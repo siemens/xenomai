@@ -1,3 +1,7 @@
-<area shape="rect" href="$nucleus_2types_8h-source.html" title="nucleus/types.h" alt="" coords="332,84,452,111">
-<area shape="rect" href="$compiler_8h-source.html" title="nucleus/compiler.h" alt="" coords="323,161,461,188">
-<area shape="rect" href="$assert_8h-source.html" title="nucleus/assert.h" alt="" coords="485,161,611,188">
+<map id="G" name="G">
+<area shape="rect" id="node3" href="$nucleus_2types_8h_source.html" title="nucleus/types.h" alt="" coords="413,83,536,112"/>
+<area shape="rect" id="node14" href="$hostrt_8h.html" title="Definitions for global semaphore heap shared objects." alt="" coords="689,83,815,112"/>
+<area shape="rect" id="node9" href="$compiler_8h_source.html" title="nucleus/compiler.h" alt="" coords="325,160,467,189"/>
+<area shape="rect" id="node11" href="$assert_8h_source.html" title="nucleus/assert.h" alt="" coords="491,160,616,189"/>
+<area shape="rect" id="node18" href="$seqlock_8h_source.html" title="nucleus/seqlock.h" alt="" coords="888,160,1021,189"/>
+</map>

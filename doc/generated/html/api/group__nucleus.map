@@ -1,0 +1,16 @@
+<map id="structs" name="structs">
+<area shape="rect" id="node1" href="$group__registry.html" title="Registry services." alt="" coords="279,5,412,35"/>
+<area shape="rect" id="node2" href="$group__intr.html" title="Interrupt management." alt="" coords="260,59,431,88"/>
+<area shape="rect" id="node4" href="$group__synch.html" title="Thread synchronization services." alt="" coords="231,112,460,141"/>
+<area shape="rect" id="node5" href="$group__bufd.html" title="Buffer descriptors." alt="" coords="276,165,415,195"/>
+<area shape="rect" id="node6" href="$group__pod.html" title="Real&#45;time pod services." alt="" coords="260,219,431,248"/>
+<area shape="rect" id="node7" href="$group__map.html" title="Lightweight key&#45;to&#45;object mapping service" alt="" coords="200,272,491,301"/>
+<area shape="rect" id="node8" href="$group__timebase.html" title="Time base services." alt="" coords="272,325,419,355"/>
+<area shape="rect" id="node9" href="$group__heap.html" title="Dynamic memory allocation services." alt="" coords="215,379,476,408"/>
+<area shape="rect" id="node10" href="$group__select.html" title="File descriptors events multiplexing services." alt="" coords="192,432,499,461"/>
+<area shape="rect" id="node11" href="$group__nucleus__state__flags.html" title="Bits reporting permanent or transient states of thread." alt="" coords="275,485,416,515"/>
+<area shape="rect" id="node12" href="$group__shadow.html" title="Real&#45;time shadow services." alt="" coords="248,539,443,568"/>
+<area shape="rect" id="node13" href="$group__vfile.html" title="Virtual file services" alt="" coords="275,592,416,621"/>
+<area shape="rect" id="node14" href="$group__timer.html" title="Timer services." alt="" coords="287,645,404,675"/>
+<area shape="rect" id="node15" href="$group__nucleus__info__flags.html" title="Bits reporting events notified to the thread." alt="" coords="255,699,436,728"/>
+</map>

@@ -235,16 +235,16 @@
 <a name="l00207"></a>00207                            <span class="keywordtype">void</span> __user *mapaddr);
 <a name="l00208"></a>00208 
 <a name="l00209"></a>00209 <span class="preprocessor">#define xnheap_base_memory(heap) \</span>
-<a name="l00210"></a>00210 <span class="preprocessor">        ((unsigned long)((heap)-&gt;archdep.heapbase))</span>
+<a name="l00210"></a>00210 <span class="preprocessor">        ((caddr_t)(heap)-&gt;archdep.heapbase)</span>
 <a name="l00211"></a>00211 <span class="preprocessor"></span>
 <a name="l00212"></a>00212 <span class="preprocessor">#define xnheap_mapped_offset(heap,ptr) \</span>
-<a name="l00213"></a>00213 <span class="preprocessor">        (((caddr_t)(ptr)) - (caddr_t)xnheap_base_memory(heap))</span>
+<a name="l00213"></a>00213 <span class="preprocessor">        (((caddr_t)(ptr)) - xnheap_base_memory(heap))</span>
 <a name="l00214"></a>00214 <span class="preprocessor"></span>
 <a name="l00215"></a>00215 <span class="preprocessor">#define xnheap_mapped_address(heap,off) \</span>
-<a name="l00216"></a>00216 <span class="preprocessor">        ((caddr_t)xnheap_base_memory(heap) + (off))</span>
+<a name="l00216"></a>00216 <span class="preprocessor">        (xnheap_base_memory(heap) + (off))</span>
 <a name="l00217"></a>00217 <span class="preprocessor"></span>
 <a name="l00218"></a>00218 <span class="preprocessor">#define xnheap_mapped_p(heap) \</span>
-<a name="l00219"></a>00219 <span class="preprocessor">        (xnheap_base_memory(heap) != 0)</span>
+<a name="l00219"></a>00219 <span class="preprocessor">        (xnheap_base_memory(heap) != NULL)</span>
 <a name="l00220"></a>00220 <span class="preprocessor"></span>
 <a name="l00221"></a>00221 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
 <a name="l00222"></a>00222 
@@ -309,15 +309,24 @@
 <a name="l00281"></a>00281 <span class="preprocessor">#define XNHEAP_DEV_NAME  "/dev/rtheap"</span>
 <a name="l00282"></a>00282 <span class="preprocessor"></span><span class="preprocessor">#define XNHEAP_DEV_MINOR 254</span>
 <a name="l00283"></a>00283 <span class="preprocessor"></span>
-<a name="l00284"></a>00284 <span class="keyword">struct </span>xnheap_desc {
-<a name="l00285"></a>00285         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> handle;
-<a name="l00286"></a>00286         <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> size;
-<a name="l00287"></a>00287         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> area;
-<a name="l00288"></a>00288 };
-<a name="l00289"></a>00289 
-<a name="l00290"></a>00290 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_HEAP_H */</span>
+<a name="l00284"></a>00284 <span class="preprocessor">#ifdef CONFIG_MMU</span>
+<a name="l00285"></a>00285 <span class="preprocessor"></span><span class="comment">/* XXX: 2.5.x ABI preserved for MMU-enabled only. */</span>
+<a name="l00286"></a>00286 <span class="preprocessor">#define xnheap_area_decl();</span>
+<a name="l00287"></a>00287 <span class="preprocessor"></span><span class="preprocessor">#define xnheap_area_set(p, val)</span>
+<a name="l00288"></a>00288 <span class="preprocessor"></span><span class="preprocessor">#else</span>
+<a name="l00289"></a>00289 <span class="preprocessor"></span><span class="preprocessor">#define xnheap_area_decl()      unsigned long area</span>
+<a name="l00290"></a>00290 <span class="preprocessor"></span><span class="preprocessor">#define xnheap_area_set(p, val) (p)-&gt;area = (unsigned long)(val)</span>
+<a name="l00291"></a>00291 <span class="preprocessor"></span><span class="preprocessor">#endif</span>
+<a name="l00292"></a>00292 <span class="preprocessor"></span>
+<a name="l00293"></a>00293 <span class="keyword">struct </span>xnheap_desc {
+<a name="l00294"></a>00294         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> handle;
+<a name="l00295"></a>00295         <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> size;
+<a name="l00296"></a>00296         xnheap_area_decl();
+<a name="l00297"></a>00297 };
+<a name="l00298"></a>00298 
+<a name="l00299"></a>00299 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_HEAP_H */</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Thu Sep 2 20:38:35 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Tue Mar 8 13:02:04 2011 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

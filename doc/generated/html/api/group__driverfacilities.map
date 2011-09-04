@@ -1,0 +1,9 @@
+<map id="structs" name="structs">
+<area shape="rect" id="node1" href="$group__misc.html" title="Misc services" alt="" coords="355,5,461,35"/>
+<area shape="rect" id="node3" href="$group__analogy__buffer.html" title="Buffer management services" alt="" coords="305,59,511,88"/>
+<area shape="rect" id="node4" href="$group__subdevice.html" title="Subdevice management services" alt="" coords="291,112,525,141"/>
+<area shape="rect" id="node5" href="$group__analogy__interrupt.html" title="Interrupt management services" alt="" coords="296,165,520,195"/>
+<area shape="rect" id="node6" href="$group__channelrange.html" title="Channels and ranges" alt="" coords="329,219,487,248"/>
+<area shape="rect" id="node8" href="$group__driver.html" title="Driver management services" alt="" coords="305,272,511,301"/>
+<area shape="rect" id="node7" href="$group__Analogy4Linux.html" title="Analogy API." alt="" coords="5,139,107,168"/>
+</map>

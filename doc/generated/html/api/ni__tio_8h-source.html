@@ -531,7 +531,7 @@
 <a name="l00522"></a>00522 
 <a name="l00523"></a>00523 <span class="keyword">struct </span>ni_gpct_device {
 <a name="l00524"></a>00524         a4l_dev_t *dev;
-<a name="l00525"></a>00525         void (*write_register)(<span class="keyword">struct </span>ni_gpct * counter, 
+<a name="l00525"></a>00525         void (*write_register)(<span class="keyword">struct </span>ni_gpct * counter,
 <a name="l00526"></a>00526                                 <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> bits, <span class="keyword">enum</span> ni_gpct_register reg);
 <a name="l00527"></a>00527         unsigned (*read_register)(<span class="keyword">struct </span>ni_gpct * counter,
 <a name="l00528"></a>00528                                    <span class="keyword">enum</span> ni_gpct_register reg);
@@ -581,22 +581,22 @@
 <a name="l00572"></a>00572 <span class="preprocessor"></span><span class="preprocessor">#define Gi_Index_Phase_HighA_LowB       (0x2 &lt;&lt; Gi_Index_Phase_Bitshift)</span>
 <a name="l00573"></a>00573 <span class="preprocessor"></span><span class="preprocessor">#define Gi_Index_Phase_HighA_HighB      (0x3 &lt;&lt; Gi_Index_Phase_Bitshift)</span>
 <a name="l00574"></a>00574 <span class="preprocessor"></span>
-<a name="l00575"></a>00575 <span class="comment">/* From m-series example code, </span>
+<a name="l00575"></a>00575 <span class="comment">/* From m-series example code,</span>
 <a name="l00576"></a>00576 <span class="comment">   not documented in 660x register level manual */</span>
-<a name="l00577"></a>00577 <span class="preprocessor">#define Gi_HW_Arm_Enable_Bit            0x80 </span>
-<a name="l00578"></a>00578 <span class="preprocessor"></span><span class="comment">/* From m-series example code, </span>
+<a name="l00577"></a>00577 <span class="preprocessor">#define Gi_HW_Arm_Enable_Bit            0x80</span>
+<a name="l00578"></a>00578 <span class="preprocessor"></span><span class="comment">/* From m-series example code,</span>
 <a name="l00579"></a>00579 <span class="comment">   not documented in 660x register level manual */</span>
 <a name="l00580"></a>00580 <span class="preprocessor">#define Gi_660x_HW_Arm_Select_Mask      (0x7 &lt;&lt; Gi_HW_Arm_Select_Shift)</span>
 <a name="l00581"></a>00581 <span class="preprocessor"></span><span class="preprocessor">#define Gi_660x_Prescale_X8_Bit         0x1000</span>
 <a name="l00582"></a>00582 <span class="preprocessor"></span><span class="preprocessor">#define Gi_M_Series_Prescale_X8_Bit     0x2000</span>
 <a name="l00583"></a>00583 <span class="preprocessor"></span><span class="preprocessor">#define Gi_M_Series_HW_Arm_Select_Mask  (0x1f &lt;&lt; Gi_HW_Arm_Select_Shift)</span>
-<a name="l00584"></a>00584 <span class="preprocessor"></span><span class="comment">/* Must be set for clocks over 40MHz, </span>
+<a name="l00584"></a>00584 <span class="preprocessor"></span><span class="comment">/* Must be set for clocks over 40MHz,</span>
 <a name="l00585"></a>00585 <span class="comment">   which includes synchronous counting and quadrature modes */</span>
 <a name="l00586"></a>00586 <span class="preprocessor">#define Gi_660x_Alternate_Sync_Bit      0x2000</span>
 <a name="l00587"></a>00587 <span class="preprocessor"></span><span class="preprocessor">#define Gi_M_Series_Alternate_Sync_Bit  0x4000</span>
-<a name="l00588"></a>00588 <span class="preprocessor"></span><span class="comment">/* From m-series example code, </span>
+<a name="l00588"></a>00588 <span class="preprocessor"></span><span class="comment">/* From m-series example code,</span>
 <a name="l00589"></a>00589 <span class="comment">   not documented in 660x register level manual */</span>
-<a name="l00590"></a>00590 <span class="preprocessor">#define Gi_660x_Prescale_X2_Bit         0x4000 </span>
+<a name="l00590"></a>00590 <span class="preprocessor">#define Gi_660x_Prescale_X2_Bit         0x4000</span>
 <a name="l00591"></a>00591 <span class="preprocessor"></span><span class="preprocessor">#define Gi_M_Series_Prescale_X2_Bit     0x8000</span>
 <a name="l00592"></a>00592 <span class="preprocessor"></span>
 <a name="l00593"></a>00593 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> Gi_Alternate_Sync_Bit(<span class="keyword">enum</span> ni_gpct_variant variant)
@@ -698,7 +698,7 @@
 <a name="l00689"></a>00689         <span class="keywordflow">return</span> (0x2 + n);
 <a name="l00690"></a>00690 }
 <a name="l00691"></a>00691 
-<a name="l00692"></a>00692 <span class="comment">/* Clock sources for ni e and m series boards, </span>
+<a name="l00692"></a>00692 <span class="comment">/* Clock sources for ni e and m series boards,</span>
 <a name="l00693"></a>00693 <span class="comment">   get bits with Gi_Source_Select_Bits() */</span>
 <a name="l00694"></a>00694 <span class="preprocessor">#define NI_M_Series_Timebase_1_Clock    0x0 </span><span class="comment">/* 20MHz */</span>
 <a name="l00695"></a>00695 <span class="preprocessor">#define NI_M_Series_Timebase_2_Clock    0x12 </span><span class="comment">/* 100KHz */</span>
@@ -799,7 +799,7 @@
 <a name="l00790"></a>00790 <span class="preprocessor"></span><span class="preprocessor">#define Gi_Level_Gating_Bits            0x1</span>
 <a name="l00791"></a>00791 <span class="preprocessor"></span><span class="preprocessor">#define Gi_Rising_Edge_Gating_Bits      0x2</span>
 <a name="l00792"></a>00792 <span class="preprocessor"></span><span class="preprocessor">#define Gi_Falling_Edge_Gating_Bits     0x3</span>
-<a name="l00793"></a>00793 <span class="preprocessor"></span><span class="preprocessor">#define Gi_Gate_On_Both_Edges_Bit       0x4 </span><span class="comment">/* used in conjunction with </span>
+<a name="l00793"></a>00793 <span class="preprocessor"></span><span class="preprocessor">#define Gi_Gate_On_Both_Edges_Bit       0x4 </span><span class="comment">/* used in conjunction with</span>
 <a name="l00794"></a>00794 <span class="comment">                                               rising edge gating mode */</span>
 <a name="l00795"></a>00795 <span class="preprocessor">#define Gi_Trigger_Mode_for_Edge_Gate_Mask 0x18</span>
 <a name="l00796"></a>00796 <span class="preprocessor"></span><span class="preprocessor">#define Gi_Edge_Gate_Starts_Stops_Bits  0x0</span>
@@ -834,13 +834,13 @@
 <a name="l00825"></a>00825 <span class="preprocessor"></span>
 <a name="l00826"></a>00826 <span class="preprocessor">#define ni_660x_max_up_down_pin         7</span>
 <a name="l00827"></a>00827 <span class="preprocessor"></span>
-<a name="l00828"></a>00828 <span class="keyword">static</span> <span class="keyword">inline</span> 
+<a name="l00828"></a>00828 <span class="keyword">static</span> <span class="keyword">inline</span>
 <a name="l00829"></a>00829 <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> NI_660x_Up_Down_Pin_Second_Gate_Select(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> n)
 <a name="l00830"></a>00830 {
 <a name="l00831"></a>00831         BUG_ON(n &gt; ni_660x_max_up_down_pin);
 <a name="l00832"></a>00832         <span class="keywordflow">return</span> 0x2 + n;
 <a name="l00833"></a>00833 }
-<a name="l00834"></a>00834 <span class="keyword">static</span> <span class="keyword">inline</span> 
+<a name="l00834"></a>00834 <span class="keyword">static</span> <span class="keyword">inline</span>
 <a name="l00835"></a>00835 <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> NI_660x_RTSI_Second_Gate_Select(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> n)
 <a name="l00836"></a>00836 {
 <a name="l00837"></a>00837         BUG_ON(n &gt; ni_660x_max_rtsi_channel);
@@ -857,7 +857,7 @@
 <a name="l00848"></a>00848 <span class="preprocessor"></span><span class="preprocessor">#define Gi_Second_Gate_Subselect_Bit    0x4000 </span><span class="comment">/* m-series only */</span>
 <a name="l00849"></a>00849 <span class="preprocessor">#define Gi_Source_Subselect_Bit         0x8000 </span><span class="comment">/* m-series only */</span>
 <a name="l00850"></a>00850 
-<a name="l00851"></a>00851 <span class="keyword">static</span> <span class="keyword">inline</span> 
+<a name="l00851"></a>00851 <span class="keyword">static</span> <span class="keyword">inline</span>
 <a name="l00852"></a>00852 <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> Gi_Second_Gate_Select_Bits(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> second_gate_select)
 <a name="l00853"></a>00853 {
 <a name="l00854"></a>00854         <span class="keywordflow">return</span> (second_gate_select &lt;&lt; Gi_Second_Gate_Select_Shift) &amp;
@@ -1079,7 +1079,7 @@
 <a name="l01070"></a>01070 <span class="preprocessor"></span><span class="preprocessor">#define NI_GPCT_PFI_CLOCK_SRC_BITS(x)           (0x20 + x)</span>
 <a name="l01071"></a>01071 <span class="preprocessor"></span>
 <a name="l01072"></a>01072 <span class="comment">/* Possibilities for setting a gate source with</span>
-<a name="l01073"></a>01073 <span class="comment">   INSN_CONFIG_SET_GATE_SRC when using NI general-purpose counters. </span>
+<a name="l01073"></a>01073 <span class="comment">   INSN_CONFIG_SET_GATE_SRC when using NI general-purpose counters.</span>
 <a name="l01074"></a>01074 <span class="comment">   May be bitwise-or'd with CR_EDGE or CR_INVERT. */</span>
 <a name="l01075"></a>01075 <span class="comment">/* M-series gates */</span>
 <a name="l01076"></a>01076 <span class="preprocessor">#define NI_GPCT_TIMESTAMP_MUX_GATE_SELECT       0x0</span>
@@ -1119,7 +1119,7 @@
 <a name="l01110"></a>01110 <span class="preprocessor">#define NI_GPCT_ARM_IMMEDIATE           0x0</span>
 <a name="l01111"></a>01111 <span class="preprocessor"></span><span class="comment">/* Start both the counter and the adjacent paired counter</span>
 <a name="l01112"></a>01112 <span class="comment">   simultaneously */</span>
-<a name="l01113"></a>01113 <span class="preprocessor">#define NI_GPCT_ARM_PAIRED_IMMEDIATE    0x1     </span>
+<a name="l01113"></a>01113 <span class="preprocessor">#define NI_GPCT_ARM_PAIRED_IMMEDIATE    0x1</span>
 <a name="l01114"></a>01114 <span class="preprocessor"></span><span class="comment">/* NI doesn't document bits for selecting hardware arm triggers.  If</span>
 <a name="l01115"></a>01115 <span class="comment">   the NI_GPCT_ARM_UNKNOWN bit is set, we will pass the least significant</span>
 <a name="l01116"></a>01116 <span class="comment">   bits (3 bits for 660x or 5 bits for m-series) through to the</span>
@@ -1191,18 +1191,18 @@
 <a name="l01182"></a>01182 <span class="keywordtype">int</span> ni_tio_cancel(<span class="keyword">struct</span> ni_gpct *counter);
 <a name="l01183"></a>01183 
 <a name="l01184"></a>01184 <span class="keywordtype">void</span> ni_tio_handle_interrupt(<span class="keyword">struct</span> ni_gpct *counter, a4l_dev_t *dev);
-<a name="l01185"></a>01185 <span class="keywordtype">void</span> ni_tio_set_mite_channel(<span class="keyword">struct</span> ni_gpct *counter, 
+<a name="l01185"></a>01185 <span class="keywordtype">void</span> ni_tio_set_mite_channel(<span class="keyword">struct</span> ni_gpct *counter,
 <a name="l01186"></a>01186                              <span class="keyword">struct</span> mite_channel *mite_chan);
-<a name="l01187"></a>01187 <span class="keywordtype">void</span> ni_tio_acknowledge_and_confirm(<span class="keyword">struct</span> ni_gpct *counter, 
+<a name="l01187"></a>01187 <span class="keywordtype">void</span> ni_tio_acknowledge_and_confirm(<span class="keyword">struct</span> ni_gpct *counter,
 <a name="l01188"></a>01188                                     <span class="keywordtype">int</span> *gate_error,
-<a name="l01189"></a>01189                                     <span class="keywordtype">int</span> *tc_error, 
+<a name="l01189"></a>01189                                     <span class="keywordtype">int</span> *tc_error,
 <a name="l01190"></a>01190                                     <span class="keywordtype">int</span> *perm_stale_data, <span class="keywordtype">int</span> *stale_data);
 <a name="l01191"></a>01191 
 <a name="l01192"></a>01192 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE */</span>
 <a name="l01193"></a>01193 
 <a name="l01194"></a>01194 <span class="preprocessor">#endif </span><span class="comment">/* !__ANALOGY_NI_TIO_H__ */</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Thu Sep 2 20:38:36 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Tue Mar 8 13:02:04 2011 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

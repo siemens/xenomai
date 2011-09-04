@@ -333,7 +333,7 @@
 <a name="l00329"></a>00329         }
 <a name="l00330"></a>00330         <span class="keywordflow">if</span>(channel &gt; max_channel)
 <a name="l00331"></a>00331         {
-<a name="l00332"></a>00332                 <a class="code" href="group__util.html#g7fe4c8a85d03bec31852634a681791e3" title="Real-time safe message printing on kernel console.">rtdm_printk</a>(<span class="stringliteral">"%s: bug, invalid RTSI_channel=%i\n"</span>, 
+<a name="l00332"></a>00332                 <a class="code" href="group__util.html#g7fe4c8a85d03bec31852634a681791e3" title="Real-time safe message printing on kernel console.">rtdm_printk</a>(<span class="stringliteral">"%s: bug, invalid RTSI_channel=%i\n"</span>,
 <a name="l00333"></a>00333                             __FUNCTION__, channel);
 <a name="l00334"></a>00334                 <span class="keywordflow">return</span> 0;
 <a name="l00335"></a>00335         }
@@ -504,7 +504,7 @@
 <a name="l00500"></a>00500 <span class="preprocessor"></span><span class="preprocessor">#define AO_FIFO_Flags_Polarity                  _bit11 </span><span class="comment">/* M Series: reserved */</span>
 <a name="l00501"></a>00501 <span class="preprocessor">#define AO_TMRDACWR_Pulse_Width                 _bit12</span>
 <a name="l00502"></a>00502 <span class="preprocessor"></span><span class="preprocessor">#define AO_Fast_CPU                             _bit13 </span><span class="comment">/* M Series: reserved */</span>
-<a name="l00503"></a>00503 <span class="preprocessor">#define AO_Number_Of_DAC_Packages               _bit14 </span><span class="comment">/* 1 for "single" mode, </span>
+<a name="l00503"></a>00503 <span class="preprocessor">#define AO_Number_Of_DAC_Packages               _bit14 </span><span class="comment">/* 1 for "single" mode,</span>
 <a name="l00504"></a>00504 <span class="comment">                                                          0 for "dual" */</span>
 <a name="l00505"></a>00505 <span class="preprocessor">#define AO_Multiple_DACS_Per_Package            _bit15 </span><span class="comment">/* M Series only */</span>
 <a name="l00506"></a>00506 
@@ -843,28 +843,28 @@
 <a name="l00839"></a>00839 <span class="comment">*/</span>
 <a name="l00840"></a>00840 
 <a name="l00841"></a>00841 <span class="keyword">enum</span>
-<a name="l00842"></a>00842 { 
-<a name="l00843"></a>00843         ai_gain_16 = 0, 
-<a name="l00844"></a>00844         ai_gain_8, 
-<a name="l00845"></a>00845         ai_gain_14, 
-<a name="l00846"></a>00846         ai_gain_4, 
-<a name="l00847"></a>00847         ai_gain_611x, 
-<a name="l00848"></a>00848         ai_gain_622x, 
-<a name="l00849"></a>00849         ai_gain_628x,  
+<a name="l00842"></a>00842 {
+<a name="l00843"></a>00843         ai_gain_16 = 0,
+<a name="l00844"></a>00844         ai_gain_8,
+<a name="l00845"></a>00845         ai_gain_14,
+<a name="l00846"></a>00846         ai_gain_4,
+<a name="l00847"></a>00847         ai_gain_611x,
+<a name="l00848"></a>00848         ai_gain_622x,
+<a name="l00849"></a>00849         ai_gain_628x,
 <a name="l00850"></a>00850         ai_gain_6143
 <a name="l00851"></a>00851 };
-<a name="l00852"></a>00852 <span class="keyword">enum</span> caldac_enum 
-<a name="l00853"></a>00853 { 
-<a name="l00854"></a>00854         caldac_none=0, 
-<a name="l00855"></a>00855         mb88341, 
-<a name="l00856"></a>00856         dac8800, 
-<a name="l00857"></a>00857         dac8043, 
+<a name="l00852"></a>00852 <span class="keyword">enum</span> caldac_enum
+<a name="l00853"></a>00853 {
+<a name="l00854"></a>00854         caldac_none=0,
+<a name="l00855"></a>00855         mb88341,
+<a name="l00856"></a>00856         dac8800,
+<a name="l00857"></a>00857         dac8043,
 <a name="l00858"></a>00858         ad8522,
-<a name="l00859"></a>00859         ad8804, 
-<a name="l00860"></a>00860         ad8842, 
-<a name="l00861"></a>00861         ad8804_debug 
+<a name="l00859"></a>00859         ad8804,
+<a name="l00860"></a>00860         ad8842,
+<a name="l00861"></a>00861         ad8804_debug
 <a name="l00862"></a>00862 };
-<a name="l00863"></a>00863 <span class="keyword">enum</span> ni_reg_type 
+<a name="l00863"></a>00863 <span class="keyword">enum</span> ni_reg_type
 <a name="l00864"></a>00864 {
 <a name="l00865"></a>00865         ni_reg_normal = 0x0,
 <a name="l00866"></a>00866         ni_reg_611x = 0x1,
@@ -1079,8 +1079,8 @@
 <a name="l01075"></a>01075 <span class="preprocessor"></span><span class="preprocessor">#define MSeries_AI_Config_Channel_Bits(x)                       (x &amp; 0xf)</span>
 <a name="l01076"></a>01076 <span class="preprocessor"></span><span class="preprocessor">#define MSeries_AI_Config_Gain_Bits(x)                          ((x &amp; 0x7) &lt;&lt; 9)</span>
 <a name="l01077"></a>01077 <span class="preprocessor"></span>
-<a name="l01078"></a>01078 <span class="keyword">static</span> <span class="keyword">inline</span> 
-<a name="l01079"></a>01079 <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> MSeries_AI_Config_Bank_Bits(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> reg_type, 
+<a name="l01078"></a>01078 <span class="keyword">static</span> <span class="keyword">inline</span>
+<a name="l01079"></a>01079 <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> MSeries_AI_Config_Bank_Bits(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> reg_type,
 <a name="l01080"></a>01080                                          <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> channel)
 <a name="l01081"></a>01081 {
 <a name="l01082"></a>01082         <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> bits = channel &amp; 0x30;
@@ -1103,7 +1103,7 @@
 <a name="l01099"></a>01099 <span class="comment">   20MHz rtsi clock frequency */</span>
 <a name="l01100"></a>01100 <span class="preprocessor">#define MSeries_RTSI_10MHz_Bit                                  0x80</span>
 <a name="l01101"></a>01101 <span class="preprocessor"></span>
-<a name="l01102"></a>01102 <span class="keyword">static</span> <span class="keyword">inline</span> 
+<a name="l01102"></a>01102 <span class="keyword">static</span> <span class="keyword">inline</span>
 <a name="l01103"></a>01103 <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> MSeries_PLL_In_Source_Select_RTSI_Bits(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> RTSI_channel)
 <a name="l01104"></a>01104 {
 <a name="l01105"></a>01105         <span class="keywordflow">if</span>(RTSI_channel &gt; 7)
@@ -1121,7 +1121,7 @@
 <a name="l01117"></a>01117 <span class="preprocessor"></span><span class="preprocessor">#define MSeries_PLL_VCO_Mode_100_225MHz_Bits                    0x4000</span>
 <a name="l01118"></a>01118 <span class="preprocessor"></span><span class="preprocessor">#define MSeries_PLL_VCO_Mode_75_150MHz_Bits                     0x6000</span>
 <a name="l01119"></a>01119 <span class="preprocessor"></span>
-<a name="l01120"></a>01120 <span class="keyword">static</span> <span class="keyword">inline</span> 
+<a name="l01120"></a>01120 <span class="keyword">static</span> <span class="keyword">inline</span>
 <a name="l01121"></a>01121 <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> MSeries_PLL_Divisor_Bits(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> divisor)
 <a name="l01122"></a>01122 {
 <a name="l01123"></a>01123         <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> max_divisor = 0x10;
@@ -1132,7 +1132,7 @@
 <a name="l01128"></a>01128         }
 <a name="l01129"></a>01129         <span class="keywordflow">return</span> (divisor &amp; 0xf) &lt;&lt; 8;
 <a name="l01130"></a>01130 }
-<a name="l01131"></a>01131 <span class="keyword">static</span> <span class="keyword">inline</span> 
+<a name="l01131"></a>01131 <span class="keyword">static</span> <span class="keyword">inline</span>
 <a name="l01132"></a>01132 <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> MSeries_PLL_Multiplier_Bits(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> multiplier)
 <a name="l01133"></a>01133 {
 <a name="l01134"></a>01134         <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> max_multiplier = 0x100;
@@ -1238,10 +1238,10 @@
 <a name="l01234"></a>01234 <span class="preprocessor"></span><span class="comment">/* sample clock on falling edge */</span>
 <a name="l01235"></a>01235 <span class="preprocessor">#define CDI_Polarity_Bit                0x400</span>
 <a name="l01236"></a>01236 <span class="preprocessor"></span><span class="comment">/* set for half full mode, clear for not empty mode */</span>
-<a name="l01237"></a>01237 <span class="preprocessor">#define CDI_FIFO_Mode_Bit               0x800 </span>
+<a name="l01237"></a>01237 <span class="preprocessor">#define CDI_FIFO_Mode_Bit               0x800</span>
 <a name="l01238"></a>01238 <span class="preprocessor"></span><span class="comment">/* data lanes specify which dio channels map to byte or word accesses</span>
 <a name="l01239"></a>01239 <span class="comment">   to the dio fifos */</span>
-<a name="l01240"></a>01240 <span class="preprocessor">#define CDI_Data_Lane_Mask              0x3000 </span>
+<a name="l01240"></a>01240 <span class="preprocessor">#define CDI_Data_Lane_Mask              0x3000</span>
 <a name="l01241"></a>01241 <span class="preprocessor"></span><span class="preprocessor">#define CDI_Data_Lane_0_15_Bits         0x0</span>
 <a name="l01242"></a>01242 <span class="preprocessor"></span><span class="preprocessor">#define CDI_Data_Lane_16_31_Bits        0x1000</span>
 <a name="l01243"></a>01243 <span class="preprocessor"></span><span class="preprocessor">#define CDI_Data_Lane_0_7_Bits          0x0</span>
@@ -1421,9 +1421,8 @@
 <a name="l01417"></a>01417 <span class="preprocessor">#define NI_FREQ_OUT_TIMEBASE_2_CLOCK_SRC        1 </span><span class="comment">/* 100 KHz */</span>
 <a name="l01418"></a>01418 
 <a name="l01419"></a>01419 <span class="preprocessor">#endif </span><span class="comment">/* _ANALOGY_NI_STC_H */</span>
-<a name="l01420"></a>01420 
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Thu Sep 2 20:38:36 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Tue Mar 8 13:02:04 2011 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

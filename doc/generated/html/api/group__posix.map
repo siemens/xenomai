@@ -1,0 +1,12 @@
+<map id="structs" name="structs">
+<area shape="rect" id="node1" href="$group__posix__thread.html" title="Threads management services." alt="" coords="165,5,389,35"/>
+<area shape="rect" id="node3" href="$group__posix__cond.html" title="Condition variables services." alt="" coords="176,59,379,88"/>
+<area shape="rect" id="node4" href="$group__posix__mutex.html" title="Mutex services." alt="" coords="217,112,337,141"/>
+<area shape="rect" id="node5" href="$group__posix__mq.html" title="Message queues services." alt="" coords="183,165,372,195"/>
+<area shape="rect" id="node6" href="$group__posix__intr.html" title="Interruptions management services." alt="" coords="151,219,404,248"/>
+<area shape="rect" id="node7" href="$group__posix__tsd.html" title="Thread&#45;specific data." alt="" coords="200,272,355,301"/>
+<area shape="rect" id="node8" href="$group__posix__time.html" title="Clocks and timers services." alt="" coords="180,325,375,355"/>
+<area shape="rect" id="node9" href="$group__posix__shm.html" title="Shared memory services." alt="" coords="184,379,371,408"/>
+<area shape="rect" id="node10" href="$group__posix__sem.html" title="Semaphores services." alt="" coords="196,432,359,461"/>
+<area shape="rect" id="node11" href="$group__posix__signal.html" title="Signals management services." alt="" coords="213,485,341,515"/>
+</map>

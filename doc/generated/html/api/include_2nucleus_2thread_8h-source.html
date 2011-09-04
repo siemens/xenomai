@@ -26,7 +26,7 @@
     </li>
     </ul>
   </div>
-<h1>include/nucleus/thread.h</h1><div class="fragment"><pre class="fragment"><a name="l00001"></a>00001 <span class="comment">/* </span>
+<h1>include/nucleus/thread.h</h1><div class="fragment"><pre class="fragment"><a name="l00001"></a>00001 <span class="comment">/*</span>
 <a name="l00002"></a>00002 <span class="comment"> * @note Copyright (C) 2001,2002,2003 Philippe Gerum &lt;rpm@xenomai.org&gt;.</span>
 <a name="l00003"></a>00003 <span class="comment"> *</span>
 <a name="l00004"></a>00004 <span class="comment"> * Xenomai is free software; you can redistribute it and/or modify</span>
@@ -253,11 +253,11 @@
 <a name="l00254"></a>00254         <span class="keyword">struct </span>xnsynch *wchan;          <span class="comment">/* Resource the thread pends on */</span>
 <a name="l00255"></a>00255 
 <a name="l00256"></a>00256         <span class="keyword">struct </span>xnsynch *wwake;          <span class="comment">/* Wait channel the thread was resumed from */</span>
-<a name="l00257"></a>00257         
+<a name="l00257"></a>00257 
 <a name="l00258"></a>00258         xntimer_t rtimer;               <span class="comment">/* Resource timer */</span>
 <a name="l00259"></a>00259 
 <a name="l00260"></a>00260         xntimer_t ptimer;               <span class="comment">/* Periodic timer */</span>
-<a name="l00261"></a>00261         
+<a name="l00261"></a>00261 
 <a name="l00262"></a>00262         xnsigmask_t signals;            <span class="comment">/* Pending core signals */</span>
 <a name="l00263"></a>00263 
 <a name="l00264"></a>00264         xnticks_t rrperiod;             <span class="comment">/* Allotted round-robin period (ticks) */</span>
@@ -421,13 +421,13 @@
 <a name="l00422"></a>00422 <span class="keyword">static</span> <span class="keyword">inline</span>
 <a name="l00423"></a>00423 <span class="keywordtype">int</span> xnthread_register(<span class="keyword">struct</span> xnthread *thread, <span class="keyword">const</span> <span class="keywordtype">char</span> *name)
 <a name="l00424"></a>00424 {
-<a name="l00425"></a>00425         <span class="keywordflow">return</span> <a class="code" href="group__registry.html#g28aefd9be7367aa495753142005e1d5a" title="Register a real-time object.">xnregistry_enter</a>(name, thread, &amp;xnthread_handle(thread), NULL);
+<a name="l00425"></a>00425         <span class="keywordflow">return</span> <a class="code" href="group__registry.html#gd44413c8fc23a46ce7c63e6889b669f4" title="Register a real-time object.">xnregistry_enter</a>(name, thread, &amp;xnthread_handle(thread), NULL);
 <a name="l00426"></a>00426 }
 <a name="l00427"></a>00427 
 <a name="l00428"></a>00428 <span class="keyword">static</span> <span class="keyword">inline</span>
 <a name="l00429"></a>00429 <span class="keyword">struct </span>xnthread *xnthread_lookup(xnhandle_t threadh)
 <a name="l00430"></a>00430 {
-<a name="l00431"></a>00431         <span class="keyword">struct </span>xnthread *thread = xnregistry_lookup(threadh);
+<a name="l00431"></a>00431         <span class="keyword">struct </span>xnthread *thread = (<span class="keyword">struct </span>xnthread *)xnregistry_lookup(threadh);
 <a name="l00432"></a>00432         <span class="keywordflow">return</span> (thread &amp;&amp; xnthread_handle(thread) == threadh) ? thread : NULL;
 <a name="l00433"></a>00433 }
 <a name="l00434"></a>00434 
@@ -464,7 +464,7 @@
 <a name="l00465"></a>00465 
 <a name="l00466"></a>00466 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_THREAD_H */</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Thu Sep 2 20:38:35 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Tue Mar 8 13:02:04 2011 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

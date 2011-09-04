@@ -1,0 +1,12 @@
+<map id="structs" name="structs">
+<area shape="rect" id="node1" href="$group__rtdmsync.html" title="Synchronisation Services" alt="" coords="475,5,656,35"/>
+<area shape="rect" id="node2" href="$group__interdrv.html" title="Inter&#45;Driver API" alt="" coords="507,59,624,88"/>
+<area shape="rect" id="node3" href="$group__util.html" title="Utility Services" alt="" coords="508,112,623,141"/>
+<area shape="rect" id="node4" href="$group__rtdmirq.html" title="Interrupt Management Services" alt="" coords="453,165,677,195"/>
+<area shape="rect" id="node5" href="$group__rtdmtask.html" title="Task Services" alt="" coords="512,219,619,248"/>
+<area shape="rect" id="node6" href="$group__clock.html" title="Clock Services" alt="" coords="508,272,623,301"/>
+<area shape="rect" id="node7" href="$group__devregister.html" title="Device Registration Services" alt="" coords="464,325,667,355"/>
+<area shape="rect" id="node8" href="$group__nrtsignal.html" title="Non&#45;Real&#45;Time Signalling Services" alt="" coords="447,379,684,408"/>
+<area shape="rect" id="node9" href="$group__rtdmtimer.html" title="Timer Services" alt="" coords="508,432,623,461"/>
+<area shape="rect" id="node10" href="$group__rtdm.html" title="Real&#45;Time Driver Model" alt="" coords="5,219,173,248"/>
+</map>

@@ -1,12 +1,14 @@
-<area shape="rect" href="$include_2nucleus_2thread_8h-source.html" title="nucleus/thread.h" alt="" coords="316,84,444,111">
-<area shape="rect" href="$nucleus_2types_8h-source.html" title="nucleus/types.h" alt="" coords="332,393,452,420">
-<area shape="rect" href="$stat_8h-source.html" title="nucleus/stat.h" alt="" coords="269,239,381,265">
-<area shape="rect" href="$include_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="320,161,440,188">
-<area shape="rect" href="$include_2nucleus_2registry_8h.html" title="This file is part of the Xenomai project." alt="" coords="464,161,597,188">
-<area shape="rect" href="$schedparam_8h-source.html" title="nucleus/schedparam.h" alt="" coords="621,161,787,188">
-<area shape="rect" href="$compiler_8h-source.html" title="nucleus/compiler.h" alt="" coords="323,471,461,497">
-<area shape="rect" href="$assert_8h-source.html" title="nucleus/assert.h" alt="" coords="485,471,611,497">
-<area shape="rect" href="$timebase_8h.html" title="nucleus/timebase.h" alt="" coords="603,239,749,265">
-<area shape="rect" href="$nucleus_2queue_8h-source.html" title="nucleus/queue.h" alt="" coords="459,316,584,343">
-<area shape="rect" href="$vfile_8h.html" title="This file is part of the Xenomai project." alt="" coords="620,316,732,343">
-<area shape="rect" href="$synch_8h-source.html" title="nucleus/synch.h" alt="" coords="456,239,579,265">
+<map id="G" name="G">
+<area shape="rect" id="node3" href="$include_2nucleus_2thread_8h_source.html" title="nucleus/thread.h" alt="" coords="320,83,448,112"/>
+<area shape="rect" id="node5" href="$nucleus_2types_8h_source.html" title="nucleus/types.h" alt="" coords="335,392,457,421"/>
+<area shape="rect" id="node16" href="$stat_8h_source.html" title="nucleus/stat.h" alt="" coords="273,237,385,267"/>
+<area shape="rect" id="node19" href="$include_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="324,160,444,189"/>
+<area shape="rect" id="node35" href="$include_2nucleus_2registry_8h.html" title="This file is part of the Xenomai project." alt="" coords="468,160,601,189"/>
+<area shape="rect" id="node42" href="$schedparam_8h_source.html" title="nucleus/schedparam.h" alt="" coords="625,160,791,189"/>
+<area shape="rect" id="node11" href="$compiler_8h_source.html" title="nucleus/compiler.h" alt="" coords="325,469,467,499"/>
+<area shape="rect" id="node13" href="$assert_8h_source.html" title="nucleus/assert.h" alt="" coords="491,469,616,499"/>
+<area shape="rect" id="node21" href="$timebase_8h.html" title="nucleus/timebase.h" alt="" coords="607,237,753,267"/>
+<area shape="rect" id="node23" href="$nucleus_2queue_8h_source.html" title="nucleus/queue.h" alt="" coords="463,315,588,344"/>
+<area shape="rect" id="node27" href="$vfile_8h.html" title="This file is part of the Xenomai project." alt="" coords="624,315,736,344"/>
+<area shape="rect" id="node38" href="$synch_8h_source.html" title="nucleus/synch.h" alt="" coords="460,237,583,267"/>
+</map>

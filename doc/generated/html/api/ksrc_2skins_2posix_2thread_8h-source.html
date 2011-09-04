@@ -82,10 +82,10 @@
 <a name="l00054"></a>00054 
 <a name="l00055"></a>00055    xnholder_t link;     <span class="comment">/* Link in pse51_threadq */</span>
 <a name="l00056"></a>00056    xnqueue_t *container;
-<a name="l00057"></a>00057     
+<a name="l00057"></a>00057 
 <a name="l00058"></a>00058 <span class="preprocessor">#define link2pthread(laddr) \</span>
 <a name="l00059"></a>00059 <span class="preprocessor">    ((pthread_t)(((char *)laddr) - offsetof(struct pse51_thread, link)))</span>
-<a name="l00060"></a>00060 <span class="preprocessor"></span>    
+<a name="l00060"></a>00060 <span class="preprocessor"></span>
 <a name="l00061"></a>00061 
 <a name="l00062"></a>00062     pthread_attr_t attr;        <span class="comment">/* creation attributes */</span>
 <a name="l00063"></a>00063 
@@ -117,7 +117,7 @@
 <a name="l00089"></a>00089 
 <a name="l00090"></a>00090     <span class="comment">/* For timers. */</span>
 <a name="l00091"></a>00091     xnqueue_t timersq;
-<a name="l00092"></a>00092     
+<a name="l00092"></a>00092 
 <a name="l00093"></a>00093 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_PERVASIVE</span>
 <a name="l00094"></a>00094 <span class="preprocessor"></span>    <span class="keyword">struct </span>pse51_hkey hkey;
 <a name="l00095"></a>00095 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_PERVASIVE */</span>
@@ -168,7 +168,7 @@
 <a name="l00140"></a>00140 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> thread_cancellation_point (xnthread_t *thread)
 <a name="l00141"></a>00141 {
 <a name="l00142"></a>00142     pthread_t cur = thread2pthread(thread);
-<a name="l00143"></a>00143     
+<a name="l00143"></a>00143 
 <a name="l00144"></a>00144     <span class="keywordflow">if</span>(cur &amp;&amp; cur-&gt;cancel_request
 <a name="l00145"></a>00145         &amp;&amp; thread_getcancelstate(cur) == PTHREAD_CANCEL_ENABLE )
 <a name="l00146"></a>00146         pse51_thread_abort(cur, PTHREAD_CANCELED);
@@ -185,7 +185,7 @@
 <a name="l00157"></a>00157 
 <a name="l00158"></a>00158 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_THREAD_H */</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Thu Sep 2 20:38:35 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Tue Mar 8 13:02:04 2011 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

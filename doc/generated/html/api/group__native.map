@@ -1,0 +1,15 @@
+<map id="structs" name="structs">
+<area shape="rect" id="node1" href="$group__pipe.html" title="Message pipe services." alt="" coords="237,5,408,35"/>
+<area shape="rect" id="node2" href="$group__alarm.html" title="Alarm services." alt="" coords="263,59,383,88"/>
+<area shape="rect" id="node4" href="$group__native__timer.html" title="Timer management services." alt="" coords="219,112,427,141"/>
+<area shape="rect" id="node5" href="$group__native__heap.html" title="Memory heap services." alt="" coords="237,165,408,195"/>
+<area shape="rect" id="node6" href="$group__task.html" title="Task management services." alt="" coords="223,219,423,248"/>
+<area shape="rect" id="node7" href="$group__native__queue.html" title="Message queue services." alt="" coords="232,272,413,301"/>
+<area shape="rect" id="node8" href="$group__event.html" title="Event flag group services." alt="" coords="229,325,416,355"/>
+<area shape="rect" id="node9" href="$group__semaphore.html" title="Counting semaphore services." alt="" coords="215,379,431,408"/>
+<area shape="rect" id="node10" href="$group__mutex.html" title="Mutex services." alt="" coords="263,432,383,461"/>
+<area shape="rect" id="node11" href="$group__interrupt.html" title="Interrupt management services." alt="" coords="209,485,436,515"/>
+<area shape="rect" id="node12" href="$group__buffer.html" title="Buffer services." alt="" coords="263,539,383,568"/>
+<area shape="rect" id="node13" href="$group__native__task__status.html" title="Defines used to specify task state and/or mode." alt="" coords="275,592,371,621"/>
+<area shape="rect" id="node14" href="$group__cond.html" title="Condition variable services." alt="" coords="225,645,420,675"/>
+</map>
