@@ -254,7 +254,7 @@ void __native_task_pkg_cleanup(void)
 int rt_task_create(RT_TASK *task,
 		   const char *name, int stksize, int prio, int mode)
 {
-#if defined(CONFIG_XENO_OPT_NATIVE_MPS) && defined(CONFIG_XENO_FASTSYNCH)
+#ifdef CONFIG_XENO_OPT_NATIVE_MPS
 	xnarch_atomic_t *fastlock = NULL;
 #endif
 	union xnsched_policy_param param;
