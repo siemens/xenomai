@@ -377,8 +377,6 @@ int rthal_irq_enable(unsigned irq)
 	if (irq >= NR_IRQS || rthal_irq_descp(irq) == NULL)
 		return -EINVAL;
 
-	rthal_irq_desc_status(irq) &= ~IRQ_DISABLED;
-
 	return rthal_irq_chip_enable(irq);
 }
 
@@ -386,8 +384,6 @@ int rthal_irq_disable(unsigned irq)
 {
 	if (irq >= NR_IRQS || rthal_irq_descp(irq) == NULL)
 		return -EINVAL;
-
-	rthal_irq_desc_status(irq) |= IRQ_DISABLED;
 
 	return rthal_irq_chip_disable(irq);
 }
