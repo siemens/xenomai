@@ -437,10 +437,10 @@ patch_kernelversion_specific="y"
 case $linux_VERSION.$linux_PATCHLEVEL in
 
     #
-    #  Linux v2.6 section
+    #  Linux v2.6 and 3.x section
     #
 
-    2.6)
+    2.6|3.*)
 
     config_file=Kconfig
 
@@ -553,10 +553,6 @@ EOF
 
     patch_help
     ;;
-
-    #
-    #  Paranoid section
-    #
 
     *)
 

@@ -1,6 +1,6 @@
-ifeq ($(PATCHLEVEL),6)
+ifneq ($(VERSION).$(PATCHLEVEL),2.4)
 
-# Makefile frag for Linux v2.6
+# Makefile frag for Linux v2.6 and v3.x
 
 EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai -Idrivers/xenomai/ipc
 
