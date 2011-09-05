@@ -637,6 +637,11 @@ static inline void wrap_proc_dir_entry_owner(struct proc_dir_entry *entry)
 #endif
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,37) && defined(CONFIG_GENERIC_HARDIRQS)
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,39)
+#define irq_desc_get_chip(desc)	get_irq_desc_chip(desc)
+#endif
+
 /*
  * The irq chip descriptor has been heavily revamped in
  * 2.6.37. Provide generic accessors to the chip handlers we need for
@@ -645,7 +650,7 @@ static inline void wrap_proc_dir_entry_owner(struct proc_dir_entry *entry)
 #define rthal_irq_chip_enable(irq)					\
 	({								\
 		struct irq_desc *desc = rthal_irq_descp(irq);		\
-		struct irq_chip *chip = get_irq_desc_chip(desc);	\
+		struct irq_chip *chip = irq_desc_get_chip(desc);	\
 		int __ret__ = 0;					\
 		if (unlikely(chip->irq_unmask == NULL))			\
 			__ret__ = -ENODEV;				\
@@ -656,7 +661,7 @@ static inline void wrap_proc_dir_entry_owner(struct proc_dir_entry *entry)
 #define rthal_irq_chip_disable(irq)					\
 	({								\
 		struct irq_desc *desc = rthal_irq_descp(irq);		\
-		struct irq_chip *chip = get_irq_desc_chip(desc);	\
+		struct irq_chip *chip = irq_desc_get_chip(desc);	\
 		int __ret__ = 0;					\
 		if (unlikely(chip->irq_mask == NULL))			\
 			__ret__ = -ENODEV;				\
