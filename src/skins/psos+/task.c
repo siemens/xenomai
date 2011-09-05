@@ -62,6 +62,7 @@ static void *psos_task_trampoline(void *cookie)
 {
 	struct psos_task_iargs *iargs = (struct psos_task_iargs *)cookie;
 	void (*entry)(u_long, u_long, u_long, u_long);
+	volatile pthread_t tid = pthread_self();
 	struct psos_arg_bulk bulk;
 	unsigned long mode_offset;
 	u_long handle, targs[4];
@@ -74,7 +75,7 @@ static void *psos_task_trampoline(void *cookie)
 	bulk.a2 = (u_long)iargs->prio;
 	bulk.a3 = (u_long)iargs->flags;
 	bulk.a4 = (u_long)&mode_offset;
-	bulk.a5 = (u_long)pthread_self();
+	bulk.a5 = (u_long)tid;
 
 	if (!bulk.a4) {
 		err = -ENOMEM;

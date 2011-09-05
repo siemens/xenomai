@@ -56,6 +56,7 @@ struct rt_task_iargs {
 static void *rt_task_trampoline(void *cookie)
 {
 	struct rt_task_iargs *iargs = (struct rt_task_iargs *)cookie;
+	volatile pthread_t tid = pthread_self();
 	void (*entry) (void *cookie);
 	unsigned long mode_offset;
 	struct rt_arg_bulk bulk;
@@ -79,11 +80,12 @@ static void *rt_task_trampoline(void *cookie)
 	bulk.a2 = (u_long)iargs->name;
 	bulk.a3 = (u_long)iargs->prio;
 	bulk.a4 = (u_long)iargs->mode;
-	bulk.a5 = (u_long)pthread_self();
+	bulk.a5 = (u_long)tid;
 	/* Signal allocation failures by setting bulk.a6 to 0, they will be
 	   propagated to the thread waiting in xn_sys_completion. */
 	bulk.a6 = !self ? 0UL : (u_long)&mode_offset;
 
+	asm volatile("nop;nop;nop");
 	err = XENOMAI_SKINCALL2(__native_muxid,
 				__native_task_create, &bulk,
 				iargs->completionp);

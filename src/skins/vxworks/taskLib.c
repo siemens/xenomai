@@ -86,6 +86,7 @@ static void *wind_task_trampoline(void *cookie)
 {
 	struct wind_task_iargs *iargs =
 	    (struct wind_task_iargs *)cookie, _iargs;
+	volatile pthread_t tid = pthread_self();
 	struct wind_arg_bulk bulk;
 	unsigned long mode_offset;
 	WIND_TCB *pTcb;
@@ -101,7 +102,7 @@ static void *wind_task_trampoline(void *cookie)
 	bulk.a1 = (u_long)iargs->name;
 	bulk.a2 = (u_long)iargs->prio;
 	bulk.a3 = (u_long)iargs->flags;
-	bulk.a4 = (u_long)pthread_self();
+	bulk.a4 = (u_long)tid;
 	bulk.a5 = (u_long)&mode_offset;
 	pTcb = iargs->pTcb;
 
