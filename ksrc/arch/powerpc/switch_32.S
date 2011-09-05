@@ -33,6 +33,7 @@
 #include <asm/offsets.h>
 #else
 #include <asm/asm-offsets.h>
+#include <asm/ptrace.h>
 #endif
 
 /*
