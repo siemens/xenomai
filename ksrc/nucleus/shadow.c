@@ -2170,8 +2170,10 @@ static void *xnshadow_sys_event(int event, void *data)
 		err = xnheap_init_mapped(&p->sem_heap,
 					 CONFIG_XENO_OPT_SEM_HEAPSZ * 1024,
 					 XNARCH_SHARED_HEAP_FLAGS);
-		if (err)
-			goto err_free_host_mem;
+		if (err) {
+			xnarch_free_host_mem(p, sizeof(*p));
+			return ERR_PTR(err);
+		}
 
 		xnheap_set_label(&p->sem_heap,
 				 "private sem heap [%d]", current->pid);
@@ -2182,11 +2184,8 @@ static void *xnshadow_sys_event(int event, void *data)
 			printk(KERN_WARNING
 			       "Xenomai: %s[%d] cannot map MAYDAY page\n",
 			       current->comm, current->pid);
-			err = -ENOMEM;
-
-		  err_free_host_mem:
 			xnarch_free_host_mem(p, sizeof(*p));
-			return ERR_PTR(err);
+			return ERR_PTR(-ENOMEM);
 		}
 #endif /* XNARCH_HAVE_MAYDAY */
 		xnarch_atomic_set(&p->refcnt, 1);

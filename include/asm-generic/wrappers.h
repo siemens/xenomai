@@ -41,6 +41,8 @@
 #include <linux/bitops.h>
 #include <linux/delay.h>
 #include <linux/slab.h>
+#include <linux/kernel.h>
+#include <linux/linkage.h>
 #include <linux/moduleparam.h>	/* Use the backport. */
 #include <asm/atomic.h>
 
@@ -90,6 +92,7 @@
 
 /* Seqfiles */
 #define SEQ_START_TOKEN ((void *)1)
+#define SEQ_SKIP 	0	/* not implemented. */
 
 /* Sched and process flags */
 #define MAX_RT_PRIO 100
@@ -295,6 +298,7 @@ void show_stack(struct task_struct *task,
 #define BITOP_WORD(nr)	((nr) / BITS_PER_LONG)
 #endif
 
+#define GFP_DMA32  GFP_DMA
 #define __GFP_BITS_SHIFT 20
 #define pgprot_noncached(p) (p)
 
@@ -624,11 +628,11 @@ static inline void wrap_proc_dir_entry_owner(struct proc_dir_entry *entry)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,11)
 #define unlocked_ioctl ioctl
 #define DECLARE_IOCTL_HANDLER(name, filp, cmd, arg)		\
-	name(struct inode *__inode__, struct file *filp,	\
+	int name(struct inode *__inode__, struct file *filp,	\
 	     unsigned int cmd, unsigned long arg)
 #else
 #define DECLARE_IOCTL_HANDLER(name, filp, cmd, arg)		\
-	name(struct file *filp,	unsigned int cmd, unsigned long arg)
+	long name(struct file *filp, unsigned int cmd, unsigned long arg)
 #endif
 
 #ifndef DEFINE_SEMAPHORE
