@@ -26,14 +26,14 @@
  * @{
  */
 
-#include <linux/workqueue.h>
-
 #include <nucleus/pod.h>
 #include <nucleus/ppd.h>
 #include <nucleus/heap.h>
 #include <rtdm/syscall.h>
 
 #include "rtdm/internal.h"
+
+#include <linux/workqueue.h>
 
 #define CLOSURE_RETRY_PERIOD_MS	100
 

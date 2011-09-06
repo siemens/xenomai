@@ -20,12 +20,12 @@
 #ifndef _RTDM_INTERNAL_H
 #define _RTDM_INTERNAL_H
 
-#include <linux/list.h>
-#include <linux/sem.h>
-
 #include <nucleus/pod.h>
 #include <nucleus/ppd.h>
 #include <rtdm/rtdm_driver.h>
+
+#include <linux/list.h>
+#include <linux/sem.h>
 
 #ifndef CONFIG_XENO_OPT_DEBUG_RTDM_APPL
 #define CONFIG_XENO_OPT_DEBUG_RTDM_APPL	0

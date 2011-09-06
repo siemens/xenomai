@@ -17,8 +17,8 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <nucleus/vfile.h>
 #include "rtdm/internal.h"
+#include <nucleus/vfile.h>
 
 struct xnvfile_directory rtdm_vfroot;	/* /proc/xenomai/rtdm */
 
