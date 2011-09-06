@@ -56,10 +56,9 @@ static inline void xnarch_chain_irq (unsigned irq)
 	/* empty */
 }
 
-static inline unsigned long xnarch_set_irq_affinity (unsigned irq,
-						     unsigned long affinity)
+static inline void xnarch_set_irq_affinity (unsigned irq,
+					    unsigned long affinity)
 {
-	return 0;
 }
 
 static inline void xnarch_relay_tick(void)

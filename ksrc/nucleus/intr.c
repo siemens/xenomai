@@ -884,12 +884,12 @@ EXPORT_SYMBOL_GPL(xnintr_disable);
  * cpumask could be meaningless.
  */
 
-xnarch_cpumask_t xnintr_affinity(xnintr_t *intr, xnarch_cpumask_t cpumask)
+void xnintr_affinity(xnintr_t *intr, xnarch_cpumask_t cpumask)
 {
 	trace_mark(xn_nucleus, irq_affinity, "irq %u %lu",
 		   intr->irq, *(unsigned long *)&cpumask);
 
-	return xnarch_set_irq_affinity(intr->irq, cpumask);
+	xnarch_set_irq_affinity(intr->irq, cpumask);
 }
 EXPORT_SYMBOL_GPL(xnintr_affinity);
 

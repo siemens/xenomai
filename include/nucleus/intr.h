@@ -126,11 +126,13 @@ int xnintr_enable(xnintr_t *intr);
 
 int xnintr_disable(xnintr_t *intr);
 
-xnarch_cpumask_t xnintr_affinity(xnintr_t *intr,
-				 xnarch_cpumask_t cpumask);
+void xnintr_affinity(xnintr_t *intr,
+		     xnarch_cpumask_t cpumask);
 
 int xnintr_query_init(xnintr_iterator_t *iterator);
-int xnintr_query_next(int irq, xnintr_iterator_t *iterator, char *name_buf);
+
+int xnintr_query_next(int irq, xnintr_iterator_t *iterator,
+		      char *name_buf);
 
 #ifdef __cplusplus
 }

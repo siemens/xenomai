@@ -57,10 +57,10 @@ static inline void xnarch_chain_irq (unsigned irq)
     rthal_irq_host_pend(irq);
 }
 
-static inline xnarch_cpumask_t xnarch_set_irq_affinity (unsigned irq,
-							xnarch_cpumask_t affinity)
+static inline void xnarch_set_irq_affinity (unsigned irq,
+					    xnarch_cpumask_t affinity)
 {
-    return rthal_set_irq_affinity(irq,affinity);
+    rthal_set_irq_affinity(irq,affinity);
 }
 
 static inline void *xnarch_get_irq_cookie(unsigned irq)
