@@ -265,7 +265,7 @@ index bb712c9..8885e9b 100644
   * or should we not care like we do now ? --BenH.
 diff --git a/arch/powerpc/include/asm/ipipe.h b/arch/powerpc/include/asm/ipipe.h
 new file mode 100644
-index 0000000..3497961
+index 0000000..013e213
 --- /dev/null
 +++ b/arch/powerpc/include/asm/ipipe.h
 @@ -0,0 +1,249 @@
@@ -316,10 +316,10 @@ index 0000000..3497961
 +#include <asm/paca.h>
 +#endif
 +
-+#define IPIPE_ARCH_STRING	"2.13-00"
++#define IPIPE_ARCH_STRING	"2.13-01"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	13
-+#define IPIPE_PATCH_NUMBER	0
++#define IPIPE_PATCH_NUMBER	1
 +
 +#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 +
@@ -2369,7 +2369,7 @@ index ba31954..d0a9b16 100644
  	sync
 diff --git a/arch/powerpc/kernel/ipipe.c b/arch/powerpc/kernel/ipipe.c
 new file mode 100644
-index 0000000..707c3ae
+index 0000000..7252c78
 --- /dev/null
 +++ b/arch/powerpc/kernel/ipipe.c
 @@ -0,0 +1,710 @@
@@ -2458,7 +2458,7 @@ index 0000000..707c3ae
 +	__ipipe_ipi_irq = irq;
 +	mb();
 +#ifndef CONFIG_DEBUGGER
-+	irq_to_desc(irq)->chip->startup(irq);
++	irq_get_chip(irq)->irq_startup(irq_get_irq_data(irq));
 +#endif
 +}
 +
