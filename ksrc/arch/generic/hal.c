@@ -295,67 +295,6 @@ int rthal_irq_release(unsigned irq)
  */
 
 /**
- * @fn int rthal_irq_affinity (unsigned irq,cpumask_t cpumask,cpumask_t *oldmask)
- *
- * @brief Set/Get processor affinity for external interrupt.
- *
- * On SMP systems, this service ensures that the given interrupt is
- * preferably dispatched to the specified set of processors. The
- * previous affinity mask is returned by this service.
- *
- * @param irq The interrupt source whose processor affinity is
- * affected by the operation. Only external interrupts can have their
- * affinity changed/queried, thus virtual interrupt numbers allocated
- * by rthal_alloc_virq() are invalid values for this parameter.
- *
- * @param cpumask A list of CPU identifiers passed as a bitmask
- * representing the new affinity for this interrupt. A zero value
- * cause this service to return the current affinity mask without
- * changing it.
- *
- * @param oldmask If non-NULL, a pointer to a memory area which will
- * bve overwritten by the previous affinity mask used for this
- * interrupt source, or a zeroed mask if an error occurred.  This
- * service always returns a zeroed mask on uniprocessor systems.
- *
- * @return 0 is returned upon success. Otherwise:
- *
- * - -EINVAL is returned if @a irq is invalid.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Linux domain context.
- */
-
-#ifdef CONFIG_SMP
-
-int rthal_irq_affinity(unsigned irq, cpumask_t cpumask, cpumask_t *oldmask)
-{
-    cpumask_t _oldmask;
-
-    if (irq >= IPIPE_NR_XIRQS)
-	return -EINVAL;
-
-    _oldmask = rthal_set_irq_affinity(irq, cpumask);
-
-    if (oldmask)
-	*oldmask = _oldmask;
-
-    return cpus_empty(_oldmask) ? -EINVAL : 0;
-}
-
-#else /* !CONFIG_SMP */
-
-int rthal_irq_affinity(unsigned irq, cpumask_t cpumask, cpumask_t *oldmask)
-{
-    return 0;
-}
-
-#endif /* CONFIG_SMP */
-
-/**
  * @fn int rthal_trap_catch (rthal_trap_handler_t handler)
  *
  * @brief Installs a fault handler.
@@ -845,7 +784,6 @@ EXPORT_SYMBOL_GPL(rthal_irq_disable);
 EXPORT_SYMBOL_GPL(rthal_irq_end);
 EXPORT_SYMBOL_GPL(rthal_irq_host_request);
 EXPORT_SYMBOL_GPL(rthal_irq_host_release);
-EXPORT_SYMBOL_GPL(rthal_irq_affinity);
 EXPORT_SYMBOL_GPL(rthal_trap_catch);
 EXPORT_SYMBOL_GPL(rthal_timer_request);
 EXPORT_SYMBOL_GPL(rthal_timer_release);

@@ -539,10 +539,6 @@ static inline void rthal_apc_schedule(int apc)
 	rthal_local_irq_restore(flags);
 }
 
-int rthal_irq_affinity(unsigned irq,
-		       cpumask_t cpumask,
-		       cpumask_t *oldmask);
-
 rthal_trap_handler_t rthal_trap_catch(rthal_trap_handler_t handler);
 
 unsigned long rthal_timer_calibrate(void);
