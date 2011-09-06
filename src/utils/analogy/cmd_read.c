@@ -54,6 +54,7 @@ static unsigned int chans[MAX_NB_CHAN];
 static int verbose = 0;
 static int real_time = 0;
 static int use_mmap = 0;
+static unsigned long wake_count = 0;
 
 static RT_TASK rt_task_desc;
 
@@ -84,6 +85,7 @@ struct option cmd_read_opts[] = {
 	{"channels", required_argument, NULL, 'c'},
 	{"mmap", no_argument, NULL, 'm'},
 	{"raw", no_argument, NULL, 'w'},
+	{"wake-count", required_argument, NULL, 'k'},
 	{"help", no_argument, NULL, 'h'},
 	{0},
 };
@@ -101,6 +103,9 @@ void do_print_usage(void)
 	fprintf(stdout, "\t\t -c, --channels: channels to use (ex.: -c 0,1)\n");
 	fprintf(stdout, "\t\t -m, --mmap: mmap the buffer\n");
 	fprintf(stdout, "\t\t -w, --raw: dump data in raw format\n");
+	fprintf(stdout, 
+		"\t\t -k, --wake-count: "
+		"space available before waking up the process\n");
 	fprintf(stdout, "\t\t -h, --help: print this help\n");
 }
 
@@ -173,6 +178,8 @@ int dump_text(a4l_desc_t *dsc, a4l_cmd_t *cmd, unsigned char *buf, int size)
 		}
 	}
 
+	fflush(stdout);
+
 out:
 	return err;
 }
@@ -191,7 +198,8 @@ int main(int argc, char *argv[])
 	/* Compute arguments */
 	while ((ret = getopt_long(argc,
 				  argv,
-				  "vrd:s:S:c:mwh", cmd_read_opts, NULL)) >= 0) {
+				  "vrd:s:S:c:mwk:h", 
+				  cmd_read_opts, NULL)) >= 0) {
 		switch (ret) {
 		case 'v':
 			verbose = 1;
@@ -216,6 +224,9 @@ int main(int argc, char *argv[])
 			break;
 		case 'w':
 			dump_function = dump_raw;
+			break;
+		case 'k':
+			wake_count = strtoul(optarg, NULL, 0);
 			break;
 		case 'h':
 		default:
@@ -365,6 +376,17 @@ int main(int argc, char *argv[])
 				("cmd_read: mmap performed successfully (map=0x%p)\n",
 				 map);
 	}
+
+	ret = a4l_set_wakesize(&dsc, wake_count);
+	if (ret < 0) {
+		fprintf(stderr,
+			"cmd_read: a4l_set_wakesize failed (ret=%d)\n", ret);
+		goto out_main;
+	}
+
+	if (verbose != 0)
+		printf("cmd_read: wake size successfully set (%lu)\n", 
+		       wake_count);
 
 	/* Send the command to the input device */
 	ret = a4l_snd_command(&dsc, &cmd);

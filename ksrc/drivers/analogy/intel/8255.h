@@ -49,13 +49,13 @@ typedef struct subd_8255_struct {
 #define CR_A_MODE(a)	((a)<<5)
 #define CR_CW		0x80
 
-void subdev_8255_init(a4l_subd_t *subd);
-void subdev_8255_interrupt(a4l_subd_t *subd);
+void a4l_subdev_8255_init(a4l_subd_t *subd);
+void a4l_subdev_8255_interrupt(a4l_subd_t *subd);
 
 #else /* !CONFIG_XENO_DRIVERS_ANALOGY_8255 */
 
-#define subdev_8255_init(x)		do { } while(0)
-#define subdev_8255_interrupt(x)	do { } while(0)
+#define a4l_subdev_8255_init(x)		do { } while(0)
+#define a4l_subdev_8255_interrupt(x)	do { } while(0)
 
 #endif /* CONFIG_XENO_DRIVERS_ANALOGY_8255 */
 

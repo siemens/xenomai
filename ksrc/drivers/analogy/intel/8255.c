@@ -46,7 +46,7 @@ static a4l_cmd_t cmd_mask_8255 = {
 	.stop_src = TRIG_NONE,
 };
 
-void subdev_8255_interrupt(a4l_subd_t *subd)
+void a4l_subdev_8255_interrupt(a4l_subd_t *subd)
 {
 	sampl_t d;
 
@@ -59,7 +59,7 @@ void subdev_8255_interrupt(a4l_subd_t *subd)
 
 	a4l_buf_evt(subd, 0);
 }
-EXPORT_SYMBOL_GPL(subdev_8255_interrupt);
+EXPORT_SYMBOL_GPL(a4l_subdev_8255_interrupt);
 
 static int subdev_8255_cb(int dir, int port, int data, unsigned long arg)
 {
@@ -199,7 +199,7 @@ int subd_8255_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	return 0;
 }
 
-void subdev_8255_init(a4l_subd_t *subd)
+void a4l_subdev_8255_init(a4l_subd_t *subd)
 {
 	subd_8255_t *subd_8255 = (subd_8255_t *)subd->priv;
 	/* Initializes the subdevice structure */
@@ -227,7 +227,7 @@ void subdev_8255_init(a4l_subd_t *subd)
 
 	do_config(subd);
 }
-EXPORT_SYMBOL_GPL(subdev_8255_init);
+EXPORT_SYMBOL_GPL(a4l_subdev_8255_init);
 
 /*
 
@@ -278,7 +278,7 @@ static int dev_8255_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 		}
 		else {
 			subd_8255->cb_arg = addrs[i];
-			subdev_8255_init(subd);
+			a4l_subdev_8255_init(subd);
 		}
 
 		err = a4l_add_subd(dev, subd);
