@@ -417,6 +417,7 @@ int a4l_buf_evt(a4l_subd_t *subd, unsigned long evts)
 {
 	a4l_buf_t *buf = subd->buf;
 	int tmp;
+	unsigned long wake = 0, count = ULONG_MAX;
 
 	/* Warning: here, there may be a condition race : the cancel
 	   function is called by the user side and a4l_buf_evt and all
@@ -428,16 +429,25 @@ int a4l_buf_evt(a4l_subd_t *subd, unsigned long evts)
 	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
 		return -ENOENT;
 
-	/* Even if it is a little more complex,
-	   atomic operations are used so as
-	   to prevent any kind of corner case */
-	while ((tmp = ffs(evts) - 1) != -1) {
-		set_bit(tmp, &buf->flags);
-		clear_bit(tmp, &evts);
+	/* Here we save the data count available for the user side */
+	if (evts == 0) {
+		count = a4l_subd_is_input(subd) ? 
+			__count_to_get(buf) : __count_to_put(buf);
+		wake = __count_to_end(buf) < buf->wake_count ? 
+			__count_to_end(buf) : buf->wake_count;
+	} else {
+		/* Even if it is a little more complex, atomic
+		   operations are used so as to prevent any kind of
+		   corner case */
+		while ((tmp = ffs(evts) - 1) != -1) {
+			set_bit(tmp, &buf->flags);
+			clear_bit(tmp, &evts);
+		}
 	}
 
-	/* Notify the user-space side */
-	a4l_signal_sync(&buf->sync);
+	if (count >= wake)
+		/* Notify the user-space side */
+		a4l_signal_sync(&buf->sync);
 
 	return 0;
 }
@@ -626,6 +636,40 @@ int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg)
 	return a4l_alloc_buffer(buf, buf_cfg.buf_size);
 }
 
+/* The ioctl BUFCFG2 allows the user space process to define the
+   minimal amount of data which should trigger a wake-up. If the ABI
+   could be broken, this facility would be handled by the original
+   BUFCFG ioctl. At the next major release, this ioctl will vanish. */
+
+int a4l_ioctl_bufcfg2(a4l_cxt_t * cxt, void *arg)
+{
+	a4l_dev_t *dev = a4l_get_dev(cxt);
+	a4l_buf_t *buf = cxt->buffer;
+	a4l_bufcfg2_t buf_cfg;
+
+	/* Basic checking */
+	if (!test_bit(A4L_DEV_ATTACHED_NR, &dev->flags)) {
+		__a4l_err("a4l_ioctl_bufcfg2: unattached device\n");
+		return -EINVAL;
+	}
+
+	if (rtdm_safe_copy_from_user(cxt->user_info,
+				     &buf_cfg, 
+				     arg, sizeof(a4l_bufcfg2_t)) != 0)
+		return -EFAULT;
+
+	if (buf_cfg.wake_count > buf->size) {
+		__a4l_err("a4l_ioctl_bufcfg2: "
+			  "wake-up threshold too big (> buffer size: %lu)\n", 
+			  buf->size);
+		return -EINVAL;
+	}
+
+	buf->wake_count = buf_cfg.wake_count;
+
+	return 0;
+}
+
 /* The BUFINFO ioctl provides two basic roles:
    - tell the user app the size of the asynchronous buffer
    - display the read/write counters (how many bytes to read/write) */
@@ -730,6 +774,32 @@ a4l_ioctl_bufinfo_out:
 	/* Sends the structure back to user space */
 	if (rtdm_safe_copy_to_user(cxt->user_info,
 				   arg, &info, sizeof(a4l_bufinfo_t)) != 0)
+		return -EFAULT;
+
+	return 0;
+}
+
+/* The ioctl BUFINFO2 tells the user application the minimal amount of
+data which should trigger a wake-up. If the ABI could be broken, this
+facility would be handled by the original BUFINFO ioctl. At the next
+major release, this ioctl will vanish. */
+
+int a4l_ioctl_bufinfo2(a4l_cxt_t * cxt, void *arg)
+{
+	a4l_dev_t *dev = a4l_get_dev(cxt);
+	a4l_buf_t *buf = cxt->buffer;
+	a4l_bufcfg2_t buf_cfg;
+
+	/* Basic checking */
+	if (!test_bit(A4L_DEV_ATTACHED_NR, &dev->flags)) {
+		__a4l_err("a4l_ioctl_bufcfg2: unattached device\n");
+		return -EINVAL;
+	}
+
+	buf_cfg.wake_count = buf->wake_count;
+
+	if (rtdm_safe_copy_to_user(cxt->user_info,
+				   arg, &buf_cfg, sizeof(a4l_bufcfg2_t)) != 0)
 		return -EFAULT;
 
 	return 0;

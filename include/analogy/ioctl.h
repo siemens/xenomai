@@ -29,7 +29,7 @@
 
 #include <rtdm/rtdm_driver.h>
 
-#define NB_IOCTL_FUNCTIONS 15
+#define NB_IOCTL_FUNCTIONS 17
 
 #endif /* __KERNEL__ */
 
@@ -51,6 +51,11 @@
 #define A4L_MMAP _IOWR(CIO,12,unsigned int)
 #define A4L_NBCHANINFO _IOR(CIO,13,a4l_chinfo_arg_t)
 #define A4L_NBRNGINFO _IOR(CIO,14,a4l_rnginfo_arg_t)
+
+/* These IOCTLs are bound to be merged with A4L_BUFCFG and A4L_BUFINFO
+   at the next major release */
+#define A4L_BUFCFG2 _IOR(CIO,15,a4l_bufcfg_t)
+#define A4L_BUFINFO2 _IOWR(CIO,16,a4l_bufcfg_t)
 
 #endif /* !DOXYGEN_CPP */
 

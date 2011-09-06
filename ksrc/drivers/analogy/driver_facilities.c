@@ -134,12 +134,12 @@ EXPORT_SYMBOL_GPL(a4l_unregister_drv);
  * @{
  */
 
-EXPORT_SYMBOL_GPL(range_bipolar10);
-EXPORT_SYMBOL_GPL(range_bipolar5);
-EXPORT_SYMBOL_GPL(range_unipolar10);
-EXPORT_SYMBOL_GPL(range_unipolar5);
-EXPORT_SYMBOL_GPL(range_unknown);
-EXPORT_SYMBOL_GPL(range_fake);
+EXPORT_SYMBOL_GPL(a4l_range_bipolar10);
+EXPORT_SYMBOL_GPL(a4l_range_bipolar5);
+EXPORT_SYMBOL_GPL(a4l_range_unipolar10);
+EXPORT_SYMBOL_GPL(a4l_range_unipolar5);
+EXPORT_SYMBOL_GPL(a4l_range_unknown);
+EXPORT_SYMBOL_GPL(a4l_range_fake);
 
 /**
  * @brief Allocate a subdevice descriptor

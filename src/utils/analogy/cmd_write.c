@@ -28,74 +28,55 @@
 #include <getopt.h>
 #include <string.h>
 
-#include <native/task.h>
-
 #include <analogy/analogy.h>
 
-/* Default command's parameters */
+#define BUFFER_DEPTH 1024
 
-/* For write operation, we consider
-   the default subdevice index is 1 */
-#define ID_SUBD 1
-/* For simplicity sake, a maximum channel
-   count is defined */
-#define MAX_NB_CHAN 10
-/* Four channels used by default */
-#define NB_CHAN 4
-/* One hundred triggered scans by default */
-#define NB_SCAN 100
+struct config {
 
-#define FILENAME "analogy0"
+	/* Configuration parameters
+	   TODO: add real_time and use_mmap*/
 
-#define BUF_SIZE 10000
+	int verbose;
+	
+	int subd;
+	char *str_chans;
+	unsigned int *chans;
+	int chans_count;
+	char *str_ranges;
+	unsigned long scans_count;
+	unsigned long wake_count;
 
-static unsigned char buf[BUF_SIZE];
-static char *filename = FILENAME;
-static char *str_chans = "0,1";
-static unsigned int chans[MAX_NB_CHAN];
-static int verbose = 0;
-static int real_time = 0;
-static int use_mmap = 0;
+	char *filename;
+	FILE *input;
 
-static RT_TASK rt_task_desc;
+	/* Analogy stuff */
 
-/* The command to send by default */
-a4l_cmd_t cmd = {
-	.idx_subd = ID_SUBD,
-	.flags = 0,
-	.start_src = TRIG_INT,
-	.start_arg = 0,
-	.scan_begin_src = TRIG_TIMER,
-	.scan_begin_arg = 2000000, /* in ns */
-	.convert_src = TRIG_NOW,
-	.convert_arg = 0, /* in ns */
-	.scan_end_src = TRIG_COUNT,
-	.scan_end_arg = 0,
-	.stop_src = TRIG_COUNT,
-	.stop_arg = NB_SCAN,
-	.nb_chan = 0,
-	.chan_descs = chans,
+	a4l_desc_t dsc;
+	a4l_chinfo_t *cinfo;
+	a4l_rnginfo_t *rinfo;
+
+	/* Buffer stuff
+	   TODO: add buffer depth / size (useful for mmap) */
+	void *buffer;
+
 };
 
-a4l_insn_t insn = {
-	.type = A4L_INSN_INTTRIG,
-	.idx_subd = ID_SUBD,
-	.data_size = 0,
-};
+/* --- Options / arguments part --- */
 
-struct option cmd_write_opts[] = {
+struct option options[] = {
 	{"verbose", no_argument, NULL, 'v'},
-	{"real-time", no_argument, NULL, 'r'},
 	{"device", required_argument, NULL, 'd'},
 	{"subdevice", required_argument, NULL, 's'},
-	{"scan-count", required_argument, NULL, 'S'},
+	{"scans-count", required_argument, NULL, 'S'},
 	{"channels", required_argument, NULL, 'c'},
-	{"mmap", no_argument, NULL, 'm'},
+	{"range", required_argument, NULL, 'c'},
+	{"wake-count", required_argument, NULL, 'k'},
 	{"help", no_argument, NULL, 'h'},
 	{0},
 };
 
-void do_print_usage(void)
+void print_usage(void)
 {
 	fprintf(stdout, "usage:\tcmd_write [OPTS]\n");
 	fprintf(stdout, "\tOPTS:\t -v, --verbose: verbose output\n");
@@ -103,305 +84,435 @@ void do_print_usage(void)
 		"\t\t -d, --device: "
 		"device filename (analogy0, analogy1, ...)\n");
 	fprintf(stdout, "\t\t -s, --subdevice: subdevice index\n");
-	fprintf(stdout, "\t\t -S, --scan-count: count of scan to perform\n");
-	fprintf(stdout, "\t\t -c, --channels: channels to use (ex.: -c 0,1)\n");
-	fprintf(stdout, "\t\t -m, --mmap: mmap the buffer\n");
+	fprintf(stdout, "\t\t -S, --scans-count: count of scan to perform\n");
+	fprintf(stdout, 
+		"\t\t -c, --channels: "
+		"channels to use <i,j,...> (ex.: -c 0,1)\n");
+	fprintf(stdout, 
+		"\t\t -R, --range: "
+		"range to use <min,max,unit> (ex.: -R 0,1,V)\n");
+	fprintf(stdout, 
+		"\t\t -k, --wake-count: "
+		"space available before waking up the process\n");
+
 	fprintf(stdout, "\t\t -h, --help: print this help\n");
+}
+
+/* --- Configuration related stuff --- */
+
+int init_dsc_config(struct config *cfg)
+{
+	int err = 0;
+
+	/* Here we have to open the Analogy device file */
+	err = a4l_open(&cfg->dsc, cfg->filename);
+	if (err < 0) {
+		fprintf(stderr,
+			"cmd_write: a4l_open %s failed (ret=%d)\n",
+			cfg->filename, err);
+		goto out;
+	}
+
+	/* Allocate a buffer so as to get more info (subd, chan, rng) */
+	cfg->dsc.sbdata = malloc(cfg->dsc.sbsize);
+	if (!cfg->dsc.sbdata) {
+		err = -ENOMEM;
+		fprintf(stderr, "cmd_write: malloc failed\n");
+		goto out;		
+	}
+
+	/* Get these data */
+	err = a4l_fill_desc(&cfg->dsc);
+	if (err < 0) {
+		fprintf(stderr,
+			"cmd_write: a4l_get_desc failed (err=%d)\n", err);
+		goto out;
+	}
+
+out:
+	if (err < 0 && cfg->buffer) 
+		free(cfg->buffer);
+
+	return err;
+}
+
+int init_chans_config(struct config *cfg)
+{
+	int err = 0;
+	int len, offset;
+	char *str_chans = cfg->str_chans;
+
+	/* Recover the number of arguments */
+	do {
+		cfg->chans_count++;
+		len = strlen(str_chans);
+		offset = strcspn(str_chans, ",");
+		str_chans += offset + 1;
+	} while (len != offset);
+
+	cfg->chans = malloc(cfg->chans_count * sizeof(int));
+	if (!cfg->chans) {
+		err = -ENOMEM;
+		fprintf(stderr, "cmd_write: basic allocation failed\n");
+		goto out;
+	}
+
+	/* A little reinitialization step and... */
+	str_chans = cfg->str_chans;
+	cfg->chans_count = 0;
+	
+	/* ...we recover the channels */
+	do {
+		cfg->chans_count++;
+		len = strlen(str_chans);
+		offset = strcspn(str_chans, ",");
+		if (sscanf(str_chans, 
+			   "%u", &cfg->chans[cfg->chans_count - 1]) == 0) {
+			err = -EINVAL;
+			fprintf(stderr, "cmd_write: bad channels argument\n");
+			goto out;
+		}
+		str_chans += offset + 1;
+	} while (len != offset);
+
+	/* We consider in this program that all the channels are
+	   identical so we took a pointer to a chinfo structure for only
+	   one of them */
+	err = a4l_get_chinfo(&cfg->dsc, cfg->subd, cfg->chans[0], &cfg->cinfo);
+	if (err < 0) {
+		fprintf(stderr, 
+			"cmd_write: channel info "
+			"recovery failed (err=%d)\n", err);
+	}
+
+out:
+	if (err < 0 && cfg->chans)
+		free(cfg->chans);
+
+	return err;
+}
+
+int init_range_config(struct config *cfg)
+{
+	int index = 0, err = 0;
+	int len, offset;
+	int limits[2];
+	unsigned long unit;
+	char * str_ranges = cfg->str_ranges;
+
+	/* Convert min and max values */
+	do {
+		len = strlen(str_ranges);
+		offset = strcspn(str_ranges, ",");
+		if (sscanf(str_ranges, "%d", &limits[index++]) == 0) {
+			err = -EINVAL;
+			fprintf(stderr, "cmd_write: bad range min/max value\n");
+			goto out;
+		}
+		str_ranges += offset + 1;
+	} while (len != offset && index < 2);
+
+	/* Find the unit among Volt, Ampere, external or no unit */
+	if (!strcmp(str_ranges, "V"))
+		unit = A4L_RNG_VOLT_UNIT;
+	else if (!strcmp(str_ranges, "mA"))
+		unit = A4L_RNG_MAMP_UNIT;
+	else if (!strcmp(str_ranges, "ext"))
+		unit = A4L_RNG_EXT_UNIT;
+	else if (!strlen(str_ranges))
+		unit = A4L_RNG_NO_UNIT;
+	else {
+		err = -EINVAL;
+		fprintf(stderr, "cmd_write: bad range unit value\n");
+		goto out;
+	}
+
+	err = a4l_find_range(&cfg->dsc, 
+				    cfg->subd, 
+				    cfg->chans[0], 
+				    unit, limits[0], limits[1], &cfg->rinfo);
+	if (err < 0) {
+		fprintf(stderr, 
+			"cmd_write: no range found for %s\n", cfg->str_ranges);
+	} else 
+		err = 0;
+
+out:
+	return err;
+}
+
+void print_config(struct config *cfg)
+{
+	printf("cmd_write configuration:\n");
+	printf("\tRTDM device name: %s\n", cfg->filename);
+	printf("\tSubdevice index: %d\n", cfg->subd);
+	printf("\tSelected channels: %s\n", cfg->str_chans);
+	printf("\tSelected range: %s\n", cfg->str_ranges);
+	printf("\tScans count: %lu\n", cfg->scans_count);
+	printf("\tWake count: %lu\n", cfg->wake_count);
+}
+
+void cleanup_config(struct config *cfg)
+{
+	if (cfg->buffer)
+		free(cfg->buffer);
+
+	if (cfg->dsc.sbdata)
+		free(cfg->dsc.sbdata);
+
+	if (cfg->dsc.fd != -1)
+		a4l_close(&cfg->dsc);
+}
+
+int init_config(struct config *cfg, int argc, char *argv[])
+{
+	int scan_size, err = 0;
+
+	memset(cfg, 0, sizeof(struct config));
+	cfg->str_chans = "0,1";
+	cfg->str_ranges = "0,5,V";
+	cfg->filename = "analogy0";	
+	cfg->input = stdin;
+	cfg->dsc.fd = -1;
+
+	while ((err = getopt_long(argc, 
+				  argv, 
+				  "vd:s:S:c:R:k:h", options, NULL)) >= 0) {
+		switch (err) {
+		case 'v':
+			cfg->verbose = 1;
+			break;
+		case 'd':
+			cfg->filename = optarg;
+			break;
+		case 's':
+			cfg->subd = strtoul(optarg, NULL, 0);
+			break;
+		case 'S':
+			cfg->scans_count = strtoul(optarg, NULL, 0);
+			break;
+		case 'c':
+			cfg->str_chans = optarg;
+			break;
+		case 'R':
+			cfg->str_ranges = optarg;
+			break;
+		case 'k':
+			cfg->wake_count = strtoul(optarg, NULL, 0);
+			break;
+		case 'h':
+		default:
+			print_usage();
+			return -EINVAL;
+		};
+	}
+
+	/* Open the analogy device and retrieve pointers on the info
+	   structures */
+	err = init_dsc_config(cfg);
+	if (err < 0)
+		goto out;
+
+	/* Parse the channel option so as to know which and how many
+	   channels will be used */
+	err = init_chans_config(cfg);
+	if (err < 0)
+		goto out;
+
+	/* Find out the most suitable range for the acquisition */
+	err = init_range_config(cfg);
+	if (err < 0)
+		goto out;
+
+	/* Compute the width of a scan */
+	scan_size = cfg->chans_count * a4l_sizeof_chan(cfg->cinfo);
+	if (scan_size < 0) {
+		fprintf(stderr,
+			"cmd_write: a4l_sizeof_chan failed (err=%d)\n", err);
+		goto out;		
+	}
+
+	/* Allocate a temporary buffer
+	   TODO: implement mmap */
+	cfg->buffer = malloc(BUFFER_DEPTH * scan_size);
+	if (!cfg->buffer) {
+		err = -ENOMEM;
+		fprintf(stderr, "cmd_write: malloc failed\n");
+		goto out;
+	}
+
+	/* If stdin is a terminal, we will not be able to read binary
+	   data from it */
+	if (isatty(fileno(cfg->input))) {
+		memset(cfg->buffer, 0, BUFFER_DEPTH * scan_size);
+		cfg->input = NULL;
+	} else
+		cfg->input = stdin;
+	
+out:
+
+	if (err < 0)
+		cleanup_config(cfg);
+
+	return err;
+}
+
+/* --- Input management part --- */
+
+int process_input(struct config *cfg)
+{
+	int err = 0, filled = 0;
+
+	/* The return value of a4l_sizeof_chan() was already
+	controlled in init_config so no need to do it twice */
+	int chan_size = a4l_sizeof_chan(cfg->cinfo);
+	int scan_size = cfg->chans_count * chan_size;
+
+	while (filled < BUFFER_DEPTH) {
+		int i;
+		double value;
+		char tmp[128];
+
+		/* Data from stdin are supposed to be double values
+		   coming from wf_generate... */
+
+		err = fread(&value, sizeof(double), 1, cfg->input);
+		if (err != 1 && !feof(cfg->input)) {
+			err = -errno;
+			fprintf(stderr, 
+				"cmd_write: stdin IO error (err=%d)\n", err);
+			goto out;
+		} else if (err == 0 && feof(cfg->input))
+			goto out;
+		
+		/* ...and these data are just for one channel... */
+		err = a4l_dtoraw(cfg->cinfo, cfg->rinfo, tmp, &value, 1);
+		if (err < 0) {
+			fprintf(stderr, 
+				"cmd_write: conversion "
+				"from stdin failed (err=%d)\n", err);
+			goto out;			
+		}
+
+		/* ...so we have to duplicate the conversion if many
+		   channels are selected for the acquisition */
+		for (i = 0; i < cfg->chans_count; i++)
+			memcpy(cfg->buffer + 
+			       filled * scan_size + i * chan_size, 
+			       tmp, chan_size);
+
+		filled ++;
+	}
+
+out:
+
+	return err < 0 ? err : filled;
+}
+
+/* --- Acquisition related stuff --- */
+
+int run_acquisition(struct config *cfg)
+{
+	int err = 0;
+
+	/* The return value of a4l_sizeof_chan() was already
+	controlled in init_config so no need to do it twice */
+	int chan_size = a4l_sizeof_chan(cfg->cinfo);
+	int scan_size = cfg->chans_count * chan_size;
+
+	err = cfg->input ? process_input(cfg) : BUFFER_DEPTH;
+	if (err > 0)
+		err = a4l_async_write(&cfg->dsc, 
+				      cfg->buffer, 
+				      err * scan_size, A4L_INFINITE);
+	else if (err == 0)
+		err = -ENOENT;
+
+	return err < 0 ? err : 0;
+}
+
+int init_acquisition(struct config *cfg)
+{
+	int err = 0;
+
+	a4l_cmd_t cmd = {
+		.idx_subd = cfg->subd,
+		.flags = 0,
+		.start_src = TRIG_INT,
+		.start_arg = 0,
+		.scan_begin_src = TRIG_TIMER,
+		.scan_begin_arg = 2000000, /* in ns */
+		.convert_src = TRIG_NOW,
+		.convert_arg = 0,
+		.scan_end_src = TRIG_COUNT,
+		.scan_end_arg = cfg->chans_count,
+		.stop_src = cfg->scans_count ? TRIG_COUNT : TRIG_NONE,
+		.stop_arg = cfg->scans_count,
+		.nb_chan = cfg->chans_count,
+		.chan_descs = cfg->chans
+	};
+
+	a4l_insn_t insn = {
+		.type = A4L_INSN_INTTRIG,
+		.idx_subd = cfg->subd,
+		.data_size = 0,
+	};
+
+	/* Cancel any former command which might be in progress */
+	a4l_snd_cancel(&cfg->dsc, cfg->subd);
+
+	err = a4l_set_wakesize(&cfg->dsc, cfg->wake_count);
+	if (err < 0) {
+		fprintf(stderr,
+			"cmd_read: a4l_set_wakesize failed (ret=%d)\n", err);
+		goto out;
+	}
+
+	/* Send the command so as to initialize the asynchronous
+	   acquisition */
+	err = a4l_snd_command(&cfg->dsc, &cmd);
+	if (err < 0) {
+		fprintf(stderr, 
+			"cmd_write: a4l_snd_command failed (err=%d)\n", err);
+		goto out;
+	}
+
+	/* Fill the asynchronous buffer with data... */
+	err = run_acquisition(cfg);
+	if (err < 0)
+		goto out;
+
+	/* ...before triggering the start of the output device feeding	*/
+	err = a4l_snd_insn(&cfg->dsc, &insn);
+
+out:
+	return err;
 }
 
 int main(int argc, char *argv[])
 {
-	int ret = 0, len, ofs;
-	unsigned int i, scan_size = 0, cnt = 0;
-	unsigned long buf_size;
-	void *map = NULL;
-	a4l_desc_t dsc = { .sbdata = NULL };
+	int err = 0;
+	struct config cfg;
 
-	/* Compute arguments */
-	while ((ret = getopt_long(argc,
-				  argv,
-				  "vrd:s:S:c:mh", cmd_write_opts, NULL)) >= 0) {
-		switch (ret) {
-		case 'v':
-			verbose = 1;
-			break;
-		case 'r':
-			real_time = 1;
-			break;
-		case 'd':
-			filename = optarg;
-			break;
-		case 's':
-			cmd.idx_subd = insn.idx_subd = strtoul(optarg, NULL, 0);
-			break;
-		case 'S':
-			cmd.stop_arg = strtoul(optarg, NULL, 0);
-			break;
-		case 'c':
-			str_chans = optarg;
-			break;
-		case 'm':
-			use_mmap = 1;
-			break;
-		case 'h':
-		default:
-			do_print_usage();
-			return 0;
-		}
-	}
+	err = init_config(&cfg, argc, argv);
+	if (err < 0)
+		goto out;
 
-	/* Recover the channels to compute */
-	do {
-		cmd.nb_chan++;
-		len = strlen(str_chans);
-		ofs = strcspn(str_chans, ",");
-		if (sscanf(str_chans, "%u", &chans[cmd.nb_chan - 1]) == 0) {
-			fprintf(stderr, "cmd_write: bad channels argument\n");
-			return -EINVAL;
-		}
-		str_chans += ofs + 1;
-	} while (len != ofs);
+	if (cfg.verbose)
+		print_config(&cfg);
 
-	/* Update the command structure */
-	cmd.scan_end_arg = cmd.nb_chan;
+	err = init_acquisition(&cfg);
+	if (err < 0)
+		goto out;
 
-	if (real_time != 0) {
+	while ((err = run_acquisition(&cfg)) == 0);
 
-		if (verbose != 0)
-			printf("cmd_write: switching to real-time mode\n");
-
-		/* Prevent any memory-swapping for this program */
-		ret = mlockall(MCL_CURRENT | MCL_FUTURE);
-		if (ret < 0) {
-			ret = errno;
-			fprintf(stderr, "cmd_write: mlockall failed (ret=%d)\n",
-				ret);
-			goto out_main;
-		}
-
-		/* Turn the current process into an RT task */
-		ret = rt_task_shadow(&rt_task_desc, NULL, 1, 0);
-		if (ret < 0) {
-			fprintf(stderr,
-				"cmd_write: rt_task_shadow failed (ret=%d)\n",
-				ret);
-			goto out_main;
-		}
-	}
-
-	/* Open the device */
-	ret = a4l_open(&dsc, filename);
-	if (ret < 0) {
-		fprintf(stderr,
-			"cmd_write: a4l_open %s failed (ret=%d)\n",
-			FILENAME, ret);
-		return ret;
-	}
-
-	if (verbose != 0) {
-		printf("cmd_write: device %s opened (fd=%d)\n",
-		       filename, dsc.fd);
-		printf("cmd_write: basic descriptor retrieved\n");
-		printf("\t subdevices count = %d\n", dsc.nb_subd);
-		printf("\t read subdevice index = %d\n", dsc.idx_read_subd);
-		printf("\t write subdevice index = %d\n", dsc.idx_write_subd);
-	}
-
-	/* Allocate a buffer so as to get more info (subd, chan, rng) */
-	dsc.sbdata = malloc(dsc.sbsize);
-	if (dsc.sbdata == NULL) {
-		fprintf(stderr, "cmd_write: malloc failed \n");
-		return -ENOMEM;
-	}
-
-	/* Get this data */
-	ret = a4l_fill_desc(&dsc);
-	if (ret < 0) {
-		fprintf(stderr,
-			"cmd_write: a4l_get_desc failed (ret=%d)\n", ret);
-		goto out_main;
-	}
-
-	if (verbose != 0)
-		printf("cmd_write: complex descriptor retrieved\n");
-
-	/* Get the size of a single acquisition */
-	for (i = 0; i < cmd.nb_chan; i++) {
-		a4l_chinfo_t *info;
-
-		ret = a4l_get_chinfo(&dsc,
-				     cmd.idx_subd, cmd.chan_descs[i], &info);
-		if (ret < 0) {
-			fprintf(stderr,
-				"cmd_write: a4l_get_chinfo failed (ret=%d)\n",
-				ret);
-			goto out_main;
-		}
-
-		if (verbose != 0) {
-			printf("cmd_write: channel %x\n", cmd.chan_descs[i]);
-			printf("\t ranges count = %d\n", info->nb_rng);
-			printf("\t range's size = %d (bits)\n", info->nb_bits);
-		}
-
-		scan_size += (info->nb_bits % 8 == 0) ?
-			info->nb_bits / 8 : (info->nb_bits / 8) + 1;
-	}
-
-	if (verbose != 0) {
-		printf("cmd_write: scan size = %u\n", scan_size);
-		printf("cmd_write: size to write  = %u\n",
-		       scan_size * cmd.stop_arg);
-	}
-
-	/* Cancel any former command which might be in progress */
-	a4l_snd_cancel(&dsc, cmd.idx_subd);
-
-	if (use_mmap != 0) {
-
-		/* Get the buffer size to map */
-		ret = a4l_get_bufsize(&dsc, cmd.idx_subd, &buf_size);
-		if (ret < 0) {
-			fprintf(stderr,
-				"cmd_write: a4l_get_bufsize() failed "
-				"(ret=%d)\n", ret);
-			goto out_main;
-		}
-
-		if (verbose != 0)
-			printf("cmd_write: buffer size = %lu bytes\n",
-			       buf_size);
-
-		/* Map the analog input subdevice buffer */
-		ret = a4l_mmap(&dsc, cmd.idx_subd, buf_size, &map);
-		if (ret < 0) {
-			fprintf(stderr,
-				"cmd_write: a4l_mmap() failed (ret=%d)\n",
-				ret);
-			goto out_main;
-		}
-
-		if (verbose != 0)
-			printf("cmd_write: mmap performed successfully "
-			       "(map=0x%p)\n", map);
-	}
-
-	/* Send the command to the output device */
-	ret = a4l_snd_command(&dsc, &cmd);
-	if (ret < 0) {
-		fprintf(stderr,
-			"cmd_write: a4l_snd_command failed (ret=%d)\n", ret);
-		goto out_main;
-	}
-
-	if (verbose != 0)
-		printf("cmd_write: command successfully sent\n");
-
-	/* Set up the buffer to be written */
-	for (i = 0; i < BUF_SIZE; i++)
-		buf[i] = i;
-
-	if (use_mmap == 0) {
-
-		/* Send data */
-		while (cnt < scan_size * cmd.stop_arg) {
-			unsigned int tmp =
-				(scan_size * cmd.stop_arg - cnt) > BUF_SIZE ?
-				BUF_SIZE : (scan_size * cmd.stop_arg - cnt);
-
-			ret = a4l_async_write(&dsc, buf, tmp, A4L_INFINITE);
-			if (ret < 0) {
-				fprintf(stderr,
-					"cmd_write: a4l_write failed (ret=%d)\n",
-					ret);
-				goto out_main;
-			}
-			cnt += ret;
-
-			if (cnt == ret && cnt != 0) {
-				ret = a4l_snd_insn(&dsc, &insn);
-				if (ret < 0) {
-					fprintf(stderr,
-						"cmd_write: triggering failed (ret=%d)\n",
-						ret);
-					goto out_main;
-				}
-			}
-		}
-	} else {
-		unsigned long front = 0;
-
-		/* Send data through the shared buffer */
-		while (cnt < cmd.stop_arg * scan_size) {
-
-			/* If the buffer is full, wait for an event
-			   (Note that a4l_poll() also retrieves the data amount
-			   to read; in our case it is useless as we have to update
-			   the data read counter) */
-			if (front == 0) {
-				ret = a4l_poll(&dsc, cmd.idx_subd, A4L_INFINITE);
-				if (ret < 0) {
-					fprintf(stderr,
-						"cmd_write: a4l_mark_bufrw() failed (ret=%d)\n",
-						ret);
-					goto out_main;
-				} else
-					front = (unsigned long)ret;
-			}
-
-			/* Update the variable front according to the data amount
-			   we still have to send */
-			if (front > (scan_size * cmd.stop_arg - cnt))
-				front = scan_size * cmd.stop_arg - cnt;
-
-			/* Perform the copy
-			   (Usually, such an operation should be avoided: the shared
-			   buffer should be used without any intermediate buffer,
-			   the "mmaped" buffer is interesting for saving data copy) */
-			memcpy(map + (cnt % buf_size),
-			       buf + (cnt % BUF_SIZE), front);
-
-			/* Update the counter */
-			cnt += front;
-
-			/* Retrieve and update the buffer's state
-			   (In output case, we recover how many bytes can be
-			   written into the shared buffer) */
-			ret = a4l_mark_bufrw(&dsc, cmd.idx_subd, front, &front);
-			if (ret < 0) {
-				fprintf(stderr,
-					"cmd_write: a4l_mark_bufrw() failed (ret=%d)\n",
-					ret);
-				goto out_main;
-			}
-
-			if (cnt == front && cnt != 0) {
-				ret = a4l_snd_insn(&dsc, &insn);
-				if (ret < 0) {
-					fprintf(stderr,
-						"cmd_write: triggering failed (ret=%d)\n",
-						ret);
-					goto out_main;
-				}
-			}
-		}
-	}
-
-	if (verbose != 0)
-		printf("cmd_write: %d bytes successfully written\n", cnt);
-
-	ret = 0;
-
-out_main:
-
-	/* Free the buffer used as device descriptor */
-	if (dsc.sbdata != NULL)
-		free(dsc.sbdata);
+	err = (err == -ENOENT) ? 0 : err;
 
 	sleep(1);
 
-	/* Release the file descriptor */
-	a4l_close(&dsc);
-
-	return ret;
+out:
+	cleanup_config(&cfg);
+	
+	return err < 0 ? 1 : 0;
 }

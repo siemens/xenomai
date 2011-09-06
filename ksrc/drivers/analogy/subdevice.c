@@ -38,32 +38,32 @@
 a4l_rngtab_t rng_bipolar10 = { 1, {
 		RANGE_V(-10, 10),
 	}};
-a4l_rngdesc_t range_bipolar10 = RNG_GLOBAL(rng_bipolar10);
+a4l_rngdesc_t a4l_range_bipolar10 = RNG_GLOBAL(rng_bipolar10);
 
 a4l_rngtab_t rng_bipolar5 = { 1, {
 		RANGE_V(-5, 5),
 	}};
-a4l_rngdesc_t range_bipolar5 = RNG_GLOBAL(rng_bipolar5);
+a4l_rngdesc_t a4l_range_bipolar5 = RNG_GLOBAL(rng_bipolar5);
 
 a4l_rngtab_t rng_unipolar10 = { 1, {
 		RANGE_V(0, 10),
 	}};
-a4l_rngdesc_t range_unipolar10 = RNG_GLOBAL(rng_unipolar10);
+a4l_rngdesc_t a4l_range_unipolar10 = RNG_GLOBAL(rng_unipolar10);
 
 a4l_rngtab_t rng_unipolar5 = { 1, {
 		RANGE_V(0, 5),
 	}};
-a4l_rngdesc_t range_unipolar5 = RNG_GLOBAL(rng_unipolar5);
+a4l_rngdesc_t a4l_range_unipolar5 = RNG_GLOBAL(rng_unipolar5);
 
 a4l_rngtab_t rng_unknown = { 1, {
 		RANGE(0, 1),
 	}};
-a4l_rngdesc_t range_unknown = RNG_GLOBAL(rng_unknown);
+a4l_rngdesc_t a4l_range_unknown = RNG_GLOBAL(rng_unknown);
 
 a4l_rngtab_t rng_fake = { 0, {
 		RANGE(0, 0),
 	}};
-a4l_rngdesc_t range_fake = RNG_GLOBAL(rng_fake);
+a4l_rngdesc_t a4l_range_fake = RNG_GLOBAL(rng_fake);
 
 /* --- Basic channel / range management functions --- */
 
@@ -290,7 +290,7 @@ int a4l_ioctl_chaninfo(a4l_cxt_t * cxt, void *arg)
 	}
 
 	if(rng_desc == NULL)
-		rng_desc = &range_fake;
+		rng_desc = &a4l_range_fake;
 
 	chan_info = rtdm_malloc(chan_desc->length * sizeof(a4l_chinfo_t));
 	if (chan_info == NULL)

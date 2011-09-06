@@ -299,14 +299,14 @@ typedef A4L_RNGDESC(GCC_ZERO_LENGTH_ARRAY) a4l_rngdesc_t;
 	.length =  1,				\
 	.rngtabs = {&(x)}, }
 
-extern a4l_rngdesc_t range_bipolar10;
-extern a4l_rngdesc_t range_bipolar5;
-extern a4l_rngdesc_t range_unipolar10;
-extern a4l_rngdesc_t range_unipolar5;
-extern a4l_rngdesc_t range_unknown;
-extern a4l_rngdesc_t range_fake;
+extern a4l_rngdesc_t a4l_range_bipolar10;
+extern a4l_rngdesc_t a4l_range_bipolar5;
+extern a4l_rngdesc_t a4l_range_unipolar10;
+extern a4l_rngdesc_t a4l_range_unipolar5;
+extern a4l_rngdesc_t a4l_range_unknown;
+extern a4l_rngdesc_t a4l_range_fake;
 
-#define range_digital range_unipolar5
+#define range_digital a4l_range_unipolar5
 
 	  /*! @} channelrange */
 

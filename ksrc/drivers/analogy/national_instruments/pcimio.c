@@ -198,7 +198,7 @@ static ni_board ni_boards[]={
 		n_aochan:       2,
 		aobits:         12,
 		ao_fifo_depth:  0,
-		.ao_range_table = &range_bipolar10,
+		.ao_range_table = &a4l_range_bipolar10,
 		ao_unipolar:    0,
 		ao_speed:	50000,
 		.num_p0_dio_channels = 8,
@@ -216,7 +216,7 @@ static ni_board ni_boards[]={
 		n_aochan:       2,
 		aobits:         16,
 		ao_fifo_depth:  2048,
-		.ao_range_table = &range_ni_E_ao_ext,
+		.ao_range_table = &a4l_range_ni_E_ao_ext,
 		ao_unipolar:    1,
 		ao_speed:	10000,
 		.num_p0_dio_channels = 8,
@@ -234,7 +234,7 @@ static ni_board ni_boards[]={
 		n_aochan:       2,
 		aobits:         16,
 		ao_fifo_depth:  0,
-		.ao_range_table = &range_bipolar10,
+		.ao_range_table = &a4l_range_bipolar10,
 		ao_unipolar:    0,
 		ao_speed:	100000,
 		.num_p0_dio_channels = 8,
@@ -252,7 +252,7 @@ static ni_board ni_boards[]={
 		n_aochan:       2,
 		aobits:         16,
 		ao_fifo_depth:  2048,
-		.ao_range_table = &range_ni_E_ao_ext,
+		.ao_range_table = &a4l_range_ni_E_ao_ext,
 		ao_unipolar:    1,
 		ao_speed:	10000,
 		.num_p0_dio_channels = 8,
@@ -271,7 +271,7 @@ static ni_board ni_boards[]={
 		n_aochan:       2,
 		aobits:         12,
 		ao_fifo_depth:  2048,
-		.ao_range_table = &range_ni_E_ao_ext,
+		.ao_range_table = &a4l_range_ni_E_ao_ext,
 		ao_unipolar:    1,
 		ao_speed:	1000,
 		.num_p0_dio_channels = 8,
@@ -291,7 +291,7 @@ static ni_board ni_boards[]={
 		n_aochan:       2,
 		aobits:         12,
 		ao_fifo_depth:  512,
-		.ao_range_table = &range_ni_E_ao_ext,
+		.ao_range_table = &a4l_range_ni_E_ao_ext,
 		ao_unipolar:    1,
 		ao_speed:	1000,
 		.num_p0_dio_channels = 8,
@@ -309,7 +309,7 @@ static ni_board ni_boards[]={
 		n_aochan:       2,
 		aobits:         12,
 		ao_fifo_depth:  512,
-		.ao_range_table = &range_ni_E_ao_ext,
+		.ao_range_table = &a4l_range_ni_E_ao_ext,
 		ao_unipolar:    1,
 		ao_speed:	1000,
 		.num_p0_dio_channels = 8,
@@ -328,7 +328,7 @@ static ni_board ni_boards[]={
 		n_aochan:       2,
 		aobits:         16,
 		ao_fifo_depth:  2048,
-		.ao_range_table = &range_ni_E_ao_ext,
+		.ao_range_table = &a4l_range_ni_E_ao_ext,
 		ao_unipolar:    1,
 		ao_speed:	10000,
 		.num_p0_dio_channels = 8,
@@ -378,7 +378,7 @@ static ni_board ni_boards[]={
 		n_aochan:       2,
 		aobits:         12,
 		ao_fifo_depth:  2048,
-		.ao_range_table = &range_ni_E_ao_ext,
+		.ao_range_table = &a4l_range_ni_E_ao_ext,
 		ao_unipolar:    1,
 		ao_speed:	1000,
 		.num_p0_dio_channels = 8,
@@ -411,7 +411,7 @@ static ni_board ni_boards[]={
 		n_aochan:       2,
 		aobits:         12,
 		ao_fifo_depth:  0,
-		.ao_range_table = &range_bipolar10,
+		.ao_range_table = &a4l_range_bipolar10,
 		ao_unipolar:    0,
 		ao_speed:	100000,
 		.num_p0_dio_channels = 8,
@@ -429,7 +429,7 @@ static ni_board ni_boards[]={
 		n_aochan:       2,
 		aobits:         12,
 		ao_fifo_depth:  0,
-		.ao_range_table = &range_bipolar10,
+		.ao_range_table = &a4l_range_bipolar10,
 		ao_unipolar:    0,
 		ao_speed:	100000,
 		.num_p0_dio_channels = 8,
@@ -447,7 +447,7 @@ static ni_board ni_boards[]={
 		n_aochan:       2,
 		aobits:         12,
 		ao_fifo_depth:  0,
-		.ao_range_table = &range_ni_E_ao_ext,
+		.ao_range_table = &a4l_range_ni_E_ao_ext,
 		ao_unipolar:    1,
 		ao_speed:	100000,
 		.num_p0_dio_channels = 8,
@@ -482,7 +482,7 @@ static ni_board ni_boards[]={
 		n_aochan:       2,
 		aobits:         12,
 		ao_fifo_depth:  0,
-		.ao_range_table = &range_bipolar10,
+		.ao_range_table = &a4l_range_bipolar10,
 		ao_unipolar:    0,
 		ao_speed:	100000,
 		.num_p0_dio_channels = 8,
@@ -501,7 +501,7 @@ static ni_board ni_boards[]={
 		aobits:         16,
 		ao_unipolar:    1,
 		ao_fifo_depth:  2048,
-		.ao_range_table = &range_ni_E_ao_ext,
+		.ao_range_table = &a4l_range_ni_E_ao_ext,
 		ao_speed:	3000,
 		.num_p0_dio_channels = 8,
 		caldac:         {ad8804_debug,ad8804_debug,ad8522}, /* manual is wrong */
@@ -517,7 +517,7 @@ static ni_board ni_boards[]={
 		n_aochan:       2,
 		aobits:         16,
 		reg_type:	ni_reg_611x,
-		.ao_range_table = &range_bipolar10,
+		.ao_range_table = &a4l_range_bipolar10,
 		ao_unipolar:    0,
 		ao_fifo_depth:  2048,
 		ao_speed:	250,
@@ -535,7 +535,7 @@ static ni_board ni_boards[]={
 		n_aochan:       2,
 		aobits:         16,
 		reg_type:	ni_reg_611x,
-		.ao_range_table = &range_bipolar10,
+		.ao_range_table = &a4l_range_bipolar10,
 		ao_unipolar:    0,
 		ao_fifo_depth:  2048,
 		ao_speed:	250,
@@ -590,7 +590,7 @@ static ni_board ni_boards[]={
 		aobits:         12,
 		ao_unipolar:    0,
 		ao_fifo_depth:  16384, /* data sheet says 8192, but fifo really holds 16384 samples */
-		.ao_range_table = &range_bipolar10,
+		.ao_range_table = &a4l_range_bipolar10,
 		ao_speed:	1000,
 		.num_p0_dio_channels = 8,
 		reg_type:	ni_reg_6711,
@@ -603,7 +603,7 @@ static ni_board ni_boards[]={
 		aobits:         12,
 		ao_unipolar:    0,
 		ao_fifo_depth:  16384,
-		.ao_range_table = &range_bipolar10,
+		.ao_range_table = &a4l_range_bipolar10,
 		ao_speed:	1000,
 		.num_p0_dio_channels = 8,
 		reg_type:	ni_reg_6711,
@@ -616,7 +616,7 @@ static ni_board ni_boards[]={
 		aobits:         12,
 		ao_unipolar:    0,
 		ao_fifo_depth:  16384,
-		.ao_range_table = &range_bipolar10,
+		.ao_range_table = &a4l_range_bipolar10,
 		ao_speed:	1000,
 		.num_p0_dio_channels = 8,
 		reg_type:	ni_reg_6713,
@@ -629,7 +629,7 @@ static ni_board ni_boards[]={
 		aobits:         12,
 		ao_unipolar:    0,
 		ao_fifo_depth:  16384,
-		.ao_range_table = &range_bipolar10,
+		.ao_range_table = &a4l_range_bipolar10,
 		ao_speed:	1000,
 		.num_p0_dio_channels = 8,
 		reg_type:	ni_reg_6713,
@@ -642,7 +642,7 @@ static ni_board ni_boards[]={
 		aobits:         16,
 		ao_unipolar:    0,
 		ao_fifo_depth:  8192,
-		.ao_range_table = &range_bipolar10,
+		.ao_range_table = &a4l_range_bipolar10,
 		ao_speed:	1000,
 		.num_p0_dio_channels = 8,
 		reg_type:	ni_reg_6711,
@@ -656,7 +656,7 @@ static ni_board ni_boards[]={
 		aobits:         16,
 		ao_unipolar:    0,
 		ao_fifo_depth:  8192,
-		.ao_range_table = &range_bipolar10,
+		.ao_range_table = &a4l_range_bipolar10,
 		.num_p0_dio_channels = 8,
 		reg_type:	ni_reg_6711,
 		caldac:         {ad8804_debug},
@@ -669,7 +669,7 @@ static ni_board ni_boards[]={
 		aobits:         16,
 		ao_unipolar:    0,
 		ao_fifo_depth:  16384,
-		.ao_range_table = &range_bipolar10,
+		.ao_range_table = &a4l_range_bipolar10,
 		ao_speed:	1000,
 		.num_p0_dio_channels = 8,
 		reg_type:	ni_reg_6713,
@@ -682,7 +682,7 @@ static ni_board ni_boards[]={
 		aobits:         16,
 		ao_unipolar:    0,
 		ao_fifo_depth:  16384,
-		.ao_range_table = &range_bipolar10,
+		.ao_range_table = &a4l_range_bipolar10,
 		ao_speed:	1000,
 		.num_p0_dio_channels = 8,
 		reg_type:	ni_reg_6713,
@@ -699,7 +699,7 @@ static ni_board ni_boards[]={
 		n_aochan:       2,
 		aobits:         12,
 		ao_fifo_depth:  2048,
-		.ao_range_table = &range_ni_E_ao_ext,
+		.ao_range_table = &a4l_range_ni_E_ao_ext,
 		ao_unipolar:    1,
 		ao_speed:	1000,
 		.num_p0_dio_channels = 8,
@@ -717,7 +717,7 @@ static ni_board ni_boards[]={
 		n_aochan:       2,
 		aobits:         12,
 		ao_fifo_depth:  2048,
-		.ao_range_table = &range_ni_E_ao_ext,
+		.ao_range_table = &a4l_range_ni_E_ao_ext,
 		ao_unipolar:    1,
 		ao_speed:	1000,
 		.num_p0_dio_channels = 8,
@@ -736,7 +736,7 @@ static ni_board ni_boards[]={
 		aobits:         16,
 		ao_unipolar:    1,
 		ao_fifo_depth:  2048,
-		.ao_range_table = &range_ni_E_ao_ext,
+		.ao_range_table = &a4l_range_ni_E_ao_ext,
 		ao_speed:	3000,
 		.num_p0_dio_channels = 8,
 		caldac:         {mb88341,mb88341,ad8522},
@@ -752,7 +752,7 @@ static ni_board ni_boards[]={
 		n_aochan:       2,
 		aobits:         16,
 		ao_fifo_depth:  2048,
-		.ao_range_table = &range_ni_E_ao_ext,
+		.ao_range_table = &a4l_range_ni_E_ao_ext,
 		ao_unipolar:    1,
 		ao_speed:	10000,
 		.num_p0_dio_channels = 8,
@@ -769,7 +769,7 @@ static ni_board ni_boards[]={
 		n_aochan:       2,
 		aobits:         16,
 		ao_fifo_depth:  0,
-		.ao_range_table = &range_bipolar10,
+		.ao_range_table = &a4l_range_bipolar10,
 		ao_unipolar:    0,
 		ao_speed:	100000,
 		.num_p0_dio_channels = 8,
@@ -1482,7 +1482,7 @@ static int pcimio_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 	}
 
 	for(i = 0; i < n_pcimio_boards && mite == NULL; i++) {
-		mite = mite_find_device(bus, slot, ni_boards[i].device_id);
+		mite = a4l_mite_find_device(bus, slot, ni_boards[i].device_id);
 		board = &ni_boards[i];
 	}
 
@@ -1524,7 +1524,7 @@ static int pcimio_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 		devpriv->stc_readl = &win_in2;
 	}
 
-	ret = mite_setup(devpriv->mite, 0);
+	ret = a4l_mite_setup(devpriv->mite, 0);
 	if(ret < 0)
 	{
 		a4l_err(dev, "pcmio_attach: error setting up mite\n");
@@ -1543,13 +1543,13 @@ static int pcimio_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 	}else{
 		a4l_info(dev, "pcimio_attach: found irq %u\n", irq);
 		ret = a4l_request_irq(dev,
-					 irq,
-					 ni_E_interrupt, A4L_IRQ_SHARED, dev);
+				      irq,
+				      a4l_ni_E_interrupt, A4L_IRQ_SHARED, dev);
 		if(ret < 0)
 			a4l_err(dev, "pcimio_attach: irq not available\n");
 	}
 
-	ret = ni_E_init(dev);
+	ret = a4l_ni_E_init(dev);
 	if(ret < 0)
 		return ret;
 
@@ -1568,7 +1568,7 @@ static int pcimio_detach(a4l_dev_t *dev)
 		mite_free_ring(devpriv->ao_mite_ring);
 		mite_free_ring(devpriv->gpct_mite_ring[0]);
 		mite_free_ring(devpriv->gpct_mite_ring[1]);
-		mite_unsetup(devpriv->mite);
+		a4l_mite_unsetup(devpriv->mite);
 	}
 
 	return 0;
