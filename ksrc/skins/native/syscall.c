@@ -1872,6 +1872,7 @@ static int __rt_cond_wait_prologue(struct pt_regs *regs)
 	plockcnt = &dummy;
 #else /* !CONFIG_XENO_FASTSYNCH */
 	plockcnt = &d.lockcnt;
+	(void)dummy;
 #endif /* !CONFIG_XENO_FASTSYNCH */
 
 	err = rt_cond_wait_prologue(cond, mutex, plockcnt, timeout_mode, timeout);
