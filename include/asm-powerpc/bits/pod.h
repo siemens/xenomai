@@ -55,7 +55,11 @@ unsigned long get_stack_vsid(unsigned long ksp)
 #else /* LINUX_VERSION_CODE >= 2.6.24 */
 	unsigned long llp = mmu_psize_defs[mmu_linear_psize].sllp;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0)
 	if (cpu_has_feature(CPU_FTR_1T_SEGMENT))
+#else
+	if (mmu_has_feature(MMU_FTR_1T_SEGMENT))
+#endif
 		vsid = get_kernel_vsid(ksp, MMU_SEGSIZE_1T)
 			<< SLB_VSID_SHIFT_1T;
 	else
@@ -130,8 +134,11 @@ static inline void xnarch_switch_to(xnarchtcb_t *out_tcb,
 #ifdef CONFIG_PPC64
 		if (likely(next_mm)) {
 			cpu_set(rthal_processor_id(), next_mm->cpu_vm_mask);
-
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0)
 			if (cpu_has_feature(CPU_FTR_SLB))
+#else
+			if (mmu_has_feature(MMU_FTR_SLB))
+#endif
 				switch_slb(next, next_mm);
 			else
 				switch_stab(next, next_mm);
@@ -203,7 +210,11 @@ static inline void xnarch_init_thread(xnarchtcb_t * tcb,
 	childregs->gpr[22] = (unsigned long)tcb;
 	childregs->gpr[23] = ((unsigned long *)xnarch_thread_trampoline)[0];	/* lr = entry addr. */
 	childregs->gpr[24] = ((unsigned long *)xnarch_thread_trampoline)[1];	/* r2 = TOC base. */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0)
 	if (cpu_has_feature(CPU_FTR_SLB))
+#else
+	if (mmu_has_feature(MMU_FTR_SLB))
+#endif
 		tcb->ts.ksp_vsid = get_stack_vsid(tcb->ts.ksp);
 #else /* !CONFIG_PPC64 */
 	childregs->nip = (unsigned long)rthal_thread_trampoline;

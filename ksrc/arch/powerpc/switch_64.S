@@ -33,6 +33,7 @@
 #include <asm/asm-offsets.h>
 #include <asm/page.h>
 #include <asm/mmu.h>
+#include <asm/ptrace.h>
 
 /*
  * void rthal_thread_switch(struct thread_struct *prev, struct thread_struct *next, int kthreadp)
