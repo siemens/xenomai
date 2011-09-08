@@ -18,9 +18,9 @@ LDFLAGS = \
 
 noinst_HEADERS = wf_facilities.h
 
-lib_LIBRARIES = libwaveform.a
+noinst_LTLIBRARIES = libwaveform.la
 
-libwaveform_a_SOURCES = wf_facilities.c
+libwaveform_la_SOURCES = wf_facilities.c
 
 analogy_config_SOURCES = analogy_config.c
 analogy_config_LDADD = \
@@ -67,4 +67,4 @@ insn_bits_LDADD = \
 	../../skins/common/libxenomai.la
 
 wf_generate_SOURCES = wf_generate.c
-wf_generate_LDADD = ./libwaveform.a -lm
+wf_generate_LDADD = ./libwaveform.la -lm
