@@ -265,7 +265,7 @@ index bb712c9..8885e9b 100644
   * or should we not care like we do now ? --BenH.
 diff --git a/arch/powerpc/include/asm/ipipe.h b/arch/powerpc/include/asm/ipipe.h
 new file mode 100644
-index 0000000..013e213
+index 0000000..45f6aaa
 --- /dev/null
 +++ b/arch/powerpc/include/asm/ipipe.h
 @@ -0,0 +1,249 @@
@@ -316,10 +316,10 @@ index 0000000..013e213
 +#include <asm/paca.h>
 +#endif
 +
-+#define IPIPE_ARCH_STRING	"2.13-01"
++#define IPIPE_ARCH_STRING	"2.13-02"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	13
-+#define IPIPE_PATCH_NUMBER	1
++#define IPIPE_PATCH_NUMBER	2
 +
 +#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 +
@@ -1807,26 +1807,43 @@ index d834425..bd73003 100644
  	mflr	r3
  	ld	r11, 0(r1)
 diff --git a/arch/powerpc/kernel/exceptions-64s.S b/arch/powerpc/kernel/exceptions-64s.S
-index a85f487..3a5dcfc 100644
+index a85f487..93bb81c 100644
 --- a/arch/powerpc/kernel/exceptions-64s.S
 +++ b/arch/powerpc/kernel/exceptions-64s.S
-@@ -287,6 +287,7 @@ vsx_unavailable_pSeries_1:
+@@ -287,22 +287,7 @@ vsx_unavailable_pSeries_1:
  	STD_EXCEPTION_PSERIES(., 0xf20, altivec_unavailable)
  	STD_EXCEPTION_PSERIES(., 0xf40, vsx_unavailable)
  
+-/*
+- * An interrupt came in while soft-disabled; clear EE in SRR1,
+- * clear paca->hard_enabled and return.
+- */
+-masked_interrupt:
+-	stb	r10,PACAHARDIRQEN(r13)
+-	mtcrf	0x80,r9
+-	ld	r9,PACA_EXGEN+EX_R9(r13)
+-	mfspr	r10,SPRN_SRR1
+-	rldicl	r10,r10,48,1		/* clear MSR_EE */
+-	rotldi	r10,r10,16
+-	mtspr	SPRN_SRR1,r10
+-	ld	r10,PACA_EXGEN+EX_R10(r13)
+-	GET_SCRATCH0(r13)
+-	rfid
+-	b	.
 +#ifdef CONFIG_SOFTDISABLE
- /*
-  * An interrupt came in while soft-disabled; clear EE in SRR1,
-  * clear paca->hard_enabled and return.
-@@ -303,6 +304,7 @@ masked_interrupt:
- 	GET_SCRATCH0(r13)
- 	rfid
- 	b	.
-+#endif /* CONFIG_SOFTDISABLE */
  
  masked_Hinterrupt:
  	stb	r10,PACAHARDIRQEN(r13)
-@@ -406,11 +408,16 @@ machine_check_common:
+@@ -317,6 +302,8 @@ masked_Hinterrupt:
+ 	hrfid
+ 	b	.
+ 
++#endif /* CONFIG_SOFTDISABLE */
++
+ 	.align	7
+ do_stab_bolted_pSeries:
+ 	std	r11,PACA_EXSLB+EX_R11(r13)
+@@ -406,11 +393,16 @@ machine_check_common:
  	FINISH_NAP
  	DISABLE_INTS
  	bl	.save_nvgprs
@@ -1843,7 +1860,7 @@ index a85f487..3a5dcfc 100644
  	STD_EXCEPTION_COMMON(0xa00, trap_0a, .unknown_exception)
  	STD_EXCEPTION_COMMON(0xb00, trap_0b, .unknown_exception)
  	STD_EXCEPTION_COMMON(0xd00, single_step, .single_step_exception)
-@@ -675,6 +682,7 @@ unrecov_slb:
+@@ -675,6 +667,7 @@ unrecov_slb:
  	EXCEPTION_PROLOG_COMMON(0x4100, PACA_EXSLB)
  	DISABLE_INTS
  	bl	.save_nvgprs
@@ -1851,7 +1868,7 @@ index a85f487..3a5dcfc 100644
  1:	addi	r3,r1,STACK_FRAME_OVERHEAD
  	bl	.unrecoverable_exception
  	b	1b
-@@ -684,15 +692,23 @@ unrecov_slb:
+@@ -684,15 +677,23 @@ unrecov_slb:
  	.globl hardware_interrupt_entry
  hardware_interrupt_common:
  	EXCEPTION_PROLOG_COMMON(0x500, PACA_EXGEN)
@@ -1876,7 +1893,7 @@ index a85f487..3a5dcfc 100644
  
  #ifdef CONFIG_PPC_970_NAP
  power4_fixup_nap:
-@@ -716,8 +732,9 @@ alignment_common:
+@@ -716,8 +717,9 @@ alignment_common:
  	std	r3,_DAR(r1)
  	std	r4,_DSISR(r1)
  	bl	.save_nvgprs
@@ -1887,7 +1904,7 @@ index a85f487..3a5dcfc 100644
  	bl	.alignment_exception
  	b	.ret_from_except
  
-@@ -726,8 +743,9 @@ alignment_common:
+@@ -726,8 +728,9 @@ alignment_common:
  program_check_common:
  	EXCEPTION_PROLOG_COMMON(0x700, PACA_EXGEN)
  	bl	.save_nvgprs
@@ -1898,7 +1915,7 @@ index a85f487..3a5dcfc 100644
  	bl	.program_check_exception
  	b	.ret_from_except
  
-@@ -737,8 +755,9 @@ fp_unavailable_common:
+@@ -737,8 +740,9 @@ fp_unavailable_common:
  	EXCEPTION_PROLOG_COMMON(0x800, PACA_EXGEN)
  	bne	1f			/* if from user, just load it up */
  	bl	.save_nvgprs
@@ -1909,7 +1926,7 @@ index a85f487..3a5dcfc 100644
  	bl	.kernel_fp_unavailable_exception
  	BUG_OPCODE
  1:	bl	.load_up_fpu
-@@ -757,8 +776,9 @@ BEGIN_FTR_SECTION
+@@ -757,8 +761,9 @@ BEGIN_FTR_SECTION
  END_FTR_SECTION_IFSET(CPU_FTR_ALTIVEC)
  #endif
  	bl	.save_nvgprs
@@ -1920,7 +1937,7 @@ index a85f487..3a5dcfc 100644
  	bl	.altivec_unavailable_exception
  	b	.ret_from_except
  
-@@ -791,12 +811,23 @@ __end_handlers:
+@@ -791,12 +796,23 @@ __end_handlers:
   * ret_from_except or ret_from_except_lite instead of this.
   */
  fast_exc_return_irq:			/* restores irq state too */
@@ -1944,7 +1961,7 @@ index a85f487..3a5dcfc 100644
  
  	.globl	fast_exception_return
  fast_exception_return:
-@@ -837,6 +868,7 @@ fast_exception_return:
+@@ -837,6 +853,7 @@ fast_exception_return:
  
  unrecov_fer:
  	bl	.save_nvgprs
@@ -1952,7 +1969,7 @@ index a85f487..3a5dcfc 100644
  1:	addi	r3,r1,STACK_FRAME_OVERHEAD
  	bl	.unrecoverable_exception
  	b	1b
-@@ -936,9 +968,18 @@ END_FW_FTR_SECTION_IFCLR(FW_FEATURE_ISERIES)
+@@ -936,9 +953,18 @@ END_FW_FTR_SECTION_IFCLR(FW_FEATURE_ISERIES)
  	 * to what it was before the trap.  Note that .arch_local_irq_restore
  	 * handles any interrupts pending at this point.
  	 */
@@ -1971,7 +1988,7 @@ index a85f487..3a5dcfc 100644
  	b	11f
  
  /* We have a data breakpoint exception - handle it */
-@@ -952,6 +993,7 @@ handle_dabr_fault:
+@@ -952,6 +978,7 @@ handle_dabr_fault:
  
  /* Here we have a page fault that hash_page can't handle. */
  handle_page_fault:
