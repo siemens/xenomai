@@ -63,18 +63,18 @@ Functions</h2></td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Enable an interrupt object.  <a href="#ga083e000abd434e4d0fca8f6b6bbd49de"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__intr.html#ga05570451a808b44216140e00b0eae713">xnintr_disable</a> (xnintr_t *intr)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Disable an interrupt object.  <a href="#ga05570451a808b44216140e00b0eae713"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">xnarch_cpumask_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__intr.html#ga88097f97513b7049db61a335713a6b4a">xnintr_affinity</a> (xnintr_t *intr, xnarch_cpumask_t cpumask)</td></tr>
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set interrupt's processor affinity.  <a href="#ga88097f97513b7049db61a335713a6b4a"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__intr.html#ga2ac234b14abb49cfbb149f94bf9eaee6">xnintr_affinity</a> (xnintr_t *intr, xnarch_cpumask_t cpumask)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set interrupt's processor affinity.  <a href="#ga2ac234b14abb49cfbb149f94bf9eaee6"></a><br/></td></tr>
 </table>
 <hr/><a name="_details"></a><h2>Detailed Description</h2>
 <p>Interrupt management. </p>
 <hr/><h2>Function Documentation</h2>
-<a class="anchor" id="ga88097f97513b7049db61a335713a6b4a"></a><!-- doxytag: member="intr.c::xnintr_affinity" ref="ga88097f97513b7049db61a335713a6b4a" args="(xnintr_t *intr, xnarch_cpumask_t cpumask)" -->
+<a class="anchor" id="ga2ac234b14abb49cfbb149f94bf9eaee6"></a><!-- doxytag: member="intr.c::xnintr_affinity" ref="ga2ac234b14abb49cfbb149f94bf9eaee6" args="(xnintr_t *intr, xnarch_cpumask_t cpumask)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">xnarch_cpumask_t xnintr_affinity </td>
+          <td class="memname">void xnintr_affinity </td>
           <td>(</td>
           <td class="paramtype">xnintr_t *&nbsp;</td>
           <td class="paramname"> <em>intr</em>, </td>
@@ -417,7 +417,7 @@ Functions</h2></td></tr>
 </div>
 </div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Sun Sep 4 2011 21:47:55 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Sat Sep 10 2011 17:30:40 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

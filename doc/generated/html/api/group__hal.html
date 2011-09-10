@@ -102,8 +102,6 @@ Functions</h2></td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Install a real-time interrupt handler.  <a href="#gaadf0f98059a5bf1caddda9dd48d51f20"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#gad7d90c5882463a1d36b7a0ad74a9d4ff">rthal_irq_release</a> (unsigned irq)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Uninstall a real-time interrupt handler.  <a href="#gad7d90c5882463a1d36b7a0ad74a9d4ff"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga63c5799998ae73a818b3c3be4cca89bd">rthal_irq_affinity</a> (unsigned irq, cpumask_t cpumask, cpumask_t *oldmask)</td></tr>
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set/Get processor affinity for external interrupt.  <a href="#ga63c5799998ae73a818b3c3be4cca89bd"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">rthal_trap_handler_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga3f868180536815c231983781afef99c4">rthal_trap_catch</a> (rthal_trap_handler_t handler)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Installs a fault handler.  <a href="#ga3f868180536815c231983781afef99c4"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#gafb91722da28118853a09b1a0d98dd169">rthal_apc_alloc</a> (const char *name, void(*handler)(void *cookie), void *cookie)</td></tr>
@@ -206,59 +204,6 @@ Functions</h2></td></tr>
 <p>This service can be called from:</p>
 <ul>
 <li>Any domain context. </li>
-</ul>
-
-</div>
-</div>
-<a class="anchor" id="ga63c5799998ae73a818b3c3be4cca89bd"></a><!-- doxytag: member="hal.c::rthal_irq_affinity" ref="ga63c5799998ae73a818b3c3be4cca89bd" args="(unsigned irq, cpumask_t cpumask, cpumask_t *oldmask)" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int rthal_irq_affinity </td>
-          <td>(</td>
-          <td class="paramtype">unsigned&nbsp;</td>
-          <td class="paramname"> <em>irq</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">cpumask_t&nbsp;</td>
-          <td class="paramname"> <em>cpumask</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">cpumask_t *&nbsp;</td>
-          <td class="paramname"> <em>oldmask</em></td><td>&nbsp;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td><td></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>Set/Get processor affinity for external interrupt. </p>
-<p>On SMP systems, this service ensures that the given interrupt is preferably dispatched to the specified set of processors. The previous affinity mask is returned by this service.</p>
-<dl><dt><b>Parameters:</b></dt><dd>
-  <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>irq</em>&nbsp;</td><td>The interrupt source whose processor affinity is affected by the operation. Only external interrupts can have their affinity changed/queried, thus virtual interrupt numbers allocated by rthal_alloc_virq() are invalid values for this parameter.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>cpumask</em>&nbsp;</td><td>A list of CPU identifiers passed as a bitmask representing the new affinity for this interrupt. A zero value cause this service to return the current affinity mask without changing it.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>oldmask</em>&nbsp;</td><td>If non-NULL, a pointer to a memory area which will bve overwritten by the previous affinity mask used for this interrupt source, or a zeroed mask if an error occurred. This service always returns a zeroed mask on uniprocessor systems.</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="return"><dt><b>Returns:</b></dt><dd>0 is returned upon success. Otherwise:</dd></dl>
-<ul>
-<li>-EINVAL is returned if <em>irq</em> is invalid.</li>
-</ul>
-<p>Environments:</p>
-<p>This service can be called from:</p>
-<ul>
-<li>Linux domain context. </li>
 </ul>
 
 </div>
@@ -691,7 +636,7 @@ Functions</h2></td></tr>
 </div>
 </div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Sun Sep 4 2011 21:47:56 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Sat Sep 10 2011 17:30:40 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

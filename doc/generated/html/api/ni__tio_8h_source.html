@@ -1171,33 +1171,33 @@
 <a name="l01158"></a>01158 <span class="preprocessor">#define NI_RTSI_OUTPUT_RTSI_BRD(x) (NI_RTSI_OUTPUT_RTSI_BRD_0 + (x))</span>
 <a name="l01159"></a>01159 <span class="preprocessor"></span>
 <a name="l01160"></a>01160 
-<a name="l01161"></a>01161 <span class="keywordtype">int</span> ni_tio_rinsn(<span class="keyword">struct</span> ni_gpct *counter, a4l_kinsn_t *insn);
-<a name="l01162"></a>01162 <span class="keywordtype">int</span> ni_tio_winsn(<span class="keyword">struct</span> ni_gpct *counter, a4l_kinsn_t *insn);
-<a name="l01163"></a>01163 <span class="keywordtype">int</span> ni_tio_insn_config(<span class="keyword">struct</span> ni_gpct *counter, a4l_kinsn_t *insn);
-<a name="l01164"></a>01164 <span class="keywordtype">void</span> ni_tio_init_counter(<span class="keyword">struct</span> ni_gpct *counter);
+<a name="l01161"></a>01161 <span class="keywordtype">int</span> a4l_ni_tio_rinsn(<span class="keyword">struct</span> ni_gpct *counter, a4l_kinsn_t *insn);
+<a name="l01162"></a>01162 <span class="keywordtype">int</span> a4l_ni_tio_winsn(<span class="keyword">struct</span> ni_gpct *counter, a4l_kinsn_t *insn);
+<a name="l01163"></a>01163 <span class="keywordtype">int</span> a4l_ni_tio_insn_config(<span class="keyword">struct</span> ni_gpct *counter, a4l_kinsn_t *insn);
+<a name="l01164"></a>01164 <span class="keywordtype">void</span> a4l_ni_tio_init_counter(<span class="keyword">struct</span> ni_gpct *counter);
 <a name="l01165"></a>01165 
-<a name="l01166"></a>01166 <span class="keyword">struct </span>ni_gpct_device *ni_gpct_device_construct(a4l_dev_t * dev,
+<a name="l01166"></a>01166 <span class="keyword">struct </span>ni_gpct_device *a4l_ni_gpct_device_construct(a4l_dev_t * dev,
 <a name="l01167"></a>01167         <span class="keywordtype">void</span> (*write_register) (<span class="keyword">struct</span> ni_gpct * counter, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> bits,
 <a name="l01168"></a>01168                 <span class="keyword">enum</span> ni_gpct_register reg),
 <a name="l01169"></a>01169         <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> (*read_register) (<span class="keyword">struct</span> ni_gpct * counter,
 <a name="l01170"></a>01170                 <span class="keyword">enum</span> ni_gpct_register reg), <span class="keyword">enum</span> ni_gpct_variant variant,
 <a name="l01171"></a>01171         <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> num_counters);
-<a name="l01172"></a>01172 <span class="keywordtype">void</span> ni_gpct_device_destroy(<span class="keyword">struct</span> ni_gpct_device *counter_dev);
+<a name="l01172"></a>01172 <span class="keywordtype">void</span> a4l_ni_gpct_device_destroy(<span class="keyword">struct</span> ni_gpct_device *counter_dev);
 <a name="l01173"></a>01173 
 <a name="l01174"></a>01174 <span class="preprocessor">#if (defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) || \</span>
 <a name="l01175"></a>01175 <span class="preprocessor">     defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE_MODULE))</span>
 <a name="l01176"></a>01176 <span class="preprocessor"></span>
-<a name="l01177"></a>01177 <span class="keyword">extern</span> <a class="code" href="structa4l__cmd__desc.html" title="Structure describing the asynchronous instruction.">a4l_cmd_t</a> ni_tio_cmd_mask;
+<a name="l01177"></a>01177 <span class="keyword">extern</span> <a class="code" href="structa4l__cmd__desc.html" title="Structure describing the asynchronous instruction.">a4l_cmd_t</a> a4l_ni_tio_cmd_mask;
 <a name="l01178"></a>01178 
-<a name="l01179"></a>01179 <span class="keywordtype">int</span> ni_tio_input_inttrig(<span class="keyword">struct</span> ni_gpct *counter, lsampl_t trignum);
-<a name="l01180"></a>01180 <span class="keywordtype">int</span> ni_tio_cmd(<span class="keyword">struct</span> ni_gpct *counter, <a class="code" href="structa4l__cmd__desc.html" title="Structure describing the asynchronous instruction.">a4l_cmd_t</a> *cmd);
-<a name="l01181"></a>01181 <span class="keywordtype">int</span> ni_tio_cmdtest(<span class="keyword">struct</span> ni_gpct *counter, <a class="code" href="structa4l__cmd__desc.html" title="Structure describing the asynchronous instruction.">a4l_cmd_t</a> *cmd);
-<a name="l01182"></a>01182 <span class="keywordtype">int</span> ni_tio_cancel(<span class="keyword">struct</span> ni_gpct *counter);
+<a name="l01179"></a>01179 <span class="keywordtype">int</span> a4l_ni_tio_input_inttrig(<span class="keyword">struct</span> ni_gpct *counter, lsampl_t trignum);
+<a name="l01180"></a>01180 <span class="keywordtype">int</span> a4l_ni_tio_cmd(<span class="keyword">struct</span> ni_gpct *counter, <a class="code" href="structa4l__cmd__desc.html" title="Structure describing the asynchronous instruction.">a4l_cmd_t</a> *cmd);
+<a name="l01181"></a>01181 <span class="keywordtype">int</span> a4l_ni_tio_cmdtest(<span class="keyword">struct</span> ni_gpct *counter, <a class="code" href="structa4l__cmd__desc.html" title="Structure describing the asynchronous instruction.">a4l_cmd_t</a> *cmd);
+<a name="l01182"></a>01182 <span class="keywordtype">int</span> a4l_ni_tio_cancel(<span class="keyword">struct</span> ni_gpct *counter);
 <a name="l01183"></a>01183 
-<a name="l01184"></a>01184 <span class="keywordtype">void</span> ni_tio_handle_interrupt(<span class="keyword">struct</span> ni_gpct *counter, a4l_dev_t *dev);
-<a name="l01185"></a>01185 <span class="keywordtype">void</span> ni_tio_set_mite_channel(<span class="keyword">struct</span> ni_gpct *counter,
+<a name="l01184"></a>01184 <span class="keywordtype">void</span> a4l_ni_tio_handle_interrupt(<span class="keyword">struct</span> ni_gpct *counter, a4l_dev_t *dev);
+<a name="l01185"></a>01185 <span class="keywordtype">void</span> a4l_ni_tio_set_mite_channel(<span class="keyword">struct</span> ni_gpct *counter,
 <a name="l01186"></a>01186                              <span class="keyword">struct</span> mite_channel *mite_chan);
-<a name="l01187"></a>01187 <span class="keywordtype">void</span> ni_tio_acknowledge_and_confirm(<span class="keyword">struct</span> ni_gpct *counter,
+<a name="l01187"></a>01187 <span class="keywordtype">void</span> a4l_ni_tio_acknowledge_and_confirm(<span class="keyword">struct</span> ni_gpct *counter,
 <a name="l01188"></a>01188                                     <span class="keywordtype">int</span> *gate_error,
 <a name="l01189"></a>01189                                     <span class="keywordtype">int</span> *tc_error,
 <a name="l01190"></a>01190                                     <span class="keywordtype">int</span> *perm_stale_data, <span class="keywordtype">int</span> *stale_data);
@@ -1207,7 +1207,7 @@
 <a name="l01194"></a>01194 <span class="preprocessor">#endif </span><span class="comment">/* !__ANALOGY_NI_TIO_H__ */</span>
 </pre></div></div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Sun Sep 4 2011 21:47:53 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Sat Sep 10 2011 17:30:37 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>
