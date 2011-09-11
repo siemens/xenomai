@@ -130,8 +130,6 @@ int __xnpod_set_thread_schedparam(struct xnthread *thread,
 				  const union xnsched_policy_param *sched_param,
 				  int propagate);
 
-void __xnpod_reset_thread(struct xnthread *thread);
-
 #ifdef CONFIG_XENO_HW_FPU
 void xnpod_switch_fpu(xnsched_t *sched);
 #endif /* CONFIG_XENO_HW_FPU */
