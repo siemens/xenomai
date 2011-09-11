@@ -814,13 +814,13 @@ EXPORT_SYMBOL_GPL(xnpod_start_thread);
 
 /*!
  * @internal
- * \fn void __xnpod_reset_thread(struct xnthread *thread, int unlock)
+ * \fn void xnpod_reset_thread(struct xnthread *thread, int unlock)
  * \brief Reset the thread.
  *
  * This internal routine resets the state of a thread so that it can
  * be subsequently stopped or restarted.
  */
-void __xnpod_reset_thread(struct xnthread *thread)
+static void xnpod_reset_thread(struct xnthread *thread)
 {
 	/* Break the thread out of any wait it is currently in. */
 	xnpod_unblock_thread(thread);
@@ -885,7 +885,7 @@ void xnpod_stop_thread(struct xnthread *thread)
 
 	xnlock_get_irqsave(&nklock, s);
 	if (!xnthread_test_state(thread, XNDORMANT)) {
-		__xnpod_reset_thread(thread);
+		xnpod_reset_thread(thread);
 		xnpod_suspend_thread(thread, XNDORMANT,
 				     XN_INFINITE, XN_RELATIVE, NULL);
 	} /* Otherwise, it is a nop. */
@@ -940,7 +940,7 @@ void xnpod_restart_thread(xnthread_t *thread)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	__xnpod_reset_thread(thread);
+	xnpod_reset_thread(thread);
 
 	if (thread == xnpod_current_sched()->curr)
 		xnthread_set_state(thread, XNRESTART);
