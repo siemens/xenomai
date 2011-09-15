@@ -15,6 +15,8 @@
 
 @SET_MAKE@
 
+
+
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
@@ -37,9 +39,11 @@ host_triplet = @host@
 target_triplet = @target@
 sbin_PROGRAMS = analogy_config$(EXEEXT)
 bin_PROGRAMS = cmd_read$(EXEEXT) cmd_write$(EXEEXT) cmd_bits$(EXEEXT) \
-	insn_read$(EXEEXT) insn_write$(EXEEXT) insn_bits$(EXEEXT)
+	insn_read$(EXEEXT) insn_write$(EXEEXT) insn_bits$(EXEEXT) \
+	wf_generate$(EXEEXT)
 subdir = utils/analogy
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
+DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config/ac_prog_cc_for_build.m4 \
 	$(top_srcdir)/config/docbook.m4 \
@@ -55,6 +59,10 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/lib/include/xeno_config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
+LTLIBRARIES = $(noinst_LTLIBRARIES)
+libwaveform_la_LIBADD =
+am_libwaveform_la_OBJECTS = wf_facilities.lo
+libwaveform_la_OBJECTS = $(am_libwaveform_la_OBJECTS)
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(sbindir)"
 PROGRAMS = $(bin_PROGRAMS) $(sbin_PROGRAMS)
 am_analogy_config_OBJECTS = analogy_config.$(OBJEXT)
@@ -87,6 +95,9 @@ am_insn_write_OBJECTS = insn_write.$(OBJEXT)
 insn_write_OBJECTS = $(am_insn_write_OBJECTS)
 insn_write_DEPENDENCIES = ../../lib/analogy/libanalogy.la \
 	../../lib/rtdm/librtdm.la ../../lib/cobalt/libcobalt.la
+am_wf_generate_OBJECTS = wf_generate.$(OBJEXT)
+wf_generate_OBJECTS = $(am_wf_generate_OBJECTS)
+wf_generate_DEPENDENCIES = ./libwaveform.la
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/lib/include
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
@@ -100,12 +111,15 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(analogy_config_SOURCES) $(cmd_bits_SOURCES) \
-	$(cmd_read_SOURCES) $(cmd_write_SOURCES) $(insn_bits_SOURCES) \
-	$(insn_read_SOURCES) $(insn_write_SOURCES)
-DIST_SOURCES = $(analogy_config_SOURCES) $(cmd_bits_SOURCES) \
-	$(cmd_read_SOURCES) $(cmd_write_SOURCES) $(insn_bits_SOURCES) \
-	$(insn_read_SOURCES) $(insn_write_SOURCES)
+SOURCES = $(libwaveform_la_SOURCES) $(analogy_config_SOURCES) \
+	$(cmd_bits_SOURCES) $(cmd_read_SOURCES) $(cmd_write_SOURCES) \
+	$(insn_bits_SOURCES) $(insn_read_SOURCES) \
+	$(insn_write_SOURCES) $(wf_generate_SOURCES)
+DIST_SOURCES = $(libwaveform_la_SOURCES) $(analogy_config_SOURCES) \
+	$(cmd_bits_SOURCES) $(cmd_read_SOURCES) $(cmd_write_SOURCES) \
+	$(insn_bits_SOURCES) $(insn_read_SOURCES) \
+	$(insn_write_SOURCES) $(wf_generate_SOURCES)
+HEADERS = $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -270,6 +284,9 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
+noinst_HEADERS = wf_facilities.h
+noinst_LTLIBRARIES = libwaveform.la
+libwaveform_la_SOURCES = wf_facilities.c
 analogy_config_SOURCES = analogy_config.c
 analogy_config_LDADD = \
 	../../lib/analogy/libanalogy.la \
@@ -314,6 +331,8 @@ insn_bits_LDADD = \
 	../../lib/rtdm/librtdm.la \
 	../../lib/cobalt/libcobalt.la
 
+wf_generate_SOURCES = wf_generate.c
+wf_generate_LDADD = ./libwaveform.la -lm
 all: all-am
 
 .SUFFIXES:
@@ -348,6 +367,17 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
+
+clean-noinstLTLIBRARIES:
+	-test -z "$(noinst_LTLIBRARIES)" || rm -f $(noinst_LTLIBRARIES)
+	@list='$(noinst_LTLIBRARIES)'; for p in $$list; do \
+	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
+	  test "$$dir" != "$$p" || dir=.; \
+	  echo "rm -f \"$${dir}/so_locations\""; \
+	  rm -f "$${dir}/so_locations"; \
+	done
+libwaveform.la: $(libwaveform_la_OBJECTS) $(libwaveform_la_DEPENDENCIES) 
+	$(LINK)  $(libwaveform_la_OBJECTS) $(libwaveform_la_LIBADD) $(LIBS)
 install-binPROGRAMS: $(bin_PROGRAMS)
 	@$(NORMAL_INSTALL)
 	test -z "$(bindir)" || $(MKDIR_P) "$(DESTDIR)$(bindir)"
@@ -455,6 +485,9 @@ insn_read$(EXEEXT): $(insn_read_OBJECTS) $(insn_read_DEPENDENCIES)
 insn_write$(EXEEXT): $(insn_write_OBJECTS) $(insn_write_DEPENDENCIES) 
 	@rm -f insn_write$(EXEEXT)
 	$(LINK) $(insn_write_OBJECTS) $(insn_write_LDADD) $(LIBS)
+wf_generate$(EXEEXT): $(wf_generate_OBJECTS) $(wf_generate_DEPENDENCIES) 
+	@rm -f wf_generate$(EXEEXT)
+	$(LINK) $(wf_generate_OBJECTS) $(wf_generate_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -469,6 +502,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/insn_bits.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/insn_read.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/insn_write.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wf_facilities.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wf_generate.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -581,7 +616,7 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(PROGRAMS)
+all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(HEADERS)
 installdirs:
 	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(sbindir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
@@ -614,7 +649,7 @@ maintainer-clean-generic:
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-generic clean-libtool \
-	clean-sbinPROGRAMS mostlyclean-am
+	clean-noinstLTLIBRARIES clean-sbinPROGRAMS mostlyclean-am
 
 distclean: distclean-am
 	-rm -rf ./$(DEPDIR)
@@ -685,15 +720,16 @@ uninstall-am: uninstall-binPROGRAMS uninstall-sbinPROGRAMS
 .MAKE: install-am install-strip
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-binPROGRAMS \
-	clean-generic clean-libtool clean-sbinPROGRAMS ctags distclean \
-	distclean-compile distclean-generic distclean-libtool \
-	distclean-tags distdir dvi dvi-am html html-am info info-am \
-	install install-am install-binPROGRAMS install-data \
-	install-data-am install-dvi install-dvi-am install-exec \
-	install-exec-am install-html install-html-am install-info \
-	install-info-am install-man install-pdf install-pdf-am \
-	install-ps install-ps-am install-sbinPROGRAMS install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
+	clean-generic clean-libtool clean-noinstLTLIBRARIES \
+	clean-sbinPROGRAMS ctags distclean distclean-compile \
+	distclean-generic distclean-libtool distclean-tags distdir dvi \
+	dvi-am html html-am info info-am install install-am \
+	install-binPROGRAMS install-data install-data-am install-dvi \
+	install-dvi-am install-exec install-exec-am install-html \
+	install-html-am install-info install-info-am install-man \
+	install-pdf install-pdf-am install-ps install-ps-am \
+	install-sbinPROGRAMS install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags uninstall uninstall-am uninstall-binPROGRAMS \

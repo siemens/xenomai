@@ -39,6 +39,7 @@
 #include <linux/module.h>
 #include <linux/irq.h>
 #include <linux/console.h>
+#include <linux/ipipe_tickdev.h>
 #include <asm/system.h>
 #include <asm/hardirq.h>
 #include <asm/hw_irq.h>

@@ -1,6 +1,13 @@
 sbin_PROGRAMS = analogy_config
 
-bin_PROGRAMS = cmd_read cmd_write cmd_bits insn_read insn_write insn_bits
+bin_PROGRAMS = \
+	cmd_read \
+	cmd_write \
+	cmd_bits \
+	insn_read \
+	insn_write \
+	insn_bits \
+	wf_generate
 
 CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
@@ -8,6 +15,12 @@ CPPFLAGS = \
 
 LDFLAGS = \
 	@XENO_USER_LDFLAGS@
+
+noinst_HEADERS = wf_facilities.h
+
+noinst_LTLIBRARIES = libwaveform.la
+
+libwaveform_la_SOURCES = wf_facilities.c
 
 analogy_config_SOURCES = analogy_config.c
 analogy_config_LDADD = \
@@ -52,3 +65,6 @@ insn_bits_LDADD = \
 	../../lib/analogy/libanalogy.la \
 	../../lib/rtdm/librtdm.la \
 	../../lib/cobalt/libcobalt.la
+
+wf_generate_SOURCES = wf_generate.c
+wf_generate_LDADD = ./libwaveform.la -lm

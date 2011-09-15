@@ -36,6 +36,7 @@
 #include <linux/errno.h>
 #include <linux/module.h>
 #include <linux/console.h>
+#include <linux/ipipe_tickdev.h>
 #include <asm/system.h>
 #include <asm/hardirq.h>
 #include <asm/irq.h>

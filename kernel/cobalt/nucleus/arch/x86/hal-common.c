@@ -30,6 +30,7 @@
  *@{*/
 
 #include <linux/module.h>
+#include <linux/ipipe_tickdev.h>
 #include <asm/xenomai/hal.h>
 
 enum rthal_ktimer_mode rthal_ktimer_saved_mode;

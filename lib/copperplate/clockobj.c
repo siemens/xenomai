@@ -243,6 +243,43 @@ int clockobj_set_resolution(struct clockobj *clkobj, unsigned int resolution_ns)
 #endif
 }
 
+#ifdef CONFIG_XENO_COBALT
+
+#include <asm/xenomai/arith.h>
+
+ticks_t clockobj_get_tsc(void)
+{
+#ifdef XNARCH_HAVE_NONPRIV_TSC
+	return __xn_rdtsc();
+#else
+	struct timespec now;
+	clock_gettime(CLOCK_MONOTONIC_RAW, &now);
+	return now.tv_sec * 1000000000ULL + now.tv_nsec;
+#endif
+}
+
+sticks_t clockobj_ns_to_ticks(struct clockobj *clkobj, sticks_t ns)
+{
+	/* Cobalt has optimized arith ops, use them. */
+	return xnarch_ulldiv(ns, clkobj->resolution, NULL);
+}
+
+#else /* CONFIG_XENO_MERCURY */
+
+ticks_t clockobj_get_tsc(void)
+{
+	struct timespec now;
+	clock_gettime(CLOCK_MONOTONIC_RAW, &now);
+	return now.tv_sec * 1000000000ULL + now.tv_nsec;
+}
+
+sticks_t clockobj_ns_to_ticks(struct clockobj *clkobj, sticks_t ns)
+{
+	return ns / clkobj->resolution;
+}
+
+#endif /* CONFIG_XENO_MERCURY */
+
 int clockobj_init(struct clockobj *clkobj,
 		  const char *name, unsigned int resolution_ns)
 {

@@ -29,7 +29,7 @@
 
 #include "wf_facilities.h"
 
-void do_print_usage(void)
+static void do_print_usage(void)
 {
 	fprintf(stdout, "usage:\twf_generate [OPTS]\n");
 	fprintf(stdout, "\tOPTS:\t -v, --verbose: verbose output\n");
@@ -56,7 +56,7 @@ static struct option opts[] = {
 	{0},
 };
 
-int select_type(struct waveform_config *config, char *arg)
+static int select_type(struct waveform_config *config, char *arg)
 {
 	int err = 0;
 
@@ -83,14 +83,14 @@ struct config {
 	struct waveform_config wf;
 };
 
-void cleanup_config(struct config *cfg)
+static void cleanup_config(struct config *cfg)
 {
 	if (cfg->output && strcmp(cfg->filename, "stdout")) {
 		fclose(cfg->output);
 	}
 }
 
-int init_config(struct config *cfg, int argc, char *argv[])
+static int init_config(struct config *cfg, int argc, char *argv[])
 {
 	int err = 0;
 

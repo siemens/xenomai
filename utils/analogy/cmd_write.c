@@ -100,7 +100,7 @@ static void print_usage(void)
 
 /* --- Configuration related stuff --- */
 
-int init_dsc_config(struct config *cfg)
+static int init_dsc_config(struct config *cfg)
 {
 	int err = 0;
 
@@ -136,7 +136,7 @@ out:
 	return err;
 }
 
-int init_chans_config(struct config *cfg)
+static int init_chans_config(struct config *cfg)
 {
 	int err = 0;
 	int len, offset;
@@ -192,7 +192,7 @@ out:
 	return err;
 }
 
-int init_range_config(struct config *cfg)
+static int init_range_config(struct config *cfg)
 {
 	int index = 0, err = 0;
 	int len, offset;
@@ -241,7 +241,7 @@ out:
 	return err;
 }
 
-void print_config(struct config *cfg)
+static void print_config(struct config *cfg)
 {
 	printf("cmd_write configuration:\n");
 	printf("\tRTDM device name: %s\n", cfg->filename);
@@ -252,7 +252,7 @@ void print_config(struct config *cfg)
 	printf("\tWake count: %lu\n", cfg->wake_count);
 }
 
-void cleanup_config(struct config *cfg)
+static void cleanup_config(struct config *cfg)
 {
 	if (cfg->buffer)
 		free(cfg->buffer);
@@ -264,7 +264,7 @@ void cleanup_config(struct config *cfg)
 		a4l_close(&cfg->dsc);
 }
 
-int init_config(struct config *cfg, int argc, char *argv[])
+static int init_config(struct config *cfg, int argc, char *argv[])
 {
 	int scan_size, err = 0;
 
@@ -359,7 +359,7 @@ out:
 
 /* --- Input management part --- */
 
-int process_input(struct config *cfg)
+static int process_input(struct config *cfg)
 {
 	int err = 0, filled = 0;
 
@@ -411,7 +411,7 @@ out:
 
 /* --- Acquisition related stuff --- */
 
-int run_acquisition(struct config *cfg)
+static int run_acquisition(struct config *cfg)
 {
 	int err = 0;
 
@@ -431,7 +431,7 @@ int run_acquisition(struct config *cfg)
 	return err < 0 ? err : 0;
 }
 
-int init_acquisition(struct config *cfg)
+static int init_acquisition(struct config *cfg)
 {
 	int err = 0;
 

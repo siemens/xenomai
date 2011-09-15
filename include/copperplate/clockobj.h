@@ -146,16 +146,8 @@ unsigned int clockobj_get_frequency(struct clockobj *clkobj)
 	return clkobj->frequency;
 }
 
-static inline sticks_t clockobj_ns_to_ticks(struct clockobj *clkobj,
-					    sticks_t ns)
-{
-#ifdef CONFIG_XENO_COBALT
-	/* Cobalt has optimized arith ops, use them. */
-	return xnarch_ulldiv(ns, clkobj->resolution, NULL);
-#else
-	return ns / clkobj->resolution;
-#endif
-}
+sticks_t clockobj_ns_to_ticks(struct clockobj *clkobj,
+			      sticks_t ns);
 
 static inline sticks_t clockobj_ticks_to_ns(struct clockobj *clkobj,
 					    sticks_t ticks)
@@ -169,16 +161,7 @@ static inline sticks_t clockobj_ticks_to_ns(struct clockobj *clkobj,
 
 #include <asm-generic/xenomai/timeconv.h>
 
-static inline ticks_t clockobj_get_tsc(void)
-{
-#ifdef XNARCH_HAVE_NONPRIV_TSC
-	return __xn_rdtsc();
-#else
-	struct timespec now;
-	clock_gettime(CLOCK_MONOTONIC_RAW, &now);
-	return now.tv_sec * 1000000000ULL + now.tv_nsec;
-#endif
-}
+ticks_t clockobj_get_tsc(void);
 
 static inline sticks_t clockobj_ns_to_tsc(sticks_t ns)
 {

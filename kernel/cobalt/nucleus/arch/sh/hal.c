@@ -35,6 +35,7 @@
 #include <linux/slab.h>
 #include <linux/errno.h>
 #include <linux/module.h>
+#include <linux/ipipe_tickdev.h>
 #include <asm/system.h>
 #include <asm/uaccess.h>
 #include <asm/unistd.h>

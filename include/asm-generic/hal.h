@@ -36,6 +36,7 @@
 #include <linux/sched.h>
 #include <linux/kallsyms.h>
 #include <linux/init.h>
+#include <linux/clockchips.h>
 #include <asm/byteorder.h>
 #include <asm/xenomai/wrappers.h>
 #include <asm/xenomai/arith.h>
