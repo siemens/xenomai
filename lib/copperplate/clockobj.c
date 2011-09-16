@@ -205,25 +205,6 @@ void clockobj_set_date(struct clockobj *clkobj,
 	read_unlock(&clkobj->lock);
 }
 
-void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks)
-{
-	struct timespec now, date;
-
-	read_lock_nocancel(&clkobj->lock);
-
-	clock_gettime(CLOCK_COPPERPLATE, &now);
-
-	timespec_add(&date, &clkobj->offset, &now);
-
-	/* Convert the time value to ticks. */
-	*pticks = (ticks_t)date.tv_sec * clockobj_get_frequency(clkobj);
-	*pticks += date.tv_nsec;
-	if (clockobj_get_resolution(clkobj) > 1)
-		*pticks /= clockobj_get_resolution(clkobj);
-
-	read_unlock(&clkobj->lock);
-}
-
 int clockobj_set_resolution(struct clockobj *clkobj, unsigned int resolution_ns)
 {
 #ifdef CONFIG_XENO_LORES_CLOCK_DISABLED
@@ -241,20 +222,35 @@ int clockobj_set_resolution(struct clockobj *clkobj, unsigned int resolution_ns)
 
 ticks_t clockobj_get_tsc(void)
 {
-#ifdef XNARCH_HAVE_NONPRIV_TSC
 	/* Guaranteed to be the source of CLOCK_COPPERPLATE. */
 	return __xn_rdtsc();
-#else
-	struct timespec now;
-	clock_gettime(CLOCK_COPPERPLATE, &now);
-	return now.tv_sec * 1000000000ULL + now.tv_nsec;
-#endif
 }
 
 sticks_t clockobj_ns_to_ticks(struct clockobj *clkobj, sticks_t ns)
 {
 	/* Cobalt has optimized arith ops, use them. */
 	return xnarch_ulldiv(ns, clkobj->resolution, NULL);
+}
+
+void clockobj_get_date(struct clockobj *clkobj,
+		       ticks_t *pticks, ticks_t *ptsc)
+{
+	unsigned long long ns, tsc;
+
+	read_lock_nocancel(&clkobj->lock);
+
+	tsc = __xn_rdtsc();
+	ns = xnarch_tsc_to_ns(tsc);
+	ns += clkobj->offset.tv_sec * 1000000000;
+	ns += clkobj->offset.tv_nsec;
+	if (clockobj_get_resolution(clkobj) > 1)
+		ns /= clockobj_get_resolution(clkobj);
+	*pticks = ns;
+
+	if (ptsc)
+		*ptsc = tsc;
+
+	read_unlock(&clkobj->lock);
 }
 
 #else /* CONFIG_XENO_MERCURY */
@@ -269,6 +265,31 @@ ticks_t clockobj_get_tsc(void)
 sticks_t clockobj_ns_to_ticks(struct clockobj *clkobj, sticks_t ns)
 {
 	return ns / clkobj->resolution;
+}
+
+void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks,
+		       ticks_t *ptsc)
+{
+	struct timespec now, date;
+
+	read_lock_nocancel(&clkobj->lock);
+
+	clock_gettime(CLOCK_COPPERPLATE, &now);
+
+	timespec_add(&date, &clkobj->offset, &now);
+
+	/* Convert the time value to ticks. */
+	*pticks = date.tv_sec * clockobj_get_frequency(clkobj)
+		+ date.tv_nsec / clockobj_get_resolution(clkobj);
+
+	/*
+	 * Mercury has a single time source, with TSC == monotonic
+	 * time.
+	 */
+	if (ptsc)
+		*ptsc = *pticks;
+
+	read_unlock(&clkobj->lock);
 }
 
 #endif /* CONFIG_XENO_MERCURY */

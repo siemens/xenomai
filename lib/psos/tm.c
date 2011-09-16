@@ -270,7 +270,7 @@ u_long tm_get(u_long *date_r, u_long *time_r, u_long *ticks_r)
 	struct tm tm;
 	ticks_t t;
 
-	clockobj_get_date(&psos_clock, &t);
+	clockobj_get_date(&psos_clock, &t, NULL);
 	clockobj_ticks_to_caltime(&psos_clock, t, &tm, ticks_r);
 	*date_r = ((tm.tm_year + 1900) << 16) | ((tm.tm_mon + 1) << 8) | tm.tm_mday;
 	*time_r = (tm.tm_hour << 16) | (tm.tm_min << 8) | tm.tm_sec;

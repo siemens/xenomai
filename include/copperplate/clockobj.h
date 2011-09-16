@@ -67,7 +67,8 @@ extern "C" {
 void clockobj_set_date(struct clockobj *clkobj,
 		       ticks_t ticks, unsigned int resolution_ns);
 
-void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks);
+void clockobj_get_date(struct clockobj *clkobj,
+		       ticks_t *pticks, ticks_t *ptsc);
 
 void clockobj_ticks_to_timespec(struct clockobj *clkobj,
 				ticks_t ticks, struct timespec *ts);
