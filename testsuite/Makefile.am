@@ -1,4 +1,6 @@
 
+if XENO_COBALT
+
 SUBDIRS = \
 	clocktest \
 	cyclic \
@@ -8,3 +10,5 @@ SUBDIRS = \
 	unit \
 	xeno-test
 	klatency
+
+endif
