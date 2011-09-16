@@ -227,7 +227,7 @@ u_long tm_wkafter(u_long ticks)
 	}
 
 	clockobj_ticks_to_timeout(&psos_clock, ticks, &rqt);
-	clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &rqt, NULL);
+	clock_nanosleep(CLOCK_COPPERPLATE, TIMER_ABSTIME, &rqt, NULL);
 
 	return SUCCESS;
 }
@@ -241,7 +241,7 @@ u_long tm_wkwhen(u_long date, u_long time, u_long ticks)
 	if (ret)
 		return ERR_ILLDATE;
 
-	clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &rqt, NULL);
+	clock_nanosleep(CLOCK_COPPERPLATE, TIMER_ABSTIME, &rqt, NULL);
 
 	return SUCCESS;
 }
