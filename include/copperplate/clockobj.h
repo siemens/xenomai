@@ -29,6 +29,19 @@ typedef unsigned long long ticks_t;
 
 typedef long long sticks_t;
 
+/*
+ * We define the Copperplate clock as a monotonic, non-adjustable
+ * one. This means that delays and timeouts won't be affected when the
+ * kernel host date is changed. The implementation provides support
+ * for absolute dates internally, with a per-clock epoch value, so
+ * that different emulators can have different system dates.
+ */
+#ifdef CLOCK_MONOTONIC_RAW
+#define CLOCK_COPPERPLATE  CLOCK_MONOTONIC_RAW
+#else
+#define CLOCK_COPPERPLATE  CLOCK_MONOTONIC
+#endif
+
 struct clockobj {
 	pthread_mutex_t lock;
 	struct timespec epoch;
@@ -157,11 +170,11 @@ static inline sticks_t clockobj_ticks_to_ns(struct clockobj *clkobj,
 
 #endif /* !CONFIG_XENO_LORES_CLOCK_DISABLED */
 
+ticks_t clockobj_get_tsc(void);
+
 #ifdef CONFIG_XENO_COBALT
 
 #include <asm-generic/xenomai/timeconv.h>
-
-ticks_t clockobj_get_tsc(void);
 
 static inline sticks_t clockobj_ns_to_tsc(sticks_t ns)
 {
@@ -174,13 +187,6 @@ static inline sticks_t clockobj_tsc_to_ns(sticks_t tsc)
 }
 
 #else /* CONFIG_XENO_MERCURY */
-
-static inline ticks_t clockobj_get_tsc(void)
-{
-	struct timespec now;
-	clock_gettime(CLOCK_MONOTONIC_RAW, &now);
-	return now.tv_sec * 1000000000ULL + now.tv_nsec;
-}
 
 static inline sticks_t clockobj_ns_to_tsc(sticks_t ns)
 {

@@ -29,7 +29,7 @@
 #include "copperplate/lock.h"
 #include "copperplate/threadobj.h"
 #include "copperplate/timerobj.h"
-#include "copperplate/timerobj.h"
+#include "copperplate/clockobj.h"
 
 static sem_t svsem;
 
@@ -99,7 +99,7 @@ static void *timerobj_server(void *arg)
 		push_cleanup_lock(&svlock);
 		write_lock(&svlock);
 
-		clock_gettime(CLOCK_REALTIME, &now);
+		clock_gettime(CLOCK_COPPERPLATE, &now);
 
 		pvlist_for_each_entry_safe(tmobj, tmp, &svtimers, link) {
 			value = tmobj->spec.it_value;
@@ -168,7 +168,7 @@ int timerobj_init(struct timerobj *tmobj)
 	tmobj->handler = NULL;
 	pvholder_init(&tmobj->link); /* so we may use pvholder_linked() */
 
-	if (timer_create(CLOCK_REALTIME, &evt, &tmobj->timer))
+	if (timer_create(CLOCK_COPPERPLATE, &evt, &tmobj->timer))
 		return -errno;
 
 	return 0;

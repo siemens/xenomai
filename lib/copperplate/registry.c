@@ -33,6 +33,7 @@
 #include <fuse.h>
 #include "copperplate/heapobj.h"
 #include "copperplate/registry.h"
+#include "copperplate/clockobj.h"
 #include "copperplate/lock.h"
 
 #define REGISTRY_ROOT "/mnt/xenomai"
@@ -76,7 +77,7 @@ int registry_add_dir(const char *fmt, ...)
 	if (basename == NULL)
 		return -EINVAL;
 
-	clock_gettime(CLOCK_REALTIME, &now);
+	clock_gettime(CLOCK_COPPERPLATE, &now);
 
 	write_lock_safe(&regfs_lock, state);
 
@@ -162,7 +163,7 @@ int registry_add_file(struct fsobj *fsobj, int mode, const char *fmt, ...)
 	fsobj->path = xnstrdup(path);
 	fsobj->basename = fsobj->path + (basename - path) + 1;
 	fsobj->mode = mode & O_ACCMODE;
-	clock_gettime(CLOCK_REALTIME, &fsobj->ctime);
+	clock_gettime(CLOCK_COPPERPLATE, &fsobj->ctime);
 	fsobj->mtime = fsobj->ctime;
 
 	write_lock_safe(&regfs_lock, state);
@@ -228,7 +229,7 @@ void registry_touch_file(struct fsobj *fsobj)
 	if (__this_node.no_registry)
 		return;
 
-	clock_gettime(CLOCK_REALTIME, &fsobj->mtime);
+	clock_gettime(CLOCK_COPPERPLATE, &fsobj->mtime);
 }
 
 static int regfs_getattr(const char *path, struct stat *sbuf)

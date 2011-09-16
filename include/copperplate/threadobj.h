@@ -25,6 +25,7 @@
 #include <copperplate/init.h>
 #include <copperplate/list.h>
 #include <copperplate/lock.h>
+#include <copperplate/clockobj.h>
 
 #ifdef CONFIG_XENO_COBALT
 
@@ -197,7 +198,7 @@ static inline int threadobj_sleep(struct timespec *ts,
 	 * XXX: guaranteed to return -EINTR upon threadobj_unblock()
 	 * with both Cobalt and Mercury cores.
 	 */
-	return -clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, ts, ts_r);
+	return -clock_nanosleep(CLOCK_COPPERPLATE, TIMER_ABSTIME, ts, ts_r);
 }
 
 static inline int threadobj_context_p(void)

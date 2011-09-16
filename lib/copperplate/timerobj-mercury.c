@@ -25,6 +25,7 @@
 #include <memory.h>
 #include "copperplate/threadobj.h"
 #include "copperplate/timerobj.h"
+#include "copperplate/clockobj.h"
 
 static void timerobj_handler(union sigval sigval)
 {
@@ -58,7 +59,7 @@ int timerobj_init(struct timerobj *tmobj)
 
 	tmobj->handler = NULL;
 
-	if (timer_create(CLOCK_REALTIME, &evt, &tmobj->timer))
+	if (timer_create(CLOCK_COPPERPLATE, &evt, &tmobj->timer))
 		return -errno;
 
 	return 0;

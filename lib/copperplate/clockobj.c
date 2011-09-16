@@ -75,7 +75,7 @@ void clockobj_ticks_to_timeout(struct clockobj *clkobj,
 	struct timespec delta;
 
 	read_lock_nocancel(&clkobj->lock);
-	clock_gettime(CLOCK_REALTIME, ts);
+	clock_gettime(CLOCK_COPPERPLATE, ts);
 	ticks_to_timespec(clkobj, ticks, &delta);
 	read_unlock(&clkobj->lock);
 	timespec_add(ts, ts, &delta);
@@ -192,7 +192,7 @@ int clockobj_set_date(struct clockobj *clkobj,
 
 	read_lock_nocancel(&clkobj->lock);
 
-	clock_gettime(CLOCK_REALTIME, &now);
+	clock_gettime(CLOCK_COPPERPLATE, &now);
 
 	/* Change the resolution on-the-fly if given. */
 	if (resolution_ns)
@@ -213,7 +213,7 @@ int clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks)
 
 	read_lock_nocancel(&clkobj->lock);
 
-	clock_gettime(CLOCK_REALTIME, &now);
+	clock_gettime(CLOCK_COPPERPLATE, &now);
 
 	/* Wall clock time elapsed since we set the date: */
 	timespec_sub(&delta, &now, &clkobj->start);
@@ -253,7 +253,7 @@ ticks_t clockobj_get_tsc(void)
 	return __xn_rdtsc();
 #else
 	struct timespec now;
-	clock_gettime(CLOCK_MONOTONIC_RAW, &now);
+	clock_gettime(CLOCK_COPPERPLATE, &now);
 	return now.tv_sec * 1000000000ULL + now.tv_nsec;
 #endif
 }
@@ -269,7 +269,7 @@ sticks_t clockobj_ns_to_ticks(struct clockobj *clkobj, sticks_t ns)
 ticks_t clockobj_get_tsc(void)
 {
 	struct timespec now;
-	clock_gettime(CLOCK_MONOTONIC_RAW, &now);
+	clock_gettime(CLOCK_COPPERPLATE, &now);
 	return now.tv_sec * 1000000000ULL + now.tv_nsec;
 }
 
@@ -299,7 +299,7 @@ int clockobj_init(struct clockobj *clkobj,
 	pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
 	pthread_mutex_init(&clkobj->lock, &mattr);
 	pthread_mutexattr_destroy(&mattr);
-	clock_gettime(CLOCK_REALTIME, &clkobj->start);
+	clock_gettime(CLOCK_COPPERPLATE, &clkobj->start);
 	timespec_sub(&clkobj->offset, &clkobj->epoch, &clkobj->start);
 	clkobj->name = name;
 
