@@ -178,8 +178,6 @@ ticks_t clockobj_get_tsc(void);
 
 #include <asm-generic/xenomai/timeconv.h>
 
-ticks_t clockobj_get_tsc(void);
-
 static inline sticks_t clockobj_ns_to_tsc(sticks_t ns)
 {
 	return xnarch_ns_to_tsc(ns);
