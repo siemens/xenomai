@@ -185,8 +185,8 @@ void clockobj_caltime_to_timeout(struct clockobj *clkobj, const struct tm *tm,
 	read_unlock(&clkobj->lock);
 }
 
-int clockobj_set_date(struct clockobj *clkobj,
-		      ticks_t ticks, unsigned int resolution_ns)
+void clockobj_set_date(struct clockobj *clkobj,
+		       ticks_t ticks, unsigned int resolution_ns)
 {
 	struct timespec now;
 
@@ -203,11 +203,9 @@ int clockobj_set_date(struct clockobj *clkobj,
 	timespec_sub(&clkobj->offset, &clkobj->epoch, &now);
 
 	read_unlock(&clkobj->lock);
-
-	return 0;
 }
 
-int clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks)
+void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks)
 {
 	struct timespec now, delta, sum;
 
@@ -228,19 +226,17 @@ int clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks)
 		*pticks /= clockobj_get_resolution(clkobj);
 
 	read_unlock(&clkobj->lock);
-
-	return 0;
 }
 
 int clockobj_set_resolution(struct clockobj *clkobj, unsigned int resolution_ns)
 {
 #ifdef CONFIG_XENO_LORES_CLOCK_DISABLED
 	assert(resolution_ns == 1);
-	return 0;
 #else
 	/* Changing the resolution implies resetting the epoch. */
-	return clockobj_set_date(clkobj, 0, resolution_ns);
+	clockobj_set_date(clkobj, 0, resolution_ns);
 #endif
+	return 0;
 }
 
 #ifdef CONFIG_XENO_COBALT
@@ -250,6 +246,7 @@ int clockobj_set_resolution(struct clockobj *clkobj, unsigned int resolution_ns)
 ticks_t clockobj_get_tsc(void)
 {
 #ifdef XNARCH_HAVE_NONPRIV_TSC
+	/* Guaranteed to be the source of CLOCK_COPPERPLATE. */
 	return __xn_rdtsc();
 #else
 	struct timespec now;

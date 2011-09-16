@@ -31,16 +31,12 @@ ULONG tickGet(void)
 {
 	ticks_t ticks;
 
-	if (clockobj_get_date(&wind_clock, &ticks)) {
-		warning("%s: failed to read clock", __FUNCTION__);
-		return (ULONG)-1;
-	}
+	clockobj_get_date(&wind_clock, &ticks);
 
 	return (ULONG)ticks;
 }
 
 void tickSet(ULONG ticks)
 {
-	if (clockobj_set_date(&wind_clock, ticks, 0))
-		warning("%s: failed to set clock", __FUNCTION__);
+	clockobj_set_date(&wind_clock, ticks, 0);
 }

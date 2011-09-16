@@ -64,10 +64,10 @@ void timespec_add(struct timespec *r,
 extern "C" {
 #endif
 
-int clockobj_set_date(struct clockobj *clkobj,
-		      ticks_t ticks, unsigned int resolution_ns);
+void clockobj_set_date(struct clockobj *clkobj,
+		       ticks_t ticks, unsigned int resolution_ns);
 
-int clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks);
+void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks);
 
 void clockobj_ticks_to_timespec(struct clockobj *clkobj,
 				ticks_t ticks, struct timespec *ts);
@@ -86,7 +86,8 @@ void clockobj_ticks_to_caltime(struct clockobj *clkobj,
 			       struct tm *tm,
 			       unsigned long *rticks);
 
-int clockobj_set_resolution(struct clockobj *clkobj, unsigned int resolution_ns);
+int clockobj_set_resolution(struct clockobj *clkobj,
+			    unsigned int resolution_ns);
 
 int clockobj_init(struct clockobj *clkobj,
 		  const char *name, unsigned int resolution_ns);
