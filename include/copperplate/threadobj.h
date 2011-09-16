@@ -151,6 +151,8 @@ int threadobj_set_periodic(struct threadobj *thobj,
 int threadobj_wait_period(struct threadobj *thobj,
 			  unsigned long *overruns_r);
 
+void threadobj_spin(ticks_t ns);
+
 void threadobj_pkg_init(void);
 
 #ifdef __cplusplus

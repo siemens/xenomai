@@ -385,6 +385,15 @@ int threadobj_wait_period(struct threadobj *thobj,
 	return -pthread_wait_np(overruns_r);
 }
 
+void threadobj_spin(ticks_t ns)
+{
+	ticks_t end;
+
+	end = clockobj_get_tsc() + clockobj_ns_to_tsc(ns);
+	while (clockobj_get_tsc() < end)
+		cpu_relax();
+}
+
 void threadobj_pkg_init(void)
 {
 	threadobj_max_prio = sched_get_priority_max(SCHED_FIFO);

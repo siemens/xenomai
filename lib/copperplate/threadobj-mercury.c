@@ -403,6 +403,16 @@ int threadobj_wait_period(struct threadobj *thobj,
 	return -ENOSYS;		/* FIXME */
 }
 
+void threadobj_spin(ticks_t ns)
+{
+	ticks_t end;
+
+	end = clockobj_get_tsc() + clockobj_ns_to_tsc(ns);
+	/* clockobj_get_tsc() does syscall, so no relax needed. */
+	while (clockobj_get_tsc() < end)
+		;
+}
+
 void threadobj_pkg_init(void)
 {
 	struct sigaction sa;
