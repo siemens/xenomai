@@ -207,21 +207,17 @@ void clockobj_set_date(struct clockobj *clkobj,
 
 void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks)
 {
-	struct timespec now, delta, sum;
+	struct timespec now, date;
 
 	read_lock_nocancel(&clkobj->lock);
 
 	clock_gettime(CLOCK_COPPERPLATE, &now);
 
-	/* Wall clock time elapsed since we set the date: */
-	timespec_sub(&delta, &now, &clkobj->start);
-
-	/* Emulation time = epoch + delta. */
-	timespec_add(&sum, &clkobj->epoch, &delta);
+	timespec_add(&date, &clkobj->offset, &now);
 
 	/* Convert the time value to ticks. */
-	*pticks = (ticks_t)sum.tv_sec * clockobj_get_frequency(clkobj);
-	*pticks += sum.tv_nsec;
+	*pticks = (ticks_t)date.tv_sec * clockobj_get_frequency(clkobj);
+	*pticks += date.tv_nsec;
 	if (clockobj_get_resolution(clkobj) > 1)
 		*pticks /= clockobj_get_resolution(clkobj);
 
