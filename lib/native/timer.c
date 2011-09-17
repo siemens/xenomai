@@ -40,15 +40,7 @@ RTIME rt_timer_read(void)
 
 RTIME rt_timer_tsc(void)
 {
-	RTIME tsc;
-
-#ifdef XNARCH_HAVE_NONPRIV_TSC
-	tsc = __xn_rdtsc();
-#else /* !XNARCH_HAVE_NONPRIV_TSC */
-	XENOMAI_SKINCALL1(__native_muxid, __native_timer_tsc, &tsc);
-#endif /* XNARCH_HAVE_NONPRIV_TSC */
-
-	return tsc;
+	return __xn_rdtsc();
 }
 
 SRTIME rt_timer_ns2ticks(SRTIME ns)

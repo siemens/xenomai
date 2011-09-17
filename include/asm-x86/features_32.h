@@ -38,8 +38,6 @@
 /* The ABI revision level we use on this arch. */
 #define XENOMAI_ABI_REV   4UL
 
-#define XNARCH_HAVE_NONPRIV_TSC  1
-
 #ifdef CONFIG_XENO_X86_SEP
 #define __xn_feat_x86_sep_mask  __xn_feat_x86_sep
 #else

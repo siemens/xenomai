@@ -30,7 +30,6 @@
 
 extern int __pse51_muxid;
 
-#ifdef XNARCH_HAVE_NONPRIV_TSC
 static xnsysinfo_t __pse51_sysinfo;
 
 void pse51_clock_init(int muxid)
@@ -42,7 +41,6 @@ void pse51_clock_init(int muxid)
 		exit(EXIT_FAILURE);
 	}
 }
-#endif /* XNARCH_HAVE_NONPRIV_TSC */
 
 int __wrap_clock_getres(clockid_t clock_id, struct timespec *tp)
 {
@@ -58,7 +56,6 @@ int __wrap_clock_getres(clockid_t clock_id, struct timespec *tp)
 	return -1;
 }
 
-#ifdef XNARCH_HAVE_NONPRIV_TSC
 static int __do_clock_host_realtime(struct timespec *ts, void *tzp)
 {
 	unsigned int seq;
@@ -102,14 +99,12 @@ retry:
 
 	return 0;
 }
-#endif /* XNARCH_HAVE_NONPRIV_TSC */
 
 int __wrap_clock_gettime(clockid_t clock_id, struct timespec *tp)
 {
 	int err;
 
 	switch (clock_id) {
-#ifdef XNARCH_HAVE_NONPRIV_TSC
 	case CLOCK_HOST_REALTIME:
 		err = __do_clock_host_realtime(tp, NULL);
 		break;
@@ -125,7 +120,6 @@ int __wrap_clock_gettime(clockid_t clock_id, struct timespec *tp)
 			return 0;
 		}
 		/* Falldown wanted */
-#endif /* XNARCH_HAVE_NONPRIV_TSC */
 	default:
 		err = -XENOMAI_SKINCALL2(__pse51_muxid,
 					 __pse51_clock_gettime,

@@ -42,7 +42,6 @@
 #ifdef CONFIG_IPIPE_ARM_KUSER_TSC
 #define CONFIG_XENO_ARM_KUSER_TSC 1
 #endif
-#define XNARCH_HAVE_NONPRIV_TSC  1
 
 #else /* !__KERNEL__ */
 

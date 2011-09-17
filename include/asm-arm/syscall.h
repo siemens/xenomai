@@ -222,10 +222,6 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define XENOMAI_SKINCALL5(id,op,a1,a2,a3,a4,a5)		\
 	XENOMAI_DO_SYSCALL(5,id,op,a1,a2,a3,a4,a5)
 
-#ifdef CONFIG_XENO_ARM_TSC_TYPE
-#define XNARCH_HAVE_NONPRIV_TSC  1
-#endif /* CONFIG_XENO_ARM_TSC_TYPE */
-
 #endif /* __KERNEL__ */
 
 #define XENOMAI_SYSARCH_ATOMIC_ADD_RETURN	0
