@@ -43,11 +43,7 @@
 #else
 # define RTHAL_TIMER_DEVICE		"pit"
 #endif
-#ifdef CONFIG_X86_TSC
 # define RTHAL_CLOCK_DEVICE		"tsc"
-#else
-# define RTHAL_CLOCK_DEVICE		"pit"
-#endif
 
 #include <asm/xenomai/wrappers.h>
 
@@ -118,19 +114,12 @@ static inline void rthal_release_control(void)
 	rthal_smi_restore();
 }
 
-#ifdef CONFIG_X86_TSC
 static inline unsigned long long rthal_rdtsc(void)
 {
 	unsigned long long t;
 	rthal_read_tsc(t);
 	return t;
 }
-#else /* !CONFIG_X86_TSC */
-#define RTHAL_8254_COUNT2LATCH  0xfffe
-void rthal_setup_8254_tsc(void);
-rthal_time_t rthal_get_8254_tsc(void);
-#define rthal_rdtsc() rthal_get_8254_tsc()
-#endif /* CONFIG_X86_TSC */
 
 static inline void rthal_timer_program_shot(unsigned long delay)
 {

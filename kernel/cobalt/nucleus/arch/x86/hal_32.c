@@ -238,57 +238,6 @@ void rthal_timer_release(int cpu)
 
 #endif /* !CONFIG_X86_LOCAL_APIC */
 
-#ifndef CONFIG_X86_TSC
-
-static rthal_time_t rthal_tsc_8254;
-
-static int rthal_last_8254_counter2;
-
-/* TSC emulation using PIT channel #2. */
-
-void rthal_setup_8254_tsc(void)
-{
-	unsigned long flags;
-	int count;
-
-	rthal_local_irq_save_hw(flags);
-
-	outb_p(0x0, PIT_MODE);
-	count = inb_p(PIT_CH0);
-	count |= inb_p(PIT_CH0) << 8;
-	outb_p(0xb4, PIT_MODE);
-	outb_p(RTHAL_8254_COUNT2LATCH & 0xff, PIT_CH2);
-	outb_p(RTHAL_8254_COUNT2LATCH >> 8, PIT_CH2);
-	rthal_tsc_8254 = count + LATCH * jiffies;
-	rthal_last_8254_counter2 = 0;
-	/* Gate high, disable speaker */
-	outb_p((inb_p(0x61) & ~0x2) | 1, 0x61);
-
-	rthal_local_irq_restore_hw(flags);
-}
-
-rthal_time_t rthal_get_8254_tsc(void)
-{
-	unsigned long flags;
-	int delta, count;
-	rthal_time_t t;
-
-	rthal_local_irq_save_hw(flags);
-
-	outb(0xd8, PIT_MODE);
-	count = inb(PIT_CH2);
-	delta = rthal_last_8254_counter2 - (count |= (inb(PIT_CH2) << 8));
-	rthal_last_8254_counter2 = count;
-	rthal_tsc_8254 += (delta > 0 ? delta : delta + RTHAL_8254_COUNT2LATCH);
-	t = rthal_tsc_8254;
-
-	rthal_local_irq_restore_hw(flags);
-
-	return t;
-}
-
-#endif /* !CONFIG_X86_TSC */
-
 int rthal_arch_init(void)
 {
 #ifdef CONFIG_X86_LOCAL_APIC
@@ -301,14 +250,8 @@ int rthal_arch_init(void)
 #endif /* CONFIG_X86_LOCAL_APIC */
 
 	if (rthal_cpufreq_arg == 0)
-#ifdef CONFIG_X86_TSC
 		/* FIXME: 4Ghz barrier is close... */
 		rthal_cpufreq_arg = rthal_get_cpufreq();
-#else /* ! CONFIG_X86_TSC */
-		rthal_cpufreq_arg = CLOCK_TICK_RATE;
-
-	rthal_setup_8254_tsc();
-#endif /* CONFIG_X86_TSC */
 
 	if (rthal_clockfreq_arg == 0)
 		rthal_clockfreq_arg = rthal_get_clockfreq();
@@ -325,6 +268,3 @@ void rthal_arch_cleanup(void)
 
 EXPORT_SYMBOL_GPL(rthal_arch_init);
 EXPORT_SYMBOL_GPL(rthal_arch_cleanup);
-#ifndef CONFIG_X86_TSC
-EXPORT_SYMBOL_GPL(rthal_get_8254_tsc);
-#endif /* !CONFIG_X86_TSC */
