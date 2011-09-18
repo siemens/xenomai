@@ -36,7 +36,7 @@ static const char *tunes[] = {
 
 void task(void *cookie)
 {
-	mqd_t mqd = (mqd_t) cookie;
+	mqd_t mqd = (mqd_t)(long)cookie;
 	fd_set inset;
 	unsigned i;
 
@@ -75,7 +75,7 @@ int main(void)
 	check_unix(mq == -1 ? -1 : 0);
 
 	check_native(rt_task_create(&tcb, "select_test", 0, 1, T_JOINABLE));
-	check_native(rt_task_start(&tcb, task, (void *)mq));
+	check_native(rt_task_start(&tcb, task, (void *)(long)mq));
 
 	alarm(30);
 
