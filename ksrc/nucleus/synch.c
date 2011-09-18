@@ -684,9 +684,13 @@ xnsynch_release_thread(struct xnsynch *synch, struct xnthread *lastowner)
 
 	XENO_BUGON(NUCLEUS, !testbits(synch->status, XNSYNCH_OWNER));
 
-	if (xnthread_test_state(lastowner, XNOTHER))
-		xnthread_dec_rescnt(lastowner);
-	XENO_BUGON(NUCLEUS, xnthread_get_rescnt(lastowner) < 0);
+	if (xnthread_test_state(lastowner, XNOTHER)) {
+		if (xnthread_get_rescnt(lastowner) == 0)
+			xnshadow_send_sig(lastowner, SIGDEBUG,
+					  SIGDEBUG_MIGRATE_PRIOINV, 1);
+		else
+			xnthread_dec_rescnt(lastowner);
+	}
 	lastownerh = xnthread_handle(lastowner);
 
 	if (use_fastlock &&

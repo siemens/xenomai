@@ -100,6 +100,8 @@ static void xnsched_tp_setparam(struct xnthread *thread,
 {
 	struct xnsched *sched = thread->sched;
 
+	if (xnthread_test_state(thread, XNSHADOW))
+		xnthread_clear_state(thread, XNOTHER);
 	thread->tps = &sched->tp.partitions[p->tp.ptid];
 	thread->cprio = p->tp.prio;
 }
