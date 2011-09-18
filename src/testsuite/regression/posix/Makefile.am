@@ -1,0 +1,14 @@
+tstdir = $(pkgdatadir)/posix
+
+tst_PROGRAMS = leaks shm
+
+CPPFLAGS = $(XENO_USER_CFLAGS) \
+	-I$(top_srcdir)/include/posix \
+	-I$(top_srcdir)/include
+
+LDFLAGS = $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS)
+
+LDADD = \
+	../../../skins/posix/libpthread_rt.la \
+	../../../skins/common/libxenomai.la \
+	-lpthread -lm
