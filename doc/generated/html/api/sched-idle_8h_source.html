@@ -50,35 +50,37 @@
 <a name="l00039"></a>00039 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> __xnsched_idle_setparam(<span class="keyword">struct</span> xnthread *thread,
 <a name="l00040"></a>00040                                            <span class="keyword">const</span> <span class="keyword">union</span> xnsched_policy_param *p)
 <a name="l00041"></a>00041 {
-<a name="l00042"></a>00042         thread-&gt;cprio = p-&gt;idle.prio;
-<a name="l00043"></a>00043 }
-<a name="l00044"></a>00044 
-<a name="l00045"></a>00045 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> __xnsched_idle_getparam(<span class="keyword">struct</span> xnthread *thread,
-<a name="l00046"></a>00046                                            <span class="keyword">union</span> xnsched_policy_param *p)
-<a name="l00047"></a>00047 {
-<a name="l00048"></a>00048         p-&gt;idle.prio = thread-&gt;cprio;
-<a name="l00049"></a>00049 }
-<a name="l00050"></a>00050 
-<a name="l00051"></a>00051 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> __xnsched_idle_trackprio(<span class="keyword">struct</span> xnthread *thread,
-<a name="l00052"></a>00052                                             <span class="keyword">const</span> <span class="keyword">union</span> xnsched_policy_param *p)
-<a name="l00053"></a>00053 {
-<a name="l00054"></a>00054         <span class="keywordflow">if</span> (p)
-<a name="l00055"></a>00055                 __xnsched_idle_setparam(thread, p);
-<a name="l00056"></a>00056         <span class="keywordflow">else</span>
-<a name="l00057"></a>00057                 thread-&gt;cprio = XNSCHED_IDLE_PRIO;
-<a name="l00058"></a>00058 }
-<a name="l00059"></a>00059 
-<a name="l00060"></a>00060 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> xnsched_idle_init_tcb(<span class="keyword">struct</span> xnthread *thread)
-<a name="l00061"></a>00061 {
-<a name="l00062"></a>00062         <span class="keywordflow">return</span> 0;
-<a name="l00063"></a>00063 }
-<a name="l00064"></a>00064 
-<a name="l00065"></a>00065 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_SIM__ */</span>
+<a name="l00042"></a>00042         <span class="keywordflow">if</span> (xnthread_test_state(thread, <a class="code" href="group__nucleus__state__flags.html#gac664c3bae93da4141d2fc8e88a91afd8" title="Shadow thread.">XNSHADOW</a>))
+<a name="l00043"></a>00043                 xnthread_clear_state(thread, <a class="code" href="group__nucleus__state__flags.html#ga77b8d73c05c6339c32471c777ff5288e" title="Non real-time shadow (prio=0).">XNOTHER</a>);
+<a name="l00044"></a>00044         thread-&gt;cprio = p-&gt;idle.prio;
+<a name="l00045"></a>00045 }
+<a name="l00046"></a>00046 
+<a name="l00047"></a>00047 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> __xnsched_idle_getparam(<span class="keyword">struct</span> xnthread *thread,
+<a name="l00048"></a>00048                                            <span class="keyword">union</span> xnsched_policy_param *p)
+<a name="l00049"></a>00049 {
+<a name="l00050"></a>00050         p-&gt;idle.prio = thread-&gt;cprio;
+<a name="l00051"></a>00051 }
+<a name="l00052"></a>00052 
+<a name="l00053"></a>00053 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> __xnsched_idle_trackprio(<span class="keyword">struct</span> xnthread *thread,
+<a name="l00054"></a>00054                                             <span class="keyword">const</span> <span class="keyword">union</span> xnsched_policy_param *p)
+<a name="l00055"></a>00055 {
+<a name="l00056"></a>00056         <span class="keywordflow">if</span> (p)
+<a name="l00057"></a>00057                 __xnsched_idle_setparam(thread, p);
+<a name="l00058"></a>00058         <span class="keywordflow">else</span>
+<a name="l00059"></a>00059                 thread-&gt;cprio = XNSCHED_IDLE_PRIO;
+<a name="l00060"></a>00060 }
+<a name="l00061"></a>00061 
+<a name="l00062"></a>00062 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> xnsched_idle_init_tcb(<span class="keyword">struct</span> xnthread *thread)
+<a name="l00063"></a>00063 {
+<a name="l00064"></a>00064         <span class="keywordflow">return</span> 0;
+<a name="l00065"></a>00065 }
 <a name="l00066"></a>00066 
-<a name="l00067"></a>00067 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_SCHED_IDLE_H */</span>
+<a name="l00067"></a>00067 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_SIM__ */</span>
+<a name="l00068"></a>00068 
+<a name="l00069"></a>00069 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_SCHED_IDLE_H */</span>
 </pre></div></div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Sat Sep 10 2011 17:30:36 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Sun Sep 18 2011 22:14:42 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>
