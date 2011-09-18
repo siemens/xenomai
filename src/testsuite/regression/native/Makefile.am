@@ -1,5 +1,7 @@
 tstdir = $(pkgdatadir)/native
 
+noinst_HEADERS = check.h
+
 tst_PROGRAMS = leaks tsc mayday heap
 
 CPPFLAGS = $(XENO_USER_CFLAGS) \

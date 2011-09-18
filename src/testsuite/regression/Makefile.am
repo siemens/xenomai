@@ -9,3 +9,7 @@ xeno-regression-test: $(srcdir)/xeno-regression-test.in Makefile
 	sed "s,@testdir@,$(testdir),;s,@pkgdir@,$(pkgdir)," $< > $@
 
 SUBDIRS = native posix native+posix
+
+EXTRA_DIST = xeno-regression-test.in
+
+CLEANFILES = xeno-regression-test

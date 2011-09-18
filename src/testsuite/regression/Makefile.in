@@ -277,6 +277,8 @@ testdir = @XENO_TEST_DIR@
 pkgdir = $(pkgdatadir)
 bin_SCRIPTS = xeno-regression-test
 SUBDIRS = native posix native+posix
+EXTRA_DIST = xeno-regression-test.in
+CLEANFILES = xeno-regression-test
 all: all-recursive
 
 .SUFFIXES:
@@ -569,6 +571,7 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)

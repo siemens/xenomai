@@ -1,5 +1,7 @@
 tstdir = $(pkgdatadir)/posix
 
+noinst_HEADERS = check.h
+
 tst_PROGRAMS = leaks shm
 
 CPPFLAGS = $(XENO_USER_CFLAGS) \
