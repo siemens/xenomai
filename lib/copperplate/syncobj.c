@@ -198,13 +198,14 @@ int syncobj_pend(struct syncobj *sobj, struct timespec *timeout,
 
 	if (ret)
 		list_remove_init(&current->wait_link);
-	else if (current->wait_status & SYNCOBJ_FLUSHED) {
-		--sobj->release_count;
-		assert(sobj->release_count >= 0);
-		ret = EINTR;
-	} else if (current->wait_status & SYNCOBJ_DELETED) {
+	else if (current->wait_status & SYNCOBJ_DELETED) {
 		syncobj_test_finalize(sobj, syns);
 		ret = EIDRM;
+	} else if (current->wait_status & SYNCOBJ_RELEASE_MASK) {
+		--sobj->release_count;
+		assert(sobj->release_count >= 0);
+		if (current->wait_status & SYNCOBJ_FLUSHED)
+			ret = EINTR;
 	}
 
 	return -ret;
@@ -304,13 +305,14 @@ int syncobj_wait_drain(struct syncobj *sobj, struct timespec *timeout,
 
 	current->wait_sobj = NULL;
 
-	if (current->wait_status & SYNCOBJ_FLUSHED) {
-		--sobj->release_count;
-		assert(sobj->release_count >= 0);
-		ret = EINTR;
-	} else if (current->wait_status & SYNCOBJ_DELETED) {
+	if (current->wait_status & SYNCOBJ_DELETED) {
 		syncobj_test_finalize(sobj, syns);
 		ret = EIDRM;
+	} else if (current->wait_status & SYNCOBJ_RELEASE_MASK) {
+		--sobj->release_count;
+		assert(sobj->release_count >= 0);
+		if (current->wait_status & SYNCOBJ_FLUSHED)
+			ret = EINTR;
 	}
 
 	return -ret;
@@ -319,6 +321,9 @@ int syncobj_wait_drain(struct syncobj *sobj, struct timespec *timeout,
 int syncobj_flush(struct syncobj *sobj, int reason)
 {
 	struct threadobj *thobj;
+
+	/* Must have a valid release flag set. */
+	assert(reason & SYNCOBJ_RELEASE_MASK);
 
 	while (!list_empty(&sobj->pend_list)) {
 		thobj = list_pop_entry(&sobj->pend_list,

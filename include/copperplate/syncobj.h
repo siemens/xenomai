@@ -28,8 +28,12 @@
 #define SYNCOBJ_PRIO	0x1
 
 /* threadobj->wait_status */
-#define SYNCOBJ_DELETED	0x1
-#define SYNCOBJ_FLUSHED	0x2
+#define SYNCOBJ_DELETED		0x1
+#define SYNCOBJ_FLUSHED		0x2
+#define SYNCOBJ_BROADCAST	0x4
+
+#define SYNCOBJ_RELEASE_MASK	\
+	(SYNCOBJ_DELETED|SYNCOBJ_FLUSHED|SYNCOBJ_BROADCAST)
 
 /* threadobj->wait_hook(status) */
 #define SYNCOBJ_BLOCK	0x1
