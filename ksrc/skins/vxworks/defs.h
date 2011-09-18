@@ -221,10 +221,10 @@ static inline int wind_errnoget(void)
 
 
 /* Must be called with nklock locked, interrupts off. */
-static inline void taskSafeInner (xnthread_t *cur)
+static inline void taskSafeInner (xnthread_t *thread)
 {
-	if (xnthread_get_magic(cur) == VXWORKS_SKIN_MAGIC) {
-		wind_task_t *task = thread2wind_task(cur);
+	if (xnthread_get_magic(thread) == VXWORKS_SKIN_MAGIC) {
+		wind_task_t *task = thread2wind_task(thread);
 		task->safecnt++;
 	}
 }

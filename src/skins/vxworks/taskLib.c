@@ -252,12 +252,43 @@ TASK_ID taskSpawn(const char *name,
 	return taskActivate(tcb.handle) == ERROR ? ERROR : tcb.handle;
 }
 
-STATUS taskDeleteForce(TASK_ID task_id)
+STATUS taskDelete(TASK_ID task_id)
 {
+	TASK_DESC desc;
+	pthread_t tid;
 	int err;
 
-	err = XENOMAI_SKINCALL1(__vxworks_muxid,
-				__vxworks_task_deleteforce, task_id);
+	err = XENOMAI_SKINCALL2(__vxworks_muxid,
+				__vxworks_taskinfo_get, task_id, &desc);
+	if (err) {
+		errno = abs(err);
+		return ERROR;
+	}
+
+	tid = (pthread_t)desc.td_opaque;
+	if (tid == pthread_self()) {
+		/* Silently migrate to avoid raising SIGXCPU. */
+		XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_LINUX_DOMAIN);
+		pthread_exit(NULL);
+	}
+
+	/*
+	 * Serialize and lock out anyone from safe sections. We won't
+	 * release this lock, which is untracked (no PIP) and lives
+	 * within the target thread TCB, so that is ok.
+	 */
+	XENOMAI_SKINCALL1(__vxworks_muxid, __vxworks_task_safe, task_id);
+
+	if (tid) {
+		err = pthread_cancel(tid);
+		if (err)
+			return -err;
+	}
+
+	err = XENOMAI_SKINCALL1(__vxworks_muxid, __vxworks_task_delete, task_id);
+	if (err == S_objLib_OBJ_ID_ERROR)
+		return OK; /* Used to be valid, but has exited. */
+
 	if (err) {
 		errno = abs(err);
 		return ERROR;
@@ -266,12 +297,37 @@ STATUS taskDeleteForce(TASK_ID task_id)
 	return OK;
 }
 
-STATUS taskDelete(TASK_ID task_id)
+STATUS taskDeleteForce(TASK_ID task_id)
 {
+	TASK_DESC desc;
+	pthread_t tid;
 	int err;
 
-	err =
-	    XENOMAI_SKINCALL1(__vxworks_muxid, __vxworks_task_delete, task_id);
+	err = XENOMAI_SKINCALL2(__vxworks_muxid,
+				__vxworks_taskinfo_get, task_id, &desc);
+	if (err) {
+		errno = abs(err);
+		return ERROR;
+	}
+
+	tid = (pthread_t)desc.td_opaque;
+	if (tid == pthread_self()) {
+		/* Silently migrate to avoid raising SIGXCPU. */
+		XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_LINUX_DOMAIN);
+		pthread_exit(NULL);
+	}
+
+	if (tid) {
+		err = pthread_cancel(tid);
+		if (err)
+			return -err;
+	}
+
+	err = XENOMAI_SKINCALL1(__vxworks_muxid,
+				__vxworks_task_deleteforce, task_id);
+	if (err == S_objLib_OBJ_ID_ERROR)
+		return OK; /* Used to be valid, but has exited. */
+
 	if (err) {
 		errno = abs(err);
 		return ERROR;
@@ -384,7 +440,7 @@ STATUS taskUnlock(void)
 
 STATUS taskSafe(void)
 {
-	XENOMAI_SKINCALL0(__vxworks_muxid, __vxworks_task_safe);
+	XENOMAI_SKINCALL1(__vxworks_muxid, __vxworks_task_safe, 0);
 	return OK;
 }
 
