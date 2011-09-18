@@ -192,8 +192,10 @@ u_long sm_p(u_long smid, u_long flags, u_long timeout)
 
 	ret = syncobj_pend(&sem->sobj, timespec, &syns);
 	if (ret) {
-		if (ret == -EIDRM)
-			return ERR_SKILLD;
+		if (ret == -EIDRM) {
+			ret = ERR_SKILLD;
+			goto out;
+		}
 
 		sem->value++;	/* Fix up semaphore count. */
 
