@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <malloc.h>
+#include "copperplate/wrappers.h"
 #include "copperplate/init.h"
 #include "copperplate/heapobj.h"
 
@@ -37,12 +38,18 @@ int mem_extend(struct heapobj *hobj, size_t size, void *mem)
 
 void *mem_alloc(struct heapobj *hobj, size_t size)
 {
-	return malloc(size);
+	/*
+	 * XXX: We don't want debug _nrt assertions to trigger when
+	 * running over Cobalt if the user picked this allocator, so
+	 * we make sure to call the glibc directly, not the Cobalt
+	 * wrappers.
+	 */
+	return __STD(malloc(size));
 }
 
 void mem_free(struct heapobj *hobj, void *ptr)
 {
-	free(ptr);
+	__STD(free(ptr));
 }
 
 size_t mem_inquire(struct heapobj *hobj, void *ptr)
@@ -64,12 +71,12 @@ static struct heapobj_ops malloc_ops = {
 
 void *pvmalloc(size_t size)
 {
-	return malloc(size);
+	return __STD(malloc(size));
 }
 
 void pvfree(void *ptr)
 {
-	free(ptr);
+	__STD(free(ptr));
 }
 
 char *pvstrdup(const char *ptr)

@@ -17,15 +17,15 @@ void traceobj_init(struct traceobj *trobj, const char *label, int nr_marks)
 	pthread_mutexattr_t mattr;
 	pthread_condattr_t cattr;
 
-	pthread_mutexattr_init(&mattr);
-	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
-	pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
-	pthread_mutex_init(&trobj->lock, &mattr);
-	pthread_mutexattr_destroy(&mattr);
-	pthread_condattr_init(&cattr);
-	pthread_condattr_setpshared(&cattr, PTHREAD_PROCESS_PRIVATE);
-	pthread_cond_init(&trobj->join, &cattr);
-	pthread_condattr_destroy(&cattr);
+	__RT(pthread_mutexattr_init(&mattr));
+	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
+	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
+	__RT(pthread_mutex_init(&trobj->lock, &mattr));
+	__RT(pthread_mutexattr_destroy(&mattr));
+	__RT(pthread_condattr_init(&cattr));
+	__RT(pthread_condattr_setpshared(&cattr, PTHREAD_PROCESS_PRIVATE));
+	__RT(pthread_cond_init(&trobj->join, &cattr));
+	__RT(pthread_condattr_destroy(&cattr));
 	trobj->nr_threads = 0;
 
 	trobj->label = label;
@@ -48,16 +48,16 @@ static void compare_marks(struct traceobj *trobj, int tseq[], int nr_seq) /* loc
 			fprintf(stderr, " <missing mark> |  [%d] expected\n",
 				tseq[mark]);
 		} else if (mark < nr_seq)
-			fprintf(stderr, "at %s:%d  |  [%d] should be [%d]\n",
-				trobj->marks[mark].file,
-				trobj->marks[mark].line,
-				trobj->marks[mark].mark,
-				tseq[mark]);
+			__RT(fprintf(stderr, "at %s:%d  |  [%d] should be [%d]\n",
+				     trobj->marks[mark].file,
+				     trobj->marks[mark].line,
+				     trobj->marks[mark].mark,
+				     tseq[mark]));
 		else
-			fprintf(stderr, "at %s:%d  |  unexpected [%d]\n",
-				trobj->marks[mark].file,
-				trobj->marks[mark].line,
-				trobj->marks[mark].mark);
+			__RT(fprintf(stderr, "at %s:%d  |  unexpected [%d]\n",
+				     trobj->marks[mark].file,
+				     trobj->marks[mark].line,
+				     trobj->marks[mark].mark));
 	}
 
 	fflush(stderr);
@@ -114,7 +114,7 @@ fail:
 void traceobj_destroy(struct traceobj *trobj)
 {
 	pvfree(trobj->marks);
-	pthread_mutex_destroy(&trobj->lock);
+	__RT(pthread_mutex_destroy(&trobj->lock));
 }
 
 static void dump_marks(struct traceobj *trobj) /* lock held */
@@ -122,10 +122,10 @@ static void dump_marks(struct traceobj *trobj) /* lock held */
 	int mark;
 
 	for (mark = 0; mark < trobj->cur_mark; mark++)
-		fprintf(stderr, "[%d] at %s:%d\n",
-			trobj->marks[mark].mark,
-			trobj->marks[mark].file,
-			trobj->marks[mark].line);
+		__RT(fprintf(stderr, "[%d] at %s:%d\n",
+			     trobj->marks[mark].mark,
+			     trobj->marks[mark].file,
+			     trobj->marks[mark].line));
 
 	fflush(stderr);
 }
@@ -191,7 +191,7 @@ void traceobj_unwind(struct traceobj *trobj)
 	write_lock_safe(&trobj->lock, state);
 
 	if (--trobj->nr_threads <= 0)
-		pthread_cond_signal(&trobj->join);
+		__RT(pthread_cond_signal(&trobj->join));
 
 	write_unlock_safe(&trobj->lock, state);
 }
@@ -215,7 +215,7 @@ void traceobj_join(struct traceobj *trobj)
 	read_lock(&trobj->lock);
 
 	while (trobj->nr_threads > 0)
-		pthread_cond_wait(&trobj->join, &trobj->lock);
+		__RT(pthread_cond_wait(&trobj->join, &trobj->lock));
 
 	read_unlock(&trobj->lock);
 	pop_cleanup_lock(&trobj->lock);

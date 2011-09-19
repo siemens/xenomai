@@ -77,7 +77,7 @@ int registry_add_dir(const char *fmt, ...)
 	if (basename == NULL)
 		return -EINVAL;
 
-	clock_gettime(CLOCK_COPPERPLATE, &now);
+	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
 
 	write_lock_safe(&regfs_lock, state);
 
@@ -132,11 +132,11 @@ int registry_init_file(struct fsobj *fsobj,  struct registry_operations *ops)
 	fsobj->ops = ops;
 	pvholder_init(&fsobj->link);
 
-	pthread_mutexattr_init(&mattr);
-	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
-	pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
-	pthread_mutex_init(&fsobj->lock, &mattr);
-	pthread_mutexattr_destroy(&mattr);
+	__RT(pthread_mutexattr_init(&mattr));
+	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
+	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
+	__RT(pthread_mutex_init(&fsobj->lock, &mattr));
+	__RT(pthread_mutexattr_destroy(&mattr));
 
 	return 0;
 }
@@ -163,7 +163,7 @@ int registry_add_file(struct fsobj *fsobj, int mode, const char *fmt, ...)
 	fsobj->path = xnstrdup(path);
 	fsobj->basename = fsobj->path + (basename - path) + 1;
 	fsobj->mode = mode & O_ACCMODE;
-	clock_gettime(CLOCK_COPPERPLATE, &fsobj->ctime);
+	__RT(clock_gettime(CLOCK_COPPERPLATE, &fsobj->ctime));
 	fsobj->mtime = fsobj->ctime;
 
 	write_lock_safe(&regfs_lock, state);
@@ -212,14 +212,14 @@ void registry_remove_file(struct fsobj *fsobj)
 	 * We are covered by a previous call to write_lock_safe(), so
 	 * we may nest pthread_mutex_lock() directly.
 	 */
-	pthread_mutex_lock(&fsobj->lock);
+	__RT(pthread_mutex_lock(&fsobj->lock));
 	d = fsobj->dir;
 	pvlist_remove(&fsobj->link);
 	d->nfiles--;
 	assert(d->nfiles >= 0);
 	xnfree(fsobj->path);
-	pthread_mutex_unlock(&fsobj->lock);
-	pthread_mutex_destroy(&fsobj->lock);
+	__RT(pthread_mutex_unlock(&fsobj->lock));
+	__RT(pthread_mutex_destroy(&fsobj->lock));
 out:
 	write_unlock_safe(&regfs_lock, state);
 }
@@ -229,7 +229,7 @@ void registry_touch_file(struct fsobj *fsobj)
 	if (__this_node.no_registry)
 		return;
 
-	clock_gettime(CLOCK_COPPERPLATE, &fsobj->mtime);
+	__RT(clock_gettime(CLOCK_COPPERPLATE, &fsobj->mtime));
 }
 
 static int regfs_getattr(const char *path, struct stat *sbuf)
@@ -526,11 +526,11 @@ int registry_pkg_init(char *arg0, char *mntpt, int do_mkdir)
 		}
 	}
 
-	pthread_mutexattr_init(&mattr);
-	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
-	pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
-	pthread_mutex_init(&regfs_lock, &mattr);
-	pthread_mutexattr_destroy(&mattr);
+	__RT(pthread_mutexattr_init(&mattr));
+	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
+	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
+	__RT(pthread_mutex_init(&regfs_lock, &mattr));
+	__RT(pthread_mutexattr_destroy(&mattr));
 
 	pvhash_init(&regfs_objtable);
 	pvhash_init(&regfs_dirtable);
@@ -550,11 +550,11 @@ int registry_pkg_init(char *arg0, char *mntpt, int do_mkdir)
 	s.do_rmdir = do_mkdir;
 
 	/* Start the FUSE server thread. */
-	return -pthread_create(&regfs_thid, &thattr, registry_thread, &s);
+	return -__STD(pthread_create(&regfs_thid, &thattr, registry_thread, &s));
 }
 
 void registry_pkg_destroy(void)
 {
 	pthread_cancel(regfs_thid);
-	pthread_join(regfs_thid, NULL);
+	__STD(pthread_join(regfs_thid, NULL));
 }

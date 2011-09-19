@@ -176,11 +176,11 @@ static void init_heap(struct heap *heap, void *mem, size_t size)
 	heap->maxcont = heap->npages * HOBJ_PAGE_SIZE;
 	__list_init(heap, &heap->extents);
 
-	pthread_mutexattr_init(&mattr);
-	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
-	pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_SHARED);
-	pthread_mutex_init(&heap->lock, &mattr);
-	pthread_mutexattr_destroy(&mattr);
+	__RT(pthread_mutexattr_init(&mattr));
+	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
+	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_SHARED));
+	__RT(pthread_mutex_init(&heap->lock, &mattr));
+	__RT(pthread_mutexattr_destroy(&mattr));
 
 	memset(heap->buckets, 0, sizeof(heap->buckets));
 	extent = mem;
@@ -596,39 +596,39 @@ static int create_heap(struct heapobj *hobj, const char *session,
 	snprintf(hobj->fsname, sizeof(hobj->fsname), "/xeno:%s", hobj->name);
 
 	if (flags & HOBJ_FORCE)
-		shm_unlink(hobj->fsname);
+		__STD(shm_unlink(hobj->fsname));
 
-	fd = shm_open(hobj->fsname, O_RDWR|O_CREAT, 0600);
+	fd = __STD(shm_open(hobj->fsname, O_RDWR|O_CREAT, 0600));
 	if (fd < 0)
 		return -errno;
 
 	ret = flock(fd, LOCK_EX);
 	if (ret) {
-		close(fd);
+		__STD(close(fd));
 		return -errno;
 	}
 		
 	ret = fstat(fd, &sbuf);
 	if (ret) {
-		close(fd);
+		__STD(close(fd));
 		return -errno;
 	}
 
 	if (sbuf.st_size == 0) {
-		ret = ftruncate(fd, len);
+		ret = __STD(ftruncate(fd, len));
 		if (ret) {
-			close(fd);
-			shm_unlink(hobj->fsname);
+			__STD(close(fd));
+			__STD(shm_unlink(hobj->fsname));
 			return -errno;
 		}
 	} else if (sbuf.st_size != len) {
-		close(fd);
+		__STD(close(fd));
 		return -EEXIST;
 	}
 
-	heap = mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+	heap = __STD(mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0));
 	if (heap == MAP_FAILED) {
-		close(fd);
+		__STD(close(fd));
 		return -errno;
 	}
 
@@ -652,7 +652,7 @@ static void pshared_destroy(struct heapobj *hobj)
 	struct heap *heap = hobj->pool;
 	int cpid;
 
-	pthread_mutex_destroy(&heap->lock);
+	__RT(pthread_mutex_destroy(&heap->lock));
 
 	if (hobj->flags & HOBJ_DEPEND) {
 		free_block(&main_heap, heap);
@@ -660,11 +660,11 @@ static void pshared_destroy(struct heapobj *hobj)
 	}
 
 	cpid = heap->cpid;
-	munmap(heap, hobj->size + sizeof(*heap));
-	close(hobj->fd);
+	__STD(munmap(heap, hobj->size + sizeof(*heap)));
+	__STD(close(hobj->fd));
 
 	if (cpid == copperplate_get_tid() || (cpid && kill(cpid, 0)))
-		shm_unlink(hobj->fsname);
+		__STD(shm_unlink(hobj->fsname));
 }
 
 static int pshared_extend(struct heapobj *hobj, size_t size, void *mem)
@@ -682,7 +682,7 @@ static int pshared_extend(struct heapobj *hobj, size_t size, void *mem)
 		return -EINVAL;
 
 	newsize = size + hobj->size + sizeof(*heap) + sizeof(*extent);
-	ret = ftruncate(hobj->fd, newsize);
+	ret = __STD(ftruncate(hobj->fd, newsize));
 	if (ret)
 		return -errno;
 	/*

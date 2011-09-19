@@ -19,6 +19,8 @@
 #ifndef _COPPERPLATE_LOCK_H
 #define _COPPERPLATE_LOCK_H
 
+#include <copperplate/wrappers.h>
+
 /*
  * COPPERPLATE_PROTECT/UNPROTECT() should enclose any emulator code
  * prior to holding a lock, or invoking copperplate services (which
@@ -59,7 +61,7 @@ struct service {
 #endif  /* !CONFIG_XENO_ASYNC_CANCEL */
 
 #define push_cleanup_lock(lock)		\
-	pthread_cleanup_push((void (*)(void *))pthread_mutex_unlock, (lock))
+	pthread_cleanup_push((void (*)(void *))__RT(pthread_mutex_unlock), (lock))
 
 #define pop_cleanup_lock(lock)		\
 	pthread_cleanup_pop(0)
@@ -67,14 +69,14 @@ struct service {
 #define __do_lock_nocancel(__lock, __op)			\
 	({							\
 		int __ret;					\
-		__ret = -pthread_mutex_##__op(__lock);		\
+		__ret = -__RT(pthread_mutex_##__op(__lock));	\
 		__ret;						\
 	})
 
 #define __do_unlock_nocancel(__lock)				\
 	({							\
 		int __ret;					\
-		__ret = -pthread_mutex_unlock(__lock);		\
+		__ret = -__RT(pthread_mutex_unlock(__lock));	\
 		__ret;						\
 	})
 
@@ -133,7 +135,7 @@ struct service {
 	({								\
 		int __ret;						\
 		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &(__state)); \
-		__ret = -pthread_mutex_##__op(__lock);			\
+		__ret = -__RT(pthread_mutex_##__op(__lock));		\
 		if (__ret)						\
 			pthread_setcancelstate(__state, NULL);		\
 		__ret;							\
@@ -142,7 +144,7 @@ struct service {
 #define __do_unlock_safe(__lock, __state)				\
 	({								\
 		int __ret;						\
-		__ret = -pthread_mutex_unlock(__lock);			\
+		__ret = -__RT(pthread_mutex_unlock(__lock));		\
 		pthread_setcancelstate(__state, NULL);			\
 		__ret;							\
 	})

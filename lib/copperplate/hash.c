@@ -96,16 +96,16 @@ void __hash_init(void *heap, struct hash_table *t)
 	for (n = 0; n < HASHSLOTS; n++)
 		__list_init(heap, &t->table[n].obj_list);
 
-	pthread_mutexattr_init(&mattr);
-	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
-	pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute);
-	pthread_mutex_init(&t->lock, &mattr);
-	pthread_mutexattr_destroy(&mattr);
+	__RT(pthread_mutexattr_init(&mattr));
+	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
+	__RT(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute));
+	__RT(pthread_mutex_init(&t->lock, &mattr));
+	__RT(pthread_mutexattr_destroy(&mattr));
 }
 
 void hash_destroy(struct hash_table *t)
 {
-	pthread_mutex_destroy(&t->lock);
+	__RT(pthread_mutex_destroy(&t->lock));
 }
 
 static struct hash_bucket *do_hash(struct hash_table *t, const char *key)
@@ -267,11 +267,11 @@ void pvhash_init(struct pvhash_table *t)
 	for (n = 0; n < HASHSLOTS; n++)
 		pvlist_init(&t->table[n].obj_list);
 
-	pthread_mutexattr_init(&mattr);
-	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
-	pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
-	pthread_mutex_init(&t->lock, &mattr);
-	pthread_mutexattr_destroy(&mattr);
+	__RT(pthread_mutexattr_init(&mattr));
+	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
+	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
+	__RT(pthread_mutex_init(&t->lock, &mattr));
+	__RT(pthread_mutexattr_destroy(&mattr));
 }
 
 static struct pvhash_bucket *do_pvhash(struct pvhash_table *t, const char *key)

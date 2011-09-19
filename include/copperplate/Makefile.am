@@ -16,4 +16,5 @@ includesub_HEADERS =	\
 	registry.h	\
 	syncobj.h	\
 	threadobj.h	\
-	traceobj.h
+	traceobj.h	\
+	wrappers.h

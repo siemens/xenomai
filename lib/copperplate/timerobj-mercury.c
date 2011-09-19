@@ -59,7 +59,7 @@ int timerobj_init(struct timerobj *tmobj)
 
 	tmobj->handler = NULL;
 
-	if (timer_create(CLOCK_COPPERPLATE, &evt, &tmobj->timer))
+	if (__STD(timer_create(CLOCK_COPPERPLATE, &evt, &tmobj->timer)))
 		return -errno;
 
 	return 0;
@@ -67,7 +67,7 @@ int timerobj_init(struct timerobj *tmobj)
 
 int timerobj_destroy(struct timerobj *tmobj)
 {
-	if (timer_delete(tmobj->timer))
+	if (__STD(timer_delete(tmobj->timer)))
 		return -errno;
 
 	return 0;
@@ -79,7 +79,7 @@ int timerobj_start(struct timerobj *tmobj,
 {
 	tmobj->handler = handler;
 
-	if (timer_settime(tmobj->timer, TIMER_ABSTIME, it, NULL))
+	if (__STD(timer_settime(tmobj->timer, TIMER_ABSTIME, it, NULL)))
 		return -errno;
 
 	return 0;
@@ -98,7 +98,7 @@ static const struct itimerspec itimer_stop = {
 
 int timerobj_stop(struct timerobj *tmobj)
 {
-	if (timer_settime(tmobj->timer, 0, &itimer_stop, NULL))
+	if (__STD(timer_settime(tmobj->timer, 0, &itimer_stop, NULL)))
 		return -errno;
 
 	tmobj->handler = NULL;

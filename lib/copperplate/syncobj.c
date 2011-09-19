@@ -18,6 +18,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include "copperplate/lock.h"
 #include "copperplate/threadobj.h"
 #include "copperplate/syncobj.h"
 
@@ -62,15 +63,15 @@ void syncobj_init(struct syncobj *sobj, int flags,
 	sobj->drain_count = 0;
 	sobj->release_count = 0;
 	sobj->finalizer = finalizer;
-	pthread_mutexattr_init(&mattr);
-	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
-	assert(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute) == 0);
-	pthread_mutex_init(&sobj->lock, &mattr);
-	pthread_mutexattr_destroy(&mattr);
-	pthread_condattr_init(&cattr);
-	pthread_condattr_setpshared(&cattr, mutex_scope_attribute);
-	pthread_cond_init(&sobj->post_sync, &cattr);
-	pthread_condattr_destroy(&cattr);
+	__RT(pthread_mutexattr_init(&mattr));
+	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
+	assert(__RT(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute)) == 0);
+	__RT(pthread_mutex_init(&sobj->lock, &mattr));
+	__RT(pthread_mutexattr_destroy(&mattr));
+	__RT(pthread_condattr_init(&cattr));
+	__RT(pthread_condattr_setpshared(&cattr, mutex_scope_attribute));
+	__RT(pthread_cond_init(&sobj->post_sync, &cattr));
+	__RT(pthread_condattr_destroy(&cattr));
 }
 
 int syncobj_lock(struct syncobj *sobj, struct syncstate *syns)
@@ -90,11 +91,11 @@ static void syncobj_test_finalize(struct syncobj *sobj,
 	int relcount;
 
 	relcount = --sobj->release_count;
-	pthread_mutex_unlock(&sobj->lock);
+	__RT(pthread_mutex_unlock(&sobj->lock));
 
 	if (relcount == 0) {
-		pthread_cond_destroy(&sobj->post_sync);
-		pthread_mutex_destroy(&sobj->lock);
+		__RT(pthread_cond_destroy(&sobj->post_sync));
+		__RT(pthread_mutex_destroy(&sobj->lock));
 		fnref_get(finalizer, sobj->finalizer);
 		if (finalizer)
 			finalizer(sobj);
@@ -133,7 +134,7 @@ int __syncobj_signal_drain(struct syncobj *sobj)
 {
 	/* Release one thread waiting for the object to drain. */
 	--sobj->drain_count;
-	pthread_cond_signal(&sobj->post_sync);
+	__RT(pthread_cond_signal(&sobj->post_sync));
 
 	return 1;
 }
@@ -150,7 +151,7 @@ static void syncobj_cleanup_pend(void *arg)
 	sobj = container_of(arg, struct syncobj, lock);
 	if (holder_linked(&current->wait_link))
 		list_remove_init(&current->wait_link);
-	pthread_mutex_unlock(&sobj->lock);
+	__RT(pthread_mutex_unlock(&sobj->lock));
 }
 
 int syncobj_pend(struct syncobj *sobj, struct timespec *timeout,
@@ -179,11 +180,11 @@ int syncobj_pend(struct syncobj *sobj, struct timespec *timeout,
 
 	do {
 		if (timeout)
-			ret = pthread_cond_timedwait(&current->wait_sync,
-						     &sobj->lock, timeout);
+			ret = __RT(pthread_cond_timedwait(&current->wait_sync,
+							  &sobj->lock, timeout));
 		else
-			ret = pthread_cond_wait(&current->wait_sync,
-						&sobj->lock);
+			ret = __RT(pthread_cond_wait(&current->wait_sync,
+						     &sobj->lock));
 		/* Check for spurious wake up. */
 	} while (ret == 0 && holder_linked(&current->wait_link));
 
@@ -220,7 +221,7 @@ void syncobj_requeue_waiter(struct syncobj *sobj, struct threadobj *thobj)
 void syncobj_wakeup_waiter(struct syncobj *sobj, struct threadobj *thobj)
 {
 	list_remove_init(&thobj->wait_link);
-	pthread_cond_signal(&thobj->wait_sync);
+	__RT(pthread_cond_signal(&thobj->wait_sync));
 }
 
 struct threadobj *syncobj_post(struct syncobj *sobj)
@@ -231,7 +232,7 @@ struct threadobj *syncobj_post(struct syncobj *sobj)
 		return NULL;
 
 	thobj = list_pop_entry(&sobj->pend_list, struct threadobj, wait_link);
-	pthread_cond_signal(&thobj->wait_sync);
+	__RT(pthread_cond_signal(&thobj->wait_sync));
 
 	return thobj;
 }
@@ -262,7 +263,7 @@ static void syncobj_cleanup_drain(void *arg)
 		list_remove_init(&current->wait_link);
 		sobj->drain_count--;
 	}
-	pthread_mutex_unlock(&sobj->lock);
+	__RT(pthread_mutex_unlock(&sobj->lock));
 }
 
 int syncobj_wait_drain(struct syncobj *sobj, struct timespec *timeout,
@@ -288,10 +289,10 @@ int syncobj_wait_drain(struct syncobj *sobj, struct timespec *timeout,
 		current->wait_hook(current, SYNCOBJ_BLOCK);
 
 	if (timeout)
-		ret = pthread_cond_timedwait(&sobj->post_sync,
-					     &sobj->lock, timeout);
+		ret = __RT(pthread_cond_timedwait(&sobj->post_sync,
+						  &sobj->lock, timeout));
 	else
-		ret = pthread_cond_wait(&sobj->post_sync, &sobj->lock);
+		ret = __RT(pthread_cond_wait(&sobj->post_sync, &sobj->lock));
 
 	if (current->wait_status == 0)
 		list_remove_init(&current->wait_link);
@@ -329,7 +330,7 @@ int syncobj_flush(struct syncobj *sobj, int reason)
 		thobj = list_pop_entry(&sobj->pend_list,
 				       struct threadobj, wait_link);
 		thobj->wait_status |= reason;
-		pthread_cond_signal(&thobj->wait_sync);
+		__RT(pthread_cond_signal(&thobj->wait_sync));
 		sobj->release_count++;
 	}
 
@@ -341,7 +342,7 @@ int syncobj_flush(struct syncobj *sobj, int reason)
 		} while (!list_empty(&sobj->drain_list));
 		sobj->release_count += sobj->drain_count;
 		sobj->drain_count = 0;
-		pthread_cond_broadcast(&sobj->post_sync);
+		__RT(pthread_cond_broadcast(&sobj->post_sync));
 	}
 
 	return sobj->release_count;

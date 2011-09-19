@@ -31,6 +31,7 @@
 #include <sched.h>
 #include "copperplate/init.h"
 #include "copperplate/panic.h"
+#include "copperplate/lock.h"
 #include "copperplate/traceobj.h"
 #include "copperplate/threadobj.h"
 #include "copperplate/syncobj.h"
@@ -68,17 +69,22 @@ void threadobj_init(struct threadobj *thobj,
 	thobj->suspend_hook = idata->suspend_hook;
 	thobj->cnode = __this_node.id;
 
-	pthread_condattr_init(&cattr);
-	pthread_condattr_setpshared(&cattr, mutex_scope_attribute);
-	pthread_cond_init(&thobj->wait_sync, &cattr);
-	pthread_condattr_destroy(&cattr);
+	/*
+	 * XXX: we don't actually need to enclose POSIX calls with
+	 * __RT() qualifiers since this file is Cobalt-specific, but
+	 * we still do this as a mean to make the code obvious.
+	 */
+	__RT(pthread_condattr_init(&cattr));
+	__RT(pthread_condattr_setpshared(&cattr, mutex_scope_attribute));
+	__RT(pthread_cond_init(&thobj->wait_sync, &cattr));
+	__RT(pthread_condattr_destroy(&cattr));
 
-	pthread_mutexattr_init(&mattr);
-	pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE);
-	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
-	pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute);
-	pthread_mutex_init(&thobj->lock, &mattr);
-	pthread_mutexattr_destroy(&mattr);
+	__RT(pthread_mutexattr_init(&mattr));
+	__RT(pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE));
+	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
+	__RT(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute));
+	__RT(pthread_mutex_init(&thobj->lock, &mattr));
+	__RT(pthread_mutexattr_destroy(&mattr));
 }
 
 /* thobj->lock free, asynchronous cancellation disabled. */
@@ -137,7 +143,7 @@ int threadobj_cancel(struct threadobj *thobj) /* thobj->lock free */
 	 * than the caller of threadobj_cancel()), but will receive
 	 * the following cancellation request asap.
 	 */
-	ret = pthread_kill(tid, SIGDEMT);
+	ret = __RT(pthread_kill(tid, SIGDEMT));
 	if (ret)
 		return -ret;
 
@@ -166,7 +172,7 @@ void threadobj_finalize(void *p) /* thobj->lock free */
 
 void threadobj_destroy(struct threadobj *thobj) /* thobj->lock free */
 {
-	pthread_mutex_destroy(&thobj->lock);
+	__RT(pthread_mutex_destroy(&thobj->lock));
 }
 
 int threadobj_suspend(struct threadobj *thobj) /* thobj->lock held */
@@ -175,7 +181,7 @@ int threadobj_suspend(struct threadobj *thobj) /* thobj->lock held */
 	int ret;
 
 	threadobj_unlock(thobj);
-	ret = pthread_kill(tid, SIGSUSP);
+	ret = __RT(pthread_kill(tid, SIGSUSP));
 	threadobj_lock(thobj);
 
 	return -ret;
@@ -187,7 +193,7 @@ int threadobj_resume(struct threadobj *thobj) /* thobj->lock held */
 	int ret;
 
 	threadobj_unlock(thobj);
-	ret = pthread_kill(tid, SIGRESM);
+	ret = __RT(pthread_kill(tid, SIGRESM));
 	threadobj_lock(thobj);
 
 	return -ret;
@@ -202,7 +208,7 @@ int threadobj_unblock(struct threadobj *thobj) /* thobj->lock held */
 		syncobj_flush(thobj->wait_sobj, SYNCOBJ_FLUSHED);
 	else
 		/* Remove standalone DELAY */
-		ret = -pthread_kill(tid, SIGRELS);
+		ret = -__RT(pthread_kill(tid, SIGRELS));
 
 	return ret;
 }
@@ -255,7 +261,7 @@ int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock hel
 	struct sched_param param;
 	int ret, policy;
 
-	ret = pthread_getschedparam(tid, &policy, &param);
+	ret = __RT(pthread_getschedparam(tid, &policy, &param));
 	if (ret)
 		return -ret;
 
@@ -269,7 +275,7 @@ int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock hel
 	 * set.
 	 */
 	param.sched_priority = prio;
-	ret = pthread_setschedparam(tid, policy, &param);
+	ret = __RT(pthread_setschedparam(tid, policy, &param));
 	threadobj_lock(thobj);
 
 	return -ret;
@@ -280,7 +286,7 @@ int threadobj_get_priority(struct threadobj *thobj) /* thobj->lock held */
 	struct sched_param param;
 	int ret, policy;
 
-	ret = pthread_getschedparam(thobj->tid, &policy, &param);
+	ret = __RT(pthread_getschedparam(thobj->tid, &policy, &param));
 	if (ret)
 		return -ret;
 
@@ -294,7 +300,7 @@ static int set_rr(struct threadobj *thobj, struct timespec *quantum)
 	struct sched_param param;
 	int policy, ret;
 
-	ret = pthread_getschedparam(tid, &policy, &param);
+	ret = __RT(pthread_getschedparam(tid, &policy, &param));
 	if (ret)
 		return -ret;
 
@@ -401,7 +407,7 @@ void threadobj_pkg_init(void)
 	threadobj_async = 0;
 
 	/* PI and recursion would be overkill. */
-	pthread_mutex_init(&list_lock, NULL);
+	__RT(pthread_mutex_init(&list_lock, NULL));
 
 	if (pthread_key_create(&threadobj_tskey, threadobj_finalize) != 0)
 		panic("failed to allocate TSD key");

@@ -97,17 +97,22 @@ void threadobj_init(struct threadobj *thobj,
 	thobj->suspend_hook = idata->suspend_hook;
 	thobj->cnode = __this_node.id;
 
-	pthread_condattr_init(&cattr);
-	pthread_condattr_setpshared(&cattr, mutex_scope_attribute);
-	pthread_cond_init(&thobj->wait_sync, &cattr);
-	pthread_condattr_destroy(&cattr);
+	/*
+	 * XXX: we don't actually need to enclose POSIX calls with
+	 * __STD() qualifiers since this file is Mercury-specific, but
+	 * we still do this as a mean to make the code obvious.
+	 */
+	__STD(pthread_condattr_init(&cattr));
+	__STD(pthread_condattr_setpshared(&cattr, mutex_scope_attribute));
+	__STD(pthread_cond_init(&thobj->wait_sync, &cattr));
+	__STD(pthread_condattr_destroy(&cattr));
 
-	pthread_mutexattr_init(&mattr);
-	pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE);
-	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
-	pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute);
-	pthread_mutex_init(&thobj->lock, &mattr);
-	pthread_mutexattr_destroy(&mattr);
+	__STD(pthread_mutexattr_init(&mattr));
+	__STD(pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE));
+	__STD(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
+	__STD(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute));
+	__STD(pthread_mutex_init(&thobj->lock, &mattr));
+	__STD(pthread_mutexattr_destroy(&mattr));
 }
 
 int threadobj_prologue(struct threadobj *thobj, const char *name)
@@ -161,7 +166,7 @@ void threadobj_finalize(void *p)
 
 void threadobj_destroy(struct threadobj *thobj)
 {
-	pthread_mutex_destroy(&thobj->lock);
+	__STD(pthread_mutex_destroy(&thobj->lock));
 }
 
 int threadobj_suspend(struct threadobj *thobj)
@@ -193,7 +198,7 @@ int threadobj_unblock(struct threadobj *thobj)
 		syncobj_flush(thobj->wait_sobj, SYNCOBJ_FLUSHED);
 	else
 		/* Remove standalone DELAY */
-		ret = -pthread_kill(tid, UNBLOCKSIG);
+		ret = -__STD(pthread_kill(tid, UNBLOCKSIG));
 
 	return ret;
 }
@@ -209,7 +214,7 @@ int threadobj_lock_sched(struct threadobj *thobj)
 	if (thobj->schedlock_depth++ > 0)
 		return 0;
 
-	ret = pthread_getschedparam(tid, &policy, &param);
+	ret = __STD(pthread_getschedparam(tid, &policy, &param));
 	if (ret)
 		return -ret;
 
@@ -217,7 +222,7 @@ int threadobj_lock_sched(struct threadobj *thobj)
 	thobj->status |= THREADOBJ_SCHEDLOCK;
 	param.sched_priority = threadobj_max_prio - 1;
 
-	return -pthread_setschedparam(tid, SCHED_FIFO, &param);
+	return -__STD(pthread_setschedparam(tid, SCHED_FIFO, &param));
 }
 
 int threadobj_unlock_sched(struct threadobj *thobj)
@@ -237,7 +242,7 @@ int threadobj_unlock_sched(struct threadobj *thobj)
 	thobj->status &= ~THREADOBJ_SCHEDLOCK;
 	param.sched_priority = thobj->core.prio_unlocked;
 	threadobj_unlock(thobj);
-	ret = pthread_setschedparam(tid, SCHED_FIFO, &param);
+	ret = __STD(pthread_setschedparam(tid, SCHED_FIFO, &param));
 	threadobj_lock(thobj);
 
 	return -ret;
@@ -265,7 +270,7 @@ int threadobj_set_priority(struct threadobj *thobj, int prio)
 	 * the pthread interface to recheck the tid for existence.
 	 */
 	param.sched_priority = prio;
-	ret = pthread_setschedparam(tid, SCHED_FIFO, &param);
+	ret = __STD(pthread_setschedparam(tid, SCHED_FIFO, &param));
 	threadobj_lock(thobj);
 
 	return -ret;
@@ -276,7 +281,7 @@ int threadobj_get_priority(struct threadobj *thobj) /* thobj->lock held */
 	struct sched_param param;
 	int ret, policy;
 
-	ret = pthread_getschedparam(thobj->tid, &policy, &param);
+	ret = __STD(pthread_getschedparam(thobj->tid, &policy, &param));
 	if (ret)
 		return -ret;
 
@@ -292,7 +297,7 @@ static void roundrobin_handler(int sig)
 	 * multiple time slices system-wide.
 	 */
 	if (current && (current->status & THREADOBJ_ROUNDROBIN))
-		sched_yield();
+		__STD(sched_yield());
 }
 
 static inline void set_rr(struct threadobj *thobj, struct timespec *quantum)
@@ -423,7 +428,7 @@ void threadobj_pkg_init(void)
 	global_rr = 0;
 
 	/* PI and recursion would be overkill. */
-	pthread_mutex_init(&list_lock, NULL);
+	__STD(pthread_mutex_init(&list_lock, NULL));
 
 	if (pthread_key_create(&threadobj_tskey, threadobj_finalize) != 0)
 		panic("failed to allocate TSD key");

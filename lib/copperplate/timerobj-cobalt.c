@@ -88,7 +88,7 @@ static void *timerobj_server(void *arg)
 	pthread_setspecific(threadobj_tskey, THREADOBJ_IRQCONTEXT);
 
 	for (;;) {
-		ret = sem_wait(&svsem);
+		ret = __RT(sem_wait(&svsem));
 		if (ret && ret != EINTR)
 			break;
 
@@ -99,7 +99,7 @@ static void *timerobj_server(void *arg)
 		push_cleanup_lock(&svlock);
 		write_lock(&svlock);
 
-		clock_gettime(CLOCK_COPPERPLATE, &now);
+		__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
 
 		pvlist_for_each_entry_safe(tmobj, tmp, &svtimers, link) {
 			value = tmobj->spec.it_value;
@@ -139,7 +139,7 @@ static int timerobj_spawn_server(void)
 	memset(&param, 0, sizeof(param));
 	param.sched_priority = threadobj_irq_priority();
 	pthread_attr_setschedparam(&thattr, &param);
-	ret = pthread_create(&svthread, &thattr, timerobj_server, NULL);
+	ret = __RT(pthread_create(&svthread, &thattr, timerobj_server, NULL));
 out:
 	read_unlock(&svlock);
 	pop_cleanup_lock(&svlock);
@@ -168,7 +168,7 @@ int timerobj_init(struct timerobj *tmobj)
 	tmobj->handler = NULL;
 	pvholder_init(&tmobj->link); /* so we may use pvholder_linked() */
 
-	if (timer_create(CLOCK_COPPERPLATE, &evt, &tmobj->timer))
+	if (__RT(timer_create(CLOCK_COPPERPLATE, &evt, &tmobj->timer)))
 		return -errno;
 
 	return 0;
@@ -183,7 +183,7 @@ int timerobj_destroy(struct timerobj *tmobj)
 
 	write_unlock(&svlock);
 
-	if (timer_delete(tmobj->timer))
+	if (__RT(timer_delete(tmobj->timer)))
 		return -errno;
 
 	return 0;
@@ -199,7 +199,7 @@ int timerobj_start(struct timerobj *tmobj,
 	timerobj_enqueue(tmobj);
 	write_unlock(&svlock);
 
-	if (timer_settime(tmobj->timer, TIMER_ABSTIME, it, NULL))
+	if (__RT(timer_settime(tmobj->timer, TIMER_ABSTIME, it, NULL)))
 		return -errno;
 
 	return 0;
@@ -218,7 +218,7 @@ int timerobj_stop(struct timerobj *tmobj)
 
 	tmobj->handler = NULL;
 
-	if (timer_settime(tmobj->timer, 0, &itimer_stop, NULL))
+	if (__RT(timer_settime(tmobj->timer, 0, &itimer_stop, NULL)))
 		return -errno;
 
 	return 0;
@@ -229,16 +229,16 @@ int timerobj_pkg_init(void)
 	pthread_mutexattr_t mattr;
 	int ret;
 
-	ret = sem_init(&svsem, 0, 0);
+	ret = __RT(sem_init(&svsem, 0, 0));
 	if (ret)
 		return -errno;
 
-	pthread_mutexattr_init(&mattr);
-	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
-	pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE);
-	pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
-	ret = pthread_mutex_init(&svlock, &mattr);
-	pthread_mutexattr_destroy(&mattr);
+	__RT(pthread_mutexattr_init(&mattr));
+	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
+	__RT(pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE));
+	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
+	ret = __RT(pthread_mutex_init(&svlock, &mattr));
+	__RT(pthread_mutexattr_destroy(&mattr));
 	if (ret)
 		return -ret;
 

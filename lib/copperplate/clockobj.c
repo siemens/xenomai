@@ -75,7 +75,7 @@ void clockobj_ticks_to_timeout(struct clockobj *clkobj,
 	struct timespec delta;
 
 	read_lock_nocancel(&clkobj->lock);
-	clock_gettime(CLOCK_COPPERPLATE, ts);
+	__RT(clock_gettime(CLOCK_COPPERPLATE, ts));
 	ticks_to_timespec(clkobj, ticks, &delta);
 	read_unlock(&clkobj->lock);
 	timespec_add(ts, ts, &delta);
@@ -192,7 +192,7 @@ void clockobj_set_date(struct clockobj *clkobj,
 
 	read_lock_nocancel(&clkobj->lock);
 
-	clock_gettime(CLOCK_COPPERPLATE, &now);
+	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
 
 	/* Change the resolution on-the-fly if given. */
 	if (resolution_ns)
@@ -258,7 +258,7 @@ void clockobj_get_date(struct clockobj *clkobj,
 ticks_t clockobj_get_tsc(void)
 {
 	struct timespec now;
-	clock_gettime(CLOCK_COPPERPLATE, &now);
+	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
 	return now.tv_sec * 1000000000ULL + now.tv_nsec;
 }
 
@@ -274,7 +274,7 @@ void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks,
 
 	read_lock_nocancel(&clkobj->lock);
 
-	clock_gettime(CLOCK_COPPERPLATE, &now);
+	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
 
 	timespec_add(&date, &clkobj->offset, &now);
 
@@ -308,12 +308,12 @@ int clockobj_init(struct clockobj *clkobj,
 	if (ret)
 		return ret;
 
-	pthread_mutexattr_init(&mattr);
-	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
-	pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
-	pthread_mutex_init(&clkobj->lock, &mattr);
-	pthread_mutexattr_destroy(&mattr);
-	clock_gettime(CLOCK_COPPERPLATE, &clkobj->start);
+	__RT(pthread_mutexattr_init(&mattr));
+	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
+	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
+	__RT(pthread_mutex_init(&clkobj->lock, &mattr));
+	__RT(pthread_mutexattr_destroy(&mattr));
+	__RT(clock_gettime(CLOCK_COPPERPLATE, &clkobj->start));
 	timespec_sub(&clkobj->offset, &clkobj->epoch, &clkobj->start);
 	clkobj->name = name;
 
@@ -322,6 +322,6 @@ int clockobj_init(struct clockobj *clkobj,
 
 int clockobj_destroy(struct clockobj *clkobj)
 {
-	pthread_mutex_destroy(&clkobj->lock);
+	__RT(pthread_mutex_destroy(&clkobj->lock));
 	return 0;
 }

@@ -60,7 +60,7 @@ static void notifier_sighandler(int sig, siginfo_t *siginfo, void *uc)
 		 * notified.
 		 */
 		rfds = notifier_rset;
-		ret = select(max_rfildes + 1, &rfds, NULL, NULL, &tv);
+		ret = __STD(select(max_rfildes + 1, &rfds, NULL, NULL, &tv));
 		if (ret <= 0)
 			goto hand_over;
 	}
@@ -83,7 +83,7 @@ static void notifier_sighandler(int sig, siginfo_t *siginfo, void *uc)
 		if (nf->owner && nf->owner != tid)
 			continue;
 
-		while (read(nf->psfd[0], &c, 1) > 0)
+		while (__STD(read(nf->psfd[0], &c, 1)) > 0)
 			/* Callee must run async-safe code only. */
 			nf->callback(nf);
 		return;
@@ -144,8 +144,8 @@ int notifier_init(struct notifier *nf,
 		return -errno;
 
 	if (pipe(nf->pwfd) < 0) {
-		close(nf->psfd[0]);
-		close(nf->psfd[1]);
+		__STD(close(nf->psfd[0]));
+		__STD(close(nf->psfd[1]));
 		return -errno;
 	}
 
@@ -153,11 +153,11 @@ int notifier_init(struct notifier *nf,
 	pvholder_init(&nf->link);
 	nf->notified = 0;
 	nf->owner = owned ? copperplate_get_tid() : 0;
-	pthread_mutexattr_init(&mattr);
-	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
-	pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
-	pthread_mutex_init(&nf->lock, &mattr);
-	pthread_mutexattr_destroy(&mattr);
+	__STD(pthread_mutexattr_init(&mattr));
+	__STD(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
+	__STD(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
+	__STD(pthread_mutex_init(&nf->lock, &mattr));
+	__STD(pthread_mutexattr_destroy(&mattr));
 
 	push_cleanup_lock(&notifier_lock);
 	lock_notifier_list(&oset);
@@ -196,9 +196,9 @@ void notifier_destroy(struct notifier *nf)
 	FD_CLR(nf->psfd[0], &notifier_rset);
 	unlock_notifier_list(&oset);
 	pop_cleanup_lock(&notifier_lock);
-	close(nf->psfd[0]);
-	close(nf->psfd[1]);
-	pthread_mutex_destroy(&nf->lock);
+	__STD(close(nf->psfd[0]));
+	__STD(close(nf->psfd[1]));
+	__STD(pthread_mutex_destroy(&nf->lock));
 }
 
 int notifier_signal(struct notifier *nf)
@@ -225,7 +225,7 @@ int notifier_signal(struct notifier *nf)
 	 * signal in case we notify the current thread.
 	 */
 	if (kick)
-		ret = write(fd, &c, 1);
+		ret = __STD(write(fd, &c, 1));
 
 	return 0;
 }
@@ -254,7 +254,7 @@ int notifier_release(struct notifier *nf)
 	read_unlock(&nf->lock);
 
 	if (kick)
-		ret = write(fd, &c, 1);
+		ret = __STD(write(fd, &c, 1));
 
 	return 0;
 }
@@ -264,7 +264,7 @@ int notifier_wait(const struct notifier *nf) /* sighandler context */
 	int ret;
 	char c;
 
-	ret = read(nf->pwfd[0], &c, 1);
+	ret = __STD(read(nf->pwfd[0], &c, 1));
 	assert(ret == 1);
 
 	return 0;
@@ -275,11 +275,11 @@ void notifier_pkg_init(void)
 	pthread_mutexattr_t mattr;
 	struct sigaction sa;
 
-	pthread_mutexattr_init(&mattr);
-	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
-	pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
-	pthread_mutex_init(&notifier_lock, &mattr);
-	pthread_mutexattr_destroy(&mattr);
+	__STD(pthread_mutexattr_init(&mattr));
+	__STD(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
+	__STD(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
+	__STD(pthread_mutex_init(&notifier_lock, &mattr));
+	__STD(pthread_mutexattr_destroy(&mattr));
 	/*
 	 * XXX: We have four requirements here:
 	 *
