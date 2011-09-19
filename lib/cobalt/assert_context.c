@@ -64,18 +64,18 @@ void assert_nrt_fast(void)
 void *__wrap_malloc(size_t size)
 {
 	assert_nrt();
-	return __real_malloc(size);
+	return __STD(malloc(size));
 }
 
 void __wrap_free(void *ptr)
 {
 	assert_nrt();
-	__real_free(ptr);
+	__STD(free(ptr));
 }
 
 /* vsyscall-based services */
 int __wrap_gettimeofday(struct timeval *tv, struct timezone *tz)
 {
 	assert_nrt();
-	return __real_gettimeofday(tv, tz);
+	return __STD(gettimeofday(tv, tz));
 }

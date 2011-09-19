@@ -22,47 +22,57 @@
 #if !(defined(__KERNEL__) || defined(__XENO_SIM__))
 
 #include_next <sys/socket.h>
+#include <cobalt/wrappers.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int __real_socket(int protocol_family, int socket_type, int protocol);
+COBALT_DECL(int, socket(int protocol_family,
+			int socket_type, int protocol));
 
-ssize_t __real_recvmsg(int fd, struct msghdr *msg, int flags);
+COBALT_DECL(ssize_t, recvmsg(int fd,
+			     struct msghdr *msg, int flags));
 
-ssize_t __real_sendmsg(int fd, const struct msghdr *msg, int flags);
+COBALT_DECL(ssize_t, sendmsg(int fd,
+			     const struct msghdr *msg, int flags));
 
-ssize_t __real_recvfrom(int fd, void *buf, size_t len, int flags,
-			struct sockaddr *from, socklen_t *fromlen);
+COBALT_DECL(ssize_t, recvfrom(int fd, void *buf, size_t len, int flags,
+			      struct sockaddr *from, socklen_t *fromlen));
 
-ssize_t __real_sendto(int fd, const void *buf, size_t len, int flags,
-		      const struct sockaddr *to, socklen_t tolen);
+COBALT_DECL(ssize_t, sendto(int fd, const void *buf, size_t len, int flags,
+			    const struct sockaddr *to, socklen_t tolen));
 
-ssize_t __real_recv(int fd, void *buf, size_t len, int flags);
+COBALT_DECL(ssize_t, recv(int fd, void *buf,
+			  size_t len, int flags));
 
-ssize_t __real_send(int fd, const void *buf, size_t len, int flags);
+COBALT_DECL(ssize_t, send(int fd, const void *buf,
+			  size_t len, int flags));
 
-int __real_getsockopt(int fd, int level, int optname, void *optval,
-		      socklen_t *optlen);
+COBALT_DECL(int, getsockopt(int fd, int level, int optname,
+			    void *optval, socklen_t *optlen));
 
-int __real_setsockopt(int fd, int level, int optname, const void *optval,
-		      socklen_t optlen);
+COBALT_DECL(int, setsockopt(int fd, int level, int optname,
+			    const void *optval, socklen_t optlen));
 
-int __real_bind(int fd, const struct sockaddr *my_addr, socklen_t addrlen);
+COBALT_DECL(int, bind(int fd, const struct sockaddr *my_addr,
+		      socklen_t addrlen));
 
-int __real_connect(int fd, const struct sockaddr *serv_addr,
-		   socklen_t addrlen);
+COBALT_DECL(int, connect(int fd, const struct sockaddr *serv_addr,
+			 socklen_t addrlen));
 
-int __real_listen(int fd, int backlog);
+COBALT_DECL(int, listen(int fd, int backlog));
 
-int __real_accept(int fd, struct sockaddr *addr, socklen_t *addrlen);
+COBALT_DECL(int, accept(int fd, struct sockaddr *addr,
+			socklen_t *addrlen));
 
-int __real_getsockname(int fd, struct sockaddr *name, socklen_t *namelen);
+COBALT_DECL(int, getsockname(int fd, struct sockaddr *name,
+			     socklen_t *namelen));
 
-int __real_getpeername(int fd, struct sockaddr *name, socklen_t *namelen);
+COBALT_DECL(int, getpeername(int fd, struct sockaddr *name,
+			     socklen_t *namelen));
 
-int __real_shutdown(int fd, int how);
+COBALT_DECL(int, shutdown(int fd, int how));
 
 #ifdef __cplusplus
 }

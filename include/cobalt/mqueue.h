@@ -107,49 +107,53 @@ int mq_unlink(const char *name);
 #else /* !(__KERNEL__ || __XENO_SIM__ || !HAVE_MQUEUE_H) */
 
 #include_next <mqueue.h>
+#include <cobalt/wrappers.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-mqd_t __real_mq_open(const char *name,
-		     int oflags,
-		     ...);
+COBALT_DECL(int, open(const char *path, int oflag, ...));
 
-int __real_mq_close(mqd_t qd);
+COBALT_DECL(mqd_t, mq_open(const char *name,
+			   int oflags,
+			   ...));
 
-int __real_mq_unlink(const char *name);
+COBALT_DECL(int, mq_close(mqd_t qd));
 
-int __real_mq_getattr(mqd_t qd,
-		      struct mq_attr *attr);
+COBALT_DECL(int, mq_unlink(const char *name));
 
-int __real_mq_setattr(mqd_t qd,
-		      const struct mq_attr *__restrict__ attr,
-		      struct mq_attr *__restrict__ oattr);
+COBALT_DECL(int, mq_getattr(mqd_t qd,
+			    struct mq_attr *attr));
 
-int __real_mq_send(mqd_t qd,
-		   const char *buffer,
-		   size_t len,
-		   unsigned prio);
+COBALT_DECL(int, mq_setattr(mqd_t qd,
+			    const struct mq_attr *__restrict__ attr,
+			    struct mq_attr *__restrict__ oattr));
 
-int __real_mq_timedsend(mqd_t q,
-			const char * buffer,
-			size_t len,
-			unsigned prio,
-			const struct timespec *timeout);
+COBALT_DECL(int, mq_send(mqd_t qd,
+			 const char *buffer,
+			 size_t len,
+			 unsigned prio));
 
-ssize_t __real_mq_receive(mqd_t q,
-			  char *buffer,
-			  size_t len,
-			  unsigned *prio);
+COBALT_DECL(int, mq_timedsend(mqd_t q,
+			      const char * buffer,
+			      size_t len,
+			      unsigned prio,
+			      const struct timespec *timeout));
 
-ssize_t __real_mq_timedreceive(mqd_t q,
-			       char *__restrict__ buffer,
-			       size_t len,
-			       unsigned *__restrict__ prio,
-			       const struct timespec *__restrict__ timeout);
+COBALT_DECL(ssize_t, mq_receive(mqd_t q,
+				char *buffer,
+				size_t len,
+				unsigned *prio));
 
-int __real_mq_notify(mqd_t mqdes, const struct sigevent *notification);
+COBALT_DECL(ssize_t, mq_timedreceive(mqd_t q,
+				     char *__restrict__ buffer,
+				     size_t len,
+				     unsigned *__restrict__ prio,
+				     const struct timespec *__restrict__ timeout));
+
+COBALT_DECL(int, mq_notify(mqd_t mqdes,
+			   const struct sigevent *notification));
 
 #ifdef __cplusplus
 }

@@ -19,7 +19,7 @@
 /*
  * NOTE: functions in dynamically linked libraries aren't
  * wrapped. These are fallback functions for __real* functions used by
- * the library itself
+ * the library itself.
  */
 #include <xeno_config.h>
 #include <sys/types.h>
@@ -133,7 +133,7 @@ int __real_close(int fd)
 }
 
 __attribute__ ((weak))
-int __real_ioctl(int fd, int request, ...)
+int __real_ioctl(int fd, unsigned long int request, ...)
 {
 	va_list ap;
 	void *arg;

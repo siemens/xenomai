@@ -56,8 +56,9 @@ int sched_rr_get_interval(int pid, struct timespec *interval);
 #else /* !(__KERNEL__ || __XENO_SIM__) */
 
 #include_next <sched.h>
+#include <cobalt/wrappers.h>
 
-int __real_sched_yield(void);
+COBALT_DECL(int, sched_yield(void));
 
 #endif /* !(__KERNEL__ || __XENO_SIM__) */
 

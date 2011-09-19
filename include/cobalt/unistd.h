@@ -49,17 +49,18 @@ int ftruncate(int fildes, off_t length);
 #else /* !(__KERNEL__ || __XENO_SIM__) */
 
 #include_next <unistd.h>
+#include <cobalt/wrappers.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int __real_ftruncate(int fildes, long length);
+COBALT_DECL(int, ftruncate(int fildes, long length));
 
 #if __WORDSIZE == 32
 #if defined(_LARGEFILE64_SOURCE) \
 	|| defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64
-int __real_ftruncate64(int fildes, long long length);
+COBALT_DECL(int, ftruncate64(int fildes, long long length));
 #endif
 
 #if defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64
@@ -67,11 +68,11 @@ int __real_ftruncate64(int fildes, long long length);
 #endif
 #endif
 
-ssize_t __real_read(int fd, void *buf, size_t nbyte);
+COBALT_DECL(ssize_t, read(int fd, void *buf, size_t nbyte));
 
-ssize_t __real_write(int fd, const void *buf, size_t nbyte);
+COBALT_DECL(ssize_t, write(int fd, const void *buf, size_t nbyte));
 
-int __real_close(int fildes);
+COBALT_DECL(int, close(int fildes));
 
 #ifdef __cplusplus
 }

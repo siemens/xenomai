@@ -25,7 +25,6 @@
 #include <native/task.h>
 #include <native/heap.h>
 #include <asm-generic/xenomai/sem_heap.h>
-#include "wrappers.h"
 
 extern int __native_muxid;
 

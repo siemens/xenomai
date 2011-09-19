@@ -21,6 +21,7 @@
 #ifndef __KERNEL__
 
 #include_next <sys/time.h>
+#include <cobalt/wrappers.h>
 
 struct timezone;
 
@@ -28,8 +29,8 @@ struct timezone;
 extern "C" {
 #endif
 
-int __real_gettimeofday(struct timeval *tv,
-			struct timezone *tz);
+COBALT_DECL(int, gettimeofday(struct timeval *tv,
+			      struct timezone *tz));
 
 #ifdef __cplusplus
 }

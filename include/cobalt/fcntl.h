@@ -46,7 +46,7 @@ int open(const char *path, int oflag, ...);
 extern "C" {
 #endif
 
-int __real_open(const char *path, int oflag, ...);
+COBALT_DECL(int, open(const char *path, int oflag, ...));
 
 #ifdef __cplusplus
 }

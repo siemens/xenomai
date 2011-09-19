@@ -33,7 +33,7 @@ int __wrap_shm_open(const char *name, int oflag, mode_t mode)
 {
 	int err, fd;
 
-	fd = __real_open("/dev/rtheap", O_RDWR, mode);
+	fd = __STD(open("/dev/rtheap", O_RDWR, mode));
 
 	if (fd == -1)
 		return -1;
@@ -45,7 +45,7 @@ int __wrap_shm_open(const char *name, int oflag, mode_t mode)
 
 #ifdef HAVE_SHM_OPEN
 	if (err == ENOSYS)
-		return __real_shm_open(name, oflag, mode);
+		return __STD(shm_open(name, oflag, mode));
 #endif
 
 	close(fd);
@@ -63,7 +63,7 @@ int __wrap_shm_unlink(const char *name)
 
 #ifdef HAVE_SHM_UNLINK
 	if (err == ENOSYS)
-		return __real_shm_unlink(name);
+		return __STD(shm_unlink(name));
 #endif
 
 	errno = err;
@@ -80,7 +80,7 @@ int __wrap_ftruncate(int fildes, long length)
 		return 0;
 
 	if (err == EBADF || err == ENOSYS)
-		return __real_ftruncate(fildes, length);
+		return __STD(ftruncate(fildes, length));
 
 	errno = err;
 	return -1;
@@ -103,18 +103,16 @@ void *__wrap_mmap(void *addr,
 				 __pse51_mmap_prologue, len, fildes, off, &map);
 
 	if (err == EBADF || err == ENOSYS)
-		return __real_mmap(addr, len, prot, flags, fildes, off);
+		return __STD(mmap(addr, len, prot, flags, fildes, off));
 
 	if (err)
 		goto error;
 
-	err = __real_ioctl(fildes, 0, map.ioctl_cookie);
-
+	err = __STD(ioctl(fildes, 0, map.ioctl_cookie));
 	if (err)
 		goto err_mmap_epilogue;
 
-	uaddr = __real_mmap(addr, len, prot, flags, fildes, off + map.offset);
-
+	uaddr = __STD(mmap(addr, len, prot, flags, fildes, off + map.offset));
 	if (uaddr == MAP_FAILED) {
 	      err_mmap_epilogue:
 		XENOMAI_SKINCALL2(__pse51_muxid,
@@ -125,11 +123,10 @@ void *__wrap_mmap(void *addr,
 	err = -XENOMAI_SKINCALL2(__pse51_muxid,
 				 __pse51_mmap_epilogue,
 				 (unsigned long)uaddr, &map);
-
 	if (!err)
 		return uaddr;
 
-	__real_munmap(uaddr, len);
+	__STD(munmap(uaddr, len));
 
       error:
 	errno = err;
@@ -151,7 +148,7 @@ int __wrap_ftruncate64(int fildes, long long length)
 
 #ifdef HAVE_FTRUNCATE64
 	if (err == EBADF || err == ENOSYS)
-		return __real_ftruncate64(fildes, length);
+		return __STD(ftruncate64(fildes, length));
 #endif
 
 	errno = err;
@@ -178,19 +175,18 @@ void *__wrap_mmap64(void *addr,
 
 #ifdef HAVE_MMAP64
 	if (err == EBADF || err == ENOSYS)
-		return __real_mmap64(addr, len, prot, flags, fildes, off);
+		return __STD(mmap64(addr, len, prot, flags, fildes, off));
 #endif
 
 	if (err)
 		goto error;
 
-	err = __real_ioctl(fildes, 0, map.ioctl_cookie);
-
+	err = __STD(ioctl(fildes, 0, map.ioctl_cookie));
 	if (err)
 		goto err_mmap_epilogue;
 
 #ifdef HAVE_MMAP64
-	uaddr = __real_mmap64(addr, len, prot, flags, fildes, map.offset + off);
+	uaddr = __STD(mmap64(addr, len, prot, flags, fildes, map.offset + off));
 #else
 	uaddr = MAP_FAILED;
 #endif
@@ -208,7 +204,7 @@ void *__wrap_mmap64(void *addr,
 	if (!err)
 		return uaddr;
 
-	__real_munmap(uaddr, len);
+	__STD(munmap(uaddr, len));
 
       error:
 	errno = err;
@@ -223,7 +219,7 @@ int __shm_close(int fd)
 	err = XENOMAI_SKINCALL1(__pse51_muxid, __pse51_shm_close, fd);
 
 	if (!err)
-		return __real_close(fd);
+		return __STD(close(fd));
 
 	errno = -err;
 	return -1;
@@ -241,12 +237,12 @@ int __wrap_munmap(void *addr, size_t len)
 				 __pse51_munmap_prologue, addr, len, &map);
 
 	if (err == ENXIO || err == ENOSYS || err == EBADF)
-		return __real_munmap(addr, len);
+		return __STD(munmap(addr, len));
 
 	if (err)
 		goto error;
 
-	if (__real_munmap(addr, len))
+	if (__STD(munmap(addr, len)))
 		return -1;
 
 	err = -XENOMAI_SKINCALL2(__pse51_muxid,

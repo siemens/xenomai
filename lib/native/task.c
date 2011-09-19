@@ -30,7 +30,6 @@
 #include <asm-generic/bits/sigshadow.h>
 #include <asm-generic/bits/current.h>
 #include <asm-generic/stack.h>
-#include "wrappers.h"
 
 #ifdef HAVE___THREAD
 __thread RT_TASK __native_self __attribute__ ((tls_model ("initial-exec"))) = {

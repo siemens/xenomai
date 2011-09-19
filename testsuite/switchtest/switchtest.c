@@ -97,7 +97,7 @@ static inline void clean_exit(int retval)
 	kill(getpid(), SIGTERM);
 	for (;;)
 		/* Wait for cancellation. */
-		__real_sem_wait(&sleeper_start);
+		__STD(sem_wait(&sleeper_start));
 }
 
 static void timespec_substract(struct timespec *result,
@@ -204,7 +204,7 @@ static void handle_bad_fpreg(struct cpu_tasks *cpu, unsigned fp_val)
 void display_cleanup(void *cookie)
 {
 	pthread_mutex_t *mutex = (pthread_mutex_t *) cookie;
-	__real_pthread_mutex_unlock(mutex);
+	__STD(pthread_mutex_unlock(mutex));
 }
 
 void display_switches_count(struct cpu_tasks *cpu, struct timespec *now)
@@ -230,7 +230,7 @@ void display_switches_count(struct cpu_tasks *cpu, struct timespec *now)
 
 	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
 	pthread_cleanup_push(display_cleanup, &headers_lock);
-	__real_pthread_mutex_lock(&headers_lock);
+	__STD(pthread_mutex_lock(&headers_lock));
 
 	if (data_lines && (nlines++ % data_lines) == 0) {
 		struct timespec diff;
@@ -288,7 +288,7 @@ static void *sleeper_switcher(void *cookie)
 	ts.tv_sec = 0;
 	ts.tv_nsec = 1000000;
 
-	ret = __real_sem_wait(&sleeper_start);
+	ret = __STD(sem_wait(&sleeper_start));
 	if (ret) {
 		fprintf(stderr, "sem_wait FAILED (%d)\n", errno);
 		fflush(stderr);
@@ -306,7 +306,7 @@ static void *sleeper_switcher(void *cookie)
 		unsigned expected, fp_val;
 		int err;
 		if (param->type == SLEEPER)
-			__real_nanosleep(&ts, NULL);
+			__STD(nanosleep(&ts, NULL));
 
 		clock_gettime(CLOCK_REALTIME, &now);
 
@@ -841,10 +841,10 @@ static int task_create(struct cpu_tasks *cpu,
 		pthread_attr_init(&attr);
 		pthread_attr_setstacksize(&attr, SMALL_STACK_MIN);
 
-		err = __real_pthread_create(&param->thread,
-					    &attr,
-					    sleeper_switcher,
-					    param);
+		err = __STD(pthread_create(&param->thread,
+					   &attr,
+					   sleeper_switcher,
+					   param));
 
 		pthread_attr_destroy(&attr);
 
@@ -861,10 +861,10 @@ static int task_create(struct cpu_tasks *cpu,
 		pthread_attr_init(&attr);
 		pthread_attr_setstacksize(&attr, LARGE_STACK_MIN);
 
-		err = __real_pthread_create(&param->thread,
-					    &attr,
-					    fpu_stress,
-					    param);
+		err = __STD(pthread_create(&param->thread,
+					   &attr,
+					   fpu_stress,
+					   param));
 
 		pthread_attr_destroy(&attr);
 
@@ -1094,7 +1094,7 @@ int check_fpu(void)
 	void *status;
 	int err;
 
-	err = __real_pthread_create(&tid, NULL, check_fpu_thread, NULL);
+	err = __STD(pthread_create(&tid, NULL, check_fpu_thread, NULL));
 	if (err) {
 		fprintf(stderr, "pthread_create: %s\n", strerror(err));
 		exit(EXIT_FAILURE);
@@ -1128,7 +1128,7 @@ int main(int argc, const char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	if (__real_sem_init(&sleeper_start, 0, 0)) {
+	if (__STD(sem_init(&sleeper_start, 0, 0))) {
 		perror("sem_init");
 		exit(EXIT_FAILURE);
 	}
@@ -1358,7 +1358,7 @@ int main(int argc, const char *argv[])
 	sigaddset(&mask, SIGALRM);
 	pthread_sigmask(SIG_BLOCK, &mask, NULL);
 
-	__real_pthread_mutex_init(&headers_lock, NULL);
+	__STD(pthread_mutex_init(&headers_lock, NULL));
 
 	/* Prepare attributes for real-time tasks. */
 	pthread_attr_init(&rt_attr);
@@ -1408,7 +1408,7 @@ int main(int argc, const char *argv[])
 
 	/* Start the sleeper tasks. */
 	for (i = 0; i < nr_cpus; i ++)
-		__real_sem_post(&sleeper_start);
+		__STD(sem_post(&sleeper_start));
 
 	/* Wait for interruption. */
 	sigwait(&mask, &sig);
@@ -1455,8 +1455,8 @@ int main(int argc, const char *argv[])
 		free(cpu->tasks);
 	}
 	free(cpus);
-	__real_sem_destroy(&sleeper_start);
-	__real_pthread_mutex_destroy(&headers_lock);
+	__STD(sem_destroy(&sleeper_start));
+	__STD(pthread_mutex_destroy(&headers_lock));
 
 	return status;
 }

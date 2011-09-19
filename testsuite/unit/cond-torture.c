@@ -143,7 +143,7 @@ int thread_spawn(thread_t *thread, int prio,
 	return -err;
 }
 #define thread_yield() sched_yield()
-#define thread_kill(thread, sig) (-__real_pthread_kill(thread, sig))
+#define thread_kill(thread, sig) (-__STD(pthread_kill(thread, sig)))
 #define thread_self() pthread_self()
 #define thread_join(thread) (-pthread_join(thread, NULL))
 

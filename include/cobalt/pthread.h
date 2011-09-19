@@ -135,6 +135,7 @@ typedef struct
 #include_next <pthread.h>
 #include <nucleus/thread.h>
 #include <nucleus/intr.h>
+#include <cobalt/wrappers.h>
 
 struct timespec;
 
@@ -449,91 +450,93 @@ int pthread_setschedparam_ex(pthread_t tid,
 			     int pol,
 			     const struct sched_param_ex *par);
 
-int __real_pthread_create(pthread_t *tid,
-			  const pthread_attr_t *attr,
-			  void *(*start) (void *),
-			  void *arg);
+COBALT_DECL(int, pthread_create(pthread_t *tid,
+				const pthread_attr_t *attr,
+				void *(*start) (void *),
+				void *arg));
 
-int __real_pthread_detach(pthread_t thread);
+COBALT_DECL(int, pthread_detach(pthread_t thread));
 
-int __real_pthread_getschedparam(pthread_t thread,
-				 int *policy,
-				 struct sched_param *param);
+COBALT_DECL(int, pthread_getschedparam(pthread_t thread,
+				       int *policy,
+				       struct sched_param *param));
 
-int __real_pthread_setschedparam(pthread_t thread,
-				 int policy,
-				 const struct sched_param *param);
-int __real_pthread_yield(void);
+COBALT_DECL(int, pthread_setschedparam(pthread_t thread,
+				       int policy,
+				       const struct sched_param *param));
+COBALT_DECL(int, pthread_yield(void));
 
-int __real_pthread_mutexattr_init(pthread_mutexattr_t *attr);
+COBALT_DECL(int, pthread_mutexattr_init(pthread_mutexattr_t *attr));
 
-int __real_pthread_mutexattr_destroy(pthread_mutexattr_t *attr);
+COBALT_DECL(int, pthread_mutexattr_destroy(pthread_mutexattr_t *attr));
 
-int __real_pthread_mutexattr_gettype(const pthread_mutexattr_t *attr,
-				     int *type);
+COBALT_DECL(int, pthread_mutexattr_gettype(const pthread_mutexattr_t *attr,
+					   int *type));
 
-int __real_pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type);
+COBALT_DECL(int, pthread_mutexattr_settype(pthread_mutexattr_t *attr,
+					   int type));
 
 #ifdef HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL
-int __real_pthread_mutexattr_getprotocol(const pthread_mutexattr_t *attr,
-					 int *proto);
+COBALT_DECL(int, pthread_mutexattr_getprotocol(const pthread_mutexattr_t *attr,
+					       int *proto));
 
-int __real_pthread_mutexattr_setprotocol(pthread_mutexattr_t *attr,
-					 int proto);
+COBALT_DECL(int, pthread_mutexattr_setprotocol(pthread_mutexattr_t *attr,
+					       int proto));
 #endif
 
-int __real_pthread_mutexattr_getpshared(const pthread_mutexattr_t *attr,
-					int *pshared);
+COBALT_DECL(int, pthread_mutexattr_getpshared(const pthread_mutexattr_t *attr,
+					      int *pshared));
 
-int __real_pthread_mutexattr_setpshared(pthread_mutexattr_t *attr,
-					int pshared);
+COBALT_DECL(int, pthread_mutexattr_setpshared(pthread_mutexattr_t *attr,
+					      int pshared));
 
-int __real_pthread_mutex_init(pthread_mutex_t *mutex,
-			      const pthread_mutexattr_t *attr);
+COBALT_DECL(int, pthread_mutex_init(pthread_mutex_t *mutex,
+				    const pthread_mutexattr_t *attr));
 
-int __real_pthread_mutex_destroy(pthread_mutex_t *mutex);
+COBALT_DECL(int, pthread_mutex_destroy(pthread_mutex_t *mutex));
 
-int __real_pthread_mutex_lock(pthread_mutex_t *mutex);
+COBALT_DECL(int, pthread_mutex_lock(pthread_mutex_t *mutex));
 
-int __real_pthread_mutex_timedlock(pthread_mutex_t *mutex,
-				   const struct timespec *to);
+COBALT_DECL(int, pthread_mutex_timedlock(pthread_mutex_t *mutex,
+					 const struct timespec *to));
 
-int __real_pthread_mutex_trylock(pthread_mutex_t *mutex);
+COBALT_DECL(int, pthread_mutex_trylock(pthread_mutex_t *mutex));
 
-int __real_pthread_mutex_unlock(pthread_mutex_t *mutex);
+COBALT_DECL(int, pthread_mutex_unlock(pthread_mutex_t *mutex));
 
-int __real_pthread_condattr_init(pthread_condattr_t *attr);
+COBALT_DECL(int, pthread_condattr_init(pthread_condattr_t *attr));
 
-int __real_pthread_condattr_destroy(pthread_condattr_t *attr);
+COBALT_DECL(int, pthread_condattr_destroy(pthread_condattr_t *attr));
 
-int __real_pthread_condattr_getclock(const pthread_condattr_t *attr,
-				     clockid_t *clk_id);
+COBALT_DECL(int, pthread_condattr_getclock(const pthread_condattr_t *attr,
+					   clockid_t *clk_id));
 
-int __real_pthread_condattr_setclock(pthread_condattr_t *attr,
-			      clockid_t clk_id);
+COBALT_DECL(int, pthread_condattr_setclock(pthread_condattr_t *attr,
+					   clockid_t clk_id));
 
-int __real_pthread_condattr_getpshared(const pthread_condattr_t *attr,
-				       int *pshared);
+COBALT_DECL(int, pthread_condattr_getpshared(const pthread_condattr_t *attr,
+					     int *pshared));
 
-int __real_pthread_condattr_setpshared(pthread_condattr_t *attr, int pshared);
+COBALT_DECL(int, pthread_condattr_setpshared(pthread_condattr_t *attr,
+					     int pshared));
 
-int __real_pthread_cond_init (pthread_cond_t *cond,
-			      const pthread_condattr_t *attr);
+COBALT_DECL(int, pthread_cond_init (pthread_cond_t *cond,
+				    const pthread_condattr_t *attr));
 
-int __real_pthread_cond_destroy(pthread_cond_t *cond);
+COBALT_DECL(int, pthread_cond_destroy(pthread_cond_t *cond));
 
-int __real_pthread_cond_wait(pthread_cond_t *cond,
-			     pthread_mutex_t *mutex);
+COBALT_DECL(int, pthread_cond_wait(pthread_cond_t *cond,
+				   pthread_mutex_t *mutex));
 
-int __real_pthread_cond_timedwait(pthread_cond_t *cond,
-				  pthread_mutex_t *mutex,
-				  const struct timespec *abstime);
+COBALT_DECL(int, pthread_cond_timedwait(pthread_cond_t *cond,
+					pthread_mutex_t *mutex,
+					const struct timespec *abstime));
 
-int __real_pthread_cond_signal(pthread_cond_t *cond);
+COBALT_DECL(int, pthread_cond_signal(pthread_cond_t *cond));
 
-int __real_pthread_cond_broadcast(pthread_cond_t *cond);
+COBALT_DECL(int, pthread_cond_broadcast(pthread_cond_t *cond));
 
-int __real_pthread_kill(pthread_t tid, int sig);
+COBALT_DECL(int, pthread_kill(pthread_t tid, int sig));
 
 #ifdef __cplusplus
 }

@@ -4,16 +4,16 @@
 #if !(defined(__KERNEL__) || defined(__XENO_SIM__))
 
 #include_next <sys/select.h>
+#include <cobalt/wrappers.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-extern int __real_select (int __nfds, fd_set *__restrict __readfds,
-			  fd_set *__restrict __writefds,
-			  fd_set *__restrict __exceptfds,
-			  struct timeval *__restrict __timeout);
-
+COBALT_DECL(int, select(int __nfds, fd_set *__restrict __readfds,
+			fd_set *__restrict __writefds,
+			fd_set *__restrict __exceptfds,
+			struct timeval *__restrict __timeout));
 #ifdef __cplusplus
 }
 #endif

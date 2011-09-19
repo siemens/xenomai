@@ -39,9 +39,12 @@
 #else /* !(__KERNEL__ || __XENO_SIM__) */
 
 #include_next <time.h>
-/* In case time.h is included for a side effect of an __need* macro, include it
-   a second time to get all definitions. */
+/*
+ * In case <time.h> is included as a side effect of an __need* macro,
+ * include it a second time to get all definitions.
+ */
 #include_next <time.h>
+#include <cobalt/wrappers.h>
 
 #endif /* !(__KERNEL__ || __XENO_SIM__) */
 
@@ -114,38 +117,38 @@ int timer_getoverrun(timer_t timerid);
 extern "C" {
 #endif
 
-int __real_clock_getres(clockid_t clock_id,
-			struct timespec *tp);
+COBALT_DECL(int, clock_getres(clockid_t clock_id,
+			      struct timespec *tp));
 
-int __real_clock_gettime(clockid_t clock_id,
-			 struct timespec *tp);
+COBALT_DECL(int, clock_gettime(clockid_t clock_id,
+			       struct timespec *tp));
 
-int __real_clock_settime(clockid_t clock_id,
-			 const struct timespec *tp);
+COBALT_DECL(int, clock_settime(clockid_t clock_id,
+			       const struct timespec *tp));
 
-int __real_clock_nanosleep(clockid_t clock_id,
-			   int flags,
-			   const struct timespec *rqtp,
-			   struct timespec *rmtp);
+COBALT_DECL(int, clock_nanosleep(clockid_t clock_id,
+				 int flags,
+				 const struct timespec *rqtp,
+				 struct timespec *rmtp));
 
-int __real_nanosleep(const struct timespec *rqtp,
-		     struct timespec *rmtp);
+COBALT_DECL(int, nanosleep(const struct timespec *rqtp,
+			   struct timespec *rmtp));
 
-int __real_timer_create (clockid_t clockid,
-			 struct sigevent *evp,
-			 timer_t *timerid);
+COBALT_DECL(int, timer_create(clockid_t clockid,
+			      const struct sigevent *__restrict__ evp,
+			      timer_t * __restrict__ timerid));
 
-int __real_timer_delete (timer_t timerid);
+COBALT_DECL(int, timer_delete(timer_t timerid));
 
-int __real_timer_settime(timer_t timerid,
-			 int flags,
-			 const struct itimerspec *value,
-			 struct itimerspec *ovalue);
+COBALT_DECL(int, timer_settime(timer_t timerid,
+			       int flags,
+			       const struct itimerspec *value,
+			       struct itimerspec *ovalue));
 
-int __real_timer_gettime(timer_t timerid,
-			 struct itimerspec *value);
+COBALT_DECL(int, timer_gettime(timer_t timerid,
+			       struct itimerspec *value));
 
-int __real_timer_getoverrun(timer_t timerid);
+COBALT_DECL(int, timer_getoverrun(timer_t timerid));
 
 #ifdef __cplusplus
 }

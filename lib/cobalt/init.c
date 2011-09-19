@@ -26,10 +26,8 @@
 #include <cobalt/posix.h>
 #include <cobalt/syscall.h>
 #include <rtdm/syscall.h>
-#include <asm-generic/bits/sigshadow.h>
 #include <kernel/cobalt/mutex.h>
 #include <rtdk.h>
-
 #include <asm/xenomai/bits/bind.h>
 
 int __pse51_muxid = -1;
@@ -81,7 +79,7 @@ void __init_posix_interface(void)
 
 	/* Don't use auto-shadowing if we are likely invoked from dlopen. */
 #ifndef CONFIG_XENO_LIBS_DLOPEN
-	err = __real_pthread_getschedparam(pthread_self(), &policy, &parm);
+	err = __STD(pthread_getschedparam(pthread_self(), &policy, &parm));
 	if (err) {
 		fprintf(stderr, "Xenomai Posix skin init: "
 			"pthread_getschedparam: %s\n", strerror(err));

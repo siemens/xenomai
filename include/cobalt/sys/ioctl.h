@@ -22,12 +22,13 @@
 #if !(defined(__KERNEL__) || defined(__XENO_SIM__))
 
 #include_next <sys/ioctl.h>
+#include <cobalt/wrappers.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int __real_ioctl(int fildes, int request, ...);
+COBALT_DECL(int, ioctl(int fildes, unsigned long int request, ...));
 
 #ifdef __cplusplus
 }

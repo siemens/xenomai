@@ -97,7 +97,8 @@ CHECKFLAGS = @CHECKFLAGS@
 CONFIG_STATUS_DEPENDENCIES = @CONFIG_STATUS_DEPENDENCIES@
 CPP = @CPP@
 CPPFLAGS = \
-	@XENO_USER_CFLAGS@
+	@XENO_USER_CFLAGS@	\
+	-I$(top_srcdir)/include
 
 CPPFLAGS_FOR_BUILD = @CPPFLAGS_FOR_BUILD@
 CPP_FOR_BUILD = @CPP_FOR_BUILD@
@@ -552,7 +553,6 @@ uninstall-am: uninstall-sbinPROGRAMS
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags uninstall uninstall-am uninstall-sbinPROGRAMS
 
-	-I$(top_srcdir)/include
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

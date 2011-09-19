@@ -25,7 +25,6 @@
 #include <signal.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "wrappers.h"
 
 /*
  * This file maintains a list of placeholders for routines that we do
@@ -69,7 +68,7 @@ int __real_close(int fd)
 }
 
 __attribute__ ((weak))
-int __real_ioctl(int fd, int request, ...)
+int __real_ioctl(int fd, unsigned long int request, ...)
 {
 	va_list ap;
 	void *arg;

@@ -51,7 +51,7 @@ int __wrap_pthread_setschedparam(pthread_t thread,
 				 &mode_offset, &promoted);
 
 	if (err == EPERM)
-		return __real_pthread_setschedparam(thread, policy, param);
+		return __STD(pthread_setschedparam(thread, policy, param));
 
 	if (!err && promoted) {
 		xeno_sigshadow_install_once();
@@ -82,7 +82,7 @@ int pthread_setschedparam_ex(pthread_t thread,
 
 	if (err == EPERM) {
 		short_param.sched_priority = param->sched_priority;
-		return __real_pthread_setschedparam(thread, policy, &short_param);
+		return __STD(pthread_setschedparam(thread, policy, &short_param));
 	}
 
 	if (!err && promoted) {
@@ -107,7 +107,7 @@ int __wrap_pthread_getschedparam(pthread_t thread,
 				 thread, policy, param);
 
 	if (err == ESRCH)
-		return __real_pthread_getschedparam(thread, policy, param);
+		return __STD(pthread_getschedparam(thread, policy, param));
 
 	return err;
 }
@@ -124,7 +124,7 @@ int pthread_getschedparam_ex(pthread_t thread,
 				 thread, policy, param);
 
 	if (err == ESRCH) {
-		err = __real_pthread_getschedparam(thread, policy, &short_param);
+		err = __STD(pthread_getschedparam(thread, policy, &short_param));
 		if (err == 0)
 			param->sched_priority = short_param.sched_priority;
 	}
@@ -137,7 +137,7 @@ int __wrap_sched_yield(void)
 	int err = -XENOMAI_SKINCALL0(__pse51_muxid, __pse51_sched_yield);
 
 	if (err == -1)
-		err = __real_sched_yield();
+		err = __STD(sched_yield());
 
 	return err;
 }
@@ -196,7 +196,7 @@ static void *__pthread_trampoline(void *arg)
 		xeno_set_current_mode(mode_offset);
 	}
 
-	__real_sem_post(&iargs->sync);
+	__STD(sem_post(&iargs->sync));
 
 	if (!err) {
 		/* If the thread running pthread_create runs with the same
@@ -260,14 +260,14 @@ int __wrap_pthread_create(pthread_t *tid,
 	iargs.start = start;
 	iargs.arg = arg;
 	iargs.ret = EAGAIN;
-	__real_sem_init(&iargs.sync, 0, 0);
+	__STD(sem_init(&iargs.sync, 0, 0));
 
-	err = __real_pthread_create(&ltid, attr,
-				    &__pthread_trampoline, &iargs);
+	err = __STD(pthread_create(&ltid, attr,
+				   &__pthread_trampoline, &iargs));
 
 	if (!err)
-		while (__real_sem_wait(&iargs.sync) && errno == EINTR) ;
-	__real_sem_destroy(&iargs.sync);
+		while (__STD(sem_wait(&iargs.sync)) && errno == EINTR) ;
+	__STD(sem_destroy(&iargs.sync));
 
 	err = err ?: iargs.ret;
 
@@ -329,7 +329,7 @@ int __wrap_pthread_kill(pthread_t thread, int sig)
 				 __pse51_thread_kill, thread, sig);
 
 	if (err == ESRCH)
-		return __real_pthread_kill(thread, sig);
+		return __STD(pthread_kill(thread, sig));
 
 	return err;
 }

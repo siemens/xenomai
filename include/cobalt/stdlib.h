@@ -5,13 +5,15 @@
 #ifndef STDLIB_H
 #define STDLIB_H
 
+#include <cobalt/wrappers.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-void __real_free(void *ptr);
+COBALT_DECL(void, free(void *ptr));
 
-void *__real_malloc(size_t size);
+COBALT_DECL(void *, malloc(size_t size));
 
 #ifdef __cplusplus
 }

@@ -55,6 +55,7 @@ typedef struct
 
 #include <fcntl.h>              /* For sem_open flags. */
 #include_next <semaphore.h>
+#include <cobalt/wrappers.h>
 
 #endif /* !(__KERNEL__ || __XENO_SIM__) */
 
@@ -111,27 +112,28 @@ int sem_unlink(const char *name);
 extern "C" {
 #endif
 
-int __real_sem_init(sem_t *sem,
-		    int pshared,
-		    unsigned value);
+COBALT_DECL(int, sem_init(sem_t *sem,
+			  int pshared,
+			  unsigned value));
 
-int __real_sem_destroy(sem_t *sem);
+COBALT_DECL(int, sem_destroy(sem_t *sem));
 
-int __real_sem_post(sem_t *sem);
+COBALT_DECL(int, sem_post(sem_t *sem));
 
-int __real_sem_wait(sem_t *sem);
+COBALT_DECL(int, sem_wait(sem_t *sem));
 
-int __real_sem_timedwait(sem_t *sem, const struct timespec *abs_timeout);
+COBALT_DECL(int, sem_timedwait(sem_t *sem,
+			       const struct timespec *abs_timeout));
 
-int __real_sem_trywait(sem_t *sem);
+COBALT_DECL(int, sem_trywait(sem_t *sem));
 
-int __real_sem_getvalue(sem_t *sem, int *value);
+COBALT_DECL(int, sem_getvalue(sem_t *sem, int *value));
 
-sem_t *__real_sem_open(const char *name, int oflags, ...);
+COBALT_DECL(sem_t *, sem_open(const char *name, int oflags, ...));
 
-int __real_sem_close(sem_t *sem);
+COBALT_DECL(int, sem_close(sem_t *sem));
 
-int __real_sem_unlink(const char *name);
+COBALT_DECL(int, sem_unlink(const char *name));
 
 #ifdef __cplusplus
 }

@@ -40,7 +40,7 @@ mqd_t __wrap_mq_open(const char *name, int oflags, ...)
 		va_end(ap);
 	}
 
-	q = __real_open("/dev/null", O_RDWR, 0);
+	q = __STD(open("/dev/null", O_RDWR, 0));
 
 	if (q == -1)
 		return (mqd_t) - 1;
@@ -61,7 +61,7 @@ int __wrap_mq_close(mqd_t q)
 
 	err = XENOMAI_SKINCALL1(__pse51_muxid, __pse51_mq_close, q);
 	if (!err)
-		return __real_close(q);
+		return __STD(close(q));
 
 	errno = -err;
 	return -1;

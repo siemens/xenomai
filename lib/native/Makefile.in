@@ -275,8 +275,7 @@ libnative_la_SOURCES = \
 	sem.c \
 	task.c \
 	timer.c \
-	wrappers.c \
-	wrappers.h
+	wrappers.c
 
 libnative_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@		\

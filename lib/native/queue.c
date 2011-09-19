@@ -21,11 +21,11 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <pthread.h>
 #include <native/syscall.h>
 #include <native/task.h>
 #include <native/queue.h>
 #include <asm-generic/xenomai/sem_heap.h>
-#include "wrappers.h"
 
 extern int __native_muxid;
 
