@@ -8,6 +8,5 @@ if XENO_COBALT
 SUBDIRS +=	\
 	native	\
 	cobalt	\
-	rtdm	\
 	analogy
 endif

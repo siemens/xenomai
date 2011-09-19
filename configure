@@ -946,7 +946,6 @@ enable_pshared
 enable_registry
 enable_smp
 enable_x86_sep
-enable_x86_tsc
 enable_arm_tsc
 enable_arm_quirks
 enable_doc_install
@@ -1610,7 +1609,6 @@ Optional Features:
   --enable-registry       Export real-time objects to a registry
   --enable-smp            Enable SMP support
   --enable-x86-sep        Enable x86 SEP instructions for issuing syscalls
-  --enable-x86-tsc        Enable x86 TSC for timings
   --enable-arm-tsc        You only need this option if you get the following
                           message when starting an application: Xenomai:
                           incompatible feature set (userland requires
@@ -6038,13 +6036,13 @@ if test "${lt_cv_nm_interface+set}" = set; then :
 else
   lt_cv_nm_interface="BSD nm"
   echo "int some_variable = 0;" > conftest.$ac_ext
-  (eval echo "\"\$as_me:6041: $ac_compile\"" >&5)
+  (eval echo "\"\$as_me:6039: $ac_compile\"" >&5)
   (eval "$ac_compile" 2>conftest.err)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:6044: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
+  (eval echo "\"\$as_me:6042: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
   (eval "$NM \"conftest.$ac_objext\"" 2>conftest.err > conftest.out)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:6047: output\"" >&5)
+  (eval echo "\"\$as_me:6045: output\"" >&5)
   cat conftest.out >&5
   if $GREP 'External.*some_variable' conftest.out > /dev/null; then
     lt_cv_nm_interface="MS dumpbin"
@@ -7142,7 +7140,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 7145 "configure"' > conftest.$ac_ext
+  echo '#line 7143 "configure"' > conftest.$ac_ext
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -8504,11 +8502,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8507: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8505: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8511: \$? = $ac_status" >&5
+   echo "$as_me:8509: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8828,11 +8826,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8831: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8829: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8835: \$? = $ac_status" >&5
+   echo "$as_me:8833: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8933,11 +8931,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8936: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8934: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8940: \$? = $ac_status" >&5
+   echo "$as_me:8938: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -8988,11 +8986,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8991: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8989: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8995: \$? = $ac_status" >&5
+   echo "$as_me:8993: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -11360,7 +11358,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11363 "configure"
+#line 11361 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11460,7 +11458,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11463 "configure"
+#line 11461 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11936,7 +11934,6 @@ $as_echo "${CONFIG_SMP:-no}" >&6; }
 
 
 CONFIG_XENO_X86_SEP=
-CONFIG_X86_TSC=y
 
 if test $XENO_TARGET_ARCH = x86; then
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for x86 SEP instructions in syscalls" >&5
@@ -11951,19 +11948,6 @@ fi
 
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${CONFIG_XENO_X86_SEP:-no}" >&5
 $as_echo "${CONFIG_XENO_X86_SEP:-no}" >&6; }
-
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for x86 TSC support" >&5
-$as_echo_n "checking for x86 TSC support... " >&6; }
-  # Check whether --enable-x86-tsc was given.
-if test "${enable_x86_tsc+set}" = set; then :
-  enableval=$enable_x86_tsc; case "$enableval" in
-	y | yes) CONFIG_X86_TSC=y ;;
-	*) unset CONFIG_X86_TSC ;;
-	esac
-fi
-
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${CONFIG_X86_TSC:-no}" >&5
-$as_echo "${CONFIG_X86_TSC:-no}" >&6; }
 fi
 
 
@@ -12546,9 +12530,6 @@ test x$ac_cv_func_fork = xyes &&
 $as_echo "#define CONFIG_MMU 1" >>confdefs.h
 
 
-test x$CONFIG_X86_TSC = xy &&
-$as_echo "#define CONFIG_X86_TSC 1" >>confdefs.h
-
 test -n "$CONFIG_XENO_ARM_ARCH" &&
 cat >>confdefs.h <<_ACEOF
 #define CONFIG_XENO_ARM_ARCH $CONFIG_XENO_ARM_ARCH
@@ -12922,7 +12903,7 @@ if test x$rtcore_type = xcobalt; then
 
 fi
 
-ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config:scripts/xeno-config-$rtcore_type.in scripts/xeno lib/Makefile lib/cobalt/Makefile lib/native/Makefile lib/rtdm/Makefile lib/copperplate/Makefile lib/vxworks/Makefile lib/psos/Makefile lib/analogy/Makefile lib/include/Makefile testsuite/Makefile testsuite/latency/Makefile testsuite/cyclic/Makefile testsuite/switchtest/Makefile testsuite/clocktest/Makefile testsuite/klatency/Makefile testsuite/unit/Makefile testsuite/xeno-test/Makefile src/testsuite/regression/Makefile src/testsuite/regression/native/Makefile src/testsuite/regression/posix/Makefile src/testsuite/regression/native+posix/Makefile utils/Makefile utils/can/Makefile utils/analogy/Makefile utils/ps/Makefile utils/slackspot/Makefile include/Makefile include/asm-generic/Makefile include/asm-generic/bits/Makefile include/asm-blackfin/Makefile include/asm-blackfin/bits/Makefile include/asm-x86/Makefile include/asm-x86/bits/Makefile include/asm-powerpc/Makefile include/asm-powerpc/bits/Makefile include/asm-arm/Makefile include/asm-arm/bits/Makefile include/asm-nios2/Makefile include/asm-nios2/bits/Makefile include/asm-sh/Makefile include/asm-sh/bits/Makefile include/asm-sim/Makefile include/asm-sim/bits/Makefile include/native/Makefile include/cobalt/Makefile include/cobalt/sys/Makefile include/cobalt/nucleus/Makefile include/rtdm/Makefile include/analogy/Makefile include/copperplate/Makefile include/vxworks/Makefile include/psos/Makefile"
+ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config:scripts/xeno-config-$rtcore_type.in scripts/xeno lib/Makefile lib/cobalt/Makefile lib/native/Makefile lib/copperplate/Makefile lib/vxworks/Makefile lib/psos/Makefile lib/analogy/Makefile lib/include/Makefile testsuite/Makefile testsuite/latency/Makefile testsuite/cyclic/Makefile testsuite/switchtest/Makefile testsuite/clocktest/Makefile testsuite/klatency/Makefile testsuite/unit/Makefile testsuite/xeno-test/Makefile src/testsuite/regression/Makefile src/testsuite/regression/native/Makefile src/testsuite/regression/posix/Makefile src/testsuite/regression/native+posix/Makefile utils/Makefile utils/can/Makefile utils/analogy/Makefile utils/ps/Makefile utils/slackspot/Makefile include/Makefile include/asm-generic/Makefile include/asm-generic/bits/Makefile include/asm-blackfin/Makefile include/asm-blackfin/bits/Makefile include/asm-x86/Makefile include/asm-x86/bits/Makefile include/asm-powerpc/Makefile include/asm-powerpc/bits/Makefile include/asm-arm/Makefile include/asm-arm/bits/Makefile include/asm-nios2/Makefile include/asm-nios2/bits/Makefile include/asm-sh/Makefile include/asm-sh/bits/Makefile include/asm-sim/Makefile include/asm-sim/bits/Makefile include/native/Makefile include/cobalt/Makefile include/cobalt/sys/Makefile include/cobalt/nucleus/Makefile include/rtdm/Makefile include/analogy/Makefile include/copperplate/Makefile include/vxworks/Makefile include/psos/Makefile"
 
 
 if test \! x$XENO_MAYBE_DOCDIR = x ; then
@@ -14043,7 +14024,6 @@ do
     "lib/Makefile") CONFIG_FILES="$CONFIG_FILES lib/Makefile" ;;
     "lib/cobalt/Makefile") CONFIG_FILES="$CONFIG_FILES lib/cobalt/Makefile" ;;
     "lib/native/Makefile") CONFIG_FILES="$CONFIG_FILES lib/native/Makefile" ;;
-    "lib/rtdm/Makefile") CONFIG_FILES="$CONFIG_FILES lib/rtdm/Makefile" ;;
     "lib/copperplate/Makefile") CONFIG_FILES="$CONFIG_FILES lib/copperplate/Makefile" ;;
     "lib/vxworks/Makefile") CONFIG_FILES="$CONFIG_FILES lib/vxworks/Makefile" ;;
     "lib/psos/Makefile") CONFIG_FILES="$CONFIG_FILES lib/psos/Makefile" ;;

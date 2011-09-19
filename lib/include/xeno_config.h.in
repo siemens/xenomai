@@ -7,9 +7,6 @@
 #undef CONFIG_SMP
 
 /* config */
-#undef CONFIG_X86_TSC
-
-/* config */
 #undef CONFIG_XENO_ARM_ARCH
 
 /* config */

@@ -727,7 +727,6 @@ AC_CONFIG_FILES([ \
 	lib/Makefile \
 	lib/cobalt/Makefile \
 	lib/native/Makefile \
-	lib/rtdm/Makefile \
 	lib/copperplate/Makefile \
 	lib/vxworks/Makefile \
 	lib/psos/Makefile \

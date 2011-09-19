@@ -312,17 +312,20 @@ static inline ssize_t rt_dev_recvfrom(int fd, void *buf, size_t len, int flags,
 extern "C" {
 #endif
 
-int rt_dev_open(const char *path, int oflag, ...);
-int rt_dev_socket(int protocol_family, int socket_type, int protocol);
-int rt_dev_close(int fd);
-int rt_dev_ioctl(int fd, int request, ...);
-ssize_t rt_dev_read(int fd, void *buf, size_t nbyte);
-ssize_t rt_dev_write(int fd, const void *buf, size_t nbyte);
-ssize_t rt_dev_recvmsg(int fd, struct msghdr *msg, int flags);
-ssize_t rt_dev_sendmsg(int fd, const struct msghdr *msg, int flags);
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
 
-ssize_t rt_dev_recvfrom(int fd, void *buf, size_t len, int flags,
-			struct sockaddr *from, socklen_t *fromlen);
+#define rt_dev_open	open
+#define rt_dev_socket	socket
+#define rt_dev_close	close
+#define rt_dev_ioctl	ioctl
+#define rt_dev_read	read
+#define rt_dev_write	write
+#define rt_dev_recvmsg	recvmsg
+#define rt_dev_sendmsg	sendmsg
+#define rt_dev_recvfrom recvfrom
 
 #ifdef __cplusplus
 }
