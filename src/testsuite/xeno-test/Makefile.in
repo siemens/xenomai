@@ -255,6 +255,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 testdir = @XENO_TEST_DIR@
+pkgdir = $(pkgdatadir)
 test_SCRIPTS = xeno-test-run-wrapper dohell
 bin_SCRIPTS = xeno-test
 xeno_test_run_CPPFLAGS = -DTESTDIR=\"$(testdir)\"
@@ -665,7 +666,7 @@ uninstall-am: uninstall-binSCRIPTS uninstall-testPROGRAMS \
 
 
 xeno-test: $(srcdir)/xeno-test.in Makefile
-	sed "s,@testdir@,$(testdir)," $< > $@
+	sed "s,@testdir@,$(testdir),;s,@pkgdir@,$(pkgdir)," $< > $@
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

@@ -41,6 +41,14 @@ echo 0 > /proc/xenomai/latency || :
 @testdir@/mutex-torture-native
 @testdir@/mutex-torture-posix
 
+@pkgdir@/posix/leaks
+@pkgdir@/posix/shm
+@pkgdir@/native/heap
+@pkgdir@/native/leaks
+@pkgdir@/native/mayday
+@pkgdir@/native/tsc
+@pkgdir@/native+posix/mq_select
+
 start_load
 
 check_alive @testdir@/latency ${1+"$@"}
