@@ -7,7 +7,7 @@
 #include <getopt.h>
 #include <sys/mman.h>
 
-#include <native/task.h>
+#include <alchemy/task.h>
 
 #include <rtdm/rtcan.h>
 

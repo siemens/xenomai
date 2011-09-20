@@ -7,8 +7,8 @@
 #include <getopt.h>
 #include <sys/mman.h>
 
-#include <native/task.h>
-#include <native/timer.h>
+#include <alchemy/task.h>
+#include <alchemy/timer.h>
 
 #include <rtdm/rtcan.h>
 

@@ -12,19 +12,18 @@ LDFLAGS = \
 rtcanconfig_SOURCES = rtcanconfig.c
 
 rtcanconfig_LDADD = \
-	../../lib/rtdm/librtdm.la \
 	../../lib/cobalt/libcobalt.la
 
 rtcanrecv_SOURCES = rtcanrecv.c
 
 rtcanrecv_LDADD = \
-	../../lib/native/libnative.la \
-	../../lib/cobalt/libcobalt.la \
-	../../lib/rtdm/librtdm.la
+	../../lib/alchemy/libalchemy.la \
+	../../lib/copperplate/libcopperplate.la \
+	../../lib/cobalt/libcobalt.la
 
 rtcansend_SOURCES = rtcansend.c
 
 rtcansend_LDADD = \
-	../../lib/native/libnative.la \
-	../../lib/cobalt/libcobalt.la \
-	../../lib/rtdm/librtdm.la
+	../../lib/alchemy/libalchemy.la \
+	../../lib/copperplate/libcopperplate.la \
+	../../lib/cobalt/libcobalt.la
