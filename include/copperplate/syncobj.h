@@ -49,6 +49,7 @@ struct syncobj {
 	pthread_mutex_t lock;
 	pthread_cond_t post_sync;
 	struct list pend_list;
+	int pend_count;
 	struct list drain_list;
 	int drain_count;
 	fnref_type(void (*)(struct syncobj *sobj)) finalizer;
@@ -82,6 +83,11 @@ int __syncobj_signal_drain(struct syncobj *sobj);
 static inline int syncobj_pended_p(struct syncobj *sobj)
 {
 	return !list_empty(&sobj->pend_list);
+}
+
+static inline int syncobj_pend_count(struct syncobj *sobj)
+{
+	return sobj->pend_count;
 }
 
 void syncobj_requeue_waiter(struct syncobj *sobj, struct threadobj *thobj);

@@ -60,6 +60,7 @@ void syncobj_init(struct syncobj *sobj, int flags,
 	sobj->flags = flags;
 	list_init(&sobj->pend_list);
 	list_init(&sobj->drain_list);
+	sobj->pend_count = 0;
 	sobj->drain_count = 0;
 	sobj->release_count = 0;
 	sobj->finalizer = finalizer;
@@ -118,6 +119,7 @@ static void syncobj_enqueue_waiter(struct syncobj *sobj,
 	struct threadobj *__thobj;
 
 	thobj->wait_prio = threadobj_get_priority(thobj);
+	sobj->pend_count++;
 	if ((sobj->flags & SYNCOBJ_PRIO) == 0 || list_empty(&sobj->pend_list)) {
 		list_append(&thobj->wait_link, &sobj->pend_list);
 		return;
@@ -221,6 +223,7 @@ void syncobj_requeue_waiter(struct syncobj *sobj, struct threadobj *thobj)
 void syncobj_wakeup_waiter(struct syncobj *sobj, struct threadobj *thobj)
 {
 	list_remove_init(&thobj->wait_link);
+	sobj->pend_count--;
 	__RT(pthread_cond_signal(&thobj->wait_sync));
 }
 
@@ -232,6 +235,7 @@ struct threadobj *syncobj_post(struct syncobj *sobj)
 		return NULL;
 
 	thobj = list_pop_entry(&sobj->pend_list, struct threadobj, wait_link);
+	sobj->pend_count--;
 	__RT(pthread_cond_signal(&thobj->wait_sync));
 
 	return thobj;
@@ -333,6 +337,7 @@ int syncobj_flush(struct syncobj *sobj, int reason)
 		__RT(pthread_cond_signal(&thobj->wait_sync));
 		sobj->release_count++;
 	}
+	sobj->pend_count = 0;
 
 	if (sobj->drain_count > 0) {
 		do {
