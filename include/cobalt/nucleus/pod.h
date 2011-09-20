@@ -307,6 +307,7 @@ static inline void xnpod_run_hooks(struct xnqueue *q,
 
 int xnpod_set_thread_periodic(xnthread_t *thread,
 			      xnticks_t idate,
+			      xntmode_t timeout_mode,
 			      xnticks_t period);
 
 int xnpod_wait_thread_period(unsigned long *overruns_r);

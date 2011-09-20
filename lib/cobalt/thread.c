@@ -278,12 +278,13 @@ int __wrap_pthread_create(pthread_t *tid,
 }
 
 int pthread_make_periodic_np(pthread_t thread,
+			     clockid_t clk_id,
 			     struct timespec *starttp,
 			     struct timespec *periodtp)
 {
-	return -XENOMAI_SKINCALL3(__pse51_muxid,
+	return -XENOMAI_SKINCALL4(__pse51_muxid,
 				  __pse51_thread_make_periodic,
-				  thread, starttp, periodtp);
+				  thread, clk_id, starttp, periodtp);
 }
 
 int pthread_wait_np(unsigned long *overruns_r)

@@ -551,9 +551,12 @@ pthread_t pthread_self(void)
  * @param thread thread identifier. This thread is immediately delayed
  * until the first periodic release point is reached.
  *
+ * @param clock_id clock identifier, either CLOCK_REALTIME,
+ * CLOCK_MONOTONIC or CLOCK_MONOTONIC_RAW.
+ *
  * @param starttp start time, expressed as an absolute value of the
- * CLOCK_REALTIME clock. The affected thread will be delayed until
- * this point is reached.
+ * clock @a clock_id. The affected thread will be delayed until this
+ * point is reached.
  *
  * @param periodtp period, expressed as a time interval.
  *
@@ -561,10 +564,12 @@ pthread_t pthread_self(void)
  * @return an error number if:
  * - ESRCH, @a thread is invalid;
  * - ETIMEDOUT, the start time has already passed.
+ * - ENOTSUP, the specified clock is unsupported;
  *
  * Rescheduling: always, until the @a starttp start time has been reached.
  */
 int pthread_make_periodic_np(pthread_t thread,
+			     clockid_t clock_id,
 			     struct timespec *starttp,
 			     struct timespec *periodtp)
 {
@@ -572,6 +577,11 @@ int pthread_make_periodic_np(pthread_t thread,
 	xnticks_t start, period;
 	int err;
 	spl_t s;
+
+	if (clock_id != CLOCK_MONOTONIC &&
+	    clock_id != CLOCK_MONOTONIC_RAW &&
+	    clock_id != CLOCK_REALTIME)
+		return ENOTSUP;
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -582,8 +592,9 @@ int pthread_make_periodic_np(pthread_t thread,
 
 	start = ts2ticks_ceil(starttp);
 	period = ts2ticks_ceil(periodtp);
-	err = -xnpod_set_thread_periodic(&thread->threadbase, start, period);
-
+	err = -xnpod_set_thread_periodic(&thread->threadbase,
+					 start, clock_flag(TIMER_ABSTIME, clock_id),
+					 period);
       unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);

@@ -389,6 +389,7 @@ int pthread_once(pthread_once_t *once_control,
 		 void (*init_routine)(void));
 
 int pthread_make_periodic_np(pthread_t thread,
+			     clockid_t clk_id,
 			     struct timespec *starttp,
 			     struct timespec *periodtp);
 
@@ -429,6 +430,7 @@ int pthread_condattr_setclock(pthread_condattr_t *attr,
 #endif
 
 int pthread_make_periodic_np(pthread_t thread,
+			     clockid_t clk_id,
 			     struct timespec *starttp,
 			     struct timespec *periodtp);
 

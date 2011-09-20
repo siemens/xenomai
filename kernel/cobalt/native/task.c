@@ -781,8 +781,8 @@ int rt_task_set_periodic(RT_TASK *task, RTIME idate, RTIME period)
 		goto unlock_and_exit;
 	}
 
-	err = xnpod_set_thread_periodic(&task->thread_base, idate, period);
-
+	err = xnpod_set_thread_periodic(&task->thread_base,
+					idate, XN_REALTIME, period);
       unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);

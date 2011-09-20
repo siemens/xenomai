@@ -2749,7 +2749,7 @@ void xnpod_disable_timesource(void)
 EXPORT_SYMBOL_GPL(xnpod_disable_timesource);
 
 /*!
- * \fn int xnpod_set_thread_periodic(xnthread_t *thread,xnticks_t idate,xnticks_t period)
+ * \fn int xnpod_set_thread_periodic(xnthread_t *thread,xnticks_t idate, xntmode_t timeout_mode, xnticks_t period)
  * \brief Make a thread periodic.
  *
  * Make a thread periodic by programming its first release point and
@@ -2765,8 +2765,13 @@ EXPORT_SYMBOL_GPL(xnpod_disable_timesource);
  * point, expressed in clock ticks (see note). The affected thread
  * will be delayed until this point is reached. If @a idate is equal
  * to XN_INFINITE, the current system date is used, and no initial
- * delay takes place.
-
+ * delay takes place. In the latter case, @a timeout_mode is not
+ * considered and can have any valid value.
+ *
+ * @param timeout_mode The mode of the @a idate parameter. It can
+ * either be set to XN_ABSOLUTE or XN_REALTIME with @a idate different
+ * from XN_INFINITE (see also xntimer_start()).
+ *
  * @param period The period of the thread, expressed in clock ticks
  * (see note). As a side-effect, passing XN_INFINITE attempts to stop
  * the thread's periodic timer; in the latter case, the routine always
@@ -2782,7 +2787,9 @@ EXPORT_SYMBOL_GPL(xnpod_disable_timesource);
  *
  * - -EINVAL is returned if @a period is different from XN_INFINITE
  * but shorter than the scheduling latency value for the target
- * system, as available from /proc/xenomai/latency.
+ * system, as available from /proc/xenomai/latency. -EINVAL is also
+ * returned if @a timeout_mode is not compatible with @a idate, such
+ * as XN_RELATIVE with @a idate different from XN_INFINITE.
  *
  * Environments:
  *
@@ -2800,8 +2807,8 @@ EXPORT_SYMBOL_GPL(xnpod_disable_timesource);
  * xnpod_init_thread), or nanoseconds otherwise.
  */
 
-int xnpod_set_thread_periodic(xnthread_t *thread,
-			      xnticks_t idate, xnticks_t period)
+int xnpod_set_thread_periodic(xnthread_t *thread, xnticks_t idate,
+			      xntmode_t timeout_mode, xnticks_t period)
 {
 	int err = 0;
 	spl_t s;
@@ -2812,8 +2819,8 @@ int xnpod_set_thread_periodic(xnthread_t *thread,
 	xnlock_get_irqsave(&nklock, s);
 
 	trace_mark(xn_nucleus, thread_setperiodic,
-		   "thread %p thread_name %s idate %Lu period %Lu timer %p",
-		   thread, xnthread_name(thread), idate, period,
+		   "thread %p thread_name %s idate %Lu mode %d period %Lu timer %p",
+		   thread, xnthread_name(thread), idate, timeout_mode, period,
 		   &thread->ptimer);
 
 	if (period == XN_INFINITE) {
@@ -2834,8 +2841,13 @@ int xnpod_set_thread_periodic(xnthread_t *thread,
 	if (idate == XN_INFINITE) {
 		xntimer_start(&thread->ptimer, period, period, XN_RELATIVE);
 	} else {
-		idate -= xntbase_get_wallclock_offset(
-			xntimer_base(&thread->ptimer));
+		if (timeout_mode == XN_REALTIME)
+			idate -= xntbase_get_wallclock_offset(
+				xntimer_base(&thread->ptimer));
+		else if (timeout_mode != XN_ABSOLUTE) {
+			err = -EINVAL;
+			goto unlock_and_exit;
+		}
 		err = xntimer_start(&thread->ptimer, idate, period,
 				    XN_ABSOLUTE);
 		if (err)

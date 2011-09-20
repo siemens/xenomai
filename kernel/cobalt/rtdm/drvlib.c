@@ -163,7 +163,7 @@ int rtdm_task_init(rtdm_task_t *task, const char *name,
 		goto cleanup_out;
 
 	if (period > 0) {
-		err = xnpod_set_thread_periodic(task, XN_INFINITE,
+		err = xnpod_set_thread_periodic(task, XN_INFINITE, XN_RELATIVE,
 						xntbase_ns2ticks_ceil
 						(rtdm_tbase,  period));
 		if (err)

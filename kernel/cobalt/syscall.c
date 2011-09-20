@@ -433,6 +433,7 @@ static int __sched_yield(void)
 }
 
 static int __pthread_make_periodic_np(unsigned long tid,
+				      clockid_t clk_id,
 				      struct timespec __user *u_startt,
 				      struct timespec __user *u_periodt)
 {
@@ -450,7 +451,7 @@ static int __pthread_make_periodic_np(unsigned long tid,
 	if (__xn_safe_copy_from_user(&periodt, u_periodt, sizeof(periodt)))
 		return -EFAULT;
 
-	return -pthread_make_periodic_np(k_tid, &startt, &periodt);
+	return -pthread_make_periodic_np(k_tid, clk_id, &startt, &periodt);
 }
 
 static int __pthread_wait_np(unsigned long __user *u_overruns)
