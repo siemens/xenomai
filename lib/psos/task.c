@@ -166,7 +166,7 @@ static void task_finalizer(struct threadobj *thobj)
 
 	threadobj_unlock(&task->thobj);
 
-	sem_destroy(&task->barrier);
+	__RT(sem_destroy(&task->barrier));
 	/* We have to hold a lock on a syncobj to destroy it. */
 	syncobj_lock(&task->sobj, &syns);
 	syncobj_destroy(&task->sobj, &syns);
@@ -198,7 +198,7 @@ static void *task_trampoline(void *arg)
 	}
 
 	/* Wait for someone to run t_start() upon us. */
-	sem_wait(&task->barrier);
+	__RT(sem_wait(&task->barrier));
 
 	threadobj_lock(&task->thobj);
 
@@ -273,7 +273,7 @@ u_long t_create(const char *name, u_long prio,
 		task->name[sizeof(task->name) - 1] = '\0';
 	}
 
-	sem_init(&task->barrier, sem_scope_attribute, 0);
+	__RT(sem_init(&task->barrier, sem_scope_attribute, 0));
 	task->flags = flags;	/* We don't do much with those. */
 	task->mode = 0;	/* Not yet known. */
 	task->events = 0;
@@ -303,10 +303,10 @@ u_long t_create(const char *name, u_long prio,
 	idata.finalizer = task_finalizer;
 	threadobj_init(&task->thobj, &idata);
 
-	ret = pthread_create(&task->thobj.tid, &thattr, &task_trampoline, task);
+	ret = __RT(pthread_create(&task->thobj.tid, &thattr, &task_trampoline, task));
 	pthread_attr_destroy(&thattr);
 	if (ret) {
-		sem_destroy(&task->barrier);
+		__RT(sem_destroy(&task->barrier));
 		xnfree(task);
 		ret = ERR_NOTCB;
 	}
@@ -336,7 +336,7 @@ u_long t_start(u_long tid,
 	task->mode = mode;
 	put_psos_task(task);
 	/* Assume sem_post() will check for validity. */
-	sem_post(&task->barrier);
+	__RT(sem_post(&task->barrier));
 
 	return SUCCESS;
 }

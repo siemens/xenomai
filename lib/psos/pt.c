@@ -77,10 +77,10 @@ static struct psos_pt *get_pt_from_id(u_long ptid, int *err_r)
 		goto objid_error;
 
 	if (pt->magic == pt_magic) {
-		if (pthread_mutex_lock(&pt->lock) == 0) {
+		if (__RT(pthread_mutex_lock(&pt->lock)) == 0) {
 			if (pt->magic == pt_magic)
 				return pt;
-			pthread_mutex_unlock(&pt->lock);
+			__RT(pthread_mutex_unlock(&pt->lock));
 			/* Will likely fall down to ERR_OBJDEL. */
 		}
 	}
@@ -103,7 +103,7 @@ objid_error:
 
 static inline void put_pt(struct psos_pt *pt)
 {
-	pthread_mutex_unlock(&pt->lock);
+	__RT(pthread_mutex_unlock(&pt->lock));
 }
 
 static inline size_t pt_overhead(size_t psize, size_t bsize)
@@ -175,11 +175,11 @@ u_long pt_create(const char *name,
 	memset(pt->bitmap, 0, overhead - sizeof(*pt) + sizeof(pt->bitmap));
 	*nbuf = pt->nblks;
 
-	pthread_mutexattr_init(&mattr);
-	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
-	pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
-	pthread_mutex_init(&pt->lock, &mattr);
-	pthread_mutexattr_destroy(&mattr);
+	__RT(pthread_mutexattr_init(&mattr));
+	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
+	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
+	__RT(pthread_mutex_init(&pt->lock, &mattr));
+	__RT(pthread_mutexattr_destroy(&mattr));
 
 	pt->magic = pt_magic;
 	*ptid_r = (u_long)pt;
@@ -207,7 +207,7 @@ u_long pt_delete(u_long ptid)
 	COPPERPLATE_UNPROTECT(svc);
 	pt->magic = ~pt_magic; /* Prevent further reference. */
 	put_pt(pt);
-	pthread_mutex_destroy(&pt->lock);
+	__RT(pthread_mutex_destroy(&pt->lock));
 
 	return SUCCESS;
 }
