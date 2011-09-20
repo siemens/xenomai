@@ -13,6 +13,7 @@
 #include <execinfo.h>
 #endif /* !__UCLIBC__ */
 
+#include <copperplate/init.h>
 #include <alchemy/task.h>
 #include <alchemy/timer.h>
 #include <alchemy/sem.h>
@@ -96,10 +97,8 @@ void latency(void *cookie)
 	start_ticks = timer_info.date + rt_timer_ns2ticks(1000000);
 	expected_tsc = timer_info.tsc + rt_timer_ns2tsc(1000000);
 
-	err =
-	    rt_task_set_periodic(NULL, start_ticks,
-				 rt_timer_ns2ticks(period_ns));
-
+	err = rt_task_set_periodic(NULL, start_ticks,
+				   rt_timer_ns2ticks(period_ns));
 	if (err) {
 		fprintf(stderr, "latency: failed to set periodic, code %d\n",
 			err);
@@ -473,6 +472,8 @@ int main(int argc, char **argv)
 	int cpu = 0, c, err, sig;
 	char task_name[16];
 	sigset_t mask;
+
+	copperplate_init(argc, argv);
 
 	while ((c = getopt(argc, argv, "hp:l:T:qH:B:sD:t:fc:P:b")) != EOF)
 		switch (c) {
