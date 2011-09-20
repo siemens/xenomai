@@ -12,7 +12,7 @@ latency_CPPFLAGS = 			\
 latency_LDFLAGS = @XENO_USER_LDFLAGS@
 
 latency_LDADD = \
-	../../lib/native/libnative.la \
-	../../lib/rtdm/librtdm.la \
+	../../lib/alchemy/libalchemy.la \
+	../../lib/copperplate/libcopperplate.la \
 	../../lib/cobalt/libcobalt.la \
 	-lpthread -lrt -lm

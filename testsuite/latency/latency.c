@@ -13,9 +13,9 @@
 #include <execinfo.h>
 #endif /* !__UCLIBC__ */
 
-#include <native/task.h>
-#include <native/timer.h>
-#include <native/sem.h>
+#include <alchemy/task.h>
+#include <alchemy/timer.h>
+#include <alchemy/sem.h>
 #include <rtdm/rttesting.h>
 
 RT_TASK latency_task, display_task;
@@ -633,8 +633,6 @@ int main(int argc, char **argv)
 			return 0;
 		}
 	}
-
-	rt_timer_set_mode(TM_ONESHOT);	/* Force aperiodic timing. */
 
 	snprintf(task_name, sizeof(task_name), "display-%d", getpid());
 	err = rt_task_create(&display_task, task_name, 0, 0, T_FPU);

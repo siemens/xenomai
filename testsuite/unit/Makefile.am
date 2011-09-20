@@ -22,7 +22,8 @@ arith_CPPFLAGS = \
 arith_LDFLAGS = @XENO_USER_LDFLAGS@
 
 arith_LDADD = \
-	../../lib/native/libnative.la \
+	../../lib/alchemy/libalchemy.la \
+	../../lib/copperplate/libcopperplate.la \
 	../../lib/cobalt/libcobalt.la \
 	-lpthread -lrt -lm
 
@@ -108,7 +109,6 @@ check_vdso_CPPFLAGS =			\
 check_vdso_LDFLAGS = @XENO_USER_LDFLAGS@
 
 check_vdso_LDADD = \
-	../../lib/native/libnative.la \
 	../../lib/cobalt/libcobalt.la \
 	-lpthread -lrt -lm
 
@@ -123,6 +123,7 @@ rtdm_CPPFLAGS =				\
 rtdm_LDFLAGS = $(XENO_POSIX_WRAPPERS) @XENO_USER_LDFLAGS@
 
 rtdm_LDADD = \
-	../../lib/native/libnative.la \
+	../../lib/alchemy/libalchemy.la \
+	../../lib/copperplate/libcopperplate.la \
 	../../lib/cobalt/libcobalt.la \
 	-lpthread -lrt -lm

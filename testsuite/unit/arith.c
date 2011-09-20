@@ -1,7 +1,7 @@
 #include <sys/mman.h>
 #include <stdio.h>
 
-#include <native/timer.h>
+#include <alchemy/timer.h>
 
 #include <asm/xenomai/arith.h>
 

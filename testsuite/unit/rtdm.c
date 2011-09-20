@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <unistd.h>
-#include <native/timer.h>
+#include <alchemy/timer.h>
 #include <rtdm/rttesting.h>
 
 #define NS_PER_MS (1000000)

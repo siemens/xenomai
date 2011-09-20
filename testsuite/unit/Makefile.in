@@ -61,15 +61,15 @@ PROGRAMS = $(test_PROGRAMS)
 am_arith_OBJECTS = arith-arith.$(OBJEXT) \
 	arith-arith-noinline.$(OBJEXT)
 arith_OBJECTS = $(am_arith_OBJECTS)
-arith_DEPENDENCIES = ../../lib/native/libnative.la \
+arith_DEPENDENCIES = ../../lib/alchemy/libalchemy.la \
+	../../lib/copperplate/libcopperplate.la \
 	../../lib/cobalt/libcobalt.la
 arith_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(arith_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_check_vdso_OBJECTS = check_vdso-check-vdso.$(OBJEXT)
 check_vdso_OBJECTS = $(am_check_vdso_OBJECTS)
-check_vdso_DEPENDENCIES = ../../lib/native/libnative.la \
-	../../lib/cobalt/libcobalt.la
+check_vdso_DEPENDENCIES = ../../lib/cobalt/libcobalt.la
 check_vdso_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(check_vdso_LDFLAGS) $(LDFLAGS) -o $@
@@ -107,7 +107,8 @@ mutex_torture_posix_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(mutex_torture_posix_LDFLAGS) $(LDFLAGS) -o $@
 am_rtdm_OBJECTS = rtdm-rtdm.$(OBJEXT)
 rtdm_OBJECTS = $(am_rtdm_OBJECTS)
-rtdm_DEPENDENCIES = ../../lib/native/libnative.la \
+rtdm_DEPENDENCIES = ../../lib/alchemy/libalchemy.la \
+	../../lib/copperplate/libcopperplate.la \
 	../../lib/cobalt/libcobalt.la
 rtdm_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(rtdm_LDFLAGS) \
@@ -308,7 +309,8 @@ arith_CPPFLAGS = \
 
 arith_LDFLAGS = @XENO_USER_LDFLAGS@
 arith_LDADD = \
-	../../lib/native/libnative.la \
+	../../lib/alchemy/libalchemy.la \
+	../../lib/copperplate/libcopperplate.la \
 	../../lib/cobalt/libcobalt.la \
 	-lpthread -lrt -lm
 
@@ -382,7 +384,6 @@ check_vdso_CPPFLAGS = \
 
 check_vdso_LDFLAGS = @XENO_USER_LDFLAGS@
 check_vdso_LDADD = \
-	../../lib/native/libnative.la \
 	../../lib/cobalt/libcobalt.la \
 	-lpthread -lrt -lm
 
@@ -395,7 +396,8 @@ rtdm_CPPFLAGS = \
 
 rtdm_LDFLAGS = $(XENO_POSIX_WRAPPERS) @XENO_USER_LDFLAGS@
 rtdm_LDADD = \
-	../../lib/native/libnative.la \
+	../../lib/alchemy/libalchemy.la \
+	../../lib/copperplate/libcopperplate.la \
 	../../lib/cobalt/libcobalt.la \
 	-lpthread -lrt -lm
 
