@@ -31,7 +31,7 @@ ULONG tickGet(void)
 {
 	ticks_t ticks;
 
-	clockobj_get_date(&wind_clock, &ticks, NULL);
+	clockobj_get_date(&wind_clock, &ticks);
 
 	return (ULONG)ticks;
 }
