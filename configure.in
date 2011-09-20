@@ -181,6 +181,25 @@ if test x$lores_clock = x; then
 	AC_DEFINE(CONFIG_XENO_LORES_CLOCK_DISABLED,1,[config])
 fi
 
+dnl Raw monotonic clock (default: cobalt=on, mercury=off)
+
+if test x$rtcore_type = xcobalt; then
+   raw_monotonic_clock=y
+else
+   raw_monotonic_clock=
+fi
+AC_MSG_CHECKING(whether we may use CLOCK_MONOTONIC_RAW)
+AC_ARG_ENABLE(clock-monotonic-raw,
+	AS_HELP_STRING([--enable-clock-monotonic-raw], [Use CLOCK_MONOTONIC_RAW for timings]),
+	[case "$enableval" in
+	y | yes) raw_monotonic_clock=y ;;
+	*) unset raw_monotonic_clock ;;
+	esac])
+AC_MSG_RESULT(${raw_monotonic_clock:-no})
+if test x$raw_monotonic_clock = xy; then
+	AC_DEFINE(CONFIG_XENO_RAW_CLOCK_ENABLED,1,[config])
+fi
+
 checkflags="-nostdinc -isystem \$(SYSROOT)/usr/include -Wbitwise -Wno-transparent-union -D_GNU_SOURCE -D_XOPEN_SOURCE=500 -D_REENTRANT \$(DEFS) \$(DEFAULT_INCLUDES) \$(INCLUDES) \$(AM_CPPFLAGS) \$(CPPFLAGS) -I\$(top_srcdir)/include -isystem \$(shell \$(CC) -print-file-name=include) -include \$(top_builddir)/include/xeno_config.h \$(shell \$(CC) -dM -E -xc /dev/null|sed -e 's/^\\#define /-D/' -e \"s/ /=\'/\" -e \"s/\$\$/\'/\")"
 
 dnl Used with sparse

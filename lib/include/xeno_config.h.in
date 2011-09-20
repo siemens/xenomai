@@ -52,6 +52,9 @@
 #undef CONFIG_XENO_PSHARED
 
 /* config */
+#undef CONFIG_XENO_RAW_CLOCK_ENABLED
+
+/* config */
 #undef CONFIG_XENO_REGISTRY
 
 /* config */

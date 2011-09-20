@@ -36,7 +36,7 @@ typedef long long sticks_t;
  * for absolute dates internally, with a per-clock epoch value, so
  * that different emulators can have different system dates.
  */
-#ifdef CLOCK_MONOTONIC_RAW
+#ifdef CONFIG_XENO_RAW_CLOCK_ENABLED
 #define CLOCK_COPPERPLATE  CLOCK_MONOTONIC_RAW
 #else
 #define CLOCK_COPPERPLATE  CLOCK_MONOTONIC

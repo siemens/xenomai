@@ -941,6 +941,7 @@ with_gnu_ld
 enable_libtool_lock
 enable_debug
 enable_lores_clock
+enable_clock_monotonic_raw
 enable_assert
 enable_pshared
 enable_registry
@@ -1603,6 +1604,8 @@ Optional Features:
   --disable-libtool-lock  avoid locking (might break parallel builds)
   --enable-debug          Enable debug mode in programs
   --enable-lores-clock    Enable low resolution clock
+  --enable-clock-monotonic-raw
+                          Use CLOCK_MONOTONIC_RAW for timings
   --enable-assert         Enable runtime assertions
   --enable-async-cancel   Enable asynchronous cancellation
   --enable-pshared        Enable shared multi-processing for capable skins
@@ -6036,13 +6039,13 @@ if test "${lt_cv_nm_interface+set}" = set; then :
 else
   lt_cv_nm_interface="BSD nm"
   echo "int some_variable = 0;" > conftest.$ac_ext
-  (eval echo "\"\$as_me:6039: $ac_compile\"" >&5)
+  (eval echo "\"\$as_me:6042: $ac_compile\"" >&5)
   (eval "$ac_compile" 2>conftest.err)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:6042: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
+  (eval echo "\"\$as_me:6045: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
   (eval "$NM \"conftest.$ac_objext\"" 2>conftest.err > conftest.out)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:6045: output\"" >&5)
+  (eval echo "\"\$as_me:6048: output\"" >&5)
   cat conftest.out >&5
   if $GREP 'External.*some_variable' conftest.out > /dev/null; then
     lt_cv_nm_interface="MS dumpbin"
@@ -7140,7 +7143,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 7143 "configure"' > conftest.$ac_ext
+  echo '#line 7146 "configure"' > conftest.$ac_ext
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -8502,11 +8505,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8505: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8508: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8509: \$? = $ac_status" >&5
+   echo "$as_me:8512: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8826,11 +8829,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8829: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8832: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8833: \$? = $ac_status" >&5
+   echo "$as_me:8836: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8931,11 +8934,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8934: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8937: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8938: \$? = $ac_status" >&5
+   echo "$as_me:8941: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -8986,11 +8989,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8989: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8992: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8993: \$? = $ac_status" >&5
+   echo "$as_me:8996: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -11358,7 +11361,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11361 "configure"
+#line 11364 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11458,7 +11461,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11461 "configure"
+#line 11464 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11731,6 +11734,30 @@ $as_echo "${lores_clock:-no}" >&6; }
 if test x$lores_clock = x; then
 
 $as_echo "#define CONFIG_XENO_LORES_CLOCK_DISABLED 1" >>confdefs.h
+
+fi
+
+
+if test x$rtcore_type = xcobalt; then
+   raw_monotonic_clock=y
+else
+   raw_monotonic_clock=
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether we may use CLOCK_MONOTONIC_RAW" >&5
+$as_echo_n "checking whether we may use CLOCK_MONOTONIC_RAW... " >&6; }
+# Check whether --enable-clock-monotonic-raw was given.
+if test "${enable_clock_monotonic_raw+set}" = set; then :
+  enableval=$enable_clock_monotonic_raw; case "$enableval" in
+	y | yes) raw_monotonic_clock=y ;;
+	*) unset raw_monotonic_clock ;;
+	esac
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: ${raw_monotonic_clock:-no}" >&5
+$as_echo "${raw_monotonic_clock:-no}" >&6; }
+if test x$raw_monotonic_clock = xy; then
+
+$as_echo "#define CONFIG_XENO_RAW_CLOCK_ENABLED 1" >>confdefs.h
 
 fi
 
@@ -12903,7 +12930,7 @@ if test x$rtcore_type = xcobalt; then
 
 fi
 
-ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config:scripts/xeno-config-$rtcore_type.in scripts/xeno lib/Makefile lib/cobalt/Makefile lib/native/Makefile lib/copperplate/Makefile lib/vxworks/Makefile lib/psos/Makefile lib/analogy/Makefile lib/include/Makefile testsuite/Makefile testsuite/latency/Makefile testsuite/cyclic/Makefile testsuite/switchtest/Makefile testsuite/clocktest/Makefile testsuite/klatency/Makefile testsuite/unit/Makefile testsuite/xeno-test/Makefile src/testsuite/regression/Makefile src/testsuite/regression/native/Makefile src/testsuite/regression/posix/Makefile src/testsuite/regression/native+posix/Makefile utils/Makefile utils/can/Makefile utils/analogy/Makefile utils/ps/Makefile utils/slackspot/Makefile include/Makefile include/asm-generic/Makefile include/asm-generic/bits/Makefile include/asm-blackfin/Makefile include/asm-blackfin/bits/Makefile include/asm-x86/Makefile include/asm-x86/bits/Makefile include/asm-powerpc/Makefile include/asm-powerpc/bits/Makefile include/asm-arm/Makefile include/asm-arm/bits/Makefile include/asm-nios2/Makefile include/asm-nios2/bits/Makefile include/asm-sh/Makefile include/asm-sh/bits/Makefile include/asm-sim/Makefile include/asm-sim/bits/Makefile include/native/Makefile include/cobalt/Makefile include/cobalt/sys/Makefile include/cobalt/nucleus/Makefile include/rtdm/Makefile include/analogy/Makefile include/copperplate/Makefile include/vxworks/Makefile include/psos/Makefile"
+ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config:scripts/xeno-config-$rtcore_type.in scripts/xeno lib/Makefile lib/cobalt/Makefile lib/native/Makefile lib/copperplate/Makefile lib/alchemy/Makefile lib/vxworks/Makefile lib/psos/Makefile lib/analogy/Makefile lib/include/Makefile testsuite/Makefile testsuite/latency/Makefile testsuite/cyclic/Makefile testsuite/switchtest/Makefile testsuite/clocktest/Makefile testsuite/klatency/Makefile testsuite/unit/Makefile testsuite/xeno-test/Makefile src/testsuite/regression/Makefile src/testsuite/regression/native/Makefile src/testsuite/regression/posix/Makefile src/testsuite/regression/native+posix/Makefile utils/Makefile utils/can/Makefile utils/analogy/Makefile utils/ps/Makefile utils/slackspot/Makefile include/Makefile include/asm-generic/Makefile include/asm-generic/bits/Makefile include/asm-blackfin/Makefile include/asm-blackfin/bits/Makefile include/asm-x86/Makefile include/asm-x86/bits/Makefile include/asm-powerpc/Makefile include/asm-powerpc/bits/Makefile include/asm-arm/Makefile include/asm-arm/bits/Makefile include/asm-nios2/Makefile include/asm-nios2/bits/Makefile include/asm-sh/Makefile include/asm-sh/bits/Makefile include/asm-sim/Makefile include/asm-sim/bits/Makefile include/native/Makefile include/cobalt/Makefile include/cobalt/sys/Makefile include/cobalt/nucleus/Makefile include/rtdm/Makefile include/analogy/Makefile include/copperplate/Makefile include/alchemy/Makefile include/vxworks/Makefile include/psos/Makefile"
 
 
 if test \! x$XENO_MAYBE_DOCDIR = x ; then
@@ -14025,6 +14052,7 @@ do
     "lib/cobalt/Makefile") CONFIG_FILES="$CONFIG_FILES lib/cobalt/Makefile" ;;
     "lib/native/Makefile") CONFIG_FILES="$CONFIG_FILES lib/native/Makefile" ;;
     "lib/copperplate/Makefile") CONFIG_FILES="$CONFIG_FILES lib/copperplate/Makefile" ;;
+    "lib/alchemy/Makefile") CONFIG_FILES="$CONFIG_FILES lib/alchemy/Makefile" ;;
     "lib/vxworks/Makefile") CONFIG_FILES="$CONFIG_FILES lib/vxworks/Makefile" ;;
     "lib/psos/Makefile") CONFIG_FILES="$CONFIG_FILES lib/psos/Makefile" ;;
     "lib/analogy/Makefile") CONFIG_FILES="$CONFIG_FILES lib/analogy/Makefile" ;;
@@ -14070,6 +14098,7 @@ do
     "include/rtdm/Makefile") CONFIG_FILES="$CONFIG_FILES include/rtdm/Makefile" ;;
     "include/analogy/Makefile") CONFIG_FILES="$CONFIG_FILES include/analogy/Makefile" ;;
     "include/copperplate/Makefile") CONFIG_FILES="$CONFIG_FILES include/copperplate/Makefile" ;;
+    "include/alchemy/Makefile") CONFIG_FILES="$CONFIG_FILES include/alchemy/Makefile" ;;
     "include/vxworks/Makefile") CONFIG_FILES="$CONFIG_FILES include/vxworks/Makefile" ;;
     "include/psos/Makefile") CONFIG_FILES="$CONFIG_FILES include/psos/Makefile" ;;
     "doc/Makefile") CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;

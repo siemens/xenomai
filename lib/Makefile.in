@@ -72,7 +72,8 @@ AM_RECURSIVE_TARGETS = $(RECURSIVE_TARGETS:-recursive=) \
 	distdir
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = include copperplate vxworks psos native cobalt analogy
+DIST_SUBDIRS = include copperplate alchemy vxworks psos native cobalt \
+	analogy
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 am__relativize = \
   dir0=`pwd`; \
@@ -255,7 +256,7 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-SUBDIRS = include copperplate vxworks psos $(am__append_1)
+SUBDIRS = include copperplate alchemy vxworks psos $(am__append_1)
 all: all-recursive
 
 .SUFFIXES:
