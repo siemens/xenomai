@@ -24,6 +24,7 @@ void traceobj_init(struct traceobj *trobj, const char *label, int nr_marks)
 	__RT(pthread_mutexattr_destroy(&mattr));
 	__RT(pthread_condattr_init(&cattr));
 	__RT(pthread_condattr_setpshared(&cattr, PTHREAD_PROCESS_PRIVATE));
+	__RT(pthread_condattr_setclock(&cattr, CLOCK_COPPERPLATE));
 	__RT(pthread_cond_init(&trobj->join, &cattr));
 	__RT(pthread_condattr_destroy(&cattr));
 	trobj->nr_threads = 0;

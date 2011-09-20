@@ -105,6 +105,7 @@ void threadobj_init(struct threadobj *thobj,
 	 */
 	__STD(pthread_condattr_init(&cattr));
 	__STD(pthread_condattr_setpshared(&cattr, mutex_scope_attribute));
+	__STD(pthread_condattr_setclock(&cattr, CLOCK_COPPERPLATE));
 	__STD(pthread_cond_init(&thobj->wait_sync, &cattr));
 	__STD(pthread_condattr_destroy(&cattr));
 

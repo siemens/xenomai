@@ -73,6 +73,7 @@ void syncobj_init(struct syncobj *sobj, int flags,
 
 	__RT(pthread_condattr_init(&cattr));
 	__RT(pthread_condattr_setpshared(&cattr, mutex_scope_attribute));
+	__RT(pthread_condattr_setclock(&cattr, CLOCK_COPPERPLATE));
 	__RT(pthread_cond_init(&sobj->post_sync, &cattr));
 	__RT(pthread_condattr_destroy(&cattr));
 }
