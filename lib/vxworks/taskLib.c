@@ -133,8 +133,8 @@ static void task_finalizer(struct threadobj *thobj)
 	threadobj_unlock(&task->thobj);
 
 	registry_remove_file(&task->fsobj);
-	sem_destroy(&task->barrier);
-	pthread_mutex_destroy(&task->safelock);
+	__RT(sem_destroy(&task->barrier));
+	__RT(pthread_mutex_destroy(&task->safelock));
 	threadobj_destroy(&task->thobj);
 
 	xnfree(task);
@@ -252,7 +252,7 @@ static void *task_trampoline(void *arg)
 	COPPERPLATE_UNPROTECT(svc);
 
 	/* Wait for someone to run taskActivate() upon us. */
-	sem_wait(&task->barrier);
+	__RT(sem_wait(&task->barrier));
 
 	args->entry(args->arg0, args->arg1, args->arg2, args->arg3,
 		    args->arg4, args->arg5, args->arg6, args->arg7,
@@ -296,13 +296,13 @@ static STATUS __taskInit(struct wind_task *task,
 		task->name[sizeof(task->name) - 1] = '\0';
 	}
 
-	pthread_mutexattr_init(&mattr);
-	pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE);
-	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
-	pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute);
-	pthread_mutex_init(&task->safelock, &mattr);
-	pthread_mutexattr_destroy(&mattr);
-	sem_init(&task->barrier, sem_scope_attribute, 0);
+	__RT(pthread_mutexattr_init(&mattr));
+	__RT(pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE));
+	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
+	__RT(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute));
+	__RT(pthread_mutex_init(&task->safelock, &mattr));
+	__RT(pthread_mutexattr_destroy(&mattr));
+	__RT(sem_init(&task->barrier, sem_scope_attribute, 0));
 
 	task->tcb = tcb;
 	tcb->magic = task_magic;
@@ -342,7 +342,7 @@ static STATUS __taskInit(struct wind_task *task,
 	idata.finalizer = task_finalizer;
 	threadobj_init(&task->thobj, &idata);
 
-	ret = pthread_create(&task->thobj.tid, &thattr, &task_trampoline, task);
+	ret = __RT(pthread_create(&task->thobj.tid, &thattr, &task_trampoline, task));
 	pthread_attr_destroy(&thattr);
 	if (ret) {
 		errno = ret == -EAGAIN ? S_memLib_NOT_ENOUGH_MEMORY : -ret;
@@ -415,7 +415,7 @@ STATUS taskActivate(TASK_ID tid)
 	task->tcb->status &= ~WIND_SUSPEND;
 	put_wind_task(task);
 	/* sem_post() will check for validity as well. */
-	if (sem_post(&task->barrier)) {
+	if (__RT(sem_post(&task->barrier))) {
 		errno = S_objLib_OBJ_ID_ERROR;
 		return ERROR;
 	}
@@ -513,9 +513,9 @@ static STATUS __taskDelete(TASK_ID tid, int force)
 	 * thread object lock. You have been warned.
 	 */
 	if (force)	/* Best effort only. */
-		force = pthread_mutex_trylock(&task->safelock);
+		force = __RT(pthread_mutex_trylock(&task->safelock));
 	else
-		pthread_mutex_lock(&task->safelock);
+		__RT(pthread_mutex_lock(&task->safelock));
 
 	threadobj_lock(&task->thobj);
 	/*
@@ -528,7 +528,7 @@ static STATUS __taskDelete(TASK_ID tid, int force)
 	threadobj_unlock(&task->thobj);
 
 	if (!force)	/* I.e. do we own the safe lock? */
-		pthread_mutex_unlock(&task->safelock);
+		__RT(pthread_mutex_unlock(&task->safelock));
 
 	ret = threadobj_cancel(&task->thobj);
 
@@ -642,7 +642,7 @@ STATUS taskSafe(void)
 	 * Grabbing the safelock will lock out cancellation requests,
 	 * so we don't have to issue COPPERPLATE_PROTECT().
 	 */
-	pthread_mutex_lock(&current->safelock);
+	__RT(pthread_mutex_lock(&current->safelock));
 	current->tcb->safeCnt++;
 
 	return OK;
@@ -664,7 +664,7 @@ STATUS taskUnsafe(void)
 		return ERROR;
 	}
 
-	ret = pthread_mutex_unlock(&current->safelock);
+	ret = __RT(pthread_mutex_unlock(&current->safelock));
 	if (ret == 0)
 		current->tcb->safeCnt--;
 

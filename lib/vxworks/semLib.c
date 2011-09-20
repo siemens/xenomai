@@ -231,24 +231,24 @@ static STATUS msem_take(struct wind_sem *sem, int timeout)
 	  
 	current = wind_task_current();
 	if (current != NULL && (sem->options & SEM_DELETE_SAFE))
-		pthread_mutex_lock(&current->safelock);
+		__RT(pthread_mutex_lock(&current->safelock));
 
 	if (timeout == NO_WAIT) {
-		ret = pthread_mutex_trylock(&sem->u.msem.lock);
+		ret = __RT(pthread_mutex_trylock(&sem->u.msem.lock));
 		if (ret)
 			goto done;
 		return OK;
 	}
 
 	if  (timeout == WAIT_FOREVER) {
-		ret = pthread_mutex_lock(&sem->u.msem.lock);
+		ret = __RT(pthread_mutex_lock(&sem->u.msem.lock));
 		if (ret)
 			goto done;
 		return OK;
 	}
 
 	clockobj_ticks_to_timeout(&wind_clock, timeout, &ts);
-	ret = pthread_mutex_timedlock(&sem->u.msem.lock, &ts);
+	ret = __RT(pthread_mutex_timedlock(&sem->u.msem.lock, &ts));
 done:
 	switch (ret) {
 	case EINVAL:
@@ -268,7 +268,7 @@ done:
 	}
 
 	if (current != NULL && (sem->options & SEM_DELETE_SAFE))
-		pthread_mutex_unlock(&current->safelock);
+		__RT(pthread_mutex_unlock(&current->safelock));
 
 	return ret;
 }
@@ -281,7 +281,7 @@ static STATUS msem_give(struct wind_sem *sem)
 	if (threadobj_async_p())
 		return S_intLib_NOT_ISR_CALLABLE;
 
-	ret = pthread_mutex_unlock(&sem->u.msem.lock);
+	ret = __RT(pthread_mutex_unlock(&sem->u.msem.lock));
 	if (ret == EINVAL)
 		return S_objLib_OBJ_ID_ERROR;
 	if (ret == EPERM)
@@ -290,7 +290,7 @@ static STATUS msem_give(struct wind_sem *sem)
 	if (sem->options & SEM_DELETE_SAFE) {
 		current = wind_task_current();
 		if (current != NULL)
-			pthread_mutex_unlock(&current->safelock);
+			__RT(pthread_mutex_unlock(&current->safelock));
 	}
 
 	return OK;
@@ -308,7 +308,7 @@ static STATUS msem_delete(struct wind_sem *sem)
 	if (threadobj_async_p())
 		return S_intLib_NOT_ISR_CALLABLE;
 	  
-	ret = pthread_mutex_destroy(&sem->u.msem.lock);
+	ret = __RT(pthread_mutex_destroy(&sem->u.msem.lock));
 	if (ret == EINVAL)
 		return S_objLib_OBJ_ID_ERROR;
 	/*
@@ -402,17 +402,17 @@ SEM_ID semMCreate(int options)
 	 * consideration for priority while serializing threads is
 	 * just asking for troubles anyway.
 	 */
-	pthread_mutexattr_init(&mattr);
-	pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE);
+	__RT(pthread_mutexattr_init(&mattr));
+	__RT(pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE));
 #if 0				/* FIXME */
 	pthread_mutexattr_setrobust_np(&mattr, PTHREAD_MUTEX_ROBUST_NP);
 #endif
 	if (options & SEM_INVERSION_SAFE)
-		pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
-	pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute);
+		__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
+	__RT(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute));
 
-	pthread_mutex_init(&sem->u.msem.lock, &mattr);
-	pthread_mutexattr_destroy(&mattr);
+	__RT(pthread_mutex_init(&sem->u.msem.lock, &mattr));
+	__RT(pthread_mutexattr_destroy(&mattr));
 
 	COPPERPLATE_UNPROTECT(svc);
 
