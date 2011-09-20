@@ -2,24 +2,24 @@ nodist_include_HEADERS=$(CONFIG_HEADER)
 
 if XENO_COBALT
 
-include_HEADERS = \
+include_HEADERS = 	\
 	rtdk.h
 
-SUBDIRS = \
-	asm-generic \
-	asm-blackfin \
-	asm-x86 \
-	asm-powerpc \
-	asm-arm \
-	asm-nios2 \
-	asm-sh \
-	asm-sim \
-	analogy \
-	native \
-	psos \
-	vxworks \
-	cobalt \
-	copperplate \
+SUBDIRS = 		\
+	asm-generic 	\
+	asm-blackfin 	\
+	asm-x86 	\
+	asm-powerpc 	\
+	asm-arm 	\
+	asm-nios2 	\
+	asm-sh 		\
+	asm-sim 	\
+	analogy 	\
+	native 		\
+	psos 		\
+	vxworks 	\
+	cobalt 		\
+	copperplate 	\
 	rtdm
 
 install-data-local:
@@ -37,6 +37,14 @@ uninstall-local:
 	rm -f $(DESTDIR)$(includedir)/xenomai
 	rm -f $(DESTDIR)$(includedir)/asm-@XENO_TARGET_ARCH@/xenomai
 	rm -f $(DESTDIR)$(includedir)/asm-generic/xenomai
+
+else
+
+SUBDIRS = 		\
+	alchemy		\
+	copperplate	\
+	psos 		\
+	vxworks
 
 endif
 

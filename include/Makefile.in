@@ -93,9 +93,9 @@ AM_RECURSIVE_TARGETS = $(RECURSIVE_TARGETS:-recursive=) \
 	distdir
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = asm-generic asm-blackfin asm-x86 asm-powerpc asm-arm \
-	asm-nios2 asm-sh asm-sim analogy native psos vxworks cobalt \
-	copperplate rtdm
+DIST_SUBDIRS = alchemy copperplate psos vxworks asm-generic \
+	asm-blackfin asm-x86 asm-powerpc asm-arm asm-nios2 asm-sh \
+	asm-sim analogy native cobalt rtdm
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 am__relativize = \
   dir0=`pwd`; \
@@ -282,21 +282,27 @@ nodist_include_HEADERS = $(CONFIG_HEADER)
 @XENO_COBALT_TRUE@include_HEADERS = \
 @XENO_COBALT_TRUE@	rtdk.h
 
+@XENO_COBALT_FALSE@SUBDIRS = \
+@XENO_COBALT_FALSE@	alchemy		\
+@XENO_COBALT_FALSE@	copperplate	\
+@XENO_COBALT_FALSE@	psos 		\
+@XENO_COBALT_FALSE@	vxworks
+
 @XENO_COBALT_TRUE@SUBDIRS = \
-@XENO_COBALT_TRUE@	asm-generic \
-@XENO_COBALT_TRUE@	asm-blackfin \
-@XENO_COBALT_TRUE@	asm-x86 \
-@XENO_COBALT_TRUE@	asm-powerpc \
-@XENO_COBALT_TRUE@	asm-arm \
-@XENO_COBALT_TRUE@	asm-nios2 \
-@XENO_COBALT_TRUE@	asm-sh \
-@XENO_COBALT_TRUE@	asm-sim \
-@XENO_COBALT_TRUE@	analogy \
-@XENO_COBALT_TRUE@	native \
-@XENO_COBALT_TRUE@	psos \
-@XENO_COBALT_TRUE@	vxworks \
-@XENO_COBALT_TRUE@	cobalt \
-@XENO_COBALT_TRUE@	copperplate \
+@XENO_COBALT_TRUE@	asm-generic 	\
+@XENO_COBALT_TRUE@	asm-blackfin 	\
+@XENO_COBALT_TRUE@	asm-x86 	\
+@XENO_COBALT_TRUE@	asm-powerpc 	\
+@XENO_COBALT_TRUE@	asm-arm 	\
+@XENO_COBALT_TRUE@	asm-nios2 	\
+@XENO_COBALT_TRUE@	asm-sh 		\
+@XENO_COBALT_TRUE@	asm-sim 	\
+@XENO_COBALT_TRUE@	analogy 	\
+@XENO_COBALT_TRUE@	native 		\
+@XENO_COBALT_TRUE@	psos 		\
+@XENO_COBALT_TRUE@	vxworks 	\
+@XENO_COBALT_TRUE@	cobalt 		\
+@XENO_COBALT_TRUE@	copperplate 	\
 @XENO_COBALT_TRUE@	rtdm
 
 EXTRA_DIST = testing
