@@ -70,11 +70,6 @@ void threadobj_init(struct threadobj *thobj,
 	thobj->suspend_hook = idata->suspend_hook;
 	thobj->cnode = __this_node.id;
 
-	/*
-	 * XXX: we don't actually need to enclose POSIX calls with
-	 * __RT() qualifiers since this file is Cobalt-specific, but
-	 * we still do this as a mean to make the code obvious.
-	 */
 	__RT(pthread_condattr_init(&cattr));
 	__RT(pthread_condattr_setpshared(&cattr, mutex_scope_attribute));
 	__RT(pthread_cond_init(&thobj->wait_sync, &cattr));
@@ -382,7 +377,8 @@ void threadobj_stop_rr(void)
 int threadobj_set_periodic(struct threadobj *thobj,
 			   struct timespec *idate, struct timespec *period)
 {
-	return -pthread_make_periodic_np(thobj->tid, idate, period);
+	return -pthread_make_periodic_np(thobj->tid,
+					 CLOCK_COPPERPLATE, idate, period);
 }
 
 int threadobj_wait_period(struct threadobj *thobj,

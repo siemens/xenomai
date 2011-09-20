@@ -64,11 +64,13 @@ void syncobj_init(struct syncobj *sobj, int flags,
 	sobj->drain_count = 0;
 	sobj->release_count = 0;
 	sobj->finalizer = finalizer;
+
 	__RT(pthread_mutexattr_init(&mattr));
 	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
 	assert(__RT(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute)) == 0);
 	__RT(pthread_mutex_init(&sobj->lock, &mattr));
 	__RT(pthread_mutexattr_destroy(&mattr));
+
 	__RT(pthread_condattr_init(&cattr));
 	__RT(pthread_condattr_setpshared(&cattr, mutex_scope_attribute));
 	__RT(pthread_cond_init(&sobj->post_sync, &cattr));

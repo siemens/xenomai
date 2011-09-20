@@ -232,7 +232,7 @@ sticks_t clockobj_ns_to_ticks(struct clockobj *clkobj, sticks_t ns)
 	return xnarch_ulldiv(ns, clkobj->resolution, NULL);
 }
 
-void clockobj_get_date(struct clockobj *clkobj,
+void clockobj_get_time(struct clockobj *clkobj,
 		       ticks_t *pticks, ticks_t *ptsc)
 {
 	unsigned long long ns, tsc;
@@ -241,14 +241,29 @@ void clockobj_get_date(struct clockobj *clkobj,
 
 	tsc = __xn_rdtsc();
 	ns = xnarch_tsc_to_ns(tsc);
-	ns += clkobj->offset.tv_sec * 1000000000;
-	ns += clkobj->offset.tv_nsec;
 	if (clockobj_get_resolution(clkobj) > 1)
 		ns /= clockobj_get_resolution(clkobj);
 	*pticks = ns;
 
 	if (ptsc)
 		*ptsc = tsc;
+
+	read_unlock(&clkobj->lock);
+}
+
+void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks)
+{
+	unsigned long long ns;
+
+	read_lock_nocancel(&clkobj->lock);
+
+	ns = xnarch_tsc_to_ns(__xn_rdtsc());
+	/* Add offset to epoch. */
+	ns += clkobj->offset.tv_sec * 1000000000;
+	ns += clkobj->offset.tv_nsec;
+	if (clockobj_get_resolution(clkobj) > 1)
+		ns /= clockobj_get_resolution(clkobj);
+	*pticks = ns;
 
 	read_unlock(&clkobj->lock);
 }
@@ -267,20 +282,18 @@ sticks_t clockobj_ns_to_ticks(struct clockobj *clkobj, sticks_t ns)
 	return ns / clkobj->resolution;
 }
 
-void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks,
+void clockobj_get_time(struct clockobj *clkobj, ticks_t *pticks,
 		       ticks_t *ptsc)
 {
-	struct timespec now, date;
+	struct timespec now;
 
 	read_lock_nocancel(&clkobj->lock);
 
 	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
 
-	timespec_add(&date, &clkobj->offset, &now);
-
-	/* Convert the time value to ticks. */
-	*pticks = date.tv_sec * clockobj_get_frequency(clkobj)
-		+ date.tv_nsec / clockobj_get_resolution(clkobj);
+	/* Convert the time value to ticks, with no offset. */
+	*pticks = now.tv_sec * clockobj_get_frequency(clkobj)
+		+ now.tv_nsec / clockobj_get_resolution(clkobj);
 
 	/*
 	 * Mercury has a single time source, with TSC == monotonic
@@ -288,6 +301,24 @@ void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks,
 	 */
 	if (ptsc)
 		*ptsc = *pticks;
+
+	read_unlock(&clkobj->lock);
+}
+
+void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks)
+{
+	struct timespec now, date;
+
+	read_lock_nocancel(&clkobj->lock);
+
+	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
+
+	/* Add offset to epoch. */
+	timespec_add(&date, &clkobj->offset, &now);
+
+	/* Convert the time value to ticks,. */
+	*pticks = date.tv_sec * clockobj_get_frequency(clkobj)
+		+ date.tv_nsec / clockobj_get_resolution(clkobj);
 
 	read_unlock(&clkobj->lock);
 }
