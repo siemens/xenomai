@@ -441,27 +441,39 @@ u_long t_ident(const char *name, u_long node, u_long *tid_r)
 	struct clusterobj *cobj;
 	struct psos_task *task;
 	struct service svc;
+	int ret = SUCCESS;
 
 	if (node)
 		return ERR_NODENO;
 
 	COPPERPLATE_PROTECT(svc);
-	cobj = cluster_findobj(&psos_task_table, name);
-	COPPERPLATE_UNPROTECT(svc);
-	if (cobj == NULL)
-		return ERR_OBJNF;
 
-	task = container_of(cobj, struct psos_task, cobj);
-	/*
-	 * Last attempt to check whether the task is valid, in case it
-	 * is pending deletion.
-	 */
-	if (threadobj_get_magic(&task->thobj) != task_magic)
-		return ERR_OBJNF;
+	if (name == NULL) {
+		task = find_psos_task_or_self(0, &ret);
+		if (task == NULL)
+			goto out;
+	} else {
+		cobj = cluster_findobj(&psos_task_table, name);
+		if (cobj == NULL) {
+			ret = ERR_OBJNF;
+			goto out;
+		}
+		task = container_of(cobj, struct psos_task, cobj);
+		/*
+		 * Last attempt to check whether the task is valid, in
+		 * case it is pending deletion.
+		 */
+		if (threadobj_get_magic(&task->thobj) != task_magic) {
+			ret = ERR_OBJNF;
+			goto out;
+		}
+	}
 
 	*tid_r = mainheap_ref(task, u_long);
+out:
+	COPPERPLATE_UNPROTECT(svc);
 
-	return SUCCESS;
+	return ret;
 }
 
 u_long t_getreg(u_long tid, u_long regnum, u_long *regvalue_r)
