@@ -72,6 +72,7 @@ struct threadobj {
 	int lock_state;
 	int status;
 	pid_t cnode;
+	const char *name;
 
 	/* Those members belong exclusively to the syncobj code. */
 	struct syncobj *wait_sobj;
@@ -309,6 +310,11 @@ static inline int threadobj_local_p(struct threadobj *thobj)
 static inline void *threadobj_get_wait(struct threadobj *thobj)
 {
 	return thobj->wait_struct;
+}
+
+static inline const char *threadobj_get_name(struct threadobj *thobj)
+{
+	return thobj->name;
 }
 
 #endif /* _COPPERPLATE_THREADOBJ_H */

@@ -87,6 +87,7 @@ void threadobj_init(struct threadobj *thobj,
 /* thobj->lock free, asynchronous cancellation disabled. */
 int threadobj_prologue(struct threadobj *thobj, const char *name)
 {
+	thobj->name = name;
 	pthread_set_name_np(pthread_self(), name);
 
 	write_lock_nocancel(&list_lock);

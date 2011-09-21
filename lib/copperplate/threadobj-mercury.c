@@ -119,6 +119,7 @@ void threadobj_init(struct threadobj *thobj,
 
 int threadobj_prologue(struct threadobj *thobj, const char *name)
 {
+	thobj->name = name;
 	prctl(PR_SET_NAME, (unsigned long)name, 0, 0, 0);
 
 	write_lock_nocancel(&list_lock);
