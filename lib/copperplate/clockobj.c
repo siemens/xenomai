@@ -69,13 +69,14 @@ void clockobj_ticks_to_timespec(struct clockobj *clkobj,
 	read_unlock(&clkobj->lock);
 }
 
-void clockobj_ticks_to_timeout(struct clockobj *clkobj,
-			       ticks_t ticks, struct timespec *ts)
+void __clockobj_ticks_to_timeout(struct clockobj *clkobj,
+				 clockid_t clk_id,
+				 ticks_t ticks, struct timespec *ts)
 {
 	struct timespec delta;
 
 	read_lock_nocancel(&clkobj->lock);
-	__RT(clock_gettime(CLOCK_COPPERPLATE, ts));
+	__RT(clock_gettime(clk_id, ts));
 	ticks_to_timespec(clkobj, ticks, &delta);
 	read_unlock(&clkobj->lock);
 	timespec_add(ts, ts, &delta);

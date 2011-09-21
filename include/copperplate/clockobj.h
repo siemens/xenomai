@@ -76,8 +76,8 @@ void clockobj_get_time(struct clockobj *clkobj,
 void clockobj_ticks_to_timespec(struct clockobj *clkobj,
 				ticks_t ticks, struct timespec *ts);
 
-void clockobj_ticks_to_timeout(struct clockobj *clkobj,
-			       ticks_t ticks, struct timespec *ts);
+void __clockobj_ticks_to_timeout(struct clockobj *clkobj, clockid_t clk_id,
+				 ticks_t ticks, struct timespec *ts);
 
 void clockobj_caltime_to_timeout(struct clockobj *clkobj, const struct tm *tm,
 				 unsigned long rticks, struct timespec *ts);
@@ -101,6 +101,13 @@ int clockobj_destroy(struct clockobj *clkobj);
 #ifdef __cplusplus
 }
 #endif
+
+static inline
+void clockobj_ticks_to_timeout(struct clockobj *clkobj,
+			       ticks_t ticks, struct timespec *ts)
+{
+	__clockobj_ticks_to_timeout(clkobj, CLOCK_COPPERPLATE, ticks, ts);
+}
 
 #ifdef CONFIG_XENO_LORES_CLOCK_DISABLED
 
