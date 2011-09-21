@@ -26,6 +26,7 @@
 #include <copperplate/list.h>
 #include <copperplate/lock.h>
 #include <copperplate/clockobj.h>
+#include <copperplate/heapobj.h>
 
 #ifdef CONFIG_XENO_COBALT
 
@@ -83,8 +84,9 @@ struct threadobj {
 			void *ptr;
 			size_t size;
 		} buffer;
-	} wait_u;
+	} wait_u;	/* XXX: deprecated by wait_struct */
 	void (*wait_hook)(struct threadobj *thobj, int status);
+	void *wait_struct;
 
 	struct threadobj_corespec core;
 	struct traceobj *tracer;
@@ -240,15 +242,73 @@ static inline int threadobj_irq_priority(void)
 }
 
 #ifdef CONFIG_XENO_PSHARED
+
 static inline int threadobj_local_p(struct threadobj *thobj)
 {
 	return thobj->cnode == __this_node.id;
 }
+
+/*
+ * In shared processing mode, wait structs may be accessed by remote
+ * processes from the same session, so we allocate them from the
+ * shared heap.
+ */
+#define threadobj_alloc_wait(T)						\
+	({								\
+		struct threadobj *__thobj = threadobj_current();	\
+		typeof(T) *__p;						\
+		assert(__thobj != NULL);				\
+		assert(__thobj->wait_struct == NULL);			\
+		__p = xnmalloc(sizeof(T));				\
+		__thobj->wait_struct = __p;				\
+		__p;							\
+	})
+
+#define threadobj_free_wait(__p)					\
+	({								\
+		struct threadobj *__thobj = threadobj_current();	\
+		assert(__thobj != NULL);				\
+		assert(__thobj->wait_struct == __p);			\
+		__thobj->wait_struct = NULL;				\
+		xnfree(__p);						\
+	})
+
 #else
+
+#include <alloca.h>
+
 static inline int threadobj_local_p(struct threadobj *thobj)
 {
 	return 1;
 }
+
+/*
+ * In purely local mode, we can allocate wait structs from the stack.
+ */
+#define threadobj_alloc_wait(T)						\
+	({								\
+		struct threadobj *__thobj = threadobj_current();	\
+		typeof(T) *__p;						\
+		assert(__thobj != NULL);				\
+		assert(__thobj->wait_struct == NULL);			\
+		__p = alloca(sizeof(T));				\
+		__thobj->wait_struct = __p;				\
+		__p;							\
+	})
+
+#define threadobj_free_wait(__p)					\
+	({								\
+		struct threadobj *__thobj = threadobj_current();	\
+		assert(__thobj != NULL);				\
+		assert(__thobj->wait_struct == __p);			\
+		__thobj->wait_struct = NULL;				\
+	})
+
 #endif
+
+static inline void *threadobj_get_wait(struct threadobj *thobj)
+{
+	return thobj->wait_struct;
+}
 
 #endif /* _COPPERPLATE_THREADOBJ_H */

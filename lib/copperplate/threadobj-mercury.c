@@ -89,6 +89,7 @@ void threadobj_init(struct threadobj *thobj,
 	thobj->magic = idata->magic;
 	thobj->tid = 0;
 	thobj->tracer = NULL;
+	thobj->wait_struct = NULL;
 	thobj->finalizer = idata->finalizer;
 	thobj->wait_hook = idata->wait_hook;
 	thobj->schedlock_depth = 0;
