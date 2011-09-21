@@ -1,9 +1,16 @@
 menuconfig XENO_SKIN_NATIVE
-	tristate "Native API"
+	tristate "Former native API"
 	default y
 	help
 
-	The native Xenomai API.
+	This is the legacy Native API available with Xenomai 2.x.
+
+	WARNING: This interface is now deprecated in favor of the
+	upcoming Alchemy API, which implements most of the former
+	Native API services over the Copperplate interface.
+
+	The format Native API will be phased out when Alchemy is
+	complete and fully functional.
 
 if XENO_SKIN_NATIVE
 
