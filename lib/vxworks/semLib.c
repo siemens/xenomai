@@ -247,7 +247,7 @@ static STATUS msem_take(struct wind_sem *sem, int timeout)
 		return OK;
 	}
 
-	clockobj_ticks_to_timeout(&wind_clock, timeout, &ts);
+	__clockobj_ticks_to_timeout(&wind_clock, CLOCK_REALTIME, timeout, &ts);
 	ret = __RT(pthread_mutex_timedlock(&sem->u.msem.lock, &ts));
 done:
 	switch (ret) {
@@ -404,7 +404,7 @@ SEM_ID semMCreate(int options)
 	 */
 	__RT(pthread_mutexattr_init(&mattr));
 	__RT(pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE));
-#if 0				/* FIXME */
+#ifdef CONFIG_XENO_MERCURY
 	pthread_mutexattr_setrobust_np(&mattr, PTHREAD_MUTEX_ROBUST_NP);
 #endif
 	if (options & SEM_INVERSION_SAFE)
