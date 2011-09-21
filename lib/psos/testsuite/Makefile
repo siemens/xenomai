@@ -5,6 +5,7 @@ XENO_CONFIG=$(DESTDIR)/bin/xeno-config
 endif
 
 prefix := $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --prefix)
+solibs := $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --libdir)
 
 ifeq ($(prefix),)
 $(error Please add <xenomai-install-path>/bin to your PATH variable or specify DESTDIR)
@@ -29,3 +30,13 @@ all: $(TESTS)
 
 clean:
 	$(RM) $(TESTS) *~
+
+# Run the test suite. We pin all tests to CPU #0, so that SMP does not
+# alter the execution sequence we expect from them.
+test: all
+	@for t in $(TESTS); do \
+		echo -n $$t...; \
+		sudo LD_LIBRARY_PATH=$(solibs) ./$$t --cpu-affinity=0 && echo ok || echo BAD; \
+	done
+
+.PHONY: clean test
