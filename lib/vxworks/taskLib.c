@@ -229,8 +229,8 @@ static void *task_trampoline(void *arg)
 
 	ret = threadobj_prologue(&task->thobj, task->name);
 	if (ret) {
-		warning("task %s prologue failed (errno=%d)",
-			task->name, -ret);
+		warning("task %s prologue failed (%s)",
+			task->name, symerror(ret));
 		goto done;
 	}
 

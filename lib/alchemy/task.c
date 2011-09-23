@@ -165,8 +165,8 @@ static int task_prologue(struct alchemy_task *tcb)
 
 	ret = threadobj_prologue(&tcb->thobj, tcb->name);
 	if (ret) {
-		warning("task %s prologue failed (errno=%d)",
-			tcb->name, -ret);
+		warning("task %s prologue failed (%s)",
+			tcb->name, symerror(ret));
 		return ret;
 	}
 
