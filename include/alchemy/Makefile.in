@@ -240,6 +240,7 @@ top_srcdir = @top_srcdir@
 includesubdir = $(includedir)/alchemy
 includesub_HEADERS = \
 	alchemy.h	\
+	cond.h		\
 	mutex.h		\
 	sem.h		\
 	task.h		\

@@ -16,50 +16,25 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
-#ifndef _XENOMAI_ALCHEMY_MUTEX_H
-#define _XENOMAI_ALCHEMY_MUTEX_H
+#ifndef _ALCHEMY_COND_H
+#define _ALCHEMY_COND_H
 
-#include <stdint.h>
-#include <alchemy/timer.h>
-#include <alchemy/task.h>
+#include <copperplate/cluster.h>
+#include <alchemy/cond.h>
 
-struct RT_MUTEX {
-	uintptr_t handle;
-};
+struct threadobj;
 
-typedef struct RT_MUTEX RT_MUTEX;
-
-struct RT_MUTEX_INFO {
-	int locked;
-	int nwaiters;
+struct alchemy_cond {
+	unsigned int magic;	/* Must be first. */
 	char name[32];
-	RT_TASK owner;
+	pthread_mutex_t safe;
+	pthread_cond_t cond;
+	struct clusterobj cobj;
+	int nwaiters;
 };
 
-typedef struct RT_MUTEX_INFO RT_MUTEX_INFO;
+#define cond_magic	0x8686ebeb
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+extern struct cluster alchemy_cond_table;
 
-int rt_mutex_create(RT_MUTEX *mutex,
-		    const char *name);
-
-int rt_mutex_delete(RT_MUTEX *mutex);
-
-int rt_mutex_acquire(RT_MUTEX *mutex,
-		     RTIME timeout);
-
-int rt_mutex_acquire_until(RT_MUTEX *mutex,
-			   RTIME timeout);
-
-int rt_mutex_release(RT_MUTEX *mutex);
-
-int rt_mutex_inquire(RT_MUTEX *mutex,
-		     RT_MUTEX_INFO *info);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* _XENOMAI_ALCHEMY_MUTEX_H */
+#endif /* _ALCHEMY_COND_H */

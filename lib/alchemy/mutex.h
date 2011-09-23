@@ -21,21 +21,26 @@
 
 #include <copperplate/cluster.h>
 #include <alchemy/mutex.h>
-
-struct threadobj;
+#include <alchemy/task.h>
 
 struct alchemy_mutex {
 	unsigned int magic;	/* Must be first. */
 	char name[32];
 	pthread_mutex_t lock;
-	pthread_mutex_t hold;
+	pthread_mutex_t safe;
 	struct clusterobj cobj;
-	struct threadobj *owner;
+	RT_TASK owner;
 	int nwaiters;
 };
 
 #define mutex_magic	0x8585ebeb
 
 extern struct cluster alchemy_mutex_table;
+
+struct alchemy_mutex *get_alchemy_mutex(RT_MUTEX *mutex, int *err_r);
+
+void put_alchemy_mutex(struct alchemy_mutex *mcb);
+
+struct alchemy_mutex *find_alchemy_mutex(RT_MUTEX *mutex, int *err_r);
 
 #endif /* _ALCHEMY_MUTEX_H */

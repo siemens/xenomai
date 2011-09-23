@@ -16,50 +16,52 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
-#ifndef _XENOMAI_ALCHEMY_MUTEX_H
-#define _XENOMAI_ALCHEMY_MUTEX_H
+#ifndef _XENOMAI_ALCHEMY_COND_H
+#define _XENOMAI_ALCHEMY_COND_H
 
 #include <stdint.h>
 #include <alchemy/timer.h>
-#include <alchemy/task.h>
+#include <alchemy/mutex.h>
 
-struct RT_MUTEX {
+struct RT_COND {
 	uintptr_t handle;
 };
 
-typedef struct RT_MUTEX RT_MUTEX;
+typedef struct RT_COND RT_COND;
 
-struct RT_MUTEX_INFO {
-	int locked;
+struct RT_COND_INFO {
 	int nwaiters;
 	char name[32];
-	RT_TASK owner;
 };
 
-typedef struct RT_MUTEX_INFO RT_MUTEX_INFO;
+typedef struct RT_COND_INFO RT_COND_INFO;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int rt_mutex_create(RT_MUTEX *mutex,
-		    const char *name);
+int rt_cond_create(RT_COND *cond,
+		   const char *name);
 
-int rt_mutex_delete(RT_MUTEX *mutex);
+int rt_cond_delete(RT_COND *cond);
 
-int rt_mutex_acquire(RT_MUTEX *mutex,
-		     RTIME timeout);
+int rt_cond_signal(RT_COND *cond);
 
-int rt_mutex_acquire_until(RT_MUTEX *mutex,
-			   RTIME timeout);
+int rt_cond_broadcast(RT_COND *cond);
 
-int rt_mutex_release(RT_MUTEX *mutex);
+int rt_cond_wait(RT_COND *cond,
+		 RT_MUTEX *mutex,
+		 RTIME timeout);
 
-int rt_mutex_inquire(RT_MUTEX *mutex,
-		     RT_MUTEX_INFO *info);
+int rt_cond_wait_until(RT_COND *cond,
+		       RT_MUTEX *mutex,
+		       RTIME timeout);
+
+int rt_cond_inquire(RT_COND *cond,
+		    RT_COND_INFO *info);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _XENOMAI_ALCHEMY_MUTEX_H */
+#endif /* _XENOMAI_ALCHEMY_COND_H */

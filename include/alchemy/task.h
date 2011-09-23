@@ -42,6 +42,8 @@ struct RT_TASK {
 
 typedef struct RT_TASK RT_TASK;
 
+static const RT_TASK no_alchemy_task = { .handle = 0 };
+
 #ifdef __cplusplus
 extern "C" {
 #endif

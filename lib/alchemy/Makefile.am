@@ -5,6 +5,8 @@ libalchemy_la_LDFLAGS = -version-info 0:0:0 -lpthread
 libalchemy_la_SOURCES =	\
 	init.c		\
 	reference.h	\
+	cond.c		\
+	cond.h		\
 	event.c		\
 	event.h		\
 	mutex.c		\
