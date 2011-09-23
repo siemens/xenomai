@@ -25,6 +25,7 @@
 #include <copperplate/init.h>
 #include <copperplate/registry.h>
 #include <copperplate/clockobj.h>
+#include <copperplate/debug.h>
 #include <psos/psos.h>
 #include "tm.h"
 #include "task.h"
@@ -86,7 +87,7 @@ static int psos_init(int argc, char *const argv[])
 	if (ret) {
 		warning("%s: failed to initialize pSOS clock (res=%u ns)",
 			__FUNCTION__, clock_resolution);
-		return ret;
+		return __bt(ret);
 	}
 
 	/* FIXME: this default 10-ticks value should be user-settable */

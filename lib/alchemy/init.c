@@ -71,7 +71,7 @@ static int alchemy_init(int argc, char *const argv[])
 	if (ret) {
 		warning("%s: failed to initialize Alchemy clock (res=%u ns)",
 			__FUNCTION__, clock_resolution);
-		return ret;
+		return __bt(ret);
 	}
 
 	return 0;
