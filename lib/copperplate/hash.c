@@ -131,7 +131,7 @@ int hash_enter(struct hash_table *t,
 	if (!list_empty(&bucket->obj_list)) {
 		list_for_each_entry(obj, &bucket->obj_list, link) {
 			if (strcmp(obj->key, key) == 0) {
-				ret = -EBUSY;
+				ret = -EEXIST;
 				goto out;
 			}
 		}
@@ -212,7 +212,7 @@ int hash_enter_probe(struct hash_table *t,
 		list_for_each_entry(obj, &bucket->obj_list, link) {
 			if (strcmp(obj->key, key) == 0) {
 				if (probefn(obj)) {
-					ret = -EBUSY;
+					ret = -EEXIST;
 					goto out;
 				}
 				list_remove_init(&obj->link);
@@ -297,7 +297,7 @@ int pvhash_enter(struct pvhash_table *t,
 	if (!pvlist_empty(&bucket->obj_list)) {
 		pvlist_for_each_entry(obj, &bucket->obj_list, link) {
 			if (strcmp(obj->key, key) == 0) {
-				ret = -EBUSY;
+				ret = -EEXIST;
 				goto out;
 			}
 		}

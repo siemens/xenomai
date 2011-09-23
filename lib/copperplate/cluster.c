@@ -122,7 +122,7 @@ redo:
 
 	hash_init(&d->table);
 	ret = hash_enter(&main_catalog, name, &d->hobj);
-	if (ret == -EBUSY) {
+	if (ret == -EEXIST) {
 		/*
 		 * Someone seems to have slipped in, creating the
 		 * cluster right after we failed retrieving it: retry
