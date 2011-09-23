@@ -36,6 +36,9 @@
 #include "copperplate/clockobj.h"
 #include "copperplate/registry.h"
 #include "copperplate/timerobj.h"
+#include "copperplate/debug.h"
+
+struct timespec __init_date;
 
 struct coppernode __this_node = {
 	.mem_pool = 128 * 1024, /* Default, 128 Kb. */
@@ -143,7 +146,7 @@ static int collect_cpu_affinity(const char *cpu_list)
 		if (cpu >= CPU_SETSIZE) {
 			free(s);
 			warning("invalid CPU number '%d'", cpu);
-			return -EINVAL;
+			return __bt(-EINVAL);
 		}
 		CPU_SET(cpu, &__this_node.cpu_affinity);
 		n = NULL;
@@ -164,7 +167,7 @@ static int collect_cpu_affinity(const char *cpu_list)
 	ret = sched_setaffinity(0, sizeof(__this_node.cpu_affinity), &__this_node.cpu_affinity);
 	if (ret) {
 		warning("no valid CPU in affinity list '%s'", cpu_list);
-		return -ret;
+		return __bt(-ret);
 	}
 
 	return 0;
@@ -218,6 +221,8 @@ void copperplate_init(int argc, char *const argv[])
 {
 	struct copperskin *skin;
 	int c, lindex, ret;
+
+	__RT(clock_gettime(CLOCK_COPPERPLATE, &__init_date));
 
 	/* No ifs, no buts: we must be called over the main thread. */
 	assert(getpid() == copperplate_get_tid());
@@ -274,6 +279,12 @@ void copperplate_init(int argc, char *const argv[])
 		}
 	}
 
+	ret = debug_pkg_init();
+	if (ret) {
+		warning("failed to initialize debugging features");
+		goto fail;
+	}
+
 	ret = heapobj_pkg_init_private();
 	if (ret) {
 		warning("failed to initialize main private heap");
@@ -321,7 +332,7 @@ void copperplate_init(int argc, char *const argv[])
 
 	return;
 fail:
-	panic("initialization failed, errno=%d", -ret);
+	panic("initialization failed, %s", symerror(ret));
 }
 
 void copperplate_register_skin(struct copperskin *p)

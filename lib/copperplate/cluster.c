@@ -88,6 +88,7 @@
 #include "copperplate/init.h"
 #include "copperplate/heapobj.h"
 #include "copperplate/cluster.h"
+#include "copperplate/debug.h"
 
 #ifdef CONFIG_XENO_PSHARED
 
@@ -133,7 +134,7 @@ redo:
 out:
 	c->d = d;
 
-	return ret;
+	return __bt(ret);
 }
 
 static int cluster_probe(struct hashobj *hobj)
@@ -156,13 +157,13 @@ int cluster_addobj(struct cluster *c, const char *name,
 	 * owner node existence, overwriting dead instances on the
 	 * fly.
 	 */
-	return hash_enter_probe(&c->d->table, name,
-				&cobj->hobj, cluster_probe);
+	return __bt(hash_enter_probe(&c->d->table, name,
+				     &cobj->hobj, cluster_probe));
 }
 
 int cluster_delobj(struct cluster *c, struct clusterobj *cobj)
 {
-	return hash_remove(&c->d->table, &cobj->hobj);
+	return __bt(hash_remove(&c->d->table, &cobj->hobj));
 }
 
 struct clusterobj *cluster_findobj(struct cluster *c, const char *name)
@@ -196,12 +197,12 @@ void pvcluster_destroy(struct pvcluster *c)
 int pvcluster_addobj(struct pvcluster *c, const char *name,
 		     struct pvclusterobj *cobj)
 {
-	return pvhash_enter(&c->table, name, &cobj->hobj);
+	return __bt(pvhash_enter(&c->table, name, &cobj->hobj));
 }
 
 int pvcluster_delobj(struct pvcluster *c, struct pvclusterobj *cobj)
 {
-	return pvhash_remove(&c->table, &cobj->hobj);
+	return __bt(pvhash_remove(&c->table, &cobj->hobj));
 }
 
 struct pvclusterobj *pvcluster_findobj(struct pvcluster *c, const char *name)

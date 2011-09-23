@@ -30,6 +30,7 @@
 #include "copperplate/threadobj.h"
 #include "copperplate/timerobj.h"
 #include "copperplate/clockobj.h"
+#include "copperplate/debug.h"
 
 static sem_t svsem;
 
@@ -144,7 +145,7 @@ out:
 	read_unlock(&svlock);
 	pop_cleanup_lock(&svlock);
 
-	return ret;
+	return __bt(ret);
 }
 
 int timerobj_init(struct timerobj *tmobj)
@@ -160,7 +161,7 @@ int timerobj_init(struct timerobj *tmobj)
 	 */
 	ret = timerobj_spawn_server();
 	if (ret)
-		return ret;
+		return __bt(ret);
 
 	evt.sigev_notify = SIGEV_THREAD_ID;
 	evt.sigev_value.sival_ptr = &svsem;
@@ -169,7 +170,7 @@ int timerobj_init(struct timerobj *tmobj)
 	pvholder_init(&tmobj->link); /* so we may use pvholder_linked() */
 
 	if (__RT(timer_create(CLOCK_COPPERPLATE, &evt, &tmobj->timer)))
-		return -errno;
+		return __bt(-errno);
 
 	return 0;
 }
@@ -184,7 +185,7 @@ int timerobj_destroy(struct timerobj *tmobj)
 	write_unlock(&svlock);
 
 	if (__RT(timer_delete(tmobj->timer)))
-		return -errno;
+		return __bt(-errno);
 
 	return 0;
 }
@@ -200,7 +201,7 @@ int timerobj_start(struct timerobj *tmobj,
 	write_unlock(&svlock);
 
 	if (__RT(timer_settime(tmobj->timer, TIMER_ABSTIME, it, NULL)))
-		return -errno;
+		return __bt(-errno);
 
 	return 0;
 }
@@ -219,7 +220,7 @@ int timerobj_stop(struct timerobj *tmobj)
 	tmobj->handler = NULL;
 
 	if (__RT(timer_settime(tmobj->timer, 0, &itimer_stop, NULL)))
-		return -errno;
+		return __bt(-errno);
 
 	return 0;
 }
@@ -231,7 +232,7 @@ int timerobj_pkg_init(void)
 
 	ret = __RT(sem_init(&svsem, 0, 0));
 	if (ret)
-		return -errno;
+		return __bt(-errno);
 
 	__RT(pthread_mutexattr_init(&mattr));
 	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
@@ -240,7 +241,7 @@ int timerobj_pkg_init(void)
 	ret = __RT(pthread_mutex_init(&svlock, &mattr));
 	__RT(pthread_mutexattr_destroy(&mattr));
 	if (ret)
-		return -ret;
+		return __bt(-ret);
 
 	return 0;
 }

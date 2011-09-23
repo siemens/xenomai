@@ -35,6 +35,7 @@
 #include "copperplate/registry.h"
 #include "copperplate/clockobj.h"
 #include "copperplate/lock.h"
+#include "copperplate/debug.h"
 
 #define REGISTRY_ROOT "/mnt/xenomai"
 
@@ -75,7 +76,7 @@ int registry_add_dir(const char *fmt, ...)
 
 	basename = strrchr(path, '/');
 	if (basename == NULL)
-		return -EINVAL;
+		return __bt(-EINVAL);
 
 	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
 
@@ -118,7 +119,7 @@ int registry_add_dir(const char *fmt, ...)
 done:
 	write_unlock_safe(&regfs_lock, state);
 
-	return ret;
+	return __bt(ret);
 }
 
 int registry_init_file(struct fsobj *fsobj,  struct registry_operations *ops)
@@ -158,7 +159,7 @@ int registry_add_file(struct fsobj *fsobj, int mode, const char *fmt, ...)
 
 	basename = strrchr(path, '/');
 	if (basename == NULL)
-		return -EINVAL;
+		return __bt(-EINVAL);
 
 	fsobj->path = xnstrdup(path);
 	fsobj->basename = fsobj->path + (basename - path) + 1;
@@ -191,7 +192,7 @@ int registry_add_file(struct fsobj *fsobj, int mode, const char *fmt, ...)
 done:
 	write_unlock_safe(&regfs_lock, state);
 
-	return ret;
+	return __bt(ret);
 }
 
 void registry_remove_file(struct fsobj *fsobj)
@@ -279,7 +280,7 @@ static int regfs_getattr(const char *path, struct stat *sbuf)
 done:
 	read_unlock(&regfs_lock);
 
-	return ret;
+	return __bt(ret);
 }
 
 static int regfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
@@ -294,7 +295,7 @@ static int regfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	hobj = pvhash_search(&regfs_dirtable, path);
 	if (hobj == NULL) {
 		read_unlock(&regfs_lock);
-		return -ENOENT;
+		return __bt(-ENOENT);
 	}
 
 	filler(buf, ".", NULL, 0);
@@ -339,7 +340,7 @@ static int regfs_open(const char *path, struct fuse_file_info *fi)
 done:
 	read_unlock(&regfs_lock);
 
-	return ret;
+	return __bt(ret);
 }
 
 static int regfs_read(const char *path, char *buf, size_t size, off_t offset,
@@ -354,13 +355,13 @@ static int regfs_read(const char *path, char *buf, size_t size, off_t offset,
 	hobj = pvhash_search(&regfs_objtable, path);
 	if (hobj == NULL) {
 		read_unlock(&regfs_lock);
-		return -EIO;
+		return __bt(-EIO);
 	}
 
 	fsobj = container_of(hobj, struct fsobj, hobj);
 	if (fsobj->ops->read == NULL) {
 		read_unlock(&regfs_lock);
-		return -ENOSYS;
+		return __bt(-ENOSYS);
 	}
 
 	read_lock_nocancel(&fsobj->lock);
@@ -368,7 +369,7 @@ static int regfs_read(const char *path, char *buf, size_t size, off_t offset,
 	ret = fsobj->ops->read(fsobj, buf, size, offset);
 	read_unlock(&fsobj->lock);
 
-	return ret;
+	return __bt(ret);
 }
 
 static int regfs_write(const char *path, const char *buf, size_t size, off_t offset,
@@ -383,13 +384,13 @@ static int regfs_write(const char *path, const char *buf, size_t size, off_t off
 	hobj = pvhash_search(&regfs_objtable, path);
 	if (hobj == NULL) {
 		read_unlock(&regfs_lock);
-		return -EIO;
+		return __bt(-EIO);
 	}
 
 	fsobj = container_of(hobj, struct fsobj, hobj);
 	if (fsobj->ops->write == NULL) {
 		read_unlock(&regfs_lock);
-		return -ENOSYS;
+		return __bt(-ENOSYS);
 	}
 
 	read_lock_nocancel(&fsobj->lock);
@@ -397,7 +398,7 @@ static int regfs_write(const char *path, const char *buf, size_t size, off_t off
 	ret = fsobj->ops->write(fsobj, buf, size, offset);
 	read_unlock(&regfs_lock);
 
-	return ret;
+	return __bt(ret);
 }
 
 static int regfs_truncate(const char *path, off_t offset)
@@ -476,8 +477,8 @@ static void regfs_cleanup(void *arg)
 			waitpid(pid, NULL, WUNTRACED);
 
 		if (rmdir(s->mntpt) < 0) {
-			warning("failed to remove registry mount point %s (errno=%d)",
-				s->mntpt, errno);
+			warning("failed to remove registry mount point %s (%s)",
+				s->mntpt, symerror(-errno));
 		}
 	}
 
@@ -520,9 +521,9 @@ int registry_pkg_init(char *arg0, char *mntpt, int do_mkdir)
 		if (access(REGISTRY_ROOT, F_OK) < 0)
 			mkdir(REGISTRY_ROOT, 0755);
 		if (mkdir(mntpt, 0755) < 0 && errno != EEXIST) {
-			warning("failed to create registry mount point %s (errno=%d)\n",
-				mntpt, errno);
-			return -errno;
+			warning("failed to create registry mount point %s (%s)\n",
+				mntpt, symerror(-errno));
+			return __bt(-errno);
 		}
 	}
 
@@ -550,7 +551,7 @@ int registry_pkg_init(char *arg0, char *mntpt, int do_mkdir)
 	s.do_rmdir = do_mkdir;
 
 	/* Start the FUSE server thread. */
-	return -__STD(pthread_create(&regfs_thid, &thattr, registry_thread, &s));
+	return __bt(-__STD(pthread_create(&regfs_thid, &thattr, registry_thread, &s)));
 }
 
 void registry_pkg_destroy(void)

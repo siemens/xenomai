@@ -27,6 +27,7 @@
 #include <copperplate/lock.h>
 #include <copperplate/clockobj.h>
 #include <copperplate/heapobj.h>
+#include <copperplate/debug.h>
 
 #ifdef CONFIG_XENO_COBALT
 
@@ -54,6 +55,7 @@ struct threadobj_corespec {
 /* threadobj->status */
 #define THREADOBJ_SCHEDLOCK	0x1	/* Holds the scheduler lock. */
 #define THREADOBJ_ROUNDROBIN	0x2	/* Undergoes round-robin. */
+#define THREADOBJ_DEBUG		0x8000	/* Debug mode enabled. */
 
 #define THREADOBJ_IRQCONTEXT    ((struct threadobj *)-2UL)
 
@@ -92,6 +94,7 @@ struct threadobj {
 	struct threadobj_corespec core;
 	struct traceobj *tracer;
 	struct pvholder thread_link;
+	struct backtrace_data btd;
 };
 
 struct threadobj_init_data {

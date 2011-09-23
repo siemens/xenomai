@@ -26,6 +26,7 @@
 #include "copperplate/panic.h"
 #include "copperplate/notifier.h"
 #include "copperplate/lock.h"
+#include "copperplate/debug.h"
 
 /* Private signal used for notification. */
 #define NOTIFYSIG	(SIGRTMIN + 8)
@@ -141,12 +142,12 @@ int notifier_init(struct notifier *nf,
 	int fd;
 
 	if (pipe(nf->psfd) < 0)
-		return -errno;
+		return __bt(-errno);
 
 	if (pipe(nf->pwfd) < 0) {
 		__STD(close(nf->psfd[0]));
 		__STD(close(nf->psfd[1]));
-		return -errno;
+		return __bt(-errno);
 	}
 
 	nf->callback = callback;
@@ -208,7 +209,7 @@ int notifier_signal(struct notifier *nf)
 
 	ret = read_lock_nocancel(&nf->lock);
 	if (ret)
-		return ret;
+		return __bt(ret);
 
 	fd = nf->psfd[1];
 
@@ -242,7 +243,7 @@ int notifier_release(struct notifier *nf)
 	 */
 	ret = read_lock_nocancel(&nf->lock);
 	if (ret)
-		return ret;
+		return __bt(ret);
 
 	fd = nf->pwfd[1];
 

@@ -39,6 +39,7 @@
 #include "copperplate/list.h"
 #include "copperplate/hash.h"
 #include "copperplate/heapobj.h"
+#include "copperplate/debug.h"
 
 #define HOBJ_PAGE_SHIFT	9	/* 2^9 => 512 bytes */
 #define HOBJ_PAGE_SIZE		(1U << HOBJ_PAGE_SHIFT)
@@ -514,7 +515,7 @@ static int free_block(struct heap *heap, void *block)
 out:
 	write_unlock(&heap->lock);
 
-	return ret;
+	return __bt(ret);
 }
 
 static size_t check_block(struct heap *heap, void *block)
@@ -554,7 +555,7 @@ static size_t check_block(struct heap *heap, void *block)
 out:
 	read_unlock(&heap->lock);
 
-	return ret;
+	return __bt(ret);
 }
 
 static int create_heap(struct heapobj *hobj, const char *session,
@@ -570,7 +571,7 @@ static int create_heap(struct heapobj *hobj, const char *session,
 	else {
 		size = __align_to(size, HOBJ_PAGE_SIZE);
 		if (size > HOBJ_MAXEXTSZ)
-			return -EINVAL;
+			return __bt(-EINVAL);
 	}
 
 	if (size - sizeof(struct heap_extent) < HOBJ_PAGE_SIZE * 2)
@@ -581,7 +582,7 @@ static int create_heap(struct heapobj *hobj, const char *session,
 	if (flags & HOBJ_DEPEND) {
 		heap = alloc_block(&main_heap, len);
 		if (heap == NULL)
-			return -ENOMEM;
+			return __bt(-ENOMEM);
 		fd = -1;
 		heap->maplen = len;
 		init_heap(heap, (caddr_t)heap + sizeof(*heap), size);
@@ -600,18 +601,18 @@ static int create_heap(struct heapobj *hobj, const char *session,
 
 	fd = __STD(shm_open(hobj->fsname, O_RDWR|O_CREAT, 0600));
 	if (fd < 0)
-		return -errno;
+		return __bt(-errno);
 
 	ret = flock(fd, LOCK_EX);
 	if (ret) {
 		__STD(close(fd));
-		return -errno;
+		return __bt(-errno);
 	}
 		
 	ret = fstat(fd, &sbuf);
 	if (ret) {
 		__STD(close(fd));
-		return -errno;
+		return __bt(-errno);
 	}
 
 	if (sbuf.st_size == 0) {
@@ -619,17 +620,17 @@ static int create_heap(struct heapobj *hobj, const char *session,
 		if (ret) {
 			__STD(close(fd));
 			__STD(shm_unlink(hobj->fsname));
-			return -errno;
+			return __bt(-errno);
 		}
 	} else if (sbuf.st_size != len) {
 		__STD(close(fd));
-		return -EEXIST;
+		return __bt(-EEXIST);
 	}
 
 	heap = __STD(mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0));
 	if (heap == MAP_FAILED) {
 		__STD(close(fd));
-		return -errno;
+		return __bt(-errno);
 	}
 
 	if (sbuf.st_size == 0 || (heap->cpid && kill(heap->cpid, 0))) {
@@ -676,15 +677,15 @@ static int pshared_extend(struct heapobj *hobj, size_t size, void *mem)
 	caddr_t p;
 
 	if (hobj == &main_pool)	/* Cannot extend the main pool. */
-		return -EINVAL;
+		return __bt(-EINVAL);
 
 	if (size <= HOBJ_PAGE_SIZE * 2)
-		return -EINVAL;
+		return __bt(-EINVAL);
 
 	newsize = size + hobj->size + sizeof(*heap) + sizeof(*extent);
 	ret = __STD(ftruncate(hobj->fd, newsize));
 	if (ret)
-		return -errno;
+		return __bt(-errno);
 	/*
 	 * We do not allow the kernel to move the mapping address, so
 	 * it is safe referring to the heap contents while extending
@@ -704,7 +705,7 @@ static int pshared_extend(struct heapobj *hobj, size_t size, void *mem)
 out:
 	write_unlock_safe(&heap->lock, state);
 
-	return ret;
+	return __bt(ret);
 }
 
 static void *pshared_alloc(struct heapobj *hobj, size_t size)
@@ -719,7 +720,7 @@ static void pshared_free(struct heapobj *hobj, void *ptr)
 
 static size_t pshared_inquire(struct heapobj *hobj, void *ptr)
 {
-	return check_block(hobj->pool, ptr);
+	return __bt(check_block(hobj->pool, ptr));
 }
 
 static struct heapobj_ops pshared_ops = {
@@ -743,8 +744,8 @@ int heapobj_init(struct heapobj *hobj, const char *name,
 
 	hobj->ops = &pshared_ops;
 
-	return create_heap(hobj, __this_node.session_label, name,
-			   size, flags);
+	return __bt(create_heap(hobj, __this_node.session_label, name,
+				size, flags));
 }
 
 int heapobj_init_depend(struct heapobj *hobj, const char *name,
@@ -754,22 +755,22 @@ int heapobj_init_depend(struct heapobj *hobj, const char *name,
 
 	hobj->ops = &pshared_ops;
 
-	return create_heap(hobj, __this_node.session_label, name,
-			   size, flags | HOBJ_DEPEND);
+	return __bt(create_heap(hobj, __this_node.session_label, name,
+				size, flags | HOBJ_DEPEND));
 }
 
 int heapobj_init_array(struct heapobj *hobj, const char *name,
 		       size_t size, int elems)
 {
 	size = align_alloc_size(size);
-	return heapobj_init(hobj, name, size * elems, NULL);
+	return __bt(heapobj_init(hobj, name, size * elems, NULL));
 }
 
 int heapobj_init_array_depend(struct heapobj *hobj, const char *name,
 			      size_t size, int elems)
 {
 	size = align_alloc_size(size);
-	return heapobj_init_depend(hobj, name, size * elems);
+	return __bt(heapobj_init_depend(hobj, name, size * elems));
 }
 
 void *xnmalloc(size_t size)
@@ -810,7 +811,7 @@ int heapobj_pkg_init_shared(void)
 					__this_node.session_label);
 		}
 
-		return ret;
+		return __bt(ret);
 	}
 
 	__pshared_heap = main_pool.pool;

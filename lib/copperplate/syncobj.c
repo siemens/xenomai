@@ -49,6 +49,10 @@
  * the scheduling priority as enforced by the kernel to fix the
  * release order whenever the lock is contended (i.e. we readied more
  * than a single waiter when flushing).
+ *
+ * NOTE: we do no error backtracing in this file, since error returns
+ * when locking, pending or deleting sync objects usually express
+ * normal runtime conditions.
  */
 
 void syncobj_init(struct syncobj *sobj, int flags,

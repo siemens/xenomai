@@ -26,6 +26,7 @@
 #include "copperplate/threadobj.h"
 #include "copperplate/timerobj.h"
 #include "copperplate/clockobj.h"
+#include "copperplate/debug.h"
 
 static void timerobj_handler(union sigval sigval)
 {
@@ -60,7 +61,7 @@ int timerobj_init(struct timerobj *tmobj)
 	tmobj->handler = NULL;
 
 	if (__STD(timer_create(CLOCK_COPPERPLATE, &evt, &tmobj->timer)))
-		return -errno;
+		return __bt(-errno);
 
 	return 0;
 }
@@ -68,7 +69,7 @@ int timerobj_init(struct timerobj *tmobj)
 int timerobj_destroy(struct timerobj *tmobj)
 {
 	if (__STD(timer_delete(tmobj->timer)))
-		return -errno;
+		return __bt(-errno);
 
 	return 0;
 }
@@ -80,7 +81,7 @@ int timerobj_start(struct timerobj *tmobj,
 	tmobj->handler = handler;
 
 	if (__STD(timer_settime(tmobj->timer, TIMER_ABSTIME, it, NULL)))
-		return -errno;
+		return __bt(-errno);
 
 	return 0;
 }
@@ -99,7 +100,7 @@ static const struct itimerspec itimer_stop = {
 int timerobj_stop(struct timerobj *tmobj)
 {
 	if (__STD(timer_settime(tmobj->timer, 0, &itimer_stop, NULL)))
-		return -errno;
+		return __bt(-errno);
 
 	tmobj->handler = NULL;
 

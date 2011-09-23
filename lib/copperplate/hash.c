@@ -25,6 +25,7 @@
 #include <errno.h>
 #include "copperplate/lock.h"
 #include "copperplate/hash.h"
+#include "copperplate/debug.h"
 
 /*
  * Crunching routine borrowed from:
@@ -140,7 +141,7 @@ int hash_enter(struct hash_table *t,
 out:
 	write_unlock(&t->lock);
 
-	return ret;
+	return __bt(ret);
 }
 
 int hash_remove(struct hash_table *t, struct hashobj *delobj)
@@ -165,7 +166,7 @@ int hash_remove(struct hash_table *t, struct hashobj *delobj)
 out:
 	write_unlock(&t->lock);
 
-	return ret;
+	return __bt(ret);
 }
 
 struct hashobj *hash_search(struct hash_table *t, const char *key)
@@ -225,7 +226,7 @@ out:
 	write_unlock(&t->lock);
 	pop_cleanup_lock(&t->lock);
 
-	return ret;
+	return __bt(ret);
 }
 
 struct hashobj *hash_search_probe(struct hash_table *t, const char *key,
@@ -306,7 +307,7 @@ int pvhash_enter(struct pvhash_table *t,
 out:
 	write_unlock(&t->lock);
 
-	return ret;
+	return __bt(ret);
 }
 
 int pvhash_remove(struct pvhash_table *t, struct pvhashobj *delobj)
@@ -331,7 +332,7 @@ int pvhash_remove(struct pvhash_table *t, struct pvhashobj *delobj)
 out:
 	write_unlock(&t->lock);
 
-	return ret;
+	return __bt(ret);
 }
 
 struct pvhashobj *pvhash_search(struct pvhash_table *t, const char *key)

@@ -26,6 +26,7 @@
 #include <string.h>
 #include "copperplate/lock.h"
 #include "copperplate/clockobj.h"
+#include "copperplate/debug.h"
 
 void timespec_sub(struct timespec *r,
 		  const struct timespec *t1, const struct timespec *t2)
@@ -333,12 +334,12 @@ int clockobj_init(struct clockobj *clkobj,
 	int ret;
 
 	if (resolution_ns == 0)
-		return -EINVAL;
+		return __bt(-EINVAL);
 
 	memset(clkobj, 0, sizeof(*clkobj));
 	ret = __clockobj_set_resolution(clkobj, resolution_ns);
 	if (ret)
-		return ret;
+		return __bt(ret);
 
 	__RT(pthread_mutexattr_init(&mattr));
 	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));

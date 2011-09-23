@@ -19,13 +19,31 @@
 #ifndef _COPPERPLATE_PANIC_H
 #define _COPPERPLATE_PANIC_H
 
+#include <stdarg.h>
+#include <pthread.h>
+
+struct threadobj;
+struct error_frame;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+void error_hook(struct error_frame *ef);
+
+void __printout(struct threadobj *thobj,
+		const char *header,
+		const char *fmt, va_list ap);
+
 void panic(const char *fmt, ...);
 
 void warning(const char *fmt, ...);
+
+const char *symerror(int errnum);
+
+extern const char *dashes;
+
+extern pthread_mutex_t __printlock;
 
 #ifdef __cplusplus
 }

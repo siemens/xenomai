@@ -24,6 +24,7 @@
 #include "copperplate/wrappers.h"
 #include "copperplate/init.h"
 #include "copperplate/heapobj.h"
+#include "copperplate/debug.h"
 #include "tlsf/tlsf.h"
 
 /* XXX: depends on the implementation included from tlsf/, YMMV. */
@@ -43,7 +44,7 @@ int mem_extend(struct heapobj *hobj, size_t size, void *mem)
 	hobj->size = add_new_area(hobj->pool, size, mem);
 	__RT(pthread_mutex_unlock(&hobj->lock));
 	if (hobj->size == (size_t)-1)
-		return -EINVAL;
+		return __bt(-EINVAL);
 
 	return 0;
 }
@@ -100,7 +101,7 @@ int heapobj_init_private(struct heapobj *hobj, const char *name,
 		size += tlsf_pool_overhead;
 		mem = tlsf_malloc(size);
 		if (mem == NULL)
-			return -ENOMEM;
+			return __bt(-ENOMEM);
 	}
 
 	if (name)
@@ -115,7 +116,7 @@ int heapobj_init_private(struct heapobj *hobj, const char *name,
 	memset(mem, 0, size);
 	hobj->size = init_memory_pool(size, mem);
 	if (hobj->size == (size_t)-1)
-		return -EINVAL;
+		return __bt(-EINVAL);
 
 	/*
 	 * TLSF does not lock around so-called extended calls aimed at
@@ -133,7 +134,7 @@ int heapobj_init_array_private(struct heapobj *hobj, const char *name,
 	if (size < 16)
 		size = 16;
 
-	return heapobj_init_private(hobj, name, size * elems, NULL);
+	return __bt(heapobj_init_private(hobj, name, size * elems, NULL));
 }
 
 void *pvmalloc(size_t size)

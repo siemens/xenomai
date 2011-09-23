@@ -36,6 +36,7 @@
 #include "copperplate/traceobj.h"
 #include "copperplate/threadobj.h"
 #include "copperplate/syncobj.h"
+#include "copperplate/debug.h"
 
 pthread_key_t threadobj_tskey;
 
@@ -121,6 +122,7 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 {
 	thobj->name = name;
 	prctl(PR_SET_NAME, (unsigned long)name, 0, 0, 0);
+	backtrace_init_context(&thobj->btd, name);
 
 	write_lock_nocancel(&list_lock);
 	pvlist_append(&thobj->thread_link, &thread_list);
@@ -144,7 +146,7 @@ int threadobj_cancel(struct threadobj *thobj)
 	if (thobj == threadobj_current())
 		pthread_exit(NULL);
 
-	return -pthread_cancel(thobj->tid);
+	return __bt(-pthread_cancel(thobj->tid));
 }
 
 void threadobj_finalize(void *p)
@@ -165,6 +167,9 @@ void threadobj_finalize(void *p)
 
 	if (thobj->finalizer)
 		thobj->finalizer(thobj);
+
+	backtrace_dump(&thobj->btd);
+	backtrace_destroy_context(&thobj->btd);
 }
 
 void threadobj_destroy(struct threadobj *thobj)
@@ -181,7 +186,7 @@ int threadobj_suspend(struct threadobj *thobj)
 	ret = notifier_signal(nf);
 	threadobj_lock(thobj);
 
-	return ret;
+	return __bt(ret);
 }
 
 int threadobj_resume(struct threadobj *thobj)
@@ -189,7 +194,7 @@ int threadobj_resume(struct threadobj *thobj)
 	if (thobj == threadobj_current())
 		return 0;
 
-	return notifier_release(&thobj->core.notifier);
+	return __bt(notifier_release(&thobj->core.notifier));
 }
 
 int threadobj_unblock(struct threadobj *thobj)
@@ -203,7 +208,7 @@ int threadobj_unblock(struct threadobj *thobj)
 		/* Remove standalone DELAY */
 		ret = -__STD(pthread_kill(tid, UNBLOCKSIG));
 
-	return ret;
+	return __bt(ret);
 }
 
 int threadobj_lock_sched(struct threadobj *thobj)
@@ -219,13 +224,13 @@ int threadobj_lock_sched(struct threadobj *thobj)
 
 	ret = __STD(pthread_getschedparam(tid, &policy, &param));
 	if (ret)
-		return -ret;
+		return __bt(-ret);
 
 	thobj->core.prio_unlocked = param.sched_priority;
 	thobj->status |= THREADOBJ_SCHEDLOCK;
 	param.sched_priority = threadobj_max_prio - 1;
 
-	return -__STD(pthread_setschedparam(tid, SCHED_FIFO, &param));
+	return __bt(-__STD(pthread_setschedparam(tid, SCHED_FIFO, &param)));
 }
 
 int threadobj_unlock_sched(struct threadobj *thobj)
@@ -237,7 +242,7 @@ int threadobj_unlock_sched(struct threadobj *thobj)
 	assert(thobj == threadobj_current());
 
 	if (thobj->schedlock_depth == 0)
-		return -EINVAL;
+		return __bt(-EINVAL);
 
 	if (--thobj->schedlock_depth > 0)
 		return 0;
@@ -248,7 +253,7 @@ int threadobj_unlock_sched(struct threadobj *thobj)
 	ret = __STD(pthread_setschedparam(tid, SCHED_FIFO, &param));
 	threadobj_lock(thobj);
 
-	return -ret;
+	return __bt(-ret);
 }
 
 int threadobj_set_priority(struct threadobj *thobj, int prio)
@@ -276,7 +281,7 @@ int threadobj_set_priority(struct threadobj *thobj, int prio)
 	ret = __STD(pthread_setschedparam(tid, SCHED_FIFO, &param));
 	threadobj_lock(thobj);
 
-	return -ret;
+	return __bt(-ret);
 }
 
 int threadobj_get_priority(struct threadobj *thobj) /* thobj->lock held */
@@ -286,7 +291,7 @@ int threadobj_get_priority(struct threadobj *thobj) /* thobj->lock held */
 
 	ret = __STD(pthread_getschedparam(thobj->tid, &policy, &param));
 	if (ret)
-		return -ret;
+		return __bt(-ret);
 
 	return param.sched_priority;
 }
@@ -357,7 +362,7 @@ int threadobj_start_rr(struct timespec *quantum)
 
 	ret = threadobj_set_rr(NULL, quantum);
 	if (ret)
-		return ret;
+		return __bt(ret);
 
 	value.it_interval.tv_sec = quantum->tv_sec;
 	value.it_interval.tv_usec = quantum->tv_nsec / 1000;
@@ -375,7 +380,7 @@ int threadobj_start_rr(struct timespec *quantum)
 	value.it_value = value.it_interval;
 	ret = setitimer(ITIMER_VIRTUAL, &value, NULL);
 	if (ret)
-		return -errno;
+		return __bt(-errno);
 
 	return 0;
 }

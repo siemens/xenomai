@@ -21,6 +21,7 @@
 
 #include <xeno_config.h>
 #include <sched.h>
+#include <time.h>
 #include <copperplate/list.h>
 
 struct coppernode {
@@ -34,6 +35,8 @@ struct coppernode {
 	int no_registry;
 	int reset_session;
 };
+
+struct timespec __init_date;
 
 extern struct coppernode __this_node;
 

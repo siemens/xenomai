@@ -24,6 +24,7 @@
 #include <xeno_config.h>
 #include <copperplate/list.h>
 #include <copperplate/panic.h>
+#include <copperplate/debug.h>
 
 typedef unsigned long long ticks_t;
 
@@ -117,7 +118,7 @@ int __clockobj_set_resolution(struct clockobj *clkobj,
 {
 	if (resolution_ns > 1) {
 		warning("support for low resolution clock disabled");
-		return -EINVAL;
+		return __bt(-EINVAL);
 	}
 
 	return 0;

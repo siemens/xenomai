@@ -40,6 +40,10 @@ libregistry_la_CPPFLAGS =		\
 	@XENO_FUSE_CFLAGS@
 endif
 
+if XENO_DEBUG
+libcopperplate_la_SOURCES += debug.c
+endif
+
 if XENO_PSHARED
 # The process shareable heap has real-time properties, therefore it
 # fits both the cobalt and mercury cores equally. Yummie.
