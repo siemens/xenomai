@@ -36,11 +36,9 @@ build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
 @XENO_COBALT_TRUE@am__append_1 = \
-@XENO_COBALT_TRUE@	threadobj-cobalt.c	\
 @XENO_COBALT_TRUE@	timerobj-cobalt.c
 
 @XENO_COBALT_FALSE@am__append_2 = \
-@XENO_COBALT_FALSE@	threadobj-mercury.c	\
 @XENO_COBALT_FALSE@	timerobj-mercury.c	\
 @XENO_COBALT_FALSE@	notifier.c
 
@@ -97,15 +95,12 @@ am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES) $(noinst_LTLIBRARIES)
 libcopperplate_la_DEPENDENCIES = $(am__append_3) $(am__append_6)
 am__libcopperplate_la_SOURCES_DIST = clockobj.c cluster.c hash.c \
-	init.c panic.c syncobj.c traceobj.c threadobj-cobalt.c \
-	timerobj-cobalt.c threadobj-mercury.c timerobj-mercury.c \
-	notifier.c debug.c heapobj-pshared.c reference.c \
-	heapobj-tlsf.c heapobj-malloc.c
+	init.c panic.c syncobj.c threadobj.c traceobj.c \
+	timerobj-cobalt.c timerobj-mercury.c notifier.c debug.c \
+	heapobj-pshared.c reference.c heapobj-tlsf.c heapobj-malloc.c
 @XENO_COBALT_TRUE@am__objects_1 =  \
-@XENO_COBALT_TRUE@	libcopperplate_la-threadobj-cobalt.lo \
 @XENO_COBALT_TRUE@	libcopperplate_la-timerobj-cobalt.lo
 @XENO_COBALT_FALSE@am__objects_2 =  \
-@XENO_COBALT_FALSE@	libcopperplate_la-threadobj-mercury.lo \
 @XENO_COBALT_FALSE@	libcopperplate_la-timerobj-mercury.lo \
 @XENO_COBALT_FALSE@	libcopperplate_la-notifier.lo
 @XENO_DEBUG_TRUE@am__objects_3 = libcopperplate_la-debug.lo
@@ -117,9 +112,10 @@ am__libcopperplate_la_SOURCES_DIST = clockobj.c cluster.c hash.c \
 am_libcopperplate_la_OBJECTS = libcopperplate_la-clockobj.lo \
 	libcopperplate_la-cluster.lo libcopperplate_la-hash.lo \
 	libcopperplate_la-init.lo libcopperplate_la-panic.lo \
-	libcopperplate_la-syncobj.lo libcopperplate_la-traceobj.lo \
-	$(am__objects_1) $(am__objects_2) $(am__objects_3) \
-	$(am__objects_4) $(am__objects_5) $(am__objects_6)
+	libcopperplate_la-syncobj.lo libcopperplate_la-threadobj.lo \
+	libcopperplate_la-traceobj.lo $(am__objects_1) \
+	$(am__objects_2) $(am__objects_3) $(am__objects_4) \
+	$(am__objects_5) $(am__objects_6)
 libcopperplate_la_OBJECTS = $(am_libcopperplate_la_OBJECTS)
 libcopperplate_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -313,9 +309,9 @@ top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libcopperplate.la
 libcopperplate_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 0:0:0 -lpthread
 libcopperplate_la_SOURCES = clockobj.c cluster.c hash.c init.c panic.c \
-	syncobj.c traceobj.c $(am__append_1) $(am__append_2) \
-	$(am__append_4) $(am__append_5) $(am__append_7) \
-	$(am__append_8)
+	syncobj.c threadobj.c traceobj.c $(am__append_1) \
+	$(am__append_2) $(am__append_4) $(am__append_5) \
+	$(am__append_7) $(am__append_8)
 libcopperplate_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@		\
 	-I$(top_srcdir)/include
@@ -439,8 +435,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-panic.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-reference.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-syncobj.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-threadobj-cobalt.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-threadobj-mercury.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-threadobj.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-timerobj-cobalt.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-timerobj-mercury.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-traceobj.Plo@am__quote@
@@ -510,6 +505,13 @@ libcopperplate_la-syncobj.lo: syncobj.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcopperplate_la-syncobj.lo `test -f 'syncobj.c' || echo '$(srcdir)/'`syncobj.c
 
+libcopperplate_la-threadobj.lo: threadobj.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcopperplate_la-threadobj.lo -MD -MP -MF $(DEPDIR)/libcopperplate_la-threadobj.Tpo -c -o libcopperplate_la-threadobj.lo `test -f 'threadobj.c' || echo '$(srcdir)/'`threadobj.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libcopperplate_la-threadobj.Tpo $(DEPDIR)/libcopperplate_la-threadobj.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='threadobj.c' object='libcopperplate_la-threadobj.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcopperplate_la-threadobj.lo `test -f 'threadobj.c' || echo '$(srcdir)/'`threadobj.c
+
 libcopperplate_la-traceobj.lo: traceobj.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcopperplate_la-traceobj.lo -MD -MP -MF $(DEPDIR)/libcopperplate_la-traceobj.Tpo -c -o libcopperplate_la-traceobj.lo `test -f 'traceobj.c' || echo '$(srcdir)/'`traceobj.c
 @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libcopperplate_la-traceobj.Tpo $(DEPDIR)/libcopperplate_la-traceobj.Plo
@@ -517,26 +519,12 @@ libcopperplate_la-traceobj.lo: traceobj.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcopperplate_la-traceobj.lo `test -f 'traceobj.c' || echo '$(srcdir)/'`traceobj.c
 
-libcopperplate_la-threadobj-cobalt.lo: threadobj-cobalt.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcopperplate_la-threadobj-cobalt.lo -MD -MP -MF $(DEPDIR)/libcopperplate_la-threadobj-cobalt.Tpo -c -o libcopperplate_la-threadobj-cobalt.lo `test -f 'threadobj-cobalt.c' || echo '$(srcdir)/'`threadobj-cobalt.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libcopperplate_la-threadobj-cobalt.Tpo $(DEPDIR)/libcopperplate_la-threadobj-cobalt.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='threadobj-cobalt.c' object='libcopperplate_la-threadobj-cobalt.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcopperplate_la-threadobj-cobalt.lo `test -f 'threadobj-cobalt.c' || echo '$(srcdir)/'`threadobj-cobalt.c
-
 libcopperplate_la-timerobj-cobalt.lo: timerobj-cobalt.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcopperplate_la-timerobj-cobalt.lo -MD -MP -MF $(DEPDIR)/libcopperplate_la-timerobj-cobalt.Tpo -c -o libcopperplate_la-timerobj-cobalt.lo `test -f 'timerobj-cobalt.c' || echo '$(srcdir)/'`timerobj-cobalt.c
 @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libcopperplate_la-timerobj-cobalt.Tpo $(DEPDIR)/libcopperplate_la-timerobj-cobalt.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='timerobj-cobalt.c' object='libcopperplate_la-timerobj-cobalt.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcopperplate_la-timerobj-cobalt.lo `test -f 'timerobj-cobalt.c' || echo '$(srcdir)/'`timerobj-cobalt.c
-
-libcopperplate_la-threadobj-mercury.lo: threadobj-mercury.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcopperplate_la-threadobj-mercury.lo -MD -MP -MF $(DEPDIR)/libcopperplate_la-threadobj-mercury.Tpo -c -o libcopperplate_la-threadobj-mercury.lo `test -f 'threadobj-mercury.c' || echo '$(srcdir)/'`threadobj-mercury.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libcopperplate_la-threadobj-mercury.Tpo $(DEPDIR)/libcopperplate_la-threadobj-mercury.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='threadobj-mercury.c' object='libcopperplate_la-threadobj-mercury.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcopperplate_la-threadobj-mercury.lo `test -f 'threadobj-mercury.c' || echo '$(srcdir)/'`threadobj-mercury.c
 
 libcopperplate_la-timerobj-mercury.lo: timerobj-mercury.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcopperplate_la-timerobj-mercury.lo -MD -MP -MF $(DEPDIR)/libcopperplate_la-timerobj-mercury.Tpo -c -o libcopperplate_la-timerobj-mercury.lo `test -f 'timerobj-mercury.c' || echo '$(srcdir)/'`timerobj-mercury.c

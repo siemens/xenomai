@@ -10,6 +10,7 @@ libcopperplate_la_SOURCES =	\
 	init.c		\
 	panic.c		\
 	syncobj.c	\
+	threadobj.c	\
 	traceobj.c
 
 libcopperplate_la_CPPFLAGS =		\
@@ -20,11 +21,9 @@ libcopperplate_la_LIBADD =
 
 if XENO_COBALT
 libcopperplate_la_SOURCES +=	\
-	threadobj-cobalt.c	\
 	timerobj-cobalt.c
 else
 libcopperplate_la_SOURCES +=	\
-	threadobj-mercury.c	\
 	timerobj-mercury.c	\
 	notifier.c
 endif
