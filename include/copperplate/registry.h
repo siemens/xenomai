@@ -57,14 +57,14 @@ extern "C" {
 
 int registry_add_dir(const char *fmt, ...);
 
-int registry_init_file(struct fsobj *fsobj,
-		       struct registry_operations *ops);
+void registry_init_file(struct fsobj *fsobj,
+			struct registry_operations *ops);
 
 int registry_add_file(struct fsobj *fsobj,
 		      int mode,
 		      const char *fmt, ...);
 
-void registry_remove_file(struct fsobj *fsobj);
+void registry_destroy_file(struct fsobj *fsobj);
 
 void registry_touch_file(struct fsobj *fsobj);
 
@@ -106,7 +106,7 @@ int registry_add_file(struct fsobj *fsobj,
 }
 
 static inline
-void registry_remove_file(struct fsobj *fsobj)
+void registry_destroy_file(struct fsobj *fsobj)
 {
 }
 

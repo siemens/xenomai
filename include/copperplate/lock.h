@@ -20,6 +20,7 @@
 #define _COPPERPLATE_LOCK_H
 
 #include <copperplate/wrappers.h>
+#include <copperplate/debug.h>
 
 /*
  * COPPERPLATE_PROTECT/UNPROTECT() should enclose any emulator code
@@ -41,15 +42,16 @@ struct service {
 
 #ifdef CONFIG_XENO_ASYNC_CANCEL
 
-#define COPPERPLATE_PROTECT(__s)						\
+#define COPPERPLATE_PROTECT(__s)					\
 	do {								\
 		pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED,		\
 				      &(__s).cancel_type);		\
 	} while (0)
 
-#define COPPERPLATE_UNPROTECT(__s)						\
+#define COPPERPLATE_UNPROTECT(__s)					\
 	do {								\
 		pthread_setcanceltype((__s).cancel_type, NULL);		\
+		backtrace_check();					\
 	} while (0)
 
 #else  /* !CONFIG_XENO_ASYNC_CANCEL */
@@ -66,24 +68,32 @@ struct service {
 #define pop_cleanup_lock(lock)		\
 	pthread_cleanup_pop(0)
 
-#define __do_lock_nocancel(__lock, __op)			\
+#ifdef __XENO_DEBUG__
+int __check_cancel_type(const char *locktype);
+#else
+#define __check_cancel_type(__locktype)				\
+	({ (void)__locktype; 0; })
+#endif
+
+#define __do_lock(__lock, __op)					\
 	({							\
 		int __ret;					\
 		__ret = -__RT(pthread_mutex_##__op(__lock));	\
 		__ret;						\
 	})
 
-#define __do_unlock_nocancel(__lock)				\
+#define __do_lock_nocancel(__lock, __type, __op)			\
+	({								\
+		int __ret = __bt(__check_cancel_type(#__type));		\
+		__ret ?: __do_lock(__lock, __op);			\
+	})
+
+#define __do_unlock(__lock)					\
 	({							\
 		int __ret;					\
 		__ret = -__RT(pthread_mutex_unlock(__lock));	\
 		__ret;						\
 	})
-
-#define __do_lock(__lock, __op)		__do_lock_nocancel(__lock, __op)
-
-#define __do_unlock(__lock, __op)	__do_unlock_nocancel(__lock)
-
 /*
  * Macros to enter/leave critical sections within
  * copperplate. Actually, they are mainly aimed at self-documenting
@@ -94,7 +104,9 @@ struct service {
  * The _nocancel suffix indicates that no cancellation point is
  * traversed by the protected code, therefore we don't need any
  * cleanup handler since we are guaranteed to run in deferred cancel
- * mode after COPPERPLATE_PROTECT().
+ * mode after COPPERPLATE_PROTECT(). A runtime check is inserted in
+ * debug mode, which triggers when cancellability is not in deferred
+ * mode while an attempt is made to acquire a _nocancel lock.
  *
  * read/write_lock() forms must be enclosed within the scope of a
  * cleanup handler since the protected code may reach cancellation
@@ -108,13 +120,13 @@ struct service {
 	__do_lock(__lock, trylock)
 
 #define read_lock_nocancel(__lock)		\
-	__do_lock_nocancel(__lock, lock)
+	__do_lock_nocancel(__lock, read_lock, lock)
 
 #define read_trylock_nocancel(__lock)		\
-	__do_lock_nocancel(__lock, trylock)
+	__do_lock_nocancel(__lock, read_trylock, trylock)
 
 #define read_unlock(__lock)			\
-	__do_unlock_nocancel(__lock)
+	__do_unlock(__lock)
 
 #define write_lock(__lock)			\
 	__do_lock(__lock, lock)
@@ -123,13 +135,13 @@ struct service {
 	__do_lock(__lock, trylock)
 
 #define write_lock_nocancel(__lock)		\
-	__do_lock_nocancel(__lock, lock)
+	__do_lock_nocancel(__lock, write_lock, lock)
 
 #define write_trylock_nocancel(__lock)		\
-	__do_lock_nocancel(__lock, trylock)
+	__do_lock_nocancel(__lock, write_trylock, trylock)
 
 #define write_unlock(__lock)			\
-	__do_unlock_nocancel(__lock)
+	__do_unlock(__lock)
 
 #define __do_lock_safe(__lock, __state, __op)				\
 	({								\
@@ -152,7 +164,8 @@ struct service {
 /*
  * The _safe call form is available when undoing the changes from an
  * update section upon cancellation using a cleanup handler is not an
- * option (e.g. too complex); in this case, cancellation is disabled
+ * option (e.g. too complex), or in situations where the protected
+ * code shall fully run; in such cases, cancellation is disabled
  * throughout the section.
  */	
 
@@ -164,5 +177,14 @@ struct service {
 
 #define write_unlock_safe(__lock, __state)	\
 	__do_unlock_safe(__lock, __state)
+
+#define read_lock_safe(__lock, __state)	\
+	__do_lock_safe(__lock, __state, lock)
+
+#define read_unlock_safe(__lock, __state)	\
+	__do_unlock_safe(__lock, __state)
+
+#define barrier()	__asm__ __volatile__("": : :"memory")
+#define membar()	__sync_synchronize()
 
 #endif /* _COPPERPLATE_LOCK_H */

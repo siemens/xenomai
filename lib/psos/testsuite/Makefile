@@ -17,7 +17,7 @@ TESTS := \
 	mq-1 mq-2 mq-3 \
 	sem-1 sem-2 \
 	pt-1 \
-	rn-1
+	rn-1 rtprint
 
 CFLAGS := $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --skin=psos --cflags) -g
 LDFLAGS := $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --skin=psos --ldflags)

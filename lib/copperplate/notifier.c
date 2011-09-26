@@ -199,6 +199,8 @@ void notifier_destroy(struct notifier *nf)
 	pop_cleanup_lock(&notifier_lock);
 	__STD(close(nf->psfd[0]));
 	__STD(close(nf->psfd[1]));
+	__STD(close(nf->pwfd[0]));
+	__STD(close(nf->pwfd[1]));
 	__STD(pthread_mutex_destroy(&nf->lock));
 }
 

@@ -47,7 +47,6 @@ typedef void (*FUNCPTR)(long, long, long, long, long,
 
 typedef struct WIND_TCB {
 	void *opaque;
-	int magic;
 	int status;
 	int safeCnt;
 	int flags;

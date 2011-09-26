@@ -37,6 +37,8 @@
 
 struct cluster psos_queue_table;
 
+static unsigned long anon_qids;
+
 struct msgholder {
 	int size;
 	struct holder link;
@@ -92,13 +94,18 @@ static u_long __q_create(const char *name, u_long count,
 		goto out;
 	}
 
-	strncpy(q->name, name, sizeof(q->name));
-	q->name[sizeof(q->name) - 1] = '\0';
+	if (name == NULL || *name == '\0')
+		sprintf(q->name, "q%lu", ++anon_qids);
+	else {
+		strncpy(q->name, name, sizeof(q->name));
+		q->name[sizeof(q->name) - 1] = '\0';
+	}
 
 	if (cluster_addobj(&psos_queue_table, q->name, &q->cobj)) {
 		warning("duplicate queue name: %s", q->name);
-		/* Make sure we won't un-hash the previous one. */
-		strcpy(q->name, "(dup)");
+		xnfree(q);
+		ret = ERR_OBJID;
+		goto out;
 	}
 
 	if (flags & Q_PRIOR)

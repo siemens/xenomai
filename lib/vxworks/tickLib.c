@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <copperplate/panic.h>
+#include <copperplate/lock.h>
 #include <vxworks/tickLib.h>
 #include "tickLib.h"
 
@@ -29,9 +30,12 @@ struct clockobj wind_clock;
 
 ULONG tickGet(void)
 {
+	struct service svc;
 	ticks_t ticks;
 
+	COPPERPLATE_PROTECT(svc);
 	clockobj_get_date(&wind_clock, &ticks);
+	COPPERPLATE_UNPROTECT(svc);
 
 	return (ULONG)ticks;
 }

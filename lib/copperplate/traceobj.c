@@ -66,16 +66,16 @@ static void compare_marks(struct traceobj *trobj, int tseq[], int nr_seq) /* loc
 
 void traceobj_verify(struct traceobj *trobj, int tseq[], int nr_seq)
 {
-	int end_mark, mark;
+	int end_mark, mark, state;
 
 	if (nr_seq > trobj->nr_marks)
 		goto fail;
 
-	read_lock_nocancel(&trobj->lock);
+	read_lock_safe(&trobj->lock, state);
 
 	end_mark = trobj->cur_mark;
 	if (end_mark == 0) {
-		read_unlock(&trobj->lock);
+		read_unlock_safe(&trobj->lock, state);
 		panic("no mark defined");
 	}
 
@@ -87,17 +87,13 @@ void traceobj_verify(struct traceobj *trobj, int tseq[], int nr_seq)
 			goto fail;
 	}
 
-	read_unlock(&trobj->lock);
+	read_unlock_safe(&trobj->lock, state);
 	return;
 
 fail:
-	read_unlock(&trobj->lock);
-	push_cleanup_lock(&trobj->lock);
-	read_lock(&trobj->lock);
 	warning("mismatching execution sequence detected");
 	compare_marks(trobj, tseq, nr_seq);
-	read_unlock(&trobj->lock);
-	pop_cleanup_lock(&trobj->lock);
+	read_unlock_safe(&trobj->lock, state);
 #ifdef CONFIG_XENO_MERCURY
 	/*
 	 * The Mercury core does not force any affinity, which may
@@ -179,9 +175,15 @@ void traceobj_enter(struct traceobj *trobj)
 		threadobj_unlock(current);
 	}
 
-	write_lock_nocancel(&trobj->lock);
+	/*
+	 * Our caller is usually out of any protected section, so push
+	 * a cleanup routine.
+	 */
+	push_cleanup_lock(&trobj->lock);
+	write_lock(&trobj->lock);
 	++trobj->nr_threads;
 	write_unlock(&trobj->lock);
+	pop_cleanup_lock(&trobj->lock);
 }
 
 /* May be directly called from finalizer. */

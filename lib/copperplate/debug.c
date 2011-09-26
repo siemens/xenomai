@@ -62,7 +62,6 @@ void backtrace_log(int retval, const char *fn,
 	ef->lineno = lineno;
 	ef->fn = fn;
 	ef->file = file;
-	ef->thread = btd->name;
 
 	write_lock(&btd->lock);
 
@@ -72,6 +71,7 @@ void backtrace_log(int retval, const char *fn,
 
 	ef->next = btd->inner;
 	btd->inner = ef;
+
 	write_unlock(&btd->lock);
 }
 
@@ -123,22 +123,34 @@ void backtrace_dump(struct backtrace_data *btd)
 		goto no_error;
 
 	fprintf(tracefp,
-		"%s\n            ** error backtrace for '%s' **\n\n",
+		"%s\n[ ERROR BACKTRACE: thread %s ]\n\n",
 		dashes, btd->name);
 
 	for (ef = btd->inner; ef; ef = ef->next, n++)
-		fprintf(tracefp, "%s #%-2d [%s] %s in %s(), %s:%d\n",
+		fprintf(tracefp, "%s #%-2d %s in %s(), %s:%d\n",
 			ef->next ? "  " : "=>",
-			n, ef->thread, symerror(ef->retval),
+			n, symerror(ef->retval),
 			ef->fn, ef->file, ef->lineno);
 
 	fputs(dashes, tracefp);
 	fputc('\n', tracefp);
 	fflush(tracefp);
+	flush_backtrace(btd);
 
 no_error:
 	read_unlock(&__printlock);
 	pop_cleanup_lock(&__printlock);
+}
+
+void backtrace_check(void)
+{
+	struct backtrace_data *btd;
+
+	btd = pthread_getspecific(btkey);
+	if (btd == NULL)
+		btd = &main_btd;
+
+	backtrace_dump(btd);
 }
 
 char *__get_error_buf(size_t *sizep)

@@ -15,7 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  *
- * Thread object abstraction - Mercury core version.
+ * Timer object abstraction - Mercury core version.
  */
 
 #include <signal.h>
@@ -23,6 +23,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <memory.h>
+#include <pthread.h>
+#include <sched.h>
+#include <limits.h>
 #include "copperplate/threadobj.h"
 #include "copperplate/timerobj.h"
 #include "copperplate/clockobj.h"
@@ -32,6 +35,7 @@ static void timerobj_handler(union sigval sigval)
 {
 	struct timerobj *tmobj = sigval.sival_ptr;
 	pthread_setspecific(threadobj_tskey, THREADOBJ_IRQCONTEXT);
+	assert(tmobj->handler != NULL);
 	tmobj->handler(tmobj);
 }
 
@@ -42,10 +46,12 @@ int timerobj_init(struct timerobj *tmobj)
 	struct sigevent evt;
 
 	pthread_attr_init(&thattr);
-	pthread_attr_setschedpolicy(&thattr, SCHED_FIFO);
 	memset(&param, 0, sizeof(param));
 	param.sched_priority = threadobj_irq_priority();
+	pthread_attr_setinheritsched(&thattr, PTHREAD_EXPLICIT_SCHED);
+	pthread_attr_setschedpolicy(&thattr, SCHED_FIFO);
 	pthread_attr_setschedparam(&thattr, &param);
+	pthread_attr_setstacksize(&thattr, PTHREAD_STACK_MIN * 16);
 
 	/*
 	 * XXX: We need a threaded handler so that we may invoke core
@@ -79,6 +85,7 @@ int timerobj_start(struct timerobj *tmobj,
 		   struct itimerspec *it)
 {
 	tmobj->handler = handler;
+	membar();
 
 	if (__STD(timer_settime(tmobj->timer, TIMER_ABSTIME, it, NULL)))
 		return __bt(-errno);
@@ -102,6 +109,7 @@ int timerobj_stop(struct timerobj *tmobj)
 	if (__STD(timer_settime(tmobj->timer, 0, &itimer_stop, NULL)))
 		return __bt(-errno);
 
+	barrier();
 	tmobj->handler = NULL;
 
 	return 0;

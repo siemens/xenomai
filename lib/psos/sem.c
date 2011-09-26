@@ -35,6 +35,8 @@
 
 struct cluster psos_sem_table;
 
+static unsigned long anon_smids;
+
 static struct psos_sem *get_sem_from_id(u_long smid, int *err_r)
 {
 	struct psos_sem *sem = mainheap_deref(smid, struct psos_sem);
@@ -74,22 +76,28 @@ u_long sm_create(const char *name,
 	struct psos_sem *sem;
 	struct service svc;
 	int sobj_flags = 0;
+	int ret = SUCCESS;
 
 	COPPERPLATE_PROTECT(svc);
 
 	sem = xnmalloc(sizeof(*sem));
 	if (sem == NULL) {
-		COPPERPLATE_UNPROTECT(svc);
-		return ERR_NOSCB;
+		ret = ERR_NOSCB;
+		goto out;
 	}
 
-	strncpy(sem->name, name, sizeof(sem->name));
-	sem->name[sizeof(sem->name) - 1] = '\0';
+	if (name == NULL || *name == '\0')
+		sprintf(sem->name, "sm%lu", ++anon_smids);
+	else {
+		strncpy(sem->name, name, sizeof(sem->name));
+		sem->name[sizeof(sem->name) - 1] = '\0';
+	}
 
 	if (cluster_addobj(&psos_sem_table, sem->name, &sem->cobj)) {
 		warning("duplicate semaphore name: %s", sem->name);
-		/* Make sure we won't un-hash the previous one. */
-		strcpy(sem->name, "(dup)");
+		xnfree(sem);
+		ret = ERR_OBJID;
+		goto out;
 	}
 
 	if (flags & SM_PRIOR)
@@ -100,10 +108,10 @@ u_long sm_create(const char *name,
 	syncobj_init(&sem->sobj, sobj_flags,
 		     fnref_put(libpsos, sem_finalize));
 	*smid_r = mainheap_ref(sem, u_long);
-
+out:
 	COPPERPLATE_UNPROTECT(svc);
 
-	return SUCCESS;
+	return ret;
 }
 
 u_long sm_delete(u_long smid)

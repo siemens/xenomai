@@ -43,16 +43,23 @@ static unsigned long anon_tids;
 static struct wind_task *find_wind_task(TASK_ID tid)
 {
 	struct WIND_TCB *tcb = mainheap_deref(tid, struct WIND_TCB);
+	struct wind_task *task;
 
 	/*
 	 * Best-effort to validate a TCB pointer the cheap way,
 	 * without relying on any syscall.
 	 */
-	if (tcb == NULL || ((uintptr_t)tcb & (sizeof(uintptr_t)-1)) != 0 ||
-	    tcb->magic != task_magic)
+	if (tcb == NULL || ((uintptr_t)tcb & (sizeof(uintptr_t)-1)) != 0)
 		return NULL;
 
-	return tcb->opaque;
+	task = tcb->opaque;
+	if (task == NULL || ((uintptr_t)task & (sizeof(uintptr_t)-1)) != 0)
+		return NULL;
+
+	if (threadobj_get_magic(&task->thobj) != task_magic)
+		return NULL;
+
+	return task;
 }
 
 static struct wind_task *find_wind_task_or_self(TASK_ID tid)
@@ -85,7 +92,7 @@ struct wind_task *get_wind_task(TASK_ID tid)
 		return NULL;
 
 	/* Check the magic word again, while we hold the lock. */
-	if (task->tcb->magic != task_magic) {
+	if (threadobj_get_magic(&task->thobj) != task_magic) {
 		threadobj_unlock(&task->thobj);
 		return NULL;
 	}
@@ -107,12 +114,6 @@ struct wind_task *get_wind_task_or_self(TASK_ID tid)
 	/* This one might block but can't fail, it is ours. */
 	threadobj_lock(&current->thobj);
 
-	/* Check the magic word again, while we hold the lock. */
-	if (threadobj_get_magic(&current->thobj) != task_magic) {
-		threadobj_unlock(&current->thobj);
-		return NULL;
-	}
-
 	return current;
 }
 
@@ -125,15 +126,9 @@ static void task_finalizer(struct threadobj *thobj)
 {
 	struct wind_task *task = container_of(thobj, struct wind_task, thobj);
 
-	threadobj_lock(&task->thobj);
-	threadobj_set_magic(&task->thobj, ~task_magic);
-	task->tcb->magic = ~task_magic; /* In case of normal exit. */
 	task->tcb->status |= WIND_DEAD;
 	cluster_delobj(&wind_task_table, &task->cobj);
-	threadobj_unlock(&task->thobj);
-
-	registry_remove_file(&task->fsobj);
-	__RT(sem_destroy(&task->barrier));
+	registry_destroy_file(&task->fsobj);
 	__RT(pthread_mutex_destroy(&task->safelock));
 	threadobj_destroy(&task->thobj);
 
@@ -227,24 +222,14 @@ static void *task_trampoline(void *arg)
 	struct service svc;
 	int ret;
 
-	ret = threadobj_prologue(&task->thobj, task->name);
-	if (ret) {
-		warning("task %s prologue failed (%s)",
-			task->name, symerror(ret));
+	ret = __bt(threadobj_prologue(&task->thobj, task->name));
+	if (ret)
 		goto done;
-	}
 
 	COPPERPLATE_PROTECT(svc);
 
-	ret = registry_init_file(&task->fsobj, &registry_ops);
-
-	if (cluster_addobj(&wind_task_table, task->name, &task->cobj)) {
-		warning("duplicate task name: %s", task->name);
-		/* Make sure we won't un-hash the previous one. */
-		strcpy(task->name, "(dup)");
-	} else if (ret == 0)
-		ret = registry_add_file(&task->fsobj, O_RDONLY,
-					"/vxworks/tasks/%s", task->name);
+	ret = __bt(registry_add_file(&task->fsobj, O_RDONLY,
+				     "/vxworks/tasks/%s", task->name));
 	if (ret)
 		warning("failed to export task %s to registry",
 			task->name);
@@ -252,12 +237,16 @@ static void *task_trampoline(void *arg)
 	COPPERPLATE_UNPROTECT(svc);
 
 	/* Wait for someone to run taskActivate() upon us. */
-	__RT(sem_wait(&task->barrier));
+	threadobj_wait_start(&task->thobj);
 
 	args->entry(args->arg0, args->arg1, args->arg2, args->arg3,
 		    args->arg4, args->arg5, args->arg6, args->arg7,
 		    args->arg8, args->arg9);
 done:
+	threadobj_lock(&task->thobj);
+	threadobj_set_magic(&task->thobj, ~task_magic);
+	threadobj_unlock(&task->thobj);
+
 	pthread_exit((void *)(long)ret);
 }
 
@@ -302,10 +291,8 @@ static STATUS __taskInit(struct wind_task *task,
 	__RT(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute));
 	__RT(pthread_mutex_init(&task->safelock, &mattr));
 	__RT(pthread_mutexattr_destroy(&mattr));
-	__RT(sem_init(&task->barrier, sem_scope_attribute, 0));
 
 	task->tcb = tcb;
-	tcb->magic = task_magic;
 	tcb->opaque = task;
 	/*
 	 * CAUTION: tcb->status in only modified by the owner task
@@ -335,6 +322,7 @@ static STATUS __taskInit(struct wind_task *task,
 	pthread_attr_setschedparam(&thattr, &param);
 	pthread_attr_setstacksize(&thattr, stacksize);
 	pthread_attr_setscope(&thattr, thread_scope_attribute);
+	pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_JOINABLE);
 
 	idata.magic = task_magic;
 	idata.wait_hook = task_wait_hook;
@@ -342,9 +330,25 @@ static STATUS __taskInit(struct wind_task *task,
 	idata.finalizer = task_finalizer;
 	threadobj_init(&task->thobj, &idata);
 
-	ret = __RT(pthread_create(&task->thobj.tid, &thattr, &task_trampoline, task));
+	ret = __bt(cluster_addobj(&wind_task_table, task->name, &task->cobj));
+	if (ret) {
+		warning("duplicate task name: %s", task->name);
+		threadobj_destroy(&task->thobj);
+		__RT(pthread_mutex_destroy(&task->safelock));
+		errno = S_objLib_OBJ_ID_ERROR;
+		return ERROR;
+	}
+
+	registry_init_file(&task->fsobj, &registry_ops);
+
+	ret = __bt(-__RT(pthread_create(&task->thobj.tid, &thattr,
+					&task_trampoline, task)));
 	pthread_attr_destroy(&thattr);
 	if (ret) {
+		registry_destroy_file(&task->fsobj);
+		cluster_delobj(&wind_task_table, &task->cobj);
+		threadobj_destroy(&task->thobj);
+		__RT(pthread_mutex_destroy(&task->safelock));
 		errno = ret == -EAGAIN ? S_memLib_NOT_ENOUGH_MEMORY : -ret;
 		return ERROR;
 	}
@@ -413,12 +417,8 @@ STATUS taskActivate(TASK_ID tid)
 		return ERROR;
 
 	task->tcb->status &= ~WIND_SUSPEND;
+	threadobj_start(&task->thobj);
 	put_wind_task(task);
-	/* sem_post() will check for validity as well. */
-	if (__RT(sem_post(&task->barrier))) {
-		errno = S_objLib_OBJ_ID_ERROR;
-		return ERROR;
-	}
 
 	return OK;
 }
@@ -479,7 +479,6 @@ TASK_ID taskSpawn(const char *name,
 static STATUS __taskDelete(TASK_ID tid, int force)
 {
 	struct wind_task *task;
-	struct service svc;
 	int ret;
 
 	if (threadobj_async_p()) {
@@ -494,12 +493,6 @@ static STATUS __taskDelete(TASK_ID tid, int force)
 		return ERROR;
 	}
 
-	/* Self-deletion. We don't have to run COPPERPLATE_UNPROTECT(). */
-	if (task == wind_task_current())
-		pthread_exit(NULL);
-
-	COPPERPLATE_PROTECT(svc);
-
 	/*
 	 * We always attempt to grab the thread safe lock first, then
 	 * make sure nobody (including the target task itself) will be
@@ -507,32 +500,28 @@ static STATUS __taskDelete(TASK_ID tid, int force)
 	 * forced mode, we are allowed to bypass lock contention, but
 	 * then we might create dangerous situations leading to
 	 * invalid memory references; that's just part of the deal.
+	 *
 	 * NOTE: Locking order is always safelock first, internal
 	 * object lock afterwards, therefore, _never_ call
 	 * __taskDelete() directly or indirectly while holding the
 	 * thread object lock. You have been warned.
+	 *
+	 * We traverse no cancellation point below until
+	 * threadobj_cancel() is invoked, so we don't need any
+	 * COPPERPLATE_PROTECT() section.
 	 */
 	if (force)	/* Best effort only. */
 		force = __RT(pthread_mutex_trylock(&task->safelock));
 	else
 		__RT(pthread_mutex_lock(&task->safelock));
 
-	threadobj_lock(&task->thobj);
-	/*
-	 * This basically makes the thread enter a zombie state, since
-	 * it won't be reachable by anyone after its magic has been
-	 * trashed.
-	 */
-	task->tcb->magic = ~task_magic;
-	threadobj_set_magic(&task->thobj, ~task_magic);
-	threadobj_unlock(&task->thobj);
+	ret = threadobj_lock(&task->thobj);
 
 	if (!force)	/* I.e. do we own the safe lock? */
 		__RT(pthread_mutex_unlock(&task->safelock));
 
-	ret = threadobj_cancel(&task->thobj);
-
-	COPPERPLATE_UNPROTECT(svc);
+	if (ret == 0)
+		ret = threadobj_cancel(&task->thobj);
 
 	if (ret)
 		goto objid_error;
@@ -584,13 +573,16 @@ struct WIND_TCB *taskTcb(TASK_ID tid)
 STATUS taskSuspend(TASK_ID tid)
 {
 	struct wind_task *task;
+	struct service svc;
 	int ret;
 
 	task = get_wind_task(tid);
 	if (task == NULL)
 		goto objid_error;
 
+	COPPERPLATE_PROTECT(svc);
 	ret = threadobj_suspend(&task->thobj);
+	COPPERPLATE_UNPROTECT(svc);
 	put_wind_task(task);
 
 	if (ret) {
@@ -605,13 +597,16 @@ STATUS taskSuspend(TASK_ID tid)
 STATUS taskResume(TASK_ID tid)
 {
 	struct wind_task *task;
+	struct service svc;
 	int ret;
 
 	task = get_wind_task(tid);
 	if (task == NULL)
 		goto objid_error;
 
+	COPPERPLATE_PROTECT(svc);
 	ret = threadobj_resume(&task->thobj);
+	COPPERPLATE_UNPROTECT(svc);
 	put_wind_task(task);
 
 	if (ret) {
@@ -692,6 +687,7 @@ void taskExit(int code)
 STATUS taskPrioritySet(TASK_ID tid, int prio)
 {
 	struct wind_task *task;
+	struct service svc;
 	int ret, pprio;
 
 	task = get_wind_task(tid);
@@ -706,7 +702,9 @@ STATUS taskPrioritySet(TASK_ID tid, int prio)
 	}
 
 	pprio = wind_task_normalize_priority(prio);
+	COPPERPLATE_PROTECT(svc);
 	ret = threadobj_set_priority(&task->thobj, pprio);
+	COPPERPLATE_UNPROTECT(svc);
 	put_wind_task(task);
 
 	if (ret) {
@@ -744,6 +742,7 @@ STATUS taskPriorityGet(TASK_ID tid, int *priop)
 STATUS taskLock(void)
 {
 	struct wind_task *task;
+	struct service svc;
 
 	if (threadobj_async_p()) {
 		errno = S_intLib_NOT_ISR_CALLABLE;
@@ -756,7 +755,9 @@ STATUS taskLock(void)
 		return ERROR;
 	}
 
+	COPPERPLATE_PROTECT(svc);
 	threadobj_lock_sched(&task->thobj);
+	COPPERPLATE_UNPROTECT(svc);
 	put_wind_task(task);
 
 	return OK;
@@ -765,6 +766,7 @@ STATUS taskLock(void)
 STATUS taskUnlock(void)
 {
 	struct wind_task *task;
+	struct service svc;
 
 	if (threadobj_async_p()) {
 		errno = S_intLib_NOT_ISR_CALLABLE;
@@ -777,7 +779,9 @@ STATUS taskUnlock(void)
 		return ERROR;
 	}
 
+	COPPERPLATE_PROTECT(svc);
 	threadobj_unlock_sched(&task->thobj);
+	COPPERPLATE_UNPROTECT(svc);
 	put_wind_task(task);
 
 	return OK;
@@ -810,7 +814,7 @@ STATUS taskDelay(int ticks)
 
 	clockobj_ticks_to_timeout(&wind_clock, ticks, &rqt);
 	current->tcb->status |= WIND_DELAY;
-	ret = threadobj_sleep(&rqt, NULL);
+	ret = threadobj_sleep(&rqt);
 	current->tcb->status &= ~WIND_DELAY;
 	if (ret) {
 		errno = -ret;

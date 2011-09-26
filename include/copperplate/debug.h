@@ -30,7 +30,6 @@ struct error_frame {
 	int lineno;
 	const char *fn;
 	const char *file;
-	const char *thread;
 	struct error_frame *next;
 };
 
@@ -66,6 +65,8 @@ void backtrace_dump(struct backtrace_data *btd);
 
 void backtrace_log(int retval, const char *fn,
 		   const char *file, int lineno);
+
+void backtrace_check(void);
 
 void __debug(struct threadobj *thobj, const char *fmt, ...);
 
@@ -104,6 +105,8 @@ struct backtrace_data {
 #define backtrace_dump(btd)		\
 	do { (void)(btd); } while (0)
 
+#define backtrace_check()		\
+	do { } while (0)
 /*
  * XXX: We have no thread-private backtrace context in non-debug mode,
  * so there is a potential race if multiple threads want to write to

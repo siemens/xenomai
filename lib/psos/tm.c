@@ -75,17 +75,12 @@ static u_long start_evtimer(u_long events,
 			    struct itimerspec *it, u_long *tmid_r)
 {
 	struct psos_task *current;
-	struct service svc;
 	struct psos_tm *tm;
 	int ret;
 
-	COPPERPLATE_PROTECT(svc);
-
 	tm = pvmalloc(sizeof(*tm));
-	if (tm == NULL) {
-		ret = ERR_NOTIMERS;
-		goto out;
-	}
+	if (tm == NULL)
+		return ERR_NOTIMERS;
 
 	pvholder_init(&tm->link);
 	tm->events = events;
@@ -94,7 +89,7 @@ static u_long start_evtimer(u_long events,
 	current = get_psos_task_or_self(0, &ret);
 	if (current == NULL) {
 		pvfree(tm);
-		goto out;
+		return ret;
 	}
 
 	tm->tid = mainheap_ref(current, u_long);
@@ -107,38 +102,46 @@ static u_long start_evtimer(u_long events,
 	if (ret) {
 	fail:
 		pvfree(tm);
-		ret = ERR_NOTIMERS;
-		goto out;
+		return ERR_NOTIMERS;
 	}
 
 	ret = timerobj_start(&tm->tmobj, postman_handler, it);
 	if (ret)
 		goto fail;
-out:
-	COPPERPLATE_UNPROTECT(svc);
 
-	return ret;
+	return SUCCESS;
 }
 
 u_long tm_evafter(u_long ticks, u_long events, u_long *tmid_r)
 {
 	struct itimerspec it;
+	struct service svc;
+	int ret;
 
-	clockobj_ticks_to_timeout(&psos_clock, ticks, &it.it_value);
 	it.it_interval.tv_sec = 0;
 	it.it_interval.tv_nsec = 0;
 
-	return start_evtimer(events, &it, tmid_r);
+	COPPERPLATE_PROTECT(svc);
+	clockobj_ticks_to_timeout(&psos_clock, ticks, &it.it_value);
+	ret = start_evtimer(events, &it, tmid_r);
+	COPPERPLATE_UNPROTECT(svc);
+
+	return ret;
 }
 
 u_long tm_evevery(u_long ticks, u_long events, u_long *tmid_r)
 {
 	struct itimerspec it;
+	struct service svc;
+	int ret;
 
+	COPPERPLATE_PROTECT(svc);
 	clockobj_ticks_to_timeout(&psos_clock, ticks, &it.it_value);
 	clockobj_ticks_to_timespec(&psos_clock, ticks, &it.it_interval);
+	ret = start_evtimer(events, &it, tmid_r);
+	COPPERPLATE_UNPROTECT(svc);
 
-	return start_evtimer(events, &it, tmid_r);
+	return ret;
 }
 
 static int date_to_tmstruct(u_long date, u_long time, u_long ticks,
@@ -167,7 +170,7 @@ static int date_to_tmstruct(u_long date, u_long time, u_long ticks,
 	    tm->tm_mon > 11 || tm->tm_year < 70)
 		return ERR_ILLDATE;
 
-	return 0;
+	return SUCCESS;
 }
 
 static int date_to_timespec(u_long date, u_long time, u_long ticks,
@@ -182,37 +185,46 @@ static int date_to_timespec(u_long date, u_long time, u_long ticks,
 
 	clockobj_caltime_to_timeout(&psos_clock, &tm, ticks, ts);
 
-	return 0;
+	return SUCCESS;
 }
 
 u_long tm_evwhen(u_long date, u_long time, u_long ticks,
 		 u_long events, u_long *tmid_r)
 {
 	struct itimerspec it;
+	struct service svc;
 	int ret;
-
-	ret = date_to_timespec(date, time, ticks, &it.it_value);
-	if (ret)
-		return ret;
 
 	it.it_interval.tv_sec = 0;
 	it.it_interval.tv_nsec = 0;
 
-	return start_evtimer(events, &it, tmid_r);
+	COPPERPLATE_PROTECT(svc);
+
+	ret = date_to_timespec(date, time, ticks, &it.it_value);
+	if (ret == SUCCESS)
+		ret = start_evtimer(events, &it, tmid_r);
+
+	COPPERPLATE_UNPROTECT(svc);
+
+	return ret;
 }
 
 u_long tm_cancel(u_long tmid)
 {
 	struct psos_tm *tm;
+	struct service svc;
 	int ret;
 
 	tm = get_tm_from_id(tmid, &ret);
 	if (tm == NULL)
 		return ret;
 
+	COPPERPLATE_PROTECT(svc);
 	timerobj_stop(&tm->tmobj);
+	timerobj_destroy(&tm->tmobj);
 	pvlist_remove(&tm->link);
 	pvfree(tm);
+	COPPERPLATE_UNPROTECT(svc);
 
 	return SUCCESS;
 }
@@ -220,14 +232,17 @@ u_long tm_cancel(u_long tmid)
 u_long tm_wkafter(u_long ticks)
 {
 	struct timespec rqt;
+	struct service svc;
 
 	if (ticks == 0) {
 		sched_yield();	/* Manual round-robin. */
 		return SUCCESS;
 	}
 
+	COPPERPLATE_PROTECT(svc);
 	clockobj_ticks_to_timeout(&psos_clock, ticks, &rqt);
-	threadobj_sleep(&rqt, NULL);
+	COPPERPLATE_UNPROTECT(svc);
+	threadobj_sleep(&rqt);
 
 	return SUCCESS;
 }
@@ -235,13 +250,16 @@ u_long tm_wkafter(u_long ticks)
 u_long tm_wkwhen(u_long date, u_long time, u_long ticks)
 {
 	struct timespec rqt;
+	struct service svc;
 	int ret;
 
+	COPPERPLATE_PROTECT(svc);
 	ret = date_to_timespec(date, time, ticks, &rqt);
+	COPPERPLATE_UNPROTECT(svc);
 	if (ret)
 		return ERR_ILLDATE;
 
-	threadobj_sleep(&rqt, NULL);
+	threadobj_sleep(&rqt);
 
 	return SUCCESS;
 }
@@ -253,13 +271,15 @@ u_long tm_set(u_long date, u_long time, u_long ticks)
 	ticks_t t;
 	int ret;
 
+	COPPERPLATE_PROTECT(svc);
+
 	ret = date_to_tmstruct(date, time, ticks, &tm);
 	if (ret)
-		return ret;
+		goto out;
 
 	clockobj_caltime_to_ticks(&psos_clock, &tm, ticks, &t);
-	COPPERPLATE_PROTECT(svc);
 	clockobj_set_date(&psos_clock, t, 0);
+out:
 	COPPERPLATE_UNPROTECT(svc);
 
 	return SUCCESS;
@@ -267,11 +287,14 @@ u_long tm_set(u_long date, u_long time, u_long ticks)
 
 u_long tm_get(u_long *date_r, u_long *time_r, u_long *ticks_r)
 {
+	struct service svc;
 	struct tm tm;
 	ticks_t t;
 
+	COPPERPLATE_PROTECT(svc);
 	clockobj_get_date(&psos_clock, &t);
 	clockobj_ticks_to_caltime(&psos_clock, t, &tm, ticks_r);
+	COPPERPLATE_UNPROTECT(svc);
 	*date_r = ((tm.tm_year + 1900) << 16) | ((tm.tm_mon + 1) << 8) | tm.tm_mday;
 	*time_r = (tm.tm_hour << 16) | (tm.tm_min << 8) | tm.tm_sec;
 

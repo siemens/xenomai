@@ -218,10 +218,13 @@ int rt_event_wait(RT_EVENT *event,
 		  unsigned long mask, unsigned long *mask_r,
 		  int mode, RTIME timeout)
 {
+	struct service svc;
 	ticks_t now;
 
 	if (timeout != TM_INFINITE && timeout != TM_NONBLOCK) {
+		COPPERPLATE_PROTECT(svc);
 		clockobj_get_time(&alchemy_clock, &now, NULL);
+		COPPERPLATE_UNPROTECT(svc);
 		timeout += now;
 	}
 

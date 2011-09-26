@@ -23,9 +23,12 @@ struct clockobj alchemy_clock;
 
 RTIME rt_timer_read(void)
 {
+	struct service svc;
 	ticks_t ticks;
 
+	COPPERPLATE_PROTECT(svc);
 	clockobj_get_time(&alchemy_clock, &ticks, NULL);
+	COPPERPLATE_UNPROTECT(svc);
 
 	return ticks;
 }
@@ -57,11 +60,17 @@ SRTIME rt_timer_tsc2ns(SRTIME tsc)
 
 int rt_timer_inquire(RT_TIMER_INFO *info)
 {
+	struct service svc;
+
+	COPPERPLATE_PROTECT(svc);
+
 	info->period = clockobj_get_resolution(&alchemy_clock);
 	if (info->period == 1)
 		info->period = TM_ONESHOT;
 
 	clockobj_get_time(&alchemy_clock, &info->date, &info->tsc);
+
+	COPPERPLATE_UNPROTECT(svc);
 
 	return 0;
 }

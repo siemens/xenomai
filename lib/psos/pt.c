@@ -49,6 +49,8 @@ pt->bitmap[((n) / (sizeof(u_long) * 8))]
 
 struct pvcluster psos_pt_table;
 
+static unsigned long anon_ptids;
+
 /*
  * XXX: Status wrt caller cancellation: all these routines are not
  * supposed to traverse any cancellation point (*), so we don't bother
@@ -121,6 +123,7 @@ u_long pt_create(const char *name,
 	pthread_mutexattr_t mattr;
 	struct service svc;
 	struct psos_pt *pt;
+	int ret = SUCCESS;
 	u_long overhead;
 	caddr_t mp;
 	u_long n;
@@ -139,26 +142,30 @@ u_long pt_create(const char *name,
 
 	pt = paddr;
 
-	strncpy(pt->name, name, sizeof(pt->name));
-	pt->name[sizeof(pt->name) - 1] = '\0';
+	if (name == NULL || *name == '\0')
+		sprintf(pt->name, "pt%lu", ++anon_ptids);
+	else {
+		strncpy(pt->name, name, sizeof(pt->name));
+		pt->name[sizeof(pt->name) - 1] = '\0';
+	}
 
 	COPPERPLATE_PROTECT(svc);
 
 	if (pvcluster_addobj(&psos_pt_table, pt->name, &pt->cobj)) {
 		warning("duplicate partition name: %s", pt->name);
-		/* Make sure we won't un-hash the previous one. */
-		strcpy(pt->name, "(dup)");
+		ret = ERR_OBJID;
+		goto out;
 	}
-
-	COPPERPLATE_UNPROTECT(svc);
 
 	pt->flags = flags;
 	pt->bsize = (bsize + pt_align_mask) & ~pt_align_mask;
 	overhead = pt_overhead(psize, pt->bsize);
 
 	pt->nblks = (psize - overhead) / pt->bsize;
-	if (pt->nblks == 0)
-		return ERR_TINYPT;
+	if (pt->nblks == 0) {
+		ret = ERR_TINYPT;
+		goto out;
+	}
 
 	pt->psize = pt->nblks * pt->bsize;
 	pt->data = (caddr_t)pt + overhead;
@@ -183,8 +190,10 @@ u_long pt_create(const char *name,
 
 	pt->magic = pt_magic;
 	*ptid_r = (u_long)pt;
+out:
+	COPPERPLATE_UNPROTECT(svc);
 
-	return SUCCESS;
+	return ret;
 }
 
 u_long pt_delete(u_long ptid)

@@ -56,8 +56,11 @@ TASK_ID taskNameToId(const char *name)
 {
 	struct clusterobj *cobj;
 	struct wind_task *task;
+	struct service svc;
 
+	COPPERPLATE_PROTECT(svc);
 	cobj = cluster_findobj(&wind_task_table, name);
+	COPPERPLATE_UNPROTECT(svc);
 	if (cobj == NULL)
 		return ERROR;
 

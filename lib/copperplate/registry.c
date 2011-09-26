@@ -122,12 +122,12 @@ done:
 	return __bt(ret);
 }
 
-int registry_init_file(struct fsobj *fsobj,  struct registry_operations *ops)
+void registry_init_file(struct fsobj *fsobj,  struct registry_operations *ops)
 {
 	pthread_mutexattr_t mattr;
 
 	if (__this_node.no_registry)
-		return 0;
+		return;
 
 	fsobj->path = NULL;
 	fsobj->ops = ops;
@@ -138,8 +138,6 @@ int registry_init_file(struct fsobj *fsobj,  struct registry_operations *ops)
 	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
 	__RT(pthread_mutex_init(&fsobj->lock, &mattr));
 	__RT(pthread_mutexattr_destroy(&mattr));
-
-	return 0;
 }
 
 int registry_add_file(struct fsobj *fsobj, int mode, const char *fmt, ...)
@@ -195,7 +193,7 @@ done:
 	return __bt(ret);
 }
 
-void registry_remove_file(struct fsobj *fsobj)
+void registry_destroy_file(struct fsobj *fsobj)
 {
 	struct regfs_dir *d;
 	int state;
@@ -220,8 +218,8 @@ void registry_remove_file(struct fsobj *fsobj)
 	assert(d->nfiles >= 0);
 	xnfree(fsobj->path);
 	__RT(pthread_mutex_unlock(&fsobj->lock));
-	__RT(pthread_mutex_destroy(&fsobj->lock));
 out:
+	__RT(pthread_mutex_destroy(&fsobj->lock));
 	write_unlock_safe(&regfs_lock, state);
 }
 

@@ -19,14 +19,12 @@
 #ifndef _PSOS_TASK_H
 #define _PSOS_TASK_H
 
-#include <semaphore.h>
 #include <copperplate/threadobj.h>
 #include <copperplate/syncobj.h>
 #include <copperplate/hash.h>
 #include <copperplate/cluster.h>
 
 struct psos_task_args {
-
 	void (*entry)(u_long a0, u_long a1, u_long a2, u_long a3);
 	u_long arg0;
 	u_long arg1;
@@ -37,8 +35,6 @@ struct psos_task_args {
 #define PSOSTASK_NR_REGS  16
 
 struct psos_task {
-
-	sem_t barrier;
 
 	int flags;
 	int mode;

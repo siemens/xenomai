@@ -33,6 +33,8 @@
 
 struct pvcluster psos_rn_table;
 
+static unsigned long anon_rnids;
+
 static struct psos_rn *get_rn_from_id(u_long rnid, int *err_r)
 {
 	struct psos_rn *rn = mainheap_deref(rnid, struct psos_rn);
@@ -108,19 +110,25 @@ u_long rn_create(const char *name, void *saddr, u_long length,
 
 	COPPERPLATE_PROTECT(svc);
 
-	ret = heapobj_init(&rn->hobj, name, length, saddr);
-	if (ret) {
-		ret = ERR_TINYRN;
-		goto out;
+	if (name == NULL || *name == '\0')
+		sprintf(rn->name, "rn%lu", ++anon_rnids);
+	else {
+		strncpy(rn->name, name, sizeof(rn->name));
+		rn->name[sizeof(rn->name) - 1] = '\0';
 	}
-
-	strncpy(rn->name, name, sizeof(rn->name));
-	rn->name[sizeof(rn->name) - 1] = '\0';
 
 	if (pvcluster_addobj(&psos_rn_table, rn->name, &rn->cobj)) {
 		warning("duplicate region name: %s", rn->name);
-		/* Make sure we won't un-hash the previous one. */
-		strcpy(rn->name, "(dup)");
+		xnfree(rn);
+		ret = ERR_OBJID;
+		goto out;
+	}
+
+	ret = heapobj_init(&rn->hobj, name, length, saddr);
+	if (ret) {
+		ret = ERR_TINYRN;
+		xnfree(rn);
+		goto out;
 	}
 
 	if (flags & RN_PRIOR)

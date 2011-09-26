@@ -55,12 +55,15 @@ struct threadobj_corespec {
 /* threadobj->status */
 #define THREADOBJ_SCHEDLOCK	0x1	/* Holds the scheduler lock. */
 #define THREADOBJ_ROUNDROBIN	0x2	/* Undergoes round-robin. */
+#define THREADOBJ_STARTED	0x4	/* threadobj_start() called. */
+#define THREADOBJ_WARMUP	0x8	/* threadobj_prologue() not called yet. */
+#define THREADOBJ_ABORTED	0x10	/* cancelled before start. */
 #define THREADOBJ_DEBUG		0x8000	/* Debug mode enabled. */
 
 #define THREADOBJ_IRQCONTEXT    ((struct threadobj *)-2UL)
 
-struct syncobj;
 struct traceobj;
+struct syncobj;
 
 struct threadobj {
 	unsigned int magic;	/* Must be first. */
@@ -92,6 +95,7 @@ struct threadobj {
 	void *wait_struct;
 
 	struct threadobj_corespec core;
+	pthread_cond_t barrier;
 	struct traceobj *tracer;
 	struct pvholder thread_link;
 	struct backtrace_data btd;
@@ -122,8 +126,12 @@ extern "C" {
 void threadobj_init(struct threadobj *thobj,
 		    struct threadobj_init_data *idata);
 
+void threadobj_start(struct threadobj *thobj);
+
 int threadobj_prologue(struct threadobj *thobj,
 		       const char *name);
+
+void threadobj_wait_start(struct threadobj *thobj);
 
 int threadobj_cancel(struct threadobj *thobj);
 
@@ -199,14 +207,13 @@ static inline int threadobj_lock_sched_once(struct threadobj *thobj)
 	return 0;
 }
 
-static inline int threadobj_sleep(struct timespec *ts,
-				  struct timespec *ts_r)
+static inline int threadobj_sleep(struct timespec *ts)
 {
 	/*
 	 * XXX: guaranteed to return -EINTR upon threadobj_unblock()
 	 * with both Cobalt and Mercury cores.
 	 */
-	return -__RT(clock_nanosleep(CLOCK_COPPERPLATE, TIMER_ABSTIME, ts, ts_r));
+	return -__RT(clock_nanosleep(CLOCK_COPPERPLATE, TIMER_ABSTIME, ts, NULL));
 }
 
 static inline int threadobj_context_p(void)

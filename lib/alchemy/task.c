@@ -31,6 +31,8 @@ struct cluster alchemy_task_table;
 
 static unsigned long anon_ids;
 
+static void delete_tcb(struct alchemy_task *tcb);
+
 static struct alchemy_task *find_alchemy_task(RT_TASK *task, int *err_r)
 {
 	struct alchemy_task *tcb;
@@ -115,13 +117,6 @@ struct alchemy_task *get_alchemy_task_or_self(RT_TASK *task, int *err_r)
 	/* This one might block but can't fail, it is ours. */
 	threadobj_lock(&current->thobj);
 
-	/* Check the magic word again, while we hold the lock. */
-	if (threadobj_get_magic(&current->thobj) != task_magic) {
-		threadobj_unlock(&current->thobj);
-		*err_r = -EIDRM;
-		return NULL;
-	}
-
 	return current;
 }
 
@@ -136,13 +131,7 @@ static void task_finalizer(struct threadobj *thobj)
 	struct syncstate syns;
 
 	tcb = container_of(thobj, struct alchemy_task, thobj);
-
-	threadobj_lock(&tcb->thobj);
-	threadobj_set_magic(&tcb->thobj, ~task_magic); /* In case of normal exit. */
 	cluster_delobj(&alchemy_task_table, &tcb->cobj);
-	threadobj_unlock(&tcb->thobj);
-
-	__RT(sem_destroy(&tcb->barrier));
 	syncobj_lock(&tcb->sobj, &syns);
 	syncobj_destroy(&tcb->sobj, &syns);
 	threadobj_destroy(&tcb->thobj);
@@ -163,30 +152,20 @@ static int task_prologue(struct alchemy_task *tcb)
 				tcb->name);
 	}
 
-	ret = threadobj_prologue(&tcb->thobj, tcb->name);
-	if (ret) {
-		warning("task %s prologue failed (%s)",
-			tcb->name, symerror(ret));
+	ret = __bt(threadobj_prologue(&tcb->thobj, tcb->name));
+	if (ret)
 		return ret;
-	}
 
 	COPPERPLATE_PROTECT(svc);
 
-	if (cluster_addobj(&alchemy_task_table, tcb->name, &tcb->cobj)) {
-		warning("duplicate task name: %s", tcb->name);
-		/* Make sure we won't un-hash the previous one. */
-		strcpy(tcb->name, "(dup)");
-		return -EEXIST;
-	}
+	threadobj_wait_start(&tcb->thobj);
 
-	/* Wait for someone to run rt_task_start() upon us. */
-	__RT(sem_wait(&tcb->barrier));
+	threadobj_lock(&tcb->thobj);
 
-	if (tcb->mode & T_LOCK) {
-		threadobj_lock(&tcb->thobj);
+	if (tcb->mode & T_LOCK)
 		threadobj_lock_sched(&tcb->thobj);
-		threadobj_unlock(&tcb->thobj);
-	}
+
+	threadobj_unlock(&tcb->thobj);
 
 	COPPERPLATE_UNPROTECT(svc);
 
@@ -200,13 +179,16 @@ static void *task_trampoline(void *arg)
 
 	ret = task_prologue(tcb);
 	if (ret) {
-		xnfree(tcb);
+		delete_tcb(tcb);
 		goto out;
 	}
 
 	tcb->entry(tcb->arg);
 out:
-	/* FIXME: ret should be propagated to rt_task_create */
+	threadobj_lock(&tcb->thobj);
+	threadobj_set_magic(&tcb->thobj, ~task_magic);
+	threadobj_unlock(&tcb->thobj);
+
 	pthread_exit((void *)(long)ret);
 }
 
@@ -236,7 +218,6 @@ static int create_tcb(struct alchemy_task **tcbp,
 		tcb->name[sizeof(tcb->name) - 1] = '\0';
 	}
 
-	__RT(sem_init(&tcb->barrier, sem_scope_attribute, 0));
 	tcb->mode = mode;
 	tcb->entry = NULL;	/* Not yet known. */
 	tcb->arg = NULL;
@@ -255,9 +236,25 @@ static int create_tcb(struct alchemy_task **tcbp,
 	idata.suspend_hook = NULL;
 	idata.finalizer = task_finalizer;
 	threadobj_init(&tcb->thobj, &idata);
+
+	if (cluster_addobj(&alchemy_task_table, tcb->name, &tcb->cobj)) {
+		delete_tcb(tcb);
+		return -EEXIST;
+	}
+
 	*tcbp = tcb;
 
 	return 0;
+}
+
+static void delete_tcb(struct alchemy_task *tcb)
+{
+	struct syncstate syns;
+
+	threadobj_destroy(&tcb->thobj);
+	syncobj_lock(&tcb->sobj, &syns);
+	syncobj_destroy(&tcb->sobj, &syns);
+	xnfree(tcb);
 }
 
 int rt_task_create(RT_TASK *task,
@@ -294,14 +291,13 @@ int rt_task_create(RT_TASK *task,
 	pthread_attr_setschedparam(&thattr, &param);
 	pthread_attr_setstacksize(&thattr, stksize);
 	pthread_attr_setscope(&thattr, thread_scope_attribute);
+	pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_JOINABLE);
 
-	ret = __RT(pthread_create(&tcb->thobj.tid, &thattr, task_trampoline, tcb));
+	ret = __bt(-__RT(pthread_create(&tcb->thobj.tid, &thattr,
+					task_trampoline, tcb)));
 	pthread_attr_destroy(&thattr);
-	if (ret) {
-		__RT(sem_destroy(&tcb->barrier));
-		xnfree(tcb);
-		ret = -ENOMEM;
-	}
+	if (ret)
+		delete_tcb(tcb);
 out:
 	COPPERPLATE_UNPROTECT(svc);
 
@@ -367,7 +363,7 @@ int rt_task_start(RT_TASK *task,
 		  void *arg)
 {
 	struct alchemy_task *tcb;
-	int ret;
+	int ret = 0;
 
 	tcb = get_alchemy_task(task, &ret);
 	if (tcb == NULL)
@@ -375,9 +371,8 @@ int rt_task_start(RT_TASK *task,
 
 	tcb->entry = entry;
 	tcb->arg = arg;
+	threadobj_start(&tcb->thobj);
 	put_alchemy_task(tcb);
-	/* Assume sem_post() will check for validity. */
-	__RT(sem_post(&tcb->barrier));
 
 	return 0;
 }
@@ -398,17 +393,17 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 	if (task)
 		task->handle = mainheap_ref(tcb, uintptr_t);
 
-	__RT(sem_post(&tcb->barrier)); /* We won't wait in prologue. */
+	threadobj_start(&tcb->thobj); /* We won't wait in prologue. */
 	ret = task_prologue(tcb);
 	if (ret) {
-		xnfree(tcb);
+		delete_tcb(tcb);
 		goto out;
 	}
 
 	memset(&param, 0, sizeof(param));
 	param.sched_priority = prio;
 	policy = prio ? SCHED_FIFO : SCHED_OTHER;
-	ret = -__RT(pthread_setschedparam(pthread_self(), policy, &param));
+	ret = __bt(-__RT(pthread_setschedparam(pthread_self(), policy, &param)));
 out:
 	COPPERPLATE_UNPROTECT(svc);
 
@@ -467,12 +462,13 @@ int rt_task_sleep(RTIME delay)
 
 	clockobj_ticks_to_timeout(&alchemy_clock, delay, &ts);
 
-	return threadobj_sleep(&ts, NULL);
+	return threadobj_sleep(&ts);
 }
 
 int rt_task_sleep_until(RTIME date)
 {
 	struct timespec ts;
+	struct service svc;
 	ticks_t now;
 
 	if (threadobj_async_p())
@@ -482,11 +478,15 @@ int rt_task_sleep_until(RTIME date)
 		ts.tv_sec = (time_t)-1 >> 1;
 		ts.tv_nsec = 999999999;
 	} else {
+		COPPERPLATE_PROTECT(svc);
 		clockobj_get_time(&alchemy_clock, &now, NULL);
-		if (date <= now)
+		if (date <= now) {
+			COPPERPLATE_UNPROTECT(svc);
 			return -ETIMEDOUT;
+		}
 		clockobj_ticks_to_timeout(&alchemy_clock, date, &ts);
+		COPPERPLATE_UNPROTECT(svc);
 	}
 
-	return threadobj_sleep(&ts, NULL);
+	return threadobj_sleep(&ts);
 }

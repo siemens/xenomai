@@ -177,10 +177,13 @@ out:
 
 int rt_mutex_acquire(RT_MUTEX *mutex, RTIME timeout)
 {
+	struct service svc;
 	ticks_t now;
 
 	if (timeout != TM_INFINITE && timeout != TM_NONBLOCK) {
+		COPPERPLATE_PROTECT(svc);
 		clockobj_get_time(&alchemy_clock, &now, NULL);
+		COPPERPLATE_UNPROTECT(svc);
 		timeout += now;
 	}
 

@@ -136,13 +136,6 @@ struct psos_task *get_psos_task_or_self(u_long tid, int *err_r)
 	/* This one might block but can't fail, it is ours. */
 	threadobj_lock(&current->thobj);
 
-	/* Check the magic word again, while we hold the lock. */
-	if (threadobj_get_magic(&current->thobj) != task_magic) {
-		threadobj_unlock(&current->thobj);
-		*err_r = ERR_OBJDEL;
-		return NULL;
-	}
-
 	return current;
 }
 
@@ -157,16 +150,11 @@ static void task_finalizer(struct threadobj *thobj)
 	struct syncstate syns;
 	struct psos_tm *tm;
 
-	threadobj_lock(&task->thobj);
-	threadobj_set_magic(&task->thobj, ~task_magic); /* In case of normal exit. */
 	cluster_delobj(&psos_task_table, &task->cobj);
 
 	pvlist_for_each_entry(tm, &task->timer_list, link)
 		tm_cancel(mainheap_ref(tm, u_long));
 
-	threadobj_unlock(&task->thobj);
-
-	__RT(sem_destroy(&task->barrier));
 	/* We have to hold a lock on a syncobj to destroy it. */
 	syncobj_lock(&task->sobj, &syns);
 	syncobj_destroy(&task->sobj, &syns);
@@ -182,23 +170,13 @@ static void *task_trampoline(void *arg)
 	struct service svc;
 	int ret;
 
-	ret = threadobj_prologue(&task->thobj, task->name);
-	if (ret) {
-		warning("task %s prologue failed (%s)",
-			task->name, symerror(ret));
+	ret = __bt(threadobj_prologue(&task->thobj, task->name));
+	if (ret)
 		goto done;
-	}
 
 	COPPERPLATE_PROTECT(svc);
 
-	if (cluster_addobj(&psos_task_table, task->name, &task->cobj)) {
-		warning("duplicate task name: %s", task->name);
-		/* Make sure we won't un-hash the previous one. */
-		strcpy(task->name, "(dup)");
-	}
-
-	/* Wait for someone to run t_start() upon us. */
-	__RT(sem_wait(&task->barrier));
+	threadobj_wait_start(&task->thobj);
 
 	threadobj_lock(&task->thobj);
 
@@ -214,6 +192,9 @@ static void *task_trampoline(void *arg)
 
 	args->entry(args->arg0, args->arg1, args->arg2, args->arg3);
 done:
+	threadobj_lock(&task->thobj);
+	threadobj_set_magic(&task->thobj, ~task_magic);
+	threadobj_unlock(&task->thobj);
 
 	pthread_exit((void *)(long)ret);
 }
@@ -238,6 +219,7 @@ u_long t_create(const char *name, u_long prio,
 	struct sched_param param;
 	struct psos_task *task;
 	pthread_attr_t thattr;
+	struct syncstate syns;
 	struct service svc;
 	int ret;
 
@@ -273,7 +255,6 @@ u_long t_create(const char *name, u_long prio,
 		task->name[sizeof(task->name) - 1] = '\0';
 	}
 
-	__RT(sem_init(&task->barrier, sem_scope_attribute, 0));
 	task->flags = flags;	/* We don't do much with those. */
 	task->mode = 0;	/* Not yet known. */
 	task->events = 0;
@@ -281,6 +262,13 @@ u_long t_create(const char *name, u_long prio,
 	memset(task->notepad, 0, sizeof(task->notepad));
 	pvlist_init(&task->timer_list);
 	*tid_r = mainheap_ref(task, u_long);
+
+	ret = __bt(cluster_addobj(&psos_task_table, task->name, &task->cobj));
+	if (ret) {
+		warning("duplicate task name: %s", task->name);
+		ret = ERR_OBJID;
+		goto fail;
+	}
 
 	pthread_attr_init(&thattr);
 
@@ -296,6 +284,7 @@ u_long t_create(const char *name, u_long prio,
 	pthread_attr_setschedparam(&thattr, &param);
 	pthread_attr_setstacksize(&thattr, ustack);
 	pthread_attr_setscope(&thattr, thread_scope_attribute);
+	pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_JOINABLE);
 
 	idata.magic = task_magic;
 	idata.wait_hook = NULL;
@@ -303,12 +292,17 @@ u_long t_create(const char *name, u_long prio,
 	idata.finalizer = task_finalizer;
 	threadobj_init(&task->thobj, &idata);
 
-	ret = __RT(pthread_create(&task->thobj.tid, &thattr, &task_trampoline, task));
+	ret = __bt(-__RT(pthread_create(&task->thobj.tid, &thattr,
+					&task_trampoline, task)));
 	pthread_attr_destroy(&thattr);
 	if (ret) {
-		__RT(sem_destroy(&task->barrier));
-		xnfree(task);
+		cluster_delobj(&psos_task_table, &task->cobj);
+		threadobj_destroy(&task->thobj);
 		ret = ERR_NOTCB;
+	fail:
+		syncobj_lock(&task->sobj, &syns);
+		syncobj_destroy(&task->sobj, &syns);
+		xnfree(task);
 	}
 out:
 	COPPERPLATE_UNPROTECT(svc);
@@ -334,9 +328,8 @@ u_long t_start(u_long tid,
 	task->args.arg2 = args[2];
 	task->args.arg3 = args[3];
 	task->mode = mode;
+	threadobj_start(&task->thobj);
 	put_psos_task(task);
-	/* Assume sem_post() will check for validity. */
-	__RT(sem_post(&task->barrier));
 
 	return SUCCESS;
 }
@@ -344,13 +337,16 @@ u_long t_start(u_long tid,
 u_long t_suspend(u_long tid)
 {
 	struct psos_task *task;
+	struct service svc;
 	int ret;
 
 	task = get_psos_task_or_self(tid, &ret);
 	if (task == NULL)
 		return ret;
 
+	COPPERPLATE_PROTECT(svc);
 	ret = threadobj_suspend(&task->thobj);
+	COPPERPLATE_UNPROTECT(svc);
 	put_psos_task(task);
 
 	if (ret)
@@ -362,13 +358,16 @@ u_long t_suspend(u_long tid)
 u_long t_resume(u_long tid)
 {
 	struct psos_task *task;
+	struct service svc;
 	int ret;
 
 	task = get_psos_task(tid, &ret);
 	if (task == NULL)
 		return ret;
 
+	COPPERPLATE_PROTECT(svc);
 	ret = threadobj_resume(&task->thobj);
+	COPPERPLATE_UNPROTECT(svc);
 	put_psos_task(task);
 
 	if (ret)
@@ -413,21 +412,9 @@ u_long t_delete(u_long tid)
 	struct psos_task *task;
 	int ret;
 
-	task = find_psos_task_or_self(tid, &ret);
+	task = get_psos_task_or_self(tid, &ret);
 	if (task == NULL)
 		return ret;
-
-	if (task == psos_task_current()) /* Self-deletion. */
-		pthread_exit(NULL);
-
-	threadobj_lock(&task->thobj);
-	/*
-	 * This basically makes the thread enter a zombie state, since
-	 * it won't be reachable by anyone after its magic has been
-	 * trashed.
-	 */
-	threadobj_set_magic(&task->thobj, ~task_magic);
-	threadobj_unlock(&task->thobj);
 
 	ret = threadobj_cancel(&task->thobj);
 	if (ret)

@@ -19,7 +19,6 @@
 #ifndef _VXWORKS_TASKLIB_H
 #define _VXWORKS_TASKLIB_H
 
-#include <semaphore.h>
 #include <copperplate/threadobj.h>
 #include <copperplate/registry.h>
 #include <copperplate/cluster.h>
@@ -43,7 +42,6 @@ struct wind_task_args {
 struct wind_task {
 
 	pthread_mutex_t safelock;
-	sem_t barrier;
 
 	struct WIND_TCB *tcb;
 	struct WIND_TCB priv_tcb;
