@@ -30,10 +30,6 @@
 #include <posix/mutex.h>
 #include <rtdk.h>
 
-/* asm-generic/bits/bind.h uses the following functions, so we redefine them to
-   be the __real variants */
-#define XENO_WRAPPED_OPEN
-
 #include <asm/xenomai/bits/bind.h>
 
 int __pse51_muxid = -1;

@@ -258,6 +258,8 @@ static void xnsched_sporadic_setparam(struct xnthread *thread,
 		}
 	}
 
+	if (xnthread_test_state(thread, XNSHADOW))
+		xnthread_clear_state(thread, XNOTHER);
 	thread->cprio = p->pss.current_prio;
 }
 

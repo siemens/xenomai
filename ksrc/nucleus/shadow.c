@@ -2756,8 +2756,11 @@ static inline void do_setsched_event(struct task_struct *p, int priority)
 	union xnsched_policy_param param;
 	struct xnsched *sched;
 
-	if (!thread || p->policy != SCHED_FIFO)
+	if (!thread || (p->policy != SCHED_FIFO && p->policy != SCHED_NORMAL))
 		return;
+
+	if (p->policy == SCHED_NORMAL)
+		priority = 0;
 
 	/*
 	 * Linux's priority scale is a subset of the core pod's
