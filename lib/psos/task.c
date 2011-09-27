@@ -147,13 +147,13 @@ void put_psos_task(struct psos_task *task)
 static void task_finalizer(struct threadobj *thobj)
 {
 	struct psos_task *task = container_of(thobj, struct psos_task, thobj);
+	struct psos_tm *tm, *tmp;
 	struct syncstate syns;
-	struct psos_tm *tm;
 
 	cluster_delobj(&psos_task_table, &task->cobj);
 
-	pvlist_for_each_entry(tm, &task->timer_list, link)
-		tm_cancel(mainheap_ref(tm, u_long));
+	pvlist_for_each_entry_safe(tm, tmp, &task->timer_list, link)
+		tm_cancel((u_long)tm);
 
 	/* We have to hold a lock on a syncobj to destroy it. */
 	syncobj_lock(&task->sobj, &syns);
