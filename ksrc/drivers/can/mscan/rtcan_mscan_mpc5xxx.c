@@ -250,16 +250,29 @@ static u32 __devinit mpc512x_can_get_clock(struct of_device *ofdev,
 }
 #endif /* CONFIG_PPC_MPC512x */
 
+static struct of_device_id mpc5xxx_can_table[];
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0)
 static int __devinit mpc5xxx_can_probe(struct of_device *ofdev,
 				       const struct of_device_id *id)
+#else /* Linux >= 3.0 */
+static int __devinit mpc5xxx_can_probe(struct of_device *ofdev)
+#endif /* Linux >= 3.0 */
 {
-	struct mpc5xxx_can_data *data = (struct mpc5xxx_can_data *)id->data;
 	struct device_node *np = mpc5xxx_get_of_node(ofdev);
+	struct mpc5xxx_can_data *data;
 	struct rtcan_device *dev;
 	void __iomem *base;
 	const char *clock_name = NULL;
 	int irq, mscan_clksrc = 0;
 	int err = -ENOMEM;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,0,0)
+	const struct of_device_id *id;
+
+	id = of_match_device(mpc5xxx_can_table, &ofdev->dev);
+	if (!id)
+		return -EINVAL;
+#endif /* Linux >= 3.0 */
+	data = (struct mpc5xxx_can_data *)id->data;
 
 	base = of_iomap(np, 0);
 	if (!base) {

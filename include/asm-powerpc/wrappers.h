@@ -198,4 +198,10 @@ typedef irq_handler_t rthal_irq_host_handler_t;
 #define of_device platform_device
 #endif
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,0,0)
+#define of_platform_driver platform_driver
+#define of_register_platform_driver platform_driver_register
+#define of_unregister_platform_driver platform_driver_unregister
+#endif
+
 #endif /* _XENO_ASM_POWERPC_WRAPPERS_H */
