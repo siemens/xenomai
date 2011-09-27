@@ -29,7 +29,7 @@
 			fprintf(stderr, object ": OK\n");		\
 	})
 
-unsigned long long get_used(void)
+static unsigned long long get_used(void)
 {
 	unsigned long long used = 0;
 	struct xnheap_desc hd;
@@ -46,7 +46,7 @@ unsigned long long get_used(void)
 	return used;
 }
 
-void *empty(void *cookie)
+static void *empty(void *cookie)
 {
 	return cookie;
 }

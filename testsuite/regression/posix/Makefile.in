@@ -36,9 +36,8 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-tst_PROGRAMS = leaks$(EXEEXT) tsc$(EXEEXT) heap$(EXEEXT) \
-	sigdebug$(EXEEXT)
-subdir = src/testsuite/regression/native
+test_PROGRAMS = leaks$(EXEEXT) shm$(EXEEXT)
+subdir = testsuite/regression/posix
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -56,32 +55,16 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/lib/include/xeno_config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-am__installdirs = "$(DESTDIR)$(tstdir)"
-PROGRAMS = $(tst_PROGRAMS)
-heap_SOURCES = heap.c
-heap_OBJECTS = heap.$(OBJEXT)
-heap_LDADD = $(LDADD)
-heap_DEPENDENCIES = ../../../skins/native/libnative.la \
-	../../../skins/rtdm/librtdm.la \
-	../../../skins/common/libxenomai.la
+am__installdirs = "$(DESTDIR)$(testdir)"
+PROGRAMS = $(test_PROGRAMS)
 leaks_SOURCES = leaks.c
 leaks_OBJECTS = leaks.$(OBJEXT)
 leaks_LDADD = $(LDADD)
-leaks_DEPENDENCIES = ../../../skins/native/libnative.la \
-	../../../skins/rtdm/librtdm.la \
-	../../../skins/common/libxenomai.la
-sigdebug_SOURCES = sigdebug.c
-sigdebug_OBJECTS = sigdebug.$(OBJEXT)
-sigdebug_LDADD = $(LDADD)
-sigdebug_DEPENDENCIES = ../../../skins/native/libnative.la \
-	../../../skins/rtdm/librtdm.la \
-	../../../skins/common/libxenomai.la
-tsc_SOURCES = tsc.c
-tsc_OBJECTS = tsc.$(OBJEXT)
-tsc_LDADD = $(LDADD)
-tsc_DEPENDENCIES = ../../../skins/native/libnative.la \
-	../../../skins/rtdm/librtdm.la \
-	../../../skins/common/libxenomai.la
+leaks_DEPENDENCIES = ../../../lib/cobalt/libcobalt.la
+shm_SOURCES = shm.c
+shm_OBJECTS = shm.$(OBJEXT)
+shm_LDADD = $(LDADD)
+shm_DEPENDENCIES = ../../../lib/cobalt/libcobalt.la
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/lib/include
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
@@ -91,12 +74,11 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 LTCOMPILE = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = heap.c leaks.c sigdebug.c tsc.c
-DIST_SOURCES = heap.c leaks.c sigdebug.c tsc.c
+SOURCES = leaks.c shm.c
+DIST_SOURCES = leaks.c shm.c
 HEADERS = $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
@@ -157,7 +139,7 @@ INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LATEX_BATCHMODE = @LATEX_BATCHMODE@
 LATEX_MODE = @LATEX_MODE@
 LD = @LD@
-LDFLAGS = $(XENO_USER_LDFLAGS)
+LDFLAGS = $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS)
 LD_FILE_OPTION = @LD_FILE_OPTION@
 LEX = @LEX@
 LEXLIB = @LEXLIB@
@@ -259,13 +241,12 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-tstdir = @XENO_TEST_DIR@/regression/native
+testdir = @XENO_TEST_DIR@
+CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 noinst_HEADERS = check.h
 LDADD = \
-	../../../skins/native/libnative.la \
-	../../../skins/rtdm/librtdm.la \
-	../../../skins/common/libxenomai.la \
-	-lpthread -lm
+	../../../lib/cobalt/libcobalt.la \
+	-lpthread -lrt -lm
 
 all: all-am
 
@@ -280,9 +261,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign src/testsuite/regression/native/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign testsuite/regression/posix/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign src/testsuite/regression/native/Makefile
+	  $(AUTOMAKE) --foreign testsuite/regression/posix/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -301,10 +282,10 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
-install-tstPROGRAMS: $(tst_PROGRAMS)
+install-testPROGRAMS: $(test_PROGRAMS)
 	@$(NORMAL_INSTALL)
-	test -z "$(tstdir)" || $(MKDIR_P) "$(DESTDIR)$(tstdir)"
-	@list='$(tst_PROGRAMS)'; test -n "$(tstdir)" || list=; \
+	test -z "$(testdir)" || $(MKDIR_P) "$(DESTDIR)$(testdir)"
+	@list='$(test_PROGRAMS)'; test -n "$(testdir)" || list=; \
 	for p in $$list; do echo "$$p $$p"; done | \
 	sed 's/$(EXEEXT)$$//' | \
 	while read p p1; do if test -f $$p || test -f $$p1; \
@@ -321,41 +302,35 @@ install-tstPROGRAMS: $(tst_PROGRAMS)
 	while read type dir files; do \
 	    if test "$$dir" = .; then dir=; else dir=/$$dir; fi; \
 	    test -z "$$files" || { \
-	    echo " $(INSTALL_PROGRAM_ENV) $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL_PROGRAM) $$files '$(DESTDIR)$(tstdir)$$dir'"; \
-	    $(INSTALL_PROGRAM_ENV) $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL_PROGRAM) $$files "$(DESTDIR)$(tstdir)$$dir" || exit $$?; \
+	    echo " $(INSTALL_PROGRAM_ENV) $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL_PROGRAM) $$files '$(DESTDIR)$(testdir)$$dir'"; \
+	    $(INSTALL_PROGRAM_ENV) $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL_PROGRAM) $$files "$(DESTDIR)$(testdir)$$dir" || exit $$?; \
 	    } \
 	; done
 
-uninstall-tstPROGRAMS:
+uninstall-testPROGRAMS:
 	@$(NORMAL_UNINSTALL)
-	@list='$(tst_PROGRAMS)'; test -n "$(tstdir)" || list=; \
+	@list='$(test_PROGRAMS)'; test -n "$(testdir)" || list=; \
 	files=`for p in $$list; do echo "$$p"; done | \
 	  sed -e 'h;s,^.*/,,;s/$(EXEEXT)$$//;$(transform)' \
 	      -e 's/$$/$(EXEEXT)/' `; \
 	test -n "$$list" || exit 0; \
-	echo " ( cd '$(DESTDIR)$(tstdir)' && rm -f" $$files ")"; \
-	cd "$(DESTDIR)$(tstdir)" && rm -f $$files
+	echo " ( cd '$(DESTDIR)$(testdir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(testdir)" && rm -f $$files
 
-clean-tstPROGRAMS:
-	@list='$(tst_PROGRAMS)'; test -n "$$list" || exit 0; \
+clean-testPROGRAMS:
+	@list='$(test_PROGRAMS)'; test -n "$$list" || exit 0; \
 	echo " rm -f" $$list; \
 	rm -f $$list || exit $$?; \
 	test -n "$(EXEEXT)" || exit 0; \
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
-heap$(EXEEXT): $(heap_OBJECTS) $(heap_DEPENDENCIES) 
-	@rm -f heap$(EXEEXT)
-	$(LINK) $(heap_OBJECTS) $(heap_LDADD) $(LIBS)
 leaks$(EXEEXT): $(leaks_OBJECTS) $(leaks_DEPENDENCIES) 
 	@rm -f leaks$(EXEEXT)
 	$(LINK) $(leaks_OBJECTS) $(leaks_LDADD) $(LIBS)
-sigdebug$(EXEEXT): $(sigdebug_OBJECTS) $(sigdebug_DEPENDENCIES) 
-	@rm -f sigdebug$(EXEEXT)
-	$(LINK) $(sigdebug_OBJECTS) $(sigdebug_LDADD) $(LIBS)
-tsc$(EXEEXT): $(tsc_OBJECTS) $(tsc_DEPENDENCIES) 
-	@rm -f tsc$(EXEEXT)
-	$(LINK) $(tsc_OBJECTS) $(tsc_LDADD) $(LIBS)
+shm$(EXEEXT): $(shm_OBJECTS) $(shm_DEPENDENCIES) 
+	@rm -f shm$(EXEEXT)
+	$(LINK) $(shm_OBJECTS) $(shm_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -363,10 +338,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/heap.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/leaks.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sigdebug.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tsc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/shm.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -481,7 +454,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(PROGRAMS) $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(tstdir)"; do \
+	for dir in "$(DESTDIR)$(testdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -511,7 +484,8 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-libtool clean-tstPROGRAMS mostlyclean-am
+clean-am: clean-generic clean-libtool clean-testPROGRAMS \
+	mostlyclean-am
 
 distclean: distclean-am
 	-rm -rf ./$(DEPDIR)
@@ -531,7 +505,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-tstPROGRAMS
+install-data-am: install-testPROGRAMS
 
 install-dvi: install-dvi-am
 
@@ -577,23 +551,23 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-tstPROGRAMS
+uninstall-am: uninstall-testPROGRAMS
 
 .MAKE: install-am install-strip
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
-	clean-libtool clean-tstPROGRAMS ctags distclean \
+	clean-libtool clean-testPROGRAMS ctags distclean \
 	distclean-compile distclean-generic distclean-libtool \
 	distclean-tags distdir dvi dvi-am html html-am info info-am \
 	install install-am install-data install-data-am install-dvi \
 	install-dvi-am install-exec install-exec-am install-html \
 	install-html-am install-info install-info-am install-man \
 	install-pdf install-pdf-am install-ps install-ps-am \
-	install-strip install-tstPROGRAMS installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-compile mostlyclean-generic \
-	mostlyclean-libtool pdf pdf-am ps ps-am tags uninstall \
-	uninstall-am uninstall-tstPROGRAMS
+	install-strip install-testPROGRAMS installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	tags uninstall uninstall-am uninstall-testPROGRAMS
 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

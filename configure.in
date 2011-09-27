@@ -760,10 +760,8 @@ AC_CONFIG_FILES([ \
 	testsuite/klatency/Makefile \
 	testsuite/unit/Makefile \
 	testsuite/xeno-test/Makefile \
-	src/testsuite/regression/Makefile \
-	src/testsuite/regression/native/Makefile \
-	src/testsuite/regression/posix/Makefile \
-	src/testsuite/regression/native+posix/Makefile \
+	testsuite/regression/Makefile \
+	testsuite/regression/posix/Makefile \
 	utils/Makefile \
 	utils/can/Makefile \
 	utils/analogy/Makefile \
