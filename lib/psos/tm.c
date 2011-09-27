@@ -65,7 +65,25 @@ objid_error:
 	return NULL;
 }
 
-static void postman_handler(struct timerobj *tmobj)
+static void delete_timer(struct psos_tm *tm)
+{
+	struct service svc;
+
+	COPPERPLATE_PROTECT(svc);
+	timerobj_destroy(&tm->tmobj);
+	pvlist_remove(&tm->link);
+	pvfree(tm);
+	COPPERPLATE_UNPROTECT(svc);
+}
+
+static void post_event_once(struct timerobj *tmobj)
+{
+	struct psos_tm *tm = container_of(tmobj, struct psos_tm, tmobj);
+	ev_send(tm->tid, tm->events);
+	delete_timer(tm);
+}
+
+static void post_event_periodic(struct timerobj *tmobj)
 {
 	struct psos_tm *tm = container_of(tmobj, struct psos_tm, tmobj);
 	ev_send(tm->tid, tm->events);
@@ -74,6 +92,7 @@ static void postman_handler(struct timerobj *tmobj)
 static u_long start_evtimer(u_long events,
 			    struct itimerspec *it, u_long *tmid_r)
 {
+	void (*handler)(struct timerobj *tmobj);
 	struct psos_task *current;
 	struct psos_tm *tm;
 	int ret;
@@ -101,11 +120,17 @@ static u_long start_evtimer(u_long events,
 	ret = timerobj_init(&tm->tmobj);
 	if (ret) {
 	fail:
+		pvlist_remove(&tm->link);
 		pvfree(tm);
 		return ERR_NOTIMERS;
 	}
 
-	ret = timerobj_start(&tm->tmobj, postman_handler, it);
+	handler = post_event_periodic;
+	if (it->it_interval.tv_sec == 0 &&
+	    it->it_interval.tv_nsec == 0)
+		handler = post_event_once;
+
+	ret = timerobj_start(&tm->tmobj, handler, it);
 	if (ret)
 		goto fail;
 
@@ -212,19 +237,13 @@ u_long tm_evwhen(u_long date, u_long time, u_long ticks,
 u_long tm_cancel(u_long tmid)
 {
 	struct psos_tm *tm;
-	struct service svc;
 	int ret;
 
 	tm = get_tm_from_id(tmid, &ret);
 	if (tm == NULL)
 		return ret;
 
-	COPPERPLATE_PROTECT(svc);
-	timerobj_stop(&tm->tmobj);
-	timerobj_destroy(&tm->tmobj);
-	pvlist_remove(&tm->link);
-	pvfree(tm);
-	COPPERPLATE_UNPROTECT(svc);
+	delete_timer(tm);
 
 	return SUCCESS;
 }
