@@ -44,7 +44,7 @@ static void task(u_long a0, u_long a1, u_long a2, u_long a3)
 	traceobj_mark(&trobj, 3);
 
 	ret = tm_cancel(timer_id);
-	traceobj_assert(&trobj, ret == ERR_OBJID);
+	traceobj_assert(&trobj, ret == ERR_BADTMID);
 
 	traceobj_exit(&trobj);
 }

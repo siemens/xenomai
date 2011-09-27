@@ -49,18 +49,8 @@ static struct psos_tm *get_tm_from_id(u_long tmid, int *err_r)
 	if (tm->magic == tm_magic)
 		return tm;
 
-	if (tm->magic == ~tm_magic) {
-		*err_r = ERR_OBJDEL;
-		return NULL;
-	}
-
-	if ((tm->magic >> 16) == 0x8181) {
-		*err_r = ERR_OBJTYPE;
-		return NULL;
-	}
-
 objid_error:
-	*err_r = ERR_OBJID;
+	*err_r = ERR_BADTMID;
 
 	return NULL;
 }
