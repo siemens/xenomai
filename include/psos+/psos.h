@@ -197,6 +197,8 @@ u_long t_restart(u_long tid,
 
 #include <psos+/syscall.h>
 
+extern unsigned psos_long_names;
+
 #endif /* __KERNEL__ || __XENO_SIM__ */
 
 /*

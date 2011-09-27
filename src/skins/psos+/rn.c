@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <nucleus/heap.h>
 #include <psos+/psos.h>
+#include <psos+/long_names.h>
 
 extern int __psos_muxid;
 
@@ -59,12 +60,15 @@ u_long rn_create(const char name[4],
 		 u_long usize, u_long flags, u_long *rnid, u_long *allocsz)
 {
 	struct rninfo rninfo;
+	char short_name[5];
 	struct {
 		u_long rnsize;
 		u_long usize;
 		u_long flags;
 	} sizeopt;
 	u_long err;
+
+	name = __psos_maybe_short_name(short_name, name);
 
 	if (rnaddr)
 		fprintf(stderr,

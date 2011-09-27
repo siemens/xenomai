@@ -26,6 +26,7 @@
 #include <memory.h>
 #include <string.h>
 #include <psos+/psos.h>
+#include <psos+/long_names.h>
 #include <asm-generic/bits/sigshadow.h>
 #include <asm-generic/bits/current.h>
 #include <asm-generic/stack.h>
@@ -124,9 +125,12 @@ u_long t_create(const char *name,
 	xncompletion_t completion;
 	struct sched_param param;
 	pthread_attr_t thattr;
+	char short_name[5];
 	pthread_t thid;
 	int policy;
 	long err;
+
+	name = __psos_maybe_short_name(short_name, name);
 
 	/* Migrate this thread to the Linux domain since we are about
 	   to issue a series of regular kernel syscalls in order to
