@@ -77,14 +77,14 @@ struct heapobj {
 #endif
 };
 
-static inline void *mainheap_ptr(off_t off)
+static inline void *mainheap_ptr(memoff_t off)
 {
 	return off ? (void *)__memptr(__pshared_heap, off) : NULL;
 }
 
-static inline off_t mainheap_off(void *addr)
+static inline memoff_t mainheap_off(void *addr)
 {
-	return addr ? (off_t)__memoff(__pshared_heap, addr) : 0;
+	return addr ? (memoff_t)__memoff(__pshared_heap, addr) : 0;
 }
 
 /*

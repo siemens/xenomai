@@ -76,9 +76,9 @@ struct page_map {
 
 struct heap_extent {
 	struct holder link;
-	off_t membase;	/* Base address of the page array */
-	off_t memlim;	/* Memory limit of page array */
-	off_t freelist;	/* Head of the free page list */
+	memoff_t membase;	/* Base address of the page array */
+	memoff_t memlim;	/* Memory limit of page array */
+	memoff_t freelist;	/* Head of the free page list */
 	struct page_map pagemap[1];	/* Start of page map */
 };
 
@@ -95,11 +95,11 @@ struct heap {
 	size_t ubytes;
 	size_t maxcont;
 	struct {
-		off_t freelist;
+		memoff_t freelist;
 		int fcount;
 	} buckets[HOBJ_NBUCKETS];
 	int cpid;
-	off_t maplen;
+	memoff_t maplen;
 	struct hash_table catalog;
 };
 
@@ -142,12 +142,12 @@ static void init_extent(struct heap *heap, struct heap_extent *extent)
 	/* Mark each page as free in the page map. */
 	for (n = 0, freepage = __mref(heap, extent->membase);
 	     n < lastpgnum; n++, freepage += HOBJ_PAGE_SIZE) {
-		*((off_t *)freepage) = __moff(heap, freepage) + HOBJ_PAGE_SIZE;
+		*((memoff_t *)freepage) = __moff(heap, freepage) + HOBJ_PAGE_SIZE;
 		extent->pagemap[n].type = page_free;
 		extent->pagemap[n].bcount = 0;
 	}
 
-	*((off_t *)freepage) = 0;
+	*((memoff_t *)freepage) = 0;
 	extent->pagemap[lastpgnum].type = page_free;
 	extent->pagemap[lastpgnum].bcount = 0;
 	extent->memlim = __moff(heap, freepage) + HOBJ_PAGE_SIZE;
@@ -209,7 +209,7 @@ static caddr_t get_free_range(struct heap *heap, size_t bsize, int log2size)
 			 */
 			do {
 				lastpage = freepage;
-				freepage = __mref_check(heap, *((off_t *)freepage));
+				freepage = __mref_check(heap, *((memoff_t *)freepage));
 				fcont += HOBJ_PAGE_SIZE;
 			} while (freepage == lastpage + HOBJ_PAGE_SIZE
 				 && fcont < bsize);
@@ -220,9 +220,9 @@ static caddr_t get_free_range(struct heap *heap, size_t bsize, int log2size)
 				 * step.
 				 */
 				if (__moff(heap, headpage) == extent->freelist)
-					extent->freelist = *((off_t *)lastpage);
+					extent->freelist = *((memoff_t *)lastpage);
 				else
-					*((off_t *)freehead) = *((off_t *)lastpage);
+					*((memoff_t *)freehead) = *((memoff_t *)lastpage);
 
 				goto splitpage;
 			}
@@ -248,11 +248,11 @@ splitpage:
 		for (block = headpage, eblock =
 		     headpage + HOBJ_PAGE_SIZE - bsize; block < eblock;
 		     block += bsize)
-			*((off_t *)block) = __moff(heap, block) + bsize;
+			*((memoff_t *)block) = __moff(heap, block) + bsize;
 
-		*((off_t *)eblock) = 0;
+		*((memoff_t *)eblock) = 0;
 	} else
-		*((off_t *)headpage) = 0;
+		*((memoff_t *)headpage) = 0;
 
 	pnum = (__moff(heap, headpage) - extent->membase) >> HOBJ_PAGE_SHIFT;
 
@@ -344,7 +344,7 @@ static void *alloc_block(struct heap *heap, size_t size)
 			++extent->pagemap[pnum].bcount;
 		}
 
-		heap->buckets[ilog].freelist = *((off_t *)block);
+		heap->buckets[ilog].freelist = *((memoff_t *)block);
 		heap->ubytes += bsize;
 	} else {
 		if (size > heap->maxcont)
@@ -369,7 +369,7 @@ static int free_block(struct heap *heap, void *block)
 	int log2size, ret = 0, nblocks, xpage, ilog;
 	size_t pnum, pcont, boffset, bsize, npages;
 	struct heap_extent *extent = NULL;
-	off_t *tailptr;
+	memoff_t *tailptr;
 
 	write_lock_nocancel(&heap->lock);
 
@@ -411,7 +411,7 @@ static int free_block(struct heap *heap, void *block)
 		for (freepage = (caddr_t)block,
 		     tailpage = (caddr_t)block + bsize - HOBJ_PAGE_SIZE;
 		     freepage < tailpage; freepage += HOBJ_PAGE_SIZE)
-			*((off_t *)freepage) = __moff(heap, freepage) + HOBJ_PAGE_SIZE;
+			*((memoff_t *)freepage) = __moff(heap, freepage) + HOBJ_PAGE_SIZE;
 
 	free_pages:
 		/* Mark the released pages as free in the extent's page map. */
@@ -423,12 +423,12 @@ static int free_block(struct heap *heap, void *block)
 		 */
 		for (nextpage = __mref_check(heap, extent->freelist), lastpage = NULL;
 		     nextpage && nextpage < (caddr_t)block;
-		     lastpage = nextpage, nextpage = __mref_check(heap, *((off_t *)nextpage)))
+		     lastpage = nextpage, nextpage = __mref_check(heap, *((memoff_t *)nextpage)))
 		  ;	/* Loop */
 
-		*((off_t *)tailpage) = __moff_check(heap, nextpage);
+		*((memoff_t *)tailpage) = __moff_check(heap, nextpage);
 		if (lastpage)
-			*((off_t *)lastpage) = __moff(heap, block);
+			*((memoff_t *)lastpage) = __moff(heap, block);
 		else
 			extent->freelist = __moff(heap, block);
 		break;
@@ -450,7 +450,7 @@ static int free_block(struct heap *heap, void *block)
 		ilog = log2size - HOBJ_MINLOG2;
 		if (--extent->pagemap[pnum].bcount > 0) {
 			/* Return the block to the bucketed memory space. */
-			*((off_t *)block) = heap->buckets[ilog].freelist;
+			*((memoff_t *)block) = heap->buckets[ilog].freelist;
 			heap->buckets[ilog].freelist = __moff(heap, block);
 			++heap->buckets[ilog].fcount;
 			break;
@@ -495,13 +495,13 @@ static int free_block(struct heap *heap, void *block)
 		 */
 		for (tailptr = &heap->buckets[ilog].freelist,
 			     freeptr = __mref_check(heap, *tailptr), xpage = 1;
-		     freeptr && nblocks > 0; freeptr = __mref_check(heap, *((off_t *)freeptr))) {
+		     freeptr && nblocks > 0; freeptr = __mref_check(heap, *((memoff_t *)freeptr))) {
 			if (freeptr < freepage || freeptr >= nextpage) {
 				if (xpage) { /* Limit random writes */
 					*tailptr = __moff(heap, freeptr);
 					xpage = 0;
 				}
-				tailptr = (off_t *)freeptr;
+				tailptr = (memoff_t *)freeptr;
 			} else {
 				--nblocks;
 				xpage = 1;
@@ -563,8 +563,8 @@ static int create_heap(struct heapobj *hobj, const char *session,
 {
 	struct heap *heap;
 	struct stat sbuf;
+	memoff_t len;
 	int ret, fd;
-	off_t len;
 
 	if (size <= sizeof(struct heap_extent))
 		size = sizeof(struct heap_extent);

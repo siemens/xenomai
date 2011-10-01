@@ -21,6 +21,7 @@
 
 #include <sys/types.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <xeno_config.h>
 
 #define libcopperplate_tag  0	/* Library tag - unique and constant. */
@@ -31,6 +32,8 @@
 		const typeof(((type *)0)->member) *__mptr = (ptr);	\
 		(type *)((char *)__mptr - offsetof(type, member));	\
 	})
+
+typedef uintptr_t memoff_t;
 
 #ifdef CONFIG_XENO_PSHARED
 /*
@@ -67,7 +70,7 @@ struct __fnref {
 		assert(__p != NULL);					\
 		__p;							\
 	})
-#define dref_type(t)		off_t
+#define dref_type(t)		memoff_t
 #define fnref_type(t)		int
 #define fnref_null		-1
 #define fnref_put(l, s)		((s) == NULL ? fnref_null : __refvar(l, s))
