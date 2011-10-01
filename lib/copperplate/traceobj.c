@@ -105,6 +105,13 @@ fail:
 	if (CPU_COUNT(&__this_node.cpu_affinity) == 0)
 		warning("NOTE: --cpu-affinity option was not given - this might explain?");
 #endif
+#ifndef CONFIG_XENO_ASYNC_CANCEL
+	/*
+	 * Lack of async cancellation support might also explain why
+	 * some tests have failed.
+	 */
+	warning("NOTE: --disable-async-cancel option was given - this might explain?");
+#endif
 	exit(5);
 }
 
