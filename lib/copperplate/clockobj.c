@@ -201,7 +201,6 @@ void clockobj_set_date(struct clockobj *clkobj,
 		__clockobj_set_resolution(clkobj, resolution_ns);
 
 	ticks_to_timespec(clkobj, ticks, &clkobj->epoch);
-	clkobj->start = now;
 	timespec_sub(&clkobj->offset, &clkobj->epoch, &now);
 
 	read_unlock(&clkobj->lock);
@@ -261,7 +260,7 @@ void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks)
 
 	ns = xnarch_tsc_to_ns(__xn_rdtsc());
 	/* Add offset to epoch. */
-	ns += clkobj->offset.tv_sec * 1000000000;
+	ns += (unsigned long long)clkobj->offset.tv_sec * 1000000000ULL;
 	ns += clkobj->offset.tv_nsec;
 	if (clockobj_get_resolution(clkobj) > 1)
 		ns /= clockobj_get_resolution(clkobj);
@@ -276,7 +275,7 @@ ticks_t clockobj_get_tsc(void)
 {
 	struct timespec now;
 	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
-	return now.tv_sec * 1000000000ULL + now.tv_nsec;
+	return (ticks_t)now.tv_sec * 1000000000ULL + now.tv_nsec;
 }
 
 sticks_t clockobj_ns_to_ticks(struct clockobj *clkobj, sticks_t ns)
@@ -294,8 +293,8 @@ void clockobj_get_time(struct clockobj *clkobj, ticks_t *pticks,
 	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
 
 	/* Convert the time value to ticks, with no offset. */
-	*pticks = now.tv_sec * clockobj_get_frequency(clkobj)
-		+ now.tv_nsec / clockobj_get_resolution(clkobj);
+	*pticks = (ticks_t)now.tv_sec * clockobj_get_frequency(clkobj)
+		+ (ticks_t)now.tv_nsec / clockobj_get_resolution(clkobj);
 
 	/*
 	 * Mercury has a single time source, with TSC == monotonic
@@ -315,12 +314,12 @@ void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks)
 
 	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
 
-	/* Add offset to epoch. */
+	/* Add offset from epoch to current system time. */
 	timespec_add(&date, &clkobj->offset, &now);
 
 	/* Convert the time value to ticks,. */
-	*pticks = date.tv_sec * clockobj_get_frequency(clkobj)
-		+ date.tv_nsec / clockobj_get_resolution(clkobj);
+	*pticks = (ticks_t)date.tv_sec * clockobj_get_frequency(clkobj)
+		+ (ticks_t)date.tv_nsec / clockobj_get_resolution(clkobj);
 
 	read_unlock(&clkobj->lock);
 }
@@ -331,6 +330,7 @@ int clockobj_init(struct clockobj *clkobj,
 		  const char *name, unsigned int resolution_ns)
 {
 	pthread_mutexattr_t mattr;
+	struct timespec now;
 	int ret;
 
 	if (resolution_ns == 0)
@@ -346,8 +346,8 @@ int clockobj_init(struct clockobj *clkobj,
 	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
 	__RT(pthread_mutex_init(&clkobj->lock, &mattr));
 	__RT(pthread_mutexattr_destroy(&mattr));
-	__RT(clock_gettime(CLOCK_COPPERPLATE, &clkobj->start));
-	timespec_sub(&clkobj->offset, &clkobj->epoch, &clkobj->start);
+	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
+	timespec_sub(&clkobj->offset, &clkobj->epoch, &now);
 	clkobj->name = name;
 
 	return 0;

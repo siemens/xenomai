@@ -47,7 +47,6 @@ struct clockobj {
 	pthread_mutex_t lock;
 	struct timespec epoch;
 	struct timespec offset;
-	struct timespec start;
 #ifndef CONFIG_XENO_LORES_CLOCK_DISABLED
 	unsigned int resolution;
 	unsigned int frequency;
