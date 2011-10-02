@@ -35,6 +35,7 @@
 #include "copperplate/traceobj.h"
 #include "copperplate/threadobj.h"
 #include "copperplate/syncobj.h"
+#include "copperplate/clockobj.h"
 #include "copperplate/debug.h"
 
 /*
@@ -376,6 +377,7 @@ static inline void setup_corespec(struct threadobj *thobj)
 {
 	prctl(PR_SET_NAME, (unsigned long)thobj->name, 0, 0, 0);
 	notifier_init(&thobj->core.notifier, notifier_callback, 1);
+	thobj->core.period = 0;
 }
 
 static inline void cleanup_corespec(struct threadobj *thobj)
@@ -612,14 +614,61 @@ void threadobj_stop_rr(void)
 int threadobj_set_periodic(struct threadobj *thobj,
 			   struct timespec *idate, struct timespec *period)
 {
-	return -ENOSYS;		/* FIXME */
+	struct timespec now;
+
+	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
+
+	if (idate->tv_sec || idate->tv_nsec) {
+		if (timespec_before(idate, &now))
+			return -ETIMEDOUT;
+		thobj->core.wakeup = *idate;
+	} else
+		thobj->core.wakeup = now;
+
+	timespec_add(&thobj->core.wakeup,
+		     &thobj->core.wakeup, period);
+
+	thobj->core.period = timespec_scalar(period);
+
+	return 0;
 }
 
 int threadobj_wait_period(struct threadobj *thobj,
 			  unsigned long *overruns_r)
 {
+	struct timespec now, delta, wakeup;
+	unsigned long overruns = 0;
+	ticks_t d, period;
+	int ret;
+
 	assert(thobj == threadobj_current());
-	return -ENOSYS;		/* FIXME */
+
+	period = thobj->core.period;
+	wakeup = thobj->core.wakeup;
+	ret = threadobj_sleep(&wakeup);
+	if (ret)
+		return ret;
+
+	/* Check whether we had an overrun. */
+
+	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
+
+	timespec_sub(&delta, &now, &wakeup);
+	d = timespec_scalar(&delta);
+	if (d >= period) {
+		overruns = d / period;
+		timespec_adds(&wakeup, &wakeup, overruns * period);
+	}
+	
+	timespec_adds(&thobj->core.wakeup, &wakeup, period);
+
+	if (overruns)
+		ret = -ETIMEDOUT;
+
+	if (overruns_r)
+		*overruns_r = overruns;
+
+	return ret;
 }
 
 #endif /* CONFIG_XENO_MERCURY */

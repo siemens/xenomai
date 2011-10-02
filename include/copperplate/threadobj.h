@@ -44,6 +44,8 @@ struct threadobj_corespec {
 	int prio_unlocked;
 	struct notifier notifier;
 	struct timespec tslice;
+	struct timespec wakeup;
+	ticks_t period;
 };
 
 #endif /* CONFIG_XENO_MERCURY */
