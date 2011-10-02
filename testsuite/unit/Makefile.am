@@ -5,10 +5,8 @@ CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 test_PROGRAMS = \
 	arith \
 	wakeup-time \
-	mutex-torture-posix \
-	mutex-torture-native \
-	cond-torture-posix \
-	cond-torture-native \
+	mutex-torture \
+	cond-torture \
 	check-vdso \
 	rtdm
 
@@ -37,65 +35,40 @@ wakeup_time_CPPFLAGS =			\
 wakeup_time_LDFLAGS = @XENO_USER_LDFLAGS@
 
 wakeup_time_LDADD = \
-	../../lib/native/libnative.la \
+	../../lib/alchemy/libalchemy.la \
+	../../lib/copperplate/libcopperplate.la \
 	../../lib/cobalt/libcobalt.la \
 	-lpthread -lrt -lm
 
-mutex_torture_posix_SOURCES = mutex-torture.c
+mutex_torture_SOURCES = mutex-torture.c
 
-mutex_torture_posix_CPPFLAGS =		\
+mutex_torture_CPPFLAGS =		\
 	@XENO_USER_CFLAGS@		\
 	-DXENO_POSIX			\
 	-I$(top_srcdir)/include		\
 	-Wno-missing-prototypes 
 
-mutex_torture_posix_LDFLAGS = $(XENO_POSIX_WRAPPERS) @XENO_USER_LDFLAGS@
+mutex_torture_LDFLAGS = $(XENO_POSIX_WRAPPERS) @XENO_USER_LDFLAGS@
 
-mutex_torture_posix_LDADD = \
-	../../lib/native/libnative.la \
+mutex_torture_LDADD = \
+	../../lib/alchemy/libalchemy.la \
+	../../lib/copperplate/libcopperplate.la \
 	../../lib/cobalt/libcobalt.la \
 	-lpthread -lrt -lm
 
-mutex_torture_native_SOURCES = mutex-torture.c
+cond_torture_SOURCES = cond-torture.c
 
-mutex_torture_native_CPPFLAGS =		\
-	@XENO_USER_CFLAGS@		\
-	-I$(top_srcdir)/include		\
-	-Wno-missing-prototypes 
-
-mutex_torture_native_LDFLAGS = @XENO_USER_LDFLAGS@
-
-mutex_torture_native_LDADD = \
-	../../lib/native/libnative.la \
-	../../lib/cobalt/libcobalt.la \
-	-lpthread -lrt -lm
-
-cond_torture_posix_SOURCES = cond-torture.c
-
-cond_torture_posix_CPPFLAGS =		\
+cond_torture_CPPFLAGS =		\
 	@XENO_USER_CFLAGS@		\
 	-DXENO_POSIX			\
 	-I$(top_srcdir)/include		\
 	-Wno-missing-prototypes 
 
-cond_torture_posix_LDFLAGS = $(XENO_POSIX_WRAPPERS) @XENO_USER_LDFLAGS@
+cond_torture_LDFLAGS = $(XENO_POSIX_WRAPPERS) @XENO_USER_LDFLAGS@
 
-cond_torture_posix_LDADD = \
-	../../lib/native/libnative.la \
-	../../lib/cobalt/libcobalt.la \
-	-lpthread -lrt -lm
-
-cond_torture_native_SOURCES = cond-torture.c
-
-cond_torture_native_CPPFLAGS =		\
-	@XENO_USER_CFLAGS@		\
-	-I$(top_srcdir)/include		\
-	-Wno-missing-prototypes 
-
-cond_torture_native_LDFLAGS = @XENO_USER_LDFLAGS@
-
-cond_torture_native_LDADD = \
-	../../lib/native/libnative.la \
+cond_torture_LDADD = \
+	../../lib/alchemy/libalchemy.la \
+	../../lib/copperplate/libcopperplate.la \
 	../../lib/cobalt/libcobalt.la \
 	-lpthread -lrt -lm
 

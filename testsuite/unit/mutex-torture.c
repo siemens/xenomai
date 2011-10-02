@@ -1,5 +1,5 @@
 /*
- * Functional testing of the mutex implementation for native & posix skins.
+ * Functional testing of the mutex implementation for Cobalt.
  *
  * Copyright (C) Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>,
  *               Marion Deveaud <marion.deveaud@siemens.com>,
@@ -18,17 +18,7 @@
 #include <signal.h>
 #include <sys/mman.h>
 #include <pthread.h>
-#ifndef __UCLIBC__
-#include <execinfo.h>
-#endif /* !__UCLIBC__ */
-
-#include <native/timer.h>
-#ifndef XENO_POSIX
-#include <native/task.h>
-#include <native/mutex.h>
-#include <native/sem.h>
-#include <native/cond.h>
-#endif /* __NATIVE_SKIN */
+#include <alchemy/timer.h>
 #include <asm-generic/xenomai/bits/current.h> /* For internal use, do not use
 					 in your code. */
 #include <asm-generic/xenomai/stack.h>
@@ -50,16 +40,6 @@
 
 #define NS_PER_MS	1000000
 
-#ifdef XENO_POSIX
-typedef pthread_mutex_t mutex_t;
-typedef	pthread_t thread_t;
-typedef pthread_cond_t cond_t;
-#else /* __NATIVE_SKIN__ */
-typedef RT_MUTEX mutex_t;
-typedef RT_TASK thread_t;
-typedef RT_COND cond_t;
-#endif /* __NATIVE_SKIN__ */
-
 static const char *reason_str[] = {
 	[SIGDEBUG_UNDEFINED] = "undefined",
 	[SIGDEBUG_MIGRATE_SIGNAL] = "received signal",
@@ -78,15 +58,9 @@ void sigdebug(int sig, siginfo_t *si, void *context)
 
 	printf("\nSIGDEBUG received, reason %d: %s\n", reason,
 	       reason <= SIGDEBUG_WATCHDOG ? reason_str[reason] : "<unknown>");
-#ifndef __UCLIBC__
-	/* Dump a backtrace of the frame which caused the switch to
-	   secondary mode: */
-	nentries = backtrace(bt,sizeof(bt) / sizeof(bt[0]));
-	backtrace_symbols_fd(bt,nentries,fileno(stdout));
-#endif /* !__UCLIBC__ */
 }
 
-void timespec_add(struct timespec *ts, unsigned long long value)
+void add_timespec(struct timespec *ts, unsigned long long value)
 {
 	ts->tv_sec += value / 1000000000;
 	ts->tv_nsec += value % 1000000000;
@@ -98,22 +72,17 @@ void timespec_add(struct timespec *ts, unsigned long long value)
 
 void ms_sleep(int time)
 {
-#ifdef XENO_POSIX
 	struct timespec ts;
 
 	ts.tv_sec = 0;
 	ts.tv_nsec = time*NS_PER_MS;
 
 	nanosleep(&ts, NULL);
-#else /* __NATIVE_SKIN__ */
-	rt_task_sleep(time*NS_PER_MS);
-#endif /* __NATIVE_SKIN__ */
 }
 
 void check_current_prio(int expected_prio)
 {
 	int current_prio;
-#ifdef XENO_POSIX
 # ifdef __pse51_get_current_prio
 	extern unsigned __pse51_muxid;
 
@@ -121,18 +90,6 @@ void check_current_prio(int expected_prio)
 # else /* !__pse51_get_current_prio */
 	current_prio = expected_prio;
 # endif /* !__pse51_get_current_prio */
-
-#else /* __NATIVE_SKIN__ */
-	int ret;
-	RT_TASK_INFO task_info;
-
-	if ((ret = rt_task_inquire(NULL, &task_info)) < 0) {
-		fprintf(stderr,
-			"FAILURE: Task inquire: %i (%s)\n", -ret, strerror(-ret));
-		exit(EXIT_FAILURE);
-	}
-	current_prio = task_info.cprio;
-#endif /* __NATIVE_SKIN__ */
 
 	if (current_prio != expected_prio) {
 		fprintf(stderr,
@@ -161,36 +118,27 @@ void check_current_mode(int mask, int expected_value)
 
 void yield(void)
 {
-#ifdef XENO_POSIX
 	sched_yield();
-#else /* __NATIVE_SKIN__ */
-	rt_task_yield();
-#endif /* __NATIVE_SKIN__ */
 }
 
 int dispatch(const char *service_name,
 	     int service_type, int check, int expected, ...)
 {
 	unsigned long long timeout;
-	thread_t *thread;
-	cond_t *cond;
+	pthread_t *thread;
+	pthread_cond_t *cond;
 	void *handler;
 	va_list ap;
 	int status;
-	mutex_t *mutex;
-#ifdef XENO_POSIX
+	pthread_mutex_t *mutex;
 	struct sched_param param;
 	pthread_attr_t threadattr;
 	pthread_mutexattr_t mutexattr;
 	struct timespec ts;
-#else /* __NATIVE_SKIN__ */
-	int prio;
-#endif /* __NATIVE_SKIN__ */
 
 	va_start(ap, expected);
 	switch (service_type) {
 	case MUTEX_CREATE:
-#ifdef XENO_POSIX
 		mutex = va_arg(ap, pthread_mutex_t *);
 		pthread_mutexattr_init(&mutexattr);
 #ifdef HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL
@@ -202,104 +150,55 @@ int dispatch(const char *service_name,
 #endif
 		pthread_mutexattr_settype(&mutexattr, va_arg(ap, int));
 		status = pthread_mutex_init(mutex, &mutexattr);
-#else /* __NATIVE_SKIN__ */
-		status = -rt_mutex_create(va_arg(ap, RT_MUTEX *), NULL);
-#endif /* __NATIVE_SKIN__ */
 		break;
 
 	case MUTEX_LOCK:
-#ifdef XENO_POSIX
 		status = pthread_mutex_lock(va_arg(ap, pthread_mutex_t *));
-#else /* __NATIVE_SKIN__ */
-		status =
-		    -rt_mutex_acquire(va_arg(ap, RT_MUTEX *), TM_INFINITE);
-#endif /* __NATIVE_SKIN__ */
 		break;
 
 	case MUTEX_TRYLOCK:
-#ifdef XENO_POSIX
 		status = pthread_mutex_trylock(va_arg(ap, pthread_mutex_t *));
-#else /* __NATIVE_SKIN__ */
-		status =
-		    -rt_mutex_acquire(va_arg(ap, RT_MUTEX *), TM_NONBLOCK);
-#endif /* __NATIVE_SKIN__ */
 		break;
 
 	case MUTEX_TIMED_LOCK:
-		mutex = va_arg(ap, mutex_t *);
+		mutex = va_arg(ap, pthread_mutex_t *);
 		timeout = va_arg(ap, unsigned long long);
-#ifdef XENO_POSIX
 		clock_gettime(CLOCK_REALTIME, &ts);
-		timespec_add(&ts, timeout);
+		add_timespec(&ts, timeout);
 		status = pthread_mutex_timedlock(mutex, &ts);
-#else /* __NATIVE_SKIN__ */
-		status = -rt_mutex_acquire(mutex, timeout);
-#endif /* __NATIVE_SKIN__ */
 		break;
 
 	case MUTEX_UNLOCK:
-#ifdef XENO_POSIX
 		status = pthread_mutex_unlock(va_arg(ap, pthread_mutex_t *));
-#else /* __NATIVE_SKIN__ */
-		status = -rt_mutex_release(va_arg(ap, RT_MUTEX *));
-#endif /* __NATIVE_SKIN__ */
 		break;
 
 	case MUTEX_DESTROY:
-#ifdef XENO_POSIX
 		status = pthread_mutex_destroy(va_arg(ap, pthread_mutex_t *));
-#else /* __NATIVE_SKIN__ */
-		status = -rt_mutex_delete(va_arg(ap, RT_MUTEX *));
-#endif /* __NATIVE_SKIN__ */
 		break;
 
 	case COND_CREATE:
-#ifdef XENO_POSIX
 		status = pthread_cond_init(va_arg(ap, pthread_cond_t *), NULL);
-#else /* __NATIVE_SKIN__ */
-		status = -rt_cond_create(va_arg(ap, RT_COND *), NULL);
-#endif /* __NATIVE_SKIN__ */
 		break;
 
 	case COND_SIGNAL:
-#ifdef XENO_POSIX
 		status = pthread_cond_signal(va_arg(ap, pthread_cond_t *));
-#else /* __NATIVE_SKIN__ */
-		status = -rt_cond_signal(va_arg(ap, RT_COND *));
-#endif /* __NATIVE_SKIN__ */
 		break;
 
 	case COND_WAIT:
-#ifdef XENO_POSIX
 		cond = va_arg(ap, pthread_cond_t *);
 		status =
 		    pthread_cond_wait(cond, va_arg(ap, pthread_mutex_t *));
-#else /* __NATIVE_SKIN__ */
-		cond = va_arg(ap, RT_COND *);
-		status =
-		    -rt_cond_wait(cond, va_arg(ap, RT_MUTEX *), TM_INFINITE);
-#endif /* __NATIVE_SKIN__ */
 		break;
 
 	case COND_DESTROY:
-#ifdef XENO_POSIX
 		status = pthread_cond_destroy(va_arg(ap, pthread_cond_t *));
-#else /* __NATIVE_SKIN__ */
-		status = -rt_cond_delete(va_arg(ap, RT_COND *));
-#endif /* __NATIVE_SKIN__ */
 		break;
 
-#ifdef XENO_POSIX
 	case THREAD_DETACH:
 		status = pthread_detach(pthread_self());
 		break;
-#else /* __NATIVE_SKIN__ */
-	case THREAD_DETACH:
-		return 0;
-#endif /* __NATIVE_SKIN__ */
 
 	case THREAD_CREATE:
-#ifdef XENO_POSIX
 		thread = va_arg(ap, pthread_t *);
 		pthread_attr_init(&threadattr);
 		param.sched_priority = va_arg(ap, int);
@@ -314,23 +213,11 @@ int dispatch(const char *service_name,
 		handler = va_arg(ap, void *);
 		status = pthread_create(thread, &threadattr, handler,
 					va_arg(ap, void *));
-#else /* __NATIVE_SKIN__ */
-		thread = va_arg(ap, RT_TASK *);
-		prio = va_arg(ap, int);
-		handler = va_arg(ap, void *);
-		status = -rt_task_spawn(thread, NULL, 0, prio, T_JOINABLE, handler,
-					va_arg(ap, void *));
-#endif /* __NATIVE_SKIN__ */
 		break;
 
 	case THREAD_JOIN:
-#ifdef XENO_POSIX
 		thread = va_arg(ap, pthread_t *);
 		status = pthread_join(*thread, NULL);
-#else /* __NATIVE_SKIN__ */
-		thread = va_arg(ap, RT_TASK *);
-		status = rt_task_join(thread);
-#endif /* __NATIVE_SKIN__ */
 		break;
 
 	case THREAD_RENICE:
@@ -366,7 +253,7 @@ int dispatch(const char *service_name,
 
 void *waiter(void *cookie)
 {
-	mutex_t *mutex = (mutex_t *) cookie;
+	pthread_mutex_t *mutex = (pthread_mutex_t *) cookie;
 	unsigned long long start, diff;
 
 	dispatch("waiter pthread_detach", THREAD_DETACH, 1, 0);
@@ -387,8 +274,8 @@ void *waiter(void *cookie)
 void simple_wait(void)
 {
 	unsigned long long start, diff;
-	mutex_t mutex;
-	thread_t waiter_tid;
+	pthread_mutex_t mutex;
+	pthread_t waiter_tid;
 
 	fprintf(stderr, "simple_wait\n");
 
@@ -416,8 +303,8 @@ void simple_wait(void)
 void recursive_wait(void)
 {
 	unsigned long long start, diff;
-	mutex_t mutex;
-	thread_t waiter_tid;
+	pthread_mutex_t mutex;
+	pthread_t waiter_tid;
 
 	fprintf(stderr, "recursive_wait\n");
 
@@ -449,11 +336,9 @@ void recursive_wait(void)
 
 void errorcheck_wait(void)
 {
-#ifdef XENO_POSIX
-	/* This test only makes sense under POSIX */
 	unsigned long long start, diff;
-	mutex_t mutex;
-	thread_t waiter_tid;
+	pthread_mutex_t mutex;
+	pthread_t waiter_tid;
 	int err;
 
 	fprintf(stderr, "errorcheck_wait\n");
@@ -491,12 +376,11 @@ void errorcheck_wait(void)
 	}
 	dispatch("errorcheck mutex_unlock 3", MUTEX_UNLOCK, 1, 0, &mutex);
 	dispatch("errorcheck mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
-#endif /* XENO_POSIX */
 }
 
 void *timed_waiter(void *cookie)
 {
-	mutex_t *mutex = (mutex_t *) cookie;
+	pthread_mutex_t *mutex = (pthread_mutex_t *) cookie;
 	unsigned long long start, diff;
 
 	dispatch("timed_waiter pthread_detach", THREAD_DETACH, 1, 0);
@@ -516,8 +400,8 @@ void *timed_waiter(void *cookie)
 
 void timed_mutex(void)
 {
-	mutex_t mutex;
-	thread_t waiter_tid;
+	pthread_mutex_t mutex;
+	pthread_t waiter_tid;
 
 	fprintf(stderr, "timed_mutex\n");
 
@@ -534,7 +418,7 @@ void timed_mutex(void)
 
 void mode_switch(void)
 {
-	mutex_t mutex;
+	pthread_mutex_t mutex;
 
 	/* Cause a switch to secondary mode */
 #ifdef XENO_POSIX
@@ -557,8 +441,8 @@ void mode_switch(void)
 void pi_wait(void)
 {
 	unsigned long long start, diff;
-	mutex_t mutex;
-	thread_t waiter_tid;
+	pthread_mutex_t mutex;
+	pthread_t waiter_tid;
 
 	fprintf(stderr, "pi_wait\n");
 
@@ -593,8 +477,8 @@ void pi_wait(void)
 
 void lock_stealing(void)
 {
-	mutex_t mutex;
-	thread_t lowprio_tid;
+	pthread_mutex_t mutex;
+	pthread_t lowprio_tid;
 	int trylock_result;
 
 	/* Main thread acquires the mutex and starts a waiter with lower
@@ -636,11 +520,7 @@ void lock_stealing(void)
 		ms_sleep(6);
 
 		dispatch("lock_stealing mutex_unlock 3", MUTEX_UNLOCK, 1, 0, &mutex);
-#ifdef XENO_POSIX
 	} else if (trylock_result != EBUSY) {
-#else /* __NATIVE_SKIN__ */
-	} else if (trylock_result != EWOULDBLOCK) {
-#endif /* __NATIVE_SKIN__ */
 		fprintf(stderr,
 			"FAILURE: lock_stealing mutex_trylock: %i (%s)\n",
 			trylock_result, strerror(trylock_result));
@@ -666,7 +546,7 @@ void lock_stealing(void)
 
 void *victim(void *cookie)
 {
-	mutex_t *mutex = (mutex_t *) cookie;
+	pthread_mutex_t *mutex = (pthread_mutex_t *) cookie;
 	unsigned long long start;
 
 	dispatch("victim pthread_detach", THREAD_DETACH, 1, 0);
@@ -683,8 +563,8 @@ void *victim(void *cookie)
 void deny_stealing(void)
 {
 	unsigned long long start, diff;
-	mutex_t mutex;
-	thread_t lowprio_tid;
+	pthread_mutex_t mutex;
+	pthread_t lowprio_tid;
 
 	fprintf(stderr, "deny_stealing\n");
 
@@ -726,8 +606,8 @@ void deny_stealing(void)
 }
 
 struct cond_mutex {
-	mutex_t *mutex;
-	cond_t *cond;
+	pthread_mutex_t *mutex;
+	pthread_cond_t *cond;
 };
 
 void *cond_signaler(void *cookie)
@@ -767,13 +647,13 @@ void *cond_signaler(void *cookie)
 void simple_condwait(void)
 {
 	unsigned long long start, diff;
-	mutex_t mutex;
-	cond_t cond;
+	pthread_mutex_t mutex;
+	pthread_cond_t cond;
 	struct cond_mutex cm = {
 		.mutex = &mutex,
 		.cond = &cond,
 	};
-	thread_t cond_signaler_tid;
+	pthread_t cond_signaler_tid;
 
 	fprintf(stderr, "simple_condwait\n");
 
@@ -805,13 +685,13 @@ void simple_condwait(void)
 void recursive_condwait(void)
 {
 	unsigned long long start, diff;
-	mutex_t mutex;
-	cond_t cond;
+	pthread_mutex_t mutex;
+	pthread_cond_t cond;
 	struct cond_mutex cm = {
 		.mutex = &mutex,
 		.cond = &cond,
 	};
-	thread_t cond_signaler_tid;
+	pthread_t cond_signaler_tid;
 
 	fprintf(stderr, "recursive_condwait\n");
 
@@ -889,11 +769,7 @@ void auto_switchback(void)
 
 int main(void)
 {
-#ifdef XENO_POSIX
 	struct sched_param sparam;
-#else /* __NATIVE_SKIN__ */
-	RT_TASK main_tid;
-#endif /* __NATIVE_SKIN__ */
 	struct sigaction sa;
 
 	mlockall(MCL_CURRENT | MCL_FUTURE);
@@ -904,12 +780,8 @@ int main(void)
 	sigaction(SIGDEBUG, &sa, NULL);
 
 	/* Set scheduling parameters for the current process */
-#ifdef XENO_POSIX
 	sparam.sched_priority = 2;
 	pthread_setschedparam(pthread_self(), SCHED_FIFO, &sparam);
-#else /* __NATIVE_SKIN__ */
-	rt_task_shadow(&main_tid, "main_task", 2, 0);
-#endif /* __NATIVE_SKIN__ */
 
 	/* Call test routines */
 	simple_wait();

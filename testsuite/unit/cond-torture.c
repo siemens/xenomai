@@ -1,5 +1,5 @@
 /*
- * Functional testing of the condvar implementation for native & posix skins.
+ * Functional testing of the condvar implementation for Cobalt.
  *
  * Copyright (C) Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
  *
@@ -15,23 +15,11 @@
 #include <stdarg.h>
 #include <sys/mman.h>
 #include <pthread.h>
-#include <native/timer.h>
-
-#ifndef XENO_POSIX
-#include <native/task.h>
-#include <native/mutex.h>
-#include <native/cond.h>
-#endif /* __NATIVE_SKIN */
-
+#include <alchemy/timer.h>
 #include <asm-generic/xenomai/stack.h>
 
 #define NS_PER_MS (1000000)
-#ifdef XENO_POSIX
 #define NS_PER_S (1000000000)
-
-typedef	pthread_t thread_t;
-typedef pthread_mutex_t mutex_t;
-typedef pthread_cond_t cond_t;
 
 unsigned long long timer_read(void)
 {
@@ -41,7 +29,7 @@ unsigned long long timer_read(void)
 	return (unsigned long long)ts.tv_sec * NS_PER_S + ts.tv_nsec;
 }
 
-int mutex_init(mutex_t *mutex, int type, int pi)
+int mutex_init(pthread_mutex_t *mutex, int type, int pi)
 {
 	pthread_mutexattr_t mattr;
 	int err;
@@ -70,7 +58,7 @@ int mutex_init(mutex_t *mutex, int type, int pi)
 #define mutex_unlock(mutex) (-pthread_mutex_unlock(mutex))
 #define mutex_destroy(mutex) (-pthread_mutex_destroy(mutex))
 
-int cond_init(cond_t *cond, int absolute)
+int cond_init(pthread_cond_t *cond, int absolute)
 {
 	pthread_condattr_t cattr;
 	int err;
@@ -85,7 +73,7 @@ int cond_init(cond_t *cond, int absolute)
 }
 #define cond_signal(cond) (-pthread_cond_signal(cond))
 
-int cond_wait(cond_t *cond, mutex_t *mutex, unsigned long long ns)
+int cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex, unsigned long long ns)
 {
 	struct timespec ts;
 
@@ -100,7 +88,7 @@ int cond_wait(cond_t *cond, mutex_t *mutex, unsigned long long ns)
 	return -pthread_cond_timedwait(cond, mutex, &ts);
 }
 
-int cond_wait_until(cond_t *cond, mutex_t *mutex, unsigned long long date)
+int cond_wait_until(pthread_cond_t *cond, pthread_mutex_t *mutex, unsigned long long date)
 {
 	struct timespec ts = {
 		.tv_sec = date / NS_PER_S,
@@ -121,7 +109,7 @@ int thread_msleep(unsigned ms)
 	return -nanosleep(&ts, NULL);
 }
 
-int thread_spawn(thread_t *thread, int prio,
+int thread_spawn(pthread_t *thread, int prio,
 		 void *(*handler)(void *cookie), void *cookie)
 {
 	struct sched_param param;
@@ -146,67 +134,6 @@ int thread_spawn(thread_t *thread, int prio,
 #define thread_kill(thread, sig) (-__STD(pthread_kill(thread, sig)))
 #define thread_self() pthread_self()
 #define thread_join(thread) (-pthread_join(thread, NULL))
-
-#else /* __NATIVE_SKIN__ */
-typedef RT_MUTEX mutex_t;
-typedef RT_TASK *thread_t;
-typedef RT_COND cond_t;
-
-#define timer_read() rt_timer_read()
-
-int __mutex_init(mutex_t *mutex, const char *name, int type, int pi)
-{
-	if (type == PTHREAD_MUTEX_ERRORCHECK)
-		return -EINVAL;
-	(void)(pi);
-
-	return -rt_mutex_create(mutex, name);
-}
-#define mutex_init(mutex, type, pi) __mutex_init(mutex, #mutex, type, pi)
-#define mutex_destroy(mutex) rt_mutex_delete(mutex)
-#define mutex_lock(mutex) rt_mutex_acquire(mutex, TM_INFINITE)
-#define mutex_unlock(mutex) rt_mutex_release(mutex)
-
-int __cond_init(cond_t *cond, const char *name, int absolute)
-{
-	(void)(absolute);
-	return rt_cond_create(cond, name);
-}
-#define cond_init(cond, absolute) __cond_init(cond, #cond, absolute)
-#define cond_signal(cond) rt_cond_signal(cond)
-#define cond_wait(cond, mutex, ns) rt_cond_wait(cond, mutex, (RTIME)ns)
-#define cond_wait_until(cond, mutex, ns) \
-	rt_cond_wait_until(cond, mutex, (RTIME)ns)
-#define cond_destroy(cond) rt_cond_delete(cond)
-
-#define thread_self() rt_task_self()
-#define thread_msleep(ms) rt_task_sleep((RTIME)ms * NS_PER_MS)
-int
-thread_spawn_inner(thread_t *thread, const char *name,
-		   int prio, void *(*handler)(void *), void *cookie)
-{
-	thread_t tcb;
-	int err;
-
-	tcb = malloc(sizeof(*tcb));
-	if (!tcb)
-		return -ENOSPC;
-
-	err = rt_task_spawn(tcb, name, 0, prio, T_JOINABLE,
-			    (void (*)(void *))handler, cookie);
-	if (!err)
-		*thread = tcb;
-
-	return err;
-}
-#define thread_spawn(thread, prio, handler, cookie) \
-	thread_spawn_inner(thread, #handler, prio, handler, cookie)
-#define thread_yield() rt_task_yield()
-#define thread_kill(thread, sig) \
-	(-pthread_kill((pthread_t)thread->opaque2, sig))
-#define thread_join(thread) rt_task_join(thread)
-
-#endif /* __NATIVE_SKIN__ */
 
 void check_inner(const char *file, int line, const char *fn, const char *msg, int status, int expected)
 {
@@ -241,9 +168,9 @@ void check_sleep_inner(const char *fn,
 	check_sleep_inner(__FUNCTION__, prefix, start)
 
 struct cond_mutex {
-	mutex_t *mutex;
-	cond_t *cond;
-	thread_t tid;
+	pthread_mutex_t *mutex;
+	pthread_cond_t *cond;
+	pthread_t tid;
 };
 
 void *cond_signaler(void *cookie)
@@ -264,13 +191,13 @@ void *cond_signaler(void *cookie)
 void simple_condwait(void)
 {
 	unsigned long long start;
-	mutex_t mutex;
-	cond_t cond;
+	pthread_mutex_t mutex;
+	pthread_cond_t cond;
 	struct cond_mutex cm = {
 		.mutex = &mutex,
 		.cond = &cond,
 	};
-	thread_t cond_signaler_tid;
+	pthread_t cond_signaler_tid;
 
 	fprintf(stderr, "%s\n", __FUNCTION__);
 
@@ -294,8 +221,8 @@ void simple_condwait(void)
 void relative_condwait(void)
 {
 	unsigned long long start;
-	mutex_t mutex;
-	cond_t cond;
+	pthread_mutex_t mutex;
+	pthread_cond_t cond;
 
 	fprintf(stderr, "%s\n", __FUNCTION__);
 
@@ -317,8 +244,8 @@ void relative_condwait(void)
 void absolute_condwait(void)
 {
 	unsigned long long start;
-	mutex_t mutex;
-	cond_t cond;
+	pthread_mutex_t mutex;
+	pthread_cond_t cond;
 
 	fprintf(stderr, "%s\n", __FUNCTION__);
 
@@ -362,14 +289,14 @@ void sighandler(int sig)
 void sig_norestart_condwait(void)
 {
 	unsigned long long start;
-	mutex_t mutex;
-	cond_t cond;
+	pthread_mutex_t mutex;
+	pthread_cond_t cond;
 	struct cond_mutex cm = {
 		.mutex = &mutex,
 		.cond = &cond,
 		.tid = thread_self(),
 	};
-	thread_t cond_killer_tid;
+	pthread_t cond_killer_tid;
 	struct sigaction sa = {
 		.sa_handler = sighandler,
 		.sa_flags = 0,
@@ -388,16 +315,7 @@ void sig_norestart_condwait(void)
 
 	start = rt_timer_tsc();
 	sig_seen = 0;
-#ifdef XENO_POSIX
 	check("cond_wait", cond_wait(&cond, &mutex, XN_INFINITE), 0);
-#else /* native */
-	{
-		int err = cond_wait(&cond, &mutex, XN_INFINITE);
-		if (err == 0)
-			err = -EINTR;
-		check("cond_wait", err, -EINTR);
-	}
-#endif /* native */
 	check_sleep("cond_wait", start);
 	check("sig_seen", sig_seen, 1);
 	check("mutex_unlock", mutex_unlock(&mutex), 0);
@@ -409,14 +327,14 @@ void sig_norestart_condwait(void)
 void sig_restart_condwait(void)
 {
 	unsigned long long start;
-	mutex_t mutex;
-	cond_t cond;
+	pthread_mutex_t mutex;
+	pthread_cond_t cond;
 	struct cond_mutex cm = {
 		.mutex = &mutex,
 		.cond = &cond,
 		.tid = thread_self(),
 	};
-	thread_t cond_killer_tid;
+	pthread_t cond_killer_tid;
 	struct sigaction sa = {
 		.sa_handler = sighandler,
 		.sa_flags = 0,
@@ -435,16 +353,7 @@ void sig_restart_condwait(void)
 
 	start = rt_timer_tsc();
 	sig_seen = 0;
-#ifdef XENO_POSIX
 	check("cond_wait", cond_wait(&cond, &mutex, XN_INFINITE), 0);
-#else /* native */
-	{
-		int err = cond_wait(&cond, &mutex, XN_INFINITE);
-		if (err == 0)
-			err = -EINTR;
-		check("cond_wait", err, -EINTR);
-	}
-#endif /* native */
 	check_sleep("cond_wait", start);
 	check("sig_seen", sig_seen, 1);
 	check("mutex_unlock", mutex_unlock(&mutex), 0);
@@ -472,14 +381,14 @@ void *mutex_killer(void *cookie)
 void sig_norestart_condwait_mutex(void)
 {
 	unsigned long long start;
-	mutex_t mutex;
-	cond_t cond;
+	pthread_mutex_t mutex;
+	pthread_cond_t cond;
 	struct cond_mutex cm = {
 		.mutex = &mutex,
 		.cond = &cond,
 		.tid = thread_self(),
 	};
-	thread_t mutex_killer_tid;
+	pthread_t mutex_killer_tid;
 	struct sigaction sa = {
 		.sa_handler = sighandler,
 		.sa_flags = 0,
@@ -512,14 +421,14 @@ void sig_norestart_condwait_mutex(void)
 void sig_restart_condwait_mutex(void)
 {
 	unsigned long long start;
-	mutex_t mutex;
-	cond_t cond;
+	pthread_mutex_t mutex;
+	pthread_cond_t cond;
 	struct cond_mutex cm = {
 		.mutex = &mutex,
 		.cond = &cond,
 		.tid = thread_self(),
 	};
-	thread_t mutex_killer_tid;
+	pthread_t mutex_killer_tid;
 	struct sigaction sa = {
 		.sa_handler = sighandler,
 		.sa_flags = SA_RESTART,
@@ -568,14 +477,14 @@ void *double_killer(void *cookie)
 void sig_norestart_double(void)
 {
 	unsigned long long start;
-	mutex_t mutex;
-	cond_t cond;
+	pthread_mutex_t mutex;
+	pthread_cond_t cond;
 	struct cond_mutex cm = {
 		.mutex = &mutex,
 		.cond = &cond,
 		.tid = thread_self(),
 	};
-	thread_t double_killer_tid;
+	pthread_t double_killer_tid;
 	struct sigaction sa = {
 		.sa_handler = sighandler,
 		.sa_flags = 0,
@@ -608,14 +517,14 @@ void sig_norestart_double(void)
 void sig_restart_double(void)
 {
 	unsigned long long start;
-	mutex_t mutex;
-	cond_t cond;
+	pthread_mutex_t mutex;
+	pthread_cond_t cond;
 	struct cond_mutex cm = {
 		.mutex = &mutex,
 		.cond = &cond,
 		.tid = thread_self(),
 	};
-	thread_t double_killer_tid;
+	pthread_t double_killer_tid;
 	struct sigaction sa = {
 		.sa_handler = sighandler,
 		.sa_flags = SA_RESTART,
@@ -655,11 +564,7 @@ void *cond_destroyer(void *cookie)
 	check("mutex_lock", mutex_lock(cm->mutex), 0);
 	check_sleep("mutex_lock", start);
 	thread_msleep(10);
-#ifdef XENO_POSIX
 	check("cond_destroy", cond_destroy(cm->cond), -EBUSY);
-#else /* native */
-	check("cond_destroy", cond_destroy(cm->cond), 0);
-#endif /* native */
 	check("mutex_unlock", mutex_unlock(cm->mutex), 0);
 
 	return NULL;
@@ -668,14 +573,14 @@ void *cond_destroyer(void *cookie)
 void cond_destroy_whilewait(void)
 {
 	unsigned long long start;
-	mutex_t mutex;
-	cond_t cond;
+	pthread_mutex_t mutex;
+	pthread_cond_t cond;
 	struct cond_mutex cm = {
 		.mutex = &mutex,
 		.cond = &cond,
 		.tid = thread_self(),
 	};
-	thread_t cond_destroyer_tid;
+	pthread_t cond_destroyer_tid;
 	struct sigaction sa = {
 		.sa_handler = sighandler,
 		.sa_flags = SA_RESTART,
@@ -694,42 +599,25 @@ void cond_destroy_whilewait(void)
 
 	start = rt_timer_tsc();
 
-#ifdef XENO_POSIX
 	check("cond_wait", cond_wait(&cond, &mutex, 10 * NS_PER_MS), -ETIMEDOUT);
 	check_sleep("cond_wait", start);
 	thread_msleep(10);
 
 	check("mutex_unlock", mutex_unlock(&mutex), 0);
-#else /* native */
-	check("cond_wait", cond_wait(&cond, &mutex, XN_INFINITE), -EIDRM);
-	check_sleep("cond_wait", start);
-#endif /* native */
 	check("thread_join", thread_join(cond_destroyer_tid), 0);
 	check("mutex_destroy", mutex_destroy(&mutex), 0);
-#ifdef XENO_POSIX
 	check("cond_destroy", cond_destroy(&cond), 0);
-#else /* native */
-	check("cond_destroy", cond_destroy(&cond), -ESRCH);
-#endif /* native */
 }
 
 int main(void)
 {
-#ifdef XENO_POSIX
 	struct sched_param sparam;
-#else /* __NATIVE_SKIN__ */
-	RT_TASK main_tid;
-#endif /* __NATIVE_SKIN__ */
 
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 
 	/* Set scheduling parameters for the current process */
-#ifdef XENO_POSIX
 	sparam.sched_priority = 2;
 	pthread_setschedparam(pthread_self(), SCHED_FIFO, &sparam);
-#else /* __NATIVE_SKIN__ */
-	rt_task_shadow(&main_tid, "main_task", 2, 0);
-#endif /* __NATIVE_SKIN__ */
 
 	simple_condwait();
 	relative_condwait();
