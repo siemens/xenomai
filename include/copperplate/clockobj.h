@@ -57,8 +57,39 @@ struct clockobj {
 void timespec_sub(struct timespec *r,
 		  const struct timespec *t1, const struct timespec *t2);
 
+void timespec_subs(struct timespec *r,
+		   const struct timespec *t1, sticks_t t2);
+
 void timespec_add(struct timespec *r,
 		  const struct timespec *t1, const struct timespec *t2);
+
+void timespec_adds(struct timespec *r,
+		   const struct timespec *t1, sticks_t t2);
+
+static inline sticks_t timespec_scalar(const struct timespec *t)
+{
+	return t->tv_sec * 1000000000LL + t->tv_nsec;
+}
+
+static inline int
+timespec_before(const struct timespec *t1, const struct timespec *t2)
+{
+	if (t1->tv_sec < t2->tv_sec)
+		return 1;
+
+	if (t1->tv_sec == t2->tv_sec &&
+	    t1->tv_nsec < t2->tv_nsec)
+		return 1;
+
+	return 0;
+}
+
+static inline int
+timespec_after(const struct timespec *t1, const struct timespec *t2)
+{
+	/* Checks after or equal. */
+	return !timespec_before(t1, t2);
+}
 
 #ifdef __cplusplus
 extern "C" {

@@ -39,11 +39,41 @@ void timespec_sub(struct timespec *r,
 	}
 }
 
+void timespec_subs(struct timespec *r,
+		   const struct timespec *t1, sticks_t t2)
+{
+	sticks_t s, rem;
+
+	s = t2 / 1000000000;
+	rem = t2 - s * 1000000000;
+	r->tv_sec = t1->tv_sec - s;
+	r->tv_nsec = t1->tv_nsec - rem;
+	if (r->tv_nsec < 0) {
+		r->tv_sec--;
+		r->tv_nsec += 1000000000;
+	}
+}
+
 void timespec_add(struct timespec *r,
 		  const struct timespec *t1, const struct timespec *t2)
 {
 	r->tv_sec = t1->tv_sec + t2->tv_sec;
 	r->tv_nsec = t1->tv_nsec + t2->tv_nsec;
+	if (r->tv_nsec >= 1000000000) {
+		r->tv_sec++;
+		r->tv_nsec -= 1000000000;
+	}
+}
+
+void timespec_adds(struct timespec *r,
+		   const struct timespec *t1, sticks_t t2)
+{
+	sticks_t s, rem;
+
+	s = t2 / 1000000000;
+	rem = t2 - s * 1000000000;
+	r->tv_sec = t1->tv_sec + s;
+	r->tv_nsec = t1->tv_nsec + rem;
 	if (r->tv_nsec >= 1000000000) {
 		r->tv_sec++;
 		r->tv_nsec -= 1000000000;
@@ -288,13 +318,16 @@ void clockobj_get_time(struct clockobj *clkobj, ticks_t *pticks,
 {
 	struct timespec now;
 
-	read_lock_nocancel(&clkobj->lock);
-
 	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
 
+	read_lock_nocancel(&clkobj->lock);
+
 	/* Convert the time value to ticks, with no offset. */
-	*pticks = (ticks_t)now.tv_sec * clockobj_get_frequency(clkobj)
-		+ (ticks_t)now.tv_nsec / clockobj_get_resolution(clkobj);
+	if (clockobj_get_resolution(clkobj) > 1)
+		*pticks = (ticks_t)now.tv_sec * clockobj_get_frequency(clkobj)
+			+ (ticks_t)now.tv_nsec / clockobj_get_resolution(clkobj);
+	else
+		*pticks = timespec_scalar(&now);
 
 	/*
 	 * Mercury has a single time source, with TSC == monotonic
