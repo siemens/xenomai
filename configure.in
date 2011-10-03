@@ -790,6 +790,7 @@ AC_CONFIG_FILES([ \
 	include/cobalt/nucleus/Makefile \
 	include/rtdm/Makefile \
 	include/analogy/Makefile \
+	include/mercury/Makefile \
 	include/copperplate/Makefile \
 	include/alchemy/Makefile \
 	include/vxworks/Makefile \

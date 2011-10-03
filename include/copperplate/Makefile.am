@@ -1,6 +1,7 @@
 includesubdir = $(includedir)/copperplate
 
 includesub_HEADERS =	\
+	core.h		\
 	clockobj.h	\
 	cluster.h	\
 	debug.h		\

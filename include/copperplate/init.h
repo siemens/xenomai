@@ -23,6 +23,7 @@
 #include <sched.h>
 #include <time.h>
 #include <copperplate/list.h>
+#include <copperplate/core.h>
 
 struct coppernode {
 	pid_t id;

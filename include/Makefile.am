@@ -43,6 +43,7 @@ else
 SUBDIRS = 		\
 	alchemy		\
 	copperplate	\
+	mercury		\
 	psos 		\
 	vxworks
 
