@@ -36,6 +36,7 @@ build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
 test_PROGRAMS = latency$(EXEEXT)
+@XENO_COBALT_TRUE@am__append_1 = ../../lib/cobalt/libcobalt.la
 subdir = testsuite/latency
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -58,8 +59,7 @@ PROGRAMS = $(test_PROGRAMS)
 am_latency_OBJECTS = latency-latency.$(OBJEXT)
 latency_OBJECTS = $(am_latency_OBJECTS)
 latency_DEPENDENCIES = ../../lib/alchemy/libalchemy.la \
-	../../lib/copperplate/libcopperplate.la \
-	../../lib/cobalt/libcobalt.la
+	../../lib/copperplate/libcopperplate.la $(core_libs)
 latency_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(latency_LDFLAGS) \
 	$(LDFLAGS) -o $@
@@ -245,10 +245,11 @@ latency_CPPFLAGS = \
 	-Wno-missing-prototypes 
 
 latency_LDFLAGS = @XENO_USER_LDFLAGS@
+core_libs = $(am__append_1)
 latency_LDADD = \
-	../../lib/alchemy/libalchemy.la \
-	../../lib/copperplate/libcopperplate.la \
-	../../lib/cobalt/libcobalt.la \
+	../../lib/alchemy/libalchemy.la		\
+	../../lib/copperplate/libcopperplate.la	\
+	$(core_libs)				\
 	-lpthread -lrt -lm
 
 all: all-am

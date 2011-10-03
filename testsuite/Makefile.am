@@ -1,7 +1,9 @@
 
+SUBDIRS = latency
+
 if XENO_COBALT
 
-SUBDIRS = \
+SUBDIRS += \
 	clocktest \
 	cyclic \
 	latency \

@@ -11,8 +11,13 @@ latency_CPPFLAGS = 			\
 
 latency_LDFLAGS = @XENO_USER_LDFLAGS@
 
+core_libs =
+if XENO_COBALT
+core_libs += ../../lib/cobalt/libcobalt.la
+endif
+
 latency_LDADD = \
-	../../lib/alchemy/libalchemy.la \
-	../../lib/copperplate/libcopperplate.la \
-	../../lib/cobalt/libcobalt.la \
+	../../lib/alchemy/libalchemy.la		\
+	../../lib/copperplate/libcopperplate.la	\
+	$(core_libs)				\
 	-lpthread -lrt -lm
