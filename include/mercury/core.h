@@ -19,6 +19,12 @@
 #ifndef _MERCURY_CORE_H
 #define _MERCURY_CORE_H
 
+#include <signal.h>
 #include <mercury/trace.h>
+
+/* Private signal used for unblocking from syscalls. */
+#define SIGRELS  	(SIGRTMIN + 9)
+
+#define cpu_relax()	do { } while (0)
 
 #endif /* _MERCURY_CORE_H */
