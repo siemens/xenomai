@@ -323,10 +323,17 @@ u_long t_start(u_long tid,
 		return ret;
 
 	task->args.entry = entry;
-	task->args.arg0 = args[0];
-	task->args.arg1 = args[1];
-	task->args.arg2 = args[2];
-	task->args.arg3 = args[3];
+	if (args) {
+		task->args.arg0 = args[0];
+		task->args.arg1 = args[1];
+		task->args.arg2 = args[2];
+		task->args.arg3 = args[3];
+	} else {
+		task->args.arg0 = 0;
+		task->args.arg1 = 0;
+		task->args.arg2 = 0;
+		task->args.arg3 = 0;
+	}
 	task->mode = mode;
 	threadobj_start(&task->thobj);
 	put_psos_task(task);
