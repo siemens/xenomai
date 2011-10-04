@@ -32,13 +32,13 @@
 
 static int tlsf_pool_overhead;
 
-void mem_destroy(struct heapobj *hobj)
+void __heapobj_destroy(struct heapobj *hobj)
 {
 	destroy_memory_pool(hobj->pool);
 	__RT(pthread_mutex_destroy(&hobj->lock));
 }
 
-int mem_extend(struct heapobj *hobj, size_t size, void *mem)
+int __heapobj_extend(struct heapobj *hobj, size_t size, void *mem)
 {
 	__RT(pthread_mutex_lock(&hobj->lock));
 	hobj->size = add_new_area(hobj->pool, size, mem);
@@ -49,7 +49,7 @@ int mem_extend(struct heapobj *hobj, size_t size, void *mem)
 	return 0;
 }
 
-void *mem_alloc(struct heapobj *hobj, size_t size)
+void *__heapobj_alloc(struct heapobj *hobj, size_t size)
 {
 	void *p;
 
@@ -60,14 +60,14 @@ void *mem_alloc(struct heapobj *hobj, size_t size)
 	return p;
 }
 
-void mem_free(struct heapobj *hobj, void *ptr)
+void __heapobj_free(struct heapobj *hobj, void *ptr)
 {
 	__RT(pthread_mutex_lock(&hobj->lock));
 	free_ex(ptr, hobj->pool);
 	__RT(pthread_mutex_unlock(&hobj->lock));
 }
 
-size_t mem_inquire(struct heapobj *hobj, void *ptr)
+size_t __heapobj_inquire(struct heapobj *hobj, void *ptr)
 {
 	size_t size;
 
@@ -81,11 +81,11 @@ size_t mem_inquire(struct heapobj *hobj, void *ptr)
 #ifdef CONFIG_XENO_PSHARED
 
 static struct heapobj_ops tlsf_ops = {
-	.destroy = mem_destroy,
-	.extend = mem_extend,
-	.alloc = mem_alloc,
-	.free = mem_free,
-	.inquire = mem_inquire,
+	.destroy = __heapobj_destroy,
+	.extend = __heapobj_extend,
+	.alloc = __heapobj_alloc,
+	.free = __heapobj_free,
+	.inquire = __heapobj_inquire,
 };
 
 #endif

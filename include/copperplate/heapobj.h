@@ -136,15 +136,15 @@ void pvfree(void *ptr);
 
 char *pvstrdup(const char *ptr);
 
-void mem_destroy(struct heapobj *hobj);
+void __heapobj_destroy(struct heapobj *hobj);
 
-int mem_extend(struct heapobj *hobj, size_t size, void *mem);
+int __heapobj_extend(struct heapobj *hobj, size_t size, void *mem);
 
-void *mem_alloc(struct heapobj *hobj, size_t size);
+void *__heapobj_alloc(struct heapobj *hobj, size_t size);
 
-void mem_free(struct heapobj *hobj, void *ptr);
+void __heapobj_free(struct heapobj *hobj, void *ptr);
 
-size_t mem_inquire(struct heapobj *hobj, void *ptr);
+size_t __heapobj_inquire(struct heapobj *hobj, void *ptr);
 
 #ifdef CONFIG_XENO_PSHARED
 
@@ -228,28 +228,28 @@ static inline int heapobj_init_array_depend(struct heapobj *hobj,
 
 static inline void heapobj_destroy(struct heapobj *hobj)
 {
-	mem_destroy(hobj);
+	__heapobj_destroy(hobj);
 }
 
 static inline int heapobj_extend(struct heapobj *hobj,
 				 size_t size, void *mem)
 {
-	return mem_extend(hobj, size, mem);
+	return __heapobj_extend(hobj, size, mem);
 }
 
 static inline void *heapobj_alloc(struct heapobj *hobj, size_t size)
 {
-	return mem_alloc(hobj, size);
+	return __heapobj_alloc(hobj, size);
 }
 
 static inline void heapobj_free(struct heapobj *hobj, void *ptr)
 {
-	mem_free(hobj, ptr);
+	__heapobj_free(hobj, ptr);
 }
 
 static inline size_t heapobj_inquire(struct heapobj *hobj, void *ptr)
 {
-	return mem_inquire(hobj, ptr);
+	return __heapobj_inquire(hobj, ptr);
 }
 
 static inline void *xnmalloc(size_t size)

@@ -28,16 +28,16 @@
 
 #define MALLOC_BLOCK_OVERHEAD  8
 
-void mem_destroy(struct heapobj *hobj)
+void __heapobj_destroy(struct heapobj *hobj)
 {
 }
 
-int mem_extend(struct heapobj *hobj, size_t size, void *mem)
+int __heapobj_extend(struct heapobj *hobj, size_t size, void *mem)
 {
 	return 0;
 }
 
-void *mem_alloc(struct heapobj *hobj, size_t size)
+void *__heapobj_alloc(struct heapobj *hobj, size_t size)
 {
 	/*
 	 * XXX: We don't want debug _nrt assertions to trigger when
@@ -48,12 +48,12 @@ void *mem_alloc(struct heapobj *hobj, size_t size)
 	return __STD(malloc(size));
 }
 
-void mem_free(struct heapobj *hobj, void *ptr)
+void __heapobj_free(struct heapobj *hobj, void *ptr)
 {
 	__STD(free(ptr));
 }
 
-size_t mem_inquire(struct heapobj *hobj, void *ptr)
+size_t __heapobj_inquire(struct heapobj *hobj, void *ptr)
 {
 	return malloc_usable_size(ptr);
 }
@@ -61,11 +61,11 @@ size_t mem_inquire(struct heapobj *hobj, void *ptr)
 #ifdef CONFIG_XENO_PSHARED
 
 static struct heapobj_ops malloc_ops = {
-	.destroy = mem_destroy,
-	.extend = mem_extend,
-	.alloc = mem_alloc,
-	.free = mem_free,
-	.inquire = mem_inquire,
+	.destroy = __heapobj_destroy,
+	.extend = __heapobj_extend,
+	.alloc = __heapobj_alloc,
+	.free = __heapobj_free,
+	.inquire = __heapobj_inquire,
 };
 
 #endif
