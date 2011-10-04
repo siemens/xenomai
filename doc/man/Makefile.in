@@ -243,10 +243,20 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-man1_MANS = clocktest.man cyclictest.man irqbench.man irqloop.man \
-	    klatency.man latency.man rtcanconfig.man \
-	    rtcanrecv.man rtcansend.man switchbench.man \
-	    switchtest.man xeno.man
+man1_MANS = \
+	clocktest.man \
+	cyclictest.man \
+	irqbench.man \
+	irqloop.man \
+	klatency.man \
+	latency.man \
+	rtcanconfig.man	\
+	rtcanrecv.man \
+	rtcansend.man \
+	switchbench.man \
+	switchtest.man \
+	xeno.man \
+	xeno-config.man
 
 all: all-am
 
