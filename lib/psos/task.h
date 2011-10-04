@@ -50,29 +50,6 @@ struct psos_task {
 	struct clusterobj cobj;
 };
 
-int psos_task_get_priority(struct psos_task *task);
-
-/*
- * pSOS priorities are mapped 1:1 to SCHED_FIFO levels:
- *
- * 1  -> SCHED_FIFO[1]
- * 97 -> SCHED_FIFO[97]
- * pSOS priorities above 97 are not supported so far.
- *
- */
-
-static inline int psos_task_normalize_priority(int psos_prio)
-{
-	/* Rescale a pSOS priority level to a SCHED_FIFO one. */
-	return psos_prio;
-}
-
-static inline int psos_task_denormalize_priority(int posix_prio)
-{
-	/* Rescale a SCHED_FIFO priority level to a pSOS one. */
-	return posix_prio;
-}
-
 #define task_magic	0x8181fafa
 
 static inline struct psos_task *psos_task_current(void)

@@ -368,6 +368,8 @@ u_long tm_wkwhen(u_long date,
 		 u_long time,
 		 u_long ticks);
 
+int psos_task_normalize_priority(unsigned long psos_prio);
+
 #ifdef __cplusplus
 };
 #endif /* __cplusplus */

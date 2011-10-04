@@ -199,15 +199,37 @@ done:
 	pthread_exit((void *)(long)ret);
 }
 
-static int check_task_priority(u_long psos_prio)
+/*
+ * By default, pSOS priorities are mapped 1:1 to SCHED_FIFO levels:
+ *
+ * 1  -> SCHED_FIFO[1]
+ * 97 -> SCHED_FIFO[97]
+ * pSOS priorities above 97 are not supported so far.
+ *
+ * The application code may override the routine doing the priority
+ * mapping from pSOS to POSIX (normalize). The bottom line is that
+ * normalized priorities should be in the range
+ * [ 1 .. threadobj_max_prio - 2 ] inclusive.
+ */
+
+__attribute__ ((weak))
+int psos_task_normalize_priority(unsigned long psos_prio)
+{
+	if (psos_prio >= threadobj_max_prio - 1)
+		panic("current implementation restricts pSOS "
+		      "priority levels to range [1..%d]",
+		      threadobj_max_prio - 2);
+
+	/* Map a pSOS priority level to a SCHED_FIFO one. */
+	return psos_prio;
+}
+
+static int check_task_priority(u_long psos_prio, int *posix_prio)
 {
 	if (psos_prio < 1 || psos_prio > 255) /* In theory. */
 		return ERR_PRIOR;
 
-	if ((int)psos_prio >= threadobj_max_prio - 1) /* In practice. */
-		panic("current implementation restricts pSOS "
-		      "priority levels to range [1..%d]",
-		      threadobj_max_prio - 2);
+	*posix_prio = psos_task_normalize_priority(psos_prio);
 
 	return SUCCESS;
 }
@@ -221,9 +243,9 @@ u_long t_create(const char *name, u_long prio,
 	pthread_attr_t thattr;
 	struct syncstate syns;
 	struct service svc;
-	int ret;
+	int ret, pprio;
 
-	ret = check_task_priority(prio);
+	ret = check_task_priority(prio, &pprio);
 	if (ret)
 		return ret;
 
@@ -278,7 +300,7 @@ u_long t_create(const char *name, u_long prio,
 		ustack = PTHREAD_STACK_MIN;
 
 	memset(&param, 0, sizeof(param));
-	param.sched_priority = psos_task_normalize_priority(prio);
+	param.sched_priority = pprio;
 	pthread_attr_setinheritsched(&thattr, PTHREAD_EXPLICIT_SCHED);
 	pthread_attr_setschedpolicy(&thattr, SCHED_FIFO);
 	pthread_attr_setschedparam(&thattr, &param);
@@ -399,13 +421,12 @@ u_long t_setpri(u_long tid, u_long newprio, u_long *oldprio_r)
 		return SUCCESS;
 	}
 
-	ret = check_task_priority(newprio);
+	ret = check_task_priority(newprio, &pprio);
 	if (ret) {
 		put_psos_task(task);
 		return ERR_SETPRI;
 	}
 
-	pprio = psos_task_normalize_priority(newprio);
 	ret = threadobj_set_priority(&task->thobj, pprio);
 	put_psos_task(task);
 	if (ret)
