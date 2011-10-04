@@ -330,6 +330,8 @@ void copperplate_init(int argc, char *const argv[])
 		}
 	}
 
+	optind = 0;
+
 	return;
 fail:
 	panic("initialization failed, %s", symerror(ret));
