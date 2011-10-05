@@ -60,6 +60,10 @@ int sched_rr_get_interval(int pid, struct timespec *interval);
 
 COBALT_DECL(int, sched_yield(void));
 
+COBALT_DECL(int, sched_get_priority_min(int policy));
+
+COBALT_DECL(int, sched_get_priority_max(int policy));
+
 #endif /* !(__KERNEL__ || __XENO_SIM__) */
 
 #ifndef __sched_extensions_defined
@@ -72,6 +76,8 @@ COBALT_DECL(int, sched_yield(void));
 #define sched_ss_init_budget	u.ss.__sched_init_budget
 #define sched_ss_max_repl	u.ss.__sched_max_repl
 #endif	/* !SCHED_SPORADIC */
+
+#define SCHED_COBALT		42
 
 #define sched_rr_quantum	u.rr.__sched_rr_quantum
 

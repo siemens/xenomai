@@ -210,12 +210,12 @@ int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock hel
 	struct sched_param param;
 	int ret, policy;
 
-	ret = __RT(pthread_getschedparam(tid, &policy, &param));
-	if (ret)
-		return __bt(-ret);
-
-	if (param.sched_priority == prio)
-		return 0;
+	policy = SCHED_FIFO;
+	if (prio == 0) {
+		thobj->status &= ~THREADOBJ_ROUNDROBIN;
+		policy = SCHED_OTHER;
+	} else if (thobj->status & THREADOBJ_ROUNDROBIN)
+		policy = SCHED_RR;
 
 	threadobj_unlock(thobj);
 	/*
@@ -333,10 +333,6 @@ int threadobj_wait_period(struct threadobj *thobj,
 
 #include <sys/prctl.h>
 #include "copperplate/notifier.h"
-
-/* Private signal used for unblocking from syscalls. */
-#define SIGRELS  	(SIGRTMIN + 9)
-#define cpu_relax()	do { } while (0)
 
 static void unblock_sighandler(int sig)
 {
@@ -457,7 +453,7 @@ int threadobj_unlock_sched(struct threadobj *thobj)
 {
 	pthread_t tid = thobj->tid;
 	struct sched_param param;
-	int ret;
+	int policy, ret;
 
 	assert(thobj == threadobj_current());
 
@@ -469,8 +465,9 @@ int threadobj_unlock_sched(struct threadobj *thobj)
 
 	thobj->status &= ~THREADOBJ_SCHEDLOCK;
 	param.sched_priority = thobj->core.prio_unlocked;
+	policy = param.sched_priority ? SCHED_FIFO : SCHED_OTHER;
 	threadobj_unlock(thobj);
-	ret = __RT(pthread_setschedparam(tid, SCHED_FIFO, &param));
+	ret = __RT(pthread_setschedparam(tid, policy, &param));
 	threadobj_lock(thobj);
 
 	return __bt(-ret);
@@ -480,7 +477,7 @@ int threadobj_set_priority(struct threadobj *thobj, int prio)
 {
 	pthread_t tid = thobj->tid;
 	struct sched_param param;
-	int ret;
+	int policy, ret;
 
 	/*
 	 * We don't actually change the scheduling priority in case
@@ -498,7 +495,8 @@ int threadobj_set_priority(struct threadobj *thobj, int prio)
 	 * the pthread interface to recheck the tid for existence.
 	 */
 	param.sched_priority = prio;
-	ret = __RT(pthread_setschedparam(tid, SCHED_FIFO, &param));
+	policy = prio ? SCHED_FIFO : SCHED_OTHER;
+	ret = __RT(pthread_setschedparam(tid, policy, &param));
 	threadobj_lock(thobj);
 
 	return __bt(-ret);

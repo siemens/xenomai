@@ -142,6 +142,36 @@ int __wrap_sched_yield(void)
 	return err;
 }
 
+int __wrap_sched_get_priority_min(int policy)
+{
+	int ret;
+
+	ret = XENOMAI_SKINCALL1(__pse51_muxid, __pse51_sched_minprio, policy);
+	if (ret < 0) {
+		if (ret == -ENOSYS)
+			return __STD(sched_get_priority_min(policy));
+		errno = -ret;
+		ret = -1;
+	}
+
+	return ret;
+}
+
+int __wrap_sched_get_priority_max(int policy)
+{
+	int ret;
+
+	ret = XENOMAI_SKINCALL1(__pse51_muxid, __pse51_sched_maxprio, policy);
+	if (ret < 0) {
+		if (ret == -ENOSYS)
+			return __STD(sched_get_priority_max(policy));
+		errno = -ret;
+		ret = -1;
+	}
+
+	return ret;
+}
+
 int __wrap_pthread_yield(void)
 {
 	return __wrap_sched_yield();

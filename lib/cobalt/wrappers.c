@@ -64,6 +64,18 @@ int __real_sched_yield(void)
 	return sched_yield();
 }
 
+__attribute__ ((weak))
+int __real_sched_get_priority_min(int policy)
+{
+	return sched_get_priority_min(policy);
+}
+
+__attribute__ ((weak))
+int __real_sched_get_priority_max(int policy)
+{
+	return sched_get_priority_max(policy);
+}
+
 /* pthread */
 __attribute__ ((weak))
 int __real_pthread_create(pthread_t *tid,

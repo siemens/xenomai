@@ -234,6 +234,7 @@ int pthread_create(pthread_t *tid,
 	thread->arg = arg;
 	xnsynch_init(&thread->join_synch, XNSYNCH_PRIO, NULL);
 	thread->nrt_joiners = 0;
+	thread->sched_policy = thread->attr.policy;
 
 	pse51_cancel_init_thread(thread);
 	pse51_signal_init_thread(thread, cur);

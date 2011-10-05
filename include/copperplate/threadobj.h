@@ -119,8 +119,6 @@ extern int threadobj_max_prio;
 
 extern int threadobj_async;
 
-extern int threadobj_max_prio;
-
 #ifdef __cplusplus
 extern "C" {
 #endif

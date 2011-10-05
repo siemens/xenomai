@@ -2257,6 +2257,18 @@ static int __select(int nfds,
 #define __select __pse51_call_not_available
 #endif /* !CONFIG_XENO_OPT_POSIX_SELECT */
 
+static int __sched_min_prio(int policy)
+{
+	int ret = sched_get_priority_min(policy);
+	return ret >= 0 ? ret : -thread_get_errno();
+}
+
+static int __sched_max_prio(int policy)
+{
+	int ret = sched_get_priority_max(policy);
+	return ret >= 0 ? ret : -thread_get_errno();
+}
+
 #ifdef CONFIG_XENO_OPT_POSIX_SHM
 
 static int __shm_open(const char __user *u_name,
@@ -2621,6 +2633,8 @@ static struct xnsysent __systab[] = {
 	SKINCALL_DEF(__pse51_condattr_getpshared, __pthread_condattr_getpshared, any),
 	SKINCALL_DEF(__pse51_condattr_setpshared, __pthread_condattr_setpshared, any),
 	SKINCALL_DEF(__pse51_select, __select, primary),
+	SKINCALL_DEF(__pse51_sched_minprio, __sched_min_prio, any),
+	SKINCALL_DEF(__pse51_sched_maxprio, __sched_max_prio, any),
 };
 
 static void __shadow_delete_hook(xnthread_t *thread)

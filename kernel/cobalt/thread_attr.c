@@ -406,7 +406,7 @@ int pthread_attr_setinheritsched(pthread_attr_t * attr, int inheritsched)
  * Threads created with the attribute object @a attr use the value of this
  * attribute as scheduling policy if the @a inheritsched attribute is set to
  * PTHREAD_EXPLICIT_SCHED. The value of this attribute is one of SCHED_FIFO,
- * SCHED_RR, SCHED_SPORADIC or SCHED_OTHER.
+ * SCHED_COBALT, SCHED_RR, SCHED_SPORADIC or SCHED_OTHER.
  *
  * @param attr attribute object;
  *
@@ -449,7 +449,7 @@ int pthread_attr_getschedpolicy(const pthread_attr_t * attr, int *policy)
  * Threads created with the attribute object @a attr use the value of this
  * attribute as scheduling policy if the @a inheritsched attribute is set to
  * PTHREAD_EXPLICIT_SCHED. The value of this attribute is one of SCHED_FIFO,
- * SCHED_RR, SCHED_SPORADIC or SCHED_OTHER.
+ * SCHED_COBALT, SCHED_RR, SCHED_SPORADIC or SCHED_OTHER.
  *
  * @param attr attribute object;
  *
@@ -475,6 +475,7 @@ int pthread_attr_setschedpolicy(pthread_attr_t * attr, int policy)
 
 	case SCHED_OTHER:
 	case SCHED_FIFO:
+	case SCHED_COBALT:
 	case SCHED_RR:
 	case SCHED_SPORADIC:
 
@@ -507,11 +508,12 @@ int pthread_attr_setschedpolicy(pthread_attr_t * attr, int policy)
  * @a schedparam attribute in the attribute object @a attr.
  *
  * The limited form only defines the @a sched_priority member, that is
- * sufficent to hold the scheduling parameter for SCHED_FIFO, SCHED_RR
- * and SCHED_OTHER class members. Threads created with @a attr will
- * use the value of this attribute as a scheduling priority if the
- * attribute @a inheritsched is set to PTHREAD_EXPLICIT_SCHED. Valid
- * priorities range from 1 to 99.
+ * sufficent to hold the scheduling parameter for SCHED_FIFO,
+ * SCHED_COBALT, SCHED_RR and SCHED_OTHER class members. Threads
+ * created with @a attr will use the value of this attribute as a
+ * scheduling priority if the attribute @a inheritsched is set to
+ * PTHREAD_EXPLICIT_SCHED. Valid priorities range from 1 to 99 for
+ * SCHED_FIFO and SCHED_RR, 1 to XNSCHED_RT_MAX_PRIO for SCHED_COBALT.
  *
  * pthread_attr_getschedparam_ex() should be used to retrieve the
  * parameters for extended scheduling classes, such as SCHED_SPORADIC.
@@ -600,11 +602,12 @@ int pthread_attr_getschedparam_ex(const pthread_attr_t * attr,
  * attribute in the attribute object @a attr.
  *
  * The limited form only defines the @a sched_priority member, that is
- * sufficent to hold the scheduling parameter for SCHED_FIFO, SCHED_RR
- * and SCHED_OTHER class members. Threads created with @a attr will
- * use the value of this attribute as a scheduling priority if the
- * attribute @a inheritsched is set to PTHREAD_EXPLICIT_SCHED. Valid
- * priorities range from 1 to 99.
+ * sufficent to hold the scheduling parameter for SCHED_FIFO,
+ * SCHED_COBALT, SCHED_RR and SCHED_OTHER class members. Threads
+ * created with @a attr will use the value of this attribute as a
+ * scheduling priority if the attribute @a inheritsched is set to
+ * PTHREAD_EXPLICIT_SCHED. Valid priorities range from 1 to 99 for
+ * SCHED_FIFO and SCHED_RR, 1 to XNSCHED_RT_MAX_PRIO for SCHED_COBALT.
  *
  * @param attr attribute object;
  *

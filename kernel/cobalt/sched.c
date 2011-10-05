@@ -23,7 +23,7 @@
  * Thread scheduling services.
  *
  * Xenomai POSIX skin supports the scheduling policies SCHED_FIFO,
- * SCHED_RR, SCHED_SPORADIC and SCHED_OTHER.
+ * SCHED_RR, SCHED_SPORADIC, SCHED_OTHER and SCHED_COBALT.
  *
  * The SCHED_OTHER policy is mainly useful for user-space non-realtime
  * activities that need to synchronize with real-time activities.
@@ -57,8 +57,8 @@
  * This service returns the minimum priority of the scheduling policy @a
  * policy.
  *
- * @param policy scheduling policy, one of SCHED_FIFO, SCHED_RR, or
- * SCHED_OTHER.
+ * @param policy scheduling policy, one of SCHED_FIFO, SCHED_RR,
+ * SCHED_OTHER and SCHED_COBALT.
  *
  * @retval 0 on success;
  * @retval -1 with @a errno set if:
@@ -75,6 +75,7 @@ int sched_get_priority_min(int policy)
 	case SCHED_FIFO:
 	case SCHED_RR:
 	case SCHED_SPORADIC:
+	case SCHED_COBALT:
 		return PSE51_MIN_PRIORITY;
 
 	case SCHED_OTHER:
@@ -92,8 +93,8 @@ int sched_get_priority_min(int policy)
  * This service returns the maximum priority of the scheduling policy @a
  * policy.
  *
- * @param policy scheduling policy, one of SCHED_FIFO, SCHED_RR, or
- * SCHED_OTHER.
+ * @param policy scheduling policy, one of SCHED_FIFO, SCHED_COBALT,
+ * SCHED_RR, or SCHED_OTHER.
  *
  * @retval 0 on success;
  * @retval -1 with @a errno set if:
@@ -111,6 +112,9 @@ int sched_get_priority_max(int policy)
 	case SCHED_RR:
 	case SCHED_SPORADIC:
 		return PSE51_MAX_PRIORITY;
+
+	case SCHED_COBALT:
+		return XNSCHED_RT_MAX_PRIO;
 
 	case SCHED_OTHER:
 		return 0;
@@ -198,9 +202,7 @@ int pthread_getschedparam(pthread_t tid, int *pol, struct sched_param *par)
 
 	prio = xnthread_base_priority(&tid->threadbase);
 	par->sched_priority = prio;
-	*pol = (prio
-		? (!xnthread_test_state(&tid->threadbase, XNRRB)
-		   ? SCHED_FIFO : SCHED_RR) : SCHED_OTHER);
+	*pol = tid->sched_policy;
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -253,19 +255,16 @@ int pthread_getschedparam_ex(pthread_t tid, int *pol, struct sched_param_ex *par
 	base_class = xnthread_base_class(thread);
 	prio = xnthread_base_priority(thread);
 	par->sched_priority = prio;
+	*pol = tid->sched_policy;
 
 	if (base_class == &xnsched_class_rt) {
-		if (xnthread_test_state(thread, XNRRB)) {
-			*pol = SCHED_RR;
+		if (xnthread_test_state(thread, XNRRB))
 			ticks2ts(&par->sched_rr_quantum, xnthread_time_slice(thread));
-		} else
-			*pol = prio ? SCHED_FIFO : SCHED_OTHER;
 		goto unlock_and_exit;
 	}
 
 #ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
 	if (base_class == &xnsched_class_sporadic) {
-		*pol = SCHED_SPORADIC;
 		par->sched_ss_low_priority = thread->pss->param.low_prio;
 		ticks2ts(&par->sched_ss_repl_period, thread->pss->param.repl_period);
 		ticks2ts(&par->sched_ss_init_budget, thread->pss->param.init_budget);
@@ -297,8 +296,8 @@ unlock_and_exit:
  *
  * @param tid target thread;
  *
- * @param pol scheduling policy, one of SCHED_FIFO, SCHED_RR or
- * SCHED_OTHER;
+ * @param pol scheduling policy, one of SCHED_FIFO, SCHED_COBALT,
+ * SCHED_RR or SCHED_OTHER;
  *
  * @param par scheduling parameters address.
  *
@@ -342,6 +341,7 @@ int pthread_setschedparam(pthread_t tid, int pol, const struct sched_param *par)
 	union xnsched_policy_param param;
 	struct xnthread *thread;
 	xnticks_t tslice;
+	int prio;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -352,36 +352,38 @@ int pthread_setschedparam(pthread_t tid, int pol, const struct sched_param *par)
 	}
 
 	thread = &tid->threadbase;
+	prio = par->sched_priority;
+	tslice = XN_INFINITE;
 
 	switch (pol) {
-	default:
-
-		xnlock_put_irqrestore(&nklock, s);
-		return EINVAL;
-
 	case SCHED_OTHER:
-	case SCHED_FIFO:
-	case SCHED_SPORADIC:
-		xnpod_set_thread_tslice(thread, XN_INFINITE);
+		if (prio)
+			goto fail;
 		break;
-
-
 	case SCHED_RR:
 		tslice = xnthread_time_slice(thread);
 		if (tslice == XN_INFINITE)
 			tslice = pse51_time_slice;
-		xnpod_set_thread_tslice(thread, tslice);
-	}
-
-	if ((pol != SCHED_OTHER && (par->sched_priority < PSE51_MIN_PRIORITY
-				    || par->sched_priority >
-				    PSE51_MAX_PRIORITY))
-	    || (pol == SCHED_OTHER && par->sched_priority != 0)) {
+		/* falldown wanted */
+	case SCHED_FIFO:
+	case SCHED_SPORADIC:
+		if (prio < PSE51_MIN_PRIORITY || prio > PSE51_MAX_PRIORITY)
+			goto fail;
+		break;
+	case SCHED_COBALT:
+		if (prio < PSE51_MIN_PRIORITY || prio > XNSCHED_RT_MAX_PRIO)
+			goto fail;
+		break;
+	default:
+	fail:
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
 
-	param.rt.prio = par->sched_priority;
+	xnpod_set_thread_tslice(thread, tslice);
+
+	tid->sched_policy = pol;
+	param.rt.prio = prio;
 	xnpod_set_thread_schedparam(thread, &xnsched_class_rt, &param);
 
 	xnpod_schedule();
@@ -396,8 +398,8 @@ int pthread_setschedparam(pthread_t tid, int pol, const struct sched_param *par)
  * thread.
  *
  * This service is an extended version of pthread_setschedparam(),
- * that supports Xenomai-specific or additional POSIX scheduling
- * policies, which are not available with the host Linux environment.
+ * that supports Xenomai-specific or additional scheduling policies,
+ * which are not available with the host Linux environment.
  *
  * Typically, a Xenomai thread policy can be set to SCHED_SPORADIC
  * using this call.
@@ -432,6 +434,7 @@ int pthread_setschedparam_ex(pthread_t tid, int pol, const struct sched_param_ex
 	switch (pol) {
 	case SCHED_OTHER:
 	case SCHED_FIFO:
+	case SCHED_COBALT:
 		short_param.sched_priority = par->sched_priority;
 		return pthread_setschedparam(tid, pol, &short_param);
 	default:
@@ -474,6 +477,8 @@ int pthread_setschedparam_ex(pthread_t tid, int pol, const struct sched_param_ex
 		(void)param;
 #endif
 	}
+
+	tid->sched_policy = pol;
 
 	xnpod_schedule();
 

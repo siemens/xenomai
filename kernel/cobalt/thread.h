@@ -89,6 +89,9 @@ struct pse51_thread {
 
     /* For timers. */
     xnqueue_t timersq;
+
+    /* Cached value for current policy. */
+    int sched_policy;
     
 #ifndef __XENO_SIM__
     struct pse51_hkey hkey;
