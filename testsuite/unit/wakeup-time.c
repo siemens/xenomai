@@ -28,7 +28,7 @@ long long minjitter = 10000000;
 long long maxjitter = -10000000;
 long long avgjitter = 0;
 long long lost = 0;
-long long nsamples = 100000;
+long long nsamples = 50000;
 long long sampling_period = CONFIG_XENO_DEFAULT_PERIOD;
 
 #define HISTOGRAM_CELLS 100
@@ -105,7 +105,13 @@ void event(void *cookie)
 	       switch_count++;
 	       switch_tsc = rt_timer_tsc();
 
-	       rt_sem_broadcast(&switch_sem);
+	       err = rt_sem_broadcast(&switch_sem);
+	       if (err) {
+		       if (err != -EIDRM && err != -EINVAL)
+			       warning("failed to broadcast semaphore (%s)\n",
+				       symerror(err));
+		       break;
+	       }
        }
 }
 
@@ -124,9 +130,12 @@ void worker(void *cookie)
 
        for (n=0; n<nsamples; n++) {
 	       err = rt_sem_p(&switch_sem, TM_INFINITE);
+	       if (err)
+		       printf("back sem_p %d\n", err);
 	       if (err) {
-		       if (err != -EIDRM)
-			       fprintf(stderr,"switch: failed to pend on semaphore, code %d\n", err);
+		       if (err != -EIDRM && err != -EINVAL)
+			       warning("failed to pend on semaphore (%s)\n",
+				       symerror(err));
 
 		       exit(EXIT_FAILURE);
 	       }
@@ -251,7 +260,8 @@ int main(int argc, char **argv)
 	       return 1;
        }
 
-       pause();
+       for (;;)
+	       pause();
 
        return 0;
 }
