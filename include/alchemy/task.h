@@ -24,7 +24,7 @@
 #include <xeno_config.h>
 #include <alchemy/timer.h>
 
-#define T_LOPRIO  1
+#define T_LOPRIO  0
 #define T_HIPRIO  99
 
 #define T_LOCK    0x1
@@ -60,6 +60,11 @@ int rt_task_start(RT_TASK *task,
 		  void (*entry)(void *arg),
 		  void *arg);
 
+int rt_task_spawn(RT_TASK *task, const char *name,
+		  int stksize, int prio, int mode,
+		  void (*entry)(void *arg),
+		  void *arg);
+
 int rt_task_shadow(RT_TASK *task,
 		   const char *name,
 		   int prio,
@@ -73,6 +78,16 @@ int rt_task_wait_period(unsigned long *overruns_r);
 int rt_task_sleep(RTIME delay);
 
 int rt_task_sleep_until(RTIME date);
+
+int rt_task_same(RT_TASK *task1, RT_TASK *task2);
+
+int rt_task_suspend(RT_TASK *task);
+
+int rt_task_resume(RT_TASK *task);
+
+RT_TASK *rt_task_self(void);
+
+int rt_task_set_priority(RT_TASK *task, int prio);
 
 #ifdef __cplusplus
 }

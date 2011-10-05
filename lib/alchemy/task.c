@@ -257,11 +257,8 @@ static void delete_tcb(struct alchemy_task *tcb)
 	xnfree(tcb);
 }
 
-int rt_task_create(RT_TASK *task,
-		   const char *name,
-		   int stksize,
-		   int prio,
-		   int mode)
+int rt_task_create(RT_TASK *task, const char *name,
+		   int stksize, int prio, int mode)
 {
 	struct alchemy_task *tcb;
 	struct sched_param param;
@@ -277,6 +274,7 @@ int rt_task_create(RT_TASK *task,
 
 	/* We want this to be set prior to spawning the thread. */
 	task->handle = mainheap_ref(tcb, uintptr_t);
+	tcb->self = *task;
 
 	pthread_attr_init(&thattr);
 
@@ -390,8 +388,10 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 	if (ret)
 		goto out;
 
+	tcb->self.handle = mainheap_ref(tcb, uintptr_t);
+
 	if (task)
-		task->handle = mainheap_ref(tcb, uintptr_t);
+		*task = tcb->self;
 
 	threadobj_start(&tcb->thobj); /* We won't wait in prologue. */
 	ret = task_prologue(tcb);
@@ -489,4 +489,89 @@ int rt_task_sleep_until(RTIME date)
 	}
 
 	return threadobj_sleep(&ts);
+}
+
+int rt_task_spawn(RT_TASK *task, const char *name,
+		  int stksize, int prio, int mode,
+		  void (*entry)(void *arg),
+		  void *arg)
+{
+	int ret;
+
+	ret = rt_task_create(task, name, stksize, prio, mode);
+	if (ret)
+		return ret;
+
+	return rt_task_start(task, entry, arg);
+}
+
+int rt_task_same(RT_TASK *task1, RT_TASK *task2)
+{
+	return task1->handle == task2->handle;
+}
+
+int rt_task_suspend(RT_TASK *task)
+{
+	struct alchemy_task *tcb;
+	struct service svc;
+	int ret;
+
+	tcb = get_alchemy_task_or_self(task, &ret);
+	if (tcb == NULL)
+		return ret;
+
+	COPPERPLATE_PROTECT(svc);
+	ret = threadobj_suspend(&tcb->thobj);
+	COPPERPLATE_UNPROTECT(svc);
+	put_alchemy_task(tcb);
+
+	return ret;
+}
+
+int rt_task_resume(RT_TASK *task)
+{
+	struct alchemy_task *tcb;
+	struct service svc;
+	int ret;
+
+	tcb = get_alchemy_task(task, &ret);
+	if (tcb == NULL)
+		return ret;
+
+	COPPERPLATE_PROTECT(svc);
+	ret = threadobj_suspend(&tcb->thobj);
+	COPPERPLATE_UNPROTECT(svc);
+	put_alchemy_task(tcb);
+
+	return ret;
+}
+
+RT_TASK *rt_task_self(void)
+{
+	struct alchemy_task *tcb;
+
+	tcb = alchemy_task_current();
+	if (tcb == NULL)
+		return NULL;
+
+	return &tcb->self;
+}
+
+int rt_task_set_priority(RT_TASK *task, int prio)
+{
+	struct alchemy_task *tcb;
+	int ret;
+
+	ret = check_task_priority(prio);
+	if (ret)
+		return ret;
+
+	tcb = get_alchemy_task_or_self(task, &ret);
+	if (tcb == NULL)
+		return ret;
+
+	ret = threadobj_set_priority(&tcb->thobj, prio);
+	put_alchemy_task(tcb);
+
+	return ret;
 }

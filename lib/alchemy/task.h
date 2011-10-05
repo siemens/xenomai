@@ -28,7 +28,6 @@
 #include <alchemy/task.h>
 
 struct alchemy_task {
-	sem_t barrier;
 	char name[32];
 	int mode;
 	cpu_set_t affinity;
@@ -38,6 +37,7 @@ struct alchemy_task {
 	struct clusterobj cobj;
 	void (*entry)(void *arg);
 	void *arg;
+	RT_TASK self;
 };
 
 #define task_magic	0x8282ebeb
@@ -60,8 +60,8 @@ struct alchemy_task *get_alchemy_task_or_self(RT_TASK *task, int *err_r);
 void put_alchemy_task(struct alchemy_task *tcb);
 
 static inline int check_task_priority(int prio)
-{
-	return prio < 0 || prio > T_HIPRIO ? -EINVAL : 0;
+{				/* FIXME: HIPRIO is lower over Mercury */
+	return prio < T_LOPRIO || prio > T_HIPRIO ? -EINVAL : 0;
 }
 
 extern struct cluster alchemy_task_table;
