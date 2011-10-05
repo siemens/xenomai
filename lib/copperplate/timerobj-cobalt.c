@@ -136,9 +136,9 @@ static int timerobj_spawn_server(void)
 		goto out;
 
 	pthread_attr_init(&thattr);
-	pthread_attr_setschedpolicy(&thattr, SCHED_FIFO);
+	pthread_attr_setschedpolicy(&thattr, SCHED_RT);
 	memset(&param, 0, sizeof(param));
-	param.sched_priority = threadobj_irq_priority();
+	param.sched_priority = threadobj_irq_prio;
 	pthread_attr_setschedparam(&thattr, &param);
 	ret = __RT(pthread_create(&svthread, &thattr, timerobj_server, NULL));
 out:

@@ -283,7 +283,7 @@ int rt_task_create(RT_TASK *task, const char *name,
 
 	memset(&param, 0, sizeof(param));
 	param.sched_priority = prio;
-	policy = prio ? SCHED_FIFO : SCHED_OTHER;
+	policy = prio ? SCHED_RT : SCHED_OTHER;
 	pthread_attr_setinheritsched(&thattr, PTHREAD_EXPLICIT_SCHED);
 	pthread_attr_setschedpolicy(&thattr, policy);
 	pthread_attr_setschedparam(&thattr, &param);
@@ -402,7 +402,7 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 
 	memset(&param, 0, sizeof(param));
 	param.sched_priority = prio;
-	policy = prio ? SCHED_FIFO : SCHED_OTHER;
+	policy = prio ? SCHED_RT : SCHED_OTHER;
 	ret = __bt(-__RT(pthread_setschedparam(pthread_self(), policy, &param)));
 out:
 	COPPERPLATE_UNPROTECT(svc);

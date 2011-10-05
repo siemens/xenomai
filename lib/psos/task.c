@@ -200,36 +200,39 @@ done:
 }
 
 /*
- * By default, pSOS priorities are mapped 1:1 to SCHED_FIFO levels:
+ * By default, pSOS priorities are mapped 1:1 to SCHED_RT
+ * levels. SCHED_RT is SCHED_COBALT in dual kernel mode, or SCHED_FIFO
+ * when running over the Mercury core. We allow up to 257 priority
+ * levels over Cobalt when running in primary mode, 99 over the
+ * regular glibc's POSIX interface.
  *
- * 1  -> SCHED_FIFO[1]
- * 97 -> SCHED_FIFO[97]
- * pSOS priorities above 97 are not supported so far.
+ * NOTE: in dual kernel mode, a thread transitioning to secondary mode
+ * has its priority ceiled to 99 in the SCHED_FIFO class.
  *
  * The application code may override the routine doing the priority
- * mapping from pSOS to POSIX (normalize). The bottom line is that
+ * mapping from pSOS to SCHED_RT (normalize). The bottom line is that
  * normalized priorities should be in the range
- * [ 1 .. threadobj_max_prio - 2 ] inclusive.
+ * [ 1 .. sched_get_priority_max(SCHED_RT) - 1 ] inclusive.
  */
 
 __attribute__ ((weak))
 int psos_task_normalize_priority(unsigned long psos_prio)
 {
-	if (psos_prio >= threadobj_max_prio - 1)
+	if (psos_prio > threadobj_high_prio)
 		panic("current implementation restricts pSOS "
 		      "priority levels to range [1..%d]",
-		      threadobj_max_prio - 2);
+		      threadobj_high_prio);
 
-	/* Map a pSOS priority level to a SCHED_FIFO one. */
+	/* Map a pSOS priority level to a SCHED_RT one. */
 	return psos_prio;
 }
 
-static int check_task_priority(u_long psos_prio, int *posix_prio)
+static int check_task_priority(u_long psos_prio, int *core_prio)
 {
 	if (psos_prio < 1 || psos_prio > 255) /* In theory. */
 		return ERR_PRIOR;
 
-	*posix_prio = psos_task_normalize_priority(psos_prio);
+	*core_prio = psos_task_normalize_priority(psos_prio);
 
 	return SUCCESS;
 }
@@ -243,9 +246,9 @@ u_long t_create(const char *name, u_long prio,
 	pthread_attr_t thattr;
 	struct syncstate syns;
 	struct service svc;
-	int ret, pprio;
+	int ret, cprio;
 
-	ret = check_task_priority(prio, &pprio);
+	ret = check_task_priority(prio, &cprio);
 	if (ret)
 		return ret;
 
@@ -300,9 +303,9 @@ u_long t_create(const char *name, u_long prio,
 		ustack = PTHREAD_STACK_MIN;
 
 	memset(&param, 0, sizeof(param));
-	param.sched_priority = pprio;
+	param.sched_priority = cprio;
 	pthread_attr_setinheritsched(&thattr, PTHREAD_EXPLICIT_SCHED);
-	pthread_attr_setschedpolicy(&thattr, SCHED_FIFO);
+	pthread_attr_setschedpolicy(&thattr, SCHED_RT);
 	pthread_attr_setschedparam(&thattr, &param);
 	pthread_attr_setstacksize(&thattr, ustack);
 	pthread_attr_setscope(&thattr, thread_scope_attribute);
@@ -408,7 +411,7 @@ u_long t_resume(u_long tid)
 u_long t_setpri(u_long tid, u_long newprio, u_long *oldprio_r)
 {
 	struct psos_task *task;
-	int ret, pprio;
+	int ret, cprio;
 
 	task = get_psos_task_or_self(tid, &ret);
 	if (task == NULL)
@@ -421,13 +424,13 @@ u_long t_setpri(u_long tid, u_long newprio, u_long *oldprio_r)
 		return SUCCESS;
 	}
 
-	ret = check_task_priority(newprio, &pprio);
+	ret = check_task_priority(newprio, &cprio);
 	if (ret) {
 		put_psos_task(task);
 		return ERR_SETPRI;
 	}
 
-	ret = threadobj_set_priority(&task->thobj, pprio);
+	ret = threadobj_set_priority(&task->thobj, cprio);
 	put_psos_task(task);
 	if (ret)
 		return ERR_OBJDEL;

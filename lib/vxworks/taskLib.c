@@ -250,15 +250,55 @@ done:
 	pthread_exit((void *)(long)ret);
 }
 
-static int check_task_priority(int wind_prio)
+/*
+ * By default, VxWorks priorities are mapped 1:1 to SCHED_RT
+ * levels. SCHED_RT is SCHED_COBALT in dual kernel mode, or SCHED_FIFO
+ * when running over the Mercury core. We allow up to 257 priority
+ * levels over Cobalt when running in primary mode, 99 over the
+ * regular glibc's POSIX interface.
+ *
+ * NOTE: in dual kernel mode, a thread transitioning to secondary mode
+ * has its priority ceiled to 99 in the SCHED_FIFO class.
+ *
+ * The application code may override the routines doing the priority
+ * mappings from VxWorks to SCHED_RT (normalize) and conversely
+ * (denormalize). The bottom line is that normalized priorities should
+ * be in the range [ 1 .. sched_get_priority_max(SCHED_RT) - 1 ]
+ * inclusive.
+ */
+
+__attribute__ ((weak))
+int wind_task_normalize_priority(int wind_prio)
+{
+	/*
+	 * SCHED_RT priorities are always 1-based regardless of the
+	 * underlying real-time core. We remap the lowest VxWorks
+	 * priority to the lowest available level in the SCHED_RT
+	 * policy.
+	 */
+	if (wind_prio > threadobj_high_prio - 1)
+		panic("current implementation restricts VxWorks "
+		      "priority levels to range [%d..0]",
+		      threadobj_high_prio - 1);
+
+	/* Map a VxWorks priority level to a SCHED_RT one. */
+	return threadobj_high_prio - wind_prio - 1;
+}
+
+__attribute__ ((weak))
+int wind_task_denormalize_priority(int core_prio)
+{
+	/* Map a SCHED_RT priority level to a VxWorks one. */
+	return threadobj_high_prio - core_prio - 1;
+}
+
+static int check_task_priority(u_long wind_prio, int *core_prio)
 {
 	if (wind_prio < 0 || wind_prio > 255) /* In theory. */
 		return S_taskLib_ILLEGAL_PRIORITY;
 
-	if (wind_prio >= threadobj_max_prio - 1) /* In practice. */
-		panic("current implementation restricts VxWorks "
-		      "priority levels to range [%d..0]",
-		      threadobj_max_prio - 2);
+	*core_prio = wind_task_normalize_priority(wind_prio);
+
 	return OK;
 }
 
@@ -270,9 +310,9 @@ static STATUS __taskInit(struct wind_task *task,
 	pthread_mutexattr_t mattr;
 	struct sched_param param;
 	pthread_attr_t thattr;
-	int ret;
+	int ret, cprio;
 
-	ret = check_task_priority(prio);
+	ret = check_task_priority(prio, &cprio);
 	if (ret) {
 		errno = ret;
 		return ERROR;
@@ -316,9 +356,9 @@ static STATUS __taskInit(struct wind_task *task,
 		stacksize = PTHREAD_STACK_MIN;
 
 	memset(&param, 0, sizeof(param));
-	param.sched_priority = wind_task_normalize_priority(prio);
+	param.sched_priority = cprio;
 	pthread_attr_setinheritsched(&thattr, PTHREAD_EXPLICIT_SCHED);
-	pthread_attr_setschedpolicy(&thattr, SCHED_FIFO);
+	pthread_attr_setschedpolicy(&thattr, SCHED_RT);
 	pthread_attr_setschedparam(&thattr, &param);
 	pthread_attr_setstacksize(&thattr, stacksize);
 	pthread_attr_setscope(&thattr, thread_scope_attribute);
@@ -688,22 +728,21 @@ STATUS taskPrioritySet(TASK_ID tid, int prio)
 {
 	struct wind_task *task;
 	struct service svc;
-	int ret, pprio;
+	int ret, cprio;
 
 	task = get_wind_task(tid);
 	if (task == NULL)
 		goto objid_error;
 
-	ret = check_task_priority(prio);
+	ret = check_task_priority(prio, &cprio);
 	if (ret) {
 		put_wind_task(task);
 		errno = ret;
 		return ERROR;
 	}
 
-	pprio = wind_task_normalize_priority(prio);
 	COPPERPLATE_PROTECT(svc);
-	ret = threadobj_set_priority(&task->thobj, pprio);
+	ret = threadobj_set_priority(&task->thobj, cprio);
 	COPPERPLATE_UNPROTECT(svc);
 	put_wind_task(task);
 

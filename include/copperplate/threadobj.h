@@ -35,6 +35,8 @@ struct threadobj_corespec {
 	/* Nothing specific */
 };
 
+#define SCHED_RT  SCHED_COBALT
+
 #else  /* CONFIG_XENO_MERCURY */
 
 #include <sys/time.h>
@@ -47,6 +49,8 @@ struct threadobj_corespec {
 	struct timespec wakeup;
 	ticks_t period;
 };
+
+#define SCHED_RT  SCHED_FIFO
 
 #endif /* CONFIG_XENO_MERCURY */
 
@@ -113,9 +117,9 @@ struct threadobj_init_data {
 
 extern pthread_key_t threadobj_tskey;
 
-extern int threadobj_min_prio;
+extern int threadobj_high_prio;
 
-extern int threadobj_max_prio;
+extern int threadobj_irq_prio;
 
 extern int threadobj_async;
 
@@ -245,11 +249,6 @@ static inline int threadobj_get_status(struct threadobj *thobj)
 static inline int threadobj_get_errno(struct threadobj *thobj)
 {
 	return *thobj->errno_pointer;
-}
-
-static inline int threadobj_irq_priority(void)
-{
-	return threadobj_max_prio;
 }
 
 #ifdef CONFIG_XENO_PSHARED

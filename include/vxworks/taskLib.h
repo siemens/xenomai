@@ -109,6 +109,10 @@ STATUS taskIdVerify(TASK_ID tid);
 
 struct WIND_TCB *taskTcb(TASK_ID tid);
 
+int wind_task_normalize_priority(int wind_prio);
+
+int wind_task_denormalize_priority(int core_prio);
+
 #ifdef __cplusplus
 }
 #endif

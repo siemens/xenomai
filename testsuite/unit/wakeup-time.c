@@ -13,6 +13,7 @@
 #include <string.h>
 #include <signal.h>
 #include <getopt.h>
+#include <copperplate/init.h>
 #include <alchemy/task.h>
 #include <alchemy/timer.h>
 #include <alchemy/sem.h>
@@ -175,6 +176,8 @@ void worker(void *cookie)
 int main(int argc, char **argv)
 {
        int err, c;
+
+       copperplate_init(argc, argv);
 
        while ((c = getopt(argc, argv, "hp:n:i:")) != EOF)
 	       switch (c) {

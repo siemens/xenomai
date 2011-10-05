@@ -54,9 +54,9 @@
 
 pthread_key_t threadobj_tskey;
 
-int threadobj_min_prio;
+int threadobj_high_prio;
 
-int threadobj_max_prio;
+int threadobj_irq_prio;
 
 int threadobj_async;
 
@@ -210,7 +210,7 @@ int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock hel
 	struct sched_param param;
 	int ret, policy;
 
-	policy = SCHED_FIFO;
+	policy = SCHED_RT;
 	if (prio == 0) {
 		thobj->status &= ~THREADOBJ_ROUNDROBIN;
 		policy = SCHED_OTHER;
@@ -241,17 +241,16 @@ static int set_rr(struct threadobj *thobj, struct timespec *quantum)
 	if (ret)
 		return __bt(-ret);
 
+	policy = SCHED_RT;
 	if (quantum == NULL) {
 		xparam.sched_rr_quantum.tv_sec = 0;
 		xparam.sched_rr_quantum.tv_nsec = 0;
 		thobj->status &= ~THREADOBJ_ROUNDROBIN;
-		policy = SCHED_FIFO;
 	} else {
 		xparam.sched_rr_quantum = *quantum;
-		if (quantum->tv_sec == 0 && quantum->tv_nsec == 0) {
+		if (quantum->tv_sec == 0 && quantum->tv_nsec == 0)
 			thobj->status &= ~THREADOBJ_ROUNDROBIN;
-			policy = SCHED_FIFO;
-		} else {
+		else {
 			thobj->status |= THREADOBJ_ROUNDROBIN;
 			policy = SCHED_RR;
 		}
@@ -318,21 +317,23 @@ void threadobj_stop_rr(void)
 int threadobj_set_periodic(struct threadobj *thobj,
 			   struct timespec *idate, struct timespec *period)
 {
-	return __bt(-pthread_make_periodic_np(thobj->tid,
-					      CLOCK_COPPERPLATE, idate, period));
+	return -pthread_make_periodic_np(thobj->tid,
+					 CLOCK_COPPERPLATE, idate, period);
 }
 
 int threadobj_wait_period(struct threadobj *thobj,
 			  unsigned long *overruns_r)
 {
 	assert(thobj == threadobj_current());
-	return __bt(-pthread_wait_np(overruns_r));
+	return -pthread_wait_np(overruns_r);
 }
 
 #else /* CONFIG_XENO_MERCURY */
 
 #include <sys/prctl.h>
 #include "copperplate/notifier.h"
+
+static int threadobj_lock_prio;
 
 static void unblock_sighandler(int sig)
 {
@@ -345,6 +346,17 @@ static void unblock_sighandler(int sig)
 static inline void pkg_init_corespec(void)
 {
 	struct sigaction sa;
+
+	/*
+	 * We don't have builtin scheduler-lock feature over Mercury,
+	 * so we emulate it by reserving the highest priority level of
+	 * the SCHED_RT class to disable involuntary preemption.
+	 */
+	threadobj_lock_prio = threadobj_high_prio;
+	threadobj_high_prio = threadobj_lock_prio - 1;
+
+	debug("SCHED_RT.%d reserved for scheduler-lock emulation",
+	      threadobj_lock_prio);
 
 	memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = unblock_sighandler;
@@ -444,9 +456,9 @@ int threadobj_lock_sched(struct threadobj *thobj)
 
 	thobj->core.prio_unlocked = param.sched_priority;
 	thobj->status |= THREADOBJ_SCHEDLOCK;
-	param.sched_priority = threadobj_max_prio - 1;
+	param.sched_priority = threadobj_lock_prio;
 
-	return __bt(-__RT(pthread_setschedparam(tid, SCHED_FIFO, &param)));
+	return __bt(-__RT(pthread_setschedparam(tid, SCHED_RT, &param)));
 }
 
 int threadobj_unlock_sched(struct threadobj *thobj)
@@ -465,7 +477,7 @@ int threadobj_unlock_sched(struct threadobj *thobj)
 
 	thobj->status &= ~THREADOBJ_SCHEDLOCK;
 	param.sched_priority = thobj->core.prio_unlocked;
-	policy = param.sched_priority ? SCHED_FIFO : SCHED_OTHER;
+	policy = param.sched_priority ? SCHED_RT : SCHED_OTHER;
 	threadobj_unlock(thobj);
 	ret = __RT(pthread_setschedparam(tid, policy, &param));
 	threadobj_lock(thobj);
@@ -495,7 +507,7 @@ int threadobj_set_priority(struct threadobj *thobj, int prio)
 	 * the pthread interface to recheck the tid for existence.
 	 */
 	param.sched_priority = prio;
-	policy = prio ? SCHED_FIFO : SCHED_OTHER;
+	policy = prio ? SCHED_RT : SCHED_OTHER;
 	ret = __RT(pthread_setschedparam(tid, policy, &param));
 	threadobj_lock(thobj);
 
@@ -507,7 +519,7 @@ static void roundrobin_handler(int sig)
 	struct threadobj *current = threadobj_current();
 
 	/*
-	 * We do manual round-robin within SCHED_FIFO to allow for
+	 * We do manual round-robin within SCHED_FIFO(RT) to allow for
 	 * multiple time slices system-wide.
 	 */
 	if (current && (current->status & THREADOBJ_ROUNDROBIN))
@@ -859,9 +871,12 @@ int __check_cancel_type(const char *locktype)
 
 void threadobj_pkg_init(void)
 {
-	threadobj_max_prio = sched_get_priority_max(SCHED_FIFO);
-	threadobj_min_prio = sched_get_priority_min(SCHED_FIFO);
+	threadobj_irq_prio = __RT(sched_get_priority_max(SCHED_RT));
+	threadobj_high_prio = threadobj_irq_prio - 1;
 	threadobj_async = 0;
+
+	debug("SCHED_RT priorities => [1 .. %d]", threadobj_irq_prio);
+	debug("SCHED_RT.%d reserved for IRQ emulation", threadobj_irq_prio);
 
 	/* PI and recursion would be overkill. */
 	__RT(pthread_mutex_init(&list_lock, NULL));

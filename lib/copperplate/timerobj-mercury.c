@@ -47,9 +47,9 @@ int timerobj_init(struct timerobj *tmobj)
 
 	pthread_attr_init(&thattr);
 	memset(&param, 0, sizeof(param));
-	param.sched_priority = threadobj_irq_priority();
+	param.sched_priority = threadobj_irq_prio;
 	pthread_attr_setinheritsched(&thattr, PTHREAD_EXPLICIT_SCHED);
-	pthread_attr_setschedpolicy(&thattr, SCHED_FIFO);
+	pthread_attr_setschedpolicy(&thattr, SCHED_RT);
 	pthread_attr_setschedparam(&thattr, &param);
 	pthread_attr_setstacksize(&thattr, PTHREAD_STACK_MIN * 16);
 

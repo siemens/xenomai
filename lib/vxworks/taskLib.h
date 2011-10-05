@@ -56,27 +56,6 @@ struct wind_task {
 
 int wind_task_get_priority(struct wind_task *task);
 
-/*
- * VxWorks priorities are rescaled as follows:
- *
- * 0  -> SCHED_FIFO[97]
- * 96 -> SCHED_FIFO[1]
- * VxWorks priorities above 96 are not supported so far.
- *
- */
-
-static inline int wind_task_normalize_priority(int wind_prio)
-{
-	/* Rescale a VxWorks priority level to a SCHED_FIFO one. */
-	return threadobj_max_prio - wind_prio - 2;
-}
-
-static inline int wind_task_denormalize_priority(int posix_prio)
-{
-	/* Rescale a SCHED_FIFO priority level to a VxWorks one. */
-	return threadobj_max_prio - posix_prio - 2;
-}
-
 #define task_magic	0x1a2b3c4d
 
 static inline struct wind_task *wind_task_current(void)
