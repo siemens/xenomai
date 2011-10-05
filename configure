@@ -792,6 +792,8 @@ XENO_REGISTRY_TRUE
 XENO_PSHARED_FALSE
 XENO_PSHARED_TRUE
 CHECKFLAGS
+XENO_DEBUG_FULL_FALSE
+XENO_DEBUG_FULL_TRUE
 XENO_DEBUG_FALSE
 XENO_DEBUG_TRUE
 OTOOL64
@@ -6040,13 +6042,13 @@ if test "${lt_cv_nm_interface+set}" = set; then :
 else
   lt_cv_nm_interface="BSD nm"
   echo "int some_variable = 0;" > conftest.$ac_ext
-  (eval echo "\"\$as_me:6043: $ac_compile\"" >&5)
+  (eval echo "\"\$as_me:6045: $ac_compile\"" >&5)
   (eval "$ac_compile" 2>conftest.err)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:6046: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
+  (eval echo "\"\$as_me:6048: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
   (eval "$NM \"conftest.$ac_objext\"" 2>conftest.err > conftest.out)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:6049: output\"" >&5)
+  (eval echo "\"\$as_me:6051: output\"" >&5)
   cat conftest.out >&5
   if $GREP 'External.*some_variable' conftest.out > /dev/null; then
     lt_cv_nm_interface="MS dumpbin"
@@ -7144,7 +7146,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 7147 "configure"' > conftest.$ac_ext
+  echo '#line 7149 "configure"' > conftest.$ac_ext
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -8506,11 +8508,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8509: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8511: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8513: \$? = $ac_status" >&5
+   echo "$as_me:8515: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8830,11 +8832,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8833: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8835: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8837: \$? = $ac_status" >&5
+   echo "$as_me:8839: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8935,11 +8937,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8938: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8940: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8942: \$? = $ac_status" >&5
+   echo "$as_me:8944: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -8990,11 +8992,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8993: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8995: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8997: \$? = $ac_status" >&5
+   echo "$as_me:8999: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -11362,7 +11364,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11365 "configure"
+#line 11367 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11462,7 +11464,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11465 "configure"
+#line 11467 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11702,19 +11704,28 @@ $as_echo_n "checking whether to enable debug mode... " >&6; }
 # Check whether --enable-debug was given.
 if test "${enable_debug+set}" = set; then :
   enableval=$enable_debug; case "$enableval" in
-	y | yes) debug_mode=y ;;
+	y | yes) debug_mode=partial ;;
+	full)    debug_mode=full ;;
 	*) unset debug_mode ;;
 	esac
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${debug_mode:-no}" >&5
 $as_echo "${debug_mode:-no}" >&6; }
- if test x$debug_mode = xy; then
+ if test \! x$debug_mode = x; then
   XENO_DEBUG_TRUE=
   XENO_DEBUG_FALSE='#'
 else
   XENO_DEBUG_TRUE='#'
   XENO_DEBUG_FALSE=
+fi
+
+ if test x$debug_mode = xfull; then
+  XENO_DEBUG_FULL_TRUE=
+  XENO_DEBUG_FULL_FALSE='#'
+else
+  XENO_DEBUG_FULL_TRUE='#'
+  XENO_DEBUG_FULL_FALSE=
 fi
 
 
@@ -12744,8 +12755,10 @@ case $XENO_TARGET_ARCH in
 	;;
 esac
 
-if test x$debug_mode = xy; then
-   XENO_USER_CFLAGS="-g -D__XENO_DEBUG__ $XENO_USER_CFLAGS"
+if test x$debug_mode = xpartial; then
+   XENO_USER_CFLAGS="-g -O2 -D__XENO_DEBUG__ $XENO_USER_CFLAGS"
+elif test x$debug_mode = xfull; then
+   XENO_USER_CFLAGS="-g -D__XENO_DEBUG__ -D__XENO_DEBUG_FULL__ $XENO_USER_CFLAGS"
 else
    XENO_USER_CFLAGS="-O2 $XENO_USER_CFLAGS"
 fi
@@ -13075,6 +13088,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${XENO_DEBUG_TRUE}" && test -z "${XENO_DEBUG_FALSE}"; then
   as_fn_error $? "conditional \"XENO_DEBUG\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${XENO_DEBUG_FULL_TRUE}" && test -z "${XENO_DEBUG_FULL_FALSE}"; then
+  as_fn_error $? "conditional \"XENO_DEBUG_FULL\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${XENO_PSHARED_TRUE}" && test -z "${XENO_PSHARED_FALSE}"; then

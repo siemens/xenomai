@@ -160,11 +160,13 @@ AC_MSG_CHECKING(whether to enable debug mode)
 AC_ARG_ENABLE(debug,
 	AS_HELP_STRING([--enable-debug], [Enable debug mode in programs]),
 	[case "$enableval" in
-	y | yes) debug_mode=y ;;
+	y | yes) debug_mode=partial ;;
+	full)    debug_mode=full ;;
 	*) unset debug_mode ;;
 	esac])
 AC_MSG_RESULT(${debug_mode:-no})
-AM_CONDITIONAL(XENO_DEBUG,[test x$debug_mode = xy])
+AM_CONDITIONAL(XENO_DEBUG,[test \! x$debug_mode = x])
+AM_CONDITIONAL(XENO_DEBUG_FULL,[test x$debug_mode = xfull])
 
 dnl Low resolution clock (default: on)
 
@@ -602,8 +604,10 @@ case $XENO_TARGET_ARCH in
 	;;
 esac
 
-if test x$debug_mode = xy; then
-   XENO_USER_CFLAGS="-g -D__XENO_DEBUG__ $XENO_USER_CFLAGS"
+if test x$debug_mode = xpartial; then
+   XENO_USER_CFLAGS="-g -O2 -D__XENO_DEBUG__ $XENO_USER_CFLAGS"
+elif test x$debug_mode = xfull; then
+   XENO_USER_CFLAGS="-g -D__XENO_DEBUG__ -D__XENO_DEBUG_FULL__ $XENO_USER_CFLAGS"
 else
    XENO_USER_CFLAGS="-O2 $XENO_USER_CFLAGS"
 fi

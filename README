@@ -93,15 +93,19 @@ Where <other-options> may be any standard autoconf switch, such as:
 
 or Xenomai-specific knobs:
 
---enable-debug
+--enable-debug[=full]
 
 	This switch will enable debug mode, causing debug symbols to
-	be compiled in the libraries and executables, passing the "-g
-	-O0" flags to the compiler. When enabled, this switch also
-	causes the __XENO_DEBUG__ macro to be defined, for both the
-	Xenomai core and the applications getting their C compilation
-	flags from the xeno-config script (i.e. xeno-config --cflags).
-	Debug mode is off by default.
+	be compiled in the libraries and executables, passing the -g
+	flag to the compiler to get debug symbols. When enabled, this
+	switch also causes the __XENO_DEBUG__ macro to be defined, for
+	both the Xenomai core and the applications getting their C
+	compilation flags from the xeno-config script
+	(i.e. xeno-config --cflags).  Debug mode is off by default.
+
+	If the full debug level is specified along with this switch,
+	-O0 is passed to the compiler, to disable the optimizer. In
+	addition, the macro __XENO_DEBUG_FULL__ is also defined.
 
 	Over the Mercury core, enabling debug mode also causes the
 	standard malloc interface to be used internally instead of a
