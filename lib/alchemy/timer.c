@@ -33,11 +33,6 @@ RTIME rt_timer_read(void)
 	return ticks;
 }
 
-RTIME rt_timer_tsc(void)
-{
-	return clockobj_get_tsc();
-}
-
 SRTIME rt_timer_ns2ticks(SRTIME ns)
 {
 	return clockobj_ns_to_ticks(&alchemy_clock, ns);
@@ -46,16 +41,6 @@ SRTIME rt_timer_ns2ticks(SRTIME ns)
 SRTIME rt_timer_ticks2ns(SRTIME ticks)
 {
 	return clockobj_ticks_to_ns(&alchemy_clock, ticks);
-}
-
-SRTIME rt_timer_ns2tsc(SRTIME ns)
-{
-	return clockobj_ns_to_tsc(ns);
-}
-
-SRTIME rt_timer_tsc2ns(SRTIME tsc)
-{
-	return clockobj_tsc_to_ns(tsc);
 }
 
 int rt_timer_inquire(RT_TIMER_INFO *info)

@@ -40,17 +40,26 @@ typedef struct rt_timer_info {
 extern "C" {
 #endif
 
-RTIME rt_timer_read(void);
+static inline RTIME rt_timer_tsc(void)
+{
+	return clockobj_get_tsc();
+}
 
-RTIME rt_timer_tsc(void);
+static inline SRTIME rt_timer_ns2tsc(SRTIME ns)
+{
+	return clockobj_ns_to_tsc(ns);
+}
+
+static inline SRTIME rt_timer_tsc2ns(SRTIME tsc)
+{
+	return clockobj_tsc_to_ns(tsc);
+}
 
 SRTIME rt_timer_ns2ticks(SRTIME ns);
 
 SRTIME rt_timer_ticks2ns(SRTIME ticks);
 
-SRTIME rt_timer_ns2tsc(SRTIME ns);
-
-SRTIME rt_timer_tsc2ns(SRTIME tsc);
+RTIME rt_timer_read(void);
 
 int rt_timer_inquire(RT_TIMER_INFO *info);
 
