@@ -1,7 +1,8 @@
 pkgconfigdir = $(libdir)/pkgconfig
 
-noinst_HEADERS = \
-	sem_heap.h
+noinst_HEADERS =	\
+	sem_heap.h	\
+	internal.h
 
 lib_LTLIBRARIES = libcobalt.la
 
@@ -17,6 +18,7 @@ libcobalt_la_SOURCES = \
 	sigshadow.c \
 	timeconv.c \
 	init.c \
+	internal.c \
 	thread.c \
 	timer.c \
 	semaphore.c \
