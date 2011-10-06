@@ -217,6 +217,7 @@ int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock hel
 	struct sched_param param;
 	int ret, policy;
 
+	thobj->priority = prio;
 	policy = SCHED_RT;
 	if (prio == 0) {
 		thobj->status &= ~THREADOBJ_ROUNDROBIN;
@@ -241,12 +242,7 @@ static int set_rr(struct threadobj *thobj, struct timespec *quantum)
 {
 	struct sched_param_ex xparam;
 	pthread_t tid = thobj->tid;
-	struct sched_param param;
-	int policy, ret;
-
-	ret = __RT(pthread_getschedparam(tid, &policy, &param));
-	if (ret)
-		return __bt(-ret);
+	int ret, policy;
 
 	policy = SCHED_RT;
 	if (quantum == NULL) {
@@ -263,7 +259,7 @@ static int set_rr(struct threadobj *thobj, struct timespec *quantum)
 		}
 	}
 
-	xparam.sched_priority = param.sched_priority;
+	xparam.sched_priority = thobj->priority;
 	threadobj_unlock(thobj);
 	ret = pthread_setschedparam_ex(tid, policy, &xparam);
 	threadobj_lock(thobj);
@@ -467,6 +463,7 @@ int threadobj_lock_sched(struct threadobj *thobj)
 
 	thobj->core.prio_unlocked = param.sched_priority;
 	thobj->status |= THREADOBJ_SCHEDLOCK;
+	thobj->priority = threadobj_lock_prio;
 	param.sched_priority = threadobj_lock_prio;
 
 	return __bt(-__RT(pthread_setschedparam(tid, SCHED_RT, &param)));
@@ -487,6 +484,7 @@ int threadobj_unlock_sched(struct threadobj *thobj)
 		return 0;
 
 	thobj->status &= ~THREADOBJ_SCHEDLOCK;
+	thobj->priority = thobj->core.prio_unlocked;
 	param.sched_priority = thobj->core.prio_unlocked;
 	policy = param.sched_priority ? SCHED_RT : SCHED_OTHER;
 	threadobj_unlock(thobj);
@@ -517,6 +515,7 @@ int threadobj_set_priority(struct threadobj *thobj, int prio)
 	 * Since we released the thread container lock, we now rely on
 	 * the pthread interface to recheck the tid for existence.
 	 */
+	thobj->priority = prio;
 	param.sched_priority = prio;
 	policy = prio ? SCHED_RT : SCHED_OTHER;
 	ret = __RT(pthread_setschedparam(tid, policy, &param));
@@ -708,6 +707,7 @@ void threadobj_init(struct threadobj *thobj,
 	thobj->wait_hook = idata->wait_hook;
 	thobj->schedlock_depth = 0;
 	thobj->status = THREADOBJ_WARMUP;
+	thobj->priority = idata->priority;
 	holder_init(&thobj->wait_link);
 	thobj->suspend_hook = idata->suspend_hook;
 	thobj->cnode = __this_node.id;
@@ -842,18 +842,6 @@ int threadobj_unblock(struct threadobj *thobj) /* thobj->lock held */
 		ret = -__RT(pthread_kill(tid, SIGRELS));
 
 	return __bt(ret);
-}
-
-int threadobj_get_priority(struct threadobj *thobj) /* thobj->lock held */
-{
-	struct sched_param param;
-	int ret, policy;
-
-	ret = __RT(pthread_getschedparam(thobj->tid, &policy, &param));
-	if (ret)
-		return __bt(-ret);
-
-	return param.sched_priority;
 }
 
 void threadobj_spin(ticks_t ns)

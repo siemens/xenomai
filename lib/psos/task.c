@@ -315,6 +315,7 @@ u_long t_create(const char *name, u_long prio,
 	idata.wait_hook = NULL;
 	idata.suspend_hook = NULL;
 	idata.finalizer = task_finalizer;
+	idata.priority = cprio;
 	threadobj_init(&task->thobj, &idata);
 
 	ret = __bt(-__RT(pthread_create(&task->thobj.tid, &thattr,

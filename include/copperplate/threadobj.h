@@ -82,6 +82,7 @@ struct threadobj {
 	int schedlock_depth;
 	int lock_state;
 	int status;
+	int priority;
 	pid_t cnode;
 	const char *name;
 
@@ -110,6 +111,7 @@ struct threadobj {
 struct threadobj_init_data {
 	unsigned int magic;
 	cpu_set_t affinity;
+	int priority;
 	void (*finalizer)(struct threadobj *thobj);
 	void (*wait_hook)(struct threadobj *thobj, int status);
 	void (*suspend_hook)(struct threadobj *thobj, int status);
@@ -155,8 +157,6 @@ int threadobj_unlock_sched(struct threadobj *thobj);
 
 int threadobj_set_priority(struct threadobj *thobj, int prio);
 
-int threadobj_get_priority(struct threadobj *thobj);
-
 int threadobj_set_rr(struct threadobj *thobj, struct timespec *quantum);
 
 int threadobj_start_rr(struct timespec *quantum);
@@ -176,6 +176,11 @@ void threadobj_pkg_init(void);
 #ifdef __cplusplus
 }
 #endif
+
+static inline int threadobj_get_priority(struct threadobj *thobj)
+{
+	return thobj->priority;
+}
 
 static inline int threadobj_lock(struct threadobj *thobj)
 {

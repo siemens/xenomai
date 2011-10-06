@@ -235,6 +235,7 @@ static int create_tcb(struct alchemy_task **tcbp,
 	idata.wait_hook = NULL;
 	idata.suspend_hook = NULL;
 	idata.finalizer = task_finalizer;
+	idata.priority = prio;
 	threadobj_init(&tcb->thobj, &idata);
 
 	if (cluster_addobj(&alchemy_task_table, tcb->name, &tcb->cobj)) {

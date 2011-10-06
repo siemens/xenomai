@@ -368,6 +368,7 @@ static STATUS __taskInit(struct wind_task *task,
 	idata.wait_hook = task_wait_hook;
 	idata.suspend_hook = task_suspend_hook;
 	idata.finalizer = task_finalizer;
+	idata.priority = cprio;
 	threadobj_init(&task->thobj, &idata);
 
 	ret = __bt(cluster_addobj(&wind_task_table, task->name, &task->cobj));
