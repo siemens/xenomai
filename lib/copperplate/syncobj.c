@@ -50,8 +50,8 @@
  * release order whenever the lock is contended (i.e. we readied more
  * than a single waiter when flushing).
  *
- * NOTE: we do no error backtracing in this file, since error returns
- * when locking, pending or deleting sync objects usually express
+ * NOTE: we do no do error backtracing in this file, since error
+ * returns when locking, pending or deleting sync objects express
  * normal runtime conditions.
  */
 
@@ -110,8 +110,8 @@ static void syncobj_test_finalize(struct syncobj *sobj,
 	pthread_setcancelstate(syns->state, NULL);
 }
 
-static void syncobj_enqueue_waiter(struct syncobj *sobj,
-				   struct threadobj *thobj)
+static void enqueue_waiter(struct syncobj *sobj,
+			   struct threadobj *thobj)
 {
 	struct threadobj *__thobj;
 
@@ -138,18 +138,28 @@ int __syncobj_signal_drain(struct syncobj *sobj)
 	return 1;
 }
 
-static void syncobj_cleanup_pend(void *arg)
+/*
+ * NOTE: we don't use POSIX cleanup handlers in syncobj_pend() and
+ * syncobj_wait() on purpose: these may have a significant impact on
+ * latency due to I-cache misses on low-end hardware (e.g. ~6 us on
+ * MPC5200), particularly when unwinding the cancel frame. So the
+ * cleanup handler below is called by the threadobj finalizer instead
+ * when appropriate, since we have enough internal information to
+ * handle this situation.
+ */
+void __syncobj_cleanup_wait(struct syncobj *sobj,
+			    struct threadobj *thobj)
 {
-	struct threadobj *current = threadobj_current();
-	struct syncobj *sobj;
 	/*
 	 * We don't care about resetting the original cancel type
 	 * saved in the syncstate struct since we are there precisely
 	 * because the caller got cancelled.
 	 */
-	sobj = container_of(arg, struct syncobj, lock);
-	if (holder_linked(&current->wait_link))
-		list_remove_init(&current->wait_link);
+	if (holder_linked(&thobj->wait_link)) {
+		list_remove(&thobj->wait_link);
+		if (thobj->wait_status & SYNCOBJ_DRAINING)
+			sobj->drain_count--;
+	}
 	__RT(pthread_mutex_unlock(&sobj->lock));
 }
 
@@ -161,11 +171,9 @@ int syncobj_pend(struct syncobj *sobj, struct timespec *timeout,
 
 	assert(current != NULL);
 
-	pthread_cleanup_push(syncobj_cleanup_pend, sobj);
-
-	syncobj_enqueue_waiter(sobj, current);
 	current->wait_sobj = sobj;
 	current->wait_status = 0;
+	enqueue_waiter(sobj, current);
 
 	if (current->wait_hook)
 		current->wait_hook(current, SYNCOBJ_BLOCK);
@@ -188,8 +196,6 @@ int syncobj_pend(struct syncobj *sobj, struct timespec *timeout,
 	} while (ret == 0 && holder_linked(&current->wait_link));
 
 	pthread_setcancelstate(state, NULL);
-
-	pthread_cleanup_pop(0);
 
 	if (current->wait_hook)
 		current->wait_hook(current, SYNCOBJ_RESUME);
@@ -214,7 +220,7 @@ int syncobj_pend(struct syncobj *sobj, struct timespec *timeout,
 void syncobj_requeue_waiter(struct syncobj *sobj, struct threadobj *thobj)
 {
 	list_remove_init(&thobj->wait_link);
-	syncobj_enqueue_waiter(sobj, thobj);
+	enqueue_waiter(sobj, thobj);
 }
 
 void syncobj_wakeup_waiter(struct syncobj *sobj, struct threadobj *thobj)
@@ -250,23 +256,6 @@ struct threadobj *syncobj_peek(struct syncobj *sobj)
 	return thobj;
 }
 
-static void syncobj_cleanup_drain(void *arg)
-{
-	struct threadobj *current = threadobj_current();
-	struct syncobj *sobj;
-
-	/*
-	 * Nearly identical to syncobj_cleanup_pend, but we also have
-	 * to fixup the drain count before leaving.
-	 */
-	sobj = container_of(arg, struct syncobj, lock);
-	if (holder_linked(&current->wait_link)) {
-		list_remove_init(&current->wait_link);
-		sobj->drain_count--;
-	}
-	__RT(pthread_mutex_unlock(&sobj->lock));
-}
-
 int syncobj_wait_drain(struct syncobj *sobj, struct timespec *timeout,
 		       struct syncstate *syns)
 {
@@ -277,12 +266,10 @@ int syncobj_wait_drain(struct syncobj *sobj, struct timespec *timeout,
 	 * XXX: The caller must check for spurious wakeups, in case
 	 * the drain condition became false again before it resumes.
 	 */
-	pthread_cleanup_push(syncobj_cleanup_drain, sobj);
-
+	current->wait_sobj = sobj;
+	current->wait_status = SYNCOBJ_DRAINING;
 	list_append(&current->wait_link, &sobj->drain_list);
 	sobj->drain_count++;
-	current->wait_sobj = sobj;
-	current->wait_status = 0;
 
 	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &state);
 
@@ -295,12 +282,11 @@ int syncobj_wait_drain(struct syncobj *sobj, struct timespec *timeout,
 	else
 		ret = __RT(pthread_cond_wait(&sobj->post_sync, &sobj->lock));
 
-	if (current->wait_status == 0)
-		list_remove_init(&current->wait_link);
-
 	pthread_setcancelstate(state, NULL);
 
-	pthread_cleanup_pop(0);
+	current->wait_status &= ~SYNCOBJ_DRAINING;
+	if (current->wait_status == 0)
+		list_remove_init(&current->wait_link);
 
 	if (current->wait_hook)
 		current->wait_hook(current, SYNCOBJ_RESUME);

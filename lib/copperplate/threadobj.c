@@ -702,6 +702,7 @@ void threadobj_init(struct threadobj *thobj,
 	thobj->magic = idata->magic;
 	thobj->tid = 0;
 	thobj->tracer = NULL;
+	thobj->wait_sobj = NULL;
 	thobj->wait_struct = NULL;
 	thobj->finalizer = idata->finalizer;
 	thobj->wait_hook = idata->wait_hook;
@@ -806,6 +807,9 @@ void threadobj_finalize(void *p) /* thobj->lock free */
 		return;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+
+	if (thobj->wait_sobj)
+		__syncobj_cleanup_wait(thobj->wait_sobj, thobj);
 
 	write_lock_nocancel(&list_lock);
 	pvlist_remove(&thobj->thread_link);

@@ -31,6 +31,7 @@
 #define SYNCOBJ_DELETED		0x1
 #define SYNCOBJ_FLUSHED		0x2
 #define SYNCOBJ_BROADCAST	0x4
+#define SYNCOBJ_DRAINING	0x8
 
 #define SYNCOBJ_RELEASE_MASK	\
 	(SYNCOBJ_DELETED|SYNCOBJ_FLUSHED|SYNCOBJ_BROADCAST)
@@ -38,6 +39,8 @@
 /* threadobj->wait_hook(status) */
 #define SYNCOBJ_BLOCK	0x1
 #define SYNCOBJ_RESUME	0x2
+
+struct threadobj;
 
 struct syncstate {
 	int state;
@@ -61,6 +64,8 @@ struct syncobj {
 #define syncobj_for_each_waiter_safe(sobj, pos, tmp)	\
 	list_for_each_entry_safe(pos, tmp, &(sobj)->pend_list, wait_link)
 
+void __syncobj_cleanup_wait(struct syncobj *sobj,
+			    struct threadobj *thobj);
 #ifdef __cplusplus
 extern "C" {
 #endif
