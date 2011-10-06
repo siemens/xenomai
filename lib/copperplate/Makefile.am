@@ -22,6 +22,7 @@ libcopperplate_la_LIBADD =
 if XENO_COBALT
 libcopperplate_la_SOURCES +=	\
 	timerobj-cobalt.c
+libcopperplate_la_CPPFLAGS +=	-I$(top_srcdir)/lib
 else
 libcopperplate_la_SOURCES +=	\
 	timerobj-mercury.c	\

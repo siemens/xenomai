@@ -72,17 +72,24 @@ static void cancel_sync(struct threadobj *thobj);
 
 #ifdef CONFIG_XENO_COBALT
 
+#include "cobalt/internal.h"
+
 static inline void pkg_init_corespec(void)
 {
 }
 
-static inline void setup_corespec(struct threadobj *thobj)
+static inline void thread_setup_corespec(struct threadobj *thobj)
 {
 	pthread_set_name_np(pthread_self(), thobj->name);
 }
 
-static inline void cleanup_corespec(struct threadobj *thobj)
+static inline void thread_cleanup_corespec(struct threadobj *thobj)
 {
+}
+
+static inline void thread_run_corespec(struct threadobj *thobj)
+{
+	__cobalt_thread_harden();
 }
 
 /* thobj->lock held on entry, released on return */
@@ -381,16 +388,20 @@ static void notifier_callback(const struct notifier *nf)
 		current->suspend_hook(current, THREADOBJ_RESUME);
 }
 
-static inline void setup_corespec(struct threadobj *thobj)
+static inline void thread_setup_corespec(struct threadobj *thobj)
 {
 	prctl(PR_SET_NAME, (unsigned long)thobj->name, 0, 0, 0);
 	notifier_init(&thobj->core.notifier, notifier_callback, 1);
 	thobj->core.period = 0;
 }
 
-static inline void cleanup_corespec(struct threadobj *thobj)
+static inline void thread_cleanup_corespec(struct threadobj *thobj)
 {
 	notifier_destroy(&thobj->core.notifier);
+}
+
+static inline void thread_run_corespec(struct threadobj *thobj)
+{
 }
 
 /* thobj->lock held on entry, released on return */
@@ -751,7 +762,7 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 
 	thobj->name = name;
 	backtrace_init_context(&thobj->btd, name);
-	setup_corespec(thobj);
+	thread_setup_corespec(thobj);
 
 	write_lock_nocancel(&list_lock);
 	pvlist_append(&thobj->thread_link, &thread_list);
@@ -771,6 +782,8 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 #ifdef CONFIG_XENO_ASYNC_CANCEL
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 #endif
+	thread_run_corespec(thobj);
+
 	return 0;
 }
 
@@ -798,7 +811,7 @@ void threadobj_finalize(void *p) /* thobj->lock free */
 	pvlist_remove(&thobj->thread_link);
 	write_unlock(&list_lock);
 
-	cleanup_corespec(thobj);
+	thread_cleanup_corespec(thobj);
 
 	if (thobj->tracer)
 		traceobj_unwind(thobj->tracer);
