@@ -1,9 +1,9 @@
 /*
-   Task switch latency test.
-   Max Krasnyansky <maxk@qualcomm.com
+  Task switch latency test.
+  Max Krasnyansky <maxk@qualcomm.com
 
-   Based on latency.c by Philippe Gerum <rpm@xenomai.org>
- */
+  Based on latency.c by Philippe Gerum <rpm@xenomai.org>
+*/
 
 #include <sys/mman.h>
 #include <unistd.h>
@@ -18,25 +18,26 @@
 #include <alchemy/timer.h>
 #include <alchemy/sem.h>
 
-RT_TASK event_task, worker_task;
+static RT_TASK event_task, worker_task;
 
-RT_SEM switch_sem;
-RTIME  switch_tsc;
-unsigned long long switch_count;
+static RT_SEM switch_sem;
+static RTIME  switch_tsc;
+static unsigned long long switch_count;
 
-long long minjitter = 10000000;
-long long maxjitter = -10000000;
-long long avgjitter = 0;
-long long lost = 0;
-long long nsamples = 50000;
-long long sampling_period = CONFIG_XENO_DEFAULT_PERIOD;
+static long long minjitter = 10000000;
+static long long maxjitter = -10000000;
+static long long avgjitter;
+static long long lost;
+static long long nsamples = 50000;
+static long long sampling_period = CONFIG_XENO_DEFAULT_PERIOD;
 
 #define HISTOGRAM_CELLS 100
 
-unsigned long histogram[HISTOGRAM_CELLS];
+static unsigned long histogram[HISTOGRAM_CELLS];
 
-int do_histogram = 0;
-int ignore = 5;
+static int do_histogram;
+static int warmup = 5;
+static int late;
 
 static inline void add_histogram(long addval)
 {
@@ -83,185 +84,189 @@ void dump_histogram(void)
 
 void event(void *cookie)
 {
-       int err;
+	int err;
 
-       err = rt_task_set_periodic(NULL,
-				  TM_NOW,
-				  rt_timer_ns2ticks(sampling_period));
-       if (err) {
-	       fprintf(stderr,"switch: failed to set periodic, code %d\n", err);
-	       return;
-       }
+	err = rt_task_set_periodic(NULL,
+				   TM_NOW,
+				   rt_timer_ns2ticks(sampling_period));
+	if (err) {
+		warning("failed to enter periodic timing (%s)\n",
+			symerror(err));
+		return;
+	}
 
-       for (;;) {
-	       err = rt_task_wait_period(NULL);
-	       if (err) {
-		       if (err != -ETIMEDOUT) {
-			       /* Timer stopped. */
+	for (;;) {
+		err = rt_task_wait_period(NULL);
+		if (err) {
+			if (err != -ETIMEDOUT)
 			       exit(EXIT_FAILURE);
-		       }
-	       }
+			late++;
+		}
 
-	       switch_count++;
-	       switch_tsc = rt_timer_tsc();
+		switch_count++;
+		switch_tsc = rt_timer_tsc();
 
-	       err = rt_sem_broadcast(&switch_sem);
-	       if (err) {
-		       if (err != -EIDRM && err != -EINVAL)
-			       warning("failed to broadcast semaphore (%s)\n",
-				       symerror(err));
-		       break;
-	       }
-       }
+		err = rt_sem_broadcast(&switch_sem);
+		if (err) {
+			if (err != -EIDRM && err != -EINVAL)
+				warning("failed to broadcast semaphore (%s)\n",
+					symerror(err));
+			break;
+		}
+	}
 }
 
 void worker(void *cookie)
 {
-       long long minj = 10000000, maxj = -10000000, dt, sumj = 0;
-       unsigned long long count = 0;
-       int err, n;
+	long long minj = 10000000, maxj = -10000000, dt, sumj = 0;
+	unsigned long long count = 0;
+	int err, n;
 
-       err = rt_sem_create(&switch_sem, "dispsem", 0, S_FIFO);
-       if (err) {
-	       fprintf(stderr,"switch: cannot create semaphore: %s\n",
-		      strerror(-err));
-	       return;
-       }
+	err = rt_sem_create(&switch_sem, "dispsem", 0, S_FIFO);
+	if (err) {
+		warning("failed to create semaphore (%s)\n",
+			symerror(err));
+		return;
+	}
 
-       for (n=0; n<nsamples; n++) {
-	       err = rt_sem_p(&switch_sem, TM_INFINITE);
-	       if (err)
-		       printf("back sem_p %d\n", err);
-	       if (err) {
-		       if (err != -EIDRM && err != -EINVAL)
-			       warning("failed to pend on semaphore (%s)\n",
-				       symerror(err));
+	for (n = 0; n < nsamples; n++) {
+		err = rt_sem_p(&switch_sem, TM_INFINITE);
+		if (err) {
+			if (err != -EIDRM && err != -EINVAL)
+				warning("failed to pend on semaphore (%s)\n",
+					symerror(err));
+			exit(EXIT_FAILURE);
+		}
 
-		       exit(EXIT_FAILURE);
-	       }
+		dt = (long) (rt_timer_tsc() - switch_tsc);
 
-	       if (++count != switch_count) {
-		       count = switch_count;
-		       lost++;
-		       continue;
-	       }
+		if (switch_count - count > 1) {
+			lost += switch_count - count;
+			count = switch_count;
+			continue;
+		}
 
-	       // First few switches are slow.
-	       // Probably due to the Linux <-> RT context migration at task startup.
-	       if (count < ignore)
-		       continue;
+		if (++count < warmup)
+			continue;
 
-	       dt = (long) (rt_timer_tsc() - switch_tsc);
-	       if (dt > maxj)
-		       maxj = dt;
-	       if (dt < minj)
-		       minj = dt;
-	       sumj += dt;
+		if (dt > maxj)
+			maxj = dt;
+		if (dt < minj)
+			minj = dt;
+		sumj += dt;
 
-	       if (do_histogram)
-		       add_histogram(dt);
-       }
+		if (do_histogram)
+			add_histogram(dt);
+	}
 
-       rt_sem_delete(&switch_sem);
+	rt_sem_delete(&switch_sem);
 
-       minjitter = minj;
-       maxjitter = maxj;
-       avgjitter = sumj / n;
+	minjitter = minj;
+	maxjitter = maxj;
+	avgjitter = sumj / n;
 
-       printf("RTH|%12s|%12s|%12s|%12s\n",
-		      "lat min", "lat avg", "lat max", "lost");
+	printf("RTH|%12s|%12s|%12s|%12s\n",
+	       "lat min", "lat avg", "lat max", "lost");
 
-       printf("RTD|%12.3f|%12.3f|%12.3f|%12lld\n",
-		      rt_timer_tsc2ns(minjitter) / 1000.0,
-		      rt_timer_tsc2ns(avgjitter) / 1000.0,
-		      rt_timer_tsc2ns(maxjitter) / 1000.0, lost);
+	printf("RTD|%12.3f|%12.3f|%12.3f|%12lld\n",
+	       rt_timer_tsc2ns(minjitter) / 1000.0,
+	       rt_timer_tsc2ns(avgjitter) / 1000.0,
+	       rt_timer_tsc2ns(maxjitter) / 1000.0, lost);
 
-       if (do_histogram)
-	       dump_histogram();
+	if (late)
+		printf("LATE: %d\n", late);
 
-       exit(0);
+	if (do_histogram)
+		dump_histogram();
+
+	exit(0);
+>>>>>>> testsuite/unit: sanitize wakeup-time
 }
 
 int main(int argc, char **argv)
 {
-       int err, c;
+	int err, c;
 
-       copperplate_init(argc, argv);
+	copperplate_init(argc, argv);
 
-       while ((c = getopt(argc, argv, "hp:n:i:")) != EOF)
-	       switch (c) {
-	       case 'h':
-		       /* ./switch --h[istogram] */
-		       do_histogram = 1;
-		       break;
+	while ((c = getopt(argc, argv, "hp:n:i:")) != EOF)
+		switch (c) {
+		case 'h':
+			/* ./switch --h[istogram] */
+			do_histogram = 1;
+			break;
 
-	       case 'p':
-		       sampling_period = atoi(optarg) * 1000;
-		       break;
+		case 'p':
+			sampling_period = atoi(optarg) * 1000;
+			break;
 
-	       case 'n':
-		       nsamples = atoi(optarg);
-		       break;
+		case 'n':
+			nsamples = atoi(optarg);
+			break;
 
-	       case 'i':
-		       ignore = atoi(optarg);
-		       break;
+		case 'i':
+			warmup = atoi(optarg);
+			break;
 
-	       default:
+		default:
 
-		       fprintf(stderr, "usage: switch [options]\n"
-			       "\t-h             - enable histogram\n"
-			       "\t-p <period_us> - timer period\n"
-			       "\t-n <samples>   - number of samples to collect\n"
-			       "\t-i <samples>   - number of _first_ samples to ignore\n");
-		       exit(2);
-	       }
+			fprintf(stderr, "usage: switch [options]\n"
+				"\t-h		  - enable histogram\n"
+				"\t-p <period_us> - timer period\n"
+				"\t-n <samples>	  - number of samples to collect\n"
+				"\t-i <samples>	  - number of _first_ samples to ignore\n");
+			exit(2);
+		}
 
-       if (sampling_period == 0)
-	       sampling_period = 100000;	/* ns */
+	if (sampling_period == 0)
+		sampling_period = 100000;	/* ns */
 
-       if (nsamples <= 0) {
-	       fprintf(stderr, "disregarding -n <%lld>, using -n <100000> "
-		       "samples\n", nsamples);
-	       nsamples = 100000;
-       }
+	if (nsamples <= 0) {
+		warning("disregarding -n <%lld>, using -n <100000> "
+			"samples\n", nsamples);
+		nsamples = 100000;
+	}
 
-       signal(SIGINT, SIG_IGN);
-       signal(SIGTERM, SIG_IGN);
+	signal(SIGINT, SIG_IGN);
+	signal(SIGTERM, SIG_IGN);
 
-       setlinebuf(stdout);
+	setlinebuf(stdout);
 
-       mlockall(MCL_CURRENT|MCL_FUTURE);
+	mlockall(MCL_CURRENT|MCL_FUTURE);
 
-       printf("== Sampling period: %llu us\n", sampling_period / 1000);
-       printf("== Do not interrupt this program\n");
+	printf("== Sampling period: %llu us\n", sampling_period / 1000);
+	printf("== Do not interrupt this program\n");
 
-       err = rt_task_create(&worker_task, "worker", 0, 98, T_FPU);
-       if (err) {
-	       fprintf(stderr,"switch: failed to create worker task, code %d\n", err);
-	       return 1;
-       }
+	err = rt_task_create(&worker_task, "worker", 0, 98, 0);
+	if (err) {
+		warning("failed to create WORKER task (%s)\n",
+			symerror(err));
+		return 1;
+	}
 
-       err = rt_task_start(&worker_task, &worker, NULL);
-       if (err) {
-	       fprintf(stderr,"switch: failed to start worker task, code %d\n", err);
-	       return 1;
-       }
+	err = rt_task_start(&worker_task, &worker, NULL);
+	if (err) {
+		warning("failed to start WORKER task (%s)\n",
+			symerror(err));
+		return 1;
+	}
 
-       err = rt_task_create(&event_task, "event", 0, 99, 0);
-       if (err) {
-	       fprintf(stderr,"switch: failed to create event task, code %d\n", err);
-	       return 1;
-       }
+	err = rt_task_create(&event_task, "event", 0, 99, 0);
+	if (err) {
+		warning("failed to create EVENT task (%s)\n",
+			symerror(err));
+		return 1;
+	}
 
-       err = rt_task_start(&event_task, &event, NULL);
-       if (err) {
-	       fprintf(stderr,"switch: failed to start event task, code %d\n", err);
-	       return 1;
-       }
+	err = rt_task_start(&event_task, &event, NULL);
+	if (err) {
+		warning("failed to start EVENT task (%s)\n",
+			symerror(err));
+		return 1;
+	}
 
-       for (;;)
-	       pause();
+	for (;;)
+		pause();
 
-       return 0;
+	return 0;
 }
