@@ -8,6 +8,7 @@
 #include <sys/mman.h>
 #include <semaphore.h>
 #include <mqueue.h>
+#include <signal.h>
 
 #include <nucleus/heap.h>
 
