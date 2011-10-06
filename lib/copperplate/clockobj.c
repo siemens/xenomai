@@ -251,12 +251,6 @@ int clockobj_set_resolution(struct clockobj *clkobj, unsigned int resolution_ns)
 
 #include <asm/xenomai/arith.h>
 
-ticks_t clockobj_get_tsc(void)
-{
-	/* Guaranteed to be the source of CLOCK_COPPERPLATE. */
-	return __xn_rdtsc();
-}
-
 sticks_t clockobj_ns_to_ticks(struct clockobj *clkobj, sticks_t ns)
 {
 	/* Cobalt has optimized arith ops, use them. */
@@ -300,13 +294,6 @@ void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks)
 }
 
 #else /* CONFIG_XENO_MERCURY */
-
-ticks_t clockobj_get_tsc(void)
-{
-	struct timespec now;
-	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
-	return (ticks_t)now.tv_sec * 1000000000ULL + now.tv_nsec;
-}
 
 sticks_t clockobj_ns_to_ticks(struct clockobj *clkobj, sticks_t ns)
 {

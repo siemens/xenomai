@@ -25,6 +25,7 @@
 #include <copperplate/list.h>
 #include <copperplate/panic.h>
 #include <copperplate/debug.h>
+#include <copperplate/lock.h>
 
 typedef unsigned long long ticks_t;
 
@@ -213,11 +214,15 @@ static inline sticks_t clockobj_ticks_to_ns(struct clockobj *clkobj,
 
 #endif /* !CONFIG_XENO_LORES_CLOCK_DISABLED */
 
-ticks_t clockobj_get_tsc(void);
-
 #ifdef CONFIG_XENO_COBALT
 
 #include <asm-generic/xenomai/timeconv.h>
+
+static inline ticks_t clockobj_get_tsc(void)
+{
+	/* Guaranteed to be the source of CLOCK_COPPERPLATE. */
+	return __xn_rdtsc();
+}
 
 static inline sticks_t clockobj_ns_to_tsc(sticks_t ns)
 {
@@ -230,6 +235,13 @@ static inline sticks_t clockobj_tsc_to_ns(sticks_t tsc)
 }
 
 #else /* CONFIG_XENO_MERCURY */
+
+static inline ticks_t clockobj_get_tsc(void)
+{
+	struct timespec now;
+	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
+	return (ticks_t)now.tv_sec * 1000000000ULL + now.tv_nsec;
+}
 
 static inline sticks_t clockobj_ns_to_tsc(sticks_t ns)
 {
