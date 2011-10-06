@@ -82,16 +82,6 @@ void syncobj_init(struct syncobj *sobj, int flags,
 	__RT(pthread_condattr_destroy(&cattr));
 }
 
-int syncobj_lock(struct syncobj *sobj, struct syncstate *syns)
-{
-	return write_lock_safe(&sobj->lock, syns->state);
-}
-
-void syncobj_unlock(struct syncobj *sobj, struct syncstate *syns)
-{
-	write_unlock_safe(&sobj->lock, syns->state);
-}
-
 static void syncobj_test_finalize(struct syncobj *sobj,
 				  struct syncstate *syns)
 {

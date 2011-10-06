@@ -75,6 +75,18 @@ struct threadobj *syncobj_post(struct syncobj *sobj);
 
 struct threadobj *syncobj_peek(struct syncobj *sobj);
 
+static inline int syncobj_lock(struct syncobj *sobj,
+			       struct syncstate *syns)
+{
+	return write_lock_safe(&sobj->lock, syns->state);
+}
+
+static inline void syncobj_unlock(struct syncobj *sobj,
+				  struct syncstate *syns)
+{
+	write_unlock_safe(&sobj->lock, syns->state);
+}
+
 int syncobj_wait_drain(struct syncobj *sobj, struct timespec *timeout,
 		       struct syncstate *syns);
 
@@ -93,10 +105,6 @@ static inline int syncobj_pend_count(struct syncobj *sobj)
 void syncobj_requeue_waiter(struct syncobj *sobj, struct threadobj *thobj);
 
 void syncobj_wakeup_waiter(struct syncobj *sobj, struct threadobj *thobj);
-
-int syncobj_lock(struct syncobj *sobj, struct syncstate *syns);
-
-void syncobj_unlock(struct syncobj *sobj, struct syncstate *syns);
 
 int syncobj_flush(struct syncobj *sobj, int reason);
 
