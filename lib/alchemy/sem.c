@@ -203,6 +203,9 @@ int rt_sem_p(RT_SEM *sem, RTIME timeout)
 	struct service svc;
 	ticks_t now;
 
+	if (threadobj_async_p())
+		return -EPERM;
+
 	if (timeout != TM_INFINITE && timeout != TM_NONBLOCK) {
 		COPPERPLATE_PROTECT(svc);
 		clockobj_get_time(&alchemy_clock, &now, NULL);
