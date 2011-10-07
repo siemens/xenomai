@@ -17,6 +17,7 @@
 */
 
 #include <stdlib.h>
+#include <copperplate/lock.h>
 #include <copperplate/heapobj.h>
 #include <vxworks/errnoLib.h>
 #include "rngLib.h"
@@ -37,17 +38,22 @@ static struct wind_ring *find_ring_from_id(RING_ID rid)
 RING_ID rngCreate(int nbytes)
 {
 	struct wind_ring *ring;
+	struct service svc;
 	void *ring_mem;
+	RING_ID rid;
 
 	if (nbytes <= 0) {
 		errnoSet(S_memLib_NOT_ENOUGH_MEMORY);
 		return 0;
 	}
 
+	COPPERPLATE_PROTECT(svc);
+
 	ring_mem = xnmalloc(sizeof(*ring) + nbytes + 1);
 	if (ring_mem == NULL) {
+		rid = 0;
 		errno = errnoSet(S_memLib_NOT_ENOUGH_MEMORY);
-		return 0;
+		goto out;
 	}
 
 	ring = ring_mem;
@@ -55,17 +61,23 @@ RING_ID rngCreate(int nbytes)
 	ring->bufSize = nbytes;
 	ring->readPos = 0;
 	ring->writePos = 0;
+	rid = mainheap_ref(ring, RING_ID);
+out:
+	COPPERPLATE_UNPROTECT(svc);
 
-	return mainheap_ref(ring, RING_ID);
+	return rid;
 }
 
 void rngDelete(RING_ID rid)
 {
 	struct wind_ring *ring = find_ring_from_id(rid);
+	struct service svc;
 
 	if (ring) {
 		ring->magic = 0;
+		COPPERPLATE_PROTECT(svc);
 		xnfree(ring);
+		COPPERPLATE_UNPROTECT(svc);
 	}
 }
 
