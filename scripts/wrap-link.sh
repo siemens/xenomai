@@ -18,10 +18,10 @@ Options:
 -n dry run (print all commands but don't run any)
 
 Example:
-$1 -v gcc -o foo foo.o -Wl,@/usr/xenomai/lib/posix.wrappers -L/usr/xenomai/lib -lpthread_rt -lpthread -lrt
+$1 -v gcc -o foo foo.o -Wl,@/usr/xenomai/lib/posix.wrappers -L/usr/xenomai/lib -lcobalt -lpthread -lrt
 will print and run:
 + gcc -o foo.tmp -Wl,-Ur -nostdlib foo.o -Wl,@/usr/xenomai/lib/posix.wrappers -L/usr/xenomai/lib
-+ gcc -o foo foo.tmp -L/usr/xenomai/lib -lpthread_rt -lpthread -lrt
++ gcc -o foo foo.tmp -L/usr/xenomai/lib -lcobalt -lpthread -lrt
 + rm foo.tmp
 EOF
 }
@@ -116,7 +116,7 @@ while test $# -gt 0; do
     arg="$1"
     shift
     case "$arg" in
-	*pthread_rt*)
+	*cobalt*)
 	    stage2_args="$stage2_args $arg"
 	    stage2=:
 	    ;;
