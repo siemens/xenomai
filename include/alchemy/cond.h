@@ -30,7 +30,6 @@ struct RT_COND {
 typedef struct RT_COND RT_COND;
 
 struct RT_COND_INFO {
-	int nwaiters;
 	char name[32];
 };
 

@@ -31,58 +31,6 @@
 
 struct cluster alchemy_cond_table;
 
-static struct alchemy_cond *
-__get_alchemy_cond(struct alchemy_cond *ccb, int *err_r)
-{
-	int ret;
-
-	if (ccb->magic == ~cond_magic)
-		goto dead_handle;
-
-	if (ccb->magic != cond_magic)
-		goto bad_handle;
-
-	ret = __RT(pthread_mutex_lock(&ccb->safe));
-	if (ret)
-		goto bad_handle;
-
-	/* Recheck under lock. */
-	if (ccb->magic == cond_magic)
-		return ccb;
-
-dead_handle:
-	/* Removed under our feet. */
-	*err_r = -EIDRM;
-	return NULL;
-
-bad_handle:
-	*err_r = -EINVAL;
-	return NULL;
-}
-
-static struct alchemy_cond *get_alchemy_cond(RT_COND *cond, int *err_r)
-{
-	struct alchemy_cond *ccb;
-
-	if (cond == NULL || ((intptr_t)cond & (sizeof(intptr_t)-1)) != 0)
-		goto bad_handle;
-
-	ccb = mainheap_deref(cond->handle, struct alchemy_cond);
-	if (ccb == NULL || ((intptr_t)ccb & (sizeof(intptr_t)-1)) != 0)
-		goto bad_handle;
-
-	return __get_alchemy_cond(ccb, err_r);
-
-bad_handle:
-	*err_r = -EINVAL;
-	return NULL;
-}
-
-static inline void put_alchemy_cond(struct alchemy_cond *ccb)
-{
-	__RT(pthread_mutex_unlock(&ccb->safe));
-}
-
 static struct alchemy_cond *find_alchemy_cond(RT_COND *cond, int *err_r)
 {
 	struct alchemy_cond *ccb;
@@ -109,7 +57,6 @@ bad_handle:
 
 int rt_cond_create(RT_COND *cond, const char *name)
 {
-	pthread_mutexattr_t mattr;
 	struct alchemy_cond *ccb;
 	pthread_condattr_t cattr;
 	struct service svc;
@@ -127,19 +74,12 @@ int rt_cond_create(RT_COND *cond, const char *name)
 
 	strncpy(ccb->name, name, sizeof(ccb->name));
 	ccb->name[sizeof(ccb->name) - 1] = '\0';
-	ccb->nwaiters = 0;
 
 	if (cluster_addobj(&alchemy_cond_table, ccb->name, &ccb->cobj)) {
 		xnfree(ccb);
 		COPPERPLATE_UNPROTECT(svc);
 		return -EEXIST;
 	}
-
-	__RT(pthread_mutexattr_init(&mattr));
-	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
-	__RT(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute));
-	__RT(pthread_mutex_init(&ccb->safe, &mattr));
-	__RT(pthread_mutexattr_destroy(&mattr));
 
 	__RT(pthread_condattr_init(&cattr));
 	__RT(pthread_condattr_setpshared(&cattr, mutex_scope_attribute));
@@ -165,21 +105,16 @@ int rt_cond_delete(RT_COND *cond)
 
 	COPPERPLATE_PROTECT(svc);
 
-	ccb = get_alchemy_cond(cond, &ret);
+	ccb = find_alchemy_cond(cond, &ret);
 	if (ccb == NULL)
 		goto out;
 
 	ret = -__RT(pthread_cond_destroy(&ccb->cond));
-	if (ret) {
-		if (ret == -EBUSY)
-			put_alchemy_cond(ccb);
+	if (ret)
 		goto out;
-	}
 
 	ccb->magic = ~cond_magic;
-	put_alchemy_cond(ccb);
 	cluster_delobj(&alchemy_cond_table, &ccb->cobj);
-	__RT(pthread_mutex_destroy(&ccb->safe));
 	xnfree(ccb);
 out:
 	COPPERPLATE_UNPROTECT(svc);
@@ -239,34 +174,19 @@ int rt_cond_wait_until(RT_COND *cond, RT_MUTEX *mutex,
 
 	COPPERPLATE_PROTECT(svc);
 
-	ccb = get_alchemy_cond(cond, &ret);
+	ccb = find_alchemy_cond(cond, &ret);
 	if (ccb == NULL)
 		goto out;
 
 	mcb = find_alchemy_mutex(mutex, &ret);
 	if (mcb == NULL)
-		goto unlock;
-
-	ccb->nwaiters++;
-	put_alchemy_cond(ccb);
+		goto out;
 
 	if (timeout != TM_INFINITE) {
 		clockobj_ticks_to_timeout(&alchemy_clock, timeout, &ts);
 		ret = -__RT(pthread_cond_timedwait(&ccb->cond, &mcb->lock, &ts));
 	} else
 		ret = -__RT(pthread_cond_wait(&ccb->cond, &mcb->lock));
-
-	/*
-	 * Be cautious, grab the internal safe lock again to update
-	 * the control block.
-	 */
-	ccb = __get_alchemy_cond(ccb, &ret);
-	if (ccb == NULL)
-		goto out;
-
-	ccb->nwaiters--;
-unlock:
-	put_alchemy_cond(ccb);
 out:
 	COPPERPLATE_UNPROTECT(svc);
 
@@ -297,13 +217,11 @@ int rt_cond_inquire(RT_COND *cond, RT_COND_INFO *info)
 
 	COPPERPLATE_PROTECT(svc);
 
-	ccb = get_alchemy_cond(cond, &ret);
+	ccb = find_alchemy_cond(cond, &ret);
 	if (ccb == NULL)
 		goto out;
 
 	strcpy(info->name, ccb->name);
-	info->nwaiters = ccb->nwaiters;
-	put_alchemy_cond(ccb);
 out:
 	COPPERPLATE_UNPROTECT(svc);
 

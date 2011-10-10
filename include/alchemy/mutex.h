@@ -30,8 +30,6 @@ struct RT_MUTEX {
 typedef struct RT_MUTEX RT_MUTEX;
 
 struct RT_MUTEX_INFO {
-	int locked;
-	int nwaiters;
 	char name[32];
 	RT_TASK owner;
 };

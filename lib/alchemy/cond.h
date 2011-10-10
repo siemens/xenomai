@@ -27,10 +27,8 @@ struct threadobj;
 struct alchemy_cond {
 	unsigned int magic;	/* Must be first. */
 	char name[32];
-	pthread_mutex_t safe;
 	pthread_cond_t cond;
 	struct clusterobj cobj;
-	int nwaiters;
 };
 
 #define cond_magic	0x8686ebeb

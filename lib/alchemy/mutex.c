@@ -31,58 +31,6 @@
 
 struct cluster alchemy_mutex_table;
 
-static struct alchemy_mutex *
-__get_alchemy_mutex(struct alchemy_mutex *mcb, int *err_r)
-{
-	int ret;
-
-	if (mcb->magic == ~mutex_magic)
-		goto dead_handle;
-
-	if (mcb->magic != mutex_magic)
-		goto bad_handle;
-
-	ret = __RT(pthread_mutex_lock(&mcb->safe));
-	if (ret)
-		goto bad_handle;
-
-	/* Recheck under lock. */
-	if (mcb->magic == mutex_magic)
-		return mcb;
-
-dead_handle:
-	/* Removed under our feet. */
-	*err_r = -EIDRM;
-	return NULL;
-
-bad_handle:
-	*err_r = -EINVAL;
-	return NULL;
-}
-
-struct alchemy_mutex *get_alchemy_mutex(RT_MUTEX *mutex, int *err_r)
-{
-	struct alchemy_mutex *mcb;
-
-	if (mutex == NULL || ((intptr_t)mutex & (sizeof(intptr_t)-1)) != 0)
-		goto bad_handle;
-
-	mcb = mainheap_deref(mutex->handle, struct alchemy_mutex);
-	if (mcb == NULL || ((intptr_t)mcb & (sizeof(intptr_t)-1)) != 0)
-		goto bad_handle;
-
-	return __get_alchemy_mutex(mcb, err_r);
-
-bad_handle:
-	*err_r = -EINVAL;
-	return NULL;
-}
-
-void put_alchemy_mutex(struct alchemy_mutex *mcb)
-{
-	__RT(pthread_mutex_unlock(&mcb->safe));
-}
-
 struct alchemy_mutex *find_alchemy_mutex(RT_MUTEX *mutex, int *err_r)
 {
 	struct alchemy_mutex *mcb;
@@ -127,7 +75,6 @@ int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 	strncpy(mcb->name, name, sizeof(mcb->name));
 	mcb->name[sizeof(mcb->name) - 1] = '\0';
 	mcb->owner = no_alchemy_task;
-	mcb->nwaiters = 0;
 
 	if (cluster_addobj(&alchemy_mutex_table, mcb->name, &mcb->cobj)) {
 		xnfree(mcb);
@@ -138,7 +85,6 @@ int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 	__RT(pthread_mutexattr_init(&mattr));
 	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
 	__RT(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute));
-	__RT(pthread_mutex_init(&mcb->safe, &mattr));
 	__RT(pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE));
 #ifdef CONFIG_XENO_MERCURY
 	pthread_mutexattr_setrobust_np(&mattr, PTHREAD_MUTEX_ROBUST_NP);
@@ -164,21 +110,16 @@ int rt_mutex_delete(RT_MUTEX *mutex)
 
 	COPPERPLATE_PROTECT(svc);
 
-	mcb = get_alchemy_mutex(mutex, &ret);
+	mcb = find_alchemy_mutex(mutex, &ret);
 	if (mcb == NULL)
 		goto out;
 
 	ret = -__RT(pthread_mutex_destroy(&mcb->lock));
-	if (ret) {
-		if (ret == -EBUSY)
-			put_alchemy_mutex(mcb);
+	if (ret)
 		goto out;
-	}
 
 	mcb->magic = ~mutex_magic;
-	put_alchemy_mutex(mcb);
 	cluster_delobj(&alchemy_mutex_table, &mcb->cobj);
-	__RT(pthread_mutex_destroy(&mcb->safe));
 	xnfree(mcb);
 out:
 	COPPERPLATE_UNPROTECT(svc);
@@ -212,42 +153,14 @@ int rt_mutex_acquire_until(RT_MUTEX *mutex, RTIME timeout)
 	if (ret == 0 || timeout == TM_NONBLOCK)
 		goto done;
 
-	/*
-	 * Slow path, we need the safe lock to make sure we won't
-	 * trash recycled memory which is not holding this control
-	 * block anymore.
-	 */
-	mcb = __get_alchemy_mutex(mcb, &ret);
-	if (mcb == NULL)
-		goto out;
-
-	mcb->nwaiters++;
-
-	/*
-	 * We need to sleep on the mutex, so we must drop the safe
-	 * lock. We count on the POSIX layer to do the sanity checks
-	 * in case the mutex is removed under our feet.
-	 */
+	/* Slow path. */
 	if (ret == -EBUSY && timeout == TM_INFINITE) {
-		put_alchemy_mutex(mcb);
 		ret = -__RT(pthread_mutex_lock(&mcb->lock));
-		goto safe;
+		goto done;
 	}
 
-	put_alchemy_mutex(mcb);
 	__clockobj_ticks_to_timeout(&alchemy_clock, CLOCK_REALTIME, timeout, &ts);
 	ret = -__RT(pthread_mutex_timedlock(&mcb->lock, &ts));
-safe:
-	/*
-	 * Be cautious, grab the internal safe lock again to update
-	 * the control block.
-	 */
-	mcb = __get_alchemy_mutex(mcb, &ret);
-	if (mcb == NULL)
-		goto out;
-
-	mcb->nwaiters--;
-	put_alchemy_mutex(mcb);
 done:
 	switch (ret) {
 	case -ENOTRECOVERABLE:
@@ -321,32 +234,22 @@ int rt_mutex_inquire(RT_MUTEX *mutex, RT_MUTEX_INFO *info)
 
 	COPPERPLATE_PROTECT(svc);
 
-	mcb = get_alchemy_mutex(mutex, &ret);
+	mcb = find_alchemy_mutex(mutex, &ret);
 	if (mcb == NULL)
 		goto out;
 
 	ret = -__RT(pthread_mutex_trylock(&mcb->lock));
 	if (ret) {
 		if (ret != -EBUSY)
-			goto done;
+			goto out;
 		info->owner = mcb->owner;
-		info->nwaiters = mcb->nwaiters;
 		ret = 0;
 	} else {
 		__RT(pthread_mutex_unlock(&mcb->lock));
 		info->owner = no_alchemy_task;
-		/*
-		 * In some rare cases, we might see some waiter
-		 * sleeping because we own this lock to peek shortly
-		 * at the mutex state, so let's just return the only
-		 * meaningful value in the "not owned" situation.
-		 */
-		info->nwaiters = 0;
 	}
 
 	strcpy(info->name, mcb->name);
-done:
-	put_alchemy_mutex(mcb);
 out:
 	COPPERPLATE_UNPROTECT(svc);
 
