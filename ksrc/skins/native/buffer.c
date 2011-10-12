@@ -314,6 +314,8 @@ int rt_buffer_create(RT_BUFFER *bf, const char *name, size_t bufsz, int mode)
 int rt_buffer_delete(RT_BUFFER *bf)
 {
 	int ret = 0, resched;
+	void *bufmem = NULL;
+	size_t bufsz = 0;
 	spl_t s;
 
 	if (xnpod_asynch_p())
@@ -327,7 +329,8 @@ int rt_buffer_delete(RT_BUFFER *bf)
 		goto unlock_and_exit;
 	}
 
-	xnarch_free_host_mem(bf->bufmem, bf->bufsz);
+	bufmem = bf->bufmem;
+	bufsz = bf->bufsz;
 	removeq(bf->rqueue, &bf->rlink);
 	resched = xnsynch_destroy(&bf->isynch_base) == XNSYNCH_RESCHED;
 	resched += xnsynch_destroy(&bf->osynch_base) == XNSYNCH_RESCHED;
@@ -347,6 +350,9 @@ int rt_buffer_delete(RT_BUFFER *bf)
       unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
+
+	if (bufmem)
+		xnarch_free_host_mem(bufmem, bufsz);
 
 	return ret;
 }
