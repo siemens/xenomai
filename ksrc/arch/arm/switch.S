@@ -37,6 +37,16 @@
 	.endm
 #endif
 
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 37)
+#ifdef CONFIG_MMU
+#define USE_DOMAINS
+#endif /* CONFIG_MMU */
+#else /* Linux >= 2.6.38 */
+#ifdef CONFIG_CPU_USE_DOMAINS
+#define USE_DOMAINS
+#endif /* CONFIG_CPU_USE_DOMAINS */
+#endif /* Linux >= 2.6.38 */
+
 	.macro fpu_switch tmp
 #ifdef CONFIG_VFP
 	@ Always disable VFP so we can lazily save/restore the old
@@ -127,13 +137,13 @@ ENTRY(rthal_thread_switch)
     add     ip, r1, #TI_CPU_SAVE
     ldr     r3, [r2, #TI_TP_VALUE]
     stmia   ip!, {r4 - sl, fp, sp, lr}      @ Store most regs on stack
-#ifdef CONFIG_MMU
+#ifdef USE_DOMAINS
     ldr     r6, [r2, #TI_CPU_DOMAIN]
 #endif
 
     clear_exclusive_monitor
     set_tls r3, r4, r5
-#ifdef CONFIG_MMU
+#ifdef USE_DOMAINS
     mcr     p15, 0, r6, c3, c0, 0           @ Set domain register
 #endif
     fpu_switch r4
