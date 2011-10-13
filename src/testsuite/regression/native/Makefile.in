@@ -257,7 +257,7 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-tstdir = $(pkgdatadir)/native
+tstdir = $(pkgdatadir)/regression/native
 noinst_HEADERS = check.h
 LDADD = \
 	../../../skins/native/libnative.la \

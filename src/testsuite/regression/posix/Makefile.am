@@ -1,4 +1,4 @@
-tstdir = $(pkgdatadir)/posix
+tstdir = $(pkgdatadir)/regression/posix
 
 noinst_HEADERS = check.h
 

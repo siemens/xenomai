@@ -1,4 +1,4 @@
-tstdir = $(pkgdatadir)/native+posix
+tstdir = $(pkgdatadir)/regression/native+posix
 
 tst_PROGRAMS = mq_select
 

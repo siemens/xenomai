@@ -1,4 +1,4 @@
-tstdir = $(pkgdatadir)/native
+tstdir = $(pkgdatadir)/regression/native
 
 noinst_HEADERS = check.h
 

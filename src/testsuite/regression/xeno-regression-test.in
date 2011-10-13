@@ -42,13 +42,13 @@ echo 0 > /proc/xenomai/latency || :
 @testdir@/mutex-torture-posix
 
 # the tests in this tree
-@pkgdir@/posix/leaks
-@pkgdir@/posix/shm
-@pkgdir@/native/heap
-@pkgdir@/native/leaks
-@pkgdir@/native/mayday
-@pkgdir@/native/tsc
-@pkgdir@/native+posix/mq_select
+@pkgdir@/regression/posix/leaks
+@pkgdir@/regression/posix/shm
+@pkgdir@/regression/native/heap
+@pkgdir@/regression/native/leaks
+@pkgdir@/regression/native/mayday
+@pkgdir@/regression/native/tsc
+@pkgdir@/regression/native+posix/mq_select
 
 start_load
 
