@@ -1,5 +1,5 @@
 menuconfig XENO_SKIN_POSIX
-	depends on XENO_OPT_NUCLEUS 
+	depends on XENO_OPT_NUCLEUS
 	tristate "POSIX API"
 	default y
 	help
@@ -56,6 +56,7 @@ config XENO_OPT_POSIX_SELECT
 	bool "Select syscall"
 	select XENO_OPT_SELECT
 	depends on XENO_SKIN_POSIX != y || XENO_SKIN_RTDM != m
+	default y
 	help
 
 	This option allows applications using the Xenomai POSIX skin in
@@ -64,7 +65,7 @@ config XENO_OPT_POSIX_SELECT
 
 config XENO_OPT_DEBUG_POSIX
 	bool "Debugging support"
-	default n
+	default y
 	help
 
 	When enabled, this option makes the skin warn about not properly
