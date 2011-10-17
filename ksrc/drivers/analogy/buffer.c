@@ -64,7 +64,7 @@ int a4l_alloc_buffer(a4l_buf_t *buf_desc, int buf_size)
 	buf_desc->size = buf_size;
 	buf_desc->size = PAGE_ALIGN(buf_desc->size);
 
-	buf_desc->buf = vmalloc(buf_desc->size);
+	buf_desc->buf = vmalloc_32(buf_desc->size);
 	if (buf_desc->buf == NULL) {
 		ret = -ENOMEM;
 		goto out_virt_contig_alloc;
