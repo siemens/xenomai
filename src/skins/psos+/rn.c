@@ -118,5 +118,9 @@ u_long rn_retseg(u_long rnid, void *chunk)
 
 u_long rn_ident(const char name[4], u_long *rnid_r)
 {
+	char short_name[5];
+
+	name = __psos_maybe_short_name(short_name, name);
+
 	return XENOMAI_SKINCALL2(__psos_muxid, __psos_rn_ident, name, rnid_r);
 }

@@ -273,6 +273,10 @@ u_long t_getreg(u_long tid, u_long regnum, u_long *regvalue_r)
 
 u_long t_ident(const char *name, u_long nodeno, u_long *tid_r)
 {
+	char short_name[5];
+
+	name = __psos_maybe_short_name(short_name, name);
+
 	return XENOMAI_SKINCALL2(__psos_muxid, __psos_t_ident, name, tid_r);
 }
 

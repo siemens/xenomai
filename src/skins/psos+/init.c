@@ -76,7 +76,7 @@ const char *__psos_maybe_short_name(char shrt[5], const char *lng)
 	if (psos_long_names)
 		return lng;
 
-	strncpy(shrt, lng, sizeof(shrt) - 1);
+	strncpy(shrt, lng, 4);
 	shrt[4] = '\0';
 
 	return (const char *)shrt;
