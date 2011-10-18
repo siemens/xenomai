@@ -1,0 +1,335 @@
+diff --git a/arch/arm/plat-mxc/cpu.c b/arch/arm/plat-mxc/cpu.c
+index 3b35f55..386e0d5 100644
+--- a/arch/arm/plat-mxc/cpu.c
++++ b/arch/arm/plat-mxc/cpu.c
+@@ -1,73 +1,11 @@
+-/*
+- * Copyright (C) 2011 Freescale Semiconductor, Inc. All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+-
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+-
+- * You should have received a copy of the GNU General Public License along
+- * with this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+- */
+ 
+ #include <linux/module.h>
+-#include <mach/clock.h>
+ 
+ unsigned int __mxc_cpu_type;
+ EXPORT_SYMBOL(__mxc_cpu_type);
+-extern int mxc_early_serial_console_init(unsigned long base, struct clk *clk);
+-int (*set_cpu_voltage)(u32 volt);
+-void (*set_num_cpu_op)(int num);
+ 
+ void mxc_set_cpu_type(unsigned int type)
+ {
+ 	__mxc_cpu_type = type;
+ }
+ 
+-int mxc_jtag_enabled;		/* OFF: 0 (default), ON: 1 */
+-int uart_at_24; 			/* OFF: 0 (default); ON: 1 */
+-/*
+- * Here are the JTAG options from the command line. By default JTAG
+- * is OFF which means JTAG is not connected and WFI is enabled
+- *
+- *       "on" --  JTAG is connected, so WFI is disabled
+- *       "off" -- JTAG is disconnected, so WFI is enabled
+- */
+-
+-static int __init jtag_wfi_setup(char *p)
+-{
+-	if (memcmp(p, "on", 2) == 0) {
+-		mxc_jtag_enabled = 1;
+-		p += 2;
+-	} else if (memcmp(p, "off", 3) == 0) {
+-		mxc_jtag_enabled = 0;
+-		p += 3;
+-	}
+-	return 0;
+-}
+-early_param("jtag", jtag_wfi_setup);
+-
+-/**
+- * early_console_setup - setup debugging console
+- *
+- * Consoles started here require little enough setup that we can start using
+- * them very early in the boot process, either right after the machine
+- * vector initialization, or even before if the drivers can detect their hw.
+- *
+- * Returns non-zero if a console couldn't be setup.
+- * This function is developed based on
+- * early_console_setup function as defined in arch/ia64/kernel/setup.c
+- */
+-void __init early_console_setup(unsigned long base, struct clk *clk)
+-{
+-#ifdef CONFIG_SERIAL_IMX_CONSOLE
+-	mxc_early_serial_console_init(base, clk);
+-#endif
+-}
+-
+diff --git a/arch/arm/plat-mxc/gpio.c b/arch/arm/plat-mxc/gpio.c
+index 5b72ff4..d17b3c9 100644
+--- a/arch/arm/plat-mxc/gpio.c
++++ b/arch/arm/plat-mxc/gpio.c
+@@ -3,7 +3,7 @@
+  * Copyright 2008 Juergen Beisert, kernel@pengutronix.de
+  *
+  * Based on code from Freescale,
+- * Copyright (C) 2004-2011 Freescale Semiconductor, Inc.
++ * Copyright (C) 2004-2010 Freescale Semiconductor, Inc. All Rights Reserved.
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License
+@@ -177,10 +177,6 @@ static void mx3_gpio_irq_handler(u32 irq, struct irq_desc *desc)
+ 	u32 irq_stat;
+ 	struct mxc_gpio_port *port = get_irq_data(irq);
+ 
+-#ifndef CONFIG_MXC_TZIC
+-	desc->irq_data.chip->irq_ack(&desc->irq_data);
+-#endif
+-
+ 	irq_stat = __raw_readl(port->base + GPIO_ISR) &
+ 			__raw_readl(port->base + GPIO_IMR);
+ 
+@@ -237,7 +233,6 @@ static int gpio_set_wake_irq(struct irq_data *d, u32 enable)
+ }
+ 
+ static struct irq_chip gpio_irq_chip = {
+-	.name = "GPIO",
+ 	.irq_ack = gpio_ack_irq,
+ 	.irq_mask = gpio_mask_irq,
+ 	.irq_unmask = gpio_unmask_irq,
+@@ -299,10 +294,9 @@ static int mxc_gpio_direction_output(struct gpio_chip *chip,
+ 	return 0;
+ }
+ 
+-int mxc_gpio_init(struct mxc_gpio_port *port, int cnt)
++int __init mxc_gpio_init(struct mxc_gpio_port *port, int cnt)
+ {
+ 	int i, j;
+-	static bool initialed;
+ 
+ 	/* save for local usage */
+ 	mxc_gpio_ports = port;
+@@ -331,12 +325,10 @@ int mxc_gpio_init(struct mxc_gpio_port *port, int cnt)
+ 
+ 		spin_lock_init(&port[i].lock);
+ 
+-		if (!initialed)
+-			/* its a serious configuration bug when it fails */
+-			BUG_ON(gpiochip_add(&port[i].chip) < 0);
++		/* its a serious configuration bug when it fails */
++		BUG_ON( gpiochip_add(&port[i].chip) < 0 );
+ 
+-		if (cpu_is_mx1() || cpu_is_mx3() || cpu_is_mx25() ||
+-			cpu_is_mx51() || cpu_is_mx53() || cpu_is_mx6q()) {
++		if (cpu_is_mx1() || cpu_is_mx3() || cpu_is_mx25() || cpu_is_mx51()) {
+ 			/* setup one handler for each entry */
+ 			set_irq_chained_handler(port[i].irq, mx3_gpio_irq_handler);
+ 			set_irq_data(port[i].irq, &port[i]);
+@@ -348,7 +340,7 @@ int mxc_gpio_init(struct mxc_gpio_port *port, int cnt)
+ 			}
+ 		}
+ 	}
+-	initialed = true;
++
+ 	if (cpu_is_mx2()) {
+ 		/* setup one handler for all GPIO interrupts */
+ 		set_irq_chained_handler(port[0].irq, mx2_gpio_irq_handler);
+@@ -357,3 +349,113 @@ int mxc_gpio_init(struct mxc_gpio_port *port, int cnt)
+ 
+ 	return 0;
+ }
++
++#define DEFINE_IMX_GPIO_PORT_IRQ_HIGH(soc, _id, _hwid, _irq, _irq_high)	\
++	{								\
++		.chip.label = "gpio-" #_id,				\
++		.irq = _irq,						\
++		.irq_high = _irq_high,					\
++		.base = soc ## _IO_ADDRESS(				\
++				soc ## _GPIO ## _hwid ## _BASE_ADDR),	\
++		.virtual_irq_start = MXC_GPIO_IRQ_START + (_id) * 32,	\
++	}
++
++#define DEFINE_IMX_GPIO_PORT_IRQ(soc, _id, _hwid, _irq)			\
++	DEFINE_IMX_GPIO_PORT_IRQ_HIGH(soc, _id, _hwid, _irq, 0)
++#define DEFINE_IMX_GPIO_PORT(soc, _id, _hwid)				\
++	DEFINE_IMX_GPIO_PORT_IRQ(soc, _id, _hwid, 0)
++
++#define DEFINE_REGISTER_FUNCTION(prefix)				\
++int __init prefix ## _register_gpios(void)				\
++{									\
++	return mxc_gpio_init(prefix ## _gpio_ports,			\
++			ARRAY_SIZE(prefix ## _gpio_ports));		\
++}
++
++#if defined(CONFIG_SOC_IMX1)
++static struct mxc_gpio_port imx1_gpio_ports[] = {
++	DEFINE_IMX_GPIO_PORT_IRQ(MX1, 0, 1, MX1_GPIO_INT_PORTA),
++	DEFINE_IMX_GPIO_PORT_IRQ(MX1, 1, 2, MX1_GPIO_INT_PORTB),
++	DEFINE_IMX_GPIO_PORT_IRQ(MX1, 2, 3, MX1_GPIO_INT_PORTC),
++	DEFINE_IMX_GPIO_PORT_IRQ(MX1, 3, 4, MX1_GPIO_INT_PORTD),
++};
++
++DEFINE_REGISTER_FUNCTION(imx1)
++
++#endif /* if defined(CONFIG_SOC_IMX1) */
++
++#if defined(CONFIG_SOC_IMX21)
++static struct mxc_gpio_port imx21_gpio_ports[] = {
++	DEFINE_IMX_GPIO_PORT_IRQ(MX21, 0, 1, MX21_INT_GPIO),
++	DEFINE_IMX_GPIO_PORT(MX21, 1, 2),
++	DEFINE_IMX_GPIO_PORT(MX21, 2, 3),
++	DEFINE_IMX_GPIO_PORT(MX21, 3, 4),
++	DEFINE_IMX_GPIO_PORT(MX21, 4, 5),
++	DEFINE_IMX_GPIO_PORT(MX21, 5, 6),
++};
++
++DEFINE_REGISTER_FUNCTION(imx21)
++
++#endif /* if defined(CONFIG_SOC_IMX21) */
++
++#if defined(CONFIG_SOC_IMX25)
++static struct mxc_gpio_port imx25_gpio_ports[] = {
++	DEFINE_IMX_GPIO_PORT_IRQ(MX25, 0, 1, MX25_INT_GPIO1),
++	DEFINE_IMX_GPIO_PORT_IRQ(MX25, 1, 2, MX25_INT_GPIO2),
++	DEFINE_IMX_GPIO_PORT_IRQ(MX25, 2, 3, MX25_INT_GPIO3),
++	DEFINE_IMX_GPIO_PORT_IRQ(MX25, 3, 4, MX25_INT_GPIO4),
++};
++
++DEFINE_REGISTER_FUNCTION(imx25)
++
++#endif /* if defined(CONFIG_SOC_IMX25) */
++
++#if defined(CONFIG_SOC_IMX27)
++static struct mxc_gpio_port imx27_gpio_ports[] = {
++	DEFINE_IMX_GPIO_PORT_IRQ(MX27, 0, 1, MX27_INT_GPIO),
++	DEFINE_IMX_GPIO_PORT(MX27, 1, 2),
++	DEFINE_IMX_GPIO_PORT(MX27, 2, 3),
++	DEFINE_IMX_GPIO_PORT(MX27, 3, 4),
++	DEFINE_IMX_GPIO_PORT(MX27, 4, 5),
++	DEFINE_IMX_GPIO_PORT(MX27, 5, 6),
++};
++
++DEFINE_REGISTER_FUNCTION(imx27)
++
++#endif /* if defined(CONFIG_SOC_IMX27) */
++
++#if defined(CONFIG_SOC_IMX31)
++static struct mxc_gpio_port imx31_gpio_ports[] = {
++	DEFINE_IMX_GPIO_PORT_IRQ(MX31, 0, 1, MX31_INT_GPIO1),
++	DEFINE_IMX_GPIO_PORT_IRQ(MX31, 1, 2, MX31_INT_GPIO2),
++	DEFINE_IMX_GPIO_PORT_IRQ(MX31, 2, 3, MX31_INT_GPIO3),
++};
++
++DEFINE_REGISTER_FUNCTION(imx31)
++
++#endif /* if defined(CONFIG_SOC_IMX31) */
++
++#if defined(CONFIG_SOC_IMX35)
++static struct mxc_gpio_port imx35_gpio_ports[] = {
++	DEFINE_IMX_GPIO_PORT_IRQ(MX35, 0, 1, MX35_INT_GPIO1),
++	DEFINE_IMX_GPIO_PORT_IRQ(MX35, 1, 2, MX35_INT_GPIO2),
++	DEFINE_IMX_GPIO_PORT_IRQ(MX35, 2, 3, MX35_INT_GPIO3),
++};
++
++DEFINE_REGISTER_FUNCTION(imx35)
++
++#endif /* if defined(CONFIG_SOC_IMX35) */
++
++#if defined(CONFIG_SOC_IMX50)
++static struct mxc_gpio_port imx50_gpio_ports[] = {
++	DEFINE_IMX_GPIO_PORT_IRQ_HIGH(MX50, 0, 1, MX50_INT_GPIO1_LOW, MX50_INT_GPIO1_HIGH),
++	DEFINE_IMX_GPIO_PORT_IRQ_HIGH(MX50, 1, 2, MX50_INT_GPIO2_LOW, MX50_INT_GPIO2_HIGH),
++	DEFINE_IMX_GPIO_PORT_IRQ_HIGH(MX50, 2, 3, MX50_INT_GPIO3_LOW, MX50_INT_GPIO3_HIGH),
++	DEFINE_IMX_GPIO_PORT_IRQ_HIGH(MX50, 3, 4, MX50_INT_GPIO3_LOW, MX50_INT_GPIO3_HIGH),
++	DEFINE_IMX_GPIO_PORT_IRQ_HIGH(MX50, 4, 5, MX50_INT_GPIO3_LOW, MX50_INT_GPIO3_HIGH),
++	DEFINE_IMX_GPIO_PORT_IRQ_HIGH(MX50, 5, 6, MX50_INT_GPIO3_LOW, MX50_INT_GPIO3_HIGH),
++};
++
++DEFINE_REGISTER_FUNCTION(imx50)
++
++#endif /* if defined(CONFIG_SOC_IMX50) */
+diff --git a/arch/arm/plat-mxc/include/mach/common.h b/arch/arm/plat-mxc/include/mach/common.h
+index 77f9e67..aea2cd3 100644
+--- a/arch/arm/plat-mxc/include/mach/common.h
++++ b/arch/arm/plat-mxc/include/mach/common.h
+@@ -1,19 +1,11 @@
+ /*
+- * Copyright (C) 2004-2011 Freescale Semiconductor, Inc. All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+-
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
++ * Copyright 2004-2007 Freescale Semiconductor, Inc. All Rights Reserved.
++ */
+ 
+- * You should have received a copy of the GNU General Public License along
+- * with this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
++/*
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
+  */
+ 
+ #ifndef __ASM_ARCH_MXC_COMMON_H__
+@@ -31,18 +23,7 @@ extern void mx35_map_io(void);
+ extern void mx50_map_io(void);
+ extern void mx51_map_io(void);
+ extern void mx53_map_io(void);
+-extern void mx6_map_io(void);
+ extern void mxc91231_map_io(void);
+-extern void imx1_init_early(void);
+-extern void imx21_init_early(void);
+-extern void imx25_init_early(void);
+-extern void imx27_init_early(void);
+-extern void imx31_init_early(void);
+-extern void imx35_init_early(void);
+-extern void imx50_init_early(void);
+-extern void imx51_init_early(void);
+-extern void imx53_init_early(void);
+-extern void mxc91231_init_early(void);
+ extern void mxc_init_irq(void __iomem *);
+ extern void tzic_init_irq(void __iomem *);
+ extern void mx1_init_irq(void);
+@@ -54,7 +35,6 @@ extern void mx35_init_irq(void);
+ extern void mx50_init_irq(void);
+ extern void mx51_init_irq(void);
+ extern void mx53_init_irq(void);
+-extern void mx6_init_irq(void);
+ extern void mxc91231_init_irq(void);
+ extern void epit_timer_init(struct clk *timer_clk, void __iomem *base, int irq);
+ extern void mxc_timer_init(struct clk *timer_clk, void __iomem *, int);
+@@ -68,10 +48,6 @@ extern int mx51_clocks_init(unsigned long ckil, unsigned long osc,
+ 			unsigned long ckih1, unsigned long ckih2);
+ extern int mx53_clocks_init(unsigned long ckil, unsigned long osc,
+ 			unsigned long ckih1, unsigned long ckih2);
+-extern int mx50_clocks_init(unsigned long ckil, unsigned long osc,
+-			unsigned long ckih1);
+-extern int mx6_clocks_init(unsigned long ckil, unsigned long osc,
+-			unsigned long ckih1, unsigned long ckih2);
+ extern int mxc91231_clocks_init(unsigned long fref);
+ extern int mxc_register_gpios(void);
+ extern int mxc_register_device(struct platform_device *pdev, void *data);
+@@ -82,5 +58,4 @@ extern void mxc91231_arch_reset(int, const char *);
+ extern void mxc91231_prepare_idle(void);
+ extern void mx51_efikamx_reset(void);
+ extern int mx53_revision(void);
+-extern int mx50_revision(void);
+ #endif
