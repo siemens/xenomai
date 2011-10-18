@@ -835,8 +835,8 @@ static void handle_a_interrupt(a4l_dev_t *dev,
 	if((subd->flags & A4L_SUBD_TYPES) == A4L_SUBD_UNUSED)
 		return;
 
-	a4l_info(dev, "ni_mio_common: interrupt: "
-		 "a_status=%04x ai_mite_status=%08x\n",status, ai_mite_status);
+	a4l_dbg(1, drv_dbg, dev, "ni_mio_common: interrupt: "
+		"a_status=%04x ai_mite_status=%08x\n",status, ai_mite_status);
 	ni_mio_print_status_a(status);
 
 #if (defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) || \
@@ -847,9 +847,9 @@ static void handle_a_interrupt(a4l_dev_t *dev,
 	if (ai_mite_status & ~(CHSR_INT | CHSR_LINKC | CHSR_DONE | CHSR_MRDY |
 			       CHSR_DRDY | CHSR_DRQ1 | CHSR_DRQ0 | CHSR_ERROR |
 			       CHSR_SABORT | CHSR_XFERR | CHSR_LxERR_mask)) {
-		a4l_info(dev, "ni_mio_common: interrupt: "
-			 "unknown mite interrupt, ack! (ai_mite_status=%08x)\n",
-			 ai_mite_status);
+		a4l_dbg(1, drv_dbg, dev, "ni_mio_common: interrupt: "
+			"unknown mite interrupt, ack! (ai_mite_status=%08x)\n",
+			ai_mite_status);
 		a4l_buf_evt(subd, A4L_BUF_ERROR);
 	}
 #endif /* CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE */
@@ -858,8 +858,8 @@ static void handle_a_interrupt(a4l_dev_t *dev,
 	if (status & (AI_Overrun_St | AI_Overflow_St | AI_SC_TC_Error_St |
 		      AI_SC_TC_St | AI_START1_St)) {
 		if (status == 0xffff) {
-			a4l_info(dev, "ni_mio_common: interrupt: "
-				 "a_status=0xffff.  Card removed?\n");
+			a4l_dbg(1, drv_dbg, dev, "ni_mio_common: interrupt: "
+				"a_status=0xffff.  Card removed?\n");
 			/* TODO: we probably aren't even running a command now,
 			   so it's a good idea to be careful.
 			   we should check the transfer status */
@@ -869,8 +869,8 @@ static void handle_a_interrupt(a4l_dev_t *dev,
 		}
 		if (status & (AI_Overrun_St | AI_Overflow_St |
 			      AI_SC_TC_Error_St)) {
-			a4l_info(dev, "ni_mio_common: interrupt: "
-				 "ai error a_status=%04x\n", status);
+			a4l_dbg(1, drv_dbg, dev, "ni_mio_common: interrupt: "
+				"ai error a_status=%04x\n", status);
 			ni_mio_print_status_a(status);
 
 			shutdown_ai_command(subd);
@@ -881,7 +881,7 @@ static void handle_a_interrupt(a4l_dev_t *dev,
 			return;
 		}
 		if (status & AI_SC_TC_St) {
-			a4l_info(dev, "ni_mio_common: SC_TC interrupt\n");
+			a4l_dbg(1, drv_dbg, dev, "ni_mio_common: SC_TC interrupt\n");
 			if (!devpriv->ai_continuous) {
 				shutdown_ai_command(subd);
 			}
@@ -914,8 +914,8 @@ static void handle_a_interrupt(a4l_dev_t *dev,
 
 	status = devpriv->stc_readw(dev, AI_Status_1_Register);
 	if (status & Interrupt_A_St)
-		a4l_info(dev, "ni_mio_common: interrupt: "
-			 " didn't clear interrupt? status=0x%x\n", status);
+		a4l_dbg(1, drv_dbg, dev, "ni_mio_common: interrupt: "
+			" didn't clear interrupt? status=0x%x\n", status);
 }
 
 static void ack_b_interrupt(a4l_dev_t *dev, unsigned short b_status)
