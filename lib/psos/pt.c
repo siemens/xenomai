@@ -26,6 +26,7 @@
 #include <copperplate/cluster.h>
 #include <copperplate/lock.h>
 #include <psos/psos.h>
+#include "internal.h"
 #include "pt.h"
 
 #define pt_magic	0x8181fefe
@@ -121,6 +122,7 @@ u_long pt_create(const char *name,
 		 u_long *ptid_r, u_long *nbuf)
 {
 	pthread_mutexattr_t mattr;
+	char short_name[5];
 	struct service svc;
 	struct psos_pt *pt;
 	int ret = SUCCESS;
@@ -145,6 +147,7 @@ u_long pt_create(const char *name,
 	if (name == NULL || *name == '\0')
 		sprintf(pt->name, "pt%lu", ++anon_ptids);
 	else {
+		name = __psos_maybe_short_name(short_name, name);
 		strncpy(pt->name, name, sizeof(pt->name));
 		pt->name[sizeof(pt->name) - 1] = '\0';
 	}
@@ -289,9 +292,12 @@ u_long pt_ident(const char *name, u_long node, u_long *ptid_r)
 	struct pvclusterobj *cobj;
 	struct service svc;
 	struct psos_pt *pt;
+	char short_name[5];
 
 	if (node)
 		return ERR_NODENO;
+
+	name = __psos_maybe_short_name(short_name, name);
 
 	COPPERPLATE_PROTECT(svc);
 	cobj = pvcluster_findobj(&psos_pt_table, name);

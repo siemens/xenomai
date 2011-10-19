@@ -29,6 +29,7 @@
 #include "task.h"
 #include "sem.h"
 #include "tm.h"
+#include "internal.h"
 #include <psos/psos.h>
 
 #define sem_magic	0x8181fbfb
@@ -75,6 +76,7 @@ u_long sm_create(const char *name,
 {
 	struct psos_sem *sem;
 	struct service svc;
+	char short_name[5];
 	int sobj_flags = 0;
 	int ret = SUCCESS;
 
@@ -89,6 +91,7 @@ u_long sm_create(const char *name,
 	if (name == NULL || *name == '\0')
 		sprintf(sem->name, "sm%lu", ++anon_smids);
 	else {
+		name = __psos_maybe_short_name(short_name, name);
 		strncpy(sem->name, name, sizeof(sem->name));
 		sem->name[sizeof(sem->name) - 1] = '\0';
 	}
@@ -148,9 +151,12 @@ u_long sm_ident(const char *name, u_long node, u_long *smid_r)
 	struct clusterobj *cobj;
 	struct psos_sem *sem;
 	struct service svc;
+	char short_name[5];
 
 	if (node)
 		return ERR_NODENO;
+
+	name = __psos_maybe_short_name(short_name, name);
 
 	COPPERPLATE_PROTECT(svc);
 	cobj = cluster_findobj(&psos_sem_table, name);

@@ -4,6 +4,7 @@ libpsos_la_LDFLAGS = -version-info 0:0:0 -lpthread
 
 libpsos_la_SOURCES =	\
 	init.c		\
+	internal.h	\
 	pt.c		\
 	pt.h		\
 	queue.c		\

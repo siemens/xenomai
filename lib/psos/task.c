@@ -33,6 +33,7 @@
 #include <copperplate/clockobj.h>
 #include <copperplate/cluster.h>
 #include <psos/psos.h>
+#include "internal.h"
 #include "task.h"
 #include "tm.h"
 
@@ -247,6 +248,7 @@ u_long t_create(const char *name, u_long prio,
 	struct syncstate syns;
 	struct service svc;
 	int ret, cprio = 1;
+	char short_name[5];
 
 	ret = check_task_priority(prio, &cprio);
 	if (ret)
@@ -276,6 +278,7 @@ u_long t_create(const char *name, u_long prio,
 	if (name == NULL || *name == '\0')
 		sprintf(task->name, "t%lu", ++anon_tids);
 	else {
+		name = __psos_maybe_short_name(short_name, name);
 		strncpy(task->name, name, sizeof(task->name));
 		task->name[sizeof(task->name) - 1] = '\0';
 	}
@@ -460,6 +463,7 @@ u_long t_ident(const char *name, u_long node, u_long *tid_r)
 	struct clusterobj *cobj;
 	struct psos_task *task;
 	struct service svc;
+	char short_name[5];
 	int ret = SUCCESS;
 
 	if (node)
@@ -472,6 +476,7 @@ u_long t_ident(const char *name, u_long node, u_long *tid_r)
 		if (task == NULL)
 			goto out;
 	} else {
+		name = __psos_maybe_short_name(short_name, name);
 		cobj = cluster_findobj(&psos_task_table, name);
 		if (cobj == NULL) {
 			ret = ERR_OBJNF;

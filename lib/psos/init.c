@@ -17,6 +17,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -27,12 +28,15 @@
 #include <copperplate/clockobj.h>
 #include <copperplate/debug.h>
 #include <psos/psos.h>
+#include "internal.h"
 #include "tm.h"
 #include "task.h"
 #include "sem.h"
 #include "queue.h"
 #include "pt.h"
 #include "rn.h"
+
+unsigned int psos_long_names;
 
 static unsigned int clock_resolution = 1000000; /* 1ms */
 
@@ -104,4 +108,15 @@ static struct copperskin psos_skin = {
 static __attribute__ ((constructor)) void register_psos(void)
 {
 	copperplate_register_skin(&psos_skin);
+}
+
+const char *__psos_maybe_short_name(char shrt[5], const char *lng)
+{
+	if (psos_long_names)
+		return lng;
+
+	strncpy(shrt, lng, 5 - 1);
+	shrt[4] = '\0';
+
+	return (const char *)shrt;
 }

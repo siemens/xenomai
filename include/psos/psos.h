@@ -373,6 +373,8 @@ u_long tm_wkwhen(u_long date,
 
 int psos_task_normalize_priority(unsigned long psos_prio);
 
+extern unsigned int psos_long_names;
+
 #ifdef __cplusplus
 };
 #endif /* __cplusplus */

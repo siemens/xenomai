@@ -28,6 +28,7 @@
 #include <copperplate/panic.h>
 #include <copperplate/cluster.h>
 #include <psos/psos.h>
+#include "internal.h"
 #include "reference.h"
 #include "task.h"
 #include "queue.h"
@@ -85,6 +86,7 @@ static u_long __q_create(const char *name, u_long count,
 	struct service svc;
 	int sobj_flags = 0;
 	int ret = SUCCESS;
+	char short_name[5];
 
 	COPPERPLATE_PROTECT(svc);
 
@@ -97,6 +99,7 @@ static u_long __q_create(const char *name, u_long count,
 	if (name == NULL || *name == '\0')
 		sprintf(q->name, "q%lu", ++anon_qids);
 	else {
+		name = __psos_maybe_short_name(short_name, name);
 		strncpy(q->name, name, sizeof(q->name));
 		q->name[sizeof(q->name) - 1] = '\0';
 	}
@@ -197,9 +200,12 @@ static u_long __q_ident(const char *name,
 	struct clusterobj *cobj;
 	struct psos_queue *q;
 	struct service svc;
+	char short_name[5];
 
 	if (node)
 		return ERR_NODENO;
+
+	name = __psos_maybe_short_name(short_name, name);
 
 	COPPERPLATE_PROTECT(svc);
 	cobj = cluster_findobj(&psos_queue_table, name);

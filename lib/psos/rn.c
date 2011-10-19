@@ -26,6 +26,7 @@
 #include <copperplate/threadobj.h>
 #include <copperplate/clockobj.h>
 #include <psos/psos.h>
+#include "internal.h"
 #include "tm.h"
 #include "rn.h"
 
@@ -68,6 +69,7 @@ u_long rn_create(const char *name, void *saddr, u_long length,
 	int sobj_flags = 0, ret = SUCCESS;
 	struct psos_rn *rn;
 	struct service svc;
+	char short_name[5];
 
 	if ((uintptr_t)saddr & (sizeof(uintptr_t) - 1))
 		return ERR_RNADDR;
@@ -113,6 +115,7 @@ u_long rn_create(const char *name, void *saddr, u_long length,
 	if (name == NULL || *name == '\0')
 		sprintf(rn->name, "rn%lu", ++anon_rnids);
 	else {
+		name = __psos_maybe_short_name(short_name, name);
 		strncpy(rn->name, name, sizeof(rn->name));
 		rn->name[sizeof(rn->name) - 1] = '\0';
 	}
@@ -190,6 +193,9 @@ u_long rn_ident(const char *name, u_long *rnid_r)
 	struct pvclusterobj *cobj;
 	struct psos_rn *rn;
 	struct service svc;
+	char short_name[5];
+
+	name = __psos_maybe_short_name(short_name, name);
 
 	COPPERPLATE_PROTECT(svc);
 	cobj = pvcluster_findobj(&psos_rn_table, name);
