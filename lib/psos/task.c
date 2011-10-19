@@ -246,7 +246,7 @@ u_long t_create(const char *name, u_long prio,
 	pthread_attr_t thattr;
 	struct syncstate syns;
 	struct service svc;
-	int ret, cprio;
+	int ret, cprio = 1;
 
 	ret = check_task_priority(prio, &cprio);
 	if (ret)
@@ -412,7 +412,7 @@ u_long t_resume(u_long tid)
 u_long t_setpri(u_long tid, u_long newprio, u_long *oldprio_r)
 {
 	struct psos_task *task;
-	int ret, cprio;
+	int ret, cprio = 1;
 
 	task = get_psos_task_or_self(tid, &ret);
 	if (task == NULL)
