@@ -363,6 +363,8 @@ u_long tm_set(u_long date,
 	      u_long time,
 	      u_long ticks);
 
+u_long tm_getm(unsigned long long *ns);
+
 u_long tm_wkafter(u_long ticks);
 
 u_long tm_wkwhen(u_long date,
