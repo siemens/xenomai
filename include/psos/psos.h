@@ -97,6 +97,7 @@
 #define ERR_OBJDEL   0x05
 #define ERR_OBJID    0x06
 #define ERR_OBJTYPE  0x07
+#define ERR_OBJTFULL 0x08
 #define ERR_OBJNF    0x09
 
 #define ERR_NOTCB    0x0E
