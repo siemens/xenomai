@@ -328,12 +328,13 @@ kernel (we do support recent ones as well on this platform):
 $ $xenomai_root/scripts/prepare-kernel.sh --arch=ppc \
   --adeos=$xenomai_root/ksrc/arch/powerpc/patches/adeos-ipipe-2.6.14-ppc-1.5-*.patch \
   --linux=$linux_tree
+$ make -p $build_root/linux
 $ cd $linux_tree
-$ make ARCH=ppc CROSS_COMPILE=ppc_4xx- O=$build_root xconfig/gconfig/menuconfig
+$ make ARCH=ppc CROSS_COMPILE=ppc_4xx- O=$build_root/linux xconfig/gconfig/menuconfig
 # [select the kernel and Xenomai options, save the configuration]
-$ make ARCH=ppc CROSS_COMPILE=ppc_4xx- O=$build_root bzImage modules
+$ make ARCH=ppc CROSS_COMPILE=ppc_4xx- O=$build_root/linux bzImage modules
 # [manually install the kernel image, system map and modules to the proper location]
-$ cd $build_root
+$ make $build_root/xenomai && cd $build_root/xenomai
 $ $xenomai_root/configure --build=i686-pc-linux-gnu --host=ppc-unknown-linux-gnu \
   CC=ppc_4xx-gcc LD=ppc_4xx-ld
 $ make DESTDIR=$staging_dir install
@@ -379,12 +380,13 @@ $ $xenomai_root/scripts/prepare-kernel.sh --arch=arm \
   --adeos=$xenomai_root/ksrc/arch/arm/patches/adeos-ipipe-2.6.20-arm-* \
   --linux=$linux_tree
 $ cd $linux_tree
-$ make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi- O=$build_root \
+$ make -p $build_root/linux
+$ make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi- O=$build_root/linux \
   csb637_defconfig
-$ make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi-- O=$build_root \
+$ make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi-- O=$build_root/linux \
   bzImage modules
 # [manually install the kernel image, system map and modules to the proper location]
-$ cd $build_root
+$ mkdir $build_root/xenomai && cd $build_root/xenomai
 $ $xenomai_root/configure CFLAGS="-march=armv4t" LDFLAGS="-march=armv4t" \
   --build=i686-pc-linux-gnu --host=arm-none-linux-gnueabi-
 $ make DESTDIR=$staging_dir install
