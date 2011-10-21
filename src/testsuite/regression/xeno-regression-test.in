@@ -52,8 +52,8 @@ echo 0 > /proc/xenomai/latency || :
 
 start_load
 
-check_alive @testdir@/switchtest ${1+"$@"}
-check_alive @testdir@/switchtest -s 1000 ${1+"$@"}
+check_alive @testdir@/switchtest
+check_alive @testdir@/switchtest -s 1000
 check_alive @testdir@/latency ${1+"$@"}
 
 wait_load

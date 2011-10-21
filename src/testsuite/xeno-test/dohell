@@ -92,5 +92,5 @@ fi
 
 kill $pids > /dev/null 2>&1
 sleep 5
-killall -KILL -q cat $nc dd hackbench ls ps
-killall -KILL -q `basename $0` sleep
+killall -KILL cat $nc dd hackbench ls ps > /dev/null 2>&1
+killall -KILL `basename $0` sleep > /dev/null 2>&1

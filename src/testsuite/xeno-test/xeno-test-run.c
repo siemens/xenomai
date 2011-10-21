@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <ctype.h>
 
 #include <sys/types.h>
 #include <sys/fcntl.h>
@@ -34,6 +35,7 @@ struct child {
 
 static const char *scriptname;
 static volatile int sigexit;
+static time_t termload_start, sigexit_start = 0;
 static sigset_t sigchld_mask;
 static struct child *first_child;
 static char *loadcmd = "exec dohell 900";
@@ -110,6 +112,9 @@ int child_initv(struct child *child, int type, char *argv[])
 			break;
 		}
 
+		/* Detach child from terminal, to avoid child catching SIGINT */
+		setsid();
+
 		err = execvp(argv[0], argv);
 		if (err < 0) {
 			fail_fprintf(stderr, "execvp(%s): %m", argv[0]);
@@ -170,10 +175,35 @@ int child_initv(struct child *child, int type, char *argv[])
 
 int child_init(struct child *child, int type, char *cmdline)
 {
-	char *argv[] = {
-		getenv("SHELL") ?: "sh" , "-c", cmdline, NULL
-	};
-	return child_initv(child, type, argv);
+	char **argv = malloc(sizeof(*argv));
+	unsigned argc = 0;
+	int rc;
+
+	if (!argv)
+		return -ENOMEM;
+
+	do {
+		char **new_argv = realloc(argv, sizeof(*argv) * (argc + 2));
+		if (!new_argv) {
+			free(argv);
+			return -ENOMEM;
+		}
+		argv = new_argv;
+
+		argv[argc++] = cmdline;
+		cmdline = strpbrk(cmdline, " \t");
+		if (cmdline)
+			do {
+				*cmdline++ = '\0';
+			} while (isspace(*cmdline));
+	} while (cmdline && *cmdline);
+	argv[argc] = NULL;
+
+	rc = child_initv(child, type, argv);
+
+	free(argv);
+
+	return rc;
 }
 
 void child_cleanup(struct child *child)
@@ -195,7 +225,7 @@ void child_cleanup(struct child *child)
 		close(child->in);
 }
 
-struct child *child_search(pid_t pid)
+struct child *child_search_pid(pid_t pid)
 {
 	struct child *child;
 
@@ -204,6 +234,17 @@ struct child *child_search(pid_t pid)
 			break;
 
 	return child;
+}
+
+struct child *child_search_type(int type)
+{
+	struct child *child;
+
+	for (child = first_child; child; child = child->next)
+		if (child->type == type)
+			return child;
+
+	return NULL;
 }
 
 int children_done_p(int type)
@@ -217,31 +258,20 @@ int children_done_p(int type)
 	return 1;
 }
 
-int children_term(int type)
+int children_kill(int type, int sig)
 {
 	struct child *child;
 	struct timespec ts;
 
-	for (child = first_child; child; child = child->next)
-		if (type == CHILD_ANY || child->type == type)
-			kill(child->pid, SIGTERM);
-
-	ts.tv_sec = 5;
-	ts.tv_nsec = 0;
-	do {
-		if (children_done_p(type))
-			return 1;
-	} while (nanosleep(&ts, &ts) == -1 && errno == EINTR);
+	if (children_done_p(type))
+		return 1;
 
 	for (child = first_child; child; child = child->next)
 		if ((type == CHILD_ANY || child->type == type)
-		    && !child->dead) {
-			fail_fprintf(stderr, "child %d would not die, sending "
-				   "SIGKILL\n", child->pid);
-			kill(child->pid, SIGKILL);
-		}
+		    && !child->dead)
+			kill(child->pid, sig);
 
-	return 0;
+	return children_done_p(type);
 }
 
 void sigchld_handler(int sig)
@@ -251,7 +281,7 @@ void sigchld_handler(int sig)
 	pid_t pid;
 
 	while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
-		child = child_search(pid);
+		child = child_search_pid(pid);
 		if (!child) {
 			fail_fprintf(stderr, "dead child %d not found!\n", pid);
 			exit(EXIT_FAILURE);
@@ -264,14 +294,15 @@ void sigchld_handler(int sig)
 
 void cleanup(void)
 {
-	if (!children_term(CHILD_ANY))
-		_exit(EXIT_FAILURE);
+	children_kill(CHILD_ANY, SIGKILL);
 }
 
 void termsig(int sig)
 {
 	sigexit = sig;
-	cleanup();
+	sigexit_start = time(NULL);
+	children_kill(CHILD_ANY, SIGTERM);
+	signal(sig, SIG_DFL);
 }
 
 void copy(int from, int to)
@@ -315,7 +346,7 @@ void handle_checked_child(struct child *child, fd_set *fds)
 		/* A checked child died, this may be abnormal if no
 		   termination signal was sent. */
 		if (WIFEXITED(status)) {
-			if (sigexit)
+			if (sigexit || termload_start)
 				goto cleanup;
 			fail_fprintf(stderr,
 				   "child %d exited with status %d\n",
@@ -323,7 +354,7 @@ void handle_checked_child(struct child *child, fd_set *fds)
 		}
 
 		if (WIFSIGNALED(status)) {
-			if (sigexit && WTERMSIG(status) == SIGTERM) {
+			if (sigexit || termload_start) {
 			  cleanup:
 				child_cleanup(child);
 				free(child);
@@ -355,8 +386,10 @@ void handle_script_child(struct child *child, fd_set *fds)
 	ssize_t sz;
 	int rc;
 
-	if (child->dead)
-		exit(child->exit_status);
+	if (child->dead) {
+		child_cleanup(child);
+		return;
+	}
 
 	if (!FD_ISSET(child->out, fds))
 		return;
@@ -386,7 +419,6 @@ void handle_script_child(struct child *child, fd_set *fds)
 					     " script is already running.\n");
 				exit(EXIT_FAILURE);
 			}
-
 			rc = child_init(&load, CHILD_LOAD, loadcmd);
 			if (rc) {
 				fail_perror("child_init");
@@ -411,28 +443,38 @@ void handle_load_child(struct child *child, fd_set *fds)
 		copy(child->out, STDOUT_FILENO);
 
 	if (child->dead) {
-		child_cleanup(child);
-		if (sigexit)
-			return;
+		time_t now = time(NULL);
 
-		sigexit = SIGTERM;
-
-		fprintf(stderr, "Load script terminated, "
-			"terminating checked scripts\n");
-
-		if (!children_term(CHILD_CHECKED))
-			exit(EXIT_FAILURE);
-
-		for (child = first_child; child; child = child->next)
-			if (child->type == CHILD_CHECKED) {
+		if (!termload_start) {
+			if (sigexit) {
 				child_cleanup(child);
-				free(child);
+				return;
 			}
 
-		sigexit = 0;
+			fprintf(stderr, "Load script terminated, "
+				"terminating checked scripts\n");
 
-		write(script.in, "0\n", 2);
-		return;
+			children_kill(CHILD_CHECKED, SIGTERM);
+			termload_start = now;
+		} else {
+			if (child_search_type(CHILD_CHECKED)
+			    && now < termload_start + 30)
+				return;
+
+			if (now >= termload_start + 30) {
+				fail_fprintf(stderr, "timeout waiting for "
+					     "checked children, "
+					     "sending SIGKILL\n");
+				children_kill(CHILD_ANY, SIGKILL);
+			}
+
+			child_cleanup(child);
+			if (sigexit)
+				return;
+
+			write(script.in, "0\n", 2);
+			termload_start = 0;
+		}
 	}
 }
 
@@ -527,7 +569,7 @@ int main(int argc, char *argv[])
 	}
 	maxfd = script.out;
 
-	for (;;) {
+	while (first_child) {
 		struct child *child, *next;
 		struct timeval tv;
 		fd_set in;
@@ -556,12 +598,17 @@ int main(int argc, char *argv[])
 			child->handle(child, &in);
 		}
 
-		if (children_done_p(CHILD_ANY)) {
-			if (sigexit) {
-				signal(sigexit, SIG_DFL);
-				raise(sigexit);
-			}
-			exit(EXIT_SUCCESS);
+		if (sigexit_start && time(NULL) >= sigexit_start + 30) {
+			fail_fprintf(stderr, "timeout waiting for all "
+				     "children, sending SIGKILL\n");
+			children_kill(CHILD_ANY, SIGKILL);
+			sigexit_start = 0;
 		}
 	}
+
+	if (sigexit) {
+		signal(sigexit, SIG_DFL);
+		raise(sigexit);
+	}
+	exit(EXIT_SUCCESS);
 }
