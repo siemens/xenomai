@@ -328,7 +328,7 @@ kernel (we do support recent ones as well on this platform):
 $ $xenomai_root/scripts/prepare-kernel.sh --arch=ppc \
   --adeos=$xenomai_root/ksrc/arch/powerpc/patches/adeos-ipipe-2.6.14-ppc-1.5-*.patch \
   --linux=$linux_tree
-$ make -p $build_root/linux
+$ mkdir -p $build_root/linux
 $ cd $linux_tree
 $ make ARCH=ppc CROSS_COMPILE=ppc_4xx- O=$build_root/linux xconfig/gconfig/menuconfig
 # [select the kernel and Xenomai options, save the configuration]
@@ -380,7 +380,7 @@ $ $xenomai_root/scripts/prepare-kernel.sh --arch=arm \
   --adeos=$xenomai_root/ksrc/arch/arm/patches/adeos-ipipe-2.6.20-arm-* \
   --linux=$linux_tree
 $ cd $linux_tree
-$ make -p $build_root/linux
+$ mkdir -p $build_root/linux
 $ make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi- O=$build_root/linux \
   csb637_defconfig
 $ make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi-- O=$build_root/linux \
