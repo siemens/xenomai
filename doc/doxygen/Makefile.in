@@ -226,7 +226,7 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-HTML_DOCS = api
+HTML_DOCS = api api/search
 PDF_DOCS = native-api.pdf nucleus-api.pdf posix-api.pdf rtdm-api.pdf
 EXTRA_DIST = \
 	Doxyfile.in Doxyfile-common.in Doxyfile-native.in Doxyfile-nucleus.in \
@@ -465,18 +465,18 @@ uninstall-am: uninstall-local
 
 @CONFIG_XENO_DOC_DOX_TRUE@.DELETE_ON_ERROR:
 
-install-htmldocs: $(HTML_DOCS:%=$(HTML_DOCSDIR)%)
+install-htmldocs: $(HTML_DOCS)
 	docs="$^"; abs_builddir=$$PWD; \
 	for dir in $$docs; do \
-	    dest=$(DESTDIR)$(docdir)/html/`basename $$dir`; \
+	    dest=$(DESTDIR)$(docdir)/html/$$dir; \
 	    $(mkinstalldirs) $$dest; \
 	    abs_dest=`cd $$dest && pwd` ; \
-            cd $$dir || exit 1; \
+	    cd $(HTML_DOCSDIR)$$dir || exit 1; \
 	    for f in * ; do \
-	        case $$f in \
+		case $$f in \
 		    *~|CVS|.svn|[mM]akefile*|GNUmakefile*);; \
 		    *) $(INSTALL_DATA) $$f $$abs_dest/$$f;; \
-	        esac; \
+		esac; \
 	    done; cd $$abs_builddir; \
 	done
 
@@ -496,17 +496,17 @@ install-psdocs: $(PS_DOCS:%=$(PS_DOCSDIR)%)
 
 install-docs-local: install-htmldocs install-psdocs install-pdfdocs
 
-dist-htmldocs: $(HTML_DOCS:%=$(HTML_DOCSDIR)%)
+dist-htmldocs: $(HTML_DOCS)
 	docs="$^"; abs_builddir=$$PWD; \
 	for dir in $$docs; do \
-	    dest=$(GEN_DOC_DIST_ROOT)/html/`basename $$dir`; \
+	    dest=$(GEN_DOC_DIST_ROOT)/html/$$dir; \
 	    $(mkinstalldirs) $$dest && abs_dest=`cd $$dest && pwd` && \
-            cd $$dir || exit 1; \
+	    cd $(HTML_DOCSDIR)$$dir || exit 1; \
 	    for f in * ; do \
 		case $$f in \
 		    *~|CVS|.svn|[mM]akefile*|GNUmakefile*);; \
 		    *) $(INSTALL_DATA) $$f $$abs_dest/$$f;; \
-	        esac; \
+		esac; \
 	    done; cd $$abs_builddir; \
 	done
 
@@ -536,7 +536,7 @@ uninstall-docs:
 		if test -d $$t; then $(RM) $$t/*; $(RM) -r $$t; \
 		else $(RM) $$t; fi; \
 	    done; \
-        fi
+	fi
 
 install-data-local: install-docs-local
 

@@ -1,4 +1,4 @@
-HTML_DOCS=api
+HTML_DOCS=api api/search
 PDF_DOCS= native-api.pdf nucleus-api.pdf posix-api.pdf rtdm-api.pdf
 
 EXTRA_DIST = \

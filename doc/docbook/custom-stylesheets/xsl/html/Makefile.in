@@ -577,18 +577,18 @@ uninstall-dbx-htmldocs:
 	    done; \
         fi
 
-install-htmldocs: $(HTML_DOCS:%=$(HTML_DOCSDIR)%)
+install-htmldocs: $(HTML_DOCS)
 	docs="$^"; abs_builddir=$$PWD; \
 	for dir in $$docs; do \
-	    dest=$(DESTDIR)$(docdir)/html/`basename $$dir`; \
+	    dest=$(DESTDIR)$(docdir)/html/$$dir; \
 	    $(mkinstalldirs) $$dest; \
 	    abs_dest=`cd $$dest && pwd` ; \
-            cd $$dir || exit 1; \
+	    cd $(HTML_DOCSDIR)$$dir || exit 1; \
 	    for f in * ; do \
-	        case $$f in \
+		case $$f in \
 		    *~|CVS|.svn|[mM]akefile*|GNUmakefile*);; \
 		    *) $(INSTALL_DATA) $$f $$abs_dest/$$f;; \
-	        esac; \
+		esac; \
 	    done; cd $$abs_builddir; \
 	done
 
@@ -608,17 +608,17 @@ install-psdocs: $(PS_DOCS:%=$(PS_DOCSDIR)%)
 
 install-docs-local: install-htmldocs install-psdocs install-pdfdocs
 
-dist-htmldocs: $(HTML_DOCS:%=$(HTML_DOCSDIR)%)
+dist-htmldocs: $(HTML_DOCS)
 	docs="$^"; abs_builddir=$$PWD; \
 	for dir in $$docs; do \
-	    dest=$(GEN_DOC_DIST_ROOT)/html/`basename $$dir`; \
+	    dest=$(GEN_DOC_DIST_ROOT)/html/$$dir; \
 	    $(mkinstalldirs) $$dest && abs_dest=`cd $$dest && pwd` && \
-            cd $$dir || exit 1; \
+	    cd $(HTML_DOCSDIR)$$dir || exit 1; \
 	    for f in * ; do \
 		case $$f in \
 		    *~|CVS|.svn|[mM]akefile*|GNUmakefile*);; \
 		    *) $(INSTALL_DATA) $$f $$abs_dest/$$f;; \
-	        esac; \
+		esac; \
 	    done; cd $$abs_builddir; \
 	done
 
@@ -648,7 +648,7 @@ uninstall-docs:
 		if test -d $$t; then $(RM) $$t/*; $(RM) -r $$t; \
 		else $(RM) $$t; fi; \
 	    done; \
-        fi
+	fi
 
 install-data-local: install-dbx-htmldocs install-docs-local
 
