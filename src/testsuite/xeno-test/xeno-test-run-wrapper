@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 
 check_alive()
 {
@@ -16,4 +16,4 @@ wait_load()
 }
 
 script="$1"; shift
-source $script
+. $script

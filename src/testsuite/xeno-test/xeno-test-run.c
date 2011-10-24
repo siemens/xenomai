@@ -38,7 +38,8 @@ static volatile int sigexit;
 static time_t termload_start, sigexit_start = 0;
 static sigset_t sigchld_mask;
 static struct child *first_child;
-static char *loadcmd = "exec dohell 900";
+static char default_loadcmd[] = "dohell 900";
+static char *loadcmd = default_loadcmd;
 static fd_set inputs;
 static struct child script, load;
 
@@ -98,6 +99,10 @@ int child_initv(struct child *child, int type, char *argv[])
 				fail_perror("dup2(pipe_err)");
 				_exit(EXIT_FAILURE);
 			}
+			/* Detach child from terminal,
+			   to avoid child catching SIGINT */
+			setsid();
+
 			break;
 
 		case CHILD_SCRIPT:
@@ -111,9 +116,6 @@ int child_initv(struct child *child, int type, char *argv[])
 			}
 			break;
 		}
-
-		/* Detach child from terminal, to avoid child catching SIGINT */
-		setsid();
 
 		err = execvp(argv[0], argv);
 		if (err < 0) {
@@ -509,7 +511,9 @@ void setpath(void)
 int main(int argc, char *argv[])
 {
 	struct sigaction action;
+	char **new_argv;
 	int rc, maxfd;
+	unsigned i;
 
 	if (argc < 2) {
 		usage(argv[0]);
@@ -561,8 +565,18 @@ int main(int argc, char *argv[])
 
 	load.dead = 1;
 	FD_ZERO(&inputs);
-	argv[0] = TESTDIR "/xeno-test-run-wrapper";
-	rc = child_initv(&script, CHILD_SCRIPT, argv);
+
+	new_argv = malloc(sizeof(*new_argv) * (argc + 2));
+	if (!new_argv) {
+		fail_fprintf(stderr, "memory allocation failed\n");
+		exit(EXIT_FAILURE);
+	}
+	new_argv[0] = getenv("SHELL") ?: "/bin/bash";
+	new_argv[1] = TESTDIR "/xeno-test-run-wrapper";
+	for (i = 1; i < argc + 1; i++)
+		new_argv[i + 1] = argv[i];
+
+	rc = child_initv(&script, CHILD_SCRIPT, new_argv);
 	if (rc < 0) {
 		fail_fprintf(stderr, "script creation failed: %s\n", strerror(-rc));
 		exit(EXIT_FAILURE);
