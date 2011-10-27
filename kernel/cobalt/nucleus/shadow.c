@@ -2278,6 +2278,7 @@ int do_losyscall_event(unsigned event, rthal_pipeline_stage_t *stage,
 
 	trace_mark(xn_nucleus, syscall_lostage_exit,
 		   "ret %ld", __xn_reg_rval(regs));
+
 	return RTHAL_EVENT_STOP;
 }
 
