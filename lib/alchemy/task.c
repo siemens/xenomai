@@ -540,7 +540,7 @@ int rt_task_resume(RT_TASK *task)
 		return ret;
 
 	COPPERPLATE_PROTECT(svc);
-	ret = threadobj_suspend(&tcb->thobj);
+	ret = threadobj_resume(&tcb->thobj);
 	COPPERPLATE_UNPROTECT(svc);
 	put_alchemy_task(tcb);
 
