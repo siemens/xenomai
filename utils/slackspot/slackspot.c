@@ -20,6 +20,7 @@
  */
 
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <stdio.h>
 #include <error.h>
 #include <stdint.h>
@@ -459,6 +460,7 @@ static void resolve_spots(void)
 	struct backtrace *b;
 	struct location *l;
 	struct mapping *m;
+	struct stat sbuf;
 	int ret, depth;
 	FILE *fp;
 
@@ -500,7 +502,11 @@ static void resolve_spots(void)
 	 * locations.
 	 */
 	for (m = mapping_list; m; m = m->next) {
-		if (*m->name == '?' || access(m->name, F_OK))
+		if (*m->name == '?')
+			continue;
+
+		ret = stat(m->name, &sbuf);
+		if (ret || !S_ISREG(sbuf.st_mode))
 			continue;
 
 		ret = asprintf(&a2l,
