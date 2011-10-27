@@ -104,9 +104,8 @@ void event(void *cookie)
 		}
 
 		switch_count++;
+		err = rt_sem_v(&switch_sem);
 		switch_tsc = rt_timer_tsc();
-
-		err = rt_sem_broadcast(&switch_sem);
 		if (err) {
 			if (err != -EIDRM && err != -EINVAL)
 				warning("failed to broadcast semaphore (%s)\n",
