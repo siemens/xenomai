@@ -58,11 +58,13 @@
 #elif defined(CONFIG_ARCH_MXC)
 #define RTHAL_TIMER_DEVICE	"mxc_timer1"
 #define RTHAL_CLOCK_DEVICE	"mxc_timer1"
-#elif defined(CONFIG_ARCH_OMAP2) || defined(CONFIG_ARCH_OMAP3) \
-	|| (defined(CONFIG_ARCH_OMAP4) && !defined(CONFIG_SMP))
+#elif (defined(CONFIG_ARCH_OMAP2) || defined(CONFIG_ARCH_OMAP3) \
+       || defined(CONFIG_ARCH_OMAP4)) && !defined(CONFIG_SMP)
 #define RTHAL_TIMER_DEVICE	"gp timer"
 #define RTHAL_CLOCK_DEVICE	"gp timer"
-/* omap4 SMP uses TWD */
+#elif defined(CONFIG_ARCH_OMAP4) && defined(CONFIG_SMP)
+#define RTHAL_TIMER_DEVICE	cpu_is_omap44xx() ? "local_timer" : "gp timer"
+#define RTHAL_CLOCK_DEVICE	cpu_is_omap44xx() ? "global_timer" : "gp timer"
 #elif defined(CONFIG_PLAT_ORION)
 #define RTHAL_TIMER_DEVICE	"orion_tick"
 #define RTHAL_CLOCK_DEVICE	"orion_clocksource"
