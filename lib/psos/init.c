@@ -95,7 +95,7 @@ static int psos_init(int argc, char *const argv[])
 	}
 
 	/* FIXME: this default 10-ticks value should be user-settable */
-	clockobj_ticks_to_timeout(&psos_clock, 10, &psos_rrperiod);
+	clockobj_ticks_to_timespec(&psos_clock, 10, &psos_rrperiod);
 
 	return 0;
 }
