@@ -216,6 +216,11 @@ static inline int threadobj_lock_sched_once(struct threadobj *thobj)
 	return 0;
 }
 
+static inline void threadobj_yield(void)
+{
+	__RT(sched_yield());
+}
+
 static inline int threadobj_sleep(struct timespec *ts)
 {
 	/*
