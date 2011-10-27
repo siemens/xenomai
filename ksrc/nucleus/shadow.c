@@ -2371,6 +2371,10 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 
       ret_handled:
 
+	/* Update the userland-visible state. */
+	if (thread)
+		*thread->u_mode = thread->state;
+
 	trace_mark(xn_nucleus, syscall_histage_exit,
 		   "ret %ld", __xn_reg_rval(regs));
 	return RTHAL_EVENT_STOP;
@@ -2398,7 +2402,7 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 		 * nucleus and a Xenomai replacement has been
 		 * substituted for it.
 		 */
-		return RTHAL_EVENT_STOP;
+		goto ret_handled;
 
 	/*
 	 * This syscall has not been substituted, let Linux handle
@@ -2533,6 +2537,11 @@ static inline int do_losyscall_event(unsigned event, unsigned domid, void *data)
 		xnshadow_relax(0, 0);
 
       ret_handled:
+
+	/* Update the userland-visible state. */
+	if (thread)
+		*thread->u_mode = thread->state;
+
 	trace_mark(xn_nucleus, syscall_lostage_exit,
 		   "ret %ld", __xn_reg_rval(regs));
 	return RTHAL_EVENT_STOP;
