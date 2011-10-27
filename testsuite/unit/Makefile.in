@@ -35,9 +35,12 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-test_PROGRAMS = arith$(EXEEXT) wakeup-time$(EXEEXT) \
-	mutex-torture$(EXEEXT) cond-torture$(EXEEXT) \
-	check-vdso$(EXEEXT) rtdm$(EXEEXT)
+test_PROGRAMS = wakeup-time$(EXEEXT) rtdm$(EXEEXT) $(am__EXEEXT_1)
+@XENO_COBALT_TRUE@am__append_1 = arith \
+@XENO_COBALT_TRUE@	mutex-torture \
+@XENO_COBALT_TRUE@	cond-torture \
+@XENO_COBALT_TRUE@	check-vdso
+
 subdir = testsuite/unit
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -55,52 +58,63 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/lib/include/xeno_config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
+@XENO_COBALT_TRUE@am__EXEEXT_1 = arith$(EXEEXT) mutex-torture$(EXEEXT) \
+@XENO_COBALT_TRUE@	cond-torture$(EXEEXT) check-vdso$(EXEEXT)
 am__installdirs = "$(DESTDIR)$(testdir)"
 PROGRAMS = $(test_PROGRAMS)
-am_arith_OBJECTS = arith-arith.$(OBJEXT) \
-	arith-arith-noinline.$(OBJEXT)
+am__arith_SOURCES_DIST = arith.c arith-noinline.c arith-noinline.h
+@XENO_COBALT_TRUE@am_arith_OBJECTS = arith-arith.$(OBJEXT) \
+@XENO_COBALT_TRUE@	arith-arith-noinline.$(OBJEXT)
 arith_OBJECTS = $(am_arith_OBJECTS)
-arith_DEPENDENCIES = ../../lib/alchemy/libalchemy.la \
-	../../lib/copperplate/libcopperplate.la \
-	../../lib/cobalt/libcobalt.la
+@XENO_COBALT_TRUE@am__DEPENDENCIES_1 = ../../lib/cobalt/libcobalt.la
+@XENO_COBALT_TRUE@arith_DEPENDENCIES =  \
+@XENO_COBALT_TRUE@	../../lib/alchemy/libalchemy.la \
+@XENO_COBALT_TRUE@	../../lib/copperplate/libcopperplate.la \
+@XENO_COBALT_TRUE@	$(am__DEPENDENCIES_1)
 arith_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(arith_LDFLAGS) \
 	$(LDFLAGS) -o $@
-am_check_vdso_OBJECTS = check_vdso-check-vdso.$(OBJEXT)
+am__check_vdso_SOURCES_DIST = check-vdso.c
+@XENO_COBALT_TRUE@am_check_vdso_OBJECTS =  \
+@XENO_COBALT_TRUE@	check_vdso-check-vdso.$(OBJEXT)
 check_vdso_OBJECTS = $(am_check_vdso_OBJECTS)
-check_vdso_DEPENDENCIES = ../../lib/cobalt/libcobalt.la
+@XENO_COBALT_TRUE@check_vdso_DEPENDENCIES = $(am__DEPENDENCIES_1)
 check_vdso_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(check_vdso_LDFLAGS) $(LDFLAGS) -o $@
-am_cond_torture_OBJECTS = cond_torture-cond-torture.$(OBJEXT)
+am__cond_torture_SOURCES_DIST = cond-torture.c
+@XENO_COBALT_TRUE@am_cond_torture_OBJECTS =  \
+@XENO_COBALT_TRUE@	cond_torture-cond-torture.$(OBJEXT)
 cond_torture_OBJECTS = $(am_cond_torture_OBJECTS)
-cond_torture_DEPENDENCIES = ../../lib/alchemy/libalchemy.la \
-	../../lib/copperplate/libcopperplate.la \
-	../../lib/cobalt/libcobalt.la
+@XENO_COBALT_TRUE@cond_torture_DEPENDENCIES =  \
+@XENO_COBALT_TRUE@	../../lib/alchemy/libalchemy.la \
+@XENO_COBALT_TRUE@	../../lib/copperplate/libcopperplate.la \
+@XENO_COBALT_TRUE@	$(am__DEPENDENCIES_1)
 cond_torture_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(cond_torture_LDFLAGS) $(LDFLAGS) -o $@
-am_mutex_torture_OBJECTS = mutex_torture-mutex-torture.$(OBJEXT)
+am__mutex_torture_SOURCES_DIST = mutex-torture.c
+@XENO_COBALT_TRUE@am_mutex_torture_OBJECTS =  \
+@XENO_COBALT_TRUE@	mutex_torture-mutex-torture.$(OBJEXT)
 mutex_torture_OBJECTS = $(am_mutex_torture_OBJECTS)
-mutex_torture_DEPENDENCIES = ../../lib/alchemy/libalchemy.la \
-	../../lib/copperplate/libcopperplate.la \
-	../../lib/cobalt/libcobalt.la
+@XENO_COBALT_TRUE@mutex_torture_DEPENDENCIES =  \
+@XENO_COBALT_TRUE@	../../lib/alchemy/libalchemy.la \
+@XENO_COBALT_TRUE@	../../lib/copperplate/libcopperplate.la \
+@XENO_COBALT_TRUE@	$(am__DEPENDENCIES_1)
 mutex_torture_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(mutex_torture_LDFLAGS) $(LDFLAGS) -o $@
 am_rtdm_OBJECTS = rtdm-rtdm.$(OBJEXT)
 rtdm_OBJECTS = $(am_rtdm_OBJECTS)
 rtdm_DEPENDENCIES = ../../lib/alchemy/libalchemy.la \
-	../../lib/copperplate/libcopperplate.la \
-	../../lib/cobalt/libcobalt.la
+	../../lib/copperplate/libcopperplate.la $(am__DEPENDENCIES_1)
 rtdm_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(rtdm_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_wakeup_time_OBJECTS = wakeup_time-wakeup-time.$(OBJEXT)
 wakeup_time_OBJECTS = $(am_wakeup_time_OBJECTS)
 wakeup_time_DEPENDENCIES = ../../lib/alchemy/libalchemy.la \
-	../../lib/copperplate/libcopperplate.la \
-	../../lib/cobalt/libcobalt.la
+	../../lib/copperplate/libcopperplate.la $(am__DEPENDENCIES_1)
 wakeup_time_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(wakeup_time_LDFLAGS) $(LDFLAGS) -o $@
@@ -119,9 +133,11 @@ LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 SOURCES = $(arith_SOURCES) $(check_vdso_SOURCES) \
 	$(cond_torture_SOURCES) $(mutex_torture_SOURCES) \
 	$(rtdm_SOURCES) $(wakeup_time_SOURCES)
-DIST_SOURCES = $(arith_SOURCES) $(check_vdso_SOURCES) \
-	$(cond_torture_SOURCES) $(mutex_torture_SOURCES) \
-	$(rtdm_SOURCES) $(wakeup_time_SOURCES)
+DIST_SOURCES = $(am__arith_SOURCES_DIST) \
+	$(am__check_vdso_SOURCES_DIST) \
+	$(am__cond_torture_SOURCES_DIST) \
+	$(am__mutex_torture_SOURCES_DIST) $(rtdm_SOURCES) \
+	$(wakeup_time_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -283,18 +299,59 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 testdir = @XENO_TEST_DIR@
 CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
-arith_SOURCES = arith.c arith-noinline.c arith-noinline.h
-arith_CPPFLAGS = \
-	@XENO_USER_CFLAGS@		\
-	-I$(top_srcdir)/include		\
-	-Wno-missing-prototypes 
+@XENO_COBALT_FALSE@coredep_lib = 
+@XENO_COBALT_TRUE@coredep_lib = ../../lib/cobalt/libcobalt.la
+@XENO_COBALT_TRUE@arith_SOURCES = arith.c arith-noinline.c arith-noinline.h
+@XENO_COBALT_TRUE@arith_CPPFLAGS = \
+@XENO_COBALT_TRUE@	@XENO_USER_CFLAGS@		\
+@XENO_COBALT_TRUE@	-I$(top_srcdir)/include		\
+@XENO_COBALT_TRUE@	-Wno-missing-prototypes 
 
-arith_LDFLAGS = @XENO_USER_LDFLAGS@
-arith_LDADD = \
-	../../lib/alchemy/libalchemy.la \
-	../../lib/copperplate/libcopperplate.la \
-	../../lib/cobalt/libcobalt.la \
-	-lpthread -lrt -lm
+@XENO_COBALT_TRUE@arith_LDFLAGS = @XENO_USER_LDFLAGS@
+@XENO_COBALT_TRUE@arith_LDADD = \
+@XENO_COBALT_TRUE@	../../lib/alchemy/libalchemy.la \
+@XENO_COBALT_TRUE@	../../lib/copperplate/libcopperplate.la \
+@XENO_COBALT_TRUE@	$(coredep_lib) \
+@XENO_COBALT_TRUE@	-lpthread -lrt -lm
+
+@XENO_COBALT_TRUE@mutex_torture_SOURCES = mutex-torture.c
+@XENO_COBALT_TRUE@mutex_torture_CPPFLAGS = \
+@XENO_COBALT_TRUE@	@XENO_USER_CFLAGS@		\
+@XENO_COBALT_TRUE@	-DXENO_POSIX			\
+@XENO_COBALT_TRUE@	-I$(top_srcdir)/include		\
+@XENO_COBALT_TRUE@	-Wno-missing-prototypes 
+
+@XENO_COBALT_TRUE@mutex_torture_LDFLAGS = $(XENO_POSIX_WRAPPERS) @XENO_USER_LDFLAGS@
+@XENO_COBALT_TRUE@mutex_torture_LDADD = \
+@XENO_COBALT_TRUE@	../../lib/alchemy/libalchemy.la \
+@XENO_COBALT_TRUE@	../../lib/copperplate/libcopperplate.la \
+@XENO_COBALT_TRUE@	$(coredep_lib) \
+@XENO_COBALT_TRUE@	-lpthread -lrt -lm
+
+@XENO_COBALT_TRUE@cond_torture_SOURCES = cond-torture.c
+@XENO_COBALT_TRUE@cond_torture_CPPFLAGS = \
+@XENO_COBALT_TRUE@	@XENO_USER_CFLAGS@		\
+@XENO_COBALT_TRUE@	-DXENO_POSIX			\
+@XENO_COBALT_TRUE@	-I$(top_srcdir)/include		\
+@XENO_COBALT_TRUE@	-Wno-missing-prototypes 
+
+@XENO_COBALT_TRUE@cond_torture_LDFLAGS = $(XENO_POSIX_WRAPPERS) @XENO_USER_LDFLAGS@
+@XENO_COBALT_TRUE@cond_torture_LDADD = \
+@XENO_COBALT_TRUE@	../../lib/alchemy/libalchemy.la \
+@XENO_COBALT_TRUE@	../../lib/copperplate/libcopperplate.la \
+@XENO_COBALT_TRUE@	$(coredep_lib) \
+@XENO_COBALT_TRUE@	-lpthread -lrt -lm
+
+@XENO_COBALT_TRUE@check_vdso_SOURCES = check-vdso.c
+@XENO_COBALT_TRUE@check_vdso_CPPFLAGS = \
+@XENO_COBALT_TRUE@	@XENO_USER_CFLAGS@		\
+@XENO_COBALT_TRUE@	-I$(top_srcdir)/include		\
+@XENO_COBALT_TRUE@	-Wno-missing-prototypes 
+
+@XENO_COBALT_TRUE@check_vdso_LDFLAGS = @XENO_USER_LDFLAGS@
+@XENO_COBALT_TRUE@check_vdso_LDADD = \
+@XENO_COBALT_TRUE@	$(coredep_lib) \
+@XENO_COBALT_TRUE@	-lpthread -lrt -lm
 
 wakeup_time_SOURCES = wakeup-time.c
 wakeup_time_CPPFLAGS = \
@@ -306,46 +363,7 @@ wakeup_time_LDFLAGS = @XENO_USER_LDFLAGS@
 wakeup_time_LDADD = \
 	../../lib/alchemy/libalchemy.la \
 	../../lib/copperplate/libcopperplate.la \
-	../../lib/cobalt/libcobalt.la \
-	-lpthread -lrt -lm
-
-mutex_torture_SOURCES = mutex-torture.c
-mutex_torture_CPPFLAGS = \
-	@XENO_USER_CFLAGS@		\
-	-DXENO_POSIX			\
-	-I$(top_srcdir)/include		\
-	-Wno-missing-prototypes 
-
-mutex_torture_LDFLAGS = $(XENO_POSIX_WRAPPERS) @XENO_USER_LDFLAGS@
-mutex_torture_LDADD = \
-	../../lib/alchemy/libalchemy.la \
-	../../lib/copperplate/libcopperplate.la \
-	../../lib/cobalt/libcobalt.la \
-	-lpthread -lrt -lm
-
-cond_torture_SOURCES = cond-torture.c
-cond_torture_CPPFLAGS = \
-	@XENO_USER_CFLAGS@		\
-	-DXENO_POSIX			\
-	-I$(top_srcdir)/include		\
-	-Wno-missing-prototypes 
-
-cond_torture_LDFLAGS = $(XENO_POSIX_WRAPPERS) @XENO_USER_LDFLAGS@
-cond_torture_LDADD = \
-	../../lib/alchemy/libalchemy.la \
-	../../lib/copperplate/libcopperplate.la \
-	../../lib/cobalt/libcobalt.la \
-	-lpthread -lrt -lm
-
-check_vdso_SOURCES = check-vdso.c
-check_vdso_CPPFLAGS = \
-	@XENO_USER_CFLAGS@		\
-	-I$(top_srcdir)/include		\
-	-Wno-missing-prototypes 
-
-check_vdso_LDFLAGS = @XENO_USER_LDFLAGS@
-check_vdso_LDADD = \
-	../../lib/cobalt/libcobalt.la \
+	$(coredep_lib) \
 	-lpthread -lrt -lm
 
 rtdm_SOURCES = rtdm.c
@@ -359,7 +377,7 @@ rtdm_LDFLAGS = $(XENO_POSIX_WRAPPERS) @XENO_USER_LDFLAGS@
 rtdm_LDADD = \
 	../../lib/alchemy/libalchemy.la \
 	../../lib/copperplate/libcopperplate.la \
-	../../lib/cobalt/libcobalt.la \
+	$(coredep_lib) \
 	-lpthread -lrt -lm
 
 all: all-am

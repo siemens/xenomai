@@ -1,14 +1,4 @@
-menuconfig XENO_SKIN_RTDM
-	depends on XENO_OPT_NUCLEUS
-	tristate "Real-Time Driver Model"
-	default y
-	help
-
-	This API skin allows to write real-time drivers against a common
-	light weight interface in kernel mode, but use them across all other
-	skins in both kernel and user mode.
-
-if XENO_SKIN_RTDM
+menu "Real-Time Driver Model"
 
 config XENO_OPT_RTDM_PERIOD
 	int "Base period (us)" if XENO_OPT_TIMING_PERIODIC
@@ -40,28 +30,9 @@ config XENO_OPT_RTDM_FILDES
 config XENO_OPT_RTDM_SELECT
 	bool "Select support for RTDM file descriptors"
 	select XENO_OPT_SELECT
-	default y
 	help
 
 	This option allows RTDM-based file descriptors to be used with
 	select-like services.
 
-config XENO_OPT_DEBUG_RTDM
-	bool "RTDM debugging support"
-	depends on XENO_OPT_DEBUG
-	help
-
-	This option activates debugging checks for the RTDM subsystem.
-	It is a recommended option for analysing potential issues in RTDM
-	drivers. A minor runtime overhead is added.
-
-config XENO_OPT_DEBUG_RTDM_APPL
-	bool "RTDM application debugging support"
-	depends on XENO_OPT_DEBUG
-	default y
-	help
-
-	When enabled, this option makes the RTDM skin warn about
-	auto-clean operations executed upon application termination.
-
-endif
+endmenu

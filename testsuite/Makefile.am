@@ -1,5 +1,5 @@
 
-SUBDIRS = latency
+SUBDIRS = latency unit
 
 if XENO_COBALT
 
@@ -9,7 +9,6 @@ SUBDIRS += \
 	latency \
 	regression \
 	switchtest \
-	unit \
 	xeno-test
 	klatency
 

@@ -40,7 +40,6 @@ target_triplet = @target@
 @XENO_COBALT_TRUE@	latency \
 @XENO_COBALT_TRUE@	regression \
 @XENO_COBALT_TRUE@	switchtest \
-@XENO_COBALT_TRUE@	unit \
 @XENO_COBALT_TRUE@	xeno-test
 
 subdir = testsuite
@@ -76,7 +75,7 @@ AM_RECURSIVE_TARGETS = $(RECURSIVE_TARGETS:-recursive=) \
 	distdir
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = latency clocktest cyclic regression switchtest unit \
+DIST_SUBDIRS = latency unit clocktest cyclic regression switchtest \
 	xeno-test
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 am__relativize = \
@@ -260,7 +259,7 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-SUBDIRS = latency $(am__append_1)
+SUBDIRS = latency unit $(am__append_1)
 all: all-recursive
 
 .SUFFIXES:

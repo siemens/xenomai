@@ -371,6 +371,7 @@ config XENO_OPT_DEBUG_TIMERS
 
 config XENO_OPT_DEBUG_SYNCH_RELAX
 	bool "Detect mutexes held in relaxed sections"
+	default y
 	help
 
 	This option detects situations where a real-time thread
