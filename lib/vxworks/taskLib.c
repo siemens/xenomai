@@ -136,9 +136,10 @@ static void task_finalizer(struct threadobj *thobj)
 }
 
 /*
- * XXX: Wait and suspend hooks run on behalf of the target task, so no
- * lock is needed to prevent unexpected exit while accessing their
- * TCB.
+ * XXX: A wait hook always runs on behalf of the target task, no lock
+ * is needed to access the current TCB. A suspend hook may run over
+ * any thread context, and always runs with the thread lock held
+ * for this reason.
  */
 static void task_wait_hook(struct threadobj *thobj, int status)
 {

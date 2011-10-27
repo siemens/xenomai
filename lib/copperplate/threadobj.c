@@ -147,6 +147,9 @@ int threadobj_suspend(struct threadobj *thobj) /* thobj->lock held */
 	pthread_t tid = thobj->tid;
 	int ret;
 
+	if (thobj->suspend_hook)
+		thobj->suspend_hook(thobj, THREADOBJ_SUSPEND);
+
 	threadobj_unlock(thobj);
 	ret = __RT(pthread_kill(tid, SIGSUSP));
 	threadobj_lock(thobj);
@@ -161,6 +164,9 @@ int threadobj_resume(struct threadobj *thobj) /* thobj->lock held */
 
 	if (thobj == threadobj_current())
 		return 0;
+
+	if (thobj->suspend_hook)
+		thobj->suspend_hook(thobj, THREADOBJ_RESUME);
 
 	threadobj_unlock(thobj);
 	ret = __RT(pthread_kill(tid, SIGRESM));
@@ -375,13 +381,16 @@ static void notifier_callback(const struct notifier *nf)
 	current = container_of(nf, struct threadobj, core.notifier);
 	assert(current == threadobj_current());
 
-	if (current->suspend_hook)
+	if (current->suspend_hook) {
+		threadobj_lock(current);
 		current->suspend_hook(current, THREADOBJ_SUSPEND);
-
-	notifier_wait(nf); /* Wait for threadobj_resume(). */
-
-	if (current->suspend_hook)
+		threadobj_unlock(current);
+		notifier_wait(nf);
+		threadobj_lock(current);
 		current->suspend_hook(current, THREADOBJ_RESUME);
+		threadobj_unlock(current);
+	} else
+		notifier_wait(nf); /* Wait for threadobj_resume(). */
 }
 
 static inline void thread_setup_corespec(struct threadobj *thobj)
@@ -438,7 +447,7 @@ int threadobj_suspend(struct threadobj *thobj) /* thobj->lock held */
 	return __bt(ret);
 }
 
-int threadobj_resume(struct threadobj *thobj)
+int threadobj_resume(struct threadobj *thobj) /* thobj->lock held */
 {
 	if (thobj == threadobj_current())
 		return 0;
