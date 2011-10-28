@@ -59,13 +59,13 @@ typedef struct
 
 #endif /* !(__KERNEL__ || __XENO_SIM__) */
 
-struct pse51_sem;
+struct cobalt_sem;
 
 union __xeno_sem {
     sem_t native_sem;
     struct __shadow_sem {
 	unsigned magic;
-	struct pse51_sem *sem;
+	struct cobalt_sem *sem;
     } shadow_sem;
 };
 
@@ -76,11 +76,11 @@ extern "C" {
 #endif
 
 #undef sem_init
-#define sem_init pse51_sem_init
+#define sem_init cobalt_sem_init
 
-int pse51_sem_init(sem_t *sem,
-		   int pshared,
-		   unsigned int value);
+int cobalt_sem_init(sem_t *sem,
+		    int pshared,
+		    unsigned int value);
 
 int sem_destroy(sem_t *sem);
 

@@ -76,7 +76,7 @@ int sched_get_priority_min(int policy)
 	case SCHED_RR:
 	case SCHED_SPORADIC:
 	case SCHED_COBALT:
-		return PSE51_MIN_PRIORITY;
+		return COBALT_MIN_PRIORITY;
 
 	case SCHED_OTHER:
 		return 0;
@@ -111,7 +111,7 @@ int sched_get_priority_max(int policy)
 	case SCHED_FIFO:
 	case SCHED_RR:
 	case SCHED_SPORADIC:
-		return PSE51_MAX_PRIORITY;
+		return COBALT_MAX_PRIORITY;
 
 	case SCHED_COBALT:
 		return XNSCHED_RT_MAX_PRIO;
@@ -157,7 +157,7 @@ int sched_rr_get_interval(int pid, struct timespec *interval)
 		return -1;
 	}
 
-	ticks2ts(interval, pse51_time_slice);
+	ticks2ts(interval, cobalt_time_slice);
 
 	return 0;
 }
@@ -195,7 +195,7 @@ int pthread_getschedparam(pthread_t tid, int *pol, struct sched_param *par)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(tid, PSE51_THREAD_MAGIC, struct pse51_thread)) {
+	if (!cobalt_obj_active(tid, COBALT_THREAD_MAGIC, struct cobalt_thread)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return ESRCH;
 	}
@@ -246,7 +246,7 @@ int pthread_getschedparam_ex(pthread_t tid, int *pol, struct sched_param_ex *par
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(tid, PSE51_THREAD_MAGIC, struct pse51_thread)) {
+	if (!cobalt_obj_active(tid, COBALT_THREAD_MAGIC, struct cobalt_thread)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return ESRCH;
 	}
@@ -346,7 +346,7 @@ int pthread_setschedparam(pthread_t tid, int pol, const struct sched_param *par)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(tid, PSE51_THREAD_MAGIC, struct pse51_thread)) {
+	if (!cobalt_obj_active(tid, COBALT_THREAD_MAGIC, struct cobalt_thread)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return ESRCH;
 	}
@@ -363,15 +363,15 @@ int pthread_setschedparam(pthread_t tid, int pol, const struct sched_param *par)
 	case SCHED_RR:
 		tslice = xnthread_time_slice(thread);
 		if (tslice == XN_INFINITE)
-			tslice = pse51_time_slice;
+			tslice = cobalt_time_slice;
 		/* falldown wanted */
 	case SCHED_FIFO:
 	case SCHED_SPORADIC:
-		if (prio < PSE51_MIN_PRIORITY || prio > PSE51_MAX_PRIORITY)
+		if (prio < COBALT_MIN_PRIORITY || prio > COBALT_MAX_PRIORITY)
 			goto fail;
 		break;
 	case SCHED_COBALT:
-		if (prio < PSE51_MIN_PRIORITY || prio > XNSCHED_RT_MAX_PRIO)
+		if (prio < COBALT_MIN_PRIORITY || prio > XNSCHED_RT_MAX_PRIO)
 			goto fail;
 		break;
 	default:
@@ -438,15 +438,15 @@ int pthread_setschedparam_ex(pthread_t tid, int pol, const struct sched_param_ex
 		short_param.sched_priority = par->sched_priority;
 		return pthread_setschedparam(tid, pol, &short_param);
 	default:
-		if (par->sched_priority < PSE51_MIN_PRIORITY ||
-		    par->sched_priority >  PSE51_MAX_PRIORITY) {
+		if (par->sched_priority < COBALT_MIN_PRIORITY ||
+		    par->sched_priority >  COBALT_MAX_PRIORITY) {
 			return EINVAL;
 		}
 	}
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(tid, PSE51_THREAD_MAGIC, struct pse51_thread)) {
+	if (!cobalt_obj_active(tid, COBALT_THREAD_MAGIC, struct cobalt_thread)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return ESRCH;
 	}

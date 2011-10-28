@@ -23,87 +23,87 @@
 #include <asm/xenomai/syscall.h>
 #endif /* __XENO_SIM__ */
 
-#define __pse51_thread_create         0
-#define __pse51_thread_detach         1
-#define __pse51_thread_setschedparam  2
-#define __pse51_sched_yield           3
-#define __pse51_thread_make_periodic  4
-#define __pse51_thread_wait           5
-#define __pse51_thread_set_mode       6
-#define __pse51_thread_set_name       7
-#define __pse51_sem_init              8
-#define __pse51_sem_destroy           9
-#define __pse51_sem_post              10
-#define __pse51_sem_wait              11
-#define __pse51_sem_trywait           12
-#define __pse51_sem_getvalue          13
-#define __pse51_clock_getres          14
-#define __pse51_clock_gettime         15
-#define __pse51_clock_settime         16
-#define __pse51_clock_nanosleep       17
-#define __pse51_mutex_init            18
-#define __pse51_mutex_destroy         19
-#define __pse51_mutex_lock            20
-#define __pse51_mutex_timedlock       21
-#define __pse51_mutex_trylock         22
-#define __pse51_check_init            __pse51_mutex_trylock
-#define __pse51_mutex_unlock          23
-#define __pse51_cond_init             24
-#define __pse51_cond_destroy          25
-#define __pse51_cond_wait_prologue    26
-#define __pse51_cond_wait_epilogue    27
-#define __pse51_cond_signal           28
-#define __pse51_cond_broadcast        29
-#define __pse51_mq_open               30
-#define __pse51_mq_close              31
-#define __pse51_mq_unlink             32
-#define __pse51_mq_getattr            33
-#define __pse51_mq_setattr            34
-#define __pse51_mq_send               35
-#define __pse51_mq_timedsend          36
-#define __pse51_mq_receive            37
-#define __pse51_mq_timedreceive       38
-#define __pse51_thread_probe          39
-#define __pse51_sched_minprio         40
-#define __pse51_sched_maxprio         41
-#define __pse51_unimp_42              42
-#define __pse51_timer_create          43
-#define __pse51_timer_delete          44
-#define __pse51_timer_settime         45
-#define __pse51_timer_gettime         46
-#define __pse51_timer_getoverrun      47
-#define __pse51_sem_open              48
-#define __pse51_sem_close             49
-#define __pse51_sem_unlink            50
-#define __pse51_sem_timedwait         51
-#define __pse51_mq_notify             52
-#define __pse51_shm_open              53
-#define __pse51_shm_unlink            54
-#define __pse51_shm_close             55
-#define __pse51_ftruncate             56
-#define __pse51_mmap_prologue         57
-#define __pse51_mmap_epilogue         58
-#define __pse51_munmap_prologue       59
-#define __pse51_munmap_epilogue       60
-#define __pse51_mutexattr_init        61
-#define __pse51_mutexattr_destroy     62
-#define __pse51_mutexattr_gettype     63
-#define __pse51_mutexattr_settype     64
-#define __pse51_mutexattr_getprotocol 65
-#define __pse51_mutexattr_setprotocol 66
-#define __pse51_mutexattr_getpshared  67
-#define __pse51_mutexattr_setpshared  68
-#define __pse51_condattr_init         69
-#define __pse51_condattr_destroy      70
-#define __pse51_condattr_getclock     71
-#define __pse51_condattr_setclock     72
-#define __pse51_condattr_getpshared   73
-#define __pse51_condattr_setpshared   74
-#define __pse51_thread_getschedparam  75
-#define __pse51_thread_kill           76
-#define __pse51_select                77
-#define __pse51_thread_setschedparam_ex	78
-#define __pse51_thread_getschedparam_ex	79
+#define __cobalt_thread_create         0
+#define __cobalt_thread_detach         1
+#define __cobalt_thread_setschedparam  2
+#define __cobalt_sched_yield           3
+#define __cobalt_thread_make_periodic  4
+#define __cobalt_thread_wait           5
+#define __cobalt_thread_set_mode       6
+#define __cobalt_thread_set_name       7
+#define __cobalt_sem_init              8
+#define __cobalt_sem_destroy           9
+#define __cobalt_sem_post              10
+#define __cobalt_sem_wait              11
+#define __cobalt_sem_trywait           12
+#define __cobalt_sem_getvalue          13
+#define __cobalt_clock_getres          14
+#define __cobalt_clock_gettime         15
+#define __cobalt_clock_settime         16
+#define __cobalt_clock_nanosleep       17
+#define __cobalt_mutex_init            18
+#define __cobalt_mutex_destroy         19
+#define __cobalt_mutex_lock            20
+#define __cobalt_mutex_timedlock       21
+#define __cobalt_mutex_trylock         22
+#define __cobalt_check_init            __cobalt_mutex_trylock
+#define __cobalt_mutex_unlock          23
+#define __cobalt_cond_init             24
+#define __cobalt_cond_destroy          25
+#define __cobalt_cond_wait_prologue    26
+#define __cobalt_cond_wait_epilogue    27
+#define __cobalt_cond_signal           28
+#define __cobalt_cond_broadcast        29
+#define __cobalt_mq_open               30
+#define __cobalt_mq_close              31
+#define __cobalt_mq_unlink             32
+#define __cobalt_mq_getattr            33
+#define __cobalt_mq_setattr            34
+#define __cobalt_mq_send               35
+#define __cobalt_mq_timedsend          36
+#define __cobalt_mq_receive            37
+#define __cobalt_mq_timedreceive       38
+#define __cobalt_thread_probe          39
+#define __cobalt_sched_minprio         40
+#define __cobalt_sched_maxprio         41
+#define __cobalt_unimp_42              42
+#define __cobalt_timer_create          43
+#define __cobalt_timer_delete          44
+#define __cobalt_timer_settime         45
+#define __cobalt_timer_gettime         46
+#define __cobalt_timer_getoverrun      47
+#define __cobalt_sem_open              48
+#define __cobalt_sem_close             49
+#define __cobalt_sem_unlink            50
+#define __cobalt_sem_timedwait         51
+#define __cobalt_mq_notify             52
+#define __cobalt_shm_open              53
+#define __cobalt_shm_unlink            54
+#define __cobalt_shm_close             55
+#define __cobalt_ftruncate             56
+#define __cobalt_mmap_prologue         57
+#define __cobalt_mmap_epilogue         58
+#define __cobalt_munmap_prologue       59
+#define __cobalt_munmap_epilogue       60
+#define __cobalt_mutexattr_init        61
+#define __cobalt_mutexattr_destroy     62
+#define __cobalt_mutexattr_gettype     63
+#define __cobalt_mutexattr_settype     64
+#define __cobalt_mutexattr_getprotocol 65
+#define __cobalt_mutexattr_setprotocol 66
+#define __cobalt_mutexattr_getpshared  67
+#define __cobalt_mutexattr_setpshared  68
+#define __cobalt_condattr_init         69
+#define __cobalt_condattr_destroy      70
+#define __cobalt_condattr_getclock     71
+#define __cobalt_condattr_setclock     72
+#define __cobalt_condattr_getpshared   73
+#define __cobalt_condattr_setpshared   74
+#define __cobalt_thread_getschedparam  75
+#define __cobalt_thread_kill           76
+#define __cobalt_select                77
+#define __cobalt_thread_setschedparam_ex	78
+#define __cobalt_thread_getschedparam_ex	79
 
 #ifdef __KERNEL__
 
@@ -111,9 +111,9 @@
 extern "C" {
 #endif
 
-int pse51_syscall_init(void);
+int cobalt_syscall_init(void);
 
-void pse51_syscall_cleanup(void);
+void cobalt_syscall_cleanup(void);
 
 #ifdef __cplusplus
 }

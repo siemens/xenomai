@@ -33,21 +33,21 @@
 #include "mutex.h"
 #include "cond.h"
 #include "mq.h"
-#include "registry.h"	/* For PSE51_MAXNAME. */
+#include "registry.h"	/* For COBALT_MAXNAME. */
 #include "sem.h"
 #include "shm.h"
 #include "timer.h"
 #include <rtdm/rtdm_driver.h>
 #define RTDM_FD_MAX CONFIG_XENO_OPT_RTDM_FILDES
 
-int pse51_muxid;
+int cobalt_muxid;
 
 #define PTHREAD_HSLOTS (1 << 8)	/* Must be a power of 2 */
 
 struct pthread_hash {
 	pthread_t k_tid;	/* Xenomai in-kernel (nucleus) tid */
 	pid_t h_tid;		/* Host (linux) tid */
-	struct pse51_hkey hkey;
+	struct cobalt_hkey hkey;
 	struct pthread_hash *next;
 };
 
@@ -79,7 +79,7 @@ static struct tid_hash *tid_table[PTHREAD_HSLOTS];
  */
 
 static inline
-struct pthread_hash *__pthread_hash(const struct pse51_hkey *hkey,
+struct pthread_hash *__pthread_hash(const struct cobalt_hkey *hkey,
 				    pthread_t k_tid,
 				    pid_t h_tid)
 {
@@ -116,7 +116,7 @@ struct pthread_hash *__pthread_hash(const struct pse51_hkey *hkey,
 	return ptslot;
 }
 
-static inline void __pthread_unhash(const struct pse51_hkey *hkey)
+static inline void __pthread_unhash(const struct cobalt_hkey *hkey)
 {
 	struct pthread_hash **pttail, *ptslot;
 	struct tid_hash **tidtail, *tidslot;
@@ -161,7 +161,7 @@ static inline void __pthread_unhash(const struct pse51_hkey *hkey)
 	xnfree(tidslot);
 }
 
-static pthread_t __pthread_find(const struct pse51_hkey *hkey)
+static pthread_t __pthread_find(const struct cobalt_hkey *hkey)
 {
 	struct pthread_hash *ptslot;
 	pthread_t k_tid;
@@ -212,7 +212,7 @@ static int __pthread_create(unsigned long tid,
 			    unsigned long __user *u_mode)
 {
 	struct task_struct *p = current;
-	struct pse51_hkey hkey;
+	struct cobalt_hkey hkey;
 	pthread_attr_t attr;
 	pthread_t k_tid;
 	int err;
@@ -247,17 +247,17 @@ static int __pthread_create(unsigned long tid,
 		err = -ENOMEM;
 
 	if (err)
-		pse51_thread_abort(k_tid, NULL);
+		cobalt_thread_abort(k_tid, NULL);
 	else
 		k_tid->hkey = hkey;
 
 	return err;
 }
 
-#define __pthread_detach  __pse51_call_not_available
+#define __pthread_detach  __cobalt_call_not_available
 
 static pthread_t __pthread_shadow(struct task_struct *p,
-				  struct pse51_hkey *hkey,
+				  struct cobalt_hkey *hkey,
 				  unsigned long __user *u_mode_offset)
 {
 	pthread_attr_t attr;
@@ -278,7 +278,7 @@ static pthread_t __pthread_shadow(struct task_struct *p,
 		err = -EAGAIN;
 
 	if (err)
-		pse51_thread_abort(k_tid, NULL);
+		cobalt_thread_abort(k_tid, NULL);
 	else
 		k_tid->hkey = *hkey;
 
@@ -292,7 +292,7 @@ static int __pthread_setschedparam(unsigned long tid,
 				   int __user *u_promoted)
 {
 	struct sched_param param;
-	struct pse51_hkey hkey;
+	struct cobalt_hkey hkey;
 	int err, promoted = 0;
 	pthread_t k_tid;
 
@@ -338,7 +338,7 @@ static int __pthread_setschedparam_ex(unsigned long tid,
 				      int __user *u_promoted)
 {
 	struct sched_param_ex param;
-	struct pse51_hkey hkey;
+	struct cobalt_hkey hkey;
 	int err, promoted = 0;
 	pthread_t k_tid;
 
@@ -373,7 +373,7 @@ static int __pthread_getschedparam(unsigned long tid,
 				   struct sched_param __user *u_param)
 {
 	struct sched_param param;
-	struct pse51_hkey hkey;
+	struct cobalt_hkey hkey;
 	pthread_t k_tid;
 	int policy, err;
 
@@ -399,7 +399,7 @@ static int __pthread_getschedparam_ex(unsigned long tid,
 				      struct sched_param __user *u_param)
 {
 	struct sched_param_ex param;
-	struct pse51_hkey hkey;
+	struct cobalt_hkey hkey;
 	pthread_t k_tid;
 	int policy, err;
 
@@ -438,7 +438,7 @@ static int __pthread_make_periodic_np(unsigned long tid,
 				      struct timespec __user *u_periodt)
 {
 	struct timespec startt, periodt;
-	struct pse51_hkey hkey;
+	struct cobalt_hkey hkey;
 	pthread_t k_tid;
 
 	hkey.u_tid = tid;
@@ -486,7 +486,7 @@ static int __pthread_set_name_np(unsigned long tid,
 				 const char __user *u_name)
 {
 	char name[XNOBJECT_NAME_LEN];
-	struct pse51_hkey hkey;
+	struct cobalt_hkey hkey;
 	pthread_t k_tid;
 
 	if (__xn_safe_strncpy_from_user(name, u_name,
@@ -509,7 +509,7 @@ static int __pthread_probe_np(pid_t h_tid)
 
 static int __pthread_kill(unsigned long tid, int sig)
 {
-	struct pse51_hkey hkey;
+	struct cobalt_hkey hkey;
 	pthread_t k_tid;
 	int ret;
 
@@ -652,17 +652,17 @@ static int __sem_open(unsigned long __user *u_addr,
 		      mode_t mode,
 		      unsigned value)
 {
-	char name[PSE51_MAXNAME];
+	char name[COBALT_MAXNAME];
 	union __xeno_sem *sm;
-	pse51_assoc_t *assoc;
+	cobalt_assoc_t *assoc;
 	unsigned long uaddr;
-	pse51_queues_t *q;
-	pse51_usem_t *usm;
+	cobalt_queues_t *q;
+	cobalt_usem_t *usm;
 	long len;
 	int err;
 	spl_t s;
 
-	q = pse51_queues();
+	q = cobalt_queues();
 	if (q == NULL)
 		return -EPERM;
 
@@ -685,9 +685,9 @@ static int __sem_open(unsigned long __user *u_addr,
 	if (sm == SEM_FAILED)
 		return -thread_get_errno();
 
-	xnlock_get_irqsave(&pse51_assoc_lock, s);
-	assoc = pse51_assoc_lookup(&q->usems, (u_long)sm->shadow_sem.sem);
+	xnlock_get_irqsave(&cobalt_assoc_lock, s);
 
+	assoc = cobalt_assoc_lookup(&q->usems, (u_long)sm->shadow_sem.sem);
 	if (assoc) {
 		usm = assoc2usem(assoc);
 		++usm->refcnt;
@@ -695,7 +695,7 @@ static int __sem_open(unsigned long __user *u_addr,
 		goto got_usm;
 	}
 
-	xnlock_put_irqrestore(&pse51_assoc_lock, s);
+	xnlock_put_irqrestore(&cobalt_assoc_lock, s);
 
 	usm = xnmalloc(sizeof(*usm));
 	if (usm == NULL) {
@@ -706,8 +706,9 @@ static int __sem_open(unsigned long __user *u_addr,
 	usm->uaddr = uaddr;
 	usm->refcnt = 1;
 
-	xnlock_get_irqsave(&pse51_assoc_lock, s);
-	assoc = pse51_assoc_lookup(&q->usems, (u_long)sm->shadow_sem.sem);
+	xnlock_get_irqsave(&cobalt_assoc_lock, s);
+
+	assoc = cobalt_assoc_lookup(&q->usems, (u_long)sm->shadow_sem.sem);
 	if (assoc) {
 		assoc2usem(assoc)->refcnt++;
 		xnlock_put_irqrestore(&nklock, s);
@@ -716,8 +717,9 @@ static int __sem_open(unsigned long __user *u_addr,
 		goto got_usm;
 	}
 
-	pse51_assoc_insert(&q->usems, &usm->assoc, (u_long)sm->shadow_sem.sem);
-	xnlock_put_irqrestore(&pse51_assoc_lock, s);
+	cobalt_assoc_insert(&q->usems, &usm->assoc, (u_long)sm->shadow_sem.sem);
+
+	xnlock_put_irqrestore(&cobalt_assoc_lock, s);
 
       got_usm:
 
@@ -736,14 +738,14 @@ static int __sem_open(unsigned long __user *u_addr,
 static int __sem_close(unsigned long uaddr,
 		       int __user *u_closed)
 {
-	pse51_assoc_t *assoc;
+	cobalt_assoc_t *assoc;
 	union __xeno_sem sm;
 	int closed = 0, err;
-	pse51_queues_t *q;
-	pse51_usem_t *usm;
+	cobalt_queues_t *q;
+	cobalt_usem_t *usm;
 	spl_t s;
 
-	q = pse51_queues();
+	q = cobalt_queues();
 	if (q == NULL)
 		return -EPERM;
 
@@ -751,11 +753,11 @@ static int __sem_close(unsigned long uaddr,
 				     (void __user *)uaddr, sizeof(sm.shadow_sem)))
 		return -EFAULT;
 
-	xnlock_get_irqsave(&pse51_assoc_lock, s);
+	xnlock_get_irqsave(&cobalt_assoc_lock, s);
 
-	assoc = pse51_assoc_lookup(&q->usems, (u_long)sm.shadow_sem.sem);
+	assoc = cobalt_assoc_lookup(&q->usems, (u_long)sm.shadow_sem.sem);
 	if (assoc == NULL) {
-		xnlock_put_irqrestore(&pse51_assoc_lock, s);
+		xnlock_put_irqrestore(&cobalt_assoc_lock, s);
 		return -EINVAL;
 	}
 
@@ -764,9 +766,9 @@ static int __sem_close(unsigned long uaddr,
 	err = sem_close(&sm.native_sem);
 
 	if (!err && (closed = (--usm->refcnt == 0)))
-		pse51_assoc_remove(&q->usems, (u_long)sm.shadow_sem.sem);
+		cobalt_assoc_remove(&q->usems, (u_long)sm.shadow_sem.sem);
 
-	xnlock_put_irqrestore(&pse51_assoc_lock, s);
+	xnlock_put_irqrestore(&cobalt_assoc_lock, s);
 
 	if (err)
 		return -thread_get_errno();
@@ -779,7 +781,7 @@ static int __sem_close(unsigned long uaddr,
 
 static int __sem_unlink(const char __user *u_name)
 {
-	char name[PSE51_MAXNAME];
+	char name[COBALT_MAXNAME];
 	long len;
 
 	len = __xn_safe_strncpy_from_user(name, u_name, sizeof(name));
@@ -1037,7 +1039,7 @@ static int __pthread_mutex_lock(union __xeno_mutex __user *u_mx)
 	if (unlikely(cb_try_read_lock(&mx.shadow_mutex.lock, s)))
 		return -EINVAL;
 
-	err = pse51_mutex_timedlock_break(&mx.shadow_mutex, 0, XN_INFINITE);
+	err = cobalt_mutex_timedlock_break(&mx.shadow_mutex, 0, XN_INFINITE);
 
 	cb_read_unlock(&mx.shadow_mutex.lock, s);
 
@@ -1069,7 +1071,7 @@ static int __pthread_mutex_timedlock(union __xeno_mutex __user *u_mx,
 	if (unlikely(cb_try_read_lock(&mx.shadow_mutex.lock, s)))
 		return -EINVAL;
 
-	err = pse51_mutex_timedlock_break(&mx.shadow_mutex,
+	err = cobalt_mutex_timedlock_break(&mx.shadow_mutex,
 					  1, ts2ticks_ceil(&ts) + 1);
 
 	cb_read_unlock(&mx.shadow_mutex.lock, s);
@@ -1109,7 +1111,7 @@ static int __pthread_mutex_unlock(union __xeno_mutex __user *u_mx)
 	struct __shadow_mutex *shadow;
 	DECLARE_CB_LOCK_FLAGS(s);
 	union __xeno_mutex mx;
-	pse51_mutex_t *mutex;
+	cobalt_mutex_t *mutex;
 	int err;
 
 	if (xnpod_root_p())
@@ -1125,8 +1127,8 @@ static int __pthread_mutex_unlock(union __xeno_mutex __user *u_mx)
 	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
 		return -EINVAL;
 
-	if (!pse51_obj_active(shadow,
-			      PSE51_MUTEX_MAGIC, struct __shadow_mutex)) {
+	if (!cobalt_obj_active(shadow,
+			      COBALT_MUTEX_MAGIC, struct __shadow_mutex)) {
 		err = -EINVAL;
 		goto out;
 	}
@@ -1179,7 +1181,7 @@ static int __pthread_mutex_check_init(union __xeno_mutex __user *u_mx,
 	} else
 		attr = NULL;
 
-	return pse51_mutex_check_init(&u_mx->shadow_mutex, attr);
+	return cobalt_mutex_check_init(&u_mx->shadow_mutex, attr);
 }
 
 static int __pthread_mutex_init(union __xeno_mutex __user *u_mx,
@@ -1188,7 +1190,7 @@ static int __pthread_mutex_init(union __xeno_mutex __user *u_mx,
 	pthread_mutexattr_t locattr, *attr;
 	xnarch_atomic_t *ownerp;
 	union __xeno_mutex mx;
-	pse51_mutex_t *mutex;
+	cobalt_mutex_t *mutex;
 	int err;
 
 	if (__xn_safe_copy_from_user(&mx.shadow_mutex,
@@ -1203,7 +1205,7 @@ static int __pthread_mutex_init(union __xeno_mutex __user *u_mx,
 
 		attr = &locattr;
 	} else
-		attr = &pse51_default_mutex_attr;
+		attr = &cobalt_default_mutex_attr;
 
 	mutex = xnmalloc(sizeof(*mutex));
 	if (mutex == NULL)
@@ -1216,7 +1218,7 @@ static int __pthread_mutex_init(union __xeno_mutex __user *u_mx,
 		return -EAGAIN;
 	}
 
-	err = pse51_mutex_init_internal(&mx.shadow_mutex, mutex, ownerp, attr);
+	err = cobalt_mutex_init_internal(&mx.shadow_mutex, mutex, ownerp, attr);
 	if (err) {
 		xnfree(mutex);
 		xnheap_free(&xnsys_ppd_get(attr->pshared)->sem_heap, ownerp);
@@ -1231,7 +1233,7 @@ static int __pthread_mutex_destroy(union __xeno_mutex __user *u_mx)
 {
 	struct __shadow_mutex *shadow;
 	union __xeno_mutex mx;
-	pse51_mutex_t *mutex;
+	cobalt_mutex_t *mutex;
 
 	shadow = &mx.shadow_mutex;
 
@@ -1240,19 +1242,19 @@ static int __pthread_mutex_destroy(union __xeno_mutex __user *u_mx)
 				     sizeof(*shadow)))
 		return -EFAULT;
 
-	if (!pse51_obj_active(shadow, PSE51_MUTEX_MAGIC, struct __shadow_mutex))
+	if (!cobalt_obj_active(shadow, COBALT_MUTEX_MAGIC, struct __shadow_mutex))
 		return -EINVAL;
 
 	mutex = shadow->mutex;
-	if (pse51_kqueues(mutex->attr.pshared) != mutex->owningq)
+	if (cobalt_kqueues(mutex->attr.pshared) != mutex->owningq)
 		return -EPERM;
 
 	if (xnsynch_fast_owner_check(mutex->synchbase.fastlock,
 				     XN_NO_HANDLE) != 0)
 		return -EBUSY;
 
-	pse51_mark_deleted(shadow);
-	pse51_mutex_destroy_internal(mutex, mutex->owningq);
+	cobalt_mark_deleted(shadow);
+	cobalt_mutex_destroy_internal(mutex, mutex->owningq);
 
 	return __xn_safe_copy_to_user(&u_mx->shadow_mutex,
 				      shadow, sizeof(u_mx->shadow_mutex));
@@ -1271,7 +1273,7 @@ static int __pthread_mutex_lock(union __xeno_mutex __user *u_mx)
 
 	shadow = &mx.shadow_mutex;
 
-	err = pse51_mutex_timedlock_break(&mx.shadow_mutex, 0, XN_INFINITE);
+	err = cobalt_mutex_timedlock_break(&mx.shadow_mutex, 0, XN_INFINITE);
 	if (err == 0 &&
 	    __xn_safe_copy_to_user(&u_mx->shadow_mutex.lockcnt,
 				   &shadow->lockcnt,
@@ -1299,7 +1301,7 @@ static int __pthread_mutex_timedlock(union __xeno_mutex __user *u_mx,
 
 	shadow = &mx.shadow_mutex;
 
-	err = pse51_mutex_timedlock_break(&mx.shadow_mutex,
+	err = cobalt_mutex_timedlock_break(&mx.shadow_mutex,
 					  1, ts2ticks_ceil(&ts) + 1);
 	if (err == 0 &&
 	    __xn_safe_copy_to_user(&u_mx->shadow_mutex.lockcnt,
@@ -1508,14 +1510,14 @@ static int __pthread_cond_wait_prologue(union __xeno_cond __user *u_cnd,
 		if (__xn_safe_copy_from_user(&ts, u_ts, sizeof(ts)))
 			return -EFAULT;
 
-		err = pse51_cond_timedwait_prologue(cur,
+		err = cobalt_cond_timedwait_prologue(cur,
 						    &cnd.shadow_cond,
 						    &mx.shadow_mutex,
 						    &d.count,
 						    timed,
 						    ts2ticks_ceil(&ts) + 1);
 	} else
-		err = pse51_cond_timedwait_prologue(cur,
+		err = cobalt_cond_timedwait_prologue(cur,
 						    &cnd.shadow_cond,
 						    &mx.shadow_mutex,
 						    &d.count,
@@ -1525,7 +1527,7 @@ static int __pthread_cond_wait_prologue(union __xeno_cond __user *u_cnd,
 	case 0:
 	case ETIMEDOUT:
 		perr = d.err = err;
-		err = -pse51_cond_timedwait_epilogue(cur, &cnd.shadow_cond,
+		err = -cobalt_cond_timedwait_epilogue(cur, &cnd.shadow_cond,
 					    	    &mx.shadow_mutex, d.count);
 		if (err == 0 &&
 		    __xn_safe_copy_to_user(&u_mx->shadow_mutex.lockcnt,
@@ -1571,7 +1573,7 @@ static int __pthread_cond_wait_epilogue(union __xeno_cond __user *u_cnd,
 				     ))
 		return -EFAULT;
 
-	err = pse51_cond_timedwait_epilogue(cur, &cnd.shadow_cond,
+	err = cobalt_cond_timedwait_epilogue(cur, &cnd.shadow_cond,
 					    &mx.shadow_mutex, count);
 
 	if (err == 0
@@ -1615,14 +1617,14 @@ static int __mq_open(const char __user *u_name,
 		     mqd_t uqd)
 {
 	struct mq_attr locattr, *attr;
-	char name[PSE51_MAXNAME];
-	pse51_ufd_t *assoc;
-	pse51_queues_t *q;
+	char name[COBALT_MAXNAME];
+	cobalt_ufd_t *assoc;
+	cobalt_queues_t *q;
 	unsigned len;
 	mqd_t kqd;
 	int err;
 
-	q = pse51_queues();
+	q = cobalt_queues();
 	if (q == NULL)
 		return -EPERM;
 
@@ -1655,7 +1657,7 @@ static int __mq_open(const char __user *u_name,
 
 	assoc->kfd = kqd;
 
-	err = pse51_assoc_insert(&q->uqds, &assoc->assoc, (u_long)uqd);
+	err = cobalt_assoc_insert(&q->uqds, &assoc->assoc, (u_long)uqd);
 	if (err) {
 		xnfree(assoc);
 		mq_close(kqd);
@@ -1666,15 +1668,15 @@ static int __mq_open(const char __user *u_name,
 
 static int __mq_close(mqd_t uqd)
 {
-	pse51_assoc_t *assoc;
-	pse51_queues_t *q;
+	cobalt_assoc_t *assoc;
+	cobalt_queues_t *q;
 	int err;
 
-	q = pse51_queues();
+	q = cobalt_queues();
 	if (q == NULL)
 		return -EPERM;
 
-	assoc = pse51_assoc_remove(&q->uqds, (u_long)uqd);
+	assoc = cobalt_assoc_remove(&q->uqds, (u_long)uqd);
 	if (assoc == NULL)
 		return -EBADF;
 
@@ -1686,7 +1688,7 @@ static int __mq_close(mqd_t uqd)
 
 static int __mq_unlink(const char __user *u_name)
 {
-	char name[PSE51_MAXNAME];
+	char name[COBALT_MAXNAME];
 	unsigned len;
 	int err;
 
@@ -1704,17 +1706,17 @@ static int __mq_unlink(const char __user *u_name)
 static int __mq_getattr(mqd_t uqd,
 			struct mq_attr __user *u_attr)
 {
-	pse51_assoc_t *assoc;
+	cobalt_assoc_t *assoc;
 	struct mq_attr attr;
-	pse51_queues_t *q;
-	pse51_ufd_t *ufd;
+	cobalt_queues_t *q;
+	cobalt_ufd_t *ufd;
 	int err;
 
-	q = pse51_queues();
+	q = cobalt_queues();
 	if (q == NULL)
 		return -EPERM;
 
-	assoc = pse51_assoc_lookup(&q->uqds, (u_long)uqd);
+	assoc = cobalt_assoc_lookup(&q->uqds, (u_long)uqd);
 	if (assoc == NULL)
 		return -EBADF;
 
@@ -1732,16 +1734,16 @@ static int __mq_setattr(mqd_t uqd,
 			struct mq_attr __user *u_oattr)
 {
 	struct mq_attr attr, oattr;
-	pse51_assoc_t *assoc;
-	pse51_queues_t *q;
-	pse51_ufd_t *ufd;
+	cobalt_assoc_t *assoc;
+	cobalt_queues_t *q;
+	cobalt_ufd_t *ufd;
 	int err;
 
-	q = pse51_queues();
+	q = cobalt_queues();
 	if (q == NULL)
 		return -EPERM;
 
-	assoc = pse51_assoc_lookup(&q->uqds, (u_long)uqd);
+	assoc = cobalt_assoc_lookup(&q->uqds, (u_long)uqd);
 	if (assoc == NULL)
 		return -EBADF;
 
@@ -1765,17 +1767,17 @@ static int __mq_send(mqd_t uqd,
 		     size_t len,
 		     unsigned int prio)
 {
-	pse51_assoc_t *assoc;
-	pse51_queues_t *q;
-	pse51_msg_t *msg;
-	pse51_ufd_t *ufd;
-	pse51_mq_t *mq;
+	cobalt_assoc_t *assoc;
+	cobalt_queues_t *q;
+	cobalt_msg_t *msg;
+	cobalt_ufd_t *ufd;
+	cobalt_mq_t *mq;
 
-	q = pse51_queues();
+	q = cobalt_queues();
 	if (q == NULL)
 		return -EPERM;
 
-	assoc = pse51_assoc_lookup(&q->uqds, (u_long)uqd);
+	assoc = cobalt_assoc_lookup(&q->uqds, (u_long)uqd);
 	if (assoc == NULL)
 		return -EBADF;
 
@@ -1784,18 +1786,18 @@ static int __mq_send(mqd_t uqd,
 	if (len > 0 && !access_rok(u_buf, len))
 		return -EFAULT;
 
-	msg = pse51_mq_timedsend_inner(&mq, ufd->kfd, len, NULL);
+	msg = cobalt_mq_timedsend_inner(&mq, ufd->kfd, len, NULL);
 	if (IS_ERR(msg))
 		return PTR_ERR(msg);
 
-	if(__xn_copy_from_user(msg->data, u_buf, len)) {
-		pse51_mq_finish_send(ufd->kfd, mq, msg);
+	if (__xn_copy_from_user(msg->data, u_buf, len)) {
+		cobalt_mq_finish_send(ufd->kfd, mq, msg);
 		return -EFAULT;
 	}
 	msg->len = len;
-	pse51_msg_set_prio(msg, prio);
+	cobalt_msg_set_prio(msg, prio);
 
-	return pse51_mq_finish_send(ufd->kfd, mq, msg);
+	return cobalt_mq_finish_send(ufd->kfd, mq, msg);
 }
 
 static int __mq_timedsend(mqd_t uqd,
@@ -1805,17 +1807,17 @@ static int __mq_timedsend(mqd_t uqd,
 			  const struct timespec __user *u_ts)
 {
 	struct timespec timeout, *timeoutp;
-	pse51_assoc_t *assoc;
-	pse51_queues_t *q;
-	pse51_msg_t *msg;
-	pse51_ufd_t *ufd;
-	pse51_mq_t *mq;
+	cobalt_assoc_t *assoc;
+	cobalt_queues_t *q;
+	cobalt_msg_t *msg;
+	cobalt_ufd_t *ufd;
+	cobalt_mq_t *mq;
 
-	q = pse51_queues();
+	q = cobalt_queues();
 	if (q == NULL)
 		return -EPERM;
 
-	assoc = pse51_assoc_lookup(&q->uqds, (u_long)uqd);
+	assoc = cobalt_assoc_lookup(&q->uqds, (u_long)uqd);
 	if (assoc == NULL)
 		return -EBADF;
 
@@ -1831,18 +1833,18 @@ static int __mq_timedsend(mqd_t uqd,
 	} else
 		timeoutp = NULL;
 
-	msg = pse51_mq_timedsend_inner(&mq, ufd->kfd, len, timeoutp);
+	msg = cobalt_mq_timedsend_inner(&mq, ufd->kfd, len, timeoutp);
 	if (IS_ERR(msg))
 		return PTR_ERR(msg);
 
 	if(__xn_copy_from_user(msg->data, u_buf, len)) {
-		pse51_mq_finish_send(ufd->kfd, mq, msg);
+		cobalt_mq_finish_send(ufd->kfd, mq, msg);
 		return -EFAULT;
 	}
 	msg->len = len;
-	pse51_msg_set_prio(msg, prio);
+	cobalt_msg_set_prio(msg, prio);
 
-	return pse51_mq_finish_send(ufd->kfd, mq, msg);
+	return cobalt_mq_finish_send(ufd->kfd, mq, msg);
 }
 
 static int __mq_receive(mqd_t uqd,
@@ -1850,20 +1852,20 @@ static int __mq_receive(mqd_t uqd,
 			ssize_t __user *u_len,
 			unsigned int __user *u_prio)
 {
-	pse51_assoc_t *assoc;
-	pse51_queues_t *q;
-	pse51_ufd_t *ufd;
-	pse51_msg_t *msg;
-	pse51_mq_t *mq;
+	cobalt_assoc_t *assoc;
+	cobalt_queues_t *q;
+	cobalt_ufd_t *ufd;
+	cobalt_msg_t *msg;
+	cobalt_mq_t *mq;
 	unsigned prio;
 	ssize_t len;
 	int err;
 
-	q = pse51_queues();
+	q = cobalt_queues();
 	if (q == NULL)
 		return -EPERM;
 
-	assoc = pse51_assoc_lookup(&q->uqds, (u_long)uqd);
+	assoc = cobalt_assoc_lookup(&q->uqds, (u_long)uqd);
 	if (assoc == NULL)
 		return -EBADF;
 
@@ -1878,18 +1880,18 @@ static int __mq_receive(mqd_t uqd,
 	if (len > 0 && !access_wok(u_buf, len))
 		return -EFAULT;
 
-	msg = pse51_mq_timedrcv_inner(&mq, ufd->kfd, len, NULL);
+	msg = cobalt_mq_timedrcv_inner(&mq, ufd->kfd, len, NULL);
 	if (IS_ERR(msg))
 		return PTR_ERR(msg);
 
 	if (__xn_copy_to_user(u_buf, msg->data, msg->len)) {
-		pse51_mq_finish_rcv(ufd->kfd, mq, msg);
+		cobalt_mq_finish_rcv(ufd->kfd, mq, msg);
 		return -EFAULT;
 	}
 	len = msg->len;
-	prio = pse51_msg_get_prio(msg);
+	prio = cobalt_msg_get_prio(msg);
 
-	err = pse51_mq_finish_rcv(ufd->kfd, mq, msg);
+	err = cobalt_mq_finish_rcv(ufd->kfd, mq, msg);
 	if (err)
 		return err;
 
@@ -1910,20 +1912,20 @@ static int __mq_timedreceive(mqd_t uqd,
 			     const struct timespec __user *u_ts)
 {
 	struct timespec timeout, *timeoutp;
-	pse51_assoc_t *assoc;
-	pse51_queues_t *q;
+	cobalt_assoc_t *assoc;
+	cobalt_queues_t *q;
 	unsigned int prio;
-	pse51_ufd_t *ufd;
-	pse51_msg_t *msg;
-	pse51_mq_t *mq;
+	cobalt_ufd_t *ufd;
+	cobalt_msg_t *msg;
+	cobalt_mq_t *mq;
 	ssize_t len;
 	int err;
 
-	q = pse51_queues();
+	q = cobalt_queues();
 	if (q == NULL)
 		return -EPERM;
 
-	assoc = pse51_assoc_lookup(&q->uqds, (u_long)uqd);
+	assoc = cobalt_assoc_lookup(&q->uqds, (u_long)uqd);
 	if (assoc == NULL)
 		return -EBADF;
 
@@ -1943,18 +1945,18 @@ static int __mq_timedreceive(mqd_t uqd,
 	} else
 		timeoutp = NULL;
 
-	msg = pse51_mq_timedrcv_inner(&mq, ufd->kfd, len, timeoutp);
+	msg = cobalt_mq_timedrcv_inner(&mq, ufd->kfd, len, timeoutp);
 	if (IS_ERR(msg))
 		return PTR_ERR(msg);
 
 	if (__xn_copy_to_user(u_buf, msg->data, msg->len)) {
-		pse51_mq_finish_rcv(ufd->kfd, mq, msg);
+		cobalt_mq_finish_rcv(ufd->kfd, mq, msg);
 		return -EFAULT;
 	}
 	len = msg->len;
-	prio = pse51_msg_get_prio(msg);
+	prio = cobalt_msg_get_prio(msg);
 
-	err = pse51_mq_finish_rcv(ufd->kfd, mq, msg);
+	err = cobalt_mq_finish_rcv(ufd->kfd, mq, msg);
 	if (err)
 		return err;
 
@@ -1970,16 +1972,16 @@ static int __mq_timedreceive(mqd_t uqd,
 static int __mq_notify(mqd_t uqd,
 		       const struct sigevent __user *u_sev)
 {
-	pse51_assoc_t *assoc;
+	cobalt_assoc_t *assoc;
 	struct sigevent sev;
-	pse51_queues_t *q;
-	pse51_ufd_t *ufd;
+	cobalt_queues_t *q;
+	cobalt_ufd_t *ufd;
 
-	q = pse51_queues();
+	q = cobalt_queues();
 	if (q == NULL)
 		return -EPERM;
 
-	assoc = pse51_assoc_lookup(&q->uqds, (u_long)uqd);
+	assoc = cobalt_assoc_lookup(&q->uqds, (u_long)uqd);
 	if (assoc == NULL)
 		return -EBADF;
 
@@ -2082,8 +2084,7 @@ static int __timer_getoverrun(timer_t tm)
 #ifdef CONFIG_XENO_OPT_POSIX_SELECT
 static int fd_valid_p(int fd)
 {
-	pse51_queues_t *q;
-	pse51_assoc_t *assoc;
+	cobalt_queues_t *q;
 	const int rtdm_fd_start = FD_SETSIZE - RTDM_FD_MAX;
 
 	if (fd >= rtdm_fd_start) {
@@ -2096,11 +2097,11 @@ static int fd_valid_p(int fd)
 		return 0;
 	}
 
-	q = pse51_queues();
+	q = cobalt_queues();
 	if (q == NULL)
 		return 0;
 
-	return pse51_assoc_lookup(&q->uqds, fd) != NULL;
+	return cobalt_assoc_lookup(&q->uqds, fd) != NULL;
 }
 
 static int first_fd_valid_p(fd_set *fds[XNSELECT_MAX_TYPES], int nfds)
@@ -2119,23 +2120,23 @@ static int first_fd_valid_p(fd_set *fds[XNSELECT_MAX_TYPES], int nfds)
 
 static int select_bind_one(struct xnselector *selector, unsigned type, int fd)
 {
-	pse51_assoc_t *assoc;
-	pse51_queues_t *q;
+	cobalt_assoc_t *assoc;
+	cobalt_queues_t *q;
 	const int rtdm_fd_start = FD_SETSIZE - RTDM_FD_MAX;
 
 	if (fd >= rtdm_fd_start)
 		return rtdm_select_bind(fd - rtdm_fd_start,
 					selector, type, fd);
 
-	q = pse51_queues();
+	q = cobalt_queues();
 	if (q == NULL)
 		return -EPERM;
 
-	assoc = pse51_assoc_lookup(&q->uqds, fd);
+	assoc = cobalt_assoc_lookup(&q->uqds, fd);
 	if (assoc == NULL)
 		return -EBADF;
 
-	return pse51_mq_select_bind(assoc2ufd(assoc)->kfd, selector, type, fd);
+	return cobalt_mq_select_bind(assoc2ufd(assoc)->kfd, selector, type, fd);
 }
 
 static int select_bind_all(struct xnselector *selector,
@@ -2263,7 +2264,7 @@ static int __select(int nfds,
 	return err;
 }
 #else /* !CONFIG_XENO_OPT_POSIX_SELECT */
-#define __select __pse51_call_not_available
+#define __select __cobalt_call_not_available
 #endif /* !CONFIG_XENO_OPT_POSIX_SELECT */
 
 static int __sched_min_prio(int policy)
@@ -2285,12 +2286,12 @@ static int __shm_open(const char __user *u_name,
 		      mode_t mode,
 		      int fd)
 {
-	char name[PSE51_MAXNAME];
-	pse51_ufd_t *assoc;
-	pse51_queues_t *q;
+	char name[COBALT_MAXNAME];
+	cobalt_ufd_t *assoc;
+	cobalt_queues_t *q;
 	int kfd, err, len;
 
-	q = pse51_queues();
+	q = cobalt_queues();
 	if (q == NULL)
 		return -EPERM;
 
@@ -2308,13 +2309,13 @@ static int __shm_open(const char __user *u_name,
 
 	assoc = xnmalloc(sizeof(*assoc));
 	if (assoc == NULL) {
-		pse51_shm_close(kfd);
+		cobalt_shm_close(kfd);
 		return -ENOSPC;
 	}
 
 	assoc->kfd = kfd;
 
-	err = pse51_assoc_insert(&q->ufds, &assoc->assoc, fd);
+	err = cobalt_assoc_insert(&q->ufds, &assoc->assoc, fd);
 	if (err) {
 		xnfree(assoc);
 		close(kfd);
@@ -2325,7 +2326,7 @@ static int __shm_open(const char __user *u_name,
 
 static int __shm_unlink(const char __user *u_name)
 {
-	char name[PSE51_MAXNAME];
+	char name[COBALT_MAXNAME];
 	unsigned len;
 
 	len = __xn_safe_strncpy_from_user(name, u_name, sizeof(name));
@@ -2339,16 +2340,16 @@ static int __shm_unlink(const char __user *u_name)
 
 static int __shm_close(int fd)
 {
-	pse51_assoc_t *assoc;
-	pse51_queues_t *q;
-	pse51_ufd_t *ufd;
+	cobalt_assoc_t *assoc;
+	cobalt_queues_t *q;
+	cobalt_ufd_t *ufd;
 	int err;
 
-	q = pse51_queues();
+	q = cobalt_queues();
 	if (q == NULL)
 		return -EPERM;
 
-	assoc = pse51_assoc_remove(&q->ufds, fd);
+	assoc = cobalt_assoc_remove(&q->ufds, fd);
 	if (assoc == NULL)
 		return -EBADF;
 
@@ -2362,16 +2363,16 @@ static int __shm_close(int fd)
 
 static int __ftruncate(int fd, off_t len)
 {
-	pse51_assoc_t *assoc;
-	pse51_queues_t *q;
-	pse51_ufd_t *ufd;
+	cobalt_assoc_t *assoc;
+	cobalt_queues_t *q;
+	cobalt_ufd_t *ufd;
 	int err;
 
-	q = pse51_queues();
+	q = cobalt_queues();
 	if (q == NULL)
 		return -EPERM;
 
-	assoc = pse51_assoc_lookup(&q->ufds, fd);
+	assoc = cobalt_assoc_lookup(&q->ufds, fd);
 	if (assoc == NULL)
 		return -EBADF;
 
@@ -2388,25 +2389,25 @@ typedef struct {
 	xnheap_t *ioctl_cookie;
 	unsigned long heapsize;
 	unsigned long offset;
-} pse51_mmap_param_t;
+} cobalt_mmap_param_t;
 
 static int __mmap_prologue(size_t len,
 			   int fd,
 			   off_t off,
-			   pse51_mmap_param_t __user *u_param)
+			   cobalt_mmap_param_t __user *u_param)
 {
-	pse51_mmap_param_t mmap_param;
-	pse51_assoc_t *assoc;
+	cobalt_mmap_param_t mmap_param;
+	cobalt_assoc_t *assoc;
 	struct xnheap *heap;
-	pse51_queues_t *q;
-	pse51_ufd_t *ufd;
+	cobalt_queues_t *q;
+	cobalt_ufd_t *ufd;
 	int err;
 
-	q = pse51_queues();
+	q = cobalt_queues();
 	if (q == NULL)
 		return -EPERM;
 
-	assoc = pse51_assoc_lookup(&q->ufds, fd);
+	assoc = cobalt_assoc_lookup(&q->ufds, fd);
 	if (assoc == NULL)
 		return -EBADF;
 
@@ -2425,7 +2426,7 @@ static int __mmap_prologue(size_t len,
 		return -thread_get_errno();
 
 	if ((err =
-	     pse51_xnheap_get(&mmap_param.ioctl_cookie, mmap_param.kaddr))) {
+	     cobalt_xnheap_get(&mmap_param.ioctl_cookie, mmap_param.kaddr))) {
 		munmap(mmap_param.kaddr, len);
 		return err;
 	}
@@ -2441,10 +2442,10 @@ static int __mmap_prologue(size_t len,
 }
 
 static int __mmap_epilogue(void __user *u_addr,
-			   pse51_mmap_param_t __user *u_param)
+			   cobalt_mmap_param_t __user *u_param)
 {
-	pse51_mmap_param_t mmap_param;
-	pse51_umap_t *umap;
+	cobalt_mmap_param_t mmap_param;
+	cobalt_umap_t *umap;
 	int err;
 
 	if (__xn_safe_copy_from_user(&mmap_param, u_param,
@@ -2465,7 +2466,7 @@ static int __mmap_epilogue(void __user *u_addr,
 	umap->kaddr = mmap_param.kaddr;
 	umap->len = mmap_param.len;
 
-	err = pse51_assoc_insert(&pse51_queues()->umaps,
+	err = cobalt_assoc_insert(&cobalt_queues()->umaps,
 				 &umap->assoc, (u_long)u_addr);
 	if (err)
 		munmap(mmap_param.kaddr, mmap_param.len);
@@ -2484,23 +2485,23 @@ static int __munmap_prologue(void __user *u_addr,
 			     struct __uunmap_struct __user *u_unmap)
 {
 	struct  __uunmap_struct uunmap;
-	pse51_assoc_t *assoc;
-	pse51_umap_t *umap;
-	pse51_queues_t *q;
+	cobalt_assoc_t *assoc;
+	cobalt_umap_t *umap;
+	cobalt_queues_t *q;
 	xnheap_t *heap;
 	int err;
 
-	q = pse51_queues();
+	q = cobalt_queues();
 	if (q == NULL)
 		return -EPERM;
 
-	assoc = pse51_assoc_lookup(&q->umaps, (u_long)u_addr);
+	assoc = cobalt_assoc_lookup(&q->umaps, (u_long)u_addr);
 	if (assoc == NULL)
 		return -EBADF;
 
 	umap = assoc2umap(assoc);
 
-	err = pse51_xnheap_get(&heap, umap->kaddr);
+	err = cobalt_xnheap_get(&heap, umap->kaddr);
 	if (err)
 		return err;
 
@@ -2513,28 +2514,28 @@ static int __munmap_prologue(void __user *u_addr,
 static int __munmap_epilogue(void __user *u_addr,
 			     size_t len)
 {
-	pse51_assoc_t *assoc;
-	pse51_umap_t *umap;
+	cobalt_assoc_t *assoc;
+	cobalt_umap_t *umap;
 	spl_t s;
 	int err;
 
-	xnlock_get_irqsave(&pse51_assoc_lock, s);
+	xnlock_get_irqsave(&cobalt_assoc_lock, s);
 
-	assoc = pse51_assoc_lookup(&pse51_queues()->umaps, (u_long)u_addr);
+	assoc = cobalt_assoc_lookup(&cobalt_queues()->umaps, (u_long)u_addr);
 	if (assoc == NULL) {
-		xnlock_put_irqrestore(&pse51_assoc_lock, s);
+		xnlock_put_irqrestore(&cobalt_assoc_lock, s);
 		return -EBADF;
 	}
 
 	umap = assoc2umap(assoc);
 
 	if (umap->len != len) {
-		xnlock_put_irqrestore(&pse51_assoc_lock, s);
+		xnlock_put_irqrestore(&cobalt_assoc_lock, s);
 		return -EINVAL;
 	}
 
-	pse51_assoc_remove(&pse51_queues()->umaps, (u_long)u_addr);
-	xnlock_put_irqrestore(&pse51_assoc_lock, s);
+	cobalt_assoc_remove(&cobalt_queues()->umaps, (u_long)u_addr);
+	xnlock_put_irqrestore(&cobalt_assoc_lock, s);
 
 	err = munmap(umap->kaddr, len);
 	if (err == 0)
@@ -2544,111 +2545,111 @@ static int __munmap_epilogue(void __user *u_addr,
 }
 #else /* !CONFIG_XENO_OPT_POSIX_SHM */
 
-#define __shm_open        __pse51_call_not_available
-#define __shm_unlink      __pse51_call_not_available
-#define __shm_close       __pse51_call_not_available
-#define __ftruncate       __pse51_call_not_available
-#define __mmap_prologue   __pse51_call_not_available
-#define __mmap_epilogue   __pse51_call_not_available
-#define __munmap_prologue __pse51_call_not_available
-#define __munmap_epilogue __pse51_call_not_available
+#define __shm_open        __cobalt_call_not_available
+#define __shm_unlink      __cobalt_call_not_available
+#define __shm_close       __cobalt_call_not_available
+#define __ftruncate       __cobalt_call_not_available
+#define __mmap_prologue   __cobalt_call_not_available
+#define __mmap_epilogue   __cobalt_call_not_available
+#define __munmap_prologue __cobalt_call_not_available
+#define __munmap_epilogue __cobalt_call_not_available
 
 #endif /* !CONFIG_XENO_OPT_POSIX_SHM */
 
-int __pse51_call_not_available(void)
+int __cobalt_call_not_available(void)
 {
 	return -ENOSYS;
 }
 
 static struct xnsysent __systab[] = {
-	SKINCALL_DEF(__pse51_thread_create, __pthread_create, init),
-	SKINCALL_DEF(__pse51_thread_detach, __pthread_detach, any),
-	SKINCALL_DEF(__pse51_thread_setschedparam, __pthread_setschedparam, conforming),
-	SKINCALL_DEF(__pse51_thread_setschedparam_ex, __pthread_setschedparam_ex, conforming),
-	SKINCALL_DEF(__pse51_thread_getschedparam, __pthread_getschedparam, any),
-	SKINCALL_DEF(__pse51_thread_getschedparam_ex, __pthread_getschedparam_ex, any),
-	SKINCALL_DEF(__pse51_sched_yield, __sched_yield, primary),
-	SKINCALL_DEF(__pse51_thread_make_periodic, __pthread_make_periodic_np, conforming),
-	SKINCALL_DEF(__pse51_thread_wait, __pthread_wait_np, primary),
-	SKINCALL_DEF(__pse51_thread_set_mode, __pthread_set_mode_np, primary),
-	SKINCALL_DEF(__pse51_thread_set_name, __pthread_set_name_np, any),
-	SKINCALL_DEF(__pse51_thread_probe, __pthread_probe_np, any),
-	SKINCALL_DEF(__pse51_thread_kill, __pthread_kill, any),
-	SKINCALL_DEF(__pse51_sem_init, __sem_init, any),
-	SKINCALL_DEF(__pse51_sem_destroy, __sem_destroy, any),
-	SKINCALL_DEF(__pse51_sem_post, __sem_post, any),
-	SKINCALL_DEF(__pse51_sem_wait, __sem_wait, primary),
-	SKINCALL_DEF(__pse51_sem_timedwait, __sem_timedwait, primary),
-	SKINCALL_DEF(__pse51_sem_trywait, __sem_trywait, primary),
-	SKINCALL_DEF(__pse51_sem_getvalue, __sem_getvalue, any),
-	SKINCALL_DEF(__pse51_sem_open, __sem_open, any),
-	SKINCALL_DEF(__pse51_sem_close, __sem_close, any),
-	SKINCALL_DEF(__pse51_sem_unlink, __sem_unlink, any),
-	SKINCALL_DEF(__pse51_clock_getres, __clock_getres, any),
-	SKINCALL_DEF(__pse51_clock_gettime, __clock_gettime, any),
-	SKINCALL_DEF(__pse51_clock_settime, __clock_settime, any),
-	SKINCALL_DEF(__pse51_clock_nanosleep, __clock_nanosleep, nonrestartable),
-	SKINCALL_DEF(__pse51_mutex_init, __pthread_mutex_init, any),
-	SKINCALL_DEF(__pse51_mutex_destroy, __pthread_mutex_destroy, any),
-	SKINCALL_DEF(__pse51_mutex_lock, __pthread_mutex_lock, primary),
-	SKINCALL_DEF(__pse51_mutex_timedlock, __pthread_mutex_timedlock, primary),
+	SKINCALL_DEF(__cobalt_thread_create, __pthread_create, init),
+	SKINCALL_DEF(__cobalt_thread_detach, __pthread_detach, any),
+	SKINCALL_DEF(__cobalt_thread_setschedparam, __pthread_setschedparam, conforming),
+	SKINCALL_DEF(__cobalt_thread_setschedparam_ex, __pthread_setschedparam_ex, conforming),
+	SKINCALL_DEF(__cobalt_thread_getschedparam, __pthread_getschedparam, any),
+	SKINCALL_DEF(__cobalt_thread_getschedparam_ex, __pthread_getschedparam_ex, any),
+	SKINCALL_DEF(__cobalt_sched_yield, __sched_yield, primary),
+	SKINCALL_DEF(__cobalt_thread_make_periodic, __pthread_make_periodic_np, conforming),
+	SKINCALL_DEF(__cobalt_thread_wait, __pthread_wait_np, primary),
+	SKINCALL_DEF(__cobalt_thread_set_mode, __pthread_set_mode_np, primary),
+	SKINCALL_DEF(__cobalt_thread_set_name, __pthread_set_name_np, any),
+	SKINCALL_DEF(__cobalt_thread_probe, __pthread_probe_np, any),
+	SKINCALL_DEF(__cobalt_thread_kill, __pthread_kill, any),
+	SKINCALL_DEF(__cobalt_sem_init, __sem_init, any),
+	SKINCALL_DEF(__cobalt_sem_destroy, __sem_destroy, any),
+	SKINCALL_DEF(__cobalt_sem_post, __sem_post, any),
+	SKINCALL_DEF(__cobalt_sem_wait, __sem_wait, primary),
+	SKINCALL_DEF(__cobalt_sem_timedwait, __sem_timedwait, primary),
+	SKINCALL_DEF(__cobalt_sem_trywait, __sem_trywait, primary),
+	SKINCALL_DEF(__cobalt_sem_getvalue, __sem_getvalue, any),
+	SKINCALL_DEF(__cobalt_sem_open, __sem_open, any),
+	SKINCALL_DEF(__cobalt_sem_close, __sem_close, any),
+	SKINCALL_DEF(__cobalt_sem_unlink, __sem_unlink, any),
+	SKINCALL_DEF(__cobalt_clock_getres, __clock_getres, any),
+	SKINCALL_DEF(__cobalt_clock_gettime, __clock_gettime, any),
+	SKINCALL_DEF(__cobalt_clock_settime, __clock_settime, any),
+	SKINCALL_DEF(__cobalt_clock_nanosleep, __clock_nanosleep, nonrestartable),
+	SKINCALL_DEF(__cobalt_mutex_init, __pthread_mutex_init, any),
+	SKINCALL_DEF(__cobalt_mutex_destroy, __pthread_mutex_destroy, any),
+	SKINCALL_DEF(__cobalt_mutex_lock, __pthread_mutex_lock, primary),
+	SKINCALL_DEF(__cobalt_mutex_timedlock, __pthread_mutex_timedlock, primary),
 #ifndef CONFIG_XENO_FASTSYNCH
-	SKINCALL_DEF(__pse51_mutex_trylock, __pthread_mutex_trylock, primary),
+	SKINCALL_DEF(__cobalt_mutex_trylock, __pthread_mutex_trylock, primary),
 #else
-        SKINCALL_DEF(__pse51_check_init, __pthread_mutex_check_init, any),
+        SKINCALL_DEF(__cobalt_check_init, __pthread_mutex_check_init, any),
 #endif
-	SKINCALL_DEF(__pse51_mutex_unlock, __pthread_mutex_unlock, nonrestartable),
-	SKINCALL_DEF(__pse51_cond_init, __pthread_cond_init, any),
-	SKINCALL_DEF(__pse51_cond_destroy, __pthread_cond_destroy, any),
-	SKINCALL_DEF(__pse51_cond_wait_prologue, __pthread_cond_wait_prologue, nonrestartable),
-	SKINCALL_DEF(__pse51_cond_wait_epilogue, __pthread_cond_wait_epilogue, primary),
-	SKINCALL_DEF(__pse51_cond_signal, __pthread_cond_signal, any),
-	SKINCALL_DEF(__pse51_cond_broadcast, __pthread_cond_broadcast, any),
-	SKINCALL_DEF(__pse51_mq_open, __mq_open, lostage),
-	SKINCALL_DEF(__pse51_mq_close, __mq_close, lostage),
-	SKINCALL_DEF(__pse51_mq_unlink, __mq_unlink, lostage),
-	SKINCALL_DEF(__pse51_mq_getattr, __mq_getattr, any),
-	SKINCALL_DEF(__pse51_mq_setattr, __mq_setattr, any),
-	SKINCALL_DEF(__pse51_mq_send, __mq_send, primary),
-	SKINCALL_DEF(__pse51_mq_timedsend, __mq_timedsend, primary),
-	SKINCALL_DEF(__pse51_mq_receive, __mq_receive, primary),
-	SKINCALL_DEF(__pse51_mq_timedreceive, __mq_timedreceive, primary),
-	SKINCALL_DEF(__pse51_mq_notify, __mq_notify, primary),
-	SKINCALL_DEF(__pse51_timer_create, __timer_create, any),
-	SKINCALL_DEF(__pse51_timer_delete, __timer_delete, any),
-	SKINCALL_DEF(__pse51_timer_settime, __timer_settime, primary),
-	SKINCALL_DEF(__pse51_timer_gettime, __timer_gettime, any),
-	SKINCALL_DEF(__pse51_timer_getoverrun, __timer_getoverrun, any),
-	SKINCALL_DEF(__pse51_shm_open, __shm_open, lostage),
-	SKINCALL_DEF(__pse51_shm_unlink, __shm_unlink, lostage),
-	SKINCALL_DEF(__pse51_shm_close, __shm_close, lostage),
-	SKINCALL_DEF(__pse51_ftruncate, __ftruncate, lostage),
-	SKINCALL_DEF(__pse51_mmap_prologue, __mmap_prologue, lostage),
-	SKINCALL_DEF(__pse51_mmap_epilogue, __mmap_epilogue, lostage),
-	SKINCALL_DEF(__pse51_munmap_prologue, __munmap_prologue, lostage),
-	SKINCALL_DEF(__pse51_munmap_epilogue, __munmap_epilogue, lostage),
-	SKINCALL_DEF(__pse51_mutexattr_init, __pthread_mutexattr_init, any),
-	SKINCALL_DEF(__pse51_mutexattr_destroy, __pthread_mutexattr_destroy, any),
-	SKINCALL_DEF(__pse51_mutexattr_gettype, __pthread_mutexattr_gettype, any),
-	SKINCALL_DEF(__pse51_mutexattr_settype, __pthread_mutexattr_settype, any),
-	SKINCALL_DEF(__pse51_mutexattr_getprotocol, __pthread_mutexattr_getprotocol, any),
-	SKINCALL_DEF(__pse51_mutexattr_setprotocol, __pthread_mutexattr_setprotocol, any),
-	SKINCALL_DEF(__pse51_mutexattr_getpshared, __pthread_mutexattr_getpshared, any),
-	SKINCALL_DEF(__pse51_mutexattr_setpshared, __pthread_mutexattr_setpshared, any),
-	SKINCALL_DEF(__pse51_condattr_init, __pthread_condattr_init, any),
-	SKINCALL_DEF(__pse51_condattr_destroy, __pthread_condattr_destroy, any),
-	SKINCALL_DEF(__pse51_condattr_getclock, __pthread_condattr_getclock, any),
-	SKINCALL_DEF(__pse51_condattr_setclock, __pthread_condattr_setclock, any),
-	SKINCALL_DEF(__pse51_condattr_getpshared, __pthread_condattr_getpshared, any),
-	SKINCALL_DEF(__pse51_condattr_setpshared, __pthread_condattr_setpshared, any),
-	SKINCALL_DEF(__pse51_select, __select, primary),
-	SKINCALL_DEF(__pse51_sched_minprio, __sched_min_prio, any),
-	SKINCALL_DEF(__pse51_sched_maxprio, __sched_max_prio, any),
+	SKINCALL_DEF(__cobalt_mutex_unlock, __pthread_mutex_unlock, nonrestartable),
+	SKINCALL_DEF(__cobalt_cond_init, __pthread_cond_init, any),
+	SKINCALL_DEF(__cobalt_cond_destroy, __pthread_cond_destroy, any),
+	SKINCALL_DEF(__cobalt_cond_wait_prologue, __pthread_cond_wait_prologue, nonrestartable),
+	SKINCALL_DEF(__cobalt_cond_wait_epilogue, __pthread_cond_wait_epilogue, primary),
+	SKINCALL_DEF(__cobalt_cond_signal, __pthread_cond_signal, any),
+	SKINCALL_DEF(__cobalt_cond_broadcast, __pthread_cond_broadcast, any),
+	SKINCALL_DEF(__cobalt_mq_open, __mq_open, lostage),
+	SKINCALL_DEF(__cobalt_mq_close, __mq_close, lostage),
+	SKINCALL_DEF(__cobalt_mq_unlink, __mq_unlink, lostage),
+	SKINCALL_DEF(__cobalt_mq_getattr, __mq_getattr, any),
+	SKINCALL_DEF(__cobalt_mq_setattr, __mq_setattr, any),
+	SKINCALL_DEF(__cobalt_mq_send, __mq_send, primary),
+	SKINCALL_DEF(__cobalt_mq_timedsend, __mq_timedsend, primary),
+	SKINCALL_DEF(__cobalt_mq_receive, __mq_receive, primary),
+	SKINCALL_DEF(__cobalt_mq_timedreceive, __mq_timedreceive, primary),
+	SKINCALL_DEF(__cobalt_mq_notify, __mq_notify, primary),
+	SKINCALL_DEF(__cobalt_timer_create, __timer_create, any),
+	SKINCALL_DEF(__cobalt_timer_delete, __timer_delete, any),
+	SKINCALL_DEF(__cobalt_timer_settime, __timer_settime, primary),
+	SKINCALL_DEF(__cobalt_timer_gettime, __timer_gettime, any),
+	SKINCALL_DEF(__cobalt_timer_getoverrun, __timer_getoverrun, any),
+	SKINCALL_DEF(__cobalt_shm_open, __shm_open, lostage),
+	SKINCALL_DEF(__cobalt_shm_unlink, __shm_unlink, lostage),
+	SKINCALL_DEF(__cobalt_shm_close, __shm_close, lostage),
+	SKINCALL_DEF(__cobalt_ftruncate, __ftruncate, lostage),
+	SKINCALL_DEF(__cobalt_mmap_prologue, __mmap_prologue, lostage),
+	SKINCALL_DEF(__cobalt_mmap_epilogue, __mmap_epilogue, lostage),
+	SKINCALL_DEF(__cobalt_munmap_prologue, __munmap_prologue, lostage),
+	SKINCALL_DEF(__cobalt_munmap_epilogue, __munmap_epilogue, lostage),
+	SKINCALL_DEF(__cobalt_mutexattr_init, __pthread_mutexattr_init, any),
+	SKINCALL_DEF(__cobalt_mutexattr_destroy, __pthread_mutexattr_destroy, any),
+	SKINCALL_DEF(__cobalt_mutexattr_gettype, __pthread_mutexattr_gettype, any),
+	SKINCALL_DEF(__cobalt_mutexattr_settype, __pthread_mutexattr_settype, any),
+	SKINCALL_DEF(__cobalt_mutexattr_getprotocol, __pthread_mutexattr_getprotocol, any),
+	SKINCALL_DEF(__cobalt_mutexattr_setprotocol, __pthread_mutexattr_setprotocol, any),
+	SKINCALL_DEF(__cobalt_mutexattr_getpshared, __pthread_mutexattr_getpshared, any),
+	SKINCALL_DEF(__cobalt_mutexattr_setpshared, __pthread_mutexattr_setpshared, any),
+	SKINCALL_DEF(__cobalt_condattr_init, __pthread_condattr_init, any),
+	SKINCALL_DEF(__cobalt_condattr_destroy, __pthread_condattr_destroy, any),
+	SKINCALL_DEF(__cobalt_condattr_getclock, __pthread_condattr_getclock, any),
+	SKINCALL_DEF(__cobalt_condattr_setclock, __pthread_condattr_setclock, any),
+	SKINCALL_DEF(__cobalt_condattr_getpshared, __pthread_condattr_getpshared, any),
+	SKINCALL_DEF(__cobalt_condattr_setpshared, __pthread_condattr_setpshared, any),
+	SKINCALL_DEF(__cobalt_select, __select, primary),
+	SKINCALL_DEF(__cobalt_sched_minprio, __sched_min_prio, any),
+	SKINCALL_DEF(__cobalt_sched_maxprio, __sched_max_prio, any),
 };
 
 static void __shadow_delete_hook(xnthread_t *thread)
 {
-	if (xnthread_get_magic(thread) == PSE51_SKIN_MAGIC &&
+	if (xnthread_get_magic(thread) == COBALT_SKIN_MAGIC &&
 	    xnthread_test_state(thread, XNSHADOW)) {
 		pthread_t k_tid = thread2pthread(thread);
 		__pthread_unhash(&k_tid->hkey);
@@ -2657,13 +2658,13 @@ static void __shadow_delete_hook(xnthread_t *thread)
 	}
 }
 
-static void *pse51_eventcb(int event, void *data)
+static void *cobalt_eventcb(int event, void *data)
 {
-	pse51_queues_t *q;
+	cobalt_queues_t *q;
 
 	switch (event) {
 	case XNSHADOW_CLIENT_ATTACH:
-		q = (pse51_queues_t *) xnarch_alloc_host_mem(sizeof(*q));
+		q = (cobalt_queues_t *) xnarch_alloc_host_mem(sizeof(*q));
 		if (q == NULL)
 			return ERR_PTR(-ENOSPC);
 
@@ -2675,11 +2676,11 @@ static void *pse51_eventcb(int event, void *data)
 		initq(&q->kqueues.semq);
 		initq(&q->kqueues.threadq);
 		initq(&q->kqueues.timerq);
-		pse51_assocq_init(&q->uqds);
-		pse51_assocq_init(&q->usems);
+		cobalt_assocq_init(&q->uqds);
+		cobalt_assocq_init(&q->usems);
 #ifdef CONFIG_XENO_OPT_POSIX_SHM
-		pse51_assocq_init(&q->umaps);
-		pse51_assocq_init(&q->ufds);
+		cobalt_assocq_init(&q->umaps);
+		cobalt_assocq_init(&q->ufds);
 #endif /* CONFIG_XENO_OPT_POSIX_SHM */
 
 		return &q->ppd;
@@ -2688,18 +2689,18 @@ static void *pse51_eventcb(int event, void *data)
 		q = ppd2queues((xnshadow_ppd_t *) data);
 
 #ifdef CONFIG_XENO_OPT_POSIX_SHM
-		pse51_shm_ufds_cleanup(q);
-		pse51_shm_umaps_cleanup(q);
+		cobalt_shm_ufds_cleanup(q);
+		cobalt_shm_umaps_cleanup(q);
 #endif /* CONFIG_XENO_OPT_POSIX_SHM */
-		pse51_sem_usems_cleanup(q);
-		pse51_mq_uqds_cleanup(q);
-		pse51_timerq_cleanup(&q->kqueues);
-		pse51_semq_cleanup(&q->kqueues);
-		pse51_mutexq_cleanup(&q->kqueues);
+		cobalt_sem_usems_cleanup(q);
+		cobalt_mq_uqds_cleanup(q);
+		cobalt_timerq_cleanup(&q->kqueues);
+		cobalt_semq_cleanup(&q->kqueues);
+		cobalt_mutexq_cleanup(&q->kqueues);
 #ifdef CONFIG_XENO_OPT_POSIX_INTR
-		pse51_intrq_cleanup(&q->kqueues);
+		cobalt_intrq_cleanup(&q->kqueues);
 #endif /* CONFIG_XENO_OPT_POSIX_INTR */
-		pse51_condq_cleanup(&q->kqueues);
+		cobalt_condq_cleanup(&q->kqueues);
 
 		xnarch_free_host_mem(q, sizeof(*q));
 
@@ -2709,23 +2710,23 @@ static void *pse51_eventcb(int event, void *data)
 	return ERR_PTR(-EINVAL);
 }
 
-extern xntbase_t *pse51_tbase;
+extern xntbase_t *cobalt_tbase;
 
 static struct xnskin_props __props = {
 	.name = "posix",
-	.magic = PSE51_SKIN_MAGIC,
+	.magic = COBALT_SKIN_MAGIC,
 	.nrcalls = sizeof(__systab) / sizeof(__systab[0]),
 	.systab = __systab,
-	.eventcb = &pse51_eventcb,
-	.timebasep = &pse51_tbase,
+	.eventcb = &cobalt_eventcb,
+	.timebasep = &cobalt_tbase,
 	.module = THIS_MODULE
 };
 
-int pse51_syscall_init(void)
+int cobalt_syscall_init(void)
 {
-	pse51_muxid = xnshadow_register_interface(&__props);
+	cobalt_muxid = xnshadow_register_interface(&__props);
 
-	if (pse51_muxid < 0)
+	if (cobalt_muxid < 0)
 		return -ENOSYS;
 
 	xnpod_add_hook(XNHOOK_THREAD_DELETE, &__shadow_delete_hook);
@@ -2733,8 +2734,8 @@ int pse51_syscall_init(void)
 	return 0;
 }
 
-void pse51_syscall_cleanup(void)
+void cobalt_syscall_cleanup(void)
 {
 	xnpod_remove_hook(XNHOOK_THREAD_DELETE, &__shadow_delete_hook);
-	xnshadow_unregister_interface(pse51_muxid);
+	xnshadow_unregister_interface(cobalt_muxid);
 }

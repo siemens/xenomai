@@ -36,9 +36,9 @@ extern "C" {
 #endif
 
 #undef close
-#define close pse51_shm_close
+#define close cobalt_shm_close
 
-int pse51_shm_close(int fildes);
+int cobalt_shm_close(int fildes);
 
 int ftruncate(int fildes, off_t length);
 

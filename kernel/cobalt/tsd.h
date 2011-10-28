@@ -20,12 +20,12 @@
 #ifndef _POSIX_TSD_H
 #define _POSIX_TSD_H
 
-void pse51_tsd_init_thread(pthread_t thread);
+void cobalt_tsd_init_thread(pthread_t thread);
 
-void pse51_tsd_cleanup_thread(pthread_t thread);
+void cobalt_tsd_cleanup_thread(pthread_t thread);
 
-void pse51_tsd_pkg_init(void);
+void cobalt_tsd_pkg_init(void);
 
-void pse51_tsd_pkg_cleanup(void);
+void cobalt_tsd_pkg_cleanup(void);
 
 #endif /* !_POSIX_TSD_H */

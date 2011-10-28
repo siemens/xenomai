@@ -20,14 +20,14 @@
 #include <cobalt/syscall.h>
 #include <time.h>
 
-extern int __pse51_muxid;
+extern int __cobalt_muxid;
 
 int __wrap_timer_create(clockid_t clockid,
 			const struct sigevent *__restrict__ evp,
 			timer_t * __restrict__ timerid)
 {
-	int err = -XENOMAI_SKINCALL3(__pse51_muxid,
-				     __pse51_timer_create,
+	int err = -XENOMAI_SKINCALL3(__cobalt_muxid,
+				     __cobalt_timer_create,
 				     clockid,
 				     evp,
 				     timerid);
@@ -42,8 +42,8 @@ int __wrap_timer_create(clockid_t clockid,
 
 int __wrap_timer_delete(timer_t timerid)
 {
-	int err = -XENOMAI_SKINCALL1(__pse51_muxid,
-				     __pse51_timer_delete,
+	int err = -XENOMAI_SKINCALL1(__cobalt_muxid,
+				     __cobalt_timer_delete,
 				     timerid);
 
 	if (!err)
@@ -59,8 +59,8 @@ int __wrap_timer_settime(timer_t timerid,
 			 const struct itimerspec *__restrict__ value,
 			 struct itimerspec *__restrict__ ovalue)
 {
-	int err = -XENOMAI_SKINCALL4(__pse51_muxid,
-				     __pse51_timer_settime,
+	int err = -XENOMAI_SKINCALL4(__cobalt_muxid,
+				     __cobalt_timer_settime,
 				     timerid,
 				     flags,
 				     value,
@@ -76,8 +76,8 @@ int __wrap_timer_settime(timer_t timerid,
 
 int __wrap_timer_gettime(timer_t timerid, struct itimerspec *value)
 {
-	int err = -XENOMAI_SKINCALL2(__pse51_muxid,
-				     __pse51_timer_gettime,
+	int err = -XENOMAI_SKINCALL2(__cobalt_muxid,
+				     __cobalt_timer_gettime,
 				     timerid,
 				     value);
 
@@ -91,8 +91,8 @@ int __wrap_timer_gettime(timer_t timerid, struct itimerspec *value)
 
 int __wrap_timer_getoverrun(timer_t timerid)
 {
-	int overrun = XENOMAI_SKINCALL1(__pse51_muxid,
-					__pse51_timer_getoverrun,
+	int overrun = XENOMAI_SKINCALL1(__cobalt_muxid,
+					__cobalt_timer_getoverrun,
 					timerid);
 
 	if (overrun >= 0)

@@ -28,7 +28,7 @@
 #include <cobalt/syscall.h>
 #include <asm-generic/bits/current.h>
 
-extern int __pse51_muxid;
+extern int __cobalt_muxid;
 
 void __cobalt_thread_harden(void)
 {

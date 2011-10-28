@@ -27,9 +27,9 @@
 #include "timer.h"
 #include "sem.h"
 
-#define PSE51_TIMER_MAX  128
+#define COBALT_TIMER_MAX  128
 
-struct pse51_timer {
+struct cobalt_timer {
 
 	xntimer_t timerbase;
 
@@ -39,31 +39,31 @@ struct pse51_timer {
 	xnholder_t link; /* link in process or global timers queue. */
 
 #define link2tm(laddr, member)							\
-    ((struct pse51_timer *)(((char *)laddr) - offsetof(struct pse51_timer, member)))
+    ((struct cobalt_timer *)(((char *)laddr) - offsetof(struct cobalt_timer, member)))
 
 	xnholder_t tlink; /* link in thread timers queue. */
 
-	pse51_siginfo_t si;
+	cobalt_siginfo_t si;
 
 	clockid_t clockid;
 	pthread_t owner;
-	pse51_kqueues_t *owningq;
+	cobalt_kqueues_t *owningq;
 };
 
 static xnqueue_t timer_freeq;
 
-static struct pse51_timer timer_pool[PSE51_TIMER_MAX];
+static struct cobalt_timer timer_pool[COBALT_TIMER_MAX];
 
-static void pse51_base_timer_handler(xntimer_t *xntimer)
+static void cobalt_base_timer_handler(xntimer_t *xntimer)
 {
-	struct pse51_timer *timer;
-	struct pse51_sem *sem;
+	struct cobalt_timer *timer;
+	struct cobalt_sem *sem;
 
-	timer = container_of(xntimer, struct pse51_timer, timerbase);
+	timer = container_of(xntimer, struct cobalt_timer, timerbase);
 	if (timer->si.info.si_signo) {
 		if (!timer->queued) {
 			timer->queued = 1;
-			pse51_sigqueue_inner(timer->owner, &timer->si);
+			cobalt_sigqueue_inner(timer->owner, &timer->si);
 		}
 		return;
 	}
@@ -79,9 +79,9 @@ static void pse51_base_timer_handler(xntimer_t *xntimer)
 }
 
 /* Must be called with nklock locked, irq off. */
-void pse51_timer_notified(pse51_siginfo_t * si)
+void cobalt_timer_notified(cobalt_siginfo_t * si)
 {
-	struct pse51_timer *timer = link2tm(si, si);
+	struct cobalt_timer *timer = link2tm(si, si);
 	xnticks_t now;
 
 	timer->queued = 0;
@@ -89,7 +89,7 @@ void pse51_timer_notified(pse51_siginfo_t * si)
 	   timer_getoverrun is the count of overruns which occured between the time
 	   the signal was queued and the time this signal was accepted by the
 	   application.
-	   In other words, if the timer elapses again after pse51_timer_notified get
+	   In other words, if the timer elapses again after cobalt_timer_notified get
 	   called (i.e. the signal is accepted by the application), the signal shall
 	   be queued again, and later overruns should count for that new
 	   notification, not the one the application is currently handling. */
@@ -99,7 +99,7 @@ void pse51_timer_notified(pse51_siginfo_t * si)
 		return;
 	}
 
-	now = xntbase_get_rawclock(pse51_tbase);
+	now = xntbase_get_rawclock(cobalt_tbase);
 
 	timer->overruns = xntimer_get_overruns(&timer->timerbase, now);
 }
@@ -151,7 +151,7 @@ int timer_create(clockid_t clockid,
 {
 	struct __shadow_sem *shadow_sem = NULL;
 	int err = EINVAL, semval, signo;
-	struct pse51_timer *timer;
+	struct cobalt_timer *timer;
 	xnholder_t *holder;
 	sem_t *sem;
 	spl_t s;
@@ -213,15 +213,15 @@ int timer_create(clockid_t clockid,
 	} else
 		timer->si.info.si_value.sival_int = (timer - timer_pool);
 
-	xntimer_init(&timer->timerbase, pse51_tbase,
-		     pse51_base_timer_handler);
+	xntimer_init(&timer->timerbase, cobalt_tbase,
+		     cobalt_base_timer_handler);
 
 	timer->overruns = 0;
 	timer->owner = NULL;
 	timer->clockid = clockid;
-	timer->owningq = pse51_kqueues(0);
+	timer->owningq = cobalt_kqueues(0);
 	inith(&timer->link);
-	appendq(&pse51_kqueues(0)->timerq, &timer->link);
+	appendq(&cobalt_kqueues(0)->timerq, &timer->link);
 	xnlock_put_irqrestore(&nklock, s);
 
 	*timerid = (timer_t) (timer - timer_pool);
@@ -235,13 +235,13 @@ int timer_create(clockid_t clockid,
 	return -1;
 }
 
-int pse51_timer_delete_inner(timer_t timerid, pse51_kqueues_t *q, int force)
+int cobalt_timer_delete_inner(timer_t timerid, cobalt_kqueues_t *q, int force)
 {
-	struct pse51_timer *timer;
+	struct cobalt_timer *timer;
 	spl_t s;
 	int err;
 
-	if ((unsigned)timerid >= PSE51_TIMER_MAX) {
+	if ((unsigned)timerid >= COBALT_TIMER_MAX) {
 		err = EINVAL;
 		goto error;
 	}
@@ -255,7 +255,7 @@ int pse51_timer_delete_inner(timer_t timerid, pse51_kqueues_t *q, int force)
 		goto unlock_and_error;
 	}
 
-	if (!force && timer->owningq != pse51_kqueues(0)) {
+	if (!force && timer->owningq != cobalt_kqueues(0)) {
 		err = EPERM;
 		goto unlock_and_error;
 	}
@@ -264,7 +264,7 @@ int pse51_timer_delete_inner(timer_t timerid, pse51_kqueues_t *q, int force)
 
 	if (timer->queued) {
 		/* timer signal is queued, unqueue it. */
-		pse51_sigunqueue(timer->owner, &timer->si);
+		cobalt_sigunqueue(timer->owner, &timer->si);
 		timer->queued = 0;
 	}
 
@@ -304,10 +304,10 @@ int pse51_timer_delete_inner(timer_t timerid, pse51_kqueues_t *q, int force)
  */
 int timer_delete(timer_t timerid)
 {
-	return pse51_timer_delete_inner(timerid, pse51_kqueues(0), 0);
+	return cobalt_timer_delete_inner(timerid, cobalt_kqueues(0), 0);
 }
 
-static void pse51_timer_gettime_inner(struct pse51_timer *__restrict__ timer,
+static void cobalt_timer_gettime_inner(struct cobalt_timer *__restrict__ timer,
 				      struct itimerspec *__restrict__ value)
 {
 	if (xntimer_running_p(&timer->timerbase)) {
@@ -378,8 +378,8 @@ int timer_settime(timer_t timerid,
 		  const struct itimerspec *__restrict__ value,
 		  struct itimerspec *__restrict__ ovalue)
 {
-	pthread_t cur = pse51_current_thread();
-	struct pse51_timer *timer;
+	pthread_t cur = cobalt_current_thread();
+	struct cobalt_timer *timer;
 	spl_t s;
 	int err;
 
@@ -388,7 +388,7 @@ int timer_settime(timer_t timerid,
 		goto error;
 	}
 
-	if ((unsigned)timerid >= PSE51_TIMER_MAX) {
+	if ((unsigned)timerid >= COBALT_TIMER_MAX) {
 		err = EINVAL;
 		goto error;
 	}
@@ -410,18 +410,18 @@ int timer_settime(timer_t timerid,
 	}
 
 #if XENO_DEBUG(POSIX)
-	if (timer->owningq != pse51_kqueues(0)) {
+	if (timer->owningq != cobalt_kqueues(0)) {
 		err = EPERM;
 		goto unlock_and_error;
 	}
 #endif /* XENO_DEBUG(POSIX) */
 
 	if (ovalue)
-		pse51_timer_gettime_inner(timer, ovalue);
+		cobalt_timer_gettime_inner(timer, ovalue);
 
 	if (timer->queued) {
 		/* timer signal is queued, unqueue it. */
-		pse51_sigunqueue(timer->owner, &timer->si);
+		cobalt_sigunqueue(timer->owner, &timer->si);
 		timer->queued = 0;
 	}
 
@@ -447,7 +447,7 @@ int timer_settime(timer_t timerid,
 				} while ((xnsticks_t) (start - now) <= 0);
 			} else
 				start = now + xntbase_ns2ticks
-					(pse51_tbase,
+					(cobalt_tbase,
 					 xnarch_tsc_to_ns(nklatency));
 			xntimer_start(&timer->timerbase, start, period,
 				      clock_flag(flags, timer->clockid));
@@ -497,11 +497,11 @@ int timer_settime(timer_t timerid,
  */
 int timer_gettime(timer_t timerid, struct itimerspec *value)
 {
-	struct pse51_timer *timer;
+	struct cobalt_timer *timer;
 	spl_t s;
 	int err;
 
-	if ((unsigned)timerid >= PSE51_TIMER_MAX) {
+	if ((unsigned)timerid >= COBALT_TIMER_MAX) {
 		err = EINVAL;
 		goto error;
 	}
@@ -516,13 +516,13 @@ int timer_gettime(timer_t timerid, struct itimerspec *value)
 	}
 
 #if XENO_DEBUG(POSIX)
-	if (timer->owningq != pse51_kqueues(0)) {
+	if (timer->owningq != cobalt_kqueues(0)) {
 		err = EPERM;
 		goto unlock_and_error;
 	}
 #endif /* XENO_DEBUG(POSIX) */
 
-	pse51_timer_gettime_inner(timer, value);
+	cobalt_timer_gettime_inner(timer, value);
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -557,11 +557,11 @@ int timer_gettime(timer_t timerid, struct itimerspec *value)
  */
 int timer_getoverrun(timer_t timerid)
 {
-	struct pse51_timer *timer;
+	struct cobalt_timer *timer;
 	int overruns, err;
 	spl_t s;
 
-	if ((unsigned)timerid >= PSE51_TIMER_MAX) {
+	if ((unsigned)timerid >= COBALT_TIMER_MAX) {
 		err = EINVAL;
 		goto error;
 	}
@@ -576,7 +576,7 @@ int timer_getoverrun(timer_t timerid)
 	}
 
 #if XENO_DEBUG(POSIX)
-	if (timer->owningq != pse51_kqueues(0)) {
+	if (timer->owningq != cobalt_kqueues(0)) {
 		err = EPERM;
 		goto unlock_and_error;
 	}
@@ -595,23 +595,23 @@ int timer_getoverrun(timer_t timerid)
 	return -1;
 }
 
-void pse51_timer_init_thread(pthread_t new_thread)
+void cobalt_timer_init_thread(pthread_t new_thread)
 {
 	initq(&new_thread->timersq);
 }
 
 /* Called with nklock locked irq off. */
-void pse51_timer_cleanup_thread(pthread_t zombie)
+void cobalt_timer_cleanup_thread(pthread_t zombie)
 {
 	xnholder_t *holder;
 	while ((holder = getq(&zombie->timersq)) != NULL) {
-		struct pse51_timer *timer = link2tm(holder, tlink);
+		struct cobalt_timer *timer = link2tm(holder, tlink);
 		xntimer_stop(&timer->timerbase);
 		timer->owner = NULL;
 	}
 }
 
-void pse51_timerq_cleanup(pse51_kqueues_t *q)
+void cobalt_timerq_cleanup(cobalt_kqueues_t *q)
 {
 	xnholder_t *holder;
 	spl_t s;
@@ -620,7 +620,7 @@ void pse51_timerq_cleanup(pse51_kqueues_t *q)
 
 	while ((holder = getheadq(&q->timerq))) {
 		timer_t tm = (timer_t) (link2tm(holder, link) - timer_pool);
-		pse51_timer_delete_inner(tm, q, 1);
+		cobalt_timer_delete_inner(tm, q, 1);
 		xnlock_put_irqrestore(&nklock, s);
 #if XENO_DEBUG(POSIX)
 		xnprintf("Posix timer %u deleted\n", (unsigned) tm);
@@ -631,14 +631,14 @@ void pse51_timerq_cleanup(pse51_kqueues_t *q)
 	xnlock_put_irqrestore(&nklock, s);
 }
 
-int pse51_timer_pkg_init(void)
+int cobalt_timer_pkg_init(void)
 {
 	int n;
 
 	initq(&timer_freeq);
-	initq(&pse51_global_kqueues.timerq);
+	initq(&cobalt_global_kqueues.timerq);
 
-	for (n = 0; n < PSE51_TIMER_MAX; n++) {
+	for (n = 0; n < COBALT_TIMER_MAX; n++) {
 		inith(&timer_pool[n].link);
 		appendq(&timer_freeq, &timer_pool[n].link);
 	}
@@ -646,9 +646,9 @@ int pse51_timer_pkg_init(void)
 	return 0;
 }
 
-void pse51_timer_pkg_cleanup(void)
+void cobalt_timer_pkg_cleanup(void)
 {
-	pse51_timerq_cleanup(&pse51_global_kqueues);
+	cobalt_timerq_cleanup(&cobalt_global_kqueues);
 }
 
 /*@}*/

@@ -22,21 +22,21 @@
 #include <asm/xenomai/atomic.h>
 #include <pthread.h>
 
-struct pse51_mutex;
+struct cobalt_mutex;
 
 union __xeno_mutex {
 	pthread_mutex_t native_mutex;
 	struct __shadow_mutex {
 		unsigned magic;
 		unsigned lockcnt;
-		struct pse51_mutex *mutex;
+		struct cobalt_mutex *mutex;
 		xnarch_atomic_t lock;
 #ifdef CONFIG_XENO_FASTSYNCH
 		union {
 			unsigned owner_offset;
 			xnarch_atomic_t *owner;
 		};
-		struct pse51_mutexattr attr;
+		struct cobalt_mutexattr attr;
 #endif /* CONFIG_XENO_FASTSYNCH */
 	} shadow_mutex;
 };
@@ -47,60 +47,60 @@ union __xeno_mutex {
 #include "thread.h"
 #include "cb_lock.h"
 
-typedef struct pse51_mutex {
+typedef struct cobalt_mutex {
 	unsigned magic;
 	xnsynch_t synchbase;
-	xnholder_t link;            /* Link in pse51_mutexq */
+	xnholder_t link;            /* Link in cobalt_mutexq */
 
 #define link2mutex(laddr)                                               \
-	((pse51_mutex_t *)(((char *)laddr) - offsetof(pse51_mutex_t, link)))
+	((cobalt_mutex_t *)(((char *)laddr) - offsetof(cobalt_mutex_t, link)))
 
 	pthread_mutexattr_t attr;
-	pse51_kqueues_t *owningq;
-} pse51_mutex_t;
+	cobalt_kqueues_t *owningq;
+} cobalt_mutex_t;
 
-extern pthread_mutexattr_t pse51_default_mutex_attr;
+extern pthread_mutexattr_t cobalt_default_mutex_attr;
 
-void pse51_mutexq_cleanup(pse51_kqueues_t *q);
+void cobalt_mutexq_cleanup(cobalt_kqueues_t *q);
 
-void pse51_mutex_pkg_init(void);
+void cobalt_mutex_pkg_init(void);
 
-void pse51_mutex_pkg_cleanup(void);
+void cobalt_mutex_pkg_cleanup(void);
 
 /* Internal mutex functions, exposed for use by syscall.c. */
-int pse51_mutex_timedlock_break(struct __shadow_mutex *shadow,
+int cobalt_mutex_timedlock_break(struct __shadow_mutex *shadow,
 				int timed, xnticks_t to);
 
-int pse51_mutex_check_init(struct __shadow_mutex *shadow,
+int cobalt_mutex_check_init(struct __shadow_mutex *shadow,
 			   const pthread_mutexattr_t *attr);
 
-int pse51_mutex_init_internal(struct __shadow_mutex *shadow,
-			      pse51_mutex_t *mutex,
+int cobalt_mutex_init_internal(struct __shadow_mutex *shadow,
+			      cobalt_mutex_t *mutex,
 			      xnarch_atomic_t *ownerp,
 			      const pthread_mutexattr_t *attr);
 
-void pse51_mutex_destroy_internal(pse51_mutex_t *mutex,
-				  pse51_kqueues_t *q);
+void cobalt_mutex_destroy_internal(cobalt_mutex_t *mutex,
+				  cobalt_kqueues_t *q);
 
 /* must be called with nklock locked, interrupts off. */
-static inline int pse51_mutex_timedlock_internal(xnthread_t *cur,
+static inline int cobalt_mutex_timedlock_internal(xnthread_t *cur,
 						 struct __shadow_mutex *shadow,
 						 unsigned count,
 						 int timed,
 						 xnticks_t abs_to)
 
 {
-	pse51_mutex_t *mutex = shadow->mutex;
+	cobalt_mutex_t *mutex = shadow->mutex;
 
 	if (xnpod_unblockable_p())
 		return -EPERM;
 
-	if (!pse51_obj_active(shadow, PSE51_MUTEX_MAGIC, struct __shadow_mutex)
-	    || !pse51_obj_active(mutex, PSE51_MUTEX_MAGIC, struct pse51_mutex))
+	if (!cobalt_obj_active(shadow, COBALT_MUTEX_MAGIC, struct __shadow_mutex)
+	    || !cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, struct cobalt_mutex))
 		return -EINVAL;
 
 #if XENO_DEBUG(POSIX)
-	if (mutex->owningq != pse51_kqueues(mutex->attr.pshared))
+	if (mutex->owningq != cobalt_kqueues(mutex->attr.pshared))
 		return -EPERM;
 #endif /* XENO_DEBUG(POSIX) */
 

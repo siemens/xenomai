@@ -25,7 +25,7 @@
 
 static pthread_condattr_t default_cond_attr = {
 
-      magic:PSE51_COND_ATTR_MAGIC,
+      magic:COBALT_COND_ATTR_MAGIC,
       clock:CLOCK_REALTIME
 };
 
@@ -86,12 +86,12 @@ int pthread_condattr_destroy(pthread_condattr_t * attr)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr, PSE51_COND_ATTR_MAGIC, pthread_condattr_t)) {
+	if (!cobalt_obj_active(attr, COBALT_COND_ATTR_MAGIC, pthread_condattr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
 
-	pse51_mark_deleted(attr);
+	cobalt_mark_deleted(attr);
 	xnlock_put_irqrestore(&nklock, s);
 
 	return 0;
@@ -129,7 +129,7 @@ int pthread_condattr_getclock(const pthread_condattr_t * attr,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr, PSE51_COND_ATTR_MAGIC, pthread_condattr_t)) {
+	if (!cobalt_obj_active(attr, COBALT_COND_ATTR_MAGIC, pthread_condattr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
@@ -170,7 +170,7 @@ int pthread_condattr_setclock(pthread_condattr_t * attr, clockid_t clk_id)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr, PSE51_COND_ATTR_MAGIC, pthread_condattr_t)) {
+	if (!cobalt_obj_active(attr, COBALT_COND_ATTR_MAGIC, pthread_condattr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
@@ -228,7 +228,7 @@ int pthread_condattr_getpshared(const pthread_condattr_t *attr, int *pshared)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr,PSE51_COND_ATTR_MAGIC,pthread_condattr_t)) {
+	if (!cobalt_obj_active(attr,COBALT_COND_ATTR_MAGIC,pthread_condattr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
@@ -275,7 +275,7 @@ int pthread_condattr_setpshared(pthread_condattr_t *attr, int pshared)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr,PSE51_COND_ATTR_MAGIC,pthread_condattr_t)) {
+	if (!cobalt_obj_active(attr,COBALT_COND_ATTR_MAGIC,pthread_condattr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}

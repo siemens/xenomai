@@ -30,7 +30,7 @@
 #include <asm-generic/bits/sigshadow.h>
 #include <asm-generic/stack.h>
 
-extern int __pse51_muxid;
+extern int __cobalt_muxid;
 
 static pthread_attr_t default_attr;
 static int linuxthreads;
@@ -45,8 +45,8 @@ int __wrap_pthread_setschedparam(pthread_t thread,
 	if (thread == myself)
 		xeno_fault_stack();
 
-	err = -XENOMAI_SKINCALL5(__pse51_muxid,
-				 __pse51_thread_setschedparam,
+	err = -XENOMAI_SKINCALL5(__cobalt_muxid,
+				 __cobalt_thread_setschedparam,
 				 thread, policy, param,
 				 &mode_offset, &promoted);
 
@@ -75,8 +75,8 @@ int pthread_setschedparam_ex(pthread_t thread,
 	if (thread == myself)
 		xeno_fault_stack();
 
-	err = -XENOMAI_SKINCALL5(__pse51_muxid,
-				 __pse51_thread_setschedparam_ex,
+	err = -XENOMAI_SKINCALL5(__cobalt_muxid,
+				 __cobalt_thread_setschedparam_ex,
 				 thread, policy, param,
 				 &mode_offset, &promoted);
 
@@ -102,8 +102,8 @@ int __wrap_pthread_getschedparam(pthread_t thread,
 {
 	int err;
 
-	err = -XENOMAI_SKINCALL3(__pse51_muxid,
-				 __pse51_thread_getschedparam,
+	err = -XENOMAI_SKINCALL3(__cobalt_muxid,
+				 __cobalt_thread_getschedparam,
 				 thread, policy, param);
 
 	if (err == ESRCH)
@@ -119,8 +119,8 @@ int pthread_getschedparam_ex(pthread_t thread,
 	struct sched_param short_param;
 	int err;
 
-	err = -XENOMAI_SKINCALL3(__pse51_muxid,
-				 __pse51_thread_getschedparam_ex,
+	err = -XENOMAI_SKINCALL3(__cobalt_muxid,
+				 __cobalt_thread_getschedparam_ex,
 				 thread, policy, param);
 
 	if (err == ESRCH) {
@@ -134,7 +134,7 @@ int pthread_getschedparam_ex(pthread_t thread,
 
 int __wrap_sched_yield(void)
 {
-	int err = -XENOMAI_SKINCALL0(__pse51_muxid, __pse51_sched_yield);
+	int err = -XENOMAI_SKINCALL0(__cobalt_muxid, __cobalt_sched_yield);
 
 	if (err == -1)
 		err = __STD(sched_yield());
@@ -146,7 +146,7 @@ int __wrap_sched_get_priority_min(int policy)
 {
 	int ret;
 
-	ret = XENOMAI_SKINCALL1(__pse51_muxid, __pse51_sched_minprio, policy);
+	ret = XENOMAI_SKINCALL1(__cobalt_muxid, __cobalt_sched_minprio, policy);
 	if (ret < 0) {
 		if (ret == -ENOSYS)
 			return __STD(sched_get_priority_min(policy));
@@ -161,7 +161,7 @@ int __wrap_sched_get_priority_max(int policy)
 {
 	int ret;
 
-	ret = XENOMAI_SKINCALL1(__pse51_muxid, __pse51_sched_maxprio, policy);
+	ret = XENOMAI_SKINCALL1(__cobalt_muxid, __cobalt_sched_maxprio, policy);
 	if (ret < 0) {
 		if (ret == -ENOSYS)
 			return __STD(sched_get_priority_max(policy));
@@ -209,7 +209,7 @@ static void *__pthread_trampoline(void *arg)
 
 	/* Do _not_ inline the call to pthread_self() in the syscall
 	   macro: this trashes the syscall regs on some archs. */
-	err = XENOMAI_SKINCALL4(__pse51_muxid, __pse51_thread_create, tid,
+	err = XENOMAI_SKINCALL4(__cobalt_muxid, __cobalt_thread_create, tid,
 				iargs->policy, iargs->prio, &mode_offset);
 	iargs->ret = -err;
 
@@ -312,8 +312,8 @@ int pthread_make_periodic_np(pthread_t thread,
 			     struct timespec *starttp,
 			     struct timespec *periodtp)
 {
-	return -XENOMAI_SKINCALL4(__pse51_muxid,
-				  __pse51_thread_make_periodic,
+	return -XENOMAI_SKINCALL4(__cobalt_muxid,
+				  __cobalt_thread_make_periodic,
 				  thread, clk_id, starttp, periodtp);
 }
 
@@ -323,8 +323,8 @@ int pthread_wait_np(unsigned long *overruns_r)
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	err = -XENOMAI_SKINCALL1(__pse51_muxid,
-				 __pse51_thread_wait, overruns_r);
+	err = -XENOMAI_SKINCALL1(__cobalt_muxid,
+				 __cobalt_thread_wait, overruns_r);
 
 	pthread_setcanceltype(oldtype, NULL);
 
@@ -333,28 +333,28 @@ int pthread_wait_np(unsigned long *overruns_r)
 
 int pthread_set_mode_np(int clrmask, int setmask, int *mode_r)
 {
-	return -XENOMAI_SKINCALL3(__pse51_muxid,
-				  __pse51_thread_set_mode,
+	return -XENOMAI_SKINCALL3(__cobalt_muxid,
+				  __cobalt_thread_set_mode,
 				  clrmask, setmask, mode_r);
 }
 
 int pthread_set_name_np(pthread_t thread, const char *name)
 {
-	return -XENOMAI_SKINCALL2(__pse51_muxid,
-				  __pse51_thread_set_name, thread, name);
+	return -XENOMAI_SKINCALL2(__cobalt_muxid,
+				  __cobalt_thread_set_name, thread, name);
 }
 
 int pthread_probe_np(pid_t tid)
 {
-	return XENOMAI_SKINCALL1(__pse51_muxid,
-				 __pse51_thread_probe, tid);
+	return XENOMAI_SKINCALL1(__cobalt_muxid,
+				 __cobalt_thread_probe, tid);
 }
 
 int __wrap_pthread_kill(pthread_t thread, int sig)
 {
 	int err;
-	err = -XENOMAI_SKINCALL2(__pse51_muxid,
-				 __pse51_thread_kill, thread, sig);
+	err = -XENOMAI_SKINCALL2(__cobalt_muxid,
+				 __cobalt_thread_kill, thread, sig);
 
 	if (err == ESRCH)
 		return __STD(pthread_kill(thread, sig));
@@ -362,7 +362,7 @@ int __wrap_pthread_kill(pthread_t thread, int sig)
 	return err;
 }
 
-static __attribute__((constructor)) void pse51_thread_init(void)
+static __attribute__((constructor)) void cobalt_thread_init(void)
 {
 	pthread_attr_init(&default_attr);
 #ifdef _CS_GNU_LIBPTHREAD_VERSION

@@ -71,11 +71,11 @@
 
 struct timespec;
 
-struct pse51_thread;
+struct cobalt_thread;
 
-typedef struct pse51_thread *pthread_t;
+typedef struct cobalt_thread *pthread_t;
 
-typedef struct pse51_threadattr {
+typedef struct cobalt_threadattr {
 
 	unsigned magic;
 	int detachstate;
@@ -93,10 +93,10 @@ typedef struct pse51_threadattr {
 
 /* pthread_mutexattr_t and pthread_condattr_t fit on 32 bits, for compatibility
    with libc. */
-struct pse51_key;
-typedef struct pse51_key *pthread_key_t;
+struct cobalt_key;
+typedef struct cobalt_key *pthread_key_t;
 
-typedef struct pse51_once {
+typedef struct cobalt_once {
 	unsigned magic;
 	int routine_called;
 } pthread_once_t;
@@ -161,33 +161,33 @@ struct timespec;
 #define PTHREAD_IENABLE     0
 #define PTHREAD_IDISABLE    1
 
-struct pse51_mutexattr {
+struct cobalt_mutexattr {
 	unsigned magic: 24;
 	unsigned type: 2;
 	unsigned protocol: 2;
 	unsigned pshared: 1;
 };
 
-struct pse51_condattr {
+struct cobalt_condattr {
 	unsigned magic: 24;
 	unsigned clock: 2;
 	unsigned pshared: 1;
 };
 
-struct pse51_cond;
+struct cobalt_cond;
 
 union __xeno_cond {
 	pthread_cond_t native_cond;
 	struct __shadow_cond {
 		unsigned magic;
-		struct pse51_cond *cond;
+		struct cobalt_cond *cond;
 	} shadow_cond;
 };
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
-typedef struct pse51_mutexattr pthread_mutexattr_t;
+typedef struct cobalt_mutexattr pthread_mutexattr_t;
 
-typedef struct pse51_condattr pthread_condattr_t;
+typedef struct cobalt_condattr pthread_condattr_t;
 
 #ifdef __cplusplus
 extern "C" {

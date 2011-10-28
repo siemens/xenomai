@@ -40,16 +40,16 @@
 #include "shm.h"
 #include <linux/fs.h>		/* Make sure ERR_PTR is defined for all kernel versions */
 
-typedef struct pse51_shm {
-	pse51_node_t nodebase;
+typedef struct cobalt_shm {
+	cobalt_node_t nodebase;
 
 #define node2shm(naddr) \
-    ((pse51_shm_t *) (((char *)(naddr)) - offsetof(pse51_shm_t, nodebase)))
+    ((cobalt_shm_t *) (((char *)(naddr)) - offsetof(cobalt_shm_t, nodebase)))
 
 	xnholder_t link;	/* link in shmq */
 
 #define link2shm(laddr)                                                 \
-    ((pse51_shm_t *) (((char *)(laddr)) - offsetof(pse51_shm_t, link)))
+    ((cobalt_shm_t *) (((char *)(laddr)) - offsetof(cobalt_shm_t, link)))
 
 	struct semaphore maplock;
 	xnheap_t heapbase;
@@ -57,26 +57,26 @@ typedef struct pse51_shm {
 	size_t size;
 
 #define heap2shm(haddr) \
-    ((pse51_shm_t *) (((char *)(haddr)) - offsetof(pse51_shm_t, heapbase)))
+    ((cobalt_shm_t *) (((char *)(haddr)) - offsetof(cobalt_shm_t, heapbase)))
 
 	xnqueue_t mappings;
 
-} pse51_shm_t;
+} cobalt_shm_t;
 
-typedef struct pse51_shm_map {
+typedef struct cobalt_shm_map {
 	void *addr;
 	size_t size;
 
 	xnholder_t link;
 
 #define link2map(laddr) \
-    ((pse51_shm_map_t *) (((char *)(laddr)) - offsetof(pse51_shm_map_t, link)))
+    ((cobalt_shm_map_t *) (((char *)(laddr)) - offsetof(cobalt_shm_map_t, link)))
 
-} pse51_shm_map_t;
+} cobalt_shm_map_t;
 
-static xnqueue_t pse51_shmq;
+static xnqueue_t cobalt_shmq;
 
-static void pse51_shm_init(pse51_shm_t * shm)
+static void cobalt_shm_init(cobalt_shm_t * shm)
 {
 	shm->addr = NULL;
 	shm->size = 0;
@@ -84,15 +84,15 @@ static void pse51_shm_init(pse51_shm_t * shm)
 	initq(&shm->mappings);
 
 	inith(&shm->link);
-	appendq(&pse51_shmq, &shm->link);
+	appendq(&cobalt_shmq, &shm->link);
 }
 
 /* Must be called nklock locked, irq off. */
-static void pse51_shm_destroy(pse51_shm_t * shm, int force)
+static void cobalt_shm_destroy(cobalt_shm_t * shm, int force)
 {
 	spl_t ignored;
 
-	removeq(&pse51_shmq, &shm->link);
+	removeq(&cobalt_shmq, &shm->link);
 	xnlock_clear_irqon(&nklock);
 
 	down(&shm->maplock);
@@ -120,21 +120,21 @@ static void pse51_shm_destroy(pse51_shm_t * shm, int force)
 	xnlock_get_irqsave(&nklock, ignored);
 }
 
-static pse51_shm_t *pse51_shm_get(pse51_desc_t ** pdesc, int fd, unsigned inc)
+static cobalt_shm_t *cobalt_shm_get(cobalt_desc_t ** pdesc, int fd, unsigned inc)
 {
-	pse51_shm_t *shm;
+	cobalt_shm_t *shm;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
 	shm =
-	    (pse51_shm_t *)
-	    ERR_PTR(-pse51_desc_get(pdesc, fd, PSE51_SHM_MAGIC));
+	    (cobalt_shm_t *)
+	    ERR_PTR(-cobalt_desc_get(pdesc, fd, COBALT_SHM_MAGIC));
 
 	if (IS_ERR(shm))
 		goto out;
 
-	shm = node2shm(pse51_desc_node(*pdesc));
+	shm = node2shm(cobalt_desc_node(*pdesc));
 
 	shm->nodebase.refcount += inc;
 
@@ -144,17 +144,17 @@ static pse51_shm_t *pse51_shm_get(pse51_desc_t ** pdesc, int fd, unsigned inc)
 	return shm;
 }
 
-static void pse51_shm_put(pse51_shm_t * shm, unsigned dec)
+static void cobalt_shm_put(cobalt_shm_t * shm, unsigned dec)
 {
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
 	while (dec--)
-		pse51_node_put(&shm->nodebase);
+		cobalt_node_put(&shm->nodebase);
 
-	if (pse51_node_removed_p(&shm->nodebase)) {
-		pse51_shm_destroy(shm, 0);
+	if (cobalt_node_removed_p(&shm->nodebase)) {
+		cobalt_shm_destroy(shm, 0);
 		xnlock_put_irqrestore(&nklock, s);
 		xnfree(shm);
 	} else
@@ -223,9 +223,9 @@ static void pse51_shm_put(pse51_shm_t * shm, unsigned dec)
  */
 int shm_open(const char *name, int oflags, mode_t mode)
 {
-	pse51_node_t *node;
-	pse51_desc_t *desc;
-	pse51_shm_t *shm;
+	cobalt_node_t *node;
+	cobalt_desc_t *desc;
+	cobalt_shm_t *shm;
 	int err, fd;
 	spl_t s;
 
@@ -236,7 +236,7 @@ int shm_open(const char *name, int oflags, mode_t mode)
 	}
 
 	xnlock_get_irqsave(&nklock, s);
-	err = pse51_node_get(&node, name, PSE51_SHM_MAGIC, oflags);
+	err = cobalt_node_get(&node, name, COBALT_SHM_MAGIC, oflags);
 	xnlock_put_irqrestore(&nklock, s);
 	if (err)
 		goto error;
@@ -247,20 +247,20 @@ int shm_open(const char *name, int oflags, mode_t mode)
 	}
 
 	/* We must create the shared memory object, not yet allocated. */
-	shm = (pse51_shm_t *) xnmalloc(sizeof(*shm));
+	shm = (cobalt_shm_t *) xnmalloc(sizeof(*shm));
 	if (!shm) {
 		err = ENOSPC;
 		goto error;
 	}
 
 	xnlock_get_irqsave(&nklock, s);
-	err = pse51_node_add(&shm->nodebase, name, PSE51_SHM_MAGIC);
+	err = cobalt_node_add(&shm->nodebase, name, COBALT_SHM_MAGIC);
 	if (err && err != EEXIST)
 		goto err_unlock;
 
 	if (err == EEXIST) {
 		/* same shm was created in the mean time, rollback. */
-		err = pse51_node_get(&node, name, PSE51_SHM_MAGIC, oflags);
+		err = cobalt_node_get(&node, name, COBALT_SHM_MAGIC, oflags);
 	  err_unlock:
 		xnlock_put_irqrestore(&nklock, s);
 		xnfree(shm);
@@ -271,16 +271,16 @@ int shm_open(const char *name, int oflags, mode_t mode)
 		goto got_shm;
 	}
 
-	pse51_shm_init(shm);
+	cobalt_shm_init(shm);
 	xnlock_put_irqrestore(&nklock, s);
 
   got_shm:
-	err = pse51_desc_create(&desc, &shm->nodebase,
-				oflags & (PSE51_PERMS_MASK | O_DIRECT));
+	err = cobalt_desc_create(&desc, &shm->nodebase,
+				oflags & (COBALT_PERMS_MASK | O_DIRECT));
 	if (err)
 		goto err_shm_put;
 
-	fd = pse51_desc_fd(desc);
+	fd = cobalt_desc_fd(desc);
 
 	if ((oflags & O_TRUNC) && ftruncate(fd, 0)) {
 		close(fd);
@@ -290,7 +290,7 @@ int shm_open(const char *name, int oflags, mode_t mode)
 	return fd;
 
   err_shm_put:
-	pse51_shm_put(shm, 1);
+	cobalt_shm_put(shm, 1);
   error:
 	thread_set_errno(err);
 	return -1;
@@ -326,14 +326,14 @@ int shm_open(const char *name, int oflags, mode_t mode)
  */
 int close(int fd)
 {
-	pse51_desc_t *desc;
-	pse51_shm_t *shm;
+	cobalt_desc_t *desc;
+	cobalt_shm_t *shm;
 	spl_t s;
 	int err;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	shm = pse51_shm_get(&desc, fd, 0);
+	shm = cobalt_shm_get(&desc, fd, 0);
 
 	if (IS_ERR(shm)) {
 		err = -PTR_ERR(shm);
@@ -345,10 +345,10 @@ int close(int fd)
 		goto err_put;
 	}
 
-	pse51_shm_put(shm, 1);
+	cobalt_shm_put(shm, 1);
 	xnlock_put_irqrestore(&nklock, s);
 
-	err = pse51_desc_destroy(desc);
+	err = cobalt_desc_destroy(desc);
 	if (err)
 		goto error;
 
@@ -392,8 +392,8 @@ int close(int fd)
  */
 int shm_unlink(const char *name)
 {
-	pse51_node_t *node;
-	pse51_shm_t *shm;
+	cobalt_node_t *node;
+	cobalt_shm_t *shm;
 	int err;
 	spl_t s;
 
@@ -404,7 +404,7 @@ int shm_unlink(const char *name)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	err = pse51_node_remove(&node, name, PSE51_SHM_MAGIC);
+	err = cobalt_node_remove(&node, name, COBALT_SHM_MAGIC);
 
 	if (err) {
 		xnlock_put_irqrestore(&nklock, s);
@@ -414,7 +414,7 @@ int shm_unlink(const char *name)
 	}
 
 	shm = node2shm(node);
-	pse51_shm_put(shm, 0);
+	cobalt_shm_put(shm, 0);
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -462,13 +462,13 @@ int shm_unlink(const char *name)
 int ftruncate(int fd, off_t len)
 {
 	unsigned desc_flags;
-	pse51_desc_t *desc;
-	pse51_shm_t *shm;
+	cobalt_desc_t *desc;
+	cobalt_shm_t *shm;
 	int err;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	shm = pse51_shm_get(&desc, fd, 1);
+	shm = cobalt_shm_get(&desc, fd, 1);
 
 	if (IS_ERR(shm)) {
 		err = -PTR_ERR(shm);
@@ -488,7 +488,7 @@ int ftruncate(int fd, off_t len)
 		goto err_shm_put;
 	}
 
-	desc_flags = pse51_desc_getflags(desc);
+	desc_flags = cobalt_desc_getflags(desc);
 	xnlock_put_irqrestore(&nklock, s);
 
 	if (down_interruptible(&shm->maplock)) {
@@ -564,7 +564,7 @@ int ftruncate(int fd, off_t len)
 	up(&shm->maplock);
 
       err_shm_put:
-	pse51_shm_put(shm, 1);
+	cobalt_shm_put(shm, 1);
 
 	if (!err)
 		return 0;
@@ -636,10 +636,10 @@ int ftruncate(int fd, off_t len)
  */
 void *mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 {
-	pse51_shm_map_t *map;
+	cobalt_shm_map_t *map;
 	unsigned desc_flags;
-	pse51_desc_t *desc;
-	pse51_shm_t *shm;
+	cobalt_desc_t *desc;
+	cobalt_shm_t *shm;
 	void *result;
 	int err;
 	spl_t s;
@@ -656,7 +656,7 @@ void *mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	shm = pse51_shm_get(&desc, fd, 1);
+	shm = cobalt_shm_get(&desc, fd, 1);
 
 	if (IS_ERR(shm)) {
 		xnlock_put_irqrestore(&nklock, s);
@@ -676,7 +676,7 @@ void *mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 		goto err_shm_put;
 	}
 
-	desc_flags = pse51_desc_getflags(desc) & PSE51_PERMS_MASK;
+	desc_flags = cobalt_desc_getflags(desc) & COBALT_PERMS_MASK;
 	xnlock_put_irqrestore(&nklock, s);
 
 	if ((desc_flags != O_RDWR && desc_flags != O_RDONLY) ||
@@ -685,7 +685,7 @@ void *mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 		goto err_shm_put;
 	}
 
-	map = (pse51_shm_map_t *) xnmalloc(sizeof(*map));
+	map = (cobalt_shm_map_t *) xnmalloc(sizeof(*map));
 	if (!map) {
 		err = EAGAIN;
 		goto err_shm_put;
@@ -715,22 +715,22 @@ void *mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
   err_free_map:
 	xnfree(map);
   err_shm_put:
-	pse51_shm_put(shm, 1);
+	cobalt_shm_put(shm, 1);
   error:
 	thread_set_errno(err);
 	return MAP_FAILED;
 }
 
-static pse51_shm_t *pse51_shm_lookup(void *addr)
+static cobalt_shm_t *cobalt_shm_lookup(void *addr)
 {
 	xnholder_t *holder;
-	pse51_shm_t *shm = NULL;
+	cobalt_shm_t *shm = NULL;
 	off_t off;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	for (holder = getheadq(&pse51_shmq);
-	     holder; holder = nextq(&pse51_shmq, holder)) {
+	for (holder = getheadq(&cobalt_shmq);
+	     holder; holder = nextq(&cobalt_shmq, holder)) {
 		shm = link2shm(holder);
 
 		if (!shm->addr)
@@ -788,9 +788,9 @@ static pse51_shm_t *pse51_shm_lookup(void *addr)
  */
 int munmap(void *addr, size_t len)
 {
-	pse51_shm_map_t *mapping = NULL;
+	cobalt_shm_map_t *mapping = NULL;
 	xnholder_t *holder;
-	pse51_shm_t *shm;
+	cobalt_shm_t *shm;
 	int err;
 	spl_t s;
 
@@ -805,7 +805,7 @@ int munmap(void *addr, size_t len)
 	}
 
 	xnlock_get_irqsave(&nklock, s);
-	shm = pse51_shm_lookup(addr);
+	shm = cobalt_shm_lookup(addr);
 
 	if (!shm) {
 		xnlock_put_irqrestore(&nklock, s);
@@ -845,23 +845,23 @@ int munmap(void *addr, size_t len)
 	up(&shm->maplock);
 
 	xnfree(mapping);
-	pse51_shm_put(shm, 2);
+	cobalt_shm_put(shm, 2);
 	return 0;
 
       err_up:
 	up(&shm->maplock);
       err_shm_put:
-	pse51_shm_put(shm, 1);
+	cobalt_shm_put(shm, 1);
       error:
 	thread_set_errno(err);
 	return -1;
 }
 
-int pse51_xnheap_get(xnheap_t **pheap, void *addr)
+int cobalt_xnheap_get(xnheap_t **pheap, void *addr)
 {
-	pse51_shm_t *shm;
+	cobalt_shm_t *shm;
 
-	shm = pse51_shm_lookup(addr);
+	shm = cobalt_shm_lookup(addr);
 
 	if (!shm)
 		return -EBADF;
@@ -870,64 +870,64 @@ int pse51_xnheap_get(xnheap_t **pheap, void *addr)
 	return 0;
 }
 
-static void ufd_cleanup(pse51_assoc_t *assoc)
+static void ufd_cleanup(cobalt_assoc_t *assoc)
 {
-	pse51_ufd_t *ufd = assoc2ufd(assoc);
+	cobalt_ufd_t *ufd = assoc2ufd(assoc);
 #if XENO_DEBUG(POSIX)
 	xnprintf("Posix: closing shared memory descriptor %lu.\n",
-		 pse51_assoc_key(assoc));
+		 cobalt_assoc_key(assoc));
 #endif /* XENO_DEBUG(POSIX) */
-	pse51_shm_close(ufd->kfd);
+	cobalt_shm_close(ufd->kfd);
 	xnfree(ufd);
 }
 
-static void umap_cleanup(pse51_assoc_t *assoc)
+static void umap_cleanup(cobalt_assoc_t *assoc)
 {
-	pse51_umap_t *umap = assoc2umap(assoc);
+	cobalt_umap_t *umap = assoc2umap(assoc);
 #if XENO_DEBUG(POSIX)
 	xnprintf("Posix: unmapping shared memory 0x%08lx.\n",
-		 pse51_assoc_key(assoc));
+		 cobalt_assoc_key(assoc));
 #endif /* XENO_DEBUG(POSIX) */
 	munmap(umap->kaddr, umap->len);
 	xnfree(umap);
 }
 
-void pse51_shm_ufds_cleanup(pse51_queues_t *q)
+void cobalt_shm_ufds_cleanup(cobalt_queues_t *q)
 {
-	pse51_assocq_destroy(&q->ufds, &ufd_cleanup);
+	cobalt_assocq_destroy(&q->ufds, &ufd_cleanup);
 }
 
-void pse51_shm_umaps_cleanup(pse51_queues_t *q)
+void cobalt_shm_umaps_cleanup(cobalt_queues_t *q)
 {
-	pse51_assocq_destroy(&q->umaps, &umap_cleanup);
+	cobalt_assocq_destroy(&q->umaps, &umap_cleanup);
 }
 
-int pse51_shm_pkg_init(void)
+int cobalt_shm_pkg_init(void)
 {
-	initq(&pse51_shmq);
+	initq(&cobalt_shmq);
 
 	return 0;
 }
 
-void pse51_shm_pkg_cleanup(void)
+void cobalt_shm_pkg_cleanup(void)
 {
 	xnholder_t *holder;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	while ((holder = getheadq(&pse51_shmq))) {
-		pse51_shm_t *shm = link2shm(holder);
-		pse51_node_t *node;
+	while ((holder = getheadq(&cobalt_shmq))) {
+		cobalt_shm_t *shm = link2shm(holder);
+		cobalt_node_t *node;
 
-		pse51_node_remove(&node, shm->nodebase.name, PSE51_SHM_MAGIC);
+		cobalt_node_remove(&node, shm->nodebase.name, COBALT_SHM_MAGIC);
 		xnlock_put_irqrestore(&nklock, s);
 #if XENO_DEBUG(POSIX)
 		xnprintf("Posix: unlinking shared memory \"%s\".\n",
 			 shm->nodebase.name);
 #endif /* XENO_DEBUG(POSIX) */
 		xnlock_get_irqsave(&nklock, s);
-		pse51_shm_destroy(shm, 1);
+		cobalt_shm_destroy(shm, 1);
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -937,7 +937,7 @@ void pse51_shm_pkg_cleanup(void)
 
 EXPORT_SYMBOL_GPL(shm_open);
 EXPORT_SYMBOL_GPL(shm_unlink);
-EXPORT_SYMBOL_GPL(pse51_shm_close);
+EXPORT_SYMBOL_GPL(cobalt_shm_close);
 EXPORT_SYMBOL_GPL(ftruncate);
 EXPORT_SYMBOL_GPL(mmap);
 EXPORT_SYMBOL_GPL(munmap);

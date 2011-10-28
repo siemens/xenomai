@@ -29,24 +29,24 @@ typedef struct {
     xnpholder_t link;
 
 #define link2siginfo(iaddr) \
-    ((pse51_siginfo_t *)(((char *)iaddr) - offsetof(pse51_siginfo_t, link)))
+    ((cobalt_siginfo_t *)(((char *)iaddr) - offsetof(cobalt_siginfo_t, link)))
 
-} pse51_siginfo_t;
+} cobalt_siginfo_t;
 
 /* Must be called with nklock lock, irqs off returns non zero if rescheduling
    needed. */
-int pse51_sigqueue_inner(pthread_t thread, pse51_siginfo_t *si);
+int cobalt_sigqueue_inner(pthread_t thread, cobalt_siginfo_t *si);
 
-void pse51_sigunqueue(pthread_t thread, pse51_siginfo_t *si);
+void cobalt_sigunqueue(pthread_t thread, cobalt_siginfo_t *si);
 
-void pse51_signal_init_thread(pthread_t new, const pthread_t parent);
+void cobalt_signal_init_thread(pthread_t new, const pthread_t parent);
 
-void pse51_signal_cleanup_thread(pthread_t zombie);
+void cobalt_signal_cleanup_thread(pthread_t zombie);
 
-void pse51_signal_handle_request(pthread_t thread);
+void cobalt_signal_handle_request(pthread_t thread);
 
-void pse51_signal_pkg_init(void);
+void cobalt_signal_pkg_init(void);
 
-void pse51_signal_pkg_cleanup(void);
+void cobalt_signal_pkg_cleanup(void);
 
 #endif /* !_POSIX_SIG_H */

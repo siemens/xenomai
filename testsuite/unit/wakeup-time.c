@@ -104,7 +104,7 @@ void event(void *cookie)
 		}
 
 		switch_count++;
-		err = rt_sem_v(&switch_sem);
+		err = rt_sem_broadcast(&switch_sem);
 		switch_tsc = rt_timer_tsc();
 		if (err) {
 			if (err != -EIDRM && err != -EINVAL)

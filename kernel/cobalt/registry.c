@@ -22,16 +22,16 @@
 #define BITS_PER_INT 32
 
 struct {
-	pse51_node_t **node_buckets;
+	cobalt_node_t **node_buckets;
 	unsigned buckets_count;
 
-	pse51_desc_t **descs;
+	cobalt_desc_t **descs;
 	unsigned maxfds;
 	unsigned *fdsmap;
 	unsigned mapsz;
-} pse51_reg;
+} cobalt_reg;
 
-static unsigned pse51_reg_crunch(const char *key)
+static unsigned cobalt_reg_crunch(const char *key)
 {
 	unsigned h = 0, g;
 
@@ -44,24 +44,24 @@ static unsigned pse51_reg_crunch(const char *key)
 			h = (h ^ (g >> HQON)) ^ g;
 	}
 
-	return h % pse51_reg.buckets_count;
+	return h % cobalt_reg.buckets_count;
 }
 
-static int pse51_node_lookup(pse51_node_t *** node_linkp,
+static int cobalt_node_lookup(cobalt_node_t *** node_linkp,
 			     const char *name, unsigned long magic)
 {
-	pse51_node_t **node_link;
+	cobalt_node_t **node_link;
 
 	if (strnlen(name, sizeof((*node_link)->name)) ==
 	    sizeof((*node_link)->name))
 		return ENAMETOOLONG;
 
-	node_link = &pse51_reg.node_buckets[pse51_reg_crunch(name)];
+	node_link = &cobalt_reg.node_buckets[cobalt_reg_crunch(name)];
 
 	while (*node_link) {
-		pse51_node_t *node = *node_link;
+		cobalt_node_t *node = *node_link;
 
-		if (!strncmp(node->name, name, PSE51_MAXNAME)
+		if (!strncmp(node->name, name, COBALT_MAXNAME)
 		    && node->magic == magic)
 			break;
 
@@ -72,9 +72,9 @@ static int pse51_node_lookup(pse51_node_t *** node_linkp,
 	return 0;
 }
 
-static void pse51_node_unbind(pse51_node_t * node)
+static void cobalt_node_unbind(cobalt_node_t * node)
 {
-	pse51_node_t **node_link;
+	cobalt_node_t **node_link;
 
 	node_link = node->prev;
 	*node_link = node->next;
@@ -84,12 +84,12 @@ static void pse51_node_unbind(pse51_node_t * node)
 	node->next = NULL;
 }
 
-int pse51_node_add(pse51_node_t * node, const char *name, unsigned magic)
+int cobalt_node_add(cobalt_node_t * node, const char *name, unsigned magic)
 {
-	pse51_node_t **node_link;
+	cobalt_node_t **node_link;
 	int err;
 
-	err = pse51_node_lookup(&node_link, name, magic);
+	err = cobalt_node_lookup(&node_link, name, magic);
 
 	if (err)
 		return err;
@@ -106,26 +106,26 @@ int pse51_node_add(pse51_node_t * node, const char *name, unsigned magic)
 	node->prev = node_link;
 	*node_link = node;
 	strcpy(node->name, name);	/* name length is checked in
-					   pse51_node_lookup. */
+					   cobalt_node_lookup. */
 
 	return 0;
 }
 
-int pse51_node_put(pse51_node_t * node)
+int cobalt_node_put(cobalt_node_t * node)
 {
-	if (!pse51_node_ref_p(node))
+	if (!cobalt_node_ref_p(node))
 		return EINVAL;
 
 	--node->refcount;
 	return 0;
 }
 
-int pse51_node_remove(pse51_node_t ** nodep, const char *name, unsigned magic)
+int cobalt_node_remove(cobalt_node_t ** nodep, const char *name, unsigned magic)
 {
-	pse51_node_t *node, **node_link;
+	cobalt_node_t *node, **node_link;
 	int err;
 
-	err = pse51_node_lookup(&node_link, name, magic);
+	err = cobalt_node_lookup(&node_link, name, magic);
 
 	if (err)
 		return err;
@@ -137,19 +137,19 @@ int pse51_node_remove(pse51_node_t ** nodep, const char *name, unsigned magic)
 
 	*nodep = node;
 	node->magic = ~node->magic;
-	node->flags |= PSE51_NODE_REMOVED;
-	pse51_node_unbind(node);
+	node->flags |= COBALT_NODE_REMOVED;
+	cobalt_node_unbind(node);
 	return 0;
 }
 
 /* Look for a node and check the POSIX open flags. */
-int pse51_node_get(pse51_node_t ** nodep,
+int cobalt_node_get(cobalt_node_t ** nodep,
 		   const char *name, unsigned long magic, long oflags)
 {
-	pse51_node_t *node, **node_link;
+	cobalt_node_t *node, **node_link;
 	int err;
 
-	err = pse51_node_lookup(&node_link, name, magic);
+	err = cobalt_node_lookup(&node_link, name, magic);
 	if (err)
 		return err;
 
@@ -169,68 +169,68 @@ int pse51_node_get(pse51_node_t ** nodep,
 	return 0;
 }
 
-static int pse51_reg_fd_get(void)
+static int cobalt_reg_fd_get(void)
 {
 	unsigned i;
 
-	for (i = 0; i < pse51_reg.mapsz; i++)
-		if (pse51_reg.fdsmap[i]) {
-			int fd = ffnz(pse51_reg.fdsmap[i]);
+	for (i = 0; i < cobalt_reg.mapsz; i++)
+		if (cobalt_reg.fdsmap[i]) {
+			int fd = ffnz(cobalt_reg.fdsmap[i]);
 
-			pse51_reg.fdsmap[i] &= ~(1 << fd);
+			cobalt_reg.fdsmap[i] &= ~(1 << fd);
 			return fd + BITS_PER_INT * i;
 		}
 
 	return -1;
 }
 
-static void pse51_reg_fd_put(int fd)
+static void cobalt_reg_fd_put(int fd)
 {
 	unsigned i, bit;
 
 	i = fd / BITS_PER_INT;
 	bit = 1 << (fd % BITS_PER_INT);
 
-	pse51_reg.fdsmap[i] |= bit;
-	pse51_reg.descs[fd] = NULL;
+	cobalt_reg.fdsmap[i] |= bit;
+	cobalt_reg.descs[fd] = NULL;
 }
 
-static int pse51_reg_fd_lookup(pse51_desc_t ** descp, int fd)
+static int cobalt_reg_fd_lookup(cobalt_desc_t ** descp, int fd)
 {
 	unsigned i, bit;
 
-	if (fd > pse51_reg.maxfds)
+	if (fd > cobalt_reg.maxfds)
 		return EBADF;
 
 	i = fd / BITS_PER_INT;
 	bit = 1 << (fd % BITS_PER_INT);
 
-	if ((pse51_reg.fdsmap[i] & bit))
+	if ((cobalt_reg.fdsmap[i] & bit))
 		return EBADF;
 
-	*descp = pse51_reg.descs[fd];
+	*descp = cobalt_reg.descs[fd];
 	return 0;
 }
 
-int pse51_desc_create(pse51_desc_t ** descp, pse51_node_t * node, long flags)
+int cobalt_desc_create(cobalt_desc_t ** descp, cobalt_node_t * node, long flags)
 {
-	pse51_desc_t *desc;
+	cobalt_desc_t *desc;
 	spl_t s;
 	int fd;
 
-	desc = (pse51_desc_t *) xnmalloc(sizeof(*desc));
+	desc = (cobalt_desc_t *) xnmalloc(sizeof(*desc));
 	if (!desc)
 		return ENOSPC;
 
 	xnlock_get_irqsave(&nklock, s);
-	fd = pse51_reg_fd_get();
+	fd = cobalt_reg_fd_get();
 	if (fd == -1) {
 		xnlock_put_irqrestore(&nklock, s);
 		xnfree(desc);
 		return EMFILE;
 	}
 
-	pse51_reg.descs[fd] = desc;
+	cobalt_reg.descs[fd] = desc;
 	desc->node = node;
 	desc->fd = fd;
 	desc->flags = flags;
@@ -240,23 +240,23 @@ int pse51_desc_create(pse51_desc_t ** descp, pse51_node_t * node, long flags)
 	return 0;
 }
 
-int pse51_desc_destroy(pse51_desc_t * desc)
+int cobalt_desc_destroy(cobalt_desc_t * desc)
 {
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	pse51_reg_fd_put(desc->fd);
+	cobalt_reg_fd_put(desc->fd);
 	xnlock_put_irqrestore(&nklock, s);
 	xnfree(desc);
 	return 0;
 }
 
-int pse51_desc_get(pse51_desc_t ** descp, int fd, unsigned magic)
+int cobalt_desc_get(cobalt_desc_t ** descp, int fd, unsigned magic)
 {
-	pse51_desc_t *desc;
+	cobalt_desc_t *desc;
 	int err;
 
-	err = pse51_reg_fd_lookup(&desc, fd);
+	err = cobalt_reg_fd_lookup(&desc, fd);
 
 	if (err)
 		return err;
@@ -272,13 +272,13 @@ int pse51_desc_get(pse51_desc_t ** descp, int fd, unsigned magic)
 
 #ifndef __XENO_SIM__
 
-DEFINE_XNLOCK(pse51_assoc_lock);
+DEFINE_XNLOCK(cobalt_assoc_lock);
 
-static int pse51_assoc_lookup_inner(pse51_assocq_t * q,
-				    pse51_assoc_t ** passoc,
+static int cobalt_assoc_lookup_inner(cobalt_assocq_t * q,
+				    cobalt_assoc_t ** passoc,
 				    u_long key)
 {
-	pse51_assoc_t *assoc;
+	cobalt_assoc_t *assoc;
 	xnholder_t *holder;
 
 	holder = getheadq(q);
@@ -310,15 +310,15 @@ static int pse51_assoc_lookup_inner(pse51_assocq_t * q,
 	return 0;
 }
 
-int pse51_assoc_insert(pse51_assocq_t * q, pse51_assoc_t * assoc, u_long key)
+int cobalt_assoc_insert(cobalt_assocq_t * q, cobalt_assoc_t * assoc, u_long key)
 {
-	pse51_assoc_t *next;
+	cobalt_assoc_t *next;
 	spl_t s;
 
-	xnlock_get_irqsave(&pse51_assoc_lock, s);
+	xnlock_get_irqsave(&cobalt_assoc_lock, s);
 
-	if (pse51_assoc_lookup_inner(q, &next, key)) {
-		xnlock_put_irqrestore(&pse51_assoc_lock, s);
+	if (cobalt_assoc_lookup_inner(q, &next, key)) {
+		xnlock_put_irqrestore(&cobalt_assoc_lock, s);
 		return -EBUSY;
 	}
 
@@ -329,63 +329,63 @@ int pse51_assoc_insert(pse51_assocq_t * q, pse51_assoc_t * assoc, u_long key)
 	else
 		appendq(q, &assoc->link);
 
-	xnlock_put_irqrestore(&pse51_assoc_lock, s);
+	xnlock_put_irqrestore(&cobalt_assoc_lock, s);
 
 	return 0;
 }
 
-pse51_assoc_t *pse51_assoc_lookup(pse51_assocq_t * q, u_long key)
+cobalt_assoc_t *cobalt_assoc_lookup(cobalt_assocq_t * q, u_long key)
 {
-	pse51_assoc_t *assoc;
+	cobalt_assoc_t *assoc;
 	unsigned found;
 	spl_t s;
 
-	xnlock_get_irqsave(&pse51_assoc_lock, s);
-	found = pse51_assoc_lookup_inner(q, &assoc, key);
-	xnlock_put_irqrestore(&pse51_assoc_lock, s);
+	xnlock_get_irqsave(&cobalt_assoc_lock, s);
+	found = cobalt_assoc_lookup_inner(q, &assoc, key);
+	xnlock_put_irqrestore(&cobalt_assoc_lock, s);
 
 	return found ? assoc : NULL;
 }
 
-pse51_assoc_t *pse51_assoc_remove(pse51_assocq_t * q, u_long key)
+cobalt_assoc_t *cobalt_assoc_remove(cobalt_assocq_t * q, u_long key)
 {
-	pse51_assoc_t *assoc;
+	cobalt_assoc_t *assoc;
 	spl_t s;
 
-	xnlock_get_irqsave(&pse51_assoc_lock, s);
-	if (!pse51_assoc_lookup_inner(q, &assoc, key)) {
-		xnlock_put_irqrestore(&pse51_assoc_lock, s);
+	xnlock_get_irqsave(&cobalt_assoc_lock, s);
+	if (!cobalt_assoc_lookup_inner(q, &assoc, key)) {
+		xnlock_put_irqrestore(&cobalt_assoc_lock, s);
 		return NULL;
 	}
 
 	removeq(q, &assoc->link);
-	xnlock_put_irqrestore(&pse51_assoc_lock, s);
+	xnlock_put_irqrestore(&cobalt_assoc_lock, s);
 
 	return assoc;
 }
 
-void pse51_assocq_destroy(pse51_assocq_t * q, void (*destroy) (pse51_assoc_t *))
+void cobalt_assocq_destroy(cobalt_assocq_t * q, void (*destroy) (cobalt_assoc_t *))
 {
-	pse51_assoc_t *assoc;
+	cobalt_assoc_t *assoc;
 	xnholder_t *holder;
 	spl_t s;
 
-	xnlock_get_irqsave(&pse51_assoc_lock, s);
+	xnlock_get_irqsave(&cobalt_assoc_lock, s);
 	while ((holder = getq(q))) {
 		assoc = link2assoc(holder);
-		xnlock_put_irqrestore(&pse51_assoc_lock, s);
+		xnlock_put_irqrestore(&cobalt_assoc_lock, s);
 		if (destroy)
 			destroy(assoc);
-		xnlock_get_irqsave(&pse51_assoc_lock, s);
+		xnlock_get_irqsave(&cobalt_assoc_lock, s);
 	}
-	xnlock_put_irqrestore(&pse51_assoc_lock, s);
+	xnlock_put_irqrestore(&cobalt_assoc_lock, s);
 }
 
 #endif /* !__XENO_SIM__ */
 
-pse51_kqueues_t pse51_global_kqueues;
+cobalt_kqueues_t cobalt_global_kqueues;
 
-int pse51_reg_pkg_init(unsigned buckets_count, unsigned maxfds)
+int cobalt_reg_pkg_init(unsigned buckets_count, unsigned maxfds)
 {
 	size_t size, mapsize;
 	char *chunk;
@@ -395,56 +395,56 @@ int pse51_reg_pkg_init(unsigned buckets_count, unsigned maxfds)
 	if (maxfds % BITS_PER_INT)
 		++mapsize;
 
-	size = sizeof(pse51_node_t) * buckets_count +
-		sizeof(pse51_desc_t) * maxfds + sizeof(unsigned) * mapsize;
+	size = sizeof(cobalt_node_t) * buckets_count +
+		sizeof(cobalt_desc_t) * maxfds + sizeof(unsigned) * mapsize;
 
 	chunk = (char *)xnarch_alloc_host_mem(size);
 	if (!chunk)
 		return ENOMEM;
 
-	pse51_reg.node_buckets = (pse51_node_t **) chunk;
-	pse51_reg.buckets_count = buckets_count;
+	cobalt_reg.node_buckets = (cobalt_node_t **) chunk;
+	cobalt_reg.buckets_count = buckets_count;
 	for (i = 0; i < buckets_count; i++)
-		pse51_reg.node_buckets[i] = NULL;
+		cobalt_reg.node_buckets[i] = NULL;
 
-	chunk += sizeof(pse51_node_t) * buckets_count;
-	pse51_reg.descs = (pse51_desc_t **) chunk;
+	chunk += sizeof(cobalt_node_t) * buckets_count;
+	cobalt_reg.descs = (cobalt_desc_t **) chunk;
 	for (i = 0; i < maxfds; i++)
-		pse51_reg.descs[i] = NULL;
+		cobalt_reg.descs[i] = NULL;
 
-	chunk += sizeof(pse51_desc_t) * maxfds;
-	pse51_reg.fdsmap = (unsigned *)chunk;
-	pse51_reg.maxfds = maxfds;
-	pse51_reg.mapsz = mapsize;
+	chunk += sizeof(cobalt_desc_t) * maxfds;
+	cobalt_reg.fdsmap = (unsigned *)chunk;
+	cobalt_reg.maxfds = maxfds;
+	cobalt_reg.mapsz = mapsize;
 
 	/* Initialize fds map. Bit set means "descriptor free". */
 	for (i = 0; i < maxfds / BITS_PER_INT; i++)
-		pse51_reg.fdsmap[i] = ~0;
+		cobalt_reg.fdsmap[i] = ~0;
 	if (maxfds % BITS_PER_INT)
-		pse51_reg.fdsmap[mapsize - 1] =
+		cobalt_reg.fdsmap[mapsize - 1] =
 		    (1 << (maxfds % BITS_PER_INT)) - 1;
 
 #ifndef __XENO_SIM__
-	xnlock_init(&pse51_assoc_lock);
+	xnlock_init(&cobalt_assoc_lock);
 #endif
 	return 0;
 }
 
-void pse51_reg_pkg_cleanup(void)
+void cobalt_reg_pkg_cleanup(void)
 {
 	size_t size;
 	unsigned i;
-	for (i = 0; i < pse51_reg.maxfds; i++)
-		if (pse51_reg.descs[i]) {
+	for (i = 0; i < cobalt_reg.maxfds; i++)
+		if (cobalt_reg.descs[i]) {
 #if XENO_DEBUG(POSIX)
 			xnprintf("Posix: destroying descriptor %d.\n", i);
 #endif /* XENO_DEBUG(POSIX) */
-			pse51_desc_destroy(pse51_reg.descs[i]);
+			cobalt_desc_destroy(cobalt_reg.descs[i]);
 		}
 #if XENO_DEBUG(POSIX)
-	for (i = 0; i < pse51_reg.buckets_count; i++) {
-		pse51_node_t *node;
-		for (node = pse51_reg.node_buckets[i];
+	for (i = 0; i < cobalt_reg.buckets_count; i++) {
+		cobalt_node_t *node;
+		for (node = cobalt_reg.node_buckets[i];
 		     node;
 		     node = node->next)
 			xnprintf("Posix: node \"%s\" left aside.\n",
@@ -452,9 +452,9 @@ void pse51_reg_pkg_cleanup(void)
 	}
 #endif /* XENO_DEBUG(POSIX) */
 
-	size = sizeof(pse51_node_t) * pse51_reg.buckets_count
-		+ sizeof(pse51_desc_t) * pse51_reg.maxfds
-		+ sizeof(unsigned) * pse51_reg.mapsz;
+	size = sizeof(cobalt_node_t) * cobalt_reg.buckets_count
+		+ sizeof(cobalt_desc_t) * cobalt_reg.maxfds
+		+ sizeof(unsigned) * cobalt_reg.mapsz;
 
-	xnarch_free_host_mem(pse51_reg.node_buckets, size);
+	xnarch_free_host_mem(cobalt_reg.node_buckets, size);
 }

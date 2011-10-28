@@ -30,16 +30,16 @@
 #include <rtdk.h>
 #include <asm/xenomai/bits/bind.h>
 
-int __pse51_muxid = -1;
+int __cobalt_muxid = -1;
 int __rtdm_muxid = -1;
 int __rtdm_fd_start = INT_MAX;
 static int fork_handler_registered;
 
 int __wrap_pthread_setschedparam(pthread_t, int, const struct sched_param *);
-void pse51_clock_init(int);
+void cobalt_clock_init(int);
 
 static __attribute__ ((constructor))
-void __init_posix_interface(void)
+void __init_cobalt_interface(void)
 {
 	struct xnbindreq breq;
 	
@@ -52,11 +52,11 @@ void __init_posix_interface(void)
 	rt_print_auto_init(1);
 
 	muxid =
-	    xeno_bind_skin(PSE51_SKIN_MAGIC, "POSIX", "xeno_posix");
+	    xeno_bind_skin(COBALT_SKIN_MAGIC, "POSIX", "xeno_posix");
 
-	pse51_clock_init(muxid);
+	cobalt_clock_init(muxid);
 
-	__pse51_muxid = __xn_mux_shifted_id(muxid);
+	__cobalt_muxid = __xn_mux_shifted_id(muxid);
 
 	breq.feat_req = XENOMAI_FEAT_DEP;
 	breq.abi_rev = XENOMAI_ABI_REV;
@@ -104,7 +104,7 @@ void __init_posix_interface(void)
 	if (fork_handler_registered)
 		return;
 
-	err = pthread_atfork(NULL, NULL, &__init_posix_interface);
+	err = pthread_atfork(NULL, NULL, &__init_cobalt_interface);
 	if (err) {
 		fprintf(stderr, "Xenomai Posix skin init: "
 			"pthread_atfork: %s\n", strerror(err));

@@ -46,17 +46,17 @@ typedef unsigned long sig_atomic_t;
 #undef SIGRTMIN
 #undef SIGRTMAX
 
-#define sigaction(sig, action, old) pse51_sigaction(sig, action, old)
-#define sigemptyset pse51_sigemptyset
-#define sigfillset pse51_sigfillset
-#define sigaddset pse51_sigaddset
-#define sigdelset pse51_sigdelset
-#define sigismember pse51_sigismember
+#define sigaction(sig, action, old) cobalt_sigaction(sig, action, old)
+#define sigemptyset cobalt_sigemptyset
+#define sigfillset cobalt_sigfillset
+#define sigaddset cobalt_sigaddset
+#define sigdelset cobalt_sigdelset
+#define sigismember cobalt_sigismember
 
 #define SIGRTMIN 33
 #define SIGRTMAX 64
 
-struct pse51_thread;
+struct cobalt_thread;
 
 #ifdef __cplusplus
 extern "C" {
@@ -75,7 +75,7 @@ int sigdelset(sigset_t *set,
 int sigismember(const sigset_t *set,
 		int signum);
 
-int pthread_kill(struct pse51_thread *thread,
+int pthread_kill(struct cobalt_thread *thread,
 		 int sig);
 
 int pthread_sigmask(int how,
@@ -99,7 +99,7 @@ int sigtimedwait(const sigset_t *__restrict__ user_set,
 		 siginfo_t *__restrict__ info,
 		 const struct timespec *__restrict__ timeout);
 
-int pthread_sigqueue_np (struct pse51_thread *thread, int sig, union sigval value);
+int pthread_sigqueue_np (struct cobalt_thread *thread, int sig, union sigval value);
 
 #ifdef __cplusplus
 }

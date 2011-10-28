@@ -24,7 +24,7 @@
 #include <pthread.h>
 #include <mqueue.h>
 
-extern int __pse51_muxid;
+extern int __cobalt_muxid;
 
 mqd_t __wrap_mq_open(const char *name, int oflags, ...)
 {
@@ -45,8 +45,8 @@ mqd_t __wrap_mq_open(const char *name, int oflags, ...)
 	if (q == -1)
 		return (mqd_t) - 1;
 
-	err = -XENOMAI_SKINCALL5(__pse51_muxid,
-				 __pse51_mq_open, name, oflags, mode, attr, q);
+	err = -XENOMAI_SKINCALL5(__cobalt_muxid,
+				 __cobalt_mq_open, name, oflags, mode, attr, q);
 
 	if (!err)
 		return (mqd_t) q;
@@ -59,7 +59,7 @@ int __wrap_mq_close(mqd_t q)
 {
 	int err;
 
-	err = XENOMAI_SKINCALL1(__pse51_muxid, __pse51_mq_close, q);
+	err = XENOMAI_SKINCALL1(__cobalt_muxid, __cobalt_mq_close, q);
 	if (!err)
 		return __STD(close(q));
 
@@ -71,7 +71,7 @@ int __wrap_mq_unlink(const char *name)
 {
 	int err;
 
-	err = XENOMAI_SKINCALL1(__pse51_muxid, __pse51_mq_unlink, name);
+	err = XENOMAI_SKINCALL1(__cobalt_muxid, __cobalt_mq_unlink, name);
 	if (!err)
 		return 0;
 
@@ -83,7 +83,7 @@ int __wrap_mq_getattr(mqd_t q, struct mq_attr *attr)
 {
 	int err;
 
-	err = XENOMAI_SKINCALL2(__pse51_muxid, __pse51_mq_getattr, q, attr);
+	err = XENOMAI_SKINCALL2(__cobalt_muxid, __cobalt_mq_getattr, q, attr);
 	if (!err)
 		return 0;
 
@@ -97,8 +97,8 @@ int __wrap_mq_setattr(mqd_t q,
 {
 	int err;
 
-	err = XENOMAI_SKINCALL3(__pse51_muxid,
-				__pse51_mq_setattr, q, attr, oattr);
+	err = XENOMAI_SKINCALL3(__cobalt_muxid,
+				__cobalt_mq_setattr, q, attr, oattr);
 	if (!err)
 		return 0;
 
@@ -112,8 +112,8 @@ int __wrap_mq_send(mqd_t q, const char *buffer, size_t len, unsigned prio)
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	err = XENOMAI_SKINCALL4(__pse51_muxid,
-				__pse51_mq_send, q, buffer, len, prio);
+	err = XENOMAI_SKINCALL4(__cobalt_muxid,
+				__cobalt_mq_send, q, buffer, len, prio);
 
 	pthread_setcanceltype(oldtype, NULL);
 
@@ -133,8 +133,8 @@ int __wrap_mq_timedsend(mqd_t q,
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	err = XENOMAI_SKINCALL5(__pse51_muxid,
-				__pse51_mq_timedsend,
+	err = XENOMAI_SKINCALL5(__cobalt_muxid,
+				__cobalt_mq_timedsend,
 				q, buffer, len, prio, timeout);
 
 	pthread_setcanceltype(oldtype, NULL);
@@ -153,8 +153,8 @@ ssize_t __wrap_mq_receive(mqd_t q, char *buffer, size_t len, unsigned *prio)
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	err = XENOMAI_SKINCALL4(__pse51_muxid,
-				__pse51_mq_receive, q, buffer, &rlen, prio);
+	err = XENOMAI_SKINCALL4(__cobalt_muxid,
+				__cobalt_mq_receive, q, buffer, &rlen, prio);
 
 	pthread_setcanceltype(oldtype, NULL);
 
@@ -176,8 +176,8 @@ ssize_t __wrap_mq_timedreceive(mqd_t q,
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	err = XENOMAI_SKINCALL5(__pse51_muxid,
-				__pse51_mq_timedreceive,
+	err = XENOMAI_SKINCALL5(__cobalt_muxid,
+				__cobalt_mq_timedreceive,
 				q, buffer, &rlen, prio, timeout);
 
 	pthread_setcanceltype(oldtype, NULL);
@@ -193,8 +193,8 @@ int __wrap_mq_notify(mqd_t mqdes, const struct sigevent *notification)
 {
 	int err;
 
-	err = XENOMAI_SKINCALL2(__pse51_muxid,
-				__pse51_mq_notify, mqdes, notification);
+	err = XENOMAI_SKINCALL2(__cobalt_muxid,
+				__cobalt_mq_notify, mqdes, notification);
 	if (err) {
 		errno = -err;
 		return -1;

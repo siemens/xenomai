@@ -93,7 +93,7 @@ int pthread_cancel(pthread_t thread)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread)) {
+	if (!cobalt_obj_active(thread, COBALT_THREAD_MAGIC, struct cobalt_thread)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return ESRCH;
 	}
@@ -102,7 +102,7 @@ int pthread_cancel(pthread_t thread)
 
 	if (cancel_enabled
 	    && thread_getcanceltype(thread) == PTHREAD_CANCEL_ASYNCHRONOUS)
-		pse51_thread_abort(thread, PTHREAD_CANCELED);
+		cobalt_thread_abort(thread, PTHREAD_CANCELED);
 	else {
 		/* pthread_cancel is not a cancellation point, so
 		   thread == pthread_self() is not a special case. */
@@ -152,7 +152,7 @@ int pthread_cancel(pthread_t thread)
  */
 void pthread_cleanup_push(cleanup_routine_t * routine, void *arg)
 {
-	pthread_t cur = pse51_current_thread();
+	pthread_t cur = cobalt_current_thread();
 	cleanup_handler_t *handler;
 	spl_t s;
 
@@ -210,7 +210,7 @@ void pthread_cleanup_push(cleanup_routine_t * routine, void *arg)
  */
 void pthread_cleanup_pop(int execute)
 {
-	pthread_t cur = pse51_current_thread();
+	pthread_t cur = cobalt_current_thread();
 	cleanup_handler_t *handler;
 	cleanup_routine_t *routine;
 	xnholder_t *holder;
@@ -293,7 +293,7 @@ int pthread_setcanceltype(int type, int *oldtype_ptr)
 		break;
 	}
 
-	cur = pse51_current_thread();
+	cur = cobalt_current_thread();
 
 	if (!cur || xnpod_interrupt_p())
 		return EPERM;
@@ -366,7 +366,7 @@ int pthread_setcancelstate(int state, int *oldstate_ptr)
 		break;
 	}
 
-	cur = pse51_current_thread();
+	cur = cobalt_current_thread();
 
 	if (!cur || xnpod_interrupt_p())
 		return EPERM;
@@ -415,7 +415,7 @@ void pthread_testcancel(void)
 	xnlock_put_irqrestore(&nklock, s);
 }
 
-void pse51_cancel_init_thread(pthread_t thread)
+void cobalt_cancel_init_thread(pthread_t thread)
 {
 	thread_setcancelstate(thread, PTHREAD_CANCEL_ENABLE);
 	thread_setcanceltype(thread, PTHREAD_CANCEL_DEFERRED);
@@ -423,7 +423,7 @@ void pse51_cancel_init_thread(pthread_t thread)
 	initq(thread_cleanups(thread));
 }
 
-void pse51_cancel_cleanup_thread(pthread_t thread)
+void cobalt_cancel_cleanup_thread(pthread_t thread)
 {
 	xnholder_t *holder;
 

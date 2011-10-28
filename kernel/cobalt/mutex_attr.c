@@ -24,7 +24,7 @@
 #include "internal.h"
 
 static const pthread_mutexattr_t default_mutex_attr = {
-	magic: PSE51_MUTEX_ATTR_MAGIC,
+	magic: COBALT_MUTEX_ATTR_MAGIC,
 	type: PTHREAD_MUTEX_NORMAL,
 	protocol: PTHREAD_PRIO_NONE,
 	pshared: PTHREAD_PROCESS_PRIVATE
@@ -87,12 +87,12 @@ int pthread_mutexattr_destroy(pthread_mutexattr_t * attr)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr,PSE51_MUTEX_ATTR_MAGIC,pthread_mutexattr_t)) {
+	if (!cobalt_obj_active(attr,COBALT_MUTEX_ATTR_MAGIC,pthread_mutexattr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
 
-	pse51_mark_deleted(attr);
+	cobalt_mark_deleted(attr);
 	xnlock_put_irqrestore(&nklock, s);
 
 	return 0;
@@ -132,7 +132,7 @@ int pthread_mutexattr_gettype(const pthread_mutexattr_t * attr, int *type)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr,PSE51_MUTEX_ATTR_MAGIC,pthread_mutexattr_t)) {
+	if (!cobalt_obj_active(attr,COBALT_MUTEX_ATTR_MAGIC,pthread_mutexattr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
@@ -182,7 +182,7 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int type)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr,PSE51_MUTEX_ATTR_MAGIC,pthread_mutexattr_t)) {
+	if (!cobalt_obj_active(attr,COBALT_MUTEX_ATTR_MAGIC,pthread_mutexattr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
@@ -240,7 +240,7 @@ int pthread_mutexattr_getprotocol(const pthread_mutexattr_t * attr, int *proto)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr,PSE51_MUTEX_ATTR_MAGIC,pthread_mutexattr_t)) {
+	if (!cobalt_obj_active(attr,COBALT_MUTEX_ATTR_MAGIC,pthread_mutexattr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
@@ -288,7 +288,7 @@ int pthread_mutexattr_setprotocol(pthread_mutexattr_t * attr, int proto)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr,PSE51_MUTEX_ATTR_MAGIC,pthread_mutexattr_t)) {
+	if (!cobalt_obj_active(attr,COBALT_MUTEX_ATTR_MAGIC,pthread_mutexattr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
@@ -350,7 +350,7 @@ int pthread_mutexattr_getpshared(const pthread_mutexattr_t *attr, int *pshared)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr,PSE51_MUTEX_ATTR_MAGIC,pthread_mutexattr_t)) {
+	if (!cobalt_obj_active(attr,COBALT_MUTEX_ATTR_MAGIC,pthread_mutexattr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
@@ -397,7 +397,7 @@ int pthread_mutexattr_setpshared(pthread_mutexattr_t *attr, int pshared)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr,PSE51_MUTEX_ATTR_MAGIC,pthread_mutexattr_t)) {
+	if (!cobalt_obj_active(attr,COBALT_MUTEX_ATTR_MAGIC,pthread_mutexattr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}

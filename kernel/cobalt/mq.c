@@ -35,7 +35,7 @@
 #include "registry.h"
 #include "internal.h"		/* Magics, time conversion */
 #include "thread.h"		/* errno. */
-#include "sig.h"		/* pse51_siginfo_t. */
+#include "sig.h"		/* cobalt_siginfo_t. */
 #ifdef __KERNEL__
 #include <linux/fs.h>		/* Make sure ERR_PTR is defined for all kernel versions */
 #include "apc.h"
@@ -44,11 +44,11 @@
 #include "mq.h"
 
 /* Temporary definitions. */
-struct pse51_mq {
-	pse51_node_t nodebase;
+struct cobalt_mq {
+	cobalt_node_t nodebase;
 
 #define node2mq(naddr) \
-    ((pse51_mq_t *) (((char *)naddr) - offsetof(pse51_mq_t, nodebase)))
+    ((cobalt_mq_t *) (((char *)naddr) - offsetof(cobalt_mq_t, nodebase)))
 
 	xnpqueue_t queued;
 	xnsynch_t receivers;
@@ -58,7 +58,7 @@ struct pse51_mq {
 	xnqueue_t avail;
 
 	/* mq_notify */
-	pse51_siginfo_t si;
+	cobalt_siginfo_t si;
 	mqd_t target_qd;
 	pthread_t target;
 
@@ -69,20 +69,20 @@ struct pse51_mq {
 	DECLARE_XNSELECT(read_select);
 	DECLARE_XNSELECT(write_select);
 #define link2mq(laddr) \
-    ((pse51_mq_t *) (((char *)laddr) - offsetof(pse51_mq_t, link)))
+    ((cobalt_mq_t *) (((char *)laddr) - offsetof(cobalt_mq_t, link)))
 };
 
 #define any2msg(addr, member)							\
-    ((pse51_msg_t *)(((char *)addr) - offsetof(pse51_msg_t, member)))
+    ((cobalt_msg_t *)(((char *)addr) - offsetof(cobalt_msg_t, member)))
 
-static xnqueue_t pse51_mqq;
+static xnqueue_t cobalt_mqq;
 
 static struct mq_attr default_attr = {
       mq_maxmsg:128,
       mq_msgsize:128,
 };
 
-static pse51_msg_t *pse51_mq_msg_alloc(pse51_mq_t * mq)
+static cobalt_msg_t *cobalt_mq_msg_alloc(cobalt_mq_t * mq)
 {
 	xnpholder_t *holder = (xnpholder_t *)getq(&mq->avail);
 
@@ -93,14 +93,14 @@ static pse51_msg_t *pse51_mq_msg_alloc(pse51_mq_t * mq)
 	return any2msg(holder, link);
 }
 
-static void pse51_mq_msg_free(pse51_mq_t * mq, pse51_msg_t * msg)
+static void cobalt_mq_msg_free(cobalt_mq_t * mq, cobalt_msg_t * msg)
 {
 	xnholder_t *holder = (xnholder_t *)(&msg->link);
 	inith(holder);
 	prependq(&mq->avail, holder);	/* For earliest re-use of the block. */
 }
 
-static int pse51_mq_init(pse51_mq_t * mq, const struct mq_attr *attr)
+static int cobalt_mq_init(cobalt_mq_t * mq, const struct mq_attr *attr)
 {
 	unsigned i, msgsize, memsize;
 	char *mem;
@@ -113,7 +113,7 @@ static int pse51_mq_init(pse51_mq_t * mq, const struct mq_attr *attr)
 	else if (attr->mq_maxmsg <= 0 || attr->mq_msgsize <= 0)
 		return EINVAL;
 
-	msgsize = attr->mq_msgsize + sizeof(pse51_msg_t);
+	msgsize = attr->mq_msgsize + sizeof(cobalt_msg_t);
 
 	/* Align msgsize on natural boundary. */
 	if ((msgsize % sizeof(unsigned long)))
@@ -137,8 +137,8 @@ static int pse51_mq_init(pse51_mq_t * mq, const struct mq_attr *attr)
 	/* Fill the pool. */
 	initq(&mq->avail);
 	for (i = 0; i < attr->mq_maxmsg; i++) {
-		pse51_msg_t *msg = (pse51_msg_t *) (mem + i * msgsize);
-		pse51_mq_msg_free(mq, msg);
+		cobalt_msg_t *msg = (cobalt_msg_t *) (mem + i * msgsize);
+		cobalt_mq_msg_free(mq, msg);
 	}
 
 	mq->attr = *attr;
@@ -149,7 +149,7 @@ static int pse51_mq_init(pse51_mq_t * mq, const struct mq_attr *attr)
 	return 0;
 }
 
-static void pse51_mq_destroy(pse51_mq_t *mq)
+static void cobalt_mq_destroy(cobalt_mq_t *mq)
 {
 	int resched;
 	spl_t s;
@@ -157,13 +157,13 @@ static void pse51_mq_destroy(pse51_mq_t *mq)
 	xnlock_get_irqsave(&nklock, s);
 	resched = (xnsynch_destroy(&mq->receivers) == XNSYNCH_RESCHED);
 	resched = (xnsynch_destroy(&mq->senders) == XNSYNCH_RESCHED) || resched;
-	removeq(&pse51_mqq, &mq->link);
+	removeq(&cobalt_mqq, &mq->link);
 	xnlock_put_irqrestore(&nklock, s);
 	xnselect_destroy(&mq->read_select);
 	xnselect_destroy(&mq->write_select);
 #ifdef __KERNEL__
 	if (!xnpod_root_p())
-		pse51_schedule_lostage(PSE51_LO_FREE_REQ, mq->mem, mq->memsize);
+		cobalt_schedule_lostage(COBALT_LO_FREE_REQ, mq->mem, mq->memsize);
 	else
 #endif /* __KERNEL__ */
 		xnarch_free_host_mem(mq->mem, mq->memsize);
@@ -241,16 +241,16 @@ static void pse51_mq_destroy(pse51_mq_t *mq)
 mqd_t mq_open(const char *name, int oflags, ...)
 {
 	struct mq_attr *attr;
-	pse51_node_t *node;
-	pse51_desc_t *desc;
-	pse51_mq_t *mq;
+	cobalt_node_t *node;
+	cobalt_desc_t *desc;
+	cobalt_mq_t *mq;
 	mode_t mode;
 	va_list ap;
 	spl_t s;
 	int err;
 
 	xnlock_get_irqsave(&nklock, s);
-	err = pse51_node_get(&node, name, PSE51_MQ_MAGIC, oflags);
+	err = cobalt_node_get(&node, name, COBALT_MQ_MAGIC, oflags);
 	xnlock_put_irqrestore(&nklock, s);
 	if (err)
 		goto error;
@@ -261,7 +261,7 @@ mqd_t mq_open(const char *name, int oflags, ...)
 	}
 
 	/* Here, we know that we must create a message queue. */
-	mq = (pse51_mq_t *) xnmalloc(sizeof(*mq));
+	mq = (cobalt_mq_t *) xnmalloc(sizeof(*mq));
 	if (!mq) {
 		err = ENOSPC;
 		goto error;
@@ -272,7 +272,7 @@ mqd_t mq_open(const char *name, int oflags, ...)
 	attr = va_arg(ap, struct mq_attr *);
 	va_end(ap);
 
-	err = pse51_mq_init(mq, attr);
+	err = cobalt_mq_init(mq, attr);
 	if (err)
 		goto err_free_mq;
 
@@ -280,20 +280,20 @@ mqd_t mq_open(const char *name, int oflags, ...)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	appendq(&pse51_mqq, &mq->link);
+	appendq(&cobalt_mqq, &mq->link);
 
-	err = pse51_node_add(&mq->nodebase, name, PSE51_MQ_MAGIC);
+	err = cobalt_node_add(&mq->nodebase, name, COBALT_MQ_MAGIC);
 	if (err && err != EEXIST)
 		goto err_put_mq;
 
 	if (err == EEXIST) {
-		err = pse51_node_get(&node, name, PSE51_MQ_MAGIC, oflags);
+		err = cobalt_node_get(&node, name, COBALT_MQ_MAGIC, oflags);
 		if (err)
 			goto err_put_mq;
 
 		/* The same mq was created in the meantime, rollback. */
 		xnlock_put_irqrestore(&nklock, s);
-		pse51_mq_destroy(mq);
+		cobalt_mq_destroy(mq);
 		xnfree(mq);
 		mq = node2mq(node);
 		goto got_mq;
@@ -303,23 +303,23 @@ mqd_t mq_open(const char *name, int oflags, ...)
 
 	/* Whether found or created, here we have a valid message queue. */
   got_mq:
-	err = pse51_desc_create(&desc, &mq->nodebase,
-				oflags & (O_NONBLOCK | PSE51_PERMS_MASK));
+	err = cobalt_desc_create(&desc, &mq->nodebase,
+				oflags & (O_NONBLOCK | COBALT_PERMS_MASK));
 	if (err)
 		goto err_lock_put_mq;
 
-	return (mqd_t) pse51_desc_fd(desc);
+	return (mqd_t) cobalt_desc_fd(desc);
 
   err_lock_put_mq:
 	xnlock_get_irqsave(&nklock, s);
   err_put_mq:
-	pse51_node_put(&mq->nodebase);
+	cobalt_node_put(&mq->nodebase);
 
-	if (pse51_node_removed_p(&mq->nodebase)) {
+	if (cobalt_node_removed_p(&mq->nodebase)) {
 		/* mq is no longer referenced, we may destroy it. */
 
 		xnlock_put_irqrestore(&nklock, s);
-		pse51_mq_destroy(mq);
+		cobalt_mq_destroy(mq);
 	  err_free_mq:
 		xnfree(mq);
 	} else
@@ -357,8 +357,8 @@ mqd_t mq_open(const char *name, int oflags, ...)
  */
 int mq_close(mqd_t fd)
 {
-	pse51_desc_t *desc;
-	pse51_mq_t *mq;
+	cobalt_desc_t *desc;
+	cobalt_mq_t *mq;
 	spl_t s;
 	int err;
 
@@ -369,29 +369,29 @@ int mq_close(mqd_t fd)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	err = pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC);
+	err = cobalt_desc_get(&desc, fd, COBALT_MQ_MAGIC);
 
 	if (err)
 		goto err_unlock;
 
-	mq = node2mq(pse51_desc_node(desc));
+	mq = node2mq(cobalt_desc_node(desc));
 
-	err = pse51_node_put(&mq->nodebase);
+	err = cobalt_node_put(&mq->nodebase);
 
 	if (err)
 		goto err_unlock;
 
 	if (mq->target_qd == fd)
 		mq->target = NULL;
-	if (pse51_node_removed_p(&mq->nodebase)) {
+	if (cobalt_node_removed_p(&mq->nodebase)) {
 		xnlock_put_irqrestore(&nklock, s);
 
-		pse51_mq_destroy(mq);
+		cobalt_mq_destroy(mq);
 		xnfree(mq);
 	} else
 		xnlock_put_irqrestore(&nklock, s);
 
-	err = pse51_desc_destroy(desc);
+	err = cobalt_desc_destroy(desc);
 
 	if (err)
 		goto error;
@@ -435,8 +435,8 @@ int mq_close(mqd_t fd)
  */
 int mq_unlink(const char *name)
 {
-	pse51_node_t *node;
-	pse51_mq_t *mq;
+	cobalt_node_t *node;
+	cobalt_mq_t *mq;
 	spl_t s;
 	int err;
 
@@ -447,13 +447,13 @@ int mq_unlink(const char *name)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	err = pse51_node_remove(&node, name, PSE51_MQ_MAGIC);
+	err = cobalt_node_remove(&node, name, COBALT_MQ_MAGIC);
 
-	if (!err && pse51_node_removed_p(node)) {
+	if (!err && cobalt_node_removed_p(node)) {
 		xnlock_put_irqrestore(&nklock, s);
 
 		mq = node2mq(node);
-		pse51_mq_destroy(mq);
+		cobalt_mq_destroy(mq);
 		xnfree(mq);
 	} else
 		xnlock_put_irqrestore(&nklock, s);
@@ -467,15 +467,15 @@ int mq_unlink(const char *name)
 	return 0;
 }
 
-static pse51_msg_t *pse51_mq_trysend(pse51_mq_t **mqp,
-				     pse51_desc_t *desc, size_t len)
+static cobalt_msg_t *cobalt_mq_trysend(cobalt_mq_t **mqp,
+				     cobalt_desc_t *desc, size_t len)
 {
-	pse51_msg_t *msg;
-	pse51_mq_t *mq;
+	cobalt_msg_t *msg;
+	cobalt_mq_t *mq;
 	unsigned flags;
 
-	mq = node2mq(pse51_desc_node(desc));
-	flags = pse51_desc_getflags(desc) & PSE51_PERMS_MASK;
+	mq = node2mq(cobalt_desc_node(desc));
+	flags = cobalt_desc_getflags(desc) & COBALT_PERMS_MASK;
 
 	if (flags != O_WRONLY && flags != O_RDWR)
 		return ERR_PTR(-EBADF);
@@ -483,7 +483,7 @@ static pse51_msg_t *pse51_mq_trysend(pse51_mq_t **mqp,
 	if (len > mq->attr.mq_msgsize)
 		return ERR_PTR(-EMSGSIZE);
 
-	msg = pse51_mq_msg_alloc(mq);
+	msg = cobalt_mq_msg_alloc(mq);
 	if (!msg)
 		return ERR_PTR(-EAGAIN);
 
@@ -495,15 +495,15 @@ static pse51_msg_t *pse51_mq_trysend(pse51_mq_t **mqp,
 	return msg;
 }
 
-static pse51_msg_t *pse51_mq_tryrcv(pse51_mq_t **mqp,
-				    pse51_desc_t *desc, size_t len)
+static cobalt_msg_t *cobalt_mq_tryrcv(cobalt_mq_t **mqp,
+				    cobalt_desc_t *desc, size_t len)
 {
 	xnpholder_t *holder;
-	pse51_mq_t *mq;
+	cobalt_mq_t *mq;
 	unsigned flags;
 
-	mq = node2mq(pse51_desc_node(desc));
-	flags = pse51_desc_getflags(desc) & PSE51_PERMS_MASK;
+	mq = node2mq(cobalt_desc_node(desc));
+	flags = cobalt_desc_getflags(desc) & COBALT_PERMS_MASK;
 
 	if (flags != O_RDONLY && flags != O_RDWR)
 		return ERR_PTR(-EBADF);
@@ -522,30 +522,30 @@ static pse51_msg_t *pse51_mq_tryrcv(pse51_mq_t **mqp,
 	return any2msg(holder, link);
 }
 
-pse51_msg_t *pse51_mq_timedsend_inner(pse51_mq_t **mqp, mqd_t fd, size_t len,
+cobalt_msg_t *cobalt_mq_timedsend_inner(cobalt_mq_t **mqp, mqd_t fd, size_t len,
 				      const struct timespec *abs_timeoutp)
 {
 	xnthread_t *cur = xnpod_current_thread();
-	pse51_msg_t *msg;
+	cobalt_msg_t *msg;
 	spl_t s;
 	int rc;
 
 	xnlock_get_irqsave(&nklock, s);
 	for (;;) {
-		pse51_desc_t *desc;
-		pse51_mq_t *mq;
+		cobalt_desc_t *desc;
+		cobalt_mq_t *mq;
 		xnticks_t to = XN_INFINITE;
 
-		if ((rc = pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC))) {
+		if ((rc = cobalt_desc_get(&desc, fd, COBALT_MQ_MAGIC))) {
 			msg = ERR_PTR(-rc);
 			break;
 		}
 
-		msg = pse51_mq_trysend(mqp, desc, len);
+		msg = cobalt_mq_trysend(mqp, desc, len);
 		if (msg != ERR_PTR(-EAGAIN))
 			break;
 
-		if ((pse51_desc_getflags(desc) & O_NONBLOCK))
+		if ((cobalt_desc_getflags(desc) & O_NONBLOCK))
 			break;
 
 		if (xnpod_unblockable_p()) {
@@ -562,7 +562,7 @@ pse51_msg_t *pse51_mq_timedsend_inner(pse51_mq_t **mqp, mqd_t fd, size_t len,
 			to = ts2ticks_ceil(abs_timeoutp) + 1;
 		}
 
-		mq = node2mq(pse51_desc_node(desc));
+		mq = node2mq(cobalt_desc_node(desc));
 
 		thread_cancellation_point(cur);
 
@@ -593,16 +593,16 @@ pse51_msg_t *pse51_mq_timedsend_inner(pse51_mq_t **mqp, mqd_t fd, size_t len,
 	return msg;
 }
 
-int pse51_mq_finish_send(mqd_t fd, pse51_mq_t *mq, pse51_msg_t *msg)
+int cobalt_mq_finish_send(mqd_t fd, cobalt_mq_t *mq, cobalt_msg_t *msg)
 {
 	int err = 0, resched = 0, removed;
-	pse51_desc_t *desc;
+	cobalt_desc_t *desc;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	if ((err = -pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC)))
+	if ((err = -cobalt_desc_get(&desc, fd, COBALT_MQ_MAGIC)))
 		goto bad_fd;
-	if ((node2mq(pse51_desc_node(desc)) != mq)) {
+	if ((node2mq(cobalt_desc_node(desc)) != mq)) {
 		err = -EBADF;
 		goto bad_fd;
 	}
@@ -616,14 +616,14 @@ int pse51_mq_finish_send(mqd_t fd, pse51_mq_t *mq, pse51_msg_t *msg)
 	else if (mq->target && countpq(&mq->queued) == 1) {
 		/* First message ? no pending reader ? attempt
 		   to send a signal if mq_notify was called. */
-		if (pse51_sigqueue_inner(mq->target, &mq->si))
+		if (cobalt_sigqueue_inner(mq->target, &mq->si))
 			resched = 1;
 		mq->target = NULL;
 	}
 
   unref:
-	pse51_node_put(&mq->nodebase);
-	removed = pse51_node_removed_p(&mq->nodebase);
+	cobalt_node_put(&mq->nodebase);
+	removed = cobalt_node_removed_p(&mq->nodebase);
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -631,7 +631,7 @@ int pse51_mq_finish_send(mqd_t fd, pse51_mq_t *mq, pse51_msg_t *msg)
 		xnpod_schedule();
 
 	if (removed) {
-		pse51_mq_destroy(mq);
+		cobalt_mq_destroy(mq);
 		xnfree(mq);
 	}
 
@@ -640,7 +640,7 @@ int pse51_mq_finish_send(mqd_t fd, pse51_mq_t *mq, pse51_msg_t *msg)
   bad_fd:
 	/* descriptor was destroyed, simply return the message to the
 	   pool and wakeup any waiting sender. */;
-	pse51_mq_msg_free(mq, msg);
+	cobalt_mq_msg_free(mq, msg);
 
 	if (countq(&mq->avail) == 1)
 		resched = xnselect_signal(&mq->write_select, 1);
@@ -650,29 +650,29 @@ int pse51_mq_finish_send(mqd_t fd, pse51_mq_t *mq, pse51_msg_t *msg)
 	goto unref;
 }
 
-pse51_msg_t *pse51_mq_timedrcv_inner(pse51_mq_t **mqp, mqd_t fd, size_t len,
+cobalt_msg_t *cobalt_mq_timedrcv_inner(cobalt_mq_t **mqp, mqd_t fd, size_t len,
 				     const struct timespec *abs_timeoutp)
 {
 	xnthread_t *cur = xnpod_current_thread();
-	pse51_msg_t *msg;
+	cobalt_msg_t *msg;
 	spl_t s;
 	int rc;
 
 	xnlock_get_irqsave(&nklock, s);
 	for (;;) {
 		xnticks_t to = XN_INFINITE;
-		pse51_desc_t *desc;
-		pse51_mq_t *mq;
+		cobalt_desc_t *desc;
+		cobalt_mq_t *mq;
 
-		if ((rc = pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC))) {
+		if ((rc = cobalt_desc_get(&desc, fd, COBALT_MQ_MAGIC))) {
 			msg = ERR_PTR(-rc);
 			break;
 		}
 
-		if ((msg = pse51_mq_tryrcv(mqp, desc, len)) != ERR_PTR(-EAGAIN))
+		if ((msg = cobalt_mq_tryrcv(mqp, desc, len)) != ERR_PTR(-EAGAIN))
 			break;
 
-		if ((pse51_desc_getflags(desc) & O_NONBLOCK))
+		if ((cobalt_desc_getflags(desc) & O_NONBLOCK))
 			break;
 
 		if (xnpod_unblockable_p()) {
@@ -689,7 +689,7 @@ pse51_msg_t *pse51_mq_timedrcv_inner(pse51_mq_t **mqp, mqd_t fd, size_t len,
 			to = ts2ticks_ceil(abs_timeoutp) + 1;
 		}
 
-		mq = node2mq(pse51_desc_node(desc));
+		mq = node2mq(cobalt_desc_node(desc));
 
 		thread_cancellation_point(cur);
 
@@ -720,18 +720,18 @@ pse51_msg_t *pse51_mq_timedrcv_inner(pse51_mq_t **mqp, mqd_t fd, size_t len,
 	return msg;
 }
 
-int pse51_mq_finish_rcv(mqd_t fd, pse51_mq_t *mq, pse51_msg_t *msg)
+int cobalt_mq_finish_rcv(mqd_t fd, cobalt_mq_t *mq, cobalt_msg_t *msg)
 {
 	int err = 0, resched = 0, removed;
-	pse51_desc_t *desc;
+	cobalt_desc_t *desc;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	err = -pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC);
-	if (!err && node2mq(pse51_desc_node(desc)) != mq)
+	err = -cobalt_desc_get(&desc, fd, COBALT_MQ_MAGIC);
+	if (!err && node2mq(cobalt_desc_node(desc)) != mq)
 		err = -EBADF;
 
-	pse51_mq_msg_free(mq, msg);
+	cobalt_mq_msg_free(mq, msg);
 
 	if (countq(&mq->avail) == 1)
 		resched = xnselect_signal(&mq->write_select, 1);
@@ -739,8 +739,8 @@ int pse51_mq_finish_rcv(mqd_t fd, pse51_mq_t *mq, pse51_msg_t *msg)
 	if (xnsynch_wakeup_one_sleeper(&mq->senders))
 		resched = 1;
 
-	pse51_node_put(&mq->nodebase);
-	removed = pse51_node_removed_p(&mq->nodebase);
+	cobalt_node_put(&mq->nodebase);
+	removed = cobalt_node_removed_p(&mq->nodebase);
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -748,7 +748,7 @@ int pse51_mq_finish_rcv(mqd_t fd, pse51_mq_t *mq, pse51_msg_t *msg)
 		xnpod_schedule();
 
 	if (removed) {
-		pse51_mq_destroy(mq);
+		cobalt_mq_destroy(mq);
 		xnfree(mq);
 	}
 
@@ -797,11 +797,11 @@ int pse51_mq_finish_rcv(mqd_t fd, pse51_mq_t *mq, pse51_msg_t *msg)
  */
 int mq_send(mqd_t fd, const char *buffer, size_t len, unsigned prio)
 {
-	pse51_msg_t *msg;
-	pse51_mq_t *mq;
+	cobalt_msg_t *msg;
+	cobalt_mq_t *mq;
 	int err;
 
-	msg = pse51_mq_timedsend_inner(&mq, fd, len, NULL);
+	msg = cobalt_mq_timedsend_inner(&mq, fd, len, NULL);
 	if (IS_ERR(msg)) {
 		thread_set_errno(-PTR_ERR(msg));
 		return -1;
@@ -809,9 +809,9 @@ int mq_send(mqd_t fd, const char *buffer, size_t len, unsigned prio)
 
 	memcpy(msg->data, buffer, len);
 	msg->len = len;
-	pse51_msg_set_prio(msg, prio);
+	cobalt_msg_set_prio(msg, prio);
 
-	err = pse51_mq_finish_send(fd, mq, msg);
+	err = cobalt_mq_finish_send(fd, mq, msg);
 	if (!err)
 		return 0;
 
@@ -862,11 +862,11 @@ int mq_timedsend(mqd_t fd,
 		 const char *buffer,
 		 size_t len, unsigned prio, const struct timespec *abs_timeout)
 {
-	pse51_msg_t *msg;
-	pse51_mq_t *mq;
+	cobalt_msg_t *msg;
+	cobalt_mq_t *mq;
 	int err;
 
-	msg = pse51_mq_timedsend_inner(&mq, fd, len, abs_timeout);
+	msg = cobalt_mq_timedsend_inner(&mq, fd, len, abs_timeout);
 	if (IS_ERR(msg)) {
 		thread_set_errno(-PTR_ERR(msg));
 		return -1;
@@ -874,9 +874,9 @@ int mq_timedsend(mqd_t fd,
 
 	memcpy(msg->data, buffer, len);
 	msg->len = len;
-	pse51_msg_set_prio(msg, prio);
+	cobalt_msg_set_prio(msg, prio);
 
-	err = pse51_mq_finish_send(fd, mq, msg);
+	err = cobalt_mq_finish_send(fd, mq, msg);
 	if (!err)
 		return 0;
 
@@ -929,11 +929,11 @@ int mq_timedsend(mqd_t fd,
  */
 ssize_t mq_receive(mqd_t fd, char *buffer, size_t len, unsigned *priop)
 {
-	pse51_msg_t *msg;
-	pse51_mq_t *mq;
+	cobalt_msg_t *msg;
+	cobalt_mq_t *mq;
 	int err;
 
-	msg = pse51_mq_timedrcv_inner(&mq, fd, len, NULL);
+	msg = cobalt_mq_timedrcv_inner(&mq, fd, len, NULL);
 	if (IS_ERR(msg)) {
 		thread_set_errno(-PTR_ERR(msg));
 		return -1;
@@ -942,9 +942,9 @@ ssize_t mq_receive(mqd_t fd, char *buffer, size_t len, unsigned *priop)
 	memcpy(buffer, msg->data, msg->len);
 	len = msg->len;
 	if (priop)
-		*priop = pse51_msg_get_prio(msg);
+		*priop = cobalt_msg_get_prio(msg);
 
-	err = pse51_mq_finish_rcv(fd, mq, msg);
+	err = cobalt_mq_finish_rcv(fd, mq, msg);
 	if (!err)
 		return len;
 
@@ -1000,11 +1000,11 @@ ssize_t mq_timedreceive(mqd_t fd,
 			unsigned *__restrict__ priop,
 			const struct timespec * __restrict__ abs_timeout)
 {
-	pse51_msg_t *msg;
-	pse51_mq_t *mq;
+	cobalt_msg_t *msg;
+	cobalt_mq_t *mq;
 	int err;
 
-	msg = pse51_mq_timedrcv_inner(&mq, fd, len, abs_timeout);
+	msg = cobalt_mq_timedrcv_inner(&mq, fd, len, abs_timeout);
 	if (IS_ERR(msg)) {
 		thread_set_errno(-PTR_ERR(msg));
 		return -1;
@@ -1013,9 +1013,9 @@ ssize_t mq_timedreceive(mqd_t fd,
 	memcpy(buffer, msg->data, msg->len);
 	len = msg->len;
 	if (priop)
-		*priop = pse51_msg_get_prio(msg);
+		*priop = cobalt_msg_get_prio(msg);
 
-	err = pse51_mq_finish_rcv(fd, mq, msg);
+	err = cobalt_mq_finish_rcv(fd, mq, msg);
 	if (!err)
 		return len;
 
@@ -1051,14 +1051,14 @@ ssize_t mq_timedreceive(mqd_t fd,
  */
 int mq_getattr(mqd_t fd, struct mq_attr *attr)
 {
-	pse51_desc_t *desc;
-	pse51_mq_t *mq;
+	cobalt_desc_t *desc;
+	cobalt_mq_t *mq;
 	spl_t s;
 	int err;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	err = pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC);
+	err = cobalt_desc_get(&desc, fd, COBALT_MQ_MAGIC);
 
 	if (err) {
 		xnlock_put_irqrestore(&nklock, s);
@@ -1066,9 +1066,9 @@ int mq_getattr(mqd_t fd, struct mq_attr *attr)
 		return -1;
 	}
 
-	mq = node2mq(pse51_desc_node(desc));
+	mq = node2mq(cobalt_desc_node(desc));
 	*attr = mq->attr;
-	attr->mq_flags = pse51_desc_getflags(desc);
+	attr->mq_flags = cobalt_desc_getflags(desc);
 	attr->mq_curmsgs = countpq(&mq->queued);
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -1106,15 +1106,15 @@ int mq_setattr(mqd_t fd,
 	       const struct mq_attr *__restrict__ attr,
 	       struct mq_attr *__restrict__ oattr)
 {
-	pse51_desc_t *desc;
-	pse51_mq_t *mq;
+	cobalt_desc_t *desc;
+	cobalt_mq_t *mq;
 	long flags;
 	spl_t s;
 	int err;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	err = pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC);
+	err = cobalt_desc_get(&desc, fd, COBALT_MQ_MAGIC);
 
 	if (err) {
 		xnlock_put_irqrestore(&nklock, s);
@@ -1122,15 +1122,15 @@ int mq_setattr(mqd_t fd,
 		return -1;
 	}
 
-	mq = node2mq(pse51_desc_node(desc));
+	mq = node2mq(cobalt_desc_node(desc));
 	if (oattr) {
 		*oattr = mq->attr;
-		oattr->mq_flags = pse51_desc_getflags(desc);
+		oattr->mq_flags = cobalt_desc_getflags(desc);
 		oattr->mq_curmsgs = countpq(&mq->queued);
 	}
-	flags = (pse51_desc_getflags(desc) & PSE51_PERMS_MASK)
-	    | (attr->mq_flags & ~PSE51_PERMS_MASK);
-	pse51_desc_setflags(desc, flags);
+	flags = (cobalt_desc_getflags(desc) & COBALT_PERMS_MASK)
+	    | (attr->mq_flags & ~COBALT_PERMS_MASK);
+	cobalt_desc_setflags(desc, flags);
 	xnlock_put_irqrestore(&nklock, s);
 
 	return 0;
@@ -1179,9 +1179,9 @@ int mq_setattr(mqd_t fd,
  */
 int mq_notify(mqd_t fd, const struct sigevent *evp)
 {
-	pthread_t thread = pse51_current_thread();
-	pse51_desc_t *desc;
-	pse51_mq_t *mq;
+	pthread_t thread = cobalt_current_thread();
+	cobalt_desc_t *desc;
+	cobalt_mq_t *mq;
 	int err;
 	spl_t s;
 
@@ -1199,12 +1199,12 @@ int mq_notify(mqd_t fd, const struct sigevent *evp)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	err = pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC);
+	err = cobalt_desc_get(&desc, fd, COBALT_MQ_MAGIC);
 
 	if (err)
 		goto unlock_and_error;
 
-	mq = node2mq(pse51_desc_node(desc));
+	mq = node2mq(cobalt_desc_node(desc));
 
 	if (mq->target && mq->target != thread) {
 		err = EBUSY;
@@ -1212,7 +1212,7 @@ int mq_notify(mqd_t fd, const struct sigevent *evp)
 	}
 
 	if (!evp || evp->sigev_notify == SIGEV_NONE)
-		/* Here, mq->target == pse51_current_thread() or NULL. */
+		/* Here, mq->target == cobalt_current_thread() or NULL. */
 		mq->target = NULL;
 	else {
 		mq->target = thread;
@@ -1233,12 +1233,12 @@ int mq_notify(mqd_t fd, const struct sigevent *evp)
 }
 
 #ifdef CONFIG_XENO_OPT_POSIX_SELECT
-int pse51_mq_select_bind(mqd_t fd, struct xnselector *selector,
+int cobalt_mq_select_bind(mqd_t fd, struct xnselector *selector,
 			 unsigned type, unsigned index)
 {
 	struct xnselect_binding *binding;
-	pse51_desc_t *desc;
-	pse51_mq_t *mq;
+	cobalt_desc_t *desc;
+	cobalt_mq_t *mq;
 	int err;
 	spl_t s;
 
@@ -1250,16 +1250,16 @@ int pse51_mq_select_bind(mqd_t fd, struct xnselector *selector,
 		return -EBADF;
 
 	xnlock_get_irqsave(&nklock, s);
-	err = -pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC);
+	err = -cobalt_desc_get(&desc, fd, COBALT_MQ_MAGIC);
 	if (err)
 		goto unlock_and_error;
 
-	mq = node2mq(pse51_desc_node(desc));
+	mq = node2mq(cobalt_desc_node(desc));
 
 	switch(type) {
 	case XNSELECT_READ:
 		err = -EBADF;
-		if ((pse51_desc_getflags(desc) & PSE51_PERMS_MASK) == O_WRONLY)
+		if ((cobalt_desc_getflags(desc) & COBALT_PERMS_MASK) == O_WRONLY)
 			goto unlock_and_error;
 
 		err = xnselect_bind(&mq->read_select, binding,
@@ -1270,7 +1270,7 @@ int pse51_mq_select_bind(mqd_t fd, struct xnselector *selector,
 
 	case XNSELECT_WRITE:
 		err = -EBADF;
-		if ((pse51_desc_getflags(desc) & PSE51_PERMS_MASK) == O_RDONLY)
+		if ((cobalt_desc_getflags(desc) & COBALT_PERMS_MASK) == O_RDONLY)
 			goto unlock_and_error;
 
 		err = xnselect_bind(&mq->write_select, binding,
@@ -1290,42 +1290,42 @@ int pse51_mq_select_bind(mqd_t fd, struct xnselector *selector,
 #endif /* CONFIG_XENO_OPT_POSIX_SELECT */
 
 #ifndef __XENO_SIM__
-static void uqd_cleanup(pse51_assoc_t *assoc)
+static void uqd_cleanup(cobalt_assoc_t *assoc)
 {
-	pse51_ufd_t *ufd = assoc2ufd(assoc);
+	cobalt_ufd_t *ufd = assoc2ufd(assoc);
 #if XENO_DEBUG(POSIX)
 	xnprintf("Posix: closing message queue descriptor %lu.\n",
-		 pse51_assoc_key(assoc));
+		 cobalt_assoc_key(assoc));
 #endif /* XENO_DEBUG(POSIX) */
 	mq_close(ufd->kfd);
 	xnfree(ufd);
 }
 
-void pse51_mq_uqds_cleanup(pse51_queues_t *q)
+void cobalt_mq_uqds_cleanup(cobalt_queues_t *q)
 {
-	pse51_assocq_destroy(&q->uqds, &uqd_cleanup);
+	cobalt_assocq_destroy(&q->uqds, &uqd_cleanup);
 }
 #endif /* !__XENO_SIM__ */
 
-int pse51_mq_pkg_init(void)
+int cobalt_mq_pkg_init(void)
 {
-	initq(&pse51_mqq);
+	initq(&cobalt_mqq);
 
 	return 0;
 }
 
-void pse51_mq_pkg_cleanup(void)
+void cobalt_mq_pkg_cleanup(void)
 {
 	xnholder_t *holder;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	while ((holder = getheadq(&pse51_mqq))) {
-		pse51_mq_t *mq = link2mq(holder);
-		pse51_node_t *node;
-		pse51_node_remove(&node, mq->nodebase.name, PSE51_MQ_MAGIC);
+	while ((holder = getheadq(&cobalt_mqq))) {
+		cobalt_mq_t *mq = link2mq(holder);
+		cobalt_node_t *node;
+		cobalt_node_remove(&node, mq->nodebase.name, COBALT_MQ_MAGIC);
 		xnlock_put_irqrestore(&nklock, s);
-		pse51_mq_destroy(mq);
+		cobalt_mq_destroy(mq);
 #if XENO_DEBUG(POSIX)
 		xnprintf("Posix: unlinking message queue \"%s\".\n",
 			 mq->nodebase.name);

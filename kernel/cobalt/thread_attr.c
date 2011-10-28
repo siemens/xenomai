@@ -46,7 +46,7 @@
 #include "internal.h"
 
 static const pthread_attr_t default_thread_attr = {
-      magic:PSE51_THREAD_ATTR_MAGIC,
+      magic:COBALT_THREAD_ATTR_MAGIC,
       detachstate:PTHREAD_CREATE_JOINABLE,
       stacksize:PTHREAD_STACK_MIN,
       inheritsched:PTHREAD_EXPLICIT_SCHED,
@@ -104,13 +104,13 @@ int pthread_attr_destroy(pthread_attr_t * attr)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+	if (!cobalt_obj_active(attr, COBALT_THREAD_ATTR_MAGIC, pthread_attr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
 
 	name = attr->name;
-	pse51_mark_deleted(attr);
+	cobalt_mark_deleted(attr);
 	xnlock_put_irqrestore(&nklock, s);
 
 	if (name)
@@ -154,7 +154,7 @@ int pthread_attr_getdetachstate(const pthread_attr_t * attr, int *detachstate)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+	if (!cobalt_obj_active(attr, COBALT_THREAD_ATTR_MAGIC, pthread_attr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
@@ -204,7 +204,7 @@ int pthread_attr_setdetachstate(pthread_attr_t * attr, int detachstate)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+	if (!cobalt_obj_active(attr, COBALT_THREAD_ATTR_MAGIC, pthread_attr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
@@ -244,7 +244,7 @@ int pthread_attr_getstacksize(const pthread_attr_t * attr, size_t * stacksize)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+	if (!cobalt_obj_active(attr, COBALT_THREAD_ATTR_MAGIC, pthread_attr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
@@ -289,7 +289,7 @@ int pthread_attr_setstacksize(pthread_attr_t * attr, size_t stacksize)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+	if (!cobalt_obj_active(attr, COBALT_THREAD_ATTR_MAGIC, pthread_attr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
@@ -333,7 +333,7 @@ int pthread_attr_getinheritsched(const pthread_attr_t * attr, int *inheritsched)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+	if (!cobalt_obj_active(attr, COBALT_THREAD_ATTR_MAGIC, pthread_attr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
@@ -385,7 +385,7 @@ int pthread_attr_setinheritsched(pthread_attr_t * attr, int inheritsched)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+	if (!cobalt_obj_active(attr, COBALT_THREAD_ATTR_MAGIC, pthread_attr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
@@ -428,7 +428,7 @@ int pthread_attr_getschedpolicy(const pthread_attr_t * attr, int *policy)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+	if (!cobalt_obj_active(attr, COBALT_THREAD_ATTR_MAGIC, pthread_attr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
@@ -484,7 +484,7 @@ int pthread_attr_setschedpolicy(pthread_attr_t * attr, int policy)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+	if (!cobalt_obj_active(attr, COBALT_THREAD_ATTR_MAGIC, pthread_attr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
@@ -494,7 +494,7 @@ int pthread_attr_setschedpolicy(pthread_attr_t * attr, int policy)
 		if (attr->schedparam_ex.sched_priority != 0)
 			attr->schedparam_ex.sched_priority = 0;
 	} else if (attr->schedparam_ex.sched_priority == 0)
-		attr->schedparam_ex.sched_priority = PSE51_MIN_PRIORITY;
+		attr->schedparam_ex.sched_priority = COBALT_MIN_PRIORITY;
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -539,7 +539,7 @@ int pthread_attr_getschedparam(const pthread_attr_t * attr,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+	if (!cobalt_obj_active(attr, COBALT_THREAD_ATTR_MAGIC, pthread_attr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
@@ -583,7 +583,7 @@ int pthread_attr_getschedparam_ex(const pthread_attr_t * attr,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+	if (!cobalt_obj_active(attr, COBALT_THREAD_ATTR_MAGIC, pthread_attr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
@@ -629,14 +629,14 @@ int pthread_attr_setschedparam(pthread_attr_t * attr,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+	if (!cobalt_obj_active(attr, COBALT_THREAD_ATTR_MAGIC, pthread_attr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
 
 	if ((attr->policy != SCHED_OTHER &&
-	     (par->sched_priority < PSE51_MIN_PRIORITY
-	      || par->sched_priority > PSE51_MAX_PRIORITY))
+	     (par->sched_priority < COBALT_MIN_PRIORITY
+	      || par->sched_priority > COBALT_MAX_PRIORITY))
 	    || (attr->policy == SCHED_OTHER && par->sched_priority != 0)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
@@ -679,14 +679,14 @@ int pthread_attr_setschedparam_ex(pthread_attr_t * attr,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+	if (!cobalt_obj_active(attr, COBALT_THREAD_ATTR_MAGIC, pthread_attr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
 
 	if ((attr->policy != SCHED_OTHER &&
-	     (par->sched_priority < PSE51_MIN_PRIORITY
-	      || par->sched_priority > PSE51_MAX_PRIORITY))
+	     (par->sched_priority < COBALT_MIN_PRIORITY
+	      || par->sched_priority > COBALT_MAX_PRIORITY))
 	    || (attr->policy == SCHED_OTHER && par->sched_priority != 0)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
@@ -729,7 +729,7 @@ int pthread_attr_getscope(const pthread_attr_t * attr, int *scope)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+	if (!cobalt_obj_active(attr, COBALT_THREAD_ATTR_MAGIC, pthread_attr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
@@ -774,7 +774,7 @@ int pthread_attr_setscope(pthread_attr_t * attr, int scope)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+	if (!cobalt_obj_active(attr, COBALT_THREAD_ATTR_MAGIC, pthread_attr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
@@ -820,7 +820,7 @@ int pthread_attr_getname_np(const pthread_attr_t * attr, const char **name)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+	if (!cobalt_obj_active(attr, COBALT_THREAD_ATTR_MAGIC, pthread_attr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
@@ -875,7 +875,7 @@ int pthread_attr_setname_np(pthread_attr_t * attr, const char *name)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+	if (!cobalt_obj_active(attr, COBALT_THREAD_ATTR_MAGIC, pthread_attr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		if (name)
 			xnfree(new_name);
@@ -922,7 +922,7 @@ int pthread_attr_getfp_np(const pthread_attr_t * attr, int *fp)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+	if (!cobalt_obj_active(attr, COBALT_THREAD_ATTR_MAGIC, pthread_attr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
@@ -963,7 +963,7 @@ int pthread_attr_setfp_np(pthread_attr_t * attr, int fp)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+	if (!cobalt_obj_active(attr, COBALT_THREAD_ATTR_MAGIC, pthread_attr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
@@ -1007,7 +1007,7 @@ pthread_attr_getaffinity_np(const pthread_attr_t * attr, xnarch_cpumask_t *mask)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+	if (!cobalt_obj_active(attr, COBALT_THREAD_ATTR_MAGIC, pthread_attr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
@@ -1050,7 +1050,7 @@ int pthread_attr_setaffinity_np(pthread_attr_t * attr, xnarch_cpumask_t mask)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+	if (!cobalt_obj_active(attr, COBALT_THREAD_ATTR_MAGIC, pthread_attr_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}

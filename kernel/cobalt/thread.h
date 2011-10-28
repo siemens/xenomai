@@ -22,41 +22,41 @@
 
 #include "internal.h"
 
-typedef unsigned long long pse51_sigset_t;
+typedef unsigned long long cobalt_sigset_t;
 
 struct mm_struct;
 
-struct pse51_hkey {
+struct cobalt_hkey {
 
     unsigned long u_tid;
     struct mm_struct *mm;
 };
 
 typedef struct {
-    pse51_sigset_t mask;
+    cobalt_sigset_t mask;
     xnpqueue_t list;
-} pse51_sigqueue_t;
+} cobalt_sigqueue_t;
 
-struct pse51_thread {
+struct cobalt_thread {
     unsigned magic;
     xnthread_t threadbase;
 
 #define thread2pthread(taddr) ({                                        \
     xnthread_t *_taddr = (taddr);                                       \
     (_taddr                                                             \
-    ? ((xnthread_get_magic(_taddr) == PSE51_SKIN_MAGIC)                 \
-       ? ((pthread_t)(((char *)_taddr)- offsetof(struct pse51_thread,   \
+    ? ((xnthread_get_magic(_taddr) == COBALT_SKIN_MAGIC)                 \
+       ? ((pthread_t)(((char *)_taddr)- offsetof(struct cobalt_thread,   \
 						 threadbase)))          \
        : NULL)                                                          \
     : NULL);                                                            \
 })
 
 
-   xnholder_t link;	/* Link in pse51_threadq */
+   xnholder_t link;	/* Link in cobalt_threadq */
    xnqueue_t *container;
 
 #define link2pthread(laddr) \
-    ((pthread_t)(((char *)laddr) - offsetof(struct pse51_thread, link)))
+    ((pthread_t)(((char *)laddr) - offsetof(struct cobalt_thread, link)))
 
 
     pthread_attr_t attr;        /* creation attributes */
@@ -80,9 +80,9 @@ struct pse51_thread {
     int err;
 
     /* For signals handling. */
-    pse51_sigset_t sigmask;     /* signals mask. */
-    pse51_sigqueue_t pending;   /* Pending signals */
-    pse51_sigqueue_t blocked_received; /* Blocked signals received. */
+    cobalt_sigset_t sigmask;     /* signals mask. */
+    cobalt_sigqueue_t pending;   /* Pending signals */
+    cobalt_sigqueue_t blocked_received; /* Blocked signals received. */
 
     /* For thread specific data. */
     const void *tsd [PTHREAD_KEYS_MAX];
@@ -94,13 +94,13 @@ struct pse51_thread {
     int sched_policy;
     
 #ifndef __XENO_SIM__
-    struct pse51_hkey hkey;
+    struct cobalt_hkey hkey;
 #endif
 };
 
-#define PSE51_JOINED_DETACHED XNTHREAD_INFO_SPARE0
+#define COBALT_JOINED_DETACHED XNTHREAD_INFO_SPARE0
 
-#define pse51_current_thread() thread2pthread(xnpod_current_thread())
+#define cobalt_current_thread() thread2pthread(xnpod_current_thread())
 
 static inline void thread_set_errno (int err)
 {
@@ -138,7 +138,7 @@ static inline int thread_get_errno (void)
 
 #define thread_settsd(thread, key, value) ((thread)->tsd[key]=(value))
 
-void pse51_thread_abort(pthread_t thread, void *status);
+void cobalt_thread_abort(pthread_t thread, void *status);
 
 static inline void thread_cancellation_point (xnthread_t *thread)
 {
@@ -146,16 +146,16 @@ static inline void thread_cancellation_point (xnthread_t *thread)
 
     if(cur && cur->cancel_request
 	&& thread_getcancelstate(cur) == PTHREAD_CANCEL_ENABLE )
-	pse51_thread_abort(cur, PTHREAD_CANCELED);
+	cobalt_thread_abort(cur, PTHREAD_CANCELED);
 }
 
-void pse51_threadq_cleanup(pse51_kqueues_t *q);
+void cobalt_threadq_cleanup(cobalt_kqueues_t *q);
 
-void pse51_thread_pkg_init(u_long rrperiod);
+void cobalt_thread_pkg_init(u_long rrperiod);
 
-void pse51_thread_pkg_cleanup(void);
+void cobalt_thread_pkg_cleanup(void);
 
 /* round-robin period. */
-extern xnticks_t pse51_time_slice;
+extern xnticks_t cobalt_time_slice;
 
 #endif /* !_POSIX_THREAD_H */

@@ -50,29 +50,29 @@
 #include "mutex.h"
 #include "cond.h"
 
-typedef struct pse51_cond {
+typedef struct cobalt_cond {
 	unsigned magic;
 	xnsynch_t synchbase;
-	xnholder_t link;	/* Link in pse51_condq */
+	xnholder_t link;	/* Link in cobalt_condq */
 
 #define link2cond(laddr)                                                \
-    ((pse51_cond_t *)(((char *)laddr) - offsetof(pse51_cond_t, link)))
+    ((cobalt_cond_t *)(((char *)laddr) - offsetof(cobalt_cond_t, link)))
 
 	pthread_condattr_t attr;
-	struct pse51_mutex *mutex;
-	pse51_kqueues_t *owningq;
-} pse51_cond_t;
+	struct cobalt_mutex *mutex;
+	cobalt_kqueues_t *owningq;
+} cobalt_cond_t;
 
 static pthread_condattr_t default_cond_attr;
 
-static void cond_destroy_internal(pse51_cond_t * cond, pse51_kqueues_t *q)
+static void cond_destroy_internal(cobalt_cond_t * cond, cobalt_kqueues_t *q)
 {
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 	removeq(&q->condq, &cond->link);
 	/* synchbase wait queue may not be empty only when this function is
-	   called from pse51_cond_pkg_cleanup, hence the absence of
+	   called from cobalt_cond_pkg_cleanup, hence the absence of
 	   xnpod_schedule(). */
 	xnsynch_destroy(&cond->synchbase);
 	xnlock_put_irqrestore(&nklock, s);
@@ -108,7 +108,7 @@ int pthread_cond_init(pthread_cond_t * cnd, const pthread_condattr_t * attr)
 {
 	struct __shadow_cond *shadow = &((union __xeno_cond *)cnd)->shadow_cond;
 	xnflags_t synch_flags = XNSYNCH_PRIO | XNSYNCH_NOPIP;
-	pse51_cond_t *cond;
+	cobalt_cond_t *cond;
 	xnqueue_t *condq;
 	spl_t s;
 	int err;
@@ -116,20 +116,20 @@ int pthread_cond_init(pthread_cond_t * cnd, const pthread_condattr_t * attr)
 	if (!attr)
 		attr = &default_cond_attr;
 
-	cond = (pse51_cond_t *) xnmalloc(sizeof(*cond));
+	cond = (cobalt_cond_t *) xnmalloc(sizeof(*cond));
 	if (!cond)
 		return ENOMEM;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (attr->magic != PSE51_COND_ATTR_MAGIC) {
+	if (attr->magic != COBALT_COND_ATTR_MAGIC) {
 		err = EINVAL;
 		goto error;
 	}
 
-	condq = &pse51_kqueues(attr->pshared)->condq;
+	condq = &cobalt_kqueues(attr->pshared)->condq;
 
-	if (shadow->magic == PSE51_COND_MAGIC) {
+	if (shadow->magic == COBALT_COND_MAGIC) {
 		xnholder_t *holder;
 		for (holder = getheadq(condq); holder;
 		     holder = nextq(condq, holder))
@@ -140,15 +140,15 @@ int pthread_cond_init(pthread_cond_t * cnd, const pthread_condattr_t * attr)
 			}
 	}
 
-	shadow->magic = PSE51_COND_MAGIC;
+	shadow->magic = COBALT_COND_MAGIC;
 	shadow->cond = cond;
 
-	cond->magic = PSE51_COND_MAGIC;
+	cond->magic = COBALT_COND_MAGIC;
 	xnsynch_init(&cond->synchbase, synch_flags, NULL);
 	inith(&cond->link);
 	cond->attr = *attr;
 	cond->mutex = NULL;
-	cond->owningq = pse51_kqueues(attr->pshared);
+	cond->owningq = cobalt_kqueues(attr->pshared);
 
 	appendq(condq, &cond->link);
 
@@ -186,19 +186,19 @@ int pthread_cond_init(pthread_cond_t * cnd, const pthread_condattr_t * attr)
 int pthread_cond_destroy(pthread_cond_t * cnd)
 {
 	struct __shadow_cond *shadow = &((union __xeno_cond *)cnd)->shadow_cond;
-	pse51_cond_t *cond;
+	cobalt_cond_t *cond;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
 	cond = shadow->cond;
-	if (!pse51_obj_active(shadow, PSE51_COND_MAGIC, struct __shadow_cond)
-	    || !pse51_obj_active(cond, PSE51_COND_MAGIC, struct pse51_cond)) {
+	if (!cobalt_obj_active(shadow, COBALT_COND_MAGIC, struct __shadow_cond)
+	    || !cobalt_obj_active(cond, COBALT_COND_MAGIC, struct cobalt_cond)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
 
-	if (cond->owningq != pse51_kqueues(cond->attr.pshared)) {
+	if (cond->owningq != cobalt_kqueues(cond->attr.pshared)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EPERM;
 	}
@@ -208,12 +208,12 @@ int pthread_cond_destroy(pthread_cond_t * cnd)
 		return EBUSY;
 	}
 
-	pse51_mark_deleted(shadow);
-	pse51_mark_deleted(cond);
+	cobalt_mark_deleted(shadow);
+	cobalt_mark_deleted(cond);
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	cond_destroy_internal(cond, pse51_kqueues(cond->attr.pshared));
+	cond_destroy_internal(cond, cobalt_kqueues(cond->attr.pshared));
 
 	return 0;
 }
@@ -226,11 +226,11 @@ static inline int mutex_save_count(xnthread_t *cur,
 				   struct __shadow_mutex *shadow,
 				   unsigned *count_ptr)
 {
-	pse51_mutex_t *mutex;
+	cobalt_mutex_t *mutex;
 
 	mutex = shadow->mutex;
-	if (!pse51_obj_active(shadow, PSE51_MUTEX_MAGIC, struct __shadow_mutex)
-	    || !pse51_obj_active(mutex, PSE51_MUTEX_MAGIC, struct pse51_mutex))
+	if (!cobalt_obj_active(shadow, COBALT_MUTEX_MAGIC, struct __shadow_mutex)
+	    || !cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, struct cobalt_mutex))
 		 return EINVAL;
 
 	if (xnsynch_owner_check(&mutex->synchbase, cur) != 0)
@@ -246,14 +246,14 @@ static inline int mutex_save_count(xnthread_t *cur,
 	return 0;
 }
 
-int pse51_cond_timedwait_prologue(xnthread_t *cur,
+int cobalt_cond_timedwait_prologue(xnthread_t *cur,
 				  struct __shadow_cond *shadow,
 				  struct __shadow_mutex *mutex,
 				  unsigned *count_ptr,
 				  int timed,
 				  xnticks_t abs_to)
 {
-	pse51_cond_t *cond;
+	cobalt_cond_t *cond;
 	spl_t s;
 	int err;
 
@@ -270,14 +270,14 @@ int pse51_cond_timedwait_prologue(xnthread_t *cur,
 	cond = shadow->cond;
 
 	/* If another thread waiting for cond does not use the same mutex */
-	if (!pse51_obj_active(shadow, PSE51_COND_MAGIC, struct __shadow_cond)
-	    || !pse51_obj_active(cond, PSE51_COND_MAGIC, struct pse51_cond)
+	if (!cobalt_obj_active(shadow, COBALT_COND_MAGIC, struct __shadow_cond)
+	    || !cobalt_obj_active(cond, COBALT_COND_MAGIC, struct cobalt_cond)
 	    || (cond->mutex && cond->mutex != mutex->mutex)) {
 		err = EINVAL;
 		goto unlock_and_return;
 	}
 
-	if (cond->owningq != pse51_kqueues(cond->attr.pshared)) {
+	if (cond->owningq != cobalt_kqueues(cond->attr.pshared)) {
 		err = EPERM;
 		goto unlock_and_return;
 	}
@@ -311,7 +311,7 @@ int pse51_cond_timedwait_prologue(xnthread_t *cur,
 	     and the moment when xnsynch_sleep_on returned ;
 	   - pthread_cancel, no status bit is set, but cancellation specific
 	     bits are set, and tested only once the mutex is reacquired in
-	     pse51_cond_timedwait_epilogue, so that the cancellation handler can
+	     cobalt_cond_timedwait_epilogue, so that the cancellation handler can
 	     be called with the mutex locked, as required by the specification.
 	 */
 
@@ -328,11 +328,11 @@ int pse51_cond_timedwait_prologue(xnthread_t *cur,
 	return err;
 }
 
-int pse51_cond_timedwait_epilogue(xnthread_t *cur,
+int cobalt_cond_timedwait_epilogue(xnthread_t *cur,
 				  struct __shadow_cond *shadow,
 				  struct __shadow_mutex *mutex, unsigned count)
 {
-	pse51_cond_t *cond;
+	cobalt_cond_t *cond;
 	int err;
 	spl_t s;
 
@@ -340,7 +340,7 @@ int pse51_cond_timedwait_epilogue(xnthread_t *cur,
 
 	cond = shadow->cond;
 
-	err = pse51_mutex_timedlock_internal(cur, mutex, count, 0, XN_INFINITE);
+	err = cobalt_mutex_timedlock_internal(cur, mutex, count, 0, XN_INFINITE);
 
 	if (err == -EINTR)
 		goto unlock_and_return;
@@ -424,11 +424,11 @@ int pthread_cond_wait(pthread_cond_t * cnd, pthread_mutex_t * mx)
 		return EINVAL;
 #endif /* CONFIG_XENO_FASTSYNCH */
 
-	err = pse51_cond_timedwait_prologue(cur, cond, mutex,
+	err = cobalt_cond_timedwait_prologue(cur, cond, mutex,
 					    &count, 0, XN_INFINITE);
 
 	if (!err || err == EINTR)
-		while (-EINTR == pse51_cond_timedwait_epilogue(cur, cond,
+		while (-EINTR == cobalt_cond_timedwait_epilogue(cur, cond,
 							       mutex, count))
 			;
 
@@ -492,11 +492,11 @@ int pthread_cond_timedwait(pthread_cond_t * cnd,
 		return EINVAL;
 #endif /* CONFIG_XENO_FASTSYNCH */
 
-	err = pse51_cond_timedwait_prologue(cur, cond, mutex, &count, 1,
+	err = cobalt_cond_timedwait_prologue(cur, cond, mutex, &count, 1,
 					    ts2ticks_ceil(abstime) + 1);
 
 	if (!err || err == EINTR || err == ETIMEDOUT)
-		while (-EINTR == pse51_cond_timedwait_epilogue(cur, cond,
+		while (-EINTR == cobalt_cond_timedwait_epilogue(cur, cond,
 							       mutex, count))
 			;
 
@@ -531,20 +531,20 @@ int pthread_cond_timedwait(pthread_cond_t * cnd,
 int pthread_cond_signal(pthread_cond_t * cnd)
 {
 	struct __shadow_cond *shadow = &((union __xeno_cond *)cnd)->shadow_cond;
-	pse51_cond_t *cond;
+	cobalt_cond_t *cond;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
 	cond = shadow->cond;
-	if (!pse51_obj_active(shadow, PSE51_COND_MAGIC, struct __shadow_cond)
-	    || !pse51_obj_active(cond, PSE51_COND_MAGIC, struct pse51_cond)) {
+	if (!cobalt_obj_active(shadow, COBALT_COND_MAGIC, struct __shadow_cond)
+	    || !cobalt_obj_active(cond, COBALT_COND_MAGIC, struct cobalt_cond)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
 
 #if XENO_DEBUG(POSIX)
-	if (cond->owningq != pse51_kqueues(cond->attr.pshared)) {
+	if (cond->owningq != cobalt_kqueues(cond->attr.pshared)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EPERM;
 	}
@@ -582,19 +582,19 @@ int pthread_cond_signal(pthread_cond_t * cnd)
 int pthread_cond_broadcast(pthread_cond_t * cnd)
 {
 	struct __shadow_cond *shadow = &((union __xeno_cond *)cnd)->shadow_cond;
-	pse51_cond_t *cond;
+	cobalt_cond_t *cond;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
 	cond = shadow->cond;
-	if (!pse51_obj_active(shadow, PSE51_COND_MAGIC, struct __shadow_cond)
-	    || !pse51_obj_active(cond, PSE51_COND_MAGIC, struct pse51_cond)) {
+	if (!cobalt_obj_active(shadow, COBALT_COND_MAGIC, struct __shadow_cond)
+	    || !cobalt_obj_active(cond, COBALT_COND_MAGIC, struct cobalt_cond)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
 
-	if (cond->owningq != pse51_kqueues(cond->attr.pshared)) {
+	if (cond->owningq != cobalt_kqueues(cond->attr.pshared)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EPERM;
 	}
@@ -607,7 +607,7 @@ int pthread_cond_broadcast(pthread_cond_t * cnd)
 	return 0;
 }
 
-void pse51_condq_cleanup(pse51_kqueues_t *q)
+void cobalt_condq_cleanup(cobalt_kqueues_t *q)
 {
 	xnholder_t *holder;
 	spl_t s;
@@ -627,15 +627,15 @@ void pse51_condq_cleanup(pse51_kqueues_t *q)
 	xnlock_put_irqrestore(&nklock, s);
 }
 
-void pse51_cond_pkg_init(void)
+void cobalt_cond_pkg_init(void)
 {
-	initq(&pse51_global_kqueues.condq);
+	initq(&cobalt_global_kqueues.condq);
 	pthread_condattr_init(&default_cond_attr);
 }
 
-void pse51_cond_pkg_cleanup(void)
+void cobalt_cond_pkg_cleanup(void)
 {
-	pse51_condq_cleanup(&pse51_global_kqueues);
+	cobalt_condq_cleanup(&cobalt_global_kqueues);
 }
 
 /*@}*/

@@ -34,24 +34,24 @@
 #include "tsd.h"
 #include "sig.h"
 
-xnticks_t pse51_time_slice;
+xnticks_t cobalt_time_slice;
 
 static pthread_attr_t default_attr;
 
-static unsigned pse51_get_magic(void)
+static unsigned cobalt_get_magic(void)
 {
-	return PSE51_SKIN_MAGIC;
+	return COBALT_SKIN_MAGIC;
 }
 
-static struct xnthread_operations pse51_thread_ops = {
-	.get_magic = &pse51_get_magic,
+static struct xnthread_operations cobalt_thread_ops = {
+	.get_magic = &cobalt_get_magic,
 };
 
 static void thread_destroy(pthread_t thread)
 {
 	removeq(thread->container, &thread->link);
 	/* join_sync wait queue may not be empty only when this function is
-	   called from pse51_thread_pkg_cleanup, hence the absence of
+	   called from cobalt_thread_pkg_cleanup, hence the absence of
 	   xnpod_schedule(). */
 	xnsynch_destroy(&thread->join_synch);
 	xnheap_schedule_free(&kheap, thread, &thread->link);
@@ -73,11 +73,11 @@ static void thread_delete_hook(xnthread_t *xnthread)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	pse51_cancel_cleanup_thread(thread);
-	pse51_tsd_cleanup_thread(thread);
-	pse51_mark_deleted(thread);
-	pse51_signal_cleanup_thread(thread);
-	pse51_timer_cleanup_thread(thread);
+	cobalt_cancel_cleanup_thread(thread);
+	cobalt_tsd_cleanup_thread(thread);
+	cobalt_mark_deleted(thread);
+	cobalt_signal_cleanup_thread(thread);
+	cobalt_timer_cleanup_thread(thread);
 
 	switch (thread_getdetachstate(thread)) {
 	case PTHREAD_CREATE_DETACHED:
@@ -176,7 +176,7 @@ int pthread_create(pthread_t *tid,
 	int prio, ret;
 	spl_t s;
 
-	if (attr && attr->magic != PSE51_THREAD_ATTR_MAGIC)
+	if (attr && attr->magic != COBALT_THREAD_ATTR_MAGIC)
 		return EINVAL;
 
 	thread = (pthread_t)xnmalloc(sizeof(*thread));
@@ -186,10 +186,10 @@ int pthread_create(pthread_t *tid,
 
 	thread->attr = attr ? *attr : default_attr;
 
-	cur = pse51_current_thread();
+	cur = cobalt_current_thread();
 
 	if (thread->attr.inheritsched == PTHREAD_INHERIT_SCHED) {
-		/* cur may be NULL if pthread_create is not called by a pse51
+		/* cur may be NULL if pthread_create is not called by a cobalt
 		   thread, in which case trying to inherit scheduling
 		   parameters is treated as an error. */
 
@@ -212,10 +212,10 @@ int pthread_create(pthread_t *tid,
 	if (!start)
 		flags |= XNSHADOW;	/* Note: no interrupt shield. */
 
-	iattr.tbase = pse51_tbase;
+	iattr.tbase = cobalt_tbase;
 	iattr.name = name;
 	iattr.flags = flags;
-	iattr.ops = &pse51_thread_ops;
+	iattr.ops = &cobalt_thread_ops;
 	iattr.stacksize = stacksize;
 	param.rt.prio = prio;
 
@@ -229,23 +229,23 @@ int pthread_create(pthread_t *tid,
 
 	inith(&thread->link);
 
-	thread->magic = PSE51_THREAD_MAGIC;
+	thread->magic = COBALT_THREAD_MAGIC;
 	thread->entry = start;
 	thread->arg = arg;
 	xnsynch_init(&thread->join_synch, XNSYNCH_PRIO, NULL);
 	thread->nrt_joiners = 0;
 	thread->sched_policy = thread->attr.policy;
 
-	pse51_cancel_init_thread(thread);
-	pse51_signal_init_thread(thread, cur);
-	pse51_tsd_init_thread(thread);
-	pse51_timer_init_thread(thread);
+	cobalt_cancel_init_thread(thread);
+	cobalt_signal_init_thread(thread, cur);
+	cobalt_tsd_init_thread(thread);
+	cobalt_timer_init_thread(thread);
 
 	if (thread->attr.policy == SCHED_RR)
-		xnpod_set_thread_tslice(&thread->threadbase, pse51_time_slice);
+		xnpod_set_thread_tslice(&thread->threadbase, cobalt_time_slice);
 
 	xnlock_get_irqsave(&nklock, s);
-	thread->container = &pse51_kqueues(0)->threadq;
+	thread->container = &cobalt_kqueues(0)->threadq;
 	appendq(thread->container, &thread->link);
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -306,7 +306,7 @@ int pthread_detach(pthread_t thread)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread)) {
+	if (!cobalt_obj_active(thread, COBALT_THREAD_MAGIC, struct cobalt_thread)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return ESRCH;
 	}
@@ -320,7 +320,7 @@ int pthread_detach(pthread_t thread)
 
 	thread->nrt_joiners = -1;
 	if (xnsynch_flush(&thread->join_synch,
-			  PSE51_JOINED_DETACHED) == XNSYNCH_RESCHED)
+			  COBALT_JOINED_DETACHED) == XNSYNCH_RESCHED)
 		xnpod_schedule();
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -375,13 +375,13 @@ void pthread_exit(void *value_ptr)
 	pthread_t cur;
 	spl_t s;
 
-	cur = pse51_current_thread();
+	cur = cobalt_current_thread();
 
 	if (!cur)
 		return;
 
 	xnlock_get_irqsave(&nklock, s);
-	pse51_thread_abort(cur, value_ptr);
+	cobalt_thread_abort(cur, value_ptr);
 }
 
 /**
@@ -438,9 +438,9 @@ int pthread_join(pthread_t thread, void **value_ptr)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread)
-	    && !pse51_obj_deleted(thread, PSE51_THREAD_MAGIC,
-				  struct pse51_thread)) {
+	if (!cobalt_obj_active(thread, COBALT_THREAD_MAGIC, struct cobalt_thread)
+	    && !cobalt_obj_deleted(thread, COBALT_THREAD_MAGIC,
+				  struct cobalt_thread)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return ESRCH;
 	}
@@ -456,8 +456,8 @@ int pthread_join(pthread_t thread, void **value_ptr)
 	}
 
 	is_last_joiner = 1;
-	while (pse51_obj_active
-	       (thread, PSE51_THREAD_MAGIC, struct pse51_thread)) {
+	while (cobalt_obj_active
+	       (thread, COBALT_THREAD_MAGIC, struct cobalt_thread)) {
 		if (xnpod_asynch_p() || xnpod_locked_p()) {
 			xnlock_put_irqrestore(&nklock, s);
 			return EPERM;
@@ -475,7 +475,7 @@ int pthread_join(pthread_t thread, void **value_ptr)
 			thread_cancellation_point(cur);
 
 			/* In case another thread called pthread_detach. */
-			if (xnthread_test_info(cur, PSE51_JOINED_DETACHED)) {
+			if (xnthread_test_info(cur, COBALT_JOINED_DETACHED)) {
 				xnlock_put_irqrestore(&nklock, s);
 				return EINVAL;
 			}
@@ -539,7 +539,7 @@ int pthread_join(pthread_t thread, void **value_ptr)
  */
 pthread_t pthread_self(void)
 {
-	return pse51_current_thread();
+	return cobalt_current_thread();
 }
 
 /**
@@ -586,7 +586,7 @@ int pthread_make_periodic_np(pthread_t thread,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread)) {
+	if (!cobalt_obj_active(thread, COBALT_THREAD_MAGIC, struct cobalt_thread)) {
 		err = ESRCH;
 		goto unlock_and_exit;
 	}
@@ -730,7 +730,7 @@ int pthread_set_name_np(pthread_t thread, const char *name)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread)) {
+	if (!cobalt_obj_active(thread, COBALT_THREAD_MAGIC, struct cobalt_thread)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return ESRCH;
 	}
@@ -743,7 +743,7 @@ int pthread_set_name_np(pthread_t thread, const char *name)
 	return 0;
 }
 
-void pse51_thread_abort(pthread_t thread, void *status)
+void cobalt_thread_abort(pthread_t thread, void *status)
 {
 	thread_exit_status(thread) = status;
 	thread_setcancelstate(thread, PTHREAD_CANCEL_DISABLE);
@@ -751,7 +751,7 @@ void pse51_thread_abort(pthread_t thread, void *status)
 	xnpod_delete_thread(&thread->threadbase);
 }
 
-void pse51_threadq_cleanup(pse51_kqueues_t *q)
+void cobalt_threadq_cleanup(cobalt_kqueues_t *q)
 {
 	xnholder_t *holder;
 	spl_t s;
@@ -765,11 +765,11 @@ void pse51_threadq_cleanup(pse51_kqueues_t *q)
 		if (!xnpod_current_p(&thread->threadbase))
 			xnpod_suspend_thread(&thread->threadbase, XNDORMANT,
 					     XN_INFINITE, XN_RELATIVE, NULL);
-		if (pse51_obj_active
-		    (thread, PSE51_THREAD_MAGIC, struct pse51_thread)) {
+		if (cobalt_obj_active
+		    (thread, COBALT_THREAD_MAGIC, struct cobalt_thread)) {
 			/* Remaining running thread. */
 			thread_setdetachstate(thread, PTHREAD_CREATE_DETACHED);
-			pse51_thread_abort(thread, NULL);
+			cobalt_thread_abort(thread, NULL);
 		} else
 			/* Remaining TCB (joinable thread, which was never joined). */
 			thread_destroy(thread);
@@ -783,17 +783,17 @@ void pse51_threadq_cleanup(pse51_kqueues_t *q)
 	xnlock_put_irqrestore(&nklock, s);
 }
 
-void pse51_thread_pkg_init(u_long rrperiod)
+void cobalt_thread_pkg_init(u_long rrperiod)
 {
-	initq(&pse51_global_kqueues.threadq);
+	initq(&cobalt_global_kqueues.threadq);
 	pthread_attr_init(&default_attr);
-	pse51_time_slice = rrperiod;
+	cobalt_time_slice = rrperiod;
 	xnpod_add_hook(XNHOOK_THREAD_DELETE, thread_delete_hook);
 }
 
-void pse51_thread_pkg_cleanup(void)
+void cobalt_thread_pkg_cleanup(void)
 {
-	pse51_threadq_cleanup(&pse51_global_kqueues);
+	cobalt_threadq_cleanup(&cobalt_global_kqueues);
 	xnpod_remove_hook(XNHOOK_THREAD_DELETE, thread_delete_hook);
 }
 

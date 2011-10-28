@@ -83,13 +83,13 @@ void ms_sleep(int time)
 void check_current_prio(int expected_prio)
 {
 	int current_prio;
-# ifdef __pse51_get_current_prio
-	extern unsigned __pse51_muxid;
+# ifdef __cobalt_get_current_prio
+	extern unsigned __cobalt_muxid;
 
-	XENOMAI_SKINCALL1(__pse51_muxid, __pse51_get_current_prio, &current_prio);
-# else /* !__pse51_get_current_prio */
+	XENOMAI_SKINCALL1(__cobalt_muxid, __cobalt_get_current_prio, &current_prio);
+# else /* !__cobalt_get_current_prio */
 	current_prio = expected_prio;
-# endif /* !__pse51_get_current_prio */
+# endif /* !__cobalt_get_current_prio */
 
 	if (current_prio != expected_prio) {
 		fprintf(stderr,

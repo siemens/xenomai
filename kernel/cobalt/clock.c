@@ -206,7 +206,7 @@ int clock_gettime(clockid_t clock_id, struct timespec *tp)
 
 	switch (clock_id) {
 	case CLOCK_REALTIME:
-		ticks2ts(tp, xntbase_get_time(pse51_tbase));
+		ticks2ts(tp, xntbase_get_time(cobalt_tbase));
 		break;
 
 	case CLOCK_MONOTONIC:
@@ -265,8 +265,8 @@ int clock_settime(clockid_t clock_id, const struct timespec *tp)
 	new_date = ts2ticks_floor(tp);
 
 	xnlock_get_irqsave(&nklock, s);
-	now = xntbase_get_time(pse51_tbase);
-	xntbase_adjust_time(pse51_tbase, (xnsticks_t) (new_date - now));
+	now = xntbase_get_time(cobalt_tbase);
+	xntbase_adjust_time(cobalt_tbase, (xnsticks_t) (new_date - now));
 	xnlock_put_irqrestore(&nklock, s);
 
 	return 0;

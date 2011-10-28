@@ -19,7 +19,7 @@
 #ifndef _XENO_SKIN_POSIX_H
 #define _XENO_SKIN_POSIX_H
 
-#define PSE51_SKIN_MAGIC           0x50534531
+#define COBALT_SKIN_MAGIC           0x50534531
 
 #ifdef __XENO_SIM__
 

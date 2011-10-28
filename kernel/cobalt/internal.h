@@ -32,36 +32,36 @@
 #define CONFIG_XENO_OPT_DEBUG_POSIX 0
 #endif
 
-#define PSE51_MAGIC(n) (0x8686##n##n)
-#define PSE51_ANY_MAGIC         PSE51_MAGIC(00)
-#define PSE51_THREAD_MAGIC      PSE51_MAGIC(01)
-#define PSE51_THREAD_ATTR_MAGIC PSE51_MAGIC(02)
-#define PSE51_MUTEX_MAGIC       PSE51_MAGIC(03)
-#define PSE51_MUTEX_ATTR_MAGIC  (PSE51_MAGIC(04) & ((1 << 24) - 1))
-#define PSE51_COND_MAGIC        PSE51_MAGIC(05)
-#define PSE51_COND_ATTR_MAGIC   (PSE51_MAGIC(05) & ((1 << 24) - 1))
-#define PSE51_SEM_MAGIC         PSE51_MAGIC(06)
-#define PSE51_KEY_MAGIC         PSE51_MAGIC(07)
-#define PSE51_ONCE_MAGIC        PSE51_MAGIC(08)
-#define PSE51_MQ_MAGIC          PSE51_MAGIC(09)
-#define PSE51_MQD_MAGIC         PSE51_MAGIC(0A)
-#define PSE51_INTR_MAGIC        PSE51_MAGIC(0B)
-#define PSE51_NAMED_SEM_MAGIC   PSE51_MAGIC(0C)
-#define PSE51_TIMER_MAGIC       PSE51_MAGIC(0D)
-#define PSE51_SHM_MAGIC         PSE51_MAGIC(0E)
+#define COBALT_MAGIC(n) (0x8686##n##n)
+#define COBALT_ANY_MAGIC         COBALT_MAGIC(00)
+#define COBALT_THREAD_MAGIC      COBALT_MAGIC(01)
+#define COBALT_THREAD_ATTR_MAGIC COBALT_MAGIC(02)
+#define COBALT_MUTEX_MAGIC       COBALT_MAGIC(03)
+#define COBALT_MUTEX_ATTR_MAGIC  (COBALT_MAGIC(04) & ((1 << 24) - 1))
+#define COBALT_COND_MAGIC        COBALT_MAGIC(05)
+#define COBALT_COND_ATTR_MAGIC   (COBALT_MAGIC(05) & ((1 << 24) - 1))
+#define COBALT_SEM_MAGIC         COBALT_MAGIC(06)
+#define COBALT_KEY_MAGIC         COBALT_MAGIC(07)
+#define COBALT_ONCE_MAGIC        COBALT_MAGIC(08)
+#define COBALT_MQ_MAGIC          COBALT_MAGIC(09)
+#define COBALT_MQD_MAGIC         COBALT_MAGIC(0A)
+#define COBALT_INTR_MAGIC        COBALT_MAGIC(0B)
+#define COBALT_NAMED_SEM_MAGIC   COBALT_MAGIC(0C)
+#define COBALT_TIMER_MAGIC       COBALT_MAGIC(0D)
+#define COBALT_SHM_MAGIC         COBALT_MAGIC(0E)
 
-#define PSE51_MIN_PRIORITY      XNSCHED_LOW_PRIO
-#define PSE51_MAX_PRIORITY      XNSCHED_HIGH_PRIO
+#define COBALT_MIN_PRIORITY      XNSCHED_LOW_PRIO
+#define COBALT_MAX_PRIORITY      XNSCHED_HIGH_PRIO
 
 #define ONE_BILLION             1000000000
 
-#define pse51_obj_active(h,m,t)			\
+#define cobalt_obj_active(h,m,t)			\
 	((h) && ((t *)(h))->magic == (m))
 
-#define pse51_obj_deleted(h,m,t)		\
+#define cobalt_obj_deleted(h,m,t)		\
 	((h) && ((t *)(h))->magic == ~(m))
 
-#define pse51_mark_deleted(t) ((t)->magic = ~(t)->magic)
+#define cobalt_mark_deleted(t) ((t)->magic = ~(t)->magic)
 
 typedef struct {
 	xnqueue_t condq;
@@ -70,39 +70,39 @@ typedef struct {
 	xnqueue_t semq;
 	xnqueue_t threadq;
 	xnqueue_t timerq;
-} pse51_kqueues_t;
+} cobalt_kqueues_t;
 
 #ifndef __XENO_SIM__
 typedef struct {
-	pse51_kqueues_t kqueues;
-	pse51_assocq_t uqds;
-	pse51_assocq_t usems;
-	pse51_assocq_t umaps;
-	pse51_assocq_t ufds;
+	cobalt_kqueues_t kqueues;
+	cobalt_assocq_t uqds;
+	cobalt_assocq_t usems;
+	cobalt_assocq_t umaps;
+	cobalt_assocq_t ufds;
 
 	xnshadow_ppd_t ppd;
 
 #define ppd2queues(addr)						\
-	((pse51_queues_t *) ((char *) (addr) - offsetof(pse51_queues_t, ppd)))
+	((cobalt_queues_t *) ((char *) (addr) - offsetof(cobalt_queues_t, ppd)))
 
-} pse51_queues_t;
+} cobalt_queues_t;
 
-extern int pse51_muxid;
+extern int cobalt_muxid;
 #endif /* !__XENO_SIM__ */
 
-extern xntbase_t *pse51_tbase;
+extern xntbase_t *cobalt_tbase;
 
-extern pse51_kqueues_t pse51_global_kqueues;
+extern cobalt_kqueues_t cobalt_global_kqueues;
 
 #ifndef __XENO_SIM__
-static inline pse51_queues_t *pse51_queues(void)
+static inline cobalt_queues_t *cobalt_queues(void)
 {
 	xnshadow_ppd_t *ppd;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	ppd = xnshadow_ppd_get(pse51_muxid);
+	ppd = xnshadow_ppd_get(cobalt_muxid);
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -113,23 +113,23 @@ static inline pse51_queues_t *pse51_queues(void)
 }
 #endif /* !__XENO_SIM__ */
 
-static inline pse51_kqueues_t *pse51_kqueues(int pshared)
+static inline cobalt_kqueues_t *cobalt_kqueues(int pshared)
 {
 #ifndef __XENO_SIM__
 	xnshadow_ppd_t *ppd;
 
-	if (pshared || !(ppd = xnshadow_ppd_get(pse51_muxid)))
-		return &pse51_global_kqueues;
+	if (pshared || !(ppd = xnshadow_ppd_get(cobalt_muxid)))
+		return &cobalt_global_kqueues;
 
 	return &ppd2queues(ppd)->kqueues;
 #else /* __XENO_SIM__ */
-	return &pse51_global_kqueues;
+	return &cobalt_global_kqueues;
 #endif /* __XENO_SIM__ */
 }
 
 static inline void ticks2ts(struct timespec *ts, xnticks_t ticks)
 {
-	ts->tv_sec = xnarch_divrem_billion(xntbase_ticks2ns(pse51_tbase, ticks),
+	ts->tv_sec = xnarch_divrem_billion(xntbase_ticks2ns(cobalt_tbase, ticks),
 					   &ts->tv_nsec);
 }
 
@@ -138,7 +138,7 @@ static inline xnticks_t ts2ticks_floor(const struct timespec *ts)
 	xntime_t nsecs = ts->tv_nsec;
 	if(ts->tv_sec)
 		nsecs += (xntime_t) ts->tv_sec * ONE_BILLION;
-	return xntbase_ns2ticks(pse51_tbase, nsecs);
+	return xntbase_ns2ticks(cobalt_tbase, nsecs);
 }
 
 static inline xnticks_t ts2ticks_ceil(const struct timespec *ts)
@@ -148,7 +148,7 @@ static inline xnticks_t ts2ticks_ceil(const struct timespec *ts)
 	xnticks_t ticks;
 	if(ts->tv_sec)
 		nsecs += (xntime_t) ts->tv_sec * ONE_BILLION;
-	ticks = xnarch_ulldiv(nsecs, xntbase_get_tickval(pse51_tbase), &rem);
+	ticks = xnarch_ulldiv(nsecs, xntbase_get_tickval(cobalt_tbase), &rem);
 	return rem ? ticks+1 : ticks;
 }
 
@@ -159,14 +159,14 @@ static inline xnticks_t tv2ticks_ceil(const struct timeval *tv)
 	xnticks_t ticks;
 	if(tv->tv_sec)
 		nsecs += (xntime_t) tv->tv_sec * ONE_BILLION;
-	ticks = xnarch_ulldiv(nsecs, xntbase_get_tickval(pse51_tbase), &rem);
+	ticks = xnarch_ulldiv(nsecs, xntbase_get_tickval(cobalt_tbase), &rem);
 	return rem ? ticks+1 : ticks;
 }
 
 static inline void ticks2tv(struct timeval *tv, xnticks_t ticks)
 {
 	unsigned long nsecs;
-	tv->tv_sec = xnarch_divrem_billion(xntbase_ticks2ns(pse51_tbase, ticks),
+	tv->tv_sec = xnarch_divrem_billion(xntbase_ticks2ns(cobalt_tbase, ticks),
 					   &nsecs);
 	tv->tv_usec = nsecs / 1000;
 }
@@ -174,9 +174,9 @@ static inline void ticks2tv(struct timeval *tv, xnticks_t ticks)
 static inline xnticks_t clock_get_ticks(clockid_t clock_id)
 {
 	if(clock_id == CLOCK_REALTIME)
-		return xntbase_get_time(pse51_tbase);
+		return xntbase_get_time(cobalt_tbase);
 	else
-		return xntbase_get_jiffies(pse51_tbase);
+		return xntbase_get_jiffies(cobalt_tbase);
 }
 
 static inline int clock_flag(int flag, clockid_t clock_id)
@@ -198,7 +198,7 @@ static inline int clock_flag(int flag, clockid_t clock_id)
 	return -EINVAL;
 }
 
-int pse51_mq_select_bind(mqd_t fd, struct xnselector *selector,
+int cobalt_mq_select_bind(mqd_t fd, struct xnselector *selector,
 			 unsigned type, unsigned index);
 
 #endif /* !_POSIX_INTERNAL_H */

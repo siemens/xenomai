@@ -27,7 +27,7 @@
 #undef __real_mmap
 #undef __real_ftruncate
 
-extern int __pse51_muxid;
+extern int __cobalt_muxid;
 
 int __wrap_shm_open(const char *name, int oflag, mode_t mode)
 {
@@ -38,8 +38,8 @@ int __wrap_shm_open(const char *name, int oflag, mode_t mode)
 	if (fd == -1)
 		return -1;
 
-	err = -XENOMAI_SKINCALL4(__pse51_muxid,
-				 __pse51_shm_open, name, oflag, mode, fd);
+	err = -XENOMAI_SKINCALL4(__cobalt_muxid,
+				 __cobalt_shm_open, name, oflag, mode, fd);
 	if (!err)
 		return fd;
 
@@ -57,7 +57,7 @@ int __wrap_shm_unlink(const char *name)
 {
 	int err;
 
-	err = -XENOMAI_SKINCALL1(__pse51_muxid, __pse51_shm_unlink, name);
+	err = -XENOMAI_SKINCALL1(__cobalt_muxid, __cobalt_shm_unlink, name);
 	if (!err)
 		return 0;
 
@@ -74,8 +74,8 @@ int __wrap_ftruncate(int fildes, long length)
 {
 	int err;
 
-	err = -XENOMAI_SKINCALL2(__pse51_muxid,
-				 __pse51_ftruncate, fildes, length);
+	err = -XENOMAI_SKINCALL2(__cobalt_muxid,
+				 __cobalt_ftruncate, fildes, length);
 	if (!err)
 		return 0;
 
@@ -99,8 +99,8 @@ void *__wrap_mmap(void *addr,
 	void *uaddr;
 	int err;
 
-	err = -XENOMAI_SKINCALL4(__pse51_muxid,
-				 __pse51_mmap_prologue, len, fildes, off, &map);
+	err = -XENOMAI_SKINCALL4(__cobalt_muxid,
+				 __cobalt_mmap_prologue, len, fildes, off, &map);
 
 	if (err == EBADF || err == ENOSYS)
 		return __STD(mmap(addr, len, prot, flags, fildes, off));
@@ -115,13 +115,13 @@ void *__wrap_mmap(void *addr,
 	uaddr = __STD(mmap(addr, len, prot, flags, fildes, off + map.offset));
 	if (uaddr == MAP_FAILED) {
 	      err_mmap_epilogue:
-		XENOMAI_SKINCALL2(__pse51_muxid,
-				  __pse51_mmap_epilogue, MAP_FAILED, &map);
+		XENOMAI_SKINCALL2(__cobalt_muxid,
+				  __cobalt_mmap_epilogue, MAP_FAILED, &map);
 		return MAP_FAILED;
 	}
 
-	err = -XENOMAI_SKINCALL2(__pse51_muxid,
-				 __pse51_mmap_epilogue,
+	err = -XENOMAI_SKINCALL2(__cobalt_muxid,
+				 __cobalt_mmap_epilogue,
 				 (unsigned long)uaddr, &map);
 	if (!err)
 		return uaddr;
@@ -139,8 +139,8 @@ int __wrap_ftruncate64(int fildes, long long length)
 {
 	int err;
 
-	err = -XENOMAI_SKINCALL2(__pse51_muxid,
-				 __pse51_ftruncate, fildes,
+	err = -XENOMAI_SKINCALL2(__cobalt_muxid,
+				 __cobalt_ftruncate, fildes,
 				 ((unsigned long long) length < LONG_MAX
 				  ? (long) length : -1L));
 	if (!err)
@@ -168,8 +168,8 @@ void *__wrap_mmap64(void *addr,
 	void *uaddr;
 	int err;
 
-	err = -XENOMAI_SKINCALL4(__pse51_muxid,
-				 __pse51_mmap_prologue, len, fildes,
+	err = -XENOMAI_SKINCALL4(__cobalt_muxid,
+				 __cobalt_mmap_prologue, len, fildes,
 				 ((unsigned long long) off < LONG_MAX
 				  ? (long) off : -1L), &map);
 
@@ -192,13 +192,13 @@ void *__wrap_mmap64(void *addr,
 #endif
 	if (uaddr == MAP_FAILED) {
 	      err_mmap_epilogue:
-		XENOMAI_SKINCALL2(__pse51_muxid,
-				  __pse51_mmap_epilogue, MAP_FAILED, &map);
+		XENOMAI_SKINCALL2(__cobalt_muxid,
+				  __cobalt_mmap_epilogue, MAP_FAILED, &map);
 		return MAP_FAILED;
 	}
 
-	err = -XENOMAI_SKINCALL2(__pse51_muxid,
-				 __pse51_mmap_epilogue,
+	err = -XENOMAI_SKINCALL2(__cobalt_muxid,
+				 __cobalt_mmap_epilogue,
 				 (unsigned long)uaddr, &map);
 
 	if (!err)
@@ -216,7 +216,7 @@ int __shm_close(int fd)
 {
 	int err;
 
-	err = XENOMAI_SKINCALL1(__pse51_muxid, __pse51_shm_close, fd);
+	err = XENOMAI_SKINCALL1(__cobalt_muxid, __cobalt_shm_close, fd);
 
 	if (!err)
 		return __STD(close(fd));
@@ -233,8 +233,8 @@ int __wrap_munmap(void *addr, size_t len)
 	} map;
 	int err;
 
-	err = -XENOMAI_SKINCALL3(__pse51_muxid,
-				 __pse51_munmap_prologue, addr, len, &map);
+	err = -XENOMAI_SKINCALL3(__cobalt_muxid,
+				 __cobalt_munmap_prologue, addr, len, &map);
 
 	if (err == ENXIO || err == ENOSYS || err == EBADF)
 		return __STD(munmap(addr, len));
@@ -245,8 +245,8 @@ int __wrap_munmap(void *addr, size_t len)
 	if (__STD(munmap(addr, len)))
 		return -1;
 
-	err = -XENOMAI_SKINCALL2(__pse51_muxid,
-				 __pse51_munmap_epilogue, addr, len);
+	err = -XENOMAI_SKINCALL2(__cobalt_muxid,
+				 __cobalt_munmap_epilogue, addr, len);
 
 	if (!err)
 		return 0;

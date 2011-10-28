@@ -48,7 +48,7 @@ int pthread_once(pthread_once_t * once, void (*init_routine) (void))
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(once, PSE51_ONCE_MAGIC, pthread_once_t)) {
+	if (!cobalt_obj_active(once, COBALT_ONCE_MAGIC, pthread_once_t)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}

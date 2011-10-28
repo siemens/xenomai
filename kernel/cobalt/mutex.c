@@ -50,19 +50,19 @@
 #include <nucleus/sys_ppd.h>
 #include "mutex.h"
 
-pthread_mutexattr_t pse51_default_mutex_attr;
+pthread_mutexattr_t cobalt_default_mutex_attr;
 
-int pse51_mutex_check_init(struct __shadow_mutex *shadow,
+int cobalt_mutex_check_init(struct __shadow_mutex *shadow,
 			   const pthread_mutexattr_t *attr)
 {
 	xnqueue_t *mutexq;
 
 	if (!attr)
-		attr = &pse51_default_mutex_attr;
+		attr = &cobalt_default_mutex_attr;
 
-	mutexq = &pse51_kqueues(attr->pshared)->mutexq;
+	mutexq = &cobalt_kqueues(attr->pshared)->mutexq;
 
-	if (shadow->magic == PSE51_MUTEX_MAGIC) {
+	if (shadow->magic == COBALT_MUTEX_MAGIC) {
 		xnholder_t *holder;
 		spl_t s;
 
@@ -80,26 +80,26 @@ int pse51_mutex_check_init(struct __shadow_mutex *shadow,
 	return 0;
 }
 
-int pse51_mutex_init_internal(struct __shadow_mutex *shadow,
-			      pse51_mutex_t *mutex,
+int cobalt_mutex_init_internal(struct __shadow_mutex *shadow,
+			      cobalt_mutex_t *mutex,
 			      xnarch_atomic_t *ownerp,
 			      const pthread_mutexattr_t *attr)
 {
 	xnflags_t synch_flags = XNSYNCH_PRIO | XNSYNCH_OWNER;
 	struct xnsys_ppd *sys_ppd;
-	pse51_kqueues_t *kq;
+	cobalt_kqueues_t *kq;
 	spl_t s;
 
 	if (!attr)
-		attr = &pse51_default_mutex_attr;
+		attr = &cobalt_default_mutex_attr;
 
-	if (attr->magic != PSE51_MUTEX_ATTR_MAGIC)
+	if (attr->magic != COBALT_MUTEX_ATTR_MAGIC)
 		return -EINVAL;
 
-	kq = pse51_kqueues(attr->pshared);
+	kq = cobalt_kqueues(attr->pshared);
 	sys_ppd = xnsys_ppd_get(attr->pshared);
 
-	shadow->magic = PSE51_MUTEX_MAGIC;
+	shadow->magic = COBALT_MUTEX_MAGIC;
 	shadow->mutex = mutex;
 	shadow->lockcnt = 0;
 	xnarch_atomic_set(&shadow->lock, -1);
@@ -112,7 +112,7 @@ int pse51_mutex_init_internal(struct __shadow_mutex *shadow,
 	if (attr->protocol == PTHREAD_PRIO_INHERIT)
 		synch_flags |= XNSYNCH_PIP;
 
-	mutex->magic = PSE51_MUTEX_MAGIC;
+	mutex->magic = COBALT_MUTEX_MAGIC;
 	xnsynch_init(&mutex->synchbase, synch_flags, ownerp);
 	inith(&mutex->link);
 	mutex->attr = *attr;
@@ -156,17 +156,17 @@ int pthread_mutex_init(pthread_mutex_t *mx, const pthread_mutexattr_t *attr)
 	struct __shadow_mutex *shadow =
 	    &((union __xeno_mutex *)mx)->shadow_mutex;
 	DECLARE_CB_LOCK_FLAGS(s);
-	pse51_mutex_t *mutex;
+	cobalt_mutex_t *mutex;
 	xnarch_atomic_t *ownerp = NULL;
 	int err;
 
 	if (!attr)
-		attr = &pse51_default_mutex_attr;
+		attr = &cobalt_default_mutex_attr;
 
 	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
 		goto checked;
 
-	err = pse51_mutex_check_init(shadow, attr);
+	err = cobalt_mutex_check_init(shadow, attr);
 #ifndef CONFIG_XENO_FASTSYNCH
 	cb_read_unlock(&shadow->lock, s);
 	if (err)
@@ -179,7 +179,7 @@ int pthread_mutex_init(pthread_mutex_t *mx, const pthread_mutexattr_t *attr)
 #endif /* CONFIG_XENO_FASTSYNCH */
 
   checked:
-	mutex = (pse51_mutex_t *) xnmalloc(sizeof(*mutex));
+	mutex = (cobalt_mutex_t *) xnmalloc(sizeof(*mutex));
 	if (!mutex)
 		return ENOMEM;
 
@@ -194,7 +194,7 @@ int pthread_mutex_init(pthread_mutex_t *mx, const pthread_mutexattr_t *attr)
 #endif /* CONFIG_XENO_FASTSYNCH */
 
 	cb_force_write_lock(&shadow->lock, s);
-	err = pse51_mutex_init_internal(shadow, mutex, ownerp, attr);
+	err = cobalt_mutex_init_internal(shadow, mutex, ownerp, attr);
 	cb_write_unlock(&shadow->lock, s);
 
 	if (err) {
@@ -206,15 +206,15 @@ int pthread_mutex_init(pthread_mutex_t *mx, const pthread_mutexattr_t *attr)
 	return -err;
 }
 
-void pse51_mutex_destroy_internal(pse51_mutex_t *mutex,
-				  pse51_kqueues_t *q)
+void cobalt_mutex_destroy_internal(cobalt_mutex_t *mutex,
+				  cobalt_kqueues_t *q)
 {
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 	removeq(&q->mutexq, &mutex->link);
 	/* synchbase wait queue may not be empty only when this function is called
-	   from pse51_mutex_pkg_cleanup, hence the absence of xnpod_schedule(). */
+	   from cobalt_mutex_pkg_cleanup, hence the absence of xnpod_schedule(). */
 	xnsynch_destroy(&mutex->synchbase);
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -251,19 +251,19 @@ int pthread_mutex_destroy(pthread_mutex_t * mx)
 	struct __shadow_mutex *shadow =
 	    &((union __xeno_mutex *)mx)->shadow_mutex;
 	DECLARE_CB_LOCK_FLAGS(s);
-	pse51_mutex_t *mutex;
+	cobalt_mutex_t *mutex;
 
 	if (unlikely(cb_try_write_lock(&shadow->lock, s)))
 		return EBUSY;
 
 	mutex = shadow->mutex;
-	if (!pse51_obj_active(shadow, PSE51_MUTEX_MAGIC, struct __shadow_mutex)
-	    || !pse51_obj_active(mutex, PSE51_MUTEX_MAGIC, struct pse51_mutex)) {
+	if (!cobalt_obj_active(shadow, COBALT_MUTEX_MAGIC, struct __shadow_mutex)
+	    || !cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, struct cobalt_mutex)) {
 		cb_write_unlock(&shadow->lock, s);
 		return EINVAL;
 	}
 
-	if (pse51_kqueues(mutex->attr.pshared) != mutex->owningq) {
+	if (cobalt_kqueues(mutex->attr.pshared) != mutex->owningq) {
 		cb_write_unlock(&shadow->lock, s);
 		return EPERM;
 	}
@@ -278,20 +278,20 @@ int pthread_mutex_destroy(pthread_mutex_t * mx)
 		return EBUSY;
 	}
 
-	pse51_mark_deleted(shadow);
-	pse51_mark_deleted(mutex);
+	cobalt_mark_deleted(shadow);
+	cobalt_mark_deleted(mutex);
 	cb_write_unlock(&shadow->lock, s);
 
-	pse51_mutex_destroy_internal(mutex, pse51_kqueues(mutex->attr.pshared));
+	cobalt_mutex_destroy_internal(mutex, cobalt_kqueues(mutex->attr.pshared));
 
 	return 0;
 }
 
-int pse51_mutex_timedlock_break(struct __shadow_mutex *shadow,
+int cobalt_mutex_timedlock_break(struct __shadow_mutex *shadow,
 				int timed, xnticks_t abs_to)
 {
 	xnthread_t *cur = xnpod_current_thread();
-	pse51_mutex_t *mutex;
+	cobalt_mutex_t *mutex;
 	spl_t s;
 	int err;
 
@@ -299,7 +299,7 @@ int pse51_mutex_timedlock_break(struct __shadow_mutex *shadow,
 	if (xnthread_handle(cur) == XN_NO_HANDLE)
 		return -EPERM;
 
-	err = pse51_mutex_timedlock_internal(cur, shadow, 1, timed, abs_to);
+	err = cobalt_mutex_timedlock_internal(cur, shadow, 1, timed, abs_to);
 	if (err != -EBUSY)
 		goto unlock_and_return;
 
@@ -392,7 +392,7 @@ int pthread_mutex_trylock(pthread_mutex_t *mx)
 	struct __shadow_mutex *shadow =
 	    &((union __xeno_mutex *)mx)->shadow_mutex;
 	xnthread_t *cur = xnpod_current_thread();
-	pse51_mutex_t *mutex = shadow->mutex;
+	cobalt_mutex_t *mutex = shadow->mutex;
 	DECLARE_CB_LOCK_FLAGS(s);
 	int err;
 
@@ -402,16 +402,16 @@ int pthread_mutex_trylock(pthread_mutex_t *mx)
 	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
 		return EINVAL;
 
-	if (!pse51_obj_active(shadow, PSE51_MUTEX_MAGIC,
+	if (!cobalt_obj_active(shadow, COBALT_MUTEX_MAGIC,
 			      struct __shadow_mutex)
-	    || !pse51_obj_active(mutex, PSE51_MUTEX_MAGIC,
-				 struct pse51_mutex)) {
+	    || !cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC,
+				 struct cobalt_mutex)) {
 		err = EINVAL;
 		goto unlock_and_return;
 	}
 
 #if XENO_DEBUG(POSIX)
-	if (mutex->owningq != pse51_kqueues(mutex->attr.pshared)) {
+	if (mutex->owningq != cobalt_kqueues(mutex->attr.pshared)) {
 		err = EPERM;
 		goto unlock_and_return;
 	}
@@ -435,7 +435,7 @@ int pthread_mutex_trylock(pthread_mutex_t *mx)
 	if (likely(!err))
 		shadow->lockcnt = 1;
 	else if (err == EBUSY) {
-		pse51_mutex_t *mutex = shadow->mutex;
+		cobalt_mutex_t *mutex = shadow->mutex;
 
 		if (mutex->attr.type == PTHREAD_MUTEX_RECURSIVE) {
 			if (shadow->lockcnt == UINT_MAX)
@@ -500,7 +500,7 @@ int pthread_mutex_lock(pthread_mutex_t * mx)
 		return EINVAL;
 
 	do {
-		err = pse51_mutex_timedlock_break(shadow, 0, XN_INFINITE);
+		err = cobalt_mutex_timedlock_break(shadow, 0, XN_INFINITE);
 	} while (err == -EINTR);
 
 	cb_read_unlock(&shadow->lock, s);
@@ -553,7 +553,7 @@ int pthread_mutex_timedlock(pthread_mutex_t * mx, const struct timespec *to)
 		return EINVAL;
 
 	do {
-		err = pse51_mutex_timedlock_break(shadow, 1,
+		err = cobalt_mutex_timedlock_break(shadow, 1,
 						  ts2ticks_ceil(to) + 1);
 	} while (err == -EINTR);
 
@@ -599,7 +599,7 @@ int pthread_mutex_unlock(pthread_mutex_t * mx)
 	    &((union __xeno_mutex *)mx)->shadow_mutex;
 	xnthread_t *cur = xnpod_current_thread();
 	DECLARE_CB_LOCK_FLAGS(s);
-	pse51_mutex_t *mutex;
+	cobalt_mutex_t *mutex;
 	int err;
 
 	if (xnpod_root_p() || xnpod_interrupt_p())
@@ -610,9 +610,9 @@ int pthread_mutex_unlock(pthread_mutex_t * mx)
 
 	mutex = shadow->mutex;
 
-	if (!pse51_obj_active(shadow,
-			      PSE51_MUTEX_MAGIC, struct __shadow_mutex)
-	    || !pse51_obj_active(mutex, PSE51_MUTEX_MAGIC, struct pse51_mutex)) {
+	if (!cobalt_obj_active(shadow,
+			      COBALT_MUTEX_MAGIC, struct __shadow_mutex)
+	    || !cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, struct cobalt_mutex)) {
 		err = EINVAL;
 		goto out;
 	}
@@ -637,7 +637,7 @@ int pthread_mutex_unlock(pthread_mutex_t * mx)
 	return err;
 }
 
-void pse51_mutexq_cleanup(pse51_kqueues_t *q)
+void cobalt_mutexq_cleanup(cobalt_kqueues_t *q)
 {
 	xnholder_t *holder;
 	spl_t s;
@@ -646,7 +646,7 @@ void pse51_mutexq_cleanup(pse51_kqueues_t *q)
 
 	while ((holder = getheadq(&q->mutexq)) != NULL) {
 		xnlock_put_irqrestore(&nklock, s);
-		pse51_mutex_destroy_internal(link2mutex(holder), q);
+		cobalt_mutex_destroy_internal(link2mutex(holder), q);
 #if XENO_DEBUG(POSIX)
 		xnprintf("Posix: destroying mutex %p.\n", link2mutex(holder));
 #endif /* XENO_DEBUG(POSIX) */
@@ -656,15 +656,15 @@ void pse51_mutexq_cleanup(pse51_kqueues_t *q)
 	xnlock_put_irqrestore(&nklock, s);
 }
 
-void pse51_mutex_pkg_init(void)
+void cobalt_mutex_pkg_init(void)
 {
-	initq(&pse51_global_kqueues.mutexq);
-	pthread_mutexattr_init(&pse51_default_mutex_attr);
+	initq(&cobalt_global_kqueues.mutexq);
+	pthread_mutexattr_init(&cobalt_default_mutex_attr);
 }
 
-void pse51_mutex_pkg_cleanup(void)
+void cobalt_mutex_pkg_cleanup(void)
 {
-	pse51_mutexq_cleanup(&pse51_global_kqueues);
+	cobalt_mutexq_cleanup(&cobalt_global_kqueues);
 }
 
 /*@}*/

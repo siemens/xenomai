@@ -21,16 +21,16 @@
 
 #include "sig.h"        /* For struct itimerspec. */
 
-void pse51_timer_notified(pse51_siginfo_t *si);
+void cobalt_timer_notified(cobalt_siginfo_t *si);
 
-void pse51_timer_init_thread(pthread_t new);
+void cobalt_timer_init_thread(pthread_t new);
 
-void pse51_timer_cleanup_thread(pthread_t zombie);
+void cobalt_timer_cleanup_thread(pthread_t zombie);
 
-void pse51_timerq_cleanup(pse51_kqueues_t *q);
+void cobalt_timerq_cleanup(cobalt_kqueues_t *q);
 
-int pse51_timer_pkg_init(void);
+int cobalt_timer_pkg_init(void);
 
-void pse51_timer_pkg_cleanup(void);
+void cobalt_timer_pkg_cleanup(void);
 
 #endif /* !_POSIX_TIMER_H */

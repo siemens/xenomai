@@ -6,20 +6,20 @@
 typedef struct {
     void *kaddr;
     unsigned long len;
-    pse51_assoc_t assoc;
+    cobalt_assoc_t assoc;
 
 #define assoc2umap(laddr) \
-    ((pse51_umap_t *)((unsigned long) (laddr) - offsetof(pse51_umap_t, assoc)))
-} pse51_umap_t;
+    ((cobalt_umap_t *)((unsigned long) (laddr) - offsetof(cobalt_umap_t, assoc)))
+} cobalt_umap_t;
 
-int pse51_xnheap_get(xnheap_t **pheap, void *addr);
+int cobalt_xnheap_get(xnheap_t **pheap, void *addr);
 
-void pse51_shm_ufds_cleanup(pse51_queues_t *q);
+void cobalt_shm_ufds_cleanup(cobalt_queues_t *q);
 
-void pse51_shm_umaps_cleanup(pse51_queues_t *q);
+void cobalt_shm_umaps_cleanup(cobalt_queues_t *q);
 
-int pse51_shm_pkg_init(void);
+int cobalt_shm_pkg_init(void);
 
-void pse51_shm_pkg_cleanup(void);
+void cobalt_shm_pkg_cleanup(void);
 
 #endif /* MMAN_H */

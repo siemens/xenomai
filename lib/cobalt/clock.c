@@ -28,13 +28,13 @@
 #include <sys/types.h>
 #include <nucleus/vdso.h>
 
-extern int __pse51_muxid;
+extern int __cobalt_muxid;
 
-static xnsysinfo_t __pse51_sysinfo;
+static xnsysinfo_t __cobalt_sysinfo;
 
-void pse51_clock_init(int muxid)
+void cobalt_clock_init(int muxid)
 {
-	int err = -XENOMAI_SYSCALL2(__xn_sys_info, muxid, &__pse51_sysinfo);
+	int err = -XENOMAI_SYSCALL2(__xn_sys_info, muxid, &__cobalt_sysinfo);
 	if (err) {
 		fprintf(stderr, "Xenomai Posix skin init: "
 			"sys_info: %s\n", strerror(err));
@@ -44,8 +44,8 @@ void pse51_clock_init(int muxid)
 
 int __wrap_clock_getres(clockid_t clock_id, struct timespec *tp)
 {
-	int err = -XENOMAI_SKINCALL2(__pse51_muxid,
-				     __pse51_clock_getres,
+	int err = -XENOMAI_SKINCALL2(__cobalt_muxid,
+				     __cobalt_clock_getres,
 				     clock_id,
 				     tp);
 
@@ -110,7 +110,7 @@ int __wrap_clock_gettime(clockid_t clock_id, struct timespec *tp)
 		break;
 	case CLOCK_MONOTONIC:
 	case CLOCK_MONOTONIC_RAW:
-		if (__pse51_sysinfo.tickval == 1) {
+		if (__cobalt_sysinfo.tickval == 1) {
 			unsigned long long ns;
 			unsigned long rem;
 
@@ -121,8 +121,8 @@ int __wrap_clock_gettime(clockid_t clock_id, struct timespec *tp)
 		}
 		/* Falldown wanted */
 	default:
-		err = -XENOMAI_SKINCALL2(__pse51_muxid,
-					 __pse51_clock_gettime,
+		err = -XENOMAI_SKINCALL2(__cobalt_muxid,
+					 __cobalt_clock_gettime,
 					 clock_id,
 					 tp);
 	}
@@ -136,8 +136,8 @@ int __wrap_clock_gettime(clockid_t clock_id, struct timespec *tp)
 
 int __wrap_clock_settime(clockid_t clock_id, const struct timespec *tp)
 {
-	int err = -XENOMAI_SKINCALL2(__pse51_muxid,
-				     __pse51_clock_settime,
+	int err = -XENOMAI_SKINCALL2(__cobalt_muxid,
+				     __cobalt_clock_settime,
 				     clock_id,
 				     tp);
 
@@ -156,8 +156,8 @@ int __wrap_clock_nanosleep(clockid_t clock_id,
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	err = -XENOMAI_SKINCALL4(__pse51_muxid,
-				 __pse51_clock_nanosleep,
+	err = -XENOMAI_SKINCALL4(__cobalt_muxid,
+				 __cobalt_clock_nanosleep,
 				 clock_id, flags, rqtp, rmtp);
 
 	pthread_setcanceltype(oldtype, NULL);

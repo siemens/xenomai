@@ -4,34 +4,34 @@
 #include <nucleus/queue.h>
 #include "registry.h"     /* For associative lists. */
 
-struct pse51_mq;
-typedef struct pse51_mq pse51_mq_t;
+struct cobalt_mq;
+typedef struct cobalt_mq cobalt_mq_t;
 
-typedef struct pse51_msg {
+typedef struct cobalt_msg {
 	xnpholder_t link;
 	size_t len;
 	char data[0];
-} pse51_msg_t;
+} cobalt_msg_t;
 
-#define pse51_msg_get_prio(msg) (msg)->link.prio
-#define pse51_msg_set_prio(msg, prio) (msg)->link.prio = (prio)
+#define cobalt_msg_get_prio(msg) (msg)->link.prio
+#define cobalt_msg_set_prio(msg, prio) (msg)->link.prio = (prio)
 
-pse51_msg_t *pse51_mq_timedsend_inner(pse51_mq_t **mqp, mqd_t fd, size_t len,
+cobalt_msg_t *cobalt_mq_timedsend_inner(cobalt_mq_t **mqp, mqd_t fd, size_t len,
 				      const struct timespec *abs_timeoutp);
 
-int pse51_mq_finish_send(mqd_t fd, pse51_mq_t *mq, pse51_msg_t *msg);
+int cobalt_mq_finish_send(mqd_t fd, cobalt_mq_t *mq, cobalt_msg_t *msg);
 
-pse51_msg_t *pse51_mq_timedrcv_inner(pse51_mq_t **mqp, mqd_t fd, size_t len,
+cobalt_msg_t *cobalt_mq_timedrcv_inner(cobalt_mq_t **mqp, mqd_t fd, size_t len,
 				     const struct timespec *abs_timeoutp);
 
-int pse51_mq_finish_rcv(mqd_t fd, pse51_mq_t *mq, pse51_msg_t *msg);
+int cobalt_mq_finish_rcv(mqd_t fd, cobalt_mq_t *mq, cobalt_msg_t *msg);
 
 #ifndef __XENO_SIM__
-void pse51_mq_uqds_cleanup(pse51_queues_t *q);
+void cobalt_mq_uqds_cleanup(cobalt_queues_t *q);
 #endif
 
-int pse51_mq_pkg_init(void);
+int cobalt_mq_pkg_init(void);
 
-void pse51_mq_pkg_cleanup(void);
+void cobalt_mq_pkg_cleanup(void);
 
 #endif /* POSIX_MQ_H */

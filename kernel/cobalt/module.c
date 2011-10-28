@@ -63,7 +63,7 @@
 #include "registry.h"
 #include "shm.h"
 
-MODULE_DESCRIPTION("POSIX/PSE51 interface");
+MODULE_DESCRIPTION("POSIX/COBALT interface");
 MODULE_AUTHOR("gilles.chanteperdrix@xenomai.org");
 MODULE_LICENSE("GPL");
 
@@ -75,30 +75,30 @@ static u_long time_slice_arg = 1;	/* Default (round-robin) time slice */
 module_param_named(time_slice, time_slice_arg, ulong, 0444);
 MODULE_PARM_DESC(time_slice, "Default time slice (in ticks)");
 
-xntbase_t *pse51_tbase;
+xntbase_t *cobalt_tbase;
 
-static void pse51_shutdown(int xtype)
+static void cobalt_shutdown(int xtype)
 {
-	pse51_thread_pkg_cleanup();
+	cobalt_thread_pkg_cleanup();
 #ifdef CONFIG_XENO_OPT_POSIX_SHM
-	pse51_shm_pkg_cleanup();
+	cobalt_shm_pkg_cleanup();
 #endif /* CONFIG_XENO_OPT_POSIX_SHM */
-	pse51_timer_pkg_cleanup();
-	pse51_mq_pkg_cleanup();
-	pse51_cond_pkg_cleanup();
-	pse51_tsd_pkg_cleanup();
-	pse51_sem_pkg_cleanup();
-	pse51_mutex_pkg_cleanup();
-	pse51_signal_pkg_cleanup();
-	pse51_reg_pkg_cleanup();
+	cobalt_timer_pkg_cleanup();
+	cobalt_mq_pkg_cleanup();
+	cobalt_cond_pkg_cleanup();
+	cobalt_tsd_pkg_cleanup();
+	cobalt_sem_pkg_cleanup();
+	cobalt_mutex_pkg_cleanup();
+	cobalt_signal_pkg_cleanup();
+	cobalt_reg_pkg_cleanup();
 #ifdef CONFIG_XENO_OPT_POSIX_INTR
-	pse51_intr_pkg_cleanup();
+	cobalt_intr_pkg_cleanup();
 #endif /* CONFIG_XENO_OPT_POSIX_INTR */
 #ifdef __KERNEL__
-	pse51_syscall_cleanup();
-	pse51_apc_pkg_cleanup();
+	cobalt_syscall_cleanup();
+	cobalt_apc_pkg_cleanup();
 #endif /* __KERNEL__ */
-	xntbase_free(pse51_tbase);
+	xntbase_free(cobalt_tbase);
 	xnpod_shutdown(xtype);
 }
 
@@ -112,25 +112,25 @@ int SKIN_INIT(posix)
 	if (err != 0)
 		goto fail;
 
-	err = xntbase_alloc("posix", tick_arg * 1000, 0, &pse51_tbase);
+	err = xntbase_alloc("posix", tick_arg * 1000, 0, &cobalt_tbase);
 	if (err)
 	    goto fail_shutdown_pod;
 
-	xntbase_start(pse51_tbase);
+	xntbase_start(cobalt_tbase);
 
 #ifdef __KERNEL__
-	err = pse51_apc_pkg_init();
+	err = cobalt_apc_pkg_init();
 	if (err)
 		goto fail_free_tbase;
-	err = pse51_syscall_init();
+	err = cobalt_syscall_init();
 #endif /* __KERNEL__ */
 
 	if (err != 0) {
 #ifdef __KERNEL__
-		pse51_apc_pkg_cleanup();
+		cobalt_apc_pkg_cleanup();
 	  fail_free_tbase:
 #endif /* __KERNEL__ */
-		xntbase_free(pse51_tbase);
+		xntbase_free(cobalt_tbase);
 	fail_shutdown_pod:
 		xnpod_shutdown(err);
 	  fail:
@@ -138,22 +138,22 @@ int SKIN_INIT(posix)
 		return err;
 	}
 
-	pse51_reg_pkg_init(64, 128);	/* FIXME: replace with compilation constants. */
-	pse51_signal_pkg_init();
-	pse51_mutex_pkg_init();
-	pse51_sem_pkg_init();
-	pse51_tsd_pkg_init();
-	pse51_cond_pkg_init();
-	pse51_mq_pkg_init();
+	cobalt_reg_pkg_init(64, 128);	/* FIXME: replace with compilation constants. */
+	cobalt_signal_pkg_init();
+	cobalt_mutex_pkg_init();
+	cobalt_sem_pkg_init();
+	cobalt_tsd_pkg_init();
+	cobalt_cond_pkg_init();
+	cobalt_mq_pkg_init();
 #ifdef CONFIG_XENO_OPT_POSIX_INTR
-	pse51_intr_pkg_init();
+	cobalt_intr_pkg_init();
 #endif /* CONFIG_XENO_OPT_POSIX_INTR */
-	pse51_timer_pkg_init();
+	cobalt_timer_pkg_init();
 #ifdef CONFIG_XENO_OPT_POSIX_SHM
-	pse51_shm_pkg_init();
+	cobalt_shm_pkg_init();
 #endif /* CONFIG_XENO_OPT_POSIX_SHM */
 
-	pse51_thread_pkg_init(module_param_value(time_slice_arg));
+	cobalt_thread_pkg_init(module_param_value(time_slice_arg));
 
 	return 0;
 }
@@ -161,7 +161,7 @@ int SKIN_INIT(posix)
 void SKIN_EXIT(posix)
 {
 	xnprintf("stopping POSIX services.\n");
-	pse51_shutdown(XNPOD_NORMAL_EXIT);
+	cobalt_shutdown(XNPOD_NORMAL_EXIT);
 }
 
 module_init(__posix_skin_init);

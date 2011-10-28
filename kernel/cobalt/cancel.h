@@ -19,8 +19,8 @@
 #ifndef _POSIX_CANCEL_H
 #define _POSIX_CANCEL_H
 
-void pse51_cancel_init_thread(pthread_t thread);
+void cobalt_cancel_init_thread(pthread_t thread);
 
-void pse51_cancel_cleanup_thread(pthread_t thread);
+void cobalt_cancel_cleanup_thread(pthread_t thread);
 
 #endif /* !_POSIX_CANCEL_H */

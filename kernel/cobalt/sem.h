@@ -19,8 +19,8 @@
 #ifndef _POSIX_SEM_H
 #define _POSIX_SEM_H
 
-#include <nucleus/thread.h>       /* For pse51_current_thread and
-				   pse51_thread_t definition. */
+#include <nucleus/thread.h>       /* For cobalt_current_thread and
+				   cobalt_thread_t definition. */
 #include <nucleus/registry.h>     /* For assocq */
 
 #ifndef __XENO_SIM__
@@ -28,22 +28,22 @@
 typedef struct {
     u_long uaddr;
     unsigned refcnt;
-    pse51_assoc_t assoc;
+    cobalt_assoc_t assoc;
 
 #define assoc2usem(laddr) \
-    ((pse51_usem_t *)((unsigned long) (laddr) - offsetof(pse51_usem_t, assoc)))
-} pse51_usem_t;
+    ((cobalt_usem_t *)((unsigned long) (laddr) - offsetof(cobalt_usem_t, assoc)))
+} cobalt_usem_t;
 
-void pse51_sem_usems_cleanup(pse51_queues_t *q);
+void cobalt_sem_usems_cleanup(cobalt_queues_t *q);
 
 #endif /* !__XENO_SIM__ */
 
-void pse51_semq_cleanup(pse51_kqueues_t *q);
+void cobalt_semq_cleanup(cobalt_kqueues_t *q);
 
-void pse51_sem_pkg_init(void);
+void cobalt_sem_pkg_init(void);
 
-void pse51_sem_pkg_cleanup(void);
+void cobalt_sem_pkg_cleanup(void);
 
-int sem_post_inner(struct pse51_sem *sem, pse51_kqueues_t *ownq);
+int sem_post_inner(struct cobalt_sem *sem, cobalt_kqueues_t *ownq);
 
 #endif /* !_POSIX_SEM_H */

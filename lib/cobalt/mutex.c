@@ -25,10 +25,10 @@
 #include <kernel/cobalt/cb_lock.h>
 #include <asm-generic/bits/current.h>
 
-extern int __pse51_muxid;
+extern int __cobalt_muxid;
 
 #ifdef CONFIG_XENO_FASTSYNCH
-#define PSE51_MUTEX_MAGIC (0x86860303)
+#define COBALT_MUTEX_MAGIC (0x86860303)
 
 extern unsigned long xeno_sem_heap[2];
 
@@ -43,53 +43,53 @@ static xnarch_atomic_t *get_ownerp(struct __shadow_mutex *shadow)
 
 int __wrap_pthread_mutexattr_init(pthread_mutexattr_t *attr)
 {
-	return -XENOMAI_SKINCALL1(__pse51_muxid, __pse51_mutexattr_init, attr);
+	return -XENOMAI_SKINCALL1(__cobalt_muxid, __cobalt_mutexattr_init, attr);
 }
 
 int __wrap_pthread_mutexattr_destroy(pthread_mutexattr_t *attr)
 {
-	return -XENOMAI_SKINCALL1(__pse51_muxid,__pse51_mutexattr_destroy,attr);
+	return -XENOMAI_SKINCALL1(__cobalt_muxid,__cobalt_mutexattr_destroy,attr);
 }
 
 int __wrap_pthread_mutexattr_gettype(const pthread_mutexattr_t *attr,
 				     int *type)
 {
-	return -XENOMAI_SKINCALL2(__pse51_muxid,
-				  __pse51_mutexattr_gettype, attr, type);
+	return -XENOMAI_SKINCALL2(__cobalt_muxid,
+				  __cobalt_mutexattr_gettype, attr, type);
 }
 
 int __wrap_pthread_mutexattr_settype(pthread_mutexattr_t *attr,
 				     int type)
 {
-	return -XENOMAI_SKINCALL2(__pse51_muxid,
-				  __pse51_mutexattr_settype, attr, type);
+	return -XENOMAI_SKINCALL2(__cobalt_muxid,
+				  __cobalt_mutexattr_settype, attr, type);
 }
 
 int __wrap_pthread_mutexattr_getprotocol(const pthread_mutexattr_t *attr,
 					 int *proto)
 {
-	return -XENOMAI_SKINCALL2(__pse51_muxid,
-				  __pse51_mutexattr_getprotocol, attr, proto);
+	return -XENOMAI_SKINCALL2(__cobalt_muxid,
+				  __cobalt_mutexattr_getprotocol, attr, proto);
 }
 
 int __wrap_pthread_mutexattr_setprotocol(pthread_mutexattr_t *attr,
 					 int proto)
 {
-	return -XENOMAI_SKINCALL2(__pse51_muxid,
-				  __pse51_mutexattr_setprotocol, attr, proto);
+	return -XENOMAI_SKINCALL2(__cobalt_muxid,
+				  __cobalt_mutexattr_setprotocol, attr, proto);
 }
 
 int __wrap_pthread_mutexattr_getpshared(const pthread_mutexattr_t *attr,
 					int *pshared)
 {
-	return -XENOMAI_SKINCALL2(__pse51_muxid,
-				  __pse51_mutexattr_getpshared, attr, pshared);
+	return -XENOMAI_SKINCALL2(__cobalt_muxid,
+				  __cobalt_mutexattr_getpshared, attr, pshared);
 }
 
 int __wrap_pthread_mutexattr_setpshared(pthread_mutexattr_t *attr, int pshared)
 {
-	return -XENOMAI_SKINCALL2(__pse51_muxid,
-				  __pse51_mutexattr_setpshared, attr, pshared);
+	return -XENOMAI_SKINCALL2(__cobalt_muxid,
+				  __cobalt_mutexattr_setpshared, attr, pshared);
 }
 
 int __wrap_pthread_mutex_init(pthread_mutex_t *mutex,
@@ -103,7 +103,7 @@ int __wrap_pthread_mutex_init(pthread_mutex_t *mutex,
 	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
 		goto checked;
 
-	err = -XENOMAI_SKINCALL2(__pse51_muxid,__pse51_check_init,shadow,attr);
+	err = -XENOMAI_SKINCALL2(__cobalt_muxid,__cobalt_check_init,shadow,attr);
 
 	if (err) {
 		cb_read_unlock(&shadow->lock, s);
@@ -114,7 +114,7 @@ int __wrap_pthread_mutex_init(pthread_mutex_t *mutex,
 	cb_force_write_lock(&shadow->lock, s);
 #endif /* CONFIG_XENO_FASTSYNCH */
 
-	err = -XENOMAI_SKINCALL2(__pse51_muxid,__pse51_mutex_init,shadow,attr);
+	err = -XENOMAI_SKINCALL2(__cobalt_muxid,__cobalt_mutex_init,shadow,attr);
 
 #ifdef CONFIG_XENO_FASTSYNCH
 	if (!shadow->attr.pshared)
@@ -136,7 +136,7 @@ int __wrap_pthread_mutex_destroy(pthread_mutex_t *mutex)
 	if (unlikely(cb_try_write_lock(&shadow->lock, s)))
 		return EINVAL;
 
-	err = -XENOMAI_SKINCALL1(__pse51_muxid, __pse51_mutex_destroy, shadow);
+	err = -XENOMAI_SKINCALL1(__cobalt_muxid, __cobalt_mutex_destroy, shadow);
 
 	cb_write_unlock(&shadow->lock, s);
 
@@ -162,7 +162,7 @@ int __wrap_pthread_mutex_lock(pthread_mutex_t *mutex)
 	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
 		return EINVAL;
 
-	if (shadow->magic != PSE51_MUTEX_MAGIC) {
+	if (shadow->magic != COBALT_MUTEX_MAGIC) {
 		err = -EINVAL;
 		goto out;
 	}
@@ -203,7 +203,7 @@ int __wrap_pthread_mutex_lock(pthread_mutex_t *mutex)
 #endif /* CONFIG_XENO_FASTSYNCH */
 
 	do {
-		err = XENOMAI_SKINCALL1(__pse51_muxid,__pse51_mutex_lock,shadow);
+		err = XENOMAI_SKINCALL1(__cobalt_muxid,__cobalt_mutex_lock,shadow);
 	} while (err == -EINTR);
 
 #ifdef CONFIG_XENO_FASTSYNCH
@@ -234,7 +234,7 @@ int __wrap_pthread_mutex_timedlock(pthread_mutex_t *mutex,
 	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
 		return EINVAL;
 
-	if (shadow->magic != PSE51_MUTEX_MAGIC) {
+	if (shadow->magic != COBALT_MUTEX_MAGIC) {
 		err = -EINVAL;
 		goto out;
 	}
@@ -271,8 +271,8 @@ int __wrap_pthread_mutex_timedlock(pthread_mutex_t *mutex,
 #endif /* CONFIG_XENO_FASTSYNCH */
 
 	do {
-		err = XENOMAI_SKINCALL2(__pse51_muxid,
-					__pse51_mutex_timedlock, shadow, to);
+		err = XENOMAI_SKINCALL2(__cobalt_muxid,
+					__cobalt_mutex_timedlock, shadow, to);
 	} while (err == -EINTR);
 
 #ifdef CONFIG_XENO_FASTSYNCH
@@ -306,7 +306,7 @@ int __wrap_pthread_mutex_trylock(pthread_mutex_t *mutex)
 	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
 		return EINVAL;
 
-	if (unlikely(shadow->magic != PSE51_MUTEX_MAGIC)) {
+	if (unlikely(shadow->magic != COBALT_MUTEX_MAGIC)) {
 		err = -EINVAL;
 		goto out;
 	}
@@ -357,8 +357,8 @@ do_syscall:
 #else /* !CONFIG_XENO_FASTSYNCH */
 
 	do {
-		err = XENOMAI_SKINCALL1(__pse51_muxid,
-					__pse51_mutex_trylock, shadow);
+		err = XENOMAI_SKINCALL1(__cobalt_muxid,
+					__cobalt_mutex_trylock, shadow);
 	} while (err == -EINTR);
 
 #endif /* !CONFIG_XENO_FASTSYNCH */
@@ -386,7 +386,7 @@ int __wrap_pthread_mutex_unlock(pthread_mutex_t *mutex)
 	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
 		return EINVAL;
 
-	if (unlikely(shadow->magic != PSE51_MUTEX_MAGIC)) {
+	if (unlikely(shadow->magic != COBALT_MUTEX_MAGIC)) {
 		err = -EINVAL;
 		goto out_err;
 	}
@@ -415,8 +415,8 @@ do_syscall:
 #endif /* CONFIG_XENO_FASTSYNCH */
 
 	do {
-		err = XENOMAI_SKINCALL1(__pse51_muxid,
-					__pse51_mutex_unlock, shadow);
+		err = XENOMAI_SKINCALL1(__cobalt_muxid,
+					__cobalt_mutex_unlock, shadow);
 	} while (err == -EINTR);
 
 #ifdef CONFIG_XENO_FASTSYNCH

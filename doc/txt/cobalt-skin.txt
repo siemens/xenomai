@@ -1,19 +1,9 @@
 Overview
 ========
 
-The POSIX module on top of Xenomai is currently available to
-kernel-based applications, and to user-space applications through a
-direct call interface to the module. The POSIX module can also be used
-over the event-driven simulation engine.
-
- xeno_posix.ko: POSIX module in kernel space.
-libcobalt.so: Direct call interface.
-libposix_sim.a: POSIX module over the event-driven simulator.
-
-The POSIX module on top of Xenomai aims at providing an (almost) PSE51
-compatible API. In order to help porting applications from other PSE51
-compatible APIs (like RTLinux) it will contain some non portable
-extensions to the POSIX specification.
+The Cobalt skin aims at providing a real-time POSIX API over Xenomai's
+dual kernel (Cobalt) core to user-space applications. It will also
+expose a few non portable extensions to the POSIX specification.
 
 This skin already contains most basic features :
 - threads,
@@ -27,20 +17,18 @@ This skin already contains most basic features :
 - timers support
 - shared memory
 
-The POSIX skin creates real-time threads running either embodied into
-kernel modules, or inside regular applications in user-space.
-
-
 Known variations from the POSIX specification.
-===============================================
+==============================================
 
-The Xenomai PSE51 skin was implemented following as closely as possible the
-single unix specification V3, which can be accessed at the following URL :
+The Xenomai Cobalt skin was implemented following as closely as
+possible the single unix specification V3, which can be accessed at
+the following URL:
 
 http://www.unix.org/single_unix_specification
 
-However, specifities of Xenomai POSIX skin implementation are documented as part
-of Xenomai doxygen documentation, available on-line at the following address:
+However, specifities of Xenomai implementation are documented as part
+of Xenomai doxygen documentation, available on-line at the following
+address:
 http://www.xenomai.org/documentation/trunk/html/api/group__posix.html
 
 You may observe some variations from the interfaces and behaviours described in
@@ -86,21 +74,21 @@ the single unix specification. Here are the known ones:
   initialization and cleanup contexts; in user-space, switch their caller to
   secondary mode.
 
-Use of the POSIX skin from user-space applications
-==================================================
+Use of the Cobalt skin from applications
+========================================
 
-In user-space, deterministic replacements are provided for critical
-services of Linux's native POSIX interface. System calls to these
-services implemented in kernel space by the POSIX skin are contained
-into the libcobalt.so library built from the lib/ sub-directory
-contents, and are aimed at shadowing the original Linux calls for the
-application, either from the LinuxThreads or NPTL libraries.
+Deterministic replacements are provided for critical services of
+Linux's native POSIX interface. System calls to these services
+implemented in kernel space by the Cobalt skin are contained into the
+libcobalt.so library built from the lib/ sub-directory contents, and
+are aimed at shadowing the original Linux calls for the application,
+either from the LinuxThreads or NPTL libraries.
 
 Native POSIX services which do not require any interaction with the
 Linux kernel (e.g. pthread_mutexattr_*) and/or do not involve
 time-critical issues for their callers (e.g. pthread_exit()), are not
-overriden by the POSIX support in user-space, but can instead be used
-directly and seamlessly by the application.
+overriden by Cobalt services, but can instead be used directly and
+seamlessly by the application.
 
 The list of shadowed POSIX services is available from the file
 lib/posix.wrappers.
@@ -151,7 +139,7 @@ being "undefined", but some implementation decisions had to be made :
 TODO List
 ==========
 
-The PSE51 skin still lacks some features which will be added gradually :
+The Cobalt skin still lacks some features which will be added gradually :
 - spinlocks/rwlocks/barriers ;
 - real-time signals in primary mode for user-space threads.
 - dimensioning constants configurable through kernel configuration menu.
@@ -160,13 +148,14 @@ The PSE51 skin still lacks some features which will be added gradually :
 Module parameters
 =================
 
-The following parameters can be passed at startup to the POSIX skin module:
+The following parameters can be passed at startup to the Cobalt skin
+module:
 
 - "time_slice_arg", duration, as a count of system clock ticks, of the
   round-robin time slice. Defaults to 1 tick. Only effective when system timer
   is set to periodic mode.
 
-- "tick_arg", duration of a base periodic tick.  The POSIX skin can
+- "tick_arg", duration of a base periodic tick.  The Cobalt skin can
   express all delays and timeouts either as counts of ticks
   (i.e. jiffy-based), or directly in nanoseconds in a tick-less
   fashion. This paramater defines the duration of the base period in

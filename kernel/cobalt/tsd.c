@@ -45,20 +45,20 @@
 #include "thread.h"
 #include "tsd.h"
 
-typedef void pse51_key_destructor_t(void *);
+typedef void cobalt_key_destructor_t(void *);
 
-struct pse51_key {
+struct cobalt_key {
 
 	unsigned magic;
 	unsigned key;
-	pse51_key_destructor_t *destructor;
+	cobalt_key_destructor_t *destructor;
 	xnholder_t link;	/* link in the list of free keys or
 				   valid keys. */
 #define link2key(laddr) ({                                              \
 	void *_laddr = laddr;                                           \
 	(!_laddr                                                        \
 	 ? NULL :                                                       \
-	 ((pthread_key_t) (((void *)_laddr) - offsetof(struct pse51_key, \
+	 ((pthread_key_t) (((void *)_laddr) - offsetof(struct cobalt_key, \
 						       link))));        \
 })
 
@@ -131,12 +131,12 @@ int pthread_key_create(pthread_key_t *key, void (*destructor) (void *))
 		   NULL. We only check the global threads queue, because
 		   user-space threads do not use these TSD services. */
 
-		for (holder = getheadq(&pse51_global_kqueues.threadq); holder;
-		     holder = nextq(&pse51_global_kqueues.threadq, holder))
+		for (holder = getheadq(&cobalt_global_kqueues.threadq); holder;
+		     holder = nextq(&cobalt_global_kqueues.threadq, holder))
 			thread_settsd(link2pthread(holder), result->key, NULL);
 	}
 
-	result->magic = PSE51_KEY_MAGIC;
+	result->magic = COBALT_KEY_MAGIC;
 	result->destructor = destructor;
 	inith(&result->link);
 	prependq(&valid_keys, &result->link);
@@ -173,7 +173,7 @@ int pthread_key_create(pthread_key_t *key, void (*destructor) (void *))
  */
 int pthread_setspecific(pthread_key_t key, const void *value)
 {
-	pthread_t cur = pse51_current_thread();
+	pthread_t cur = cobalt_current_thread();
 	spl_t s;
 
 	if (!cur)
@@ -181,7 +181,7 @@ int pthread_setspecific(pthread_key_t key, const void *value)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(key, PSE51_KEY_MAGIC, struct pse51_key)) {
+	if (!cobalt_obj_active(key, COBALT_KEY_MAGIC, struct cobalt_key)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
@@ -214,7 +214,7 @@ int pthread_setspecific(pthread_key_t key, const void *value)
  */
 void *pthread_getspecific(pthread_key_t key)
 {
-	pthread_t cur = pse51_current_thread();
+	pthread_t cur = cobalt_current_thread();
 	const void *value;
 	spl_t s;
 
@@ -223,7 +223,7 @@ void *pthread_getspecific(pthread_key_t key)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(key, PSE51_KEY_MAGIC, struct pse51_key)) {
+	if (!cobalt_obj_active(key, COBALT_KEY_MAGIC, struct cobalt_key)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return NULL;
 	}
@@ -260,12 +260,12 @@ int pthread_key_delete(pthread_key_t key)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(key, PSE51_KEY_MAGIC, struct pse51_key)) {
+	if (!cobalt_obj_active(key, COBALT_KEY_MAGIC, struct cobalt_key)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
 
-	pse51_mark_deleted(key);
+	cobalt_mark_deleted(key);
 	removeq(&valid_keys, &key->link);
 	inith(&key->link);
 	appendq(&free_keys, &key->link);
@@ -275,7 +275,7 @@ int pthread_key_delete(pthread_key_t key)
 	return 0;
 }
 
-void pse51_tsd_init_thread(pthread_t thread)
+void cobalt_tsd_init_thread(pthread_t thread)
 {
 	unsigned key;
 
@@ -283,7 +283,7 @@ void pse51_tsd_init_thread(pthread_t thread)
 		thread_settsd(thread, key, NULL);
 }
 
-void pse51_tsd_cleanup_thread(pthread_t thread)
+void cobalt_tsd_cleanup_thread(pthread_t thread)
 {
 	int i, again = 1;
 	spl_t s;
@@ -299,8 +299,8 @@ void pse51_tsd_cleanup_thread(pthread_t thread)
 			pthread_key_t key = link2key(holder);
 			const void *value;
 
-			if (!pse51_obj_active
-			    (key, PSE51_KEY_MAGIC, struct pse51_key)) {
+			if (!cobalt_obj_active
+			    (key, COBALT_KEY_MAGIC, struct cobalt_key)) {
 				/* A destructor destroyed this key. */
 				again = 1;
 				break;
@@ -325,18 +325,18 @@ void pse51_tsd_cleanup_thread(pthread_t thread)
 	xnlock_put_irqrestore(&nklock, s);
 }
 
-void pse51_tsd_pkg_init(void)
+void cobalt_tsd_pkg_init(void)
 {
 	initq(&free_keys);
 	initq(&valid_keys);
 }
 
-void pse51_tsd_pkg_cleanup(void)
+void cobalt_tsd_pkg_cleanup(void)
 {
 	pthread_key_t key;
 
 	while ((key = link2key(getq(&valid_keys))) != NULL) {
-		pse51_mark_deleted(key);
+		cobalt_mark_deleted(key);
 		xnfree(key);
 	}
 
