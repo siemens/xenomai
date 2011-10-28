@@ -2763,10 +2763,11 @@ EXPORT_SYMBOL_GPL(xnpod_disable_timesource);
  *
  * @param idate The initial (absolute) date of the first release
  * point, expressed in clock ticks (see note). The affected thread
- * will be delayed until this point is reached. If @a idate is equal
- * to XN_INFINITE, the current system date is used, and no initial
- * delay takes place. In the latter case, @a timeout_mode is not
- * considered and can have any valid value.
+ * will be delayed by the first call to xnpod_wait_thread_period()
+ * until this point is reached. If @a idate is equal to XN_INFINITE,
+ * the current system date is used, and no initial delay takes
+ * place. In the latter case, @a timeout_mode is not considered and
+ * can have any valid value.
  *
  * @param timeout_mode The mode of the @a idate parameter. It can
  * either be set to XN_ABSOLUTE or XN_REALTIME with @a idate different
@@ -2799,8 +2800,7 @@ EXPORT_SYMBOL_GPL(xnpod_disable_timesource);
  * - Kernel-based task
  * - User-space task
  *
- * Rescheduling: possible if the operation affects the current thread
- * and @a idate has not elapsed yet.
+ * Rescheduling: none.
  *
  * @note The @a idate and @a period values will be interpreted as
  * jiffies if @a thread is bound to a periodic time base (see
@@ -2848,19 +2848,8 @@ int xnpod_set_thread_periodic(xnthread_t *thread, xnticks_t idate,
 			err = -EINVAL;
 			goto unlock_and_exit;
 		}
-		err = xntimer_start(&thread->ptimer, idate, period,
+		err = xntimer_start(&thread->ptimer, idate + period, period,
 				    XN_ABSOLUTE);
-		if (err)
-			goto unlock_and_exit;
-
-		/* We could call xntimer_get_overruns after
-		   xnpod_suspend_thread, but we would need to return the count
-		   of overruns to the caller, otherwise, these overruns
-		   would be lost. */
-		xntimer_pexpect_forward(&thread->ptimer,
-					xntimer_interval(&thread->ptimer));
-		xnpod_suspend_thread(thread, XNDELAY, XN_INFINITE,
-				     XN_RELATIVE, NULL);
 	}
 
       unlock_and_exit:
