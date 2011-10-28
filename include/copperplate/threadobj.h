@@ -54,9 +54,9 @@ struct threadobj_corespec {
 
 #endif /* CONFIG_XENO_MERCURY */
 
-/* threadobj->suspend_hook(status) */
-#define THREADOBJ_SUSPEND	0x1	/* About to suspend. */
-#define THREADOBJ_RESUME	0x2	/* Just resumed. */
+/* threadobj->suspend_hook(event) */
+#define THREADOBJ_SUSPEND	0x1	/* Just suspended. */
+#define THREADOBJ_RESUME	0x2	/* About to resume. */
 
 /* threadobj->status */
 #define THREADOBJ_SCHEDLOCK	0x1	/* Holds the scheduler lock. */
@@ -67,6 +67,25 @@ struct threadobj_corespec {
 #define THREADOBJ_DEBUG		0x8000	/* Debug mode enabled. */
 
 #define THREADOBJ_IRQCONTEXT    ((struct threadobj *)-2UL)
+
+/* threadobj mode bits */
+#define __THREAD_M_LOCK		0x80000000 /* Toggle scheduler lock. */
+#define __THREAD_M_WARNSW	0x40000000 /* Toggle switch warning bit. */
+#define __THREAD_M_CONFORMING	0x20000000 /* Switch to conforming mode. */
+#define __THREAD_M_SPARESTART	0
+#define __THREAD_M_SPARECOUNT	12
+#define __THREAD_M_SPARE0	0x00000001
+#define __THREAD_M_SPARE1	0x00000002
+#define __THREAD_M_SPARE2	0x00000004
+#define __THREAD_M_SPARE3	0x00000008
+#define __THREAD_M_SPARE4	0x00000010
+#define __THREAD_M_SPARE5	0x00000020
+#define __THREAD_M_SPARE6	0x00000040
+#define __THREAD_M_SPARE7	0x00000080
+#define __THREAD_M_SPARE8	0x00000100
+#define __THREAD_M_SPARE9	0x00000200
+#define __THREAD_M_SPARE10	0x00000400
+#define __THREAD_M_SPARE11	0x00000800
 
 struct traceobj;
 struct syncobj;
@@ -156,6 +175,9 @@ int threadobj_lock_sched(struct threadobj *thobj);
 int threadobj_unlock_sched(struct threadobj *thobj);
 
 int threadobj_set_priority(struct threadobj *thobj, int prio);
+
+int threadobj_set_mode(struct threadobj *thobj,
+		       int clrmask, int setmask, int *mode_r);
 
 int threadobj_set_rr(struct threadobj *thobj, struct timespec *quantum);
 

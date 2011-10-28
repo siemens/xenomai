@@ -207,7 +207,7 @@ int threadobj_lock_sched(struct threadobj *thobj) /* thobj->lock held */
 	 * locking the scheduler, so no need to drop the thread lock
 	 * across this call.
 	 */
-	return __bt(-pthread_set_mode_np(0, PTHREAD_LOCK_SCHED));
+	return __bt(-pthread_set_mode_np(0, PTHREAD_LOCK_SCHED, NULL));
 }
 
 int threadobj_unlock_sched(struct threadobj *thobj) /* thobj->lock held */
@@ -230,7 +230,7 @@ int threadobj_unlock_sched(struct threadobj *thobj) /* thobj->lock held */
 
 	thobj->status &= ~THREADOBJ_SCHEDLOCK;
 	threadobj_unlock(thobj);
-	ret = pthread_set_mode_np(PTHREAD_LOCK_SCHED, 0);
+	ret = pthread_set_mode_np(PTHREAD_LOCK_SCHED, 0, NULL);
 	threadobj_lock(thobj);
 
 	return __bt(-ret);
@@ -261,6 +261,33 @@ int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock hel
 	threadobj_lock(thobj);
 
 	return __bt(-ret);
+}
+
+int threadobj_set_mode(struct threadobj *thobj,
+		       int clrmask, int setmask, int *mode_r) /* thobj->lock held */
+{
+	int ret, __clrmask = 0, __setmask = 0;
+
+	if (setmask & __THREAD_M_LOCK)
+		__setmask |= PTHREAD_LOCK_SCHED;
+	else if (clrmask & __THREAD_M_LOCK)
+		__clrmask |= PTHREAD_LOCK_SCHED;
+
+	if (setmask & __THREAD_M_WARNSW)
+		__setmask |= PTHREAD_WARNSW;
+	else if (clrmask & __THREAD_M_WARNSW)
+		__clrmask |= PTHREAD_WARNSW;
+
+	if (setmask & __THREAD_M_CONFORMING)
+		__setmask |= PTHREAD_CONFORMING;
+	else if (clrmask & __THREAD_M_CONFORMING)
+		__clrmask |= PTHREAD_CONFORMING;
+
+	threadobj_unlock(thobj);
+	ret = pthread_set_mode_np(__clrmask, __setmask, mode_r);
+	threadobj_lock(thobj);
+
+	return ret;
 }
 
 static int set_rr(struct threadobj *thobj, struct timespec *quantum)
@@ -550,6 +577,25 @@ int threadobj_set_priority(struct threadobj *thobj, int prio)
 	threadobj_lock(thobj);
 
 	return __bt(-ret);
+}
+
+int threadobj_set_mode(struct threadobj *thobj,
+		       int clrmask, int setmask, int *mode_r) /* thobj->lock held */
+{
+	int ret = 0, old = 0;
+
+	if (thobj->status & THREADOBJ_SCHEDLOCK)
+		old |= __THREAD_M_LOCK;
+
+	if (setmask & __THREAD_M_LOCK)
+		ret = __bt(threadobj_lock_sched_once(thobj));
+	else if (clrmask & __THREAD_M_LOCK)
+		threadobj_unlock_sched(thobj);
+
+	if (*mode_r)
+		*mode_r = old;
+
+	return ret;
 }
 
 static void roundrobin_handler(int sig)
