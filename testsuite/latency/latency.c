@@ -5,15 +5,9 @@
 #include <errno.h>
 #include <signal.h>
 #include <time.h>
-
 #include <sys/mman.h>
 #include <sys/time.h>
 #include <unistd.h>
-
-#ifndef __UCLIBC__
-#include <execinfo.h>
-#endif /* !__UCLIBC__ */
-
 #include <copperplate/init.h>
 #include <alchemy/task.h>
 #include <alchemy/timer.h>
@@ -444,14 +438,9 @@ void faulthand(int sig)
 
 void mode_sw(int sig)
 {
-#ifndef __UCLIBC__
-	const char buffer[] = "Mode switch, aborting. Backtrace:\n";
-	static void *bt[200];
-#else /* __UCLIBC__ */
-	const char buffer[] = "Mode switch, aborting."
-		" Backtrace unavailable with uclibc.\n";
-#endif /* __UCLIBC__ */
-	unsigned n;
+	const char buffer[] = "Spurious mode switch detected, aborting.\n"
+		"Enable XENO_OPT_DEBUG_TRACE_RELAX to find the cause.\n";
+	int n;
 
 	if (!stop_upon_switch) {
 		++sampling_relaxed;
@@ -459,11 +448,6 @@ void mode_sw(int sig)
 	}
 
 	n = write(STDERR_FILENO, buffer, sizeof(buffer));
-#ifndef __UCLIBC__
-	n = backtrace(bt, sizeof(bt)/sizeof(bt[0]));
-	backtrace_symbols_fd(bt, n, STDERR_FILENO);
-#endif /* !__UCLIBC__ */
-
 	signal(sig, SIG_DFL);
 	kill(getpid(), sig);
 }

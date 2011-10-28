@@ -401,7 +401,7 @@ config XENO_OPT_DEBUG_TRACE_RELAX
 	This option enables recording of unwanted relax requests from
 	user-space applications leaving the real-time domain, logging
 	the thread information and code location involved. All records
-	are readable from /proc/xenomai/debug/relaxes, and can be
+	are readable from /proc/xenomai/debug/relax, and can be
 	decoded using the "slackspot" utility.
 
 config XENO_OPT_WATCHDOG
