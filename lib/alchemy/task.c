@@ -197,14 +197,13 @@ static int create_tcb(struct alchemy_task **tcbp,
 {
 	struct threadobj_init_data idata;
 	struct alchemy_task *tcb;
-	int cpu, cpumask;
-	int ret;
+	int cpu, ret;
 
 	ret = check_task_priority(prio);
 	if (ret)
 		return ret;
 
-	if (mode & ~(T_CPUMASK|T_LOCK|T_NOSIG|T_SUSP))
+	if (mode & ~(T_CPUMASK|T_LOCK))
 		return -EINVAL;
 
 	tcb = xnmalloc(sizeof(*tcb));
@@ -223,10 +222,10 @@ static int create_tcb(struct alchemy_task **tcbp,
 	tcb->arg = NULL;
 
 	CPU_ZERO(&tcb->affinity);
-	for (cpu = 0, cpumask = (mode >> 24) & 0xff;
-	     cpumask && cpu < 8; cpu++, cpumask >>= 1)
-		if (cpumask & 1)
+	for (cpu = 0; cpu < 8; cpu++) {
+		if (T_CPU(cpu))
 			CPU_SET(cpu, &tcb->affinity);
+	}
 
 	tcb->safecount = 0;
 	syncobj_init(&tcb->sobj, 0, fnref_null);
@@ -572,6 +571,82 @@ int rt_task_set_priority(RT_TASK *task, int prio)
 		return ret;
 
 	ret = threadobj_set_priority(&tcb->thobj, prio);
+	put_alchemy_task(tcb);
+
+	return ret;
+}
+
+int rt_task_yield(void)
+{
+	if (threadobj_async_p())
+		return -EPERM;
+
+	threadobj_yield();
+
+	return 0;
+}
+
+int rt_task_unblock(RT_TASK *task)
+{
+	struct alchemy_task *tcb;
+	struct service svc;
+	int ret;
+
+	tcb = get_alchemy_task(task, &ret);
+	if (tcb == NULL)
+		return ret;
+
+	COPPERPLATE_PROTECT(svc);
+	ret = threadobj_unblock(&tcb->thobj);
+	COPPERPLATE_UNPROTECT(svc);
+	put_alchemy_task(tcb);
+
+	return ret;
+}
+
+int rt_task_slice(RT_TASK *task, RTIME quantum)
+{
+	struct alchemy_task *tcb;
+	struct timespec slice;
+	struct service svc;
+	int ret;
+
+	clockobj_ticks_to_timespec(&alchemy_clock, quantum, &slice);
+
+	tcb = get_alchemy_task_or_self(task, &ret);
+	if (tcb == NULL)
+		return ret;
+
+	COPPERPLATE_PROTECT(svc);
+	ret = threadobj_set_rr(&tcb->thobj, &slice);
+	COPPERPLATE_UNPROTECT(svc);
+	put_alchemy_task(tcb);
+
+	return ret;
+}
+
+int rt_task_set_mode(int clrmask, int setmask, int *mode_r)
+{
+	struct alchemy_task *tcb;
+	struct service svc;
+	int ret = 0;
+
+	if (threadobj_async_p()) {
+		clrmask &= ~T_LOCK;
+		setmask &= ~T_LOCK;
+		return (clrmask | setmask) ? -EPERM : 0;
+	}
+
+	if (((clrmask | setmask) & ~(T_LOCK | T_WARNSW | T_CONFORMING)) != 0)
+		return -EINVAL;
+
+	tcb = get_alchemy_task_or_self(NULL, &ret);
+	if (tcb == NULL)
+		return ret;
+
+	COPPERPLATE_PROTECT(svc);
+	ret = threadobj_set_mode(&tcb->thobj, clrmask, setmask, mode_r);
+	COPPERPLATE_UNPROTECT(svc);
 	put_alchemy_task(tcb);
 
 	return ret;

@@ -22,20 +22,25 @@
 #include <sys/types.h>
 #include <stdint.h>
 #include <xeno_config.h>
+#include <copperplate/threadobj.h>
 #include <alchemy/timer.h>
 
 #define T_LOPRIO  0
 #define T_HIPRIO  99
 
-#define T_LOCK    0x1
-#define T_NOSIG   0x2
-#define T_SUSP    0x4
-#define T_WARNSW  0x0		/* ??? */
-#define T_FPU     0x0		/* Deprecated. */
-
-#define T_CPU(cpu) (1 << (24 + (cpu & 7))) /* Up to 8 cpus [0-7] */
-#define T_CPUMASK  0xff000000
-
+/*
+ * Task mode bits.
+ */
+#define T_LOCK		__THREAD_M_LOCK
+/* Cobalt only, nop over Mercury. */
+#define T_WARNSW	__THREAD_M_WARNSW
+#define T_CONFORMING	__THREAD_M_CONFORMING
+/* Deprecated, compat only. */
+#define T_FPU		0x0
+/* CPU mask, up to 8 cpus [0-7] */
+#define T_CPU(cpu)	(1 << (__THREAD_M_SPARESTART + (cpu & 7)))
+#define T_CPUMASK	((-1 >> (32 - __THREAD_M_SPARESTART - 8)) & \
+			 ~(__THREAD_M_SPARESTART ? (-1 >> (32 - __THREAD_M_SPARESTART)) : 0))
 struct RT_TASK {
 	uintptr_t handle;
 };
@@ -88,6 +93,15 @@ int rt_task_resume(RT_TASK *task);
 RT_TASK *rt_task_self(void);
 
 int rt_task_set_priority(RT_TASK *task, int prio);
+
+int rt_task_set_mode(int clrmask, int setmask,
+		     int *mode_r);
+
+int rt_task_yield(void);
+
+int rt_task_unblock(RT_TASK *task);
+
+int rt_task_slice(RT_TASK *task, RTIME quantum);
 
 #ifdef __cplusplus
 }
