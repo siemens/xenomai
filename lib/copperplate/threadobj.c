@@ -144,15 +144,27 @@ int threadobj_cancel(struct threadobj *thobj)
 
 int threadobj_suspend(struct threadobj *thobj) /* thobj->lock held */
 {
+	struct threadobj *current = threadobj_current();
 	pthread_t tid = thobj->tid;
 	int ret;
 
-	if (thobj->suspend_hook)
+	/*
+	 * XXX: we must guarantee that a THREADOBJ_SUSPEND event is sent
+	 * only once the target thread is in an innocuous state,
+	 * i.e. about to suspend if current, or suspended
+	 * otherwise. This way, the hook routine may always safely
+	 * assume that the thread state in userland will not change,
+	 * until that thread is resumed.
+	 */
+	if (thobj->suspend_hook && thobj == current)
 		thobj->suspend_hook(thobj, THREADOBJ_SUSPEND);
 
 	threadobj_unlock(thobj);
 	ret = __RT(pthread_kill(tid, SIGSUSP));
 	threadobj_lock(thobj);
+
+	if (thobj->suspend_hook && thobj != current)
+		thobj->suspend_hook(thobj, THREADOBJ_SUSPEND);
 
 	return __bt(-ret);
 }
@@ -165,6 +177,13 @@ int threadobj_resume(struct threadobj *thobj) /* thobj->lock held */
 	if (thobj == threadobj_current())
 		return 0;
 
+	/*
+	 * XXX: we must guarantee that a THREADOBJ_RESUME event is
+	 * sent while the target thread is still in an innocuous
+	 * state, prior to being actually resuled. This way, the hook
+	 * routine may always safely assume that the thread state in
+	 * userland will not change, until that point.
+	 */
 	if (thobj->suspend_hook)
 		thobj->suspend_hook(thobj, THREADOBJ_RESUME);
 
