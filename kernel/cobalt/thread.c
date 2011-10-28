@@ -651,12 +651,14 @@ int pthread_wait_np(unsigned long *overruns_r)
  * are two bit masks which are respectively cleared and set in the calling
  * thread status. They are a bitwise OR of the following values:
  * - PTHREAD_LOCK_SCHED, when set, locks the scheduler, which prevents the
- *   current thread from being switched out by the scheduler until the scheduler
+ *   current thread from being switched out until the scheduler
  *   is unlocked;
- * - PTHREAD_WARNSW, when set, cause the signal SIGXCPU to be sent to the
+ * - PTHREAD_WARNSW, when set, causes the signal SIGXCPU to be sent to the
  *   current thread, whenever it involontary switches to secondary mode;
- * - PTHREAD_PRIMARY, cause the migration of the current thread to primary
- *   mode.
+ * - PTHREAD_CONFORMING can be passed in @a setmask to switch the
+ * current user-space task to its preferred runtime mode. The only
+ * meaningful use of this switch is to force a real-time shadow back
+ * to primary mode. Any other use either cause to a nop, or an error.
  *
  * PTHREAD_LOCK_SCHED is valid for any Xenomai thread, the other bits are only
  * valid for Xenomai user-space threads.
@@ -667,36 +669,40 @@ int pthread_wait_np(unsigned long *overruns_r)
  *
  * @param setmask set of bits to be set.
  *
+ * @param mode_r If non-NULL, @a mode_r must be a pointer to a memory
+ * location which will be written upon success with the previous set
+ * of active mode bits. If NULL, the previous set of active mode bits
+ * will not be returned.
+ *
  * @return 0 on success;
  * @return an error number if:
  * - EINVAL, some bit in @a clrmask or @a setmask is invalid.
  *
  */
-int pthread_set_mode_np(int clrmask, int setmask)
+int pthread_set_mode_np(int clrmask, int setmask, int *mode_r)
 {
 	xnthread_t *cur = xnpod_current_thread();
-	xnflags_t valid_flags = XNLOCK;
+	xnflags_t valid_flags = XNLOCK, old;
 
 #ifndef __XENO_SIM__
 	if (xnthread_test_state(cur, XNSHADOW))
 		valid_flags |= XNTHREAD_STATE_SPARE1 | XNTRAPSW;
 #endif
 
-	/* XNTHREAD_STATE_SPARE1 is used for primary mode switch. */
+	/* XNTHREAD_STATE_SPARE1 is used as the CONFORMING mode bit. */
 
 	if ((clrmask & ~valid_flags) != 0 || (setmask & ~valid_flags) != 0)
 		return EINVAL;
 
-	xnpod_set_thread_mode(cur,
-			      clrmask & ~XNTHREAD_STATE_SPARE1,
-			      setmask & ~XNTHREAD_STATE_SPARE1);
+	old = xnpod_set_thread_mode(cur,
+				    clrmask & ~XNTHREAD_STATE_SPARE1,
+				    setmask & ~XNTHREAD_STATE_SPARE1);
+	if (mode_r)
+		*mode_r = old;
 
 	if ((clrmask & ~setmask) & XNLOCK)
 		/* Reschedule if the scheduler has been unlocked. */
 		xnpod_schedule();
-
-	if (xnthread_test_state(cur, XNSHADOW) && (clrmask & XNTHREAD_STATE_SPARE1) != 0)
-		xnshadow_relax(0, 0);
 
 	return 0;
 }

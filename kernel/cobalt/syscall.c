@@ -468,9 +468,18 @@ static int __pthread_wait_np(unsigned long __user *u_overruns)
 	return err;
 }
 
-static int __pthread_set_mode_np(xnflags_t clrmask, xnflags_t setmask)
+static int __pthread_set_mode_np(int clrmask, int setmask, int __user *u_mode_r)
 {
-	return -pthread_set_mode_np(clrmask, setmask);
+	int ret, old;
+
+	ret = -pthread_set_mode_np(clrmask, setmask, &old);
+	if (ret)
+		return ret;
+
+	if (u_mode_r && __xn_safe_copy_to_user(u_mode_r, &old, sizeof(old)))
+		return -EFAULT;
+
+	return 0;
 }
 
 static int __pthread_set_name_np(unsigned long tid,

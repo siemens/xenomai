@@ -153,7 +153,7 @@ struct timespec;
 
 #define PTHREAD_WARNSW     XNTRAPSW
 #define PTHREAD_LOCK_SCHED XNLOCK
-#define PTHREAD_PRIMARY    XNTHREAD_STATE_SPARE1
+#define PTHREAD_CONFORMING XNTHREAD_STATE_SPARE1
 
 #define PTHREAD_INOAUTOENA  XN_ISR_NOENABLE
 #define PTHREAD_IPROPAGATE  XN_ISR_PROPAGATE
@@ -395,8 +395,8 @@ int pthread_make_periodic_np(pthread_t thread,
 
 int pthread_wait_np(unsigned long *overruns_r);
 
-int pthread_set_mode_np(int clrmask,
-			int setmask);
+int pthread_set_mode_np(int clrmask, int setmask,
+			int *mask_r);
 
 int pthread_set_name_np(pthread_t thread,
 			const char *name);
@@ -436,8 +436,8 @@ int pthread_make_periodic_np(pthread_t thread,
 
 int pthread_wait_np(unsigned long *overruns_r);
 
-int pthread_set_mode_np(int clrmask,
-			int setmask);
+int pthread_set_mode_np(int clrmask, int setmask,
+			int *mask_r);
 
 int pthread_set_name_np(pthread_t thread,
 			const char *name);

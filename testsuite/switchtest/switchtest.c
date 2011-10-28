@@ -429,7 +429,7 @@ static void *rtup(void *cookie)
 	   allowed when suspended in ioctl. */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-	if ((err = pthread_set_mode_np(0, PTHREAD_PRIMARY))) {
+	if ((err = pthread_set_mode_np(0, PTHREAD_CONFORMING, NULL))) {
 		fprintf(stderr,
 			"rtup: pthread_set_mode_np: %s\n",
 			strerror(err));
@@ -515,7 +515,7 @@ static void *rtus(void *cookie)
 	   allowed when suspended in ioctl. */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-	if ((err = pthread_set_mode_np(PTHREAD_PRIMARY, 0))) {
+	if ((err = pthread_set_mode_np(PTHREAD_CONFORMING, 0, NULL))) {
 		fprintf(stderr,
 			"rtus: pthread_set_mode_np: %s\n",
 			strerror(err));
@@ -601,7 +601,7 @@ static void *rtuo(void *cookie)
 	   allowed when suspended in ioctl. */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-	if ((err = pthread_set_mode_np(0, PTHREAD_PRIMARY))) {
+	if ((err = pthread_set_mode_np(0, PTHREAD_CONFORMING, NULL))) {
 		fprintf(stderr,
 			"rtup: pthread_set_mode_np: %s\n",
 			strerror(err));
@@ -614,7 +614,7 @@ static void *rtuo(void *cookie)
 	if (err == -1)
 		return NULL;
 
-	mode = PTHREAD_PRIMARY;
+	mode = PTHREAD_CONFORMING;
 	for (;;) {
 		unsigned expected, fp_val;
 
@@ -659,9 +659,9 @@ static void *rtuo(void *cookie)
 
 		/* Switch mode. */
 		if (i % 3 == 2) {
-			mode = PTHREAD_PRIMARY - mode;
+			mode = PTHREAD_CONFORMING - mode;
 			if ((err = pthread_set_mode_np
-			     (PTHREAD_PRIMARY - mode, mode))) {
+			     (PTHREAD_CONFORMING - mode, mode, NULL))) {
 				fprintf(stderr,
 					"rtuo: pthread_set_mode_np: %s\n",
 					strerror(err));

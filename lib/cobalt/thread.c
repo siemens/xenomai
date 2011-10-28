@@ -331,14 +331,11 @@ int pthread_wait_np(unsigned long *overruns_r)
 	return err;
 }
 
-int pthread_set_mode_np(int clrmask, int setmask)
+int pthread_set_mode_np(int clrmask, int setmask, int *mode_r)
 {
-	int err;
-
-	err = -XENOMAI_SKINCALL2(__pse51_muxid,
-				 __pse51_thread_set_mode, clrmask, setmask);
-
-	return err;
+	return -XENOMAI_SKINCALL3(__pse51_muxid,
+				  __pse51_thread_set_mode,
+				  clrmask, setmask, mode_r);
 }
 
 int pthread_set_name_np(pthread_t thread, const char *name)
