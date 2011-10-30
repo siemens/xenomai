@@ -210,3 +210,34 @@ int __wrap_sem_unlink(const char *name)
 	errno = err;
 	return -1;
 }
+
+int sem_init_np(sem_t *sem, int flags, unsigned int value)
+{
+	union __xeno_sem *_sem = (union __xeno_sem *)sem;
+	int err;
+
+	err = -XENOMAI_SKINCALL3(__cobalt_muxid,
+				 __cobalt_sem_init_np,
+				 &_sem->shadow_sem, flags, value);
+	if (!err)
+		return 0;
+
+	errno = err;
+
+	return -1;
+}
+
+int sem_broadcast_np(sem_t *sem)
+{
+	union __xeno_sem *_sem = (union __xeno_sem *)sem;
+	int err;
+
+	err = -XENOMAI_SKINCALL1(__cobalt_muxid,
+				 __cobalt_sem_broadcast_np, &_sem->shadow_sem);
+	if (!err)
+		return 0;
+
+	errno = err;
+
+	return -1;
+}

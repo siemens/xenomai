@@ -44,6 +44,7 @@ void cobalt_sem_pkg_init(void);
 
 void cobalt_sem_pkg_cleanup(void);
 
-int sem_post_inner(struct cobalt_sem *sem, cobalt_kqueues_t *ownq);
+int sem_post_inner(struct cobalt_sem *sem,
+		   cobalt_kqueues_t *ownq, int bcast);
 
 #endif /* !_POSIX_SEM_H */

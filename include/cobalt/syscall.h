@@ -104,6 +104,8 @@
 #define __cobalt_select                77
 #define __cobalt_thread_setschedparam_ex	78
 #define __cobalt_thread_getschedparam_ex	79
+#define __cobalt_sem_init_np           80
+#define __cobalt_sem_broadcast_np      81
 
 #ifdef __KERNEL__
 

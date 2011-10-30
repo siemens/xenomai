@@ -33,47 +33,49 @@
 
 #include <stddef.h>
 #include <stdarg.h>
-
 #include "registry.h"	/* For named semaphores. */
 #include "thread.h"
 #include "sem.h"
 
+#define SEM_NAMED    0x80000000
+
 typedef struct cobalt_sem {
-	unsigned magic;
+	unsigned int magic;
 	xnsynch_t synchbase;
 	xnholder_t link;	/* Link in semq */
-
-#define link2sem(laddr)                                                 \
-    ((cobalt_sem_t *)(((char *)(laddr)) - offsetof(cobalt_sem_t, link)))
-
-	int value;
-	unsigned pshared;
-	unsigned is_named;
+	unsigned int value;
+	int flags;
 	cobalt_kqueues_t *owningq;
 } cobalt_sem_t;
 
+static inline cobalt_kqueues_t *sem_kqueue(struct cobalt_sem *sem)
+{
+	int pshared = !!(sem->flags & SEM_PSHARED);
+	return cobalt_kqueues(pshared);
+}
+
+#define link2sem(laddr) container_of(laddr, cobalt_sem_t, link)
+
 typedef struct cobalt_named_sem {
 	cobalt_sem_t sembase;	/* Has to be the first member. */
-#define sem2named_sem(saddr) ((nsem_t *) (saddr))
-
 	cobalt_node_t nodebase;
-#define node2sem(naddr) \
-    ((nsem_t *)((char *)(naddr) - offsetof(nsem_t, nodebase)))
-
 	union __xeno_sem descriptor;
 } nsem_t;
 
+#define sem2named_sem(saddr) ((nsem_t *) (saddr))
+#define node2sem(naddr) container_of(naddr, nsem_t, nodebase)
+
 #ifndef __XENO_SIM__
+
 typedef struct cobalt_uptr {
 	struct mm_struct *mm;
 	unsigned refcnt;
 	unsigned long uaddr;
-
 	xnholder_t link;
-
-#define link2uptr(laddr) \
-    ((cobalt_uptr_t *)((char *)(laddr) - offsetof(cobalt_uptr_t, link)))
 } cobalt_uptr_t;
+
+#define link2uptr(laddr) container_of(laddr, cobalt_uptr_t, link)
+
 #endif /* !__XENO_SIM__ */
 
 static void sem_destroy_inner(cobalt_sem_t * sem, cobalt_kqueues_t *q)
@@ -86,28 +88,81 @@ static void sem_destroy_inner(cobalt_sem_t * sem, cobalt_kqueues_t *q)
 		xnpod_schedule();
 	xnlock_put_irqrestore(&nklock, s);
 
-	if (sem->is_named)
+	if (sem->flags & SEM_NAMED)
 		xnfree(sem2named_sem(sem));
 	else
 		xnfree(sem);
 }
 
 /* Called with nklock locked, irq off. */
-static int cobalt_sem_init_inner(cobalt_sem_t * sem, int pshared, unsigned value)
+static int sem_init_inner(cobalt_sem_t * sem, int flags, unsigned int value)
 {
+	int pshared, sflags;
+
 	if (value > (unsigned)SEM_VALUE_MAX)
 		return EINVAL;
+
+	pshared = !!(flags & SEM_PSHARED);
+	sflags = flags & SEM_FIFO ? 0 : XNSYNCH_PRIO;
 
 	sem->magic = COBALT_SEM_MAGIC;
 	inith(&sem->link);
 	appendq(&cobalt_kqueues(pshared)->semq, &sem->link);
-	xnsynch_init(&sem->synchbase, XNSYNCH_PRIO, NULL);
+	xnsynch_init(&sem->synchbase, sflags, NULL);
 	sem->value = value;
-	sem->pshared = pshared;
-	sem->is_named = 0;
+	sem->flags = flags;
 	sem->owningq = cobalt_kqueues(pshared);
 
 	return 0;
+}
+
+static int do_sem_init(sem_t *sm, int flags, unsigned int value)
+{
+	struct __shadow_sem *shadow = &((union __xeno_sem *)sm)->shadow_sem;
+	xnholder_t *holder;
+	cobalt_sem_t *sem;
+	xnqueue_t *semq;
+	int ret;
+	spl_t s;
+
+	sem = xnmalloc(sizeof(cobalt_sem_t));
+	if (sem == NULL) {
+		ret = ENOSPC;
+		goto error;
+	}
+
+	xnlock_get_irqsave(&nklock, s);
+
+	semq = &cobalt_kqueues(!!(flags & SEM_PSHARED))->semq;
+
+	if (shadow->magic == COBALT_SEM_MAGIC
+	    || shadow->magic == COBALT_NAMED_SEM_MAGIC
+	    || shadow->magic == ~COBALT_NAMED_SEM_MAGIC) {
+		for (holder = getheadq(semq); holder;
+		     holder = nextq(semq, holder))
+			if (holder == &shadow->sem->link) {
+				ret = EBUSY;
+				goto err_lock_put;
+			}
+	}
+
+	ret = sem_init_inner(sem, flags, value);
+	if (ret)
+		goto err_lock_put;
+
+	shadow->magic = COBALT_SEM_MAGIC;
+	shadow->sem = sem;
+	xnlock_put_irqrestore(&nklock, s);
+
+	return 0;
+
+  err_lock_put:
+	xnlock_put_irqrestore(&nklock, s);
+	xnfree(sem);
+  error:
+	thread_set_errno(ret);
+
+	return -1;
 }
 
 /**
@@ -138,54 +193,63 @@ static int cobalt_sem_init_inner(cobalt_sem_t * sem, int pshared, unsigned value
  * Specification.</a>
  *
  */
-int sem_init(sem_t * sm, int pshared, unsigned value)
+int sem_init(sem_t *sm, int pshared, unsigned int value)
 {
-	struct __shadow_sem *shadow = &((union __xeno_sem *)sm)->shadow_sem;
-	cobalt_sem_t *sem;
-	xnqueue_t *semq;
-	int err;
-	spl_t s;
+	return do_sem_init(sm, pshared ? SEM_PSHARED : 0, value);
+}
 
-	sem = (cobalt_sem_t *) xnmalloc(sizeof(cobalt_sem_t));
-	if (!sem) {
-		err = ENOSPC;
-		goto error;
+/**
+ * Initialize a non-standard, extended semaphore.
+ *
+ * This service initializes the unnamed semaphore @a sm, with the
+ * value @a value. An additional set of flags allows to specify a
+ * non-standard behavior for the semaphore.
+ *
+ * This service fails if @a sm is already initialized or is a named semaphore.
+ *
+ * @param sm the semaphore to be initialized;
+ *
+ * @param flags A set of extension flags. The following flags can be
+ * OR'ed into this bitmask, each of them affecting the new semaphore:
+ *
+ * - SEM_FIFO makes threads pend by FIFO order on the semaphore. By
+ * default, threads pend by priority order.
+ *
+ * - SEM_PULSE causes the semaphore to behave in "pulse" mode. In this
+ * mode, sem_post() attempts to release a single waiter each time it
+ * is called, but without incrementing the semaphore count if no
+ * waiter is pending. For this reason, the semaphore count in pulse
+ * mode remains zero. If SEM_PULSE is mentioned, @a value can only be
+ * zero.
+ *
+ * - SEM_PSHARED controls the scope of the new semaphore. When set, it
+ * has the same meaning as passing 1 for the pshared parameter to the
+ * regular sem_init() call.
+ *
+ * - SEM_REPORT tells whether sem_getvalue() should report the number
+ * of waiters as a negative value, for a fully depleted semaphore. By
+ * default, sem_getvalue() returns a current value of zero for a
+ * depleted semaphore with waiters.
+ *
+ * @param value the semaphore initial value.
+ *
+ * @retval 0 on success,
+ * @retval -1 with @a errno set if:
+ * - EBUSY, the semaphore @a sm was already initialized;
+ * - ENOSPC, insufficient memory exists in the system heap to initialize the
+ *   semaphore, increase CONFIG_XENO_OPT_SYS_HEAPSZ;
+ * - EINVAL, the @a value argument exceeds @a SEM_VALUE_MAX, or this
+ * value is non-zero albeit SEM_PULSE is mentioned in @a flags. EINVAL
+ * is also returned if an invalid flag appears in @a flags.
+ */
+int sem_init_np(sem_t *sm, int flags, unsigned int value)
+{
+	if (flags & ~(SEM_FIFO|SEM_PULSE|SEM_PSHARED|SEM_REPORT)) {
+		thread_set_errno(EINVAL);
+		return -1;
 	}
 
-	xnlock_get_irqsave(&nklock, s);
-
-	semq = &cobalt_kqueues(pshared)->semq;
-
-	if (shadow->magic == COBALT_SEM_MAGIC
-	    || shadow->magic == COBALT_NAMED_SEM_MAGIC
-	    || shadow->magic == ~COBALT_NAMED_SEM_MAGIC) {
-		xnholder_t *holder;
-
-		for (holder = getheadq(semq); holder;
-		     holder = nextq(semq, holder))
-			if (holder == &shadow->sem->link) {
-				err = EBUSY;
-				goto err_lock_put;
-			}
-	}
-
-	err = cobalt_sem_init_inner(sem, pshared, value);
-	if (err)
-		goto err_lock_put;
-
-	shadow->magic = COBALT_SEM_MAGIC;
-	shadow->sem = sem;
-	xnlock_put_irqrestore(&nklock, s);
-
-	return 0;
-
-  err_lock_put:
-	xnlock_put_irqrestore(&nklock, s);
-	xnfree(sem);
-  error:
-	thread_set_errno(err);
-
-	return -1;
+	return do_sem_init(sm, flags, value);
 }
 
 /**
@@ -223,7 +287,7 @@ int sem_destroy(sem_t * sm)
 		goto error;
 	}
 
-	if (cobalt_kqueues(shadow->sem->pshared) != shadow->sem->owningq) {
+	if (sem_kqueue(shadow->sem) != shadow->sem->owningq) {
 		thread_set_errno(EPERM);
 		goto error;
 	}
@@ -232,7 +296,7 @@ int sem_destroy(sem_t * sm)
 	cobalt_mark_deleted(shadow->sem);
 	xnlock_put_irqrestore(&nklock, s);
 
-	sem_destroy_inner(shadow->sem, cobalt_kqueues(shadow->sem->pshared));
+	sem_destroy_inner(shadow->sem, sem_kqueue(shadow->sem));
 
 	return 0;
 
@@ -313,7 +377,6 @@ sem_t *sem_open(const char *name, int oflags, ...)
 		err = ENOSPC;
 		goto error;
 	}
-	named_sem->sembase.is_named = 1;
 	named_sem->descriptor.shadow_sem.sem = &named_sem->sembase;
 
 	va_start(ap, oflags);
@@ -322,7 +385,7 @@ sem_t *sem_open(const char *name, int oflags, ...)
 	va_end(ap);
 
 	xnlock_get_irqsave(&nklock, s);
-	err = cobalt_sem_init_inner(&named_sem->sembase, 1, value);
+	err = sem_init_inner(&named_sem->sembase, SEM_PSHARED|SEM_NAMED, value);
 	if (err) {
 		xnlock_put_irqrestore(&nklock, s);
 		xnfree(named_sem);
@@ -339,8 +402,7 @@ sem_t *sem_open(const char *name, int oflags, ...)
 			goto err_put_lock;
 
 		xnlock_put_irqrestore(&nklock, s);
-		sem_destroy_inner(&named_sem->sembase,
-				  cobalt_kqueues(named_sem->sembase.pshared));
+		sem_destroy_inner(&named_sem->sembase, sem_kqueue(&named_sem->sembase));
 		named_sem = node2sem(node);
 		goto got_sem;
 	}
@@ -355,8 +417,7 @@ sem_t *sem_open(const char *name, int oflags, ...)
 
   err_put_lock:
 	xnlock_put_irqrestore(&nklock, s);
-	sem_destroy_inner(&named_sem->sembase,
-			  cobalt_kqueues(named_sem->sembase.pshared));
+	sem_destroy_inner(&named_sem->sembase, sem_kqueue(&named_sem->sembase));
   error:
 	thread_set_errno(err);
 	return SEM_FAILED;
@@ -501,7 +562,7 @@ static inline int sem_trywait_internal(struct __shadow_sem *shadow)
 	sem = shadow->sem;
 
 #if XENO_DEBUG(POSIX)
-	if (sem->owningq != cobalt_kqueues(sem->pshared))
+	if (sem->owningq != sem_kqueue(sem))
 		return EPERM;
 #endif /* XENO_DEBUG(POSIX) */
 
@@ -514,20 +575,20 @@ static inline int sem_trywait_internal(struct __shadow_sem *shadow)
 }
 
 /**
- * Attempt to lock a semaphore.
+ * Attempt to decrement a semaphore.
  *
- * This service is equivalent to sem_wait(), except that it returns immediately
- * if the semaphore @a sm is currently locked, and that it is not a cancellation
- * point.
+ * This service is equivalent to sem_wait(), except that it returns
+ * immediately if the semaphore @a sm is currently depleted, and that
+ * it is not a cancellation point.
  *
- * @param sm the semaphore to be locked.
+ * @param sm the semaphore to be decremented.
  *
  * @retval 0 on success;
  * @retval -1 with @a errno set if:
  * - EINVAL, the specified semaphore is invalid or uninitialized;
  * - EPERM, the semaphore @a sm is not process-shared and does not belong to the
  *   current process;
- * - EAGAIN, the specified semaphore is currently locked.
+ * - EAGAIN, the specified semaphore is currently fully depleted.
  *
  * * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_trywait.html">
@@ -592,19 +653,19 @@ static inline int sem_timedwait_internal(struct __shadow_sem *shadow,
 }
 
 /**
- * Lock a semaphore.
+ * Decrement a semaphore.
  *
- * This service locks the semaphore @a sm if it is currently unlocked (i.e. if
- * its value is greater than 0). If the semaphore is currently locked, the
- * calling thread is suspended until the semaphore is unlocked, or a signal is
- * delivered to the calling thread.
+ * This service decrements the semaphore @a sm if it is currently if
+ * its value is greater than 0. If the semaphore's value is currently
+ * zero, the calling thread is suspended until the semaphore is
+ * posted, or a signal is delivered to the calling thread.
  *
  * This service is a cancellation point for Xenomai POSIX skin threads (created
  * with the pthread_create() service). When such a thread is cancelled while
  * blocked in a call to this service, the semaphore state is left unchanged
  * before the cancellation cleanup handlers are called.
  *
- * @param sm the semaphore to be locked.
+ * @param sm the semaphore to be decremented.
  *
  * @retval 0 on success;
  * @retval -1 with @a errno set if:
@@ -643,12 +704,12 @@ int sem_wait(sem_t * sm)
 }
 
 /**
- * Attempt, during a bounded time, to lock a semaphore.
+ * Attempt, during a bounded time, to decrement a semaphore.
  *
- * This serivce is equivalent to sem_wait(), except that the caller is only
+ * This service is equivalent to sem_wait(), except that the caller is only
  * blocked until the timeout @a abs_timeout expires.
  *
- * @param sm the semaphore to be locked;
+ * @param sm the semaphore to be decremented;
  *
  * @param abs_timeout the timeout, expressed as an absolute value of the
  * CLOCK_REALTIME clock.
@@ -662,8 +723,8 @@ int sem_wait(sem_t * sm)
  *   current process;
  * - EINTR, the caller was interrupted by a signal while blocked in this
  *   service;
- * - ETIMEDOUT, the semaphore could not be locked and the specified timeout
- *   expired.
+ * - ETIMEDOUT, the semaphore could not be decremented and the
+ *   specified timeout expired.
  *
  * @par Valid contexts:
  * - Xenomai kernel-space thread,
@@ -698,7 +759,7 @@ int sem_timedwait(sem_t * sm, const struct timespec *abs_timeout)
 	return 0;
 }
 
-int sem_post_inner(struct cobalt_sem *sem, cobalt_kqueues_t *ownq)
+int sem_post_inner(struct cobalt_sem *sem, cobalt_kqueues_t *ownq, int bcast)
 {
 	if (sem->magic != COBALT_SEM_MAGIC) {
 		thread_set_errno(EINVAL);
@@ -706,7 +767,7 @@ int sem_post_inner(struct cobalt_sem *sem, cobalt_kqueues_t *ownq)
 	}
 
 #if XENO_DEBUG(POSIX)
-	if (ownq && ownq != cobalt_kqueues(sem->pshared)) {
+	if (ownq && ownq != sem_kqueue(sem)) {
 		thread_set_errno(EPERM);
 		return -1;
 	}
@@ -717,23 +778,31 @@ int sem_post_inner(struct cobalt_sem *sem, cobalt_kqueues_t *ownq)
 		return -1;
 	}
 
-	if (xnsynch_wakeup_one_sleeper(&sem->synchbase) != NULL)
-		xnpod_schedule();
-	else
-		++sem->value;
+	if (bcast) {
+		if (xnsynch_wakeup_one_sleeper(&sem->synchbase) != NULL)
+			xnpod_schedule();
+		else if ((sem->flags & SEM_PULSE) == 0)
+			++sem->value;
+	} else {
+		sem->value = 0;
+		if (xnsynch_flush(&sem->synchbase, 0) == XNSYNCH_RESCHED)
+			xnpod_schedule();
+	}
 
 	return 0;
 }
 
 /**
- * Unlock a semaphore.
+ * Post a semaphore.
  *
- * This service unlocks the semaphore @a sm.
+ * This service posts the semaphore @a sm.
  *
  * If no thread is currently blocked on this semaphore, its count is
- * incremented, otherwise the highest priority thread is unblocked.
+ * incremented unless "pulse" mode is enabled for it (see
+ * sem_init_np(), SEM_PULSE). If a thread is blocked on the semaphore,
+ * the thread heading the wait queue is unblocked.
  *
- * @param sm the semaphore to be unlocked.
+ * @param sm the semaphore to be signaled.
  *
  * @retval 0 on success;
  * @retval -1 with errno set if:
@@ -762,7 +831,7 @@ int sem_post(sem_t * sm)
 		goto out;
 	}
 
-	ret = sem_post_inner(shadow->sem, shadow->sem->owningq);
+	ret = sem_post_inner(shadow->sem, shadow->sem->owningq, 0);
 out:
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -775,7 +844,12 @@ out:
  * This service stores at the address @a value, the current count of the
  * semaphore @a sm. The state of the semaphore is unchanged.
  *
- * If the semaphore is currently locked, the value stored is zero.
+ * If the semaphore is currently fully depleted, the value stored is
+ * zero, unless SEM_REPORT was mentioned for a non-standard semaphore
+ * (see sem_init_np()), in which case the current number of waiters is
+ * returned as the semaphore's negative value (e.g. -2 would mean the
+ * semaphore is fully depleted AND two threads are currently pending
+ * on it).
  *
  * @param sm a semaphore;
  *
@@ -810,17 +884,61 @@ int sem_getvalue(sem_t * sm, int *value)
 
 	sem = shadow->sem;
 
-	if (sem->owningq != cobalt_kqueues(sem->pshared)) {
+	if (sem->owningq != sem_kqueue(sem)) {
 		xnlock_put_irqrestore(&nklock, s);
 		thread_set_errno(EPERM);
 		return -1;
 	}
 
-	*value = sem->value;
+	if (sem->value == 0 && (sem->flags & SEM_REPORT) != 0)
+		*value = -xnsynch_nsleepers(&sem->synchbase);
+	else
+		*value = sem->value;
 
 	xnlock_put_irqrestore(&nklock, s);
 
 	return 0;
+}
+
+/**
+ * Broadcast a semaphore.
+ *
+ * This service is a non-standard extension for broadcasting the
+ * semaphore @a sm.
+ *
+ * All threads waiting on the semaphore are unblocked, as if the
+ * semaphore has been signaled. The semaphore count is zeroed as a
+ * result of the operation.
+ *
+ * @param sm the semaphore to be broadcast.
+ *
+ * @retval 0 on success;
+ * @retval -1 with errno set if:
+ * - EINVAL, the specified semaphore is invalid or uninitialized;
+ * - EPERM, the semaphore @a sm is not process-shared and does not belong to the
+ *   current process;
+ *
+ */
+int sem_broadcast_np(sem_t *sm)
+{
+	struct __shadow_sem *shadow = &((union __xeno_sem *)sm)->shadow_sem;
+	int ret;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	if (shadow->magic != COBALT_SEM_MAGIC
+	    && shadow->magic != COBALT_NAMED_SEM_MAGIC) {
+		thread_set_errno(EINVAL);
+		ret = -1;
+		goto out;
+	}
+
+	ret = sem_post_inner(shadow->sem, shadow->sem->owningq, 1);
+out:
+	xnlock_put_irqrestore(&nklock, s);
+
+	return ret;
 }
 
 #ifndef __XENO_SIM__
@@ -855,14 +973,14 @@ void cobalt_semq_cleanup(cobalt_kqueues_t *q)
 		cobalt_node_t *node;
 		xnlock_put_irqrestore(&nklock, s);
 #if XENO_DEBUG(POSIX)
-		if (sem->is_named)
+		if (sem->flags & SEM_NAMED)
 			xnprintf("Posix: unlinking semaphore \"%s\".\n",
 				 sem2named_sem(sem)->nodebase.name);
 		else
 			xnprintf("Posix: destroying semaphore %p.\n", sem);
 #endif /* XENO_DEBUG(POSIX) */
 		xnlock_get_irqsave(&nklock, s);
-		if (sem->is_named)
+		if (sem->flags & SEM_NAMED)
 			cobalt_node_remove(&node,
 					  sem2named_sem(sem)->nodebase.name,
 					  COBALT_NAMED_SEM_MAGIC);
@@ -886,7 +1004,7 @@ void cobalt_sem_pkg_cleanup(void)
 
 /*@}*/
 
-EXPORT_SYMBOL_GPL(cobalt_sem_init);
+EXPORT_SYMBOL_GPL(sem_init);
 EXPORT_SYMBOL_GPL(sem_destroy);
 EXPORT_SYMBOL_GPL(sem_post);
 EXPORT_SYMBOL_GPL(sem_trywait);
@@ -896,3 +1014,5 @@ EXPORT_SYMBOL_GPL(sem_getvalue);
 EXPORT_SYMBOL_GPL(sem_open);
 EXPORT_SYMBOL_GPL(sem_close);
 EXPORT_SYMBOL_GPL(sem_unlink);
+EXPORT_SYMBOL_GPL(sem_init_np);
+EXPORT_SYMBOL_GPL(sem_broadcast_np);

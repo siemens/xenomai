@@ -793,6 +793,35 @@ static int __sem_unlink(const char __user *u_name)
 	return sem_unlink(name) == 0 ? 0 : -thread_get_errno();
 }
 
+static int __sem_init_np(union __xeno_sem __user *u_sem,
+			 int flags, unsigned value)
+{
+	union __xeno_sem sm;
+
+	if (__xn_safe_copy_from_user(&sm.shadow_sem,
+				     &u_sem->shadow_sem,
+				     sizeof(sm.shadow_sem)))
+		return -EFAULT;
+
+	if (sem_init_np(&sm.native_sem, flags, value) == -1)
+		return -thread_get_errno();
+
+	return __xn_safe_copy_to_user(&u_sem->shadow_sem,
+				      &sm.shadow_sem, sizeof(u_sem->shadow_sem));
+}
+
+static int __sem_broadcast_np(union __xeno_sem __user *u_sem)
+{
+	union __xeno_sem sm;
+
+	if (__xn_safe_copy_from_user(&sm.shadow_sem,
+				     &u_sem->shadow_sem,
+				     sizeof(sm.shadow_sem)))
+		return -EFAULT;
+
+	return sem_broadcast_np(&sm.native_sem) == 0 ? 0 : -thread_get_errno();
+}
+
 static int __clock_getres(clockid_t clock_id,
 			  struct timespec __user *u_ts)
 {
@@ -2585,6 +2614,8 @@ static struct xnsysent __systab[] = {
 	SKINCALL_DEF(__cobalt_sem_open, __sem_open, any),
 	SKINCALL_DEF(__cobalt_sem_close, __sem_close, any),
 	SKINCALL_DEF(__cobalt_sem_unlink, __sem_unlink, any),
+	SKINCALL_DEF(__cobalt_sem_init_np, __sem_init_np, any),
+	SKINCALL_DEF(__cobalt_sem_broadcast_np, __sem_broadcast_np, any),
 	SKINCALL_DEF(__cobalt_clock_getres, __clock_getres, any),
 	SKINCALL_DEF(__cobalt_clock_gettime, __clock_gettime, any),
 	SKINCALL_DEF(__cobalt_clock_settime, __clock_settime, any),

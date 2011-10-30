@@ -114,7 +114,7 @@ extern "C" {
 
 COBALT_DECL(int, sem_init(sem_t *sem,
 			  int pshared,
-			  unsigned value));
+			  unsigned int value));
 
 COBALT_DECL(int, sem_destroy(sem_t *sem));
 
@@ -140,5 +140,17 @@ COBALT_DECL(int, sem_unlink(const char *name));
 #endif
 
 #endif /* !(__KERNEL__ || __XENO_SIM__) */
+
+/* For Cobalt's sem_init_np() extension. */
+#define SEM_FIFO     0x1
+#define SEM_PULSE    0x2
+#define SEM_PSHARED  0x4
+#define SEM_REPORT   0x8
+
+int sem_init_np(sem_t *sem,
+		int flags,
+		unsigned int value);
+
+int sem_broadcast_np(sem_t *sem);
 
 #endif /* _XENO_POSIX_SEMAPHORE_H */
