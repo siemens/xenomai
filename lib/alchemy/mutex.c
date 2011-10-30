@@ -131,8 +131,8 @@ int rt_mutex_acquire_until(RT_MUTEX *mutex, RTIME timeout)
 {
 	struct alchemy_mutex *mcb;
 	struct alchemy_task *tcb;
-	struct service svc;
 	struct timespec ts;
+	struct service svc;
 	int ret = 0;
 
 	if (threadobj_async_p())
@@ -150,16 +150,22 @@ int rt_mutex_acquire_until(RT_MUTEX *mutex, RTIME timeout)
 	 * check for object existence.
 	 */
 	ret = -__RT(pthread_mutex_trylock(&mcb->lock));
-	if (ret == 0 || timeout == TM_NONBLOCK)
+	if (ret == 0 || ret != -EBUSY || timeout == TM_NONBLOCK)
 		goto done;
 
 	/* Slow path. */
-	if (ret == -EBUSY && timeout == TM_INFINITE) {
+	if (timeout == TM_INFINITE) {
 		ret = -__RT(pthread_mutex_lock(&mcb->lock));
 		goto done;
 	}
 
-	__clockobj_ticks_to_timeout(&alchemy_clock, CLOCK_REALTIME, timeout, &ts);
+	/*
+	 * What a mess: we want all our timings to be based on
+	 * CLOCK_COPPERPLATE, but pthread_mutex_timedlock() is
+	 * implicitly based on CLOCK_REALTIME, so we need to translate
+	 * the user timeout into something POSIX understands.
+	 */
+	clockobj_ticks_to_clock(&alchemy_clock, timeout, CLOCK_REALTIME, &ts);
 	ret = -__RT(pthread_mutex_timedlock(&mcb->lock, &ts));
 done:
 	switch (ret) {

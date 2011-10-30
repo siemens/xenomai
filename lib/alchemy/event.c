@@ -192,7 +192,7 @@ int rt_event_wait_until(RT_EVENT *event,
 
 	if (timeout != TM_INFINITE) {
 		timespec = &ts;
-		clockobj_ticks_to_timeout(&alchemy_clock, timeout, timespec);
+		clockobj_ticks_to_timespec(&alchemy_clock, timeout, timespec);
 	} else
 		timespec = NULL;
 

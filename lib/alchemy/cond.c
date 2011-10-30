@@ -183,7 +183,7 @@ int rt_cond_wait_until(RT_COND *cond, RT_MUTEX *mutex,
 		goto out;
 
 	if (timeout != TM_INFINITE) {
-		clockobj_ticks_to_timeout(&alchemy_clock, timeout, &ts);
+		clockobj_ticks_to_timespec(&alchemy_clock, timeout, &ts);
 		ret = -__RT(pthread_cond_timedwait(&ccb->cond, &mcb->lock, &ts));
 	} else
 		ret = -__RT(pthread_cond_wait(&ccb->cond, &mcb->lock));

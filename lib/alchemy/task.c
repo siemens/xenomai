@@ -484,7 +484,7 @@ int rt_task_sleep_until(RTIME date)
 			COPPERPLATE_UNPROTECT(svc);
 			return -ETIMEDOUT;
 		}
-		clockobj_ticks_to_timeout(&alchemy_clock, date, &ts);
+		clockobj_ticks_to_timespec(&alchemy_clock, date, &ts);
 		COPPERPLATE_UNPROTECT(svc);
 	}
 
