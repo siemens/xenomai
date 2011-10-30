@@ -26,8 +26,7 @@
 
 struct cluster alchemy_sem_table;
 
-static struct alchemy_sem *get_alchemy_sem(RT_SEM *sem,
-					   struct syncstate *syns, int *err_r)
+static struct alchemy_sem *find_alchemy_sem(RT_SEM *sem, int *err_r)
 {
 	struct alchemy_sem *scb;
 
@@ -41,35 +40,21 @@ static struct alchemy_sem *get_alchemy_sem(RT_SEM *sem,
 	if (scb->magic == ~sem_magic)
 		goto dead_handle;
 
-	if (scb->magic != sem_magic)
-		goto bad_handle;
-
-	if (syncobj_lock(&scb->sobj, syns))
-		goto bad_handle;
-
-	/* Recheck under lock. */
 	if (scb->magic == sem_magic)
 		return scb;
+bad_handle:
+	*err_r = -EINVAL;
+	return NULL;
 
 dead_handle:
 	/* Removed under our feet. */
 	*err_r = -EIDRM;
 	return NULL;
-
-bad_handle:
-	*err_r = -EINVAL;
-	return NULL;
 }
 
-static inline void put_alchemy_sem(struct alchemy_sem *scb,
-				   struct syncstate *syns)
+static void sem_finalize(struct semobj *smobj)
 {
-	syncobj_unlock(&scb->sobj, syns);
-}
-
-static void sem_finalize(struct syncobj *sobj)
-{
-	struct alchemy_sem *scb = container_of(sobj, struct alchemy_sem, sobj);
+	struct alchemy_sem *scb = container_of(smobj, struct alchemy_sem, smobj);
 	xnfree(scb);
 }
 fnref_register(libalchemy, sem_finalize);
@@ -77,15 +62,18 @@ fnref_register(libalchemy, sem_finalize);
 int rt_sem_create(RT_SEM *sem, const char *name,
 		  unsigned long icount, int mode)
 {
+	int smobj_flags = 0, ret;
 	struct alchemy_sem *scb;
 	struct service svc;
-	int sobj_flags = 0;
 
 	if (threadobj_async_p())
 		return -EPERM;
 
-	if ((mode & S_PULSE) && icount > 0)
-		return -EINVAL;
+	if (mode & S_PULSE) {
+		if (icount > 0)
+			return -EINVAL;
+		smobj_flags |= SEMOBJ_PULSE;
+	}
 
 	COPPERPLATE_PROTECT(svc);
 
@@ -105,13 +93,17 @@ int rt_sem_create(RT_SEM *sem, const char *name,
 	}
 
 	if (mode & S_PRIO)
-		sobj_flags = SYNCOBJ_PRIO;
+		smobj_flags |= SEMOBJ_PRIO;
+
+	ret = semobj_init(&scb->smobj, smobj_flags, icount,
+			  fnref_put(libalchemy, sem_finalize));
+	if (ret) {
+		xnfree(scb);
+		COPPERPLATE_UNPROTECT(svc);
+		return ret;
+	}
 
 	scb->magic = sem_magic;
-	scb->value = icount;
-	scb->mode = mode;
-	syncobj_init(&scb->sobj, sobj_flags,
-		     fnref_put(libalchemy, sem_finalize));
 	sem->handle = mainheap_ref(scb, uintptr_t);
 
 	COPPERPLATE_UNPROTECT(svc);
@@ -122,7 +114,6 @@ int rt_sem_create(RT_SEM *sem, const char *name,
 int rt_sem_delete(RT_SEM *sem)
 {
 	struct alchemy_sem *scb;
-	struct syncstate syns;
 	struct service svc;
 	int ret = 0;
 
@@ -131,13 +122,13 @@ int rt_sem_delete(RT_SEM *sem)
 
 	COPPERPLATE_PROTECT(svc);
 
-	scb = get_alchemy_sem(sem, &syns, &ret);
+	scb = find_alchemy_sem(sem, &ret);
 	if (scb == NULL)
 		goto out;
 
 	cluster_delobj(&alchemy_sem_table, &scb->cobj);
 	scb->magic = ~sem_magic; /* Prevent further reference. */
-	syncobj_destroy(&scb->sobj, &syns);
+	semobj_destroy(&scb->smobj);
 out:
 	COPPERPLATE_UNPROTECT(svc);
 
@@ -148,50 +139,31 @@ int rt_sem_p_until(RT_SEM *sem, RTIME timeout)
 {
 	struct timespec ts, *timespec;
 	struct alchemy_sem *scb;
-	struct syncstate syns;
 	struct service svc;
 	int ret = 0;
 
+	if (threadobj_async_p())
+		return -EPERM;
+
 	COPPERPLATE_PROTECT(svc);
 
-	scb = get_alchemy_sem(sem, &syns, &ret);
+	scb = find_alchemy_sem(sem, &ret);
 	if (scb == NULL)
 		goto out;
 
-	if (--scb->value >= 0)
-		goto done;
-
-	if (timeout == TM_NONBLOCK) {
-		scb->value++;
-		ret = -EWOULDBLOCK;
-		goto done;
-	}
-
-	if (threadobj_async_p()) {
-		ret = -EPERM;
-		goto done;
-	}
-
-	if (timeout != TM_INFINITE) {
-		timespec = &ts;
-		clockobj_ticks_to_timeout(&alchemy_clock, timeout, timespec);
-	} else
+	if (timeout == TM_INFINITE)
 		timespec = NULL;
-
-	ret = syncobj_pend(&scb->sobj, timespec, &syns);
-	if (ret) {
-		/*
-		 * -EIDRM means that the semaphore has been deleted,
-		 * so we bail out immediately and don't attempt to
-		 * access that stale object in any way.
-		 */
-		if (ret == -EIDRM)
-			goto out;
-
-		scb->value++;	/* Fix up semaphore count. */
+	else {
+		timespec = &ts;
+		if (timeout == TM_NONBLOCK) {
+			ts.tv_sec = 0;
+			ts.tv_nsec = 0;
+		} else
+			clockobj_ticks_to_timespec(&alchemy_clock,
+						   timeout, timespec);
 	}
-done:
-	put_alchemy_sem(scb, &syns);
+
+	ret = semobj_wait(&scb->smobj, timespec);
 out:
 	COPPERPLATE_UNPROTECT(svc);
 
@@ -202,9 +174,6 @@ int rt_sem_p(RT_SEM *sem, RTIME timeout)
 {
 	struct service svc;
 	ticks_t now;
-
-	if (threadobj_async_p())
-		return -EPERM;
 
 	if (timeout != TM_INFINITE && timeout != TM_NONBLOCK) {
 		COPPERPLATE_PROTECT(svc);
@@ -219,22 +188,16 @@ int rt_sem_p(RT_SEM *sem, RTIME timeout)
 int rt_sem_v(RT_SEM *sem)
 {
 	struct alchemy_sem *scb;
-	struct syncstate syns;
 	struct service svc;
 	int ret = 0;
 
 	COPPERPLATE_PROTECT(svc);
 
-	scb = get_alchemy_sem(sem, &syns, &ret);
+	scb = find_alchemy_sem(sem, &ret);
 	if (scb == NULL)
 		goto out;
 
-	if (++scb->value <= 0)
-		syncobj_post(&scb->sobj);
-	else if (scb->mode & S_PULSE)
-		scb->value = 0;
-
-	put_alchemy_sem(scb, &syns);
+	ret = semobj_post(&scb->smobj);
 out:
 	COPPERPLATE_UNPROTECT(svc);
 
@@ -244,22 +207,16 @@ out:
 int rt_sem_broadcast(RT_SEM *sem)
 {
 	struct alchemy_sem *scb;
-	struct syncstate syns;
 	struct service svc;
 	int ret = 0;
 
 	COPPERPLATE_PROTECT(svc);
 
-	scb = get_alchemy_sem(sem, &syns, &ret);
+	scb = find_alchemy_sem(sem, &ret);
 	if (scb == NULL)
 		goto out;
 
-	if (scb->value < 0) {
-		scb->value = 0;
-		syncobj_flush(&scb->sobj, SYNCOBJ_BROADCAST);
-	}
-
-	put_alchemy_sem(scb, &syns);
+	ret = semobj_broadcast(&scb->smobj);
 out:
 	COPPERPLATE_UNPROTECT(svc);
 
@@ -269,21 +226,22 @@ out:
 int rt_sem_inquire(RT_SEM *sem, RT_SEM_INFO *info)
 {
 	struct alchemy_sem *scb;
-	struct syncstate syns;
 	struct service svc;
-	int ret = 0;
+	int ret = 0, sval;
 
 	COPPERPLATE_PROTECT(svc);
 
-	scb = get_alchemy_sem(sem, &syns, &ret);
+	scb = find_alchemy_sem(sem, &ret);
 	if (scb == NULL)
 		goto out;
 
-	info->count = scb->value < 0 ? 0 : scb->value;
-	info->nwaiters = -scb->value;
-	strcpy(info->name, scb->name);
+	ret = semobj_getvalue(&scb->smobj, &sval);
+	if (ret)
+		goto out;
 
-	put_alchemy_sem(scb, &syns);
+	info->count = sval < 0 ? 0 : sval;
+	info->nwaiters = -sval;
+	strcpy(info->name, scb->name); /* <= racy. */
 out:
 	COPPERPLATE_UNPROTECT(svc);
 

@@ -19,17 +19,15 @@
 #ifndef _ALCHEMY_SEM_H
 #define _ALCHEMY_SEM_H
 
-#include <copperplate/syncobj.h>
+#include <copperplate/semobj.h>
 #include <copperplate/cluster.h>
 #include <alchemy/sem.h>
 
 struct alchemy_sem {
 	unsigned int magic;	/* Must be first. */
 	char name[32];
-	struct syncobj sobj;
+	struct semobj smobj;
 	struct clusterobj cobj;
-	int value;
-	int mode;
 };
 
 #define sem_magic	0x8383ebeb
