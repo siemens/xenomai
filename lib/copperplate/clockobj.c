@@ -346,6 +346,26 @@ void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks)
 
 #endif /* CONFIG_XENO_MERCURY */
 
+void clockobj_ticks_to_clock(struct clockobj *clkobj,
+			     ticks_t ticks,
+			     clockid_t clk_id,
+			     struct timespec *timeout)
+{
+	struct timespec ts, now;
+
+	read_lock_nocancel(&clkobj->lock);
+	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
+	/* Absolute timeout, CLOCK_COPPERPLATE-based. */
+	ticks_to_timespec(clkobj, ticks, &ts);
+	read_unlock(&clkobj->lock);
+	/* Offset from CLOCK_COPPERPLATE epoch. */
+	timespec_sub(timeout, &ts, &now);
+	/* Current time for clk_id. */
+	__RT(clock_gettime(clk_id, &now));
+	/* Absolute timeout again, clk_id-based this time. */
+	timespec_add(timeout, timeout, &now);
+}
+
 int clockobj_init(struct clockobj *clkobj,
 		  const char *name, unsigned int resolution_ns)
 {

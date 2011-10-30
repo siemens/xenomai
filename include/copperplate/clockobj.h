@@ -122,6 +122,11 @@ void clockobj_ticks_to_caltime(struct clockobj *clkobj,
 			       struct tm *tm,
 			       unsigned long *rticks);
 
+void clockobj_ticks_to_clock(struct clockobj *clkobj,
+			     ticks_t ticks,
+			     clockid_t clk_id,
+			     struct timespec *timeout);
+
 int clockobj_set_resolution(struct clockobj *clkobj,
 			    unsigned int resolution_ns);
 
