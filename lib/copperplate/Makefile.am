@@ -10,6 +10,7 @@ libcopperplate_la_SOURCES =	\
 	init.c		\
 	panic.c		\
 	syncobj.c	\
+	semobj.c	\
 	threadobj.c	\
 	traceobj.c
 

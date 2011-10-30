@@ -103,7 +103,7 @@ int __fnref_register(const char *libname,
 #define __memchk(base, addr)	pshared_check(base, addr)
 
 #define mutex_scope_attribute	PTHREAD_PROCESS_SHARED
-#define sem_scope_attribute	1
+#define sem_scope_attribute	SEM_PSHARED
 #define thread_scope_attribute	PTHREAD_SCOPE_SYSTEM
 
 #else /* !CONFIG_XENO_PSHARED */

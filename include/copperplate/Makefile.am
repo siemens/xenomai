@@ -10,6 +10,7 @@ includesub_HEADERS =	\
 	init.h		\
 	list.h		\
 	lock.h		\
+	semobj.h	\
 	shared-list.h	\
 	private-list.h	\
 	notifier.h	\
