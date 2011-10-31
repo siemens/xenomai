@@ -18,4 +18,4 @@ xeno_sigtest-y := sigtest_module.o
 
 xeno_rtdmtest-y := rtdmtest.o
 
-EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai/cobalt -Iinclude/xenomai
+ccflags-y := -D__IN_XENOMAI__ -Iinclude/xenomai/cobalt -Iinclude/xenomai

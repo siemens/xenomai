@@ -320,7 +320,7 @@ if test -r $linux_tree/include/linux/ipipe.h; then
     fi
 else
    if test x$adeos_patch = x; then
-      default_adeos_patch="`( ls $xenomai_root/kernel/cobalt/nucleus/arch/$xenomai_arch/patches/adeos-ipipe-$linux_version*-{$linux_arch,$xenomai_arch}-*|sort -r ) 2>/dev/null | head -n1`"
+      default_adeos_patch="`( ls $xenomai_root/kernel/cobalt/arch/$xenomai_arch/patches/adeos-ipipe-$linux_version*-{$linux_arch,$xenomai_arch}-*|sort -r ) 2>/dev/null | head -n1`"
    fi
    if test x$default_adeos_patch = x; then
       if test x$verbose = x1; then
@@ -400,8 +400,8 @@ case $linux_VERSION.$linux_PATCHLEVEL in
             patch_append init/Kconfig
     fi
 
-    if ! grep -q CONFIG_XENOMAI $linux_tree/arch/$linux_arch/Makefile; then
-	p="core-\$(CONFIG_XENOMAI)		+= arch/$linux_arch/xenomai/"
+    if ! grep -q CONFIG_XENOMAI_COBALT $linux_tree/arch/$linux_arch/Makefile; then
+	p="core-\$(CONFIG_XENOMAI_COBALT)	+= kernel/xenomai/hal/ arch/$linux_arch/xenomai/"
 	echo $p | patch_append arch/$linux_arch/Makefile
     fi
 
@@ -436,9 +436,10 @@ esac
 
 patch_kernelversion_specific="n"
 patch_architecture_specific="y"
-patch_link r m kernel/cobalt/nucleus/arch/$xenomai_arch arch/$linux_arch/xenomai
+patch_link r m kernel/cobalt/arch/$xenomai_arch arch/$linux_arch/xenomai
 patch_architecture_specific="n"
 patch_link n m kernel/cobalt kernel/xenomai
+patch_link n m kernel/cobalt/arch/generic kernel/xenomai/hal
 patch_link n m kernel/cobalt/nucleus kernel/xenomai/nucleus
 patch_link n m kernel/cobalt/rtdm kernel/xenomai/rtdm
 patch_link r m kernel/drivers drivers/xenomai

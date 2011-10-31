@@ -1,5 +1,5 @@
 
-EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai
+ccflags-y := -D__IN_XENOMAI__ -Iinclude/xenomai
 
 obj-$(CONFIG_XENO_DRIVERS_ANALOGY_FAKE) += analogy_fake.o
 

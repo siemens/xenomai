@@ -865,6 +865,7 @@ void xnshadow_kick(struct xnthread *thread) /* nklock locked, irqs off */
 	if (thread != xnpod_current_thread())
 		xnarch_call_mayday(p);
 }
+EXPORT_SYMBOL_GPL(xnshadow_kick);
 
 void xnshadow_demote(struct xnthread *thread) /* nklock locked, irqs off */
 {
@@ -885,6 +886,7 @@ void xnshadow_demote(struct xnthread *thread) /* nklock locked, irqs off */
 			  sigshadow_int(SIGSHADOW_ACTION_RENICE, 0),
 			  1);
 }
+EXPORT_SYMBOL_GPL(xnshadow_demote);
 
 void xnshadow_exit(void)
 {

@@ -1,5 +1,5 @@
 
-EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai/cobalt -Iinclude/xenomai
+ccflags-y := -D__IN_XENOMAI__ -Iinclude/xenomai/cobalt -Iinclude/xenomai
 
 obj-$(CONFIG_XENO_DRIVERS_16550A) += xeno_16550A.o
 obj-$(CONFIG_XENO_DRIVERS_MPC52XX_UART) += xeno_mpc52xx_uart.o

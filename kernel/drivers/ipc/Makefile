@@ -1,5 +1,5 @@
 
-EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai/cobalt -Iinclude/xenomai -Idrivers/xenomai/ipc
+ccflags-y := -D__IN_XENOMAI__ -Iinclude/xenomai/cobalt -Iinclude/xenomai -Idrivers/xenomai/ipc
 
 obj-$(CONFIG_XENO_DRIVERS_RTIPC) += xeno_rtipc.o
 

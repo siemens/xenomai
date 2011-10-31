@@ -2,7 +2,7 @@
 obj-$(CONFIG_XENOMAI) += xeno_nucleus.o
 
 xeno_nucleus-y := \
-	hal.o bufd.o heap.o intr.o pod.o registry.o \
+	bufd.o heap.o intr.o pod.o registry.o \
 	synch.o thread.o timebase.o timer.o shadow.o \
 	sched.o sched-idle.o sched-rt.o
 
@@ -19,4 +19,4 @@ xeno_nucleus-$(CONFIG_PROC_FS) += vfile.o
 # exist on initcalls defined by other object files.
 xeno_nucleus-y += module.o
 
-EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai/cobalt
+ccflags-y := -D__IN_XENOMAI__ -Iinclude/xenomai/cobalt

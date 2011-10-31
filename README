@@ -33,8 +33,8 @@ system, i.e:
 
 1. An interrupt pipeline patch which fits your hardware. Recent ones
 are readily available from the Xenomai source tree (see
-kernel/cobalt/nucleus/arch/*/patches). All existing patches can be
-found at http://download.gna.org/adeos/patches/
+kernel/cobalt/arch/*/patches). All existing patches can be found at
+http://download.gna.org/adeos/patches/
 
 2. A working port of the Cobalt core to the target architecture. We
 intend to support the same set as available with Xenomai

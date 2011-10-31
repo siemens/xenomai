@@ -36,6 +36,7 @@
 #include <linux/kallsyms.h>
 #include <linux/bitops.h>
 #include <linux/hardirq.h>
+#include <linux/mm.h>
 #include <asm/system.h>
 #include <asm/irq.h>
 #include <asm/xenomai/hal.h>
@@ -729,3 +730,4 @@ EXPORT_SYMBOL_GPL(rthal_apc_virq);
 EXPORT_SYMBOL_GPL(rthal_apc_pending);
 
 EXPORT_SYMBOL_GPL(kill_proc_info);
+EXPORT_SYMBOL_GPL(get_mm_exe_file);

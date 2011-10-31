@@ -94,7 +94,6 @@ mkdir -p $xenomai_root/tmp/linux.new
 linux_tree="$xenomai_root/tmp/linux"
 temp_tree="$xenomai_root/tmp/linux.new"
 
-
 for linux_arch in $supported_arch ; do
     case $linux_arch in
         i386)
@@ -111,10 +110,10 @@ for linux_arch in $supported_arch ; do
             ;;
     esac
 
-    patch_link r m kernel/cobalt/nucleus/arch/$base_arch arch/$linux_arch/xenomai
+    patch_link r m kernel/cobalt/arch/$base_arch arch/$linux_arch/xenomai
     patch_link r n include/asm-$base_arch arch/$linux_arch/include/asm/xenomai
 
-    p="+core-\$(CONFIG_XENOMAI)		+= arch/$linux_arch/xenomai/"
+    p="+core-\$(CONFIG_XENOMAI_COBALT)	+= arch/$linux_arch/xenomai/"
     echo $p | patch_append arch/$linux_arch/Makefile
     diff_addons
 done
@@ -129,6 +128,7 @@ echo $p | patch_append kernel/Makefile
 # there, so that we don't pollute the Xenomai source tree with
 # compilation files.
 patch_link n m kernel/cobalt kernel/xenomai
+patch_link n m kernel/cobalt/arch/generic kernel/xenomai/hal
 patch_link n m kernel/cobalt/nucleus kernel/xenomai/nucleus
 patch_link n m kernel/cobalt/rtdm kernel/xenomai/rtdm
 patch_link r m kernel/drivers drivers/xenomai
@@ -151,7 +151,7 @@ cd $xenomai_root
 #echo "Patch-id: xenomai" >> $xenomai_root/debian/linux-patch-xenomai.kpatches
 #echo "Architecture: all" >> $xenomai_root/debian/linux-patch-xenomai.kpatches
 
-find $xenomai_root/kernel/cobalt/nucleus/arch/ -name "adeos-ipipe-2.6.*-$supported_arch-*.patch" |
+find $xenomai_root/kernel/cobalt/arch/ -name "adeos-ipipe-2.6.*-$supported_arch-*.patch" |
 while read f ; do
 
     file=`basename $f`

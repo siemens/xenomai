@@ -1,5 +1,5 @@
 
-EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai
+ccflags-y := -D__IN_XENOMAI__ -Iinclude/xenomai
 
 obj-$(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) += analogy_ni_mite.o
 obj-$(CONFIG_XENO_DRIVERS_ANALOGY_NI_TIO) += analogy_ni_tio.o
