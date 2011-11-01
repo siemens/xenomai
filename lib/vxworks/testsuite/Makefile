@@ -15,12 +15,12 @@ TESTS := task-1 task-2 msgQ-1 msgQ-2 msgQ-3 wd-1 sem-1 sem-2 sem-3 sem-4 lst-1 r
 
 CFLAGS := $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --skin=vxworks --cflags) -g
 LDFLAGS := $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --skin=vxworks --ldflags)
-CCLD = $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --ccld)
+CC = $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --cc)
 
 all: $(TESTS)
 
 %: %.c
-	$(CCLD) -o $@ $< $(CFLAGS) $(LDFLAGS)
+	$(CC) -o $@ $< $(CFLAGS) $(LDFLAGS)
 
 clean:
 	$(RM) $(TESTS) *~

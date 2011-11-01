@@ -21,12 +21,12 @@ TESTS := \
 
 CFLAGS := $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --skin=psos --cflags) -g
 LDFLAGS := $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --skin=psos --ldflags)
-CCLD = $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --ccld)
+CC = $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --cc)
 
 all: $(TESTS)
 
 %: %.c
-	$(CCLD) -o $@ $< $(CFLAGS) $(LDFLAGS)
+	$(CC) -o $@ $< $(CFLAGS) $(LDFLAGS)
 
 clean:
 	$(RM) $(TESTS) *~
