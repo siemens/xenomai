@@ -115,8 +115,9 @@ static struct hash_bucket *do_hash(struct hash_table *t, const char *key)
 	return &t->table[hash & (HASHSLOTS-1)];
 }
 
-int hash_enter(struct hash_table *t,
-	       const char *key, struct hashobj *newobj)
+int __hash_enter(struct hash_table *t,
+		 const char *key, struct hashobj *newobj,
+		 int nodup)
 {
 	struct hash_bucket *bucket;
 	struct hashobj *obj;
@@ -128,7 +129,7 @@ int hash_enter(struct hash_table *t,
 
 	write_lock_nocancel(&t->lock);
 
-	if (!list_empty(&bucket->obj_list)) {
+	if (nodup && !list_empty(&bucket->obj_list)) {
 		list_for_each_entry(obj, &bucket->obj_list, link) {
 			if (strcmp(obj->key, key) == 0) {
 				ret = -EEXIST;
@@ -137,7 +138,7 @@ int hash_enter(struct hash_table *t,
 		}
 	}
 
-	list_prepend(&newobj->link, &bucket->obj_list);
+	list_append(&newobj->link, &bucket->obj_list);
 out:
 	write_unlock(&t->lock);
 
@@ -193,12 +194,13 @@ out:
 
 #ifdef CONFIG_XENO_PSHARED
 
-int hash_enter_probe(struct hash_table *t,
-		     const char *key, struct hashobj *newobj,
-		     int (*probefn)(struct hashobj *oldobj))
+int __hash_enter_probe(struct hash_table *t,
+		       const char *key, struct hashobj *newobj,
+		       int (*probefn)(struct hashobj *oldobj),
+		       int nodup)
 {
 	struct hash_bucket *bucket;
-	struct hashobj *obj;
+	struct hashobj *obj, *tmp;
 	int ret = 0;
 
 	holder_init(&newobj->link);
@@ -209,19 +211,21 @@ int hash_enter_probe(struct hash_table *t,
 	write_lock(&t->lock);
 
 	if (!list_empty(&bucket->obj_list)) {
-		list_for_each_entry(obj, &bucket->obj_list, link) {
+		list_for_each_entry_safe(obj, tmp, &bucket->obj_list, link) {
 			if (strcmp(obj->key, key) == 0) {
 				if (probefn(obj)) {
-					ret = -EEXIST;
-					goto out;
+					if (nodup) {
+						ret = -EEXIST;
+						goto out;
+					}
+					continue;
 				}
 				list_remove_init(&obj->link);
-				break;
 			}
 		}
 	}
 
-	list_prepend(&newobj->link, &bucket->obj_list);
+	list_append(&newobj->link, &bucket->obj_list);
 out:
 	write_unlock(&t->lock);
 	pop_cleanup_lock(&t->lock);
@@ -233,7 +237,7 @@ struct hashobj *hash_search_probe(struct hash_table *t, const char *key,
 				  int (*probefn)(struct hashobj *obj))
 {
 	struct hash_bucket *bucket;
-	struct hashobj *obj;
+	struct hashobj *obj, *tmp;
 
 	bucket = do_hash(t, key);
 
@@ -241,17 +245,16 @@ struct hashobj *hash_search_probe(struct hash_table *t, const char *key,
 	write_lock(&t->lock);
 
 	if (!list_empty(&bucket->obj_list)) {
-		list_for_each_entry(obj, &bucket->obj_list, link) {
+		list_for_each_entry_safe(obj, tmp, &bucket->obj_list, link) {
 			if (strcmp(obj->key, key) == 0) {
 				if (!probefn(obj)) {
 					list_remove_init(&obj->link);
-					goto fail;
+					continue;
 				}
 				goto out;
 			}
 		}
 	}
-fail:
 	obj = NULL;
 out:
 	write_unlock(&t->lock);
@@ -281,8 +284,9 @@ static struct pvhash_bucket *do_pvhash(struct pvhash_table *t, const char *key)
 	return &t->table[hash & (HASHSLOTS-1)];
 }
 
-int pvhash_enter(struct pvhash_table *t,
-		 const char *key, struct pvhashobj *newobj)
+int __pvhash_enter(struct pvhash_table *t,
+		   const char *key, struct pvhashobj *newobj,
+		   int nodup)
 {
 	struct pvhash_bucket *bucket;
 	struct pvhashobj *obj;
@@ -294,7 +298,7 @@ int pvhash_enter(struct pvhash_table *t,
 
 	write_lock_nocancel(&t->lock);
 
-	if (!pvlist_empty(&bucket->obj_list)) {
+	if (nodup && !pvlist_empty(&bucket->obj_list)) {
 		pvlist_for_each_entry(obj, &bucket->obj_list, link) {
 			if (strcmp(obj->key, key) == 0) {
 				ret = -EEXIST;
@@ -303,7 +307,7 @@ int pvhash_enter(struct pvhash_table *t,
 		}
 	}
 
-	pvlist_prepend(&newobj->link, &bucket->obj_list);
+	pvlist_append(&newobj->link, &bucket->obj_list);
 out:
 	write_unlock(&t->lock);
 

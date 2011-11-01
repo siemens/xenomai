@@ -72,6 +72,9 @@ void pvcluster_destroy(struct pvcluster *c);
 int pvcluster_addobj(struct pvcluster *c, const char *name,
 		     struct pvclusterobj *cobj);
 
+int pvcluster_addobj_dup(struct pvcluster *c, const char *name,
+			 struct pvclusterobj *cobj);
+
 int pvcluster_delobj(struct pvcluster *c,
 		     struct pvclusterobj *cobj);
 
@@ -83,6 +86,9 @@ int cluster_init(struct cluster *c, const char *name);
 
 int cluster_addobj(struct cluster *c, const char *name,
 		   struct clusterobj *cobj);
+
+int cluster_addobj_dup(struct cluster *c, const char *name,
+		       struct clusterobj *cobj);
 
 int cluster_delobj(struct cluster *c,
 		   struct clusterobj *cobj);
@@ -100,6 +106,12 @@ static inline int cluster_addobj(struct cluster *c, const char *name,
 				 struct clusterobj *cobj)
 {
 	return pvcluster_addobj(c, name, cobj);
+}
+
+static inline int cluster_addobj_dup(struct cluster *c, const char *name,
+				     struct clusterobj *cobj)
+{
+	return pvcluster_addobj_dup(c, name, cobj);
 }
 
 static inline int cluster_delobj(struct cluster *c,

@@ -161,6 +161,18 @@ int cluster_addobj(struct cluster *c, const char *name,
 				     &cobj->hobj, cluster_probe));
 }
 
+int cluster_addobj_dup(struct cluster *c, const char *name,
+		       struct clusterobj *cobj)
+{
+	cobj->cnode = __this_node.id;
+	/*
+	 * Same as cluster_addobj(), but allows for duplicate keys in
+	 * live objects.
+	 */
+	return __bt(hash_enter_probe_dup(&c->d->table, name,
+					 &cobj->hobj, cluster_probe));
+}
+
 int cluster_delobj(struct cluster *c, struct clusterobj *cobj)
 {
 	return __bt(hash_remove(&c->d->table, &cobj->hobj));
@@ -198,6 +210,12 @@ int pvcluster_addobj(struct pvcluster *c, const char *name,
 		     struct pvclusterobj *cobj)
 {
 	return __bt(pvhash_enter(&c->table, name, &cobj->hobj));
+}
+
+int pvcluster_addobj_dup(struct pvcluster *c, const char *name,
+			 struct pvclusterobj *cobj)
+{
+	return __bt(pvhash_enter_dup(&c->table, name, &cobj->hobj));
 }
 
 int pvcluster_delobj(struct pvcluster *c, struct pvclusterobj *cobj)
