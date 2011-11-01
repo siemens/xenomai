@@ -14,6 +14,7 @@ includesub_HEADERS = \
 	syscall.h \
 	syslog.h \
 	time.h \
-	unistd.h
+	unistd.h \
+	wrappers.h
 
 SUBDIRS=sys nucleus
