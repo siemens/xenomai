@@ -203,9 +203,6 @@ config XENO_OPT_TIMER_WHEEL_STEP
 	Set the duration in ns of a timer wheel step. At each step, 
 	the timer wheel use the next hash bucket.
 
-config XENO_OPT_SELECT
-	bool
-
 config XENO_OPT_HOSTRT
        depends on HAVE_IPIPE_HOSTRT
        def_bool y

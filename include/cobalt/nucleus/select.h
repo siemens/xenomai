@@ -45,8 +45,6 @@ struct xnselector {
 	xnqueue_t bindings; /* only used by xnselector_destroy */
 };
 
-#ifdef CONFIG_XENO_OPT_SELECT
-
 struct xnselect {
 	xnqueue_t bindings;
 };
@@ -114,16 +112,6 @@ int xnselect_umount(void);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-
-#else /* !CONFIG_XENO_OPT_SELECT */
-struct xnselector;
-#define DECLARE_XNSELECT(name)
-#define xnselect_init(block)
-#define xnselect_bind(select_block,binding,selector,type,bit_index,state) \
-	({ -EBADF; })
-#define xnselect_signal(block, state) ({ int __ret = 0; __ret; })
-#define xnselect_destroy(block)
-#endif /* !CONFIG_XENO_OPT_SELECT */
 
 /*@}*/
 

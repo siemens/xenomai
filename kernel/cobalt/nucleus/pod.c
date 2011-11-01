@@ -1105,12 +1105,10 @@ void xnpod_delete_thread(xnthread_t *thread)
 	xntimer_destroy(&thread->rtimer);
 	xntimer_destroy(&thread->ptimer);
 
-#ifdef CONFIG_XENO_OPT_SELECT
 	if (thread->selector) {
 		xnselector_destroy(thread->selector);
 		thread->selector = NULL;
 	}
-#endif /* CONFIG_XENO_OPT_SELECT */
 
 	if (xnthread_test_state(thread, XNPEND))
 		xnsynch_forget_sleeper(thread);

@@ -282,9 +282,7 @@ typedef struct xnthread {
 		xnstat_exectime_t lastperiod; /* Interval marker for execution time reports */
 	} stat;
 
-#ifdef CONFIG_XENO_OPT_SELECT
 	struct xnselector *selector;    /* For select. */
-#endif /* CONFIG_XENO_OPT_SELECT */
 
 	int errcode;			/* Local errno */
 

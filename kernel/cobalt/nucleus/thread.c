@@ -141,9 +141,7 @@ int xnthread_init(struct xnthread *thread,
 	inith(&thread->glink);
 	initph(&thread->rlink);
 	initph(&thread->plink);
-#ifdef CONFIG_XENO_OPT_SELECT
 	thread->selector = NULL;
-#endif /* CONFIG_XENO_OPT_SELECT */
 	initpq(&thread->claimq);
 
 	thread->sched = sched;

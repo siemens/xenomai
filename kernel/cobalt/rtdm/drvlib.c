@@ -1037,7 +1037,6 @@ void rtdm_event_clear(rtdm_event_t *event)
 
 EXPORT_SYMBOL_GPL(rtdm_event_clear);
 
-#ifdef CONFIG_XENO_OPT_RTDM_SELECT
 /**
  * @brief Bind a selector to an event
  *
@@ -1093,7 +1092,7 @@ int rtdm_event_select_bind(rtdm_event_t *event, rtdm_selector_t *selector,
 	return err;
 }
 EXPORT_SYMBOL_GPL(rtdm_event_select_bind);
-#endif /* CONFIG_XENO_OPT_RTDM_SELECT */
+
 /** @} */
 
 /*!
@@ -1319,7 +1318,6 @@ void rtdm_sem_up(rtdm_sem_t *sem)
 
 EXPORT_SYMBOL_GPL(rtdm_sem_up);
 
-#ifdef CONFIG_XENO_OPT_RTDM_SELECT
 /**
  * @brief Bind a selector to a semaphore
  *
@@ -1375,7 +1373,7 @@ int rtdm_sem_select_bind(rtdm_sem_t *sem, rtdm_selector_t *selector,
 	return err;
 }
 EXPORT_SYMBOL_GPL(rtdm_sem_select_bind);
-#endif /* CONFIG_XENO_OPT_RTDM_SELECT */
+
 /** @} */
 
 /*!

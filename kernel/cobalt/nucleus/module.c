@@ -158,11 +158,9 @@ int __init __xeno_sys_init(void)
 		goto cleanup_proc;
 #endif /* CONFIG_XENO_OPT_PIPE */
 
-#ifdef CONFIG_XENO_OPT_SELECT
 	ret = xnselect_mount();
 	if (ret)
 		goto cleanup_pipe;
-#endif /* CONFIG_XENO_OPT_SELECT */
 
 	ret = xnshadow_mount();
 	if (ret)
@@ -198,11 +196,9 @@ int __init __xeno_sys_init(void)
 
       cleanup_select:
 
-#ifdef CONFIG_XENO_OPT_SELECT
 	xnselect_umount();
 
       cleanup_pipe:
-#endif /* CONFIG_XENO_OPT_SELECT */
 
 #ifdef CONFIG_XENO_OPT_PIPE
 	xnpipe_umount();

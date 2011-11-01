@@ -1232,7 +1232,6 @@ int mq_notify(mqd_t fd, const struct sigevent *evp)
 	return -1;
 }
 
-#ifdef CONFIG_XENO_OPT_POSIX_SELECT
 int cobalt_mq_select_bind(mqd_t fd, struct xnselector *selector,
 			 unsigned type, unsigned index)
 {
@@ -1287,7 +1286,6 @@ int cobalt_mq_select_bind(mqd_t fd, struct xnselector *selector,
 	xnfree(binding);
 	return err;
 }
-#endif /* CONFIG_XENO_OPT_POSIX_SELECT */
 
 #ifndef __XENO_SIM__
 static void uqd_cleanup(cobalt_assoc_t *assoc)

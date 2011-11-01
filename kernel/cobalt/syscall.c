@@ -2110,7 +2110,6 @@ static int __timer_getoverrun(timer_t tm)
 	return ret >= 0 ? ret : -thread_get_errno();
 }
 
-#ifdef CONFIG_XENO_OPT_POSIX_SELECT
 static int fd_valid_p(int fd)
 {
 	cobalt_queues_t *q;
@@ -2292,9 +2291,6 @@ static int __select(int nfds,
 				return -EFAULT;
 	return err;
 }
-#else /* !CONFIG_XENO_OPT_POSIX_SELECT */
-#define __select __cobalt_call_not_available
-#endif /* !CONFIG_XENO_OPT_POSIX_SELECT */
 
 static int __sched_min_prio(int policy)
 {
