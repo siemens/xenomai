@@ -96,8 +96,8 @@ u_long sm_create(const char *name,
 		sem->name[sizeof(sem->name) - 1] = '\0';
 	}
 
-	if (cluster_addobj(&psos_sem_table, sem->name, &sem->cobj)) {
-		warning("duplicate semaphore name: %s", sem->name);
+	if (cluster_addobj_dup(&psos_sem_table, sem->name, &sem->cobj)) {
+		warning("cannot register semaphore: %s", sem->name);
 		xnfree(sem);
 		ret = ERR_OBJID;
 		goto out;

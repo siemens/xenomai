@@ -12,7 +12,7 @@ $(error Please add <xenomai-install-path>/bin to your PATH variable or specify D
 endif
 
 TESTS := \
-	task-1 task-2 task-3 task-4 task-5 task-6 \
+	task-1 task-2 task-3 task-4 task-5 task-6 task-7 \
 	tm-1 tm-2 tm-3 tm-4 tm-5 tm-6 tm-7 \
 	mq-1 mq-2 mq-3 \
 	sem-1 sem-2 \

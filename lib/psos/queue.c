@@ -104,8 +104,8 @@ static u_long __q_create(const char *name, u_long count,
 		q->name[sizeof(q->name) - 1] = '\0';
 	}
 
-	if (cluster_addobj(&psos_queue_table, q->name, &q->cobj)) {
-		warning("duplicate queue name: %s", q->name);
+	if (cluster_addobj_dup(&psos_queue_table, q->name, &q->cobj)) {
+		warning("cannot register queue: %s", q->name);
 		xnfree(q);
 		ret = ERR_OBJID;
 		goto out;

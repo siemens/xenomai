@@ -291,9 +291,9 @@ u_long t_create(const char *name, u_long prio,
 	pvlist_init(&task->timer_list);
 	*tid_r = mainheap_ref(task, u_long);
 
-	ret = __bt(cluster_addobj(&psos_task_table, task->name, &task->cobj));
+	ret = __bt(cluster_addobj_dup(&psos_task_table, task->name, &task->cobj));
 	if (ret) {
-		warning("duplicate task name: %s", task->name);
+		warning("cannot register task: %s", task->name);
 		ret = ERR_OBJID;
 		goto fail;
 	}

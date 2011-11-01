@@ -120,8 +120,8 @@ u_long rn_create(const char *name, void *saddr, u_long length,
 		rn->name[sizeof(rn->name) - 1] = '\0';
 	}
 
-	if (pvcluster_addobj(&psos_rn_table, rn->name, &rn->cobj)) {
-		warning("duplicate region name: %s", rn->name);
+	if (pvcluster_addobj_dup(&psos_rn_table, rn->name, &rn->cobj)) {
+		warning("cannot register region: %s", rn->name);
 		xnfree(rn);
 		ret = ERR_OBJID;
 		goto out;

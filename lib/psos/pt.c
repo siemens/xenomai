@@ -154,8 +154,8 @@ u_long pt_create(const char *name,
 
 	COPPERPLATE_PROTECT(svc);
 
-	if (pvcluster_addobj(&psos_pt_table, pt->name, &pt->cobj)) {
-		warning("duplicate partition name: %s", pt->name);
+	if (pvcluster_addobj_dup(&psos_pt_table, pt->name, &pt->cobj)) {
+		warning("cannot register partition: %s", pt->name);
 		ret = ERR_OBJID;
 		goto out;
 	}
