@@ -383,6 +383,24 @@ int threadobj_wait_period(struct threadobj *thobj,
 	return -pthread_wait_np(overruns_r);
 }
 
+int threadobj_stat(struct threadobj *thobj, struct threadobj_stat *p) /* thobj->lock held */
+{
+	struct cobalt_threadstat stat;
+	int ret;
+
+	ret = __cobalt_thread_stat(thobj->tid, &stat);
+	if (ret)
+		return __bt(ret);
+
+	p->status = stat.status;
+	p->xtime = stat.xtime;
+	p->msw = stat.msw;
+	p->csw = stat.csw;
+	p->pf = stat.pf;
+
+	return 0;
+}
+
 #else /* CONFIG_XENO_MERCURY */
 
 #include <sys/prctl.h>
@@ -763,6 +781,12 @@ int threadobj_wait_period(struct threadobj *thobj,
 		*overruns_r = overruns;
 
 	return ret;
+}
+
+int threadobj_stat(struct threadobj *thobj,
+		   struct threadobj_stat *stat) /* thobj->lock held */
+{
+	return 0;
 }
 
 #endif /* CONFIG_XENO_MERCURY */

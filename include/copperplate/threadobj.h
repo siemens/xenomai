@@ -32,7 +32,20 @@
 #ifdef CONFIG_XENO_COBALT
 
 struct threadobj_corespec {
-	/* Nothing specific */
+	/* Nothing specific. */
+};
+
+struct threadobj_stat {
+	/** Cobalt thread status bits. */
+	unsigned long status;
+	/** Execution time in primary mode (ns). */
+	ticks_t xtime;
+	/** Number of primary->secondary mode switches. */
+	int msw;
+	/** Number of context switches. */
+	int csw;
+	/** Number of page faults. */
+	int pf;
 };
 
 #define SCHED_RT  SCHED_COBALT
@@ -48,6 +61,11 @@ struct threadobj_corespec {
 	struct timespec tslice;
 	struct timespec wakeup;
 	ticks_t period;
+};
+
+struct threadobj_stat {
+	/** Mercury thread status bits. */
+	unsigned long status;
 };
 
 #define SCHED_RT  SCHED_FIFO
@@ -192,6 +210,9 @@ int threadobj_wait_period(struct threadobj *thobj,
 			  unsigned long *overruns_r);
 
 void threadobj_spin(ticks_t ns);
+
+int threadobj_stat(struct threadobj *thobj,
+		   struct threadobj_stat *stat);
 
 void threadobj_pkg_init(void);
 
