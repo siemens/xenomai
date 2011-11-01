@@ -647,6 +647,32 @@ int rt_task_set_mode(int clrmask, int setmask, int *mode_r)
 	COPPERPLATE_PROTECT(svc);
 	ret = threadobj_set_mode(&tcb->thobj, clrmask, setmask, mode_r);
 	COPPERPLATE_UNPROTECT(svc);
+
+	put_alchemy_task(tcb);
+
+	return ret;
+}
+
+int rt_task_inquire(RT_TASK *task, RT_TASK_INFO *info)
+{
+	struct alchemy_task *tcb;
+	struct service svc;
+	int ret = 0;
+
+	tcb = get_alchemy_task_or_self(NULL, &ret);
+	if (tcb == NULL)
+		return ret;
+
+	COPPERPLATE_PROTECT(svc);
+
+	ret = __bt(threadobj_stat(&tcb->thobj, &info->stat));
+	if (ret)
+		goto out;
+
+	strcpy(info->name, tcb->name);
+	info->prio = threadobj_get_priority(&tcb->thobj);
+out:
+	COPPERPLATE_UNPROTECT(svc);
 	put_alchemy_task(tcb);
 
 	return ret;

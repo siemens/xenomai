@@ -47,6 +47,14 @@ struct RT_TASK {
 
 typedef struct RT_TASK RT_TASK;
 
+struct RT_TASK_INFO {
+	int prio;
+	char name[32];
+	struct threadobj_stat stat;
+};
+
+typedef struct RT_TASK_INFO RT_TASK_INFO;
+
 static const RT_TASK no_alchemy_task = { .handle = 0 };
 
 #ifdef __cplusplus
@@ -102,6 +110,9 @@ int rt_task_yield(void);
 int rt_task_unblock(RT_TASK *task);
 
 int rt_task_slice(RT_TASK *task, RTIME quantum);
+
+int rt_task_inquire(RT_TASK *task,
+		    RT_TASK_INFO *info);
 
 #ifdef __cplusplus
 }
