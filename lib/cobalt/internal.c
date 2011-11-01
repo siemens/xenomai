@@ -38,3 +38,9 @@ void __cobalt_thread_harden(void)
 	if ((status & (XNRELAX|XNOTHER)) == XNRELAX)
 		XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
 }
+
+int __cobalt_thread_stat(pthread_t tid, struct cobalt_threadstat *stat)
+{
+	return -XENOMAI_SKINCALL2(__cobalt_muxid,
+				  __cobalt_thread_getstat, tid, stat);
+}

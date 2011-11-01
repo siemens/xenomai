@@ -539,6 +539,42 @@ static int __pthread_kill(unsigned long tid, int sig)
 	return -pthread_kill(k_tid, sig);
 }
 
+static int __pthread_stat(unsigned long tid,
+			  struct cobalt_threadstat __user *u_stat)
+{
+	struct cobalt_threadstat stat;
+	struct cobalt_hkey hkey;
+	struct xnthread *thread;
+	pthread_t k_tid;
+	xnticks_t xtime;
+	spl_t s;
+
+	hkey.u_tid = tid;
+	hkey.mm = current->mm;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	k_tid = __pthread_find(&hkey);
+	if (k_tid == NULL) {
+		xnlock_put_irqrestore(&nklock, s);
+		return -ESRCH;
+	}
+
+	thread = &k_tid->threadbase;
+	xtime = xnthread_get_exectime(thread);
+	if (xnthread_sched(thread)->curr == thread)
+		xtime += xnstat_exectime_now() - xnthread_get_lastswitch(thread);
+	stat.xtime = xnarch_tsc_to_ns(xtime);
+	stat.msw = xnstat_counter_get(&thread->stat.ssw);
+	stat.csw = xnstat_counter_get(&thread->stat.csw);
+	stat.pf = xnstat_counter_get(&thread->stat.pf);
+	stat.status = xnthread_state_flags(thread);
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return __xn_safe_copy_to_user(u_stat, &stat, sizeof(stat));
+}
+
 static int __sem_init(union __xeno_sem __user *u_sem,
 		      int pshared, unsigned value)
 {
@@ -2600,6 +2636,7 @@ static struct xnsysent __systab[] = {
 	SKINCALL_DEF(__cobalt_thread_set_name, __pthread_set_name_np, any),
 	SKINCALL_DEF(__cobalt_thread_probe, __pthread_probe_np, any),
 	SKINCALL_DEF(__cobalt_thread_kill, __pthread_kill, any),
+	SKINCALL_DEF(__cobalt_thread_getstat, __pthread_stat, any),
 	SKINCALL_DEF(__cobalt_sem_init, __sem_init, any),
 	SKINCALL_DEF(__cobalt_sem_destroy, __sem_destroy, any),
 	SKINCALL_DEF(__cobalt_sem_post, __sem_post, any),

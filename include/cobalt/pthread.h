@@ -184,6 +184,14 @@ union __xeno_cond {
 	} shadow_cond;
 };
 
+struct cobalt_threadstat {
+	unsigned long status;
+	unsigned long long xtime;
+	int msw;
+	int csw;
+	int pf;
+};
+
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 typedef struct cobalt_mutexattr pthread_mutexattr_t;
 
