@@ -16,6 +16,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
+#ifndef _ALCHEMY_INTERNAL_H
+#define _ALCHEMY_INTERNAL_H
+
+#include <copperplate/clockobj.h>
+
 struct alchemy_namegen {
 	const char *prefix;
 	int length;
@@ -24,3 +29,7 @@ struct alchemy_namegen {
 
 char *__alchemy_build_name(char *buf, const char *name,
 			   struct alchemy_namegen *ngen);
+
+ticks_t __alchemy_rel2abs_timeout(ticks_t timeout);
+
+#endif /* !_ALCHEMY_INTERNAL_H */

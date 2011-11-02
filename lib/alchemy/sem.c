@@ -177,16 +177,7 @@ out:
 
 int rt_sem_p(RT_SEM *sem, RTIME timeout)
 {
-	struct service svc;
-	ticks_t now;
-
-	if (timeout != TM_INFINITE && timeout != TM_NONBLOCK) {
-		COPPERPLATE_PROTECT(svc);
-		clockobj_get_time(&alchemy_clock, &now, NULL);
-		COPPERPLATE_UNPROTECT(svc);
-		timeout += now;
-	}
-
+	timeout = __alchemy_rel2abs_timeout(timeout);
 	return rt_sem_p_until(sem, timeout);
 }
 

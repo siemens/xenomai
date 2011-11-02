@@ -201,16 +201,7 @@ out:
 int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex,
 		 RTIME timeout)
 {
-	struct service svc;
-	ticks_t now;
-
-	if (timeout != TM_INFINITE && timeout != TM_NONBLOCK) {
-		COPPERPLATE_PROTECT(svc);
-		clockobj_get_time(&alchemy_clock, &now, NULL);
-		COPPERPLATE_UNPROTECT(svc);
-		timeout += now;
-	}
-
+	timeout = __alchemy_rel2abs_timeout(timeout);
 	return rt_cond_wait_until(cond, mutex, timeout);
 }
 

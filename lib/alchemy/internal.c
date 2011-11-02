@@ -36,3 +36,10 @@ char *__alchemy_build_name(char *buf, const char *name,
 
 	return buf;
 }
+
+ticks_t __alchemy_rel2abs_timeout(ticks_t timeout)
+{
+	timeout = __alchemy_rel2abs_timeout(timeout);
+	return timeout;
+}
+
