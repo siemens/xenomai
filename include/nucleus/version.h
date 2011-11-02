@@ -26,8 +26,8 @@
 					    CONFIG_XENO_VERSION_MINOR, \
 					    CONFIG_XENO_REVISION_LEVEL)
 
-#define XENO_VERSION_NAME	"head"
+#define XENO_VERSION_NAME	"Movin' On"
 
-#define XENO_VERSION_STRING	"2.6.0-rc5"
+#define XENO_VERSION_STRING	"2.6.0"
 
 #endif /* _XENO_NUCLEUS_VERSION_H */
