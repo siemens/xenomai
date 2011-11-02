@@ -21,6 +21,7 @@
 
 #include <copperplate/init.h>
 #include <copperplate/hash.h>
+#include <copperplate/syncobj.h>
 
 #ifdef CONFIG_XENO_PSHARED
 
@@ -38,12 +39,22 @@ struct cluster {
 	struct dictionary *d;
 };
 
+struct syncluster {
+	struct cluster c;
+	struct syncobj sobj;
+};
+
 struct pvclusterobj {
 	struct pvhashobj hobj;
 };
 
 struct pvcluster {
 	struct pvhash_table table;
+};
+
+struct pvsyncluster {
+	struct pvcluster c;
+	struct syncobj sobj;
 };
 
 #else /* !CONFIG_XENO_PSHARED */
@@ -56,8 +67,14 @@ struct cluster {
 	struct pvhash_table table;
 };
 
+struct syncluster {
+	struct cluster c;
+	struct syncobj sobj;
+};
+
 #define pvclusterobj  clusterobj
 #define pvcluster     cluster
+#define pvsyncluster  syncluster
 
 #endif /* !CONFIG_XENO_PSHARED */
 
@@ -80,6 +97,22 @@ int pvcluster_delobj(struct pvcluster *c,
 
 struct pvclusterobj *pvcluster_findobj(struct pvcluster *c,
 				       const char *name);
+
+int pvsyncluster_init(struct pvsyncluster *sc, const char *name);
+
+void pvsyncluster_destroy(struct pvsyncluster *sc);
+
+int pvsyncluster_addobj(struct pvsyncluster *sc, const char *name,
+			struct pvclusterobj *cobj);
+
+int pvsyncluster_delobj(struct pvsyncluster *sc,
+			struct pvclusterobj *cobj);
+
+int pvsyncluster_findobj(struct pvsyncluster *sc,
+			 const char *name,
+			 const struct timespec *timeout,
+			 struct pvclusterobj **cobjp);
+
 #ifdef CONFIG_XENO_PSHARED
 
 int cluster_init(struct cluster *c, const char *name);
@@ -95,6 +128,20 @@ int cluster_delobj(struct cluster *c,
 
 struct clusterobj *cluster_findobj(struct cluster *c,
 				   const char *name);
+
+int syncluster_init(struct syncluster *sc, const char *name);
+
+int syncluster_addobj(struct syncluster *sc, const char *name,
+		      struct clusterobj *cobj);
+
+int syncluster_delobj(struct syncluster *sc,
+		      struct clusterobj *cobj);
+
+int syncluster_findobj(struct syncluster *sc,
+		       const char *name,
+		       const struct timespec *timeout,
+		       struct clusterobj **cobjp);
+
 #else /* !CONFIG_XENO_PSHARED */
 
 static inline int cluster_init(struct cluster *c, const char *name)
@@ -124,6 +171,33 @@ static inline struct clusterobj *cluster_findobj(struct cluster *c,
 						 const char *name)
 {
 	return pvcluster_findobj(c, name);
+}
+
+static inline int syncluster_init(struct syncluster *sc,
+				  const char *name)
+{
+	return pvsyncluster_init(sc, name);
+}
+
+static inline int syncluster_addobj(struct syncluster *sc,
+				    const char *name,
+				    struct clusterobj *cobj)
+{
+	return pvsyncluster_addobj(sc, name, cobj);
+}
+
+static inline int syncluster_delobj(struct syncluster *sc,
+				    struct clusterobj *cobj)
+{
+	return pvsyncluster_delobj(sc, cobj);
+}
+
+static inline int syncluster_findobj(struct syncluster *sc,
+				     const char *name,
+				     const struct timespec *timeout,
+				     struct clusterobj **cobjp)
+{
+	return pvsyncluster_findobj(sc, name, timeout, cobjp);
 }
 
 #endif /* !CONFIG_XENO_PSHARED */

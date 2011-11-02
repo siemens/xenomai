@@ -82,13 +82,24 @@
  * died unexpectedly. Under normal circumstances, for an orderly exit,
  * a process should remove all references to objects it has created
  * from existing clusters, before eventually freeing those objects.
+ *
+ * In addition to the basic cluster object, the synchronizing cluster
+ * (struct syncluster) provides support for waiting for a given object
+ * to appear in the dictionary.
  */
 
 #include <errno.h>
+#include <string.h>
 #include "copperplate/init.h"
 #include "copperplate/heapobj.h"
 #include "copperplate/cluster.h"
+#include "copperplate/syncobj.h"
+#include "copperplate/threadobj.h"
 #include "copperplate/debug.h"
+
+struct syncluster_wait_struct {
+	const char *name;
+};
 
 #ifdef CONFIG_XENO_PSHARED
 
@@ -193,6 +204,113 @@ struct clusterobj *cluster_findobj(struct cluster *c, const char *name)
 	return container_of(hobj, struct clusterobj, hobj);
 }
 
+int syncluster_init(struct syncluster *sc, const char *name)
+{
+	int ret;
+
+	ret = __bt(cluster_init(&sc->c, name));
+	if (ret)
+		return ret;
+
+	syncobj_init(&sc->sobj, SYNCOBJ_FIFO, fnref_null);
+
+	return 0;
+}
+
+int syncluster_addobj(struct syncluster *sc, const char *name,
+		      struct clusterobj *cobj)
+{
+	struct syncluster_wait_struct *wait;
+	struct threadobj *thobj, *tmp;
+	struct syncstate syns;
+	int ret;
+
+	if (syncobj_lock(&sc->sobj, &syns))
+		return __bt(-EINVAL);
+
+	ret = __bt(cluster_addobj(&sc->c, name, cobj));
+	if (ret)
+		goto out;
+	/*
+	 * Wake up all threads waiting for this key to appear in the
+	 * dictionary.
+	 */
+	syncobj_for_each_waiter_safe(&sc->sobj, thobj, tmp) {
+		wait = threadobj_get_wait(thobj);
+		if (*wait->name == *name && strcmp(wait->name, name) == 0)
+			syncobj_wakeup_waiter(&sc->sobj, thobj);
+	}
+out:
+	syncobj_unlock(&sc->sobj, &syns);
+
+	return ret;
+}
+
+int syncluster_delobj(struct syncluster *sc,
+		      struct clusterobj *cobj)
+{
+	struct syncstate syns;
+	int ret;
+
+	if (syncobj_lock(&sc->sobj, &syns))
+		return __bt(-EINVAL);
+
+	ret = __bt(cluster_delobj(&sc->c, cobj));
+
+	syncobj_unlock(&sc->sobj, &syns);
+
+	return ret;
+}
+
+int syncluster_findobj(struct syncluster *sc,
+		       const char *name,
+		       const struct timespec *timeout,
+		       struct clusterobj **cobjp)
+{
+	struct syncluster_wait_struct *wait = NULL;
+	struct clusterobj *cobj;
+	struct syncstate syns;
+	int ret = 0;
+
+	if (syncobj_lock(&sc->sobj, &syns))
+		return __bt(-EINVAL);
+
+	for (;;) {
+		cobj = cluster_findobj(&sc->c, name);
+		if (cobj) {
+			*cobjp = cobj;
+			break;
+		}
+		if (timeout->tv_sec == 0 && timeout->tv_nsec == 0) {
+			ret = -EWOULDBLOCK;
+			break;
+		}
+		if (threadobj_async_p()) {
+			ret = -EPERM;
+			break;
+		}
+		if (wait == NULL) {
+			wait = threadobj_alloc_wait(struct syncluster_wait_struct);
+			if (wait == NULL) {
+				return __bt(-ENOMEM);
+			}
+		}
+		ret = syncobj_pend(&sc->sobj, timeout, &syns);
+		if (ret) {
+			if (ret == -EIDRM)
+				goto out;
+			break;
+		}
+	}
+
+	syncobj_unlock(&sc->sobj, &syns);
+out:
+	if (wait)
+		threadobj_free_wait(wait);
+
+	return ret;
+}
+
 #endif /* !CONFIG_XENO_PSHARED */
 
 int pvcluster_init(struct pvcluster *c, const char *name)
@@ -232,4 +350,113 @@ struct pvclusterobj *pvcluster_findobj(struct pvcluster *c, const char *name)
 		return NULL;
 
 	return container_of(hobj, struct pvclusterobj, hobj);
+}
+
+int pvsyncluster_init(struct pvsyncluster *sc, const char *name)
+{
+	int ret;
+
+	ret = __bt(pvcluster_init(&sc->c, name));
+	if (ret)
+		return ret;
+
+	/*
+	 * Assuming pvcluster_destroy() is a nop, so we don't need to
+	 * run any finalizer.
+	 */
+	syncobj_init(&sc->sobj, SYNCOBJ_FIFO, fnref_null);
+
+	return 0;
+}
+
+void pvsyncluster_destroy(struct pvsyncluster *sc)
+{
+	struct syncstate syns;
+
+	if (__bt(syncobj_lock(&sc->sobj, &syns)))
+		return;
+
+	/* No finalizer, we just destroy the synchro. */
+	syncobj_destroy(&sc->sobj, &syns);
+}
+
+int pvsyncluster_addobj(struct pvsyncluster *sc, const char *name,
+			struct pvclusterobj *cobj)
+{
+	struct syncstate syns;
+	int ret;
+
+	if (syncobj_lock(&sc->sobj, &syns))
+		return __bt(-EINVAL);
+
+	ret = __bt(pvcluster_addobj(&sc->c, name, cobj));
+
+	syncobj_unlock(&sc->sobj, &syns);
+
+	return ret;
+}
+
+int pvsyncluster_delobj(struct pvsyncluster *sc,
+			struct pvclusterobj *cobj)
+{
+	struct syncstate syns;
+	int ret;
+
+	if (syncobj_lock(&sc->sobj, &syns))
+		return __bt(-EINVAL);
+
+	ret = __bt(pvcluster_delobj(&sc->c, cobj));
+
+	syncobj_unlock(&sc->sobj, &syns);
+
+	return ret;
+}
+
+int pvsyncluster_findobj(struct pvsyncluster *sc,
+			 const char *name,
+			 const struct timespec *timeout,
+			 struct pvclusterobj **cobjp)
+{
+	struct syncluster_wait_struct *wait = NULL;
+	struct pvclusterobj *cobj;
+	struct syncstate syns;
+	int ret = 0;
+
+	if (syncobj_lock(&sc->sobj, &syns))
+		return __bt(-EINVAL);
+
+	for (;;) {
+		cobj = pvcluster_findobj(&sc->c, name);
+		if (cobj) {
+			*cobjp = cobj;
+			break;
+		}
+		if (timeout->tv_sec == 0 && timeout->tv_nsec == 0) {
+			ret = -EWOULDBLOCK;
+			break;
+		}
+		if (threadobj_async_p()) {
+			ret = -EPERM;
+			break;
+		}
+		if (wait == NULL) {
+			wait = threadobj_alloc_wait(struct syncluster_wait_struct);
+			if (wait == NULL) {
+				return __bt(-ENOMEM);
+			}
+		}
+		ret = syncobj_pend(&sc->sobj, timeout, &syns);
+		if (ret) {
+			if (ret == -EIDRM)
+				goto out;
+			break;
+		}
+	}
+
+	syncobj_unlock(&sc->sobj, &syns);
+out:
+	if (wait)
+		threadobj_free_wait(wait);
+
+	return ret;
 }
