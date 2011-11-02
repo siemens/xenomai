@@ -163,7 +163,7 @@ void __syncobj_cleanup_wait(struct syncobj *sobj,
 	__RT(pthread_mutex_unlock(&sobj->lock));
 }
 
-int syncobj_pend(struct syncobj *sobj, struct timespec *timeout,
+int syncobj_pend(struct syncobj *sobj, const struct timespec *timeout,
 		 struct syncstate *syns)
 {
 	struct threadobj *current = threadobj_current();
@@ -256,7 +256,7 @@ struct threadobj *syncobj_peek(struct syncobj *sobj)
 	return thobj;
 }
 
-int syncobj_wait_drain(struct syncobj *sobj, struct timespec *timeout,
+int syncobj_wait_drain(struct syncobj *sobj, const struct timespec *timeout,
 		       struct syncstate *syns)
 {
 	struct threadobj *current = threadobj_current();

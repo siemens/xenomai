@@ -73,7 +73,8 @@ extern "C" {
 void syncobj_init(struct syncobj *sobj, int flags,
 		  fnref_type(void (*)(struct syncobj *sobj)) finalizer);
 
-int syncobj_pend(struct syncobj *sobj, struct timespec *timeout,
+int syncobj_pend(struct syncobj *sobj,
+		 const struct timespec *timeout,
 		 struct syncstate *syns);
 
 struct threadobj *syncobj_post(struct syncobj *sobj);
@@ -92,7 +93,8 @@ static inline void syncobj_unlock(struct syncobj *sobj,
 	write_unlock_safe(&sobj->lock, syns->state);
 }
 
-int syncobj_wait_drain(struct syncobj *sobj, struct timespec *timeout,
+int syncobj_wait_drain(struct syncobj *sobj,
+		       const struct timespec *timeout,
 		       struct syncstate *syns);
 
 int __syncobj_signal_drain(struct syncobj *sobj);
