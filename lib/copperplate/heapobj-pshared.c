@@ -748,8 +748,8 @@ int heapobj_init(struct heapobj *hobj, const char *name,
 				size, flags));
 }
 
-int heapobj_init_depend(struct heapobj *hobj, const char *name,
-			size_t size)
+int heapobj_init_shareable(struct heapobj *hobj, const char *name,
+			   size_t size)
 {
 	int flags = __this_node.reset_session ? HOBJ_FORCE : 0;
 
@@ -766,11 +766,11 @@ int heapobj_init_array(struct heapobj *hobj, const char *name,
 	return __bt(heapobj_init(hobj, name, size * elems, NULL));
 }
 
-int heapobj_init_array_depend(struct heapobj *hobj, const char *name,
-			      size_t size, int elems)
+int heapobj_init_array_shareable(struct heapobj *hobj, const char *name,
+				 size_t size, int elems)
 {
 	size = align_alloc_size(size);
-	return __bt(heapobj_init_depend(hobj, name, size * elems));
+	return __bt(heapobj_init_shareable(hobj, name, size * elems));
 }
 
 void *xnmalloc(size_t size)

@@ -91,13 +91,13 @@ MSG_Q_ID msgQCreate(int maxMsgs, int maxMsgLength, int options)
 		goto no_mem;
 
 	/*
-	 * The message pool will depend on the main heap because of
+	 * The message pool must come from the main heap because of
 	 * mq->msg_list (this queue head and messages from the pool
 	 * must share the same allocation base). Create the heap
 	 * object accordingly.
 	 */
-	if (heapobj_init_array_depend(&mq->pool, NULL, maxMsgLength +
-				      sizeof(struct msgholder), maxMsgs)) {
+	if (heapobj_init_array_shareable(&mq->pool, NULL, maxMsgLength +
+					 sizeof(struct msgholder), maxMsgs)) {
 		xnfree(mq);
 	no_mem:
 		errno = S_memLib_NOT_ENOUGH_MEMORY;

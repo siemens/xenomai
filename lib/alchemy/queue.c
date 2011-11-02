@@ -114,7 +114,7 @@ int rt_queue_create(RT_QUEUE *queue, const char *name,
 	 * The message pool has to be part of the main heap for proper
 	 * sharing between processes.
 	 */
-	if (heapobj_init_depend(&qcb->pool, NULL, poolsize)) {
+	if (heapobj_init_shareable(&qcb->pool, NULL, poolsize)) {
 		xnfree(qcb);
 	no_mem:
 		COPPERPLATE_UNPROTECT(svc);
