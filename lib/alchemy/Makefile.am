@@ -4,6 +4,8 @@ libalchemy_la_LDFLAGS = -version-info 0:0:0 -lpthread
 
 libalchemy_la_SOURCES =	\
 	init.c		\
+	internal.c	\
+	internal.h	\
 	reference.h	\
 	cond.c		\
 	cond.h		\
@@ -11,6 +13,8 @@ libalchemy_la_SOURCES =	\
 	event.h		\
 	mutex.c		\
 	mutex.h		\
+	queue.c		\
+	queue.h		\
 	task.c		\
 	task.h		\
 	sem.c		\

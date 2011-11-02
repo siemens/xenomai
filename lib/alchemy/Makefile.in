@@ -76,10 +76,11 @@ am__base_list = \
 am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libalchemy_la_LIBADD =
-am_libalchemy_la_OBJECTS = libalchemy_la-init.lo libalchemy_la-cond.lo \
+am_libalchemy_la_OBJECTS = libalchemy_la-init.lo \
+	libalchemy_la-internal.lo libalchemy_la-cond.lo \
 	libalchemy_la-event.lo libalchemy_la-mutex.lo \
-	libalchemy_la-task.lo libalchemy_la-sem.lo \
-	libalchemy_la-timer.lo
+	libalchemy_la-queue.lo libalchemy_la-task.lo \
+	libalchemy_la-sem.lo libalchemy_la-timer.lo
 libalchemy_la_OBJECTS = $(am_libalchemy_la_OBJECTS)
 libalchemy_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -262,6 +263,8 @@ lib_LTLIBRARIES = libalchemy.la
 libalchemy_la_LDFLAGS = -version-info 0:0:0 -lpthread
 libalchemy_la_SOURCES = \
 	init.c		\
+	internal.c	\
+	internal.h	\
 	reference.h	\
 	cond.c		\
 	cond.h		\
@@ -269,6 +272,8 @@ libalchemy_la_SOURCES = \
 	event.h		\
 	mutex.c		\
 	mutex.h		\
+	queue.c		\
+	queue.h		\
 	task.c		\
 	task.h		\
 	sem.c		\
@@ -359,7 +364,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libalchemy_la-cond.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libalchemy_la-event.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libalchemy_la-init.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libalchemy_la-internal.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libalchemy_la-mutex.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libalchemy_la-queue.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libalchemy_la-sem.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libalchemy_la-task.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libalchemy_la-timer.Plo@am__quote@
@@ -392,6 +399,13 @@ libalchemy_la-init.lo: init.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libalchemy_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libalchemy_la-init.lo `test -f 'init.c' || echo '$(srcdir)/'`init.c
 
+libalchemy_la-internal.lo: internal.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libalchemy_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libalchemy_la-internal.lo -MD -MP -MF $(DEPDIR)/libalchemy_la-internal.Tpo -c -o libalchemy_la-internal.lo `test -f 'internal.c' || echo '$(srcdir)/'`internal.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libalchemy_la-internal.Tpo $(DEPDIR)/libalchemy_la-internal.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='internal.c' object='libalchemy_la-internal.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libalchemy_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libalchemy_la-internal.lo `test -f 'internal.c' || echo '$(srcdir)/'`internal.c
+
 libalchemy_la-cond.lo: cond.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libalchemy_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libalchemy_la-cond.lo -MD -MP -MF $(DEPDIR)/libalchemy_la-cond.Tpo -c -o libalchemy_la-cond.lo `test -f 'cond.c' || echo '$(srcdir)/'`cond.c
 @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libalchemy_la-cond.Tpo $(DEPDIR)/libalchemy_la-cond.Plo
@@ -412,6 +426,13 @@ libalchemy_la-mutex.lo: mutex.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mutex.c' object='libalchemy_la-mutex.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libalchemy_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libalchemy_la-mutex.lo `test -f 'mutex.c' || echo '$(srcdir)/'`mutex.c
+
+libalchemy_la-queue.lo: queue.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libalchemy_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libalchemy_la-queue.lo -MD -MP -MF $(DEPDIR)/libalchemy_la-queue.Tpo -c -o libalchemy_la-queue.lo `test -f 'queue.c' || echo '$(srcdir)/'`queue.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libalchemy_la-queue.Tpo $(DEPDIR)/libalchemy_la-queue.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='queue.c' object='libalchemy_la-queue.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libalchemy_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libalchemy_la-queue.lo `test -f 'queue.c' || echo '$(srcdir)/'`queue.c
 
 libalchemy_la-task.lo: task.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libalchemy_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libalchemy_la-task.lo -MD -MP -MF $(DEPDIR)/libalchemy_la-task.Tpo -c -o libalchemy_la-task.lo `test -f 'task.c' || echo '$(srcdir)/'`task.c
