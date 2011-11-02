@@ -574,8 +574,8 @@ uninstall-dbx-htmldocs:
 	    done; \
         fi
 
-install-htmldocs: $(HTML_DOCS)
-	docs="$^"; abs_builddir=$$PWD; \
+install-htmldocs: $(HTML_DOCS:%=$(HTML_DOCSDIR)%)
+	docs="$(HTML_DOCS)"; abs_builddir=$$PWD; \
 	for dir in $$docs; do \
 	    dest=$(DESTDIR)$(docdir)/html/$$dir; \
 	    $(mkinstalldirs) $$dest; \
@@ -605,8 +605,8 @@ install-psdocs: $(PS_DOCS:%=$(PS_DOCSDIR)%)
 
 install-docs-local: install-htmldocs install-psdocs install-pdfdocs
 
-dist-htmldocs: $(HTML_DOCS)
-	docs="$^"; abs_builddir=$$PWD; \
+dist-htmldocs: $(HTML_DOCS:%=$(HTML_DOCSDIR)%)
+	docs="$(HTML_DOCS)"; abs_builddir=$$PWD; \
 	for dir in $$docs; do \
 	    dest=$(GEN_DOC_DIST_ROOT)/html/$$dir; \
 	    $(mkinstalldirs) $$dest && abs_dest=`cd $$dest && pwd` && \
