@@ -103,6 +103,7 @@ int rt_sem_create(RT_SEM *sem, const char *name,
 	ret = semobj_init(&scb->smobj, smobj_flags, icount,
 			  fnref_put(libalchemy, sem_finalize));
 	if (ret) {
+		syncluster_delobj(&alchemy_sem_table, &scb->cobj);
 		xnfree(scb);
 		COPPERPLATE_UNPROTECT(svc);
 		return ret;

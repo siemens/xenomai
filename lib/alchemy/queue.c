@@ -115,6 +115,7 @@ int rt_queue_create(RT_QUEUE *queue, const char *name,
 	 * sharing between processes.
 	 */
 	if (heapobj_init_shareable(&qcb->pool, NULL, poolsize)) {
+		syncluster_delobj(&alchemy_queue_table, &qcb->cobj);
 		xnfree(qcb);
 	no_mem:
 		COPPERPLATE_UNPROTECT(svc);
