@@ -20,6 +20,7 @@
 #include <string.h>
 #include <copperplate/threadobj.h>
 #include <copperplate/heapobj.h>
+#include "internal.h"
 #include "mutex.h"
 #include "timer.h"
 #include "task.h"
@@ -30,6 +31,11 @@
  */
 
 struct cluster alchemy_mutex_table;
+
+static struct alchemy_namegen mutex_namegen = {
+	.prefix = "mutex",
+	.length = sizeof ((struct alchemy_mutex *)0)->name,
+};
 
 struct alchemy_mutex *find_alchemy_mutex(RT_MUTEX *mutex, int *err_r)
 {
@@ -72,8 +78,7 @@ int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 		return -ENOMEM;
 	}
 
-	strncpy(mcb->name, name, sizeof(mcb->name));
-	mcb->name[sizeof(mcb->name) - 1] = '\0';
+	__alchemy_build_name(mcb->name, name, &mutex_namegen);
 	mcb->owner = no_alchemy_task;
 
 	if (cluster_addobj(&alchemy_mutex_table, mcb->name, &mcb->cobj)) {

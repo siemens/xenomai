@@ -21,10 +21,16 @@
 #include <copperplate/threadobj.h>
 #include <copperplate/heapobj.h>
 #include "reference.h"
+#include "internal.h"
 #include "sem.h"
 #include "timer.h"
 
 struct cluster alchemy_sem_table;
+
+static struct alchemy_namegen sem_namegen = {
+	.prefix = "sem",
+	.length = sizeof ((struct alchemy_sem *)0)->name,
+};
 
 static struct alchemy_sem *find_alchemy_sem(RT_SEM *sem, int *err_r)
 {
@@ -83,8 +89,7 @@ int rt_sem_create(RT_SEM *sem, const char *name,
 		return -ENOMEM;
 	}
 
-	strncpy(scb->name, name, sizeof(scb->name));
-	scb->name[sizeof(scb->name) - 1] = '\0';
+	__alchemy_build_name(scb->name, name, &sem_namegen);
 
 	if (cluster_addobj(&alchemy_sem_table, scb->name, &scb->cobj)) {
 		xnfree(scb);

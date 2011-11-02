@@ -24,12 +24,16 @@
 #include <stdio.h>
 #include <string.h>
 #include <copperplate/heapobj.h>
+#include "internal.h"
 #include "task.h"
 #include "timer.h"
 
 struct cluster alchemy_task_table;
 
-static unsigned long anon_ids;
+static struct alchemy_namegen task_namegen = {
+	.prefix = "task",
+	.length = sizeof ((struct alchemy_task *)0)->name,
+};
 
 static void delete_tcb(struct alchemy_task *tcb);
 
@@ -210,12 +214,7 @@ static int create_tcb(struct alchemy_task **tcbp,
 	if (tcb == NULL)
 		return -ENOMEM;
 
-	if (name == NULL || *name == '\0')
-		snprintf(tcb->name, sizeof(tcb->name), "T%lu", ++anon_ids);
-	else {
-		strncpy(tcb->name, name, sizeof(tcb->name));
-		tcb->name[sizeof(tcb->name) - 1] = '\0';
-	}
+	__alchemy_build_name(tcb->name, name, &task_namegen);
 
 	tcb->mode = mode;
 	tcb->entry = NULL;	/* Not yet known. */

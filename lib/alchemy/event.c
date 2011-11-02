@@ -21,10 +21,16 @@
 #include <copperplate/threadobj.h>
 #include <copperplate/heapobj.h>
 #include "reference.h"
+#include "internal.h"
 #include "event.h"
 #include "timer.h"
 
 struct cluster alchemy_event_table;
+
+static struct alchemy_namegen event_namegen = {
+	.prefix = "event",
+	.length = sizeof ((struct alchemy_event *)0)->name,
+};
 
 static struct alchemy_event *get_alchemy_event(RT_EVENT *event,
 					       struct syncstate *syns, int *err_r)
@@ -93,8 +99,7 @@ int rt_event_create(RT_EVENT *event, const char *name,
 		return -ENOMEM;
 	}
 
-	strncpy(evcb->name, name, sizeof(evcb->name));
-	evcb->name[sizeof(evcb->name) - 1] = '\0';
+	__alchemy_build_name(evcb->name, name, &event_namegen);
 
 	if (cluster_addobj(&alchemy_event_table, evcb->name, &evcb->cobj)) {
 		xnfree(evcb);

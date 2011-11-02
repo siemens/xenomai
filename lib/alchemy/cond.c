@@ -20,6 +20,7 @@
 #include <string.h>
 #include <copperplate/threadobj.h>
 #include <copperplate/heapobj.h>
+#include "internal.h"
 #include "cond.h"
 #include "timer.h"
 #include "mutex.h"
@@ -30,6 +31,11 @@
  */
 
 struct cluster alchemy_cond_table;
+
+static struct alchemy_namegen cond_namegen = {
+	.prefix = "cond",
+	.length = sizeof ((struct alchemy_cond *)0)->name,
+};
 
 static struct alchemy_cond *find_alchemy_cond(RT_COND *cond, int *err_r)
 {
@@ -72,8 +78,7 @@ int rt_cond_create(RT_COND *cond, const char *name)
 		return -ENOMEM;
 	}
 
-	strncpy(ccb->name, name, sizeof(ccb->name));
-	ccb->name[sizeof(ccb->name) - 1] = '\0';
+	__alchemy_build_name(ccb->name, name, &cond_namegen);
 
 	if (cluster_addobj(&alchemy_cond_table, ccb->name, &ccb->cobj)) {
 		xnfree(ccb);
