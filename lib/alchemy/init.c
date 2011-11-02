@@ -27,6 +27,9 @@
 #include "task.h"
 #include "sem.h"
 #include "event.h"
+#include "cond.h"
+#include "mutex.h"
+#include "queue.h"
 
 static unsigned int clock_resolution = 1; /* nanosecond. */
 
@@ -63,9 +66,12 @@ static int alchemy_init(int argc, char *const argv[])
 		}
 	}
 
-	cluster_init(&alchemy_task_table, "alchemy.task");
-	cluster_init(&alchemy_sem_table, "alchemy.sem");
-	cluster_init(&alchemy_event_table, "alchemy.event");
+	syncluster_init(&alchemy_task_table, "alchemy.task");
+	syncluster_init(&alchemy_sem_table, "alchemy.sem");
+	syncluster_init(&alchemy_event_table, "alchemy.event");
+	syncluster_init(&alchemy_cond_table, "alchemy.cond");
+	syncluster_init(&alchemy_mutex_table, "alchemy.mutex");
+	syncluster_init(&alchemy_queue_table, "alchemy.queue");
 
 	ret = clockobj_init(&alchemy_clock, "alchemy", clock_resolution);
 	if (ret) {

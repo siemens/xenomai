@@ -49,6 +49,6 @@ struct alchemy_queue_wait {
 	struct alchemy_queue_msg *msg;
 };
 
-extern struct cluster alchemy_queue_table;
+extern struct syncluster alchemy_queue_table;
 
 #endif /* _ALCHEMY_QUEUE_H */

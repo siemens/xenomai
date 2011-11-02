@@ -39,6 +39,6 @@ struct alchemy_event_wait {
 
 #define event_magic	0x8484ebeb
 
-extern struct cluster alchemy_event_table;
+extern struct syncluster alchemy_event_table;
 
 #endif /* _ALCHEMY_EVENT_H */

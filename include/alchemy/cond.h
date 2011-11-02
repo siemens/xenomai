@@ -59,6 +59,11 @@ int rt_cond_wait_until(RT_COND *cond,
 int rt_cond_inquire(RT_COND *cond,
 		    RT_COND_INFO *info);
 
+int rt_cond_bind(RT_COND *cond,
+		 const char *name, RTIME timeout);
+
+int rt_cond_unbind(RT_COND *cond);
+
 #ifdef __cplusplus
 }
 #endif

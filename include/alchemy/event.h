@@ -77,6 +77,11 @@ int rt_event_clear(RT_EVENT *event,
 int rt_event_inquire(RT_EVENT *event,
 		     RT_EVENT_INFO *info);
 
+int rt_event_bind(RT_EVENT *event,
+		  const char *name, RTIME timeout);
+
+int rt_event_unbind(RT_EVENT *event);
+
 #ifdef __cplusplus
 }
 #endif

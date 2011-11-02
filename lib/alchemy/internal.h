@@ -19,7 +19,7 @@
 #ifndef _ALCHEMY_INTERNAL_H
 #define _ALCHEMY_INTERNAL_H
 
-#include <copperplate/clockobj.h>
+#include "timer.h"
 
 struct alchemy_namegen {
 	const char *prefix;
@@ -27,9 +27,16 @@ struct alchemy_namegen {
 	int serial;
 };
 
+struct syncluster;
+
 char *__alchemy_build_name(char *buf, const char *name,
 			   struct alchemy_namegen *ngen);
 
-ticks_t __alchemy_rel2abs_timeout(ticks_t timeout);
+RTIME __alchemy_rel2abs_timeout(RTIME timeout);
+
+int __alchemy_bind_object(const char *name, struct syncluster *sc,
+			  RTIME timeout,
+			  int offset,
+			  uintptr_t *handle);
 
 #endif /* !_ALCHEMY_INTERNAL_H */

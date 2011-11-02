@@ -114,6 +114,11 @@ int rt_task_slice(RT_TASK *task, RTIME quantum);
 int rt_task_inquire(RT_TASK *task,
 		    RT_TASK_INFO *info);
 
+int rt_task_bind(RT_TASK *task,
+		 const char *name, RTIME timeout);
+
+int rt_task_unbind(RT_TASK *task);
+
 #ifdef __cplusplus
 }
 #endif

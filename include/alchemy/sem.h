@@ -65,6 +65,11 @@ int rt_sem_broadcast(RT_SEM *sem);
 int rt_sem_inquire(RT_SEM *sem,
 		   RT_SEM_INFO *info);
 
+int rt_sem_bind(RT_SEM *sem,
+		const char *name, RTIME timeout);
+
+int rt_sem_unbind(RT_SEM *sem);
+
 #ifdef __cplusplus
 }
 #endif

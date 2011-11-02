@@ -30,7 +30,7 @@
  * must rely on POSIX condvars directly.
  */
 
-struct cluster alchemy_cond_table;
+struct syncluster alchemy_cond_table;
 
 static struct alchemy_namegen cond_namegen = {
 	.prefix = "cond",
@@ -80,7 +80,7 @@ int rt_cond_create(RT_COND *cond, const char *name)
 
 	__alchemy_build_name(ccb->name, name, &cond_namegen);
 
-	if (cluster_addobj(&alchemy_cond_table, ccb->name, &ccb->cobj)) {
+	if (syncluster_addobj(&alchemy_cond_table, ccb->name, &ccb->cobj)) {
 		xnfree(ccb);
 		COPPERPLATE_UNPROTECT(svc);
 		return -EEXIST;
@@ -119,7 +119,7 @@ int rt_cond_delete(RT_COND *cond)
 		goto out;
 
 	ccb->magic = ~cond_magic;
-	cluster_delobj(&alchemy_cond_table, &ccb->cobj);
+	syncluster_delobj(&alchemy_cond_table, &ccb->cobj);
 	xnfree(ccb);
 out:
 	COPPERPLATE_UNPROTECT(svc);
@@ -222,4 +222,20 @@ out:
 	COPPERPLATE_UNPROTECT(svc);
 
 	return ret;
+}
+
+int rt_cond_bind(RT_COND *cond,
+		 const char *name, RTIME timeout)
+{
+	return __alchemy_bind_object(name,
+				     &alchemy_cond_table,
+				     timeout,
+				     offsetof(struct alchemy_cond, cobj),
+				     &cond->handle);
+}
+
+int rt_cond_unbind(RT_COND *cond)
+{
+	cond->handle = 0;
+	return 0;
 }

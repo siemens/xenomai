@@ -18,7 +18,10 @@
 
 #include <string.h>
 #include <stdio.h>
-#include "copperplate/lock.h"
+#include <errno.h>
+#include <copperplate/lock.h>
+#include <copperplate/cluster.h>
+#include <copperplate/heapobj.h>
 #include "internal.h"
 
 char *__alchemy_build_name(char *buf, const char *name,
@@ -37,9 +40,41 @@ char *__alchemy_build_name(char *buf, const char *name,
 	return buf;
 }
 
-ticks_t __alchemy_rel2abs_timeout(ticks_t timeout)
+RTIME __alchemy_rel2abs_timeout(RTIME timeout)
 {
 	timeout = __alchemy_rel2abs_timeout(timeout);
 	return timeout;
 }
 
+int __alchemy_bind_object(const char *name, struct syncluster *sc,
+			  RTIME timeout,
+			  int offset,
+			  uintptr_t *handle)
+{
+	struct timespec ts, *timespec;
+	struct clusterobj *cobj;
+	struct service svc;
+	void *p;
+	int ret;
+
+	COPPERPLATE_PROTECT(svc);
+
+ 	if (timeout != TM_INFINITE) {
+		timespec = &ts;
+		clockobj_ticks_to_timespec(&alchemy_clock, timeout, timespec);
+	} else
+		timespec = NULL;
+
+	ret = syncluster_findobj(sc, name, timespec, &cobj);
+
+	COPPERPLATE_UNPROTECT(svc);
+
+	if (ret)
+		return ret;
+
+	p = cobj;
+	p -= offset;
+	*handle = mainheap_ref(p, uintptr_t);
+
+	return 0;
+}

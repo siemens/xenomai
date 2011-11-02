@@ -25,7 +25,7 @@
 #include "queue.h"
 #include "timer.h"
 
-struct cluster alchemy_queue_table;
+struct syncluster alchemy_queue_table;
 
 static struct alchemy_namegen queue_namegen = {
 	.prefix = "queue",
@@ -104,7 +104,7 @@ int rt_queue_create(RT_QUEUE *queue, const char *name,
 
 	__alchemy_build_name(qcb->name, name, &queue_namegen);
 
-	if (cluster_addobj(&alchemy_queue_table, qcb->name, &qcb->cobj)) {
+	if (syncluster_addobj(&alchemy_queue_table, qcb->name, &qcb->cobj)) {
 		xnfree(qcb);
 		COPPERPLATE_UNPROTECT(svc);
 		return -EEXIST;
@@ -154,7 +154,7 @@ int rt_queue_delete(RT_QUEUE *queue)
 	if (qcb == NULL)
 		goto out;
 
-	cluster_delobj(&alchemy_queue_table, &qcb->cobj);
+	syncluster_delobj(&alchemy_queue_table, &qcb->cobj);
 	qcb->magic = ~queue_magic;
 	syncobj_destroy(&qcb->sobj, &syns);
 out:
@@ -498,4 +498,20 @@ out:
 	COPPERPLATE_UNPROTECT(svc);
 
 	return ret;
+}
+
+int rt_queue_bind(RT_QUEUE *queue,
+		  const char *name, RTIME timeout)
+{
+	return __alchemy_bind_object(name,
+				     &alchemy_queue_table,
+				     timeout,
+				     offsetof(struct alchemy_queue, cobj),
+				     &queue->handle);
+}
+
+int rt_queue_unbind(RT_QUEUE *queue)
+{
+	queue->handle = 0;
+	return 0;
 }

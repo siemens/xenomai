@@ -32,6 +32,6 @@ struct alchemy_sem {
 
 #define sem_magic	0x8383ebeb
 
-extern struct cluster alchemy_sem_table;
+extern struct syncluster alchemy_sem_table;
 
 #endif /* _ALCHEMY_SEM_H */

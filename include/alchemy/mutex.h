@@ -56,6 +56,11 @@ int rt_mutex_release(RT_MUTEX *mutex);
 int rt_mutex_inquire(RT_MUTEX *mutex,
 		     RT_MUTEX_INFO *info);
 
+int rt_mutex_bind(RT_MUTEX *mutex,
+		  const char *name, RTIME timeout);
+
+int rt_mutex_unbind(RT_MUTEX *mutex);
+
 #ifdef __cplusplus
 }
 #endif

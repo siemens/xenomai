@@ -33,7 +33,7 @@ struct alchemy_mutex {
 
 #define mutex_magic	0x8585ebeb
 
-extern struct cluster alchemy_mutex_table;
+extern struct syncluster alchemy_mutex_table;
 
 struct alchemy_mutex *find_alchemy_mutex(RT_MUTEX *mutex, int *err_r);
 

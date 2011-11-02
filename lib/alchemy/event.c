@@ -25,7 +25,7 @@
 #include "event.h"
 #include "timer.h"
 
-struct cluster alchemy_event_table;
+struct syncluster alchemy_event_table;
 
 static struct alchemy_namegen event_namegen = {
 	.prefix = "event",
@@ -101,7 +101,7 @@ int rt_event_create(RT_EVENT *event, const char *name,
 
 	__alchemy_build_name(evcb->name, name, &event_namegen);
 
-	if (cluster_addobj(&alchemy_event_table, evcb->name, &evcb->cobj)) {
+	if (syncluster_addobj(&alchemy_event_table, evcb->name, &evcb->cobj)) {
 		xnfree(evcb);
 		COPPERPLATE_UNPROTECT(svc);
 		return -EEXIST;
@@ -138,7 +138,7 @@ int rt_event_delete(RT_EVENT *event)
 	if (evcb == NULL)
 		goto out;
 
-	cluster_delobj(&alchemy_event_table, &evcb->cobj);
+	syncluster_delobj(&alchemy_event_table, &evcb->cobj);
 	evcb->magic = ~event_magic; /* Prevent further reference. */
 	syncobj_destroy(&evcb->sobj, &syns);
 out:
@@ -195,7 +195,7 @@ int rt_event_wait_until(RT_EVENT *event,
 	wait->mask = mask;
 	wait->mode = mode;
 
-	if (timeout != TM_INFINITE) {
+ 	if (timeout != TM_INFINITE) {
 		timespec = &ts;
 		clockobj_ticks_to_timespec(&alchemy_clock, timeout, timespec);
 	} else
@@ -310,4 +310,20 @@ out:
 	COPPERPLATE_UNPROTECT(svc);
 
 	return ret;
+}
+
+int rt_event_bind(RT_EVENT *event,
+		  const char *name, RTIME timeout)
+{
+	return __alchemy_bind_object(name,
+				     &alchemy_event_table,
+				     timeout,
+				     offsetof(struct alchemy_event, cobj),
+				     &event->handle);
+}
+
+int rt_event_unbind(RT_EVENT *event)
+{
+	event->handle = 0;
+	return 0;
 }

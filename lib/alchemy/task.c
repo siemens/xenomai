@@ -28,7 +28,7 @@
 #include "task.h"
 #include "timer.h"
 
-struct cluster alchemy_task_table;
+struct syncluster alchemy_task_table;
 
 static struct alchemy_namegen task_namegen = {
 	.prefix = "task",
@@ -135,7 +135,7 @@ static void task_finalizer(struct threadobj *thobj)
 	struct syncstate syns;
 
 	tcb = container_of(thobj, struct alchemy_task, thobj);
-	cluster_delobj(&alchemy_task_table, &tcb->cobj);
+	syncluster_delobj(&alchemy_task_table, &tcb->cobj);
 	syncobj_lock(&tcb->sobj, &syns);
 	syncobj_destroy(&tcb->sobj, &syns);
 	threadobj_destroy(&tcb->thobj);
@@ -236,7 +236,7 @@ static int create_tcb(struct alchemy_task **tcbp,
 	idata.priority = prio;
 	threadobj_init(&tcb->thobj, &idata);
 
-	if (cluster_addobj(&alchemy_task_table, tcb->name, &tcb->cobj)) {
+	if (syncluster_addobj(&alchemy_task_table, tcb->name, &tcb->cobj)) {
 		delete_tcb(tcb);
 		return -EEXIST;
 	}
@@ -308,7 +308,7 @@ int rt_task_delete(RT_TASK *task)
 	struct service svc;
 	int ret;
 
-	if (threadobj_async_p())
+ 	if (threadobj_async_p())
 		return -EPERM;
 
 	tcb = find_alchemy_task_or_self(task, &ret);
@@ -675,4 +675,20 @@ out:
 	put_alchemy_task(tcb);
 
 	return ret;
+}
+
+int rt_task_bind(RT_TASK *task,
+		 const char *name, RTIME timeout)
+{
+	return __alchemy_bind_object(name,
+				     &alchemy_task_table,
+				     timeout,
+				     offsetof(struct alchemy_task, cobj),
+				     &task->handle);
+}
+
+int rt_task_unbind(RT_TASK *task)
+{
+	*task = no_alchemy_task;
+	return 0;
 }

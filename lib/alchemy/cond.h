@@ -33,6 +33,6 @@ struct alchemy_cond {
 
 #define cond_magic	0x8686ebeb
 
-extern struct cluster alchemy_cond_table;
+extern struct syncluster alchemy_cond_table;
 
 #endif /* _ALCHEMY_COND_H */

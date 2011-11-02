@@ -64,6 +64,6 @@ static inline int check_task_priority(int prio)
 	return prio < T_LOPRIO || prio > T_HIPRIO ? -EINVAL : 0;
 }
 
-extern struct cluster alchemy_task_table;
+extern struct syncluster alchemy_task_table;
 
 #endif /* _ALCHEMY_TASK_H */

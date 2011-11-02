@@ -25,7 +25,7 @@
 #include "sem.h"
 #include "timer.h"
 
-struct cluster alchemy_sem_table;
+struct syncluster alchemy_sem_table;
 
 static struct alchemy_namegen sem_namegen = {
 	.prefix = "sem",
@@ -91,7 +91,7 @@ int rt_sem_create(RT_SEM *sem, const char *name,
 
 	__alchemy_build_name(scb->name, name, &sem_namegen);
 
-	if (cluster_addobj(&alchemy_sem_table, scb->name, &scb->cobj)) {
+	if (syncluster_addobj(&alchemy_sem_table, scb->name, &scb->cobj)) {
 		xnfree(scb);
 		COPPERPLATE_UNPROTECT(svc);
 		return -EEXIST;
@@ -131,7 +131,7 @@ int rt_sem_delete(RT_SEM *sem)
 	if (scb == NULL)
 		goto out;
 
-	cluster_delobj(&alchemy_sem_table, &scb->cobj);
+	syncluster_delobj(&alchemy_sem_table, &scb->cobj);
 	scb->magic = ~sem_magic; /* Prevent further reference. */
 	semobj_destroy(&scb->smobj);
 out:
@@ -242,4 +242,20 @@ out:
 	COPPERPLATE_UNPROTECT(svc);
 
 	return ret;
+}
+
+int rt_sem_bind(RT_SEM *sem,
+		const char *name, RTIME timeout)
+{
+	return __alchemy_bind_object(name,
+				     &alchemy_sem_table,
+				     timeout,
+				     offsetof(struct alchemy_sem, cobj),
+				     &sem->handle);
+}
+
+int rt_sem_unbind(RT_SEM *sem)
+{
+	sem->handle = 0;
+	return 0;
 }

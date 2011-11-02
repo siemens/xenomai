@@ -30,7 +30,7 @@
  * to base this code directly over the POSIX layer.
  */
 
-struct cluster alchemy_mutex_table;
+struct syncluster alchemy_mutex_table;
 
 static struct alchemy_namegen mutex_namegen = {
 	.prefix = "mutex",
@@ -81,7 +81,7 @@ int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 	__alchemy_build_name(mcb->name, name, &mutex_namegen);
 	mcb->owner = no_alchemy_task;
 
-	if (cluster_addobj(&alchemy_mutex_table, mcb->name, &mcb->cobj)) {
+	if (syncluster_addobj(&alchemy_mutex_table, mcb->name, &mcb->cobj)) {
 		xnfree(mcb);
 		COPPERPLATE_UNPROTECT(svc);
 		return -EEXIST;
@@ -124,7 +124,7 @@ int rt_mutex_delete(RT_MUTEX *mutex)
 		goto out;
 
 	mcb->magic = ~mutex_magic;
-	cluster_delobj(&alchemy_mutex_table, &mcb->cobj);
+	syncluster_delobj(&alchemy_mutex_table, &mcb->cobj);
 	xnfree(mcb);
 out:
 	COPPERPLATE_UNPROTECT(svc);
@@ -256,4 +256,20 @@ out:
 	COPPERPLATE_UNPROTECT(svc);
 
 	return ret;
+}
+
+int rt_mutex_bind(RT_MUTEX *mutex,
+		  const char *name, RTIME timeout)
+{
+	return __alchemy_bind_object(name,
+				     &alchemy_mutex_table,
+				     timeout,
+				     offsetof(struct alchemy_mutex, cobj),
+				     &mutex->handle);
+}
+
+int rt_mutex_unbind(RT_MUTEX *mutex)
+{
+	mutex->handle = 0;
+	return 0;
 }
