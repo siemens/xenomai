@@ -658,7 +658,7 @@ int rt_task_inquire(RT_TASK *task, RT_TASK_INFO *info)
 	struct service svc;
 	int ret = 0;
 
-	tcb = get_alchemy_task_or_self(NULL, &ret);
+	tcb = get_alchemy_task_or_self(task, &ret);
 	if (tcb == NULL)
 		return ret;
 
