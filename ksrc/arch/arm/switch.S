@@ -47,6 +47,11 @@
 #endif /* CONFIG_CPU_USE_DOMAINS */
 #endif /* Linux >= 2.6.38 */
 
+#ifdef CONFIG_CC_STACKPROTECTOR
+#warning "Buffer overflow detection not supported for Xenomai on ARM"
+#error "Disable CONFIG_CC_STACKPROTECTOR in your kernel configuration"
+#endif
+
 	.macro fpu_switch tmp
 #ifdef CONFIG_VFP
 	@ Always disable VFP so we can lazily save/restore the old

@@ -27,10 +27,6 @@ separately from the kernel support, even if the latter is absent from
 the build system. Section 1.3 documents the installation process of this
 user-space support.
 
-Finally, Xenomai build system also allows building a Xenomai patched
-kernel as part of the user space support compilation process. Section
-1.4 documents this possibility.
-
 
 1. Installation steps
 ---------------------

@@ -708,10 +708,16 @@ index 7b1bb2b..40da67b 100644
  	return (res & mask) != 0;
  }
 diff --git a/arch/arm/include/asm/cacheflush.h b/arch/arm/include/asm/cacheflush.h
-index 3acd8fa..fc3bb73 100644
+index 3acd8fa..449942d 100644
 --- a/arch/arm/include/asm/cacheflush.h
 +++ b/arch/arm/include/asm/cacheflush.h
-@@ -16,6 +16,7 @@
+@@ -11,11 +11,13 @@
+ #define _ASMARM_CACHEFLUSH_H
+ 
+ #include <linux/mm.h>
++#include <linux/sched.h>
+ 
+ #include <asm/glue.h>
  #include <asm/shmparam.h>
  #include <asm/cachetype.h>
  #include <asm/outercache.h>
@@ -719,7 +725,7 @@ index 3acd8fa..fc3bb73 100644
  
  #define CACHE_COLOUR(vaddr)	((vaddr & (SHMLBA - 1)) >> PAGE_SHIFT)
  
-@@ -286,6 +287,27 @@ extern void dmac_flush_range(const void *, const void *);
+@@ -286,6 +288,27 @@ extern void dmac_flush_range(const void *, const void *);
  
  #endif
  
@@ -747,7 +753,7 @@ index 3acd8fa..fc3bb73 100644
  /*
   * Copy user data from/to a page which is mapped into a different
   * processes address space.  Really, we want to allow our "user
-@@ -293,9 +315,10 @@ extern void dmac_flush_range(const void *, const void *);
+@@ -293,9 +316,10 @@ extern void dmac_flush_range(const void *, const void *);
   */
  extern void copy_to_user_page(struct vm_area_struct *, struct page *,
  	unsigned long, void *, const void *, unsigned long);
@@ -761,7 +767,7 @@ index 3acd8fa..fc3bb73 100644
  	} while (0)
  
  /*
-@@ -336,23 +359,29 @@ static inline void __flush_icache_all(void)
+@@ -336,23 +360,29 @@ static inline void __flush_icache_all(void)
  
  static inline void vivt_flush_cache_mm(struct mm_struct *mm)
  {
@@ -797,7 +803,7 @@ index 3acd8fa..fc3bb73 100644
  		__cpuc_flush_user_range(addr, addr + PAGE_SIZE, vma->vm_flags);
  	}
  }
-@@ -377,14 +406,22 @@ extern void flush_cache_page(struct vm_area_struct *vma, unsigned long user_addr
+@@ -377,14 +407,22 @@ extern void flush_cache_page(struct vm_area_struct *vma, unsigned long user_addr
   * Harvard caches are synchronised for the user space address range.
   * This is used for the ARM private sys_cacheflush system call.
   */
@@ -823,7 +829,7 @@ index 3acd8fa..fc3bb73 100644
  
  /*
   * Perform necessary cache operations to ensure that the TLB will
-@@ -425,7 +462,8 @@ static inline void flush_anon_page(struct vm_area_struct *vma,
+@@ -425,7 +463,8 @@ static inline void flush_anon_page(struct vm_area_struct *vma,
  	extern void __flush_anon_page(struct vm_area_struct *vma,
  				struct page *, unsigned long);
  	if (PageAnon(page))
@@ -833,7 +839,7 @@ index 3acd8fa..fc3bb73 100644
  }
  
  #define ARCH_HAS_FLUSH_KERNEL_DCACHE_PAGE
-@@ -456,9 +494,11 @@ static inline void flush_kernel_dcache_page(struct page *page)
+@@ -456,9 +495,11 @@ static inline void flush_kernel_dcache_page(struct page *page)
   */
  static inline void flush_cache_vmap(unsigned long start, unsigned long end)
  {
@@ -847,7 +853,7 @@ index 3acd8fa..fc3bb73 100644
  		/*
  		 * set_pte_at() called from vmap_pte_range() does not
  		 * have a DSB after cleaning the cache line.
-@@ -468,8 +508,11 @@ static inline void flush_cache_vmap(unsigned long start, unsigned long end)
+@@ -468,8 +509,11 @@ static inline void flush_cache_vmap(unsigned long start, unsigned long end)
  
  static inline void flush_cache_vunmap(unsigned long start, unsigned long end)
  {
@@ -1140,7 +1146,7 @@ index 21e75e3..2cae6e8 100644
  void sp804_clockevents_init(void __iomem *, unsigned int);
 diff --git a/arch/arm/include/asm/ipipe.h b/arch/arm/include/asm/ipipe.h
 new file mode 100644
-index 0000000..b96e3e2
+index 0000000..1108ba6
 --- /dev/null
 +++ b/arch/arm/include/asm/ipipe.h
 @@ -0,0 +1,340 @@
@@ -1176,10 +1182,10 @@ index 0000000..b96e3e2
 +#include <linux/ipipe_percpu.h>
 +#include <linux/ipipe_trace.h>
 +
-+#define IPIPE_ARCH_STRING	"1.18-03"
++#define IPIPE_ARCH_STRING	"1.18-04"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	18
-+#define IPIPE_PATCH_NUMBER	3
++#define IPIPE_PATCH_NUMBER	4
 +
 +#ifdef CONFIG_SMP
 +#define ipipe_processor_id()	hard_smp_processor_id()
