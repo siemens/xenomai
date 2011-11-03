@@ -231,6 +231,9 @@ int syncluster_addobj(struct syncluster *sc, const char *name,
 	ret = __bt(cluster_addobj(&sc->c, name, cobj));
 	if (ret)
 		goto out;
+
+	if (!syncobj_pended_p(&sc->sobj))
+		goto out;
 	/*
 	 * Wake up all threads waiting for this key to appear in the
 	 * dictionary.

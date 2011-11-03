@@ -153,8 +153,10 @@ static void task_finalizer(struct threadobj *thobj)
 
 	cluster_delobj(&psos_task_table, &task->cobj);
 
-	pvlist_for_each_entry_safe(tm, tmp, &task->timer_list, link)
-		tm_cancel((u_long)tm);
+	if (!pvlist_empty(&task->timer_list)) {
+		pvlist_for_each_entry_safe(tm, tmp, &task->timer_list, link)
+			tm_cancel((u_long)tm);
+	}
 
 	/* We have to hold a lock on a syncobj to destroy it. */
 	syncobj_lock(&task->sobj, &syns);

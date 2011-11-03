@@ -44,7 +44,7 @@ NODE *lstNth(LIST *l, int nodenum)
 	struct pvholder *holder;
 	int nth;
 
-	if (l == 0 || nodenum <= 0)
+	if (l == NULL || nodenum <= 0 || pvlist_empty(&l->list))
 		return NULL;
 
 	if (nodenum <= l->count >> 2) { /* nodenum is 1-based. */
@@ -89,7 +89,8 @@ int lstFind(LIST *l, NODE *n)
 {
 	struct pvholder *holder;
 	int nth = 1;
-	if (l == 0)
+
+	if (l == NULL || pvlist_empty(&l->list))
 		return ERROR;
 
 	pvlist_for_each(holder, &l->list) {
@@ -105,6 +106,9 @@ void lstConcat(LIST *ldst, LIST *lsrc)
 {
 	struct pvholder *holder;
 	struct NODE *n;
+
+	if (pvlist_empty(&lsrc->list))
+		return;
 
 	pvlist_for_each(holder, &lsrc->list) {
 		n = container_of(holder, struct NODE, link);

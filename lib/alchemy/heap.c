@@ -266,6 +266,8 @@ int rt_heap_free(RT_HEAP *heap, void *block)
 
 	heapobj_free(&hcb->hobj, block);
 
+	if (!syncobj_pended_p(&hcb->sobj))
+		goto done;
 	/*
 	 * We might be releasing a block large enough to satisfy
 	 * multiple requests, so we iterate over all waiters.

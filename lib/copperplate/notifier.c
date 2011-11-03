@@ -66,6 +66,9 @@ static void notifier_sighandler(int sig, siginfo_t *siginfo, void *uc)
 			goto hand_over;
 	}
 
+	if (pvlist_empty(&notifier_list))
+		goto hand_over;
+
 	/* We may NOT alter the notifier list, but only scan it. */
 	pvlist_for_each_entry(nf, &notifier_list, link) {
 		if (!FD_ISSET(nf->psfd[0], &rfds))

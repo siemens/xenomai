@@ -308,6 +308,9 @@ u_long rn_retseg(u_long rnid, void *segaddr)
 	heapobj_free(&rn->hobj, segaddr);
 	rn->busynr--;
 
+	if (!syncobj_pended_p(&rn->sobj))
+		goto done;
+
 	syncobj_for_each_waiter_safe(&rn->sobj, thobj, tmp) {
 		size = thobj->wait_u.buffer.size;
 		if (rn->usedmem + size > rn->length)
@@ -320,7 +323,7 @@ u_long rn_retseg(u_long rnid, void *segaddr)
 			syncobj_wakeup_waiter(&rn->sobj, thobj);
 		}
 	}
-
+done:
 	syncobj_unlock(&rn->sobj, &syns);
 out:
 	COPPERPLATE_UNPROTECT(svc);

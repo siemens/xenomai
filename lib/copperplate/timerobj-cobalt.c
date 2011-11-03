@@ -70,6 +70,11 @@ static void timerobj_enqueue(struct timerobj *tmobj)
 {
 	struct timerobj *__tmobj;
 
+	if (pvlist_empty(&svtimers)) {
+		pvlist_append(&tmobj->link, &svtimers);
+		return;
+	}
+
 	pvlist_for_each_entry_reverse(__tmobj, &svtimers, link) {
 		if (timeobj_compare(&__tmobj->spec.it_value,
 				    &tmobj->spec.it_value) <= 0)

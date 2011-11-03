@@ -245,6 +245,9 @@ int rt_event_signal(RT_EVENT *event, unsigned long mask)
 
 	evcb->value |= mask;
 
+	if (!syncobj_pended_p(&evcb->sobj))
+		goto done;
+
 	syncobj_for_each_waiter_safe(&evcb->sobj, thobj, tmp) {
 		wait = threadobj_get_wait(thobj);
 		bits = wait->mask & mask;
@@ -254,7 +257,7 @@ int rt_event_signal(RT_EVENT *event, unsigned long mask)
 			syncobj_wakeup_waiter(&evcb->sobj, thobj);
 		}
 	}
-
+done:
 	put_alchemy_event(evcb, &syns);
 out:
 	COPPERPLATE_UNPROTECT(svc);
