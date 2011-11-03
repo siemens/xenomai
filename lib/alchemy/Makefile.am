@@ -15,6 +15,8 @@ libalchemy_la_SOURCES =	\
 	cond.h		\
 	event.c		\
 	event.h		\
+	heap.c		\
+	heap.h		\
 	mutex.c		\
 	mutex.h		\
 	queue.c		\
