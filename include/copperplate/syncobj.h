@@ -118,6 +118,8 @@ int syncobj_flush(struct syncobj *sobj, int reason);
 int syncobj_destroy(struct syncobj *sobj,
 		    struct syncstate *syns);
 
+void syncobj_uninit(struct syncobj *sobj);
+
 #ifdef __cplusplus
 }
 #endif

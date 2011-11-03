@@ -350,3 +350,11 @@ int syncobj_destroy(struct syncobj *sobj, struct syncstate *syns)
 
 	return ret;
 }
+
+void syncobj_uninit(struct syncobj *sobj)
+{
+	assert(sobj->release_count == 0);
+	__RT(pthread_cond_destroy(&sobj->post_sync));
+	__RT(pthread_mutex_destroy(&sobj->lock));
+
+}
