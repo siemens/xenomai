@@ -239,6 +239,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 includesubdir = $(includedir)/alchemy
 includesub_HEADERS = \
+	alarm.h		\
 	cond.h		\
 	mutex.h		\
 	queue.h		\

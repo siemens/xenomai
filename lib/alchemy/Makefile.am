@@ -7,6 +7,8 @@ libalchemy_la_SOURCES =	\
 	internal.c	\
 	internal.h	\
 	reference.h	\
+	alarm.c		\
+	alarm.h		\
 	cond.c		\
 	cond.h		\
 	event.c		\
