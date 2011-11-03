@@ -36,7 +36,8 @@ struct heapobj_ops {
 	int (*extend)(struct heapobj *hobj, size_t size, void *mem);
 	void *(*alloc)(struct heapobj *hobj, size_t size);
 	void (*free)(struct heapobj *hobj, void *ptr);
-	size_t (*inquire)(struct heapobj *hobj, void *ptr);
+	size_t (*validate)(struct heapobj *hobj, void *ptr);
+	size_t (*inquire)(struct heapobj *hobj);
 };
 
 /*
@@ -118,6 +119,11 @@ static inline memoff_t mainheap_off(void *addr)
 		handle|1;						\
 	})
 
+static inline size_t heapobj_size(struct heapobj *hobj)
+{
+	return hobj->size;
+}
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -144,7 +150,9 @@ void *__heapobj_alloc(struct heapobj *hobj, size_t size);
 
 void __heapobj_free(struct heapobj *hobj, void *ptr);
 
-size_t __heapobj_inquire(struct heapobj *hobj, void *ptr);
+size_t __heapobj_validate(struct heapobj *hobj, void *ptr);
+
+size_t __heapobj_inquire(struct heapobj *hobj);
 
 #ifdef CONFIG_XENO_PSHARED
 
@@ -177,9 +185,14 @@ static inline void heapobj_free(struct heapobj *hobj, void *ptr)
 	hobj->ops->free(hobj, ptr);
 }
 
-static inline size_t heapobj_inquire(struct heapobj *hobj, void *ptr)
+static inline size_t heapobj_validate(struct heapobj *hobj, void *ptr)
 {
-	return hobj->ops->inquire(hobj, ptr);
+	return hobj->ops->validate(hobj, ptr);
+}
+
+static inline size_t heapobj_inquire(struct heapobj *hobj)
+{
+	return hobj->ops->inquire(hobj);
 }
 
 int heapobj_init_shareable(struct heapobj *hobj, const char *name,
@@ -247,9 +260,14 @@ static inline void heapobj_free(struct heapobj *hobj, void *ptr)
 	__heapobj_free(hobj, ptr);
 }
 
-static inline size_t heapobj_inquire(struct heapobj *hobj, void *ptr)
+static inline size_t heapobj_validate(struct heapobj *hobj, void *ptr)
 {
-	return __heapobj_inquire(hobj, ptr);
+	return __heapobj_validate(hobj, ptr);
+}
+
+static inline size_t heapobj_inquire(struct heapobj *hobj)
+{
+	return __heapobj_inquire(hobj);
 }
 
 static inline void *xnmalloc(size_t size)

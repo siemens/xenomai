@@ -242,7 +242,7 @@ u_long rn_getseg(u_long rnid, u_long size, u_long flags,
 	if (seg) {
 		*segaddr = seg;
 		rn->busynr++;
-		rn->usedmem += heapobj_inquire(&rn->hobj, seg);
+		rn->usedmem += heapobj_validate(&rn->hobj, seg);
 		goto done;
 	}
 
@@ -304,7 +304,7 @@ u_long rn_retseg(u_long rnid, void *segaddr)
 		goto out;
 	}
 
-	rn->usedmem -= heapobj_inquire(&rn->hobj, segaddr);
+	rn->usedmem -= heapobj_validate(&rn->hobj, segaddr);
 	heapobj_free(&rn->hobj, segaddr);
 	rn->busynr--;
 
@@ -315,7 +315,7 @@ u_long rn_retseg(u_long rnid, void *segaddr)
 		seg = heapobj_alloc(&rn->hobj, size);
 		if (seg) {
 			rn->busynr++;
-			rn->usedmem += heapobj_inquire(&rn->hobj, seg);
+			rn->usedmem += heapobj_validate(&rn->hobj, seg);
 			thobj->wait_u.buffer.ptr = seg;
 			syncobj_wakeup_waiter(&rn->sobj, thobj);
 		}

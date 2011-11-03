@@ -718,9 +718,15 @@ static void pshared_free(struct heapobj *hobj, void *ptr)
 	free_block(hobj->pool, ptr);
 }
 
-static size_t pshared_inquire(struct heapobj *hobj, void *ptr)
+static size_t pshared_validate(struct heapobj *hobj, void *ptr)
 {
 	return __bt(check_block(hobj->pool, ptr));
+}
+
+static size_t pshared_inquire(struct heapobj *hobj)
+{
+	struct heap *heap = hobj->pool;
+	return heap->ubytes;
 }
 
 static struct heapobj_ops pshared_ops = {
@@ -728,6 +734,7 @@ static struct heapobj_ops pshared_ops = {
 	.extend = pshared_extend,
 	.alloc = pshared_alloc,
 	.free = pshared_free,
+	.validate = pshared_validate,
 	.inquire = pshared_inquire,
 };
 

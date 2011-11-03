@@ -53,9 +53,15 @@ void __heapobj_free(struct heapobj *hobj, void *ptr)
 	__STD(free(ptr));
 }
 
-size_t __heapobj_inquire(struct heapobj *hobj, void *ptr)
+size_t __heapobj_validate(struct heapobj *hobj, void *ptr)
 {
 	return malloc_usable_size(ptr);
+}
+
+size_t __heapobj_inquire(struct heapobj *hobj)
+{
+	struct mallinfo m = mallinfo();
+	return m.uordblks;
 }
 
 #ifdef CONFIG_XENO_PSHARED
@@ -65,6 +71,7 @@ static struct heapobj_ops malloc_ops = {
 	.extend = __heapobj_extend,
 	.alloc = __heapobj_alloc,
 	.free = __heapobj_free,
+	.validate = __heapobj_validate,
 	.inquire = __heapobj_inquire,
 };
 

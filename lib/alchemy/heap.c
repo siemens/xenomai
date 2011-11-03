@@ -299,8 +299,8 @@ int rt_heap_inquire(RT_HEAP *heap, RT_HEAP_INFO *info)
 
 	info->nwaiters = syncobj_pend_count(&hcb->sobj);
 	info->heapsize = hcb->size;
-	info->usablemem = 0;	/* FIXME */
-	info->usedmem = 0;
+	info->usablemem = heapobj_size(&hcb->hobj);
+	info->usedmem = heapobj_inquire(&hcb->hobj);
 	strcpy(info->name, hcb->name);
 
 	put_alchemy_heap(hcb, &syns);

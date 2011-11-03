@@ -67,12 +67,23 @@ void __heapobj_free(struct heapobj *hobj, void *ptr)
 	__RT(pthread_mutex_unlock(&hobj->lock));
 }
 
-size_t __heapobj_inquire(struct heapobj *hobj, void *ptr)
+size_t __heapobj_validate(struct heapobj *hobj, void *ptr)
 {
 	size_t size;
 
 	__RT(pthread_mutex_lock(&hobj->lock));
 	size = malloc_usable_size_ex(ptr, hobj->pool);
+	__RT(pthread_mutex_unlock(&hobj->lock));
+
+	return size;
+}
+
+size_t __heapobj_inquire(struct heapobj *hobj)
+{
+	size_t size;
+
+	__RT(pthread_mutex_lock(&hobj->lock));
+	size = get_used_size(hobj->pool);
 	__RT(pthread_mutex_unlock(&hobj->lock));
 
 	return size;
@@ -85,6 +96,7 @@ static struct heapobj_ops tlsf_ops = {
 	.extend = __heapobj_extend,
 	.alloc = __heapobj_alloc,
 	.free = __heapobj_free,
+	.validate = __heapobj_validate,
 	.inquire = __heapobj_inquire,
 };
 

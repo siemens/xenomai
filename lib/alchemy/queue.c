@@ -490,8 +490,8 @@ int rt_queue_inquire(RT_QUEUE *queue, RT_QUEUE_INFO *info)
 	info->nmessages = qcb->mcount;
 	info->mode = qcb->mode;
 	info->qlimit = qcb->limit;
-	info->poolsize = 0;	/* FIXME */
-	info->usedmem = 0;
+	info->poolsize = heapobj_size(&qcb->hobj);
+	info->usedmem = heapobj_inquire(&qcb->hobj);
 	strcpy(info->name, qcb->name);
 
 	put_alchemy_queue(qcb, &syns);
