@@ -22,6 +22,7 @@
 #include <copperplate/list.h>
 #include <copperplate/syncobj.h>
 #include <copperplate/cluster.h>
+#include <copperplate/heapobj.h>
 #include <alchemy/queue.h>
 
 struct alchemy_queue {
@@ -29,7 +30,7 @@ struct alchemy_queue {
 	char name[32];
 	int mode;
 	size_t limit;
-	struct heapobj pool;
+	struct heapobj hobj;
 	struct syncobj sobj;
 	struct clusterobj cobj;
 	struct list mq;

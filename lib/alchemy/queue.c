@@ -78,7 +78,7 @@ static void queue_finalize(struct syncobj *sobj)
 	struct alchemy_queue *qcb;
 
 	qcb = container_of(sobj, struct alchemy_queue, sobj);
-	heapobj_destroy(&qcb->pool);
+	heapobj_destroy(&qcb->hobj);
 	xnfree(qcb);
 }
 fnref_register(libalchemy, queue_finalize);
@@ -114,7 +114,7 @@ int rt_queue_create(RT_QUEUE *queue, const char *name,
 	 * The message pool has to be part of the main heap for proper
 	 * sharing between processes.
 	 */
-	if (heapobj_init_shareable(&qcb->pool, NULL, poolsize)) {
+	if (heapobj_init_shareable(&qcb->hobj, NULL, poolsize)) {
 		syncluster_delobj(&alchemy_queue_table, &qcb->cobj);
 		xnfree(qcb);
 	no_mem:
@@ -178,7 +178,7 @@ void *rt_queue_alloc(RT_QUEUE *queue, size_t size)
 	if (qcb == NULL)
 		goto out;
 
-	msg = heapobj_alloc(&qcb->pool, size + sizeof(*msg));
+	msg = heapobj_alloc(&qcb->hobj, size + sizeof(*msg));
 	if (msg == NULL)
 		goto done;
 
@@ -224,7 +224,7 @@ int rt_queue_free(RT_QUEUE *queue, void *buf)
 	}
 
 	if (--msg->refcount == 0)
-		heapobj_free(&qcb->pool, msg);
+		heapobj_free(&qcb->hobj, msg);
 done:
 	put_alchemy_queue(qcb, &syns);
 out:
@@ -490,7 +490,7 @@ int rt_queue_inquire(RT_QUEUE *queue, RT_QUEUE_INFO *info)
 	info->nmessages = qcb->mcount;
 	info->mode = qcb->mode;
 	info->qlimit = qcb->limit;
-	info->poolsize = 0;
+	info->poolsize = 0;	/* FIXME */
 	info->usedmem = 0;
 	strcpy(info->name, qcb->name);
 

@@ -28,7 +28,6 @@
 #define Q_PRIO  0x1	/* Pend by task priority order. */
 #define Q_FIFO  0x0	/* Pend by FIFO order. */
 /* Deprecated, compat only. */
-#define Q_DMA    0x0
 #define Q_SHARED 0x0
 
 #define Q_UNLIMITED 0	/* No size limit. */
