@@ -145,11 +145,12 @@ int __check_cancel_type(const char *locktype);
 
 #define __do_lock_safe(__lock, __state, __op)				\
 	({								\
-		int __ret;						\
-		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &(__state)); \
+		int __ret, __oldstate;					\
+		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &__oldstate); \
 		__ret = -__RT(pthread_mutex_##__op(__lock));		\
 		if (__ret)						\
-			pthread_setcancelstate(__state, NULL);		\
+			pthread_setcancelstate(__oldstate, NULL);	\
+		__state = __oldstate;					\
 		__ret;							\
 	})
 
