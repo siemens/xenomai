@@ -117,7 +117,7 @@ struct threadobj {
 	void (*suspend_hook)(struct threadobj *thobj, int status);
 	int *errno_pointer;
 	int schedlock_depth;
-	int lock_state;
+	int cancel_state;
 	int status;
 	int priority;
 	pid_t cnode;
@@ -227,17 +227,17 @@ static inline int threadobj_get_priority(struct threadobj *thobj)
 
 static inline int threadobj_lock(struct threadobj *thobj)
 {
-	return write_lock_safe(&thobj->lock, thobj->lock_state);
+	return write_lock_safe(&thobj->lock, thobj->cancel_state);
 }
 
 static inline int threadobj_trylock(struct threadobj *thobj)
 {
-	return write_trylock_safe(&thobj->lock, thobj->lock_state);
+	return write_trylock_safe(&thobj->lock, thobj->cancel_state);
 }
 
 static inline int threadobj_unlock(struct threadobj *thobj)
 {
-	return write_unlock_safe(&thobj->lock, thobj->lock_state);
+	return write_unlock_safe(&thobj->lock, thobj->cancel_state);
 }
 
 static inline struct threadobj *threadobj_current(void)
