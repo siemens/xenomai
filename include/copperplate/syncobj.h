@@ -79,7 +79,9 @@ int syncobj_pend(struct syncobj *sobj,
 
 struct threadobj *syncobj_post(struct syncobj *sobj);
 
-struct threadobj *syncobj_peek(struct syncobj *sobj);
+struct threadobj *syncobj_peek_at_pend(struct syncobj *sobj);
+
+struct threadobj *syncobj_peek_at_drain(struct syncobj *sobj);
 
 static inline int syncobj_lock(struct syncobj *sobj,
 			       struct syncstate *syns)
@@ -107,6 +109,11 @@ static inline int syncobj_pended_p(struct syncobj *sobj)
 static inline int syncobj_pend_count(struct syncobj *sobj)
 {
 	return sobj->pend_count;
+}
+
+static inline int syncobj_drain_count(struct syncobj *sobj)
+{
+	return sobj->drain_count;
 }
 
 void syncobj_requeue_waiter(struct syncobj *sobj, struct threadobj *thobj);

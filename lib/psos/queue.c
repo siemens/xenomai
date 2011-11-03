@@ -239,7 +239,7 @@ static u_long __q_send_inner(struct psos_queue *q, unsigned long flags,
 	struct msgholder *msg;
 	u_long maxbytes;
 	
-	thobj = syncobj_peek(&q->sobj);
+	thobj = syncobj_peek_at_pend(&q->sobj);
 	if (thobj && threadobj_local_p(thobj)) {
 		/* Fast path: direct copy to the receiver's buffer. */
 		maxbytes = thobj->wait_u.buffer.size;

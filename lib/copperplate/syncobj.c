@@ -244,7 +244,7 @@ struct threadobj *syncobj_post(struct syncobj *sobj)
 	return thobj;
 }
 
-struct threadobj *syncobj_peek(struct syncobj *sobj)
+struct threadobj *syncobj_peek_at_pend(struct syncobj *sobj)
 {
 	struct threadobj *thobj;
 
@@ -252,6 +252,18 @@ struct threadobj *syncobj_peek(struct syncobj *sobj)
 		return NULL;
 
 	thobj = list_first_entry(&sobj->pend_list, struct threadobj,
+				 wait_link);
+	return thobj;
+}
+
+struct threadobj *syncobj_peek_at_drain(struct syncobj *sobj)
+{
+	struct threadobj *thobj;
+
+	if (list_empty(&sobj->drain_list))
+		return NULL;
+
+	thobj = list_first_entry(&sobj->drain_list, struct threadobj,
 				 wait_link);
 	return thobj;
 }

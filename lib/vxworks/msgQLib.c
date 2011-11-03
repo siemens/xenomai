@@ -265,7 +265,7 @@ STATUS msgQSend(MSG_Q_ID msgQId, const char *buffer, UINT bytes,
 		goto fail;
 	}
 
-	thobj = syncobj_peek(&mq->sobj);
+	thobj = syncobj_peek_at_pend(&mq->sobj);
 	if (thobj && threadobj_local_p(thobj)) {
 		/* Fast path: direct copy to the receiver's buffer. */
 		maxbytes = thobj->wait_u.buffer.size;
