@@ -68,10 +68,10 @@ void traceobj_verify(struct traceobj *trobj, int tseq[], int nr_seq)
 {
 	int end_mark, mark, state;
 
+	read_lock_safe(&trobj->lock, state);
+
 	if (nr_seq > trobj->nr_marks)
 		goto fail;
-
-	read_lock_safe(&trobj->lock, state);
 
 	end_mark = trobj->cur_mark;
 	if (end_mark == 0) {
