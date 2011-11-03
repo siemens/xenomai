@@ -494,7 +494,7 @@ size_t init_memory_pool(size_t mem_pool_size, void *mem_pool)
 
 #if TLSF_STATISTIC
     tlsf->used_size = mem_pool_size - (b->size & BLOCK_SIZE);
-    tlsf->max_size = tlsf->used_size;
+    tlsf->max_size = mem_pool_size - tlsf->used_size;
 #endif
 
     return (b->size & BLOCK_SIZE);

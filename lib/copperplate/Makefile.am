@@ -68,7 +68,7 @@ libtlsf_la_SOURCES =	\
 libtlsf_la_CPPFLAGS =			\
 	-Itlsf @XENO_USER_CFLAGS@	\
 	-I$(top_srcdir)/include		\
-	-DTLSF_USE_LOCKS=1 -DUSE_MMAP=1 -DUSE_SBRK=1
+	-DTLSF_USE_LOCKS=1 -DUSE_MMAP=1 -DTLSF_STATISTIC=1
 
 EXTRA_DIST = tlsf/README
 
