@@ -134,13 +134,15 @@ out:
 
 int rt_mutex_acquire_until(RT_MUTEX *mutex, RTIME timeout)
 {
+	struct alchemy_task *current;
 	struct alchemy_mutex *mcb;
-	struct alchemy_task *tcb;
 	struct timespec ts;
 	struct service svc;
 	int ret = 0;
 
-	if (threadobj_async_p())
+	/* This must be an alchemy task. */
+	current = alchemy_task_current();
+	if (current == NULL)
 		return -EPERM;
 
 	COPPERPLATE_PROTECT(svc);
@@ -187,8 +189,7 @@ done:
 		ret = -EWOULDBLOCK;
 		break;
 	case 0:
-		tcb = alchemy_task_current();
-		mcb->owner.handle = mainheap_ref(tcb, uintptr_t);
+		mcb->owner.handle = mainheap_ref(current, uintptr_t);
 	}
 out:
 	COPPERPLATE_UNPROTECT(svc);
