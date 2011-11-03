@@ -30,6 +30,7 @@
 #include "cond.h"
 #include "mutex.h"
 #include "queue.h"
+#include "buffer.h"
 #include "alarm.h"
 
 static unsigned int clock_resolution = 1; /* nanosecond. */
@@ -73,6 +74,7 @@ static int alchemy_init(int argc, char *const argv[])
 	syncluster_init(&alchemy_cond_table, "alchemy.cond");
 	syncluster_init(&alchemy_mutex_table, "alchemy.mutex");
 	syncluster_init(&alchemy_queue_table, "alchemy.queue");
+	syncluster_init(&alchemy_buffer_table, "alchemy.buffer");
 	cluster_init(&alchemy_alarm_table, "alchemy.alarm");
 
 	ret = clockobj_init(&alchemy_clock, "alchemy", clock_resolution);

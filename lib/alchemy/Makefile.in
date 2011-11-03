@@ -78,10 +78,10 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 libalchemy_la_LIBADD =
 am_libalchemy_la_OBJECTS = libalchemy_la-init.lo \
 	libalchemy_la-internal.lo libalchemy_la-alarm.lo \
-	libalchemy_la-cond.lo libalchemy_la-event.lo \
-	libalchemy_la-mutex.lo libalchemy_la-queue.lo \
-	libalchemy_la-task.lo libalchemy_la-sem.lo \
-	libalchemy_la-timer.lo
+	libalchemy_la-buffer.lo libalchemy_la-cond.lo \
+	libalchemy_la-event.lo libalchemy_la-mutex.lo \
+	libalchemy_la-queue.lo libalchemy_la-task.lo \
+	libalchemy_la-sem.lo libalchemy_la-timer.lo
 libalchemy_la_OBJECTS = $(am_libalchemy_la_OBJECTS)
 libalchemy_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -269,6 +269,8 @@ libalchemy_la_SOURCES = \
 	reference.h	\
 	alarm.c		\
 	alarm.h		\
+	buffer.c	\
+	buffer.h	\
 	cond.c		\
 	cond.h		\
 	event.c		\
@@ -365,6 +367,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libalchemy_la-alarm.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libalchemy_la-buffer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libalchemy_la-cond.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libalchemy_la-event.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libalchemy_la-init.Plo@am__quote@
@@ -416,6 +419,13 @@ libalchemy_la-alarm.lo: alarm.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='alarm.c' object='libalchemy_la-alarm.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libalchemy_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libalchemy_la-alarm.lo `test -f 'alarm.c' || echo '$(srcdir)/'`alarm.c
+
+libalchemy_la-buffer.lo: buffer.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libalchemy_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libalchemy_la-buffer.lo -MD -MP -MF $(DEPDIR)/libalchemy_la-buffer.Tpo -c -o libalchemy_la-buffer.lo `test -f 'buffer.c' || echo '$(srcdir)/'`buffer.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libalchemy_la-buffer.Tpo $(DEPDIR)/libalchemy_la-buffer.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='buffer.c' object='libalchemy_la-buffer.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libalchemy_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libalchemy_la-buffer.lo `test -f 'buffer.c' || echo '$(srcdir)/'`buffer.c
 
 libalchemy_la-cond.lo: cond.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libalchemy_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libalchemy_la-cond.lo -MD -MP -MF $(DEPDIR)/libalchemy_la-cond.Tpo -c -o libalchemy_la-cond.lo `test -f 'cond.c' || echo '$(srcdir)/'`cond.c

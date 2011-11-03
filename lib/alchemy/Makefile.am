@@ -9,6 +9,8 @@ libalchemy_la_SOURCES =	\
 	reference.h	\
 	alarm.c		\
 	alarm.h		\
+	buffer.c	\
+	buffer.h	\
 	cond.c		\
 	cond.h		\
 	event.c		\

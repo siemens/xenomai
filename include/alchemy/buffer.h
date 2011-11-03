@@ -1,0 +1,86 @@
+/*
+ * Copyright (C) 2011 Philippe Gerum <rpm@xenomai.org>.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
+ */
+
+#ifndef _XENOMAI_ALCHEMY_BUFFER_H
+#define _XENOMAI_ALCHEMY_BUFFER_H
+
+#include <stdint.h>
+#include <alchemy/timer.h>
+
+/* Creation flags. */
+#define B_PRIO  0x1	/* Pend by task priority order. */
+#define B_FIFO  0x0	/* Pend by FIFO order. */
+
+struct RT_BUFFER {
+	uintptr_t handle;
+};
+
+typedef struct RT_BUFFER RT_BUFFER;
+
+struct RT_BUFFER_INFO {
+	int iwaiters;
+	int owaiters;
+	size_t totalmem;
+	size_t availmem;
+	char name[32];
+};
+
+typedef struct RT_BUFFER_INFO RT_BUFFER_INFO;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int rt_buffer_create(RT_BUFFER *bf,
+		     const char *name,
+		     size_t bufsz,
+		     int mode);
+
+int rt_buffer_delete(RT_BUFFER *bf);
+
+ssize_t rt_buffer_write(RT_BUFFER *bf,
+			const void *ptr, size_t size,
+			RTIME timeout);
+
+ssize_t rt_buffer_write_until(RT_BUFFER *bf,
+			      const void *ptr, size_t size,
+			      RTIME timeout);
+
+ssize_t rt_buffer_read(RT_BUFFER *bf,
+		       void *ptr, size_t size,
+		       RTIME timeout);
+
+ssize_t rt_buffer_read_until(RT_BUFFER *bf,
+			     void *ptr, size_t size,
+			     RTIME timeout);
+
+int rt_buffer_clear(RT_BUFFER *bf);
+
+int rt_buffer_inquire(RT_BUFFER *bf,
+		      RT_BUFFER_INFO *info);
+
+int rt_buffer_bind(RT_BUFFER *bf,
+		   const char *name, RTIME timeout);
+
+int rt_buffer_unbind(RT_BUFFER *bf);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* _XENOMAI_ALCHEMY_BUFFER_H */
