@@ -113,7 +113,9 @@ static void *timerobj_server(void *arg)
 					     &value, &interval);
 				timerobj_enqueue(tmobj);
 			}
+			write_unlock(&svlock);
 			tmobj->handler(tmobj);
+			write_lock(&svlock);
 		}
 
 		write_unlock(&svlock);
@@ -150,6 +152,7 @@ out:
 
 int timerobj_init(struct timerobj *tmobj)
 {
+	pthread_mutexattr_t mattr;
 	struct sigevent evt;
 	int ret;
 
@@ -172,10 +175,16 @@ int timerobj_init(struct timerobj *tmobj)
 	if (__RT(timer_create(CLOCK_COPPERPLATE, &evt, &tmobj->timer)))
 		return __bt(-errno);
 
+	__RT(pthread_mutexattr_init(&mattr));
+	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
+	assert(__RT(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute)) == 0);
+	__RT(pthread_mutex_init(&tmobj->lock, &mattr));
+	__RT(pthread_mutexattr_destroy(&mattr));
+
 	return 0;
 }
 
-int timerobj_destroy(struct timerobj *tmobj)
+void timerobj_destroy(struct timerobj *tmobj) /* lock held, dropped */
 {
 	write_lock_nocancel(&svlock);
 
@@ -184,21 +193,21 @@ int timerobj_destroy(struct timerobj *tmobj)
 
 	write_unlock(&svlock);
 
-	if (__RT(timer_delete(tmobj->timer)))
-		return __bt(-errno);
-
-	return 0;
+	__RT(timer_delete(tmobj->timer));
+	__RT(pthread_mutex_unlock(&tmobj->lock));
+	__RT(pthread_mutex_destroy(&tmobj->lock));
 }
 
 int timerobj_start(struct timerobj *tmobj,
 		   void (*handler)(struct timerobj *tmobj),
-		   struct itimerspec *it)
+		   struct itimerspec *it) /* lock held, dropped */
 {
 	tmobj->handler = handler;
 	tmobj->spec = *it;
 	write_lock_nocancel(&svlock);
 	timerobj_enqueue(tmobj);
 	write_unlock(&svlock);
+	timerobj_unlock(tmobj);
 
 	if (__RT(timer_settime(tmobj->timer, TIMER_ABSTIME, it, NULL)))
 		return __bt(-errno);
@@ -208,7 +217,7 @@ int timerobj_start(struct timerobj *tmobj,
 
 static const struct itimerspec itimer_stop;
 
-int timerobj_stop(struct timerobj *tmobj)
+int timerobj_stop(struct timerobj *tmobj) /* lock held, dropped */
 {
 	write_lock_nocancel(&svlock);
 
@@ -217,10 +226,9 @@ int timerobj_stop(struct timerobj *tmobj)
 
 	write_unlock(&svlock);
 
+	__RT(timer_settime(tmobj->timer, 0, &itimer_stop, NULL));
 	tmobj->handler = NULL;
-
-	if (__RT(timer_settime(tmobj->timer, 0, &itimer_stop, NULL)))
-		return __bt(-errno);
+	timerobj_unlock(tmobj);
 
 	return 0;
 }

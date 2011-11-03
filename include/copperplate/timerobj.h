@@ -19,6 +19,7 @@
 #ifndef _COPPERPLATE_TIMEROBJ_H
 #define _COPPERPLATE_TIMEROBJ_H
 
+#include <pthread.h>
 #include <time.h>
 
 struct timerobj {
@@ -26,7 +27,19 @@ struct timerobj {
 	timer_t timer;
 	struct itimerspec spec;
 	struct pvholder link;
+	pthread_mutex_t lock;
+	int cancel_state;
 };
+
+static inline int timerobj_lock(struct timerobj *tmobj)
+{
+	return write_lock_safe(&tmobj->lock, tmobj->cancel_state);
+}
+
+static inline int timerobj_unlock(struct timerobj *tmobj)
+{
+	return write_unlock_safe(&tmobj->lock, tmobj->cancel_state);
+}
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,7 +47,7 @@ extern "C" {
 
 int timerobj_init(struct timerobj *tmobj);
 
-int timerobj_destroy(struct timerobj *tmobj);
+void timerobj_destroy(struct timerobj *tmobj);
 
 int timerobj_start(struct timerobj *tmobj,
 		   void (*handler)(struct timerobj *tmobj),

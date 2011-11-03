@@ -31,7 +31,7 @@ struct timespec psos_rrperiod;
 
 #define tm_magic	0x8181fcfc
 
-static struct psos_tm *get_tm_from_id(u_long tmid, int *err_r)
+static struct psos_tm *get_tm(u_long tmid, int *err_r)
 {
 	struct psos_tm *tm = (struct psos_tm *)tmid;
 
@@ -46,8 +46,13 @@ static struct psos_tm *get_tm_from_id(u_long tmid, int *err_r)
 	if (tm == NULL || ((uintptr_t)tm & (sizeof(uintptr_t)-1)) != 0)
 		goto objid_error;
 
-	if (tm->magic == tm_magic)
-		return tm;
+	if (tm->magic != tm_magic)
+		goto objid_error;
+
+	if (timerobj_lock(&tm->tmobj))
+		goto objid_error;
+
+	return tm;
 
 objid_error:
 	*err_r = ERR_BADTMID;
@@ -57,20 +62,23 @@ objid_error:
 
 static void delete_timer(struct psos_tm *tm)
 {
-	struct service svc;
-
-	COPPERPLATE_PROTECT(svc);
 	timerobj_destroy(&tm->tmobj);
 	pvlist_remove(&tm->link);
 	pvfree(tm);
-	COPPERPLATE_UNPROTECT(svc);
 }
 
 static void post_event_once(struct timerobj *tmobj)
 {
 	struct psos_tm *tm = container_of(tmobj, struct psos_tm, tmobj);
+	struct service svc;
+	int ret;
+
 	ev_send(tm->tid, tm->events);
-	delete_timer(tm);
+	COPPERPLATE_PROTECT(svc);
+	ret = timerobj_lock(&tm->tmobj);
+	if (ret == 0)
+		delete_timer(tm);
+	COPPERPLATE_UNPROTECT(svc);
 }
 
 static void post_event_periodic(struct timerobj *tmobj)
@@ -120,9 +128,13 @@ static u_long start_evtimer(u_long events,
 	    it->it_interval.tv_nsec == 0)
 		handler = post_event_once;
 
+	timerobj_lock(&tm->tmobj);
+
 	ret = timerobj_start(&tm->tmobj, handler, it);
-	if (ret)
+	if (ret) {
+		timerobj_destroy(&tm->tmobj);
 		goto fail;
+	}
 
 	return SUCCESS;
 }
@@ -227,15 +239,18 @@ u_long tm_evwhen(u_long date, u_long time, u_long ticks,
 u_long tm_cancel(u_long tmid)
 {
 	struct psos_tm *tm;
-	int ret;
+	struct service svc;
+	int ret = SUCCESS;
 
-	tm = get_tm_from_id(tmid, &ret);
-	if (tm == NULL)
-		return ret;
+	COPPERPLATE_PROTECT(svc);
 
-	delete_timer(tm);
+	tm = get_tm(tmid, &ret);
+	if (tm)
+		delete_timer(tm);
 
-	return SUCCESS;
+	COPPERPLATE_UNPROTECT(svc);
+
+	return ret;
 }
 
 u_long tm_wkafter(u_long ticks)
