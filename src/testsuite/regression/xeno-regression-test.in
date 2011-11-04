@@ -3,7 +3,7 @@
 usage()
 {
     cat <<EOF
-xeno-regression-test [ -l "load command" ] [ latency options ]
+xeno-regression-test [ -l "load command" ] [ -- ] [ latency test options ]
 
 Run Xenomai regression testsuite on your platform, by first starting a
 fewtests, then running the latency test in parallel to the switchtest test
@@ -27,6 +27,10 @@ EOF
 if [ "$1" = "-h" -o "$1" = "--help" ]; then
     usage
     exit 0
+fi
+
+if [ "$1" = "--" ]; then
+   shift
 fi
 
 set -ex
