@@ -70,12 +70,6 @@ static inline struct mm_struct *rthal_get_active_mm(void)
 	return current->active_mm;
 }
 
-#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
-extern int rthal_periodic_p;
-#else /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
-#define rthal_periodic_p  0
-#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
-
 void rthal_thread_switch(struct thread_struct *prev,
 			 struct thread_struct *next,
 			 int kthreadp);
