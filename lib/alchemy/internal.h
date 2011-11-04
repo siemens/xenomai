@@ -27,6 +27,19 @@ struct alchemy_namegen {
 	int serial;
 };
 
+static inline struct timespec *
+alchemy_get_timespec(RTIME timeout, struct timespec *tmp)
+{
+	struct timespec *timespec = NULL;
+
+ 	if (timeout != TM_INFINITE) {
+		clockobj_ticks_to_timespec(&alchemy_clock, timeout, tmp);
+		timespec = tmp;
+	}
+
+	return timespec;
+}
+
 struct syncluster;
 
 char *__alchemy_build_name(char *buf, const char *name,

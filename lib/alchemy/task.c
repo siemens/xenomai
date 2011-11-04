@@ -771,11 +771,7 @@ ssize_t rt_task_send_until(RT_TASK *task,
 	if (syncobj_drain_count(&tcb->sobj_msg))
 		syncobj_signal_drain(&tcb->sobj_msg);
 
-	if (timeout != TM_INFINITE) {
-		timespec = &ts;
-		clockobj_ticks_to_timespec(&alchemy_clock, timeout, timespec);
-	} else
-		timespec = NULL;
+	timespec = alchemy_get_timespec(timeout, &ts);
 
 	ret = syncobj_pend(&tcb->sobj_msg, timespec, &syns);
 	if (ret) {
@@ -817,11 +813,7 @@ int rt_task_receive_until(RT_TASK_MCB *mcb_r, RTIME timeout)
 	if (current == NULL)
 		return -EPERM;
 
-	if (timeout != TM_INFINITE) {
-		timespec = &ts;
-		clockobj_ticks_to_timespec(&alchemy_clock, timeout, timespec);
-	} else
-		timespec = NULL;
+	timespec = alchemy_get_timespec(timeout, &ts);
 
 	COPPERPLATE_PROTECT(svc);
 

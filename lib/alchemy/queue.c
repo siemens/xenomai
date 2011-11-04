@@ -368,11 +368,7 @@ ssize_t rt_queue_receive_until(RT_QUEUE *queue,
 		goto done;
 	}
 
-	if (timeout != TM_INFINITE) {
-		timespec = &ts;
-		clockobj_ticks_to_timespec(&alchemy_clock, timeout, timespec);
-	} else
-		timespec = NULL;
+	timespec = alchemy_get_timespec(timeout, &ts);
 
 	ret = syncobj_pend(&qcb->sobj, timespec, &syns);
 	if (ret) {

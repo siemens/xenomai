@@ -213,12 +213,8 @@ int rt_heap_alloc(RT_HEAP *heap,
 		goto done;
 	}
 
- 	if (timeout != TM_INFINITE) {
-		timespec = &ts;
-		clockobj_ticks_to_timespec(&alchemy_clock, timeout, timespec);
-	} else
-		timespec = NULL;
-	
+	timespec = alchemy_get_timespec(timeout, &ts);
+
 	wait = threadobj_alloc_wait(struct alchemy_heap_wait);
 	if (wait == NULL) {
 		ret = -ENOMEM;

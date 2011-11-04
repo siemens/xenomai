@@ -58,17 +58,9 @@ int __alchemy_bind_object(const char *name, struct syncluster *sc,
 	int ret;
 
 	COPPERPLATE_PROTECT(svc);
-
- 	if (timeout != TM_INFINITE) {
-		timespec = &ts;
-		clockobj_ticks_to_timespec(&alchemy_clock, timeout, timespec);
-	} else
-		timespec = NULL;
-
+	timespec = alchemy_get_timespec(timeout, &ts);
 	ret = syncluster_findobj(sc, name, timespec, &cobj);
-
 	COPPERPLATE_UNPROTECT(svc);
-
 	if (ret)
 		return ret;
 

@@ -195,11 +195,7 @@ int rt_event_wait_until(RT_EVENT *event,
 	wait->mask = mask;
 	wait->mode = mode;
 
- 	if (timeout != TM_INFINITE) {
-		timespec = &ts;
-		clockobj_ticks_to_timespec(&alchemy_clock, timeout, timespec);
-	} else
-		timespec = NULL;
+	timespec = alchemy_get_timespec(timeout, &ts);
 
 	ret = syncobj_pend(&evcb->sobj, timespec, &syns);
 	if (ret) {
