@@ -51,7 +51,7 @@ Options :
         --ccld
         --arch
         --prefix
-        --skin native|posix|vxworks|psos
+        --skin native|posix|vxworks|psos|alchemy
         --cflags
         --ldflags
         --lib*-dir,--libdir,--user-libdir
@@ -109,13 +109,13 @@ while test $# -gt 0; do
 	    ;;
 	--cflags)
 	    case "$skin" in
-		native|rtdm)
+		native)
 		    echo $XENO_BASE_CFLAGS
 		    ;;
 		posix)
 		    echo $XENO_BASE_CFLAGS -I$XENO_INCLUDE_DIR/cobalt
 		    ;;
-		vxworks|psos)
+		vxworks|psos|alchemy)
 		    echo $XENO_BASE_CFLAGS -I$XENO_INCLUDE_DIR/cobalt -I$XENO_INCLUDE_DIR/$skin
 		    ;;
 		"")
@@ -135,7 +135,7 @@ while test $# -gt 0; do
 		    posix_ldflags
 		    echo
 		    ;;
-		vxworks|psos)
+		vxworks|psos|alchemy)
 		    echo "-l$skin -lcopperplate"
 		    posix_ldflags
 		    echo

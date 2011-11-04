@@ -32,7 +32,7 @@ Options :
         --ccld
         --arch
         --prefix
-        --skin vxworks|psos
+        --skin vxworks|psos|alchemy
         --cflags
         --ldflags
         --lib*-dir,--libdir,--user-libdir
@@ -87,7 +87,7 @@ while test $# -gt 0; do
 	    ;;
 	--cflags)
 	    case "$skin" in
-		vxworks|psos)
+		vxworks|psos|alchemy)
 		    echo $XENO_BASE_CFLAGS -I$XENO_INCLUDE_DIR/$skin
 		    ;;
 		"")
@@ -102,7 +102,7 @@ while test $# -gt 0; do
 	    ;;
 	--ldflags)
 	    case "$skin" in
-		vxworks|psos)
+		vxworks|psos|alchemy)
 		    echo -l$skin $XENO_BASE_LDFLAGS
 		    ;;
 		"")
