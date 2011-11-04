@@ -22,6 +22,7 @@
 #include <sched.h>
 #include <semaphore.h>
 #include <errno.h>
+#include <copperplate/list.h>
 #include <copperplate/syncobj.h>
 #include <copperplate/threadobj.h>
 #include <copperplate/cluster.h>
@@ -32,12 +33,19 @@ struct alchemy_task {
 	int mode;
 	cpu_set_t affinity;
 	int safecount;
-	struct syncobj sobj;
+	struct syncobj sobj_safe;
+	struct syncobj sobj_msg;
+	int flowgen;
 	struct threadobj thobj;
 	struct clusterobj cobj;
 	void (*entry)(void *arg);
 	void *arg;
 	RT_TASK self;
+};
+
+struct alchemy_task_wait {
+	struct RT_TASK_MCB request;
+	struct RT_TASK_MCB reply;
 };
 
 #define task_magic	0x8282ebeb

@@ -132,11 +132,19 @@ void put_alchemy_task(struct alchemy_task *tcb)
 static void task_finalizer(struct threadobj *thobj)
 {
 	struct alchemy_task *tcb;
+	struct syncstate syns;
 
 	tcb = container_of(thobj, struct alchemy_task, thobj);
 	syncluster_delobj(&alchemy_task_table, &tcb->cobj);
-	syncobj_uninit(&tcb->sobj_safe);
-	syncobj_uninit(&tcb->sobj_msg);
+	/*
+	 * Both the safe and msg syncs may be pended by other threads,
+	 * so we do have to use syncobj_destroy() for them (i.e. NOT
+	 * syncobj_uninit()).
+	 */
+	syncobj_lock(&tcb->sobj_safe, &syns);
+	syncobj_destroy(&tcb->sobj_safe, &syns);
+	syncobj_lock(&tcb->sobj_msg, &syns);
+	syncobj_destroy(&tcb->sobj_msg, &syns);
 	threadobj_destroy(&tcb->thobj);
 
 	xnfree(tcb);
@@ -227,7 +235,8 @@ static int create_tcb(struct alchemy_task **tcbp,
 
 	tcb->safecount = 0;
 	syncobj_init(&tcb->sobj_safe, 0, fnref_null);
-	syncobj_init(&tcb->sobj_msg, 0, fnref_null);
+	syncobj_init(&tcb->sobj_msg, SYNCOBJ_PRIO, fnref_null);
+	tcb->flowgen = 0;
 
 	idata.magic = task_magic;
 	idata.wait_hook = NULL;
@@ -678,11 +687,11 @@ int rt_task_inquire(RT_TASK *task, RT_TASK_INFO *info)
 	struct service svc;
 	int ret = 0;
 
+	COPPERPLATE_PROTECT(svc);
+
 	tcb = get_alchemy_task_or_self(task, &ret);
 	if (tcb == NULL)
-		return ret;
-
-	COPPERPLATE_PROTECT(svc);
+		goto out;
 
 	ret = __bt(threadobj_stat(&tcb->thobj, &info->stat));
 	if (ret)
@@ -690,9 +699,230 @@ int rt_task_inquire(RT_TASK *task, RT_TASK_INFO *info)
 
 	strcpy(info->name, tcb->name);
 	info->prio = threadobj_get_priority(&tcb->thobj);
+
+	put_alchemy_task(tcb);
 out:
 	COPPERPLATE_UNPROTECT(svc);
+
+	return ret;
+}
+
+ssize_t rt_task_send_until(RT_TASK *task,
+			   RT_TASK_MCB *mcb_s, RT_TASK_MCB *mcb_r,
+			   RTIME timeout)
+{
+	struct alchemy_task_wait *wait;
+	struct timespec ts, *timespec;
+	struct threadobj *current;
+	struct alchemy_task *tcb;
+	struct syncstate syns;
+	struct service svc;
+	int ret = 0;
+
+	current = threadobj_current();
+	if (current == NULL)
+		return -EPERM;
+
+	COPPERPLATE_PROTECT(svc);
+
+	tcb = get_alchemy_task(task, &ret);
+	if (tcb == NULL)
+		goto out;
+
+	/*
+	 * If we grabbed a lock on the remote task successfully, then
+	 * locking its message sync can't fail. While we hold this
+	 * lock, the remote can't destroy its message sync either, so
+	 * we should be safe.
+	 *
+	 * Deadlock prevention: locking order is task lock, then sync
+	 * lock, always (or sync lock only in the receiver).
+	 */
+	syncobj_lock(&tcb->sobj_msg, &syns);
+
 	put_alchemy_task(tcb);
+
+	if (timeout == TM_NONBLOCK) {
+		if (!syncobj_drain_count(&tcb->sobj_msg)) {
+			ret = -EWOULDBLOCK;
+			goto done;
+		}
+		timeout = TM_INFINITE;
+	}
+
+	/* Get space for the reply. */
+	wait = threadobj_alloc_wait(struct alchemy_task_wait);
+	if (wait == NULL) {
+		ret = -ENOMEM;
+		goto done;
+	}
+
+	/*
+	 * Compute the next flow identifier, making sure that we won't
+	 * draw a null or negative value.
+	 */
+	if (++tcb->flowgen < 0)
+		tcb->flowgen = 1;
+
+	wait->request = *mcb_s;
+	wait->request.flowid = tcb->flowgen;
+	wait->reply.size = mcb_r ? mcb_r->size : 0;
+
+	if (syncobj_drain_count(&tcb->sobj_msg))
+		syncobj_signal_drain(&tcb->sobj_msg);
+
+	if (timeout != TM_INFINITE) {
+		timespec = &ts;
+		clockobj_ticks_to_timespec(&alchemy_clock, timeout, timespec);
+	} else
+		timespec = NULL;
+
+	ret = syncobj_pend(&tcb->sobj_msg, timespec, &syns);
+	if (ret) {
+		threadobj_free_wait(wait);
+		if (ret == -EIDRM)
+			goto out;
+		goto done;
+	}
+
+	threadobj_free_wait(wait);
+done:
+	syncobj_unlock(&tcb->sobj_msg, &syns);
+out:
+	COPPERPLATE_UNPROTECT(svc);
+
+	return ret;
+}
+
+ssize_t rt_task_send(RT_TASK *task,
+		     RT_TASK_MCB *mcb_s, RT_TASK_MCB *mcb_r,
+		     RTIME timeout)
+{
+	timeout = __alchemy_rel2abs_timeout(timeout);
+	return rt_task_send_until(task, mcb_s, mcb_r, timeout);
+}
+
+int rt_task_receive_until(RT_TASK_MCB *mcb_r, RTIME timeout)
+{
+	struct alchemy_task_wait *wait;
+	struct timespec ts, *timespec;
+	struct alchemy_task *current;
+	struct threadobj *thobj;
+	struct syncstate syns;
+	struct service svc;
+	RT_TASK_MCB *mcb_s;
+	int ret;
+
+	current = alchemy_task_current();
+	if (current == NULL)
+		return -EPERM;
+
+	if (timeout != TM_INFINITE) {
+		timespec = &ts;
+		clockobj_ticks_to_timespec(&alchemy_clock, timeout, timespec);
+	} else
+		timespec = NULL;
+
+	COPPERPLATE_PROTECT(svc);
+
+	syncobj_lock(&current->sobj_msg, &syns);
+
+	while (!syncobj_pended_p(&current->sobj_msg)) {
+		if (timeout == TM_NONBLOCK) {
+			ret = -EWOULDBLOCK;
+			goto done;
+		}
+		syncobj_wait_drain(&current->sobj_msg, timespec, &syns);
+	}
+
+	thobj = syncobj_peek_at_pend(&current->sobj_msg);
+	wait = threadobj_get_wait(thobj);
+	mcb_s = &wait->request;
+
+	if (mcb_s->size > mcb_r->size) {
+		ret = -ENOBUFS;
+		goto fixup;
+	}
+
+	if (mcb_s->size > 0)
+		memcpy(mcb_r->data, mcb_s->data, mcb_s->size);
+
+	/* The flow identifier is always strictly positive. */
+	ret = mcb_s->flowid;
+	mcb_r->opcode = mcb_s->opcode;
+fixup:
+	mcb_r->size = mcb_s->size;
+done:
+	syncobj_unlock(&current->sobj_msg, &syns);
+
+	COPPERPLATE_UNPROTECT(svc);
+
+	return ret;
+}
+
+int rt_task_receive(RT_TASK_MCB *mcb_r, RTIME timeout)
+{
+	timeout = __alchemy_rel2abs_timeout(timeout);
+	return rt_task_receive_until(mcb_r, timeout);
+}
+
+int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
+{
+	struct alchemy_task_wait *wait = NULL;
+	struct alchemy_task *current;
+	struct threadobj *thobj;
+	struct syncstate syns;
+	struct service svc;
+	RT_TASK_MCB *mcb_r;
+	size_t size;
+	int ret;
+
+	current = alchemy_task_current();
+	if (current == NULL)
+		return -EPERM;
+
+	if (flowid <= 0)
+		return -EINVAL;
+
+	COPPERPLATE_PROTECT(svc);
+
+	syncobj_lock(&current->sobj_msg, &syns);
+
+	ret = -ENXIO;
+	if (!syncobj_pended_p(&current->sobj_msg))
+		goto done;
+
+	syncobj_for_each_waiter(&current->sobj_msg, thobj) {
+		wait = threadobj_get_wait(thobj);
+		if (wait->request.flowid == flowid)
+			break;
+	}
+
+	if (wait == NULL)
+		goto done;
+
+	size = mcb_s ? mcb_s->size : 0;
+	syncobj_wakeup_waiter(&current->sobj_msg, thobj);
+	mcb_r = &wait->reply;
+
+	/*
+	 * NOTE: sending back a NULL or zero-length reply is perfectly
+	 * valid; it just means to unblock the client without passing
+	 * it back any reply data. What is invalid is sending a
+	 * response larger than what the client expects.
+	 */
+	if (mcb_r->size < size)
+		ret = -ENOBUFS;
+	else if (size > 0)
+		memcpy(mcb_r->data, mcb_s->data, size);
+
+	mcb_r->flowid = flowid;
+	mcb_r->size = size;
+	mcb_r->opcode = mcb_s ? mcb_s->opcode : 0;
+done:
+	syncobj_unlock(&current->sobj_msg, &syns);
+
+	COPPERPLATE_UNPROTECT(svc);
 
 	return ret;
 }

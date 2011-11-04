@@ -22,6 +22,7 @@
 #include <sys/types.h>
 #include <stdint.h>
 #include <xeno_config.h>
+#include <copperplate/list.h>
 #include <copperplate/threadobj.h>
 #include <alchemy/timer.h>
 
@@ -46,6 +47,15 @@ struct RT_TASK {
 };
 
 typedef struct RT_TASK RT_TASK;
+
+struct RT_TASK_MCB {
+	int flowid;
+	int opcode;
+	caddr_t data;
+	size_t size;
+};
+
+typedef struct RT_TASK_MCB RT_TASK_MCB;
 
 struct RT_TASK_INFO {
 	int prio;
@@ -113,6 +123,25 @@ int rt_task_slice(RT_TASK *task, RTIME quantum);
 
 int rt_task_inquire(RT_TASK *task,
 		    RT_TASK_INFO *info);
+
+ssize_t rt_task_send_until(RT_TASK *task,
+			   RT_TASK_MCB *mcb_s,
+			   RT_TASK_MCB *mcb_r,
+			   RTIME timeout);
+
+ssize_t rt_task_send(RT_TASK *task,
+		     RT_TASK_MCB *mcb_s,
+		     RT_TASK_MCB *mcb_r,
+		     RTIME timeout);
+
+int rt_task_receive_until(RT_TASK_MCB *mcb_r,
+			  RTIME timeout);
+
+int rt_task_receive(RT_TASK_MCB *mcb_r,
+		    RTIME timeout);
+
+int rt_task_reply(int flowid,
+		  RT_TASK_MCB *mcb_s);
 
 int rt_task_bind(RT_TASK *task,
 		 const char *name, RTIME timeout);
