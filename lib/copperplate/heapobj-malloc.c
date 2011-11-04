@@ -55,6 +55,11 @@ void __heapobj_free(struct heapobj *hobj, void *ptr)
 
 size_t __heapobj_validate(struct heapobj *hobj, void *ptr)
 {
+	/*
+	 * We will likely get hard validation here, i.e. crash or
+	 * abort if the pointer is wrong. TLSF is a bit smarter, and
+	 * pshared definitely does the right thing.
+	 */
 	return malloc_usable_size(ptr);
 }
 

@@ -540,10 +540,8 @@ static size_t check_block(struct heap *heap, void *block)
 	/* Compute the heading page number in the page map. */
 	pnum = (__moff(heap, block) - extent->membase) >> HOBJ_PAGE_SHIFT;
 	ptype = extent->pagemap[pnum].type;
-	if (ptype == page_free || ptype == page_cont) {
-		ret = -EINVAL;
+	if (ptype == page_free || ptype == page_cont)
 		goto out;
-	}
 
 	bsize = (1 << ptype);
 	boffset = (__moff(heap, block) -
@@ -555,7 +553,7 @@ static size_t check_block(struct heap *heap, void *block)
 out:
 	read_unlock(&heap->lock);
 
-	return __bt(ret);
+	return ret;
 }
 
 static int create_heap(struct heapobj *hobj, const char *session,
