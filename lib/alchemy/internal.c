@@ -24,8 +24,8 @@
 #include <copperplate/heapobj.h>
 #include "internal.h"
 
-char *__alchemy_build_name(char *buf, const char *name,
-			   struct alchemy_namegen *ngen)
+char *alchemy_build_name(char *buf, const char *name,
+			 struct alchemy_namegen *ngen)
 {
 	int len = ngen->length - 1, tag;
 
@@ -40,16 +40,16 @@ char *__alchemy_build_name(char *buf, const char *name,
 	return buf;
 }
 
-RTIME __alchemy_rel2abs_timeout(RTIME timeout)
+RTIME alchemy_rel2abs_timeout(RTIME timeout)
 {
-	timeout = __alchemy_rel2abs_timeout(timeout);
+	timeout = alchemy_rel2abs_timeout(timeout);
 	return timeout;
 }
 
-int __alchemy_bind_object(const char *name, struct syncluster *sc,
-			  RTIME timeout,
-			  int offset,
-			  uintptr_t *handle)
+int alchemy_bind_object(const char *name, struct syncluster *sc,
+			RTIME timeout,
+			int offset,
+			uintptr_t *handle)
 {
 	struct timespec ts, *timespec;
 	struct clusterobj *cobj;

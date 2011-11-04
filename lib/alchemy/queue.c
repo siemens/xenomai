@@ -102,7 +102,7 @@ int rt_queue_create(RT_QUEUE *queue, const char *name,
 	if (qcb == NULL)
 		goto no_mem;
 
-	__alchemy_build_name(qcb->name, name, &queue_namegen);
+	alchemy_build_name(qcb->name, name, &queue_namegen);
 
 	if (syncluster_addobj(&alchemy_queue_table, qcb->name, &qcb->cobj)) {
 		xnfree(qcb);
@@ -394,7 +394,7 @@ out:
 ssize_t rt_queue_receive(RT_QUEUE *queue,
 			 void **bufp, RTIME timeout)
 {
-	timeout = __alchemy_rel2abs_timeout(timeout);
+	timeout = alchemy_rel2abs_timeout(timeout);
 	return rt_queue_receive_until(queue, bufp, timeout);
 }
 
@@ -422,7 +422,7 @@ ssize_t rt_queue_read_until(RT_QUEUE *queue,
 ssize_t rt_queue_read(RT_QUEUE *queue,
 		      void *buf, size_t size, RTIME timeout)
 {
-	timeout = __alchemy_rel2abs_timeout(timeout);
+	timeout = alchemy_rel2abs_timeout(timeout);
 	return rt_queue_read_until(queue, buf, size, timeout);
 }
 
@@ -505,11 +505,11 @@ out:
 int rt_queue_bind(RT_QUEUE *queue,
 		  const char *name, RTIME timeout)
 {
-	return __alchemy_bind_object(name,
-				     &alchemy_queue_table,
-				     timeout,
-				     offsetof(struct alchemy_queue, cobj),
-				     &queue->handle);
+	return alchemy_bind_object(name,
+				   &alchemy_queue_table,
+				   timeout,
+				   offsetof(struct alchemy_queue, cobj),
+				   &queue->handle);
 }
 
 int rt_queue_unbind(RT_QUEUE *queue)

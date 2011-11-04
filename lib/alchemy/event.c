@@ -99,7 +99,7 @@ int rt_event_create(RT_EVENT *event, const char *name,
 		return -ENOMEM;
 	}
 
-	__alchemy_build_name(evcb->name, name, &event_namegen);
+	alchemy_build_name(evcb->name, name, &event_namegen);
 
 	if (syncluster_addobj(&alchemy_event_table, evcb->name, &evcb->cobj)) {
 		xnfree(evcb);
@@ -219,7 +219,7 @@ int rt_event_wait(RT_EVENT *event,
 		  unsigned long mask, unsigned long *mask_r,
 		  int mode, RTIME timeout)
 {
-	timeout = __alchemy_rel2abs_timeout(timeout);
+	timeout = alchemy_rel2abs_timeout(timeout);
 	return rt_event_wait_until(event, mask, mask_r, mode, timeout);
 }
 
@@ -314,11 +314,11 @@ out:
 int rt_event_bind(RT_EVENT *event,
 		  const char *name, RTIME timeout)
 {
-	return __alchemy_bind_object(name,
-				     &alchemy_event_table,
-				     timeout,
-				     offsetof(struct alchemy_event, cobj),
-				     &event->handle);
+	return alchemy_bind_object(name,
+				   &alchemy_event_table,
+				   timeout,
+				   offsetof(struct alchemy_event, cobj),
+				   &event->handle);
 }
 
 int rt_event_unbind(RT_EVENT *event)

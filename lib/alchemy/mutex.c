@@ -78,7 +78,7 @@ int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 		return -ENOMEM;
 	}
 
-	__alchemy_build_name(mcb->name, name, &mutex_namegen);
+	alchemy_build_name(mcb->name, name, &mutex_namegen);
 	mcb->owner = no_alchemy_task;
 
 	if (syncluster_addobj(&alchemy_mutex_table, mcb->name, &mcb->cobj)) {
@@ -199,7 +199,7 @@ out:
 
 int rt_mutex_acquire(RT_MUTEX *mutex, RTIME timeout)
 {
-	timeout = __alchemy_rel2abs_timeout(timeout);
+	timeout = alchemy_rel2abs_timeout(timeout);
 	return rt_mutex_acquire_until(mutex, timeout);
 }
 
@@ -262,11 +262,11 @@ out:
 int rt_mutex_bind(RT_MUTEX *mutex,
 		  const char *name, RTIME timeout)
 {
-	return __alchemy_bind_object(name,
-				     &alchemy_mutex_table,
-				     timeout,
-				     offsetof(struct alchemy_mutex, cobj),
-				     &mutex->handle);
+	return alchemy_bind_object(name,
+				   &alchemy_mutex_table,
+				   timeout,
+				   offsetof(struct alchemy_mutex, cobj),
+				   &mutex->handle);
 }
 
 int rt_mutex_unbind(RT_MUTEX *mutex)

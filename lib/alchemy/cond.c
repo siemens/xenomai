@@ -78,7 +78,7 @@ int rt_cond_create(RT_COND *cond, const char *name)
 		return -ENOMEM;
 	}
 
-	__alchemy_build_name(ccb->name, name, &cond_namegen);
+	alchemy_build_name(ccb->name, name, &cond_namegen);
 
 	if (syncluster_addobj(&alchemy_cond_table, ccb->name, &ccb->cobj)) {
 		xnfree(ccb);
@@ -201,7 +201,7 @@ out:
 int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex,
 		 RTIME timeout)
 {
-	timeout = __alchemy_rel2abs_timeout(timeout);
+	timeout = alchemy_rel2abs_timeout(timeout);
 	return rt_cond_wait_until(cond, mutex, timeout);
 }
 
@@ -227,11 +227,11 @@ out:
 int rt_cond_bind(RT_COND *cond,
 		 const char *name, RTIME timeout)
 {
-	return __alchemy_bind_object(name,
-				     &alchemy_cond_table,
-				     timeout,
-				     offsetof(struct alchemy_cond, cobj),
-				     &cond->handle);
+	return alchemy_bind_object(name,
+				   &alchemy_cond_table,
+				   timeout,
+				   offsetof(struct alchemy_cond, cobj),
+				   &cond->handle);
 }
 
 int rt_cond_unbind(RT_COND *cond)

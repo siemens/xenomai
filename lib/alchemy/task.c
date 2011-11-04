@@ -221,7 +221,7 @@ static int create_tcb(struct alchemy_task **tcbp,
 	if (tcb == NULL)
 		return -ENOMEM;
 
-	__alchemy_build_name(tcb->name, name, &task_namegen);
+	alchemy_build_name(tcb->name, name, &task_namegen);
 
 	tcb->mode = mode;
 	tcb->entry = NULL;	/* Not yet known. */
@@ -794,7 +794,7 @@ ssize_t rt_task_send(RT_TASK *task,
 		     RT_TASK_MCB *mcb_s, RT_TASK_MCB *mcb_r,
 		     RTIME timeout)
 {
-	timeout = __alchemy_rel2abs_timeout(timeout);
+	timeout = alchemy_rel2abs_timeout(timeout);
 	return rt_task_send_until(task, mcb_s, mcb_r, timeout);
 }
 
@@ -854,7 +854,7 @@ done:
 
 int rt_task_receive(RT_TASK_MCB *mcb_r, RTIME timeout)
 {
-	timeout = __alchemy_rel2abs_timeout(timeout);
+	timeout = alchemy_rel2abs_timeout(timeout);
 	return rt_task_receive_until(mcb_r, timeout);
 }
 
@@ -922,11 +922,11 @@ done:
 int rt_task_bind(RT_TASK *task,
 		 const char *name, RTIME timeout)
 {
-	return __alchemy_bind_object(name,
-				     &alchemy_task_table,
-				     timeout,
-				     offsetof(struct alchemy_task, cobj),
-				     &task->handle);
+	return alchemy_bind_object(name,
+				   &alchemy_task_table,
+				   timeout,
+				   offsetof(struct alchemy_task, cobj),
+				   &task->handle);
 }
 
 int rt_task_unbind(RT_TASK *task)

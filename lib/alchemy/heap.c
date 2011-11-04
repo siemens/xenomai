@@ -101,7 +101,7 @@ int rt_heap_create(RT_HEAP *heap,
 	if (hcb == NULL)
 		goto no_mem;
 
-	__alchemy_build_name(hcb->name, name, &heap_namegen);
+	alchemy_build_name(hcb->name, name, &heap_namegen);
 
 	if (syncluster_addobj(&alchemy_heap_table, hcb->name, &hcb->cobj)) {
 		xnfree(hcb);
@@ -316,11 +316,11 @@ out:
 int rt_heap_bind(RT_HEAP *heap,
 		  const char *name, RTIME timeout)
 {
-	return __alchemy_bind_object(name,
-				     &alchemy_heap_table,
-				     timeout,
-				     offsetof(struct alchemy_heap, cobj),
-				     &heap->handle);
+	return alchemy_bind_object(name,
+				   &alchemy_heap_table,
+				   timeout,
+				   offsetof(struct alchemy_heap, cobj),
+				   &heap->handle);
 }
 
 int rt_heap_unbind(RT_HEAP *heap)

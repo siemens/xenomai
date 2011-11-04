@@ -89,7 +89,7 @@ int rt_sem_create(RT_SEM *sem, const char *name,
 		return -ENOMEM;
 	}
 
-	__alchemy_build_name(scb->name, name, &sem_namegen);
+	alchemy_build_name(scb->name, name, &sem_namegen);
 
 	if (syncluster_addobj(&alchemy_sem_table, scb->name, &scb->cobj)) {
 		xnfree(scb);
@@ -178,7 +178,7 @@ out:
 
 int rt_sem_p(RT_SEM *sem, RTIME timeout)
 {
-	timeout = __alchemy_rel2abs_timeout(timeout);
+	timeout = alchemy_rel2abs_timeout(timeout);
 	return rt_sem_p_until(sem, timeout);
 }
 
@@ -248,11 +248,11 @@ out:
 int rt_sem_bind(RT_SEM *sem,
 		const char *name, RTIME timeout)
 {
-	return __alchemy_bind_object(name,
-				     &alchemy_sem_table,
-				     timeout,
-				     offsetof(struct alchemy_sem, cobj),
-				     &sem->handle);
+	return alchemy_bind_object(name,
+				   &alchemy_sem_table,
+				   timeout,
+				   offsetof(struct alchemy_sem, cobj),
+				   &sem->handle);
 }
 
 int rt_sem_unbind(RT_SEM *sem)

@@ -110,7 +110,7 @@ int rt_buffer_create(RT_BUFFER *bf, const char *name,
 		goto fail_bufalloc;
 	}
 
-	__alchemy_build_name(bcb->name, name, &buffer_namegen);
+	alchemy_build_name(bcb->name, name, &buffer_namegen);
 
 	if (syncluster_addobj(&alchemy_buffer_table, bcb->name, &bcb->cobj)) {
 		ret = -EEXIST;
@@ -299,7 +299,7 @@ out:
 ssize_t rt_buffer_read(RT_BUFFER *bf,
 		       void *ptr, size_t size, RTIME timeout)
 {
-	timeout = __alchemy_rel2abs_timeout(timeout);
+	timeout = alchemy_rel2abs_timeout(timeout);
 	return rt_buffer_read_until(bf, ptr, size, timeout);
 }
 
@@ -433,7 +433,7 @@ out:
 ssize_t rt_buffer_write(RT_BUFFER *bf,
 			const void *ptr, size_t size, RTIME timeout)
 {
-	timeout = __alchemy_rel2abs_timeout(timeout);
+	timeout = alchemy_rel2abs_timeout(timeout);
 	return rt_buffer_write_until(bf, ptr, size, timeout);
 }
 
@@ -491,11 +491,11 @@ out:
 int rt_buffer_bind(RT_BUFFER *bf,
 		   const char *name, RTIME timeout)
 {
-	return __alchemy_bind_object(name,
-				     &alchemy_buffer_table,
-				     timeout,
-				     offsetof(struct alchemy_buffer, cobj),
-				     &bf->handle);
+	return alchemy_bind_object(name,
+				   &alchemy_buffer_table,
+				   timeout,
+				   offsetof(struct alchemy_buffer, cobj),
+				   &bf->handle);
 }
 
 int rt_buffer_unbind(RT_BUFFER *bf)

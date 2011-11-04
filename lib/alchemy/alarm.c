@@ -96,7 +96,7 @@ int rt_alarm_create(RT_ALARM *alarm, const char *name,
 		goto out;
 	}
 
-	__alchemy_build_name(acb->name, name, &alarm_namegen);
+	alchemy_build_name(acb->name, name, &alarm_namegen);
 
 	if (cluster_addobj(&alchemy_alarm_table, acb->name, &acb->cobj)) {
 		ret = -EEXIST;
