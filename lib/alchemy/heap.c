@@ -264,6 +264,11 @@ int rt_heap_free(RT_HEAP *heap, void *block)
 	if (hcb->mode & H_SINGLE)
 		goto done;
 
+	if (heapobj_validate(&hcb->hobj, block) == 0) {
+		ret = -EINVAL;
+		goto done;
+	}
+
 	heapobj_free(&hcb->hobj, block);
 
 	if (!syncobj_pended_p(&hcb->sobj))

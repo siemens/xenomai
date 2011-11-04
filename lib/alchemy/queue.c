@@ -213,6 +213,11 @@ int rt_queue_free(RT_QUEUE *queue, void *buf)
 	if (qcb == NULL)
 		goto out;
 
+	if (heapobj_validate(&qcb->hobj, msg) == 0) {
+		ret = -EINVAL;
+		goto done;
+	}
+
 	/*
 	 * Check the reference count under lock, so that we properly
 	 * serialize with rt_queue_send() and rt_queue_receive() which
