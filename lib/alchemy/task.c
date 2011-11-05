@@ -229,7 +229,7 @@ static int create_tcb(struct alchemy_task **tcbp,
 
 	CPU_ZERO(&tcb->affinity);
 	for (cpu = 0; cpu < 8; cpu++) {
-		if (T_CPU(cpu))
+		if (mode & T_CPU(cpu))
 			CPU_SET(cpu, &tcb->affinity);
 	}
 
