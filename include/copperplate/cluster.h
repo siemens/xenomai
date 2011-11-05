@@ -41,7 +41,7 @@ struct cluster {
 
 struct syncluster {
 	struct cluster c;
-	struct syncobj sobj;
+	struct syncobj *sobj;
 };
 
 struct pvclusterobj {

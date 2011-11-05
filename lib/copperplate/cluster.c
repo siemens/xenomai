@@ -212,7 +212,11 @@ int syncluster_init(struct syncluster *sc, const char *name)
 	if (ret)
 		return ret;
 
-	syncobj_init(&sc->sobj, SYNCOBJ_FIFO, fnref_null);
+	sc->sobj = xnmalloc(sizeof(*sc->sobj));
+	if (sc->sobj == NULL)
+		return -ENOMEM;
+
+	syncobj_init(sc->sobj, SYNCOBJ_FIFO, fnref_null);
 
 	return 0;
 }
@@ -225,26 +229,26 @@ int syncluster_addobj(struct syncluster *sc, const char *name,
 	struct syncstate syns;
 	int ret;
 
-	if (syncobj_lock(&sc->sobj, &syns))
+	if (syncobj_lock(sc->sobj, &syns))
 		return __bt(-EINVAL);
 
 	ret = __bt(cluster_addobj(&sc->c, name, cobj));
 	if (ret)
 		goto out;
 
-	if (!syncobj_pended_p(&sc->sobj))
+	if (!syncobj_pended_p(sc->sobj))
 		goto out;
 	/*
 	 * Wake up all threads waiting for this key to appear in the
 	 * dictionary.
 	 */
-	syncobj_for_each_waiter_safe(&sc->sobj, thobj, tmp) {
+	syncobj_for_each_waiter_safe(sc->sobj, thobj, tmp) {
 		wait = threadobj_get_wait(thobj);
 		if (*wait->name == *name && strcmp(wait->name, name) == 0)
-			syncobj_wakeup_waiter(&sc->sobj, thobj);
+			syncobj_wakeup_waiter(sc->sobj, thobj);
 	}
 out:
-	syncobj_unlock(&sc->sobj, &syns);
+	syncobj_unlock(sc->sobj, &syns);
 
 	return ret;
 }
@@ -255,12 +259,12 @@ int syncluster_delobj(struct syncluster *sc,
 	struct syncstate syns;
 	int ret;
 
-	if (syncobj_lock(&sc->sobj, &syns))
+	if (syncobj_lock(sc->sobj, &syns))
 		return __bt(-EINVAL);
 
 	ret = __bt(cluster_delobj(&sc->c, cobj));
 
-	syncobj_unlock(&sc->sobj, &syns);
+	syncobj_unlock(sc->sobj, &syns);
 
 	return ret;
 }
@@ -275,7 +279,7 @@ int syncluster_findobj(struct syncluster *sc,
 	struct syncstate syns;
 	int ret = 0;
 
-	if (syncobj_lock(&sc->sobj, &syns))
+	if (syncobj_lock(sc->sobj, &syns))
 		return __bt(-EINVAL);
 
 	for (;;) {
@@ -298,7 +302,7 @@ int syncluster_findobj(struct syncluster *sc,
 				return __bt(-ENOMEM);
 			}
 		}
-		ret = syncobj_pend(&sc->sobj, timeout, &syns);
+		ret = syncobj_pend(sc->sobj, timeout, &syns);
 		if (ret) {
 			if (ret == -EIDRM)
 				goto out;
@@ -306,7 +310,7 @@ int syncluster_findobj(struct syncluster *sc,
 		}
 	}
 
-	syncobj_unlock(&sc->sobj, &syns);
+	syncobj_unlock(sc->sobj, &syns);
 out:
 	if (wait)
 		threadobj_free_wait(wait);
