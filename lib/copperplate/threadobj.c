@@ -428,7 +428,7 @@ static inline void pkg_init_corespec(void)
 	threadobj_lock_prio = threadobj_high_prio;
 	threadobj_high_prio = threadobj_lock_prio - 1;
 
-	debug("SCHED_RT.%d reserved for scheduler-lock emulation",
+	debug("SCHED_RT.%d reserved for scheduler lock",
 	      threadobj_lock_prio);
 
 	memset(&sa, 0, sizeof(sa));
@@ -979,7 +979,7 @@ void threadobj_pkg_init(void)
 	threadobj_async = 0;
 
 	debug("SCHED_RT priorities => [1 .. %d]", threadobj_irq_prio);
-	debug("SCHED_RT.%d reserved for IRQ emulation", threadobj_irq_prio);
+	debug("SCHED_RT.%d reserved for timer context", threadobj_irq_prio);
 
 	/* PI and recursion would be overkill. */
 	__RT(pthread_mutex_init(&list_lock, NULL));
