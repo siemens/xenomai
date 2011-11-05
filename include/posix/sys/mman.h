@@ -63,23 +63,27 @@ int __real_shm_open(const char *name, int oflag, mode_t mode);
 
 int __real_shm_unlink(const char *name);
 
-#if !defined(_FILE_OFFSET_BITS) || _FILE_OFFSET_BITS != 64
 void *__real_mmap(void *addr,
 		  size_t len,
 		  int prot,
 		  int flags,
 		  int fildes,
 		  long off);
-#else
-#define __real_mmap __real_mmap64
-#endif
-#ifdef _LARGEFILE64_SOURCE
+
+#if __WORDSIZE == 32
+#if defined(_LARGEFILE64_SOURCE) \
+	|| defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64
 void *__real_mmap64(void *addr,
 		    size_t len,
 		    int prot,
 		    int flags,
 		    int fildes,
 		    long long off);
+#endif
+
+#if defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64
+#define __real_mmap __real_mmap64
+#endif
 #endif
 
 int __real_munmap(void *addr, size_t len);
