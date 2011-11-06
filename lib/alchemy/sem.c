@@ -154,18 +154,7 @@ int rt_sem_p_until(RT_SEM *sem, RTIME timeout)
 	if (scb == NULL)
 		goto out;
 
-	if (timeout == TM_INFINITE)
-		timespec = NULL;
-	else {
-		timespec = &ts;
-		if (timeout == TM_NONBLOCK) {
-			ts.tv_sec = 0;
-			ts.tv_nsec = 0;
-		} else
-			clockobj_ticks_to_timespec(&alchemy_clock,
-						   timeout, timespec);
-	}
-
+	timespec  = alchemy_get_timespec(timeout, &ts);
 	ret = semobj_wait(&scb->smobj, timespec);
 out:
 	COPPERPLATE_UNPROTECT(svc);

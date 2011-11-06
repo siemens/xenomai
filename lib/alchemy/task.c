@@ -813,8 +813,6 @@ int rt_task_receive_until(RT_TASK_MCB *mcb_r, RTIME timeout)
 	if (current == NULL)
 		return -EPERM;
 
-	timespec = alchemy_get_timespec(timeout, &ts);
-
 	COPPERPLATE_PROTECT(svc);
 
 	syncobj_lock(&current->sobj_msg, &syns);
@@ -824,6 +822,7 @@ int rt_task_receive_until(RT_TASK_MCB *mcb_r, RTIME timeout)
 			ret = -EWOULDBLOCK;
 			goto done;
 		}
+		timespec = alchemy_get_timespec(timeout, &ts);
 		syncobj_wait_drain(&current->sobj_msg, timespec, &syns);
 	}
 

@@ -55,6 +55,19 @@ RTIME alchemy_rel2abs_timeout(RTIME timeout)
 	return timeout;
 }
 
+struct timespec *alchemy_get_timespec(RTIME timeout, struct timespec *tmp)
+{
+ 	if (timeout == TM_INFINITE)
+		return NULL;
+
+	if (timeout == TM_NONBLOCK)
+		timeout = 0;
+
+	clockobj_ticks_to_timespec(&alchemy_clock, timeout, tmp);
+
+	return tmp;
+}
+
 int alchemy_bind_object(const char *name, struct syncluster *sc,
 			RTIME timeout,
 			int offset,
