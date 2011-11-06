@@ -89,7 +89,7 @@ int rt_heap_create(RT_HEAP *heap,
 	struct service svc;
 	int sobj_flags = 0;
 
-	if (threadobj_async_p())
+	if (threadobj_irq_p())
 		return -EPERM;
 
 	if (heapsize == 0)
@@ -144,7 +144,7 @@ int rt_heap_delete(RT_HEAP *heap)
 	struct service svc;
 	int ret = 0;
 
-	if (threadobj_async_p())
+	if (threadobj_irq_p())
 		return -EPERM;
 
 	COPPERPLATE_PROTECT(svc);
@@ -173,7 +173,7 @@ int rt_heap_alloc(RT_HEAP *heap,
 	void *p = NULL;
 	int ret = 0;
 
-	if (threadobj_async_p())
+	if (threadobj_irq_p())
 		return -EPERM;
 
 	COPPERPLATE_PROTECT(svc);
@@ -208,7 +208,7 @@ int rt_heap_alloc(RT_HEAP *heap,
 		goto done;
 	}
 
-	if (threadobj_async_p()) {
+	if (!threadobj_current_p()) {
 		ret = -EPERM;
 		goto done;
 	}

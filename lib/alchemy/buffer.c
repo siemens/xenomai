@@ -90,7 +90,7 @@ int rt_buffer_create(RT_BUFFER *bf, const char *name,
 	int sobj_flags = 0;
 	int ret;
 
-	if (threadobj_async_p())
+	if (threadobj_irq_p())
 		return -EPERM;
 
 	if (bufsz == 0)
@@ -151,7 +151,7 @@ int rt_buffer_delete(RT_BUFFER *bf)
 	struct service svc;
 	int ret = 0;
 
-	if (threadobj_async_p())
+	if (threadobj_irq_p())
 		return -EPERM;
 
 	COPPERPLATE_PROTECT(svc);
@@ -251,7 +251,7 @@ redo:
 			goto done;
 		}
 
-		if (threadobj_async_p()) {
+		if (!threadobj_current_p()) {
 			ret = -EPERM;
 			goto done;
 		}
@@ -385,7 +385,7 @@ redo:
 			goto done;
 		}
 
-		if (threadobj_async_p()) {
+		if (!threadobj_current_p()) {
 			ret = -EPERM;
 			goto done;
 		}

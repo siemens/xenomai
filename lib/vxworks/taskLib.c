@@ -418,7 +418,7 @@ STATUS taskInit(WIND_TCB *pTcb,
 	struct service svc;
 	STATUS ret = ERROR;
 
-	if (threadobj_async_p()) {
+	if (threadobj_irq_p()) {
 		errno = S_intLib_NOT_ISR_CALLABLE;
 		return ERROR;
 	}
@@ -478,7 +478,7 @@ TASK_ID taskSpawn(const char *name,
 	struct service svc;
 	TASK_ID tid;
 
-	if (threadobj_async_p()) {
+	if (threadobj_irq_p()) {
 		errno = S_intLib_NOT_ISR_CALLABLE;
 		return ERROR;
 	}
@@ -523,7 +523,7 @@ static STATUS __taskDelete(TASK_ID tid, int force)
 	struct wind_task *task;
 	int ret;
 
-	if (threadobj_async_p()) {
+	if (threadobj_irq_p()) {
 		errno = S_intLib_NOT_ISR_CALLABLE;
 		return ERROR;
 	}
@@ -585,7 +585,7 @@ TASK_ID taskIdSelf(void)
 {
 	struct wind_task *current;
 
-	if (threadobj_async_p()) {
+	if (threadobj_irq_p()) {
 		errno = S_intLib_NOT_ISR_CALLABLE;
 		return ERROR;
 	}
@@ -664,7 +664,7 @@ STATUS taskSafe(void)
 {
 	struct wind_task *current;
 
-	if (threadobj_async_p()) {
+	if (threadobj_irq_p()) {
 		errno = S_intLib_NOT_ISR_CALLABLE;
 		return ERROR;
 	}
@@ -690,7 +690,7 @@ STATUS taskUnsafe(void)
 	struct wind_task *current;
 	int ret;
 
-	if (threadobj_async_p()) {
+	if (threadobj_irq_p()) {
 		errno = S_intLib_NOT_ISR_CALLABLE;
 		return ERROR;
 	}
@@ -785,7 +785,7 @@ STATUS taskLock(void)
 	struct wind_task *task;
 	struct service svc;
 
-	if (threadobj_async_p()) {
+	if (threadobj_irq_p()) {
 		errno = S_intLib_NOT_ISR_CALLABLE;
 		return ERROR;
 	}
@@ -809,7 +809,7 @@ STATUS taskUnlock(void)
 	struct wind_task *task;
 	struct service svc;
 
-	if (threadobj_async_p()) {
+	if (threadobj_irq_p()) {
 		errno = S_intLib_NOT_ISR_CALLABLE;
 		return ERROR;
 	}
@@ -835,7 +835,7 @@ STATUS taskDelay(int ticks)
 	struct service svc;
 	int ret;
 
-	if (threadobj_async_p()) {
+	if (threadobj_irq_p()) {
 		errno = S_intLib_NOT_ISR_CALLABLE;
 		return ERROR;
 	}

@@ -13,7 +13,8 @@ endif
 
 TESTS :=	\
 	task-1	\
-	task-2
+	task-2	\
+	task-3
 
 CFLAGS := $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --skin=alchemy --cflags) -g
 LDFLAGS := $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --skin=alchemy --ldflags)

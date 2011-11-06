@@ -67,7 +67,7 @@ int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 	pthread_mutexattr_t mattr;
 	struct service svc;
 
-	if (threadobj_async_p())
+	if (threadobj_irq_p())
 		return -EPERM;
 
 	COPPERPLATE_PROTECT(svc);
@@ -110,7 +110,7 @@ int rt_mutex_delete(RT_MUTEX *mutex)
 	struct service svc;
 	int ret = 0;
 
-	if (threadobj_async_p())
+	if (threadobj_irq_p())
 		return -EPERM;
 
 	COPPERPLATE_PROTECT(svc);
@@ -209,9 +209,6 @@ int rt_mutex_release(RT_MUTEX *mutex)
 	struct service svc;
 	int ret = 0;
 
-	if (threadobj_async_p())
-		return -EPERM;
-
 	COPPERPLATE_PROTECT(svc);
 
 	mcb = find_alchemy_mutex(mutex, &ret);
@@ -232,7 +229,7 @@ int rt_mutex_inquire(RT_MUTEX *mutex, RT_MUTEX_INFO *info)
 	struct service svc;
 	int ret = 0;
 
-	if (threadobj_async_p())
+	if (threadobj_irq_p())
 		return -EPERM;
 
 	COPPERPLATE_PROTECT(svc);

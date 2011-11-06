@@ -61,7 +61,7 @@ static STATUS xsem_take(struct wind_sem *sem, int timeout)
 	struct service svc;
 	STATUS ret = OK;
 
-	if (threadobj_async_p())
+	if (threadobj_irq_p())
 		return S_intLib_NOT_ISR_CALLABLE;
 	  
 	COPPERPLATE_PROTECT(svc);
@@ -168,7 +168,7 @@ static STATUS xsem_delete(struct wind_sem *sem)
 	struct service svc;
 	int ret = OK;
 
-	if (threadobj_async_p())
+	if (threadobj_irq_p())
 		return S_intLib_NOT_ISR_CALLABLE;
 	  
 	COPPERPLATE_PROTECT(svc);
@@ -226,7 +226,7 @@ static STATUS msem_take(struct wind_sem *sem, int timeout)
 	struct timespec ts;
 	int ret;
 
-	if (threadobj_async_p())
+	if (threadobj_irq_p())
 		return S_intLib_NOT_ISR_CALLABLE;
 	  
 	current = wind_task_current();
@@ -278,7 +278,7 @@ static STATUS msem_give(struct wind_sem *sem)
 	struct wind_task *current;
 	int ret;
 
-	if (threadobj_async_p())
+	if (threadobj_irq_p())
 		return S_intLib_NOT_ISR_CALLABLE;
 
 	ret = __RT(pthread_mutex_unlock(&sem->u.msem.lock));
@@ -305,7 +305,7 @@ static STATUS msem_delete(struct wind_sem *sem)
 {
 	int ret;
 
-	if (threadobj_async_p())
+	if (threadobj_irq_p())
 		return S_intLib_NOT_ISR_CALLABLE;
 	  
 	ret = __RT(pthread_mutex_destroy(&sem->u.msem.lock));

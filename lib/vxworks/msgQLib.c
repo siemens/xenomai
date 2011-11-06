@@ -69,7 +69,7 @@ MSG_Q_ID msgQCreate(int maxMsgs, int maxMsgLength, int options)
 	int sobj_flags = 0;
 	struct service svc;
 
-	if (threadobj_async_p()) {
+	if (threadobj_irq_p()) {
 		errno = S_intLib_NOT_ISR_CALLABLE;
 		return (MSG_Q_ID)0;
 	}
@@ -129,7 +129,7 @@ STATUS msgQDelete(MSG_Q_ID msgQId)
 	struct wind_mq *mq;
 	struct service svc;
 
-	if (threadobj_async_p()) {
+	if (threadobj_irq_p()) {
 		errno = S_intLib_NOT_ISR_CALLABLE;
 		return ERROR;
 	}
@@ -166,7 +166,7 @@ int msgQReceive(MSG_Q_ID msgQId, char *buffer, UINT maxNBytes, int timeout)
 	struct service svc;
 	int ret;
 
-	if (threadobj_async_p()) {
+	if (threadobj_irq_p()) {
 		errno = S_intLib_NOT_ISR_CALLABLE;
 		return ERROR;
 	}
@@ -285,7 +285,7 @@ STATUS msgQSend(MSG_Q_ID msgQId, const char *buffer, UINT bytes,
 		goto fail;
 	}
 
-	if (threadobj_async_p()) {
+	if (threadobj_irq_p()) {
 		errno = S_msgQLib_NON_ZERO_TIMEOUT_AT_INT_LEVEL;
 		goto fail;
 	}

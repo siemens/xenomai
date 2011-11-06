@@ -215,7 +215,7 @@ int semobj_wait(struct semobj *smobj, struct timespec *timeout)
 		goto done;
 	}
 
-	if (threadobj_async_p()) {
+	if (!threadobj_current_p()) {
 		ret = -EPERM;
 		goto done;
 	}

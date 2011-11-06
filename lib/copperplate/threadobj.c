@@ -58,8 +58,6 @@ int threadobj_high_prio;
 
 int threadobj_irq_prio;
 
-int threadobj_async;
-
 static DEFINE_PRIVATE_LIST(thread_list);
 
 static pthread_mutex_t list_lock;
@@ -1000,7 +998,6 @@ void threadobj_pkg_init(void)
 {
 	threadobj_irq_prio = __RT(sched_get_priority_max(SCHED_RT));
 	threadobj_high_prio = threadobj_irq_prio - 1;
-	threadobj_async = 0;
 
 	debug("SCHED_RT priorities => [1 .. %d]", threadobj_irq_prio);
 	debug("SCHED_RT.%d reserved for timer context", threadobj_irq_prio);

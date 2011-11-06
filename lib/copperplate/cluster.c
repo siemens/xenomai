@@ -292,7 +292,7 @@ int syncluster_findobj(struct syncluster *sc,
 			ret = -EWOULDBLOCK;
 			break;
 		}
-		if (threadobj_async_p()) {
+		if (!threadobj_current_p()) {
 			ret = -EPERM;
 			break;
 		}
@@ -442,7 +442,7 @@ int pvsyncluster_findobj(struct pvsyncluster *sc,
 			ret = -EWOULDBLOCK;
 			break;
 		}
-		if (threadobj_async_p()) {
+		if (!threadobj_current_p()) {
 			ret = -EPERM;
 			break;
 		}

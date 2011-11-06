@@ -67,7 +67,7 @@ int rt_cond_create(RT_COND *cond, const char *name)
 	pthread_condattr_t cattr;
 	struct service svc;
 
-	if (threadobj_async_p())
+	if (threadobj_irq_p())
 		return -EPERM;
 
 	COPPERPLATE_PROTECT(svc);
@@ -105,7 +105,7 @@ int rt_cond_delete(RT_COND *cond)
 	struct service svc;
 	int ret = 0;
 
-	if (threadobj_async_p())
+	if (threadobj_irq_p())
 		return -EPERM;
 
 	COPPERPLATE_PROTECT(svc);

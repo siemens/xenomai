@@ -315,7 +315,7 @@ int rt_task_delete(RT_TASK *task)
 	struct service svc;
 	int ret;
 
- 	if (threadobj_async_p())
+ 	if (threadobj_irq_p())
 		return -EPERM;
 
 	tcb = find_alchemy_task_or_self(task, &ret);
@@ -466,7 +466,7 @@ int rt_task_sleep(RTIME delay)
 	struct timespec ts;
 	struct service svc;
 
-	if (threadobj_async_p())
+	if (!threadobj_current_p())
 		return -EPERM;
 
 	if (delay == 0)
@@ -485,7 +485,7 @@ int rt_task_sleep_until(RTIME date)
 	struct service svc;
 	ticks_t now;
 
-	if (threadobj_async_p())
+	if (!threadobj_current_p())
 		return -EPERM;
 
 	if (date == TM_INFINITE) {
@@ -601,7 +601,7 @@ out:
 
 int rt_task_yield(void)
 {
-	if (threadobj_async_p())
+	if (!threadobj_current_p())
 		return -EPERM;
 
 	threadobj_yield();
@@ -658,7 +658,7 @@ int rt_task_set_mode(int clrmask, int setmask, int *mode_r)
 	struct service svc;
 	int ret = 0;
 
-	if (threadobj_async_p()) {
+	if (threadobj_irq_p()) {
 		clrmask &= ~T_LOCK;
 		setmask &= ~T_LOCK;
 		return (clrmask | setmask) ? -EPERM : 0;

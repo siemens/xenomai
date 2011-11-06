@@ -88,7 +88,7 @@ int rt_event_create(RT_EVENT *event, const char *name,
 	struct service svc;
 	int sobj_flags = 0;
 
-	if (threadobj_async_p())
+	if (threadobj_irq_p())
 		return -EPERM;
 
 	COPPERPLATE_PROTECT(svc);
@@ -129,7 +129,7 @@ int rt_event_delete(RT_EVENT *event)
 	struct service svc;
 	int ret = 0;
 
-	if (threadobj_async_p())
+	if (threadobj_irq_p())
 		return -EPERM;
 
 	COPPERPLATE_PROTECT(svc);
@@ -182,7 +182,7 @@ int rt_event_wait_until(RT_EVENT *event,
 		goto done;
 	}
 
-	if (threadobj_async_p()) {
+	if (!threadobj_current_p()) {
 		ret = -EPERM;
 		goto done;
 	}

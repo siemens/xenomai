@@ -72,7 +72,7 @@ int rt_sem_create(RT_SEM *sem, const char *name,
 	struct alchemy_sem *scb;
 	struct service svc;
 
-	if (threadobj_async_p())
+	if (threadobj_irq_p())
 		return -EPERM;
 
 	if (mode & S_PULSE) {
@@ -123,7 +123,7 @@ int rt_sem_delete(RT_SEM *sem)
 	struct service svc;
 	int ret = 0;
 
-	if (threadobj_async_p())
+	if (threadobj_irq_p())
 		return -EPERM;
 
 	COPPERPLATE_PROTECT(svc);
@@ -147,9 +147,6 @@ int rt_sem_p_until(RT_SEM *sem, RTIME timeout)
 	struct alchemy_sem *scb;
 	struct service svc;
 	int ret = 0;
-
-	if (threadobj_async_p())
-		return -EPERM;
 
 	COPPERPLATE_PROTECT(svc);
 

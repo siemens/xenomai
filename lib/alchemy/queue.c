@@ -90,7 +90,7 @@ int rt_queue_create(RT_QUEUE *queue, const char *name,
 	struct service svc;
 	int sobj_flags = 0;
 
-	if (threadobj_async_p())
+	if (threadobj_irq_p())
 		return -EPERM;
 
 	if (poolsize == 0)
@@ -146,7 +146,7 @@ int rt_queue_delete(RT_QUEUE *queue)
 	struct service svc;
 	int ret = 0;
 
-	if (threadobj_async_p())
+	if (threadobj_irq_p())
 		return -EPERM;
 
 	COPPERPLATE_PROTECT(svc);
@@ -357,7 +357,7 @@ ssize_t rt_queue_receive_until(RT_QUEUE *queue,
 		goto done;
 	}
 
-	if (threadobj_async_p()) {
+	if (!threadobj_current_p()) {
 		ret = -EPERM;
 		goto done;
 	}

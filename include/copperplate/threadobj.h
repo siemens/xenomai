@@ -160,8 +160,6 @@ extern int threadobj_high_prio;
 
 extern int threadobj_irq_prio;
 
-extern int threadobj_async;
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -245,10 +243,16 @@ static inline struct threadobj *threadobj_current(void)
 	return pthread_getspecific(threadobj_tskey);
 }
 
-static inline int threadobj_async_p(void)
+static inline int threadobj_irq_p(void)
 {
-	struct threadobj *thobj = threadobj_current();
-	return thobj == THREADOBJ_IRQCONTEXT;
+	struct threadobj *current = threadobj_current();
+	return current == THREADOBJ_IRQCONTEXT;
+}
+
+static inline int threadobj_current_p(void)
+{
+	struct threadobj *current = threadobj_current();
+	return current && current != THREADOBJ_IRQCONTEXT;
 }
 
 static inline int threadobj_lock_sched_once(struct threadobj *thobj)
@@ -271,11 +275,6 @@ static inline int threadobj_sleep(struct timespec *ts)
 	 * with both Cobalt and Mercury cores.
 	 */
 	return -__RT(clock_nanosleep(CLOCK_COPPERPLATE, TIMER_ABSTIME, ts, NULL));
-}
-
-static inline int threadobj_context_p(void)
-{
-	return !threadobj_async_p() && threadobj_current();
 }
 
 static inline unsigned int threadobj_get_magic(struct threadobj *thobj)

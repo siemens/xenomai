@@ -21,5 +21,5 @@
 
 BOOL intContext(void)
 {
-	return threadobj_async_p();
+	return threadobj_irq_p();
 }
