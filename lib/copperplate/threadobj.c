@@ -837,10 +837,29 @@ void threadobj_start(struct threadobj *thobj)	/* thobj->lock held. */
 
 void threadobj_wait_start(struct threadobj *thobj) /* thobj->lock free. */
 {
+	int oldstate;
+
 	threadobj_lock(thobj);
 
-	while ((thobj->status & (THREADOBJ_STARTED|THREADOBJ_ABORTED)) == 0)
+	/*
+	 * NOTE: to spare us the need for passing the equivalent of a
+	 * syncstate argument to each thread locking operation, we
+	 * hold the cancel state of the locker directly into the
+	 * locked thread, prior to disabling cancellation for the
+	 * calling thread. However, this means that we must save the
+	 * currently saved state on the stack prior to calling any
+	 * service which releases that lock implicitly, such as
+	 * pthread_cond_wait(). Failing to do so would introduce the
+	 * possibility for the saved state to be overwritten by
+	 * another thread which managed to grab the lock after
+	 * pthread_cond_wait() dropped it.
+	 */
+
+	while ((thobj->status & (THREADOBJ_STARTED|THREADOBJ_ABORTED)) == 0) {
+		oldstate = thobj->cancel_state;
 		__RT(pthread_cond_wait(&thobj->barrier, &thobj->lock));
+		thobj->cancel_state = oldstate;
+	}
 
 	threadobj_unlock(thobj);
 
@@ -888,8 +907,13 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 
 static void cancel_sync(struct threadobj *thobj) /* thobj->lock held */
 {
-	while (thobj->status & THREADOBJ_WARMUP)
+	int oldstate;
+
+	while (thobj->status & THREADOBJ_WARMUP) {
+		oldstate = thobj->cancel_state;
 		__RT(pthread_cond_wait(&thobj->barrier, &thobj->lock));
+		thobj->cancel_state = oldstate;
+	}
 
 	if ((thobj->status & THREADOBJ_STARTED) == 0) {
 		thobj->status |= THREADOBJ_ABORTED;
