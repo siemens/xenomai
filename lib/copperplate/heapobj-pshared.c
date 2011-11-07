@@ -564,13 +564,18 @@ static int create_heap(struct heapobj *hobj, const char *session,
 	memoff_t len;
 	int ret, fd;
 
-	if (size <= sizeof(struct heap_extent))
-		size = sizeof(struct heap_extent);
-	else {
-		size = __align_to(size, HOBJ_PAGE_SIZE);
-		if (size > HOBJ_MAXEXTSZ)
-			return __bt(-EINVAL);
-	}
+	/*
+	 * A storage page should be obviously larger than an extent
+	 * header, but we still make sure of this in debug mode, so
+	 * that we can rely on __align_to() for rounding to the
+	 * minimum size in production builds, without any further
+	 * test (e.g. like size >= sizeof(struct heap_extent)).
+	 */
+	assert(HOBJ_PAGE_SIZE > sizeof(struct heap_extent));
+
+	size = __align_to(size, HOBJ_PAGE_SIZE);
+	if (size > HOBJ_MAXEXTSZ)
+		return __bt(-EINVAL);
 
 	if (size - sizeof(struct heap_extent) < HOBJ_PAGE_SIZE * 2)
 		size += HOBJ_PAGE_SIZE * 2;
