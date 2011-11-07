@@ -689,7 +689,7 @@ int threadobj_start_rr(struct timespec *quantum)
 
 	value.it_interval.tv_sec = quantum->tv_sec;
 	value.it_interval.tv_usec = quantum->tv_nsec / 1000;
-	
+
 	ret = getitimer(ITIMER_VIRTUAL, &ovalue);
 	if (ret == 0 &&
 	    value.it_interval.tv_sec == ovalue.it_interval.tv_sec &&
@@ -718,7 +718,7 @@ void threadobj_stop_rr(void)
 	value.it_value.tv_sec = 0;
 	value.it_value.tv_usec = 0;
 	value.it_interval = value.it_value;
-	
+
 	setitimer(ITIMER_VIRTUAL, &value, NULL);
 
 	memset(&sa, 0, sizeof(sa));
@@ -774,7 +774,7 @@ int threadobj_wait_period(struct threadobj *thobj,
 		overruns = d / period;
 		timespec_adds(&wakeup, &wakeup, overruns * period);
 	}
-	
+
 	timespec_adds(&thobj->core.wakeup, &wakeup, period);
 
 	if (overruns)
@@ -1029,14 +1029,14 @@ void threadobj_pkg_init(void)
 	threadobj_irq_prio = __RT(sched_get_priority_max(SCHED_RT));
 	threadobj_high_prio = threadobj_irq_prio - 1;
 
-	debug("SCHED_RT priorities => [1 .. %d]", threadobj_irq_prio);
-	debug("SCHED_RT.%d reserved for timer context", threadobj_irq_prio);
-
 	/* PI and recursion would be overkill. */
 	__RT(pthread_mutex_init(&list_lock, NULL));
 
 	if (pthread_key_create(&threadobj_tskey, threadobj_finalize) != 0)
 		panic("failed to allocate TSD key");
+
+	debug("SCHED_RT priorities => [1 .. %d]", threadobj_irq_prio);
+	debug("SCHED_RT.%d reserved for timer context", threadobj_irq_prio);
 
 	pkg_init_corespec();
 }
