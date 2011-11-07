@@ -49,14 +49,17 @@ void backtrace_log(int retval, const char *fn,
 {
 	struct backtrace_data *btd;
 	struct error_frame *ef;
+	int state;
 
 	btd = pthread_getspecific(btkey);
 	if (btd == NULL)
 		btd = &main_btd;
 
+	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &state);
+
 	ef = xnmalloc(sizeof(*ef));
 	if (ef == NULL)
-		return;
+		goto out;
 
 	ef->retval = retval;
 	ef->lineno = lineno;
@@ -73,13 +76,18 @@ void backtrace_log(int retval, const char *fn,
 	btd->inner = ef;
 
 	write_unlock(&btd->lock);
+out:
+	pthread_setcanceltype(state, NULL);
 }
 
 static void flush_backtrace(struct backtrace_data *btd)
 {
 	struct error_frame *ef, *nef;
+	int state;
 
 	/* Locking order must be __printlock, then btlock. */
+
+	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &state);
 
 	write_lock(&btd->lock);
 
@@ -90,6 +98,8 @@ static void flush_backtrace(struct backtrace_data *btd)
 
 	btd->inner = NULL;
 	write_unlock(&btd->lock);
+
+	pthread_setcanceltype(state, NULL);
 }
 
 void backtrace_init_context(struct backtrace_data *btd,
