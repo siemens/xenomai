@@ -78,6 +78,10 @@ struct syncluster {
 
 #endif /* !CONFIG_XENO_PSHARED */
 
+struct syncluster_wait_struct {
+	const char *name;
+};
+
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -134,9 +134,10 @@ struct threadobj {
 			void *ptr;
 			size_t size;
 		} buffer;
-	} wait_u;	/* XXX: deprecated by wait_struct */
+	} wait_u;	/* XXX: deprecated by wait_union */
 	void (*wait_hook)(struct threadobj *thobj, int status);
-	void *wait_struct;
+	void *wait_union;
+	size_t wait_size;
 
 	struct threadobj_corespec core;
 	pthread_cond_t barrier;
@@ -163,6 +164,15 @@ extern int threadobj_irq_prio;
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+void *__threadobj_alloc(size_t tcb_struct_size,
+			size_t wait_union_size,
+			int thobj_offset);
+
+static inline void threadobj_free(void *p)
+{
+	xnfree(p);
+}
 
 void threadobj_init(struct threadobj *thobj,
 		    struct threadobj_init_data *idata);
@@ -217,6 +227,13 @@ void threadobj_pkg_init(void);
 #ifdef __cplusplus
 }
 #endif
+
+#define threadobj_alloc(T, __mptr, W)					\
+	({								\
+		void *__p;						\
+		__p = __threadobj_alloc(sizeof(T), sizeof(W), offsetof(T, __mptr)); \
+		__p;							\
+	})
 
 static inline int threadobj_get_priority(struct threadobj *thobj)
 {
@@ -303,74 +320,28 @@ static inline int threadobj_get_errno(struct threadobj *thobj)
 	return *thobj->errno_pointer;
 }
 
+static inline int threadobj_local_p(struct threadobj *thobj)
+{
 #ifdef CONFIG_XENO_PSHARED
-
-static inline int threadobj_local_p(struct threadobj *thobj)
-{
 	return thobj->cnode == __this_node.id;
-}
-
-/*
- * In shared processing mode, wait structs may be accessed by remote
- * processes from the same session, so we allocate them from the
- * shared heap.
- */
-#define threadobj_alloc_wait(T)						\
-	({								\
-		struct threadobj *__thobj = threadobj_current();	\
-		typeof(T) *__p;						\
-		assert(__thobj != NULL);				\
-		assert(__thobj->wait_struct == NULL);			\
-		__p = xnmalloc(sizeof(T));				\
-		__thobj->wait_struct = __p;				\
-		__p;							\
-	})
-
-#define threadobj_free_wait(__p)					\
-	({								\
-		struct threadobj *__thobj = threadobj_current();	\
-		assert(__thobj != NULL);				\
-		assert(__thobj->wait_struct == __p);			\
-		__thobj->wait_struct = NULL;				\
-		xnfree(__p);						\
-	})
-
 #else
-
-#include <alloca.h>
-
-static inline int threadobj_local_p(struct threadobj *thobj)
-{
 	return 1;
+#endif
 }
 
-/*
- * In purely local mode, we can allocate wait structs from the stack.
- */
-#define threadobj_alloc_wait(T)						\
-	({								\
-		struct threadobj *__thobj = threadobj_current();	\
-		typeof(T) *__p;						\
-		assert(__thobj != NULL);				\
-		assert(__thobj->wait_struct == NULL);			\
-		__p = alloca(sizeof(T));				\
-		__thobj->wait_struct = __p;				\
-		__p;							\
-	})
-
-#define threadobj_free_wait(__p)					\
+#define threadobj_prepare_wait(T)					\
 	({								\
 		struct threadobj *__thobj = threadobj_current();	\
 		assert(__thobj != NULL);				\
-		assert(__thobj->wait_struct == __p);			\
-		__thobj->wait_struct = NULL;				\
+		assert(sizeof(typeof(T)) <= __thobj->wait_size);	\
+		__thobj->wait_union;					\
 	})
 
-#endif
+#define threadobj_finish_wait()		do { } while (0)
 
 static inline void *threadobj_get_wait(struct threadobj *thobj)
 {
-	return thobj->wait_struct;
+	return thobj->wait_union;
 }
 
 static inline const char *threadobj_get_name(struct threadobj *thobj)

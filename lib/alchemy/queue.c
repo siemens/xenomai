@@ -368,18 +368,13 @@ ssize_t rt_queue_receive_until(RT_QUEUE *queue,
 		goto done;
 	}
 
-	wait = threadobj_alloc_wait(struct alchemy_queue_wait);
-	if (wait == NULL) {
-		ret = -ENOMEM;
-		goto done;
-	}
-
+	wait = threadobj_prepare_wait(struct alchemy_queue_wait);
 	timespec = alchemy_get_timespec(timeout, &ts);
 
 	ret = syncobj_pend(&qcb->sobj, timespec, &syns);
 	if (ret) {
 		if (ret == -EIDRM) {
-			threadobj_free_wait(wait);
+			threadobj_finish_wait();
 			goto out;
 		}
 	} else {
@@ -388,7 +383,7 @@ ssize_t rt_queue_receive_until(RT_QUEUE *queue,
 		ret = (ssize_t)msg->size;
 	}
 
-	threadobj_free_wait(wait);
+	threadobj_finish_wait();
 done:
 	put_alchemy_queue(qcb, &syns);
 out:

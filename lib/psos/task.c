@@ -37,6 +37,9 @@
 #include "task.h"
 #include "tm.h"
 
+union psos_wait_union {
+};
+
 struct cluster psos_task_table;
 
 static unsigned long anon_tids;
@@ -163,7 +166,7 @@ static void task_finalizer(struct threadobj *thobj)
 	syncobj_destroy(&task->sobj, &syns);
 	threadobj_destroy(&task->thobj);
 
-	xnfree(task);
+	threadobj_free(task);
 }
 
 static void *task_trampoline(void *arg)
@@ -258,7 +261,8 @@ u_long t_create(const char *name, u_long prio,
 
 	COPPERPLATE_PROTECT(svc);
 
-	task = xnmalloc(sizeof(struct psos_task));
+	task = threadobj_alloc(struct psos_task,
+			       thobj, union psos_wait_union);
 	if (task == NULL) {
 		ret = ERR_NOTCB;
 		goto out;
@@ -272,7 +276,7 @@ u_long t_create(const char *name, u_long prio,
 	 * value based on the implementation default for such minimum.
 	 */
 	if (ustack > 0 && ustack < 8192) {
-		xnfree(task);
+		threadobj_free(task);
 		ret = ERR_TINYSTK;
 		goto out;
 	}
@@ -333,7 +337,7 @@ u_long t_create(const char *name, u_long prio,
 	fail:
 		syncobj_lock(&task->sobj, &syns);
 		syncobj_destroy(&task->sobj, &syns);
-		xnfree(task);
+		threadobj_free(task);
 	}
 out:
 	COPPERPLATE_UNPROTECT(svc);

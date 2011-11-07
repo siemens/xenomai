@@ -35,8 +35,13 @@
 #include "copperplate/traceobj.h"
 #include "copperplate/threadobj.h"
 #include "copperplate/syncobj.h"
+#include "copperplate/cluster.h"
 #include "copperplate/clockobj.h"
 #include "copperplate/debug.h"
+
+union copperplate_wait_union {
+	struct syncluster_wait_struct syncluster_wait;
+};
 
 /*
  * NOTE on cancellation handling: Most traditional RTOSes guarantee
@@ -789,6 +794,28 @@ int threadobj_stat(struct threadobj *thobj,
 
 #endif /* CONFIG_XENO_MERCURY */
 
+void *__threadobj_alloc(size_t tcb_struct_size,
+			size_t wait_union_size,
+			int thobj_offset)
+{
+	struct threadobj *thobj;
+	void *p;
+
+	if (wait_union_size < sizeof(union copperplate_wait_union))
+		wait_union_size = sizeof(union copperplate_wait_union);
+
+	tcb_struct_size = (tcb_struct_size+sizeof(double)-1) & ~(sizeof(double)-1);
+	p = xnmalloc(tcb_struct_size + wait_union_size);
+	if (p == NULL)
+		return NULL;
+
+	thobj = p + thobj_offset;
+	thobj->wait_union = p + tcb_struct_size;
+	thobj->wait_size = wait_union_size;
+
+	return p;
+}
+
 void threadobj_init(struct threadobj *thobj,
 		    struct threadobj_init_data *idata)
 {
@@ -799,7 +826,6 @@ void threadobj_init(struct threadobj *thobj,
 	thobj->tid = 0;
 	thobj->tracer = NULL;
 	thobj->wait_sobj = NULL;
-	thobj->wait_struct = NULL;
 	thobj->finalizer = idata->finalizer;
 	thobj->wait_hook = idata->wait_hook;
 	thobj->schedlock_depth = 0;
@@ -808,6 +834,10 @@ void threadobj_init(struct threadobj *thobj,
 	holder_init(&thobj->wait_link);
 	thobj->suspend_hook = idata->suspend_hook;
 	thobj->cnode = __this_node.id;
+	/*
+	 * CAUTION: wait_union and wait_size have been set in
+	 * __threadobj_alloc().
+	 */
 
 	__RT(pthread_condattr_init(&cattr));
 	__RT(pthread_condattr_setpshared(&cattr, mutex_scope_attribute));

@@ -26,7 +26,17 @@
 #include <copperplate/heapobj.h>
 #include "internal.h"
 #include "task.h"
+#include "buffer.h"
+#include "event.h"
+#include "queue.h"
 #include "timer.h"
+
+union alchemy_wait_union {
+	struct alchemy_task_wait task_wait;
+	struct alchemy_buffer_wait buffer_wait;
+	struct alchemy_event_wait event_wait;
+	struct alchemy_queue_wait queue_wait;
+};
 
 struct syncluster alchemy_task_table;
 
@@ -147,7 +157,7 @@ static void task_finalizer(struct threadobj *thobj)
 	syncobj_destroy(&tcb->sobj_msg, &syns);
 	threadobj_destroy(&tcb->thobj);
 
-	xnfree(tcb);
+	threadobj_free(tcb);
 }
 
 static int task_prologue(struct alchemy_task *tcb)
@@ -217,7 +227,8 @@ static int create_tcb(struct alchemy_task **tcbp,
 	if (mode & ~(T_CPUMASK|T_LOCK))
 		return -EINVAL;
 
-	tcb = xnmalloc(sizeof(*tcb));
+	tcb = threadobj_alloc(struct alchemy_task, thobj,
+			      union alchemy_wait_union);
 	if (tcb == NULL)
 		return -ENOMEM;
 
@@ -260,7 +271,7 @@ static void delete_tcb(struct alchemy_task *tcb)
 	threadobj_destroy(&tcb->thobj);
 	syncobj_uninit(&tcb->sobj_safe);
 	syncobj_uninit(&tcb->sobj_msg);
-	xnfree(tcb);
+	threadobj_free(tcb);
 }
 
 int rt_task_create(RT_TASK *task, const char *name,
@@ -751,11 +762,7 @@ ssize_t rt_task_send_until(RT_TASK *task,
 	}
 
 	/* Get space for the reply. */
-	wait = threadobj_alloc_wait(struct alchemy_task_wait);
-	if (wait == NULL) {
-		ret = -ENOMEM;
-		goto done;
-	}
+	wait = threadobj_prepare_wait(struct alchemy_task_wait);
 
 	/*
 	 * Compute the next flow identifier, making sure that we won't
@@ -775,13 +782,13 @@ ssize_t rt_task_send_until(RT_TASK *task,
 
 	ret = syncobj_pend(&tcb->sobj_msg, timespec, &syns);
 	if (ret) {
-		threadobj_free_wait(wait);
+		threadobj_finish_wait();
 		if (ret == -EIDRM)
 			goto out;
 		goto done;
 	}
 
-	threadobj_free_wait(wait);
+	threadobj_finish_wait();
 done:
 	syncobj_unlock(&tcb->sobj_msg, &syns);
 out:

@@ -270,11 +270,7 @@ redo:
 
 		if (wait == NULL) {
 			timespec = alchemy_get_timespec(timeout, &ts);
-			wait = threadobj_alloc_wait(struct alchemy_buffer_wait);
-			if (wait == NULL) {
-				ret = -ENOMEM;
-				goto done;
-			}
+			wait = threadobj_prepare_wait(struct alchemy_buffer_wait);
 		}
 		wait->size = len;
 
@@ -289,7 +285,7 @@ done:
 	put_alchemy_buffer(bcb, &syns);
 out:
 	if (wait)
-		threadobj_free_wait(wait);
+		threadobj_finish_wait();
 
 	COPPERPLATE_UNPROTECT(svc);
 
@@ -404,11 +400,7 @@ redo:
 
 		if (wait == NULL) {
 			timespec = alchemy_get_timespec(timeout, &ts);
-			wait = threadobj_alloc_wait(struct alchemy_buffer_wait);
-			if (wait == NULL) {
-				ret = -ENOMEM;
-				goto done;
-			}
+			wait = threadobj_prepare_wait(struct alchemy_buffer_wait);
 		}
 		wait->size = len;
 
@@ -423,7 +415,7 @@ done:
 	put_alchemy_buffer(bcb, &syns);
 out:
 	if (wait)
-		threadobj_free_wait(wait);
+		threadobj_finish_wait();
 
 	COPPERPLATE_UNPROTECT(svc);
 

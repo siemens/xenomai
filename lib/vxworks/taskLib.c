@@ -36,6 +36,9 @@
 #include <copperplate/cluster.h>
 #include <vxworks/errnoLib.h>
 
+union wind_wait_union {
+};
+
 struct cluster wind_task_table;
 
 static unsigned long anon_tids;
@@ -132,7 +135,7 @@ static void task_finalizer(struct threadobj *thobj)
 	__RT(pthread_mutex_destroy(&task->safelock));
 	threadobj_destroy(&task->thobj);
 
-	xnfree(task);
+	threadobj_free(task);
 }
 
 /*
@@ -400,7 +403,8 @@ static STATUS __taskInit(struct wind_task *task,
 
 static inline struct wind_task *alloc_task(void)
 {
-	return xnmalloc(sizeof(struct wind_task));
+	return threadobj_alloc(struct wind_task,
+			       thobj, union wind_wait_union);
 }
 
 STATUS taskInit(WIND_TCB *pTcb,

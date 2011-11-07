@@ -187,11 +187,7 @@ int rt_event_wait_until(RT_EVENT *event,
 		goto done;
 	}
 
-	wait = threadobj_alloc_wait(struct alchemy_event_wait);
-	if (wait == NULL) {
-		ret = -ENOMEM;
-		goto done;
-	}
+	wait = threadobj_prepare_wait(struct alchemy_event_wait);
 	wait->mask = mask;
 	wait->mode = mode;
 
@@ -200,13 +196,13 @@ int rt_event_wait_until(RT_EVENT *event,
 	ret = syncobj_pend(&evcb->sobj, timespec, &syns);
 	if (ret) {
 		if (ret == -EIDRM) {
-			threadobj_free_wait(wait);
+			threadobj_finish_wait();
 			goto out;
 		}
 	} else
 		*mask_r = wait->mask;
 
-	threadobj_free_wait(wait);
+	threadobj_finish_wait();
 done:
 	put_alchemy_event(evcb, &syns);
 out:

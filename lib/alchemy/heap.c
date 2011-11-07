@@ -215,23 +215,19 @@ int rt_heap_alloc(RT_HEAP *heap,
 
 	timespec = alchemy_get_timespec(timeout, &ts);
 
-	wait = threadobj_alloc_wait(struct alchemy_heap_wait);
-	if (wait == NULL) {
-		ret = -ENOMEM;
-		goto done;
-	}
+	wait = threadobj_prepare_wait(struct alchemy_heap_wait);
 	wait->size = size;
 
 	ret = syncobj_pend(&hcb->sobj, timespec, &syns);
 	if (ret) {
 		if (ret == -EIDRM) {
-			threadobj_free_wait(wait);
+			threadobj_finish_wait();
 			goto out;
 		}
 	} else
 		p = wait->ptr;
 
-	threadobj_free_wait(wait);
+	threadobj_finish_wait();
 done:
 	*blockp = p;
 

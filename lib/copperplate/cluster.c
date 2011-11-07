@@ -97,10 +97,6 @@
 #include "copperplate/threadobj.h"
 #include "copperplate/debug.h"
 
-struct syncluster_wait_struct {
-	const char *name;
-};
-
 #ifdef CONFIG_XENO_PSHARED
 
 int cluster_init(struct cluster *c, const char *name)
@@ -297,10 +293,8 @@ int syncluster_findobj(struct syncluster *sc,
 			break;
 		}
 		if (wait == NULL) {
-			wait = threadobj_alloc_wait(struct syncluster_wait_struct);
-			if (wait == NULL) {
-				return __bt(-ENOMEM);
-			}
+			wait = threadobj_prepare_wait(struct syncluster_wait_struct);
+			wait->name = name;
 		}
 		ret = syncobj_pend(sc->sobj, timeout, &syns);
 		if (ret) {
@@ -313,7 +307,7 @@ int syncluster_findobj(struct syncluster *sc,
 	syncobj_unlock(sc->sobj, &syns);
 out:
 	if (wait)
-		threadobj_free_wait(wait);
+		threadobj_finish_wait();
 
 	return ret;
 }
@@ -447,10 +441,8 @@ int pvsyncluster_findobj(struct pvsyncluster *sc,
 			break;
 		}
 		if (wait == NULL) {
-			wait = threadobj_alloc_wait(struct syncluster_wait_struct);
-			if (wait == NULL) {
-				return __bt(-ENOMEM);
-			}
+			wait = threadobj_prepare_wait(struct syncluster_wait_struct);
+			wait->name = name;
 		}
 		ret = syncobj_pend(&sc->sobj, timeout, &syns);
 		if (ret) {
@@ -463,7 +455,7 @@ int pvsyncluster_findobj(struct pvsyncluster *sc,
 	syncobj_unlock(&sc->sobj, &syns);
 out:
 	if (wait)
-		threadobj_free_wait(wait);
+		threadobj_finish_wait();
 
 	return ret;
 }
