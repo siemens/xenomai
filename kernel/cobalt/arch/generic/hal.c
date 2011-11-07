@@ -40,6 +40,9 @@
 #include <asm/system.h>
 #include <asm/irq.h>
 #include <asm/xenomai/hal.h>
+#ifdef CONFIG_PROC_FS
+#include <linux/proc_fs.h>
+#endif /* CONFIG_PROC_FS */
 #include <stdarg.h>
 
 MODULE_LICENSE("GPL");
