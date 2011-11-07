@@ -455,7 +455,7 @@ int rtcan_raw_ioctl(struct rtdm_dev_context *context,
     }
 
     case _RTIOC_SETSOCKOPT: {
- 	struct _rtdm_setsockopt_args *setopt;
+	struct _rtdm_setsockopt_args *setopt;
 	struct _rtdm_setsockopt_args setopt_buf;
 
 	if (user_info) {

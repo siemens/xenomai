@@ -228,7 +228,7 @@ int do_exception_event(unsigned event, rthal_pipeline_stage_t *stage,
 		       void *data)
 {
 	/* Notes:
-	 * 
+	 *
 	 * 1) GPF needs to be propagated downstream whichever domain
 	 * caused it. This is required so that we don't spuriously
 	 * raise a fatal error when some fixup code is available to

@@ -486,7 +486,7 @@ int rt_cond_wait_epilogue(RT_MUTEX *mutex, unsigned lockcnt)
 }
 
 static int rt_cond_wait_inner(RT_COND *cond, RT_MUTEX *mutex,
-		       	      xntmode_t timeout_mode, RTIME timeout)
+			      xntmode_t timeout_mode, RTIME timeout)
 {
 	unsigned lockcnt;
 	int err, epilogue_err = 0;

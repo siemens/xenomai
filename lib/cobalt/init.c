@@ -42,7 +42,7 @@ static __attribute__ ((constructor))
 void __init_cobalt_interface(void)
 {
 	struct xnbindreq breq;
-	
+
 #ifndef CONFIG_XENO_LIBS_DLOPEN
 	struct sched_param parm;
 	int policy;

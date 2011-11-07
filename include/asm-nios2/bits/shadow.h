@@ -75,11 +75,11 @@ static inline void xnarch_setup_mayday_page(void *page)
 	/*
 	 * We want this code to appear at the top of the MAYDAY page:
 	 *
-	 *	00c00334 	movhi	r3,#__xn_sys_mayday
-	 *	18c08ac4 	addi	r3,r3,#__xn_sys_mux
-	 *	00800004 	movi	r2,0
-	 *	003b683a 	trap
-	 *	003fff06 	br	.
+	 *	00c00334	movhi	r3,#__xn_sys_mayday
+	 *	18c08ac4	addi	r3,r3,#__xn_sys_mux
+	 *	00800004	movi	r2,0
+	 *	003b683a	trap
+	 *	003fff06	br	.
 	 */
 	static const struct {
 		u32 movhi_r3h;

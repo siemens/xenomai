@@ -38,7 +38,7 @@ struct config {
 	   TODO: add real_time and use_mmap*/
 
 	int verbose;
-	
+
 	int subd;
 	char *str_chans;
 	unsigned int *chans;
@@ -85,13 +85,13 @@ static void print_usage(void)
 		"device filename (analogy0, analogy1, ...)\n");
 	fprintf(stdout, "\t\t -s, --subdevice: subdevice index\n");
 	fprintf(stdout, "\t\t -S, --scans-count: count of scan to perform\n");
-	fprintf(stdout, 
+	fprintf(stdout,
 		"\t\t -c, --channels: "
 		"channels to use <i,j,...> (ex.: -c 0,1)\n");
-	fprintf(stdout, 
+	fprintf(stdout,
 		"\t\t -R, --range: "
 		"range to use <min,max,unit> (ex.: -R 0,1,V)\n");
-	fprintf(stdout, 
+	fprintf(stdout,
 		"\t\t -k, --wake-count: "
 		"space available before waking up the process\n");
 
@@ -118,7 +118,7 @@ static int init_dsc_config(struct config *cfg)
 	if (!cfg->dsc.sbdata) {
 		err = -ENOMEM;
 		fprintf(stderr, "cmd_write: malloc failed\n");
-		goto out;		
+		goto out;
 	}
 
 	/* Get these data */
@@ -130,7 +130,7 @@ static int init_dsc_config(struct config *cfg)
 	}
 
 out:
-	if (err < 0 && cfg->buffer) 
+	if (err < 0 && cfg->buffer)
 		free(cfg->buffer);
 
 	return err;
@@ -160,13 +160,13 @@ static int init_chans_config(struct config *cfg)
 	/* A little reinitialization step and... */
 	str_chans = cfg->str_chans;
 	cfg->chans_count = 0;
-	
+
 	/* ...we recover the channels */
 	do {
 		cfg->chans_count++;
 		len = strlen(str_chans);
 		offset = strcspn(str_chans, ",");
-		if (sscanf(str_chans, 
+		if (sscanf(str_chans,
 			   "%u", &cfg->chans[cfg->chans_count - 1]) == 0) {
 			err = -EINVAL;
 			fprintf(stderr, "cmd_write: bad channels argument\n");
@@ -180,7 +180,7 @@ static int init_chans_config(struct config *cfg)
 	   one of them */
 	err = a4l_get_chinfo(&cfg->dsc, cfg->subd, cfg->chans[0], &cfg->cinfo);
 	if (err < 0) {
-		fprintf(stderr, 
+		fprintf(stderr,
 			"cmd_write: channel info "
 			"recovery failed (err=%d)\n", err);
 	}
@@ -227,14 +227,14 @@ static int init_range_config(struct config *cfg)
 		goto out;
 	}
 
-	err = a4l_find_range(&cfg->dsc, 
-				    cfg->subd, 
-				    cfg->chans[0], 
+	err = a4l_find_range(&cfg->dsc,
+				    cfg->subd,
+				    cfg->chans[0],
 				    unit, limits[0], limits[1], &cfg->rinfo);
 	if (err < 0) {
-		fprintf(stderr, 
+		fprintf(stderr,
 			"cmd_write: no range found for %s\n", cfg->str_ranges);
-	} else 
+	} else
 		err = 0;
 
 out:
@@ -271,12 +271,12 @@ static int init_config(struct config *cfg, int argc, char *argv[])
 	memset(cfg, 0, sizeof(struct config));
 	cfg->str_chans = "0,1";
 	cfg->str_ranges = "0,5,V";
-	cfg->filename = "analogy0";	
+	cfg->filename = "analogy0";
 	cfg->input = stdin;
 	cfg->dsc.fd = -1;
 
-	while ((err = getopt_long(argc, 
-				  argv, 
+	while ((err = getopt_long(argc,
+				  argv,
 				  "vd:s:S:c:R:k:h", options, NULL)) >= 0) {
 		switch (err) {
 		case 'v':
@@ -329,7 +329,7 @@ static int init_config(struct config *cfg, int argc, char *argv[])
 	if (scan_size < 0) {
 		fprintf(stderr,
 			"cmd_write: a4l_sizeof_chan failed (err=%d)\n", err);
-		goto out;		
+		goto out;
 	}
 
 	/* Allocate a temporary buffer
@@ -348,7 +348,7 @@ static int init_config(struct config *cfg, int argc, char *argv[])
 		cfg->input = NULL;
 	} else
 		cfg->input = stdin;
-	
+
 out:
 
 	if (err < 0)
@@ -379,26 +379,26 @@ static int process_input(struct config *cfg)
 		err = fread(&value, sizeof(double), 1, cfg->input);
 		if (err != 1 && !feof(cfg->input)) {
 			err = -errno;
-			fprintf(stderr, 
+			fprintf(stderr,
 				"cmd_write: stdin IO error (err=%d)\n", err);
 			goto out;
 		} else if (err == 0 && feof(cfg->input))
 			goto out;
-		
+
 		/* ...and these data are just for one channel... */
 		err = a4l_dtoraw(cfg->cinfo, cfg->rinfo, tmp, &value, 1);
 		if (err < 0) {
-			fprintf(stderr, 
+			fprintf(stderr,
 				"cmd_write: conversion "
 				"from stdin failed (err=%d)\n", err);
-			goto out;			
+			goto out;
 		}
 
 		/* ...so we have to duplicate the conversion if many
 		   channels are selected for the acquisition */
 		for (i = 0; i < cfg->chans_count; i++)
-			memcpy(cfg->buffer + 
-			       filled * scan_size + i * chan_size, 
+			memcpy(cfg->buffer +
+			       filled * scan_size + i * chan_size,
 			       tmp, chan_size);
 
 		filled ++;
@@ -422,8 +422,8 @@ static int run_acquisition(struct config *cfg)
 
 	err = cfg->input ? process_input(cfg) : BUFFER_DEPTH;
 	if (err > 0)
-		err = a4l_async_write(&cfg->dsc, 
-				      cfg->buffer, 
+		err = a4l_async_write(&cfg->dsc,
+				      cfg->buffer,
 				      err * scan_size, A4L_INFINITE);
 	else if (err == 0)
 		err = -ENOENT;
@@ -472,7 +472,7 @@ static int init_acquisition(struct config *cfg)
 	   acquisition */
 	err = a4l_snd_command(&cfg->dsc, &cmd);
 	if (err < 0) {
-		fprintf(stderr, 
+		fprintf(stderr,
 			"cmd_write: a4l_snd_command failed (err=%d)\n", err);
 		goto out;
 	}
@@ -513,6 +513,6 @@ int main(int argc, char *argv[])
 
 out:
 	cleanup_config(&cfg);
-	
+
 	return err < 0 ? 1 : 0;
 }

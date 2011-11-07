@@ -422,7 +422,7 @@ enum global_interrupt_config_register_bits {
 
 /* Offset of the GPCT chips from the base-adress of the card:
    First chip is at base-address +0x00, etc. */
-static const unsigned GPCT_OFFSET[2] = { 0x0, 0x800 };	
+static const unsigned GPCT_OFFSET[2] = { 0x0, 0x800 };
 
 /* Board description */
 struct ni_660x_board {
@@ -473,7 +473,7 @@ struct ni_660x_private {
 	struct ni_gpct_device *counter_dev;
 	uint64_t pfi_direction_bits;
 
-	struct mite_dma_descriptor_ring	
+	struct mite_dma_descriptor_ring
 	  *mite_rings[NI_660X_MAX_NUM_CHIPS][counters_per_chip];
 
 	a4l_lock_t mite_channel_lock;
@@ -504,7 +504,7 @@ static inline const struct ni_660x_board *board(a4l_dev_t *dev)
 #define n_ni_660x_boards ARRAY_SIZE(ni_660x_boards)
 
 static int ni_660x_attach(a4l_dev_t *dev,
-			                 a4l_lnkdesc_t *arg);
+					 a4l_lnkdesc_t *arg);
 static int ni_660x_detach(a4l_dev_t *dev);
 static void init_tio_chip(a4l_dev_t *dev, int chipset);
 static void ni_660x_select_pfi_output(a4l_dev_t *dev,
@@ -535,10 +535,10 @@ static int ni_660x_GPCT_winsn(
 
 /* Possible instructions for Digital IO */
 static int ni_660x_dio_insn_config(
-               a4l_subd_t *s,
+	       a4l_subd_t *s,
 	       a4l_kinsn_t *insn);
 static int ni_660x_dio_insn_bits(
-             a4l_subd_t *s,
+	     a4l_subd_t *s,
 	     a4l_kinsn_t *insn);
 
 static inline unsigned ni_660x_num_counters(a4l_dev_t *dev)
@@ -812,7 +812,7 @@ static inline unsigned ni_660x_read_register(a4l_dev_t *dev,
 	return 0;
 }
 
-static void ni_gpct_write_register(struct ni_gpct *counter, 
+static void ni_gpct_write_register(struct ni_gpct *counter,
 				   unsigned int bits, enum ni_gpct_register reg)
 {
 	a4l_dev_t *dev = counter->counter_dev->dev;
@@ -832,7 +832,7 @@ static unsigned ni_gpct_read_register(struct ni_gpct *counter,
 				     ni_660x_register);
 }
 
-static inline 
+static inline
 struct mite_dma_descriptor_ring *mite_ring(struct ni_660x_private *priv,
 					   struct ni_gpct *counter)
 {
@@ -840,7 +840,7 @@ struct mite_dma_descriptor_ring *mite_ring(struct ni_660x_private *priv,
 	return priv->mite_rings[counter->chip_index][counter->counter_index];
 }
 
-static inline 
+static inline
 void ni_660x_set_dma_channel(a4l_dev_t *dev,
 			     unsigned int mite_channel, struct ni_gpct *counter)
 {
@@ -861,9 +861,9 @@ void ni_660x_set_dma_channel(a4l_dev_t *dev,
 	a4l_unlock_irqrestore(&private(dev)->soft_reg_copy_lock, flags);
 }
 
-static inline 
+static inline
 void ni_660x_unset_dma_channel(a4l_dev_t *dev,
-			       unsigned int mite_channel, 
+			       unsigned int mite_channel,
 			       struct ni_gpct *counter)
 {
 	unsigned long flags;
@@ -889,12 +889,12 @@ static int ni_660x_request_mite_channel(a4l_dev_t *dev,
 
 	a4l_lock_irqsave(&private(dev)->mite_channel_lock, flags);
 	BUG_ON(counter->mite_chan);
-	mite_chan = mite_request_channel(private(dev)->mite, 
+	mite_chan = mite_request_channel(private(dev)->mite,
 					 mite_ring(private(dev), counter));
 	if (mite_chan == NULL) {
 		a4l_unlock_irqrestore(&private(dev)->mite_channel_lock, flags);
-		a4l_err(dev, 
-			"%s: failed to reserve mite dma channel for counter.\n", 
+		a4l_err(dev,
+			"%s: failed to reserve mite dma channel for counter.\n",
 			__FUNCTION__);
 		return -EBUSY;
 	}
@@ -929,7 +929,7 @@ static int ni_660x_cmd(a4l_subd_t *s, a4l_cmd_t* cmd)
 
 	retval = ni_660x_request_mite_channel(s->dev, counter, A4L_INPUT);
 	if (retval) {
-		a4l_err(s->dev, 
+		a4l_err(s->dev,
 			"%s: no dma channel available for use by counter",
 			__FUNCTION__);
 		return retval;
@@ -965,11 +965,11 @@ static void set_tio_counterswap(a4l_dev_t *dev, int chipset)
 	 */
 
 	if (chipset)
-		ni_660x_write_register(dev, 
-				       chipset, 
+		ni_660x_write_register(dev,
+				       chipset,
 				       CounterSwap, ClockConfigRegister);
 	else
-		ni_660x_write_register(dev, 
+		ni_660x_write_register(dev,
 				       chipset, 0, ClockConfigRegister);
 }
 
@@ -979,9 +979,9 @@ static void ni_660x_handle_gpct_interrupt(a4l_dev_t *dev,
    a4l_buf_t *buf = s->buf;
 
    a4l_ni_tio_handle_interrupt(subdev_priv->counter, dev);
-   if ( test_bit(A4L_BUF_EOA_NR, &buf->flags) && 
-        test_bit(A4L_BUF_ERROR_NR, &buf->flags) && 
-        test_bit(A4L_BUF_EOA_NR, &buf->flags))
+   if ( test_bit(A4L_BUF_EOA_NR, &buf->flags) &&
+	test_bit(A4L_BUF_ERROR_NR, &buf->flags) &&
+	test_bit(A4L_BUF_EOA_NR, &buf->flags))
 	   ni_660x_cancel(s);
    else
 	   a4l_buf_evt(s, 0);
@@ -998,13 +998,13 @@ static int ni_660x_interrupt(unsigned int irq, void *d)
 	/* Lock to avoid race with comedi_poll */
 	a4l_lock_irqsave(&private(dev)->interrupt_lock, flags);
 	smp_mb();
-	
+
 	while (&dev->subdvsq != dev->subdvsq.next) {
 		struct list_head *this = dev->subdvsq.next;
 		a4l_subd_t *tmp = list_entry(this, a4l_subd_t, list);
 		ni_660x_handle_gpct_interrupt(dev, tmp);
 	}
-   
+
 	a4l_unlock_irqrestore(&private(dev)->interrupt_lock, flags);
 	return 0;
 }
@@ -1077,7 +1077,7 @@ static int ni_660x_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 	}
 
 	for (i = 0; ( i < n_ni_660x_boards ) && ( mitedev == NULL ); i++) {
-		mitedev  = a4l_mite_find_device(bus, slot, 
+		mitedev  = a4l_mite_find_device(bus, slot,
 						ni_660x_boards[i].dev_id);
 		boardptr = (struct ni_660x_board*) &ni_660x_boards[i];
 	}
@@ -1088,8 +1088,8 @@ static int ni_660x_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 		return -ENOENT;
 	}
 
-	a4l_info(dev, 
-		 "%s: Board found (name=%s), continue initialization ...", 
+	a4l_info(dev,
+		 "%s: Board found (name=%s), continue initialization ...",
 		 __FUNCTION__, boardptr->name);
 
 	private(dev)->mite      = mitedev;
@@ -1101,7 +1101,7 @@ static int ni_660x_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 	for (i = 0; i < NUM_PFI_CHANNELS; ++i) {
 		private(dev)->pfi_output_selects[i] = pfi_output_select_counter;
 	}
-	
+
 	ret = a4l_mite_setup(private(dev)->mite, 1);
 	if (ret < 0) {
 		a4l_err(dev, "%s: error setting up mite\n", __FUNCTION__);
@@ -1120,10 +1120,10 @@ static int ni_660x_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 		return -ENOMEM;
 
 	s->flags = A4L_SUBD_UNUSED;
-	
+
 	err = a4l_add_subd(dev, s);
 	if (err != nsubdev) {
-		a4l_info(dev, 
+		a4l_info(dev,
 			 "%s: cannot add first subdevice, "
 			 "returns %d, expect %d\n", __FUNCTION__, err, i);
 		return err;
@@ -1134,8 +1134,8 @@ static int ni_660x_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 	/* Setup second subdevice */
 	s = a4l_alloc_subd(sizeof(struct ni_660x_subd_priv), NULL);
 	if (s == NULL) {
-		a4l_info(dev, 
-			 "%s: cannot allocate second subdevice\n", 
+		a4l_info(dev,
+			 "%s: cannot allocate second subdevice\n",
 			 __FUNCTION__);
 		return -ENOMEM;
 	}
@@ -1153,10 +1153,10 @@ static int ni_660x_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 	err = a4l_add_subd(dev, s);
 	if (err != nsubdev)
 		return err;
-	
+
 	nsubdev++;
-	
-	private(dev)->counter_dev = 
+
+	private(dev)->counter_dev =
 		a4l_ni_gpct_device_construct(dev,
 					     &ni_gpct_write_register,
 					     &ni_gpct_read_register,
@@ -1164,12 +1164,12 @@ static int ni_660x_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 					     ni_660x_num_counters (dev));
 	if (private(dev)->counter_dev == NULL)
 		return -ENOMEM;
-	
+
 	for (i = 0; i < ni_660x_num_counters(dev); ++i) {
 		/* TODO: check why there are kmalloc here... and in pcimio */
-		private(dev)->counter_dev->counters[i] = 
+		private(dev)->counter_dev->counters[i] =
 			kmalloc(sizeof(struct ni_gpct), GFP_KERNEL);
-		private(dev)->counter_dev->counters[i]->counter_dev = 
+		private(dev)->counter_dev->counters[i]->counter_dev =
 			private(dev)->counter_dev;
 		a4l_lock_init(&(private(dev)->counter_dev->counters[i]->lock));
 	}
@@ -1178,7 +1178,7 @@ static int ni_660x_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 		if (i < ni_660x_num_counters(dev)) {
 			/* Setup other subdevice */
 			s = a4l_alloc_subd(sizeof(struct ni_660x_subd_priv), NULL);
-			
+
 			if (s == NULL)
 				return -ENOMEM;
 
@@ -1193,7 +1193,7 @@ static int ni_660x_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 			s->cancel            = &ni_660x_cancel;
 
 			subdev_priv->counter = private(dev)->counter_dev->counters[i];
-			
+
 			private(dev)->counter_dev->counters[i]->chip_index =
 				i / counters_per_chip;
 			private(dev)->counter_dev->counters[i]->counter_index =
@@ -1204,15 +1204,15 @@ static int ni_660x_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 				return -ENOMEM;
 			s->flags = A4L_SUBD_UNUSED;
 		}
-		
+
 		err = a4l_add_subd(dev, s);
-		
+
 		if (err != nsubdev)
 			return err;
 
 		nsubdev++;
 	}
-	
+
 	for (i = 0; i < board(dev)->n_chips; ++i)
 		init_tio_chip(dev, i);
 
@@ -1227,18 +1227,18 @@ static int ni_660x_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 						pfi_output_select_counter);
 		ni_660x_select_pfi_output(dev, i, pfi_output_select_high_Z);
 	}
-	
+
 
 	/* To be safe, set counterswap bits on tio chips after all the
 	   counter outputs have been set to high impedance mode */
-	
+
 	for (i = 0; i < board(dev)->n_chips; ++i)
 		set_tio_counterswap(dev, i);
 
-	ret = a4l_request_irq(dev, 
-			      mite_irq(private(dev)->mite), 
+	ret = a4l_request_irq(dev,
+			      mite_irq(private(dev)->mite),
 			      ni_660x_interrupt, A4L_IRQ_SHARED, dev);
-	
+
 	if (ret < 0) {
 		a4l_err(dev, "%s: IRQ not available\n", __FUNCTION__);
 		return ret;
@@ -1247,7 +1247,7 @@ static int ni_660x_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 	global_interrupt_config_bits = Global_Int_Enable_Bit;
 	if (board(dev)->n_chips > 1)
 		global_interrupt_config_bits |= Cascade_Int_Enable_Bit;
-	
+
 	ni_660x_write_register(dev, 0, global_interrupt_config_bits,
 			       GlobalInterruptConfigRegister);
 
@@ -1261,7 +1261,7 @@ static int ni_660x_detach(a4l_dev_t *dev)
 	int i;
 
 	a4l_info(dev, "%s: begin to detach the driver ...", __FUNCTION__);
-	
+
 	/* Free irq */
 	if(a4l_get_irq(dev)!=A4L_IRQ_UNUSED)
 		a4l_free_irq(dev,a4l_get_irq(dev));
@@ -1269,7 +1269,7 @@ static int ni_660x_detach(a4l_dev_t *dev)
 	if (dev->priv) {
 
 		if (private(dev)->counter_dev) {
-			
+
 			for (i = 0; i < ni_660x_num_counters(dev); ++i)
 				if ((private(dev)->counter_dev->counters[i]) != NULL)
 					kfree (private(dev)->counter_dev->counters[i]);
@@ -1338,7 +1338,7 @@ static int ni_660x_dio_insn_bits(a4l_subd_t *s, a4l_kinsn_t *insn)
 
 	/* On return, data[1] contains the value of the digital input
 	   and output lines. */
-	data[1] = ni_660x_read_register(s->dev, 0,DIO32Input) >> 
+	data[1] = ni_660x_read_register(s->dev, 0,DIO32Input) >>
 		base_bitfield_channel;
 
 	return 0;
@@ -1354,7 +1354,7 @@ static void ni_660x_select_pfi_output(a4l_dev_t *dev,
 	unsigned idle_chipset = 0;
 	unsigned active_bits;
 	unsigned idle_bits;
-	
+
 	if (board(dev)->n_chips > 1) {
 		if (output_select == pfi_output_select_counter &&
 		    pfi_channel >= counter_4_7_first_pfi &&
@@ -1438,7 +1438,7 @@ static int ni_660x_dio_insn_config(a4l_subd_t *s, a4l_kinsn_t *insn)
 	unsigned int* data = insn->data;
 	int chan = CR_CHAN(insn->chan_desc);
 	a4l_dev_t* dev = s->dev;
-	
+
 	if (data == NULL)
 		return -EINVAL;
 

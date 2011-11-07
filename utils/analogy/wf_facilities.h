@@ -12,7 +12,7 @@
 #define WAVEFORM_STEPS 3
 
 struct waveform_config {
-	
+
 	/* Waveform stuff */
 	int wf_kind;
 	double wf_frequency;

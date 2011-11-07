@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 	TASK_ID tid;
 
 	copperplate_init(argc, argv);
-	
+
 	traceobj_init(&trobj, argv[0], sizeof(tseq) / sizeof(int));
 
 	tid = taskSpawn("windTask", 70, 0, 0, windTask,

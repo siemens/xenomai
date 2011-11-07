@@ -426,7 +426,7 @@ STATUS taskInit(WIND_TCB *pTcb,
 		errno = S_intLib_NOT_ISR_CALLABLE;
 		return ERROR;
 	}
-	  
+
 	COPPERPLATE_PROTECT(svc);
 
 	task = alloc_task();
@@ -486,7 +486,7 @@ TASK_ID taskSpawn(const char *name,
 		errno = S_intLib_NOT_ISR_CALLABLE;
 		return ERROR;
 	}
-	  
+
 	COPPERPLATE_PROTECT(svc);
 
 	task = alloc_task();
@@ -593,13 +593,13 @@ TASK_ID taskIdSelf(void)
 		errno = S_intLib_NOT_ISR_CALLABLE;
 		return ERROR;
 	}
-	  
+
 	current = wind_task_current();
 	if (current == NULL) {
 		errno = S_objLib_OBJ_NO_METHOD;
 		return ERROR;
 	}
-	  
+
 	return (TASK_ID)current->tcb;
 }
 

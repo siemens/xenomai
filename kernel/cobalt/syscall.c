@@ -1593,7 +1593,7 @@ static int __pthread_cond_wait_prologue(union __xeno_cond __user *u_cnd,
 	case ETIMEDOUT:
 		perr = d.err = err;
 		err = -cobalt_cond_timedwait_epilogue(cur, &cnd.shadow_cond,
-					    	    &mx.shadow_mutex, d.count);
+						    &mx.shadow_mutex, d.count);
 		if (err == 0 &&
 		    __xn_safe_copy_to_user(&u_mx->shadow_mutex.lockcnt,
 					   &mx.shadow_mutex.lockcnt,
@@ -1607,7 +1607,7 @@ static int __pthread_cond_wait_prologue(union __xeno_cond __user *u_cnd,
 		break;
 	}
 
-	if (err == EINTR 
+	if (err == EINTR
 	    &&__xn_safe_copy_to_user(u_d, &d, sizeof(d)))
 			return -EFAULT;
 
@@ -2660,7 +2660,7 @@ static struct xnsysent __systab[] = {
 #ifndef CONFIG_XENO_FASTSYNCH
 	SKINCALL_DEF(__cobalt_mutex_trylock, __pthread_mutex_trylock, primary),
 #else
-        SKINCALL_DEF(__cobalt_check_init, __pthread_mutex_check_init, any),
+	SKINCALL_DEF(__cobalt_check_init, __pthread_mutex_check_init, any),
 #endif
 	SKINCALL_DEF(__cobalt_mutex_unlock, __pthread_mutex_unlock, nonrestartable),
 	SKINCALL_DEF(__cobalt_cond_init, __pthread_cond_init, any),

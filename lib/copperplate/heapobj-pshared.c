@@ -107,7 +107,7 @@ static struct heapobj main_pool;
 
 #define __moff(h, p)		((caddr_t)(p) - (caddr_t)(h))
 #define __moff_check(h, p)	((p) ? __moff(h, p) : 0)
-#define __mref(h, o)  		((void *)((caddr_t)(h) + (o)))
+#define __mref(h, o)		((void *)((caddr_t)(h) + (o)))
 #define __mref_check(h, o)	((o) ? __mref(h, o) : NULL)
 
 static inline size_t __align_to(size_t size, size_t al)
@@ -608,7 +608,7 @@ static int create_heap(struct heapobj *hobj, const char *session,
 		__STD(close(fd));
 		return __bt(-errno);
 	}
-		
+
 	ret = fstat(fd, &sbuf);
 	if (ret) {
 		__STD(close(fd));

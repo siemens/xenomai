@@ -89,7 +89,7 @@ static struct psos_task *find_psos_task_or_self(u_long tid, int *err_r)
 		*err_r = ERR_SSFN;
 		return NULL;
 	}
-		
+
 	return current;
 }
 

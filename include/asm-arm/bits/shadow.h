@@ -171,7 +171,7 @@ int xnarch_local_syscall(unsigned long a1, unsigned long a2,
 		default:
 			return -EINVAL;
 		}
-		
+
 		if (__xn_copy_to_user((void *)a2, &info, sizeof(info)))
 			return -EFAULT;
 		break;

@@ -73,7 +73,7 @@ MSG_Q_ID msgQCreate(int maxMsgs, int maxMsgLength, int options)
 		errno = S_intLib_NOT_ISR_CALLABLE;
 		return (MSG_Q_ID)0;
 	}
-	  
+
 	if ((options & ~MSG_Q_PRIORITY) || maxMsgs <= 0) {
 		errno = S_msgQLib_INVALID_QUEUE_TYPE;
 		return (MSG_Q_ID)0;
@@ -246,7 +246,7 @@ STATUS msgQSend(MSG_Q_ID msgQId, const char *buffer, UINT bytes,
 	struct service svc;
 	int ret = ERROR;
 	UINT maxbytes;
-	
+
 	COPPERPLATE_PROTECT(svc);
 
 	mq = find_mq_from_id(msgQId);
@@ -289,7 +289,7 @@ STATUS msgQSend(MSG_Q_ID msgQId, const char *buffer, UINT bytes,
 		errno = S_msgQLib_NON_ZERO_TIMEOUT_AT_INT_LEVEL;
 		goto fail;
 	}
-	  
+
 	if (timeout != WAIT_FOREVER) {
 		timespec = &ts;
 		clockobj_ticks_to_timeout(&wind_clock, timeout, timespec);

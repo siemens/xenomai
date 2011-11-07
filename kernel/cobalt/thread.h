@@ -92,7 +92,7 @@ struct cobalt_thread {
 
     /* Cached value for current policy. */
     int sched_policy;
-    
+
 #ifndef __XENO_SIM__
     struct cobalt_hkey hkey;
 #endif

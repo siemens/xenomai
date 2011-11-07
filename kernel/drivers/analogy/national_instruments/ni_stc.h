@@ -167,7 +167,7 @@
 #define AI_SCAN_IN_PROG_Pulse			_bit4
 #define AI_EXTMUX_CLK_Pulse			_bit3
 #define AI_LOCALMUX_CLK_Pulse			_bit2
-#define AI_SC_TC_Pulse			 	_bit1
+#define AI_SC_TC_Pulse				_bit1
 #define AI_CONVERT_Pulse			_bit0
 
 #define AO_Command_1_Register		9
@@ -607,7 +607,7 @@ static inline unsigned int RTSI_Output_Bit(unsigned channel, int is_mseries)
 #define G_Load_Source_Select		_bit7
 #define G_Reload_Source_Switching	_bit15
 #define G_Loading_On_Gate		_bit14
-#define G_Gate_Polarity 		_bit13
+#define G_Gate_Polarity		_bit13
 
 #define G_Counting_Once(a)		(((a)&0x03)<<10)
 #define G_Stop_Mode(a)			(((a)&0x03)<<5)
@@ -812,8 +812,8 @@ static inline unsigned int DACx_Direct_Data_671x(int channel)
 #define CSCFG_WORD_RATE_MASK			(0x7 << 13)
 #define CSCFG_LOW_POWER				(1 << 16)
 
-#define CS5529_CONFIG_DOUT(x) 			(1 << (18 + x))
-#define CS5529_CONFIG_AOUT(x) 			(1 << (22 + x))
+#define CS5529_CONFIG_DOUT(x)			(1 << (18 + x))
+#define CS5529_CONFIG_AOUT(x)			(1 << (22 + x))
 
 /* cs5529 command bits */
 #define CSCMD_POWER_SAVE			_bit0
@@ -1072,7 +1072,7 @@ static inline unsigned M_Offset_PFI_Output_Select(unsigned n)
 #define MSeries_AI_Config_Polarity_Bit				0x1000 /* 0 for 2's complement encoding */
 #define MSeries_AI_Config_Dither_Bit				0x2000
 #define MSeries_AI_Config_Last_Channel_Bit			0x4000
-#define MSeries_AI_Config_Channel_Bits(x) 			(x & 0xf)
+#define MSeries_AI_Config_Channel_Bits(x)			(x & 0xf)
 #define MSeries_AI_Config_Gain_Bits(x)				((x & 0x7) << 9)
 
 static inline
@@ -1176,7 +1176,7 @@ unsigned int MSeries_PLL_Multiplier_Bits(unsigned int multiplier)
 #define MSeries_PFI_Output_Select_Mask(x)		(0x1f << (x % 3) * 5)
 #define MSeries_PFI_Output_Select_Bits(x, y)		((y & 0x1f) << ((x % 3) * 5))
 // inverse to MSeries_PFI_Output_Select_Bits
-#define MSeries_PFI_Output_Select_Source(x, y) 		((y >> ((x % 3) * 5)) & 0x1f)
+#define MSeries_PFI_Output_Select_Source(x, y)		((y >> ((x % 3) * 5)) & 0x1f)
 
 #define Gi_DMA_BankSW_Error_Bit				0x10
 #define Gi_DMA_Reset_Bit				0x8
@@ -1184,8 +1184,8 @@ unsigned int MSeries_PLL_Multiplier_Bits(unsigned int multiplier)
 #define Gi_DMA_Write_Bit				0x2
 #define Gi_DMA_Enable_Bit				0x1
 
-#define MSeries_PFI_Filter_Select_Mask(x) 		(0x3 << (x * 2))
-#define MSeries_PFI_Filter_Select_Bits(x, y) 		((y << (x * 2)) & \
+#define MSeries_PFI_Filter_Select_Mask(x)		(0x3 << (x * 2))
+#define MSeries_PFI_Filter_Select_Bits(x, y)		((y << (x * 2)) & \
 							 MSeries_PFI_Filter_Select_Mask(x))
 
 /* CDIO DMA select bits */

@@ -270,7 +270,7 @@ int __init rtcan_peak_dng_init_one(int idx)
     }
 
     /* Clock frequency in Hz */
-    dev->can_sys_clock = 8000000;    	/* 16/2 MHz */
+    dev->can_sys_clock = 8000000;	/* 16/2 MHz */
 
     /* Output control register */
     sja->ocr = SJA_OCR_MODE_NORMAL | SJA_OCR_TX0_PUSHPULL;

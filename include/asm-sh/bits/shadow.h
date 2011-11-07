@@ -62,17 +62,17 @@ static inline void xnarch_setup_mayday_page(void *page)
 	/*
 	 * We want this code to appear at the top of the MAYDAY page:
 	 *
-	 * 0:	03 d3       	mov.l	12 <pc+0x12>,r3	! b022b
-	 * 2:	09 00       	nop	
-	 * 4:	10 c3       	trapa	#16
-	 * 6:	0b 20       	or	r0,r0
-	 * 8:	0b 20       	or	r0,r0
-	 * a:	0b 20       	or	r0,r0
-	 * c:	0b 20       	or	r0,r0
-	 * e:	0b 20       	or	r0,r0
-	 * 10:	3e c3       	trapa	#62
-	 * 12:	2b 02       	.word 0x022b
-	 * 14:	0b 00       	.word 0x000b
+	 * 0:	03 d3	mov.l	12 <pc+0x12>,r3	! b022b
+	 * 2:	09 00	nop
+	 * 4:	10 c3	trapa	#16
+	 * 6:	0b 20	or	r0,r0
+	 * 8:	0b 20	or	r0,r0
+	 * a:	0b 20	or	r0,r0
+	 * c:	0b 20	or	r0,r0
+	 * e:	0b 20	or	r0,r0
+	 * 10:	3e c3	trapa	#62
+	 * 12:	2b 02	.word 0x022b
+	 * 14:	0b 00	.word 0x000b
 	 */
 	insn[0] = 0xd303;
 	insn[1] = 0x0009;

@@ -370,7 +370,7 @@ static void read_spots(FILE *fp)
 		p = malloc(sizeof(*p));
 		if (p == NULL)
 			error(1, 0, "out of memory");
-			
+
 		ret = fscanf(fp, "%a[^\n]\n", &p->exe_path);
 		if (ret != 1) {
 			if (feof(fp))

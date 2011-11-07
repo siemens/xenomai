@@ -53,13 +53,13 @@ static inline void xnarch_setup_mayday_page(void *page)
 	/*
 	 * We want this code to appear at the top of the MAYDAY page:
 	 *
-	 * 	b8 2b 02 00 0c	     	mov    $<mux_code>,%eax
+	 *	b8 2b 02 00 0c		mov    $<mux_code>,%eax
 	 * if HAVE_SEP
-	 *      65 ff 15 10 00 00 00 	call   *%gs:0x10
+	 *      65 ff 15 10 00 00 00	call   *%gs:0x10
 	 * else
-	 *      cd 80		     	int    $0x80
+	 *      cd 80			int    $0x80
 	 * endif
-	 * 	0f 0b		     	ud2a
+	 *	0f 0b			ud2a
 	 *
 	 * We intentionally don't mess with EFLAGS here, so that we
 	 * don't have to save/restore it in handle/fixup code.

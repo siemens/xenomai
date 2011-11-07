@@ -13,7 +13,7 @@
 /* --- Driver related structures --- */
 
 struct fake_priv {
-	/* Attach configuration parameters 
+	/* Attach configuration parameters
 	   (they should be relocated in ai_priv) */
 	unsigned long amplitude_div;
 	unsigned long quanta_cnt;
@@ -28,7 +28,7 @@ struct fake_priv {
 };
 
 struct ai_priv {
-  
+
 	/* Specific timing fields */
 	unsigned long scan_period_ns;
 	unsigned long convert_period_ns;
@@ -142,29 +142,29 @@ int ai_push_values(a4l_subd_t *subd)
 
 	if (!cmd)
 		return -EPIPE;
-	
+
 	now_ns = a4l_get_time();
 	elapsed_ns += now_ns - priv->last_ns + priv->reminder_ns;
 	priv->last_ns = now_ns;
 
 	while(elapsed_ns >= priv->scan_period_ns) {
 		int j;
-				
+
 		for(j = 0; j < cmd->nb_chan; j++) {
 			uint16_t value = ai_value_output(priv);
 			a4l_buf_put(subd, &value, sizeof(uint16_t));
 		}
-				
+
 		elapsed_ns -= priv->scan_period_ns;
 		i++;
-	}		       
+	}
 
 	priv->current_ns += i * priv->scan_period_ns;
 	priv->reminder_ns = elapsed_ns;
 
 	if (i != 0)
 		a4l_buf_evt(subd, 0);
-	
+
 	return 0;
 }
 
@@ -176,16 +176,16 @@ int ao_pull_values(a4l_subd_t *subd)
 	int err;
 
 	/* Let's have a look at how many samples are available */
-	priv->count = a4l_buf_count(subd) < TRANSFER_SIZE ? 
+	priv->count = a4l_buf_count(subd) < TRANSFER_SIZE ?
 		a4l_buf_count(subd) : TRANSFER_SIZE;
-	
+
 	if (!priv->count)
 		return 0;
 
 	err = a4l_buf_get(subd, priv->buffer, priv->count);
 	if (err < 0) {
 		priv->count = 0;
-		a4l_err(subd->dev, 
+		a4l_err(subd->dev,
 			"ao_get_values: a4l_buf_get failed (err=%d)\n", err);
 	}
 
@@ -213,7 +213,7 @@ int ai2_push_values(a4l_subd_t *subd)
 		priv->count = 0;
 
 		if (err < 0)
-			a4l_err(subd->dev, 
+			a4l_err(subd->dev,
 				"ai2_push_values: "
 				"a4l_buf_put failed (err=%d)\n", err);
 		else
@@ -230,7 +230,7 @@ int ai2_push_values(a4l_subd_t *subd)
 
 static void task_proc(void *arg)
 {
-	a4l_dev_t *dev = (a4l_dev_t *)arg;	
+	a4l_dev_t *dev = (a4l_dev_t *)arg;
 	a4l_subd_t *ai_subd = (a4l_subd_t *)a4l_get_subd(dev, AI_SUBD);
 	a4l_subd_t *ao_subd = (a4l_subd_t *)a4l_get_subd(dev, AO_SUBD);
 	a4l_subd_t *ai2_subd = (a4l_subd_t *)a4l_get_subd(dev, AI2_SUBD);
@@ -240,7 +240,7 @@ static void task_proc(void *arg)
 	while (1) {
 
 		int running;
-		
+
 		RTDM_EXECUTE_ATOMICALLY(running = priv->ai_running);
 		if (running && ai_push_values(ai_subd) < 0)
 			break;
@@ -263,7 +263,7 @@ static int ai_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 {
 	struct fake_priv *priv = (struct fake_priv *)subd->dev->priv;
 	struct ai_priv *ai_priv = (struct ai_priv *)subd->priv;
-  
+
 	ai_priv->scan_period_ns = cmd->scan_begin_arg;
 	ai_priv->convert_period_ns = (cmd->convert_src==TRIG_TIMER)?
 		cmd->convert_arg:0;
@@ -278,7 +278,7 @@ static int ai_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 	ai_priv->reminder_ns = 0;
 
 	RTDM_EXECUTE_ATOMICALLY(priv->ai_running = 1);
- 
+
 	return 0;
 
 }
@@ -319,7 +319,7 @@ static void ai_munge(a4l_subd_t *subd, void *buf, unsigned long size)
 
 int ao_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 {
-	a4l_info(subd->dev, "ao_cmd: (subd=%d)\n", subd->idx);  
+	a4l_info(subd->dev, "ao_cmd: (subd=%d)\n", subd->idx);
 	return 0;
 }
 
@@ -327,7 +327,7 @@ int ao_trigger(a4l_subd_t *subd, lsampl_t trignum)
 {
 	struct fake_priv *priv = (struct fake_priv *)subd->dev->priv;
 
-	a4l_info(subd->dev, "ao_trigger: (subd=%d)\n", subd->idx);  
+	a4l_info(subd->dev, "ao_trigger: (subd=%d)\n", subd->idx);
 	RTDM_EXECUTE_ATOMICALLY(priv->ao_running = 1);
 	return 0;
 }
@@ -343,7 +343,7 @@ int ao_cancel(a4l_subd_t *subd)
 
 	RTDM_EXECUTE_ATOMICALLY(running = priv->ai2_running);
 	if (running) {
-		a4l_subd_t *ai2_subd = 
+		a4l_subd_t *ai2_subd =
 			(a4l_subd_t *)a4l_get_subd(subd->dev, AI2_SUBD);
 		/* Here, we have not saved the required amount of
 		   data; so, we cannot know whether or not, it is the
@@ -362,7 +362,7 @@ int ai2_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 {
 	struct fake_priv *priv = (struct fake_priv *)subd->dev->priv;
 
-	a4l_info(subd->dev, "ai2_cmd: (subd=%d)\n", subd->idx);  
+	a4l_info(subd->dev, "ai2_cmd: (subd=%d)\n", subd->idx);
 	RTDM_EXECUTE_ATOMICALLY(priv->ai2_running = 1);
 	return 0;
 }
@@ -379,7 +379,7 @@ int ai2_cancel(a4l_subd_t *subd)
 
 	RTDM_EXECUTE_ATOMICALLY(running = priv->ao_running);
 	if (running) {
-		a4l_subd_t *ao_subd = 
+		a4l_subd_t *ao_subd =
 			(a4l_subd_t *)a4l_get_subd(subd->dev, AO_SUBD);
 		/* Here, we have not saved the required amount of
 		   data; so, we cannot know whether or not, it is the
@@ -432,7 +432,7 @@ static int dio_insn_bits(a4l_subd_t *subd, a4l_kinsn_t *insn)
 int ao_insn_write(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	struct ao_ai2_priv *priv = (struct ao_ai2_priv *)subd->priv;
-	uint16_t *data = (uint16_t *)insn->data;	
+	uint16_t *data = (uint16_t *)insn->data;
 
 	/* Checks the buffer size */
 	if (insn->data_size != sizeof(uint16_t))
@@ -440,7 +440,7 @@ int ao_insn_write(a4l_subd_t *subd, a4l_kinsn_t *insn)
 
 	/* Retrieves the value to memorize */
 	priv->insn_value = data[0];
-	
+
 	return 0;
 }
 
@@ -452,10 +452,10 @@ int ai2_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	/* Checks the buffer size */
 	if (insn->data_size != sizeof(uint16_t))
 		return -EINVAL;
-	
+
 	/* Sets the memorized value */
 	data[0] = priv->insn_value;
-	
+
 	return 0;
 }
 
@@ -598,9 +598,9 @@ int test_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 
 	a4l_dbg(1, drv_dbg, dev, "AI2 subdevice registered\n");
 
-	ret = a4l_task_init(&priv->task, 
-			    "Fake AI task", 
-			    task_proc, 
+	ret = a4l_task_init(&priv->task,
+			    "Fake AI task",
+			    task_proc,
 			    dev, A4L_TASK_HIGHEST_PRIORITY);
 
 	a4l_dbg(1, drv_dbg, dev, "AI2 subdevice registered\n");

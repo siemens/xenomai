@@ -295,7 +295,7 @@ typedef A4L_RNGDESC(GCC_ZERO_LENGTH_ARRAY) a4l_rngdesc_t;
  * Macro to declare a ranges global descriptor in one line
  */
 #define RNG_GLOBAL(x) {				\
-	.mode = A4L_RNG_GLOBAL_RNGDESC, 	\
+	.mode = A4L_RNG_GLOBAL_RNGDESC,	\
 	.length =  1,				\
 	.rngtabs = {&(x)}, }
 

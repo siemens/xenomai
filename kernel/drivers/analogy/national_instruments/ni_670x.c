@@ -97,11 +97,11 @@ struct ni_670x_private {
 };
 
 struct ni_670x_subd_priv {
-        int io_bits;
-        unsigned int state;
-        uint16_t readback[2];
-        uint16_t config;
-        void* counter;
+	int io_bits;
+	unsigned int state;
+	uint16_t readback[2];
+	uint16_t config;
+	void* counter;
 };
 
 static int ni_670x_ao_winsn(a4l_subd_t *subd, a4l_kinsn_t *insn);
@@ -145,7 +145,7 @@ static void setup_subd_ao(a4l_subd_t *subd)
 {
 	int i;
 	int nchans;
-	
+
 	nchans = ((struct ni_670x_private*)(subd->dev->priv))->board_ptr->ao_chans;
 	subd->flags                = A4L_SUBD_AO;
 	subd->chan_desc            = &ni_670x_desc_ao;
@@ -176,8 +176,8 @@ static void setup_subd_dio(a4l_subd_t *s)
 }
 
 struct setup_subd {
-        void (*setup_func) (a4l_subd_t *);
-        int sizeof_priv;
+	void (*setup_func) (a4l_subd_t *);
+	int sizeof_priv;
 };
 
 static struct setup_subd setup_subds[2] = {
@@ -260,7 +260,7 @@ static int ni_670x_attach (a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 	struct mite_struct *mite;
 	struct ni_670x_board* board = NULL;
 	int err;
-	
+
 	if(arg->opts == NULL || arg->opts_size == 0)
 		bus = slot = 0;
 	else {
@@ -270,14 +270,14 @@ static int ni_670x_attach (a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 			((unsigned long *)arg->opts)[1] : 0;
 	}
 
-	a4l_info(dev, 
-		 "%s: ni670x attach procedure started(bus=%d/slot=%d)...\n", 
+	a4l_info(dev,
+		 "%s: ni670x attach procedure started(bus=%d/slot=%d)...\n",
 		 __FUNCTION__, bus, slot);
-	
+
 	mite = NULL;
 
 	for(i = 0; i <  n_ni_670x_boards && mite == NULL; i++) {
-		mite = a4l_mite_find_device(bus, 
+		mite = a4l_mite_find_device(bus,
 					    slot, ni_670x_boards[i].device_id);
 		board = (struct ni_670x_board*) &ni_670x_boards[i];
 	}
@@ -287,42 +287,42 @@ static int ni_670x_attach (a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 		return -ENOENT;
 	}
 
-	a4l_info(dev, 
-		 "%s: Found device %d %s\n", 
+	a4l_info(dev,
+		 "%s: Found device %d %s\n",
 		 __FUNCTION__, i , ni_670x_boards[i].name);
-	
+
 	devpriv->irq_polarity = PCIMIO_IRQ_POLARITY;
 	devpriv->irq_pin = 0;
-	
+
 	devpriv->mite = mite;
 	devpriv->board_ptr = board;
-	
+
 	ret = a4l_mite_setup(devpriv->mite, 0);
 	if (ret < 0) {
 		a4l_err(dev, "%s: error setting up mite\n", __FUNCTION__);
 		return ret;
 	}
-	
+
 	irq = mite_irq(devpriv->mite);
 	devpriv->irq = irq;
 
 	a4l_info(dev, "ni670x attach: found %s board\n", board->name);
 
 	for (i = 0; i < 2; i++) {
-		a4l_subd_t *subd = 
+		a4l_subd_t *subd =
 			a4l_alloc_subd(setup_subds[i].sizeof_priv, NULL);
-		
+
 		if (subd == NULL) {
-			a4l_err(dev, 
-				"%s: cannot allocate subdevice\n", 
+			a4l_err(dev,
+				"%s: cannot allocate subdevice\n",
 				__FUNCTION__);
 			return -ENOMEM;
 		}
 
 		err = a4l_add_subd(dev, subd);
 		if (err != i) {
-			a4l_err(dev, 
-				"%s: cannot add subdevice\n", 
+			a4l_err(dev,
+				"%s: cannot add subdevice\n",
 				__FUNCTION__);
 			return err;
 		}
@@ -334,7 +334,7 @@ static int ni_670x_attach (a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 	writel(0x10, devpriv->mite->daq_io_addr + MISC_CONTROL_OFFSET);
 	/* Config of ao registers */
 	writel(0x00, devpriv->mite->daq_io_addr + AO_CONTROL_OFFSET);
-	
+
 	a4l_info(dev, "%s: ni670x attached\n", __FUNCTION__);
 
 	return 0;
@@ -343,13 +343,13 @@ static int ni_670x_attach (a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 static int ni_670x_detach(a4l_dev_t *dev)
 {
 	a4l_info(dev, "%s: ni670x detach procedure started...\n", __FUNCTION__);
-	
+
 	if(dev->priv != NULL && devpriv->mite != NULL)
 		a4l_mite_unsetup(devpriv->mite);
 
-	a4l_info(dev, 
+	a4l_info(dev,
 		 "%s: ni670x detach procedure succeeded...\n", __FUNCTION__);
-	
+
 	return 0;
 }
 
@@ -370,7 +370,7 @@ static int ni_670x_dio_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 		subdpriv->io_bits &= ~(1 << chan);
 		break;
 	case A4L_INSN_CONFIG_DIO_QUERY:
-		data[1] = (subdpriv->io_bits & (1 << chan)) ? 
+		data[1] = (subdpriv->io_bits & (1 << chan)) ?
 			A4L_OUTPUT : A4L_INPUT;
 		return 0;
 		break;
@@ -379,7 +379,7 @@ static int ni_670x_dio_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 		break;
 	}
 
-	writel(subdpriv->io_bits, 
+	writel(subdpriv->io_bits,
 	       devpriv->mite->daq_io_addr + DIO_PORT0_DIR_OFFSET);
 
 	return 0;
@@ -393,9 +393,9 @@ static int ni_670x_ao_winsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	int chan;
 	dtmp = (unsigned int*)insn->data;
 	chan = CR_CHAN(insn->chan_desc);
-	
+
 	/* Channel number mapping :
-	   
+
 	   NI 6703/ NI 6704     | NI 6704 Only
 	   ----------------------------------------------------
 	   vch(0)       :       0       | ich(16)       :       1
@@ -404,17 +404,17 @@ static int ni_670x_ao_winsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	   .    :       .       |   .                   .
 	   .    :       .       |   .                   .
 	   vch(15)      :       30      | ich(31)       :       31 */
-	
+
 	for (i = 0; i < insn->data_size / sizeof(unsigned int); i++) {
 
 		tmp = dtmp[i];
-		
+
 		/* First write in channel register which channel to use */
 		writel(((chan & 15) << 1) | ((chan & 16) >> 4),
 		       private (subd->dev)->mite->daq_io_addr + AO_CHAN_OFFSET);
 
 		/* write channel value */
-		writel(dtmp[i], 
+		writel(dtmp[i],
 		       private(subd->dev)->mite->daq_io_addr + AO_VALUE_OFFSET);
 		private(subd->dev)->ao_readback[chan] = tmp;
 	}
@@ -427,12 +427,12 @@ static int ni_670x_ao_rinsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	int i;
 	unsigned int* dtmp;
 	int chan = CR_CHAN(insn->chan_desc);
-	
+
 	dtmp = (unsigned int*)insn->data;
-	
+
 	for (i = 0; i < insn->data_size / sizeof(unsigned int); i++)
 		dtmp[i] = private(subd->dev)->ao_readback[chan];
-	
+
 	return 0;
 }
 

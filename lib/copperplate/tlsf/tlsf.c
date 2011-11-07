@@ -1,4 +1,4 @@
-/* 
+/*
  * Two Levels Segregate Fit memory allocator (TLSF)
  * Version 2.4.6
  *
@@ -23,27 +23,27 @@
  *
  * - Add 64 bit support. It now runs on x86_64 and solaris64.
  * - I also tested this on vxworks/32and solaris/32 and i386/32 processors.
- * - Remove assembly code. I could not measure any performance difference 
+ * - Remove assembly code. I could not measure any performance difference
  *   on my core2 processor. This also makes the code more portable.
  * - Moved defines/typedefs from tlsf.h to tlsf.c
- * - Changed MIN_BLOCK_SIZE to sizeof (free_ptr_t) and BHDR_OVERHEAD to 
- *   (sizeof (bhdr_t) - MIN_BLOCK_SIZE). This does not change the fact 
- *    that the minumum size is still sizeof 
+ * - Changed MIN_BLOCK_SIZE to sizeof (free_ptr_t) and BHDR_OVERHEAD to
+ *   (sizeof (bhdr_t) - MIN_BLOCK_SIZE). This does not change the fact
+ *    that the minumum size is still sizeof
  *   (bhdr_t).
  * - Changed all C++ comment style to C style. (// -> /.* ... *./)
- * - Used ls_bit instead of ffs and ms_bit instead of fls. I did this to 
- *   avoid confusion with the standard ffs function which returns 
+ * - Used ls_bit instead of ffs and ms_bit instead of fls. I did this to
+ *   avoid confusion with the standard ffs function which returns
  *   different values.
- * - Created set_bit/clear_bit fuctions because they are not present 
+ * - Created set_bit/clear_bit fuctions because they are not present
  *   on x86_64.
  * - Added locking support + extra file target.h to show how to use it.
  * - Added get_used_size function (REMOVED in 2.4)
  * - Added rtl_realloc and rtl_calloc function
  * - Implemented realloc clever support.
  * - Added some test code in the example directory.
- * - Bug fixed (discovered by the rockbox project: www.rockbox.org).       
+ * - Bug fixed (discovered by the rockbox project: www.rockbox.org).
  *
- * (Oct 23 2006) Adam Scislowicz: 
+ * (Oct 23 2006) Adam Scislowicz:
  *
  * - Support for ARMv5 implemented
  *
@@ -59,19 +59,19 @@
 #include <string.h>
 
 #ifndef TLSF_USE_LOCKS
-#define	TLSF_USE_LOCKS 	(0)
+#define	TLSF_USE_LOCKS	(0)
 #endif
 
 #ifndef TLSF_STATISTIC
-#define	TLSF_STATISTIC 	(0)
+#define	TLSF_STATISTIC	(0)
 #endif
 
 #ifndef USE_MMAP
-#define	USE_MMAP 	(0)
+#define	USE_MMAP	(0)
 #endif
 
 #ifndef USE_SBRK
-#define	USE_SBRK 	(0)
+#define	USE_SBRK	(0)
 #endif
 
 
@@ -79,7 +79,7 @@
 #include "target.h"
 #else
 #define TLSF_CREATE_LOCK(_unused_)   do{}while(0)
-#define TLSF_DESTROY_LOCK(_unused_)  do{}while(0) 
+#define TLSF_DESTROY_LOCK(_unused_)  do{}while(0)
 #define TLSF_ACQUIRE_LOCK(_unused_)  do{}while(0)
 #define TLSF_RELEASE_LOCK(_unused_)  do{}while(0)
 #endif
@@ -87,7 +87,7 @@
 #if TLSF_STATISTIC
 #define	TLSF_ADD_SIZE(tlsf, b) do {									\
 		tlsf->used_size += (b->size & BLOCK_SIZE) + BHDR_OVERHEAD;	\
-		if (tlsf->used_size > tlsf->max_size) 						\
+		if (tlsf->used_size > tlsf->max_size)						\
 			tlsf->max_size = tlsf->used_size;						\
 		} while(0)
 
@@ -195,8 +195,8 @@ typedef struct bhdr_struct {
     size_t size;                /* bit 0 indicates whether the block is used and */
     /* bit 1 allows to know whether the previous block is free */
     union {
-        struct free_ptr_struct free_ptr;
-        u8_t buffer[1];         /*sizeof(struct free_ptr_struct)]; */
+	struct free_ptr_struct free_ptr;
+	u8_t buffer[1];         /*sizeof(struct free_ptr_struct)]; */
     } ptr;
 } bhdr_t;
 
@@ -312,30 +312,30 @@ static __inline__ void MAPPING_SEARCH(size_t * _r, int *_fl, int *_sl)
     int _t;
 
     if (*_r < SMALL_BLOCK) {
-        *_fl = 0;
-        *_sl = *_r / (SMALL_BLOCK / MAX_SLI);
+	*_fl = 0;
+	*_sl = *_r / (SMALL_BLOCK / MAX_SLI);
     } else {
-        _t = (1 << (ms_bit(*_r) - MAX_LOG2_SLI)) - 1;
-        *_r = *_r + _t;
-        *_fl = ms_bit(*_r);
-        *_sl = (*_r >> (*_fl - MAX_LOG2_SLI)) - MAX_SLI;
-        *_fl -= FLI_OFFSET;
-        /*if ((*_fl -= FLI_OFFSET) < 0) // FL wil be always >0!
-         *_fl = *_sl = 0;
-         */
-        *_r &= ~_t;
+	_t = (1 << (ms_bit(*_r) - MAX_LOG2_SLI)) - 1;
+	*_r = *_r + _t;
+	*_fl = ms_bit(*_r);
+	*_sl = (*_r >> (*_fl - MAX_LOG2_SLI)) - MAX_SLI;
+	*_fl -= FLI_OFFSET;
+	/*if ((*_fl -= FLI_OFFSET) < 0) // FL wil be always >0!
+	 *_fl = *_sl = 0;
+	 */
+	*_r &= ~_t;
     }
 }
 
 static __inline__ void MAPPING_INSERT(size_t _r, int *_fl, int *_sl)
 {
     if (_r < SMALL_BLOCK) {
-        *_fl = 0;
-        *_sl = _r / (SMALL_BLOCK / MAX_SLI);
+	*_fl = 0;
+	*_sl = _r / (SMALL_BLOCK / MAX_SLI);
     } else {
-        *_fl = ms_bit(_r);
-        *_sl = (_r >> (*_fl - MAX_LOG2_SLI)) - MAX_SLI;
-        *_fl -= FLI_OFFSET;
+	*_fl = ms_bit(_r);
+	*_sl = (_r >> (*_fl - MAX_LOG2_SLI)) - MAX_SLI;
+	*_fl -= FLI_OFFSET;
     }
 }
 
@@ -346,14 +346,14 @@ static __inline__ bhdr_t *FIND_SUITABLE_BLOCK(tlsf_t * _tlsf, int *_fl, int *_sl
     bhdr_t *_b = NULL;
 
     if (_tmp) {
-        *_sl = ls_bit(_tmp);
-        _b = _tlsf->matrix[*_fl][*_sl];
+	*_sl = ls_bit(_tmp);
+	_b = _tlsf->matrix[*_fl][*_sl];
     } else {
-        *_fl = ls_bit(_tlsf->fl_bitmap & (~0 << (*_fl + 1)));
-        if (*_fl > 0) {         /* likely */
-            *_sl = ls_bit(_tlsf->sl_bitmap[*_fl]);
-            _b = _tlsf->matrix[*_fl][*_sl];
-        }
+	*_fl = ls_bit(_tlsf->fl_bitmap & (~0 << (*_fl + 1)));
+	if (*_fl > 0) {         /* likely */
+	    *_sl = ls_bit(_tlsf->sl_bitmap[*_fl]);
+	    _b = _tlsf->matrix[*_fl][*_sl];
+	}
     }
     return _b;
 }
@@ -401,14 +401,14 @@ static __inline__ bhdr_t *FIND_SUITABLE_BLOCK(tlsf_t * _tlsf, int *_fl, int *_sl
 	} while(0)
 
 #if USE_SBRK || USE_MMAP
-static __inline__ void *get_new_area(size_t * size) 
+static __inline__ void *get_new_area(size_t * size)
 {
     void *area;
 
 #if USE_SBRK
     area = (void *)sbrk(0);
     if (((void *)sbrk(*size)) != ((void *) -1))
-        return area;
+	return area;
 #endif
 
 #ifndef MAP_ANONYMOUS
@@ -420,7 +420,7 @@ static __inline__ void *get_new_area(size_t * size)
 #if USE_MMAP
     *size = ROUNDUP(*size, PAGE_SIZE);
     if ((area = mmap(0, *size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)) != MAP_FAILED)
-        return area;
+	return area;
 #endif
     return ((void *) ~0);
 }
@@ -433,8 +433,8 @@ static __inline__ bhdr_t *process_area(void *area, size_t size)
 
     ib = (bhdr_t *) area;
     ib->size =
-        (sizeof(area_info_t) <
-         MIN_BLOCK_SIZE) ? MIN_BLOCK_SIZE : ROUNDUP_SIZE(sizeof(area_info_t)) | USED_BLOCK | PREV_USED;
+	(sizeof(area_info_t) <
+	 MIN_BLOCK_SIZE) ? MIN_BLOCK_SIZE : ROUNDUP_SIZE(sizeof(area_info_t)) | USED_BLOCK | PREV_USED;
     b = (bhdr_t *) GET_NEXT_BLOCK(ib->ptr.buffer, ib->size & BLOCK_SIZE);
     b->size = ROUNDDOWN_SIZE(size - 3 * BHDR_OVERHEAD - (ib->size & BLOCK_SIZE)) | USED_BLOCK | PREV_USED;
     b->ptr.free_ptr.prev = b->ptr.free_ptr.next = 0;
@@ -461,20 +461,20 @@ size_t init_memory_pool(size_t mem_pool_size, void *mem_pool)
     bhdr_t *b, *ib;
 
     if (!mem_pool || !mem_pool_size || mem_pool_size < sizeof(tlsf_t) + BHDR_OVERHEAD * 8) {
-        ERROR_MSG("init_memory_pool (): memory_pool invalid\n");
-        return -1;
+	ERROR_MSG("init_memory_pool (): memory_pool invalid\n");
+	return -1;
     }
 
     if (((unsigned long) mem_pool & PTR_MASK)) {
-        ERROR_MSG("init_memory_pool (): mem_pool must be aligned to a word\n");
-        return -1;
+	ERROR_MSG("init_memory_pool (): mem_pool must be aligned to a word\n");
+	return -1;
     }
     tlsf = (tlsf_t *) mem_pool;
     /* Check if already initialised */
     if (tlsf->tlsf_signature == TLSF_SIGNATURE) {
-        mp = mem_pool;
-        b = GET_NEXT_BLOCK(mp, ROUNDUP_SIZE(sizeof(tlsf_t)));
-        return b->size & BLOCK_SIZE;
+	mp = mem_pool;
+	b = GET_NEXT_BLOCK(mp, ROUNDUP_SIZE(sizeof(tlsf_t)));
+	return b->size & BLOCK_SIZE;
     }
 
     mp = mem_pool;
@@ -487,7 +487,7 @@ size_t init_memory_pool(size_t mem_pool_size, void *mem_pool)
     TLSF_CREATE_LOCK(&tlsf->lock);
 
     ib = process_area(GET_NEXT_BLOCK
-                      (mem_pool, ROUNDUP_SIZE(sizeof(tlsf_t))), ROUNDDOWN_SIZE(mem_pool_size - sizeof(tlsf_t)));
+		      (mem_pool, ROUNDUP_SIZE(sizeof(tlsf_t))), ROUNDDOWN_SIZE(mem_pool_size - sizeof(tlsf_t)));
     b = GET_NEXT_BLOCK(ib->ptr.buffer, ib->size & BLOCK_SIZE);
     free_ex(b->ptr.buffer, tlsf);
     tlsf->area_head = (area_info_t *) ib->ptr.buffer;
@@ -520,53 +520,53 @@ size_t add_new_area(void *area, size_t area_size, void *mem_pool)
        already existing ones */
 
     while (ptr) {
-        ib1 = (bhdr_t *) ((char *) ptr - BHDR_OVERHEAD);
-        b1 = GET_NEXT_BLOCK(ib1->ptr.buffer, ib1->size & BLOCK_SIZE);
-        lb1 = ptr->end;
+	ib1 = (bhdr_t *) ((char *) ptr - BHDR_OVERHEAD);
+	b1 = GET_NEXT_BLOCK(ib1->ptr.buffer, ib1->size & BLOCK_SIZE);
+	lb1 = ptr->end;
 
-        /* Merging the new area with the next physically contigous one */
-        if ((unsigned long) ib1 == (unsigned long) lb0 + BHDR_OVERHEAD) {
-            if (tlsf->area_head == ptr) {
-                tlsf->area_head = ptr->next;
-                ptr = ptr->next;
-            } else {
-                ptr_prev->next = ptr->next;
-                ptr = ptr->next;
-            }
+	/* Merging the new area with the next physically contigous one */
+	if ((unsigned long) ib1 == (unsigned long) lb0 + BHDR_OVERHEAD) {
+	    if (tlsf->area_head == ptr) {
+		tlsf->area_head = ptr->next;
+		ptr = ptr->next;
+	    } else {
+		ptr_prev->next = ptr->next;
+		ptr = ptr->next;
+	    }
 
-            b0->size =
-                ROUNDDOWN_SIZE((b0->size & BLOCK_SIZE) +
-                               (ib1->size & BLOCK_SIZE) + 2 * BHDR_OVERHEAD) | USED_BLOCK | PREV_USED;
+	    b0->size =
+		ROUNDDOWN_SIZE((b0->size & BLOCK_SIZE) +
+			       (ib1->size & BLOCK_SIZE) + 2 * BHDR_OVERHEAD) | USED_BLOCK | PREV_USED;
 
-            b1->prev_hdr = b0;
-            lb0 = lb1;
+	    b1->prev_hdr = b0;
+	    lb0 = lb1;
 
-            continue;
-        }
+	    continue;
+	}
 
-        /* Merging the new area with the previous physically contigous
-           one */
-        if ((unsigned long) lb1->ptr.buffer == (unsigned long) ib0) {
-            if (tlsf->area_head == ptr) {
-                tlsf->area_head = ptr->next;
-                ptr = ptr->next;
-            } else {
-                ptr_prev->next = ptr->next;
-                ptr = ptr->next;
-            }
+	/* Merging the new area with the previous physically contigous
+	   one */
+	if ((unsigned long) lb1->ptr.buffer == (unsigned long) ib0) {
+	    if (tlsf->area_head == ptr) {
+		tlsf->area_head = ptr->next;
+		ptr = ptr->next;
+	    } else {
+		ptr_prev->next = ptr->next;
+		ptr = ptr->next;
+	    }
 
-            lb1->size =
-                ROUNDDOWN_SIZE((b0->size & BLOCK_SIZE) +
-                               (ib0->size & BLOCK_SIZE) + 2 * BHDR_OVERHEAD) | USED_BLOCK | (lb1->size & PREV_STATE);
-            next_b = GET_NEXT_BLOCK(lb1->ptr.buffer, lb1->size & BLOCK_SIZE);
-            next_b->prev_hdr = lb1;
-            b0 = lb1;
-            ib0 = ib1;
+	    lb1->size =
+		ROUNDDOWN_SIZE((b0->size & BLOCK_SIZE) +
+			       (ib0->size & BLOCK_SIZE) + 2 * BHDR_OVERHEAD) | USED_BLOCK | (lb1->size & PREV_STATE);
+	    next_b = GET_NEXT_BLOCK(lb1->ptr.buffer, lb1->size & BLOCK_SIZE);
+	    next_b->prev_hdr = lb1;
+	    b0 = lb1;
+	    ib0 = ib1;
 
-            continue;
-        }
-        ptr_prev = ptr;
-        ptr = ptr->next;
+	    continue;
+	}
+	ptr_prev = ptr;
+	ptr = ptr->next;
     }
 
     /* Inserting the area in the list of linked areas */
@@ -624,15 +624,15 @@ void *tlsf_malloc(size_t size)
 
 #if USE_MMAP || USE_SBRK
     if (!mp) {
-        size_t area_size;
-        void *area;
+	size_t area_size;
+	void *area;
 
-        area_size = sizeof(tlsf_t) + BHDR_OVERHEAD * 8; /* Just a safety constant */
-        area_size = (area_size > DEFAULT_AREA_SIZE) ? area_size : DEFAULT_AREA_SIZE;
-        area = get_new_area(&area_size);
-        if (area == ((void *) ~0))
-            return NULL;        /* Not enough system memory */
-        init_memory_pool(area_size, area);
+	area_size = sizeof(tlsf_t) + BHDR_OVERHEAD * 8; /* Just a safety constant */
+	area_size = (area_size > DEFAULT_AREA_SIZE) ? area_size : DEFAULT_AREA_SIZE;
+	area = get_new_area(&area_size);
+	if (area == ((void *) ~0))
+	    return NULL;        /* Not enough system memory */
+	init_memory_pool(area_size, area);
     }
 #endif
 
@@ -713,23 +713,23 @@ void *malloc_ex(size_t size, void *mem_pool)
     b = FIND_SUITABLE_BLOCK(tlsf, &fl, &sl);
 #if USE_MMAP || USE_SBRK
     if (!b) {
-        size_t area_size;
-        void *area;
-        /* Growing the pool size when needed */
-        area_size = size + BHDR_OVERHEAD * 8;   /* size plus enough room for the requered headers. */
-        area_size = (area_size > DEFAULT_AREA_SIZE) ? area_size : DEFAULT_AREA_SIZE;
-        area = get_new_area(&area_size);        /* Call sbrk or mmap */
-        if (area == ((void *) ~0))
-            return NULL;        /* Not enough system memory */
-        add_new_area(area, area_size, mem_pool);
-        /* Rounding up the requested size and calculating fl and sl */
-        MAPPING_SEARCH(&size, &fl, &sl);
-        /* Searching a free block */
-        b = FIND_SUITABLE_BLOCK(tlsf, &fl, &sl);
+	size_t area_size;
+	void *area;
+	/* Growing the pool size when needed */
+	area_size = size + BHDR_OVERHEAD * 8;   /* size plus enough room for the requered headers. */
+	area_size = (area_size > DEFAULT_AREA_SIZE) ? area_size : DEFAULT_AREA_SIZE;
+	area = get_new_area(&area_size);        /* Call sbrk or mmap */
+	if (area == ((void *) ~0))
+	    return NULL;        /* Not enough system memory */
+	add_new_area(area, area_size, mem_pool);
+	/* Rounding up the requested size and calculating fl and sl */
+	MAPPING_SEARCH(&size, &fl, &sl);
+	/* Searching a free block */
+	b = FIND_SUITABLE_BLOCK(tlsf, &fl, &sl);
     }
 #endif
     if (!b)
-        return NULL;            /* Not found */
+	return NULL;            /* Not found */
 
     EXTRACT_BLOCK_HDR(b, tlsf, fl, sl);
 
@@ -738,17 +738,17 @@ void *malloc_ex(size_t size, void *mem_pool)
     /* Should the block be split? */
     tmp_size = (b->size & BLOCK_SIZE) - size;
     if (tmp_size >= sizeof(bhdr_t)) {
-        tmp_size -= BHDR_OVERHEAD;
-        b2 = GET_NEXT_BLOCK(b->ptr.buffer, size);
-        b2->size = tmp_size | FREE_BLOCK | PREV_USED;
-        next_b->prev_hdr = b2;
-        MAPPING_INSERT(tmp_size, &fl, &sl);
-        INSERT_BLOCK(b2, tlsf, fl, sl);
+	tmp_size -= BHDR_OVERHEAD;
+	b2 = GET_NEXT_BLOCK(b->ptr.buffer, size);
+	b2->size = tmp_size | FREE_BLOCK | PREV_USED;
+	next_b->prev_hdr = b2;
+	MAPPING_INSERT(tmp_size, &fl, &sl);
+	INSERT_BLOCK(b2, tlsf, fl, sl);
 
-        b->size = size | (b->size & PREV_STATE);
+	b->size = size | (b->size & PREV_STATE);
     } else {
-        next_b->size &= (~PREV_FREE);
-        b->size &= (~FREE_BLOCK);       /* Now it's used */
+	next_b->size &= (~PREV_FREE);
+	b->size &= (~FREE_BLOCK);       /* Now it's used */
     }
 
     TLSF_ADD_SIZE(tlsf, b);
@@ -765,7 +765,7 @@ void free_ex(void *ptr, void *mem_pool)
     int fl = 0, sl = 0;
 
     if (!ptr) {
-        return;
+	return;
     }
     b = (bhdr_t *) ((char *) ptr - BHDR_OVERHEAD);
     b->size |= FREE_BLOCK;
@@ -776,16 +776,16 @@ void free_ex(void *ptr, void *mem_pool)
     b->ptr.free_ptr.next = NULL;
     tmp_b = GET_NEXT_BLOCK(b->ptr.buffer, b->size & BLOCK_SIZE);
     if (tmp_b->size & FREE_BLOCK) {
-        MAPPING_INSERT(tmp_b->size & BLOCK_SIZE, &fl, &sl);
-        EXTRACT_BLOCK(tmp_b, tlsf, fl, sl);
-        b->size += (tmp_b->size & BLOCK_SIZE) + BHDR_OVERHEAD;
+	MAPPING_INSERT(tmp_b->size & BLOCK_SIZE, &fl, &sl);
+	EXTRACT_BLOCK(tmp_b, tlsf, fl, sl);
+	b->size += (tmp_b->size & BLOCK_SIZE) + BHDR_OVERHEAD;
     }
     if (b->size & PREV_FREE) {
-        tmp_b = b->prev_hdr;
-        MAPPING_INSERT(tmp_b->size & BLOCK_SIZE, &fl, &sl);
-        EXTRACT_BLOCK(tmp_b, tlsf, fl, sl);
-        tmp_b->size += (b->size & BLOCK_SIZE) + BHDR_OVERHEAD;
-        b = tmp_b;
+	tmp_b = b->prev_hdr;
+	MAPPING_INSERT(tmp_b->size & BLOCK_SIZE, &fl, &sl);
+	EXTRACT_BLOCK(tmp_b, tlsf, fl, sl);
+	tmp_b->size += (b->size & BLOCK_SIZE) + BHDR_OVERHEAD;
+	b = tmp_b;
     }
     MAPPING_INSERT(b->size & BLOCK_SIZE, &fl, &sl);
     INSERT_BLOCK(b, tlsf, fl, sl);
@@ -807,13 +807,13 @@ void *realloc_ex(void *ptr, size_t new_size, void *mem_pool)
     size_t tmp_size;
 
     if (!ptr) {
-        if (new_size)
-            return (void *) malloc_ex(new_size, mem_pool);
-        if (!new_size)
-            return NULL;
+	if (new_size)
+	    return (void *) malloc_ex(new_size, mem_pool);
+	if (!new_size)
+	    return NULL;
     } else if (!new_size) {
-        free_ex(ptr, mem_pool);
-        return NULL;
+	free_ex(ptr, mem_pool);
+	return NULL;
     }
 
     b = (bhdr_t *) ((char *) ptr - BHDR_OVERHEAD);
@@ -822,57 +822,57 @@ void *realloc_ex(void *ptr, size_t new_size, void *mem_pool)
     tmp_size = (b->size & BLOCK_SIZE);
     if (new_size <= tmp_size) {
 	TLSF_REMOVE_SIZE(tlsf, b);
-        if (next_b->size & FREE_BLOCK) {
-            MAPPING_INSERT(next_b->size & BLOCK_SIZE, &fl, &sl);
-            EXTRACT_BLOCK(next_b, tlsf, fl, sl);
-            tmp_size += (next_b->size & BLOCK_SIZE) + BHDR_OVERHEAD;
-            next_b = GET_NEXT_BLOCK(next_b->ptr.buffer, next_b->size & BLOCK_SIZE);
-            /* We allways reenter this free block because tmp_size will
-               be greater then sizeof (bhdr_t) */
-        }
-        tmp_size -= new_size;
-        if (tmp_size >= sizeof(bhdr_t)) {
-            tmp_size -= BHDR_OVERHEAD;
-            tmp_b = GET_NEXT_BLOCK(b->ptr.buffer, new_size);
-            tmp_b->size = tmp_size | FREE_BLOCK | PREV_USED;
-            next_b->prev_hdr = tmp_b;
-            next_b->size |= PREV_FREE;
-            MAPPING_INSERT(tmp_size, &fl, &sl);
-            INSERT_BLOCK(tmp_b, tlsf, fl, sl);
-            b->size = new_size | (b->size & PREV_STATE);
-        }
+	if (next_b->size & FREE_BLOCK) {
+	    MAPPING_INSERT(next_b->size & BLOCK_SIZE, &fl, &sl);
+	    EXTRACT_BLOCK(next_b, tlsf, fl, sl);
+	    tmp_size += (next_b->size & BLOCK_SIZE) + BHDR_OVERHEAD;
+	    next_b = GET_NEXT_BLOCK(next_b->ptr.buffer, next_b->size & BLOCK_SIZE);
+	    /* We allways reenter this free block because tmp_size will
+	       be greater then sizeof (bhdr_t) */
+	}
+	tmp_size -= new_size;
+	if (tmp_size >= sizeof(bhdr_t)) {
+	    tmp_size -= BHDR_OVERHEAD;
+	    tmp_b = GET_NEXT_BLOCK(b->ptr.buffer, new_size);
+	    tmp_b->size = tmp_size | FREE_BLOCK | PREV_USED;
+	    next_b->prev_hdr = tmp_b;
+	    next_b->size |= PREV_FREE;
+	    MAPPING_INSERT(tmp_size, &fl, &sl);
+	    INSERT_BLOCK(tmp_b, tlsf, fl, sl);
+	    b->size = new_size | (b->size & PREV_STATE);
+	}
 	TLSF_ADD_SIZE(tlsf, b);
-        return (void *) b->ptr.buffer;
+	return (void *) b->ptr.buffer;
     }
     if ((next_b->size & FREE_BLOCK)) {
-        if (new_size <= (tmp_size + (next_b->size & BLOCK_SIZE))) {
+	if (new_size <= (tmp_size + (next_b->size & BLOCK_SIZE))) {
 			TLSF_REMOVE_SIZE(tlsf, b);
-            MAPPING_INSERT(next_b->size & BLOCK_SIZE, &fl, &sl);
-            EXTRACT_BLOCK(next_b, tlsf, fl, sl);
-            b->size += (next_b->size & BLOCK_SIZE) + BHDR_OVERHEAD;
-            next_b = GET_NEXT_BLOCK(b->ptr.buffer, b->size & BLOCK_SIZE);
-            next_b->prev_hdr = b;
-            next_b->size &= ~PREV_FREE;
-            tmp_size = (b->size & BLOCK_SIZE) - new_size;
-            if (tmp_size >= sizeof(bhdr_t)) {
-                tmp_size -= BHDR_OVERHEAD;
-                tmp_b = GET_NEXT_BLOCK(b->ptr.buffer, new_size);
-                tmp_b->size = tmp_size | FREE_BLOCK | PREV_USED;
-                next_b->prev_hdr = tmp_b;
-                next_b->size |= PREV_FREE;
-                MAPPING_INSERT(tmp_size, &fl, &sl);
-                INSERT_BLOCK(tmp_b, tlsf, fl, sl);
-                b->size = new_size | (b->size & PREV_STATE);
-            }
+	    MAPPING_INSERT(next_b->size & BLOCK_SIZE, &fl, &sl);
+	    EXTRACT_BLOCK(next_b, tlsf, fl, sl);
+	    b->size += (next_b->size & BLOCK_SIZE) + BHDR_OVERHEAD;
+	    next_b = GET_NEXT_BLOCK(b->ptr.buffer, b->size & BLOCK_SIZE);
+	    next_b->prev_hdr = b;
+	    next_b->size &= ~PREV_FREE;
+	    tmp_size = (b->size & BLOCK_SIZE) - new_size;
+	    if (tmp_size >= sizeof(bhdr_t)) {
+		tmp_size -= BHDR_OVERHEAD;
+		tmp_b = GET_NEXT_BLOCK(b->ptr.buffer, new_size);
+		tmp_b->size = tmp_size | FREE_BLOCK | PREV_USED;
+		next_b->prev_hdr = tmp_b;
+		next_b->size |= PREV_FREE;
+		MAPPING_INSERT(tmp_size, &fl, &sl);
+		INSERT_BLOCK(tmp_b, tlsf, fl, sl);
+		b->size = new_size | (b->size & PREV_STATE);
+	    }
 			TLSF_ADD_SIZE(tlsf, b);
-            return (void *) b->ptr.buffer;
-        }
+	    return (void *) b->ptr.buffer;
+	}
     }
 
     if (!(ptr_aux = malloc_ex(new_size, mem_pool))){
-        return NULL;
-    }      
-    
+	return NULL;
+    }
+
     cpsize = ((b->size & BLOCK_SIZE) > new_size) ? new_size : (b->size & BLOCK_SIZE);
 
     memcpy(ptr_aux, ptr, cpsize);
@@ -889,10 +889,10 @@ void *calloc_ex(size_t nelem, size_t elem_size, void *mem_pool)
     void *ptr;
 
     if (nelem <= 0 || elem_size <= 0)
-        return NULL;
+	return NULL;
 
     if (!(ptr = malloc_ex(nelem * elem_size, mem_pool)))
-        return NULL;
+	return NULL;
     memset(ptr, 0, nelem * elem_size);
 
     return ptr;
@@ -906,11 +906,11 @@ size_t malloc_usable_size_ex(void *ptr, void *pool)
     bhdr_t *b;
 
     if (!ptr) {
-        return 0;
+	return 0;
     }
     b = (bhdr_t *) ((char *) ptr - BHDR_OVERHEAD);
     if ((b->size & BLOCK_STATE) == FREE_BLOCK)
-        return 0;
+	return 0;
     return b->size & BLOCK_SIZE;
 }
 
@@ -948,20 +948,20 @@ void dump_memory_region(unsigned char *mem_ptr, unsigned int size)
     PRINT_MSG("0x%lx ", begin);
 
     while (begin < end) {
-        if (((unsigned char *) begin)[0] == 0)
-            PRINT_MSG("00");
-        else
-            PRINT_MSG("%02x", ((unsigned char *) begin)[0]);
-        if (((unsigned char *) begin)[1] == 0)
-            PRINT_MSG("00 ");
-        else
-            PRINT_MSG("%02x ", ((unsigned char *) begin)[1]);
-        begin += 2;
-        column++;
-        if (column == 8) {
-            PRINT_MSG("\n0x%lx ", begin);
-            column = 0;
-        }
+	if (((unsigned char *) begin)[0] == 0)
+	    PRINT_MSG("00");
+	else
+	    PRINT_MSG("%02x", ((unsigned char *) begin)[0]);
+	if (((unsigned char *) begin)[1] == 0)
+	    PRINT_MSG("00 ");
+	else
+	    PRINT_MSG("%02x ", ((unsigned char *) begin)[1]);
+	begin += 2;
+	column++;
+	if (column == 8) {
+	    PRINT_MSG("\n0x%lx ", begin);
+	    column = 0;
+	}
 
     }
     PRINT_MSG("\n\n");
@@ -970,20 +970,20 @@ void dump_memory_region(unsigned char *mem_ptr, unsigned int size)
 void print_block(bhdr_t * b)
 {
     if (!b)
-        return;
+	return;
     PRINT_MSG(">> [%p] (", b);
     if ((b->size & BLOCK_SIZE))
-        PRINT_MSG("%lu bytes, ", (unsigned long) (b->size & BLOCK_SIZE));
+	PRINT_MSG("%lu bytes, ", (unsigned long) (b->size & BLOCK_SIZE));
     else
-        PRINT_MSG("sentinel, ");
+	PRINT_MSG("sentinel, ");
     if ((b->size & BLOCK_STATE) == FREE_BLOCK)
-        PRINT_MSG("free [%p, %p], ", b->ptr.free_ptr.prev, b->ptr.free_ptr.next);
+	PRINT_MSG("free [%p, %p], ", b->ptr.free_ptr.prev, b->ptr.free_ptr.next);
     else
-        PRINT_MSG("used, ");
+	PRINT_MSG("used, ");
     if ((b->size & PREV_STATE) == PREV_FREE)
-        PRINT_MSG("prev. free [%p])\n", b->prev_hdr);
+	PRINT_MSG("prev. free [%p])\n", b->prev_hdr);
     else
-        PRINT_MSG("prev used)\n");
+	PRINT_MSG("prev used)\n");
 }
 
 void print_tlsf(tlsf_t * tlsf)
@@ -996,17 +996,17 @@ void print_tlsf(tlsf_t * tlsf)
     PRINT_MSG("FL bitmap: 0x%x\n\n", (unsigned) tlsf->fl_bitmap);
 
     for (i = 0; i < REAL_FLI; i++) {
-        if (tlsf->sl_bitmap[i])
-            PRINT_MSG("SL bitmap 0x%x\n", (unsigned) tlsf->sl_bitmap[i]);
-        for (j = 0; j < MAX_SLI; j++) {
-            next = tlsf->matrix[i][j];
-            if (next)
-                PRINT_MSG("-> [%d][%d]\n", i, j);
-            while (next) {
-                print_block(next);
-                next = next->ptr.free_ptr.next;
-            }
-        }
+	if (tlsf->sl_bitmap[i])
+	    PRINT_MSG("SL bitmap 0x%x\n", (unsigned) tlsf->sl_bitmap[i]);
+	for (j = 0; j < MAX_SLI; j++) {
+	    next = tlsf->matrix[i][j];
+	    if (next)
+		PRINT_MSG("-> [%d][%d]\n", i, j);
+	    while (next) {
+		print_block(next);
+		next = next->ptr.free_ptr.next;
+	    }
+	}
     }
 }
 
@@ -1017,15 +1017,15 @@ void print_all_blocks(tlsf_t * tlsf)
     PRINT_MSG("\nTLSF at %p\nALL BLOCKS\n\n", tlsf);
     ai = tlsf->area_head;
     while (ai) {
-        next = (bhdr_t *) ((char *) ai - BHDR_OVERHEAD);
-        while (next) {
-            print_block(next);
-            if ((next->size & BLOCK_SIZE))
-                next = GET_NEXT_BLOCK(next->ptr.buffer, next->size & BLOCK_SIZE);
-            else
-                next = NULL;
-        }
-        ai = ai->next;
+	next = (bhdr_t *) ((char *) ai - BHDR_OVERHEAD);
+	while (next) {
+	    print_block(next);
+	    if ((next->size & BLOCK_SIZE))
+		next = GET_NEXT_BLOCK(next->ptr.buffer, next->size & BLOCK_SIZE);
+	    else
+		next = NULL;
+	}
+	ai = ai->next;
     }
 }
 

@@ -50,7 +50,7 @@ struct xnbindreq {
 typedef struct xnsysinfo {
 	unsigned long long clockfreq;	/* Real-time clock frequency */
 	unsigned long tickval;		/* Tick duration (ns) */
-	unsigned long vdso;  		/* Offset of nkvdso in the sem heap */
+	unsigned long vdso;		/* Offset of nkvdso in the sem heap */
 } xnsysinfo_t;
 
 #define SIGSHADOW  SIGWINCH

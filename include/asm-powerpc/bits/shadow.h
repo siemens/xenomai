@@ -70,9 +70,9 @@ static inline void xnarch_setup_mayday_page(void *page)
 	/*
 	 * We want this code to appear at the top of the MAYDAY page:
 	 *
-	 * 3c 00 0b 00 	lis     r0,mux_code@h
-	 * 60 00 02 2b 	ori     r0,r0,mux_code@l
-	 * 44 00 00 02 	sc
+	 * 3c 00 0b 00	lis     r0,mux_code@h
+	 * 60 00 02 2b	ori     r0,r0,mux_code@l
+	 * 44 00 00 02	sc
 	 * 00 b0 0b 00  .long	0x00b00b00 <illegal insn>
 	 *
 	 * We don't mess with CCR here, so no need to save/restore it

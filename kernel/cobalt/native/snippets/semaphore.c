@@ -18,8 +18,8 @@ void foo (void)
 
     for (;;) {
 
-    	/* Now, wait for a semaphore unit... */
-    	rt_sem_p(&sem_desc,TM_INFINITE);
+	/* Now, wait for a semaphore unit... */
+	rt_sem_p(&sem_desc,TM_INFINITE);
 
 	/* ... */
 

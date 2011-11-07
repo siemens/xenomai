@@ -101,7 +101,7 @@ static void rootTask(long a0, long a1, long a2, long a3, long a4,
 
 	ret = semTake(sem_id, WAIT_FOREVER);
 	traceobj_assert(&trobj, ret == OK);
-    
+
 	ptid = taskNameToId("peerTask");
 	traceobj_assert(&trobj, ptid != ERROR);
 

@@ -23,7 +23,7 @@
 #define _XENO_NUCLEUS_INTR_H
 
 /* Possible return values of ISR. */
-#define XN_ISR_NONE   	 0x1
+#define XN_ISR_NONE	 0x1
 #define XN_ISR_HANDLED	 0x2
 /* Additional bits. */
 #define XN_ISR_PROPAGATE 0x100
@@ -56,7 +56,7 @@ typedef struct xnintr {
 
     void *cookie;	/* !< User-defined cookie value. */
 
-    xnflags_t flags; 	/* !< Creation flags. */
+    xnflags_t flags;	/* !< Creation flags. */
 
     unsigned irq;	/* !< IRQ number. */
 

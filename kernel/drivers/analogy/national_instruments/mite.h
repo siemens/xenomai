@@ -122,7 +122,7 @@ struct mite_struct * a4l_mite_find_device(int bus,
 					  int slot, unsigned short device_id);
 struct mite_channel *
 a4l_mite_request_channel_in_range(struct mite_struct *mite,
-				  struct mite_dma_descriptor_ring *ring, 
+				  struct mite_dma_descriptor_ring *ring,
 				  unsigned min_channel, unsigned max_channel);
 static inline struct mite_channel *mite_request_channel(struct mite_struct
 	*mite, struct mite_dma_descriptor_ring *ring)

@@ -141,7 +141,7 @@ int a4l_set_wakesize(a4l_desc_t * dsc, unsigned long size)
 		return -EINVAL;
 
 	return  __sys_ioctl(dsc->fd, A4L_BUFCFG2, &cfg);
-	
+
 	return err;
 }
 

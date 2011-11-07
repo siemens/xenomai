@@ -48,8 +48,8 @@ int (*a4l_ioctl_functions[NB_IOCTL_FUNCTIONS]) (a4l_cxt_t *, void *) = {
 	a4l_ioctl_bufcfg,
 	a4l_ioctl_bufinfo,
 	a4l_ioctl_poll,
-	a4l_ioctl_mmap, 
-	a4l_ioctl_nbchaninfo, 
+	a4l_ioctl_mmap,
+	a4l_ioctl_nbchaninfo,
 	a4l_ioctl_nbrnginfo,
 	a4l_ioctl_bufcfg2,
 	a4l_ioctl_bufinfo2
@@ -226,7 +226,7 @@ static struct rtdm_device rtdm_devs[A4L_NB_DEVICES] =
 		.struct_version =	RTDM_DEVICE_STRUCT_VER,
 		.device_flags =		RTDM_NAMED_DEVICE,
 		.context_size =		sizeof(struct a4l_device_context),
-		.device_name = 		"",
+		.device_name =		"",
 
 		.open_nrt =		a4l_open,
 

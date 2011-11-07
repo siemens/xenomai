@@ -408,7 +408,7 @@ static ssize_t __xddp_stream(struct xddp_socket *sk,
 			     int from, struct xnbufd *bufd)
 {
 	struct xddp_message *mbuf;
- 	size_t fillptr, rembytes;
+	size_t fillptr, rembytes;
 	rtdm_lockctx_t lockctx;
 	ssize_t outbytes;
 	int ret;

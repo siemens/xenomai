@@ -56,7 +56,7 @@ extern int clock_nanosleep (clockid_t __clock_id, int __flags,
 #define MODE_SYS_NANOSLEEP	3
 #define MODE_SYS_OFFSET		2
 
-#define TIMER_RELTIME 	0
+#define TIMER_RELTIME	0
 
 /* Must be power of 2 ! */
 #define VALBUF_SIZE	16384
@@ -473,9 +473,9 @@ int main(int argc, char **argv)
 
 	mode = use_nanosleep + use_system;
 
-       	sigemptyset(&sigset);
-       	sigaddset(&sigset, signum);
-   	sigprocmask (SIG_BLOCK, &sigset, NULL);
+	sigemptyset(&sigset);
+	sigaddset(&sigset, signum);
+	sigprocmask (SIG_BLOCK, &sigset, NULL);
 
 	signal(SIGINT, sighand);
 	signal(SIGTERM, sighand);

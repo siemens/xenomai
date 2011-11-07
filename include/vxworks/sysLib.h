@@ -31,9 +31,9 @@ extern "C" {
 #endif
 
 int sysClkRateGet(void);
-    
+
 STATUS sysClkRateSet(int hz);
-    
+
 #ifdef __cplusplus
 }
 #endif

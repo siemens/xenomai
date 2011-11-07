@@ -724,7 +724,7 @@ static ni_board ni_boards[]={
 		caldac:         {ad8804_debug},
 		has_8255:       0,
 	},
- 	{	device_id:      0x18c0,
+	{	device_id:      0x18c0,
 		name:           "pxi-6052e",
 		n_adchan:       16,
 		adbits:         16,

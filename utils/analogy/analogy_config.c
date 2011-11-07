@@ -245,7 +245,7 @@ int main(int argc, char *argv[])
 		lnkdsc.bname_size = strlen(argv[optind + 1]);
 
 		/* Process driver-specific options */
- 		if (argc - optind == 3) {
+		if (argc - optind == 3) {
 
 			err = process_extra_arg(&lnkdsc, argv[optind + 2]);
 			if (err < 0)

@@ -103,7 +103,7 @@ static void do_print_usage(void)
 	fprintf(stdout, "\t\t -c, --channels: channels to use (ex.: -c 0,1)\n");
 	fprintf(stdout, "\t\t -m, --mmap: mmap the buffer\n");
 	fprintf(stdout, "\t\t -w, --raw: dump data in raw format\n");
-	fprintf(stdout, 
+	fprintf(stdout,
 		"\t\t -k, --wake-count: "
 		"space available before waking up the process\n");
 	fprintf(stdout, "\t\t -h, --help: print this help\n");
@@ -198,7 +198,7 @@ int main(int argc, char *argv[])
 	/* Compute arguments */
 	while ((ret = getopt_long(argc,
 				  argv,
-				  "vrd:s:S:c:mwk:h", 
+				  "vrd:s:S:c:mwk:h",
 				  cmd_read_opts, NULL)) >= 0) {
 		switch (ret) {
 		case 'v':
@@ -385,7 +385,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (verbose != 0)
-		printf("cmd_read: wake size successfully set (%lu)\n", 
+		printf("cmd_read: wake size successfully set (%lu)\n",
 		       wake_count);
 
 	/* Send the command to the input device */

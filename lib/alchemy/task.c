@@ -86,7 +86,7 @@ static struct alchemy_task *find_alchemy_task_or_self(RT_TASK *task, int *err_r)
 		*err_r = -EPERM;
 		return NULL;
 	}
-		
+
 	return current;
 }
 
@@ -326,7 +326,7 @@ int rt_task_delete(RT_TASK *task)
 	struct service svc;
 	int ret;
 
- 	if (threadobj_irq_p())
+	if (threadobj_irq_p())
 		return -EPERM;
 
 	tcb = find_alchemy_task_or_self(task, &ret);

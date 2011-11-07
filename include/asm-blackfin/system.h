@@ -58,7 +58,7 @@ typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
 		unsigned long p0;
 		unsigned long r5;
 	} mayday;
-	
+
     /* Init block */
 	struct xnthread *self;
 	int imask;

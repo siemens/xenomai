@@ -168,7 +168,7 @@ int __check_cancel_type(const char *locktype);
  * option (e.g. too complex), or in situations where the protected
  * code shall fully run; in such cases, cancellation is disabled
  * throughout the section.
- */	
+ */
 
 #define write_lock_safe(__lock, __state)	\
 	__do_lock_safe(__lock, __state, lock)

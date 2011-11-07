@@ -63,7 +63,7 @@ static STATUS xsem_take(struct wind_sem *sem, int timeout)
 
 	if (threadobj_irq_p())
 		return S_intLib_NOT_ISR_CALLABLE;
-	  
+
 	COPPERPLATE_PROTECT(svc);
 
 	if (syncobj_lock(&sem->u.xsem.sobj, &syns)) {
@@ -170,7 +170,7 @@ static STATUS xsem_delete(struct wind_sem *sem)
 
 	if (threadobj_irq_p())
 		return S_intLib_NOT_ISR_CALLABLE;
-	  
+
 	COPPERPLATE_PROTECT(svc);
 
 	if (syncobj_lock(&sem->u.xsem.sobj, &syns)) {
@@ -202,7 +202,7 @@ static SEM_ID alloc_xsem(int options, int initval, int maxval)
 		errno = S_semLib_INVALID_OPTION;
 		return (SEM_ID)0;
 	}
-		
+
 	sem = alloc_sem(options, &xsem_ops);
 	if (sem == NULL) {
 		errno = S_memLib_NOT_ENOUGH_MEMORY;
@@ -228,7 +228,7 @@ static STATUS msem_take(struct wind_sem *sem, int timeout)
 
 	if (threadobj_irq_p())
 		return S_intLib_NOT_ISR_CALLABLE;
-	  
+
 	current = wind_task_current();
 	if (current != NULL && (sem->options & SEM_DELETE_SAFE))
 		__RT(pthread_mutex_lock(&current->safelock));
@@ -307,7 +307,7 @@ static STATUS msem_delete(struct wind_sem *sem)
 
 	if (threadobj_irq_p())
 		return S_intLib_NOT_ISR_CALLABLE;
-	  
+
 	ret = __RT(pthread_mutex_destroy(&sem->u.msem.lock));
 	if (ret == EINVAL)
 		return S_objLib_OBJ_ID_ERROR;

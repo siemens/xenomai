@@ -83,7 +83,7 @@ static inline void __native_cond_flush_rq(xnqueue_t *rq)
 }
 
 int rt_cond_wait_prologue(RT_COND *cond, RT_MUTEX *mutex, unsigned *plockcnt,
-		       	  xntmode_t timeout_mode, RTIME timeout);
+			  xntmode_t timeout_mode, RTIME timeout);
 
 int rt_cond_wait_epilogue(RT_MUTEX *mutex, unsigned lockcnt);
 

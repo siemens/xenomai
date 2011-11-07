@@ -115,7 +115,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define LOADARGS_2(muxcode, arg1, arg2)	\
 	LOADARGS_1(muxcode, arg1);	\
 	__a2 = (unsigned long) (arg2)
-#define LOADARGS_3(muxcode, arg1, arg2, arg3) 	\
+#define LOADARGS_3(muxcode, arg1, arg2, arg3)	\
 	LOADARGS_2(muxcode,  arg1, arg2);	\
 	__a3 = (unsigned long) (arg3)
 #define LOADARGS_4(muxcode,  arg1, arg2, arg3, arg4)	\

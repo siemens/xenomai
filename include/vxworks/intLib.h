@@ -31,7 +31,7 @@ extern "C" {
 #endif
 
 BOOL intContext(void);
-    
+
 #ifdef __cplusplus
 }
 #endif

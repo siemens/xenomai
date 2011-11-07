@@ -33,7 +33,7 @@ static void do_print_usage(void)
 {
 	fprintf(stdout, "usage:\twf_generate [OPTS]\n");
 	fprintf(stdout, "\tOPTS:\t -v, --verbose: verbose output\n");
-	fprintf(stdout, 
+	fprintf(stdout,
 		"\t\t -t, --type: waveform type "
 		"(sine, sawtooth, triangular, steps\n");
 	fprintf(stdout, "\t\t -f, --frequency: waveform frequency\n");
@@ -60,7 +60,7 @@ static int select_type(struct waveform_config *config, char *arg)
 {
 	int err = 0;
 
-	if (!strcmp(arg, "sine")) 
+	if (!strcmp(arg, "sine"))
 		config->wf_kind = WAVEFORM_SINE;
 	else if (!strcmp(arg, "sawtooth"))
 		config->wf_kind = WAVEFORM_SAWTOOTH;
@@ -103,9 +103,9 @@ static int init_config(struct config *cfg, int argc, char *argv[])
 	cfg->wf.spl_frequency = 1000.0;
 	cfg->wf.spl_count = 0;
 
-	while ((err = getopt_long(argc, 
+	while ((err = getopt_long(argc,
 				  argv, "vt:f:a:o:s:O:h", opts, NULL)) >= 0) {
-		
+
 		switch (err) {
 
 		case 'v':
@@ -158,7 +158,7 @@ static int init_config(struct config *cfg, int argc, char *argv[])
 			goto out;
 		}
 	}
-	
+
 	err = 0;
 
 	if (cfg->filename != NULL) {
@@ -175,8 +175,8 @@ static int init_config(struct config *cfg, int argc, char *argv[])
 
 	if (isatty(fileno(cfg->output))) {
 		err = -EINVAL;
-		fprintf(stderr, 
-			"Error: output terminals are not allowed (%s)\n", 
+		fprintf(stderr,
+			"Error: output terminals are not allowed (%s)\n",
 			cfg->filename);
 		goto out;
 	}
@@ -190,7 +190,7 @@ out:
 bad_conversion:
 	fprintf(stderr, "Error:  bad option(s) value(s)\n");
 	do_print_usage();
-	return err;	
+	return err;
 }
 
 int main(int argc, char *argv[])
@@ -198,7 +198,7 @@ int main(int argc, char *argv[])
 	int err = 0;
 	struct config cfg;
 	double *values = NULL;
-	
+
 	err = init_config(&cfg, argc, argv);
 	if (err < 0)
 		goto out;
@@ -215,12 +215,12 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Amplitude: %F\n", cfg.wf.wf_amplitude);
 		fprintf(stderr, "Frequency: %F\n", cfg.wf.wf_frequency);
 		fprintf(stderr, "Offset: %F\n", cfg.wf.wf_offset);
-		fprintf(stderr, 
+		fprintf(stderr,
 			"Sampling frequency: %F\n", cfg.wf.spl_frequency);
 		fprintf(stderr, "Samples count: %d\n", cfg.wf.spl_count);
 		fprintf(stderr, "Output file: %s\n", cfg.filename);
 	}
-	
+
 	values = malloc(cfg.wf.spl_count * sizeof(double));
 	if (!values) {
 		err = -ENOMEM;

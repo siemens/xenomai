@@ -83,7 +83,7 @@ struct xnarch_x8664_initstack {
 	"movq %%r8,"__percpu_arg([gs_canary])"\n\t"			\
 	"jmp 9f\n\t"
 #define xeno_switch_user_canary						\
-  	"movq "__percpu_arg([current_task])",%%rsi\n\t"			\
+	"movq "__percpu_arg([current_task])",%%rsi\n\t"			\
 	"movq %P[user_canary](%%rsi),%%r8\n\t"				\
 	"movq %%r8,"__percpu_arg([gs_canary])"\n\t"
 #define xeno_switch_canary_oparam					\

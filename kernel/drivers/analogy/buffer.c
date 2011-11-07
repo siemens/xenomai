@@ -431,9 +431,9 @@ int a4l_buf_evt(a4l_subd_t *subd, unsigned long evts)
 
 	/* Here we save the data count available for the user side */
 	if (evts == 0) {
-		count = a4l_subd_is_input(subd) ? 
+		count = a4l_subd_is_input(subd) ?
 			__count_to_get(buf) : __count_to_put(buf);
-		wake = __count_to_end(buf) < buf->wake_count ? 
+		wake = __count_to_end(buf) < buf->wake_count ?
 			__count_to_end(buf) : buf->wake_count;
 	} else {
 		/* Even if it is a little more complex, atomic
@@ -654,13 +654,13 @@ int a4l_ioctl_bufcfg2(a4l_cxt_t * cxt, void *arg)
 	}
 
 	if (rtdm_safe_copy_from_user(cxt->user_info,
-				     &buf_cfg, 
+				     &buf_cfg,
 				     arg, sizeof(a4l_bufcfg2_t)) != 0)
 		return -EFAULT;
 
 	if (buf_cfg.wake_count > buf->size) {
 		__a4l_err("a4l_ioctl_bufcfg2: "
-			  "wake-up threshold too big (> buffer size: %lu)\n", 
+			  "wake-up threshold too big (> buffer size: %lu)\n",
 			  buf->size);
 		return -EINVAL;
 	}

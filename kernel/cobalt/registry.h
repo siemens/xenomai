@@ -115,7 +115,7 @@ cobalt_assoc_t *cobalt_assoc_lookup(cobalt_assocq_t *q,
 				  u_long key);
 
 cobalt_assoc_t *cobalt_assoc_remove(cobalt_assocq_t *q,
-                                  u_long key);
+				  u_long key);
 #endif /* !__XENO_SIM__ */
 
 #endif /* COBALT_REGISTRY_H */

@@ -999,11 +999,9 @@ static inline int format_irq_proc(unsigned int irq,
 		xnvfile_puts(it, "         [sync]");
 		return 0;
 #endif /* CONFIG_SMP */
-	default:
-		if (rthal_virtual_irq_p(irq)) {
-			xnvfile_puts(it, "         [virtual]");
-			return 0;
-		}
+	} else	if (rthal_virtual_irq_p(irq)) {
+		xnvfile_puts(it, "         [virtual]");
+		return 0;
 	}
 
 	xnlock_get_irqsave(&intrlock, s);

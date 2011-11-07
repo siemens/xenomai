@@ -86,7 +86,7 @@ static void task_B(u_long a0, u_long a1, u_long a2, u_long a3)
 
 	ret = sm_p(sem_id, SM_WAIT, 0);
 	traceobj_assert(&trobj, ret == SUCCESS);
-    
+
 	ret = t_ident("TSKA", 0, &tid);
 	traceobj_assert(&trobj, ret == SUCCESS && tid == tidA);
 

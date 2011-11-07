@@ -1043,7 +1043,7 @@ int a4l_ni_E_interrupt(unsigned int irq, void *d)
 	if (mite) {
 #if (defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) || \
      defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE_MODULE))
- 		a4l_lock(&devpriv->mite_channel_lock);
+		a4l_lock(&devpriv->mite_channel_lock);
 		if (devpriv->ai_mite_chan) {
 			ai_mite_status = a4l_mite_get_status(devpriv->ai_mite_chan);
 			if (ai_mite_status & CHSR_LINKC)
@@ -5350,9 +5350,9 @@ int a4l_ni_E_init(a4l_dev_t *dev)
 	} else {
 		counter_variant = ni_gpct_variant_e_series;
 	}
-	devpriv->counter_dev = 
+	devpriv->counter_dev =
 		a4l_ni_gpct_device_construct(dev,
-					     &ni_gpct_write_register, 
+					     &ni_gpct_write_register,
 					     &ni_gpct_read_register,
 					     counter_variant, NUM_GPCT);
 

@@ -72,10 +72,10 @@ static inline void xnarch_setup_mayday_page(void *page)
 	/*
 	 * We want this code to appear at the top of the MAYDAY page:
 	 *
-	 * 45 e1 0c 00 	  R5.H = 0xc
-	 * 05 e1 2b 02 	  R5.L = 0x22b
-	 * 05 32       	  P0 = R5
-	 * a0 00       	  EXCPT 0x0
+	 * 45 e1 0c 00	  R5.H = 0xc
+	 * 05 e1 2b 02	  R5.L = 0x22b
+	 * 05 32	  P0 = R5
+	 * a0 00	  EXCPT 0x0
 	 * cd ef          <bug opcode>
 	 *
 	 * We don't mess with ASTAT here, so no need to save/restore

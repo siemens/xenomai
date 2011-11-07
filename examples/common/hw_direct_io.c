@@ -25,7 +25,7 @@
 #include <unistd.h>
 
 #define MAP_SIZE			4096UL
-#define MAP_MASK 			(MAP_SIZE - 1)
+#define MAP_MASK			(MAP_SIZE - 1)
 
 /* board specific, please put in correct values for your HW */
 #define HCU3_LED_REGISTER		0xEF600700

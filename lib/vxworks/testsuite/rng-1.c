@@ -12,19 +12,19 @@ static struct traceobj trobj;
 #define ADD_CONTENT(buffer,bytes,counter)				\
 	{								\
 		char	*bufPtr = buffer;				\
-		for (k=0; k<bytes; k++) { 				\
-			*bufPtr = counter; 				\
-			counter ++; 					\
-			bufPtr ++; 					\
+		for (k=0; k<bytes; k++) {				\
+			*bufPtr = counter;				\
+			counter ++;					\
+			bufPtr ++;					\
 		}							\
 	}
 
-#define CHECK_CONTENT(buffer,bytes,counter) 				\
+#define CHECK_CONTENT(buffer,bytes,counter)				\
 	{								\
 		char	*bufPtr = buffer;			\
-		for (k=0; k<bytes; k++) { 				\
+		for (k=0; k<bytes; k++) {				\
 			traceobj_assert(&trobj, *bufPtr == (char)counter);	\
-			counter ++; 					\
+			counter ++;					\
 			bufPtr ++;					\
 		}							\
 	}

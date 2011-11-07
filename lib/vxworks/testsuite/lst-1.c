@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
 	TASK_ID tid;
 
 	copperplate_init(argc, argv);
-	
+
 	traceobj_init(&trobj, argv[0], 0);
 
 	tid = taskSpawn("rootTask", 50,	0, 0, rootTask,

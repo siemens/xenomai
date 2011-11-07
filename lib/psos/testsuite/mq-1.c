@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
 
 	ret = q_ident("QUEUE", 0, &_qid);
 	traceobj_assert(&trobj, ret == SUCCESS && _qid == qid);
-  
+
 	ret = t_create("root", 1, 0, 0, 0, &tid);
 	traceobj_assert(&trobj, ret == SUCCESS);
 

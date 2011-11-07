@@ -139,7 +139,7 @@ void xnlock_dbg_acquired(struct xnlock *lock, int cpu,
 			 const char *file, int line,
 			 const char *function);
 int xnlock_dbg_release(struct xnlock *lock);
-	
+
 #else /* !XENO_DEBUG(XNLOCK) */
 
 struct xnlock {

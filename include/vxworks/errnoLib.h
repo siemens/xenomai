@@ -67,7 +67,7 @@ extern "C" {
 #endif
 
 void printErrno(int status);
-    
+
 STATUS errnoSet(int status);
 
 int errnoGet(void);
@@ -75,7 +75,7 @@ int errnoGet(void);
 int errnoOfTaskGet(TASK_ID task_id);
 
 STATUS errnoOfTaskSet(TASK_ID task_id, int status);
-         
+
 #ifdef __cplusplus
 }
 #endif

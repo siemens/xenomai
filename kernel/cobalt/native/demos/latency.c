@@ -80,7 +80,7 @@ void latency (void *cookie)
       {
 	long minj = TEN_MILLION, maxj = -TEN_MILLION, dt, sumj;
 	overrun = 0;
- 	test_loops++;
+	test_loops++;
 
 	for (count = sumj = 0; count < nsamples; count++)
 	  {
@@ -214,7 +214,7 @@ void dump_stats (long *histogram, char* kind, double avg)
       {
 	long hits = histogram[n];
 	if (hits) {
-  	    total_hits += hits;
+	    total_hits += hits;
 	    variance += hits * (n-avg) * (n-avg);
 	}
       }

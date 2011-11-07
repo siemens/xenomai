@@ -57,7 +57,7 @@ int semobj_destroy(struct semobj *smobj)
 	 * won't touch this object anymore. We can finalize it
 	 * immediately.
 	 */
- 	fnref_get(finalizer, smobj->finalizer);
+	fnref_get(finalizer, smobj->finalizer);
 	finalizer(smobj);
 
 	return 0;
@@ -120,7 +120,7 @@ static void semobj_finalize(struct syncobj *sobj)
 	struct semobj *smobj = container_of(sobj, struct semobj, core.sobj);
 	void (*finalizer)(struct semobj *smobj);
 
- 	fnref_get(finalizer, smobj->finalizer);
+	fnref_get(finalizer, smobj->finalizer);
 	finalizer(smobj);
 }
 fnref_register(libcopperplate, semobj_finalize);

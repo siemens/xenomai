@@ -57,7 +57,7 @@ RTIME alchemy_rel2abs_timeout(RTIME timeout)
 
 struct timespec *alchemy_get_timespec(RTIME timeout, struct timespec *tmp)
 {
- 	if (timeout == TM_INFINITE)
+	if (timeout == TM_INFINITE)
 		return NULL;
 
 	if (timeout == TM_NONBLOCK)

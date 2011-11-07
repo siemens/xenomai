@@ -104,7 +104,7 @@
  * @{ */
 #define RTSER_5_BITS			0x00
 #define RTSER_6_BITS			0x01
-#define RTSER_7_BITS 			0x02
+#define RTSER_7_BITS			0x02
 #define RTSER_8_BITS			0x03
 #define RTSER_DEF_BITS			RTSER_8_BITS
 /** @} */

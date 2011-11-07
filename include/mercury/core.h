@@ -23,7 +23,7 @@
 #include <mercury/trace.h>
 
 /* Private signal used for unblocking from syscalls. */
-#define SIGRELS  	(SIGRTMIN + 9)
+#define SIGRELS	(SIGRTMIN + 9)
 
 #define cpu_relax()	do { } while (0)
 

@@ -162,7 +162,7 @@ static u_long __q_delete(u_long qid, u_long flags)
 		syncobj_unlock(&q->sobj, &syns);
 		COPPERPLATE_UNPROTECT(svc);
 		return (flags & Q_VARIABLE) ? ERR_NOTVARQ: ERR_VARQ;
-		
+
 	}
 
 	emptyq = list_empty(&q->msg_list);
@@ -238,7 +238,7 @@ static u_long __q_send_inner(struct psos_queue *q, unsigned long flags,
 	struct threadobj *thobj;
 	struct msgholder *msg;
 	u_long maxbytes;
-	
+
 	thobj = syncobj_peek_at_pend(&q->sobj);
 	if (thobj && threadobj_local_p(thobj)) {
 		/* Fast path: direct copy to the receiver's buffer. */
@@ -290,7 +290,7 @@ static u_long __q_send(u_long qid, u_long flags, u_long *buffer, u_long bytes)
 	struct psos_queue *q;
 	struct service svc;
 	int ret;
-	
+
 	q = get_queue_from_id(qid, &ret);
 	if (q == NULL)
 		return ret;

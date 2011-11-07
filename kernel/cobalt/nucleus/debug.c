@@ -456,7 +456,7 @@ static int relax_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 			       p->spot.backtrace[n].mapname ?: "?");
 
 	xnvfile_printf(it, ".\n");
-		
+
 	return 0;
 }
 

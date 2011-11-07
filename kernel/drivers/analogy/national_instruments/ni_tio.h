@@ -533,8 +533,8 @@ struct ni_gpct_device {
 	a4l_lock_t regs_lock;
 };
 
-#define Gi_Auto_Increment_Mask 		0xff
-#define Gi_Up_Down_Shift 		5
+#define Gi_Auto_Increment_Mask		0xff
+#define Gi_Up_Down_Shift		5
 
 #define Gi_Arm_Bit			0x1
 #define Gi_Save_Trace_Bit		0x2
@@ -555,7 +555,7 @@ struct ni_gpct_device {
 #define Gi_Save_Trace_Copy_Bit		0x4000
 #define Gi_Disarm_Copy_Bit		0x8000
 
-#define Gi_Index_Phase_Bitshift 	5
+#define Gi_Index_Phase_Bitshift	5
 #define Gi_HW_Arm_Select_Shift		8
 
 #define Gi_Counting_Mode_Mask		0x7
@@ -965,7 +965,7 @@ static inline unsigned int Gi_TC_Error_Confirm_Bit(unsigned int counter_index)
 
 /* Bits that are the same in G0/G2 and G1/G3 interrupt acknowledge registers */
 #define Gi_TC_Interrupt_Ack_Bit		0x4000
-#define Gi_Gate_Interrupt_Ack_Bit 	0x8000
+#define Gi_Gate_Interrupt_Ack_Bit	0x8000
 
 #define Gi_Gate_Interrupt_Bit	0x4
 #define Gi_TC_Bit		0x8
@@ -997,7 +997,7 @@ static inline unsigned int Gi_Gate_Interrupt_Enable_Bit(unsigned int counter_ind
 /* Mode bits for NI general-purpose counters, set with
    INSN_CONFIG_SET_COUNTER_MODE */
 #define NI_GPCT_COUNTING_MODE_SHIFT		16
-#define NI_GPCT_INDEX_PHASE_BITSHIFT 		20
+#define NI_GPCT_INDEX_PHASE_BITSHIFT		20
 #define NI_GPCT_COUNTING_DIRECTION_SHIFT	24
 
 #define NI_GPCT_GATE_ON_BOTH_EDGES_BIT		0x4
@@ -1090,8 +1090,8 @@ static inline unsigned int Gi_Gate_Interrupt_Enable_Bit(unsigned int counter_ind
 /* M-series "second gate" sources are unknown, we should add them here
    with an offset of 0x300 when known. */
 #define NI_GPCT_DISABLED_GATE_SELECT		0x8000
-#define NI_GPCT_GATE_PIN_GATE_SELECT(x) 	(0x102 + x)
-#define NI_GPCT_RTSI_GATE_SELECT(x) 		NI_USUAL_RTSI_SELECT(x)
+#define NI_GPCT_GATE_PIN_GATE_SELECT(x)	(0x102 + x)
+#define NI_GPCT_RTSI_GATE_SELECT(x)		NI_USUAL_RTSI_SELECT(x)
 #define NI_GPCT_PFI_GATE_SELECT(x)		NI_USUAL_PFI_SELECT(x)
 #define NI_GPCT_UP_DOWN_PIN_GATE_SELECT(x)	(0x202 + x)
 

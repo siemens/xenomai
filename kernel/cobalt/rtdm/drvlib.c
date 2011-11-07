@@ -1852,7 +1852,7 @@ static int rtdm_mmap_buffer(struct file *filp, struct vm_area_struct *vma)
 	vma->vm_pgoff = paddr >> PAGE_SHIFT;
 #endif /* CONFIG_MMU */
 	if (mmap_data->src_paddr)
-	  	ret = xnarch_remap_io_page_range(filp, vma, maddr, paddr,
+		ret = xnarch_remap_io_page_range(filp, vma, maddr, paddr,
 						 size, PAGE_SHARED);
 	else {
 		ret = xnarch_remap_kmem_page_range(vma, maddr, paddr,

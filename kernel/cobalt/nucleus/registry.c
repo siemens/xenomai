@@ -1218,8 +1218,8 @@ EXPORT_SYMBOL_GPL(xnregistry_put);
 
 void *xnregistry_fetch(xnhandle_t handle)
 {
- 	if (handle == XNOBJECT_SELF)
- 		return xnpod_primary_p()? xnpod_current_thread() : NULL;
+	if (handle == XNOBJECT_SELF)
+		return xnpod_primary_p()? xnpod_current_thread() : NULL;
 
 	return xnregistry_lookup(handle);
 }

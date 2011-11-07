@@ -58,9 +58,9 @@ static inline int check_abi_revision(unsigned long abirev)
 static inline const char *get_feature_label (unsigned feature)
 {
     switch (feature) {
-    	case __xn_feat_x86_sep:
+	case __xn_feat_x86_sep:
 	    return "sep";
-    	default:
+	default:
 	    return get_generic_feature_label(feature);
     }
 }

@@ -92,17 +92,17 @@ STATUS taskPriorityGet(TASK_ID tid,
 		       int *pprio);
 
 void taskExit(int code);
-    
+
 STATUS taskLock(void);
 
 STATUS taskUnlock(void);
 
 TASK_ID taskIdSelf(void);
-    
+
 STATUS taskSafe(void);
 
 STATUS taskUnsafe(void);
-    
+
 STATUS taskDelay(int ticks);
 
 STATUS taskIdVerify(TASK_ID tid);

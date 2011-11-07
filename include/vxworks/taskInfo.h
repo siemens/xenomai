@@ -49,7 +49,7 @@ const char *taskName(TASK_ID task_id);
 TASK_ID taskNameToId(const char *name);
 
 TASK_ID taskIdDefault(TASK_ID task_id);
-    
+
 BOOL taskIsReady(TASK_ID task_id);
 
 BOOL taskIsSuspended (TASK_ID task_id);
