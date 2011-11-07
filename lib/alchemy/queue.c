@@ -325,6 +325,8 @@ int rt_queue_write(RT_QUEUE *queue,
 	if (ret == 0 && (mode & Q_BROADCAST))
 		/* Nobody received, free the temp buffer. */
 		rt_queue_free(queue, _buf);
+
+	return ret;
 }
 
 ssize_t rt_queue_receive_until(RT_QUEUE *queue,
