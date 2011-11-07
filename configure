@@ -12581,9 +12581,9 @@ $as_echo "#define CONFIG_XENO_ARM_SA1100 1" >>confdefs.h
 test x$CONFIG_XENO_CPU_XSC3 = xy &&
 $as_echo "#define CONFIG_XENO_CPU_XSC3 1" >>confdefs.h
 
-test $XNARCH_ARM_TSC_TYPE &&
+test $CONFIG_XENO_ARM_TSC_TYPE &&
 cat >>confdefs.h <<_ACEOF
-#define XNARCH_ARM_TSC_TYPE $XNARCH_ARM_TSC_TYPE
+#define CONFIG_XENO_ARM_TSC_TYPE $CONFIG_XENO_ARM_TSC_TYPE
 _ACEOF
 
  if test "$enable_shared" = 'yes'; then
