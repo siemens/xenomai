@@ -333,13 +333,13 @@ static void *alloc_block(struct heap *heap, size_t size)
 				--heap->buckets[ilog].fcount;
 
 			/* Search for the source extent of block. */
-			extent = NULL;
 			__list_for_each_entry(heap, extent, &heap->extents, link) {
 				if (__moff(heap, block) >= extent->membase &&
 				    __moff(heap, block) < extent->memlim)
-					break;
+					goto found;
 			}
-			assert(extent != NULL);
+			assert(0);
+		found:
 			pnum = (__moff(heap, block) - extent->membase) >> HOBJ_PAGE_SHIFT;
 			++extent->pagemap[pnum].bcount;
 		}
@@ -368,7 +368,7 @@ static int free_block(struct heap *heap, void *block)
 	caddr_t freepage, lastpage, nextpage, tailpage, freeptr;
 	int log2size, ret = 0, nblocks, xpage, ilog;
 	size_t pnum, pcont, boffset, bsize, npages;
-	struct heap_extent *extent = NULL;
+	struct heap_extent *extent;
 	memoff_t *tailptr;
 
 	write_lock_nocancel(&heap->lock);
@@ -380,14 +380,12 @@ static int free_block(struct heap *heap, void *block)
 	__list_for_each_entry(heap, extent, &heap->extents, link) {
 		if (__moff(heap, block) >= extent->membase &&
 		    __moff(heap, block) < extent->memlim)
-			break;
+			goto found;
 	}
 
-	if (extent == NULL) {
-		ret = -EFAULT;
-		goto out;
-	}
-
+	ret = -EFAULT;
+	goto out;
+found:
 	/* Compute the heading page number in the page map. */
 	pnum = (__moff(heap, block) - extent->membase) >> HOBJ_PAGE_SHIFT;
 	boffset = (__moff(heap, block) -
@@ -521,7 +519,7 @@ out:
 static size_t check_block(struct heap *heap, void *block)
 {
 	size_t pnum, boffset, bsize, ret = 0;
-	struct heap_extent *extent = NULL;
+	struct heap_extent *extent;
 	int ptype;
 
 	read_lock_nocancel(&heap->lock);
@@ -532,11 +530,10 @@ static size_t check_block(struct heap *heap, void *block)
 	__list_for_each_entry(heap, extent, &heap->extents, link) {
 		if (__moff(heap, block) >= extent->membase &&
 		    __moff(heap, block) < extent->memlim)
-			break;
+			goto found;
 	}
-	if (extent == NULL)
-		goto out;
-
+	goto out;
+found:
 	/* Compute the heading page number in the page map. */
 	pnum = (__moff(heap, block) - extent->membase) >> HOBJ_PAGE_SHIFT;
 	ptype = extent->pagemap[pnum].type;
