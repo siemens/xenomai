@@ -16,7 +16,10 @@ TESTS :=	\
 	task-2	\
 	task-3	\
 	task-4	\
-	task-5
+	task-5	\
+	mq-1	\
+	mq-2	\
+	mq-3
 
 CFLAGS := $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --skin=alchemy --cflags) -g
 LDFLAGS := $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --skin=alchemy --ldflags)
