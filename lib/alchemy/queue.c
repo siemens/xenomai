@@ -312,6 +312,7 @@ int rt_queue_write(RT_QUEUE *queue,
 		   const void *buf, size_t size, int mode)
 {
 	void *_buf;
+	int ret;
 
 	_buf = rt_queue_alloc(queue, size);
 	if (_buf == NULL)
@@ -320,7 +321,10 @@ int rt_queue_write(RT_QUEUE *queue,
 	if (size > 0)
 		memcpy(_buf, buf, size);
 
-	return rt_queue_send(queue, _buf, size, mode);
+	ret = rt_queue_send(queue, _buf, size, mode);
+	if (ret == 0 && (mode & Q_BROADCAST))
+		/* Nobody received, free the temp buffer. */
+		rt_queue_free(queue, _buf);
 }
 
 ssize_t rt_queue_receive_until(RT_QUEUE *queue,
