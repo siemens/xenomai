@@ -76,7 +76,7 @@ int rt_queue_free(RT_QUEUE *queue,
 		  void *buf);
 
 int rt_queue_send(RT_QUEUE *queue,
-		  void *buf,
+		  const void *buf,
 		  size_t size,
 		  int mode);
 

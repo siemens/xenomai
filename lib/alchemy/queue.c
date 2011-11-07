@@ -93,7 +93,7 @@ int rt_queue_create(RT_QUEUE *queue, const char *name,
 	if (threadobj_irq_p())
 		return -EPERM;
 
-	if (poolsize == 0)
+	if (poolsize == 0 || (mode & ~Q_PRIO) != 0)
 		return -EINVAL;
 
 	COPPERPLATE_PROTECT(svc);
@@ -239,7 +239,7 @@ out:
 }
 
 int rt_queue_send(RT_QUEUE *queue,
-		  void *buf, size_t size, int mode)
+		  const void *buf, size_t size, int mode)
 {
 	struct alchemy_queue_wait *wait;
 	struct alchemy_queue_msg *msg;
@@ -343,8 +343,8 @@ ssize_t rt_queue_receive_until(RT_QUEUE *queue,
 		goto out;
 	}
 
-	msg = list_pop_entry(&qcb->mq, struct alchemy_queue_msg, next);
-	if (msg) {
+	if (!list_empty(&qcb->mq)) {
+		msg = list_pop_entry(&qcb->mq, struct alchemy_queue_msg, next);
 		msg->refcount++;
 		*bufp = msg + 1;
 		ret = (ssize_t)msg->size;
@@ -403,6 +403,7 @@ ssize_t rt_queue_read_until(RT_QUEUE *queue,
 {
 	ssize_t rsize;
 	void *_buf;
+	int ret;
 
 	rsize = rt_queue_receive_until(queue, &_buf, timeout);
 	if (rsize < 0)
@@ -414,7 +415,9 @@ ssize_t rt_queue_read_until(RT_QUEUE *queue,
 	if (size > 0)
 		memcpy(buf, _buf, size);
 
-	rt_queue_free(queue, _buf);
+	ret = rt_queue_free(queue, _buf);
+	if (ret)
+		return __bt(ret);
 
 	return rsize;
 }
