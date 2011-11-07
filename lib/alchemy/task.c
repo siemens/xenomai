@@ -728,7 +728,8 @@ ssize_t rt_task_send_until(RT_TASK *task,
 	struct alchemy_task *tcb;
 	struct syncstate syns;
 	struct service svc;
-	int ret = 0;
+	ssize_t ret;
+	int err;
 
 	current = threadobj_current();
 	if (current == NULL)
@@ -736,9 +737,11 @@ ssize_t rt_task_send_until(RT_TASK *task,
 
 	COPPERPLATE_PROTECT(svc);
 
-	tcb = get_alchemy_task(task, &ret);
-	if (tcb == NULL)
+	tcb = get_alchemy_task(task, &err);
+	if (tcb == NULL) {
+		ret = err;
 		goto out;
+	}
 
 	/*
 	 * If we grabbed a lock on the remote task successfully, then
@@ -773,7 +776,13 @@ ssize_t rt_task_send_until(RT_TASK *task,
 
 	wait->request = *mcb_s;
 	wait->request.flowid = tcb->flowgen;
-	wait->reply.size = mcb_r ? mcb_r->size : 0;
+	if (mcb_r) {
+		wait->reply.data = mcb_r->data;
+		wait->reply.size = mcb_r->size;
+	} else {
+		wait->reply.data = NULL;
+		wait->reply.size = 0;
+	}
 
 	if (syncobj_drain_count(&tcb->sobj_msg))
 		syncobj_signal_drain(&tcb->sobj_msg);
@@ -787,6 +796,7 @@ ssize_t rt_task_send_until(RT_TASK *task,
 			goto out;
 		goto done;
 	}
+	ret = wait->reply.size;
 
 	threadobj_finish_wait();
 done:
@@ -909,13 +919,17 @@ int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
 	 * it back any reply data. What is invalid is sending a
 	 * response larger than what the client expects.
 	 */
-	if (mcb_r->size < size)
-		ret = -ENOBUFS;
-	else if (size > 0)
-		memcpy(mcb_r->data, mcb_s->data, size);
+	if (mcb_r->size < size) {
+		ret = -ENOBUFS;	/* Client will get this too. */
+		mcb_r->size = -ENOBUFS;
+	} else {
+		ret = 0;
+		mcb_r->size = size;
+		if (size > 0)
+			memcpy(mcb_r->data, mcb_s->data, size);
+	}
 
 	mcb_r->flowid = flowid;
-	mcb_r->size = size;
 	mcb_r->opcode = mcb_s ? mcb_s->opcode : 0;
 done:
 	syncobj_unlock(&current->sobj_msg, &syns);

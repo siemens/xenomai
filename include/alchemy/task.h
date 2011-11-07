@@ -51,8 +51,8 @@ typedef struct RT_TASK RT_TASK;
 struct RT_TASK_MCB {
 	int flowid;
 	int opcode;
-	caddr_t data;
-	size_t size;
+	void *data;
+	ssize_t size;
 };
 
 typedef struct RT_TASK_MCB RT_TASK_MCB;
