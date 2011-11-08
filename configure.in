@@ -713,6 +713,10 @@ AC_ARG_WITH(testdir,
     ], [XENO_TEST_DIR=$bindir])
 AC_MSG_RESULT($XENO_TEST_DIR)
 
+AC_MSG_CHECKING([for test source generation])
+AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+    [AC_MSG_RESULT(ok)], [AC_MSG_RESULT(failed)], [AC_MSG_RESULT(untestable)])
+
 dnl
 dnl Build the Makefiles
 dnl
