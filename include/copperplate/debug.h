@@ -75,6 +75,8 @@ char *__get_error_buf(size_t *sizep);
 
 int debug_pkg_init(void);
 
+void debug_pkg_activate(void);
+
 #ifdef __cplusplus
 }
 #endif
@@ -122,6 +124,7 @@ struct backtrace_data {
 	})
 
 #define debug_pkg_init()	({ 0; })
+#define debug_pkg_activate()	({ 0; })
 
 #endif /* !__XENO_DEBUG__ */
 
