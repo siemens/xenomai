@@ -274,7 +274,6 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 ACLOCAL_AMFLAGS = -I m4
 testdir = @XENO_TEST_DIR@
-pkgdir = $(pkgdatadir)
 bin_SCRIPTS = xeno-regression-test
 SUBDIRS = native posix native+posix
 EXTRA_DIST = xeno-regression-test.in
@@ -666,7 +665,7 @@ uninstall-am: uninstall-binSCRIPTS
 
 
 xeno-regression-test: $(srcdir)/xeno-regression-test.in Makefile
-	sed "s,@testdir@,$(testdir),;s,@pkgdir@,$(pkgdir)," $< > $@
+	sed "s,@testdir@,$(testdir)," $< > $@
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

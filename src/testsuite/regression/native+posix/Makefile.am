@@ -1,4 +1,4 @@
-tstdir = $(pkgdatadir)/regression/native+posix
+tstdir = @XENO_TEST_DIR@/regression/native+posix
 
 tst_PROGRAMS = mq_select
 

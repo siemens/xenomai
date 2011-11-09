@@ -1,4 +1,4 @@
-tstdir = $(pkgdatadir)/regression/native
+tstdir = @XENO_TEST_DIR@/regression/native
 
 noinst_HEADERS = check.h
 
