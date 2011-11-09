@@ -134,7 +134,6 @@ typedef struct
 #include <sched.h>
 #include_next <pthread.h>
 #include <nucleus/thread.h>
-#include <nucleus/intr.h>
 #include <cobalt/wrappers.h>
 
 struct timespec;
@@ -154,12 +153,6 @@ struct timespec;
 #define PTHREAD_WARNSW     XNTRAPSW
 #define PTHREAD_LOCK_SCHED XNLOCK
 #define PTHREAD_CONFORMING XNTHREAD_STATE_SPARE1
-
-#define PTHREAD_INOAUTOENA  XN_ISR_NOENABLE
-#define PTHREAD_IPROPAGATE  XN_ISR_PROPAGATE
-
-#define PTHREAD_IENABLE     0
-#define PTHREAD_IDISABLE    1
 
 struct cobalt_mutexattr {
 	unsigned magic: 24;
@@ -459,6 +452,12 @@ int pthread_getschedparam_ex(pthread_t tid,
 int pthread_setschedparam_ex(pthread_t tid,
 			     int pol,
 			     const struct sched_param_ex *par);
+
+COBALT_DECL(int, pthread_attr_setschedpolicy(pthread_attr_t *attr,
+					     int policy));
+
+COBALT_DECL(int, pthread_attr_setschedparam(pthread_attr_t *attr,
+					    const struct sched_param *par));
 
 COBALT_DECL(int, pthread_create(pthread_t *tid,
 				const pthread_attr_t *attr,
