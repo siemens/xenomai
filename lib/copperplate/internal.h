@@ -69,6 +69,10 @@ pid_t copperplate_get_tid(void);
 
 int copperplate_probe_node(unsigned int id);
 
+int copperplate_create_thread(int prio,
+			      void *(*start)(void *arg), void *arg,
+			      size_t stacksize,
+			      pthread_t *tid);
 #ifdef __cplusplus
 }
 #endif

@@ -31,6 +31,7 @@
 #include "copperplate/timerobj.h"
 #include "copperplate/clockobj.h"
 #include "copperplate/debug.h"
+#include "internal.h"
 
 static sem_t svsem;
 
@@ -132,8 +133,6 @@ static void *timerobj_server(void *arg)
 
 static int timerobj_spawn_server(void)
 {
-	struct sched_param param;
-	pthread_attr_t thattr;
 	int ret = 0;
 
 	push_cleanup_lock(&svlock);
@@ -142,17 +141,15 @@ static int timerobj_spawn_server(void)
 	if (svthread)
 		goto out;
 
-	pthread_attr_init(&thattr);
-	pthread_attr_setschedpolicy(&thattr, SCHED_RT);
-	memset(&param, 0, sizeof(param));
-	param.sched_priority = threadobj_irq_prio;
-	pthread_attr_setschedparam(&thattr, &param);
-	ret = __RT(pthread_create(&svthread, &thattr, timerobj_server, NULL));
+	ret = __bt(copperplate_create_thread(threadobj_irq_prio,
+					     timerobj_server, NULL,
+					     PTHREAD_STACK_MIN * 16,
+					     &svthread));
 out:
 	read_unlock(&svlock);
 	pop_cleanup_lock(&svlock);
 
-	return __bt(ret);
+	return ret;
 }
 
 int timerobj_init(struct timerobj *tmobj)

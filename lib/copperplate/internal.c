@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <errno.h>
+#include <limits.h>
 #include <linux/unistd.h>
 #include <copperplate/clockobj.h>
 #include <copperplate/threadobj.h>
@@ -64,11 +65,65 @@ int copperplate_probe_node(unsigned int id)
 	return pthread_probe_np((pid_t)id) == 0;
 }
 
+int copperplate_create_thread(int prio,
+			      void *(*start)(void *arg), void *arg,
+			      size_t stacksize,
+			      pthread_t *tid)
+{
+	struct sched_param_ex param_ex;
+	pthread_attr_ex_t attr_ex;
+	int policy, ret;
+
+	if (stacksize < PTHREAD_STACK_MIN * 4)
+		stacksize = PTHREAD_STACK_MIN * 4;
+
+	param_ex.sched_priority = prio;
+	policy = prio ? SCHED_RT : SCHED_OTHER;
+	pthread_attr_init_ex(&attr_ex);
+	pthread_attr_setinheritsched_ex(&attr_ex, PTHREAD_EXPLICIT_SCHED);
+	pthread_attr_setschedpolicy_ex(&attr_ex, policy);
+	pthread_attr_setschedparam_ex(&attr_ex, &param_ex);
+	pthread_attr_setstacksize_ex(&attr_ex, stacksize);
+	pthread_attr_setscope_ex(&attr_ex, thread_scope_attribute);
+	pthread_attr_setdetachstate_ex(&attr_ex, PTHREAD_CREATE_JOINABLE);
+	ret = __bt(-pthread_create_ex(tid, &attr_ex, start, arg));
+	pthread_attr_destroy_ex(&attr_ex);
+
+	return ret;
+}
+
 #else /* CONFIG_XENO_MERCURY */
 
 int copperplate_probe_node(unsigned int id)
 {
 	return kill((pid_t)id, 0) == 0;
+}
+
+int copperplate_create_thread(int prio,
+			      void *(*start)(void *arg), void *arg,
+			      size_t stacksize,
+			      pthread_t *tid)
+{
+	struct sched_param param;
+	pthread_attr_t attr;
+	int policy, ret;
+
+	if (stacksize < PTHREAD_STACK_MIN * 4)
+		stacksize = PTHREAD_STACK_MIN * 4;
+
+	param.sched_priority = prio;
+	policy = prio ? SCHED_RT : SCHED_OTHER;
+	pthread_attr_init(&attr);
+	pthread_attr_setinheritsched(&attr, PTHREAD_EXPLICIT_SCHED);
+	pthread_attr_setschedpolicy(&attr, policy);
+	pthread_attr_setschedparam(&attr, &param);
+	pthread_attr_setstacksize(&attr, stacksize);
+	pthread_attr_setscope(&attr, thread_scope_attribute);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+	ret = __bt(-pthread_create(tid, &attr, start, arg));
+	pthread_attr_destroy(&attr);
+
+	return ret;
 }
 
 #endif  /* CONFIG_XENO_MERCURY */

@@ -19,11 +19,11 @@
 #include <assert.h>
 #include <sched.h>
 #include <pthread.h>
-#include <limits.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
-#include <copperplate/heapobj.h>
+#include "copperplate/heapobj.h"
+#include "copperplate/internal.h"
 #include "internal.h"
 #include "task.h"
 #include "buffer.h"
@@ -278,10 +278,8 @@ int rt_task_create(RT_TASK *task, const char *name,
 		   int stksize, int prio, int mode)
 {
 	struct alchemy_task *tcb;
-	struct sched_param param;
-	pthread_attr_t thattr;
 	struct service svc;
-	int policy, ret;
+	int ret;
 
 	COPPERPLATE_PROTECT(svc);
 
@@ -293,24 +291,8 @@ int rt_task_create(RT_TASK *task, const char *name,
 	task->handle = mainheap_ref(tcb, uintptr_t);
 	tcb->self = *task;
 
-	pthread_attr_init(&thattr);
-
-	if (stksize < PTHREAD_STACK_MIN * 4)
-		stksize = PTHREAD_STACK_MIN * 4;
-
-	memset(&param, 0, sizeof(param));
-	param.sched_priority = prio;
-	policy = prio ? SCHED_RT : SCHED_OTHER;
-	pthread_attr_setinheritsched(&thattr, PTHREAD_EXPLICIT_SCHED);
-	pthread_attr_setschedpolicy(&thattr, policy);
-	pthread_attr_setschedparam(&thattr, &param);
-	pthread_attr_setstacksize(&thattr, stksize);
-	pthread_attr_setscope(&thattr, thread_scope_attribute);
-	pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_JOINABLE);
-
-	ret = __bt(-__RT(pthread_create(&tcb->thobj.tid, &thattr,
-					task_trampoline, tcb)));
-	pthread_attr_destroy(&thattr);
+	ret = __bt(copperplate_create_thread(prio, task_trampoline, tcb,
+					     stksize, &tcb->thobj.tid));
 	if (ret)
 		delete_tcb(tcb);
 out:

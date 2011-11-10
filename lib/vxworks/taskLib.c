@@ -26,15 +26,15 @@
 #include <assert.h>
 #include <fcntl.h>
 #include <sched.h>
-#include <limits.h>
 #include "taskLib.h"
 #include "tickLib.h"
-#include <copperplate/init.h>
-#include <copperplate/heapobj.h>
-#include <copperplate/threadobj.h>
-#include <copperplate/syncobj.h>
-#include <copperplate/cluster.h>
-#include <vxworks/errnoLib.h>
+#include "copperplate/init.h"
+#include "copperplate/heapobj.h"
+#include "copperplate/threadobj.h"
+#include "copperplate/syncobj.h"
+#include "copperplate/cluster.h"
+#include "copperplate/internal.h"
+#include "vxworks/errnoLib.h"
 
 union wind_wait_union {
 };
@@ -312,8 +312,6 @@ static STATUS __taskInit(struct wind_task *task,
 {
 	struct threadobj_init_data idata;
 	pthread_mutexattr_t mattr;
-	struct sched_param param;
-	pthread_attr_t thattr;
 	int ret, cprio;
 
 	ret = check_task_priority(prio, &cprio);
@@ -352,22 +350,6 @@ static STATUS __taskInit(struct wind_task *task,
 	tcb->flags = flags;
 	tcb->entry = entry;
 
-	pthread_attr_init(&thattr);
-
-	if (stacksize == 0)
-		stacksize = PTHREAD_STACK_MIN * 4;
-	else if (stacksize < PTHREAD_STACK_MIN)
-		stacksize = PTHREAD_STACK_MIN;
-
-	memset(&param, 0, sizeof(param));
-	param.sched_priority = cprio;
-	pthread_attr_setinheritsched(&thattr, PTHREAD_EXPLICIT_SCHED);
-	pthread_attr_setschedpolicy(&thattr, SCHED_RT);
-	pthread_attr_setschedparam(&thattr, &param);
-	pthread_attr_setstacksize(&thattr, stacksize);
-	pthread_attr_setscope(&thattr, thread_scope_attribute);
-	pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_JOINABLE);
-
 	idata.magic = task_magic;
 	idata.wait_hook = task_wait_hook;
 	idata.suspend_hook = task_suspend_hook;
@@ -386,9 +368,8 @@ static STATUS __taskInit(struct wind_task *task,
 
 	registry_init_file(&task->fsobj, &registry_ops);
 
-	ret = __bt(-__RT(pthread_create(&task->thobj.tid, &thattr,
-					&task_trampoline, task)));
-	pthread_attr_destroy(&thattr);
+	ret = __bt(copperplate_create_thread(cprio, task_trampoline, task,
+					     stacksize, &task->thobj.tid));
 	if (ret) {
 		registry_destroy_file(&task->fsobj);
 		cluster_delobj(&wind_task_table, &task->cobj);

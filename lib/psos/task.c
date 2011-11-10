@@ -25,14 +25,14 @@
 #include <pthread.h>
 #include <assert.h>
 #include <sched.h>
-#include <limits.h>
-#include <copperplate/init.h>
-#include <copperplate/heapobj.h>
-#include <copperplate/threadobj.h>
-#include <copperplate/syncobj.h>
-#include <copperplate/clockobj.h>
-#include <copperplate/cluster.h>
-#include <psos/psos.h>
+#include "copperplate/init.h"
+#include "copperplate/heapobj.h"
+#include "copperplate/threadobj.h"
+#include "copperplate/syncobj.h"
+#include "copperplate/clockobj.h"
+#include "copperplate/cluster.h"
+#include "copperplate/internal.h"
+#include "psos/psos.h"
 #include "internal.h"
 #include "task.h"
 #include "tm.h"
@@ -247,9 +247,7 @@ u_long t_create(const char *name, u_long prio,
 		u_long sstack, u_long ustack, u_long flags, u_long *tid_r)
 {
 	struct threadobj_init_data idata;
-	struct sched_param param;
 	struct psos_task *task;
-	pthread_attr_t thattr;
 	struct syncstate syns;
 	struct service svc;
 	int ret, cprio = 1;
@@ -304,22 +302,6 @@ u_long t_create(const char *name, u_long prio,
 		goto fail;
 	}
 
-	pthread_attr_init(&thattr);
-
-	if (ustack == 0)
-		ustack = PTHREAD_STACK_MIN * 4;
-	else if (ustack < PTHREAD_STACK_MIN)
-		ustack = PTHREAD_STACK_MIN;
-
-	memset(&param, 0, sizeof(param));
-	param.sched_priority = cprio;
-	pthread_attr_setinheritsched(&thattr, PTHREAD_EXPLICIT_SCHED);
-	pthread_attr_setschedpolicy(&thattr, SCHED_RT);
-	pthread_attr_setschedparam(&thattr, &param);
-	pthread_attr_setstacksize(&thattr, ustack);
-	pthread_attr_setscope(&thattr, thread_scope_attribute);
-	pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_JOINABLE);
-
 	idata.magic = task_magic;
 	idata.wait_hook = NULL;
 	idata.suspend_hook = NULL;
@@ -327,9 +309,8 @@ u_long t_create(const char *name, u_long prio,
 	idata.priority = cprio;
 	threadobj_init(&task->thobj, &idata);
 
-	ret = __bt(-__RT(pthread_create(&task->thobj.tid, &thattr,
-					&task_trampoline, task)));
-	pthread_attr_destroy(&thattr);
+	ret = __bt(copperplate_create_thread(cprio, task_trampoline, task,
+					     ustack, &task->thobj.tid));
 	if (ret) {
 		cluster_delobj(&psos_task_table, &task->cobj);
 		threadobj_destroy(&task->thobj);

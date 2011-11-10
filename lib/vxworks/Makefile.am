@@ -27,7 +27,8 @@ libvxworks_la_SOURCES = \
 
 libvxworks_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
-	-I$(top_srcdir)/include
+	-I$(top_srcdir)/include \
+	-I$(top_srcdir)/lib
 
 EXTRA_DIST = testsuite
 
