@@ -207,16 +207,19 @@ static int __tid_probe(pid_t h_tid)
 	return ret;
 }
 
-static int __pthread_create(unsigned long tid,
-			    int policy, int sched_prio,
+static int __pthread_create(unsigned long tid, int policy,
+			    struct sched_param_ex __user *u_param,
 			    unsigned long __user *u_mode)
 {
 	struct task_struct *p = current;
+	struct sched_param_ex param;
 	struct cobalt_hkey hkey;
 	pthread_attr_t attr;
 	pthread_t k_tid;
-	int err;
+	int ret;
 
+	if (__xn_safe_copy_from_user(&param, u_param, sizeof(param)))
+		return -EFAULT;
 	/*
 	 * We have been passed the pthread_t identifier the user-space
 	 * POSIX library has assigned to our caller; we'll index our
@@ -233,25 +236,31 @@ static int __pthread_create(unsigned long tid,
 	pthread_attr_init(&attr);
 	attr.policy = policy;
 	attr.detachstate = PTHREAD_CREATE_DETACHED;
-	attr.schedparam_ex.sched_priority = sched_prio;
+	attr.schedparam_ex = param;
 	attr.fp = 1;
 	attr.name = p->comm;
 
-	err = pthread_create(&k_tid, &attr, NULL, NULL);
+	ret = pthread_create(&k_tid, &attr, NULL, NULL);
+	if (ret)
+		return -ret;
 
-	if (err)
-		return -err;	/* Conventionally, our error codes are negative. */
+	ret = xnshadow_map(&k_tid->threadbase, NULL, u_mode);
+	if (ret)
+		goto fail;
 
-	err = xnshadow_map(&k_tid->threadbase, NULL, u_mode);
-	if (err == 0 && !__pthread_hash(&hkey, k_tid, task_pid_vnr(p)))
-		err = -ENOMEM;
+	if (!__pthread_hash(&hkey, k_tid, task_pid_vnr(p))) {
+		ret = -ENOMEM;
+		goto fail;
+	}
 
-	if (err)
-		cobalt_thread_abort(k_tid, NULL);
-	else
-		k_tid->hkey = hkey;
+	k_tid->hkey = hkey;
 
-	return err;
+	return 0;
+
+fail:
+	cobalt_thread_abort(k_tid, NULL);
+
+	return ret;
 }
 
 #define __pthread_detach  __cobalt_call_not_available

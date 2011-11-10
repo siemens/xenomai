@@ -258,11 +258,11 @@ int pthread_attr_getfp_np(const pthread_attr_t *attr,
 int pthread_attr_setfp_np(pthread_attr_t *attr,
 			  int use_fp);
 
-int pthread_attr_getaffinity_np (const pthread_attr_t *attr,
-				 xnarch_cpumask_t *mask);
+int pthread_attr_getaffinity_np(const pthread_attr_t *attr,
+				xnarch_cpumask_t *mask);
 
-int pthread_attr_setaffinity_np (pthread_attr_t *attr,
-				 xnarch_cpumask_t mask);
+int pthread_attr_setaffinity_np(pthread_attr_t *attr,
+				xnarch_cpumask_t mask);
 
 int pthread_create(pthread_t *tid,
 		   const pthread_attr_t *attr,
@@ -408,50 +408,17 @@ int pthread_set_name_np(pthread_t thread,
 
 #else /* !(__KERNEL__ || __XENO_SIM__) */
 
-struct sched_param_ex;
+typedef struct {
+	pthread_attr_t std;
+	struct {
+		int sched_policy;
+		struct sched_param_ex sched_param;
+	} nonstd;
+} pthread_attr_ex_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#ifndef HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL
-int pthread_mutexattr_getprotocol(const pthread_mutexattr_t *attr,
-				  int *proto);
-
-int pthread_mutexattr_setprotocol(pthread_mutexattr_t *attr,
-				  int proto);
-#endif
-
-#ifndef HAVE_PTHREAD_CONDATTR_SETCLOCK
-int pthread_condattr_getclock(const pthread_condattr_t *attr,
-			      clockid_t *clk_id);
-
-int pthread_condattr_setclock(pthread_condattr_t *attr,
-			      clockid_t clk_id);
-#endif
-
-int pthread_make_periodic_np(pthread_t thread,
-			     clockid_t clk_id,
-			     struct timespec *starttp,
-			     struct timespec *periodtp);
-
-int pthread_wait_np(unsigned long *overruns_r);
-
-int pthread_set_mode_np(int clrmask, int setmask,
-			int *mask_r);
-
-int pthread_set_name_np(pthread_t thread,
-			const char *name);
-
-int pthread_probe_np(pid_t tid);
-
-int pthread_getschedparam_ex(pthread_t tid,
-			     int *pol,
-			     struct sched_param_ex *par);
-
-int pthread_setschedparam_ex(pthread_t tid,
-			     int pol,
-			     const struct sched_param_ex *par);
 
 COBALT_DECL(int, pthread_attr_setschedpolicy(pthread_attr_t *attr,
 					     int policy));
@@ -547,6 +514,92 @@ COBALT_DECL(int, pthread_cond_broadcast(pthread_cond_t *cond));
 
 COBALT_DECL(int, pthread_kill(pthread_t tid, int sig));
 
+#ifndef HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL
+COBALT_DECL(int, pthread_mutexattr_getprotocol(const pthread_mutexattr_t *attr,
+					       int *proto));
+
+COBALT_DECL(int, pthread_mutexattr_setprotocol(pthread_mutexattr_t *attr,
+					       int proto));
+#endif
+
+#ifndef HAVE_PTHREAD_CONDATTR_SETCLOCK
+COBALT_DECL(int, pthread_condattr_getclock(const pthread_condattr_t *attr,
+					   clockid_t *clk_id));
+
+COBALT_DECL(int pthread_condattr_setclock(pthread_condattr_t *attr,
+					  clockid_t clk_id));
+#endif
+
+int pthread_make_periodic_np(pthread_t thread,
+			     clockid_t clk_id,
+			     struct timespec *starttp,
+			     struct timespec *periodtp);
+
+int pthread_wait_np(unsigned long *overruns_r);
+
+int pthread_set_mode_np(int clrmask, int setmask,
+			int *mask_r);
+
+int pthread_set_name_np(pthread_t thread,
+			const char *name);
+
+int pthread_probe_np(pid_t tid);
+
+int pthread_create_ex(pthread_t *tid,
+		      const pthread_attr_ex_t *attr_ex,
+		      void *(*start)(void *),
+		      void *arg);
+
+int pthread_getschedparam_ex(pthread_t tid,
+			     int *pol,
+			     struct sched_param_ex *par);
+
+int pthread_setschedparam_ex(pthread_t tid,
+			     int pol,
+			     const struct sched_param_ex *par);
+
+int pthread_attr_init_ex(pthread_attr_ex_t *attr_ex);
+
+int pthread_attr_destroy_ex(pthread_attr_ex_t *attr_ex);
+
+int pthread_attr_setschedpolicy_ex(pthread_attr_ex_t *attr_ex,
+				   int policy);
+
+int pthread_attr_getschedpolicy_ex(const pthread_attr_ex_t *attr_ex,
+				   int *policy);
+
+int pthread_attr_setschedparam_ex(pthread_attr_ex_t *attr_ex,
+				  const struct sched_param_ex *param_ex);
+
+int pthread_attr_getschedparam_ex(const pthread_attr_ex_t *attr_ex,
+				  struct sched_param_ex *param_ex);
+
+int pthread_attr_getinheritsched_ex(const pthread_attr_ex_t *attr_ex,
+				    int *inheritsched);
+
+int pthread_attr_setinheritsched_ex(pthread_attr_ex_t *attr_ex,
+				    int inheritsched);
+
+int pthread_attr_getdetachstate_ex(const pthread_attr_ex_t *attr_ex,
+				   int *detachstate);
+
+int pthread_attr_setdetachstate_ex(pthread_attr_ex_t *attr_ex,
+				   int detachstate);
+
+int pthread_attr_setdetachstate_ex(pthread_attr_ex_t *attr_ex,
+				   int detachstate);
+
+int pthread_attr_getstacksize_ex(const pthread_attr_ex_t *attr_ex,
+				 size_t *stacksize);
+
+int pthread_attr_setstacksize_ex(pthread_attr_ex_t *attr_ex,
+				 size_t stacksize);
+
+int pthread_attr_getscope_ex(const pthread_attr_ex_t *attr_ex,
+			     int *scope);
+
+int pthread_attr_setscope_ex(pthread_attr_ex_t *attr_ex,
+			     int scope);
 #ifdef __cplusplus
 }
 #endif

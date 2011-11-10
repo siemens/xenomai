@@ -79,15 +79,16 @@ am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libcobalt_la_LIBADD =
 am_libcobalt_la_OBJECTS = libcobalt_la-assert_context.lo \
-	libcobalt_la-bind.lo libcobalt_la-current.lo \
-	libcobalt_la-sem_heap.lo libcobalt_la-sigshadow.lo \
-	libcobalt_la-timeconv.lo libcobalt_la-init.lo \
-	libcobalt_la-internal.lo libcobalt_la-thread.lo \
-	libcobalt_la-timer.lo libcobalt_la-semaphore.lo \
-	libcobalt_la-clock.lo libcobalt_la-cond.lo libcobalt_la-mq.lo \
-	libcobalt_la-mutex.lo libcobalt_la-shm.lo \
-	libcobalt_la-select.lo libcobalt_la-rtdm.lo \
-	libcobalt_la-printf.lo libcobalt_la-wrappers.lo
+	libcobalt_la-attr.lo libcobalt_la-bind.lo \
+	libcobalt_la-current.lo libcobalt_la-sem_heap.lo \
+	libcobalt_la-sigshadow.lo libcobalt_la-timeconv.lo \
+	libcobalt_la-init.lo libcobalt_la-internal.lo \
+	libcobalt_la-thread.lo libcobalt_la-timer.lo \
+	libcobalt_la-semaphore.lo libcobalt_la-clock.lo \
+	libcobalt_la-cond.lo libcobalt_la-mq.lo libcobalt_la-mutex.lo \
+	libcobalt_la-shm.lo libcobalt_la-select.lo \
+	libcobalt_la-rtdm.lo libcobalt_la-printf.lo \
+	libcobalt_la-wrappers.lo
 libcobalt_la_OBJECTS = $(am_libcobalt_la_OBJECTS)
 libcobalt_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -277,6 +278,7 @@ lib_LTLIBRARIES = libcobalt.la
 libcobalt_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 2:0:0 -lpthread -lrt
 libcobalt_la_SOURCES = \
 	assert_context.c \
+	attr.c \
 	bind.c \
 	current.c \
 	sem_heap.c \
@@ -378,6 +380,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcobalt_la-assert_context.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcobalt_la-attr.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcobalt_la-bind.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcobalt_la-clock.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcobalt_la-cond.Plo@am__quote@
@@ -425,6 +428,13 @@ libcobalt_la-assert_context.lo: assert_context.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assert_context.c' object='libcobalt_la-assert_context.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcobalt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcobalt_la-assert_context.lo `test -f 'assert_context.c' || echo '$(srcdir)/'`assert_context.c
+
+libcobalt_la-attr.lo: attr.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcobalt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcobalt_la-attr.lo -MD -MP -MF $(DEPDIR)/libcobalt_la-attr.Tpo -c -o libcobalt_la-attr.lo `test -f 'attr.c' || echo '$(srcdir)/'`attr.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libcobalt_la-attr.Tpo $(DEPDIR)/libcobalt_la-attr.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='attr.c' object='libcobalt_la-attr.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcobalt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcobalt_la-attr.lo `test -f 'attr.c' || echo '$(srcdir)/'`attr.c
 
 libcobalt_la-bind.lo: bind.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcobalt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcobalt_la-bind.lo -MD -MP -MF $(DEPDIR)/libcobalt_la-bind.Tpo -c -o libcobalt_la-bind.lo `test -f 'bind.c' || echo '$(srcdir)/'`bind.c

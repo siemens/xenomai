@@ -12,6 +12,7 @@ libcobalt_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 2:0:0 -lpthread -l
 
 libcobalt_la_SOURCES = \
 	assert_context.c \
+	attr.c \
 	bind.c \
 	current.c \
 	sem_heap.c \
