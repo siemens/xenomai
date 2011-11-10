@@ -21,7 +21,7 @@
 #include <string.h>
 #include "copperplate/reference.h"
 #include "copperplate/hash.h"
-#include "copperplate/panic.h"
+#include "internal.h"
 
 static int nrefs[MAX_FNLIBS];
 

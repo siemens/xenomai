@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <copperplate/heapobj.h>
-#include <copperplate/panic.h>
+#include <copperplate/init.h>
 #include <vxworks/errnoLib.h>
 #include "reference.h"
 #include "taskLib.h"

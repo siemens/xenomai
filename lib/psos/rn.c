@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <memory.h>
-#include <copperplate/panic.h>
+#include <copperplate/init.h>
 #include <copperplate/threadobj.h>
 #include <copperplate/clockobj.h>
 #include <psos/psos.h>

@@ -29,8 +29,6 @@
 #include <assert.h>
 #include <limits.h>
 #include <sched.h>
-#include "copperplate/init.h"
-#include "copperplate/panic.h"
 #include "copperplate/lock.h"
 #include "copperplate/traceobj.h"
 #include "copperplate/threadobj.h"
@@ -38,6 +36,7 @@
 #include "copperplate/cluster.h"
 #include "copperplate/clockobj.h"
 #include "copperplate/debug.h"
+#include "internal.h"
 
 union copperplate_wait_union {
 	struct syncluster_wait_struct syncluster_wait;
@@ -1006,6 +1005,15 @@ void threadobj_spin(ticks_t ns)
 	while (clockobj_get_tsc() < end)
 		cpu_relax();
 }
+
+#ifdef CONFIG_XENO_PSHARED
+
+int __threadobj_local_p(struct threadobj *thobj)
+{
+	return thobj->cnode == __this_node.id;
+}
+
+#endif	/* CONFIG_XENO_PSHARED */
 
 #ifdef __XENO_DEBUG__
 

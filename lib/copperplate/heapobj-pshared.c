@@ -34,12 +34,12 @@
 #include <signal.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "copperplate/init.h"
 #include "copperplate/lock.h"
 #include "copperplate/list.h"
 #include "copperplate/hash.h"
 #include "copperplate/heapobj.h"
 #include "copperplate/debug.h"
+#include "internal.h"
 
 #define HOBJ_PAGE_SHIFT	9	/* 2^9 => 512 bytes */
 #define HOBJ_PAGE_SIZE		(1U << HOBJ_PAGE_SHIFT)

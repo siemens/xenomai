@@ -8,7 +8,8 @@ libcopperplate_la_SOURCES =	\
 	cluster.c	\
 	hash.c 		\
 	init.c		\
-	panic.c		\
+	internal.c	\
+	internal.h	\
 	syncobj.c	\
 	semobj.c	\
 	threadobj.c	\

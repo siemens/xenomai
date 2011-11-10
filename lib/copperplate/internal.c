@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2011 Philippe Gerum <rpm@xenomai.org>.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,18 +16,62 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
+#include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <signal.h>
 #include <errno.h>
-#include "copperplate/init.h"
-#include "copperplate/lock.h"
-#include "copperplate/debug.h"
-#include "copperplate/clockobj.h"
-#include "copperplate/threadobj.h"
-#include "copperplate/panic.h"
+#include <linux/unistd.h>
+#include <copperplate/clockobj.h>
+#include <copperplate/threadobj.h>
+#include "internal.h"
+
+struct coppernode __this_node = {
+	.mem_pool = 128 * 1024, /* Default, 128 Kb. */
+	.session_label = "anon",
+	.no_mlock = 0,
+	.no_registry = 0,
+	.reset_session = 0,
+};
 
 pthread_mutex_t __printlock;
+
+pid_t copperplate_get_tid(void)
+{
+	/*
+	 * XXX: The nucleus maintains a hash table indexed on
+	 * task_pid_vnr() values for mapped shadows. This is what
+	 * __NR_gettid retrieves as well in Cobalt mode.
+	 */
+	return syscall(__NR_gettid);
+}
+
+#ifdef CONFIG_XENO_COBALT
+
+int copperplate_probe_node(unsigned int id)
+{
+	/*
+	 * XXX: this call does NOT migrate to secondary mode therefore
+	 * may be used in time-critical contexts. However, since the
+	 * nucleus has to know about a probed thread to find out
+	 * whether it exists, copperplate_init() must always be
+	 * invoked from a real-time shadow, so that __this_node.id can
+	 * be matched.
+	 */
+	return pthread_probe_np((pid_t)id) == 0;
+}
+
+#else /* CONFIG_XENO_MERCURY */
+
+int copperplate_probe_node(unsigned int id)
+{
+	return kill((pid_t)id, 0) == 0;
+}
+
+#endif  /* CONFIG_XENO_MERCURY */
 
 void __printout(struct threadobj *thobj,
 		const char *header, const char *fmt, va_list ap)

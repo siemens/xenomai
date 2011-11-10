@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "copperplate/init.h"
 #include "copperplate/lock.h"
 #include "copperplate/traceobj.h"
 #include "copperplate/threadobj.h"
 #include "copperplate/heapobj.h"
+#include "internal.h"
 
 struct tracemark {
 	const char *file;

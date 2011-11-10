@@ -96,9 +96,10 @@ am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES) $(noinst_LTLIBRARIES)
 libcopperplate_la_DEPENDENCIES = $(am__append_4) $(am__append_7)
 am__libcopperplate_la_SOURCES_DIST = clockobj.c cluster.c hash.c \
-	init.c panic.c syncobj.c semobj.c threadobj.c traceobj.c \
-	timerobj-cobalt.c timerobj-mercury.c notifier.c debug.c \
-	heapobj-pshared.c reference.c heapobj-tlsf.c heapobj-malloc.c
+	init.c internal.c internal.h syncobj.c semobj.c threadobj.c \
+	traceobj.c timerobj-cobalt.c timerobj-mercury.c notifier.c \
+	debug.c heapobj-pshared.c reference.c heapobj-tlsf.c \
+	heapobj-malloc.c
 @XENO_COBALT_TRUE@am__objects_1 =  \
 @XENO_COBALT_TRUE@	libcopperplate_la-timerobj-cobalt.lo
 @XENO_COBALT_FALSE@am__objects_2 =  \
@@ -112,7 +113,7 @@ am__libcopperplate_la_SOURCES_DIST = clockobj.c cluster.c hash.c \
 @XENO_TLSF_FALSE@am__objects_6 = libcopperplate_la-heapobj-malloc.lo
 am_libcopperplate_la_OBJECTS = libcopperplate_la-clockobj.lo \
 	libcopperplate_la-cluster.lo libcopperplate_la-hash.lo \
-	libcopperplate_la-init.lo libcopperplate_la-panic.lo \
+	libcopperplate_la-init.lo libcopperplate_la-internal.lo \
 	libcopperplate_la-syncobj.lo libcopperplate_la-semobj.lo \
 	libcopperplate_la-threadobj.lo libcopperplate_la-traceobj.lo \
 	$(am__objects_1) $(am__objects_2) $(am__objects_3) \
@@ -310,10 +311,10 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libcopperplate.la
 libcopperplate_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 0:0:0 -lpthread
-libcopperplate_la_SOURCES = clockobj.c cluster.c hash.c init.c panic.c \
-	syncobj.c semobj.c threadobj.c traceobj.c $(am__append_1) \
-	$(am__append_3) $(am__append_5) $(am__append_6) \
-	$(am__append_8) $(am__append_9)
+libcopperplate_la_SOURCES = clockobj.c cluster.c hash.c init.c \
+	internal.c internal.h syncobj.c semobj.c threadobj.c \
+	traceobj.c $(am__append_1) $(am__append_3) $(am__append_5) \
+	$(am__append_6) $(am__append_8) $(am__append_9)
 libcopperplate_la_CPPFLAGS = @XENO_USER_CFLAGS@ \
 	-I$(top_srcdir)/include $(am__append_2)
 libcopperplate_la_LIBADD = $(am__append_4) $(am__append_7)
@@ -431,8 +432,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-heapobj-pshared.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-heapobj-tlsf.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-init.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-internal.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-notifier.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-panic.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-reference.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-semobj.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-syncobj.Plo@am__quote@
@@ -492,12 +493,12 @@ libcopperplate_la-init.lo: init.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcopperplate_la-init.lo `test -f 'init.c' || echo '$(srcdir)/'`init.c
 
-libcopperplate_la-panic.lo: panic.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcopperplate_la-panic.lo -MD -MP -MF $(DEPDIR)/libcopperplate_la-panic.Tpo -c -o libcopperplate_la-panic.lo `test -f 'panic.c' || echo '$(srcdir)/'`panic.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libcopperplate_la-panic.Tpo $(DEPDIR)/libcopperplate_la-panic.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='panic.c' object='libcopperplate_la-panic.lo' libtool=yes @AMDEPBACKSLASH@
+libcopperplate_la-internal.lo: internal.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcopperplate_la-internal.lo -MD -MP -MF $(DEPDIR)/libcopperplate_la-internal.Tpo -c -o libcopperplate_la-internal.lo `test -f 'internal.c' || echo '$(srcdir)/'`internal.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libcopperplate_la-internal.Tpo $(DEPDIR)/libcopperplate_la-internal.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='internal.c' object='libcopperplate_la-internal.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcopperplate_la-panic.lo `test -f 'panic.c' || echo '$(srcdir)/'`panic.c
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcopperplate_la-internal.lo `test -f 'internal.c' || echo '$(srcdir)/'`internal.c
 
 libcopperplate_la-syncobj.lo: syncobj.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcopperplate_la-syncobj.lo -MD -MP -MF $(DEPDIR)/libcopperplate_la-syncobj.Tpo -c -o libcopperplate_la-syncobj.lo `test -f 'syncobj.c' || echo '$(srcdir)/'`syncobj.c

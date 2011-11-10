@@ -29,7 +29,7 @@
 #include <limits.h>
 #include "taskLib.h"
 #include "tickLib.h"
-#include <copperplate/panic.h>
+#include <copperplate/init.h>
 #include <copperplate/heapobj.h>
 #include <copperplate/threadobj.h>
 #include <copperplate/syncobj.h>

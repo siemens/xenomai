@@ -22,7 +22,6 @@
 #include <time.h>
 #include <sched.h>
 #include <pthread.h>
-#include <copperplate/init.h>
 #include <copperplate/list.h>
 #include <copperplate/lock.h>
 #include <copperplate/clockobj.h>
@@ -222,6 +221,24 @@ void threadobj_spin(ticks_t ns);
 int threadobj_stat(struct threadobj *thobj,
 		   struct threadobj_stat *stat);
 
+#ifdef CONFIG_XENO_PSHARED
+
+int __threadobj_local_p(struct threadobj *thobj);
+
+static inline int threadobj_local_p(struct threadobj *thobj)
+{
+	return __threadobj_local_p(thobj);
+}
+
+#else
+
+static inline int threadobj_local_p(struct threadobj *thobj)
+{
+	return 1;
+}
+
+#endif	/* !CONFIG_XENO_PSHARED */
+
 void threadobj_pkg_init(void);
 
 #ifdef __cplusplus
@@ -318,15 +335,6 @@ static inline int threadobj_get_status(struct threadobj *thobj)
 static inline int threadobj_get_errno(struct threadobj *thobj)
 {
 	return *thobj->errno_pointer;
-}
-
-static inline int threadobj_local_p(struct threadobj *thobj)
-{
-#ifdef CONFIG_XENO_PSHARED
-	return thobj->cnode == __this_node.id;
-#else
-	return 1;
-#endif
 }
 
 #define threadobj_prepare_wait(T)					\

@@ -20,7 +20,6 @@
 #define _COPPERPLATE_TRACEOBJ_H
 
 #include <pthread.h>
-#include <copperplate/panic.h>
 
 struct threadobj;
 

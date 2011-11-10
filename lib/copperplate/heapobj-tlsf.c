@@ -22,10 +22,10 @@
 #include <string.h>
 #include <memory.h>
 #include "copperplate/wrappers.h"
-#include "copperplate/init.h"
 #include "copperplate/heapobj.h"
 #include "copperplate/debug.h"
 #include "tlsf/tlsf.h"
+#include "internal.h"
 
 /* XXX: depends on the implementation included from tlsf/, YMMV. */
 #define TLSF_BLOCK_OVERHEAD  8

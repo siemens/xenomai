@@ -19,27 +19,9 @@
 #ifndef _COPPERPLATE_INIT_H
 #define _COPPERPLATE_INIT_H
 
-#include <xeno_config.h>
-#include <sched.h>
-#include <time.h>
-#include <copperplate/list.h>
+#include <stdarg.h>
 #include <copperplate/core.h>
-
-struct coppernode {
-	pid_t id;
-	unsigned int mem_pool;
-	char *registry_mountpt;
-	const char *session_label;
-	cpu_set_t cpu_affinity;
-	/* No bitfield below, we have to take address of thoses. */
-	int no_mlock;
-	int no_registry;
-	int reset_session;
-};
-
-struct timespec __init_date;
-
-extern struct coppernode __this_node;
+#include <copperplate/list.h>
 
 struct copperskin {
 	const char *name;
@@ -53,15 +35,13 @@ extern "C" {
 
 void copperplate_init(int argc, char *const argv[]);
 
-pid_t copperplate_get_tid(void);
-
-int copperplate_probe_node(unsigned int id);
-
 void copperplate_register_skin(struct copperskin *p);
 
 void panic(const char *fmt, ...);
 
 void warning(const char *fmt, ...);
+
+const char *symerror(int errnum);
 
 #ifdef __cplusplus
 }

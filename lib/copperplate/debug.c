@@ -23,11 +23,11 @@
 #include <assert.h>
 #include <pthread.h>
 #include <errno.h>
-#include "copperplate/panic.h"
 #include "copperplate/lock.h"
 #include "copperplate/debug.h"
 #include "copperplate/threadobj.h"
 #include "copperplate/heapobj.h"
+#include "internal.h"
 
 static pthread_key_t btkey;
 

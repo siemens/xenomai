@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2011 Philippe Gerum <rpm@xenomai.org>.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,11 +16,35 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
-#ifndef _COPPERPLATE_PANIC_H
-#define _COPPERPLATE_PANIC_H
+#ifndef _COPPERPLATE_INTERNAL_H
+#define _COPPERPLATE_INTERNAL_H
 
+#include <sys/types.h>
 #include <stdarg.h>
 #include <pthread.h>
+#include <sched.h>
+#include <xeno_config.h>
+#include <copperplate/list.h>
+
+struct coppernode {
+	pid_t id;
+	unsigned int mem_pool;
+	char *registry_mountpt;
+	const char *session_label;
+	cpu_set_t cpu_affinity;
+	/* No bitfield below, we have to take address of thoses. */
+	int no_mlock;
+	int no_registry;
+	int reset_session;
+};
+
+extern struct coppernode __this_node;
+
+extern struct timespec __init_date;
+
+extern const char *dashes;
+
+extern pthread_mutex_t __printlock;
 
 struct threadobj;
 struct error_frame;
@@ -29,24 +53,24 @@ struct error_frame;
 extern "C" {
 #endif
 
-void error_hook(struct error_frame *ef);
-
 void __printout(struct threadobj *thobj,
 		const char *header,
 		const char *fmt, va_list ap);
+
+void error_hook(struct error_frame *ef);
+
+const char *symerror(int errnum);
 
 void panic(const char *fmt, ...);
 
 void warning(const char *fmt, ...);
 
-const char *symerror(int errnum);
+pid_t copperplate_get_tid(void);
 
-extern const char *dashes;
-
-extern pthread_mutex_t __printlock;
+int copperplate_probe_node(unsigned int id);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _COPPERPLATE_PANIC_H */
+#endif /* _COPPERPLATE_INTERNAL_H */

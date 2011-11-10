@@ -14,7 +14,6 @@ includesub_HEADERS =	\
 	shared-list.h	\
 	private-list.h	\
 	notifier.h	\
-	panic.h		\
 	reference.h	\
 	registry.h	\
 	syncobj.h	\

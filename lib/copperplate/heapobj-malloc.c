@@ -22,9 +22,9 @@
 #include <string.h>
 #include <malloc.h>
 #include "copperplate/wrappers.h"
-#include "copperplate/init.h"
 #include "copperplate/heapobj.h"
 #include "copperplate/debug.h"
+#include "internal.h"
 
 #define MALLOC_BLOCK_OVERHEAD  8
 

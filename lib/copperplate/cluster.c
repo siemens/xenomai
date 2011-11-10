@@ -90,12 +90,12 @@
 
 #include <errno.h>
 #include <string.h>
-#include "copperplate/init.h"
 #include "copperplate/heapobj.h"
 #include "copperplate/cluster.h"
 #include "copperplate/syncobj.h"
 #include "copperplate/threadobj.h"
 #include "copperplate/debug.h"
+#include "internal.h"
 
 #ifdef CONFIG_XENO_PSHARED
 

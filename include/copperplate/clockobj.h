@@ -23,7 +23,6 @@
 #include <time.h>
 #include <xeno_config.h>
 #include <copperplate/list.h>
-#include <copperplate/panic.h>
 #include <copperplate/debug.h>
 #include <copperplate/lock.h>
 

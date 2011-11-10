@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <copperplate/heapobj.h>
-#include <copperplate/panic.h>
+#include <copperplate/init.h>
 #include <copperplate/cluster.h>
 #include <copperplate/clockobj.h>
 #include "reference.h"

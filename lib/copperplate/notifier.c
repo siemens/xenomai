@@ -22,11 +22,10 @@
 #include <fcntl.h>
 #include <assert.h>
 #include <errno.h>
-#include "copperplate/init.h"
-#include "copperplate/panic.h"
 #include "copperplate/notifier.h"
 #include "copperplate/lock.h"
 #include "copperplate/debug.h"
+#include "internal.h"
 
 /* Private signal used for notification. */
 #define NOTIFYSIG	(SIGRTMIN + 8)
