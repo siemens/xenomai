@@ -74,6 +74,7 @@ static inline struct task_struct *wrap_find_task_by_pid(pid_t nr)
 #define DECLARE_IOCTL_HANDLER(name, filp, cmd, arg)		\
 	long name(struct file *filp, unsigned int cmd, unsigned long arg)
 
+#include <linux/semaphore.h>
 #ifndef DEFINE_SEMAPHORE
 /* Legacy DECLARE_MUTEX vanished in 2.6.37 */
 #define DEFINE_SEMAPHORE(sem) DECLARE_MUTEX(sem)
