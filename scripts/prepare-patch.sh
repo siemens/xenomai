@@ -113,7 +113,7 @@ for linux_arch in $supported_arch ; do
     patch_link r m kernel/cobalt/arch/$base_arch arch/$linux_arch/xenomai
     patch_link r n include/asm-$base_arch arch/$linux_arch/include/asm/xenomai
 
-    p="+core-\$(CONFIG_XENOMAI_COBALT)	+= arch/$linux_arch/xenomai/"
+    p="+core-\$(CONFIG_XENOMAI)	+= arch/$linux_arch/xenomai/"
     echo $p | patch_append arch/$linux_arch/Makefile
     diff_addons
 done

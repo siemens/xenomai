@@ -1,11 +1,8 @@
-config XENOMAI_COBALT
-       bool
 
 config XENOMAI
 	depends on (X86_TSC || !X86) && (!HPET_TIMER || !X86 || X86_LOCAL_APIC)
-	tristate "Xenomai"
+	bool "Xenomai"
         select IPIPE
-        select XENOMAI_COBALT
 	default y
         help
           Xenomai is a real-time extension to the Linux kernel. Note

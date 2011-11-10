@@ -400,8 +400,8 @@ case $linux_VERSION.$linux_PATCHLEVEL in
             patch_append init/Kconfig
     fi
 
-    if ! grep -q CONFIG_XENOMAI_COBALT $linux_tree/arch/$linux_arch/Makefile; then
-	p="core-\$(CONFIG_XENOMAI_COBALT)	+= kernel/xenomai/hal/ arch/$linux_arch/xenomai/"
+    if ! grep -q CONFIG_XENOMAI $linux_tree/arch/$linux_arch/Makefile; then
+	p="core-\$(CONFIG_XENOMAI)	+= kernel/xenomai/hal/ arch/$linux_arch/xenomai/"
 	echo $p | patch_append arch/$linux_arch/Makefile
     fi
 
