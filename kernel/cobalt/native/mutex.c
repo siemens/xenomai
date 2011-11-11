@@ -77,7 +77,7 @@ static int vfile_rewind(struct xnvfile_snapshot_iterator *it)
 #ifdef CONFIG_XENO_FASTSYNCH
 	lock_state = xnarch_atomic_get(mutex->synch_base.fastlock);
 	owner = (lock_state == XN_NO_HANDLE) ? NULL :
-		xnthread_lookup(xnsynch_fast_mask_claimed(lock_state));
+		xnthread_lookup(xnhandle_mask_spares(lock_state));
 
 	if (owner == NULL && lock_state != XN_NO_HANDLE)
 		strncpy(priv->owner, "<DAMAGED HANDLE>",
@@ -660,7 +660,7 @@ int rt_mutex_inquire(RT_MUTEX *mutex, RT_MUTEX_INFO *info)
 	lock_state = xnarch_atomic_get(mutex->synch_base.fastlock);
 	info->locked = (lock_state != XN_NO_HANDLE);
 	owner = (info->locked) ?
-		xnthread_lookup(xnsynch_fast_mask_claimed(lock_state)) : NULL;
+		xnthread_lookup(xnhandle_mask_spares(lock_state)) : NULL;
 	if (!owner && info->locked)
 		strcpy(info->owner, "<DAMAGED HANDLE!>");
 	else

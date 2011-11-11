@@ -453,7 +453,7 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 			fastlock = old;
 		} while (!xnsynch_fast_is_claimed(fastlock));
 
-		owner = xnthread_lookup(xnsynch_fast_mask_claimed(fastlock));
+		owner = xnthread_lookup(xnhandle_mask_spares(fastlock));
 
 		if (!owner) {
 			/* The handle is broken, therefore pretend that the synch
@@ -543,10 +543,13 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 			xnarch_atomic_t *lockp = xnsynch_fastlock(synch);
 			/* We are the new owner, update the fastlock
 			   accordingly. */
-			if (xnsynch_pended_p(synch))
-				threadh =
-				    xnsynch_fast_set_claimed(threadh, 1);
-			xnarch_atomic_set(lockp, threadh);
+			fastlock = threadh |
+				xnhandle_get_spares(xnarch_atomic_get(lockp),
+						    XN_HANDLE_SPARE_MASK);
+			fastlock =
+				xnsynch_fast_set_claimed(fastlock,
+							 xnsynch_pended_p(synch));
+			xnarch_atomic_set(lockp, fastlock);
 		}
 	}
 
@@ -718,6 +721,8 @@ xnsynch_release_thread(struct xnsynch *synch, struct xnthread *lastowner)
 	}
 	if (use_fastlock) {
 		xnarch_atomic_t *lockp = xnsynch_fastlock(synch);
+		newownerh |= xnhandle_get_spares(xnarch_atomic_get(lockp),
+						 XN_HANDLE_SPARE_MASK & ~XNSYNCH_FLCLAIM);
 		xnarch_atomic_set(lockp, newownerh);
 	}
 

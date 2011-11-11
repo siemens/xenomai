@@ -42,7 +42,7 @@
 static inline int xnsynch_fast_owner_check(xnarch_atomic_t *fastlock,
 					   xnhandle_t ownerh)
 {
-	return (xnhandle_mask_spare(xnarch_atomic_get(fastlock)) == ownerh) ?
+	return (xnhandle_mask_spares(xnarch_atomic_get(fastlock)) == ownerh) ?
 		0 : -EPERM;
 }
 
@@ -55,7 +55,7 @@ static inline int xnsynch_fast_acquire(xnarch_atomic_t *fastlock,
 	if (likely(lock_state == XN_NO_HANDLE))
 		return 0;
 
-	if (xnhandle_mask_spare(lock_state) == new_ownerh)
+	if (xnhandle_mask_spares(lock_state) == new_ownerh)
 		return -EBUSY;
 
 	return -EAGAIN;
@@ -152,10 +152,9 @@ typedef struct xnsynch {
 #endif /* !CONFIG_XENO_FASTSYNCH */
 
 #define xnsynch_fast_is_claimed(fastlock) \
-	xnhandle_test_spare(fastlock, XNSYNCH_FLCLAIM)
+	xnhandle_test_spares(fastlock, XNSYNCH_FLCLAIM)
 #define xnsynch_fast_set_claimed(fastlock, enable) \
 	(((fastlock) & ~XNSYNCH_FLCLAIM) | ((enable) ? XNSYNCH_FLCLAIM : 0))
-#define xnsynch_fast_mask_claimed(fastlock) ((fastlock) & ~XNSYNCH_FLCLAIM)
 
 #ifdef __cplusplus
 extern "C" {
