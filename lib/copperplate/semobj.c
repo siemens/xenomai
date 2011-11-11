@@ -35,6 +35,9 @@ int semobj_init(struct semobj *smobj, int flags, int value,
 	if (flags & SEMOBJ_PULSE)
 		sem_flags |= SEM_PULSE;
 
+	if (flags & SEMOBJ_WANRDEL)
+		sem_flags |= SEM_WARNDEL;
+
 	ret = sem_init_np(&smobj->core.sem, sem_flags, value);
 	if (ret)
 		return __bt(-errno);
@@ -50,7 +53,7 @@ int semobj_destroy(struct semobj *smobj)
 	int ret;
 
 	ret = __RT(sem_destroy(&smobj->core.sem));
-	if (ret)
+	if (ret < 0)
 		return errno == EINVAL ? -EIDRM : -errno;
 	/*
 	 * All waiters have been unblocked with EINVAL, and therefore
@@ -60,7 +63,7 @@ int semobj_destroy(struct semobj *smobj)
 	fnref_get(finalizer, smobj->finalizer);
 	finalizer(smobj);
 
-	return 0;
+	return ret;
 }
 
 int semobj_post(struct semobj *smobj)
@@ -153,9 +156,7 @@ int semobj_destroy(struct semobj *smobj)
 	if (syncobj_lock(&smobj->core.sobj, &syns))
 		return -EINVAL;
 
-	syncobj_destroy(&smobj->core.sobj, &syns);
-
-	return 0;
+	return syncobj_destroy(&smobj->core.sobj, &syns);
 }
 
 int semobj_post(struct semobj *smobj)
