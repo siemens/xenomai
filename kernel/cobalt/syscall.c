@@ -2789,7 +2789,6 @@ static struct xnskin_props __props = {
 	.nrcalls = sizeof(__systab) / sizeof(__systab[0]),
 	.systab = __systab,
 	.eventcb = &cobalt_eventcb,
-	.module = THIS_MODULE
 };
 
 int cobalt_syscall_init(void)

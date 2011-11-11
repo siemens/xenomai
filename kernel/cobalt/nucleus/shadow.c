@@ -277,8 +277,6 @@ static void detach_ppd(xnshadow_ppd_t * ppd)
 {
 	unsigned int muxid = xnshadow_ppd_muxid(ppd);
 	skins[muxid].props->eventcb(XNSHADOW_CLIENT_DETACH, ppd);
-	if (skins[muxid].props->module)
-		module_put(skins[muxid].props->module);
 }
 
 struct xnvdso *nkvdso;
@@ -347,8 +345,6 @@ static void xnshadow_dereference_skin(unsigned magic)
 		sslt = skins + muxid;
 		if (sslt->props && sslt->props->magic == magic) {
 			xnarch_atomic_dec(&sslt->refcnt);
-			if (sslt->props->module)
-				module_put(sslt->props->module);
 			break;
 		}
 	}
@@ -1000,9 +996,6 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 	for (muxid = 0; muxid < XENOMAI_SKINS_NR; muxid++) {
 		sslt = skins + muxid;
 		if (sslt->props && sslt->props->magic == magic) {
-			if (sslt->props->module
-			    && !try_module_get(sslt->props->module))
-				return -ENOSYS;
 			xnarch_atomic_inc(&sslt->refcnt);
 			break;
 		}
@@ -1490,12 +1483,6 @@ muxid_eventcb:
 		 */
 		sslt->props->eventcb(XNSHADOW_CLIENT_DETACH, ppd);
 		ppd = NULL;
-		goto eventcb_done;
-	}
-
-	if (sslt->props->module && !try_module_get(sslt->props->module)) {
-		err = -ESRCH;
-		goto fail;
 	}
 
 eventcb_done:
@@ -1507,8 +1494,6 @@ eventcb_done:
 		if (sslt->props->eventcb && ppd) {
 			ppd_remove(ppd);
 			sslt->props->eventcb(XNSHADOW_CLIENT_DETACH, ppd);
-			if (sslt->props->module)
-				module_put(sslt->props->module);
 		}
 
 		err = -ENOSYS;
@@ -1918,7 +1903,6 @@ static struct xnskin_props __props = {
 	.nrcalls = sizeof(__systab) / sizeof(__systab[0]),
 	.systab = __systab,
 	.eventcb = xnshadow_sys_event,
-	.module = NULL
 };
 
 static inline int

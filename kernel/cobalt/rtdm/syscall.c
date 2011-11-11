@@ -152,7 +152,6 @@ static struct xnskin_props __props = {
 	.nrcalls = sizeof(__systab) / sizeof(__systab[0]),
 	.systab = __systab,
 	.eventcb = &rtdm_skin_callback,
-	.module = THIS_MODULE
 };
 
 int __init rtdm_syscall_init(void)

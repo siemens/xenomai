@@ -45,7 +45,6 @@ struct xnskin_props {
 	int nrcalls;
 	void *(*eventcb)(int, void *);
 	struct xnsysent *systab;
-	struct module *module;
 };
 
 int xnshadow_mount(void);
