@@ -45,9 +45,7 @@ echo 0 > /proc/xenomai/latency || :
 @testdir@/arith
 @testdir@/clocktest -T 30
 @testdir@/switchtest -T 30
-@testdir@/cond-torture-native
 @testdir@/cond-torture-posix
-@testdir@/mutex-torture-native
 @testdir@/mutex-torture-posix
 
 start_load

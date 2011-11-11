@@ -7,7 +7,6 @@ SUBDIRS =	\
 
 if XENO_COBALT
 SUBDIRS +=	\
-	native	\
 	cobalt	\
 	analogy
 endif

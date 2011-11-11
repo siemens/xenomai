@@ -13100,11 +13100,11 @@ if test x$rtcore_type = xcobalt; then
 
 fi
 
-ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config:scripts/xeno-config-$rtcore_type.in scripts/xeno lib/Makefile lib/cobalt/Makefile lib/native/Makefile lib/copperplate/Makefile lib/alchemy/Makefile lib/vxworks/Makefile lib/psos/Makefile lib/analogy/Makefile lib/include/Makefile testsuite/Makefile testsuite/latency/Makefile testsuite/cyclic/Makefile testsuite/switchtest/Makefile testsuite/clocktest/Makefile testsuite/klatency/Makefile testsuite/unit/Makefile testsuite/xeno-test/Makefile testsuite/regression/Makefile testsuite/regression/posix/Makefile utils/Makefile utils/can/Makefile utils/analogy/Makefile utils/ps/Makefile utils/slackspot/Makefile include/Makefile include/asm-generic/Makefile include/asm-generic/bits/Makefile include/asm-blackfin/Makefile include/asm-blackfin/bits/Makefile include/asm-x86/Makefile include/asm-x86/bits/Makefile include/asm-powerpc/Makefile include/asm-powerpc/bits/Makefile include/asm-arm/Makefile include/asm-arm/bits/Makefile include/asm-nios2/Makefile include/asm-nios2/bits/Makefile include/asm-sh/Makefile include/asm-sh/bits/Makefile include/asm-sim/Makefile include/asm-sim/bits/Makefile include/native/Makefile include/cobalt/Makefile include/cobalt/sys/Makefile include/cobalt/nucleus/Makefile include/rtdm/Makefile include/analogy/Makefile include/mercury/Makefile include/copperplate/Makefile include/alchemy/Makefile include/vxworks/Makefile include/psos/Makefile"
+ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config:scripts/xeno-config-$rtcore_type.in scripts/xeno lib/Makefile lib/cobalt/Makefile lib/copperplate/Makefile lib/alchemy/Makefile lib/vxworks/Makefile lib/psos/Makefile lib/analogy/Makefile lib/include/Makefile testsuite/Makefile testsuite/latency/Makefile testsuite/cyclic/Makefile testsuite/switchtest/Makefile testsuite/clocktest/Makefile testsuite/unit/Makefile testsuite/xeno-test/Makefile testsuite/regression/Makefile testsuite/regression/posix/Makefile utils/Makefile utils/can/Makefile utils/analogy/Makefile utils/ps/Makefile utils/slackspot/Makefile include/Makefile include/asm-generic/Makefile include/asm-generic/bits/Makefile include/asm-blackfin/Makefile include/asm-blackfin/bits/Makefile include/asm-x86/Makefile include/asm-x86/bits/Makefile include/asm-powerpc/Makefile include/asm-powerpc/bits/Makefile include/asm-arm/Makefile include/asm-arm/bits/Makefile include/asm-nios2/Makefile include/asm-nios2/bits/Makefile include/asm-sh/Makefile include/asm-sh/bits/Makefile include/asm-sim/Makefile include/asm-sim/bits/Makefile include/cobalt/Makefile include/cobalt/sys/Makefile include/cobalt/nucleus/Makefile include/rtdm/Makefile include/analogy/Makefile include/mercury/Makefile include/copperplate/Makefile include/alchemy/Makefile include/vxworks/Makefile include/psos/Makefile"
 
 
 if test \! x$XENO_MAYBE_DOCDIR = x ; then
-      ac_config_files="$ac_config_files doc/Makefile doc/txt/Makefile doc/man/Makefile doc/man/clocktest.man doc/man/cyclictest.man doc/man/klatency.man doc/man/latency.man doc/man/rtcanconfig.man doc/man/rtcanrecv.man doc/man/rtcansend.man doc/man/switchbench.man doc/man/switchtest.man doc/man/xeno.man doc/man/xeno-config.man doc/doxygen/Makefile doc/doxygen/Doxyfile-common doc/doxygen/Doxyfile doc/doxygen/Doxyfile-native doc/doxygen/Doxyfile-nucleus doc/doxygen/Doxyfile-posix doc/doxygen/Doxyfile-rtdm doc/docbook/Makefile doc/docbook/catalog doc/docbook/custom-stylesheets/Makefile doc/docbook/custom-stylesheets/xsl/Makefile doc/docbook/custom-stylesheets/xsl/common/Makefile doc/docbook/custom-stylesheets/xsl/fo/Makefile doc/docbook/custom-stylesheets/xsl/html/Makefile doc/docbook/custom-stylesheets/xsl/html/chunk.xsl doc/docbook/custom-stylesheets/xsl/html/onechunk.xsl doc/docbook/xenomai/Makefile"
+      ac_config_files="$ac_config_files doc/Makefile doc/txt/Makefile doc/man/Makefile doc/man/clocktest.man doc/man/cyclictest.man doc/man/latency.man doc/man/rtcanconfig.man doc/man/rtcanrecv.man doc/man/rtcansend.man doc/man/switchbench.man doc/man/switchtest.man doc/man/xeno.man doc/man/xeno-config.man doc/doxygen/Makefile doc/doxygen/Doxyfile-common doc/doxygen/Doxyfile doc/doxygen/Doxyfile-nucleus doc/doxygen/Doxyfile-posix doc/doxygen/Doxyfile-rtdm doc/docbook/Makefile doc/docbook/catalog doc/docbook/custom-stylesheets/Makefile doc/docbook/custom-stylesheets/xsl/Makefile doc/docbook/custom-stylesheets/xsl/common/Makefile doc/docbook/custom-stylesheets/xsl/fo/Makefile doc/docbook/custom-stylesheets/xsl/html/Makefile doc/docbook/custom-stylesheets/xsl/html/chunk.xsl doc/docbook/custom-stylesheets/xsl/html/onechunk.xsl doc/docbook/xenomai/Makefile"
 
 fi
 
@@ -14156,7 +14156,6 @@ do
     "scripts/xeno") CONFIG_FILES="$CONFIG_FILES scripts/xeno" ;;
     "lib/Makefile") CONFIG_FILES="$CONFIG_FILES lib/Makefile" ;;
     "lib/cobalt/Makefile") CONFIG_FILES="$CONFIG_FILES lib/cobalt/Makefile" ;;
-    "lib/native/Makefile") CONFIG_FILES="$CONFIG_FILES lib/native/Makefile" ;;
     "lib/copperplate/Makefile") CONFIG_FILES="$CONFIG_FILES lib/copperplate/Makefile" ;;
     "lib/alchemy/Makefile") CONFIG_FILES="$CONFIG_FILES lib/alchemy/Makefile" ;;
     "lib/vxworks/Makefile") CONFIG_FILES="$CONFIG_FILES lib/vxworks/Makefile" ;;
@@ -14168,7 +14167,6 @@ do
     "testsuite/cyclic/Makefile") CONFIG_FILES="$CONFIG_FILES testsuite/cyclic/Makefile" ;;
     "testsuite/switchtest/Makefile") CONFIG_FILES="$CONFIG_FILES testsuite/switchtest/Makefile" ;;
     "testsuite/clocktest/Makefile") CONFIG_FILES="$CONFIG_FILES testsuite/clocktest/Makefile" ;;
-    "testsuite/klatency/Makefile") CONFIG_FILES="$CONFIG_FILES testsuite/klatency/Makefile" ;;
     "testsuite/unit/Makefile") CONFIG_FILES="$CONFIG_FILES testsuite/unit/Makefile" ;;
     "testsuite/xeno-test/Makefile") CONFIG_FILES="$CONFIG_FILES testsuite/xeno-test/Makefile" ;;
     "testsuite/regression/Makefile") CONFIG_FILES="$CONFIG_FILES testsuite/regression/Makefile" ;;
@@ -14195,7 +14193,6 @@ do
     "include/asm-sh/bits/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-sh/bits/Makefile" ;;
     "include/asm-sim/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-sim/Makefile" ;;
     "include/asm-sim/bits/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-sim/bits/Makefile" ;;
-    "include/native/Makefile") CONFIG_FILES="$CONFIG_FILES include/native/Makefile" ;;
     "include/cobalt/Makefile") CONFIG_FILES="$CONFIG_FILES include/cobalt/Makefile" ;;
     "include/cobalt/sys/Makefile") CONFIG_FILES="$CONFIG_FILES include/cobalt/sys/Makefile" ;;
     "include/cobalt/nucleus/Makefile") CONFIG_FILES="$CONFIG_FILES include/cobalt/nucleus/Makefile" ;;
@@ -14211,7 +14208,6 @@ do
     "doc/man/Makefile") CONFIG_FILES="$CONFIG_FILES doc/man/Makefile" ;;
     "doc/man/clocktest.man") CONFIG_FILES="$CONFIG_FILES doc/man/clocktest.man" ;;
     "doc/man/cyclictest.man") CONFIG_FILES="$CONFIG_FILES doc/man/cyclictest.man" ;;
-    "doc/man/klatency.man") CONFIG_FILES="$CONFIG_FILES doc/man/klatency.man" ;;
     "doc/man/latency.man") CONFIG_FILES="$CONFIG_FILES doc/man/latency.man" ;;
     "doc/man/rtcanconfig.man") CONFIG_FILES="$CONFIG_FILES doc/man/rtcanconfig.man" ;;
     "doc/man/rtcanrecv.man") CONFIG_FILES="$CONFIG_FILES doc/man/rtcanrecv.man" ;;
@@ -14223,7 +14219,6 @@ do
     "doc/doxygen/Makefile") CONFIG_FILES="$CONFIG_FILES doc/doxygen/Makefile" ;;
     "doc/doxygen/Doxyfile-common") CONFIG_FILES="$CONFIG_FILES doc/doxygen/Doxyfile-common" ;;
     "doc/doxygen/Doxyfile") CONFIG_FILES="$CONFIG_FILES doc/doxygen/Doxyfile" ;;
-    "doc/doxygen/Doxyfile-native") CONFIG_FILES="$CONFIG_FILES doc/doxygen/Doxyfile-native" ;;
     "doc/doxygen/Doxyfile-nucleus") CONFIG_FILES="$CONFIG_FILES doc/doxygen/Doxyfile-nucleus" ;;
     "doc/doxygen/Doxyfile-posix") CONFIG_FILES="$CONFIG_FILES doc/doxygen/Doxyfile-posix" ;;
     "doc/doxygen/Doxyfile-rtdm") CONFIG_FILES="$CONFIG_FILES doc/doxygen/Doxyfile-rtdm" ;;

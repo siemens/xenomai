@@ -33,11 +33,10 @@
 #define XNSCHED_RT_NR_PRIO	(XNSCHED_RT_MAX_PRIO - XNSCHED_RT_MIN_PRIO + 1)
 
 /*
- * Builtin priorities shared by all core APIs.  Those APIs, namely
- * POSIX, native and RTDM, only use a sub-range of the available
- * priority levels from the RT scheduling class, in order to exhibit a
- * 1:1 mapping with Linux's SCHED_FIFO ascending priority scale
- * [1..99].
+ * Builtin priorities shared by SCHED_FIFO over Cobalt and RTDM, only
+ * use a sub-range of the available priority levels from the RT
+ * scheduling class, in order to exhibit a 1:1 mapping with Linux's
+ * SCHED_FIFO ascending priority scale [1..99].
  */
 #define XNSCHED_LOW_PRIO	0
 #define XNSCHED_HIGH_PRIO	99

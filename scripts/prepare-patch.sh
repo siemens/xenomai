@@ -132,7 +132,6 @@ patch_link n m kernel/cobalt/arch/generic kernel/xenomai/hal
 patch_link n m kernel/cobalt/nucleus kernel/xenomai/nucleus
 patch_link n m kernel/cobalt/rtdm kernel/xenomai/rtdm
 patch_link r m kernel/drivers drivers/xenomai
-patch_link n m kernel/cobalt/native kernel/xenomai/native
 patch_link r n include/asm-generic include/asm-generic/xenomai
 patch_link n n include include/xenomai
 cd $xenomai_root

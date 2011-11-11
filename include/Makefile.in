@@ -95,7 +95,7 @@ ETAGS = etags
 CTAGS = ctags
 DIST_SUBDIRS = alchemy copperplate mercury psos vxworks asm-generic \
 	asm-blackfin asm-x86 asm-powerpc asm-arm asm-nios2 asm-sh \
-	asm-sim analogy native cobalt rtdm
+	asm-sim analogy cobalt rtdm
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 am__relativize = \
   dir0=`pwd`; \
@@ -300,7 +300,6 @@ nodist_include_HEADERS = $(CONFIG_HEADER)
 @XENO_COBALT_TRUE@	asm-sh 		\
 @XENO_COBALT_TRUE@	asm-sim 	\
 @XENO_COBALT_TRUE@	analogy 	\
-@XENO_COBALT_TRUE@	native 		\
 @XENO_COBALT_TRUE@	psos 		\
 @XENO_COBALT_TRUE@	vxworks 	\
 @XENO_COBALT_TRUE@	cobalt 		\

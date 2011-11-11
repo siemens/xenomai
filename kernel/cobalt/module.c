@@ -22,8 +22,8 @@
  * Xenomai POSIX skin is an implementation of a small subset of the Single
  * Unix specification over Xenomai generic RTOS core.
  *
- * The following table gives equivalence between native API services and POSIX
- * services.
+ * The following table gives equivalence between Alchemy API services
+ * and POSIX services.
  *
  * <CENTER>
  * <TABLE>
@@ -32,15 +32,15 @@
  * <TR><TD>@ref cond</TD>           <TD>@ref posix_cond</TD></TR>
  * <TR><TD>@ref event</TD>          <TD>no direct equivalence, <BR>
  *                                      see @ref posix_cond</TD></TR>
- * <TR><TD>@ref native_heap</TD>    <TD>@ref posix_shm</TD></TR>
+ * <TR><TD>@ref alchemy_heap</TD>   <TD>@ref posix_shm</TD></TR>
  * <TR><TD>@ref interrupt</TD>      <TD>@ref posix_intr</TD></TR>
  * <TR><TD>@ref mutex</TD>          <TD>@ref posix_mutex</TD></TR>
  * <TR><TD>@ref pipe</TD>           <TD>no direct equivalence, <BR>
  *                                      see @ref posix_mq</TD></TR>
- * <TR><TD>@ref native_queue</TD>   <TD>@ref posix_mq</TD></TR>
+ * <TR><TD>@ref alchemy_queue</TD>  <TD>@ref posix_mq</TD></TR>
  * <TR><TD>@ref semaphore</TD>      <TD>@ref posix_sem</TD></TR>
  * <TR><TD>@ref task</TD>           <TD>@ref posix_thread</TD></TR>
- * <TR><TD>@ref native_timer</TD>   <TD>@ref posix_time</TD></TR>
+ * <TR><TD>@ref alchemy_timer</TD>  <TD>@ref posix_time</TD></TR>
  * </TABLE>
  * </CENTER>
  *

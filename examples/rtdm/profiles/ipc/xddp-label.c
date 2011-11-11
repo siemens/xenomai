@@ -47,9 +47,6 @@
  *   =>  mirror traffic to RT domain via write()           +--+
  *
  * See Makefile in this directory for build directives.
- *
- * NOTE: XDDP is a replacement for the legacy RT_PIPE interface
- * available from the native skin until Xenomai 3.
  */
 #include <sys/mman.h>
 #include <stdio.h>

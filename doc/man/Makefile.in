@@ -37,11 +37,10 @@ target_triplet = @target@
 subdir = doc/man
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/clocktest.man.in $(srcdir)/cyclictest.man.in \
-	$(srcdir)/klatency.man.in $(srcdir)/latency.man.in \
-	$(srcdir)/rtcanconfig.man.in $(srcdir)/rtcanrecv.man.in \
-	$(srcdir)/rtcansend.man.in $(srcdir)/switchbench.man.in \
-	$(srcdir)/switchtest.man.in $(srcdir)/xeno-config.man.in \
-	$(srcdir)/xeno.man.in
+	$(srcdir)/latency.man.in $(srcdir)/rtcanconfig.man.in \
+	$(srcdir)/rtcanrecv.man.in $(srcdir)/rtcansend.man.in \
+	$(srcdir)/switchbench.man.in $(srcdir)/switchtest.man.in \
+	$(srcdir)/xeno-config.man.in $(srcdir)/xeno.man.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config/ac_prog_cc_for_build.m4 \
 	$(top_srcdir)/config/docbook.m4 \
@@ -55,9 +54,9 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/lib/include/xeno_config.h
-CONFIG_CLEAN_FILES = clocktest.man cyclictest.man klatency.man \
-	latency.man rtcanconfig.man rtcanrecv.man rtcansend.man \
-	switchbench.man switchtest.man xeno.man xeno-config.man
+CONFIG_CLEAN_FILES = clocktest.man cyclictest.man latency.man \
+	rtcanconfig.man rtcanrecv.man rtcansend.man switchbench.man \
+	switchtest.man xeno.man xeno-config.man
 CONFIG_CLEAN_VPATH_FILES =
 SOURCES =
 DIST_SOURCES =
@@ -293,8 +292,6 @@ $(am__aclocal_m4_deps):
 clocktest.man: $(top_builddir)/config.status $(srcdir)/clocktest.man.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 cyclictest.man: $(top_builddir)/config.status $(srcdir)/cyclictest.man.in
-	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
-klatency.man: $(top_builddir)/config.status $(srcdir)/klatency.man.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 latency.man: $(top_builddir)/config.status $(srcdir)/latency.man.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@

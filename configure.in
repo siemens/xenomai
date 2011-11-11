@@ -753,7 +753,6 @@ AC_CONFIG_FILES([ \
 	scripts/xeno \
 	lib/Makefile \
 	lib/cobalt/Makefile \
-	lib/native/Makefile \
 	lib/copperplate/Makefile \
 	lib/alchemy/Makefile \
 	lib/vxworks/Makefile \
@@ -765,7 +764,6 @@ AC_CONFIG_FILES([ \
 	testsuite/cyclic/Makefile \
 	testsuite/switchtest/Makefile \
 	testsuite/clocktest/Makefile \
-	testsuite/klatency/Makefile \
 	testsuite/unit/Makefile \
 	testsuite/xeno-test/Makefile \
 	testsuite/regression/Makefile \
@@ -792,7 +790,6 @@ AC_CONFIG_FILES([ \
 	include/asm-sh/bits/Makefile \
 	include/asm-sim/Makefile \
 	include/asm-sim/bits/Makefile \
-	include/native/Makefile \
 	include/cobalt/Makefile \
 	include/cobalt/sys/Makefile \
 	include/cobalt/nucleus/Makefile \
@@ -812,7 +809,6 @@ if test \! x$XENO_MAYBE_DOCDIR = x ; then
 	doc/man/Makefile \
 	doc/man/clocktest.man \
 	doc/man/cyclictest.man \
-	doc/man/klatency.man \
 	doc/man/latency.man \
 	doc/man/rtcanconfig.man \
 	doc/man/rtcanrecv.man \
@@ -824,7 +820,6 @@ if test \! x$XENO_MAYBE_DOCDIR = x ; then
 	doc/doxygen/Makefile \
 	doc/doxygen/Doxyfile-common \
 	doc/doxygen/Doxyfile \
-	doc/doxygen/Doxyfile-native \
 	doc/doxygen/Doxyfile-nucleus \
 	doc/doxygen/Doxyfile-posix \
 	doc/doxygen/Doxyfile-rtdm \

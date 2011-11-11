@@ -10,6 +10,5 @@ SUBDIRS += \
 	regression \
 	switchtest \
 	xeno-test
-	klatency
 
 endif

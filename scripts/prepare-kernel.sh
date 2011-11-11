@@ -443,7 +443,6 @@ patch_link n m kernel/cobalt/arch/generic kernel/xenomai/hal
 patch_link n m kernel/cobalt/nucleus kernel/xenomai/nucleus
 patch_link n m kernel/cobalt/rtdm kernel/xenomai/rtdm
 patch_link r m kernel/drivers drivers/xenomai
-patch_link n m kernel/cobalt/native kernel/xenomai/native
 patch_architecture_specific="y"
 patch_link r n include/asm-$xenomai_arch $linux_include_asm/xenomai
 patch_architecture_specific="n"

@@ -1,8 +1,8 @@
 HTML_DOCS=api api/search
-PDF_DOCS= native-api.pdf nucleus-api.pdf posix-api.pdf rtdm-api.pdf
+PDF_DOCS= nucleus-api.pdf posix-api.pdf rtdm-api.pdf
 
 EXTRA_DIST = \
-	Doxyfile.in Doxyfile-common.in Doxyfile-native.in Doxyfile-nucleus.in \
+	Doxyfile.in Doxyfile-common.in Doxyfile-nucleus.in \
 	Doxyfile-posix.in Doxyfile-rtdm.in
 
 if !CONFIG_XENO_DOC_DOX

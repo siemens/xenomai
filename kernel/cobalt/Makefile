@@ -1,5 +1,5 @@
 
-obj-$(CONFIG_XENOMAI) += nucleus/ rtdm/ native/ xeno_cobalt.o
+obj-$(CONFIG_XENOMAI) += nucleus/ rtdm/ xeno_cobalt.o
 
 xeno_cobalt-y := sched.o thread_attr.o thread.o mutex_attr.o mutex.o \
 		cond_attr.o cond.o sem.o cancel.o once.o signal.o tsd.o \

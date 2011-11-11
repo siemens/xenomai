@@ -15,7 +15,6 @@ SUBDIRS = 		\
 	asm-sh 		\
 	asm-sim 	\
 	analogy 	\
-	native 		\
 	psos 		\
 	vxworks 	\
 	cobalt 		\

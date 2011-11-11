@@ -161,5 +161,4 @@ endmenu
 
 source "kernel/xenomai/nucleus/Kconfig"
 source "kernel/xenomai/Kconfig"
-source "kernel/xenomai/native/Kconfig"
 source "drivers/xenomai/Kconfig"
