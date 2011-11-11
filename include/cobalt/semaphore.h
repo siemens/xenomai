@@ -146,6 +146,7 @@ COBALT_DECL(int, sem_unlink(const char *name));
 #define SEM_PULSE    0x2
 #define SEM_PSHARED  0x4
 #define SEM_REPORT   0x8
+#define SEM_WARNDEL  0x10
 
 int sem_init_np(sem_t *sem,
 		int flags,

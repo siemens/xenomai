@@ -49,8 +49,8 @@ int __wrap_sem_destroy(sem_t * sem)
 
 	err = -XENOMAI_SKINCALL1(__cobalt_muxid,
 				 __cobalt_sem_destroy, &_sem->shadow_sem);
-	if (!err)
-		return 0;
+	if (err >= 0)
+		return err;
 
 	errno = err;
 

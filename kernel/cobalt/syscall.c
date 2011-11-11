@@ -684,11 +684,11 @@ static int __sem_destroy(union __xeno_sem __user *u_sem)
 		return -EFAULT;
 
 	err = sem_destroy(&sm.native_sem);
-	if (err)
+	if (err < 0)
 		return -thread_get_errno();
 
 	return __xn_safe_copy_to_user(&u_sem->shadow_sem,
-				      &sm.shadow_sem, sizeof(u_sem->shadow_sem));
+				      &sm.shadow_sem, sizeof(u_sem->shadow_sem)) ?: err;
 }
 
 static int __sem_open(unsigned long __user *u_addr,

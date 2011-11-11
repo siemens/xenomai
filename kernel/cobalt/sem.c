@@ -78,20 +78,25 @@ typedef struct cobalt_uptr {
 
 #endif /* !__XENO_SIM__ */
 
-static void sem_destroy_inner(cobalt_sem_t * sem, cobalt_kqueues_t *q)
+static int sem_destroy_inner(cobalt_sem_t * sem, cobalt_kqueues_t *q)
 {
+	int ret = 0;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 	removeq(&q->semq, &sem->link);
-	if (xnsynch_destroy(&sem->synchbase) == XNSYNCH_RESCHED)
+	if (xnsynch_destroy(&sem->synchbase) == XNSYNCH_RESCHED) {
 		xnpod_schedule();
+		ret = 1;
+	}
 	xnlock_put_irqrestore(&nklock, s);
 
 	if (sem->flags & SEM_NAMED)
 		xnfree(sem2named_sem(sem));
 	else
 		xnfree(sem);
+
+	return ret;
 }
 
 /* Called with nklock locked, irq off. */
@@ -124,6 +129,11 @@ static int do_sem_init(sem_t *sm, int flags, unsigned int value)
 	xnqueue_t *semq;
 	int ret;
 	spl_t s;
+
+	if ((flags & SEM_PULSE) != 0 && value > 0) {
+		ret = EINVAL;
+		goto error;
+	}
 
 	sem = xnmalloc(sizeof(cobalt_sem_t));
 	if (sem == NULL) {
@@ -231,6 +241,10 @@ int sem_init(sem_t *sm, int pshared, unsigned int value)
  * default, sem_getvalue() returns a current value of zero for a
  * depleted semaphore with waiters.
  *
+ * - SEM_WARNDEL causes sem_destroy() to return a strictly positive
+ *   value instead of zero, in case threads were pending on the
+ *   successfully deleted semaphore.
+ *
  * @param value the semaphore initial value.
  *
  * @retval 0 on success,
@@ -244,7 +258,7 @@ int sem_init(sem_t *sm, int pshared, unsigned int value)
  */
 int sem_init_np(sem_t *sm, int flags, unsigned int value)
 {
-	if (flags & ~(SEM_FIFO|SEM_PULSE|SEM_PSHARED|SEM_REPORT)) {
+	if (flags & ~(SEM_FIFO|SEM_PULSE|SEM_PSHARED|SEM_REPORT|SEM_WARNDEL)) {
 		thread_set_errno(EINVAL);
 		return -1;
 	}
@@ -264,7 +278,11 @@ int sem_init_np(sem_t *sm, int flags, unsigned int value)
  *
  * @param sm the semaphore to be destroyed.
  *
- * @retval 0 on success,
+ * @retval always 0 on success if SEM_WARNDEL was not mentioned via
+ * sem_init_np().  If SEM_WARNDEL was mentioned, then a strictly
+ * positive value is returned to warn the caller if threads were
+ * pending on the semaphore, or zero otherwise.
+ *
  * @retval -1 with @a errno set if:
  * - EINVAL, the semaphore @a sm is invalid or a named semaphore;
  * - EPERM, the semaphore @a sm is not process-shared and does not belong to the
@@ -278,6 +296,8 @@ int sem_init_np(sem_t *sm, int flags, unsigned int value)
 int sem_destroy(sem_t * sm)
 {
 	struct __shadow_sem *shadow = &((union __xeno_sem *)sm)->shadow_sem;
+	cobalt_sem_t *sem;
+	int warn, ret;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -287,18 +307,20 @@ int sem_destroy(sem_t * sm)
 		goto error;
 	}
 
-	if (sem_kqueue(shadow->sem) != shadow->sem->owningq) {
+	sem = shadow->sem;
+	if (sem_kqueue(sem) != sem->owningq) {
 		thread_set_errno(EPERM);
 		goto error;
 	}
 
+	warn = sem->flags & SEM_WARNDEL;
 	cobalt_mark_deleted(shadow);
-	cobalt_mark_deleted(shadow->sem);
+	cobalt_mark_deleted(sem);
 	xnlock_put_irqrestore(&nklock, s);
 
-	sem_destroy_inner(shadow->sem, sem_kqueue(shadow->sem));
+	ret = sem_destroy_inner(sem, sem_kqueue(sem));
 
-	return 0;
+	return warn ? ret : 0;
 
       error:
 
