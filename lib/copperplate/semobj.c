@@ -35,7 +35,7 @@ int semobj_init(struct semobj *smobj, int flags, int value,
 	if (flags & SEMOBJ_PULSE)
 		sem_flags |= SEM_PULSE;
 
-	if (flags & SEMOBJ_WANRDEL)
+	if (flags & SEMOBJ_WARNDEL)
 		sem_flags |= SEM_WARNDEL;
 
 	ret = sem_init_np(&smobj->core.sem, sem_flags, value);
