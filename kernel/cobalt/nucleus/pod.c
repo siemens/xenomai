@@ -3152,7 +3152,6 @@ int __init xnpod_init_proc(void)
 	xntimer_init_proc();
 	xnheap_init_proc();
 	xnintr_init_proc();
-	xnshadow_init_proc();
 
 	xnvfile_init_regular("latency", &latency_vfile, &nkvfroot);
 	xnvfile_init_regular("version", &version_vfile, &nkvfroot);
@@ -3181,7 +3180,6 @@ void xnpod_cleanup_proc(void)
 	xnvfile_destroy_regular(&version_vfile);
 	xnvfile_destroy_regular(&latency_vfile);
 
-	xnshadow_cleanup_proc();
 	xnintr_cleanup_proc();
 	xnheap_cleanup_proc();
 	xntimer_cleanup_proc();

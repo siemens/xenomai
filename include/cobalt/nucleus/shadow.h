@@ -97,12 +97,4 @@ void xnshadow_demote(struct xnthread *thread);
 }
 #endif
 
-#ifdef CONFIG_XENO_OPT_VFILE
-void xnshadow_init_proc(void);
-void xnshadow_cleanup_proc(void);
-#else /* !CONFIG_XENO_OPT_VFILE */
-static inline void xnshadow_init_proc(void) { }
-static inline void xnshadow_cleanup_proc(void) { }
-#endif /* CONFIG_XENO_OPT_VFILE */
-
 #endif /* !_XENO_NUCLEUS_SHADOW_H */

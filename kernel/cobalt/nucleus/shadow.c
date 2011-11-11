@@ -76,10 +76,6 @@ EXPORT_SYMBOL_GPL(nkmmptd);
 
 struct xnskin_slot {
 	struct xnskin_props *props;
-	atomic_counter_t refcnt;
-#ifdef CONFIG_XENO_OPT_VFILE
-	struct xnvfile_regular vfile;
-#endif
 } skins[XENOMAI_SKINS_NR];
 
 static int lostage_apc;
@@ -336,20 +332,6 @@ static inline void unlock_timers(void)
 		clrbits(nkclock.status, XNTBLCK);
 }
 
-static void xnshadow_dereference_skin(unsigned magic)
-{
-	struct xnskin_slot *sslt;
-	int muxid;
-
-	for (muxid = 0; muxid < XENOMAI_SKINS_NR; muxid++) {
-		sslt = skins + muxid;
-		if (sslt->props && sslt->props->magic == magic) {
-			xnarch_atomic_dec(&sslt->refcnt);
-			break;
-		}
-	}
-}
-
 static void lostage_handler(void *cookie)
 {
 	int cpu, reqnum, type, arg, sig, sigarg;
@@ -375,8 +357,6 @@ static void lostage_handler(void *cookie)
 
 		switch (type) {
 		case LO_UNMAP_REQ:
-			xnshadow_dereference_skin(arg);
-
 			/* fall through */
 		case LO_WAKEUP_REQ:
 			xnpod_schedule();
@@ -960,8 +940,6 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 	struct xnthread_start_attr attr;
 	xnarch_cpumask_t affinity;
 	struct xnsys_ppd *sys_ppd;
-	unsigned int muxid, magic;
-	struct xnskin_slot *sslt;
 	unsigned long *u_mode;
 	xnheap_t *sem_heap;
 	spl_t s;
@@ -989,17 +967,6 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 		if ((ret = rthal_disable_ondemand_mappings(current)))
 			return ret;
 #endif /* CONFIG_MMU */
-
-	/* Increment the interface reference count. */
-	magic = xnthread_get_magic(thread);
-
-	for (muxid = 0; muxid < XENOMAI_SKINS_NR; muxid++) {
-		sslt = skins + muxid;
-		if (sslt->props && sslt->props->magic == magic) {
-			xnarch_atomic_inc(&sslt->refcnt);
-			break;
-		}
-	}
 
 	xnlock_get_irqsave(&nklock, s);
 	sys_ppd = xnsys_ppd_get(0);
@@ -1870,7 +1837,6 @@ static void *xnshadow_sys_event(int event, void *data)
 			return ERR_PTR(-ENOMEM);
 		}
 
-		xnarch_atomic_set(&p->refcnt, 1);
 		exe_path = get_exe_path(current);
 		if (IS_ERR(exe_path)) {
 			printk(KERN_WARNING
@@ -1880,14 +1846,11 @@ static void *xnshadow_sys_event(int event, void *data)
 		}
 		p->exe_path = exe_path;
 
-		xnarch_atomic_inc(&skins[0].refcnt);
-
 		return &p->ppd;
 
 	case XNSHADOW_CLIENT_DETACH:
 		p = ppd2sys(data);
 		xnheap_destroy_mapped(&p->sem_heap, post_ppd_release, NULL);
-		xnarch_atomic_dec(&skins[0].refcnt);
 		if (p->exe_path)
 			kfree(p->exe_path);
 
@@ -2288,7 +2251,6 @@ static inline void do_taskexit_event(struct task_struct *p)
 	if (!xnarch_atomic_get(&sys_ppd->refcnt))
 		ppd_remove_mm(xnshadow_mm(p), &detach_ppd);
 
-	xnshadow_dereference_skin(magic);
 	trace_mark(xn_nucleus, shadow_exit, "thread %p thread_name %s",
 		   thread, xnthread_name(thread));
 }
@@ -2485,47 +2447,6 @@ static inline void do_cleanup_event(struct mm_struct *mm)
 
 RTHAL_DECLARE_CLEANUP_EVENT(cleanup_event);
 
-#ifdef CONFIG_XENO_OPT_VFILE
-
-static struct xnvfile_directory iface_vfroot;
-
-static int iface_vfile_show(struct xnvfile_regular_iterator *it, void *data)
-{
-	struct xnskin_slot *sslt;
-	int refcnt;
-
-	sslt = container_of(it->vfile, struct xnskin_slot, vfile);
-	refcnt = xnarch_atomic_get(&sslt->refcnt);
-	xnvfile_printf(it, "%d\n", refcnt);
-
-	return 0;
-}
-
-static struct xnvfile_regular_ops iface_vfile_ops = {
-	.show = iface_vfile_show,
-};
-
-void xnshadow_init_proc(void)
-{
-	xnvfile_init_dir("interfaces", &iface_vfroot, &nkvfroot);
-}
-
-void xnshadow_cleanup_proc(void)
-{
-	struct xnskin_slot *sslt;
-	int muxid;
-
-	for (muxid = 0; muxid < XENOMAI_SKINS_NR; muxid++) {
-		sslt = skins + muxid;
-		if (sslt->props && sslt->props->name)
-			xnvfile_destroy_regular(&sslt->vfile);
-	}
-
-	xnvfile_destroy_dir(&iface_vfroot);
-}
-
-#endif /* CONFIG_XENO_OPT_VFILE */
-
 /*
  * xnshadow_register_interface() -- Register a new skin/interface.
  * NOTE: an interface can be registered without its pod being
@@ -2569,7 +2490,6 @@ int xnshadow_register_interface(struct xnskin_props *props)
 		sslt = skins + muxid;
 		if (sslt->props == NULL) {
 			sslt->props = props;
-			xnarch_atomic_set(&sslt->refcnt, 0);
 			break;
 		}
 	}
@@ -2580,13 +2500,6 @@ int xnshadow_register_interface(struct xnskin_props *props)
 		up(&registration_mutex);
 		return -EAGAIN;
 	}
-
-#ifdef CONFIG_XENO_OPT_VFILE
-	memset(&sslt->vfile, 0, sizeof(sslt->vfile));
-	sslt->vfile.ops = &iface_vfile_ops;
-	xnvfile_init_regular(props->name, &sslt->vfile,
-			     &iface_vfroot);
-#endif
 
 	up(&registration_mutex);
 
@@ -2614,18 +2527,9 @@ int xnshadow_unregister_interface(int muxid)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (xnarch_atomic_get(&sslt->refcnt) > 0) {
-		xnlock_put_irqrestore(&nklock, s);
-		up(&registration_mutex);
-		return -EBUSY;
-	}
 	sslt->props = NULL;
 
 	xnlock_put_irqrestore(&nklock, s);
-
-#ifdef CONFIG_XENO_OPT_VFILE
-	xnvfile_destroy_regular(&sslt->vfile);
-#endif
 
 	up(&registration_mutex);
 
