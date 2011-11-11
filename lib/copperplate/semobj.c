@@ -200,7 +200,7 @@ int semobj_broadcast(struct semobj *smobj)
 int semobj_wait(struct semobj *smobj, struct timespec *timeout)
 {
 	struct syncstate syns;
-	int ret;
+	int ret = 0;
 
 	ret = syncobj_lock(&smobj->core.sobj, &syns);
 	if (ret)
@@ -236,7 +236,7 @@ int semobj_wait(struct semobj *smobj, struct timespec *timeout)
 done:
 	syncobj_unlock(&smobj->core.sobj, &syns);
 
-	return 0;
+	return ret;
 }
 
 int semobj_getvalue(struct semobj *smobj, int *sval)
