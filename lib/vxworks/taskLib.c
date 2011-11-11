@@ -28,6 +28,7 @@
 #include <sched.h>
 #include "taskLib.h"
 #include "tickLib.h"
+#include "msgQLib.h"
 #include "copperplate/init.h"
 #include "copperplate/heapobj.h"
 #include "copperplate/threadobj.h"
@@ -37,6 +38,7 @@
 #include "vxworks/errnoLib.h"
 
 union wind_wait_union {
+	struct wind_queue_wait queue_wait;
 };
 
 struct cluster wind_task_table;

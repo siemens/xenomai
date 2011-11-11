@@ -157,9 +157,9 @@ STATUS msgQDelete(MSG_Q_ID msgQId)
 
 int msgQReceive(MSG_Q_ID msgQId, char *buffer, UINT maxNBytes, int timeout)
 {
+	struct wind_queue_wait *wait = NULL;
 	struct timespec ts, *timespec;
 	struct msgholder *msg = NULL;
-	struct threadobj *current;
 	UINT nbytes = (UINT)ERROR;
 	struct syncstate syns;
 	struct wind_mq *mq;
@@ -209,10 +209,9 @@ retry:
 	} else
 		timespec = NULL;
 
-	current = threadobj_current();
-	assert(current != NULL);
-	current->wait_u.buffer.ptr = buffer;
-	current->wait_u.buffer.size = maxNBytes;
+	wait = threadobj_prepare_wait(struct wind_queue_wait);
+	wait->ptr = buffer;
+	wait->size = maxNBytes;
 
 	ret = syncobj_pend(&mq->sobj, timespec, &syns);
 	if (ret == -EIDRM) {
@@ -223,12 +222,15 @@ retry:
 		errno = S_objLib_OBJ_TIMEOUT;
 		goto done;
 	}
-	nbytes = current->wait_u.buffer.size;
-	if (nbytes < 0)	/* No direct copy? */
+	nbytes = wait->size;
+	if (nbytes == -1L)	/* No direct copy? */
 		goto retry;
 	syncobj_signal_drain(&mq->sobj);
 done:
 	syncobj_unlock(&mq->sobj, &syns);
+
+	if (wait)
+		threadobj_finish_wait();
 
 	COPPERPLATE_UNPROTECT(svc);
 
@@ -239,6 +241,7 @@ STATUS msgQSend(MSG_Q_ID msgQId, const char *buffer, UINT bytes,
 		int timeout, int prio)
 {
 	struct timespec ts, *timespec;
+	struct wind_queue_wait *wait;
 	struct threadobj *thobj;
 	struct msgholder *msg;
 	struct syncstate syns;
@@ -268,12 +271,13 @@ STATUS msgQSend(MSG_Q_ID msgQId, const char *buffer, UINT bytes,
 	thobj = syncobj_peek_at_pend(&mq->sobj);
 	if (thobj && threadobj_local_p(thobj)) {
 		/* Fast path: direct copy to the receiver's buffer. */
-		maxbytes = thobj->wait_u.buffer.size;
+		wait = threadobj_get_wait(thobj);
+		maxbytes = wait->size;
 		if (bytes > maxbytes)
 			bytes = maxbytes;
 		if (bytes > 0)
-			memcpy(thobj->wait_u.buffer.ptr, buffer, bytes);
-		thobj->wait_u.buffer.size = bytes;
+			memcpy(wait->ptr, buffer, bytes);
+		wait->size = bytes;
 		goto done;
 	}
 
@@ -331,13 +335,15 @@ enqueue:
 	else
 		list_prepend(&msg->link, &mq->msg_list);
 
-	if (thobj)
+	if (thobj) {
 		/*
 		 * We could not copy the message directly to the
 		 * remote buffer, tell the thread to pull it from the
 		 * pool.
 		 */
-		thobj->wait_u.buffer.size = -1;
+		wait = threadobj_get_wait(thobj);
+		wait->size = -1UL;
+	}
 done:
 	if (thobj)	/* Wakeup waiter. */
 		syncobj_wakeup_waiter(&mq->sobj, thobj);

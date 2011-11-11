@@ -235,6 +235,7 @@ u_long q_vident(const char *name, u_long node, u_long *qid_r)
 static u_long __q_send_inner(struct psos_queue *q, unsigned long flags,
 			     u_long *buffer, u_long bytes)
 {
+	struct psos_queue_wait *wait;
 	struct threadobj *thobj;
 	struct msgholder *msg;
 	u_long maxbytes;
@@ -242,12 +243,13 @@ static u_long __q_send_inner(struct psos_queue *q, unsigned long flags,
 	thobj = syncobj_peek_at_pend(&q->sobj);
 	if (thobj && threadobj_local_p(thobj)) {
 		/* Fast path: direct copy to the receiver's buffer. */
-		maxbytes = thobj->wait_u.buffer.size;
+		wait = threadobj_get_wait(thobj);
+		maxbytes = wait->size;
 		if (bytes > maxbytes)
 			bytes = maxbytes;
 		if (bytes > 0)
-			memcpy(thobj->wait_u.buffer.ptr, buffer, bytes);
-		thobj->wait_u.buffer.size = bytes;
+			memcpy(wait->ptr, buffer, bytes);
+		wait->size = bytes;
 		goto done;
 	}
 
@@ -270,13 +272,15 @@ static u_long __q_send_inner(struct psos_queue *q, unsigned long flags,
 	else
 		list_append(&msg->link, &q->msg_list);
 
-	if (thobj)
+	if (thobj) {
 		/*
 		 * We could not copy the message directly to the
 		 * remote buffer, tell the thread to pull it from the
 		 * pool.
 		 */
-		thobj->wait_u.buffer.size = -1;
+		wait = threadobj_get_wait(thobj);
+		wait->size = -1UL;
+	}
 done:
 	if (thobj)
 		syncobj_wakeup_waiter(&q->sobj, thobj);
@@ -399,14 +403,14 @@ u_long q_vbroadcast(u_long qid, void *msgbuf, u_long msglen, u_long *count_r)
 static u_long __q_receive(u_long qid, u_long flags, u_long timeout,
 			  void *buffer, u_long msglen, u_long *msglen_r)
 {
+	struct psos_queue_wait *wait = NULL;
 	struct timespec ts, *timespec;
 	struct msgholder *msg = NULL;
-	struct threadobj *current;
 	struct syncstate syns;
+	unsigned long nbytes;
 	struct psos_queue *q;
 	struct service svc;
 	int ret = SUCCESS;
-	u_long nbytes;
 
 	q = get_queue_from_id(qid, &ret);
 	if (q == NULL)
@@ -423,7 +427,6 @@ static u_long __q_receive(u_long qid, u_long flags, u_long timeout,
 		ret = (flags & Q_VARIABLE) ? ERR_NOTVARQ: ERR_VARQ;
 		goto fail;
 	}
-
 retry:
 	if (!list_empty(&q->msg_list)) {
 		q->msgcount--;
@@ -448,20 +451,22 @@ retry:
 	} else
 		timespec = NULL;
 
-	current = threadobj_current();
-	current->wait_u.buffer.ptr = buffer;
-	current->wait_u.buffer.size = msglen;
+	wait = threadobj_prepare_wait(struct psos_queue_wait);
+	wait->ptr = buffer;
+	wait->size = msglen;
 
 	ret = syncobj_pend(&q->sobj, timespec, &syns);
-	if (ret == -EIDRM)
-		return ERR_QKILLD;
+	if (ret == -EIDRM) {
+		ret = ERR_QKILLD;
+		goto out;
+	}
 
 	if (ret == -ETIMEDOUT) {
 		ret = ERR_TIMEOUT;
 		goto fail;
 	}
-	nbytes = current->wait_u.buffer.size;
-	if (nbytes < 0)	/* No direct copy? */
+	nbytes = wait->size;
+	if (nbytes == -1UL)	/* No direct copy? */
 		goto retry;
 done:
 	if (msglen_r)
@@ -469,6 +474,9 @@ done:
 fail:
 	syncobj_unlock(&q->sobj, &syns);
 out:
+	if (wait)
+		threadobj_finish_wait();
+
 	COPPERPLATE_UNPROTECT(svc);
 
 	return ret;

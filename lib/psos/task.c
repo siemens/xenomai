@@ -36,8 +36,12 @@
 #include "internal.h"
 #include "task.h"
 #include "tm.h"
+#include "queue.h"
+#include "rn.h"
 
 union psos_wait_union {
+	struct psos_queue_wait queue_wait;
+	struct psos_rn_wait rn_wait;
 };
 
 struct cluster psos_task_table;

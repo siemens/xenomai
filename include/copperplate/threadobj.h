@@ -128,12 +128,6 @@ struct threadobj {
 	struct holder wait_link;
 	int wait_status;
 	int wait_prio;
-	union {
-		struct {
-			void *ptr;
-			size_t size;
-		} buffer;
-	} wait_u;	/* XXX: deprecated by wait_union */
 	void (*wait_hook)(struct threadobj *thobj, int status);
 	void *wait_union;
 	size_t wait_size;

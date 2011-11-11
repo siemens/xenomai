@@ -212,8 +212,8 @@ u_long rn_ident(const char *name, u_long *rnid_r)
 u_long rn_getseg(u_long rnid, u_long size, u_long flags,
 		 u_long timeout, void **segaddr)
 {
+	struct psos_rn_wait *wait = NULL;
 	struct timespec ts, *timespec;
-	struct threadobj *current;
 	struct syncstate syns;
 	struct psos_rn *rn;
 	struct service svc;
@@ -258,9 +258,9 @@ starve:
 	} else
 		timespec = NULL;
 
-	current = threadobj_current();
-	current->wait_u.buffer.ptr = NULL;
-	current->wait_u.buffer.size = size;
+	wait = threadobj_prepare_wait(struct psos_rn_wait);
+	wait->ptr = NULL;
+	wait->size = size;
 
 	ret = syncobj_pend(&rn->sobj, timespec, &syns);
 	if (ret == -ETIMEDOUT)
@@ -274,10 +274,13 @@ starve:
 		goto out;
 	}
 
-	*segaddr = current->wait_u.buffer.ptr;
+	*segaddr = wait->ptr;
 done:
 	syncobj_unlock(&rn->sobj, &syns);
 out:
+	if (wait)
+		threadobj_finish_wait();
+
 	COPPERPLATE_UNPROTECT(svc);
 
 	return ret;
@@ -286,6 +289,7 @@ out:
 u_long rn_retseg(u_long rnid, void *segaddr)
 {
 	struct threadobj *thobj, *tmp;
+	struct psos_rn_wait *wait;
 	struct syncstate syns;
 	struct psos_rn *rn;
 	struct service svc;
@@ -312,14 +316,15 @@ u_long rn_retseg(u_long rnid, void *segaddr)
 		goto done;
 
 	syncobj_for_each_waiter_safe(&rn->sobj, thobj, tmp) {
-		size = thobj->wait_u.buffer.size;
+		wait = threadobj_get_wait(thobj);
+		size = wait->size;
 		if (rn->usedmem + size > rn->length)
 			continue;
 		seg = heapobj_alloc(&rn->hobj, size);
 		if (seg) {
 			rn->busynr++;
 			rn->usedmem += heapobj_validate(&rn->hobj, seg);
-			thobj->wait_u.buffer.ptr = seg;
+			wait->ptr = seg;
 			syncobj_wakeup_waiter(&rn->sobj, thobj);
 		}
 	}

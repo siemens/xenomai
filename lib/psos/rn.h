@@ -39,6 +39,11 @@ struct psos_rn {
 	struct pvclusterobj cobj;
 };
 
+struct psos_rn_wait {
+	size_t size;
+	void *ptr;
+};
+
 extern struct pvcluster psos_rn_table;
 
 #endif /* _PSOS_RN_H */

@@ -41,6 +41,11 @@ struct psos_queue {
 	struct clusterobj cobj;
 };
 
+struct psos_queue_wait {
+	size_t size;
+	void *ptr;
+};
+
 extern struct cluster psos_queue_table;
 
 #endif /* _PSOS_QUEUE_H */

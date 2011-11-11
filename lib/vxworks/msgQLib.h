@@ -37,4 +37,9 @@ struct wind_mq {
 	struct list msg_list;
 };
 
+struct wind_queue_wait {
+	size_t size;
+	void *ptr;
+};
+
 #endif /* _VXWORKS_MSGQLIB_H */
