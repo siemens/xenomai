@@ -24,12 +24,6 @@
 
 extern int __native_muxid;
 
-int rt_timer_set_mode(RTIME tickval)
-{
-	return XENOMAI_SKINCALL1(__native_muxid, __native_timer_set_mode,
-				 &tickval);
-}
-
 RTIME rt_timer_read(void)
 {
 	RTIME now;

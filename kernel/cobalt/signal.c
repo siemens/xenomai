@@ -1026,7 +1026,7 @@ int sigtimedwait(const sigset_t * __restrict__ set,
 			goto out;
 		}
 
-		to = ts2ticks_ceil(timeout) + 1;
+		to = ts2ns(timeout) + 1;
 	}
 
 	do {

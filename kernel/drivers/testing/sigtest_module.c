@@ -1,4 +1,4 @@
-#include <nucleus/timebase.h>
+#include <nucleus/clock.h>
 #include <nucleus/timer.h>
 #include <nucleus/shadow.h>
 #include <nucleus/thread.h>
@@ -8,7 +8,6 @@
 #include <testing/sigtest_syscall.h>
 
 static int muxid;
-static xntbase_t *tbase;
 
 static int *sigs, next_sig;
 static size_t nr_sigs;
@@ -50,7 +49,8 @@ static int __sigtest_queue(struct pt_regs *regs)
 static int __sigtest_wait_pri(struct pt_regs *regs)
 {
 	xnthread_t *thread = xnshadow_thread(current);
-	xnticks_t ticks = xntbase_ns2ticks(tbase, 20000000);
+	xnticks_t ticks = 20000000;
+
 	xnpod_suspend_thread(thread, XNDELAY, ticks, XN_RELATIVE, NULL);
 	if (xnthread_test_info(thread, XNBREAK))
 		return -EINTR;
@@ -96,7 +96,6 @@ static struct xnskin_props __props = {
 	.systab = __systab,
 	.eventcb = NULL,
 	.sig_unqueue = sigtest_unqueue,
-	.timebasep = &tbase,
 	.module = THIS_MODULE
 };
 
@@ -110,10 +109,6 @@ int SKIN_INIT(sigtest)
 	if (err)
 		goto fail;
 
-	err = xntbase_alloc("sigtest", 0, 0, &tbase);
-	if (err)
-		goto fail_shutdown_pod;
-
 	muxid = xnshadow_register_interface(&__props);
 	if (muxid < 0) {
 		err = muxid;
@@ -123,7 +118,7 @@ int SKIN_INIT(sigtest)
 		return err;
 	}
 
-	xntimer_init(&sigtest_timer, tbase, sigtest_timer_handler);
+	xntimer_init(&sigtest_timer, sigtest_timer_handler);
 
 	return 0;
 }
@@ -133,7 +128,6 @@ void SKIN_EXIT(sigtest)
 	xnprintf("stopping sigtest services\n");
 	xntimer_destroy(&sigtest_timer);
 	xnshadow_unregister_interface(muxid);
-	xntbase_free(tbase);
 	xnpod_shutdown(XNPOD_NORMAL_EXIT);
 }
 module_init(__sigtest_skin_init);

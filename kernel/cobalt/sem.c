@@ -747,7 +747,7 @@ int sem_timedwait(sem_t * sm, const struct timespec *abs_timeout)
 	}
 
 	xnlock_get_irqsave(&nklock, s);
-	err = sem_timedwait_internal(shadow, 1, ts2ticks_ceil(abs_timeout) + 1);
+	err = sem_timedwait_internal(shadow, 1, ts2ns(abs_timeout) + 1);
 	xnlock_put_irqrestore(&nklock, s);
 
   error:

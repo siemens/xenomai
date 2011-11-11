@@ -99,7 +99,7 @@ void cobalt_timer_notified(cobalt_siginfo_t * si)
 		return;
 	}
 
-	now = xntbase_get_rawclock(cobalt_tbase);
+	now = xnclock_read_raw();
 
 	timer->overruns = xntimer_get_overruns(&timer->timerbase, now);
 }
@@ -213,8 +213,7 @@ int timer_create(clockid_t clockid,
 	} else
 		timer->si.info.si_value.sival_int = (timer - timer_pool);
 
-	xntimer_init(&timer->timerbase, cobalt_tbase,
-		     cobalt_base_timer_handler);
+	xntimer_init(&timer->timerbase, cobalt_base_timer_handler);
 
 	timer->overruns = 0;
 	timer->owner = NULL;
@@ -311,10 +310,10 @@ static void cobalt_timer_gettime_inner(struct cobalt_timer *__restrict__ timer,
 				      struct itimerspec *__restrict__ value)
 {
 	if (xntimer_running_p(&timer->timerbase)) {
-		ticks2ts(&value->it_value,
-			 xntimer_get_timeout(&timer->timerbase));
-		ticks2ts(&value->it_interval,
-			 xntimer_interval(&timer->timerbase));
+		ns2ts(&value->it_value,
+		      xntimer_get_timeout(&timer->timerbase));
+		ns2ts(&value->it_interval,
+		      xntimer_interval(&timer->timerbase));
 	} else {
 		value->it_value.tv_sec = 0;
 		value->it_value.tv_nsec = 0;
@@ -341,9 +340,8 @@ static void cobalt_timer_gettime_inner(struct cobalt_timer *__restrict__ timer,
  * is interpreted as an absolute date of the clock passed to the timer_create()
  * service. Otherwise, the expiration value is interpreted as a time interval.
  *
- * Expiration date and reload value are rounded to an integer count of system
- * clock ticks (see note in section @ref posix_time "Clocks and timers services"
- * for details on the duration of the system tick).
+ * Expiration date and reload value are rounded to an integer count of
+ * nanoseconds.
  *
  * @param timerid identifier of the timer to be started or stopped;
  *
@@ -432,8 +430,8 @@ int timer_settime(timer_t timerid,
 		xntimer_stop(&timer->timerbase);
 		timer->owner = NULL;
 	} else {
-		xnticks_t start = ts2ticks_ceil(&value->it_value) + 1;
-		xnticks_t period = ts2ticks_ceil(&value->it_interval);
+		xnticks_t start = ts2ns(&value->it_value) + 1;
+		xnticks_t period = ts2ns(&value->it_interval);
 
 		xntimer_set_sched(&timer->timerbase, xnpod_current_sched());
 		if (xntimer_start(&timer->timerbase, start, period,
@@ -446,9 +444,7 @@ int timer_settime(timer_t timerid,
 					start += period;
 				} while ((xnsticks_t) (start - now) <= 0);
 			} else
-				start = now + xntbase_ns2ticks
-					(cobalt_tbase,
-					 xnarch_tsc_to_ns(nklatency));
+				start = now + xnarch_tsc_to_ns(nklatency);
 			xntimer_start(&timer->timerbase, start, period,
 				      clock_flag(flags, timer->clockid));
 		}

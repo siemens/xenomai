@@ -28,20 +28,17 @@
  * The SCHED_OTHER policy is mainly useful for user-space non-realtime
  * activities that need to synchronize with real-time activities.
  *
- * The SCHED_RR policy is only effective if the time base is periodic
- * (i.e. if configured with the compilation constant @a
- * CONFIG_XENO_OPT_POSIX_PERIOD or the @a xeno_nucleus module
- * parameter @a tick_arg set to a non null value). The SCHED_RR
- * round-robin time slice is configured with the @a xeno_posix module
- * parameter @a time_slice, as a count of system timer clock ticks.
+ * The SCHED_RR round-robin time slice is configured with the @a
+ * xeno_posix module parameter @a time_slice.
  *
  * The SCHED_SPORADIC policy provides a mean to schedule aperiodic or
  * sporadic threads in periodic-based systems.
  *
- * The scheduling policy and priority of a thread is set when creating a thread,
- * by using thread creation attributes (see pthread_attr_setinheritsched(),
- * pthread_attr_setschedpolicy() and pthread_attr_setschedparam()), or when the
- * thread is already running by using the service pthread_setschedparam().
+ * The scheduling policy and priority of a thread is set when creating
+ * a thread, by using thread creation attributes (see
+ * pthread_attr_setinheritsched(), pthread_attr_setschedpolicy() and
+ * pthread_attr_setschedparam()), or when the thread is already
+ * running by using the service pthread_setschedparam().
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_08.html#tag_02_08_04">
@@ -157,7 +154,7 @@ int sched_rr_get_interval(int pid, struct timespec *interval)
 		return -1;
 	}
 
-	ticks2ts(interval, cobalt_time_slice);
+	ns2ts(interval, cobalt_time_slice);
 
 	return 0;
 }
@@ -259,15 +256,15 @@ int pthread_getschedparam_ex(pthread_t tid, int *pol, struct sched_param_ex *par
 
 	if (base_class == &xnsched_class_rt) {
 		if (xnthread_test_state(thread, XNRRB))
-			ticks2ts(&par->sched_rr_quantum, xnthread_time_slice(thread));
+			ns2ts(&par->sched_rr_quantum, xnthread_time_slice(thread));
 		goto unlock_and_exit;
 	}
 
 #ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
 	if (base_class == &xnsched_class_sporadic) {
 		par->sched_ss_low_priority = thread->pss->param.low_prio;
-		ticks2ts(&par->sched_ss_repl_period, thread->pss->param.repl_period);
-		ticks2ts(&par->sched_ss_init_budget, thread->pss->param.init_budget);
+		ns2ts(&par->sched_ss_repl_period, thread->pss->param.repl_period);
+		ns2ts(&par->sched_ss_init_budget, thread->pss->param.init_budget);
 		par->sched_ss_max_repl = thread->pss->param.max_repl;
 		goto unlock_and_exit;
 	}
@@ -453,7 +450,7 @@ int pthread_setschedparam_ex(pthread_t tid, int pol, const struct sched_param_ex
 
 	switch (pol) {
 	case SCHED_RR:
-		tslice = ts2ticks_ceil(&par->sched_rr_quantum);
+		tslice = ts2ns(&par->sched_rr_quantum);
 		ret = xnpod_set_thread_tslice(&tid->threadbase, tslice);
 		break;
 	default:
@@ -467,8 +464,8 @@ int pthread_setschedparam_ex(pthread_t tid, int pol, const struct sched_param_ex
 		param.pss.normal_prio = par->sched_priority;
 		param.pss.low_prio = par->sched_ss_low_priority;
 		param.pss.current_prio = param.pss.normal_prio;
-		param.pss.init_budget = ts2ticks_ceil(&par->sched_ss_init_budget);
-		param.pss.repl_period = ts2ticks_ceil(&par->sched_ss_repl_period);
+		param.pss.init_budget = ts2ns(&par->sched_ss_init_budget);
+		param.pss.repl_period = ts2ns(&par->sched_ss_repl_period);
 		param.pss.max_repl = par->sched_ss_max_repl;
 		ret = xnpod_set_thread_schedparam(&tid->threadbase,
 						  &xnsched_class_sporadic, &param);

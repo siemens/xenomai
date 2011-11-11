@@ -743,16 +743,6 @@ out:
 
 #endif /* CONFIG_XENO_OPT_NATIVE_MPS */
 
-static int __rt_timer_set_mode(RTIME __user *u_tickval)
-{
-	RTIME tickval;
-
-	if (__xn_safe_copy_from_user(&tickval, u_tickval, sizeof(tickval)))
-		return -EFAULT;
-
-	return rt_timer_set_mode(tickval);
-}
-
 static int __rt_timer_read(RTIME __user *u_time)
 {
 	RTIME now = rt_timer_read();
@@ -2610,7 +2600,6 @@ static struct xnsysent __systab[] = {
 	SKINCALL_DEF(__native_task_send, __rt_task_send, primary),
 	SKINCALL_DEF(__native_task_receive, __rt_task_receive, primary),
 	SKINCALL_DEF(__native_task_reply, __rt_task_reply, primary),
-	SKINCALL_DEF(__native_timer_set_mode, __rt_timer_set_mode, downup),
 	SKINCALL_DEF(__native_unimp_22, __rt_call_not_available, any),
 	SKINCALL_DEF(__native_timer_read, __rt_timer_read, any),
 	SKINCALL_DEF(__native_timer_tsc, __rt_timer_tsc, any),
@@ -2687,7 +2676,6 @@ static struct xnskin_props __props = {
 	.nrcalls = sizeof(__systab) / sizeof(__systab[0]),
 	.systab = __systab,
 	.eventcb = &__shadow_eventcb,
-	.timebasep = &__native_tbase,
 	.module = THIS_MODULE
 };
 

@@ -30,7 +30,7 @@ includesub_HEADERS = \
 	system.h \
 	sys_ppd.h \
 	thread.h \
-	timebase.h \
+	clock.h \
 	timer.h \
 	trace.h \
 	types.h \

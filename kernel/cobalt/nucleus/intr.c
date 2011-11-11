@@ -42,8 +42,8 @@
 DEFINE_PRIVATE_XNLOCK(intrlock);
 
 #ifdef CONFIG_XENO_OPT_STATS
-xnintr_t nkclock;	     /* Only for statistics */
-static int xnintr_count = 1; /* Number of attached xnintr objects + nkclock */
+xnintr_t nktimer;	     /* Only for statistics */
+static int xnintr_count = 1; /* Number of attached xnintr objects + nktimer */
 static int xnintr_list_rev;  /* Modification counter of xnintr list */
 
 /* Both functions update xnintr_list_rev at the very end.
@@ -97,17 +97,17 @@ void xnintr_clock_handler(void)
 	xnstat_exectime_t *prev;
 
 	prev = xnstat_exectime_switch(sched,
-		&nkclock.stat[xnsched_cpu(sched)].account);
-	xnstat_counter_inc(&nkclock.stat[xnsched_cpu(sched)].hits);
+		&nktimer.stat[xnsched_cpu(sched)].account);
+	xnstat_counter_inc(&nktimer.stat[xnsched_cpu(sched)].hits);
 
 	trace_mark(xn_nucleus, irq_enter, "irq %u", XNARCH_TIMER_IRQ);
-	trace_mark(xn_nucleus, tbase_tick, "base %s", nktbase.name);
+	trace_mark(xn_nucleus, clock_tick, MARK_NOARGS);
 
 	++sched->inesting;
 	__setbits(sched->lflags, XNINIRQ);
 
 	xnlock_get(&nklock);
-	xntimer_tick_aperiodic();
+	xntimer_tick();
 	xnlock_put(&nklock);
 
 	xnstat_exectime_switch(sched, prev);
@@ -935,7 +935,7 @@ int xnintr_query_next(int irq, xnintr_iterator_t *iterator, char *name_buf)
 
 	if (!iterator->prev) {
 		if (irq == XNARCH_TIMER_IRQ)
-			intr = &nkclock;
+			intr = &nktimer;
 		else
 			intr = xnintr_shirq_first(irq);
 	} else

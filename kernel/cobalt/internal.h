@@ -90,8 +90,6 @@ typedef struct {
 extern int cobalt_muxid;
 #endif /* !__XENO_SIM__ */
 
-extern xntbase_t *cobalt_tbase;
-
 extern cobalt_kqueues_t cobalt_global_kqueues;
 
 #ifndef __XENO_SIM__
@@ -127,56 +125,44 @@ static inline cobalt_kqueues_t *cobalt_kqueues(int pshared)
 #endif /* __XENO_SIM__ */
 }
 
-static inline void ticks2ts(struct timespec *ts, xnticks_t ticks)
+static inline void ns2ts(struct timespec *ts, xnticks_t nsecs)
 {
-	ts->tv_sec = xnarch_divrem_billion(xntbase_ticks2ns(cobalt_tbase, ticks),
-					   &ts->tv_nsec);
+	ts->tv_sec = xnarch_divrem_billion(nsecs, &ts->tv_nsec);
 }
 
-static inline xnticks_t ts2ticks_floor(const struct timespec *ts)
-{
-	xntime_t nsecs = ts->tv_nsec;
-	if(ts->tv_sec)
-		nsecs += (xntime_t) ts->tv_sec * ONE_BILLION;
-	return xntbase_ns2ticks(cobalt_tbase, nsecs);
-}
-
-static inline xnticks_t ts2ticks_ceil(const struct timespec *ts)
+static inline xnticks_t ts2ns(const struct timespec *ts)
 {
 	xntime_t nsecs = ts->tv_nsec;
-	unsigned long rem;
-	xnticks_t ticks;
-	if(ts->tv_sec)
-		nsecs += (xntime_t) ts->tv_sec * ONE_BILLION;
-	ticks = xnarch_ulldiv(nsecs, xntbase_get_tickval(cobalt_tbase), &rem);
-	return rem ? ticks+1 : ticks;
+
+	if (ts->tv_sec)
+		nsecs += (xntime_t)ts->tv_sec * ONE_BILLION;
+
+	return nsecs;
 }
 
-static inline xnticks_t tv2ticks_ceil(const struct timeval *tv)
+static inline xnticks_t tv2ns(const struct timeval *tv)
 {
 	xntime_t nsecs = tv->tv_usec * 1000;
-	unsigned long rem;
-	xnticks_t ticks;
-	if(tv->tv_sec)
-		nsecs += (xntime_t) tv->tv_sec * ONE_BILLION;
-	ticks = xnarch_ulldiv(nsecs, xntbase_get_tickval(cobalt_tbase), &rem);
-	return rem ? ticks+1 : ticks;
+
+	if (tv->tv_sec)
+		nsecs += (xntime_t)tv->tv_sec * ONE_BILLION;
+
+	return nsecs;
 }
 
 static inline void ticks2tv(struct timeval *tv, xnticks_t ticks)
 {
 	unsigned long nsecs;
-	tv->tv_sec = xnarch_divrem_billion(xntbase_ticks2ns(cobalt_tbase, ticks),
-					   &nsecs);
+
+	tv->tv_sec = xnarch_divrem_billion(ticks, &nsecs);
 	tv->tv_usec = nsecs / 1000;
 }
 
 static inline xnticks_t clock_get_ticks(clockid_t clock_id)
 {
-	if(clock_id == CLOCK_REALTIME)
-		return xntbase_get_time(cobalt_tbase);
-	else
-		return xntbase_get_jiffies(cobalt_tbase);
+	return clock_id == CLOCK_REALTIME ?
+		xnclock_read() :
+		xnclock_read_monotonic();
 }
 
 static inline int clock_flag(int flag, clockid_t clock_id)

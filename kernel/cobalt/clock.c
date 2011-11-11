@@ -25,28 +25,22 @@
  * Xenomai POSIX skin supports two clocks:
  *
  * CLOCK_REALTIME maps to the nucleus system clock, keeping time as the amount
- * of time since the Epoch, with a resolution of one system clock tick.
+ * of time since the Epoch, with a resolution of one nanosecond.
  *
- * CLOCK_MONOTONIC maps to an architecture-dependent high resolution counter, so
- * is suitable for measuring short time intervals. However, when used for
- * sleeping (with clock_nanosleep()), the CLOCK_MONOTONIC clock has a resolution
- * of one system clock tick, like the CLOCK_REALTIME clock.
+ * CLOCK_MONOTONIC maps to an architecture-dependent high resolution
+ * counter, so is suitable for measuring short time
+ * intervals. However, when used for sleeping (with
+ * clock_nanosleep()), the CLOCK_MONOTONIC clock has a resolution of
+ * one nanosecond, like the CLOCK_REALTIME clock.
  *
  * CLOCK_MONOTONIC_RAW is Linux-specific, and provides monotonic time
  * values from a hardware timer which is not adjusted by NTP. This is
  * strictly equivalent to CLOCK_MONOTONIC with Xenomai, which is not
  * NTP adjusted either.
  *
- * Timer objects may be created with the timer_create() service using either of
- * the two clocks, but the resolution of these timers is one system clock tick,
- * as is the case for clock_nanosleep().
- *
- * @note The duration of the POSIX clock tick depends on the active
- * time base (configurable at compile-time with the constant @a
- * CONFIG_XENO_OPT_POSIX_PERIOD, and at run-time with the @a
- * xeno_posix module parameter @a tick_arg). When the time base is
- * aperiodic (which is the default) the system clock tick is one
- * nanosecond.
+ * Timer objects may be created with the timer_create() service using
+ * either of the two clocks. The resolution of these timers is one
+ * nanosecond, as is the case for clock_nanosleep().
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_08.html#tag_02_08_05">
@@ -65,9 +59,8 @@
  * This service returns, at the address @a res, if it is not @a NULL, the
  * resolution of the clock @a clock_id.
  *
- * For both CLOCK_REALTIME, CLOCK_MONOTONIC and CLOCK_MONOTONIC_RAW,
- * this resolution is the duration of one system clock tick. No other
- * clock is supported.
+ * For CLOCK_REALTIME, CLOCK_MONOTONIC and CLOCK_MONOTONIC_RAW, this
+ * resolution is one nanosecond. No other clock is supported.
  *
  * @param clock_id clock identifier, either CLOCK_REALTIME,
  * CLOCK_MONOTONIC or CLOCK_MONOTONIC_RAW;
@@ -91,7 +84,7 @@ int clock_getres(clockid_t clock_id, struct timespec *res)
 	case CLOCK_MONOTONIC:
 	case CLOCK_MONOTONIC_RAW:
 		if (res)
-			ticks2ts(res, 1);
+			ns2ts(res, 1);
 		break;
 	default:
 		thread_set_errno(EINVAL);
@@ -177,14 +170,13 @@ retry:
  * This service returns, at the address @a tp the current value of the clock @a
  * clock_id. If @a clock_id is:
  * - CLOCK_REALTIME, the clock value represents the amount of time since the
- *   Epoch, with a precision of one system clock tick;
+ *   Epoch, with a precision of one nanosecond;
  * - CLOCK_MONOTONIC, the clock value is given by an architecture-dependent high
- *   resolution counter, with a precision independent from the system clock tick
- *   duration.
+ *   resolution counter, with a precision of one nanosecond.
  * - CLOCK_MONOTONIC_RAW, same as CLOCK_MONOTONIC.
  * - CLOCK_HOST_REALTIME, the clock value as seen by the host, typically
  *   Linux. Resolution and precision depend on the host, but it is guaranteed
- *   that both, host and Xenomai, see the same information.
+ *   that both, host and Xenomai, use the same information.
  *
  * @param clock_id clock identifier, either CLOCK_REALTIME, CLOCK_MONOTONIC,
  *        CLOCK_MONOTONIC_RAW or CLOCK_HOST_REALTIME;
@@ -206,7 +198,7 @@ int clock_gettime(clockid_t clock_id, struct timespec *tp)
 
 	switch (clock_id) {
 	case CLOCK_REALTIME:
-		ticks2ts(tp, xntbase_get_time(cobalt_tbase));
+		ns2ts(tp, xnclock_read());
 		break;
 
 	case CLOCK_MONOTONIC:
@@ -262,11 +254,11 @@ int clock_settime(clockid_t clock_id, const struct timespec *tp)
 		return -1;
 	}
 
-	new_date = ts2ticks_floor(tp);
+	new_date = ts2ns(tp);
 
 	xnlock_get_irqsave(&nklock, s);
-	now = xntbase_get_time(cobalt_tbase);
-	xntbase_adjust_time(cobalt_tbase, (xnsticks_t) (new_date - now));
+	now = xnclock_read();
+	xnclock_adjust((xnsticks_t) (new_date - now));
 	xnlock_put_irqrestore(&nklock, s);
 
 	return 0;
@@ -285,7 +277,7 @@ int clock_settime(clockid_t clock_id, const struct timespec *tp)
  * set, and @a rmtp is not @a NULL, the time remaining until the specified
  * wakeup time is returned at the address @a rmtp.
  *
- * The resolution of this service is one system clock tick.
+ * The resolution of this service is one nanosecond.
  *
  * @param clock_id clock identifier, either CLOCK_REALTIME,
  * CLOCK_MONOTONIC or CLOCK_MONOTONIC_RAW.
@@ -344,7 +336,7 @@ int clock_nanosleep(clockid_t clock_id,
 
 	thread_cancellation_point(cur);
 
-	xnpod_suspend_thread(cur, XNDELAY, ts2ticks_ceil(rqtp) + 1,
+	xnpod_suspend_thread(cur, XNDELAY, ts2ns(rqtp) + 1,
 			     clock_flag(flags, clock_id), NULL);
 
 	thread_cancellation_point(cur);
@@ -360,7 +352,7 @@ int clock_nanosleep(clockid_t clock_id,
 			xnlock_put_irqrestore(&nklock, s);
 			rem = expiry - now;
 
-			ticks2ts(rmtp, rem > 0 ? rem : 0);
+			ns2ts(rmtp, rem > 0 ? rem : 0);
 		} else
 			xnlock_put_irqrestore(&nklock, s);
 
@@ -383,7 +375,7 @@ int clock_nanosleep(clockid_t clock_id,
  * time remaining until the specified wakeup time is returned at the address @a
  * rmtp.
  *
- * The resolution of this service is one system clock tick.
+ * The resolution of this service is one nanosecond.
  *
  * @param rqtp address of the wakeup time.
  *

@@ -40,6 +40,7 @@
 #include <nucleus/synch.h>
 #include <nucleus/select.h>
 #include <nucleus/vfile.h>
+#include <nucleus/clock.h>
 #include <rtdm/rtdm.h>
 
 /* debug support */
@@ -595,17 +596,14 @@ static inline void rtdm_context_put(struct rtdm_dev_context *context)
 }
 
 /* --- clock services --- */
-struct xntbase;
-extern struct xntbase *rtdm_tbase;
-
 static inline nanosecs_abs_t rtdm_clock_read(void)
 {
-	return xntbase_ticks2ns(rtdm_tbase, xntbase_get_time(rtdm_tbase));
+	return xnclock_read();
 }
 
 static inline nanosecs_abs_t rtdm_clock_read_monotonic(void)
 {
-	return xntbase_ticks2ns(rtdm_tbase, xntbase_get_jiffies(rtdm_tbase));
+	return xnclock_read_monotonic();
 }
 #endif /* !DOXYGEN_CPP */
 
@@ -998,7 +996,7 @@ enum rtdm_timer_mode {
 #ifndef DOXYGEN_CPP /* Avoid broken doxygen output */
 #define rtdm_timer_init(timer, handler, name)		\
 ({							\
-	xntimer_init((timer), rtdm_tbase, handler);	\
+	xntimer_init((timer), &handler);		\
 	xntimer_set_name((timer), (name));		\
 	0;						\
 })
@@ -1017,9 +1015,7 @@ static inline int rtdm_timer_start_in_handler(rtdm_timer_t *timer,
 					      nanosecs_rel_t interval,
 					      enum rtdm_timer_mode mode)
 {
-	return xntimer_start(timer, xntbase_ns2ticks_ceil(rtdm_tbase, expiry),
-			     xntbase_ns2ticks_ceil(rtdm_tbase, interval),
-			     (xntmode_t)mode);
+	return xntimer_start(timer, expiry, interval, (xntmode_t)mode);
 }
 
 static inline void rtdm_timer_stop_in_handler(rtdm_timer_t *timer)
@@ -1087,9 +1083,8 @@ static inline int rtdm_task_set_period(rtdm_task_t *task,
 {
 	if (period < 0)
 		period = 0;
-	return xnpod_set_thread_periodic(task, XN_INFINITE, XN_RELATIVE,
-					 xntbase_ns2ticks_ceil
-					 (xnthread_time_base(task), period));
+
+	return xnpod_set_thread_periodic(task, XN_INFINITE, XN_RELATIVE, period);
 }
 
 static inline int rtdm_task_unblock(rtdm_task_t *task)

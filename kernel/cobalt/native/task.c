@@ -278,7 +278,6 @@ int rt_task_create(RT_TASK *task,
 	if (name)
 		xnobject_copy_name(task->rname, name);
 
-	attr.tbase = __native_tbase;
 	attr.name = name;
 	attr.flags = bflags;
 	attr.ops = &__xeno_task_ops;
@@ -943,8 +942,6 @@ int rt_task_set_priority(RT_TASK *task, int prio)
  * - -EINTR is returned if rt_task_unblock() has been called for the
  * sleeping task before the sleep time has elapsed.
  *
- * - -EWOULDBLOCK is returned if the system timer is inactive.
- *
  * - -EPERM is returned if this service was called from a context
  * which cannot sleep (e.g. interrupt, non-realtime or scheduler
  * locked).
@@ -975,9 +972,6 @@ int rt_task_sleep(RTIME delay)
 
 	self = xnpod_current_thread();
 
-	if (!xnthread_timed_p(self))
-		return -EWOULDBLOCK;
-
 	/* Calling the suspension service on behalf of the current task
 	   implicitely calls the rescheduling procedure. */
 
@@ -1005,9 +999,6 @@ int rt_task_sleep(RTIME delay)
  * sleeping task before the sleep time has elapsed.
  *
  * - -ETIMEDOUT is returned if @a date has already elapsed.
- *
- * - -EWOULDBLOCK is returned if the system timer is inactive, and
- *    @date is valid but different from TM_INFINITE.
  *
  * - -EPERM is returned if this service was called from a context
  * which cannot sleep (e.g. interrupt, non-realtime or scheduler
@@ -1043,11 +1034,8 @@ int rt_task_sleep_until(RTIME date)
 	if (date == TM_INFINITE)
 		/* i.e. will resume only upon rt_task_unblock(). */
 		mode = XN_RELATIVE;
-	else if (date <= xntbase_get_time(__native_tbase)) {
+	else if (date <= xnclock_read_monotonic()) {
 		err = -ETIMEDOUT;
-		goto unlock_and_exit;
-	} else if (!xnthread_timed_p(self)) {
-		err = -EWOULDBLOCK;
 		goto unlock_and_exit;
 	}
 

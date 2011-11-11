@@ -235,7 +235,7 @@ int rt_alarm_create(RT_ALARM *alarm,
 	if (xnpod_asynch_p())
 		return -EPERM;
 
-	xntimer_init(&alarm->timer_base, __native_tbase, __alarm_trampoline);
+	xntimer_init(&alarm->timer_base, __alarm_trampoline);
 	alarm->handle = 0;	/* i.e. (still) unregistered alarm. */
 	alarm->magic = XENO_ALARM_MAGIC;
 	alarm->expiries = 0;

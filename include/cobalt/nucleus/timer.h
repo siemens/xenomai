@@ -23,7 +23,7 @@
 #ifndef _XENO_NUCLEUS_TIMER_H
 #define _XENO_NUCLEUS_TIMER_H
 
-#include <nucleus/timebase.h>
+#include <nucleus/clock.h>
 #include <nucleus/stat.h>
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
@@ -87,11 +87,11 @@ static inline void xntlist_insert(xnqueue_t *q, xntlholder_t *holder)
 {
 	xnholder_t *p;
 
-	/* Insert the new timer at the proper place in the single
-	   queue managed when running in aperiodic mode. O(N) here,
-	   but users of the aperiodic mode need to pay a price for the
-	   increased flexibility... */
-
+	/*
+	 * Insert the new timer at the proper place in the single
+	 * queue. O(N) here, but this is the price for the increased
+	 * flexibility...
+	 */
 	for (p = q->head.last; p != &q->head; p = p->last)
 		if ((xnsticks_t) (holder->key - link2tlholder(p)->key) > 0 ||
 		    (holder->key == link2tlholder(p)->key &&
@@ -272,20 +272,10 @@ struct xnsched;
 
 typedef struct xntimer {
 
-	xntimerh_t aplink;	/* Link in aperiodic timers list. */
-
+	xntimerh_t aplink;	/* Link in timers list. */
 #define aplink2timer(ln) container_of(ln, xntimer_t, aplink)
 
-#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
-	xntbase_t *base;	/* Time base. */
-
-	xntlholder_t plink;	/* Link in periodic timers wheel. */
-
-#define plink2timer(ln) container_of(ln, xntimer_t, plink)
-#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
-
 	xnholder_t adjlink;
-
 #define adjlink2timer(ln) container_of(ln, xntimer_t, adjlink)
 
 	xnflags_t status;	/* !< Timer status. */
@@ -317,22 +307,6 @@ typedef struct xntimer {
 
 } xntimer_t;
 
-typedef struct xntimed_slave {
-
-	xntbase_t base;		/* !< Cascaded time base. */
-
-	struct percpu_cascade {
-		xntimer_t timer; /* !< Cascading timer in master time base. */
-		xnqueue_t wheel[XNTIMER_WHEELSIZE]; /*!< BSDish timer wheel. */
-	} cascade[XNARCH_NR_CPUS];
-
-#define timer2slave(t) \
-    ((xntslave_t *)(((char *)t) - offsetof(xntslave_t, cascade[xnsched_cpu((t)->sched)].timer)))
-#define base2slave(b) \
-    ((xntslave_t *)(((char *)b) - offsetof(xntslave_t, base)))
-
-} xntslave_t;
-
 #ifdef CONFIG_SMP
 #define xntimer_sched(t)	((t)->sched)
 #else /* !CONFIG_SMP */
@@ -342,20 +316,8 @@ typedef struct xntimed_slave {
 #define xntimer_pexpect(t)      ((t)->pexpect)
 #define xntimer_pexpect_forward(t,delta) ((t)->pexpect += delta)
 
-#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
-#define xntimer_base(t)		((t)->base)
-#define xntimer_set_priority(t,p)				\
-	({							\
-		xntimer_t *_t = (t);				\
-		unsigned prio = (p);				\
-		xntimerh_prio(&(_t)->aplink) = prio;		\
-		xntlholder_prio(&(_t)->plink) = prio;		\
-	})
-#else /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
-#define xntimer_base(t)		(&nktbase)
-#define xntimer_set_priority(t,p)				\
+#define xntimer_set_priority(t, p)			\
 	do { xntimerh_prio(&(t)->aplink) = (p); } while(0)
-#endif /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
 
 static inline int xntimer_active_p (xntimer_t *timer)
 {
@@ -378,27 +340,23 @@ static inline int xntimer_reload_p(xntimer_t *timer)
 extern "C" {
 #endif
 
-extern xntbops_t nktimer_ops_aperiodic,
-		 nktimer_ops_periodic;
-
 #ifdef CONFIG_XENO_OPT_STATS
-#define xntimer_init(timer, base, handler)		\
+#define xntimer_init(timer, handler)			\
 	do {						\
-		__xntimer_init(timer, base, handler);	\
+		__xntimer_init(timer, handler);		\
 		(timer)->handler_name = #handler;	\
 	} while (0)
 #else /* !CONFIG_XENO_OPT_STATS */
 #define xntimer_init	__xntimer_init
 #endif /* !CONFIG_XENO_OPT_STATS */
 
-#define xntimer_init_noblock(timer, base, handler)	\
+#define xntimer_init_noblock(timer, handler)		\
 	do {						\
-		xntimer_init(timer, base, handler);	\
+		xntimer_init(timer, handler);		\
 		(timer)->status |= XNTIMER_NOBLCK;	\
 	} while(0)
 
 void __xntimer_init(struct xntimer *timer,
-		    struct xntbase *base,
 		    void (*handler)(struct xntimer *timer));
 
 void xntimer_destroy(xntimer_t *timer);
@@ -416,307 +374,34 @@ void xntimer_next_local_shot(struct xnsched *sched);
  * \addtogroup timer
  *@{ */
 
-#if defined(CONFIG_XENO_OPT_TIMING_PERIODIC) || defined(DOXYGEN_CPP)
+int xntimer_start(xntimer_t *timer,
+		  xnticks_t value,
+		  xnticks_t interval,
+		  xntmode_t mode);
 
-/*!
- * @fn void xntimer_start(xntimer_t *timer,xnticks_t value,xnticks_t interval,
- *                        xntmode_t mode)
- * @brief Arm a timer.
- *
- * Activates a timer so that the associated timeout handler will be
- * fired after each expiration time. A timer can be either periodic or
- * single-shot, depending on the reload value passed to this
- * routine. The given timer must have been previously initialized, and
- * will be clocked according to the policy defined by the time base
- * specified in xntimer_init().
- *
- * @param timer The address of a valid timer descriptor.
- *
- * @param value The date of the initial timer shot, expressed in clock ticks
- * (see note).
- *
- * @param interval The reload value of the timer. It is a periodic
- * interval value to be used for reprogramming the next timer shot,
- * expressed in clock ticks (see note). If @a interval is equal to
- * XN_INFINITE, the timer will not be reloaded after it has expired.
- *
- * @param mode The timer mode. It can be XN_RELATIVE if @a value shall
- * be interpreted as a relative date, XN_ABSOLUTE for an absolute date
- * based on the monotonic clock of the related time base (as returned
- * my xntbase_get_jiffies()), or XN_REALTIME if the absolute date is
- * based on the adjustable real-time clock of the time base (as returned
- * by xntbase_get_time().
- *
- * @return 0 is returned upon success, or -ETIMEDOUT if an absolute
- * date in the past has been given.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
- *
- * @note This service is sensitive to the current operation mode of
- * the associated time base, as defined by the xnpod_init_timebase()
- * service. In periodic mode, clock ticks are interpreted as periodic
- * jiffies. In oneshot mode, clock ticks are interpreted as
- * nanoseconds.
- *
- * @note Must be called with nklock held, IRQs off.
- */
+void __xntimer_stop(xntimer_t *timer);
 
-static inline int xntimer_start(xntimer_t *timer,
-				xnticks_t value, xnticks_t interval,
-				xntmode_t mode)
-{
-	return timer->base->ops->start_timer(timer, value, interval, mode);
-}
+xnticks_t xntimer_get_date(xntimer_t *timer);
 
-/*!
- * \fn int xntimer_stop(xntimer_t *timer)
- *
- * \brief Disarm a timer.
- *
- * This service deactivates a timer previously armed using
- * xntimer_start(). Once disarmed, the timer can be subsequently
- * re-armed using the latter service.
- *
- * @param timer The address of a valid timer descriptor.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
- *
- * @note Must be called with nklock held, IRQs off.
- */
+xnticks_t xntimer_get_timeout(xntimer_t *timer);
 
-static inline void xntimer_stop(xntimer_t *timer)
-{
-	/* Careful: the do_timer_stop() helper is expected to preserve
-	   the date field of the stopped timer, so that subsequent
-	   calls to xntimer_get_timeout() would still work on such
-	   timer as expected. */
-	if (!testbits(timer->status,XNTIMER_DEQUEUED))
-		timer->base->ops->stop_timer(timer);
-}
-
-/*!
- * \fn xnticks_t xntimer_get_date(xntimer_t *timer)
- *
- * \brief Return the absolute expiration date.
- *
- * Return the next expiration date of a timer in absolute clock ticks
- * (see note).
- *
- * @param timer The address of a valid timer descriptor.
- *
- * @return The expiration date converted to the current time unit. The
- * special value XN_INFINITE is returned if @a timer is currently
- * inactive.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
- *
- * @note This service is sensitive to the current operation mode of
- * the associated time base, as defined by the xnpod_init_timebase()
- * service. In periodic mode, clock ticks are interpreted as periodic
- * jiffies. In oneshot mode, clock ticks are interpreted as
- * nanoseconds.
- */
-
-static inline xnticks_t xntimer_get_date(xntimer_t *timer)
-{
-	if (!xntimer_running_p(timer))
-		return XN_INFINITE;
-
-	return timer->base->ops->get_timer_date(timer);
-}
-
-/*!
- * \fn xnticks_t xntimer_get_timeout(xntimer_t *timer)
- *
- * \brief Return the relative expiration date.
- *
- * Return the next expiration date of a timer in relative clock ticks
- * (see note).
- *
- * @param timer The address of a valid timer descriptor.
- *
- * @return The expiration date converted to the current time unit. The
- * special value XN_INFINITE is returned if @a timer is currently
- * inactive. In oneshot mode, it might happen that the timer has
- * already expired when this service is run (even if the associated
- * handler has not been fired yet); in such a case, 1 is returned.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
- *
- * @note This service is sensitive to the current operation mode of
- * the associated time base, as defined by the xnpod_init_timebase()
- * service. In periodic mode, clock ticks are interpreted as periodic
- * jiffies. In oneshot mode, clock ticks are interpreted as
- * nanoseconds.
- */
-
-static inline xnticks_t xntimer_get_timeout(xntimer_t *timer)
-{
-	if (!xntimer_running_p(timer))
-		return XN_INFINITE;
-
-	return timer->base->ops->get_timer_timeout(timer);
-}
-
-static inline xnticks_t xntimer_get_timeout_stopped(xntimer_t *timer)
-{
-	return timer->base->ops->get_timer_timeout(timer);
-}
-
-/*!
- * \fn xnticks_t xntimer_get_interval(xntimer_t *timer)
- *
- * \brief Return the timer interval value.
- *
- * Return the timer interval value in clock ticks (see note).
- *
- * @param timer The address of a valid timer descriptor.
- *
- * @return The expiration date converted to the current time unit. The
- * special value XN_INFINITE is returned if @a timer is currently
- * inactive or aperiodic.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
- *
- * @note This service is sensitive to the current operation mode of
- * the associated time base, as defined by the xnpod_init_timebase()
- * service. In periodic mode, clock ticks are interpreted as periodic
- * jiffies. In oneshot mode, clock ticks are interpreted as
- * nanoseconds.
- */
-
-static inline xnticks_t xntimer_get_interval(xntimer_t *timer)
-{
-	return timer->base->ops->get_timer_interval(timer);
-}
-
-static inline xnticks_t xntimer_get_raw_expiry (xntimer_t *timer)
-{
-	return timer->base->ops->get_timer_raw_expiry(timer);
-}
-
-void xntslave_init(xntslave_t *slave);
-
-void xntslave_destroy(xntslave_t *slave);
-
-void xntslave_update(xntslave_t *slave,
-		     xnticks_t interval);
-
-void xntslave_start(xntslave_t *slave,
-		    xnticks_t start,
-		    xnticks_t interval);
-
-void xntslave_stop(xntslave_t *slave);
-
-void xntslave_adjust(xntslave_t *slave, xnsticks_t delta);
-
-#else /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
-
-int xntimer_start_aperiodic(xntimer_t *timer,
-			    xnticks_t value,
-			    xnticks_t interval,
-			    xntmode_t mode);
-
-void xntimer_stop_aperiodic(xntimer_t *timer);
-
-xnticks_t xntimer_get_date_aperiodic(xntimer_t *timer);
-
-xnticks_t xntimer_get_timeout_aperiodic(xntimer_t *timer);
-
-xnticks_t xntimer_get_interval_aperiodic(xntimer_t *timer);
-
-xnticks_t xntimer_get_raw_expiry_aperiodic(xntimer_t *timer);
-
-static inline int xntimer_start(xntimer_t *timer,
-				xnticks_t value, xnticks_t interval,
-				xntmode_t mode)
-{
-	return xntimer_start_aperiodic(timer, value, interval, mode);
-}
+xnticks_t xntimer_get_interval(xntimer_t *timer);
 
 static inline void xntimer_stop(xntimer_t *timer)
 {
 	if (!testbits(timer->status,XNTIMER_DEQUEUED))
-		xntimer_stop_aperiodic(timer);
-}
-
-static inline xnticks_t xntimer_get_date(xntimer_t *timer)
-{
-	if (!xntimer_running_p(timer))
-		return XN_INFINITE;
-
-	return xntimer_get_date_aperiodic(timer);
-}
-
-static inline xnticks_t xntimer_get_timeout(xntimer_t *timer)
-{
-	if (!xntimer_running_p(timer))
-		return XN_INFINITE;
-
-	return xntimer_get_timeout_aperiodic(timer);
+		__xntimer_stop(timer);
 }
 
 static inline xnticks_t xntimer_get_timeout_stopped(xntimer_t *timer)
 {
-	return xntimer_get_timeout_aperiodic(timer);
+	return xntimer_get_timeout(timer);
 }
 
-static inline xnticks_t xntimer_get_interval(xntimer_t *timer)
-{
-	return xntimer_get_interval_aperiodic(timer);
-}
-
-static inline xnticks_t xntimer_get_raw_expiry (xntimer_t *timer)
+static inline xnticks_t xntimer_get_expiry(xntimer_t *timer)
 {
 	return xntimerh_date(&timer->aplink);
 }
-
-#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 
 /*@}*/
 
@@ -728,13 +413,9 @@ unsigned long xntimer_get_overruns(xntimer_t *timer, xnticks_t now);
 
 void xntimer_freeze(void);
 
-void xntimer_tick_aperiodic(void);
+void xntimer_tick(void);
 
-void xntimer_tick_periodic(xntimer_t *timer);
-
-void xntimer_tick_periodic_inner(xntslave_t *slave);
-
-void xntimer_adjust_all_aperiodic(xnsticks_t delta);
+void xntimer_adjust_all(xnsticks_t delta);
 
 #ifdef CONFIG_SMP
 int xntimer_migrate(xntimer_t *timer,
@@ -745,7 +426,7 @@ int xntimer_migrate(xntimer_t *timer,
 
 #define xntimer_set_sched(timer, sched)	xntimer_migrate(timer, sched)
 
-char *xntimer_format_time(xnticks_t value, int periodic,
+char *xntimer_format_time(xnticks_t value,
 			  char *buf, size_t bufsz);
 #ifdef __cplusplus
 }

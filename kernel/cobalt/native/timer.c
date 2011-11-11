@@ -74,23 +74,14 @@ int rt_timer_inquire(RT_TIMER_INFO *info)
 {
 	RTIME period, tsc;
 
-	if (xntbase_periodic_p(__native_tbase))
-		period = xntbase_get_tickval(__native_tbase);
-	else
-		period = TM_ONESHOT;
-
+	period = TM_ONESHOT;
 	tsc = xnarch_get_cpu_tsc();
 	info->period = period;
 	info->tsc = tsc;
 
-#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
-	if (period != TM_ONESHOT)
-		info->date = xntbase_get_time(__native_tbase);
-	else
-#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
-		/* In aperiodic mode, our idea of time is the same as the
-		   CPU's, and a tick equals a nanosecond. */
-		info->date = xnarch_tsc_to_ns(tsc) + __native_tbase->wallclock_offset;
+	/* In aperiodic mode, our idea of time is the same as the
+	   CPU's, and a tick equals a nanosecond. */
+	info->date = xnarch_tsc_to_ns(tsc) + nkclock.wallclock_offset;
 
 	return 0;
 }
@@ -129,55 +120,7 @@ void rt_timer_spin(RTIME ns)
 		cpu_relax();
 }
 
-/**
- * @fn int rt_timer_set_mode(RTIME nstick)
- * @brief Set the system clock rate.
- *
- * This routine switches to periodic timing mode and sets the clock
- * tick rate, or resets the current timing mode to aperiodic/oneshot
- * mode depending on the value of the @a nstick parameter. Since the
- * native skin automatically sets its time base according to the
- * configured policy and period at load time (see
- * CONFIG_XENO_OPT_NATIVE_PERIOD), calling rt_timer_set_mode() is not
- * required from applications unless the pre-defined mode and period
- * need to be changed dynamically.
- *
- * This service sets the time unit which will be relevant when
- * specifying time intervals to the services taking timeout or delays
- * as input parameters. In periodic mode, clock ticks will represent
- * periodic jiffies. In oneshot mode, clock ticks will represent
- * nanoseconds.
- *
- * @param nstick The time base period in nanoseconds. If this
- * parameter is equal to the special TM_ONESHOT value, the time base
- * is set to operate in a tick-less fashion (i.e. oneshot mode). Other
- * values are interpreted as the time between two consecutive clock
- * ticks in periodic timing mode (i.e. clock HZ = 1e9 / nstick).
- *
- * @return 0 is returned on success. Otherwise:
- *
- * - -ENODEV is returned if the underlying architecture does not
- * support the requested periodic timing. Aperiodic/oneshot timing is
- * always supported.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - User-space task
- *
- * Rescheduling: never.
- */
-
-int rt_timer_set_mode(RTIME nstick)
-{
-	return xntbase_switch("native", nstick, &__native_tbase);
-}
-
 /*@}*/
 
 EXPORT_SYMBOL_GPL(rt_timer_inquire);
 EXPORT_SYMBOL_GPL(rt_timer_spin);
-EXPORT_SYMBOL_GPL(rt_timer_set_mode);
-EXPORT_SYMBOL_GPL(__native_tbase);

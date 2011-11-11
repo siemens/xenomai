@@ -493,7 +493,7 @@ int pthread_cond_timedwait(pthread_cond_t * cnd,
 #endif /* CONFIG_XENO_FASTSYNCH */
 
 	err = cobalt_cond_timedwait_prologue(cur, cond, mutex, &count, 1,
-					    ts2ticks_ceil(abstime) + 1);
+					    ts2ns(abstime) + 1);
 
 	if (!err || err == EINTR || err == ETIMEDOUT)
 		while (-EINTR == cobalt_cond_timedwait_epilogue(cur, cond,

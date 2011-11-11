@@ -38,7 +38,6 @@ struct xnmutex;
 struct pt_regs;
 struct timespec;
 struct timeval;
-struct xntbase;
 
 struct xnskin_props {
 	const char *name;
@@ -46,7 +45,6 @@ struct xnskin_props {
 	int nrcalls;
 	void *(*eventcb)(int, void *);
 	struct xnsysent *systab;
-	struct xntbase **timebasep;
 	struct module *module;
 };
 

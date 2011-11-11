@@ -171,8 +171,6 @@ int __init __xeno_sys_init(void)
 		goto cleanup_shadow;
 #endif /* __KERNEL__ */
 
-	xntbase_mount();
-
 	xnloginfo("real-time nucleus v%s (%s) loaded.\n",
 		  XENO_VERSION_STRING, XENO_VERSION_NAME);
 
@@ -233,7 +231,6 @@ void __exit __xeno_sys_exit(void)
 	xnshadow_cleanup();
 #endif
 
-	xntbase_umount();
 	xnpod_umount();
 
 	xnarch_exit();

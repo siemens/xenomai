@@ -743,13 +743,13 @@ EXPORT_SYMBOL_GPL(xnregistry_enter);
  *
  * @param timeout The timeout which may be used to limit the time the
  * thread wait for the object to be registered. This value is a wait
- * time given in ticks (see note). It can either be relative, absolute
- * monotonic (XN_ABSOLUTE), or absolute adjustable (XN_REALTIME)
- * depending on @a timeout_mode. Passing XN_INFINITE @b and setting @a
- * timeout_mode to XN_RELATIVE specifies an unbounded wait. Passing
- * XN_NONBLOCK causes the service to return immediately without
- * waiting if the object is not registered on entry. All other values
- * are used as a wait limit.
+ * time given as a count of nanoseconds. It can either be relative,
+ * absolute monotonic (XN_ABSOLUTE), or absolute adjustable
+ * (XN_REALTIME) depending on @a timeout_mode. Passing XN_INFINITE @b
+ * and setting @a timeout_mode to XN_RELATIVE specifies an unbounded
+ * wait. Passing XN_NONBLOCK causes the service to return immediately
+ * without waiting if the object is not registered on entry. All other
+ * values are used as a wait limit.
  *
  * @param timeout_mode The mode of the @a timeout parameter. It can
  * either be set to XN_RELATIVE, XN_ABSOLUTE, or XN_REALTIME (see also
@@ -788,10 +788,6 @@ EXPORT_SYMBOL_GPL(xnregistry_enter);
  *
  * Rescheduling: always unless the request is immediately satisfied or
  * @a timeout specifies a non-blocking operation.
- *
- * @note The @a timeout value will be interpreted as jiffies if @a
- * thread is bound to a periodic time base (see xnpod_init_thread), or
- * nanoseconds otherwise.
  */
 
 int xnregistry_bind(const char *key, xnticks_t timeout, int timeout_mode,
@@ -799,22 +795,20 @@ int xnregistry_bind(const char *key, xnticks_t timeout, int timeout_mode,
 {
 	struct xnobject *object;
 	xnthread_t *thread;
-	xntbase_t *tbase;
 	int err = 0;
 	spl_t s;
 
-	if (!key)
+	if (key == NULL)
 		return -EINVAL;
 
 	thread = xnpod_current_thread();
-	tbase = xnthread_time_base(thread);
 
 	xnlock_get_irqsave(&nklock, s);
 
 	if (timeout_mode == XN_RELATIVE &&
 	    timeout != XN_INFINITE && timeout != XN_NONBLOCK) {
 		timeout_mode = XN_REALTIME;
-		timeout += xntbase_get_time(tbase);
+		timeout += xnclock_read_monotonic();
 	}
 
 	for (;;) {
@@ -944,11 +938,11 @@ EXPORT_SYMBOL_GPL(xnregistry_remove);
  * @param handle The generic handle of the object to remove.
  *
  * @param timeout If the object is locked on entry, @a param gives the
- * number of clock ticks to wait for the unlocking to occur (see
- * note). Passing XN_INFINITE causes the caller to block
- * indefinitely until the object is unlocked. Passing XN_NONBLOCK
- * causes the service to return immediately without waiting if the
- * object is locked on entry.
+ * number of nanoseconds to wait for the unlocking to occur.  Passing
+ * XN_INFINITE causes the caller to block indefinitely until the
+ * object is unlocked. Passing XN_NONBLOCK causes the service to
+ * return immediately without waiting if the object is locked on
+ * entry.
  *
  * @return 0 is returned upon success. Otherwise:
  *
@@ -979,10 +973,6 @@ EXPORT_SYMBOL_GPL(xnregistry_remove);
  *
  * Rescheduling: possible if the object to remove is currently locked
  * and the calling context can sleep.
- *
- * @note The @a timeout value will be interpreted as jiffies if the
- * current thread is bound to a periodic time base (see
- * xnpod_init_thread), or nanoseconds otherwise.
  */
 
 int xnregistry_remove_safe(xnhandle_t handle, xnticks_t timeout)

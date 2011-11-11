@@ -52,8 +52,6 @@ typedef struct rt_timer_info {
 #include <asm-generic/xenomai/timeconv.h>
 #endif
 
-extern xntbase_t *__native_tbase;
-
 #endif /* __KERNEL__ || __XENO_SIM__ */
 
 #ifdef __cplusplus
@@ -78,17 +76,17 @@ static inline RTIME rt_timer_tsc(void)
 
 static inline RTIME rt_timer_read(void)
 {
-	return xntbase_get_time(__native_tbase);
+	return xnclock_read_monotonic();
 }
 
 static inline SRTIME rt_timer_ns2ticks(SRTIME ns)
 {
-	return xntbase_ns2ticks(__native_tbase, ns);
+	return ns;
 }
 
 static inline SRTIME rt_timer_ticks2ns(SRTIME ticks)
 {
-	return xntbase_ticks2ns(__native_tbase, ticks);
+	return ticks;
 }
 
 #else /* !(__KERNEL__ || __XENO_SIM__) */
@@ -249,8 +247,6 @@ int rt_timer_inquire(RT_TIMER_INFO *info);
 RTIME rt_timer_read(void);
 
 void rt_timer_spin(RTIME ns);
-
-int rt_timer_set_mode(RTIME nstick);
 
 #ifdef __cplusplus
 }

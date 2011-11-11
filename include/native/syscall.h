@@ -44,7 +44,7 @@
 #define __native_task_send          18
 #define __native_task_receive       19
 #define __native_task_reply         20
-#define __native_timer_set_mode     21
+#define __native_unimp_21           21
 #define __native_unimp_22           22
 #define __native_timer_read         23
 #define __native_timer_tsc          24

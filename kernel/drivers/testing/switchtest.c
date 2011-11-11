@@ -467,7 +467,6 @@ static int rtswitch_create_ktask(rtswitch_context_t *ctx,
 	 */
 	set_cpus_allowed(current, cpumask_of_cpu(ctx->cpu));
 
-	iattr.tbase = rtdm_tbase;
 	iattr.name = name;
 	iattr.flags = init_flags;
 	iattr.ops = NULL;

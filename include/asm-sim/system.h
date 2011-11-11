@@ -35,7 +35,6 @@
 
 struct xnthread;
 struct xnsynch;
-struct xntbase;
 struct XenoThread;
 struct mvm_displayctx;
 struct mvm_displayctl;
@@ -300,8 +299,6 @@ int mvm_run(void *tcbarg,
 
 void mvm_finalize_init(void);
 
-void mvm_declare_tbase(struct xntbase *base);
-
 void mvm_sleep(unsigned long ticks);
 
 int mvm_hook_irq(unsigned irq,
@@ -542,9 +539,6 @@ do \
 if (cond) \
 __mvm_breakable(mvm_post_graph)(&(obj)->__mvm_display_context,state); \
 while(0)
-
-/* Time base export */
-#define xnarch_declare_tbase(base)		mvm_declare_tbase(base)
 
 /* Tracer interface */
 #define xnarch_trace_max_begin(v)		({int err = -ENOSYS; err; })

@@ -104,10 +104,10 @@ int xnthread_init(struct xnthread *thread,
 	else
 		snprintf(thread->name, sizeof(thread->name), "%p", thread);
 
-	xntimer_init(&thread->rtimer, attr->tbase, xnthread_timeout_handler);
+	xntimer_init(&thread->rtimer, xnthread_timeout_handler);
 	xntimer_set_name(&thread->rtimer, thread->name);
 	xntimer_set_priority(&thread->rtimer, XNTIMER_HIPRIO);
-	xntimer_init(&thread->ptimer, attr->tbase, xnthread_periodic_handler);
+	xntimer_init(&thread->ptimer, xnthread_periodic_handler);
 	xntimer_set_name(&thread->ptimer, thread->name);
 	xntimer_set_priority(&thread->ptimer, XNTIMER_HIPRIO);
 
@@ -276,22 +276,8 @@ xnticks_t xnthread_get_timeout(xnthread_t *thread, xnticks_t tsc_ns)
 		timer = &thread->ptimer;
 	else
 		return 0LL;
-	/*
-	 * The caller should have masked IRQs while collecting the
-	 * timeout(s), so no tick could be announced in the meantime,
-	 * and all timeouts would always use the same epoch
-	 * value. Obviously, this can't be a valid assumption for
-	 * aperiodic timers, which values are based on the hardware
-	 * TSC, and as such the current time will change regardless of
-	 * the interrupt state; for this reason, we use the "tsc_ns"
-	 * input parameter (TSC converted to nanoseconds) the caller
-	 * has passed us as the epoch value instead.
-	 */
-	if (xntbase_periodic_p(xnthread_time_base(thread)))
-		return xntimer_get_timeout(timer);
 
 	timeout = xntimer_get_date(timer);
-
 	if (timeout <= tsc_ns)
 		return 1;
 

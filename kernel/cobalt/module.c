@@ -67,15 +67,9 @@ MODULE_DESCRIPTION("POSIX/COBALT interface");
 MODULE_AUTHOR("gilles.chanteperdrix@xenomai.org");
 MODULE_LICENSE("GPL");
 
-static u_long tick_arg = CONFIG_XENO_OPT_POSIX_PERIOD;
-module_param_named(tick_arg, tick_arg, ulong, 0444);
-MODULE_PARM_DESC(tick_arg, "Fixed clock tick value (us), 0 for tick-less mode");
-
 static u_long time_slice_arg = 1;	/* Default (round-robin) time slice */
 module_param_named(time_slice, time_slice_arg, ulong, 0444);
 MODULE_PARM_DESC(time_slice, "Default time slice (in ticks)");
-
-xntbase_t *cobalt_tbase;
 
 static void cobalt_shutdown(int xtype)
 {
@@ -98,7 +92,6 @@ static void cobalt_shutdown(int xtype)
 	cobalt_syscall_cleanup();
 	cobalt_apc_pkg_cleanup();
 #endif /* __KERNEL__ */
-	xntbase_free(cobalt_tbase);
 	xnpod_shutdown(xtype);
 }
 
@@ -112,25 +105,17 @@ int SKIN_INIT(posix)
 	if (err != 0)
 		goto fail;
 
-	err = xntbase_alloc("posix", tick_arg * 1000, 0, &cobalt_tbase);
-	if (err)
-	    goto fail_shutdown_pod;
-
-	xntbase_start(cobalt_tbase);
-
 #ifdef __KERNEL__
 	err = cobalt_apc_pkg_init();
 	if (err)
-		goto fail_free_tbase;
+		goto fail_shutdown_pod;
 	err = cobalt_syscall_init();
 #endif /* __KERNEL__ */
 
 	if (err != 0) {
 #ifdef __KERNEL__
 		cobalt_apc_pkg_cleanup();
-	  fail_free_tbase:
 #endif /* __KERNEL__ */
-		xntbase_free(cobalt_tbase);
 	fail_shutdown_pod:
 		xnpod_shutdown(err);
 	  fail:

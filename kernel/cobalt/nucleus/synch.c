@@ -138,11 +138,12 @@ EXPORT_SYMBOL_GPL(xnsynch_init);
  * to sleep on.
  *
  * @param timeout The timeout which may be used to limit the time the
- * thread pends on the resource. This value is a wait time given in
- * ticks (see note). It can either be relative, absolute monotonic, or
- * absolute adjustable depending on @a timeout_mode. Passing XN_INFINITE
- * @b and setting @a mode to XN_RELATIVE specifies an unbounded wait. All
- * other values are used to initialize a watchdog timer.
+ * thread pends on the resource. This value is a wait time given as a
+ * count of nanoseconds. It can either be relative, absolute
+ * monotonic, or absolute adjustable depending on @a
+ * timeout_mode. Passing XN_INFINITE @b and setting @a mode to
+ * XN_RELATIVE specifies an unbounded wait. All other values are used
+ * to initialize a watchdog timer.
  *
  * @param timeout_mode The mode of the @a timeout parameter. It can
  * either be set to XN_RELATIVE, XN_ABSOLUTE, or XN_REALTIME (see also
@@ -162,10 +163,6 @@ EXPORT_SYMBOL_GPL(xnsynch_init);
  * - User-space task
  *
  * Rescheduling: always.
- *
- * @note The @a timeout value will be interpreted as jiffies if the
- * current thread is bound to a periodic time base (see
- * xnpod_init_thread), or nanoseconds otherwise.
  */
 
 xnflags_t xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
@@ -373,11 +370,12 @@ static void xnsynch_renice_thread(struct xnthread *thread,
  * to acquire.
  *
  * @param timeout The timeout which may be used to limit the time the
- * thread pends on the resource. This value is a wait time given in
- * ticks (see note). It can either be relative, absolute monotonic, or
- * absolute adjustable depending on @a timeout_mode. Passing XN_INFINITE
- * @b and setting @a mode to XN_RELATIVE specifies an unbounded wait. All
- * other values are used to initialize a watchdog timer.
+ * thread pends on the resource. This value is a wait time given as a
+ * count of nanoseconds. It can either be relative, absolute
+ * monotonic, or absolute adjustable depending on @a
+ * timeout_mode. Passing XN_INFINITE @b and setting @a mode to
+ * XN_RELATIVE specifies an unbounded wait. All other values are used
+ * to initialize a watchdog timer.
  *
  * @param timeout_mode The mode of the @a timeout parameter. It can
  * either be set to XN_RELATIVE, XN_ABSOLUTE, or XN_REALTIME (see also
@@ -397,10 +395,6 @@ static void xnsynch_renice_thread(struct xnthread *thread,
  * - User-space task
  *
  * Rescheduling: possible.
- *
- * @note The @a timeout value will be interpreted as jiffies if the
- * current thread is bound to a periodic time base (see
- * xnpod_init_thread), or nanoseconds otherwise.
  */
 
 xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,

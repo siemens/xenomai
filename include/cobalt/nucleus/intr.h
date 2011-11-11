@@ -90,7 +90,7 @@ typedef struct xnintr_iterator {
 
 } xnintr_iterator_t;
 
-extern xnintr_t nkclock;
+extern xnintr_t nktimer;
 
 #ifdef __cplusplus
 extern "C" {

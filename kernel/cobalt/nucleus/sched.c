@@ -143,7 +143,7 @@ void xnsched_init(struct xnsched *sched, int cpu)
 	 * postponed to xnintr_irq_handler(), as part of the interrupt
 	 * exit code.
 	 */
-	xntimer_init(&sched->htimer, &nktbase, NULL);
+	xntimer_init(&sched->htimer, NULL);
 	xntimer_set_priority(&sched->htimer, XNTIMER_LOPRIO);
 	xntimer_set_name(&sched->htimer, htimer_name);
 	xntimer_set_sched(&sched->htimer, sched);
@@ -155,7 +155,6 @@ void xnsched_init(struct xnsched *sched, int cpu)
 	attr.flags = XNROOT | XNSTARTED | XNFPU;
 	attr.name = root_name;
 	attr.stacksize = 0;
-	attr.tbase = &nktbase;
 	attr.ops = NULL;
 	param.idle.prio = XNSCHED_IDLE_PRIO;
 
@@ -173,8 +172,7 @@ void xnsched_init(struct xnsched *sched, int cpu)
 			     xnthread_name(&sched->rootcb));
 
 #ifdef CONFIG_XENO_OPT_WATCHDOG
-	xntimer_init_noblock(&sched->wdtimer, &nktbase,
-			     xnsched_watchdog_handler);
+	xntimer_init_noblock(&sched->wdtimer, xnsched_watchdog_handler);
 	xntimer_set_name(&sched->wdtimer, "[watchdog]");
 	xntimer_set_priority(&sched->wdtimer, XNTIMER_LOPRIO);
 	xntimer_set_sched(&sched->wdtimer, sched);
@@ -639,11 +637,9 @@ struct vfile_schedlist_data {
 	int cpu;
 	pid_t pid;
 	char name[XNOBJECT_NAME_LEN];
-	char timebase[XNOBJECT_NAME_LEN];
 	char sched_class[XNOBJECT_NAME_LEN];
 	int cprio;
 	int dnprio;
-	int periodic;
 	xnticks_t timeout;
 	xnflags_t state;
 };
@@ -662,7 +658,7 @@ static int vfile_schedlist_rewind(struct xnvfile_snapshot_iterator *it)
 	struct vfile_schedlist_priv *priv = xnvfile_iterator_priv(it);
 
 	priv->curr = getheadq(&nkpod->threadq);
-	priv->start_time = xntbase_get_jiffies(&nktbase);
+	priv->start_time = xnclock_read_monotonic();
 
 	return countq(&nkpod->threadq);
 }
@@ -687,8 +683,6 @@ static int vfile_schedlist_next(struct xnvfile_snapshot_iterator *it,
 	p->cprio = thread->cprio;
 	p->dnprio = xnthread_get_denormalized_prio(thread, thread->cprio);
 	p->state = xnthread_state_flags(thread);
-	memcpy(p->timebase, xntbase_name(xnthread_time_base(thread)),
-	       sizeof(p->timebase));
 	xnobject_copy_name(p->sched_class, thread->sched_class->name);
 	period = xnthread_get_period(thread);
 	timeout = xnthread_get_timeout(thread, priv->start_time);
@@ -707,7 +701,6 @@ static int vfile_schedlist_next(struct xnvfile_snapshot_iterator *it,
 	    !xntimer_running_p(&thread->rtimer))
 		timeout = period;
 	p->timeout = timeout;
-	p->periodic = xntbase_periodic_p(xnthread_time_base(thread));
 
 	return 1;
 }
@@ -720,9 +713,9 @@ static int vfile_schedlist_show(struct xnvfile_snapshot_iterator *it,
 
 	if (p == NULL)
 		xnvfile_printf(it,
-			       "%-3s  %-6s %-5s  %-8s %-8s  %-10s %-10s %s\n",
+			       "%-3s  %-6s %-5s  %-8s %-8s  %-10s %s\n",
 			       "CPU", "PID", "CLASS", "PRI", "TIMEOUT",
-			       "TIMEBASE", "STAT", "NAME");
+			       "STAT", "NAME");
 	else {
 		if (p->cprio != p->dnprio)
 			snprintf(pbuf, sizeof(pbuf), "%3d(%d)",
@@ -730,17 +723,16 @@ static int vfile_schedlist_show(struct xnvfile_snapshot_iterator *it,
 		else
 			snprintf(pbuf, sizeof(pbuf), "%3d", p->cprio);
 
-		xntimer_format_time(p->timeout, p->periodic, tbuf, sizeof(tbuf));
+		xntimer_format_time(p->timeout, tbuf, sizeof(tbuf));
 		xnthread_format_status(p->state, sbuf, sizeof(sbuf));
 
 		xnvfile_printf(it,
-			       "%3u  %-6d %-5s  %-8s %-8s  %-10s %-10s %s\n",
+			       "%3u  %-6d %-5s  %-8s %-8s  %-10s %s\n",
 			       p->cpu,
 			       p->pid,
 			       p->sched_class,
 			       pbuf,
 			       tbuf,
-			       p->timebase,
 			       sbuf,
 			       p->name);
 	}

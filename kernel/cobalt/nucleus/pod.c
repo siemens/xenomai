@@ -215,7 +215,7 @@ void xnpod_fatal_helper(const char *format, ...)
 		goto out;
 
 	__setbits(nkpod->status, XNFATAL);
-	now = xntbase_get_jiffies(&nktbase);
+	now = xnclock_read_monotonic();
 
 	xnlogerr_noprompt("\n %-3s  %-6s %-8s %-8s %-8s  %s\n",
 			  "CPU", "PID", "PRI", "TIMEOUT", "STAT", "NAME");
@@ -255,11 +255,8 @@ void xnpod_fatal_helper(const char *format, ...)
 		}
 	}
 
-	if (xntbase_enabled_p(&nktbase))
-		xnlogerr_noprompt("Master time base: clock=%Lu\n",
-				  xntbase_get_rawclock(&nktbase));
-	else
-		xnlogerr_noprompt("Master time base: disabled\n");
+	xnlogerr_noprompt("Master time base: clock=%Lu\n",
+			  xnclock_read_raw());
 #ifdef CONFIG_SMP
 	xnlogerr_noprompt("Current CPU: #%d\n", xnarch_current_cpu());
 #endif
@@ -283,7 +280,7 @@ void xnpod_schedule_deferred(void)
 
 static void xnpod_timeslice_handler(struct xntimer *timer)
 {
-	xnsched_tick(timer->sched->curr, &nktbase);
+	xnsched_tick(timer->sched->curr);
 }
 
 static void xnpod_flush_heap(xnheap_t *heap,
@@ -355,7 +352,7 @@ int xnpod_init(void)
 	initq(&pod->tstartq);
 	initq(&pod->tswitchq);
 	initq(&pod->tdeleteq);
-	xntimer_init(&pod->tslicer, &nktbase, xnpod_timeslice_handler);
+	xntimer_init(&pod->tslicer, xnpod_timeslice_handler);
 	pod->tsliced = 0;
 	xnarch_atomic_set(&pod->timerlck, 0);
 #ifdef __XENO_SIM__
@@ -553,10 +550,6 @@ void xnpod_fire_callouts(xnqueue_t *hookq, xnthread_t *thread)
  * even uses this name intensively to identify threads in the
  * debugging GUI it provides. However, passing NULL here is always
  * legal and means "anonymous".
- *
- * - tbase: The time base descriptor to refer to for all timed
- * operations issued by the new thread. See xntbase_alloc() for
- * detailed explanations about time bases.
  *
  * - flags: A set of creation flags affecting the operation. The
  * following flags can be part of this bitmask, each of them affecting
@@ -1237,7 +1230,7 @@ EXPORT_SYMBOL_GPL(xnpod_abort_thread);
  *
  * @param timeout The timeout which may be used to limit the time the
  * thread pends on a resource. This value is a wait time given in
- * ticks (see note). It can either be relative, absolute monotonic, or
+ * nanoseconds. It can either be relative, absolute monotonic, or
  * absolute adjustable depending on @a timeout_mode. Passing XN_INFINITE
  * @b and setting @a timeout_mode to XN_RELATIVE specifies an unbounded
  * wait. All other values are used to initialize a watchdog timer. If the
@@ -1270,10 +1263,6 @@ EXPORT_SYMBOL_GPL(xnpod_abort_thread);
  * - User-space task
  *
  * Rescheduling: possible if the current thread suspends itself.
- *
- * @note The @a timeout value will be interpreted as jiffies if @a
- * thread is bound to a periodic time base (see xnpod_init_thread), or
- * nanoseconds otherwise.
  */
 
 void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
@@ -1893,7 +1882,7 @@ int xnpod_migrate_thread(int cpu)
 	/* Move to remote scheduler. */
 	xnsched_migrate(thread, sched);
 
-	/* Migrate the thread periodic timer. */
+	/* Migrate the thread's periodic timer. */
 	xntimer_set_sched(&thread->ptimer, sched);
 
 	xnpod_schedule();
@@ -2559,28 +2548,14 @@ EXPORT_SYMBOL_GPL(xnpod_trap_fault);
  * \fn int xnpod_enable_timesource(void)
  * \brief Activate the core time source.
  *
- * Xenomai implements the notion of time base, by which software
- * timers that belong to different skins may be clocked separately
- * according to distinct frequencies, or aperiodically. In the
- * periodic case, delays and timeouts are given in counts of ticks;
- * the duration of a tick is specified by the time base. In the
- * aperiodic case, timings are directly specified in nanoseconds.
+ * On every architecture, Xenomai directly manages a hardware timer
+ * clocked in one-shot mode, to support any number of software timers
+ * internally. Timings are always specified as a count of nanoseconds.
  *
- * Only a single aperiodic (i.e. tick-less) time base may exist in the
- * system, and the nucleus provides for it through the nktbase
- * object. All skins depending on aperiodic timings should bind to the
- * latter, also known as the master time base. Skins depending on
- * periodic timings may create and bind to their own time base. Such a
- * periodic time base is managed as a slave object of the master one.
- * A cascading software timer, which is fired by the master time base
- * according to the appropriate frequency, triggers in turn the update
- * process of the associated slave time base, which eventually fires
- * the elapsed software timers controlled by the latter.
- *
- * Xenomai always controls the underlying hardware timer in a
- * tick-less fashion, also known as the oneshot mode. The
- * xnpod_enable_timesource() service configures the timer chip as
- * needed, and activates the master time base.
+ * The xnpod_enable_timesource() service configures the hardware timer
+ * chip. Because Xenomai most often interposes on the system timer
+ * used by the Linux kernel, a software timer may be started to relay
+ * periodic ticks to the host kernel if needed.
  *
  * @return 0 is returned on success. Otherwise:
  *
@@ -2589,27 +2564,17 @@ EXPORT_SYMBOL_GPL(xnpod_trap_fault);
  *
  * - -ENOSYS is returned if no active pod exists.
  *
- * Side-effect: A host timing service is started in order to relay the
- * canonical periodical tick to the underlying architecture,
- * regardless of the frequency used for Xenomai's system tick. This
- * routine does not call the rescheduling procedure.
- *
  * Environments:
  *
  * This service can be called from:
  *
- * - Kernel module initialization/cleanup code
- * - User-space task in secondary mode
+ * - Regular Linux kernel context.
  *
  * Rescheduling: never.
- *
- * @note Built-in support for periodic timing depends on
- * CONFIG_XENO_OPT_TIMING_PERIODIC.
  */
-
 int xnpod_enable_timesource(void)
 {
-	int err,  htickval, cpu;
+	int err, htickval, cpu;
 	xnsched_t *sched;
 	spl_t s;
 
@@ -2621,7 +2586,7 @@ int xnpod_enable_timesource(void)
 		return err;
 	}
 
-	trace_mark(xn_nucleus, tbase_start, "base %s", nktbase.name);
+	trace_mark(xn_nucleus, enable_timesource, MARK_NOARGS);
 
 #ifdef CONFIG_XENO_OPT_STATS
 	/*
@@ -2629,15 +2594,13 @@ int xnpod_enable_timesource(void)
 	 * attached directly by the arch-dependent layer
 	 * (xnarch_start_timer).
 	 */
-	xnintr_init(&nkclock, "[timer]", XNARCH_TIMER_IRQ, NULL, NULL, 0);
+	xnintr_init(&nktimer, "[timer]", XNARCH_TIMER_IRQ, NULL, NULL, 0);
 #endif /* CONFIG_XENO_OPT_STATS */
-
-	nktbase.status = XNTBRUN;
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	nktbase.wallclock_offset =
-		xnarch_get_host_time() - xnarch_get_cpu_time();
+	nkclock.wallclock_offset =
+	  xnarch_get_host_time() - xnarch_get_cpu_time();
 
 	for (cpu = 0; cpu < xnarch_num_online_cpus(); cpu++) {
 
@@ -2700,7 +2663,7 @@ EXPORT_SYMBOL_GPL(xnpod_enable_timesource);
  * \fn void xnpod_disable_timesource(void)
  * \brief Stop the core time source.
  *
- * Releases the hardware timer, and deactivates the master time base.
+ * Releases the hardware timer, and deactivates the system clock.
  *
  * Environments:
  *
@@ -2714,35 +2677,29 @@ EXPORT_SYMBOL_GPL(xnpod_enable_timesource);
 
 void xnpod_disable_timesource(void)
 {
-	spl_t s;
 	int cpu;
 
-	trace_mark(xn_nucleus, tbase_stop, "base %s", nktbase.name);
+	trace_mark(xn_nucleus, disable_timesource, MARK_NOARGS);
 
-	xnlock_get_irqsave(&nklock, s);
-
-	if (!xnpod_active_p() || !xntbase_enabled_p(&nktbase)) {
-		xnlock_put_irqrestore(&nklock, s);
+	if (!xnpod_active_p())
 		return;
-	}
-
-	__clrbits(nktbase.status, XNTBRUN);
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	/* We must not hold the nklock while stopping the hardware
-	   timer, since this could cause deadlock situations to arise
-	   on SMP systems. */
+	/*
+	 * We must not hold the nklock while stopping the hardware
+	 * timer, since this could cause deadlock situations to arise
+	 * on SMP systems.
+	 */
 	for (cpu = 0; cpu < xnarch_num_online_cpus(); cpu++)
 		if (xnarch_cpu_supported(cpu))
 			xnarch_stop_timer(cpu);
 
 	xntimer_freeze();
 
-	/* NOTE: The nkclock interrupt object is not destroyed on
-	   purpose since this would be mostly redundant after
-	   xnarch_stop_timer() has been called. In any case, no
-	   resource is associated with this object. */
+	/*
+	 * NOTE: The nktimer interrupt object is not destroyed on
+	 * purpose since this would be mostly redundant after
+	 * xnarch_stop_timer() has been called. In any case, no
+	 * resource is associated with this object.
+	 */
 }
 EXPORT_SYMBOL_GPL(xnpod_disable_timesource);
 
@@ -2760,29 +2717,26 @@ EXPORT_SYMBOL_GPL(xnpod_disable_timesource);
  * point is reached.
  *
  * @param idate The initial (absolute) date of the first release
- * point, expressed in clock ticks (see note). The affected thread
- * will be delayed by the first call to xnpod_wait_thread_period()
- * until this point is reached. If @a idate is equal to XN_INFINITE,
- * the current system date is used, and no initial delay takes
- * place. In the latter case, @a timeout_mode is not considered and
- * can have any valid value.
+ * point, expressed in nanoseconds. The affected thread will be
+ * delayed by the first call to xnpod_wait_thread_period() until this
+ * point is reached. If @a idate is equal to XN_INFINITE, the current
+ * system date is used, and no initial delay takes place. In the
+ * latter case, @a timeout_mode is not considered and can have any
+ * valid value.
  *
  * @param timeout_mode The mode of the @a idate parameter. It can
  * either be set to XN_ABSOLUTE or XN_REALTIME with @a idate different
  * from XN_INFINITE (see also xntimer_start()).
  *
- * @param period The period of the thread, expressed in clock ticks
- * (see note). As a side-effect, passing XN_INFINITE attempts to stop
- * the thread's periodic timer; in the latter case, the routine always
- * exits succesfully, regardless of the previous state of this timer.
+ * @param period The period of the thread, expressed in nanoseconds.
+ * As a side-effect, passing XN_INFINITE attempts to stop the thread's
+ * periodic timer; in the latter case, the routine always exits
+ * succesfully, regardless of the previous state of this timer.
  *
  * @return 0 is returned upon success. Otherwise:
  *
  * - -ETIMEDOUT is returned @a idate is different from XN_INFINITE and
  * represents a date in the past.
- *
- * - -EWOULDBLOCK is returned if the relevant time base has not been
- * initialized by a call to xnpod_init_timebase().
  *
  * - -EINVAL is returned if @a period is different from XN_INFINITE
  * but shorter than the scheduling latency value for the target
@@ -2799,10 +2753,6 @@ EXPORT_SYMBOL_GPL(xnpod_disable_timesource);
  * - User-space task
  *
  * Rescheduling: none.
- *
- * @note The @a idate and @a period values will be interpreted as
- * jiffies if @a thread is bound to a periodic time base (see
- * xnpod_init_thread), or nanoseconds otherwise.
  */
 
 int xnpod_set_thread_periodic(xnthread_t *thread, xnticks_t idate,
@@ -2810,9 +2760,6 @@ int xnpod_set_thread_periodic(xnthread_t *thread, xnticks_t idate,
 {
 	int err = 0;
 	spl_t s;
-
-	if (!xnthread_timed_p(thread))
-		return -EWOULDBLOCK;
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -2826,10 +2773,13 @@ int xnpod_set_thread_periodic(xnthread_t *thread, xnticks_t idate,
 			xntimer_stop(&thread->ptimer);
 
 		goto unlock_and_exit;
-	} else if (!xntbase_periodic_p(xnthread_time_base(thread))
-		   && period < nklatency) {
-		/* LART: detect periods which are shorter than the
-		 * intrinsic latency figure; this must be a joke... */
+	}
+
+	if (period < nklatency) {
+		/*
+		 * LART: detect periods which are shorter than the
+		 * intrinsic latency figure; this must be a joke...
+		 */
 		err = -EINVAL;
 		goto unlock_and_exit;
 	}
@@ -2840,8 +2790,7 @@ int xnpod_set_thread_periodic(xnthread_t *thread, xnticks_t idate,
 		xntimer_start(&thread->ptimer, period, period, XN_RELATIVE);
 	} else {
 		if (timeout_mode == XN_REALTIME)
-			idate -= xntbase_get_wallclock_offset(
-				xntimer_base(&thread->ptimer));
+			idate -= xnclock_get_offset();
 		else if (timeout_mode != XN_ABSOLUTE) {
 			err = -EINVAL;
 			goto unlock_and_exit;
@@ -2902,10 +2851,9 @@ EXPORT_SYMBOL_GPL(xnpod_set_thread_periodic);
 
 int xnpod_wait_thread_period(unsigned long *overruns_r)
 {
-	xnticks_t now;
 	unsigned long overruns = 0;
 	xnthread_t *thread;
-	xntbase_t *tbase;
+	xnticks_t now;
 	int err = 0;
 	spl_t s;
 
@@ -2921,10 +2869,7 @@ int xnpod_wait_thread_period(unsigned long *overruns_r)
 	trace_mark(xn_nucleus, thread_waitperiod, "thread %p thread_name %s",
 		   thread, xnthread_name(thread));
 
-	/* Work with either TSC or periodic ticks. */
-	tbase = xnthread_time_base(thread);
-	now = xntbase_get_rawclock(tbase);
-
+	now = xnclock_read_raw();
 	if (likely((xnsticks_t)(now - xntimer_pexpect(&thread->ptimer)) < 0)) {
 		xnpod_suspend_thread(thread, XNDELAY, XN_INFINITE, XN_RELATIVE, NULL);
 
@@ -2933,7 +2878,7 @@ int xnpod_wait_thread_period(unsigned long *overruns_r)
 			goto unlock_and_exit;
 		}
 
-		now = xntbase_get_rawclock(tbase);
+		now = xnclock_read_raw();
 	}
 
 	overruns = xntimer_get_overruns(&thread->ptimer, now);
@@ -2984,23 +2929,17 @@ EXPORT_SYMBOL_GPL(xnpod_wait_thread_period);
  *
  * This service can be called from:
  *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task
+ * - Any kernel context.
  *
  * Rescheduling: never.
  *
- * @note If @a thread is bound to a periodic timebase, @a quantum
- * represents the number of periodic ticks in that
- * timebase. Otherwise, if @a thread is bound to the master time base,
- * a full time-slice will last:
- * @a quantum * CONFIG_XENO_OPT_TIMING_VIRTICK.
+ * @note A full time-slice will last: @a quantum *
+ * CONFIG_XENO_OPT_TIMING_VIRTICK micro-seconds.
  */
 
 int xnpod_set_thread_tslice(struct xnthread *thread, xnticks_t quantum)
 {
 	unsigned long oldmode;
-	int aperiodic;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -3010,19 +2949,18 @@ int xnpod_set_thread_tslice(struct xnthread *thread, xnticks_t quantum)
 		return -EINVAL;
 	}
 
-	aperiodic = !xntbase_periodic_p(xnthread_time_base(thread));
 	thread->rrperiod = quantum;
 	thread->rrcredit = quantum;
 	oldmode = xnthread_test_state(thread, XNRRB);
 
 	if (quantum != XN_INFINITE) {
 		xnthread_set_state(thread, XNRRB);
-		if (aperiodic && !oldmode && nkpod->tsliced++ == 0)
+		if (!oldmode && nkpod->tsliced++ == 0)
 			xntimer_start(&nkpod->tslicer,
 				      nkvtick, nkvtick, XN_RELATIVE);
 	} else {
 		xnthread_clear_state(thread, XNRRB);
-		if (aperiodic && oldmode && --nkpod->tsliced == 0)
+		if (oldmode && --nkpod->tsliced == 0)
 			xntimer_stop(&nkpod->tslicer);
 	}
 
@@ -3210,7 +3148,7 @@ int __init xnpod_init_proc(void)
 	if (ret)
 		return ret;
 
-	xntbase_init_proc();
+	xnclock_init_proc();
 	xntimer_init_proc();
 	xnheap_init_proc();
 	xnintr_init_proc();
@@ -3247,7 +3185,7 @@ void xnpod_cleanup_proc(void)
 	xnintr_cleanup_proc();
 	xnheap_cleanup_proc();
 	xntimer_cleanup_proc();
-	xntbase_cleanup_proc();
+	xnclock_cleanup_proc();
 	xnsched_cleanup_proc();
 
 	xnvfile_destroy_root();

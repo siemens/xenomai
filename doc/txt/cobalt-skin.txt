@@ -148,15 +148,8 @@ The Cobalt skin still lacks some features which will be added gradually :
 Module parameters
 =================
 
-The following parameters can be passed at startup to the Cobalt skin
+The following parameter can be passed at startup to the Cobalt skin
 module:
 
-- "time_slice_arg", duration, as a count of system clock ticks, of the
-  round-robin time slice. Defaults to 1 tick. Only effective when system timer
-  is set to periodic mode.
-
-- "tick_arg", duration of a base periodic tick.  The Cobalt skin can
-  express all delays and timeouts either as counts of ticks
-  (i.e. jiffy-based), or directly in nanoseconds in a tick-less
-  fashion. This paramater defines the duration of the base period in
-  microseconds; a null value selects the tick-less mode.
+- "time_slice_arg", duration, as a number of base periods, of the
+  default round-robin time slice. Defaults to 1 period.

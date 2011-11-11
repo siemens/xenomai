@@ -48,9 +48,6 @@ static void close_callback(struct work_struct *work);
 static DECLARE_DELAYED_WORK(close_work, close_callback);
 static LIST_HEAD(cleanup_queue);
 
-xntbase_t *rtdm_tbase;
-EXPORT_SYMBOL_GPL(rtdm_tbase);
-
 DEFINE_XNLOCK(rt_fildes_lock);
 
 /**

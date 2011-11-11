@@ -178,7 +178,6 @@ struct xnthread_operations {
 };
 
 struct xnthread_init_attr {
-	struct xntbase *tbase;
 	struct xnthread_operations *ops;
 	xnflags_t flags;
 	unsigned int stacksize;
@@ -366,13 +365,7 @@ typedef struct xnhook {
 #define xnthread_stack_base(thread)        xnarch_stack_base(xnthread_archtcb(thread))
 #define xnthread_stack_end(thread)         xnarch_stack_end(xnthread_archtcb(thread))
 #define xnthread_handle(thread)            ((thread)->registry.handle)
-#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
-#define xnthread_time_base(thread)         ((thread)->rtimer.base)
-#else /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
-#define xnthread_time_base(thread)         (&nktbase)
-#endif /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
 #define xnthread_signaled_p(thread)        ((thread)->signals != 0)
-#define xnthread_timed_p(thread)	      (!!testbits(xnthread_time_base(thread)->status, XNTBRUN))
 #define xnthread_user_task(thread)         xnarch_user_task(xnthread_archtcb(thread))
 #define xnthread_user_pid(thread) \
     (xnthread_test_state((thread),XNROOT) || !xnthread_user_task(thread) ? \

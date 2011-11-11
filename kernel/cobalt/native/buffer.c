@@ -401,7 +401,7 @@ ssize_t rt_buffer_write_inner(RT_BUFFER *bf,
 		 * spec.
 		 */
 		timeout_mode = XN_REALTIME;
-		timeout += xntbase_get_time(__native_tbase);
+		timeout += xnclock_read();
 	}
 
 redo:
@@ -559,7 +559,7 @@ ssize_t rt_buffer_read_inner(RT_BUFFER *bf,
 		 * data, so let's always use an absolute time spec.
 		 */
 		timeout_mode = XN_REALTIME;
-		timeout += xntbase_get_time(__native_tbase);
+		timeout += xnclock_read();
 	}
 
 redo:

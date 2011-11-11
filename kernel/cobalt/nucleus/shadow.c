@@ -329,13 +329,13 @@ static inline void set_linux_task_priority(struct task_struct *p, int prio)
 static inline void lock_timers(void)
 {
 	xnarch_atomic_inc(&nkpod->timerlck);
-	setbits(nktbase.status, XNTBLCK);
+	setbits(nkclock.status, XNTBLCK);
 }
 
 static inline void unlock_timers(void)
 {
 	if (xnarch_atomic_dec_and_test(&nkpod->timerlck))
-		clrbits(nktbase.status, XNTBLCK);
+		clrbits(nkclock.status, XNTBLCK);
 }
 
 static void xnshadow_dereference_skin(unsigned magic)
@@ -1527,27 +1527,15 @@ eventcb_done:
 
 static int xnshadow_sys_info(int muxid, xnsysinfo_t __user *u_info)
 {
-	xntbase_t **timebasep;
 	xnsysinfo_t info;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
 
 	if (muxid < 0 || muxid > XENOMAI_SKINS_NR ||
-	    skins[muxid].props == NULL) {
-		xnlock_put_irqrestore(&nklock, s);
+	    skins[muxid].props == NULL)
 		return -EINVAL;
-	}
-
-	timebasep = skins[muxid].props->timebasep;
-	info.tickval = xntbase_get_tickval(timebasep ? *timebasep : &nktbase);
-
-	xnlock_put_irqrestore(&nklock, s);
 
 	info.clockfreq = xnarch_get_clock_freq();
-
-	info.vdso =
-		xnheap_mapped_offset(&xnsys_ppd_get(1)->sem_heap, nkvdso);
+	info.vdso = xnheap_mapped_offset(&xnsys_ppd_get(1)->sem_heap,
+					 nkvdso);
 
 	return __xn_safe_copy_to_user(u_info, &info, sizeof(info));
 }
@@ -1930,7 +1918,6 @@ static struct xnskin_props __props = {
 	.nrcalls = sizeof(__systab) / sizeof(__systab[0]),
 	.systab = __systab,
 	.eventcb = xnshadow_sys_event,
-	.timebasep = NULL,
 	.module = NULL
 };
 

@@ -329,7 +329,7 @@ static inline struct xnsched_class *xnsched_root_class(struct xnsched *sched)
 	return sched->rootcb.sched_class;
 }
 
-static inline void xnsched_tick(struct xnthread *curr, struct xntbase *tbase)
+static inline void xnsched_tick(struct xnthread *curr)
 {
 	struct xnsched_class *sched_class = curr->sched_class;
 	/*
@@ -337,8 +337,7 @@ static inline void xnsched_tick(struct xnthread *curr, struct xntbase *tbase)
 	 * consumes its time slice when it runs within its own
 	 * scheduling class, which excludes temporary PIP boosts.
 	 */
-	if (xnthread_time_base(curr) == tbase &&
-	    sched_class != &xnsched_class_idle &&
+	if (sched_class != &xnsched_class_idle &&
 	    sched_class == curr->base_class &&
 	    xnthread_test_state(curr, XNTHREAD_BLOCK_BITS|XNLOCK|XNRRB) == XNRRB)
 		sched_class->sched_tick(curr);

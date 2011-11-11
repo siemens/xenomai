@@ -558,8 +558,7 @@ cobalt_msg_t *cobalt_mq_timedsend_inner(cobalt_mq_t **mqp, mqd_t fd, size_t len,
 				msg = ERR_PTR(-EINVAL);
 				break;
 			}
-
-			to = ts2ticks_ceil(abs_timeoutp) + 1;
+			to = ts2ns(abs_timeoutp) + 1;
 		}
 
 		mq = node2mq(cobalt_desc_node(desc));
@@ -685,8 +684,7 @@ cobalt_msg_t *cobalt_mq_timedrcv_inner(cobalt_mq_t **mqp, mqd_t fd, size_t len,
 				msg = ERR_PTR(-EINVAL);
 				break;
 			}
-
-			to = ts2ticks_ceil(abs_timeoutp) + 1;
+			to = ts2ns(abs_timeoutp) + 1;
 		}
 
 		mq = node2mq(cobalt_desc_node(desc));

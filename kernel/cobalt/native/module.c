@@ -43,12 +43,6 @@ MODULE_DESCRIPTION("Native skin");
 MODULE_AUTHOR("rpm@xenomai.org");
 MODULE_LICENSE("GPL");
 
-static u_long tick_arg = CONFIG_XENO_OPT_NATIVE_PERIOD;
-module_param_named(tick_arg, tick_arg, ulong, 0444);
-MODULE_PARM_DESC(tick_arg, "Fixed clock tick value (us), 0 for tick-less mode");
-
-xntbase_t *__native_tbase;
-
 xeno_rholder_t __native_global_rholder;
 
 DEFINE_XNPTREE(__native_ptree, "native");
@@ -70,13 +64,6 @@ int SKIN_INIT(native)
 
 	if (err)
 		goto fail;
-
-	err = xntbase_alloc("native", tick_arg * 1000, 0, &__native_tbase);
-
-	if (err)
-		goto fail;
-
-	xntbase_start(__native_tbase);
 
 	err = __native_task_pkg_init();
 
@@ -161,8 +148,6 @@ int SKIN_INIT(native)
 
       cleanup_pod:
 
-	xntbase_free(__native_tbase);
-
 	xnpod_shutdown(err);
 
       fail:
@@ -185,8 +170,6 @@ void SKIN_EXIT(native)
 	__native_sem_pkg_cleanup();
 	__native_task_pkg_cleanup();
 	__native_syscall_cleanup();
-
-	xntbase_free(__native_tbase);
 
 	xnpod_shutdown(XNPOD_NORMAL_EXIT);
 }

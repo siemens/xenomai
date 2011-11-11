@@ -52,9 +52,6 @@
 extern "C" {
 #endif
 
-/* Time base export */
-#define xnarch_declare_tbase(base)		do { } while(0)
-
 /* Tracer interface */
 #define xnarch_trace_max_begin(v)		rthal_trace_max_begin(v)
 #define xnarch_trace_max_end(v)			rthal_trace_max_end(v)

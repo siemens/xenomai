@@ -21,7 +21,7 @@
 #define _XENO_NUCLEUS_MODULE_H
 
 #include <nucleus/queue.h>
-#include <nucleus/timebase.h>
+#include <nucleus/clock.h>
 
 #define XNMOD_GHOLDER_REALLOC   128 /* Realloc count */
 #define XNMOD_GHOLDER_THRESHOLD 64  /* Safety threshold */

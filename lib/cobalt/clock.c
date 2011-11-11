@@ -102,36 +102,33 @@ retry:
 
 int __wrap_clock_gettime(clockid_t clock_id, struct timespec *tp)
 {
-	int err;
+	unsigned long long ns;
+	unsigned long rem;
+	int ret;
 
 	switch (clock_id) {
 	case CLOCK_HOST_REALTIME:
-		err = __do_clock_host_realtime(tp, NULL);
+		ret = __do_clock_host_realtime(tp, NULL);
 		break;
 	case CLOCK_MONOTONIC:
 	case CLOCK_MONOTONIC_RAW:
-		if (__cobalt_sysinfo.tickval == 1) {
-			unsigned long long ns;
-			unsigned long rem;
-
-			ns = xnarch_tsc_to_ns(__xn_rdtsc());
-			tp->tv_sec = xnarch_divrem_billion(ns, &rem);
-			tp->tv_nsec = rem;
-			return 0;
-		}
-		/* Falldown wanted */
+		ns = xnarch_tsc_to_ns(__xn_rdtsc());
+		tp->tv_sec = xnarch_divrem_billion(ns, &rem);
+		tp->tv_nsec = rem;
+		return 0;
 	default:
-		err = -XENOMAI_SKINCALL2(__cobalt_muxid,
+		ret = -XENOMAI_SKINCALL2(__cobalt_muxid,
 					 __cobalt_clock_gettime,
 					 clock_id,
 					 tp);
 	}
 
-	if (!err)
-		return 0;
+	if (ret) {
+		errno = ret;
+		return -1;
+	}
 
-	errno = err;
-	return -1;
+	return 0;
 }
 
 int __wrap_clock_settime(clockid_t clock_id, const struct timespec *tp)

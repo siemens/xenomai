@@ -1146,7 +1146,7 @@ static int __pthread_mutex_timedlock(union __xeno_mutex __user *u_mx,
 		return -EINVAL;
 
 	err = cobalt_mutex_timedlock_break(&mx.shadow_mutex,
-					  1, ts2ticks_ceil(&ts) + 1);
+					  1, ts2ns(&ts) + 1);
 
 	cb_read_unlock(&mx.shadow_mutex.lock, s);
 
@@ -1376,7 +1376,7 @@ static int __pthread_mutex_timedlock(union __xeno_mutex __user *u_mx,
 	shadow = &mx.shadow_mutex;
 
 	err = cobalt_mutex_timedlock_break(&mx.shadow_mutex,
-					  1, ts2ticks_ceil(&ts) + 1);
+					  1, ts2ns(&ts) + 1);
 	if (err == 0 &&
 	    __xn_safe_copy_to_user(&u_mx->shadow_mutex.lockcnt,
 				   &shadow->lockcnt,
@@ -1589,7 +1589,7 @@ static int __pthread_cond_wait_prologue(union __xeno_cond __user *u_cnd,
 						    &mx.shadow_mutex,
 						    &d.count,
 						    timed,
-						    ts2ticks_ceil(&ts) + 1);
+						    ts2ns(&ts) + 1);
 	} else
 		err = cobalt_cond_timedwait_prologue(cur,
 						    &cnd.shadow_cond,
@@ -2269,7 +2269,7 @@ static int __select(int nfds,
 		if (tv.tv_usec > 1000000)
 			return -EINVAL;
 
-		timeout = clock_get_ticks(CLOCK_MONOTONIC) + tv2ticks_ceil(&tv);
+		timeout = clock_get_ticks(CLOCK_MONOTONIC) + tv2ns(&tv);
 		mode = XN_ABSOLUTE;
 	}
 
@@ -2783,15 +2783,12 @@ static void *cobalt_eventcb(int event, void *data)
 	return ERR_PTR(-EINVAL);
 }
 
-extern xntbase_t *cobalt_tbase;
-
 static struct xnskin_props __props = {
 	.name = "posix",
 	.magic = COBALT_SKIN_MAGIC,
 	.nrcalls = sizeof(__systab) / sizeof(__systab[0]),
 	.systab = __systab,
 	.eventcb = &cobalt_eventcb,
-	.timebasep = &cobalt_tbase,
 	.module = THIS_MODULE
 };
 

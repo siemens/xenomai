@@ -283,7 +283,6 @@ static int xnsched_sporadic_declare(struct xnthread *thread,
 				    const union xnsched_policy_param *p)
 {
 	struct xnsched_sporadic_data *pss;
-	struct xntbase *tbase;
 
 	if (p->pss.low_prio < -1 ||
 	    p->pss.low_prio > XNSCHED_RT_MAX_PRIO)
@@ -312,10 +311,9 @@ static int xnsched_sporadic_declare(struct xnthread *thread,
 	if (pss == NULL)
 		return -ENOMEM;
 
-	tbase = xnthread_time_base(thread);
-	xntimer_init(&pss->repl_timer, tbase, sporadic_replenish_handler);
+	xntimer_init(&pss->repl_timer, sporadic_replenish_handler);
 	xntimer_set_name(&pss->repl_timer, "pss-replenish");
-	xntimer_init(&pss->drop_timer, tbase, sporadic_drop_handler);
+	xntimer_init(&pss->drop_timer, sporadic_drop_handler);
 	xntimer_set_name(&pss->drop_timer, "pss-drop");
 
 	thread->pss = pss;
@@ -399,7 +397,6 @@ struct vfile_sched_sporadic_data {
 	int current_prio;
 	int low_prio;
 	int normal_prio;
-	int periodic;
 	xnticks_t period;
 	xnticks_t timeout;
 	xnticks_t budget;
@@ -451,7 +448,6 @@ static int vfile_sched_sporadic_next(struct xnvfile_snapshot_iterator *it,
 	p->normal_prio = thread->pss->param.normal_prio;
 	p->period = xnthread_get_period(thread);
 	p->budget = thread->pss->param.init_budget;
-	p->periodic = xntbase_periodic_p(xnthread_time_base(thread));
 
 	return 1;
 }
@@ -474,8 +470,8 @@ static int vfile_sched_sporadic_show(struct xnvfile_snapshot_iterator *it,
 		snprintf(npbuf, sizeof(npbuf), "%3d%c",
 			 p->normal_prio, p->current_prio == p->normal_prio ? '*' : ' ');
 
-		xntimer_format_time(p->period, p->periodic, ptbuf, sizeof(ptbuf));
-		xntimer_format_time(p->budget, p->periodic, btbuf, sizeof(btbuf));
+		xntimer_format_time(p->period, ptbuf, sizeof(ptbuf));
+		xntimer_format_time(p->budget, btbuf, sizeof(btbuf));
 
 		xnvfile_printf(it,
 			       "%3u  %-6d %-4s %-4s  %-10s %-10s %s\n",

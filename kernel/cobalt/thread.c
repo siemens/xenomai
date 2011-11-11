@@ -212,7 +212,6 @@ int pthread_create(pthread_t *tid,
 	if (!start)
 		flags |= XNSHADOW;	/* Note: no interrupt shield. */
 
-	iattr.tbase = cobalt_tbase;
 	iattr.name = name;
 	iattr.flags = flags;
 	iattr.ops = &cobalt_thread_ops;
@@ -591,8 +590,8 @@ int pthread_make_periodic_np(pthread_t thread,
 		goto unlock_and_exit;
 	}
 
-	start = ts2ticks_ceil(starttp);
-	period = ts2ticks_ceil(periodtp);
+	start = ts2ns(starttp);
+	period = ts2ns(periodtp);
 	err = -xnpod_set_thread_periodic(&thread->threadbase,
 					 start, clock_flag(TIMER_ABSTIME, clock_id),
 					 period);

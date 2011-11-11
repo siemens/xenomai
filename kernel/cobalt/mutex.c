@@ -554,7 +554,7 @@ int pthread_mutex_timedlock(pthread_mutex_t * mx, const struct timespec *to)
 
 	do {
 		err = cobalt_mutex_timedlock_break(shadow, 1,
-						  ts2ticks_ceil(to) + 1);
+						   ts2ns(to) + 1);
 	} while (err == -EINTR);
 
 	cb_read_unlock(&shadow->lock, s);
