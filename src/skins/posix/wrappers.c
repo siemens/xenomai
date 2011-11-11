@@ -359,6 +359,18 @@ int __real_puts(const char *s)
 }
 
 __attribute__ ((weak))
+int __real_fputs(const char *s, FILE *stream)
+{
+	return fputs(s, stream);
+}
+
+__attribute__ ((weak))
+size_t __real_fwrite(const void *ptr, size_t sz, size_t nmemb, FILE *stream)
+{
+	return fwrite(ptr, sz, nmemb, stream);
+}
+
+__attribute__ ((weak))
 void __real_syslog(int priority, const char *fmt, ...)
 {
 	va_list args;
