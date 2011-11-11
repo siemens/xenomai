@@ -47,13 +47,14 @@
 #define RT_PRINT_SYSLOG_STREAM		NULL
 
 #define RT_PRINT_MODE_FORMAT		0
-#define RT_PRINT_MODE_PUTS		1
+#define RT_PRINT_MODE_FWRITE		1
 
 struct entry_head {
 	FILE *dest;
 	uint32_t seq_no;
 	int priority;
-	char text[1];
+	size_t len;
+	char data[0];
 } __attribute__((packed));
 
 struct print_buffer {
@@ -96,7 +97,7 @@ static void print_buffers(void);
 /* *** rt_print API *** */
 
 static int vprint_to_buffer(FILE *stream, int priority, unsigned int mode,
-			    const char *format, va_list args)
+			    size_t sz, const char *format, va_list args)
 {
 	struct print_buffer *buffer = pthread_getspecific(buffer_key);
 	off_t write_pos, read_pos;
@@ -136,7 +137,7 @@ static int vprint_to_buffer(FILE *stream, int priority, unsigned int mode,
 			head = buffer->ring + write_pos;
 			head->seq_no = seq_no;
 			head->priority = 0;
-			head->text[0] = 0;
+			head->len = 0;
 
 			/* Forward to the ring buffer start */
 			write_pos = 0;
@@ -156,24 +157,35 @@ static int vprint_to_buffer(FILE *stream, int priority, unsigned int mode,
 	head = buffer->ring + write_pos;
 
 	if (mode == RT_PRINT_MODE_FORMAT) {
-		res = vsnprintf(head->text, len, format, args);
+		if (stream != RT_PRINT_SYSLOG_STREAM) {
+			/* We do not need the terminating \0 */
+			res = vsnprintf(head->data, len + 1, format, args);
 
-		if (res < len) {
-			/* Text was written completely, res contains its
-			   length */
-			len = res;
+			if (res < len + 1) {
+				/* Text was written completely, res contains its
+				   length */
+				len = res;
+			} else {
+				/* Text was truncated */
+				res = len;
+			}
 		} else {
-			/* Text was truncated, remove closing \0 that
-			   entry_head already includes */
-			len--;
-			res = len;
+			/* We DO need the terminating \0 */
+			res = vsnprintf(head->data, len, format, args);
+
+			if (res < len) {
+				/* Text was written completely, res contains its
+				   length */
+				len = res + 1;
+			} else {
+				/* Text was truncated */
+				res = len;
+			}
 		}
-	} else if (len >= 2) {
-		str_len = strlen(format);
-		len = (str_len < len - 2) ? str_len : len - 2;
-		strncpy(head->text, format, len);
-		head->text[len++] = '\n';
-		head->text[len] = 0;
+	} else if (len >= 1) {
+		str_len = sz;
+		len = (str_len < len) ? str_len : len;
+		memcpy(head->data, format, len);
 	} else
 		len = 0;
 
@@ -182,6 +194,7 @@ static int vprint_to_buffer(FILE *stream, int priority, unsigned int mode,
 		head->seq_no = ++seq_no;
 		head->priority = priority;
 		head->dest = stream;
+		head->len = len;
 
 		/* Move forward by text and head length */
 		write_pos += len + sizeof(struct entry_head);
@@ -194,7 +207,7 @@ static int vprint_to_buffer(FILE *stream, int priority, unsigned int mode,
 		head = buffer->ring + write_pos;
 		head->seq_no = seq_no;
 		head->priority = priority;
-		head->text[0] = 0;
+		head->len = 0;
 
 		write_pos = 0;
 	}
@@ -208,13 +221,13 @@ static int vprint_to_buffer(FILE *stream, int priority, unsigned int mode,
 }
 
 static int print_to_buffer(FILE *stream, int priority, unsigned int mode,
-			   const char *format, ...)
+			   size_t sz, const char *format, ...)
 {
 	va_list args;
 	int ret;
 
 	va_start(args, format);
-	ret = vprint_to_buffer(stream, priority, mode, format, args);
+	ret = vprint_to_buffer(stream, priority, mode, sz, format, args);
 	va_end(args);
 
 	return ret;
@@ -222,7 +235,8 @@ static int print_to_buffer(FILE *stream, int priority, unsigned int mode,
 
 int rt_vfprintf(FILE *stream, const char *format, va_list args)
 {
-	return vprint_to_buffer(stream, 0, RT_PRINT_MODE_FORMAT, format, args);
+	return vprint_to_buffer(stream, 0,
+				RT_PRINT_MODE_FORMAT, 0, format, args);
 }
 
 int rt_vprintf(const char *format, va_list args)
@@ -254,10 +268,22 @@ int rt_printf(const char *format, ...)
 	return n;
 }
 
+int rt_fputs(const char *s, FILE *stream)
+{
+	return print_to_buffer(stream, 0, RT_PRINT_MODE_FWRITE, strlen(s), s);
+}
+
 int rt_puts(const char *s)
 {
-	return print_to_buffer(stdout, 0, RT_PRINT_MODE_PUTS, s);
+	return rt_fputs(s, stdout);
 }
+
+size_t rt_fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
+{
+	print_to_buffer(stream, 0, RT_PRINT_MODE_FWRITE, size * nmemb, ptr);
+	return nmemb;
+}
+
 
 void rt_syslog(int priority, const char *format, ...)
 {
@@ -265,14 +291,14 @@ void rt_syslog(int priority, const char *format, ...)
 
 	va_start(args, format);
 	vprint_to_buffer(RT_PRINT_SYSLOG_STREAM, priority,
-			 RT_PRINT_MODE_FORMAT, format, args);
+			 RT_PRINT_MODE_FORMAT, 0, format, args);
 	va_end(args);
 }
 
 void rt_vsyslog(int priority, const char *format, va_list args)
 {
 	vprint_to_buffer(RT_PRINT_SYSLOG_STREAM, priority,
-			 RT_PRINT_MODE_FORMAT, format, args);
+			 RT_PRINT_MODE_FORMAT, 0, format, args);
 }
 
 static void set_buffer_name(struct print_buffer *buffer, const char *name)
@@ -541,16 +567,17 @@ static void print_buffers(void)
 
 		read_pos = buffer->read_pos;
 		head = buffer->ring + read_pos;
-		len = strlen(head->text);
+		len = head->len;
 
 		if (len) {
 			/* Print out non-empty entry and proceed */
 			/* Check if output goes to syslog */
 			if (head->dest == RT_PRINT_SYSLOG_STREAM) {
-				syslog(head->priority, "%s", head->text);
+				syslog(head->priority,
+				       "%s", head->data);
 			} else {
-				/* Output goes to specified stream */
-				fprintf(head->dest, "%s", head->text);
+				fwrite(head->data,
+				       head->len, 1, head->dest);
 			}
 
 			read_pos += sizeof(*head) + len;
