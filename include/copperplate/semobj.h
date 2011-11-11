@@ -48,7 +48,7 @@ struct semobj {
 
 #define SEMOBJ_PRIO	0x1
 #define SEMOBJ_PULSE	0x2
-#define SEMOBJ_WANRDEL	0x4
+#define SEMOBJ_WARNDEL	0x4
 
 #ifdef __cplusplus
 extern "C" {
