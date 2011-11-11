@@ -25,6 +25,7 @@
 #include <copperplate/init.h>
 #include <copperplate/cluster.h>
 #include <copperplate/clockobj.h>
+#include <copperplate/semobj.h>
 #include "reference.h"
 #include "task.h"
 #include "sem.h"
@@ -64,9 +65,9 @@ objid_error:
 	return NULL;
 }
 
-static void sem_finalize(struct syncobj *sobj)
+static void sem_finalize(struct semobj *smobj)
 {
-	struct psos_sem *sem = container_of(sobj, struct psos_sem, sobj);
+	struct psos_sem *sem = container_of(smobj, struct psos_sem, smobj);
 	xnfree(sem);
 }
 fnref_register(libpsos, sem_finalize);
@@ -74,11 +75,11 @@ fnref_register(libpsos, sem_finalize);
 u_long sm_create(const char *name,
 		 u_long count, u_long flags, u_long *smid_r)
 {
+	int smobj_flags = SEMOBJ_WARNDEL;
 	struct psos_sem *sem;
 	struct service svc;
 	char short_name[5];
-	int sobj_flags = 0;
-	int ret = SUCCESS;
+	int ret;
 
 	COPPERPLATE_PROTECT(svc);
 
@@ -104,12 +105,17 @@ u_long sm_create(const char *name,
 	}
 
 	if (flags & SM_PRIOR)
-		sobj_flags = SYNCOBJ_PRIO;
+		smobj_flags |= SEMOBJ_PRIO;
 
 	sem->magic = sem_magic;
-	sem->value = count;
-	syncobj_init(&sem->sobj, sobj_flags,
-		     fnref_put(libpsos, sem_finalize));
+	ret = semobj_init(&sem->smobj, smobj_flags, count,
+			  fnref_put(libpsos, sem_finalize));
+	if (ret) {
+		cluster_delobj(&psos_sem_table, &sem->cobj);
+		xnfree(sem);
+		goto out;
+	}
+
 	*smid_r = mainheap_ref(sem, u_long);
 out:
 	COPPERPLATE_UNPROTECT(svc);
@@ -119,7 +125,6 @@ out:
 
 u_long sm_delete(u_long smid)
 {
-	struct syncstate syns;
 	struct psos_sem *sem;
 	struct service svc;
 	int ret;
@@ -130,17 +135,12 @@ u_long sm_delete(u_long smid)
 
 	COPPERPLATE_PROTECT(svc);
 
-	if (syncobj_lock(&sem->sobj, &syns)) {
-		ret = ERR_OBJDEL;
-		goto out;
-	}
-
 	cluster_delobj(&psos_sem_table, &sem->cobj);
 	sem->magic = ~sem_magic; /* Prevent further reference. */
-	ret = syncobj_destroy(&sem->sobj, &syns);
+	ret = semobj_destroy(&sem->smobj);
 	if (ret)
-		ret = ERR_TATSDEL;
-out:
+		ret = ret > 0 ? ERR_TATSDEL : ERR_OBJDEL;
+
 	COPPERPLATE_UNPROTECT(svc);
 
 	return ret;
@@ -173,30 +173,15 @@ u_long sm_ident(const char *name, u_long node, u_long *smid_r)
 u_long sm_p(u_long smid, u_long flags, u_long timeout)
 {
 	struct timespec ts, *timespec;
-	struct syncstate syns;
 	struct psos_sem *sem;
 	struct service svc;
-	int ret = SUCCESS;
+	int ret;
 
 	sem = get_sem_from_id(smid, &ret);
 	if (sem == NULL)
 		return ret;
 
 	COPPERPLATE_PROTECT(svc);
-
-	if (syncobj_lock(&sem->sobj, &syns)) {
-		ret = ERR_OBJDEL;
-		goto out;
-	}
-
-	if (--sem->value >= 0)
-		goto done;
-
-	if (flags & SM_NOWAIT) {
-		sem->value++;
-		ret = ERR_NOSEM;
-		goto done;
-	}
 
 	if (timeout != 0) {
 		timespec = &ts;
@@ -204,25 +189,18 @@ u_long sm_p(u_long smid, u_long flags, u_long timeout)
 	} else
 		timespec = NULL;
 
-	ret = syncobj_pend(&sem->sobj, timespec, &syns);
+	ret = semobj_wait(&sem->smobj, timespec);
 	if (ret) {
-		if (ret == -EIDRM) {
+		if (ret == -EIDRM)
 			ret = ERR_SKILLD;
-			goto out;
-		}
-
-		sem->value++;	/* Fix up semaphore count. */
-
-		if (ret == -ETIMEDOUT)
+		else if (ret == -ETIMEDOUT)
 			ret = ERR_TIMEOUT;
 		/*
 		 * There is no explicit flush operation on pSOS
 		 * semaphores, only an implicit one through deletion.
 		 */
 	}
-done:
-	syncobj_unlock(&sem->sobj, &syns);
-out:
+
 	COPPERPLATE_UNPROTECT(svc);
 
 	return ret;
@@ -230,10 +208,9 @@ out:
 
 u_long sm_v(u_long smid)
 {
-	struct syncstate syns;
 	struct psos_sem *sem;
 	struct service svc;
-	int ret = SUCCESS;
+	int ret;
 
 	sem = get_sem_from_id(smid, &ret);
 	if (sem == NULL)
@@ -241,16 +218,10 @@ u_long sm_v(u_long smid)
 
 	COPPERPLATE_PROTECT(svc);
 
-	if (syncobj_lock(&sem->sobj, &syns)) {
+	ret = semobj_post(&sem->smobj);
+	if (ret == -EIDRM)
 		ret = ERR_OBJDEL;
-		goto out;
-	}
 
-	if (++sem->value <= 0)
-		syncobj_post(&sem->sobj);
-
-	syncobj_unlock(&sem->sobj, &syns);
-out:
 	COPPERPLATE_UNPROTECT(svc);
 
 	return ret;
