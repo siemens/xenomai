@@ -41,5 +41,14 @@ int main(int argc, char *argv[])
 	ret = rt_task_bind(&t, "taskB", TM_NONBLOCK);
 	traceobj_assert(&trobj, ret == -EWOULDBLOCK);
 
+	ret = rt_task_bind(&t, "taskB", 1000000000ULL);
+	traceobj_assert(&trobj, ret == -EPERM);
+
+	ret = rt_task_shadow(NULL, "main", 1, 0);
+	traceobj_assert(&trobj, ret == 0);
+
+	ret = rt_task_bind(&t, "taskB", 1000000000ULL);
+	traceobj_assert(&trobj, ret == -ETIMEDOUT);
+
 	exit(0);
 }

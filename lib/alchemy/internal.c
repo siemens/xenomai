@@ -60,10 +60,25 @@ struct timespec *alchemy_get_timespec(RTIME timeout, struct timespec *tmp)
 	if (timeout == TM_INFINITE)
 		return NULL;
 
-	if (timeout == TM_NONBLOCK)
-		timeout = 0;
+	if (timeout == TM_NONBLOCK) {
+		tmp->tv_sec = 0;
+		tmp->tv_nsec = 0;
+	} else
+		clockobj_ticks_to_timespec(&alchemy_clock, timeout, tmp);
 
-	clockobj_ticks_to_timespec(&alchemy_clock, timeout, tmp);
+	return tmp;
+}
+
+struct timespec *alchemy_get_timeout(RTIME timeout, struct timespec *tmp)
+{
+	if (timeout == TM_INFINITE)
+		return NULL;
+
+	if (timeout == TM_NONBLOCK) {
+		tmp->tv_sec = 0;
+		tmp->tv_nsec = 0;
+	} else
+		clockobj_ticks_to_timeout(&alchemy_clock, timeout, tmp);
 
 	return tmp;
 }
@@ -80,7 +95,7 @@ int alchemy_bind_object(const char *name, struct syncluster *sc,
 	int ret;
 
 	COPPERPLATE_PROTECT(svc);
-	timespec = alchemy_get_timespec(timeout, &ts);
+	timespec = alchemy_get_timeout(timeout, &ts);
 	ret = syncluster_findobj(sc, name, timespec, &cobj);
 	COPPERPLATE_UNPROTECT(svc);
 	if (ret)
