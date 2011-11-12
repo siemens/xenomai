@@ -256,22 +256,7 @@ typedef struct xnthread {
 
 	xnticks_t rrcredit;		/* Remaining round-robin time credit (ticks) */
 
-	union {
-		struct {
-			/*
-			 * XXX: the buffer struct should disappear as
-			 * soon as all IPCs are converted to use
-			 * buffer descriptors instead (bufd).
-			 */
-			void *ptr;
-			size_t size;
-		} buffer;
-		struct xnbufd *bufd;
-		size_t size;
-	} wait_u;
-
-	/* Active wait context - Obsoletes wait_u. */
-	struct xnthread_wait_context *wcontext;
+  	struct xnthread_wait_context *wcontext;	/* Active wait context. */
 
 	struct {
 		xnstat_counter_t ssw;	/* Primary -> secondary mode switch count */
