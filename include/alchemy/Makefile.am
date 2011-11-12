@@ -5,6 +5,7 @@ includesub_HEADERS =	\
 	buffer.h	\
 	cond.h		\
 	mutex.h		\
+	pipe.h		\
 	queue.h		\
 	sem.h		\
 	task.h		\

@@ -35,6 +35,10 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
+@XENO_COBALT_TRUE@am__append_1 = \
+@XENO_COBALT_TRUE@	pipe.c			\
+@XENO_COBALT_TRUE@	pipe.h
+
 subdir = lib/alchemy
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in COPYING
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -76,13 +80,18 @@ am__base_list = \
 am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libalchemy_la_LIBADD =
+am__libalchemy_la_SOURCES_DIST = init.c internal.c internal.h \
+	reference.h alarm.c alarm.h buffer.c buffer.h cond.c cond.h \
+	event.c event.h heap.c heap.h mutex.c mutex.h queue.c queue.h \
+	task.c task.h sem.c sem.h timer.c timer.h pipe.c pipe.h
+@XENO_COBALT_TRUE@am__objects_1 = libalchemy_la-pipe.lo
 am_libalchemy_la_OBJECTS = libalchemy_la-init.lo \
 	libalchemy_la-internal.lo libalchemy_la-alarm.lo \
 	libalchemy_la-buffer.lo libalchemy_la-cond.lo \
 	libalchemy_la-event.lo libalchemy_la-heap.lo \
 	libalchemy_la-mutex.lo libalchemy_la-queue.lo \
 	libalchemy_la-task.lo libalchemy_la-sem.lo \
-	libalchemy_la-timer.lo
+	libalchemy_la-timer.lo $(am__objects_1)
 libalchemy_la_OBJECTS = $(am_libalchemy_la_OBJECTS)
 libalchemy_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -101,7 +110,7 @@ LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
 SOURCES = $(libalchemy_la_SOURCES)
-DIST_SOURCES = $(libalchemy_la_SOURCES)
+DIST_SOURCES = $(am__libalchemy_la_SOURCES_DIST)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -264,32 +273,10 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libalchemy.la
 libalchemy_la_LDFLAGS = -version-info 0:0:0 -lpthread
-libalchemy_la_SOURCES = \
-	init.c		\
-	internal.c	\
-	internal.h	\
-	reference.h	\
-	alarm.c		\
-	alarm.h		\
-	buffer.c	\
-	buffer.h	\
-	cond.c		\
-	cond.h		\
-	event.c		\
-	event.h		\
-	heap.c		\
-	heap.h		\
-	mutex.c		\
-	mutex.h		\
-	queue.c		\
-	queue.h		\
-	task.c		\
-	task.h		\
-	sem.c		\
-	sem.h		\
-	timer.c		\
-	timer.h
-
+libalchemy_la_SOURCES = init.c internal.c internal.h reference.h \
+	alarm.c alarm.h buffer.c buffer.h cond.c cond.h event.c \
+	event.h heap.c heap.h mutex.c mutex.h queue.c queue.h task.c \
+	task.h sem.c sem.h timer.c timer.h $(am__append_1)
 libalchemy_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
 	-I$(top_srcdir)/include \
@@ -379,6 +366,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libalchemy_la-init.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libalchemy_la-internal.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libalchemy_la-mutex.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libalchemy_la-pipe.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libalchemy_la-queue.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libalchemy_la-sem.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libalchemy_la-task.Plo@am__quote@
@@ -488,6 +476,13 @@ libalchemy_la-timer.lo: timer.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='timer.c' object='libalchemy_la-timer.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libalchemy_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libalchemy_la-timer.lo `test -f 'timer.c' || echo '$(srcdir)/'`timer.c
+
+libalchemy_la-pipe.lo: pipe.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libalchemy_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libalchemy_la-pipe.lo -MD -MP -MF $(DEPDIR)/libalchemy_la-pipe.Tpo -c -o libalchemy_la-pipe.lo `test -f 'pipe.c' || echo '$(srcdir)/'`pipe.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libalchemy_la-pipe.Tpo $(DEPDIR)/libalchemy_la-pipe.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pipe.c' object='libalchemy_la-pipe.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libalchemy_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libalchemy_la-pipe.lo `test -f 'pipe.c' || echo '$(srcdir)/'`pipe.c
 
 mostlyclean-libtool:
 	-rm -f *.lo

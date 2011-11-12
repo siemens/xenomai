@@ -28,6 +28,12 @@ libalchemy_la_SOURCES =	\
 	timer.c		\
 	timer.h
 
+if XENO_COBALT
+libalchemy_la_SOURCES +=	\
+	pipe.c			\
+	pipe.h
+endif
+
 libalchemy_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
 	-I$(top_srcdir)/include \
