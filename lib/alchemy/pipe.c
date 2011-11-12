@@ -93,6 +93,7 @@ int rt_pipe_create(RT_PIPE *pipe,
 
 	sock = __RT(socket(AF_RTIPC, SOCK_DGRAM, IPCPROTO_XDDP));
 	if (sock < 0) {
+		warning("RTIPC/XDDP protocol not supported by kernel");
 		ret = -errno;
 		xnfree(pcb);
 		goto out;
