@@ -267,7 +267,7 @@ top_srcdir = @top_srcdir@
 ACLOCAL_AMFLAGS = -I config
 SUDO = sudo
 SUBDIRS = lib config include @XENO_MAYBE_DOCDIR@ scripts testsuite utils
-EXTRA_DIST = kernel examples debian
+EXTRA_DIST = kernel debian
 all: all-recursive
 
 .SUFFIXES:

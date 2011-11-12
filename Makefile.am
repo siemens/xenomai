@@ -4,7 +4,7 @@ SUDO=sudo
 
 SUBDIRS = lib config include @XENO_MAYBE_DOCDIR@ scripts testsuite utils
 
-EXTRA_DIST = kernel examples debian
+EXTRA_DIST = kernel debian
 
 dist-hook:
 	rm -fr `find $(distdir) -name '.svn' -o -name CVS  -o -name '.#*' \
