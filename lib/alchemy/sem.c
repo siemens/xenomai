@@ -132,9 +132,12 @@ int rt_sem_delete(RT_SEM *sem)
 	if (scb == NULL)
 		goto out;
 
+	ret = semobj_destroy(&scb->smobj);
+	if (ret)
+		goto out;
+
 	syncluster_delobj(&alchemy_sem_table, &scb->cobj);
 	scb->magic = ~sem_magic; /* Prevent further reference. */
-	semobj_destroy(&scb->smobj);
 out:
 	COPPERPLATE_UNPROTECT(svc);
 
