@@ -1236,7 +1236,7 @@ static int __pthread_mutex_unlock(union __xeno_mutex __user *u_mx)
 
 	return err;
 }
-#else /* !CONFIG_XENO_FASTSYNCH */
+#else /* CONFIG_XENO_FASTSYNCH */
 static int __pthread_mutex_check_init(union __xeno_mutex __user *u_mx,
 				      const pthread_mutexattr_t __user *u_attr)
 {
@@ -1327,6 +1327,9 @@ static int __pthread_mutex_destroy(union __xeno_mutex __user *u_mx)
 
 	if (xnsynch_fast_owner_check(mutex->synchbase.fastlock,
 				     XN_NO_HANDLE) != 0)
+		return -EBUSY;
+
+	if (countq(&mutex->conds))
 		return -EBUSY;
 
 	cobalt_mark_deleted(shadow);
@@ -1450,6 +1453,8 @@ static int __pthread_mutex_timedlock(union __xeno_mutex __user *u_mx,
 static int __pthread_mutex_unlock(union __xeno_mutex __user *u_mx)
 {
 	union __xeno_mutex mx;
+	int err;
+	spl_t s;
 
 	if (xnpod_root_p())
 		return -EPERM;
@@ -1459,12 +1464,22 @@ static int __pthread_mutex_unlock(union __xeno_mutex __user *u_mx)
 				     offsetof(struct __shadow_mutex, lock)))
 		return -EFAULT;
 
-	if (xnsynch_release(&mx.shadow_mutex.mutex->synchbase))
-		xnpod_schedule();
+	xnlock_get_irqsave(&nklock, s);
+	err = cobalt_mutex_release(xnpod_current_thread(),
+				   &mx.shadow_mutex, NULL);
+	if (err < 0)
+		goto out;
 
-	return 0;
+	if (err) {
+		xnpod_schedule();
+		err = 0;
+	}
+  out:
+	xnlock_put_irqrestore(&nklock, s);
+
+	return err;
 }
-#endif /* !CONFIG_XENO_FASTSYNCH */
+#endif /* CONFIG_XENO_FASTSYNCH */
 
 static int __pthread_condattr_init(pthread_condattr_t __user *u_attr)
 {
@@ -1633,24 +1648,26 @@ static int __pthread_cond_wait_prologue(union __xeno_cond __user *u_cnd,
 
 	if (__xn_safe_copy_from_user(&mx.shadow_mutex,
 				     &u_mx->shadow_mutex,
-#ifdef CONFIG_XENO_FASTSYNCH
-				     offsetof(struct __shadow_mutex, lock)
-#else /* !CONFIG_XENO_FASTSYNCH */
-				     sizeof(mx.shadow_mutex)
-#endif /* !CONFIG_XENO_FASTSYNCH */
-				     ))
+				     sizeof(mx.shadow_mutex)))
 		return -EFAULT;
 
-	if (timed) {
-		if (__xn_safe_copy_from_user(&ts, u_ts, sizeof(ts)))
-			return -EFAULT;
+#ifdef CONFIG_XENO_FASTSYNCH
+	cnd.shadow_cond.mutex_ownerp = mx.shadow_mutex.owner;
+	if (__xn_safe_copy_to_user(&u_cnd->shadow_cond.mutex_ownerp,
+				   &cnd.shadow_cond.mutex_ownerp,
+				   sizeof(cnd.shadow_cond.mutex_ownerp)))
+		return -EFAULT;
+#endif /* CONFIG_XENO_FASTSYNCH */
 
-		err = cobalt_cond_timedwait_prologue(cur,
-						    &cnd.shadow_cond,
-						    &mx.shadow_mutex,
-						    &d.count,
-						    timed,
-						    ts2ns(&ts) + 1);
+	if (timed) {
+		err = __xn_safe_copy_from_user(&ts, u_ts, sizeof(ts))?EFAULT:0;
+		if (!err)
+			err = cobalt_cond_timedwait_prologue(cur,
+							     &cnd.shadow_cond,
+							     &mx.shadow_mutex,
+							     &d.count,
+							     timed,
+							     ts2ns(&ts) + 1);
 	} else
 		err = cobalt_cond_timedwait_prologue(cur,
 						    &cnd.shadow_cond,
@@ -1658,12 +1675,33 @@ static int __pthread_cond_wait_prologue(union __xeno_cond __user *u_cnd,
 						    &d.count,
 						    timed, XN_INFINITE);
 
+#ifdef CONFIG_XENO_FASTSYNCH
+	if (!cnd.shadow_cond.cond->mutex) {
+		cnd.shadow_cond.mutex_ownerp = (xnarch_atomic_t *)~0UL;
+		if (__xn_safe_copy_to_user(&u_cnd->shadow_cond.mutex_ownerp,
+					   &cnd.shadow_cond.mutex_ownerp,
+					   sizeof(cnd.shadow_cond.mutex_ownerp)))
+			return -EFAULT;
+	}
+#endif /* CONFIG_XENO_FASTSYNCH */
+
 	switch(err) {
 	case 0:
 	case ETIMEDOUT:
 		perr = d.err = err;
 		err = -cobalt_cond_timedwait_epilogue(cur, &cnd.shadow_cond,
 						    &mx.shadow_mutex, d.count);
+
+#ifdef CONFIG_XENO_FASTSYNCH
+		if (!cnd.shadow_cond.cond->mutex) {
+			cnd.shadow_cond.mutex_ownerp = (xnarch_atomic_t *)~0UL;
+			if (__xn_safe_copy_to_user(&u_cnd->shadow_cond.mutex_ownerp,
+						   &cnd.shadow_cond.mutex_ownerp,
+						   sizeof(cnd.shadow_cond.mutex_ownerp)))
+				return -EFAULT;
+		}
+#endif /* CONFIG_XENO_FASTSYNCH */
+
 		if (err == 0 &&
 		    __xn_safe_copy_to_user(&u_mx->shadow_mutex.lockcnt,
 					   &mx.shadow_mutex.lockcnt,
@@ -1710,6 +1748,16 @@ static int __pthread_cond_wait_epilogue(union __xeno_cond __user *u_cnd,
 
 	err = cobalt_cond_timedwait_epilogue(cur, &cnd.shadow_cond,
 					    &mx.shadow_mutex, count);
+
+#ifdef CONFIG_XENO_FASTSYNCH
+	if (!cnd.shadow_cond.cond->mutex) {
+		cnd.shadow_cond.mutex_ownerp = (xnarch_atomic_t *)~0UL;
+		if (__xn_safe_copy_to_user(&u_cnd->shadow_cond.mutex_ownerp,
+					   &cnd.shadow_cond.mutex_ownerp,
+					   sizeof(cnd.shadow_cond.mutex_ownerp)))
+			return -EFAULT;
+	}
+#endif /* CONFIG_XENO_FASTSYNCH */
 
 	if (err == 0
 	    && __xn_safe_copy_to_user(&u_mx->shadow_mutex.lockcnt,

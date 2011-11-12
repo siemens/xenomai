@@ -169,14 +169,6 @@ struct cobalt_condattr {
 
 struct cobalt_cond;
 
-union __xeno_cond {
-	pthread_cond_t native_cond;
-	struct __shadow_cond {
-		unsigned magic;
-		struct cobalt_cond *cond;
-	} shadow_cond;
-};
-
 struct cobalt_threadstat {
 	unsigned long status;
 	unsigned long long xtime;

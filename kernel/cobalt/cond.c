@@ -47,21 +47,9 @@
  *
  *@{*/
 
+#include <nucleus/sys_ppd.h>
 #include "mutex.h"
 #include "cond.h"
-
-typedef struct cobalt_cond {
-	unsigned magic;
-	xnsynch_t synchbase;
-	xnholder_t link;	/* Link in cobalt_condq */
-
-#define link2cond(laddr)                                                \
-    ((cobalt_cond_t *)(((char *)laddr) - offsetof(cobalt_cond_t, link)))
-
-	pthread_condattr_t attr;
-	struct cobalt_mutex *mutex;
-	cobalt_kqueues_t *owningq;
-} cobalt_cond_t;
 
 static pthread_condattr_t default_cond_attr;
 
@@ -76,6 +64,10 @@ static void cond_destroy_internal(cobalt_cond_t * cond, cobalt_kqueues_t *q)
 	   xnpod_schedule(). */
 	xnsynch_destroy(&cond->synchbase);
 	xnlock_put_irqrestore(&nklock, s);
+#ifdef CONFIG_XENO_FASTSYNCH
+	xnheap_free(&xnsys_ppd_get(cond->attr.pshared)->sem_heap,
+		    cond->pending_signals);
+#endif /* CONFIG_XENO_FASTSYNCH */
 	xnfree(cond);
 }
 
@@ -108,6 +100,7 @@ int pthread_cond_init(pthread_cond_t * cnd, const pthread_condattr_t * attr)
 {
 	struct __shadow_cond *shadow = &((union __xeno_cond *)cnd)->shadow_cond;
 	xnflags_t synch_flags = XNSYNCH_PRIO | XNSYNCH_NOPIP;
+	struct xnsys_ppd *sys_ppd;
 	cobalt_cond_t *cond;
 	xnqueue_t *condq;
 	spl_t s;
@@ -120,11 +113,23 @@ int pthread_cond_init(pthread_cond_t * cnd, const pthread_condattr_t * attr)
 	if (!cond)
 		return ENOMEM;
 
+#ifdef CONFIG_XENO_FASTSYNCH
+	sys_ppd = xnsys_ppd_get(attr->pshared);
+	cond->pending_signals = (unsigned long *)
+		xnheap_alloc(&sys_ppd->sem_heap,
+			     sizeof(*(cond->pending_signals)));
+	if (!cond->pending_signals) {
+		err = EAGAIN;
+		goto err_free_cond;
+	}
+	*(cond->pending_signals) = 0;
+#endif /* CONFIG_XENO_FASTSYNCH */
+
 	xnlock_get_irqsave(&nklock, s);
 
 	if (attr->magic != COBALT_COND_ATTR_MAGIC) {
 		err = EINVAL;
-		goto error;
+		goto err_free_pending_signals;
 	}
 
 	condq = &cobalt_kqueues(attr->pshared)->condq;
@@ -136,9 +141,17 @@ int pthread_cond_init(pthread_cond_t * cnd, const pthread_condattr_t * attr)
 			if (holder == &shadow->cond->link) {
 				/* cond is already in the queue. */
 				err = EBUSY;
-				goto error;
+				goto err_free_pending_signals;
 			}
 	}
+
+#ifdef CONFIG_XENO_FASTSYNCH
+	shadow->attr = *attr;
+	shadow->pending_signals_offset =
+		xnheap_mapped_offset(&sys_ppd->sem_heap,
+				     cond->pending_signals);
+	shadow->mutex_ownerp = (xnarch_atomic_t *)~0UL;
+#endif /* CONFIG_XENO_FASTSYNCH */
 
 	shadow->magic = COBALT_COND_MAGIC;
 	shadow->cond = cond;
@@ -156,8 +169,14 @@ int pthread_cond_init(pthread_cond_t * cnd, const pthread_condattr_t * attr)
 
 	return 0;
 
-  error:
+  err_free_pending_signals:
 	xnlock_put_irqrestore(&nklock, s);
+#ifdef CONFIG_XENO_FASTSYNCH
+	xnheap_free(&xnsys_ppd_get(cond->attr.pshared)->sem_heap,
+		    cond->pending_signals);
+  err_free_cond:
+	xnfree(cond);
+#endif
 	return err;
 }
 
@@ -218,34 +237,6 @@ int pthread_cond_destroy(pthread_cond_t * cnd)
 	return 0;
 }
 
-/* must be called with nklock locked, interrupts off.
-
-   Note: this function is very similar to mutex_unlock_internal() in mutex.c.
-*/
-static inline int mutex_save_count(xnthread_t *cur,
-				   struct __shadow_mutex *shadow,
-				   unsigned *count_ptr)
-{
-	cobalt_mutex_t *mutex;
-
-	mutex = shadow->mutex;
-	if (!cobalt_obj_active(shadow, COBALT_MUTEX_MAGIC, struct __shadow_mutex)
-	    || !cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, struct cobalt_mutex))
-		 return EINVAL;
-
-	if (xnsynch_owner_check(&mutex->synchbase, cur) != 0)
-		return EPERM;
-
-	*count_ptr = shadow->lockcnt;
-
-	xnsynch_release(&mutex->synchbase);
-
-	/* Do not reschedule here, releasing the mutex and suspension must be
-	   done atomically in pthread_cond_*wait. */
-
-	return 0;
-}
-
 int cobalt_cond_timedwait_prologue(xnthread_t *cur,
 				  struct __shadow_cond *shadow,
 				  struct __shadow_mutex *mutex,
@@ -282,15 +273,27 @@ int cobalt_cond_timedwait_prologue(xnthread_t *cur,
 		goto unlock_and_return;
 	}
 
+	if (mutex->attr.pshared != cond->attr.pshared) {
+		err = EINVAL;
+		goto unlock_and_return;
+	}
+
 	/* Unlock mutex, with its previous recursive lock count stored
 	   in "*count_ptr". */
-	err = mutex_save_count(cur, mutex, count_ptr);
-	if (err)
+	err = cobalt_mutex_release(cur, mutex, count_ptr);
+	if (err < 0)
 		goto unlock_and_return;
 
+	/* err == 1 means a reschedule is needed, but do not
+	   reschedule here, releasing the mutex and suspension must be
+	   done atomically in pthread_cond_*wait. */
+
 	/* Bind mutex to cond. */
-	if (cond->mutex == NULL)
+	if (cond->mutex == NULL) {
 		cond->mutex = mutex->mutex;
+		inith(&cond->mutex_link);
+		appendq(&mutex->mutex->conds, &cond->mutex_link);
+	}
 
 	/* Wait for another thread to signal the condition. */
 	if (timed)
@@ -349,8 +352,10 @@ int cobalt_cond_timedwait_epilogue(xnthread_t *cur,
 	/* Unbind mutex and cond, if no other thread is waiting, if the job was
 	   not already done. */
 	if (!xnsynch_nsleepers(&cond->synchbase)
-	    && cond->mutex == mutex->mutex)
+	    && cond->mutex == mutex->mutex) {
 		cond->mutex = NULL;
+		removeq(&mutex->mutex->conds, &cond->mutex_link);
+	}
 
 	thread_cancellation_point(cur);
 
@@ -395,6 +400,8 @@ int cobalt_cond_timedwait_epilogue(xnthread_t *cur,
  * @return an error number if:
  * - EPERM, the caller context is invalid;
  * - EINVAL, the specified condition variable or mutex is invalid;
+ * - EINVAL, the specified condition variable and mutex process-shared
+ * attribute mismatch;
  * - EPERM, the specified condition variable is not process-shared and does not
  *   belong to the current process;
  * - EINVAL, another thread is currently blocked on @a cnd using another mutex
@@ -463,6 +470,8 @@ int pthread_cond_wait(pthread_cond_t * cnd, pthread_mutex_t * mx)
  * - EPERM, the specified condition variable is not process-shared and does not
  *   belong to the current process;
  * - EINVAL, the specified condition variable, mutex or timeout is invalid;
+ * - EINVAL, the specified condition variable and mutex process-shared
+ * attribute mismatch;
  * - EINVAL, another thread is currently blocked on @a cnd using another mutex
  *   than @a mx;
  * - EPERM, the specified mutex is not owned by the caller;
@@ -626,6 +635,37 @@ void cobalt_condq_cleanup(cobalt_kqueues_t *q)
 
 	xnlock_put_irqrestore(&nklock, s);
 }
+
+#ifdef CONFIG_XENO_FASTSYNCH
+int cobalt_cond_deferred_signals(struct cobalt_cond *cond)
+{
+	unsigned long pending_signals;
+	int need_resched, i;
+
+	pending_signals = *(cond->pending_signals);
+
+	switch(pending_signals) {
+	case ~0UL:
+		need_resched =
+			xnsynch_flush(&cond->synchbase, 0) == XNSYNCH_RESCHED;
+		break;
+
+	case 0:
+		need_resched = 0;
+		break;
+
+	default:
+		for(i = 0, need_resched = 0; i < pending_signals; i++)
+			need_resched |=
+				xnsynch_wakeup_one_sleeper(&cond->synchbase)
+				!= NULL;
+	}
+
+	*cond->pending_signals = 0;
+
+	return need_resched;
+}
+#endif /* CONFIG_XENO_FASTSYNCH */
 
 void cobalt_cond_pkg_init(void)
 {

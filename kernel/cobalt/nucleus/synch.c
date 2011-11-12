@@ -545,9 +545,9 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 			xnarch_atomic_t *lockp = xnsynch_fastlock(synch);
 			/* We are the new owner, update the fastlock
 			   accordingly. */
-			threah |= xnhandle_get_spares(xnarch_atomic_get(lockp),
+			threadh |= xnhandle_get_spares(xnarch_atomic_get(lockp),
 						       XN_HANDLE_SPARE_MASK);
-			threadh;
+			threadh =
 				xnsynch_fast_set_claimed(threadh,
 							 xnsynch_pended_p(synch));
 			xnarch_atomic_set(lockp, threadh);

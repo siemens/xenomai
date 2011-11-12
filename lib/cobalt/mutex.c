@@ -37,7 +37,7 @@ static xnarch_atomic_t *get_ownerp(struct __shadow_mutex *shadow)
 	if (likely(!shadow->attr.pshared))
 		return shadow->owner;
 
-	return (xnarch_atomic_t *) (xeno_sem_heap[1] + shadow->owner_offset);
+	return (xnarch_atomic_t *)(xeno_sem_heap[1] + shadow->owner_offset);
 }
 #endif /* CONFIG_XENO_FASTSYNCH */
 
@@ -388,6 +388,9 @@ int __wrap_pthread_mutex_unlock(pthread_mutex_t *mutex)
 	}
 
 	if (unlikely(xeno_get_current_mode() & XNOTHER))
+		goto do_syscall;
+
+	if (unlikely(xnsynch_fast_check_spares(ownerp, COBALT_MUTEX_COND_SIGNAL)))
 		goto do_syscall;
 
 	if (likely(xnsynch_fast_release(ownerp, cur))) {

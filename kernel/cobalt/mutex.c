@@ -49,6 +49,7 @@
 
 #include <nucleus/sys_ppd.h>
 #include "mutex.h"
+#include "cond.h"
 
 pthread_mutexattr_t cobalt_default_mutex_attr;
 
@@ -117,6 +118,7 @@ int cobalt_mutex_init_internal(struct __shadow_mutex *shadow,
 	inith(&mutex->link);
 	mutex->attr = *attr;
 	mutex->owningq = kq;
+	initq(&mutex->conds);
 
 	xnlock_get_irqsave(&nklock, s);
 	appendq(&kq->mutexq, &mutex->link);

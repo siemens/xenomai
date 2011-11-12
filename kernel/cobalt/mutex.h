@@ -19,8 +19,8 @@
 #ifndef _POSIX_MUTEX_H
 #define _POSIX_MUTEX_H
 
-#include <asm/xenomai/atomic.h>
 #include <pthread.h>
+#include <asm/xenomai/atomic.h>
 
 struct cobalt_mutex;
 
@@ -37,6 +37,8 @@ union __xeno_mutex {
 			xnarch_atomic_t *owner;
 		};
 		struct cobalt_mutexattr attr;
+
+#define COBALT_MUTEX_COND_SIGNAL XN_HANDLE_SPARE2
 #endif /* CONFIG_XENO_FASTSYNCH */
 	} shadow_mutex;
 };
@@ -45,6 +47,7 @@ union __xeno_mutex {
 
 #include "internal.h"
 #include "thread.h"
+#include "cond.h"
 #include "cb_lock.h"
 
 typedef struct cobalt_mutex {
@@ -54,6 +57,8 @@ typedef struct cobalt_mutex {
 
 #define link2mutex(laddr)                                               \
 	((cobalt_mutex_t *)(((char *)laddr) - offsetof(cobalt_mutex_t, link)))
+
+	xnqueue_t conds;
 
 	pthread_mutexattr_t attr;
 	cobalt_kqueues_t *owningq;
@@ -124,6 +129,54 @@ static inline int cobalt_mutex_timedlock_internal(xnthread_t *cur,
 	shadow->lockcnt = count;
 
 	return 0;
+}
+
+static inline int cobalt_mutex_release(xnthread_t *cur,
+				       struct __shadow_mutex *shadow,
+				       unsigned *count_ptr)
+{
+	cobalt_mutex_t *mutex;
+	xnholder_t *holder;
+	int need_resched;
+
+	mutex = shadow->mutex;
+	if (!cobalt_obj_active(shadow, COBALT_MUTEX_MAGIC, struct __shadow_mutex)
+	    || !cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, struct cobalt_mutex))
+		 return -EINVAL;
+
+#if XENO_DEBUG(POSIX)
+	if (mutex->owningq != cobalt_kqueues(mutex->attr.pshared))
+		return -EPERM;
+#endif /* XENO_DEBUG(POSIX) */
+
+	if (xnsynch_owner_check(&mutex->synchbase, cur) != 0)
+		return -EPERM;
+
+	if (count_ptr)
+		*count_ptr = shadow->lockcnt;
+
+	need_resched = 0;
+#ifdef CONFIG_XENO_FASTSYNCH
+	for (holder = getheadq(&mutex->conds);
+	     holder; holder = nextq(&mutex->conds, holder)) {
+		struct cobalt_cond *cond = mutex_link2cond(holder);
+		if (*(cond->pending_signals)) {
+			if (xnsynch_nsleepers(&cond->synchbase))
+				need_resched |=
+					cobalt_cond_deferred_signals(cond);
+			else
+				*(cond->pending_signals) = 0;
+		}
+	}
+	xnsynch_fast_clear_spares(mutex->synchbase.fastlock,
+				  xnthread_handle(cur),
+				  COBALT_MUTEX_COND_SIGNAL);
+#endif /* CONFIG_XENO_FASTSYNCH */
+	need_resched |= xnsynch_release(&mutex->synchbase) != NULL;
+
+	return need_resched;
+	/* Do not reschedule here, releasing the mutex and suspension must be
+	   done atomically in pthread_cond_*wait. */
 }
 
 #endif /* __KERNEL__ */
