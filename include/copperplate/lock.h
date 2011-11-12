@@ -190,5 +190,7 @@ int __check_cancel_type(const char *locktype);
 
 #define atomic_sub_fetch(v, n)	__sync_sub_and_fetch(&(v), n)
 #define atomic_add_fetch(v, n)	__sync_add_and_fetch(&(v), n)
+#define atomic_add_fetch(v, n)	__sync_add_and_fetch(&(v), n)
+#define atomic_cmp_swap(ptr, old, new)  __sync_val_compare_and_swap(ptr, old, new)
 
 #endif /* _COPPERPLATE_LOCK_H */
