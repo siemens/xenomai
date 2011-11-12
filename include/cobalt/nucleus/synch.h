@@ -37,6 +37,7 @@
 #endif /* CONFIG_XENO_OPT_DEBUG_SYNCH_RELAX */
 
 #ifdef CONFIG_XENO_FASTSYNCH
+#define XNSYNCH_FLCLAIM XN_HANDLE_SPARE3 /* Corresponding bit in fast lock */
 
 /* Fast lock API */
 static inline int xnsynch_fast_owner_check(xnarch_atomic_t *fastlock,
@@ -46,13 +47,24 @@ static inline int xnsynch_fast_owner_check(xnarch_atomic_t *fastlock,
 		0 : -EPERM;
 }
 
+static inline int xnsynch_fast_check_spares(xnarch_atomic_t *fastlock,
+					    unsigned spares)
+{
+	return (xnhandle_test_spares(xnarch_atomic_get(fastlock), spares));
+}
+
+
 static inline int xnsynch_fast_acquire(xnarch_atomic_t *fastlock,
 				       xnhandle_t new_ownerh)
 {
-	xnhandle_t lock_state =
-	    xnarch_atomic_cmpxchg(fastlock, XN_NO_HANDLE, new_ownerh);
+	xnhandle_t lock_state, old, spares;
 
-	if (likely(lock_state == XN_NO_HANDLE))
+	spares = xnhandle_get_spares(xnarch_atomic_get(fastlock),
+				     XN_HANDLE_SPARE_MASK);
+	old = XN_NO_HANDLE | spares;
+	lock_state = xnarch_atomic_cmpxchg(fastlock, old, new_ownerh | spares);
+
+	if (likely(lock_state == old))
 		return 0;
 
 	if (xnhandle_mask_spares(lock_state) == new_ownerh)
@@ -64,8 +76,12 @@ static inline int xnsynch_fast_acquire(xnarch_atomic_t *fastlock,
 static inline int xnsynch_fast_release(xnarch_atomic_t *fastlock,
 				       xnhandle_t cur_ownerh)
 {
-	return (xnarch_atomic_cmpxchg(fastlock, cur_ownerh, XN_NO_HANDLE) ==
-		cur_ownerh);
+	xnhandle_t spares = xnhandle_get_spares(xnarch_atomic_get(fastlock),
+						XN_HANDLE_SPARE_MASK &
+						~XNSYNCH_FLCLAIM);
+	cur_ownerh |= spares;
+	return (xnarch_atomic_cmpxchg(fastlock, cur_ownerh,
+				      XN_NO_HANDLE | spares) == cur_ownerh);
 }
 
 #else /* !CONFIG_XENO_FASTSYNCH */
@@ -87,8 +103,6 @@ static inline int xnsynch_fast_release(xnarch_atomic_t *fastlock,
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
 #define XNSYNCH_CLAIMED 0x10	/* Claimed by other thread(s) w/ PIP */
-
-#define XNSYNCH_FLCLAIM XN_HANDLE_SPARE3 /* Corresponding bit in fast lock */
 
 /* Spare flags usable by upper interfaces */
 #define XNSYNCH_SPARE0  0x01000000

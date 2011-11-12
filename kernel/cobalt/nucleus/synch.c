@@ -401,7 +401,7 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 			  xntmode_t timeout_mode)
 {
 	struct xnthread *thread = xnpod_current_thread(), *owner;
-	xnhandle_t threadh = xnthread_handle(thread), fastlock, old;
+	xnhandle_t threadh = xnthread_handle(thread), fastlock, old, spares;
 	const int use_fastlock = xnsynch_fastlock_p(synch);
 	spl_t s;
 
@@ -414,10 +414,12 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 	if (use_fastlock) {
 		xnarch_atomic_t *lockp = xnsynch_fastlock(synch);
 
-		fastlock = xnarch_atomic_cmpxchg(lockp,
-						 XN_NO_HANDLE, threadh);
+		spares = xnhandle_get_spares(xnarch_atomic_get(lockp),
+					     XN_HANDLE_SPARE_MASK);
+		old = XN_NO_HANDLE | spares;
+		fastlock = xnarch_atomic_cmpxchg(lockp, old, threadh | spares);
 
-		if (likely(fastlock == XN_NO_HANDLE)) {
+		if (likely(fastlock == old)) {
 			if (xnthread_test_state(thread, XNOTHER))
 				xnthread_inc_rescnt(thread);
 			xnthread_clear_info(thread,
@@ -543,13 +545,12 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 			xnarch_atomic_t *lockp = xnsynch_fastlock(synch);
 			/* We are the new owner, update the fastlock
 			   accordingly. */
-			fastlock = threadh |
-				xnhandle_get_spares(xnarch_atomic_get(lockp),
-						    XN_HANDLE_SPARE_MASK);
-			fastlock =
-				xnsynch_fast_set_claimed(fastlock,
+			threah |= xnhandle_get_spares(xnarch_atomic_get(lockp),
+						       XN_HANDLE_SPARE_MASK);
+			threadh;
+				xnsynch_fast_set_claimed(threadh,
 							 xnsynch_pended_p(synch));
-			xnarch_atomic_set(lockp, fastlock);
+			xnarch_atomic_set(lockp, threadh);
 		}
 	}
 
@@ -721,8 +722,10 @@ xnsynch_release_thread(struct xnsynch *synch, struct xnthread *lastowner)
 	}
 	if (use_fastlock) {
 		xnarch_atomic_t *lockp = xnsynch_fastlock(synch);
-		newownerh |= xnhandle_get_spares(xnarch_atomic_get(lockp),
-						 XN_HANDLE_SPARE_MASK & ~XNSYNCH_FLCLAIM);
+		newownerh |=
+			xnhandle_get_spares(xnarch_atomic_get(lockp),
+					    XN_HANDLE_SPARE_MASK
+					    & ~XNSYNCH_FLCLAIM);
 		xnarch_atomic_set(lockp, newownerh);
 	}
 
