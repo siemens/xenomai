@@ -363,10 +363,13 @@ xnarch_atomic_cmpxchg(xnarch_atomic_t *ptr,
 			"add pc, %1, #(0xffff0fc0 - 0xffff0fff)\n\t"
 			: "+r"(asm_old), "=&r"(asm_tmp), "=r"(asm_lr)
 			: "r"(asm_new), "r"(asm_ptr)
-			: "ip", "cc", "memory");
-		if (likely(!asm_old))
-			return oldval;
-	} while ((asm_old = *asm_ptr) == oldval);
+			: "cc", "memory");
+		if (likely(!asm_old)) {
+			asm_old = oldval;
+			goto done;
+		}
+	} while (unlikely((asm_old = *asm_ptr) == oldval));
+  done:
 	return asm_old;
 }
 
@@ -419,12 +422,11 @@ xnarch_atomic_sub_return(int i, xnarch_atomic_t *v)
 }
 
 static __inline__ void
-xnarch_atomic_set_mask(xnarch_atomic_t *v, long mask)
+xnarch_atomic_set_mask(unsigned long *v, long mask)
 {
 	register unsigned long asm_old asm("r0");
 	register unsigned long asm_new asm("r1");
-	register unsigned long *asm_ptr asm("r2") =
-		(unsigned long *)&v->counter;
+	register unsigned long *asm_ptr asm("r2") = v;
 	register unsigned long asm_lr asm("lr");
 	register unsigned long asm_tmp asm("r3");
 
@@ -442,12 +444,11 @@ xnarch_atomic_set_mask(xnarch_atomic_t *v, long mask)
 }
 
 static __inline__ void
-xnarch_atomic_clear_mask(xnarch_atomic_t *v, long mask)
+xnarch_atomic_clear_mask(unsigned long *v, long mask)
 {
 	register unsigned long asm_old asm("r0");
 	register unsigned long asm_new asm("r1");
-	register unsigned long *asm_ptr asm("r2") =
-		(unsigned long *)&v->counter;
+	register unsigned long *asm_ptr asm("r2") = v;
 	register unsigned long asm_lr asm("lr");
 	register unsigned long asm_tmp asm("r3");
 
