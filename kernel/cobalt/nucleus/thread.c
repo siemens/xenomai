@@ -21,6 +21,7 @@
 #include <nucleus/synch.h>
 #include <nucleus/heap.h>
 #include <nucleus/thread.h>
+#include <nucleus/sched.h>
 #include <nucleus/module.h>
 #include <asm/xenomai/bits/thread.h>
 
@@ -28,20 +29,27 @@ static unsigned idtags;
 
 static void xnthread_timeout_handler(xntimer_t *timer)
 {
-	xnthread_t *thread = container_of(timer, xnthread_t, rtimer);
+	struct xnthread *thread = container_of(timer, xnthread_t, rtimer);
+
 	xnthread_set_info(thread, XNTIMEO);	/* Interrupts are off. */
 	xnpod_resume_thread(thread, XNDELAY);
 }
 
 static void xnthread_periodic_handler(xntimer_t *timer)
 {
-	xnthread_t *thread = container_of(timer, xnthread_t, ptimer);
+	struct xnthread *thread = container_of(timer, xnthread_t, ptimer);
 	/*
 	 * Prevent unwanted round-robin, and do not wake up threads
 	 * blocked on a resource.
 	 */
 	if (xnthread_test_state(thread, XNDELAY|XNPEND) == XNDELAY)
 		xnpod_resume_thread(thread, XNDELAY);
+}
+
+static void xnthread_roundrobin_handler(xntimer_t *timer)
+{
+	struct xnthread *thread = container_of(timer, struct xnthread, rrbtimer);
+	xnsched_tick(thread);
 }
 
 int xnthread_init(struct xnthread *thread,
@@ -110,6 +118,9 @@ int xnthread_init(struct xnthread *thread,
 	xntimer_init(&thread->ptimer, xnthread_periodic_handler);
 	xntimer_set_name(&thread->ptimer, thread->name);
 	xntimer_set_priority(&thread->ptimer, XNTIMER_HIPRIO);
+	xntimer_init(&thread->rrbtimer, xnthread_roundrobin_handler);
+	xntimer_set_name(&thread->rrbtimer, thread->name);
+	xntimer_set_priority(&thread->rrbtimer, XNTIMER_LOPRIO);
 
 	thread->state = flags;
 	thread->info = 0;
@@ -122,7 +133,6 @@ int xnthread_init(struct xnthread *thread,
 
 	thread->ops = attr->ops;
 	thread->rrperiod = XN_INFINITE;
-	thread->rrcredit = XN_INFINITE;
 	thread->wchan = NULL;
 	thread->wwake = NULL;
 	thread->wcontext = NULL;

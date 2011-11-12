@@ -78,10 +78,7 @@ struct xnpod {
 	 tswitchq,		/*!< Thread switch hook queue. */
 	 tdeleteq;		/*!< Thread delete hook queue. */
 
-	atomic_counter_t timerlck;	/*!< Timer lock depth.  */
-
-	xntimer_t tslicer;	/*!< Time-slicing timer  */
-	int tsliced;		/*!< Number of threads using the slicer */
+	atomic_counter_t timerlck; /*!< Timer lock depth.  */
 
 	int refcnt;		/*!< Reference count.  */
 

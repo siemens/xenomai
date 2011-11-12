@@ -66,8 +66,6 @@ u_long nktimerlat = 0;
 
 xnarch_cpumask_t nkaffinity = XNPOD_ALL_CPUS;
 
-xnticks_t nkvtick = CONFIG_XENO_OPT_TIMING_VIRTICK * 1000;
-
 #ifdef CONFIG_XENO_OPT_DEBUG
 struct xnvfile_directory debug_vfroot;
 EXPORT_SYMBOL_GPL(debug_vfroot);
@@ -278,11 +276,6 @@ void xnpod_schedule_deferred(void)
 		xnpod_schedule();
 }
 
-static void xnpod_timeslice_handler(struct xntimer *timer)
-{
-	xnsched_tick(timer->sched->curr);
-}
-
 static void xnpod_flush_heap(xnheap_t *heap,
 			     void *extaddr, u_long extsize, void *cookie)
 {
@@ -352,8 +345,6 @@ int xnpod_init(void)
 	initq(&pod->tstartq);
 	initq(&pod->tswitchq);
 	initq(&pod->tdeleteq);
-	xntimer_init(&pod->tslicer, xnpod_timeslice_handler);
-	pod->tsliced = 0;
 	xnarch_atomic_set(&pod->timerlck, 0);
 #ifdef __XENO_SIM__
 	pod->schedhook = NULL;
@@ -455,8 +446,6 @@ void xnpod_shutdown(int xtype)
 		xnlock_put_irqrestore(&nklock, s);
 		return;	/* No-op */
 	}
-
-	xntimer_destroy(&nkpod->tslicer);
 
 	/*
 	 * FIXME: We must release the lock before disabling the time
@@ -1097,6 +1086,7 @@ void xnpod_delete_thread(xnthread_t *thread)
 
 	xntimer_destroy(&thread->rtimer);
 	xntimer_destroy(&thread->ptimer);
+	xntimer_destroy(&thread->rrbtimer);
 
 	if (thread->selector) {
 		xnselector_destroy(thread->selector);
@@ -2914,11 +2904,11 @@ EXPORT_SYMBOL_GPL(xnpod_wait_thread_period);
  * @param thread The descriptor address of the affected thread.
  *
  * @param quantum The time quantum assigned to the thread expressed in
- * time-slicing ticks (see note). If @a quantum is different from
- * XN_INFINITE, the time-slice for the thread is set to that value and
- * its current time credit is refilled (i.e. the thread is given a
- * full time-slice to run next). Otherwise, if @a quantum equals
- * XN_INFINITE, time-slicing is stopped for that thread.
+ * nanoseconds. If @a quantum is different from XN_INFINITE, the
+ * time-slice for the thread is set to that value and its current time
+ * credit is refilled (i.e. the thread is given a full time-slice to
+ * run next). Otherwise, if @a quantum equals XN_INFINITE,
+ * time-slicing is stopped for that thread.
  *
  * @return 0 is returned upon success. Otherwise:
  *
@@ -2932,14 +2922,9 @@ EXPORT_SYMBOL_GPL(xnpod_wait_thread_period);
  * - Any kernel context.
  *
  * Rescheduling: never.
- *
- * @note A full time-slice will last: @a quantum *
- * CONFIG_XENO_OPT_TIMING_VIRTICK micro-seconds.
  */
-
 int xnpod_set_thread_tslice(struct xnthread *thread, xnticks_t quantum)
 {
-	unsigned long oldmode;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -2950,19 +2935,14 @@ int xnpod_set_thread_tslice(struct xnthread *thread, xnticks_t quantum)
 	}
 
 	thread->rrperiod = quantum;
-	thread->rrcredit = quantum;
-	oldmode = xnthread_test_state(thread, XNRRB);
+	xntimer_stop(&thread->rrbtimer);
 
 	if (quantum != XN_INFINITE) {
 		xnthread_set_state(thread, XNRRB);
-		if (!oldmode && nkpod->tsliced++ == 0)
-			xntimer_start(&nkpod->tslicer,
-				      nkvtick, nkvtick, XN_RELATIVE);
-	} else {
+		xntimer_start(&thread->rrbtimer,
+			      quantum, quantum, XN_RELATIVE);
+	} else
 		xnthread_clear_state(thread, XNRRB);
-		if (oldmode && --nkpod->tsliced == 0)
-			xntimer_stop(&nkpod->tslicer);
-	}
 
 	xnlock_put_irqrestore(&nklock, s);
 

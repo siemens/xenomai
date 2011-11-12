@@ -185,6 +185,7 @@ void xnsched_destroy(struct xnsched *sched)
 	xntimer_destroy(&sched->htimer);
 	xntimer_destroy(&sched->rootcb.ptimer);
 	xntimer_destroy(&sched->rootcb.rtimer);
+	xntimer_destroy(&sched->rootcb.rrbtimer);
 #ifdef CONFIG_XENO_OPT_WATCHDOG
 	xntimer_destroy(&sched->wdtimer);
 #endif /* CONFIG_XENO_OPT_WATCHDOG */
@@ -700,6 +701,7 @@ static int vfile_schedlist_next(struct xnvfile_snapshot_iterator *it,
 	if (period > 0 && period < timeout &&
 	    !xntimer_running_p(&thread->rtimer))
 		timeout = period;
+
 	p->timeout = timeout;
 
 	return 1;

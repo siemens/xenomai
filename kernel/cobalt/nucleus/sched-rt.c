@@ -98,20 +98,11 @@ void xnsched_rt_tick(struct xnthread *curr)
 	/*
 	 * The round-robin time credit is only consumed by a running
 	 * thread that neither holds the scheduler lock nor was
-	 * blocked before entering this callback.
+	 * blocked before entering this callback. As the time slice is
+	 * exhausted for the running thread, move it back to the
+	 * runnable queue at the end of its priority group.
 	 */
-	if (likely(curr->rrcredit > 1))
-		--curr->rrcredit;
-	else {
-		/*
-		 * If the time slice is exhausted for the running
-		 * thread, move it back to the runnable queue at the
-		 * end of its priority group and reset its credit for
-		 * the next run.
-		 */
-		curr->rrcredit = curr->rrperiod;
-		xnsched_putback(curr);
-	}
+	xnsched_putback(curr);
 }
 
 void xnsched_rt_setparam(struct xnthread *thread,

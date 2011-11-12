@@ -67,10 +67,6 @@ MODULE_DESCRIPTION("POSIX/COBALT interface");
 MODULE_AUTHOR("gilles.chanteperdrix@xenomai.org");
 MODULE_LICENSE("GPL");
 
-static u_long time_slice_arg = 1;	/* Default (round-robin) time slice */
-module_param_named(time_slice, time_slice_arg, ulong, 0444);
-MODULE_PARM_DESC(time_slice, "Default time slice (in ticks)");
-
 static void cobalt_shutdown(int xtype)
 {
 	cobalt_thread_pkg_cleanup();
@@ -138,7 +134,7 @@ int SKIN_INIT(posix)
 	cobalt_shm_pkg_init();
 #endif /* CONFIG_XENO_OPT_POSIX_SHM */
 
-	cobalt_thread_pkg_init(module_param_value(time_slice_arg));
+	cobalt_thread_pkg_init(CONFIG_XENO_OPT_RR_QUANTUM * 1000);
 
 	return 0;
 }

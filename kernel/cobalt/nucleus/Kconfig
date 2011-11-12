@@ -82,18 +82,15 @@ config XENO_OPT_SHIRQ
 	are allowed to control dedicated hardware devices which are
 	configured to share the same interrupt line.
 
-config XENO_OPT_TIMING_VIRTICK
-	int "Virtual tick duration (us)"
+config XENO_OPT_RR_QUANTUM
+	int "Round-robin quantum (us)"
 	default 1000
 	help
 
-	Time-slicing (aka round-robin scheduling) defines a base
-	period that represents the duration of one tick; threads can
-	then be given a time credit to consume as a count of
-	ticks.
-
-	This parameter defines the duration of the base period
-	expressed as a count of micro-seconds.
+	This parameter defines the duration of the default round-robin
+	time quantum expressed as a count of micro-seconds. This value
+	may be overriden internally by Xenomai services which do
+	provide a round-robin interval.
 
 config XENO_OPT_TIMING_SCHEDLAT
 	int "Scheduling latency (ns)"
@@ -248,6 +245,7 @@ config XENO_OPT_SYS_STACKPOOLSZ
 	zero value for this option. The size is expressed in Kilobytes.
 
 if !XENO_GENERIC_STACKPOOL
+
 config XENO_OPT_SYS_STACKPOOLSZ
         int
 	default 0

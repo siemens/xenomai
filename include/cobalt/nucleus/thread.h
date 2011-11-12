@@ -250,11 +250,11 @@ typedef struct xnthread {
 
 	xntimer_t ptimer;		/* Periodic timer */
 
+	xntimer_t rrbtimer;		/* Round-robin timer */
+
 	xnsigmask_t signals;		/* Pending core signals */
 
-	xnticks_t rrperiod;		/* Allotted round-robin period (ticks) */
-
-	xnticks_t rrcredit;		/* Remaining round-robin time credit (ticks) */
+	xnticks_t rrperiod;		/* Allotted round-robin period (ns) */
 
   	struct xnthread_wait_context *wcontext;	/* Active wait context. */
 
@@ -341,7 +341,6 @@ typedef struct xnhook {
 #define xnthread_base_class(thread)        ((thread)->base_class)
 #define xnthread_sched_class(thread)       ((thread)->sched_class)
 #define xnthread_time_slice(thread)        ((thread)->rrperiod)
-#define xnthread_time_credit(thread)       ((thread)->rrcredit)
 #define xnthread_archtcb(thread)           (&((thread)->tcb))
 #define xnthread_asr_level(thread)         ((thread)->asrlevel)
 #define xnthread_pending_signals(thread)  ((thread)->signals)
