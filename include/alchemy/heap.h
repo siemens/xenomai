@@ -28,9 +28,8 @@
 #define H_PRIO    0x1	/* Pend by task priority order. */
 #define H_FIFO    0x0	/* Pend by FIFO order. */
 #define H_SINGLE  0x4	/* Manage as single-block area. */
-#define H_SHARED  H_SINGLE
 /* Deprecated, compat only. */
-#define H_MAPPABLE 0x0
+#define H_SHARED  H_SINGLE
 
 struct RT_HEAP {
 	uintptr_t handle;
