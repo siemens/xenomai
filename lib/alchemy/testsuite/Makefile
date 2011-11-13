@@ -23,8 +23,9 @@ TESTS :=	\
 	mq-2	\
 	mq-3	\
 	alarm-1	\
+	sem-1	\
 	sem-2	\
-	sem-1
+	mutex-1
 
 CFLAGS := $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --skin=alchemy --cflags) -g
 LDFLAGS := $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --skin=alchemy --ldflags)
