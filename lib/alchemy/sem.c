@@ -61,6 +61,9 @@ dead_handle:
 static void sem_finalize(struct semobj *smobj)
 {
 	struct alchemy_sem *scb = container_of(smobj, struct alchemy_sem, smobj);
+	/* We should never fail here, so we backtrace. */
+	__bt(syncluster_delobj(&alchemy_sem_table, &scb->cobj));
+	scb->magic = ~sem_magic;
 	xnfree(scb);
 }
 fnref_register(libalchemy, sem_finalize);
@@ -132,12 +135,17 @@ int rt_sem_delete(RT_SEM *sem)
 	if (scb == NULL)
 		goto out;
 
+	/*
+	 * XXX: we rely on copperplate's semobj to check for semaphore
+	 * existence, so we refrain from altering the object memory
+	 * until we know it was valid. So the only safe place to
+	 * negate the magic tag, deregister from the cluster and
+	 * release the memory is in the finalizer routine, which is
+	 * only called for valid objects.
+	 */
 	ret = semobj_destroy(&scb->smobj);
-	if (ret)
-		goto out;
-
-	syncluster_delobj(&alchemy_sem_table, &scb->cobj);
-	scb->magic = ~sem_magic; /* Prevent further reference. */
+	if (ret > 0)
+		ret = 0;
 out:
 	COPPERPLATE_UNPROTECT(svc);
 
