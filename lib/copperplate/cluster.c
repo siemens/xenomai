@@ -284,7 +284,8 @@ int syncluster_findobj(struct syncluster *sc,
 			*cobjp = cobj;
 			break;
 		}
-		if (timeout->tv_sec == 0 && timeout->tv_nsec == 0) {
+		if (timeout &&
+		    timeout->tv_sec == 0 && timeout->tv_nsec == 0) {
 			ret = -EWOULDBLOCK;
 			break;
 		}
@@ -432,7 +433,8 @@ int pvsyncluster_findobj(struct pvsyncluster *sc,
 			*cobjp = cobj;
 			break;
 		}
-		if (timeout->tv_sec == 0 && timeout->tv_nsec == 0) {
+		if (timeout &&
+		    timeout->tv_sec == 0 && timeout->tv_nsec == 0) {
 			ret = -EWOULDBLOCK;
 			break;
 		}
