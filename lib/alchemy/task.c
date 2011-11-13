@@ -885,12 +885,10 @@ int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
 	syncobj_for_each_waiter(&current->sobj_msg, thobj) {
 		wait = threadobj_get_wait(thobj);
 		if (wait->request.flowid == flowid)
-			break;
+			goto reply;
 	}
-
-	if (wait == NULL)
-		goto done;
-
+	goto done;
+ reply:
 	size = mcb_s ? mcb_s->size : 0;
 	syncobj_wakeup_waiter(&current->sobj_msg, thobj);
 	mcb_r = &wait->reply;
