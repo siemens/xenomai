@@ -164,8 +164,8 @@ int cluster_addobj(struct cluster *c, const char *name,
 	 * owner node existence, overwriting dead instances on the
 	 * fly.
 	 */
-	return __bt(hash_enter_probe(&c->d->table, name,
-				     &cobj->hobj, cluster_probe));
+	return hash_enter_probe(&c->d->table, name,
+				&cobj->hobj, cluster_probe);
 }
 
 int cluster_addobj_dup(struct cluster *c, const char *name,
@@ -176,8 +176,8 @@ int cluster_addobj_dup(struct cluster *c, const char *name,
 	 * Same as cluster_addobj(), but allows for duplicate keys in
 	 * live objects.
 	 */
-	return __bt(hash_enter_probe_dup(&c->d->table, name,
-					 &cobj->hobj, cluster_probe));
+	return hash_enter_probe_dup(&c->d->table, name,
+				    &cobj->hobj, cluster_probe);
 }
 
 int cluster_delobj(struct cluster *c, struct clusterobj *cobj)
@@ -228,7 +228,7 @@ int syncluster_addobj(struct syncluster *sc, const char *name,
 	if (syncobj_lock(sc->sobj, &syns))
 		return __bt(-EINVAL);
 
-	ret = __bt(cluster_addobj(&sc->c, name, cobj));
+	ret = cluster_addobj(&sc->c, name, cobj);
 	if (ret)
 		goto out;
 
@@ -276,7 +276,7 @@ int syncluster_findobj(struct syncluster *sc,
 	int ret = 0;
 
 	if (syncobj_lock(sc->sobj, &syns))
-		return __bt(-EINVAL);
+		return -EINVAL;
 
 	for (;;) {
 		cobj = cluster_findobj(&sc->c, name);
@@ -328,13 +328,13 @@ void pvcluster_destroy(struct pvcluster *c)
 int pvcluster_addobj(struct pvcluster *c, const char *name,
 		     struct pvclusterobj *cobj)
 {
-	return __bt(pvhash_enter(&c->table, name, &cobj->hobj));
+	return pvhash_enter(&c->table, name, &cobj->hobj);
 }
 
 int pvcluster_addobj_dup(struct pvcluster *c, const char *name,
 			 struct pvclusterobj *cobj)
 {
-	return __bt(pvhash_enter_dup(&c->table, name, &cobj->hobj));
+	return pvhash_enter_dup(&c->table, name, &cobj->hobj);
 }
 
 int pvcluster_delobj(struct pvcluster *c, struct pvclusterobj *cobj)
@@ -390,7 +390,7 @@ int pvsyncluster_addobj(struct pvsyncluster *sc, const char *name,
 	if (syncobj_lock(&sc->sobj, &syns))
 		return __bt(-EINVAL);
 
-	ret = __bt(pvcluster_addobj(&sc->c, name, cobj));
+	ret = pvcluster_addobj(&sc->c, name, cobj);
 
 	syncobj_unlock(&sc->sobj, &syns);
 

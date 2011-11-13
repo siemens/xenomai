@@ -142,7 +142,7 @@ int __hash_enter(struct hash_table *t,
 out:
 	write_unlock(&t->lock);
 
-	return __bt(ret);
+	return ret;
 }
 
 int hash_remove(struct hash_table *t, struct hashobj *delobj)
@@ -230,7 +230,7 @@ out:
 	write_unlock(&t->lock);
 	pop_cleanup_lock(&t->lock);
 
-	return __bt(ret);
+	return ret;
 }
 
 struct hashobj *hash_search_probe(struct hash_table *t, const char *key,
@@ -311,7 +311,7 @@ int __pvhash_enter(struct pvhash_table *t,
 out:
 	write_unlock(&t->lock);
 
-	return __bt(ret);
+	return ret;
 }
 
 int pvhash_remove(struct pvhash_table *t, struct pvhashobj *delobj)
