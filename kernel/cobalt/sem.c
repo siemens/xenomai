@@ -800,7 +800,7 @@ int sem_post_inner(struct cobalt_sem *sem, cobalt_kqueues_t *ownq, int bcast)
 		return -1;
 	}
 
-	if (bcast) {
+	if (!bcast) {
 		if (xnsynch_wakeup_one_sleeper(&sem->synchbase) != NULL)
 			xnpod_schedule();
 		else if ((sem->flags & SEM_PULSE) == 0)
