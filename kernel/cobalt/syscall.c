@@ -1081,6 +1081,8 @@ static int __pthread_mutex_init(union __xeno_mutex __user *u_mx,
 				      &mx.shadow_mutex, sizeof(u_mx->shadow_mutex));
 }
 
+#define __pthread_mutex_check_init __cobalt_call_not_available
+
 static int __pthread_mutex_destroy(union __xeno_mutex __user *u_mx)
 {
 	union __xeno_mutex mx;
@@ -1332,6 +1334,65 @@ static int __pthread_mutex_destroy(union __xeno_mutex __user *u_mx)
 
 	return __xn_safe_copy_to_user(&u_mx->shadow_mutex,
 				      shadow, sizeof(u_mx->shadow_mutex));
+}
+
+static int __pthread_mutex_trylock(union __xeno_mutex __user *u_mx)
+{
+	xnthread_t *cur = xnpod_current_thread();
+	struct __shadow_mutex *shadow;
+	cobalt_mutex_t *mutex;
+	union __xeno_mutex mx;
+	int err;
+
+	if (__xn_safe_copy_from_user(&mx.shadow_mutex,
+				     &u_mx->shadow_mutex,
+				     offsetof(struct __shadow_mutex, lock)))
+		return -EFAULT;
+
+	shadow = &mx.shadow_mutex;
+	mutex = shadow->mutex;
+
+	if (!cobalt_obj_active(shadow, COBALT_MUTEX_MAGIC,
+			      struct __shadow_mutex)
+	    || !cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC,
+				 struct cobalt_mutex)) {
+		return -EINVAL;
+	}
+
+	err = xnsynch_fast_acquire(mutex->synchbase.fastlock,
+				   xnthread_handle(cur));
+	switch(err) {
+	case 0:
+		if (xnthread_test_state(cur, XNOTHER))
+			xnthread_inc_rescnt(cur);
+		shadow->lockcnt = 1;
+		break;
+
+	case -EBUSY:
+/* This should not happen, as recursive mutexes are handled in
+   user-space */
+		if (mutex->attr.type == PTHREAD_MUTEX_RECURSIVE) {
+			if (shadow->lockcnt == UINT_MAX)
+				err = -EAGAIN;
+			else {
+				++shadow->lockcnt;
+				err = 0;
+			}
+		}
+		break;
+
+	case -EAGAIN:
+		err = -EBUSY;
+		break;
+	}
+
+	if (err == 0 &&
+	    __xn_safe_copy_to_user(&u_mx->shadow_mutex.lockcnt,
+				   &shadow->lockcnt,
+				   sizeof(u_mx->shadow_mutex.lockcnt)))
+		return -EFAULT;
+
+	return err;
 }
 
 static int __pthread_mutex_lock(union __xeno_mutex __user *u_mx)
@@ -2663,14 +2724,11 @@ static struct xnsysent __systab[] = {
 	SKINCALL_DEF(__cobalt_clock_settime, __clock_settime, any),
 	SKINCALL_DEF(__cobalt_clock_nanosleep, __clock_nanosleep, nonrestartable),
 	SKINCALL_DEF(__cobalt_mutex_init, __pthread_mutex_init, any),
+	SKINCALL_DEF(__cobalt_check_init, __pthread_mutex_check_init, any),
 	SKINCALL_DEF(__cobalt_mutex_destroy, __pthread_mutex_destroy, any),
 	SKINCALL_DEF(__cobalt_mutex_lock, __pthread_mutex_lock, primary),
 	SKINCALL_DEF(__cobalt_mutex_timedlock, __pthread_mutex_timedlock, primary),
-#ifndef CONFIG_XENO_FASTSYNCH
 	SKINCALL_DEF(__cobalt_mutex_trylock, __pthread_mutex_trylock, primary),
-#else
-	SKINCALL_DEF(__cobalt_check_init, __pthread_mutex_check_init, any),
-#endif
 	SKINCALL_DEF(__cobalt_mutex_unlock, __pthread_mutex_unlock, nonrestartable),
 	SKINCALL_DEF(__cobalt_cond_init, __pthread_cond_init, any),
 	SKINCALL_DEF(__cobalt_cond_destroy, __pthread_cond_destroy, any),
