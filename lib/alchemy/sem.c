@@ -88,16 +88,8 @@ int rt_sem_create(RT_SEM *sem, const char *name,
 
 	scb = xnmalloc(sizeof(*scb));
 	if (scb == NULL) {
-		COPPERPLATE_UNPROTECT(svc);
-		return -ENOMEM;
-	}
-
-	alchemy_build_name(scb->name, name, &sem_namegen);
-
-	if (syncluster_addobj(&alchemy_sem_table, scb->name, &scb->cobj)) {
-		xnfree(scb);
-		COPPERPLATE_UNPROTECT(svc);
-		return -EEXIST;
+		ret = -ENOMEM;
+		goto out;
 	}
 
 	if (mode & S_PRIO)
@@ -106,18 +98,23 @@ int rt_sem_create(RT_SEM *sem, const char *name,
 	ret = semobj_init(&scb->smobj, smobj_flags, icount,
 			  fnref_put(libalchemy, sem_finalize));
 	if (ret) {
-		syncluster_delobj(&alchemy_sem_table, &scb->cobj);
 		xnfree(scb);
-		COPPERPLATE_UNPROTECT(svc);
-		return ret;
+		goto out;
 	}
 
+	alchemy_build_name(scb->name, name, &sem_namegen);
 	scb->magic = sem_magic;
-	sem->handle = mainheap_ref(scb, uintptr_t);
 
+	if (syncluster_addobj(&alchemy_sem_table, scb->name, &scb->cobj)) {
+		semobj_destroy(&scb->smobj);
+		xnfree(scb);
+		ret = -EEXIST;
+	} else
+		sem->handle = mainheap_ref(scb, uintptr_t);
+out:
 	COPPERPLATE_UNPROTECT(svc);
 
-	return 0;
+	return ret;
 }
 
 int rt_sem_delete(RT_SEM *sem)

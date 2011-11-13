@@ -213,7 +213,7 @@ out:
 	pthread_exit((void *)(long)ret);
 }
 
-static int create_tcb(struct alchemy_task **tcbp,
+static int create_tcb(struct alchemy_task **tcbp, RT_TASK *task,
 		      const char *name, int prio, int mode)
 {
 	struct threadobj_init_data idata;
@@ -256,12 +256,24 @@ static int create_tcb(struct alchemy_task **tcbp,
 	idata.priority = prio;
 	threadobj_init(&tcb->thobj, &idata);
 
+	*tcbp = tcb;
+
+	/*
+	 * CAUTION: The task control block must be fully built before
+	 * we publish it through syncluster_addobj(), at which point
+	 * it could be referred to immediately from another task as we
+	 * got preempted. In addition, the task descriptor must be
+	 * updated prior to starting the task.
+	 */
+	tcb->self.handle = mainheap_ref(tcb, uintptr_t);
+
 	if (syncluster_addobj(&alchemy_task_table, tcb->name, &tcb->cobj)) {
 		delete_tcb(tcb);
 		return -EEXIST;
 	}
 
-	*tcbp = tcb;
+	if (task)
+		task->handle = tcb->self.handle;
 
 	return 0;
 }
@@ -283,12 +295,11 @@ int rt_task_create(RT_TASK *task, const char *name,
 
 	COPPERPLATE_PROTECT(svc);
 
-	ret = create_tcb(&tcb, name, prio, mode);
+	ret = create_tcb(&tcb, task, name, prio, mode);
 	if (ret)
 		goto out;
 
 	/* We want this to be set prior to spawning the thread. */
-	task->handle = mainheap_ref(tcb, uintptr_t);
 	tcb->self = *task;
 
 	ret = __bt(copperplate_create_thread(prio, task_trampoline, tcb,
@@ -388,14 +399,9 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 
 	COPPERPLATE_PROTECT(svc);
 
-	ret = create_tcb(&tcb, name, prio, mode);
+	ret = create_tcb(&tcb, task, name, prio, mode);
 	if (ret)
 		goto out;
-
-	tcb->self.handle = mainheap_ref(tcb, uintptr_t);
-
-	if (task)
-		*task = tcb->self;
 
 	threadobj_start(&tcb->thobj); /* We won't wait in prologue. */
 	ret = task_prologue(tcb);

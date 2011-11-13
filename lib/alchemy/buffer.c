@@ -111,23 +111,23 @@ int rt_buffer_create(RT_BUFFER *bf, const char *name,
 	}
 
 	alchemy_build_name(bcb->name, name, &buffer_namegen);
-
-	if (syncluster_addobj(&alchemy_buffer_table, bcb->name, &bcb->cobj)) {
-		ret = -EEXIST;
-		goto fail_register;
-	}
-
-	if (mode & B_PRIO)
-		sobj_flags = SYNCOBJ_PRIO;
-
 	bcb->magic = buffer_magic;
 	bcb->mode = mode;
 	bcb->bufsz = bufsz;
 	bcb->rdoff = 0;
 	bcb->wroff = 0;
 	bcb->fillsz = 0;
+	if (mode & B_PRIO)
+		sobj_flags = SYNCOBJ_PRIO;
+
 	syncobj_init(&bcb->sobj, sobj_flags,
 		     fnref_put(libalchemy, buffer_finalize));
+
+	if (syncluster_addobj(&alchemy_buffer_table, bcb->name, &bcb->cobj)) {
+		ret = -EEXIST;
+		goto fail_register;
+	}
+
 	bf->handle = mainheap_ref(bcb, uintptr_t);
 
 	COPPERPLATE_UNPROTECT(svc);
@@ -135,6 +135,7 @@ int rt_buffer_create(RT_BUFFER *bf, const char *name,
 	return 0;
 
 fail_register:
+	syncobj_uninit(&bcb->sobj);
 	xnfree(bcb->buf);
 fail_bufalloc:
 	xnfree(bcb);

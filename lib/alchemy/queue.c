@@ -87,8 +87,8 @@ int rt_queue_create(RT_QUEUE *queue, const char *name,
 		    size_t poolsize, size_t qlimit, int mode)
 {
 	struct alchemy_queue *qcb;
+	int sobj_flags = 0, ret;
 	struct service svc;
-	int sobj_flags = 0;
 
 	if (threadobj_irq_p())
 		return -EPERM;
@@ -98,45 +98,44 @@ int rt_queue_create(RT_QUEUE *queue, const char *name,
 
 	COPPERPLATE_PROTECT(svc);
 
+	ret = -ENOMEM;
 	qcb = xnmalloc(sizeof(*qcb));
 	if (qcb == NULL)
-		goto no_mem;
-
-	alchemy_build_name(qcb->name, name, &queue_namegen);
-
-	if (syncluster_addobj(&alchemy_queue_table, qcb->name, &qcb->cobj)) {
-		xnfree(qcb);
-		COPPERPLATE_UNPROTECT(svc);
-		return -EEXIST;
-	}
-
+		goto out;
 	/*
 	 * The message pool has to be part of the main heap for proper
 	 * sharing between processes.
 	 */
 	if (heapobj_init_shareable(&qcb->hobj, NULL, poolsize)) {
-		syncluster_delobj(&alchemy_queue_table, &qcb->cobj);
 		xnfree(qcb);
-	no_mem:
-		COPPERPLATE_UNPROTECT(svc);
-		return -ENOMEM;
+		goto out;
 	}
 
-	if (mode & Q_PRIO)
-		sobj_flags = SYNCOBJ_PRIO;
-
+	alchemy_build_name(qcb->name, name, &queue_namegen);
 	qcb->magic = queue_magic;
 	qcb->mode = mode;
 	qcb->limit = qlimit;
 	list_init(&qcb->mq);
 	qcb->mcount = 0;
+
+	if (mode & Q_PRIO)
+		sobj_flags = SYNCOBJ_PRIO;
+
 	syncobj_init(&qcb->sobj, sobj_flags,
 		     fnref_put(libalchemy, queue_finalize));
-	queue->handle = mainheap_ref(qcb, uintptr_t);
 
+	ret = 0;
+	if (syncluster_addobj(&alchemy_queue_table, qcb->name, &qcb->cobj)) {
+		heapobj_destroy(&qcb->hobj);
+		syncobj_uninit(&qcb->sobj);
+		xnfree(qcb);
+		ret = -EEXIST;
+	} else
+		queue->handle = mainheap_ref(qcb, uintptr_t);
+out:
 	COPPERPLATE_UNPROTECT(svc);
 
-	return 0;
+	return ret;
 }
 
 int rt_queue_delete(RT_QUEUE *queue)

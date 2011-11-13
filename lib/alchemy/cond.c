@@ -66,6 +66,7 @@ int rt_cond_create(RT_COND *cond, const char *name)
 	struct alchemy_cond *ccb;
 	pthread_condattr_t cattr;
 	struct service svc;
+	int ret = 0;
 
 	if (threadobj_irq_p())
 		return -EPERM;
@@ -74,29 +75,28 @@ int rt_cond_create(RT_COND *cond, const char *name)
 
 	ccb = xnmalloc(sizeof(*ccb));
 	if (ccb == NULL) {
-		COPPERPLATE_UNPROTECT(svc);
-		return -ENOMEM;
+		ret = -ENOMEM;
+		goto out;
 	}
 
 	alchemy_build_name(ccb->name, name, &cond_namegen);
-
-	if (syncluster_addobj(&alchemy_cond_table, ccb->name, &ccb->cobj)) {
-		xnfree(ccb);
-		COPPERPLATE_UNPROTECT(svc);
-		return -EEXIST;
-	}
-
 	__RT(pthread_condattr_init(&cattr));
 	__RT(pthread_condattr_setpshared(&cattr, mutex_scope_attribute));
 	__RT(pthread_condattr_setclock(&cattr, CLOCK_COPPERPLATE));
 	__RT(pthread_cond_init(&ccb->cond, &cattr));
 	__RT(pthread_condattr_destroy(&cattr));
 	ccb->magic = cond_magic;
-	cond->handle = mainheap_ref(ccb, uintptr_t);
 
+	if (syncluster_addobj(&alchemy_cond_table, ccb->name, &ccb->cobj)) {
+		__RT(pthread_cond_destroy(&ccb->cond));
+		xnfree(ccb);
+		ret = -EEXIST;
+	} else
+		cond->handle = mainheap_ref(ccb, uintptr_t);
+out:
 	COPPERPLATE_UNPROTECT(svc);
 
-	return 0;
+	return ret;
 }
 
 int rt_cond_delete(RT_COND *cond)

@@ -70,7 +70,7 @@ int rt_pipe_create(RT_PIPE *pipe,
 	struct alchemy_pipe *pcb;
 	struct service svc;
 	size_t streambufsz;
-	int ret = 0, sock;
+	int ret, sock;
 
 	if (threadobj_irq_p())
 		return -EPERM;
@@ -79,16 +79,8 @@ int rt_pipe_create(RT_PIPE *pipe,
 
 	pcb = xnmalloc(sizeof(*pcb));
 	if (pcb == NULL) {
-		COPPERPLATE_UNPROTECT(svc);
-		return -ENOMEM;
-	}
-
-	alchemy_build_name(pcb->name, name, &pipe_namegen);
-
-	if (syncluster_addobj(&alchemy_pipe_table, pcb->name, &pcb->cobj)) {
-		xnfree(pcb);
-		COPPERPLATE_UNPROTECT(svc);
-		return -EEXIST;
+		ret = -ENOMEM;
+		goto out;
 	}
 
 	sock = __RT(socket(AF_RTIPC, SOCK_DGRAM, IPCPROTO_XDDP));
@@ -105,42 +97,49 @@ int rt_pipe_create(RT_PIPE *pipe,
 		ret = __RT(setsockopt(sock, SOL_XDDP, XDDP_LABEL,
 				      &plabel, sizeof(plabel)));
 		if (ret)
-			goto fail;
+			goto fail_sockopt;
 	}
 
 	if (poolsize > 0) {
 		ret = setsockopt(pcb->sock, SOL_XDDP, XDDP_POOLSZ,
 				 &poolsize, sizeof(poolsize));
 		if (ret)
-			goto fail;
+			goto fail_sockopt;
 	}
 
 	streambufsz = ALCHEMY_PIPE_STREAMSZ;
 	ret = __RT(setsockopt(pcb->sock, SOL_XDDP, XDDP_BUFSZ,
 			      &streambufsz, streambufsz));
 	if (ret)
-		goto fail;
+		goto fail_sockopt;
 
 	memset(&saddr, 0, sizeof(saddr));
 	saddr.sipc_family = AF_RTIPC;
 	saddr.sipc_port = minor;
 	ret = bind(sock, (struct sockaddr *)&saddr, sizeof(saddr));
 	if (ret)
-		goto fail;
+		goto fail_sockopt;
 
+	alchemy_build_name(pcb->name, name, &pipe_namegen);
 	pcb->sock = sock;
 	pcb->magic = pipe_magic;
+
+	if (syncluster_addobj(&alchemy_pipe_table, pcb->name, &pcb->cobj)) {
+		ret = -EEXIST;
+		goto fail_register;
+	}
+
 	pipe->handle = mainheap_ref(pcb, uintptr_t);
-out:
+
 	COPPERPLATE_UNPROTECT(svc);
 
 	return 0;
-fail:
+fail_sockopt:
 	ret = -errno;
+fail_register:
 	__RT(close(sock));
-	syncluster_delobj(&alchemy_pipe_table, &pcb->cobj);
 	xnfree(pcb);
-
+out:
 	COPPERPLATE_UNPROTECT(svc);
 
 	return ret;	

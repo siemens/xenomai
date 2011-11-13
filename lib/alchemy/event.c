@@ -84,9 +84,9 @@ fnref_register(libalchemy, event_finalize);
 int rt_event_create(RT_EVENT *event, const char *name,
 		    unsigned long ivalue, int mode)
 {
+	int sobj_flags = 0, ret = 0;
 	struct alchemy_event *evcb;
 	struct service svc;
-	int sobj_flags = 0;
 
 	if (threadobj_irq_p())
 		return -EPERM;
@@ -95,31 +95,30 @@ int rt_event_create(RT_EVENT *event, const char *name,
 
 	evcb = xnmalloc(sizeof(*evcb));
 	if (evcb == NULL) {
-		COPPERPLATE_UNPROTECT(svc);
-		return -ENOMEM;
+		ret = -ENOMEM;
+		goto out;
 	}
 
 	alchemy_build_name(evcb->name, name, &event_namegen);
-
-	if (syncluster_addobj(&alchemy_event_table, evcb->name, &evcb->cobj)) {
-		xnfree(evcb);
-		COPPERPLATE_UNPROTECT(svc);
-		return -EEXIST;
-	}
-
-	if (mode & EV_PRIO)
-		sobj_flags = SYNCOBJ_PRIO;
-
 	evcb->magic = event_magic;
 	evcb->value = ivalue;
 	evcb->mode = mode;
+	if (mode & EV_PRIO)
+		sobj_flags = SYNCOBJ_PRIO;
+
 	syncobj_init(&evcb->sobj, sobj_flags,
 		     fnref_put(libalchemy, event_finalize));
-	event->handle = mainheap_ref(evcb, uintptr_t);
 
+	if (syncluster_addobj(&alchemy_event_table, evcb->name, &evcb->cobj)) {
+		syncobj_uninit(&evcb->sobj);
+		xnfree(evcb);
+		ret = -EEXIST;
+	} else
+		event->handle = mainheap_ref(evcb, uintptr_t);
+out:
 	COPPERPLATE_UNPROTECT(svc);
 
-	return 0;
+	return ret;
 }
 
 int rt_event_delete(RT_EVENT *event)

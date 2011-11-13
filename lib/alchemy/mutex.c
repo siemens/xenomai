@@ -66,6 +66,7 @@ int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 	struct alchemy_mutex *mcb;
 	pthread_mutexattr_t mattr;
 	struct service svc;
+	int ret = 0;
 
 	if (threadobj_irq_p())
 		return -EPERM;
@@ -74,19 +75,12 @@ int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 
 	mcb = xnmalloc(sizeof(*mcb));
 	if (mcb == NULL) {
-		COPPERPLATE_UNPROTECT(svc);
-		return -ENOMEM;
+		ret = -ENOMEM;
+		goto out;
 	}
 
 	alchemy_build_name(mcb->name, name, &mutex_namegen);
 	mcb->owner = no_alchemy_task;
-
-	if (syncluster_addobj(&alchemy_mutex_table, mcb->name, &mcb->cobj)) {
-		xnfree(mcb);
-		COPPERPLATE_UNPROTECT(svc);
-		return -EEXIST;
-	}
-
 	__RT(pthread_mutexattr_init(&mattr));
 	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
 	__RT(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute));
@@ -97,11 +91,16 @@ int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 	__RT(pthread_mutex_init(&mcb->lock, &mattr));
 	__RT(pthread_mutexattr_destroy(&mattr));
 	mcb->magic = mutex_magic;
-	mutex->handle = mainheap_ref(mcb, uintptr_t);
 
+	if (syncluster_addobj(&alchemy_mutex_table, mcb->name, &mcb->cobj)) {
+		xnfree(mcb);
+		ret = -EEXIST;
+	} else
+		mutex->handle = mainheap_ref(mcb, uintptr_t);
+out:
 	COPPERPLATE_UNPROTECT(svc);
 
-	return 0;
+	return ret;
 }
 
 int rt_mutex_delete(RT_MUTEX *mutex)

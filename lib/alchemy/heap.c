@@ -86,8 +86,8 @@ int rt_heap_create(RT_HEAP *heap,
 		   const char *name, size_t heapsize, int mode)
 {
 	struct alchemy_heap *hcb;
+	int sobj_flags = 0, ret;
 	struct service svc;
-	int sobj_flags = 0;
 
 	if (threadobj_irq_p())
 		return -EPERM;
@@ -97,44 +97,44 @@ int rt_heap_create(RT_HEAP *heap,
 
 	COPPERPLATE_PROTECT(svc);
 
+	ret = -ENOMEM;
 	hcb = xnmalloc(sizeof(*hcb));
 	if (hcb == NULL)
-		goto no_mem;
-
-	alchemy_build_name(hcb->name, name, &heap_namegen);
-
-	if (syncluster_addobj(&alchemy_heap_table, hcb->name, &hcb->cobj)) {
-		xnfree(hcb);
-		COPPERPLATE_UNPROTECT(svc);
-		return -EEXIST;
-	}
+		goto out;
 
 	/*
 	 * The memory pool has to be part of the main heap for proper
 	 * sharing between processes.
 	 */
 	if (heapobj_init_shareable(&hcb->hobj, NULL, heapsize)) {
-		syncluster_delobj(&alchemy_heap_table, &hcb->cobj);
 		xnfree(hcb);
-	no_mem:
-		COPPERPLATE_UNPROTECT(svc);
-		return -ENOMEM;
+		goto out;
 	}
 
-	if (mode & H_PRIO)
-		sobj_flags = SYNCOBJ_PRIO;
-
+	alchemy_build_name(hcb->name, name, &heap_namegen);
 	hcb->magic = heap_magic;
 	hcb->mode = mode;
 	hcb->size = heapsize;
 	hcb->sba = NULL;
+
+	if (mode & H_PRIO)
+		sobj_flags = SYNCOBJ_PRIO;
+
 	syncobj_init(&hcb->sobj, sobj_flags,
 		     fnref_put(libalchemy, heap_finalize));
-	heap->handle = mainheap_ref(hcb, uintptr_t);
 
+	ret = 0;
+	if (syncluster_addobj(&alchemy_heap_table, hcb->name, &hcb->cobj)) {
+		syncobj_uninit(&hcb->sobj);
+		heapobj_destroy(&hcb->hobj);
+		xnfree(hcb);
+		ret = -EEXIST;
+	} else
+		heap->handle = mainheap_ref(hcb, uintptr_t);
+out:
 	COPPERPLATE_UNPROTECT(svc);
 
-	return 0;
+	return ret;
 }
 
 int rt_heap_delete(RT_HEAP *heap)

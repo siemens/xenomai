@@ -96,29 +96,27 @@ int rt_alarm_create(RT_ALARM *alarm, const char *name,
 		goto out;
 	}
 
-	alchemy_build_name(acb->name, name, &alarm_namegen);
-
-	if (pvcluster_addobj(&alchemy_alarm_table, acb->name, &acb->cobj)) {
-		ret = -EEXIST;
-		goto fail_cluster;
-	}
-
 	ret = timerobj_init(&acb->tmobj);
 	if (ret)
-		goto fail_timer;
+		goto fail;
 
+	alchemy_build_name(acb->name, name, &alarm_namegen);
 	acb->handler = handler;
 	acb->arg = arg;
 	acb->expiries = 0;
 	acb->magic = alarm_magic;
 	alarm->handle = (uintptr_t)acb;
 
+	if (pvcluster_addobj(&alchemy_alarm_table, acb->name, &acb->cobj)) {
+		timerobj_destroy(&acb->tmobj);
+		ret = -EEXIST;
+		goto fail;
+	}
+
 	COPPERPLATE_UNPROTECT(svc);
 
 	return 0;
-fail_timer:
-	pvcluster_delobj(&alchemy_alarm_table, &acb->cobj);
-fail_cluster:
+fail:
 	pvfree(acb);
 out:
 	COPPERPLATE_UNPROTECT(svc);
@@ -141,6 +139,7 @@ int rt_alarm_delete(RT_ALARM *alarm)
 	timerobj_destroy(&acb->tmobj);
 	pvcluster_delobj(&alchemy_alarm_table, &acb->cobj);
 	acb->magic = ~alarm_magic;
+	pvfree(acb);
 out:
 	COPPERPLATE_UNPROTECT(svc);
 
