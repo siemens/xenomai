@@ -27,7 +27,7 @@ struct alchemy_alarm {
 	unsigned int magic;	/* Must be first. */
 	char name[32];
 	struct timerobj tmobj;
-	struct clusterobj cobj;
+	struct pvclusterobj cobj;
 	void (*handler)(void *arg);
 	void *arg;
 	unsigned long expiries;
@@ -35,6 +35,6 @@ struct alchemy_alarm {
 
 #define alarm_magic	0x8888ebeb
 
-extern struct cluster alchemy_alarm_table;
+extern struct pvcluster alchemy_alarm_table;
 
 #endif /* _ALCHEMY_ALARM_H */

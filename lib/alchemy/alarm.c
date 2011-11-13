@@ -25,7 +25,7 @@
 #include "alarm.h"
 #include "timer.h"
 
-struct cluster alchemy_alarm_table;
+struct pvcluster alchemy_alarm_table;
 
 static struct alchemy_namegen alarm_namegen = {
 	.prefix = "alarm",
@@ -98,7 +98,7 @@ int rt_alarm_create(RT_ALARM *alarm, const char *name,
 
 	alchemy_build_name(acb->name, name, &alarm_namegen);
 
-	if (cluster_addobj(&alchemy_alarm_table, acb->name, &acb->cobj)) {
+	if (pvcluster_addobj(&alchemy_alarm_table, acb->name, &acb->cobj)) {
 		ret = -EEXIST;
 		goto fail_cluster;
 	}
@@ -109,13 +109,15 @@ int rt_alarm_create(RT_ALARM *alarm, const char *name,
 
 	acb->handler = handler;
 	acb->arg = arg;
+	acb->expiries = 0;
 	acb->magic = alarm_magic;
+	alarm->handle = (uintptr_t)acb;
 
 	COPPERPLATE_UNPROTECT(svc);
 
 	return 0;
 fail_timer:
-	cluster_delobj(&alchemy_alarm_table, &acb->cobj);
+	pvcluster_delobj(&alchemy_alarm_table, &acb->cobj);
 fail_cluster:
 	pvfree(acb);
 out:
@@ -137,7 +139,7 @@ int rt_alarm_delete(RT_ALARM *alarm)
 		goto out;
 
 	timerobj_destroy(&acb->tmobj);
-	cluster_delobj(&alchemy_alarm_table, &acb->cobj);
+	pvcluster_delobj(&alchemy_alarm_table, &acb->cobj);
 	acb->magic = ~alarm_magic;
 out:
 	COPPERPLATE_UNPROTECT(svc);

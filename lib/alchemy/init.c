@@ -77,7 +77,7 @@ static int alchemy_init(int argc, char *const argv[])
 	syncluster_init(&alchemy_queue_table, "alchemy.queue");
 	syncluster_init(&alchemy_buffer_table, "alchemy.buffer");
 	syncluster_init(&alchemy_buffer_table, "alchemy.heap");
-	cluster_init(&alchemy_alarm_table, "alchemy.alarm");
+	pvcluster_init(&alchemy_alarm_table, "alchemy.alarm");
 
 	ret = clockobj_init(&alchemy_clock, "alchemy", clock_resolution);
 	if (ret) {
