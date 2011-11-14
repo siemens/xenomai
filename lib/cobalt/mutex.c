@@ -96,10 +96,13 @@ int __wrap_pthread_mutex_init(pthread_mutex_t *mutex,
 	struct __shadow_mutex *shadow = &_mutex->shadow_mutex;
 	int err;
 
-	err = -XENOMAI_SKINCALL2(__cobalt_muxid,__cobalt_check_init,shadow,attr);
+	if (shadow->magic == COBALT_MUTEX_MAGIC) {
+		err = -XENOMAI_SKINCALL1(__cobalt_muxid,
+					 __cobalt_check_init,shadow);
 
-	if (err)
-		return err;
+		if (err)
+			return err;
+	}
 
 	err = -XENOMAI_SKINCALL2(__cobalt_muxid,__cobalt_mutex_init,shadow,attr);
 
@@ -116,9 +119,12 @@ int __wrap_pthread_mutex_destroy(pthread_mutex_t *mutex)
 	struct __shadow_mutex *shadow = &_mutex->shadow_mutex;
 	int err;
 
-	err = -XENOMAI_SKINCALL1(__cobalt_muxid, __cobalt_mutex_destroy, shadow);
+	if (shadow->magic != COBALT_MUTEX_MAGIC)
+		return EINVAL;
 
-	return err;
+	err = XENOMAI_SKINCALL1(__cobalt_muxid, __cobalt_mutex_destroy, shadow);
+
+	return -err;
 }
 
 int __wrap_pthread_mutex_lock(pthread_mutex_t *mutex)
@@ -134,51 +140,49 @@ int __wrap_pthread_mutex_lock(pthread_mutex_t *mutex)
 	if (cur == XN_NO_HANDLE)
 		return EPERM;
 
-	status = xeno_get_current_mode();
-
-	if (shadow->magic != COBALT_MUTEX_MAGIC) {
-		err = -EINVAL;
-		goto out;
-	}
+	if (shadow->magic != COBALT_MUTEX_MAGIC)
+		return EINVAL;
 
 	/*
 	 * We track resource ownership for non real-time shadows in
 	 * order to handle the auto-relax feature, so we must always
 	 * obtain them via a syscall.
 	 */
+	status = xeno_get_current_mode();
 	if (likely(!(status & (XNRELAX|XNOTHER)))) {
 		err = xnsynch_fast_acquire(get_ownerp(shadow), cur);
-
 		if (likely(!err)) {
 			shadow->lockcnt = 1;
 			return 0;
 		}
+	} else {
+		err = xnsynch_fast_owner_check(get_ownerp(shadow), cur);
+		if (!err)
+			err = -EBUSY;
+	}
 
-		if (err == -EBUSY)
-			switch(shadow->attr.type) {
-			case PTHREAD_MUTEX_NORMAL:
-				break;
+	if (err == -EBUSY)
+		switch(shadow->attr.type) {
+		case PTHREAD_MUTEX_NORMAL:
+			break;
 
-			case PTHREAD_MUTEX_ERRORCHECK:
-				err = -EDEADLK;
-				goto out;
+		case PTHREAD_MUTEX_ERRORCHECK:
+			return EDEADLK;
 
-			case PTHREAD_MUTEX_RECURSIVE:
-				if (shadow->lockcnt == UINT_MAX) {
-					err = -EAGAIN;
-					goto out;
-				}
-				++shadow->lockcnt;
-				err = 0;
-				goto out;
-			}
+		case PTHREAD_MUTEX_RECURSIVE:
+			if (shadow->lockcnt == UINT_MAX)
+				return EAGAIN;
+			++shadow->lockcnt;
+			return 0;
 		}
 
 	do {
 		err = XENOMAI_SKINCALL1(__cobalt_muxid,__cobalt_mutex_lock,shadow);
 	} while (err == -EINTR);
 
-  out:
+	if (!err)
+		shadow->lockcnt = 1;
+
 	return -err;
 }
 
@@ -195,48 +199,46 @@ int __wrap_pthread_mutex_timedlock(pthread_mutex_t *mutex,
 	if (cur == XN_NO_HANDLE)
 		return EPERM;
 
-	status = xeno_get_current_mode();
-
-	if (shadow->magic != COBALT_MUTEX_MAGIC) {
-		err = -EINVAL;
-		goto out;
-	}
+	if (shadow->magic != COBALT_MUTEX_MAGIC)
+		return EINVAL;
 
 	/* See __wrap_pthread_mutex_lock() */
+	status = xeno_get_current_mode();
 	if (likely(!(status & (XNRELAX|XNOTHER)))) {
 		err = xnsynch_fast_acquire(get_ownerp(shadow), cur);
-
 		if (likely(!err)) {
 			shadow->lockcnt = 1;
 			return 0;
 		}
-
-		if (err == -EBUSY)
-			switch(shadow->attr.type) {
-			case PTHREAD_MUTEX_NORMAL:
-				break;
-
-			case PTHREAD_MUTEX_ERRORCHECK:
-				err = -EDEADLK;
-				goto out;
-
-			case PTHREAD_MUTEX_RECURSIVE:
-				if (shadow->lockcnt == UINT_MAX) {
-					err = -EAGAIN;
-					goto out;
-				}
-
-				++shadow->lockcnt;
-				goto out;
-			}
+	} else {
+		err = xnsynch_fast_owner_check(get_ownerp(shadow), cur);
+		if (!err)
+			err = -EBUSY;
 	}
+
+	if (err == -EBUSY)
+		switch(shadow->attr.type) {
+		case PTHREAD_MUTEX_NORMAL:
+			break;
+
+		case PTHREAD_MUTEX_ERRORCHECK:
+			return EDEADLK;
+
+		case PTHREAD_MUTEX_RECURSIVE:
+			if (shadow->lockcnt == UINT_MAX)
+				return EAGAIN;
+
+			++shadow->lockcnt;
+			return 0;
+		}
 
 	do {
 		err = XENOMAI_SKINCALL2(__cobalt_muxid,
 					__cobalt_mutex_timedlock, shadow, to);
 	} while (err == -EINTR);
 
-  out:
+	if (!err)
+		shadow->lockcnt = 1;
 	return -err;
 }
 
@@ -244,7 +246,7 @@ int __wrap_pthread_mutex_trylock(pthread_mutex_t *mutex)
 {
 	union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
 	struct __shadow_mutex *shadow = &_mutex->shadow_mutex;
-	xnarch_atomic_t *ownerp;
+	unsigned long status;
 	struct timespec ts;
 	xnhandle_t cur;
 	int err;
@@ -256,28 +258,26 @@ int __wrap_pthread_mutex_trylock(pthread_mutex_t *mutex)
 	if (unlikely(shadow->magic != COBALT_MUTEX_MAGIC))
 		return EINVAL;
 
-	ownerp = get_ownerp(shadow);
-	err = xnsynch_fast_owner_check(ownerp, cur);
-	if (err == 0) {
-		if (shadow->attr.type == PTHREAD_MUTEX_RECURSIVE) {
-			if (shadow->lockcnt == UINT_MAX)
-				err = EAGAIN;
-			else {
-				++shadow->lockcnt;
-				err = 0;
-			}
-		} else
-			err = EBUSY;
-		return err;
+	status = xeno_get_current_mode();
+	if (likely((status & (XNRELAX|XNOTHER)) == 0)) {
+		err = xnsynch_fast_acquire(get_ownerp(shadow), cur);
+		if (likely(err == 0)) {
+			shadow->lockcnt = 1;
+			return 0;
+		}
+	} else {
+		err = xnsynch_fast_owner_check(get_ownerp(shadow), cur);
+		if (err < 0)
+			goto do_syscall;
+
+		err = -EBUSY;
 	}
 
-	if (unlikely(xeno_get_current_mode() & (XNOTHER | XNRELAX)))
-		goto do_syscall;
+	if (err == -EBUSY && shadow->attr.type == PTHREAD_MUTEX_RECURSIVE) {
+		if (shadow->lockcnt == UINT_MAX)
+			return EAGAIN;
 
-	err = xnsynch_fast_acquire(ownerp, cur);
-
-	if (likely(!err)) {
-		shadow->lockcnt = 1;
+		++shadow->lockcnt;
 		return 0;
 	}
 
@@ -287,13 +287,19 @@ do_syscall:
 
 	__RT(clock_gettime(CLOCK_REALTIME, &ts));
 	do {
-		err = -XENOMAI_SKINCALL2(__cobalt_muxid,
-					 __cobalt_mutex_timedlock, shadow, &ts);
-	} while (err == EINTR);
-	if (err == ETIMEDOUT || err == EDEADLK)
-		return EBUSY;
+		err = XENOMAI_SKINCALL2(__cobalt_muxid,
+					__cobalt_mutex_timedlock, shadow, &ts);
+	} while (err == -EINTR);
 
-	return err;
+	if (err) {
+		if (err == -ETIMEDOUT || err == -EDEADLK)
+			return EBUSY;
+		return -err;
+	}
+
+	shadow->lockcnt = 1;
+
+	return 0;
 }
 
 int __wrap_pthread_mutex_unlock(pthread_mutex_t *mutex)
@@ -301,37 +307,33 @@ int __wrap_pthread_mutex_unlock(pthread_mutex_t *mutex)
 	union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
 	struct __shadow_mutex *shadow = &_mutex->shadow_mutex;
 	xnarch_atomic_t *ownerp;
-	xnhandle_t cur;
+	xnhandle_t cur, owner;
 	int err;
+
+	if (unlikely(shadow->magic != COBALT_MUTEX_MAGIC))
+		return EINVAL;
 
 	cur = xeno_get_current();
 	if (cur == XN_NO_HANDLE)
 		return EPERM;
 
-	if (unlikely(shadow->magic != COBALT_MUTEX_MAGIC)) {
-		err = -EINVAL;
-		goto out_err;
-	}
-
 	ownerp = get_ownerp(shadow);
-
-	err = xnsynch_fast_owner_check(ownerp, cur);
-	if (unlikely(err))
-		goto out_err;
+	owner = xnarch_atomic_get(ownerp);
+	if (xnhandle_mask_spares(owner) != cur)
+		return EPERM;
 
 	if (shadow->lockcnt > 1) {
 		--shadow->lockcnt;
-		goto out;
+		return 0;
 	}
+
+	if ((owner & COBALT_MUTEX_COND_SIGNAL))
+		goto do_syscall;
 
 	if (unlikely(xeno_get_current_mode() & XNOTHER))
 		goto do_syscall;
 
-	if (unlikely(xnsynch_fast_check_spares(ownerp, COBALT_MUTEX_COND_SIGNAL)))
-		goto do_syscall;
-
 	if (likely(xnsynch_fast_release(ownerp, cur)))
-	  out:
 		return 0;
 
 do_syscall:
@@ -341,6 +343,5 @@ do_syscall:
 					__cobalt_mutex_unlock, shadow);
 	} while (err == -EINTR);
 
-  out_err:
 	return -err;
 }

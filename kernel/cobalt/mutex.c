@@ -53,38 +53,10 @@
 
 pthread_mutexattr_t cobalt_default_mutex_attr;
 
-int cobalt_mutex_check_init(struct __shadow_mutex *shadow,
-			   const pthread_mutexattr_t *attr)
-{
-	xnqueue_t *mutexq;
-
-	if (!attr)
-		attr = &cobalt_default_mutex_attr;
-
-	mutexq = &cobalt_kqueues(attr->pshared)->mutexq;
-
-	if (shadow->magic == COBALT_MUTEX_MAGIC) {
-		xnholder_t *holder;
-		spl_t s;
-
-		xnlock_get_irqsave(&nklock, s);
-		for (holder = getheadq(mutexq); holder;
-		     holder = nextq(mutexq, holder))
-			if (holder == &shadow->mutex->link) {
-				xnlock_put_irqrestore(&nklock, s);
-				/* mutex is already in the queue. */
-				return -EBUSY;
-			}
-		xnlock_put_irqrestore(&nklock, s);
-	}
-
-	return 0;
-}
-
-int cobalt_mutex_init_internal(struct __shadow_mutex *shadow,
-			      cobalt_mutex_t *mutex,
-			      xnarch_atomic_t *ownerp,
-			      const pthread_mutexattr_t *attr)
+static int cobalt_mutex_init_inner(struct __shadow_mutex *shadow,
+				   cobalt_mutex_t *mutex,
+				   xnarch_atomic_t *ownerp,
+				   const pthread_mutexattr_t *attr)
 {
 	xnflags_t synch_flags = XNSYNCH_PRIO | XNSYNCH_OWNER;
 	struct xnsys_ppd *sys_ppd;
@@ -124,69 +96,8 @@ int cobalt_mutex_init_internal(struct __shadow_mutex *shadow,
 	return 0;
 }
 
-/**
- * Initialize a mutex.
- *
- * This services initializes the mutex @a mx, using the mutex attributes object
- * @a attr. If @a attr is @a NULL, default attributes are used (see
- * pthread_mutexattr_init()).
- *
- * @param mx the mutex to be initialized;
- *
- * @param attr the mutex attributes object.
- *
- * @return 0 on success,
- * @return an error number if:
- * - EINVAL, the mutex attributes object @a attr is invalid or uninitialized;
- * - EBUSY, the mutex @a mx was already initialized;
- * - ENOMEM, insufficient memory exists in the system heap to initialize the
- *   mutex, increase CONFIG_XENO_OPT_SYS_HEAPSZ.
- * - EAGAIN, insufficient memory exists in the semaphore heap to initialize the
- *   mutex, increase CONFIG_XENO_OPT_GLOBAL_SEM_HEAPSZ for a process-shared
- *   mutex, or CONFG_XENO_OPT_SEM_HEAPSZ for a process-private mutex.
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_init.html">
- * Specification.</a>
- *
- */
-int pthread_mutex_init(pthread_mutex_t *mx, const pthread_mutexattr_t *attr)
-{
-	struct __shadow_mutex *shadow =
-	    &((union __xeno_mutex *)mx)->shadow_mutex;
-	cobalt_mutex_t *mutex;
-	xnarch_atomic_t *ownerp = NULL;
-	int err;
-
-	if (!attr)
-		attr = &cobalt_default_mutex_attr;
-
-	err = cobalt_mutex_check_init(shadow, attr);
-	if (err)
-		return -err;
-
-	mutex = (cobalt_mutex_t *) xnmalloc(sizeof(*mutex));
-	if (!mutex)
-		return ENOMEM;
-
-	ownerp = (xnarch_atomic_t *)
-		xnheap_alloc(&xnsys_ppd_get(attr->pshared)->sem_heap,
-			     sizeof(xnarch_atomic_t));
-	if (!ownerp) {
-		xnfree(mutex);
-		return EAGAIN;
-	}
-
-	err = cobalt_mutex_init_internal(shadow, mutex, ownerp, attr);
-	if (err) {
-		xnfree(mutex);
-		xnheap_free(&xnsys_ppd_get(attr->pshared)->sem_heap, ownerp);
-	}
-	return -err;
-}
-
-void cobalt_mutex_destroy_internal(cobalt_mutex_t *mutex,
-				  cobalt_kqueues_t *q)
+static void cobalt_mutex_destroy_inner(cobalt_mutex_t *mutex,
+				       cobalt_kqueues_t *q)
 {
 	spl_t s;
 
@@ -202,58 +113,29 @@ void cobalt_mutex_destroy_internal(cobalt_mutex_t *mutex,
 	xnfree(mutex);
 }
 
-/**
- * Destroy a mutex.
- *
- * This service destroys the mutex @a mx, if it is unlocked and not referenced
- * by any condition variable. The mutex becomes invalid for all mutex services
- * (they all return the EINVAL error) except pthread_mutex_init().
- *
- * @param mx the mutex to be destroyed.
- *
- * @return 0 on success,
- * @return an error number if:
- * - EINVAL, the mutex @a mx is invalid;
- * - EPERM, the mutex is not process-shared and does not belong to the current
- *   process;
- * - EBUSY, the mutex is locked, or used by a condition variable.
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_destroy.html">
- * Specification.</a>
- *
- */
-int pthread_mutex_destroy(pthread_mutex_t * mx)
+static int cobalt_mutex_acquire(xnthread_t *cur,
+				cobalt_mutex_t *mutex,
+				int timed,
+				xnticks_t abs_to)
 {
-	struct __shadow_mutex *shadow =
-	    &((union __xeno_mutex *)mx)->shadow_mutex;
-	cobalt_mutex_t *mutex;
+	if (xnpod_unblockable_p())
+		return -EPERM;
 
-	mutex = shadow->mutex;
-	if (!cobalt_obj_active(shadow, COBALT_MUTEX_MAGIC, struct __shadow_mutex)
-	    || !cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, struct cobalt_mutex))
-		return EINVAL;
+	if (!cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, struct cobalt_mutex))
+		return -EINVAL;
 
-	if (cobalt_kqueues(mutex->attr.pshared) != mutex->owningq)
-		return EPERM;
+#if XENO_DEBUG(POSIX)
+	if (mutex->owningq != cobalt_kqueues(mutex->attr.pshared))
+		return -EPERM;
+#endif /* XENO_DEBUG(POSIX) */
 
-	if (xnsynch_fast_owner_check(mutex->synchbase.fastlock,
-				     XN_NO_HANDLE) != 0)
-		return EBUSY;
-
-	cobalt_mark_deleted(shadow);
-	cobalt_mark_deleted(mutex);
-
-	cobalt_mutex_destroy_internal(mutex, cobalt_kqueues(mutex->attr.pshared));
-
-	return 0;
+	return cobalt_mutex_acquire_unchecked(cur, mutex, timed, abs_to);
 }
 
-int cobalt_mutex_timedlock_break(struct __shadow_mutex *shadow,
-				int timed, xnticks_t abs_to)
+static int cobalt_mutex_timedlock_break(cobalt_mutex_t *mutex,
+					int timed, xnticks_t abs_to)
 {
 	xnthread_t *cur = xnpod_current_thread();
-	cobalt_mutex_t *mutex;
 	spl_t s;
 	int err;
 
@@ -261,14 +143,10 @@ int cobalt_mutex_timedlock_break(struct __shadow_mutex *shadow,
 	if (xnthread_handle(cur) == XN_NO_HANDLE)
 		return -EPERM;
 
-	err = cobalt_mutex_timedlock_internal(cur, shadow->mutex, timed, abs_to);
-	if (!err)
-		shadow->lockcnt = 1;
+	err = cobalt_mutex_acquire(cur, mutex, timed, abs_to);
 
 	if (err != -EBUSY)
 		goto out;
-
-	mutex = shadow->mutex;
 
 	switch(mutex->attr.type) {
 	case PTHREAD_MUTEX_NORMAL:
@@ -305,18 +183,15 @@ int cobalt_mutex_timedlock_break(struct __shadow_mutex *shadow,
 
 		break;
 
+		/* Recursive mutexes are handled in user-space, so
+		   these cases can not happen */
 	case PTHREAD_MUTEX_ERRORCHECK:
-		err = -EDEADLK;
+		err = -EINVAL;
 		break;
 
 	case PTHREAD_MUTEX_RECURSIVE:
-		if (shadow->lockcnt == UINT_MAX) {
-			err = -EAGAIN;
-			break;
-		}
-
-		++shadow->lockcnt;
-		err = 0;
+		err = -EINVAL;
+		break;
 	}
 
   out:
@@ -324,243 +199,203 @@ int cobalt_mutex_timedlock_break(struct __shadow_mutex *shadow,
 
 }
 
-/**
- * Attempt to lock a mutex.
- *
- * This service is equivalent to pthread_mutex_lock(), except that if the mutex
- * @a mx is locked by another thread than the current one, this service returns
- * immediately.
- *
- * @param mx the mutex to be locked.
- *
- * @return 0 on success;
- * @return an error number if:
- * - EPERM, the caller context is invalid;
- * - EINVAL, the mutex is invalid;
- * - EPERM, the mutex is not process-shared and does not belong to the current
- *   process;
- * - EBUSY, the mutex was locked by another thread than the current one;
- * - EAGAIN, the mutex is recursive, and the maximum number of recursive locks
- *   has been exceeded.
- *
- * @par Valid contexts:
- * - Xenomai kernel-space thread,
- * - Xenomai user-space thread (switches to primary mode).
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_trylock.html">
- * Specification.</a>
- *
- */
-int pthread_mutex_trylock(pthread_mutex_t *mx)
+int cobalt_mutex_check_init(union __xeno_mutex __user *u_mx)
 {
-	struct __shadow_mutex *shadow =
-	    &((union __xeno_mutex *)mx)->shadow_mutex;
-	xnthread_t *cur = xnpod_current_thread();
-	cobalt_mutex_t *mutex = shadow->mutex;
-	int err;
+	cobalt_mutex_t *mutex;
+	xnholder_t *holder;
+	xnqueue_t *mutexq;
+	spl_t s;
 
-	if (xnpod_unblockable_p())
-		return EPERM;
+	__xn_get_user(mutex, &u_mx->shadow_mutex.mutex);
 
-	if (!cobalt_obj_active(shadow, COBALT_MUTEX_MAGIC,
-			      struct __shadow_mutex)
-	    || !cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC,
-				 struct cobalt_mutex)) {
-		err = EINVAL;
-		goto out;
-	}
+	mutexq = &cobalt_kqueues(0)->mutexq;
 
-#if XENO_DEBUG(POSIX)
-	if (mutex->owningq != cobalt_kqueues(mutex->attr.pshared)) {
-		err = EPERM;
-		goto out;
-	}
-#endif /* XENO_DEBUG(POSIX) */
+	xnlock_get_irqsave(&nklock, s);
+	for (holder = getheadq(mutexq);
+	     holder; holder = nextq(mutexq, holder))
+		if (holder == &mutex->link)
+			goto busy;
+	xnlock_put_irqrestore(&nklock, s);
 
-	err = -xnsynch_fast_acquire(mutex->synchbase.fastlock,
-				    xnthread_handle(cur));
-	if (likely(!err))
-		shadow->lockcnt = 1;
-	else if (err == EBUSY) {
-		cobalt_mutex_t *mutex = shadow->mutex;
+	mutexq = &cobalt_kqueues(1)->mutexq;
 
-		if (mutex->attr.type == PTHREAD_MUTEX_RECURSIVE) {
-			if (shadow->lockcnt == UINT_MAX)
-				err = EAGAIN;
-			else {
-				++shadow->lockcnt;
-				err = 0;
-			}
-		}
-	}
+	xnlock_get_irqsave(&nklock, s);
+	for (holder = getheadq(mutexq);
+	     holder; holder = nextq(mutexq, holder))
+		if (holder == &mutex->link)
+			goto busy;
+	xnlock_put_irqrestore(&nklock, s);
 
-  out:
-	return err;
+	return 0;
+
+  busy:
+	xnlock_put_irqrestore(&nklock, s);
+	/* mutex is already in the queue. */
+	return -EBUSY;
 }
 
-/**
- * Lock a mutex.
- *
- * This service attempts to lock the mutex @a mx. If the mutex is free, it
- * becomes locked. If it was locked by another thread than the current one, the
- * current thread is suspended until the mutex is unlocked. If it was already
- * locked by the current mutex, the behaviour of this service depends on the
- * mutex type :
- * - for mutexes of the @a PTHREAD_MUTEX_NORMAL type, this service deadlocks;
- * - for mutexes of the @a PTHREAD_MUTEX_ERRORCHECK type, this service returns
- *   the EDEADLK error number;
- * - for mutexes of the @a PTHREAD_MUTEX_RECURSIVE type, this service increments
- *   the lock recursion count and returns 0.
- *
- * @param mx the mutex to be locked.
- *
- * @return 0 on success
- * @return an error number if:
- * - EPERM, the caller context is invalid;
- * - EINVAL, the mutex @a mx is invalid;
- * - EPERM, the mutex is not process-shared and does not belong to the current
- *   process;
- * - EDEADLK, the mutex is of the @a PTHREAD_MUTEX_ERRORCHECK type and was
- *   already locked by the current thread;
- * - EAGAIN, the mutex is of the @a PTHREAD_MUTEX_RECURSIVE type and the maximum
- *   number of recursive locks has been exceeded.
- *
- * @par Valid contexts:
- * - Xenomai kernel-space thread;
- * - Xenomai user-space thread (switches to primary mode).
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_lock.html">
- * Specification.</a>
- *
- */
-int pthread_mutex_lock(pthread_mutex_t * mx)
+int cobalt_mutex_init(union __xeno_mutex __user *u_mx,
+		      const pthread_mutexattr_t __user *u_attr)
 {
-	struct __shadow_mutex *shadow =
-	    &((union __xeno_mutex *)mx)->shadow_mutex;
+	pthread_mutexattr_t locattr, *attr;
+	xnarch_atomic_t *ownerp;
+	union __xeno_mutex mx;
+	cobalt_mutex_t *mutex;
 	int err;
 
-	do {
-		err = cobalt_mutex_timedlock_break(shadow, 0, XN_INFINITE);
-	} while (err == -EINTR);
+	if (__xn_safe_copy_from_user(&mx.shadow_mutex,
+				     &u_mx->shadow_mutex,
+				     sizeof(mx.shadow_mutex)))
+		return -EFAULT;
 
-	return -err;
+	if (u_attr) {
+		if (__xn_safe_copy_from_user(&locattr, u_attr,
+					     sizeof(locattr)))
+			return -EFAULT;
+
+		attr = &locattr;
+	} else
+		attr = &cobalt_default_mutex_attr;
+
+	mutex = xnmalloc(sizeof(*mutex));
+	if (mutex == NULL)
+		return -ENOMEM;
+
+	ownerp = xnheap_alloc(&xnsys_ppd_get(attr->pshared)->sem_heap,
+			      sizeof(xnarch_atomic_t));
+	if (ownerp == NULL) {
+		xnfree(mutex);
+		return -EAGAIN;
+	}
+
+	err = cobalt_mutex_init_inner(&mx.shadow_mutex, mutex, ownerp, attr);
+	if (err) {
+		xnfree(mutex);
+		xnheap_free(&xnsys_ppd_get(attr->pshared)->sem_heap, ownerp);
+		return err;
+	}
+
+	return __xn_safe_copy_to_user(&u_mx->shadow_mutex,
+				      &mx.shadow_mutex, sizeof(u_mx->shadow_mutex));
 }
 
-/**
- * Attempt, during a bounded time, to lock a mutex.
- *
- * This service is equivalent to pthread_mutex_lock(), except that if the mutex
- * @a mx is locked by another thread than the current one, this service only
- * suspends the current thread until the timeout specified by @a to expires.
- *
- * @param mx the mutex to be locked;
- *
- * @param to the timeout, expressed as an absolute value of the CLOCK_REALTIME
- * clock.
- *
- * @return 0 on success;
- * @return an error number if:
- * - EPERM, the caller context is invalid;
- * - EINVAL, the mutex @a mx is invalid;
- * - EPERM, the mutex is not process-shared and does not belong to the current
- *   process;
- * - ETIMEDOUT, the mutex could not be locked and the specified timeout
- *   expired;
- * - EDEADLK, the mutex is of the @a PTHREAD_MUTEX_ERRORCHECK type and the mutex
- *   was already locked by the current thread;
- * - EAGAIN, the mutex is of the @a PTHREAD_MUTEX_RECURSIVE type and the maximum
- *   number of recursive locks has been exceeded.
- *
- * @par Valid contexts:
- * - Xenomai kernel-space thread;
- * - Xenomai user-space thread (switches to primary mode).
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_timedlock.html">
- * Specification.</a>
- *
- */
-int pthread_mutex_timedlock(pthread_mutex_t * mx, const struct timespec *to)
+int cobalt_mutex_destroy(union __xeno_mutex __user *u_mx)
 {
-	struct __shadow_mutex *shadow =
-	    &((union __xeno_mutex *)mx)->shadow_mutex;
-	int err;
+	struct __shadow_mutex *shadow;
+	union __xeno_mutex mx;
+	cobalt_mutex_t *mutex;
 
-	do {
-		err = cobalt_mutex_timedlock_break(shadow, 1,
-						   ts2ns(to) + 1);
-	} while (err == -EINTR);
+	shadow = &mx.shadow_mutex;
 
-	return -err;
+	if (__xn_safe_copy_from_user(shadow,
+				     &u_mx->shadow_mutex,
+				     sizeof(*shadow)))
+		return -EFAULT;
+
+	mutex = shadow->mutex;
+	if (cobalt_kqueues(mutex->attr.pshared) != mutex->owningq)
+		return -EPERM;
+
+	if (xnsynch_fast_owner_check(mutex->synchbase.fastlock,
+				     XN_NO_HANDLE) != 0)
+		return -EBUSY;
+
+	if (countq(&mutex->conds))
+		return -EBUSY;
+
+	cobalt_mark_deleted(shadow);
+	cobalt_mutex_destroy_inner(mutex, mutex->owningq);
+
+	return __xn_safe_copy_to_user(&u_mx->shadow_mutex,
+				      shadow, sizeof(u_mx->shadow_mutex));
 }
 
-/**
- * Unlock a mutex.
- *
- * This service unlocks the mutex @a mx. If the mutex is of the @a
- * PTHREAD_MUTEX_RECURSIVE @a type and the locking recursion count is greater
- * than one, the lock recursion count is decremented and the mutex remains
- * locked.
- *
- * Attempting to unlock a mutex which is not locked or which is locked by
- * another thread than the current one yields the EPERM error, whatever the
- * mutex @a type attribute.
- *
- * @param mx the mutex to be released.
- *
- * @return 0 on success;
- * @return an error number if:
- * - EPERM, the caller context is invalid;
- * - EINVAL, the mutex @a mx is invalid;
- * - EPERM, the mutex was not locked by the current thread.
- *
- * @par Valid contexts:
- * - Xenomai kernel-space thread,
- * - kernel-space cancellation cleanup routine,
- * - Xenomai user-space thread (switches to primary mode),
- * - user-space cancellation cleanup routine.
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_unlock.html">
- * Specification.</a>
- *
- */
-int pthread_mutex_unlock(pthread_mutex_t * mx)
+int cobalt_mutex_trylock(union __xeno_mutex __user *u_mx)
 {
-	struct __shadow_mutex *shadow =
-	    &((union __xeno_mutex *)mx)->shadow_mutex;
 	xnthread_t *cur = xnpod_current_thread();
 	cobalt_mutex_t *mutex;
 	int err;
 
-	if (xnpod_root_p() || xnpod_interrupt_p())
-		return EPERM;
+	__xn_get_user(mutex, &u_mx->shadow_mutex.mutex);
 
-	mutex = shadow->mutex;
+	if (!cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC,
+			       struct cobalt_mutex))
+		return -EINVAL;
 
-	if (!cobalt_obj_active(shadow,
-			      COBALT_MUTEX_MAGIC, struct __shadow_mutex)
-	    || !cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, struct cobalt_mutex)) {
-		err = EINVAL;
-		goto out;
+	err = xnsynch_fast_acquire(mutex->synchbase.fastlock,
+				   xnthread_handle(cur));
+	switch(err) {
+	case 0:
+		if (xnthread_test_state(cur, XNOTHER))
+			xnthread_inc_rescnt(cur);
+		break;
+
+/* This should not happen, as recursive mutexes are handled in
+   user-space */
+	case -EBUSY:
+		err = -EINVAL;
+		break;
+
+	case -EAGAIN:
+		err = -EBUSY;
+		break;
 	}
 
-	err = -xnsynch_owner_check(&mutex->synchbase, cur);
-	if (err)
+	return err;
+}
+
+int cobalt_mutex_lock(union __xeno_mutex __user *u_mx)
+{
+	cobalt_mutex_t *mutex;
+	int err;
+
+	__xn_get_user(mutex, &u_mx->shadow_mutex.mutex);
+
+	err = cobalt_mutex_timedlock_break(mutex, 0, XN_INFINITE);
+
+	return err;
+}
+
+int cobalt_mutex_timedlock(union __xeno_mutex __user *u_mx,
+			   const struct timespec __user *u_ts)
+{
+	cobalt_mutex_t *mutex;
+	struct timespec ts;
+	int err;
+
+	__xn_get_user(mutex, &u_mx->shadow_mutex.mutex);
+
+	if (__xn_safe_copy_from_user(&ts, u_ts, sizeof(ts)))
+		return -EFAULT;
+
+	err = cobalt_mutex_timedlock_break(mutex, 1, ts2ns(&ts) + 1);
+
+	return err;
+}
+
+int cobalt_mutex_unlock(union __xeno_mutex __user *u_mx)
+{
+	cobalt_mutex_t *mutex;
+	int err;
+	spl_t s;
+
+	if (xnpod_root_p())
+		return -EPERM;
+
+	__xn_get_user(mutex, &u_mx->shadow_mutex.mutex);
+
+	xnlock_get_irqsave(&nklock, s);
+	err = cobalt_mutex_release(xnpod_current_thread(), mutex);
+	if (err < 0)
 		goto out;
 
-	if (shadow->lockcnt > 1) {
-		/* Mutex is recursive */
-		--shadow->lockcnt;
-		return 0;
-	}
-
-	if (xnsynch_release(&mutex->synchbase))
+	if (err) {
 		xnpod_schedule();
-
+		err = 0;
+	}
   out:
+	xnlock_put_irqrestore(&nklock, s);
+
 	return err;
 }
 
@@ -573,7 +408,7 @@ void cobalt_mutexq_cleanup(cobalt_kqueues_t *q)
 
 	while ((holder = getheadq(&q->mutexq)) != NULL) {
 		xnlock_put_irqrestore(&nklock, s);
-		cobalt_mutex_destroy_internal(link2mutex(holder), q);
+		cobalt_mutex_destroy_inner(link2mutex(holder), q);
 #if XENO_DEBUG(POSIX)
 		xnprintf("Posix: destroying mutex %p.\n", link2mutex(holder));
 #endif /* XENO_DEBUG(POSIX) */
@@ -595,10 +430,3 @@ void cobalt_mutex_pkg_cleanup(void)
 }
 
 /*@}*/
-
-EXPORT_SYMBOL_GPL(pthread_mutex_init);
-EXPORT_SYMBOL_GPL(pthread_mutex_destroy);
-EXPORT_SYMBOL_GPL(pthread_mutex_trylock);
-EXPORT_SYMBOL_GPL(pthread_mutex_lock);
-EXPORT_SYMBOL_GPL(pthread_mutex_timedlock);
-EXPORT_SYMBOL_GPL(pthread_mutex_unlock);

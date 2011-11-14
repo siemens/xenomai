@@ -62,45 +62,13 @@ typedef struct cobalt_mutex {
 
 extern pthread_mutexattr_t cobalt_default_mutex_attr;
 
-void cobalt_mutexq_cleanup(cobalt_kqueues_t *q);
-
-void cobalt_mutex_pkg_init(void);
-
-void cobalt_mutex_pkg_cleanup(void);
-
-/* Internal mutex functions, exposed for use by syscall.c. */
-int cobalt_mutex_timedlock_break(struct __shadow_mutex *shadow,
-				int timed, xnticks_t to);
-
-int cobalt_mutex_check_init(struct __shadow_mutex *shadow,
-			   const pthread_mutexattr_t *attr);
-
-int cobalt_mutex_init_internal(struct __shadow_mutex *shadow,
-			      cobalt_mutex_t *mutex,
-			      xnarch_atomic_t *ownerp,
-			      const pthread_mutexattr_t *attr);
-
-void cobalt_mutex_destroy_internal(cobalt_mutex_t *mutex,
-				  cobalt_kqueues_t *q);
-
 /* must be called with nklock locked, interrupts off. */
-static inline int cobalt_mutex_timedlock_internal(xnthread_t *cur,
+static inline int cobalt_mutex_acquire_unchecked(xnthread_t *cur,
 						 cobalt_mutex_t *mutex,
 						 int timed,
 						 xnticks_t abs_to)
 
 {
-	if (xnpod_unblockable_p())
-		return -EPERM;
-
-	if (!cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, struct cobalt_mutex))
-		return -EINVAL;
-
-#if XENO_DEBUG(POSIX)
-	if (mutex->owningq != cobalt_kqueues(mutex->attr.pshared))
-		return -EPERM;
-#endif /* XENO_DEBUG(POSIX) */
-
 	if (xnsynch_owner_check(&mutex->synchbase, cur) == 0)
 		return -EBUSY;
 
@@ -121,8 +89,7 @@ static inline int cobalt_mutex_timedlock_internal(xnthread_t *cur,
 	return 0;
 }
 
-static inline int cobalt_mutex_release(xnthread_t *cur,
-				       cobalt_mutex_t *mutex)
+static inline int cobalt_mutex_release(xnthread_t *cur, cobalt_mutex_t *mutex)
 {
 	xnholder_t *holder;
 	int need_resched;
@@ -160,6 +127,27 @@ static inline int cobalt_mutex_release(xnthread_t *cur,
 	   done atomically in pthread_cond_*wait. */
 }
 
+int cobalt_mutex_check_init(union __xeno_mutex __user *u_mx);
+
+int cobalt_mutex_init(union __xeno_mutex __user *u_mx,
+		      const pthread_mutexattr_t __user *u_attr);
+
+int cobalt_mutex_destroy(union __xeno_mutex __user *u_mx);
+
+int cobalt_mutex_trylock(union __xeno_mutex __user *u_mx);
+
+int cobalt_mutex_lock(union __xeno_mutex __user *u_mx);
+
+int cobalt_mutex_timedlock(union __xeno_mutex __user *u_mx,
+			   const struct timespec __user *u_ts);
+
+int cobalt_mutex_unlock(union __xeno_mutex __user *u_mx);
+
+void cobalt_mutexq_cleanup(cobalt_kqueues_t *q);
+
+void cobalt_mutex_pkg_init(void);
+
+void cobalt_mutex_pkg_cleanup(void);
 #endif /* __KERNEL__ */
 
 #endif /* !_POSIX_MUTEX_H */
