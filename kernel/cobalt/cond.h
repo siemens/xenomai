@@ -29,6 +29,7 @@ union __xeno_cond {
 	struct __shadow_cond {
 		unsigned magic;
 		struct cobalt_condattr attr;
+		struct cobalt_cond *cond;
 		union {
 			unsigned pending_signals_offset;
 			unsigned long *pending_signals;
@@ -37,7 +38,6 @@ union __xeno_cond {
 			unsigned mutex_ownerp_offset;
 			xnarch_atomic_t *mutex_ownerp;
 		};
-		struct cobalt_cond *cond;
 	} shadow_cond;
 };
 
@@ -46,6 +46,7 @@ union __xeno_cond {
 #include "internal.h"
 
 struct __shadow_mutex;
+union __xeno_mutex;
 
 typedef struct cobalt_cond {
 	unsigned magic;
@@ -66,18 +67,21 @@ typedef struct cobalt_cond {
 	cobalt_kqueues_t *owningq;
 } cobalt_cond_t;
 
-int cobalt_cond_timedwait_prologue(xnthread_t *cur,
-				  struct __shadow_cond *shadow,
-				  struct __shadow_mutex *mutex,
-				  unsigned *count_ptr,
-				  int timed,
-				  xnticks_t to);
-
-int cobalt_cond_timedwait_epilogue(xnthread_t *cur,
-				  struct __shadow_cond *shadow,
-				  struct __shadow_mutex *mutex, unsigned count);
-
 int cobalt_cond_deferred_signals(struct cobalt_cond *cond);
+
+int cobalt_cond_init(union __xeno_cond __user *u_cnd,
+		     const pthread_condattr_t __user *u_attr);
+
+int cobalt_cond_destroy(union __xeno_cond __user *u_cnd);
+
+int cobalt_cond_wait_prologue(union __xeno_cond __user *u_cnd,
+			      union __xeno_mutex __user *u_mx,
+			      int *u_err,
+			      unsigned int timed,
+			      struct timespec __user *u_ts);
+
+int cobalt_cond_wait_epilogue(union __xeno_cond __user *u_cnd,
+			      union __xeno_mutex __user *u_mx);
 
 void cobalt_condq_cleanup(cobalt_kqueues_t *q);
 

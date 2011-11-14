@@ -17,7 +17,6 @@
  */
 
 #include <errno.h>
-#include <pthread.h>
 #include <nucleus/synch.h>
 #include <cobalt/syscall.h>
 #include <kernel/cobalt/mutex.h>
@@ -95,14 +94,14 @@ int __wrap_pthread_cond_init(pthread_cond_t * cond,
 		&((union __xeno_cond *)cond)->shadow_cond;
 	int err;
 
-	err = -XENOMAI_SKINCALL2(__cobalt_muxid,
+	err = XENOMAI_SKINCALL2(__cobalt_muxid,
 				 __cobalt_cond_init, shadow, attr);
 	if (!err && !shadow->attr.pshared) {
 		shadow->pending_signals = (unsigned long *)
 			(xeno_sem_heap[0] + shadow->pending_signals_offset);
 	}
 
-	return err;
+	return -err;
 }
 
 int __wrap_pthread_cond_destroy(pthread_cond_t * cond)
@@ -126,12 +125,13 @@ static void __pthread_cond_cleanup(void *data)
 	int err;
 
 	do {
-		err = -XENOMAI_SKINCALL3(__cobalt_muxid,
+		err = XENOMAI_SKINCALL2(__cobalt_muxid,
 					__cobalt_cond_wait_epilogue,
 					&c->cond->shadow_cond,
-					&c->mutex->shadow_mutex,
-					c->count);
-	} while (err == EINTR);
+					&c->mutex->shadow_mutex);
+	} while (err == -EINTR);
+
+	c->mutex->shadow_mutex.lockcnt = c->count;
 }
 
 int __wrap_pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
@@ -144,27 +144,30 @@ int __wrap_pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
 
 	pthread_cleanup_push(&__pthread_cond_cleanup, &c);
 
+	c.count = c.mutex->shadow_mutex.lockcnt;
+
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	err = -XENOMAI_SKINCALL5(__cobalt_muxid,
+	err = XENOMAI_SKINCALL5(__cobalt_muxid,
 				 __cobalt_cond_wait_prologue,
 				 &c.cond->shadow_cond,
-				 &c.mutex->shadow_mutex, &c.count, 0, NULL);
+				 &c.mutex->shadow_mutex, &c.err, 0, NULL);
 
 	pthread_setcanceltype(oldtype, NULL);
 
 	pthread_cleanup_pop(0);
 
-	while (err == EINTR)
-		err = -XENOMAI_SKINCALL3(__cobalt_muxid,
+	while (err == -EINTR)
+		err = XENOMAI_SKINCALL2(__cobalt_muxid,
 					 __cobalt_cond_wait_epilogue,
 					 &c.cond->shadow_cond,
-					 &c.mutex->shadow_mutex,
-					 c.count);
+					 &c.mutex->shadow_mutex);
+
+	c.mutex->shadow_mutex.lockcnt = c.count;
 
 	pthread_testcancel();
 
-	return err ?: c.err;
+	return -err ?: -c.err;
 }
 
 int __wrap_pthread_cond_timedwait(pthread_cond_t * cond,
@@ -179,26 +182,29 @@ int __wrap_pthread_cond_timedwait(pthread_cond_t * cond,
 
 	pthread_cleanup_push(&__pthread_cond_cleanup, &c);
 
+	c.count = c.mutex->shadow_mutex.lockcnt;
+
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	err = -XENOMAI_SKINCALL5(__cobalt_muxid,
-				 __cobalt_cond_wait_prologue,
-				 &c.cond->shadow_cond,
-				 &c.mutex->shadow_mutex, &c.count, 1, abstime);
+	err = XENOMAI_SKINCALL5(__cobalt_muxid,
+				__cobalt_cond_wait_prologue,
+				&c.cond->shadow_cond,
+				&c.mutex->shadow_mutex, &c.err, 1, abstime);
 	pthread_setcanceltype(oldtype, NULL);
 
 	pthread_cleanup_pop(0);
 
-	while (err == EINTR)
-		err = -XENOMAI_SKINCALL3(__cobalt_muxid,
-					 __cobalt_cond_wait_epilogue,
-					 &c.cond->shadow_cond,
-					 &c.mutex->shadow_mutex,
-					 c.count);
+	while (err == -EINTR)
+		err = XENOMAI_SKINCALL2(__cobalt_muxid,
+					__cobalt_cond_wait_epilogue,
+					&c.cond->shadow_cond,
+					&c.mutex->shadow_mutex);
+
+	c.mutex->shadow_mutex.lockcnt = c.count;
 
 	pthread_testcancel();
 
-	return err ?: c.err;
+	return -err ?: -c.err;
 }
 
 int __wrap_pthread_cond_signal(pthread_cond_t * cond)
@@ -220,7 +226,7 @@ int __wrap_pthread_cond_signal(pthread_cond_t * cond)
 	if (mutex_ownerp) {
 		if (xnsynch_fast_set_spares(mutex_ownerp, cur,
 					    COBALT_MUTEX_COND_SIGNAL) < 0)
-			return -EPERM;
+			return EPERM;
 
 		pending_signals = get_signalsp(shadow);
 		if (*pending_signals != ~0UL)
@@ -249,7 +255,7 @@ int __wrap_pthread_cond_broadcast(pthread_cond_t * cond)
 	if (mutex_ownerp) {
 		if (xnsynch_fast_set_spares(mutex_ownerp, cur,
 					    COBALT_MUTEX_COND_SIGNAL) < 0)
-			return -EPERM;
+			return EPERM;
 
 		pending_signals = get_signalsp(shadow);
 		*get_signalsp(shadow) = ~0UL;

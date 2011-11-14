@@ -85,19 +85,15 @@ void cobalt_mutex_destroy_internal(cobalt_mutex_t *mutex,
 
 /* must be called with nklock locked, interrupts off. */
 static inline int cobalt_mutex_timedlock_internal(xnthread_t *cur,
-						 struct __shadow_mutex *shadow,
-						 unsigned count,
+						 cobalt_mutex_t *mutex,
 						 int timed,
 						 xnticks_t abs_to)
 
 {
-	cobalt_mutex_t *mutex = shadow->mutex;
-
 	if (xnpod_unblockable_p())
 		return -EPERM;
 
-	if (!cobalt_obj_active(shadow, COBALT_MUTEX_MAGIC, struct __shadow_mutex)
-	    || !cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, struct cobalt_mutex))
+	if (!cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, struct cobalt_mutex))
 		return -EINVAL;
 
 #if XENO_DEBUG(POSIX)
@@ -122,22 +118,16 @@ static inline int cobalt_mutex_timedlock_internal(xnthread_t *cur,
 			return -EINVAL;
 	}
 
-	shadow->lockcnt = count;
-
 	return 0;
 }
 
 static inline int cobalt_mutex_release(xnthread_t *cur,
-				       struct __shadow_mutex *shadow,
-				       unsigned *count_ptr)
+				       cobalt_mutex_t *mutex)
 {
-	cobalt_mutex_t *mutex;
 	xnholder_t *holder;
 	int need_resched;
 
-	mutex = shadow->mutex;
-	if (!cobalt_obj_active(shadow, COBALT_MUTEX_MAGIC, struct __shadow_mutex)
-	    || !cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, struct cobalt_mutex))
+	if (!cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, struct cobalt_mutex))
 		 return -EINVAL;
 
 #if XENO_DEBUG(POSIX)
@@ -147,9 +137,6 @@ static inline int cobalt_mutex_release(xnthread_t *cur,
 
 	if (xnsynch_owner_check(&mutex->synchbase, cur) != 0)
 		return -EPERM;
-
-	if (count_ptr)
-		*count_ptr = shadow->lockcnt;
 
 	need_resched = 0;
 	for (holder = getheadq(&mutex->conds);

@@ -52,8 +52,7 @@
 #define __cobalt_cond_destroy          26
 #define __cobalt_cond_wait_prologue    27
 #define __cobalt_cond_wait_epilogue    28
-#define __cobalt_cond_signal           29
-#define __cobalt_cond_broadcast        30
+
 #define __cobalt_mq_open               31
 #define __cobalt_mq_close              32
 #define __cobalt_mq_unlink             33

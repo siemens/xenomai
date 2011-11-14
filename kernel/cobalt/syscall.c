@@ -1280,7 +1280,7 @@ static int __pthread_mutex_unlock(union __xeno_mutex __user *u_mx)
 
 	xnlock_get_irqsave(&nklock, s);
 	err = cobalt_mutex_release(xnpod_current_thread(),
-				   &mx.shadow_mutex, NULL);
+				   mx.shadow_mutex.mutex);
 	if (err < 0)
 		goto out;
 
@@ -1384,215 +1384,6 @@ static int __pthread_condattr_setpshared(pthread_condattr_t __user *u_attr,
 		return -err;
 
 	return __xn_safe_copy_to_user(u_attr, &attr, sizeof(*u_attr));
-}
-
-static int __pthread_cond_init(union __xeno_cond __user *u_cnd,
-			       const pthread_condattr_t __user *u_attr)
-{
-	pthread_condattr_t locattr, *attr;
-	union __xeno_cond cnd;
-	int err;
-
-	if (__xn_safe_copy_from_user(&cnd.shadow_cond,
-				     &u_cnd->shadow_cond,
-				     sizeof(cnd.shadow_cond)))
-		return -EFAULT;
-
-	if (u_attr) {
-		if (__xn_safe_copy_from_user(&locattr,
-					     u_attr, sizeof(locattr)))
-			return -EFAULT;
-
-		attr = &locattr;
-	} else
-		attr = NULL;
-
-	/* Always use default attribute. */
-	err = pthread_cond_init(&cnd.native_cond, attr);
-
-	if (err)
-		return -err;
-
-	return __xn_safe_copy_to_user(&u_cnd->shadow_cond,
-				      &cnd.shadow_cond, sizeof(u_cnd->shadow_cond));
-}
-
-static int __pthread_cond_destroy(union __xeno_cond __user *u_cnd)
-{
-	union __xeno_cond cnd;
-	int err;
-
-	if (__xn_safe_copy_from_user(&cnd.shadow_cond,
-				     &u_cnd->shadow_cond,
-				     sizeof(cnd.shadow_cond)))
-		return -EFAULT;
-
-	err = pthread_cond_destroy(&cnd.native_cond);
-	if (err)
-		return -err;
-
-	return __xn_safe_copy_to_user(&u_cnd->shadow_cond,
-				      &cnd.shadow_cond, sizeof(u_cnd->shadow_cond));
-}
-
-struct us_cond_data {
-	unsigned count;
-	int err;
-};
-
-/* pthread_cond_wait_prologue(cond, mutex, count_ptr, timed, timeout) */
-static int __pthread_cond_wait_prologue(union __xeno_cond __user *u_cnd,
-					union __xeno_mutex __user *u_mx,
-					struct us_cond_data __user *u_d,
-					unsigned int timed,
-					struct timespec __user *u_ts)
-{
-	xnthread_t *cur = xnshadow_thread(current);
-	struct us_cond_data d;
-	union __xeno_cond cnd;
-	union __xeno_mutex mx;
-	struct timespec ts;
-	int err, perr = 0;
-
-	if (__xn_safe_copy_from_user(&cnd.shadow_cond,
-				     &u_cnd->shadow_cond,
-				     sizeof(cnd.shadow_cond)))
-		return -EFAULT;
-
-	if (__xn_safe_copy_from_user(&mx.shadow_mutex,
-				     &u_mx->shadow_mutex,
-				     sizeof(mx.shadow_mutex)))
-		return -EFAULT;
-
-	if (!cnd.shadow_cond.cond->mutex) {
-		cnd.shadow_cond.mutex_ownerp = mx.shadow_mutex.owner;
-		if (__xn_safe_copy_to_user(&u_cnd->shadow_cond.mutex_ownerp,
-					   &cnd.shadow_cond.mutex_ownerp,
-					   sizeof(cnd.shadow_cond.mutex_ownerp)))
-			return -EFAULT;
-	}
-
-	if (timed) {
-		err = __xn_safe_copy_from_user(&ts, u_ts, sizeof(ts))?EFAULT:0;
-		if (!err)
-			err = cobalt_cond_timedwait_prologue(cur,
-							     &cnd.shadow_cond,
-							     &mx.shadow_mutex,
-							     &d.count,
-							     timed,
-							     ts2ns(&ts) + 1);
-	} else
-		err = cobalt_cond_timedwait_prologue(cur,
-						    &cnd.shadow_cond,
-						    &mx.shadow_mutex,
-						    &d.count,
-						    timed, XN_INFINITE);
-
-	if (!cnd.shadow_cond.cond->mutex) {
-		cnd.shadow_cond.mutex_ownerp = (xnarch_atomic_t *)~0UL;
-		if (__xn_safe_copy_to_user(&u_cnd->shadow_cond.mutex_ownerp,
-					   &cnd.shadow_cond.mutex_ownerp,
-					   sizeof(cnd.shadow_cond.mutex_ownerp)))
-			return -EFAULT;
-	}
-
-	switch(err) {
-	case 0:
-	case ETIMEDOUT:
-		perr = d.err = err;
-		err = -cobalt_cond_timedwait_epilogue(cur, &cnd.shadow_cond,
-						    &mx.shadow_mutex, d.count);
-
-		if (!cnd.shadow_cond.cond->mutex) {
-			cnd.shadow_cond.mutex_ownerp = (xnarch_atomic_t *)~0UL;
-			if (__xn_safe_copy_to_user(&u_cnd->shadow_cond.mutex_ownerp,
-						   &cnd.shadow_cond.mutex_ownerp,
-						   sizeof(cnd.shadow_cond.mutex_ownerp)))
-				return -EFAULT;
-		}
-
-		if (err == 0 &&
-		    __xn_safe_copy_to_user(&u_mx->shadow_mutex.lockcnt,
-					   &mx.shadow_mutex.lockcnt,
-					   sizeof(u_mx->shadow_mutex.lockcnt)))
-			return -EFAULT;
-		break;
-
-	case EINTR:
-		perr = err;
-		d.err = 0;	/* epilogue should return 0. */
-		break;
-	}
-
-	if (err == EINTR
-	    &&__xn_safe_copy_to_user(u_d, &d, sizeof(d)))
-			return -EFAULT;
-
-	return err == 0 ? -perr : -err;
-}
-
-static int __pthread_cond_wait_epilogue(union __xeno_cond __user *u_cnd,
-					union __xeno_mutex __user *u_mx,
-					unsigned int count)
-{
-	xnthread_t *cur = xnshadow_thread(current);
-	union __xeno_cond cnd;
-	union __xeno_mutex mx;
-	int err;
-
-	if (__xn_safe_copy_from_user(&cnd.shadow_cond,
-				     &u_cnd->shadow_cond,
-				     sizeof(cnd.shadow_cond)))
-		return -EFAULT;
-
-	if (__xn_safe_copy_from_user(&mx.shadow_mutex,
-				     &u_mx->shadow_mutex,
-				     offsetof(struct __shadow_mutex, owner)
-				     ))
-		return -EFAULT;
-
-	err = cobalt_cond_timedwait_epilogue(cur, &cnd.shadow_cond,
-					    &mx.shadow_mutex, count);
-
-	if (!cnd.shadow_cond.cond->mutex) {
-		cnd.shadow_cond.mutex_ownerp = (xnarch_atomic_t *)~0UL;
-		if (__xn_safe_copy_to_user(&u_cnd->shadow_cond.mutex_ownerp,
-					   &cnd.shadow_cond.mutex_ownerp,
-					   sizeof(cnd.shadow_cond.mutex_ownerp)))
-			return -EFAULT;
-	}
-
-	if (err == 0
-	    && __xn_safe_copy_to_user(&u_mx->shadow_mutex.lockcnt,
-				      &mx.shadow_mutex.lockcnt,
-				      sizeof(u_mx->shadow_mutex.lockcnt)))
-		return -EFAULT;
-
-	return err;
-}
-
-static int __pthread_cond_signal(union __xeno_cond __user *u_cnd)
-{
-	union __xeno_cond cnd;
-
-	if (__xn_safe_copy_from_user(&cnd.shadow_cond,
-				     &u_cnd->shadow_cond,
-				     sizeof(cnd.shadow_cond)))
-		return -EFAULT;
-
-	return -pthread_cond_signal(&cnd.native_cond);
-}
-
-static int __pthread_cond_broadcast(union __xeno_cond __user *u_cnd)
-{
-	union __xeno_cond cnd;
-
-	if (__xn_safe_copy_from_user(&cnd.shadow_cond,
-				     &u_cnd->shadow_cond,
-				     sizeof(cnd.shadow_cond)))
-		return -EFAULT;
-
-	return -pthread_cond_broadcast(&cnd.native_cond);
 }
 
 /* mq_open(name, oflags, mode, attr, ufd) */
@@ -2581,12 +2372,11 @@ static struct xnsysent __systab[] = {
 	SKINCALL_DEF(__cobalt_mutex_timedlock, __pthread_mutex_timedlock, primary),
 	SKINCALL_DEF(__cobalt_mutex_trylock, __pthread_mutex_trylock, primary),
 	SKINCALL_DEF(__cobalt_mutex_unlock, __pthread_mutex_unlock, nonrestartable),
-	SKINCALL_DEF(__cobalt_cond_init, __pthread_cond_init, any),
-	SKINCALL_DEF(__cobalt_cond_destroy, __pthread_cond_destroy, any),
-	SKINCALL_DEF(__cobalt_cond_wait_prologue, __pthread_cond_wait_prologue, nonrestartable),
-	SKINCALL_DEF(__cobalt_cond_wait_epilogue, __pthread_cond_wait_epilogue, primary),
-	SKINCALL_DEF(__cobalt_cond_signal, __pthread_cond_signal, any),
-	SKINCALL_DEF(__cobalt_cond_broadcast, __pthread_cond_broadcast, any),
+	SKINCALL_DEF(__cobalt_cond_init, cobalt_cond_init, any),
+	SKINCALL_DEF(__cobalt_cond_destroy, cobalt_cond_destroy, any),
+	SKINCALL_DEF(__cobalt_cond_wait_prologue, cobalt_cond_wait_prologue, nonrestartable),
+	SKINCALL_DEF(__cobalt_cond_wait_epilogue, cobalt_cond_wait_epilogue, primary),
+
 	SKINCALL_DEF(__cobalt_mq_open, __mq_open, lostage),
 	SKINCALL_DEF(__cobalt_mq_close, __mq_close, lostage),
 	SKINCALL_DEF(__cobalt_mq_unlink, __mq_unlink, lostage),

@@ -261,7 +261,10 @@ int cobalt_mutex_timedlock_break(struct __shadow_mutex *shadow,
 	if (xnthread_handle(cur) == XN_NO_HANDLE)
 		return -EPERM;
 
-	err = cobalt_mutex_timedlock_internal(cur, shadow, 1, timed, abs_to);
+	err = cobalt_mutex_timedlock_internal(cur, shadow->mutex, timed, abs_to);
+	if (!err)
+		shadow->lockcnt = 1;
+
 	if (err != -EBUSY)
 		goto out;
 

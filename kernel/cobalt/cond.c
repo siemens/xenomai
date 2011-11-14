@@ -94,7 +94,8 @@ static void cond_destroy_internal(cobalt_cond_t * cond, cobalt_kqueues_t *q)
  * Specification.</a>
  *
  */
-int pthread_cond_init(pthread_cond_t * cnd, const pthread_condattr_t * attr)
+static int
+pthread_cond_init(pthread_cond_t *cnd, const pthread_condattr_t *attr)
 {
 	struct __shadow_cond *shadow = &((union __xeno_cond *)cnd)->shadow_cond;
 	xnflags_t synch_flags = XNSYNCH_PRIO | XNSYNCH_NOPIP;
@@ -194,7 +195,7 @@ int pthread_cond_init(pthread_cond_t * cnd, const pthread_condattr_t * attr)
  * Specification.</a>
  *
  */
-int pthread_cond_destroy(pthread_cond_t * cnd)
+static int pthread_cond_destroy(pthread_cond_t * cnd)
 {
 	struct __shadow_cond *shadow = &((union __xeno_cond *)cnd)->shadow_cond;
 	cobalt_cond_t *cond;
@@ -229,18 +230,16 @@ int pthread_cond_destroy(pthread_cond_t * cnd)
 	return 0;
 }
 
-int cobalt_cond_timedwait_prologue(xnthread_t *cur,
-				  struct __shadow_cond *shadow,
-				  struct __shadow_mutex *mutex,
-				  unsigned *count_ptr,
-				  int timed,
-				  xnticks_t abs_to)
+static int cobalt_cond_timedwait_prologue(xnthread_t *cur,
+					  cobalt_cond_t *cond,
+					  cobalt_mutex_t *mutex,
+					  int timed,
+					  xnticks_t abs_to)
 {
-	cobalt_cond_t *cond;
 	spl_t s;
 	int err;
 
-	if (!shadow || !mutex)
+	if (!cond || !mutex)
 		return EINVAL;
 
 	if (xnpod_unblockable_p())
@@ -250,29 +249,27 @@ int cobalt_cond_timedwait_prologue(xnthread_t *cur,
 
 	thread_cancellation_point(cur);
 
-	cond = shadow->cond;
-
 	/* If another thread waiting for cond does not use the same mutex */
-	if (!cobalt_obj_active(shadow, COBALT_COND_MAGIC, struct __shadow_cond)
-	    || !cobalt_obj_active(cond, COBALT_COND_MAGIC, struct cobalt_cond)
-	    || (cond->mutex && cond->mutex != mutex->mutex)) {
-		err = EINVAL;
+	if (!cobalt_obj_active(cond, COBALT_COND_MAGIC, struct cobalt_cond)
+	    || (cond->mutex && cond->mutex != mutex)) {
+		err = -EINVAL;
 		goto unlock_and_return;
 	}
 
+#if XENO_DEBUG(NUCLEUS)
 	if (cond->owningq != cobalt_kqueues(cond->attr.pshared)) {
-		err = EPERM;
+		err = -EPERM;
 		goto unlock_and_return;
 	}
+#endif
 
 	if (mutex->attr.pshared != cond->attr.pshared) {
-		err = EINVAL;
+		err = -EINVAL;
 		goto unlock_and_return;
 	}
 
-	/* Unlock mutex, with its previous recursive lock count stored
-	   in "*count_ptr". */
-	err = cobalt_mutex_release(cur, mutex, count_ptr);
+	/* Unlock mutex. */
+	err = cobalt_mutex_release(cur, mutex);
 	if (err < 0)
 		goto unlock_and_return;
 
@@ -282,9 +279,9 @@ int cobalt_cond_timedwait_prologue(xnthread_t *cur,
 
 	/* Bind mutex to cond. */
 	if (cond->mutex == NULL) {
-		cond->mutex = mutex->mutex;
+		cond->mutex = mutex;
 		inith(&cond->mutex_link);
-		appendq(&mutex->mutex->conds, &cond->mutex_link);
+		appendq(&mutex->conds, &cond->mutex_link);
 	}
 
 	/* Wait for another thread to signal the condition. */
@@ -313,9 +310,9 @@ int cobalt_cond_timedwait_prologue(xnthread_t *cur,
 	err = 0;
 
 	if (xnthread_test_info(cur, XNBREAK))
-		err = EINTR;
+		err = -EINTR;
 	else if (xnthread_test_info(cur, XNTIMEO))
-		err = ETIMEDOUT;
+		err = -ETIMEDOUT;
 
       unlock_and_return:
 	xnlock_put_irqrestore(&nklock, s);
@@ -323,30 +320,26 @@ int cobalt_cond_timedwait_prologue(xnthread_t *cur,
 	return err;
 }
 
-int cobalt_cond_timedwait_epilogue(xnthread_t *cur,
-				  struct __shadow_cond *shadow,
-				  struct __shadow_mutex *mutex, unsigned count)
+static int cobalt_cond_timedwait_epilogue(xnthread_t *cur,
+					  cobalt_cond_t *cond,
+					  cobalt_mutex_t *mutex)
 {
-	cobalt_cond_t *cond;
 	int err;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	cond = shadow->cond;
-
-	err = cobalt_mutex_timedlock_internal(cur, mutex, count, 0, XN_INFINITE);
+	err = cobalt_mutex_timedlock_internal(cur, mutex, 0, XN_INFINITE);
 
 	if (err == -EINTR)
 		goto unlock_and_return;
 
-
 	/* Unbind mutex and cond, if no other thread is waiting, if the job was
 	   not already done. */
 	if (!xnsynch_nsleepers(&cond->synchbase)
-	    && cond->mutex == mutex->mutex) {
+	    && cond->mutex == mutex) {
 		cond->mutex = NULL;
-		removeq(&mutex->mutex->conds, &cond->mutex_link);
+		removeq(&mutex->conds, &cond->mutex_link);
 	}
 
 	thread_cancellation_point(cur);
@@ -355,259 +348,6 @@ int cobalt_cond_timedwait_epilogue(xnthread_t *cur,
 	xnlock_put_irqrestore(&nklock, s);
 
 	return err;
-}
-
-/**
- * Wait on a condition variable.
- *
- * This service atomically unlocks the mutex @a mx, and block the calling thread
- * until the condition variable @a cnd is signalled using pthread_cond_signal()
- * or pthread_cond_broadcast(). When the condition is signaled, this service
- * re-acquire the mutex before returning.
- *
- * Spurious wakeups occur if a signal is delivered to the blocked thread, so, an
- * application should not assume that the condition changed upon successful
- * return from this service.
- *
- * Even if the mutex @a mx is recursive and its recursion count is greater than
- * one on entry, it is unlocked before blocking the caller, and the recursion
- * count is restored once the mutex is re-acquired by this service before
- * returning.
- *
- * Once a thread is blocked on a condition variable, a dynamic binding is formed
- * between the condition vairable @a cnd and the mutex @a mx; if another thread
- * calls this service specifying @a cnd as a condition variable but another
- * mutex than @a mx, this service returns immediately with the EINVAL status.
- *
- * This service is a cancellation point for Xenomai POSIX skin threads
- * (created with the pthread_create() service). When such a thread is cancelled
- * while blocked in a call to this service, the mutex @a mx is re-acquired
- * before the cancellation cleanup handlers are called.
- *
- * @param cnd the condition variable to wait for;
- *
- * @param mx the mutex associated with @a cnd.
- *
- * @return 0 on success,
- * @return an error number if:
- * - EPERM, the caller context is invalid;
- * - EINVAL, the specified condition variable or mutex is invalid;
- * - EINVAL, the specified condition variable and mutex process-shared
- * attribute mismatch;
- * - EPERM, the specified condition variable is not process-shared and does not
- *   belong to the current process;
- * - EINVAL, another thread is currently blocked on @a cnd using another mutex
- *   than @a mx;
- * - EPERM, the specified mutex is not owned by the caller.
- *
- * @par Valid contexts:
- * - Xenomai kernel-space thread;
- * - Xenomai user-space thread (switches to primary mode).
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_wait.html">
- * Specification.</a>
- *
- */
-int pthread_cond_wait(pthread_cond_t * cnd, pthread_mutex_t * mx)
-{
-	struct __shadow_cond *cond = &((union __xeno_cond *)cnd)->shadow_cond;
-	struct __shadow_mutex *mutex =
-	    &((union __xeno_mutex *)mx)->shadow_mutex;
-	xnthread_t *cur = xnpod_current_thread();
-	unsigned count;
-	int err;
-
-	err = cobalt_cond_timedwait_prologue(cur, cond, mutex,
-					    &count, 0, XN_INFINITE);
-
-	if (!err || err == EINTR)
-		while (-EINTR == cobalt_cond_timedwait_epilogue(cur, cond,
-							       mutex, count))
-			;
-
-	return err != EINTR ? err : 0;
-}
-
-/**
- * Wait a bounded time on a condition variable.
- *
- * This service is equivalent to pthread_cond_wait(), except that the calling
- * thread remains blocked on the condition variable @a cnd only until the
- * timeout specified by @a abstime expires.
- *
- * The timeout @a abstime is expressed as an absolute value of the @a clock
- * attribute passed to pthread_cond_init(). By default, @a CLOCK_REALTIME is
- * used.
- *
- * @param cnd the condition variable to wait for;
- *
- * @param mx the mutex associated with @a cnd;
- *
- * @param abstime the timeout, expressed as an absolute value of the clock
- * attribute passed to pthread_cond_init().
- *
- * @return 0 on success,
- * @return an error number if:
- * - EPERM, the caller context is invalid;
- * - EPERM, the specified condition variable is not process-shared and does not
- *   belong to the current process;
- * - EINVAL, the specified condition variable, mutex or timeout is invalid;
- * - EINVAL, the specified condition variable and mutex process-shared
- * attribute mismatch;
- * - EINVAL, another thread is currently blocked on @a cnd using another mutex
- *   than @a mx;
- * - EPERM, the specified mutex is not owned by the caller;
- * - ETIMEDOUT, the specified timeout expired.
- *
- * @par Valid contexts:
- * - Xenomai kernel-space thread;
- * - Xenomai user-space thread (switches to primary mode).
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_timedwait.html">
- * Specification.</a>
- *
- */
-int pthread_cond_timedwait(pthread_cond_t * cnd,
-			   pthread_mutex_t * mx, const struct timespec *abstime)
-{
-	struct __shadow_cond *cond = &((union __xeno_cond *)cnd)->shadow_cond;
-	struct __shadow_mutex *mutex =
-	    &((union __xeno_mutex *)mx)->shadow_mutex;
-	xnthread_t *cur = xnpod_current_thread();
-	unsigned count;
-	int err;
-
-	err = cobalt_cond_timedwait_prologue(cur, cond, mutex, &count, 1,
-					    ts2ns(abstime) + 1);
-
-	if (!err || err == EINTR || err == ETIMEDOUT)
-		while (-EINTR == cobalt_cond_timedwait_epilogue(cur, cond,
-							       mutex, count))
-			;
-
-	return err != EINTR ? err : 0;
-}
-
-/**
- * Signal a condition variable.
- *
- * This service unblocks one thread blocked on the condition variable @a cnd.
- *
- * If more than one thread is blocked on the specified condition variable, the
- * highest priority thread is unblocked.
- *
- * @param cnd the condition variable to be signalled.
- *
- * @return 0 on succes,
- * @return an error number if:
- * - EINVAL, the condition variable is invalid;
- * - EPERM, the condition variable is not process-shared and does not belong to
- *   the current process.
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_signal.html.">
- * Specification.</a>
- *
- */
-int pthread_cond_signal(pthread_cond_t * cnd)
-{
-	struct __shadow_cond *shadow = &((union __xeno_cond *)cnd)->shadow_cond;
-	cobalt_cond_t *cond;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	cond = shadow->cond;
-	if (!cobalt_obj_active(shadow, COBALT_COND_MAGIC, struct __shadow_cond)
-	    || !cobalt_obj_active(cond, COBALT_COND_MAGIC, struct cobalt_cond)) {
-		xnlock_put_irqrestore(&nklock, s);
-		return EINVAL;
-	}
-
-#if XENO_DEBUG(POSIX)
-	if (cond->owningq != cobalt_kqueues(cond->attr.pshared)) {
-		xnlock_put_irqrestore(&nklock, s);
-		return EPERM;
-	}
-#endif /* XENO_DEBUG(POSIX) */
-
-	/* FIXME: If the mutex associated with cnd is owned by the current
-	   thread, we could postpone rescheduling until pthread_mutex_unlock is
-	   called, this would save two useless context switches. */
-	if (xnsynch_wakeup_one_sleeper(&cond->synchbase) != NULL)
-		xnpod_schedule();
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	return 0;
-}
-
-/**
- * Broadcast a condition variable.
- *
- * This service unblocks all threads blocked on the condition variable @a cnd.
- *
- * @param cnd the condition variable to be signalled.
- *
- * @return 0 on succes,
- * @return an error number if:
- * - EINVAL, the condition variable is invalid;
- * - EPERM, the condition variable is not process-shared and does not belong to
- *   the current process.
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_broadcast.html">
- * Specification.</a>
- *
- */
-int pthread_cond_broadcast(pthread_cond_t * cnd)
-{
-	struct __shadow_cond *shadow = &((union __xeno_cond *)cnd)->shadow_cond;
-	cobalt_cond_t *cond;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	cond = shadow->cond;
-	if (!cobalt_obj_active(shadow, COBALT_COND_MAGIC, struct __shadow_cond)
-	    || !cobalt_obj_active(cond, COBALT_COND_MAGIC, struct cobalt_cond)) {
-		xnlock_put_irqrestore(&nklock, s);
-		return EINVAL;
-	}
-
-	if (cond->owningq != cobalt_kqueues(cond->attr.pshared)) {
-		xnlock_put_irqrestore(&nklock, s);
-		return EPERM;
-	}
-
-	if (xnsynch_flush(&cond->synchbase, 0) == XNSYNCH_RESCHED)
-		xnpod_schedule();
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	return 0;
-}
-
-void cobalt_condq_cleanup(cobalt_kqueues_t *q)
-{
-	xnholder_t *holder;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	while ((holder = getheadq(&q->condq)) != NULL) {
-		xnlock_put_irqrestore(&nklock, s);
-		cond_destroy_internal(link2cond(holder), q);
-#if XENO_DEBUG(POSIX)
-		xnprintf("Posix: destroying condition variable %p.\n",
-			 link2cond(holder));
-#endif /* XENO_DEBUG(POSIX) */
-		xnlock_get_irqsave(&nklock, s);
-	}
-
-	xnlock_put_irqrestore(&nklock, s);
 }
 
 int cobalt_cond_deferred_signals(struct cobalt_cond *cond)
@@ -639,6 +379,169 @@ int cobalt_cond_deferred_signals(struct cobalt_cond *cond)
 	return need_resched;
 }
 
+int cobalt_cond_init(union __xeno_cond __user *u_cnd,
+		     const pthread_condattr_t __user *u_attr)
+{
+	pthread_condattr_t locattr, *attr;
+	union __xeno_cond cnd;
+	int err;
+
+	if (__xn_safe_copy_from_user(&cnd.shadow_cond,
+				     &u_cnd->shadow_cond,
+				     sizeof(cnd.shadow_cond)))
+		return -EFAULT;
+
+	if (u_attr) {
+		if (__xn_safe_copy_from_user(&locattr,
+					     u_attr, sizeof(locattr)))
+			return -EFAULT;
+
+		attr = &locattr;
+	} else
+		attr = NULL;
+
+	/* Always use default attribute. */
+	err = pthread_cond_init(&cnd.native_cond, attr);
+
+	if (err)
+		return -err;
+
+	return __xn_safe_copy_to_user(&u_cnd->shadow_cond,
+				      &cnd.shadow_cond, sizeof(u_cnd->shadow_cond));
+}
+
+int cobalt_cond_destroy(union __xeno_cond __user *u_cnd)
+{
+	union __xeno_cond cnd;
+	int err;
+
+	if (__xn_safe_copy_from_user(&cnd.shadow_cond,
+				     &u_cnd->shadow_cond,
+				     sizeof(cnd.shadow_cond)))
+		return -EFAULT;
+
+	err = pthread_cond_destroy(&cnd.native_cond);
+	if (err)
+		return -err;
+
+	return __xn_safe_copy_to_user(&u_cnd->shadow_cond,
+				      &cnd.shadow_cond, sizeof(u_cnd->shadow_cond));
+}
+
+struct us_cond_data {
+	int err;
+};
+
+/* pthread_cond_wait_prologue(cond, mutex, count_ptr, timed, timeout) */
+int cobalt_cond_wait_prologue(union __xeno_cond __user *u_cnd,
+			      union __xeno_mutex __user *u_mx,
+			      int *u_err,
+			      unsigned int timed,
+			      struct timespec __user *u_ts)
+{
+	xnthread_t *cur = xnshadow_thread(current);
+	xnarch_atomic_t *ownerp;
+	struct us_cond_data d;
+	cobalt_cond_t *cnd;
+	cobalt_mutex_t *mx;
+	struct timespec ts;
+	int err, perr = 0;
+
+	__xn_get_user(cnd, &u_cnd->shadow_cond.cond);
+	__xn_get_user(mx, &u_mx->shadow_mutex.mutex);
+
+	if (!cnd->mutex) {
+		__xn_get_user(ownerp, &u_mx->shadow_mutex.owner);
+		__xn_put_user(ownerp, &u_cnd->shadow_cond.mutex_ownerp);
+	}
+
+	if (timed) {
+		err = __xn_safe_copy_from_user(&ts, u_ts, sizeof(ts))?-EFAULT:0;
+		if (!err)
+			err = cobalt_cond_timedwait_prologue(cur,
+							     cnd, mx, timed,
+							     ts2ns(&ts) + 1);
+	} else
+		err = cobalt_cond_timedwait_prologue(cur, cnd,
+						     mx, timed,
+						     XN_INFINITE);
+
+	if (!cnd->mutex) {
+		ownerp = (xnarch_atomic_t *)~0UL;
+		__xn_put_user(ownerp, &u_cnd->shadow_cond.mutex_ownerp);
+	}
+
+	switch(err) {
+	case 0:
+	case -ETIMEDOUT:
+		perr = d.err = err;
+		err = cobalt_cond_timedwait_epilogue(cur, cnd, mx);
+
+		if (!cnd->mutex) {
+			ownerp = (xnarch_atomic_t *)~0UL;
+			__xn_put_user(ownerp,
+				      &u_cnd->shadow_cond.mutex_ownerp);
+		}
+		break;
+
+	case -EINTR:
+		perr = err;
+		d.err = 0;	/* epilogue should return 0. */
+		break;
+
+	default:
+		/* Please gcc and handle the case which will never
+		   happen */
+		d.err = EINVAL;
+	}
+
+	if (err == -EINTR)
+		__xn_put_user(d.err, u_err);
+
+	return err == 0 ? perr : err;
+}
+
+int cobalt_cond_wait_epilogue(union __xeno_cond __user *u_cnd,
+			      union __xeno_mutex __user *u_mx)
+{
+	xnthread_t *cur = xnshadow_thread(current);
+	cobalt_cond_t *cnd;
+	cobalt_mutex_t *mx;
+	int err;
+
+	__xn_get_user(cnd, &u_cnd->shadow_cond.cond);
+	__xn_get_user(mx, &u_mx->shadow_mutex.mutex);
+
+	err = cobalt_cond_timedwait_epilogue(cur, cnd, mx);
+
+	if (!cnd->mutex) {
+		xnarch_atomic_t *ownerp = (xnarch_atomic_t *)~0UL;
+		__xn_put_user(ownerp, &u_cnd->shadow_cond.mutex_ownerp);
+	}
+
+	return err;
+}
+
+void cobalt_condq_cleanup(cobalt_kqueues_t *q)
+{
+	xnholder_t *holder;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	while ((holder = getheadq(&q->condq)) != NULL) {
+		xnlock_put_irqrestore(&nklock, s);
+		cond_destroy_internal(link2cond(holder), q);
+#if XENO_DEBUG(POSIX)
+		xnprintf("Posix: destroying condition variable %p.\n",
+			 link2cond(holder));
+#endif /* XENO_DEBUG(POSIX) */
+		xnlock_get_irqsave(&nklock, s);
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+}
+
 void cobalt_cond_pkg_init(void)
 {
 	initq(&cobalt_global_kqueues.condq);
@@ -651,10 +554,3 @@ void cobalt_cond_pkg_cleanup(void)
 }
 
 /*@}*/
-
-EXPORT_SYMBOL_GPL(pthread_cond_init);
-EXPORT_SYMBOL_GPL(pthread_cond_destroy);
-EXPORT_SYMBOL_GPL(pthread_cond_wait);
-EXPORT_SYMBOL_GPL(pthread_cond_timedwait);
-EXPORT_SYMBOL_GPL(pthread_cond_signal);
-EXPORT_SYMBOL_GPL(pthread_cond_broadcast);
