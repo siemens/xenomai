@@ -105,10 +105,8 @@ int cobalt_mutex_init_internal(struct __shadow_mutex *shadow,
 	shadow->lockcnt = 0;
 	xnarch_atomic_set(&shadow->lock, -1);
 
-#ifdef CONFIG_XENO_FASTSYNCH
 	shadow->attr = *attr;
 	shadow->owner_offset = xnheap_mapped_offset(&sys_ppd->sem_heap, ownerp);
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 	if (attr->protocol == PTHREAD_PRIO_INHERIT)
 		synch_flags |= XNSYNCH_PIP;
@@ -169,23 +167,16 @@ int pthread_mutex_init(pthread_mutex_t *mx, const pthread_mutexattr_t *attr)
 		goto checked;
 
 	err = cobalt_mutex_check_init(shadow, attr);
-#ifndef CONFIG_XENO_FASTSYNCH
-	cb_read_unlock(&shadow->lock, s);
-	if (err)
-		return -err;
-#else /* CONFIG_XENO_FASTSYNCH */
 	if (err) {
 		cb_read_unlock(&shadow->lock, s);
 		return -err;
 	}
-#endif /* CONFIG_XENO_FASTSYNCH */
 
   checked:
 	mutex = (cobalt_mutex_t *) xnmalloc(sizeof(*mutex));
 	if (!mutex)
 		return ENOMEM;
 
-#ifdef CONFIG_XENO_FASTSYNCH
 	ownerp = (xnarch_atomic_t *)
 		xnheap_alloc(&xnsys_ppd_get(attr->pshared)->sem_heap,
 			     sizeof(xnarch_atomic_t));
@@ -193,7 +184,6 @@ int pthread_mutex_init(pthread_mutex_t *mx, const pthread_mutexattr_t *attr)
 		xnfree(mutex);
 		return EAGAIN;
 	}
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 	cb_force_write_lock(&shadow->lock, s);
 	err = cobalt_mutex_init_internal(shadow, mutex, ownerp, attr);
@@ -201,9 +191,7 @@ int pthread_mutex_init(pthread_mutex_t *mx, const pthread_mutexattr_t *attr)
 
 	if (err) {
 		xnfree(mutex);
-#ifdef CONFIG_XENO_FASTSYNCH
 		xnheap_free(&xnsys_ppd_get(attr->pshared)->sem_heap, ownerp);
-#endif /* CONFIG_XENO_FASTSYNCH */
 	}
 	return -err;
 }
@@ -220,10 +208,8 @@ void cobalt_mutex_destroy_internal(cobalt_mutex_t *mutex,
 	xnsynch_destroy(&mutex->synchbase);
 	xnlock_put_irqrestore(&nklock, s);
 
-#ifdef CONFIG_XENO_FASTSYNCH
 	xnheap_free(&xnsys_ppd_get(mutex->attr.pshared)->sem_heap,
 		    mutex->synchbase.fastlock);
-#endif /* CONFIG_XENO_FASTSYNCH */
 	xnfree(mutex);
 }
 
@@ -270,12 +256,8 @@ int pthread_mutex_destroy(pthread_mutex_t * mx)
 		return EPERM;
 	}
 
-#ifdef CONFIG_XENO_FASTSYNCH
 	if (xnsynch_fast_owner_check(mutex->synchbase.fastlock,
 				     XN_NO_HANDLE) != 0) {
-#else /* CONFIG_XENO_FASTSYNCH */
-	if (xnsynch_owner_check(&mutex->synchbase, NULL)) {
-#endif
 		cb_write_unlock(&shadow->lock, s);
 		return EBUSY;
 	}
@@ -419,21 +401,8 @@ int pthread_mutex_trylock(pthread_mutex_t *mx)
 	}
 #endif /* XENO_DEBUG(POSIX) */
 
-#ifdef CONFIG_XENO_FASTSYNCH
 	err = -xnsynch_fast_acquire(mutex->synchbase.fastlock,
 				    xnthread_handle(cur));
-#else /* !CONFIG_XENO_FASTSYNCH */
-	{
-		xnthread_t *owner = xnsynch_owner(&mutex->synchbase);
-		if (!owner)
-			err = 0;
-		else if (owner == cur)
-			err = EBUSY;
-		else
-			err = EAGAIN;
-	}
-#endif /* !CONFIG_XENO_FASTSYNCH */
-
 	if (likely(!err))
 		shadow->lockcnt = 1;
 	else if (err == EBUSY) {

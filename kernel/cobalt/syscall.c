@@ -1051,192 +1051,6 @@ static int __pthread_mutexattr_setpshared(pthread_mutexattr_t __user *u_attr,
 	return __xn_safe_copy_to_user(u_attr, &attr, sizeof(*u_attr));
 }
 
-#ifndef CONFIG_XENO_FASTSYNCH
-static int __pthread_mutex_init(union __xeno_mutex __user *u_mx,
-				const pthread_mutexattr_t __user *u_attr)
-{
-	pthread_mutexattr_t locattr, *attr;
-	union __xeno_mutex mx;
-	int err;
-
-	if (__xn_safe_copy_from_user(&mx.shadow_mutex,
-				     &u_mx->shadow_mutex,
-				     sizeof(mx.shadow_mutex)))
-		return -EFAULT;
-
-	if (u_attr) {
-		if (__xn_safe_copy_from_user(&locattr, u_attr,
-					     sizeof(locattr)))
-			return -EFAULT;
-
-		attr = &locattr;
-	} else
-		attr = NULL;
-
-	err = pthread_mutex_init(&mx.native_mutex, attr);
-	if (err)
-		return -err;
-
-	return __xn_safe_copy_to_user(&u_mx->shadow_mutex,
-				      &mx.shadow_mutex, sizeof(u_mx->shadow_mutex));
-}
-
-#define __pthread_mutex_check_init __cobalt_call_not_available
-
-static int __pthread_mutex_destroy(union __xeno_mutex __user *u_mx)
-{
-	union __xeno_mutex mx;
-	int err;
-
-	if (__xn_safe_copy_from_user(&mx.shadow_mutex,
-				     &u_mx->shadow_mutex,
-				     sizeof(mx.shadow_mutex)))
-		return -EFAULT;
-
-	err = pthread_mutex_destroy(&mx.native_mutex);
-	if (err)
-		return -err;
-
-	return __xn_safe_copy_to_user(&u_mx->shadow_mutex,
-				      &mx.shadow_mutex, sizeof(u_mx->shadow_mutex));
-}
-
-static int __pthread_mutex_lock(union __xeno_mutex __user *u_mx)
-{
-	DECLARE_CB_LOCK_FLAGS(s);
-	union __xeno_mutex mx;
-	int err;
-
-	if (__xn_safe_copy_from_user(&mx.shadow_mutex,
-				     &u_mx->shadow_mutex,
-				     sizeof(mx.shadow_mutex)))
-		return -EFAULT;
-
-	if (unlikely(cb_try_read_lock(&mx.shadow_mutex.lock, s)))
-		return -EINVAL;
-
-	err = cobalt_mutex_timedlock_break(&mx.shadow_mutex, 0, XN_INFINITE);
-
-	cb_read_unlock(&mx.shadow_mutex.lock, s);
-
-	if (err == 0 &&
-	    __xn_safe_copy_to_user(&u_mx->shadow_mutex.lockcnt,
-				   &mx.shadow_mutex.lockcnt,
-				   sizeof(u_mx->shadow_mutex.lockcnt)))
-		return -EFAULT;
-
-	return err;
-}
-
-static int __pthread_mutex_timedlock(union __xeno_mutex __user *u_mx,
-				     const struct timespec __user *u_ts)
-{
-	DECLARE_CB_LOCK_FLAGS(s);
-	union __xeno_mutex mx;
-	struct timespec ts;
-	int err;
-
-	if (__xn_safe_copy_from_user(&mx.shadow_mutex,
-				     &u_mx->shadow_mutex,
-				     sizeof(mx.shadow_mutex)))
-		return -EFAULT;
-
-	if (__xn_safe_copy_from_user(&ts, u_ts, sizeof(ts)))
-		return -EFAULT;
-
-	if (unlikely(cb_try_read_lock(&mx.shadow_mutex.lock, s)))
-		return -EINVAL;
-
-	err = cobalt_mutex_timedlock_break(&mx.shadow_mutex,
-					  1, ts2ns(&ts) + 1);
-
-	cb_read_unlock(&mx.shadow_mutex.lock, s);
-
-	if (err == 0 &&
-	    __xn_safe_copy_to_user(&u_mx->shadow_mutex.lockcnt,
-				   &mx.shadow_mutex.lockcnt,
-				   sizeof(u_mx->shadow_mutex.lockcnt)))
-		return -EFAULT;
-
-	return err;
-}
-
-static int __pthread_mutex_trylock(union __xeno_mutex __user *u_mx)
-{
-	union __xeno_mutex mx;
-	int err;
-
-	if (__xn_safe_copy_from_user(&mx.shadow_mutex,
-				     &u_mx->shadow_mutex,
-				     sizeof(mx.shadow_mutex)))
-		return -EFAULT;
-
-	err = pthread_mutex_trylock(&mx.native_mutex);
-	if (err == 0 &&
-	    __xn_safe_copy_to_user(&u_mx->shadow_mutex.lockcnt,
-				   &mx.shadow_mutex.lockcnt,
-				   sizeof(u_mx->shadow_mutex.lockcnt)))
-		return -EFAULT;
-
-	return -err;
-}
-
-static int __pthread_mutex_unlock(union __xeno_mutex __user *u_mx)
-{
-	xnthread_t *cur = xnpod_current_thread();
-	struct __shadow_mutex *shadow;
-	DECLARE_CB_LOCK_FLAGS(s);
-	union __xeno_mutex mx;
-	cobalt_mutex_t *mutex;
-	int err;
-
-	if (xnpod_root_p())
-		return -EPERM;
-
-	if (__xn_safe_copy_from_user(&mx.shadow_mutex,
-				     &u_mx->shadow_mutex,
-				     sizeof(mx.shadow_mutex)))
-		return -EFAULT;
-
-	shadow = &mx.shadow_mutex;
-
-	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
-		return -EINVAL;
-
-	if (!cobalt_obj_active(shadow,
-			      COBALT_MUTEX_MAGIC, struct __shadow_mutex)) {
-		err = -EINVAL;
-		goto out;
-	}
-
-	mutex = shadow->mutex;
-
-	err = (xnsynch_owner(&mutex->synchbase) == cur) ? 0 : -EPERM;
-	if (err)
-		goto out;
-
-	if (shadow->lockcnt > 1) {
-		/* Mutex is recursive */
-		--shadow->lockcnt;
-		cb_read_unlock(&shadow->lock, s);
-
-		if (__xn_safe_copy_to_user(&u_mx->shadow_mutex.lockcnt,
-					   &shadow->lockcnt,
-					   sizeof(u_mx->shadow_mutex.lockcnt)))
-			return -EFAULT;
-
-		return 0;
-	}
-
-	if (xnsynch_release(&mutex->synchbase))
-		xnpod_schedule();
-
-  out:
-	cb_read_unlock(&shadow->lock, s);
-
-	return err;
-}
-#else /* CONFIG_XENO_FASTSYNCH */
 static int __pthread_mutex_check_init(union __xeno_mutex __user *u_mx,
 				      const pthread_mutexattr_t __user *u_attr)
 {
@@ -1479,7 +1293,6 @@ static int __pthread_mutex_unlock(union __xeno_mutex __user *u_mx)
 
 	return err;
 }
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 static int __pthread_condattr_init(pthread_condattr_t __user *u_attr)
 {
@@ -1651,13 +1464,13 @@ static int __pthread_cond_wait_prologue(union __xeno_cond __user *u_cnd,
 				     sizeof(mx.shadow_mutex)))
 		return -EFAULT;
 
-#ifdef CONFIG_XENO_FASTSYNCH
-	cnd.shadow_cond.mutex_ownerp = mx.shadow_mutex.owner;
-	if (__xn_safe_copy_to_user(&u_cnd->shadow_cond.mutex_ownerp,
-				   &cnd.shadow_cond.mutex_ownerp,
-				   sizeof(cnd.shadow_cond.mutex_ownerp)))
-		return -EFAULT;
-#endif /* CONFIG_XENO_FASTSYNCH */
+	if (!cnd.shadow_cond.cond->mutex) {
+		cnd.shadow_cond.mutex_ownerp = mx.shadow_mutex.owner;
+		if (__xn_safe_copy_to_user(&u_cnd->shadow_cond.mutex_ownerp,
+					   &cnd.shadow_cond.mutex_ownerp,
+					   sizeof(cnd.shadow_cond.mutex_ownerp)))
+			return -EFAULT;
+	}
 
 	if (timed) {
 		err = __xn_safe_copy_from_user(&ts, u_ts, sizeof(ts))?EFAULT:0;
@@ -1675,7 +1488,6 @@ static int __pthread_cond_wait_prologue(union __xeno_cond __user *u_cnd,
 						    &d.count,
 						    timed, XN_INFINITE);
 
-#ifdef CONFIG_XENO_FASTSYNCH
 	if (!cnd.shadow_cond.cond->mutex) {
 		cnd.shadow_cond.mutex_ownerp = (xnarch_atomic_t *)~0UL;
 		if (__xn_safe_copy_to_user(&u_cnd->shadow_cond.mutex_ownerp,
@@ -1683,7 +1495,6 @@ static int __pthread_cond_wait_prologue(union __xeno_cond __user *u_cnd,
 					   sizeof(cnd.shadow_cond.mutex_ownerp)))
 			return -EFAULT;
 	}
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 	switch(err) {
 	case 0:
@@ -1692,7 +1503,6 @@ static int __pthread_cond_wait_prologue(union __xeno_cond __user *u_cnd,
 		err = -cobalt_cond_timedwait_epilogue(cur, &cnd.shadow_cond,
 						    &mx.shadow_mutex, d.count);
 
-#ifdef CONFIG_XENO_FASTSYNCH
 		if (!cnd.shadow_cond.cond->mutex) {
 			cnd.shadow_cond.mutex_ownerp = (xnarch_atomic_t *)~0UL;
 			if (__xn_safe_copy_to_user(&u_cnd->shadow_cond.mutex_ownerp,
@@ -1700,7 +1510,6 @@ static int __pthread_cond_wait_prologue(union __xeno_cond __user *u_cnd,
 						   sizeof(cnd.shadow_cond.mutex_ownerp)))
 				return -EFAULT;
 		}
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 		if (err == 0 &&
 		    __xn_safe_copy_to_user(&u_mx->shadow_mutex.lockcnt,
@@ -1738,18 +1547,13 @@ static int __pthread_cond_wait_epilogue(union __xeno_cond __user *u_cnd,
 
 	if (__xn_safe_copy_from_user(&mx.shadow_mutex,
 				     &u_mx->shadow_mutex,
-#ifdef CONFIG_XENO_FASTSYNCH
 				     offsetof(struct __shadow_mutex, lock)
-#else /* !CONFIG_XENO_FASTSYNCH */
-				     sizeof(mx.shadow_mutex)
-#endif /* !CONFIG_XENO_FASTSYNCH */
 				     ))
 		return -EFAULT;
 
 	err = cobalt_cond_timedwait_epilogue(cur, &cnd.shadow_cond,
 					    &mx.shadow_mutex, count);
 
-#ifdef CONFIG_XENO_FASTSYNCH
 	if (!cnd.shadow_cond.cond->mutex) {
 		cnd.shadow_cond.mutex_ownerp = (xnarch_atomic_t *)~0UL;
 		if (__xn_safe_copy_to_user(&u_cnd->shadow_cond.mutex_ownerp,
@@ -1757,7 +1561,6 @@ static int __pthread_cond_wait_epilogue(union __xeno_cond __user *u_cnd,
 					   sizeof(cnd.shadow_cond.mutex_ownerp)))
 			return -EFAULT;
 	}
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 	if (err == 0
 	    && __xn_safe_copy_to_user(&u_mx->shadow_mutex.lockcnt,

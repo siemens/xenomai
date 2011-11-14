@@ -76,8 +76,6 @@
 #error "SMP not supported below armv6, compile with -march=armv6 or above"
 #endif
 
-#define CONFIG_XENO_FASTSYNCH 1
-
 #if CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_KUSER
 #define CONFIG_XENO_ARM_KUSER_TSC 1
 #endif

@@ -27,7 +27,6 @@
 
 extern int __cobalt_muxid;
 
-#ifdef CONFIG_XENO_FASTSYNCH
 #define COBALT_MUTEX_MAGIC (0x86860303)
 
 extern unsigned long xeno_sem_heap[2];
@@ -39,7 +38,6 @@ static xnarch_atomic_t *get_ownerp(struct __shadow_mutex *shadow)
 
 	return (xnarch_atomic_t *)(xeno_sem_heap[1] + shadow->owner_offset);
 }
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 int __wrap_pthread_mutexattr_init(pthread_mutexattr_t *attr)
 {
@@ -99,7 +97,6 @@ int __wrap_pthread_mutex_init(pthread_mutex_t *mutex,
 	struct __shadow_mutex *shadow = &_mutex->shadow_mutex;
 	int err;
 
-#ifdef CONFIG_XENO_FASTSYNCH
 	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
 		goto checked;
 
@@ -112,17 +109,14 @@ int __wrap_pthread_mutex_init(pthread_mutex_t *mutex,
 
   checked:
 	cb_force_write_lock(&shadow->lock, s);
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 	err = -XENOMAI_SKINCALL2(__cobalt_muxid,__cobalt_mutex_init,shadow,attr);
 
-#ifdef CONFIG_XENO_FASTSYNCH
 	if (!shadow->attr.pshared)
 		shadow->owner = (xnarch_atomic_t *)
 			(xeno_sem_heap[0] + shadow->owner_offset);
 
 	cb_write_unlock(&shadow->lock, s);
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 	return err;
 }
@@ -149,7 +143,6 @@ int __wrap_pthread_mutex_lock(pthread_mutex_t *mutex)
 	struct __shadow_mutex *shadow = &_mutex->shadow_mutex;
 	int err;
 
-#ifdef CONFIG_XENO_FASTSYNCH
 	unsigned long status;
 	xnhandle_t cur;
 
@@ -200,16 +193,13 @@ int __wrap_pthread_mutex_lock(pthread_mutex_t *mutex)
 				goto out;
 			}
 		}
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 	do {
 		err = XENOMAI_SKINCALL1(__cobalt_muxid,__cobalt_mutex_lock,shadow);
 	} while (err == -EINTR);
 
-#ifdef CONFIG_XENO_FASTSYNCH
   out:
 	cb_read_unlock(&shadow->lock, s);
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 	return -err;
 }
@@ -219,11 +209,9 @@ int __wrap_pthread_mutex_timedlock(pthread_mutex_t *mutex,
 {
 	union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
 	struct __shadow_mutex *shadow = &_mutex->shadow_mutex;
-	int err;
-
-#ifdef CONFIG_XENO_FASTSYNCH
 	unsigned long status;
 	xnhandle_t cur;
+	int err;
 
 	cur = xeno_get_current();
 	if (cur == XN_NO_HANDLE)
@@ -268,17 +256,14 @@ int __wrap_pthread_mutex_timedlock(pthread_mutex_t *mutex,
 				goto out;
 			}
 	}
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 	do {
 		err = XENOMAI_SKINCALL2(__cobalt_muxid,
 					__cobalt_mutex_timedlock, shadow, to);
 	} while (err == -EINTR);
 
-#ifdef CONFIG_XENO_FASTSYNCH
   out:
 	cb_read_unlock(&shadow->lock, s);
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 	return -err;
 }
@@ -287,12 +272,10 @@ int __wrap_pthread_mutex_trylock(pthread_mutex_t *mutex)
 {
 	union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
 	struct __shadow_mutex *shadow = &_mutex->shadow_mutex;
-	struct timespec ts;
-	int err;
-
-#ifdef CONFIG_XENO_FASTSYNCH
 	xnarch_atomic_t *ownerp;
+	struct timespec ts;
 	xnhandle_t cur;
+	int err;
 
 	cur = xeno_get_current();
 	if (cur == XN_NO_HANDLE)
@@ -336,7 +319,6 @@ int __wrap_pthread_mutex_trylock(pthread_mutex_t *mutex)
 	goto out;
 
 do_syscall:
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 	__RT(clock_gettime(CLOCK_REALTIME, &ts));
 	do {
@@ -346,10 +328,8 @@ do_syscall:
 	if (err == ETIMEDOUT || err == EDEADLK)
 		err = EBUSY;
 
-#ifdef CONFIG_XENO_FASTSYNCH
-  out:
+out:
 	cb_read_unlock(&shadow->lock, s);
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 	return err;
 }
@@ -358,11 +338,9 @@ int __wrap_pthread_mutex_unlock(pthread_mutex_t *mutex)
 {
 	union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
 	struct __shadow_mutex *shadow = &_mutex->shadow_mutex;
-	int err;
-
-#ifdef CONFIG_XENO_FASTSYNCH
 	xnarch_atomic_t *ownerp;
 	xnhandle_t cur;
+	int err;
 
 	cur = xeno_get_current();
 	if (cur == XN_NO_HANDLE)
@@ -400,17 +378,14 @@ int __wrap_pthread_mutex_unlock(pthread_mutex_t *mutex)
 	}
 
 do_syscall:
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 	do {
 		err = XENOMAI_SKINCALL1(__cobalt_muxid,
 					__cobalt_mutex_unlock, shadow);
 	} while (err == -EINTR);
 
-#ifdef CONFIG_XENO_FASTSYNCH
   out_err:
 	cb_read_unlock(&shadow->lock, s);
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 	return -err;
 }

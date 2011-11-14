@@ -27,7 +27,6 @@
 
 extern int __cobalt_muxid;
 
-#ifdef CONFIG_XENO_FASTSYNCH
 #define COBALT_COND_MAGIC 0x86860505
 
 extern unsigned long xeno_sem_heap[2];
@@ -52,7 +51,6 @@ static xnarch_atomic_t *get_mutex_ownerp(struct __shadow_cond *shadow)
 	return (xnarch_atomic_t *)(xeno_sem_heap[1]
 				   + shadow->mutex_ownerp_offset);
 }
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 int __wrap_pthread_condattr_init(pthread_condattr_t *attr)
 {
@@ -100,12 +98,10 @@ int __wrap_pthread_cond_init(pthread_cond_t * cond,
 
 	err = -XENOMAI_SKINCALL2(__cobalt_muxid,
 				 __cobalt_cond_init, shadow, attr);
-#ifdef CONFIG_XENO_FASTSYNCH
 	if (!err && !shadow->attr.pshared) {
 		shadow->pending_signals = (unsigned long *)
 			(xeno_sem_heap[0] + shadow->pending_signals_offset);
 	}
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 	return err;
 }
@@ -220,7 +216,6 @@ int __wrap_pthread_cond_signal(pthread_cond_t * cond)
 {
 	struct __shadow_cond *shadow =
 		&((union __xeno_cond *)cond)->shadow_cond;
-#ifdef CONFIG_XENO_FASTSYNCH
 	unsigned long *pending_signals;
 	xnarch_atomic_t *mutex_ownerp;
 	xnhandle_t cur;
@@ -244,17 +239,12 @@ int __wrap_pthread_cond_signal(pthread_cond_t * cond)
 	}
 
 	return 0;
-#else /* !CONFIG_XENO_FASTSYNCH */
-	return -XENOMAI_SKINCALL1(__cobalt_muxid,
-				  __cobalt_cond_signal, &_cond->shadow_cond);
-#endif /* !CONFIG_XENO_FASTSYNCH */
 }
 
 int __wrap_pthread_cond_broadcast(pthread_cond_t * cond)
 {
 	struct __shadow_cond *shadow =
 		&((union __xeno_cond *)cond)->shadow_cond;
-#ifdef CONFIG_XENO_FASTSYNCH
 	unsigned long *pending_signals;
 	xnarch_atomic_t *mutex_ownerp;
 	xnhandle_t cur;
@@ -277,8 +267,4 @@ int __wrap_pthread_cond_broadcast(pthread_cond_t * cond)
 	}
 
 	return 0;
-#else /* !CONFIG_XENO_FASTSYNCH */
-	return -XENOMAI_SKINCALL1(__cobalt_muxid,
-				  __cobalt_cond_broadcast, &_cond->shadow_cond);
-#endif /* !CONFIG_XENO_FASTSYNCH */
 }

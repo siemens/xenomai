@@ -64,10 +64,8 @@ static void cond_destroy_internal(cobalt_cond_t * cond, cobalt_kqueues_t *q)
 	   xnpod_schedule(). */
 	xnsynch_destroy(&cond->synchbase);
 	xnlock_put_irqrestore(&nklock, s);
-#ifdef CONFIG_XENO_FASTSYNCH
 	xnheap_free(&xnsys_ppd_get(cond->attr.pshared)->sem_heap,
 		    cond->pending_signals);
-#endif /* CONFIG_XENO_FASTSYNCH */
 	xnfree(cond);
 }
 
@@ -113,7 +111,6 @@ int pthread_cond_init(pthread_cond_t * cnd, const pthread_condattr_t * attr)
 	if (!cond)
 		return ENOMEM;
 
-#ifdef CONFIG_XENO_FASTSYNCH
 	sys_ppd = xnsys_ppd_get(attr->pshared);
 	cond->pending_signals = (unsigned long *)
 		xnheap_alloc(&sys_ppd->sem_heap,
@@ -123,7 +120,6 @@ int pthread_cond_init(pthread_cond_t * cnd, const pthread_condattr_t * attr)
 		goto err_free_cond;
 	}
 	*(cond->pending_signals) = 0;
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -145,13 +141,11 @@ int pthread_cond_init(pthread_cond_t * cnd, const pthread_condattr_t * attr)
 			}
 	}
 
-#ifdef CONFIG_XENO_FASTSYNCH
 	shadow->attr = *attr;
 	shadow->pending_signals_offset =
 		xnheap_mapped_offset(&sys_ppd->sem_heap,
 				     cond->pending_signals);
 	shadow->mutex_ownerp = (xnarch_atomic_t *)~0UL;
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 	shadow->magic = COBALT_COND_MAGIC;
 	shadow->cond = cond;
@@ -171,12 +165,10 @@ int pthread_cond_init(pthread_cond_t * cnd, const pthread_condattr_t * attr)
 
   err_free_pending_signals:
 	xnlock_put_irqrestore(&nklock, s);
-#ifdef CONFIG_XENO_FASTSYNCH
 	xnheap_free(&xnsys_ppd_get(cond->attr.pshared)->sem_heap,
 		    cond->pending_signals);
   err_free_cond:
 	xnfree(cond);
-#endif
 	return err;
 }
 
@@ -426,10 +418,8 @@ int pthread_cond_wait(pthread_cond_t * cnd, pthread_mutex_t * mx)
 	unsigned count;
 	int err;
 
-#ifdef CONFIG_XENO_FASTSYNCH
 	if (unlikely(cb_try_read_lock(&mutex->lock, s)))
 		return EINVAL;
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 	err = cobalt_cond_timedwait_prologue(cur, cond, mutex,
 					    &count, 0, XN_INFINITE);
@@ -439,9 +429,7 @@ int pthread_cond_wait(pthread_cond_t * cnd, pthread_mutex_t * mx)
 							       mutex, count))
 			;
 
-#ifdef CONFIG_XENO_FASTSYNCH
 	cb_read_unlock(&mutex->lock, s);
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 	return err != EINTR ? err : 0;
 }
@@ -496,10 +484,8 @@ int pthread_cond_timedwait(pthread_cond_t * cnd,
 	unsigned count;
 	int err;
 
-#ifdef CONFIG_XENO_FASTSYNCH
 	if (unlikely(cb_try_read_lock(&mutex->lock, s)))
 		return EINVAL;
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 	err = cobalt_cond_timedwait_prologue(cur, cond, mutex, &count, 1,
 					    ts2ns(abstime) + 1);
@@ -509,9 +495,7 @@ int pthread_cond_timedwait(pthread_cond_t * cnd,
 							       mutex, count))
 			;
 
-#ifdef CONFIG_XENO_FASTSYNCH
 	cb_read_unlock(&mutex->lock, s);
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 	return err != EINTR ? err : 0;
 }
@@ -636,7 +620,6 @@ void cobalt_condq_cleanup(cobalt_kqueues_t *q)
 	xnlock_put_irqrestore(&nklock, s);
 }
 
-#ifdef CONFIG_XENO_FASTSYNCH
 int cobalt_cond_deferred_signals(struct cobalt_cond *cond)
 {
 	unsigned long pending_signals;
@@ -665,7 +648,6 @@ int cobalt_cond_deferred_signals(struct cobalt_cond *cond)
 
 	return need_resched;
 }
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 void cobalt_cond_pkg_init(void)
 {

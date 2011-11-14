@@ -81,12 +81,10 @@ static void unmap_on_fork(void)
 	   that access to these addresses will cause a segmentation
 	   fault.
 	*/
-#if defined(CONFIG_XENO_FASTSYNCH)
 	void *addr = mmap((void *)xeno_sem_heap[PRIVATE],
 			  private_hdesc.size, PROT_NONE,
 			  MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
 	if (addr != (void *)xeno_sem_heap[PRIVATE])
-#endif /* CONFIG_XENO_FASTSYNCH */
 		munmap((void *)xeno_sem_heap[PRIVATE], private_hdesc.size);
 	xeno_sem_heap[PRIVATE] = 0UL;
 	init_private_heap = PTHREAD_ONCE_INIT;

@@ -56,11 +56,7 @@ struct xnfeatinfo {
 #define __xn_feat_smp_mask __xn_feat_nosmp
 #endif
 
-#ifdef CONFIG_XENO_FASTSYNCH
 #define __xn_feat_fastsynch_mask __xn_feat_fastsynch
-#else
-#define __xn_feat_fastsynch_mask __xn_feat_nofastsynch
-#endif
 
 /* List of generic features kernel or userland may support */
 #define __xn_feat_generic_mask \

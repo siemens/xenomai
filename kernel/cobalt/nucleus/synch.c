@@ -109,13 +109,14 @@ void xnsynch_init(struct xnsynch *synch, xnflags_t flags, xnarch_atomic_t *fastl
 	synch->status = flags & ~XNSYNCH_CLAIMED;
 	synch->owner = NULL;
 	synch->cleanup = NULL;	/* Only works for PIP-enabled objects. */
-#ifdef CONFIG_XENO_FASTSYNCH
-	if ((flags & XNSYNCH_OWNER) && fastlock) {
-		synch->fastlock = fastlock;
-		xnarch_atomic_set(fastlock, XN_NO_HANDLE);
+	if ((flags & XNSYNCH_OWNER)) {
+		if (fastlock) {
+			synch->fastlock = fastlock;
+			xnarch_atomic_set(fastlock, XN_NO_HANDLE);
+		} else
+			BUG();
 	} else
 		synch->fastlock = NULL;
-#endif /* CONFIG_XENO_FASTSYNCH */
 	initpq(&synch->pendq);
 	xnarch_init_display_context(synch);
 }
@@ -402,7 +403,7 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 {
 	struct xnthread *thread = xnpod_current_thread(), *owner;
 	xnhandle_t threadh = xnthread_handle(thread), fastlock, old, spares;
-	const int use_fastlock = xnsynch_fastlock_p(synch);
+	xnarch_atomic_t *lockp = xnsynch_fastlock(synch);
 	spl_t s;
 
 	XENO_BUGON(NUCLEUS, !testbits(synch->status, XNSYNCH_OWNER));
@@ -411,74 +412,57 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 
       redo:
 
-	if (use_fastlock) {
-		xnarch_atomic_t *lockp = xnsynch_fastlock(synch);
-
-		spares = xnhandle_get_spares(xnarch_atomic_get(lockp),
+	spares = xnhandle_get_spares(xnarch_atomic_get(lockp),
 					     XN_HANDLE_SPARE_MASK);
-		old = XN_NO_HANDLE | spares;
-		fastlock = xnarch_atomic_cmpxchg(lockp, old, threadh | spares);
+	old = XN_NO_HANDLE | spares;
+	fastlock = xnarch_atomic_cmpxchg(lockp, old, threadh | spares);
 
-		if (likely(fastlock == old)) {
-			if (xnthread_test_state(thread, XNOTHER))
-				xnthread_inc_rescnt(thread);
-			xnthread_clear_info(thread,
-					    XNRMID | XNTIMEO | XNBREAK);
-			return 0;
-		}
-
-		xnlock_get_irqsave(&nklock, s);
-
-		/* Set claimed bit.
-		   In case it appears to be set already, re-read its state
-		   under nklock so that we don't miss any change between the
-		   lock-less read and here. But also try to avoid cmpxchg
-		   where possible. Only if it appears not to be set, start
-		   with cmpxchg directly. */
-		if (xnsynch_fast_is_claimed(fastlock)) {
-			old = xnarch_atomic_get(lockp);
-			goto test_no_owner;
-		}
-		do {
-			old = xnarch_atomic_cmpxchg(lockp, fastlock,
-					xnsynch_fast_set_claimed(fastlock, 1));
-			if (likely(old == fastlock))
-				break;
-
-		  test_no_owner:
-			if (old == XN_NO_HANDLE) {
-				/* Owner called xnsynch_release
-				   (on another cpu) */
-				xnlock_put_irqrestore(&nklock, s);
-				goto redo;
-			}
-			fastlock = old;
-		} while (!xnsynch_fast_is_claimed(fastlock));
-
-		owner = xnthread_lookup(xnhandle_mask_spares(fastlock));
-
-		if (!owner) {
-			/* The handle is broken, therefore pretend that the synch
-			   object was deleted to signal an error. */
-			xnthread_set_info(thread, XNRMID);
-			goto unlock_and_exit;
-		}
-
-		xnsynch_set_owner(synch, owner);
-	} else {
-		xnlock_get_irqsave(&nklock, s);
-
-		owner = synch->owner;
-
-		if (!owner) {
-			synch->owner = thread;
-			if (xnthread_test_state(thread, XNOTHER))
-				xnthread_inc_rescnt(thread);
-			xnthread_clear_info(thread,
-					    XNRMID | XNTIMEO | XNBREAK);
-			goto unlock_and_exit;
-		}
+	if (likely(fastlock == old)) {
+		if (xnthread_test_state(thread, XNOTHER))
+			xnthread_inc_rescnt(thread);
+		xnthread_clear_info(thread,
+				    XNRMID | XNTIMEO | XNBREAK);
+		return 0;
 	}
+
+	xnlock_get_irqsave(&nklock, s);
+
+	/* Set claimed bit.
+	   In case it appears to be set already, re-read its state
+	   under nklock so that we don't miss any change between the
+	   lock-less read and here. But also try to avoid cmpxchg
+	   where possible. Only if it appears not to be set, start
+	   with cmpxchg directly. */
+	if (xnsynch_fast_is_claimed(fastlock)) {
+		old = xnarch_atomic_get(lockp);
+		goto test_no_owner;
+	}
+	do {
+		old = xnarch_atomic_cmpxchg(lockp, fastlock,
+				xnsynch_fast_set_claimed(fastlock, 1));
+		if (likely(old == fastlock))
+			break;
+
+	  test_no_owner:
+		if (old == XN_NO_HANDLE) {
+			/* Owner called xnsynch_release
+			   (on another cpu) */
+			xnlock_put_irqrestore(&nklock, s);
+			goto redo;
+		}
+		fastlock = old;
+	} while (!xnsynch_fast_is_claimed(fastlock));
+
+	owner = xnthread_lookup(xnhandle_mask_spares(fastlock));
+
+	if (!owner) {
+		/* The handle is broken, therefore pretend that the synch
+		   object was deleted to signal an error. */
+		xnthread_set_info(thread, XNRMID);
+		goto unlock_and_exit;
+	}
+
+	xnsynch_set_owner(synch, owner);
 
 	xnsynch_detect_relaxed_owner(synch, thread);
 
@@ -535,23 +519,18 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 		}
 		xnthread_set_info(thread, XNTIMEO);
 	} else {
-
 	      grab_and_exit:
-
 		if (xnthread_test_state(thread, XNOTHER))
 			xnthread_inc_rescnt(thread);
 
-		if (use_fastlock) {
-			xnarch_atomic_t *lockp = xnsynch_fastlock(synch);
-			/* We are the new owner, update the fastlock
-			   accordingly. */
-			threadh |= xnhandle_get_spares(xnarch_atomic_get(lockp),
-						       XN_HANDLE_SPARE_MASK);
-			threadh =
-				xnsynch_fast_set_claimed(threadh,
-							 xnsynch_pended_p(synch));
-			xnarch_atomic_set(lockp, threadh);
-		}
+		/* We are the new owner, update the fastlock
+		   accordingly. */
+		threadh |= xnhandle_get_spares(xnarch_atomic_get(lockp),
+					       XN_HANDLE_SPARE_MASK);
+		threadh =
+			xnsynch_fast_set_claimed(threadh,
+						 xnsynch_pended_p(synch));
+		xnarch_atomic_set(lockp, threadh);
 	}
 
       unlock_and_exit:
@@ -674,10 +653,10 @@ EXPORT_SYMBOL_GPL(xnsynch_requeue_sleeper);
 static struct xnthread *
 xnsynch_release_thread(struct xnsynch *synch, struct xnthread *lastowner)
 {
-	const int use_fastlock = xnsynch_fastlock_p(synch);
 	xnhandle_t lastownerh, newownerh;
 	struct xnthread *newowner;
 	struct xnpholder *holder;
+	xnarch_atomic_t *lockp;
 	spl_t s;
 
 	XENO_BUGON(NUCLEUS, !testbits(synch->status, XNSYNCH_OWNER));
@@ -693,8 +672,7 @@ xnsynch_release_thread(struct xnsynch *synch, struct xnthread *lastowner)
 #endif
 	lastownerh = xnthread_handle(lastowner);
 
-	if (use_fastlock &&
-	    likely(xnsynch_fast_release(xnsynch_fastlock(synch), lastownerh)))
+	if (likely(xnsynch_fast_release(xnsynch_fastlock(synch), lastownerh)))
 		return NULL;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -720,14 +698,12 @@ xnsynch_release_thread(struct xnsynch *synch, struct xnthread *lastowner)
 		synch->owner = NULL;
 		newownerh = XN_NO_HANDLE;
 	}
-	if (use_fastlock) {
-		xnarch_atomic_t *lockp = xnsynch_fastlock(synch);
-		newownerh |=
-			xnhandle_get_spares(xnarch_atomic_get(lockp),
-					    XN_HANDLE_SPARE_MASK
-					    & ~XNSYNCH_FLCLAIM);
-		xnarch_atomic_set(lockp, newownerh);
-	}
+
+	lockp = xnsynch_fastlock(synch);
+	newownerh |= xnhandle_get_spares(xnarch_atomic_get(lockp),
+					 XN_HANDLE_SPARE_MASK
+					 & ~XNSYNCH_FLCLAIM);
+	xnarch_atomic_set(lockp, newownerh);
 
 	xnlock_put_irqrestore(&nklock, s);
 

@@ -85,12 +85,10 @@ static pthread_mutex_t buffer_lock;
 static pthread_cond_t printer_wakeup;
 static pthread_key_t buffer_key;
 static pthread_t printer_thread;
-#ifdef CONFIG_XENO_FASTSYNCH
 static xnarch_atomic_t *pool_bitmap;
 static unsigned pool_bitmap_len;
 static unsigned pool_buf_size;
 static unsigned long pool_start, pool_len;
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 static void cleanup_buffer(struct print_buffer *buffer);
 static void print_buffers(void);
@@ -360,7 +358,6 @@ int rt_print_init(size_t buffer_size, const char *buffer_name)
 		buffer = NULL;
 	}
 
-#ifdef CONFIG_XENO_FASTSYNCH
 	/* Find a free buffer in the pool */
 	do {
 		unsigned long bitmap;
@@ -388,7 +385,6 @@ int rt_print_init(size_t buffer_size, const char *buffer_name)
 	buffer = (struct print_buffer *)(pool_start + j * pool_buf_size);
 
   not_found:
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 	if (!buffer) {
 		assert_nrt();
@@ -478,7 +474,6 @@ static void cleanup_buffer(struct print_buffer *buffer)
 
 	pthread_mutex_unlock(&buffer_lock);
 
-#ifdef CONFIG_XENO_FASTSYNCH
 	/* Return the buffer to the pool */
 	{
 		unsigned long old_bitmap, bitmap;
@@ -502,7 +497,6 @@ static void cleanup_buffer(struct print_buffer *buffer)
 		return;
 	}
   dofree:
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 	pthread_mutex_lock(&buffer_lock);
 
@@ -677,7 +671,6 @@ static __attribute__ ((constructor)) void __rt_print_init(void)
 	print_period.tv_sec  = period / 1000;
 	print_period.tv_nsec = (period % 1000) * 1000000;
 
-#ifdef CONFIG_XENO_FASTSYNCH
 	/* Fill the buffer pool */
 	{
 		unsigned buffers_count, i;
@@ -733,7 +726,6 @@ static __attribute__ ((constructor)) void __rt_print_init(void)
 		}
 	}
   done:
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 	pthread_mutex_init(&buffer_lock, NULL);
 	pthread_key_create(&buffer_key, (void (*)(void*))cleanup_buffer);

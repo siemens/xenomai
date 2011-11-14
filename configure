@@ -770,8 +770,6 @@ CONFIG_XENO_DOC_DOX_FALSE
 CONFIG_XENO_DOC_DOX_TRUE
 CONFIG_XENO_SHARED_FALSE
 CONFIG_XENO_SHARED_TRUE
-CONFIG_XENO_FASTSYNCH_FALSE
-CONFIG_XENO_FASTSYNCH_TRUE
 DBX_ABS_SRCDIR_FALSE
 DBX_ABS_SRCDIR_TRUE
 DBX_XSL_ROOT
@@ -5305,8 +5303,6 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for target architecture" >&5
 $as_echo_n "checking for target architecture... " >&6; }
 
-CONFIG_XENO_FASTSYNCH=
-
 if test x$host_alias = x; then
   build_for=$host
 else
@@ -5318,12 +5314,10 @@ case "$build_for" in
  i*86*-*)
 	use__thread=yes
 	XENO_TARGET_ARCH=x86
-	CONFIG_XENO_FASTSYNCH=y
 	CONFIG_XENO_DEFAULT_PERIOD=100000
 	;;
  ppc-*|powerpc-*|powerpc64-*|ppc64-*)
 	XENO_TARGET_ARCH=powerpc
-	CONFIG_XENO_FASTSYNCH=y
 	CONFIG_XENO_DEFAULT_PERIOD=100000
 	;;
  bfin-*|bfinnommu-*|blackfin-*)
@@ -5339,7 +5333,6 @@ case "$build_for" in
  x86_64-*|amd64-*)
 	use__thread=yes
 	XENO_TARGET_ARCH=x86
-	CONFIG_XENO_FASTSYNCH=y
 	CONFIG_XENO_DEFAULT_PERIOD=100000
 	;;
  nios2-*)
@@ -6043,13 +6036,13 @@ if test "${lt_cv_nm_interface+set}" = set; then :
 else
   lt_cv_nm_interface="BSD nm"
   echo "int some_variable = 0;" > conftest.$ac_ext
-  (eval echo "\"\$as_me:6046: $ac_compile\"" >&5)
+  (eval echo "\"\$as_me:6039: $ac_compile\"" >&5)
   (eval "$ac_compile" 2>conftest.err)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:6049: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
+  (eval echo "\"\$as_me:6042: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
   (eval "$NM \"conftest.$ac_objext\"" 2>conftest.err > conftest.out)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:6052: output\"" >&5)
+  (eval echo "\"\$as_me:6045: output\"" >&5)
   cat conftest.out >&5
   if $GREP 'External.*some_variable' conftest.out > /dev/null; then
     lt_cv_nm_interface="MS dumpbin"
@@ -7254,7 +7247,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 7257 "configure"' > conftest.$ac_ext
+  echo '#line 7250 "configure"' > conftest.$ac_ext
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -8616,11 +8609,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8619: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8612: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8623: \$? = $ac_status" >&5
+   echo "$as_me:8616: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8955,11 +8948,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8958: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8951: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8962: \$? = $ac_status" >&5
+   echo "$as_me:8955: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -9060,11 +9053,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:9063: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:9056: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:9067: \$? = $ac_status" >&5
+   echo "$as_me:9060: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -9115,11 +9108,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:9118: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:9111: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:9122: \$? = $ac_status" >&5
+   echo "$as_me:9115: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -11499,7 +11492,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11502 "configure"
+#line 11495 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11595,7 +11588,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11598 "configure"
+#line 11591 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11986,7 +11979,7 @@ fi
 $as_echo "${use_registry:-no}" >&6; }
 
 if test x$use_registry = xy; then
-        fuse_cflags="-D_FILE_OFFSET_BITS=64 -DFUSE_USE_VERSION=26"
+	fuse_cflags="-D_FILE_OFFSET_BITS=64 -DFUSE_USE_VERSION=26"
 	fuse_ldflags="-lfuse"
 
 	ac_ext=c
@@ -12680,17 +12673,6 @@ $as_echo "#define CONFIG_XENO_X86_SEP 1" >>confdefs.h
 test x$CONFIG_SMP = xy &&
 $as_echo "#define CONFIG_SMP 1" >>confdefs.h
 
-test x$CONFIG_XENO_FASTSYNCH = xy &&
-$as_echo "#define CONFIG_XENO_FASTSYNCH 1" >>confdefs.h
-
- if test "$CONFIG_XENO_FASTSYNCH" = y; then
-  CONFIG_XENO_FASTSYNCH_TRUE=
-  CONFIG_XENO_FASTSYNCH_FALSE='#'
-else
-  CONFIG_XENO_FASTSYNCH_TRUE='#'
-  CONFIG_XENO_FASTSYNCH_FALSE=
-fi
-
 
 test x$ac_cv_func_fork = xyes &&
 $as_echo "#define CONFIG_MMU 1" >>confdefs.h
@@ -13264,10 +13246,6 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${DBX_ABS_SRCDIR_TRUE}" && test -z "${DBX_ABS_SRCDIR_FALSE}"; then
   as_fn_error $? "conditional \"DBX_ABS_SRCDIR\" was never defined.
-Usually this means the macro was only invoked conditionally." "$LINENO" 5
-fi
-if test -z "${CONFIG_XENO_FASTSYNCH_TRUE}" && test -z "${CONFIG_XENO_FASTSYNCH_FALSE}"; then
-  as_fn_error $? "conditional \"CONFIG_XENO_FASTSYNCH\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${CONFIG_XENO_SHARED_TRUE}" && test -z "${CONFIG_XENO_SHARED_FALSE}"; then

@@ -31,7 +31,6 @@ union __xeno_mutex {
 		unsigned lockcnt;
 		struct cobalt_mutex *mutex;
 		xnarch_atomic_t lock;
-#ifdef CONFIG_XENO_FASTSYNCH
 		union {
 			unsigned owner_offset;
 			xnarch_atomic_t *owner;
@@ -39,7 +38,6 @@ union __xeno_mutex {
 		struct cobalt_mutexattr attr;
 
 #define COBALT_MUTEX_COND_SIGNAL XN_HANDLE_SPARE2
-#endif /* CONFIG_XENO_FASTSYNCH */
 	} shadow_mutex;
 };
 
@@ -156,7 +154,6 @@ static inline int cobalt_mutex_release(xnthread_t *cur,
 		*count_ptr = shadow->lockcnt;
 
 	need_resched = 0;
-#ifdef CONFIG_XENO_FASTSYNCH
 	for (holder = getheadq(&mutex->conds);
 	     holder; holder = nextq(&mutex->conds, holder)) {
 		struct cobalt_cond *cond = mutex_link2cond(holder);
@@ -171,7 +168,6 @@ static inline int cobalt_mutex_release(xnthread_t *cur,
 	xnsynch_fast_clear_spares(mutex->synchbase.fastlock,
 				  xnthread_handle(cur),
 				  COBALT_MUTEX_COND_SIGNAL);
-#endif /* CONFIG_XENO_FASTSYNCH */
 	need_resched |= xnsynch_release(&mutex->synchbase) != NULL;
 
 	return need_resched;

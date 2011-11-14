@@ -83,8 +83,6 @@ AM_PROG_LEX
 
 AC_MSG_CHECKING([for target architecture])
 
-CONFIG_XENO_FASTSYNCH=
-
 if test x$host_alias = x; then
   build_for=$host
 else
@@ -96,12 +94,10 @@ case "$build_for" in
  i*86*-*)
 	use__thread=yes
 	XENO_TARGET_ARCH=x86
-	CONFIG_XENO_FASTSYNCH=y
 	CONFIG_XENO_DEFAULT_PERIOD=100000
 	;;
  ppc-*|powerpc-*|powerpc64-*|ppc64-*)
 	XENO_TARGET_ARCH=powerpc
-	CONFIG_XENO_FASTSYNCH=y
 	CONFIG_XENO_DEFAULT_PERIOD=100000
 	;;
  bfin-*|bfinnommu-*|blackfin-*)
@@ -117,7 +113,6 @@ case "$build_for" in
  x86_64-*|amd64-*)
 	use__thread=yes
 	XENO_TARGET_ARCH=x86
-	CONFIG_XENO_FASTSYNCH=y
 	CONFIG_XENO_DEFAULT_PERIOD=100000
 	;;
  nios2-*)
@@ -265,7 +260,7 @@ AC_ARG_ENABLE(registry,
 AC_MSG_RESULT(${use_registry:-no})
 
 if test x$use_registry = xy; then
-        fuse_cflags="-D_FILE_OFFSET_BITS=64 -DFUSE_USE_VERSION=26"
+	fuse_cflags="-D_FILE_OFFSET_BITS=64 -DFUSE_USE_VERSION=26"
 	fuse_ldflags="-lfuse"
 	AC_LANG_SAVE
 	AC_LANG_C
@@ -485,8 +480,6 @@ dnl
 
 test x$CONFIG_XENO_X86_SEP = xy && AC_DEFINE(CONFIG_XENO_X86_SEP,1,[config])
 test x$CONFIG_SMP = xy && AC_DEFINE(CONFIG_SMP,1,[config])
-test x$CONFIG_XENO_FASTSYNCH = xy && AC_DEFINE(CONFIG_XENO_FASTSYNCH,1,[config])
-AM_CONDITIONAL(CONFIG_XENO_FASTSYNCH,[test "$CONFIG_XENO_FASTSYNCH" = y])
 
 dnl
 dnl Userland may want to know about MMU availability on the target.
