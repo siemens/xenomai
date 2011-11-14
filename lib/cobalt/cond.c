@@ -22,7 +22,6 @@
 #include <cobalt/syscall.h>
 #include <kernel/cobalt/mutex.h>
 #include <kernel/cobalt/cond.h>
-#include <kernel/cobalt/cb_lock.h>
 #include <asm-generic/bits/current.h>
 
 extern int __cobalt_muxid;
@@ -143,9 +142,6 @@ int __wrap_pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
 	};
 	int err, oldtype;
 
-	if (cb_try_read_lock(&c.mutex->shadow_mutex.lock, s))
-		return EINVAL;
-
 	pthread_cleanup_push(&__pthread_cond_cleanup, &c);
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
@@ -166,8 +162,6 @@ int __wrap_pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
 					 &c.mutex->shadow_mutex,
 					 c.count);
 
-	cb_read_unlock(&c.mutex->shadow_mutex.lock, s);
-
 	pthread_testcancel();
 
 	return err ?: c.err;
@@ -182,9 +176,6 @@ int __wrap_pthread_cond_timedwait(pthread_cond_t * cond,
 		.mutex = (union __xeno_mutex *)mutex,
 	};
 	int err, oldtype;
-
-	if (cb_try_read_lock(&c.mutex->shadow_mutex.lock, s))
-		return EINVAL;
 
 	pthread_cleanup_push(&__pthread_cond_cleanup, &c);
 
@@ -204,8 +195,6 @@ int __wrap_pthread_cond_timedwait(pthread_cond_t * cond,
 					 &c.cond->shadow_cond,
 					 &c.mutex->shadow_mutex,
 					 c.count);
-
-	cb_read_unlock(&c.mutex->shadow_mutex.lock, s);
 
 	pthread_testcancel();
 

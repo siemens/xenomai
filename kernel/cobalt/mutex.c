@@ -103,7 +103,6 @@ int cobalt_mutex_init_internal(struct __shadow_mutex *shadow,
 	shadow->magic = COBALT_MUTEX_MAGIC;
 	shadow->mutex = mutex;
 	shadow->lockcnt = 0;
-	xnarch_atomic_set(&shadow->lock, -1);
 
 	shadow->attr = *attr;
 	shadow->owner_offset = xnheap_mapped_offset(&sys_ppd->sem_heap, ownerp);
@@ -155,7 +154,6 @@ int pthread_mutex_init(pthread_mutex_t *mx, const pthread_mutexattr_t *attr)
 {
 	struct __shadow_mutex *shadow =
 	    &((union __xeno_mutex *)mx)->shadow_mutex;
-	DECLARE_CB_LOCK_FLAGS(s);
 	cobalt_mutex_t *mutex;
 	xnarch_atomic_t *ownerp = NULL;
 	int err;
@@ -163,16 +161,10 @@ int pthread_mutex_init(pthread_mutex_t *mx, const pthread_mutexattr_t *attr)
 	if (!attr)
 		attr = &cobalt_default_mutex_attr;
 
-	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
-		goto checked;
-
 	err = cobalt_mutex_check_init(shadow, attr);
-	if (err) {
-		cb_read_unlock(&shadow->lock, s);
+	if (err)
 		return -err;
-	}
 
-  checked:
 	mutex = (cobalt_mutex_t *) xnmalloc(sizeof(*mutex));
 	if (!mutex)
 		return ENOMEM;
@@ -185,10 +177,7 @@ int pthread_mutex_init(pthread_mutex_t *mx, const pthread_mutexattr_t *attr)
 		return EAGAIN;
 	}
 
-	cb_force_write_lock(&shadow->lock, s);
 	err = cobalt_mutex_init_internal(shadow, mutex, ownerp, attr);
-	cb_write_unlock(&shadow->lock, s);
-
 	if (err) {
 		xnfree(mutex);
 		xnheap_free(&xnsys_ppd_get(attr->pshared)->sem_heap, ownerp);
@@ -238,33 +227,22 @@ int pthread_mutex_destroy(pthread_mutex_t * mx)
 {
 	struct __shadow_mutex *shadow =
 	    &((union __xeno_mutex *)mx)->shadow_mutex;
-	DECLARE_CB_LOCK_FLAGS(s);
 	cobalt_mutex_t *mutex;
-
-	if (unlikely(cb_try_write_lock(&shadow->lock, s)))
-		return EBUSY;
 
 	mutex = shadow->mutex;
 	if (!cobalt_obj_active(shadow, COBALT_MUTEX_MAGIC, struct __shadow_mutex)
-	    || !cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, struct cobalt_mutex)) {
-		cb_write_unlock(&shadow->lock, s);
+	    || !cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, struct cobalt_mutex))
 		return EINVAL;
-	}
 
-	if (cobalt_kqueues(mutex->attr.pshared) != mutex->owningq) {
-		cb_write_unlock(&shadow->lock, s);
+	if (cobalt_kqueues(mutex->attr.pshared) != mutex->owningq)
 		return EPERM;
-	}
 
 	if (xnsynch_fast_owner_check(mutex->synchbase.fastlock,
-				     XN_NO_HANDLE) != 0) {
-		cb_write_unlock(&shadow->lock, s);
+				     XN_NO_HANDLE) != 0)
 		return EBUSY;
-	}
 
 	cobalt_mark_deleted(shadow);
 	cobalt_mark_deleted(mutex);
-	cb_write_unlock(&shadow->lock, s);
 
 	cobalt_mutex_destroy_internal(mutex, cobalt_kqueues(mutex->attr.pshared));
 
@@ -285,7 +263,7 @@ int cobalt_mutex_timedlock_break(struct __shadow_mutex *shadow,
 
 	err = cobalt_mutex_timedlock_internal(cur, shadow, 1, timed, abs_to);
 	if (err != -EBUSY)
-		goto unlock_and_return;
+		goto out;
 
 	mutex = shadow->mutex;
 
@@ -338,7 +316,7 @@ int cobalt_mutex_timedlock_break(struct __shadow_mutex *shadow,
 		err = 0;
 	}
 
-  unlock_and_return:
+  out:
 	return err;
 
 }
@@ -377,27 +355,23 @@ int pthread_mutex_trylock(pthread_mutex_t *mx)
 	    &((union __xeno_mutex *)mx)->shadow_mutex;
 	xnthread_t *cur = xnpod_current_thread();
 	cobalt_mutex_t *mutex = shadow->mutex;
-	DECLARE_CB_LOCK_FLAGS(s);
 	int err;
 
 	if (xnpod_unblockable_p())
 		return EPERM;
-
-	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
-		return EINVAL;
 
 	if (!cobalt_obj_active(shadow, COBALT_MUTEX_MAGIC,
 			      struct __shadow_mutex)
 	    || !cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC,
 				 struct cobalt_mutex)) {
 		err = EINVAL;
-		goto unlock_and_return;
+		goto out;
 	}
 
 #if XENO_DEBUG(POSIX)
 	if (mutex->owningq != cobalt_kqueues(mutex->attr.pshared)) {
 		err = EPERM;
-		goto unlock_and_return;
+		goto out;
 	}
 #endif /* XENO_DEBUG(POSIX) */
 
@@ -418,9 +392,7 @@ int pthread_mutex_trylock(pthread_mutex_t *mx)
 		}
 	}
 
-  unlock_and_return:
-	cb_read_unlock(&shadow->lock, s);
-
+  out:
 	return err;
 }
 
@@ -464,17 +436,11 @@ int pthread_mutex_lock(pthread_mutex_t * mx)
 {
 	struct __shadow_mutex *shadow =
 	    &((union __xeno_mutex *)mx)->shadow_mutex;
-	DECLARE_CB_LOCK_FLAGS(s);
 	int err;
-
-	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
-		return EINVAL;
 
 	do {
 		err = cobalt_mutex_timedlock_break(shadow, 0, XN_INFINITE);
 	} while (err == -EINTR);
-
-	cb_read_unlock(&shadow->lock, s);
 
 	return -err;
 }
@@ -517,18 +483,12 @@ int pthread_mutex_timedlock(pthread_mutex_t * mx, const struct timespec *to)
 {
 	struct __shadow_mutex *shadow =
 	    &((union __xeno_mutex *)mx)->shadow_mutex;
-	DECLARE_CB_LOCK_FLAGS(s);
 	int err;
-
-	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
-		return EINVAL;
 
 	do {
 		err = cobalt_mutex_timedlock_break(shadow, 1,
 						   ts2ns(to) + 1);
 	} while (err == -EINTR);
-
-	cb_read_unlock(&shadow->lock, s);
 
 	return -err;
 }
@@ -569,15 +529,11 @@ int pthread_mutex_unlock(pthread_mutex_t * mx)
 	struct __shadow_mutex *shadow =
 	    &((union __xeno_mutex *)mx)->shadow_mutex;
 	xnthread_t *cur = xnpod_current_thread();
-	DECLARE_CB_LOCK_FLAGS(s);
 	cobalt_mutex_t *mutex;
 	int err;
 
 	if (xnpod_root_p() || xnpod_interrupt_p())
 		return EPERM;
-
-	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
-		return EINVAL;
 
 	mutex = shadow->mutex;
 
@@ -595,7 +551,6 @@ int pthread_mutex_unlock(pthread_mutex_t * mx)
 	if (shadow->lockcnt > 1) {
 		/* Mutex is recursive */
 		--shadow->lockcnt;
-		cb_read_unlock(&shadow->lock, s);
 		return 0;
 	}
 
@@ -603,8 +558,6 @@ int pthread_mutex_unlock(pthread_mutex_t * mx)
 		xnpod_schedule();
 
   out:
-	cb_read_unlock(&shadow->lock, s);
-
 	return err;
 }
 

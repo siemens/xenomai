@@ -30,7 +30,6 @@ union __xeno_mutex {
 		unsigned magic;
 		unsigned lockcnt;
 		struct cobalt_mutex *mutex;
-		xnarch_atomic_t lock;
 		union {
 			unsigned owner_offset;
 			xnarch_atomic_t *owner;
@@ -46,7 +45,6 @@ union __xeno_mutex {
 #include "internal.h"
 #include "thread.h"
 #include "cond.h"
-#include "cb_lock.h"
 
 typedef struct cobalt_mutex {
 	unsigned magic;

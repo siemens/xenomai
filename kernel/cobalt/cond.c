@@ -418,9 +418,6 @@ int pthread_cond_wait(pthread_cond_t * cnd, pthread_mutex_t * mx)
 	unsigned count;
 	int err;
 
-	if (unlikely(cb_try_read_lock(&mutex->lock, s)))
-		return EINVAL;
-
 	err = cobalt_cond_timedwait_prologue(cur, cond, mutex,
 					    &count, 0, XN_INFINITE);
 
@@ -428,8 +425,6 @@ int pthread_cond_wait(pthread_cond_t * cnd, pthread_mutex_t * mx)
 		while (-EINTR == cobalt_cond_timedwait_epilogue(cur, cond,
 							       mutex, count))
 			;
-
-	cb_read_unlock(&mutex->lock, s);
 
 	return err != EINTR ? err : 0;
 }
@@ -484,9 +479,6 @@ int pthread_cond_timedwait(pthread_cond_t * cnd,
 	unsigned count;
 	int err;
 
-	if (unlikely(cb_try_read_lock(&mutex->lock, s)))
-		return EINVAL;
-
 	err = cobalt_cond_timedwait_prologue(cur, cond, mutex, &count, 1,
 					    ts2ns(abstime) + 1);
 
@@ -494,8 +486,6 @@ int pthread_cond_timedwait(pthread_cond_t * cnd,
 		while (-EINTR == cobalt_cond_timedwait_epilogue(cur, cond,
 							       mutex, count))
 			;
-
-	cb_read_unlock(&mutex->lock, s);
 
 	return err != EINTR ? err : 0;
 }

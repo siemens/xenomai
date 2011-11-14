@@ -22,7 +22,6 @@
 #include <nucleus/synch.h>
 #include <cobalt/syscall.h>
 #include <kernel/cobalt/mutex.h>
-#include <kernel/cobalt/cb_lock.h>
 #include <asm-generic/bits/current.h>
 
 extern int __cobalt_muxid;
@@ -97,26 +96,16 @@ int __wrap_pthread_mutex_init(pthread_mutex_t *mutex,
 	struct __shadow_mutex *shadow = &_mutex->shadow_mutex;
 	int err;
 
-	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
-		goto checked;
-
 	err = -XENOMAI_SKINCALL2(__cobalt_muxid,__cobalt_check_init,shadow,attr);
 
-	if (err) {
-		cb_read_unlock(&shadow->lock, s);
+	if (err)
 		return err;
-	}
-
-  checked:
-	cb_force_write_lock(&shadow->lock, s);
 
 	err = -XENOMAI_SKINCALL2(__cobalt_muxid,__cobalt_mutex_init,shadow,attr);
 
 	if (!shadow->attr.pshared)
 		shadow->owner = (xnarch_atomic_t *)
 			(xeno_sem_heap[0] + shadow->owner_offset);
-
-	cb_write_unlock(&shadow->lock, s);
 
 	return err;
 }
@@ -127,12 +116,7 @@ int __wrap_pthread_mutex_destroy(pthread_mutex_t *mutex)
 	struct __shadow_mutex *shadow = &_mutex->shadow_mutex;
 	int err;
 
-	if (unlikely(cb_try_write_lock(&shadow->lock, s)))
-		return EINVAL;
-
 	err = -XENOMAI_SKINCALL1(__cobalt_muxid, __cobalt_mutex_destroy, shadow);
-
-	cb_write_unlock(&shadow->lock, s);
 
 	return err;
 }
@@ -152,9 +136,6 @@ int __wrap_pthread_mutex_lock(pthread_mutex_t *mutex)
 
 	status = xeno_get_current_mode();
 
-	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
-		return EINVAL;
-
 	if (shadow->magic != COBALT_MUTEX_MAGIC) {
 		err = -EINVAL;
 		goto out;
@@ -170,7 +151,6 @@ int __wrap_pthread_mutex_lock(pthread_mutex_t *mutex)
 
 		if (likely(!err)) {
 			shadow->lockcnt = 1;
-			cb_read_unlock(&shadow->lock, s);
 			return 0;
 		}
 
@@ -199,8 +179,6 @@ int __wrap_pthread_mutex_lock(pthread_mutex_t *mutex)
 	} while (err == -EINTR);
 
   out:
-	cb_read_unlock(&shadow->lock, s);
-
 	return -err;
 }
 
@@ -219,9 +197,6 @@ int __wrap_pthread_mutex_timedlock(pthread_mutex_t *mutex,
 
 	status = xeno_get_current_mode();
 
-	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
-		return EINVAL;
-
 	if (shadow->magic != COBALT_MUTEX_MAGIC) {
 		err = -EINVAL;
 		goto out;
@@ -233,7 +208,6 @@ int __wrap_pthread_mutex_timedlock(pthread_mutex_t *mutex,
 
 		if (likely(!err)) {
 			shadow->lockcnt = 1;
-			cb_read_unlock(&shadow->lock, s);
 			return 0;
 		}
 
@@ -263,8 +237,6 @@ int __wrap_pthread_mutex_timedlock(pthread_mutex_t *mutex,
 	} while (err == -EINTR);
 
   out:
-	cb_read_unlock(&shadow->lock, s);
-
 	return -err;
 }
 
@@ -281,13 +253,8 @@ int __wrap_pthread_mutex_trylock(pthread_mutex_t *mutex)
 	if (cur == XN_NO_HANDLE)
 		return EPERM;
 
-	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
+	if (unlikely(shadow->magic != COBALT_MUTEX_MAGIC))
 		return EINVAL;
-
-	if (unlikely(shadow->magic != COBALT_MUTEX_MAGIC)) {
-		err = EINVAL;
-		goto out;
-	}
 
 	ownerp = get_ownerp(shadow);
 	err = xnsynch_fast_owner_check(ownerp, cur);
@@ -301,7 +268,7 @@ int __wrap_pthread_mutex_trylock(pthread_mutex_t *mutex)
 			}
 		} else
 			err = EBUSY;
-		goto out;
+		return err;
 	}
 
 	if (unlikely(xeno_get_current_mode() & (XNOTHER | XNRELAX)))
@@ -311,12 +278,10 @@ int __wrap_pthread_mutex_trylock(pthread_mutex_t *mutex)
 
 	if (likely(!err)) {
 		shadow->lockcnt = 1;
-		cb_read_unlock(&shadow->lock, s);
 		return 0;
 	}
 
-	err = EBUSY;
-	goto out;
+	return EBUSY;
 
 do_syscall:
 
@@ -326,10 +291,7 @@ do_syscall:
 					 __cobalt_mutex_timedlock, shadow, &ts);
 	} while (err == EINTR);
 	if (err == ETIMEDOUT || err == EDEADLK)
-		err = EBUSY;
-
-out:
-	cb_read_unlock(&shadow->lock, s);
+		return EBUSY;
 
 	return err;
 }
@@ -345,9 +307,6 @@ int __wrap_pthread_mutex_unlock(pthread_mutex_t *mutex)
 	cur = xeno_get_current();
 	if (cur == XN_NO_HANDLE)
 		return EPERM;
-
-	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
-		return EINVAL;
 
 	if (unlikely(shadow->magic != COBALT_MUTEX_MAGIC)) {
 		err = -EINVAL;
@@ -371,11 +330,9 @@ int __wrap_pthread_mutex_unlock(pthread_mutex_t *mutex)
 	if (unlikely(xnsynch_fast_check_spares(ownerp, COBALT_MUTEX_COND_SIGNAL)))
 		goto do_syscall;
 
-	if (likely(xnsynch_fast_release(ownerp, cur))) {
+	if (likely(xnsynch_fast_release(ownerp, cur)))
 	  out:
-		cb_read_unlock(&shadow->lock, s);
 		return 0;
-	}
 
 do_syscall:
 
@@ -385,7 +342,5 @@ do_syscall:
 	} while (err == -EINTR);
 
   out_err:
-	cb_read_unlock(&shadow->lock, s);
-
 	return -err;
 }

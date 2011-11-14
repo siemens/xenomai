@@ -1163,7 +1163,7 @@ static int __pthread_mutex_trylock(union __xeno_mutex __user *u_mx)
 
 	if (__xn_safe_copy_from_user(&mx.shadow_mutex,
 				     &u_mx->shadow_mutex,
-				     offsetof(struct __shadow_mutex, lock)))
+				     offsetof(struct __shadow_mutex, owner)))
 		return -EFAULT;
 
 	shadow = &mx.shadow_mutex;
@@ -1220,7 +1220,7 @@ static int __pthread_mutex_lock(union __xeno_mutex __user *u_mx)
 
 	if (__xn_safe_copy_from_user(&mx.shadow_mutex,
 				     &u_mx->shadow_mutex,
-				     offsetof(struct __shadow_mutex, lock)))
+				     offsetof(struct __shadow_mutex, owner)))
 		return -EFAULT;
 
 	shadow = &mx.shadow_mutex;
@@ -1275,7 +1275,7 @@ static int __pthread_mutex_unlock(union __xeno_mutex __user *u_mx)
 
 	if (__xn_safe_copy_from_user(&mx.shadow_mutex,
 				     &u_mx->shadow_mutex,
-				     offsetof(struct __shadow_mutex, lock)))
+				     offsetof(struct __shadow_mutex, owner)))
 		return -EFAULT;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -1547,7 +1547,7 @@ static int __pthread_cond_wait_epilogue(union __xeno_cond __user *u_cnd,
 
 	if (__xn_safe_copy_from_user(&mx.shadow_mutex,
 				     &u_mx->shadow_mutex,
-				     offsetof(struct __shadow_mutex, lock)
+				     offsetof(struct __shadow_mutex, owner)
 				     ))
 		return -EFAULT;
 
