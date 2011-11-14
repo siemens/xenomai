@@ -3,6 +3,7 @@ noinst_HEADERS = sem_heap.h
 
 includesub_HEADERS = \
 	arith.h \
+	atomic.h \
 	features.h \
 	hal.h \
 	pci_ids.h \
