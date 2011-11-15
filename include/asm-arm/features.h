@@ -39,8 +39,8 @@
 #define CONFIG_XENO_ARM_EABI 1
 #endif
 
-#ifdef CONFIG_IPIPE_ARM_KUSER_TSC
-#define CONFIG_XENO_ARM_KUSER_TSC 1
+#ifndef CONFIG_IPIPE_ARM_KUSER_TSC
+#error "I-pipe patch with kuser tsc required"
 #endif
 
 #else /* !__KERNEL__ */
@@ -50,6 +50,14 @@
 #ifdef __ARM_EABI__
 #define CONFIG_XENO_ARM_EABI 1
 #endif
+
+#if defined(__ARM_ARCH_2__)
+#define __LINUX_ARM_ARCH__ 2
+#endif /* armv2 */
+
+#if defined(__ARM_ARCH_3__)
+#define __LINUX_ARM_ARCH__ 3
+#endif /* armv3 */
 
 #if defined(__ARM_ARCH_4__) || defined(__ARM_ARCH_4T__)
 #define __LINUX_ARM_ARCH__ 4
@@ -76,51 +84,16 @@
 #error "SMP not supported below armv6, compile with -march=armv6 or above"
 #endif
 
-#if CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_KUSER
-#define CONFIG_XENO_ARM_KUSER_TSC 1
-#endif
-
 #endif /* !__KERNEL__ */
 
 #include <asm-generic/xenomai/features.h>
 
-#define __xn_feat_arm_atomic_xchg	0x00000001
-#define __xn_feat_arm_atomic_atomic	0x00000002
-#define __xn_feat_arm_eabi              0x00000004
-#define __xn_feat_arm_tsc               0x00000008
-
 /* The ABI revision level we use on this arch. */
 #define XENOMAI_ABI_REV   4UL
 
-#if __LINUX_ARM_ARCH__ >= 6
-/* ARMv6 has both atomic xchg and atomic_inc/dec etc. */
-#define __xn_feat_arm_atomic_xchg_mask		__xn_feat_arm_atomic_xchg
-#define __xn_feat_arm_atomic_atomic_mask	__xn_feat_arm_atomic_atomic
-#else
-/* ARM < v6 has only atomic xchg, except on SA1000 where it is buggy */
-#ifdef CONFIG_XENO_ARM_SA1100
-#define __xn_feat_arm_atomic_xchg_mask		0
-#else
-#define __xn_feat_arm_atomic_xchg_mask		__xn_feat_arm_atomic_xchg
-#endif
-#define __xn_feat_arm_atomic_atomic_mask	0
-#endif
-#define __xn_feat_arm_eabi_mask			__xn_feat_arm_eabi
+#define XENOMAI_FEAT_DEP (__xn_feat_generic_mask)
 
-#ifdef CONFIG_XENO_ARM_KUSER_TSC
-#define __xn_feat_arm_tsc_mask                  __xn_feat_arm_tsc
-#else /* !CONFIG_XENO_ARM_KUSER_TSC */
-#define __xn_feat_arm_tsc_mask                  0
-#endif /* !CONFIG_XENO_ARM_KUSER_TSC */
-
-#define XENOMAI_FEAT_DEP  ( __xn_feat_generic_mask              | \
-			    __xn_feat_arm_atomic_xchg_mask      | \
-			    __xn_feat_arm_atomic_atomic_mask    | \
-			    __xn_feat_arm_eabi_mask             | \
-			    __xn_feat_arm_tsc_mask)
-
-#define XENOMAI_FEAT_MAN \
-	(__xn_feat_generic_man_mask | __xn_feat_arm_tsc)
+#define XENOMAI_FEAT_MAN (__xn_feat_generic_man_mask)
 
 static inline int check_abi_revision(unsigned long abirev)
 {
@@ -130,14 +103,6 @@ static inline int check_abi_revision(unsigned long abirev)
 static inline const char *get_feature_label (unsigned feature)
 {
     switch (feature) {
-    case __xn_feat_arm_atomic_xchg:
-	    return "sa1100";
-    case __xn_feat_arm_atomic_atomic:
-	    return "v6";
-    case __xn_feat_arm_eabi:
-	    return "eabi";
-    case __xn_feat_arm_tsc:
-	    return "kuser_tsc";
     default:
 	    return get_generic_feature_label(feature);
     }

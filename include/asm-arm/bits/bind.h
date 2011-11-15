@@ -19,7 +19,6 @@ __attribute__((weak)) struct __xn_tscinfo __xn_tscinfo = {
 
 static inline void xeno_arm_features_check(struct xnfeatinfo *finfo)
 {
-#ifdef CONFIG_XENO_ARM_TSC_TYPE
 	unsigned long phys_addr;
 	unsigned page_size;
 	int err, fd;
@@ -42,33 +41,12 @@ static inline void xeno_arm_features_check(struct xnfeatinfo *finfo)
 	page_size = sysconf(_SC_PAGESIZE);
 
 	switch(__xn_tscinfo.type) {
-#if CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_KUSER
 	case __XN_TSC_TYPE_FREERUNNING:
 	case __XN_TSC_TYPE_FREERUNNING_COUNTDOWN:
 	case __XN_TSC_TYPE_FREERUNNING_FAST_WRAP:
 	case __XN_TSC_TYPE_DECREMENTER:
 		goto domap;
 
-#elif CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING		\
-	|| CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_COUNTDOWN \
-	|| CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_FAST_WRAP
-	case __XN_TSC_TYPE_FREERUNNING:
-	case __XN_TSC_TYPE_FREERUNNING_COUNTDOWN:
-#if CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_FAST_WRAP
-		if (__xn_tscinfo.mask >= ((1 << 28) - 1)) {
-			fprintf(stderr, "Hardware tsc is not a fast wrapping"
-				" one, select the correct platform, or fix\n"
-				"configure.in\n");
-			exit(EXIT_FAILURE);
-		}
-#endif /* __XN_TSC_TYPE_FREERUNNING_FAST_WRAP */
-		goto domap;
-
-#elif CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_DECREMENTER
-	case __XN_TSC_TYPE_DECREMENTER:
-		goto domap;
-
-#endif /* CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_DECREMENTER */
 	case __XN_TSC_TYPE_NONE:
 	  error:
 		fprintf(stderr, "Xenomai: Your board/configuration does not"
@@ -100,7 +78,6 @@ static inline void xeno_arm_features_check(struct xnfeatinfo *finfo)
 		perror("Xenomai init: close(/dev/mem)");
 		exit(EXIT_FAILURE);
 	}
-#endif /* CONFIG_XENO_ARM_TSC_TYPE */
 }
 #define xeno_arch_features_check(finfo) xeno_arm_features_check(finfo)
 
