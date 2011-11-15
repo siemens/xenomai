@@ -230,11 +230,11 @@ static int pthread_cond_destroy(pthread_cond_t * cnd)
 	return 0;
 }
 
-static int cobalt_cond_timedwait_prologue(xnthread_t *cur,
-					  cobalt_cond_t *cond,
-					  cobalt_mutex_t *mutex,
-					  int timed,
-					  xnticks_t abs_to)
+static inline int cobalt_cond_timedwait_prologue(xnthread_t *cur,
+						 cobalt_cond_t *cond,
+						 cobalt_mutex_t *mutex,
+						 int timed,
+						 xnticks_t abs_to)
 {
 	spl_t s;
 	int err;
@@ -320,9 +320,9 @@ static int cobalt_cond_timedwait_prologue(xnthread_t *cur,
 	return err;
 }
 
-static int cobalt_cond_timedwait_epilogue(xnthread_t *cur,
-					  cobalt_cond_t *cond,
-					  cobalt_mutex_t *mutex)
+static inline int cobalt_cond_timedwait_epilogue(xnthread_t *cur,
+						 cobalt_cond_t *cond,
+						 cobalt_mutex_t *mutex)
 {
 	int err;
 	spl_t s;
@@ -347,35 +347,6 @@ static int cobalt_cond_timedwait_epilogue(xnthread_t *cur,
 	xnlock_put_irqrestore(&nklock, s);
 
 	return err;
-}
-
-int cobalt_cond_deferred_signals(struct cobalt_cond *cond)
-{
-	unsigned long pending_signals;
-	int need_resched, i;
-
-	pending_signals = *(cond->pending_signals);
-
-	switch(pending_signals) {
-	case ~0UL:
-		need_resched =
-			xnsynch_flush(&cond->synchbase, 0) == XNSYNCH_RESCHED;
-		break;
-
-	case 0:
-		need_resched = 0;
-		break;
-
-	default:
-		for(i = 0, need_resched = 0; i < pending_signals; i++)
-			need_resched |=
-				xnsynch_wakeup_one_sleeper(&cond->synchbase)
-				!= NULL;
-	}
-
-	*cond->pending_signals = 0;
-
-	return need_resched;
 }
 
 int cobalt_cond_init(union __xeno_cond __user *u_cnd,

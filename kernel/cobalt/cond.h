@@ -67,7 +67,34 @@ typedef struct cobalt_cond {
 	cobalt_kqueues_t *owningq;
 } cobalt_cond_t;
 
-int cobalt_cond_deferred_signals(struct cobalt_cond *cond);
+static inline int cobalt_cond_deferred_signals(struct cobalt_cond *cond)
+{
+	unsigned long pending_signals;
+	int need_resched, i;
+
+	pending_signals = *(cond->pending_signals);
+
+	switch(pending_signals) {
+	case ~0UL:
+		need_resched =
+			xnsynch_flush(&cond->synchbase, 0) == XNSYNCH_RESCHED;
+		break;
+
+	case 0:
+		need_resched = 0;
+		break;
+
+	default:
+		for(i = 0, need_resched = 0; i < pending_signals; i++) {
+			if (xnsynch_wakeup_one_sleeper(&cond->synchbase) == NULL)
+				break;
+			need_resched = 1;
+		}
+	}
+	*cond->pending_signals = 0;
+
+	return need_resched;
+}
 
 int cobalt_cond_init(union __xeno_cond __user *u_cnd,
 		     const pthread_condattr_t __user *u_attr);
