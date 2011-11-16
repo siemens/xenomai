@@ -52,8 +52,8 @@
 #define HOBJ_NBUCKETS   (HOBJ_MAXLOG2 - HOBJ_MINLOG2 + 2)
 #define HOBJ_MAXEXTSZ   (1U << 31) /* i.e. 2Gb */
 
-#define HOBJ_FORCE   0x1	/* Force cleanup */
-#define HOBJ_DEPEND  0x2	/* Allocate from main heap */
+#define HOBJ_FORCE      0x1	/* Force cleanup */
+#define HOBJ_SHAREABLE  0x2	/* Allocate from main heap to allow sharing */
 
 /*
  * The base address of the shared memory segment, as seen by each
@@ -579,7 +579,7 @@ static int create_heap(struct heapobj *hobj, const char *session,
 
 	len = size + sizeof(*heap);
 
-	if (flags & HOBJ_DEPEND) {
+	if (flags & HOBJ_SHARABLE) {
 		heap = alloc_block(&main_heap, len);
 		if (heap == NULL)
 			return __bt(-ENOMEM);
@@ -655,7 +655,7 @@ static void pshared_destroy(struct heapobj *hobj)
 
 	__RT(pthread_mutex_destroy(&heap->lock));
 
-	if (hobj->flags & HOBJ_DEPEND) {
+	if (hobj->flags & HOBJ_SHARABLE) {
 		free_block(&main_heap, heap);
 		return;
 	}
@@ -765,7 +765,7 @@ int heapobj_init_shareable(struct heapobj *hobj, const char *name,
 	hobj->ops = &pshared_ops;
 
 	return __bt(create_heap(hobj, __this_node.session_label, name,
-				size, flags | HOBJ_DEPEND));
+				size, flags | HOBJ_SHARABLE));
 }
 
 int heapobj_init_array(struct heapobj *hobj, const char *name,
