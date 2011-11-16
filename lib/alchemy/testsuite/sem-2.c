@@ -33,7 +33,7 @@ static void main_task(void *arg)
 	traceobj_mark(&trobj, 3);
 
 	ret = rt_sem_p(&sem, TM_INFINITE);
-	traceobj_assert(&trobj, ret == -EIDRM || ret == -EINVAL);
+	traceobj_assert(&trobj, ret == -EIDRM);
 
 	traceobj_mark(&trobj, 4);
 

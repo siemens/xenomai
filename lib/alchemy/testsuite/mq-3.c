@@ -84,7 +84,7 @@ static void peer_task(void *arg)
 	traceobj_mark(&trobj, 9);
 
 	ret = rt_queue_read(&q, &msg, sizeof(msg), TM_INFINITE);
-	traceobj_assert(&trobj, ret == -EIDRM || ret == -EINVAL);
+	traceobj_assert(&trobj, ret == -EINVAL);
 
 	traceobj_mark(&trobj, 10);
 
