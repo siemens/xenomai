@@ -23,6 +23,7 @@
 #include <pthread.h>
 
 struct cobalt_cond;
+struct mutex_dat;
 
 union __xeno_cond {
 	pthread_cond_t native_cond;
@@ -35,8 +36,8 @@ union __xeno_cond {
 			unsigned long *pending_signals;
 		};
 		union {
-			unsigned mutex_ownerp_offset;
-			xnarch_atomic_t *mutex_ownerp;
+			unsigned mutex_datp_offset;
+			struct mutex_dat *mutex_datp;
 		};
 	} shadow_cond;
 };
@@ -75,11 +76,6 @@ static inline int cobalt_cond_deferred_signals(struct cobalt_cond *cond)
 	pending_signals = *(cond->pending_signals);
 
 	switch(pending_signals) {
-	case ~0UL:
-		need_resched =
-			xnsynch_flush(&cond->synchbase, 0) == XNSYNCH_RESCHED;
-		break;
-
 	case 0:
 		need_resched = 0;
 		break;
@@ -90,8 +86,14 @@ static inline int cobalt_cond_deferred_signals(struct cobalt_cond *cond)
 				break;
 			need_resched = 1;
 		}
+		*cond->pending_signals = 0;
+		break;
+
+	case ~0UL:
+		need_resched =
+			xnsynch_flush(&cond->synchbase, 0) == XNSYNCH_RESCHED;
+		*cond->pending_signals = 0;
 	}
-	*cond->pending_signals = 0;
 
 	return need_resched;
 }

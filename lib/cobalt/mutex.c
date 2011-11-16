@@ -30,12 +30,17 @@ extern int __cobalt_muxid;
 
 extern unsigned long xeno_sem_heap[2];
 
-static xnarch_atomic_t *get_ownerp(struct __shadow_mutex *shadow)
+static struct mutex_dat *get_datp(struct __shadow_mutex *shadow)
 {
 	if (likely(!shadow->attr.pshared))
-		return shadow->owner;
+		return shadow->dat;
 
-	return (xnarch_atomic_t *)(xeno_sem_heap[1] + shadow->owner_offset);
+	return (struct mutex_dat *)(xeno_sem_heap[1] + shadow->dat_offset);
+}
+
+static xnarch_atomic_t *get_ownerp(struct __shadow_mutex *shadow)
+{
+	return &get_datp(shadow)->owner;
 }
 
 int __wrap_pthread_mutexattr_init(pthread_mutexattr_t *attr)
@@ -107,8 +112,8 @@ int __wrap_pthread_mutex_init(pthread_mutex_t *mutex,
 	err = -XENOMAI_SKINCALL2(__cobalt_muxid,__cobalt_mutex_init,shadow,attr);
 
 	if (!shadow->attr.pshared)
-		shadow->owner = (xnarch_atomic_t *)
-			(xeno_sem_heap[0] + shadow->owner_offset);
+		shadow->dat = (struct mutex_dat *)
+			(xeno_sem_heap[0] + shadow->dat_offset);
 
 	return err;
 }
@@ -306,8 +311,8 @@ int __wrap_pthread_mutex_unlock(pthread_mutex_t *mutex)
 {
 	union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
 	struct __shadow_mutex *shadow = &_mutex->shadow_mutex;
-	xnarch_atomic_t *ownerp;
-	xnhandle_t cur, owner;
+	struct mutex_dat *datp;
+	xnhandle_t cur;
 	int err;
 
 	if (unlikely(shadow->magic != COBALT_MUTEX_MAGIC))
@@ -317,9 +322,8 @@ int __wrap_pthread_mutex_unlock(pthread_mutex_t *mutex)
 	if (cur == XN_NO_HANDLE)
 		return EPERM;
 
-	ownerp = get_ownerp(shadow);
-	owner = xnarch_atomic_get(ownerp);
-	if (xnhandle_mask_spares(owner) != cur)
+	datp = get_datp(shadow);
+	if (xnsynch_fast_owner_check(&datp->owner, cur) != 0)
 		return EPERM;
 
 	if (shadow->lockcnt > 1) {
@@ -327,13 +331,13 @@ int __wrap_pthread_mutex_unlock(pthread_mutex_t *mutex)
 		return 0;
 	}
 
-	if ((owner & COBALT_MUTEX_COND_SIGNAL))
+	if ((datp->flags & COBALT_MUTEX_COND_SIGNAL))
 		goto do_syscall;
 
 	if (unlikely(xeno_get_current_mode() & XNOTHER))
 		goto do_syscall;
 
-	if (likely(xnsynch_fast_release(ownerp, cur)))
+	if (likely(xnsynch_fast_release(&datp->owner, cur)))
 		return 0;
 
 do_syscall:

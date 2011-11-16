@@ -146,7 +146,7 @@ pthread_cond_init(pthread_cond_t *cnd, const pthread_condattr_t *attr)
 	shadow->pending_signals_offset =
 		xnheap_mapped_offset(&sys_ppd->sem_heap,
 				     cond->pending_signals);
-	shadow->mutex_ownerp = (xnarch_atomic_t *)~0UL;
+	shadow->mutex_datp = (struct mutex_dat *)~0UL;
 
 	shadow->magic = COBALT_COND_MAGIC;
 	shadow->cond = cond;
@@ -410,7 +410,7 @@ int cobalt_cond_wait_prologue(union __xeno_cond __user *u_cnd,
 			      struct timespec __user *u_ts)
 {
 	xnthread_t *cur = xnshadow_thread(current);
-	xnarch_atomic_t *ownerp;
+	struct mutex_dat *datp;
 	struct us_cond_data d;
 	cobalt_cond_t *cnd;
 	cobalt_mutex_t *mx;
@@ -421,8 +421,8 @@ int cobalt_cond_wait_prologue(union __xeno_cond __user *u_cnd,
 	__xn_get_user(mx, &u_mx->shadow_mutex.mutex);
 
 	if (!cnd->mutex) {
-		__xn_get_user(ownerp, &u_mx->shadow_mutex.owner);
-		__xn_put_user(ownerp, &u_cnd->shadow_cond.mutex_ownerp);
+		__xn_get_user(datp, &u_mx->shadow_mutex.dat);
+		__xn_put_user(datp, &u_cnd->shadow_cond.mutex_datp);
 	}
 
 	if (timed) {
@@ -437,8 +437,8 @@ int cobalt_cond_wait_prologue(union __xeno_cond __user *u_cnd,
 						     XN_INFINITE);
 
 	if (!cnd->mutex) {
-		ownerp = (xnarch_atomic_t *)~0UL;
-		__xn_put_user(ownerp, &u_cnd->shadow_cond.mutex_ownerp);
+		datp = (struct mutex_dat *)~0UL;
+		__xn_put_user(datp, &u_cnd->shadow_cond.mutex_datp);
 	}
 
 	switch(err) {
@@ -448,9 +448,8 @@ int cobalt_cond_wait_prologue(union __xeno_cond __user *u_cnd,
 		err = cobalt_cond_timedwait_epilogue(cur, cnd, mx);
 
 		if (!cnd->mutex) {
-			ownerp = (xnarch_atomic_t *)~0UL;
-			__xn_put_user(ownerp,
-				      &u_cnd->shadow_cond.mutex_ownerp);
+			datp = (struct mutex_dat *)~0UL;
+			__xn_put_user(datp, &u_cnd->shadow_cond.mutex_datp);
 		}
 		break;
 
@@ -485,8 +484,8 @@ int cobalt_cond_wait_epilogue(union __xeno_cond __user *u_cnd,
 	err = cobalt_cond_timedwait_epilogue(cur, cnd, mx);
 
 	if (!cnd->mutex) {
-		xnarch_atomic_t *ownerp = (xnarch_atomic_t *)~0UL;
-		__xn_put_user(ownerp, &u_cnd->shadow_cond.mutex_ownerp);
+		struct mutex_dat *datp = (struct mutex_dat *)~0UL;
+		__xn_put_user(datp, &u_cnd->shadow_cond.mutex_datp);
 	}
 
 	return err;

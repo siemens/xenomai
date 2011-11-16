@@ -55,7 +55,7 @@ pthread_mutexattr_t cobalt_default_mutex_attr;
 
 static int cobalt_mutex_init_inner(struct __shadow_mutex *shadow,
 				   cobalt_mutex_t *mutex,
-				   xnarch_atomic_t *ownerp,
+				   struct mutex_dat *datp,
 				   const pthread_mutexattr_t *attr)
 {
 	xnflags_t synch_flags = XNSYNCH_PRIO | XNSYNCH_OWNER;
@@ -77,13 +77,14 @@ static int cobalt_mutex_init_inner(struct __shadow_mutex *shadow,
 	shadow->lockcnt = 0;
 
 	shadow->attr = *attr;
-	shadow->owner_offset = xnheap_mapped_offset(&sys_ppd->sem_heap, ownerp);
+	shadow->dat_offset = xnheap_mapped_offset(&sys_ppd->sem_heap, datp);
 
 	if (attr->protocol == PTHREAD_PRIO_INHERIT)
 		synch_flags |= XNSYNCH_PIP;
 
 	mutex->magic = COBALT_MUTEX_MAGIC;
-	xnsynch_init(&mutex->synchbase, synch_flags, ownerp);
+	xnsynch_init(&mutex->synchbase, synch_flags, &datp->owner);
+	datp->flags = 0;
 	inith(&mutex->link);
 	mutex->attr = *attr;
 	mutex->owningq = kq;
@@ -238,7 +239,7 @@ int cobalt_mutex_init(union __xeno_mutex __user *u_mx,
 		      const pthread_mutexattr_t __user *u_attr)
 {
 	pthread_mutexattr_t locattr, *attr;
-	xnarch_atomic_t *ownerp;
+	struct mutex_dat *datp;
 	union __xeno_mutex mx;
 	cobalt_mutex_t *mutex;
 	int err;
@@ -261,17 +262,17 @@ int cobalt_mutex_init(union __xeno_mutex __user *u_mx,
 	if (mutex == NULL)
 		return -ENOMEM;
 
-	ownerp = xnheap_alloc(&xnsys_ppd_get(attr->pshared)->sem_heap,
-			      sizeof(xnarch_atomic_t));
-	if (ownerp == NULL) {
+	datp = xnheap_alloc(&xnsys_ppd_get(attr->pshared)->sem_heap,
+			     sizeof(*datp));
+	if (datp == NULL) {
 		xnfree(mutex);
 		return -EAGAIN;
 	}
 
-	err = cobalt_mutex_init_inner(&mx.shadow_mutex, mutex, ownerp, attr);
+	err = cobalt_mutex_init_inner(&mx.shadow_mutex, mutex, datp, attr);
 	if (err) {
 		xnfree(mutex);
-		xnheap_free(&xnsys_ppd_get(attr->pshared)->sem_heap, ownerp);
+		xnheap_free(&xnsys_ppd_get(attr->pshared)->sem_heap, datp);
 		return err;
 	}
 

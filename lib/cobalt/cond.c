@@ -38,16 +38,16 @@ static unsigned long *get_signalsp(struct __shadow_cond *shadow)
 				 + shadow->pending_signals_offset);
 }
 
-static xnarch_atomic_t *get_mutex_ownerp(struct __shadow_cond *shadow)
+static struct mutex_dat *get_mutex_datp(struct __shadow_cond *shadow)
 {
-	if (shadow->mutex_ownerp == (xnarch_atomic_t *)~0UL)
+	if (shadow->mutex_datp == (struct mutex_dat *)~0UL)
 		return NULL;
 
 	if (likely(!shadow->attr.pshared))
-		return shadow->mutex_ownerp;
+		return shadow->mutex_datp;
 
-	return (xnarch_atomic_t *)(xeno_sem_heap[1]
-				   + shadow->mutex_ownerp_offset);
+	return (struct mutex_dat *)(xeno_sem_heap[1]
+				    + shadow->mutex_datp_offset);
 }
 
 int __wrap_pthread_condattr_init(pthread_condattr_t *attr)
@@ -212,7 +212,7 @@ int __wrap_pthread_cond_signal(pthread_cond_t * cond)
 	struct __shadow_cond *shadow =
 		&((union __xeno_cond *)cond)->shadow_cond;
 	unsigned long *pending_signals;
-	xnarch_atomic_t *mutex_ownerp;
+	struct mutex_dat *mutex_datp;
 	xnhandle_t cur;
 
 	cur = xeno_get_current();
@@ -222,11 +222,12 @@ int __wrap_pthread_cond_signal(pthread_cond_t * cond)
 	if (shadow->magic != COBALT_COND_MAGIC)
 		return EINVAL;
 
-	mutex_ownerp = get_mutex_ownerp(shadow);
-	if (mutex_ownerp) {
-		if (xnsynch_fast_set_spares(mutex_ownerp, cur,
-					    COBALT_MUTEX_COND_SIGNAL) < 0)
+	mutex_datp = get_mutex_datp(shadow);
+	if (mutex_datp) {
+		if (xnsynch_fast_owner_check(&mutex_datp->owner, cur) < 0)
 			return EPERM;
+
+		mutex_datp->flags |= COBALT_MUTEX_COND_SIGNAL;
 
 		pending_signals = get_signalsp(shadow);
 		if (*pending_signals != ~0UL)
@@ -241,7 +242,7 @@ int __wrap_pthread_cond_broadcast(pthread_cond_t * cond)
 	struct __shadow_cond *shadow =
 		&((union __xeno_cond *)cond)->shadow_cond;
 	unsigned long *pending_signals;
-	xnarch_atomic_t *mutex_ownerp;
+	struct mutex_dat *mutex_datp;
 	xnhandle_t cur;
 
 	cur = xeno_get_current();
@@ -251,11 +252,12 @@ int __wrap_pthread_cond_broadcast(pthread_cond_t * cond)
 	if (shadow->magic != COBALT_COND_MAGIC)
 		return EINVAL;
 
-	mutex_ownerp = get_mutex_ownerp(shadow);
-	if (mutex_ownerp) {
-		if (xnsynch_fast_set_spares(mutex_ownerp, cur,
-					    COBALT_MUTEX_COND_SIGNAL) < 0)
+	mutex_datp = get_mutex_datp(shadow);
+	if (mutex_datp) {
+		if (xnsynch_fast_owner_check(&mutex_datp->owner, cur) < 0)
 			return EPERM;
+
+		mutex_datp->flags |= COBALT_MUTEX_COND_SIGNAL;
 
 		pending_signals = get_signalsp(shadow);
 		*get_signalsp(shadow) = ~0UL;

@@ -24,6 +24,13 @@
 
 struct cobalt_mutex;
 
+struct mutex_dat {
+	xnarch_atomic_t owner;
+	unsigned flags;
+
+#define COBALT_MUTEX_COND_SIGNAL 0x00000001
+};
+
 union __xeno_mutex {
 	pthread_mutex_t native_mutex;
 	struct __shadow_mutex {
@@ -31,12 +38,10 @@ union __xeno_mutex {
 		unsigned lockcnt;
 		struct cobalt_mutex *mutex;
 		union {
-			unsigned owner_offset;
-			xnarch_atomic_t *owner;
+			unsigned dat_offset;
+			struct mutex_dat *dat;
 		};
 		struct cobalt_mutexattr attr;
-
-#define COBALT_MUTEX_COND_SIGNAL XN_HANDLE_SPARE2
 	} shadow_mutex;
 };
 
@@ -91,6 +96,7 @@ static inline int cobalt_mutex_acquire_unchecked(xnthread_t *cur,
 
 static inline int cobalt_mutex_release(xnthread_t *cur, cobalt_mutex_t *mutex)
 {
+	struct mutex_dat *datp;
 	xnholder_t *holder;
 	int need_resched;
 
@@ -109,17 +115,10 @@ static inline int cobalt_mutex_release(xnthread_t *cur, cobalt_mutex_t *mutex)
 	for (holder = getheadq(&mutex->conds);
 	     holder; holder = nextq(&mutex->conds, holder)) {
 		struct cobalt_cond *cond = mutex_link2cond(holder);
-		if (*(cond->pending_signals)) {
-			if (xnsynch_nsleepers(&cond->synchbase))
-				need_resched |=
-					cobalt_cond_deferred_signals(cond);
-			else
-				*(cond->pending_signals) = 0;
-		}
+		need_resched |= cobalt_cond_deferred_signals(cond);
 	}
-	xnsynch_fast_clear_spares(mutex->synchbase.fastlock,
-				  xnthread_handle(cur),
-				  COBALT_MUTEX_COND_SIGNAL);
+	datp = container_of(mutex->synchbase.fastlock, struct mutex_dat, owner);
+	datp->flags &= ~COBALT_MUTEX_COND_SIGNAL;
 	need_resched |= xnsynch_release(&mutex->synchbase) != NULL;
 
 	return need_resched;

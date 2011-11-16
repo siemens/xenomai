@@ -402,7 +402,7 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 			  xntmode_t timeout_mode)
 {
 	struct xnthread *thread = xnpod_current_thread(), *owner;
-	xnhandle_t threadh = xnthread_handle(thread), fastlock, old, spares;
+	xnhandle_t threadh = xnthread_handle(thread), fastlock, old;
 	xnarch_atomic_t *lockp = xnsynch_fastlock(synch);
 	spl_t s;
 
@@ -412,12 +412,9 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 
       redo:
 
-	spares = xnhandle_get_spares(xnarch_atomic_get(lockp),
-					     XN_HANDLE_SPARE_MASK);
-	old = XN_NO_HANDLE | spares;
-	fastlock = xnarch_atomic_cmpxchg(lockp, old, threadh | spares);
+	fastlock = xnarch_atomic_cmpxchg(lockp, XN_NO_HANDLE, threadh);
 
-	if (likely(fastlock == old)) {
+	if (likely(fastlock == XN_NO_HANDLE)) {
 		if (xnthread_test_state(thread, XNOTHER))
 			xnthread_inc_rescnt(thread);
 		xnthread_clear_info(thread,
@@ -453,7 +450,7 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 		fastlock = old;
 	} while (!xnsynch_fast_is_claimed(fastlock));
 
-	owner = xnthread_lookup(xnhandle_mask_spares(fastlock));
+	owner = xnthread_lookup(xnsynch_fast_mask_claimed(fastlock));
 
 	if (!owner) {
 		/* The handle is broken, therefore pretend that the synch
@@ -525,11 +522,9 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 
 		/* We are the new owner, update the fastlock
 		   accordingly. */
-		threadh |= xnhandle_get_spares(xnarch_atomic_get(lockp),
-					       XN_HANDLE_SPARE_MASK);
-		threadh =
-			xnsynch_fast_set_claimed(threadh,
-						 xnsynch_pended_p(synch));
+		if (xnsynch_pended_p(synch))
+			threadh =
+				xnsynch_fast_set_claimed(threadh, 1);
 		xnarch_atomic_set(lockp, threadh);
 	}
 
@@ -700,9 +695,6 @@ xnsynch_release_thread(struct xnsynch *synch, struct xnthread *lastowner)
 	}
 
 	lockp = xnsynch_fastlock(synch);
-	newownerh |= xnhandle_get_spares(xnarch_atomic_get(lockp),
-					 XN_HANDLE_SPARE_MASK
-					 & ~XNSYNCH_FLCLAIM);
 	xnarch_atomic_set(lockp, newownerh);
 
 	xnlock_put_irqrestore(&nklock, s);

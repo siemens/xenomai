@@ -42,78 +42,20 @@
 static inline int xnsynch_fast_owner_check(xnarch_atomic_t *fastlock,
 					   xnhandle_t ownerh)
 {
-	return (xnhandle_mask_spares(xnarch_atomic_get(fastlock)) == ownerh) ?
+	return (xnhandle_mask_spare(xnarch_atomic_get(fastlock)) == ownerh) ?
 		0 : -EPERM;
-}
-
-static inline int xnsynch_fast_check_spares(xnarch_atomic_t *fastlock,
-					    unsigned spares)
-{
-	return (xnhandle_test_spares(xnarch_atomic_get(fastlock), spares));
-}
-
-static inline int xnsynch_fast_set_spares(xnarch_atomic_t *fastlock,
-					  xnhandle_t owner,
-					  xnhandle_t spares)
-{
-	xnhandle_t cur, old;
-	cur = xnarch_atomic_cmpxchg(fastlock, owner, owner | spares);
-	if (cur != owner) {
-		/* Only the current owner of the fastlock can change
-		   spare bits */
-		if (xnhandle_mask_spares(cur) != owner)
-			return -EPERM;
-
-		do {
-			if (xnhandle_test_spares(cur, spares))
-				return 0;
-
-			old = cur;
-			cur = xnarch_atomic_cmpxchg(fastlock,
-						    old, old | spares);
-		} while(old != cur);
-	}
-	return 0;
-}
-
-static inline int xnsynch_fast_clear_spares(xnarch_atomic_t *fastlock,
-					    xnhandle_t owner,
-					    xnhandle_t spares)
-{
-	xnhandle_t cur, old;
-	cur = xnarch_atomic_cmpxchg(fastlock, owner | spares, owner & ~spares);
-	if (cur != (owner | spares)) {
-		/* Only the current owner of the fastlock can change
-		   spare bits */
-		if (xnhandle_mask_spares(cur) != owner)
-			return -EPERM;
-
-		do {
-			if (!xnhandle_test_spares(cur, spares))
-				return 0;
-
-			old = cur;
-			cur = xnarch_atomic_cmpxchg(fastlock,
-						    old, old & ~spares);
-		} while(old != cur);
-	}
-	return 0;
 }
 
 static inline int xnsynch_fast_acquire(xnarch_atomic_t *fastlock,
 				       xnhandle_t new_ownerh)
 {
-	xnhandle_t lock_state, old, spares;
+	xnhandle_t lock_state =
+		xnarch_atomic_cmpxchg(fastlock, XN_NO_HANDLE, new_ownerh);
 
-	spares = xnhandle_get_spares(xnarch_atomic_get(fastlock),
-				     XN_HANDLE_SPARE_MASK);
-	old = XN_NO_HANDLE | spares;
-	lock_state = xnarch_atomic_cmpxchg(fastlock, old, new_ownerh | spares);
-
-	if (likely(lock_state == old))
+	if (likely(lock_state == XN_NO_HANDLE))
 		return 0;
 
-	if (xnhandle_mask_spares(lock_state) == new_ownerh)
+	if (xnhandle_mask_spare(lock_state) == new_ownerh)
 		return -EBUSY;
 
 	return -EAGAIN;
@@ -122,17 +64,15 @@ static inline int xnsynch_fast_acquire(xnarch_atomic_t *fastlock,
 static inline int xnsynch_fast_release(xnarch_atomic_t *fastlock,
 				       xnhandle_t cur_ownerh)
 {
-	xnhandle_t spares = xnhandle_get_spares(xnarch_atomic_get(fastlock),
-						XN_HANDLE_SPARE_MASK &
-						~XNSYNCH_FLCLAIM);
-	cur_ownerh |= spares;
-	return (xnarch_atomic_cmpxchg(fastlock, cur_ownerh,
-				      XN_NO_HANDLE | spares) == cur_ownerh);
+	return (xnarch_atomic_cmpxchg(fastlock, cur_ownerh, XN_NO_HANDLE) ==
+		cur_ownerh);
 }
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
 #define XNSYNCH_CLAIMED 0x10	/* Claimed by other thread(s) w/ PIP */
+
+#define XNSYNCH_FLCLAIM XN_HANDLE_SPARE3 /* Corresponding bit in fast lock */
 
 /* Spare flags usable by upper interfaces */
 #define XNSYNCH_SPARE0  0x01000000
@@ -187,9 +127,10 @@ typedef struct xnsynch {
 	xnsynch_fast_owner_check((synch)->fastlock, xnthread_handle(thread))
 
 #define xnsynch_fast_is_claimed(fastlock) \
-	xnhandle_test_spares(fastlock, XNSYNCH_FLCLAIM)
+	xnhandle_test_spare(fastlock, XNSYNCH_FLCLAIM)
 #define xnsynch_fast_set_claimed(fastlock, enable) \
 	(((fastlock) & ~XNSYNCH_FLCLAIM) | ((enable) ? XNSYNCH_FLCLAIM : 0))
+#define xnsynch_fast_mask_claimed(fastlock) ((fastlock & ~XNSYNCH_FLCLAIM))
 
 #ifdef __cplusplus
 extern "C" {
