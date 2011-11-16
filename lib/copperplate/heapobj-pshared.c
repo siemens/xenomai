@@ -682,19 +682,21 @@ static int pshared_extend(struct heapobj *hobj, size_t size, void *mem)
 	if (size <= HOBJ_PAGE_SIZE * 2)
 		return __bt(-EINVAL);
 
+	write_lock_safe(&heap->lock, state);
 	newsize = size + hobj->size + sizeof(*heap) + sizeof(*extent);
 	ret = __STD(ftruncate(hobj->fd, newsize));
-	if (ret)
-		return __bt(-errno);
+	if (ret) {
+		ret = __bt(-errno);
+		goto out;
+	}
 	/*
 	 * We do not allow the kernel to move the mapping address, so
 	 * it is safe referring to the heap contents while extending
 	 * it.
 	 */
-	write_lock_safe(&heap->lock, state);
 	p = mremap(heap, hobj->size + sizeof(*heap), newsize, 0);
 	if (p == MAP_FAILED) {
-		ret = -errno;
+		ret = __bt(-errno);
 		goto out;
 	}
 
