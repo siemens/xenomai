@@ -29,7 +29,7 @@ extern int __cobalt_muxid;
 
 extern unsigned long xeno_sem_heap[2];
 
-static unsigned long *get_signalsp(struct __shadow_cond *shadow)
+static unsigned long *cond_get_signalsp(struct __shadow_cond *shadow)
 {
 	if (likely(!shadow->attr.pshared))
 		return shadow->pending_signals;
@@ -38,7 +38,7 @@ static unsigned long *get_signalsp(struct __shadow_cond *shadow)
 				 + shadow->pending_signals_offset);
 }
 
-static struct mutex_dat *get_mutex_datp(struct __shadow_cond *shadow)
+static struct mutex_dat *cond_get_mutex_datp(struct __shadow_cond *shadow)
 {
 	if (shadow->mutex_datp == (struct mutex_dat *)~0UL)
 		return NULL;
@@ -113,45 +113,53 @@ int __wrap_pthread_cond_destroy(pthread_cond_t * cond)
 }
 
 struct cobalt_cond_cleanup_t {
-	union __xeno_cond *cond;
-	union __xeno_mutex *mutex;
+	struct __shadow_cond *cond;
+	struct __shadow_mutex *mutex;
 	unsigned count;
 	int err;
 };
 
 static void __pthread_cond_cleanup(void *data)
 {
-	struct cobalt_cond_cleanup_t *c = (struct cobalt_cond_cleanup_t *) data;
+	struct cobalt_cond_cleanup_t *c = (struct cobalt_cond_cleanup_t *)data;
 	int err;
 
 	do {
 		err = XENOMAI_SKINCALL2(__cobalt_muxid,
 					__cobalt_cond_wait_epilogue,
-					&c->cond->shadow_cond,
-					&c->mutex->shadow_mutex);
+					c->cond, c->mutex);
 	} while (err == -EINTR);
 
-	c->mutex->shadow_mutex.lockcnt = c->count;
+	c->mutex->lockcnt = c->count;
 }
 
 int __wrap_pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
 {
 	struct cobalt_cond_cleanup_t c = {
-		.cond = (union __xeno_cond *)cond,
-		.mutex = (union __xeno_mutex *)mutex,
+		.cond = &((union __xeno_cond *)cond)->shadow_cond,
+		.mutex = &((union __xeno_mutex *)mutex)->shadow_mutex,
 	};
 	int err, oldtype;
 
+	if (c.mutex->attr.type == PTHREAD_MUTEX_ERRORCHECK) {
+		xnhandle_t cur = xeno_get_current();
+
+		if (cur == XN_NO_HANDLE)
+			return EPERM;
+
+		if (xnsynch_fast_owner_check(mutex_get_ownerp(c.mutex), cur))
+			return EPERM;
+	}
+
 	pthread_cleanup_push(&__pthread_cond_cleanup, &c);
 
-	c.count = c.mutex->shadow_mutex.lockcnt;
+	c.count = c.mutex->lockcnt;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
 	err = XENOMAI_SKINCALL5(__cobalt_muxid,
 				 __cobalt_cond_wait_prologue,
-				 &c.cond->shadow_cond,
-				 &c.mutex->shadow_mutex, &c.err, 0, NULL);
+				 c.cond, c.mutex, &c.err, 0, NULL);
 
 	pthread_setcanceltype(oldtype, NULL);
 
@@ -160,10 +168,9 @@ int __wrap_pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
 	while (err == -EINTR)
 		err = XENOMAI_SKINCALL2(__cobalt_muxid,
 					 __cobalt_cond_wait_epilogue,
-					 &c.cond->shadow_cond,
-					 &c.mutex->shadow_mutex);
+					c.cond, c.mutex);
 
-	c.mutex->shadow_mutex.lockcnt = c.count;
+	c.mutex->lockcnt = c.count;
 
 	pthread_testcancel();
 
@@ -175,21 +182,30 @@ int __wrap_pthread_cond_timedwait(pthread_cond_t * cond,
 				  const struct timespec *abstime)
 {
 	struct cobalt_cond_cleanup_t c = {
-		.cond = (union __xeno_cond *)cond,
-		.mutex = (union __xeno_mutex *)mutex,
+		.cond = &((union __xeno_cond *)cond)->shadow_cond,
+		.mutex = &((union __xeno_mutex *)mutex)->shadow_mutex,
 	};
 	int err, oldtype;
 
+	if (c.mutex->attr.type == PTHREAD_MUTEX_ERRORCHECK) {
+		xnhandle_t cur = xeno_get_current();
+
+		if (cur == XN_NO_HANDLE)
+			return EPERM;
+
+		if (xnsynch_fast_owner_check(mutex_get_ownerp(c.mutex), cur))
+			return EPERM;
+	}
+
 	pthread_cleanup_push(&__pthread_cond_cleanup, &c);
 
-	c.count = c.mutex->shadow_mutex.lockcnt;
+	c.count = c.mutex->lockcnt;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
 	err = XENOMAI_SKINCALL5(__cobalt_muxid,
 				__cobalt_cond_wait_prologue,
-				&c.cond->shadow_cond,
-				&c.mutex->shadow_mutex, &c.err, 1, abstime);
+				c.cond, c.mutex, &c.err, 1, abstime);
 	pthread_setcanceltype(oldtype, NULL);
 
 	pthread_cleanup_pop(0);
@@ -197,10 +213,9 @@ int __wrap_pthread_cond_timedwait(pthread_cond_t * cond,
 	while (err == -EINTR)
 		err = XENOMAI_SKINCALL2(__cobalt_muxid,
 					__cobalt_cond_wait_epilogue,
-					&c.cond->shadow_cond,
-					&c.mutex->shadow_mutex);
+					c.cond, c.mutex);
 
-	c.mutex->shadow_mutex.lockcnt = c.count;
+	c.mutex->lockcnt = c.count;
 
 	pthread_testcancel();
 
@@ -213,23 +228,25 @@ int __wrap_pthread_cond_signal(pthread_cond_t * cond)
 		&((union __xeno_cond *)cond)->shadow_cond;
 	unsigned long *pending_signals;
 	struct mutex_dat *mutex_datp;
-	xnhandle_t cur;
-
-	cur = xeno_get_current();
-	if (cur == XN_NO_HANDLE)
-		return EPERM;
 
 	if (shadow->magic != COBALT_COND_MAGIC)
 		return EINVAL;
 
-	mutex_datp = get_mutex_datp(shadow);
+	mutex_datp = cond_get_mutex_datp(shadow);
 	if (mutex_datp) {
-		if (xnsynch_fast_owner_check(&mutex_datp->owner, cur) < 0)
-			return EPERM;
+		if ((mutex_datp->flags & COBALT_MUTEX_ERRORCHECK)) {
+			xnhandle_t cur = xeno_get_current();
+
+			if (cur == XN_NO_HANDLE)
+				return EPERM;
+
+			if (xnsynch_fast_owner_check(&mutex_datp->owner, cur) < 0)
+				return EPERM;
+		}
 
 		mutex_datp->flags |= COBALT_MUTEX_COND_SIGNAL;
 
-		pending_signals = get_signalsp(shadow);
+		pending_signals = cond_get_signalsp(shadow);
 		if (*pending_signals != ~0UL)
 			++(*pending_signals);
 	}
@@ -241,26 +258,26 @@ int __wrap_pthread_cond_broadcast(pthread_cond_t * cond)
 {
 	struct __shadow_cond *shadow =
 		&((union __xeno_cond *)cond)->shadow_cond;
-	unsigned long *pending_signals;
 	struct mutex_dat *mutex_datp;
-	xnhandle_t cur;
-
-	cur = xeno_get_current();
-	if (cur == XN_NO_HANDLE)
-		return EPERM;
 
 	if (shadow->magic != COBALT_COND_MAGIC)
 		return EINVAL;
 
-	mutex_datp = get_mutex_datp(shadow);
+	mutex_datp = cond_get_mutex_datp(shadow);
 	if (mutex_datp) {
-		if (xnsynch_fast_owner_check(&mutex_datp->owner, cur) < 0)
-			return EPERM;
+		if (unlikely(mutex_datp->flags & COBALT_MUTEX_ERRORCHECK)) {
+			xnhandle_t cur = xeno_get_current();
+
+			if (cur == XN_NO_HANDLE)
+				return EPERM;
+
+			if (xnsynch_fast_owner_check(&mutex_datp->owner, cur) < 0)
+				return EPERM;
+		}
 
 		mutex_datp->flags |= COBALT_MUTEX_COND_SIGNAL;
 
-		pending_signals = get_signalsp(shadow);
-		*get_signalsp(shadow) = ~0UL;
+		*cond_get_signalsp(shadow) = ~0UL;
 	}
 
 	return 0;

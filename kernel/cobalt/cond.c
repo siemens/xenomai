@@ -436,11 +436,6 @@ int cobalt_cond_wait_prologue(union __xeno_cond __user *u_cnd,
 						     mx, timed,
 						     XN_INFINITE);
 
-	if (!cnd->mutex) {
-		datp = (struct mutex_dat *)~0UL;
-		__xn_put_user(datp, &u_cnd->shadow_cond.mutex_datp);
-	}
-
 	switch(err) {
 	case 0:
 	case -ETIMEDOUT:
@@ -454,11 +449,21 @@ int cobalt_cond_wait_prologue(union __xeno_cond __user *u_cnd,
 		break;
 
 	case -EINTR:
+		if (!cnd->mutex) {
+			datp = (struct mutex_dat *)~0UL;
+			__xn_put_user(datp, &u_cnd->shadow_cond.mutex_datp);
+		}
+
 		perr = err;
 		d.err = 0;	/* epilogue should return 0. */
 		break;
 
 	default:
+		if (!cnd->mutex) {
+			datp = (struct mutex_dat *)~0UL;
+			__xn_put_user(datp, &u_cnd->shadow_cond.mutex_datp);
+		}
+
 		/* Please gcc and handle the case which will never
 		   happen */
 		d.err = EINVAL;

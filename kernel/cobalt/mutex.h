@@ -26,9 +26,10 @@ struct cobalt_mutex;
 
 struct mutex_dat {
 	xnarch_atomic_t owner;
-	unsigned flags;
+	unsigned long flags;
 
 #define COBALT_MUTEX_COND_SIGNAL 0x00000001
+#define COBALT_MUTEX_ERRORCHECK  0x00000002
 };
 
 union __xeno_mutex {
@@ -74,9 +75,6 @@ static inline int cobalt_mutex_acquire_unchecked(xnthread_t *cur,
 						 xnticks_t abs_to)
 
 {
-	if (xnsynch_owner_check(&mutex->synchbase, cur) == 0)
-		return -EBUSY;
-
 	if (timed)
 		xnsynch_acquire(&mutex->synchbase, abs_to, XN_REALTIME);
 	else
@@ -108,9 +106,6 @@ static inline int cobalt_mutex_release(xnthread_t *cur, cobalt_mutex_t *mutex)
 		return -EPERM;
 #endif /* XENO_DEBUG(POSIX) */
 
-	if (xnsynch_owner_check(&mutex->synchbase, cur) != 0)
-		return -EPERM;
-
 	need_resched = 0;
 	for (holder = getheadq(&mutex->conds);
 	     holder; holder = nextq(&mutex->conds, holder)) {
@@ -122,8 +117,6 @@ static inline int cobalt_mutex_release(xnthread_t *cur, cobalt_mutex_t *mutex)
 	need_resched |= xnsynch_release(&mutex->synchbase) != NULL;
 
 	return need_resched;
-	/* Do not reschedule here, releasing the mutex and suspension must be
-	   done atomically in pthread_cond_*wait. */
 }
 
 int cobalt_mutex_check_init(union __xeno_mutex __user *u_mx);
@@ -147,6 +140,22 @@ void cobalt_mutexq_cleanup(cobalt_kqueues_t *q);
 void cobalt_mutex_pkg_init(void);
 
 void cobalt_mutex_pkg_cleanup(void);
+#else /* ! __KERNEL__ */
+
+extern unsigned long xeno_sem_heap[2];
+
+static inline struct mutex_dat *mutex_get_datp(struct __shadow_mutex *shadow)
+{
+	if (likely(!shadow->attr.pshared))
+		return shadow->dat;
+
+	return (struct mutex_dat *)(xeno_sem_heap[1] + shadow->dat_offset);
+}
+
+static inline xnarch_atomic_t *mutex_get_ownerp(struct __shadow_mutex *shadow)
+{
+	return &mutex_get_datp(shadow)->owner;
+}
 #endif /* __KERNEL__ */
 
 #endif /* !_POSIX_MUTEX_H */

@@ -84,7 +84,8 @@ static int cobalt_mutex_init_inner(struct __shadow_mutex *shadow,
 
 	mutex->magic = COBALT_MUTEX_MAGIC;
 	xnsynch_init(&mutex->synchbase, synch_flags, &datp->owner);
-	datp->flags = 0;
+	datp->flags = (attr->type == PTHREAD_MUTEX_ERRORCHECK
+		       ? COBALT_MUTEX_ERRORCHECK : 0);
 	inith(&mutex->link);
 	mutex->attr = *attr;
 	mutex->owningq = kq;
@@ -119,11 +120,11 @@ static int cobalt_mutex_acquire(xnthread_t *cur,
 				int timed,
 				xnticks_t abs_to)
 {
-	if (xnpod_unblockable_p())
-		return -EPERM;
-
 	if (!cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, struct cobalt_mutex))
 		return -EINVAL;
+
+	if (xnsynch_owner_check(&mutex->synchbase, cur) == 0)
+		return -EBUSY;
 
 #if XENO_DEBUG(POSIX)
 	if (mutex->owningq != cobalt_kqueues(mutex->attr.pshared))
@@ -379,9 +380,6 @@ int cobalt_mutex_unlock(union __xeno_mutex __user *u_mx)
 	cobalt_mutex_t *mutex;
 	int err;
 	spl_t s;
-
-	if (xnpod_root_p())
-		return -EPERM;
 
 	__xn_get_user(mutex, &u_mx->shadow_mutex.mutex);
 
