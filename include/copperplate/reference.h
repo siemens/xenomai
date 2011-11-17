@@ -73,7 +73,11 @@ struct __fnref {
 #define dref_type(t)		memoff_t
 #define fnref_type(t)		int
 #define fnref_null		-1
-#define fnref_put(l, s)		((s) == NULL ? fnref_null : __refvar(l, s))
+static inline int __fnref_nofn(void *fnaddr)
+{
+	return fnaddr == NULL;
+}
+#define fnref_put(l, s)		(__fnref_nofn((void *)(s)) ? fnref_null : __refvar(l, s))
 #define fnref_get(v, r)		((v) = (r) < 0 ? NULL :	__refchk(v, r))
 #define fnref_register(l, s)						\
 	int __refvar(l, s);						\
