@@ -333,7 +333,7 @@ ssize_t rt_buffer_write_until(RT_BUFFER *bf,
 		ret = -EINVAL;
 		goto done;
 	}
-redo:
+
 	for (;;) {
 		/*
 		 * We should be able to write the entire message at
@@ -385,18 +385,6 @@ redo:
 		if (!threadobj_current_p()) {
 			ret = -EPERM;
 			goto done;
-		}
-
-		/*
-		 * Check whether writers are already waiting for
-		 * sending data, while we are about to wait for
-		 * receiving some. In such a case, we have a
-		 * pathological use of the buffer. We must allow for a
-		 * short read to prevent a deadlock.
-		 */
-		if (bcb->fillsz > 0 && syncobj_drain_count(&bcb->sobj)) {
-			len = bcb->fillsz;
-			goto redo;
 		}
 
 		if (wait == NULL) {
