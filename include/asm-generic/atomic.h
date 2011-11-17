@@ -1,5 +1,5 @@
-#ifndef ATOMIC_H
-#define ATOMIC_H
+#ifndef _XENO_ASM_GENERIC_ATOMIC_H
+#define _XENO_ASM_GENERIC_ATOMIC_H
 
 #include <asm/xenomai/features.h>
 
@@ -82,4 +82,4 @@ typedef struct { unsigned long counter; } __xnarch_atomic_t;
 
 #endif /* !__KERNEL__ */
 
-#endif /* ATOMIC_H */
+#endif /* _XENO_ASM_GENERIC_ATOMIC_H */

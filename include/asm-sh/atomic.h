@@ -67,8 +67,8 @@ static inline unsigned long long load_u64(volatile void *p)
 	return ((unsigned long long)u.e.high << 32) | u.e.low;
 }
 
-#define xnarch_memory_barrier()     __asm__ __volatile__("": : :"memory")
+#endif /* !__KERNEL__ */
 
-#endif /* __KERNEL__ */
+#include <asm-generic/xenomai/atomic.h>
 
 #endif /* !_XENO_ASM_SH_ATOMIC_H */

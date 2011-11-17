@@ -21,6 +21,7 @@
 #define _XENO_ASM_NIOS2_ATOMIC_H
 
 #ifdef __KERNEL__
+
 #include <asm/irqflags.h>
 
 static inline void atomic_set_mask(unsigned long mask, unsigned long *addr)
@@ -32,10 +33,8 @@ static inline void atomic_set_mask(unsigned long mask, unsigned long *addr)
 	local_irq_restore_hw(flags);
 }
 
-#else /* !__KERNEL__ */
+#endif /* !__KERNEL__ */
 
-#define xnarch_memory_barrier()     __asm__ __volatile__("": : :"memory")
-
-#endif /* __KERNEL__ */
+#include <asm-generic/xenomai/atomic.h>
 
 #endif /* !_XENO_ASM_NIOS2_ATOMIC_H */

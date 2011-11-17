@@ -23,8 +23,6 @@
 #ifndef _XENO_ASM_POWERPC_ATOMIC_H
 #define _XENO_ASM_POWERPC_ATOMIC_H
 
-typedef unsigned long atomic_flags_t;
-
 #ifdef __KERNEL__
 
 #ifdef CONFIG_PPC64
@@ -64,5 +62,7 @@ void atomic_clear_mask(unsigned long mask, unsigned long *ptr);
 #endif /* !CONFIG_PPC64 */
 
 #endif /* __KERNEL__ */
+
+#include <asm-generic/xenomai/atomic.h>
 
 #endif /* !_XENO_ASM_POWERPC_ATOMIC_H */
