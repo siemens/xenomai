@@ -440,7 +440,7 @@ void mode_sw(int sig)
 {
 	const char buffer[] = "Spurious mode switch detected, aborting.\n"
 		"Enable XENO_OPT_DEBUG_TRACE_RELAX to find the cause.\n";
-	int n;
+	int n __attribute__ ((unused));
 
 	if (!stop_upon_switch) {
 		++sampling_relaxed;
