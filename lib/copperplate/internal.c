@@ -31,7 +31,7 @@
 #include "internal.h"
 
 struct coppernode __this_node = {
-	.mem_pool = 128 * 1024, /* Default, 128 Kb. */
+	.mem_pool = 1024 * 1024, /* Default, 1Mb. */
 	.session_label = "anon",
 	.no_mlock = 0,
 	.no_registry = 0,
