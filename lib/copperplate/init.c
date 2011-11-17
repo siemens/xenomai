@@ -284,7 +284,6 @@ void copperplate_init(int argc, char *const argv[])
 	}
 
 	optind = 0;
-	debug_pkg_activate();
 
 	return;
 fail:

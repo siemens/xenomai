@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <pthread.h>
+#include <malloc.h>
 #include <errno.h>
 #include "copperplate/lock.h"
 #include "copperplate/debug.h"
@@ -34,30 +35,6 @@ static pthread_key_t btkey;
 static struct backtrace_data main_btd = {
 	.name = "main",
 };
-
-static void *safe_malloc(size_t size)
-{
-	return malloc(size);
-}
-
-static void safe_free(void *p)
-{
-	free(p);
-}
-
-static void *fast_malloc(size_t size)
-{
-	return xnmalloc(size);
-}
-
-static void fast_free(void *p)
-{
-	xnfree(p);
-}
-
-static void *(*do_malloc)(size_t size) = safe_malloc;
-
-static void (*do_free)(void *p) = safe_free;
 
 void __debug(struct threadobj *thobj, const char *fmt, ...)
 {
@@ -81,7 +58,7 @@ void backtrace_log(int retval, const char *fn,
 
 	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &state);
 
-	ef = do_malloc(sizeof(*ef));
+	ef = malloc(sizeof(*ef));
 	if (ef == NULL)
 		goto out;
 
@@ -117,7 +94,7 @@ static void flush_backtrace(struct backtrace_data *btd)
 
 	for (ef = btd->inner; ef; ef = nef) {
 		nef = ef->next;
-		do_free(ef);
+		free(ef);
 	}
 
 	btd->inner = NULL;
@@ -204,10 +181,4 @@ int debug_pkg_init(void)
 {
 	__RT(pthread_mutex_init(&main_btd.lock, NULL));
 	return -pthread_key_create(&btkey, NULL);
-}
-
-void debug_pkg_activate(void)
-{
-	do_malloc = fast_malloc;
-	do_free = fast_free;
 }
