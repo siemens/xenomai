@@ -44,9 +44,6 @@ static struct alchemy_queue *get_alchemy_queue(RT_QUEUE *queue,
 	if (qcb == NULL || ((intptr_t)qcb & (sizeof(intptr_t)-1)) != 0)
 		goto bad_handle;
 
-	if (qcb->magic == ~queue_magic)
-		goto dead_handle;
-
 	if (qcb->magic != queue_magic)
 		goto bad_handle;
 
@@ -56,14 +53,9 @@ static struct alchemy_queue *get_alchemy_queue(RT_QUEUE *queue,
 	/* Recheck under lock. */
 	if (qcb->magic == queue_magic)
 		return qcb;
-
-dead_handle:
-	/* Removed under our feet. */
-	*err_r = -EIDRM;
-	return NULL;
-
 bad_handle:
 	*err_r = -EINVAL;
+
 	return NULL;
 }
 

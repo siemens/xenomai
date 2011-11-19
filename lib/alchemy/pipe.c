@@ -47,18 +47,11 @@ static struct alchemy_pipe *find_alchemy_pipe(RT_PIPE *pipe, int *err_r)
 	if (pcb == NULL || ((intptr_t)pcb & (sizeof(intptr_t)-1)) != 0)
 		goto bad_handle;
 
-	if (pcb->magic == ~pipe_magic)
-		goto dead_handle;
-
 	if (pcb->magic == pipe_magic)
 		return pcb;
 bad_handle:
 	*err_r = -EINVAL;
-	return NULL;
 
-dead_handle:
-	/* Removed under our feet. */
-	*err_r = -EIDRM;
 	return NULL;
 }
 

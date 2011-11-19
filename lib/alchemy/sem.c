@@ -43,18 +43,11 @@ static struct alchemy_sem *find_alchemy_sem(RT_SEM *sem, int *err_r)
 	if (scb == NULL || ((intptr_t)scb & (sizeof(intptr_t)-1)) != 0)
 		goto bad_handle;
 
-	if (scb->magic == ~sem_magic)
-		goto dead_handle;
-
 	if (scb->magic == sem_magic)
 		return scb;
 bad_handle:
 	*err_r = -EINVAL;
-	return NULL;
 
-dead_handle:
-	/* Removed under our feet. */
-	*err_r = -EIDRM;
 	return NULL;
 }
 

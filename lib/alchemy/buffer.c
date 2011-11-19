@@ -44,9 +44,6 @@ static struct alchemy_buffer *get_alchemy_buffer(RT_BUFFER *bf,
 	if (bcb == NULL || ((intptr_t)bcb & (sizeof(intptr_t)-1)) != 0)
 		goto bad_handle;
 
-	if (bcb->magic == ~buffer_magic)
-		goto dead_handle;
-
 	if (bcb->magic != buffer_magic)
 		goto bad_handle;
 
@@ -56,14 +53,9 @@ static struct alchemy_buffer *get_alchemy_buffer(RT_BUFFER *bf,
 	/* Recheck under lock. */
 	if (bcb->magic == buffer_magic)
 		return bcb;
-
-dead_handle:
-	/* Removed under our feet. */
-	*err_r = -EIDRM;
-	return NULL;
-
 bad_handle:
 	*err_r = -EINVAL;
+
 	return NULL;
 }
 

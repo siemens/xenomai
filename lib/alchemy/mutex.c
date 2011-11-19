@@ -48,16 +48,11 @@ struct alchemy_mutex *find_alchemy_mutex(RT_MUTEX *mutex, int *err_r)
 	if (mcb == NULL || ((intptr_t)mcb & (sizeof(intptr_t)-1)) != 0)
 		goto bad_handle;
 
-	if (mcb->magic == ~mutex_magic) {
-		*err_r = -EIDRM;
-		return NULL;
-	}
-
 	if (mcb->magic == mutex_magic)
 		return mcb;
-
 bad_handle:
 	*err_r = -EINVAL;
+
 	return NULL;
 }
 

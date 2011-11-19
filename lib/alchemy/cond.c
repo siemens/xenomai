@@ -48,16 +48,11 @@ static struct alchemy_cond *find_alchemy_cond(RT_COND *cond, int *err_r)
 	if (ccb == NULL || ((intptr_t)ccb & (sizeof(intptr_t)-1)) != 0)
 		goto bad_handle;
 
-	if (ccb->magic == ~cond_magic) {
-		*err_r = -EIDRM;
-		return NULL;
-	}
-
 	if (ccb->magic == cond_magic)
 		return ccb;
-
 bad_handle:
 	*err_r = -EINVAL;
+
 	return NULL;
 }
 

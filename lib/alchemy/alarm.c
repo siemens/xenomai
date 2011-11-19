@@ -43,9 +43,6 @@ static struct alchemy_alarm *get_alchemy_alarm(RT_ALARM *alarm, int *err_r)
 	if (acb == NULL || ((intptr_t)acb & (sizeof(intptr_t)-1)) != 0)
 		goto bad_handle;
 
-	if (acb->magic == ~alarm_magic)
-		goto dead_handle;
-
 	if (acb->magic != alarm_magic)
 		goto bad_handle;
 
@@ -55,14 +52,9 @@ static struct alchemy_alarm *get_alchemy_alarm(RT_ALARM *alarm, int *err_r)
 	/* Recheck under lock. */
 	if (acb->magic == alarm_magic)
 		return acb;
-
-dead_handle:
-	/* Removed under our feet. */
-	*err_r = -EIDRM;
-	return NULL;
-
 bad_handle:
 	*err_r = -EINVAL;
+
 	return NULL;
 }
 

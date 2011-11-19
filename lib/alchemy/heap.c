@@ -44,9 +44,6 @@ static struct alchemy_heap *get_alchemy_heap(RT_HEAP *heap,
 	if (hcb == NULL || ((intptr_t)hcb & (sizeof(intptr_t)-1)) != 0)
 		goto bad_handle;
 
-	if (hcb->magic == ~heap_magic)
-		goto dead_handle;
-
 	if (hcb->magic != heap_magic)
 		goto bad_handle;
 
@@ -56,14 +53,9 @@ static struct alchemy_heap *get_alchemy_heap(RT_HEAP *heap,
 	/* Recheck under lock. */
 	if (hcb->magic == heap_magic)
 		return hcb;
-
-dead_handle:
-	/* Removed under our feet. */
-	*err_r = -EIDRM;
-	return NULL;
-
 bad_handle:
 	*err_r = -EINVAL;
+
 	return NULL;
 }
 

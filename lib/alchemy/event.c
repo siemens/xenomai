@@ -44,9 +44,6 @@ static struct alchemy_event *get_alchemy_event(RT_EVENT *event,
 	if (evcb == NULL || ((intptr_t)evcb & (sizeof(intptr_t)-1)) != 0)
 		goto bad_handle;
 
-	if (evcb->magic == ~event_magic)
-		goto dead_handle;
-
 	if (evcb->magic != event_magic)
 		goto bad_handle;
 
@@ -56,14 +53,9 @@ static struct alchemy_event *get_alchemy_event(RT_EVENT *event,
 	/* Recheck under lock. */
 	if (evcb->magic == event_magic)
 		return evcb;
-
-dead_handle:
-	/* Removed under our feet. */
-	*err_r = -EIDRM;
-	return NULL;
-
 bad_handle:
 	*err_r = -EINVAL;
+
 	return NULL;
 }
 

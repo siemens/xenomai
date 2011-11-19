@@ -62,12 +62,6 @@ static struct alchemy_task *find_alchemy_task(RT_TASK *task, int *err_r)
 	magic = threadobj_get_magic(&tcb->thobj);
 	if (magic == task_magic)
 		return tcb;
-
-	if (magic == ~task_magic) {
-		*err_r = -EIDRM;
-		return NULL;
-	}
-
 bad_handle:
 	*err_r = -EINVAL;
 
@@ -102,13 +96,15 @@ struct alchemy_task *get_alchemy_task(RT_TASK *task, int *err_r)
 	 * chance is pthread_mutex_lock() detecting a wrong mutex kind
 	 * and bailing out.
 	 */
-	if (tcb == NULL || threadobj_lock(&tcb->thobj) == -EINVAL)
+	if (tcb == NULL || threadobj_lock(&tcb->thobj) == -EINVAL) {
+		*err_r = -EINVAL;
 		return NULL;
+	}
 
 	/* Check the magic word again, while we hold the lock. */
 	if (threadobj_get_magic(&tcb->thobj) != task_magic) {
 		threadobj_unlock(&tcb->thobj);
-		*err_r = -EIDRM;
+		*err_r = -EINVAL;
 		return NULL;
 	}
 
