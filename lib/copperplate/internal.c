@@ -92,6 +92,17 @@ int copperplate_create_thread(int prio,
 	return ret;
 }
 
+int copperplate_renice_thread(pthread_t tid, int prio)
+{
+	struct sched_param_ex param_ex;
+	int policy;
+
+	param_ex.sched_priority = prio;
+	policy = prio ? SCHED_RT : SCHED_OTHER;
+
+	return __bt(-pthread_setschedparam_ex(tid, policy, &param_ex));
+}
+
 #else /* CONFIG_XENO_MERCURY */
 
 int copperplate_probe_node(unsigned int id)
@@ -124,6 +135,17 @@ int copperplate_create_thread(int prio,
 	pthread_attr_destroy(&attr);
 
 	return ret;
+}
+
+int copperplate_renice_thread(pthread_t tid, int prio)
+{
+	struct sched_param param;
+	int policy;
+
+	param.sched_priority = prio;
+	policy = prio ? SCHED_RT : SCHED_OTHER;
+
+	return __bt(-__RT(pthread_setschedparam(tid, policy, &param)));
 }
 
 #endif  /* CONFIG_XENO_MERCURY */

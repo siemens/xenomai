@@ -73,6 +73,9 @@ int copperplate_create_thread(int prio,
 			      void *(*start)(void *arg), void *arg,
 			      size_t stacksize,
 			      pthread_t *tid);
+
+int copperplate_renice_thread(pthread_t tid, int prio);
+
 #ifdef __cplusplus
 }
 #endif
