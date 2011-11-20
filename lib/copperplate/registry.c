@@ -36,6 +36,7 @@
 #include "copperplate/clockobj.h"
 #include "copperplate/lock.h"
 #include "copperplate/debug.h"
+#include "internal.h"
 
 #define REGISTRY_ROOT "/mnt/xenomai"
 
