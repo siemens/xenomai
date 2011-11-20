@@ -72,17 +72,17 @@ static void timerobj_enqueue(struct timerobj *tmobj)
 	struct timerobj *__tmobj;
 
 	if (pvlist_empty(&svtimers)) {
-		pvlist_append(&tmobj->link, &svtimers);
+		pvlist_append(&tmobj->core.link, &svtimers);
 		return;
 	}
 
-	pvlist_for_each_entry_reverse(__tmobj, &svtimers, link) {
-		if (timeobj_compare(&__tmobj->spec.it_value,
-				    &tmobj->spec.it_value) <= 0)
+	pvlist_for_each_entry_reverse(__tmobj, &svtimers, core.link) {
+		if (timeobj_compare(&__tmobj->core.spec.it_value,
+				    &tmobj->core.spec.it_value) <= 0)
 			break;
 	}
 
-	atpvh(&__tmobj->link, &tmobj->link);
+	atpvh(&__tmobj->core.link, &tmobj->core.link);
 }
 
 static void *timerobj_server(void *arg)
@@ -108,14 +108,14 @@ static void *timerobj_server(void *arg)
 
 		__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
 
-		pvlist_for_each_entry_safe(tmobj, tmp, &svtimers, link) {
-			value = tmobj->spec.it_value;
+		pvlist_for_each_entry_safe(tmobj, tmp, &svtimers, core.link) {
+			value = tmobj->core.spec.it_value;
 			if (timeobj_compare(&value, &now) > 0)
 				break;
-			pvlist_remove_init(&tmobj->link);
-			interval = tmobj->spec.it_interval;
+			pvlist_remove_init(&tmobj->core.link);
+			interval = tmobj->core.spec.it_interval;
 			if (interval.tv_sec > 0 || interval.tv_nsec > 0) {
-				timespec_add(&tmobj->spec.it_value,
+				timespec_add(&tmobj->core.spec.it_value,
 					     &value, &interval);
 				timerobj_enqueue(tmobj);
 			}
@@ -172,7 +172,7 @@ int timerobj_init(struct timerobj *tmobj)
 	evt.sigev_value.sival_ptr = &svsem;
 
 	tmobj->handler = NULL;
-	pvholder_init(&tmobj->link); /* so we may use pvholder_linked() */
+	pvholder_init(&tmobj->core.link); /* so we may use pvholder_linked() */
 
 	if (__RT(timer_create(CLOCK_COPPERPLATE, &evt, &tmobj->timer)))
 		return __bt(-errno);
@@ -190,8 +190,8 @@ void timerobj_destroy(struct timerobj *tmobj) /* lock held, dropped */
 {
 	write_lock_nocancel(&svlock);
 
-	if (pvholder_linked(&tmobj->link))
-		pvlist_remove_init(&tmobj->link);
+	if (pvholder_linked(&tmobj->core.link))
+		pvlist_remove_init(&tmobj->core.link);
 
 	write_unlock(&svlock);
 
@@ -205,7 +205,7 @@ int timerobj_start(struct timerobj *tmobj,
 		   struct itimerspec *it) /* lock held, dropped */
 {
 	tmobj->handler = handler;
-	tmobj->spec = *it;
+	tmobj->core.spec = *it;
 	write_lock_nocancel(&svlock);
 	timerobj_enqueue(tmobj);
 	write_unlock(&svlock);
@@ -223,8 +223,8 @@ int timerobj_stop(struct timerobj *tmobj) /* lock held, dropped */
 {
 	write_lock_nocancel(&svlock);
 
-	if (pvholder_linked(&tmobj->link))
-		pvlist_remove_init(&tmobj->link);
+	if (pvholder_linked(&tmobj->core.link))
+		pvlist_remove_init(&tmobj->core.link);
 
 	write_unlock(&svlock);
 
