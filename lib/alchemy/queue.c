@@ -332,6 +332,9 @@ ssize_t rt_queue_receive_until(RT_QUEUE *queue,
 	ssize_t ret;
 	int err = 0;
 
+	if (timeout != TM_NONBLOCK && !threadobj_current_p())
+		return -EPERM;
+
 	COPPERPLATE_PROTECT(svc);
 
 	qcb = get_alchemy_queue(queue, &syns, &err);
@@ -351,11 +354,6 @@ ssize_t rt_queue_receive_until(RT_QUEUE *queue,
 
 	if (timeout == TM_NONBLOCK) {
 		ret = -EWOULDBLOCK;
-		goto done;
-	}
-
-	if (!threadobj_current_p()) {
-		ret = -EPERM;
 		goto done;
 	}
 

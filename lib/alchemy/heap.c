@@ -165,7 +165,7 @@ int rt_heap_alloc(RT_HEAP *heap,
 	void *p = NULL;
 	int ret = 0;
 
-	if (threadobj_irq_p())
+	if (timeout != TM_NONBLOCK && !threadobj_current_p())
 		return -EPERM;
 
 	COPPERPLATE_PROTECT(svc);
@@ -197,11 +197,6 @@ int rt_heap_alloc(RT_HEAP *heap,
 
 	if (timeout == TM_NONBLOCK) {
 		ret = -EWOULDBLOCK;
-		goto done;
-	}
-
-	if (!threadobj_current_p()) {
-		ret = -EPERM;
 		goto done;
 	}
 

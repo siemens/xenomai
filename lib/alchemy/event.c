@@ -150,6 +150,9 @@ int rt_event_wait_until(RT_EVENT *event,
 	struct service svc;
 	int ret = 0;
 
+	if (timeout != TM_NONBLOCK && !threadobj_current_p())
+		return -EPERM;
+
 	COPPERPLATE_PROTECT(svc);
 
 	evcb = get_alchemy_event(event, &syns, &ret);
@@ -170,11 +173,6 @@ int rt_event_wait_until(RT_EVENT *event,
 
 	if (timeout == TM_NONBLOCK) {
 		ret = -EWOULDBLOCK;
-		goto done;
-	}
-
-	if (!threadobj_current_p()) {
-		ret = -EPERM;
 		goto done;
 	}
 

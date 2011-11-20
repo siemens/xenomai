@@ -179,7 +179,7 @@ ssize_t rt_pipe_read_until(RT_PIPE *pipe,
 	int err, flags;
 	ssize_t ret;
 
-	if (!threadobj_current_p())
+	if (timeout != TM_NONBLOCK && !threadobj_current_p())
 		return -EPERM;
 
 	COPPERPLATE_PROTECT(svc);
@@ -229,9 +229,6 @@ static ssize_t do_write_pipe(RT_PIPE *pipe,
 	struct service svc;
 	ssize_t ret;
 	int err;
-
-	if (threadobj_irq_p())
-		return -EPERM;
 
 	COPPERPLATE_PROTECT(svc);
 

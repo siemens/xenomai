@@ -180,6 +180,9 @@ ssize_t rt_buffer_read_until(RT_BUFFER *bf,
 	if (len == 0)
 		return 0;
 
+	if (timeout != TM_NONBLOCK && !threadobj_current_p())
+		return -EPERM;
+
 	COPPERPLATE_PROTECT(svc);
 
 	bcb = get_alchemy_buffer(bf, &syns, &ret);
@@ -244,11 +247,6 @@ redo:
 			goto done;
 		}
 
-		if (!threadobj_current_p()) {
-			ret = -EPERM;
-			goto done;
-		}
-
 		/*
 		 * Check whether writers are already waiting for
 		 * sending data, while we are about to wait for
@@ -309,6 +307,9 @@ ssize_t rt_buffer_write_until(RT_BUFFER *bf,
 	len = size;
 	if (len == 0)
 		return 0;
+
+	if (timeout != TM_NONBLOCK && !threadobj_current_p())
+		return -EPERM;
 
 	COPPERPLATE_PROTECT(svc);
 
@@ -371,11 +372,6 @@ ssize_t rt_buffer_write_until(RT_BUFFER *bf,
 	wait:
 		if (timeout == TM_NONBLOCK) {
 			ret = -EWOULDBLOCK;
-			goto done;
-		}
-
-		if (!threadobj_current_p()) {
-			ret = -EPERM;
 			goto done;
 		}
 
