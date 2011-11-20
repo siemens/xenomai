@@ -389,9 +389,8 @@ out:
 int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 {
 	struct alchemy_task *tcb;
-	struct sched_param param;
 	struct service svc;
-	int policy, ret;
+	int ret;
 
 	COPPERPLATE_PROTECT(svc);
 
@@ -406,10 +405,7 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 		goto out;
 	}
 
-	memset(&param, 0, sizeof(param));
-	param.sched_priority = prio;
-	policy = prio ? SCHED_RT : SCHED_OTHER;
-	ret = __bt(-__RT(pthread_setschedparam(pthread_self(), policy, &param)));
+	ret = __bt(copperplate_renice_thread(pthread_self(), prio));
 out:
 	COPPERPLATE_UNPROTECT(svc);
 
