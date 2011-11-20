@@ -12753,6 +12753,40 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: done" >&5
 $as_echo "done" >&6; }
 
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether the compiler provides atomic builtins" >&5
+$as_echo_n "checking whether the compiler provides atomic builtins... " >&6; }
+if test "${ac_cv_atomic_builtins+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int atomic_sub(int i) { return __sync_sub_and_fetch(&i, 1); }
+int atomic_add(int i) { return __sync_add_and_fetch(&i, 1); }
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_atomic_builtins="yes"
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_atomic_builtins" >&5
+$as_echo "$ac_cv_atomic_builtins" >&6; }
+if test "$ac_cv_atomic_builtins" != "yes"; then
+   as_fn_error $? "compiler does not support atomic builtins." "$LINENO" 5
+fi
+
 XENO_USER_CFLAGS="-D_GNU_SOURCE -D_REENTRANT -Wall -pipe -Wstrict-prototypes -Wmissing-prototypes -Wno-long-long -Wno-unused-parameter -Werror"
 XENO_USER_LDFLAGS=
 

@@ -510,6 +510,19 @@ else
 fi
 AC_MSG_RESULT([done])
 
+dnl Check for atomic builtins. For now we only check for the legacy
+dnl interface, i.e. __sync_*.
+
+AC_CACHE_CHECK([whether the compiler provides atomic builtins], ac_cv_atomic_builtins, [
+AC_TRY_LINK([
+int atomic_sub(int i) { return __sync_sub_and_fetch(&i, 1); }
+int atomic_add(int i) { return __sync_add_and_fetch(&i, 1); }
+], [], ac_cv_atomic_builtins="yes")
+])
+if test "$ac_cv_atomic_builtins" != "yes"; then
+   AC_MSG_ERROR([compiler does not support atomic builtins.])
+fi
+
 dnl Common CFLAGS and LDFLAGS
 XENO_USER_CFLAGS="-D_GNU_SOURCE -D_REENTRANT -Wall -pipe -Wstrict-prototypes -Wmissing-prototypes -Wno-long-long -Wno-unused-parameter -Werror"
 XENO_USER_LDFLAGS=
