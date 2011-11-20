@@ -94,7 +94,7 @@ static inline void holder_init(struct holder *holder)
 	inith(holder);
 }
 
-static inline int __holder_linked(void *heap, struct holder *holder)
+static inline int __holder_linked(void *heap, const struct holder *holder)
 {
 	return !(holder->prev == holder->next &&
 		 holder->prev == __hoff(heap, holder));
@@ -104,7 +104,7 @@ static inline int __holder_linked(void *heap, struct holder *holder)
  * XXX: holder_init() is mandatory if you later want to use this
  * predicate.
  */
-static inline int holder_linked(struct holder *holder)
+static inline int holder_linked(const struct holder *holder)
 {
 	return __holder_linked(__pshared_heap, holder);
 }

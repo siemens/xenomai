@@ -73,7 +73,7 @@ static inline void pvholder_init(struct pvholder *holder)
  * XXX: pvholder_init() is mandatory if you later want to use this
  * predicate.
  */
-static inline int pvholder_linked(struct pvholder *holder)
+static inline int pvholder_linked(const struct pvholder *holder)
 {
 	return !(holder->prev == holder->next &&
 		 holder->prev == holder);
