@@ -21,6 +21,8 @@
 
 #include <pthread.h>
 #include <time.h>
+#include <copperplate/lock.h>
+#include <copperplate/list.h>
 
 struct timerobj {
 	void (*handler)(struct timerobj *tmobj);
@@ -39,6 +41,11 @@ static inline int timerobj_lock(struct timerobj *tmobj)
 static inline int timerobj_unlock(struct timerobj *tmobj)
 {
 	return write_unlock_safe(&tmobj->lock, tmobj->cancel_state);
+}
+
+static inline int timerobj_enabled(const struct timerobj *tmobj)
+{
+	return tmobj->handler != NULL;
 }
 
 #ifdef __cplusplus
