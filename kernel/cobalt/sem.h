@@ -23,20 +23,53 @@
 				   cobalt_thread_t definition. */
 #include <nucleus/registry.h>     /* For assocq */
 
-#ifndef __XENO_SIM__
+#ifdef __KERNEL__
 
 typedef struct {
     u_long uaddr;
     unsigned refcnt;
     cobalt_assoc_t assoc;
 
-#define assoc2usem(laddr) \
-    ((cobalt_usem_t *)((unsigned long) (laddr) - offsetof(cobalt_usem_t, assoc)))
+#define assoc2usem(laddr) container_of(laddr, cobalt_usem_t, assoc)
 } cobalt_usem_t;
 
 void cobalt_sem_usems_cleanup(cobalt_queues_t *q);
 
-#endif /* !__XENO_SIM__ */
+struct cobalt_sem;
+
+int sem_getvalue(struct cobalt_sem *sem, int *value);
+
+int sem_post_inner(struct cobalt_sem *sem,
+		   cobalt_kqueues_t *ownq, int bcast);
+
+int cobalt_sem_init(struct __shadow_sem __user *u_sem,
+		    int pshared, unsigned value);
+
+int cobalt_sem_post(struct __shadow_sem __user *u_sem);
+
+int cobalt_sem_wait(struct __shadow_sem __user *u_sem);
+
+int cobalt_sem_timedwait(struct __shadow_sem __user *u_sem,
+			 struct timespec __user *u_ts);
+
+int cobalt_sem_trywait(struct __shadow_sem __user *u_sem);
+
+int cobalt_sem_getvalue(struct __shadow_sem __user *u_sem, int __user *u_sval);
+
+int cobalt_sem_destroy(struct __shadow_sem __user *u_sem);
+
+int cobalt_sem_open(unsigned long __user *u_addr,
+		    const char __user *u_name,
+		    int oflags, mode_t mode, unsigned value);
+
+int cobalt_sem_close(unsigned long uaddr, int __user *u_closed);
+
+int cobalt_sem_unlink(const char __user *u_name);
+
+int cobalt_sem_init_np(struct __shadow_sem __user *u_sem,
+		       int flags, unsigned value);
+
+int cobalt_sem_broadcast_np(struct __shadow_sem __user *u_sem);
 
 void cobalt_semq_cleanup(cobalt_kqueues_t *q);
 
@@ -44,7 +77,9 @@ void cobalt_sem_pkg_init(void);
 
 void cobalt_sem_pkg_cleanup(void);
 
-int sem_post_inner(struct cobalt_sem *sem,
-		   cobalt_kqueues_t *ownq, int bcast);
+#endif /* __KERNEL__ */
+
+#define COBALT_SEM_MAGIC (0x86860707)
+#define COBALT_NAMED_SEM_MAGIC (0x86860D0D)
 
 #endif /* !_POSIX_SEM_H */

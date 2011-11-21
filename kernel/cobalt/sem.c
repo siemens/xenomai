@@ -62,7 +62,7 @@ typedef struct cobalt_named_sem {
 	union __xeno_sem descriptor;
 } nsem_t;
 
-#define sem2named_sem(saddr) ((nsem_t *) (saddr))
+#define sem2named_sem(saddr) ((nsem_t *)(saddr))
 #define node2sem(naddr) container_of(naddr, nsem_t, nodebase)
 
 #ifndef __XENO_SIM__
@@ -78,7 +78,7 @@ typedef struct cobalt_uptr {
 
 #endif /* !__XENO_SIM__ */
 
-static int sem_destroy_inner(cobalt_sem_t * sem, cobalt_kqueues_t *q)
+static int sem_destroy_inner(cobalt_sem_t *sem, cobalt_kqueues_t *q)
 {
 	int ret = 0;
 	spl_t s;
@@ -100,12 +100,12 @@ static int sem_destroy_inner(cobalt_sem_t * sem, cobalt_kqueues_t *q)
 }
 
 /* Called with nklock locked, irq off. */
-static int sem_init_inner(cobalt_sem_t * sem, int flags, unsigned int value)
+static int sem_init_inner(cobalt_sem_t *sem, int flags, unsigned int value)
 {
 	int pshared, sflags;
 
 	if (value > (unsigned)SEM_VALUE_MAX)
-		return EINVAL;
+		return -EINVAL;
 
 	pshared = !!(flags & SEM_PSHARED);
 	sflags = flags & SEM_FIFO ? 0 : XNSYNCH_PRIO;
@@ -121,37 +121,32 @@ static int sem_init_inner(cobalt_sem_t * sem, int flags, unsigned int value)
 	return 0;
 }
 
-static int do_sem_init(sem_t *sm, int flags, unsigned int value)
+static int do_sem_init(struct __shadow_sem *sm, int flags, unsigned int value)
 {
-	struct __shadow_sem *shadow = &((union __xeno_sem *)sm)->shadow_sem;
 	xnholder_t *holder;
 	cobalt_sem_t *sem;
 	xnqueue_t *semq;
 	int ret;
 	spl_t s;
 
-	if ((flags & SEM_PULSE) != 0 && value > 0) {
-		ret = EINVAL;
-		goto error;
-	}
+	if ((flags & SEM_PULSE) != 0 && value > 0)
+		return -EINVAL;
 
-	sem = xnmalloc(sizeof(cobalt_sem_t));
-	if (sem == NULL) {
-		ret = ENOSPC;
-		goto error;
-	}
+	sem = (cobalt_sem_t *)xnmalloc(sizeof(*sem));
+	if (sem == NULL)
+		return -ENOSPC;
 
 	xnlock_get_irqsave(&nklock, s);
 
 	semq = &cobalt_kqueues(!!(flags & SEM_PSHARED))->semq;
 
-	if (shadow->magic == COBALT_SEM_MAGIC
-	    || shadow->magic == COBALT_NAMED_SEM_MAGIC
-	    || shadow->magic == ~COBALT_NAMED_SEM_MAGIC) {
+	if (sm->magic == COBALT_SEM_MAGIC
+	    || sm->magic == COBALT_NAMED_SEM_MAGIC
+	    || sm->magic == ~COBALT_NAMED_SEM_MAGIC) {
 		for (holder = getheadq(semq); holder;
 		     holder = nextq(semq, holder))
-			if (holder == &shadow->sem->link) {
-				ret = EBUSY;
+			if (holder == &sm->sem->link) {
+				ret = -EBUSY;
 				goto err_lock_put;
 			}
 	}
@@ -160,8 +155,8 @@ static int do_sem_init(sem_t *sm, int flags, unsigned int value)
 	if (ret)
 		goto err_lock_put;
 
-	shadow->magic = COBALT_SEM_MAGIC;
-	shadow->sem = sem;
+	sm->magic = COBALT_SEM_MAGIC;
+	sm->sem = sem;
 	xnlock_put_irqrestore(&nklock, s);
 
 	return 0;
@@ -169,101 +164,8 @@ static int do_sem_init(sem_t *sm, int flags, unsigned int value)
   err_lock_put:
 	xnlock_put_irqrestore(&nklock, s);
 	xnfree(sem);
-  error:
-	thread_set_errno(ret);
 
-	return -1;
-}
-
-/**
- * Initialize an unnamed semaphore.
- *
- * This service initializes the semaphore @a sm, with the value @a value.
- *
- * This service fails if @a sm is already initialized or is a named semaphore.
- *
- * @param sm the semaphore to be initialized;
- *
- * @param pshared if zero, means that the new semaphore may only be used by
- * threads in the same process as the thread calling sem_init(); if non zero,
- * means that the new semaphore may be used by any thread that has access to the
- * memory where the semaphore is allocated.
- *
- * @param value the semaphore initial value.
- *
- * @retval 0 on success,
- * @retval -1 with @a errno set if:
- * - EBUSY, the semaphore @a sm was already initialized;
- * - ENOSPC, insufficient memory exists in the system heap to initialize the
- *   semaphore, increase CONFIG_XENO_OPT_SYS_HEAPSZ;
- * - EINVAL, the @a value argument exceeds @a SEM_VALUE_MAX.
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_init.html">
- * Specification.</a>
- *
- */
-int sem_init(sem_t *sm, int pshared, unsigned int value)
-{
-	return do_sem_init(sm, pshared ? SEM_PSHARED : 0, value);
-}
-
-/**
- * Initialize a non-standard, extended semaphore.
- *
- * This service initializes the unnamed semaphore @a sm, with the
- * value @a value. An additional set of flags allows to specify a
- * non-standard behavior for the semaphore.
- *
- * This service fails if @a sm is already initialized or is a named semaphore.
- *
- * @param sm the semaphore to be initialized;
- *
- * @param flags A set of extension flags. The following flags can be
- * OR'ed into this bitmask, each of them affecting the new semaphore:
- *
- * - SEM_FIFO makes threads pend by FIFO order on the semaphore. By
- * default, threads pend by priority order.
- *
- * - SEM_PULSE causes the semaphore to behave in "pulse" mode. In this
- * mode, sem_post() attempts to release a single waiter each time it
- * is called, but without incrementing the semaphore count if no
- * waiter is pending. For this reason, the semaphore count in pulse
- * mode remains zero. If SEM_PULSE is mentioned, @a value can only be
- * zero.
- *
- * - SEM_PSHARED controls the scope of the new semaphore. When set, it
- * has the same meaning as passing 1 for the pshared parameter to the
- * regular sem_init() call.
- *
- * - SEM_REPORT tells whether sem_getvalue() should report the number
- * of waiters as a negative value, for a fully depleted semaphore. By
- * default, sem_getvalue() returns a current value of zero for a
- * depleted semaphore with waiters.
- *
- * - SEM_WARNDEL causes sem_destroy() to return a strictly positive
- *   value instead of zero, in case threads were pending on the
- *   successfully deleted semaphore.
- *
- * @param value the semaphore initial value.
- *
- * @retval 0 on success,
- * @retval -1 with @a errno set if:
- * - EBUSY, the semaphore @a sm was already initialized;
- * - ENOSPC, insufficient memory exists in the system heap to initialize the
- *   semaphore, increase CONFIG_XENO_OPT_SYS_HEAPSZ;
- * - EINVAL, the @a value argument exceeds @a SEM_VALUE_MAX, or this
- * value is non-zero albeit SEM_PULSE is mentioned in @a flags. EINVAL
- * is also returned if an invalid flag appears in @a flags.
- */
-int sem_init_np(sem_t *sm, int flags, unsigned int value)
-{
-	if (flags & ~(SEM_FIFO|SEM_PULSE|SEM_PSHARED|SEM_REPORT|SEM_WARNDEL)) {
-		thread_set_errno(EINVAL);
-		return -1;
-	}
-
-	return do_sem_init(sm, flags, value);
+	return ret;
 }
 
 /**
@@ -293,28 +195,27 @@ int sem_init_np(sem_t *sm, int flags, unsigned int value)
  * Specification.</a>
  *
  */
-int sem_destroy(sem_t * sm)
+static int sem_destroy(struct __shadow_sem *sm)
 {
-	struct __shadow_sem *shadow = &((union __xeno_sem *)sm)->shadow_sem;
 	cobalt_sem_t *sem;
 	int warn, ret;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	if (shadow->magic != COBALT_SEM_MAGIC
-	    || shadow->sem->magic != COBALT_SEM_MAGIC) {
-		thread_set_errno(EINVAL);
+	if (sm->magic != COBALT_SEM_MAGIC
+	    || sm->sem->magic != COBALT_SEM_MAGIC) {
+		ret = -EINVAL;
 		goto error;
 	}
 
-	sem = shadow->sem;
+	sem = sm->sem;
 	if (sem_kqueue(sem) != sem->owningq) {
-		thread_set_errno(EPERM);
+		ret = -EPERM;
 		goto error;
 	}
 
 	warn = sem->flags & SEM_WARNDEL;
-	cobalt_mark_deleted(shadow);
+	cobalt_mark_deleted(sm);
 	cobalt_mark_deleted(sem);
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -326,7 +227,7 @@ int sem_destroy(sem_t * sm)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return -1;
+	return ret;
 }
 
 /**
@@ -383,7 +284,7 @@ sem_t *sem_open(const char *name, int oflags, ...)
 	int err;
 
 	xnlock_get_irqsave(&nklock, s);
-	err = cobalt_node_get(&node, name, COBALT_NAMED_SEM_MAGIC, oflags);
+	err = -cobalt_node_get(&node, name, COBALT_NAMED_SEM_MAGIC, oflags);
 	xnlock_put_irqrestore(&nklock, s);
 
 	if (err)
@@ -394,9 +295,9 @@ sem_t *sem_open(const char *name, int oflags, ...)
 		goto got_sem;
 	}
 
-	named_sem = (nsem_t *) xnmalloc(sizeof(*named_sem));
+	named_sem = (nsem_t *)xnmalloc(sizeof(*named_sem));
 	if (!named_sem) {
-		err = ENOSPC;
+		err = -ENOSPC;
 		goto error;
 	}
 	named_sem->descriptor.shadow_sem.sem = &named_sem->sembase;
@@ -414,12 +315,12 @@ sem_t *sem_open(const char *name, int oflags, ...)
 		goto error;
 	}
 
-	err = cobalt_node_add(&named_sem->nodebase, name, COBALT_NAMED_SEM_MAGIC);
-	if (err && err != EEXIST)
+	err = -cobalt_node_add(&named_sem->nodebase, name, COBALT_NAMED_SEM_MAGIC);
+	if (err && err != -EEXIST)
 		goto err_put_lock;
 
-	if (err == EEXIST) {
-		err = cobalt_node_get(&node, name, COBALT_NAMED_SEM_MAGIC, oflags);
+	if (err == -EEXIST) {
+		err = -cobalt_node_get(&node, name, COBALT_NAMED_SEM_MAGIC, oflags);
 		if (err)
 			goto err_put_lock;
 
@@ -441,8 +342,7 @@ sem_t *sem_open(const char *name, int oflags, ...)
 	xnlock_put_irqrestore(&nklock, s);
 	sem_destroy_inner(&named_sem->sembase, sem_kqueue(&named_sem->sembase));
   error:
-	thread_set_errno(err);
-	return SEM_FAILED;
+	return (sem_t *)ERR_PTR(err);
 }
 
 /**
@@ -469,22 +369,21 @@ sem_t *sem_open(const char *name, int oflags, ...)
  * Specification.</a>
  *
  */
-int sem_close(sem_t * sm)
+int sem_close(struct __shadow_sem *sm)
 {
-	struct __shadow_sem *shadow = &((union __xeno_sem *)sm)->shadow_sem;
 	nsem_t *named_sem;
 	spl_t s;
 	int err;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (shadow->magic != COBALT_NAMED_SEM_MAGIC
-	    || shadow->sem->magic != COBALT_SEM_MAGIC) {
+	if (sm->magic != COBALT_NAMED_SEM_MAGIC
+	    || sm->sem->magic != COBALT_SEM_MAGIC) {
 		err = EINVAL;
 		goto error;
 	}
 
-	named_sem = sem2named_sem(shadow->sem);
+	named_sem = sem2named_sem(sm->sem);
 
 	err = cobalt_node_put(&named_sem->nodebase);
 
@@ -493,14 +392,14 @@ int sem_close(sem_t * sm)
 
 	if (cobalt_node_removed_p(&named_sem->nodebase)) {
 		/* unlink was called, and this semaphore is no longer referenced. */
-		cobalt_mark_deleted(shadow);
+		cobalt_mark_deleted(sm);
 		cobalt_mark_deleted(&named_sem->sembase);
 		xnlock_put_irqrestore(&nklock, s);
 
 		sem_destroy_inner(&named_sem->sembase, cobalt_kqueues(1));
 	} else if (!cobalt_node_ref_p(&named_sem->nodebase)) {
 		/* this semaphore is no longer referenced, but not unlinked. */
-		cobalt_mark_deleted(shadow);
+		cobalt_mark_deleted(sm);
 		xnlock_put_irqrestore(&nklock, s);
 	} else
 		xnlock_put_irqrestore(&nklock, s);
@@ -510,9 +409,7 @@ int sem_close(sem_t * sm)
       error:
 	xnlock_put_irqrestore(&nklock, s);
 
-	thread_set_errno(err);
-
-	return -1;
+	return -err;
 }
 
 /**
@@ -567,29 +464,21 @@ int sem_unlink(const char *name)
       error:
 	xnlock_put_irqrestore(&nklock, s);
 
-	thread_set_errno(err);
-
-	return -1;
+	return -err;
 }
 
-static inline int sem_trywait_internal(struct __shadow_sem *shadow)
+static inline int sem_trywait_internal(cobalt_sem_t *sem)
 {
-	cobalt_sem_t *sem;
-
-	if ((shadow->magic != COBALT_SEM_MAGIC
-	     && shadow->magic != COBALT_NAMED_SEM_MAGIC)
-	    || shadow->sem->magic != COBALT_SEM_MAGIC)
-		return EINVAL;
-
-	sem = shadow->sem;
+	if (sem->magic != COBALT_SEM_MAGIC)
+		return -EINVAL;
 
 #if XENO_DEBUG(POSIX)
 	if (sem->owningq != sem_kqueue(sem))
-		return EPERM;
+		return -EPERM;
 #endif /* XENO_DEBUG(POSIX) */
 
 	if (sem->value == 0)
-		return EAGAIN;
+		return -EAGAIN;
 
 	--sem->value;
 
@@ -617,39 +506,30 @@ static inline int sem_trywait_internal(struct __shadow_sem *shadow)
  * Specification.</a>
  *
  */
-int sem_trywait(sem_t * sm)
+static int sem_trywait(cobalt_sem_t *sem)
 {
-	struct __shadow_sem *shadow = &((union __xeno_sem *)sm)->shadow_sem;
 	int err;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-
-	err = sem_trywait_internal(shadow);
-
+	err = sem_trywait_internal(sem);
 	xnlock_put_irqrestore(&nklock, s);
 
-	if (err) {
-		thread_set_errno(err);
-		return -1;
-	}
-
-	return 0;
+	return err;
 }
 
-static inline int sem_timedwait_internal(struct __shadow_sem *shadow,
-					 int timed, xnticks_t to)
+static inline int
+sem_timedwait_internal(cobalt_sem_t *sem, int timed, xnticks_t to)
 {
-	cobalt_sem_t *sem = shadow->sem;
 	xnthread_t *cur;
 	int err;
 
 	if (xnpod_unblockable_p())
-		return EPERM;
+		return -EPERM;
 
 	cur = xnpod_current_thread();
 
-	if ((err = sem_trywait_internal(shadow)) != EAGAIN)
+	if ((err = sem_trywait_internal(sem)) != -EAGAIN)
 		return err;
 
 	thread_cancellation_point(cur);
@@ -663,13 +543,13 @@ static inline int sem_timedwait_internal(struct __shadow_sem *shadow,
 	thread_cancellation_point(cur);
 
 	if (xnthread_test_info(cur, XNRMID))
-		return EINVAL;
+		return -EINVAL;
 
 	if (xnthread_test_info(cur, XNBREAK))
-		return EINTR;
+		return -EINTR;
 
 	if (xnthread_test_info(cur, XNTIMEO))
-		return ETIMEDOUT;
+		return -ETIMEDOUT;
 
 	return 0;
 }
@@ -707,22 +587,16 @@ static inline int sem_timedwait_internal(struct __shadow_sem *shadow,
  * Specification.</a>
  *
  */
-int sem_wait(sem_t * sm)
+static int sem_wait(cobalt_sem_t *sem)
 {
-	struct __shadow_sem *shadow = &((union __xeno_sem *)sm)->shadow_sem;
 	spl_t s;
 	int err;
 
 	xnlock_get_irqsave(&nklock, s);
-	err = sem_timedwait_internal(shadow, 0, XN_INFINITE);
+	err = sem_timedwait_internal(sem, 0, XN_INFINITE);
 	xnlock_put_irqrestore(&nklock, s);
 
-	if (err) {
-		thread_set_errno(err);
-		return -1;
-	}
-
-	return 0;
+	return err;
 }
 
 /**
@@ -757,48 +631,33 @@ int sem_wait(sem_t * sm)
  * Specification.</a>
  *
  */
-int sem_timedwait(sem_t * sm, const struct timespec *abs_timeout)
+static int sem_timedwait(cobalt_sem_t *sem, const struct timespec *abs_timeout)
 {
-	struct __shadow_sem *shadow = &((union __xeno_sem *)sm)->shadow_sem;
 	spl_t s;
 	int err;
 
-	if (abs_timeout->tv_nsec > ONE_BILLION) {
-		err = EINVAL;
-		goto error;
-	}
+	if (abs_timeout->tv_nsec > ONE_BILLION)
+		return -EINVAL;
 
 	xnlock_get_irqsave(&nklock, s);
-	err = sem_timedwait_internal(shadow, 1, ts2ns(abs_timeout) + 1);
+	err = sem_timedwait_internal(sem, 1, ts2ns(abs_timeout) + 1);
 	xnlock_put_irqrestore(&nklock, s);
 
-  error:
-	if (err) {
-		thread_set_errno(err);
-		return -1;
-	}
-
-	return 0;
+	return err;
 }
 
-int sem_post_inner(struct cobalt_sem *sem, cobalt_kqueues_t *ownq, int bcast)
+int sem_post_inner(cobalt_sem_t *sem, cobalt_kqueues_t *ownq, int bcast)
 {
-	if (sem->magic != COBALT_SEM_MAGIC) {
-		thread_set_errno(EINVAL);
-		return -1;
-	}
+	if (sem->magic != COBALT_SEM_MAGIC)
+		return -EINVAL;
 
 #if XENO_DEBUG(POSIX)
-	if (ownq && ownq != sem_kqueue(sem)) {
-		thread_set_errno(EPERM);
-		return -1;
-	}
+	if (ownq && ownq != sem_kqueue(sem))
+		return -EPERM;
 #endif /* XENO_DEBUG(POSIX) */
 
-	if (sem->value == SEM_VALUE_MAX) {
-		thread_set_errno(EAGAIN);
-		return -1;
-	}
+	if (sem->value == SEM_VALUE_MAX)
+		return -EINVAL;
 
 	if (!bcast) {
 		if (xnsynch_wakeup_one_sleeper(&sem->synchbase) != NULL)
@@ -838,23 +697,13 @@ int sem_post_inner(struct cobalt_sem *sem, cobalt_kqueues_t *ownq, int bcast)
  * Specification.</a>
  *
  */
-int sem_post(sem_t * sm)
+static int sem_post(cobalt_sem_t *sm)
 {
-	struct __shadow_sem *shadow = &((union __xeno_sem *)sm)->shadow_sem;
 	int ret;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-
-	if (shadow->magic != COBALT_SEM_MAGIC
-	    && shadow->magic != COBALT_NAMED_SEM_MAGIC) {
-		thread_set_errno(EINVAL);
-		ret = -1;
-		goto out;
-	}
-
-	ret = sem_post_inner(shadow->sem, shadow->sem->owningq, 0);
-out:
+	ret = sem_post_inner(sm, sm->owningq, 0);
 	xnlock_put_irqrestore(&nklock, s);
 
 	return ret;
@@ -888,28 +737,22 @@ out:
  * Specification.</a>
  *
  */
-int sem_getvalue(sem_t * sm, int *value)
+int sem_getvalue(cobalt_sem_t *sem, int *value)
 {
-	struct __shadow_sem *shadow = &((union __xeno_sem *)sm)->shadow_sem;
-	cobalt_sem_t *sem;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if ((shadow->magic != COBALT_SEM_MAGIC
-	     && shadow->magic != COBALT_NAMED_SEM_MAGIC)
-	    || shadow->sem->magic != COBALT_SEM_MAGIC) {
+	if (sem->magic != COBALT_SEM_MAGIC) {
 		xnlock_put_irqrestore(&nklock, s);
-		thread_set_errno(EINVAL);
-		return -1;
-	}
 
-	sem = shadow->sem;
+		return -EINVAL;
+	}
 
 	if (sem->owningq != sem_kqueue(sem)) {
 		xnlock_put_irqrestore(&nklock, s);
-		thread_set_errno(EPERM);
-		return -1;
+
+		return -EPERM;
 	}
 
 	if (sem->value == 0 && (sem->flags & SEM_REPORT) != 0)
@@ -922,45 +765,266 @@ int sem_getvalue(sem_t * sm, int *value)
 	return 0;
 }
 
-/**
- * Broadcast a semaphore.
- *
- * This service is a non-standard extension for broadcasting the
- * semaphore @a sm.
- *
- * All threads waiting on the semaphore are unblocked, as if the
- * semaphore has been signaled. The semaphore count is zeroed as a
- * result of the operation.
- *
- * @param sm the semaphore to be broadcast.
- *
- * @retval 0 on success;
- * @retval -1 with errno set if:
- * - EINVAL, the specified semaphore is invalid or uninitialized;
- * - EPERM, the semaphore @a sm is not process-shared and does not belong to the
- *   current process;
- *
- */
-int sem_broadcast_np(sem_t *sm)
+int cobalt_sem_init(struct __shadow_sem __user *u_sem, int pshared, unsigned value)
 {
-	struct __shadow_sem *shadow = &((union __xeno_sem *)sm)->shadow_sem;
-	int ret;
+	struct __shadow_sem sm;
+	int err;
+
+	if (__xn_safe_copy_from_user(&sm, u_sem, sizeof(sm)))
+		return -EFAULT;
+
+	err = do_sem_init(&sm, pshared ? SEM_PSHARED : 0, value);
+	if (err < 0)
+		return err;
+
+	return __xn_safe_copy_to_user(u_sem, &sm, sizeof(*u_sem));
+}
+
+int cobalt_sem_post(struct __shadow_sem __user *u_sem)
+{
+	cobalt_sem_t *sm;
+
+	__xn_get_user(sm, &u_sem->sem);
+
+	return sem_post(sm);
+}
+
+int cobalt_sem_wait(struct __shadow_sem __user *u_sem)
+{
+	cobalt_sem_t *sm;
+
+	__xn_get_user(sm, &u_sem->sem);
+
+	return sem_wait(sm);
+}
+
+int cobalt_sem_timedwait(struct __shadow_sem __user *u_sem,
+			 struct timespec __user *u_ts)
+{
+	struct timespec ts;
+	cobalt_sem_t *sm;
+
+	__xn_get_user(sm, &u_sem->sem);
+
+	if (__xn_safe_copy_from_user(&ts, u_ts, sizeof(ts)))
+		return -EFAULT;
+
+	return sem_timedwait(sm, &ts);
+}
+
+int cobalt_sem_trywait(struct __shadow_sem __user *u_sem)
+{
+	cobalt_sem_t *sm;
+
+	__xn_get_user(sm, &u_sem->sem);
+
+	return sem_trywait(sm);
+}
+
+int cobalt_sem_getvalue(struct __shadow_sem __user *u_sem, int __user *u_sval)
+{
+	cobalt_sem_t *sm;
+	int err, sval;
+
+	__xn_get_user(sm, &u_sem->sem);
+
+	err = sem_getvalue(sm, &sval);
+	if (err < 0)
+		return err;
+
+	return __xn_safe_copy_to_user(u_sval, &sval, sizeof(sval));
+}
+
+int cobalt_sem_destroy(struct __shadow_sem __user *u_sem)
+{
+	struct __shadow_sem sm;
+	int err;
+
+	if (__xn_safe_copy_from_user(&sm, u_sem, sizeof(sm)))
+		return -EFAULT;
+
+	err = sem_destroy(&sm);
+	if (err < 0)
+		return err;
+
+	return __xn_safe_copy_to_user(u_sem, &sm, sizeof(*u_sem)) ?: err;
+}
+
+int cobalt_sem_open(unsigned long __user *u_addr,
+		    const char __user *u_name,
+		    int oflags, mode_t mode, unsigned value)
+{
+	char name[COBALT_MAXNAME];
+	struct __shadow_sem *sm;
+	cobalt_assoc_t *assoc;
+	unsigned long uaddr;
+	cobalt_queues_t *q;
+	cobalt_usem_t *usm;
+	long len;
+	int err;
 	spl_t s;
 
-	xnlock_get_irqsave(&nklock, s);
+	q = cobalt_queues();
+	if (q == NULL)
+		return -EPERM;
 
-	if (shadow->magic != COBALT_SEM_MAGIC
-	    && shadow->magic != COBALT_NAMED_SEM_MAGIC) {
-		thread_set_errno(EINVAL);
-		ret = -1;
-		goto out;
+	if (__xn_safe_copy_from_user(&uaddr, u_addr, sizeof(uaddr)))
+		return -EFAULT;
+
+	len = __xn_safe_strncpy_from_user(name, u_name, sizeof(name));
+	if (len < 0)
+		return len;
+	if (len >= sizeof(name))
+		return -ENAMETOOLONG;
+	if (len == 0)
+		return -EINVAL;
+
+	if (!(oflags & O_CREAT))
+		sm = &((union __xeno_sem *)sem_open(name, oflags))->shadow_sem;
+	else
+		sm = &((union __xeno_sem *)sem_open(name, oflags, mode, value))->shadow_sem;
+
+	if (IS_ERR(sm))
+		return PTR_ERR(sm);
+
+	xnlock_get_irqsave(&cobalt_assoc_lock, s);
+
+	assoc = cobalt_assoc_lookup(&q->usems, (u_long)sm->sem);
+	if (assoc) {
+		usm = assoc2usem(assoc);
+		++usm->refcnt;
+		xnlock_put_irqrestore(&nklock, s);
+		goto got_usm;
 	}
 
-	ret = sem_post_inner(shadow->sem, shadow->sem->owningq, 1);
-out:
+	xnlock_put_irqrestore(&cobalt_assoc_lock, s);
+
+	usm = xnmalloc(sizeof(*usm));
+	if (usm == NULL) {
+		sem_close(sm);
+		return -ENOSPC;
+	}
+
+	usm->uaddr = uaddr;
+	usm->refcnt = 1;
+
+	xnlock_get_irqsave(&cobalt_assoc_lock, s);
+
+	assoc = cobalt_assoc_lookup(&q->usems, (u_long)sm->sem);
+	if (assoc) {
+		assoc2usem(assoc)->refcnt++;
+		xnlock_put_irqrestore(&nklock, s);
+		xnfree(usm);
+		usm = assoc2usem(assoc);
+		goto got_usm;
+	}
+
+	cobalt_assoc_insert(&q->usems, &usm->assoc, (u_long)sm->sem);
+
+	xnlock_put_irqrestore(&cobalt_assoc_lock, s);
+
+      got_usm:
+
+	if (usm->uaddr == uaddr)
+		/* First binding by this process. */
+		err = __xn_safe_copy_to_user((void __user *)usm->uaddr,
+					     sm, sizeof(*sm));
+	else
+		/* Semaphore already bound by this process in user-space. */
+		err = __xn_safe_copy_to_user(u_addr,
+					     &usm->uaddr, sizeof(*u_addr));
+
+	return err;
+}
+
+int cobalt_sem_close(unsigned long uaddr, int __user *u_closed)
+{
+	struct __shadow_sem sm;
+	cobalt_assoc_t *assoc;
+	int closed = 0, err;
+	cobalt_usem_t *usm;
+	cobalt_queues_t *q;
+	spl_t s;
+
+	q = cobalt_queues();
+	if (q == NULL)
+		return -EPERM;
+
+	if (__xn_safe_copy_from_user(&sm, (void __user *)uaddr, sizeof(sm)))
+		return -EFAULT;
+
+	xnlock_get_irqsave(&cobalt_assoc_lock, s);
+
+	assoc = cobalt_assoc_lookup(&q->usems, (u_long)sm.sem);
+	if (assoc == NULL) {
+		xnlock_put_irqrestore(&cobalt_assoc_lock, s);
+		return -EINVAL;
+	}
+
+	usm = assoc2usem(assoc);
+
+	err = sem_close(&sm);
+
+	if (!err && (closed = (--usm->refcnt == 0)))
+		cobalt_assoc_remove(&q->usems, (u_long)sm.sem);
+
+	xnlock_put_irqrestore(&cobalt_assoc_lock, s);
+
+	if (err < 0)
+		return err;
+
+	if (closed)
+		xnfree(usm);
+
+	return __xn_safe_copy_to_user(u_closed, &closed, sizeof(*u_closed));
+}
+
+int cobalt_sem_unlink(const char __user *u_name)
+{
+	char name[COBALT_MAXNAME];
+	long len;
+
+	len = __xn_safe_strncpy_from_user(name, u_name, sizeof(name));
+	if (len < 0)
+		return len;
+	if (len >= sizeof(name))
+		return -ENAMETOOLONG;
+
+	return sem_unlink(name);
+}
+
+int cobalt_sem_init_np(struct __shadow_sem __user *u_sem,
+		       int flags, unsigned value)
+{
+	struct __shadow_sem sm;
+	int err;
+
+	if (__xn_safe_copy_from_user(&sm, u_sem, sizeof(sm)))
+		return -EFAULT;
+
+	if (flags & ~(SEM_FIFO|SEM_PULSE|SEM_PSHARED|SEM_REPORT|SEM_WARNDEL))
+		return -EINVAL;
+
+	err = do_sem_init(&sm, flags, value);
+	if (err < 0)
+		return err;
+
+	return __xn_safe_copy_to_user(u_sem, &sm, sizeof(*u_sem));
+}
+
+int cobalt_sem_broadcast_np(struct __shadow_sem __user *u_sem)
+{
+	cobalt_sem_t *sm;
+	spl_t s;
+	int err;
+
+	__xn_get_user(sm, &u_sem->sem);
+
+	xnlock_get_irqsave(&nklock, s);
+	err = sem_post_inner(sm, sm->owningq, 1);
 	xnlock_put_irqrestore(&nklock, s);
 
-	return ret;
+	return err;
 }
 
 #ifndef __XENO_SIM__
@@ -973,7 +1037,7 @@ static void usem_cleanup(cobalt_assoc_t *assoc)
 #if XENO_DEBUG(POSIX)
 	xnprintf("Posix: closing semaphore \"%s\".\n", nsem->nodebase.name);
 #endif /* XENO_DEBUG(POSIX) */
-	sem_close(&nsem->descriptor.native_sem);
+	sem_close(&nsem->descriptor.shadow_sem);
 	xnfree(usem);
 }
 
@@ -1025,16 +1089,3 @@ void cobalt_sem_pkg_cleanup(void)
 }
 
 /*@}*/
-
-EXPORT_SYMBOL_GPL(sem_init);
-EXPORT_SYMBOL_GPL(sem_destroy);
-EXPORT_SYMBOL_GPL(sem_post);
-EXPORT_SYMBOL_GPL(sem_trywait);
-EXPORT_SYMBOL_GPL(sem_wait);
-EXPORT_SYMBOL_GPL(sem_timedwait);
-EXPORT_SYMBOL_GPL(sem_getvalue);
-EXPORT_SYMBOL_GPL(sem_open);
-EXPORT_SYMBOL_GPL(sem_close);
-EXPORT_SYMBOL_GPL(sem_unlink);
-EXPORT_SYMBOL_GPL(sem_init_np);
-EXPORT_SYMBOL_GPL(sem_broadcast_np);

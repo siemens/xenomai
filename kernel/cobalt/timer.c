@@ -70,7 +70,7 @@ static void cobalt_base_timer_handler(xntimer_t *xntimer)
 
 	/* Null signo means to post a semaphore instead. */
 	sem = timer->si.info.si_value.sival_ptr;
-	if (sem && sem_post_inner(sem, NULL, 0))
+	if (sem && sem_post_inner(sem, NULL, 0) < 0)
 		/*
 		 * On error, forget sema4 for next shots. In essence,
 		 * the timer stops notifying anyone at expiry.
@@ -177,10 +177,10 @@ int timer_create(clockid_t clockid,
 			sem = evp->sigev_value.sival_ptr;
 			if (sem == NULL)
 				goto error;
-			err = sem_getvalue(sem, &semval);
-			if (err)
-				return -1; /* errno already set */
 			shadow_sem = &((union __xeno_sem *)sem)->shadow_sem;
+			err = sem_getvalue(shadow_sem->sem, &semval);
+			if (err)
+				goto error;
 			signo = 0;
 			break;
 

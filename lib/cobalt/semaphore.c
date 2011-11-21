@@ -21,19 +21,19 @@
 #include <errno.h>
 #include <fcntl.h>		/* For O_CREAT. */
 #include <pthread.h>		/* For pthread_setcanceltype. */
+#include <kernel/cobalt/sem.h>
 #include <cobalt/syscall.h>
 #include <semaphore.h>
 
 extern int __cobalt_muxid;
 
-int __wrap_sem_init(sem_t * sem, int pshared, unsigned value)
+int __wrap_sem_init(sem_t *sem, int pshared, unsigned value)
 {
-	union __xeno_sem *_sem = (union __xeno_sem *)sem;
+	struct __shadow_sem *_sem = &((union __xeno_sem *)sem)->shadow_sem;
 	int err;
 
 	err = -XENOMAI_SKINCALL3(__cobalt_muxid,
-				 __cobalt_sem_init,
-				 &_sem->shadow_sem, pshared, value);
+				 __cobalt_sem_init, _sem, pshared, value);
 	if (!err)
 		return 0;
 
@@ -42,45 +42,58 @@ int __wrap_sem_init(sem_t * sem, int pshared, unsigned value)
 	return -1;
 }
 
-int __wrap_sem_destroy(sem_t * sem)
+int __wrap_sem_destroy(sem_t *sem)
 {
-	union __xeno_sem *_sem = (union __xeno_sem *)sem;
+	struct __shadow_sem *_sem = &((union __xeno_sem *)sem)->shadow_sem;
 	int err;
 
-	err = -XENOMAI_SKINCALL1(__cobalt_muxid,
-				 __cobalt_sem_destroy, &_sem->shadow_sem);
+	if (_sem->magic != COBALT_SEM_MAGIC
+	    && _sem->magic != COBALT_NAMED_SEM_MAGIC) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	err = -XENOMAI_SKINCALL1(__cobalt_muxid, __cobalt_sem_destroy, _sem);
 	if (err >= 0)
 		return err;
 
 	errno = err;
-
 	return -1;
 }
 
-int __wrap_sem_post(sem_t * sem)
+int __wrap_sem_post(sem_t *sem)
 {
-	union __xeno_sem *_sem = (union __xeno_sem *)sem;
+	struct __shadow_sem *_sem = &((union __xeno_sem *)sem)->shadow_sem;
 	int err;
 
-	err = -XENOMAI_SKINCALL1(__cobalt_muxid,
-				 __cobalt_sem_post, &_sem->shadow_sem);
+	if (_sem->magic != COBALT_SEM_MAGIC
+	    && _sem->magic != COBALT_NAMED_SEM_MAGIC) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	err = -XENOMAI_SKINCALL1(__cobalt_muxid, __cobalt_sem_post, _sem);
 	if (!err)
 		return 0;
 
 	errno = err;
-
 	return -1;
 }
 
-int __wrap_sem_wait(sem_t * sem)
+int __wrap_sem_wait(sem_t *sem)
 {
-	union __xeno_sem *_sem = (union __xeno_sem *)sem;
+	struct __shadow_sem *_sem = &((union __xeno_sem *)sem)->shadow_sem;
 	int err, oldtype;
+
+	if (_sem->magic != COBALT_SEM_MAGIC
+	    && _sem->magic != COBALT_NAMED_SEM_MAGIC) {
+		errno = EINVAL;
+		return -1;
+	}
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	err = -XENOMAI_SKINCALL1(__cobalt_muxid,
-				 __cobalt_sem_wait, &_sem->shadow_sem);
+	err = -XENOMAI_SKINCALL1(__cobalt_muxid, __cobalt_sem_wait, _sem);
 
 	pthread_setcanceltype(oldtype, NULL);
 
@@ -88,19 +101,24 @@ int __wrap_sem_wait(sem_t * sem)
 		return 0;
 
 	errno = err;
-
 	return -1;
 }
 
-int __wrap_sem_timedwait(sem_t * sem, const struct timespec *ts)
+int __wrap_sem_timedwait(sem_t *sem, const struct timespec *ts)
 {
-	union __xeno_sem *_sem = (union __xeno_sem *)sem;
+	struct __shadow_sem *_sem = &((union __xeno_sem *)sem)->shadow_sem;
 	int err, oldtype;
+
+	if (_sem->magic != COBALT_SEM_MAGIC
+	    && _sem->magic != COBALT_NAMED_SEM_MAGIC) {
+		errno = EINVAL;
+		return -1;
+	}
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
 	err = -XENOMAI_SKINCALL2(__cobalt_muxid,
-				 __cobalt_sem_timedwait, &_sem->shadow_sem, ts);
+				 __cobalt_sem_timedwait, _sem, ts);
 
 	pthread_setcanceltype(oldtype, NULL);
 
@@ -108,37 +126,45 @@ int __wrap_sem_timedwait(sem_t * sem, const struct timespec *ts)
 		return 0;
 
 	errno = err;
-
 	return -1;
 }
 
-int __wrap_sem_trywait(sem_t * sem)
+int __wrap_sem_trywait(sem_t *sem)
 {
-	union __xeno_sem *_sem = (union __xeno_sem *)sem;
+	struct __shadow_sem *_sem = &((union __xeno_sem *)sem)->shadow_sem;
 	int err;
 
-	err = -XENOMAI_SKINCALL1(__cobalt_muxid,
-				 __cobalt_sem_trywait, &_sem->shadow_sem);
+	if (_sem->magic != COBALT_SEM_MAGIC
+	    && _sem->magic != COBALT_NAMED_SEM_MAGIC) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	err = -XENOMAI_SKINCALL1(__cobalt_muxid, __cobalt_sem_trywait, _sem);
 	if (!err)
 		return 0;
 
 	errno = err;
-
 	return -1;
 }
 
-int __wrap_sem_getvalue(sem_t * sem, int *sval)
+int __wrap_sem_getvalue(sem_t *sem, int *sval)
 {
-	union __xeno_sem *_sem = (union __xeno_sem *)sem;
+	struct __shadow_sem *_sem = &((union __xeno_sem *)sem)->shadow_sem;
 	int err;
+
+	if (_sem->magic != COBALT_SEM_MAGIC
+	    && _sem->magic != COBALT_NAMED_SEM_MAGIC) {
+		errno = EINVAL;
+		return -1;
+	}
 
 	err = -XENOMAI_SKINCALL2(__cobalt_muxid,
-				 __cobalt_sem_getvalue, &_sem->shadow_sem, sval);
+				 __cobalt_sem_getvalue, _sem, sval);
 	if (!err)
 		return 0;
 
 	errno = err;
-
 	return -1;
 }
 
@@ -180,13 +206,18 @@ sem_t *__wrap_sem_open(const char *name, int oflags, ...)
 	return SEM_FAILED;
 }
 
-int __wrap_sem_close(sem_t * sem)
+int __wrap_sem_close(sem_t *sem)
 {
-	union __xeno_sem *_sem = (union __xeno_sem *)sem;
+	struct __shadow_sem *_sem = &((union __xeno_sem *)sem)->shadow_sem;
 	int err, closed;
 
+	if (_sem->magic != COBALT_NAMED_SEM_MAGIC) {
+		errno = EINVAL;
+		return -1;
+	}
+
 	err = -XENOMAI_SKINCALL2(__cobalt_muxid,
-				 __cobalt_sem_close, &_sem->shadow_sem, &closed);
+				 __cobalt_sem_close, _sem, &closed);
 
 	if (!err) {
 		if (closed)
@@ -213,31 +244,34 @@ int __wrap_sem_unlink(const char *name)
 
 int sem_init_np(sem_t *sem, int flags, unsigned int value)
 {
-	union __xeno_sem *_sem = (union __xeno_sem *)sem;
+	struct __shadow_sem *_sem = &((union __xeno_sem *)sem)->shadow_sem;
 	int err;
 
 	err = -XENOMAI_SKINCALL3(__cobalt_muxid,
-				 __cobalt_sem_init_np,
-				 &_sem->shadow_sem, flags, value);
+				 __cobalt_sem_init_np, _sem, flags, value);
 	if (!err)
 		return 0;
 
 	errno = err;
-
 	return -1;
 }
 
 int sem_broadcast_np(sem_t *sem)
 {
-	union __xeno_sem *_sem = (union __xeno_sem *)sem;
+	struct __shadow_sem *_sem = &((union __xeno_sem *)sem)->shadow_sem;
 	int err;
 
+	if (_sem->magic != COBALT_SEM_MAGIC
+	    && _sem->magic != COBALT_NAMED_SEM_MAGIC) {
+		errno = EINVAL;
+		return -1;
+	}
+
 	err = -XENOMAI_SKINCALL1(__cobalt_muxid,
-				 __cobalt_sem_broadcast_np, &_sem->shadow_sem);
+				 __cobalt_sem_broadcast_np, _sem);
 	if (!err)
 		return 0;
 
 	errno = err;
-
 	return -1;
 }

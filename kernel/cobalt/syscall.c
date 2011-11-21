@@ -584,289 +584,6 @@ static int __pthread_stat(unsigned long tid,
 	return __xn_safe_copy_to_user(u_stat, &stat, sizeof(stat));
 }
 
-static int __sem_init(union __xeno_sem __user *u_sem,
-		      int pshared, unsigned value)
-{
-	union __xeno_sem sm;
-
-	if (__xn_safe_copy_from_user(&sm.shadow_sem,
-				     &u_sem->shadow_sem,
-				     sizeof(sm.shadow_sem)))
-		return -EFAULT;
-
-	if (sem_init(&sm.native_sem, pshared, value) == -1)
-		return -thread_get_errno();
-
-	return __xn_safe_copy_to_user(&u_sem->shadow_sem,
-				      &sm.shadow_sem, sizeof(u_sem->shadow_sem));
-}
-
-static int __sem_post(union __xeno_sem __user *u_sem)
-{
-	union __xeno_sem sm;
-
-	if (__xn_safe_copy_from_user(&sm.shadow_sem,
-				     &u_sem->shadow_sem,
-				     sizeof(sm.shadow_sem)))
-		return -EFAULT;
-
-	return sem_post(&sm.native_sem) == 0 ? 0 : -thread_get_errno();
-}
-
-static int __sem_wait(union __xeno_sem __user *u_sem)
-{
-	union __xeno_sem sm;
-
-	if (__xn_safe_copy_from_user(&sm.shadow_sem,
-				     &u_sem->shadow_sem,
-				     sizeof(sm.shadow_sem)))
-		return -EFAULT;
-
-	return sem_wait(&sm.native_sem) == 0 ? 0 : -thread_get_errno();
-}
-
-static int __sem_timedwait(union __xeno_sem __user *u_sem,
-			   struct timespec __user *u_ts)
-{
-	union __xeno_sem sm;
-	struct timespec ts;
-
-	if (__xn_safe_copy_from_user(&sm.shadow_sem,
-				     &u_sem->shadow_sem,
-				     sizeof(sm.shadow_sem)))
-		return -EFAULT;
-
-	if (__xn_safe_copy_from_user(&ts, u_ts, sizeof(ts)))
-		return -EFAULT;
-
-	return sem_timedwait(&sm.native_sem,
-			     &ts) == 0 ? 0 : -thread_get_errno();
-}
-
-static int __sem_trywait(union __xeno_sem __user *u_sem)
-{
-	union __xeno_sem sm;
-
-	if (__xn_safe_copy_from_user(&sm.shadow_sem,
-				     &u_sem->shadow_sem,
-				     sizeof(sm.shadow_sem)))
-		return -EFAULT;
-
-	return sem_trywait(&sm.native_sem) == 0 ? 0 : -thread_get_errno();
-}
-
-static int __sem_getvalue(union __xeno_sem __user *u_sem,
-			  int __user *u_sval)
-{
-	union __xeno_sem sm;
-	int err, sval;
-
-	if (__xn_safe_copy_from_user(&sm.shadow_sem,
-				     &u_sem->shadow_sem,
-				     sizeof(sm.shadow_sem)))
-		return -EFAULT;
-
-	err = sem_getvalue(&sm.native_sem, &sval);
-	if (err)
-		return -thread_get_errno();
-
-	return __xn_safe_copy_to_user(u_sval, &sval, sizeof(sval));
-}
-
-static int __sem_destroy(union __xeno_sem __user *u_sem)
-{
-	union __xeno_sem sm;
-	int err;
-
-	if (__xn_safe_copy_from_user(&sm.shadow_sem,
-				     &u_sem->shadow_sem,
-				     sizeof(sm.shadow_sem)))
-		return -EFAULT;
-
-	err = sem_destroy(&sm.native_sem);
-	if (err < 0)
-		return -thread_get_errno();
-
-	return __xn_safe_copy_to_user(&u_sem->shadow_sem,
-				      &sm.shadow_sem, sizeof(u_sem->shadow_sem)) ?: err;
-}
-
-static int __sem_open(unsigned long __user *u_addr,
-		      const char __user *u_name,
-		      int oflags,
-		      mode_t mode,
-		      unsigned value)
-{
-	char name[COBALT_MAXNAME];
-	union __xeno_sem *sm;
-	cobalt_assoc_t *assoc;
-	unsigned long uaddr;
-	cobalt_queues_t *q;
-	cobalt_usem_t *usm;
-	long len;
-	int err;
-	spl_t s;
-
-	q = cobalt_queues();
-	if (q == NULL)
-		return -EPERM;
-
-	if (__xn_safe_copy_from_user(&uaddr, u_addr, sizeof(uaddr)))
-		return -EFAULT;
-
-	len = __xn_safe_strncpy_from_user(name, u_name, sizeof(name));
-	if (len < 0)
-		return len;
-	if (len >= sizeof(name))
-		return -ENAMETOOLONG;
-	if (len == 0)
-		return -EINVAL;
-
-	if (!(oflags & O_CREAT))
-		sm = (union __xeno_sem *)sem_open(name, oflags);
-	else
-		sm = (union __xeno_sem *)sem_open(name, oflags, mode, value);
-
-	if (sm == SEM_FAILED)
-		return -thread_get_errno();
-
-	xnlock_get_irqsave(&cobalt_assoc_lock, s);
-
-	assoc = cobalt_assoc_lookup(&q->usems, (u_long)sm->shadow_sem.sem);
-	if (assoc) {
-		usm = assoc2usem(assoc);
-		++usm->refcnt;
-		xnlock_put_irqrestore(&nklock, s);
-		goto got_usm;
-	}
-
-	xnlock_put_irqrestore(&cobalt_assoc_lock, s);
-
-	usm = xnmalloc(sizeof(*usm));
-	if (usm == NULL) {
-		sem_close(&sm->native_sem);
-		return -ENOSPC;
-	}
-
-	usm->uaddr = uaddr;
-	usm->refcnt = 1;
-
-	xnlock_get_irqsave(&cobalt_assoc_lock, s);
-
-	assoc = cobalt_assoc_lookup(&q->usems, (u_long)sm->shadow_sem.sem);
-	if (assoc) {
-		assoc2usem(assoc)->refcnt++;
-		xnlock_put_irqrestore(&nklock, s);
-		xnfree(usm);
-		usm = assoc2usem(assoc);
-		goto got_usm;
-	}
-
-	cobalt_assoc_insert(&q->usems, &usm->assoc, (u_long)sm->shadow_sem.sem);
-
-	xnlock_put_irqrestore(&cobalt_assoc_lock, s);
-
-      got_usm:
-
-	if (usm->uaddr == uaddr)
-		/* First binding by this process. */
-		err = __xn_safe_copy_to_user((void __user *)usm->uaddr,
-					     &sm->shadow_sem, sizeof(sm->shadow_sem));
-	else
-		/* Semaphore already bound by this process in user-space. */
-		err = __xn_safe_copy_to_user(u_addr, &usm->uaddr,
-					     sizeof(unsigned long));
-
-	return err;
-}
-
-static int __sem_close(unsigned long uaddr,
-		       int __user *u_closed)
-{
-	cobalt_assoc_t *assoc;
-	union __xeno_sem sm;
-	int closed = 0, err;
-	cobalt_queues_t *q;
-	cobalt_usem_t *usm;
-	spl_t s;
-
-	q = cobalt_queues();
-	if (q == NULL)
-		return -EPERM;
-
-	if (__xn_safe_copy_from_user(&sm.shadow_sem,
-				     (void __user *)uaddr, sizeof(sm.shadow_sem)))
-		return -EFAULT;
-
-	xnlock_get_irqsave(&cobalt_assoc_lock, s);
-
-	assoc = cobalt_assoc_lookup(&q->usems, (u_long)sm.shadow_sem.sem);
-	if (assoc == NULL) {
-		xnlock_put_irqrestore(&cobalt_assoc_lock, s);
-		return -EINVAL;
-	}
-
-	usm = assoc2usem(assoc);
-
-	err = sem_close(&sm.native_sem);
-
-	if (!err && (closed = (--usm->refcnt == 0)))
-		cobalt_assoc_remove(&q->usems, (u_long)sm.shadow_sem.sem);
-
-	xnlock_put_irqrestore(&cobalt_assoc_lock, s);
-
-	if (err)
-		return -thread_get_errno();
-
-	if (closed)
-		xnfree(usm);
-
-	return __xn_safe_copy_to_user(u_closed, &closed, sizeof(int));
-}
-
-static int __sem_unlink(const char __user *u_name)
-{
-	char name[COBALT_MAXNAME];
-	long len;
-
-	len = __xn_safe_strncpy_from_user(name, u_name, sizeof(name));
-	if (len < 0)
-		return len;
-	if (len >= sizeof(name))
-		return -ENAMETOOLONG;
-
-	return sem_unlink(name) == 0 ? 0 : -thread_get_errno();
-}
-
-static int __sem_init_np(union __xeno_sem __user *u_sem,
-			 int flags, unsigned value)
-{
-	union __xeno_sem sm;
-
-	if (__xn_safe_copy_from_user(&sm.shadow_sem,
-				     &u_sem->shadow_sem,
-				     sizeof(sm.shadow_sem)))
-		return -EFAULT;
-
-	if (sem_init_np(&sm.native_sem, flags, value) == -1)
-		return -thread_get_errno();
-
-	return __xn_safe_copy_to_user(&u_sem->shadow_sem,
-				      &sm.shadow_sem, sizeof(u_sem->shadow_sem));
-}
-
-static int __sem_broadcast_np(union __xeno_sem __user *u_sem)
-{
-	union __xeno_sem sm;
-
-	if (__xn_safe_copy_from_user(&sm.shadow_sem,
-				     &u_sem->shadow_sem,
-				     sizeof(sm.shadow_sem)))
-		return -EFAULT;
-
-	return sem_broadcast_np(&sm.native_sem) == 0 ? 0 : -thread_get_errno();
-}
-
 static int __clock_getres(clockid_t clock_id,
 			  struct timespec __user *u_ts)
 {
@@ -1542,12 +1259,13 @@ static int __timer_create(clockid_t clock,
 	if (u_sev) {
 		if (__xn_safe_copy_from_user(&sev, u_sev, sizeof(sev)))
 			return -EFAULT;
+
 		if (sev.sigev_notify == SIGEV_THREAD_ID) {
 			u_sem = sev.sigev_value.sival_ptr;
-			if (__xn_safe_copy_from_user(&sm.shadow_sem,
-						     &u_sem->shadow_sem,
-						     sizeof(sm.shadow_sem)))
+
+			if (__xn_safe_copy_from_user(&sm, u_sem, sizeof(sm)))
 				return -EFAULT;
+
 			sev.sigev_value.sival_ptr = &sm.native_sem;
 		}
 	} else
@@ -2106,18 +1824,18 @@ static struct xnsysent __systab[] = {
 	SKINCALL_DEF(__cobalt_thread_probe, __pthread_probe_np, any),
 	SKINCALL_DEF(__cobalt_thread_kill, __pthread_kill, any),
 	SKINCALL_DEF(__cobalt_thread_getstat, __pthread_stat, any),
-	SKINCALL_DEF(__cobalt_sem_init, __sem_init, any),
-	SKINCALL_DEF(__cobalt_sem_destroy, __sem_destroy, any),
-	SKINCALL_DEF(__cobalt_sem_post, __sem_post, any),
-	SKINCALL_DEF(__cobalt_sem_wait, __sem_wait, primary),
-	SKINCALL_DEF(__cobalt_sem_timedwait, __sem_timedwait, primary),
-	SKINCALL_DEF(__cobalt_sem_trywait, __sem_trywait, primary),
-	SKINCALL_DEF(__cobalt_sem_getvalue, __sem_getvalue, any),
-	SKINCALL_DEF(__cobalt_sem_open, __sem_open, any),
-	SKINCALL_DEF(__cobalt_sem_close, __sem_close, any),
-	SKINCALL_DEF(__cobalt_sem_unlink, __sem_unlink, any),
-	SKINCALL_DEF(__cobalt_sem_init_np, __sem_init_np, any),
-	SKINCALL_DEF(__cobalt_sem_broadcast_np, __sem_broadcast_np, any),
+	SKINCALL_DEF(__cobalt_sem_init, cobalt_sem_init, any),
+	SKINCALL_DEF(__cobalt_sem_destroy, cobalt_sem_destroy, any),
+	SKINCALL_DEF(__cobalt_sem_post, cobalt_sem_post, any),
+	SKINCALL_DEF(__cobalt_sem_wait, cobalt_sem_wait, primary),
+	SKINCALL_DEF(__cobalt_sem_timedwait, cobalt_sem_timedwait, primary),
+	SKINCALL_DEF(__cobalt_sem_trywait, cobalt_sem_trywait, primary),
+	SKINCALL_DEF(__cobalt_sem_getvalue, cobalt_sem_getvalue, any),
+	SKINCALL_DEF(__cobalt_sem_open, cobalt_sem_open, any),
+	SKINCALL_DEF(__cobalt_sem_close, cobalt_sem_close, any),
+	SKINCALL_DEF(__cobalt_sem_unlink, cobalt_sem_unlink, any),
+	SKINCALL_DEF(__cobalt_sem_init_np, cobalt_sem_init_np, any),
+	SKINCALL_DEF(__cobalt_sem_broadcast_np, cobalt_sem_broadcast_np, any),
 	SKINCALL_DEF(__cobalt_clock_getres, __clock_getres, any),
 	SKINCALL_DEF(__cobalt_clock_gettime, __clock_gettime, any),
 	SKINCALL_DEF(__cobalt_clock_settime, __clock_settime, any),
