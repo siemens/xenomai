@@ -57,7 +57,6 @@ struct threadobj_stat {
 struct threadobj_corespec {
 	int prio_unlocked;
 	struct notifier notifier;
-	struct timespec tslice;
 	struct timespec wakeup;
 	ticks_t period;
 };
@@ -133,6 +132,7 @@ struct threadobj {
 	size_t wait_size;
 
 	struct threadobj_corespec core;
+	struct timespec tslice;
 	pthread_cond_t barrier;
 	struct traceobj *tracer;
 	struct pvholder thread_link;

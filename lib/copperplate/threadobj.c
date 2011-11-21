@@ -240,8 +240,8 @@ int threadobj_unlock_sched(struct threadobj *thobj) /* thobj->lock held */
 
 int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock held */
 {
+	struct sched_param_ex xparam;
 	pthread_t tid = thobj->tid;
-	struct sched_param param;
 	int ret, policy;
 
 	thobj->priority = prio;
@@ -249,8 +249,10 @@ int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock hel
 	if (prio == 0) {
 		thobj->status &= ~THREADOBJ_ROUNDROBIN;
 		policy = SCHED_OTHER;
-	} else if (thobj->status & THREADOBJ_ROUNDROBIN)
+	} else if (thobj->status & THREADOBJ_ROUNDROBIN) {
+		xparam.sched_rr_quantum = thobj->tslice;
 		policy = SCHED_RR;
+	}
 
 	threadobj_unlock(thobj);
 	/*
@@ -258,8 +260,8 @@ int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock hel
 	 * time credit for the target thread with the last rrperiod
 	 * set.
 	 */
-	param.sched_priority = prio;
-	ret = __RT(pthread_setschedparam(tid, policy, &param));
+	xparam.sched_priority = prio;
+	ret = pthread_setschedparam_ex(tid, policy, &xparam);
 	threadobj_lock(thobj);
 
 	return __bt(-ret);
@@ -304,6 +306,7 @@ static int set_rr(struct threadobj *thobj, struct timespec *quantum)
 		xparam.sched_rr_quantum.tv_nsec = 0;
 		thobj->status &= ~THREADOBJ_ROUNDROBIN;
 	} else {
+		thobj->tslice = *quantum;
 		xparam.sched_rr_quantum = *quantum;
 		if (quantum->tv_sec == 0 && quantum->tv_nsec == 0)
 			thobj->status &= ~THREADOBJ_ROUNDROBIN;
@@ -634,7 +637,7 @@ static inline void set_rr(struct threadobj *thobj, struct timespec *quantum)
 {
 	if (quantum) {
 		thobj->status |= THREADOBJ_ROUNDROBIN;
-		thobj->core.tslice = *quantum;
+		thobj->tslice = *quantum;
 	} else
 		thobj->status &= ~THREADOBJ_ROUNDROBIN;
 }
