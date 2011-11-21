@@ -25,11 +25,9 @@
 
 extern int __cobalt_muxid;
 
-#define COBALT_COND_MAGIC 0x86860505
-
 extern unsigned long xeno_sem_heap[2];
 
-static unsigned long *cond_get_signalsp(struct __shadow_cond *shadow)
+static inline unsigned long *cond_get_signalsp(struct __shadow_cond *shadow)
 {
 	if (likely(!shadow->attr.pshared))
 		return shadow->pending_signals;
@@ -38,7 +36,8 @@ static unsigned long *cond_get_signalsp(struct __shadow_cond *shadow)
 				 + shadow->pending_signals_offset);
 }
 
-static struct mutex_dat *cond_get_mutex_datp(struct __shadow_cond *shadow)
+static inline struct mutex_dat *
+cond_get_mutex_datp(struct __shadow_cond *shadow)
 {
 	if (shadow->mutex_datp == (struct mutex_dat *)~0UL)
 		return NULL;
@@ -87,29 +86,26 @@ int __wrap_pthread_condattr_setpshared(pthread_condattr_t *attr, int pshared)
 				  __cobalt_condattr_setpshared, attr, pshared);
 }
 
-int __wrap_pthread_cond_init(pthread_cond_t * cond,
+int __wrap_pthread_cond_init(pthread_cond_t *cond,
 			     const pthread_condattr_t * attr)
 {
-	struct __shadow_cond *shadow =
-		&((union __xeno_cond *)cond)->shadow_cond;
+	struct __shadow_cond *_cnd = &((union __xeno_cond *)cond)->shadow_cond;
 	int err;
 
-	err = XENOMAI_SKINCALL2(__cobalt_muxid,
-				 __cobalt_cond_init, shadow, attr);
-	if (!err && !shadow->attr.pshared) {
-		shadow->pending_signals = (unsigned long *)
-			(xeno_sem_heap[0] + shadow->pending_signals_offset);
+	err = XENOMAI_SKINCALL2(__cobalt_muxid, __cobalt_cond_init, _cnd, attr);
+	if (!err && !_cnd->attr.pshared) {
+		_cnd->pending_signals = (unsigned long *)
+			(xeno_sem_heap[0] + _cnd->pending_signals_offset);
 	}
 
 	return -err;
 }
 
-int __wrap_pthread_cond_destroy(pthread_cond_t * cond)
+int __wrap_pthread_cond_destroy(pthread_cond_t *cond)
 {
-	union __xeno_cond *_cond = (union __xeno_cond *)cond;
+	struct __shadow_cond *_cond = &((union __xeno_cond *)cond)->shadow_cond;
 
-	return -XENOMAI_SKINCALL1(__cobalt_muxid,
-				  __cobalt_cond_destroy, &_cond->shadow_cond);
+	return -XENOMAI_SKINCALL1(__cobalt_muxid, __cobalt_cond_destroy, _cond);
 }
 
 struct cobalt_cond_cleanup_t {
@@ -135,31 +131,39 @@ static void __pthread_cond_cleanup(void *data)
 
 int __wrap_pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
 {
+	struct __shadow_cond *_cnd = &((union __xeno_cond *)cond)->shadow_cond;
+	struct __shadow_mutex *_mx =
+		&((union __xeno_mutex *)mutex)->shadow_mutex;
 	struct cobalt_cond_cleanup_t c = {
-		.cond = &((union __xeno_cond *)cond)->shadow_cond,
-		.mutex = &((union __xeno_mutex *)mutex)->shadow_mutex,
+		.cond = _cnd,
+		.mutex = _mx,
 	};
 	int err, oldtype;
+	unsigned count;
 
-	if (c.mutex->attr.type == PTHREAD_MUTEX_ERRORCHECK) {
+	if (_mx->magic != COBALT_MUTEX_MAGIC
+	    || _cnd->magic != COBALT_COND_MAGIC)
+		return EINVAL;
+
+	if (_mx->attr.type == PTHREAD_MUTEX_ERRORCHECK) {
 		xnhandle_t cur = xeno_get_current();
 
 		if (cur == XN_NO_HANDLE)
 			return EPERM;
 
-		if (xnsynch_fast_owner_check(mutex_get_ownerp(c.mutex), cur))
+		if (xnsynch_fast_owner_check(mutex_get_ownerp(_mx), cur))
 			return EPERM;
 	}
 
 	pthread_cleanup_push(&__pthread_cond_cleanup, &c);
 
-	c.count = c.mutex->lockcnt;
+	count = _mx->lockcnt;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
 	err = XENOMAI_SKINCALL5(__cobalt_muxid,
 				 __cobalt_cond_wait_prologue,
-				 c.cond, c.mutex, &c.err, 0, NULL);
+				 _cnd, _mx, &c.err, 0, NULL);
 
 	pthread_setcanceltype(oldtype, NULL);
 
@@ -167,74 +171,81 @@ int __wrap_pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
 
 	while (err == -EINTR)
 		err = XENOMAI_SKINCALL2(__cobalt_muxid,
-					 __cobalt_cond_wait_epilogue,
-					c.cond, c.mutex);
+					__cobalt_cond_wait_epilogue, _cnd, _mx);
 
-	c.mutex->lockcnt = c.count;
+	_mx->lockcnt = count;
 
 	pthread_testcancel();
 
 	return -err ?: -c.err;
 }
 
-int __wrap_pthread_cond_timedwait(pthread_cond_t * cond,
-				  pthread_mutex_t * mutex,
+int __wrap_pthread_cond_timedwait(pthread_cond_t *cond,
+				  pthread_mutex_t *mutex,
 				  const struct timespec *abstime)
 {
+	struct __shadow_cond *_cnd = &((union __xeno_cond *)cond)->shadow_cond;
+	struct __shadow_mutex *_mx =
+		&((union __xeno_mutex *)mutex)->shadow_mutex;
 	struct cobalt_cond_cleanup_t c = {
-		.cond = &((union __xeno_cond *)cond)->shadow_cond,
-		.mutex = &((union __xeno_mutex *)mutex)->shadow_mutex,
+		.cond = _cnd,
+		.mutex = _mx,
 	};
 	int err, oldtype;
+	unsigned count;
 
-	if (c.mutex->attr.type == PTHREAD_MUTEX_ERRORCHECK) {
+	if (_mx->magic != COBALT_MUTEX_MAGIC
+	    || _cnd->magic != COBALT_COND_MAGIC)
+		return EINVAL;
+
+	if (_mx->attr.type == PTHREAD_MUTEX_ERRORCHECK) {
 		xnhandle_t cur = xeno_get_current();
 
 		if (cur == XN_NO_HANDLE)
 			return EPERM;
 
-		if (xnsynch_fast_owner_check(mutex_get_ownerp(c.mutex), cur))
+		if (xnsynch_fast_owner_check(mutex_get_ownerp(_mx), cur))
 			return EPERM;
 	}
 
 	pthread_cleanup_push(&__pthread_cond_cleanup, &c);
 
-	c.count = c.mutex->lockcnt;
+	count = _mx->lockcnt;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
 	err = XENOMAI_SKINCALL5(__cobalt_muxid,
 				__cobalt_cond_wait_prologue,
-				c.cond, c.mutex, &c.err, 1, abstime);
+				_cnd, _mx, &c.err, 1, abstime);
 	pthread_setcanceltype(oldtype, NULL);
 
 	pthread_cleanup_pop(0);
 
 	while (err == -EINTR)
 		err = XENOMAI_SKINCALL2(__cobalt_muxid,
-					__cobalt_cond_wait_epilogue,
-					c.cond, c.mutex);
+					__cobalt_cond_wait_epilogue, _cnd, _mx);
 
-	c.mutex->lockcnt = c.count;
+	_mx->lockcnt = count;
 
 	pthread_testcancel();
 
 	return -err ?: -c.err;
 }
 
-int __wrap_pthread_cond_signal(pthread_cond_t * cond)
+int __wrap_pthread_cond_signal(pthread_cond_t *cond)
 {
-	struct __shadow_cond *shadow =
-		&((union __xeno_cond *)cond)->shadow_cond;
-	unsigned long *pending_signals;
+	struct __shadow_cond *_cnd = &((union __xeno_cond *)cond)->shadow_cond;
+	unsigned long pending_signals, *pending_signalsp;
 	struct mutex_dat *mutex_datp;
 
-	if (shadow->magic != COBALT_COND_MAGIC)
+	if (_cnd->magic != COBALT_COND_MAGIC)
 		return EINVAL;
 
-	mutex_datp = cond_get_mutex_datp(shadow);
+	mutex_datp = cond_get_mutex_datp(_cnd);
 	if (mutex_datp) {
-		if ((mutex_datp->flags & COBALT_MUTEX_ERRORCHECK)) {
+		unsigned long flags = mutex_datp->flags ;
+
+		if (unlikely(flags & COBALT_MUTEX_ERRORCHECK)) {
 			xnhandle_t cur = xeno_get_current();
 
 			if (cur == XN_NO_HANDLE)
@@ -244,28 +255,30 @@ int __wrap_pthread_cond_signal(pthread_cond_t * cond)
 				return EPERM;
 		}
 
-		mutex_datp->flags |= COBALT_MUTEX_COND_SIGNAL;
+		mutex_datp->flags = flags | COBALT_MUTEX_COND_SIGNAL;
 
-		pending_signals = cond_get_signalsp(shadow);
-		if (*pending_signals != ~0UL)
-			++(*pending_signals);
+		pending_signalsp = cond_get_signalsp(_cnd);
+		pending_signals = *pending_signalsp;
+		if (pending_signals != ~0UL)
+			*pending_signalsp = pending_signals + 1;
 	}
 
 	return 0;
 }
 
-int __wrap_pthread_cond_broadcast(pthread_cond_t * cond)
+int __wrap_pthread_cond_broadcast(pthread_cond_t *cond)
 {
-	struct __shadow_cond *shadow =
-		&((union __xeno_cond *)cond)->shadow_cond;
+	struct __shadow_cond *_cnd = &((union __xeno_cond *)cond)->shadow_cond;
 	struct mutex_dat *mutex_datp;
 
-	if (shadow->magic != COBALT_COND_MAGIC)
+	if (_cnd->magic != COBALT_COND_MAGIC)
 		return EINVAL;
 
-	mutex_datp = cond_get_mutex_datp(shadow);
+	mutex_datp = cond_get_mutex_datp(_cnd);
 	if (mutex_datp) {
-		if (unlikely(mutex_datp->flags & COBALT_MUTEX_ERRORCHECK)) {
+		unsigned long flags = mutex_datp->flags ;
+
+		if (unlikely(flags & COBALT_MUTEX_ERRORCHECK)) {
 			xnhandle_t cur = xeno_get_current();
 
 			if (cur == XN_NO_HANDLE)
@@ -275,9 +288,9 @@ int __wrap_pthread_cond_broadcast(pthread_cond_t * cond)
 				return EPERM;
 		}
 
-		mutex_datp->flags |= COBALT_MUTEX_COND_SIGNAL;
+		mutex_datp->flags = flags | COBALT_MUTEX_COND_SIGNAL;
 
-		*cond_get_signalsp(shadow) = ~0UL;
+		*cond_get_signalsp(_cnd) = ~0UL;
 	}
 
 	return 0;

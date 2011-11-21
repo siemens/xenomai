@@ -42,6 +42,8 @@ union __xeno_cond {
 	} shadow_cond;
 };
 
+#define COBALT_COND_MAGIC 0x86860505
+
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
 #include "internal.h"
@@ -54,13 +56,11 @@ typedef struct cobalt_cond {
 	xnsynch_t synchbase;
 	xnholder_t link;	/* Link in cobalt_condq */
 
-#define link2cond(laddr)                                                \
-    ((cobalt_cond_t *)(((char *)laddr) - offsetof(cobalt_cond_t, link)))
+#define link2cond(laddr) container_of(laddr, cobalt_cond_t, link)
 
 	xnholder_t mutex_link;
 
-#define mutex_link2cond(laddr)						\
-    ((cobalt_cond_t *)(((char *)laddr) - offsetof(cobalt_cond_t, mutex_link)))
+#define mutex_link2cond(laddr) container_of(laddr, cobalt_cond_t, mutex_link)
 
 	unsigned long *pending_signals;
 	pthread_condattr_t attr;
@@ -71,21 +71,18 @@ typedef struct cobalt_cond {
 static inline int cobalt_cond_deferred_signals(struct cobalt_cond *cond)
 {
 	unsigned long pending_signals;
-	int need_resched, i;
+	int need_resched, i, sleepers;
 
 	pending_signals = *(cond->pending_signals);
 
 	switch(pending_signals) {
-	case 0:
-		need_resched = 0;
-		break;
-
 	default:
-		for(i = 0, need_resched = 0; i < pending_signals; i++) {
-			if (xnsynch_wakeup_one_sleeper(&cond->synchbase) == NULL)
-				break;
-			need_resched = 1;
-		}
+		sleepers = xnsynch_nsleepers(&cond->synchbase);
+		if (pending_signals > sleepers)
+			pending_signals = sleepers;
+		need_resched = !!pending_signals;
+		for(i = 0; i < pending_signals; i++)
+			xnsynch_wakeup_one_sleeper(&cond->synchbase);
 		*cond->pending_signals = 0;
 		break;
 
@@ -93,24 +90,28 @@ static inline int cobalt_cond_deferred_signals(struct cobalt_cond *cond)
 		need_resched =
 			xnsynch_flush(&cond->synchbase, 0) == XNSYNCH_RESCHED;
 		*cond->pending_signals = 0;
+
+	case 0:
+		need_resched = 0;
+		break;
 	}
 
 	return need_resched;
 }
 
-int cobalt_cond_init(union __xeno_cond __user *u_cnd,
+int cobalt_cond_init(struct __shadow_cond __user *u_cnd,
 		     const pthread_condattr_t __user *u_attr);
 
-int cobalt_cond_destroy(union __xeno_cond __user *u_cnd);
+int cobalt_cond_destroy(struct __shadow_cond __user *u_cnd);
 
-int cobalt_cond_wait_prologue(union __xeno_cond __user *u_cnd,
-			      union __xeno_mutex __user *u_mx,
+int cobalt_cond_wait_prologue(struct __shadow_cond __user *u_cnd,
+			      struct __shadow_mutex __user *u_mx,
 			      int *u_err,
 			      unsigned int timed,
 			      struct timespec __user *u_ts);
 
-int cobalt_cond_wait_epilogue(union __xeno_cond __user *u_cnd,
-			      union __xeno_mutex __user *u_mx);
+int cobalt_cond_wait_epilogue(struct __shadow_cond __user *u_cnd,
+			      struct __shadow_mutex __user *u_mx);
 
 void cobalt_condq_cleanup(cobalt_kqueues_t *q);
 

@@ -46,6 +46,8 @@ union __xeno_mutex {
 	} shadow_mutex;
 };
 
+#define COBALT_MUTEX_MAGIC (0x86860303)
+
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
 #include "internal.h"
@@ -57,8 +59,7 @@ typedef struct cobalt_mutex {
 	xnsynch_t synchbase;
 	xnholder_t link;            /* Link in cobalt_mutexq */
 
-#define link2mutex(laddr)                                               \
-	((cobalt_mutex_t *)(((char *)laddr) - offsetof(cobalt_mutex_t, link)))
+#define link2mutex(laddr) container_of(laddr, cobalt_mutex_t, link)
 
 	xnqueue_t conds;
 
@@ -95,6 +96,7 @@ static inline int cobalt_mutex_acquire_unchecked(xnthread_t *cur,
 static inline int cobalt_mutex_release(xnthread_t *cur, cobalt_mutex_t *mutex)
 {
 	struct mutex_dat *datp;
+	unsigned long flags;
 	xnholder_t *holder;
 	int need_resched;
 
@@ -107,33 +109,36 @@ static inline int cobalt_mutex_release(xnthread_t *cur, cobalt_mutex_t *mutex)
 #endif /* XENO_DEBUG(POSIX) */
 
 	need_resched = 0;
-	for (holder = getheadq(&mutex->conds);
-	     holder; holder = nextq(&mutex->conds, holder)) {
-		struct cobalt_cond *cond = mutex_link2cond(holder);
-		need_resched |= cobalt_cond_deferred_signals(cond);
-	}
 	datp = container_of(mutex->synchbase.fastlock, struct mutex_dat, owner);
-	datp->flags &= ~COBALT_MUTEX_COND_SIGNAL;
+	flags = datp->flags;
+	if ((flags & COBALT_MUTEX_COND_SIGNAL)) {
+		datp->flags = flags & ~COBALT_MUTEX_COND_SIGNAL;
+		for (holder = getheadq(&mutex->conds);
+		     holder; holder = nextq(&mutex->conds, holder)) {
+			struct cobalt_cond *cond = mutex_link2cond(holder);
+			need_resched |= cobalt_cond_deferred_signals(cond);
+		}
+	}
 	need_resched |= xnsynch_release(&mutex->synchbase) != NULL;
 
 	return need_resched;
 }
 
-int cobalt_mutex_check_init(union __xeno_mutex __user *u_mx);
+int cobalt_mutex_check_init(struct __shadow_mutex __user *u_mx);
 
-int cobalt_mutex_init(union __xeno_mutex __user *u_mx,
+int cobalt_mutex_init(struct __shadow_mutex __user *u_mx,
 		      const pthread_mutexattr_t __user *u_attr);
 
-int cobalt_mutex_destroy(union __xeno_mutex __user *u_mx);
+int cobalt_mutex_destroy(struct __shadow_mutex __user *u_mx);
 
-int cobalt_mutex_trylock(union __xeno_mutex __user *u_mx);
+int cobalt_mutex_trylock(struct __shadow_mutex __user *u_mx);
 
-int cobalt_mutex_lock(union __xeno_mutex __user *u_mx);
+int cobalt_mutex_lock(struct __shadow_mutex __user *u_mx);
 
-int cobalt_mutex_timedlock(union __xeno_mutex __user *u_mx,
+int cobalt_mutex_timedlock(struct __shadow_mutex __user *u_mx,
 			   const struct timespec __user *u_ts);
 
-int cobalt_mutex_unlock(union __xeno_mutex __user *u_mx);
+int cobalt_mutex_unlock(struct __shadow_mutex __user *u_mx);
 
 void cobalt_mutexq_cleanup(cobalt_kqueues_t *q);
 

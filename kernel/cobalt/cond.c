@@ -53,7 +53,8 @@
 
 static pthread_condattr_t default_cond_attr;
 
-static void cond_destroy_internal(cobalt_cond_t * cond, cobalt_kqueues_t *q)
+static inline void
+cond_destroy_internal(cobalt_cond_t *cond, cobalt_kqueues_t *q)
 {
 	spl_t s;
 
@@ -94,10 +95,9 @@ static void cond_destroy_internal(cobalt_cond_t * cond, cobalt_kqueues_t *q)
  * Specification.</a>
  *
  */
-static int
-pthread_cond_init(pthread_cond_t *cnd, const pthread_condattr_t *attr)
+static inline int
+pthread_cond_init(struct __shadow_cond *cnd, const pthread_condattr_t *attr)
 {
-	struct __shadow_cond *shadow = &((union __xeno_cond *)cnd)->shadow_cond;
 	xnflags_t synch_flags = XNSYNCH_PRIO | XNSYNCH_NOPIP;
 	struct xnsys_ppd *sys_ppd;
 	cobalt_cond_t *cond;
@@ -108,16 +108,16 @@ pthread_cond_init(pthread_cond_t *cnd, const pthread_condattr_t *attr)
 	if (!attr)
 		attr = &default_cond_attr;
 
-	cond = (cobalt_cond_t *) xnmalloc(sizeof(*cond));
+	cond = (cobalt_cond_t *)xnmalloc(sizeof(*cond));
 	if (!cond)
-		return ENOMEM;
+		return -ENOMEM;
 
 	sys_ppd = xnsys_ppd_get(attr->pshared);
 	cond->pending_signals = (unsigned long *)
 		xnheap_alloc(&sys_ppd->sem_heap,
 			     sizeof(*(cond->pending_signals)));
 	if (!cond->pending_signals) {
-		err = EAGAIN;
+		err = -EAGAIN;
 		goto err_free_cond;
 	}
 	*(cond->pending_signals) = 0;
@@ -125,31 +125,31 @@ pthread_cond_init(pthread_cond_t *cnd, const pthread_condattr_t *attr)
 	xnlock_get_irqsave(&nklock, s);
 
 	if (attr->magic != COBALT_COND_ATTR_MAGIC) {
-		err = EINVAL;
+		err = -EINVAL;
 		goto err_free_pending_signals;
 	}
 
 	condq = &cobalt_kqueues(attr->pshared)->condq;
 
-	if (shadow->magic == COBALT_COND_MAGIC) {
+	if (cnd->magic == COBALT_COND_MAGIC) {
 		xnholder_t *holder;
 		for (holder = getheadq(condq); holder;
 		     holder = nextq(condq, holder))
-			if (holder == &shadow->cond->link) {
+			if (holder == &cnd->cond->link) {
 				/* cond is already in the queue. */
-				err = EBUSY;
+				err = -EBUSY;
 				goto err_free_pending_signals;
 			}
 	}
 
-	shadow->attr = *attr;
-	shadow->pending_signals_offset =
+	cnd->attr = *attr;
+	cnd->pending_signals_offset =
 		xnheap_mapped_offset(&sys_ppd->sem_heap,
 				     cond->pending_signals);
-	shadow->mutex_datp = (struct mutex_dat *)~0UL;
+	cnd->mutex_datp = (struct mutex_dat *)~0UL;
 
-	shadow->magic = COBALT_COND_MAGIC;
-	shadow->cond = cond;
+	cnd->magic = COBALT_COND_MAGIC;
+	cnd->cond = cond;
 
 	cond->magic = COBALT_COND_MAGIC;
 	xnsynch_init(&cond->synchbase, synch_flags, NULL);
@@ -195,32 +195,31 @@ pthread_cond_init(pthread_cond_t *cnd, const pthread_condattr_t *attr)
  * Specification.</a>
  *
  */
-static int pthread_cond_destroy(pthread_cond_t * cnd)
+static inline int pthread_cond_destroy(struct __shadow_cond *cnd)
 {
-	struct __shadow_cond *shadow = &((union __xeno_cond *)cnd)->shadow_cond;
 	cobalt_cond_t *cond;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	cond = shadow->cond;
-	if (!cobalt_obj_active(shadow, COBALT_COND_MAGIC, struct __shadow_cond)
+	cond = cnd->cond;
+	if (!cobalt_obj_active(cnd, COBALT_COND_MAGIC, struct __shadow_cond)
 	    || !cobalt_obj_active(cond, COBALT_COND_MAGIC, struct cobalt_cond)) {
 		xnlock_put_irqrestore(&nklock, s);
-		return EINVAL;
+		return -EINVAL;
 	}
 
 	if (cond->owningq != cobalt_kqueues(cond->attr.pshared)) {
 		xnlock_put_irqrestore(&nklock, s);
-		return EPERM;
+		return -EPERM;
 	}
 
 	if (xnsynch_nsleepers(&cond->synchbase) || cond->mutex) {
 		xnlock_put_irqrestore(&nklock, s);
-		return EBUSY;
+		return -EBUSY;
 	}
 
-	cobalt_mark_deleted(shadow);
+	cobalt_mark_deleted(cnd);
 	cobalt_mark_deleted(cond);
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -239,11 +238,8 @@ static inline int cobalt_cond_timedwait_prologue(xnthread_t *cur,
 	spl_t s;
 	int err;
 
-	if (!cond || !mutex)
-		return EINVAL;
-
 	if (xnpod_unblockable_p())
-		return EPERM;
+		return -EPERM;
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -349,16 +345,14 @@ static inline int cobalt_cond_timedwait_epilogue(xnthread_t *cur,
 	return err;
 }
 
-int cobalt_cond_init(union __xeno_cond __user *u_cnd,
+int cobalt_cond_init(struct __shadow_cond __user *u_cnd,
 		     const pthread_condattr_t __user *u_attr)
 {
 	pthread_condattr_t locattr, *attr;
-	union __xeno_cond cnd;
+	struct __shadow_cond cnd;
 	int err;
 
-	if (__xn_safe_copy_from_user(&cnd.shadow_cond,
-				     &u_cnd->shadow_cond,
-				     sizeof(cnd.shadow_cond)))
+	if (__xn_safe_copy_from_user(&cnd, u_cnd, sizeof(cnd)))
 		return -EFAULT;
 
 	if (u_attr) {
@@ -371,31 +365,26 @@ int cobalt_cond_init(union __xeno_cond __user *u_cnd,
 		attr = NULL;
 
 	/* Always use default attribute. */
-	err = pthread_cond_init(&cnd.native_cond, attr);
+	err = pthread_cond_init(&cnd, attr);
+	if (err < 0)
+		return err;
 
-	if (err)
-		return -err;
-
-	return __xn_safe_copy_to_user(&u_cnd->shadow_cond,
-				      &cnd.shadow_cond, sizeof(u_cnd->shadow_cond));
+	return __xn_safe_copy_to_user(u_cnd, &cnd, sizeof(*u_cnd));
 }
 
-int cobalt_cond_destroy(union __xeno_cond __user *u_cnd)
+int cobalt_cond_destroy(struct __shadow_cond __user *u_cnd)
 {
-	union __xeno_cond cnd;
+	struct __shadow_cond cnd;
 	int err;
 
-	if (__xn_safe_copy_from_user(&cnd.shadow_cond,
-				     &u_cnd->shadow_cond,
-				     sizeof(cnd.shadow_cond)))
+	if (__xn_safe_copy_from_user(&cnd, u_cnd, sizeof(cnd)))
 		return -EFAULT;
 
-	err = pthread_cond_destroy(&cnd.native_cond);
-	if (err)
-		return -err;
+	err = pthread_cond_destroy(&cnd);
+	if (err < 0)
+		return err;
 
-	return __xn_safe_copy_to_user(&u_cnd->shadow_cond,
-				      &cnd.shadow_cond, sizeof(u_cnd->shadow_cond));
+	return __xn_safe_copy_to_user(u_cnd, &cnd, sizeof(*u_cnd));
 }
 
 struct us_cond_data {
@@ -403,8 +392,8 @@ struct us_cond_data {
 };
 
 /* pthread_cond_wait_prologue(cond, mutex, count_ptr, timed, timeout) */
-int cobalt_cond_wait_prologue(union __xeno_cond __user *u_cnd,
-			      union __xeno_mutex __user *u_mx,
+int cobalt_cond_wait_prologue(struct __shadow_cond __user *u_cnd,
+			      struct __shadow_mutex __user *u_mx,
 			      int *u_err,
 			      unsigned int timed,
 			      struct timespec __user *u_ts)
@@ -417,12 +406,12 @@ int cobalt_cond_wait_prologue(union __xeno_cond __user *u_cnd,
 	struct timespec ts;
 	int err, perr = 0;
 
-	__xn_get_user(cnd, &u_cnd->shadow_cond.cond);
-	__xn_get_user(mx, &u_mx->shadow_mutex.mutex);
+	__xn_get_user(cnd, &u_cnd->cond);
+	__xn_get_user(mx, &u_mx->mutex);
 
 	if (!cnd->mutex) {
-		__xn_get_user(datp, &u_mx->shadow_mutex.dat);
-		__xn_put_user(datp, &u_cnd->shadow_cond.mutex_datp);
+		__xn_get_user(datp, &u_mx->dat);
+		__xn_put_user(datp, &u_cnd->mutex_datp);
 	}
 
 	if (timed) {
@@ -444,14 +433,14 @@ int cobalt_cond_wait_prologue(union __xeno_cond __user *u_cnd,
 
 		if (!cnd->mutex) {
 			datp = (struct mutex_dat *)~0UL;
-			__xn_put_user(datp, &u_cnd->shadow_cond.mutex_datp);
+			__xn_put_user(datp, &u_cnd->mutex_datp);
 		}
 		break;
 
 	case -EINTR:
 		if (!cnd->mutex) {
 			datp = (struct mutex_dat *)~0UL;
-			__xn_put_user(datp, &u_cnd->shadow_cond.mutex_datp);
+			__xn_put_user(datp, &u_cnd->mutex_datp);
 		}
 
 		perr = err;
@@ -461,7 +450,7 @@ int cobalt_cond_wait_prologue(union __xeno_cond __user *u_cnd,
 	default:
 		if (!cnd->mutex) {
 			datp = (struct mutex_dat *)~0UL;
-			__xn_put_user(datp, &u_cnd->shadow_cond.mutex_datp);
+			__xn_put_user(datp, &u_cnd->mutex_datp);
 		}
 
 		/* Please gcc and handle the case which will never
@@ -475,22 +464,22 @@ int cobalt_cond_wait_prologue(union __xeno_cond __user *u_cnd,
 	return err == 0 ? perr : err;
 }
 
-int cobalt_cond_wait_epilogue(union __xeno_cond __user *u_cnd,
-			      union __xeno_mutex __user *u_mx)
+int cobalt_cond_wait_epilogue(struct __shadow_cond __user *u_cnd,
+			      struct __shadow_mutex __user *u_mx)
 {
 	xnthread_t *cur = xnshadow_thread(current);
 	cobalt_cond_t *cnd;
 	cobalt_mutex_t *mx;
 	int err;
 
-	__xn_get_user(cnd, &u_cnd->shadow_cond.cond);
-	__xn_get_user(mx, &u_mx->shadow_mutex.mutex);
+	__xn_get_user(cnd, &u_cnd->cond);
+	__xn_get_user(mx, &u_mx->mutex);
 
 	err = cobalt_cond_timedwait_epilogue(cur, cnd, mx);
 
 	if (!cnd->mutex) {
 		struct mutex_dat *datp = (struct mutex_dat *)~0UL;
-		__xn_put_user(datp, &u_cnd->shadow_cond.mutex_datp);
+		__xn_put_user(datp, &u_cnd->mutex_datp);
 	}
 
 	return err;

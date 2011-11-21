@@ -115,7 +115,7 @@ static void cobalt_mutex_destroy_inner(cobalt_mutex_t *mutex,
 	xnfree(mutex);
 }
 
-static int cobalt_mutex_acquire(xnthread_t *cur,
+static inline int cobalt_mutex_acquire(xnthread_t *cur,
 				cobalt_mutex_t *mutex,
 				int timed,
 				xnticks_t abs_to)
@@ -134,8 +134,8 @@ static int cobalt_mutex_acquire(xnthread_t *cur,
 	return cobalt_mutex_acquire_unchecked(cur, mutex, timed, abs_to);
 }
 
-static int cobalt_mutex_timedlock_break(cobalt_mutex_t *mutex,
-					int timed, xnticks_t abs_to)
+static inline int cobalt_mutex_timedlock_break(cobalt_mutex_t *mutex,
+					       int timed, xnticks_t abs_to)
 {
 	xnthread_t *cur = xnpod_current_thread();
 	spl_t s;
@@ -201,14 +201,14 @@ static int cobalt_mutex_timedlock_break(cobalt_mutex_t *mutex,
 
 }
 
-int cobalt_mutex_check_init(union __xeno_mutex __user *u_mx)
+int cobalt_mutex_check_init(struct __shadow_mutex __user *u_mx)
 {
 	cobalt_mutex_t *mutex;
 	xnholder_t *holder;
 	xnqueue_t *mutexq;
 	spl_t s;
 
-	__xn_get_user(mutex, &u_mx->shadow_mutex.mutex);
+	__xn_get_user(mutex, &u_mx->mutex);
 
 	mutexq = &cobalt_kqueues(0)->mutexq;
 
@@ -236,18 +236,16 @@ int cobalt_mutex_check_init(union __xeno_mutex __user *u_mx)
 	return -EBUSY;
 }
 
-int cobalt_mutex_init(union __xeno_mutex __user *u_mx,
+int cobalt_mutex_init(struct __shadow_mutex __user *u_mx,
 		      const pthread_mutexattr_t __user *u_attr)
 {
 	pthread_mutexattr_t locattr, *attr;
+	struct __shadow_mutex mx;
 	struct mutex_dat *datp;
-	union __xeno_mutex mx;
 	cobalt_mutex_t *mutex;
 	int err;
 
-	if (__xn_safe_copy_from_user(&mx.shadow_mutex,
-				     &u_mx->shadow_mutex,
-				     sizeof(mx.shadow_mutex)))
+	if (__xn_safe_copy_from_user(&mx, u_mx, sizeof(mx)))
 		return -EFAULT;
 
 	if (u_attr) {
@@ -270,31 +268,25 @@ int cobalt_mutex_init(union __xeno_mutex __user *u_mx,
 		return -EAGAIN;
 	}
 
-	err = cobalt_mutex_init_inner(&mx.shadow_mutex, mutex, datp, attr);
+	err = cobalt_mutex_init_inner(&mx, mutex, datp, attr);
 	if (err) {
 		xnfree(mutex);
 		xnheap_free(&xnsys_ppd_get(attr->pshared)->sem_heap, datp);
 		return err;
 	}
 
-	return __xn_safe_copy_to_user(&u_mx->shadow_mutex,
-				      &mx.shadow_mutex, sizeof(u_mx->shadow_mutex));
+	return __xn_safe_copy_to_user(u_mx, &mx, sizeof(*u_mx));
 }
 
-int cobalt_mutex_destroy(union __xeno_mutex __user *u_mx)
+int cobalt_mutex_destroy(struct __shadow_mutex __user *u_mx)
 {
-	struct __shadow_mutex *shadow;
-	union __xeno_mutex mx;
+	struct __shadow_mutex mx;
 	cobalt_mutex_t *mutex;
 
-	shadow = &mx.shadow_mutex;
-
-	if (__xn_safe_copy_from_user(shadow,
-				     &u_mx->shadow_mutex,
-				     sizeof(*shadow)))
+	if (__xn_safe_copy_from_user(&mx, u_mx, sizeof(mx)))
 		return -EFAULT;
 
-	mutex = shadow->mutex;
+	mutex = mx.mutex;
 	if (cobalt_kqueues(mutex->attr.pshared) != mutex->owningq)
 		return -EPERM;
 
@@ -305,20 +297,19 @@ int cobalt_mutex_destroy(union __xeno_mutex __user *u_mx)
 	if (countq(&mutex->conds))
 		return -EBUSY;
 
-	cobalt_mark_deleted(shadow);
+	cobalt_mark_deleted(&mx);
 	cobalt_mutex_destroy_inner(mutex, mutex->owningq);
 
-	return __xn_safe_copy_to_user(&u_mx->shadow_mutex,
-				      shadow, sizeof(u_mx->shadow_mutex));
+	return __xn_safe_copy_to_user(u_mx, &mx, sizeof(*u_mx));
 }
 
-int cobalt_mutex_trylock(union __xeno_mutex __user *u_mx)
+int cobalt_mutex_trylock(struct __shadow_mutex __user *u_mx)
 {
 	xnthread_t *cur = xnpod_current_thread();
 	cobalt_mutex_t *mutex;
 	int err;
 
-	__xn_get_user(mutex, &u_mx->shadow_mutex.mutex);
+	__xn_get_user(mutex, &u_mx->mutex);
 
 	if (!cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC,
 			       struct cobalt_mutex))
@@ -346,26 +337,26 @@ int cobalt_mutex_trylock(union __xeno_mutex __user *u_mx)
 	return err;
 }
 
-int cobalt_mutex_lock(union __xeno_mutex __user *u_mx)
+int cobalt_mutex_lock(struct __shadow_mutex __user *u_mx)
 {
 	cobalt_mutex_t *mutex;
 	int err;
 
-	__xn_get_user(mutex, &u_mx->shadow_mutex.mutex);
+	__xn_get_user(mutex, &u_mx->mutex);
 
 	err = cobalt_mutex_timedlock_break(mutex, 0, XN_INFINITE);
 
 	return err;
 }
 
-int cobalt_mutex_timedlock(union __xeno_mutex __user *u_mx,
+int cobalt_mutex_timedlock(struct __shadow_mutex __user *u_mx,
 			   const struct timespec __user *u_ts)
 {
 	cobalt_mutex_t *mutex;
 	struct timespec ts;
 	int err;
 
-	__xn_get_user(mutex, &u_mx->shadow_mutex.mutex);
+	__xn_get_user(mutex, &u_mx->mutex);
 
 	if (__xn_safe_copy_from_user(&ts, u_ts, sizeof(ts)))
 		return -EFAULT;
@@ -375,13 +366,13 @@ int cobalt_mutex_timedlock(union __xeno_mutex __user *u_mx,
 	return err;
 }
 
-int cobalt_mutex_unlock(union __xeno_mutex __user *u_mx)
+int cobalt_mutex_unlock(struct __shadow_mutex __user *u_mx)
 {
 	cobalt_mutex_t *mutex;
 	int err;
 	spl_t s;
 
-	__xn_get_user(mutex, &u_mx->shadow_mutex.mutex);
+	__xn_get_user(mutex, &u_mx->mutex);
 
 	xnlock_get_irqsave(&nklock, s);
 	err = cobalt_mutex_release(xnpod_current_thread(), mutex);

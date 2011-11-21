@@ -32,6 +32,10 @@
 
 #define wrap_strncpy_from_user(dstP, srcP, n)	__strncpy_from_user(dstP, srcP, n)
 
+#define __put_user_inatomic __put_user
+
+#define __get_user_inatomic __get_user
+
 #define rthal_irq_desc_status(irq)	(rthal_irq_descp(irq)->status)
 
 #if !defined(CONFIG_GENERIC_HARDIRQS) \

@@ -645,7 +645,7 @@ void xnsynch_requeue_sleeper(struct xnthread *thread)
 }
 EXPORT_SYMBOL_GPL(xnsynch_requeue_sleeper);
 
-static struct xnthread *
+static inline struct xnthread *
 xnsynch_release_thread(struct xnsynch *synch, struct xnthread *lastowner)
 {
 	xnhandle_t lastownerh, newownerh;
