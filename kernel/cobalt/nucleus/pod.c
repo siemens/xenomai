@@ -2912,8 +2912,9 @@ EXPORT_SYMBOL_GPL(xnpod_wait_thread_period);
  *
  * @return 0 is returned upon success. Otherwise:
  *
- * - -EINVAL is returned if the base scheduling class of the target
- * thread does not support time-slicing.
+ * - -EINVAL is returned if @a quantum is not XN_INFINITE, and the
+ * base scheduling class of the target thread does not support
+ * time-slicing.
  *
  * Environments:
  *
@@ -2929,15 +2930,14 @@ int xnpod_set_thread_tslice(struct xnthread *thread, xnticks_t quantum)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (thread->base_class->sched_tick == NULL) {
-		xnlock_put_irqrestore(&nklock, s);
-		return -EINVAL;
-	}
-
 	thread->rrperiod = quantum;
 	xntimer_stop(&thread->rrbtimer);
 
 	if (quantum != XN_INFINITE) {
+		if (thread->base_class->sched_tick == NULL) {
+			xnlock_put_irqrestore(&nklock, s);
+			return -EINVAL;
+		}
 		xnthread_set_state(thread, XNRRB);
 		xntimer_start(&thread->rrbtimer,
 			      quantum, quantum, XN_RELATIVE);
