@@ -63,4 +63,10 @@ config XENO_DRIVERS_16550A_PCI_MOXA
 	  CP-132U, CP-134U, CP-138U
 	  CP-168U
 
+config XENO_DRIVERS_MPC52XX_UART
+	depends on XENO_SKIN_RTDM && PPC_MPC52xx
+	tristate "MPC52xx PSC UART driver"
+	help
+	Real-time UART driver for the PSC on the MPC5200 processor.
+
 endmenu
