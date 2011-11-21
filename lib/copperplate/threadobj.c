@@ -867,7 +867,7 @@ void threadobj_start(struct threadobj *thobj)	/* thobj->lock held. */
 
 void threadobj_wait_start(struct threadobj *thobj) /* thobj->lock free. */
 {
-	int oldstate;
+	int oldstate, status;
 
 	threadobj_lock(thobj);
 
@@ -885,7 +885,10 @@ void threadobj_wait_start(struct threadobj *thobj) /* thobj->lock free. */
 	 * pthread_cond_wait() dropped it.
 	 */
 
-	while ((thobj->status & (THREADOBJ_STARTED|THREADOBJ_ABORTED)) == 0) {
+	for (;;) {
+		status = thobj->status;
+		if (status & (THREADOBJ_STARTED|THREADOBJ_ABORTED))
+			break;
 		oldstate = thobj->cancel_state;
 		__RT(pthread_cond_wait(&thobj->barrier, &thobj->lock));
 		thobj->cancel_state = oldstate;
@@ -899,7 +902,7 @@ void threadobj_wait_start(struct threadobj *thobj) /* thobj->lock free. */
 	 * on us, so we need to go idle into a cancellation point to
 	 * wait for it: use pause() for this.
 	 */
-	while (thobj->status & THREADOBJ_ABORTED)
+	while (status & THREADOBJ_ABORTED)
 		pause();
 }
 
