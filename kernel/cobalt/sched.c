@@ -432,6 +432,7 @@ int pthread_setschedparam_ex(pthread_t tid, int pol, const struct sched_param_ex
 	case SCHED_OTHER:
 	case SCHED_FIFO:
 	case SCHED_COBALT:
+		xnpod_set_thread_tslice(&tid->threadbase, XN_INFINITE);
 		short_param.sched_priority = par->sched_priority;
 		return pthread_setschedparam(tid, pol, &short_param);
 	default:
