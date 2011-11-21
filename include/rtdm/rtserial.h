@@ -130,6 +130,15 @@
 /** @} */
 
 /*!
+ * @anchor RTSER_RS485_xxx   @name RTSER_RS485_xxx
+ * RS485 mode with automatic RTS handling
+ * @{ */
+#define RTSER_RS485_DISABLE		0x00
+#define RTSER_RS485_ENABLE		0x01
+#define RTSER_DEF_RS485			RTSER_RS485_DISABLE
+/** @} */
+
+/*!
  * @anchor RTSER_FIFO_xxx   @name RTSER_FIFO_xxx
  * Reception FIFO interrupt threshold
  * @{ */
@@ -165,6 +174,7 @@
 #define RTSER_EVENT_ERRPEND		0x02
 #define RTSER_EVENT_MODEMHI		0x04
 #define RTSER_EVENT_MODEMLO		0x08
+#define RTSER_EVENT_TXEMPTY		0x10
 #define RTSER_DEF_EVENT_MASK		0x00
 /** @} */
 
@@ -184,6 +194,7 @@
 #define RTSER_SET_TIMEOUT_EVENT		0x0400
 #define RTSER_SET_TIMESTAMP_HISTORY	0x0800
 #define RTSER_SET_EVENT_MASK		0x1000
+#define RTSER_SET_RS485			0x2000
 /** @} */
 
 
@@ -282,6 +293,9 @@ typedef struct rtser_config {
 	/** event mask to be used with @ref RTSER_RTIOC_WAIT_EVENT, see
 	 *  @ref RTSER_EVENT_xxx */
 	int		event_mask;
+
+	/** enable RS485 mode, see @ref RTSER_RS485_xxx */
+	int		rs485;
 } rtser_config_t;
 
 /**
