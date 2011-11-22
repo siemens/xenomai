@@ -381,6 +381,24 @@ ssize_t rt_buffer_write_until(RT_BUFFER *bf,
 		}
 		wait->size = len;
 
+		/*
+		 * Check whether readers are already waiting for
+		 * receiving data, while we are about to wait for
+		 * sending some. In such a case, we have the converse
+		 * pathological use of the buffer. We must kick
+		 * readers to allow for a short read to prevent a
+		 * deadlock.
+		 *
+		 * XXX: instead of broadcasting a general wake up
+		 * event, we could be smarter and wake up only the
+		 * number of waiters required to consume the amount of
+		 * data we want to send, but this does not seem worth
+		 * the burden: this is an error condition, we just
+		 * have to mitigate its effect, avoiding a deadlock.
+		 */
+		if (bcb->fillsz > 0 && syncobj_pend_count(&bcb->sobj))
+			syncobj_flush(&bcb->sobj, SYNCOBJ_BROADCAST);
+
 		ret = syncobj_wait_drain(&bcb->sobj, timespec, &syns);
 		if (ret) {
 			if (ret == -EIDRM)
