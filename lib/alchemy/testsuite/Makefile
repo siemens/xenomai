@@ -27,7 +27,8 @@ TESTS :=	\
 	sem-2	\
 	mutex-1	\
 	event-1	\
-	heap-1
+	heap-1	\
+	buffer-1 \
 
 CFLAGS := $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --skin=alchemy --cflags) -g
 LDFLAGS := $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --skin=alchemy --ldflags)
