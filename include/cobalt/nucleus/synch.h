@@ -179,6 +179,8 @@ xnflags_t xnsynch_sleep_on(struct xnsynch *synch,
 
 struct xnthread *xnsynch_wakeup_one_sleeper(struct xnsynch *synch);
 
+int xnsynch_wakeup_many_sleepers(struct xnsynch *synch, int nr);
+
 xnpholder_t *xnsynch_wakeup_this_sleeper(struct xnsynch *synch,
 					 xnpholder_t *holder);
 

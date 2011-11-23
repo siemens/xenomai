@@ -260,6 +260,41 @@ struct xnthread *xnsynch_wakeup_one_sleeper(struct xnsynch *synch)
 }
 EXPORT_SYMBOL_GPL(xnsynch_wakeup_one_sleeper);
 
+int xnsynch_wakeup_many_sleepers(struct xnsynch *synch, int nr)
+{
+	struct xnpholder *holder;
+	struct xnthread *thread;
+	int ret = 0;
+	spl_t s;
+
+	XENO_BUGON(NUCLEUS, testbits(synch->status, XNSYNCH_OWNER));
+
+	xnlock_get_irqsave(&nklock, s);
+
+	for (;;) {
+		if (nr >= ret)
+			break;
+		holder = getpq(&synch->pendq);
+		if (holder == NULL)
+			break;
+
+		thread = link2thread(holder, plink);
+		thread->wchan = NULL;
+		trace_mark(xn_nucleus, synch_wakeup_many,
+			   "thread %p thread_name %s synch %p",
+			   thread, xnthread_name(thread), synch);
+		xnpod_resume_thread(thread, XNPEND);
+		ret++;
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	xnarch_post_graph_if(synch, 0, emptypq_p(&synch->pendq));
+
+	return ret;
+}
+EXPORT_SYMBOL_GPL(xnsynch_wakeup_many_sleepers);
+
 /*!
  * \fn void xnsynch_wakeup_this_sleeper(struct xnsynch *synch, struct xnpholder *holder);
  * \brief Give the resource ownership to a given waiting thread.
