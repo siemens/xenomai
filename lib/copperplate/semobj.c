@@ -88,7 +88,7 @@ int semobj_broadcast(struct semobj *smobj)
 	return 0;
 }
 
-int semobj_wait(struct semobj *smobj, struct timespec *timeout)
+int semobj_wait(struct semobj *smobj, const struct timespec *timeout)
 {
 	int ret;
 
@@ -197,7 +197,7 @@ int semobj_broadcast(struct semobj *smobj)
 	return 0;
 }
 
-int semobj_wait(struct semobj *smobj, struct timespec *timeout)
+int semobj_wait(struct semobj *smobj, const struct timespec *timeout)
 {
 	struct syncstate syns;
 	int ret = 0;

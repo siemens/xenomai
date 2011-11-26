@@ -65,7 +65,7 @@ int semobj_post(struct semobj *smobj);
 int semobj_broadcast(struct semobj *smobj);
 
 int semobj_wait(struct semobj *smobj,
-		struct timespec *timeout);
+		const struct timespec *timeout);
 
 int semobj_getvalue(struct semobj *smobj, int *sval);
 
