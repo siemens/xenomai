@@ -475,7 +475,6 @@ int rt_task_sleep(RTIME delay)
 int rt_task_sleep_until(RTIME date)
 {
 	struct timespec ts;
-	struct service svc;
 	ticks_t now;
 
 	if (!threadobj_current_p())
@@ -485,14 +484,10 @@ int rt_task_sleep_until(RTIME date)
 		ts.tv_sec = (time_t)-1 >> 1;
 		ts.tv_nsec = 999999999;
 	} else {
-		COPPERPLATE_PROTECT(svc);
 		clockobj_get_time(&alchemy_clock, &now, NULL);
-		if (date <= now) {
-			COPPERPLATE_UNPROTECT(svc);
+		if (date <= now)
 			return -ETIMEDOUT;
-		}
 		clockobj_ticks_to_timespec(&alchemy_clock, date, &ts);
-		COPPERPLATE_UNPROTECT(svc);
 	}
 
 	return threadobj_sleep(&ts);

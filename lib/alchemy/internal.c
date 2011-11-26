@@ -42,13 +42,10 @@ char *alchemy_build_name(char *buf, const char *name,
 
 RTIME alchemy_rel2abs_timeout(RTIME timeout)
 {
-	struct service svc;
 	ticks_t now;
 
 	if (timeout != TM_INFINITE && timeout != TM_NONBLOCK) {
-		COPPERPLATE_PROTECT(svc);
 		clockobj_get_time(&alchemy_clock, &now, NULL);
-		COPPERPLATE_UNPROTECT(svc);
 		timeout += now;
 	}
 

@@ -22,7 +22,6 @@
 #include <pthread.h>
 #include <time.h>
 #include <xeno_config.h>
-#include <copperplate/init.h>
 #include <copperplate/list.h>
 #include <copperplate/debug.h>
 #include <copperplate/lock.h>
@@ -96,11 +95,9 @@ timespec_after(const struct timespec *t1, const struct timespec *t2)
 extern "C" {
 #endif
 
-void clockobj_set_date(struct clockobj *clkobj,
-		       ticks_t ticks, unsigned int resolution_ns);
+void clockobj_set_date(struct clockobj *clkobj, ticks_t ticks);
 
-void clockobj_get_date(struct clockobj *clkobj,
-		       ticks_t *pticks);
+void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks);
 
 void clockobj_get_time(struct clockobj *clkobj,
 		       ticks_t *pticks, ticks_t *ptsc);
@@ -220,18 +217,6 @@ void clockobj_ticks_to_timespec(struct clockobj *clkobj,
 }
 
 static inline
-int __clockobj_set_resolution(struct clockobj *clkobj,
-			      unsigned int resolution_ns)
-{
-	if (resolution_ns > 1) {
-		warning("support for low resolution clock disabled");
-		return __bt(-EINVAL);
-	}
-
-	return 0;
-}
-
-static inline
 unsigned int clockobj_get_resolution(struct clockobj *clkobj)
 {
 	return 1;
@@ -270,16 +255,6 @@ void clockobj_ticks_to_timespec(struct clockobj *clkobj,
 	read_lock_nocancel(&clkobj->lock);
 	__clockobj_ticks_to_timespec(clkobj, ticks, ts);
 	read_unlock(&clkobj->lock);
-}
-
-static inline
-int __clockobj_set_resolution(struct clockobj *clkobj,
-			      unsigned int resolution_ns)
-{
-	clkobj->resolution = resolution_ns;
-	clkobj->frequency = 1000000000 / resolution_ns;
-
-	return 0;
 }
 
 static inline

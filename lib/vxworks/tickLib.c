@@ -42,5 +42,5 @@ ULONG tickGet(void)
 
 void tickSet(ULONG ticks)
 {
-	clockobj_set_date(&wind_clock, ticks, 0);
+	clockobj_set_date(&wind_clock, ticks);
 }

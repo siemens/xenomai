@@ -27,6 +27,7 @@
 #include "copperplate/lock.h"
 #include "copperplate/clockobj.h"
 #include "copperplate/debug.h"
+#include "internal.h"
 
 void timespec_sub(struct timespec *r,
 		  const struct timespec *t1, const struct timespec *t2)
@@ -80,7 +81,21 @@ void timespec_adds(struct timespec *r,
 	}
 }
 
-#ifndef CONFIG_XENO_LORES_CLOCK_DISABLED
+#ifdef CONFIG_XENO_LORES_CLOCK_DISABLED
+
+static inline
+int __clockobj_set_resolution(struct clockobj *clkobj,
+			      unsigned int resolution_ns)
+{
+	if (resolution_ns > 1) {
+		warning("support for low resolution clock disabled");
+		return __bt(-EINVAL);
+	}
+
+	return 0;
+}
+
+#else  /* !CONFIG_XENO_LORES_CLOCK_DISABLED */
 
 void __clockobj_ticks_to_timespec(struct clockobj *clkobj,
 				  ticks_t ticks,
@@ -103,11 +118,19 @@ void __clockobj_ticks_to_timeout(struct clockobj *clkobj,
 {
 	struct timespec delta;
 
-	read_lock_nocancel(&clkobj->lock);
 	__RT(clock_gettime(clk_id, ts));
 	__clockobj_ticks_to_timespec(clkobj, ticks, &delta);
-	read_unlock(&clkobj->lock);
 	timespec_add(ts, ts, &delta);
+}
+
+static inline
+int __clockobj_set_resolution(struct clockobj *clkobj,
+			      unsigned int resolution_ns)
+{
+	clkobj->resolution = resolution_ns;
+	clkobj->frequency = 1000000000 / resolution_ns;
+
+	return 0;
 }
 
 #endif /* !CONFIG_XENO_LORES_CLOCK_DISABLED */
@@ -164,11 +187,9 @@ void clockobj_ticks_to_caltime(struct clockobj *clkobj,
 	unsigned int freq;
 	time_t nsecs;
 
-	read_lock_nocancel(&clkobj->lock);
 	freq = clockobj_get_frequency(clkobj);
 	nsecs = ticks / freq;
 	*rticks = ticks % freq;
-	read_unlock(&clkobj->lock);
 
 	for (year = 1970;; year++) { /* Years since 1970. */
 		int ysecs = ((year % 4) ? 365 : 366) * SECBYDAY;
@@ -209,25 +230,24 @@ void clockobj_caltime_to_timeout(struct clockobj *clkobj, const struct tm *tm,
 {
 	ticks_t ticks;
 
-	read_lock_nocancel(&clkobj->lock);
 	clockobj_caltime_to_ticks(clkobj, tm, rticks, &ticks);
 	__clockobj_ticks_to_timespec(clkobj, ticks, ts);
 	timespec_sub(ts, ts, &clkobj->offset);
-	read_unlock(&clkobj->lock);
 }
 
-void clockobj_set_date(struct clockobj *clkobj,
-		       ticks_t ticks, unsigned int resolution_ns)
+void clockobj_set_date(struct clockobj *clkobj, ticks_t ticks)
 {
 	struct timespec now;
 
+	/*
+	 * XXX: we grab the lock to exclude other threads from reading
+	 * the clock offset while we update it, so that they either
+	 * compute against the old value, or the new one, but always
+	 * see a valid offset.
+	 */
 	read_lock_nocancel(&clkobj->lock);
 
 	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
-
-	/* Change the resolution on-the-fly if given. */
-	if (resolution_ns)
-		__clockobj_set_resolution(clkobj, resolution_ns);
 
 	__clockobj_ticks_to_timespec(clkobj, ticks, &clkobj->epoch);
 	timespec_sub(&clkobj->offset, &clkobj->epoch, &now);
@@ -235,13 +255,22 @@ void clockobj_set_date(struct clockobj *clkobj,
 	read_unlock(&clkobj->lock);
 }
 
+/*
+ * XXX: clockobj_set_resolution() should be called during the init
+ * phase, not after. For performance reason, we want to run locklessly
+ * for common time unit conversions, so the clockobj implementation
+ * does assume that the clock resolution will not be updated
+ * on-the-fly.
+ */
 int clockobj_set_resolution(struct clockobj *clkobj, unsigned int resolution_ns)
 {
 #ifdef CONFIG_XENO_LORES_CLOCK_DISABLED
 	assert(resolution_ns == 1);
 #else
+	__clockobj_set_resolution(clkobj, resolution_ns);
+
 	/* Changing the resolution implies resetting the epoch. */
-	clockobj_set_date(clkobj, 0, resolution_ns);
+	clockobj_set_date(clkobj, 0);
 #endif
 	return 0;
 }
@@ -265,8 +294,6 @@ void clockobj_get_time(struct clockobj *clkobj,
 {
 	unsigned long long ns, tsc;
 
-	read_lock_nocancel(&clkobj->lock);
-
 	tsc = __xn_rdtsc();
 	ns = xnarch_tsc_to_ns(tsc);
 	if (clockobj_get_resolution(clkobj) > 1)
@@ -275,8 +302,6 @@ void clockobj_get_time(struct clockobj *clkobj,
 
 	if (ptsc)
 		*ptsc = tsc;
-
-	read_unlock(&clkobj->lock);
 }
 
 void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks)
@@ -310,8 +335,6 @@ void clockobj_get_time(struct clockobj *clkobj, ticks_t *pticks,
 
 	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
 
-	read_lock_nocancel(&clkobj->lock);
-
 	/* Convert the time value to ticks, with no offset. */
 	if (clockobj_get_resolution(clkobj) > 1)
 		*pticks = (ticks_t)now.tv_sec * clockobj_get_frequency(clkobj)
@@ -325,8 +348,6 @@ void clockobj_get_time(struct clockobj *clkobj, ticks_t *pticks,
 	 */
 	if (ptsc)
 		*ptsc = *pticks;
-
-	read_unlock(&clkobj->lock);
 }
 
 void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks)
@@ -356,11 +377,9 @@ void clockobj_ticks_to_clock(struct clockobj *clkobj,
 {
 	struct timespec ts, now;
 
-	read_lock_nocancel(&clkobj->lock);
 	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
 	/* Absolute timeout, CLOCK_COPPERPLATE-based. */
 	__clockobj_ticks_to_timespec(clkobj, ticks, &ts);
-	read_unlock(&clkobj->lock);
 	/* Offset from CLOCK_COPPERPLATE epoch. */
 	timespec_sub(timeout, &ts, &now);
 	/* Current time for clk_id. */
@@ -384,6 +403,11 @@ int clockobj_init(struct clockobj *clkobj,
 	if (ret)
 		return __bt(ret);
 
+	/*
+	 * FIXME: this lock is only used to protect the wallclock
+	 * offset readings from updates. We should replace this by a
+	 * confirmed reading loop.
+	 */
 	__RT(pthread_mutexattr_init(&mattr));
 	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
 	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
