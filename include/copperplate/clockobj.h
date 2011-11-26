@@ -105,9 +105,6 @@ void clockobj_get_date(struct clockobj *clkobj,
 void clockobj_get_time(struct clockobj *clkobj,
 		       ticks_t *pticks, ticks_t *ptsc);
 
-void __clockobj_ticks_to_timeout(struct clockobj *clkobj, clockid_t clk_id,
-				 ticks_t ticks, struct timespec *ts);
-
 void clockobj_caltime_to_timeout(struct clockobj *clkobj, const struct tm *tm,
 				 unsigned long rticks, struct timespec *ts);
 
@@ -194,14 +191,19 @@ void clockobj_ns_to_timespec(ticks_t ns, struct timespec *ts)
 
 #endif /* CONFIG_XENO_MERCURY */
 
-static inline
-void clockobj_ticks_to_timeout(struct clockobj *clkobj,
-			       ticks_t ticks, struct timespec *ts)
-{
-	__clockobj_ticks_to_timeout(clkobj, CLOCK_COPPERPLATE, ticks, ts);
-}
-
 #ifdef CONFIG_XENO_LORES_CLOCK_DISABLED
+
+static inline
+void __clockobj_ticks_to_timeout(struct clockobj *clkobj,
+				 clockid_t clk_id,
+				 ticks_t ticks, struct timespec *ts)
+{
+	struct timespec now, delta;
+
+	__RT(clock_gettime(clk_id, &now));
+	clockobj_ns_to_timespec(ticks, &delta);
+	timespec_add(ts, &now, &delta);
+}
 
 static inline
 void __clockobj_ticks_to_timespec(struct clockobj *clkobj,
@@ -255,6 +257,9 @@ static inline sticks_t clockobj_ticks_to_ns(struct clockobj *clkobj,
 
 #else /* !CONFIG_XENO_LORES_CLOCK_DISABLED */
 
+void __clockobj_ticks_to_timeout(struct clockobj *clkobj, clockid_t clk_id,
+				 ticks_t ticks, struct timespec *ts);
+
 void __clockobj_ticks_to_timespec(struct clockobj *clkobj,
 				  ticks_t ticks, struct timespec *ts);
 
@@ -299,5 +304,12 @@ static inline sticks_t clockobj_ticks_to_ns(struct clockobj *clkobj,
 }
 
 #endif /* !CONFIG_XENO_LORES_CLOCK_DISABLED */
+
+static inline
+void clockobj_ticks_to_timeout(struct clockobj *clkobj,
+			       ticks_t ticks, struct timespec *ts)
+{
+	__clockobj_ticks_to_timeout(clkobj, CLOCK_COPPERPLATE, ticks, ts);
+}
 
 #endif /* _COPPERPLATE_CLOCKOBJ_H */

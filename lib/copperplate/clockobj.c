@@ -97,8 +97,6 @@ void __clockobj_ticks_to_timespec(struct clockobj *clkobj,
 		clockobj_ns_to_timespec(ticks, ts);
 }
 
-#endif /* !CONFIG_XENO_LORES_CLOCK_DISABLED */
-
 void __clockobj_ticks_to_timeout(struct clockobj *clkobj,
 				 clockid_t clk_id,
 				 ticks_t ticks, struct timespec *ts)
@@ -111,6 +109,8 @@ void __clockobj_ticks_to_timeout(struct clockobj *clkobj,
 	read_unlock(&clkobj->lock);
 	timespec_add(ts, ts, &delta);
 }
+
+#endif /* !CONFIG_XENO_LORES_CLOCK_DISABLED */
 
 static const int mdays[] = {
 	31, 28, 31, 30, 31, 30,	31, 31, 30, 31, 30, 31
