@@ -43,9 +43,6 @@ SRTIME rt_timer_ticks2ns(SRTIME ticks)
 int rt_timer_inquire(RT_TIMER_INFO *info)
 {
 	info->period = clockobj_get_resolution(&alchemy_clock);
-	if (info->period == 1)
-		info->period = TM_ONESHOT;
-
 	clockobj_get_time(&alchemy_clock, &info->date, &info->tsc);
 
 	return 0;

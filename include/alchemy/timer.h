@@ -28,7 +28,6 @@ typedef sticks_t SRTIME;
 
 #define TM_INFINITE  0
 #define TM_NOW       0
-#define TM_ONESHOT   0
 #define TM_NONBLOCK  ((RTIME)-1ULL)
 
 typedef struct rt_timer_info {
