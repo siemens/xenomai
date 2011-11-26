@@ -282,9 +282,11 @@ command line, namely:
 
 --enable-async-cancel
 
-	Allow threads to be cancelled asynchronously. When disabled,
-	threads are deleted only when they reach specific cancellation
-	points (like system calls). Defaults to enabled.
+	Enable asynchronous cancellation of Xenomai threads, making
+	provision to protect the Xenomai APIs accordingly. When
+	disabled, Xenomai assumes that threads may exit due to
+	cancellation only when they reach cancellation points (like
+	system calls). Defaults to enabled.
 
 Available emulators/APIs
 ========================
