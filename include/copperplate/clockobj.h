@@ -22,6 +22,7 @@
 #include <pthread.h>
 #include <time.h>
 #include <xeno_config.h>
+#include <copperplate/init.h>
 #include <copperplate/list.h>
 #include <copperplate/debug.h>
 #include <copperplate/lock.h>

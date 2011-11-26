@@ -251,11 +251,15 @@ int clockobj_set_resolution(struct clockobj *clkobj, unsigned int resolution_ns)
 
 #include <asm/xenomai/arith.h>
 
+#ifndef CONFIG_XENO_LORES_CLOCK_DISABLED
+
 sticks_t clockobj_ns_to_ticks(struct clockobj *clkobj, sticks_t ns)
 {
 	/* Cobalt has optimized arith ops, use them. */
 	return xnarch_ulldiv(ns, clkobj->resolution, NULL);
 }
+
+#endif /* !CONFIG_XENO_LORES_CLOCK_DISABLED */
 
 void clockobj_get_time(struct clockobj *clkobj,
 		       ticks_t *pticks, ticks_t *ptsc)
