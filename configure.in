@@ -491,25 +491,6 @@ AC_CACHE_VAL(ac_cv_sched_setaffinity,
  fi
  CFLAGS="$save_CFLAGS")
 
-AC_MSG_CHECKING([for specific GCC switches])
-AC_CACHE_VAL(ac_cv_gcc_wnoalias,
-AC_LANG_SAVE
-AC_LANG_C
-save_CFLAGS="$CFLAGS"
-CFLAGS="-Wno-strict-aliasing -Werror"
-[AC_TRY_COMPILE([],
-[return 0;],
-[ac_cv_gcc_wnoalias=yes],
-[ac_cv_gcc_wnoalias=no])]
-CFLAGS="$save_CFLAGS"
-AC_LANG_RESTORE)
-if [[ $ac_cv_gcc_wnoalias = no ]]; then
-  gcc_w_noalias=
-else
-  gcc_w_noalias="-Wno-strict-aliasing"
-fi
-AC_MSG_RESULT([done])
-
 dnl Check for atomic builtins. For now we only check for the legacy
 dnl interface, i.e. __sync_*.
 
@@ -524,7 +505,7 @@ if test "$ac_cv_atomic_builtins" != "yes"; then
 fi
 
 dnl Common CFLAGS and LDFLAGS
-XENO_USER_CFLAGS="-D_GNU_SOURCE -D_REENTRANT -Wall -pipe -Wstrict-prototypes -Wmissing-prototypes -Wno-long-long -Wno-unused-parameter -Werror"
+XENO_USER_CFLAGS="-D_GNU_SOURCE -D_REENTRANT -fstrict-aliasing -Wall -pipe -Wstrict-prototypes -Wmissing-prototypes -Wno-long-long -Wno-unused-parameter -Werror"
 XENO_USER_LDFLAGS=
 
 if test x$use_registry = xy; then
@@ -536,16 +517,10 @@ dnl Exported CFLAGS and LDFLAGS, may be enhanced per-arch below
 XENO_USER_APP_CFLAGS=$XENO_USER_CFLAGS
 XENO_USER_APP_LDFLAGS=$XENO_USER_LDFLAGS
 
-case $XENO_TARGET_ARCH in
- x86)
-	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -fno-omit-frame-pointer -fstrict-aliasing $gcc_w_noalias"
-	;;
-esac
-
 if test x$debug_mode = xpartial; then
-   XENO_USER_CFLAGS="-g -O2 -D__XENO_DEBUG__ $XENO_USER_CFLAGS"
+   XENO_USER_CFLAGS="-g -O2 -D__XENO_DEBUG__ $XENO_USER_CFLAGS -fno-omit-frame-pointer"
 elif test x$debug_mode = xfull; then
-   XENO_USER_CFLAGS="-g -D__XENO_DEBUG__ -D__XENO_DEBUG_FULL__ $XENO_USER_CFLAGS"
+   XENO_USER_CFLAGS="-g -D__XENO_DEBUG__ -D__XENO_DEBUG_FULL__ -fno-omit-frame-pointer $XENO_USER_CFLAGS"
 else
    XENO_USER_CFLAGS="-O2 $XENO_USER_CFLAGS"
 fi

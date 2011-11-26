@@ -41,24 +41,6 @@ static pthread_t svthread;
 
 static DEFINE_PRIVATE_LIST(svtimers);
 
-void timespec_add(struct timespec *r,
-		  const struct timespec *t1, const struct timespec *t2);
-
-static inline int __attribute__ ((always_inline))
-timeobj_compare(const struct timespec *t1, const struct timespec *t2)
-{
-	if (t1->tv_sec < t2->tv_sec)
-		return -1;
-	if (t1->tv_sec > t2->tv_sec)
-		return 1;
-	if (t1->tv_nsec < t2->tv_nsec)
-		return -1;
-	if (t1->tv_nsec > t2->tv_nsec)
-		return 1;
-
-	return 0;
-}
-
 /*
  * XXX: at some point, we may consider using a timer wheel instead of
  * a simple linked list to index timers. The latter method is
@@ -77,8 +59,8 @@ static void timerobj_enqueue(struct timerobj *tmobj)
 	}
 
 	pvlist_for_each_entry_reverse(__tmobj, &svtimers, core.link) {
-		if (timeobj_compare(&__tmobj->core.spec.it_value,
-				    &tmobj->core.spec.it_value) <= 0)
+		if (timespec_before_or_same(&__tmobj->core.spec.it_value,
+					    &tmobj->core.spec.it_value))
 			break;
 	}
 
@@ -110,7 +92,7 @@ static void *timerobj_server(void *arg)
 
 		pvlist_for_each_entry_safe(tmobj, tmp, &svtimers, core.link) {
 			value = tmobj->core.spec.it_value;
-			if (timeobj_compare(&value, &now) > 0)
+			if (timespec_after(&value, &now))
 				break;
 			pvlist_remove_init(&tmobj->core.link);
 			interval = tmobj->core.spec.it_interval;

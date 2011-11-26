@@ -29,8 +29,9 @@
 #include "copperplate/debug.h"
 #include "internal.h"
 
-void timespec_sub(struct timespec *r,
-		  const struct timespec *t1, const struct timespec *t2)
+void timespec_sub(struct timespec *__restrict r,
+		  const struct timespec *__restrict t1,
+		  const struct timespec *__restrict t2)
 {
 	r->tv_sec = t1->tv_sec - t2->tv_sec;
 	r->tv_nsec = t1->tv_nsec - t2->tv_nsec;
@@ -40,8 +41,9 @@ void timespec_sub(struct timespec *r,
 	}
 }
 
-void timespec_subs(struct timespec *r,
-		   const struct timespec *t1, sticks_t t2)
+void timespec_subs(struct timespec *__restrict r,
+		   const struct timespec *__restrict t1,
+		   sticks_t t2)
 {
 	sticks_t s, rem;
 
@@ -55,8 +57,9 @@ void timespec_subs(struct timespec *r,
 	}
 }
 
-void timespec_add(struct timespec *r,
-		  const struct timespec *t1, const struct timespec *t2)
+void timespec_add(struct timespec *__restrict r,
+		  const struct timespec *__restrict t1,
+		  const struct timespec *__restrict t2)
 {
 	r->tv_sec = t1->tv_sec + t2->tv_sec;
 	r->tv_nsec = t1->tv_nsec + t2->tv_nsec;
@@ -66,8 +69,9 @@ void timespec_add(struct timespec *r,
 	}
 }
 
-void timespec_adds(struct timespec *r,
-		   const struct timespec *t1, sticks_t t2)
+void timespec_adds(struct timespec *__restrict r,
+		   const struct timespec *__restrict t1,
+		   sticks_t t2)
 {
 	sticks_t s, rem;
 
@@ -116,11 +120,11 @@ void __clockobj_ticks_to_timeout(struct clockobj *clkobj,
 				 clockid_t clk_id,
 				 ticks_t ticks, struct timespec *ts)
 {
-	struct timespec delta;
+	struct timespec now, delta;
 
-	__RT(clock_gettime(clk_id, ts));
+	__RT(clock_gettime(clk_id, &now));
 	__clockobj_ticks_to_timespec(clkobj, ticks, &delta);
-	timespec_add(ts, ts, &delta);
+	timespec_add(ts, &now, &delta);
 }
 
 static inline
@@ -228,11 +232,12 @@ void clockobj_ticks_to_caltime(struct clockobj *clkobj,
 void clockobj_caltime_to_timeout(struct clockobj *clkobj, const struct tm *tm,
 				 unsigned long rticks, struct timespec *ts)
 {
+	struct timespec date;
 	ticks_t ticks;
 
 	clockobj_caltime_to_ticks(clkobj, tm, rticks, &ticks);
-	__clockobj_ticks_to_timespec(clkobj, ticks, ts);
-	timespec_sub(ts, ts, &clkobj->offset);
+	__clockobj_ticks_to_timespec(clkobj, ticks, &date);
+	timespec_sub(ts, &date, &clkobj->offset);
 }
 
 void clockobj_set_date(struct clockobj *clkobj, ticks_t ticks)

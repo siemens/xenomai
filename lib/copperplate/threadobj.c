@@ -727,20 +727,18 @@ void threadobj_stop_rr(void)
 int threadobj_set_periodic(struct threadobj *thobj,
 			   struct timespec *idate, struct timespec *period)
 {
-	struct timespec now;
+	struct timespec now, wakeup;
 
 	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
 
 	if (idate->tv_sec || idate->tv_nsec) {
 		if (timespec_before(idate, &now))
 			return -ETIMEDOUT;
-		thobj->core.wakeup = *idate;
+		wakeup = *idate;
 	} else
-		thobj->core.wakeup = now;
+		wakeup = now;
 
-	timespec_add(&thobj->core.wakeup,
-		     &thobj->core.wakeup, period);
-
+	timespec_add(&thobj->core.wakeup, &wakeup, period);
 	thobj->core.period = timespec_scalar(period);
 
 	return 0;
@@ -770,10 +768,10 @@ int threadobj_wait_period(struct threadobj *thobj,
 	d = timespec_scalar(&delta);
 	if (d >= period) {
 		overruns = d / period;
-		timespec_adds(&wakeup, &wakeup, overruns * period);
-	}
-
-	timespec_adds(&thobj->core.wakeup, &wakeup, period);
+		timespec_adds(&thobj->core.wakeup, &wakeup,
+			      overruns * (period + 1));
+	} else
+		timespec_adds(&thobj->core.wakeup, &wakeup, period);
 
 	if (overruns)
 		ret = -ETIMEDOUT;

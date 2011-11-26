@@ -12705,54 +12705,6 @@ $as_echo "no" >&6; }
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for specific GCC switches" >&5
-$as_echo_n "checking for specific GCC switches... " >&6; }
-if test "${ac_cv_gcc_wnoalias+set}" = set; then :
-  $as_echo_n "(cached) " >&6
-else
-
-ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
-
-save_CFLAGS="$CFLAGS"
-CFLAGS="-Wno-strict-aliasing -Werror"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-int
-main ()
-{
-return 0;
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
-  ac_cv_gcc_wnoalias=yes
-else
-  ac_cv_gcc_wnoalias=no
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-CFLAGS="$save_CFLAGS"
-ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
-
-fi
-
-if [ $ac_cv_gcc_wnoalias = no ]; then
-  gcc_w_noalias=
-else
-  gcc_w_noalias="-Wno-strict-aliasing"
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: done" >&5
-$as_echo "done" >&6; }
-
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether the compiler provides atomic builtins" >&5
 $as_echo_n "checking whether the compiler provides atomic builtins... " >&6; }
@@ -12787,7 +12739,7 @@ if test "$ac_cv_atomic_builtins" != "yes"; then
    as_fn_error $? "compiler does not support atomic builtins." "$LINENO" 5
 fi
 
-XENO_USER_CFLAGS="-D_GNU_SOURCE -D_REENTRANT -Wall -pipe -Wstrict-prototypes -Wmissing-prototypes -Wno-long-long -Wno-unused-parameter -Werror"
+XENO_USER_CFLAGS="-D_GNU_SOURCE -D_REENTRANT -fstrict-aliasing -Wall -pipe -Wstrict-prototypes -Wmissing-prototypes -Wno-long-long -Wno-unused-parameter -Werror"
 XENO_USER_LDFLAGS=
 
 if test x$use_registry = xy; then
@@ -12797,12 +12749,6 @@ fi
 
 XENO_USER_APP_CFLAGS=$XENO_USER_CFLAGS
 XENO_USER_APP_LDFLAGS=$XENO_USER_LDFLAGS
-
-case $XENO_TARGET_ARCH in
- x86)
-	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -fno-omit-frame-pointer -fstrict-aliasing $gcc_w_noalias"
-	;;
-esac
 
 if test x$debug_mode = xpartial; then
    XENO_USER_CFLAGS="-g -O2 -D__XENO_DEBUG__ $XENO_USER_CFLAGS"
