@@ -370,22 +370,21 @@ void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks)
 
 #endif /* CONFIG_XENO_MERCURY */
 
-void clockobj_ticks_to_clock(struct clockobj *clkobj,
-			     ticks_t ticks,
+/* Conversion from CLOCK_COPPERPLATE to clk_id. */
+void clockobj_convert_clocks(struct clockobj *clkobj,
+			     const struct timespec *in,
 			     clockid_t clk_id,
-			     struct timespec *timeout)
+			     struct timespec *out)
 {
-	struct timespec ts, now;
+	struct timespec now, delta;
 
 	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
-	/* Absolute timeout, CLOCK_COPPERPLATE-based. */
-	__clockobj_ticks_to_timespec(clkobj, ticks, &ts);
 	/* Offset from CLOCK_COPPERPLATE epoch. */
-	timespec_sub(timeout, &ts, &now);
+	timespec_sub(&delta, in, &now);
 	/* Current time for clk_id. */
 	__RT(clock_gettime(clk_id, &now));
 	/* Absolute timeout again, clk_id-based this time. */
-	timespec_add(timeout, timeout, &now);
+	timespec_add(out, &delta, &now);
 }
 
 int clockobj_init(struct clockobj *clkobj,
