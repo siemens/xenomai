@@ -19,6 +19,7 @@
 #ifndef _XENOMAI_ALCHEMY_TIMER_H
 #define _XENOMAI_ALCHEMY_TIMER_H
 
+#include <stddef.h>
 #include <copperplate/clockobj.h>
 
 typedef ticks_t RTIME;
@@ -35,6 +36,34 @@ typedef struct rt_timer_info {
 	RTIME date;
 	RTIME tsc;
 } RT_TIMER_INFO;
+
+extern struct clockobj alchemy_clock;
+
+#define alchemy_abs_timeout(__t, __ts)					\
+	({								\
+		(__t) == TM_INFINITE ? NULL :				\
+		(__t) == TM_NONBLOCK ?					\
+		({ (__ts)->tv_sec = (__ts)->tv_nsec = 0; (__ts); }) :	\
+		({ clockobj_ticks_to_timespec(&alchemy_clock, (__t), (__ts)); \
+			(__ts); });					\
+	})
+
+#define alchemy_rel_timeout(__t, __ts)					\
+	({								\
+		(__t) == TM_INFINITE ? NULL :				\
+		(__t) == TM_NONBLOCK ?					\
+		({ (__ts)->tv_sec = (__ts)->tv_nsec = 0; (__ts); }) :	\
+		({ clockobj_ticks_to_timeout(&alchemy_clock, (__t), (__ts)); \
+			(__ts); });					\
+	})
+
+static inline
+int alchemy_poll_mode(const struct timespec *abs_timeout)
+{
+	return abs_timeout &&
+		abs_timeout->tv_sec == 0 &&
+		abs_timeout->tv_nsec == 0;
+}
 
 #ifdef __cplusplus
 extern "C" {

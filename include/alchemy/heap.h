@@ -59,10 +59,30 @@ int rt_heap_create(RT_HEAP *heap,
 
 int rt_heap_delete(RT_HEAP *heap);
 
+int rt_heap_alloc_timed(RT_HEAP *heap,
+			size_t size,
+			const struct timespec *abs_timeout,
+			void **blockp);
+
+static inline
+int rt_heap_alloc_until(RT_HEAP *heap,
+		  size_t size, RTIME timeout, void **blockp)
+{
+	struct timespec ts;
+	return rt_heap_alloc_timed(heap, size,
+				   alchemy_abs_timeout(timeout, &ts),
+				   blockp);
+}
+
+static inline
 int rt_heap_alloc(RT_HEAP *heap,
-		  size_t size,
-		  RTIME timeout,
-		  void **blockp);
+		  size_t size, RTIME timeout, void **blockp)
+{
+	struct timespec ts;
+	return rt_heap_alloc_timed(heap, size,
+				   alchemy_rel_timeout(timeout, &ts),
+				   blockp);
+}
 
 int rt_heap_free(RT_HEAP *heap,
 		 void *block);

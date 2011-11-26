@@ -40,60 +40,21 @@ char *alchemy_build_name(char *buf, const char *name,
 	return buf;
 }
 
-RTIME alchemy_rel2abs_timeout(RTIME timeout)
-{
-	ticks_t now;
-
-	if (timeout != TM_INFINITE && timeout != TM_NONBLOCK) {
-		clockobj_get_time(&alchemy_clock, &now, NULL);
-		timeout += now;
-	}
-
-	return timeout;
-}
-
-struct timespec *alchemy_get_timespec(RTIME timeout, struct timespec *tmp)
-{
-	if (timeout == TM_INFINITE)
-		return NULL;
-
-	if (timeout == TM_NONBLOCK) {
-		tmp->tv_sec = 0;
-		tmp->tv_nsec = 0;
-	} else
-		clockobj_ticks_to_timespec(&alchemy_clock, timeout, tmp);
-
-	return tmp;
-}
-
-struct timespec *alchemy_get_timeout(RTIME timeout, struct timespec *tmp)
-{
-	if (timeout == TM_INFINITE)
-		return NULL;
-
-	if (timeout == TM_NONBLOCK) {
-		tmp->tv_sec = 0;
-		tmp->tv_nsec = 0;
-	} else
-		clockobj_ticks_to_timeout(&alchemy_clock, timeout, tmp);
-
-	return tmp;
-}
-
 int alchemy_bind_object(const char *name, struct syncluster *sc,
 			RTIME timeout,
 			int offset,
 			uintptr_t *handle)
 {
-	struct timespec ts, *timespec;
 	struct clusterobj *cobj;
 	struct service svc;
+	struct timespec ts;
 	void *p;
 	int ret;
 
 	COPPERPLATE_PROTECT(svc);
-	timespec = alchemy_get_timeout(timeout, &ts);
-	ret = syncluster_findobj(sc, name, timespec, &cobj);
+	ret = syncluster_findobj(sc, name,
+				 alchemy_rel_timeout(timeout, &ts),
+				 &cobj);
 	COPPERPLATE_UNPROTECT(svc);
 	if (ret)
 		return ret;

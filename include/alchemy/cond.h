@@ -48,13 +48,24 @@ int rt_cond_signal(RT_COND *cond);
 
 int rt_cond_broadcast(RT_COND *cond);
 
-int rt_cond_wait(RT_COND *cond,
-		 RT_MUTEX *mutex,
-		 RTIME timeout);
-
-int rt_cond_wait_until(RT_COND *cond,
+int rt_cond_wait_timed(RT_COND *cond,
 		       RT_MUTEX *mutex,
-		       RTIME timeout);
+		       const struct timespec *abs_timeout);
+static inline
+int rt_cond_wait_until(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
+{
+	struct timespec ts;
+	return rt_cond_wait_timed(cond, mutex,
+				  alchemy_abs_timeout(timeout, &ts));
+}
+
+static inline
+int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
+{
+	struct timespec ts;
+	return rt_cond_wait_timed(cond, mutex,
+				  alchemy_rel_timeout(timeout, &ts));
+}
 
 int rt_cond_inquire(RT_COND *cond,
 		    RT_COND_INFO *info);

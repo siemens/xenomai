@@ -125,18 +125,13 @@ out:
 int rt_cond_signal(RT_COND *cond)
 {
 	struct alchemy_cond *ccb;
-	struct service svc;
 	int ret = 0;
-
-	COPPERPLATE_PROTECT(svc);
 
 	ccb = find_alchemy_cond(cond, &ret);
 	if (ccb == NULL)
-		goto out;
+		return ret;
 
-	ret = -__RT(pthread_cond_signal(&ccb->cond));
-out:
-	COPPERPLATE_UNPROTECT(svc);
+	return -__RT(pthread_cond_signal(&ccb->cond));
 
 	return ret;
 }
@@ -144,77 +139,52 @@ out:
 int rt_cond_broadcast(RT_COND *cond)
 {
 	struct alchemy_cond *ccb;
-	struct service svc;
 	int ret = 0;
-
-	COPPERPLATE_PROTECT(svc);
 
 	ccb = find_alchemy_cond(cond, &ret);
 	if (ccb == NULL)
-		goto out;
+		return ret;
 
-	ret = -__RT(pthread_cond_broadcast(&ccb->cond));
-out:
-	COPPERPLATE_UNPROTECT(svc);
-
-	return ret;
+	return -__RT(pthread_cond_broadcast(&ccb->cond));
 }
 
-int rt_cond_wait_until(RT_COND *cond, RT_MUTEX *mutex,
-		       RTIME timeout)
+int rt_cond_wait_timed(RT_COND *cond, RT_MUTEX *mutex,
+		       const struct timespec *abs_timeout)
 {
 	struct alchemy_mutex *mcb;
 	struct alchemy_cond *ccb;
-	struct service svc;
-	struct timespec ts;
 	int ret = 0;
 
-	if (timeout == TM_NONBLOCK)
+	if (alchemy_poll_mode(abs_timeout))
 		return -EWOULDBLOCK;
-
-	COPPERPLATE_PROTECT(svc);
 
 	ccb = find_alchemy_cond(cond, &ret);
 	if (ccb == NULL)
-		goto out;
+		return ret;
 
 	mcb = find_alchemy_mutex(mutex, &ret);
 	if (mcb == NULL)
-		goto out;
+		return ret;
 
-	if (timeout != TM_INFINITE) {
-		clockobj_ticks_to_timespec(&alchemy_clock, timeout, &ts);
-		ret = -__RT(pthread_cond_timedwait(&ccb->cond, &mcb->lock, &ts));
-	} else
+	if (abs_timeout)
+		ret = -__RT(pthread_cond_timedwait(&ccb->cond,
+						   &mcb->lock, abs_timeout));
+	else
 		ret = -__RT(pthread_cond_wait(&ccb->cond, &mcb->lock));
-out:
-	COPPERPLATE_UNPROTECT(svc);
 
 	return ret;
-}
-
-int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex,
-		 RTIME timeout)
-{
-	timeout = alchemy_rel2abs_timeout(timeout);
-	return rt_cond_wait_until(cond, mutex, timeout);
 }
 
 int rt_cond_inquire(RT_COND *cond, RT_COND_INFO *info)
 {
 	struct alchemy_cond *ccb;
-	struct service svc;
 	int ret = 0;
-
-	COPPERPLATE_PROTECT(svc);
 
 	ccb = find_alchemy_cond(cond, &ret);
 	if (ccb == NULL)
-		goto out;
+		return ret;
 
 	strcpy(info->name, ccb->name);
-out:
-	COPPERPLATE_UNPROTECT(svc);
 
 	return ret;
 }

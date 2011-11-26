@@ -63,9 +63,7 @@ extern "C" {
 
 int rt_queue_create(RT_QUEUE *queue,
 		    const char *name,
-		    size_t poolsize,
-		    size_t qlimit,
-		    int mode);
+		    size_t poolsize, size_t qlimit, int mode);
 
 int rt_queue_delete(RT_QUEUE *queue);
 
@@ -76,32 +74,54 @@ int rt_queue_free(RT_QUEUE *queue,
 		  void *buf);
 
 int rt_queue_send(RT_QUEUE *queue,
-		  const void *buf,
-		  size_t size,
-		  int mode);
+		  const void *buf, size_t size, int mode);
 
 int rt_queue_write(RT_QUEUE *queue,
-		   const void *buf,
-		   size_t size,
-		   int mode);
+		   const void *buf, size_t size, int mode);
 
-ssize_t rt_queue_receive(RT_QUEUE *queue,
-			 void **bufp,
-			 RTIME timeout);
-
-ssize_t rt_queue_receive_until(RT_QUEUE *queue,
+ssize_t rt_queue_receive_timed(RT_QUEUE *queue,
 			       void **bufp,
-			       RTIME timeout);
+			       const struct timespec *abs_timeout);
 
-ssize_t rt_queue_read(RT_QUEUE *queue,
-		      void *buf,
-		      size_t size,
-		      RTIME timeout);
+static inline
+ssize_t rt_queue_receive_until(RT_QUEUE *queue,
+			       void **bufp, RTIME timeout)
+{
+	struct timespec ts;
+	return rt_queue_receive_timed(queue, bufp,
+				      alchemy_abs_timeout(timeout, &ts));
+}
 
+static inline
+ssize_t rt_queue_receive(RT_QUEUE *queue,
+			 void **bufp, RTIME timeout)
+{
+	struct timespec ts;
+	return rt_queue_receive_timed(queue, bufp,
+				      alchemy_rel_timeout(timeout, &ts));
+}
+
+ssize_t rt_queue_read_timed(RT_QUEUE *queue,
+			    void *buf, size_t size,
+			    const struct timespec *abs_timeout);
+
+static inline
 ssize_t rt_queue_read_until(RT_QUEUE *queue,
-			    void *buf,
-			    size_t size,
-			    RTIME timeout);
+			    void *buf, size_t size, RTIME timeout)
+{
+	struct timespec ts;
+	return rt_queue_read_timed(queue, buf, size,
+				   alchemy_abs_timeout(timeout, &ts));
+}
+
+static inline
+ssize_t rt_queue_read(RT_QUEUE *queue,
+		      void *buf, size_t size, RTIME timeout)
+{
+	struct timespec ts;
+	return rt_queue_read_timed(queue, buf, size,
+				   alchemy_rel_timeout(timeout, &ts));
+}
 
 int rt_queue_flush(RT_QUEUE *queue);
 

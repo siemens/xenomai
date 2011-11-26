@@ -124,21 +124,48 @@ int rt_task_slice(RT_TASK *task, RTIME quantum);
 int rt_task_inquire(RT_TASK *task,
 		    RT_TASK_INFO *info);
 
+ssize_t rt_task_send_timed(RT_TASK *task,
+			   RT_TASK_MCB *mcb_s, RT_TASK_MCB *mcb_r,
+			   const struct timespec *abs_timeout);
+
+static inline
 ssize_t rt_task_send_until(RT_TASK *task,
-			   RT_TASK_MCB *mcb_s,
-			   RT_TASK_MCB *mcb_r,
-			   RTIME timeout);
+			   RT_TASK_MCB *mcb_s, RT_TASK_MCB *mcb_r,
+			   RTIME timeout)
+{
+	struct timespec ts;
+	return rt_task_send_timed(task, mcb_s, mcb_r,
+				  alchemy_abs_timeout(timeout, &ts));
+}
 
+static inline
 ssize_t rt_task_send(RT_TASK *task,
-		     RT_TASK_MCB *mcb_s,
-		     RT_TASK_MCB *mcb_r,
-		     RTIME timeout);
+		     RT_TASK_MCB *mcb_s, RT_TASK_MCB *mcb_r,
+		     RTIME timeout)
+{
+	struct timespec ts;
+	return rt_task_send_timed(task, mcb_s, mcb_r,
+				  alchemy_rel_timeout(timeout, &ts));
+}
 
-int rt_task_receive_until(RT_TASK_MCB *mcb_r,
-			  RTIME timeout);
+int rt_task_receive_timed(RT_TASK_MCB *mcb_r,
+			  const struct timespec *abs_timeout);
 
-int rt_task_receive(RT_TASK_MCB *mcb_r,
-		    RTIME timeout);
+static inline
+int rt_task_receive_until(RT_TASK_MCB *mcb_r, RTIME timeout)
+{
+	struct timespec ts;
+	return rt_task_receive_timed(mcb_r,
+				     alchemy_abs_timeout(timeout, &ts));
+}
+
+static inline
+int rt_task_receive(RT_TASK_MCB *mcb_r, RTIME timeout)
+{
+	struct timespec ts;
+	return rt_task_receive_timed(mcb_r,
+				     alchemy_rel_timeout(timeout, &ts));
+}
 
 int rt_task_reply(int flowid,
 		  RT_TASK_MCB *mcb_s);

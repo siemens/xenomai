@@ -126,12 +126,12 @@ out:
 	return ret;
 }
 
-int rt_mutex_acquire_until(RT_MUTEX *mutex, RTIME timeout)
+int rt_mutex_acquire_timed(RT_MUTEX *mutex,
+			   const struct timespec *abs_timeout)
 {
 	struct alchemy_task *current;
 	struct alchemy_mutex *mcb;
 	struct timespec ts;
-	struct service svc;
 	int ret = 0;
 
 	/* This must be an alchemy task. */
@@ -139,23 +139,25 @@ int rt_mutex_acquire_until(RT_MUTEX *mutex, RTIME timeout)
 	if (current == NULL)
 		return -EPERM;
 
-	COPPERPLATE_PROTECT(svc);
-
-	/* Try the fast path first. */
+	/*
+	 * Try the fast path first. Note that we don't need any
+	 * protected section here: the caller should have provided for
+	 * it.
+	 */
 	mcb = find_alchemy_mutex(mutex, &ret);
 	if (mcb == NULL)
-		goto out;
+		return ret;
 
 	/*
 	 * We found the mutex, but locklessly: let the POSIX layer
 	 * check for object existence.
 	 */
 	ret = -__RT(pthread_mutex_trylock(&mcb->lock));
-	if (ret == 0 || ret != -EBUSY || timeout == TM_NONBLOCK)
+	if (ret == 0 || ret != -EBUSY || alchemy_poll_mode(abs_timeout))
 		goto done;
 
 	/* Slow path. */
-	if (timeout == TM_INFINITE) {
+	if (abs_timeout == NULL) {
 		ret = -__RT(pthread_mutex_lock(&mcb->lock));
 		goto done;
 	}
@@ -166,7 +168,7 @@ int rt_mutex_acquire_until(RT_MUTEX *mutex, RTIME timeout)
 	 * implicitly based on CLOCK_REALTIME, so we need to translate
 	 * the user timeout into something POSIX understands.
 	 */
-	clockobj_ticks_to_clock(&alchemy_clock, timeout, CLOCK_REALTIME, &ts);
+	clockobj_convert_clocks(&alchemy_clock, abs_timeout, CLOCK_REALTIME, &ts);
 	ret = -__RT(pthread_mutex_timedlock(&mcb->lock, &ts));
 done:
 	switch (ret) {
@@ -185,36 +187,21 @@ done:
 	case 0:
 		mcb->owner.handle = mainheap_ref(current, uintptr_t);
 	}
-out:
-	COPPERPLATE_UNPROTECT(svc);
 
 	return ret;
-}
-
-int rt_mutex_acquire(RT_MUTEX *mutex, RTIME timeout)
-{
-	timeout = alchemy_rel2abs_timeout(timeout);
-	return rt_mutex_acquire_until(mutex, timeout);
 }
 
 int rt_mutex_release(RT_MUTEX *mutex)
 {
 	struct alchemy_mutex *mcb;
-	struct service svc;
 	int ret = 0;
-
-	COPPERPLATE_PROTECT(svc);
 
 	mcb = find_alchemy_mutex(mutex, &ret);
 	if (mcb == NULL)
-		goto out;
+		return ret;
 
 	/* Let the POSIX layer check for object existence. */
-	ret = -__RT(pthread_mutex_unlock(&mcb->lock));
-out:
-	COPPERPLATE_UNPROTECT(svc);
-
-	return ret;
+	return -__RT(pthread_mutex_unlock(&mcb->lock));
 }
 
 int rt_mutex_inquire(RT_MUTEX *mutex, RT_MUTEX_INFO *info)

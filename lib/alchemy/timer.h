@@ -22,6 +22,4 @@
 #include <copperplate/clockobj.h>
 #include <alchemy/timer.h>
 
-extern struct clockobj alchemy_clock;
-
 #endif /* _ALCHEMY_TIMER_H */

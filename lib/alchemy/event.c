@@ -138,19 +138,18 @@ out:
 	return ret;
 }
 
-int rt_event_wait_until(RT_EVENT *event,
+int rt_event_wait_timed(RT_EVENT *event,
 			unsigned long mask, unsigned long *mask_r,
-			int mode, RTIME timeout)
+			int mode, const struct timespec *abs_timeout)
 {
 	struct alchemy_event_wait *wait;
-	struct timespec ts, *timespec;
 	unsigned long bits, testval;
 	struct alchemy_event *evcb;
 	struct syncstate syns;
 	struct service svc;
 	int ret = 0;
 
-	if (timeout != TM_NONBLOCK && !threadobj_current_p())
+	if (!threadobj_current_p() && !alchemy_poll_mode(abs_timeout))
 		return -EPERM;
 
 	COPPERPLATE_PROTECT(svc);
@@ -171,7 +170,7 @@ int rt_event_wait_until(RT_EVENT *event,
 	if (bits && bits == testval)
 		goto done;
 
-	if (timeout == TM_NONBLOCK) {
+	if (alchemy_poll_mode(abs_timeout)) {
 		ret = -EWOULDBLOCK;
 		goto done;
 	}
@@ -180,9 +179,7 @@ int rt_event_wait_until(RT_EVENT *event,
 	wait->mask = mask;
 	wait->mode = mode;
 
-	timespec = alchemy_get_timespec(timeout, &ts);
-
-	ret = syncobj_pend(&evcb->sobj, timespec, &syns);
+	ret = syncobj_pend(&evcb->sobj, abs_timeout, &syns);
 	if (ret) {
 		if (ret == -EIDRM) {
 			threadobj_finish_wait();
@@ -198,14 +195,6 @@ out:
 	COPPERPLATE_UNPROTECT(svc);
 
 	return ret;
-}
-
-int rt_event_wait(RT_EVENT *event,
-		  unsigned long mask, unsigned long *mask_r,
-		  int mode, RTIME timeout)
-{
-	timeout = alchemy_rel2abs_timeout(timeout);
-	return rt_event_wait_until(event, mask, mask_r, mode, timeout);
 }
 
 int rt_event_signal(RT_EVENT *event, unsigned long mask)

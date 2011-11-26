@@ -320,19 +320,18 @@ int rt_queue_write(RT_QUEUE *queue,
 	return ret;
 }
 
-ssize_t rt_queue_receive_until(RT_QUEUE *queue,
-			       void **bufp, RTIME timeout)
+ssize_t rt_queue_receive_timed(RT_QUEUE *queue, void **bufp,
+			       const struct timespec *abs_timeout)
 {
 	struct alchemy_queue_wait *wait;
 	struct alchemy_queue_msg *msg;
-	struct timespec ts, *timespec;
 	struct alchemy_queue *qcb;
 	struct syncstate syns;
 	struct service svc;
 	ssize_t ret;
 	int err = 0;
 
-	if (timeout != TM_NONBLOCK && !threadobj_current_p())
+	if (!threadobj_current_p() && !alchemy_poll_mode(abs_timeout))
 		return -EPERM;
 
 	COPPERPLATE_PROTECT(svc);
@@ -352,15 +351,14 @@ ssize_t rt_queue_receive_until(RT_QUEUE *queue,
 		goto done;
 	}
 
-	if (timeout == TM_NONBLOCK) {
+	if (alchemy_poll_mode(abs_timeout)) {
 		ret = -EWOULDBLOCK;
 		goto done;
 	}
 
 	wait = threadobj_prepare_wait(struct alchemy_queue_wait);
-	timespec = alchemy_get_timespec(timeout, &ts);
 
-	ret = syncobj_pend(&qcb->sobj, timespec, &syns);
+	ret = syncobj_pend(&qcb->sobj, abs_timeout, &syns);
 	if (ret) {
 		if (ret == -EIDRM) {
 			threadobj_finish_wait();
@@ -381,21 +379,15 @@ out:
 	return ret;
 }
 
-ssize_t rt_queue_receive(RT_QUEUE *queue,
-			 void **bufp, RTIME timeout)
-{
-	timeout = alchemy_rel2abs_timeout(timeout);
-	return rt_queue_receive_until(queue, bufp, timeout);
-}
-
-ssize_t rt_queue_read_until(RT_QUEUE *queue,
-			    void *buf, size_t size, RTIME timeout)
+ssize_t rt_queue_read_timed(RT_QUEUE *queue,
+			    void *buf, size_t size,
+			    const struct timespec *abs_timeout)
 {
 	ssize_t rsize;
 	void *_buf;
 	int ret;
 
-	rsize = rt_queue_receive_until(queue, &_buf, timeout);
+	rsize = rt_queue_receive_timed(queue, &_buf, abs_timeout);
 	if (rsize < 0)
 		return rsize;
 
@@ -410,13 +402,6 @@ ssize_t rt_queue_read_until(RT_QUEUE *queue,
 		return __bt(ret);
 
 	return rsize;
-}
-
-ssize_t rt_queue_read(RT_QUEUE *queue,
-		      void *buf, size_t size, RTIME timeout)
-{
-	timeout = alchemy_rel2abs_timeout(timeout);
-	return rt_queue_read_until(queue, buf, size, timeout);
 }
 
 int rt_queue_flush(RT_QUEUE *queue)

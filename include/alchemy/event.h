@@ -58,17 +58,30 @@ int rt_event_delete(RT_EVENT *event);
 int rt_event_signal(RT_EVENT *event,
 		    unsigned long mask);
 
-int rt_event_wait(RT_EVENT *event,
-		  unsigned long mask,
-		  unsigned long *mask_r,
-		  int mode,
-		  RTIME timeout);
-
-int rt_event_wait_until(RT_EVENT *event,
+int rt_event_wait_timed(RT_EVENT *event,
 			unsigned long mask,
 			unsigned long *mask_r,
 			int mode,
-			RTIME timeout);
+			const struct timespec *abs_timeout);
+static inline
+int rt_event_wait_until(RT_EVENT *event,
+			unsigned long mask, unsigned long *mask_r,
+			int mode, RTIME timeout)
+{
+	struct timespec ts;
+	return rt_event_wait_timed(event, mask, mask_r, mode,
+				   alchemy_abs_timeout(timeout, &ts));
+}
+
+static inline
+int rt_event_wait(RT_EVENT *event,
+		  unsigned long mask, unsigned long *mask_r,
+		  int mode, RTIME timeout)
+{
+	struct timespec ts;
+	return rt_event_wait_timed(event, mask, mask_r, mode,
+				   alchemy_rel_timeout(timeout, &ts));
+}
 
 int rt_event_clear(RT_EVENT *event,
 		   unsigned long mask,

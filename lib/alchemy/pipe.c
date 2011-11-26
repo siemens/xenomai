@@ -169,57 +169,41 @@ out:
 	return ret;
 }
 
-ssize_t rt_pipe_read_until(RT_PIPE *pipe,
-			   void *buf, size_t size, RTIME timeout)
+ssize_t rt_pipe_read_timed(RT_PIPE *pipe,
+			   void *buf, size_t size,
+			   const struct timespec *abs_timeout)
 {
-	struct timeval tv = { .tv_sec = 0, .tv_usec = 0 };
-	struct timespec ts, *timespec;
 	struct alchemy_pipe *pcb;
-	struct service svc;
-	int err, flags;
+	int err = 0, flags;
+	struct timeval tv;
 	ssize_t ret;
 
-	if (timeout != TM_NONBLOCK && !threadobj_current_p())
-		return -EPERM;
-
-	COPPERPLATE_PROTECT(svc);
-
 	pcb = find_alchemy_pipe(pipe, &err);
-	if (pcb == NULL) {
-		ret = err;
-		goto out;
-	}
+	if (pcb == NULL)
+		return err;
 
-	switch (timeout) {
-	default:
-		timespec = alchemy_get_timespec(timeout, &ts);
-		tv.tv_sec = ts.tv_sec;
-		tv.tv_usec = ts.tv_nsec / 1000;
-		/* Falldown wanted. */
-	case TM_INFINITE:
+	if (alchemy_poll_mode(abs_timeout))
+		flags = MSG_DONTWAIT;
+	else {
+		if (!threadobj_current_p())
+			return -EPERM;
+		if (abs_timeout) {
+			tv.tv_sec = abs_timeout->tv_sec;
+			tv.tv_usec = abs_timeout->tv_nsec / 1000;
+		} else {
+			tv.tv_sec = 0;
+			tv.tv_usec = 0;
+		}
 		__RT(setsockopt(pcb->sock, SOL_SOCKET,
 				SO_RCVTIMEO, &tv, sizeof(tv)));
 		flags = 0;
-		break;
-	case TM_NONBLOCK:
-		flags = MSG_DONTWAIT;
-		break;
 	}
 
 	ret = __RT(recvfrom(pcb->sock, buf, size, flags, NULL, 0));
 	if (ret < 0)
 		ret = -errno;
-out:
-	COPPERPLATE_UNPROTECT(svc);
 
 	return ret;
-}
-
-ssize_t rt_pipe_read(RT_PIPE *pipe,
-		     void *buf, size_t size, RTIME timeout)
-{
-	timeout = alchemy_rel2abs_timeout(timeout);
-	return rt_pipe_read_until(pipe, buf, size, timeout);
 }
 
 static ssize_t do_write_pipe(RT_PIPE *pipe,

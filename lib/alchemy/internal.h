@@ -32,14 +32,6 @@ struct syncluster;
 char *alchemy_build_name(char *buf, const char *name,
 			 struct alchemy_namegen *ngen);
 
-RTIME alchemy_rel2abs_timeout(RTIME timeout);
-
-struct timespec *alchemy_get_timespec(RTIME timeout,
-				      struct timespec *tmp);
-
-struct timespec *alchemy_get_timeout(RTIME timeout,
-				     struct timespec *tmp);
-
 int alchemy_bind_object(const char *name, struct syncluster *sc,
 			RTIME timeout,
 			int offset,

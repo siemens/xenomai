@@ -142,9 +142,8 @@ out:
 	return ret;
 }
 
-int rt_sem_p_until(RT_SEM *sem, RTIME timeout)
+int rt_sem_p_timed(RT_SEM *sem, const struct timespec *abs_timeout)
 {
-	struct timespec ts, *timespec;
 	struct alchemy_sem *scb;
 	struct service svc;
 	int ret = 0;
@@ -155,18 +154,11 @@ int rt_sem_p_until(RT_SEM *sem, RTIME timeout)
 	if (scb == NULL)
 		goto out;
 
-	timespec  = alchemy_get_timespec(timeout, &ts);
-	ret = semobj_wait(&scb->smobj, timespec);
+	ret = semobj_wait(&scb->smobj, abs_timeout);
 out:
 	COPPERPLATE_UNPROTECT(svc);
 
 	return ret;
-}
-
-int rt_sem_p(RT_SEM *sem, RTIME timeout)
-{
-	timeout = alchemy_rel2abs_timeout(timeout);
-	return rt_sem_p_until(sem, timeout);
 }
 
 int rt_sem_v(RT_SEM *sem)

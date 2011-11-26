@@ -52,11 +52,20 @@ int rt_sem_create(RT_SEM *sem,
 
 int rt_sem_delete(RT_SEM *sem);
 
-int rt_sem_p(RT_SEM *sem,
-	     RTIME timeout);
+int rt_sem_p_timed(RT_SEM *sem,
+		   const struct timespec *abs_timeout);
 
-int rt_sem_p_until(RT_SEM *sem,
-		   RTIME timeout);
+static inline int rt_sem_p_until(RT_SEM *sem, RTIME timeout)
+{
+	struct timespec ts;
+	return rt_sem_p_timed(sem, alchemy_abs_timeout(timeout, &ts));
+}
+
+static inline int rt_sem_p(RT_SEM *sem, RTIME timeout)
+{
+	struct timespec ts;
+	return rt_sem_p_timed(sem, alchemy_rel_timeout(timeout, &ts));
+}
 
 int rt_sem_v(RT_SEM *sem);
 

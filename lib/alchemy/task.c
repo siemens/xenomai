@@ -695,12 +695,11 @@ out:
 	return ret;
 }
 
-ssize_t rt_task_send_until(RT_TASK *task,
+ssize_t rt_task_send_timed(RT_TASK *task,
 			   RT_TASK_MCB *mcb_s, RT_TASK_MCB *mcb_r,
-			   RTIME timeout)
+			   const struct timespec *abs_timeout)
 {
 	struct alchemy_task_wait *wait;
-	struct timespec ts, *timespec;
 	struct threadobj *current;
 	struct alchemy_task *tcb;
 	struct syncstate syns;
@@ -733,12 +732,12 @@ ssize_t rt_task_send_until(RT_TASK *task,
 
 	put_alchemy_task(tcb);
 
-	if (timeout == TM_NONBLOCK) {
+	if (alchemy_poll_mode(abs_timeout)) {
 		if (!syncobj_drain_count(&tcb->sobj_msg)) {
 			ret = -EWOULDBLOCK;
 			goto done;
 		}
-		timeout = TM_INFINITE;
+		abs_timeout = NULL;
 	}
 
 	/* Get space for the reply. */
@@ -764,9 +763,7 @@ ssize_t rt_task_send_until(RT_TASK *task,
 	if (syncobj_drain_count(&tcb->sobj_msg))
 		syncobj_signal_drain(&tcb->sobj_msg);
 
-	timespec = alchemy_get_timespec(timeout, &ts);
-
-	ret = syncobj_pend(&tcb->sobj_msg, timespec, &syns);
+	ret = syncobj_pend(&tcb->sobj_msg, abs_timeout, &syns);
 	if (ret) {
 		threadobj_finish_wait();
 		if (ret == -EIDRM)
@@ -784,18 +781,10 @@ out:
 	return ret;
 }
 
-ssize_t rt_task_send(RT_TASK *task,
-		     RT_TASK_MCB *mcb_s, RT_TASK_MCB *mcb_r,
-		     RTIME timeout)
-{
-	timeout = alchemy_rel2abs_timeout(timeout);
-	return rt_task_send_until(task, mcb_s, mcb_r, timeout);
-}
-
-int rt_task_receive_until(RT_TASK_MCB *mcb_r, RTIME timeout)
+int rt_task_receive_timed(RT_TASK_MCB *mcb_r,
+			  const struct timespec *abs_timeout)
 {
 	struct alchemy_task_wait *wait;
-	struct timespec ts, *timespec;
 	struct alchemy_task *current;
 	struct threadobj *thobj;
 	struct syncstate syns;
@@ -812,12 +801,11 @@ int rt_task_receive_until(RT_TASK_MCB *mcb_r, RTIME timeout)
 	syncobj_lock(&current->sobj_msg, &syns);
 
 	while (!syncobj_pended_p(&current->sobj_msg)) {
-		if (timeout == TM_NONBLOCK) {
+		if (alchemy_poll_mode(abs_timeout)) {
 			ret = -EWOULDBLOCK;
 			goto done;
 		}
-		timespec = alchemy_get_timespec(timeout, &ts);
-		syncobj_wait_drain(&current->sobj_msg, timespec, &syns);
+		syncobj_wait_drain(&current->sobj_msg, abs_timeout, &syns);
 	}
 
 	thobj = syncobj_peek_at_pend(&current->sobj_msg);
@@ -843,12 +831,6 @@ done:
 	COPPERPLATE_UNPROTECT(svc);
 
 	return ret;
-}
-
-int rt_task_receive(RT_TASK_MCB *mcb_r, RTIME timeout)
-{
-	timeout = alchemy_rel2abs_timeout(timeout);
-	return rt_task_receive_until(mcb_r, timeout);
 }
 
 int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)

@@ -53,21 +53,53 @@ int rt_buffer_create(RT_BUFFER *bf,
 
 int rt_buffer_delete(RT_BUFFER *bf);
 
-ssize_t rt_buffer_write(RT_BUFFER *bf,
-			const void *ptr, size_t size,
-			RTIME timeout);
+ssize_t rt_buffer_write_timed(RT_BUFFER *bf,
+			      const void *ptr, size_t size,
+			      const struct timespec *abs_timeout);
 
+static inline
 ssize_t rt_buffer_write_until(RT_BUFFER *bf,
 			      const void *ptr, size_t size,
-			      RTIME timeout);
+			      RTIME timeout)
+{
+	struct timespec ts;
+	return rt_buffer_write_timed(bf, ptr, size,
+				     alchemy_abs_timeout(timeout, &ts));
+}
 
-ssize_t rt_buffer_read(RT_BUFFER *bf,
-		       void *ptr, size_t size,
-		       RTIME timeout);
+static inline
+ssize_t rt_buffer_write(RT_BUFFER *bf,
+			const void *ptr, size_t size,
+			RTIME timeout)
+{
+	struct timespec ts;
+	return rt_buffer_write_timed(bf, ptr, size,
+				     alchemy_rel_timeout(timeout, &ts));
+}
 
+ssize_t rt_buffer_read_timed(RT_BUFFER *bf,
+			     void *ptr, size_t size,
+			     const struct timespec *abs_timeout);
+
+static inline
 ssize_t rt_buffer_read_until(RT_BUFFER *bf,
 			     void *ptr, size_t size,
-			     RTIME timeout);
+			     RTIME timeout)
+{
+	struct timespec ts;
+	return rt_buffer_read_timed(bf, ptr, size,
+				    alchemy_abs_timeout(timeout, &ts));
+}
+
+static inline
+ssize_t rt_buffer_read(RT_BUFFER *bf,
+		       void *ptr, size_t size,
+		       RTIME timeout)
+{
+	struct timespec ts;
+	return rt_buffer_read_timed(bf, ptr, size,
+				    alchemy_rel_timeout(timeout, &ts));
+}
 
 int rt_buffer_clear(RT_BUFFER *bf);
 

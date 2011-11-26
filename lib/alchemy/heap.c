@@ -154,18 +154,18 @@ out:
 	return ret;
 }
 
-int rt_heap_alloc(RT_HEAP *heap,
-		  size_t size, RTIME timeout, void **blockp)
+int rt_heap_alloc_timed(RT_HEAP *heap,
+			size_t size, const struct timespec *abs_timeout,
+			void **blockp)
 {
 	struct alchemy_heap_wait *wait;
-	struct timespec ts, *timespec;
 	struct alchemy_heap *hcb;
 	struct syncstate syns;
 	struct service svc;
 	void *p = NULL;
 	int ret = 0;
 
-	if (timeout != TM_NONBLOCK && !threadobj_current_p())
+	if (!threadobj_current_p() && !alchemy_poll_mode(abs_timeout))
 		return -EPERM;
 
 	COPPERPLATE_PROTECT(svc);
@@ -195,17 +195,15 @@ int rt_heap_alloc(RT_HEAP *heap,
 	if (p)
 		goto done;
 
-	if (timeout == TM_NONBLOCK) {
+	if (alchemy_poll_mode(abs_timeout)) {
 		ret = -EWOULDBLOCK;
 		goto done;
 	}
 
-	timespec = alchemy_get_timespec(timeout, &ts);
-
 	wait = threadobj_prepare_wait(struct alchemy_heap_wait);
 	wait->size = size;
 
-	ret = syncobj_pend(&hcb->sobj, timespec, &syns);
+	ret = syncobj_pend(&hcb->sobj, abs_timeout, &syns);
 	if (ret) {
 		if (ret == -EIDRM) {
 			threadobj_finish_wait();

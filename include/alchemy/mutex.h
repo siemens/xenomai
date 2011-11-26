@@ -45,11 +45,24 @@ int rt_mutex_create(RT_MUTEX *mutex,
 
 int rt_mutex_delete(RT_MUTEX *mutex);
 
-int rt_mutex_acquire(RT_MUTEX *mutex,
-		     RTIME timeout);
+int rt_mutex_acquire_timed(RT_MUTEX *mutex,
+			   const struct timespec *abs_timeout);
 
-int rt_mutex_acquire_until(RT_MUTEX *mutex,
-			   RTIME timeout);
+static inline
+int rt_mutex_acquire_until(RT_MUTEX *mutex, RTIME timeout)
+{
+	struct timespec ts;
+	return rt_mutex_acquire_timed(mutex,
+				      alchemy_abs_timeout(timeout, &ts));
+}
+
+static inline
+int rt_mutex_acquire(RT_MUTEX *mutex, RTIME timeout)
+{
+	struct timespec ts;
+	return rt_mutex_acquire_timed(mutex,
+				      alchemy_rel_timeout(timeout, &ts));
+}
 
 int rt_mutex_release(RT_MUTEX *mutex);
 

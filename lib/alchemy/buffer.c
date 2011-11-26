@@ -162,11 +162,11 @@ out:
 	return ret;
 }
 
-ssize_t rt_buffer_read_until(RT_BUFFER *bf,
-			     void *ptr, size_t size, RTIME timeout)
+ssize_t rt_buffer_read_timed(RT_BUFFER *bf,
+			     void *ptr, size_t size,
+			     const struct timespec *abs_timeout)
 {
 	struct alchemy_buffer_wait *wait = NULL;
-	struct timespec ts, *timespec = NULL;
 	struct alchemy_buffer *bcb;
 	struct threadobj *thobj;
 	size_t len, rbytes, n;
@@ -180,7 +180,7 @@ ssize_t rt_buffer_read_until(RT_BUFFER *bf,
 	if (len == 0)
 		return 0;
 
-	if (timeout != TM_NONBLOCK && !threadobj_current_p())
+	if (!threadobj_current_p() && !alchemy_poll_mode(abs_timeout))
 		return -EPERM;
 
 	COPPERPLATE_PROTECT(svc);
@@ -242,7 +242,7 @@ redo:
 
 		goto done;
 	wait:
-		if (timeout == TM_NONBLOCK) {
+		if (alchemy_poll_mode(abs_timeout)) {
 			ret = -EWOULDBLOCK;
 			goto done;
 		}
@@ -259,13 +259,12 @@ redo:
 			goto redo;
 		}
 
-		if (wait == NULL) {
-			timespec = alchemy_get_timespec(timeout, &ts);
+		if (wait == NULL)
 			wait = threadobj_prepare_wait(struct alchemy_buffer_wait);
-		}
+
 		wait->size = len;
 
-		ret = syncobj_pend(&bcb->sobj, timespec, &syns);
+		ret = syncobj_pend(&bcb->sobj, abs_timeout, &syns);
 		if (ret) {
 			if (ret == -EIDRM)
 				goto out;
@@ -283,18 +282,11 @@ out:
 	return ret;
 }
 
-ssize_t rt_buffer_read(RT_BUFFER *bf,
-		       void *ptr, size_t size, RTIME timeout)
-{
-	timeout = alchemy_rel2abs_timeout(timeout);
-	return rt_buffer_read_until(bf, ptr, size, timeout);
-}
-
-ssize_t rt_buffer_write_until(RT_BUFFER *bf,
-			      const void *ptr, size_t size, RTIME timeout)
+ssize_t rt_buffer_write_timed(RT_BUFFER *bf,
+			      const void *ptr, size_t size,
+			      const struct timespec *abs_timeout)
 {
 	struct alchemy_buffer_wait *wait = NULL;
-	struct timespec ts, *timespec = NULL;
 	struct alchemy_buffer *bcb;
 	struct threadobj *thobj;
 	size_t len, rbytes, n;
@@ -308,7 +300,7 @@ ssize_t rt_buffer_write_until(RT_BUFFER *bf,
 	if (len == 0)
 		return 0;
 
-	if (timeout != TM_NONBLOCK && !threadobj_current_p())
+	if (!threadobj_current_p() && !alchemy_poll_mode(abs_timeout))
 		return -EPERM;
 
 	COPPERPLATE_PROTECT(svc);
@@ -370,15 +362,14 @@ ssize_t rt_buffer_write_until(RT_BUFFER *bf,
 
 		goto done;
 	wait:
-		if (timeout == TM_NONBLOCK) {
+		if (alchemy_poll_mode(abs_timeout)) {
 			ret = -EWOULDBLOCK;
 			goto done;
 		}
 
-		if (wait == NULL) {
-			timespec = alchemy_get_timespec(timeout, &ts);
+		if (wait == NULL)
 			wait = threadobj_prepare_wait(struct alchemy_buffer_wait);
-		}
+
 		wait->size = len;
 
 		/*
@@ -399,7 +390,7 @@ ssize_t rt_buffer_write_until(RT_BUFFER *bf,
 		if (bcb->fillsz > 0 && syncobj_pend_count(&bcb->sobj))
 			syncobj_flush(&bcb->sobj, SYNCOBJ_BROADCAST);
 
-		ret = syncobj_wait_drain(&bcb->sobj, timespec, &syns);
+		ret = syncobj_wait_drain(&bcb->sobj, abs_timeout, &syns);
 		if (ret) {
 			if (ret == -EIDRM)
 				goto out;
@@ -415,13 +406,6 @@ out:
 	COPPERPLATE_UNPROTECT(svc);
 
 	return ret;
-}
-
-ssize_t rt_buffer_write(RT_BUFFER *bf,
-			const void *ptr, size_t size, RTIME timeout)
-{
-	timeout = alchemy_rel2abs_timeout(timeout);
-	return rt_buffer_write_until(bf, ptr, size, timeout);
 }
 
 int rt_buffer_clear(RT_BUFFER *bf)
