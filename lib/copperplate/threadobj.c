@@ -35,7 +35,6 @@
 #include "copperplate/syncobj.h"
 #include "copperplate/cluster.h"
 #include "copperplate/clockobj.h"
-#include "copperplate/debug.h"
 #include "internal.h"
 
 union copperplate_wait_union {
@@ -432,9 +431,6 @@ static inline void pkg_init_corespec(void)
 	 */
 	threadobj_lock_prio = threadobj_high_prio;
 	threadobj_high_prio = threadobj_lock_prio - 1;
-
-	debug("SCHED_RT.%d reserved for scheduler lock",
-	      threadobj_lock_prio);
 
 	memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = unblock_sighandler;
@@ -1048,9 +1044,6 @@ void threadobj_pkg_init(void)
 
 	if (pthread_key_create(&threadobj_tskey, threadobj_finalize) != 0)
 		panic("failed to allocate TSD key");
-
-	debug("SCHED_RT priorities => [1 .. %d]", threadobj_irq_prio);
-	debug("SCHED_RT.%d reserved for timer context", threadobj_irq_prio);
 
 	pkg_init_corespec();
 }
