@@ -105,9 +105,6 @@ void clockobj_get_date(struct clockobj *clkobj,
 void clockobj_get_time(struct clockobj *clkobj,
 		       ticks_t *pticks, ticks_t *ptsc);
 
-void clockobj_ticks_to_timespec(struct clockobj *clkobj,
-				ticks_t ticks, struct timespec *ts);
-
 void __clockobj_ticks_to_timeout(struct clockobj *clkobj, clockid_t clk_id,
 				 ticks_t ticks, struct timespec *ts);
 
@@ -139,6 +136,64 @@ int clockobj_destroy(struct clockobj *clkobj);
 }
 #endif
 
+#ifdef CONFIG_XENO_COBALT
+
+#include <asm/xenomai/arith.h>
+#include <asm-generic/xenomai/timeconv.h>
+
+static inline ticks_t clockobj_get_tsc(void)
+{
+	/* Guaranteed to be the source of CLOCK_COPPERPLATE. */
+	return __xn_rdtsc();
+}
+
+static inline sticks_t clockobj_ns_to_tsc(sticks_t ns)
+{
+	return xnarch_ns_to_tsc(ns);
+}
+
+static inline sticks_t clockobj_tsc_to_ns(sticks_t tsc)
+{
+	return xnarch_tsc_to_ns(tsc);
+}
+
+static inline
+void clockobj_ns_to_timespec(ticks_t ns, struct timespec *ts)
+{
+	unsigned long rem;
+
+	ts->tv_sec = xnarch_divrem_billion(ns, &rem);
+	ts->tv_nsec = rem;
+}
+
+#else /* CONFIG_XENO_MERCURY */
+
+static inline ticks_t clockobj_get_tsc(void)
+{
+	struct timespec now;
+	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
+	return (ticks_t)now.tv_sec * 1000000000ULL + now.tv_nsec;
+}
+
+static inline sticks_t clockobj_ns_to_tsc(sticks_t ns)
+{
+	return ns;
+}
+
+static inline sticks_t clockobj_tsc_to_ns(sticks_t tsc)
+{
+	return tsc;
+}
+
+static inline
+void clockobj_ns_to_timespec(ticks_t ns, struct timespec *ts)
+{
+	ts->tv_sec = ns / 1000000000ULL;
+	ts->tv_nsec = ns - (ts->tv_sec * 1000000000ULL);
+}
+
+#endif /* CONFIG_XENO_MERCURY */
+
 static inline
 void clockobj_ticks_to_timeout(struct clockobj *clkobj,
 			       ticks_t ticks, struct timespec *ts)
@@ -147,6 +202,20 @@ void clockobj_ticks_to_timeout(struct clockobj *clkobj,
 }
 
 #ifdef CONFIG_XENO_LORES_CLOCK_DISABLED
+
+static inline
+void __clockobj_ticks_to_timespec(struct clockobj *clkobj,
+				  ticks_t ticks, struct timespec *ts)
+{
+	clockobj_ns_to_timespec(ticks, ts);
+}
+
+static inline
+void clockobj_ticks_to_timespec(struct clockobj *clkobj,
+				ticks_t ticks, struct timespec *ts)
+{
+	__clockobj_ticks_to_timespec(clkobj, ticks, ts);
+}
 
 static inline
 int __clockobj_set_resolution(struct clockobj *clkobj,
@@ -186,6 +255,18 @@ static inline sticks_t clockobj_ticks_to_ns(struct clockobj *clkobj,
 
 #else /* !CONFIG_XENO_LORES_CLOCK_DISABLED */
 
+void __clockobj_ticks_to_timespec(struct clockobj *clkobj,
+				  ticks_t ticks, struct timespec *ts);
+
+static inline
+void clockobj_ticks_to_timespec(struct clockobj *clkobj,
+				ticks_t ticks, struct timespec *ts)
+{
+	read_lock_nocancel(&clkobj->lock);
+	__clockobj_ticks_to_timespec(clkobj, ticks, ts);
+	read_unlock(&clkobj->lock);
+}
+
 static inline
 int __clockobj_set_resolution(struct clockobj *clkobj,
 			      unsigned int resolution_ns)
@@ -218,46 +299,5 @@ static inline sticks_t clockobj_ticks_to_ns(struct clockobj *clkobj,
 }
 
 #endif /* !CONFIG_XENO_LORES_CLOCK_DISABLED */
-
-#ifdef CONFIG_XENO_COBALT
-
-#include <asm-generic/xenomai/timeconv.h>
-
-static inline ticks_t clockobj_get_tsc(void)
-{
-	/* Guaranteed to be the source of CLOCK_COPPERPLATE. */
-	return __xn_rdtsc();
-}
-
-static inline sticks_t clockobj_ns_to_tsc(sticks_t ns)
-{
-	return xnarch_ns_to_tsc(ns);
-}
-
-static inline sticks_t clockobj_tsc_to_ns(sticks_t tsc)
-{
-	return xnarch_tsc_to_ns(tsc);
-}
-
-#else /* CONFIG_XENO_MERCURY */
-
-static inline ticks_t clockobj_get_tsc(void)
-{
-	struct timespec now;
-	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
-	return (ticks_t)now.tv_sec * 1000000000ULL + now.tv_nsec;
-}
-
-static inline sticks_t clockobj_ns_to_tsc(sticks_t ns)
-{
-	return ns;
-}
-
-static inline sticks_t clockobj_tsc_to_ns(sticks_t tsc)
-{
-	return tsc;
-}
-
-#endif /* CONFIG_XENO_MERCURY */
 
 #endif /* _COPPERPLATE_CLOCKOBJ_H */

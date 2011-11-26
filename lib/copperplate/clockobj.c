@@ -80,25 +80,24 @@ void timespec_adds(struct timespec *r,
 	}
 }
 
-static void ticks_to_timespec(struct clockobj *clkobj,
-			      ticks_t ticks,
-			      struct timespec *ts)
-{
-	unsigned int freq = clockobj_get_frequency(clkobj);
+#ifndef CONFIG_XENO_LORES_CLOCK_DISABLED
 
-	ts->tv_sec = ticks / freq;
-	ts->tv_nsec = ticks - (ts->tv_sec * freq);
-	if (clockobj_get_resolution(clkobj) > 1)
+void __clockobj_ticks_to_timespec(struct clockobj *clkobj,
+				  ticks_t ticks,
+				  struct timespec *ts)
+{
+	unsigned int freq;
+
+	if (clockobj_get_resolution(clkobj) > 1) {
+		freq = clockobj_get_frequency(clkobj);
+		ts->tv_sec = ticks / freq;
+		ts->tv_nsec = ticks - (ts->tv_sec * freq);
 		ts->tv_nsec *= clockobj_get_resolution(clkobj);
+	} else
+		clockobj_ns_to_timespec(ticks, ts);
 }
 
-void clockobj_ticks_to_timespec(struct clockobj *clkobj,
-				ticks_t ticks, struct timespec *ts)
-{
-	read_lock_nocancel(&clkobj->lock);
-	ticks_to_timespec(clkobj, ticks, ts);
-	read_unlock(&clkobj->lock);
-}
+#endif /* !CONFIG_XENO_LORES_CLOCK_DISABLED */
 
 void __clockobj_ticks_to_timeout(struct clockobj *clkobj,
 				 clockid_t clk_id,
@@ -108,7 +107,7 @@ void __clockobj_ticks_to_timeout(struct clockobj *clkobj,
 
 	read_lock_nocancel(&clkobj->lock);
 	__RT(clock_gettime(clk_id, ts));
-	ticks_to_timespec(clkobj, ticks, &delta);
+	__clockobj_ticks_to_timespec(clkobj, ticks, &delta);
 	read_unlock(&clkobj->lock);
 	timespec_add(ts, ts, &delta);
 }
@@ -212,7 +211,7 @@ void clockobj_caltime_to_timeout(struct clockobj *clkobj, const struct tm *tm,
 
 	read_lock_nocancel(&clkobj->lock);
 	clockobj_caltime_to_ticks(clkobj, tm, rticks, &ticks);
-	ticks_to_timespec(clkobj, ticks, ts);
+	__clockobj_ticks_to_timespec(clkobj, ticks, ts);
 	timespec_sub(ts, ts, &clkobj->offset);
 	read_unlock(&clkobj->lock);
 }
@@ -230,7 +229,7 @@ void clockobj_set_date(struct clockobj *clkobj,
 	if (resolution_ns)
 		__clockobj_set_resolution(clkobj, resolution_ns);
 
-	ticks_to_timespec(clkobj, ticks, &clkobj->epoch);
+	__clockobj_ticks_to_timespec(clkobj, ticks, &clkobj->epoch);
 	timespec_sub(&clkobj->offset, &clkobj->epoch, &now);
 
 	read_unlock(&clkobj->lock);
@@ -360,7 +359,7 @@ void clockobj_ticks_to_clock(struct clockobj *clkobj,
 	read_lock_nocancel(&clkobj->lock);
 	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
 	/* Absolute timeout, CLOCK_COPPERPLATE-based. */
-	ticks_to_timespec(clkobj, ticks, &ts);
+	__clockobj_ticks_to_timespec(clkobj, ticks, &ts);
 	read_unlock(&clkobj->lock);
 	/* Offset from CLOCK_COPPERPLATE epoch. */
 	timespec_sub(timeout, &ts, &now);
