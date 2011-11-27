@@ -32,38 +32,7 @@ static struct alchemy_namegen event_namegen = {
 	.length = sizeof ((struct alchemy_event *)0)->name,
 };
 
-static struct alchemy_event *get_alchemy_event(RT_EVENT *event,
-					       struct syncstate *syns, int *err_r)
-{
-	struct alchemy_event *evcb;
-
-	if (event == NULL || ((intptr_t)event & (sizeof(intptr_t)-1)) != 0)
-		goto bad_handle;
-
-	evcb = mainheap_deref(event->handle, struct alchemy_event);
-	if (evcb == NULL || ((intptr_t)evcb & (sizeof(intptr_t)-1)) != 0)
-		goto bad_handle;
-
-	if (evcb->magic != event_magic)
-		goto bad_handle;
-
-	if (syncobj_lock(&evcb->sobj, syns))
-		goto bad_handle;
-
-	/* Recheck under lock. */
-	if (evcb->magic == event_magic)
-		return evcb;
-bad_handle:
-	*err_r = -EINVAL;
-
-	return NULL;
-}
-
-static inline void put_alchemy_event(struct alchemy_event *evcb,
-				     struct syncstate *syns)
-{
-	syncobj_unlock(&evcb->sobj, syns);
-}
+DEFINE_SYNC_LOOKUP(event, RT_EVENT);
 
 static void event_finalize(struct syncobj *sobj)
 {

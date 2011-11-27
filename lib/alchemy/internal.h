@@ -27,6 +27,66 @@ struct alchemy_namegen {
 	int serial;
 };
 
+#define DEFINE_SYNC_LOOKUP(__name, __dsctype)				\
+static inline struct alchemy_ ## __name *				\
+get_alchemy_ ## __name(__dsctype *desc,					\
+		       struct syncstate *syns, int *err_r)		\
+{									\
+	struct alchemy_ ## __name *cb;					\
+									\
+	if (bad_pointer(desc)) {					\
+		*err_r = -EINVAL;					\
+		return NULL;						\
+	}								\
+									\
+	cb = mainheap_deref(desc->handle, struct alchemy_ ## __name);	\
+	if (bad_pointer(cb)) {						\
+		*err_r = -EINVAL;					\
+		return NULL;						\
+	}								\
+									\
+	if (syncobj_lock(&cb->sobj, syns) ||				\
+	    cb->magic != __name ## _magic) {				\
+		*err_r = -EINVAL;					\
+		return NULL;						\
+	}								\
+									\
+	return cb;							\
+}									\
+									\
+static inline								\
+void put_alchemy_ ## __name(struct alchemy_ ## __name *cb,		\
+			    struct syncstate *syns)			\
+{									\
+	syncobj_unlock(&cb->sobj, syns);				\
+}
+
+#define __DEFINE_LOOKUP(__scope, __name, __dsctype)			\
+__scope struct alchemy_ ## __name *					\
+find_alchemy_ ## __name(__dsctype *desc, int *err_r)			\
+{									\
+	struct alchemy_ ## __name *cb;					\
+									\
+	if (bad_pointer(desc)) {					\
+		*err_r = -EINVAL;					\
+		return NULL;						\
+	}								\
+									\
+	cb = mainheap_deref(desc->handle, struct alchemy_ ## __name);	\
+	if (bad_pointer(cb) || cb->magic != __name ## _magic) {		\
+		*err_r = -EINVAL;					\
+		return NULL;						\
+	}								\
+									\
+	return cb;							\
+}									\
+
+#define DEFINE_LOOKUP_PRIVATE(__name, __dsctype)			\
+	__DEFINE_LOOKUP(static inline, __name, __dsctype)
+
+#define DEFINE_LOOKUP(__name, __dsctype)				\
+	__DEFINE_LOOKUP(, __name, __dsctype)
+
 struct syncluster;
 
 char *alchemy_build_name(char *buf, const char *name,

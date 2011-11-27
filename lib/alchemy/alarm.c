@@ -36,20 +36,13 @@ static struct alchemy_alarm *get_alchemy_alarm(RT_ALARM *alarm, int *err_r)
 {
 	struct alchemy_alarm *acb;
 
-	if (alarm == NULL || ((intptr_t)alarm & (sizeof(intptr_t)-1)) != 0)
+	if (bad_pointer(alarm))
 		goto bad_handle;
 
 	acb = (struct alchemy_alarm *)alarm->handle;
-	if (acb == NULL || ((intptr_t)acb & (sizeof(intptr_t)-1)) != 0)
+	if (bad_pointer(acb) || timerobj_lock(&acb->tmobj))
 		goto bad_handle;
 
-	if (acb->magic != alarm_magic)
-		goto bad_handle;
-
-	if (timerobj_lock(&acb->tmobj))
-		goto bad_handle;
-
-	/* Recheck under lock. */
 	if (acb->magic == alarm_magic)
 		return acb;
 bad_handle:

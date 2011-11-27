@@ -36,24 +36,7 @@ static struct alchemy_namegen pipe_namegen = {
 	.length = sizeof ((struct alchemy_pipe *)0)->name,
 };
 
-static struct alchemy_pipe *find_alchemy_pipe(RT_PIPE *pipe, int *err_r)
-{
-	struct alchemy_pipe *pcb;
-
-	if (pipe == NULL || ((intptr_t)pipe & (sizeof(intptr_t)-1)) != 0)
-		goto bad_handle;
-
-	pcb = mainheap_deref(pipe->handle, struct alchemy_pipe);
-	if (pcb == NULL || ((intptr_t)pcb & (sizeof(intptr_t)-1)) != 0)
-		goto bad_handle;
-
-	if (pcb->magic == pipe_magic)
-		return pcb;
-bad_handle:
-	*err_r = -EINVAL;
-
-	return NULL;
-}
+DEFINE_LOOKUP_PRIVATE(pipe, RT_PIPE);
 
 int rt_pipe_create(RT_PIPE *pipe,
 		   const char *name, int minor, size_t poolsize)
@@ -212,7 +195,7 @@ static ssize_t do_write_pipe(RT_PIPE *pipe,
 	struct alchemy_pipe *pcb;
 	struct service svc;
 	ssize_t ret;
-	int err;
+	int err = 0;
 
 	COPPERPLATE_PROTECT(svc);
 

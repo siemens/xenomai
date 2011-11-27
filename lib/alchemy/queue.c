@@ -32,38 +32,7 @@ static struct alchemy_namegen queue_namegen = {
 	.length = sizeof ((struct alchemy_queue *)0)->name,
 };
 
-static struct alchemy_queue *get_alchemy_queue(RT_QUEUE *queue,
-					       struct syncstate *syns, int *err_r)
-{
-	struct alchemy_queue *qcb;
-
-	if (queue == NULL || ((intptr_t)queue & (sizeof(intptr_t)-1)) != 0)
-		goto bad_handle;
-
-	qcb = mainheap_deref(queue->handle, struct alchemy_queue);
-	if (qcb == NULL || ((intptr_t)qcb & (sizeof(intptr_t)-1)) != 0)
-		goto bad_handle;
-
-	if (qcb->magic != queue_magic)
-		goto bad_handle;
-
-	if (syncobj_lock(&qcb->sobj, syns))
-		goto bad_handle;
-
-	/* Recheck under lock. */
-	if (qcb->magic == queue_magic)
-		return qcb;
-bad_handle:
-	*err_r = -EINVAL;
-
-	return NULL;
-}
-
-static inline void put_alchemy_queue(struct alchemy_queue *qcb,
-				     struct syncstate *syns)
-{
-	syncobj_unlock(&qcb->sobj, syns);
-}
+DEFINE_SYNC_LOOKUP(queue, RT_QUEUE);
 
 static void queue_finalize(struct syncobj *sobj)
 {

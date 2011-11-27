@@ -52,17 +52,15 @@ static void delete_tcb(struct alchemy_task *tcb);
 static struct alchemy_task *find_alchemy_task(RT_TASK *task, int *err_r)
 {
 	struct alchemy_task *tcb;
-	unsigned int magic;
 
-	if (task == NULL || ((intptr_t)task & (sizeof(intptr_t)-1)) != 0)
+	if (bad_pointer(task))
 		goto bad_handle;
 
 	tcb = mainheap_deref(task->handle, struct alchemy_task);
-	if (tcb == NULL || ((intptr_t)tcb & (sizeof(intptr_t)-1)) != 0)
+	if (bad_pointer(tcb))
 		goto bad_handle;
 
-	magic = threadobj_get_magic(&tcb->thobj);
-	if (magic == task_magic)
+	if (threadobj_get_magic(&tcb->thobj) == task_magic)
 		return tcb;
 bad_handle:
 	*err_r = -EINVAL;

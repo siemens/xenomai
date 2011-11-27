@@ -37,24 +37,7 @@ static struct alchemy_namegen cond_namegen = {
 	.length = sizeof ((struct alchemy_cond *)0)->name,
 };
 
-static struct alchemy_cond *find_alchemy_cond(RT_COND *cond, int *err_r)
-{
-	struct alchemy_cond *ccb;
-
-	if (cond == NULL || ((intptr_t)cond & (sizeof(intptr_t)-1)) != 0)
-		goto bad_handle;
-
-	ccb = mainheap_deref(cond->handle, struct alchemy_cond);
-	if (ccb == NULL || ((intptr_t)ccb & (sizeof(intptr_t)-1)) != 0)
-		goto bad_handle;
-
-	if (ccb->magic == cond_magic)
-		return ccb;
-bad_handle:
-	*err_r = -EINVAL;
-
-	return NULL;
-}
+DEFINE_LOOKUP_PRIVATE(cond, RT_COND);
 
 int rt_cond_create(RT_COND *cond, const char *name)
 {

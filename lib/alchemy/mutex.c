@@ -37,24 +37,7 @@ static struct alchemy_namegen mutex_namegen = {
 	.length = sizeof ((struct alchemy_mutex *)0)->name,
 };
 
-struct alchemy_mutex *find_alchemy_mutex(RT_MUTEX *mutex, int *err_r)
-{
-	struct alchemy_mutex *mcb;
-
-	if (mutex == NULL || ((intptr_t)mutex & (sizeof(intptr_t)-1)) != 0)
-		goto bad_handle;
-
-	mcb = mainheap_deref(mutex->handle, struct alchemy_mutex);
-	if (mcb == NULL || ((intptr_t)mcb & (sizeof(intptr_t)-1)) != 0)
-		goto bad_handle;
-
-	if (mcb->magic == mutex_magic)
-		return mcb;
-bad_handle:
-	*err_r = -EINVAL;
-
-	return NULL;
-}
+DEFINE_LOOKUP(mutex, RT_MUTEX);
 
 int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 {

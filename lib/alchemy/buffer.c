@@ -32,38 +32,7 @@ static struct alchemy_namegen buffer_namegen = {
 	.length = sizeof ((struct alchemy_buffer *)0)->name,
 };
 
-static struct alchemy_buffer *get_alchemy_buffer(RT_BUFFER *bf,
-						 struct syncstate *syns, int *err_r)
-{
-	struct alchemy_buffer *bcb;
-
-	if (bf == NULL || ((intptr_t)bf & (sizeof(intptr_t)-1)) != 0)
-		goto bad_handle;
-
-	bcb = mainheap_deref(bf->handle, struct alchemy_buffer);
-	if (bcb == NULL || ((intptr_t)bcb & (sizeof(intptr_t)-1)) != 0)
-		goto bad_handle;
-
-	if (bcb->magic != buffer_magic)
-		goto bad_handle;
-
-	if (syncobj_lock(&bcb->sobj, syns))
-		goto bad_handle;
-
-	/* Recheck under lock. */
-	if (bcb->magic == buffer_magic)
-		return bcb;
-bad_handle:
-	*err_r = -EINVAL;
-
-	return NULL;
-}
-
-static inline void put_alchemy_buffer(struct alchemy_buffer *bcb,
-				      struct syncstate *syns)
-{
-	syncobj_unlock(&bcb->sobj, syns);
-}
+DEFINE_SYNC_LOOKUP(buffer, RT_BUFFER);
 
 static void buffer_finalize(struct syncobj *sobj)
 {

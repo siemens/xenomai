@@ -32,38 +32,7 @@ static struct alchemy_namegen heap_namegen = {
 	.length = sizeof ((struct alchemy_heap *)0)->name,
 };
 
-static struct alchemy_heap *get_alchemy_heap(RT_HEAP *heap,
-					     struct syncstate *syns, int *err_r)
-{
-	struct alchemy_heap *hcb;
-
-	if (heap == NULL || ((intptr_t)heap & (sizeof(intptr_t)-1)) != 0)
-		goto bad_handle;
-
-	hcb = mainheap_deref(heap->handle, struct alchemy_heap);
-	if (hcb == NULL || ((intptr_t)hcb & (sizeof(intptr_t)-1)) != 0)
-		goto bad_handle;
-
-	if (hcb->magic != heap_magic)
-		goto bad_handle;
-
-	if (syncobj_lock(&hcb->sobj, syns))
-		goto bad_handle;
-
-	/* Recheck under lock. */
-	if (hcb->magic == heap_magic)
-		return hcb;
-bad_handle:
-	*err_r = -EINVAL;
-
-	return NULL;
-}
-
-static inline void put_alchemy_heap(struct alchemy_heap *hcb,
-				    struct syncstate *syns)
-{
-	syncobj_unlock(&hcb->sobj, syns);
-}
+DEFINE_SYNC_LOOKUP(heap, RT_HEAP);
 
 static void heap_finalize(struct syncobj *sobj)
 {

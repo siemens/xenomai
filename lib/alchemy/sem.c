@@ -32,24 +32,7 @@ static struct alchemy_namegen sem_namegen = {
 	.length = sizeof ((struct alchemy_sem *)0)->name,
 };
 
-static struct alchemy_sem *find_alchemy_sem(RT_SEM *sem, int *err_r)
-{
-	struct alchemy_sem *scb;
-
-	if (sem == NULL || ((intptr_t)sem & (sizeof(intptr_t)-1)) != 0)
-		goto bad_handle;
-
-	scb = mainheap_deref(sem->handle, struct alchemy_sem);
-	if (scb == NULL || ((intptr_t)scb & (sizeof(intptr_t)-1)) != 0)
-		goto bad_handle;
-
-	if (scb->magic == sem_magic)
-		return scb;
-bad_handle:
-	*err_r = -EINVAL;
-
-	return NULL;
-}
+DEFINE_LOOKUP_PRIVATE(sem, RT_SEM);
 
 static void sem_finalize(struct semobj *smobj)
 {
