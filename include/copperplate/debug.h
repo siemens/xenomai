@@ -21,7 +21,18 @@
 
 #ifdef __XENO_DEBUG__
 
+#include <stdint.h>
 #include <pthread.h>
+
+static inline int bad_pointer(const void *ptr)
+{
+	return ptr == NULL || ((intptr_t)ptr & (sizeof(intptr_t)-1)) != 0;
+}
+
+static inline int must_check(void)
+{
+	return 1;
+}
 
 struct threadobj;
 
@@ -89,6 +100,16 @@ int debug_pkg_init(void);
 	})
 
 #else /* !__XENO_DEBUG__ */
+
+static inline int bad_pointer(const void *ptr)
+{
+	return 0;
+}
+
+static inline int must_check(void)
+{
+	return 0;
+}
 
 #define debug(fmt, args...)  do { } while (0)
 
