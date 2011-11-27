@@ -23,7 +23,7 @@ unset prefix exec_prefix libdir datadir datarootdir pkgdatadir includedir
 usage ()
 {
 cat <<EOF
-Usage xeno-config --skin=skinname OPTIONS
+Usage xeno-config --skin=skin OPTIONS
 Options :
         --help
         --v,--verbose
@@ -88,7 +88,7 @@ while test $# -gt 0; do
 	--cflags)
 	    case "$skin" in
 		vxworks|psos|alchemy)
-		    echo $XENO_BASE_CFLAGS -I$XENO_INCLUDE_DIR/$skin
+		    echo $XENO_BASE_CFLAGS -I$XENO_INCLUDE_DIR/$skin -I$XENO_INCLUDE_DIR
 		    ;;
 		"")
 		    echo skin not set, please pass --skin before --cflags 1>&2

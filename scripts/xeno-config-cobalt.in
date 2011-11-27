@@ -42,7 +42,7 @@ posix_ldflags ()
 usage ()
 {
 cat <<EOF
-Usage xeno-config --skin=skinname OPTIONS
+Usage xeno-config --skin=name OPTIONS
 Options :
         --help
         --v,--verbose
@@ -113,7 +113,7 @@ while test $# -gt 0; do
 		    echo $XENO_BASE_CFLAGS -I$XENO_INCLUDE_DIR/cobalt
 		    ;;
 		vxworks|psos|alchemy)
-		    echo $XENO_BASE_CFLAGS -I$XENO_INCLUDE_DIR/cobalt -I$XENO_INCLUDE_DIR/$skin
+		    echo $XENO_BASE_CFLAGS -I$XENO_INCLUDE_DIR/cobalt -I$XENO_INCLUDE_DIR/$skin -I$XENO_INCLUDE_DIR
 		    ;;
 		"")
 		    echo skin not set, please pass --skin before --cflags 1>&2
