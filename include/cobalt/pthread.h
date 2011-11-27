@@ -502,8 +502,8 @@ COBALT_DECL(int, pthread_mutexattr_setprotocol(pthread_mutexattr_t *attr,
 COBALT_DECL(int, pthread_condattr_getclock(const pthread_condattr_t *attr,
 					   clockid_t *clk_id));
 
-COBALT_DECL(int pthread_condattr_setclock(pthread_condattr_t *attr,
-					  clockid_t clk_id));
+COBALT_DECL(int, pthread_condattr_setclock(pthread_condattr_t *attr,
+					   clockid_t clk_id));
 #endif
 
 int pthread_make_periodic_np(pthread_t thread,
