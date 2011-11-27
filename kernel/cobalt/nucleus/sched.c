@@ -763,6 +763,7 @@ struct vfile_schedstat_data {
 	char name[XNOBJECT_NAME_LEN];
 	unsigned long ssw;
 	unsigned long csw;
+	unsigned long xsc;
 	unsigned long pf;
 	xnticks_t exectime_period;
 	xnticks_t account_period;
@@ -821,6 +822,7 @@ static int vfile_schedstat_next(struct xnvfile_snapshot_iterator *it,
 	p->state = xnthread_state_flags(thread);
 	p->ssw = xnstat_counter_get(&thread->stat.ssw);
 	p->csw = xnstat_counter_get(&thread->stat.csw);
+	p->xsc = xnstat_counter_get(&thread->stat.xsc);
 	p->pf = xnstat_counter_get(&thread->stat.pf);
 
 	period = sched->last_account_switch - thread->stat.lastperiod.start;
@@ -860,6 +862,7 @@ scan_irqs:
 	p->pid = 0;
 	p->state =  0;
 	p->ssw = 0;
+	p->xsc = 0;
 	p->pf = 0;
 
 	return 1;
@@ -873,9 +876,9 @@ static int vfile_schedstat_show(struct xnvfile_snapshot_iterator *it,
 
 	if (p == NULL)
 		xnvfile_printf(it,
-			       "%-3s  %-6s %-10s %-10s %-4s  %-8s  %5s"
+			       "%-3s  %-6s %-10s %-10s %-10s %-4s  %-8s  %5s"
 			       "  %s\n",
-			       "CPU", "PID", "MSW", "CSW", "PF", "STAT", "%CPU",
+			       "CPU", "PID", "MSW", "CSW", "XSC", "PF", "STAT", "%CPU",
 			       "NAME");
 	else {
 		if (p->account_period) {
@@ -888,9 +891,9 @@ static int vfile_schedstat_show(struct xnvfile_snapshot_iterator *it,
 					      p->account_period, NULL);
 		}
 		xnvfile_printf(it,
-			       "%3u  %-6d %-10lu %-10lu %-4lu  %.8lx  %3u.%u"
+			       "%3u  %-6d %-10lu %-10lu %-10lu %-4lu  %.8lx  %3u.%u"
 			       "  %s\n",
-			       p->cpu, p->pid, p->ssw, p->csw, p->pf, p->state,
+			       p->cpu, p->pid, p->ssw, p->csw, p->xsc, p->pf, p->state,
 			       usage / 10, usage % 10, p->name);
 	}
 
@@ -905,8 +908,8 @@ static int vfile_schedacct_show(struct xnvfile_snapshot_iterator *it,
 	if (p == NULL)
 		return 0;
 
-	xnvfile_printf(it, "%u %d %lu %lu %lu %.8lx %Lu %Lu %Lu %s\n",
-		       p->cpu, p->pid, p->ssw, p->csw, p->pf, p->state,
+	xnvfile_printf(it, "%u %d %lu %lu %lu %lu %.8lx %Lu %Lu %Lu %s\n",
+		       p->cpu, p->pid, p->ssw, p->csw, p->xsc, p->pf, p->state,
 		       xnarch_tsc_to_ns(p->account_period),
 		       xnarch_tsc_to_ns(p->exectime_period),
 		       xnarch_tsc_to_ns(p->exectime_total),

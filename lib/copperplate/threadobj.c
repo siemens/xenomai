@@ -400,6 +400,7 @@ int threadobj_stat(struct threadobj *thobj, struct threadobj_stat *p) /* thobj->
 	p->xtime = stat.xtime;
 	p->msw = stat.msw;
 	p->csw = stat.csw;
+	p->xsc = stat.xsc;
 	p->pf = stat.pf;
 
 	return 0;

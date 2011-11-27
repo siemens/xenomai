@@ -143,6 +143,7 @@ typedef struct xnthread_info {
 	unsigned long modeswitches; /**< Number of primary->secondary mode switches. */
 	unsigned long ctxswitches; /**< Number of context switches. */
 	unsigned long pagefaults; /**< Number of triggered page faults. */
+	unsigned long syscalls; /**< Number of Xenomai syscalls. */
 
 	char name[XNOBJECT_NAME_LEN];  /**< Symbolic name assigned at creation. */
 
@@ -261,6 +262,7 @@ typedef struct xnthread {
 	struct {
 		xnstat_counter_t ssw;	/* Primary -> secondary mode switch count */
 		xnstat_counter_t csw;	/* Context switches (includes secondary -> primary switches) */
+		xnstat_counter_t xsc;	/* Xenomai syscalls */
 		xnstat_counter_t pf;	/* Number of page faults */
 		xnstat_exectime_t account; /* Execution time accounting entity */
 		xnstat_exectime_t lastperiod; /* Interval marker for execution time reports */

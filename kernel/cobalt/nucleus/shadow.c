@@ -1726,6 +1726,7 @@ static int xnshadow_sys_current_info(xnthread_info_t __user *u_info)
 	info.modeswitches = xnstat_counter_get(&cur->stat.ssw);
 	info.ctxswitches = xnstat_counter_get(&cur->stat.csw);
 	info.pagefaults = xnstat_counter_get(&cur->stat.pf);
+	info.syscalls = xnstat_counter_get(&cur->stat.xsc);
 	strcpy(info.name, xnthread_name(cur));
 
 	return __xn_safe_copy_to_user(u_info, &info, sizeof(*u_info));
@@ -1994,7 +1995,6 @@ int do_hisyscall_event(unsigned event, rthal_pipeline_stage_t *stage,
 	}
 
 	err = se->svc(__xn_reg_arglist(regs));
-
 	if (err == -ENOSYS && (sysflags & __xn_exec_adaptive) != 0) {
 		if (switched) {
 			switched = 0;
@@ -2032,9 +2032,11 @@ int do_hisyscall_event(unsigned event, rthal_pipeline_stage_t *stage,
 
       ret_handled:
 
-	/* Update the userland-visible state. */
-	if (thread)
+	/* Update the stats and userland-visible state. */
+	if (thread) {
+		xnstat_counter_inc(&thread->stat.xsc);
 		*thread->u_mode = thread->state;
+	}
 
 	trace_mark(xn_nucleus, syscall_histage_exit,
 		   "ret %ld", __xn_reg_rval(regs));
@@ -2173,7 +2175,6 @@ int do_losyscall_event(unsigned event, rthal_pipeline_stage_t *stage,
 		switched = 0;
 
 	err = se->svc(__xn_reg_arglist(regs));
-
 	if (err == -ENOSYS && (sysflags & __xn_exec_adaptive) != 0) {
 		if (switched) {
 			switched = 0;
@@ -2208,9 +2209,11 @@ int do_losyscall_event(unsigned event, rthal_pipeline_stage_t *stage,
 
       ret_handled:
 
-	/* Update the userland-visible state. */
-	if (thread)
+	/* Update the stats and userland-visible state. */
+	if (thread) {
+		xnstat_counter_inc(&thread->stat.xsc);
 		*thread->u_mode = thread->state;
+	}
 
 	trace_mark(xn_nucleus, syscall_lostage_exit,
 		   "ret %ld", __xn_reg_rval(regs));

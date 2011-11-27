@@ -40,11 +40,13 @@ struct threadobj_stat {
 	/** Execution time in primary mode (ns). */
 	ticks_t xtime;
 	/** Number of primary->secondary mode switches. */
-	int msw;
+	unsigned long msw;
 	/** Number of context switches. */
-	int csw;
+	unsigned long csw;
+	/** Number of Xenomai syscalls. */
+	unsigned long xsc;
 	/** Number of page faults. */
-	int pf;
+	unsigned long pf;
 };
 
 #define SCHED_RT  SCHED_COBALT

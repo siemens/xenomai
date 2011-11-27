@@ -172,9 +172,10 @@ struct cobalt_cond;
 struct cobalt_threadstat {
 	unsigned long status;
 	unsigned long long xtime;
-	int msw;
-	int csw;
-	int pf;
+	unsigned long msw;
+	unsigned long csw;
+	unsigned long xsc;
+	unsigned long pf;
 };
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)

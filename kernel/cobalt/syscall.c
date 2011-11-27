@@ -576,6 +576,7 @@ static int __pthread_stat(unsigned long tid,
 	stat.xtime = xnarch_tsc_to_ns(xtime);
 	stat.msw = xnstat_counter_get(&thread->stat.ssw);
 	stat.csw = xnstat_counter_get(&thread->stat.csw);
+	stat.xsc = xnstat_counter_get(&thread->stat.xsc);
 	stat.pf = xnstat_counter_get(&thread->stat.pf);
 	stat.status = xnthread_state_flags(thread);
 
