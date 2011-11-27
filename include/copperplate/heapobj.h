@@ -88,20 +88,7 @@ static inline memoff_t mainheap_off(void *addr)
 	return addr ? (memoff_t)__memoff(__pshared_heap, addr) : 0;
 }
 
-/*
- * Handles of shared heap-based pointers have bit #0 set. Other values
- * are not translated, and the return value is the original handle
- * cast to a pointer. A null handle is always returned unchanged.
- */
-#define mainheap_deref(handle, type)					\
-	({								\
-		type *ptr;						\
-		assert(__builtin_types_compatible_p(typeof(handle), unsigned long) || \
-		       __builtin_types_compatible_p(typeof(handle), uintptr_t)); \
-		ptr = (handle & 1) ? (type *)mainheap_ptr(handle & ~1UL) : (type *)handle; \
-		ptr;							\
-	})
-
+#ifdef CONFIG_XENO_PSHARED
 /*
  * ptr shall point to a block of memory allocated within the main heap
  * if non-null; such address is always 8-byte aligned. Handles of
@@ -118,6 +105,38 @@ static inline memoff_t mainheap_off(void *addr)
 		handle = (type)mainheap_off(ptr);			\
 		handle|1;						\
 	})
+/*
+ * Handles of shared heap-based pointers have bit #0 set. Other values
+ * are not translated, and the return value is the original handle
+ * cast to a pointer. A null handle is always returned unchanged.
+ */
+#define mainheap_deref(handle, type)					\
+	({								\
+		type *ptr;						\
+		assert(__builtin_types_compatible_p(typeof(handle), unsigned long) || \
+		       __builtin_types_compatible_p(typeof(handle), uintptr_t)); \
+		ptr = (handle & 1) ? (type *)mainheap_ptr(handle & ~1UL) : (type *)handle; \
+		ptr;							\
+	})
+#else
+#define mainheap_ref(ptr, type)						\
+	({								\
+		type handle;						\
+		assert(__builtin_types_compatible_p(typeof(type), unsigned long) || \
+		       __builtin_types_compatible_p(typeof(type), uintptr_t)); \
+		assert(ptr == NULL || __memchk(__pshared_heap, ptr));	\
+		handle = (type)ptr;					\
+		handle;							\
+	})
+#define mainheap_deref(handle, type)					\
+	({								\
+		type *ptr;						\
+		assert(__builtin_types_compatible_p(typeof(handle), unsigned long) || \
+		       __builtin_types_compatible_p(typeof(handle), uintptr_t)); \
+		ptr = (type *)handle;					\
+		ptr;							\
+	})
+#endif
 
 static inline size_t heapobj_size(struct heapobj *hobj)
 {
