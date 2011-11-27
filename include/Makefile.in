@@ -299,6 +299,7 @@ nodist_include_HEADERS = $(CONFIG_HEADER)
 @XENO_COBALT_TRUE@	asm-nios2 	\
 @XENO_COBALT_TRUE@	asm-sh 		\
 @XENO_COBALT_TRUE@	asm-sim 	\
+@XENO_COBALT_TRUE@	alchemy		\
 @XENO_COBALT_TRUE@	analogy 	\
 @XENO_COBALT_TRUE@	psos 		\
 @XENO_COBALT_TRUE@	vxworks 	\

@@ -14,6 +14,7 @@ SUBDIRS = 		\
 	asm-nios2 	\
 	asm-sh 		\
 	asm-sim 	\
+	alchemy		\
 	analogy 	\
 	psos 		\
 	vxworks 	\
