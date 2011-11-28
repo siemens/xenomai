@@ -373,7 +373,7 @@ static void *relax_vfile_begin(struct xnvfile_regular_iterator *it)
 	 */
 	xnlock_get(&relax_lock);
 
-	if (it->pos >= relax_queued) {
+	if (relax_queued == 0 || it->pos > relax_queued) {
 		xnlock_put(&relax_lock);
 		return NULL;
 	}
