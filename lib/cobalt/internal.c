@@ -26,6 +26,8 @@
 #include <sys/types.h>
 #include <semaphore.h>
 #include <cobalt/syscall.h>
+#include <kernel/cobalt/mutex.h>
+#include <kernel/cobalt/cond.h>
 #include <asm-generic/bits/current.h>
 
 extern int __cobalt_muxid;
@@ -43,4 +45,111 @@ int __cobalt_thread_stat(pthread_t tid, struct cobalt_threadstat *stat)
 {
 	return -XENOMAI_SKINCALL2(__cobalt_muxid,
 				  __cobalt_thread_getstat, tid, stat);
+}
+
+static inline unsigned long *cond_get_signalsp(struct __shadow_cond *shadow)
+{
+	if (likely(!shadow->attr.pshared))
+		return shadow->pending_signals;
+
+	return (unsigned long *)(xeno_sem_heap[1]
+				 + shadow->pending_signals_offset);
+}
+
+static inline struct mutex_dat *
+cond_get_mutex_datp(struct __shadow_cond *shadow)
+{
+	if (shadow->mutex_datp == (struct mutex_dat *)~0UL)
+		return NULL;
+
+	if (likely(!shadow->attr.pshared))
+		return shadow->mutex_datp;
+
+	return (struct mutex_dat *)(xeno_sem_heap[1]
+				    + shadow->mutex_datp_offset);
+}
+
+int __cobalt_event_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
+{
+	struct __shadow_cond *_cnd;
+	struct __shadow_mutex *_mx;
+	unsigned int count;
+	int err, _err = 0;
+
+	_cnd = &((union __xeno_cond *)cond)->shadow_cond;
+	_mx = &((union __xeno_mutex *)mutex)->shadow_mutex;
+	count = _mx->lockcnt;
+
+	err = XENOMAI_SKINCALL5(__cobalt_muxid,
+				 __cobalt_cond_wait_prologue,
+				 _cnd, _mx, &_err, 0, NULL);
+	while (err == -EINTR)
+		err = XENOMAI_SKINCALL2(__cobalt_muxid,
+					__cobalt_cond_wait_epilogue, _cnd, _mx);
+
+	_mx->lockcnt = count;
+
+	return -err ?: -_err;
+}
+
+int __cobalt_event_timedwait(pthread_cond_t *cond,
+			     pthread_mutex_t *mutex,
+			     const struct timespec *abstime)
+{
+	struct __shadow_cond *_cnd;
+	struct __shadow_mutex *_mx;
+	unsigned int count;
+	int err, _err = 0;
+
+	_cnd = &((union __xeno_cond *)cond)->shadow_cond;
+	_mx = &((union __xeno_mutex *)mutex)->shadow_mutex;
+	count = _mx->lockcnt;
+
+	err = XENOMAI_SKINCALL5(__cobalt_muxid,
+				 __cobalt_cond_wait_prologue,
+				 _cnd, _mx, &_err, 1, abstime);
+	while (err == -EINTR)
+		err = XENOMAI_SKINCALL2(__cobalt_muxid,
+					__cobalt_cond_wait_epilogue, _cnd, _mx);
+
+	_mx->lockcnt = count;
+
+	return -err ?: -_err;
+}
+
+int __cobalt_event_signal(pthread_cond_t *cond)
+{
+	struct __shadow_cond *_cnd = &((union __xeno_cond *)cond)->shadow_cond;
+	unsigned long pending_signals, *pending_signalsp;
+	struct mutex_dat *mutex_datp;
+
+	mutex_datp = cond_get_mutex_datp(_cnd);
+	if (mutex_datp == NULL)
+		return 0;
+
+	mutex_datp->flags |= COBALT_MUTEX_COND_SIGNAL;
+
+	pending_signalsp = cond_get_signalsp(_cnd);
+	pending_signals = *pending_signalsp;
+	if (pending_signals != ~0UL)
+		*pending_signalsp = pending_signals + 1;
+
+	return 0;
+}
+
+int __cobalt_event_broadcast(pthread_cond_t *cond)
+{
+	struct mutex_dat *mutex_datp;
+	struct __shadow_cond *_cnd;
+
+	_cnd = &((union __xeno_cond *)cond)->shadow_cond;
+
+	mutex_datp = cond_get_mutex_datp(_cnd);
+	if (mutex_datp == NULL)
+		return 0;
+
+	mutex_datp->flags |= COBALT_MUTEX_COND_SIGNAL;
+	*cond_get_signalsp(_cnd) = ~0UL;
+
+	return 0;
 }

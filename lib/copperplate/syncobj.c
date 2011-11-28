@@ -55,6 +55,58 @@
  * normal runtime conditions.
  */
 
+#ifdef CONFIG_XENO_COBALT
+
+#include "cobalt/internal.h"
+
+static inline void signal_cond(pthread_cond_t *cond)
+{
+	__cobalt_event_signal(cond);
+}
+
+static inline int wait_cond(pthread_cond_t *cond, pthread_mutex_t *mutex)
+{
+	return __cobalt_event_wait(cond, mutex);
+}
+
+static inline int timedwait_cond(pthread_cond_t *cond,
+				 pthread_mutex_t *mutex,
+				 const struct timespec *abstime)
+{
+	return __cobalt_event_timedwait(cond, mutex, abstime);
+}
+
+static inline void broadcast_cond(pthread_cond_t *cond)
+{
+	__cobalt_event_broadcast(cond);
+}
+
+#else /* CONFIG_XENO_MERCURY */
+
+static inline void signal_cond(pthread_cond_t *cond)
+{
+	pthread_cond_signal(cond);
+}
+
+static inline int wait_cond(pthread_cond_t *cond, pthread_mutex_t *mutex)
+{
+	return pthread_cond_wait(cond, mutex);
+}
+
+static inline int timedwait_cond(pthread_cond_t *cond,
+				 pthread_mutex_t *mutex,
+				 const struct timespec *abstime)
+{
+	return pthread_cond_timedwait(cond, mutex, abstime);
+}
+
+static inline void broadcast_cond(pthread_cond_t *cond)
+{
+	pthread_cond_broadcast(cond);
+}
+
+#endif	/* CONFIG_XENO_MERCURY */
+
 void syncobj_init(struct syncobj *sobj, int flags,
 		  fnref_type(void (*)(struct syncobj *sobj)) finalizer)
 {
@@ -133,7 +185,7 @@ int __syncobj_signal_drain(struct syncobj *sobj)
 {
 	/* Release one thread waiting for the object to drain. */
 	--sobj->drain_count;
-	__RT(pthread_cond_signal(&sobj->post_sync));
+	signal_cond(&sobj->post_sync);
 
 	return 1;
 }
@@ -187,11 +239,10 @@ int syncobj_pend(struct syncobj *sobj, const struct timespec *timeout,
 
 	do {
 		if (timeout)
-			ret = __RT(pthread_cond_timedwait(&current->wait_sync,
-							  &sobj->lock, timeout));
+			ret = timedwait_cond(&current->wait_sync,
+					     &sobj->lock, timeout);
 		else
-			ret = __RT(pthread_cond_wait(&current->wait_sync,
-						     &sobj->lock));
+			ret = wait_cond(&current->wait_sync, &sobj->lock);
 		/* Check for spurious wake up. */
 	} while (ret == 0 && holder_linked(&current->wait_link));
 
@@ -227,7 +278,7 @@ void syncobj_wakeup_waiter(struct syncobj *sobj, struct threadobj *thobj)
 {
 	list_remove_init(&thobj->wait_link);
 	sobj->pend_count--;
-	__RT(pthread_cond_signal(&thobj->wait_sync));
+	signal_cond(&thobj->wait_sync);
 }
 
 struct threadobj *syncobj_post(struct syncobj *sobj)
@@ -239,7 +290,7 @@ struct threadobj *syncobj_post(struct syncobj *sobj)
 
 	thobj = list_pop_entry(&sobj->pend_list, struct threadobj, wait_link);
 	sobj->pend_count--;
-	__RT(pthread_cond_signal(&thobj->wait_sync));
+	signal_cond(&thobj->wait_sync);
 
 	return thobj;
 }
@@ -289,10 +340,10 @@ int syncobj_wait_drain(struct syncobj *sobj, const struct timespec *timeout,
 		current->wait_hook(current, SYNCOBJ_BLOCK);
 
 	if (timeout)
-		ret = __RT(pthread_cond_timedwait(&sobj->post_sync,
-						  &sobj->lock, timeout));
+		ret = timedwait_cond(&sobj->post_sync,
+				     &sobj->lock, timeout);
 	else
-		ret = __RT(pthread_cond_wait(&sobj->post_sync, &sobj->lock));
+		ret = wait_cond(&sobj->post_sync, &sobj->lock);
 
 	pthread_setcancelstate(state, NULL);
 
@@ -329,7 +380,7 @@ int syncobj_flush(struct syncobj *sobj, int reason)
 		thobj = list_pop_entry(&sobj->pend_list,
 				       struct threadobj, wait_link);
 		thobj->wait_status |= reason;
-		__RT(pthread_cond_signal(&thobj->wait_sync));
+		signal_cond(&thobj->wait_sync);
 		sobj->release_count++;
 	}
 	sobj->pend_count = 0;
@@ -342,7 +393,7 @@ int syncobj_flush(struct syncobj *sobj, int reason)
 		} while (!list_empty(&sobj->drain_list));
 		sobj->release_count += sobj->drain_count;
 		sobj->drain_count = 0;
-		__RT(pthread_cond_broadcast(&sobj->post_sync));
+		broadcast_cond(&sobj->post_sync);
 	}
 
 	return sobj->release_count;
