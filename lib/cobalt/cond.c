@@ -137,6 +137,7 @@ int __wrap_pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
 	struct cobalt_cond_cleanup_t c = {
 		.cond = _cnd,
 		.mutex = _mx,
+		.err = 0,
 	};
 	int err, oldtype;
 	unsigned count;
