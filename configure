@@ -11811,7 +11811,7 @@ $as_echo_n "checking whether to enable debug mode... " >&6; }
 # Check whether --enable-debug was given.
 if test "${enable_debug+set}" = set; then :
   enableval=$enable_debug; case "$enableval" in
-	y | yes) debug_mode=partial ;;
+	y | yes | partial) debug_mode=partial ;;
 	full)    debug_mode=full ;;
 	*) unset debug_mode ;;
 	esac
