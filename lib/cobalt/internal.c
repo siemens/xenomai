@@ -21,14 +21,15 @@
 #include <string.h>
 #include <errno.h>
 #include <signal.h>
-#include <unistd.h>
+#include <signal.h>
+#include <limits.h>
 #include <pthread.h>
 #include <sys/types.h>
 #include <semaphore.h>
+#include <nucleus/synch.h>
 #include <cobalt/syscall.h>
-#include <kernel/cobalt/mutex.h>
-#include <kernel/cobalt/cond.h>
 #include <asm-generic/bits/current.h>
+#include "internal.h"
 
 extern int __cobalt_muxid;
 
@@ -47,49 +48,31 @@ int __cobalt_thread_stat(pthread_t tid, struct cobalt_threadstat *stat)
 				  __cobalt_thread_getstat, tid, stat);
 }
 
-static inline unsigned long *cond_get_signalsp(struct __shadow_cond *shadow)
-{
-	if (likely(!shadow->attr.pshared))
-		return shadow->pending_signals;
-
-	return (unsigned long *)(xeno_sem_heap[1]
-				 + shadow->pending_signals_offset);
-}
-
-static inline struct mutex_dat *
-cond_get_mutex_datp(struct __shadow_cond *shadow)
-{
-	if (shadow->mutex_datp == (struct mutex_dat *)~0UL)
-		return NULL;
-
-	if (likely(!shadow->attr.pshared))
-		return shadow->mutex_datp;
-
-	return (struct mutex_dat *)(xeno_sem_heap[1]
-				    + shadow->mutex_datp_offset);
-}
-
 int __cobalt_event_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
 {
 	struct __shadow_cond *_cnd;
 	struct __shadow_mutex *_mx;
+	int ret, _ret = 0, oldtype;
 	unsigned int count;
-	int err, _err = 0;
 
 	_cnd = &((union __xeno_cond *)cond)->shadow_cond;
 	_mx = &((union __xeno_mutex *)mutex)->shadow_mutex;
 	count = _mx->lockcnt;
 
-	err = XENOMAI_SKINCALL5(__cobalt_muxid,
-				 __cobalt_cond_wait_prologue,
-				 _cnd, _mx, &_err, 0, NULL);
-	while (err == -EINTR)
-		err = XENOMAI_SKINCALL2(__cobalt_muxid,
-					__cobalt_cond_wait_epilogue, _cnd, _mx);
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
+	ret = XENOMAI_SKINCALL5(__cobalt_muxid,
+				__cobalt_cond_wait_prologue,
+				_cnd, _mx, &_ret, 0, NULL);
+
+	pthread_setcanceltype(oldtype, NULL);
+
+	while (ret == -EINTR)
+		ret = XENOMAI_SKINCALL2(__cobalt_muxid,
+					__cobalt_cond_wait_epilogue, _cnd, _mx);
 	_mx->lockcnt = count;
 
-	return -err ?: -_err;
+	return -ret ?: -_ret;
 }
 
 int __cobalt_event_timedwait(pthread_cond_t *cond,
@@ -98,23 +81,27 @@ int __cobalt_event_timedwait(pthread_cond_t *cond,
 {
 	struct __shadow_cond *_cnd;
 	struct __shadow_mutex *_mx;
+	int ret, _ret = 0, oldtype;
 	unsigned int count;
-	int err, _err = 0;
 
 	_cnd = &((union __xeno_cond *)cond)->shadow_cond;
 	_mx = &((union __xeno_mutex *)mutex)->shadow_mutex;
 	count = _mx->lockcnt;
 
-	err = XENOMAI_SKINCALL5(__cobalt_muxid,
-				 __cobalt_cond_wait_prologue,
-				 _cnd, _mx, &_err, 1, abstime);
-	while (err == -EINTR)
-		err = XENOMAI_SKINCALL2(__cobalt_muxid,
-					__cobalt_cond_wait_epilogue, _cnd, _mx);
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
+	ret = XENOMAI_SKINCALL5(__cobalt_muxid,
+				__cobalt_cond_wait_prologue,
+				_cnd, _mx, &_ret, 1, abstime);
+
+	pthread_setcanceltype(oldtype, NULL);
+
+	while (ret == -EINTR)
+		ret = XENOMAI_SKINCALL2(__cobalt_muxid,
+					__cobalt_cond_wait_epilogue, _cnd, _mx);
 	_mx->lockcnt = count;
 
-	return -err ?: -_err;
+	return -ret ?: -_ret;
 }
 
 int __cobalt_event_signal(pthread_cond_t *cond)

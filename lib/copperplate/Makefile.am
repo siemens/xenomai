@@ -17,6 +17,7 @@ libcopperplate_la_SOURCES =	\
 
 libcopperplate_la_CPPFLAGS =		\
 	@XENO_USER_CFLAGS@		\
+	-I$(top_srcdir)			\
 	-I$(top_srcdir)/include
 
 libcopperplate_la_LIBADD =

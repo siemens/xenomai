@@ -315,7 +315,7 @@ libcopperplate_la_SOURCES = clockobj.c cluster.c hash.c init.c \
 	internal.c internal.h syncobj.c semobj.c threadobj.c \
 	traceobj.c $(am__append_1) $(am__append_3) $(am__append_5) \
 	$(am__append_6) $(am__append_8) $(am__append_9)
-libcopperplate_la_CPPFLAGS = @XENO_USER_CFLAGS@ \
+libcopperplate_la_CPPFLAGS = @XENO_USER_CFLAGS@ -I$(top_srcdir) \
 	-I$(top_srcdir)/include $(am__append_2)
 libcopperplate_la_LIBADD = $(am__append_4) $(am__append_7)
 @XENO_REGISTRY_TRUE@noinst_LTLIBRARIES = libregistry.la
