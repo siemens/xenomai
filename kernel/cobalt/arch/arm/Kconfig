@@ -2,14 +2,6 @@ config XENO_GENERIC_STACKPOOL
 	bool
 	default y
 
-config XENO_FASTSYNCH_DEP
-	bool
-	default y if (CPU_32v3 || CPU_32v4T || CPU_32v5) && !SMP || CPU_32v6 || CPU_32v7
-
-config XENO_FASTSYNCH
-	bool
-	default y if XENO_FASTSYNCH_DEP
-
 menu "Hardware options"
 
 config IPIPE_WANT_PREEMPTIBLE_SWITCH

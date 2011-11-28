@@ -2,10 +2,6 @@ config XENO_GENERIC_STACKPOOL
 	bool
 	default y
 
-config XENO_FASTSYNCH
-	bool
-	default y
-
 menu "Hardware options"
 
 config XENO_HW_FPU

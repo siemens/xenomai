@@ -107,8 +107,6 @@ case "$build_for" in
  arm*-*)
 	XENO_TARGET_ARCH=arm
 	CONFIG_XENO_DEFAULT_PERIOD=1000000
-	# We set CONFIG_XENO_FASTSYNCH in asm/features.h, when we know
-	# what architecture we are running
 	;;
  x86_64-*|amd64-*)
 	use__thread=yes
