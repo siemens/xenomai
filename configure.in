@@ -463,6 +463,7 @@ dnl Note: in dual kernel mode, we don't want malloc, no matter what.
 dnl We switch to malloc only over the Mercury core in debug mode, to ease
 dnl debugging with valgrind, instrumented glibc etc.
 AM_CONDITIONAL(XENO_TLSF,[test x$rtcore_type = xcobalt -o x$debug_mode = x])
+test x$rtcore_type = xcobalt -o x$debug_mode = x && AC_DEFINE(CONFIG_XENO_TLSF,1,[config])
 
 AC_MSG_CHECKING([for sched_setaffinity])
 AC_CACHE_VAL(ac_cv_sched_setaffinity,

@@ -16,12 +16,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
-#include <assert.h>
 #include <errno.h>
 #include <stdio.h>
-#include <string.h>
-#include <memory.h>
-#include "copperplate/wrappers.h"
 #include "copperplate/heapobj.h"
 #include "copperplate/debug.h"
 #include "tlsf/tlsf.h"
@@ -31,76 +27,6 @@
 #define TLSF_BLOCK_OVERHEAD  8
 
 static int tlsf_pool_overhead;
-
-void __heapobj_destroy(struct heapobj *hobj)
-{
-	destroy_memory_pool(hobj->pool);
-	__RT(pthread_mutex_destroy(&hobj->lock));
-}
-
-int __heapobj_extend(struct heapobj *hobj, size_t size, void *mem)
-{
-	__RT(pthread_mutex_lock(&hobj->lock));
-	hobj->size = add_new_area(hobj->pool, size, mem);
-	__RT(pthread_mutex_unlock(&hobj->lock));
-	if (hobj->size == (size_t)-1)
-		return __bt(-EINVAL);
-
-	return 0;
-}
-
-void *__heapobj_alloc(struct heapobj *hobj, size_t size)
-{
-	void *p;
-
-	__RT(pthread_mutex_lock(&hobj->lock));
-	p = malloc_ex(size, hobj->pool);
-	__RT(pthread_mutex_unlock(&hobj->lock));
-
-	return p;
-}
-
-void __heapobj_free(struct heapobj *hobj, void *ptr)
-{
-	__RT(pthread_mutex_lock(&hobj->lock));
-	free_ex(ptr, hobj->pool);
-	__RT(pthread_mutex_unlock(&hobj->lock));
-}
-
-size_t __heapobj_validate(struct heapobj *hobj, void *ptr)
-{
-	size_t size;
-
-	__RT(pthread_mutex_lock(&hobj->lock));
-	size = malloc_usable_size_ex(ptr, hobj->pool);
-	__RT(pthread_mutex_unlock(&hobj->lock));
-
-	return size;
-}
-
-size_t __heapobj_inquire(struct heapobj *hobj)
-{
-	size_t size;
-
-	__RT(pthread_mutex_lock(&hobj->lock));
-	size = get_used_size(hobj->pool);
-	__RT(pthread_mutex_unlock(&hobj->lock));
-
-	return size;
-}
-
-#ifdef CONFIG_XENO_PSHARED
-
-static struct heapobj_ops tlsf_ops = {
-	.destroy = __heapobj_destroy,
-	.extend = __heapobj_extend,
-	.alloc = __heapobj_alloc,
-	.free = __heapobj_free,
-	.validate = __heapobj_validate,
-	.inquire = __heapobj_inquire,
-};
-
-#endif
 
 int heapobj_init_private(struct heapobj *hobj, const char *name,
 			 size_t size, void *mem)
@@ -120,21 +46,13 @@ int heapobj_init_private(struct heapobj *hobj, const char *name,
 		snprintf(hobj->name, sizeof(hobj->name), "%s", name);
 	else
 		snprintf(hobj->name, sizeof(hobj->name), "%p", hobj);
-#ifdef CONFIG_XENO_PSHARED
-	hobj->ops = &tlsf_ops;
-#endif
+
 	hobj->pool = mem;
 	/* Make sure to wipe out tlsf's signature. */
 	memset(mem, 0, size < 32 ? size : 32);
 	hobj->size = init_memory_pool(size, mem);
 	if (hobj->size == (size_t)-1)
 		return __bt(-EINVAL);
-
-	/*
-	 * TLSF does not lock around so-called extended calls aimed at
-	 * specific pools, which is definitely braindamage. So DIY.
-	 */
-	__RT(pthread_mutex_init(&hobj->lock, NULL));
 
 	return 0;
 }
@@ -147,27 +65,6 @@ int heapobj_init_array_private(struct heapobj *hobj, const char *name,
 		size = 16;
 
 	return __bt(heapobj_init_private(hobj, name, size * elems, NULL));
-}
-
-void *pvmalloc(size_t size)
-{
-	return tlsf_malloc(size);
-}
-
-void pvfree(void *ptr)
-{
-	tlsf_free(ptr);
-}
-
-char *pvstrdup(const char *ptr)
-{
-	char *str;
-
-	str = pvmalloc(strlen(ptr) + 1);
-	if (str == NULL)
-		return NULL;
-
-	return strcpy(str, ptr);
 }
 
 int heapobj_pkg_init_private(void)

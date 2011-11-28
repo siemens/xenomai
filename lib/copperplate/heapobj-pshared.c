@@ -553,91 +553,6 @@ out:
 	return ret;
 }
 
-static void pshared_destroy(struct heapobj *hobj)
-{
-	struct heap *heap = hobj->pool;
-	int cpid;
-
-	__RT(pthread_mutex_destroy(&heap->lock));
-
-	if (hobj->flags & HOBJ_SHAREABLE) {
-		free_block(&main_heap, heap);
-		return;
-	}
-
-	cpid = heap->cpid;
-	__STD(munmap(heap, hobj->size + sizeof(*heap)));
-	__STD(close(hobj->fd));
-
-	if (cpid == copperplate_get_tid() || (cpid && kill(cpid, 0)))
-		__STD(shm_unlink(hobj->fsname));
-}
-
-static int pshared_extend(struct heapobj *hobj, size_t size, void *mem)
-{
-	struct heap *heap = hobj->pool;
-	struct heap_extent *extent;
-	size_t newsize;
-	int ret, state;
-	caddr_t p;
-
-	if (hobj == &main_pool)	/* Can't extend the main pool. */
-		return __bt(-EINVAL);
-		
-	if (size <= HOBJ_PAGE_SIZE * 2)
-		return __bt(-EINVAL);
-
-	write_lock_safe(&heap->lock, state);
-	newsize = size + hobj->size + sizeof(*heap) + sizeof(*extent);
-	ret = __STD(ftruncate(hobj->fd, newsize));
-	if (ret) {
-		ret = __bt(-errno);
-		goto out;
-	}
-
-	/*
-	 * We do not allow the kernel to move the mapping address, so
-	 * it is safe referring to the heap contents while extending
-	 * it.
-	 */
-	p = mremap(heap, heap->maplen, newsize, 0);
-	if (p == MAP_FAILED) {
-		ret = __bt(-errno);
-		goto out;
-	}
-
-	heap->maplen = newsize;
-	extent = (struct heap_extent *)(p + hobj->size + sizeof(*heap));
-	init_extent(heap, extent);
-	__list_append(heap, &extent->link, &heap->extents);
-	hobj->size = newsize - sizeof(*heap);
-out:
-	write_unlock_safe(&heap->lock, state);
-
-	return ret;
-}
-
-static void *pshared_alloc(struct heapobj *hobj, size_t size)
-{
-	return alloc_block(hobj->pool, size);
-}
-
-static void pshared_free(struct heapobj *hobj, void *ptr)
-{
-	free_block(hobj->pool, ptr);
-}
-
-static size_t pshared_validate(struct heapobj *hobj, void *ptr)
-{
-	return __bt(check_block(hobj->pool, ptr));
-}
-
-static size_t pshared_inquire(struct heapobj *hobj)
-{
-	struct heap *heap = hobj->pool;
-	return heap->ubytes;
-}
-
 static int create_heap(struct heapobj *hobj, const char *session,
 		       const char *name, size_t size, int flags)
 {
@@ -741,15 +656,6 @@ close_fail:
 	return ret;
 }
 
-static struct heapobj_ops pshared_ops = {
-	.destroy = pshared_destroy,
-	.extend = pshared_extend,
-	.alloc = pshared_alloc,
-	.free = pshared_free,
-	.validate = pshared_validate,
-	.inquire = pshared_inquire,
-};
-
 int pshared_check(void *__heap, void *__addr)
 {
 	struct heap *heap = __heap;
@@ -761,8 +667,6 @@ int heapobj_init(struct heapobj *hobj, const char *name,
 {
 	int flags = __this_node.reset_session ? HOBJ_FORCE : 0;
 
-	hobj->ops = &pshared_ops;
-
 	return __bt(create_heap(hobj, __this_node.session_label, name,
 				size, flags));
 }
@@ -771,8 +675,6 @@ int heapobj_init_shareable(struct heapobj *hobj, const char *name,
 			   size_t size)
 {
 	int flags = __this_node.reset_session ? HOBJ_FORCE : 0;
-
-	hobj->ops = &pshared_ops;
 
 	return __bt(create_heap(hobj, __this_node.session_label, name,
 				size, flags | HOBJ_SHAREABLE));
@@ -790,6 +692,91 @@ int heapobj_init_array_shareable(struct heapobj *hobj, const char *name,
 {
 	size = align_alloc_size(size);
 	return __bt(heapobj_init_shareable(hobj, name, size * elems));
+}
+
+void heapobj_destroy(struct heapobj *hobj)
+{
+	struct heap *heap = hobj->pool;
+	int cpid;
+
+	__RT(pthread_mutex_destroy(&heap->lock));
+
+	if (hobj->flags & HOBJ_SHAREABLE) {
+		free_block(&main_heap, heap);
+		return;
+	}
+
+	cpid = heap->cpid;
+	__STD(munmap(heap, hobj->size + sizeof(*heap)));
+	__STD(close(hobj->fd));
+
+	if (cpid == copperplate_get_tid() || (cpid && kill(cpid, 0)))
+		__STD(shm_unlink(hobj->fsname));
+}
+
+int heapobj_extend(struct heapobj *hobj, size_t size, void *mem)
+{
+	struct heap *heap = hobj->pool;
+	struct heap_extent *extent;
+	size_t newsize;
+	int ret, state;
+	caddr_t p;
+
+	if (hobj == &main_pool)	/* Can't extend the main pool. */
+		return __bt(-EINVAL);
+		
+	if (size <= HOBJ_PAGE_SIZE * 2)
+		return __bt(-EINVAL);
+
+	write_lock_safe(&heap->lock, state);
+	newsize = size + hobj->size + sizeof(*heap) + sizeof(*extent);
+	ret = __STD(ftruncate(hobj->fd, newsize));
+	if (ret) {
+		ret = __bt(-errno);
+		goto out;
+	}
+
+	/*
+	 * We do not allow the kernel to move the mapping address, so
+	 * it is safe referring to the heap contents while extending
+	 * it.
+	 */
+	p = mremap(heap, heap->maplen, newsize, 0);
+	if (p == MAP_FAILED) {
+		ret = __bt(-errno);
+		goto out;
+	}
+
+	heap->maplen = newsize;
+	extent = (struct heap_extent *)(p + hobj->size + sizeof(*heap));
+	init_extent(heap, extent);
+	__list_append(heap, &extent->link, &heap->extents);
+	hobj->size = newsize - sizeof(*heap);
+out:
+	write_unlock_safe(&heap->lock, state);
+
+	return ret;
+}
+
+void *heapobj_alloc(struct heapobj *hobj, size_t size)
+{
+	return alloc_block(hobj->pool, size);
+}
+
+void heapobj_free(struct heapobj *hobj, void *ptr)
+{
+	free_block(hobj->pool, ptr);
+}
+
+size_t heapobj_validate(struct heapobj *hobj, void *ptr)
+{
+	return __bt(check_block(hobj->pool, ptr));
+}
+
+size_t heapobj_inquire(struct heapobj *hobj)
+{
+	struct heap *heap = hobj->pool;
+	return heap->ubytes;
 }
 
 void *xnmalloc(size_t size)

@@ -44,6 +44,7 @@ static struct wind_mempart *find_mempart_from_id(PART_ID partId)
 
 PART_ID memPartCreate(char *pPool, unsigned int poolSize)
 {
+	pthread_mutexattr_t mattr;
 	struct wind_mempart *mp;
 	struct service svc;
 
@@ -61,6 +62,11 @@ PART_ID memPartCreate(char *pPool, unsigned int poolSize)
 		return (PART_ID)0;
 	}
 
+	__RT(pthread_mutexattr_init(&mattr));
+	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
+	__RT(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute));
+	__RT(pthread_mutex_init(&mp->lock, &mattr));
+	__RT(pthread_mutexattr_destroy(&mattr));
 	mp->magic = mempart_magic;
 
 	COPPERPLATE_UNPROTECT(svc);
@@ -88,10 +94,14 @@ STATUS memPartAddToPool(PART_ID partId,
 
 	COPPERPLATE_PROTECT(svc);
 
+	__RT(pthread_mutex_lock(&mp->lock));
+
 	if (heapobj_extend(&mp->hobj, poolSize, pPool)) {
 		errno = S_memLib_INVALID_NBYTES;
 		ret = ERROR;
 	}
+
+	__RT(pthread_mutex_unlock(&mp->lock));
 
 	COPPERPLATE_UNPROTECT(svc);
 
@@ -127,6 +137,7 @@ void *memPartAlignedAlloc(PART_ID partId,
 void *memPartAlloc(PART_ID partId, unsigned int nBytes)
 {
 	struct wind_mempart *mp;
+	void *p;
 
 	if (nBytes == 0)
 		return NULL;
@@ -135,7 +146,11 @@ void *memPartAlloc(PART_ID partId, unsigned int nBytes)
 	if (mp == NULL)
 		return NULL;
 
-	return heapobj_alloc(&mp->hobj, nBytes);
+	__RT(pthread_mutex_lock(&mp->lock));
+	p = heapobj_alloc(&mp->hobj, nBytes);
+	__RT(pthread_mutex_unlock(&mp->lock));
+
+	return p;
 }
 
 STATUS memPartFree(PART_ID partId, char *pBlock)
@@ -152,7 +167,9 @@ STATUS memPartFree(PART_ID partId, char *pBlock)
 
 	COPPERPLATE_PROTECT(svc);
 
+	__RT(pthread_mutex_lock(&mp->lock));
 	heapobj_free(&mp->hobj, pBlock);
+	__RT(pthread_mutex_unlock(&mp->lock));
 
 	COPPERPLATE_UNPROTECT(svc);
 

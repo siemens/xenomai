@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2008-2011 Philippe Gerum <rpm@xenomai.org>.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,24 +21,194 @@
 
 #include <sys/types.h>
 #include <stdint.h>
+#include <string.h>
 #include <assert.h>
+#include <errno.h>
 #include <pthread.h>
 #include <xeno_config.h>
 #include <copperplate/reference.h>
+#include <copperplate/wrappers.h>
+#include <copperplate/debug.h>
+
+struct heapobj;
 
 #ifdef CONFIG_XENO_PSHARED
 
-struct heapobj;
-struct hash_table;
-
-struct heapobj_ops {
-	void (*destroy)(struct heapobj *hobj);
-	int (*extend)(struct heapobj *hobj, size_t size, void *mem);
-	void *(*alloc)(struct heapobj *hobj, size_t size);
-	void (*free)(struct heapobj *hobj, void *ptr);
-	size_t (*validate)(struct heapobj *hobj, void *ptr);
-	size_t (*inquire)(struct heapobj *hobj);
+struct heapobj {
+	void *pool;
+	size_t size;
+	char name[64];
+	char fsname[64];
+	int fd;
+	int flags;
 };
+
+#else /* !CONFIG_XENO_PSHARED */
+
+struct heapobj {
+	void *pool;
+	size_t size;
+	char name[64];
+};
+
+#endif /* !CONFIG_XENO_PSHARED */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int heapobj_pkg_init_private(void);
+
+int heapobj_init_private(struct heapobj *hobj, const char *name,
+			 size_t size, void *mem);
+
+int heapobj_init_array_private(struct heapobj *hobj, const char *name,
+			       size_t size, int elems);
+#ifdef __cplusplus
+}
+#endif
+
+#ifdef CONFIG_XENO_TLSF
+
+size_t get_used_size(void *pool);
+void destroy_memory_pool(void *pool);
+size_t add_new_area(void *pool, size_t size, void *mem);
+void *malloc_ex(size_t size, void *pool);
+void free_ex(void *pool, void *ptr);
+void *tlsf_malloc(size_t size);
+void tlsf_free(void *ptr);
+size_t malloc_usable_size_ex(void *ptr, void *pool);
+
+static inline
+void pvheapobj_destroy(struct heapobj *hobj)
+{
+	destroy_memory_pool(hobj->pool);
+}
+
+static inline
+int pvheapobj_extend(struct heapobj *hobj, size_t size, void *mem)
+{
+	hobj->size = add_new_area(hobj->pool, size, mem);
+	if (hobj->size == (size_t)-1)
+		return __bt(-EINVAL);
+
+	return 0;
+}
+
+static inline
+void *pvheapobj_alloc(struct heapobj *hobj, size_t size)
+{
+	return malloc_ex(size, hobj->pool);
+}
+
+static inline
+void pvheapobj_free(struct heapobj *hobj, void *ptr)
+{
+	free_ex(ptr, hobj->pool);
+}
+
+static inline
+size_t pvheapobj_validate(struct heapobj *hobj, void *ptr)
+{
+	return malloc_usable_size_ex(ptr, hobj->pool);
+}
+
+static inline
+size_t pvheapobj_inquire(struct heapobj *hobj)
+{
+	return get_used_size(hobj->pool);
+}
+
+static inline void *pvmalloc(size_t size)
+{
+	return tlsf_malloc(size);
+}
+
+static inline void pvfree(void *ptr)
+{
+	tlsf_free(ptr);
+}
+
+static inline char *pvstrdup(const char *ptr)
+{
+	char *str;
+
+	str = pvmalloc(strlen(ptr) + 1);
+	if (str == NULL)
+		return NULL;
+
+	return strcpy(str, ptr);
+}
+
+#else /* !CONFIG_XENO_TLSF, i.e. malloc */
+
+#include <malloc.h>
+
+static inline
+void pvheapobj_destroy(struct heapobj *hobj)
+{
+}
+
+static inline
+int pvheapobj_extend(struct heapobj *hobj, size_t size, void *mem)
+{
+	return 0;
+}
+
+static inline
+void *pvheapobj_alloc(struct heapobj *hobj, size_t size)
+{
+	/*
+	 * XXX: We don't want debug _nrt assertions to trigger when
+	 * running over Cobalt if the user picked this allocator, so
+	 * we make sure to call the glibc directly, not the Cobalt
+	 * wrappers.
+	 */
+	return __STD(malloc(size));
+}
+
+static inline
+void pvheapobj_free(struct heapobj *hobj, void *ptr)
+{
+	__STD(free(ptr));
+}
+
+static inline
+size_t pvheapobj_validate(struct heapobj *hobj, void *ptr)
+{
+	/*
+	 * We will likely get hard validation here, i.e. crash or
+	 * abort if the pointer is wrong. TLSF is a bit smarter, and
+	 * pshared definitely does the right thing.
+	 */
+	return malloc_usable_size(ptr);
+}
+
+static inline
+size_t pvheapobj_inquire(struct heapobj *hobj)
+{
+	struct mallinfo m = mallinfo();
+	return m.uordblks;
+}
+
+static inline void *pvmalloc(size_t size)
+{
+	return __STD(malloc(size));
+}
+
+static inline void pvfree(void *ptr)
+{
+	__STD(free(ptr));
+}
+
+static inline char *pvstrdup(const char *ptr)
+{
+	return strdup(ptr);
+}
+
+#endif /* !CONFIG_XENO_TLSF */
+
+#ifdef CONFIG_XENO_PSHARED
 
 /*
  * The heap control block is always heading the shared memory segment,
@@ -52,32 +222,6 @@ extern void *__pshared_heap;
 extern struct hash_table *__pshared_catalog;
 #define main_catalog		(*((struct hash_table *)__pshared_catalog))
 
-#else /* !CONFIG_XENO_PSHARED */
-
-/*
- * Whether an object is laid in some shared heap. Never if pshared
- * mode is disabled.
- */
-static inline int pshared_check(void *heap, void *addr)
-{
-	return 0;
-}
-
-#endif	/* !CONFIG_XENO_PSHARED */
-
-struct heapobj {
-	void *pool;
-	size_t size;
-	char name[64];
-	pthread_mutex_t lock;
-#ifdef CONFIG_XENO_PSHARED
-	struct heapobj_ops *ops;
-	char fsname[64];
-	int fd;
-	int flags;
-#endif
-};
-
 static inline void *mainheap_ptr(memoff_t off)
 {
 	return off ? (void *)__memptr(__pshared_heap, off) : NULL;
@@ -88,7 +232,6 @@ static inline memoff_t mainheap_off(void *addr)
 	return addr ? (memoff_t)__memoff(__pshared_heap, addr) : 0;
 }
 
-#ifdef CONFIG_XENO_PSHARED
 /*
  * ptr shall point to a block of memory allocated within the main heap
  * if non-null; such address is always 8-byte aligned. Handles of
@@ -118,7 +261,54 @@ static inline memoff_t mainheap_off(void *addr)
 		ptr = (handle & 1) ? (type *)mainheap_ptr(handle & ~1UL) : (type *)handle; \
 		ptr;							\
 	})
-#else
+
+int heapobj_pkg_init_shared(void);
+
+int heapobj_init(struct heapobj *hobj, const char *name,
+		 size_t size, void *mem);
+
+int heapobj_init_array(struct heapobj *hobj, const char *name,
+		       size_t size, int elems);
+
+int heapobj_init_shareable(struct heapobj *hobj, const char *name,
+			   size_t size);
+
+int heapobj_init_array_shareable(struct heapobj *hobj, const char *name,
+				 size_t size, int elems);
+
+void heapobj_destroy(struct heapobj *hobj);
+
+int heapobj_extend(struct heapobj *hobj,
+		   size_t size, void *mem);
+
+void *heapobj_alloc(struct heapobj *hobj,
+		    size_t size);
+
+void heapobj_free(struct heapobj *hobj,
+		  void *ptr);
+
+size_t heapobj_validate(struct heapobj *hobj,
+			void *ptr);
+
+size_t heapobj_inquire(struct heapobj *hobj);
+
+void *xnmalloc(size_t size);
+
+void xnfree(void *ptr);
+
+char *xnstrdup(const char *ptr);
+
+#else /* !CONFIG_XENO_PSHARED */
+
+/*
+ * Whether an object is laid in some shared heap. Never if pshared
+ * mode is disabled.
+ */
+static inline int pshared_check(void *heap, void *addr)
+{
+	return 0;
+}
+
 #define mainheap_ref(ptr, type)						\
 	({								\
 		type handle;						\
@@ -136,97 +326,6 @@ static inline memoff_t mainheap_off(void *addr)
 		ptr = (type *)handle;					\
 		ptr;							\
 	})
-#endif
-
-static inline size_t heapobj_size(struct heapobj *hobj)
-{
-	return hobj->size;
-}
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-int heapobj_pkg_init_private(void);
-
-int heapobj_init_private(struct heapobj *hobj, const char *name,
-			 size_t size, void *mem);
-
-int heapobj_init_array_private(struct heapobj *hobj, const char *name,
-			       size_t size, int elems);
-
-void *pvmalloc(size_t size);
-
-void pvfree(void *ptr);
-
-char *pvstrdup(const char *ptr);
-
-void __heapobj_destroy(struct heapobj *hobj);
-
-int __heapobj_extend(struct heapobj *hobj, size_t size, void *mem);
-
-void *__heapobj_alloc(struct heapobj *hobj, size_t size);
-
-void __heapobj_free(struct heapobj *hobj, void *ptr);
-
-size_t __heapobj_validate(struct heapobj *hobj, void *ptr);
-
-size_t __heapobj_inquire(struct heapobj *hobj);
-
-#ifdef CONFIG_XENO_PSHARED
-
-int heapobj_pkg_init_shared(void);
-
-int heapobj_init(struct heapobj *hobj, const char *name,
-		 size_t size, void *mem);
-
-int heapobj_init_array(struct heapobj *hobj, const char *name,
-		       size_t size, int elems);
-
-static inline void heapobj_destroy(struct heapobj *hobj)
-{
-	hobj->ops->destroy(hobj);
-}
-
-static inline int heapobj_extend(struct heapobj *hobj,
-				 size_t size, void *mem)
-{
-	return hobj->ops->extend(hobj, size, mem);
-}
-
-static inline void *heapobj_alloc(struct heapobj *hobj, size_t size)
-{
-	return hobj->ops->alloc(hobj, size);
-}
-
-static inline void heapobj_free(struct heapobj *hobj, void *ptr)
-{
-	hobj->ops->free(hobj, ptr);
-}
-
-static inline size_t heapobj_validate(struct heapobj *hobj, void *ptr)
-{
-	return hobj->ops->validate(hobj, ptr);
-}
-
-static inline size_t heapobj_inquire(struct heapobj *hobj)
-{
-	return hobj->ops->inquire(hobj);
-}
-
-int heapobj_init_shareable(struct heapobj *hobj, const char *name,
-			   size_t size);
-
-int heapobj_init_array_shareable(struct heapobj *hobj, const char *name,
-				 size_t size, int elems);
-
-void *xnmalloc(size_t size);
-
-void xnfree(void *ptr);
-
-char *xnstrdup(const char *ptr);
-
-#else /* !CONFIG_XENO_PSHARED */
 
 static inline int heapobj_pkg_init_shared(void)
 {
@@ -260,33 +359,36 @@ static inline int heapobj_init_array_shareable(struct heapobj *hobj,
 
 static inline void heapobj_destroy(struct heapobj *hobj)
 {
-	__heapobj_destroy(hobj);
+	pvheapobj_destroy(hobj);
 }
 
 static inline int heapobj_extend(struct heapobj *hobj,
 				 size_t size, void *mem)
 {
-	return __heapobj_extend(hobj, size, mem);
+	return pvheapobj_extend(hobj, size, mem);
 }
 
-static inline void *heapobj_alloc(struct heapobj *hobj, size_t size)
+static inline void *heapobj_alloc(struct heapobj *hobj,
+				  size_t size)
 {
-	return __heapobj_alloc(hobj, size);
+	return pvheapobj_alloc(hobj, size);
 }
 
-static inline void heapobj_free(struct heapobj *hobj, void *ptr)
+static inline void heapobj_free(struct heapobj *hobj,
+				void *ptr)
 {
-	__heapobj_free(hobj, ptr);
+	return pvheapobj_free(hobj, ptr);
 }
 
-static inline size_t heapobj_validate(struct heapobj *hobj, void *ptr)
+static inline size_t heapobj_validate(struct heapobj *hobj,
+				      void *ptr)
 {
-	return __heapobj_validate(hobj, ptr);
+	return pvheapobj_validate(hobj, ptr);
 }
 
 static inline size_t heapobj_inquire(struct heapobj *hobj)
 {
-	return __heapobj_inquire(hobj);
+	return pvheapobj_inquire(hobj);
 }
 
 static inline void *xnmalloc(size_t size)
@@ -304,10 +406,16 @@ static inline char *xnstrdup(const char *ptr)
 	return pvstrdup(ptr);
 }
 
-#endif /* !CONFIG_XENO_PSHARED */
+#endif	/* !CONFIG_XENO_PSHARED */
 
-#ifdef __cplusplus
+static inline const char *heapobj_name(struct heapobj *hobj)
+{
+	return hobj->name;
 }
-#endif
+
+static inline size_t heapobj_size(struct heapobj *hobj)
+{
+	return hobj->size;
+}
 
 #endif /* _COPPERPLATE_HEAPOBJ_H */

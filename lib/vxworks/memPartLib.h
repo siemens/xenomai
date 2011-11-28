@@ -22,10 +22,9 @@
 #include <copperplate/heapobj.h>
 
 struct wind_mempart {
-
 	unsigned int magic;
-
 	struct heapobj hobj;
+	pthread_mutex_t lock;
 };
 
 #endif /* _VXWORKS_MEMPARTLIB_H */
