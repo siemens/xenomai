@@ -207,11 +207,10 @@ void __syncobj_cleanup_wait(struct syncobj *sobj,
 	 * saved in the syncstate struct since we are there precisely
 	 * because the caller got cancelled.
 	 */
-	if (holder_linked(&thobj->wait_link)) {
-		list_remove(&thobj->wait_link);
-		if (thobj->wait_status & SYNCOBJ_DRAINING)
-			sobj->drain_count--;
-	}
+	list_remove(&thobj->wait_link);
+	if (thobj->wait_status & SYNCOBJ_DRAINING)
+		sobj->drain_count--;
+
 	__RT(pthread_mutex_unlock(&sobj->lock));
 }
 
@@ -223,9 +222,9 @@ int syncobj_pend(struct syncobj *sobj, const struct timespec *timeout,
 
 	assert(current != NULL);
 
-	current->wait_sobj = sobj;
 	current->wait_status = 0;
 	enqueue_waiter(sobj, current);
+	current->wait_sobj = sobj;
 
 	if (current->wait_hook)
 		current->wait_hook(sobj, SYNCOBJ_BLOCK);
@@ -250,18 +249,17 @@ int syncobj_pend(struct syncobj *sobj, const struct timespec *timeout,
 		else
 			ret = wait_cond(&current->wait_sync, &sobj->lock);
 		/* Check for spurious wake up. */
-	} while (ret == 0 && holder_linked(&current->wait_link));
+	} while (ret == 0 && current->wait_sobj);
 
 	pthread_setcancelstate(state, NULL);
 
 	if (current->wait_hook)
 		current->wait_hook(sobj, SYNCOBJ_RESUME);
 
-	current->wait_sobj = NULL;
-
-	if (ret)
-		list_remove_init(&current->wait_link);
-	else if (current->wait_status & SYNCOBJ_DELETED) {
+	if (ret) {
+		current->wait_sobj = NULL;
+		list_remove(&current->wait_link);
+	} else if (current->wait_status & SYNCOBJ_DELETED) {
 		syncobj_test_finalize(sobj, syns);
 		ret = EIDRM;
 	} else if (current->wait_status & SYNCOBJ_RELEASE_MASK) {
@@ -276,13 +274,14 @@ int syncobj_pend(struct syncobj *sobj, const struct timespec *timeout,
 
 void syncobj_requeue_waiter(struct syncobj *sobj, struct threadobj *thobj)
 {
-	list_remove_init(&thobj->wait_link);
+	list_remove(&thobj->wait_link);
 	enqueue_waiter(sobj, thobj);
 }
 
 void syncobj_wakeup_waiter(struct syncobj *sobj, struct threadobj *thobj)
 {
-	list_remove_init(&thobj->wait_link);
+	list_remove(&thobj->wait_link);
+	thobj->wait_sobj = NULL;
 	sobj->pend_count--;
 	signal_cond(&thobj->wait_sync);
 }
@@ -295,6 +294,7 @@ struct threadobj *syncobj_post(struct syncobj *sobj)
 		return NULL;
 
 	thobj = list_pop_entry(&sobj->pend_list, struct threadobj, wait_link);
+	thobj->wait_sobj = NULL;
 	sobj->pend_count--;
 	signal_cond(&thobj->wait_sync);
 
@@ -332,12 +332,25 @@ int syncobj_wait_drain(struct syncobj *sobj, const struct timespec *timeout,
 	int ret, state;
 
 	/*
-	 * XXX: The caller must check for spurious wakeups, in case
-	 * the drain condition became false again before it resumes.
+	 * XXX: syncobj_wait_drain() behaves slightly differently than
+	 * syncobj_pend(), in that we don't process spurious wakeups
+	 * internally, leaving it to the caller. We do this because a
+	 * drain sync is broadcast so we can't be 100% sure whether
+	 * the wait condition actually disappeared for all waiters.
+	 *
+	 * (e.g. in case the drain signal notifies about a single
+	 * resource being released, only one waiter will be satisfied,
+	 * albeit all waiters will compete to get that resource - this
+	 * means that all waiters but one will get a spurious wakeup).
+	 *
+	 * On the other hand, syncobj_pend() only unblocks on a
+	 * directed wakeup signal to the waiting thread, so we can
+	 * check whether such signal has existed prior to exiting the
+	 * wait loop (i.e. testing current->wait_sobj for NULL).
 	 */
-	current->wait_sobj = sobj;
 	current->wait_status = SYNCOBJ_DRAINING;
 	list_append(&current->wait_link, &sobj->drain_list);
+	current->wait_sobj = sobj;
 	sobj->drain_count++;
 
 	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &state);
@@ -346,6 +359,10 @@ int syncobj_wait_drain(struct syncobj *sobj, const struct timespec *timeout,
 	if (current->wait_hook)
 		current->wait_hook(sobj, SYNCOBJ_BLOCK);
 
+	/*
+	 * XXX: The caller must check for spurious wakeups, in case
+	 * the drain condition became false again before it resumes.
+	 */
 	if (timeout)
 		ret = timedwait_cond(&sobj->post_sync,
 				     &sobj->lock, timeout);
@@ -355,13 +372,13 @@ int syncobj_wait_drain(struct syncobj *sobj, const struct timespec *timeout,
 	pthread_setcancelstate(state, NULL);
 
 	current->wait_status &= ~SYNCOBJ_DRAINING;
-	if (current->wait_status == 0)
-		list_remove_init(&current->wait_link);
+	if (current->wait_status == 0) { /* not flushed? */
+		current->wait_sobj = NULL;
+		list_remove(&current->wait_link);
+	}
 
 	if (current->wait_hook)
 		current->wait_hook(sobj, SYNCOBJ_RESUME);
-
-	current->wait_sobj = NULL;
 
 	if (current->wait_status & SYNCOBJ_DELETED) {
 		syncobj_test_finalize(sobj, syns);
@@ -387,6 +404,7 @@ int syncobj_flush(struct syncobj *sobj, int reason)
 		thobj = list_pop_entry(&sobj->pend_list,
 				       struct threadobj, wait_link);
 		thobj->wait_status |= reason;
+		thobj->wait_sobj = NULL;
 		signal_cond(&thobj->wait_sync);
 		sobj->release_count++;
 	}
@@ -396,6 +414,7 @@ int syncobj_flush(struct syncobj *sobj, int reason)
 		do {
 			thobj = list_pop_entry(&sobj->drain_list,
 					       struct threadobj, wait_link);
+			thobj->wait_sobj = NULL;
 			thobj->wait_status |= reason;
 		} while (!list_empty(&sobj->drain_list));
 		sobj->release_count += sobj->drain_count;
@@ -426,5 +445,4 @@ void syncobj_uninit(struct syncobj *sobj)
 	assert(sobj->release_count == 0);
 	__RT(pthread_cond_destroy(&sobj->post_sync));
 	__RT(pthread_mutex_destroy(&sobj->lock));
-
 }
