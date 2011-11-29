@@ -146,9 +146,9 @@ static void task_finalizer(struct threadobj *thobj)
  * any thread context, and always runs with the thread lock held
  * for this reason.
  */
-static void task_wait_hook(struct threadobj *thobj, int status)
+static void task_wait_hook(struct syncobj *sobj, int status)
 {
-	struct wind_task *task = container_of(thobj, struct wind_task, thobj);
+	struct wind_task *task = wind_task_current();
 
 	if (status & SYNCOBJ_BLOCK)
 		task->tcb->status |= WIND_PEND;

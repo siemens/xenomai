@@ -989,6 +989,9 @@ int threadobj_unblock(struct threadobj *thobj) /* thobj->lock held */
 	pthread_t tid = thobj->tid;
 	int ret = 0;
 
+	/*
+	 * FIXME: racy. We can't assume thobj->wait_sobj is stable.
+	 */
 	if (thobj->wait_sobj)	/* Remove PEND (+DELAY timeout) */
 		syncobj_flush(thobj->wait_sobj, SYNCOBJ_FLUSHED);
 	else

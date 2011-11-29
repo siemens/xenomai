@@ -129,7 +129,7 @@ struct threadobj {
 	struct holder wait_link;
 	int wait_status;
 	int wait_prio;
-	void (*wait_hook)(struct threadobj *thobj, int status);
+	void (*wait_hook)(struct syncobj *sobj, int status);
 	void *wait_union;
 	size_t wait_size;
 
@@ -146,7 +146,7 @@ struct threadobj_init_data {
 	cpu_set_t affinity;
 	int priority;
 	void (*finalizer)(struct threadobj *thobj);
-	void (*wait_hook)(struct threadobj *thobj, int status);
+	void (*wait_hook)(struct syncobj *sobj, int status);
 	void (*suspend_hook)(struct threadobj *thobj, int status);
 };
 

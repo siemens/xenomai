@@ -228,7 +228,7 @@ int syncobj_pend(struct syncobj *sobj, const struct timespec *timeout,
 	enqueue_waiter(sobj, current);
 
 	if (current->wait_hook)
-		current->wait_hook(current, SYNCOBJ_BLOCK);
+		current->wait_hook(sobj, SYNCOBJ_BLOCK);
 
 	/*
 	 * XXX: we are guaranteed to be in deferred cancel mode, with
@@ -255,7 +255,7 @@ int syncobj_pend(struct syncobj *sobj, const struct timespec *timeout,
 	pthread_setcancelstate(state, NULL);
 
 	if (current->wait_hook)
-		current->wait_hook(current, SYNCOBJ_RESUME);
+		current->wait_hook(sobj, SYNCOBJ_RESUME);
 
 	current->wait_sobj = NULL;
 
@@ -344,7 +344,7 @@ int syncobj_wait_drain(struct syncobj *sobj, const struct timespec *timeout,
 	assert(state == PTHREAD_CANCEL_DISABLE);
 
 	if (current->wait_hook)
-		current->wait_hook(current, SYNCOBJ_BLOCK);
+		current->wait_hook(sobj, SYNCOBJ_BLOCK);
 
 	if (timeout)
 		ret = timedwait_cond(&sobj->post_sync,
@@ -359,7 +359,7 @@ int syncobj_wait_drain(struct syncobj *sobj, const struct timespec *timeout,
 		list_remove_init(&current->wait_link);
 
 	if (current->wait_hook)
-		current->wait_hook(current, SYNCOBJ_RESUME);
+		current->wait_hook(sobj, SYNCOBJ_RESUME);
 
 	current->wait_sobj = NULL;
 
