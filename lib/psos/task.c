@@ -586,20 +586,17 @@ u_long ev_receive(u_long events, u_long flags,
 	struct service svc;
 	int ret;
 
-	current = get_psos_task_or_self(0, &ret);
+	current = find_psos_task_or_self(0, &ret);
 	if (current == NULL)
 		return ret;
 
-	ret = syncobj_lock(&current->sobj, &syns);
-	/*
-	 * We can't be cancelled asynchronously while we hold a
-	 * syncobj lock, so we may safely drop our thread lock now.
-	 */
-	put_psos_task(current);
-	if (ret)
-		return ERR_OBJDEL;
-
 	COPPERPLATE_PROTECT(svc);
+
+	ret = syncobj_lock(&current->sobj, &syns);
+	if (ret) {
+		ret = ERR_OBJDEL;
+		goto out;
+	}
 
 	if (events == 0) {
 		*events_r = current->events; /* Only polling events. */
@@ -631,7 +628,7 @@ u_long ev_receive(u_long events, u_long flags,
 	}
 done:
 	syncobj_unlock(&current->sobj, &syns);
-
+out:
 	COPPERPLATE_UNPROTECT(svc);
 
 	return ret;
@@ -644,14 +641,13 @@ u_long ev_send(u_long tid, u_long events)
 	struct service svc;
 	int ret = SUCCESS;
 
-	task = get_psos_task(tid, &ret);
+	task = find_psos_task(tid, &ret);
 	if (task == NULL)
 		return ret;
 
 	COPPERPLATE_PROTECT(svc);
 
 	ret = syncobj_lock(&task->sobj, &syns);
-	put_psos_task(task);
 	if (ret) {
 		ret = ERR_OBJDEL;
 		goto out;
