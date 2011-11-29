@@ -48,6 +48,8 @@ struct alchemy_queue_msg {
 
 struct alchemy_queue_wait {
 	struct alchemy_queue_msg *msg;
+	void *userbuf;
+	size_t usersz;
 };
 
 extern struct syncluster alchemy_queue_table;
