@@ -56,7 +56,7 @@ static void *map_sem_heap(unsigned int shared)
 	int ret;
 
 	hdesc = shared ? &global_hdesc : &private_hdesc;
-	ret = XENOMAI_SYSCALL2(__xn_sys_heap_info, hdesc, shared);
+	ret = XENOMAI_SYSCALL2(sc_nucleus_heap_info, hdesc, shared);
 	if (ret < 0) {
 		errno = -ret;
 		perror("Xenomai: sys_heap_info");
@@ -95,7 +95,7 @@ static void xeno_init_vdso(void)
 	xnsysinfo_t sysinfo;
 	int err;
 
-	err = XENOMAI_SYSCALL2(__xn_sys_info, 0, &sysinfo);
+	err = XENOMAI_SYSCALL2(sc_nucleus_info, 0, &sysinfo);
 	if (err < 0) {
 		errno = -err;
 		perror("Xenomai: sys_info failed");

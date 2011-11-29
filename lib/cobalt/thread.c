@@ -47,7 +47,7 @@ int __wrap_pthread_setschedparam(pthread_t thread,
 		xeno_fault_stack();
 
 	ret = -XENOMAI_SKINCALL5(__cobalt_muxid,
-				 __cobalt_thread_setschedparam,
+				 sc_cobalt_thread_setschedparam,
 				 thread, policy, param,
 				 &mode_offset, &promoted);
 
@@ -59,7 +59,7 @@ int __wrap_pthread_setschedparam(pthread_t thread,
 		xeno_set_current();
 		xeno_set_current_mode(mode_offset);
 		if (policy != SCHED_OTHER)
-			XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
+			XENOMAI_SYSCALL1(sc_nucleus_migrate, XENOMAI_XENO_DOMAIN);
 	}
 
 	return ret;
@@ -77,7 +77,7 @@ int pthread_setschedparam_ex(pthread_t thread,
 		xeno_fault_stack();
 
 	ret = -XENOMAI_SKINCALL5(__cobalt_muxid,
-				 __cobalt_thread_setschedparam_ex,
+				 sc_cobalt_thread_setschedparam_ex,
 				 thread, policy, param,
 				 &mode_offset, &promoted);
 	if (ret == EPERM) {
@@ -90,7 +90,7 @@ int pthread_setschedparam_ex(pthread_t thread,
 		xeno_set_current();
 		xeno_set_current_mode(mode_offset);
 		if (policy != SCHED_OTHER)
-			XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
+			XENOMAI_SYSCALL1(sc_nucleus_migrate, XENOMAI_XENO_DOMAIN);
 	}
 
 	return ret;
@@ -103,7 +103,7 @@ int __wrap_pthread_getschedparam(pthread_t thread,
 	int ret;
 
 	ret = -XENOMAI_SKINCALL3(__cobalt_muxid,
-				 __cobalt_thread_getschedparam,
+				 sc_cobalt_thread_getschedparam,
 				 thread, policy, param);
 	if (ret == ESRCH)
 		return __STD(pthread_getschedparam(thread, policy, param));
@@ -119,7 +119,7 @@ int pthread_getschedparam_ex(pthread_t thread,
 	int ret;
 
 	ret = -XENOMAI_SKINCALL3(__cobalt_muxid,
-				 __cobalt_thread_getschedparam_ex,
+				 sc_cobalt_thread_getschedparam_ex,
 				 thread, policy, param);
 	if (ret == ESRCH) {
 		ret = __STD(pthread_getschedparam(thread, policy, &short_param));
@@ -134,7 +134,7 @@ int __wrap_sched_yield(void)
 {
 	int ret;
 
-	ret = -XENOMAI_SKINCALL0(__cobalt_muxid, __cobalt_sched_yield);
+	ret = -XENOMAI_SKINCALL0(__cobalt_muxid, sc_cobalt_sched_yield);
 	if (ret == -1)
 		ret = __STD(sched_yield());
 
@@ -145,7 +145,7 @@ int __wrap_sched_get_priority_min(int policy)
 {
 	int ret;
 
-	ret = XENOMAI_SKINCALL1(__cobalt_muxid, __cobalt_sched_minprio, policy);
+	ret = XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_sched_minprio, policy);
 	if (ret < 0) {
 		if (ret == -ENOSYS)
 			return __STD(sched_get_priority_min(policy));
@@ -160,7 +160,7 @@ int __wrap_sched_get_priority_max(int policy)
 {
 	int ret;
 
-	ret = XENOMAI_SKINCALL1(__cobalt_muxid, __cobalt_sched_maxprio, policy);
+	ret = XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_sched_maxprio, policy);
 	if (ret < 0) {
 		if (ret == -ENOSYS)
 			return __STD(sched_get_priority_max(policy));
@@ -212,7 +212,7 @@ static void *__pthread_trampoline(void *p)
 	 * Do _not_ inline the call to pthread_self() in the syscall
 	 * macro: this trashes the syscall regs on some archs.
 	 */
-	ret = XENOMAI_SKINCALL4(__cobalt_muxid, __cobalt_thread_create, tid,
+	ret = XENOMAI_SKINCALL4(__cobalt_muxid, sc_cobalt_thread_create, tid,
 				policy, &param_ex, &mode_offset);
 	if (ret == 0) {
 		xeno_set_current();
@@ -239,7 +239,7 @@ static void *__pthread_trampoline(void *p)
 		__wrap_sched_yield();
 
 	if (policy != SCHED_OTHER)
-		XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
+		XENOMAI_SYSCALL1(sc_nucleus_migrate, XENOMAI_XENO_DOMAIN);
 
 	return start(arg);
 }
@@ -340,7 +340,7 @@ int pthread_make_periodic_np(pthread_t thread,
 			     struct timespec *periodtp)
 {
 	return -XENOMAI_SKINCALL4(__cobalt_muxid,
-				  __cobalt_thread_make_periodic,
+				  sc_cobalt_thread_make_periodic,
 				  thread, clk_id, starttp, periodtp);
 }
 
@@ -351,7 +351,7 @@ int pthread_wait_np(unsigned long *overruns_r)
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
 	ret = -XENOMAI_SKINCALL1(__cobalt_muxid,
-				 __cobalt_thread_wait, overruns_r);
+				 sc_cobalt_thread_wait, overruns_r);
 
 	pthread_setcanceltype(oldtype, NULL);
 
@@ -361,20 +361,20 @@ int pthread_wait_np(unsigned long *overruns_r)
 int pthread_set_mode_np(int clrmask, int setmask, int *mode_r)
 {
 	return -XENOMAI_SKINCALL3(__cobalt_muxid,
-				  __cobalt_thread_set_mode,
+				  sc_cobalt_thread_set_mode,
 				  clrmask, setmask, mode_r);
 }
 
 int pthread_set_name_np(pthread_t thread, const char *name)
 {
 	return -XENOMAI_SKINCALL2(__cobalt_muxid,
-				  __cobalt_thread_set_name, thread, name);
+				  sc_cobalt_thread_set_name, thread, name);
 }
 
 int pthread_probe_np(pid_t tid)
 {
 	return XENOMAI_SKINCALL1(__cobalt_muxid,
-				 __cobalt_thread_probe, tid);
+				 sc_cobalt_thread_probe, tid);
 }
 
 int __wrap_pthread_kill(pthread_t thread, int sig)
@@ -382,7 +382,7 @@ int __wrap_pthread_kill(pthread_t thread, int sig)
 	int ret;
 
 	ret = -XENOMAI_SKINCALL2(__cobalt_muxid,
-				 __cobalt_thread_kill, thread, sig);
+				 sc_cobalt_thread_kill, thread, sig);
 	if (ret == ESRCH)
 		return __STD(pthread_kill(thread, sig));
 

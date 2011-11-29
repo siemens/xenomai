@@ -80,7 +80,7 @@ static inline void xnarch_setup_mayday_page(void *page)
 	} code_sep = {
 		.mov_eax = {
 			.op = 0xb8,
-			.imm = __xn_mux_code(0, __xn_sys_mayday)
+			.imm = __xn_mux_code(0, sc_nucleus_mayday)
 		},
 		.syscall = {
 			.op = {
@@ -101,7 +101,7 @@ static inline void xnarch_setup_mayday_page(void *page)
 	} code_nosep = {
 		.mov_eax = {
 			.op = 0xb8,
-			.imm = __xn_mux_code(0, __xn_sys_mayday)
+			.imm = __xn_mux_code(0, sc_nucleus_mayday)
 		},
 		.syscall = 0x80cd,
 		.bug = 0x0b0f,

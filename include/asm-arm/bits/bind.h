@@ -27,7 +27,7 @@ static inline void xeno_arm_features_check(struct xnfeatinfo *finfo)
 	if (__xn_tscinfo.type != -1)
 		return;
 
-	err = XENOMAI_SYSCALL2(__xn_sys_arch,
+	err = XENOMAI_SYSCALL2(sc_nucleus_arch,
 			       XENOMAI_SYSARCH_TSCINFO, &__xn_tscinfo);
 	if (err)
 		goto error;

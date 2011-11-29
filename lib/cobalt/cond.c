@@ -28,39 +28,39 @@ extern unsigned long xeno_sem_heap[2];
 
 int __wrap_pthread_condattr_init(pthread_condattr_t *attr)
 {
-	return -XENOMAI_SKINCALL1(__cobalt_muxid, __cobalt_condattr_init, attr);
+	return -XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_condattr_init, attr);
 }
 
 int __wrap_pthread_condattr_destroy(pthread_condattr_t *attr)
 {
-	return -XENOMAI_SKINCALL1(__cobalt_muxid,__cobalt_condattr_destroy,attr);
+	return -XENOMAI_SKINCALL1(__cobalt_muxid,sc_cobalt_condattr_destroy,attr);
 }
 
 int __wrap_pthread_condattr_getclock(const pthread_condattr_t *attr,
 				     clockid_t *clk_id)
 {
 	return -XENOMAI_SKINCALL2(__cobalt_muxid,
-				  __cobalt_condattr_getclock, attr, clk_id);
+				  sc_cobalt_condattr_getclock, attr, clk_id);
 }
 
 int __wrap_pthread_condattr_setclock(pthread_condattr_t *attr,
 				     clockid_t clk_id)
 {
 	return -XENOMAI_SKINCALL2(__cobalt_muxid,
-				  __cobalt_condattr_setclock, attr, clk_id);
+				  sc_cobalt_condattr_setclock, attr, clk_id);
 }
 
 int __wrap_pthread_condattr_getpshared(const pthread_condattr_t *attr,
 				       int *pshared)
 {
 	return -XENOMAI_SKINCALL2(__cobalt_muxid,
-				  __cobalt_condattr_getpshared, attr, pshared);
+				  sc_cobalt_condattr_getpshared, attr, pshared);
 }
 
 int __wrap_pthread_condattr_setpshared(pthread_condattr_t *attr, int pshared)
 {
 	return -XENOMAI_SKINCALL2(__cobalt_muxid,
-				  __cobalt_condattr_setpshared, attr, pshared);
+				  sc_cobalt_condattr_setpshared, attr, pshared);
 }
 
 int __wrap_pthread_cond_init(pthread_cond_t *cond,
@@ -69,7 +69,7 @@ int __wrap_pthread_cond_init(pthread_cond_t *cond,
 	struct __shadow_cond *_cnd = &((union __xeno_cond *)cond)->shadow_cond;
 	int err;
 
-	err = XENOMAI_SKINCALL2(__cobalt_muxid, __cobalt_cond_init, _cnd, attr);
+	err = XENOMAI_SKINCALL2(__cobalt_muxid, sc_cobalt_cond_init, _cnd, attr);
 	if (!err && !_cnd->attr.pshared) {
 		_cnd->pending_signals = (unsigned long *)
 			(xeno_sem_heap[0] + _cnd->pending_signals_offset);
@@ -82,7 +82,7 @@ int __wrap_pthread_cond_destroy(pthread_cond_t *cond)
 {
 	struct __shadow_cond *_cond = &((union __xeno_cond *)cond)->shadow_cond;
 
-	return -XENOMAI_SKINCALL1(__cobalt_muxid, __cobalt_cond_destroy, _cond);
+	return -XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_cond_destroy, _cond);
 }
 
 struct cobalt_cond_cleanup_t {
@@ -99,7 +99,7 @@ static void __pthread_cond_cleanup(void *data)
 
 	do {
 		err = XENOMAI_SKINCALL2(__cobalt_muxid,
-					__cobalt_cond_wait_epilogue,
+					sc_cobalt_cond_wait_epilogue,
 					c->cond, c->mutex);
 	} while (err == -EINTR);
 
@@ -140,7 +140,7 @@ int __wrap_pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
 	err = XENOMAI_SKINCALL5(__cobalt_muxid,
-				 __cobalt_cond_wait_prologue,
+				 sc_cobalt_cond_wait_prologue,
 				 _cnd, _mx, &c.err, 0, NULL);
 
 	pthread_setcanceltype(oldtype, NULL);
@@ -149,7 +149,7 @@ int __wrap_pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
 
 	while (err == -EINTR)
 		err = XENOMAI_SKINCALL2(__cobalt_muxid,
-					__cobalt_cond_wait_epilogue, _cnd, _mx);
+					sc_cobalt_cond_wait_epilogue, _cnd, _mx);
 
 	_mx->lockcnt = count;
 
@@ -193,7 +193,7 @@ int __wrap_pthread_cond_timedwait(pthread_cond_t *cond,
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
 	err = XENOMAI_SKINCALL5(__cobalt_muxid,
-				__cobalt_cond_wait_prologue,
+				sc_cobalt_cond_wait_prologue,
 				_cnd, _mx, &c.err, 1, abstime);
 	pthread_setcanceltype(oldtype, NULL);
 
@@ -201,7 +201,7 @@ int __wrap_pthread_cond_timedwait(pthread_cond_t *cond,
 
 	while (err == -EINTR)
 		err = XENOMAI_SKINCALL2(__cobalt_muxid,
-					__cobalt_cond_wait_epilogue, _cnd, _mx);
+					sc_cobalt_cond_wait_epilogue, _cnd, _mx);
 
 	_mx->lockcnt = count;
 

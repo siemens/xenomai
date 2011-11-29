@@ -14,7 +14,7 @@ int __wrap_select (int __nfds, fd_set *__restrict __readfds,
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	err = XENOMAI_SKINCALL5(__cobalt_muxid, __cobalt_select, __nfds,
+	err = XENOMAI_SKINCALL5(__cobalt_muxid, sc_cobalt_select, __nfds,
 				__readfds, __writefds, __exceptfds, __timeout);
 
 	pthread_setcanceltype(oldtype, NULL);

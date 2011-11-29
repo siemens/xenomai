@@ -36,7 +36,7 @@ static unsigned long long get_used(void)
 	struct xnheap_desc hd;
 	int i;
 
-	for (i = 0; XENOMAI_SYSCALL2(__xn_sys_heap_info, &hd, i) == 0; i++)
+	for (i = 0; XENOMAI_SYSCALL2(sc_nucleus_heap_info, &hd, i) == 0; i++)
 		used += hd.used;
 
 	if (used == 0) {

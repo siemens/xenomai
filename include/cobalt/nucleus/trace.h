@@ -53,43 +53,43 @@
 
 static inline int xntrace_max_begin(unsigned long v)
 {
-	return XENOMAI_SYSCALL2(__xn_sys_trace, __xntrace_op_max_begin, v);
+	return XENOMAI_SYSCALL2(sc_nucleus_trace, __xntrace_op_max_begin, v);
 }
 
 static inline int xntrace_max_end(unsigned long v)
 {
-	return XENOMAI_SYSCALL2(__xn_sys_trace, __xntrace_op_max_end, v);
+	return XENOMAI_SYSCALL2(sc_nucleus_trace, __xntrace_op_max_end, v);
 }
 
 static inline int xntrace_max_reset(void)
 {
-	return XENOMAI_SYSCALL1(__xn_sys_trace, __xntrace_op_max_reset);
+	return XENOMAI_SYSCALL1(sc_nucleus_trace, __xntrace_op_max_reset);
 }
 
 static inline int xntrace_user_start(void)
 {
-	return XENOMAI_SYSCALL1(__xn_sys_trace, __xntrace_op_user_start);
+	return XENOMAI_SYSCALL1(sc_nucleus_trace, __xntrace_op_user_start);
 }
 
 static inline int xntrace_user_stop(unsigned long v)
 {
-	return XENOMAI_SYSCALL2(__xn_sys_trace, __xntrace_op_user_stop, v);
+	return XENOMAI_SYSCALL2(sc_nucleus_trace, __xntrace_op_user_stop, v);
 }
 
 static inline int xntrace_user_freeze(unsigned long v, int once)
 {
-	return XENOMAI_SYSCALL3(__xn_sys_trace, __xntrace_op_user_freeze,
+	return XENOMAI_SYSCALL3(sc_nucleus_trace, __xntrace_op_user_freeze,
 				v, once);
 }
 
 static inline int xntrace_special(unsigned char id, unsigned long v)
 {
-	return XENOMAI_SYSCALL3(__xn_sys_trace, __xntrace_op_special, id, v);
+	return XENOMAI_SYSCALL3(sc_nucleus_trace, __xntrace_op_special, id, v);
 }
 
 static inline int xntrace_special_u64(unsigned char id, unsigned long long v)
 {
-	return XENOMAI_SYSCALL4(__xn_sys_trace, __xntrace_op_special_u64, id,
+	return XENOMAI_SYSCALL4(sc_nucleus_trace, __xntrace_op_special_u64, id,
 				(unsigned long)(v >> 32),
 				(unsigned long)(v & 0xFFFFFFFF));
 }

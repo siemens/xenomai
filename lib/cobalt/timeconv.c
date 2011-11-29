@@ -38,7 +38,7 @@ void xeno_init_timeconv(int muxid)
 	xnsysinfo_t sysinfo;
 	int ret;
 
-	ret = XENOMAI_SYSCALL2(__xn_sys_info, muxid, &sysinfo);
+	ret = XENOMAI_SYSCALL2(sc_nucleus_info, muxid, &sysinfo);
 	if (ret) {
 		fprintf(stderr, "Xenomai: sys_info failed: %s\n",
 			strerror(-ret));

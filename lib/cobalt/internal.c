@@ -39,13 +39,13 @@ void __cobalt_thread_harden(void)
 
 	/* non-RT shadows are NOT allowed to force primary mode. */
 	if ((status & (XNRELAX|XNOTHER)) == XNRELAX)
-		XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
+		XENOMAI_SYSCALL1(sc_nucleus_migrate, XENOMAI_XENO_DOMAIN);
 }
 
 int __cobalt_thread_stat(pthread_t tid, struct cobalt_threadstat *stat)
 {
 	return -XENOMAI_SKINCALL2(__cobalt_muxid,
-				  __cobalt_thread_getstat, tid, stat);
+				  sc_cobalt_thread_getstat, tid, stat);
 }
 
 int __cobalt_event_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
@@ -62,14 +62,14 @@ int __cobalt_event_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
 	ret = XENOMAI_SKINCALL5(__cobalt_muxid,
-				__cobalt_cond_wait_prologue,
+				sc_cobalt_cond_wait_prologue,
 				_cnd, _mx, &_ret, 0, NULL);
 
 	pthread_setcanceltype(oldtype, NULL);
 
 	while (ret == -EINTR)
 		ret = XENOMAI_SKINCALL2(__cobalt_muxid,
-					__cobalt_cond_wait_epilogue, _cnd, _mx);
+					sc_cobalt_cond_wait_epilogue, _cnd, _mx);
 	_mx->lockcnt = count;
 
 	return -ret ?: -_ret;
@@ -91,14 +91,14 @@ int __cobalt_event_timedwait(pthread_cond_t *cond,
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
 	ret = XENOMAI_SKINCALL5(__cobalt_muxid,
-				__cobalt_cond_wait_prologue,
+				sc_cobalt_cond_wait_prologue,
 				_cnd, _mx, &_ret, 1, abstime);
 
 	pthread_setcanceltype(oldtype, NULL);
 
 	while (ret == -EINTR)
 		ret = XENOMAI_SKINCALL2(__cobalt_muxid,
-					__cobalt_cond_wait_epilogue, _cnd, _mx);
+					sc_cobalt_cond_wait_epilogue, _cnd, _mx);
 	_mx->lockcnt = count;
 
 	return -ret ?: -_ret;

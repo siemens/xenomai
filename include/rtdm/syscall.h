@@ -26,15 +26,15 @@
 
 #define RTDM_SKIN_MAGIC		0x5254444D
 
-#define __rtdm_fdcount		0
-#define __rtdm_open		1
-#define __rtdm_socket		2
-#define __rtdm_close		3
-#define __rtdm_ioctl		4
-#define __rtdm_read		5
-#define __rtdm_write		6
-#define __rtdm_recvmsg		7
-#define __rtdm_sendmsg		8
+#define sc_rtdm_fdcount		0
+#define sc_rtdm_open		1
+#define sc_rtdm_socket		2
+#define sc_rtdm_close		3
+#define sc_rtdm_ioctl		4
+#define sc_rtdm_read		5
+#define sc_rtdm_write		6
+#define sc_rtdm_recvmsg		7
+#define sc_rtdm_sendmsg		8
 
 #ifdef __KERNEL__
 

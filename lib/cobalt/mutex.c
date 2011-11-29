@@ -28,53 +28,53 @@ extern int __cobalt_muxid;
 
 int __wrap_pthread_mutexattr_init(pthread_mutexattr_t *attr)
 {
-	return -XENOMAI_SKINCALL1(__cobalt_muxid, __cobalt_mutexattr_init, attr);
+	return -XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_mutexattr_init, attr);
 }
 
 int __wrap_pthread_mutexattr_destroy(pthread_mutexattr_t *attr)
 {
-	return -XENOMAI_SKINCALL1(__cobalt_muxid,__cobalt_mutexattr_destroy,attr);
+	return -XENOMAI_SKINCALL1(__cobalt_muxid,sc_cobalt_mutexattr_destroy,attr);
 }
 
 int __wrap_pthread_mutexattr_gettype(const pthread_mutexattr_t *attr,
 				     int *type)
 {
 	return -XENOMAI_SKINCALL2(__cobalt_muxid,
-				  __cobalt_mutexattr_gettype, attr, type);
+				  sc_cobalt_mutexattr_gettype, attr, type);
 }
 
 int __wrap_pthread_mutexattr_settype(pthread_mutexattr_t *attr,
 				     int type)
 {
 	return -XENOMAI_SKINCALL2(__cobalt_muxid,
-				  __cobalt_mutexattr_settype, attr, type);
+				  sc_cobalt_mutexattr_settype, attr, type);
 }
 
 int __wrap_pthread_mutexattr_getprotocol(const pthread_mutexattr_t *attr,
 					 int *proto)
 {
 	return -XENOMAI_SKINCALL2(__cobalt_muxid,
-				  __cobalt_mutexattr_getprotocol, attr, proto);
+				  sc_cobalt_mutexattr_getprotocol, attr, proto);
 }
 
 int __wrap_pthread_mutexattr_setprotocol(pthread_mutexattr_t *attr,
 					 int proto)
 {
 	return -XENOMAI_SKINCALL2(__cobalt_muxid,
-				  __cobalt_mutexattr_setprotocol, attr, proto);
+				  sc_cobalt_mutexattr_setprotocol, attr, proto);
 }
 
 int __wrap_pthread_mutexattr_getpshared(const pthread_mutexattr_t *attr,
 					int *pshared)
 {
 	return -XENOMAI_SKINCALL2(__cobalt_muxid,
-				  __cobalt_mutexattr_getpshared, attr, pshared);
+				  sc_cobalt_mutexattr_getpshared, attr, pshared);
 }
 
 int __wrap_pthread_mutexattr_setpshared(pthread_mutexattr_t *attr, int pshared)
 {
 	return -XENOMAI_SKINCALL2(__cobalt_muxid,
-				  __cobalt_mutexattr_setpshared, attr, pshared);
+				  sc_cobalt_mutexattr_setpshared, attr, pshared);
 }
 
 int __wrap_pthread_mutex_init(pthread_mutex_t *mutex,
@@ -86,13 +86,13 @@ int __wrap_pthread_mutex_init(pthread_mutex_t *mutex,
 
 	if (_mutex->magic == COBALT_MUTEX_MAGIC) {
 		err = -XENOMAI_SKINCALL1(__cobalt_muxid,
-					 __cobalt_check_init,_mutex);
+					 sc_cobalt_check_init,_mutex);
 
 		if (err)
 			return err;
 	}
 
-	err = -XENOMAI_SKINCALL2(__cobalt_muxid,__cobalt_mutex_init,_mutex,attr);
+	err = -XENOMAI_SKINCALL2(__cobalt_muxid,sc_cobalt_mutex_init,_mutex,attr);
 
 	if (!_mutex->attr.pshared)
 		_mutex->dat = (struct mutex_dat *)
@@ -110,7 +110,7 @@ int __wrap_pthread_mutex_destroy(pthread_mutex_t *mutex)
 	if (_mutex->magic != COBALT_MUTEX_MAGIC)
 		return EINVAL;
 
-	err = XENOMAI_SKINCALL1(__cobalt_muxid, __cobalt_mutex_destroy, _mutex);
+	err = XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_mutex_destroy, _mutex);
 
 	return -err;
 }
@@ -164,7 +164,7 @@ int __wrap_pthread_mutex_lock(pthread_mutex_t *mutex)
 		}
 
 	do {
-		err = XENOMAI_SKINCALL1(__cobalt_muxid,__cobalt_mutex_lock,_mutex);
+		err = XENOMAI_SKINCALL1(__cobalt_muxid,sc_cobalt_mutex_lock,_mutex);
 	} while (err == -EINTR);
 
 	if (!err)
@@ -221,7 +221,7 @@ int __wrap_pthread_mutex_timedlock(pthread_mutex_t *mutex,
 
 	do {
 		err = XENOMAI_SKINCALL2(__cobalt_muxid,
-					__cobalt_mutex_timedlock, _mutex, to);
+					sc_cobalt_mutex_timedlock, _mutex, to);
 	} while (err == -EINTR);
 
 	if (!err)
@@ -275,7 +275,7 @@ do_syscall:
 	__RT(clock_gettime(CLOCK_REALTIME, &ts));
 	do {
 		err = XENOMAI_SKINCALL2(__cobalt_muxid,
-					__cobalt_mutex_timedlock, _mutex, &ts);
+					sc_cobalt_mutex_timedlock, _mutex, &ts);
 	} while (err == -EINTR);
 
 	if (err) {
@@ -334,7 +334,7 @@ do_syscall:
 
 	do {
 		err = XENOMAI_SKINCALL1(__cobalt_muxid,
-					__cobalt_mutex_unlock, _mutex);
+					sc_cobalt_mutex_unlock, _mutex);
 	} while (err == -EINTR);
 
 	return -err;

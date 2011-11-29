@@ -96,11 +96,11 @@ static inline void xnarch_setup_mayday_page(void *page)
 	} code = {
 		.load_r5h = {
 			.op = 0xe145,
-			.imm = __xn_mux_code(0, __xn_sys_mayday) >> 16
+			.imm = __xn_mux_code(0, sc_nucleus_mayday) >> 16
 		},
 		.load_r5l = {
 			.op = 0xe105,
-			.imm = __xn_mux_code(0, __xn_sys_mayday) & 0xffff
+			.imm = __xn_mux_code(0, sc_nucleus_mayday) & 0xffff
 		},
 		.mov_p0 = 0x3205,
 		.syscall = 0x00a0,

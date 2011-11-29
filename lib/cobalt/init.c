@@ -64,7 +64,7 @@ void __init_cobalt_interface(void)
 	if (muxid > 0) {
 		__rtdm_muxid = __xn_mux_shifted_id(muxid);
 		__rtdm_fd_start = FD_SETSIZE - XENOMAI_SKINCALL0(__rtdm_muxid,
-								 __rtdm_fdcount);
+								 sc_rtdm_fdcount);
 	}
 
 	/* If not dlopening, we are going to shadow the main thread, so mlock

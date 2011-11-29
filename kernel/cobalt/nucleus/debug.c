@@ -182,7 +182,7 @@ DEFINE_PRIVATE_XNLOCK(relax_lock);
  * request to userland when a relax spot is detected from
  * xnshadow_relax, which should then trigger a call back to
  * xndebug_trace_relax with the complete backtrace information, as
- * seen from userland (via the internal __xn_sys_backtrace
+ * seen from userland (via the internal sc_nucleus_backtrace
  * syscall). All this is ran on behalf of the relaxing thread, so we
  * can make a number of convenient assumptions (such as being able to
  * scan the current vma list to get detailed information about the

@@ -22,7 +22,7 @@
 
 #include <asm-generic/xenomai/syscall.h>
 
-#define __xn_mux_code(shifted_id,op) ((op << 24)|shifted_id|(__xn_sys_mux & 0x7fff))
+#define __xn_mux_code(shifted_id,op) ((op << 24)|shifted_id|(sc_nucleus_mux & 0x7fff))
 #define __xn_mux_shifted_id(id) ((id << 16) & 0xff0000)
 
 #ifdef __KERNEL__
@@ -52,7 +52,7 @@
 #define __xn_reg_pc(regs)     ((regs)->ip)
 #define __xn_reg_sp(regs)     ((regs)->sp)
 
-#define __xn_reg_mux_p(regs)  ((__xn_reg_mux(regs) & 0x7fff) == __xn_sys_mux)
+#define __xn_reg_mux_p(regs)  ((__xn_reg_mux(regs) & 0x7fff) == sc_nucleus_mux)
 #define __xn_mux_id(regs)     ((__xn_reg_mux(regs) >> 16) & 0xff)
 #define __xn_mux_op(regs)     ((__xn_reg_mux(regs) >> 24) & 0xff)
 
@@ -224,7 +224,7 @@ static inline void __xn_get_ebp(void **dest)
 	, "a" (arg1), "c" (arg2), "d" (arg3), "S" (arg4), "D" (arg5)
 
 #define XENOMAI_SYSBIND(a1,a2) \
-	XENOMAI_SYS_MUX_SAFE(2,__xn_sys_bind,a1,a2)
+	XENOMAI_SYS_MUX_SAFE(2,sc_nucleus_bind,a1,a2)
 
 #else /* x86_64 */
 
@@ -296,7 +296,7 @@ static inline void __xn_get_ebp(void **dest)
 	DO_SYSCALL(__xn_mux_code(shifted_id,op), nr, args)
 
 #define XENOMAI_SYSBIND(a1,a2) \
-	XENOMAI_SYS_MUX(2,__xn_sys_bind,a1,a2)
+	XENOMAI_SYS_MUX(2,sc_nucleus_bind,a1,a2)
 
 #endif /* x86_64 */
 

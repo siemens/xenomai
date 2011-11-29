@@ -34,7 +34,7 @@ static xnsysinfo_t __cobalt_sysinfo;
 
 void cobalt_clock_init(int muxid)
 {
-	int err = -XENOMAI_SYSCALL2(__xn_sys_info, muxid, &__cobalt_sysinfo);
+	int err = -XENOMAI_SYSCALL2(sc_nucleus_info, muxid, &__cobalt_sysinfo);
 	if (err) {
 		fprintf(stderr, "Xenomai Posix skin init: "
 			"sys_info: %s\n", strerror(err));
@@ -45,7 +45,7 @@ void cobalt_clock_init(int muxid)
 int __wrap_clock_getres(clockid_t clock_id, struct timespec *tp)
 {
 	int err = -XENOMAI_SKINCALL2(__cobalt_muxid,
-				     __cobalt_clock_getres,
+				     sc_cobalt_clock_getres,
 				     clock_id,
 				     tp);
 
@@ -118,7 +118,7 @@ int __wrap_clock_gettime(clockid_t clock_id, struct timespec *tp)
 		return 0;
 	default:
 		ret = -XENOMAI_SKINCALL2(__cobalt_muxid,
-					 __cobalt_clock_gettime,
+					 sc_cobalt_clock_gettime,
 					 clock_id,
 					 tp);
 	}
@@ -134,7 +134,7 @@ int __wrap_clock_gettime(clockid_t clock_id, struct timespec *tp)
 int __wrap_clock_settime(clockid_t clock_id, const struct timespec *tp)
 {
 	int err = -XENOMAI_SKINCALL2(__cobalt_muxid,
-				     __cobalt_clock_settime,
+				     sc_cobalt_clock_settime,
 				     clock_id,
 				     tp);
 
@@ -154,7 +154,7 @@ int __wrap_clock_nanosleep(clockid_t clock_id,
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
 	err = -XENOMAI_SKINCALL4(__cobalt_muxid,
-				 __cobalt_clock_nanosleep,
+				 sc_cobalt_clock_nanosleep,
 				 clock_id, flags, rqtp, rmtp);
 
 	pthread_setcanceltype(oldtype, NULL);

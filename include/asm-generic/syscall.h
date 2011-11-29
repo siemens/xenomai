@@ -23,20 +23,20 @@
 #include <asm/xenomai/features.h>
 
 /* Xenomai multiplexer syscall. */
-#define __xn_sys_mux		555	/* Must fit within 15bit */
+#define sc_nucleus_mux		555	/* Must fit within 15bit */
 /* Xenomai nucleus syscalls. */
-#define __xn_sys_bind		0	/* muxid = bind_to_interface(magic, &breq) */
-#define __xn_sys_completion	1	/* xnshadow_completion(&completion) */
-#define __xn_sys_migrate	2	/* switched = xnshadow_relax/harden() */
-#define __xn_sys_barrier	3	/* started = xnshadow_wait_barrier(&entry,&cookie) */
-#define __xn_sys_info		4	/* xnshadow_get_info(muxid,&info) */
-#define __xn_sys_arch		5	/* r = xnarch_local_syscall(args) */
-#define __xn_sys_trace		6	/* r = xntrace_xxx(...) */
-#define __xn_sys_heap_info	7
-#define __xn_sys_current	8	/* threadh = xnthread_handle(cur) */
-#define __xn_sys_current_info	9	/* r = xnshadow_current_info(&info) */
-#define __xn_sys_mayday        10	/* request mayday fixup */
-#define __xn_sys_backtrace     11	/* collect backtrace (relax tracing) */
+#define sc_nucleus_bind		0	/* muxid = bind_to_interface(magic, &breq) */
+#define sc_nucleus_completion	1	/* xnshadow_completion(&completion) */
+#define sc_nucleus_migrate	2	/* switched = xnshadow_relax/harden() */
+#define sc_nucleus_barrier	3	/* started = xnshadow_wait_barrier(&entry,&cookie) */
+#define sc_nucleus_info		4	/* xnshadow_get_info(muxid,&info) */
+#define sc_nucleus_arch		5	/* r = xnarch_local_syscall(args) */
+#define sc_nucleus_trace		6	/* r = xntrace_xxx(...) */
+#define sc_nucleus_heap_info	7
+#define sc_nucleus_current	8	/* threadh = xnthread_handle(cur) */
+#define sc_nucleus_current_info	9	/* r = xnshadow_current_info(&info) */
+#define sc_nucleus_mayday        10	/* request mayday fixup */
+#define sc_nucleus_backtrace     11	/* collect backtrace (relax tracing) */
 
 struct xnbindreq {
 	int feat_req;		/* Features userland requires. */

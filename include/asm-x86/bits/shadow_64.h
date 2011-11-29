@@ -74,7 +74,7 @@ static inline void xnarch_setup_mayday_page(void *page)
 	} code = {
 		.mov_eax = {
 			.op = 0xb8,
-			.imm = __xn_mux_code(0, __xn_sys_mayday)
+			.imm = __xn_mux_code(0, sc_nucleus_mayday)
 		},
 		.syscall = 0x050f,
 		.bug = 0x0b0f,

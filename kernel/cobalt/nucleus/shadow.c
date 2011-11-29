@@ -1740,18 +1740,18 @@ static int xnshadow_sys_backtrace(int nr, unsigned long *u_backtrace,
 }
 
 static struct xnsysent __systab[] = {
-	SKINCALL_DEF(__xn_sys_migrate, xnshadow_sys_migrate, current),
-	SKINCALL_DEF(__xn_sys_arch, xnarch_local_syscall, any),
-	SKINCALL_DEF(__xn_sys_bind, xnshadow_sys_bind, lostage),
-	SKINCALL_DEF(__xn_sys_info, xnshadow_sys_info, lostage),
-	SKINCALL_DEF(__xn_sys_completion, xnshadow_sys_completion, lostage),
-	SKINCALL_DEF(__xn_sys_barrier, xnshadow_sys_barrier, lostage),
-	SKINCALL_DEF(__xn_sys_trace, xnshadow_sys_trace, any),
-	SKINCALL_DEF(__xn_sys_heap_info, xnshadow_sys_heap_info, lostage),
-	SKINCALL_DEF(__xn_sys_current, xnshadow_sys_current, any),
-	SKINCALL_DEF(__xn_sys_current_info, xnshadow_sys_current_info, shadow),
-	SKINCALL_DEF(__xn_sys_mayday, xnshadow_sys_mayday, oneway),
-	SKINCALL_DEF(__xn_sys_backtrace, xnshadow_sys_backtrace, current),
+	SKINCALL_DEF(sc_nucleus_migrate, xnshadow_sys_migrate, current),
+	SKINCALL_DEF(sc_nucleus_arch, xnarch_local_syscall, any),
+	SKINCALL_DEF(sc_nucleus_bind, xnshadow_sys_bind, lostage),
+	SKINCALL_DEF(sc_nucleus_info, xnshadow_sys_info, lostage),
+	SKINCALL_DEF(sc_nucleus_completion, xnshadow_sys_completion, lostage),
+	SKINCALL_DEF(sc_nucleus_barrier, xnshadow_sys_barrier, lostage),
+	SKINCALL_DEF(sc_nucleus_trace, xnshadow_sys_trace, any),
+	SKINCALL_DEF(sc_nucleus_heap_info, xnshadow_sys_heap_info, lostage),
+	SKINCALL_DEF(sc_nucleus_current, xnshadow_sys_current, any),
+	SKINCALL_DEF(sc_nucleus_current_info, xnshadow_sys_current_info, shadow),
+	SKINCALL_DEF(sc_nucleus_mayday, xnshadow_sys_mayday, oneway),
+	SKINCALL_DEF(sc_nucleus_backtrace, xnshadow_sys_backtrace, current),
 };
 
 static void post_ppd_release(struct xnheap *h)
@@ -1910,10 +1910,10 @@ int do_hisyscall_event(unsigned event, rthal_pipeline_stage_t *stage,
 
 	/*
 	 * Executing Xenomai services requires CAP_SYS_NICE, except for
-	 * __xn_sys_bind which does its own checks.
+	 * sc_nucleus_bind which does its own checks.
 	 */
 	if (unlikely(!cap_raised(current_cap(), CAP_SYS_NICE)) &&
-	    __xn_reg_mux(regs) != __xn_mux_code(0, __xn_sys_bind))
+	    __xn_reg_mux(regs) != __xn_mux_code(0, sc_nucleus_bind))
 		goto no_permission;
 
 	muxid = __xn_mux_id(regs);
@@ -2081,7 +2081,7 @@ int do_hisyscall_event(unsigned event, rthal_pipeline_stage_t *stage,
       no_skin:
 
 	if (__xn_reg_mux_p(regs)) {
-		if (__xn_reg_mux(regs) == __xn_mux_code(0, __xn_sys_bind))
+		if (__xn_reg_mux(regs) == __xn_mux_code(0, sc_nucleus_bind))
 			/*
 			 * Valid exception case: we may be called to
 			 * bind to a skin which will create its own

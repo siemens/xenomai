@@ -29,10 +29,10 @@ static void assert_nrt_inner(void)
 	xnthread_info_t info;
 	int err;
 
-	err = XENOMAI_SYSCALL1(__xn_sys_current_info, &info);
+	err = XENOMAI_SYSCALL1(sc_nucleus_current_info, &info);
 
 	if (err) {
-		fprintf(stderr, "__xn_sys_current_info failed: %s\n",
+		fprintf(stderr, "sc_nucleus_current_info failed: %s\n",
 			strerror(-err));
 		return;
 	}

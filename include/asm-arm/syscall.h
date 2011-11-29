@@ -29,7 +29,7 @@
 #include <asm-generic/xenomai/syscall.h>
 #include <asm/xenomai/features.h>
 
-#define __xn_mux_code(shifted_id,op) ((op << 24)|shifted_id|(__xn_sys_mux & 0xffff))
+#define __xn_mux_code(shifted_id,op) ((op << 24)|shifted_id|(sc_nucleus_mux & 0xffff))
 #define __xn_mux_shifted_id(id) ((id << 16) & 0xff0000)
 
 #define XENO_ARM_SYSCALL        0x000F0042	/* carefully chosen... */
@@ -207,7 +207,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define XENOMAI_SYSCALL5(op,a1,a2,a3,a4,a5)		\
 	XENOMAI_DO_SYSCALL(5,0,op,a1,a2,a3,a4,a5)
 #define XENOMAI_SYSBIND(a1,a2)			\
-	XENOMAI_DO_SYSCALL(2,0,__xn_sys_bind,a1,a2)
+	XENOMAI_DO_SYSCALL(2,0,sc_nucleus_bind,a1,a2)
 
 #define XENOMAI_SKINCALL0(id,op)		\
 	XENOMAI_DO_SYSCALL(0,id,op)

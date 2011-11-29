@@ -25,7 +25,7 @@
 
 #include <asm-generic/xenomai/syscall.h>
 
-#define __xn_mux_code(shifted_id,op) ((op << 24)|shifted_id|(__xn_sys_mux & 0xffff))
+#define __xn_mux_code(shifted_id,op) ((op << 24)|shifted_id|(sc_nucleus_mux & 0xffff))
 #define __xn_mux_shifted_id(id) ((id << 16) & 0xff0000)
 
 #ifdef __KERNEL__
@@ -46,7 +46,7 @@
 #define __xn_reg_pc(regs)     ((regs)->nip)
 #define __xn_reg_sp(regs)     ((regs)->gpr[1])
 
-#define __xn_reg_mux_p(regs)        ((__xn_reg_mux(regs) & 0xffff) == __xn_sys_mux)
+#define __xn_reg_mux_p(regs)        ((__xn_reg_mux(regs) & 0xffff) == sc_nucleus_mux)
 #define __xn_mux_id(regs)           ((__xn_reg_mux(regs) >> 16) & 0xff)
 #define __xn_mux_op(regs)           ((__xn_reg_mux(regs) >> 24) & 0xff)
 
@@ -144,7 +144,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define XENOMAI_SYSCALL3(op,a1,a2,a3)       XENOMAI_DO_SYSCALL(3,0,op,a1,a2,a3)
 #define XENOMAI_SYSCALL4(op,a1,a2,a3,a4)    XENOMAI_DO_SYSCALL(4,0,op,a1,a2,a3,a4)
 #define XENOMAI_SYSCALL5(op,a1,a2,a3,a4,a5) XENOMAI_DO_SYSCALL(5,0,op,a1,a2,a3,a4,a5)
-#define XENOMAI_SYSBIND(a1,a2)              XENOMAI_DO_SYSCALL(2,0,__xn_sys_bind,a1,a2)
+#define XENOMAI_SYSBIND(a1,a2)              XENOMAI_DO_SYSCALL(2,0,sc_nucleus_bind,a1,a2)
 
 #define XENOMAI_SKINCALL0(id,op)                XENOMAI_DO_SYSCALL(0,id,op)
 #define XENOMAI_SKINCALL1(id,op,a1)             XENOMAI_DO_SYSCALL(1,id,op,a1)

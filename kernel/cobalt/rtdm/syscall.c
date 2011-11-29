@@ -135,15 +135,15 @@ static void *rtdm_skin_callback(int event, void *data)
 }
 
 static struct xnsysent __systab[] = {
-	SKINCALL_DEF(__rtdm_fdcount, sys_rtdm_fdcount, any),
-	SKINCALL_DEF(__rtdm_open, sys_rtdm_open, probing),
-	SKINCALL_DEF(__rtdm_socket, sys_rtdm_socket, probing),
-	SKINCALL_DEF(__rtdm_close, sys_rtdm_close, probing),
-	SKINCALL_DEF(__rtdm_ioctl, sys_rtdm_ioctl, probing),
-	SKINCALL_DEF(__rtdm_read, sys_rtdm_read, probing),
-	SKINCALL_DEF(__rtdm_write, sys_rtdm_write, probing),
-	SKINCALL_DEF(__rtdm_recvmsg, sys_rtdm_recvmsg, probing),
-	SKINCALL_DEF(__rtdm_sendmsg, sys_rtdm_sendmsg, probing),
+	SKINCALL_DEF(sc_rtdm_fdcount, sys_rtdm_fdcount, any),
+	SKINCALL_DEF(sc_rtdm_open, sys_rtdm_open, probing),
+	SKINCALL_DEF(sc_rtdm_socket, sys_rtdm_socket, probing),
+	SKINCALL_DEF(sc_rtdm_close, sys_rtdm_close, probing),
+	SKINCALL_DEF(sc_rtdm_ioctl, sys_rtdm_ioctl, probing),
+	SKINCALL_DEF(sc_rtdm_read, sys_rtdm_read, probing),
+	SKINCALL_DEF(sc_rtdm_write, sys_rtdm_write, probing),
+	SKINCALL_DEF(sc_rtdm_recvmsg, sys_rtdm_recvmsg, probing),
+	SKINCALL_DEF(sc_rtdm_sendmsg, sys_rtdm_sendmsg, probing),
 };
 
 static struct xnskin_props __props = {

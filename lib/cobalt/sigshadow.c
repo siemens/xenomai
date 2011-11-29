@@ -22,7 +22,7 @@ int xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt)
 	action = sigshadow_action(si->si_int);
 	switch(action) {
 	case SIGSHADOW_ACTION_HARDEN:
-		XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
+		XENOMAI_SYSCALL1(sc_nucleus_migrate, XENOMAI_XENO_DOMAIN);
 		break;
 
 	case SIGSHADOW_ACTION_RENICE: {
@@ -41,7 +41,7 @@ int xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt)
 		nr = backtrace(frames, sizeof(frames) / sizeof(frames[0]));
 		/* Skip the sighandler context. */
 		skip = nr > 3 ? 3 : 0;
-		XENOMAI_SYSCALL3(__xn_sys_backtrace, nr - skip, frames + skip, arg);
+		XENOMAI_SYSCALL3(sc_nucleus_backtrace, nr - skip, frames + skip, arg);
 		break;
 
 	default:

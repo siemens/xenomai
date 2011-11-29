@@ -33,7 +33,7 @@ int __wrap_sem_init(sem_t *sem, int pshared, unsigned value)
 	int err;
 
 	err = -XENOMAI_SKINCALL3(__cobalt_muxid,
-				 __cobalt_sem_init, _sem, pshared, value);
+				 sc_cobalt_sem_init, _sem, pshared, value);
 	if (!err)
 		return 0;
 
@@ -53,7 +53,7 @@ int __wrap_sem_destroy(sem_t *sem)
 		return -1;
 	}
 
-	err = -XENOMAI_SKINCALL1(__cobalt_muxid, __cobalt_sem_destroy, _sem);
+	err = -XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_sem_destroy, _sem);
 	if (err >= 0)
 		return err;
 
@@ -72,7 +72,7 @@ int __wrap_sem_post(sem_t *sem)
 		return -1;
 	}
 
-	err = -XENOMAI_SKINCALL1(__cobalt_muxid, __cobalt_sem_post, _sem);
+	err = -XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_sem_post, _sem);
 	if (!err)
 		return 0;
 
@@ -93,7 +93,7 @@ int __wrap_sem_wait(sem_t *sem)
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	err = -XENOMAI_SKINCALL1(__cobalt_muxid, __cobalt_sem_wait, _sem);
+	err = -XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_sem_wait, _sem);
 
 	pthread_setcanceltype(oldtype, NULL);
 
@@ -118,7 +118,7 @@ int __wrap_sem_timedwait(sem_t *sem, const struct timespec *ts)
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
 	err = -XENOMAI_SKINCALL2(__cobalt_muxid,
-				 __cobalt_sem_timedwait, _sem, ts);
+				 sc_cobalt_sem_timedwait, _sem, ts);
 
 	pthread_setcanceltype(oldtype, NULL);
 
@@ -140,7 +140,7 @@ int __wrap_sem_trywait(sem_t *sem)
 		return -1;
 	}
 
-	err = -XENOMAI_SKINCALL1(__cobalt_muxid, __cobalt_sem_trywait, _sem);
+	err = -XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_sem_trywait, _sem);
 	if (!err)
 		return 0;
 
@@ -160,7 +160,7 @@ int __wrap_sem_getvalue(sem_t *sem, int *sval)
 	}
 
 	err = -XENOMAI_SKINCALL2(__cobalt_muxid,
-				 __cobalt_sem_getvalue, _sem, sval);
+				 sc_cobalt_sem_getvalue, _sem, sval);
 	if (!err)
 		return 0;
 
@@ -191,7 +191,7 @@ sem_t *__wrap_sem_open(const char *name, int oflags, ...)
 	}
 
 	err = -XENOMAI_SKINCALL5(__cobalt_muxid,
-				 __cobalt_sem_open,
+				 sc_cobalt_sem_open,
 				 &rsem, name, oflags, mode, value);
 
 	if (!err) {
@@ -217,7 +217,7 @@ int __wrap_sem_close(sem_t *sem)
 	}
 
 	err = -XENOMAI_SKINCALL2(__cobalt_muxid,
-				 __cobalt_sem_close, _sem, &closed);
+				 sc_cobalt_sem_close, _sem, &closed);
 
 	if (!err) {
 		if (closed)
@@ -233,7 +233,7 @@ int __wrap_sem_unlink(const char *name)
 {
 	int err;
 
-	err = -XENOMAI_SKINCALL1(__cobalt_muxid, __cobalt_sem_unlink, name);
+	err = -XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_sem_unlink, name);
 
 	if (!err)
 		return 0;
@@ -248,7 +248,7 @@ int sem_init_np(sem_t *sem, int flags, unsigned int value)
 	int err;
 
 	err = -XENOMAI_SKINCALL3(__cobalt_muxid,
-				 __cobalt_sem_init_np, _sem, flags, value);
+				 sc_cobalt_sem_init_np, _sem, flags, value);
 	if (!err)
 		return 0;
 
@@ -268,7 +268,7 @@ int sem_broadcast_np(sem_t *sem)
 	}
 
 	err = -XENOMAI_SKINCALL1(__cobalt_muxid,
-				 __cobalt_sem_broadcast_np, _sem);
+				 sc_cobalt_sem_broadcast_np, _sem);
 	if (!err)
 		return 0;
 

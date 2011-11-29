@@ -82,7 +82,7 @@ xnhandle_t xeno_slow_get_current(void)
 	xnhandle_t current;
 	int err;
 
-	err = XENOMAI_SYSCALL1(__xn_sys_current, &current);
+	err = XENOMAI_SYSCALL1(sc_nucleus_current, &current);
 
 	return err ? XN_NO_HANDLE : current;
 }
@@ -92,7 +92,7 @@ void xeno_set_current(void)
 	xnhandle_t current;
 	int err;
 
-	err = XENOMAI_SYSCALL1(__xn_sys_current, &current);
+	err = XENOMAI_SYSCALL1(sc_nucleus_current, &current);
 	if (err) {
 		fprintf(stderr, "Xenomai: error obtaining handle for current "
 			"thread: %s\n", strerror(-err));
