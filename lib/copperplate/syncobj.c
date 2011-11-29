@@ -236,6 +236,12 @@ int syncobj_pend(struct syncobj *sobj, const struct timespec *timeout,
 	 * cancelability before pending on the condvar.
 	 */
 	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &state);
+	/*
+	 * Catch spurious unlocked calls: this must be a blatant bug
+	 * in the calling code, don't even try to continue
+	 * (syncobj_lock() required first).
+	 */
+	assert(state == PTHREAD_CANCEL_DISABLE);
 
 	do {
 		if (timeout)
@@ -335,6 +341,7 @@ int syncobj_wait_drain(struct syncobj *sobj, const struct timespec *timeout,
 	sobj->drain_count++;
 
 	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &state);
+	assert(state == PTHREAD_CANCEL_DISABLE);
 
 	if (current->wait_hook)
 		current->wait_hook(current, SYNCOBJ_BLOCK);
