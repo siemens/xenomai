@@ -36,6 +36,7 @@ struct coppernode __this_node = {
 	.no_mlock = 0,
 	.no_registry = 0,
 	.reset_session = 0,
+	.silent_mode = 0,
 };
 
 pthread_mutex_t __printlock;

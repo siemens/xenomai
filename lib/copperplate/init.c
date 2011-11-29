@@ -101,6 +101,13 @@ static const struct option base_options[] = {
 		.val = 0
 	},
 	{
+#define silent_opt	8
+		.name = "silent",
+		.has_arg = 0,
+		.flag = &__this_node.silent_mode,
+		.val = 1
+	},
+	{
 		.name = NULL,
 		.has_arg = 0,
 		.flag = NULL,
@@ -118,6 +125,7 @@ static void usage(void)
 	fprintf(stderr, "--session=<label>		label of shared multi-processing session\n");
 	fprintf(stderr, "--reset			remove any older session\n");
 	fprintf(stderr, "--cpu-affinity=<cpu[,cpu]...>	set CPU affinity of threads\n");
+	fprintf(stderr, "--silent			tame down verbosity\n");
 }
 
 static void do_cleanup(void)
@@ -220,6 +228,7 @@ void copperplate_init(int argc, char *const argv[])
 		case no_mlock_opt:
 		case no_registry_opt:
 		case reset_session_opt:
+		case silent_opt:
 			break;
 		case help_opt:
 			usage();
@@ -283,6 +292,19 @@ void copperplate_init(int argc, char *const argv[])
 		}
 	}
 
+#ifdef __XENO_DEBUG__
+	if (!__this_node.silent_mode) {
+		warning("Xenomai compiled with %s debug enabled,\n"
+			"                                     "
+			"%shigh latencies expected [--enable-debug=%s]",
+#ifdef __XENO_DEBUG_FULL__
+			"full", "very ", "full"
+#else
+			"partial", "", "partial"
+#endif
+			);
+	}
+#endif
 	optind = 0;
 
 	return;
