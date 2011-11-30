@@ -187,6 +187,11 @@ int __check_cancel_type(const char *locktype);
 
 #define barrier()	__asm__ __volatile__("": : :"memory")
 #define membar()	__sync_synchronize()
+#ifdef CONFIG_SMP
+#define smp_membar()	membar()
+#else
+#define smp_membar()	do { } while (0)
+#endif
 
 #define atomic_sub_fetch(v, n)	__sync_sub_and_fetch(&(v), n)
 #define atomic_add_fetch(v, n)	__sync_add_and_fetch(&(v), n)

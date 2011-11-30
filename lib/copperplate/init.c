@@ -62,7 +62,7 @@ static const struct option base_options[] = {
 #define no_mlock_opt	2
 		.name = "no-mlock",
 		.has_arg = 0,
-		.flag = &__this_node.no_mlock,
+		.flag = &__node_info.no_mlock,
 		.val = 1
 	},
 	{
@@ -76,7 +76,7 @@ static const struct option base_options[] = {
 #define no_registry_opt	4
 		.name = "no-registry",
 		.has_arg = 0,
-		.flag = &__this_node.no_registry,
+		.flag = &__node_info.no_registry,
 		.val = 1
 	},
 	{
@@ -90,7 +90,7 @@ static const struct option base_options[] = {
 #define reset_session_opt	6
 		.name = "reset-session",
 		.has_arg = 0,
-		.flag = &__this_node.reset_session,
+		.flag = &__node_info.reset_session,
 		.val = 1
 	},
 	{
@@ -104,7 +104,7 @@ static const struct option base_options[] = {
 #define silent_opt	8
 		.name = "silent",
 		.has_arg = 0,
-		.flag = &__this_node.silent_mode,
+		.flag = &__node_info.silent_mode,
 		.val = 1
 	},
 	{
@@ -130,7 +130,7 @@ static void usage(void)
 
 static void do_cleanup(void)
 {
-	if (!__this_node.no_registry)
+	if (!__node_info.no_registry)
 		registry_pkg_destroy();
 }
 
@@ -147,7 +147,7 @@ static int collect_cpu_affinity(const char *cpu_list)
 			warning("invalid CPU number '%d'", cpu);
 			return __bt(-EINVAL);
 		}
-		CPU_SET(cpu, &__this_node.cpu_affinity);
+		CPU_SET(cpu, &__node_info.cpu_affinity);
 		n = NULL;
 	}
 
@@ -159,11 +159,11 @@ static int collect_cpu_affinity(const char *cpu_list)
 	 * CPU affinity will be inherited by children threads, we only
 	 * have to set it here.
 	 *
-	 * NOTE: we don't clear __this_node.cpu_affinity on entry to this routine
-	 * to allow cumulative --cpu-affinity options to appear in the
-	 * command line arguments.
+	 * NOTE: we don't clear __node_info.cpu_affinity on entry to
+	 * this routine to allow cumulative --cpu-affinity options to
+	 * appear in the command line arguments.
 	 */
-	ret = sched_setaffinity(0, sizeof(__this_node.cpu_affinity), &__this_node.cpu_affinity);
+	ret = sched_setaffinity(0, sizeof(__node_info.cpu_affinity), &__node_info.cpu_affinity);
 	if (ret) {
 		warning("no valid CPU in affinity list '%s'", cpu_list);
 		return __bt(-ret);
@@ -180,13 +180,13 @@ void copperplate_init(int argc, char *const argv[])
 	__RT(clock_gettime(CLOCK_COPPERPLATE, &__init_date));
 
 	/* Our node id. is the tid of the main thread. */
-	__this_node.id = copperplate_get_tid();
+	__node_id = copperplate_get_tid();
 
 	/* No ifs, no buts: we must be called over the main thread. */
-	assert(getpid() == __this_node.id);
+	assert(getpid() == __node_id);
 
 	/* Set a reasonable default value for the registry mount point. */
-	ret = asprintf(&__this_node.registry_mountpt,
+	ret = asprintf(&__node_info.registry_mountpt,
 		       "/mnt/xenomai/%d", getpid());
 	if (ret < 0) {
 		ret = -ENOMEM;
@@ -194,7 +194,7 @@ void copperplate_init(int argc, char *const argv[])
 	}
 
 	/* Define default CPU affinity, i.e. no particular affinity. */
-	CPU_ZERO(&__this_node.cpu_affinity);
+	CPU_ZERO(&__node_info.cpu_affinity);
 	opterr = 0;
 
 	for (;;) {
@@ -205,17 +205,17 @@ void copperplate_init(int argc, char *const argv[])
 			continue;
 		switch (lindex) {
 		case mempool_opt:
-			__this_node.mem_pool = atoi(optarg) * 1024;
+			__node_info.mem_pool = atoi(optarg) * 1024;
 			break;
 		case mountpt_opt:
-			__this_node.registry_mountpt = strdup(optarg);
+			__node_info.registry_mountpt = strdup(optarg);
 			mkdir_mountpt = 0;
 #ifndef CONFIG_XENO_REGISTRY
 			warning("Xenomai compiled without registry support");
 #endif
 			break;
 		case session_opt:
-			__this_node.session_label = optarg;
+			__node_info.session_label = optarg;
 #ifndef CONFIG_XENO_PSHARED
 			warning("Xenomai compiled without shared multi-processing support");
 #endif
@@ -254,8 +254,8 @@ void copperplate_init(int argc, char *const argv[])
 		goto fail;
 	}
 
-	if (!__this_node.no_registry) {
-		ret = registry_pkg_init(argv[0], __this_node.registry_mountpt,
+	if (!__node_info.no_registry) {
+		ret = registry_pkg_init(argv[0], __node_info.registry_mountpt,
 					mkdir_mountpt);
 		if (ret)
 			goto fail;
@@ -269,7 +269,7 @@ void copperplate_init(int argc, char *const argv[])
 		goto fail;
 	}
 
-	if (!__this_node.no_mlock) {
+	if (!__node_info.no_mlock) {
 		ret = mlockall(MCL_CURRENT | MCL_FUTURE);
 		if (ret) {
 			ret = -errno;
@@ -293,7 +293,7 @@ void copperplate_init(int argc, char *const argv[])
 	}
 
 #ifdef __XENO_DEBUG__
-	if (!__this_node.silent_mode) {
+	if (!__node_info.silent_mode) {
 		warning("Xenomai compiled with %s debug enabled,\n"
 			"                                     "
 			"%shigh latencies expected [--enable-debug=%s]",

@@ -22,7 +22,6 @@
 
 #include <linux/types.h>
 #include <linux/err.h>
-#include <linux/jhash.h>
 #include <asm/xenomai/wrappers.h>
 #include <nucleus/ppd.h>
 #include <nucleus/sys_ppd.h>
@@ -37,28 +36,11 @@
 #include "sem.h"
 #include "shm.h"
 #include "timer.h"
+#include "monitor.h"
 #include <rtdm/rtdm_driver.h>
 #define RTDM_FD_MAX CONFIG_XENO_OPT_RTDM_FILDES
 
 int cobalt_muxid;
-
-#define PTHREAD_HSLOTS (1 << 8)	/* Must be a power of 2 */
-
-struct pthread_hash {
-	pthread_t k_tid;	/* Xenomai in-kernel (nucleus) tid */
-	pid_t h_tid;		/* Host (linux) tid */
-	struct cobalt_hkey hkey;
-	struct pthread_hash *next;
-};
-
-struct tid_hash {
-	pid_t tid;
-	struct tid_hash *next;
-};
-
-static struct pthread_hash *pthread_table[PTHREAD_HSLOTS];
-
-static struct tid_hash *tid_table[PTHREAD_HSLOTS];
 
 /*
  * We want to keep the native pthread_t token unmodified for Xenomai
@@ -77,135 +59,6 @@ static struct tid_hash *tid_table[PTHREAD_HSLOTS];
  * override their respective interfaces with Xenomai-based
  * replacements.
  */
-
-static inline
-struct pthread_hash *__pthread_hash(const struct cobalt_hkey *hkey,
-				    pthread_t k_tid,
-				    pid_t h_tid)
-{
-	struct pthread_hash **pthead, *ptslot;
-	struct tid_hash **tidhead, *tidslot;
-	u32 hash;
-	void *p;
-	spl_t s;
-
-	p = xnmalloc(sizeof(*ptslot) + sizeof(*tidslot));
-	if (p == NULL)
-		return NULL;
-
-	ptslot = p;
-	ptslot->hkey = *hkey;
-	ptslot->k_tid = k_tid;
-	ptslot->h_tid = h_tid;
-	hash = jhash2((u32 *)&ptslot->hkey,
-		      sizeof(ptslot->hkey) / sizeof(u32), 0);
-	pthead = &pthread_table[hash & (PTHREAD_HSLOTS - 1)];
-
-	tidslot = p + sizeof(*ptslot);
-	tidslot->tid = h_tid;
-	hash = jhash2((u32 *)&h_tid, sizeof(h_tid) / sizeof(u32), 0);
-	tidhead = &tid_table[hash & (PTHREAD_HSLOTS - 1)];
-
-	xnlock_get_irqsave(&nklock, s);
-	ptslot->next = *pthead;
-	*pthead = ptslot;
-	tidslot->next = *tidhead;
-	*tidhead = tidslot;
-	xnlock_put_irqrestore(&nklock, s);
-
-	return ptslot;
-}
-
-static inline void __pthread_unhash(const struct cobalt_hkey *hkey)
-{
-	struct pthread_hash **pttail, *ptslot;
-	struct tid_hash **tidtail, *tidslot;
-	pid_t h_tid;
-	u32 hash;
-	spl_t s;
-
-	hash = jhash2((u32 *) hkey, sizeof(*hkey) / sizeof(u32), 0);
-	pttail = &pthread_table[hash & (PTHREAD_HSLOTS - 1)];
-
-	xnlock_get_irqsave(&nklock, s);
-
-	ptslot = *pttail;
-	while (ptslot &&
-	       (ptslot->hkey.u_tid != hkey->u_tid ||
-		ptslot->hkey.mm != hkey->mm)) {
-		pttail = &ptslot->next;
-		ptslot = *pttail;
-	}
-
-	if (ptslot == NULL) {
-		xnlock_put_irqrestore(&nklock, s);
-		return;
-	}
-
-	*pttail = ptslot->next;
-	h_tid = ptslot->h_tid;
-	hash = jhash2((u32 *)&h_tid, sizeof(h_tid) / sizeof(u32), 0);
-	tidtail = &tid_table[hash & (PTHREAD_HSLOTS - 1)];
-	tidslot = *tidtail;
-	while (tidslot && tidslot->tid != h_tid) {
-		tidtail = &tidslot->next;
-		tidslot = *tidtail;
-	}
-	/* tidslot must be found here. */
-	XENO_BUGON(POSIX, !(tidslot && tidtail));
-	*tidtail = tidslot->next;
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	xnfree(ptslot);
-	xnfree(tidslot);
-}
-
-static pthread_t __pthread_find(const struct cobalt_hkey *hkey)
-{
-	struct pthread_hash *ptslot;
-	pthread_t k_tid;
-	u32 hash;
-	spl_t s;
-
-	hash = jhash2((u32 *) hkey, sizeof(*hkey) / sizeof(u32), 0);
-
-	xnlock_get_irqsave(&nklock, s);
-
-	ptslot = pthread_table[hash & (PTHREAD_HSLOTS - 1)];
-
-	while (ptslot != NULL &&
-	       (ptslot->hkey.u_tid != hkey->u_tid || ptslot->hkey.mm != hkey->mm))
-		ptslot = ptslot->next;
-
-	k_tid = ptslot ? ptslot->k_tid : NULL;
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	return k_tid;
-}
-
-static int __tid_probe(pid_t h_tid)
-{
-	struct tid_hash *tidslot;
-	u32 hash;
-	int ret;
-	spl_t s;
-
-	hash = jhash2((u32 *)&h_tid, sizeof(h_tid) / sizeof(u32), 0);
-
-	xnlock_get_irqsave(&nklock, s);
-
-	tidslot = tid_table[hash & (PTHREAD_HSLOTS - 1)];
-	while (tidslot && tidslot->tid != h_tid)
-		tidslot = tidslot->next;
-
-	ret = tidslot ? 0 : -ESRCH;
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	return ret;
-}
 
 static int __pthread_create(unsigned long tid, int policy,
 			    struct sched_param_ex __user *u_param,
@@ -248,7 +101,7 @@ static int __pthread_create(unsigned long tid, int policy,
 	if (ret)
 		goto fail;
 
-	if (!__pthread_hash(&hkey, k_tid, task_pid_vnr(p))) {
+	if (!cobalt_thread_hash(&hkey, k_tid, task_pid_vnr(p))) {
 		ret = -ENOMEM;
 		goto fail;
 	}
@@ -283,7 +136,7 @@ static pthread_t __pthread_shadow(struct task_struct *p,
 		return ERR_PTR(-err);
 
 	err = xnshadow_map(&k_tid->threadbase, NULL, u_mode_offset);
-	if (err == 0 && !__pthread_hash(hkey, k_tid, task_pid_vnr(p)))
+	if (err == 0 && !cobalt_thread_hash(hkey, k_tid, task_pid_vnr(p)))
 		err = -EAGAIN;
 
 	if (err)
@@ -310,7 +163,7 @@ static int __pthread_setschedparam(unsigned long tid,
 
 	hkey.u_tid = tid;
 	hkey.mm = current->mm;
-	k_tid = __pthread_find(&hkey);
+	k_tid = cobalt_thread_find(&hkey);
 
 	if (!k_tid && u_mode_offset) {
 		/*
@@ -356,7 +209,7 @@ static int __pthread_setschedparam_ex(unsigned long tid,
 
 	hkey.u_tid = tid;
 	hkey.mm = current->mm;
-	k_tid = __pthread_find(&hkey);
+	k_tid = cobalt_thread_find(&hkey);
 
 	if (!k_tid && u_mode_offset) {
 		k_tid = __pthread_shadow(current, &hkey, u_mode_offset);
@@ -388,7 +241,7 @@ static int __pthread_getschedparam(unsigned long tid,
 
 	hkey.u_tid = tid;
 	hkey.mm = current->mm;
-	k_tid = __pthread_find(&hkey);
+	k_tid = cobalt_thread_find(&hkey);
 
 	if (!k_tid)
 		return -ESRCH;
@@ -414,7 +267,7 @@ static int __pthread_getschedparam_ex(unsigned long tid,
 
 	hkey.u_tid = tid;
 	hkey.mm = current->mm;
-	k_tid = __pthread_find(&hkey);
+	k_tid = cobalt_thread_find(&hkey);
 
 	if (!k_tid)
 		return -ESRCH;
@@ -452,7 +305,7 @@ static int __pthread_make_periodic_np(unsigned long tid,
 
 	hkey.u_tid = tid;
 	hkey.mm = current->mm;
-	k_tid = __pthread_find(&hkey);
+	k_tid = cobalt_thread_find(&hkey);
 
 	if (__xn_safe_copy_from_user(&startt, u_startt, sizeof(startt)))
 		return -EFAULT;
@@ -506,14 +359,14 @@ static int __pthread_set_name_np(unsigned long tid,
 
 	hkey.u_tid = tid;
 	hkey.mm = current->mm;
-	k_tid = __pthread_find(&hkey);
+	k_tid = cobalt_thread_find(&hkey);
 
 	return -pthread_set_name_np(k_tid, name);
 }
 
 static int __pthread_probe_np(pid_t h_tid)
 {
-	return __tid_probe(h_tid);
+	return cobalt_thread_probe(h_tid);
 }
 
 static int __pthread_kill(unsigned long tid, int sig)
@@ -524,7 +377,7 @@ static int __pthread_kill(unsigned long tid, int sig)
 
 	hkey.u_tid = tid;
 	hkey.mm = current->mm;
-	k_tid = __pthread_find(&hkey);
+	k_tid = cobalt_thread_find(&hkey);
 
 	if (!k_tid)
 		return -ESRCH;
@@ -563,7 +416,7 @@ static int __pthread_stat(unsigned long tid,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	k_tid = __pthread_find(&hkey);
+	k_tid = cobalt_thread_find(&hkey);
 	if (k_tid == NULL) {
 		xnlock_put_irqrestore(&nklock, s);
 		return -ESRCH;
@@ -1893,6 +1746,11 @@ static struct xnsysent __systab[] = {
 	SKINCALL_DEF(sc_cobalt_select, __select, primary),
 	SKINCALL_DEF(sc_cobalt_sched_minprio, __sched_min_prio, any),
 	SKINCALL_DEF(sc_cobalt_sched_maxprio, __sched_max_prio, any),
+	SKINCALL_DEF(sc_cobalt_monitor_init, cobalt_monitor_init, any),
+	SKINCALL_DEF(sc_cobalt_monitor_destroy, cobalt_monitor_destroy, any),
+	SKINCALL_DEF(sc_cobalt_monitor_enter, cobalt_monitor_enter, primary),
+	SKINCALL_DEF(sc_cobalt_monitor_wait, cobalt_monitor_wait, nonrestartable),
+	SKINCALL_DEF(sc_cobalt_monitor_exit, cobalt_monitor_exit, nonrestartable),
 };
 
 static void __shadow_delete_hook(xnthread_t *thread)
@@ -1900,7 +1758,7 @@ static void __shadow_delete_hook(xnthread_t *thread)
 	if (xnthread_get_magic(thread) == COBALT_SKIN_MAGIC &&
 	    xnthread_test_state(thread, XNSHADOW)) {
 		pthread_t k_tid = thread2pthread(thread);
-		__pthread_unhash(&k_tid->hkey);
+		cobalt_thread_unhash(&k_tid->hkey);
 		if (xnthread_test_state(thread, XNMAPPED))
 			xnshadow_unmap(thread);
 	}
@@ -1924,6 +1782,7 @@ static void *cobalt_eventcb(int event, void *data)
 		initq(&q->kqueues.semq);
 		initq(&q->kqueues.threadq);
 		initq(&q->kqueues.timerq);
+		initq(&q->kqueues.monitorq);
 		cobalt_assocq_init(&q->uqds);
 		cobalt_assocq_init(&q->usems);
 #ifdef CONFIG_XENO_OPT_POSIX_SHM
@@ -1942,6 +1801,7 @@ static void *cobalt_eventcb(int event, void *data)
 #endif /* CONFIG_XENO_OPT_POSIX_SHM */
 		cobalt_sem_usems_cleanup(q);
 		cobalt_mq_uqds_cleanup(q);
+		cobalt_monitorq_cleanup(&q->kqueues);
 		cobalt_timerq_cleanup(&q->kqueues);
 		cobalt_semq_cleanup(&q->kqueues);
 		cobalt_mutexq_cleanup(&q->kqueues);

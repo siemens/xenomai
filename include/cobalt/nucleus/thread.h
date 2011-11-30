@@ -50,17 +50,18 @@
 #define XNRRB     0x00008000 /**< Undergoes a round-robin scheduling */
 #define XNASDI    0x00010000 /**< ASR are disabled */
 #define XNDEFCAN  0x00020000 /**< Deferred cancelability mode (self-set only) */
+#define XNGRANT   0x00040000 /**< Granted monitor-protected resource */
 
 /*
  * Some skins may depend on the following fields to live in the high
  * 16-bit word, in order to be combined with the emulated RTOS flags
  * which use the low one, so don't change them carelessly.
  */
-#define XNTRAPSW  0x00040000 /**< Trap execution mode switches */
-#define XNFPU     0x00080000 /**< Thread uses FPU */
-#define XNSHADOW  0x00100000 /**< Shadow thread */
-#define XNROOT    0x00200000 /**< Root thread (that is, Linux/IDLE) */
-#define XNOTHER   0x00400000 /**< Non real-time shadow (prio=0) */
+#define XNTRAPSW  0x00080000 /**< Trap execution mode switches */
+#define XNFPU     0x00100000 /**< Thread uses FPU */
+#define XNSHADOW  0x00200000 /**< Shadow thread */
+#define XNROOT    0x00400000 /**< Root thread (that is, Linux/IDLE) */
+#define XNOTHER   0x00800000 /**< Non real-time shadow (prio=0) */
 
 /*! @} */ /* Ends doxygen comment group: nucleus_state_flags */
 
@@ -81,7 +82,7 @@
   't' -> Mode switches trapped.
   'f' -> FPU enabled (for kernel threads).
 */
-#define XNTHREAD_STATE_LABELS  "SWDRU....X.HbTlr..tof.."
+#define XNTHREAD_STATE_LABELS  "SWDRU...X.HbTlr...tf..."
 
 #define XNTHREAD_BLOCK_BITS   (XNSUSP|XNPEND|XNDELAY|XNDORMANT|XNRELAX|XNMIGRATE|XNHELD)
 #define XNTHREAD_MODE_BITS    (XNLOCK|XNRRB|XNASDI|XNTRAPSW)

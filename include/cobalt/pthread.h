@@ -178,6 +178,22 @@ struct cobalt_threadstat {
 	unsigned long pf;
 };
 
+struct cobalt_monitor;
+struct cobalt_monitor_data;
+
+#define COBALT_MONITOR_SHARED     0x1
+#define COBALT_MONITOR_WAITGRANT  0x0
+#define COBALT_MONITOR_WAITDRAIN  0x1
+
+struct cobalt_monitor_shadow {
+	struct cobalt_monitor *monitor;
+	union {
+		struct cobalt_monitor_data *data;
+		unsigned int data_offset;
+	} u;
+	int flags;
+};
+
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 typedef struct cobalt_mutexattr pthread_mutexattr_t;
 
@@ -392,6 +408,8 @@ typedef struct {
 		struct sched_param_ex sched_param;
 	} nonstd;
 } pthread_attr_ex_t;
+
+typedef struct cobalt_monitor_shadow cobalt_monitor_t;
 
 #ifdef __cplusplus
 extern "C" {

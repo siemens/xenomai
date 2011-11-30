@@ -31,7 +31,8 @@
 #ifdef CONFIG_XENO_COBALT
 
 struct threadobj_corespec {
-	/* Nothing specific. */
+	xnhandle_t handle;
+	unsigned long *u_mode;
 };
 
 struct threadobj_stat {
@@ -57,6 +58,7 @@ struct threadobj_stat {
 #include <copperplate/notifier.h>
 
 struct threadobj_corespec {
+	pthread_cond_t grant_sync;
 	int prio_unlocked;
 	struct notifier notifier;
 	struct timespec wakeup;
@@ -125,7 +127,6 @@ struct threadobj {
 
 	/* Those members belong exclusively to the syncobj code. */
 	struct syncobj *wait_sobj;
-	pthread_cond_t wait_sync;
 	struct holder wait_link;
 	int wait_status;
 	int wait_prio;
@@ -183,8 +184,6 @@ int threadobj_cancel(struct threadobj *thobj);
 
 void threadobj_destroy(struct threadobj *thobj);
 
-void threadobj_finalize(void *p);
-
 int threadobj_suspend(struct threadobj *thobj);
 
 int threadobj_resume(struct threadobj *thobj);
@@ -219,14 +218,13 @@ int threadobj_stat(struct threadobj *thobj,
 
 #ifdef CONFIG_XENO_PSHARED
 
-int __threadobj_local_p(struct threadobj *thobj);
-
 static inline int threadobj_local_p(struct threadobj *thobj)
 {
-	return __threadobj_local_p(thobj);
+	extern pid_t __node_id;
+	return thobj->cnode == __node_id;
 }
 
-#else
+#else /* !CONFIG_XENO_PSHARED */
 
 static inline int threadobj_local_p(struct threadobj *thobj)
 {

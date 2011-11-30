@@ -1,45 +1,36 @@
 #ifndef XENO_COBALT_INTERNAL_H
 #define XENO_COBALT_INTERNAL_H
 
-#include <kernel/cobalt/mutex.h>
-#include <kernel/cobalt/cond.h>
+#include <pthread.h>
+#include <asm-generic/bits/current.h>
 
-static inline unsigned long *cond_get_signalsp(struct __shadow_cond *shadow)
-{
-	if (likely(!shadow->attr.pshared))
-		return shadow->pending_signals;
-
-	return (unsigned long *)(xeno_sem_heap[1]
-				 + shadow->pending_signals_offset);
-}
-
-static inline struct mutex_dat *
-cond_get_mutex_datp(struct __shadow_cond *shadow)
-{
-	if (shadow->mutex_datp == (struct mutex_dat *)~0UL)
-		return NULL;
-
-	if (likely(!shadow->attr.pshared))
-		return shadow->mutex_datp;
-
-	return (struct mutex_dat *)(xeno_sem_heap[1]
-				    + shadow->mutex_datp_offset);
-}
+struct cobalt_threadstat;
+struct cobalt_monitor_shadow;
 
 void __cobalt_thread_harden(void);
 
 int __cobalt_thread_stat(pthread_t tid,
 			 struct cobalt_threadstat *stat);
 
-int __cobalt_event_wait(pthread_cond_t *cond,
-			pthread_mutex_t *mutex);
+int cobalt_monitor_init(cobalt_monitor_t *mon, int flags);
 
-int __cobalt_event_timedwait(pthread_cond_t *cond,
-			     pthread_mutex_t *mutex,
-			     const struct timespec *abstime);
+int cobalt_monitor_destroy(cobalt_monitor_t *mon);
 
-int __cobalt_event_signal(pthread_cond_t *cond);
+int cobalt_monitor_enter(cobalt_monitor_t *mon);
 
-int __cobalt_event_broadcast(pthread_cond_t *cond);
+int cobalt_monitor_exit(cobalt_monitor_t *mon);
+
+int cobalt_monitor_wait(cobalt_monitor_t *mon, int event,
+			const struct timespec *ts);
+
+void cobalt_monitor_grant(cobalt_monitor_t *mon,
+			  unsigned long *u_mode);
+
+void cobalt_monitor_grant_all(cobalt_monitor_t *mon,
+			      unsigned long *u_mode);
+
+void cobalt_monitor_drain(cobalt_monitor_t *mon);
+
+void cobalt_monitor_drain_all(cobalt_monitor_t *mon);
 
 #endif /* XENO_COBALT_INTERNAL_H */

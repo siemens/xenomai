@@ -27,74 +27,82 @@ typedef unsigned long long cobalt_sigset_t;
 struct mm_struct;
 
 struct cobalt_hkey {
+	unsigned long u_tid;
+	struct mm_struct *mm;
+};
 
-    unsigned long u_tid;
-    struct mm_struct *mm;
+struct cobalt_hash {
+	pthread_t k_tid;	/* Xenomai in-kernel (nucleus) tid */
+	pid_t h_tid;		/* Host (linux) tid */
+	struct cobalt_hkey hkey;
+	struct cobalt_hash *next;
 };
 
 typedef struct {
-    cobalt_sigset_t mask;
-    xnpqueue_t list;
+	cobalt_sigset_t mask;
+	xnpqueue_t list;
 } cobalt_sigqueue_t;
 
 struct cobalt_thread {
-    unsigned magic;
-    xnthread_t threadbase;
+	unsigned magic;
+	xnthread_t threadbase;
 
 #define thread2pthread(taddr) ({                                        \
-    xnthread_t *_taddr = (taddr);                                       \
-    (_taddr                                                             \
-    ? ((xnthread_get_magic(_taddr) == COBALT_SKIN_MAGIC)                 \
-       ? ((pthread_t)(((char *)_taddr)- offsetof(struct cobalt_thread,   \
-						 threadbase)))          \
-       : NULL)                                                          \
-    : NULL);                                                            \
-})
+			xnthread_t *_taddr = (taddr);			\
+			(_taddr						\
+			 ? ((xnthread_get_magic(_taddr) == COBALT_SKIN_MAGIC) \
+			    ? ((pthread_t)(((char *)_taddr)- offsetof(struct cobalt_thread, \
+								      threadbase))) \
+			    : NULL)					\
+			 : NULL);					\
+		})
 
 
-   xnholder_t link;	/* Link in cobalt_threadq */
-   xnqueue_t *container;
+	xnholder_t link;	/* Link in cobalt_threadq */
+	xnqueue_t *container;
 
-#define link2pthread(laddr) \
-    ((pthread_t)(((char *)laddr) - offsetof(struct cobalt_thread, link)))
+#define link2pthread(laddr) container_of(laddr, struct cobalt_thread, link)
 
+	pthread_attr_t attr;        /* creation attributes */
 
-    pthread_attr_t attr;        /* creation attributes */
+	void *(*entry)(void *arg);  /* start routine */
+	void *arg;                  /* start routine argument */
 
-    void *(*entry)(void *arg);  /* start routine */
-    void *arg;                  /* start routine argument */
+	/* For pthread_join */
+	void *exit_status;
+	xnsynch_t join_synch;       /* synchronization object, used by other threads
+				       waiting for this one to finish. */
+	int nrt_joiners;
 
-    /* For pthread_join */
-    void *exit_status;
-    xnsynch_t join_synch;       /* synchronization object, used by other threads
-				   waiting for this one to finish. */
-    int nrt_joiners;
+	/* For pthread_cancel */
+	unsigned cancelstate : 2;
+	unsigned canceltype : 2;
+	unsigned cancel_request : 1;
+	xnqueue_t cleanup_handlers_q;
 
-    /* For pthread_cancel */
-    unsigned cancelstate : 2;
-    unsigned canceltype : 2;
-    unsigned cancel_request : 1;
-    xnqueue_t cleanup_handlers_q;
+	/* errno value for this thread. */
+	int err;
 
-    /* errno value for this thread. */
-    int err;
+	/* For signals handling. */
+	cobalt_sigset_t sigmask;     /* signals mask. */
+	cobalt_sigqueue_t pending;   /* Pending signals */
+	cobalt_sigqueue_t blocked_received; /* Blocked signals received. */
 
-    /* For signals handling. */
-    cobalt_sigset_t sigmask;     /* signals mask. */
-    cobalt_sigqueue_t pending;   /* Pending signals */
-    cobalt_sigqueue_t blocked_received; /* Blocked signals received. */
+	/* For thread specific data. */
+	const void *tsd [PTHREAD_KEYS_MAX];
 
-    /* For thread specific data. */
-    const void *tsd [PTHREAD_KEYS_MAX];
+	/* For timers. */
+	xnqueue_t timersq;
 
-    /* For timers. */
-    xnqueue_t timersq;
+	/* Cached value for current policy. */
+	int sched_policy;
 
-    /* Cached value for current policy. */
-    int sched_policy;
+	/* Monitor wait object and link holder. */
+	struct xnsynch monitor_synch;
+	struct xnholder monitor_link;
 
 #ifndef __XENO_SIM__
-    struct cobalt_hkey hkey;
+	struct cobalt_hkey hkey;
 #endif
 };
 
@@ -139,6 +147,16 @@ static inline int thread_get_errno (void)
 #define thread_settsd(thread, key, value) ((thread)->tsd[key]=(value))
 
 void cobalt_thread_abort(pthread_t thread, void *status);
+
+struct cobalt_hash *cobalt_thread_hash(const struct cobalt_hkey *hkey,
+				       pthread_t k_tid,
+				       pid_t h_tid);
+
+void cobalt_thread_unhash(const struct cobalt_hkey *hkey);
+
+pthread_t cobalt_thread_find(const struct cobalt_hkey *hkey);
+
+int cobalt_thread_probe(pid_t h_tid);
 
 static inline void thread_cancellation_point (xnthread_t *thread)
 {

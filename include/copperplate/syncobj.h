@@ -46,15 +46,29 @@ struct syncstate {
 	int state;
 };
 
+#ifdef CONFIG_XENO_COBALT
+
+struct syncobj_corespec {
+	cobalt_monitor_t monitor;
+};
+
+#else  /* CONFIG_XENO_MERCURY */
+
+struct syncobj_corespec {
+	pthread_mutex_t lock;
+	pthread_cond_t drain_sync;
+};
+
+#endif /* CONFIG_XENO_MERCURY */
+
 struct syncobj {
 	int flags;
 	int release_count;
-	pthread_mutex_t lock;
-	pthread_cond_t post_sync;
 	struct list pend_list;
 	int pend_count;
 	struct list drain_list;
 	int drain_count;
+	struct syncobj_corespec core;
 	fnref_type(void (*)(struct syncobj *sobj)) finalizer;
 };
 
@@ -83,17 +97,11 @@ struct threadobj *syncobj_peek_at_pend(struct syncobj *sobj);
 
 struct threadobj *syncobj_peek_at_drain(struct syncobj *sobj);
 
-static inline int syncobj_lock(struct syncobj *sobj,
-			       struct syncstate *syns)
-{
-	return write_lock_safe(&sobj->lock, syns->state);
-}
+int syncobj_lock(struct syncobj *sobj,
+		 struct syncstate *syns);
 
-static inline void syncobj_unlock(struct syncobj *sobj,
-				  struct syncstate *syns)
-{
-	write_unlock_safe(&sobj->lock, syns->state);
-}
+void syncobj_unlock(struct syncobj *sobj,
+		    struct syncstate *syns);
 
 int syncobj_wait_drain(struct syncobj *sobj,
 		       const struct timespec *timeout,

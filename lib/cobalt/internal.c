@@ -16,22 +16,21 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
+#include <sys/types.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include <string.h>
 #include <errno.h>
-#include <signal.h>
-#include <signal.h>
-#include <limits.h>
 #include <pthread.h>
-#include <sys/types.h>
-#include <semaphore.h>
 #include <nucleus/synch.h>
+#include <nucleus/thread.h>
 #include <cobalt/syscall.h>
+#include <kernel/cobalt/monitor.h>
 #include <asm-generic/bits/current.h>
 #include "internal.h"
 
 extern int __cobalt_muxid;
+
+extern unsigned long xeno_sem_heap[2];
 
 void __cobalt_thread_harden(void)
 {
@@ -44,99 +43,158 @@ void __cobalt_thread_harden(void)
 
 int __cobalt_thread_stat(pthread_t tid, struct cobalt_threadstat *stat)
 {
-	return -XENOMAI_SKINCALL2(__cobalt_muxid,
-				  sc_cobalt_thread_getstat, tid, stat);
+	return XENOMAI_SKINCALL2(__cobalt_muxid,
+				 sc_cobalt_thread_getstat, tid, stat);
 }
 
-int __cobalt_event_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
+static inline
+struct cobalt_monitor_data *get_monitor_data(cobalt_monitor_t *mon)
 {
-	struct __shadow_cond *_cnd;
-	struct __shadow_mutex *_mx;
-	int ret, _ret = 0, oldtype;
-	unsigned int count;
-
-	_cnd = &((union __xeno_cond *)cond)->shadow_cond;
-	_mx = &((union __xeno_mutex *)mutex)->shadow_mutex;
-	count = _mx->lockcnt;
-
-	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
-
-	ret = XENOMAI_SKINCALL5(__cobalt_muxid,
-				sc_cobalt_cond_wait_prologue,
-				_cnd, _mx, &_ret, 0, NULL);
-
-	pthread_setcanceltype(oldtype, NULL);
-
-	while (ret == -EINTR)
-		ret = XENOMAI_SKINCALL2(__cobalt_muxid,
-					sc_cobalt_cond_wait_epilogue, _cnd, _mx);
-	_mx->lockcnt = count;
-
-	return -ret ?: -_ret;
+	return mon->flags & COBALT_MONITOR_SHARED ?
+		(void *)xeno_sem_heap[1] + mon->u.data_offset :
+		mon->u.data;
 }
 
-int __cobalt_event_timedwait(pthread_cond_t *cond,
-			     pthread_mutex_t *mutex,
-			     const struct timespec *abstime)
+int cobalt_monitor_init(cobalt_monitor_t *mon, int flags)
 {
-	struct __shadow_cond *_cnd;
-	struct __shadow_mutex *_mx;
-	int ret, _ret = 0, oldtype;
-	unsigned int count;
+	struct cobalt_monitor_data *datp;
+	int ret;
 
-	_cnd = &((union __xeno_cond *)cond)->shadow_cond;
-	_mx = &((union __xeno_mutex *)mutex)->shadow_mutex;
-	count = _mx->lockcnt;
+	ret = XENOMAI_SKINCALL2(__cobalt_muxid,
+				sc_cobalt_monitor_init,
+				mon, flags);
+	if (ret)
+		return ret;
 
-	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
-
-	ret = XENOMAI_SKINCALL5(__cobalt_muxid,
-				sc_cobalt_cond_wait_prologue,
-				_cnd, _mx, &_ret, 1, abstime);
-
-	pthread_setcanceltype(oldtype, NULL);
-
-	while (ret == -EINTR)
-		ret = XENOMAI_SKINCALL2(__cobalt_muxid,
-					sc_cobalt_cond_wait_epilogue, _cnd, _mx);
-	_mx->lockcnt = count;
-
-	return -ret ?: -_ret;
-}
-
-int __cobalt_event_signal(pthread_cond_t *cond)
-{
-	struct __shadow_cond *_cnd = &((union __xeno_cond *)cond)->shadow_cond;
-	unsigned long pending_signals, *pending_signalsp;
-	struct mutex_dat *mutex_datp;
-
-	mutex_datp = cond_get_mutex_datp(_cnd);
-	if (mutex_datp == NULL)
-		return 0;
-
-	mutex_datp->flags |= COBALT_MUTEX_COND_SIGNAL;
-
-	pending_signalsp = cond_get_signalsp(_cnd);
-	pending_signals = *pending_signalsp;
-	if (pending_signals != ~0UL)
-		*pending_signalsp = pending_signals + 1;
+	if ((flags & COBALT_MONITOR_SHARED) == 0) {
+		datp = (void *)xeno_sem_heap[0] + mon->u.data_offset;
+		mon->u.data = datp;
+	}
 
 	return 0;
 }
 
-int __cobalt_event_broadcast(pthread_cond_t *cond)
+int cobalt_monitor_destroy(cobalt_monitor_t *mon)
 {
-	struct mutex_dat *mutex_datp;
-	struct __shadow_cond *_cnd;
+	return XENOMAI_SKINCALL1(__cobalt_muxid,
+				 sc_cobalt_monitor_destroy,
+				 mon);
+}
 
-	_cnd = &((union __xeno_cond *)cond)->shadow_cond;
+int cobalt_monitor_enter(cobalt_monitor_t *mon)
+{
+	struct cobalt_monitor_data *datp;
+	unsigned long status;
+	xnhandle_t cur;
+	int ret;
 
-	mutex_datp = cond_get_mutex_datp(_cnd);
-	if (mutex_datp == NULL)
+	/*
+	 * Assumptions on entry:
+	 *
+	 * - this is a Xenomai shadow (caller checked this).
+	 * - no recursive entry/locking.
+	 */
+
+	status = xeno_get_current_mode();
+	if (status & (XNRELAX|XNOTHER))
+		goto syscall;
+
+	datp = get_monitor_data(mon);
+	cur = xeno_get_current();
+	ret = xnsynch_fast_acquire(&datp->owner, cur);
+	if (ret == 0) {
+		datp->flags &= ~(COBALT_MONITOR_SIGNALED|COBALT_MONITOR_BROADCAST);
 		return 0;
+	}
+syscall:
+	/*
+	 * Jump to kernel to wait for entry. We redo in case of
+	 * interrupt.
+	 */
+	do
+		ret = XENOMAI_SKINCALL1(__cobalt_muxid,
+					sc_cobalt_monitor_enter,
+					mon);
+	while (ret == -EINTR);
 
-	mutex_datp->flags |= COBALT_MUTEX_COND_SIGNAL;
-	*cond_get_signalsp(_cnd) = ~0UL;
+	return ret;
+}
 
-	return 0;
+int cobalt_monitor_exit(cobalt_monitor_t *mon)
+{
+	struct cobalt_monitor_data *datp;
+	unsigned long status;
+	xnhandle_t cur;
+
+	xnarch_memory_barrier();
+
+	datp = get_monitor_data(mon);
+	if ((datp->flags & COBALT_MONITOR_PENDED) &&
+	    (datp->flags & COBALT_MONITOR_SIGNALED))
+		goto syscall;
+
+	status = xeno_get_current_mode();
+	if (status & XNOTHER)
+		goto syscall;
+
+	cur = xeno_get_current();
+	if (xnsynch_fast_release(&datp->owner, cur))
+		return 0;
+syscall:
+	return XENOMAI_SKINCALL1(__cobalt_muxid,
+				 sc_cobalt_monitor_exit,
+				 mon);
+}
+
+int cobalt_monitor_wait(cobalt_monitor_t *mon, int event,
+			const struct timespec *ts)
+{
+	int ret, opret, oldtype;
+
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+
+	ret = XENOMAI_SKINCALL4(__cobalt_muxid,
+				sc_cobalt_monitor_wait,
+				mon, event, ts, &opret);
+
+	pthread_setcanceltype(oldtype, NULL);
+
+	/*
+	 * If we got interrupted while trying to re-enter the monitor,
+	 * we need to redo. In the meantime, any pending linux signal
+	 * has been processed.
+	 */
+	if (ret == -EINTR)
+		ret = cobalt_monitor_enter(mon);
+
+	return ret ?: opret;
+}
+
+void cobalt_monitor_grant(cobalt_monitor_t *mon, unsigned long *u_mode)
+{
+	struct cobalt_monitor_data *datp = get_monitor_data(mon);
+
+	datp->flags |= COBALT_MONITOR_GRANTED;
+	*u_mode |= XNGRANT;
+}
+
+void cobalt_monitor_grant_all(cobalt_monitor_t *mon, unsigned long *u_mode)
+{
+	struct cobalt_monitor_data *datp = get_monitor_data(mon);
+
+	datp->flags |= COBALT_MONITOR_GRANTED|COBALT_MONITOR_BROADCAST;
+}
+
+void cobalt_monitor_drain(cobalt_monitor_t *mon)
+{
+	struct cobalt_monitor_data *datp = get_monitor_data(mon);
+
+	datp->flags |= COBALT_MONITOR_DRAINED;
+}
+
+void cobalt_monitor_drain_all(cobalt_monitor_t *mon)
+{
+	struct cobalt_monitor_data *datp = get_monitor_data(mon);
+
+	datp->flags |= COBALT_MONITOR_DRAINED|COBALT_MONITOR_BROADCAST;
 }

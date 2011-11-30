@@ -27,7 +27,6 @@
 #include <copperplate/list.h>
 
 struct coppernode {
-	pid_t id;
 	unsigned int mem_pool;
 	char *registry_mountpt;
 	const char *session_label;
@@ -39,7 +38,9 @@ struct coppernode {
 	int silent_mode;
 };
 
-extern struct coppernode __this_node;
+extern pid_t __node_id;
+
+extern struct coppernode __node_info;
 
 extern struct timespec __init_date;
 

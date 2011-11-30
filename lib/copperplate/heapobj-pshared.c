@@ -665,18 +665,18 @@ int pshared_check(void *__heap, void *__addr)
 int heapobj_init(struct heapobj *hobj, const char *name,
 		 size_t size, void *mem)
 {
-	int flags = __this_node.reset_session ? HOBJ_FORCE : 0;
+	int flags = __node_info.reset_session ? HOBJ_FORCE : 0;
 
-	return __bt(create_heap(hobj, __this_node.session_label, name,
+	return __bt(create_heap(hobj, __node_info.session_label, name,
 				size, flags));
 }
 
 int heapobj_init_shareable(struct heapobj *hobj, const char *name,
 			   size_t size)
 {
-	int flags = __this_node.reset_session ? HOBJ_FORCE : 0;
+	int flags = __node_info.reset_session ? HOBJ_FORCE : 0;
 
-	return __bt(create_heap(hobj, __this_node.session_label, name,
+	return __bt(create_heap(hobj, __node_info.session_label, name,
 				size, flags | HOBJ_SHAREABLE));
 }
 
@@ -804,7 +804,7 @@ int heapobj_pkg_init_shared(void)
 {
 	int ret;
 
-	ret = heapobj_init(&main_pool, "main", __this_node.mem_pool, NULL);
+	ret = heapobj_init(&main_pool, "main", __node_info.mem_pool, NULL);
 	if (ret == 0) {
 		__pshared_heap = main_pool.pool;
 		__pshared_catalog = &main_heap.catalog;
@@ -812,14 +812,14 @@ int heapobj_pkg_init_shared(void)
 	}
 
 	if (ret == -EEXIST) {
-		if (__this_node.reset_session)
+		if (__node_info.reset_session)
 			/* Init failed despite override. */
 			warning("active session %s is conflicting\n",
-				__this_node.session_label);
+				__node_info.session_label);
 		else
 			warning("non-matching session %s already exists,\n"
 				"pass --reset to override.",
-				__this_node.session_label);
+				__node_info.session_label);
 	}
 
 	return __bt(ret);

@@ -16,15 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
-#ifndef _COPPERPLATE_CORE_H
-#define _COPPERPLATE_CORE_H
+#ifndef _COBALT_CORE_H
+#define _COBALT_CORE_H
 
-#include <xeno_config.h>
-
-#ifdef CONFIG_XENO_COBALT
-#include <cobalt/core.h>
-#else
-#include <mercury/core.h>
-#endif  /* CONFIG_XENO_MERCURY */
-
-#endif /* _COPPERPLATE_CORE_H */
+#endif /* _COBALT_CORE_H */

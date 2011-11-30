@@ -280,6 +280,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 includesubdir = $(includedir)/cobalt
 includesub_HEADERS = \
+	core.h \
 	errno.h \
 	fcntl.h \
 	mqueue.h \

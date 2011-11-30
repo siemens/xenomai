@@ -104,6 +104,11 @@
 #define sc_cobalt_sem_init_np           80
 #define sc_cobalt_sem_broadcast_np      81
 #define sc_cobalt_thread_getstat        82
+#define sc_cobalt_monitor_init          83
+#define sc_cobalt_monitor_destroy       84
+#define sc_cobalt_monitor_enter         85
+#define sc_cobalt_monitor_wait          86
+#define sc_cobalt_monitor_exit          87
 
 #ifdef __KERNEL__
 

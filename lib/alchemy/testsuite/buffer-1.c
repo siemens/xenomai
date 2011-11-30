@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
 	ret = rt_buffer_create(&buffer, NULL, 2, B_FIFO);
 	traceobj_assert(&trobj, ret == 0);
 
-	ret = rt_task_shadow(NULL, "main", 30, 0);
+	ret = rt_task_shadow(NULL, "main_task", 30, 0);
 	traceobj_assert(&trobj, ret == 0);
 
 	ret = rt_task_create(&t_fgnd, "FGND", 0,  20, 0);

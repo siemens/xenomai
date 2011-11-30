@@ -21,6 +21,8 @@
 #include "copperplate/lock.h"
 #include "copperplate/threadobj.h"
 #include "copperplate/syncobj.h"
+#include "copperplate/debug.h"
+#include "internal.h"
 
 /*
  * XXX: The POSIX spec states that "Synchronization primitives that
@@ -39,16 +41,14 @@
  * time, and ignoring the FIFO queuing requirement may break the
  * application in case a fair attribution of the resource is
  * expected. Therefore, we must emulate FIFO ordering, and we do that
- * using an internal queue.
+ * using an internal queue. We also use this queue to implement the
+ * flush operation on synchronization objects which POSIX does not
+ * provide either.
  *
- * We also use this queue to implement the flush operation on
- * synchronization objects which POSIX does not provide either. Atomic
- * release is emulated by the sobj->lock mutex acting as a barrier for
- * all waiters, after their condition variable is signaled by the
- * flushing code, and until the latter releases this lock. We rely on
- * the scheduling priority as enforced by the kernel to fix the
- * release order whenever the lock is contended (i.e. we readied more
- * than a single waiter when flushing).
+ * The syncobj abstraction is based on a complex monitor object to
+ * wait for resources, either implemented natively by Cobalt or
+ * emulated via a mutex and two condition variables over Mercury (one
+ * of which being hosted by the thread object implementation).
  *
  * NOTE: we do no do error backtracing in this file, since error
  * returns when locking, pending or deleting sync objects express
@@ -59,50 +59,151 @@
 
 #include "cobalt/internal.h"
 
-static inline void signal_cond(pthread_cond_t *cond)
+static inline
+int monitor_enter(struct syncobj *sobj)
 {
-	__cobalt_event_signal(cond);
+	return cobalt_monitor_enter(&sobj->core.monitor);
 }
 
-static inline int wait_cond(pthread_cond_t *cond, pthread_mutex_t *mutex)
+static inline
+void monitor_exit(struct syncobj *sobj)
 {
-	return __cobalt_event_wait(cond, mutex);
+	int ret;
+	ret = cobalt_monitor_exit(&sobj->core.monitor);
+	assert(ret == 0);
 }
 
-static inline int timedwait_cond(pthread_cond_t *cond,
-				 pthread_mutex_t *mutex,
-				 const struct timespec *abstime)
+static inline
+int monitor_wait_grant(struct syncobj *sobj,
+		       struct threadobj *current,
+		       const struct timespec *timeout)
 {
-	return __cobalt_event_timedwait(cond, mutex, abstime);
+	return cobalt_monitor_wait(&sobj->core.monitor,
+				   COBALT_MONITOR_WAITGRANT,
+				   timeout);
 }
 
-static inline void broadcast_cond(pthread_cond_t *cond)
+static inline
+int monitor_wait_drain(struct syncobj *sobj, const struct timespec *timeout)
 {
-	__cobalt_event_broadcast(cond);
+	return cobalt_monitor_wait(&sobj->core.monitor,
+				   COBALT_MONITOR_WAITDRAIN,
+				   timeout);
+}
+
+static inline
+void monitor_grant(struct syncobj *sobj, struct threadobj *thobj)
+{
+	cobalt_monitor_grant(&sobj->core.monitor, thobj->core.u_mode);
+}
+
+static inline
+void monitor_drain(struct syncobj *sobj)
+{
+	cobalt_monitor_drain(&sobj->core.monitor);
+}
+
+static inline
+void monitor_drain_all(struct syncobj *sobj)
+{
+	cobalt_monitor_drain_all(&sobj->core.monitor);
+}
+
+static inline void syncobj_init_corespec(struct syncobj *sobj)
+{
+	int flags = monitor_scope_attribute;
+	assert(cobalt_monitor_init(&sobj->core.monitor, flags) == 0);
+}
+
+static inline void syncobj_cleanup_corespec(struct syncobj *sobj)
+{
+	assert(cobalt_monitor_destroy(&sobj->core.monitor) == 0);
 }
 
 #else /* CONFIG_XENO_MERCURY */
 
-static inline void signal_cond(pthread_cond_t *cond)
+static inline
+int monitor_enter(struct syncobj *sobj)
 {
-	pthread_cond_signal(cond);
+	return -pthread_mutex_lock(&sobj->core.lock);
 }
 
-static inline int wait_cond(pthread_cond_t *cond, pthread_mutex_t *mutex)
+static inline
+void monitor_exit(struct syncobj *sobj)
 {
-	return pthread_cond_wait(cond, mutex);
+	int ret;
+	ret = pthread_mutex_unlock(&sobj->core.lock);
+	assert(ret == 0);
 }
 
-static inline int timedwait_cond(pthread_cond_t *cond,
-				 pthread_mutex_t *mutex,
-				 const struct timespec *abstime)
+static inline
+int monitor_wait_grant(struct syncobj *sobj,
+		       struct threadobj *current,
+		       const struct timespec *timeout)
 {
-	return pthread_cond_timedwait(cond, mutex, abstime);
+	if (timeout)
+		return -pthread_cond_timedwait(&current->core.grant_sync,
+					       &sobj->core.lock, timeout);
+
+	return -pthread_cond_wait(&current->core.grant_sync, &sobj->core.lock);
 }
 
-static inline void broadcast_cond(pthread_cond_t *cond)
+static inline
+int monitor_wait_drain(struct syncobj *sobj, const struct timespec *timeout)
 {
-	pthread_cond_broadcast(cond);
+	if (timeout)
+		return -pthread_cond_timedwait(&sobj->core.drain_sync,
+					       &sobj->core.lock,
+					       timeout);
+
+	return -pthread_cond_wait(&sobj->core.drain_sync, &sobj->core.lock);
+}
+
+static inline
+void monitor_grant(struct syncobj *sobj, struct threadobj *thobj)
+{
+	pthread_cond_signal(&thobj->core.grant_sync);
+}
+
+static inline
+void monitor_drain(struct syncobj *sobj)
+{
+	pthread_cond_signal(&sobj->core.drain_sync);
+}
+
+static inline
+void monitor_drain_all(struct syncobj *sobj)
+{
+	pthread_cond_broadcast(&sobj->core.drain_sync);
+}
+
+/*
+ * Over Mercury, we implement a complex monitor via a mutex and a
+ * couple of condvars, one in the syncobj and the other owned by the
+ * thread object.
+ */
+static inline void syncobj_init_corespec(struct syncobj *sobj)
+{
+	pthread_mutexattr_t mattr;
+	pthread_condattr_t cattr;
+
+	pthread_mutexattr_init(&mattr);
+	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
+	assert(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute) == 0);
+	pthread_mutex_init(&sobj->core.lock, &mattr);
+	pthread_mutexattr_destroy(&mattr);
+
+	pthread_condattr_init(&cattr);
+	pthread_condattr_setpshared(&cattr, mutex_scope_attribute);
+	pthread_condattr_setclock(&cattr, CLOCK_COPPERPLATE);
+	pthread_cond_init(&sobj->core.drain_sync, &cattr);
+	pthread_condattr_destroy(&cattr);
+}
+
+static inline void syncobj_cleanup_corespec(struct syncobj *sobj)
+{
+	pthread_cond_destroy(&sobj->core.drain_sync);
+	pthread_mutex_destroy(&sobj->core.lock);
 }
 
 #endif	/* CONFIG_XENO_MERCURY */
@@ -110,9 +211,6 @@ static inline void broadcast_cond(pthread_cond_t *cond)
 void syncobj_init(struct syncobj *sobj, int flags,
 		  fnref_type(void (*)(struct syncobj *sobj)) finalizer)
 {
-	pthread_mutexattr_t mattr;
-	pthread_condattr_t cattr;
-
 	sobj->flags = flags;
 	list_init(&sobj->pend_list);
 	list_init(&sobj->drain_list);
@@ -120,18 +218,32 @@ void syncobj_init(struct syncobj *sobj, int flags,
 	sobj->drain_count = 0;
 	sobj->release_count = 0;
 	sobj->finalizer = finalizer;
+	syncobj_init_corespec(sobj);
+}
 
-	__RT(pthread_mutexattr_init(&mattr));
-	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
-	assert(__RT(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute)) == 0);
-	__RT(pthread_mutex_init(&sobj->lock, &mattr));
-	__RT(pthread_mutexattr_destroy(&mattr));
+int syncobj_lock(struct syncobj *sobj, struct syncstate *syns)
+{
+	int ret, oldstate;
 
-	__RT(pthread_condattr_init(&cattr));
-	__RT(pthread_condattr_setpshared(&cattr, mutex_scope_attribute));
-	__RT(pthread_condattr_setclock(&cattr, CLOCK_COPPERPLATE));
-	__RT(pthread_cond_init(&sobj->post_sync, &cattr));
-	__RT(pthread_condattr_destroy(&cattr));
+	assert(threadobj_current() != NULL);
+
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &oldstate);
+
+	ret = monitor_enter(sobj);
+	if (ret) {
+		pthread_setcancelstate(oldstate, NULL);
+		return ret;
+	}
+
+	syns->state = oldstate;
+
+	return 0;
+}
+
+void syncobj_unlock(struct syncobj *sobj, struct syncstate *syns)
+{
+	monitor_exit(sobj);
+	pthread_setcancelstate(syns->state, NULL);
 }
 
 static void syncobj_test_finalize(struct syncobj *sobj,
@@ -141,11 +253,10 @@ static void syncobj_test_finalize(struct syncobj *sobj,
 	int relcount;
 
 	relcount = --sobj->release_count;
-	__RT(pthread_mutex_unlock(&sobj->lock));
+	monitor_exit(sobj);
 
 	if (relcount == 0) {
-		__RT(pthread_cond_destroy(&sobj->post_sync));
-		__RT(pthread_mutex_destroy(&sobj->lock));
+		syncobj_cleanup_corespec(sobj);
 		fnref_get(finalizer, sobj->finalizer);
 		if (finalizer)
 			finalizer(sobj);
@@ -154,10 +265,9 @@ static void syncobj_test_finalize(struct syncobj *sobj,
 
 	/*
 	 * Cancelability reset is postponed until here, so that we
-	 * can't be wiped off before the object is fully finalized,
-	 * albeit we did unlock the object earlier to allow
-	 * deletion. This is why we don't use the all-in-one
-	 * write_unlock_safe() call.
+	 * can't be wiped off asynchronously before the object is
+	 * fully finalized, albeit we exited the monitor earlier to
+	 * allow deletion.
 	 */
 	pthread_setcancelstate(syns->state, NULL);
 }
@@ -185,7 +295,7 @@ int __syncobj_signal_drain(struct syncobj *sobj)
 {
 	/* Release one thread waiting for the object to drain. */
 	--sobj->drain_count;
-	signal_cond(&sobj->post_sync);
+	monitor_drain(sobj);
 
 	return 1;
 }
@@ -199,8 +309,7 @@ int __syncobj_signal_drain(struct syncobj *sobj)
  * when appropriate, since we have enough internal information to
  * handle this situation.
  */
-void __syncobj_cleanup_wait(struct syncobj *sobj,
-			    struct threadobj *thobj)
+void __syncobj_cleanup_wait(struct syncobj *sobj, struct threadobj *thobj)
 {
 	/*
 	 * We don't care about resetting the original cancel type
@@ -211,7 +320,7 @@ void __syncobj_cleanup_wait(struct syncobj *sobj,
 	if (thobj->wait_status & SYNCOBJ_DRAINING)
 		sobj->drain_count--;
 
-	__RT(pthread_mutex_unlock(&sobj->lock));
+	monitor_exit(sobj);
 }
 
 int syncobj_pend(struct syncobj *sobj, const struct timespec *timeout,
@@ -243,11 +352,7 @@ int syncobj_pend(struct syncobj *sobj, const struct timespec *timeout,
 	assert(state == PTHREAD_CANCEL_DISABLE);
 
 	do {
-		if (timeout)
-			ret = timedwait_cond(&current->wait_sync,
-					     &sobj->lock, timeout);
-		else
-			ret = wait_cond(&current->wait_sync, &sobj->lock);
+		ret = monitor_wait_grant(sobj, current, timeout);
 		/* Check for spurious wake up. */
 	} while (ret == 0 && current->wait_sobj);
 
@@ -261,15 +366,15 @@ int syncobj_pend(struct syncobj *sobj, const struct timespec *timeout,
 		list_remove(&current->wait_link);
 	} else if (current->wait_status & SYNCOBJ_DELETED) {
 		syncobj_test_finalize(sobj, syns);
-		ret = EIDRM;
+		ret = -EIDRM;
 	} else if (current->wait_status & SYNCOBJ_RELEASE_MASK) {
 		--sobj->release_count;
 		assert(sobj->release_count >= 0);
 		if (current->wait_status & SYNCOBJ_FLUSHED)
-			ret = EINTR;
+			ret = -EINTR;
 	}
 
-	return -ret;
+	return ret;
 }
 
 void syncobj_requeue_waiter(struct syncobj *sobj, struct threadobj *thobj)
@@ -283,7 +388,7 @@ void syncobj_wakeup_waiter(struct syncobj *sobj, struct threadobj *thobj)
 	list_remove(&thobj->wait_link);
 	thobj->wait_sobj = NULL;
 	sobj->pend_count--;
-	signal_cond(&thobj->wait_sync);
+	monitor_grant(sobj, thobj);
 }
 
 struct threadobj *syncobj_post(struct syncobj *sobj)
@@ -296,7 +401,7 @@ struct threadobj *syncobj_post(struct syncobj *sobj)
 	thobj = list_pop_entry(&sobj->pend_list, struct threadobj, wait_link);
 	thobj->wait_sobj = NULL;
 	sobj->pend_count--;
-	signal_cond(&thobj->wait_sync);
+	monitor_grant(sobj, thobj);
 
 	return thobj;
 }
@@ -331,6 +436,8 @@ int syncobj_wait_drain(struct syncobj *sobj, const struct timespec *timeout,
 	struct threadobj *current = threadobj_current();
 	int ret, state;
 
+	assert(current != NULL);
+
 	/*
 	 * XXX: syncobj_wait_drain() behaves slightly differently than
 	 * syncobj_pend(), in that we don't process spurious wakeups
@@ -363,11 +470,7 @@ int syncobj_wait_drain(struct syncobj *sobj, const struct timespec *timeout,
 	 * XXX: The caller must check for spurious wakeups, in case
 	 * the drain condition became false again before it resumes.
 	 */
-	if (timeout)
-		ret = timedwait_cond(&sobj->post_sync,
-				     &sobj->lock, timeout);
-	else
-		ret = wait_cond(&sobj->post_sync, &sobj->lock);
+	ret = monitor_wait_drain(sobj, timeout);
 
 	pthread_setcancelstate(state, NULL);
 
@@ -382,15 +485,15 @@ int syncobj_wait_drain(struct syncobj *sobj, const struct timespec *timeout,
 
 	if (current->wait_status & SYNCOBJ_DELETED) {
 		syncobj_test_finalize(sobj, syns);
-		ret = EIDRM;
+		ret = -EIDRM;
 	} else if (current->wait_status & SYNCOBJ_RELEASE_MASK) {
 		--sobj->release_count;
 		assert(sobj->release_count >= 0);
 		if (current->wait_status & SYNCOBJ_FLUSHED)
-			ret = EINTR;
+			ret = -EINTR;
 	}
 
-	return -ret;
+	return ret;
 }
 
 int syncobj_flush(struct syncobj *sobj, int reason)
@@ -405,7 +508,7 @@ int syncobj_flush(struct syncobj *sobj, int reason)
 				       struct threadobj, wait_link);
 		thobj->wait_status |= reason;
 		thobj->wait_sobj = NULL;
-		signal_cond(&thobj->wait_sync);
+		monitor_grant(sobj, thobj);
 		sobj->release_count++;
 	}
 	sobj->pend_count = 0;
@@ -419,7 +522,7 @@ int syncobj_flush(struct syncobj *sobj, int reason)
 		} while (!list_empty(&sobj->drain_list));
 		sobj->release_count += sobj->drain_count;
 		sobj->drain_count = 0;
-		broadcast_cond(&sobj->post_sync);
+		monitor_drain_all(sobj);
 	}
 
 	return sobj->release_count;
@@ -443,6 +546,5 @@ int syncobj_destroy(struct syncobj *sobj, struct syncstate *syns)
 void syncobj_uninit(struct syncobj *sobj)
 {
 	assert(sobj->release_count == 0);
-	__RT(pthread_cond_destroy(&sobj->post_sync));
-	__RT(pthread_mutex_destroy(&sobj->lock));
+	syncobj_cleanup_corespec(sobj);
 }

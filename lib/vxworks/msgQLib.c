@@ -216,7 +216,7 @@ retry:
 	ret = syncobj_pend(&mq->sobj, timespec, &syns);
 	if (ret == -EIDRM) {
 		errno = S_objLib_OBJ_DELETED;
-		goto done;
+		goto out;
 	}
 	if (ret == -ETIMEDOUT) {
 		errno = S_objLib_OBJ_TIMEOUT;
@@ -228,7 +228,7 @@ retry:
 	syncobj_signal_drain(&mq->sobj);
 done:
 	syncobj_unlock(&mq->sobj, &syns);
-
+out:
 	if (wait)
 		threadobj_finish_wait();
 

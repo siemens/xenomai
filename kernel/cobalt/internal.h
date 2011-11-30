@@ -59,13 +59,14 @@
 
 #define cobalt_mark_deleted(t) ((t)->magic = ~(t)->magic)
 
-typedef struct {
+typedef struct cobalt_kqueues {
 	xnqueue_t condq;
 	xnqueue_t intrq;
 	xnqueue_t mutexq;
 	xnqueue_t semq;
 	xnqueue_t threadq;
 	xnqueue_t timerq;
+	xnqueue_t monitorq;
 } cobalt_kqueues_t;
 
 #ifndef __XENO_SIM__

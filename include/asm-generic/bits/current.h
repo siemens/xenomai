@@ -7,8 +7,6 @@
 extern pthread_key_t xeno_current_mode_key;
 
 xnhandle_t xeno_slow_get_current(void);
-unsigned long xeno_slow_get_current_mode(void);
-void xeno_current_warn_old(void);
 
 #ifdef HAVE___THREAD
 extern __thread __attribute__ ((tls_model ("initial-exec")))
@@ -28,12 +26,15 @@ static inline unsigned long xeno_get_current_mode(void)
 	return xeno_current_mode ? *xeno_current_mode : XNRELAX;
 }
 
+static inline unsigned long *xeno_get_current_mode_ptr(void)
+{
+	return xeno_current ? xeno_current_mode : NULL;
+}
+
 #else /* ! HAVE___THREAD */
 extern pthread_key_t xeno_current_key;
 
 xnhandle_t xeno_slow_get_current(void);
-
-unsigned long xeno_slow_get_current_mode(void);
 
 static inline xnhandle_t xeno_get_current(void)
 {
@@ -57,6 +58,11 @@ static inline unsigned long xeno_get_current_mode(void)
 	mode = pthread_getspecific(xeno_current_mode_key);
 
 	return mode ? *mode : XNRELAX;
+}
+
+static inline unsigned long *xeno_get_current_mode_ptr(void)
+{
+	return pthread_getspecific(xeno_current_mode_key);
 }
 
 #endif /* ! HAVE___THREAD */

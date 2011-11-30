@@ -149,7 +149,7 @@ static int cluster_probe(struct hashobj *hobj)
 	struct clusterobj *cobj;
 
 	cobj = container_of(hobj, struct clusterobj, hobj);
-	if (cobj->cnode == __this_node.id)
+	if (cobj->cnode == __node_id)
 		return 1; /* Trivial check: is it ours? */
 
 	return copperplate_probe_node(cobj->cnode);
@@ -158,7 +158,7 @@ static int cluster_probe(struct hashobj *hobj)
 int cluster_addobj(struct cluster *c, const char *name,
 		   struct clusterobj *cobj)
 {
-	cobj->cnode = __this_node.id;
+	cobj->cnode = __node_id;
 	/*
 	 * Add object to cluster and probe conflicting entries for
 	 * owner node existence, overwriting dead instances on the
@@ -171,7 +171,7 @@ int cluster_addobj(struct cluster *c, const char *name,
 int cluster_addobj_dup(struct cluster *c, const char *name,
 		       struct clusterobj *cobj)
 {
-	cobj->cnode = __this_node.id;
+	cobj->cnode = __node_id;
 	/*
 	 * Same as cluster_addobj(), but allows for duplicate keys in
 	 * live objects.

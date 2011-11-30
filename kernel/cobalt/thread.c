@@ -28,6 +28,8 @@
  *
  *@{*/
 
+#include <linux/types.h>
+#include <linux/jhash.h>
 #include "thread.h"
 #include "cancel.h"
 #include "timer.h"
@@ -47,6 +49,145 @@ static struct xnthread_operations cobalt_thread_ops = {
 	.get_magic = &cobalt_get_magic,
 };
 
+#define PTHREAD_HSLOTS (1 << 8)	/* Must be a power of 2 */
+
+struct tid_hash {
+	pid_t tid;
+	struct tid_hash *next;
+};
+
+static struct cobalt_hash *pthread_table[PTHREAD_HSLOTS];
+
+static struct tid_hash *tid_table[PTHREAD_HSLOTS];
+
+struct cobalt_hash *cobalt_thread_hash(const struct cobalt_hkey *hkey,
+				       pthread_t k_tid,
+				       pid_t h_tid)
+{
+	struct cobalt_hash **pthead, *ptslot;
+	struct tid_hash **tidhead, *tidslot;
+	u32 hash;
+	void *p;
+	spl_t s;
+
+	p = xnmalloc(sizeof(*ptslot) + sizeof(*tidslot));
+	if (p == NULL)
+		return NULL;
+
+	ptslot = p;
+	ptslot->hkey = *hkey;
+	ptslot->k_tid = k_tid;
+	ptslot->h_tid = h_tid;
+	hash = jhash2((u32 *)&ptslot->hkey,
+		      sizeof(ptslot->hkey) / sizeof(u32), 0);
+	pthead = &pthread_table[hash & (PTHREAD_HSLOTS - 1)];
+
+	tidslot = p + sizeof(*ptslot);
+	tidslot->tid = h_tid;
+	hash = jhash2((u32 *)&h_tid, sizeof(h_tid) / sizeof(u32), 0);
+	tidhead = &tid_table[hash & (PTHREAD_HSLOTS - 1)];
+
+	xnlock_get_irqsave(&nklock, s);
+	ptslot->next = *pthead;
+	*pthead = ptslot;
+	tidslot->next = *tidhead;
+	*tidhead = tidslot;
+	xnlock_put_irqrestore(&nklock, s);
+
+	return ptslot;
+}
+
+void cobalt_thread_unhash(const struct cobalt_hkey *hkey)
+{
+	struct cobalt_hash **pttail, *ptslot;
+	struct tid_hash **tidtail, *tidslot;
+	pid_t h_tid;
+	u32 hash;
+	spl_t s;
+
+	hash = jhash2((u32 *) hkey, sizeof(*hkey) / sizeof(u32), 0);
+	pttail = &pthread_table[hash & (PTHREAD_HSLOTS - 1)];
+
+	xnlock_get_irqsave(&nklock, s);
+
+	ptslot = *pttail;
+	while (ptslot &&
+	       (ptslot->hkey.u_tid != hkey->u_tid ||
+		ptslot->hkey.mm != hkey->mm)) {
+		pttail = &ptslot->next;
+		ptslot = *pttail;
+	}
+
+	if (ptslot == NULL) {
+		xnlock_put_irqrestore(&nklock, s);
+		return;
+	}
+
+	*pttail = ptslot->next;
+	h_tid = ptslot->h_tid;
+	hash = jhash2((u32 *)&h_tid, sizeof(h_tid) / sizeof(u32), 0);
+	tidtail = &tid_table[hash & (PTHREAD_HSLOTS - 1)];
+	tidslot = *tidtail;
+	while (tidslot && tidslot->tid != h_tid) {
+		tidtail = &tidslot->next;
+		tidslot = *tidtail;
+	}
+	/* tidslot must be found here. */
+	XENO_BUGON(POSIX, !(tidslot && tidtail));
+	*tidtail = tidslot->next;
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	xnfree(ptslot);
+	xnfree(tidslot);
+}
+
+pthread_t cobalt_thread_find(const struct cobalt_hkey *hkey)
+{
+	struct cobalt_hash *ptslot;
+	pthread_t k_tid;
+	u32 hash;
+	spl_t s;
+
+	hash = jhash2((u32 *) hkey, sizeof(*hkey) / sizeof(u32), 0);
+
+	xnlock_get_irqsave(&nklock, s);
+
+	ptslot = pthread_table[hash & (PTHREAD_HSLOTS - 1)];
+
+	while (ptslot != NULL &&
+	       (ptslot->hkey.u_tid != hkey->u_tid || ptslot->hkey.mm != hkey->mm))
+		ptslot = ptslot->next;
+
+	k_tid = ptslot ? ptslot->k_tid : NULL;
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return k_tid;
+}
+
+int cobalt_thread_probe(pid_t h_tid)
+{
+	struct tid_hash *tidslot;
+	u32 hash;
+	int ret;
+	spl_t s;
+
+	hash = jhash2((u32 *)&h_tid, sizeof(h_tid) / sizeof(u32), 0);
+
+	xnlock_get_irqsave(&nklock, s);
+
+	tidslot = tid_table[hash & (PTHREAD_HSLOTS - 1)];
+	while (tidslot && tidslot->tid != h_tid)
+		tidslot = tidslot->next;
+
+	ret = tidslot ? 0 : -ESRCH;
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return ret;
+}
+
 static void thread_destroy(pthread_t thread)
 {
 	removeq(thread->container, &thread->link);
@@ -54,6 +195,7 @@ static void thread_destroy(pthread_t thread)
 	   called from cobalt_thread_pkg_cleanup, hence the absence of
 	   xnpod_schedule(). */
 	xnsynch_destroy(&thread->join_synch);
+	xnsynch_destroy(&thread->monitor_synch);
 	xnheap_schedule_free(&kheap, thread, &thread->link);
 }
 
@@ -210,7 +352,7 @@ int pthread_create(pthread_t *tid,
 		flags |= XNFPU;
 
 	if (!start)
-		flags |= XNSHADOW;	/* Note: no interrupt shield. */
+		flags |= XNSHADOW;
 
 	iattr.name = name;
 	iattr.flags = flags;
@@ -232,6 +374,8 @@ int pthread_create(pthread_t *tid,
 	thread->entry = start;
 	thread->arg = arg;
 	xnsynch_init(&thread->join_synch, XNSYNCH_PRIO, NULL);
+	xnsynch_init(&thread->monitor_synch, XNSYNCH_FIFO, NULL);
+	inith(&thread->monitor_link);
 	thread->nrt_joiners = 0;
 	thread->sched_policy = thread->attr.policy;
 

@@ -30,7 +30,7 @@
 #include <copperplate/threadobj.h>
 #include "internal.h"
 
-struct coppernode __this_node = {
+struct coppernode __node_info = {
 	.mem_pool = 1024 * 1024, /* Default, 1Mb. */
 	.session_label = "anon",
 	.no_mlock = 0,
@@ -38,6 +38,8 @@ struct coppernode __this_node = {
 	.reset_session = 0,
 	.silent_mode = 0,
 };
+
+pid_t __node_id;
 
 pthread_mutex_t __printlock;
 
@@ -60,8 +62,8 @@ int copperplate_probe_node(unsigned int id)
 	 * may be used in time-critical contexts. However, since the
 	 * nucleus has to know about a probed thread to find out
 	 * whether it exists, copperplate_init() must always be
-	 * invoked from a real-time shadow, so that __this_node.id can
-	 * be matched.
+	 * invoked from a real-time shadow, so that __node_id can be
+	 * matched.
 	 */
 	return pthread_probe_np((pid_t)id) == 0;
 }

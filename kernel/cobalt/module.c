@@ -61,6 +61,7 @@
 #include "mq.h"
 #include "timer.h"
 #include "registry.h"
+#include "monitor.h"
 #include "shm.h"
 
 MODULE_DESCRIPTION("POSIX/COBALT interface");
@@ -74,6 +75,7 @@ static void cobalt_shutdown(int xtype)
 	cobalt_shm_pkg_cleanup();
 #endif /* CONFIG_XENO_OPT_POSIX_SHM */
 	cobalt_timer_pkg_cleanup();
+	cobalt_monitor_pkg_cleanup();
 	cobalt_mq_pkg_cleanup();
 	cobalt_cond_pkg_cleanup();
 	cobalt_tsd_pkg_cleanup();
@@ -126,6 +128,7 @@ int SKIN_INIT(posix)
 	cobalt_tsd_pkg_init();
 	cobalt_cond_pkg_init();
 	cobalt_mq_pkg_init();
+	cobalt_monitor_pkg_init();
 #ifdef CONFIG_XENO_OPT_POSIX_INTR
 	cobalt_intr_pkg_init();
 #endif /* CONFIG_XENO_OPT_POSIX_INTR */

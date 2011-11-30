@@ -41,6 +41,8 @@ union copperplate_wait_union {
 	struct syncluster_wait_struct syncluster_wait;
 };
 
+static void threadobj_finalize(void *p);
+
 /*
  * NOTE on cancellation handling: Most traditional RTOSes guarantee
  * that the task/thread delete operation is strictly synchronous,
@@ -79,16 +81,22 @@ static inline void pkg_init_corespec(void)
 {
 }
 
-static inline void thread_setup_corespec(struct threadobj *thobj)
+static inline void threadobj_init_corespec(struct threadobj *thobj)
+{
+}
+
+static inline void threadobj_setup_corespec(struct threadobj *thobj)
 {
 	pthread_set_name_np(pthread_self(), thobj->name);
+	thobj->core.handle = xeno_get_current();
+	thobj->core.u_mode = xeno_get_current_mode_ptr();
 }
 
-static inline void thread_cleanup_corespec(struct threadobj *thobj)
+static inline void threadobj_cleanup_corespec(struct threadobj *thobj)
 {
 }
 
-static inline void thread_run_corespec(struct threadobj *thobj)
+static inline void threadobj_run_corespec(struct threadobj *thobj)
 {
 	__cobalt_thread_harden();
 }
@@ -459,19 +467,34 @@ static void notifier_callback(const struct notifier *nf)
 		notifier_wait(nf); /* Wait for threadobj_resume(). */
 }
 
-static inline void thread_setup_corespec(struct threadobj *thobj)
+static inline void threadobj_init_corespec(struct threadobj *thobj)
+{
+	pthread_condattr_t cattr;
+	/*
+	 * Over Mercury, we need an additional per-thread condvar to
+	 * implement the complex monitor for the syncobj abstraction.
+	 */
+	pthread_condattr_init(&cattr);
+	pthread_condattr_setpshared(&cattr, mutex_scope_attribute);
+	pthread_condattr_setclock(&cattr, CLOCK_COPPERPLATE);
+	pthread_cond_init(&thobj->core.grant_sync, &cattr);
+	pthread_condattr_destroy(&cattr);
+}
+
+static inline void threadobj_setup_corespec(struct threadobj *thobj)
 {
 	prctl(PR_SET_NAME, (unsigned long)thobj->name, 0, 0, 0);
 	notifier_init(&thobj->core.notifier, notifier_callback, 1);
 	thobj->core.period = 0;
 }
 
-static inline void thread_cleanup_corespec(struct threadobj *thobj)
+static inline void threadobj_cleanup_corespec(struct threadobj *thobj)
 {
 	notifier_destroy(&thobj->core.notifier);
+	pthread_cond_destroy(&thobj->core.grant_sync);
 }
 
-static inline void thread_run_corespec(struct threadobj *thobj)
+static inline void threadobj_run_corespec(struct threadobj *thobj)
 {
 }
 
@@ -496,9 +519,9 @@ int threadobj_cancel(struct threadobj *thobj)
 	tid = thobj->tid;
 	threadobj_unlock(thobj);
 
-	__RT(pthread_cancel(tid));
+	pthread_cancel(tid);
 
-	return __bt(-__RT(pthread_join(tid, NULL)));
+	return __bt(-pthread_join(tid, NULL));
 }
 
 int threadobj_suspend(struct threadobj *thobj) /* thobj->lock held */
@@ -532,7 +555,7 @@ int threadobj_lock_sched(struct threadobj *thobj)
 	if (thobj->schedlock_depth++ > 0)
 		return 0;
 
-	ret = __RT(pthread_getschedparam(tid, &policy, &param));
+	ret = pthread_getschedparam(tid, &policy, &param);
 	if (ret)
 		return __bt(-ret);
 
@@ -541,7 +564,7 @@ int threadobj_lock_sched(struct threadobj *thobj)
 	thobj->priority = threadobj_lock_prio;
 	param.sched_priority = threadobj_lock_prio;
 
-	return __bt(-__RT(pthread_setschedparam(tid, SCHED_RT, &param)));
+	return __bt(-pthread_setschedparam(tid, SCHED_RT, &param));
 }
 
 int threadobj_unlock_sched(struct threadobj *thobj)
@@ -563,7 +586,7 @@ int threadobj_unlock_sched(struct threadobj *thobj)
 	param.sched_priority = thobj->core.prio_unlocked;
 	policy = param.sched_priority ? SCHED_RT : SCHED_OTHER;
 	threadobj_unlock(thobj);
-	ret = __RT(pthread_setschedparam(tid, policy, &param));
+	ret = pthread_setschedparam(tid, policy, &param);
 	threadobj_lock(thobj);
 
 	return __bt(-ret);
@@ -593,7 +616,7 @@ int threadobj_set_priority(struct threadobj *thobj, int prio)
 	thobj->priority = prio;
 	param.sched_priority = prio;
 	policy = prio ? SCHED_RT : SCHED_OTHER;
-	ret = __RT(pthread_setschedparam(tid, policy, &param));
+	ret = pthread_setschedparam(tid, policy, &param);
 	threadobj_lock(thobj);
 
 	return __bt(-ret);
@@ -627,7 +650,7 @@ static void roundrobin_handler(int sig)
 	 * multiple time slices system-wide.
 	 */
 	if (current && (current->status & THREADOBJ_ROUNDROBIN))
-		__RT(sched_yield());
+		sched_yield();
 }
 
 static inline void set_rr(struct threadobj *thobj, struct timespec *quantum)
@@ -730,7 +753,7 @@ int threadobj_set_periodic(struct threadobj *thobj,
 {
 	struct timespec now, wakeup;
 
-	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
+	clock_gettime(CLOCK_COPPERPLATE, &now);
 
 	if (idate->tv_sec || idate->tv_nsec) {
 		if (timespec_before(idate, &now))
@@ -763,7 +786,7 @@ int threadobj_wait_period(struct threadobj *thobj,
 
 	/* Check whether we had an overrun. */
 
-	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
+	clock_gettime(CLOCK_COPPERPLATE, &now);
 
 	timespec_sub(&delta, &now, &wakeup);
 	d = timespec_scalar(&delta);
@@ -830,18 +853,11 @@ void threadobj_init(struct threadobj *thobj,
 	thobj->priority = idata->priority;
 	holder_init(&thobj->wait_link);
 	thobj->suspend_hook = idata->suspend_hook;
-	thobj->cnode = __this_node.id;
+	thobj->cnode = __node_id;
 	/*
 	 * CAUTION: wait_union and wait_size have been set in
-	 * __threadobj_alloc().
+	 * __threadobj_alloc(), do not overwrite.
 	 */
-
-	__RT(pthread_condattr_init(&cattr));
-	__RT(pthread_condattr_setpshared(&cattr, mutex_scope_attribute));
-	__RT(pthread_condattr_setclock(&cattr, CLOCK_COPPERPLATE));
-	__RT(pthread_cond_init(&thobj->wait_sync, &cattr));
-	__RT(pthread_cond_init(&thobj->barrier, &cattr));
-	__RT(pthread_condattr_destroy(&cattr));
 
 	__RT(pthread_mutexattr_init(&mattr));
 	__RT(pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE));
@@ -849,6 +865,14 @@ void threadobj_init(struct threadobj *thobj,
 	__RT(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute));
 	__RT(pthread_mutex_init(&thobj->lock, &mattr));
 	__RT(pthread_mutexattr_destroy(&mattr));
+
+	__RT(pthread_condattr_init(&cattr));
+	__RT(pthread_condattr_setpshared(&cattr, mutex_scope_attribute));
+	__RT(pthread_condattr_setclock(&cattr, CLOCK_COPPERPLATE));
+	__RT(pthread_cond_init(&thobj->barrier, &cattr));
+	__RT(pthread_condattr_destroy(&cattr));
+
+	threadobj_init_corespec(thobj);
 }
 
 void threadobj_start(struct threadobj *thobj)	/* thobj->lock held. */
@@ -904,11 +928,27 @@ void threadobj_wait_start(struct threadobj *thobj) /* thobj->lock free. */
 /* thobj->lock free, cancellation disabled. */
 int threadobj_prologue(struct threadobj *thobj, const char *name)
 {
-	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+	struct threadobj *current = threadobj_current();
+
+	/*
+	 * Check whether we overlay the default main TCB we set in
+	 * main_overlay(), releasing it if so.
+	 */
+	if (current) {
+		/*
+		 * CAUTION: we may not overlay non-default TCB. The
+		 * upper API should catch this issue before we get
+		 * called.
+		 */
+		assert(current->magic == 0);
+		threadobj_finalize(current);
+		threadobj_free(current);
+	} else
+		pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
 
 	thobj->name = name;
 	backtrace_init_context(&thobj->btd, name);
-	thread_setup_corespec(thobj);
+	threadobj_setup_corespec(thobj);
 
 	write_lock_nocancel(&list_lock);
 	pvlist_append(&thobj->thread_link, &thread_list);
@@ -928,7 +968,7 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 #ifdef CONFIG_XENO_ASYNC_CANCEL
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 #endif
-	thread_run_corespec(thobj);
+	threadobj_run_corespec(thobj);
 
 	return 0;
 }
@@ -949,7 +989,7 @@ static void cancel_sync(struct threadobj *thobj) /* thobj->lock held */
 	}
 }
 
-void threadobj_finalize(void *p) /* thobj->lock free */
+static void threadobj_finalize(void *p) /* thobj->lock free */
 {
 	struct threadobj *thobj = p;
 
@@ -957,6 +997,7 @@ void threadobj_finalize(void *p) /* thobj->lock free */
 		return;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+	pthread_setspecific(threadobj_tskey, p);
 
 	if (thobj->wait_sobj)
 		__syncobj_cleanup_wait(thobj->wait_sobj, thobj);
@@ -964,8 +1005,6 @@ void threadobj_finalize(void *p) /* thobj->lock free */
 	write_lock_nocancel(&list_lock);
 	pvlist_remove(&thobj->thread_link);
 	write_unlock(&list_lock);
-
-	thread_cleanup_corespec(thobj);
 
 	if (thobj->tracer)
 		traceobj_unwind(thobj->tracer);
@@ -975,13 +1014,15 @@ void threadobj_finalize(void *p) /* thobj->lock free */
 
 	if (thobj->finalizer)
 		thobj->finalizer(thobj);
+
+	pthread_setspecific(threadobj_tskey, NULL);
 }
 
 void threadobj_destroy(struct threadobj *thobj) /* thobj->lock free */
 {
 	__RT(pthread_cond_destroy(&thobj->barrier));
-	__RT(pthread_cond_destroy(&thobj->wait_sync));
 	__RT(pthread_mutex_destroy(&thobj->lock));
+	threadobj_cleanup_corespec(thobj);
 }
 
 int threadobj_unblock(struct threadobj *thobj) /* thobj->lock held */
@@ -1010,15 +1051,6 @@ void threadobj_spin(ticks_t ns)
 		cpu_relax();
 }
 
-#ifdef CONFIG_XENO_PSHARED
-
-int __threadobj_local_p(struct threadobj *thobj)
-{
-	return thobj->cnode == __this_node.id;
-}
-
-#endif	/* CONFIG_XENO_PSHARED */
-
 #ifdef __XENO_DEBUG__
 
 int __check_cancel_type(const char *locktype)
@@ -1036,16 +1068,43 @@ int __check_cancel_type(const char *locktype)
 
 #endif
 
+static inline void main_overlay(void)
+{
+	struct threadobj_init_data idata;
+	struct threadobj *tcb;
+
+	/*
+	 * Make the main() context a basic yet complete thread object,
+	 * so that it may use any services which require the caller to
+	 * have a Copperplate TCB (e.g. all blocking services).
+	 */
+	tcb = __threadobj_alloc(sizeof(*tcb),
+				sizeof(union copperplate_wait_union),
+				0);
+	if (tcb == NULL)
+		panic("failed to allocate main tcb");
+
+	idata.magic = 0x0;
+	idata.wait_hook = NULL;
+	idata.suspend_hook = NULL;
+	idata.finalizer = NULL;
+	idata.priority = 0;
+	threadobj_init(tcb, &idata);
+	threadobj_prologue(tcb, "main");
+	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+}
+
 void threadobj_pkg_init(void)
 {
 	threadobj_irq_prio = __RT(sched_get_priority_max(SCHED_RT));
 	threadobj_high_prio = threadobj_irq_prio - 1;
 
-	/* PI and recursion would be overkill. */
 	__RT(pthread_mutex_init(&list_lock, NULL));
 
 	if (pthread_key_create(&threadobj_tskey, threadobj_finalize) != 0)
 		panic("failed to allocate TSD key");
 
 	pkg_init_corespec();
+
+	main_overlay();
 }

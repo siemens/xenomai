@@ -147,11 +147,12 @@ static void task_finalizer(struct threadobj *thobj)
 	 * so we do have to use syncobj_destroy() for them (i.e. NOT
 	 * syncobj_uninit()).
 	 */
-	syncobj_lock(&tcb->sobj_safe, &syns);
+	__bt(syncobj_lock(&tcb->sobj_safe, &syns));
 	syncobj_destroy(&tcb->sobj_safe, &syns);
-	syncobj_lock(&tcb->sobj_msg, &syns);
+	__bt(syncobj_lock(&tcb->sobj_msg, &syns));
 	syncobj_destroy(&tcb->sobj_msg, &syns);
 	threadobj_destroy(&tcb->thobj);
+	backtrace_dump(&thobj->btd);
 
 	threadobj_free(tcb);
 }
@@ -388,11 +389,21 @@ out:
 
 int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 {
+	struct threadobj *current = threadobj_current();
 	struct alchemy_task *tcb;
 	struct service svc;
 	int ret;
 
 	COPPERPLATE_PROTECT(svc);
+
+	/*
+	 * This is ok to overlay the default TCB for the main thread
+	 * assigned by Copperplate at init, but it is not to
+	 * over-shadow a Xenomai thread. A valid TCB pointer with a
+	 * zero magic identifies the default main TCB.
+	 */
+	if (current && threadobj_get_magic(current))
+		return -EBUSY;
 
 	ret = create_tcb(&tcb, task, name, prio, mode);
 	if (ret)
@@ -711,24 +722,15 @@ ssize_t rt_task_send_timed(RT_TASK *task,
 
 	COPPERPLATE_PROTECT(svc);
 
-	tcb = get_alchemy_task(task, &err);
+	tcb = find_alchemy_task(task, &err);
 	if (tcb == NULL) {
 		ret = err;
 		goto out;
 	}
 
-	/*
-	 * If we grabbed a lock on the remote task successfully, then
-	 * locking its message sync can't fail. While we hold this
-	 * lock, the remote can't destroy its message sync either, so
-	 * we should be safe.
-	 *
-	 * Deadlock prevention: locking order is task lock, then sync
-	 * lock, always (or sync lock only in the receiver).
-	 */
-	syncobj_lock(&tcb->sobj_msg, &syns);
-
-	put_alchemy_task(tcb);
+	ret = syncobj_lock(&tcb->sobj_msg, &syns);
+	if (ret)
+		goto out;
 
 	if (alchemy_poll_mode(abs_timeout)) {
 		if (!syncobj_drain_count(&tcb->sobj_msg)) {
@@ -796,7 +798,7 @@ int rt_task_receive_timed(RT_TASK_MCB *mcb_r,
 
 	COPPERPLATE_PROTECT(svc);
 
-	syncobj_lock(&current->sobj_msg, &syns);
+	__bt(syncobj_lock(&current->sobj_msg, &syns));
 
 	while (!syncobj_pended_p(&current->sobj_msg)) {
 		if (alchemy_poll_mode(abs_timeout)) {
@@ -851,7 +853,7 @@ int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
 
 	COPPERPLATE_PROTECT(svc);
 
-	syncobj_lock(&current->sobj_msg, &syns);
+	__bt(syncobj_lock(&current->sobj_msg, &syns));
 
 	ret = -ENXIO;
 	if (!syncobj_pended_p(&current->sobj_msg))
