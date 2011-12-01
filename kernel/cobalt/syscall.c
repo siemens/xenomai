@@ -69,6 +69,7 @@ static int __pthread_create(unsigned long tid, int policy,
 	struct cobalt_hkey hkey;
 	pthread_attr_t attr;
 	pthread_t k_tid;
+	pid_t h_tid;
 	int ret;
 
 	if (__xn_safe_copy_from_user(&param, u_param, sizeof(param)))
@@ -97,11 +98,12 @@ static int __pthread_create(unsigned long tid, int policy,
 	if (ret)
 		return -ret;
 
+	h_tid = task_pid_vnr(p);
 	ret = xnshadow_map(&k_tid->threadbase, NULL, u_mode);
 	if (ret)
 		goto fail;
 
-	if (!cobalt_thread_hash(&hkey, k_tid, task_pid_vnr(p))) {
+	if (!cobalt_thread_hash(&hkey, k_tid, h_tid)) {
 		ret = -ENOMEM;
 		goto fail;
 	}
@@ -124,6 +126,7 @@ static pthread_t __pthread_shadow(struct task_struct *p,
 {
 	pthread_attr_t attr;
 	pthread_t k_tid;
+	pid_t h_tid;
 	int err;
 
 	pthread_attr_init(&attr);
@@ -135,8 +138,14 @@ static pthread_t __pthread_shadow(struct task_struct *p,
 	if (err)
 		return ERR_PTR(-err);
 
+	h_tid = task_pid_vnr(p);
 	err = xnshadow_map(&k_tid->threadbase, NULL, u_mode_offset);
-	if (err == 0 && !cobalt_thread_hash(hkey, k_tid, task_pid_vnr(p)))
+	/*
+	 * From now on, we run in primary mode, so we refrain from
+	 * calling regular kernel services (e.g. like
+	 * task_pid_vnr()).
+	 */
+	if (err == 0 && !cobalt_thread_hash(hkey, k_tid, h_tid))
 		err = -EAGAIN;
 
 	if (err)
