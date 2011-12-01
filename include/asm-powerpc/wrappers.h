@@ -92,6 +92,7 @@ typedef irq_handler_t rthal_irq_host_handler_t;
 			rthal_irq_handlerp(irq)->mask(irq);		\
 		__err__;						\
 	})
+
 #endif
 
 #define rthal_irq_chip_end(irq)						\

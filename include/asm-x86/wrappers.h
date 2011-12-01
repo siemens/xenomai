@@ -27,6 +27,10 @@
 
 #include <asm-generic/xenomai/wrappers.h> /* Read the generic portion. */
 #include <linux/interrupt.h>
+#include <linux/version.h>
+
+#define __get_user_inatomic __get_user
+#define __put_user_inatomic __put_user
 
 #ifdef CONFIG_X86_32
 
@@ -52,11 +56,15 @@
 
 #define rthal_irq_desc_status(irq)	(rthal_irq_descp(irq)->status)
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)
+
 #define rthal_irq_chip_enable(irq)			\
 	({ rthal_irq_descp(irq)->chip->unmask(irq); 0; })
 
 #define rthal_irq_chip_disable(irq)			\
 	({ rthal_irq_descp(irq)->chip->mask(irq); 0; })
+
+#endif
 
 #define rthal_irq_chip_end(irq)				\
 	({ rthal_irq_descp(irq)->ipipe_end(irq, rthal_irq_descp(irq)); 0; })
