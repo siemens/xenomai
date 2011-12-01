@@ -88,7 +88,12 @@ struct pt_regs;
 
 struct xnsysent {
 
-	int (*svc)(u_long arg, ...);
+	/*
+	 * CAUTION: no varargs, we want the calling convention for
+	 * regular functions to apply.
+	 */
+	int (*svc)(u_long arg1, u_long arg2, u_long arg3,
+		   u_long arg4, u_long arg5);
 
 /* Syscall must run into the Linux domain. */
 #define __xn_exec_lostage    0x1
@@ -126,7 +131,7 @@ struct xnsysent {
 	unsigned long flags;
 };
 
-#define __syscast__(fn)	((int (*)(u_long, ...))(fn))
+#define __syscast__(fn)	((int (*)(u_long, u_long, u_long, u_long, u_long))(fn))
 
 #define SKINCALL_DEF(nr, fn, fl)	\
 	[nr] = { .svc = __syscast__(fn), .flags = __xn_exec_##fl }
