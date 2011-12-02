@@ -180,11 +180,17 @@ void cobalt_monitor_grant(cobalt_monitor_t *mon, unsigned long *u_mode)
 
 int cobalt_monitor_grant_sync(cobalt_monitor_t *mon, unsigned long *u_mode)
 {
+	int ret;
+
 	cobalt_monitor_grant(mon, u_mode);
 
-	return XENOMAI_SKINCALL1(__cobalt_muxid,
-				 sc_cobalt_monitor_sync,
-				 mon);
+	ret = XENOMAI_SKINCALL1(__cobalt_muxid,
+				sc_cobalt_monitor_sync,
+				mon);
+	if (ret)
+		return cobalt_monitor_enter(mon);
+
+	return 0;
 }
 
 void cobalt_monitor_grant_all(cobalt_monitor_t *mon, unsigned long *u_mode)
@@ -196,11 +202,17 @@ void cobalt_monitor_grant_all(cobalt_monitor_t *mon, unsigned long *u_mode)
 
 int cobalt_monitor_grant_all_sync(cobalt_monitor_t *mon, unsigned long *u_mode)
 {
+	int ret;
+
 	cobalt_monitor_grant_all(mon, u_mode);
 
-	return XENOMAI_SKINCALL1(__cobalt_muxid,
-				 sc_cobalt_monitor_sync,
-				 mon);
+	ret = XENOMAI_SKINCALL1(__cobalt_muxid,
+				sc_cobalt_monitor_sync,
+				mon);
+	if (ret)
+		return cobalt_monitor_enter(mon);
+
+	return 0;
 }
 
 void cobalt_monitor_drain(cobalt_monitor_t *mon)
@@ -212,11 +224,17 @@ void cobalt_monitor_drain(cobalt_monitor_t *mon)
 
 int cobalt_monitor_drain_sync(cobalt_monitor_t *mon)
 {
+	int ret;
+
 	cobalt_monitor_drain(mon);
 
-	return XENOMAI_SKINCALL1(__cobalt_muxid,
-				 sc_cobalt_monitor_sync,
-				 mon);
+	ret = XENOMAI_SKINCALL1(__cobalt_muxid,
+				sc_cobalt_monitor_sync,
+				mon);
+	if (ret)
+		return cobalt_monitor_enter(mon);
+
+	return 0;
 }
 
 void cobalt_monitor_drain_all(cobalt_monitor_t *mon)
@@ -228,9 +246,15 @@ void cobalt_monitor_drain_all(cobalt_monitor_t *mon)
 
 int cobalt_monitor_drain_all_sync(cobalt_monitor_t *mon)
 {
+	int ret;
+
 	cobalt_monitor_drain_all(mon);
 
-	return XENOMAI_SKINCALL1(__cobalt_muxid,
-				 sc_cobalt_monitor_sync,
-				 mon);
+	ret = XENOMAI_SKINCALL1(__cobalt_muxid,
+				sc_cobalt_monitor_sync,
+				mon);
+	if (ret)
+		return cobalt_monitor_enter(mon);
+
+	return 0;
 }
