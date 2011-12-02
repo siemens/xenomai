@@ -57,8 +57,6 @@ static void threadobj_finalize(void *p);
  * returning from threadobj_cancel().
  */
 
-pthread_key_t threadobj_tskey;
-
 int threadobj_high_prio;
 
 int threadobj_irq_prio;
@@ -72,6 +70,27 @@ static int global_rr;
 static struct timespec global_quantum;
 
 static void cancel_sync(struct threadobj *thobj);
+
+#ifdef HAVE___THREAD
+
+__thread __attribute__ ((tls_model ("initial-exec")))
+struct threadobj *__threadobj_current;
+
+static inline void threadobj_init_key(void)
+{
+}
+
+#else /* !HAVE____THREAD */
+
+pthread_key_t threadobj_tskey;
+
+static inline void threadobj_init_key(void)
+{
+	if (pthread_key_create(&threadobj_tskey, threadobj_finalize))
+		panic("failed to allocate TSD key");
+}
+
+#endif /* !HAVE____THREAD */
 
 #ifdef CONFIG_XENO_COBALT
 
@@ -955,7 +974,7 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 	write_unlock(&list_lock);
 
 	thobj->errno_pointer = &errno;
-	pthread_setspecific(threadobj_tskey, thobj);
+	threadobj_set_current(thobj);
 
 	if (global_rr)
 		threadobj_set_rr(thobj, &global_quantum);
@@ -997,7 +1016,7 @@ static void threadobj_finalize(void *p) /* thobj->lock free */
 		return;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
-	pthread_setspecific(threadobj_tskey, p);
+	threadobj_set_current(p);
 
 	if (thobj->wait_sobj)
 		__syncobj_cleanup_wait(thobj->wait_sobj, thobj);
@@ -1015,7 +1034,7 @@ static void threadobj_finalize(void *p) /* thobj->lock free */
 	if (thobj->finalizer)
 		thobj->finalizer(thobj);
 
-	pthread_setspecific(threadobj_tskey, NULL);
+	threadobj_set_current(NULL);
 }
 
 void threadobj_destroy(struct threadobj *thobj) /* thobj->lock free */
@@ -1101,8 +1120,7 @@ void threadobj_pkg_init(void)
 
 	__RT(pthread_mutex_init(&list_lock, NULL));
 
-	if (pthread_key_create(&threadobj_tskey, threadobj_finalize) != 0)
-		panic("failed to allocate TSD key");
+	threadobj_init_key();
 
 	pkg_init_corespec();
 

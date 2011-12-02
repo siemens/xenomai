@@ -74,7 +74,7 @@ static void *timerobj_server(void *arg)
 	int ret;
 
 	pthread_set_name_np(pthread_self(), "timer-internal");
-	pthread_setspecific(threadobj_tskey, THREADOBJ_IRQCONTEXT);
+	threadobj_set_current(THREADOBJ_IRQCONTEXT);
 
 	for (;;) {
 		ret = __RT(sem_wait(&svsem));

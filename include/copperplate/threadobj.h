@@ -151,11 +151,40 @@ struct threadobj_init_data {
 	void (*suspend_hook)(struct threadobj *thobj, int status);
 };
 
-extern pthread_key_t threadobj_tskey;
-
 extern int threadobj_high_prio;
 
 extern int threadobj_irq_prio;
+
+#ifdef HAVE___THREAD
+
+extern __thread __attribute__ ((tls_model ("initial-exec")))
+struct threadobj *__threadobj_current;
+
+static inline void threadobj_set_current(struct threadobj *thobj)
+{
+	__threadobj_current = thobj;
+}
+
+static inline struct threadobj *threadobj_current(void)
+{
+	return __threadobj_current;
+}
+
+#else /* !HAVE___THREAD */
+
+extern pthread_key_t threadobj_tskey;
+
+static inline void threadobj_set_current(struct threadobj *thobj)
+{
+	pthread_setspecific(threadobj_tskey, thobj);
+}
+
+static inline struct threadobj *threadobj_current(void)
+{
+	return pthread_getspecific(threadobj_tskey);
+}
+
+#endif /* !HAVE___THREAD */
 
 #ifdef __cplusplus
 extern "C" {
@@ -264,11 +293,6 @@ static inline int threadobj_trylock(struct threadobj *thobj)
 static inline int threadobj_unlock(struct threadobj *thobj)
 {
 	return write_unlock_safe(&thobj->lock, thobj->cancel_state);
-}
-
-static inline struct threadobj *threadobj_current(void)
-{
-	return pthread_getspecific(threadobj_tskey);
 }
 
 static inline int threadobj_irq_p(void)

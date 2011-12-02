@@ -34,7 +34,7 @@
 static void timerobj_handler(union sigval sigval)
 {
 	struct timerobj *tmobj = sigval.sival_ptr;
-	pthread_setspecific(threadobj_tskey, THREADOBJ_IRQCONTEXT);
+	threadobj_set_current(THREADOBJ_IRQCONTEXT);
 	assert(tmobj->handler != NULL);
 	tmobj->handler(tmobj);
 }

@@ -5170,6 +5170,7 @@ case "$build_for" in
 	CONFIG_XENO_DEFAULT_PERIOD=100000
 	;;
  ppc-*|powerpc-*|powerpc64-*|ppc64-*)
+	use__thread=yes
 	XENO_TARGET_ARCH=powerpc
 	CONFIG_XENO_DEFAULT_PERIOD=100000
 	;;
