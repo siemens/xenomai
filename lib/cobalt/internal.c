@@ -178,11 +178,29 @@ void cobalt_monitor_grant(cobalt_monitor_t *mon, unsigned long *u_mode)
 	*u_mode |= XNGRANT;
 }
 
+int cobalt_monitor_grant_sync(cobalt_monitor_t *mon, unsigned long *u_mode)
+{
+	cobalt_monitor_grant(mon, u_mode);
+
+	return XENOMAI_SKINCALL1(__cobalt_muxid,
+				 sc_cobalt_monitor_sync,
+				 mon);
+}
+
 void cobalt_monitor_grant_all(cobalt_monitor_t *mon, unsigned long *u_mode)
 {
 	struct cobalt_monitor_data *datp = get_monitor_data(mon);
 
 	datp->flags |= COBALT_MONITOR_GRANTED|COBALT_MONITOR_BROADCAST;
+}
+
+int cobalt_monitor_grant_all_sync(cobalt_monitor_t *mon, unsigned long *u_mode)
+{
+	cobalt_monitor_grant_all(mon, u_mode);
+
+	return XENOMAI_SKINCALL1(__cobalt_muxid,
+				 sc_cobalt_monitor_sync,
+				 mon);
 }
 
 void cobalt_monitor_drain(cobalt_monitor_t *mon)
@@ -192,9 +210,27 @@ void cobalt_monitor_drain(cobalt_monitor_t *mon)
 	datp->flags |= COBALT_MONITOR_DRAINED;
 }
 
+int cobalt_monitor_drain_sync(cobalt_monitor_t *mon)
+{
+	cobalt_monitor_drain(mon);
+
+	return XENOMAI_SKINCALL1(__cobalt_muxid,
+				 sc_cobalt_monitor_sync,
+				 mon);
+}
+
 void cobalt_monitor_drain_all(cobalt_monitor_t *mon)
 {
 	struct cobalt_monitor_data *datp = get_monitor_data(mon);
 
 	datp->flags |= COBALT_MONITOR_DRAINED|COBALT_MONITOR_BROADCAST;
+}
+
+int cobalt_monitor_drain_all_sync(cobalt_monitor_t *mon)
+{
+	cobalt_monitor_drain_all(mon);
+
+	return XENOMAI_SKINCALL1(__cobalt_muxid,
+				 sc_cobalt_monitor_sync,
+				 mon);
 }

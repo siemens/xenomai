@@ -27,10 +27,7 @@
 #define COBALT_MONITOR_DRAINED    0x02
 #define COBALT_MONITOR_SIGNALED   0x03 /* i.e. GRANTED or DRAINED */
 #define COBALT_MONITOR_BROADCAST  0x04
-
-#define COBALT_MONITOR_GRPENDED   0x08
-#define COBALT_MONITOR_DRPENDED   0x10
-#define COBALT_MONITOR_PENDED     0x18 /* i.e. GRPENDED or DRPENDED */
+#define COBALT_MONITOR_PENDED     0x08
 
 struct cobalt_monitor_data {
 	xnarch_atomic_t owner;
@@ -58,6 +55,8 @@ int cobalt_monitor_init(struct cobalt_monitor_shadow __user *u_monsh,
 			int flags);
 
 int cobalt_monitor_enter(struct cobalt_monitor_shadow __user *u_monsh);
+
+int cobalt_monitor_sync(struct cobalt_monitor_shadow __user *u_monsh);
 
 int cobalt_monitor_exit(struct cobalt_monitor_shadow __user *u_monsh);
 

@@ -108,7 +108,8 @@
 #define sc_cobalt_monitor_destroy       84
 #define sc_cobalt_monitor_enter         85
 #define sc_cobalt_monitor_wait          86
-#define sc_cobalt_monitor_exit          87
+#define sc_cobalt_monitor_sync          87
+#define sc_cobalt_monitor_exit          88
 
 #ifdef __KERNEL__
 

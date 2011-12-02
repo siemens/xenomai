@@ -157,29 +157,14 @@ int cobalt_monitor_enter(struct cobalt_monitor_shadow __user *u_monsh)
 	return ret;
 }
 
-int cobalt_monitor_exit(struct cobalt_monitor_shadow __user *u_monsh)
+/* nklock held, irqs off */
+static int cobalt_monitor_wakeup(struct cobalt_monitor *mon)
 {
-	struct cobalt_monitor *mon = NULL;
-	struct cobalt_monitor_data *datp;
+	struct cobalt_monitor_data *datp = mon->data;
+	int resched = 0, bcast;
 	struct xnthread *p;
 	struct xnholder *h;
 	pthread_t tid;
-	int ret = 0;
-	spl_t s;
-
-	__xn_get_user(mon, &u_monsh->monitor);
-
-	xnlock_get_irqsave(&nklock, s);
-
-	if (!cobalt_obj_active(mon, COBALT_MONITOR_MAGIC,
-			       struct cobalt_monitor)) {
-		ret = -EINVAL;
-		goto out;
-	}
-
-	datp = mon->data;
-	if ((datp->flags & COBALT_MONITOR_SIGNALED) == 0)
-		goto done;
 
 	if ((datp->flags & COBALT_MONITOR_GRANTED) == 0 ||
 	    emptyq_p(&mon->waiters))
@@ -190,14 +175,15 @@ int cobalt_monitor_exit(struct cobalt_monitor_shadow __user *u_monsh)
 	 * received it only or all of them, depending on the broadcast
 	 * bit.
 	 */
+	bcast = (datp->flags & COBALT_MONITOR_BROADCAST) != 0;
 	for (h = getheadq(&mon->waiters); h; h = nextq(&mon->waiters, h)) {
 		tid = container_of(h, struct cobalt_thread, monitor_link);
 		p = &tid->threadbase;
-		if ((datp->flags & COBALT_MONITOR_BROADCAST) != 0 ||
-		    ((*p->u_mode & XNGRANT) &&
-		     p->wchan == &tid->monitor_synch)) {
+		if (bcast || ((*p->u_mode & XNGRANT) &&
+			      p->wchan == &tid->monitor_synch)) {
 			xnsynch_wakeup_this_sleeper(&tid->monitor_synch,
 						    &p->plink);
+			resched = 1;
 		}
 	}
 drain:
@@ -208,17 +194,14 @@ drain:
 	if ((datp->flags & COBALT_MONITOR_DRAINED) != 0 &&
 	    !xnsynch_pended_p(&mon->drain)) {
 		if (datp->flags & COBALT_MONITOR_BROADCAST)
-			xnsynch_flush(&mon->drain, 0);
+			resched |= xnsynch_flush(&mon->drain, 0)
+				== XNSYNCH_RESCHED;
 		else
-			xnsynch_wakeup_one_sleeper(&mon->drain);
+			resched |= xnsynch_wakeup_one_sleeper(&mon->drain)
+				!= NULL;
 	}
-done:
-	xnsynch_release(&mon->gate);
-	xnpod_schedule();
-out:
-	xnlock_put_irqrestore(&nklock, s);
 
-	return ret;
+	return resched;
 }
 
 int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_monsh,
@@ -256,33 +239,33 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_monsh,
 	xnsynch_release(&mon->gate);
 
 	synch = &cur->monitor_synch;
-	if (event & COBALT_MONITOR_WAITDRAIN) {
+	if (event & COBALT_MONITOR_WAITDRAIN)
 		synch = &mon->drain;
-		mon->data->flags |= COBALT_MONITOR_DRPENDED;
-	} else {
+	else {
 		*cur->threadbase.u_mode &= ~XNGRANT;
 		appendq(&mon->waiters, &cur->monitor_link);
-		mon->data->flags |= COBALT_MONITOR_GRPENDED;
 	}
+	mon->data->flags |= COBALT_MONITOR_PENDED;
 
 	info = xnsynch_sleep_on(synch, timeout, tmode);
-	if (info & XNRMID) {
+	if ((info & XNRMID) != 0 ||
+	    !cobalt_obj_active(mon, COBALT_MONITOR_MAGIC,
+			       struct cobalt_monitor)) {
 		ret = -EINVAL;
 		goto out;
 	}
 
 	/*
-	 * We update the GRPENDED and DRPENDED flags to inform
-	 * userland about the presence of waiters, so that it may
-	 * decide not to issue any syscall for exiting the monitor if
-	 * there is nobody else waiting at the gate.
+	 * We update the PENDED flag to inform userland about the
+	 * presence of waiters, so that it may decide not to issue any
+	 * syscall for exiting the monitor if there is nobody else
+	 * waiting at the gate.
 	 */
-	if ((event & COBALT_MONITOR_WAITDRAIN) == 0) {
+	if ((event & COBALT_MONITOR_WAITDRAIN) == 0)
 		removeq(&mon->waiters, &cur->monitor_link);
-		if (emptyq_p(&mon->waiters))
-			mon->data->flags &= ~COBALT_MONITOR_GRPENDED;
-	} else if (!xnsynch_pended_p(&mon->drain))
-		mon->data->flags &= ~COBALT_MONITOR_DRPENDED;
+
+	if (emptyq_p(&mon->waiters) && !xnsynch_pended_p(&mon->drain))
+		mon->data->flags &= ~COBALT_MONITOR_PENDED;
 
 	if (info & XNBREAK)
 		opret = -EINTR;
@@ -294,6 +277,61 @@ out:
 	xnlock_put_irqrestore(&nklock, s);
 
 	__xn_put_user(opret, u_ret);
+
+	return ret;
+}
+
+int cobalt_monitor_sync(struct cobalt_monitor_shadow __user *u_monsh)
+{
+	struct cobalt_monitor *mon = NULL;
+	int ret = 0;
+	spl_t s;
+
+	__xn_get_user(mon, &u_monsh->monitor);
+
+	xnlock_get_irqsave(&nklock, s);
+
+	if (!cobalt_obj_active(mon, COBALT_MONITOR_MAGIC,
+			       struct cobalt_monitor)) {
+		ret = -EINVAL;
+		goto out;
+	}
+
+	if (mon->data->flags & COBALT_MONITOR_SIGNALED) {
+		cobalt_monitor_wakeup(mon);
+		xnsynch_release(&mon->gate);
+		xnpod_schedule();
+		ret = cobalt_monitor_enter_inner(mon);
+	}
+out:
+	xnlock_put_irqrestore(&nklock, s);
+
+	return ret;
+}
+
+int cobalt_monitor_exit(struct cobalt_monitor_shadow __user *u_monsh)
+{
+	struct cobalt_monitor *mon = NULL;
+	int ret = 0;
+	spl_t s;
+
+	__xn_get_user(mon, &u_monsh->monitor);
+
+	xnlock_get_irqsave(&nklock, s);
+
+	if (!cobalt_obj_active(mon, COBALT_MONITOR_MAGIC,
+			       struct cobalt_monitor)) {
+		ret = -EINVAL;
+		goto out;
+	}
+
+	if (mon->data->flags & COBALT_MONITOR_SIGNALED)
+		cobalt_monitor_wakeup(mon);
+
+	xnsynch_release(&mon->gate);
+	xnpod_schedule();
+out:
+	xnlock_put_irqrestore(&nklock, s);
 
 	return ret;
 }
@@ -334,17 +372,9 @@ int cobalt_monitor_destroy(struct cobalt_monitor_shadow __user *u_monsh)
 		goto fail;
 	}
 
-	if (xnsynch_fast_owner_check(mon->gate.fastlock, XN_NO_HANDLE)) {
-		ret = -EBUSY;
-		goto fail;
-	}
-
-	if (xnsynch_pended_p(&mon->drain)) {
-		ret = -EBUSY;
-		goto fail;
-	}
-
-	if (!emptyq_p(&mon->waiters)) {
+	if (xnsynch_fast_owner_check(mon->gate.fastlock, XN_NO_HANDLE) ||
+	    xnsynch_pended_p(&mon->drain) ||
+	    !emptyq_p(&mon->waiters)) {
 		ret = -EBUSY;
 		goto fail;
 	}
