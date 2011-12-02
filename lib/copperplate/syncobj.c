@@ -272,25 +272,6 @@ static void syncobj_test_finalize(struct syncobj *sobj,
 	pthread_setcancelstate(syns->state, NULL);
 }
 
-static void enqueue_waiter(struct syncobj *sobj,
-			   struct threadobj *thobj)
-{
-	struct threadobj *__thobj;
-
-	thobj->wait_prio = threadobj_get_priority(thobj);
-	sobj->pend_count++;
-	if ((sobj->flags & SYNCOBJ_PRIO) == 0 || list_empty(&sobj->pend_list)) {
-		list_append(&thobj->wait_link, &sobj->pend_list);
-		return;
-	}
-
-	list_for_each_entry_reverse(__thobj, &sobj->pend_list, wait_link) {
-		if (thobj->wait_prio <= __thobj->wait_prio)
-			break;
-	}
-	ath(&__thobj->wait_link, &thobj->wait_link);
-}
-
 int __syncobj_signal_drain(struct syncobj *sobj)
 {
 	/* Release one thread waiting for the object to drain. */
@@ -321,6 +302,25 @@ void __syncobj_cleanup_wait(struct syncobj *sobj, struct threadobj *thobj)
 		sobj->drain_count--;
 
 	monitor_exit(sobj);
+}
+
+static inline void enqueue_waiter(struct syncobj *sobj,
+				  struct threadobj *thobj)
+{
+	struct threadobj *__thobj;
+
+	thobj->wait_prio = threadobj_get_priority(thobj);
+	sobj->pend_count++;
+	if ((sobj->flags & SYNCOBJ_PRIO) == 0 || list_empty(&sobj->pend_list)) {
+		list_append(&thobj->wait_link, &sobj->pend_list);
+		return;
+	}
+
+	list_for_each_entry_reverse(__thobj, &sobj->pend_list, wait_link) {
+		if (thobj->wait_prio <= __thobj->wait_prio)
+			break;
+	}
+	ath(&__thobj->wait_link, &thobj->wait_link);
 }
 
 int syncobj_pend(struct syncobj *sobj, const struct timespec *timeout,
