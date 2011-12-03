@@ -1175,6 +1175,7 @@ int rt_queue_flush(RT_QUEUE *q)
 		 * may run concurrently, we need to revalidate the
 		 * queue descriptor for each buffer.
 		 */
+		msg->refcount = 1;
 		ret = rt_queue_free(q, msg + 1);
 		if (ret)
 			break;
