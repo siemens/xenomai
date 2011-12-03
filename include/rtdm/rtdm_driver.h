@@ -1212,7 +1212,8 @@ static inline void rtdm_mutex_unlock(rtdm_mutex_t *mutex)
 
 	trace_mark(xn_rtdm, mutex_unlock, "mutex %p", mutex);
 
-	if (unlikely(xnsynch_release(&mutex->synch_base) != NULL))
+	if (unlikely(xnsynch_release(&mutex->synch_base,
+				     xnpod_current_thread()) != NULL))
 		xnpod_schedule();
 }
 

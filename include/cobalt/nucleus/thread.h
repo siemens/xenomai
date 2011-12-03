@@ -398,6 +398,31 @@ struct xnthread *xnthread_lookup(xnhandle_t threadh)
 	return (thread && xnthread_handle(thread) == threadh) ? thread : NULL;
 }
 
+/*
+ * XXX: Mutual dependency issue with synch.h, we have to define
+ * xnsynch_release() here.
+ */
+static inline struct xnthread *
+xnsynch_release(struct xnsynch *synch, struct xnthread *thread)
+{
+	xnarch_atomic_t *lockp;
+	xnhandle_t threadh;
+
+	XENO_BUGON(NUCLEUS, !testbits(synch->status, XNSYNCH_OWNER));
+
+	trace_mark(xn_nucleus, synch_release, "synch %p", synch);
+
+	if (unlikely(xnthread_test_state(thread, XNOTHER)))
+		__xnsynch_fixup_rescnt(thread);
+
+	lockp = xnsynch_fastlock(synch);
+	threadh = xnthread_handle(thread);
+	if (likely(xnsynch_fast_release(lockp, threadh)))
+		return NULL;
+
+	return __xnsynch_transfer_ownership(synch, thread);
+}
+
 #ifdef __cplusplus
 extern "C" {
 #endif

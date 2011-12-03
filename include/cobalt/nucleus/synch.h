@@ -136,6 +136,10 @@ typedef struct xnsynch {
 extern "C" {
 #endif
 
+void __xnsynch_fixup_rescnt(struct xnthread *thread);
+
+struct xnthread *__xnsynch_transfer_ownership(struct xnsynch *synch,
+					      struct xnthread *lastowner);
 #if XENO_DEBUG(SYNCH_RELAX)
 
 void xnsynch_detect_relaxed_owner(struct xnsynch *synch,
@@ -187,8 +191,6 @@ xnpholder_t *xnsynch_wakeup_this_sleeper(struct xnsynch *synch,
 xnflags_t xnsynch_acquire(struct xnsynch *synch,
 			  xnticks_t timeout,
 			  xntmode_t timeout_mode);
-
-struct xnthread *xnsynch_release(struct xnsynch *synch);
 
 struct xnthread *xnsynch_peek_pendq(struct xnsynch *synch);
 

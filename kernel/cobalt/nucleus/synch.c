@@ -572,6 +572,46 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 EXPORT_SYMBOL_GPL(xnsynch_acquire);
 
 /*!
+ * \fn struct xnthread *xnsynch_release(struct xnsynch *synch, struct xnthread *owner);
+ * \brief Give the resource ownership to the next waiting thread.
+ *
+ * This service releases the ownership of the given synchronization
+ * object. The thread which is currently leading the object's pending
+ * list, if any, is unblocked from its pending state. However, no
+ * reschedule is performed.
+ *
+ * This service must be used only with synchronization objects that
+ * track ownership (XNSYNCH_OWNER set).
+ *
+ * @param synch The descriptor address of the synchronization object
+ * whose ownership is changed.
+ *
+ * @param owner The descriptor address of the current owner.
+ *
+ * @return The descriptor address of the unblocked thread.
+ *
+ * Side-effects:
+ *
+ * - The effective priority of the previous resource owner might be
+ * lowered to its base priority value as a consequence of the priority
+ * inheritance boost being cleared.
+ *
+ * - The synchronization object ownership is transfered to the
+ * unblocked thread.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Interrupt service routine
+ * - Kernel-based task
+ * - User-space task
+ *
+ * Rescheduling: never.
+ */
+
+/*!
  * @internal
  * \fn void xnsynch_clear_boost(struct xnsynch *synch, struct xnthread *owner);
  * \brief Clear the priority boost.
@@ -680,105 +720,56 @@ void xnsynch_requeue_sleeper(struct xnthread *thread)
 }
 EXPORT_SYMBOL_GPL(xnsynch_requeue_sleeper);
 
-static inline struct xnthread *
-xnsynch_release_thread(struct xnsynch *synch, struct xnthread *lastowner)
+void __xnsynch_fixup_rescnt(struct xnthread *thread)
 {
-	xnhandle_t lastownerh, newownerh;
+	if (xnthread_get_rescnt(thread) == 0)
+		xnshadow_send_sig(thread, SIGDEBUG,
+				  SIGDEBUG_MIGRATE_PRIOINV, 1);
+	else
+		xnthread_dec_rescnt(thread);
+}
+EXPORT_SYMBOL_GPL(__xnsynch_fixup_rescnt);
+
+struct xnthread *__xnsynch_transfer_ownership(struct xnsynch *synch,
+					      struct xnthread *lastowner)
+{
 	struct xnthread *newowner;
 	struct xnpholder *holder;
 	xnarch_atomic_t *lockp;
+	xnhandle_t newownerh;
 	spl_t s;
-
-	XENO_BUGON(NUCLEUS, !testbits(synch->status, XNSYNCH_OWNER));
-
-	if (xnthread_test_state(lastowner, XNOTHER)) {
-		if (xnthread_get_rescnt(lastowner) == 0)
-			xnshadow_send_sig(lastowner, SIGDEBUG,
-					  SIGDEBUG_MIGRATE_PRIOINV, 1);
-		else
-			xnthread_dec_rescnt(lastowner);
-	}
-
-	lastownerh = xnthread_handle(lastowner);
-	if (xnsynch_fast_release(xnsynch_fastlock(synch), lastownerh))
-		return NULL;	/* This is a BUG, we should have one. */
 
 	xnlock_get_irqsave(&nklock, s);
 
-	trace_mark(xn_nucleus, synch_release, "synch %p", synch);
+	lockp = xnsynch_fastlock(synch);
 
-	holder = getpq(&synch->pendq);
-	if (holder) {
-		newowner = link2thread(holder, plink);
-		newowner->wchan = NULL;
-		newowner->wwake = synch;
-		synch->owner = newowner;
-		xnthread_set_info(newowner, XNWAKEN);
-		xnpod_resume_thread(newowner, XNPEND);
-
-		if (testbits(synch->status, XNSYNCH_CLAIMED))
-			xnsynch_clear_boost(synch, lastowner);
-
-		newownerh = xnsynch_fast_set_claimed(xnthread_handle(newowner),
-						     xnsynch_pended_p(synch));
-	} else {
-		newowner = NULL;
+	if (emptypq_p(&synch->pendq)) {
 		synch->owner = NULL;
-		newownerh = XN_NO_HANDLE;
+		xnarch_atomic_set(lockp, XN_NO_HANDLE);
+		xnlock_put_irqrestore(&nklock, s);
+		return NULL;
 	}
 
-	lockp = xnsynch_fastlock(synch);
+	holder = getpq(&synch->pendq);
+	newowner = link2thread(holder, plink);
+	newowner->wchan = NULL;
+	newowner->wwake = synch;
+	synch->owner = newowner;
+	xnthread_set_info(newowner, XNWAKEN);
+	xnpod_resume_thread(newowner, XNPEND);
+
+	if (testbits(synch->status, XNSYNCH_CLAIMED))
+		xnsynch_clear_boost(synch, lastowner);
+
+	newownerh = xnsynch_fast_set_claimed(xnthread_handle(newowner),
+					     xnsynch_pended_p(synch));
 	xnarch_atomic_set(lockp, newownerh);
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	xnarch_post_graph_if(synch, 0, emptypq_p(&synch->pendq));
-
 	return newowner;
 }
-
-/*!
- * \fn struct xnthread *xnsynch_release(struct xnsynch *synch);
- * \brief Give the resource ownership to the next waiting thread.
- *
- * This service releases the ownership of the given synchronization
- * object. The thread which is currently leading the object's pending
- * list, if any, is unblocked from its pending state. However, no
- * reschedule is performed.
- *
- * This service must be used only with synchronization objects that
- * track ownership (XNSYNCH_OWNER set).
- *
- * @param synch The descriptor address of the synchronization object
- * whose ownership is changed.
- *
- * @return The descriptor address of the unblocked thread.
- *
- * Side-effects:
- *
- * - The effective priority of the previous resource owner might be
- * lowered to its base priority value as a consequence of the priority
- * inheritance boost being cleared.
- *
- * - The synchronization object ownership is transfered to the
- * unblocked thread.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
- */
-struct xnthread *xnsynch_release(struct xnsynch *synch)
-{
-	return xnsynch_release_thread(synch, xnpod_current_thread());
-}
-EXPORT_SYMBOL_GPL(xnsynch_release);
+EXPORT_SYMBOL_GPL(__xnsynch_transfer_ownership);
 
 /*!
  * \fn struct xnthread *xnsynch_peek_pendq(struct xnsynch *synch);
@@ -813,6 +804,7 @@ struct xnthread *xnsynch_peek_pendq(struct xnsynch *synch)
 	holder = getheadpq(&synch->pendq);
 	if (holder)
 		thread = link2thread(holder, plink);
+
 	xnlock_put_irqrestore(&nklock, s);
 
 	return thread;
@@ -993,7 +985,7 @@ void xnsynch_release_all_ownerships(struct xnthread *thread)
 		 */
 		synch = link2synch(holder);
 		nholder = nextpq(&thread->claimq, holder);
-		xnsynch_release_thread(synch, thread);
+		xnsynch_release(synch, thread);
 		if (synch->cleanup)
 			synch->cleanup(synch);
 	}

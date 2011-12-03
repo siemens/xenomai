@@ -255,7 +255,7 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_monsh,
 	}
 
 	/* Release the gate prior to waiting, all atomically. */
-	xnsynch_release(&mon->gate);
+	xnsynch_release(&mon->gate, &cur->threadbase);
 
 	synch = &cur->monitor_synch;
 	if (event & COBALT_MONITOR_WAITDRAIN)
@@ -314,7 +314,7 @@ int cobalt_monitor_sync(struct cobalt_monitor_shadow __user *u_monsh)
 
 	if (mon->data->flags & COBALT_MONITOR_SIGNALED) {
 		cobalt_monitor_wakeup(mon);
-		xnsynch_release(&mon->gate);
+		xnsynch_release(&mon->gate, xnpod_current_thread());
 		xnpod_schedule();
 		ret = cobalt_monitor_enter_inner(mon);
 	}
@@ -343,7 +343,7 @@ int cobalt_monitor_exit(struct cobalt_monitor_shadow __user *u_monsh)
 	if (mon->data->flags & COBALT_MONITOR_SIGNALED)
 		cobalt_monitor_wakeup(mon);
 
-	xnsynch_release(&mon->gate);
+	xnsynch_release(&mon->gate, xnpod_current_thread());
 	xnpod_schedule();
 out:
 	xnlock_put_irqrestore(&nklock, s);

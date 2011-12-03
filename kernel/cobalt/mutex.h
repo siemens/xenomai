@@ -119,7 +119,7 @@ static inline int cobalt_mutex_release(xnthread_t *cur, cobalt_mutex_t *mutex)
 			need_resched |= cobalt_cond_deferred_signals(cond);
 		}
 	}
-	need_resched |= xnsynch_release(&mutex->synchbase) != NULL;
+	need_resched |= xnsynch_release(&mutex->synchbase, cur) != NULL;
 
 	return need_resched;
 }
