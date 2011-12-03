@@ -180,9 +180,13 @@ void cobalt_monitor_grant(cobalt_monitor_t *mon, unsigned long *u_mode)
 
 int cobalt_monitor_grant_sync(cobalt_monitor_t *mon, unsigned long *u_mode)
 {
+	struct cobalt_monitor_data *datp = get_monitor_data(mon);
 	int ret, oldtype;
 
 	cobalt_monitor_grant(mon, u_mode);
+
+	if ((datp->flags & COBALT_MONITOR_PENDED) == 0)
+		return 0;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
@@ -207,9 +211,13 @@ void cobalt_monitor_grant_all(cobalt_monitor_t *mon, unsigned long *u_mode)
 
 int cobalt_monitor_grant_all_sync(cobalt_monitor_t *mon, unsigned long *u_mode)
 {
+	struct cobalt_monitor_data *datp = get_monitor_data(mon);
 	int ret, oldtype;
 
 	cobalt_monitor_grant_all(mon, u_mode);
+
+	if ((datp->flags & COBALT_MONITOR_PENDED) == 0)
+		return 0;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
@@ -234,9 +242,13 @@ void cobalt_monitor_drain(cobalt_monitor_t *mon)
 
 int cobalt_monitor_drain_sync(cobalt_monitor_t *mon)
 {
+	struct cobalt_monitor_data *datp = get_monitor_data(mon);
 	int ret, oldtype;
 
 	cobalt_monitor_drain(mon);
+
+	if ((datp->flags & COBALT_MONITOR_PENDED) == 0)
+		return 0;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
@@ -261,9 +273,13 @@ void cobalt_monitor_drain_all(cobalt_monitor_t *mon)
 
 int cobalt_monitor_drain_all_sync(cobalt_monitor_t *mon)
 {
+	struct cobalt_monitor_data *datp = get_monitor_data(mon);
 	int ret, oldtype;
 
 	cobalt_monitor_drain_all(mon);
+
+	if ((datp->flags & COBALT_MONITOR_PENDED) == 0)
+		return 0;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
