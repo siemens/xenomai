@@ -1760,7 +1760,7 @@ static struct xnsysent __systab[] = {
 	SKINCALL_DEF(sc_cobalt_monitor_enter, cobalt_monitor_enter, primary),
 	SKINCALL_DEF(sc_cobalt_monitor_wait, cobalt_monitor_wait, nonrestartable),
 	SKINCALL_DEF(sc_cobalt_monitor_sync, cobalt_monitor_sync, nonrestartable),
-	SKINCALL_DEF(sc_cobalt_monitor_exit, cobalt_monitor_exit, nonrestartable),
+	SKINCALL_DEF(sc_cobalt_monitor_exit, cobalt_monitor_exit, primary),
 };
 
 static void __shadow_delete_hook(xnthread_t *thread)
