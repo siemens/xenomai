@@ -493,8 +493,7 @@ int rt_queue_flush(RT_QUEUE *queue)
 	struct alchemy_queue *qcb;
 	struct syncstate syns;
 	struct service svc;
-	int ret = 0, _ret;
-	struct list dump;
+	int ret = 0;
 
 	COPPERPLATE_PROTECT(svc);
 
@@ -502,33 +501,23 @@ int rt_queue_flush(RT_QUEUE *queue)
 	if (qcb == NULL)
 		goto out;
 
-	/*
-	 * Transfer the contents to a private list by moving list
-	 * heads, so that we may free the messages without holding the
-	 * queue lock.
-	 */
-	list_init(&dump);
-	list_join(&qcb->mq, &dump);
 	ret = qcb->mcount;
 	qcb->mcount = 0;
 
-	put_alchemy_queue(qcb, &syns);
-
-	if (list_empty(&dump))
-		goto out;
-
-	list_for_each_entry_safe(msg, tmp, &dump, next) {
-		/*
-		 * It's a bit of a pain, but since rt_queue_delete()
-		 * may run concurrently, we need to revalidate the
-		 * queue descriptor for each buffer.
-		 */
-		_ret = rt_queue_free(queue, msg + 1);
-		if (_ret) {
-			ret = _ret;
-			break;
+	/*
+	 * Flushing a message queue is not an operation we should see
+	 * in any fast path within an application, so locking out
+	 * other threads from using that queue while we flush it is
+	 * acceptable.
+	 */
+	if (!list_empty(&qcb->mq)) {
+		list_for_each_entry_safe(msg, tmp, &qcb->mq, next) {
+			list_remove(&msg->next);
+			heapobj_free(&qcb->hobj, msg);
 		}
 	}
+
+	put_alchemy_queue(qcb, &syns);
 out:
 	COPPERPLATE_UNPROTECT(svc);
 
