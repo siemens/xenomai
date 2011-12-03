@@ -201,15 +201,15 @@ checkflags="-nostdinc -isystem \$(SYSROOT)/usr/include -Wbitwise -Wno-transparen
 dnl Used with sparse
 AC_SUBST(CHECKFLAGS, $checkflags)
 
-dnl Enable assertions (default: on)
+dnl Enable assertions (default: depends on debug mode)
 
-use_assert=y
+test x$debug_mode = x || use_assert=y
 AC_MSG_CHECKING(whether assertions should be enabled)
 AC_ARG_ENABLE(assert,
 	AS_HELP_STRING([--enable-assert], [Enable runtime assertions]),
 	[case "$enableval" in
 	y | yes) use_assert=y ;;
-	n | no) unset use_assert ;;
+	*) unset use_assert ;;
 	esac])
 AC_MSG_RESULT(${use_assert:-no})
 

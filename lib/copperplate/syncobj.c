@@ -111,13 +111,16 @@ void monitor_drain_all(struct syncobj *sobj)
 
 static inline void syncobj_init_corespec(struct syncobj *sobj)
 {
-	int flags = monitor_scope_attribute;
-	assert(cobalt_monitor_init(&sobj->core.monitor, flags) == 0);
+	int flags = monitor_scope_attribute, ret;
+	ret = cobalt_monitor_init(&sobj->core.monitor, flags);
+	assert(ret == 0);
 }
 
 static inline void syncobj_cleanup_corespec(struct syncobj *sobj)
 {
-	assert(cobalt_monitor_destroy(&sobj->core.monitor) == 0);
+	int ret = cobalt_monitor_destroy(&sobj->core.monitor);
+	assert(ret == 0);
+	(void)ret;
 }
 
 #else /* CONFIG_XENO_MERCURY */
@@ -133,7 +136,7 @@ void monitor_exit(struct syncobj *sobj)
 {
 	int ret;
 	ret = pthread_mutex_unlock(&sobj->core.lock);
-	assert(ret == 0);
+	assert(ret == 0); (void)ret;
 }
 
 static inline
@@ -186,10 +189,12 @@ static inline void syncobj_init_corespec(struct syncobj *sobj)
 {
 	pthread_mutexattr_t mattr;
 	pthread_condattr_t cattr;
+	int ret;
 
 	pthread_mutexattr_init(&mattr);
 	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
-	assert(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute) == 0);
+	ret = pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute);
+	assert(ret == 0); (void)ret;
 	pthread_mutex_init(&sobj->core.lock, &mattr);
 	pthread_mutexattr_destroy(&mattr);
 

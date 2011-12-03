@@ -45,6 +45,7 @@ int timerobj_init(struct timerobj *tmobj)
 	struct sched_param param;
 	pthread_attr_t thattr;
 	struct sigevent evt;
+	int ret;
 
 	pthread_attr_init(&thattr);
 	memset(&param, 0, sizeof(param));
@@ -72,7 +73,8 @@ int timerobj_init(struct timerobj *tmobj)
 
 	__RT(pthread_mutexattr_init(&mattr));
 	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
-	assert(__RT(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute)) == 0);
+	ret = __RT(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute));
+	assert(ret == 0); (void)ret;
 	__RT(pthread_mutex_init(&tmobj->lock, &mattr));
 	__RT(pthread_mutexattr_destroy(&mattr));
 

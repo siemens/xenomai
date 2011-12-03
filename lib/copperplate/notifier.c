@@ -270,7 +270,7 @@ int notifier_wait(const struct notifier *nf) /* sighandler context */
 	char c;
 
 	ret = __STD(read(nf->pwfd[0], &c, 1));
-	assert(ret == 1);
+	assert(ret == 1); (void)ret;
 
 	return 0;
 }

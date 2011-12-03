@@ -21,7 +21,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <getopt.h>
-#include <assert.h>
 #include <copperplate/init.h>
 #include <vxworks/errnoLib.h>
 #include "tickLib.h"

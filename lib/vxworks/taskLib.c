@@ -23,7 +23,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
-#include <assert.h>
 #include <fcntl.h>
 #include <sched.h>
 #include "taskLib.h"

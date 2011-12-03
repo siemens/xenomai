@@ -20,7 +20,6 @@
 #include <stdint.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <memory.h>
 #include <copperplate/threadobj.h>
 #include <copperplate/heapobj.h>

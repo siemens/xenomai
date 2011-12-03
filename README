@@ -119,8 +119,9 @@ or Xenomai-specific knobs:
 	Xenomai core, which aim at checking the internal consistency
 	of the emulation system during runtime (see man
 	assert(3)). Passing --disable-assert to the configure script
-	disables built-in assertions. Assertions are enabled by
-	default.
+	disables built-in assertions unconditionally. By default,
+	assertions are enabled in partial or full debug modes,
+	disabled otherwise.
 
 --enable-pshared
 
