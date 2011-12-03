@@ -174,15 +174,29 @@ static int cobalt_monitor_wakeup(struct cobalt_monitor *mon)
 	 * Unblock waiters requesting a grant, either those who
 	 * received it only or all of them, depending on the broadcast
 	 * bit.
+	 *
+	 * We update the PENDED flag to inform userland about the
+	 * presence of waiters, so that it may decide not to issue any
+	 * syscall for exiting the monitor if nobody else is waiting
+	 * at the gate.
 	 */
 	bcast = (datp->flags & COBALT_MONITOR_BROADCAST) != 0;
-	for (h = getheadq(&mon->waiters); h; h = nextq(&mon->waiters, h)) {
+	h = getheadq(&mon->waiters);
+	while (h) {
 		tid = container_of(h, struct cobalt_thread, monitor_link);
+		h = nextq(&mon->waiters, h);
 		p = &tid->threadbase;
+		/*
+		 * A thread might receive XNGRANT albeit it does not
+		 * wait on a monitor, or it might have timed out
+		 * before we got there, so we really have to check
+		 * that ->wchan does match our sleep queue.
+		 */
 		if (bcast || ((*p->u_mode & XNGRANT) &&
 			      p->wchan == &tid->monitor_synch)) {
 			xnsynch_wakeup_this_sleeper(&tid->monitor_synch,
 						    &p->plink);
+			removeq(&mon->waiters, &tid->monitor_link);
 			resched = 1;
 		}
 	}
@@ -200,6 +214,11 @@ drain:
 			resched |= xnsynch_wakeup_one_sleeper(&mon->drain)
 				!= NULL;
 	}
+
+	if (resched &&
+	    emptyq_p(&mon->waiters) &&
+	    !xnsynch_pended_p(&mon->drain))
+		mon->data->flags &= ~COBALT_MONITOR_PENDED;
 
 	return resched;
 }
@@ -248,29 +267,25 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_monsh,
 	mon->data->flags |= COBALT_MONITOR_PENDED;
 
 	info = xnsynch_sleep_on(synch, timeout, tmode);
-	if ((info & XNRMID) != 0 ||
-	    !cobalt_obj_active(mon, COBALT_MONITOR_MAGIC,
-			       struct cobalt_monitor)) {
-		ret = -EINVAL;
-		goto out;
+	if (info) {
+		if ((info & XNRMID) != 0 ||
+		    !cobalt_obj_active(mon, COBALT_MONITOR_MAGIC,
+				       struct cobalt_monitor)) {
+			ret = -EINVAL;
+			goto out;
+		}
+
+		if ((event & COBALT_MONITOR_WAITDRAIN) == 0)
+			removeq(&mon->waiters, &cur->monitor_link);
+
+		if (emptyq_p(&mon->waiters) && !xnsynch_pended_p(&mon->drain))
+			mon->data->flags &= ~COBALT_MONITOR_PENDED;
+
+		if (info & XNBREAK)
+			opret = -EINTR;
+		else if (info & XNTIMEO)
+			opret = -ETIMEDOUT;
 	}
-
-	/*
-	 * We update the PENDED flag to inform userland about the
-	 * presence of waiters, so that it may decide not to issue any
-	 * syscall for exiting the monitor if there is nobody else
-	 * waiting at the gate.
-	 */
-	if ((event & COBALT_MONITOR_WAITDRAIN) == 0)
-		removeq(&mon->waiters, &cur->monitor_link);
-
-	if (emptyq_p(&mon->waiters) && !xnsynch_pended_p(&mon->drain))
-		mon->data->flags &= ~COBALT_MONITOR_PENDED;
-
-	if (info & XNBREAK)
-		opret = -EINTR;
-	else if (info & XNTIMEO)
-		opret = -ETIMEDOUT;
 
 	ret = cobalt_monitor_enter_inner(mon);
 out:
