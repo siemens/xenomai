@@ -166,6 +166,11 @@ static int cobalt_monitor_wakeup(struct cobalt_monitor *mon)
 	struct xnholder *h;
 	pthread_t tid;
 
+	/*
+	 * Having the GRANT signal pending does not necessarily mean
+	 * that somebody is actually waiting for it, so we have to
+	 * check both conditions below.
+	 */
 	if ((datp->flags & COBALT_MONITOR_GRANTED) == 0 ||
 	    emptyq_p(&mon->waiters))
 		goto drain;
@@ -202,11 +207,11 @@ static int cobalt_monitor_wakeup(struct cobalt_monitor *mon)
 	}
 drain:
 	/*
-	 * Unblock threads waiting for a drain event, either one or
-	 * all, depending on the broadcast bit.
+	 * Unblock threads waiting for a drain event if that signal is
+	 * pending, either one or all, depending on the broadcast bit.
 	 */
 	if ((datp->flags & COBALT_MONITOR_DRAINED) != 0 &&
-	    !xnsynch_pended_p(&mon->drain)) {
+	    xnsynch_pended_p(&mon->drain)) {
 		if (datp->flags & COBALT_MONITOR_BROADCAST)
 			resched |= xnsynch_flush(&mon->drain, 0)
 				== XNSYNCH_RESCHED;
@@ -228,6 +233,7 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_monsh,
 			int __user *u_ret)
 {
 	pthread_t cur = cobalt_current_thread();
+	struct cobalt_monitor_data *datp;
 	struct cobalt_monitor *mon = NULL;
 	xnticks_t timeout = XN_INFINITE;
 	xntmode_t tmode = XN_RELATIVE;
@@ -254,6 +260,15 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_monsh,
 		goto out;
 	}
 
+	/*
+	 * The current thread might have sent signals to the monitor
+	 * it wants to sleep on: wake up satisfied waiters before
+	 * going to sleep.
+	 */
+	datp = mon->data;
+	if (datp->flags & COBALT_MONITOR_SIGNALED)
+		cobalt_monitor_wakeup(mon);
+
 	/* Release the gate prior to waiting, all atomically. */
 	xnsynch_release(&mon->gate, &cur->threadbase);
 
@@ -264,7 +279,7 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_monsh,
 		*cur->threadbase.u_mode &= ~XNGRANT;
 		appendq(&mon->waiters, &cur->monitor_link);
 	}
-	mon->data->flags |= COBALT_MONITOR_PENDED;
+	datp->flags |= COBALT_MONITOR_PENDED;
 
 	info = xnsynch_sleep_on(synch, timeout, tmode);
 	if (info) {
@@ -279,7 +294,7 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_monsh,
 			removeq(&mon->waiters, &cur->monitor_link);
 
 		if (emptyq_p(&mon->waiters) && !xnsynch_pended_p(&mon->drain))
-			mon->data->flags &= ~COBALT_MONITOR_PENDED;
+			datp->flags &= ~COBALT_MONITOR_PENDED;
 
 		if (info & XNBREAK)
 			opret = -EINTR;
