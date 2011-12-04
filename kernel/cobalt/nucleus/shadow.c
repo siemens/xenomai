@@ -1846,6 +1846,7 @@ static void *xnshadow_sys_event(int event, void *data)
 			exe_path = NULL; /* Not lethal, but weird. */
 		}
 		p->exe_path = exe_path;
+		xnarch_atomic_set(&p->refcnt, 1);
 
 		return &p->ppd;
 
