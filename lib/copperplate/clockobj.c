@@ -328,10 +328,14 @@ void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks)
 
 #else /* CONFIG_XENO_MERCURY */
 
+#ifndef CONFIG_XENO_LORES_CLOCK_DISABLED
+
 sticks_t clockobj_ns_to_ticks(struct clockobj *clkobj, sticks_t ns)
 {
 	return ns / clkobj->resolution;
 }
+
+#endif /* !CONFIG_XENO_LORES_CLOCK_DISABLED */
 
 void clockobj_get_time(struct clockobj *clkobj, ticks_t *pticks,
 		       ticks_t *ptsc)
