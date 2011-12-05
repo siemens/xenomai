@@ -71,25 +71,22 @@ typedef struct cobalt_cond {
 static inline int cobalt_cond_deferred_signals(struct cobalt_cond *cond)
 {
 	unsigned long pending_signals;
-	int need_resched, i, sleepers;
+	int need_resched;
 
-	pending_signals = *(cond->pending_signals);
+	pending_signals = *cond->pending_signals;
 
 	switch(pending_signals) {
 	default:
-		sleepers = xnsynch_nsleepers(&cond->synchbase);
-		if (pending_signals > sleepers)
-			pending_signals = sleepers;
-		need_resched = !!pending_signals;
-		for(i = 0; i < pending_signals; i++)
-			xnsynch_wakeup_one_sleeper(&cond->synchbase);
 		*cond->pending_signals = 0;
+		need_resched = xnsynch_wakeup_many_sleepers(&cond->synchbase,
+							    pending_signals);
 		break;
 
 	case ~0UL:
 		need_resched =
 			xnsynch_flush(&cond->synchbase, 0) == XNSYNCH_RESCHED;
 		*cond->pending_signals = 0;
+		break;
 
 	case 0:
 		need_resched = 0;
