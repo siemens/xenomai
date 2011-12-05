@@ -264,19 +264,18 @@ int xnsynch_wakeup_many_sleepers(struct xnsynch *synch, int nr)
 {
 	struct xnpholder *holder;
 	struct xnthread *thread;
-	int ret = 0;
+	int sleepers, i;
 	spl_t s;
 
 	XENO_BUGON(NUCLEUS, testbits(synch->status, XNSYNCH_OWNER));
 
 	xnlock_get_irqsave(&nklock, s);
 
-	for (;;) {
-		if (nr >= ret)
-			break;
+	sleepers = xnsynch_nsleepers(synch);
+	if (nr > sleepers)
+		nr = sleepers;
+	for (i = 0; i < nr; i++) {
 		holder = getpq(&synch->pendq);
-		if (holder == NULL)
-			break;
 
 		thread = link2thread(holder, plink);
 		thread->wchan = NULL;
@@ -284,14 +283,13 @@ int xnsynch_wakeup_many_sleepers(struct xnsynch *synch, int nr)
 			   "thread %p thread_name %s synch %p",
 			   thread, xnthread_name(thread), synch);
 		xnpod_resume_thread(thread, XNPEND);
-		ret++;
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
 
 	xnarch_post_graph_if(synch, 0, emptypq_p(&synch->pendq));
 
-	return ret;
+	return nr;
 }
 EXPORT_SYMBOL_GPL(xnsynch_wakeup_many_sleepers);
 
