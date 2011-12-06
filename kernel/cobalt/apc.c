@@ -18,7 +18,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "sig.h"
+#include "thread.h"
 #include "apc.h"
 
 #define COBALT_LO_MAX_REQUESTS 64	/* Must be a ^2 */
@@ -61,16 +61,8 @@ static void cobalt_lostage_handle_request(void *cookie)
 
 		rq->out = (reqnum + 1) & (COBALT_LO_MAX_REQUESTS - 1);
 
-		switch (req->type){
-#ifndef __XENO_SIM__
-		case COBALT_LO_SIGNAL_REQ:
-			cobalt_signal_handle_request((pthread_t) req->arg);
-			break;
-#endif
-		case COBALT_LO_FREE_REQ:
+		if (req->type == COBALT_LO_FREE_REQ)
 			xnarch_free_host_mem(req->arg, req->size);
-			break;
-		}
 	}
 }
 

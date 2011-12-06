@@ -74,8 +74,6 @@ typedef struct {
 	cobalt_kqueues_t kqueues;
 	cobalt_assocq_t uqds;
 	cobalt_assocq_t usems;
-	cobalt_assocq_t umaps;
-	cobalt_assocq_t ufds;
 
 	xnshadow_ppd_t ppd;
 

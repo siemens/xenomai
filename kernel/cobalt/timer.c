@@ -29,11 +29,19 @@
 
 #define COBALT_TIMER_MAX  128
 
+typedef struct {
+    siginfo_t info;
+    xnpholder_t link;
+
+#define link2siginfo(iaddr) \
+    ((cobalt_siginfo_t *)(((char *)iaddr) - offsetof(cobalt_siginfo_t, link)))
+
+} cobalt_siginfo_t;
+
 struct cobalt_timer {
 
 	xntimer_t timerbase;
 
-	unsigned queued;
 	unsigned overruns;
 
 	xnholder_t link; /* link in process or global timers queue. */
@@ -60,15 +68,8 @@ static void cobalt_base_timer_handler(xntimer_t *xntimer)
 	struct cobalt_sem *sem;
 
 	timer = container_of(xntimer, struct cobalt_timer, timerbase);
-	if (timer->si.info.si_signo) {
-		if (!timer->queued) {
-			timer->queued = 1;
-			cobalt_sigqueue_inner(timer->owner, &timer->si);
-		}
-		return;
-	}
 
-	/* Null signo means to post a semaphore instead. */
+	/* post a semaphore. */
 	sem = timer->si.info.si_value.sival_ptr;
 	if (sem && sem_post_inner(sem, NULL, 0) < 0)
 		/*
@@ -84,7 +85,6 @@ void cobalt_timer_notified(cobalt_siginfo_t * si)
 	struct cobalt_timer *timer = link2tm(si, si);
 	xnticks_t now;
 
-	timer->queued = 0;
 	/* We need this two staged overruns count. The overruns count returned by
 	   timer_getoverrun is the count of overruns which occured between the time
 	   the signal was queued and the time this signal was accepted by the
@@ -171,26 +171,20 @@ int timer_create(clockid_t clockid,
 	 */
 	signo = SIGALRM;
 	if (evp) {
-		switch (evp->sigev_notify) {
-		case SIGEV_THREAD_ID:
-			/* Quick check to detect trivial mistakes early. */
-			sem = evp->sigev_value.sival_ptr;
-			if (sem == NULL)
-				goto error;
-			shadow_sem = &((union __xeno_sem *)sem)->shadow_sem;
-			err = sem_getvalue(shadow_sem->sem, &semval);
-			if (err)
-				goto error;
-			signo = 0;
-			break;
-
-		case SIGEV_SIGNAL:
-			signo = evp->sigev_signo;
-			if ((unsigned)(signo - 1) <= SIGRTMAX - 1)
-				break;
-		default:
+		if (evp->sigev_notify != SIGEV_THREAD_ID) {
+			err = ENOSYS;
 			goto error;
 		}
+
+		/* Quick check to detect trivial mistakes early. */
+		sem = evp->sigev_value.sival_ptr;
+		if (sem == NULL)
+			goto error;
+		shadow_sem = &((union __xeno_sem *)sem)->shadow_sem;
+		err = sem_getvalue(shadow_sem->sem, &semval);
+		if (err)
+			goto error;
+		signo = 0;
 	}
 
 	xnlock_get_irqsave(&nklock, s);
@@ -206,10 +200,7 @@ int timer_create(clockid_t clockid,
 	timer->si.info.si_signo = signo;
 
 	if (evp) {
-		if (shadow_sem)
-			timer->si.info.si_value.sival_ptr = shadow_sem->sem;
-		else
-			timer->si.info.si_value = evp->sigev_value;
+		timer->si.info.si_value.sival_ptr = shadow_sem->sem;
 	} else
 		timer->si.info.si_value.sival_int = (timer - timer_pool);
 
@@ -260,12 +251,6 @@ int cobalt_timer_delete_inner(timer_t timerid, cobalt_kqueues_t *q, int force)
 	}
 
 	removeq(&q->timerq, &timer->link);
-
-	if (timer->queued) {
-		/* timer signal is queued, unqueue it. */
-		cobalt_sigunqueue(timer->owner, &timer->si);
-		timer->queued = 0;
-	}
 
 	xntimer_destroy(&timer->timerbase);
 	if (timer->owner)
@@ -416,12 +401,6 @@ int timer_settime(timer_t timerid,
 
 	if (ovalue)
 		cobalt_timer_gettime_inner(timer, ovalue);
-
-	if (timer->queued) {
-		/* timer signal is queued, unqueue it. */
-		cobalt_sigunqueue(timer->owner, &timer->si);
-		timer->queued = 0;
-	}
 
 	if (timer->owner)
 		removeq(&timer->owner->timersq, &timer->tlink);

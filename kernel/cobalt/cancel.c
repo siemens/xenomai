@@ -304,10 +304,6 @@ int pthread_setcanceltype(int type, int *oldtype_ptr)
 
 	thread_setcanceltype(cur, type);
 
-	if (type == PTHREAD_CANCEL_ASYNCHRONOUS
-	    && thread_getcancelstate(cur) == PTHREAD_CANCEL_ENABLE)
-		thread_cancellation_point(&cur->threadbase);
-
 	if (oldtype_ptr)
 		*oldtype_ptr = oldtype;
 
@@ -376,43 +372,12 @@ int pthread_setcancelstate(int state, int *oldstate_ptr)
 	oldstate = thread_getcancelstate(cur);
 	thread_setcancelstate(cur, state);
 
-	if (state == PTHREAD_CANCEL_ENABLE
-	    && thread_getcanceltype(cur) == PTHREAD_CANCEL_ASYNCHRONOUS)
-		thread_cancellation_point(&cur->threadbase);
-
 	if (oldstate_ptr)
 		*oldstate_ptr = oldstate;
 
 	xnlock_put_irqrestore(&nklock, s);
 
 	return 0;
-}
-
-/**
- * Test if a cancellation request is pending.
- *
- * This function creates a cancellation point if the calling thread is a Xenomai
- * POSIX skin thread (i.e. created with the pthread_create() service).
- *
- * This function is a cancellation point. It has no effect if cancellation is
- * disabled.
- *
- * @par Valid contexts:
- * - Xenomai POSIX skin kernel-space thread,
- * - Xenomai POSIX skin user-space thread (switches to primary mode).
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_testcancel.html">
- * Specification.</a>
- *
- */
-void pthread_testcancel(void)
-{
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-	thread_cancellation_point(xnpod_current_thread());
-	xnlock_put_irqrestore(&nklock, s);
 }
 
 void cobalt_cancel_init_thread(pthread_t thread)

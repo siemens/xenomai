@@ -243,8 +243,6 @@ static inline int cobalt_cond_timedwait_prologue(xnthread_t *cur,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	thread_cancellation_point(cur);
-
 	/* If another thread waiting for cond does not use the same mutex */
 	if (!cobalt_obj_active(cond, COBALT_COND_MAGIC, struct cobalt_cond)
 	    || (cond->mutex && cond->mutex != mutex)) {
@@ -337,8 +335,6 @@ static inline int cobalt_cond_timedwait_epilogue(xnthread_t *cur,
 		removeq(&mutex->conds, &cond->mutex_link);
 	}
 
-	thread_cancellation_point(cur);
-
       unlock_and_return:
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -430,32 +426,22 @@ int cobalt_cond_wait_prologue(struct __shadow_cond __user *u_cnd,
 	case -ETIMEDOUT:
 		perr = d.err = err;
 		err = cobalt_cond_timedwait_epilogue(cur, cnd, mx);
-
-		if (!cnd->mutex) {
-			datp = (struct mutex_dat *)~0UL;
-			__xn_put_user(datp, &u_cnd->mutex_datp);
-		}
 		break;
 
 	case -EINTR:
-		if (!cnd->mutex) {
-			datp = (struct mutex_dat *)~0UL;
-			__xn_put_user(datp, &u_cnd->mutex_datp);
-		}
-
 		perr = err;
 		d.err = 0;	/* epilogue should return 0. */
 		break;
 
 	default:
-		if (!cnd->mutex) {
-			datp = (struct mutex_dat *)~0UL;
-			__xn_put_user(datp, &u_cnd->mutex_datp);
-		}
-
 		/* Please gcc and handle the case which will never
 		   happen */
 		d.err = EINVAL;
+	}
+
+	if (!cnd->mutex) {
+		datp = (struct mutex_dat *)~0UL;
+		__xn_put_user(datp, &u_cnd->mutex_datp);
 	}
 
 	if (err == -EINTR)

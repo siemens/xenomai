@@ -188,17 +188,3 @@ ssize_t __wrap_mq_timedreceive(mqd_t q,
 	errno = -err;
 	return -1;
 }
-
-int __wrap_mq_notify(mqd_t mqdes, const struct sigevent *notification)
-{
-	int err;
-
-	err = XENOMAI_SKINCALL2(__cobalt_muxid,
-				sc_cobalt_mq_notify, mqdes, notification);
-	if (err) {
-		errno = -err;
-		return -1;
-	}
-
-	return 0;
-}

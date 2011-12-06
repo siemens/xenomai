@@ -273,34 +273,17 @@ int pthread_attr_getaffinity_np(const pthread_attr_t *attr,
 int pthread_attr_setaffinity_np(pthread_attr_t *attr,
 				xnarch_cpumask_t mask);
 
-int pthread_create(pthread_t *tid,
-		   const pthread_attr_t *attr,
-		   void *(*start) (void *),
-		   void *arg ) __deprecated_in_kernel__;
-
-int pthread_detach(pthread_t thread);
-
-int pthread_equal(pthread_t t1,
-		  pthread_t t2);
-
-void pthread_exit(void *value_ptr);
-
-int pthread_join(pthread_t thread,
-		 void **value_ptr);
-
-pthread_t pthread_self(void);
-
 int pthread_getschedparam(pthread_t tid,
 			  int *pol,
 			  struct sched_param *par);
 
-int pthread_getschedparam_ex(pthread_t tid,
-			     int *pol,
-			     struct sched_param_ex *par);
-
 int pthread_setschedparam(pthread_t tid,
 			  int pol,
 			  const struct sched_param *par);
+
+int pthread_getschedparam_ex(pthread_t tid,
+			     int *pol,
+			     struct sched_param_ex *par);
 
 int pthread_setschedparam_ex(pthread_t tid,
 			     int pol,
@@ -353,47 +336,6 @@ int pthread_condattr_setclock(pthread_condattr_t *attr,
 int pthread_condattr_getpshared(const pthread_condattr_t *attr, int *pshared);
 
 int pthread_condattr_setpshared(pthread_condattr_t *attr, int pshared);
-
-int pthread_cancel(pthread_t thread);
-
-void pthread_cleanup_push(void (*routine)(void *),
-			  void *arg);
-
-void pthread_cleanup_pop(int execute);
-
-int pthread_setcancelstate(int state,
-			   int *oldstate);
-
-int pthread_setcanceltype(int type,
-			  int *oldtype);
-
-void pthread_testcancel(void);
-
-int pthread_key_create(pthread_key_t *key,
-		       void (*destructor)(void *));
-
-int pthread_key_delete(pthread_key_t key);
-
-void *pthread_getspecific(pthread_key_t key);
-
-int pthread_setspecific(pthread_key_t key,
-			const void *value);
-
-int pthread_once(pthread_once_t *once_control,
-		 void (*init_routine)(void));
-
-int pthread_make_periodic_np(pthread_t thread,
-			     clockid_t clk_id,
-			     struct timespec *starttp,
-			     struct timespec *periodtp);
-
-int pthread_wait_np(unsigned long *overruns_r);
-
-int pthread_set_mode_np(int clrmask, int setmask,
-			int *mask_r);
-
-int pthread_set_name_np(pthread_t thread,
-			const char *name);
 
 #ifdef __cplusplus
 }

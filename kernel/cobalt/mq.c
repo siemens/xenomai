@@ -35,7 +35,6 @@
 #include "registry.h"
 #include "internal.h"		/* Magics, time conversion */
 #include "thread.h"		/* errno. */
-#include "sig.h"		/* cobalt_siginfo_t. */
 #ifdef __KERNEL__
 #include <linux/fs.h>		/* Make sure ERR_PTR is defined for all kernel versions */
 #include "apc.h"
@@ -56,11 +55,6 @@ struct cobalt_mq {
 	size_t memsize;
 	char *mem;
 	xnqueue_t avail;
-
-	/* mq_notify */
-	cobalt_siginfo_t si;
-	mqd_t target_qd;
-	pthread_t target;
 
 	struct mq_attr attr;
 
@@ -142,7 +136,6 @@ static int cobalt_mq_init(cobalt_mq_t * mq, const struct mq_attr *attr)
 	}
 
 	mq->attr = *attr;
-	mq->target = NULL;
 	xnselect_init(&mq->read_select);
 	xnselect_init(&mq->write_select);
 
@@ -381,8 +374,6 @@ int mq_close(mqd_t fd)
 	if (err)
 		goto err_unlock;
 
-	if (mq->target_qd == fd)
-		mq->target = NULL;
 	if (cobalt_node_removed_p(&mq->nodebase)) {
 		xnlock_put_irqrestore(&nklock, s);
 
@@ -563,14 +554,10 @@ cobalt_msg_t *cobalt_mq_timedsend_inner(cobalt_mq_t **mqp, mqd_t fd, size_t len,
 
 		mq = node2mq(cobalt_desc_node(desc));
 
-		thread_cancellation_point(cur);
-
 		if (abs_timeoutp)
 			xnsynch_sleep_on(&mq->senders, to, XN_REALTIME);
 		else
 			xnsynch_sleep_on(&mq->senders, to, XN_RELATIVE);
-
-		thread_cancellation_point(cur);
 
 		if (xnthread_test_info(cur, XNBREAK)) {
 			msg = ERR_PTR(-EINTR);
@@ -612,13 +599,6 @@ int cobalt_mq_finish_send(mqd_t fd, cobalt_mq_t *mq, cobalt_msg_t *msg)
 
 	if (xnsynch_wakeup_one_sleeper(&mq->receivers))
 		resched = 1;
-	else if (mq->target && countpq(&mq->queued) == 1) {
-		/* First message ? no pending reader ? attempt
-		   to send a signal if mq_notify was called. */
-		if (cobalt_sigqueue_inner(mq->target, &mq->si))
-			resched = 1;
-		mq->target = NULL;
-	}
 
   unref:
 	cobalt_node_put(&mq->nodebase);
@@ -689,14 +669,10 @@ cobalt_msg_t *cobalt_mq_timedrcv_inner(cobalt_mq_t **mqp, mqd_t fd, size_t len,
 
 		mq = node2mq(cobalt_desc_node(desc));
 
-		thread_cancellation_point(cur);
-
 		if (abs_timeoutp)
 			xnsynch_sleep_on(&mq->receivers, to, XN_REALTIME);
 		else
 			xnsynch_sleep_on(&mq->receivers, to, XN_RELATIVE);
-
-		thread_cancellation_point(cur);
 
 		if (xnthread_test_info(cur, XNRMID)) {
 			msg = ERR_PTR(-EBADF);
@@ -1132,102 +1108,6 @@ int mq_setattr(mqd_t fd,
 	xnlock_put_irqrestore(&nklock, s);
 
 	return 0;
-}
-
-/**
- * Register the current thread to be notified of message arrival at an empty
- * message queue.
- *
- * If @a evp is not @a NULL and is the address of a @b sigevent structure with
- * the @a sigev_notify member set to SIGEV_SIGNAL, the current thread will be
- * notified by a signal when a message is sent to the message queue @a fd, the
- * queue is empty, and no thread is blocked in call to mq_receive() or
- * mq_timedreceive(). After the notification, the thread is unregistered.
- *
- * If @a evp is @a NULL or the @a sigev_notify member is SIGEV_NONE, the current
- * thread is unregistered.
- *
- * Only one thread may be registered at a time.
- *
- * If the current thread is not a Xenomai POSIX skin thread (created with
- * pthread_create()), this service fails.
- *
- * Note that signals sent to user-space Xenomai POSIX skin threads will cause
- * them to switch to secondary mode.
- *
- * @param fd message queue descriptor;
- *
- * @param evp pointer to an event notification structure.
- *
- * @retval 0 on success;
- * @retval -1 with @a errno set if:
- * - EINVAL, @a evp is invalid;
- * - EPERM, the caller context is invalid;
- * - EBADF, @a fd is not a valid message queue descriptor;
- * - EBUSY, another thread is already registered.
- *
- * @par Valid contexts:
- * - Xenomai kernel-space POSIX skin thread,
- * - Xenomai user-space POSIX skin thread (switches to primary mode).
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_notify.html">
- * Specification.</a>
- *
- */
-int mq_notify(mqd_t fd, const struct sigevent *evp)
-{
-	pthread_t thread = cobalt_current_thread();
-	cobalt_desc_t *desc;
-	cobalt_mq_t *mq;
-	int err;
-	spl_t s;
-
-	if (evp && ((evp->sigev_notify != SIGEV_SIGNAL &&
-		     evp->sigev_notify != SIGEV_NONE) ||
-		    (unsigned)(evp->sigev_signo - 1) > SIGRTMAX - 1)) {
-		err = EINVAL;
-		goto error;
-	}
-
-	if (xnpod_asynch_p() || !thread) {
-		err = EPERM;
-		goto error;
-	}
-
-	xnlock_get_irqsave(&nklock, s);
-
-	err = cobalt_desc_get(&desc, fd, COBALT_MQ_MAGIC);
-
-	if (err)
-		goto unlock_and_error;
-
-	mq = node2mq(cobalt_desc_node(desc));
-
-	if (mq->target && mq->target != thread) {
-		err = EBUSY;
-		goto unlock_and_error;
-	}
-
-	if (!evp || evp->sigev_notify == SIGEV_NONE)
-		/* Here, mq->target == cobalt_current_thread() or NULL. */
-		mq->target = NULL;
-	else {
-		mq->target = thread;
-		mq->target_qd = fd;
-		mq->si.info.si_signo = evp->sigev_signo;
-		mq->si.info.si_code = SI_MESGQ;
-		mq->si.info.si_value = evp->sigev_value;
-	}
-
-	xnlock_put_irqrestore(&nklock, s);
-	return 0;
-
-      unlock_and_error:
-	xnlock_put_irqrestore(&nklock, s);
-      error:
-	thread_set_errno(err);
-	return -1;
 }
 
 int cobalt_mq_select_bind(mqd_t fd, struct xnselector *selector,

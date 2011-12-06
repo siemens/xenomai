@@ -24,7 +24,6 @@
 #endif /* __XENO_SIM__ */
 
 #define sc_cobalt_thread_create         0
-#define sc_cobalt_thread_detach         1
 #define sc_cobalt_thread_setschedparam  2
 #define sc_cobalt_sched_yield           3
 #define sc_cobalt_thread_make_periodic  4
@@ -74,14 +73,6 @@
 #define sc_cobalt_sem_unlink            50
 #define sc_cobalt_sem_timedwait         51
 #define sc_cobalt_mq_notify             52
-#define sc_cobalt_shm_open              53
-#define sc_cobalt_shm_unlink            54
-#define sc_cobalt_shm_close             55
-#define sc_cobalt_ftruncate             56
-#define sc_cobalt_mmap_prologue         57
-#define sc_cobalt_mmap_epilogue         58
-#define sc_cobalt_munmap_prologue       59
-#define sc_cobalt_munmap_epilogue       60
 #define sc_cobalt_mutexattr_init        61
 #define sc_cobalt_mutexattr_destroy     62
 #define sc_cobalt_mutexattr_gettype     63

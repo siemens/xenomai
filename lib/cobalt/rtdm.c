@@ -105,7 +105,6 @@ int __wrap_socket(int protocol_family, int socket_type, int protocol)
 
 int __wrap_close(int fd)
 {
-	extern int __shm_close(int fd);
 	int ret;
 
 	if (fd >= __rtdm_fd_start) {
@@ -121,9 +120,6 @@ int __wrap_close(int fd)
 
 		return ret;
 	} else
-		ret = __shm_close(fd);
-
-	if (ret == -1 && (errno == EBADF || errno == ENOSYS))
 		return __STD(close(fd));
 
 	return ret;

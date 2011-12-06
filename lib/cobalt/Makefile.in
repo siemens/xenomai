@@ -86,9 +86,8 @@ am_libcobalt_la_OBJECTS = libcobalt_la-assert_context.lo \
 	libcobalt_la-thread.lo libcobalt_la-timer.lo \
 	libcobalt_la-semaphore.lo libcobalt_la-clock.lo \
 	libcobalt_la-cond.lo libcobalt_la-mq.lo libcobalt_la-mutex.lo \
-	libcobalt_la-shm.lo libcobalt_la-select.lo \
-	libcobalt_la-rtdm.lo libcobalt_la-printf.lo \
-	libcobalt_la-wrappers.lo
+	libcobalt_la-select.lo libcobalt_la-rtdm.lo \
+	libcobalt_la-printf.lo libcobalt_la-wrappers.lo
 libcobalt_la_OBJECTS = $(am_libcobalt_la_OBJECTS)
 libcobalt_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -295,7 +294,6 @@ libcobalt_la_SOURCES = \
 	cond.c \
 	mq.c \
 	mutex.c \
-	shm.c \
 	select.c \
 	rtdm.c \
 	printf.c \
@@ -396,7 +394,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcobalt_la-select.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcobalt_la-sem_heap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcobalt_la-semaphore.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcobalt_la-shm.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcobalt_la-sigshadow.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcobalt_la-thread.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcobalt_la-timeconv.Plo@am__quote@
@@ -535,13 +532,6 @@ libcobalt_la-mutex.lo: mutex.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mutex.c' object='libcobalt_la-mutex.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcobalt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcobalt_la-mutex.lo `test -f 'mutex.c' || echo '$(srcdir)/'`mutex.c
-
-libcobalt_la-shm.lo: shm.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcobalt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcobalt_la-shm.lo -MD -MP -MF $(DEPDIR)/libcobalt_la-shm.Tpo -c -o libcobalt_la-shm.lo `test -f 'shm.c' || echo '$(srcdir)/'`shm.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libcobalt_la-shm.Tpo $(DEPDIR)/libcobalt_la-shm.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='shm.c' object='libcobalt_la-shm.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcobalt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcobalt_la-shm.lo `test -f 'shm.c' || echo '$(srcdir)/'`shm.c
 
 libcobalt_la-select.lo: select.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcobalt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcobalt_la-select.lo -MD -MP -MF $(DEPDIR)/libcobalt_la-select.Tpo -c -o libcobalt_la-select.lo `test -f 'select.c' || echo '$(srcdir)/'`select.c

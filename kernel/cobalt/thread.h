@@ -65,31 +65,8 @@ struct cobalt_thread {
 
 	pthread_attr_t attr;        /* creation attributes */
 
-	void *(*entry)(void *arg);  /* start routine */
-	void *arg;                  /* start routine argument */
-
-	/* For pthread_join */
-	void *exit_status;
-	xnsynch_t join_synch;       /* synchronization object, used by other threads
-				       waiting for this one to finish. */
-	int nrt_joiners;
-
-	/* For pthread_cancel */
-	unsigned cancelstate : 2;
-	unsigned canceltype : 2;
-	unsigned cancel_request : 1;
-	xnqueue_t cleanup_handlers_q;
-
 	/* errno value for this thread. */
 	int err;
-
-	/* For signals handling. */
-	cobalt_sigset_t sigmask;     /* signals mask. */
-	cobalt_sigqueue_t pending;   /* Pending signals */
-	cobalt_sigqueue_t blocked_received; /* Blocked signals received. */
-
-	/* For thread specific data. */
-	const void *tsd [PTHREAD_KEYS_MAX];
 
 	/* For timers. */
 	xnqueue_t timersq;
@@ -122,50 +99,54 @@ static inline int thread_get_errno (void)
 
 #define thread_name(thread) ((thread)->attr.name)
 
-#define thread_exit_status(thread) ((thread)->exit_status)
+int cobalt_thread_create(unsigned long tid, int policy,
+			 struct sched_param_ex __user *u_param,
+			 unsigned long __user *u_mode);
 
-#define thread_getdetachstate(thread) ((thread)->attr.detachstate)
+pthread_t cobalt_thread_shadow(struct task_struct *p,
+			       struct cobalt_hkey *hkey,
+			       unsigned long __user *u_mode_offset);
 
-#define thread_setdetachstate(thread, state) ((thread)->attr.detachstate=state)
+int cobalt_thread_setschedparam(unsigned long tid,
+				int policy,
+				struct sched_param __user *u_param,
+				unsigned long __user *u_mode_offset,
+				int __user *u_promoted);
 
-#define thread_getcancelstate(thread) ((thread)->cancelstate)
+int cobalt_thread_setschedparam_ex(unsigned long tid,
+				   int policy,
+				   struct sched_param __user *u_param,
+				   unsigned long __user *u_mode_offset,
+				   int __user *u_promoted);
 
-#define thread_setcancelstate(thread, state) ((thread)->cancelstate=state)
+int cobalt_thread_getschedparam(unsigned long tid,
+				int __user *u_policy,
+				struct sched_param __user *u_param);
 
-#define thread_setcanceltype(thread, type) ((thread)->canceltype=type)
+int cobalt_thread_getschedparam_ex(unsigned long tid,
+				   int __user *u_policy,
+				   struct sched_param __user *u_param);
 
-#define thread_getcanceltype(thread) ((thread)->canceltype)
 
-#define thread_clrcancel(thread) ((thread)->cancel_request = 0)
+int cobalt_sched_yield(void);
 
-#define thread_setcancel(thread) ((thread)->cancel_request = 1)
+int cobalt_thread_make_periodic_np(unsigned long tid,
+				   clockid_t clk_id,
+				   struct timespec __user *u_startt,
+				   struct timespec __user *u_periodt);
 
-#define thread_cleanups(thread) (&(thread)->cleanup_handlers_q)
+int cobalt_thread_wait_np(unsigned long __user *u_overruns);
 
-#define thread_gettsd(thread, key) ((thread)->tsd[key])
+int cobalt_thread_set_mode_np(int clrmask, int setmask, int __user *u_mode_r);
 
-#define thread_settsd(thread, key, value) ((thread)->tsd[key]=(value))
+int cobalt_thread_set_name_np(unsigned long tid, const char __user *u_name);
 
-void cobalt_thread_abort(pthread_t thread, void *status);
+int cobalt_thread_probe_np(pid_t h_tid);
 
-struct cobalt_hash *cobalt_thread_hash(const struct cobalt_hkey *hkey,
-				       pthread_t k_tid,
-				       pid_t h_tid);
+int cobalt_thread_kill(unsigned long tid, int sig);
 
-void cobalt_thread_unhash(const struct cobalt_hkey *hkey);
-
-pthread_t cobalt_thread_find(const struct cobalt_hkey *hkey);
-
-int cobalt_thread_probe(pid_t h_tid);
-
-static inline void thread_cancellation_point (xnthread_t *thread)
-{
-    pthread_t cur = thread2pthread(thread);
-
-    if(cur && cur->cancel_request
-	&& thread_getcancelstate(cur) == PTHREAD_CANCEL_ENABLE )
-	cobalt_thread_abort(cur, PTHREAD_CANCELED);
-}
+int cobalt_thread_stat(unsigned long tid,
+		       struct cobalt_threadstat __user *u_stat);
 
 void cobalt_threadq_cleanup(cobalt_kqueues_t *q);
 

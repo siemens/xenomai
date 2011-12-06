@@ -55,14 +55,11 @@
 #include "cond.h"
 #include "mutex.h"
 #include "sem.h"
-#include "sig.h"
 #include "thread.h"
-#include "tsd.h"
 #include "mq.h"
 #include "timer.h"
 #include "registry.h"
 #include "monitor.h"
-#include "shm.h"
 
 MODULE_DESCRIPTION("POSIX/COBALT interface");
 MODULE_AUTHOR("gilles.chanteperdrix@xenomai.org");
@@ -71,21 +68,13 @@ MODULE_LICENSE("GPL");
 static void cobalt_shutdown(int xtype)
 {
 	cobalt_thread_pkg_cleanup();
-#ifdef CONFIG_XENO_OPT_POSIX_SHM
-	cobalt_shm_pkg_cleanup();
-#endif /* CONFIG_XENO_OPT_POSIX_SHM */
 	cobalt_timer_pkg_cleanup();
 	cobalt_monitor_pkg_cleanup();
 	cobalt_mq_pkg_cleanup();
 	cobalt_cond_pkg_cleanup();
-	cobalt_tsd_pkg_cleanup();
 	cobalt_sem_pkg_cleanup();
 	cobalt_mutex_pkg_cleanup();
-	cobalt_signal_pkg_cleanup();
 	cobalt_reg_pkg_cleanup();
-#ifdef CONFIG_XENO_OPT_POSIX_INTR
-	cobalt_intr_pkg_cleanup();
-#endif /* CONFIG_XENO_OPT_POSIX_INTR */
 #ifdef __KERNEL__
 	cobalt_syscall_cleanup();
 	cobalt_apc_pkg_cleanup();
@@ -122,20 +111,12 @@ int SKIN_INIT(posix)
 	}
 
 	cobalt_reg_pkg_init(64, 128);	/* FIXME: replace with compilation constants. */
-	cobalt_signal_pkg_init();
 	cobalt_mutex_pkg_init();
 	cobalt_sem_pkg_init();
-	cobalt_tsd_pkg_init();
 	cobalt_cond_pkg_init();
 	cobalt_mq_pkg_init();
 	cobalt_monitor_pkg_init();
-#ifdef CONFIG_XENO_OPT_POSIX_INTR
-	cobalt_intr_pkg_init();
-#endif /* CONFIG_XENO_OPT_POSIX_INTR */
 	cobalt_timer_pkg_init();
-#ifdef CONFIG_XENO_OPT_POSIX_SHM
-	cobalt_shm_pkg_init();
-#endif /* CONFIG_XENO_OPT_POSIX_SHM */
 
 	cobalt_thread_pkg_init(CONFIG_XENO_OPT_RR_QUANTUM * 1000);
 

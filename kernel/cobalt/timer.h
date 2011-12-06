@@ -19,9 +19,7 @@
 #ifndef _POSIX_TIMER_H
 #define _POSIX_TIMER_H
 
-#include "sig.h"        /* For struct itimerspec. */
-
-void cobalt_timer_notified(cobalt_siginfo_t *si);
+#include "thread.h"        /* For struct itimerspec. */
 
 void cobalt_timer_init_thread(pthread_t new);
 

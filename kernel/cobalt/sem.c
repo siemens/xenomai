@@ -532,15 +532,10 @@ sem_timedwait_internal(cobalt_sem_t *sem, int timed, xnticks_t to)
 	if ((err = sem_trywait_internal(sem)) != -EAGAIN)
 		return err;
 
-	thread_cancellation_point(cur);
-
 	if (timed)
 		xnsynch_sleep_on(&sem->synchbase, to, XN_REALTIME);
 	else
 		xnsynch_sleep_on(&sem->synchbase, XN_INFINITE, XN_RELATIVE);
-
-	/* Handle cancellation requests. */
-	thread_cancellation_point(cur);
 
 	if (xnthread_test_info(cur, XNRMID))
 		return -EINVAL;

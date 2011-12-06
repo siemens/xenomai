@@ -34,418 +34,12 @@
 #include "mq.h"
 #include "registry.h"	/* For COBALT_MAXNAME. */
 #include "sem.h"
-#include "shm.h"
 #include "timer.h"
 #include "monitor.h"
 #include <rtdm/rtdm_driver.h>
 #define RTDM_FD_MAX CONFIG_XENO_OPT_RTDM_FILDES
 
 int cobalt_muxid;
-
-/*
- * We want to keep the native pthread_t token unmodified for Xenomai
- * mapped threads, and keep it pointing at a genuine NPTL/LinuxThreads
- * descriptor, so that portions of the POSIX interface which are not
- * overriden by Xenomai fall back to the original Linux services.
- *
- * If the latter invoke Linux system calls, the associated shadow
- * thread will simply switch to secondary exec mode to perform
- * them. For this reason, we need an external index to map regular
- * pthread_t values to Xenomai's internal thread ids used in
- * syscalling the POSIX skin, so that the outer interface can keep on
- * using the former transparently.
- *
- * Semaphores and mutexes do not have this constraint, since we fully
- * override their respective interfaces with Xenomai-based
- * replacements.
- */
-
-static int __pthread_create(unsigned long tid, int policy,
-			    struct sched_param_ex __user *u_param,
-			    unsigned long __user *u_mode)
-{
-	struct task_struct *p = current;
-	struct sched_param_ex param;
-	struct cobalt_hkey hkey;
-	pthread_attr_t attr;
-	pthread_t k_tid;
-	pid_t h_tid;
-	int ret;
-
-	if (__xn_safe_copy_from_user(&param, u_param, sizeof(param)))
-		return -EFAULT;
-	/*
-	 * We have been passed the pthread_t identifier the user-space
-	 * POSIX library has assigned to our caller; we'll index our
-	 * internal pthread_t descriptor in kernel space on it.
-	 */
-	hkey.u_tid = tid;
-	hkey.mm = p->mm;
-
-	/*
-	 * Build a default thread attribute, then make sure that a few
-	 * critical fields are set in a compatible fashion wrt to the
-	 * calling context.
-	 */
-	pthread_attr_init(&attr);
-	attr.policy = policy;
-	attr.detachstate = PTHREAD_CREATE_DETACHED;
-	attr.schedparam_ex = param;
-	attr.fp = 1;
-	attr.name = p->comm;
-
-	ret = pthread_create(&k_tid, &attr, NULL, NULL);
-	if (ret)
-		return -ret;
-
-	h_tid = task_pid_vnr(p);
-	ret = xnshadow_map(&k_tid->threadbase, NULL, u_mode);
-	if (ret)
-		goto fail;
-
-	if (!cobalt_thread_hash(&hkey, k_tid, h_tid)) {
-		ret = -ENOMEM;
-		goto fail;
-	}
-
-	k_tid->hkey = hkey;
-
-	return 0;
-
-fail:
-	cobalt_thread_abort(k_tid, NULL);
-
-	return ret;
-}
-
-#define __pthread_detach  __cobalt_call_not_available
-
-static pthread_t __pthread_shadow(struct task_struct *p,
-				  struct cobalt_hkey *hkey,
-				  unsigned long __user *u_mode_offset)
-{
-	pthread_attr_t attr;
-	pthread_t k_tid;
-	pid_t h_tid;
-	int err;
-
-	pthread_attr_init(&attr);
-	attr.detachstate = PTHREAD_CREATE_DETACHED;
-	attr.name = p->comm;
-
-	err = pthread_create(&k_tid, &attr, NULL, NULL);
-
-	if (err)
-		return ERR_PTR(-err);
-
-	h_tid = task_pid_vnr(p);
-	err = xnshadow_map(&k_tid->threadbase, NULL, u_mode_offset);
-	/*
-	 * From now on, we run in primary mode, so we refrain from
-	 * calling regular kernel services (e.g. like
-	 * task_pid_vnr()).
-	 */
-	if (err == 0 && !cobalt_thread_hash(hkey, k_tid, h_tid))
-		err = -EAGAIN;
-
-	if (err)
-		cobalt_thread_abort(k_tid, NULL);
-	else
-		k_tid->hkey = *hkey;
-
-	return err ? ERR_PTR(err) : k_tid;
-}
-
-static int __pthread_setschedparam(unsigned long tid,
-				   int policy,
-				   struct sched_param __user *u_param,
-				   unsigned long __user *u_mode_offset,
-				   int __user *u_promoted)
-{
-	struct sched_param param;
-	struct cobalt_hkey hkey;
-	int err, promoted = 0;
-	pthread_t k_tid;
-
-	if (__xn_safe_copy_from_user(&param, u_param, sizeof(param)))
-		return -EFAULT;
-
-	hkey.u_tid = tid;
-	hkey.mm = current->mm;
-	k_tid = cobalt_thread_find(&hkey);
-
-	if (!k_tid && u_mode_offset) {
-		/*
-		 * If the syscall applies to "current", and the latter
-		 * is not a Xenomai thread already, then shadow it.
-		 */
-		k_tid = __pthread_shadow(current, &hkey, u_mode_offset);
-		if (IS_ERR(k_tid))
-			return PTR_ERR(k_tid);
-
-		promoted = 1;
-	}
-	if (k_tid)
-		err = -pthread_setschedparam(k_tid, policy, &param);
-	else
-		/*
-		 * target thread is not a real-time thread, and is not current,
-		 * so can not be promoted, try again with the real
-		 * pthread_setschedparam service.
-		 */
-		err = -EPERM;
-
-	if (err == 0 &&
-	    __xn_safe_copy_to_user(u_promoted, &promoted, sizeof(promoted)))
-		err = -EFAULT;
-
-	return err;
-}
-
-static int __pthread_setschedparam_ex(unsigned long tid,
-				      int policy,
-				      struct sched_param __user *u_param,
-				      unsigned long __user *u_mode_offset,
-				      int __user *u_promoted)
-{
-	struct sched_param_ex param;
-	struct cobalt_hkey hkey;
-	int err, promoted = 0;
-	pthread_t k_tid;
-
-	if (__xn_safe_copy_from_user(&param, u_param, sizeof(param)))
-		return -EFAULT;
-
-	hkey.u_tid = tid;
-	hkey.mm = current->mm;
-	k_tid = cobalt_thread_find(&hkey);
-
-	if (!k_tid && u_mode_offset) {
-		k_tid = __pthread_shadow(current, &hkey, u_mode_offset);
-		if (IS_ERR(k_tid))
-			return PTR_ERR(k_tid);
-
-		promoted = 1;
-	}
-	if (k_tid)
-		err = -pthread_setschedparam_ex(k_tid, policy, &param);
-	else
-		err = -EPERM;
-
-	if (err == 0 &&
-	    __xn_safe_copy_to_user(u_promoted, &promoted, sizeof(promoted)))
-		err = -EFAULT;
-
-	return err;
-}
-
-static int __pthread_getschedparam(unsigned long tid,
-				   int __user *u_policy,
-				   struct sched_param __user *u_param)
-{
-	struct sched_param param;
-	struct cobalt_hkey hkey;
-	pthread_t k_tid;
-	int policy, err;
-
-	hkey.u_tid = tid;
-	hkey.mm = current->mm;
-	k_tid = cobalt_thread_find(&hkey);
-
-	if (!k_tid)
-		return -ESRCH;
-
-	err = -pthread_getschedparam(k_tid, &policy, &param);
-	if (err)
-		return err;
-
-	if (__xn_safe_copy_to_user(u_policy, &policy, sizeof(int)))
-		return -EFAULT;
-
-	return __xn_safe_copy_to_user(u_param, &param, sizeof(param));
-}
-
-static int __pthread_getschedparam_ex(unsigned long tid,
-				      int __user *u_policy,
-				      struct sched_param __user *u_param)
-{
-	struct sched_param_ex param;
-	struct cobalt_hkey hkey;
-	pthread_t k_tid;
-	int policy, err;
-
-	hkey.u_tid = tid;
-	hkey.mm = current->mm;
-	k_tid = cobalt_thread_find(&hkey);
-
-	if (!k_tid)
-		return -ESRCH;
-
-	err = -pthread_getschedparam_ex(k_tid, &policy, &param);
-	if (err)
-		return err;
-
-	if (__xn_safe_copy_to_user(u_policy, &policy, sizeof(int)))
-		return -EFAULT;
-
-	return __xn_safe_copy_to_user(u_param, &param, sizeof(param));
-}
-
-static int __sched_yield(void)
-{
-	pthread_t thread = thread2pthread(xnshadow_thread(current));
-	struct sched_param_ex param;
-	int policy;
-
-	pthread_getschedparam_ex(thread, &policy, &param);
-	sched_yield();
-
-	return policy == SCHED_OTHER;
-}
-
-static int __pthread_make_periodic_np(unsigned long tid,
-				      clockid_t clk_id,
-				      struct timespec __user *u_startt,
-				      struct timespec __user *u_periodt)
-{
-	struct timespec startt, periodt;
-	struct cobalt_hkey hkey;
-	pthread_t k_tid;
-
-	hkey.u_tid = tid;
-	hkey.mm = current->mm;
-	k_tid = cobalt_thread_find(&hkey);
-
-	if (__xn_safe_copy_from_user(&startt, u_startt, sizeof(startt)))
-		return -EFAULT;
-
-	if (__xn_safe_copy_from_user(&periodt, u_periodt, sizeof(periodt)))
-		return -EFAULT;
-
-	return -pthread_make_periodic_np(k_tid, clk_id, &startt, &periodt);
-}
-
-static int __pthread_wait_np(unsigned long __user *u_overruns)
-{
-	unsigned long overruns;
-	int err;
-
-	err = -pthread_wait_np(&overruns);
-
-	if (u_overruns && (err == 0 || err == -ETIMEDOUT))
-		if (__xn_safe_copy_to_user(u_overruns,
-					   &overruns, sizeof(overruns)))
-			err = -EFAULT;
-	return err;
-}
-
-static int __pthread_set_mode_np(int clrmask, int setmask, int __user *u_mode_r)
-{
-	int ret, old;
-
-	ret = -pthread_set_mode_np(clrmask, setmask, &old);
-	if (ret)
-		return ret;
-
-	if (u_mode_r && __xn_safe_copy_to_user(u_mode_r, &old, sizeof(old)))
-		return -EFAULT;
-
-	return 0;
-}
-
-static int __pthread_set_name_np(unsigned long tid,
-				 const char __user *u_name)
-{
-	char name[XNOBJECT_NAME_LEN];
-	struct cobalt_hkey hkey;
-	pthread_t k_tid;
-
-	if (__xn_safe_strncpy_from_user(name, u_name,
-					sizeof(name) - 1) < 0)
-		return -EFAULT;
-
-	name[sizeof(name) - 1] = '\0';
-
-	hkey.u_tid = tid;
-	hkey.mm = current->mm;
-	k_tid = cobalt_thread_find(&hkey);
-
-	return -pthread_set_name_np(k_tid, name);
-}
-
-static int __pthread_probe_np(pid_t h_tid)
-{
-	return cobalt_thread_probe(h_tid);
-}
-
-static int __pthread_kill(unsigned long tid, int sig)
-{
-	struct cobalt_hkey hkey;
-	pthread_t k_tid;
-	int ret;
-
-	hkey.u_tid = tid;
-	hkey.mm = current->mm;
-	k_tid = cobalt_thread_find(&hkey);
-
-	if (!k_tid)
-		return -ESRCH;
-	/*
-	 * We have to take care of self-suspension, when the
-	 * underlying shadow thread is currently relaxed. In that
-	 * case, we must switch back to primary before issuing the
-	 * suspend call to the nucleus in pthread_kill(). Marking the
-	 * __pthread_kill syscall as __xn_exec_primary would be
-	 * overkill, since no other signal would require this, so we
-	 * handle that case locally here.
-	 */
-	if (sig == SIGSUSP && xnpod_current_p(&k_tid->threadbase)) {
-		if (!xnpod_shadow_p()) {
-			ret = xnshadow_harden();
-			if (ret)
-				return ret;
-		}
-	}
-
-	return -pthread_kill(k_tid, sig);
-}
-
-static int __pthread_stat(unsigned long tid,
-			  struct cobalt_threadstat __user *u_stat)
-{
-	struct cobalt_threadstat stat;
-	struct cobalt_hkey hkey;
-	struct xnthread *thread;
-	pthread_t k_tid;
-	xnticks_t xtime;
-	spl_t s;
-
-	hkey.u_tid = tid;
-	hkey.mm = current->mm;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	k_tid = cobalt_thread_find(&hkey);
-	if (k_tid == NULL) {
-		xnlock_put_irqrestore(&nklock, s);
-		return -ESRCH;
-	}
-
-	thread = &k_tid->threadbase;
-	xtime = xnthread_get_exectime(thread);
-	if (xnthread_sched(thread)->curr == thread)
-		xtime += xnstat_exectime_now() - xnthread_get_lastswitch(thread);
-	stat.xtime = xnarch_tsc_to_ns(xtime);
-	stat.msw = xnstat_counter_get(&thread->stat.ssw);
-	stat.csw = xnstat_counter_get(&thread->stat.csw);
-	stat.xsc = xnstat_counter_get(&thread->stat.xsc);
-	stat.pf = xnstat_counter_get(&thread->stat.pf);
-	stat.status = xnthread_state_flags(thread);
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	return __xn_safe_copy_to_user(u_stat, &stat, sizeof(stat));
-}
 
 static int __clock_getres(clockid_t clock_id,
 			  struct timespec __user *u_ts)
@@ -1390,303 +984,25 @@ static int __sched_max_prio(int policy)
 	return ret >= 0 ? ret : -thread_get_errno();
 }
 
-#ifdef CONFIG_XENO_OPT_POSIX_SHM
-
-static int __shm_open(const char __user *u_name,
-		      int oflag,
-		      mode_t mode,
-		      int fd)
-{
-	char name[COBALT_MAXNAME];
-	cobalt_ufd_t *assoc;
-	cobalt_queues_t *q;
-	int kfd, err, len;
-
-	q = cobalt_queues();
-	if (q == NULL)
-		return -EPERM;
-
-	len = __xn_safe_strncpy_from_user(name, u_name, sizeof(name));
-	if (len < 0)
-		return -EFAULT;
-	if (len >= sizeof(name))
-		return -ENAMETOOLONG;
-	if (len == 0)
-		return -EINVAL;
-
-	kfd = shm_open(name, oflag, mode);
-	if (kfd == -1)
-		return -thread_get_errno();
-
-	assoc = xnmalloc(sizeof(*assoc));
-	if (assoc == NULL) {
-		cobalt_shm_close(kfd);
-		return -ENOSPC;
-	}
-
-	assoc->kfd = kfd;
-
-	err = cobalt_assoc_insert(&q->ufds, &assoc->assoc, fd);
-	if (err) {
-		xnfree(assoc);
-		close(kfd);
-	}
-
-	return err;
-}
-
-static int __shm_unlink(const char __user *u_name)
-{
-	char name[COBALT_MAXNAME];
-	unsigned len;
-
-	len = __xn_safe_strncpy_from_user(name, u_name, sizeof(name));
-	if (len < 0)
-		return -EFAULT;
-	if (len >= sizeof(name))
-		return -ENAMETOOLONG;
-
-	return shm_unlink(name) == 0 ? 0 : -thread_get_errno();
-}
-
-static int __shm_close(int fd)
-{
-	cobalt_assoc_t *assoc;
-	cobalt_queues_t *q;
-	cobalt_ufd_t *ufd;
-	int err;
-
-	q = cobalt_queues();
-	if (q == NULL)
-		return -EPERM;
-
-	assoc = cobalt_assoc_remove(&q->ufds, fd);
-	if (assoc == NULL)
-		return -EBADF;
-
-	ufd = assoc2ufd(assoc);
-
-	err = close(ufd->kfd);
-	xnfree(ufd);
-
-	return err == 0 ? 0 : -thread_get_errno();
-}
-
-static int __ftruncate(int fd, off_t len)
-{
-	cobalt_assoc_t *assoc;
-	cobalt_queues_t *q;
-	cobalt_ufd_t *ufd;
-	int err;
-
-	q = cobalt_queues();
-	if (q == NULL)
-		return -EPERM;
-
-	assoc = cobalt_assoc_lookup(&q->ufds, fd);
-	if (assoc == NULL)
-		return -EBADF;
-
-	ufd = assoc2ufd(assoc);
-
-	err = ftruncate(ufd->kfd, len);
-
-	return err == 0 ? 0 : -thread_get_errno();
-}
-
-typedef struct {
-	void *kaddr;
-	unsigned long len;
-	xnheap_t *ioctl_cookie;
-	unsigned long heapsize;
-	unsigned long offset;
-} cobalt_mmap_param_t;
-
-static int __mmap_prologue(size_t len,
-			   int fd,
-			   off_t off,
-			   cobalt_mmap_param_t __user *u_param)
-{
-	cobalt_mmap_param_t mmap_param;
-	cobalt_assoc_t *assoc;
-	struct xnheap *heap;
-	cobalt_queues_t *q;
-	cobalt_ufd_t *ufd;
-	int err;
-
-	q = cobalt_queues();
-	if (q == NULL)
-		return -EPERM;
-
-	assoc = cobalt_assoc_lookup(&q->ufds, fd);
-	if (assoc == NULL)
-		return -EBADF;
-
-	ufd = assoc2ufd(assoc);
-
-	/*
-	 * We do not care for the real flags and protection, this
-	 * mapping is a placeholder.
-	 */
-	mmap_param.kaddr = mmap(NULL,
-				len,
-				PROT_READ,
-				MAP_SHARED, ufd->kfd, off);
-
-	if (mmap_param.kaddr == MAP_FAILED)
-		return -thread_get_errno();
-
-	if ((err =
-	     cobalt_xnheap_get(&mmap_param.ioctl_cookie, mmap_param.kaddr))) {
-		munmap(mmap_param.kaddr, len);
-		return err;
-	}
-
-	heap = mmap_param.ioctl_cookie;
-	mmap_param.len = len;
-	mmap_param.heapsize = xnheap_extentsize(heap);
-	mmap_param.offset = xnheap_mapped_offset(heap, mmap_param.kaddr);
-	mmap_param.offset += xnheap_base_memory(heap);
-
-	return __xn_safe_copy_to_user(u_param, &mmap_param,
-				      sizeof(mmap_param));
-}
-
-static int __mmap_epilogue(void __user *u_addr,
-			   cobalt_mmap_param_t __user *u_param)
-{
-	cobalt_mmap_param_t mmap_param;
-	cobalt_umap_t *umap;
-	int err;
-
-	if (__xn_safe_copy_from_user(&mmap_param, u_param,
-				     sizeof(mmap_param)))
-		return -EFAULT;
-
-	if (u_addr == MAP_FAILED) {
-		munmap(mmap_param.kaddr, mmap_param.len);
-		return 0;
-	}
-
-	umap = xnmalloc(sizeof(*umap));
-	if (umap == NULL) {
-		munmap(mmap_param.kaddr, mmap_param.len);
-		return -EAGAIN;
-	}
-
-	umap->kaddr = mmap_param.kaddr;
-	umap->len = mmap_param.len;
-
-	err = cobalt_assoc_insert(&cobalt_queues()->umaps,
-				 &umap->assoc, (u_long)u_addr);
-	if (err)
-		munmap(mmap_param.kaddr, mmap_param.len);
-
-	return err;
-}
-
-struct  __uunmap_struct {
-	unsigned long mapsize;
-	unsigned long offset;
-};
-
-/* munmap_prologue(uaddr, len, &unmap) */
-static int __munmap_prologue(void __user *u_addr,
-			     size_t len,
-			     struct __uunmap_struct __user *u_unmap)
-{
-	struct  __uunmap_struct uunmap;
-	cobalt_assoc_t *assoc;
-	cobalt_umap_t *umap;
-	cobalt_queues_t *q;
-	xnheap_t *heap;
-	int err;
-
-	q = cobalt_queues();
-	if (q == NULL)
-		return -EPERM;
-
-	assoc = cobalt_assoc_lookup(&q->umaps, (u_long)u_addr);
-	if (assoc == NULL)
-		return -EBADF;
-
-	umap = assoc2umap(assoc);
-
-	err = cobalt_xnheap_get(&heap, umap->kaddr);
-	if (err)
-		return err;
-
-	uunmap.mapsize = xnheap_extentsize(heap);
-	uunmap.offset = xnheap_mapped_offset(heap, umap->kaddr);
-
-	return __xn_safe_copy_to_user(u_unmap, &uunmap, sizeof(uunmap));
-}
-
-static int __munmap_epilogue(void __user *u_addr,
-			     size_t len)
-{
-	cobalt_assoc_t *assoc;
-	cobalt_umap_t *umap;
-	spl_t s;
-	int err;
-
-	xnlock_get_irqsave(&cobalt_assoc_lock, s);
-
-	assoc = cobalt_assoc_lookup(&cobalt_queues()->umaps, (u_long)u_addr);
-	if (assoc == NULL) {
-		xnlock_put_irqrestore(&cobalt_assoc_lock, s);
-		return -EBADF;
-	}
-
-	umap = assoc2umap(assoc);
-
-	if (umap->len != len) {
-		xnlock_put_irqrestore(&cobalt_assoc_lock, s);
-		return -EINVAL;
-	}
-
-	cobalt_assoc_remove(&cobalt_queues()->umaps, (u_long)u_addr);
-	xnlock_put_irqrestore(&cobalt_assoc_lock, s);
-
-	err = munmap(umap->kaddr, len);
-	if (err == 0)
-		xnfree(umap);
-
-	return err == 0 ? 0 : -thread_get_errno();
-}
-#else /* !CONFIG_XENO_OPT_POSIX_SHM */
-
-#define __shm_open        __cobalt_call_not_available
-#define __shm_unlink      __cobalt_call_not_available
-#define __shm_close       __cobalt_call_not_available
-#define __ftruncate       __cobalt_call_not_available
-#define __mmap_prologue   __cobalt_call_not_available
-#define __mmap_epilogue   __cobalt_call_not_available
-#define __munmap_prologue __cobalt_call_not_available
-#define __munmap_epilogue __cobalt_call_not_available
-
-#endif /* !CONFIG_XENO_OPT_POSIX_SHM */
-
 int __cobalt_call_not_available(void)
 {
 	return -ENOSYS;
 }
 
 static struct xnsysent __systab[] = {
-	SKINCALL_DEF(sc_cobalt_thread_create, __pthread_create, init),
-	SKINCALL_DEF(sc_cobalt_thread_detach, __pthread_detach, any),
-	SKINCALL_DEF(sc_cobalt_thread_setschedparam, __pthread_setschedparam, conforming),
-	SKINCALL_DEF(sc_cobalt_thread_setschedparam_ex, __pthread_setschedparam_ex, conforming),
-	SKINCALL_DEF(sc_cobalt_thread_getschedparam, __pthread_getschedparam, any),
-	SKINCALL_DEF(sc_cobalt_thread_getschedparam_ex, __pthread_getschedparam_ex, any),
-	SKINCALL_DEF(sc_cobalt_sched_yield, __sched_yield, primary),
-	SKINCALL_DEF(sc_cobalt_thread_make_periodic, __pthread_make_periodic_np, conforming),
-	SKINCALL_DEF(sc_cobalt_thread_wait, __pthread_wait_np, primary),
-	SKINCALL_DEF(sc_cobalt_thread_set_mode, __pthread_set_mode_np, primary),
-	SKINCALL_DEF(sc_cobalt_thread_set_name, __pthread_set_name_np, any),
-	SKINCALL_DEF(sc_cobalt_thread_probe, __pthread_probe_np, any),
-	SKINCALL_DEF(sc_cobalt_thread_kill, __pthread_kill, any),
-	SKINCALL_DEF(sc_cobalt_thread_getstat, __pthread_stat, any),
+	SKINCALL_DEF(sc_cobalt_thread_create, cobalt_thread_create, init),
+	SKINCALL_DEF(sc_cobalt_thread_setschedparam, cobalt_thread_setschedparam, conforming),
+	SKINCALL_DEF(sc_cobalt_thread_setschedparam_ex, cobalt_thread_setschedparam_ex, conforming),
+	SKINCALL_DEF(sc_cobalt_thread_getschedparam, cobalt_thread_getschedparam, any),
+	SKINCALL_DEF(sc_cobalt_thread_getschedparam_ex, cobalt_thread_getschedparam_ex, any),
+	SKINCALL_DEF(sc_cobalt_sched_yield, cobalt_sched_yield, primary),
+	SKINCALL_DEF(sc_cobalt_thread_make_periodic, cobalt_thread_make_periodic_np, conforming),
+	SKINCALL_DEF(sc_cobalt_thread_wait, cobalt_thread_wait_np, primary),
+	SKINCALL_DEF(sc_cobalt_thread_set_mode, cobalt_thread_set_mode_np, primary),
+	SKINCALL_DEF(sc_cobalt_thread_set_name, cobalt_thread_set_name_np, any),
+	SKINCALL_DEF(sc_cobalt_thread_probe, cobalt_thread_probe_np, any),
+	SKINCALL_DEF(sc_cobalt_thread_kill, cobalt_thread_kill, any),
+	SKINCALL_DEF(sc_cobalt_thread_getstat, cobalt_thread_stat, any),
 	SKINCALL_DEF(sc_cobalt_sem_init, cobalt_sem_init, any),
 	SKINCALL_DEF(sc_cobalt_sem_destroy, cobalt_sem_destroy, any),
 	SKINCALL_DEF(sc_cobalt_sem_post, cobalt_sem_post, any),
@@ -1714,7 +1030,6 @@ static struct xnsysent __systab[] = {
 	SKINCALL_DEF(sc_cobalt_cond_destroy, cobalt_cond_destroy, any),
 	SKINCALL_DEF(sc_cobalt_cond_wait_prologue, cobalt_cond_wait_prologue, nonrestartable),
 	SKINCALL_DEF(sc_cobalt_cond_wait_epilogue, cobalt_cond_wait_epilogue, primary),
-
 	SKINCALL_DEF(sc_cobalt_mq_open, __mq_open, lostage),
 	SKINCALL_DEF(sc_cobalt_mq_close, __mq_close, lostage),
 	SKINCALL_DEF(sc_cobalt_mq_unlink, __mq_unlink, lostage),
@@ -1730,14 +1045,6 @@ static struct xnsysent __systab[] = {
 	SKINCALL_DEF(sc_cobalt_timer_settime, __timer_settime, primary),
 	SKINCALL_DEF(sc_cobalt_timer_gettime, __timer_gettime, any),
 	SKINCALL_DEF(sc_cobalt_timer_getoverrun, __timer_getoverrun, any),
-	SKINCALL_DEF(sc_cobalt_shm_open, __shm_open, lostage),
-	SKINCALL_DEF(sc_cobalt_shm_unlink, __shm_unlink, lostage),
-	SKINCALL_DEF(sc_cobalt_shm_close, __shm_close, lostage),
-	SKINCALL_DEF(sc_cobalt_ftruncate, __ftruncate, lostage),
-	SKINCALL_DEF(sc_cobalt_mmap_prologue, __mmap_prologue, lostage),
-	SKINCALL_DEF(sc_cobalt_mmap_epilogue, __mmap_epilogue, lostage),
-	SKINCALL_DEF(sc_cobalt_munmap_prologue, __munmap_prologue, lostage),
-	SKINCALL_DEF(sc_cobalt_munmap_epilogue, __munmap_epilogue, lostage),
 	SKINCALL_DEF(sc_cobalt_mutexattr_init, __pthread_mutexattr_init, any),
 	SKINCALL_DEF(sc_cobalt_mutexattr_destroy, __pthread_mutexattr_destroy, any),
 	SKINCALL_DEF(sc_cobalt_mutexattr_gettype, __pthread_mutexattr_gettype, any),
@@ -1763,17 +1070,6 @@ static struct xnsysent __systab[] = {
 	SKINCALL_DEF(sc_cobalt_monitor_exit, cobalt_monitor_exit, primary),
 };
 
-static void __shadow_delete_hook(xnthread_t *thread)
-{
-	if (xnthread_get_magic(thread) == COBALT_SKIN_MAGIC &&
-	    xnthread_test_state(thread, XNSHADOW)) {
-		pthread_t k_tid = thread2pthread(thread);
-		cobalt_thread_unhash(&k_tid->hkey);
-		if (xnthread_test_state(thread, XNMAPPED))
-			xnshadow_unmap(thread);
-	}
-}
-
 static void *cobalt_eventcb(int event, void *data)
 {
 	cobalt_queues_t *q;
@@ -1785,9 +1081,6 @@ static void *cobalt_eventcb(int event, void *data)
 			return ERR_PTR(-ENOSPC);
 
 		initq(&q->kqueues.condq);
-#ifdef CONFIG_XENO_OPT_POSIX_INTR
-		initq(&q->kqueues.intrq);
-#endif /* CONFIG_XENO_OPT_POSIX_INTR */
 		initq(&q->kqueues.mutexq);
 		initq(&q->kqueues.semq);
 		initq(&q->kqueues.threadq);
@@ -1795,29 +1088,18 @@ static void *cobalt_eventcb(int event, void *data)
 		initq(&q->kqueues.monitorq);
 		cobalt_assocq_init(&q->uqds);
 		cobalt_assocq_init(&q->usems);
-#ifdef CONFIG_XENO_OPT_POSIX_SHM
-		cobalt_assocq_init(&q->umaps);
-		cobalt_assocq_init(&q->ufds);
-#endif /* CONFIG_XENO_OPT_POSIX_SHM */
 
 		return &q->ppd;
 
 	case XNSHADOW_CLIENT_DETACH:
 		q = ppd2queues((xnshadow_ppd_t *) data);
 
-#ifdef CONFIG_XENO_OPT_POSIX_SHM
-		cobalt_shm_ufds_cleanup(q);
-		cobalt_shm_umaps_cleanup(q);
-#endif /* CONFIG_XENO_OPT_POSIX_SHM */
 		cobalt_sem_usems_cleanup(q);
 		cobalt_mq_uqds_cleanup(q);
 		cobalt_monitorq_cleanup(&q->kqueues);
 		cobalt_timerq_cleanup(&q->kqueues);
 		cobalt_semq_cleanup(&q->kqueues);
 		cobalt_mutexq_cleanup(&q->kqueues);
-#ifdef CONFIG_XENO_OPT_POSIX_INTR
-		cobalt_intrq_cleanup(&q->kqueues);
-#endif /* CONFIG_XENO_OPT_POSIX_INTR */
 		cobalt_condq_cleanup(&q->kqueues);
 
 		xnarch_free_host_mem(q, sizeof(*q));
@@ -1843,13 +1125,10 @@ int cobalt_syscall_init(void)
 	if (cobalt_muxid < 0)
 		return -ENOSYS;
 
-	xnpod_add_hook(XNHOOK_THREAD_DELETE, &__shadow_delete_hook);
-
 	return 0;
 }
 
 void cobalt_syscall_cleanup(void)
 {
-	xnpod_remove_hook(XNHOOK_THREAD_DELETE, &__shadow_delete_hook);
 	xnshadow_unregister_interface(cobalt_muxid);
 }

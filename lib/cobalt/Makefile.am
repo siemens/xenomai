@@ -27,7 +27,6 @@ libcobalt_la_SOURCES = \
 	cond.c \
 	mq.c \
 	mutex.c \
-	shm.c \
 	select.c \
 	rtdm.c \
 	printf.c \
