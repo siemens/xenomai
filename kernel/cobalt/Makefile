@@ -1,7 +1,6 @@
 obj-$(CONFIG_XENOMAI) += nucleus/ rtdm/ xeno_cobalt.o
 
 xeno_cobalt-y := \
-	sched.o \
 	thread_attr.o \
 	thread.o \
 	mutex_attr.o \

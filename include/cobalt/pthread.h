@@ -273,22 +273,6 @@ int pthread_attr_getaffinity_np(const pthread_attr_t *attr,
 int pthread_attr_setaffinity_np(pthread_attr_t *attr,
 				xnarch_cpumask_t mask);
 
-int pthread_getschedparam(pthread_t tid,
-			  int *pol,
-			  struct sched_param *par);
-
-int pthread_setschedparam(pthread_t tid,
-			  int pol,
-			  const struct sched_param *par);
-
-int pthread_getschedparam_ex(pthread_t tid,
-			     int *pol,
-			     struct sched_param_ex *par);
-
-int pthread_setschedparam_ex(pthread_t tid,
-			     int pol,
-			     const struct sched_param_ex *par);
-
 int pthread_mutexattr_init(pthread_mutexattr_t *attr);
 
 int pthread_mutexattr_destroy(pthread_mutexattr_t *attr);

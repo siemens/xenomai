@@ -35,24 +35,6 @@
 
 #define SCHED_OTHER 0
 
-struct timespec;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-int sched_yield(void);
-
-int sched_get_priority_min(int policy);
-
-int sched_get_priority_max(int policy);
-
-int sched_rr_get_interval(int pid, struct timespec *interval);
-
-#ifdef __cplusplus
-}
-#endif
-
 #else /* !(__KERNEL__ || __XENO_SIM__) */
 
 #include_next <sched.h>

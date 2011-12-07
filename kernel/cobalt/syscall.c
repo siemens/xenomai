@@ -36,6 +36,7 @@
 #include "sem.h"
 #include "timer.h"
 #include "monitor.h"
+#include "sched.h"
 #include <rtdm/rtdm_driver.h>
 #define RTDM_FD_MAX CONFIG_XENO_OPT_RTDM_FILDES
 
@@ -972,18 +973,6 @@ static int __select(int nfds,
 	return err;
 }
 
-static int __sched_min_prio(int policy)
-{
-	int ret = sched_get_priority_min(policy);
-	return ret >= 0 ? ret : -thread_get_errno();
-}
-
-static int __sched_max_prio(int policy)
-{
-	int ret = sched_get_priority_max(policy);
-	return ret >= 0 ? ret : -thread_get_errno();
-}
-
 int __cobalt_call_not_available(void)
 {
 	return -ENOSYS;
@@ -1060,8 +1049,8 @@ static struct xnsysent __systab[] = {
 	SKINCALL_DEF(sc_cobalt_condattr_getpshared, __pthread_condattr_getpshared, any),
 	SKINCALL_DEF(sc_cobalt_condattr_setpshared, __pthread_condattr_setpshared, any),
 	SKINCALL_DEF(sc_cobalt_select, __select, primary),
-	SKINCALL_DEF(sc_cobalt_sched_minprio, __sched_min_prio, any),
-	SKINCALL_DEF(sc_cobalt_sched_maxprio, __sched_max_prio, any),
+	SKINCALL_DEF(sc_cobalt_sched_minprio, cobalt_sched_min_prio, any),
+	SKINCALL_DEF(sc_cobalt_sched_maxprio, cobalt_sched_max_prio, any),
 	SKINCALL_DEF(sc_cobalt_monitor_init, cobalt_monitor_init, any),
 	SKINCALL_DEF(sc_cobalt_monitor_destroy, cobalt_monitor_destroy, any),
 	SKINCALL_DEF(sc_cobalt_monitor_enter, cobalt_monitor_enter, primary),
