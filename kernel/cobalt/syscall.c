@@ -37,71 +37,11 @@
 #include "timer.h"
 #include "monitor.h"
 #include "sched.h"
+#include "clock.h"
 #include <rtdm/rtdm_driver.h>
 #define RTDM_FD_MAX CONFIG_XENO_OPT_RTDM_FILDES
 
 int cobalt_muxid;
-
-static int __clock_getres(clockid_t clock_id,
-			  struct timespec __user *u_ts)
-{
-	struct timespec ts;
-	int err;
-
-	err = clock_getres(clock_id, &ts);
-	if (err == 0 && __xn_safe_copy_to_user(u_ts, &ts, sizeof(ts)))
-		return -EFAULT;
-
-	return err ? -thread_get_errno() : 0;
-}
-
-static int __clock_gettime(clockid_t clock_id,
-			   struct timespec __user *u_ts)
-{
-	struct timespec ts;
-	int err;
-
-	err = clock_gettime(clock_id, &ts);
-	if (err == 0 && __xn_safe_copy_to_user(u_ts, &ts, sizeof(ts)))
-		return -EFAULT;
-
-	return err ? -thread_get_errno() : 0;
-}
-
-static int __clock_settime(clockid_t clock_id,
-			   const struct timespec __user *u_ts)
-{
-	struct timespec ts;
-
-	if (__xn_safe_copy_from_user(&ts, u_ts, sizeof(ts)))
-		return -EFAULT;
-
-	return clock_settime(clock_id, &ts) ? -thread_get_errno() : 0;
-}
-
-static int __clock_nanosleep(clockid_t clock_id,
-			     int flags,
-			     const struct timespec __user *u_rqt,
-			     struct timespec __user *u_rmt)
-{
-	struct timespec rqt, rmt, *rmtp = NULL;
-	int err;
-
-	if (u_rmt)
-		rmtp = &rmt;
-
-	if (__xn_safe_copy_from_user(&rqt, u_rqt, sizeof(rqt)))
-		return -EFAULT;
-
-	err = clock_nanosleep(clock_id, flags, &rqt, rmtp);
-	if (err != EINTR)
-		return -err;
-
-	if (rmtp && __xn_safe_copy_to_user(u_rmt, rmtp, sizeof(*rmtp)))
-		return -EFAULT;
-
-	return -EINTR;
-}
 
 static int __pthread_mutexattr_init(pthread_mutexattr_t __user *u_attr)
 {
@@ -1004,10 +944,10 @@ static struct xnsysent __systab[] = {
 	SKINCALL_DEF(sc_cobalt_sem_unlink, cobalt_sem_unlink, any),
 	SKINCALL_DEF(sc_cobalt_sem_init_np, cobalt_sem_init_np, any),
 	SKINCALL_DEF(sc_cobalt_sem_broadcast_np, cobalt_sem_broadcast_np, any),
-	SKINCALL_DEF(sc_cobalt_clock_getres, __clock_getres, any),
-	SKINCALL_DEF(sc_cobalt_clock_gettime, __clock_gettime, any),
-	SKINCALL_DEF(sc_cobalt_clock_settime, __clock_settime, any),
-	SKINCALL_DEF(sc_cobalt_clock_nanosleep, __clock_nanosleep, nonrestartable),
+	SKINCALL_DEF(sc_cobalt_clock_getres, cobalt_clock_getres, any),
+	SKINCALL_DEF(sc_cobalt_clock_gettime, cobalt_clock_gettime, any),
+	SKINCALL_DEF(sc_cobalt_clock_settime, cobalt_clock_settime, any),
+	SKINCALL_DEF(sc_cobalt_clock_nanosleep, cobalt_clock_nanosleep, nonrestartable),
 	SKINCALL_DEF(sc_cobalt_mutex_init, cobalt_mutex_init, any),
 	SKINCALL_DEF(sc_cobalt_check_init, cobalt_mutex_check_init, any),
 	SKINCALL_DEF(sc_cobalt_mutex_destroy, cobalt_mutex_destroy, any),

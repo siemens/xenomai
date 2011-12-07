@@ -54,47 +54,6 @@
 #include "thread.h"
 
 /**
- * Get the resolution of the specified clock.
- *
- * This service returns, at the address @a res, if it is not @a NULL, the
- * resolution of the clock @a clock_id.
- *
- * For CLOCK_REALTIME, CLOCK_MONOTONIC and CLOCK_MONOTONIC_RAW, this
- * resolution is one nanosecond. No other clock is supported.
- *
- * @param clock_id clock identifier, either CLOCK_REALTIME,
- * CLOCK_MONOTONIC or CLOCK_MONOTONIC_RAW;
- *
- * @param res the address where the resolution of the specified clock will be
- * stored on success.
- *
- * @retval 0 on success;
- * @retval -1 with @a errno set if:
- * - EINVAL, @a clock_id is invalid;
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_getres.html">
- * Specification.</a>
- *
- */
-int clock_getres(clockid_t clock_id, struct timespec *res)
-{
-	switch (clock_id) {
-	case CLOCK_REALTIME:
-	case CLOCK_MONOTONIC:
-	case CLOCK_MONOTONIC_RAW:
-		if (res)
-			ns2ts(res, 1);
-		break;
-	default:
-		thread_set_errno(EINVAL);
-		return -1;
-	}
-
-	return 0;
-}
-
-/**
  * Read the host-synchronised realtime clock.
  *
  * Obtain the current time with NTP corrections from the Linux domain
@@ -164,177 +123,113 @@ retry:
 #endif
 }
 
-/**
- * Read the specified clock.
- *
- * This service returns, at the address @a tp the current value of the clock @a
- * clock_id. If @a clock_id is:
- * - CLOCK_REALTIME, the clock value represents the amount of time since the
- *   Epoch, with a precision of one nanosecond;
- * - CLOCK_MONOTONIC, the clock value is given by an architecture-dependent high
- *   resolution counter, with a precision of one nanosecond.
- * - CLOCK_MONOTONIC_RAW, same as CLOCK_MONOTONIC.
- * - CLOCK_HOST_REALTIME, the clock value as seen by the host, typically
- *   Linux. Resolution and precision depend on the host, but it is guaranteed
- *   that both, host and Xenomai, use the same information.
- *
- * @param clock_id clock identifier, either CLOCK_REALTIME, CLOCK_MONOTONIC,
- *        CLOCK_MONOTONIC_RAW or CLOCK_HOST_REALTIME;
- *
- * @param tp the address where the value of the specified clock will be stored.
- *
- * @retval 0 on success;
- * @retval -1 with @a errno set if:
- * - EINVAL, @a clock_id is invalid.
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_gettime.html">
- * Specification.</a>
- *
- */
-int clock_gettime(clockid_t clock_id, struct timespec *tp)
+int cobalt_clock_getres(clockid_t clock_id, struct timespec __user *u_ts)
 {
-	xnticks_t cpu_time;
+	struct timespec ts;
+	int err;
 
 	switch (clock_id) {
 	case CLOCK_REALTIME:
-		ns2ts(tp, xnclock_read());
+	case CLOCK_MONOTONIC:
+	case CLOCK_MONOTONIC_RAW:
+		err = 0;
+		ns2ts(&ts, 1);
+		break;
+	default:
+		err = -EINVAL;
+	}
+
+	if (err == 0 && __xn_safe_copy_to_user(u_ts, &ts, sizeof(ts)))
+		return -EFAULT;
+
+	return err;
+}
+
+int cobalt_clock_gettime(clockid_t clock_id, struct timespec __user *u_ts)
+{
+	xnticks_t cpu_time;
+	struct timespec ts;
+	int err = 0;
+
+	switch (clock_id) {
+	case CLOCK_REALTIME:
+		ns2ts(&ts, xnclock_read());
 		break;
 
 	case CLOCK_MONOTONIC:
 	case CLOCK_MONOTONIC_RAW:
 		cpu_time = xnpod_get_cpu_time();
-		tp->tv_sec =
-		    xnarch_uldivrem(cpu_time, ONE_BILLION, &tp->tv_nsec);
+		ts.tv_sec =
+			xnarch_uldivrem(cpu_time, ONE_BILLION, &ts.tv_nsec);
 		break;
 
 	case CLOCK_HOST_REALTIME:
-		if (do_clock_host_realtime(tp) != 0) {
-			thread_set_errno(EINVAL);
-			return -1;
-		}
+		if (do_clock_host_realtime(&ts) != 0)
+			err = -EINVAL;
 		break;
 
 	default:
-		thread_set_errno(EINVAL);
-		return -1;
+		err = -EINVAL;
 	}
 
-	return 0;
+	if (err == 0 && __xn_safe_copy_to_user(u_ts, &ts, sizeof(*u_ts)))
+		return -EFAULT;
+
+	return err ? -thread_get_errno() : 0;
 }
 
-/**
- * Set the specified clock.
- *
- * This allow setting the CLOCK_REALTIME clock.
- *
- * @param clock_id the id of the clock to be set, only CLOCK_REALTIME is
- * supported.
- *
- * @param tp the address of a struct timespec specifying the new date.
- *
- * @retval 0 on success;
- * @retval -1 with @a errno set if:
- * - EINVAL, @a clock_id is not CLOCK_REALTIME;
- * - EINVAL, the date specified by @a tp is invalid.
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_settime.html">
- * Specification.</a>
- *
- */
-int clock_settime(clockid_t clock_id, const struct timespec *tp)
+int cobalt_clock_settime(clockid_t clock_id, const struct timespec __user *u_ts)
 {
-	xnticks_t now, new_date;
+	struct timespec ts;
+	xnticks_t now;
 	spl_t s;
 
-	if (clock_id != CLOCK_REALTIME
-	    || (unsigned long)tp->tv_nsec >= ONE_BILLION) {
-		thread_set_errno(EINVAL);
-		return -1;
-	}
+	if (__xn_safe_copy_from_user(&ts, u_ts, sizeof(ts)))
+		return -EFAULT;
 
-	new_date = ts2ns(tp);
+	if (clock_id != CLOCK_REALTIME
+	    || (unsigned long)ts.tv_nsec >= ONE_BILLION)
+		return -EINVAL;
 
 	xnlock_get_irqsave(&nklock, s);
 	now = xnclock_read();
-	xnclock_adjust((xnsticks_t) (new_date - now));
+	xnclock_adjust((xnsticks_t) (ts2ns(&ts) - now));
 	xnlock_put_irqrestore(&nklock, s);
 
 	return 0;
 }
 
-/**
- * Sleep some amount of time.
- *
- * This service suspends the calling thread until the wakeup time specified by
- * @a rqtp, or a signal is delivered to the caller. If the flag TIMER_ABSTIME is
- * set in the @a flags argument, the wakeup time is specified as an absolute
- * value of the clock @a clock_id. If the flag TIMER_ABSTIME is not set, the
- * wakeup time is specified as a time interval.
- *
- * If this service is interrupted by a signal, the flag TIMER_ABSTIME is not
- * set, and @a rmtp is not @a NULL, the time remaining until the specified
- * wakeup time is returned at the address @a rmtp.
- *
- * The resolution of this service is one nanosecond.
- *
- * @param clock_id clock identifier, either CLOCK_REALTIME,
- * CLOCK_MONOTONIC or CLOCK_MONOTONIC_RAW.
- *
- * @param flags one of:
- * - 0 meaning that the wakeup time @a rqtp is a time interval;
- * - TIMER_ABSTIME, meaning that the wakeup time is an absolute value of the
- *   clock @a clock_id.
- *
- * @param rqtp address of the wakeup time.
- *
- * @param rmtp address where the remaining time before wakeup will be stored if
- * the service is interrupted by a signal.
- *
- * @return 0 on success;
- * @return an error number if:
- * - EPERM, the caller context is invalid;
- * - ENOTSUP, the specified clock is unsupported;
- * - EINVAL, the specified wakeup time is invalid;
- * - EINTR, this service was interrupted by a signal.
- *
- * @par Valid contexts:
- * - Xenomai kernel-space thread,
- * - Xenomai user-space thread (switches to primary mode).
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_nanosleep.html">
- * Specification.</a>
- *
- */
-int clock_nanosleep(clockid_t clock_id,
-		    int flags,
-		    const struct timespec *rqtp, struct timespec *rmtp)
+int cobalt_clock_nanosleep(clockid_t clock_id, int flags,
+			   const struct timespec __user *u_rqt,
+			   struct timespec __user *u_rmt)
 {
+	struct timespec rqt, rmt, *rmtp = NULL;
 	xnthread_t *cur;
-	spl_t s;
 	int err = 0;
+	spl_t s;
 
-	if (xnpod_unblockable_p())
-		return EPERM;
+	if (u_rmt)
+		rmtp = &rmt;
+
+	if (__xn_safe_copy_from_user(&rqt, u_rqt, sizeof(rqt)))
+		return -EFAULT;
 
 	if (clock_id != CLOCK_MONOTONIC &&
 	    clock_id != CLOCK_MONOTONIC_RAW &&
 	    clock_id != CLOCK_REALTIME)
-		return ENOTSUP;
+		return -ENOTSUP;
 
-	if ((unsigned long)rqtp->tv_nsec >= ONE_BILLION)
-		return EINVAL;
+	if ((unsigned long)rqt.tv_nsec >= ONE_BILLION)
+		return -EINVAL;
 
 	if (flags & ~TIMER_ABSTIME)
-		return EINVAL;
+		return -EINVAL;
 
 	cur = xnpod_current_thread();
 
 	xnlock_get_irqsave(&nklock, s);
 
-	xnpod_suspend_thread(cur, XNDELAY, ts2ns(rqtp) + 1,
+	xnpod_suspend_thread(cur, XNDELAY, ts2ns(&rqt) + 1,
 			     clock_flag(flags, clock_id), NULL);
 
 	if (xnthread_test_info(cur, XNBREAK)) {
@@ -349,10 +244,13 @@ int clock_nanosleep(clockid_t clock_id,
 			rem = expiry - now;
 
 			ns2ts(rmtp, rem > 0 ? rem : 0);
+
+			if (__xn_safe_copy_to_user(u_rmt, rmtp, sizeof(*u_rmt)))
+				return -EFAULT;
 		} else
 			xnlock_put_irqrestore(&nklock, s);
 
-		return EINTR;
+		return -EINTR;
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -360,54 +258,4 @@ int clock_nanosleep(clockid_t clock_id,
 	return err;
 }
 
-/**
- * Sleep some amount of time.
- *
- * This service suspends the calling thread until the wakeup time specified by
- * @a rqtp, or a signal is delivered. The wakeup time is specified as a time
- * interval.
- *
- * If this service is interrupted by a signal and @a rmtp is not @a NULL, the
- * time remaining until the specified wakeup time is returned at the address @a
- * rmtp.
- *
- * The resolution of this service is one nanosecond.
- *
- * @param rqtp address of the wakeup time.
- *
- * @param rmtp address where the remaining time before wakeup will be stored if
- * the service is interrupted by a signal.
- *
- * @retval 0 on success;
- * @retval -1 with @a errno set if:
- * - EPERM, the caller context is invalid;
- * - EINVAL, the specified wakeup time is invalid;
- * - EINTR, this service was interrupted by a signal.
- *
- * @par Valid contexts:
- * - Xenomai kernel-space thread,
- * - Xenomai user-space thread (switches to primary mode).
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/nanosleep.html">
- * Specification.</a>
- *
- */
-int nanosleep(const struct timespec *rqtp, struct timespec *rmtp)
-{
-	int err = clock_nanosleep(CLOCK_REALTIME, 0, rqtp, rmtp);
-
-	if (!err)
-		return 0;
-
-	thread_set_errno(err);
-	return -1;
-}
-
 /*@}*/
-
-EXPORT_SYMBOL_GPL(clock_getres);
-EXPORT_SYMBOL_GPL(clock_gettime);
-EXPORT_SYMBOL_GPL(clock_settime);
-EXPORT_SYMBOL_GPL(clock_nanosleep);
-EXPORT_SYMBOL_GPL(nanosleep);
