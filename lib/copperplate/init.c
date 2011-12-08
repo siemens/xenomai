@@ -280,6 +280,7 @@ void copperplate_init(int argc, char *const argv[])
 
 	if (pvlist_empty(&skins)) {
 		warning("no skin detected in program");
+		ret = -EINVAL;
 		goto fail;
 	}
 
