@@ -18,7 +18,7 @@ XENO_BASE_LDFLAGS="-L${staging}${libdir} @XENO_USER_APP_LDFLAGS@ -lcopperplate -
 XENO_LIBRARY_DIR="${staging}${libdir}"
 XENO_INCLUDE_DIR="${staging}${includedir}"
 
-unset prefix exec_prefix libdir datadir datarootdir pkgdatadir includedir
+unset prefix exec_prefix libdir datadir datarootdir pkgdatadir includedir skin_list
 
 usage ()
 {
@@ -79,41 +79,49 @@ while test $# -gt 0; do
             echo $XENO_LIBRARY_DIR
             ;;
 	--skin)
-	    skin="$2"
+	    skin_list="$skin_list $2"
 	    shift
 	    ;;
 	--skin=*)
-	    skin=`expr "$1" : '--skin=\(.*\)'`
+	    skin_list="$skin_list `expr "$1" : '--skin=\(.*\)'`"
 	    ;;
 	--cflags)
-	    case "$skin" in
-		vxworks|psos|alchemy)
-		    echo $XENO_BASE_CFLAGS -I$XENO_INCLUDE_DIR/$skin -I$XENO_INCLUDE_DIR
-		    ;;
-		"")
-		    echo skin not set, please pass --skin before --cflags 1>&2
-		    exit 1
-		    ;;
-		*)
-		    echo skin $skin unknown 1>&2
-		    exit 1
-		    ;;
-	    esac
+	    if test -z "$skin_list"; then
+		echo "no skin specified, missing --skin before --cflags" 1>&2
+		exit 1
+	    fi
+	    cflags="$XENO_BASE_CFLAGS -I$XENO_INCLUDE_DIR"
+	    for skin in $skin_list; do
+		case "$skin" in
+		    vxworks|psos|alchemy)
+			cflags="$cflags -I$XENO_INCLUDE_DIR/$skin"
+			;;
+		    *)
+			echo "unknown skin: $skin" 1>&2
+			exit 1
+			;;
+		esac
+	    done
+	    echo $cflags
 	    ;;
 	--ldflags)
-	    case "$skin" in
-		vxworks|psos|alchemy)
-		    echo -l$skin $XENO_BASE_LDFLAGS
-		    ;;
-		"")
-		    echo skin not set, please pass --skin before --cflags 1>&2
-		    exit 1
-		    ;;
-		*)
-		    echo skin $skin unknown 1>&2
-		    exit 1
-		    ;;
-	    esac
+	    if test -z "$skin_list"; then
+		echo "no skin specified, missing --skin before --ldflags" 1>&2
+		exit 1
+	    fi
+	    ldflags="$XENO_BASE_LDFLAGS"
+	    for skin in $skin_list; do
+		case "$skin" in
+		    vxworks|psos|alchemy)
+			ldflags="-l$skin $ldflags"
+			;;
+		    *)
+			echo "unknown skin: $skin" 1>&2
+			exit 1
+			;;
+		esac
+	    done
+	    echo $ldflags
 	    ;;
 	--core)
 	    echo mercury
