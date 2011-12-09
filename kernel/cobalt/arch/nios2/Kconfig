@@ -3,5 +3,4 @@ config XENO_GENERIC_STACKPOOL
 	default y
 
 source "kernel/xenomai/nucleus/Kconfig"
-source "kernel/xenomai/Kconfig"
 source "drivers/xenomai/Kconfig"

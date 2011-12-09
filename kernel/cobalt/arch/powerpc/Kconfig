@@ -43,5 +43,4 @@ config XENO_HW_UNLOCKED_SWITCH
 endmenu
 
 source "kernel/xenomai/nucleus/Kconfig"
-source "kernel/xenomai/Kconfig"
 source "drivers/xenomai/Kconfig"
