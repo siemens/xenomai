@@ -182,11 +182,11 @@ void worker(void *cookie)
 >>>>>>> testsuite/unit: sanitize wakeup-time
 }
 
-int main(int argc, char **argv)
+int main(int argc, char *const *argv)
 {
 	int err, c;
 
-	copperplate_init(argc, argv);
+	copperplate_init(&argc, &argv);
 
 	while ((c = getopt(argc, argv, "hp:n:i:")) != EOF)
 		switch (c) {

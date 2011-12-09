@@ -9,13 +9,13 @@ static struct traceobj trobj;
 
 static char pt_mem[65536];
 
-int main(int argc, char *argv[])
+int main(int argc, char *const argv[])
 {
 	u_long nbufs, ptid, _ptid, n;
 	void *buf, *lbuf;
 	int ret;
 
-	copperplate_init(argc, argv);
+	copperplate_init(&argc, &argv);
 
 	traceobj_init(&trobj, argv[0], 0);
 

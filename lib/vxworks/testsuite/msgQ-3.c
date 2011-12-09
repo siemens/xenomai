@@ -85,11 +85,11 @@ static void peerTask(long a0, long a1, long a2, long a3, long a4,
 	traceobj_exit(&trobj);
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char *const argv[])
 {
 	TASK_ID rtid, ptid;
 
-	copperplate_init(argc, argv);
+	copperplate_init(&argc, &argv);
 
 	traceobj_init(&trobj, argv[0], sizeof(tseq) / sizeof(int));
 

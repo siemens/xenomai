@@ -452,13 +452,13 @@ void mode_sw(int sig)
 	kill(getpid(), sig);
 }
 
-int main(int argc, char **argv)
+int main(int argc, char *const *argv)
 {
 	int cpu = 0, c, err, sig;
 	char task_name[16];
 	sigset_t mask;
 
-	copperplate_init(argc, argv);
+	copperplate_init(&argc, &argv);
 
 	while ((c = getopt(argc, argv, "hp:l:T:qH:B:sD:t:fc:P:b")) != EOF)
 		switch (c) {

@@ -51,22 +51,28 @@ static const struct option alchemy_options[] = {
 	}
 };
 
-static int alchemy_init(int argc, char *const argv[])
+static int alchemy_parse_option(int optnum, const char *optarg)
 {
-	int ret, lindex, c;
-
-	for (;;) {
-		c = getopt_long_only(argc, argv, "", alchemy_options, &lindex);
-		if (c == EOF)
-			break;
-		if (c > 0)
-			continue;
-		switch (lindex) {
-		case clock_resolution_opt:
-			clock_resolution = atoi(optarg);
-			break;
-		}
+	switch (optnum) {
+	case clock_resolution_opt:
+		clock_resolution = atoi(optarg);
+		break;
+	default:
+		/* Paranoid, can't happen. */
+		return -EINVAL;
 	}
+
+	return 0;
+}
+
+static void alchemy_help(void)
+{
+        fprintf(stderr, "--alchemy-clock-resolution=<ns>  tick value (default 1ns, tickless)\n");
+}
+
+static int alchemy_init(void)
+{
+	int ret;
 
 	syncluster_init(&alchemy_task_table, "alchemy.task");
 	syncluster_init(&alchemy_sem_table, "alchemy.sem");
@@ -91,6 +97,9 @@ static int alchemy_init(int argc, char *const argv[])
 static struct copperskin alchemy_skin = {
 	.name = "alchemy",
 	.init = alchemy_init,
+	.options = alchemy_options,
+	.parse_option = alchemy_parse_option,
+	.help = alchemy_help,
 };
 
 static __attribute__ ((constructor)) void register_alchemy(void)

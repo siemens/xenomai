@@ -8,12 +8,12 @@ static struct traceobj trobj;
 
 static u_long tidA, tidB;
 
-int main(int argc, char *argv[])
+int main(int argc, char *const argv[])
 {
 	u_long tid;
 	int ret;
 
-	copperplate_init(argc, argv);
+	copperplate_init(&argc, &argv);
 
 	traceobj_init(&trobj, argv[0], 0);
 

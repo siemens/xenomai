@@ -31,12 +31,12 @@ static void alloc_task(u_long a1, u_long a2, u_long a3, u_long a4)
 	}
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char *const argv[])
 {
 	u_long args[] = { 1, 2, 3, 4 }, asize, _rnid;
 	int ret;
 
-	copperplate_init(argc, argv);
+	copperplate_init(&argc, &argv);
 
 	traceobj_init(&trobj, argv[0], 0);
 

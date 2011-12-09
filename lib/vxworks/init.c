@@ -44,22 +44,28 @@ static const struct option vxworks_options[] = {
 	}
 };
 
-static int vxworks_init(int argc, char *const argv[])
+static int vxworks_parse_option(int optnum, const char *optarg)
 {
-	int ret, lindex, c;
-
-	for (;;) {
-		c = getopt_long_only(argc, argv, "", vxworks_options, &lindex);
-		if (c == EOF)
-			break;
-		if (c > 0)
-			continue;
-		switch (lindex) {
-		case clock_resolution_opt:
-			clock_resolution = atoi(optarg);
-			break;
-		}
+	switch (optnum) {
+	case clock_resolution_opt:
+		clock_resolution = atoi(optarg);
+		break;
+	default:
+		/* Paranoid, can't happen. */
+		return -EINVAL;
 	}
+
+	return 0;
+}
+
+static void vxworks_help(void)
+{
+        fprintf(stderr, "--vxworks-clock-resolution=<ns>  tick value (default 1ms)\n");
+}
+
+static int vxworks_init(void)
+{
+	int ret;
 
 	registry_add_dir("/vxworks");
 	registry_add_dir("/vxworks/tasks");
@@ -82,6 +88,9 @@ static int vxworks_init(int argc, char *const argv[])
 static struct copperskin vxworks_skin = {
 	.name = "vxworks",
 	.init = vxworks_init,
+	.options = vxworks_options,
+	.parse_option = vxworks_parse_option,
+	.help = vxworks_help,
 };
 
 static __attribute__ ((constructor)) void register_vxworks(void)

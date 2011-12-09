@@ -55,22 +55,28 @@ static const struct option psos_options[] = {
 	}
 };
 
-static int psos_init(int argc, char *const argv[])
+static int psos_parse_option(int optnum, const char *optarg)
 {
-	int ret, lindex, c;
-
-	for (;;) {
-		c = getopt_long_only(argc, argv, "", psos_options, &lindex);
-		if (c == EOF)
-			break;
-		if (c > 0)
-			continue;
-		switch (lindex) {
-		case clock_resolution_opt:
-			clock_resolution = atoi(optarg);
-			break;
-		}
+	switch (optnum) {
+	case clock_resolution_opt:
+		clock_resolution = atoi(optarg);
+		break;
+	default:
+		/* Paranoid, can't happen. */
+		return -EINVAL;
 	}
+
+	return 0;
+}
+
+static void psos_help(void)
+{
+        fprintf(stderr, "--psos-clock-resolution=<ns>  tick value (default 1ms)\n");
+}
+
+static int psos_init(void)
+{
+	int ret;
 
 	registry_add_dir("/psos");
 	registry_add_dir("/psos/tasks");
@@ -102,6 +108,9 @@ static int psos_init(int argc, char *const argv[])
 static struct copperskin psos_skin = {
 	.name = "psos",
 	.init = psos_init,
+	.options = psos_options,
+	.parse_option = psos_parse_option,
+	.help = psos_help,
 };
 
 static __attribute__ ((constructor)) void register_psos(void)

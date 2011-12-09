@@ -72,11 +72,11 @@ static void foregroundTask(long a1, long a2, long a3, long a4, long a5,
 	traceobj_exit(&trobj);
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char *const argv[])
 {
 	int ret;
 
-	copperplate_init(argc, argv);
+	copperplate_init(&argc, &argv);
 
 	traceobj_init(&trobj, argv[0], sizeof(tseq) / sizeof(int));
 

@@ -66,11 +66,11 @@ static void background_task(void *arg)
 	traceobj_exit(&trobj);
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char *const argv[])
 {
 	int ret;
 
-	copperplate_init(argc, argv);
+	copperplate_init(&argc, &argv);
 
 	traceobj_init(&trobj, argv[0], 0);
 

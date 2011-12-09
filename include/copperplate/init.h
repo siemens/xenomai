@@ -23,17 +23,26 @@
 #include <copperplate/core.h>
 #include <copperplate/list.h>
 
+struct option;
+
 struct copperskin {
 	const char *name;
-	int (*init)(int argc, char *const argv[]);
-	struct pvholder next;
+	int (*init)(void);
+	const struct option *options;
+	int (*parse_option)(int optnum, const char *optarg);
+	void (*help)(void);
+	struct {
+		int opt_start;
+		int opt_end;
+		struct pvholder next;
+	} __reserved; /* Don't init, reserved to Copperplate. */
 };
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void copperplate_init(int argc, char *const argv[]);
+void copperplate_init(int *argcp, char *const **argvp);
 
 void copperplate_register_skin(struct copperskin *p);
 

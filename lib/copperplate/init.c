@@ -24,6 +24,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <memory.h>
+#include <malloc.h>
 #include <assert.h>
 #include <signal.h>
 #include <errno.h>
@@ -117,20 +119,27 @@ static const struct option base_options[] = {
 
 static void usage(void)
 {
-	fprintf(stderr, "usage: program <options>, where options may be:\n");
-	fprintf(stderr, "--mem-pool-size=<sizeK>	size of the main heap (kbytes)\n");
-	fprintf(stderr, "--no-mlock			do not lock memory at init\n");
-	fprintf(stderr, "--registry-mountpt=<path>	mount point of registry\n");
-	fprintf(stderr, "--no-registry			suppress object registration\n");
-	fprintf(stderr, "--session=<label>		label of shared multi-processing session\n");
-	fprintf(stderr, "--reset			remove any older session\n");
-	fprintf(stderr, "--cpu-affinity=<cpu[,cpu]...>	set CPU affinity of threads\n");
-	fprintf(stderr, "--silent			tame down verbosity\n");
+	struct copperskin *skin;
+
+        fprintf(stderr, "usage: program <options>, where options may be:\n");
+        fprintf(stderr, "--mem-pool-size=<sizeK>          size of the main heap (kbytes)\n");
+        fprintf(stderr, "--no-mlock                       do not lock memory at init\n");
+        fprintf(stderr, "--registry-mountpt=<path>        mount point of registry\n");
+        fprintf(stderr, "--no-registry                    suppress object registration\n");
+        fprintf(stderr, "--session=<label>                label of shared multi-processing session\n");
+        fprintf(stderr, "--reset                          remove any older session\n");
+        fprintf(stderr, "--cpu-affinity=<cpu[,cpu]...>    set CPU affinity of threads\n");
+        fprintf(stderr, "--silent                         tame down verbosity\n");
+	
+	pvlist_for_each_entry(skin, &skins, __reserved.next) {
+		if (skin->help)
+			skin->help();
+	}
 }
 
 static void do_cleanup(void)
 {
-	if (!__node_info.no_registry)
+	if (__node_info.no_registry == 0)
 		registry_pkg_destroy();
 }
 
@@ -163,7 +172,8 @@ static int collect_cpu_affinity(const char *cpu_list)
 	 * this routine to allow cumulative --cpu-affinity options to
 	 * appear in the command line arguments.
 	 */
-	ret = sched_setaffinity(0, sizeof(__node_info.cpu_affinity), &__node_info.cpu_affinity);
+	ret = sched_setaffinity(0, sizeof(__node_info.cpu_affinity),
+				&__node_info.cpu_affinity);
 	if (ret) {
 		warning("no valid CPU in affinity list '%s'", cpu_list);
 		return __bt(-ret);
@@ -172,38 +182,141 @@ static int collect_cpu_affinity(const char *cpu_list)
 	return 0;
 }
 
-void copperplate_init(int argc, char *const argv[])
+static inline char **prep_args(int argc, char *const argv[], int *largcp)
 {
-	struct copperskin *skin;
-	int c, lindex, ret;
+	int in, out, n, maybe_arg, lim;
+	char **uargv, *p;
 
-	__RT(clock_gettime(CLOCK_COPPERPLATE, &__init_date));
+	uargv = malloc(argc * sizeof(char *));
+	if (uargv == NULL)
+		return NULL;
 
-	/* Our node id. is the tid of the main thread. */
-	__node_id = copperplate_get_tid();
-
-	/* No ifs, no buts: we must be called over the main thread. */
-	assert(getpid() == __node_id);
-
-	/* Set a reasonable default value for the registry mount point. */
-	ret = asprintf(&__node_info.registry_mountpt,
-		       "/mnt/xenomai/%d", getpid());
-	if (ret < 0) {
-		ret = -ENOMEM;
-		goto fail;
+	for (n = 0; n < argc; n++) {
+		uargv[n] = strdup(argv[n]);
+		if (uargv[n] == NULL)
+			return NULL;
 	}
 
-	/* Define default CPU affinity, i.e. no particular affinity. */
-	CPU_ZERO(&__node_info.cpu_affinity);
+	lim = argc;
+	in = maybe_arg = 0;
+	while (in < lim) {
+		if ((uargv[in][0] == '-' && uargv[in][1] != '-') ||
+		    (maybe_arg && uargv[in][0] != '-')) {
+			p = strdup(uargv[in]);
+			for (n = in, out = in + 1; out < argc; out++, n++) {
+				free(uargv[n]);
+				uargv[n] = strdup(uargv[out]);
+			}
+			free(uargv[argc - 1]);
+			uargv[argc - 1] = p;
+			if (*p == '-')
+				maybe_arg = 1;
+			lim--;
+		} else {
+			in++;
+			maybe_arg = 0;
+		}
+	}
+
+	*largcp = lim;
+
+	return uargv;
+}
+
+static inline void pack_args(int *argcp, int *largcp, char **argv)
+{
+	int in, out;
+
+	for (in = out = 0; in < *argcp; in++) {
+		if (*argv[in])
+			argv[out++] = argv[in];
+		else {
+			free(argv[in]);
+			(*largcp)--;
+		}
+	}
+
+	*argcp = out;
+}
+
+static struct option *build_option_array(int *base_opt_startp)
+{
+	struct option *options, *q;
+	struct copperskin *skin;
+	const struct option *p;
+	int nopts;
+
+	nopts = sizeof(base_options) / sizeof(base_options[0]);
+	pvlist_for_each_entry(skin, &skins, __reserved.next) {
+		p = skin->options;
+		if (p) {
+			while (p->name) {
+				nopts++;
+				p++;
+			}
+		}
+	}
+	options = malloc(sizeof(*options) * nopts);
+	if (options == NULL)
+		return NULL;
+
+	q = options;
+	pvlist_for_each_entry(skin, &skins, __reserved.next) {
+		p = skin->options;
+		if (p) {
+			skin->__reserved.opt_start = q - options;
+			while (p->name)
+				memcpy(q++, p++, sizeof(*q));
+		}
+		skin->__reserved.opt_end = q - options;
+	}
+
+	*base_opt_startp = q - options;
+	memcpy(q, base_options, sizeof(base_options));
+
+	return options;
+}
+
+static int parse_base_options(int *argcp, char *const **argvp,
+			      int *largcp, char ***uargvp,
+			      const struct option *options,
+			      int base_opt_start)
+{
+	int c, lindex, ret, n;
+	char **uargv;
+
+	/*
+	 * Prepare a user argument vector we can modify, copying the
+	 * one we have been given by the application code in
+	 * copperplate_init(). This vector will be expunged from
+	 * Xenomai proper options as we discover them.
+	 */
+	uargv = prep_args(*argcp, *argvp, largcp);
+	if (uargv == NULL)
+		return -ENOMEM;
+
+	*uargvp = uargv;
 	opterr = 0;
 
+	/*
+	 * NOTE: since we pack the argument vector on the fly while
+	 * processing the options, optarg should be considered as
+	 * volatile by skin option handlers; i.e. strdup() is required
+	 * if the value has to be retained. Values from the user
+	 * vector returned by copperplate_init() live in permanent
+	 * memory though.
+	 */
+
 	for (;;) {
-		c = getopt_long_only(argc, argv, "", base_options, &lindex);
+		lindex = -1;
+		c = getopt_long(*largcp, uargv, "", options, &lindex);
 		if (c == EOF)
 			break;
-		if (c > 0)
-			continue;
-		switch (lindex) {
+		if (lindex == -1) {
+			usage();
+			exit(1);
+		}
+		switch (lindex - base_opt_start) {
 		case mempool_opt:
 			__node_info.mem_pool = atoi(optarg) * 1024;
 			break;
@@ -215,7 +328,7 @@ void copperplate_init(int argc, char *const argv[])
 #endif
 			break;
 		case session_opt:
-			__node_info.session_label = optarg;
+			__node_info.session_label = strdup(optarg);
 #ifndef CONFIG_XENO_PSHARED
 			warning("Xenomai compiled without shared multi-processing support");
 #endif
@@ -223,7 +336,7 @@ void copperplate_init(int argc, char *const argv[])
 		case affinity_opt:
 			ret = collect_cpu_affinity(optarg);
 			if (ret)
-				goto fail;
+				return ret;
 			break;
 		case no_mlock_opt:
 		case no_registry_opt:
@@ -233,8 +346,129 @@ void copperplate_init(int argc, char *const argv[])
 		case help_opt:
 			usage();
 			exit(0);
+		default:
+			/* Skin option, don't process yet. */
+			continue;
 		}
+
+		/*
+		 * Clear the first byte of the base option we found
+		 * (including any companion argument), pack_args()
+		 * will expunge all options we have already handled.
+		 *
+		 * NOTE: this code relies on the fact that only long
+		 * options with double-dash markers can be parsed here
+		 * after prep_args() did its job (we do not support
+		 * -foo as a long option). This is aimed at reserving
+		 * use of short options to the application layer,
+		 * sharing only the long option namespace with the
+		 * Xenomai core libs.
+		 */
+		n = optind - 1;
+		if (uargv[n][0] != '-' || uargv[n][1] != '-')
+			/* Clear the separate argument value. */
+			uargv[n--][0] = '\0';
+		uargv[n][0] = '\0'; /* Clear the option switch. */
 	}
+
+	pack_args(argcp, largcp, uargv);
+
+	optind = 0;
+
+	return 0;
+}
+
+static int parse_skin_options(int *argcp, int largc, char **uargv,
+			      const struct option *options)
+{
+	struct copperskin *skin;
+	int lindex, n, c, ret;
+
+	for (;;) {
+		lindex = -1;
+		c = getopt_long(largc, uargv, "", options, &lindex);
+		if (c == EOF)
+			break;
+		if (lindex == -1) {
+			usage();
+			exit(1);
+		}
+		pvlist_for_each_entry(skin, &skins, __reserved.next) {
+			if (skin->parse_option == NULL)
+				continue;
+			if (lindex < skin->__reserved.opt_start ||
+			    lindex >= skin->__reserved.opt_end)
+				continue;
+			lindex -= skin->__reserved.opt_start;
+			ret = skin->parse_option(lindex, optarg);
+			if (ret == 0)
+				break;
+			return ret;
+		}
+		n = optind - 1;
+		if (uargv[n][0] != '-' || uargv[n][1] != '-')
+			/* Clear the separate argument value. */
+			uargv[n--][0] = '\0';
+		uargv[n][0] = '\0'; /* Clear the option switch. */
+	}
+
+	pack_args(argcp, &largc, uargv);
+
+	optind = 0;
+
+	return 0;
+}
+
+void copperplate_init(int *argcp, char *const **argvp)
+{
+	int ret, largc, base_opt_start;
+	struct copperskin *skin;
+	struct option *options;
+	char **uargv;
+
+	__RT(clock_gettime(CLOCK_COPPERPLATE, &__init_date));
+
+	/* Our node id. is the tid of the main thread. */
+	__node_id = copperplate_get_tid();
+
+	/* No ifs, no buts: we must be called over the main thread. */
+	assert(getpid() == __node_id);
+
+	if (pvlist_empty(&skins)) {
+		warning("no skin detected in program");
+		ret = -EINVAL;
+		goto fail;
+	}
+
+	/* Set a reasonable default value for the registry mount point. */
+	ret = asprintf(&__node_info.registry_mountpt,
+		       "/mnt/xenomai/%d", getpid());
+	if (ret < 0) {
+		ret = -ENOMEM;
+		goto fail;
+	}
+
+	/* Define default CPU affinity, i.e. no particular affinity. */
+	CPU_ZERO(&__node_info.cpu_affinity);
+
+	/*
+	 * Build the global option array, merging the base and
+	 * per-skin option sets.
+	 */
+	options = build_option_array(&base_opt_start);
+	if (options == NULL) {
+		ret = -ENOMEM;
+		goto fail;
+	}
+
+	/*
+	 * Parse the base options first, to bootstrap the core with
+	 * the right config values.
+	 */
+	ret = parse_base_options(argcp, argvp, &largc, &uargv,
+				 options, base_opt_start);
+	if (ret)
+		goto fail;
 
 	ret = debug_pkg_init();
 	if (ret) {
@@ -254,8 +488,8 @@ void copperplate_init(int argc, char *const argv[])
 		goto fail;
 	}
 
-	if (!__node_info.no_registry) {
-		ret = registry_pkg_init(argv[0], __node_info.registry_mountpt,
+	if (__node_info.no_registry == 0) {
+		ret = registry_pkg_init(uargv[0], __node_info.registry_mountpt,
 					mkdir_mountpt);
 		if (ret)
 			goto fail;
@@ -269,7 +503,7 @@ void copperplate_init(int argc, char *const argv[])
 		goto fail;
 	}
 
-	if (!__node_info.no_mlock) {
+	if (__node_info.no_mlock == 0) {
 		ret = mlockall(MCL_CURRENT | MCL_FUTURE);
 		if (ret) {
 			ret = -errno;
@@ -278,15 +512,19 @@ void copperplate_init(int argc, char *const argv[])
 		}
 	}
 
-	if (pvlist_empty(&skins)) {
-		warning("no skin detected in program");
-		ret = -EINVAL;
+	/*
+	 * Now that we have bootstrapped the core, we may call the
+	 * skin handlers for parsing their own options, which in turn
+	 * may create system objects on the fly.
+	 */
+	ret = parse_skin_options(argcp, largc, uargv, options);
+	if (ret)
 		goto fail;
-	}
 
-	pvlist_for_each_entry(skin, &skins, next) {
-		optind = 0;
-		ret = skin->init(argc, argv);
+	free(options);
+
+	pvlist_for_each_entry(skin, &skins, __reserved.next) {
+		ret = skin->init();
 		if (ret) {
 			warning("skin %s won't initialize", skin->name);
 			goto fail;
@@ -294,9 +532,9 @@ void copperplate_init(int argc, char *const argv[])
 	}
 
 #ifdef __XENO_DEBUG__
-	if (!__node_info.silent_mode) {
+	if (__node_info.silent_mode == 0) {
 		warning("Xenomai compiled with %s debug enabled,\n"
-			"                                     "
+			"                              "
 			"%shigh latencies expected [--enable-debug=%s]",
 #ifdef __XENO_DEBUG_FULL__
 			"full", "very ", "full"
@@ -306,7 +544,13 @@ void copperplate_init(int argc, char *const argv[])
 			);
 	}
 #endif
-	optind = 0;
+
+	/*
+	 * The final user arg vector only contains options we could
+	 * not handle. The caller should be able to process them, or
+	 * bail out.
+	 */
+	*argvp = uargv;
 
 	return;
 fail:
@@ -315,5 +559,5 @@ fail:
 
 void copperplate_register_skin(struct copperskin *p)
 {
-	pvlist_append(&p->next, &skins);
+	pvlist_append(&p->__reserved.next, &skins);
 }
