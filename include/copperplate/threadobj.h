@@ -155,6 +155,8 @@ extern int threadobj_high_prio;
 
 extern int threadobj_irq_prio;
 
+extern pthread_key_t threadobj_tskey;
+
 #ifdef HAVE___THREAD
 
 extern __thread __attribute__ ((tls_model ("initial-exec")))
@@ -163,6 +165,7 @@ struct threadobj *__threadobj_current;
 static inline void threadobj_set_current(struct threadobj *thobj)
 {
 	__threadobj_current = thobj;
+	pthread_setspecific(threadobj_tskey, thobj);
 }
 
 static inline struct threadobj *threadobj_current(void)
@@ -171,8 +174,6 @@ static inline struct threadobj *threadobj_current(void)
 }
 
 #else /* !HAVE___THREAD */
-
-extern pthread_key_t threadobj_tskey;
 
 static inline void threadobj_set_current(struct threadobj *thobj)
 {

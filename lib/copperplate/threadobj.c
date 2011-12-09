@@ -76,12 +76,12 @@ static void cancel_sync(struct threadobj *thobj);
 __thread __attribute__ ((tls_model ("initial-exec")))
 struct threadobj *__threadobj_current;
 
-static inline void threadobj_init_key(void)
-{
-}
+#endif
 
-#else /* !HAVE____THREAD */
-
+/*
+ * We need the thread object key regardless of whether TLS is
+ * available to us, to run the thread finalizer routine.
+ */
 pthread_key_t threadobj_tskey;
 
 static inline void threadobj_init_key(void)
@@ -89,8 +89,6 @@ static inline void threadobj_init_key(void)
 	if (pthread_key_create(&threadobj_tskey, threadobj_finalize))
 		panic("failed to allocate TSD key");
 }
-
-#endif /* !HAVE____THREAD */
 
 #ifdef CONFIG_XENO_COBALT
 
