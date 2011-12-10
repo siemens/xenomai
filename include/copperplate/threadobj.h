@@ -157,9 +157,9 @@ extern int threadobj_irq_prio;
 
 extern pthread_key_t threadobj_tskey;
 
-#ifdef HAVE___THREAD
+#ifdef HAVE_TLS
 
-extern __thread __attribute__ ((tls_model ("initial-exec")))
+extern __thread __attribute__ ((tls_model (CONFIG_XENO_TLS_MODEL)))
 struct threadobj *__threadobj_current;
 
 static inline void threadobj_set_current(struct threadobj *thobj)
@@ -173,7 +173,7 @@ static inline struct threadobj *threadobj_current(void)
 	return __threadobj_current;
 }
 
-#else /* !HAVE___THREAD */
+#else /* !HAVE_TLS */
 
 static inline void threadobj_set_current(struct threadobj *thobj)
 {
@@ -185,7 +185,7 @@ static inline struct threadobj *threadobj_current(void)
 	return pthread_getspecific(threadobj_tskey);
 }
 
-#endif /* !HAVE___THREAD */
+#endif /* !HAVE_TLS */
 
 #ifdef __cplusplus
 extern "C" {

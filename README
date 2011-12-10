@@ -187,6 +187,32 @@ or Xenomai-specific knobs:
 	by default, since we don't know in advance whether this
 	feature exists on the target kernel.
 
+--enable-tls
+
+	Xenomai can use GCC's thread local storage extension (TLS) to
+	speed up retrieval of per-thread information it uses
+	internally. This switch enables TLS, use the converse
+	--disable-tls to prevent this.
+
+	Whether TLS is enabled by default is a per-architecture
+	decision. Currently, this feature is enabled for x86 and
+	powerpc by default, other architectures will require
+	--enable-tls to be passed to the configure script explicitly.
+
+--enable-dlopen-libs
+
+	This switch allows programs to load Xenomai libraries
+	dynamically, using the dlopen(3) routine. Enabling dynamic
+	loading introduces some overhead in TLS accesses (see
+	--enable-tls), which might be noticeable depending on the
+	architecture.
+
+	Applications loading libcobalt.so dynamically may want to
+	create the XENO_NOSHADOW environment variable prior to calling
+	dlopen(), to prevent auto-shadowing of the calling context.
+
+	Dynamic loading of Xenomai libraries is disabled by default.
+
 Compiling an application
 ========================
 

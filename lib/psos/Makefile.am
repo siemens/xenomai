@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libpsos.la
 
-libpsos_la_LDFLAGS = -version-info 0:0:0 -lpthread
+libpsos_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 0:0:0
 
 libpsos_la_SOURCES =	\
 	init.c		\

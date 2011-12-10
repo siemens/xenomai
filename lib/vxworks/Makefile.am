@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libvxworks.la
 
-libvxworks_la_LDFLAGS = -version-info 0:0:0 -lpthread
+libvxworks_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 0:0:0
 
 libvxworks_la_SOURCES = \
 	init.c		\

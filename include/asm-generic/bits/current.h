@@ -8,10 +8,10 @@ extern pthread_key_t xeno_current_mode_key;
 
 xnhandle_t xeno_slow_get_current(void);
 
-#ifdef HAVE___THREAD
-extern __thread __attribute__ ((tls_model ("initial-exec")))
+#ifdef HAVE_TLS
+extern __thread __attribute__ ((tls_model (CONFIG_XENO_TLS_MODEL)))
 xnhandle_t xeno_current;
-extern __thread __attribute__ ((tls_model ("initial-exec")))
+extern __thread __attribute__ ((tls_model (CONFIG_XENO_TLS_MODEL)))
 unsigned long *xeno_current_mode;
 
 static inline xnhandle_t xeno_get_current(void)
@@ -31,7 +31,7 @@ static inline unsigned long *xeno_get_current_mode_ptr(void)
 	return xeno_current ? xeno_current_mode : NULL;
 }
 
-#else /* ! HAVE___THREAD */
+#else /* ! HAVE_TLS */
 extern pthread_key_t xeno_current_key;
 
 xnhandle_t xeno_slow_get_current(void);
@@ -65,7 +65,7 @@ static inline unsigned long *xeno_get_current_mode_ptr(void)
 	return pthread_getspecific(xeno_current_mode_key);
 }
 
-#endif /* ! HAVE___THREAD */
+#endif /* ! HAVE_TLS */
 
 void xeno_init_current_keys(void);
 

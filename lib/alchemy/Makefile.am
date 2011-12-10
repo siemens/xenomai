@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libalchemy.la
 
-libalchemy_la_LDFLAGS = -version-info 0:0:0 -lpthread
+libalchemy_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 0:0:0
 
 libalchemy_la_SOURCES =	\
 	init.c		\

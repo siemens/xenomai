@@ -11,10 +11,10 @@
 
 extern unsigned long xeno_sem_heap[2];
 
-#ifdef HAVE___THREAD
-__thread __attribute__ ((tls_model ("initial-exec")))
+#ifdef HAVE_TLS
+__thread __attribute__ ((tls_model (CONFIG_XENO_TLS_MODEL)))
 xnhandle_t xeno_current = XN_NO_HANDLE;
-__thread __attribute__ ((tls_model ("initial-exec")))
+__thread __attribute__ ((tls_model (CONFIG_XENO_TLS_MODEL)))
 unsigned long *xeno_current_mode;
 
 static inline void __xeno_set_current(xnhandle_t current)
@@ -30,7 +30,7 @@ void xeno_set_current_mode(unsigned long offset)
 {
 	xeno_current_mode = (unsigned long *)(xeno_sem_heap[0] + offset);
 }
-#else /* !HAVE___THREAD */
+#else /* !HAVE_TLS */
 
 pthread_key_t xeno_current_mode_key;
 pthread_key_t xeno_current_key;
@@ -75,7 +75,7 @@ void xeno_set_current_mode(unsigned long offset)
 	pthread_setspecific(xeno_current_mode_key,
 			    (void *)(xeno_sem_heap[0] + offset));
 }
-#endif /* !HAVE___THREAD */
+#endif /* !HAVE_TLS */
 
 xnhandle_t xeno_slow_get_current(void)
 {

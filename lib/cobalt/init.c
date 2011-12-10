@@ -41,13 +41,10 @@ void cobalt_clock_init(int);
 static __attribute__ ((constructor))
 void __init_cobalt_interface(void)
 {
-	struct xnbindreq breq;
-
-#ifndef CONFIG_XENO_LIBS_DLOPEN
 	struct sched_param parm;
-	int policy;
-#endif /* !CONFIG_XENO_LIBS_DLOPEN */
-	int muxid, err;
+	struct xnbindreq breq;
+	int policy, muxid, ret;
+	const char *p;
 
 	rt_print_auto_init(1);
 
@@ -67,47 +64,40 @@ void __init_cobalt_interface(void)
 								 sc_rtdm_fdcount);
 	}
 
-	/* If not dlopening, we are going to shadow the main thread, so mlock
-	   the whole memory for the time of the syscall, in order to avoid the
-	   SIGXCPU signal. */
-#if defined(CONFIG_XENO_POSIX_AUTO_MLOCKALL) || !defined(CONFIG_XENO_LIBS_DLOPEN)
+	p = getenv("XENO_NOSHADOW");
+	if (p && *p)
+		goto no_shadow;
+
+	/*
+	 * Auto-shadow the current context if we can't be invoked from
+	 * dlopen.
+	 */
 	if (mlockall(MCL_CURRENT | MCL_FUTURE)) {
 		perror("Xenomai Posix skin init: mlockall");
 		exit(EXIT_FAILURE);
 	}
-#endif /* auto mlockall || !dlopen */
-
-	/* Don't use auto-shadowing if we are likely invoked from dlopen. */
-#ifndef CONFIG_XENO_LIBS_DLOPEN
-	err = __STD(pthread_getschedparam(pthread_self(), &policy, &parm));
-	if (err) {
+	ret = __STD(pthread_getschedparam(pthread_self(), &policy, &parm));
+	if (ret) {
 		fprintf(stderr, "Xenomai Posix skin init: "
-			"pthread_getschedparam: %s\n", strerror(err));
+			"pthread_getschedparam: %s\n", strerror(ret));
 		exit(EXIT_FAILURE);
 	}
 
-	err = __wrap_pthread_setschedparam(pthread_self(), policy, &parm);
-	if (err) {
+	ret = __wrap_pthread_setschedparam(pthread_self(), policy, &parm);
+	if (ret) {
 		fprintf(stderr, "Xenomai Posix skin init: "
-			"pthread_setschedparam: %s\n", strerror(err));
+			"pthread_setschedparam: %s\n", strerror(ret));
 		exit(EXIT_FAILURE);
 	}
 
-#ifndef CONFIG_XENO_POSIX_AUTO_MLOCKALL
-	if (munlockall()) {
-		perror("Xenomai Posix skin init: munlockall");
-		exit(EXIT_FAILURE);
-	}
-#endif /* !CONFIG_XENO_POSIX_AUTO_MLOCKALL */
-#endif /* !CONFIG_XENO_LIBS_DLOPEN */
-
+no_shadow:
 	if (fork_handler_registered)
 		return;
 
-	err = pthread_atfork(NULL, NULL, &__init_cobalt_interface);
-	if (err) {
+	ret = pthread_atfork(NULL, NULL, &__init_cobalt_interface);
+	if (ret) {
 		fprintf(stderr, "Xenomai Posix skin init: "
-			"pthread_atfork: %s\n", strerror(err));
+			"pthread_atfork: %s\n", strerror(ret));
 		exit(EXIT_FAILURE);
 	}
 	fork_handler_registered = 1;

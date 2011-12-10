@@ -34,9 +34,6 @@
 #undef CONFIG_XENO_MERCURY
 
 /* config */
-#undef CONFIG_XENO_POSIX_AUTO_MLOCKALL
-
-/* config */
 #undef CONFIG_XENO_PSHARED
 
 /* config */
@@ -50,6 +47,9 @@
 
 /* config */
 #undef CONFIG_XENO_TLSF
+
+/* TLS model */
+#undef CONFIG_XENO_TLS_MODEL
 
 /* config */
 #undef CONFIG_XENO_VERSION_MAJOR
@@ -128,11 +128,11 @@
 /* Define to 1 if you have the <sys/types.h> header file. */
 #undef HAVE_SYS_TYPES_H
 
+/* config */
+#undef HAVE_TLS
+
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
-
-/* config */
-#undef HAVE___THREAD
 
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
    */

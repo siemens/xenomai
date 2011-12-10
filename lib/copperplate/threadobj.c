@@ -71,9 +71,9 @@ static struct timespec global_quantum;
 
 static void cancel_sync(struct threadobj *thobj);
 
-#ifdef HAVE___THREAD
+#ifdef HAVE_TLS
 
-__thread __attribute__ ((tls_model ("initial-exec")))
+__thread __attribute__ ((tls_model (CONFIG_XENO_TLS_MODEL)))
 struct threadobj *__threadobj_current;
 
 #endif

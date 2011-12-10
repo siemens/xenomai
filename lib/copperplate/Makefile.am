@@ -1,7 +1,7 @@
 
 lib_LTLIBRARIES = libcopperplate.la
 
-libcopperplate_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 0:0:0 -lpthread
+libcopperplate_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 0:0:0
 
 libcopperplate_la_SOURCES =	\
 	clockobj.c	\

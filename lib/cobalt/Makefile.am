@@ -8,7 +8,7 @@ lib_LTLIBRARIES = libcobalt.la
 
 CPPFLAGS += -I$(top_srcdir)/kernel/cobalt
 
-libcobalt_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 2:0:0 -lpthread -lrt
+libcobalt_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 2:0:0 -lpthread -lrt
 
 libcobalt_la_SOURCES = \
 	assert_context.c \

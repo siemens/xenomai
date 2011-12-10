@@ -103,8 +103,8 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
  * services in kernel space.
  */
 
-#if defined(HAVE___THREAD) && __GNUC__ == 4 && __GNUC_MINOR__ >= 3
-#error __thread is too buggy with gcc 4.3 and later, please do not pass --with-__thread to configure
+#if defined(HAVE_TLS) && __GNUC__ == 4 && __GNUC_MINOR__ >= 3
+#error TLS support (__thread) is broken with GCC >= 4.3, use --disable-tls when configuring
 #endif
 
 #define LOADARGS_0(muxcode, dummy...)	\
