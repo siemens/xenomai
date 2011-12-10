@@ -389,10 +389,8 @@ static int parse_skin_options(int *argcp, int largc, char **uargv,
 		c = getopt_long(largc, uargv, "", options, &lindex);
 		if (c == EOF)
 			break;
-		if (lindex == -1) {
-			usage();
-			exit(1);
-		}
+		if (lindex == -1)
+			continue; /* Not handled here. */
 		pvlist_for_each_entry(skin, &skins, __reserved.next) {
 			if (skin->parse_option == NULL)
 				continue;
