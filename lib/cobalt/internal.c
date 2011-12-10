@@ -294,3 +294,26 @@ int cobalt_monitor_drain_all_sync(cobalt_monitor_t *mon)
 
 	return ret;
 }
+
+void cobalt_handle_sigdebug(int sig, siginfo_t *si, void *context)
+{
+	struct sigaction sa;
+
+	if (si->si_value.sival_int == SIGDEBUG_NOMLOCK) {
+		fprintf(stderr, "Xenomai: process memory not locked "
+			"(missing mlockall?)\n");
+		fflush(stderr);
+		exit(4);
+	}
+
+	/*
+	 * XNTRAPSW was set for the thread but no user-defined handler
+	 * has been set to override our internal handler, so let's
+	 * invoke the default signal action.
+	 */
+	sa.sa_handler = SIG_DFL;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0;
+	sigaction(SIGXCPU, &sa, NULL);
+	pthread_kill(pthread_self(), SIGXCPU);
+}

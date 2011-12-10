@@ -20,23 +20,125 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <signal.h>
 #include <limits.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <nucleus/heap.h>
 #include <cobalt/posix.h>
 #include <cobalt/syscall.h>
 #include <rtdm/syscall.h>
 #include <kernel/cobalt/mutex.h>
 #include <rtdk.h>
 #include <asm/xenomai/bits/bind.h>
+#include <asm-generic/xenomai/timeconv.h>
+#include <asm-generic/xenomai/stack.h>
+#include <asm-generic/xenomai/sem_heap.h>
+#include "internal.h"
 
 int __cobalt_muxid = -1;
 int __rtdm_muxid = -1;
 int __rtdm_fd_start = INT_MAX;
 static int fork_handler_registered;
+static pthread_t xeno_main_tid;
+struct xnfeatinfo xeno_featinfo;
 
 int __wrap_pthread_setschedparam(pthread_t, int, const struct sched_param *);
 void cobalt_clock_init(int);
+
+static void sigill_handler(int sig)
+{
+	fprintf(stderr, "Xenomai disabled in kernel?\n");
+	exit(EXIT_FAILURE);
+}
+
+#ifdef xeno_arch_features_check
+static void do_init_arch_features(void)
+{
+	xeno_arch_features_check(&xeno_featinfo);
+}
+static void init_arch_features(void)
+{
+	static pthread_once_t init_archfeat_once = PTHREAD_ONCE_INIT;
+	pthread_once(&init_archfeat_once, do_init_arch_features);
+}
+#else  /* !xeno_init_arch_features */
+#define init_arch_features()	do { } while (0)
+#endif /* !xeno_arch_features_check */
+
+void xeno_fault_stack(void)
+{
+	if (pthread_self() == xeno_main_tid) {
+		char stk[xeno_stacksize(1)];
+		stk[0] = stk[sizeof(stk) - 1] = 0xA5;
+	}
+}
+
+static int bind_interface(void)
+{
+	sighandler_t old_sigill_handler;
+	struct xnbindreq breq;
+	struct xnfeatinfo *f;
+	int muxid;
+
+	/* Some sanity checks first. */
+	if (access(XNHEAP_DEV_NAME, 0)) {
+		fprintf(stderr, "Xenomai: %s is missing\n(chardev, major=10 minor=%d)\n",
+			XNHEAP_DEV_NAME, XNHEAP_DEV_MINOR);
+		exit(EXIT_FAILURE);
+	}
+
+	old_sigill_handler = signal(SIGILL, sigill_handler);
+	if (old_sigill_handler == SIG_ERR) {
+		perror("signal(SIGILL)");
+		exit(EXIT_FAILURE);
+	}
+
+	f = &breq.feat_ret;
+	breq.feat_req = XENOMAI_FEAT_DEP;
+	breq.abi_rev = XENOMAI_ABI_REV;
+	muxid = XENOMAI_SYSBIND(COBALT_SKIN_MAGIC, &breq);
+
+	signal(SIGILL, old_sigill_handler);
+
+	switch (muxid) {
+	case -EINVAL:
+		fprintf(stderr, "Xenomai: incompatible feature set\n");
+		fprintf(stderr,
+			"(userland requires \"%s\", kernel provides \"%s\", missing=\"%s\").\n",
+			f->feat_man_s, f->feat_all_s, f->feat_mis_s);
+		exit(EXIT_FAILURE);
+
+	case -ENOEXEC:
+		fprintf(stderr, "Xenomai: incompatible ABI revision level\n");
+		fprintf(stderr, "(user-space requires '%lu', kernel provides '%lu').\n",
+			XENOMAI_ABI_REV, f->feat_abirev);
+		exit(EXIT_FAILURE);
+
+	case -ENOSYS:
+	case -ESRCH:
+		return -1;
+	}
+
+	if (muxid < 0) {
+		fprintf(stderr, "Xenomai: binding failed: %s.\n",
+			strerror(-muxid));
+		exit(EXIT_FAILURE);
+	}
+
+	xeno_featinfo = *f;
+	init_arch_features();
+
+	xeno_init_sem_heaps();
+
+	xeno_init_current_keys();
+
+	xeno_main_tid = pthread_self();
+
+	xeno_init_timeconv(muxid);
+
+	return muxid;
+}
 
 static __attribute__ ((constructor))
 void __init_cobalt_interface(void)
@@ -44,12 +146,22 @@ void __init_cobalt_interface(void)
 	struct sched_param parm;
 	struct xnbindreq breq;
 	int policy, muxid, ret;
+	struct sigaction sa;
 	const char *p;
 
 	rt_print_auto_init(1);
 
-	muxid =
-	    xeno_bind_skin(COBALT_SKIN_MAGIC, "POSIX", "xeno_posix");
+	muxid = bind_interface();
+	if (muxid < 0) {
+		fprintf(stderr,
+			"Xenomai: Cobalt interface unavailable\n");
+		exit(EXIT_FAILURE);
+	}
+
+	sa.sa_sigaction = cobalt_handle_sigdebug;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = SA_SIGINFO;
+	sigaction(SIGXCPU, &sa, NULL);
 
 	cobalt_clock_init(muxid);
 

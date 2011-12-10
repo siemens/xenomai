@@ -13,7 +13,6 @@ libcobalt_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 2:0:0 -lpthread -lrt
 libcobalt_la_SOURCES = \
 	assert_context.c \
 	attr.c \
-	bind.c \
 	current.c \
 	sem_heap.c \
 	sigshadow.c \
