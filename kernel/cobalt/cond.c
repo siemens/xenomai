@@ -238,9 +238,6 @@ static inline int cobalt_cond_timedwait_prologue(xnthread_t *cur,
 	spl_t s;
 	int err;
 
-	if (xnpod_unblockable_p())
-		return -EPERM;
-
 	xnlock_get_irqsave(&nklock, s);
 
 	/* If another thread waiting for cond does not use the same mutex */

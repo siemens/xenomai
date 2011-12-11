@@ -524,9 +524,6 @@ sem_timedwait_internal(cobalt_sem_t *sem, int timed, xnticks_t to)
 	xnthread_t *cur;
 	int err;
 
-	if (xnpod_unblockable_p())
-		return -EPERM;
-
 	cur = xnpod_current_thread();
 
 	if ((err = sem_trywait_internal(sem)) != -EAGAIN)
