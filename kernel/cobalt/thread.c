@@ -36,7 +36,19 @@
 
 xnticks_t cobalt_time_slice;
 
-static pthread_attr_t default_attr;
+static const pthread_attr_t default_thread_attr = {
+      magic:COBALT_THREAD_ATTR_MAGIC,
+      detachstate:PTHREAD_CREATE_JOINABLE,
+      stacksize:PTHREAD_STACK_MIN,
+      inheritsched:PTHREAD_EXPLICIT_SCHED,
+      policy:SCHED_OTHER,
+      schedparam_ex:{
+      sched_priority:0},
+
+      name:NULL,
+      fp:1,
+      affinity:XNPOD_ALL_CPUS,
+};
 
 static unsigned cobalt_get_magic(void)
 {
@@ -393,7 +405,7 @@ static inline int pthread_create(pthread_t *tid, const pthread_attr_t * attr)
 	if (!thread)
 		return -EAGAIN;
 
-	thread->attr = attr ? *attr : default_attr;
+	thread->attr = attr ? *attr : default_thread_attr;
 
 	cur = cobalt_current_thread();
 
@@ -968,7 +980,7 @@ int cobalt_thread_create(unsigned long tid, int policy,
 	 * critical fields are set in a compatible fashion wrt to the
 	 * calling context.
 	 */
-	pthread_attr_init(&attr);
+	attr = default_thread_attr;
 	attr.policy = policy;
 	attr.detachstate = PTHREAD_CREATE_DETACHED;
 	attr.schedparam_ex = param;
@@ -1008,7 +1020,7 @@ pthread_t cobalt_thread_shadow(struct task_struct *p,
 	pid_t h_tid;
 	int err;
 
-	pthread_attr_init(&attr);
+	attr = default_thread_attr;
 	attr.detachstate = PTHREAD_CREATE_DETACHED;
 	attr.name = p->comm;
 
@@ -1369,7 +1381,6 @@ void cobalt_threadq_cleanup(cobalt_kqueues_t *q)
 void cobalt_thread_pkg_init(u_long rrperiod)
 {
 	initq(&cobalt_global_kqueues.threadq);
-	pthread_attr_init(&default_attr);
 	cobalt_time_slice = rrperiod;
 	xnpod_add_hook(XNHOOK_THREAD_DELETE, thread_delete_hook);
 }
