@@ -137,7 +137,6 @@ int xnthread_init(struct xnthread *thread,
 	thread->wwake = NULL;
 	thread->wcontext = NULL;
 	thread->hrescnt = 0;
-	thread->errcode = 0;
 	thread->registry.handle = XN_NO_HANDLE;
 	thread->registry.waitkey = NULL;
 	memset(&thread->stat, 0, sizeof(thread->stat));
@@ -252,25 +251,6 @@ char *xnthread_format_status(xnflags_t status, char *buf, int size)
 
 	return buf;
 }
-
-int *xnthread_get_errno_location(xnthread_t *thread)
-{
-	static int fallback_errno;
-
-	if (unlikely(!xnpod_active_p()))
-		return &fallback_errno;
-
-#ifndef __XENO_SIM__
-	if (xnthread_test_state(thread, XNSHADOW))
-		return &thread->errcode;
-
-	if (xnthread_test_state(thread, XNROOT))
-		return &xnshadow_errno(current);
-#endif /* !__XENO_SIM__ */
-
-	return &thread->errcode;
-}
-EXPORT_SYMBOL_GPL(xnthread_get_errno_location);
 
 xnticks_t xnthread_get_timeout(xnthread_t *thread, xnticks_t tsc_ns)
 {

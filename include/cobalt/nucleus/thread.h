@@ -271,8 +271,6 @@ typedef struct xnthread {
 
 	struct xnselector *selector;    /* For select. */
 
-	int errcode;			/* Local errno */
-
 	xnasr_t asr;			/* Asynchronous service routine */
 
 	xnflags_t asrmode;		/* Thread's mode for ASR */
@@ -436,8 +434,6 @@ int xnthread_init(struct xnthread *thread,
 void xnthread_cleanup_tcb(struct xnthread *thread);
 
 char *xnthread_format_status(xnflags_t status, char *buf, int size);
-
-int *xnthread_get_errno_location(struct xnthread *thread);
 
 xnticks_t xnthread_get_timeout(struct xnthread *thread, xnticks_t tsc_ns);
 

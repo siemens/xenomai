@@ -138,12 +138,8 @@ struct xnsysent {
 
 extern int nkthrptd;
 
-extern int nkerrptd;
-
 #define xnshadow_thrptd(t) ((t)->ptd[nkthrptd])
 #define xnshadow_thread(t) ((xnthread_t *)xnshadow_thrptd(t))
-/* The errno field must be addressable for plain Linux tasks too. */
-#define xnshadow_errno(t)  (*(int *)&((t)->ptd[nkerrptd]))
 
 #define access_rok(addr, size)	access_ok(VERIFY_READ, (addr), (size))
 #define access_wok(addr, size)	access_ok(VERIFY_WRITE, (addr), (size))

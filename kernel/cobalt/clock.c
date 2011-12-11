@@ -175,7 +175,7 @@ int cobalt_clock_gettime(clockid_t clock_id, struct timespec __user *u_ts)
 	if (err == 0 && __xn_safe_copy_to_user(u_ts, &ts, sizeof(*u_ts)))
 		return -EFAULT;
 
-	return err ? -thread_get_errno() : 0;
+	return err;
 }
 
 int cobalt_clock_settime(clockid_t clock_id, const struct timespec __user *u_ts)

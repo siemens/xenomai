@@ -66,8 +66,6 @@ MODULE_PARM_DESC(xenomai_gid, "GID of the group with access to Xenomai services"
 
 int nkthrptd;
 EXPORT_SYMBOL_GPL(nkthrptd);
-int nkerrptd;
-EXPORT_SYMBOL_GPL(nkerrptd);
 int nkmmptd;
 EXPORT_SYMBOL_GPL(nkmmptd);
 
@@ -2594,10 +2592,9 @@ int xnshadow_mount(void)
 
 	sema_init(&completion_mutex, 1);
 	nkthrptd = rthal_alloc_ptdkey();
-	nkerrptd = rthal_alloc_ptdkey();
 	nkmmptd = rthal_alloc_ptdkey();
 
-	if (nkthrptd < 0 || nkerrptd < 0 || nkmmptd < 0) {
+	if (nkthrptd < 0 || nkmmptd < 0) {
 		printk(KERN_ERR "Xenomai: cannot allocate PTD slots\n");
 		return -ENOMEM;
 	}
@@ -2696,7 +2693,6 @@ void xnshadow_cleanup(void)
 	}
 
 	rthal_apc_free(lostage_apc);
-	rthal_free_ptdkey(nkerrptd);
 	rthal_free_ptdkey(nkthrptd);
 
 	mayday_cleanup_page();

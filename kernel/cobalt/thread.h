@@ -82,16 +82,6 @@ struct cobalt_thread {
 
 #define cobalt_current_thread() thread2pthread(xnpod_current_thread())
 
-static inline void thread_set_errno(int err)
-{
-	*xnthread_get_errno_location(xnpod_current_thread()) = err;
-}
-
-static inline int thread_get_errno(void)
-{
-	return *xnthread_get_errno_location(xnpod_current_thread());
-}
-
 #define thread_name(thread) ((thread)->attr.name)
 
 pthread_t cobalt_thread_find(const struct cobalt_hkey *hkey);
