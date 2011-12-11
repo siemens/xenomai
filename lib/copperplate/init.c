@@ -123,7 +123,7 @@ static void usage(void)
 
         fprintf(stderr, "usage: program <options>, where options may be:\n");
         fprintf(stderr, "--mem-pool-size=<sizeK>          size of the main heap (kbytes)\n");
-        fprintf(stderr, "--no-mlock                       do not lock memory at init\n");
+        fprintf(stderr, "--no-mlock                       do not lock memory at init (Mercury only)\n");
         fprintf(stderr, "--registry-mountpt=<path>        mount point of registry\n");
         fprintf(stderr, "--no-registry                    suppress object registration\n");
         fprintf(stderr, "--session=<label>                label of shared multi-processing session\n");
@@ -501,6 +501,7 @@ void copperplate_init(int *argcp, char *const **argvp)
 		goto fail;
 	}
 
+#ifdef CONFIG_XENO_MERCURY
 	if (__node_info.no_mlock == 0) {
 		ret = mlockall(MCL_CURRENT | MCL_FUTURE);
 		if (ret) {
@@ -509,6 +510,7 @@ void copperplate_init(int *argcp, char *const **argvp)
 			goto fail;
 		}
 	}
+#endif
 
 	/*
 	 * Now that we have bootstrapped the core, we may call the

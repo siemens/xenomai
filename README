@@ -274,6 +274,10 @@ command line, namely:
 	the Xenomai core as part of the emulator initialization
 	duties.
 
+	This flag only applies to the Mercury core. Memory must be
+	locked when invoking dual kernel services, therefore this
+	switch is a nop over Cobalt.
+
 --registry-mountpt=<path>
 
 	Tells the emulator to mount the object registry over the given
