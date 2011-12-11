@@ -124,6 +124,28 @@ static inline int cobalt_mutex_release(xnthread_t *cur, cobalt_mutex_t *mutex)
 	return need_resched;
 }
 
+int cobalt_mutexattr_init(pthread_mutexattr_t __user *u_attr);
+
+int cobalt_mutexattr_destroy(pthread_mutexattr_t __user *u_attr);
+
+int cobalt_mutexattr_gettype(const pthread_mutexattr_t __user *u_attr,
+			     int __user *u_type);
+
+int cobalt_mutexattr_settype(pthread_mutexattr_t __user *u_attr,
+			     int type);
+
+int cobalt_mutexattr_getprotocol(const pthread_mutexattr_t __user *u_attr,
+				 int __user *u_proto);
+
+int cobalt_mutexattr_setprotocol(pthread_mutexattr_t __user *u_attr,
+				 int proto);
+
+int cobalt_mutexattr_getpshared(const pthread_mutexattr_t __user *u_attr,
+				int __user *u_pshared);
+
+int cobalt_mutexattr_setpshared(pthread_mutexattr_t __user *u_attr,
+				int pshared);
+
 int cobalt_mutex_check_init(struct __shadow_mutex __user *u_mx);
 
 int cobalt_mutex_init(struct __shadow_mutex __user *u_mx,

@@ -273,40 +273,6 @@ int pthread_attr_getaffinity_np(const pthread_attr_t *attr,
 int pthread_attr_setaffinity_np(pthread_attr_t *attr,
 				xnarch_cpumask_t mask);
 
-int pthread_mutexattr_init(pthread_mutexattr_t *attr);
-
-int pthread_mutexattr_destroy(pthread_mutexattr_t *attr);
-
-int pthread_mutexattr_gettype(const pthread_mutexattr_t *attr,
-			      int *type);
-
-int pthread_mutexattr_settype(pthread_mutexattr_t *attr,
-			      int type);
-
-int pthread_mutexattr_getprotocol(const pthread_mutexattr_t *attr,
-				  int *proto);
-
-int pthread_mutexattr_setprotocol(pthread_mutexattr_t *attr,
-				  int proto);
-
-int pthread_mutexattr_getpshared(const pthread_mutexattr_t *attr, int *pshared);
-
-int pthread_mutexattr_setpshared(pthread_mutexattr_t *attr, int pshared);
-
-int pthread_mutex_init(pthread_mutex_t *mutex,
-		       const pthread_mutexattr_t *attr);
-
-int pthread_mutex_destroy(pthread_mutex_t *mutex);
-
-int pthread_mutex_trylock(pthread_mutex_t *mutex);
-
-int pthread_mutex_lock(pthread_mutex_t *mutex);
-
-int pthread_mutex_timedlock(pthread_mutex_t *mutex,
-			    const struct timespec *to);
-
-int pthread_mutex_unlock(pthread_mutex_t *mutex);
-
 int pthread_condattr_init(pthread_condattr_t *attr);
 
 int pthread_condattr_destroy(pthread_condattr_t *attr);

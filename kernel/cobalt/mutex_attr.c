@@ -23,7 +23,7 @@
 
 #include "internal.h"
 
-static const pthread_mutexattr_t default_mutex_attr = {
+const pthread_mutexattr_t cobalt_default_mutex_attr = {
 	magic: COBALT_MUTEX_ATTR_MAGIC,
 	type: PTHREAD_MUTEX_NORMAL,
 	protocol: PTHREAD_PRIO_NONE,
@@ -53,12 +53,12 @@ static const pthread_mutexattr_t default_mutex_attr = {
  * Specification.</a>
  *
  */
-int pthread_mutexattr_init(pthread_mutexattr_t * attr)
+static inline int pthread_mutexattr_init(pthread_mutexattr_t * attr)
 {
 	if (!attr)
 		return ENOMEM;
 
-	*attr = default_mutex_attr;
+	*attr = cobalt_default_mutex_attr;
 
 	return 0;
 }
@@ -81,7 +81,7 @@ int pthread_mutexattr_init(pthread_mutexattr_t * attr)
  * Specification.</a>
  *
  */
-int pthread_mutexattr_destroy(pthread_mutexattr_t * attr)
+static inline int pthread_mutexattr_destroy(pthread_mutexattr_t * attr)
 {
 	spl_t s;
 
@@ -123,7 +123,8 @@ int pthread_mutexattr_destroy(pthread_mutexattr_t * attr)
  * Specification.</a>
  *
  */
-int pthread_mutexattr_gettype(const pthread_mutexattr_t * attr, int *type)
+static inline int
+pthread_mutexattr_gettype(const pthread_mutexattr_t * attr, int *type)
 {
 	spl_t s;
 
@@ -173,7 +174,8 @@ int pthread_mutexattr_gettype(const pthread_mutexattr_t * attr, int *type)
  * Specification.</a>
  *
  */
-int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int type)
+static inline int
+pthread_mutexattr_settype(pthread_mutexattr_t * attr, int type)
 {
 	spl_t s;
 
@@ -231,7 +233,8 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int type)
  * Specification.</a>
  *
  */
-int pthread_mutexattr_getprotocol(const pthread_mutexattr_t * attr, int *proto)
+static inline int
+pthread_mutexattr_getprotocol(const pthread_mutexattr_t * attr, int *proto)
 {
 	spl_t s;
 
@@ -279,7 +282,8 @@ int pthread_mutexattr_getprotocol(const pthread_mutexattr_t * attr, int *proto)
  * Specification.</a>
  *
  */
-int pthread_mutexattr_setprotocol(pthread_mutexattr_t * attr, int proto)
+static inline int
+pthread_mutexattr_setprotocol(pthread_mutexattr_t * attr, int proto)
 {
 	spl_t s;
 
@@ -341,7 +345,8 @@ int pthread_mutexattr_setprotocol(pthread_mutexattr_t * attr, int proto)
  * Specification.</a>
  *
  */
-int pthread_mutexattr_getpshared(const pthread_mutexattr_t *attr, int *pshared)
+static inline int
+pthread_mutexattr_getpshared(const pthread_mutexattr_t *attr, int *pshared)
 {
 	spl_t s;
 
@@ -388,7 +393,8 @@ int pthread_mutexattr_getpshared(const pthread_mutexattr_t *attr, int *pshared)
  * Specification.</a>
  *
  */
-int pthread_mutexattr_setpshared(pthread_mutexattr_t *attr, int pshared)
+static inline int
+pthread_mutexattr_setpshared(pthread_mutexattr_t *attr, int pshared)
 {
 	spl_t s;
 
@@ -419,14 +425,128 @@ int pthread_mutexattr_setpshared(pthread_mutexattr_t *attr, int pshared)
 	return 0;
 }
 
+int cobalt_mutexattr_init(pthread_mutexattr_t __user *u_attr)
+{
+	pthread_mutexattr_t attr;
+	int err;
+
+	err = pthread_mutexattr_init(&attr);
+	if (err)
+		return -err;
+
+	return __xn_safe_copy_to_user(u_attr, &attr, sizeof(*u_attr));
+}
+
+int cobalt_mutexattr_destroy(pthread_mutexattr_t __user *u_attr)
+{
+	pthread_mutexattr_t attr;
+	int err;
+
+	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
+		return -EFAULT;
+
+	err = pthread_mutexattr_destroy(&attr);
+	if (err)
+		return -err;
+
+	return __xn_safe_copy_to_user(u_attr, &attr, sizeof(*u_attr));
+}
+
+int cobalt_mutexattr_gettype(const pthread_mutexattr_t __user *u_attr,
+			     int __user *u_type)
+{
+	pthread_mutexattr_t attr;
+	int err, type;
+
+	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
+		return -EFAULT;
+
+	err = pthread_mutexattr_gettype(&attr, &type);
+	if (err)
+		return -err;
+
+	return __xn_safe_copy_to_user(u_type, &type, sizeof(*u_type));
+}
+
+int cobalt_mutexattr_settype(pthread_mutexattr_t __user *u_attr,
+			     int type)
+{
+	pthread_mutexattr_t attr;
+	int err;
+
+	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
+		return -EFAULT;
+
+	err = pthread_mutexattr_settype(&attr, type);
+	if (err)
+		return -err;
+
+	return __xn_safe_copy_to_user(u_attr, &attr, sizeof(*u_attr));
+}
+
+int cobalt_mutexattr_getprotocol(const pthread_mutexattr_t __user *u_attr,
+				 int __user *u_proto)
+{
+	pthread_mutexattr_t attr;
+	int err, proto;
+
+	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
+		return -EFAULT;
+
+	err = pthread_mutexattr_getprotocol(&attr, &proto);
+	if (err)
+		return -err;
+
+	return __xn_safe_copy_to_user(u_proto, &proto, sizeof(*u_proto));
+}
+
+int cobalt_mutexattr_setprotocol(pthread_mutexattr_t __user *u_attr,
+				 int proto)
+{
+	pthread_mutexattr_t attr;
+	int err;
+
+	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
+		return -EFAULT;
+
+	err = pthread_mutexattr_setprotocol(&attr, proto);
+	if (err)
+		return -err;
+
+	return __xn_safe_copy_to_user(u_attr, &attr, sizeof(*u_attr));
+}
+
+int cobalt_mutexattr_getpshared(const pthread_mutexattr_t __user *u_attr,
+				int __user *u_pshared)
+{
+	pthread_mutexattr_t attr;
+	int err, pshared;
+
+	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
+		return -EFAULT;
+
+	err = pthread_mutexattr_getpshared(&attr, &pshared);
+	if (err)
+		return -err;
+
+	return __xn_safe_copy_to_user(u_pshared, &pshared, sizeof(*u_pshared));
+}
+
+int cobalt_mutexattr_setpshared(pthread_mutexattr_t __user *u_attr,
+				int pshared)
+{
+	pthread_mutexattr_t attr;
+	int err;
+
+	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
+		return -EFAULT;
+
+	err = pthread_mutexattr_setpshared(&attr, pshared);
+	if (err)
+		return -err;
+
+	return __xn_safe_copy_to_user(u_attr, &attr, sizeof(*u_attr));
+}
+
 
 /*@}*/
-
-EXPORT_SYMBOL_GPL(pthread_mutexattr_init);
-EXPORT_SYMBOL_GPL(pthread_mutexattr_destroy);
-EXPORT_SYMBOL_GPL(pthread_mutexattr_gettype);
-EXPORT_SYMBOL_GPL(pthread_mutexattr_settype);
-EXPORT_SYMBOL_GPL(pthread_mutexattr_getprotocol);
-EXPORT_SYMBOL_GPL(pthread_mutexattr_setprotocol);
-EXPORT_SYMBOL_GPL(pthread_mutexattr_getpshared);
-EXPORT_SYMBOL_GPL(pthread_mutexattr_setpshared);

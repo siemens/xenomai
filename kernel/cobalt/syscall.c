@@ -43,129 +43,6 @@
 
 int cobalt_muxid;
 
-static int __pthread_mutexattr_init(pthread_mutexattr_t __user *u_attr)
-{
-	pthread_mutexattr_t attr;
-	int err;
-
-	err = pthread_mutexattr_init(&attr);
-	if (err)
-		return -err;
-
-	return __xn_safe_copy_to_user(u_attr, &attr, sizeof(*u_attr));
-}
-
-static int __pthread_mutexattr_destroy(pthread_mutexattr_t __user *u_attr)
-{
-	pthread_mutexattr_t attr;
-	int err;
-
-	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
-		return -EFAULT;
-
-	err = pthread_mutexattr_destroy(&attr);
-	if (err)
-		return -err;
-
-	return __xn_safe_copy_to_user(u_attr, &attr, sizeof(*u_attr));
-}
-
-static int __pthread_mutexattr_gettype(const pthread_mutexattr_t __user *u_attr,
-				       int __user *u_type)
-{
-	pthread_mutexattr_t attr;
-	int err, type;
-
-	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
-		return -EFAULT;
-
-	err = pthread_mutexattr_gettype(&attr, &type);
-	if (err)
-		return -err;
-
-	return __xn_safe_copy_to_user(u_type, &type, sizeof(*u_type));
-}
-
-static int __pthread_mutexattr_settype(pthread_mutexattr_t __user *u_attr,
-				       int type)
-{
-	pthread_mutexattr_t attr;
-	int err;
-
-	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
-		return -EFAULT;
-
-	err = pthread_mutexattr_settype(&attr, type);
-	if (err)
-		return -err;
-
-	return __xn_safe_copy_to_user(u_attr, &attr, sizeof(*u_attr));
-}
-
-static int __pthread_mutexattr_getprotocol(const pthread_mutexattr_t __user *u_attr,
-					   int __user *u_proto)
-{
-	pthread_mutexattr_t attr;
-	int err, proto;
-
-	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
-		return -EFAULT;
-
-	err = pthread_mutexattr_getprotocol(&attr, &proto);
-	if (err)
-		return -err;
-
-	return __xn_safe_copy_to_user(u_proto, &proto, sizeof(*u_proto));
-}
-
-static int __pthread_mutexattr_setprotocol(pthread_mutexattr_t __user *u_attr,
-					   int proto)
-{
-	pthread_mutexattr_t attr;
-	int err;
-
-	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
-		return -EFAULT;
-
-	err = pthread_mutexattr_setprotocol(&attr, proto);
-	if (err)
-		return -err;
-
-	return __xn_safe_copy_to_user(u_attr, &attr, sizeof(*u_attr));
-}
-
-static int __pthread_mutexattr_getpshared(const pthread_mutexattr_t __user *u_attr,
-					   int __user *u_pshared)
-{
-	pthread_mutexattr_t attr;
-	int err, pshared;
-
-	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
-		return -EFAULT;
-
-	err = pthread_mutexattr_getpshared(&attr, &pshared);
-	if (err)
-		return -err;
-
-	return __xn_safe_copy_to_user(u_pshared, &pshared, sizeof(*u_pshared));
-}
-
-static int __pthread_mutexattr_setpshared(pthread_mutexattr_t __user *u_attr,
-					  int pshared)
-{
-	pthread_mutexattr_t attr;
-	int err;
-
-	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
-		return -EFAULT;
-
-	err = pthread_mutexattr_setpshared(&attr, pshared);
-	if (err)
-		return -err;
-
-	return __xn_safe_copy_to_user(u_attr, &attr, sizeof(*u_attr));
-}
-
 static int __pthread_condattr_init(pthread_condattr_t __user *u_attr)
 {
 	pthread_condattr_t attr;
@@ -974,14 +851,14 @@ static struct xnsysent __systab[] = {
 	SKINCALL_DEF(sc_cobalt_timer_settime, __timer_settime, primary),
 	SKINCALL_DEF(sc_cobalt_timer_gettime, __timer_gettime, any),
 	SKINCALL_DEF(sc_cobalt_timer_getoverrun, __timer_getoverrun, any),
-	SKINCALL_DEF(sc_cobalt_mutexattr_init, __pthread_mutexattr_init, any),
-	SKINCALL_DEF(sc_cobalt_mutexattr_destroy, __pthread_mutexattr_destroy, any),
-	SKINCALL_DEF(sc_cobalt_mutexattr_gettype, __pthread_mutexattr_gettype, any),
-	SKINCALL_DEF(sc_cobalt_mutexattr_settype, __pthread_mutexattr_settype, any),
-	SKINCALL_DEF(sc_cobalt_mutexattr_getprotocol, __pthread_mutexattr_getprotocol, any),
-	SKINCALL_DEF(sc_cobalt_mutexattr_setprotocol, __pthread_mutexattr_setprotocol, any),
-	SKINCALL_DEF(sc_cobalt_mutexattr_getpshared, __pthread_mutexattr_getpshared, any),
-	SKINCALL_DEF(sc_cobalt_mutexattr_setpshared, __pthread_mutexattr_setpshared, any),
+	SKINCALL_DEF(sc_cobalt_mutexattr_init, cobalt_mutexattr_init, any),
+	SKINCALL_DEF(sc_cobalt_mutexattr_destroy, cobalt_mutexattr_destroy, any),
+	SKINCALL_DEF(sc_cobalt_mutexattr_gettype, cobalt_mutexattr_gettype, any),
+	SKINCALL_DEF(sc_cobalt_mutexattr_settype, cobalt_mutexattr_settype, any),
+	SKINCALL_DEF(sc_cobalt_mutexattr_getprotocol, cobalt_mutexattr_getprotocol, any),
+	SKINCALL_DEF(sc_cobalt_mutexattr_setprotocol, cobalt_mutexattr_setprotocol, any),
+	SKINCALL_DEF(sc_cobalt_mutexattr_getpshared, cobalt_mutexattr_getpshared, any),
+	SKINCALL_DEF(sc_cobalt_mutexattr_setpshared, cobalt_mutexattr_setpshared, any),
 	SKINCALL_DEF(sc_cobalt_condattr_init, __pthread_condattr_init, any),
 	SKINCALL_DEF(sc_cobalt_condattr_destroy, __pthread_condattr_destroy, any),
 	SKINCALL_DEF(sc_cobalt_condattr_getclock, __pthread_condattr_getclock, any),
