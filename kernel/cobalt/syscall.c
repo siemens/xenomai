@@ -43,92 +43,6 @@
 
 int cobalt_muxid;
 
-static int __timer_create(clockid_t clock,
-			  const struct sigevent __user *u_sev,
-			  timer_t __user *u_tm)
-{
-	union __xeno_sem sm, __user *u_sem;
-	struct sigevent sev, *evp = &sev;
-	timer_t tm;
-	int ret;
-
-	if (u_sev) {
-		if (__xn_safe_copy_from_user(&sev, u_sev, sizeof(sev)))
-			return -EFAULT;
-
-		if (sev.sigev_notify == SIGEV_THREAD_ID) {
-			u_sem = sev.sigev_value.sival_ptr;
-
-			if (__xn_safe_copy_from_user(&sm, u_sem, sizeof(sm)))
-				return -EFAULT;
-
-			sev.sigev_value.sival_ptr = &sm.native_sem;
-		}
-	} else
-		evp = NULL;
-
-	ret = timer_create(clock, evp, &tm);
-	if (ret)
-		return -thread_get_errno();
-
-	if (__xn_safe_copy_to_user(u_tm, &tm, sizeof(tm))) {
-		timer_delete(tm);
-		return -EFAULT;
-	}
-
-	return 0;
-}
-
-static int __timer_delete(timer_t tm)
-{
-	int ret = timer_delete(tm);
-	return ret == 0 ? 0 : -thread_get_errno();
-}
-
-static int __timer_settime(timer_t tm,
-			   int flags,
-			   const struct itimerspec __user *u_newval,
-			   struct itimerspec __user *u_oldval)
-{
-	struct itimerspec newv, oldv, *oldvp;
-	int ret;
-
-	oldvp = u_oldval == 0 ? NULL : &oldv;
-
-	if (__xn_safe_copy_from_user(&newv, u_newval, sizeof(newv)))
-		return -EFAULT;
-
-	ret = timer_settime(tm, flags, &newv, oldvp);
-	if (ret)
-		return -thread_get_errno();
-
-	if (oldvp && __xn_safe_copy_to_user(u_oldval, oldvp, sizeof(oldv))) {
-		timer_settime(tm, flags, oldvp, NULL);
-		return -EFAULT;
-	}
-
-	return 0;
-}
-
-static int __timer_gettime(timer_t tm,
-			   struct itimerspec __user *u_val)
-{
-	struct itimerspec val;
-	int ret;
-
-	ret = timer_gettime(tm, &val);
-	if (ret)
-		return -thread_get_errno();
-
-	return __xn_safe_copy_to_user(u_val, &val, sizeof(val));
-}
-
-static int __timer_getoverrun(timer_t tm)
-{
-	int ret = timer_getoverrun(tm);
-	return ret >= 0 ? ret : -thread_get_errno();
-}
-
 static int fd_valid_p(int fd)
 {
 	cobalt_queues_t *q;
@@ -357,19 +271,6 @@ static struct xnsysent __systab[] = {
 	SKINCALL_DEF(sc_cobalt_cond_destroy, cobalt_cond_destroy, any),
 	SKINCALL_DEF(sc_cobalt_cond_wait_prologue, cobalt_cond_wait_prologue, nonrestartable),
 	SKINCALL_DEF(sc_cobalt_cond_wait_epilogue, cobalt_cond_wait_epilogue, primary),
-<<<<<<< HEAD
-	SKINCALL_DEF(sc_cobalt_mq_open, __mq_open, lostage),
-	SKINCALL_DEF(sc_cobalt_mq_close, __mq_close, lostage),
-	SKINCALL_DEF(sc_cobalt_mq_unlink, __mq_unlink, lostage),
-	SKINCALL_DEF(sc_cobalt_mq_getattr, __mq_getattr, any),
-	SKINCALL_DEF(sc_cobalt_mq_setattr, __mq_setattr, any),
-	SKINCALL_DEF(sc_cobalt_mq_send, __mq_send, primary),
-	SKINCALL_DEF(sc_cobalt_mq_timedsend, __mq_timedsend, primary),
-	SKINCALL_DEF(sc_cobalt_mq_receive, __mq_receive, primary),
-	SKINCALL_DEF(sc_cobalt_mq_timedreceive, __mq_timedreceive, primary),
-	SKINCALL_DEF(sc_cobalt_mq_notify, __mq_notify, primary),
-=======
-
 	SKINCALL_DEF(sc_cobalt_mq_open, cobalt_mq_open, lostage),
 	SKINCALL_DEF(sc_cobalt_mq_close, cobalt_mq_close, lostage),
 	SKINCALL_DEF(sc_cobalt_mq_unlink, cobalt_mq_unlink, lostage),
@@ -379,12 +280,12 @@ static struct xnsysent __systab[] = {
 	SKINCALL_DEF(sc_cobalt_mq_timedsend, cobalt_mq_timedsend, primary),
 	SKINCALL_DEF(sc_cobalt_mq_receive, cobalt_mq_receive, primary),
 	SKINCALL_DEF(sc_cobalt_mq_timedreceive, cobalt_mq_timedreceive, primary),
->>>>>>> cobalt: move message queues syscalls to mq.c
-	SKINCALL_DEF(sc_cobalt_timer_create, __timer_create, any),
-	SKINCALL_DEF(sc_cobalt_timer_delete, __timer_delete, any),
-	SKINCALL_DEF(sc_cobalt_timer_settime, __timer_settime, primary),
-	SKINCALL_DEF(sc_cobalt_timer_gettime, __timer_gettime, any),
-	SKINCALL_DEF(sc_cobalt_timer_getoverrun, __timer_getoverrun, any),
+	SKINCALL_DEF(sc_cobalt_mq_notify, cobalt_mq_notify, primary),
+	SKINCALL_DEF(sc_cobalt_timer_create, cobalt_timer_create, any),
+	SKINCALL_DEF(sc_cobalt_timer_delete, cobalt_timer_delete, any),
+	SKINCALL_DEF(sc_cobalt_timer_settime, cobalt_timer_settime, primary),
+	SKINCALL_DEF(sc_cobalt_timer_gettime, cobalt_timer_gettime, any),
+	SKINCALL_DEF(sc_cobalt_timer_getoverrun, cobalt_timer_getoverrun, any),
 	SKINCALL_DEF(sc_cobalt_mutexattr_init, cobalt_mutexattr_init, any),
 	SKINCALL_DEF(sc_cobalt_mutexattr_destroy, cobalt_mutexattr_destroy, any),
 	SKINCALL_DEF(sc_cobalt_mutexattr_gettype, cobalt_mutexattr_gettype, any),

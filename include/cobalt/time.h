@@ -65,53 +65,7 @@
  */
 #define CLOCK_HOST_REALTIME 42
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__)
-
-struct sigevent;
-
-struct timespec;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-int clock_getres(clockid_t clock_id,
-		 struct timespec *res);
-
-int clock_gettime(clockid_t clock_id,
-		  struct timespec *tp);
-
-int clock_settime(clockid_t clock_id,
-		  const struct timespec *tp);
-
-int clock_nanosleep(clockid_t clock_id,
-		    int flags,
-		    const struct timespec *rqtp,
-		    struct timespec *rmtp);
-
-int nanosleep(const struct timespec *rqtp,
-	      struct timespec *rmtp);
-
-int timer_create(clockid_t clockid,
-		 const struct sigevent *__restrict__ evp,
-		 timer_t *__restrict__ timerid);
-
-int timer_delete(timer_t timerid);
-
-int timer_settime(timer_t timerid,
-		  int flags,
-		  const struct itimerspec *__restrict__ value,
-		  struct itimerspec *__restrict__ ovalue);
-
-int timer_gettime(timer_t timerid, struct itimerspec *value);
-
-int timer_getoverrun(timer_t timerid);
-
-#ifdef __cplusplus
-}
-#endif
-
-#else /* !(__KERNEL__ || __XENO_SIM__) */
+#if !(defined(__KERNEL__) || defined(__XENO_SIM__))
 
 #ifdef __cplusplus
 extern "C" {

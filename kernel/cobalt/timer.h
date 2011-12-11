@@ -21,6 +21,21 @@
 
 #include "thread.h"        /* For struct itimerspec. */
 
+int cobalt_timer_create(clockid_t clock,
+			const struct sigevent __user *u_sev,
+			timer_t __user *u_tm);
+
+int cobalt_timer_delete(timer_t tm);
+
+int cobalt_timer_settime(timer_t tm,
+			 int flags,
+			 const struct itimerspec __user *u_newval,
+			 struct itimerspec __user *u_oldval);
+
+int cobalt_timer_gettime(timer_t tm, struct itimerspec __user *u_val);
+
+int cobalt_timer_getoverrun(timer_t tm);
+
 void cobalt_timer_init_thread(pthread_t new);
 
 void cobalt_timer_cleanup_thread(pthread_t zombie);

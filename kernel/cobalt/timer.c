@@ -33,8 +33,7 @@ typedef struct {
     siginfo_t info;
     xnpholder_t link;
 
-#define link2siginfo(iaddr) \
-    ((cobalt_siginfo_t *)(((char *)iaddr) - offsetof(cobalt_siginfo_t, link)))
+#define link2siginfo(iaddr) container_of(iaddr, cobalt_siginfo_t, link)
 
 } cobalt_siginfo_t;
 
@@ -46,8 +45,7 @@ struct cobalt_timer {
 
 	xnholder_t link; /* link in process or global timers queue. */
 
-#define link2tm(laddr, member)							\
-    ((struct cobalt_timer *)(((char *)laddr) - offsetof(struct cobalt_timer, member)))
+#define link2tm(laddr, member) container_of(laddr, struct cobalt_timer, member)
 
 	xnholder_t tlink; /* link in thread timers queue. */
 
@@ -77,31 +75,6 @@ static void cobalt_base_timer_handler(xntimer_t *xntimer)
 		 * the timer stops notifying anyone at expiry.
 		 */
 		timer->si.info.si_value.sival_ptr = NULL;
-}
-
-/* Must be called with nklock locked, irq off. */
-void cobalt_timer_notified(cobalt_siginfo_t * si)
-{
-	struct cobalt_timer *timer = link2tm(si, si);
-	xnticks_t now;
-
-	/* We need this two staged overruns count. The overruns count returned by
-	   timer_getoverrun is the count of overruns which occured between the time
-	   the signal was queued and the time this signal was accepted by the
-	   application.
-	   In other words, if the timer elapses again after cobalt_timer_notified get
-	   called (i.e. the signal is accepted by the application), the signal shall
-	   be queued again, and later overruns should count for that new
-	   notification, not the one the application is currently handling. */
-
-	if (!xntimer_interval(&timer->timerbase)) {
-		timer->overruns = 0;
-		return;
-	}
-
-	now = xnclock_read_raw();
-
-	timer->overruns = xntimer_get_overruns(&timer->timerbase, now);
 }
 
 /**
@@ -145,12 +118,12 @@ void cobalt_timer_notified(cobalt_siginfo_t * si)
  * Specification.</a>
  *
  */
-int timer_create(clockid_t clockid,
-		 const struct sigevent *__restrict__ evp,
-		 timer_t * __restrict__ timerid)
+static inline int timer_create(clockid_t clockid,
+			       const struct sigevent *__restrict__ evp,
+			       timer_t * __restrict__ timerid)
 {
 	struct __shadow_sem *shadow_sem = NULL;
-	int err = EINVAL, semval, signo;
+	int err = -EINVAL, semval, signo;
 	struct cobalt_timer *timer;
 	xnholder_t *holder;
 	sem_t *sem;
@@ -172,7 +145,7 @@ int timer_create(clockid_t clockid,
 	signo = SIGALRM;
 	if (evp) {
 		if (evp->sigev_notify != SIGEV_THREAD_ID) {
-			err = ENOSYS;
+			err = -ENOSYS;
 			goto error;
 		}
 
@@ -191,7 +164,7 @@ int timer_create(clockid_t clockid,
 
 	holder = getq(&timer_freeq);
 	if (holder == NULL) {
-		err = EAGAIN;
+		err = -EAGAIN;
 		goto unlock_and_error;
 	}
 
@@ -214,25 +187,25 @@ int timer_create(clockid_t clockid,
 	appendq(&cobalt_kqueues(0)->timerq, &timer->link);
 	xnlock_put_irqrestore(&nklock, s);
 
-	*timerid = (timer_t) (timer - timer_pool);
+	*timerid = (timer_t)(timer - timer_pool);
 
 	return 0;
 
       unlock_and_error:
 	xnlock_put_irqrestore(&nklock, s);
       error:
-	thread_set_errno(err);
-	return -1;
+	return err;
 }
 
-int cobalt_timer_delete_inner(timer_t timerid, cobalt_kqueues_t *q, int force)
+static inline int
+cobalt_timer_delete_inner(timer_t timerid, cobalt_kqueues_t *q, int force)
 {
 	struct cobalt_timer *timer;
 	spl_t s;
 	int err;
 
 	if ((unsigned)timerid >= COBALT_TIMER_MAX) {
-		err = EINVAL;
+		err = -EINVAL;
 		goto error;
 	}
 
@@ -241,12 +214,12 @@ int cobalt_timer_delete_inner(timer_t timerid, cobalt_kqueues_t *q, int force)
 	timer = &timer_pool[(unsigned long)timerid];
 
 	if (!xntimer_active_p(&timer->timerbase)) {
-		err = EINVAL;
+		err = -EINVAL;
 		goto unlock_and_error;
 	}
 
 	if (!force && timer->owningq != cobalt_kqueues(0)) {
-		err = EPERM;
+		err = -EPERM;
 		goto unlock_and_error;
 	}
 
@@ -265,34 +238,12 @@ int cobalt_timer_delete_inner(timer_t timerid, cobalt_kqueues_t *q, int force)
       unlock_and_error:
 	xnlock_put_irqrestore(&nklock, s);
       error:
-	thread_set_errno(err);
-	return -1;
+	return err;
 }
 
-/**
- * Delete a timer object.
- *
- * This service deletes the timer @a timerid.
- *
- * @param timerid identifier of the timer to be removed;
- *
- * @retval 0 on success;
- * @retval -1 with @a errno set if:
- * - EINVAL, @a timerid is invalid;
- * - EPERM, the timer @a timerid does not belong to the current process.
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_delete.html">
- * Specification.</a>
- *
- */
-int timer_delete(timer_t timerid)
-{
-	return cobalt_timer_delete_inner(timerid, cobalt_kqueues(0), 0);
-}
-
-static void cobalt_timer_gettime_inner(struct cobalt_timer *__restrict__ timer,
-				      struct itimerspec *__restrict__ value)
+static inline void
+cobalt_timer_gettime_inner(struct cobalt_timer *__restrict__ timer,
+			   struct itimerspec *__restrict__ value)
 {
 	if (xntimer_running_p(&timer->timerbase)) {
 		ns2ts(&value->it_value,
@@ -356,30 +307,30 @@ static void cobalt_timer_gettime_inner(struct cobalt_timer *__restrict__ timer,
  * Specification.</a>
  *
  */
-int timer_settime(timer_t timerid,
-		  int flags,
-		  const struct itimerspec *__restrict__ value,
-		  struct itimerspec *__restrict__ ovalue)
+static inline int
+timer_settime(timer_t timerid, int flags,
+	      const struct itimerspec *__restrict__ value,
+	      struct itimerspec *__restrict__ ovalue)
 {
 	pthread_t cur = cobalt_current_thread();
 	struct cobalt_timer *timer;
 	spl_t s;
 	int err;
 
-	if (!cur || xnpod_interrupt_p()) {
-		err = EPERM;
+	if (!cur) {
+		err = -EPERM;
 		goto error;
 	}
 
 	if ((unsigned)timerid >= COBALT_TIMER_MAX) {
-		err = EINVAL;
+		err = -EINVAL;
 		goto error;
 	}
 
 	if ((unsigned long)value->it_value.tv_nsec >= ONE_BILLION ||
 	    ((unsigned long)value->it_interval.tv_nsec >= ONE_BILLION &&
 	     (value->it_value.tv_sec != 0 || value->it_value.tv_nsec != 0))) {
-		err = EINVAL;
+		err = -EINVAL;
 		goto error;
 	}
 
@@ -388,13 +339,13 @@ int timer_settime(timer_t timerid,
 	timer = &timer_pool[(unsigned long)timerid];
 
 	if (!xntimer_active_p(&timer->timerbase)) {
-		err = EINVAL;
+		err = -EINVAL;
 		goto unlock_and_error;
 	}
 
 #if XENO_DEBUG(POSIX)
 	if (timer->owningq != cobalt_kqueues(0)) {
-		err = EPERM;
+		err = -EPERM;
 		goto unlock_and_error;
 	}
 #endif /* XENO_DEBUG(POSIX) */
@@ -440,8 +391,7 @@ int timer_settime(timer_t timerid,
       unlock_and_error:
 	xnlock_put_irqrestore(&nklock, s);
       error:
-	thread_set_errno(err);
-	return -1;
+	return err;
 }
 
 /**
@@ -470,14 +420,14 @@ int timer_settime(timer_t timerid,
  * Specification.</a>
  *
  */
-int timer_gettime(timer_t timerid, struct itimerspec *value)
+static inline int timer_gettime(timer_t timerid, struct itimerspec *value)
 {
 	struct cobalt_timer *timer;
 	spl_t s;
 	int err;
 
 	if ((unsigned)timerid >= COBALT_TIMER_MAX) {
-		err = EINVAL;
+		err = -EINVAL;
 		goto error;
 	}
 
@@ -486,13 +436,13 @@ int timer_gettime(timer_t timerid, struct itimerspec *value)
 	timer = &timer_pool[(unsigned long)timerid];
 
 	if (!xntimer_active_p(&timer->timerbase)) {
-		err = EINVAL;
+		err = -EINVAL;
 		goto unlock_and_error;
 	}
 
 #if XENO_DEBUG(POSIX)
 	if (timer->owningq != cobalt_kqueues(0)) {
-		err = EPERM;
+		err = -EPERM;
 		goto unlock_and_error;
 	}
 #endif /* XENO_DEBUG(POSIX) */
@@ -506,38 +456,94 @@ int timer_gettime(timer_t timerid, struct itimerspec *value)
       unlock_and_error:
 	xnlock_put_irqrestore(&nklock, s);
       error:
-	thread_set_errno(err);
-	return -1;
+	return err;
 }
 
-/**
- * Get expiration overruns count since the most recent timer expiration
- * signal delivery.
- *
- * This service returns @a timerid expiration overruns count since the most
- * recent timer expiration signal delivery. If this count is more than @a
- * DELAYTIMER_MAX expirations, @a DELAYTIMER_MAX is returned.
- *
- * @param timerid Timer identifier.
- *
- * @return the overruns count on success;
- * @return -1 with @a errno set if:
- * - EINVAL, @a timerid is invalid;
- * - EPERM, the timer @a timerid does not belong to the current process.
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_getoverrun.html">
- * Specification.</a>
- *
- */
-int timer_getoverrun(timer_t timerid)
+int cobalt_timer_delete(timer_t timerid)
+{
+       return cobalt_timer_delete_inner(timerid, cobalt_kqueues(0), 0);
+}
+
+int cobalt_timer_create(clockid_t clock,
+			const struct sigevent __user *u_sev,
+			timer_t __user *u_tm)
+{
+	union __xeno_sem sm, __user *u_sem;
+	struct sigevent sev, *evp = &sev;
+	timer_t tm;
+	int ret;
+
+	if (u_sev) {
+		if (__xn_safe_copy_from_user(&sev, u_sev, sizeof(sev)))
+			return -EFAULT;
+
+		if (sev.sigev_notify == SIGEV_THREAD_ID) {
+			u_sem = sev.sigev_value.sival_ptr;
+
+			if (__xn_safe_copy_from_user(&sm, u_sem, sizeof(sm)))
+				return -EFAULT;
+
+			sev.sigev_value.sival_ptr = &sm.native_sem;
+		}
+	} else
+		evp = NULL;
+
+	ret = timer_create(clock, evp, &tm);
+	if (ret)
+		return ret;
+
+	if (__xn_safe_copy_to_user(u_tm, &tm, sizeof(tm))) {
+		cobalt_timer_delete(tm);
+		return -EFAULT;
+	}
+
+	return 0;
+}
+
+int cobalt_timer_settime(timer_t tm, int flags,
+			 const struct itimerspec __user *u_newval,
+			 struct itimerspec __user *u_oldval)
+{
+	struct itimerspec newv, oldv, *oldvp;
+	int ret;
+
+	oldvp = u_oldval == 0 ? NULL : &oldv;
+
+	if (__xn_safe_copy_from_user(&newv, u_newval, sizeof(newv)))
+		return -EFAULT;
+
+	ret = timer_settime(tm, flags, &newv, oldvp);
+	if (ret)
+		return ret;
+
+	if (oldvp && __xn_safe_copy_to_user(u_oldval, oldvp, sizeof(oldv))) {
+		timer_settime(tm, flags, oldvp, NULL);
+		return -EFAULT;
+	}
+
+	return 0;
+}
+
+int cobalt_timer_gettime(timer_t tm, struct itimerspec __user *u_val)
+{
+	struct itimerspec val;
+	int ret;
+
+	ret = timer_gettime(tm, &val);
+	if (ret)
+		return ret;
+
+	return __xn_safe_copy_to_user(u_val, &val, sizeof(val));
+}
+
+int cobalt_timer_getoverrun(timer_t timerid)
 {
 	struct cobalt_timer *timer;
 	int overruns, err;
 	spl_t s;
 
 	if ((unsigned)timerid >= COBALT_TIMER_MAX) {
-		err = EINVAL;
+		err = -EINVAL;
 		goto error;
 	}
 
@@ -546,13 +552,13 @@ int timer_getoverrun(timer_t timerid)
 	timer = &timer_pool[(unsigned long)timerid];
 
 	if (!xntimer_active_p(&timer->timerbase)) {
-		err = EINVAL;
+		err = -EINVAL;
 		goto unlock_and_error;
 	}
 
 #if XENO_DEBUG(POSIX)
 	if (timer->owningq != cobalt_kqueues(0)) {
-		err = EPERM;
+		err = -EPERM;
 		goto unlock_and_error;
 	}
 #endif /* XENO_DEBUG(POSIX) */
@@ -566,8 +572,7 @@ int timer_getoverrun(timer_t timerid)
   unlock_and_error:
 	xnlock_put_irqrestore(&nklock, s);
   error:
-	thread_set_errno(err);
-	return -1;
+	return err;
 }
 
 void cobalt_timer_init_thread(pthread_t new_thread)
@@ -627,9 +632,3 @@ void cobalt_timer_pkg_cleanup(void)
 }
 
 /*@}*/
-
-EXPORT_SYMBOL_GPL(timer_create);
-EXPORT_SYMBOL_GPL(timer_delete);
-EXPORT_SYMBOL_GPL(timer_settime);
-EXPORT_SYMBOL_GPL(timer_gettime);
-EXPORT_SYMBOL_GPL(timer_getoverrun);
