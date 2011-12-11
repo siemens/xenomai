@@ -43,98 +43,6 @@
 
 int cobalt_muxid;
 
-static int __pthread_condattr_init(pthread_condattr_t __user *u_attr)
-{
-	pthread_condattr_t attr;
-	int err;
-
-	err = pthread_condattr_init(&attr);
-	if (err)
-		return -err;
-
-	return __xn_safe_copy_to_user(u_attr, &attr, sizeof(*u_attr));
-}
-
-static int __pthread_condattr_destroy(pthread_condattr_t __user *u_attr)
-{
-	pthread_condattr_t attr;
-	int err;
-
-	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
-		return -EFAULT;
-
-	err = pthread_condattr_destroy(&attr);
-	if (err)
-		return -err;
-
-	return __xn_safe_copy_to_user(u_attr, &attr, sizeof(*u_attr));
-}
-
-static int __pthread_condattr_getclock(const pthread_condattr_t __user *u_attr,
-				       clockid_t __user *u_clock)
-{
-	pthread_condattr_t attr;
-	clockid_t clock;
-	int err;
-
-	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
-		return -EFAULT;
-
-	err = pthread_condattr_getclock(&attr, &clock);
-	if (err)
-		return -err;
-
-	return __xn_safe_copy_to_user(u_clock, &clock, sizeof(*u_clock));
-}
-
-static int __pthread_condattr_setclock(pthread_condattr_t __user *u_attr,
-				       clockid_t clock)
-{
-	pthread_condattr_t attr;
-	int err;
-
-	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
-		return -EFAULT;
-
-	err = pthread_condattr_setclock(&attr, clock);
-	if (err)
-		return -err;
-
-	return __xn_safe_copy_to_user(u_attr, &attr, sizeof(*u_attr));
-}
-
-static int __pthread_condattr_getpshared(const pthread_condattr_t __user *u_attr,
-					 int __user *u_pshared)
-{
-	pthread_condattr_t attr;
-	int err, pshared;
-
-	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
-		return -EFAULT;
-
-	err = pthread_condattr_getpshared(&attr, &pshared);
-	if (err)
-		return -err;
-
-	return __xn_safe_copy_to_user(u_pshared, &pshared, sizeof(*u_pshared));
-}
-
-static int __pthread_condattr_setpshared(pthread_condattr_t __user *u_attr,
-					 int pshared)
-{
-	pthread_condattr_t attr;
-	int err;
-
-	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
-		return -EFAULT;
-
-	err = pthread_condattr_setpshared(&attr, pshared);
-	if (err)
-		return -err;
-
-	return __xn_safe_copy_to_user(u_attr, &attr, sizeof(*u_attr));
-}
-
 /* mq_open(name, oflags, mode, attr, ufd) */
 static int __mq_open(const char __user *u_name,
 		     int oflags,
@@ -859,12 +767,12 @@ static struct xnsysent __systab[] = {
 	SKINCALL_DEF(sc_cobalt_mutexattr_setprotocol, cobalt_mutexattr_setprotocol, any),
 	SKINCALL_DEF(sc_cobalt_mutexattr_getpshared, cobalt_mutexattr_getpshared, any),
 	SKINCALL_DEF(sc_cobalt_mutexattr_setpshared, cobalt_mutexattr_setpshared, any),
-	SKINCALL_DEF(sc_cobalt_condattr_init, __pthread_condattr_init, any),
-	SKINCALL_DEF(sc_cobalt_condattr_destroy, __pthread_condattr_destroy, any),
-	SKINCALL_DEF(sc_cobalt_condattr_getclock, __pthread_condattr_getclock, any),
-	SKINCALL_DEF(sc_cobalt_condattr_setclock, __pthread_condattr_setclock, any),
-	SKINCALL_DEF(sc_cobalt_condattr_getpshared, __pthread_condattr_getpshared, any),
-	SKINCALL_DEF(sc_cobalt_condattr_setpshared, __pthread_condattr_setpshared, any),
+	SKINCALL_DEF(sc_cobalt_condattr_init, cobalt_condattr_init, any),
+	SKINCALL_DEF(sc_cobalt_condattr_destroy, cobalt_condattr_destroy, any),
+	SKINCALL_DEF(sc_cobalt_condattr_getclock, cobalt_condattr_getclock, any),
+	SKINCALL_DEF(sc_cobalt_condattr_setclock, cobalt_condattr_setclock, any),
+	SKINCALL_DEF(sc_cobalt_condattr_getpshared, cobalt_condattr_getpshared, any),
+	SKINCALL_DEF(sc_cobalt_condattr_setpshared, cobalt_condattr_setpshared, any),
 	SKINCALL_DEF(sc_cobalt_select, __select, primary),
 	SKINCALL_DEF(sc_cobalt_sched_minprio, cobalt_sched_min_prio, any),
 	SKINCALL_DEF(sc_cobalt_sched_maxprio, cobalt_sched_max_prio, any),

@@ -51,8 +51,6 @@
 #include "mutex.h"
 #include "cond.h"
 
-static pthread_condattr_t default_cond_attr;
-
 static inline void
 cond_destroy_internal(cobalt_cond_t *cond, cobalt_kqueues_t *q)
 {
@@ -106,7 +104,7 @@ pthread_cond_init(struct __shadow_cond *cnd, const pthread_condattr_t *attr)
 	int err;
 
 	if (!attr)
-		attr = &default_cond_attr;
+		attr = &cobalt_default_cond_attr;
 
 	cond = (cobalt_cond_t *)xnmalloc(sizeof(*cond));
 	if (!cond)
@@ -491,7 +489,6 @@ void cobalt_condq_cleanup(cobalt_kqueues_t *q)
 void cobalt_cond_pkg_init(void)
 {
 	initq(&cobalt_global_kqueues.condq);
-	pthread_condattr_init(&default_cond_attr);
 }
 
 void cobalt_cond_pkg_cleanup(void)

@@ -23,10 +23,11 @@
 
 #include "internal.h"
 
-static pthread_condattr_t default_cond_attr = {
+const pthread_condattr_t cobalt_default_cond_attr = {
 
-      magic:COBALT_COND_ATTR_MAGIC,
-      clock:CLOCK_REALTIME
+      magic: COBALT_COND_ATTR_MAGIC,
+      pshared: 0,
+      clock: CLOCK_REALTIME
 };
 
 /**
@@ -52,12 +53,12 @@ static pthread_condattr_t default_cond_attr = {
  * Specification.</a>
  *
  */
-int pthread_condattr_init(pthread_condattr_t * attr)
+static inline int pthread_condattr_init(pthread_condattr_t * attr)
 {
 	if (!attr)
 		return ENOMEM;
 
-	*attr = default_cond_attr;
+	*attr = cobalt_default_cond_attr;
 
 	return 0;
 }
@@ -80,7 +81,7 @@ int pthread_condattr_init(pthread_condattr_t * attr)
  * Specification.</a>
  *
  */
-int pthread_condattr_destroy(pthread_condattr_t * attr)
+static inline int pthread_condattr_destroy(pthread_condattr_t * attr)
 {
 	spl_t s;
 
@@ -122,8 +123,8 @@ int pthread_condattr_destroy(pthread_condattr_t * attr)
  * Specification.</a>
  *
  */
-int pthread_condattr_getclock(const pthread_condattr_t * attr,
-			      clockid_t * clk_id)
+static inline int
+pthread_condattr_getclock(const pthread_condattr_t * attr, clockid_t * clk_id)
 {
 	spl_t s;
 
@@ -164,7 +165,8 @@ int pthread_condattr_getclock(const pthread_condattr_t * attr,
  * Specification.</a>
  *
  */
-int pthread_condattr_setclock(pthread_condattr_t * attr, clockid_t clk_id)
+static inline int
+pthread_condattr_setclock(pthread_condattr_t * attr, clockid_t clk_id)
 {
 	spl_t s;
 
@@ -219,7 +221,8 @@ int pthread_condattr_setclock(pthread_condattr_t * attr, clockid_t clk_id)
  * Specification.</a>
  *
  */
-int pthread_condattr_getpshared(const pthread_condattr_t *attr, int *pshared)
+static inline int
+pthread_condattr_getpshared(const pthread_condattr_t *attr, int *pshared)
 {
 	spl_t s;
 
@@ -266,7 +269,8 @@ int pthread_condattr_getpshared(const pthread_condattr_t *attr, int *pshared)
  * Specification.</a>
  *
  */
-int pthread_condattr_setpshared(pthread_condattr_t *attr, int pshared)
+static inline int
+pthread_condattr_setpshared(pthread_condattr_t *attr, int pshared)
 {
 	spl_t s;
 
@@ -296,11 +300,95 @@ int pthread_condattr_setpshared(pthread_condattr_t *attr, int pshared)
 
 	return 0;
 }
-/*@}*/
 
-EXPORT_SYMBOL_GPL(pthread_condattr_init);
-EXPORT_SYMBOL_GPL(pthread_condattr_destroy);
-EXPORT_SYMBOL_GPL(pthread_condattr_getclock);
-EXPORT_SYMBOL_GPL(pthread_condattr_setclock);
-EXPORT_SYMBOL_GPL(pthread_condattr_getpshared);
-EXPORT_SYMBOL_GPL(pthread_condattr_setpshared);
+int cobalt_condattr_init(pthread_condattr_t __user *u_attr)
+{
+	pthread_condattr_t attr;
+	int err;
+
+	err = pthread_condattr_init(&attr);
+	if (err)
+		return -err;
+
+	return __xn_safe_copy_to_user(u_attr, &attr, sizeof(*u_attr));
+}
+
+int cobalt_condattr_destroy(pthread_condattr_t __user *u_attr)
+{
+	pthread_condattr_t attr;
+	int err;
+
+	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
+		return -EFAULT;
+
+	err = pthread_condattr_destroy(&attr);
+	if (err)
+		return -err;
+
+	return __xn_safe_copy_to_user(u_attr, &attr, sizeof(*u_attr));
+}
+
+int cobalt_condattr_getclock(const pthread_condattr_t __user *u_attr,
+			     clockid_t __user *u_clock)
+{
+	pthread_condattr_t attr;
+	clockid_t clock;
+	int err;
+
+	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
+		return -EFAULT;
+
+	err = pthread_condattr_getclock(&attr, &clock);
+	if (err)
+		return -err;
+
+	return __xn_safe_copy_to_user(u_clock, &clock, sizeof(*u_clock));
+}
+
+int cobalt_condattr_setclock(pthread_condattr_t __user *u_attr, clockid_t clock)
+{
+	pthread_condattr_t attr;
+	int err;
+
+	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
+		return -EFAULT;
+
+	err = pthread_condattr_setclock(&attr, clock);
+	if (err)
+		return -err;
+
+	return __xn_safe_copy_to_user(u_attr, &attr, sizeof(*u_attr));
+}
+
+int cobalt_condattr_getpshared(const pthread_condattr_t __user *u_attr,
+			       int __user *u_pshared)
+{
+	pthread_condattr_t attr;
+	int err, pshared;
+
+	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
+		return -EFAULT;
+
+	err = pthread_condattr_getpshared(&attr, &pshared);
+	if (err)
+		return -err;
+
+	return __xn_safe_copy_to_user(u_pshared, &pshared, sizeof(*u_pshared));
+}
+
+int cobalt_condattr_setpshared(pthread_condattr_t __user *u_attr, int pshared)
+{
+	pthread_condattr_t attr;
+	int err;
+
+	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
+		return -EFAULT;
+
+	err = pthread_condattr_setpshared(&attr, pshared);
+	if (err)
+		return -err;
+
+	return __xn_safe_copy_to_user(u_attr, &attr, sizeof(*u_attr));
+}
+
+/*@}*/

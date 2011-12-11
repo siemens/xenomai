@@ -68,6 +68,8 @@ typedef struct cobalt_cond {
 	cobalt_kqueues_t *owningq;
 } cobalt_cond_t;
 
+extern const pthread_condattr_t cobalt_default_cond_attr;
+
 static inline int cobalt_cond_deferred_signals(struct cobalt_cond *cond)
 {
 	unsigned long pending_signals;
@@ -95,6 +97,20 @@ static inline int cobalt_cond_deferred_signals(struct cobalt_cond *cond)
 
 	return need_resched;
 }
+
+int cobalt_condattr_init(pthread_condattr_t __user *u_attr);
+
+int cobalt_condattr_destroy(pthread_condattr_t __user *u_attr);
+
+int cobalt_condattr_getclock(const pthread_condattr_t __user *u_attr,
+			     clockid_t __user *u_clock);
+
+int cobalt_condattr_setclock(pthread_condattr_t __user *u_attr, clockid_t clock);
+
+int cobalt_condattr_getpshared(const pthread_condattr_t __user *u_attr,
+			       int __user *u_pshared);
+
+int cobalt_condattr_setpshared(pthread_condattr_t __user *u_attr, int pshared);
 
 int cobalt_cond_init(struct __shadow_cond __user *u_cnd,
 		     const pthread_condattr_t __user *u_attr);
