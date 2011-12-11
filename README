@@ -116,12 +116,11 @@ or Xenomai-specific knobs:
 --enable-assert
 
 	A number of debug assertion statements are wired into the
-	Xenomai core, which aim at checking the internal consistency
-	of the emulation system during runtime (see man
-	assert(3)). Passing --disable-assert to the configure script
-	disables built-in assertions unconditionally. By default,
-	assertions are enabled in partial or full debug modes,
-	disabled otherwise.
+	Xenomai core, checking the internal consistency of the runtime
+	system dynamically (see man assert(3)). Passing
+	--disable-assert to the configure script disables built-in
+	assertions unconditionally. By default, assertions are enabled
+	in partial or full debug modes, disabled otherwise.
 
 --enable-pshared
 
@@ -131,7 +130,7 @@ or Xenomai-specific knobs:
 
 --enable-registry
 
-	Some Xenomai APIs can export their internal state through a
+	Xenomai APIs can export their internal state through a
 	pseudo-filesystem, which files may be read to obtain
 	information about the existing real-time objects, such as
 	tasks, semaphores, message queues and so on.  This feature is
@@ -140,30 +139,30 @@ or Xenomai-specific knobs:
 	requires the FUSE development libraries to be installed on the
 	build system.
 
-	When this option is enabled, the emulator creates a file
-	hierachy under /mnt/xenomai/<pid> (by default), where you can
-	access the internal state of the active real-time
-	objects. E.g. looking at the properties of a VxWorks task
-	could be done as follows:
+	When this option is enabled, the system creates a file
+	hierachy under /mnt/xenomai/<session>.<pid> (by default),
+	where you can access the internal state of the active
+	real-time objects. The session label is obtained from the
+	--session runtime switch. E.g. looking at the properties of a
+	VxWorks task could be done as follows:
 
-	$ cat /mnt/xenomai/12656/vxworks/tasks/windTask 
+	$ cat /mnt/xenomai/anon.12656/vxworks/tasks/windTask 
 	name       = windTask
 	errno      = 0
 	status     = ready
 	priority   = 70
 	lock_depth = 0
 
-	You may override the default mount point of the registry
-	hierarchy by using the --registry-mountpt runtime option (see
-	below).
+	You may override the default root of the registry hierarchy by
+	using the --registry-root runtime option (see below).
 
 	NOTE: the FUSE-based registry support is still in its early
 	stage, and only a few objects are currently exported, only by
 	the VxWorks API when running over the Mercury core. This is
 	work in progress, so don't expect too much yet.
 
-	When running over the Cobalt core however, the /proc/xenomai
-	interface is available for inspecting the core system state
+	When running over the Cobalt core, the /proc/xenomai interface
+	is still available for inspecting the system state
 	(i.e. nucleus and RTDM), like with Xenomai 2.x.
 
 --enable-lores-clock
@@ -271,34 +270,40 @@ command line, namely:
 	when and how it sees fit, in order to avoid the extra latency
 	induced by virtual memory paging.  Otherwise,
 	mlockall(MCL_CURRENT | MCL_FUTURE) is automatically invoked by
-	the Xenomai core as part of the emulator initialization
-	duties.
+	the Xenomai core as part of the API initialization duties.
 
 	This flag only applies to the Mercury core. Memory must be
 	locked when invoking dual kernel services, therefore this
 	switch is a nop over Cobalt.
 
---registry-mountpt=<path>
+--registry-root=<path>
 
-	Tells the emulator to mount the object registry over the given
-	path, instead of /mnt/xenomai/<pid> by default (see the
-	--enable-registry switch from the build time options).
+	Tells Xenomai to root the object registry at the given path,
+	instead of /mnt/xenomai by default (see the --enable-registry
+	switch from the build time options).
 
 --no-registry
 
 	This switch disables registry support at runtime. No real-time
-	objects will be exported to /mnt/xenomai/<pid>, despite the
-	registry code has been compiled in.
+	objects will be exported to /mnt/xenomai/<session>.<pid>,
+	despite the registry code has been compiled in.
 
---session=<name>
+--session=<label>
 
 	Name of the session the new process will be part of (or create
-	if not present). This is only useful when --enable-pshared was
-	passed at build time, to allow multiple processes to operate
-	on remote objects. e.g. allowing a process to post a semaphore
-	created by another process within the same session. This is
-	done using a common heap area, shared by all processes within
-	the same session.
+	if not present). When --enable-pshared was passed at build
+	time, this label allows multiple processes giving the same
+	label at startup to operate on the same set of
+	objects. e.g. allowing a process to post a semaphore created
+	by another process within the same session. This is done using
+	a common heap area, shared by all processes within the same
+	session.
+
+	This label is also used to form the registry mount point for
+	each process, e.g. /mnt/xenomai/<session>.<pid>. See
+	--enable-registry from the build options.
+
+	By default, "anon" is used as the session label.
 
 --reset
 
@@ -335,5 +340,5 @@ Alchemy		This is a re-implementation of Xenomai's former "native"
 		API, fully rebased on the new RTOS emulation core.
 		This is work in progress.
 
-Wed Sep 21 11:54:54 CEST 2011
+Mon Dec 12 11:47:44 CET 2011
 by <rpm@xenomai.org>

@@ -46,7 +46,7 @@ struct fsobj {
 	struct regfs_dir *dir;
 	struct timespec ctime;
 	struct timespec mtime;
-	struct registry_operations *ops;
+	const struct registry_operations *ops;
 	struct pvholder link;
 	struct pvhashobj hobj;
 };
@@ -58,7 +58,7 @@ extern "C" {
 int registry_add_dir(const char *fmt, ...);
 
 void registry_init_file(struct fsobj *fsobj,
-			struct registry_operations *ops);
+			const struct registry_operations *ops);
 
 int registry_add_file(struct fsobj *fsobj,
 		      int mode,
@@ -68,7 +68,7 @@ void registry_destroy_file(struct fsobj *fsobj);
 
 void registry_touch_file(struct fsobj *fsobj);
 
-int registry_pkg_init(char *arg0, char *mntpt, int do_mkdir);
+int registry_pkg_init(char *arg0);
 
 void registry_pkg_destroy(void);
 
@@ -92,7 +92,7 @@ int registry_add_dir(const char *fmt, ...)
 
 static inline
 int registry_init_file(struct fsobj *fsobj,
-		       struct registry_operations *ops)
+		       const struct registry_operations *ops)
 {
 	return 0;
 }
@@ -116,7 +116,7 @@ void registry_touch_file(struct fsobj *fsobj)
 }
 
 static inline
-int registry_pkg_init(char *arg0, char *mntpt, int do_mkdir)
+int registry_pkg_init(char *arg0)
 {
 	return 0;
 }

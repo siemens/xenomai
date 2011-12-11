@@ -28,8 +28,8 @@
 
 struct coppernode {
 	unsigned int mem_pool;
-	char *registry_mountpt;
 	const char *session_label;
+	const char *registry_root;
 	cpu_set_t cpu_affinity;
 	/* No bitfield below, we have to take address of thoses. */
 	int no_mlock;

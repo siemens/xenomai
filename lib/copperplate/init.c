@@ -43,8 +43,6 @@ struct timespec __init_date;
 
 static DEFINE_PRIVATE_LIST(skins);
 
-static int mkdir_mountpt = 1;
-
 static const struct option base_options[] = {
 	{
 #define help_opt	0
@@ -68,8 +66,8 @@ static const struct option base_options[] = {
 		.val = 1
 	},
 	{
-#define mountpt_opt	3
-		.name = "registry-mountpt",
+#define regroot_opt	3
+		.name = "registry-root",
 		.has_arg = 1,
 		.flag = NULL,
 		.val = 0
@@ -124,7 +122,7 @@ static void usage(void)
         fprintf(stderr, "usage: program <options>, where options may be:\n");
         fprintf(stderr, "--mem-pool-size=<sizeK>          size of the main heap (kbytes)\n");
         fprintf(stderr, "--no-mlock                       do not lock memory at init (Mercury only)\n");
-        fprintf(stderr, "--registry-mountpt=<path>        mount point of registry\n");
+        fprintf(stderr, "--registry-root=<path>           root path of registry\n");
         fprintf(stderr, "--no-registry                    suppress object registration\n");
         fprintf(stderr, "--session=<label>                label of shared multi-processing session\n");
         fprintf(stderr, "--reset                          remove any older session\n");
@@ -320,18 +318,11 @@ static int parse_base_options(int *argcp, char *const **argvp,
 		case mempool_opt:
 			__node_info.mem_pool = atoi(optarg) * 1024;
 			break;
-		case mountpt_opt:
-			__node_info.registry_mountpt = strdup(optarg);
-			mkdir_mountpt = 0;
-#ifndef CONFIG_XENO_REGISTRY
-			warning("Xenomai compiled without registry support");
-#endif
-			break;
 		case session_opt:
 			__node_info.session_label = strdup(optarg);
-#ifndef CONFIG_XENO_PSHARED
-			warning("Xenomai compiled without shared multi-processing support");
-#endif
+			break;
+		case regroot_opt:
+			__node_info.registry_root = strdup(optarg);
 			break;
 		case affinity_opt:
 			ret = collect_cpu_affinity(optarg);
@@ -438,14 +429,6 @@ void copperplate_init(int *argcp, char *const **argvp)
 		goto fail;
 	}
 
-	/* Set a reasonable default value for the registry mount point. */
-	ret = asprintf(&__node_info.registry_mountpt,
-		       "/mnt/xenomai/%d", getpid());
-	if (ret < 0) {
-		ret = -ENOMEM;
-		goto fail;
-	}
-
 	/* Define default CPU affinity, i.e. no particular affinity. */
 	CPU_ZERO(&__node_info.cpu_affinity);
 
@@ -487,8 +470,7 @@ void copperplate_init(int *argcp, char *const **argvp)
 	}
 
 	if (__node_info.no_registry == 0) {
-		ret = registry_pkg_init(uargv[0], __node_info.registry_mountpt,
-					mkdir_mountpt);
+		ret = registry_pkg_init(uargv[0]);
 		if (ret)
 			goto fail;
 	}

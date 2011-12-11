@@ -17,6 +17,7 @@
  */
 
 #include <sys/types.h>
+#include <sys/mount.h>
 #include <sys/wait.h>
 #include <limits.h>
 #include <stdarg.h>
@@ -38,7 +39,10 @@
 #include "copperplate/debug.h"
 #include "internal.h"
 
-#define REGISTRY_ROOT "/mnt/xenomai"
+/* We allow use of oldish umount2(). */
+#ifndef MNT_DETACH
+#define MNT_DETACH 0
+#endif
 
 static struct pvhash_table regfs_objtable;
 
@@ -123,7 +127,8 @@ done:
 	return __bt(ret);
 }
 
-void registry_init_file(struct fsobj *fsobj,  struct registry_operations *ops)
+void registry_init_file(struct fsobj *fsobj, 
+			const struct registry_operations *ops)
 {
 	pthread_mutexattr_t mattr;
 
@@ -260,13 +265,13 @@ static int regfs_getattr(const char *path, struct stat *sbuf)
 		sbuf->st_mode = S_IFREG;
 		switch (fsobj->mode) {
 		case O_RDONLY:
-			sbuf->st_mode |= 0440;
+			sbuf->st_mode |= 0444;
 			break;
 		case O_WRONLY:
-			sbuf->st_mode |= 0220;
+			sbuf->st_mode |= 0222;
 			break;
 		case O_RDWR:
-			sbuf->st_mode |= 0660;
+			sbuf->st_mode |= 0666;
 			break;
 		}
 		sbuf->st_nlink = 1;
@@ -279,7 +284,7 @@ static int regfs_getattr(const char *path, struct stat *sbuf)
 done:
 	read_unlock(&regfs_lock);
 
-	return __bt(ret);
+	return ret;
 }
 
 static int regfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
@@ -303,9 +308,13 @@ static int regfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	d = container_of(hobj, struct regfs_dir, hobj);
 
 	if (!pvlist_empty(&d->dir_list)) {
-		pvlist_for_each_entry(subd, &d->dir_list, link)
+		pvlist_for_each_entry(subd, &d->dir_list, link) {
+			/* We don't output empty directories. */
+			if (subd->ndirs + subd->nfiles == 0)
+				continue;
 			if (filler(buf, subd->basename, NULL, 0))
 				break;
+		}
 	}
 
 	if (!pvlist_empty(&d->file_list)) {
@@ -363,10 +372,12 @@ static int regfs_read(const char *path, char *buf, size_t size, off_t offset,
 		return __bt(-ENOSYS);
 	}
 
-	read_lock_nocancel(&fsobj->lock);
+	push_cleanup_lock(&fsobj->lock);
+	read_lock(&fsobj->lock);
 	read_unlock(&regfs_lock);
 	ret = fsobj->ops->read(fsobj, buf, size, offset);
 	read_unlock(&fsobj->lock);
+	pop_cleanup_lock(&fsobj->lock);
 
 	return __bt(ret);
 }
@@ -392,10 +403,12 @@ static int regfs_write(const char *path, const char *buf, size_t size, off_t off
 		return __bt(-ENOSYS);
 	}
 
-	read_lock_nocancel(&fsobj->lock);
+	push_cleanup_lock(&fsobj->lock);
+	read_lock(&fsobj->lock);
 	read_unlock(&regfs_lock);
 	ret = fsobj->ops->write(fsobj, buf, size, offset);
-	read_unlock(&regfs_lock);
+	read_unlock(&fsobj->lock);
+	pop_cleanup_lock(&fsobj->lock);
 
 	return __bt(ret);
 }
@@ -456,30 +469,15 @@ static struct fuse_operations regfs_opts = {
 
 struct regfs_init_struct {
 	char *arg0;
-	char *mntpt;
-	int do_rmdir;
+	char *mountpt;
 };
 
 static void regfs_cleanup(void *arg)
 {
 	struct regfs_init_struct *s = arg;
-	pid_t pid;
 
-	if (s->do_rmdir) {
-		/* FIXME: Oh dear... Ahem, sorry... */
-		if ((pid = vfork()) == 0) {
-			close(0);
-			close(1);
-			close(2);
-			execl("/bin/fusermount", "fusermount", "-z", "-u", "-q", s->mntpt, NULL);
-		} else
-			waitpid(pid, NULL, WUNTRACED);
-
-		if (rmdir(s->mntpt) < 0) {
-			warning("failed to remove registry mount point %s (%s)",
-				s->mntpt, symerror(-errno));
-		}
-	}
+	umount2(s->mountpt, MNT_DETACH);
+	rmdir(s->mountpt);
 
 	if (__fs_killed)
 		_exit(99);
@@ -488,7 +486,7 @@ static void regfs_cleanup(void *arg)
 static void *registry_thread(void *arg)
 {
 	struct regfs_init_struct *s = arg;
-	char *av[5];
+	char *av[7];
 	int ret;
 
 	pthread_cleanup_push(regfs_cleanup, arg);
@@ -496,34 +494,47 @@ static void *registry_thread(void *arg)
 	av[0] = s->arg0;
 	av[1] = "-s";
 	av[2] = "-f";
-	av[3] = s->mntpt;
-	av[4] = NULL;
-	ret = fuse_main(4, av, &regfs_opts, NULL);
+	av[3] = s->mountpt;
+	av[4] = "-o";
+	av[5] = "allow_other,default_permissions";
+	av[6] = NULL;
+	ret = fuse_main(6, av, &regfs_opts, NULL);
 
 	pthread_cleanup_pop(0);
 
 	if (ret) {
-		warning("failed to mount registry fs on %s", s->mntpt);
+		warning("can't mount registry onto %s", s->mountpt);
 		return (void *)(long)ret;
 	}
 
 	return NULL;
 }
 
-int registry_pkg_init(char *arg0, char *mntpt, int do_mkdir)
+int registry_pkg_init(char *arg0)
 {
 	static struct regfs_init_struct s;
 	pthread_mutexattr_t mattr;
 	pthread_attr_t thattr;
+	char *mountpt;
+	int ret;
 
-	if (do_mkdir) {
-		if (access(REGISTRY_ROOT, F_OK) < 0)
-			mkdir(REGISTRY_ROOT, 0755);
-		if (mkdir(mntpt, 0755) < 0 && errno != EEXIST) {
-			warning("failed to create registry mount point %s (%s)\n",
-				mntpt, symerror(-errno));
-			return __bt(-errno);
-		}
+	if (__node_info.no_registry)
+		return 0;
+
+	ret = asprintf(&mountpt, "%s/%s.%d",
+		       __node_info.registry_root,
+		       __node_info.session_label, getpid());
+	if (ret < 0)
+		return -ENOMEM;
+
+	if (access(__node_info.registry_root, F_OK) < 0)
+		mkdir(__node_info.registry_root, 0755);
+
+	if (mkdir(mountpt, 0755) < 0) {
+		ret = -errno;
+		warning("can't create registry mount point at %s (%s)\n",
+			mountpt, symerror(ret));
+		return ret;
 	}
 
 	__RT(pthread_mutexattr_init(&mattr));
@@ -537,6 +548,7 @@ int registry_pkg_init(char *arg0, char *mntpt, int do_mkdir)
 
 	registry_add_dir("/");	/* Create the fs root. */
 
+	/* We want a SCHED_OTHER thread, use defaults. */
 	pthread_attr_init(&thattr);
 	/*
 	 * Memory is locked as the process data grows, so we set a
@@ -546,15 +558,21 @@ int registry_pkg_init(char *arg0, char *mntpt, int do_mkdir)
 	pthread_attr_setstacksize(&thattr, PTHREAD_STACK_MIN * 4);
 	pthread_attr_setscope(&thattr, PTHREAD_SCOPE_PROCESS);
 	s.arg0 = arg0;
-	s.mntpt = mntpt;
-	s.do_rmdir = do_mkdir;
+	s.mountpt = mountpt;
 
-	/* Start the FUSE server thread. */
-	return __bt(-__STD(pthread_create(&regfs_thid, &thattr, registry_thread, &s)));
+	/*
+	 * Start the FUSE filesystem daemon. Over Cobalt, it runs as a
+	 * non real-time Xenomai shadow, so that it may synchronize on
+	 * real-time objects.
+	 */
+	return __bt(-__RT(pthread_create(&regfs_thid, &thattr, registry_thread, &s)));
 }
 
 void registry_pkg_destroy(void)
 {
+	if (__node_info.no_registry)
+		return;
+
 	pthread_cancel(regfs_thid);
-	__STD(pthread_join(regfs_thid, NULL));
+	pthread_join(regfs_thid, NULL);
 }
