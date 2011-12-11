@@ -57,53 +57,6 @@ struct mq_attr {
     long    mq_curmsgs;
 };
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-int mq_getattr(mqd_t qd,
-	       struct mq_attr *attr);
-
-int mq_setattr(mqd_t qd,
-	       const struct mq_attr *__restrict__ attr,
-	       struct mq_attr *__restrict__ oattr);
-
-int mq_send(mqd_t qd,
-	    const char *buffer,
-	    size_t len,
-	    unsigned prio);
-
-int mq_close(mqd_t qd);
-
-ssize_t  mq_receive(mqd_t q,
-		    char *buffer,
-		    size_t len,
-		    unsigned *prio);
-
-ssize_t  mq_timedreceive(mqd_t q,
-			 char *__restrict__ buffer,
-			 size_t len,
-			 unsigned *__restrict__ prio,
-			 const struct timespec *__restrict__ timeout);
-
-int mq_timedsend(mqd_t q,
-		 const char *buffer,
-		 size_t len,
-		 unsigned prio,
-		 const struct timespec *timeout);
-
-int mq_notify(mqd_t mqdes, const struct sigevent *notification);
-
-mqd_t mq_open(const char *name,
-	      int oflags,
-	      ...);
-
-int mq_unlink(const char *name);
-
-#ifdef __cplusplus
-}
-#endif
-
 #else /* !(__KERNEL__ || __XENO_SIM__ || !HAVE_MQUEUE_H) */
 
 #include_next <mqueue.h>

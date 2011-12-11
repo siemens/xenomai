@@ -46,8 +46,7 @@
 struct cobalt_mq {
 	cobalt_node_t nodebase;
 
-#define node2mq(naddr) \
-    ((cobalt_mq_t *) (((char *)naddr) - offsetof(cobalt_mq_t, nodebase)))
+#define node2mq(naddr) container_of(naddr,  cobalt_mq_t, nodebase)
 
 	xnpqueue_t queued;
 	xnsynch_t receivers;
@@ -62,12 +61,19 @@ struct cobalt_mq {
 
 	DECLARE_XNSELECT(read_select);
 	DECLARE_XNSELECT(write_select);
-#define link2mq(laddr) \
-    ((cobalt_mq_t *) (((char *)laddr) - offsetof(cobalt_mq_t, link)))
+#define link2mq(laddr) container_of(laddr, cobalt_mq_t, link)
 };
 
-#define any2msg(addr, member)							\
-    ((cobalt_msg_t *)(((char *)addr) - offsetof(cobalt_msg_t, member)))
+#define link2msg(addr) container_of(addr, cobalt_msg_t, link)
+
+typedef struct cobalt_msg {
+	xnpholder_t link;
+	size_t len;
+	char data[0];
+} cobalt_msg_t;
+
+#define cobalt_msg_get_prio(msg) (msg)->link.prio
+#define cobalt_msg_set_prio(msg, prio) (msg)->link.prio = (prio)
 
 static xnqueue_t cobalt_mqq;
 
@@ -76,7 +82,7 @@ static struct mq_attr default_attr = {
       mq_msgsize:128,
 };
 
-static cobalt_msg_t *cobalt_mq_msg_alloc(cobalt_mq_t * mq)
+static inline cobalt_msg_t *cobalt_mq_msg_alloc(cobalt_mq_t * mq)
 {
 	xnpholder_t *holder = (xnpholder_t *)getq(&mq->avail);
 
@@ -84,23 +90,20 @@ static cobalt_msg_t *cobalt_mq_msg_alloc(cobalt_mq_t * mq)
 		return NULL;
 
 	initph(holder);
-	return any2msg(holder, link);
+	return link2msg(holder);
 }
 
-static void cobalt_mq_msg_free(cobalt_mq_t * mq, cobalt_msg_t * msg)
+static inline void cobalt_mq_msg_free(cobalt_mq_t * mq, cobalt_msg_t * msg)
 {
 	xnholder_t *holder = (xnholder_t *)(&msg->link);
 	inith(holder);
 	prependq(&mq->avail, holder);	/* For earliest re-use of the block. */
 }
 
-static int cobalt_mq_init(cobalt_mq_t * mq, const struct mq_attr *attr)
+static inline int cobalt_mq_init(cobalt_mq_t * mq, const struct mq_attr *attr)
 {
 	unsigned i, msgsize, memsize;
 	char *mem;
-
-	if (xnpod_asynch_p() || !xnpod_root_p())
-		return EPERM;
 
 	if (!attr)
 		attr = &default_attr;
@@ -142,7 +145,7 @@ static int cobalt_mq_init(cobalt_mq_t * mq, const struct mq_attr *attr)
 	return 0;
 }
 
-static void cobalt_mq_destroy(cobalt_mq_t *mq)
+static inline void cobalt_mq_destroy(cobalt_mq_t *mq)
 {
 	int resched;
 	spl_t s;
@@ -231,7 +234,7 @@ static void cobalt_mq_destroy(cobalt_mq_t *mq)
  * Specification.</a>
  *
  */
-mqd_t mq_open(const char *name, int oflags, ...)
+static mqd_t mq_open(const char *name, int oflags, ...)
 {
 	struct mq_attr *attr;
 	cobalt_node_t *node;
@@ -243,7 +246,7 @@ mqd_t mq_open(const char *name, int oflags, ...)
 	int err;
 
 	xnlock_get_irqsave(&nklock, s);
-	err = cobalt_node_get(&node, name, COBALT_MQ_MAGIC, oflags);
+	err = -cobalt_node_get(&node, name, COBALT_MQ_MAGIC, oflags);
 	xnlock_put_irqrestore(&nklock, s);
 	if (err)
 		goto error;
@@ -256,7 +259,7 @@ mqd_t mq_open(const char *name, int oflags, ...)
 	/* Here, we know that we must create a message queue. */
 	mq = (cobalt_mq_t *) xnmalloc(sizeof(*mq));
 	if (!mq) {
-		err = ENOSPC;
+		err = -ENOSPC;
 		goto error;
 	}
 
@@ -275,12 +278,12 @@ mqd_t mq_open(const char *name, int oflags, ...)
 
 	appendq(&cobalt_mqq, &mq->link);
 
-	err = cobalt_node_add(&mq->nodebase, name, COBALT_MQ_MAGIC);
-	if (err && err != EEXIST)
+	err = -cobalt_node_add(&mq->nodebase, name, COBALT_MQ_MAGIC);
+	if (err && err != -EEXIST)
 		goto err_put_mq;
 
-	if (err == EEXIST) {
-		err = cobalt_node_get(&node, name, COBALT_MQ_MAGIC, oflags);
+	if (err == -EEXIST) {
+		err = -cobalt_node_get(&node, name, COBALT_MQ_MAGIC, oflags);
 		if (err)
 			goto err_put_mq;
 
@@ -296,8 +299,8 @@ mqd_t mq_open(const char *name, int oflags, ...)
 
 	/* Whether found or created, here we have a valid message queue. */
   got_mq:
-	err = cobalt_desc_create(&desc, &mq->nodebase,
-				oflags & (O_NONBLOCK | COBALT_PERMS_MASK));
+	err = -cobalt_desc_create(&desc, &mq->nodebase,
+				  oflags & (O_NONBLOCK | COBALT_PERMS_MASK));
 	if (err)
 		goto err_lock_put_mq;
 
@@ -318,9 +321,7 @@ mqd_t mq_open(const char *name, int oflags, ...)
 	} else
 		xnlock_put_irqrestore(&nklock, s);
   error:
-	thread_set_errno(err);
-
-	return (mqd_t) - 1;
+	return (mqd_t)err;
 }
 
 /**
@@ -348,29 +349,22 @@ mqd_t mq_open(const char *name, int oflags, ...)
  * Specification.</a>
  *
  */
-int mq_close(mqd_t fd)
+static inline int mq_close(mqd_t fd)
 {
 	cobalt_desc_t *desc;
 	cobalt_mq_t *mq;
 	spl_t s;
 	int err;
 
-	if (xnpod_interrupt_p() || !xnpod_root_p()) {
-		err = EPERM;
-		goto error;
-	}
-
 	xnlock_get_irqsave(&nklock, s);
 
-	err = cobalt_desc_get(&desc, fd, COBALT_MQ_MAGIC);
-
+	err = -cobalt_desc_get(&desc, fd, COBALT_MQ_MAGIC);
 	if (err)
 		goto err_unlock;
 
 	mq = node2mq(cobalt_desc_node(desc));
 
-	err = cobalt_node_put(&mq->nodebase);
-
+	err = -cobalt_node_put(&mq->nodebase);
 	if (err)
 		goto err_unlock;
 
@@ -382,8 +376,7 @@ int mq_close(mqd_t fd)
 	} else
 		xnlock_put_irqrestore(&nklock, s);
 
-	err = cobalt_desc_destroy(desc);
-
+	err = -cobalt_desc_destroy(desc);
 	if (err)
 		goto error;
 
@@ -392,8 +385,7 @@ int mq_close(mqd_t fd)
       err_unlock:
 	xnlock_put_irqrestore(&nklock, s);
       error:
-	thread_set_errno(err);
-	return -1;
+	return err;
 }
 
 /**
@@ -424,22 +416,16 @@ int mq_close(mqd_t fd)
  * Specification.</a>
  *
  */
-int mq_unlink(const char *name)
+static inline int mq_unlink(const char *name)
 {
 	cobalt_node_t *node;
 	cobalt_mq_t *mq;
 	spl_t s;
 	int err;
 
-	if (xnpod_interrupt_p() || !xnpod_root_p()) {
-		err = EPERM;
-		goto error;
-	}
-
 	xnlock_get_irqsave(&nklock, s);
 
-	err = cobalt_node_remove(&node, name, COBALT_MQ_MAGIC);
-
+	err = -cobalt_node_remove(&node, name, COBALT_MQ_MAGIC);
 	if (!err && cobalt_node_removed_p(node)) {
 		xnlock_put_irqrestore(&nklock, s);
 
@@ -449,17 +435,11 @@ int mq_unlink(const char *name)
 	} else
 		xnlock_put_irqrestore(&nklock, s);
 
-	if (err) {
-	      error:
-		thread_set_errno(err);
-		return -1;
-	}
-
-	return 0;
+	return err;
 }
 
-static cobalt_msg_t *cobalt_mq_trysend(cobalt_mq_t **mqp,
-				     cobalt_desc_t *desc, size_t len)
+static inline cobalt_msg_t *cobalt_mq_trysend(cobalt_mq_t **mqp,
+					      cobalt_desc_t *desc, size_t len)
 {
 	cobalt_msg_t *msg;
 	cobalt_mq_t *mq;
@@ -486,8 +466,8 @@ static cobalt_msg_t *cobalt_mq_trysend(cobalt_mq_t **mqp,
 	return msg;
 }
 
-static cobalt_msg_t *cobalt_mq_tryrcv(cobalt_mq_t **mqp,
-				    cobalt_desc_t *desc, size_t len)
+static inline cobalt_msg_t *cobalt_mq_tryrcv(cobalt_mq_t **mqp,
+					     cobalt_desc_t *desc, size_t len)
 {
 	xnpholder_t *holder;
 	cobalt_mq_t *mq;
@@ -510,11 +490,12 @@ static cobalt_msg_t *cobalt_mq_tryrcv(cobalt_mq_t **mqp,
 
 	*mqp = mq;
 	mq->nodebase.refcount++;
-	return any2msg(holder, link);
+	return link2msg(holder);
 }
 
-cobalt_msg_t *cobalt_mq_timedsend_inner(cobalt_mq_t **mqp, mqd_t fd, size_t len,
-				      const struct timespec *abs_timeoutp)
+static cobalt_msg_t *
+cobalt_mq_timedsend_inner(cobalt_mq_t **mqp, mqd_t fd,
+			  size_t len, const struct timespec *abs_timeoutp)
 {
 	xnthread_t *cur = xnpod_current_thread();
 	cobalt_msg_t *msg;
@@ -538,11 +519,6 @@ cobalt_msg_t *cobalt_mq_timedsend_inner(cobalt_mq_t **mqp, mqd_t fd, size_t len,
 
 		if ((cobalt_desc_getflags(desc) & O_NONBLOCK))
 			break;
-
-		if (xnpod_unblockable_p()) {
-			msg = ERR_PTR(-EPERM);
-			break;
-		}
 
 		if (abs_timeoutp) {
 			if ((unsigned long)abs_timeoutp->tv_nsec >= ONE_BILLION){
@@ -579,7 +555,8 @@ cobalt_msg_t *cobalt_mq_timedsend_inner(cobalt_mq_t **mqp, mqd_t fd, size_t len,
 	return msg;
 }
 
-int cobalt_mq_finish_send(mqd_t fd, cobalt_mq_t *mq, cobalt_msg_t *msg)
+static int
+cobalt_mq_finish_send(mqd_t fd, cobalt_mq_t *mq, cobalt_msg_t *msg)
 {
 	int err = 0, resched = 0, removed;
 	cobalt_desc_t *desc;
@@ -629,8 +606,9 @@ int cobalt_mq_finish_send(mqd_t fd, cobalt_mq_t *mq, cobalt_msg_t *msg)
 	goto unref;
 }
 
-cobalt_msg_t *cobalt_mq_timedrcv_inner(cobalt_mq_t **mqp, mqd_t fd, size_t len,
-				     const struct timespec *abs_timeoutp)
+static cobalt_msg_t *
+cobalt_mq_timedrcv_inner(cobalt_mq_t **mqp, mqd_t fd,
+			 size_t len, const struct timespec *abs_timeoutp)
 {
 	xnthread_t *cur = xnpod_current_thread();
 	cobalt_msg_t *msg;
@@ -653,11 +631,6 @@ cobalt_msg_t *cobalt_mq_timedrcv_inner(cobalt_mq_t **mqp, mqd_t fd, size_t len,
 
 		if ((cobalt_desc_getflags(desc) & O_NONBLOCK))
 			break;
-
-		if (xnpod_unblockable_p()) {
-			msg = ERR_PTR(-EPERM);
-			break;
-		}
 
 		if (abs_timeoutp) {
 			if ((unsigned long)abs_timeoutp->tv_nsec >= ONE_BILLION){
@@ -694,7 +667,8 @@ cobalt_msg_t *cobalt_mq_timedrcv_inner(cobalt_mq_t **mqp, mqd_t fd, size_t len,
 	return msg;
 }
 
-int cobalt_mq_finish_rcv(mqd_t fd, cobalt_mq_t *mq, cobalt_msg_t *msg)
+static int
+cobalt_mq_finish_rcv(mqd_t fd, cobalt_mq_t *mq, cobalt_msg_t *msg)
 {
 	int err = 0, resched = 0, removed;
 	cobalt_desc_t *desc;
@@ -730,274 +704,6 @@ int cobalt_mq_finish_rcv(mqd_t fd, cobalt_mq_t *mq, cobalt_msg_t *msg)
 }
 
 /**
- * Send a message to a message queue.
- *
- * If the message queue @a fd is not full, this service sends the message of
- * length @a len pointed to by the argument @a buffer, with priority @a prio. A
- * message with greater priority is inserted in the queue before a message with
- * lower priority.
- *
- * If the message queue is full and the flag @a O_NONBLOCK is not set, the
- * calling thread is suspended until the queue is not full. If the message queue
- * is full and the flag @a O_NONBLOCK is set, the message is not sent and the
- * service returns immediately a value of -1 with @a errno set to EAGAIN.
- *
- * @param fd message queue descriptor;
- *
- * @param buffer pointer to the message to be sent;
- *
- * @param len length of the message;
- *
- * @param prio priority of the message.
- *
- * @return 0 and send a message on success;
- * @return -1 with no message sent and @a errno set if:
- * - EBADF, @a fd is not a valid message queue descriptor open for writing;
- * - EMSGSIZE, the message length @a len exceeds the @a mq_msgsize attribute of
- *   the message queue;
- * - EAGAIN, the flag O_NONBLOCK is set for the descriptor @a fd and the message
- *   queue is full;
- * - EPERM, the caller context is invalid;
- * - EINTR, the service was interrupted by a signal.
- *
- * @par Valid contexts:
- * - Xenomai kernel-space thread,
- * - Xenomai user-space thread (switches to primary mode).
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_send.html">
- * Specification.</a>
- *
- */
-int mq_send(mqd_t fd, const char *buffer, size_t len, unsigned prio)
-{
-	cobalt_msg_t *msg;
-	cobalt_mq_t *mq;
-	int err;
-
-	msg = cobalt_mq_timedsend_inner(&mq, fd, len, NULL);
-	if (IS_ERR(msg)) {
-		thread_set_errno(-PTR_ERR(msg));
-		return -1;
-	}
-
-	memcpy(msg->data, buffer, len);
-	msg->len = len;
-	cobalt_msg_set_prio(msg, prio);
-
-	err = cobalt_mq_finish_send(fd, mq, msg);
-	if (!err)
-		return 0;
-
-	thread_set_errno(-err);
-	return -1;
-}
-
-/**
- * Attempt, during a bounded time, to send a message to a message queue.
- *
- * This service is equivalent to mq_send(), except that if the message queue is
- * full and the flag @a O_NONBLOCK is not set for the descriptor @a fd, the
- * calling thread is only suspended until the timeout specified by @a
- * abs_timeout expires.
- *
- * @param fd message queue descriptor;
- *
- * @param buffer pointer to the message to be sent;
- *
- * @param len length of the message;
- *
- * @param prio priority of the message;
- *
- * @param abs_timeout the timeout, expressed as an absolute value of the
- * CLOCK_REALTIME clock.
- *
- * @return 0 and send a message on success;
- * @return -1 with no message sent and @a errno set if:
- * - EBADF, @a fd is not a valid message queue descriptor open for writing;
- * - EMSGSIZE, the message length exceeds the @a mq_msgsize attribute of the
- *   message queue;
- * - EAGAIN, the flag O_NONBLOCK is set for the descriptor @a fd and the message
- *   queue is full;
- * - EPERM, the caller context is invalid;
- * - ETIMEDOUT, the specified timeout expired;
- * - EINTR, the service was interrupted by a signal.
- *
- * @par Valid contexts:
- * - Xenomai kernel-space thread,
- * - Xenomai user-space thread (switches to primary mode).
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_timedsend.html">
- * Specification.</a>
- *
- */
-int mq_timedsend(mqd_t fd,
-		 const char *buffer,
-		 size_t len, unsigned prio, const struct timespec *abs_timeout)
-{
-	cobalt_msg_t *msg;
-	cobalt_mq_t *mq;
-	int err;
-
-	msg = cobalt_mq_timedsend_inner(&mq, fd, len, abs_timeout);
-	if (IS_ERR(msg)) {
-		thread_set_errno(-PTR_ERR(msg));
-		return -1;
-	}
-
-	memcpy(msg->data, buffer, len);
-	msg->len = len;
-	cobalt_msg_set_prio(msg, prio);
-
-	err = cobalt_mq_finish_send(fd, mq, msg);
-	if (!err)
-		return 0;
-
-	thread_set_errno(-err);
-	return -1;
-}
-
-/**
- * Receive a message from a message queue.
- *
- * If the message queue @a fd is not empty and if @a len is greater than the @a
- * mq_msgsize of the message queue, this service copies, at the address
- * @a buffer, the queued message with the highest priority.
- *
- * If the queue is empty and the flag @a O_NONBLOCK is not set for the
- * descriptor @a fd, the calling thread is suspended until some message is sent
- * to the queue. If the queue is empty and the flag @a O_NONBLOCK is set for the
- * descriptor @a fd, this service returns immediately a value of -1 with @a
- * errno set to EAGAIN.
- *
- * @param fd the queue descriptor;
- *
- * @param buffer the address where the received message will be stored on
- * success;
- *
- * @param len @a buffer length;
- *
- * @param priop address where the priority of the received message will be
- * stored on success.
- *
- * @return the message length, and copy a message at the address @a buffer on
- * success;
- * @return -1 with no message unqueued and @a errno set if:
- * - EBADF, @a fd is not a valid descriptor open for reading;
- * - EMSGSIZE, the length @a len is lesser than the message queue @a mq_msgsize
- *   attribute;
- * - EAGAIN, the queue is empty, and the flag @a O_NONBLOCK is set for the
- *   descriptor @a fd;
- * - EPERM, the caller context is invalid;
- * - EINTR, the service was interrupted by a signal.
- *
- * @par Valid contexts:
- * - Xenomai kernel-space thread,
- * - Xenomai user-space thread (switches to primary mode).
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_receive.html">
- * Specification.</a>
- *
- */
-ssize_t mq_receive(mqd_t fd, char *buffer, size_t len, unsigned *priop)
-{
-	cobalt_msg_t *msg;
-	cobalt_mq_t *mq;
-	int err;
-
-	msg = cobalt_mq_timedrcv_inner(&mq, fd, len, NULL);
-	if (IS_ERR(msg)) {
-		thread_set_errno(-PTR_ERR(msg));
-		return -1;
-	}
-
-	memcpy(buffer, msg->data, msg->len);
-	len = msg->len;
-	if (priop)
-		*priop = cobalt_msg_get_prio(msg);
-
-	err = cobalt_mq_finish_rcv(fd, mq, msg);
-	if (!err)
-		return len;
-
-	thread_set_errno(-err);
-	return -1;
-}
-
-/**
- * Attempt, during a bounded time, to receive a message from a message queue.
- *
- * This service is equivalent to mq_receive(), except that if the flag @a
- * O_NONBLOCK is not set for the descriptor @a fd and the message queue is
- * empty, the calling thread is only suspended until the timeout @a abs_timeout
- * expires.
- *
- * @param fd the queue descriptor;
- *
- * @param buffer the address where the received message will be stored on
- * success;
- *
- * @param len @a buffer length;
- *
- * @param priop address where the priority of the received message will be
- * stored on success.
- *
- * @param abs_timeout the timeout, expressed as an absolute value of the
- * CLOCK_REALTIME clock.
- *
- * @return the message length, and copy a message at the address @a buffer on
- * success;
- * @return -1 with no message unqueued and @a errno set if:
- * - EBADF, @a fd is not a valid descriptor open for reading;
- * - EMSGSIZE, the length @a len is lesser than the message queue @a mq_msgsize
- *   attribute;
- * - EAGAIN, the queue is empty, and the flag @a O_NONBLOCK is set for the
- *   descriptor @a fd;
- * - EPERM, the caller context is invalid;
- * - EINTR, the service was interrupted by a signal;
- * - ETIMEDOUT, the specified timeout expired.
- *
- * @par Valid contexts:
- * - Xenomai kernel-space thread,
- * - Xenomai user-space thread (switches to primary mode).
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_timedreceive.html">
- * Specification.</a>
- *
- */
-ssize_t mq_timedreceive(mqd_t fd,
-			char *__restrict__ buffer,
-			size_t len,
-			unsigned *__restrict__ priop,
-			const struct timespec * __restrict__ abs_timeout)
-{
-	cobalt_msg_t *msg;
-	cobalt_mq_t *mq;
-	int err;
-
-	msg = cobalt_mq_timedrcv_inner(&mq, fd, len, abs_timeout);
-	if (IS_ERR(msg)) {
-		thread_set_errno(-PTR_ERR(msg));
-		return -1;
-	}
-
-	memcpy(buffer, msg->data, msg->len);
-	len = msg->len;
-	if (priop)
-		*priop = cobalt_msg_get_prio(msg);
-
-	err = cobalt_mq_finish_rcv(fd, mq, msg);
-	if (!err)
-		return len;
-
-	thread_set_errno(-err);
-	return -1;
-}
-
-/**
  * Get the attributes object of a message queue.
  *
  * This service stores, at the address @a attr, the attributes of the messages
@@ -1023,7 +729,7 @@ ssize_t mq_timedreceive(mqd_t fd,
  * Specification.</a>
  *
  */
-int mq_getattr(mqd_t fd, struct mq_attr *attr)
+static inline int mq_getattr(mqd_t fd, struct mq_attr *attr)
 {
 	cobalt_desc_t *desc;
 	cobalt_mq_t *mq;
@@ -1032,12 +738,10 @@ int mq_getattr(mqd_t fd, struct mq_attr *attr)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	err = cobalt_desc_get(&desc, fd, COBALT_MQ_MAGIC);
-
+	err = -cobalt_desc_get(&desc, fd, COBALT_MQ_MAGIC);
 	if (err) {
 		xnlock_put_irqrestore(&nklock, s);
-		thread_set_errno(err);
-		return -1;
+		return err;
 	}
 
 	mq = node2mq(cobalt_desc_node(desc));
@@ -1076,9 +780,9 @@ int mq_getattr(mqd_t fd, struct mq_attr *attr)
  * Specification.</a>
  *
  */
-int mq_setattr(mqd_t fd,
-	       const struct mq_attr *__restrict__ attr,
-	       struct mq_attr *__restrict__ oattr)
+static inline int mq_setattr(mqd_t fd,
+			     const struct mq_attr *__restrict__ attr,
+			     struct mq_attr *__restrict__ oattr)
 {
 	cobalt_desc_t *desc;
 	cobalt_mq_t *mq;
@@ -1088,12 +792,10 @@ int mq_setattr(mqd_t fd,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	err = cobalt_desc_get(&desc, fd, COBALT_MQ_MAGIC);
-
+	err = -cobalt_desc_get(&desc, fd, COBALT_MQ_MAGIC);
 	if (err) {
 		xnlock_put_irqrestore(&nklock, s);
-		thread_set_errno(err);
-		return -1;
+		return err;
 	}
 
 	mq = node2mq(cobalt_desc_node(desc));
@@ -1183,6 +885,353 @@ void cobalt_mq_uqds_cleanup(cobalt_queues_t *q)
 }
 #endif /* !__XENO_SIM__ */
 
+/* mq_open(name, oflags, mode, attr, ufd) */
+int cobalt_mq_open(const char __user *u_name, int oflags,
+		   mode_t mode, struct mq_attr __user *u_attr, mqd_t uqd)
+{
+	struct mq_attr locattr, *attr;
+	char name[COBALT_MAXNAME];
+	cobalt_ufd_t *assoc;
+	cobalt_queues_t *q;
+	unsigned len;
+	mqd_t kqd;
+	int err;
+
+	q = cobalt_queues();
+	if (q == NULL)
+		return -EPERM;
+
+	len = __xn_safe_strncpy_from_user(name, u_name, sizeof(name));
+	if (len < 0)
+		return -EFAULT;
+
+	if (len >= sizeof(name))
+		return -ENAMETOOLONG;
+	if (len == 0)
+		return -EINVAL;
+
+	if ((oflags & O_CREAT) && u_attr) {
+		if (__xn_safe_copy_from_user(&locattr, u_attr, sizeof(locattr)))
+			return -EFAULT;
+
+		attr = &locattr;
+	} else
+		attr = NULL;
+
+	kqd = mq_open(name, oflags, mode, attr);
+	if (kqd == -1)
+		return -thread_get_errno();
+
+	assoc = xnmalloc(sizeof(*assoc));
+	if (assoc == NULL) {
+		mq_close(kqd);
+		return -ENOSPC;
+	}
+
+	assoc->kfd = kqd;
+
+	err = cobalt_assoc_insert(&q->uqds, &assoc->assoc, (u_long)uqd);
+	if (err) {
+		xnfree(assoc);
+		mq_close(kqd);
+	}
+
+	return err;
+}
+
+int cobalt_mq_close(mqd_t uqd)
+{
+	cobalt_assoc_t *assoc;
+	cobalt_queues_t *q;
+	int err;
+
+	q = cobalt_queues();
+	if (q == NULL)
+		return -EPERM;
+
+	assoc = cobalt_assoc_remove(&q->uqds, (u_long)uqd);
+	if (assoc == NULL)
+		return -EBADF;
+
+	err = mq_close(assoc2ufd(assoc)->kfd);
+	xnfree(assoc2ufd(assoc));
+
+	return !err ? 0 : -thread_get_errno();
+}
+
+int cobalt_mq_unlink(const char __user *u_name)
+{
+	char name[COBALT_MAXNAME];
+	unsigned len;
+	int err;
+
+	len = __xn_safe_strncpy_from_user(name, u_name, sizeof(name));
+	if (len < 0)
+		return -EFAULT;
+	if (len >= sizeof(name))
+		return -ENAMETOOLONG;
+
+	err = mq_unlink(name);
+
+	return err ? -thread_get_errno() : 0;
+}
+
+int cobalt_mq_getattr(mqd_t uqd, struct mq_attr __user *u_attr)
+{
+	cobalt_assoc_t *assoc;
+	struct mq_attr attr;
+	cobalt_queues_t *q;
+	cobalt_ufd_t *ufd;
+	int err;
+
+	q = cobalt_queues();
+	if (q == NULL)
+		return -EPERM;
+
+	assoc = cobalt_assoc_lookup(&q->uqds, (u_long)uqd);
+	if (assoc == NULL)
+		return -EBADF;
+
+	ufd = assoc2ufd(assoc);
+
+	err = mq_getattr(ufd->kfd, &attr);
+	if (err)
+		return -thread_get_errno();
+
+	return __xn_safe_copy_to_user(u_attr, &attr, sizeof(attr));
+}
+
+int cobalt_mq_setattr(mqd_t uqd, const struct mq_attr __user *u_attr,
+		      struct mq_attr __user *u_oattr)
+{
+	struct mq_attr attr, oattr;
+	cobalt_assoc_t *assoc;
+	cobalt_queues_t *q;
+	cobalt_ufd_t *ufd;
+	int err;
+
+	q = cobalt_queues();
+	if (q == NULL)
+		return -EPERM;
+
+	assoc = cobalt_assoc_lookup(&q->uqds, (u_long)uqd);
+	if (assoc == NULL)
+		return -EBADF;
+
+	ufd = assoc2ufd(assoc);
+
+	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
+		return -EFAULT;
+
+	err = mq_setattr(ufd->kfd, &attr, &oattr);
+	if (err)
+		return -thread_get_errno();
+
+	if (u_oattr)
+		return __xn_safe_copy_to_user(u_oattr, &oattr, sizeof(oattr));
+
+	return 0;
+}
+
+int cobalt_mq_send(mqd_t uqd,
+		   const void __user *u_buf, size_t len, unsigned int prio)
+{
+	cobalt_assoc_t *assoc;
+	cobalt_queues_t *q;
+	cobalt_msg_t *msg;
+	cobalt_ufd_t *ufd;
+	cobalt_mq_t *mq;
+
+	q = cobalt_queues();
+	if (q == NULL)
+		return -EPERM;
+
+	assoc = cobalt_assoc_lookup(&q->uqds, (u_long)uqd);
+	if (assoc == NULL)
+		return -EBADF;
+
+	ufd = assoc2ufd(assoc);
+
+	if (len > 0 && !access_rok(u_buf, len))
+		return -EFAULT;
+
+	msg = cobalt_mq_timedsend_inner(&mq, ufd->kfd, len, NULL);
+	if (IS_ERR(msg))
+		return PTR_ERR(msg);
+
+	if (__xn_copy_from_user(msg->data, u_buf, len)) {
+		cobalt_mq_finish_send(ufd->kfd, mq, msg);
+		return -EFAULT;
+	}
+	msg->len = len;
+	cobalt_msg_set_prio(msg, prio);
+
+	return cobalt_mq_finish_send(ufd->kfd, mq, msg);
+}
+
+int cobalt_mq_timedsend(mqd_t uqd, const void __user *u_buf, size_t len,
+			unsigned int prio, const struct timespec __user *u_ts)
+{
+	struct timespec timeout, *timeoutp;
+	cobalt_assoc_t *assoc;
+	cobalt_queues_t *q;
+	cobalt_msg_t *msg;
+	cobalt_ufd_t *ufd;
+	cobalt_mq_t *mq;
+
+	q = cobalt_queues();
+	if (q == NULL)
+		return -EPERM;
+
+	assoc = cobalt_assoc_lookup(&q->uqds, (u_long)uqd);
+	if (assoc == NULL)
+		return -EBADF;
+
+	ufd = assoc2ufd(assoc);
+
+	if (len > 0 && !access_rok(u_buf, len))
+		return -EFAULT;
+
+	if (u_ts) {
+		if (__xn_safe_copy_from_user(&timeout, u_ts, sizeof(timeout)))
+			return -EFAULT;
+		timeoutp = &timeout;
+	} else
+		timeoutp = NULL;
+
+	msg = cobalt_mq_timedsend_inner(&mq, ufd->kfd, len, timeoutp);
+	if (IS_ERR(msg))
+		return PTR_ERR(msg);
+
+	if(__xn_copy_from_user(msg->data, u_buf, len)) {
+		cobalt_mq_finish_send(ufd->kfd, mq, msg);
+		return -EFAULT;
+	}
+	msg->len = len;
+	cobalt_msg_set_prio(msg, prio);
+
+	return cobalt_mq_finish_send(ufd->kfd, mq, msg);
+}
+
+int cobalt_mq_receive(mqd_t uqd, void __user *u_buf,
+		      ssize_t __user *u_len, unsigned int __user *u_prio)
+{
+	cobalt_assoc_t *assoc;
+	cobalt_queues_t *q;
+	cobalt_ufd_t *ufd;
+	cobalt_msg_t *msg;
+	cobalt_mq_t *mq;
+	unsigned prio;
+	ssize_t len;
+	int err;
+
+	q = cobalt_queues();
+	if (q == NULL)
+		return -EPERM;
+
+	assoc = cobalt_assoc_lookup(&q->uqds, (u_long)uqd);
+	if (assoc == NULL)
+		return -EBADF;
+
+	ufd = assoc2ufd(assoc);
+
+	if (__xn_safe_copy_from_user(&len, u_len, sizeof(len)))
+		return -EFAULT;
+
+	if (u_prio && !access_wok(u_prio, sizeof(prio)))
+		return -EFAULT;
+
+	if (len > 0 && !access_wok(u_buf, len))
+		return -EFAULT;
+
+	msg = cobalt_mq_timedrcv_inner(&mq, ufd->kfd, len, NULL);
+	if (IS_ERR(msg))
+		return PTR_ERR(msg);
+
+	if (__xn_copy_to_user(u_buf, msg->data, msg->len)) {
+		cobalt_mq_finish_rcv(ufd->kfd, mq, msg);
+		return -EFAULT;
+	}
+	len = msg->len;
+	prio = cobalt_msg_get_prio(msg);
+
+	err = cobalt_mq_finish_rcv(ufd->kfd, mq, msg);
+	if (err)
+		return err;
+
+	if (__xn_safe_copy_to_user(u_len, &len, sizeof(len)))
+		return -EFAULT;
+
+	if (u_prio &&
+	    __xn_safe_copy_to_user(u_prio, &prio, sizeof(prio)))
+		return -EFAULT;
+
+	return 0;
+}
+
+int cobalt_mq_timedreceive(mqd_t uqd, void __user *u_buf,
+			   ssize_t __user *u_len,
+			   unsigned int __user *u_prio,
+			   const struct timespec __user *u_ts)
+{
+	struct timespec timeout, *timeoutp;
+	cobalt_assoc_t *assoc;
+	cobalt_queues_t *q;
+	unsigned int prio;
+	cobalt_ufd_t *ufd;
+	cobalt_msg_t *msg;
+	cobalt_mq_t *mq;
+	ssize_t len;
+	int err;
+
+	q = cobalt_queues();
+	if (q == NULL)
+		return -EPERM;
+
+	assoc = cobalt_assoc_lookup(&q->uqds, (u_long)uqd);
+	if (assoc == NULL)
+		return -EBADF;
+
+	ufd = assoc2ufd(assoc);
+
+	if (__xn_safe_copy_from_user(&len, u_len, sizeof(len)))
+		return -EFAULT;
+
+	if (len > 0 && !access_wok(u_buf, len))
+		return -EFAULT;
+
+	if (u_ts) {
+		if (__xn_safe_copy_from_user(&timeout, u_ts, sizeof(timeout)))
+			return -EFAULT;
+
+		timeoutp = &timeout;
+	} else
+		timeoutp = NULL;
+
+	msg = cobalt_mq_timedrcv_inner(&mq, ufd->kfd, len, timeoutp);
+	if (IS_ERR(msg))
+		return PTR_ERR(msg);
+
+	if (__xn_copy_to_user(u_buf, msg->data, msg->len)) {
+		cobalt_mq_finish_rcv(ufd->kfd, mq, msg);
+		return -EFAULT;
+	}
+	len = msg->len;
+	prio = cobalt_msg_get_prio(msg);
+
+	err = cobalt_mq_finish_rcv(ufd->kfd, mq, msg);
+	if (err)
+		return err;
+
+	if (__xn_safe_copy_to_user(u_len, &len, sizeof(len)))
+		return -EFAULT;
+
+	if (u_prio && __xn_safe_copy_to_user(u_prio, &prio, sizeof(prio)))
+		return -EFAULT;
+
+	return 0;
+}
+
 int cobalt_mq_pkg_init(void)
 {
 	initq(&cobalt_mqq);
@@ -1213,13 +1262,3 @@ void cobalt_mq_pkg_cleanup(void)
 }
 
 /*@}*/
-
-EXPORT_SYMBOL_GPL(mq_open);
-EXPORT_SYMBOL_GPL(mq_getattr);
-EXPORT_SYMBOL_GPL(mq_setattr);
-EXPORT_SYMBOL_GPL(mq_send);
-EXPORT_SYMBOL_GPL(mq_timedsend);
-EXPORT_SYMBOL_GPL(mq_receive);
-EXPORT_SYMBOL_GPL(mq_timedreceive);
-EXPORT_SYMBOL_GPL(mq_close);
-EXPORT_SYMBOL_GPL(mq_unlink);

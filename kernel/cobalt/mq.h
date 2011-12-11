@@ -7,24 +7,34 @@
 struct cobalt_mq;
 typedef struct cobalt_mq cobalt_mq_t;
 
-typedef struct cobalt_msg {
-	xnpholder_t link;
-	size_t len;
-	char data[0];
-} cobalt_msg_t;
+int cobalt_mq_select_bind(mqd_t fd, struct xnselector *selector,
+			  unsigned type, unsigned index);
 
-#define cobalt_msg_get_prio(msg) (msg)->link.prio
-#define cobalt_msg_set_prio(msg, prio) (msg)->link.prio = (prio)
+int cobalt_mq_open(const char __user *u_name, int oflags,
+		   mode_t mode, struct mq_attr __user *u_attr, mqd_t uqd);
 
-cobalt_msg_t *cobalt_mq_timedsend_inner(cobalt_mq_t **mqp, mqd_t fd, size_t len,
-				      const struct timespec *abs_timeoutp);
+int cobalt_mq_close(mqd_t uqd);
 
-int cobalt_mq_finish_send(mqd_t fd, cobalt_mq_t *mq, cobalt_msg_t *msg);
+int cobalt_mq_unlink(const char __user *u_name);
 
-cobalt_msg_t *cobalt_mq_timedrcv_inner(cobalt_mq_t **mqp, mqd_t fd, size_t len,
-				     const struct timespec *abs_timeoutp);
+int cobalt_mq_getattr(mqd_t uqd, struct mq_attr __user *u_attr);
 
-int cobalt_mq_finish_rcv(mqd_t fd, cobalt_mq_t *mq, cobalt_msg_t *msg);
+int cobalt_mq_setattr(mqd_t uqd, const struct mq_attr __user *u_attr,
+		      struct mq_attr __user *u_oattr);
+
+int cobalt_mq_send(mqd_t uqd,
+		   const void __user *u_buf, size_t len, unsigned int prio);
+
+int cobalt_mq_timedsend(mqd_t uqd, const void __user *u_buf, size_t len,
+			unsigned int prio, const struct timespec __user *u_ts);
+
+int cobalt_mq_receive(mqd_t uqd, void __user *u_buf,
+		      ssize_t __user *u_len, unsigned int __user *u_prio);
+
+int cobalt_mq_timedreceive(mqd_t uqd, void __user *u_buf,
+			   ssize_t __user *u_len,
+			   unsigned int __user *u_prio,
+			   const struct timespec __user *u_ts);
 
 #ifndef __XENO_SIM__
 void cobalt_mq_uqds_cleanup(cobalt_queues_t *q);
