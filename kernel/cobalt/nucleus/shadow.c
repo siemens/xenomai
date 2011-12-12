@@ -2397,24 +2397,21 @@ static inline void do_setsched_event(struct task_struct *p, int priority)
 		priority = 0;
 
 	/*
+	 * Reflect a Linux priority change for a given thread in the
+	 * Xenomai scheduler.
+	 *
 	 * Linux's priority scale is a subset of the core pod's
 	 * priority scale, so there is no need to bound the priority
-	 * values when mapping them from Linux -> Xenomai. We
-	 * propagate priority changes to the nucleus only for threads
-	 * that belong to skins that have a compatible priority scale.
+	 * values when mapping them from Linux -> Xenomai.
 	 *
 	 * BIG FAT WARNING: Change of scheduling parameters from the
 	 * Linux side are propagated only to threads that belong to
 	 * the Xenomai RT scheduling class. Threads from other classes
-	 * are remain unaffected, since we could not map this
-	 * information 1:1 between Linux and Xenomai.
+	 * remain unaffected, since we could not map this information
+	 * 1:1 between Linux and Xenomai.
 	 */
 	if (thread->base_class != &xnsched_class_rt ||
 	    thread->cprio == priority)
-		return;
-
-	if (xnthread_get_denormalized_prio(thread, priority) != priority)
-		/* Priority scales don't match 1:1. */
 		return;
 
 	param.rt.prio = priority;

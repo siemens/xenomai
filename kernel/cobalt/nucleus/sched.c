@@ -640,7 +640,6 @@ struct vfile_schedlist_data {
 	char name[XNOBJECT_NAME_LEN];
 	char sched_class[XNOBJECT_NAME_LEN];
 	int cprio;
-	int dnprio;
 	xnticks_t timeout;
 	xnflags_t state;
 };
@@ -682,7 +681,6 @@ static int vfile_schedlist_next(struct xnvfile_snapshot_iterator *it,
 	p->pid = xnthread_user_pid(thread);
 	memcpy(p->name, thread->name, sizeof(p->name));
 	p->cprio = thread->cprio;
-	p->dnprio = xnthread_get_denormalized_prio(thread, thread->cprio);
 	p->state = xnthread_state_flags(thread);
 	xnobject_copy_name(p->sched_class, thread->sched_class->name);
 	period = xnthread_get_period(thread);
@@ -719,12 +717,7 @@ static int vfile_schedlist_show(struct xnvfile_snapshot_iterator *it,
 			       "CPU", "PID", "CLASS", "PRI", "TIMEOUT",
 			       "STAT", "NAME");
 	else {
-		if (p->cprio != p->dnprio)
-			snprintf(pbuf, sizeof(pbuf), "%3d(%d)",
-				 p->cprio, p->dnprio);
-		else
-			snprintf(pbuf, sizeof(pbuf), "%3d", p->cprio);
-
+		snprintf(pbuf, sizeof(pbuf), "%3d", p->cprio);
 		xntimer_format_time(p->timeout, tbuf, sizeof(tbuf));
 		xnthread_format_status(p->state, sbuf, sizeof(sbuf));
 

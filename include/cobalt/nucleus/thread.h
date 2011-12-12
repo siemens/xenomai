@@ -175,7 +175,6 @@ union xnsched_policy_param;
 struct xnbufd;
 
 struct xnthread_operations {
-	int (*get_denormalized_prio)(struct xnthread *, int coreprio);
 	unsigned (*get_magic)(void);
 };
 
@@ -364,13 +363,6 @@ typedef struct xnhook {
 #define xnthread_dec_rescnt(thread)        ({ --(thread)->hrescnt; })
 #define xnthread_get_rescnt(thread)        ((thread)->hrescnt)
 #endif /* !__XENO_SIM__ */
-
-/* Class-level operations for threads. */
-static inline int xnthread_get_denormalized_prio(struct xnthread *t, int coreprio)
-{
-	return t->ops && t->ops->get_denormalized_prio
-		? t->ops->get_denormalized_prio(t, coreprio) : coreprio;
-}
 
 static inline unsigned xnthread_get_magic(struct xnthread *t)
 {

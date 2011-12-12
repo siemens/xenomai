@@ -137,7 +137,6 @@ struct vfile_sched_rt_data {
 	char name[XNOBJECT_NAME_LEN];
 	xnticks_t period;
 	int cprio;
-	int dnprio;
 };
 
 static struct xnvfile_snapshot_ops vfile_sched_rt_ops;
@@ -182,7 +181,6 @@ static int vfile_sched_rt_next(struct xnvfile_snapshot_iterator *it,
 	p->pid = xnthread_user_pid(thread);
 	memcpy(p->name, thread->name, sizeof(p->name));
 	p->cprio = thread->cprio;
-	p->dnprio = xnthread_get_denormalized_prio(thread, thread->cprio);
 	p->period = xnthread_get_period(thread);
 
 	return 1;
@@ -198,14 +196,8 @@ static int vfile_sched_rt_show(struct xnvfile_snapshot_iterator *it,
 		xnvfile_printf(it, "%-3s  %-6s %-8s %-10s %s\n",
 			       "CPU", "PID", "PRI", "PERIOD", "NAME");
 	else {
-		if (p->cprio != p->dnprio)
-			snprintf(pribuf, sizeof(pribuf), "%3d(%d)",
-				 p->cprio, p->dnprio);
-		else
-			snprintf(pribuf, sizeof(pribuf), "%3d", p->cprio);
-
+		snprintf(pribuf, sizeof(pribuf), "%3d", p->cprio);
 		xntimer_format_time(p->period, ptbuf, sizeof(ptbuf));
-
 		xnvfile_printf(it, "%3u  %-6d %-8s %-10s %s\n",
 			       p->cpu,
 			       p->pid,

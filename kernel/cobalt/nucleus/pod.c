@@ -226,7 +226,7 @@ void xnpod_fatal_helper(const char *format, ...)
 
 		while (holder) {
 			xnthread_t *thread = link2thread(holder, glink);
-			int cprio, dnprio;
+			int cprio;
 
 			holder = nextq(&nkpod->threadq, holder);
 
@@ -234,13 +234,7 @@ void xnpod_fatal_helper(const char *format, ...)
 				continue;
 
 			cprio = xnthread_current_priority(thread);
-			dnprio = xnthread_get_denormalized_prio(thread, cprio);
-
-			if (dnprio != cprio)
-				snprintf(pbuf, sizeof(pbuf), "%3d(%d)",
-					 cprio, dnprio);
-			else
-				snprintf(pbuf, sizeof(pbuf), "%3d", dnprio);
+			snprintf(pbuf, sizeof(pbuf), "%3d", cprio);
 
 			xnlogerr_noprompt("%c%3u  %-6d %-8s %-8Lu %.8lx  %s\n",
 					  thread == sched->curr ? '>' : ' ',
