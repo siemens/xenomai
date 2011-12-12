@@ -632,6 +632,10 @@ static void forked_child_init(void)
 	while (*pbuffer) {
 		if (*pbuffer == my_buffer)
 			pbuffer = &(*pbuffer)->next;
+		else if ((unsigned long)*pbuffer - pool_start < pool_len) {
+			cleanup_buffer(*pbuffer);
+			pbuffer = &(*pbuffer)->next;
+		}
 		else
 			cleanup_buffer(*pbuffer);
 	}
