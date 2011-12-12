@@ -32,7 +32,7 @@ int xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt)
 		arg = sigshadow_arg(si->si_int);
 		param.sched_priority = arg;
 		policy = param.sched_priority > 0 ? SCHED_FIFO: SCHED_OTHER;
-		pthread_setschedparam(pthread_self(), policy, &param);
+		__STD(pthread_setschedparam(pthread_self(), policy, &param));
 		break;
 	}
 
