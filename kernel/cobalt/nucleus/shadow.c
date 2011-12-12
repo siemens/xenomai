@@ -2384,46 +2384,6 @@ static inline void do_sigwake_event(struct task_struct *p)
 
 RTHAL_DECLARE_SIGWAKE_EVENT(sigwake_event);
 
-static inline void do_setsched_event(struct task_struct *p, int priority)
-{
-	xnthread_t *thread = xnshadow_thread(p);
-	union xnsched_policy_param param;
-	struct xnsched *sched;
-
-	if (!thread || (p->policy != SCHED_FIFO && p->policy != SCHED_NORMAL))
-		return;
-
-	if (p->policy == SCHED_NORMAL)
-		priority = 0;
-
-	/*
-	 * Reflect a Linux priority change for a given thread in the
-	 * Xenomai scheduler.
-	 *
-	 * Linux's priority scale is a subset of the core pod's
-	 * priority scale, so there is no need to bound the priority
-	 * values when mapping them from Linux -> Xenomai.
-	 *
-	 * BIG FAT WARNING: Change of scheduling parameters from the
-	 * Linux side are propagated only to threads that belong to
-	 * the Xenomai RT scheduling class. Threads from other classes
-	 * remain unaffected, since we could not map this information
-	 * 1:1 between Linux and Xenomai.
-	 */
-	if (thread->base_class != &xnsched_class_rt ||
-	    thread->cprio == priority)
-		return;
-
-	param.rt.prio = priority;
-	__xnpod_set_thread_schedparam(thread, &xnsched_class_rt, &param, 0);
-	sched = xnpod_current_sched();
-
-	if (xnsched_resched_p(sched))
-		xnpod_schedule();
-}
-
-RTHAL_DECLARE_SETSCHED_EVENT(setsched_event);
-
 static inline void do_cleanup_event(struct mm_struct *mm)
 {
 	struct task_struct *p = current;
@@ -2566,7 +2526,6 @@ void xnshadow_grab_events(void)
 	rthal_catch_taskexit(&taskexit_event);
 	rthal_catch_sigwake(&sigwake_event);
 	rthal_catch_schedule(&schedule_event);
-	rthal_catch_setsched(&setsched_event);
 	rthal_catch_cleanup(&cleanup_event);
 	rthal_catch_return(&mayday_event);
 }
@@ -2576,7 +2535,6 @@ void xnshadow_release_events(void)
 	rthal_catch_taskexit(NULL);
 	rthal_catch_sigwake(NULL);
 	rthal_catch_schedule(NULL);
-	rthal_catch_setsched(NULL);
 	rthal_catch_cleanup(NULL);
 	rthal_catch_return(NULL);
 }

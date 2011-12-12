@@ -306,8 +306,6 @@ static inline void clear_task_nowakeup(struct task_struct *p)
     ipipe_catch_event(ipipe_root_domain,IPIPE_EVENT_SIGWAKE,hdlr)
 #define rthal_catch_schedule(hdlr)	\
     ipipe_catch_event(ipipe_root_domain,IPIPE_EVENT_SCHEDULE,hdlr)
-#define rthal_catch_setsched(hdlr)	\
-    ipipe_catch_event(&rthal_domain,IPIPE_EVENT_SETSCHED,hdlr)
 #define rthal_catch_losyscall(hdlr)	\
     ipipe_catch_event(ipipe_root_domain,IPIPE_EVENT_SYSCALL,hdlr)
 #define rthal_catch_hisyscall(hdlr)	\
