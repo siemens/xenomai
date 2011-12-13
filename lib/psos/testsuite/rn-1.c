@@ -17,6 +17,8 @@ static void alloc_task(u_long a1, u_long a2, u_long a3, u_long a4)
 	int ret, n;
 	void *buf;
 
+	traceobj_enter(&trobj);
+
 	srandom(0x11223344);
 
 	for (n = 0;; n++) {
@@ -29,6 +31,8 @@ static void alloc_task(u_long a1, u_long a2, u_long a3, u_long a4)
 		memset(buf, 0xaa, size);
 		alloc_size += size;
 	}
+
+	traceobj_exit(&trobj);
 }
 
 int main(int argc, char *const argv[])
