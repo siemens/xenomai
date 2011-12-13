@@ -521,26 +521,27 @@ static int sem_trywait(cobalt_sem_t *sem)
 static inline int
 sem_timedwait_internal(cobalt_sem_t *sem, int timed, xnticks_t to)
 {
-	xnthread_t *cur;
-	int err;
+	xntmode_t tmode;
+	xnflags_t info;
+	int ret;
 
-	cur = xnpod_current_thread();
+	ret = sem_trywait_internal(sem);
+	if (ret != -EAGAIN)
+		return ret;
 
-	if ((err = sem_trywait_internal(sem)) != -EAGAIN)
-		return err;
+	if (timed) {
+		tmode = sem->flags & SEM_RAWCLOCK ? XN_ABSOLUTE : XN_REALTIME;
+		info = xnsynch_sleep_on(&sem->synchbase, to, tmode);
+	} else
+		info = xnsynch_sleep_on(&sem->synchbase, XN_INFINITE, XN_RELATIVE);
 
-	if (timed)
-		xnsynch_sleep_on(&sem->synchbase, to, XN_REALTIME);
-	else
-		xnsynch_sleep_on(&sem->synchbase, XN_INFINITE, XN_RELATIVE);
-
-	if (xnthread_test_info(cur, XNRMID))
+	if (info & XNRMID)
 		return -EINVAL;
 
-	if (xnthread_test_info(cur, XNBREAK))
+	if (info & XNBREAK)
 		return -EINTR;
 
-	if (xnthread_test_info(cur, XNTIMEO))
+	if (info & XNTIMEO)
 		return -ETIMEDOUT;
 
 	return 0;
@@ -599,8 +600,10 @@ static int sem_wait(cobalt_sem_t *sem)
  *
  * @param sm the semaphore to be decremented;
  *
- * @param abs_timeout the timeout, expressed as an absolute value of the
- * CLOCK_REALTIME clock.
+ * @param abs_timeout the timeout, expressed as an absolute value of
+ * the relevant clock for the semaphore, either CLOCK_MONOTONIC if
+ * SEM_RAWCLOCK was mentioned via sem_init_np(), or CLOCK_REALTIME
+ * otherwise.
  *
  * @retval 0 on success;
  * @retval -1 with @a errno set if:
@@ -994,7 +997,8 @@ int cobalt_sem_init_np(struct __shadow_sem __user *u_sem,
 	if (__xn_safe_copy_from_user(&sm, u_sem, sizeof(sm)))
 		return -EFAULT;
 
-	if (flags & ~(SEM_FIFO|SEM_PULSE|SEM_PSHARED|SEM_REPORT|SEM_WARNDEL))
+	if (flags & ~(SEM_FIFO|SEM_PULSE|SEM_PSHARED|\
+		      SEM_REPORT|SEM_WARNDEL|SEM_RAWCLOCK))
 		return -EINVAL;
 
 	err = do_sem_init(&sm, flags, value);
