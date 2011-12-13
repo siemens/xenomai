@@ -27,7 +27,7 @@
 int semobj_init(struct semobj *smobj, int flags, int value,
 		fnref_type(void (*)(struct semobj *smobj)) finalizer)
 {
-	int ret, sem_flags = sem_scope_attribute|SEM_REPORT;
+	int ret, sem_flags = sem_scope_attribute|SEM_REPORT|SEM_RAWCLOCK;
 
 	if ((flags & SEMOBJ_PRIO) == 0)
 		sem_flags |= SEM_FIFO;
