@@ -229,28 +229,30 @@ static STATUS msem_take(struct wind_sem *sem, int timeout)
 	if (threadobj_irq_p())
 		return S_intLib_NOT_ISR_CALLABLE;
 
+	/*
+	 * We allow threads from other APIs to grab a VxWorks mutex
+	 * ignoring the safe option in such a case.
+	 */
 	current = wind_task_current();
-	if (current != NULL && (sem->options & SEM_DELETE_SAFE))
+	if (current && (sem->options & SEM_DELETE_SAFE))
 		__RT(pthread_mutex_lock(&current->safelock));
 
 	if (timeout == NO_WAIT) {
 		ret = __RT(pthread_mutex_trylock(&sem->u.msem.lock));
-		if (ret)
-			goto done;
-		return OK;
+		goto check;
 	}
 
 	if  (timeout == WAIT_FOREVER) {
 		ret = __RT(pthread_mutex_lock(&sem->u.msem.lock));
-		if (ret)
-			goto done;
-		return OK;
+		goto check;
 	}
 
 	__clockobj_ticks_to_timeout(&wind_clock, CLOCK_REALTIME, timeout, &ts);
 	ret = __RT(pthread_mutex_timedlock(&sem->u.msem.lock, &ts));
-done:
+check:
 	switch (ret) {
+	case 0:
+		return OK;
 	case EINVAL:
 		ret = S_objLib_OBJ_ID_ERROR;
 		break;
@@ -289,7 +291,7 @@ static STATUS msem_give(struct wind_sem *sem)
 
 	if (sem->options & SEM_DELETE_SAFE) {
 		current = wind_task_current();
-		if (current != NULL)
+		if (current)
 			__RT(pthread_mutex_unlock(&current->safelock));
 	}
 

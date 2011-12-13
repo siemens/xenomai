@@ -46,6 +46,8 @@ struct wind_sem {
 		} xsem;
 		struct {
 			pthread_mutex_t lock;
+			struct threadobj *owner;
+			int lockdepth;
 		} msem;
 	} u;
 
