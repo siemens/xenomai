@@ -27,7 +27,12 @@ void traceobj_init(struct traceobj *trobj, const char *label, int nr_marks)
 	__RT(pthread_condattr_setclock(&cattr, CLOCK_COPPERPLATE));
 	__RT(pthread_cond_init(&trobj->join, &cattr));
 	__RT(pthread_condattr_destroy(&cattr));
-	trobj->nr_threads = 0;
+	/*
+	 * We make sure not to unblock from threadobj_join() until at
+	 * least one thread has called trace_enter() for this trace
+	 * object.
+	 */
+	trobj->nr_threads = -1;
 
 	trobj->label = label;
 	trobj->nr_marks = nr_marks;
@@ -188,7 +193,8 @@ void traceobj_enter(struct traceobj *trobj)
 	 */
 	push_cleanup_lock(&trobj->lock);
 	write_lock(&trobj->lock);
-	++trobj->nr_threads;
+	if (++trobj->nr_threads == 0)
+		trobj->nr_threads = 1;
 	write_unlock(&trobj->lock);
 	pop_cleanup_lock(&trobj->lock);
 }
@@ -210,11 +216,8 @@ void traceobj_exit(struct traceobj *trobj)
 {
 	struct threadobj *current = threadobj_current();
 
-	if (current) {
-		threadobj_lock(current);
+	if (current)
 		current->tracer = NULL;
-		threadobj_unlock(current);
-	}
 
 	traceobj_unwind(trobj);
 }
@@ -224,7 +227,7 @@ void traceobj_join(struct traceobj *trobj)
 	push_cleanup_lock(&trobj->lock);
 	read_lock(&trobj->lock);
 
-	while (trobj->nr_threads > 0)
+	while (trobj->nr_threads < 0 || trobj->nr_threads > 0)
 		__RT(pthread_cond_wait(&trobj->join, &trobj->lock));
 
 	read_unlock(&trobj->lock);
