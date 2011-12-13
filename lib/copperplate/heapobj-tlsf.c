@@ -18,13 +18,17 @@
 
 #include <errno.h>
 #include <stdio.h>
+#include <stdint.h>
 #include "copperplate/heapobj.h"
 #include "copperplate/debug.h"
 #include "tlsf/tlsf.h"
 #include "internal.h"
 
-/* XXX: depends on the implementation included from tlsf/, YMMV. */
-#define TLSF_BLOCK_OVERHEAD  8
+#if __WORDSIZE == 32
+#define TLSF_BLOCK_ALIGN  (8 * 2)
+#else
+#define TLSF_BLOCK_ALIGN  (16 * 2)
+#endif
 
 static int tlsf_pool_overhead;
 
@@ -60,11 +64,12 @@ int heapobj_init_private(struct heapobj *hobj, const char *name,
 int heapobj_init_array_private(struct heapobj *hobj, const char *name,
 			       size_t size, int elems)
 {
-	size += TLSF_BLOCK_OVERHEAD;
-	if (size < 16)
-		size = 16;
+	size_t poolsz;
 
-	return __bt(heapobj_init_private(hobj, name, size * elems, NULL));
+	poolsz = (size + TLSF_BLOCK_ALIGN - 1) & ~(TLSF_BLOCK_ALIGN - 1);
+	poolsz *= elems;
+
+	return __bt(heapobj_init_private(hobj, name, poolsz, NULL));
 }
 
 int heapobj_pkg_init_private(void)
@@ -77,6 +82,10 @@ int heapobj_pkg_init_private(void)
 	 * use for its own internal use. We get the probe memory from
 	 * tlsf_malloc(), so that the main pool will be set up in the
 	 * same move.
+	 *
+	 * We include 1k of additional memory to cope with the
+	 * per-block overhead for an undefined number of individual
+	 * allocation requests. Ugly.
 	 */
 	mem = tlsf_malloc(__node_info.mem_pool);
 	size = init_memory_pool(__node_info.mem_pool, mem);
@@ -85,7 +94,7 @@ int heapobj_pkg_init_private(void)
 
 	destroy_memory_pool(mem);
 	tlsf_pool_overhead = __node_info.mem_pool - size;
-	tlsf_pool_overhead = (tlsf_pool_overhead + 15) & ~15;
+	tlsf_pool_overhead = (tlsf_pool_overhead + 1024) & ~15;
 	tlsf_free(mem);
 
 	return 0;
