@@ -385,6 +385,8 @@ void pvsyncluster_destroy(struct pvsyncluster *sc)
 int pvsyncluster_addobj(struct pvsyncluster *sc, const char *name,
 			struct pvclusterobj *cobj)
 {
+	struct syncluster_wait_struct *wait;
+	struct threadobj *thobj, *tmp;
 	struct syncstate syns;
 	int ret;
 
@@ -392,7 +394,21 @@ int pvsyncluster_addobj(struct pvsyncluster *sc, const char *name,
 		return __bt(-EINVAL);
 
 	ret = pvcluster_addobj(&sc->c, name, cobj);
+	if (ret)
+		goto out;
 
+	if (!syncobj_pended_p(&sc->sobj))
+		goto out;
+	/*
+	 * Wake up all threads waiting for this key to appear in the
+	 * dictionary.
+	 */
+	syncobj_for_each_waiter_safe(&sc->sobj, thobj, tmp) {
+		wait = threadobj_get_wait(thobj);
+		if (*wait->name == *name && strcmp(wait->name, name) == 0)
+			syncobj_wakeup_waiter(&sc->sobj, thobj);
+	}
+out:
 	syncobj_unlock(&sc->sobj, &syns);
 
 	return ret;
