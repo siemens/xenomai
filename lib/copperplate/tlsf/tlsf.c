@@ -451,7 +451,7 @@ static __inline__ bhdr_t *process_area(void *area, size_t size)
 /******************** Begin of the allocator code *****************/
 /******************************************************************/
 
-static char *mp = NULL;         /* Default memory pool. */
+static char *mp;         /* Default memory pool. */
 
 /******************************************************************/
 size_t init_memory_pool(size_t mem_pool_size, void *mem_pool)
@@ -461,23 +461,20 @@ size_t init_memory_pool(size_t mem_pool_size, void *mem_pool)
     bhdr_t *b, *ib;
 
     if (!mem_pool || !mem_pool_size || mem_pool_size < sizeof(tlsf_t) + BHDR_OVERHEAD * 8) {
-	ERROR_MSG("init_memory_pool (): memory_pool invalid\n");
+	ERROR_MSG("init_memory_pool(): invalid pool\n");
 	return -1;
     }
 
     if (((unsigned long) mem_pool & PTR_MASK)) {
-	ERROR_MSG("init_memory_pool (): mem_pool must be aligned to a word\n");
+	ERROR_MSG("init_memory_pool(): pool must be aligned to a word\n");
 	return -1;
     }
     tlsf = (tlsf_t *) mem_pool;
     /* Check if already initialised */
     if (tlsf->tlsf_signature == TLSF_SIGNATURE) {
-	mp = mem_pool;
-	b = GET_NEXT_BLOCK(mp, ROUNDUP_SIZE(sizeof(tlsf_t)));
-	return b->size & BLOCK_SIZE;
+	ERROR_MSG("init_memory_pool(): already initialized\n");
+	return -1;
     }
-
-    mp = mem_pool;
 
     /* Zeroing the memory pool */
     memset(mem_pool, 0, sizeof(tlsf_t));
@@ -633,6 +630,7 @@ void *tlsf_malloc(size_t size)
 	if (area == ((void *) ~0))
 	    return NULL;        /* Not enough system memory */
 	init_memory_pool(area_size, area);
+	mp = area;
     }
 #endif
 
@@ -712,7 +710,7 @@ void *malloc_ex(size_t size, void *mem_pool)
        so they are not longer valid when the function fails */
     b = FIND_SUITABLE_BLOCK(tlsf, &fl, &sl);
 #if USE_MMAP || USE_SBRK
-    if (!b) {
+    if (!b && mem_pool == mp) {	/* Don't grow private pools */
 	size_t area_size;
 	void *area;
 	/* Growing the pool size when needed */
