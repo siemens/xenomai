@@ -63,16 +63,17 @@ int rt_queue_create(RT_QUEUE *queue, const char *name,
 	qcb = xnmalloc(sizeof(*qcb));
 	if (qcb == NULL)
 		goto out;
+
+	alchemy_build_name(qcb->name, name, &queue_namegen);
 	/*
 	 * The message pool has to be part of the main heap for proper
 	 * sharing between processes.
 	 */
-	if (heapobj_init_shareable(&qcb->hobj, NULL, poolsize)) {
+	if (heapobj_init_shareable(&qcb->hobj, qcb->name, poolsize)) {
 		xnfree(qcb);
 		goto out;
 	}
 
-	alchemy_build_name(qcb->name, name, &queue_namegen);
 	qcb->magic = queue_magic;
 	qcb->mode = mode;
 	qcb->limit = qlimit;
