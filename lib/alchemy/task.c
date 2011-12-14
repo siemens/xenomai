@@ -327,6 +327,14 @@ int rt_task_delete(RT_TASK *task)
 
 	COPPERPLATE_PROTECT(svc);
 
+	threadobj_lock(&tcb->thobj);
+	/*
+	 * Prevent further reference to this zombie, including via
+	 * alchemy_task_current().
+	 */
+	threadobj_set_magic(&tcb->thobj, ~task_magic);
+	threadobj_unlock(&tcb->thobj);
+
 	if (syncobj_lock(&tcb->sobj_safe, &syns)) {
 		ret = -EIDRM;
 		goto out;
@@ -343,15 +351,9 @@ int rt_task_delete(RT_TASK *task)
 		}
 	}
 
-	threadobj_lock(&tcb->thobj);
-	/*
-	 * Prevent further reference to this zombie, including via
-	 * alchemy_task_current().
-	 */
-	threadobj_set_magic(&tcb->thobj, ~task_magic);
-	threadobj_unlock(&tcb->thobj);
-
 	syncobj_unlock(&tcb->sobj_safe, &syns);
+
+	threadobj_lock(&tcb->thobj);
 
 	ret = threadobj_cancel(&tcb->thobj);
 	if (ret)
@@ -408,7 +410,9 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 	if (ret)
 		goto out;
 
+	threadobj_lock(&tcb->thobj);
 	threadobj_start(&tcb->thobj); /* We won't wait in prologue. */
+	threadobj_unlock(&tcb->thobj);
 	ret = task_prologue(tcb);
 	if (ret) {
 		delete_tcb(tcb);
