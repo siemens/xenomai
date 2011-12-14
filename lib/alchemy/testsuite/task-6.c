@@ -39,7 +39,7 @@ static void foreground_task(void *arg)
 	traceobj_enter(&trobj);
 
 	for (msg = 0; msg < 10; msg++) {
-		rt_task_sleep(1000000);
+		rt_task_sleep(1000000ULL);
 		mcb.opcode = 0x77;
 		mcb.data = &msg;
 		mcb.size = sizeof(msg);

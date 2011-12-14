@@ -105,7 +105,7 @@ static void task_b(void *arg)
 
 	traceobj_mark(&trobj, 16);
 
-	ret = rt_sem_p(&sem, 10000000);
+	ret = rt_sem_p(&sem, 10000000ULL);
 	traceobj_assert(&trobj, ret == 0);
 
 	traceobj_mark(&trobj, 17);
@@ -115,7 +115,7 @@ static void task_b(void *arg)
 
 	traceobj_mark(&trobj, 18);
 
-	ret = rt_sem_p(&sem, 100000000);
+	ret = rt_sem_p(&sem, 100000000ULL);
 	traceobj_assert(&trobj, ret == -ETIMEDOUT);
 
 	traceobj_mark(&trobj, 19);

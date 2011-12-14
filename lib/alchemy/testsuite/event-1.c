@@ -53,7 +53,7 @@ static void foreground_task(void *arg)
 		traceobj_assert(&trobj, flags == 2 << n * 2);
 	}
 
-	rt_task_sleep(1000000);
+	rt_task_sleep(1000000ULL);
 	ret = rt_event_delete(&event);
 	traceobj_assert(&trobj, ret == 0);
 

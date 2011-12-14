@@ -79,7 +79,7 @@ static void main_task(void *arg)
 	traceobj_assert(&trobj, ret == 0);
 	traceobj_assert(&trobj, info.nmessages == 0);
 
-	ret = rt_queue_read(&q, &msg, sizeof(msg), 1000000);
+	ret = rt_queue_read(&q, &msg, sizeof(msg), 1000000ULL);
 	traceobj_assert(&trobj, ret == -ETIMEDOUT);
 
 	ret = rt_queue_delete(&q);

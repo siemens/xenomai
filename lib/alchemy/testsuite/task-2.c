@@ -50,7 +50,7 @@ static void foreground_task(void *arg)
 
 	traceobj_mark(&trobj, 5);
 
-	rt_task_sleep(20000000);
+	rt_task_sleep(20000000ULL);
 
 	traceobj_mark(&trobj, 6);
 

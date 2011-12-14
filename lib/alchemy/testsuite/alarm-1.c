@@ -37,7 +37,7 @@ static void alarm_handler(void *arg)
 	}
 
 	traceobj_mark(&trobj, 4);
-	ret = rt_alarm_start(&alrm, 200000000, 200000000);
+	ret = rt_alarm_start(&alrm, 200000000ULL, 200000000ULL);
 	traceobj_assert(&trobj, ret == 0);
 }
 
@@ -56,7 +56,7 @@ static void main_task(void *arg)
 	ret = rt_alarm_create(&alrm, "ALARM", alarm_handler, &alrm);
 	traceobj_assert(&trobj, ret == 0);
 
-	ret = rt_alarm_start(&alrm, 200000000, 200000000);
+	ret = rt_alarm_start(&alrm, 200000000ULL, 200000000ULL);
 	traceobj_assert(&trobj, ret == 0);
 
 	traceobj_mark(&trobj, 6);

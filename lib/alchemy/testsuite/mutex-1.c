@@ -35,7 +35,7 @@ static void task_a(void *arg)
 
 	traceobj_mark(&trobj, 3);
 
-	ret = rt_mutex_acquire(&mutex, 100000000);
+	ret = rt_mutex_acquire(&mutex, 100000000ULL);
 	traceobj_assert(&trobj, ret == -ETIMEDOUT);
 
 	traceobj_mark(&trobj, 4);

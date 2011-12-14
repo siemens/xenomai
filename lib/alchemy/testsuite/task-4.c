@@ -31,7 +31,7 @@ static void background_task(void *arg)
 	ret = rt_task_suspend(&t_fgnd);
 	traceobj_assert(&trobj, ret == 0);
 
-	rt_task_sleep(20000000);
+	rt_task_sleep(20000000ULL);
 
 	traceobj_mark(&trobj, 3);
 

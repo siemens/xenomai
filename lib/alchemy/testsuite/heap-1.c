@@ -58,7 +58,7 @@ static void foreground_task(void *arg)
 	ret = rt_heap_free(&heap, p2);
 	traceobj_assert(&trobj, ret == 0);
 
-	rt_task_sleep(1000000);
+	rt_task_sleep(1000000ULL);
 
 	ret = rt_heap_delete(&heap);
 	traceobj_assert(&trobj, ret == 0);

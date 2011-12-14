@@ -92,7 +92,7 @@ int main(int argc, char *const argv[])
 	ret = rt_task_start(&t_bgnd, background_task, NULL);
 	traceobj_assert(&trobj, ret == 0);
 
-	ret = rt_task_sleep(1500000000);
+	ret = rt_task_sleep(1500000000ULL);
 	traceobj_assert(&trobj, ret == 0);
 
 	ret = rt_task_delete(&t_bgnd);

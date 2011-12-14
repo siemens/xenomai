@@ -81,7 +81,7 @@ static void main_task(void *arg)
 
 	traceobj_mark(&trobj, 6);
 
-	rt_task_sleep(10000000);
+	rt_task_sleep(10000000ULL);
 
 	traceobj_mark(&trobj, 7);
 
