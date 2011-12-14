@@ -39,7 +39,7 @@ static void main_task(void *arg)
 	ret = rt_queue_write(&q, &msg, sizeof(int), Q_URGENT);
 	traceobj_assert(&trobj, ret == -ENOMEM);
 
-	rt_task_sleep(1000000);
+	rt_task_sleep(100000000);
 
 	ret = rt_queue_write(&q, &msg, sizeof(int), Q_URGENT);
 	traceobj_assert(&trobj, ret == 0);
@@ -79,7 +79,7 @@ static void peer_task(void *arg)
 
 	traceobj_mark(&trobj, 14);
 
-	rt_task_sleep(1000000);
+	rt_task_sleep(100000000);
 
 	traceobj_mark(&trobj, 9);
 
