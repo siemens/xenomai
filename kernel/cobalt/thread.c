@@ -451,6 +451,7 @@ static inline int pthread_create(pthread_t *tid, const pthread_attr_t * attr)
 	thread->magic = COBALT_THREAD_MAGIC;
 	xnsynch_init(&thread->monitor_synch, XNSYNCH_FIFO, NULL);
 	inith(&thread->monitor_link);
+	thread->monitor_queued = 0;
 	thread->sched_policy = thread->attr.policy;
 
 	cobalt_timer_init_thread(thread);

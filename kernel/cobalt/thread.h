@@ -74,6 +74,7 @@ struct cobalt_thread {
 	/* Monitor wait object and link holder. */
 	struct xnsynch monitor_synch;
 	struct xnholder monitor_link;
+	int monitor_queued;
 
 #ifndef __XENO_SIM__
 	struct cobalt_hkey hkey;
