@@ -26,6 +26,7 @@
 /* syncobj->flags */
 #define SYNCOBJ_FIFO	0x0
 #define SYNCOBJ_PRIO	0x1
+#define SYNCOBJ_LOCKED	0x2
 
 /* threadobj->wait_status */
 #define SYNCOBJ_DELETED		0x1
@@ -80,6 +81,41 @@ struct syncobj {
 
 void __syncobj_cleanup_wait(struct syncobj *sobj,
 			    struct threadobj *thobj);
+
+#ifdef __XENO_DEBUG__
+
+static inline void __syncobj_tag_locked(struct syncobj *sobj)
+{
+	sobj->flags |= SYNCOBJ_LOCKED;
+}
+
+static inline void __syncobj_tag_unlocked(struct syncobj *sobj)
+{
+	assert(sobj->flags & SYNCOBJ_LOCKED);
+	sobj->flags &= ~SYNCOBJ_LOCKED;
+}
+
+static inline void __syncobj_check_locked(struct syncobj *sobj)
+{
+	assert(sobj->flags & SYNCOBJ_LOCKED);
+}
+
+#else /* !__XENO_DEBUG__ */
+
+static inline void __syncobj_tag_locked(struct syncobj *sobj)
+{
+}
+
+static inline void __syncobj_tag_unlocked(struct syncobj *sobj)
+{
+}
+
+static inline void __syncobj_check_locked(struct syncobj *sobj)
+{
+}
+
+#endif /* !__XENO_DEBUG__ */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -111,16 +147,22 @@ int __syncobj_signal_drain(struct syncobj *sobj);
 
 static inline int syncobj_pended_p(struct syncobj *sobj)
 {
+	__syncobj_check_locked(sobj);
+
 	return !list_empty(&sobj->pend_list);
 }
 
 static inline int syncobj_pend_count(struct syncobj *sobj)
 {
+	__syncobj_check_locked(sobj);
+
 	return sobj->pend_count;
 }
 
 static inline int syncobj_drain_count(struct syncobj *sobj)
 {
+	__syncobj_check_locked(sobj);
+
 	return sobj->drain_count;
 }
 
@@ -142,6 +184,8 @@ void syncobj_uninit(struct syncobj *sobj);
 static inline int syncobj_signal_drain(struct syncobj *sobj)
 {
 	int ret = 0;
+
+	__syncobj_check_locked(sobj);
 
 	if (sobj->drain_count > 0)
 		ret = __syncobj_signal_drain(sobj);

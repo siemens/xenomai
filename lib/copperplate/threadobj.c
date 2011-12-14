@@ -123,6 +123,8 @@ int threadobj_cancel(struct threadobj *thobj)
 {
 	pthread_t tid;
 
+	__threadobj_check_locked(thobj);
+
 	/*
 	 * This basically makes the thread enter a zombie state, since
 	 * it won't be reachable by anyone after its magic has been
@@ -174,6 +176,8 @@ int threadobj_suspend(struct threadobj *thobj) /* thobj->lock held */
 	pthread_t tid = thobj->tid;
 	int ret;
 
+	__threadobj_check_locked(thobj);
+
 	/*
 	 * XXX: we must guarantee that a THREADOBJ_SUSPEND event is sent
 	 * only once the target thread is in an innocuous state,
@@ -200,6 +204,8 @@ int threadobj_resume(struct threadobj *thobj) /* thobj->lock held */
 	pthread_t tid = thobj->tid;
 	int ret;
 
+	__threadobj_check_locked(thobj);
+
 	if (thobj == threadobj_current())
 		return 0;
 
@@ -222,6 +228,8 @@ int threadobj_resume(struct threadobj *thobj) /* thobj->lock held */
 
 int threadobj_lock_sched(struct threadobj *thobj) /* thobj->lock held */
 {
+	__threadobj_check_locked(thobj);
+
 	assert(thobj == threadobj_current());
 
 	if (thobj->schedlock_depth++ > 0)
@@ -239,6 +247,8 @@ int threadobj_lock_sched(struct threadobj *thobj) /* thobj->lock held */
 int threadobj_unlock_sched(struct threadobj *thobj) /* thobj->lock held */
 {
 	int ret;
+
+	__threadobj_check_locked(thobj);
 
 	assert(thobj == threadobj_current());
 
@@ -268,6 +278,8 @@ int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock hel
 	pthread_t tid = thobj->tid;
 	int ret, policy;
 
+	__threadobj_check_locked(thobj);
+
 	thobj->priority = prio;
 	policy = SCHED_RT;
 	if (prio == 0) {
@@ -295,6 +307,8 @@ int threadobj_set_mode(struct threadobj *thobj,
 		       int clrmask, int setmask, int *mode_r) /* thobj->lock held */
 {
 	int ret, __clrmask = 0, __setmask = 0;
+
+	__threadobj_check_locked(thobj);
 
 	if (setmask & __THREAD_M_LOCK)
 		__setmask |= PTHREAD_LOCK_SCHED;
@@ -352,8 +366,10 @@ int threadobj_set_rr(struct threadobj *thobj, struct timespec *quantum)
 {				/* thobj->lock held if valid */
 	int ret;
 
-	if (thobj)
+	if (thobj) {
+		__threadobj_check_locked(thobj);
 		return __bt(set_rr(thobj, quantum));
+	}
 
 	global_rr = (quantum != NULL);
 	if (global_rr)
@@ -416,6 +432,8 @@ int threadobj_stat(struct threadobj *thobj, struct threadobj_stat *p) /* thobj->
 {
 	struct cobalt_threadstat stat;
 	int ret;
+
+	__threadobj_check_locked(thobj);
 
 	ret = __cobalt_thread_stat(thobj->tid, &stat);
 	if (ret)
@@ -520,6 +538,8 @@ int threadobj_cancel(struct threadobj *thobj)
 {
 	pthread_t tid;
 
+	__threadobj_check_locked(thobj);
+
 	/*
 	 * This basically makes the thread enter a zombie state, since
 	 * it won't be reachable by anyone after its magic has been
@@ -555,6 +575,8 @@ int threadobj_suspend(struct threadobj *thobj) /* thobj->lock held */
 
 int threadobj_resume(struct threadobj *thobj) /* thobj->lock held */
 {
+	__threadobj_check_locked(thobj);
+
 	if (thobj == threadobj_current())
 		return 0;
 
@@ -643,6 +665,8 @@ int threadobj_set_mode(struct threadobj *thobj,
 		       int clrmask, int setmask, int *mode_r) /* thobj->lock held */
 {
 	int ret = 0, old = 0;
+
+	__threadobj_check_locked(thobj);
 
 	if (thobj->status & THREADOBJ_SCHEDLOCK)
 		old |= __THREAD_M_LOCK;
@@ -826,6 +850,8 @@ int threadobj_wait_period(struct threadobj *thobj,
 int threadobj_stat(struct threadobj *thobj,
 		   struct threadobj_stat *stat) /* thobj->lock held */
 {
+	__threadobj_check_locked(thobj);
+
 	return 0;
 }
 
@@ -894,6 +920,8 @@ void threadobj_init(struct threadobj *thobj,
 
 void threadobj_start(struct threadobj *thobj)	/* thobj->lock held. */
 {
+	__threadobj_check_locked(thobj);
+
 	if (thobj->status & THREADOBJ_STARTED)
 		return;
 
@@ -912,9 +940,11 @@ void threadobj_wait_start(struct threadobj *thobj) /* thobj->lock free. */
 	 * syncstate argument to each thread locking operation, we
 	 * hold the cancel state of the locker directly into the
 	 * locked thread, prior to disabling cancellation for the
-	 * calling thread. However, this means that we must save the
-	 * currently saved state on the stack prior to calling any
-	 * service which releases that lock implicitly, such as
+	 * calling thread.
+	 *
+	 * However, this means that we must save some state
+	 * information on the stack prior to calling any service which
+	 * releases that lock implicitly, such as
 	 * pthread_cond_wait(). Failing to do so would introduce the
 	 * possibility for the saved state to be overwritten by
 	 * another thread which managed to grab the lock after
@@ -926,7 +956,9 @@ void threadobj_wait_start(struct threadobj *thobj) /* thobj->lock free. */
 		if (status & (THREADOBJ_STARTED|THREADOBJ_ABORTED))
 			break;
 		oldstate = thobj->cancel_state;
+		__threadobj_tag_unlocked(thobj);
 		__RT(pthread_cond_wait(&thobj->barrier, &thobj->lock));
+		__threadobj_tag_locked(thobj);
 		thobj->cancel_state = oldstate;
 	}
 
@@ -994,6 +1026,8 @@ static void cancel_sync(struct threadobj *thobj) /* thobj->lock held */
 {
 	int oldstate;
 
+	__threadobj_check_locked(thobj);
+
 	while (thobj->status & THREADOBJ_WARMUP) {
 		oldstate = thobj->cancel_state;
 		__RT(pthread_cond_wait(&thobj->barrier, &thobj->lock));
@@ -1046,6 +1080,8 @@ int threadobj_unblock(struct threadobj *thobj) /* thobj->lock held */
 {
 	pthread_t tid = thobj->tid;
 	int ret = 0;
+
+	__threadobj_check_locked(thobj);
 
 	/*
 	 * FIXME: racy. We can't assume thobj->wait_sobj is stable.

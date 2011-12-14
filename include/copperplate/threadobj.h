@@ -84,6 +84,7 @@ struct threadobj_stat {
 #define THREADOBJ_STARTED	0x4	/* threadobj_start() called. */
 #define THREADOBJ_WARMUP	0x8	/* threadobj_prologue() not called yet. */
 #define THREADOBJ_ABORTED	0x10	/* cancelled before start. */
+#define THREADOBJ_LOCKED	0x20	/* threadobj_lock() granted (debug only). */
 #define THREADOBJ_DEBUG		0x8000	/* Debug mode enabled. */
 
 #define THREADOBJ_IRQCONTEXT    ((struct threadobj *)-2UL)
@@ -187,6 +188,40 @@ static inline struct threadobj *threadobj_current(void)
 
 #endif /* !HAVE_TLS */
 
+#ifdef __XENO_DEBUG__
+
+static inline void __threadobj_tag_locked(struct threadobj *thobj)
+{
+	thobj->status |= THREADOBJ_LOCKED;
+}
+
+static inline void __threadobj_tag_unlocked(struct threadobj *thobj)
+{
+	assert(thobj->status & THREADOBJ_LOCKED);
+	thobj->status &= ~THREADOBJ_LOCKED;
+}
+
+static inline void __threadobj_check_locked(struct threadobj *thobj)
+{
+	assert(thobj->status & THREADOBJ_LOCKED);
+}
+
+#else /* !__XENO_DEBUG__ */
+
+static inline void __threadobj_tag_locked(struct threadobj *thobj)
+{
+}
+
+static inline void __threadobj_tag_unlocked(struct threadobj *thobj)
+{
+}
+
+static inline void __threadobj_check_locked(struct threadobj *thobj)
+{
+}
+
+#endif /* !__XENO_DEBUG__ */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -283,16 +318,33 @@ static inline int threadobj_get_priority(struct threadobj *thobj)
 
 static inline int threadobj_lock(struct threadobj *thobj)
 {
-	return write_lock_safe(&thobj->lock, thobj->cancel_state);
+	int ret;
+
+	ret = write_lock_safe(&thobj->lock, thobj->cancel_state);
+	if (ret)
+		return ret;
+
+	__threadobj_tag_locked(thobj);
+
+	return 0;
 }
 
 static inline int threadobj_trylock(struct threadobj *thobj)
 {
-	return write_trylock_safe(&thobj->lock, thobj->cancel_state);
+	int ret;
+
+	ret = write_trylock_safe(&thobj->lock, thobj->cancel_state);
+	if (ret)
+		return ret;
+
+	__threadobj_tag_locked(thobj);
+
+	return 0;
 }
 
 static inline int threadobj_unlock(struct threadobj *thobj)
 {
+	__threadobj_tag_unlocked(thobj);
 	return write_unlock_safe(&thobj->lock, thobj->cancel_state);
 }
 

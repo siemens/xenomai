@@ -241,12 +241,14 @@ int syncobj_lock(struct syncobj *sobj, struct syncstate *syns)
 	}
 
 	syns->state = oldstate;
+	__syncobj_tag_locked(sobj);
 
 	return 0;
 }
 
 void syncobj_unlock(struct syncobj *sobj, struct syncstate *syns)
 {
+	__syncobj_tag_unlocked(sobj);
 	monitor_exit(sobj);
 	pthread_setcancelstate(syns->state, NULL);
 }
@@ -334,6 +336,8 @@ int syncobj_pend(struct syncobj *sobj, const struct timespec *timeout,
 	struct threadobj *current = threadobj_current();
 	int ret, state;
 
+	__syncobj_check_locked(sobj);
+
 	assert(current != NULL);
 
 	current->wait_status = 0;
@@ -357,7 +361,9 @@ int syncobj_pend(struct syncobj *sobj, const struct timespec *timeout,
 	assert(state == PTHREAD_CANCEL_DISABLE);
 
 	do {
+		__syncobj_tag_unlocked(sobj);
 		ret = monitor_wait_grant(sobj, current, timeout);
+		__syncobj_tag_locked(sobj);
 		/* Check for spurious wake up. */
 	} while (ret == 0 && current->wait_sobj);
 
@@ -384,12 +390,16 @@ int syncobj_pend(struct syncobj *sobj, const struct timespec *timeout,
 
 void syncobj_requeue_waiter(struct syncobj *sobj, struct threadobj *thobj)
 {
+	__syncobj_check_locked(sobj);
+
 	list_remove(&thobj->wait_link);
 	enqueue_waiter(sobj, thobj);
 }
 
 void syncobj_wakeup_waiter(struct syncobj *sobj, struct threadobj *thobj)
 {
+	__syncobj_check_locked(sobj);
+
 	list_remove(&thobj->wait_link);
 	thobj->wait_sobj = NULL;
 	sobj->pend_count--;
@@ -399,6 +409,8 @@ void syncobj_wakeup_waiter(struct syncobj *sobj, struct threadobj *thobj)
 struct threadobj *syncobj_post(struct syncobj *sobj)
 {
 	struct threadobj *thobj;
+
+	__syncobj_check_locked(sobj);
 
 	if (list_empty(&sobj->pend_list))
 		return NULL;
@@ -415,6 +427,8 @@ struct threadobj *syncobj_peek_at_pend(struct syncobj *sobj)
 {
 	struct threadobj *thobj;
 
+	__syncobj_check_locked(sobj);
+
 	if (list_empty(&sobj->pend_list))
 		return NULL;
 
@@ -426,6 +440,8 @@ struct threadobj *syncobj_peek_at_pend(struct syncobj *sobj)
 struct threadobj *syncobj_peek_at_drain(struct syncobj *sobj)
 {
 	struct threadobj *thobj;
+
+	__syncobj_check_locked(sobj);
 
 	if (list_empty(&sobj->drain_list))
 		return NULL;
@@ -440,6 +456,8 @@ int syncobj_wait_drain(struct syncobj *sobj, const struct timespec *timeout,
 {
 	struct threadobj *current = threadobj_current();
 	int ret, state;
+
+	__syncobj_check_locked(sobj);
 
 	assert(current != NULL);
 
@@ -475,7 +493,9 @@ int syncobj_wait_drain(struct syncobj *sobj, const struct timespec *timeout,
 	 * XXX: The caller must check for spurious wakeups, in case
 	 * the drain condition became false again before it resumes.
 	 */
+	__syncobj_tag_unlocked(sobj);
 	ret = monitor_wait_drain(sobj, timeout);
+	__syncobj_tag_locked(sobj);
 
 	pthread_setcancelstate(state, NULL);
 
@@ -504,6 +524,8 @@ int syncobj_wait_drain(struct syncobj *sobj, const struct timespec *timeout,
 int syncobj_flush(struct syncobj *sobj, int reason)
 {
 	struct threadobj *thobj;
+
+	__syncobj_check_locked(sobj);
 
 	/* Must have a valid release flag set. */
 	assert(reason & SYNCOBJ_RELEASE_MASK);
@@ -536,6 +558,8 @@ int syncobj_flush(struct syncobj *sobj, int reason)
 int syncobj_destroy(struct syncobj *sobj, struct syncstate *syns)
 {
 	int ret;
+
+	__syncobj_check_locked(sobj);
 
 	ret = syncobj_flush(sobj, SYNCOBJ_DELETED);
 	if (ret == 0) {
