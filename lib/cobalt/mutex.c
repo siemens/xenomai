@@ -295,28 +295,23 @@ int __wrap_pthread_mutex_unlock(pthread_mutex_t *mutex)
 		&((union __xeno_mutex *)mutex)->shadow_mutex;
 	struct mutex_dat *datp = NULL;
 	xnhandle_t cur = XN_NO_HANDLE;
-	int err, check;
+	int err;
 
 	if (unlikely(_mutex->magic != COBALT_MUTEX_MAGIC))
 		return EINVAL;
 
-	if ((check = _mutex->attr.type == PTHREAD_MUTEX_ERRORCHECK)) {
-		cur = xeno_get_current();
-		if (cur == XN_NO_HANDLE)
-			return EPERM;
+	cur = xeno_get_current();
+	if (cur == XN_NO_HANDLE)
+		return EPERM;
 
-		datp = mutex_get_datp(_mutex);
-		if (xnsynch_fast_owner_check(&datp->owner, cur) != 0)
-			return EPERM;
-	}
+	datp = mutex_get_datp(_mutex);
+	if (xnsynch_fast_owner_check(&datp->owner, cur) != 0)
+		return EPERM;
 
 	if (_mutex->lockcnt > 1) {
 		--_mutex->lockcnt;
 		return 0;
 	}
-
-	if (!check)
-		datp = mutex_get_datp(_mutex);
 
 	if ((datp->flags & COBALT_MUTEX_COND_SIGNAL))
 		goto do_syscall;
@@ -324,12 +319,8 @@ int __wrap_pthread_mutex_unlock(pthread_mutex_t *mutex)
 	if (unlikely(xeno_get_current_mode() & XNOTHER))
 		goto do_syscall;
 
-	if (!check)
-		cur = xeno_get_current();
-
 	if (likely(xnsynch_fast_release(&datp->owner, cur)))
 		return 0;
-
 do_syscall:
 
 	do {
