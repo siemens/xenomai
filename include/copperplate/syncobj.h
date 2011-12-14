@@ -41,6 +41,8 @@
 #define SYNCOBJ_BLOCK	0x1
 #define SYNCOBJ_RESUME	0x2
 
+#define SYNCOBJ_MAGIC  0xf9f99f9f
+
 struct threadobj;
 
 struct syncstate {
@@ -63,6 +65,7 @@ struct syncobj_corespec {
 #endif /* CONFIG_XENO_MERCURY */
 
 struct syncobj {
+	unsigned int magic;
 	int flags;
 	int release_count;
 	struct list pend_list;

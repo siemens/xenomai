@@ -223,6 +223,7 @@ void syncobj_init(struct syncobj *sobj, int flags,
 	sobj->drain_count = 0;
 	sobj->release_count = 0;
 	sobj->finalizer = finalizer;
+	sobj->magic = SYNCOBJ_MAGIC;
 	syncobj_init_corespec(sobj);
 }
 
@@ -231,6 +232,13 @@ int syncobj_lock(struct syncobj *sobj, struct syncstate *syns)
 	int ret, oldstate;
 
 	assert(threadobj_current() != NULL);
+
+	/*
+	 * This magic prevents concurrent locking while a deletion is
+	 * in progress, waiting for the release count to drop to zero.
+	 */
+	if (sobj->magic != SYNCOBJ_MAGIC)
+		return -EINVAL;
 
 	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &oldstate);
 
@@ -561,6 +569,7 @@ int syncobj_destroy(struct syncobj *sobj, struct syncstate *syns)
 
 	__syncobj_check_locked(sobj);
 
+	sobj->magic = ~SYNCOBJ_MAGIC;
 	ret = syncobj_flush(sobj, SYNCOBJ_DELETED);
 	if (ret == 0) {
 		/* No thread awaken - we may dispose immediately. */
