@@ -172,7 +172,7 @@ int rt_heap_alloc_timed(RT_HEAP *heap,
 	wait = threadobj_prepare_wait(struct alchemy_heap_wait);
 	wait->size = size;
 
-	ret = syncobj_pend(&hcb->sobj, abs_timeout, &syns);
+	ret = syncobj_wait_grant(&hcb->sobj, abs_timeout, &syns);
 	if (ret) {
 		if (ret == -EIDRM) {
 			threadobj_finish_wait();
@@ -217,7 +217,7 @@ int rt_heap_free(RT_HEAP *heap, void *block)
 
 	heapobj_free(&hcb->hobj, block);
 
-	if (!syncobj_pended_p(&hcb->sobj))
+	if (!syncobj_grant_wait_p(&hcb->sobj))
 		goto done;
 	/*
 	 * We might be releasing a block large enough to satisfy
@@ -227,7 +227,7 @@ int rt_heap_free(RT_HEAP *heap, void *block)
 		wait = threadobj_get_wait(thobj);
 		wait->ptr = heapobj_alloc(&hcb->hobj, wait->size);
 		if (wait->ptr)
-			syncobj_wakeup_waiter(&hcb->sobj, thobj);
+			syncobj_grant_to(&hcb->sobj, thobj);
 	}
 done:
 	put_alchemy_heap(hcb, &syns);
@@ -250,7 +250,7 @@ int rt_heap_inquire(RT_HEAP *heap, RT_HEAP_INFO *info)
 	if (hcb == NULL)
 		goto out;
 
-	info->nwaiters = syncobj_pend_count(&hcb->sobj);
+	info->nwaiters = syncobj_count_grant(&hcb->sobj);
 	info->heapsize = hcb->size;
 	info->usablemem = heapobj_size(&hcb->hobj);
 	info->usedmem = heapobj_inquire(&hcb->hobj);

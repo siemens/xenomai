@@ -169,7 +169,7 @@ int semobj_post(struct semobj *smobj)
 		return ret;
 
 	if (++smobj->core.value <= 0)
-		syncobj_post(&smobj->core.sobj);
+		syncobj_grant_one(&smobj->core.sobj);
 	else if (smobj->core.flags & SEMOBJ_PULSE)
 		smobj->core.value = 0;
 
@@ -189,7 +189,7 @@ int semobj_broadcast(struct semobj *smobj)
 
 	if (smobj->core.value < 0) {
 		smobj->core.value = 0;
-		syncobj_flush(&smobj->core.sobj, SYNCOBJ_BROADCAST);
+		syncobj_grant_all(&smobj->core.sobj);
 	}
 
 	syncobj_unlock(&smobj->core.sobj, &syns);
@@ -221,7 +221,7 @@ int semobj_wait(struct semobj *smobj, const struct timespec *timeout)
 		goto done;
 	}
 
-	ret = syncobj_pend(&smobj->core.sobj, timeout, &syns);
+	ret = syncobj_wait_grant(&smobj->core.sobj, timeout, &syns);
 	if (ret) {
 		/*
 		 * -EIDRM means that the semaphore has been deleted,

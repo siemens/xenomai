@@ -246,7 +246,7 @@ int rt_queue_send(RT_QUEUE *queue,
 	ret = 0;  /* # of tasks unblocked. */
 
 	do {
-		waiter = syncobj_post(&qcb->sobj);
+		waiter = syncobj_grant_one(&qcb->sobj);
 		if (waiter == NULL)
 			break;
 		wait = threadobj_get_wait(waiter);
@@ -300,7 +300,7 @@ int rt_queue_write(RT_QUEUE *queue,
 	if (qcb == NULL)
 		goto out;
 
-	waiter = syncobj_peek_at_pend(&qcb->sobj);
+	waiter = syncobj_peek_grant(&qcb->sobj);
 	if (waiter && threadobj_local_p(waiter)) {
 		/*
 		 * Fast path for local threads already waiting for
@@ -317,13 +317,13 @@ int rt_queue_write(RT_QUEUE *queue,
 		if (size > 0)
 			memcpy(wait->userbuf, buf, size);
 		wait->usersz = size;
-		syncobj_wakeup_waiter(&qcb->sobj, waiter);
+		syncobj_grant_to(&qcb->sobj, waiter);
 		ret = 1;
 		goto done;
 	}
 
 enqueue:
-	nwaiters = syncobj_pend_count(&qcb->sobj);
+	nwaiters = syncobj_count_grant(&qcb->sobj);
 	if (nwaiters == 0 && (mode & Q_BROADCAST) != 0)
 		goto done;
 
@@ -350,7 +350,7 @@ enqueue:
 	}
 
 	do {
-		waiter = syncobj_post(&qcb->sobj);
+		waiter = syncobj_grant_one(&qcb->sobj);
 		if (waiter == NULL)
 			break;
 		wait = threadobj_get_wait(waiter);
@@ -406,7 +406,7 @@ wait:
 	wait = threadobj_prepare_wait(struct alchemy_queue_wait);
 	wait->usersz = 0;
 
-	ret = syncobj_pend(&qcb->sobj, abs_timeout, &syns);
+	ret = syncobj_wait_grant(&qcb->sobj, abs_timeout, &syns);
 	if (ret) {
 		if (ret == -EIDRM) {
 			threadobj_finish_wait();
@@ -470,7 +470,7 @@ wait:
 	wait->usersz = size;
 	wait->msg = NULL;
 
-	ret = syncobj_pend(&qcb->sobj, abs_timeout, &syns);
+	ret = syncobj_wait_grant(&qcb->sobj, abs_timeout, &syns);
 	if (ret) {
 		if (ret == -EIDRM) {
 			threadobj_finish_wait();
@@ -545,7 +545,7 @@ int rt_queue_inquire(RT_QUEUE *queue, RT_QUEUE_INFO *info)
 	if (qcb == NULL)
 		goto out;
 
-	info->nwaiters = syncobj_pend_count(&qcb->sobj);
+	info->nwaiters = syncobj_count_grant(&qcb->sobj);
 	info->nmessages = qcb->mcount;
 	info->mode = qcb->mode;
 	info->qlimit = qcb->limit;

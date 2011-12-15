@@ -261,7 +261,7 @@ starve:
 	wait->ptr = NULL;
 	wait->size = size;
 
-	ret = syncobj_pend(&rn->sobj, timespec, &syns);
+	ret = syncobj_wait_grant(&rn->sobj, timespec, &syns);
 	if (ret == -ETIMEDOUT)
 		ret = ERR_TIMEOUT;
 	/*
@@ -311,7 +311,7 @@ u_long rn_retseg(u_long rnid, void *segaddr)
 	heapobj_free(&rn->hobj, segaddr);
 	rn->busynr--;
 
-	if (!syncobj_pended_p(&rn->sobj))
+	if (!syncobj_grant_wait_p(&rn->sobj))
 		goto done;
 
 	syncobj_for_each_waiter_safe(&rn->sobj, thobj, tmp) {
@@ -324,7 +324,7 @@ u_long rn_retseg(u_long rnid, void *segaddr)
 			rn->busynr++;
 			rn->usedmem += heapobj_validate(&rn->hobj, seg);
 			wait->ptr = seg;
-			syncobj_wakeup_waiter(&rn->sobj, thobj);
+			syncobj_grant_to(&rn->sobj, thobj);
 		}
 	}
 done:

@@ -86,7 +86,7 @@ static STATUS xsem_take(struct wind_sem *sem, int timeout)
 	} else
 		timespec = NULL;
 
-	ret = syncobj_pend(&sem->u.xsem.sobj, timespec, &syns);
+	ret = syncobj_wait_grant(&sem->u.xsem.sobj, timespec, &syns);
 	if (ret == -EIDRM) {
 		ret = S_objLib_OBJ_DELETED;
 		goto out;
@@ -124,7 +124,7 @@ static STATUS xsem_give(struct wind_sem *sem)
 			/* No wrap around. */
 			ret = S_semLib_INVALID_OPERATION;
 	} else if (++sem->u.xsem.value <= 0)
-		syncobj_post(&sem->u.xsem.sobj);
+		syncobj_grant_one(&sem->u.xsem.sobj);
 
 	syncobj_unlock(&sem->u.xsem.sobj, &syns);
 out:
@@ -146,7 +146,7 @@ static STATUS xsem_flush(struct wind_sem *sem)
 		goto out;
 	}
 
-	syncobj_flush(&sem->u.xsem.sobj, SYNCOBJ_FLUSHED);
+	syncobj_flush(&sem->u.xsem.sobj);
 
 	syncobj_unlock(&sem->u.xsem.sobj, &syns);
 out:

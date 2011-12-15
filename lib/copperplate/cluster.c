@@ -232,7 +232,7 @@ int syncluster_addobj(struct syncluster *sc, const char *name,
 	if (ret)
 		goto out;
 
-	if (!syncobj_pended_p(sc->sobj))
+	if (!syncobj_grant_wait_p(sc->sobj))
 		goto out;
 	/*
 	 * Wake up all threads waiting for this key to appear in the
@@ -241,7 +241,7 @@ int syncluster_addobj(struct syncluster *sc, const char *name,
 	syncobj_for_each_waiter_safe(sc->sobj, thobj, tmp) {
 		wait = threadobj_get_wait(thobj);
 		if (*wait->name == *name && strcmp(wait->name, name) == 0)
-			syncobj_wakeup_waiter(sc->sobj, thobj);
+			syncobj_grant_to(sc->sobj, thobj);
 	}
 out:
 	syncobj_unlock(sc->sobj, &syns);
@@ -297,7 +297,7 @@ int syncluster_findobj(struct syncluster *sc,
 			wait = threadobj_prepare_wait(struct syncluster_wait_struct);
 			wait->name = name;
 		}
-		ret = syncobj_pend(sc->sobj, timeout, &syns);
+		ret = syncobj_wait_grant(sc->sobj, timeout, &syns);
 		if (ret) {
 			if (ret == -EIDRM)
 				goto out;
@@ -397,7 +397,7 @@ int pvsyncluster_addobj(struct pvsyncluster *sc, const char *name,
 	if (ret)
 		goto out;
 
-	if (!syncobj_pended_p(&sc->sobj))
+	if (!syncobj_grant_wait_p(&sc->sobj))
 		goto out;
 	/*
 	 * Wake up all threads waiting for this key to appear in the
@@ -406,7 +406,7 @@ int pvsyncluster_addobj(struct pvsyncluster *sc, const char *name,
 	syncobj_for_each_waiter_safe(&sc->sobj, thobj, tmp) {
 		wait = threadobj_get_wait(thobj);
 		if (*wait->name == *name && strcmp(wait->name, name) == 0)
-			syncobj_wakeup_waiter(&sc->sobj, thobj);
+			syncobj_grant_to(&sc->sobj, thobj);
 	}
 out:
 	syncobj_unlock(&sc->sobj, &syns);
@@ -462,7 +462,7 @@ int pvsyncluster_findobj(struct pvsyncluster *sc,
 			wait = threadobj_prepare_wait(struct syncluster_wait_struct);
 			wait->name = name;
 		}
-		ret = syncobj_pend(&sc->sobj, timeout, &syns);
+		ret = syncobj_wait_grant(&sc->sobj, timeout, &syns);
 		if (ret) {
 			if (ret == -EIDRM)
 				goto out;

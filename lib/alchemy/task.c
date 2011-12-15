@@ -341,7 +341,7 @@ int rt_task_delete(RT_TASK *task)
 	}
 
 	while (tcb->safecount) {
-		ret = syncobj_pend(&tcb->sobj_safe, NULL, &syns);
+		ret = syncobj_wait_grant(&tcb->sobj_safe, NULL, &syns);
 		if (ret) {
 			if (ret == -EIDRM)
 				goto out;
@@ -735,7 +735,7 @@ ssize_t rt_task_send_timed(RT_TASK *task,
 		goto out;
 
 	if (alchemy_poll_mode(abs_timeout)) {
-		if (!syncobj_drain_count(&tcb->sobj_msg)) {
+		if (!syncobj_count_drain(&tcb->sobj_msg)) {
 			ret = -EWOULDBLOCK;
 			goto done;
 		}
@@ -762,10 +762,10 @@ ssize_t rt_task_send_timed(RT_TASK *task,
 		wait->reply.size = 0;
 	}
 
-	if (syncobj_drain_count(&tcb->sobj_msg))
-		syncobj_signal_drain(&tcb->sobj_msg);
+	if (syncobj_count_drain(&tcb->sobj_msg))
+		syncobj_drain(&tcb->sobj_msg);
 
-	ret = syncobj_pend(&tcb->sobj_msg, abs_timeout, &syns);
+	ret = syncobj_wait_grant(&tcb->sobj_msg, abs_timeout, &syns);
 	if (ret) {
 		threadobj_finish_wait();
 		if (ret == -EIDRM)
@@ -802,7 +802,7 @@ int rt_task_receive_timed(RT_TASK_MCB *mcb_r,
 
 	__bt(syncobj_lock(&current->sobj_msg, &syns));
 
-	while (!syncobj_pended_p(&current->sobj_msg)) {
+	while (!syncobj_grant_wait_p(&current->sobj_msg)) {
 		if (alchemy_poll_mode(abs_timeout)) {
 			ret = -EWOULDBLOCK;
 			goto done;
@@ -810,7 +810,7 @@ int rt_task_receive_timed(RT_TASK_MCB *mcb_r,
 		syncobj_wait_drain(&current->sobj_msg, abs_timeout, &syns);
 	}
 
-	thobj = syncobj_peek_at_pend(&current->sobj_msg);
+	thobj = syncobj_peek_grant(&current->sobj_msg);
 	wait = threadobj_get_wait(thobj);
 	mcb_s = &wait->request;
 
@@ -858,7 +858,7 @@ int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
 	__bt(syncobj_lock(&current->sobj_msg, &syns));
 
 	ret = -ENXIO;
-	if (!syncobj_pended_p(&current->sobj_msg))
+	if (!syncobj_grant_wait_p(&current->sobj_msg))
 		goto done;
 
 	syncobj_for_each_waiter(&current->sobj_msg, thobj) {
@@ -869,7 +869,7 @@ int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
 	goto done;
  reply:
 	size = mcb_s ? mcb_s->size : 0;
-	syncobj_wakeup_waiter(&current->sobj_msg, thobj);
+	syncobj_grant_to(&current->sobj_msg, thobj);
 	mcb_r = &wait->reply;
 
 	/*

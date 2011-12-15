@@ -201,13 +201,13 @@ redo:
 		 * drain, if we freed enough room for the leading one
 		 * to post its message.
 		 */
-		thobj = syncobj_peek_at_drain(&bcb->sobj);
+		thobj = syncobj_peek_drain(&bcb->sobj);
 		if (thobj == NULL)
 			goto done;
 
 		wait = threadobj_get_wait(thobj);
 		if (wait->size + bcb->fillsz <= bcb->bufsz)
-			syncobj_signal_drain(&bcb->sobj);
+			syncobj_drain(&bcb->sobj);
 
 		goto done;
 	wait:
@@ -223,7 +223,7 @@ redo:
 		 * pathological use of the buffer. We must allow for a
 		 * short read to prevent a deadlock.
 		 */
-		if (bcb->fillsz > 0 && syncobj_drain_count(&bcb->sobj)) {
+		if (bcb->fillsz > 0 && syncobj_count_drain(&bcb->sobj)) {
 			len = bcb->fillsz;
 			goto redo;
 		}
@@ -233,7 +233,7 @@ redo:
 
 		wait->size = len;
 
-		ret = syncobj_pend(&bcb->sobj, abs_timeout, &syns);
+		ret = syncobj_wait_grant(&bcb->sobj, abs_timeout, &syns);
 		if (ret) {
 			if (ret == -EIDRM)
 				goto out;
@@ -321,13 +321,13 @@ ssize_t rt_buffer_write_timed(RT_BUFFER *bf,
 		 * Wake up all threads waiting for input, if we
 		 * accumulated enough data to feed the leading one.
 		 */
-		thobj = syncobj_peek_at_pend(&bcb->sobj);
+		thobj = syncobj_peek_grant(&bcb->sobj);
 		if (thobj == NULL)
 			goto done;
 
 		wait = threadobj_get_wait(thobj);
 		if (wait->size <= bcb->fillsz)
-			syncobj_flush(&bcb->sobj, SYNCOBJ_BROADCAST);
+			syncobj_grant_all(&bcb->sobj);
 
 		goto done;
 	wait:
@@ -356,8 +356,8 @@ ssize_t rt_buffer_write_timed(RT_BUFFER *bf,
 		 * the burden: this is an error condition, we just
 		 * have to mitigate its effect, avoiding a deadlock.
 		 */
-		if (bcb->fillsz > 0 && syncobj_pend_count(&bcb->sobj))
-			syncobj_flush(&bcb->sobj, SYNCOBJ_BROADCAST);
+		if (bcb->fillsz > 0 && syncobj_count_grant(&bcb->sobj))
+			syncobj_grant_all(&bcb->sobj);
 
 		ret = syncobj_wait_drain(&bcb->sobj, abs_timeout, &syns);
 		if (ret) {
@@ -393,7 +393,7 @@ int rt_buffer_clear(RT_BUFFER *bf)
 	bcb->wroff = 0;
 	bcb->rdoff = 0;
 	bcb->fillsz = 0;
-	syncobj_signal_drain(&bcb->sobj);
+	syncobj_drain(&bcb->sobj);
 
 	put_alchemy_buffer(bcb, &syns);
 out:
@@ -415,8 +415,8 @@ int rt_buffer_inquire(RT_BUFFER *bf, RT_BUFFER_INFO *info)
 	if (bcb == NULL)
 		goto out;
 
-	info->iwaiters = syncobj_pend_count(&bcb->sobj);
-	info->owaiters = syncobj_drain_count(&bcb->sobj);
+	info->iwaiters = syncobj_count_grant(&bcb->sobj);
+	info->owaiters = syncobj_count_drain(&bcb->sobj);
 	info->totalmem = bcb->bufsz;
 	info->availmem = bcb->bufsz - bcb->fillsz;
 	strcpy(info->name, bcb->name);

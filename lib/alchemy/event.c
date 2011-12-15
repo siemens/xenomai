@@ -148,7 +148,7 @@ int rt_event_wait_timed(RT_EVENT *event,
 	wait->mask = mask;
 	wait->mode = mode;
 
-	ret = syncobj_pend(&evcb->sobj, abs_timeout, &syns);
+	ret = syncobj_wait_grant(&evcb->sobj, abs_timeout, &syns);
 	if (ret) {
 		if (ret == -EIDRM) {
 			threadobj_finish_wait();
@@ -184,7 +184,7 @@ int rt_event_signal(RT_EVENT *event, unsigned long mask)
 
 	evcb->value |= mask;
 
-	if (!syncobj_pended_p(&evcb->sobj))
+	if (!syncobj_grant_wait_p(&evcb->sobj))
 		goto done;
 
 	syncobj_for_each_waiter_safe(&evcb->sobj, thobj, tmp) {
@@ -193,7 +193,7 @@ int rt_event_signal(RT_EVENT *event, unsigned long mask)
 		testval = wait->mode & EV_ANY ? bits : mask;
 		if (bits && bits == testval) {
 			wait->mask = bits;
-			syncobj_wakeup_waiter(&evcb->sobj, thobj);
+			syncobj_grant_to(&evcb->sobj, thobj);
 		}
 	}
 done:
@@ -244,7 +244,7 @@ int rt_event_inquire(RT_EVENT *event, RT_EVENT_INFO *info)
 		goto out;
 
 	info->value = evcb->value;
-	info->nwaiters = syncobj_pend_count(&evcb->sobj);
+	info->nwaiters = syncobj_count_grant(&evcb->sobj);
 	strcpy(info->name, evcb->name);
 
 	put_alchemy_event(evcb, &syns);

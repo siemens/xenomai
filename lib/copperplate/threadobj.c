@@ -1090,7 +1090,7 @@ int threadobj_unblock(struct threadobj *thobj) /* thobj->lock held */
 	 * FIXME: racy. We can't assume thobj->wait_sobj is stable.
 	 */
 	if (thobj->wait_sobj)	/* Remove PEND (+DELAY timeout) */
-		syncobj_flush(thobj->wait_sobj, SYNCOBJ_FLUSHED);
+		syncobj_flush(thobj->wait_sobj);
 	else
 		/* Remove standalone DELAY */
 		ret = -__RT(pthread_kill(tid, SIGRELS));

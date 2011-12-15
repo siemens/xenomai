@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2008-2011 Philippe Gerum <rpm@xenomai.org>.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -98,12 +98,6 @@ void monitor_grant(struct syncobj *sobj, struct threadobj *thobj)
 }
 
 static inline
-void monitor_drain(struct syncobj *sobj)
-{
-	cobalt_monitor_drain(&sobj->core.monitor);
-}
-
-static inline
 void monitor_drain_all(struct syncobj *sobj)
 {
 	cobalt_monitor_drain_all(&sobj->core.monitor);
@@ -118,6 +112,7 @@ static inline void syncobj_init_corespec(struct syncobj *sobj)
 
 static inline void syncobj_cleanup_corespec(struct syncobj *sobj)
 {
+	/* We hold the gate lock while destroying. */
 	int ret = cobalt_monitor_destroy(&sobj->core.monitor);
 	assert(ret == 0);
 	(void)ret;
@@ -169,12 +164,6 @@ void monitor_grant(struct syncobj *sobj, struct threadobj *thobj)
 }
 
 static inline
-void monitor_drain(struct syncobj *sobj)
-{
-	pthread_cond_signal(&sobj->core.drain_sync);
-}
-
-static inline
 void monitor_drain_all(struct syncobj *sobj)
 {
 	pthread_cond_broadcast(&sobj->core.drain_sync);
@@ -207,6 +196,7 @@ static inline void syncobj_init_corespec(struct syncobj *sobj)
 
 static inline void syncobj_cleanup_corespec(struct syncobj *sobj)
 {
+	monitor_exit(sobj);
 	pthread_cond_destroy(&sobj->core.drain_sync);
 	pthread_mutex_destroy(&sobj->core.lock);
 }
@@ -217,11 +207,11 @@ void syncobj_init(struct syncobj *sobj, int flags,
 		  fnref_type(void (*)(struct syncobj *sobj)) finalizer)
 {
 	sobj->flags = flags;
-	list_init(&sobj->pend_list);
+	list_init(&sobj->grant_list);
 	list_init(&sobj->drain_list);
-	sobj->pend_count = 0;
+	sobj->grant_count = 0;
 	sobj->drain_count = 0;
-	sobj->release_count = 0;
+	sobj->wait_count = 0;
 	sobj->finalizer = finalizer;
 	sobj->magic = SYNCOBJ_MAGIC;
 	syncobj_init_corespec(sobj);
@@ -237,21 +227,25 @@ int syncobj_lock(struct syncobj *sobj, struct syncstate *syns)
 	 * This magic prevents concurrent locking while a deletion is
 	 * in progress, waiting for the release count to drop to zero.
 	 */
-	if (sobj->magic != SYNCOBJ_MAGIC)
-		return -EINVAL;
-
 	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &oldstate);
 
 	ret = monitor_enter(sobj);
-	if (ret) {
-		pthread_setcancelstate(oldstate, NULL);
-		return ret;
+	if (ret)
+		goto fail;
+
+	/* Check for an ongoing deletion. */
+	if (sobj->magic != SYNCOBJ_MAGIC) {
+		monitor_exit(sobj);
+		ret = -EINVAL;
+		goto fail;
 	}
 
 	syns->state = oldstate;
 	__syncobj_tag_locked(sobj);
-
 	return 0;
+fail:
+	pthread_setcancelstate(oldstate, NULL);
+	return ret;
 }
 
 void syncobj_unlock(struct syncobj *sobj, struct syncstate *syns)
@@ -261,43 +255,109 @@ void syncobj_unlock(struct syncobj *sobj, struct syncstate *syns)
 	pthread_setcancelstate(syns->state, NULL);
 }
 
-static void syncobj_test_finalize(struct syncobj *sobj,
-				  struct syncstate *syns)
+static void __syncobj_finalize(struct syncobj *sobj)
 {
 	void (*finalizer)(struct syncobj *sobj);
-	int relcount;
-
-	relcount = --sobj->release_count;
-	monitor_exit(sobj);
-
-	if (relcount == 0) {
-		syncobj_cleanup_corespec(sobj);
-		fnref_get(finalizer, sobj->finalizer);
-		if (finalizer)
-			finalizer(sobj);
-	} else
-		assert(relcount > 0);
 
 	/*
-	 * Cancelability reset is postponed until here, so that we
-	 * can't be wiped off asynchronously before the object is
-	 * fully finalized, albeit we exited the monitor earlier to
-	 * allow deletion.
+	 * Cancelability is still disabled or we are running over the
+	 * thread finalizer, therefore we can't be wiped off in the
+	 * middle of the finalization process.
 	 */
-	pthread_setcancelstate(syns->state, NULL);
+	syncobj_cleanup_corespec(sobj);
+	fnref_get(finalizer, sobj->finalizer);
+	if (finalizer)
+		finalizer(sobj);
 }
 
-int __syncobj_signal_drain(struct syncobj *sobj)
+int __syncobj_broadcast_grant(struct syncobj *sobj, int reason)
 {
-	/* Release one thread waiting for the object to drain. */
-	--sobj->drain_count;
-	monitor_drain(sobj);
+	struct threadobj *thobj;
+	int ret;
 
-	return 1;
+	assert(!list_empty(&sobj->grant_list));
+
+	do {
+		thobj = list_pop_entry(&sobj->grant_list,
+				       struct threadobj, wait_link);
+		thobj->wait_status |= reason;
+		thobj->wait_sobj = NULL;
+		monitor_grant(sobj, thobj);
+	} while (!list_empty(&sobj->grant_list));
+
+	ret = sobj->grant_count;
+	sobj->grant_count = 0;
+
+	return ret;
+}
+
+int __syncobj_broadcast_drain(struct syncobj *sobj, int reason)
+{
+	struct threadobj *thobj;
+	int ret;
+
+	assert(!list_empty(&sobj->drain_list));
+
+	do {
+		thobj = list_pop_entry(&sobj->drain_list,
+				       struct threadobj, wait_link);
+		thobj->wait_sobj = NULL;
+		thobj->wait_status |= reason;
+	} while (!list_empty(&sobj->drain_list));
+
+	monitor_drain_all(sobj);
+
+	ret = sobj->drain_count;
+	sobj->drain_count = 0;
+
+	return ret;
+}
+
+int syncobj_flush(struct syncobj *sobj)
+{
+	__syncobj_check_locked(sobj);
+
+	if (sobj->grant_count > 0)
+		__syncobj_broadcast_grant(sobj, SYNCOBJ_FLUSHED);
+
+	if (sobj->drain_count > 0)
+		__syncobj_broadcast_drain(sobj, SYNCOBJ_FLUSHED);
+
+	return sobj->wait_count;
+}
+
+static inline void enqueue_waiter(struct syncobj *sobj,
+				  struct threadobj *thobj)
+{
+	struct threadobj *__thobj;
+
+	thobj->wait_prio = threadobj_get_priority(thobj);
+	if ((sobj->flags & SYNCOBJ_PRIO) == 0 || list_empty(&sobj->grant_list)) {
+		list_append(&thobj->wait_link, &sobj->grant_list);
+		return;
+	}
+
+	list_for_each_entry_reverse(__thobj, &sobj->grant_list, wait_link) {
+		if (thobj->wait_prio <= __thobj->wait_prio)
+			break;
+	}
+	ath(&__thobj->wait_link, &thobj->wait_link);
+}
+
+static inline void dequeue_waiter(struct syncobj *sobj,
+				  struct threadobj *thobj)
+{
+	list_remove(&thobj->wait_link);
+	if (thobj->wait_status & SYNCOBJ_DRAINWAIT)
+		sobj->drain_count--;
+	else
+		sobj->grant_count--;
+
+	assert(sobj->wait_count > 0);
 }
 
 /*
- * NOTE: we don't use POSIX cleanup handlers in syncobj_pend() and
+ * NOTE: we don't use POSIX cleanup handlers in syncobj_wait_grant() and
  * syncobj_wait() on purpose: these may have a significant impact on
  * latency due to I-cache misses on low-end hardware (e.g. ~6 us on
  * MPC5200), particularly when unwinding the cancel frame. So the
@@ -310,142 +370,63 @@ void __syncobj_cleanup_wait(struct syncobj *sobj, struct threadobj *thobj)
 	/*
 	 * We don't care about resetting the original cancel type
 	 * saved in the syncstate struct since we are there precisely
-	 * because the caller got cancelled.
+	 * because the caller got cancelled while sleeping on the
+	 * GRANT/DRAIN condition.
 	 */
-	list_remove(&thobj->wait_link);
-	if (thobj->wait_status & SYNCOBJ_DRAINING)
-		sobj->drain_count--;
+	dequeue_waiter(sobj, thobj);
+
+	if (--sobj->wait_count == 0 && sobj->magic != SYNCOBJ_MAGIC) {
+		__syncobj_finalize(sobj);
+		return;
+	}
 
 	monitor_exit(sobj);
 }
 
-static inline void enqueue_waiter(struct syncobj *sobj,
-				  struct threadobj *thobj)
-{
-	struct threadobj *__thobj;
-
-	thobj->wait_prio = threadobj_get_priority(thobj);
-	sobj->pend_count++;
-	if ((sobj->flags & SYNCOBJ_PRIO) == 0 || list_empty(&sobj->pend_list)) {
-		list_append(&thobj->wait_link, &sobj->pend_list);
-		return;
-	}
-
-	list_for_each_entry_reverse(__thobj, &sobj->pend_list, wait_link) {
-		if (thobj->wait_prio <= __thobj->wait_prio)
-			break;
-	}
-	ath(&__thobj->wait_link, &thobj->wait_link);
-}
-
-int syncobj_pend(struct syncobj *sobj, const struct timespec *timeout,
-		 struct syncstate *syns)
-{
-	struct threadobj *current = threadobj_current();
-	int ret, state;
-
-	__syncobj_check_locked(sobj);
-
-	assert(current != NULL);
-
-	current->wait_status = 0;
-	enqueue_waiter(sobj, current);
-	current->wait_sobj = sobj;
-
-	if (current->wait_hook)
-		current->wait_hook(sobj, SYNCOBJ_BLOCK);
-
-	/*
-	 * XXX: we are guaranteed to be in deferred cancel mode, with
-	 * cancelability disabled (in syncobj_lock); enable
-	 * cancelability before pending on the condvar.
-	 */
-	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &state);
-	/*
-	 * Catch spurious unlocked calls: this must be a blatant bug
-	 * in the calling code, don't even try to continue
-	 * (syncobj_lock() required first).
-	 */
-	assert(state == PTHREAD_CANCEL_DISABLE);
-
-	do {
-		__syncobj_tag_unlocked(sobj);
-		ret = monitor_wait_grant(sobj, current, timeout);
-		__syncobj_tag_locked(sobj);
-		/* Check for spurious wake up. */
-	} while (ret == 0 && current->wait_sobj);
-
-	pthread_setcancelstate(state, NULL);
-
-	if (current->wait_hook)
-		current->wait_hook(sobj, SYNCOBJ_RESUME);
-
-	if (ret) {
-		current->wait_sobj = NULL;
-		list_remove(&current->wait_link);
-	} else if (current->wait_status & SYNCOBJ_DELETED) {
-		syncobj_test_finalize(sobj, syns);
-		ret = -EIDRM;
-	} else if (current->wait_status & SYNCOBJ_RELEASE_MASK) {
-		--sobj->release_count;
-		assert(sobj->release_count >= 0);
-		if (current->wait_status & SYNCOBJ_FLUSHED)
-			ret = -EINTR;
-	}
-
-	return ret;
-}
-
-void syncobj_requeue_waiter(struct syncobj *sobj, struct threadobj *thobj)
-{
-	__syncobj_check_locked(sobj);
-
-	list_remove(&thobj->wait_link);
-	enqueue_waiter(sobj, thobj);
-}
-
-void syncobj_wakeup_waiter(struct syncobj *sobj, struct threadobj *thobj)
-{
-	__syncobj_check_locked(sobj);
-
-	list_remove(&thobj->wait_link);
-	thobj->wait_sobj = NULL;
-	sobj->pend_count--;
-	monitor_grant(sobj, thobj);
-}
-
-struct threadobj *syncobj_post(struct syncobj *sobj)
+struct threadobj *syncobj_grant_one(struct syncobj *sobj)
 {
 	struct threadobj *thobj;
 
 	__syncobj_check_locked(sobj);
 
-	if (list_empty(&sobj->pend_list))
+	if (list_empty(&sobj->grant_list))
 		return NULL;
 
-	thobj = list_pop_entry(&sobj->pend_list, struct threadobj, wait_link);
+	thobj = list_pop_entry(&sobj->grant_list, struct threadobj, wait_link);
+	thobj->wait_status |= SYNCOBJ_SIGNALED;
 	thobj->wait_sobj = NULL;
-	sobj->pend_count--;
+	sobj->grant_count--;
 	monitor_grant(sobj, thobj);
 
 	return thobj;
 }
 
-struct threadobj *syncobj_peek_at_pend(struct syncobj *sobj)
+void syncobj_grant_to(struct syncobj *sobj, struct threadobj *thobj)
+{
+	__syncobj_check_locked(sobj);
+
+	list_remove(&thobj->wait_link);
+	thobj->wait_status |= SYNCOBJ_SIGNALED;
+	thobj->wait_sobj = NULL;
+	sobj->grant_count--;
+	monitor_grant(sobj, thobj);
+}
+
+struct threadobj *syncobj_peek_grant(struct syncobj *sobj)
 {
 	struct threadobj *thobj;
 
 	__syncobj_check_locked(sobj);
 
-	if (list_empty(&sobj->pend_list))
+	if (list_empty(&sobj->grant_list))
 		return NULL;
 
-	thobj = list_first_entry(&sobj->pend_list, struct threadobj,
+	thobj = list_first_entry(&sobj->grant_list, struct threadobj,
 				 wait_link);
 	return thobj;
 }
 
-struct threadobj *syncobj_peek_at_drain(struct syncobj *sobj)
+struct threadobj *syncobj_peek_drain(struct syncobj *sobj)
 {
 	struct threadobj *thobj;
 
@@ -459,6 +440,75 @@ struct threadobj *syncobj_peek_at_drain(struct syncobj *sobj)
 	return thobj;
 }
 
+static inline int wait_epilogue(struct syncobj *sobj,
+				struct syncstate *syns,
+				struct threadobj *current)
+{
+	if (current->wait_sobj) {
+		dequeue_waiter(sobj, current);
+		current->wait_sobj = NULL;
+	}
+
+	if (current->wait_hook)
+		current->wait_hook(sobj, SYNCOBJ_RESUME);
+
+	sobj->wait_count--;
+	assert(sobj->wait_count >= 0);
+
+	if (sobj->magic != SYNCOBJ_MAGIC) {
+		if (sobj->wait_count == 0)
+			__syncobj_finalize(sobj);
+		else
+			monitor_exit(sobj);
+		pthread_setcancelstate(syns->state, NULL);
+		return -EIDRM;
+	}
+
+	if (current->wait_status & SYNCOBJ_FLUSHED)
+		return -EINTR;
+
+	return 0;
+}
+
+int syncobj_wait_grant(struct syncobj *sobj, const struct timespec *timeout,
+		       struct syncstate *syns)
+{
+	struct threadobj *current = threadobj_current();
+	int ret, state;
+
+	__syncobj_check_locked(sobj);
+
+	assert(current != NULL);
+
+	current->wait_status = 0;
+	enqueue_waiter(sobj, current);
+	current->wait_sobj = sobj;
+	sobj->grant_count++;
+	sobj->wait_count++;
+
+	if (current->wait_hook)
+		current->wait_hook(sobj, SYNCOBJ_BLOCK);
+
+	/*
+	 * XXX: we are guaranteed to be in deferred cancel mode, with
+	 * cancelability disabled (in syncobj_lock); re-enable it
+	 * before pending on the condvar.
+	 */
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &state);
+	assert(state == PTHREAD_CANCEL_DISABLE);
+
+	do {
+		__syncobj_tag_unlocked(sobj);
+		ret = monitor_wait_grant(sobj, current, timeout);
+		__syncobj_tag_locked(sobj);
+		/* Check for spurious wake up. */
+	} while (ret == 0 && current->wait_sobj);
+
+	pthread_setcancelstate(state, NULL);
+
+	return wait_epilogue(sobj, syns, current) ?: ret;
+}
+
 int syncobj_wait_drain(struct syncobj *sobj, const struct timespec *timeout,
 		       struct syncstate *syns)
 {
@@ -469,98 +519,33 @@ int syncobj_wait_drain(struct syncobj *sobj, const struct timespec *timeout,
 
 	assert(current != NULL);
 
-	/*
-	 * XXX: syncobj_wait_drain() behaves slightly differently than
-	 * syncobj_pend(), in that we don't process spurious wakeups
-	 * internally, leaving it to the caller. We do this because a
-	 * drain sync is broadcast so we can't be 100% sure whether
-	 * the wait condition actually disappeared for all waiters.
-	 *
-	 * (e.g. in case the drain signal notifies about a single
-	 * resource being released, only one waiter will be satisfied,
-	 * albeit all waiters will compete to get that resource - this
-	 * means that all waiters but one will get a spurious wakeup).
-	 *
-	 * On the other hand, syncobj_pend() only unblocks on a
-	 * directed wakeup signal to the waiting thread, so we can
-	 * check whether such signal has existed prior to exiting the
-	 * wait loop (i.e. testing current->wait_sobj for NULL).
-	 */
-	current->wait_status = SYNCOBJ_DRAINING;
+	current->wait_status = SYNCOBJ_DRAINWAIT;
 	list_append(&current->wait_link, &sobj->drain_list);
 	current->wait_sobj = sobj;
 	sobj->drain_count++;
-
-	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &state);
-	assert(state == PTHREAD_CANCEL_DISABLE);
+	sobj->wait_count++;
 
 	if (current->wait_hook)
 		current->wait_hook(sobj, SYNCOBJ_BLOCK);
 
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &state);
+	assert(state == PTHREAD_CANCEL_DISABLE);
+
 	/*
-	 * XXX: The caller must check for spurious wakeups, in case
-	 * the drain condition became false again before it resumes.
+	 * XXX: Since the DRAINED signal is broadcast to all waiters,
+	 * a race may exist for acting upon it among those
+	 * threads. Therefore the caller must check that the drain
+	 * condition is still true before proceeding.
 	 */
-	__syncobj_tag_unlocked(sobj);
-	ret = monitor_wait_drain(sobj, timeout);
-	__syncobj_tag_locked(sobj);
+	do {
+		__syncobj_tag_unlocked(sobj);
+		ret = monitor_wait_drain(sobj, timeout);
+		__syncobj_tag_locked(sobj);
+	} while (ret == 0 && current->wait_sobj);
 
 	pthread_setcancelstate(state, NULL);
 
-	current->wait_status &= ~SYNCOBJ_DRAINING;
-	if (current->wait_status == 0) { /* not flushed? */
-		current->wait_sobj = NULL;
-		list_remove(&current->wait_link);
-	}
-
-	if (current->wait_hook)
-		current->wait_hook(sobj, SYNCOBJ_RESUME);
-
-	if (current->wait_status & SYNCOBJ_DELETED) {
-		syncobj_test_finalize(sobj, syns);
-		ret = -EIDRM;
-	} else if (current->wait_status & SYNCOBJ_RELEASE_MASK) {
-		--sobj->release_count;
-		assert(sobj->release_count >= 0);
-		if (current->wait_status & SYNCOBJ_FLUSHED)
-			ret = -EINTR;
-	}
-
-	return ret;
-}
-
-int syncobj_flush(struct syncobj *sobj, int reason)
-{
-	struct threadobj *thobj;
-
-	__syncobj_check_locked(sobj);
-
-	/* Must have a valid release flag set. */
-	assert(reason & SYNCOBJ_RELEASE_MASK);
-
-	while (!list_empty(&sobj->pend_list)) {
-		thobj = list_pop_entry(&sobj->pend_list,
-				       struct threadobj, wait_link);
-		thobj->wait_status |= reason;
-		thobj->wait_sobj = NULL;
-		monitor_grant(sobj, thobj);
-		sobj->release_count++;
-	}
-	sobj->pend_count = 0;
-
-	if (sobj->drain_count > 0) {
-		do {
-			thobj = list_pop_entry(&sobj->drain_list,
-					       struct threadobj, wait_link);
-			thobj->wait_sobj = NULL;
-			thobj->wait_status |= reason;
-		} while (!list_empty(&sobj->drain_list));
-		sobj->release_count += sobj->drain_count;
-		sobj->drain_count = 0;
-		monitor_drain_all(sobj);
-	}
-
-	return sobj->release_count;
+	return wait_epilogue(sobj, syns, current) ?: ret;
 }
 
 int syncobj_destroy(struct syncobj *sobj, struct syncstate *syns)
@@ -570,19 +555,21 @@ int syncobj_destroy(struct syncobj *sobj, struct syncstate *syns)
 	__syncobj_check_locked(sobj);
 
 	sobj->magic = ~SYNCOBJ_MAGIC;
-	ret = syncobj_flush(sobj, SYNCOBJ_DELETED);
-	if (ret == 0) {
-		/* No thread awaken - we may dispose immediately. */
-		sobj->release_count = 1;
-		syncobj_test_finalize(sobj, syns);
-	} else
+	ret = syncobj_flush(sobj);
+	if (ret) {
 		syncobj_unlock(sobj, syns);
+		return ret;
+	}
 
-	return ret;
+	/* No thread awaken - we may dispose immediately. */
+	__syncobj_finalize(sobj);
+	pthread_setcancelstate(syns->state, NULL);
+
+	return 0;
 }
 
 void syncobj_uninit(struct syncobj *sobj)
 {
-	assert(sobj->release_count == 0);
+	assert(sobj->wait_count == 0);
 	syncobj_cleanup_corespec(sobj);
 }

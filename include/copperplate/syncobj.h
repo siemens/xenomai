@@ -29,13 +29,9 @@
 #define SYNCOBJ_LOCKED	0x2
 
 /* threadobj->wait_status */
-#define SYNCOBJ_DELETED		0x1
-#define SYNCOBJ_FLUSHED		0x2
-#define SYNCOBJ_BROADCAST	0x4
-#define SYNCOBJ_DRAINING	0x8
-
-#define SYNCOBJ_RELEASE_MASK	\
-	(SYNCOBJ_DELETED|SYNCOBJ_FLUSHED|SYNCOBJ_BROADCAST)
+#define SYNCOBJ_FLUSHED		0x1
+#define SYNCOBJ_SIGNALED	0x2
+#define SYNCOBJ_DRAINWAIT	0x4
 
 /* threadobj->wait_hook(status) */
 #define SYNCOBJ_BLOCK	0x1
@@ -67,9 +63,9 @@ struct syncobj_corespec {
 struct syncobj {
 	unsigned int magic;
 	int flags;
-	int release_count;
-	struct list pend_list;
-	int pend_count;
+	int wait_count;
+	struct list grant_list;
+	int grant_count;
 	struct list drain_list;
 	int drain_count;
 	struct syncobj_corespec core;
@@ -77,10 +73,10 @@ struct syncobj {
 };
 
 #define syncobj_for_each_waiter(sobj, pos)		\
-	list_for_each_entry(pos, &(sobj)->pend_list, wait_link)
+	list_for_each_entry(pos, &(sobj)->grant_list, wait_link)
 
 #define syncobj_for_each_waiter_safe(sobj, pos, tmp)	\
-	list_for_each_entry_safe(pos, tmp, &(sobj)->pend_list, wait_link)
+	list_for_each_entry_safe(pos, tmp, &(sobj)->grant_list, wait_link)
 
 void __syncobj_cleanup_wait(struct syncobj *sobj,
 			    struct threadobj *thobj);
@@ -123,18 +119,25 @@ static inline void __syncobj_check_locked(struct syncobj *sobj)
 extern "C" {
 #endif
 
+int __syncobj_broadcast_drain(struct syncobj *sobj, int reason);
+
+int __syncobj_broadcast_grant(struct syncobj *sobj, int reason);
+
 void syncobj_init(struct syncobj *sobj, int flags,
 		  fnref_type(void (*)(struct syncobj *sobj)) finalizer);
 
-int syncobj_pend(struct syncobj *sobj,
+int syncobj_wait_grant(struct syncobj *sobj,
 		 const struct timespec *timeout,
 		 struct syncstate *syns);
 
-struct threadobj *syncobj_post(struct syncobj *sobj);
+struct threadobj *syncobj_grant_one(struct syncobj *sobj);
 
-struct threadobj *syncobj_peek_at_pend(struct syncobj *sobj);
+void syncobj_grant_to(struct syncobj *sobj,
+		      struct threadobj *thobj);
 
-struct threadobj *syncobj_peek_at_drain(struct syncobj *sobj);
+struct threadobj *syncobj_peek_grant(struct syncobj *sobj);
+
+struct threadobj *syncobj_peek_drain(struct syncobj *sobj);
 
 int syncobj_lock(struct syncobj *sobj,
 		 struct syncstate *syns);
@@ -146,54 +149,60 @@ int syncobj_wait_drain(struct syncobj *sobj,
 		       const struct timespec *timeout,
 		       struct syncstate *syns);
 
-int __syncobj_signal_drain(struct syncobj *sobj);
-
-static inline int syncobj_pended_p(struct syncobj *sobj)
-{
-	__syncobj_check_locked(sobj);
-
-	return !list_empty(&sobj->pend_list);
-}
-
-static inline int syncobj_pend_count(struct syncobj *sobj)
-{
-	__syncobj_check_locked(sobj);
-
-	return sobj->pend_count;
-}
-
-static inline int syncobj_drain_count(struct syncobj *sobj)
-{
-	__syncobj_check_locked(sobj);
-
-	return sobj->drain_count;
-}
-
-void syncobj_requeue_waiter(struct syncobj *sobj, struct threadobj *thobj);
-
-void syncobj_wakeup_waiter(struct syncobj *sobj, struct threadobj *thobj);
-
-int syncobj_flush(struct syncobj *sobj, int reason);
+int syncobj_flush(struct syncobj *sobj);
 
 int syncobj_destroy(struct syncobj *sobj,
 		    struct syncstate *syns);
 
 void syncobj_uninit(struct syncobj *sobj);
 
-#ifdef __cplusplus
-}
-#endif
+static inline int syncobj_grant_wait_p(struct syncobj *sobj)
+{
+	__syncobj_check_locked(sobj);
 
-static inline int syncobj_signal_drain(struct syncobj *sobj)
+	return !list_empty(&sobj->grant_list);
+}
+
+static inline int syncobj_count_grant(struct syncobj *sobj)
+{
+	__syncobj_check_locked(sobj);
+
+	return sobj->grant_count;
+}
+
+static inline int syncobj_count_drain(struct syncobj *sobj)
+{
+	__syncobj_check_locked(sobj);
+
+	return sobj->drain_count;
+}
+
+static inline int syncobj_drain(struct syncobj *sobj)
 {
 	int ret = 0;
 
 	__syncobj_check_locked(sobj);
 
 	if (sobj->drain_count > 0)
-		ret = __syncobj_signal_drain(sobj);
+		ret = __syncobj_broadcast_drain(sobj, SYNCOBJ_SIGNALED);
 
 	return ret;
 }
+
+static inline int syncobj_grant_all(struct syncobj *sobj)
+{
+	int ret = 0;
+
+	__syncobj_check_locked(sobj);
+
+	if (sobj->grant_count > 0)
+		ret = __syncobj_broadcast_grant(sobj, SYNCOBJ_SIGNALED);
+
+	return ret;
+}
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _COPPERPLATE_SYNCOBJ_H */

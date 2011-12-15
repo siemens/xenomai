@@ -239,7 +239,7 @@ static u_long __q_send_inner(struct psos_queue *q, unsigned long flags,
 	struct msgholder *msg;
 	u_long maxbytes;
 
-	thobj = syncobj_peek_at_pend(&q->sobj);
+	thobj = syncobj_peek_grant(&q->sobj);
 	if (thobj && threadobj_local_p(thobj)) {
 		/* Fast path: direct copy to the receiver's buffer. */
 		wait = threadobj_get_wait(thobj);
@@ -282,7 +282,7 @@ static u_long __q_send_inner(struct psos_queue *q, unsigned long flags,
 	}
 done:
 	if (thobj)
-		syncobj_wakeup_waiter(&q->sobj, thobj);
+		syncobj_grant_to(&q->sobj, thobj);
 
 	return SUCCESS;
 }
@@ -375,7 +375,7 @@ static u_long __q_broadcast(u_long qid, u_long flags,
 
 	/* Release all pending tasks atomically. */
 	*count_r = 0;
-	while (syncobj_pended_p(&q->sobj)) {
+	while (syncobj_grant_wait_p(&q->sobj)) {
 		ret = __q_send_inner(q, flags, buffer, bytes);
 		if (ret)
 			break;
@@ -454,7 +454,7 @@ retry:
 	wait->ptr = buffer;
 	wait->size = msglen;
 
-	ret = syncobj_pend(&q->sobj, timespec, &syns);
+	ret = syncobj_wait_grant(&q->sobj, timespec, &syns);
 	if (ret == -EIDRM) {
 		ret = ERR_QKILLD;
 		goto out;

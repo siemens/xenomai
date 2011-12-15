@@ -616,7 +616,7 @@ u_long ev_receive(u_long events, u_long flags,
 		timespec = NULL;
 
 	for (;;) {
-		ret = syncobj_pend(&current->sobj, timespec, &syns);
+		ret = syncobj_wait_grant(&current->sobj, timespec, &syns);
 		if (ret == -ETIMEDOUT) {
 			ret = ERR_TIMEOUT;
 			break;
@@ -658,7 +658,7 @@ u_long ev_send(u_long tid, u_long events)
 	 * it up immediately and let it confirm whether the condition
 	 * is now satisfied.
 	 */
-	syncobj_post(&task->sobj);
+	syncobj_grant_one(&task->sobj);
 
 	syncobj_unlock(&task->sobj, &syns);
 out:

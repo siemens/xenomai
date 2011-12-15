@@ -194,7 +194,7 @@ retry:
 		if (nbytes > 0)
 			memcpy(buffer, msg + 1, nbytes);
 		heapobj_free(&mq->pool, msg);
-		syncobj_signal_drain(&mq->sobj);
+		syncobj_drain(&mq->sobj);
 		goto done;
 	}
 
@@ -213,7 +213,7 @@ retry:
 	wait->ptr = buffer;
 	wait->size = maxNBytes;
 
-	ret = syncobj_pend(&mq->sobj, timespec, &syns);
+	ret = syncobj_wait_grant(&mq->sobj, timespec, &syns);
 	if (ret == -EIDRM) {
 		errno = S_objLib_OBJ_DELETED;
 		goto out;
@@ -225,7 +225,7 @@ retry:
 	nbytes = wait->size;
 	if (nbytes == -1L)	/* No direct copy? */
 		goto retry;
-	syncobj_signal_drain(&mq->sobj);
+	syncobj_drain(&mq->sobj);
 done:
 	syncobj_unlock(&mq->sobj, &syns);
 out:
@@ -268,7 +268,7 @@ STATUS msgQSend(MSG_Q_ID msgQId, const char *buffer, UINT bytes,
 		goto fail;
 	}
 
-	thobj = syncobj_peek_at_pend(&mq->sobj);
+	thobj = syncobj_peek_grant(&mq->sobj);
 	if (thobj && threadobj_local_p(thobj)) {
 		/* Fast path: direct copy to the receiver's buffer. */
 		wait = threadobj_get_wait(thobj);
@@ -346,7 +346,7 @@ enqueue:
 	}
 done:
 	if (thobj)	/* Wakeup waiter. */
-		syncobj_wakeup_waiter(&mq->sobj, thobj);
+		syncobj_grant_to(&mq->sobj, thobj);
 
 	ret = OK;
 fail:
