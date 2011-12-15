@@ -82,7 +82,7 @@
   't' -> Mode switches trapped.
   'f' -> FPU enabled (for kernel threads).
 */
-#define XNTHREAD_STATE_LABELS  "SWDRU...X.HbTlr...tf..."
+#define XNTHREAD_STATE_LABELS  "SWDRU....X.HbTlr...tf..."
 
 #define XNTHREAD_BLOCK_BITS   (XNSUSP|XNPEND|XNDELAY|XNDORMANT|XNRELAX|XNMIGRATE|XNHELD)
 #define XNTHREAD_MODE_BITS    (XNLOCK|XNRRB|XNASDI|XNTRAPSW)
