@@ -592,7 +592,6 @@ int rt_task_set_priority(RT_TASK *task, int prio)
 		goto out;
 
 	ret = threadobj_set_priority(&tcb->thobj, prio);
-	put_alchemy_task(tcb);
 out:
 	COPPERPLATE_UNPROTECT(svc);
 

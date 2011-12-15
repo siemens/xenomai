@@ -732,7 +732,6 @@ STATUS taskPrioritySet(TASK_ID tid, int prio)
 	COPPERPLATE_PROTECT(svc);
 	ret = threadobj_set_priority(&task->thobj, cprio);
 	COPPERPLATE_UNPROTECT(svc);
-	put_wind_task(task);
 
 	if (ret) {
 	objid_error:

@@ -272,11 +272,11 @@ int threadobj_unlock_sched(struct threadobj *thobj) /* thobj->lock held */
 	return __bt(-ret);
 }
 
-int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock held */
+int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock held, dropped */
 {
 	struct sched_param_ex xparam;
 	pthread_t tid = thobj->tid;
-	int ret, policy;
+	int policy;
 
 	__threadobj_check_locked(thobj);
 
@@ -297,10 +297,8 @@ int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock hel
 	 * set.
 	 */
 	xparam.sched_priority = prio;
-	ret = pthread_setschedparam_ex(tid, policy, &xparam);
-	threadobj_lock(thobj);
 
-	return __bt(-ret);
+	return pthread_setschedparam_ex(tid, policy, &xparam);
 }
 
 int threadobj_set_mode(struct threadobj *thobj,
@@ -583,11 +581,13 @@ int threadobj_resume(struct threadobj *thobj) /* thobj->lock held */
 	return __bt(notifier_release(&thobj->core.notifier));
 }
 
-int threadobj_lock_sched(struct threadobj *thobj)
+int threadobj_lock_sched(struct threadobj *thobj) /* thobj->lock held */
 {
 	pthread_t tid = thobj->tid;
 	struct sched_param param;
 	int policy, ret;
+
+	__threadobj_check_locked(thobj);
 
 	assert(thobj == threadobj_current());
 
@@ -606,11 +606,13 @@ int threadobj_lock_sched(struct threadobj *thobj)
 	return __bt(-pthread_setschedparam(tid, SCHED_RT, &param));
 }
 
-int threadobj_unlock_sched(struct threadobj *thobj)
+int threadobj_unlock_sched(struct threadobj *thobj) /* thobj->lock held */
 {
 	pthread_t tid = thobj->tid;
 	struct sched_param param;
 	int policy, ret;
+
+	__threadobj_check_locked(thobj);
 
 	assert(thobj == threadobj_current());
 
@@ -631,11 +633,13 @@ int threadobj_unlock_sched(struct threadobj *thobj)
 	return __bt(-ret);
 }
 
-int threadobj_set_priority(struct threadobj *thobj, int prio)
+int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock held, dropped */
 {
 	pthread_t tid = thobj->tid;
 	struct sched_param param;
-	int policy, ret;
+	int policy;
+
+	__threadobj_check_locked(thobj);
 
 	/*
 	 * We don't actually change the scheduling priority in case
@@ -647,18 +651,16 @@ int threadobj_set_priority(struct threadobj *thobj, int prio)
 		return 0;
 	}
 
+	thobj->priority = prio;
 	threadobj_unlock(thobj);
 	/*
 	 * Since we released the thread container lock, we now rely on
 	 * the pthread interface to recheck the tid for existence.
 	 */
-	thobj->priority = prio;
 	param.sched_priority = prio;
 	policy = prio ? SCHED_RT : SCHED_OTHER;
-	ret = pthread_setschedparam(tid, policy, &param);
-	threadobj_lock(thobj);
 
-	return __bt(-ret);
+	return pthread_setschedparam(tid, policy, &param);
 }
 
 int threadobj_set_mode(struct threadobj *thobj,
@@ -704,8 +706,9 @@ static inline void set_rr(struct threadobj *thobj, struct timespec *quantum)
 }
 
 int threadobj_set_rr(struct threadobj *thobj, struct timespec *quantum)
-{
+{				/* thobj->lock held if valid */
 	if (thobj) {
+		__threadobj_check_locked(thobj);
 		set_rr(thobj, quantum);
 		return 0;
 	}

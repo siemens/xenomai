@@ -425,7 +425,6 @@ u_long t_setpri(u_long tid, u_long newprio, u_long *oldprio_r)
 	}
 
 	ret = threadobj_set_priority(&task->thobj, cprio);
-	put_psos_task(task);
 	if (ret)
 		return ERR_OBJDEL;
 
