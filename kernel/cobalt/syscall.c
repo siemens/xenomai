@@ -304,7 +304,7 @@ static struct xnsysent __systab[] = {
 	SKINCALL_DEF(sc_cobalt_sched_minprio, cobalt_sched_min_prio, any),
 	SKINCALL_DEF(sc_cobalt_sched_maxprio, cobalt_sched_max_prio, any),
 	SKINCALL_DEF(sc_cobalt_monitor_init, cobalt_monitor_init, any),
-	SKINCALL_DEF(sc_cobalt_monitor_destroy, cobalt_monitor_destroy, any),
+	SKINCALL_DEF(sc_cobalt_monitor_destroy, cobalt_monitor_destroy, primary),
 	SKINCALL_DEF(sc_cobalt_monitor_enter, cobalt_monitor_enter, primary),
 	SKINCALL_DEF(sc_cobalt_monitor_wait, cobalt_monitor_wait, nonrestartable),
 	SKINCALL_DEF(sc_cobalt_monitor_sync, cobalt_monitor_sync, nonrestartable),

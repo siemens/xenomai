@@ -158,19 +158,20 @@ int cobalt_monitor_enter(struct cobalt_monitor_shadow __user *u_monsh)
 }
 
 /* nklock held, irqs off */
-static int cobalt_monitor_wakeup(struct cobalt_monitor *mon)
+static void cobalt_monitor_wakeup(struct cobalt_monitor *mon)
 {
 	struct cobalt_monitor_data *datp = mon->data;
-	int resched = 0, bcast;
 	struct xnthread *p;
 	struct xnholder *h;
 	pthread_t tid;
+	int bcast;
 
 	/*
 	 * Having the GRANT signal pending does not necessarily mean
 	 * that somebody is actually waiting for it, so we have to
 	 * check both conditions below.
 	 */
+	bcast = (datp->flags & COBALT_MONITOR_BROADCAST) != 0;
 	if ((datp->flags & COBALT_MONITOR_GRANTED) == 0 ||
 	    emptyq_p(&mon->waiters))
 		goto drain;
@@ -185,7 +186,6 @@ static int cobalt_monitor_wakeup(struct cobalt_monitor *mon)
 	 * syscall for exiting the monitor if nobody else is waiting
 	 * at the gate.
 	 */
-	bcast = (datp->flags & COBALT_MONITOR_BROADCAST) != 0;
 	h = getheadq(&mon->waiters);
 	while (h) {
 		tid = container_of(h, struct cobalt_thread, monitor_link);
@@ -203,30 +203,25 @@ static int cobalt_monitor_wakeup(struct cobalt_monitor *mon)
 						    &p->plink);
 			removeq(&mon->waiters, &tid->monitor_link);
 			tid->monitor_queued = 0;
-			resched = 1;
 		}
 	}
 drain:
 	/*
 	 * Unblock threads waiting for a drain event if that signal is
-	 * pending, either one or all, depending on the broadcast bit.
+	 * pending, either one or all, depending on the broadcast
+	 * flag.
 	 */
 	if ((datp->flags & COBALT_MONITOR_DRAINED) != 0 &&
 	    xnsynch_pended_p(&mon->drain)) {
-		if (datp->flags & COBALT_MONITOR_BROADCAST)
-			resched |= xnsynch_flush(&mon->drain, 0)
-				== XNSYNCH_RESCHED;
+		if (bcast)
+			xnsynch_flush(&mon->drain, 0);
 		else
-			resched |= xnsynch_wakeup_one_sleeper(&mon->drain)
-				!= NULL;
+			xnsynch_wakeup_one_sleeper(&mon->drain);
 	}
 
-	if (resched &&
-	    emptyq_p(&mon->waiters) &&
+	if (emptyq_p(&mon->waiters) &&
 	    !xnsynch_pended_p(&mon->drain))
-		mon->data->flags &= ~COBALT_MONITOR_PENDED;
-
-	return resched;
+		datp->flags &= ~COBALT_MONITOR_PENDED;
 }
 
 int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_monsh,
@@ -234,8 +229,8 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_monsh,
 			int __user *u_ret)
 {
 	pthread_t cur = cobalt_current_thread();
-	struct cobalt_monitor_data *datp;
 	struct cobalt_monitor *mon = NULL;
+	struct cobalt_monitor_data *datp;
 	xnticks_t timeout = XN_INFINITE;
 	xntmode_t tmode = XN_RELATIVE;
 	int ret = 0, opret = 0;
@@ -393,6 +388,7 @@ static void cobalt_monitor_destroy_inner(struct cobalt_monitor *mon,
 
 int cobalt_monitor_destroy(struct cobalt_monitor_shadow __user *u_monsh)
 {
+	struct xnthread *cur = xnpod_current_thread();
 	struct cobalt_monitor *mon = NULL;
 	int ret = 0;
 	spl_t s;
@@ -407,10 +403,17 @@ int cobalt_monitor_destroy(struct cobalt_monitor_shadow __user *u_monsh)
 		goto fail;
 	}
 
-	if (xnsynch_fast_owner_check(mon->gate.fastlock, XN_NO_HANDLE) ||
-	    xnsynch_pended_p(&mon->drain) ||
-	    !emptyq_p(&mon->waiters)) {
+	if (xnsynch_pended_p(&mon->drain) || !emptyq_p(&mon->waiters)) {
 		ret = -EBUSY;
+		goto fail;
+	}
+
+	/*
+	 * A monitor must be destroyed by the thread currently holding
+	 * its gate lock.
+	 */
+	if (xnsynch_owner_check(&mon->gate, cur)) {
+		ret = -EPERM;
 		goto fail;
 	}
 
