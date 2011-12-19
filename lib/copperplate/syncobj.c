@@ -313,19 +313,6 @@ int __syncobj_broadcast_drain(struct syncobj *sobj, int reason)
 	return ret;
 }
 
-int syncobj_flush(struct syncobj *sobj)
-{
-	__syncobj_check_locked(sobj);
-
-	if (sobj->grant_count > 0)
-		__syncobj_broadcast_grant(sobj, SYNCOBJ_FLUSHED);
-
-	if (sobj->drain_count > 0)
-		__syncobj_broadcast_drain(sobj, SYNCOBJ_FLUSHED);
-
-	return sobj->wait_count;
-}
-
 static inline void enqueue_waiter(struct syncobj *sobj,
 				  struct threadobj *thobj)
 {

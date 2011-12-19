@@ -149,8 +149,6 @@ int syncobj_wait_drain(struct syncobj *sobj,
 		       const struct timespec *timeout,
 		       struct syncstate *syns);
 
-int syncobj_flush(struct syncobj *sobj);
-
 int syncobj_destroy(struct syncobj *sobj,
 		    struct syncstate *syns);
 
@@ -199,6 +197,19 @@ static inline int syncobj_grant_all(struct syncobj *sobj)
 		ret = __syncobj_broadcast_grant(sobj, SYNCOBJ_SIGNALED);
 
 	return ret;
+}
+
+static inline int syncobj_flush(struct syncobj *sobj)
+{
+	__syncobj_check_locked(sobj);
+
+	if (sobj->grant_count > 0)
+		__syncobj_broadcast_grant(sobj, SYNCOBJ_FLUSHED);
+
+	if (sobj->drain_count > 0)
+		__syncobj_broadcast_drain(sobj, SYNCOBJ_FLUSHED);
+
+	return sobj->wait_count;
 }
 
 #ifdef __cplusplus
