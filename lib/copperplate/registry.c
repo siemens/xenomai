@@ -31,6 +31,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include <fuse.h>
 #include "copperplate/heapobj.h"
 #include "copperplate/registry.h"
@@ -51,6 +52,14 @@ static struct pvhash_table regfs_dirtable;
 static pthread_t regfs_thid;
 
 static pthread_mutex_t regfs_lock;
+
+struct regfs_data {
+	char *arg0;
+	char *mountpt;
+	sem_t sync;
+};
+
+#define REGFS_DATA() ((struct regfs_data *)fuse_get_context()->private_data)
 
 struct regfs_dir {
 	char *path;
@@ -438,7 +447,9 @@ static void kill_fs_thread(int sig)
 
 static void *regfs_init(struct fuse_conn_info *conn)
 {
+	struct regfs_data *p;
 	struct sigaction sa;
+
 	/*
 	 * Override annoying FUSE settings. Unless the application
 	 * tells otherwise, we want the emulator to exit upon common
@@ -450,6 +461,9 @@ static void *regfs_init(struct fuse_conn_info *conn)
 	sigaction(SIGHUP, &sa, NULL);
 	sigaction(SIGINT, &sa, NULL);
 	sigaction(SIGPIPE, &sa, NULL);
+
+	p = REGFS_DATA();
+	__STD(sem_post(&p->sync));
 
 	return NULL;
 }
@@ -467,17 +481,12 @@ static struct fuse_operations regfs_opts = {
 	.chmod		= regfs_chmod,
 };
 
-struct regfs_init_struct {
-	char *arg0;
-	char *mountpt;
-};
-
 static void regfs_cleanup(void *arg)
 {
-	struct regfs_init_struct *s = arg;
+	struct regfs_data *p = arg;
 
-	umount2(s->mountpt, MNT_DETACH);
-	rmdir(s->mountpt);
+	umount2(p->mountpt, MNT_DETACH);
+	rmdir(p->mountpt);
 
 	if (__fs_killed)
 		_exit(99);
@@ -485,25 +494,25 @@ static void regfs_cleanup(void *arg)
 
 static void *registry_thread(void *arg)
 {
-	struct regfs_init_struct *s = arg;
+	struct regfs_data *p = arg;
 	char *av[7];
 	int ret;
 
 	pthread_cleanup_push(regfs_cleanup, arg);
 
-	av[0] = s->arg0;
+	av[0] = p->arg0;
 	av[1] = "-s";
 	av[2] = "-f";
-	av[3] = s->mountpt;
+	av[3] = p->mountpt;
 	av[4] = "-o";
 	av[5] = "allow_other,default_permissions";
 	av[6] = NULL;
-	ret = fuse_main(6, av, &regfs_opts, NULL);
+	ret = fuse_main(6, av, &regfs_opts, p);
 
 	pthread_cleanup_pop(0);
 
 	if (ret) {
-		warning("can't mount registry onto %s", s->mountpt);
+		warning("can't mount registry onto %s", p->mountpt);
 		return (void *)(long)ret;
 	}
 
@@ -512,7 +521,7 @@ static void *registry_thread(void *arg)
 
 int registry_pkg_init(char *arg0)
 {
-	static struct regfs_init_struct s;
+	static struct regfs_data data;
 	pthread_mutexattr_t mattr;
 	pthread_attr_t thattr;
 	char *mountpt;
@@ -557,15 +566,26 @@ int registry_pkg_init(char *arg0)
 	 */
 	pthread_attr_setstacksize(&thattr, PTHREAD_STACK_MIN * 4);
 	pthread_attr_setscope(&thattr, PTHREAD_SCOPE_PROCESS);
-	s.arg0 = arg0;
-	s.mountpt = mountpt;
+	data.arg0 = arg0;
+	data.mountpt = mountpt;
+	__STD(sem_init(&data.sync, 0, 0));
 
 	/*
 	 * Start the FUSE filesystem daemon. Over Cobalt, it runs as a
 	 * non real-time Xenomai shadow, so that it may synchronize on
 	 * real-time objects.
 	 */
-	return __bt(-__RT(pthread_create(&regfs_thid, &thattr, registry_thread, &s)));
+	ret = __bt(-__RT(pthread_create(&regfs_thid, &thattr,
+					registry_thread, &data)));
+	if (ret)
+		return ret;
+
+	/*
+	 * We synchronize with regfs_init() to wait for FUSE to
+	 * complete all its init chores before returning to our
+	 * caller.
+	 */
+	return __bt(__STD(sem_wait(&data.sync)));
 }
 
 void registry_pkg_destroy(void)
