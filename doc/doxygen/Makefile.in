@@ -34,8 +34,8 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-DIST_COMMON = $(srcdir)/Doxyfile-common.in \
-	$(srcdir)/Doxyfile-nucleus.in $(srcdir)/Doxyfile-posix.in \
+DIST_COMMON = $(srcdir)/Doxyfile-cobalt.in \
+	$(srcdir)/Doxyfile-common.in $(srcdir)/Doxyfile-nucleus.in \
 	$(srcdir)/Doxyfile-rtdm.in $(srcdir)/Doxyfile.in \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/doc/install-dist.rules
@@ -54,7 +54,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/lib/include/xeno_config.h
 CONFIG_CLEAN_FILES = Doxyfile-common Doxyfile Doxyfile-nucleus \
-	Doxyfile-posix Doxyfile-rtdm
+	Doxyfile-cobalt Doxyfile-rtdm
 CONFIG_CLEAN_VPATH_FILES =
 SOURCES =
 DIST_SOURCES =
@@ -232,10 +232,10 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 HTML_DOCS = api api/search
-PDF_DOCS = nucleus-api.pdf posix-api.pdf rtdm-api.pdf
+PDF_DOCS = nucleus-api.pdf cobalt-api.pdf rtdm-api.pdf
 EXTRA_DIST = \
 	Doxyfile.in Doxyfile-common.in Doxyfile-nucleus.in \
-	Doxyfile-posix.in Doxyfile-rtdm.in
+	Doxyfile-cobalt.in Doxyfile-rtdm.in
 
 @CONFIG_XENO_DOC_DOX_FALSE@HTML_DOCSDIR = $(srcdir)/../generated/html/
 @CONFIG_XENO_DOC_DOX_TRUE@HTML_DOCSDIR = ./
@@ -282,7 +282,7 @@ Doxyfile: $(top_builddir)/config.status $(srcdir)/Doxyfile.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 Doxyfile-nucleus: $(top_builddir)/config.status $(srcdir)/Doxyfile-nucleus.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
-Doxyfile-posix: $(top_builddir)/config.status $(srcdir)/Doxyfile-posix.in
+Doxyfile-cobalt: $(top_builddir)/config.status $(srcdir)/Doxyfile-cobalt.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 Doxyfile-rtdm: $(top_builddir)/config.status $(srcdir)/Doxyfile-rtdm.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@

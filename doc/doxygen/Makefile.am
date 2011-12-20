@@ -1,9 +1,9 @@
 HTML_DOCS=api api/search
-PDF_DOCS= nucleus-api.pdf posix-api.pdf rtdm-api.pdf
+PDF_DOCS= nucleus-api.pdf cobalt-api.pdf rtdm-api.pdf
 
 EXTRA_DIST = \
 	Doxyfile.in Doxyfile-common.in Doxyfile-nucleus.in \
-	Doxyfile-posix.in Doxyfile-rtdm.in
+	Doxyfile-cobalt.in Doxyfile-rtdm.in
 
 if !CONFIG_XENO_DOC_DOX
 HTML_DOCSDIR = $(srcdir)/../generated/html/

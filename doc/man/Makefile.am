@@ -2,7 +2,6 @@
 man1_MANS = \
 	clocktest.man \
 	cyclictest.man \
-	klatency.man \
 	latency.man \
 	rtcanconfig.man	\
 	rtcanrecv.man \

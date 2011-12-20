@@ -722,7 +722,7 @@ if test \! x$XENO_MAYBE_DOCDIR = x ; then
 	doc/doxygen/Doxyfile-common \
 	doc/doxygen/Doxyfile \
 	doc/doxygen/Doxyfile-nucleus \
-	doc/doxygen/Doxyfile-posix \
+	doc/doxygen/Doxyfile-cobalt \
 	doc/doxygen/Doxyfile-rtdm \
 	doc/docbook/Makefile \
 	doc/docbook/catalog \

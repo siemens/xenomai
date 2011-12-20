@@ -5,7 +5,7 @@
 # The PROJECT_NAME tag is a single word (or a sequence of words surrounded 
 # by quotes) that should identify the project.
 
-PROJECT_NAME           = "Xenomai nanokernel API"
+PROJECT_NAME           = "Xenomai core"
 
 # The INPUT tag can be used to specify the files and/or directories that contain 
 # documented source files. You may enter file names like "myfile.cpp" or 
@@ -13,8 +13,8 @@ PROJECT_NAME           = "Xenomai nanokernel API"
 # with spaces.
 
 INPUT                  = \
-        @top_srcdir@/include/nucleus \
-        @top_srcdir@/kernel/cobalt \
+        @top_srcdir@/include/cobalt/nucleus \
+        @top_srcdir@/kernel/cobalt/nucleus \
         @top_srcdir@/doc/doxygen
 
 #---------------------------------------------------------------------------

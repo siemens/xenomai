@@ -13745,7 +13745,7 @@ ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scri
 
 
 if test \! x$XENO_MAYBE_DOCDIR = x ; then
-      ac_config_files="$ac_config_files doc/Makefile doc/txt/Makefile doc/man/Makefile doc/man/clocktest.man doc/man/cyclictest.man doc/man/latency.man doc/man/rtcanconfig.man doc/man/rtcanrecv.man doc/man/rtcansend.man doc/man/switchbench.man doc/man/switchtest.man doc/man/xeno.man doc/man/xeno-config.man doc/doxygen/Makefile doc/doxygen/Doxyfile-common doc/doxygen/Doxyfile doc/doxygen/Doxyfile-nucleus doc/doxygen/Doxyfile-posix doc/doxygen/Doxyfile-rtdm doc/docbook/Makefile doc/docbook/catalog doc/docbook/custom-stylesheets/Makefile doc/docbook/custom-stylesheets/xsl/Makefile doc/docbook/custom-stylesheets/xsl/common/Makefile doc/docbook/custom-stylesheets/xsl/fo/Makefile doc/docbook/custom-stylesheets/xsl/html/Makefile doc/docbook/custom-stylesheets/xsl/html/chunk.xsl doc/docbook/custom-stylesheets/xsl/html/onechunk.xsl doc/docbook/xenomai/Makefile"
+      ac_config_files="$ac_config_files doc/Makefile doc/txt/Makefile doc/man/Makefile doc/man/clocktest.man doc/man/cyclictest.man doc/man/latency.man doc/man/rtcanconfig.man doc/man/rtcanrecv.man doc/man/rtcansend.man doc/man/switchbench.man doc/man/switchtest.man doc/man/xeno.man doc/man/xeno-config.man doc/doxygen/Makefile doc/doxygen/Doxyfile-common doc/doxygen/Doxyfile doc/doxygen/Doxyfile-nucleus doc/doxygen/Doxyfile-cobalt doc/doxygen/Doxyfile-rtdm doc/docbook/Makefile doc/docbook/catalog doc/docbook/custom-stylesheets/Makefile doc/docbook/custom-stylesheets/xsl/Makefile doc/docbook/custom-stylesheets/xsl/common/Makefile doc/docbook/custom-stylesheets/xsl/fo/Makefile doc/docbook/custom-stylesheets/xsl/html/Makefile doc/docbook/custom-stylesheets/xsl/html/chunk.xsl doc/docbook/custom-stylesheets/xsl/html/onechunk.xsl doc/docbook/xenomai/Makefile"
 
 fi
 
@@ -14879,7 +14879,7 @@ do
     "doc/doxygen/Doxyfile-common") CONFIG_FILES="$CONFIG_FILES doc/doxygen/Doxyfile-common" ;;
     "doc/doxygen/Doxyfile") CONFIG_FILES="$CONFIG_FILES doc/doxygen/Doxyfile" ;;
     "doc/doxygen/Doxyfile-nucleus") CONFIG_FILES="$CONFIG_FILES doc/doxygen/Doxyfile-nucleus" ;;
-    "doc/doxygen/Doxyfile-posix") CONFIG_FILES="$CONFIG_FILES doc/doxygen/Doxyfile-posix" ;;
+    "doc/doxygen/Doxyfile-cobalt") CONFIG_FILES="$CONFIG_FILES doc/doxygen/Doxyfile-cobalt" ;;
     "doc/doxygen/Doxyfile-rtdm") CONFIG_FILES="$CONFIG_FILES doc/doxygen/Doxyfile-rtdm" ;;
     "doc/docbook/Makefile") CONFIG_FILES="$CONFIG_FILES doc/docbook/Makefile" ;;
     "doc/docbook/catalog") CONFIG_FILES="$CONFIG_FILES doc/docbook/catalog" ;;

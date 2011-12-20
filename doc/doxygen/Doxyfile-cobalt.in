@@ -5,7 +5,7 @@
 # The PROJECT_NAME tag is a single word (or a sequence of words surrounded 
 # by quotes) that should identify the project.
 
-PROJECT_NAME           = "Xenomai POSIX skin API"
+PROJECT_NAME           = "Xenomai Cobalt API"
 
 # The INPUT tag can be used to specify the files and/or directories that contain 
 # documented source files. You may enter file names like "myfile.cpp" or 
@@ -13,14 +13,15 @@ PROJECT_NAME           = "Xenomai POSIX skin API"
 # with spaces.
 
 INPUT                  = \
-        @top_srcdir@/kernel/cobalt/posix \
+        @top_srcdir@/include/cobalt \
+        @top_srcdir@/kernel/cobalt \
         @top_srcdir@/doc/doxygen
 
 # The EXAMPLE_PATH tag can be used to specify one or more files or 
 # directories that contain example code fragments that are included (see 
 # the \include command).
 
-EXAMPLE_PATH           =  @top_srcdir@/examples/posix
+EXAMPLE_PATH           =
 
 #---------------------------------------------------------------------------
 # configuration options related to the HTML output
@@ -154,7 +155,7 @@ GENERATE_LATEX         = YES
 # If a relative path is entered the value of OUTPUT_DIRECTORY will be 
 # put in front of it. If left blank `latex' will be used as the default path.
 
-LATEX_OUTPUT           = latex-posix
+LATEX_OUTPUT           = latex-cobalt
 
 # The LATEX_CMD_NAME tag can be used to specify the LaTeX command name to be 
 # invoked. If left blank `latex' will be used as the default command name.
@@ -230,5 +231,5 @@ LATEX_HIDE_INDICES     = NO
 INCLUDE_PATH           = \
 @top_builddir@/include \
 @top_srcdir@/include \
-@top_srcdir@/include/posix \
+@top_srcdir@/include/cobalt \
 

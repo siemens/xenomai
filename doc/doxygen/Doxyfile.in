@@ -5,7 +5,7 @@
 # The PROJECT_NAME tag is a single word (or a sequence of words surrounded 
 # by quotes) that should identify the project.
 
-PROJECT_NAME           = "Xenomai API"
+PROJECT_NAME           = "Xenomai"
 
 
 #---------------------------------------------------------------------------
@@ -18,13 +18,14 @@ PROJECT_NAME           = "Xenomai API"
 # with spaces.
 
 INPUT                  = \
-        @top_srcdir@/include/nucleus \
+        @top_srcdir@/include/cobalt/nucleus \
         @top_srcdir@/kernel/cobalt \
-        @top_srcdir@/include/native \
-        @top_srcdir@/lib/native \
+        @top_srcdir@/include/copperplate \
+        @top_srcdir@/include/alchemy \
         @top_srcdir@/include/rtdm \
-        @top_srcdir@/lib/rtdm \
         @top_srcdir@/include/analogy \
+        @top_srcdir@/lib/copperplate \
+        @top_srcdir@/lib/alchemy \
         @top_srcdir@/lib/analogy \
         @top_srcdir@/kernel/drivers/analogy \
         @top_srcdir@/doc/doxygen
@@ -33,8 +34,7 @@ INPUT                  = \
 # directories that contain example code fragments that are included (see 
 # the \include command).
 
-EXAMPLE_PATH           = @top_srcdir@/utils \
-			 @top_srcdir@/examples
+EXAMPLE_PATH           = @top_srcdir@/utils
 
 #---------------------------------------------------------------------------
 # configuration options related to the HTML output
@@ -246,5 +246,10 @@ INCLUDE_PATH           = \
 @top_srcdir@/kernel/drivers \
 @top_builddir@/include \
 @top_srcdir@/include \
-@top_srcdir@/include/posix \
-@top_srcdir@/include/analogy \
+@top_srcdir@/include/copperplate \
+@top_srcdir@/include/cobalt \
+@top_srcdir@/include/cobalt/nucleus \
+@top_srcdir@/include/alchemy \
+@top_srcdir@/include/psos \
+@top_srcdir@/include/vxworks \
+@top_srcdir@/include/analogy
