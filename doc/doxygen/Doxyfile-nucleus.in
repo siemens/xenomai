@@ -220,10 +220,4 @@ LATEX_HIDE_INDICES     = NO
 # contain include files that are not input files but should be processed by 
 # the preprocessor.
 
-# Added top_buildir/include here for the definition of XENO_PROTO in
-# xeno_config.h
-INCLUDE_PATH           = \
-@top_builddir@/include \
-@top_srcdir@/include
-
-
+INCLUDE_PATH           =

@@ -870,12 +870,10 @@ void xnshadow_exit(void)
 	do_exit(0);
 }
 
-/*!
- * \fn int xnshadow_map(xnthread_t *thread,
- *                      xncompletion_t __user *u_completion,
- *                      unsigned long __user *u_mode_offset)
+/**
+ * @fn int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion, unsigned long __user *u_mode_offset)
  * @internal
- * \brief Create a shadow thread context.
+ * @brief Create a shadow thread context.
  *
  * This call maps a nucleus thread to the "current" Linux task.  The
  * priority and scheduling class of the underlying Linux task are not
@@ -897,7 +895,7 @@ void xnshadow_exit(void)
  * immediately started and "current" immediately resumes in the Xenomai
  * domain from this service.
  *
- * @param: u_mode_offset is the address of a user space address where
+ * @param u_mode_offset is the address of a user space address where
  * we will store the offset of the "u_mode" thread variable in the
  * process shared heap. This thread variable reflects the current
  * thread mode (primary or secondary). The nucleus will try to update

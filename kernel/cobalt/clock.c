@@ -17,8 +17,8 @@
  */
 
 /**
- * @ingroup posix
- * @defgroup posix_time Clocks and timers services.
+ * @ingroup cobalt
+ * @defgroup cobalt_time Clocks and timers services.
  *
  * Clocks and timers services.
  *

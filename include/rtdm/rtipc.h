@@ -48,6 +48,10 @@
 /**
  * Create an endpoint for communication in the AF_RTIPC domain.
  *
+ * @param[in] domain The communication domain. Must be AF_RTIPC.
+ *
+ * @param[in] type The socket type. Must be SOCK_DGRAM.
+ *
  * @param [in] protocol Any of @ref IPCPROTO_XDDP, @ref IPCPROTO_IDDP,
  * or @ref IPCPROTO_BUFP. @ref IPCPROTO_IPC is also valid, and refers
  * to the default RTIPC protocol, namely @ref IPCPROTO_IDDP.
@@ -88,6 +92,9 @@ int close__AF_RTIPC(int sockfd);
  * Bind a RTIPC socket to a port.
  *
  * Bind the socket to a destination port.
+ *
+ * @param[in] sockfd The RTDM file descriptor obtained from the socket
+ * creation call.
  *
  * @param [in] addr The address to bind the socket to (see struct
  * sockaddr_ipc). The meaning of such address depends on the RTIPC
@@ -157,6 +164,9 @@ int close__AF_RTIPC(int sockfd);
  *   the label string passed to setsockopt() for the @a BUFP_LABEL
  *   option.
  *
+ * @param[in] addrlen The size in bytes of the structure pointed to by
+ * @a addr.
+ *
  * @return In addition to the standard error codes for @c
  * bind(2), the following specific error code may be returned:
  *   - -EFAULT (Invalid data address given)
@@ -176,6 +186,9 @@ int bind__AF_RTIPC(int sockfd, const struct sockaddr_ipc *addr,
 /**
  * Initiate a connection on a RTIPC socket.
  *
+ * @param[in] sockfd The RTDM file descriptor obtained from the socket
+ * creation call.
+ *
  * @param [in] addr The address to connect the socket to (see struct
  * sockaddr_ipc).
  *
@@ -193,6 +206,9 @@ int bind__AF_RTIPC(int sockfd, const struct sockaddr_ipc *addr,
  * default destination address is cleared, meaning that any subsequent
  * write to the socket will return -EDESTADDRREQ, until a valid
  * destination address is set via @c connect(2) or @c bind(2).
+ *
+ * @param[in] addrlen The size in bytes of the structure pointed to by
+ * @a addr.
  *
  * @return In addition to the standard error codes for @c connect(2),
  * the following specific error code may be returned:
@@ -258,6 +274,12 @@ int getsockopt__AF_RTIPC(int sockfd, int level, int optname,
 /**
  * Send a message on a RTIPC socket.
  *
+ * @param[in] sockfd The RTDM file descriptor obtained from the socket
+ * creation call.
+ *
+ * @param[in] msg The address of the message header conveying the
+ * datagram.
+ *
  * @param [in] flags Operation flags:
  *
  * - MSG_OOB Send out-of-band message.  For all RTIPC protocols except
@@ -296,6 +318,11 @@ ssize_t sendmsg__AF_RTIPC(int sockfd, const struct msghdr *msg, int flags);
 
 /**
  * Receive a message from a RTIPC socket.
+ *
+ * @param[in] sockfd The RTDM file descriptor obtained from the socket
+ * creation call.
+ *
+ * @param[out] msg The address the message header will be copied at.
  *
  * @param [in] flags Operation flags:
  *

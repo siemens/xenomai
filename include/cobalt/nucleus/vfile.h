@@ -243,7 +243,7 @@ struct xnvfile_regular_ops {
 	 * @return the number of bytes read from the input descriptor
 	 * if the call succeeds. Otherwise, a negative error code.
 	 * Return values from parsing helper routines are commonly
-	 * passed back to the caller by the @ref show_store
+	 * passed back to the caller by the @ref regular_store
 	 * "store() handler".
 	 *
 	 * @note This handler is optional, and may be omitted for

@@ -17,7 +17,7 @@
  */
 
 /**
- * @addtogroup posix_mutex
+ * @addtogroup cobalt_mutex
  *
  *@{*/
 

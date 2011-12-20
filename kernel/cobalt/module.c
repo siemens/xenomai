@@ -22,25 +22,24 @@
  * Xenomai POSIX skin is an implementation of a small subset of the Single
  * Unix specification over Xenomai generic RTOS core.
  *
- * The following table gives equivalence between Alchemy API services
- * and POSIX services.
+ * The following table gives equivalence between Alchemy services and
+ * Cobalt services.
  *
  * <CENTER>
  * <TABLE>
- * <TR><TH>Native API services</TH> <TH>POSIX API services</TH></TR>
- * <TR><TD>@ref alarm</TD>          <TD>@ref posix_time</TD></TR>
- * <TR><TD>@ref cond</TD>           <TD>@ref posix_cond</TD></TR>
- * <TR><TD>@ref event</TD>          <TD>no direct equivalence, <BR>
- *                                      see @ref posix_cond</TD></TR>
- * <TR><TD>@ref alchemy_heap</TD>   <TD>@ref posix_shm</TD></TR>
- * <TR><TD>@ref interrupt</TD>      <TD>@ref posix_intr</TD></TR>
- * <TR><TD>@ref mutex</TD>          <TD>@ref posix_mutex</TD></TR>
- * <TR><TD>@ref pipe</TD>           <TD>no direct equivalence, <BR>
- *                                      see @ref posix_mq</TD></TR>
- * <TR><TD>@ref alchemy_queue</TD>  <TD>@ref posix_mq</TD></TR>
- * <TR><TD>@ref semaphore</TD>      <TD>@ref posix_sem</TD></TR>
- * <TR><TD>@ref task</TD>           <TD>@ref posix_thread</TD></TR>
- * <TR><TD>@ref alchemy_timer</TD>  <TD>@ref posix_time</TD></TR>
+ * <TR><TH>Alchemy services</TH>    <TH>Cobalt services</TH></TR>
+ * <TR><TD>@ref alchemy_alarm</TD>  <TD>@ref cobalt_time</TD></TR>
+ * <TR><TD>@ref alchemy_cond</TD>   <TD>@ref cobalt_cond</TD></TR>
+ * <TR><TD>@ref alchemy_event</TD>  <TD>no direct equivalence, <BR>
+ *                                      see @ref cobalt_cond</TD></TR>
+ * <TR><TD>@ref alchemy_heap</TD>   <TD>no direct equivalence<BR>
+ * <TR><TD>@ref alchemy_mutex</TD>  <TD>@ref cobalt_mutex</TD></TR>
+ * <TR><TD>@ref alchemy_pipe</TD>   <TD>no direct equivalence, <BR>
+ *                                      see @ref cobalt_mq</TD></TR>
+ * <TR><TD>@ref alchemy_queue</TD>  <TD>@ref cobalt_mq</TD></TR>
+ * <TR><TD>@ref alchemy_sem</TD>    <TD>@ref cobalt_sem</TD></TR>
+ * <TR><TD>@ref alchemy_task</TD>   <TD>@ref cobalt_thread</TD></TR>
+ * <TR><TD>@ref alchemy_timer</TD>  <TD>@ref cobalt_time</TD></TR>
  * </TABLE>
  * </CENTER>
  *

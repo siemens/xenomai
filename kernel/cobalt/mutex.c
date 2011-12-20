@@ -17,8 +17,8 @@
  */
 
 /**
- * @ingroup posix
- * @defgroup posix_mutex Mutex services.
+ * @ingroup cobalt
+ * @defgroup cobalt_mutex Mutex services.
  *
  * Mutex services.
  *

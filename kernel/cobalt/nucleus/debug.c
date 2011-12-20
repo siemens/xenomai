@@ -1,4 +1,4 @@
-/*!\file debug.c
+/*!\file
  * \brief Debug services.
  * \author Philippe Gerum
  *

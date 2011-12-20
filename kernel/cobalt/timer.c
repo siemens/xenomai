@@ -17,7 +17,7 @@
  */
 
 /**
- * @addtogroup posix_time
+ * @addtogroup cobalt_time
  *
  *@{*/
 
@@ -397,13 +397,14 @@ timer_settime(timer_t timerid, int flags,
 /**
  * Get timer next expiration date and reload value.
  *
- * This service stores, at the address @a value, the expiration date (member @a
- * it_value) and reload value (member @a it_interval) of the timer @a
- * timerid. The values are returned as time intervals, and as multiples of the
- * system clock tick duration (see note in section
- * @ref posix_time "Clocks and timers services" for details on the
- * duration of the system clock tick). If the timer was not started, the
- * returned members @a it_value and @a it_interval of @a value are zero.
+ * This service stores, at the address @a value, the expiration date
+ * (member @a it_value) and reload value (member @a it_interval) of
+ * the timer @a timerid. The values are returned as time intervals,
+ * and as multiples of the system clock tick duration (see note in
+ * section @ref cobalt_time "Clocks and timers services" for details
+ * on the duration of the system clock tick). If the timer was not
+ * started, the returned members @a it_value and @a it_interval of @a
+ * value are zero.
  *
  * @param timerid timer identifier;
  *

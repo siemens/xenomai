@@ -1039,16 +1039,16 @@ typedef xnthread_t rtdm_task_t;
  */
 typedef void (*rtdm_task_proc_t)(void *arg);
 
-/*!
- * @anchor taskprio @name Task Priority Range
+/**
+ * @anchor rtdmtaskprio @name Task Priority Range
  * Maximum and minimum task priorities
  * @{ */
 #define RTDM_TASK_LOWEST_PRIORITY	XNSCHED_LOW_PRIO
 #define RTDM_TASK_HIGHEST_PRIORITY	XNSCHED_HIGH_PRIO
 /** @} Task Priority Range */
 
-/*!
- * @anchor changetaskprio @name Task Priority Modification
+/**
+ * @anchor rtdmchangetaskprio @name Task Priority Modification
  * Raise or lower task priorities by one level
  * @{ */
 #define RTDM_TASK_RAISE_PRIORITY	(+1)

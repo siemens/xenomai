@@ -1,4 +1,4 @@
-/*!\file select.h
+/**\file
  * \brief file descriptors events multiplexing header.
  * \author Gilles Chanteperdrix
  *

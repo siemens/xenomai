@@ -29,15 +29,9 @@
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  *   02111-1307, USA.
+ *
+ *   i386-specific HAL services.
  */
-
-/**
- * @addtogroup hal
- *
- * i386-specific HAL services.
- *
- *@{*/
-
 #include <linux/version.h>
 #include <linux/slab.h>
 #include <linux/errno.h>
@@ -263,8 +257,6 @@ void rthal_arch_cleanup(void)
 {
 	printk(KERN_INFO "Xenomai: hal/i386 stopped.\n");
 }
-
-/*@}*/
 
 EXPORT_SYMBOL_GPL(rthal_arch_init);
 EXPORT_SYMBOL_GPL(rthal_arch_cleanup);

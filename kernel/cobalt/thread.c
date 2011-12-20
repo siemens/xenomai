@@ -17,8 +17,8 @@
  */
 
 /**
- * @ingroup posix
- * @defgroup posix_thread Threads management services.
+ * @ingroup cobalt
+ * @defgroup cobalt_thread Threads management services.
  *
  * Threads management services.
  *
@@ -328,19 +328,19 @@ unlock_and_exit:
 /**
  * Create a thread.
  *
- * This service create a thread. The created thread may be used with all POSIX
- * skin services.
+ * This service creates a Cobalt thread control block. The created
+ * thread may use Cobalt API services.
  *
- * The new thread run the @a start routine, with the @a arg argument.
+ * The new thread control block can be mapped over a regular Linux
+ * thread, forming a Xenomai shadow.
  *
  * The new thread signal mask is inherited from the current thread, if it was
  * also created with pthread_create(), otherwise the new thread signal mask is
  * empty.
  *
- * Other attributes of the new thread depend on the @a attr argument. If
- * @a attr is null, default values for these attributes are used. See @ref
- * posix_threadattr for a definition of thread creation attributes and their
- * default values.
+ * Other attributes of the new thread depend on the @a attr
+ * argument. If @a attr is null, default values for these attributes
+ * are used.
  *
  * Returning from the @a start routine has the same effect as calling
  * pthread_exit() with the return value.
@@ -349,10 +349,6 @@ unlock_and_exit:
  * success;
  *
  * @param attr thread attributes;
- *
- * @param start thread routine;
- *
- * @param arg thread routine argument.
  *
  * @return 0 on success;
  * @return an error number if:
@@ -369,22 +365,23 @@ unlock_and_exit:
  * @note
  *
  * When creating or shadowing a Xenomai thread for the first time in
- * user-space, Xenomai installs a handler for the SIGWINCH signal. If you had
- * installed a handler before that, it will be automatically called by Xenomai
- * for SIGWINCH signals that it has not sent.
+ * user-space, Xenomai installs a handler for the SIGWINCH signal. If
+ * you had installed a handler before that, it will be automatically
+ * called by Xenomai for SIGWINCH signals that it has not sent.
  *
- * If, however, you install a signal handler for SIGWINCH after creating
- * or shadowing the first Xenomai thread, you have to explicitly call the
- * function xeno_sigwinch_handler at the beginning of your signal handler,
- * using its return to know if the signal was in fact an internal signal of
- * Xenomai (in which case it returns 1), or if you should handle the signal (in
- * which case it returns 0). xeno_sigwinch_handler prototype is:
+ * If, however, you install a signal handler for SIGWINCH after
+ * creating or shadowing the first Xenomai thread, you have to
+ * explicitly call the function xeno_sigwinch_handler at the beginning
+ * of your signal handler, using its return to know if the signal was
+ * in fact an internal signal of Xenomai (in which case it returns 1),
+ * or if you should handle the signal (in which case it returns
+ * 0). xeno_sigwinch_handler prototype is:
  *
  * <b>int xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt);</b>
  *
- * Which means that you should register your handler with sigaction, using the
- * SA_SIGINFO flag, and pass all the arguments you received to
- * xeno_sigwinch_handler.
+ * Which means that you should register your handler with sigaction,
+ * using the SA_SIGINFO flag, and pass all the arguments you received
+ * to xeno_sigwinch_handler.
  */
 static inline int pthread_create(pthread_t *tid, const pthread_attr_t * attr)
 {

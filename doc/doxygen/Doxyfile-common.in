@@ -651,28 +651,11 @@ INCLUDE_FILE_PATTERNS  =
 # or name=definition (no spaces). If the definition and the = are 
 # omitted =1 is assumed.
 
-PREDEFINED             = DOXYGEN_CPP \
-        EXPORT_SYMBOL(symbol)=// \
+PREDEFINED = DOXYGEN_CPP \
+        EXPORT_SYMBOL_GPL(symbol)=// \
 	__KERNEL__ \
         CONFIG_XENO_OPT_PIPE \
         CONFIG_XENO_OPT_REGISTRY \
-        CONFIG_XENO_OPT_PERVASIVE \
-        CONFIG_XENO_OPT_TIMING_PERIODIC \
-        CONFIG_XENO_OPT_NATIVE_MPS \
-        CONFIG_XENO_OPT_NATIVE_PIPE \
-        CONFIG_XENO_OPT_NATIVE_REGISTRY \
-        CONFIG_XENO_OPT_NATIVE_SEM \
-        CONFIG_XENO_OPT_NATIVE_EVENT \
-        CONFIG_XENO_OPT_NATIVE_MUTEX \
-        CONFIG_XENO_OPT_NATIVE_COND \
-        CONFIG_XENO_OPT_NATIVE_QUEUE \
-        CONFIG_XENO_OPT_NATIVE_HEAP \
-        CONFIG_XENO_OPT_NATIVE_ALARM \
-        CONFIG_XENO_OPT_NATIVE_INTR \
-        CONFIG_XENO_OPT_POSIX_INTR \
-        CONFIG_XENO_OPT_RTAI_FIFO \
-        CONFIG_XENO_OPT_RTAI_SEM \
-        CONFIG_XENO_OPT_RTAI_SHM \
         CONFIG_XENO_OPT_RTDM_SELECT
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then 
@@ -680,7 +663,7 @@ PREDEFINED             = DOXYGEN_CPP \
 # The macro definition that is found in the sources will be used. 
 # Use the PREDEFINED tag if you want to use a different macro definition.
 
-EXPAND_AS_DEFINED      = XENO_PROTO
+EXPAND_AS_DEFINED      =
 
 # If the SKIP_FUNCTION_MACROS tag is set to YES (the default) then 
 # doxygen's preprocessor will remove all function-like macros that are alone 

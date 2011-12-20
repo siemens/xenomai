@@ -17,7 +17,7 @@
  */
 
 /**
- * @addtogroup posix_cond
+ * @addtogroup cobalt_cond
  *
  *@{*/
 

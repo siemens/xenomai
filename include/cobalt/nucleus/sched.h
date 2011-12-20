@@ -1,4 +1,4 @@
-/*!\file sched.h
+/**\file
  * \brief Scheduler interface header.
  * \author Philippe Gerum
  *
@@ -263,7 +263,7 @@ void xnsched_migrate_passive(struct xnthread *thread,
 			     struct xnsched *sched);
 
 /*!
- * \fn void xnsched_rotate(struct xnsched *sched, struct xnsched_class *sched_class, const union xnsched_policy_param *param)
+ * \fn void xnsched_rotate(struct xnsched *sched, struct xnsched_class *sched_class, const union xnsched_policy_param *sched_param)
  * \brief Rotate a scheduler runqueue.
  *
  * The specified scheduling class is requested to rotate its runqueue

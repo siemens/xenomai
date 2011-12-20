@@ -239,17 +239,4 @@ LATEX_HIDE_INDICES     = NO
 # contain include files that are not input files but should be processed by 
 # the preprocessor.
 
-# Added top_buildir/include here for the definition of XENO_PROTO in
-# xeno_config.h
-INCLUDE_PATH           = \
-@top_srcdir@/kernel/cobalt \
-@top_srcdir@/kernel/drivers \
-@top_builddir@/include \
-@top_srcdir@/include \
-@top_srcdir@/include/copperplate \
-@top_srcdir@/include/cobalt \
-@top_srcdir@/include/cobalt/nucleus \
-@top_srcdir@/include/alchemy \
-@top_srcdir@/include/psos \
-@top_srcdir@/include/vxworks \
-@top_srcdir@/include/analogy
+INCLUDE_PATH           =

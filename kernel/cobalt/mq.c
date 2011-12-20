@@ -17,8 +17,8 @@
  */
 
 /**
- * @ingroup posix
- * @defgroup posix_mq Message queues services.
+ * @ingroup cobalt
+ * @defgroup cobalt_mq Message queues services.
  *
  * Message queues services.
  *

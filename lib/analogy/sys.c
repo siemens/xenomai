@@ -190,7 +190,7 @@ int a4l_sys_detach(int fd)
  *
  * @param[in] fd File descriptor as returned by a4l_sys_open()
  * @param[in] idx_subd Index of the concerned subdevice
- * @param[int] size Buffer size to be set
+ * @param[in] size Buffer size to be set
  *
  * @return 0 on success. Otherwise:
  *

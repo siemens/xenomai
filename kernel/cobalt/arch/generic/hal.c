@@ -208,27 +208,6 @@ int rthal_irq_release(unsigned irq)
 }
 
 /**
- * @fn void rthal_irq_host_pend (unsigned irq)
- *
- * @brief Propagate an IRQ event to Linux.
- *
- * Causes the given IRQ to be propagated down to the Adeos pipeline to
- * the Linux kernel. This operation is typically used after the given
- * IRQ has been processed into the Xenomai domain by a real-time
- * interrupt handler (see rthal_irq_request()), in case such interrupt
- * must also be handled by the Linux kernel.
- *
- * @param irq The interrupt number to propagate.  This value is
- * architecture-dependent.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Xenomai domain context.
- */
-
-/**
  * @fn int rthal_trap_catch (rthal_trap_handler_t handler)
  *
  * @brief Installs a fault handler.
@@ -681,29 +660,6 @@ unsigned long long __rthal_generic_full_divmod64(unsigned long long a,
  * This service can be called from:
  *
  * - Linux domain context.
- */
-
-/**
- * @fn int rthal_apc_schedule (int apc)
- *
- * @brief Schedule an APC invocation.
- *
- * This service marks the APC as pending for the Linux domain, so that
- * its handler will be called as soon as possible, when the Linux
- * domain gets back in control.
- *
- * When posted from the Linux domain, the APC handler is fired as soon
- * as the interrupt mask is explicitly cleared by some kernel
- * code. When posted from the Xenomai domain, the APC handler is
- * fired as soon as the Linux domain is resumed, i.e. after Xenomai has
- * completed all its pending duties.
- *
- * @param apc The APC id. to schedule.
- *
- * This service can be called from:
- *
- * - Any domain context, albeit the usual calling place is from the
- * Xenomai domain.
  */
 
 /*@}*/

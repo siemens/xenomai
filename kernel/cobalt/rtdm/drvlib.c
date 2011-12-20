@@ -43,11 +43,12 @@
 
 /*!
  * @ingroup driverapi
- * @defgroup clock Clock Services
+ * @defgroup rtdmclock Clock Services
  * @{
  */
 
 #ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
+
 /**
  * @brief Get system time
  *
@@ -120,7 +121,7 @@ nanosecs_abs_t rtdm_clock_read_monotonic(void);
  * @param[in] task_proc Procedure to be executed by the task
  * @param[in] arg Custom argument passed to @c task_proc() on entry
  * @param[in] priority Priority of the task, see also
- * @ref taskprio "Task Priority Range"
+ * @ref rtdmtaskprio "Task Priority Range"
  * @param[in] period Period in nanoseconds of a cyclic task, 0 for non-cyclic
  * mode
  *
@@ -212,7 +213,7 @@ void rtdm_task_destroy(rtdm_task_t *task);
  *
  * @param[in,out] task Task handle as returned by rtdm_task_init()
  * @param[in] priority New priority of the task, see also
- * @ref taskprio "Task Priority Range"
+ * @ref rtdmtaskprio "Task Priority Range"
  *
  * Environments:
  *
@@ -734,6 +735,7 @@ void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, nanosecs_rel_t timeout)
 }
 
 EXPORT_SYMBOL_GPL(rtdm_toseq_init);
+
 /** @} */
 
 /*!

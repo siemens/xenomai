@@ -17,8 +17,8 @@
  */
 
 /**
- * @ingroup posix
- * @defgroup posix_cond Condition variables services.
+ * @ingroup cobalt
+ * @defgroup cobalt_cond Condition variables services.
  *
  * Condition variables services.
  *

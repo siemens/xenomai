@@ -5,7 +5,7 @@
 # The PROJECT_NAME tag is a single word (or a sequence of words surrounded 
 # by quotes) that should identify the project.
 
-PROJECT_NAME           = "Xenomai Cobalt API"
+PROJECT_NAME           = "Xenomai Cobalt interface"
 
 # The INPUT tag can be used to specify the files and/or directories that contain 
 # documented source files. You may enter file names like "myfile.cpp" or 
@@ -15,6 +15,7 @@ PROJECT_NAME           = "Xenomai Cobalt API"
 INPUT                  = \
         @top_srcdir@/include/cobalt \
         @top_srcdir@/kernel/cobalt \
+	@top_srcdir@/include/rtdm \
         @top_srcdir@/doc/doxygen
 
 # The EXAMPLE_PATH tag can be used to specify one or more files or 
@@ -226,10 +227,4 @@ LATEX_HIDE_INDICES     = NO
 # contain include files that are not input files but should be processed by 
 # the preprocessor.
 
-# Added top_buildir/include here for the definition of XENO_PROTO in
-# xeno_config.h
-INCLUDE_PATH           = \
-@top_builddir@/include \
-@top_srcdir@/include \
-@top_srcdir@/include/cobalt \
-
+INCLUDE_PATH           =

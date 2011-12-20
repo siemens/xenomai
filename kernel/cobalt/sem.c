@@ -17,8 +17,8 @@
  */
 
 /**
- * @ingroup posix
- * @defgroup posix_sem Semaphores services.
+ * @ingroup cobalt
+ * @defgroup cobalt_sem Semaphores services.
  *
  * Semaphores services.
  *
@@ -492,7 +492,7 @@ static inline int sem_trywait_internal(cobalt_sem_t *sem)
  * immediately if the semaphore @a sm is currently depleted, and that
  * it is not a cancellation point.
  *
- * @param sm the semaphore to be decremented.
+ * @param sem the semaphore to be decremented.
  *
  * @retval 0 on success;
  * @retval -1 with @a errno set if:
@@ -560,7 +560,7 @@ sem_timedwait_internal(cobalt_sem_t *sem, int timed, xnticks_t to)
  * blocked in a call to this service, the semaphore state is left unchanged
  * before the cancellation cleanup handlers are called.
  *
- * @param sm the semaphore to be decremented.
+ * @param sem the semaphore to be decremented.
  *
  * @retval 0 on success;
  * @retval -1 with @a errno set if:
@@ -598,7 +598,7 @@ static int sem_wait(cobalt_sem_t *sem)
  * This service is equivalent to sem_wait(), except that the caller is only
  * blocked until the timeout @a abs_timeout expires.
  *
- * @param sm the semaphore to be decremented;
+ * @param sem the semaphore to be decremented;
  *
  * @param abs_timeout the timeout, expressed as an absolute value of
  * the relevant clock for the semaphore, either CLOCK_MONOTONIC if
@@ -717,7 +717,7 @@ static int sem_post(cobalt_sem_t *sm)
  * semaphore is fully depleted AND two threads are currently pending
  * on it).
  *
- * @param sm a semaphore;
+ * @param sem a semaphore;
  *
  * @param value address where the semaphore count will be stored on success.
  *

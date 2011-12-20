@@ -17,8 +17,8 @@
  */
 
 /**
- * @ingroup posix_thread
- * @defgroup posix_cancel Thread cancellation.
+ * @ingroup cobalt_thread
+ * @defgroup cobalt_cancel Thread cancellation.
  *
  * Thread cancellation.
  *

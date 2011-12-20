@@ -232,7 +232,6 @@ int a4l_find_range(a4l_desc_t * dsc,
  * convenience routine which performs no conversion, just copy.
  *
  * @param[in] chan Channel descriptor
- * @param[in] rng Range descriptor
  * @param[out] dst Ouput buffer
  * @param[in] src Input buffer
  * @param[in] cnt Count of transfer to copy
@@ -241,7 +240,7 @@ int a4l_find_range(a4l_desc_t * dsc,
  * code:
  *
  * - -EINVAL is returned if some argument is missing or wrong;
- *    chan, rng and the pointers should be checked; check also the
+ *    chan, dst and src pointers should be checked; check also the
  *    kernel log ("dmesg"); WARNING: a4l_fill_desc() should be called
  *    before using a4l_ultoraw()
  *
@@ -442,7 +441,6 @@ int a4l_rawtod(a4l_chinfo_t * chan,
  * routine which performs no conversion, just formatting.
  *
  * @param[in] chan Channel descriptor
- * @param[in] rng Range descriptor
  * @param[out] dst Ouput buffer
  * @param[in] src Input buffer
  * @param[in] cnt Count of transfer to copy
@@ -450,10 +448,10 @@ int a4l_rawtod(a4l_chinfo_t * chan,
  * @return the count of copy performed, otherwise a negative error
  * code:
  *
- * - -EINVAL is returned if some argument is missing or wrong;
- *    chan, rng and the pointers should be checked; check also the
- *    kernel log ("dmesg"); WARNING: a4l_fill_desc() should be called
- *    before using a4l_ultoraw()
+ * - -EINVAL is returned if some argument is missing or wrong; chan,
+ *    dst and src pointers should be checked; check also the kernel
+ *    log ("dmesg"); WARNING: a4l_fill_desc() should be called before
+ *    using a4l_ultoraw()
  *
  */
 int a4l_ultoraw(a4l_chinfo_t * chan, void *dst, unsigned long *src, int cnt)
