@@ -36,9 +36,25 @@ struct RT_EVENT {
 
 typedef struct RT_EVENT RT_EVENT;
 
+/**
+ * @brief Event status descriptor
+ * @anchor RT_EVENT_INFO
+ *
+ * This structure reports various static and runtime information about
+ * an event flag group, returned by a call to rt_event_inquire().
+ */
 struct RT_EVENT_INFO {
+	/**
+	 * Current value of the event flag group.
+	 */
 	unsigned long value;
+	/**
+	 * Number of tasks currently waiting for events.
+	 */
 	int nwaiters;
+	/**
+	 * Name of event flag group.
+	 */
 	char name[32];
 };
 

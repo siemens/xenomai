@@ -29,9 +29,24 @@ struct RT_MUTEX {
 
 typedef struct RT_MUTEX RT_MUTEX;
 
+/**
+ * @brief Mutex status descriptor
+ * @anchor RT_MUTEX_INFO
+ *
+ * This structure reports various static and runtime information about
+ * a mutex, returned by a call to rt_mutex_inquire().
+ */
 struct RT_MUTEX_INFO {
-	char name[32];
+	/**
+	 * Current mutex owner, or null if unlocked. This information
+	 * is in essence transient, and may not be valid anymore once
+	 * used by the caller.
+	 */
 	RT_TASK owner;
+	/**
+	 * Name of mutex.
+	 */
+	char name[32];
 };
 
 typedef struct RT_MUTEX_INFO RT_MUTEX_INFO;

@@ -45,13 +45,42 @@ struct RT_QUEUE {
 
 typedef struct RT_QUEUE RT_QUEUE;
 
+/**
+ * @brief Queue status descriptor
+ * @anchor RT_QUEUE_INFO
+ *
+ * This structure reports various static and runtime information about
+ * a real-time queue, returned by a call to rt_queue_inquire().
+ */
 struct RT_QUEUE_INFO {
+	/**
+	 * Number of tasks currently waiting on the queue for
+	 * messages.
+	 */
 	int nwaiters;
+	/**
+	 * Number of messages pending in queue.
+	 */
 	int nmessages;
+	/**
+	 * Queue mode bits, as given to rt_queue_create().
+	 */
 	int mode;
+	/**
+	 * Maximum number of messages in queue, zero if unlimited.
+	 */
 	size_t qlimit;
+	/**
+	 * Size of memory pool for holding message buffers (in bytes).
+	 */
 	size_t poolsize;
+	/**
+	 * Amount of memory consumed from the buffer pool.
+	 */
 	size_t usedmem;
+	/**
+	 * Name of message queue.
+	 */
 	char name[32];
 };
 

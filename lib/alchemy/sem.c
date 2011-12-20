@@ -14,6 +14,28 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
+ *
+ * @defgroup alchemy_sem Semaphore services.
+ * @ingroup alchemy_sem
+ * @ingroup alchemy
+ *
+ * A counting semaphore is a synchronization object for controlling
+ * the concurrency level allowed in accessing a resource from multiple
+ * real-time tasks, based on the value of a count variable accessed
+ * atomically.  The semaphore is used through the P ("Proberen", from
+ * the Dutch "test and decrement") and V ("Verhogen", increment)
+ * operations. The P operation decrements the semaphore count by one
+ * if non-zero, or waits until a V operation is issued by another
+ * task. Conversely, the V operation releases a resource by
+ * incrementing the count by one, unblocking the heading task waiting
+ * on the P operation if any. Waiting on a semaphore may cause
+ * a priority inversion.
+ *
+ * If no more than a single resource is made available at any point in
+ * time, the semaphore enforces mutual exclusion and thus can be used
+ * to serialize access to a critical section. However, mutexes should
+ * be used instead in order to prevent priority inversions, based on
+ * the priority inheritance protocol.
  */
 
 #include <errno.h>
@@ -44,6 +66,55 @@ static void sem_finalize(struct semobj *smobj)
 }
 fnref_register(libalchemy, sem_finalize);
 
+/**
+ * @fn int rt_sem_create(RT_SEM *sem, const char *name, unsigned long icount, int mode)
+ * @brief Create a counting semaphore.
+ *
+ * @param sem The address of a semaphore descriptor which can be later
+ * used to identify uniquely the created object, upon success of this
+ * call.
+ *
+ * @param name An ASCII string standing for the symbolic name of the
+ * semaphore. When non-NULL and non-empty, a copy of this string is
+ * used for indexing the created semaphore into the object registry.
+ *
+ * @param icount The initial value of the counting semaphore.
+ *
+ * @param mode The semaphore creation mode. The following flags can be
+ * OR'ed into this bitmask:
+ *
+ * - S_FIFO makes tasks pend in FIFO order on the semaphore.
+ *
+ * - S_PRIO makes tasks pend in priority order on the semaphore.
+ *
+ * - S_PULSE causes the semaphore to behave in "pulse" mode. In this
+ * mode, the V (signal) operation attempts to release a single waiter
+ * each time it is called, without incrementing the semaphore count,
+ * even if no waiter is pending. For this reason, the semaphore count
+ * in pulse mode remains zero.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if the @a icount is non-zero and S_PULSE is
+ * set in @a mode.
+ *
+ * - -ENOMEM is returned if the system fails to get memory from the
+ * main heap in order to create the semaphore.
+ *
+ * - -EEXIST is returned if the @a name is conflicting with an already
+ * registered semaphore.
+ *
+ * - -EPERM is returned if this service was called from an
+ * asynchronous context.
+ *
+ * Valid calling context:
+ *
+ * - Regular POSIX threads
+ * - Xenomai threads
+ *
+ * @note Semaphores can be shared by multiple processes which belong
+ * to the same Xenomai session.
+ */
 int rt_sem_create(RT_SEM *sem, const char *name,
 		  unsigned long icount, int mode)
 {
@@ -93,6 +164,28 @@ out:
 	return ret;
 }
 
+/**
+ * @fn int rt_sem_delete(RT_SEM *sem)
+ * @brief Delete a semaphore.
+ *
+ * This routine deletes a semaphore previously created by a call to
+ * rt_sem_create().
+ *
+ * @param sem The descriptor address of the deleted object.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a sem is not a valid semaphore
+ * descriptor.
+ *
+ * - -EPERM is returned if this service was called from an
+ * asynchronous context.
+ *
+ * Valid calling context:
+ *
+ * - Regular POSIX threads
+ * - Xenomai threads
+ */
 int rt_sem_delete(RT_SEM *sem)
 {
 	struct alchemy_sem *scb;
@@ -125,6 +218,64 @@ out:
 	return ret;
 }
 
+/**
+ * @fn int rt_sem_p_until(RT_SEM *sem, RTIME timeout)
+ * @brief Pend on a semaphore (with absolute timeout date).
+ *
+ * Test and decrement the semaphore count. If the semaphore value is
+ * greater than zero, it is decremented by one and the service
+ * immediately returns to the caller. Otherwise, the caller is blocked
+ * until the semaphore is either signaled or destroyed, unless a
+ * non-blocking operation was required.
+ *
+ * @param sem The descriptor address of the semaphore to wait on.
+ *
+ * @param timeout An absolute date expressed in clock ticks,
+ * specifying a time limit to wait for the request to be satisfied
+ * (see note). Passing TM_INFINITE causes the caller to block
+ * indefinitely until the request is satisfied. Passing TM_NONBLOCK
+ * causes the service to return without blocking in case the request
+ * cannot be satisfied immediately.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -ETIMEDOUT is returned if the absolute @a timeout date is reached
+ * before the request is satisfied.
+ *
+ * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
+ * and the semaphore count is null on entry to the call.
+
+ * - -EINTR is returned if rt_task_unblock() has been called for the
+ * waiting task before the request is satisfied.
+ *
+ * - -EINVAL is returned if @a sem is not a valid semaphore
+ * descriptor.
+ *
+ * - -EIDRM is returned if @a sem is deleted while the caller was
+ * sleeping on it. In such a case, @a sem is no more valid upon
+ * return of this service.
+ *
+ * - -EPERM is returned if this service could block, but was called
+ * from a context which cannot sleep, i.e. not from a Xenomai thread.
+ *
+ * Valid calling contexts:
+ *
+ * - Xenomai threads
+ * - Any other context if @a timeout equals TM_NONBLOCK.
+ *
+ * @note The @a timeout value is interpreted as a multiple of the
+ * Alchemy clock resolution (see --alchemy-clock-resolution option,
+ * defaults to 1 nanosecond).
+ */
+
+/**
+ * @fn int rt_sem_p(RT_SEM *sem, RTIME timeout)
+ * @brief Pend on a semaphore (with relative timeout date).
+ *
+ * This routine is a variant of rt_sem_p_until() accepting a
+ * relative timeout specification.
+ */
+
 int rt_sem_p_timed(RT_SEM *sem, const struct timespec *abs_timeout)
 {
 	struct alchemy_sem *scb;
@@ -144,6 +295,24 @@ out:
 	return ret;
 }
 
+/**
+ * @fn int rt_sem_v(RT_SEM *sem)
+ * @brief Signal a semaphore.
+ *
+ * If the semaphore is pended, the task heading the wait queue is
+ * immediately unblocked. Otherwise, the semaphore count is
+ * incremented by one, unless the semaphore is used in "pulse" mode
+ * (see rt_sem_create()).
+ *
+ * @param The descriptor address of the semaphore to signal.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a sem is not a valid semaphore
+ * descriptor.
+ *
+ * Valid calling context: any.
+ */
 int rt_sem_v(RT_SEM *sem)
 {
 	struct alchemy_sem *scb;
@@ -163,6 +332,22 @@ out:
 	return ret;
 }
 
+/**
+ * @fn int rt_sem_broadcast(RT_SEM *sem)
+ * @brief Broadcast a semaphore.
+ *
+ * All tasks currently waiting on the semaphore are immediately
+ * unblocked. The semaphore count is set to zero.
+ *
+ * @param The descriptor address of the semaphore to broadcast.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a sem is not a valid semaphore
+ * descriptor.
+ *
+ * Valid calling context: any.
+ */
 int rt_sem_broadcast(RT_SEM *sem)
 {
 	struct alchemy_sem *scb;
@@ -182,6 +367,24 @@ out:
 	return ret;
 }
 
+/**
+ * @fn int rt_sem_inquire(RT_SEM *sem, RT_SEM_INFO *info)
+ * @brief Query semaphore status.
+ *
+ * This routine returns the status information about the specified
+ * semaphore.
+ *
+ * @param sem The descriptor address of the semaphore to get the
+ * status of.
+ *
+ * @return Zero is returned and status information is written to the
+ * structure pointed at by @a info upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a sem is not a valid semaphore
+ * descriptor.
+ *
+ * Valid calling context: any.
+ */
 int rt_sem_inquire(RT_SEM *sem, RT_SEM_INFO *info)
 {
 	struct alchemy_sem *scb;
@@ -207,6 +410,52 @@ out:
 	return ret;
 }
 
+/**
+ * @fn int rt_sem_bind(RT_SEM *sem, const char *name, RTIME timeout)
+ * @brief Bind to a semaphore.
+ *
+ * This routine creates a new descriptor to refer to an existing
+ * semaphore identified by its symbolic name. If the object does not
+ * exist on entry, the caller may block until a semaphore of the given
+ * name is created.
+ *
+ * @param sem The address of a semaphore descriptor filled in by the
+ * operation. Contents of this memory is undefined upon failure.
+ *
+ * @param name A valid NULL-terminated name which identifies the
+ * semaphore to bind to. This string should match the object name
+ * argument passed to rt_sem_create().
+ *
+ * @param timeout The number of clock ticks to wait for the
+ * registration to occur (see note). Passing TM_INFINITE causes the
+ * caller to block indefinitely until the object is
+ * registered. Passing TM_NONBLOCK causes the service to return
+ * immediately without waiting if the object is not registered on
+ * entry.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINTR is returned if rt_task_unblock() has been called for the
+ * waiting task before the retrieval has completed.
+ *
+ * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
+ * and the searched object is not registered on entry.
+ *
+ * - -ETIMEDOUT is returned if the object cannot be retrieved within
+ * the specified amount of time.
+ *
+ * - -EPERM is returned if this service could block, but was called
+ * from a context which cannot sleep, i.e. not from a Xenomai thread.
+ *
+ * Valid calling contexts:
+ *
+ * - Xenomai threads
+ * - Any other context if @a timeout equals TM_NONBLOCK.
+ *
+ * @note The @a timeout value is interpreted as a multiple of the
+ * Alchemy clock resolution (see --alchemy-clock-resolution option,
+ * defaults to 1 nanosecond).
+ */
 int rt_sem_bind(RT_SEM *sem,
 		const char *name, RTIME timeout)
 {
@@ -217,6 +466,16 @@ int rt_sem_bind(RT_SEM *sem,
 				   &sem->handle);
 }
 
+/**
+ * @fn int rt_sem_unbind(RT_SEM *sem)
+ * @brief Unbind from a semaphore.
+ *
+ * @param sem The descriptor address of the semaphore to unbind from.
+ *
+ * This routine releases a previous binding to a semaphore. After this
+ * call has returned, the descriptor is no more valid for referencing
+ * this object.
+ */
 int rt_sem_unbind(RT_SEM *sem)
 {
 	sem->handle = 0;

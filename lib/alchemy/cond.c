@@ -14,7 +14,24 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
- */
+ *
+ * @defgroup alchemy_cond Condition variable services.
+ * @ingroup alchemy_cond
+ * @ingroup alchemy
+ *
+ * Condition variable services.
+ *
+ * A condition variable is a synchronization object which allows tasks
+ * to suspend execution until some predicate on shared data is
+ * satisfied. The basic operations on conditions are: signal the
+ * condition (when the predicate becomes true), and wait for the
+ * condition, blocking the task execution until another task signals
+ * the condition.  A condition variable must always be associated with
+ * a mutex, to avoid a well-known race condition where a task prepares
+ * to wait on a condition variable and another task signals the
+ * condition just before the first task actually waits on it.
+ *
+ *@{*/
 
 #include <errno.h>
 #include <string.h>
@@ -39,6 +56,41 @@ static struct alchemy_namegen cond_namegen = {
 
 DEFINE_LOOKUP_PRIVATE(cond, RT_COND);
 
+/**
+ * @fn int rt_cond_create(RT_COND *cond, const char *name)
+ * @brief Create a condition variable.
+ *
+ * Create a synchronization object which allows tasks to suspend
+ * execution until some predicate on shared data is satisfied.
+ *
+ * @param cond The address of a condition variable descriptor which
+ * can be later used to identify uniquely the created object, upon
+ * success of this call.
+ *
+ * @param name An ASCII string standing for the symbolic name of the
+ * condition variable. When non-NULL and non-empty, a copy of this
+ * string is used for indexing the created condition variable into the
+ * object registry.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -ENOMEM is returned if the system fails to get memory from the
+ * main heap in order to create the condition variable.
+ *
+ * - -EEXIST is returned if the @a name is conflicting with an already
+ * registered condition variable.
+ *
+ * - -EPERM is returned if this service was called from an
+ * asynchronous context.
+ *
+ * Valid calling context:
+ *
+ * - Regular POSIX threads
+ * - Xenomai threads
+ *
+ * @note Condition variables can be shared by multiple processes which
+ * belong to the same Xenomai session.
+ */
 int rt_cond_create(RT_COND *cond, const char *name)
 {
 	struct alchemy_cond *ccb;
@@ -77,6 +129,28 @@ out:
 	return ret;
 }
 
+/**
+ * @fn int rt_cond_delete(RT_COND *cond)
+ * @brief Delete a condition variable.
+ *
+ * This routine deletes a condition variable object previously created
+ * by a call to rt_cond_create().
+ *
+ * @param cond The descriptor address of the deleted condition variable.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a alarm is not a valid condition variable
+ * descriptor.
+ *
+ * - -EPERM is returned if this service was called from an
+ * asynchronous context.
+ *
+ * Valid calling context:
+ *
+ * - Regular POSIX threads
+ * - Xenomai threads
+ */
 int rt_cond_delete(RT_COND *cond)
 {
 	struct alchemy_cond *ccb;
@@ -105,6 +179,23 @@ out:
 	return ret;
 }
 
+/**
+ * @fn int rt_cond_signal(RT_COND *cond)
+ * @brief Signal a condition variable.
+ *
+ * If the condition variable @a cond is pended, this routine
+ * immediately unblocks the first waiting task (by queuing priority
+ * order).
+ *
+ * @param The descriptor address of the condition variable to signal.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a cond is not a valid condition variable
+ * descriptor.
+ *
+ * Valid calling context: any.
+ */
 int rt_cond_signal(RT_COND *cond)
 {
 	struct alchemy_cond *ccb;
@@ -119,6 +210,23 @@ int rt_cond_signal(RT_COND *cond)
 	return ret;
 }
 
+/**
+ * @fn int rt_cond_broadcast(RT_COND *cond)
+ * @brief Broadcast a condition variable.
+ *
+ * All tasks currently waiting on the condition variable are
+ * immediately unblocked.
+ *
+ * @param The descriptor address of the condition variable to
+ * broadcast.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a cond is not a valid condition variable
+ * descriptor.
+ *
+ * Valid calling context: any.
+ */
 int rt_cond_broadcast(RT_COND *cond)
 {
 	struct alchemy_cond *ccb;
@@ -130,6 +238,60 @@ int rt_cond_broadcast(RT_COND *cond)
 
 	return -__RT(pthread_cond_broadcast(&ccb->cond));
 }
+
+/**
+ * @fn int rt_cond_wait_until(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
+ * @brief Wait on a condition variable (with absolute timeout date).
+ *
+ * This service atomically releases the mutex and blocks the calling
+ * task, until the condition variable @a cond is signaled or a timeout
+ * occurs, whichever comes first. The mutex is re-acquired before
+ * returning from this service.
+ *
+ * @param cond The descriptor address of the condition variable to
+ * wait on.
+ *
+ * @param timeout An absolute date expressed in clock ticks,
+ * specifying a time limit to wait for the condition variable to be
+ * signaled  (see note). Passing TM_INFINITE causes the caller to
+ * block indefinitely.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -ETIMEDOUT is returned if the absolute @a timeout date is reached
+ * before the condition variable is signaled.
+ *
+ * - -EWOULDBLOCK is returned if @a timeout equals TM_NONBLOCK.
+
+ * - -EINTR is returned if rt_task_unblock() has been called for the
+ * blocked task.
+ *
+ * - -EINVAL is returned if @a cond is not a valid condition variable
+ * descriptor.
+ *
+ * - -EIDRM is returned if @a cond is deleted while the caller was
+ * waiting on the condition variable. In such event, @a cond is no
+ * more valid upon return of this service.
+ *
+ * - -EPERM is returned if this service could block, but was called
+ * from a context which cannot sleep, i.e. not from a Xenomai thread.
+ *
+ * Valid calling contexts:
+ *
+ * - Xenomai threads
+ *
+ * @note The @a timeout value is interpreted as a multiple of the
+ * Alchemy clock resolution (see --alchemy-clock-resolution option,
+ * defaults to 1 nanosecond).
+ */
+
+/**
+ * @fn int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
+ * @brief Wait on a condition variable (with relative timeout date).
+ *
+ * This routine is a variant of rt_cond_wait_until() accepting a
+ * relative timeout specification.
+ */
 
 int rt_cond_wait_timed(RT_COND *cond, RT_MUTEX *mutex,
 		       const struct timespec *abs_timeout)
@@ -158,6 +320,24 @@ int rt_cond_wait_timed(RT_COND *cond, RT_MUTEX *mutex,
 	return ret;
 }
 
+/**
+ * @fn int rt_cond_inquire(RT_COND *cond, RT_COND_INFO *info)
+ * @brief Query condition variable status.
+ *
+ * This routine returns the status information about the specified
+ * condition variable.
+ *
+ * @param The descriptor address of the condition variable to get the
+ * status of.
+ *
+ * @return Zero is returned and status information is written to the
+ * structure pointed at by @a info upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a cond is not a valid condition variable
+ * descriptor.
+ *
+ * Valid calling context: any.
+ */
 int rt_cond_inquire(RT_COND *cond, RT_COND_INFO *info)
 {
 	struct alchemy_cond *ccb;
@@ -172,6 +352,53 @@ int rt_cond_inquire(RT_COND *cond, RT_COND_INFO *info)
 	return ret;
 }
 
+/**
+ * @fn int rt_cond_bind(RT_COND *cond, const char *name, RTIME timeout)
+ * @brief Bind to a condition variable.
+ *
+ * This routine creates a new descriptor to refer to an existing
+ * condition variable identified by its symbolic name. If the object
+ * not exist on entry, the caller may block until a condition variable
+ * of the given name is created.
+ *
+ * @param cond The address of a condition variable descriptor filled
+ * in by the operation. Contents of this memory is undefined upon
+ * failure.
+ *
+ * @param name A valid NULL-terminated name which identifies the
+ * condition variable to bind to. This string should match the object
+ * name argument passed to rt_cond_create().
+ *
+ * @param timeout The number of clock ticks to wait for the
+ * registration to occur (see note). Passing TM_INFINITE causes the
+ * caller to block indefinitely until the object is
+ * registered. Passing TM_NONBLOCK causes the service to return
+ * immediately without waiting if the object is not registered on
+ * entry.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINTR is returned if rt_task_unblock() has been called for the
+ * waiting task before the retrieval has completed.
+ *
+ * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
+ * and the searched object is not registered on entry.
+ *
+ * - -ETIMEDOUT is returned if the object cannot be retrieved within
+ * the specified amount of time.
+ *
+ * - -EPERM is returned if this service could block, but was called
+ * from a context which cannot sleep, i.e. not from a Xenomai thread.
+ *
+ * Valid calling contexts:
+ *
+ * - Xenomai threads
+ * - Any other context if @a timeout equals TM_NONBLOCK.
+ *
+ * @note The @a timeout value is interpreted as a multiple of the
+ * Alchemy clock resolution (see --alchemy-clock-resolution option,
+ * defaults to 1 nanosecond).
+ */
 int rt_cond_bind(RT_COND *cond,
 		 const char *name, RTIME timeout)
 {
@@ -182,8 +409,21 @@ int rt_cond_bind(RT_COND *cond,
 				   &cond->handle);
 }
 
+/**
+ * @fn int rt_cond_unbind(RT_COND *cond)
+ * @brief Unbind from a condition variable.
+ *
+ * @param cond The descriptor address of the condition variable to
+ * unbind from.
+ *
+ * This routine releases a previous binding to a condition
+ * variable. After this call has returned, the descriptor is no more
+ * valid for referencing this object.
+ */
 int rt_cond_unbind(RT_COND *cond)
 {
 	cond->handle = 0;
 	return 0;
 }
+
+/*@}*/

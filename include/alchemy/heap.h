@@ -37,12 +37,40 @@ struct RT_HEAP {
 
 typedef struct RT_HEAP RT_HEAP;
 
+/**
+ * @brief Heap status descriptor
+ * @anchor RT_HEAP_INFO
+ *
+ * This structure reports various static and runtime information about
+ * a real-time heap, returned by a call to rt_heap_inquire().
+ */
 struct RT_HEAP_INFO {
+	/**
+	 * Number of tasks waiting for available memory in
+	 * rt_heap_alloc().
+	 */
 	int nwaiters;
+	/**
+	 * Creation mode flags as given to rt_heap_create().
+	 */
 	int mode;
+	/**
+	 * Overall size of heap (in bytes).
+	 */
 	size_t heapsize;
+	/**
+	 * Maximum amount of memory available from the heap. This
+	 * value accounts for the overhead of internal data structures
+	 * required to maintain the heap.
+	 */
 	size_t usablemem;
+	/**
+	 * Amount of heap memory currently consumed.
+	 */
 	size_t usedmem;
+	/**
+	 * Name of heap.
+	 */
 	char name[32];
 };
 
@@ -66,7 +94,7 @@ int rt_heap_alloc_timed(RT_HEAP *heap,
 
 static inline
 int rt_heap_alloc_until(RT_HEAP *heap,
-		  size_t size, RTIME timeout, void **blockp)
+			size_t size, RTIME timeout, void **blockp)
 {
 	struct timespec ts;
 	return rt_heap_alloc_timed(heap, size,

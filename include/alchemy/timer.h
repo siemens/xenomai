@@ -30,10 +30,37 @@ typedef sticks_t SRTIME;
 #define TM_NOW       0
 #define TM_NONBLOCK  ((RTIME)-1ULL)
 
+/**
+ * @brief Timer status descriptor
+ * @anchor RT_TIMER_INFO
+ *
+ * This structure reports various static and runtime information about
+ * the timer, returned by a call to rt_timer_inquire().
+ */
 typedef struct rt_timer_info {
+	/**
+	 * Clock resolution in nanoseconds.
+	 */
 	RTIME period;
-	RTIME date;
+	/**
+	 * Current time stamp counter value. The source of this
+	 * information is hardware-dependent, and does not depend on
+	 * the per-process clock settings. Consecutive readings from a
+	 * single CPU are guaranteed to be monotonically incrementing,
+	 * however readings may not be synchronized on multi-core
+	 * hardware if the time stamp counter is local to each CPU.
+	 * Therefore, whether consecutive readings from different CPUs
+	 * are consistent and monotonically incrementing depends on
+	 * the underlying TSC source.
+	 */
 	RTIME tsc;
+	/**
+	 * Current monotonic date, based on the time stamp counter
+	 * value. The date is expressed in clock ticks, therefore
+	 * depends on the Alchemy clock resolution applicable to the
+	 * current process.
+	 */
+	RTIME date;
 } RT_TIMER_INFO;
 
 extern struct clockobj alchemy_clock;

@@ -29,7 +29,17 @@ struct RT_COND {
 
 typedef struct RT_COND RT_COND;
 
+/**
+ * @brief Condition variable status descriptor
+ * @anchor RT_CONF_INFO
+ *
+ * This structure reports various static and runtime information about
+ * a condition variable, returned by a call to rt_cond_inquire().
+ */
 struct RT_COND_INFO {
+	/**
+	 * Name of condition variable.
+	 */
 	char name[32];
 };
 

@@ -14,7 +14,17 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
- */
+ *
+ * @defgroup alchemy_heap Heap management services.
+ * @ingroup alchemy_heap
+ * @ingroup alchemy
+ *
+ * Heaps are regions of memory used for dynamic memory allocation in
+ * a time-bounded fashion. Blocks of memory are allocated and freed in
+ * an arbitrary order and the pattern of allocation and size of blocks
+ * is not known until run time.
+ *
+ *@{*/
 
 #include <errno.h>
 #include <string.h>
@@ -43,8 +53,72 @@ static void heap_finalize(struct syncobj *sobj)
 }
 fnref_register(libalchemy, heap_finalize);
 
+/**
+ * @fn int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsz, int mode)
+ * @brief Create a heap.
+ *
+ * This routine creates a memory heap suitable for time-bounded
+ * allocation requests of RAM chunks. When not enough memory is
+ * available, tasks may be blocked until their allocation request can
+ * be fulfilled.
+ *
+ * By default, heaps support allocation of multiple blocks of memory
+ * in an arbitrary order. However, it is possible to ask for
+ * single-block management by passing the H_SINGLE flag into the @a
+ * mode parameter, in which case the entire memory space managed by
+ * the heap is made available as a unique block.  In this mode, all
+ * allocation requests made through rt_heap_alloc() will return the
+ * same block address, pointing at the beginning of the heap memory.
+ *
+ * @param heap The address of a heap descriptor which can be later
+ * used to identify uniquely the created object, upon success of this
+ * call.
+ *
+ * @param name An ASCII string standing for the symbolic name of the
+ * heap. When non-NULL and non-empty, a copy of this string is used
+ * for indexing the created heap into the object registry.
+ *
+ * @param heapsz The size (in bytes) of the memory pool, blocks will
+ * be claimed and released to.  This area is not extensible, so this
+ * value must be compatible with the highest memory pressure that
+ * could be expected. The valid range is between 2k and 2Gb.
+ *
+ * @param mode The heap creation mode. The following flags can be
+ * OR'ed into this bitmask, each of them affecting the new heap:
+ *
+ * - H_FIFO makes tasks pend in FIFO order on the heap when waiting
+ * for available blocks.
+ *
+ * - H_PRIO makes tasks pend in priority order on the heap when
+ * waiting for available blocks.
+ *
+ * - H_SINGLE causes the entire heap space to be managed as a single
+ * memory block.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a heapsz is not in the valid range
+ * [2k..2Gb].
+ *
+ * - -ENOMEM is returned if the system fails to get memory from the
+ * main heap in order to create the heap.
+ *
+ * - -EEXIST is returned if the @a name is conflicting with an already
+ * registered heap.
+ *
+ * - -EPERM is returned if this service was called from an
+ * asynchronous context.
+ *
+ * Valid calling context:
+ *
+ * - Regular POSIX threads
+ * - Xenomai threads
+ *
+ * @note Heaps can be shared by multiple processes which belong to the
+ * same Xenomai session.
+ */
 int rt_heap_create(RT_HEAP *heap,
-		   const char *name, size_t heapsize, int mode)
+		   const char *name, size_t heapsz, int mode)
 {
 	struct alchemy_heap *hcb;
 	int sobj_flags = 0, ret;
@@ -53,7 +127,7 @@ int rt_heap_create(RT_HEAP *heap,
 	if (threadobj_irq_p())
 		return -EPERM;
 
-	if (heapsize == 0)
+	if (heapsz < 2048 || heapsz >= 1U << 31)
 		return -EINVAL;
 
 	COPPERPLATE_PROTECT(svc);
@@ -67,7 +141,7 @@ int rt_heap_create(RT_HEAP *heap,
 	 * The memory pool has to be part of the main heap for proper
 	 * sharing between processes.
 	 */
-	if (heapobj_init_shareable(&hcb->hobj, NULL, heapsize)) {
+	if (heapobj_init_shareable(&hcb->hobj, NULL, heapsz)) {
 		xnfree(hcb);
 		goto out;
 	}
@@ -75,7 +149,7 @@ int rt_heap_create(RT_HEAP *heap,
 	alchemy_build_name(hcb->name, name, &heap_namegen);
 	hcb->magic = heap_magic;
 	hcb->mode = mode;
-	hcb->size = heapsize;
+	hcb->size = heapsz;
 	hcb->sba = NULL;
 
 	if (mode & H_PRIO)
@@ -98,6 +172,27 @@ out:
 	return ret;
 }
 
+/**
+ * @fn int rt_heap_delete(RT_HEAP *heap)
+ * @brief Delete a heap.
+ *
+ * This routine deletes a heap object previously created by a call to
+ * rt_heap_create(), releasing all tasks currently blocked on it.
+ *
+ * @param heap The descriptor address of the deleted heap.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a heap is not a valid heap descriptor.
+ *
+ * - -EPERM is returned if this service was called from an
+ * asynchronous context.
+ *
+ * Valid calling context:
+ *
+ * - Regular POSIX threads
+ * - Xenomai threads
+ */
 int rt_heap_delete(RT_HEAP *heap)
 {
 	struct alchemy_heap *hcb;
@@ -122,6 +217,78 @@ out:
 
 	return ret;
 }
+
+/**
+ * @fn int rt_heap_alloc_until(RT_HEAP *heap, size_t size, RTIME timeout, void **blockp)
+ * @brief Allocate a block from a heap (with absolute timeout date).
+ *
+ * This service allocates a block from a given heap, or returns the
+ * address of the single memory segment if H_SINGLE was mentioned in
+ * the creation mode to rt_heap_create(). When not enough memory is
+ * available on entry to this service, tasks may be blocked until
+ * their allocation request can be fulfilled.
+ *
+ * @param heap The descriptor address of the heap to allocate from.
+ *
+ * @param size The requested size (in bytes) of the block. If the heap
+ * is managed as a single-block area (H_SINGLE), this value can be
+ * either zero, or the same value given to rt_heap_create(). In that
+ * case, the same block covering the entire heap space is returned to
+ * all callers of this service.
+ *
+ * @param timeout An absolute date expressed in clock ticks,
+ * specifying a time limit to wait for a block of the requested size
+ * to be available from the heap (see note). Passing TM_INFINITE
+ * causes the caller to block indefinitely until a block is
+ * available. Passing TM_NONBLOCK causes the service to return
+ * immediately without blocking in case not block is available.
+ *
+ * @param blockp A pointer to a memory location which will be written
+ * upon success with the address of the allocated block, or the start
+ * address of the single memory segment. In the former case, the block
+ * can be freed using rt_heap_free().
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -ETIMEDOUT is returned if the absolute @a timeout date is reached
+ * before a block is available.
+ *
+ * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
+ * and no block is immediately available on entry to fulfill the
+ * allocation request.
+
+ * - -EINTR is returned if rt_task_unblock() has been called for the
+ * blocked task before a block became available.
+ *
+ * - -EINVAL is returned if @a heap is not a valid heap descriptor, or
+ * @a heap is managed as a single-block area (i.e. H_SINGLE mode) and
+ * @a size is non-zero but does not match the original heap size
+ * passed to rt_heap_create().
+ *
+ * - -EIDRM is returned if @a heap is deleted while the caller was
+ * waiting for a block. In such event, @a heap is no more valid upon
+ * return of this service.
+ *
+ * - -EPERM is returned if this service could block, but was called
+ * from a context which cannot sleep, i.e. not from a Xenomai thread.
+ *
+ * Valid calling contexts:
+ *
+ * - Xenomai threads
+ * - Any other context if @a timeout equals TM_NONBLOCK.
+ *
+ * @note The @a timeout value is interpreted as a multiple of the
+ * Alchemy clock resolution (see --alchemy-clock-resolution option,
+ * defaults to 1 nanosecond).
+ */
+
+/**
+ * @fn int rt_heap_alloc(RT_HEAP *heap, size_t size, RTIME timeout, void **blockp)
+ * @brief Allocate a block from a heap (with relative timeout date).
+ *
+ * This routine is a variant of rt_heap_alloc_until() accepting a
+ * relative timeout specification.
+ */
 
 int rt_heap_alloc_timed(RT_HEAP *heap,
 			size_t size, const struct timespec *abs_timeout,
@@ -192,6 +359,28 @@ out:
 	return ret;
 }
 
+/**
+ * @fn int rt_heap_free(RT_HEAP *heap, void *block)
+ * @brief Release a block to a heap.
+ *
+ * This service should be used to release a block to the heap it
+ * belongs to. An attempt to fulfill the request of every task blocked
+ * on rt_heap_alloc() is made once @a block is returned to the memory
+ * pool.
+ *
+ * @param heap The descriptor address of the heap to release the block
+ * to.
+ *
+ * @param block The address of the block to free.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a heap is not a valid heap descriptor, or
+ * @a block is not a valid block previously allocated by the
+ * rt_heap_alloc() service from @a heap.
+ *
+ * Valid calling contexts: any.
+ */
 int rt_heap_free(RT_HEAP *heap, void *block)
 {
 	struct alchemy_heap_wait *wait;
@@ -237,6 +426,22 @@ out:
 	return ret;
 }
 
+/**
+ * @fn int rt_heap_inquire(RT_HEAP *heap, RT_HEAP_INFO *info)
+ * @brief Query heap status.
+ *
+ * This routine returns the status information about @a heap.
+ *
+ * @param heap The descriptor address of the heap to get the status
+ * of.
+ *
+ * @return Zero is returned and status information is written to the
+ * structure pointed at by @a info upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a heap is not a valid heap descriptor.
+ *
+ * Valid calling context: any.
+ */
 int rt_heap_inquire(RT_HEAP *heap, RT_HEAP_INFO *info)
 {
 	struct alchemy_heap *hcb;
@@ -263,6 +468,52 @@ out:
 	return ret;
 }
 
+/**
+ * @fn int rt_heap_bind(RT_HEAP *heap, const char *name, RTIME timeout)
+ * @brief Bind to a heap.
+ *
+ * This routine creates a new descriptor to refer to an existing heap
+ * identified by its symbolic name. If the object does not exist on
+ * entry, the caller may block until a heap of the given name is
+ * created.
+ *
+ * @param heap The address of a heap descriptor filled in by the
+ * operation. Contents of this memory is undefined upon failure.
+ *
+ * @param name A valid NULL-terminated name which identifies the
+ * heap to bind to. This string should match the object name
+ * argument passed to rt_heap_create().
+ *
+ * @param timeout The number of clock ticks to wait for the
+ * registration to occur (see note). Passing TM_INFINITE causes the
+ * caller to block indefinitely until the object is
+ * registered. Passing TM_NONBLOCK causes the service to return
+ * immediately without waiting if the object is not registered on
+ * entry.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINTR is returned if rt_task_unblock() has been called for the
+ * waiting task before the retrieval has completed.
+ *
+ * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
+ * and the searched object is not registered on entry.
+ *
+ * - -ETIMEDOUT is returned if the object cannot be retrieved within
+ * the specified amount of time.
+ *
+ * - -EPERM is returned if this service could block, but was called
+ * from a context which cannot sleep, i.e. not from a Xenomai thread.
+ *
+ * Valid calling contexts:
+ *
+ * - Xenomai threads
+ * - Any other context if @a timeout equals TM_NONBLOCK.
+ *
+ * @note The @a timeout value is interpreted as a multiple of the
+ * Alchemy clock resolution (see --alchemy-clock-resolution option,
+ * defaults to 1 nanosecond).
+ */
 int rt_heap_bind(RT_HEAP *heap,
 		  const char *name, RTIME timeout)
 {
@@ -273,8 +524,20 @@ int rt_heap_bind(RT_HEAP *heap,
 				   &heap->handle);
 }
 
+/**
+ * @fn int rt_heap_unbind(RT_HEAP *heap)
+ * @brief Unbind from a heap.
+ *
+ * @param heap The descriptor address of the heap to unbind from.
+ *
+ * This routine releases a previous binding to a heap. After this call
+ * has returned, the descriptor is no more valid for referencing this
+ * object.
+ */
 int rt_heap_unbind(RT_HEAP *heap)
 {
 	heap->handle = 0;
 	return 0;
 }
+
+/*@}*/

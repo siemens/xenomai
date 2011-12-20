@@ -32,11 +32,35 @@ struct RT_BUFFER {
 
 typedef struct RT_BUFFER RT_BUFFER;
 
+/**
+ * @brief Buffer status descriptor
+ * @anchor RT_BUFFER_INFO
+ *
+ * This structure reports various static and runtime information about
+ * a real-time buffer, returned by a call to rt_buffer_inquire().
+ */
 struct RT_BUFFER_INFO {
+	/**
+	 * Number of tasks waiting on the read side of the buffer for
+	 * input data.
+	 */
 	int iwaiters;
+	/**
+	 * Number of tasks waiting on the write side of the buffer for
+	 * sending out data.
+	 */
 	int owaiters;
+	/**
+	 * Overall size of buffer (in bytes).
+	 */
 	size_t totalmem;
+	/**
+	 * Amount of memory currently available for holding more data.
+	 */
 	size_t availmem;
+	/**
+	 * Name of the buffer.
+	 */
 	char name[32];
 };
 

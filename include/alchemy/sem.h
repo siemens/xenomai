@@ -33,9 +33,25 @@ struct RT_SEM {
 
 typedef struct RT_SEM RT_SEM;
 
+/**
+ * @brief Semaphore status descriptor
+ * @anchor RT_QUEUE_INFO
+ *
+ * This structure reports various static and runtime information about
+ * a semaphore, returned by a call to rt_sem_inquire().
+ */
 struct RT_SEM_INFO {
+	/**
+	 * Current semaphore value.
+	 */
 	unsigned long count;
+	/**
+	 * Number of tasks waiting on the semaphore.
+	 */
 	int nwaiters;
+	/**
+	 * Name of semaphore.
+	 */
 	char name[32];
 };
 

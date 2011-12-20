@@ -28,8 +28,21 @@ struct RT_ALARM {
 
 typedef struct RT_ALARM RT_ALARM;
 
+/**
+ * @brief Alarm status descriptor
+ * @anchor RT_ALARM_INFO
+ *
+ * This structure reports various static and runtime information about
+ * a real-time alarm, returned by a call to rt_alarm_inquire().
+ */
 struct RT_ALARM_INFO {
+	/**
+	 * Number of past expiries.
+	 */
 	unsigned long expiries;
+	/**
+	 * Name of alarm object.
+	 */
 	char name[32];
 };
 

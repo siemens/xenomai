@@ -14,7 +14,27 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
- */
+ *
+ * @defgroup alchemy_mutex Mutex services.
+ * @ingroup alchemy_mutex
+ * @ingroup alchemy
+ *
+ * Mutex services.
+ *
+ * A mutex is a MUTual EXclusion object, and is useful for protecting
+ * shared data structures from concurrent modifications, and
+ * implementing critical sections and monitors.
+ *
+ * A mutex has two possible states: unlocked (not owned by any task),
+ * and locked (owned by one task). A mutex can never be owned by two
+ * different tasks simultaneously. A task attempting to lock a mutex
+ * that is already locked by another task is blocked until the latter
+ * unlocks the mutex first.
+ *
+ * Xenomai mutex services enforce a priority inheritance protocol in
+ * order to solve priority inversions.
+ *
+ *@{*/
 
 #include <errno.h>
 #include <string.h>
@@ -39,6 +59,41 @@ static struct alchemy_namegen mutex_namegen = {
 
 DEFINE_LOOKUP(mutex, RT_MUTEX);
 
+/**
+ * @fn int rt_mutex_create(RT_MUTEX *mutex, const char *name)
+ * @brief Create a mutex.
+ *
+ * Create a mutual exclusion object that allows multiple tasks to
+ * synchronize access to a shared resource. A mutex is left in an
+ * unlocked state after creation.
+ *
+ * @param mutex The address of a mutex descriptor which can be later
+ * used to identify uniquely the created object, upon success of this
+ * call.
+ *
+ * @param name An ASCII string standing for the symbolic name of the
+ * mutex. When non-NULL and non-empty, a copy of this string is used
+ * for indexing the created mutex into the object registry.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -ENOMEM is returned if the system fails to get memory from the
+ * main heap in order to create the mutex.
+ *
+ * - -EEXIST is returned if the @a name is conflicting with an already
+ * registered mutex.
+ *
+ * - -EPERM is returned if this service was called from an
+ * asynchronous context.
+ *
+ * Valid calling context:
+ *
+ * - Regular POSIX threads
+ * - Xenomai threads
+ *
+ * @note Mutexes can be shared by multiple processes which belong to
+ * the same Xenomai session.
+ */
 int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 {
 	struct alchemy_mutex *mcb;
@@ -81,6 +136,27 @@ out:
 	return ret;
 }
 
+/**
+ * @fn int rt_mutex_delete(RT_MUTEX *mutex)
+ * @brief Delete a mutex.
+ *
+ * This routine deletes a mutex object previously created by a call to
+ * rt_mutex_create().
+ *
+ * @param mutex The descriptor address of the deleted mutex.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a alarm is not a valid mutex descriptor.
+ *
+ * - -EPERM is returned if this service was called from an
+ * asynchronous context.
+ *
+ * Valid calling context:
+ *
+ * - Regular POSIX threads
+ * - Xenomai threads
+ */
 int rt_mutex_delete(RT_MUTEX *mutex)
 {
 	struct alchemy_mutex *mcb;
@@ -109,6 +185,62 @@ out:
 	return ret;
 }
 
+/**
+ * @fn int rt_mutex_acquire_until(RT_MUTEX *mutex, RTIME timeout)
+ * @brief Acquire/lock a mutex (with absolute timeout date).
+ *
+ * Attempt to lock a mutex. The calling task is blocked until the
+ * mutex is available, in which case it is locked again before this
+ * service returns. Xenomai mutexes are implicitely recursive and
+ * implement the priority inheritance protocol.
+ *
+ * @param mutex The descriptor address of the mutex to acquire.
+ *
+ * @param timeout An absolute date expressed in clock ticks,
+ * specifying a time limit to wait for the mutex to be available (see
+ * note). Passing TM_INFINITE causes the caller to block indefinitely.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -ETIMEDOUT is returned if the absolute @a timeout date is reached
+ * before the mutex is available.
+ *
+ * - -EWOULDBLOCK is returned if @a timeout equals TM_NONBLOCK and the
+ * mutex is not immediately available.
+ *
+ * - -EINTR is returned if rt_task_unblock() has been called for the
+ * blocked task.
+ *
+ * - -EINVAL is returned if @a mutex is not a valid mutex descriptor.
+ *
+ * - -EIDRM is returned if @a mutex is deleted while the caller was
+ * waiting on it. In such event, @a mutex is no more valid upon return
+ * of this service.
+ *
+ * - -EPERM is returned if this service could block, but was called
+ * from a context which cannot sleep, i.e. not from a Xenomai thread.
+ *
+ * Valid calling contexts:
+ *
+ * - Xenomai threads
+ *
+ * Core specifics:
+ *
+ * Over the Cobalt core, a real-time task with effective priority zero
+ * keeps running in primary mode until it releases the mutex.
+ *
+ * @note The @a timeout value is interpreted as a multiple of the
+ * Alchemy clock resolution (see --alchemy-clock-resolution option,
+ * defaults to 1 nanosecond).
+ */
+
+/**
+ * @fn int rt_mutex_acquire(RT_MUTEX *mutex, RTIME timeout)
+ * @brief Acquire/lock a mutex (with relative timeout date).
+ *
+ * This routine is a variant of rt_mutex_acquire_until() accepting a
+ * relative timeout specification.
+ */
 int rt_mutex_acquire_timed(RT_MUTEX *mutex,
 			   const struct timespec *abs_timeout)
 {
@@ -174,6 +306,30 @@ done:
 	return ret;
 }
 
+/**
+ * @fn int rt_mutex_release(RT_MUTEX *mutex)
+ * @brief Release/unlock a mutex.
+ *
+ * This routine releases a mutex object previously locked by a call to
+ * rt_mutex_acquire() or rt_mutex_acquire_until().  If the mutex is
+ * pended, the first waiting task (by priority order) is immediately
+ * unblocked and transfered the ownership of the mutex; otherwise, the
+ * mutex is left in an unlocked state.
+ *
+ * @param mutex The descriptor address of the deleted mutex.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a alarm is not a valid mutex descriptor.
+ *
+ * - -EPERM is returned if @a mutex is not owned by the current task,
+ * or more generally if this service was called from a context which
+ * cannot own any mutex (e.g. interrupt context).
+ *
+ * Valid calling context:
+ *
+ * - Xenomai threads
+ */
 int rt_mutex_release(RT_MUTEX *mutex)
 {
 	struct alchemy_mutex *mcb;
@@ -187,6 +343,27 @@ int rt_mutex_release(RT_MUTEX *mutex)
 	return -__RT(pthread_mutex_unlock(&mcb->lock));
 }
 
+/**
+ * @fn int rt_mutex_inquire(RT_MUTEX *mutex, RT_MUTEX_INFO *info)
+ * @brief Query mutex status.
+ *
+ * This routine returns the status information about the specified
+ * mutex.
+ *
+ * @param The descriptor address of the mutex to get the status of.
+ *
+ * @return Zero is returned and status information is written to the
+ * structure pointed at by @a info upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a mutex is not a valid mutex descriptor.
+ *
+ * - -EPERM is returned if this service is called from an interrupt
+ * context.
+ *
+ * Valid calling context:
+ *
+ * - Xenomai threads
+ */
 int rt_mutex_inquire(RT_MUTEX *mutex, RT_MUTEX_INFO *info)
 {
 	struct alchemy_mutex *mcb;
@@ -220,6 +397,51 @@ out:
 	return ret;
 }
 
+/**
+ * @fn int rt_mutex_bind(RT_MUTEX *mutex, const char *name, RTIME timeout)
+ * @brief Bind to a mutex.
+ *
+ * This routine creates a new descriptor to refer to an existing mutex
+ * identified by its symbolic name. If the object not exist on entry,
+ * the caller may block until a mutex of the given name is created.
+ *
+ * @param mutex The address of a mutex descriptor filled in by the
+ * operation. Contents of this memory is undefined upon failure.
+ *
+ * @param name A valid NULL-terminated name which identifies the mutex
+ * to bind to. This string should match the object name argument
+ * passed to rt_mutex_create().
+ *
+ * @param timeout The number of clock ticks to wait for the
+ * registration to occur (see note). Passing TM_INFINITE causes the
+ * caller to block indefinitely until the object is
+ * registered. Passing TM_NONBLOCK causes the service to return
+ * immediately without waiting if the object is not registered on
+ * entry.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINTR is returned if rt_task_unblock() has been called for the
+ * waiting task before the retrieval has completed.
+ *
+ * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
+ * and the searched object is not registered on entry.
+ *
+ * - -ETIMEDOUT is returned if the object cannot be retrieved within
+ * the specified amount of time.
+ *
+ * - -EPERM is returned if this service could block, but was called
+ * from a context which cannot sleep, i.e. not from a Xenomai thread.
+ *
+ * Valid calling contexts:
+ *
+ * - Xenomai threads
+ * - Any other context if @a timeout equals TM_NONBLOCK.
+ *
+ * @note The @a timeout value is interpreted as a multiple of the
+ * Alchemy clock resolution (see --alchemy-clock-resolution option,
+ * defaults to 1 nanosecond).
+ */
 int rt_mutex_bind(RT_MUTEX *mutex,
 		  const char *name, RTIME timeout)
 {
@@ -230,8 +452,20 @@ int rt_mutex_bind(RT_MUTEX *mutex,
 				   &mutex->handle);
 }
 
+/**
+ * @fn int rt_mutex_unbind(RT_MUTEX *mutex)
+ * @brief Unbind from a mutex.
+ *
+ * @param mutex The descriptor address of the mutex to unbind from.
+ *
+ * This routine releases a previous binding to a mutex. After this
+ * call has returned, the descriptor is no more valid for referencing
+ * this object.
+ */
 int rt_mutex_unbind(RT_MUTEX *mutex)
 {
 	mutex->handle = 0;
 	return 0;
 }
+
+/*@}*/

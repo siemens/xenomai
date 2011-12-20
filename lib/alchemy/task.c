@@ -281,6 +281,87 @@ static void delete_tcb(struct alchemy_task *tcb)
 	threadobj_free(tcb);
 }
 
+/**
+ * @fn int rt_task_create(RT_TASK *task, const char *name, int stksize, int prio, int mode)
+ * @brief Create a real-time task.
+ *
+ * This service creates a task with access to the full set of Xenomai
+ * real-time services. If @a prio is non-zero, the new task belongs to
+ * Xenomai's real-time FIFO scheduling class, aka SCHED_RT. If @a prio
+ * is zero, the task belongs to the regular SCHED_OTHER class.
+ *
+ * Creating tasks with zero priority is useful for running non
+ * real-time processes which may invoke blocking real-time services,
+ * such as pending on a semaphore, reading from a message queue or a
+ * buffer, and so on.
+ *
+ * Once created, the task is left dormant until it is actually started
+ * by rt_task_start().
+ *
+ * @param task The address of a task descriptor which can be later
+ * used to identify uniquely the created object, upon success of this
+ * call.
+ *
+ * @param name An ASCII string standing for the symbolic name of the
+ * task. When non-NULL and non-empty, a copy of this string is
+ * used for indexing the created task into the object registry.
+ *
+ * @param stksize The size of the stack (in bytes) for the new
+ * task. If zero is passed, a system-dependent default size will be
+ * substituted.
+ *
+ * @param prio The base priority of the new task. This value must be
+ * in the [0 .. 99] range, where 0 is the lowest effective priority. 
+ *
+ * @param mode The task creation mode. The following flags can be
+ * OR'ed into this bitmask, each of them affecting the new task:
+ *
+ * - T_SUSP causes the task to start in suspended mode; a call to
+ * rt_task_resume() is required to actually start its execution.
+ *
+ * - T_CPU(cpuid) makes the new task affine to CPU # @b cpuid. CPU
+ * identifiers range from 0 to 7 (inclusive).
+ *
+ * - T_JOINABLE allows another task to wait on the termination of the
+ * new task. rt_task_join() shall be called for this task to clean up
+ * any resources after its termination.
+ *
+ * @return 0 is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if either @a prio, @a mode or @a stksize are
+ * invalid.
+ *
+ * - -ENOMEM is returned if the system fails to get memory from the
+ * main heap in order to create the task.
+ *
+ * - -EEXIST is returned if the @a name is conflicting with an already
+ * registered task.
+ *
+ * - -EPERM is returned if this service was called from an
+ * asynchronous context.
+ *
+ * Valid calling context:
+ *
+ * - Regular POSIX threads
+ * - Xenomai threads
+ *
+ * Core specifics:
+ *
+ * When running over the Cobalt core:
+ *
+ * - calling rt_task_create() causes SCHED_RT tasks to switch to
+ * secondary mode.
+ *
+ * - members of Xenomai's SCHED_RT class running in the primary domain
+ * have utmost priority over all Linux activities in the system,
+ * including regular interrupt handlers.
+ *
+ * When running over the Mercury core, the SCHED_RT class is mapped
+ * over the regular POSIX SCHED_FIFO class.
+ *
+ * @note Tasks can be referred to from multiple processes which all
+ * belong to the same Xenomai session.
+ */
 int rt_task_create(RT_TASK *task, const char *name,
 		   int stksize, int prio, int mode)
 {
@@ -307,6 +388,37 @@ out:
 	return ret;
 }
 
+/**
+ * @fn int rt_task_delete(RT_TASK *task)
+ * @brief Delete a real-time task.
+ *
+ * This call terminates a task previously created by
+ * rt_task_create().
+ *
+ * Tasks created with the T_JOINABLE flag shall be joined by a
+ * subsequent call to rt_task_join() once successfully deleted, to
+ * reclaim all resources.
+ *
+ * @param task The descriptor address of the deleted task.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a task is not a valid task descriptor.
+ *
+ * - -EIDRM is returned if @a task is deleted while the caller was
+ * waiting for the target task to exit a safe section.
+ *
+ * - -EPERM is returned if this service was called from an
+ * asynchronous context.
+ *
+ * Valid calling context:
+ *
+ * - Regular POSIX threads
+ * - Xenomai threads
+ *
+ * @note rt_task_delete() may block until the deleted task exits a
+ * safe section, previously entered by a call to rt_task_safe().
+ */
 int rt_task_delete(RT_TASK *task)
 {
 	struct alchemy_task *tcb;
@@ -363,6 +475,29 @@ out:
 	return ret;
 }
 
+/**
+ * @fn int rt_task_start(RT_TASK *task, void (*entry)(void *arg), void *arg)
+ * @brief Start a real-time task.
+ *
+ * This call starts execution of a task previously created by
+ * rt_task_create(). This service causes the started task to leave the
+ * initial dormant state.
+ *
+ * @param task The descriptor address of the task to be started.
+ *
+ * @param entry The address of the task entry point.
+ *
+ * @param arg A user-defined opaque argument @a entry will receive.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a task is not a valid task descriptor.
+ *
+ * Valid calling context: any.
+ *
+ * @note Starting an already started task leads to a nop, returning a
+ * success status.
+ */
 int rt_task_start(RT_TASK *task,
 		  void (*entry)(void *arg),
 		  void *arg)
@@ -387,6 +522,77 @@ out:
 	return ret;
 }
 
+/**
+ * @fn int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
+ * @brief Turn caller into a real-time task.
+ *
+ * Extends the calling Linux task with Xenomai capabilities, with
+ * access to the full set of Xenomai real-time services. This service
+ * is typically used for turning the main() thread of an application
+ * process into a Xenomai-enabled task.
+ *
+ * If @a prio is non-zero, the new task moves to Xenomai's real-time
+ * FIFO scheduling class, aka SCHED_RT. If @a prio is zero, the task
+ * moves to the regular SCHED_OTHER class.
+ *
+ * Running Xenomai tasks with zero priority is useful for running non
+ * real-time processes which may invoke blocking real-time services,
+ * such as pending on a semaphore, reading from a message queue or a
+ * buffer, and so on.
+ *
+ * Once shadowed with the Xenomai extension, the calling task returns
+ * and resumes execution normally from the call site.
+ *
+ * @param task If non-NULL, the address of a task descriptor which can
+ * be later used to identify uniquely the task, upon success of this
+ * call. If NULL, no descriptor is returned.
+ *
+ * @param name An ASCII string standing for the symbolic name of the
+ * task. When non-NULL and non-empty, a copy of this string is
+ * used for indexing the task into the object registry.
+ *
+ * @param prio The base priority of the task. This value must be in
+ * the [0 .. 99] range, where 0 is the lowest effective priority.
+ *
+ * @param mode The task creation mode. The following flags can be
+ * OR'ed into this bitmask, each of them affecting the new task:
+ *
+ * - T_SUSP causes the task to suspend before returning from this
+ * service; a call to rt_task_resume() is required to resume
+ * execution.
+ *
+ * - T_CPU(cpuid) makes the new task affine to CPU # @b cpuid. CPU
+ * identifiers range from 0 to 7 (inclusive).
+ *
+ * @return 0 is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if either @a prio or @a mode are invalid.
+ *
+ * - -ENOMEM is returned if the system fails to get memory from the
+ * main heap in order to create the task extension.
+ *
+ * - -EEXIST is returned if the @a name is conflicting with an already
+ * registered task.
+ *
+ * - -EBUSY is returned if the caller is already mapped to a Xenomai
+ * task context.
+ *
+ * - -EPERM is returned if this service was called from an
+ * asynchronous context.
+ *
+ * Valid calling context:
+ *
+ * - Regular POSIX threads
+ *
+ * Core specifics:
+ *
+ * When running over the Cobalt core:
+ *
+ * - the caller always returns from this service in primary mode.
+ *
+ * @note Tasks can be referred to from multiple processes which all
+ * belong to the same Xenomai session.
+ */
 int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 {
 	struct threadobj *current = threadobj_current();
@@ -425,6 +631,50 @@ out:
 	return ret;
 }
 
+/**
+ * @fn int rt_task_set_periodic(RT_TASK *task, RTIME idate, RTIME period)
+ * @brief Make a real-time task periodic.
+ *
+ * Make a task periodic by programing its first release point and its
+ * period in the processor time line.  @a task should then call
+ * rt_task_wait_period() to sleep until the next periodic release
+ * point in the processor timeline is reached.
+ *
+ * @param task The descriptor address of the periodic task.
+ * If @a task is NULL, the current task is made periodic.
+ *
+ * @param idate The initial (absolute) date of the first release
+ * point, expressed in clock ticks (see note). @a task will be delayed
+ * until this point is reached. If @a idate is equal to TM_NOW, the
+ * current system date is used.
+ *
+ * @param period The period of the task, expressed in clock ticks (see
+ * note). Passing TM_INFINITE stops the task's periodic timer if
+ * enabled, then returns successfully.
+ *
+ * @return 0 is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a task is NULL but the caller is not a
+ * Xenomai task, or if @a task is non-NULL but not a valid task
+ * descriptor.
+ *
+ * - -ETIMEDOUT is returned if @a idate is different from TM_INFINITE
+ * and represents a date in the past.
+ *
+ * Valid calling contexts:
+ *
+ * - Xenomai threads
+ *
+ * Core specifics:
+ *
+ * Over Cobalt, -EINVAL is returned if @a period is different from
+ * TM_INFINITE but shorter than the scheduling latency value for the
+ * target system, as available from /proc/xenomai/latency.
+ *
+ * @note The @a idate and @a period values are interpreted as a
+ * multiple of the Alchemy clock resolution (see
+ * --alchemy-clock-resolution option, defaults to 1 nanosecond).
+ */
 int rt_task_set_periodic(RT_TASK *task, RTIME idate, RTIME period)
 {
 	struct timespec its, pts;
@@ -454,6 +704,42 @@ out:
 	return ret;
 }
 
+/**
+ * @fn int rt_task_wait_period(unsigned long *overruns_r)
+ * @brief Wait for the next periodic release point.
+ *
+ * Delay the current task until the next periodic release point is
+ * reached. The periodic timer should have been previously started for
+ * @a task by a call to rt_task_set_periodic().
+ *
+ * @param overruns_r If non-NULL, @a overruns_r shall be a pointer to
+ * a memory location which will be written with the count of pending
+ * overruns. This value is written to only when rt_task_wait_period()
+ * returns -ETIMEDOUT or success. The memory location remains
+ * unmodified otherwise. If NULL, this count will not be returned.
+ *
+ * @return 0 is returned upon success. If @a overruns_r is non-NULL,
+ * zero is written to the pointed memory location. Otherwise:
+ *
+ * - -EWOULDBLOCK is returned if rt_task_set_periodic() was not called
+ * for the current task.
+ *
+ * - -EINTR is returned if rt_task_unblock() was called for the
+ * waiting task before the next periodic release point was reached. In
+ * this case, the overrun counter is also cleared.
+ *
+ * - -ETIMEDOUT is returned if a timer overrun occurred, which
+ * indicates that a previous release point was missed by the calling
+ * task. If @a overruns_r is non-NULL, the count of pending overruns
+ * is written to the pointed memory location.
+ *
+ * - -EPERM is returned if this service was called from an
+ * asynchronous context.
+ *
+ * @note If the current release point has already been reached at the
+ * time of the call, the current task immediately returns from this
+ * service with no delay.
+ */
 int rt_task_wait_period(unsigned long *overruns_r)
 {
 	struct alchemy_task *tcb;

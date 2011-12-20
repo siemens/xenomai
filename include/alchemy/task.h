@@ -57,10 +57,26 @@ struct RT_TASK_MCB {
 
 typedef struct RT_TASK_MCB RT_TASK_MCB;
 
+/**
+ * @brief Task status descriptor
+ * @anchor RT_TASK_INFO
+ *
+ * This structure reports various static and runtime information about
+ * a real-time task, returned by a call to rt_task_inquire().
+ */
 struct RT_TASK_INFO {
+	/**
+	 * Task priority.
+	 */
 	int prio;
-	char name[32];
+	/**
+	 * Task status.
+	 */
 	struct threadobj_stat stat;
+	/**
+	 * Name of task.
+	 */
+	char name[32];
 };
 
 typedef struct RT_TASK_INFO RT_TASK_INFO;
