@@ -29,6 +29,7 @@
 #include <asm-generic/xenomai/hal.h>	/* Read the generic bits. */
 #include <asm/div64.h>
 
+#define RTHAL_ARCH_NAME		"blackfin"
 #define RTHAL_TIMER_DEVICE	"coretmr"
 #define RTHAL_CLOCK_DEVICE	"cyclectr"
 
@@ -56,14 +57,14 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 static inline unsigned long long rthal_rdtsc(void)
 {
 	unsigned long long t;
-	rthal_read_tsc(t);
+	ipipe_read_tsc(t);
 	return t;
 }
 
 static inline void rthal_timer_program_shot(unsigned long delay)
 {
 	if (delay < 2)
-		rthal_schedule_irq_head(RTHAL_TIMER_IRQ);
+		__ipipe_schedule_irq_head(RTHAL_TIMER_IRQ);
 	else {
 		bfin_write_TCNTL(TMPWR);
 		CSYNC();

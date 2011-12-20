@@ -60,6 +60,9 @@
 #include <asm/xenomai/syscall.h>
 #include <asm/xenomai/bits/shadow.h>
 
+#define EVENT_PROPAGATE   0
+#define EVENT_STOP        1
+
 static int xn_gid_arg = -1;
 module_param_named(xenomai_gid, xn_gid_arg, int, 0644);
 MODULE_PARM_DESC(xenomai_gid, "GID of the group with access to Xenomai services");
@@ -312,7 +315,7 @@ static inline void request_syscall_restart(xnthread_t *thread,
 
 static inline void set_linux_task_priority(struct task_struct *p, int prio)
 {
-	if (rthal_setsched_root(p, prio ? SCHED_FIFO : SCHED_NORMAL, prio) < 0)
+	if (ipipe_setscheduler_root(p, prio ? SCHED_FIFO : SCHED_NORMAL, prio) < 0)
 		printk(KERN_WARNING
 		       "Xenomai: invalid Linux priority level: %d, task=%s\n",
 		       prio, p->comm);
@@ -385,7 +388,7 @@ static void lostage_handler(void *cookie)
 
 static void schedule_linux_call(int type, struct task_struct *p, int arg)
 {
-	int cpu = rthal_processor_id(), reqnum;
+	int cpu = ipipe_processor_id(), reqnum;
 	struct __lostagerq *rq;
 	spl_t s;
 
@@ -567,7 +570,7 @@ redo:
 	 * uniniterruptible tasks, we just notice the issue and gracefully
 	 * fail; the caller will have to process this signal anyway.
 	 */
-	if (rthal_current_domain == rthal_root_domain) {
+	if (ipipe_current_domain == ipipe_root_domain) {
 		if (XENO_DEBUG(NUCLEUS) && (!signal_pending(this_task)
 		    || this_task->state != TASK_RUNNING))
 			xnpod_fatal
@@ -662,6 +665,7 @@ EXPORT_SYMBOL_GPL(xnshadow_harden);
 void xnshadow_relax(int notify, int reason)
 {
 	xnthread_t *thread = xnpod_current_thread();
+	struct task_struct *p = current;
 	siginfo_t si;
 	int prio;
 
@@ -689,23 +693,23 @@ void xnshadow_relax(int notify, int reason)
 	 * xnpod_suspend_thread() has an interrupts-on section built in.
 	 */
 	splmax();
-	schedule_linux_call(LO_WAKEUP_REQ, current, 0);
+	schedule_linux_call(LO_WAKEUP_REQ, p, 0);
 
 	/*
 	 * Task nklock to synchronize the Linux task state manipulation with
 	 * do_sigwake_event. nklock will be released by xnpod_suspend_thread.
 	 */
 	xnlock_get(&nklock);
-	clear_task_nowakeup(current);
+	set_task_state(p, p->state & ~TASK_NOWAKEUP);
 	xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
 
 	splnone();
-	if (XENO_DEBUG(NUCLEUS) && rthal_current_domain != rthal_root_domain)
+	if (XENO_DEBUG(NUCLEUS) && ipipe_current_domain != ipipe_root_domain)
 		xnpod_fatal("xnshadow_relax() failed for thread %s[%d]",
 			    thread->name, xnthread_user_pid(thread));
 
 	prio = normalize_priority(xnthread_current_priority(thread));
-	rthal_reenter_root(get_switch_lock_owner(),
+	ipipe_reenter_root(get_switch_lock_owner(),
 			   prio ? SCHED_FIFO : SCHED_NORMAL, prio);
 
 	xnstat_counter_inc(&thread->stat.ssw);	/* Account for secondary mode switch. */
@@ -718,7 +722,7 @@ void xnshadow_relax(int notify, int reason)
 			si.si_signo = SIGDEBUG;
 			si.si_code = SI_QUEUE;
 			si.si_int = reason;
-			send_sig_info(SIGDEBUG, &si, current);
+			send_sig_info(SIGDEBUG, &si, p);
 		}
 		xnsynch_detect_claimed_relax(thread);
 	}
@@ -738,7 +742,7 @@ void xnshadow_relax(int notify, int reason)
 	   mode available from the nucleus --rpm]. */
 	if (xnthread_test_info(thread, XNAFFSET)) {
 		xnthread_clear_info(thread, XNAFFSET);
-		set_cpus_allowed(current, xnthread_affinity(thread));
+		set_cpus_allowed(p, xnthread_affinity(thread));
 	}
 #endif /* CONFIG_SMP */
 
@@ -750,7 +754,7 @@ void xnshadow_relax(int notify, int reason)
 
 	trace_mark(xn_nucleus, shadow_relaxed,
 		  "thread %p thread_name %s comm %s",
-		  thread, xnthread_name(thread), current->comm);
+		  thread, xnthread_name(thread), p->comm);
 }
 EXPORT_SYMBOL_GPL(xnshadow_relax);
 
@@ -864,7 +868,7 @@ EXPORT_SYMBOL_GPL(xnshadow_demote);
 
 void xnshadow_exit(void)
 {
-	rthal_reenter_root(get_switch_lock_owner(),
+	ipipe_reenter_root(get_switch_lock_owner(),
 			   current->rt_priority ? SCHED_FIFO : SCHED_NORMAL,
 			   current->rt_priority);
 	do_exit(0);
@@ -960,7 +964,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 		si.si_int = SIGDEBUG_NOMLOCK;
 		send_sig_info(SIGDEBUG, &si, current);
 	} else
-		if ((ret = rthal_disable_ondemand_mappings(current)))
+		if ((ret = ipipe_disable_ondemand_mappings(current)))
 			return ret;
 #endif /* CONFIG_MMU */
 
@@ -1010,7 +1014,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 	xnshadow_mmptd(current) = current->mm;
 	xnarch_atomic_inc(&sys_ppd->refcnt);
 
-	rthal_enable_notifier(current);
+	ipipe_enable_notifier(current);
 
 	if (xnthread_base_priority(thread) == 0 &&
 	    current->policy == SCHED_NORMAL)
@@ -1131,7 +1135,7 @@ static int xnshadow_sys_migrate(int domain)
 {
 	struct xnthread *thread = xnshadow_thread(current);
 
-	if (rthal_current_domain == rthal_root_domain) {
+	if (ipipe_current_domain == ipipe_root_domain) {
 		if (domain == XENOMAI_XENO_DOMAIN) {
 			if (thread == NULL)
 				return -EPERM;
@@ -1150,7 +1154,7 @@ static int xnshadow_sys_migrate(int domain)
 		return 0;
 	}
 
-	/* rthal_current_domain != rthal_root_domain */
+	/* ipipe_current_domain != ipipe_root_domain */
 	if (domain == XENOMAI_LINUX_DOMAIN) {
 		xnshadow_relax(0, 0);
 		return 1;
@@ -1277,10 +1281,12 @@ static inline void mayday_cleanup_page(void)
 		vfree(mayday_page);
 }
 
-static inline void do_mayday_event(struct pt_regs *regs)
+static int handle_mayday_event(unsigned int event, struct ipipe_domain *ipd,
+			       void *data)
 {
 	struct xnthread *thread = xnshadow_thread(current);
 	struct xnarchtcb *tcb = xnthread_archtcb(thread);
+	struct pt_regs *regs = data;
 	struct xnsys_ppd *sys_ppd;
 
 	/* We enter the event handler with hw IRQs off. */
@@ -1290,9 +1296,9 @@ static inline void do_mayday_event(struct pt_regs *regs)
 	XENO_BUGON(NUCLEUS, sys_ppd == NULL);
 
 	xnarch_handle_mayday(tcb, regs, sys_ppd->mayday_addr);
-}
 
-RTHAL_DECLARE_MAYDAY_EVENT(mayday_event);
+	return EVENT_PROPAGATE;
+}
 
 static inline int raise_cap(int cap)
 {
@@ -1881,9 +1887,8 @@ void xnshadow_send_sig(xnthread_t *thread, int sig, int arg, int specific)
 }
 EXPORT_SYMBOL_GPL(xnshadow_send_sig);
 
-static inline
-int do_hisyscall_event(unsigned event, rthal_pipeline_stage_t *stage,
-		       void *data)
+static int handle_hisyscall_event(unsigned int event,
+				  struct ipipe_domain *ipd, void *data)
 {
 	int muxid, muxop, switched, err, sigs;
 	struct pt_regs *regs = data;
@@ -1966,7 +1971,7 @@ int do_hisyscall_event(unsigned event, rthal_pipeline_stage_t *stage,
 	if ((sysflags & __xn_exec_lostage) != 0) {
 		/* Syscall must run into the Linux domain. */
 
-		if (stage == &rthal_domain) {
+		if (ipd == &rthal_archdata.domain) {
 			/* Request originates from the Xenomai domain: just relax the
 			   caller and execute the syscall immediately after. */
 			xnshadow_relax(1, SIGDEBUG_MIGRATE_SYSCALL);
@@ -1980,7 +1985,7 @@ int do_hisyscall_event(unsigned event, rthal_pipeline_stage_t *stage,
 		/* Syscall must be processed either by Xenomai, or by the
 		   calling domain. */
 
-		if (stage != &rthal_domain)
+		if (ipd != &rthal_archdata.domain)
 			/* Request originates from the Linux domain: propagate the
 			   event to our Linux-based handler, so that the caller is
 			   hardened and the syscall is eventually executed from
@@ -2037,7 +2042,7 @@ int do_hisyscall_event(unsigned event, rthal_pipeline_stage_t *stage,
 
 	trace_mark(xn_nucleus, syscall_histage_exit,
 		   "ret %ld", __xn_reg_rval(regs));
-	return RTHAL_EVENT_STOP;
+	return EVENT_STOP;
 
       linux_syscall:
 
@@ -2091,7 +2096,7 @@ int do_hisyscall_event(unsigned event, rthal_pipeline_stage_t *stage,
 			  __xn_mux_id(regs), __xn_mux_op(regs));
 
 		__xn_error_return(regs, -ENOSYS);
-		return RTHAL_EVENT_STOP;
+		return EVENT_STOP;
 	}
 
 	/*
@@ -2101,14 +2106,11 @@ int do_hisyscall_event(unsigned event, rthal_pipeline_stage_t *stage,
 
       propagate_syscall:
 
-	return RTHAL_EVENT_PROPAGATE;
+	return EVENT_PROPAGATE;
 }
 
-RTHAL_DECLARE_EVENT(hisyscall_event);
-
-static inline
-int do_losyscall_event(unsigned event, rthal_pipeline_stage_t *stage,
-		       void *data)
+static int handle_losyscall_event(unsigned int event,
+				  struct ipipe_domain *ipd, void *data)
 {
 	int muxid, muxop, sysflags, switched, err, sigs;
 	xnthread_t *thread = xnshadow_thread(current);
@@ -2120,7 +2122,7 @@ int do_losyscall_event(unsigned event, rthal_pipeline_stage_t *stage,
 
 	if (thread == NULL || !substitute_linux_syscall(regs))
 		/* Fall back to Linux syscall handling. */
-		return RTHAL_EVENT_PROPAGATE;
+		return EVENT_PROPAGATE;
 
 	/*
 	 * This is a Linux syscall issued on behalf of a shadow thread
@@ -2128,7 +2130,7 @@ int do_losyscall_event(unsigned event, rthal_pipeline_stage_t *stage,
 	 * substituted with a Xenomai replacement, do not let Linux know
 	 * about it.
 	 */
-	return RTHAL_EVENT_STOP;
+	return EVENT_STOP;
 
       xenomai_syscall:
 
@@ -2215,27 +2217,25 @@ int do_losyscall_event(unsigned event, rthal_pipeline_stage_t *stage,
 	trace_mark(xn_nucleus, syscall_lostage_exit,
 		   "ret %ld", __xn_reg_rval(regs));
 
-	return RTHAL_EVENT_STOP;
+	return EVENT_STOP;
 }
 
-RTHAL_DECLARE_EVENT(losyscall_event);
-
-static inline void do_taskexit_event(struct task_struct *p)
+static int handle_taskexit_event(unsigned int event,
+				 struct ipipe_domain *ipd, void *data)
 {
-	xnthread_t *thread = xnshadow_thread(p); /* p == current */
+	struct task_struct *p = data; /* p == current */
 	struct xnsys_ppd *sys_ppd;
-	unsigned magic;
+	xnthread_t *thread;
 	spl_t s;
 
-	if (!thread)
-		return;
+	thread = xnshadow_thread(p);
+	if (thread == NULL)
+		return EVENT_PROPAGATE;
 
 	XENO_BUGON(NUCLEUS, !xnpod_root_p());
 
 	if (xnthread_test_state(thread, XNDEBUG))
 		unlock_timers();
-
-	magic = xnthread_get_magic(thread);
 
 	xnlock_get_irqsave(&nklock, s);
 	/* Prevent wakeup call from xnshadow_unmap(). */
@@ -2253,18 +2253,20 @@ static inline void do_taskexit_event(struct task_struct *p)
 
 	trace_mark(xn_nucleus, shadow_exit, "thread %p thread_name %s",
 		   thread, xnthread_name(thread));
+
+	return EVENT_PROPAGATE;
 }
 
-RTHAL_DECLARE_EXIT_EVENT(taskexit_event);
-
-static inline void do_schedule_event(struct task_struct *next_task)
+static int handle_schedule_event(unsigned int event,
+				 struct ipipe_domain *ipd, void *data)
 {
+	struct task_struct *next_task = data;
 	struct task_struct *prev_task;
 	struct xnthread *prev, *next;
 	sigset_t pending;
 
 	if (!xnpod_active_p())
-		return;
+		return EVENT_PROPAGATE;
 
 	prev_task = current;
 	prev = xnshadow_thread(prev_task);
@@ -2327,18 +2329,21 @@ static inline void do_schedule_event(struct task_struct *next_task)
 			}
 		}
 	}
+
+	return EVENT_PROPAGATE;
 }
 
-RTHAL_DECLARE_SCHEDULE_EVENT(schedule_event);
-
-static inline void do_sigwake_event(struct task_struct *p)
+static int handle_sigwake_event(unsigned int event,
+				struct ipipe_domain *ipd, void *data)
 {
-	struct xnthread *thread = xnshadow_thread(p);
+	struct task_struct *p = data;
+	struct xnthread *thread;
 	sigset_t pending;
 	spl_t s;
 
+	thread = xnshadow_thread(p);
 	if (thread == NULL)
-		return;
+		return EVENT_PROPAGATE;
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -2358,7 +2363,7 @@ static inline void do_sigwake_event(struct task_struct *p)
 
 	if (xnthread_test_state(thread, XNRELAX)) {
 		xnlock_put_irqrestore(&nklock, s);
-		return;
+		return EVENT_PROPAGATE;
 	}
 
 	/*
@@ -2371,20 +2376,22 @@ static inline void do_sigwake_event(struct task_struct *p)
 	 * we don't break any undergoing ptrace.
 	 */
 	if (p->state & (TASK_INTERRUPTIBLE|TASK_UNINTERRUPTIBLE))
-		set_task_nowakeup(p);
+		set_task_state(p, p->state | TASK_NOWAKEUP);
 
 	xnshadow_force_wakeup(thread);
 
 	xnpod_schedule();
 
 	xnlock_put_irqrestore(&nklock, s);
+
+	return EVENT_PROPAGATE;
 }
 
-RTHAL_DECLARE_SIGWAKE_EVENT(sigwake_event);
-
-static inline void do_cleanup_event(struct mm_struct *mm)
+static int handle_cleanup_event(unsigned int event,
+				struct ipipe_domain *ipd, void *data)
 {
 	struct task_struct *p = current;
+	struct mm_struct *mm = data;
 	struct xnsys_ppd *sys_ppd;
 	struct mm_struct *old;
 
@@ -2392,17 +2399,100 @@ static inline void do_cleanup_event(struct mm_struct *mm)
 	xnshadow_mmptd(p) = mm;
 
 	sys_ppd = xnsys_ppd_get(0);
-	if (sys_ppd == &__xnsys_global_ppd)
-		goto done;
+	if (sys_ppd != &__xnsys_global_ppd) {
+		if (xnarch_atomic_dec_and_test(&sys_ppd->refcnt))
+			ppd_remove_mm(mm, &detach_ppd);
+	}
 
-	if (xnarch_atomic_dec_and_test(&sys_ppd->refcnt))
-		ppd_remove_mm(mm, &detach_ppd);
-
-  done:
 	xnshadow_mmptd(p) = old;
+
+	return EVENT_PROPAGATE;
 }
 
-RTHAL_DECLARE_CLEANUP_EVENT(cleanup_event);
+static int handle_exception_event(unsigned int event,
+				  struct ipipe_domain *ipd, void *data)
+{
+	/*
+	 * CAUTION: access faults must be propagated downstream
+	 * whichever domain caused them, so that we don't spuriously
+	 * raise a fatal error when some Linux fixup code is available
+	 * to solve the error condition.
+	 */
+	if (ipd == &rthal_archdata.domain) {
+		rthal_archdata.faults[ipipe_processor_id()][event]++;
+		if (rthal_archdata.trap_handler &&
+		    rthal_archdata.trap_handler(event, ipd, data) != 0)
+			return EVENT_STOP;
+	}
+
+	return EVENT_PROPAGATE;
+}
+
+#define catch_taskexit(fn)	\
+    ipipe_catch_event(ipipe_root_domain, IPIPE_EVENT_EXIT, fn)
+#define catch_sigwake(fn)	\
+    ipipe_catch_event(ipipe_root_domain, IPIPE_EVENT_SIGWAKE, fn)
+#define catch_schedule(fn)	\
+    ipipe_catch_event(ipipe_root_domain, IPIPE_EVENT_SCHEDULE, fn)
+#define catch_cleanup(fn)         \
+    ipipe_catch_event(ipipe_root_domain, IPIPE_EVENT_CLEANUP, fn)
+#define catch_mayday(fn)         \
+    ipipe_catch_event(&rthal_archdata.domain, IPIPE_EVENT_RETURN, fn)
+#define catch_losyscall(fn)	\
+    ipipe_catch_event(ipipe_root_domain, IPIPE_EVENT_SYSCALL, fn)
+#define catch_hisyscall(fn)	\
+    ipipe_catch_event(&rthal_archdata.domain, IPIPE_EVENT_SYSCALL, fn)
+#define catch_hostrt(fn)	\
+    ipipe_catch_event(ipipe_root_domain, IPIPE_EVENT_HOSTRT, fn)
+#define catch_exception(ex, fn)	\
+    ipipe_catch_event(&rthal_archdata.domain, ex|IPIPE_EVENT_SELF, fn)
+
+#ifdef CONFIG_XENO_OPT_HOSTRT
+
+static IPIPE_DEFINE_SPINLOCK(__hostrtlock);
+
+static int handle_hostrt_event(unsigned int event,
+			       struct ipipe_domain *ipd, void *data)
+{
+	struct xnarch_hostrt_data *hostrt = data;
+	unsigned long flags;
+
+	/*
+	 * The locking strategy is twofold:
+	 * - The spinlock protects against concurrent updates from within the
+	 *   Linux kernel and against preemption by Xenomai
+	 * - The sequence counter is for lockless read-only access.
+	 */
+
+	spin_lock_irqsave(&__hostrtlock, flags);
+
+	xnwrite_seqcount_begin(&nkvdso->hostrt_data.seqcount);
+
+	nkvdso->hostrt_data.live = 1;
+	nkvdso->hostrt_data.cycle_last = hostrt->cycle_last;
+	nkvdso->hostrt_data.mask = hostrt->mask;
+	nkvdso->hostrt_data.mult = hostrt->mult;
+	nkvdso->hostrt_data.shift = hostrt->shift;
+	nkvdso->hostrt_data.wall_time_sec = hostrt->wall_time_sec;
+	nkvdso->hostrt_data.wall_time_nsec = hostrt->wall_time_nsec;
+	nkvdso->hostrt_data.wall_to_monotonic = hostrt->wall_to_monotonic;
+
+	xnwrite_seqcount_end(&nkvdso->hostrt_data.seqcount);
+
+	spin_unlock_irqrestore(&__hostrtlock, flags);
+
+	return EVENT_PROPAGATE;
+}
+
+static inline void init_hostrt(void)
+{
+	xnseqcount_init(&nkvdso->hostrt_data.seqcount);
+	nkvdso->hostrt_data.live = 0;
+	catch_hostrt(handle_hostrt_event);
+}
+#else
+static inline void init_hostrt(void) { }
+#endif /* CONFIG_XENO_OPT_HOSTRT */
 
 /*
  * xnshadow_register_interface() -- Register a new skin/interface.
@@ -2521,20 +2611,32 @@ EXPORT_SYMBOL_GPL(xnshadow_ppd_get);
 
 void xnshadow_grab_events(void)
 {
-	rthal_catch_taskexit(&taskexit_event);
-	rthal_catch_sigwake(&sigwake_event);
-	rthal_catch_schedule(&schedule_event);
-	rthal_catch_cleanup(&cleanup_event);
-	rthal_catch_return(&mayday_event);
+	unsigned int trapnr;
+
+	/* Trap all faults. */
+	for (trapnr = 0; trapnr < IPIPE_NR_FAULTS; trapnr++)
+		catch_exception(trapnr, handle_exception_event);
+
+	catch_taskexit(handle_taskexit_event);
+	catch_sigwake(handle_sigwake_event);
+	catch_schedule(handle_schedule_event);
+	catch_cleanup(handle_cleanup_event);
+	catch_mayday(handle_mayday_event);
+	init_hostrt();
 }
 
 void xnshadow_release_events(void)
 {
-	rthal_catch_taskexit(NULL);
-	rthal_catch_sigwake(NULL);
-	rthal_catch_schedule(NULL);
-	rthal_catch_cleanup(NULL);
-	rthal_catch_return(NULL);
+	unsigned int trapnr;
+
+	catch_taskexit(NULL);
+	catch_sigwake(NULL);
+	catch_schedule(NULL);
+	catch_cleanup(NULL);
+	catch_mayday(NULL);
+
+	for (trapnr = 0; trapnr < IPIPE_NR_FAULTS; trapnr++)
+		catch_exception(trapnr, NULL);
 }
 
 int xnshadow_mount(void)
@@ -2544,8 +2646,8 @@ int xnshadow_mount(void)
 	int cpu, ret;
 
 	sema_init(&completion_mutex, 1);
-	nkthrptd = rthal_alloc_ptdkey();
-	nkmmptd = rthal_alloc_ptdkey();
+	nkthrptd = ipipe_alloc_ptdkey();
+	nkmmptd = ipipe_alloc_ptdkey();
 
 	if (nkthrptd < 0 || nkmmptd < 0) {
 		printk(KERN_ERR "Xenomai: cannot allocate PTD slots\n");
@@ -2584,12 +2686,12 @@ int xnshadow_mount(void)
 	}
 
 	/* We need to grab these ones right now. */
-	rthal_catch_losyscall(&losyscall_event);
-	rthal_catch_hisyscall(&hisyscall_event);
+	catch_losyscall(handle_losyscall_event);
+	catch_hisyscall(handle_hisyscall_event);
 
 	size = sizeof(xnqueue_t) * PPD_HASH_SIZE;
-	ppd_hash = (xnqueue_t *)xnarch_alloc_host_mem(size);
-	if (!ppd_hash) {
+	ppd_hash = xnarch_alloc_host_mem(size);
+	if (ppd_hash == NULL) {
 		xnshadow_cleanup();
 		printk(KERN_WARNING
 		       "Xenomai: cannot allocate PPD hash table.\n");
@@ -2600,19 +2702,7 @@ int xnshadow_mount(void)
 		initq(&ppd_hash[i]);
 
 	nucleus_muxid = xnshadow_register_interface(&__props);
-
-	if (nucleus_muxid != 0) {
-		if (nucleus_muxid > 0) {
-			printk(KERN_WARNING
-			       "Xenomai: got non null id when registering "
-			       "nucleus syscall table.\n");
-		} else
-			printk(KERN_WARNING
-			       "Xenomai: cannot register nucleus syscall table.\n");
-
-		xnshadow_cleanup();
-		return -ENOMEM;
-	}
+	XENO_BUGON(NUCLEUS, nucleus_muxid != 0);
 
 	return 0;
 }
@@ -2632,8 +2722,8 @@ void xnshadow_cleanup(void)
 			       sizeof(xnqueue_t) * PPD_HASH_SIZE);
 	ppd_hash = NULL;
 
-	rthal_catch_losyscall(NULL);
-	rthal_catch_hisyscall(NULL);
+	catch_losyscall(NULL);
+	catch_hisyscall(NULL);
 
 	for_each_online_cpu(cpu) {
 		if (!xnarch_cpu_supported(cpu))
@@ -2646,7 +2736,7 @@ void xnshadow_cleanup(void)
 	}
 
 	rthal_apc_free(lostage_apc);
-	rthal_free_ptdkey(nkthrptd);
+	ipipe_free_ptdkey(nkthrptd);
 
 	mayday_cleanup_page();
 

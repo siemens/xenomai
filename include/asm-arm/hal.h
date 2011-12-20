@@ -32,6 +32,8 @@
 #include <asm-generic/xenomai/hal.h>	/* Read the generic bits. */
 #include <asm/byteorder.h>
 
+#define RTHAL_ARCH_NAME "arm"
+
 #ifdef CONFIG_VFP
 #include <asm/vfp.h>
 #endif /* CONFIG_VFP */
@@ -149,7 +151,7 @@ static inline __attribute_const__ unsigned long ffnz (unsigned long ul)
 #endif /* RTHAL_TIMER_IRQ */
 
 #ifndef RTHAL_TIMER_IPI
-#define RTHAL_TIMER_IPI RTHAL_HRTIMER_IPI
+#define RTHAL_TIMER_IPI IPIPE_SERVICE_IPI3
 #endif /* RTHAL_TIMER_IPI */
 
 #ifdef __IPIPE_FEATURE_SYSINFO_V2
@@ -166,7 +168,7 @@ static inline __attribute_const__ unsigned long ffnz (unsigned long ul)
 static inline unsigned long long rthal_rdtsc (void)
 {
     unsigned long long t;
-    rthal_read_tsc(t);
+    ipipe_read_tsc(t);
     return t;
 }
 
@@ -178,14 +180,9 @@ static inline struct task_struct *rthal_current_host_task (int cpuid)
 static inline void rthal_timer_program_shot (unsigned long delay)
 {
     if(!delay)
-	rthal_schedule_irq_head(RTHAL_TIMER_IRQ);
+	__ipipe_schedule_irq_head(RTHAL_TIMER_IRQ);
     else
 	__ipipe_mach_set_dec(delay);
-}
-
-static inline struct mm_struct *rthal_get_active_mm(void)
-{
-	return per_cpu(ipipe_active_mm, smp_processor_id());
 }
 
 /* Private interface -- Internal use only */

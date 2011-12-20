@@ -100,11 +100,11 @@ static inline void xnarch_switch_to(xnarchtcb_t *out_tcb,
 	if (likely(next != NULL)) {
 		in_tcb->active_task = next;
 		in_tcb->active_mm = in_tcb->mm;
-		rthal_clear_foreign_stack(&rthal_domain);
+		ipipe_clear_foreign_stack(&rthal_archdata.domain);
 	} else {
 		in_tcb->active_task = prev;
 		in_tcb->active_mm = prev_mm;
-		rthal_set_foreign_stack(&rthal_domain);
+		ipipe_set_foreign_stack(&rthal_archdata.domain);
 	}
 
 	next_mm = in_tcb->active_mm;
@@ -119,7 +119,7 @@ static inline void xnarch_switch_to(xnarchtcb_t *out_tcb,
 #endif
 #ifdef CONFIG_PPC64
 		if (likely(next_mm)) {
-			cpu_set(rthal_processor_id(), next_mm->cpu_vm_mask);
+			cpu_set(ipipe_processor_id(), next_mm->cpu_vm_mask);
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0)
 			if (cpu_has_feature(CPU_FTR_SLB))
 #else
@@ -271,8 +271,8 @@ static inline int xnarch_escalate(void)
 {
 	extern int xnarch_escalation_virq;
 
-	if (rthal_current_domain == rthal_root_domain) {
-		rthal_trigger_irq(xnarch_escalation_virq);
+	if (ipipe_current_domain == ipipe_root_domain) {
+		ipipe_trigger_irq(xnarch_escalation_virq);
 		return 1;
 	}
 

@@ -19,13 +19,13 @@
 #ifndef _XENO_ASM_SIM_BITS_INTR_H
 #define _XENO_ASM_SIM_BITS_INTR_H
 
-typedef void (*rthal_irq_handler_t)(unsigned, void *);
+typedef void (*ipipe_irq_handler_t)(unsigned, void *);
 
-typedef int (*rthal_irq_ackfn_t)(unsigned);
+typedef int (*ipipe_irq_ackfn_t)(unsigned);
 
 static inline int xnarch_hook_irq (unsigned irq,
-				   rthal_irq_handler_t handler,
-				   rthal_irq_ackfn_t ackfn, /* Ignored. */
+				   ipipe_irq_handler_t handler,
+				   ipipe_irq_ackfn_t ackfn, /* Ignored. */
 				   void *cookie)
 {
 	return mvm_hook_irq(irq,handler,cookie);

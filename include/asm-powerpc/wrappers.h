@@ -68,7 +68,7 @@
 })
 
 #define rthal_irq_desc_status(irq)	(rthal_irq_descp(irq)->status)
-#define rthal_irq_handlerp(irq)		rthal_irq_descp(irq)->chip
+#define __ipipe_irq_handlerp(irq)		rthal_irq_descp(irq)->chip
 typedef irq_handler_t rthal_irq_host_handler_t;
 
 #if !defined(CONFIG_GENERIC_HARDIRQS) \
@@ -76,20 +76,20 @@ typedef irq_handler_t rthal_irq_host_handler_t;
 #define rthal_irq_chip_enable(irq)					\
 	({								\
 		int __err__ = 0;					\
-		if (unlikely(rthal_irq_handlerp(irq)->unmask == NULL))	\
+		if (unlikely(__ipipe_irq_handlerp(irq)->unmask == NULL))	\
 			__err__ = -ENODEV;				\
 		else							\
-			rthal_irq_handlerp(irq)->unmask(irq);		\
+			__ipipe_irq_handlerp(irq)->unmask(irq);		\
 		__err__;						\
 	})
 
 #define rthal_irq_chip_disable(irq)					\
 	({								\
 		int __err__ = 0;					\
-		if (rthal_irq_handlerp(irq)->mask == NULL)		\
+		if (__ipipe_irq_handlerp(irq)->mask == NULL)		\
 			__err__ = -ENODEV;				\
 		else							\
-			rthal_irq_handlerp(irq)->mask(irq);		\
+			__ipipe_irq_handlerp(irq)->mask(irq);		\
 		__err__;						\
 	})
 

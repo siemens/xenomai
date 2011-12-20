@@ -59,58 +59,37 @@ module_param_named(clockfreq, rthal_clockfreq_arg, ulong, 0444);
 #ifdef CONFIG_SMP
 static unsigned long supported_cpus_arg = -1;
 module_param_named(supported_cpus, supported_cpus_arg, ulong, 0444);
-
-cpumask_t rthal_supported_cpus;
-EXPORT_SYMBOL_GPL(rthal_supported_cpus);
 #endif /* CONFIG_SMP */
 
-static int rthal_init_done;
-
-static rthal_spinlock_t rthal_apc_lock = RTHAL_SPIN_LOCK_UNLOCKED;
+static IPIPE_DEFINE_SPINLOCK(rthal_apc_lock);
 
 static atomic_t rthal_sync_count = ATOMIC_INIT(1);
 
-rthal_pipeline_stage_t rthal_domain;
-
-struct rthal_calibration_data rthal_tunables;
-
-rthal_trap_handler_t rthal_trap_handler;
-
-unsigned rthal_realtime_faults[RTHAL_NR_CPUS][RTHAL_NR_FAULTS];
-EXPORT_SYMBOL_GPL(rthal_realtime_faults);
-
-unsigned long rthal_apc_map;
-EXPORT_SYMBOL_GPL(rthal_apc_map);
-
-struct rthal_apc_desc rthal_apc_table[RTHAL_NR_APCS];
-EXPORT_SYMBOL_GPL(rthal_apc_table);
-
-volatile int rthal_sync_op;
-
-unsigned long rthal_apc_pending[RTHAL_NR_CPUS];
-
-unsigned int rthal_apc_virq;
+struct rthal_archdata rthal_archdata;
+EXPORT_SYMBOL_GPL(rthal_archdata);
 
 unsigned long rthal_critical_enter(void (*synch) (void))
 {
-    unsigned long flags = rthal_grab_superlock(synch);
+	unsigned long flags = ipipe_critical_enter(synch);
 
-    if (atomic_dec_and_test(&rthal_sync_count))
-	rthal_sync_op = 0;
-    else if (synch != NULL)
-	printk(KERN_WARNING "Xenomai: Nested critical sync will fail.\n");
+	if (atomic_dec_and_test(&rthal_sync_count))
+		rthal_archdata.sync_op = 0;
+	else
+		BUG_ON(synch != NULL);
 
-    return flags;
+	return flags;
 }
+EXPORT_SYMBOL_GPL(rthal_critical_enter);
 
 void rthal_critical_exit(unsigned long flags)
 {
-    atomic_inc(&rthal_sync_count);
-    rthal_release_superlock(flags);
+	atomic_inc(&rthal_sync_count);
+	ipipe_critical_exit(flags);
 }
+EXPORT_SYMBOL_GPL(rthal_critical_exit);
 
 /**
- * @fn int rthal_irq_request(unsigned irq, rthal_irq_handler_t handler, rthal_irq_ackfn_t ackfn, void *cookie)
+ * @fn int rthal_irq_request(unsigned int irq, ipipe_irq_handler_t handler, ipipe_irq_ackfn_t ackfn, void *cookie)
  *
  * @brief Install a real-time interrupt handler.
  *
@@ -156,24 +135,25 @@ void rthal_critical_exit(unsigned long flags)
  * - Any domain context.
  */
 
-int rthal_irq_request(unsigned irq,
-		      rthal_irq_handler_t handler,
-		      rthal_irq_ackfn_t ackfn, void *cookie)
+int rthal_irq_request(unsigned int irq,
+		      ipipe_irq_handler_t handler,
+		      ipipe_irq_ackfn_t ackfn, void *cookie)
 {
-    if (handler == NULL || irq >= IPIPE_NR_IRQS)
-	return -EINVAL;
+	if (handler == NULL || irq >= IPIPE_NR_IRQS)
+		return -EINVAL;
 
-    return rthal_virtualize_irq(&rthal_domain,
-				irq,
-				handler,
-				cookie,
-				ackfn,
-				IPIPE_HANDLE_MASK | IPIPE_WIRED_MASK |
-				IPIPE_EXCLUSIVE_MASK);
+	return ipipe_virtualize_irq(&rthal_archdata.domain,
+				    irq,
+				    handler,
+				    cookie,
+				    ackfn,
+				    IPIPE_HANDLE_MASK | IPIPE_WIRED_MASK |
+				    IPIPE_EXCLUSIVE_MASK);
 }
+EXPORT_SYMBOL_GPL(rthal_irq_request);
 
 /**
- * @fn int rthal_irq_release(unsigned irq)
+ * @fn int rthal_irq_release(unsigned int irq)
  *
  * @brief Uninstall a real-time interrupt handler.
  *
@@ -198,17 +178,18 @@ int rthal_irq_request(unsigned irq,
  * - Any domain context.
  */
 
-int rthal_irq_release(unsigned irq)
+int rthal_irq_release(unsigned int irq)
 {
-    if (irq >= IPIPE_NR_IRQS)
-	return -EINVAL;
+	if (irq >= IPIPE_NR_IRQS)
+		return -EINVAL;
 
-    return rthal_virtualize_irq(&rthal_domain,
-				irq, NULL, NULL, NULL, IPIPE_PASS_MASK);
+	return ipipe_virtualize_irq(&rthal_archdata.domain,
+				    irq, NULL, NULL, NULL, IPIPE_PASS_MASK);
 }
+EXPORT_SYMBOL_GPL(rthal_irq_release);
 
 /**
- * @fn int rthal_trap_catch (rthal_trap_handler_t handler)
+ * @fn int rthal_trap_catch (rthal_archdata.trap_handler_t handler)
  *
  * @brief Installs a fault handler.
  *
@@ -230,81 +211,84 @@ int rthal_irq_release(unsigned irq)
  * - Any domain context.
  */
 
-rthal_trap_handler_t rthal_trap_catch(rthal_trap_handler_t handler)
+ipipe_event_handler_t rthal_trap_catch(ipipe_event_handler_t handler)
 {
-    return (rthal_trap_handler_t) xchg(&rthal_trap_handler, handler);
+	return (ipipe_event_handler_t) xchg(&rthal_archdata.trap_handler, handler);
 }
+EXPORT_SYMBOL_GPL(rthal_trap_catch);
 
 static void rthal_apc_handler(unsigned virq, void *arg)
 {
-    void (*handler) (void *), *cookie;
-    int cpu;
+	void (*handler) (void *), *cookie;
+	int cpu;
 
-    rthal_spin_lock(&rthal_apc_lock);
+	spin_lock(&rthal_apc_lock);
 
-    cpu = rthal_processor_id();
+	cpu = ipipe_processor_id();
 
-    /* <!> This loop is not protected against a handler becoming
-       unavailable while processing the pending queue; the software
-       must make sure to uninstall all apcs before eventually
-       unloading any module that may contain apc handlers. We keep the
-       handler affinity with the poster's CPU, so that the handler is
-       invoked on the same CPU than the code which called
-       rthal_apc_schedule(). */
+	/*
+	 * <!> This loop is not protected against a handler becoming
+	 * unavailable while processing the pending queue; the
+	 * software must make sure to uninstall all apcs before
+	 * eventually unloading any module that may contain apc
+	 * handlers. We keep the handler affinity with the poster's
+	 * CPU, so that the handler is invoked on the same CPU than
+	 * the code which called rthal_apc_schedule().
+	 */
+	while (rthal_archdata.apc_pending[cpu]) {
+		int apc = ffnz(rthal_archdata.apc_pending[cpu]);
+		clear_bit(apc, &rthal_archdata.apc_pending[cpu]);
+		handler = rthal_archdata.apc_table[apc].handler;
+		cookie = rthal_archdata.apc_table[apc].cookie;
+		rthal_archdata.apc_table[apc].hits[cpu]++;
+		spin_unlock(&rthal_apc_lock);
+		handler(cookie);
+		spin_lock(&rthal_apc_lock);
+	}
 
-    while (rthal_apc_pending[cpu] != 0) {
-	int apc = ffnz(rthal_apc_pending[cpu]);
-	clear_bit(apc, &rthal_apc_pending[cpu]);
-	handler = rthal_apc_table[apc].handler;
-	cookie = rthal_apc_table[apc].cookie;
-	rthal_apc_table[apc].hits[cpu]++;
-	rthal_spin_unlock(&rthal_apc_lock);
-	handler(cookie);
-	rthal_spin_lock(&rthal_apc_lock);
-    }
-
-    rthal_spin_unlock(&rthal_apc_lock);
+	spin_unlock(&rthal_apc_lock);
 }
 
 #ifdef CONFIG_PREEMPT_RT
 
-/* On PREEMPT_RT, we need to invoke the apc handlers over a process
-   context, so that the latter can access non-atomic kernel services
-   properly. So the Adeos virq is only used to kick a per-CPU apc
-   server process which in turns runs the apc dispatcher. A bit
-   twisted, but indeed consistent with the threaded IRQ model of
-   PREEMPT_RT. */
-
+/*
+ * On PREEMPT_RT, we need to invoke the apc handlers over a process
+ * context, so that the latter can access non-atomic kernel services
+ * properly. So the Adeos virq is only used to kick a per-CPU apc
+ * server process which in turns runs the apc dispatcher. A bit
+ * twisted, but indeed consistent with the threaded IRQ model of
+ * PREEMPT_RT.
+ */
 #include <linux/kthread.h>
 
-static struct task_struct *rthal_apc_servers[RTHAL_NR_CPUS];
+static struct task_struct *rthal_apc_servers[NR_CPUS];
 
 static int rthal_apc_thread(void *data)
 {
-    unsigned cpu = (unsigned)(unsigned long)data;
+	unsigned cpu = (unsigned)(unsigned long)data;
 
-    set_cpus_allowed(current, cpumask_of_cpu(cpu));
-    sigfillset(&current->blocked);
-    current->flags |= PF_NOFREEZE;
-    /* Use highest priority here, since some apc handlers might
-       require to run as soon as possible after the request has been
-       pended. */
-    rthal_setsched_root(current, SCHED_FIFO, MAX_RT_PRIO - 1);
+	set_cpus_allowed(current, cpumask_of_cpu(cpu));
+	sigfillset(&current->blocked);
+	current->flags |= PF_NOFREEZE;
+	/* Use highest priority here, since some apc handlers might
+	   require to run as soon as possible after the request has been
+	   pended. */
+	ipipe_setscheduler_root(current, SCHED_FIFO, MAX_RT_PRIO - 1);
 
-    while (!kthread_should_stop()) {
-	set_current_state(TASK_INTERRUPTIBLE);
-	schedule();
-	rthal_apc_handler(0, NULL);
-    }
+	while (!kthread_should_stop()) {
+		set_current_state(TASK_INTERRUPTIBLE);
+		schedule();
+		rthal_apc_handler(0, NULL);
+	}
 
-    __set_current_state(TASK_RUNNING);
+	__set_current_state(TASK_RUNNING);
 
-    return 0;
+	return 0;
 }
 
 void rthal_apc_kicker(unsigned virq, void *cookie)
 {
-    wake_up_process(rthal_apc_servers[smp_processor_id()]);
+	wake_up_process(rthal_apc_servers[smp_processor_id()]);
 }
 
 #define rthal_apc_trampoline rthal_apc_kicker
@@ -355,7 +339,6 @@ void rthal_apc_kicker(unsigned virq, void *cookie)
  *
  * - Linux domain context.
  */
-
 int rthal_apc_alloc(const char *name,
 		    void (*handler) (void *cookie), void *cookie)
 {
@@ -365,23 +348,24 @@ int rthal_apc_alloc(const char *name,
 	if (handler == NULL)
 		return -EINVAL;
 
-	rthal_spin_lock_irqsave(&rthal_apc_lock, flags);
+	spin_lock_irqsave(&rthal_apc_lock, flags);
 
-	if (rthal_apc_map == ~0) {
+	if (rthal_archdata.apc_map == ~0) {
 		apc = -EBUSY;
 		goto out;
 	}
 
-	apc = ffz(rthal_apc_map);
-	__set_bit(apc, &rthal_apc_map);
-	rthal_apc_table[apc].handler = handler;
-	rthal_apc_table[apc].cookie = cookie;
-	rthal_apc_table[apc].name = name;
+	apc = ffz(rthal_archdata.apc_map);
+	__set_bit(apc, &rthal_archdata.apc_map);
+	rthal_archdata.apc_table[apc].handler = handler;
+	rthal_archdata.apc_table[apc].cookie = cookie;
+	rthal_archdata.apc_table[apc].name = name;
 out:
-	rthal_spin_unlock_irqrestore(&rthal_apc_lock, flags);
+	spin_unlock_irqrestore(&rthal_apc_lock, flags);
 
 	return apc;
 }
+EXPORT_SYMBOL_GPL(rthal_apc_alloc);
 
 /**
  * @fn int rthal_apc_free (int apc)
@@ -399,118 +383,98 @@ out:
  *
  * - Any domain context.
  */
-
 void rthal_apc_free(int apc)
 {
-	BUG_ON(apc < 0 || apc >= RTHAL_NR_APCS);
-	clear_bit(apc, &rthal_apc_map);
+	BUG_ON(apc < 0 || apc >= BITS_PER_LONG);
+	clear_bit(apc, &rthal_archdata.apc_map);
 }
+EXPORT_SYMBOL_GPL(rthal_apc_free);
 
 int rthal_init(void)
 {
-    int err;
+	struct ipipe_domain_attr attr;
+	int ret;
 
-    err = rthal_arch_init();
-
-    if (err)
-	goto out;
+	ret = rthal_arch_init();
+	if (ret)
+		return ret;
 
 #ifdef CONFIG_SMP
-    {
-	int cpu;
-	cpus_clear(rthal_supported_cpus);
-	for (cpu = 0; cpu < BITS_PER_LONG; cpu++)
-	    if (supported_cpus_arg & (1 << cpu))
-		cpu_set(cpu, rthal_supported_cpus);
-    }
+	{
+		int cpu;
+		cpus_clear(rthal_archdata.supported_cpus);
+		for (cpu = 0; cpu < BITS_PER_LONG; cpu++)
+			if (supported_cpus_arg & (1 << cpu))
+				cpu_set(cpu, rthal_archdata.supported_cpus);
+	}
 #endif /* CONFIG_SMP */
 
-    /*
-     * The arch-dependent support must have updated the various
-     * frequency args as required.
-     */
+	/*
+	 * The arch-dependent support must have updated the various
+	 * frequency args as required.
+	 */
+	if (rthal_cpufreq_arg == 0) {
+		printk(KERN_ERR "Xenomai has detected a CPU frequency of 0. Aborting.\n");
+		return -ENODEV;
+	}
 
-    /* check the CPU frequency first and abort if it's invalid */
-    if (rthal_cpufreq_arg == 0) {
-	printk(KERN_ERR "Xenomai has detected a CPU frequency of 0. Aborting.\n");
-	return -ENODEV;
-    }
+	rthal_archdata.cpu_freq = rthal_cpufreq_arg;
+	rthal_archdata.timer_freq = rthal_timerfreq_arg;
+	rthal_archdata.clock_freq = rthal_clockfreq_arg;
 
-    rthal_tunables.cpu_freq = rthal_cpufreq_arg;
-    rthal_tunables.timer_freq = rthal_timerfreq_arg;
-    rthal_tunables.clock_freq = rthal_clockfreq_arg;
+	/*
+	 * Allocate a virtual interrupt to handle apcs within the
+	 * Linux domain.
+	 */
+	rthal_archdata.apc_virq = ipipe_alloc_virq();
+	if (rthal_archdata.apc_virq == 0) {
+		printk(KERN_ERR "Xenomai: No virtual interrupt available.\n");
+		ret = -EBUSY;
+		goto out_arch_cleanup;
+	}
 
-    /*
-     * Allocate a virtual interrupt to handle apcs within the Linux
-     * domain.
-     */
-    rthal_apc_virq = rthal_alloc_virq();
+	ret = ipipe_virtualize_irq(ipipe_current_domain,
+				   rthal_archdata.apc_virq,
+				   &rthal_apc_handler,
+				   NULL, NULL, IPIPE_HANDLE_MASK);
+	if (ret) {
+		printk(KERN_ERR "Xenomai: Failed to virtualize IRQ.\n");
+		goto out_free_irq;
+	}
 
-    if (!rthal_apc_virq) {
-	printk(KERN_ERR "Xenomai: No virtual interrupt available.\n");
-	err = -EBUSY;
-	goto out_arch_cleanup;
-    }
+	ipipe_init_attr(&attr);
+	attr.name = "Xenomai";
+	attr.entry = NULL;
+	attr.domid = 0x58454e4f;
+	attr.priority = IPIPE_HEAD_PRIORITY;
+	ret = ipipe_register_domain(&rthal_archdata.domain, &attr);
+	if (ret == 0) {
+		printk(KERN_INFO "Xenomai: hal/%s enabled.\n", RTHAL_ARCH_NAME);
+		return 0;
+	}
 
-    err = rthal_virtualize_irq(rthal_current_domain,
-			       rthal_apc_virq,
-			       &rthal_apc_handler,
-			       NULL, NULL, IPIPE_HANDLE_MASK);
-    if (err) {
-	printk(KERN_ERR "Xenomai: Failed to virtualize IRQ.\n");
-	goto out_free_irq;
-    }
+	printk(KERN_ERR "Xenomai: Domain registration failed (%d).\n", ret);
+	ipipe_virtualize_irq(ipipe_current_domain, rthal_archdata.apc_virq,
+			     NULL, NULL, NULL, 0);
+out_free_irq:
+	ipipe_free_virq(rthal_archdata.apc_virq);
 
-    err = rthal_register_domain(&rthal_domain,
-				"Xenomai",
-				RTHAL_DOMAIN_ID,
-				RTHAL_XENO_PRIO, &rthal_domain_entry);
-    if (!err)
-	rthal_init_done = 1;
-    else {
-#ifdef __ipipe_pipeline_head
-	if (err == -EAGAIN) {
-	    printk(KERN_ERR
-		   "Xenomai: the real-time domain cannot head the pipeline,\n");
-	    printk(KERN_ERR
-		   "         either unload domain %s or disable CONFIG_XENO_OPT_PIPELINE_HEAD.\n",
-		   __ipipe_pipeline_head()->name);
-	} else
-#endif
-	    printk(KERN_ERR "Xenomai: Domain registration failed (%d).\n", err);
+out_arch_cleanup:
+	rthal_arch_cleanup();
 
-	goto fail;
-    }
-
-    return 0;
-
-  fail:
-    rthal_virtualize_irq(rthal_current_domain, rthal_apc_virq, NULL, NULL, NULL,
-			 0);
-
-  out_free_irq:
-    rthal_free_virq(rthal_apc_virq);
-
-  out_arch_cleanup:
-    rthal_arch_cleanup();
-
-  out:
-    return err;
+	return ret;
 }
+EXPORT_SYMBOL_GPL(rthal_init);
 
 void rthal_exit(void)
 {
-    if (rthal_apc_virq) {
-	rthal_virtualize_irq(rthal_current_domain, rthal_apc_virq, NULL, NULL,
-			     NULL, 0);
-	rthal_free_virq(rthal_apc_virq);
-    }
-
-    if (rthal_init_done)
-	rthal_unregister_domain(&rthal_domain);
-
-    rthal_arch_cleanup();
+	ipipe_virtualize_irq(ipipe_current_domain, rthal_archdata.apc_virq,
+			     NULL, NULL, NULL, 0);
+	ipipe_free_virq(rthal_archdata.apc_virq);
+	ipipe_unregister_domain(&rthal_archdata.domain);
+	rthal_arch_cleanup();
 }
+EXPORT_SYMBOL_GPL(rthal_exit);
 
 unsigned long long __rthal_generic_full_divmod64(unsigned long long a,
 						 unsigned long long b,
@@ -531,9 +495,10 @@ unsigned long long __rthal_generic_full_divmod64(unsigned long long a,
 		*rem = r;
 	return q;
 }
+EXPORT_SYMBOL_GPL(__rthal_generic_full_divmod64);
 
 /**
- * @fn int rthal_irq_enable(unsigned irq)
+ * @fn int rthal_irq_enable(unsigned int irq)
  *
  * @brief Enable an interrupt source.
  *
@@ -562,9 +527,17 @@ unsigned long long __rthal_generic_full_divmod64(unsigned long long a,
  *
  * - Any domain context.
  */
+int rthal_irq_enable(unsigned int irq)
+{
+	if (irq >= NR_IRQS || rthal_irq_descp(irq) == NULL)
+		return -EINVAL;
+
+	return rthal_irq_chip_enable(irq);
+}
+EXPORT_SYMBOL_GPL(rthal_irq_enable);
 
 /**
- * @fn int rthal_irq_disable(unsigned irq)
+ * @fn int rthal_irq_disable(unsigned int irq)
  *
  * @brief Disable an interrupt source.
  *
@@ -589,6 +562,49 @@ unsigned long long __rthal_generic_full_divmod64(unsigned long long a,
  *
  * - Any domain context.
  */
+int rthal_irq_disable(unsigned int irq)
+{
+	if (irq >= NR_IRQS || rthal_irq_descp(irq) == NULL)
+		return -EINVAL;
+
+	return rthal_irq_chip_disable(irq);
+}
+EXPORT_SYMBOL_GPL(rthal_irq_disable);
+
+/**
+ * @fn int rthal_irq_end(unsigned int irq)
+ *
+ * @brief End of interrupt handling.
+ *
+ * This service should be invoked to notify the system when a
+ * real-time interrupt has been serviced, to enable the IRQ channel
+ * back again.
+ *
+ * @param irq The interrupt source from which a request was handled.
+ * This value is architecture-dependent.
+ *
+ * @return 0 is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a irq is invalid.
+ *
+ * - Other error codes might be returned in case some internal error
+ * happens at the Adeos level. Such error might caused by conflicting
+ * Adeos requests made by third-party code.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Any domain context.
+ */
+int rthal_irq_end(unsigned int irq)
+{
+	if (irq >= NR_IRQS || rthal_irq_descp(irq) == NULL)
+		return -EINVAL;
+
+	return rthal_irq_chip_end(irq);
+}
+EXPORT_SYMBOL_GPL(rthal_irq_end);
 
 /**
  * \fn int rthal_timer_request(void (*tick_handler)(void),
@@ -664,29 +680,9 @@ unsigned long long __rthal_generic_full_divmod64(unsigned long long a,
 
 /*@}*/
 
-EXPORT_SYMBOL_GPL(rthal_irq_request);
-EXPORT_SYMBOL_GPL(rthal_irq_release);
-EXPORT_SYMBOL_GPL(rthal_irq_enable);
-EXPORT_SYMBOL_GPL(rthal_irq_disable);
-EXPORT_SYMBOL_GPL(rthal_irq_end);
-EXPORT_SYMBOL_GPL(rthal_trap_catch);
 EXPORT_SYMBOL_GPL(rthal_timer_request);
 EXPORT_SYMBOL_GPL(rthal_timer_release);
 EXPORT_SYMBOL_GPL(rthal_timer_calibrate);
-EXPORT_SYMBOL_GPL(rthal_apc_alloc);
-EXPORT_SYMBOL_GPL(rthal_apc_free);
-
-EXPORT_SYMBOL_GPL(rthal_critical_enter);
-EXPORT_SYMBOL_GPL(rthal_critical_exit);
-
-EXPORT_SYMBOL_GPL(rthal_domain);
-EXPORT_SYMBOL_GPL(rthal_tunables);
-
-EXPORT_SYMBOL_GPL(rthal_init);
-EXPORT_SYMBOL_GPL(rthal_exit);
-EXPORT_SYMBOL_GPL(__rthal_generic_full_divmod64);
-EXPORT_SYMBOL_GPL(rthal_apc_virq);
-EXPORT_SYMBOL_GPL(rthal_apc_pending);
 
 EXPORT_SYMBOL_GPL(kill_proc_info);
 EXPORT_SYMBOL_GPL(get_mm_exe_file);

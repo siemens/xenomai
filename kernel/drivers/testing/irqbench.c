@@ -65,7 +65,7 @@ struct rt_irqbench_context {
 	rtdm_irq_t irq_handle;
 	rtdm_event_t irq_event;
 	rtdm_task_t irq_task;
-	rthal_pipeline_stage_t domain;
+	struct ipipe_domain domain;
 	struct semaphore nrt_mutex;
 };
 
@@ -166,12 +166,6 @@ static void rt_irqbench_domain_irq(unsigned irq, void *arg)
 	rthal_irq_end(ctx->port_irq);
 }
 
-static inline void do_rt_irqbench_domain_entry(void)
-{
-}
-
-static RTHAL_DECLARE_DOMAIN(rt_irqbench_domain_entry);
-
 static int rt_irqbench_stop(struct rt_irqbench_context *ctx)
 {
 	if (ctx->mode < 0)
@@ -191,9 +185,9 @@ static int rt_irqbench_stop(struct rt_irqbench_context *ctx)
 	}
 
 	if (ctx->mode == RTTST_IRQBENCH_HARD_IRQ) {
-		rthal_virtualize_irq(&ctx->domain, ctx->port_irq, NULL, NULL,
+		ipipe_virtualize_irq(&ctx->domain, ctx->port_irq, NULL, NULL,
 				     NULL, IPIPE_PASS_MASK);
-		rthal_unregister_domain(&ctx->domain);
+		ipipe_unregister_domain(&ctx->domain);
 	} else
 		rtdm_irq_free(&ctx->irq_handle);
 
@@ -239,6 +233,7 @@ static int rt_irqbench_ioctl_nrt(struct rtdm_dev_context *context,
 	struct rt_irqbench_context *ctx;
 	struct rttst_irqbench_config config_buf;
 	struct rttst_irqbench_config *config;
+	struct ipipe_domain_attr attr;
 	int err = 0;
 
 	ctx = (struct rt_irqbench_context *)context->dev_private;
@@ -336,18 +331,18 @@ static int rt_irqbench_ioctl_nrt(struct rtdm_dev_context *context,
 			break;
 
 		case RTTST_IRQBENCH_HARD_IRQ:
-			err =
-			    rthal_register_domain(&ctx->domain,
-						  "irqbench",
-						  0x49525142,
-						  IPIPE_HEAD_PRIORITY,
-						  rt_irqbench_domain_entry);
+			ipipe_init_attr(&attr);
+			attr.name = "irqbench";
+			attr.entry = NULL;
+			attr.domid = 0x49525142;
+			attr.priority = IPIPE_HEAD_PRIORITY;
+			err = ipipe_register_domain(&ctx->domain, &attr);
 			if (err)
 				break;
 
 			ctx->port_irq = config->port_irq;
 			err =
-			    rthal_virtualize_irq(&ctx->domain,
+			    ipipe_virtualize_irq(&ctx->domain,
 						 config->port_irq,
 						 rt_irqbench_domain_irq,
 						 ctx, NULL,
@@ -355,7 +350,7 @@ static int rt_irqbench_ioctl_nrt(struct rtdm_dev_context *context,
 						 IPIPE_WIRED_MASK |
 						 IPIPE_EXCLUSIVE_MASK);
 			if (err)
-				rthal_unregister_domain(&ctx->domain);
+				ipipe_unregister_domain(&ctx->domain);
 			rthal_irq_enable(ctx->port_irq);
 			break;
 

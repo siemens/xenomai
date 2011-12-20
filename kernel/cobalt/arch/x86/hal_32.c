@@ -70,15 +70,18 @@ unsigned long rthal_timer_calibrate(void)
 
 	rthal_critical_exit(flags);
 
-#ifdef CONFIG_IPIPE_TRACE_IRQSOFF
-	/* Reset the max trace, since it contains the calibration time now. */
-	rthal_trace_max_reset();
-#endif /* CONFIG_IPIPE_TRACE_IRQSOFF */
+	/*
+	 * Reset the max trace, since it contains the calibration time
+	 * now.
+	 */
+	ipipe_trace_max_reset();
 
 	return rthal_imuldiv(dt, 20, RTHAL_CPU_FREQ);
 }
 
 #else /* !CONFIG_X86_LOCAL_APIC */
+
+extern enum rthal_ktimer_mode rthal_ktimer_saved_mode;
 
 unsigned long rthal_timer_calibrate(void)
 {
@@ -86,7 +89,7 @@ unsigned long rthal_timer_calibrate(void)
 	rthal_time_t t, dt;
 	int i, count;
 
-	rthal_local_irq_save_hw(flags);
+	local_irq_save_hw(flags);
 
 	/* Read the current latch value, whatever the current mode is. */
 
@@ -112,12 +115,13 @@ unsigned long rthal_timer_calibrate(void)
 
 	dt = rthal_rdtsc() - t;
 
-	rthal_local_irq_restore_hw(flags);
+	local_irq_restore_hw(flags);
 
-#ifdef CONFIG_IPIPE_TRACE_IRQSOFF
-	/* Reset the max trace, since it contains the calibration time now. */
-	rthal_trace_max_reset();
-#endif /* CONFIG_IPIPE_TRACE_IRQSOFF */
+	/*
+	 * Reset the max trace, since it contains the calibration time
+	 * now.
+	 */
+	ipipe_trace_max_reset();
 
 	return rthal_imuldiv(dt, 20, RTHAL_CPU_FREQ);
 }
@@ -127,7 +131,7 @@ static void rthal_timer_set_oneshot(void)
 	unsigned long flags;
 	int count;
 
-	rthal_local_irq_save_hw(flags);
+	local_irq_save_hw(flags);
 	/*
 	 * We should be running in rate generator mode (M2) on entry,
 	 * so read the current latch value, in order to roughly
@@ -149,18 +153,18 @@ static void rthal_timer_set_oneshot(void)
 	outb_p(0x38, PIT_MODE);
 	outb(count & 0xff, PIT_CH0);
 	outb(count >> 8, PIT_CH0);
-	rthal_local_irq_restore_hw(flags);
+	local_irq_restore_hw(flags);
 }
 
 static void rthal_timer_set_periodic(void)
 {
 	unsigned long flags;
 
-	rthal_local_irq_save_hw(flags);
+	local_irq_save_hw(flags);
 	outb_p(0x34, PIT_MODE);
 	outb(LATCH & 0xff, PIT_CH0);
 	outb(LATCH >> 8, PIT_CH0);
-	rthal_local_irq_restore_hw(flags);
+	local_irq_restore_hw(flags);
 }
 
 int rthal_timer_request(void (*tick_handler)(void),
@@ -203,7 +207,7 @@ int rthal_timer_request(void (*tick_handler)(void),
 	rthal_ktimer_saved_mode = res;
 
 	if (rthal_timerfreq_arg == 0)
-		rthal_tunables.timer_freq = tmfreq;
+		rthal_archdata.timer_freq = tmfreq;
 	/*
 	 * No APIC means that we can't be running in SMP mode, so this
 	 * routine will be called only once, for CPU #0.
@@ -212,7 +216,7 @@ int rthal_timer_request(void (*tick_handler)(void),
 	rthal_timer_set_oneshot();
 
 	err = rthal_irq_request(RTHAL_TIMER_IRQ,
-				(rthal_irq_handler_t)tick_handler, NULL, NULL);
+				(ipipe_irq_handler_t)tick_handler, NULL, NULL);
 
 	return err ?: tickval;
 }
@@ -227,7 +231,7 @@ void rthal_timer_release(int cpu)
 		rthal_timer_set_periodic();
 	else if (rthal_ktimer_saved_mode == KTIMER_MODE_ONESHOT)
 		/* We need to keep the timing cycle alive for the kernel. */
-		rthal_trigger_irq(RTHAL_TIMER_IRQ);
+		ipipe_trigger_irq(RTHAL_TIMER_IRQ);
 }
 
 #endif /* !CONFIG_X86_LOCAL_APIC */

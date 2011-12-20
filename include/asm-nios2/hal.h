@@ -31,6 +31,7 @@
 #include <asm/processor.h>
 #include <asm/div64.h>
 
+#define RTHAL_ARCH_NAME		"nios2"
 #define RTHAL_TIMER_DEVICE	"hrtimer"
 #define RTHAL_TIMER_IRQ		__ipipe_hrtimer_irq
 #define RTHAL_CLOCK_DEVICE	"hrclock"
@@ -51,24 +52,19 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 static inline unsigned long long rthal_rdtsc(void)
 {
 	unsigned long long t;
-	rthal_read_tsc(t);
+	ipipe_read_tsc(t);
 	return t;
 }
 
 static inline void rthal_timer_program_shot(unsigned long delay)
 {
 	if (delay < 100)
-		rthal_schedule_irq_head(RTHAL_TIMER_IRQ);
+		__ipipe_schedule_irq_head(RTHAL_TIMER_IRQ);
 	else
 		__ipipe_program_hrtimer(delay);
 }
 
     /* Private interface -- Internal use only */
-
-static inline struct mm_struct *rthal_get_active_mm(void)
-{
-	return current->active_mm;
-}
 
 void rthal_thread_switch(struct thread_struct *prev,
 			 struct thread_struct *next,

@@ -31,6 +31,7 @@
 
 #include <asm-generic/xenomai/hal.h>	/* Read the generic bits. */
 
+#define RTHAL_ARCH_NAME		"powerpc"
 #define RTHAL_TIMER_DEVICE	"decrementer"
 #define RTHAL_CLOCK_DEVICE	"timebase"
 
@@ -78,14 +79,14 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 static inline unsigned long long rthal_rdtsc(void)
 {
 	unsigned long long t;
-	rthal_read_tsc(t);
+	ipipe_read_tsc(t);
 	return t;
 }
 
 static inline void rthal_timer_program_shot(unsigned long delay)
 {
 	if (delay < 3)
-		rthal_schedule_irq_head(RTHAL_TIMER_IRQ);
+		__ipipe_schedule_irq_head(RTHAL_TIMER_IRQ);
 	else {
 #ifdef CONFIG_40x
 		mtspr(SPRN_PIT, delay);
@@ -99,19 +100,6 @@ static inline void rthal_timer_program_shot(unsigned long delay)
 		set_dec((int)delay);
 #endif /* CONFIG_40x */
 	}
-}
-
-static inline struct mm_struct *rthal_get_active_mm(void)
-{
-#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
-#ifdef CONFIG_IPIPE_CORE
-	return __this_cpu_read(ipipe_percpu.active_mm);
-#else
-	return per_cpu(ipipe_active_mm, smp_processor_id());
-#endif
-#else  /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
-	return current->active_mm;
-#endif  /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
 }
 
     /* Private interface -- Internal use only */

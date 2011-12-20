@@ -59,10 +59,11 @@ unsigned long rthal_timer_calibrate(void)
 
 	rthal_critical_exit(flags);
 
-#ifdef CONFIG_IPIPE_TRACE_IRQSOFF
-	/* Reset the max trace, since it contains the calibration time now. */
-	rthal_trace_max_reset();
-#endif /* CONFIG_IPIPE_TRACE_IRQSOFF */
+	/*
+	 * Reset the max trace, since it contains the calibration time
+	 * now.
+	 */
+	ipipe_trace_max_reset();
 
 	return rthal_imuldiv(dt, 20, RTHAL_CPU_FREQ);
 }

@@ -34,9 +34,9 @@ int xnpod_trap_fault(xnarch_fltinfo_t *fltinfo);
 
 void xnpod_schedule_handler(void);
 
-static rthal_trap_handler_t xnarch_old_trap_handler;
+static ipipe_event_handler_t xnarch_old_trap_handler;
 
-static int xnarch_trap_fault(unsigned event, rthal_pipeline_stage_t *stage,
+static int xnarch_trap_fault(unsigned event, struct ipipe_domain *ipd,
 			     void *data)
 {
 	xnarch_fltinfo_t fltinfo;
@@ -79,13 +79,13 @@ static inline int xnarch_init(void)
 	if (ret)
 		return ret;
 
-	xnarch_escalation_virq = rthal_alloc_virq();
+	xnarch_escalation_virq = ipipe_alloc_virq();
 	if (xnarch_escalation_virq == 0)
 		return -ENOSYS;
 
-	rthal_virtualize_irq(&rthal_domain,
+	ipipe_virtualize_irq(&rthal_archdata.domain,
 			     xnarch_escalation_virq,
-			     (rthal_irq_handler_t) &xnpod_schedule_handler,
+			     (ipipe_irq_handler_t)xnpod_schedule_handler,
 			     NULL, NULL, IPIPE_HANDLE_MASK | IPIPE_WIRED_MASK);
 
 	xnarch_old_trap_handler = rthal_trap_catch(&xnarch_trap_fault);
@@ -96,7 +96,7 @@ static inline int xnarch_init(void)
 static inline void xnarch_exit(void)
 {
 	rthal_trap_catch(xnarch_old_trap_handler);
-	rthal_free_virq(xnarch_escalation_virq);
+	ipipe_free_virq(xnarch_escalation_virq);
 	rthal_exit();
 }
 

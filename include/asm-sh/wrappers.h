@@ -34,26 +34,26 @@
 #define wrap_strncpy_from_user(dstP, srcP, n)	strncpy_from_user(dstP, srcP, n)
 
 #define rthal_irq_desc_status(irq)	(rthal_irq_descp(irq)->status)
-#define rthal_irq_handlerp(irq)		rthal_irq_descp(irq)->chip
+#define __ipipe_irq_handlerp(irq)		rthal_irq_descp(irq)->chip
 #define rthal_irq_chip_end(irq)		({ rthal_irq_descp(irq)->ipipe_end(irq, rthal_irq_descp(irq)); 0; })
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)
 #define rthal_irq_chip_enable(irq)					\
 	({								\
 		int __err__ = 0;					\
-		if (unlikely(rthal_irq_handlerp(irq)->unmask == NULL))	\
+		if (unlikely(__ipipe_irq_handlerp(irq)->unmask == NULL))	\
 			__err__ = -ENODEV;				\
 		else							\
-			rthal_irq_handlerp(irq)->unmask(irq);		\
+			__ipipe_irq_handlerp(irq)->unmask(irq);		\
 		__err__;						\
 	})
 #define rthal_irq_chip_disable(irq)					\
 	({								\
 		int __err__ = 0;					\
-		if (rthal_irq_handlerp(irq)->mask == NULL)		\
+		if (__ipipe_irq_handlerp(irq)->mask == NULL)		\
 			__err__ = -ENODEV;				\
 		else							\
-			rthal_irq_handlerp(irq)->mask(irq);		\
+			__ipipe_irq_handlerp(irq)->mask(irq);		\
 		__err__;						\
 	})
 #endif

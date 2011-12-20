@@ -25,8 +25,8 @@
 #endif
 
 static inline int xnarch_hook_irq (unsigned irq,
-				   rthal_irq_handler_t handler,
-				   rthal_irq_ackfn_t ackfn,
+				   ipipe_irq_handler_t handler,
+				   ipipe_irq_ackfn_t ackfn,
 				   void *cookie)
 {
     return rthal_irq_request(irq,handler,ackfn,cookie);
@@ -61,13 +61,13 @@ static inline void xnarch_set_irq_affinity (unsigned irq,
 					    xnarch_cpumask_t affinity)
 {
 #ifdef CONFIG_SMP
-    rthal_set_irq_affinity(irq,affinity);
+    ipipe_set_irq_affinity(irq,affinity);
 #endif
 }
 
 static inline void *xnarch_get_irq_cookie(unsigned irq)
 {
-	return rthal_irq_cookie(&rthal_domain, irq);
+	return __ipipe_irq_cookie(&rthal_archdata.domain, irq);
 }
 
 #endif /* !_XENO_ASM_GENERIC_BITS_INTR_H */

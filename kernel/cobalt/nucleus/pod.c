@@ -3052,7 +3052,7 @@ static int faults_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 
 		for_each_online_cpu(cpu)
 			xnvfile_printf(it, "%12u",
-				       rthal_realtime_faults[cpu][trap]);
+				       rthal_archdata.faults[cpu][trap]);
 
 		xnvfile_printf(it, "    (%s)",
 			       rthal_fault_labels[trap]);
@@ -3083,18 +3083,18 @@ static int apc_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 		xnvfile_printf(it, "         CPU%d", cpu);
 
 	for (apc = 0; apc < BITS_PER_LONG; apc++) {
-		if (!test_bit(apc, &rthal_apc_map))
+		if (!test_bit(apc, &rthal_archdata.apc_map))
 			continue; /* Not hooked. */
 
 		xnvfile_printf(it, "\n%3d: ", apc);
 
 		for_each_online_cpu(cpu)
 			xnvfile_printf(it, "%12lu",
-				       rthal_apc_table[apc].hits[cpu]);
+				       rthal_archdata.apc_table[apc].hits[cpu]);
 
-		if (rthal_apc_table[apc].name)
+		if (rthal_archdata.apc_table[apc].name)
 			xnvfile_printf(it, "    (%s)",
-				       rthal_apc_table[apc].name);
+				       rthal_archdata.apc_table[apc].name);
 	}
 
 	xnvfile_putc(it, '\n');

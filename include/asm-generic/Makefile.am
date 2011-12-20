@@ -11,6 +11,7 @@ includesub_HEADERS = \
 	syscall.h \
 	system.h \
 	timeconv.h \
+	trace.h \
 	wrappers.h
 
 SUBDIRS = bits

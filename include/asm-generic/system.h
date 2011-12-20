@@ -39,6 +39,7 @@
 #include <asm/xenomai/hal.h>
 #include <asm/xenomai/atomic.h>
 #include <asm-generic/xenomai/timeconv.h>
+#include <asm-generic/xenomai/trace.h>
 #include <nucleus/shadow.h>
 
 /* debug support */
@@ -48,24 +49,6 @@
 #define CONFIG_XENO_OPT_DEBUG_XNLOCK 0
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/* Tracer interface */
-#define xnarch_trace_max_begin(v)		rthal_trace_max_begin(v)
-#define xnarch_trace_max_end(v)			rthal_trace_max_end(v)
-#define xnarch_trace_max_reset()		rthal_trace_max_reset()
-#define xnarch_trace_user_start()		rthal_trace_user_start()
-#define xnarch_trace_user_stop(v)		rthal_trace_user_stop(v)
-#define xnarch_trace_user_freeze(v, once)	rthal_trace_user_freeze(v, once)
-#define xnarch_trace_special(id, v)		rthal_trace_special(id, v)
-#define xnarch_trace_special_u64(id, v)		rthal_trace_special_u64(id, v)
-#define xnarch_trace_pid(pid, prio)		rthal_trace_pid(pid, prio)
-#define xnarch_trace_tick(delay_tsc)		rthal_trace_tick(delay_tsc)
-#define xnarch_trace_panic_freeze()		rthal_trace_panic_freeze()
-#define xnarch_trace_panic_dump()		rthal_trace_panic_dump()
-
 #ifndef xnarch_fault_um
 #define xnarch_fault_um(fi) user_mode(fi->regs)
 #endif
@@ -74,20 +57,27 @@ extern "C" {
 
 typedef unsigned long spl_t;
 
-#define splhigh(x)  rthal_local_irq_save(x)
+#define splhigh(x)  ((x) = ipipe_test_and_stall_pipeline_head() & 1)
 #ifdef CONFIG_SMP
-#define splexit(x)  rthal_local_irq_restore((x) & 1)
+#define splexit(x)  ipipe_restore_pipeline_head(x & 1)
 #else /* !CONFIG_SMP */
-#define splexit(x)  rthal_local_irq_restore(x)
+#define splexit(x)  ipipe_restore_pipeline_head(x)
 #endif /* !CONFIG_SMP */
-#define splmax()    rthal_local_irq_disable()
-#define splnone()   rthal_local_irq_enable()
-#define spltest()   rthal_local_irq_disabled()
-#define splget(x)   rthal_local_irq_flags(x)
+#define splmax()    ipipe_stall_pipeline_head()
+#define splnone()   ipipe_unstall_pipeline_head()
+#define splget(x)   ((x) = ipipe_test_pipeline_from(&rthal_archdata.domain) & 1)
+#define spltest()						\
+({								\
+	unsigned long __flags, __ret;				\
+	local_irq_save_hw_smp(__flags);				\
+	__ret = ipipe_test_pipeline_from(&rthal_archdata.domain);	\
+	local_irq_restore_hw_smp(__flags);			\
+	__ret;							\
+})
 
 static inline unsigned xnarch_current_cpu(void)
 {
-	return rthal_processor_id();
+	return ipipe_processor_id();
 }
 
 #if XENO_DEBUG(XNLOCK)
@@ -177,9 +167,9 @@ static inline int xnlock_dbg_release(struct xnlock *lock)
 
 #endif /* !XENO_DEBUG(XNLOCK) */
 
-#define XNARCH_NR_CPUS			RTHAL_NR_CPUS
+#define XNARCH_NR_CPUS			NR_CPUS
 
-#define XNARCH_NR_IRQS			RTHAL_NR_IRQS
+#define XNARCH_NR_IRQS			IPIPE_NR_IRQS
 #define XNARCH_TIMER_IRQ		RTHAL_TIMER_IRQ
 #define XNARCH_TIMER_DEVICE		RTHAL_TIMER_DEVICE
 #define XNARCH_CLOCK_DEVICE		RTHAL_CLOCK_DEVICE
@@ -272,7 +262,7 @@ static inline int xnarch_setimask (int imask)
 
 static inline int xnarch_root_domain_p(void)
 {
-	return rthal_current_domain == rthal_root_domain;
+	return ipipe_current_domain == ipipe_root_domain;
 }
 
 #if defined(CONFIG_SMP) || XENO_DEBUG(XNLOCK)
@@ -332,7 +322,7 @@ __xnlock_get_irqsave(struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
 {
 	unsigned long flags;
 
-	rthal_local_irq_save(flags);
+	splhigh(flags);
 
 	if (__xnlock_get(lock /*, */ XNLOCK_DBG_PASS_CONTEXT))
 		flags |= 2;	/* Recursive acquisition */
@@ -346,14 +336,14 @@ static inline void xnlock_put_irqrestore(struct xnlock *lock, spl_t flags)
 	if (!(flags & 2))
 		xnlock_put(lock);
 
-	rthal_local_irq_restore(flags & 1);
+	splexit(flags & 1);
 }
 
 static inline void xnarch_send_ipi(xnarch_cpumask_t cpumask)
 {
 #ifdef CONFIG_SMP
-	rthal_send_ipi(RTHAL_RESCHEDULE_IPI, cpumask);
-#endif /* !CONFIG_SMP */
+	ipipe_send_ipi(IPIPE_SERVICE_IPI0, cpumask);
+#endif /* CONFIG_SMP */
 }
 
 static inline int xnlock_is_owner(struct xnlock *lock)
@@ -366,10 +356,10 @@ static inline int xnlock_is_owner(struct xnlock *lock)
 #define xnlock_init(lock)		do { } while(0)
 #define xnlock_get(lock)		do { } while(0)
 #define xnlock_put(lock)		do { } while(0)
-#define xnlock_get_irqsave(lock,x)	rthal_local_irq_save(x)
-#define xnlock_put_irqrestore(lock,x)	rthal_local_irq_restore(x)
-#define xnlock_clear_irqoff(lock)	rthal_local_irq_disable()
-#define xnlock_clear_irqon(lock)	rthal_local_irq_enable()
+#define xnlock_get_irqsave(lock,x)	splhigh(x)
+#define xnlock_put_irqrestore(lock,x)	splexit(x)
+#define xnlock_clear_irqoff(lock)	splmax()
+#define xnlock_clear_irqon(lock)	splnone()
 #define xnlock_is_owner(lock)		1
 
 #define DECLARE_XNLOCK(lock)
@@ -432,10 +422,6 @@ static inline int xnarch_remap_kmem_page_range(struct vm_area_struct *vma,
 static inline void xnarch_hisyscall_entry(void)	{ }
 #endif
 
-#ifdef __cplusplus
-}
-#endif
-
 /* Dashboard and graph control. */
 #define XNARCH_DECL_DISPLAY_CONTEXT();
 #define xnarch_init_display_context(obj)
@@ -444,7 +430,7 @@ static inline void xnarch_hisyscall_entry(void)	{ }
 #define xnarch_post_graph(obj,state)
 #define xnarch_post_graph_if(obj,state,cond)
 
-/* Synchronised realtime clock*/
-#define xnarch_hostrt_data	rthal_hostrt_data
+/* Synchronised realtime clock */
+#define xnarch_hostrt_data	ipipe_hostrt_data
 
 #endif /* !_XENO_ASM_GENERIC_SYSTEM_H */

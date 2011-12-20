@@ -36,21 +36,24 @@ void xnpod_schedule_handler(void);
 
 void xnpod_schedule_deferred(void);
 
-static rthal_trap_handler_t xnarch_old_trap_handler;
+static ipipe_event_handler_t xnarch_old_trap_handler;
 
-static int xnarch_trap_fault(unsigned event, rthal_pipeline_stage_t *stage,
+static int xnarch_trap_fault(unsigned event, struct ipipe_domain *ipd,
 			     void *data)
 {
 	xnarch_fltinfo_t fltinfo;
 	fltinfo.exception = event;
-	fltinfo.regs = (struct pt_regs *)data;
+	fltinfo.regs = data;
 	return xnpod_trap_fault(&fltinfo);
 }
 
 unsigned long xnarch_calibrate_timer(void)
 {
-	/* Compute the time needed to program the decrementer in aperiodic
-	   mode. The return value is expressed in timebase ticks. */
+	/*
+	 * Compute the time needed to program the decrementer in
+	 * aperiodic mode. The return value is expressed in timebase
+	 * ticks.
+	 */
 	return xnarch_ns_to_tsc(rthal_timer_calibrate())? : 1;
 }
 
@@ -58,7 +61,7 @@ int xnarch_calibrate_sched(void)
 {
 	nktimerlat = xnarch_calibrate_timer();
 
-	if (!nktimerlat)
+	if (nktimerlat == 0)
 		return -ENODEV;
 
 	nklatency = xnarch_ns_to_tsc(xnarch_get_sched_latency()) + nktimerlat;
@@ -70,19 +73,11 @@ static inline int xnarch_init(void)
 {
 	int ret;
 
-	__ipipe_irq_tail_hook = (unsigned long)&xnpod_schedule_deferred;
+	__ipipe_irq_tail_hook = (unsigned long)xnpod_schedule_deferred;
 
 	ret = rthal_init();
 	if (ret)
 		return ret;
-
-#if defined(CONFIG_SMP) && defined(MODULE)
-	/*
-	 * Make sure the init sequence is kept on the same CPU when
-	 * running as a module.
-	 */
-	set_cpus_allowed(current, cpumask_of_cpu(0));
-#endif /* CONFIG_SMP && MODULE */
 
 	xnarch_init_timeconv(RTHAL_CPU_FREQ);
 
@@ -90,13 +85,13 @@ static inline int xnarch_init(void)
 	if (ret)
 		return ret;
 
-	xnarch_escalation_virq = rthal_alloc_virq();
+	xnarch_escalation_virq = ipipe_alloc_virq();
 	if (xnarch_escalation_virq == 0)
 		return -ENOSYS;
 
-	rthal_virtualize_irq(&rthal_domain,
+	ipipe_virtualize_irq(&rthal_archdata.domain,
 			     xnarch_escalation_virq,
-			     (rthal_irq_handler_t) &xnpod_schedule_handler,
+			     (ipipe_irq_handler_t)xnpod_schedule_handler,
 			     NULL, NULL, IPIPE_HANDLE_MASK | IPIPE_WIRED_MASK);
 
 	xnarch_old_trap_handler = rthal_trap_catch(&xnarch_trap_fault);
@@ -108,7 +103,7 @@ static inline void xnarch_exit(void)
 {
 	__ipipe_irq_tail_hook = 0;
 	rthal_trap_catch(xnarch_old_trap_handler);
-	rthal_free_virq(xnarch_escalation_virq);
+	ipipe_free_virq(xnarch_escalation_virq);
 	rthal_exit();
 }
 

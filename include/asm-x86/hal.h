@@ -25,21 +25,6 @@
 
 #include <linux/ipipe.h>
 
-#ifdef CONFIG_X86_LOCAL_APIC
-#ifdef __IPIPE_FEATURE_APIC_TIMER_FREQ
-#define RTHAL_COMPAT_TIMERFREQ		__ipipe_apic_timer_freq
-#else
-/* Fallback value: may be inaccurate. */
-#define RTHAL_COMPAT_TIMERFREQ		(apic_read(APIC_TMICT) * HZ)
-#endif
-#else
-#define RTHAL_COMPAT_TIMERFREQ		CLOCK_TICK_RATE
-#endif
-
-extern enum rthal_ktimer_mode rthal_ktimer_saved_mode;
-
-void rthal_latency_above_max(struct pt_regs *regs);
-
 #ifdef __i386__
 #include "hal_32.h"
 #else

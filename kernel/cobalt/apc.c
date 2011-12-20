@@ -36,7 +36,7 @@ static struct cobalt_lostageq_t {
 
 void cobalt_schedule_lostage(int request, void *arg, size_t size)
 {
-	int cpuid = rthal_processor_id(), reqnum;
+	int cpuid = ipipe_processor_id(), reqnum;
 	struct cobalt_lostageq_t *rq = &cobalt_lostageq[cpuid];
 	spl_t s;
 

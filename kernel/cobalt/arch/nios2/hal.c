@@ -45,7 +45,7 @@ int rthal_timer_request(void (*tick_handler) (void), int cpu)
 	int ret;
 
 	ret = rthal_irq_request(RTHAL_TIMER_IRQ,
-				(rthal_irq_handler_t)tick_handler,
+				(ipipe_irq_handler_t)tick_handler,
 				NULL, NULL);
 	if (ret)
 		return ret;
@@ -68,74 +68,22 @@ unsigned long rthal_timer_calibrate(void)
 	u32 d;
 	int n;
 
-	rthal_local_irq_save_hw(flags);
+	local_irq_save_hw(flags);
 
-	rthal_read_tsc(t);
+	ipipe_read_tsc(t);
 
 	barrier();
 
 	for (n = 1; n < 100; n++)
-		rthal_read_tsc(v);
+		ipipe_read_tsc(v);
 
-	rthal_local_irq_restore_hw(flags);
+	local_irq_restore_hw(flags);
 
 	d = (u32)(v - t);
 	freq = rthal_get_clockfreq();
 
 	return ((1000000000 / freq) * (d / n));
 }
-
-int rthal_irq_enable(unsigned irq)
-{
-	if (irq >= IPIPE_NR_XIRQS || rthal_irq_descp(irq) == NULL)
-		return -EINVAL;
-
-	return rthal_irq_chip_enable(irq);
-}
-
-int rthal_irq_disable(unsigned irq)
-{
-
-	if (irq >= IPIPE_NR_XIRQS || rthal_irq_descp(irq) == NULL)
-		return -EINVAL;
-
-	return rthal_irq_chip_disable(irq);
-}
-
-int rthal_irq_end(unsigned irq)
-{
-	if (irq >= IPIPE_NR_XIRQS || rthal_irq_descp(irq) == NULL)
-		return -EINVAL;
-
-	return rthal_irq_chip_end(irq);
-}
-
-static inline int do_exception_event(unsigned event, unsigned domid, void *data)
-{
-	if (stage == &rthal_domain) {
-		rthal_realtime_faults[rthal_processor_id()][event]++;
-
-		if (rthal_trap_handler != NULL &&
-		    rthal_trap_handler(event, stage, data) != 0)
-			return RTHAL_EVENT_STOP;
-	}
-
-	return RTHAL_EVENT_PROPAGATE;
-}
-
-RTHAL_DECLARE_EVENT(exception_event);
-
-static inline void do_rthal_domain_entry(void)
-{
-	unsigned trapnr;
-
-	for (trapnr = 0; trapnr < RTHAL_NR_FAULTS; trapnr++)
-		rthal_catch_exception(trapnr, &exception_event);
-
-	printk(KERN_INFO "Xenomai: hal/nios2 started.\n");
-}
-
-RTHAL_DECLARE_DOMAIN(rthal_domain_entry);
 
 int rthal_arch_init(void)
 {

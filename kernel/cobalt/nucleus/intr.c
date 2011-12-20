@@ -342,7 +342,7 @@ static inline int xnintr_irq_attach(xnintr_t *intr)
 		shirq->unhandled = 0;
 
 		err = xnarch_hook_irq(intr->irq, handler,
-				      (rthal_irq_ackfn_t)intr->iack, intr);
+				      (ipipe_irq_ackfn_t)intr->iack, intr);
 		if (err)
 			return err;
 	}
@@ -410,7 +410,7 @@ static inline xnintr_t *xnintr_shirq_next(xnintr_t *prev)
 static inline int xnintr_irq_attach(xnintr_t *intr)
 {
 	return xnarch_hook_irq(intr->irq, &xnintr_irq_handler,
-			       (rthal_irq_ackfn_t)intr->iack, intr);
+			       (ipipe_irq_ackfn_t)intr->iack, intr);
 }
 
 static inline int xnintr_irq_detach(xnintr_t *intr)
@@ -990,16 +990,17 @@ static inline int format_irq_proc(unsigned int irq,
 		return 0;
 	}
 
-	switch (irq) {
+	if (irq >= IPIPE_SERVICE_IPI0 && irq <= IPIPE_SERVICE_IPI3) {
+		xnvfile_printf(it, "         [IPI%d]", irq - IPIPE_SERVICE_IPI0);
+		return 0;
+	}
 #ifdef CONFIG_SMP
-	case RTHAL_RESCHEDULE_IPI:
-		xnvfile_puts(it, "         [reschedule]");
+	else if (irq == IPIPE_CRITICAL_IPI) {
+		xnvfile_puts(it, "         [critical sync]");
 		return 0;
-	case RTHAL_CRITICAL_IPI:
-		xnvfile_puts(it, "         [sync]");
-		return 0;
+	}
 #endif /* CONFIG_SMP */
-	} else	if (rthal_virtual_irq_p(irq)) {
+	else if (ipipe_virtual_irq_p(irq)) {
 		xnvfile_puts(it, "         [virtual]");
 		return 0;
 	}
@@ -1035,14 +1036,14 @@ static int irq_vfile_show(struct xnvfile_regular_iterator *it,
 		xnvfile_printf(it, "        CPU%d", cpu);
 
 	for (irq = 0; irq < XNARCH_NR_IRQS; irq++) {
-		if (rthal_irq_handler(&rthal_domain, irq) == NULL)
+		if (__ipipe_irq_handler(&rthal_archdata.domain, irq) == NULL)
 			continue;
 
 		xnvfile_printf(it, "\n%3d:", irq);
 
 		for_each_online_cpu(cpu) {
 			xnvfile_printf(it, "%12lu",
-				       rthal_cpudata_irq_hits(&rthal_domain, cpu,
+				       __ipipe_cpudata_irq_hits(&rthal_archdata.domain, cpu,
 							      irq));
 		}
 

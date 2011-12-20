@@ -49,18 +49,13 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 #include <asm/xenomai/atomic.h>
 #include <asm/xenomai/smi.h>
 
-#ifdef CONFIG_IPIPE_CORE
-#define RTHAL_HRTIMER_VECTOR	IPIPE_HRTIMER_VECTOR
-#else
-#define RTHAL_HRTIMER_VECTOR	IPIPE_SERVICE_VECTOR0
-#endif
-#define RTHAL_APIC_TIMER_VECTOR	RTHAL_HRTIMER_VECTOR
-#define RTHAL_APIC_TIMER_IPI	RTHAL_HRTIMER_IPI
-#define RTHAL_APIC_ICOUNT	((RTHAL_TIMER_FREQ + HZ/2)/HZ)
-#define RTHAL_TIMER_IRQ		RTHAL_APIC_TIMER_IPI
-#define RTHAL_NMICLK_FREQ	RTHAL_CPU_FREQ
-#define RTHAL_HOST_TICK_IRQ	ipipe_apic_vector_irq(LOCAL_TIMER_VECTOR)
-#define RTHAL_BCAST_TICK_IRQ	0
+#define RTHAL_APIC_TIMER_VECTOR		IPIPE_SERVICE_VECTOR3
+#define RTHAL_APIC_TIMER_IPI		IPIPE_SERVICE_IPI3
+#define RTHAL_APIC_ICOUNT		((RTHAL_TIMER_FREQ + HZ/2)/HZ)
+#define RTHAL_TIMER_IRQ			RTHAL_APIC_TIMER_IPI
+#define RTHAL_NMICLK_FREQ		RTHAL_CPU_FREQ
+#define RTHAL_HOST_TICK_IRQ		ipipe_apic_vector_irq(LOCAL_TIMER_VECTOR)
+#define RTHAL_BCAST_TICK_IRQ		0
 
 static inline void rthal_grab_control(void)
 {
@@ -76,7 +71,7 @@ static inline void rthal_release_control(void)
 static inline unsigned long long rthal_rdtsc(void)
 {
 	unsigned long long t;
-	rthal_read_tsc(t);
+	ipipe_read_tsc(t);
 	return t;
 }
 
@@ -86,7 +81,7 @@ static inline void rthal_timer_program_shot(unsigned long delay)
 		apic_write(APIC_TMICT,delay);
 	else
 		/* Pend the timer interrupt. */
-		rthal_schedule_irq_head(RTHAL_APIC_TIMER_IPI);
+		__ipipe_schedule_irq_head(RTHAL_APIC_TIMER_IPI);
 }
 
 static const char *const rthal_fault_labels[] = {
@@ -113,10 +108,6 @@ static const char *const rthal_fault_labels[] = {
     [20] = NULL,
 };
 
-#ifdef CONFIG_X86_LOCAL_APIC
-
-#include <asm/apic.h>
-
 static inline void rthal_setup_periodic_apic(int count, int vector)
 {
 	apic_write(APIC_LVTT, APIC_LVT_TIMER_PERIODIC | vector);
@@ -127,8 +118,6 @@ static inline void rthal_setup_oneshot_apic(int vector)
 {
 	apic_write(APIC_LVTT, vector);
 }
-
-#endif /* !CONFIG_X86_LOCAL_APIC */
 
 #endif /* !__cplusplus */
 

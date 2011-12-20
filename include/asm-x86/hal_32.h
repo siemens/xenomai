@@ -85,13 +85,8 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 #include <asm/xenomai/smi.h>
 
 #ifdef CONFIG_X86_LOCAL_APIC
-#ifdef CONFIG_IPIPE_CORE
-#define RTHAL_HRTIMER_VECTOR	IPIPE_HRTIMER_VECTOR
-#else
-#define RTHAL_HRTIMER_VECTOR	IPIPE_SERVICE_VECTOR0
-#endif
-#define RTHAL_APIC_TIMER_VECTOR	RTHAL_HRTIMER_VECTOR
-#define RTHAL_APIC_TIMER_IPI	RTHAL_HRTIMER_IPI
+#define RTHAL_APIC_TIMER_VECTOR	IPIPE_SERVICE_VECTOR3
+#define RTHAL_APIC_TIMER_IPI	IPIPE_SERVICE_IPI3
 #define RTHAL_APIC_ICOUNT	((RTHAL_TIMER_FREQ + HZ/2)/HZ)
 #define RTHAL_TIMER_IRQ		RTHAL_APIC_TIMER_IPI
 #define RTHAL_HOST_TICK_IRQ	ipipe_apic_vector_irq(LOCAL_TIMER_VECTOR)
@@ -117,7 +112,7 @@ static inline void rthal_release_control(void)
 static inline unsigned long long rthal_rdtsc(void)
 {
 	unsigned long long t;
-	rthal_read_tsc(t);
+	ipipe_read_tsc(t);
 	return t;
 }
 
@@ -126,7 +121,7 @@ static inline void rthal_timer_program_shot(unsigned long delay)
 #ifdef CONFIG_X86_LOCAL_APIC
 	if (!delay) {
 		/* Pend the timer interrupt. */
-		rthal_schedule_irq_head(RTHAL_APIC_TIMER_IPI);
+		__ipipe_schedule_irq_head(RTHAL_APIC_TIMER_IPI);
 	} else {
 		/* Note: reading before writing just to work around the Pentium
 		   APIC double write bug. apic_read() expands to nil
@@ -136,7 +131,7 @@ static inline void rthal_timer_program_shot(unsigned long delay)
 	}
 #else /* !CONFIG_X86_LOCAL_APIC */
 	if (!delay)
-		rthal_schedule_irq_head(RTHAL_TIMER_IRQ);
+		__ipipe_schedule_irq_head(RTHAL_TIMER_IRQ);
 	else {
 		outb(delay & 0xff, PIT_CH0);
 		outb(delay >> 8, PIT_CH0);

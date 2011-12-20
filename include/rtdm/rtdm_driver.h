@@ -680,10 +680,10 @@ int rtdm_select_bind(int fd, rtdm_selector_t *selector,
 /**
  * Static lock initialisation
  */
-#define RTDM_LOCK_UNLOCKED	RTHAL_SPIN_LOCK_UNLOCKED
+#define RTDM_LOCK_UNLOCKED	IPIPE_SPIN_LOCK_UNLOCKED
 
 /** Lock variable */
-typedef rthal_spinlock_t rtdm_lock_t;
+typedef ipipe_spinlock_t rtdm_lock_t;
 
 /** Variable to save the context while holding a lock */
 typedef unsigned long rtdm_lockctx_t;
@@ -703,7 +703,7 @@ typedef unsigned long rtdm_lockctx_t;
  *
  * Rescheduling: never.
  */
-#define rtdm_lock_init(lock)	rthal_spin_lock_init(lock)
+#define rtdm_lock_init(lock)	spin_lock_init(lock)
 
 /**
  * Acquire lock from non-preemptible contexts
@@ -722,12 +722,12 @@ typedef unsigned long rtdm_lockctx_t;
  * Rescheduling: never.
  */
 #ifdef DOXYGEN_CPP /* Beautify doxygen output */
-#define rtdm_lock_get(lock)	rthal_spin_lock(lock)
+#define rtdm_lock_get(lock)	spin_lock(lock)
 #else /* This is how it really works */
 #define rtdm_lock_get(lock)					\
 	do {							\
-		XENO_BUGON(RTDM, !rthal_local_irq_disabled());	\
-		rthal_spin_lock(lock);				\
+		XENO_BUGON(RTDM, !spltest());			\
+		spin_lock(lock);				\
 	} while (0)
 #endif
 
@@ -747,7 +747,7 @@ typedef unsigned long rtdm_lockctx_t;
  *
  * Rescheduling: never.
  */
-#define rtdm_lock_put(lock)	rthal_spin_unlock(lock)
+#define rtdm_lock_put(lock)	spin_unlock(lock)
 
 /**
  * Acquire lock and disable preemption
@@ -767,7 +767,7 @@ typedef unsigned long rtdm_lockctx_t;
  * Rescheduling: never.
  */
 #define rtdm_lock_get_irqsave(lock, context)	\
-	rthal_spin_lock_irqsave(lock, context)
+	spin_lock_irqsave(lock, context)
 
 /**
  * Release lock and restore preemption state
@@ -787,7 +787,7 @@ typedef unsigned long rtdm_lockctx_t;
  * Rescheduling: possible.
  */
 #define rtdm_lock_put_irqrestore(lock, context)	\
-	rthal_spin_unlock_irqrestore(lock, context)
+	spin_unlock_irqrestore(lock, context)
 
 /**
  * Disable preemption locally
@@ -806,7 +806,7 @@ typedef unsigned long rtdm_lockctx_t;
  * Rescheduling: never.
  */
 #define rtdm_lock_irqsave(context)	\
-	rthal_local_irq_save(context)
+	splhigh(context)
 
 /**
  * Restore preemption state
@@ -825,7 +825,7 @@ typedef unsigned long rtdm_lockctx_t;
  * Rescheduling: possible.
  */
 #define rtdm_lock_irqrestore(context)	\
-	rthal_local_irq_restore(context)
+	splexit(context)
 /** @} Spinlock with Preemption Deactivation */
 
 /** @} rtdmsync */
@@ -937,24 +937,24 @@ typedef void (*rtdm_nrtsig_handler_t)(rtdm_nrtsig_t nrt_sig, void *arg);
 static inline int rtdm_nrtsig_init(rtdm_nrtsig_t *nrt_sig,
 				   rtdm_nrtsig_handler_t handler, void *arg)
 {
-	*nrt_sig = rthal_alloc_virq();
+	*nrt_sig = ipipe_alloc_virq();
 
 	if (*nrt_sig == 0)
 		return -EAGAIN;
 
-	rthal_virtualize_irq(rthal_root_domain, *nrt_sig, handler, arg, NULL,
+	ipipe_virtualize_irq(ipipe_root_domain, *nrt_sig, handler, arg, NULL,
 			     IPIPE_HANDLE_MASK);
 	return 0;
 }
 
 static inline void rtdm_nrtsig_destroy(rtdm_nrtsig_t *nrt_sig)
 {
-	rthal_free_virq(*nrt_sig);
+	ipipe_free_virq(*nrt_sig);
 }
 
 static inline void rtdm_nrtsig_pend(rtdm_nrtsig_t *nrt_sig)
 {
-	rthal_trigger_irq(*nrt_sig);
+	ipipe_trigger_irq(*nrt_sig);
 }
 #endif /* !DOXYGEN_CPP */
 
@@ -1344,7 +1344,7 @@ static inline int rtdm_rt_capable(rtdm_user_info_t *user_info)
 
 static inline int rtdm_in_rt_context(void)
 {
-	return (rthal_current_domain != rthal_root_domain);
+	return (ipipe_current_domain != ipipe_root_domain);
 }
 
 #endif /* !DOXYGEN_CPP */

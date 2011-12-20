@@ -69,11 +69,11 @@ static inline void xnarch_switch_to(struct xnarchtcb *out_tcb, struct xnarchtcb 
 	if (likely(next != NULL)) {
 		in_tcb->active_task = next;
 		in_tcb->active_mm = in_tcb->mm;
-		rthal_clear_foreign_stack(&rthal_domain);
+		ipipe_clear_foreign_stack(&rthal_archdata.domain);
 	} else {
 		in_tcb->active_task = prev;
 		in_tcb->active_mm = prev_mm;
-		rthal_set_foreign_stack(&rthal_domain);
+		ipipe_set_foreign_stack(&rthal_archdata.domain);
 	}
 
 	next_mm = in_tcb->active_mm;
@@ -147,8 +147,8 @@ static inline void xnarch_restore_fpu(struct xnarchtcb *tcb)
 
 static inline int xnarch_escalate(void)
 {
-	if (unlikely(rthal_current_domain == rthal_root_domain)) {
-		rthal_trigger_irq(xnarch_escalation_virq);
+	if (unlikely(ipipe_current_domain == ipipe_root_domain)) {
+		ipipe_trigger_irq(xnarch_escalation_virq);
 		return 1;
 	}
 

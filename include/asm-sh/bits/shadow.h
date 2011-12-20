@@ -92,7 +92,7 @@ static inline void xnarch_setup_mayday_page(void *page)
 
 static inline void xnarch_call_mayday(struct task_struct *p)
 {
-	rthal_return_intercept(p);
+	ipipe_return_notify(p);
 }
 
 static inline void xnarch_handle_mayday(struct xnarchtcb *tcb,

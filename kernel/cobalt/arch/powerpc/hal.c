@@ -58,7 +58,7 @@ enum rthal_ktimer_mode rthal_ktimer_saved_mode;
 
 static inline void rthal_disarm_decr(int disarmed)
 {
-	per_cpu(disarm_decr, rthal_processor_id()) = disarmed;
+	per_cpu(disarm_decr, ipipe_processor_id()) = disarmed;
 }
 
 static inline void rthal_setup_oneshot_dec(void)
@@ -82,7 +82,7 @@ static inline void rthal_setup_periodic_dec(void)
 
 static void rthal_critical_sync(void)
 {
-	switch (rthal_sync_op) {
+	switch (rthal_archdata.sync_op) {
 	case RTHAL_SET_ONESHOT_XENOMAI:
 		rthal_setup_oneshot_dec();
 		rthal_disarm_decr(1);
@@ -92,7 +92,7 @@ static void rthal_critical_sync(void)
 		rthal_setup_oneshot_dec();
 		rthal_disarm_decr(0);
 		/* We need to keep the timing cycle alive for the kernel. */
-		rthal_trigger_irq(RTHAL_TIMER_IRQ);
+		ipipe_trigger_irq(RTHAL_TIMER_IRQ);
 		break;
 
 	case RTHAL_SET_PERIODIC:
@@ -116,15 +116,15 @@ static void rthal_timer_set_oneshot(int rt_mode)
 
 	flags = rthal_critical_enter(rthal_critical_sync);
 	if (rt_mode) {
-		rthal_sync_op = RTHAL_SET_ONESHOT_XENOMAI;
+		rthal_archdata.sync_op = RTHAL_SET_ONESHOT_XENOMAI;
 		rthal_setup_oneshot_dec();
 		rthal_disarm_decr(1);
 	} else {
-		rthal_sync_op = RTHAL_SET_ONESHOT_LINUX;
+		rthal_archdata.sync_op = RTHAL_SET_ONESHOT_LINUX;
 		rthal_setup_oneshot_dec();
 		rthal_disarm_decr(0);
 		/* We need to keep the timing cycle alive for the kernel. */
-		rthal_trigger_irq(RTHAL_TIMER_IRQ);
+		ipipe_trigger_irq(RTHAL_TIMER_IRQ);
 	}
 	rthal_critical_exit(flags);
 }
@@ -134,7 +134,7 @@ static void rthal_timer_set_periodic(void)
 	unsigned long flags;
 
 	flags = rthal_critical_enter(&rthal_critical_sync);
-	rthal_sync_op = RTHAL_SET_PERIODIC;
+	rthal_archdata.sync_op = RTHAL_SET_PERIODIC;
 	rthal_setup_periodic_dec();
 	rthal_disarm_decr(0);
 	rthal_critical_exit(flags);
@@ -153,7 +153,7 @@ int rthal_timer_request(void (*tick_handler)(void),
 	int tickval, err, res;
 
 	if (rthal_timerfreq_arg == 0)
-		tmfreq = &rthal_tunables.timer_freq;
+		tmfreq = &rthal_archdata.timer_freq;
 
 	res = ipipe_request_tickdev("decrementer", mode_emul, tick_emul, cpu,
 				    tmfreq);
@@ -191,14 +191,14 @@ int rthal_timer_request(void (*tick_handler)(void),
 		goto out;
 
 	err = rthal_irq_request(RTHAL_TIMER_IRQ,
-				(rthal_irq_handler_t) tick_handler,
+				(ipipe_irq_handler_t) tick_handler,
 				NULL, NULL);
 	if (err)
 		return err;
 
 #ifdef CONFIG_SMP
 	err = rthal_irq_request(RTHAL_TIMER_IPI,
-				(rthal_irq_handler_t) tick_handler,
+				(ipipe_irq_handler_t) tick_handler,
 				NULL, NULL);
 	if (err)
 		return err;
@@ -231,7 +231,7 @@ void rthal_timer_release(int cpu)
 void rthal_timer_notify_switch(enum clock_event_mode mode,
 			       struct clock_event_device *cdev)
 {
-	if (rthal_processor_id() > 0)
+	if (ipipe_processor_id() > 0)
 		/*
 		 * We assume all CPUs switch the same way, so we only
 		 * track mode switches from the boot CPU.
@@ -246,60 +246,6 @@ unsigned long rthal_timer_calibrate(void)
 {
 	return 1000000000 / RTHAL_CLOCK_FREQ;
 }
-
-int rthal_irq_enable(unsigned irq)
-{
-	if (irq >= NR_IRQS || rthal_irq_descp(irq) == NULL)
-		return -EINVAL;
-
-	return rthal_irq_chip_enable(irq);
-}
-
-int rthal_irq_disable(unsigned irq)
-{
-	if (irq >= NR_IRQS || rthal_irq_descp(irq) == NULL)
-		return -EINVAL;
-
-	return rthal_irq_chip_disable(irq);
-}
-
-int rthal_irq_end(unsigned irq)
-{
-	if (irq >= NR_IRQS || rthal_irq_descp(irq) == NULL)
-		return -EINVAL;
-
-	return rthal_irq_chip_end(irq);
-}
-
-static inline
-int do_exception_event(unsigned event, rthal_pipeline_stage_t *stage,
-		       void *data)
-{
-	if (stage == &rthal_domain) {
-		rthal_realtime_faults[rthal_processor_id()][event]++;
-
-		if (rthal_trap_handler != NULL &&
-		    rthal_trap_handler(event, stage, data) != 0)
-			return RTHAL_EVENT_STOP;
-	}
-
-	return RTHAL_EVENT_PROPAGATE;
-}
-
-RTHAL_DECLARE_EVENT(exception_event);
-
-static inline void do_rthal_domain_entry(void)
-{
-	unsigned trapnr;
-
-	/* Trap all faults. */
-	for (trapnr = 0; trapnr < RTHAL_NR_FAULTS; trapnr++)
-		rthal_catch_exception(trapnr, &exception_event);
-
-	printk(KERN_INFO "Xenomai: hal/powerpc started.\n");
-}
-
-RTHAL_DECLARE_DOMAIN(rthal_domain_entry);
 
 int rthal_arch_init(void)
 {

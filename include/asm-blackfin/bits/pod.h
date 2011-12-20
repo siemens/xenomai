@@ -101,10 +101,10 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 
 	if (likely(next != NULL)) {
 		mpu_set_next(in_tcb, next);
-		rthal_clear_foreign_stack(&rthal_domain);
+		ipipe_clear_foreign_stack(&rthal_archdata.domain);
 	} else {
 		mpu_set_next(in_tcb, prev);
-		rthal_set_foreign_stack(&rthal_domain);
+		ipipe_set_foreign_stack(&rthal_archdata.domain);
 	}
 
 	mpu_switch(prev, next);
@@ -198,8 +198,8 @@ static inline int xnarch_escalate(void)
 		return 1;
 	}
 
-	if (rthal_current_domain == rthal_root_domain) {
-		rthal_trigger_irq(xnarch_escalation_virq);
+	if (ipipe_current_domain == ipipe_root_domain) {
+		ipipe_trigger_irq(xnarch_escalation_virq);
 		__ipipe_unlock_root();
 		return 1;
 	}

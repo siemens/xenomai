@@ -37,48 +37,6 @@
 #include <asm/xenomai/bits/init.h>
 #include <nucleus/vdso.h>
 
-#ifdef CONFIG_XENO_OPT_HOSTRT
-static IPIPE_DEFINE_SPINLOCK(__hostrtlock);
-
-static inline void do_hostrt_event(struct xnarch_hostrt_data *hostrt)
-{
-	unsigned long flags;
-
-	/*
-	 * The locking strategy is twofold:
-	 * - The spinlock protects against concurrent updates from within the
-	 *   Linux kernel and against preemption by Xenomai
-	 * - The sequence counter is for lockless read-only access.
-	 */
-
-	spin_lock_irqsave(&__hostrtlock, flags);
-	xnwrite_seqcount_begin(&nkvdso->hostrt_data.seqcount);
-
-	nkvdso->hostrt_data.live = 1;
-	nkvdso->hostrt_data.cycle_last = hostrt->cycle_last;
-	nkvdso->hostrt_data.mask = hostrt->mask;
-	nkvdso->hostrt_data.mult = hostrt->mult;
-	nkvdso->hostrt_data.shift = hostrt->shift;
-	nkvdso->hostrt_data.wall_time_sec = hostrt->wall_time_sec;
-	nkvdso->hostrt_data.wall_time_nsec = hostrt->wall_time_nsec;
-	nkvdso->hostrt_data.wall_to_monotonic = hostrt->wall_to_monotonic;
-
-	xnwrite_seqcount_end(&nkvdso->hostrt_data.seqcount);
-	spin_unlock_irqrestore(&__hostrtlock, flags);
-}
-
-RTHAL_DECLARE_HOSTRT_EVENT(hostrt_event);
-
-static inline void init_hostrt(void)
-{
-	xnseqcount_init(&nkvdso->hostrt_data.seqcount);
-	nkvdso->hostrt_data.live = 0;
-	rthal_catch_hostrt(&hostrt_event);
-}
-#else
-static inline void init_hostrt(void) { }
-#endif /* CONFIG_XENO_OPT_HOSTRT */
-
 MODULE_DESCRIPTION("Xenomai nucleus");
 MODULE_AUTHOR("rpm@xenomai.org");
 MODULE_LICENSE("GPL");
@@ -145,7 +103,6 @@ int __init __xeno_sys_init(void)
 	xnheap_set_label(&__xnsys_global_ppd.sem_heap, "global sem heap");
 
 	xnheap_init_vdso();
-	init_hostrt();
 #endif /* !__XENO_SIM__ */
 
 #ifdef __KERNEL__

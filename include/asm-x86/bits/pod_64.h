@@ -72,11 +72,11 @@ static inline void xnarch_switch_to(xnarchtcb_t *out_tcb, xnarchtcb_t *in_tcb)
 			 */
 			clts();
 		in_tcb->active_task = next;
-		rthal_clear_foreign_stack(&rthal_domain);
+		ipipe_clear_foreign_stack(&rthal_archdata.domain);
 		next->fpu_counter = 0;
 	} else {
 		in_tcb->active_task = prev;
-		rthal_set_foreign_stack(&rthal_domain);
+		ipipe_set_foreign_stack(&rthal_archdata.domain);
 	}
 
 	if (next && next != prev) {
@@ -121,7 +121,7 @@ static inline void xnarch_init_thread(xnarchtcb_t *tcb,
 
 	/* Prepare the bootstrap stack. */
 
-	rthal_local_irq_flags_hw(flags);
+	local_save_flags_hw(flags);
 
 	rsp = (unsigned long *)((unsigned long)tcb->stackbase + tcb->stacksize -
 				sizeof(struct xnarch_x8664_initstack) - 8);
@@ -326,8 +326,8 @@ static inline int xnarch_escalate(void)
 {
 	extern int xnarch_escalation_virq;
 
-	if (rthal_current_domain == rthal_root_domain) {
-		rthal_trigger_irq(xnarch_escalation_virq);
+	if (ipipe_current_domain == ipipe_root_domain) {
+		ipipe_trigger_irq(xnarch_escalation_virq);
 		return 1;
 	}
 

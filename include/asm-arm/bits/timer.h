@@ -40,7 +40,7 @@ static inline void xnarch_program_timer_shot(unsigned long delay)
 static inline void xnarch_send_timer_ipi(xnarch_cpumask_t mask)
 {
 #ifdef CONFIG_SMP
-	rthal_send_ipi(RTHAL_TIMER_IPI, mask);
+	ipipe_send_ipi(RTHAL_TIMER_IPI, mask);
 #endif /* !CONFIG_SMP */
 }
 
