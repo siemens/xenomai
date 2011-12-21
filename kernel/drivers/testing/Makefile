@@ -1,13 +1,10 @@
 
 obj-$(CONFIG_XENO_DRIVERS_TIMERBENCH) += xeno_timerbench.o
-obj-$(CONFIG_XENO_DRIVERS_IRQBENCH)   += xeno_irqbench.o
 obj-$(CONFIG_XENO_DRIVERS_SWITCHTEST) += xeno_switchtest.o
 obj-$(CONFIG_XENO_DRIVERS_SIGTEST)    += xeno_sigtest.o
 obj-$(CONFIG_XENO_DRIVERS_RTDMTEST)   += xeno_rtdmtest.o
 
 xeno_timerbench-y := timerbench.o
-
-xeno_irqbench-y := irqbench.o
 
 xeno_switchtest-y := switchtest.o
 
