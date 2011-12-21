@@ -23,7 +23,7 @@
 #include <asm/xenomai/atomic.h>
 #include <asm/xenomai/syscall.h>
 
-#define XENOMAI_SKINS_NR 16
+#define XENOMAI_SKINS_NR  4
 
 /* Events sent to the interface callback */
 #define XNSHADOW_CLIENT_ATTACH  0
