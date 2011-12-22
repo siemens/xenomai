@@ -43,7 +43,6 @@
 
 struct rthal_archdata {
 	struct ipipe_domain domain;
-	unsigned long cpu_freq;
 	unsigned long timer_freq;
 	unsigned long clock_freq;
 	volatile int sync_op;
@@ -65,7 +64,6 @@ struct rthal_archdata {
 
 #define RTHAL_TIMER_FREQ	(rthal_archdata.timer_freq)
 #define RTHAL_CLOCK_FREQ	(rthal_archdata.clock_freq)
-#define RTHAL_CPU_FREQ		(rthal_archdata.cpu_freq)
 
 enum rthal_ktimer_mode { /* <!> Must follow enum clock_event_mode */
 	KTIMER_MODE_UNUSED = 0,
@@ -87,13 +85,6 @@ enum rthal_ktimer_mode { /* <!> Must follow enum clock_event_mode */
 		ipipe_stall_pipeline_from(ipipe_root_domain);	\
 		ipipe_set_printk_sync(ipipe_current_domain);	\
 	} while (0)
-
-static inline unsigned long rthal_get_cpufreq(void)
-{
-	struct ipipe_sysinfo sysinfo;
-	ipipe_get_sysinfo(&sysinfo);
-	return (unsigned long)sysinfo.sys_cpu_freq;
-}
 
 static inline unsigned long rthal_get_timerfreq(void)
 {
@@ -127,8 +118,6 @@ unsigned long rthal_critical_enter(void (*synch)(void));
 void rthal_critical_exit(unsigned long flags);
 
 extern struct rthal_archdata rthal_archdata;
-
-extern unsigned long rthal_cpufreq_arg;
 
 extern unsigned long rthal_timerfreq_arg;
 

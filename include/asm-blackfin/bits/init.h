@@ -79,7 +79,7 @@ static inline int xnarch_init(void)
 	if (ret)
 		return ret;
 
-	xnarch_init_timeconv(RTHAL_CPU_FREQ);
+	xnarch_init_timeconv(RTHAL_CLOCK_FREQ);
 
 	ret = xnarch_calibrate_sched();
 	if (ret)

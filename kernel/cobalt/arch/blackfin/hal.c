@@ -208,14 +208,11 @@ EXPORT_SYMBOL_GPL(rthal_timer_notify_switch);
 
 unsigned long rthal_timer_calibrate(void)
 {
-	return (1000000000 / RTHAL_CPU_FREQ) * 100;	/* 100 CPU cycles -- FIXME */
+	return (1000000000 / RTHAL_CLOCK_FREQ) * 100;	/* 100 clock cycles -- FIXME */
 }
 
 int rthal_arch_init(void)
 {
-	if (rthal_cpufreq_arg == 0)
-		rthal_cpufreq_arg = rthal_get_cpufreq();
-
 	if (rthal_clockfreq_arg == 0)
 		rthal_clockfreq_arg = rthal_get_clockfreq();
 

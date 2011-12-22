@@ -47,9 +47,6 @@
 
 MODULE_LICENSE("GPL");
 
-unsigned long rthal_cpufreq_arg;
-module_param_named(cpufreq, rthal_cpufreq_arg, ulong, 0444);
-
 unsigned long rthal_timerfreq_arg;
 module_param_named(timerfreq, rthal_timerfreq_arg, ulong, 0444);
 
@@ -413,12 +410,11 @@ int rthal_init(void)
 	 * The arch-dependent support must have updated the various
 	 * frequency args as required.
 	 */
-	if (rthal_cpufreq_arg == 0) {
-		printk(KERN_ERR "Xenomai has detected a CPU frequency of 0. Aborting.\n");
+	if (rthal_clockfreq_arg == 0) {
+		printk(KERN_ERR "Xenomai: null clock frequency? Aborting.\n");
 		return -ENODEV;
 	}
 
-	rthal_archdata.cpu_freq = rthal_cpufreq_arg;
 	rthal_archdata.timer_freq = rthal_timerfreq_arg;
 	rthal_archdata.clock_freq = rthal_clockfreq_arg;
 
@@ -428,7 +424,7 @@ int rthal_init(void)
 	 */
 	rthal_archdata.apc_virq = ipipe_alloc_virq();
 	if (rthal_archdata.apc_virq == 0) {
-		printk(KERN_ERR "Xenomai: No virtual interrupt available.\n");
+		printk(KERN_ERR "Xenomai: no virtual interrupt available.\n");
 		ret = -EBUSY;
 		goto out_arch_cleanup;
 	}
@@ -438,7 +434,7 @@ int rthal_init(void)
 				   &rthal_apc_handler,
 				   NULL, NULL, IPIPE_HANDLE_MASK);
 	if (ret) {
-		printk(KERN_ERR "Xenomai: Failed to virtualize IRQ.\n");
+		printk(KERN_ERR "Xenomai: failed to virtualize IRQ.\n");
 		goto out_free_irq;
 	}
 
@@ -453,7 +449,7 @@ int rthal_init(void)
 		return 0;
 	}
 
-	printk(KERN_ERR "Xenomai: Domain registration failed (%d).\n", ret);
+	printk(KERN_ERR "Xenomai: domain registration failed (%d).\n", ret);
 	ipipe_virtualize_irq(ipipe_current_domain, rthal_archdata.apc_virq,
 			     NULL, NULL, NULL, 0);
 out_free_irq:

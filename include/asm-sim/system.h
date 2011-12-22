@@ -438,11 +438,6 @@ static inline unsigned long long xnarch_get_cpu_tsc (void)
     return mvm_get_cpu_time();
 }
 
-static inline unsigned long xnarch_get_cpu_freq (void)
-{
-    return mvm_get_cpu_freq();
-}
-
 static inline void xnarch_begin_panic (void)
 {
 }

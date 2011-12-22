@@ -258,9 +258,6 @@ int rthal_arch_init(void)
 	}
 #endif /* CONFIG_ALTIVEC */
 
-	if (rthal_cpufreq_arg == 0)
-		rthal_cpufreq_arg = (unsigned long)rthal_get_cpufreq();
-
 	if (rthal_timerfreq_arg == 0)
 		rthal_timerfreq_arg = (unsigned long)rthal_get_timerfreq();
 

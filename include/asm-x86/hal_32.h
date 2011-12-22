@@ -96,8 +96,6 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 #define RTHAL_HOST_TICK_IRQ	0	/* Host tick is emulated by Xenomai. */
 #endif /* CONFIG_X86_LOCAL_APIC */
 
-#define RTHAL_NMICLK_FREQ	RTHAL_CPU_FREQ
-
 static inline void rthal_grab_control(void)
 {
 	rthal_smi_init();

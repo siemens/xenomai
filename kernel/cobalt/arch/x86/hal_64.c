@@ -65,15 +65,12 @@ unsigned long rthal_timer_calibrate(void)
 	 */
 	ipipe_trace_max_reset();
 
-	return rthal_imuldiv(dt, 20, RTHAL_CPU_FREQ);
+	return rthal_imuldiv(dt, 20, RTHAL_CLOCK_FREQ);
 }
 
 int rthal_arch_init(void)
 {
-	if (rthal_cpufreq_arg == 0)
-		/* FIXME: 4Ghz barrier is close... */
-		rthal_cpufreq_arg = rthal_get_cpufreq();
-
+	/* FIXME: 4Ghz barrier is close... */
 	if (rthal_clockfreq_arg == 0)
 		rthal_clockfreq_arg = rthal_get_clockfreq();
 

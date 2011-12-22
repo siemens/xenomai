@@ -225,11 +225,6 @@ unsigned long long xnarch_get_host_time(void);
 
 unsigned long long xnarch_get_cpu_time(void);
 
-static inline unsigned long long xnarch_get_cpu_freq(void)
-{
-	return RTHAL_CPU_FREQ;
-}
-
 static inline unsigned long long xnarch_get_clock_freq(void)
 {
 	return RTHAL_CLOCK_FREQ;

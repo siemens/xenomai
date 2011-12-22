@@ -319,9 +319,6 @@ void __rthal_arm_fault_range(struct vm_area_struct *vma)
 
 int rthal_arch_init(void)
 {
-	if (rthal_cpufreq_arg == 0)
-		rthal_cpufreq_arg = rthal_get_cpufreq();
-
 	if (rthal_timerfreq_arg == 0)
 		rthal_timerfreq_arg = rthal_get_timerfreq();
 
