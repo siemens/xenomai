@@ -80,12 +80,6 @@ enum rthal_ktimer_mode { /* <!> Must follow enum clock_event_mode */
 #define rthal_unmute_pic()		do { } while(0)
 #endif /* __IPIPE_FEATURE_PIC_MUTE */
 
-#define rthal_emergency_console()				\
-	do {							\
-		ipipe_stall_pipeline_from(ipipe_root_domain);	\
-		ipipe_set_printk_sync(ipipe_current_domain);	\
-	} while (0)
-
 static inline unsigned long rthal_get_timerfreq(void)
 {
 	struct ipipe_sysinfo sysinfo;

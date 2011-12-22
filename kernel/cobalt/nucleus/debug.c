@@ -548,7 +548,7 @@ void xnlock_dbg_spinning(struct xnlock *lock, int cpu,
 			 const char *file, int line, const char *function)
 {
 	if (--*spin_limit == 0) {
-		rthal_emergency_console();
+		ipipe_prepare_panic();
 		printk(KERN_ERR "Xenomai: stuck on nucleus lock %p\n"
 				"	  waiter = %s:%u (%s(), CPU #%d)\n"
 				"	  owner	 = %s:%u (%s(), CPU #%d)\n",
@@ -585,7 +585,7 @@ int xnlock_dbg_release(struct xnlock *lock)
 	stats = &xnlock_stats[cpu];
 
 	if (unlikely(atomic_read(&lock->owner) != cpu)) {
-		rthal_emergency_console();
+		ipipe_prepare_panic();
 		printk(KERN_ERR "Xenomai: unlocking unlocked nucleus lock %p"
 				" on CPU #%d\n"
 				"         owner  = %s:%u (%s(), CPU #%d)\n",

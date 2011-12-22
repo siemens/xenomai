@@ -235,7 +235,7 @@ static inline unsigned long long xnarch_get_clock_freq(void)
 static inline void xnarch_begin_panic(void)
 {
 	xnarch_trace_panic_freeze();
-	rthal_emergency_console();
+	ipipe_prepare_panic();
 }
 
 #define xnarch_halt()					\
