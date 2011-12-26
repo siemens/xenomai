@@ -69,4 +69,6 @@ int main(int argc, char* argv[])
 	pause();
 
 	rt_task_delete(&demo_task);
+
+	return 0;
 }
