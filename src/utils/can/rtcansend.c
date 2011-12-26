@@ -62,7 +62,7 @@ void cleanup(void)
 	if (ret) {
 	    fprintf(stderr, "rt_dev_close: %s\n", strerror(-ret));
 	}
-	rt_task_delete(&rt_task_desc);
+	exit(EXIT_SUCCESS);
     }
 }
 
