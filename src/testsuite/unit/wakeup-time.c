@@ -97,7 +97,7 @@ void event(void *cookie)
 	       if (err) {
 		       if (err != -ETIMEDOUT) {
 			       /* Timer stopped. */
-			       rt_task_delete(NULL);
+			       exit(EXIT_FAILURE);
 		       }
 	       }
 
@@ -127,7 +127,7 @@ void worker(void *cookie)
 		       if (err != -EIDRM)
 			       fprintf(stderr,"switch: failed to pend on semaphore, code %d\n", err);
 
-		       rt_task_delete(NULL);
+		       exit(EXIT_FAILURE);
 	       }
 
 	       if (++count != switch_count) {

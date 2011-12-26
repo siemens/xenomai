@@ -138,7 +138,7 @@ void latency(void *cookie)
 					fprintf(stderr,
 						"latency: wait period failed, code %d\n",
 						err);
-					rt_task_delete(NULL);	/* Timer stopped. */
+					exit(EXIT_FAILURE); /* Timer stopped. */
 				}
 
 				overrun += ov;
