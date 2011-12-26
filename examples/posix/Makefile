@@ -35,9 +35,9 @@ endif
 
 CC=$(shell $(XENOCONFIG) --cc)
 
-CFLAGS=-DCONSUMER $(shell $(XENOCONFIG) --posix-cflags) $(APP_CFLAGS)
+CFLAGS=-DCONSUMER $(shell $(XENOCONFIG) --skin=posix --cflags) $(APP_CFLAGS)
 
-LDFLAGS=$(shell $(XENOCONFIG) --posix-ldflags) $(APP_LDFLAGS)
+LDFLAGS=$(shell $(XENOCONFIG) --skin=posix --ldflags) $(APP_LDFLAGS)
 
 # This includes the library path of given Xenomai into the binary to make live
 # easier for beginners if Xenomai's libs are not in any default search path.

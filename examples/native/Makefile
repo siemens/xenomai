@@ -32,9 +32,9 @@ endif
 
 CC=$(shell $(XENOCONFIG) --cc)
 
-CFLAGS=$(shell $(XENOCONFIG) --xeno-cflags) $(MY_CFLAGS)
+CFLAGS=$(shell $(XENOCONFIG) --skin=native --cflags) $(MY_CFLAGS)
 
-LDFLAGS=$(shell $(XENOCONFIG) --xeno-ldflags) $(MY_LDFLAGS) -lnative
+LDFLAGS=$(shell $(XENOCONFIG) --skin=native --ldflags) $(MY_LDFLAGS)
 
 # This includes the library path of given Xenomai into the binary to make live
 # easier for beginners if Xenomai's libs are not in any default search path.
@@ -52,7 +52,7 @@ endif
 
 ###### SPECIAL TARGET RULES ######
 rtprint: rtprint.c
-	$(CC) $(CFLAGS) $? $(LDFLAGS) -lrtdk -o $@
+	$(CC) $(CFLAGS) $? $(LDFLAGS) -o $@
 
 
 
@@ -66,8 +66,9 @@ OBJS     := ${patsubst %, %.o, $(MODULES)}
 CLEANMOD := ${patsubst %, .%*, $(MODULES)}
 PWD      := $(shell if [ "$$PWD" != "" ]; then echo $$PWD; else pwd; fi)
 
+PATCHLEVEL:=$(shell sed 's/^PATCHLEVEL = *\(.*\)/\1/;t;d' $(KSRC)/Makefile)
 ### Kernel 2.6
-ifeq ($(findstring 2.6,$(KSRC)),2.6)
+ifeq ($(strip $(PATCHLEVEL)),6)
 
 obj-m        := $(OBJS)
 EXTRA_CFLAGS := -I$(KSRC)/include/xenomai -I$(KSRC)/include/xenomai/posix $(ADD_CFLAGS)
