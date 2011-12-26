@@ -2111,7 +2111,84 @@ int rtdm_munmap(rtdm_user_info_t *user_info, void *ptr, size_t len)
 EXPORT_SYMBOL_GPL(rtdm_munmap);
 #endif /* CONFIG_XENO_OPT_PERVASIVE || DOXYGEN_CPP */
 
+/**
+ * @brief Enforces a rate limit
+ *
+ * This function enforces a rate limit: not more than @rs->burst callbacks
+ * in every @rs->interval.
+ *
+ * @param[in,out] rtdm_ratelimit_state data
+ * @param[in] name of calling function
+ *
+ * @return 0 means callback will be suppressed and 1 means go ahead and do it
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Kernel-based task
+ * - User-space task (RT, non-RT)
+ *
+ * Rescheduling: possible.
+ */
+int rtdm_ratelimit(struct rtdm_ratelimit_state *rs, const char *func)
+{
+	rtdm_lockctx_t lock_ctx;
+	int ret;
+
+	if (!rs->interval)
+		return 1;
+
+	rtdm_lock_get_irqsave(&rs->lock, lock_ctx);
+
+	if (!rs->begin)
+		rs->begin = rtdm_clock_read();
+	if (rtdm_clock_read() >= rs->begin + rs->interval) {
+		if (rs->missed)
+			printk(KERN_WARNING "%s: %d callbacks suppressed\n",
+			       func, rs->missed);
+		rs->begin   = 0;
+		rs->printed = 0;
+		rs->missed  = 0;
+	}
+	if (rs->burst && rs->burst > rs->printed) {
+		rs->printed++;
+		ret = 1;
+	} else {
+		rs->missed++;
+		ret = 0;
+	}
+	rtdm_lock_put_irqrestore(&rs->lock, lock_ctx);
+
+	return ret;
+}
+EXPORT_SYMBOL(rtdm_ratelimit);
+
 #ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
+
+/**
+ * Real-time safe rate-limited message printing on kernel console
+ *
+ * @param[in] format Format string (conforming standard @c printf())
+ * @param ... Arguments referred by @a format
+ *
+ * @return On success, this service returns the number of characters printed.
+ * Otherwise, a negative error code is returned.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Interrupt service routine (consider the overhead!)
+ * - Kernel-based task
+ * - User-space task (RT, non-RT)
+ *
+ * Rescheduling: never in real-time context, possible in non-real-time
+ * environments.
+ */
+void rtdm_printk_ratelimited(const char *format, ...);
 
 /**
  * Real-time safe message printing on kernel console

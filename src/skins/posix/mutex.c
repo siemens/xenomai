@@ -290,6 +290,8 @@ int __wrap_pthread_mutex_trylock(pthread_mutex_t *mutex)
 	int err;
 
 #ifdef CONFIG_XENO_FASTSYNCH
+	extern int __wrap_clock_gettime(clockid_t clock_id, struct timespec *tp);
+	struct timespec ts;
 	unsigned long status;
 	xnhandle_t cur;
 
@@ -342,12 +344,24 @@ int __wrap_pthread_mutex_trylock(pthread_mutex_t *mutex)
 	return -err;
 
 do_syscall:
-#endif /* !CONFIG_XENO_FASTSYNCH */
+	__wrap_clock_gettime(CLOCK_REALTIME, &ts);
+	do {
+		err = XENOMAI_SKINCALL2(__pse51_muxid,
+					__pse51_mutex_timedlock, shadow, &ts);
+	} while (err == -EINTR);
+	if (err == -ETIMEDOUT || err == -EDEADLK)
+		err = -EBUSY;
+
+	cb_read_unlock(&shadow->lock, s);
+
+#else /* !CONFIG_XENO_FASTSYNCH */
 
 	do {
 		err = XENOMAI_SKINCALL1(__pse51_muxid,
 					__pse51_mutex_trylock, shadow);
 	} while (err == -EINTR);
+
+#endif /* !CONFIG_XENO_FASTSYNCH */
 
 	return -err;
 }

@@ -484,6 +484,10 @@ void mode_switch(void)
 {
 	mutex_t mutex;
 
+	/* Cause a switch to secondary mode */
+#ifdef XENO_POSIX
+	__real_sched_yield();
+#endif
 	fprintf(stderr, "mode_switch\n");
 
 	dispatch("switch mutex_init", MUTEX_CREATE, 1, 0, &mutex, 1, 0);
