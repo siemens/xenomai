@@ -420,6 +420,8 @@ int pthread_intr_control_np(pthread_intr_t intr,
 
 #else /* !(__KERNEL__ || __XENO_SIM__) */
 
+struct sched_param_ex;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
