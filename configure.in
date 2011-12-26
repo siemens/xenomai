@@ -458,7 +458,7 @@ XENO_USER_APP_LDFLAGS=$XENO_USER_LDFLAGS
 
 case $XENO_TARGET_ARCH in
  x86)
-	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -fstrict-aliasing $gcc_w_noalias"
+	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -fno-omit-frame-pointer -fstrict-aliasing $gcc_w_noalias"
 	;;
  powerpc)
 	;;
