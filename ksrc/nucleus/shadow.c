@@ -2228,7 +2228,9 @@ void xnshadow_send_sig(xnthread_t *thread, int sig, int arg, int specific)
 }
 EXPORT_SYMBOL_GPL(xnshadow_send_sig);
 
-static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
+static inline
+int do_hisyscall_event(unsigned event, rthal_pipeline_stage_t *stage,
+		       void *data)
 {
 	struct pt_regs *regs = (struct pt_regs *)data;
 	int muxid, muxop, switched, err, sigs;
@@ -2307,7 +2309,7 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 	if ((sysflags & __xn_exec_lostage) != 0) {
 		/* Syscall must run into the Linux domain. */
 
-		if (domid == RTHAL_DOMAIN_ID) {
+		if (stage == &rthal_domain) {
 			/* Request originates from the Xenomai domain: just relax the
 			   caller and execute the syscall immediately after. */
 			xnshadow_relax(1, SIGDEBUG_MIGRATE_SYSCALL);
@@ -2321,7 +2323,7 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 		/* Syscall must be processed either by Xenomai, or by the
 		   calling domain. */
 
-		if (domid != RTHAL_DOMAIN_ID)
+		if (stage != &rthal_domain)
 			/* Request originates from the Linux domain: propagate the
 			   event to our Linux-based handler, so that the caller is
 			   hardened and the syscall is eventually executed from
@@ -2446,7 +2448,9 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 
 RTHAL_DECLARE_EVENT(hisyscall_event);
 
-static inline int do_losyscall_event(unsigned event, unsigned domid, void *data)
+static inline
+int do_losyscall_event(unsigned event, rthal_pipeline_stage_t *stage,
+		       void *data)
 {
 	int muxid, muxop, sysflags, switched, err, sigs;
 	struct pt_regs *regs = (struct pt_regs *)data;
