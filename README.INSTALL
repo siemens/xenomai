@@ -391,7 +391,30 @@ NOTE: Contrarily to previous releases, Xenomai no longer passes any
 arm architecture specific flags, or FPU flags to gcc, so, users
 are expected to pass them using the CFLAGS and LDFLAGS variables as
 demonstrated above, where the AT91RM9200 is based on the ARM920T core,
-and so is an armv4t architecture.
+and so is an armv4t architecture. The following table summarizes the
+CFLAGS and options to pass for the known SOCs:
+
+----------------------------------------------------------------------
+SOC         | CFLAGS                     | configure options
+------------+----------------------------+----------------------------
+at91rm9200  | -march=armv4t -msoft-float |
+at91sam9x   | -march=armv5 -msoft-float  |
+ixp4xx      | -march=armv5 -msoft-float  | --enable-arm-tsc=ixp4xx
+imx1        | -march=armv4t -msoft-float |
+imx21       | -march=armv5 -msoft-float  |
+imx31       | -march=armv6 -mfpu=vfp     |
+imx51/imx53 | -march=armv7-a -mfpu=vfp3 *|
+omap3       | -march=armv7-a -mfpu=vfp3 *|
+omap4       | -march=armv7-a -mfpu=vfp3 *| --enable-smp
+orion       | -march=armv5 -mfpu=vfp     |
+pxa         | -march=armv5 -msoft-float  |
+pxa3xx      | -march=armv5 -msoft-float  | --enable-arm-quirks=xscale3
+s3c24xx     | -march=armv4t -msoft-float |
+sa1100      | -march=armv4t -msoft-float | --enable-arm-quirks=sa1100
+-----------------------------------------------------------------------
+
+* Depending on the gcc versions, the flag for armv7 may be
+-march=armv7-a or -march=armv7a.
 
 2.5 Building for NIOS II
 --------------------
