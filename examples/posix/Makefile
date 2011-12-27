@@ -63,9 +63,9 @@ OBJS     := ${patsubst %, %.o, $(MODULES)}
 CLEANMOD := ${patsubst %, .%*, $(MODULES)}
 PWD      := $(shell if [ "$$PWD" != "" ]; then echo $$PWD; else pwd; fi)
 
-### Kernel 2.6
+### Kernel 2.6 or 3.0
 PATCHLEVEL:=$(shell sed 's/PATCHLEVEL = \(.*\)/\1/;t;d' $(KSRC)/Makefile)
-ifeq ($(PATCHLEVEL),6)
+ifneq ($(PATCHLEVEL),4)
 
 obj-m        := $(OBJS)
 EXTRA_CFLAGS := -DPRODUCER -I$(KSRC)/include/xenomai -I$(KSRC)/include/xenomai/posix $(ADD_CFLAGS)
