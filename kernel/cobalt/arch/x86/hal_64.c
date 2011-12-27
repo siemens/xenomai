@@ -46,7 +46,7 @@ unsigned long rthal_timer_calibrate(void)
 	rthal_time_t t, dt;
 	int i;
 
-	flags = rthal_critical_enter(NULL);
+	flags = ipipe_critical_enter(NULL);
 
 	t = rthal_rdtsc();
 
@@ -57,7 +57,7 @@ unsigned long rthal_timer_calibrate(void)
 
 	dt = (rthal_rdtsc() - t) / 2;
 
-	rthal_critical_exit(flags);
+	ipipe_critical_exit(flags);
 
 	/*
 	 * Reset the max trace, since it contains the calibration time

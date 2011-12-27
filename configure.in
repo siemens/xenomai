@@ -677,6 +677,7 @@ AC_CONFIG_FILES([ \
 	include/Makefile \
 	include/asm-generic/Makefile \
 	include/asm-generic/bits/Makefile \
+	include/asm-generic/ipipe/Makefile \
 	include/asm-blackfin/Makefile \
 	include/asm-blackfin/bits/Makefile \
 	include/asm-x86/Makefile \

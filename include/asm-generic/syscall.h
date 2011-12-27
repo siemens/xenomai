@@ -136,11 +136,6 @@ struct xnsysent {
 #define SKINCALL_DEF(nr, fn, fl)	\
 	[nr] = { .svc = __syscast__(fn), .flags = __xn_exec_##fl }
 
-extern int nkthrptd;
-
-#define xnshadow_thrptd(t) ((t)->ptd[nkthrptd])
-#define xnshadow_thread(t) ((xnthread_t *)xnshadow_thrptd(t))
-
 #define access_rok(addr, size)	access_ok(VERIFY_READ, (addr), (size))
 #define access_wok(addr, size)	access_ok(VERIFY_WRITE, (addr), (size))
 

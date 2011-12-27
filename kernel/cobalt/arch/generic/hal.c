@@ -60,159 +60,8 @@ module_param_named(supported_cpus, supported_cpus_arg, ulong, 0444);
 
 static IPIPE_DEFINE_SPINLOCK(rthal_apc_lock);
 
-static atomic_t rthal_sync_count = ATOMIC_INIT(1);
-
 struct rthal_archdata rthal_archdata;
 EXPORT_SYMBOL_GPL(rthal_archdata);
-
-unsigned long rthal_critical_enter(void (*synch) (void))
-{
-	unsigned long flags = ipipe_critical_enter(synch);
-
-	if (atomic_dec_and_test(&rthal_sync_count))
-		rthal_archdata.sync_op = 0;
-	else
-		BUG_ON(synch != NULL);
-
-	return flags;
-}
-EXPORT_SYMBOL_GPL(rthal_critical_enter);
-
-void rthal_critical_exit(unsigned long flags)
-{
-	atomic_inc(&rthal_sync_count);
-	ipipe_critical_exit(flags);
-}
-EXPORT_SYMBOL_GPL(rthal_critical_exit);
-
-/**
- * @fn int rthal_irq_request(unsigned int irq, ipipe_irq_handler_t handler, ipipe_irq_ackfn_t ackfn, void *cookie)
- *
- * @brief Install a real-time interrupt handler.
- *
- * Installs an interrupt handler for the specified IRQ line by
- * requesting the appropriate Adeos virtualization service. The
- * handler is invoked by Adeos on behalf of the Xenomai domain
- * context.  Once installed, the HAL interrupt handler will be called
- * prior to the regular Linux handler for the same interrupt source.
- *
- * @param irq The hardware interrupt channel to install a handler on.
- * This value is architecture-dependent.
- *
- * @param handler The address of a valid interrupt service routine.
- * This handler will be called each time the corresponding IRQ is
- * delivered, and will be passed the @a cookie value unmodified.
- *
- * @param ackfn The address of an optional interrupt acknowledge
- * routine, aimed at replacing the one provided by Adeos. Only very
- * specific situations actually require to override the default Adeos
- * setting for this parameter, like having to acknowledge non-standard
- * PIC hardware. If @a ackfn is NULL, the default Adeos routine will
- * be used instead.
- *
- * @param cookie A user-defined opaque cookie the HAL will pass to the
- * interrupt handler as its sole argument.
- *
- * @return 0 is returned upon success. Otherwise:
- *
- * - -EBUSY is returned if an interrupt handler is already installed.
- * rthal_irq_release() must be issued first before a handler is
- * installed anew.
- *
- * - -EINVAL is returned if @a irq is invalid or @a handler is NULL.
- *
- * - Other error codes might be returned in case some internal error
- * happens at the Adeos level. Such error might caused by conflicting
- * Adeos requests made by third-party code.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Any domain context.
- */
-
-int rthal_irq_request(unsigned int irq,
-		      ipipe_irq_handler_t handler,
-		      ipipe_irq_ackfn_t ackfn, void *cookie)
-{
-	if (handler == NULL || irq >= IPIPE_NR_IRQS)
-		return -EINVAL;
-
-	return ipipe_virtualize_irq(&rthal_archdata.domain,
-				    irq,
-				    handler,
-				    cookie,
-				    ackfn,
-				    IPIPE_HANDLE_MASK | IPIPE_WIRED_MASK |
-				    IPIPE_EXCLUSIVE_MASK);
-}
-EXPORT_SYMBOL_GPL(rthal_irq_request);
-
-/**
- * @fn int rthal_irq_release(unsigned int irq)
- *
- * @brief Uninstall a real-time interrupt handler.
- *
- * Uninstalls an interrupt handler previously attached using the
- * rthal_irq_request() service.
- *
- * @param irq The hardware interrupt channel to uninstall a handler
- * from.  This value is architecture-dependent.
- *
- * @return 0 is returned upon success. Otherwise:
- *
- * - -EINVAL is returned if @a irq is invalid.
- *
- * - Other error codes might be returned in case some internal error
- * happens at the Adeos level. Such error might caused by conflicting
- * Adeos requests made by third-party code.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Any domain context.
- */
-
-int rthal_irq_release(unsigned int irq)
-{
-	if (irq >= IPIPE_NR_IRQS)
-		return -EINVAL;
-
-	return ipipe_virtualize_irq(&rthal_archdata.domain,
-				    irq, NULL, NULL, NULL, IPIPE_PASS_MASK);
-}
-EXPORT_SYMBOL_GPL(rthal_irq_release);
-
-/**
- * @fn int rthal_trap_catch (rthal_archdata.trap_handler_t handler)
- *
- * @brief Installs a fault handler.
- *
- * The HAL attempts to invoke a fault handler whenever an uncontrolled
- * exception or fault is caught at machine level. This service allows
- * to install a user-defined handler for such events.
- *
- * @param handler The address of the fault handler to call upon
- * exception condition. The handler is passed the address of the
- * low-level information block describing the fault as passed by
- * Adeos. Its layout is implementation-dependent.
- *
- * @return The address of the fault handler previously installed.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Any domain context.
- */
-
-ipipe_event_handler_t rthal_trap_catch(ipipe_event_handler_t handler)
-{
-	return (ipipe_event_handler_t) xchg(&rthal_archdata.trap_handler, handler);
-}
-EXPORT_SYMBOL_GPL(rthal_trap_catch);
 
 static void rthal_apc_handler(unsigned virq, void *arg)
 {
@@ -384,12 +233,12 @@ void rthal_apc_free(int apc)
 {
 	BUG_ON(apc < 0 || apc >= BITS_PER_LONG);
 	clear_bit(apc, &rthal_archdata.apc_map);
+	smp_mb__after_clear_bit();
 }
 EXPORT_SYMBOL_GPL(rthal_apc_free);
 
 int rthal_init(void)
 {
-	struct ipipe_domain_attr attr;
 	int ret;
 
 	ret = rthal_arch_init();
@@ -429,32 +278,22 @@ int rthal_init(void)
 		goto out_arch_cleanup;
 	}
 
-	ret = ipipe_virtualize_irq(ipipe_current_domain,
-				   rthal_archdata.apc_virq,
-				   &rthal_apc_handler,
-				   NULL, NULL, IPIPE_HANDLE_MASK);
+	ret = ipipe_request_irq(ipipe_current_domain,
+				rthal_archdata.apc_virq,
+				&rthal_apc_handler,
+				NULL, NULL);
 	if (ret) {
-		printk(KERN_ERR "Xenomai: failed to virtualize IRQ.\n");
+		printk(KERN_ERR "Xenomai: failed to request IRQ.\n");
 		goto out_free_irq;
 	}
 
-	ipipe_init_attr(&attr);
-	attr.name = "Xenomai";
-	attr.entry = NULL;
-	attr.domid = 0x58454e4f;
-	attr.priority = IPIPE_HEAD_PRIORITY;
-	ret = ipipe_register_domain(&rthal_archdata.domain, &attr);
-	if (ret == 0) {
-		printk(KERN_INFO "Xenomai: hal/%s enabled.\n", RTHAL_ARCH_NAME);
-		return 0;
-	}
+	ipipe_register_head(&rthal_archdata.domain, "Xenomai");
 
-	printk(KERN_ERR "Xenomai: domain registration failed (%d).\n", ret);
-	ipipe_virtualize_irq(ipipe_current_domain, rthal_archdata.apc_virq,
-			     NULL, NULL, NULL, 0);
+	printk(KERN_INFO "Xenomai: hal/%s enabled.\n", RTHAL_ARCH_NAME);
+
+	return 0;
 out_free_irq:
 	ipipe_free_virq(rthal_archdata.apc_virq);
-
 out_arch_cleanup:
 	rthal_arch_cleanup();
 
@@ -464,10 +303,9 @@ EXPORT_SYMBOL_GPL(rthal_init);
 
 void rthal_exit(void)
 {
-	ipipe_virtualize_irq(ipipe_current_domain, rthal_archdata.apc_virq,
-			     NULL, NULL, NULL, 0);
+	ipipe_free_irq(ipipe_current_domain, rthal_archdata.apc_virq);
 	ipipe_free_virq(rthal_archdata.apc_virq);
-	ipipe_unregister_domain(&rthal_archdata.domain);
+	ipipe_unregister_head(&rthal_archdata.domain);
 	rthal_arch_cleanup();
 }
 EXPORT_SYMBOL_GPL(rthal_exit);
@@ -492,115 +330,6 @@ unsigned long long __rthal_generic_full_divmod64(unsigned long long a,
 	return q;
 }
 EXPORT_SYMBOL_GPL(__rthal_generic_full_divmod64);
-
-/**
- * @fn int rthal_irq_enable(unsigned int irq)
- *
- * @brief Enable an interrupt source.
- *
- * Enables an interrupt source at PIC level. Since Adeos masks and
- * acknowledges the associated interrupt source upon IRQ receipt, this
- * action is usually needed whenever the HAL handler does not
- * propagate the IRQ event to the Linux domain, thus preventing the
- * regular Linux interrupt handling code from re-enabling said
- * source. After this call has returned, IRQs from the given source
- * will be enabled again.
- *
- * @param irq The interrupt source to enable.  This value is
- * architecture-dependent.
- *
- * @return 0 is returned upon success. Otherwise:
- *
- * - -EINVAL is returned if @a irq is invalid.
- *
- * - Other error codes might be returned in case some internal error
- * happens at the Adeos level. Such error might caused by conflicting
- * Adeos requests made by third-party code.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Any domain context.
- */
-int rthal_irq_enable(unsigned int irq)
-{
-	if (irq >= NR_IRQS || rthal_irq_descp(irq) == NULL)
-		return -EINVAL;
-
-	return rthal_irq_chip_enable(irq);
-}
-EXPORT_SYMBOL_GPL(rthal_irq_enable);
-
-/**
- * @fn int rthal_irq_disable(unsigned int irq)
- *
- * @brief Disable an interrupt source.
- *
- * Disables an interrupt source at PIC level. After this call has
- * returned, no more IRQs from the given source will be allowed, until
- * the latter is enabled again using rthal_irq_enable().
- *
- * @param irq The interrupt source to disable.  This value is
- * architecture-dependent.
- *
- * @return 0 is returned upon success. Otherwise:
- *
- * - -EINVAL is returned if @a irq is invalid.
- *
- * - Other error codes might be returned in case some internal error
- * happens at the Adeos level. Such error might caused by conflicting
- * Adeos requests made by third-party code.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Any domain context.
- */
-int rthal_irq_disable(unsigned int irq)
-{
-	if (irq >= NR_IRQS || rthal_irq_descp(irq) == NULL)
-		return -EINVAL;
-
-	return rthal_irq_chip_disable(irq);
-}
-EXPORT_SYMBOL_GPL(rthal_irq_disable);
-
-/**
- * @fn int rthal_irq_end(unsigned int irq)
- *
- * @brief End of interrupt handling.
- *
- * This service should be invoked to notify the system when a
- * real-time interrupt has been serviced, to enable the IRQ channel
- * back again.
- *
- * @param irq The interrupt source from which a request was handled.
- * This value is architecture-dependent.
- *
- * @return 0 is returned upon success. Otherwise:
- *
- * - -EINVAL is returned if @a irq is invalid.
- *
- * - Other error codes might be returned in case some internal error
- * happens at the Adeos level. Such error might caused by conflicting
- * Adeos requests made by third-party code.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Any domain context.
- */
-int rthal_irq_end(unsigned int irq)
-{
-	if (irq >= NR_IRQS || rthal_irq_descp(irq) == NULL)
-		return -EINVAL;
-
-	return rthal_irq_chip_end(irq);
-}
-EXPORT_SYMBOL_GPL(rthal_irq_end);
 
 /**
  * \fn int rthal_timer_request(void (*tick_handler)(void),
@@ -679,6 +408,3 @@ EXPORT_SYMBOL_GPL(rthal_irq_end);
 EXPORT_SYMBOL_GPL(rthal_timer_request);
 EXPORT_SYMBOL_GPL(rthal_timer_release);
 EXPORT_SYMBOL_GPL(rthal_timer_calibrate);
-
-EXPORT_SYMBOL_GPL(kill_proc_info);
-EXPORT_SYMBOL_GPL(get_mm_exe_file);

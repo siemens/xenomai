@@ -2212,20 +2212,24 @@ reschedule:
 
 #ifndef __XENO_SIM__
       shadow_epilogue:
-	/* Shadow on entry and root without shadow extension on exit?
-	   Mmmm... This must be the user-space mate of a deleted real-time
-	   shadow we've just rescheduled in the Linux domain to have it
-	   exit properly.  Reap it now. */
-	if (xnshadow_thrptd(current) == NULL) {
+	/*
+	 * Shadow on entry and root without shadow extension on exit?
+	 * Mmmm... This must be the user-space mate of a deleted
+	 * real-time shadow we've just rescheduled in the Linux domain
+	 * to have it exit properly.  Reap it now.
+	 */
+	if (xnshadow_current() == NULL) {
 		splnone();
 		xnshadow_exit();
 	}
 
-	/* Interrupts must be disabled here (has to be done on entry of the
-	   Linux [__]switch_to function), but it is what callers expect,
-	   specifically the reschedule of an IRQ handler that hit before we
-	   call xnpod_schedule in xnpod_suspend_thread when relaxing a
-	   thread. */
+	/*
+	 * Interrupts must be disabled here (has to be done on entry
+	 * of the Linux [__]switch_to function), but it is what
+	 * callers expect, specifically the reschedule of an IRQ
+	 * handler that hit before we call xnpod_schedule in
+	 * xnpod_suspend_thread when relaxing a thread.
+	 */
 	XENO_BUGON(NUCLEUS, !irqs_disabled_hw());
 	return;
 #endif /* !__XENO_SIM__ */
@@ -2438,21 +2442,16 @@ int xnpod_remove_hook(int type, void (*routine) (xnthread_t *))
 EXPORT_SYMBOL_GPL(xnpod_remove_hook);
 
 /*!
- * \fn void xnpod_trap_fault(xnarch_fltinfo_t *fltinfo);
- * \brief Default fault handler.
+ * \fn void xnpod_handle_exception(struct ipipe_trap_data *d);
+ * \brief Exception handler.
  *
- * This is the default handler which is called whenever an uncontrolled
- * exception or fault is caught. If the fault is caught on behalf of a
- * real-time thread, the fault is not propagated to the host system.
- * Otherwise, the fault is unhandled by the nucleus and simply propagated.
+ * This is the handler which is called whenever an exception/fault is
+ * caught over the primary domain.
  *
- * @param fltinfo An opaque pointer to the arch-specific buffer
- * describing the fault. The actual layout is defined by the
- * xnarch_fltinfo_t type in each arch-dependent layer file.
- *
+ * @param d A pointer to the trap information block received from the
+ * pipeline core.
  */
-
-int xnpod_trap_fault(xnarch_fltinfo_t *fltinfo)
+int xnpod_handle_exception(struct ipipe_trap_data *d)
 {
 	xnthread_t *thread;
 
@@ -2465,22 +2464,22 @@ int xnpod_trap_fault(xnarch_fltinfo_t *fltinfo)
 	trace_mark(xn_nucleus, thread_fault,
 		   "thread %p thread_name %s ip %p type 0x%x",
 		   thread, xnthread_name(thread),
-		   (void *)xnarch_fault_pc(fltinfo),
-		   xnarch_fault_trap(fltinfo));
+		   (void *)xnarch_fault_pc(d),
+		   xnarch_fault_trap(d));
 
 #ifdef __KERNEL__
-	if (xnarch_fault_fpu_p(fltinfo)) {
+	if (xnarch_fault_fpu_p(d)) {
 		if (__xnpod_fault_init_fpu(thread))
 			return 1;
 		print_symbol("invalid use of FPU in Xenomai context at %s\n",
-			     xnarch_fault_pc(fltinfo));
+			     xnarch_fault_pc(d));
 	}
 
 	if (!xnpod_userspace_p()) {
 		xnprintf
 		    ("suspending kernel thread %p ('%s') at 0x%lx after exception #0x%x\n",
-		     thread, thread->name, xnarch_fault_pc(fltinfo),
-		     xnarch_fault_trap(fltinfo));
+		     thread, thread->name, xnarch_fault_pc(d),
+		     xnarch_fault_trap(d));
 
 		xnpod_suspend_thread(thread, XNSUSP, XN_INFINITE, XN_RELATIVE, NULL);
 		return 1;
@@ -2494,39 +2493,39 @@ int xnpod_trap_fault(xnarch_fltinfo_t *fltinfo)
 	 * debug stepping properly.
 	 */
 	if (xnpod_shadow_p()) {
-		thread->regs = xnarch_fault_regs(fltinfo);
+		thread->regs = xnarch_fault_regs(d);
 #if XENO_DEBUG(NUCLEUS)
-		if (!xnarch_fault_um(fltinfo)) {
+		if (!xnarch_fault_um(d)) {
 			xnarch_trace_panic_freeze();
 			xnprintf
 			    ("Switching %s to secondary mode after exception #%u in "
 			     "kernel-space at 0x%lx (pid %d)\n", thread->name,
-			     xnarch_fault_trap(fltinfo),
-			     xnarch_fault_pc(fltinfo),
+			     xnarch_fault_trap(d),
+			     xnarch_fault_pc(d),
 			     xnthread_user_pid(thread));
 			xnarch_trace_panic_dump();
-		} else if (xnarch_fault_notify(fltinfo))	/* Don't report debug traps */
+		} else if (xnarch_fault_notify(d))	/* Don't report debug traps */
 			xnprintf
 			    ("Switching %s to secondary mode after exception #%u from "
 			     "user-space at 0x%lx (pid %d)\n", thread->name,
-			     xnarch_fault_trap(fltinfo),
-			     xnarch_fault_pc(fltinfo),
+			     xnarch_fault_trap(d),
+			     xnarch_fault_pc(d),
 			     xnthread_user_pid(thread));
 #endif /* XENO_DEBUG(NUCLEUS) */
-		if (xnarch_fault_pf_p(fltinfo))
+		if (xnarch_fault_pf_p(d))
 			/* The page fault counter is not SMP-safe, but it's a
 			   simple indicator that something went wrong wrt memory
 			   locking anyway. */
 			xnstat_counter_inc(&thread->stat.pf);
 
-		xnshadow_relax(xnarch_fault_notify(fltinfo),
+		xnshadow_relax(xnarch_fault_notify(d),
 			       SIGDEBUG_MIGRATE_FAULT);
 	}
 #endif /* __KERNEL__ */
 
 	return 0;
 }
-EXPORT_SYMBOL_GPL(xnpod_trap_fault);
+EXPORT_SYMBOL_GPL(xnpod_handle_exception);
 
 /*!
  * \fn int xnpod_enable_timesource(void)

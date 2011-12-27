@@ -1215,7 +1215,7 @@ static inline struct xnheap *__validate_heap_addr(void *addr)
 	return NULL;
 }
 
-static DECLARE_IOCTL_HANDLER(xnheap_ioctl, file, cmd, arg)
+static long xnheap_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
 	file->private_data = (void *)arg;
 	return 0;

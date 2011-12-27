@@ -67,9 +67,9 @@
 #ifdef CONFIG_ARCH_OMAP3
 #error "xenomai does not support multi-omap configuration"
 #endif /* multi-omap */
-#define RTHAL_TIMER_DEVICE \
+#define RTHAL_TIMER_DEVICE					\
 	num_online_cpus() == 1 ? "gp timer" : "local_timer"
-#define RTHAL_CLOCK_DEVICE \
+#define RTHAL_CLOCK_DEVICE					\
 	num_online_cpus() == 1 ? "gp timer" : "global_timer"
 #elif defined(CONFIG_PLAT_ORION)
 #define RTHAL_TIMER_DEVICE	"orion_tick"
@@ -93,7 +93,7 @@
 typedef unsigned long long rthal_time_t;
 
 #if __LINUX_ARM_ARCH__ < 5
-static inline __attribute_const__ unsigned long ffnz (unsigned long x)
+static inline __attribute_const__ unsigned long ffnz(unsigned long x)
 {
 	int r = 0;
 
@@ -122,7 +122,7 @@ static inline __attribute_const__ unsigned long ffnz (unsigned long x)
 	return r;
 }
 #else
-static inline __attribute_const__ unsigned long ffnz (unsigned long ul)
+static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 {
 	int __r;
 	__asm__("clz\t%0, %1" : "=r" (__r) : "r"(ul & (-ul)) : "cc");
@@ -157,24 +157,24 @@ static inline __attribute_const__ unsigned long ffnz (unsigned long ul)
 #define rthal_grab_control()     do { } while(0)
 #define rthal_release_control()  do { } while(0)
 
-static inline unsigned long long rthal_rdtsc (void)
+static inline unsigned long long rthal_rdtsc(void)
 {
-    unsigned long long t;
-    ipipe_read_tsc(t);
-    return t;
+	unsigned long long t;
+	ipipe_read_tsc(t);
+	return t;
 }
 
-static inline struct task_struct *rthal_current_host_task (int cpuid)
+static inline struct task_struct *rthal_current_host_task(int cpuid)
 {
-    return current;
+	return current;
 }
 
-static inline void rthal_timer_program_shot (unsigned long delay)
+static inline void rthal_timer_program_shot(unsigned long delay)
 {
-    if(!delay)
-	__ipipe_schedule_irq_head(RTHAL_TIMER_IRQ);
-    else
-	__ipipe_mach_set_dec(delay);
+	if (delay == 0)
+		ipipe_post_irq_head(RTHAL_TIMER_IRQ);
+	else
+		__ipipe_mach_set_dec(delay);
 }
 
 /* Private interface -- Internal use only */
@@ -189,30 +189,30 @@ asmlinkage void rthal_thread_trampoline(void);
 
 typedef struct rthal_fpenv {
 
-    /*
-     * This layout must follow exactely the definition of the FPU
-     *  area in the ARM thread_info structure. 'tp_value' is also
-     *  saved even if it is not needed, but it shouldn't matter.
-     */
-    __u8                    used_cp[16];    /* thread used copro */
-    unsigned long           tp_value;
-    struct crunch_state     crunchstate;
-    union fp_state          fpstate __attribute__((aligned(8)));
-    union vfp_state         vfpstate;
+	/*
+	 * This layout must follow exactely the definition of the FPU
+	 *  area in the ARM thread_info structure. 'tp_value' is also
+	 *  saved even if it is not needed, but it shouldn't matter.
+	 */
+	__u8                    used_cp[16];    /* thread used copro */
+	unsigned long           tp_value;
+	struct crunch_state     crunchstate;
+	union fp_state          fpstate __attribute__((aligned(8)));
+	union vfp_state         vfpstate;
 } rthal_fpenv_t;
 
 static inline void rthal_init_fpu(rthal_fpenv_t *fpuenv)
 {
-    fp_init(&fpuenv->fpstate);
+	fp_init(&fpuenv->fpstate);
 #if defined(CONFIG_VFP)
-    /* vfpstate has already been zeroed by xnarch_init_fpu */
-    fpuenv->vfpstate.hard.fpexc = FPEXC_EN;
-    fpuenv->vfpstate.hard.fpscr = FPSCR_ROUND_NEAREST;
+	/* vfpstate has already been zeroed by xnarch_init_fpu */
+	fpuenv->vfpstate.hard.fpexc = FPEXC_EN;
+	fpuenv->vfpstate.hard.fpscr = FPSCR_ROUND_NEAREST;
 #endif
 }
 
-#define rthal_task_fpenv(task) \
-    ((rthal_fpenv_t *) &task_thread_info(task)->used_cp[0])
+#define rthal_task_fpenv(task)					\
+	((rthal_fpenv_t *) &task_thread_info(task)->used_cp[0])
 
 #ifdef CONFIG_VFP
 asmlinkage void rthal_vfp_save(union vfp_state *vfp, unsigned fpexc);
@@ -221,26 +221,26 @@ asmlinkage void rthal_vfp_load(union vfp_state *vfp);
 
 static inline void rthal_save_fpu(rthal_fpenv_t *fpuenv, unsigned fpexc)
 {
-    rthal_vfp_save(&fpuenv->vfpstate, fpexc);
+	rthal_vfp_save(&fpuenv->vfpstate, fpexc);
 }
 
 static inline void rthal_restore_fpu(rthal_fpenv_t *fpuenv)
 {
-    rthal_vfp_load(&fpuenv->vfpstate);
+	rthal_vfp_load(&fpuenv->vfpstate);
 }
 
-#define rthal_vfp_fmrx(_vfp_) ({			\
-    u32 __v;						\
-    asm volatile("mrc p10, 7, %0, " __stringify(_vfp_)	\
-		 ", cr0, 0 @ fmrx %0, " #_vfp_:		\
-		 "=r" (__v));				\
-    __v;						\
- })
+#define rthal_vfp_fmrx(_vfp_) ({					\
+			u32 __v;					\
+			asm volatile("mrc p10, 7, %0, " __stringify(_vfp_) \
+				     ", cr0, 0 @ fmrx %0, " #_vfp_:	\
+				     "=r" (__v));			\
+			__v;						\
+		})
 
-#define rthal_vfp_fmxr(_vfp_,_var_)			\
-    asm volatile("mcr p10, 7, %0, " __stringify(_vfp_)	\
-		 ", cr0, 0 @ fmxr " #_vfp_ ", %0":	\
-		 /* */ : "r" (_var_))
+#define rthal_vfp_fmxr(_vfp_,_var_)				\
+	asm volatile("mcr p10, 7, %0, " __stringify(_vfp_)	\
+		     ", cr0, 0 @ fmxr " #_vfp_ ", %0":		\
+		     /* */ : "r" (_var_))
 
 extern union vfp_state *last_VFP_context[NR_CPUS];
 static inline rthal_fpenv_t *rthal_get_fpu_owner(void)
@@ -261,18 +261,18 @@ static inline rthal_fpenv_t *rthal_get_fpu_owner(void)
 	return container_of(vfp_owner, rthal_fpenv_t, vfpstate);
 }
 
-#define rthal_disable_fpu() \
-    rthal_vfp_fmxr(FPEXC, rthal_vfp_fmrx(FPEXC) & ~FPEXC_EN)
+#define rthal_disable_fpu()						\
+	rthal_vfp_fmxr(FPEXC, rthal_vfp_fmrx(FPEXC) & ~FPEXC_EN)
 
-#define RTHAL_VFP_ANY_EXC \
+#define RTHAL_VFP_ANY_EXC						\
 	(FPEXC_EX|FPEXC_DEX|FPEXC_FP2V|FPEXC_VV|FPEXC_TRAP_MASK)
 
-#define rthal_enable_fpu()					\
-    ({								\
-	unsigned _fpexc = rthal_vfp_fmrx(FPEXC) | FPEXC_EN;	\
-	rthal_vfp_fmxr(FPEXC, _fpexc & ~RTHAL_VFP_ANY_EXC);	\
-	_fpexc;							\
-    })
+#define rthal_enable_fpu()						\
+	({								\
+		unsigned _fpexc = rthal_vfp_fmrx(FPEXC) | FPEXC_EN;	\
+		rthal_vfp_fmxr(FPEXC, _fpexc & ~RTHAL_VFP_ANY_EXC);	\
+		_fpexc;							\
+	})
 
 #else /* !CONFIG_VFP */
 static inline void rthal_save_fpu(rthal_fpenv_t *fpuenv)
@@ -283,16 +283,16 @@ static inline void rthal_restore_fpu(rthal_fpenv_t *fpuenv)
 {
 }
 
-#define rthal_get_fpu_owner(cur) ({                                         \
-    struct task_struct * _cur = (cur);                                      \
-    ((task_thread_info(_cur)->used_cp[1] | task_thread_info(_cur)->used_cp[2])    \
-	? _cur : NULL);                                                     \
-})
+#define rthal_get_fpu_owner(cur) ({					\
+			struct task_struct * _cur = (cur);		\
+			((task_thread_info(_cur)->used_cp[1] | task_thread_info(_cur)->used_cp[2]) \
+			 ? _cur : NULL);				\
+		})
 
-#define rthal_disable_fpu() \
+#define rthal_disable_fpu()						\
 	task_thread_info(current)->used_cp[1] = task_thread_info(current)->used_cp[2] = 0;
 
-#define rthal_enable_fpu() \
+#define rthal_enable_fpu()						\
 	task_thread_info(current)->used_cp[1] = task_thread_info(current)->used_cp[2] = 1;
 
 #endif /* !CONFIG_VFP */
@@ -303,18 +303,18 @@ void __rthal_arm_fault_range(struct vm_area_struct *vma);
 #define rthal_fault_range(vma) __rthal_arm_fault_range(vma)
 
 static const char *const rthal_fault_labels[] = {
-    [IPIPE_TRAP_ACCESS] = "Data or instruction access",
-    [IPIPE_TRAP_SECTION] = "Section fault",
-    [IPIPE_TRAP_DABT] = "Generic data abort",
-    [IPIPE_TRAP_UNKNOWN] = "Unknown exception",
-    [IPIPE_TRAP_BREAK] = "Instruction breakpoint",
-    [IPIPE_TRAP_FPU] = "Floating point exception",
-    [IPIPE_TRAP_VFP] = "VFP Floating point exception",
-    [IPIPE_TRAP_UNDEFINSTR] = "Undefined instruction",
+	[IPIPE_TRAP_ACCESS] = "Data or instruction access",
+	[IPIPE_TRAP_SECTION] = "Section fault",
+	[IPIPE_TRAP_DABT] = "Generic data abort",
+	[IPIPE_TRAP_UNKNOWN] = "Unknown exception",
+	[IPIPE_TRAP_BREAK] = "Instruction breakpoint",
+	[IPIPE_TRAP_FPU] = "Floating point exception",
+	[IPIPE_TRAP_VFP] = "VFP Floating point exception",
+	[IPIPE_TRAP_UNDEFINSTR] = "Undefined instruction",
 #ifdef IPIPE_TRAP_ALIGNMENT
-    [IPIPE_TRAP_ALIGNMENT] = "Unaligned access exception",
+	[IPIPE_TRAP_ALIGNMENT] = "Unaligned access exception",
 #endif /* IPIPE_TRAP_ALIGNMENT */
-    [IPIPE_NR_FAULTS] = NULL
+	[IPIPE_NR_FAULTS] = NULL
 };
 
 #endif /* !__cplusplus */
@@ -322,3 +322,4 @@ static const char *const rthal_fault_labels[] = {
 #endif /* !_XENO_ASM_ARM_HAL_H */
 
 // vim: ts=4 et sw=4 sts=4
+indent-reg

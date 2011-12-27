@@ -51,14 +51,15 @@ typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
 
 } xnarchtcb_t;
 
-typedef void *xnarch_fltinfo_t;	/* Unused but required */
+struct ipipe_trap_data {
+};	/* Unused but required */
 
-#define xnarch_fault_regs(fi)	NULL
-#define xnarch_fault_trap(fi)   0
-#define xnarch_fault_code(fi)   0
-#define xnarch_fault_pc(fi)     0L
-#define xnarch_fault_notify(fi) 1
-#define xnarch_fault_um(fi)     0
+#define xnarch_fault_regs(d)	NULL
+#define xnarch_fault_trap(d)   0
+#define xnarch_fault_code(d)   0
+#define xnarch_fault_pc(d)     0L
+#define xnarch_fault_notify(d) 1
+#define xnarch_fault_um(d)     0
 
 typedef int spl_t;
 
@@ -66,7 +67,6 @@ typedef int spl_t;
 #define splexit(x)  mvm_set_irqmask(x)
 #define splnone()   mvm_set_irqmask(0)
 #define spltest()   (mvm_get_irqmask() != 0)
-#define splget(x)   ((x) = mvm_get_irqmask())
 #define irqs_disabled_hw() spltest()
 
 struct xnlock {

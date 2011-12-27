@@ -36,10 +36,10 @@ void xnpod_delete_thread(struct xnthread *);
 
 static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
 {
-	rthal_mute_pic();
+	ipipe_mute_pic();
 	/* Remember the preempted Linux task pointer. */
 	rootcb->user_task = rootcb->active_task = current;
-	rootcb->mm = rootcb->active_mm = rthal_get_active_mm();
+	rootcb->mm = rootcb->active_mm = ipipe_get_active_mm();
 	rootcb->tip = current_thread_info();
 #ifdef CONFIG_XENO_HW_FPU
 #ifdef CONFIG_VFP
@@ -57,7 +57,7 @@ static inline void xnarch_enter_root(xnarchtcb_t * rootcb)
 {
 	if (!rootcb->mm)
 		set_ti_thread_flag(rootcb->tip, TIF_MMSWITCH_INT);
-	rthal_unmute_pic();
+	ipipe_unmute_pic();
 }
 
 static inline void xnarch_switch_to(xnarchtcb_t *out_tcb, xnarchtcb_t *in_tcb)
@@ -245,7 +245,7 @@ static inline int xnarch_escalate(void)
 	extern int xnarch_escalation_virq;
 
 	if (ipipe_current_domain == ipipe_root_domain) {
-		ipipe_trigger_irq(xnarch_escalation_virq);
+		ipipe_raise_irq(xnarch_escalation_virq);
 		return 1;
 	}
 

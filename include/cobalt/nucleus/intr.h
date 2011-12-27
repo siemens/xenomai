@@ -122,9 +122,9 @@ int xnintr_attach(xnintr_t *intr,
 
 int xnintr_detach(xnintr_t *intr);
 
-int xnintr_enable(xnintr_t *intr);
+void xnintr_enable(xnintr_t *intr);
 
-int xnintr_disable(xnintr_t *intr);
+void xnintr_disable(xnintr_t *intr);
 
 void xnintr_affinity(xnintr_t *intr,
 		     xnarch_cpumask_t cpumask);

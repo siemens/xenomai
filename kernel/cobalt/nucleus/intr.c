@@ -356,11 +356,10 @@ static inline int xnintr_irq_attach(xnintr_t *intr)
 	return 0;
 }
 
-static inline int xnintr_irq_detach(xnintr_t *intr)
+static inline void xnintr_irq_detach(xnintr_t *intr)
 {
 	xnintr_irq_t *shirq = &xnirqs[intr->irq];
 	xnintr_t *e, **p = &shirq->handlers;
-	int err = 0;
 
 	while ((e = *p) != NULL) {
 		if (e == intr) {
@@ -373,16 +372,15 @@ static inline int xnintr_irq_detach(xnintr_t *intr)
 
 			/* Release the IRQ line if this was the last user */
 			if (shirq->handlers == NULL)
-				err = xnarch_release_irq(intr->irq);
+				xnarch_release_irq(intr->irq);
 
-			return err;
+			return;
 		}
 		p = &e->next;
 	}
 
 	xnlogerr("attempted to detach a non previously attached interrupt "
 		 "object.\n");
-	return err;
 }
 
 #else /* !CONFIG_XENO_OPT_SHIRQ */
@@ -413,24 +411,22 @@ static inline int xnintr_irq_attach(xnintr_t *intr)
 			       (ipipe_irq_ackfn_t)intr->iack, intr);
 }
 
-static inline int xnintr_irq_detach(xnintr_t *intr)
+static inline void xnintr_irq_detach(xnintr_t *intr)
 {
-	int irq = intr->irq, ret;
+	int irq = intr->irq;
 
 	xnlock_get(&xnirqs[irq].lock);
-	ret = xnarch_release_irq(irq);
+	xnarch_release_irq(irq);
 	xnlock_put(&xnirqs[irq].lock);
 
 	xnintr_sync_stat_references(intr);
-
-	return ret;
 }
 
 #endif /* !CONFIG_XENO_OPT_SHIRQ */
 
 /*
- * Low-level interrupt handler dispatching non-shared ISRs -- Called with
- * interrupts off.
+ * Low-level interrupt handler dispatching non-shared ISRs -- Called
+ * with interrupts off.
  */
 static void xnintr_irq_handler(unsigned irq, void *cookie)
 {
@@ -788,10 +784,7 @@ int xnintr_detach(xnintr_t *intr)
 
 	__clrbits(intr->flags, XN_ISR_ATTACHED);
 
-	ret = xnintr_irq_detach(intr);
-	if (ret)
-		goto out;
-
+	xnintr_irq_detach(intr);
 	xnintr_stat_counter_dec();
  out:
 	xnlock_put_irqrestore(&intrlock, s);
@@ -801,7 +794,7 @@ int xnintr_detach(xnintr_t *intr)
 EXPORT_SYMBOL_GPL(xnintr_detach);
 
 /*!
- * \fn int xnintr_enable (xnintr_t *intr)
+ * \fn void xnintr_enable(xnintr_t *intr)
  * \brief Enable an interrupt object.
  *
  * Enables the hardware interrupt line associated with an interrupt
@@ -812,9 +805,6 @@ EXPORT_SYMBOL_GPL(xnintr_detach);
  * @param intr The descriptor address of the interrupt object to
  * enable.
  *
- * @return 0 is returned on success. Otherwise, -EINVAL is returned if
- * a low-level error occurred while enabling the interrupt.
- *
  * Environments:
  *
  * This service can be called from:
@@ -825,16 +815,16 @@ EXPORT_SYMBOL_GPL(xnintr_detach);
  * Rescheduling: never.
  */
 
-int xnintr_enable(xnintr_t *intr)
+void xnintr_enable(xnintr_t *intr)
 {
 	trace_mark(xn_nucleus, irq_enable, "irq %u", intr->irq);
 
-	return xnarch_enable_irq(intr->irq);
+	xnarch_enable_irq(intr->irq);
 }
 EXPORT_SYMBOL_GPL(xnintr_enable);
 
 /*!
- * \fn int xnintr_disable (xnintr_t *intr)
+ * \fn void xnintr_disable(xnintr_t *intr)
  * \brief Disable an interrupt object.
  *
  * Disables the hardware interrupt line associated with an interrupt
@@ -844,9 +834,6 @@ EXPORT_SYMBOL_GPL(xnintr_enable);
  * @param intr The descriptor address of the interrupt object to
  * disable.
  *
- * @return 0 is returned on success. Otherwise, -EINVAL is returned if
- * a low-level error occurred while disabling the interrupt.
- *
  * Environments:
  *
  * This service can be called from:
@@ -857,16 +844,16 @@ EXPORT_SYMBOL_GPL(xnintr_enable);
  * Rescheduling: never.
  */
 
-int xnintr_disable(xnintr_t *intr)
+void xnintr_disable(xnintr_t *intr)
 {
 	trace_mark(xn_nucleus, irq_disable, "irq %u", intr->irq);
 
-	return xnarch_disable_irq(intr->irq);
+	xnarch_disable_irq(intr->irq);
 }
 EXPORT_SYMBOL_GPL(xnintr_disable);
 
 /*!
- * \fn xnarch_cpumask_t xnintr_affinity (xnintr_t *intr, xnarch_cpumask_t cpumask)
+ * \fn void xnintr_affinity(xnintr_t *intr, xnarch_cpumask_t cpumask)
  * \brief Set interrupt's processor affinity.
  *
  * Causes the IRQ associated with the interrupt object @a intr to be
@@ -876,9 +863,6 @@ EXPORT_SYMBOL_GPL(xnintr_disable);
  * affinity is to be changed.
  *
  * @param cpumask The new processor affinity of the interrupt object.
- *
- * @return the previous cpumask on success, or an empty mask on
- * failure.
  *
  * @note Depending on architectures, setting more than one bit in @a
  * cpumask could be meaningless.

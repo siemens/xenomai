@@ -24,32 +24,29 @@
 #error "Pure kernel header included from user-space!"
 #endif
 
-#include <linux/ipipe.h>
-#include <linux/interrupt.h>
 #include <asm-generic/xenomai/wrappers.h> /* Read the generic portion. */
 
-#define wrap_phys_mem_prot(filp,pfn,size,prot)	(prot)
+#define wrap_phys_mem_prot(filp, pfn, size, prot)  (prot)
 
 #define wrap_strncpy_from_user(dstP, srcP, n)	__strncpy_from_user(dstP, srcP, n)
 
 #define __put_user_inatomic __put_user
-
 #define __get_user_inatomic __get_user
 
-#define rthal_irq_desc_status(irq)	(rthal_irq_descp(irq)->status)
+#ifdef CONFIG_XENO_LEGACY_IPIPE
 
 #if !defined(CONFIG_GENERIC_HARDIRQS) \
 	|| LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)
-#define rthal_irq_chip_enable(irq)   ({ rthal_irq_descp(irq)->chip->unmask(irq); 0; })
-#define rthal_irq_chip_disable(irq)  ({ rthal_irq_descp(irq)->chip->mask(irq); 0; })
+#define ipipe_enable_irq(irq)   irq_to_desc(irq)->chip->unmask(irq)
+#define ipipe_disable_irq(irq)  irq_to_desc(irq)->chip->mask(irq)
 #endif
-#define rthal_irq_desc_lock(irq)	(&rthal_irq_descp(irq)->lock)
-#define rthal_irq_chip_end(irq)      ({ rthal_irq_descp(irq)->ipipe_end(irq, rthal_irq_descp(irq)); 0; })
-typedef irq_handler_t rthal_irq_host_handler_t;
+
+#endif /* CONFIG_XENO_LEGACY_IPIPE */
+
 static inline void fp_init(union fp_state *state)
 {
-    /* FIXME: This is insufficient. */
-    memset(state, 0, sizeof(*state));
+	/* FIXME: This is insufficient. */
+	memset(state, 0, sizeof(*state));
 }
 
 #endif /* _XENO_ASM_ARM_WRAPPERS_H */

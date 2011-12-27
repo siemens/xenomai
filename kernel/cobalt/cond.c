@@ -389,7 +389,7 @@ int cobalt_cond_wait_prologue(struct __shadow_cond __user *u_cnd,
 			      unsigned int timed,
 			      struct timespec __user *u_ts)
 {
-	xnthread_t *cur = xnshadow_thread(current);
+	xnthread_t *cur = xnshadow_current();
 	struct mutex_dat *datp;
 	struct us_cond_data d;
 	cobalt_cond_t *cnd;
@@ -448,7 +448,7 @@ int cobalt_cond_wait_prologue(struct __shadow_cond __user *u_cnd,
 int cobalt_cond_wait_epilogue(struct __shadow_cond __user *u_cnd,
 			      struct __shadow_mutex __user *u_mx)
 {
-	xnthread_t *cur = xnshadow_thread(current);
+	xnthread_t *cur = xnshadow_current();
 	cobalt_cond_t *cnd;
 	cobalt_mutex_t *mx;
 	int err;

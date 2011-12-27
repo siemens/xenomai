@@ -86,7 +86,7 @@ static inline unsigned long long rthal_rdtsc(void)
 static inline void rthal_timer_program_shot(unsigned long delay)
 {
 	if (delay < 3)
-		__ipipe_schedule_irq_head(RTHAL_TIMER_IRQ);
+		ipipe_post_irq_head(RTHAL_TIMER_IRQ);
 	else {
 #ifdef CONFIG_40x
 		mtspr(SPRN_PIT, delay);

@@ -25,22 +25,21 @@
 #endif
 
 #include <asm-generic/xenomai/wrappers.h> /* Read the generic portion. */
-#include <linux/interrupt.h>
 
-#define wrap_phys_mem_prot(filp,pfn,size,prot)	(prot)
+#define wrap_phys_mem_prot(filp, pfn, size, prot)  (prot)
 
 #define wrap_strncpy_from_user(dstP, srcP, n)	strncpy_from_user(dstP, srcP, n)
 
+#define PAGE_SHARED  __pgprot(0)
+
+#ifdef CONFIG_XENO_LEGACY_IPIPE
+
 #if !defined(CONFIG_GENERIC_HARDIRQS) \
 	|| LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)
-#define rthal_irq_chip_enable(irq)	({ rthal_irq_descp(irq)->chip->enable(irq); 0; })
-#define rthal_irq_chip_disable(irq)	({ rthal_irq_descp(irq)->chip->disable(irq); 0; })
+#define ipipe_enable_irq(irq)   irq_to_desc(irq)->chip->enable(irq)
+#define ipipe_disable_irq(irq)  irq_to_desc(irq)->chip->disable(irq)
 #endif
-#define rthal_irq_desc_status(irq)	(rthal_irq_descp(irq)->status)
-#define rthal_irq_chip_end(irq)		({ rthal_irq_descp(irq)->ipipe_end(irq, rthal_irq_descp(irq)); 0; })
 
-typedef irq_handler_t rthal_irq_host_handler_t;
-
-#define PAGE_SHARED  __pgprot(0)
+#endif /* CONFIG_XENO_LEGACY_IPIPE */
 
 #endif /* _XENO_ASM_NIOS2_WRAPPERS_H */

@@ -1,0 +1,315 @@
+/*
+ * Copyright (C) 2012 Philippe Gerum <rpm@xenomai.org>.
+ *
+ * Xenomai is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation; either version 2 of the License,
+ * or (at your option) any later version.
+ *
+ * Xenomai is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Xenomai; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+ * 02111-1307, USA.
+ *
+ * I-pipe core -> legacy wrappers.
+ */
+
+#ifndef _XENO_ASM_GENERIC_IPIPE_WRAPPERS_H
+
+#ifdef CONFIG_XENO_LEGACY_IPIPE
+/*
+ * CAUTION: These wrappers are scheduled for removal when a refactored
+ * pipeline core implementation is available for each supported
+ * architecture. We provide them only to be able to run over legacy
+ * I-pipe patches until then.
+ */
+#include <linux/irq.h>
+#include <ipipe/thread_info.h>
+
+struct ipipe_trap_data {
+	int exception;
+	struct pt_regs *regs;
+};
+
+#ifndef CONFIG_XENO_OPT_HOSTRT
+#define IPIPE_EVENT_HOSTRT  -1	/* Never received */
+#endif
+#define IPIPE_KEVT_SCHEDULE	IPIPE_EVENT_SCHEDULE
+#define IPIPE_KEVT_SIGWAKE	IPIPE_EVENT_SIGWAKE
+#define IPIPE_KEVT_EXIT		IPIPE_EVENT_EXIT
+#define IPIPE_KEVT_CLEANUP	IPIPE_EVENT_CLEANUP
+#define IPIPE_KEVT_HOSTRT	IPIPE_EVENT_HOSTRT
+#define IPIPE_TRAP_MAYDAY	IPIPE_EVENT_RETURN
+
+#define IPIPE_SYSCALL	1	/* Any non-zero value would do */
+#define IPIPE_TRAP	2
+#define IPIPE_KEVENT	4
+
+#ifndef __IPIPE_FEATURE_PIC_MUTE
+#define ipipe_mute_pic()		do { } while(0)
+#define ipipe_unmute_pic()		do { } while(0)
+#endif /* !__IPIPE_FEATURE_PIC_MUTE */
+
+static inline void ipipe_register_head(struct ipipe_domain *ipd,
+				       const char *name)
+{
+	struct ipipe_domain_attr attr;
+
+	ipipe_init_attr(&attr);
+
+	attr.name = "Xenomai";
+	attr.entry = NULL;
+	attr.domid = 0x58454e4f;
+	attr.priority = IPIPE_HEAD_PRIORITY;
+	ipipe_register_domain(&rthal_archdata.domain, &attr);
+}
+
+static inline void ipipe_unregister_head(struct ipipe_domain *ipd)
+{
+	ipipe_unregister_domain(&rthal_archdata.domain);
+}
+
+static inline int ipipe_request_irq(struct ipipe_domain *ipd,
+				    unsigned int irq,
+				    ipipe_irq_handler_t handler,
+				    void *cookie,
+				    ipipe_irq_ackfn_t ackfn)
+{
+	return ipipe_virtualize_irq(ipd, irq, handler, cookie, ackfn,
+				    IPIPE_HANDLE_MASK | IPIPE_WIRED_MASK |
+				    IPIPE_EXCLUSIVE_MASK);
+}
+
+static inline void ipipe_free_irq(struct ipipe_domain *ipd,
+				  unsigned int irq)
+{
+	ipipe_virtualize_irq(ipd, irq, NULL, NULL, NULL, IPIPE_PASS_MASK);
+}
+
+static inline void ipipe_post_irq_root(unsigned int irq)
+{
+	__ipipe_schedule_irq_root(irq);
+}
+
+static inline void ipipe_post_irq_head(unsigned int irq)
+{
+	__ipipe_schedule_irq_head(irq);
+}
+
+static inline void ipipe_raise_irq(unsigned int irq)
+{
+	ipipe_trigger_irq(irq);
+}
+
+static inline void ipipe_stall_head(void)
+{
+	ipipe_stall_pipeline_head();
+}
+
+static inline unsigned long ipipe_test_and_stall_head(void)
+{
+	return ipipe_test_and_stall_pipeline_head();
+}
+
+static inline void ipipe_restore_head(unsigned long x)
+{
+	ipipe_restore_pipeline_head(x);
+}
+
+static inline void ipipe_unstall_head(void)
+{
+	ipipe_unstall_pipeline_head();
+}
+
+static inline unsigned long ipipe_test_head(void)
+{
+	return ipipe_test_pipeline_from(&rthal_archdata.domain);
+}
+
+#define ipipe_root_p ipipe_root_domain_p
+
+static inline struct mm_struct *ipipe_get_active_mm(void)
+{
+#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
+	return per_cpu(ipipe_active_mm, ipipe_processor_id());
+#else
+	return current->active_mm;
+#endif
+}
+
+static inline int __ipipe_setscheduler_root(struct task_struct *p,
+					  int policy,
+					  int prio)
+{
+	return ipipe_setscheduler_root(p, policy, prio);
+}
+
+static inline int __ipipe_disable_ondemand_mappings(struct task_struct *p)
+{
+	return ipipe_disable_ondemand_mappings(p);
+}
+
+static inline void __ipipe_reenter_root(void)
+{
+	struct task_struct *prev;
+	int policy, prio, cpu;
+
+	cpu = task_cpu(current);
+	policy = current->rt_priority ? SCHED_FIFO : SCHED_NORMAL;
+	prio = current->rt_priority;
+	prev = rthal_archdata.task_hijacked[cpu];
+
+	ipipe_reenter_root(prev, policy, prio);
+}
+
+static inline void ipipe_raise_mayday(struct task_struct *p)
+{
+	ipipe_return_notify(p);
+}
+
+int xnarch_emulate_hooks(unsigned int event,
+			 struct ipipe_domain *ipd,
+			 void *data);
+
+static inline void ipipe_set_hooks(struct ipipe_domain *ipd,
+				   int enables)
+{
+	int (*fn)(unsigned int event, struct ipipe_domain *ipd, void *data);
+	unsigned int ex;
+
+	/*
+	 * We don't care about the individual enable bits when
+	 * emulating ipipe_set_hooks(). We are called once to
+	 * enable/disable all events the nucleus needs to know about
+	 * for a given domain.
+	 */
+	fn = enables ? xnarch_emulate_hooks : NULL;
+	if (ipd == ipipe_root_domain) {
+		ipipe_catch_event(ipd, IPIPE_EVENT_EXIT, fn);
+		ipipe_catch_event(ipd, IPIPE_EVENT_SIGWAKE, fn);
+		ipipe_catch_event(ipd, IPIPE_EVENT_SCHEDULE, fn);
+		ipipe_catch_event(ipd, IPIPE_EVENT_CLEANUP, fn);
+		ipipe_catch_event(ipd, IPIPE_EVENT_SYSCALL, fn);
+#ifdef CONFIG_XENO_OPT_HOSTRT
+		ipipe_catch_event(ipd, IPIPE_EVENT_HOSTRT, fn);
+#endif
+	} else {
+		ipipe_catch_event(ipd, IPIPE_EVENT_RETURN, fn);
+		ipipe_catch_event(ipd, IPIPE_EVENT_SYSCALL, fn);
+		for (ex = 0; ex < IPIPE_NR_FAULTS; ex++)
+			ipipe_catch_event(ipd, ex|IPIPE_EVENT_SELF, fn);
+	}
+}
+
+static inline void alloc_ptd_key(void)
+{
+	int key = ipipe_alloc_ptdkey();
+	/* In emulation mode, we want PTD key #0, no matter what. */
+	BUG_ON(key != 0);
+}
+
+static inline void free_ptd_key(void)
+{
+	ipipe_free_ptdkey(0);
+}
+
+static inline void set_ptd(struct ipipe_threadinfo *p)
+{
+	current->ptd[0] = p;
+}
+
+static inline void clear_ptd(void)
+{
+	current->ptd[0] = NULL;
+}
+
+static inline
+struct ipipe_threadinfo *ipipe_task_threadinfo(struct task_struct *p)
+{
+	static struct ipipe_threadinfo noinfo = {
+		.thread = NULL,
+		.mm = NULL,
+	};
+	return p->ptd[0] ?: &noinfo;
+}
+
+static inline
+struct ipipe_threadinfo *ipipe_current_threadinfo(void)
+{
+	return ipipe_task_threadinfo(current);
+}
+
+static inline void hijack_current(void)
+{ 
+	int cpu = task_cpu(current);
+
+	rthal_archdata.task_hijacked[cpu] = current;
+	schedule();
+}
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,37) && defined(CONFIG_GENERIC_HARDIRQS)
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,39)
+#define irq_desc_get_chip(desc)	get_irq_desc_chip(desc)
+#endif
+
+/*
+ * The irq chip descriptor has been heavily revamped in
+ * 2.6.37. Provide generic accessors to the chip handlers we need for
+ * kernels implementing those changes.
+ */
+
+static inline void ipipe_enable_irq(unsigned int irq)
+{
+	struct irq_desc *desc = irq_to_desc(irq);
+	struct irq_chip *chip = irq_desc_get_chip(desc);
+
+	if (WARN_ON_ONCE(chip->irq_unmask == NULL))
+		return;
+
+	chip->irq_unmask(&desc->irq_data);
+}
+
+static inline void ipipe_disable_irq(unsigned int irq)
+{
+	struct irq_desc *desc = irq_to_desc(irq);
+	struct irq_chip *chip = irq_desc_get_chip(desc);
+
+	if (WARN_ON_ONCE(chip->irq_mask == NULL))
+		return;
+
+	chip->irq_mask(&desc->irq_data);
+}
+
+#endif
+
+static inline void ipipe_end_irq(unsigned int irq)
+{
+	struct irq_desc *desc = irq_to_desc(irq);
+
+	desc->ipipe_end(irq, desc);
+}
+
+#else /* !CONFIG_XENO_LEGACY_IPIPE */
+
+static inline void alloc_ptd_key(void) { }
+
+static inline void free_ptd_key(void) { }
+
+#define set_ptd(p)  do { } while (0)
+
+static inline void clear_ptd(void) { }
+
+static inline void hijack_current(void)
+{ 
+	schedule();
+}
+
+#endif /* !CONFIG_XENO_LEGACY_IPIPE */
+
+#endif /* _XENO_ASM_GENERIC_IPIPE_WRAPPERS_H */

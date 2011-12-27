@@ -139,74 +139,62 @@ static void xnarch_switch_htick_mode(enum clock_event_mode mode, struct clock_ev
 
 #ifdef CONFIG_SMP
 
-static inline int xnarch_hook_ipi (void (*handler)(void))
+static inline int xnarch_hook_ipi(void (*handler)(void))
 {
-    return ipipe_virtualize_irq(&rthal_archdata.domain,
-				IPIPE_SERVICE_IPI0,
-				(ipipe_irq_handler_t) handler,
-				NULL,
-				NULL,
-				IPIPE_HANDLE_MASK | IPIPE_WIRED_MASK);
+	return ipipe_request_irq(&rthal_archdata.domain, IPIPE_SERVICE_IPI0,
+				 (ipipe_irq_handler_t) handler,
+				 NULL, NULL);
 }
 
-static inline int xnarch_release_ipi (void)
+static inline void xnarch_release_ipi(void)
 {
-    return ipipe_virtualize_irq(&rthal_archdata.domain,
-				IPIPE_SERVICE_IPI0,
-				NULL,
-				NULL,
-				NULL,
-				IPIPE_PASS_MASK);
+	return ipipe_free_irq(&rthal_archdata.domain, IPIPE_SERVICE_IPI0);
+}
+
+static struct semaphore xnarch_finalize_sync;
+
+static void xnarch_finalize_cpu(unsigned irq)
+{
+	up(&xnarch_finalize_sync);
 }
 
 static inline void xnarch_notify_halt(void)
 {
-    xnarch_cpumask_t other_cpus = cpu_online_map;
-    int cpu, nr_cpus = num_online_cpus();
-    unsigned long flags;
+	xnarch_cpumask_t other_cpus = cpu_online_map;
+	int cpu, nr_cpus = num_online_cpus();
+	unsigned long flags;
 
-    sema_init(&xnarch_finalize_sync,0);
+	sema_init(&xnarch_finalize_sync,0);
 
-    /* Here ipipe_current_domain is in fact root, since xnarch_notify_halt is
-       called from xnpod_shutdown, itself called from Linux
-       context. */
+	/* Here ipipe_current_domain is in fact root, since xnarch_notify_halt is
+	   called from xnpod_shutdown, itself called from Linux
+	   context. */
 
-    ipipe_virtualize_irq(ipipe_current_domain,
-			 IPIPE_SERVICE_IPI2,
-			 (ipipe_irq_handler_t)xnarch_finalize_cpu,
-			 NULL,
-			 NULL,
-			 IPIPE_HANDLE_MASK);
+	ipipe_request_irq(ipipe_current_domain, IPIPE_SERVICE_IPI2,
+			  (ipipe_irq_handler_t)xnarch_finalize_cpu,
+			  NULL, NULL);
 
-    local_irq_save_hw(flags);
-    cpu_clear(ipipe_processor_id(), other_cpus);
-    ipipe_send_ipi(IPIPE_SERVICE_IPI2, other_cpus);
-    local_irq_restore_hw(flags);
+	local_irq_save_hw(flags);
+	cpu_clear(ipipe_processor_id(), other_cpus);
+	ipipe_send_ipi(IPIPE_SERVICE_IPI2, other_cpus);
+	local_irq_restore_hw(flags);
 
-    for(cpu=0; cpu < nr_cpus-1; ++cpu)
-	down(&xnarch_finalize_sync);
+	for(cpu=0; cpu < nr_cpus-1; ++cpu)
+		down(&xnarch_finalize_sync);
 
-    ipipe_virtualize_irq(ipipe_current_domain,
-			 IPIPE_SERVICE_IPI2,
-			 NULL,
-			 NULL,
-			 NULL,
-			 IPIPE_PASS_MASK);
+	ipipe_free_irq(ipipe_current_domain, IPIPE_SERVICE_IPI2);
 
-    rthal_release_control();
+	rthal_release_control();
 }
 
 #else /* !CONFIG_SMP */
 
 static inline int xnarch_hook_ipi (void (*handler)(void))
 {
-    return 0;
+	return 0;
 }
 
-static inline int xnarch_release_ipi (void)
-{
-    return 0;
-}
+static inline void xnarch_release_ipi(void) { }
 
 #define xnarch_notify_halt()  rthal_release_control()
 
@@ -214,36 +202,36 @@ static inline int xnarch_release_ipi (void)
 
 static inline void xnarch_notify_shutdown(void)
 {
-#if defined(CONFIG_SMP) && defined(MODULE)
+#ifdef CONFIG_SMP
 	/* Make sure the shutdown sequence is kept on the same CPU
 	   when running as a module. */
 	set_cpus_allowed(current, cpumask_of_cpu(0));
-#endif /* CONFIG_SMP && MODULE */
-    xnshadow_release_events();
-    /* Wait for the currently processed events to drain. */
-    set_current_state(TASK_UNINTERRUPTIBLE);
-    schedule_timeout(50);
-    xnarch_release_ipi();
+#endif /* CONFIG_SMP */
+	xnshadow_release_events();
+	/* Wait for the currently processed events to drain. */
+	set_current_state(TASK_UNINTERRUPTIBLE);
+	schedule_timeout(50);
+	xnarch_release_ipi();
 }
 
 static void xnarch_notify_ready (void)
 {
-    rthal_grab_control();
-    xnshadow_grab_events();
+	rthal_grab_control();
+	xnshadow_grab_events();
 }
 
 unsigned long long xnarch_get_host_time(void)
 {
-    struct timeval tv;
-    do_gettimeofday(&tv);
-    return tv.tv_sec * 1000000000ULL + tv.tv_usec * 1000;
+	struct timeval tv;
+	do_gettimeofday(&tv);
+	return tv.tv_sec * 1000000000ULL + tv.tv_usec * 1000;
 }
 
 EXPORT_SYMBOL_GPL(xnarch_get_host_time);
 
 unsigned long long xnarch_get_cpu_time(void)
 {
-    return xnarch_tsc_to_ns(xnarch_get_cpu_tsc());
+	return xnarch_tsc_to_ns(xnarch_get_cpu_tsc());
 }
 
 EXPORT_SYMBOL_GPL(xnarch_get_cpu_time);
@@ -265,5 +253,28 @@ void __xnlock_spin(struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
 }
 EXPORT_SYMBOL_GPL(__xnlock_spin);
 #endif /* CONFIG_SMP */
+
+#ifdef CONFIG_XENO_LEGACY_IPIPE
+
+struct ipipe_domain;
+struct ipipe_trap_data;
+
+int ipipe_syscall_hook(struct ipipe_domain *ipd, struct pt_regs *regs);
+int ipipe_trap_hook(struct ipipe_trap_data *data);
+int ipipe_kevent_hook(int kevent, void *data);
+
+int xnarch_emulate_hooks(unsigned int event, struct ipipe_domain *ipd,
+			 void *data)
+{
+	if (event == IPIPE_EVENT_SYSCALL)
+		return ipipe_syscall_hook(ipd, data);
+
+	if (event < IPIPE_NR_FAULTS || event == IPIPE_EVENT_RETURN)
+		return ipipe_trap_hook(data);
+
+	return ipipe_kevent_hook(event, data);
+}
+
+#endif /* CONFIG_XENO_LEGACY_IPIPE */
 
 #endif /* !_XENO_ASM_GENERIC_BITS_POD_H */

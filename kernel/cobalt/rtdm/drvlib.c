@@ -1614,11 +1614,9 @@ int rtdm_irq_request(rtdm_irq_t *irq_handle, unsigned int irq_no,
 	if (err)
 		return err;
 
-	err = xnintr_enable(irq_handle);
-	if (err)
-		xnintr_detach(irq_handle);
+	xnintr_enable(irq_handle);
 
-	return err;
+	return 0;
 }
 
 EXPORT_SYMBOL_GPL(rtdm_irq_request);

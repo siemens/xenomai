@@ -455,6 +455,7 @@ for d in include/* ; do
         patch_link r n $d $destdir
     fi
 done
+patch_link n n include/asm-generic/ipipe arch/$linux_arch/include/ipipe
 
 if test "x$output_patch" != "x"; then
     if test x$verbose = x1; then

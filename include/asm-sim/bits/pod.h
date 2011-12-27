@@ -94,10 +94,7 @@ static inline int xnarch_hook_ipi (void (*handler)(void))
     return 0;
 }
 
-static inline int xnarch_release_ipi (void)
-{
-    return 0;
-}
+static inline void xnarch_release_ipi(void) { }
 
 static inline int xnarch_escalate (void)
 {

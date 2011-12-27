@@ -75,7 +75,8 @@ int rthal_timer_request(void (*tick_handler)(void),
 		return res;
 	}
 
-	err = rthal_irq_request(RTHAL_TIMER_IRQ,
+	ret = ipipe_request_irq(&rthal_archdata.domain,
+				RTHAL_TIMER_IRQ,
 				(ipipe_irq_handler_t)tick_handler,
 				NULL, NULL);
 	if (err)
@@ -89,7 +90,7 @@ int rthal_timer_request(void (*tick_handler)(void),
 void rthal_timer_release(int cpu)
 {
 	ipipe_release_tickdev(cpu);
-	rthal_irq_release(RTHAL_TIMER_IRQ);
+	ipipe_free_irq(&rthal_archdata.domain, RTHAL_TIMER_IRQ);
 	__ipipe_release_hrtimer();
 }
 

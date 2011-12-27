@@ -80,7 +80,7 @@ static inline void rthal_timer_program_shot(unsigned long delay)
 		apic_write(APIC_TMICT,delay);
 	else
 		/* Pend the timer interrupt. */
-		__ipipe_schedule_irq_head(RTHAL_APIC_TIMER_IPI);
+		ipipe_post_irq_head(RTHAL_APIC_TIMER_IPI);
 }
 
 static const char *const rthal_fault_labels[] = {

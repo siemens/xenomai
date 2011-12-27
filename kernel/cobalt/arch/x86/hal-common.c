@@ -37,15 +37,17 @@ enum rthal_ktimer_mode rthal_ktimer_saved_mode;
 
 #ifdef CONFIG_X86_LOCAL_APIC
 
+static volatile int sync_op;
+
 #define RTHAL_SET_ONESHOT_XENOMAI	1
 #define RTHAL_SET_ONESHOT_LINUX		2
 #define RTHAL_SET_PERIODIC		3
 
-static void rthal_critical_sync(void)
+static void critical_sync(void)
 {
 	if (!rthal_cpu_supported(ipipe_processor_id()))
 		return;
-	switch (rthal_archdata.sync_op) {
+	switch (sync_op) {
 	case RTHAL_SET_ONESHOT_XENOMAI:
 		rthal_setup_oneshot_apic(RTHAL_APIC_TIMER_VECTOR);
 		break;
@@ -53,7 +55,7 @@ static void rthal_critical_sync(void)
 	case RTHAL_SET_ONESHOT_LINUX:
 		rthal_setup_oneshot_apic(LOCAL_TIMER_VECTOR);
 		/* We need to keep the timing cycle alive for the kernel. */
-		ipipe_trigger_irq(RTHAL_HOST_TICK_IRQ);
+		ipipe_raise_irq(RTHAL_HOST_TICK_IRQ);
 		break;
 
 	case RTHAL_SET_PERIODIC:
@@ -66,34 +68,34 @@ static void rthal_timer_set_oneshot(int rt_mode)
 {
 	unsigned long flags;
 
-	flags = rthal_critical_enter(rthal_critical_sync);
+	flags = ipipe_critical_enter(critical_sync);
 	if (rt_mode) {
-		rthal_archdata.sync_op = RTHAL_SET_ONESHOT_XENOMAI;
+		sync_op = RTHAL_SET_ONESHOT_XENOMAI;
 		if (rthal_cpu_supported(ipipe_processor_id()))
 			rthal_setup_oneshot_apic(RTHAL_APIC_TIMER_VECTOR);
 		if (rthal_ktimer_saved_mode != KTIMER_MODE_UNUSED)
-			__ipipe_tick_irq = RTHAL_TIMER_IRQ;
+			__ipipe_hrtimer_irq = RTHAL_TIMER_IRQ;
 	} else {
-		rthal_archdata.sync_op = RTHAL_SET_ONESHOT_LINUX;
+		sync_op = RTHAL_SET_ONESHOT_LINUX;
 		if (rthal_cpu_supported(ipipe_processor_id()))
 			rthal_setup_oneshot_apic(LOCAL_TIMER_VECTOR);
-		__ipipe_tick_irq = RTHAL_HOST_TICK_IRQ;
+		__ipipe_hrtimer_irq = RTHAL_HOST_TICK_IRQ;
 		/* We need to keep the timing cycle alive for the kernel. */
-		ipipe_trigger_irq(RTHAL_HOST_TICK_IRQ);
+		ipipe_raise_irq(RTHAL_HOST_TICK_IRQ);
 	}
-	rthal_critical_exit(flags);
+	ipipe_critical_exit(flags);
 }
 
 static void rthal_timer_set_periodic(void)
 {
 	unsigned long flags;
 
-	flags = rthal_critical_enter(&rthal_critical_sync);
-	rthal_archdata.sync_op = RTHAL_SET_PERIODIC;
+	flags = ipipe_critical_enter(critical_sync);
+	sync_op = RTHAL_SET_PERIODIC;
 	if (rthal_cpu_supported(ipipe_processor_id()))
 		rthal_setup_periodic_apic(RTHAL_APIC_ICOUNT, LOCAL_TIMER_VECTOR);
-	__ipipe_tick_irq = RTHAL_HOST_TICK_IRQ;
-	rthal_critical_exit(flags);
+	__ipipe_hrtimer_irq = RTHAL_HOST_TICK_IRQ;
+	ipipe_critical_exit(flags);
 }
 
 static int cpu_timers_requested;
@@ -107,14 +109,15 @@ int rthal_timer_request(
 	int cpu)
 {
 	unsigned long dummy, *tmfreq = &dummy;
-	int tickval, err, res;
+	int tickval, ret, res;
 
 	if (cpu_timers_requested == 0) {
-		err = rthal_irq_request(RTHAL_APIC_TIMER_IPI,
-					(ipipe_irq_handler_t) tick_handler,
+		ret = ipipe_request_irq(&rthal_archdata.domain,
+					RTHAL_APIC_TIMER_IPI,
+					(ipipe_irq_handler_t)tick_handler,
 					NULL, NULL);
-		if (err)
-			return err;
+		if (ret)
+			return ret;
 	}
 
 	/* This code works both for UP+LAPIC and SMP configurations. */
@@ -148,7 +151,8 @@ int rthal_timer_request(
 
 	default:
 		if (cpu_timers_requested == 0)
-			rthal_irq_release(RTHAL_APIC_TIMER_IPI);
+			ipipe_free_irq(&rthal_archdata.domain,
+				       RTHAL_APIC_TIMER_IPI);
 		return res;
 	}
 	rthal_ktimer_saved_mode = res;
@@ -179,7 +183,7 @@ void rthal_timer_release(int cpu)
 	else if (rthal_ktimer_saved_mode == KTIMER_MODE_ONESHOT)
 		rthal_timer_set_oneshot(0);
 
-	rthal_irq_release(RTHAL_APIC_TIMER_IPI);
+	ipipe_free_irq(&rthal_archdata.domain, RTHAL_APIC_TIMER_IPI);
 }
 
 #endif /* CONFIG_X86_LOCAL_APIC */

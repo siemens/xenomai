@@ -83,27 +83,27 @@ static void rthal_timer_set_oneshot(int rt_mode)
 {
 	unsigned long flags;
 
-	flags = rthal_critical_enter(NULL);
-	if (rt_mode) {
-		rthal_archdata.sync_op = RTHAL_SET_ONESHOT_XENOMAI;
+	flags = ipipe_critical_enter(NULL);
+	if (rt_mode)
 		rthal_setup_oneshot_coretmr();
-	} else {
-		rthal_archdata.sync_op = RTHAL_SET_ONESHOT_LINUX;
+	else {
 		rthal_setup_oneshot_coretmr();
-		/* We need to keep the timing cycle alive for the kernel. */
-		ipipe_trigger_irq(RTHAL_TIMER_IRQ);
+		/*
+		 * We need to keep the timing cycle alive for the
+		 * kernel.
+		 */
+		ipipe_raise_irq(RTHAL_TIMER_IRQ);
 	}
-	rthal_critical_exit(flags);
+	ipipe_critical_exit(flags);
 }
 
 static void rthal_timer_set_periodic(void)
 {
 	unsigned long flags;
 
-	flags = rthal_critical_enter(NULL);
-	rthal_archdata.sync_op = RTHAL_SET_PERIODIC;
+	flags = ipipe_critical_enter(NULL);
 	rthal_setup_periodic_coretmr();
-	rthal_critical_exit(flags);
+	ipipe_critical_exit(flags);
 }
 
 static int cpu_timers_requested;
@@ -116,7 +116,7 @@ int rthal_timer_request(void (*tick_handler)(void),
 			int cpu)
 {
 	unsigned long dummy, *tmfreq = &dummy;
-	int tickval, err, res;
+	int tickval, ret, res;
 
 	if (rthal_timerfreq_arg == 0)
 		tmfreq = &rthal_archdata.timer_freq;
@@ -145,7 +145,7 @@ int rthal_timer_request(void (*tick_handler)(void),
 		 */
 		tickval = 0;
 		*tmfreq = get_cclk();
-		rthal_irq_enable(RTHAL_TIMER_IRQ);
+		ipipe_enable_irq(RTHAL_TIMER_IRQ);
 		break;
 
 	case CLOCK_EVT_MODE_SHUTDOWN:
@@ -163,11 +163,12 @@ int rthal_timer_request(void (*tick_handler)(void),
 	if (cpu_timers_requested++ > 0)
 		goto out;
 
-	err = rthal_irq_request(RTHAL_TIMER_IRQ,
-				(ipipe_irq_handler_t) tick_handler,
+	ret = ipipe_request_irq(&rthal_archdata.domain,
+				RTHAL_TIMER_IRQ,
+				(ipipe_irq_handler_t)tick_handler,
 				NULL, NULL);
-	if (err)
-		return err;
+	if (ret)
+		return ret;
 
 	rthal_timer_set_oneshot(1);
 
@@ -182,14 +183,14 @@ void rthal_timer_release(int cpu)
 	if (--cpu_timers_requested > 0)
 		return;
 
-	rthal_irq_release(RTHAL_TIMER_IRQ);
+	ipipe_free_irq(&rthal_archdata.domain, RTHAL_TIMER_IRQ);
 
 	if (rthal_ktimer_saved_mode == KTIMER_MODE_PERIODIC)
 		rthal_timer_set_periodic();
 	else if (rthal_ktimer_saved_mode == KTIMER_MODE_ONESHOT)
 		rthal_timer_set_oneshot(0);
 	else
-		rthal_irq_disable(RTHAL_TIMER_IRQ);
+		ipipe_disable_irq(RTHAL_TIMER_IRQ);
 }
 
 void rthal_timer_notify_switch(enum clock_event_mode mode,

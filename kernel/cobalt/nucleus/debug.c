@@ -212,7 +212,7 @@ void xndebug_trace_relax(int nr, unsigned long __user *u_backtrace,
 	char *tmp;
 	u32 hash;
 
-	thread = xnshadow_thread(current);
+	thread = xnshadow_current();
 	if (thread == NULL)
 		return;		/* Can't be, right? What a mess. */
 	/*

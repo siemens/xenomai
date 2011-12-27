@@ -14,4 +14,4 @@ includesub_HEADERS = \
 	trace.h \
 	wrappers.h
 
-SUBDIRS = bits
+SUBDIRS = bits ipipe

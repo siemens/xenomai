@@ -75,21 +75,14 @@ typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
 
 } xnarchtcb_t;
 
-typedef struct xnarch_fltinfo {
-
-    unsigned int exception;
-    struct pt_regs *regs;
-
-} xnarch_fltinfo_t;
-
-#define xnarch_fault_trap(fi)   ((fi)->exception)
-#define xnarch_fault_code(fi)   (0)
-#define xnarch_fault_pc(fi)     ((fi)->regs->pc)
-#define xnarch_fault_fpu_p(fi)  ((fi)->exception == IPIPE_TRAP_FPUERR)
-#define xnarch_fault_pf_p(fi)   ((fi)->exception == IPIPE_TRAP_PF)
-#define xnarch_fault_bp_p(fi)   ((current->ptrace & PT_PTRACED) && \
-				 (fi)->exception == IPIPE_TRAP_BP)
-#define xnarch_fault_notify(fi) (!xnarch_fault_bp_p(fi))
+#define xnarch_fault_trap(d)   ((d)->exception)
+#define xnarch_fault_code(d)   0
+#define xnarch_fault_pc(d)     ((d)->regs->pc)
+#define xnarch_fault_fpu_p(d)  ((d)->exception == IPIPE_TRAP_FPUERR)
+#define xnarch_fault_pf_p(d)   ((d)->exception == IPIPE_TRAP_PF)
+#define xnarch_fault_bp_p(d)   ((current->ptrace & PT_PTRACED) &&	\
+				(d)->exception == IPIPE_TRAP_BP)
+#define xnarch_fault_notify(d) (!xnarch_fault_bp_p(d))
 
 #ifdef __cplusplus
 extern "C" {

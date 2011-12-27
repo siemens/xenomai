@@ -50,30 +50,22 @@
 #endif
 
 #ifndef xnarch_fault_um
-#define xnarch_fault_um(fi) user_mode(fi->regs)
+#define xnarch_fault_um(d) user_mode(d->regs)
 #endif
 
 #define module_param_value(parm) (parm)
 
 typedef unsigned long spl_t;
 
-#define splhigh(x)  ((x) = ipipe_test_and_stall_pipeline_head() & 1)
+#define splhigh(x)  ((x) = ipipe_test_and_stall_head() & 1)
 #ifdef CONFIG_SMP
-#define splexit(x)  ipipe_restore_pipeline_head(x & 1)
+#define splexit(x)  ipipe_restore_head(x & 1)
 #else /* !CONFIG_SMP */
-#define splexit(x)  ipipe_restore_pipeline_head(x)
+#define splexit(x)  ipipe_restore_head(x)
 #endif /* !CONFIG_SMP */
-#define splmax()    ipipe_stall_pipeline_head()
-#define splnone()   ipipe_unstall_pipeline_head()
-#define splget(x)   ((x) = ipipe_test_pipeline_from(&rthal_archdata.domain) & 1)
-#define spltest()						\
-({								\
-	unsigned long __flags, __ret;				\
-	local_irq_save_hw_smp(__flags);				\
-	__ret = ipipe_test_pipeline_from(&rthal_archdata.domain);	\
-	local_irq_restore_hw_smp(__flags);			\
-	__ret;							\
-})
+#define splmax()    ipipe_stall_head()
+#define splnone()   ipipe_unstall_head()
+#define spltest()   ipipe_test_head()
 
 static inline unsigned xnarch_current_cpu(void)
 {
@@ -413,8 +405,8 @@ static inline int xnarch_remap_kmem_page_range(struct vm_area_struct *vma,
 #define xnarch_fault_range(vma) do { } while (0)
 #endif /*!rthal_fault_range */
 
-#ifndef xnarch_hisyscall_entry
-static inline void xnarch_hisyscall_entry(void)	{ }
+#ifndef xnarch_head_syscall_entry
+static inline void xnarch_head_syscall_entry(void)	{ }
 #endif
 
 /* Dashboard and graph control. */
@@ -424,8 +416,5 @@ static inline void xnarch_hisyscall_entry(void)	{ }
 #define xnarch_delete_display(obj)
 #define xnarch_post_graph(obj,state)
 #define xnarch_post_graph_if(obj,state,cond)
-
-/* Synchronised realtime clock */
-#define xnarch_hostrt_data	ipipe_hostrt_data
 
 #endif /* !_XENO_ASM_GENERIC_SYSTEM_H */

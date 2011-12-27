@@ -26,8 +26,6 @@
 #endif
 
 #include <asm-generic/xenomai/wrappers.h> /* Read the generic portion. */
-#include <linux/interrupt.h>
-#include <linux/version.h>
 
 #define __get_user_inatomic __get_user
 #define __put_user_inatomic __put_user
@@ -49,38 +47,21 @@
 
 #endif /* CONFIG_X86_32 */
 
-#define wrap_strncpy_from_user(dstP,srcP,n)		\
-	rthal_strncpy_from_user(dstP,srcP,n)
+#define wrap_strncpy_from_user(dstP, srcP, n)		\
+	rthal_strncpy_from_user(dstP, srcP, n)
 
-#define wrap_phys_mem_prot(filp,pfn,size,prot)  (prot)
+#define wrap_phys_mem_prot(filp, pfn, size, prot)  (prot)
 
-#define rthal_irq_desc_status(irq)	(rthal_irq_descp(irq)->status)
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)
-
-#define rthal_irq_chip_enable(irq)			\
-	({ rthal_irq_descp(irq)->chip->unmask(irq); 0; })
-
-#define rthal_irq_chip_disable(irq)			\
-	({ rthal_irq_descp(irq)->chip->mask(irq); 0; })
-
-#endif
-
-#define rthal_irq_chip_end(irq)				\
-	({ rthal_irq_descp(irq)->ipipe_end(irq, rthal_irq_descp(irq)); 0; })
-
-typedef irq_handler_t rthal_irq_host_handler_t;
-
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,34)
-typedef union thread_xstate x86_fpustate;
-#define x86_fpustate_ptr(t) ((t)->xstate)
-#else /* 2.6.35 and above */
 typedef union thread_xstate x86_fpustate;
 #define x86_fpustate_ptr(t) ((t)->fpu.state)
+
+#ifdef CONFIG_XENO_LEGACY_IPIPE
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)
+#define ipipe_enable_irq(irq)   irq_to_desc(irq)->chip->unmask(irq)
+#define ipipe_disable_irq(irq)  irq_to_desc(irq)->chip->mask(irq)
 #endif
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34)
-#define per_cpu_var(var) (var)
-#endif /* Linux >= 2.6.34 */
+#endif /* CONFIG_XENO_LEGACY_IPIPE */
 
 #endif /* _XENO_ASM_X86_WRAPPERS_H */

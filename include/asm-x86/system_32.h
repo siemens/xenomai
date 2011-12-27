@@ -68,26 +68,18 @@ typedef struct xnarchtcb {      /* Per-thread arch-dependent block */
 
 } xnarchtcb_t;
 
-typedef struct xnarch_fltinfo {
-
-    unsigned vector;
-    long errcode;
-    struct pt_regs *regs;
-
-} xnarch_fltinfo_t;
-
-#define xnarch_fault_regs(fi)	((fi)->regs)
-#define xnarch_fault_trap(fi)   ((fi)->vector)
-#define xnarch_fault_code(fi)   ((fi)->errcode)
-#define xnarch_fault_pc(fi)     ((fi)->regs->ip)
+#define xnarch_fault_regs(d)	((d)->regs)
+#define xnarch_fault_trap(d)	((d)->exception)
+#define xnarch_fault_code(d)	((d)->regs->orig_ax)
+#define xnarch_fault_pc(d)	((d)->regs->ip)
 /* fault is caused by use FPU while FPU disabled. */
-#define xnarch_fault_fpu_p(fi)  ((fi)->vector == 7)
+#define xnarch_fault_fpu_p(d)	((d)->exception == 7)
 /* The following predicates are only usable over a regular Linux stack
    context. */
-#define xnarch_fault_pf_p(fi)   ((fi)->vector == 14)
-#define xnarch_fault_bp_p(fi)   ((current->ptrace & PT_PTRACED) && \
-				 ((fi)->vector == 1 || (fi)->vector == 3))
-#define xnarch_fault_notify(fi) (!xnarch_fault_bp_p(fi))
+#define xnarch_fault_pf_p(d)	((d)->exception == 14)
+#define xnarch_fault_bp_p(d)	((current->ptrace & PT_PTRACED) &&	\
+				 ((d)->exception == 1 || (d)->exception == 3))
+#define xnarch_fault_notify(d)	(!xnarch_fault_bp_p(d))
 
 #ifdef __cplusplus
 extern "C" {

@@ -64,9 +64,7 @@ EXPORT_SYMBOL_GPL(rtdm_apc);
 struct semaphore nrt_dev_lock;
 DEFINE_XNLOCK(rt_dev_lock);
 
-#ifndef MODULE
 int rtdm_initialised = 0;
-#endif /* !MODULE */
 
 int rtdm_no_support(void)
 {

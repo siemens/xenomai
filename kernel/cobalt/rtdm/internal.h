@@ -61,11 +61,7 @@ extern unsigned int protocol_hashtab_size;
 extern struct list_head *rtdm_named_devices;
 extern struct list_head *rtdm_protocol_devices;
 
-#ifdef MODULE
-#define rtdm_initialised 1
-#else /* !MODULE */
 extern int rtdm_initialised;
-#endif /* MODULE */
 
 void cleanup_owned_contexts(void *user_info);
 int rtdm_no_support(void);

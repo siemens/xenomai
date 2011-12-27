@@ -24,7 +24,7 @@
 
 static inline void xnarch_relay_tick(void)
 {
-	rthal_irq_host_pend(RTHAL_TIMER_IRQ);
+	ipipe_post_irq_root(RTHAL_TIMER_IRQ);
 }
 
 #endif /* !_XENO_ASM_SH_BITS_INTR_H */

@@ -67,14 +67,6 @@ static int xn_gid_arg = -1;
 module_param_named(xenomai_gid, xn_gid_arg, int, 0644);
 MODULE_PARM_DESC(xenomai_gid, "GID of the group with access to Xenomai services");
 
-int nkthrptd;
-EXPORT_SYMBOL_GPL(nkthrptd);
-int nkmmptd;
-EXPORT_SYMBOL_GPL(nkmmptd);
-
-#define xnshadow_mmptd(t) ((t)->ptd[nkmmptd])
-#define xnshadow_mm(t) ((struct mm_struct *)xnshadow_mmptd(t))
-
 struct xnskin_slot {
 	struct xnskin_props *props;
 } skins[XENOMAI_SKINS_NR];
@@ -107,8 +99,6 @@ static struct __lostagerq {
 		(arg) = _muxed >> 8;	     \
 	} while (0)
 
-static struct task_struct *switch_lock_owner[XNARCH_NR_CPUS];
-
 static int nucleus_muxid = -1;
 
 static struct semaphore completion_mutex;
@@ -116,16 +106,6 @@ static struct semaphore completion_mutex;
 static DEFINE_SEMAPHORE(registration_mutex);
 
 static void *mayday_page;
-
-static inline struct task_struct *get_switch_lock_owner(void)
-{
-	return switch_lock_owner[task_cpu(current)];
-}
-
-static inline void set_switch_lock_owner(struct task_struct *p)
-{
-	switch_lock_owner[task_cpu(p)] = p;
-}
 
 static xnqueue_t *ppd_hash;
 #define PPD_HASH_SIZE 13
@@ -315,7 +295,7 @@ static inline void request_syscall_restart(xnthread_t *thread,
 
 static inline void set_linux_task_priority(struct task_struct *p, int prio)
 {
-	if (ipipe_setscheduler_root(p, prio ? SCHED_FIFO : SCHED_NORMAL, prio) < 0)
+	if (__ipipe_setscheduler_root(p, prio ? SCHED_FIFO : SCHED_NORMAL, prio) < 0)
 		printk(KERN_WARNING
 		       "Xenomai: invalid Linux priority level: %d, task=%s\n",
 		       prio, p->comm);
@@ -380,7 +360,7 @@ static void lostage_handler(void *cookie)
 			break;
 
 		case LO_SIGGRP_REQ:
-			kill_proc(p->pid, arg, 1);
+			kill_proc_info(arg, SEND_SIG_PRIV, p->pid);
 			break;
 		}
 	}
@@ -510,8 +490,8 @@ int xnshadow_harden(void)
 	int cpu, err;
 
 redo:
-	thread = xnshadow_thread(this_task);
-	if (!thread)
+	thread = xnshadow_current();
+	if (thread == NULL)
 		return -EPERM;
 
 	cpu = task_cpu(this_task);
@@ -559,8 +539,8 @@ redo:
 	set_current_state(TASK_INTERRUPTIBLE | TASK_ATOMICSWITCH);
 
 	wake_up_process(sched->gatekeeper);
+	hijack_current();
 
-	schedule();
 	xnthread_clear_info(thread, XNATOMIC);
 
 	/*
@@ -609,11 +589,11 @@ redo:
 		   thread, xnthread_name(thread));
 
 	/*
-	 * Recheck pending signals once again. As we block task wakeups during
-	 * the migration and do_sigwake_event ignores signals until XNRELAX is
-	 * left, any signal between entering TASK_ATOMICSWITCH and starting
-	 * the migration in the gatekeeker thread is just silently queued up
-	 * to here.
+	 * Recheck pending signals once again. As we block task
+	 * wakeups during the migration and handle_sigwake_event()
+	 * ignores signals until XNRELAX is left, any signal between
+	 * entering TASK_ATOMICSWITCH and starting the migration in
+	 * the gatekeeker thread is just silently queued up to here.
 	 */
 	if (signal_pending(this_task)) {
 		xnshadow_relax(!xnthread_test_state(thread, XNDEBUG),
@@ -708,9 +688,7 @@ void xnshadow_relax(int notify, int reason)
 		xnpod_fatal("xnshadow_relax() failed for thread %s[%d]",
 			    thread->name, xnthread_user_pid(thread));
 
-	prio = normalize_priority(xnthread_current_priority(thread));
-	ipipe_reenter_root(get_switch_lock_owner(),
-			   prio ? SCHED_FIFO : SCHED_NORMAL, prio);
+	__ipipe_reenter_root();
 
 	xnstat_counter_inc(&thread->stat.ssw);	/* Account for secondary mode switch. */
 
@@ -728,6 +706,7 @@ void xnshadow_relax(int notify, int reason)
 	}
 
 	if (xnthread_test_info(thread, XNPRIOSET)) {
+		prio = normalize_priority(xnthread_current_priority(thread));
 		xnthread_clear_info(thread, XNPRIOSET);
 		xnshadow_send_sig(thread, SIGSHADOW,
 				  sigshadow_int(SIGSHADOW_ACTION_RENICE, prio),
@@ -868,10 +847,25 @@ EXPORT_SYMBOL_GPL(xnshadow_demote);
 
 void xnshadow_exit(void)
 {
-	ipipe_reenter_root(get_switch_lock_owner(),
-			   current->rt_priority ? SCHED_FIFO : SCHED_NORMAL,
-			   current->rt_priority);
+	__ipipe_reenter_root();
 	do_exit(0);
+}
+
+static inline void init_threadinfo(struct xnthread *thread)
+{
+	struct ipipe_threadinfo *p;
+
+	set_ptd(&thread->ipipe_data);
+	p = ipipe_current_threadinfo();
+	p->thread = thread;
+	p->mm = current->mm;
+}
+
+static inline void destroy_threadinfo(void)
+{
+	struct ipipe_threadinfo *p = ipipe_current_threadinfo();
+	p->thread = NULL;
+	clear_ptd();
 }
 
 /**
@@ -948,7 +942,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 	if (!xnthread_test_state(thread, XNSHADOW))
 		return -EINVAL;
 
-	if (xnshadow_thread(current) || xnthread_test_state(thread, XNMAPPED))
+	if (xnshadow_current() || xnthread_test_state(thread, XNMAPPED))
 		return -EBUSY;
 
 	if (!access_wok(u_mode_offset, sizeof(*u_mode_offset)))
@@ -964,7 +958,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 		si.si_int = SIGDEBUG_NOMLOCK;
 		send_sig_info(SIGDEBUG, &si, current);
 	} else
-		if ((ret = ipipe_disable_ondemand_mappings(current)))
+		if ((ret = __ipipe_disable_ondemand_mappings(current)))
 			return ret;
 #endif /* CONFIG_MMU */
 
@@ -998,22 +992,13 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 	xndebug_shadow_init(thread);
 
 	/*
-	 * Switch on propagation of normal kernel events for the bound
-	 * task. This is basically a per-task event filter which
-	 * restricts event notifications (e.g. syscalls) to Linux
-	 * tasks bearing a specific flag, so that we don't uselessly
-	 * intercept those events when they happen to be caused by
-	 * plain (i.e. non-Xenomai) Linux tasks.
-	 *
-	 * CAUTION: we arm the notification callback only when the
+	 * CAUTION: we enable the pipeline notifier only when our
 	 * shadow TCB is consistent, so that we won't trigger false
-	 * positive in debug code from do_schedule_event() and
+	 * positive in debug code from handle_schedule_event() and
 	 * friends.
 	 */
-	xnshadow_thrptd(current) = thread;
-	xnshadow_mmptd(current) = current->mm;
+	init_threadinfo(thread);
 	xnarch_atomic_inc(&sys_ppd->refcnt);
-
 	ipipe_enable_notifier(current);
 
 	if (xnthread_base_priority(thread) == 0 &&
@@ -1082,7 +1067,7 @@ void xnshadow_unmap(xnthread_t *thread)
 		   "thread %p thread_name %s pid %d",
 		   thread, xnthread_name(thread), p ? p->pid : -1);
 
-	if (!p)
+	if (p == NULL)
 		return;
 
 	XENO_ASSERT(NUCLEUS, p == current,
@@ -1090,7 +1075,7 @@ void xnshadow_unmap(xnthread_t *thread)
 				__FUNCTION__, thread->name, p->comm);
 		);
 
-	xnshadow_thrptd(p) = NULL;
+	destroy_threadinfo();
 
 	schedule_linux_call(LO_UNMAP_REQ, p, xnthread_get_magic(thread));
 }
@@ -1133,9 +1118,9 @@ EXPORT_SYMBOL_GPL(xnshadow_suspend);
 
 static int xnshadow_sys_migrate(int domain)
 {
-	struct xnthread *thread = xnshadow_thread(current);
+	struct xnthread *thread = xnshadow_current();
 
-	if (ipipe_current_domain == ipipe_root_domain) {
+	if (ipipe_root_p) {
 		if (domain == XENOMAI_XENO_DOMAIN) {
 			if (thread == NULL)
 				return -EPERM;
@@ -1243,13 +1228,13 @@ static int xnshadow_sys_mayday(void)
 {
 	struct xnthread *cur;
 
-	cur = xnshadow_thread(current);
+	cur = xnshadow_current();
 	if (likely(cur)) {
 		/*
 		 * If the thread was kicked by the watchdog, this
 		 * syscall we have just forced on it via the mayday
 		 * escape will cause it to relax. See
-		 * do_hisyscall_event().
+		 * handle_head_syscall().
 		 */
 		xnarch_fixup_mayday(xnthread_archtcb(cur), cur->regs);
 		return 0;
@@ -1281,15 +1266,13 @@ static inline void mayday_cleanup_page(void)
 		vfree(mayday_page);
 }
 
-static int handle_mayday_event(unsigned int event, struct ipipe_domain *ipd,
-			       void *data)
+static int handle_mayday_event(struct pt_regs *regs)
 {
-	struct xnthread *thread = xnshadow_thread(current);
+	struct xnthread *thread = xnshadow_current();
 	struct xnarchtcb *tcb = xnthread_archtcb(thread);
-	struct pt_regs *regs = data;
 	struct xnsys_ppd *sys_ppd;
 
-	/* We enter the event handler with hw IRQs off. */
+	/* We enter the mayday handler with hw IRQs off. */
 	xnlock_get(&nklock);
 	sys_ppd = xnsys_ppd_get(0);
 	xnlock_put(&nklock);
@@ -1576,7 +1559,7 @@ static int xnshadow_sys_completion(xncompletion_t __user *u_completion)
 static int xnshadow_sys_barrier(void __user **u_entry,
 				void __user **u_cookie)
 {
-	xnthread_t *thread = xnshadow_thread(current);
+	xnthread_t *thread = xnshadow_current();
 	spl_t s;
 
 	if (thread == NULL)
@@ -1695,7 +1678,7 @@ static int xnshadow_sys_heap_info(struct xnheap_desc __user *u_hd,
 
 static int xnshadow_sys_current(xnhandle_t __user *u_handle)
 {
-	xnthread_t *cur = xnshadow_thread(current);
+	xnthread_t *cur = xnshadow_current();
 
 	if (cur == NULL)
 		return -EPERM;
@@ -1706,7 +1689,7 @@ static int xnshadow_sys_current(xnhandle_t __user *u_handle)
 
 static int xnshadow_sys_current_info(xnthread_info_t __user *u_info)
 {
-	xnthread_t *cur = xnshadow_thread(current);
+	xnthread_t *cur = xnshadow_current();
 	xnticks_t raw_exectime;
 	xnthread_info_t info;
 	int i;
@@ -1887,613 +1870,6 @@ void xnshadow_send_sig(xnthread_t *thread, int sig, int arg, int specific)
 }
 EXPORT_SYMBOL_GPL(xnshadow_send_sig);
 
-static int handle_hisyscall_event(unsigned int event,
-				  struct ipipe_domain *ipd, void *data)
-{
-	int muxid, muxop, switched, err, sigs;
-	struct pt_regs *regs = data;
-	struct task_struct *p;
-	struct xnsysent *se;
-	xnthread_t *thread;
-	u_long sysflags;
-
-	if (!xnpod_active_p())
-		goto no_skin;
-
-	xnarch_hisyscall_entry();
-
-	p = current;
-	thread = xnshadow_thread(p);
-	if (thread)
-		thread->regs = regs;
-
-	if (!__xn_reg_mux_p(regs))
-		goto linux_syscall;
-
-	/*
-	 * Executing Xenomai services requires CAP_SYS_NICE, except for
-	 * sc_nucleus_bind which does its own checks.
-	 */
-	if (unlikely(!cap_raised(current_cap(), CAP_SYS_NICE)) &&
-	    __xn_reg_mux(regs) != __xn_mux_code(0, sc_nucleus_bind))
-		goto no_permission;
-
-	muxid = __xn_mux_id(regs);
-	muxop = __xn_mux_op(regs);
-
-	trace_mark(xn_nucleus, syscall_histage_entry,
-		   "thread %p thread_name %s muxid %d muxop %d",
-		   thread, thread ? xnthread_name(thread) : NULL,
-		   muxid, muxop);
-
-	if (muxid < 0 || muxid > XENOMAI_SKINS_NR ||
-	    muxop < 0 || muxop >= skins[muxid].props->nrcalls) {
-		__xn_error_return(regs, -ENOSYS);
-		goto ret_handled;
-	}
-
-	se = &skins[muxid].props->systab[muxop];
-	sysflags = se->flags;
-
-	if ((sysflags & __xn_exec_shadow) != 0 && thread == NULL) {
-	no_permission:
-		if (XENO_DEBUG(NUCLEUS))
-			printk(KERN_WARNING
-			       "Xenomai: non-shadow %s[%d] was denied a real-time call\n",
-			       current->comm, current->pid);
-		__xn_error_return(regs, -EPERM);
-		goto ret_handled;
-	}
-
-	if ((sysflags & __xn_exec_conforming) != 0)
-		/* If the conforming exec bit has been set, turn the exec
-		   bitmask for the syscall into the most appropriate setup for
-		   the caller, i.e. Xenomai domain for shadow threads, Linux
-		   otherwise. */
-		sysflags |= (thread ? __xn_exec_histage : __xn_exec_lostage);
-
-	/*
-	 * Here we have to dispatch the syscall execution properly,
-	 * depending on:
-	 *
-	 * o Whether the syscall must be run into the Linux or Xenomai
-	 * domain, or indifferently in the current Xenomai domain.
-	 *
-	 * o Whether the caller currently runs in the Linux or Xenomai
-	 * domain.
-	 */
-
-	switched = 0;
-
-      restart:			/* Process adaptive syscalls by restarting them in the
-				   opposite domain. */
-
-	if ((sysflags & __xn_exec_lostage) != 0) {
-		/* Syscall must run into the Linux domain. */
-
-		if (ipd == &rthal_archdata.domain) {
-			/* Request originates from the Xenomai domain: just relax the
-			   caller and execute the syscall immediately after. */
-			xnshadow_relax(1, SIGDEBUG_MIGRATE_SYSCALL);
-			switched = 1;
-		} else
-			/* Request originates from the Linux domain: propagate the
-			   event to our Linux-based handler, so that the syscall
-			   is executed from there. */
-			goto propagate_syscall;
-	} else if ((sysflags & (__xn_exec_histage | __xn_exec_current)) != 0) {
-		/* Syscall must be processed either by Xenomai, or by the
-		   calling domain. */
-
-		if (ipd != &rthal_archdata.domain)
-			/* Request originates from the Linux domain: propagate the
-			   event to our Linux-based handler, so that the caller is
-			   hardened and the syscall is eventually executed from
-			   there. */
-			goto propagate_syscall;
-
-		/* Request originates from the Xenomai domain: run the syscall
-		   immediately. */
-	}
-
-	err = se->svc(__xn_reg_arglist(regs));
-	if (err == -ENOSYS && (sysflags & __xn_exec_adaptive) != 0) {
-		if (switched) {
-			switched = 0;
-
-			if ((err = xnshadow_harden()) != 0)
-				goto done;
-		}
-
-		sysflags ^=
-		    (__xn_exec_lostage | __xn_exec_histage |
-		     __xn_exec_adaptive);
-		goto restart;
-	}
-
-      done:
-
-	__xn_status_return(regs, err);
-
-	sigs = 0;
-	if (xnpod_shadow_p()) {
-		if (signal_pending(p) ||
-		    xnthread_test_info(thread, XNKICKED)) {
-			sigs = 1;
-			request_syscall_restart(thread, regs, sysflags);
-		} else if (xnthread_test_state(thread, XNOTHER) &&
-			   xnthread_get_rescnt(thread) == 0) {
-			if (switched)
-				switched = 0;
-			else
-				xnshadow_relax(0, 0);
-		}
-	}
-	if (!sigs && (sysflags & __xn_exec_switchback) != 0 && switched)
-		xnshadow_harden();	/* -EPERM will be trapped later if needed. */
-
-      ret_handled:
-
-	/* Update the stats and userland-visible state. */
-	if (thread) {
-		xnstat_counter_inc(&thread->stat.xsc);
-		*thread->u_mode = thread->state;
-	}
-
-	trace_mark(xn_nucleus, syscall_histage_exit,
-		   "ret %ld", __xn_reg_rval(regs));
-	return EVENT_STOP;
-
-      linux_syscall:
-
-	if (xnpod_root_p())
-		/*
-		 * The call originates from the Linux domain, either
-		 * from a relaxed shadow or from a regular Linux task;
-		 * just propagate the event so that we will fall back
-		 * to linux_sysentry().
-		 */
-		goto propagate_syscall;
-
-	/*
-	 * From now on, we know that we have a valid shadow thread
-	 * pointer.
-	 */
-	if (substitute_linux_syscall(regs))
-		/*
-		 * This is a Linux syscall issued on behalf of a
-		 * shadow thread running inside the Xenomai
-		 * domain. This call has just been intercepted by the
-		 * nucleus and a Xenomai replacement has been
-		 * substituted for it.
-		 */
-		goto ret_handled;
-
-	/*
-	 * This syscall has not been substituted, let Linux handle
-	 * it. This will eventually fall back to the Linux syscall
-	 * handler if our Linux domain handler does not intercept
-	 * it. Before we let it go, ensure that the current thread has
-	 * properly entered the Linux domain.
-	 */
-	xnshadow_relax(1, SIGDEBUG_MIGRATE_SYSCALL);
-
-	goto propagate_syscall;
-
-      no_skin:
-
-	if (__xn_reg_mux_p(regs)) {
-		if (__xn_reg_mux(regs) == __xn_mux_code(0, sc_nucleus_bind))
-			/*
-			 * Valid exception case: we may be called to
-			 * bind to a skin which will create its own
-			 * pod through its callback routine before
-			 * returning to user-space.
-			 */
-			goto propagate_syscall;
-
-		xnlogwarn("bad syscall %ld/%ld -- no skin loaded.\n",
-			  __xn_mux_id(regs), __xn_mux_op(regs));
-
-		__xn_error_return(regs, -ENOSYS);
-		return EVENT_STOP;
-	}
-
-	/*
-	 * Regular Linux syscall with no skin loaded -- propagate it
-	 * to the Linux kernel.
-	 */
-
-      propagate_syscall:
-
-	return EVENT_PROPAGATE;
-}
-
-static int handle_losyscall_event(unsigned int event,
-				  struct ipipe_domain *ipd, void *data)
-{
-	int muxid, muxop, sysflags, switched, err, sigs;
-	xnthread_t *thread = xnshadow_thread(current);
-	struct pt_regs *regs = data;
-	struct xnsysent *se;
-
-	if (__xn_reg_mux_p(regs))
-		goto xenomai_syscall;
-
-	if (thread == NULL || !substitute_linux_syscall(regs))
-		/* Fall back to Linux syscall handling. */
-		return EVENT_PROPAGATE;
-
-	/*
-	 * This is a Linux syscall issued on behalf of a shadow thread
-	 * running inside the Linux domain. If the call has been
-	 * substituted with a Xenomai replacement, do not let Linux know
-	 * about it.
-	 */
-	return EVENT_STOP;
-
-      xenomai_syscall:
-
-	/* muxid and muxop have already been checked in the Xenomai domain
-	   handler. */
-
-	if (thread)
-		thread->regs = regs;
-
-	muxid = __xn_mux_id(regs);
-	muxop = __xn_mux_op(regs);
-
-	trace_mark(xn_nucleus, syscall_lostage_entry,
-		   "thread %p thread_name %s muxid %d muxop %d",
-		   xnpod_active_p() ? xnpod_current_thread() : NULL,
-		   xnpod_active_p() ? xnthread_name(xnpod_current_thread()) : NULL,
-		   muxid, muxop);
-
-	/* Processing a real-time skin syscall. */
-
-	se = &skins[muxid].props->systab[muxop];
-	sysflags = se->flags;
-
-	if ((sysflags & __xn_exec_conforming) != 0)
-		sysflags |= (thread ? __xn_exec_histage : __xn_exec_lostage);
-
-      restart:			/* Process adaptive syscalls by restarting them in the
-				   opposite domain. */
-
-	if ((sysflags & __xn_exec_histage) != 0) {
-		/* This request originates from the Linux domain and must be
-		   run into the Xenomai domain: harden the caller and execute the
-		   syscall. */
-		if ((err = xnshadow_harden()) != 0) {
-			__xn_error_return(regs, err);
-			goto ret_handled;
-		}
-
-		switched = 1;
-	} else			/* We want to run the syscall in the Linux domain.  */
-		switched = 0;
-
-	err = se->svc(__xn_reg_arglist(regs));
-	if (err == -ENOSYS && (sysflags & __xn_exec_adaptive) != 0) {
-		if (switched) {
-			switched = 0;
-			xnshadow_relax(1, SIGDEBUG_MIGRATE_SYSCALL);
-		}
-
-		sysflags ^=
-		    (__xn_exec_lostage | __xn_exec_histage |
-		     __xn_exec_adaptive);
-		goto restart;
-	}
-
-	__xn_status_return(regs, err);
-
-	sigs = 0;
-	if (xnpod_active_p() && xnpod_shadow_p()) {
-		/*
-		 * We may have gained a shadow TCB from the syscall we
-		 * just invoked, so make sure to fetch it.
-		 */
-		thread = xnshadow_thread(current);
-		if (signal_pending(current)) {
-			sigs = 1;
-			request_syscall_restart(thread, regs, sysflags);
-		} else if (xnthread_test_state(thread, XNOTHER) &&
-			   xnthread_get_rescnt(thread) == 0)
-			sysflags |= __xn_exec_switchback;
-	}
-	if (!sigs && (sysflags & __xn_exec_switchback) != 0
-	    && (switched || xnpod_primary_p()))
-		xnshadow_relax(0, 0);
-
-      ret_handled:
-
-	/* Update the stats and userland-visible state. */
-	if (thread) {
-		xnstat_counter_inc(&thread->stat.xsc);
-		*thread->u_mode = thread->state;
-	}
-
-	trace_mark(xn_nucleus, syscall_lostage_exit,
-		   "ret %ld", __xn_reg_rval(regs));
-
-	return EVENT_STOP;
-}
-
-static int handle_taskexit_event(unsigned int event,
-				 struct ipipe_domain *ipd, void *data)
-{
-	struct task_struct *p = data; /* p == current */
-	struct xnsys_ppd *sys_ppd;
-	xnthread_t *thread;
-	spl_t s;
-
-	thread = xnshadow_thread(p);
-	if (thread == NULL)
-		return EVENT_PROPAGATE;
-
-	XENO_BUGON(NUCLEUS, !xnpod_root_p());
-
-	if (xnthread_test_state(thread, XNDEBUG))
-		unlock_timers();
-
-	xnlock_get_irqsave(&nklock, s);
-	/* Prevent wakeup call from xnshadow_unmap(). */
-	xnshadow_thrptd(p) = NULL;
-	xnthread_archtcb(thread)->user_task = NULL;
-	/* xnpod_delete_thread() -> hook -> xnshadow_unmap(). */
-	xnsched_set_resched(thread->sched);
-	xnpod_delete_thread(thread);
-	sys_ppd = xnsys_ppd_get(0);
-	xnlock_put_irqrestore(&nklock, s);
-	xnpod_schedule();
-
-	if (!xnarch_atomic_get(&sys_ppd->refcnt))
-		ppd_remove_mm(xnshadow_mm(p), &detach_ppd);
-
-	trace_mark(xn_nucleus, shadow_exit, "thread %p thread_name %s",
-		   thread, xnthread_name(thread));
-
-	return EVENT_PROPAGATE;
-}
-
-static int handle_schedule_event(unsigned int event,
-				 struct ipipe_domain *ipd, void *data)
-{
-	struct task_struct *next_task = data;
-	struct task_struct *prev_task;
-	struct xnthread *prev, *next;
-	sigset_t pending;
-
-	if (!xnpod_active_p())
-		return EVENT_PROPAGATE;
-
-	prev_task = current;
-	prev = xnshadow_thread(prev_task);
-	next = xnshadow_thread(next_task);
-	set_switch_lock_owner(prev_task);
-
-	if (next) {
-		/*
-		 * Check whether we need to unlock the timers, each
-		 * time a Linux task resumes from a stopped state,
-		 * excluding tasks resuming shortly for entering a
-		 * stopped state asap due to ptracing. To identify the
-		 * latter, we need to check for SIGSTOP and SIGINT in
-		 * order to encompass both the NPTL and LinuxThreads
-		 * behaviours.
-		 */
-		if (xnthread_test_state(next, XNDEBUG)) {
-			if (signal_pending(next_task)) {
-				/*
-				 * Do not grab the sighand lock here:
-				 * it's useless, and we already own
-				 * the runqueue lock, so this would
-				 * expose us to deadlock situations on
-				 * SMP.
-				 */
-				sigorsets(&pending,
-					  &next_task->pending.signal,
-					  &next_task->signal->shared_pending.signal);
-				if (sigismember(&pending, SIGSTOP) ||
-				    sigismember(&pending, SIGINT))
-					goto no_ptrace;
-			}
-			xnthread_clear_state(next, XNDEBUG);
-			unlock_timers();
-		}
-
-	      no_ptrace:
-
-		if (XENO_DEBUG(NUCLEUS)) {
-			int sigpending = signal_pending(next_task);
-
-			if (!xnthread_test_state(next, XNRELAX)) {
-				xnarch_trace_panic_freeze();
-				show_stack(xnthread_user_task(next), NULL);
-				xnpod_fatal
-				    ("Hardened thread %s[%d] running in Linux"" domain?! (status=0x%lx, sig=%d, prev=%s[%d])",
-				     next->name, next_task->pid, xnthread_state_flags(next),
-				     sigpending, prev_task->comm, prev_task->pid);
-			} else if (!(next_task->ptrace & PT_PTRACED) &&
-				   /* Allow ptraced threads to run shortly in order to
-				      properly recover from a stopped state. */
-				   xnthread_test_state(next, XNSTARTED)
-				   && xnthread_test_state(next, XNPEND)) {
-				xnarch_trace_panic_freeze();
-				show_stack(xnthread_user_task(next), NULL);
-				xnpod_fatal
-				    ("blocked thread %s[%d] rescheduled?! (status=0x%lx, sig=%d, prev=%s[%d])",
-				     next->name, next_task->pid, xnthread_state_flags(next),
-				     sigpending, prev_task->comm, prev_task->pid);
-			}
-		}
-	}
-
-	return EVENT_PROPAGATE;
-}
-
-static int handle_sigwake_event(unsigned int event,
-				struct ipipe_domain *ipd, void *data)
-{
-	struct task_struct *p = data;
-	struct xnthread *thread;
-	sigset_t pending;
-	spl_t s;
-
-	thread = xnshadow_thread(p);
-	if (thread == NULL)
-		return EVENT_PROPAGATE;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	if ((p->ptrace & PT_PTRACED) && !xnthread_test_state(thread, XNDEBUG)) {
-		/* We already own the siglock. */
-		sigorsets(&pending,
-			  &p->pending.signal,
-			  &p->signal->shared_pending.signal);
-
-		if (sigismember(&pending, SIGTRAP) ||
-		    sigismember(&pending, SIGSTOP)
-		    || sigismember(&pending, SIGINT)) {
-			xnthread_set_state(thread, XNDEBUG);
-			lock_timers();
-		}
-	}
-
-	if (xnthread_test_state(thread, XNRELAX)) {
-		xnlock_put_irqrestore(&nklock, s);
-		return EVENT_PROPAGATE;
-	}
-
-	/*
-	 * If kicking a shadow thread in primary mode, make sure Linux
-	 * won't schedule in its mate under our feet as a result of
-	 * running signal_wake_up(). The Xenomai scheduler must remain
-	 * in control for now, until we explicitly relax the shadow
-	 * thread to allow for processing the pending signals. Make
-	 * sure we keep the additional state flags unmodified so that
-	 * we don't break any undergoing ptrace.
-	 */
-	if (p->state & (TASK_INTERRUPTIBLE|TASK_UNINTERRUPTIBLE))
-		set_task_state(p, p->state | TASK_NOWAKEUP);
-
-	xnshadow_force_wakeup(thread);
-
-	xnpod_schedule();
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	return EVENT_PROPAGATE;
-}
-
-static int handle_cleanup_event(unsigned int event,
-				struct ipipe_domain *ipd, void *data)
-{
-	struct task_struct *p = current;
-	struct mm_struct *mm = data;
-	struct xnsys_ppd *sys_ppd;
-	struct mm_struct *old;
-
-	old = xnshadow_mm(p);
-	xnshadow_mmptd(p) = mm;
-
-	sys_ppd = xnsys_ppd_get(0);
-	if (sys_ppd != &__xnsys_global_ppd) {
-		if (xnarch_atomic_dec_and_test(&sys_ppd->refcnt))
-			ppd_remove_mm(mm, &detach_ppd);
-	}
-
-	xnshadow_mmptd(p) = old;
-
-	return EVENT_PROPAGATE;
-}
-
-static int handle_exception_event(unsigned int event,
-				  struct ipipe_domain *ipd, void *data)
-{
-	/*
-	 * CAUTION: access faults must be propagated downstream
-	 * whichever domain caused them, so that we don't spuriously
-	 * raise a fatal error when some Linux fixup code is available
-	 * to solve the error condition.
-	 */
-	if (ipd == &rthal_archdata.domain) {
-		rthal_archdata.faults[ipipe_processor_id()][event]++;
-		if (rthal_archdata.trap_handler &&
-		    rthal_archdata.trap_handler(event, ipd, data) != 0)
-			return EVENT_STOP;
-	}
-
-	return EVENT_PROPAGATE;
-}
-
-#define catch_taskexit(fn)	\
-    ipipe_catch_event(ipipe_root_domain, IPIPE_EVENT_EXIT, fn)
-#define catch_sigwake(fn)	\
-    ipipe_catch_event(ipipe_root_domain, IPIPE_EVENT_SIGWAKE, fn)
-#define catch_schedule(fn)	\
-    ipipe_catch_event(ipipe_root_domain, IPIPE_EVENT_SCHEDULE, fn)
-#define catch_cleanup(fn)         \
-    ipipe_catch_event(ipipe_root_domain, IPIPE_EVENT_CLEANUP, fn)
-#define catch_mayday(fn)         \
-    ipipe_catch_event(&rthal_archdata.domain, IPIPE_EVENT_RETURN, fn)
-#define catch_losyscall(fn)	\
-    ipipe_catch_event(ipipe_root_domain, IPIPE_EVENT_SYSCALL, fn)
-#define catch_hisyscall(fn)	\
-    ipipe_catch_event(&rthal_archdata.domain, IPIPE_EVENT_SYSCALL, fn)
-#define catch_hostrt(fn)	\
-    ipipe_catch_event(ipipe_root_domain, IPIPE_EVENT_HOSTRT, fn)
-#define catch_exception(ex, fn)	\
-    ipipe_catch_event(&rthal_archdata.domain, ex|IPIPE_EVENT_SELF, fn)
-
-#ifdef CONFIG_XENO_OPT_HOSTRT
-
-static IPIPE_DEFINE_SPINLOCK(__hostrtlock);
-
-static int handle_hostrt_event(unsigned int event,
-			       struct ipipe_domain *ipd, void *data)
-{
-	struct xnarch_hostrt_data *hostrt = data;
-	unsigned long flags;
-
-	/*
-	 * The locking strategy is twofold:
-	 * - The spinlock protects against concurrent updates from within the
-	 *   Linux kernel and against preemption by Xenomai
-	 * - The sequence counter is for lockless read-only access.
-	 */
-
-	spin_lock_irqsave(&__hostrtlock, flags);
-
-	xnwrite_seqcount_begin(&nkvdso->hostrt_data.seqcount);
-
-	nkvdso->hostrt_data.live = 1;
-	nkvdso->hostrt_data.cycle_last = hostrt->cycle_last;
-	nkvdso->hostrt_data.mask = hostrt->mask;
-	nkvdso->hostrt_data.mult = hostrt->mult;
-	nkvdso->hostrt_data.shift = hostrt->shift;
-	nkvdso->hostrt_data.wall_time_sec = hostrt->wall_time_sec;
-	nkvdso->hostrt_data.wall_time_nsec = hostrt->wall_time_nsec;
-	nkvdso->hostrt_data.wall_to_monotonic = hostrt->wall_to_monotonic;
-
-	xnwrite_seqcount_end(&nkvdso->hostrt_data.seqcount);
-
-	spin_unlock_irqrestore(&__hostrtlock, flags);
-
-	return EVENT_PROPAGATE;
-}
-
-static inline void init_hostrt(void)
-{
-	xnseqcount_init(&nkvdso->hostrt_data.seqcount);
-	nkvdso->hostrt_data.live = 0;
-	catch_hostrt(handle_hostrt_event);
-}
-#else
-static inline void init_hostrt(void) { }
-#endif /* CONFIG_XENO_OPT_HOSTRT */
-
 /*
  * xnshadow_register_interface() -- Register a new skin/interface.
  * NOTE: an interface can be registered without its pod being
@@ -2603,40 +1979,651 @@ EXPORT_SYMBOL_GPL(xnshadow_unregister_interface);
 xnshadow_ppd_t *xnshadow_ppd_get(unsigned int muxid)
 {
 	if (xnpod_userspace_p())
-		return ppd_lookup(muxid, xnshadow_mm(current) ?: current->mm);
+		return ppd_lookup(muxid, xnshadow_current_mm() ?: current->mm);
 
 	return NULL;
 }
 EXPORT_SYMBOL_GPL(xnshadow_ppd_get);
 
+static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
+{
+	int muxid, muxop, switched, err, sigs;
+	struct xnsysent *se;
+	xnthread_t *thread;
+	u_long sysflags;
+
+	if (!xnpod_active_p())
+		goto no_skin;
+
+	xnarch_head_syscall_entry();
+
+	thread = xnshadow_current();
+	if (thread)
+		thread->regs = regs;
+
+	if (!__xn_reg_mux_p(regs))
+		goto linux_syscall;
+
+	/*
+	 * Executing Xenomai services requires CAP_SYS_NICE, except for
+	 * sc_nucleus_bind which does its own checks.
+	 */
+	if (unlikely(!cap_raised(current_cap(), CAP_SYS_NICE)) &&
+	    __xn_reg_mux(regs) != __xn_mux_code(0, sc_nucleus_bind))
+		goto no_permission;
+
+	muxid = __xn_mux_id(regs);
+	muxop = __xn_mux_op(regs);
+
+	trace_mark(xn_nucleus, syscall_histage_entry,
+		   "thread %p thread_name %s muxid %d muxop %d",
+		   thread, thread ? xnthread_name(thread) : NULL,
+		   muxid, muxop);
+
+	if (muxid < 0 || muxid > XENOMAI_SKINS_NR ||
+	    muxop < 0 || muxop >= skins[muxid].props->nrcalls) {
+		__xn_error_return(regs, -ENOSYS);
+		goto ret_handled;
+	}
+
+	se = &skins[muxid].props->systab[muxop];
+	sysflags = se->flags;
+
+	if ((sysflags & __xn_exec_shadow) != 0 && thread == NULL) {
+	no_permission:
+		if (XENO_DEBUG(NUCLEUS))
+			printk(KERN_WARNING
+			       "Xenomai: non-shadow %s[%d] was denied a real-time call\n",
+			       current->comm, current->pid);
+		__xn_error_return(regs, -EPERM);
+		goto ret_handled;
+	}
+
+	if ((sysflags & __xn_exec_conforming) != 0)
+		/* If the conforming exec bit has been set, turn the exec
+		   bitmask for the syscall into the most appropriate setup for
+		   the caller, i.e. Xenomai domain for shadow threads, Linux
+		   otherwise. */
+		sysflags |= (thread ? __xn_exec_histage : __xn_exec_lostage);
+
+	/*
+	 * Here we have to dispatch the syscall execution properly,
+	 * depending on:
+	 *
+	 * o Whether the syscall must be run into the Linux or Xenomai
+	 * domain, or indifferently in the current Xenomai domain.
+	 *
+	 * o Whether the caller currently runs in the Linux or Xenomai
+	 * domain.
+	 */
+
+	switched = 0;
+
+restart:
+	/*
+	 * Process adaptive syscalls by restarting them in the
+	 * opposite domain.
+	 */
+	if ((sysflags & __xn_exec_lostage) != 0) {
+		/* Syscall must run into the Linux domain. */
+
+		if (ipd == &rthal_archdata.domain) {
+			/*
+			 * Request originates from the Xenomai domain:
+			 * just relax the caller and execute the
+			 * syscall immediately after.
+			 */
+			xnshadow_relax(1, SIGDEBUG_MIGRATE_SYSCALL);
+			switched = 1;
+		} else
+			/*
+			 * Request originates from the Linux domain:
+			 * propagate the event to our Linux-based
+			 * handler, so that the syscall is executed
+			 * from there.
+			 */
+			goto propagate_syscall;
+	} else if ((sysflags & (__xn_exec_histage | __xn_exec_current)) != 0) {
+		/*
+		 * Syscall must be processed either by Xenomai, or by
+		 * the calling domain.
+		 */
+		if (ipd != &rthal_archdata.domain)
+			/*
+			 * Request originates from the Linux domain:
+			 * propagate the event to our Linux-based
+			 * handler, so that the caller is hardened and
+			 * the syscall is eventually executed from
+			 * there.
+			 */
+			goto propagate_syscall;
+		/*
+		 * Request originates from the Xenomai domain: run the
+		 * syscall immediately.
+		 */
+	}
+
+	err = se->svc(__xn_reg_arglist(regs));
+	if (err == -ENOSYS && (sysflags & __xn_exec_adaptive) != 0) {
+		if (switched) {
+			switched = 0;
+
+			if ((err = xnshadow_harden()) != 0)
+				goto done;
+		}
+
+		sysflags ^=
+		    (__xn_exec_lostage | __xn_exec_histage |
+		     __xn_exec_adaptive);
+		goto restart;
+	}
+
+      done:
+
+	__xn_status_return(regs, err);
+
+	sigs = 0;
+	if (xnpod_shadow_p()) {
+		if (signal_pending(current) ||
+		    xnthread_test_info(thread, XNKICKED)) {
+			sigs = 1;
+			request_syscall_restart(thread, regs, sysflags);
+		} else if (xnthread_test_state(thread, XNOTHER) &&
+			   xnthread_get_rescnt(thread) == 0) {
+			if (switched)
+				switched = 0;
+			else
+				xnshadow_relax(0, 0);
+		}
+	}
+	if (!sigs && (sysflags & __xn_exec_switchback) != 0 && switched)
+		xnshadow_harden();	/* -EPERM will be trapped later if needed. */
+
+      ret_handled:
+
+	/* Update the stats and userland-visible state. */
+	if (thread) {
+		xnstat_counter_inc(&thread->stat.xsc);
+		*thread->u_mode = thread->state;
+	}
+
+	trace_mark(xn_nucleus, syscall_histage_exit,
+		   "ret %ld", __xn_reg_rval(regs));
+	return EVENT_STOP;
+
+      linux_syscall:
+
+	if (xnpod_root_p())
+		/*
+		 * The call originates from the Linux domain, either
+		 * from a relaxed shadow or from a regular Linux task;
+		 * just propagate the event so that we will fall back
+		 * to linux_sysentry().
+		 */
+		goto propagate_syscall;
+
+	/*
+	 * From now on, we know that we have a valid shadow thread
+	 * pointer.
+	 */
+	if (substitute_linux_syscall(regs))
+		/*
+		 * This is a Linux syscall issued on behalf of a
+		 * shadow thread running inside the Xenomai
+		 * domain. This call has just been intercepted by the
+		 * nucleus and a Xenomai replacement has been
+		 * substituted for it.
+		 */
+		goto ret_handled;
+
+	/*
+	 * This syscall has not been substituted, let Linux handle
+	 * it. This will eventually fall back to the Linux syscall
+	 * handler if our Linux domain handler does not intercept
+	 * it. Before we let it go, ensure that the current thread has
+	 * properly entered the Linux domain.
+	 */
+	xnshadow_relax(1, SIGDEBUG_MIGRATE_SYSCALL);
+
+	goto propagate_syscall;
+
+      no_skin:
+
+	if (__xn_reg_mux_p(regs)) {
+		if (__xn_reg_mux(regs) == __xn_mux_code(0, sc_nucleus_bind))
+			/*
+			 * Valid exception case: we may be called to
+			 * bind to a skin which will create its own
+			 * pod through its callback routine before
+			 * returning to user-space.
+			 */
+			goto propagate_syscall;
+
+		xnlogwarn("bad syscall %ld/%ld -- no skin loaded.\n",
+			  __xn_mux_id(regs), __xn_mux_op(regs));
+
+		__xn_error_return(regs, -ENOSYS);
+		return EVENT_STOP;
+	}
+
+	/*
+	 * Regular Linux syscall with no skin loaded -- propagate it
+	 * to the Linux kernel.
+	 */
+
+      propagate_syscall:
+
+	return EVENT_PROPAGATE;
+}
+
+static int handle_root_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
+{
+	int muxid, muxop, sysflags, switched, err, sigs;
+	xnthread_t *thread = xnshadow_current();
+	struct xnsysent *se;
+
+	if (__xn_reg_mux_p(regs))
+		goto xenomai_syscall;
+
+	if (thread == NULL || !substitute_linux_syscall(regs))
+		/* Fall back to Linux syscall handling. */
+		return EVENT_PROPAGATE;
+
+	/*
+	 * This is a Linux syscall issued on behalf of a shadow thread
+	 * running inside the Linux domain. If the call has been
+	 * substituted with a Xenomai replacement, do not let Linux know
+	 * about it.
+	 */
+	return EVENT_STOP;
+
+      xenomai_syscall:
+
+	/* muxid and muxop have already been checked in the Xenomai domain
+	   handler. */
+
+	if (thread)
+		thread->regs = regs;
+
+	muxid = __xn_mux_id(regs);
+	muxop = __xn_mux_op(regs);
+
+	trace_mark(xn_nucleus, syscall_lostage_entry,
+		   "thread %p thread_name %s muxid %d muxop %d",
+		   xnpod_active_p() ? xnpod_current_thread() : NULL,
+		   xnpod_active_p() ? xnthread_name(xnpod_current_thread()) : NULL,
+		   muxid, muxop);
+
+	/* Processing a real-time skin syscall. */
+
+	se = &skins[muxid].props->systab[muxop];
+	sysflags = se->flags;
+
+	if ((sysflags & __xn_exec_conforming) != 0)
+		sysflags |= (thread ? __xn_exec_histage : __xn_exec_lostage);
+
+restart:
+	/*
+	 * Process adaptive syscalls by restarting them in the
+	 * opposite domain.
+	 */
+	if ((sysflags & __xn_exec_histage) != 0) {
+		/*
+		 * This request originates from the Linux domain and
+		 * must be run into the Xenomai domain: harden the
+		 * caller and execute the syscall.
+		 */
+		if ((err = xnshadow_harden()) != 0) {
+			__xn_error_return(regs, err);
+			goto ret_handled;
+		}
+
+		switched = 1;
+	} else			/* We want to run the syscall in the Linux domain.  */
+		switched = 0;
+
+	err = se->svc(__xn_reg_arglist(regs));
+	if (err == -ENOSYS && (sysflags & __xn_exec_adaptive) != 0) {
+		if (switched) {
+			switched = 0;
+			xnshadow_relax(1, SIGDEBUG_MIGRATE_SYSCALL);
+		}
+
+		sysflags ^=
+		    (__xn_exec_lostage | __xn_exec_histage |
+		     __xn_exec_adaptive);
+		goto restart;
+	}
+
+	__xn_status_return(regs, err);
+
+	sigs = 0;
+	if (xnpod_active_p() && xnpod_shadow_p()) {
+		/*
+		 * We may have gained a shadow TCB from the syscall we
+		 * just invoked, so make sure to fetch it.
+		 */
+		thread = xnshadow_current();
+		if (signal_pending(current)) {
+			sigs = 1;
+			request_syscall_restart(thread, regs, sysflags);
+		} else if (xnthread_test_state(thread, XNOTHER) &&
+			   xnthread_get_rescnt(thread) == 0)
+			sysflags |= __xn_exec_switchback;
+	}
+	if (!sigs && (sysflags & __xn_exec_switchback) != 0
+	    && (switched || xnpod_primary_p()))
+		xnshadow_relax(0, 0);
+
+      ret_handled:
+
+	/* Update the stats and userland-visible state. */
+	if (thread) {
+		xnstat_counter_inc(&thread->stat.xsc);
+		*thread->u_mode = thread->state;
+	}
+
+	trace_mark(xn_nucleus, syscall_lostage_exit,
+		   "ret %ld", __xn_reg_rval(regs));
+
+	return EVENT_STOP;
+}
+
+int ipipe_syscall_hook(struct ipipe_domain *ipd, struct pt_regs *regs)
+{
+	if (unlikely(ipipe_root_p))
+		return handle_root_syscall(ipd, regs);
+
+	return handle_head_syscall(ipd, regs);
+}
+
+static int handle_taskexit_event(struct task_struct *p) /* p == current */
+{
+	struct xnsys_ppd *sys_ppd;
+	xnthread_t *thread;
+	spl_t s;
+
+	thread = xnshadow_current();
+	if (thread == NULL)
+		return EVENT_PROPAGATE;
+
+	XENO_BUGON(NUCLEUS, !xnpod_root_p());
+
+	if (xnthread_test_state(thread, XNDEBUG))
+		unlock_timers();
+
+	xnlock_get_irqsave(&nklock, s);
+	destroy_threadinfo();
+	/* Prevent wakeup call from xnshadow_unmap(). */
+	xnthread_archtcb(thread)->user_task = NULL;
+	/* xnpod_delete_thread() -> hook -> xnshadow_unmap(). */
+	xnsched_set_resched(thread->sched);
+	xnpod_delete_thread(thread);
+	sys_ppd = xnsys_ppd_get(0);
+	xnlock_put_irqrestore(&nklock, s);
+	xnpod_schedule();
+
+	if (!xnarch_atomic_get(&sys_ppd->refcnt))
+		ppd_remove_mm(xnshadow_current_mm(), &detach_ppd);
+
+	trace_mark(xn_nucleus, shadow_exit, "thread %p thread_name %s",
+		   thread, xnthread_name(thread));
+
+	return EVENT_PROPAGATE;
+}
+
+static int handle_schedule_event(struct task_struct *next_task)
+{
+	struct task_struct *prev_task;
+	struct xnthread *prev, *next;
+	sigset_t pending;
+
+	if (!xnpod_active_p())
+		return EVENT_PROPAGATE;
+
+	prev_task = current;
+	prev = xnshadow_thread(prev_task);
+	next = xnshadow_thread(next_task);
+	if (next) {
+		/*
+		 * Check whether we need to unlock the timers, each
+		 * time a Linux task resumes from a stopped state,
+		 * excluding tasks resuming shortly for entering a
+		 * stopped state asap due to ptracing. To identify the
+		 * latter, we need to check for SIGSTOP and SIGINT in
+		 * order to encompass both the NPTL and LinuxThreads
+		 * behaviours.
+		 */
+		if (xnthread_test_state(next, XNDEBUG)) {
+			if (signal_pending(next_task)) {
+				/*
+				 * Do not grab the sighand lock here:
+				 * it's useless, and we already own
+				 * the runqueue lock, so this would
+				 * expose us to deadlock situations on
+				 * SMP.
+				 */
+				sigorsets(&pending,
+					  &next_task->pending.signal,
+					  &next_task->signal->shared_pending.signal);
+				if (sigismember(&pending, SIGSTOP) ||
+				    sigismember(&pending, SIGINT))
+					goto no_ptrace;
+			}
+			xnthread_clear_state(next, XNDEBUG);
+			unlock_timers();
+		}
+
+	      no_ptrace:
+
+		if (XENO_DEBUG(NUCLEUS)) {
+			int sigpending = signal_pending(next_task);
+
+			if (!xnthread_test_state(next, XNRELAX)) {
+				xnarch_trace_panic_freeze();
+				show_stack(xnthread_user_task(next), NULL);
+				xnpod_fatal
+				    ("Hardened thread %s[%d] running in Linux"" domain?! (status=0x%lx, sig=%d, prev=%s[%d])",
+				     next->name, next_task->pid, xnthread_state_flags(next),
+				     sigpending, prev_task->comm, prev_task->pid);
+			} else if (!(next_task->ptrace & PT_PTRACED) &&
+				   /* Allow ptraced threads to run shortly in order to
+				      properly recover from a stopped state. */
+				   xnthread_test_state(next, XNSTARTED)
+				   && xnthread_test_state(next, XNPEND)) {
+				xnarch_trace_panic_freeze();
+				show_stack(xnthread_user_task(next), NULL);
+				xnpod_fatal
+				    ("blocked thread %s[%d] rescheduled?! (status=0x%lx, sig=%d, prev=%s[%d])",
+				     next->name, next_task->pid, xnthread_state_flags(next),
+				     sigpending, prev_task->comm, prev_task->pid);
+			}
+		}
+	}
+
+	return EVENT_PROPAGATE;
+}
+
+static int handle_sigwake_event(struct task_struct *p)
+{
+	struct xnthread *thread;
+	sigset_t pending;
+	spl_t s;
+
+	thread = xnshadow_thread(p);
+	if (thread == NULL)
+		return EVENT_PROPAGATE;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	if ((p->ptrace & PT_PTRACED) && !xnthread_test_state(thread, XNDEBUG)) {
+		/* We already own the siglock. */
+		sigorsets(&pending,
+			  &p->pending.signal,
+			  &p->signal->shared_pending.signal);
+
+		if (sigismember(&pending, SIGTRAP) ||
+		    sigismember(&pending, SIGSTOP)
+		    || sigismember(&pending, SIGINT)) {
+			xnthread_set_state(thread, XNDEBUG);
+			lock_timers();
+		}
+	}
+
+	if (xnthread_test_state(thread, XNRELAX)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EVENT_PROPAGATE;
+	}
+
+	/*
+	 * If kicking a shadow thread in primary mode, make sure Linux
+	 * won't schedule in its mate under our feet as a result of
+	 * running signal_wake_up(). The Xenomai scheduler must remain
+	 * in control for now, until we explicitly relax the shadow
+	 * thread to allow for processing the pending signals. Make
+	 * sure we keep the additional state flags unmodified so that
+	 * we don't break any undergoing ptrace.
+	 */
+	if (p->state & (TASK_INTERRUPTIBLE|TASK_UNINTERRUPTIBLE))
+		set_task_state(p, p->state | TASK_NOWAKEUP);
+
+	xnshadow_force_wakeup(thread);
+
+	xnpod_schedule();
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return EVENT_PROPAGATE;
+}
+
+static int handle_cleanup_event(struct mm_struct *mm)
+{
+	struct xnsys_ppd *sys_ppd;
+	struct mm_struct *old;
+
+	old = xnshadow_swap_mm(mm);
+
+	sys_ppd = xnsys_ppd_get(0);
+	if (sys_ppd != &__xnsys_global_ppd) {
+		if (xnarch_atomic_dec_and_test(&sys_ppd->refcnt))
+			ppd_remove_mm(mm, &detach_ppd);
+	}
+
+	xnshadow_swap_mm(old);
+
+	return EVENT_PROPAGATE;
+}
+
+#ifdef CONFIG_XENO_OPT_HOSTRT
+
+static IPIPE_DEFINE_SPINLOCK(__hostrtlock);
+
+static int handle_hostrt_event(struct ipipe_hostrt_data *hostrt)
+{
+	unsigned long flags;
+
+	/*
+	 * The locking strategy is twofold:
+	 * - The spinlock protects against concurrent updates from within the
+	 *   Linux kernel and against preemption by Xenomai
+	 * - The sequence counter is for lockless read-only access.
+	 */
+
+	spin_lock_irqsave(&__hostrtlock, flags);
+
+	xnwrite_seqcount_begin(&nkvdso->hostrt_data.seqcount);
+
+	nkvdso->hostrt_data.live = 1;
+	nkvdso->hostrt_data.cycle_last = hostrt->cycle_last;
+	nkvdso->hostrt_data.mask = hostrt->mask;
+	nkvdso->hostrt_data.mult = hostrt->mult;
+	nkvdso->hostrt_data.shift = hostrt->shift;
+	nkvdso->hostrt_data.wall_time_sec = hostrt->wall_time_sec;
+	nkvdso->hostrt_data.wall_time_nsec = hostrt->wall_time_nsec;
+	nkvdso->hostrt_data.wall_to_monotonic = hostrt->wall_to_monotonic;
+
+	xnwrite_seqcount_end(&nkvdso->hostrt_data.seqcount);
+
+	spin_unlock_irqrestore(&__hostrtlock, flags);
+
+	return EVENT_PROPAGATE;
+}
+
+static inline void init_hostrt(void)
+{
+	xnseqcount_init(&nkvdso->hostrt_data.seqcount);
+	nkvdso->hostrt_data.live = 0;
+}
+
+#else
+
+struct ipipe_hostrt_data;
+
+static inline int handle_hostrt_event(struct ipipe_hostrt_data *hostrt)
+{
+	return EVENT_PROPAGATE;
+}
+
+static inline void init_hostrt(void) { }
+
+#endif
+
+int ipipe_kevent_hook(int kevent, void *data)
+{
+	int ret;
+
+	switch (kevent) {
+	case IPIPE_KEVT_SCHEDULE:
+		ret = handle_schedule_event(data);
+		break;
+	case IPIPE_KEVT_SIGWAKE:
+		ret = handle_sigwake_event(data);
+		break;
+	case IPIPE_KEVT_EXIT:
+		ret = handle_taskexit_event(data);
+		break;
+	case IPIPE_KEVT_CLEANUP:
+		ret = handle_cleanup_event(data);
+		break;
+	case IPIPE_KEVT_HOSTRT:
+		ret = handle_hostrt_event(data);
+		break;
+	default:
+		ret = EVENT_PROPAGATE;
+	}
+
+	return ret;
+}
+
+int ipipe_trap_hook(struct ipipe_trap_data *data)
+{
+	if (data->exception == IPIPE_TRAP_MAYDAY)
+		return handle_mayday_event(data->regs);
+
+	/*
+	 * CAUTION: access faults must be propagated downstream
+	 * whichever domain caused them, so that we don't spuriously
+	 * raise a fatal error when some Linux fixup code is available
+	 * to solve the error condition.
+	 */
+	rthal_archdata.faults[ipipe_processor_id()][data->exception]++;
+	if (xnpod_handle_exception(data))
+		return EVENT_STOP;
+
+	return EVENT_PROPAGATE;
+}
+
 void xnshadow_grab_events(void)
 {
-	unsigned int trapnr;
-
-	/* Trap all faults. */
-	for (trapnr = 0; trapnr < IPIPE_NR_FAULTS; trapnr++)
-		catch_exception(trapnr, handle_exception_event);
-
-	catch_taskexit(handle_taskexit_event);
-	catch_sigwake(handle_sigwake_event);
-	catch_schedule(handle_schedule_event);
-	catch_cleanup(handle_cleanup_event);
-	catch_mayday(handle_mayday_event);
 	init_hostrt();
+	ipipe_set_hooks(ipipe_root_domain, IPIPE_SYSCALL|IPIPE_KEVENT);
+	ipipe_set_hooks(&rthal_archdata.domain,	IPIPE_SYSCALL|IPIPE_TRAP);
 }
 
 void xnshadow_release_events(void)
 {
-	unsigned int trapnr;
-
-	catch_taskexit(NULL);
-	catch_sigwake(NULL);
-	catch_schedule(NULL);
-	catch_cleanup(NULL);
-	catch_mayday(NULL);
-
-	for (trapnr = 0; trapnr < IPIPE_NR_FAULTS; trapnr++)
-		catch_exception(trapnr, NULL);
+	ipipe_set_hooks(&rthal_archdata.domain,	0);
+	ipipe_set_hooks(ipipe_root_domain, 0);
 }
 
 int xnshadow_mount(void)
@@ -2646,13 +2633,7 @@ int xnshadow_mount(void)
 	int cpu, ret;
 
 	sema_init(&completion_mutex, 1);
-	nkthrptd = ipipe_alloc_ptdkey();
-	nkmmptd = ipipe_alloc_ptdkey();
-
-	if (nkthrptd < 0 || nkmmptd < 0) {
-		printk(KERN_ERR "Xenomai: cannot allocate PTD slots\n");
-		return -ENOMEM;
-	}
+	alloc_ptd_key();
 
 	ret = xndebug_init();
 	if (ret)
@@ -2684,10 +2665,6 @@ int xnshadow_mount(void)
 		xnshadow_cleanup();
 		return ret;
 	}
-
-	/* We need to grab these ones right now. */
-	catch_losyscall(handle_losyscall_event);
-	catch_hisyscall(handle_hisyscall_event);
 
 	size = sizeof(xnqueue_t) * PPD_HASH_SIZE;
 	ppd_hash = xnarch_alloc_host_mem(size);
@@ -2722,9 +2699,6 @@ void xnshadow_cleanup(void)
 			       sizeof(xnqueue_t) * PPD_HASH_SIZE);
 	ppd_hash = NULL;
 
-	catch_losyscall(NULL);
-	catch_hisyscall(NULL);
-
 	for_each_online_cpu(cpu) {
 		if (!xnarch_cpu_supported(cpu))
 			continue;
@@ -2736,7 +2710,7 @@ void xnshadow_cleanup(void)
 	}
 
 	rthal_apc_free(lostage_apc);
-	ipipe_free_ptdkey(nkthrptd);
+	free_ptd_key();
 
 	mayday_cleanup_page();
 

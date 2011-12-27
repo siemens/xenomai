@@ -92,35 +92,29 @@ typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
 
 } xnarchtcb_t;
 
-typedef struct xnarch_fltinfo {
-
-	unsigned exception;
-	struct pt_regs *regs;
-
-} xnarch_fltinfo_t;
-
-#define xnarch_fault_regs(fi)	((fi)->regs)
-#define xnarch_fault_trap(fi)   ((unsigned int)(fi)->regs->trap)
-#define xnarch_fault_code(fi)   ((fi)->regs->dar)
-#define xnarch_fault_pc(fi)     ((fi)->regs->nip)
-#define xnarch_fault_pc(fi)     ((fi)->regs->nip)
-/* FIXME: FPU faults ignored by the nanokernel on PPC. */
-#define xnarch_fault_fpu_p(fi)  (0)
-/* The following predicates are only usable over a regular Linux stack
-   context. */
-#define xnarch_fault_pf_p(fi)   ((fi)->exception == IPIPE_TRAP_ACCESS)
+#define xnarch_fault_regs(d)	((d)->regs)
+#define xnarch_fault_trap(d)    ((unsigned int)(d)->regs->trap)
+#define xnarch_fault_code(d)    ((d)->regs->dar)
+#define xnarch_fault_pc(d)      ((d)->regs->nip)
+#define xnarch_fault_pc(d)      ((d)->regs->nip)
+#define xnarch_fault_fpu_p(d)   0
+/*
+ * The following predicates are only usable over a regular Linux stack
+ * context.
+ */
+#define xnarch_fault_pf_p(d)   ((d)->exception == IPIPE_TRAP_ACCESS)
 #ifdef CONFIG_PPC64
-#define xnarch_fault_bp_p(fi)   ((current->ptrace & PT_PTRACED) && \
-				 ((fi)->exception == IPIPE_TRAP_IABR || \
-				  (fi)->exception == IPIPE_TRAP_SSTEP))
+#define xnarch_fault_bp_p(d)   ((current->ptrace & PT_PTRACED) &&	\
+				((d)->exception == IPIPE_TRAP_IABR ||	\
+				 (d)->exception == IPIPE_TRAP_SSTEP))
 #else /* !CONFIG_PPC64 */
-#define xnarch_fault_bp_p(fi)   ((current->ptrace & PT_PTRACED) && \
-				 ((fi)->exception == IPIPE_TRAP_IABR || \
-				  (fi)->exception == IPIPE_TRAP_SSTEP || \
-				  (fi)->exception == IPIPE_TRAP_DEBUG))
+#define xnarch_fault_bp_p(d)   ((current->ptrace & PT_PTRACED) &&	\
+				((d)->exception == IPIPE_TRAP_IABR ||	\
+				 (d)->exception == IPIPE_TRAP_SSTEP ||	\
+				 (d)->exception == IPIPE_TRAP_DEBUG))
 #endif /* CONFIG_PPC64 */
 
-#define xnarch_fault_notify(fi) (!xnarch_fault_bp_p(fi))
+#define xnarch_fault_notify(d) (!xnarch_fault_bp_p(d))
 
 #ifdef __cplusplus
 extern "C" {

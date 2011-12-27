@@ -173,24 +173,24 @@ static inline int xnarch_escalate(void)
 	 * braindamage stuff we need to do for this arch, i.e. deferring
 	 * Xenomai's rescheduling procedure whenever:
 
-	 * 1. ILAT tells us that a deferred syscall (EVT15) is pending, so
-	 * that we don't later execute this syscall over the wrong thread
-	 * context. This could happen whenever a user-space task (plain or
-	 * Xenomai) gets preempted by a high priority interrupt right
-	 * after the deferred syscall event is raised (EVT15) but before
-	 * the evt_system_call ISR could run. In case of deferred Xenomai
-	 * rescheduling, the pending rescheduling opportunity will be
-	 * checked at the beginning of Xenomai's do_hisyscall_event which
-	 * intercepts any incoming syscall, and we know it will happen
-	 * shortly after.
+	 * 1. ILAT tells us that a deferred syscall (EVT15) is
+	 * pending, so that we don't later execute this syscall over
+	 * the wrong thread context. This could happen whenever a
+	 * user-space task (plain or Xenomai) gets preempted by a high
+	 * priority interrupt right after the deferred syscall event
+	 * is raised (EVT15) but before the evt_system_call ISR could
+	 * run. In case of deferred Xenomai rescheduling, the pending
+	 * rescheduling opportunity will be checked at the beginning
+	 * of Xenomai's handle_head_syscall() which intercepts any
+	 * incoming syscall, and we know it will happen shortly after.
 	 *
 	 * 2. the context we will switch back to belongs to the Linux
-	 * kernel code, so that we don't inadvertently cause the CPU to
-	 * switch to user operating mode as a result of returning from an
-	 * interrupt stack frame over the incoming thread through RTI. In
-	 * the latter case, the preempted kernel code will be diverted
-	 * shortly before resumption in order to run the rescheduling
-	 * procedure (see __ipipe_irq_tail_hook).
+	 * kernel code, so that we don't inadvertently cause the CPU
+	 * to switch to user operating mode as a result of returning
+	 * from an interrupt stack frame over the incoming thread
+	 * through RTI. In the latter case, the preempted kernel code
+	 * will be diverted shortly before resumption in order to run
+	 * the rescheduling procedure (see __ipipe_irq_tail_hook).
 	 */
 
 	if (rthal_defer_switch_p()) {
@@ -199,7 +199,7 @@ static inline int xnarch_escalate(void)
 	}
 
 	if (ipipe_current_domain == ipipe_root_domain) {
-		ipipe_trigger_irq(xnarch_escalation_virq);
+		ipipe_raise_irq(xnarch_escalation_virq);
 		__ipipe_unlock_root();
 		return 1;
 	}

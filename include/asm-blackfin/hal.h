@@ -64,7 +64,7 @@ static inline unsigned long long rthal_rdtsc(void)
 static inline void rthal_timer_program_shot(unsigned long delay)
 {
 	if (delay < 2)
-		__ipipe_schedule_irq_head(RTHAL_TIMER_IRQ);
+		ipipe_post_irq_head(RTHAL_TIMER_IRQ);
 	else {
 		bfin_write_TCNTL(TMPWR);
 		CSYNC();

@@ -29,10 +29,6 @@
 #define XNSHADOW_CLIENT_ATTACH  0
 #define XNSHADOW_CLIENT_DETACH  1
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 struct xnthread;
 struct xnmutex;
 struct pt_regs;
@@ -46,6 +42,32 @@ struct xnskin_props {
 	void *(*eventcb)(int, void *);
 	struct xnsysent *systab;
 };
+
+static inline struct xnthread *xnshadow_current(void)
+{
+	return ipipe_current_threadinfo()->thread;
+}
+
+static inline struct xnthread *xnshadow_thread(struct task_struct *p)
+{
+	return ipipe_task_threadinfo(p)->thread;
+}
+
+static inline struct mm_struct *xnshadow_current_mm(void)
+{
+	return ipipe_current_threadinfo()->mm;
+}
+
+static inline struct mm_struct *xnshadow_swap_mm(struct mm_struct *mm)
+{
+	struct ipipe_threadinfo *p = ipipe_current_threadinfo();
+	struct mm_struct *oldmm;
+
+	oldmm = p->mm;
+	p->mm = mm;
+
+	return oldmm;
+}
 
 int xnshadow_mount(void);
 
@@ -92,9 +114,5 @@ void xnshadow_call_mayday(struct xnthread *thread, int sigtype);
 void xnshadow_kick(struct xnthread *thread);
 
 void xnshadow_demote(struct xnthread *thread);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* !_XENO_NUCLEUS_SHADOW_H */

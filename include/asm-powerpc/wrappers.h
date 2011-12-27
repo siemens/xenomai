@@ -26,6 +26,10 @@
 
 #include <linux/version.h>
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0)
+#error "Linux kernel 3.0 or above required for this architecture"
+#endif
+
 #define wrap_strncpy_from_user(dstP, srcP, n)	__strncpy_from_user(dstP, srcP, n)
 
 #define wrap_phys_mem_prot(filp,pfn,size,prot) \
@@ -41,7 +45,6 @@
 #endif /* !CONFIG_PPC64 */
 
 #include <asm-generic/xenomai/wrappers.h>	/* Read the generic portion. */
-#include <linux/interrupt.h>
 
 /* from linux/include/asm-powerpc/uaccess.h */
 #define wrap_get_user(x, ptr)					\
@@ -67,49 +70,9 @@
 	__pu_err;						\
 })
 
-#define rthal_irq_desc_status(irq)	(rthal_irq_descp(irq)->status)
-#define __ipipe_irq_handlerp(irq)		rthal_irq_descp(irq)->chip
-typedef irq_handler_t rthal_irq_host_handler_t;
-
-#if !defined(CONFIG_GENERIC_HARDIRQS) \
-	|| LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)
-#define rthal_irq_chip_enable(irq)					\
-	({								\
-		int __err__ = 0;					\
-		if (unlikely(__ipipe_irq_handlerp(irq)->unmask == NULL))	\
-			__err__ = -ENODEV;				\
-		else							\
-			__ipipe_irq_handlerp(irq)->unmask(irq);		\
-		__err__;						\
-	})
-
-#define rthal_irq_chip_disable(irq)					\
-	({								\
-		int __err__ = 0;					\
-		if (__ipipe_irq_handlerp(irq)->mask == NULL)		\
-			__err__ = -ENODEV;				\
-		else							\
-			__ipipe_irq_handlerp(irq)->mask(irq);		\
-		__err__;						\
-	})
-
-#endif
-
-#define rthal_irq_chip_end(irq)						\
-	({ rthal_irq_descp(irq)->ipipe_end(irq, rthal_irq_descp(irq)); 0; })
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
-#define mpc5xxx_get_bus_frequency(node)	mpc52xx_find_ipb_freq(node)
-#endif
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36)
 #define of_device platform_device
-#endif
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,0,0)
 #define of_platform_driver platform_driver
 #define of_register_platform_driver platform_driver_register
 #define of_unregister_platform_driver platform_driver_unregister
-#endif
 
 #endif /* _XENO_ASM_POWERPC_WRAPPERS_H */

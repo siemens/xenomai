@@ -74,26 +74,19 @@ typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
 
 } xnarchtcb_t;
 
-typedef struct xnarch_fltinfo {
-
-    unsigned exception;
-    struct pt_regs *regs;
-
-} xnarch_fltinfo_t;
-
-#define xnarch_fault_trap(fi)   ((fi)->exception)
-#define xnarch_fault_code(fi)   (0) /* None on this arch. */
-#define xnarch_fault_pc(fi)     ((fi)->regs->ea)
-#define xnarch_fault_fpu_p(fi)  (0) /* Can't be. */
+#define xnarch_fault_trap(d)   ((d)->exception)
+#define xnarch_fault_code(d)   (0) /* None on this arch. */
+#define xnarch_fault_pc(d)     ((d)->regs->ea)
+#define xnarch_fault_fpu_p(d)  (0) /* Can't be. */
 /*
  * The following predicates are only usable over a regular Linux stack
  * context.
  */
-#define xnarch_fault_pf_p(fi)   (0) /* No page faults. */
-#define xnarch_fault_bp_p(fi)   ((current->ptrace & PT_PTRACED) &&	\
-				 ((fi)->exception == IPIPE_TRAP_BP))
+#define xnarch_fault_pf_p(d)   (0) /* No page faults. */
+#define xnarch_fault_bp_p(d)   ((current->ptrace & PT_PTRACED) &&	\
+				((d)->exception == IPIPE_TRAP_BP))
 
-#define xnarch_fault_notify(fi) (!xnarch_fault_bp_p(fi))
+#define xnarch_fault_notify(d) (!xnarch_fault_bp_p(d))
 
 #ifdef __cplusplus
 extern "C" {

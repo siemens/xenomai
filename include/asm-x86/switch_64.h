@@ -72,7 +72,7 @@ struct xnarch_x8664_initstack {
 	"popq	%%r8\n\t"						\
 	"movq %%r8,"__percpu_arg([gs_canary])"\n\t"
 #define xeno_init_canary_oparam						\
-	[gs_canary] "=m" (per_cpu_var(irq_stack_union.stack_canary))
+	[gs_canary] "=m" (irq_stack_union.stack_canary)
 #define xeno_switch_canary_setup(c)					\
 	register long __kcanary __asm__ ("r8") = (c)
 #define xeno_switch_kernel_prologue					\
@@ -87,10 +87,10 @@ struct xnarch_x8664_initstack {
 	"movq %P[user_canary](%%rsi),%%r8\n\t"				\
 	"movq %%r8,"__percpu_arg([gs_canary])"\n\t"
 #define xeno_switch_canary_oparam					\
-	, [gs_canary] "=m" (per_cpu_var(irq_stack_union.stack_canary))
+	, [gs_canary] "=m" (irq_stack_union.stack_canary)
 #define xeno_switch_canary_iparam					\
 	, [user_canary] "i" (offsetof(struct task_struct, stack_canary)) \
-	, [current_task] "m" (per_cpu_var(current_task))		\
+	, [current_task] "m" (current_task)				\
 	, "r" (__kcanary)
 #define __SWITCH_CLOBBER_LIST  , "r9", "r10", "r11", "r12", "r13", "r14", "r15"
 #define __HEAD_CLOBBER_LIST    , "rdi", "r8"

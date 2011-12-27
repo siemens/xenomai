@@ -44,21 +44,22 @@ int rthal_timer_request(void (*tick_handler) (void), int cpu)
 {
 	int ret;
 
-	ret = rthal_irq_request(RTHAL_TIMER_IRQ,
+	ret = ipipe_request_irq(&rthal_archdata.domain,
+				RTHAL_TIMER_IRQ,
 				(ipipe_irq_handler_t)tick_handler,
 				NULL, NULL);
 	if (ret)
 		return ret;
 
-	rthal_irq_enable(RTHAL_TIMER_IRQ);
+	ipipe_enable_irq(RTHAL_TIMER_IRQ);
 
 	return 0;
 }
 
 void rthal_timer_release(int cpu)
 {
-	rthal_irq_disable(RTHAL_TIMER_IRQ);
-	rthal_irq_release(RTHAL_TIMER_IRQ);
+	ipipe_disable_irq(RTHAL_TIMER_IRQ);
+	ipipe_free_irq(&rthal_archdata.domain, RTHAL_TIMER_IRQ);
 }
 
 unsigned long rthal_timer_calibrate(void)

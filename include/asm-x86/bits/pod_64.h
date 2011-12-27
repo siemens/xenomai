@@ -327,7 +327,7 @@ static inline int xnarch_escalate(void)
 	extern int xnarch_escalation_virq;
 
 	if (ipipe_current_domain == ipipe_root_domain) {
-		ipipe_trigger_irq(xnarch_escalation_virq);
+		ipipe_raise_irq(xnarch_escalation_virq);
 		return 1;
 	}
 

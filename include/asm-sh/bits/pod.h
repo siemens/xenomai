@@ -48,7 +48,7 @@ static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
 
 	rootcb->user_task = rootcb->active_task = p;
 	rootcb->tsp = &p->thread;
-	rootcb->mm = rootcb->active_mm = rthal_get_active_mm();
+	rootcb->mm = rootcb->active_mm = ipipe_get_active_mm();
 #ifdef CONFIG_XENO_HW_FPU
 	rootcb->user_fpu_owner = rthal_get_fpu_owner(p);
 	rootcb->fpup = rootcb->user_fpu_owner ?
@@ -189,7 +189,7 @@ static inline int xnarch_escalate(void)
 	extern int xnarch_escalation_virq;
 
 	if (ipipe_current_domain == ipipe_root_domain) {
-		ipipe_trigger_irq(xnarch_escalation_virq);
+		ipipe_raise_irq(xnarch_escalation_virq);
 		return 1;
 	}
 

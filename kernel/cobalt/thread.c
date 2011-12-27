@@ -1335,7 +1335,7 @@ int cobalt_sched_max_prio(int policy)
 
 int cobalt_sched_yield(void)
 {
-	pthread_t thread = thread2pthread(xnshadow_thread(current));
+	pthread_t thread = thread2pthread(xnshadow_current());
 	struct sched_param_ex param;
 	int policy = SCHED_OTHER;
 

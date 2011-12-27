@@ -57,7 +57,7 @@ unsigned long rthal_timer_calibrate(void)
 	rthal_time_t t, dt;
 	int i;
 
-	flags = rthal_critical_enter(NULL);
+	flags = ipipe_critical_enter(NULL);
 
 	t = rthal_rdtsc();
 
@@ -68,7 +68,7 @@ unsigned long rthal_timer_calibrate(void)
 
 	dt = (rthal_rdtsc() - t) / 2;
 
-	rthal_critical_exit(flags);
+	ipipe_critical_exit(flags);
 
 	/*
 	 * Reset the max trace, since it contains the calibration time
@@ -174,7 +174,7 @@ int rthal_timer_request(void (*tick_handler)(void),
 					 struct clock_event_device *cdev),
 			int cpu)
 {
-	int tickval, err;
+	int tickval, ret;
 
 	unsigned long tmfreq;
 
@@ -215,23 +215,24 @@ int rthal_timer_request(void (*tick_handler)(void),
 
 	rthal_timer_set_oneshot();
 
-	err = rthal_irq_request(RTHAL_TIMER_IRQ,
-				(ipipe_irq_handler_t)tick_handler, NULL, NULL);
-
-	return err ?: tickval;
+	ret = ipipe_request_irq(&rthal_archdata.domain,
+				RTHAL_TIMER_IRQ,
+				(ipipe_irq_handler_t)tick_handler,
+				NULL, NULL);
+	return ret ?: tickval;
 }
 
 void rthal_timer_release(int cpu)
 {
 	ipipe_release_tickdev(cpu);
 
-	rthal_irq_release(RTHAL_TIMER_IRQ);
+	ipipe_free_irq(&rthal_archdata.domain, RTHAL_TIMER_IRQ);
 
 	if (rthal_ktimer_saved_mode == KTIMER_MODE_PERIODIC)
 		rthal_timer_set_periodic();
 	else if (rthal_ktimer_saved_mode == KTIMER_MODE_ONESHOT)
 		/* We need to keep the timing cycle alive for the kernel. */
-		ipipe_trigger_irq(RTHAL_TIMER_IRQ);
+		ipipe_raise_irq(RTHAL_TIMER_IRQ);
 }
 
 #endif /* !CONFIG_X86_LOCAL_APIC */

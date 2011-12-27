@@ -25,39 +25,19 @@
 #endif
 
 #include <asm-generic/xenomai/wrappers.h> /* Read the generic portion. */
-#include <linux/interrupt.h>
-#include <asm/mmu.h>
 
 #define wrap_phys_mem_prot(filp, pfn, size, prot)  \
 	pgprot_noncached(prot)
 
 #define wrap_strncpy_from_user(dstP, srcP, n)	strncpy_from_user(dstP, srcP, n)
 
-#define rthal_irq_desc_status(irq)	(rthal_irq_descp(irq)->status)
-#define __ipipe_irq_handlerp(irq)		rthal_irq_descp(irq)->chip
-#define rthal_irq_chip_end(irq)		({ rthal_irq_descp(irq)->ipipe_end(irq, rthal_irq_descp(irq)); 0; })
+#ifdef CONFIG_XENO_LEGACY_IPIPE
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)
-#define rthal_irq_chip_enable(irq)					\
-	({								\
-		int __err__ = 0;					\
-		if (unlikely(__ipipe_irq_handlerp(irq)->unmask == NULL))	\
-			__err__ = -ENODEV;				\
-		else							\
-			__ipipe_irq_handlerp(irq)->unmask(irq);		\
-		__err__;						\
-	})
-#define rthal_irq_chip_disable(irq)					\
-	({								\
-		int __err__ = 0;					\
-		if (__ipipe_irq_handlerp(irq)->mask == NULL)		\
-			__err__ = -ENODEV;				\
-		else							\
-			__ipipe_irq_handlerp(irq)->mask(irq);		\
-		__err__;						\
-	})
+#define ipipe_enable_irq(irq)   irq_to_desc(irq)->chip->unmask(irq)
+#define ipipe_disable_irq(irq)  irq_to_desc(irq)->chip->mask(irq)
 #endif
 
-typedef irq_handler_t rthal_irq_host_handler_t;
+#endif /* CONFIG_XENO_LEGACY_IPIPE */
 
 #endif /* _XENO_ASM_SH_WRAPPERS_H */

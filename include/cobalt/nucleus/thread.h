@@ -310,6 +310,9 @@ typedef struct xnthread {
 
     XNARCH_DECL_DISPLAY_CONTEXT();
 
+#ifdef CONFIG_XENO_LEGACY_IPIPE
+	struct ipipe_threadinfo ipipe_data;
+#endif
 } xnthread_t;
 
 #define XNHOOK_THREAD_START  1

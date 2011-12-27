@@ -50,6 +50,8 @@
 #define DBG(fmt...)
 #endif
 
+static volatile int sync_op;
+
 enum rthal_ktimer_mode rthal_ktimer_saved_mode;
 
 #define RTHAL_SET_ONESHOT_XENOMAI	1
@@ -78,11 +80,11 @@ static inline void rthal_setup_periodic_dec(void)
 #endif /* CONFIG_40x */
 }
 
-#ifdef CONFIG_SMP
 
-static void rthal_critical_sync(void)
+static void critical_sync(void)
 {
-	switch (rthal_archdata.sync_op) {
+#ifdef CONFIG_SMP
+	switch (sync_op) {
 	case RTHAL_SET_ONESHOT_XENOMAI:
 		rthal_setup_oneshot_dec();
 		rthal_disarm_decr(1);
@@ -92,7 +94,7 @@ static void rthal_critical_sync(void)
 		rthal_setup_oneshot_dec();
 		rthal_disarm_decr(0);
 		/* We need to keep the timing cycle alive for the kernel. */
-		ipipe_trigger_irq(RTHAL_TIMER_IRQ);
+		ipipe_raise_irq(RTHAL_TIMER_IRQ);
 		break;
 
 	case RTHAL_SET_PERIODIC:
@@ -100,44 +102,37 @@ static void rthal_critical_sync(void)
 		rthal_disarm_decr(0);
 		break;
 	}
+#endif
 }
-
-#else /* CONFIG_SMP */
-
-static void rthal_critical_sync(void)
-{
-}
-
-#endif /* !CONFIG_SMP */
 
 static void rthal_timer_set_oneshot(int rt_mode)
 {
 	unsigned long flags;
 
-	flags = rthal_critical_enter(rthal_critical_sync);
+	flags = ipipe_critical_enter(critical_sync);
 	if (rt_mode) {
-		rthal_archdata.sync_op = RTHAL_SET_ONESHOT_XENOMAI;
+		sync_op = RTHAL_SET_ONESHOT_XENOMAI;
 		rthal_setup_oneshot_dec();
 		rthal_disarm_decr(1);
 	} else {
-		rthal_archdata.sync_op = RTHAL_SET_ONESHOT_LINUX;
+		sync_op = RTHAL_SET_ONESHOT_LINUX;
 		rthal_setup_oneshot_dec();
 		rthal_disarm_decr(0);
 		/* We need to keep the timing cycle alive for the kernel. */
-		ipipe_trigger_irq(RTHAL_TIMER_IRQ);
+		ipipe_raise_irq(RTHAL_TIMER_IRQ);
 	}
-	rthal_critical_exit(flags);
+	ipipe_critical_exit(flags);
 }
 
 static void rthal_timer_set_periodic(void)
 {
 	unsigned long flags;
 
-	flags = rthal_critical_enter(&rthal_critical_sync);
-	rthal_archdata.sync_op = RTHAL_SET_PERIODIC;
+	flags = ipipe_critical_enter(critical_sync);
+	sync_op = RTHAL_SET_PERIODIC;
 	rthal_setup_periodic_dec();
 	rthal_disarm_decr(0);
-	rthal_critical_exit(flags);
+	ipipe_critical_exit(flags);
 }
 
 static int cpu_timers_requested;
@@ -150,7 +145,7 @@ int rthal_timer_request(void (*tick_handler)(void),
 			int cpu)
 {
 	unsigned long dummy, *tmfreq = &dummy;
-	int tickval, err, res;
+	int tickval, ret, res;
 
 	if (rthal_timerfreq_arg == 0)
 		tmfreq = &rthal_archdata.timer_freq;
@@ -190,22 +185,23 @@ int rthal_timer_request(void (*tick_handler)(void),
 	if (cpu_timers_requested++ > 0)
 		goto out;
 
-	err = rthal_irq_request(RTHAL_TIMER_IRQ,
-				(ipipe_irq_handler_t) tick_handler,
+	ret = ipipe_request_irq(&rthal_archdata.domain,
+				RTHAL_TIMER_IRQ,
+				(ipipe_irq_handler_t)tick_handler,
 				NULL, NULL);
-	if (err)
-		return err;
+	if (ret)
+		return ret;
 
 #ifdef CONFIG_SMP
-	err = rthal_irq_request(RTHAL_TIMER_IPI,
-				(ipipe_irq_handler_t) tick_handler,
+	ret = ipipe_request_irq(&rthal_archdata.domain,
+				RTHAL_TIMER_IPI,
+				(ipipe_irq_handler_t)tick_handler,
 				NULL, NULL);
-	if (err)
-		return err;
+	if (ret)
+		return ret;
 #endif
 
 	rthal_timer_set_oneshot(1);
-
 out:
 	return tickval;
 }
@@ -218,9 +214,9 @@ void rthal_timer_release(int cpu)
 		return;
 
 #ifdef CONFIG_SMP
-	rthal_irq_release(RTHAL_TIMER_IPI);
+	ipipe_free_irq(&rthal_archdata.domain, RTHAL_TIMER_IPI);
 #endif /* CONFIG_SMP */
-	rthal_irq_release(RTHAL_TIMER_IRQ);
+	ipipe_free_irq(&rthal_archdata.domain, RTHAL_TIMER_IRQ);
 
 	if (rthal_ktimer_saved_mode == KTIMER_MODE_PERIODIC)
 		rthal_timer_set_periodic();

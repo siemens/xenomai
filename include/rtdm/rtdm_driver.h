@@ -902,12 +902,14 @@ static inline int rtdm_irq_free(rtdm_irq_t *irq_handle)
 
 static inline int rtdm_irq_enable(rtdm_irq_t *irq_handle)
 {
-	return xnintr_enable(irq_handle);
+	xnintr_enable(irq_handle);
+	return 0;
 }
 
 static inline int rtdm_irq_disable(rtdm_irq_t *irq_handle)
 {
-	return xnintr_disable(irq_handle);
+	xnintr_disable(irq_handle);
+	return 0;
 }
 #endif /* !DOXYGEN_CPP */
 
@@ -938,12 +940,11 @@ static inline int rtdm_nrtsig_init(rtdm_nrtsig_t *nrt_sig,
 				   rtdm_nrtsig_handler_t handler, void *arg)
 {
 	*nrt_sig = ipipe_alloc_virq();
-
 	if (*nrt_sig == 0)
 		return -EAGAIN;
 
-	ipipe_virtualize_irq(ipipe_root_domain, *nrt_sig, handler, arg, NULL,
-			     IPIPE_HANDLE_MASK);
+	ipipe_request_irq(ipipe_root_domain, *nrt_sig, handler, arg, NULL);
+
 	return 0;
 }
 
@@ -954,7 +955,7 @@ static inline void rtdm_nrtsig_destroy(rtdm_nrtsig_t *nrt_sig)
 
 static inline void rtdm_nrtsig_pend(rtdm_nrtsig_t *nrt_sig)
 {
-	ipipe_trigger_irq(*nrt_sig);
+	ipipe_raise_irq(*nrt_sig);
 }
 #endif /* !DOXYGEN_CPP */
 

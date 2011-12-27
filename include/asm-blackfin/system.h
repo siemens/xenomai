@@ -68,27 +68,22 @@ typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
 
 } xnarchtcb_t;
 
-typedef struct xnarch_fltinfo {
+#define xnarch_fault_regs(d)	((d)->regs)
+#define xnarch_fault_trap(d)    ((d)->exception)
+#define xnarch_fault_code(d)    (0) /* None on this arch. */
+#define xnarch_fault_pc(d)      ((d)->regs->retx)
+#define xnarch_fault_fpu_p(d)   (0) /* Can't be. */
+/*
+ * The following predicates are only usable over a regular Linux stack
+ * context.
+ */
+#define xnarch_fault_pf_p(d)   (0) /* No page faults. */
+#define xnarch_fault_bp_p(d)   ((current->ptrace & PT_PTRACED) &&   \
+				((d)->exception == VEC_STEP ||	    \
+				 (d)->exception == VEC_EXCPT01 ||   \
+				 (d)->exception == VEC_WATCH))
 
-    unsigned exception;
-    struct pt_regs *regs;
-
-} xnarch_fltinfo_t;
-
-#define xnarch_fault_regs(fi)	((fi)->regs)
-#define xnarch_fault_trap(fi)   ((fi)->exception)
-#define xnarch_fault_code(fi)   (0) /* None on this arch. */
-#define xnarch_fault_pc(fi)     ((fi)->regs->retx)
-#define xnarch_fault_fpu_p(fi)  (0) /* Can't be. */
-/* The following predicates are only usable over a regular Linux stack
-   context. */
-#define xnarch_fault_pf_p(fi)   (0) /* No page faults. */
-#define xnarch_fault_bp_p(fi)   ((current->ptrace & PT_PTRACED) && \
-				 ((fi)->exception == VEC_STEP || \
-				  (fi)->exception == VEC_EXCPT01 || \
-				  (fi)->exception == VEC_WATCH))
-
-#define xnarch_fault_notify(fi) (!xnarch_fault_bp_p(fi))
+#define xnarch_fault_notify(d) (!xnarch_fault_bp_p(d))
 
 #ifdef __cplusplus
 extern "C" {
@@ -114,13 +109,13 @@ static inline void xnarch_free_stack_mem(void *chunk, u_long bytes)
 	kfree(chunk);
 }
 
-#define __xnarch_hisyscall_entry()				\
+#define __xnarch_head_syscall_entry()				\
 	do	{						\
 		if (xnsched_resched_p(xnpod_current_sched()))	\
 			xnpod_schedule();			\
 	} while(0)
 
-#define xnarch_hisyscall_entry	__xnarch_hisyscall_entry
+#define xnarch_head_syscall_entry	__xnarch_head_syscall_entry
 
 #ifdef __cplusplus
 }

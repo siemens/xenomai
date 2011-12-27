@@ -171,10 +171,12 @@ void __xnpod_schedule(struct xnsched *sched);
     (xnpod_current_thread() == (thread))
 #else /* !__XENO_SIM__ */
 #define xnpod_current_p(thread)						\
-    ({ int __shadow_p = xnthread_test_state(thread, XNSHADOW);		\
-       int __curr_p = __shadow_p ? xnshadow_thread(current) == thread	\
-	   : thread == xnpod_current_thread();				\
-       __curr_p;})
+	({								\
+		int __shadow_p = xnthread_test_state(thread, XNSHADOW);	\
+		int __curr_p = __shadow_p ? xnshadow_current() == thread \
+			: thread == xnpod_current_thread();		\
+		__curr_p;						\
+	})
 #endif /* !__XENO_SIM__ */
 
 #define xnpod_locked_p() \
@@ -287,6 +289,8 @@ static inline void xnpod_schedule(void)
 void xnpod_lock_sched(void);
 
 void xnpod_unlock_sched(void);
+
+int xnpod_handle_exception(struct ipipe_trap_data *d);
 
 void xnpod_fire_callouts(xnqueue_t *hookq,
 			 xnthread_t *thread);

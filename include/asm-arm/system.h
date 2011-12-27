@@ -48,11 +48,12 @@ typedef struct xnarchtcb {  /* Per-thread arch-dependent block */
 	rthal_fpenv_t fpuenv;
 	rthal_fpenv_t *fpup;	/* Pointer to the FPU backup area */
 	struct task_struct *user_fpu_owner;
-	/* Pointer the the FPU owner in userspace:
-	   - NULL for RT K threads,
-	   - last_task_used_math for Linux US threads (only current or NULL when MP)
-	   - current for RT US threads.
-	*/
+	/*
+	 * Pointer the the FPU owner in userspace:
+	 * - NULL for RT K threads,
+	 * - last_task_used_math for Linux US threads (only current or NULL when MP)
+	 * - current for RT US threads.
+	 */
 	unsigned is_root;
 #define xnarch_fpu_ptr(tcb)	((tcb)->fpup)
 #else /* !CONFIG_XENO_HW_FPU */
@@ -86,24 +87,20 @@ typedef struct xnarchtcb {  /* Per-thread arch-dependent block */
 
 } xnarchtcb_t;
 
-typedef struct xnarch_fltinfo {
-
-	unsigned exception;
-	struct pt_regs *regs;
-
-} xnarch_fltinfo_t;
-
-#define xnarch_fault_regs(fi)	((fi)->regs)
-#define xnarch_fault_trap(fi)	((fi)->exception)
-#define xnarch_fault_code(fi)	(0)
-#define xnarch_fault_pc(fi)	((fi)->regs->ARM_pc - (thumb_mode((fi)->regs) ? 2 : 4)) /* XXX ? */
+#define xnarch_fault_regs(d)	((d)->regs)
+#define xnarch_fault_trap(d)	((d)->exception)
+#define xnarch_fault_code(d)	(0)
+#define xnarch_fault_pc(d)	((d)->regs->ARM_pc - (thumb_mode((d)->regs) ? 2 : 4)) /* XXX ? */
 #ifndef CONFIG_XENO_HW_FPU
-/* It is normal on ARM for user-space support running with a kernel compiled
-   with FPU support to make FPU faults, even on the context of real-time threads
-   which do not otherwise use FPU, so we simply ignore these faults. */
-#define xnarch_fault_fpu_p(fi) (0)
+/*
+ * It is normal on ARM for user-space support running with a kernel
+ * compiled with FPU support to make FPU faults, even on the context
+ * of real-time threads which do not otherwise use FPU, so we simply
+ * ignore these faults.
+ */
+#define xnarch_fault_fpu_p(d) (0)
 #else /* CONFIG_XENO_HW_FPU */
-static inline int xnarch_fault_fpu_p(struct xnarch_fltinfo *fi)
+static inline int xnarch_fault_fpu_p(struct ipipe_trap_data *d)
 {
 	/* This function does the same thing to decode the faulting instruct as
 	   "call_fpe" in arch/arm/entry-armv.S */
@@ -129,21 +126,23 @@ static inline int xnarch_fault_fpu_p(struct xnarch_fltinfo *fi)
 	unsigned instr, exc, cp;
 	char *pc;
 
-	if (fi->exception == IPIPE_TRAP_FPU)
+	if (d->exception == IPIPE_TRAP_FPU)
 		return 1;
 
 #ifdef CONFIG_VFP
-	if (fi->exception == IPIPE_TRAP_VFP)
+	if (d->exception == IPIPE_TRAP_VFP)
 		goto trap_vfp;
 #endif
 
-	/* When an FPU fault occurs in user-mode, it will be properly resolved
-	   before __ipipe_dispatch_event is called. */
-	if (fi->exception != IPIPE_TRAP_UNDEFINSTR || xnarch_fault_um(fi))
+	/*
+	 * When an FPU fault occurs in user-mode, it will be properly
+	 * resolved before __ipipe_report_trap() is called.
+	 */
+	if (d->exception != IPIPE_TRAP_UNDEFINSTR || xnarch_fault_um(d))
 		return 0;
 
-	pc = (char *) xnarch_fault_pc(fi);
-	if (unlikely(thumb_mode(fi->regs))) {
+	pc = (char *) xnarch_fault_pc(d);
+	if (unlikely(thumb_mode(d->regs))) {
 		unsigned short thumbh, thumbl;
 
 		thumbh = *(unsigned short *) pc;
@@ -176,7 +175,7 @@ static inline int xnarch_fault_fpu_p(struct xnarch_fltinfo *fi)
 	/* We need something equivalent to _TIF_USING_IWMMXT for Xenomai kernel
 	   threads */
 	if (cp <= 1) {
-		fi->exception = IPIPE_TRAP_FPU;
+		d->exception = IPIPE_TRAP_FPU;
 		return 1;
 	}
 #endif
@@ -195,17 +194,17 @@ static inline int xnarch_fault_fpu_p(struct xnarch_fltinfo *fi)
 			exc = IPIPE_TRAP_VFP;
 	}
 #endif
-	fi->exception = exc;
+	d->exception = exc;
 	return exc != IPIPE_TRAP_UNDEFINSTR;
 }
 #endif /* CONFIG_XENO_HW_FPU */
 /* The following predicates are only usable over a regular Linux stack
    context. */
-#define xnarch_fault_pf_p(fi)	((fi)->exception == IPIPE_TRAP_ACCESS)
-#define xnarch_fault_bp_p(fi)	((current->ptrace & PT_PTRACED) &&	\
-				 ((fi)->exception == IPIPE_TRAP_BREAK))
+#define xnarch_fault_pf_p(d)	((d)->exception == IPIPE_TRAP_ACCESS)
+#define xnarch_fault_bp_p(d)	((current->ptrace & PT_PTRACED) &&	\
+				 ((d)->exception == IPIPE_TRAP_BREAK))
 
-#define xnarch_fault_notify(fi) (!xnarch_fault_bp_p(fi))
+#define xnarch_fault_notify(d) (!xnarch_fault_bp_p(d))
 
 #ifdef __cplusplus
 extern "C" {

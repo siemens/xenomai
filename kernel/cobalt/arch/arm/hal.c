@@ -44,6 +44,8 @@
 #endif /* CONFIG_PROC_FS */
 #include <stdarg.h>
 
+static volatile int sync_op;
+
 rthal_u32frac_t rthal_tsc_to_timer;
 EXPORT_SYMBOL_GPL(rthal_tsc_to_timer);
 
@@ -95,7 +97,7 @@ unsigned long rthal_timer_calibrate(void)
 	long long diff;
 	int i, j;
 
-	flags = rthal_critical_enter(NULL);
+	flags = ipipe_critical_enter(NULL);
 
 	/*
 	 * Hw interrupts off, other CPUs quiesced, no migration
@@ -131,7 +133,7 @@ unsigned long rthal_timer_calibrate(void)
 
 	restore_normal_hw_mode();
 
-	rthal_critical_exit(flags);
+	ipipe_critical_exit(flags);
 
 	/* Use average + standard deviation as timer programming latency. */
 	do_div(sum, RTHAL_CALIBRATE_LOOPS * RTHAL_CALIBRATE_LOOPS);
@@ -142,9 +144,9 @@ unsigned long rthal_timer_calibrate(void)
 }
 
 #ifdef CONFIG_SMP
-static void rthal_critical_sync(void)
+static void critical_sync(void)
 {
-	switch (rthal_archdata.sync_op) {
+	switch (sync_op) {
 	case RTHAL_SET_ONESHOT_XENOMAI:
 		force_oneshot_hw_mode();
 		steal_timer(1);
@@ -154,7 +156,7 @@ static void rthal_critical_sync(void)
 		force_oneshot_hw_mode();
 		steal_timer(0);
 		/* We need to keep the timing cycle alive for the kernel. */
-		ipipe_trigger_irq(RTHAL_TIMER_IRQ);
+		ipipe_raise_irq(RTHAL_TIMER_IRQ);
 		break;
 
 	case RTHAL_SET_PERIODIC:
@@ -170,29 +172,30 @@ static void rthal_timer_set_oneshot(int rt_mode)
 {
 	unsigned long flags;
 
-	flags = rthal_critical_enter(rthal_critical_sync);
+	flags = ipipe_critical_enter(critical_sync);
+
 	if (rt_mode) {
-		rthal_archdata.sync_op = RTHAL_SET_ONESHOT_XENOMAI;
+		sync_op = RTHAL_SET_ONESHOT_XENOMAI;
 		force_oneshot_hw_mode();
 		steal_timer(1);
 	} else {
-		rthal_archdata.sync_op = RTHAL_SET_ONESHOT_LINUX;
+		sync_op = RTHAL_SET_ONESHOT_LINUX;
 		force_oneshot_hw_mode();
 		steal_timer(0);
 		/* We need to keep the timing cycle alive for the kernel. */
-		ipipe_trigger_irq(RTHAL_TIMER_IRQ);
+		ipipe_raise_irq(RTHAL_TIMER_IRQ);
 	}
-	rthal_critical_exit(flags);
+	ipipe_critical_exit(flags);
 }
 
 static void rthal_timer_set_periodic(void)
 {
 	unsigned long flags;
 
-	flags = rthal_critical_enter(rthal_critical_sync);
-	rthal_archdata.sync_op = RTHAL_SET_PERIODIC;
+	flags = ipipe_critical_enter(critical_sync);
+	sync_op = RTHAL_SET_PERIODIC;
 	restore_normal_hw_mode();
-	rthal_critical_exit(flags);
+	ipipe_critical_exit(flags);
 }
 
 static int cpu_timers_requested;
@@ -247,14 +250,16 @@ int rthal_timer_request(
 	if (cpu_timers_requested++ > 0)
 		goto out;
 
-	ret = rthal_irq_request(RTHAL_TIMER_IRQ,
+	ret = ipipe_request_irq(&rthal_archdata.domain,
+				RTHAL_TIMER_IRQ,
 				(ipipe_irq_handler_t)tick_handler,
 				NULL, NULL);
 	if (ret)
 		return ret;
 
 #ifdef CONFIG_SMP
-	ret = rthal_irq_request(RTHAL_TIMER_IPI,
+	ret = ipipe_request_irq(&rthal_archdata.domain,
+				RTHAL_TIMER_IPI,
 				(ipipe_irq_handler_t)tick_handler,
 				NULL, NULL);
 	if (ret)
@@ -273,9 +278,9 @@ void rthal_timer_release(int cpu)
 	if (--cpu_timers_requested > 0)
 		return;
 
-	rthal_irq_release(RTHAL_TIMER_IRQ);
+	ipipe_free_irq(&rthal_archdata.domain, RTHAL_TIMER_IRQ);
 #ifdef CONFIG_SMP
-	rthal_irq_release(RTHAL_TIMER_IPI);
+	ipipe_free_irq(&rthal_archdata.domain, RTHAL_TIMER_IPI);
 #endif /* CONFIG_SMP */
 
 	if (rthal_ktimer_saved_mode == KTIMER_MODE_PERIODIC)

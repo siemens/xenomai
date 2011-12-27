@@ -1,10 +1,10 @@
 /*
- * Copyright (C) 2001,2002,2003,2004,2005 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright(C) 2001,2002,2003,2004,2005 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ *(at your option) any later version.
  *
  * Xenomai is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -24,48 +24,47 @@
 #error "Pure kernel header included from user-space!"
 #endif
 
-static inline int xnarch_hook_irq (unsigned irq,
-				   ipipe_irq_handler_t handler,
-				   ipipe_irq_ackfn_t ackfn,
-				   void *cookie)
+static inline int xnarch_hook_irq(unsigned int irq,
+				  ipipe_irq_handler_t handler,
+				  ipipe_irq_ackfn_t ackfn,
+				  void *cookie)
 {
-    return rthal_irq_request(irq,handler,ackfn,cookie);
+	return ipipe_request_irq(&rthal_archdata.domain,
+				 irq, handler, cookie, ackfn);
 }
 
-static inline int xnarch_release_irq (unsigned irq)
+static inline void xnarch_release_irq(unsigned int irq)
 {
-    return rthal_irq_release(irq);
+	ipipe_free_irq(&rthal_archdata.domain, irq);
 }
 
-static inline int xnarch_enable_irq (unsigned irq)
+static inline void xnarch_enable_irq(unsigned int irq)
 {
-    return rthal_irq_enable(irq);
+	ipipe_enable_irq(irq);
 }
 
-static inline int xnarch_disable_irq (unsigned irq)
+static inline void xnarch_disable_irq(unsigned int irq)
 {
-    return rthal_irq_disable(irq);
+	ipipe_disable_irq(irq);
 }
 
-static inline int xnarch_end_irq (unsigned irq)
+static inline void xnarch_end_irq(unsigned int irq)
 {
-     return rthal_irq_end(irq);
+	ipipe_end_irq(irq);
 }
 
-static inline void xnarch_chain_irq (unsigned irq)
+static inline void xnarch_chain_irq(unsigned int irq)
 {
-    rthal_irq_host_pend(irq);
+	ipipe_post_irq_root(irq);
 }
 
-static inline void xnarch_set_irq_affinity (unsigned irq,
-					    xnarch_cpumask_t affinity)
+static inline void xnarch_set_irq_affinity(unsigned int irq,
+					   xnarch_cpumask_t affinity)
 {
-#ifdef CONFIG_SMP
-    ipipe_set_irq_affinity(irq,affinity);
-#endif
+	ipipe_set_irq_affinity(irq, affinity);
 }
 
-static inline void *xnarch_get_irq_cookie(unsigned irq)
+static inline void *xnarch_get_irq_cookie(unsigned int irq)
 {
 	return __ipipe_irq_cookie(&rthal_archdata.domain, irq);
 }

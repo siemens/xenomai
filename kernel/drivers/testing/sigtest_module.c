@@ -26,7 +26,7 @@ static void sigtest_timer_handler(xntimer_t *timer)
 
 static int __sigtest_queue(struct pt_regs *regs)
 {
-	target = xnshadow_thread(current);
+	target = xnshadow_current();
 	if (!target)
 		return -EPERM;
 
@@ -48,7 +48,7 @@ static int __sigtest_queue(struct pt_regs *regs)
 
 static int __sigtest_wait_pri(struct pt_regs *regs)
 {
-	xnthread_t *thread = xnshadow_thread(current);
+	xnthread_t *thread = xnshadow_current();
 	xnticks_t ticks = 20000000;
 
 	xnpod_suspend_thread(thread, XNDELAY, ticks, XN_RELATIVE, NULL);
