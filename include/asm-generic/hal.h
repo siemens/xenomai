@@ -246,7 +246,7 @@ static inline unsigned long rthal_get_clockfreq(void)
 #define RTHAL_DECLARE_EVENT(hdlr)				       \
 static int hdlr (unsigned event, struct ipipe_domain *ipd, void *data) \
 {								       \
-	return do_##hdlr(event,ipd->domid,data);		       \
+	return do_##hdlr(event,ipd,data);			       \
 }
 
 #define RTHAL_DECLARE_SCHEDULE_EVENT(hdlr)			       \
@@ -440,7 +440,7 @@ struct rthal_apc_desc {
 };
 
 typedef int (*rthal_trap_handler_t)(unsigned trapno,
-				    unsigned domid,
+				    rthal_pipeline_stage_t *stage,
 				    void *data);
 
 extern unsigned long rthal_cpufreq_arg;
@@ -544,6 +544,10 @@ rthal_trap_handler_t rthal_trap_catch(rthal_trap_handler_t handler);
 unsigned long rthal_timer_calibrate(void);
 
 #ifdef CONFIG_GENERIC_CLOCKEVENTS
+
+enum clock_event_mode;
+struct clock_event_device;
+
 int rthal_timer_request(void (*tick_handler)(void),
 			void (*mode_emul)(enum clock_event_mode mode, struct clock_event_device *cdev),
 			int (*tick_emul) (unsigned long delay, struct clock_event_device *cdev),

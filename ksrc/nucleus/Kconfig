@@ -2,6 +2,7 @@ config XENO_OPT_NUCLEUS
 	depends on XENOMAI
 	tristate "Nucleus"
 	default y
+	select IPIPE_LEGACY if IPIPE_CORE
 
 if XENO_OPT_NUCLEUS != n
 

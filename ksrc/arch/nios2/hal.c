@@ -166,13 +166,15 @@ int rthal_irq_host_release(unsigned irq, void *dev_id)
 	return 0;
 }
 
-static inline int do_exception_event(unsigned event, unsigned domid, void *data)
+static inline
+int do_exception_event(unsigned event, rthal_pipeline_stage_t *stage,
+		       void *data)
 {
-	if (domid == RTHAL_DOMAIN_ID) {
+	if (stage == &rthal_domain) {
 		rthal_realtime_faults[rthal_processor_id()][event]++;
 
 		if (rthal_trap_handler != NULL &&
-		    rthal_trap_handler(event, domid, data) != 0)
+		    rthal_trap_handler(event, stage, data) != 0)
 			return RTHAL_EVENT_STOP;
 	}
 

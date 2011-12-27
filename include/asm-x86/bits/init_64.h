@@ -37,9 +37,10 @@ void xnpod_schedule_handler(void);
 
 static rthal_trap_handler_t xnarch_old_trap_handler;
 
-static int xnarch_trap_fault(unsigned event, unsigned domid, void *data)
+static int xnarch_trap_fault(unsigned event, rthal_pipeline_stage_t *stage,
+			     void *data)
 {
-	struct pt_regs *regs = (struct pt_regs *)data;
+	struct pt_regs *regs = data;
 	xnarch_fltinfo_t fltinfo;
 
 	fltinfo.vector = event;
