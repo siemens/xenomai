@@ -28,9 +28,7 @@
 #include <linux/version.h>
 #include <linux/module.h>
 #include <linux/slab.h>
-#if defined(CONFIG_XENO_OPT_HOSTRT) || defined(__IPIPE_FEATURE_REQUEST_TICKDEV)
 #include <linux/ipipe_tickdev.h>
-#endif /* CONFIG_XENO_OPT_HOSTRT || __IPIPE_FEATURE_REQUEST_TICKDEV */
 #include <asm/io.h>
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,31)
