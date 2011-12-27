@@ -108,37 +108,8 @@ static inline void xnarch_switch_to(xnarchtcb_t *out_tcb,
 	}
 
 	next_mm = in_tcb->active_mm;
-
-#ifdef __IPIPE_FEATURE_HARDENED_SWITCHMM
 	if (next_mm && likely(prev_mm != next_mm))
 		__switch_mm(prev_mm, next_mm, next);
-#else /* !__IPIPE_FEATURE_HARDENED_SWITCHMM */
-	if (likely(prev_mm != next_mm)) {
-#ifdef CONFIG_ALTIVEC
-		asm volatile ("dssall;\n" :/*empty*/:);
-#endif
-#ifdef CONFIG_PPC64
-		if (likely(next_mm)) {
-			cpu_set(ipipe_processor_id(), next_mm->cpu_vm_mask);
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0)
-			if (cpu_has_feature(CPU_FTR_SLB))
-#else
-			if (mmu_has_feature(MMU_FTR_SLB))
-#endif
-				switch_slb(next, next_mm);
-			else
-				switch_stab(next, next_mm);
-		}
-	}
-#else /* PPC32 */
-		if (likely(next_mm != NULL)) {
-			next->thread.pgdir = next_mm->pgd;
-			switch_mmu_context(prev_mm, next_mm);
-			current = prev;	/* Make sure r2 is valid. */
-		}
-	}
-#endif	/* PPC32 */
-#endif /* !__IPIPE_FEATURE_HARDENED_SWITCHMM */
 
 #ifdef CONFIG_PPC64
 	rthal_thread_switch(out_tcb->tsp, in_tcb->tsp, next == NULL);
