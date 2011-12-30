@@ -37,12 +37,10 @@ static inline void xnarch_program_timer_shot(unsigned long delay)
 		rthal_nodiv_imuldiv_ceil(delay, rthal_tsc_to_timer));
 }
 
-static inline int xnarch_send_timer_ipi(xnarch_cpumask_t mask)
+static inline void xnarch_send_timer_ipi(xnarch_cpumask_t mask)
 {
 #ifdef CONFIG_SMP
-	return rthal_send_ipi(RTHAL_TIMER_IPI, mask);
-#else /* !CONFIG_SMP */
-	return 0;
+	rthal_send_ipi(RTHAL_TIMER_IPI, mask);
 #endif /* !CONFIG_SMP */
 }
 

@@ -36,12 +36,10 @@ static inline void xnarch_program_timer_shot(unsigned long delay)
 				 (delay, RTHAL_TIMER_FREQ, RTHAL_CPU_FREQ));
 }
 
-static inline int xnarch_send_timer_ipi(xnarch_cpumask_t mask)
+static inline void xnarch_send_timer_ipi(xnarch_cpumask_t mask)
 {
 #ifdef CONFIG_SMP
-	return rthal_send_ipi(RTHAL_APIC_TIMER_IPI, mask);
-#else /* ! CONFIG_SMP */
-	return 0;
+	rthal_send_ipi(RTHAL_APIC_TIMER_IPI, mask);
 #endif /* CONFIG_SMP */
 }
 

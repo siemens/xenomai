@@ -25,9 +25,8 @@ static inline void xnarch_program_timer_shot (unsigned long delay)
     mvm_program_timer(delay ?: 1);
 }
 
-static inline int xnarch_send_timer_ipi (xnarch_cpumask_t mask)
+static inline void xnarch_send_timer_ipi (xnarch_cpumask_t mask)
 {
-    return -1;
 }
 
 #endif /* !_XENO_ASM_SIM_BITS_TIMER_H */
