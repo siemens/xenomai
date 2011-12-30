@@ -44,18 +44,6 @@ enum rthal_ktimer_mode rthal_ktimer_saved_mode;
 #define RTHAL_SET_ONESHOT_LINUX		2
 #define RTHAL_SET_PERIODIC		3
 
-/* Acknowledge the core timer IRQ. This routine does nothing, except
-   preventing Linux to mask the IRQ. */
-
-#if IPIPE_MAJOR_NUMBER < 2 && IPIPE_MINOR_NUMBER < 8
-static int rthal_timer_ack(unsigned irq)
-{
-	return 1;
-}
-#else
-#define rthal_timer_ack NULL
-#endif
-
 static inline void rthal_setup_oneshot_coretmr(void)
 {
 	bfin_write_TCNTL(TMPWR);
