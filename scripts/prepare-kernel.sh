@@ -144,7 +144,7 @@ generate_patch() {
 }
 
 
-usage='usage: prepare-kernel --linux=<linux-tree> --adeos=<adeos-patch> [--arch=<arch>] [--outpatch=<file> [--filterkvers=y|n] [--filterarch=y|n]] [--forcelink] [--default] [--verbose]'
+usage='usage: prepare-kernel --linux=<linux-tree> --ipipe=<ipipe-patch> [--arch=<arch>] [--outpatch=<file> [--filterkvers=y|n] [--filterarch=y|n]] [--forcelink] [--default] [--verbose]'
 me=`basename $0`
 
 while test $# -gt 0; do
@@ -154,8 +154,12 @@ while test $# -gt 0; do
 	linux_tree=`eval "echo $linux_tree"`
 	;;
     --adeos=*)
-	adeos_patch=`echo $1|sed -e 's,^--adeos=\\(.*\\)$,\\1,g'`
-	adeos_patch=`eval "echo $adeos_patch"`
+	ipipe_patch=`echo $1|sed -e 's,^--adeos=\\(.*\\)$,\\1,g'`
+	ipipe_patch=`eval "echo $ipipe_patch"`
+	;;
+    --ipipe=*)
+	ipipe_patch=`echo $1|sed -e 's,^--ipipe=\\(.*\\)$,\\1,g'`
+	ipipe_patch=`eval "echo $ipipe_patch"`
 	;;
     --arch=*)
 	linux_arch=`echo $1|sed -e 's,^--arch=\\(.*\\)$,\\1,g'`
@@ -262,29 +266,23 @@ while : ; do
       fi
    fi
    case "$linux_arch" in
-   x86*|i*86|amd64)
+   x86*|i*86|amd*)
       linux_arch=x86
-      xenomai_arch=x86
       ;;
-   ppc*|powerpc*)
+   powerpc*|ppc*)
       linux_arch=powerpc
-      xenomai_arch=powerpc
       ;;
-   bfin|blackfin)
+   bfin*|blackfin)
       linux_arch=blackfin
-      xenomai_arch=blackfin
       ;;
    nios2)
       linux_arch=nios2
-      xenomai_arch=nios2
       ;;
    arm)
       linux_arch=arm
-      xenomai_arch=arm
       ;;
    sh|sh4)
       linux_arch=sh
-      xenomai_arch=sh
       ;;
    *)
       echo "$me: unsupported architecture: $linux_arch" >&2
@@ -316,69 +314,67 @@ fi
 
 if test -r $linux_tree/include/linux/ipipe.h; then
     if test x$verbose = x1; then
-    echo "Adeos found - bypassing patch."
+    echo "I-pipe found - bypassing patch."
     fi
 else
-   if test x$adeos_patch = x; then
-      default_adeos_patch="`( ls $xenomai_root/kernel/cobalt/arch/$xenomai_arch/patches/adeos-ipipe-$linux_version*-{$linux_arch,$xenomai_arch}-*|sort -r ) 2>/dev/null | head -n1`"
+   if test x$ipipe_patch = x; then
+      # We pick ipipe-core-* patches first over adeos-ipipe-* ones,
+      # then the highest numbered sequence/release number.
+      default_ipipe_patch="`( ls $xenomai_root/kernel/cobalt/arch/$linux_arch/patches/ipipe-core-$linux_version*-$linux_arch-* $xenomai_root/kernel/cobalt/arch/$linux_arch/patches/adeos-ipipe-$linux_version*-$linux_arch-*|sort -r ) 2>/dev/null | head -n1`"
    fi
-   if test x$default_adeos_patch = x; then
+   if test x$default_ipipe_patch = x; then
       if test x$verbose = x1; then
-         echo "$me: no default Adeos patch found." >&2
+         echo "$me: no default I-pipe patch found." >&2
       fi
-      default_adeos_patch=/dev/null
+      default_ipipe_patch=/dev/null
    fi
-   while test x$adeos_patch = x; do
+   while test x$ipipe_patch = x; do
       if test x$usedefault = x; then
-         echo -n "Adeos patch [default $default_adeos_patch]: "
-         read adeos_patch
+         echo -n "I-pipe patch [default $default_ipipe_patch]: "
+         read ipipe_patch
       fi
-      if test x$adeos_patch = x; then
-         adeos_patch=$default_adeos_patch
+      if test x$ipipe_patch = x; then
+         ipipe_patch=$default_ipipe_patch
       fi
-      if test \! -r "$adeos_patch" -o x$adeos_patch = x/dev/null; then
-         echo "$me: cannot read Adeos patch from $adeos_patch" >&2
+      if test \! -r "$ipipe_patch" -o x$ipipe_patch = x/dev/null; then
+         echo "$me: cannot read I-pipe patch from $ipipe_patch" >&2
          usedefault=
-         adeos_patch=
+         ipipe_patch=
       fi
    done
-   patchdir=`dirname $adeos_patch`; 
+   patchdir=`dirname $ipipe_patch`; 
    patchdir=`cd $patchdir && pwd`
-   adeos_patch=$patchdir/`basename $adeos_patch`
+   ipipe_patch=$patchdir/`basename $ipipe_patch`
    curdir=$PWD
-   cd $linux_tree && patch --dry-run -p1 -f < $adeos_patch || { 
+   cd $linux_tree && patch --dry-run -p1 -f < $ipipe_patch || { 
         cd $curdir;
-        echo "$me: Unable to patch kernel $linux_version$linux_EXTRAVERSION with `basename $adeos_patch`." >&2
+        echo "$me: Unable to patch kernel $linux_version$linux_EXTRAVERSION with `basename $ipipe_patch`." >&2
         exit 2;
    }
-   patch -p1 -f -s < $adeos_patch
+   patch -p1 -f -s < $ipipe_patch
    cd $curdir
 fi
 
-asm_ipipe_h=unknown
-if test -r $linux_tree/arch/$linux_arch/include/asm/ipipe.h \
-   && grep -q IPIPE $linux_tree/arch/$linux_arch/include/asm/ipipe.h; then
-   linux_include_asm=arch/$linux_arch/include/asm
-   asm_ipipe_h=$linux_tree/$linux_include_asm/ipipe.h
-else
-   # For archs that did not move their headers to arch/*/include/asm/ yet.
-   linux_include_asm=include/asm-$linux_arch
-   asm_ipipe_h=`ls $linux_tree/include/asm-{$linux_arch,$xenomai_arch}/ipipe.h 2>/dev/null|head -n1`
-fi
-
-if test -z "$asm_ipipe_h"; then
-   echo "$me: $linux_tree has no Adeos support for $linux_arch" >&2
+if test \! -r $linux_tree/arch/$linux_arch/include/asm/ipipe.h; then
+   echo "$me: $linux_tree has no I-pipe support for $linux_arch" >&2
    exit 2
 fi
-adeos_version=`grep '^#define.*IPIPE_ARCH_STRING.*"' $asm_ipipe_h 2>/dev/null|head -n1|sed -e 's,.*"\(.*\)"$,\1,'`
 
-if test \! "x$adeos_version" = x; then
+ipipe_legacy=`grep '^#define.*IPIPE_ARCH_STRING.*"' $linux_tree/arch/$linux_arch/include/asm/ipipe.h 2>/dev/null|head -n1|sed -e 's,.*"\(.*\)"$,\1,'`
+
+if test \! "x$ipipe_legacy" = x; then
    if test x$verbose = x1; then
-   echo "Adeos/$linux_arch $adeos_version installed."
+     echo "Legacy I-pipe/$linux_arch $ipipe_legacy installed."
    fi
 else
-   echo "$me: $linux_tree has no Adeos support for $linux_arch" >&2
-   exit 2
+   ipipe_core=`grep '^#define.*IPIPE_CORE_RELEASE.*' $linux_tree/arch/$linux_arch/include/asm/ipipe.h 2>/dev/null|head -n1|sed -e 's,[^0-9]*\([0-9]*\)$,\1,'`
+   if test "x$ipipe_core" = x; then
+       echo "$me: $linux_tree has no I-pipe support for $linux_arch" >&2
+       exit 2
+   fi
+   if test x$verbose = x1; then
+     echo "I-pipe core/$linux_arch #$ipipe_core installed."
+   fi
 fi
 
 patch_kernelversion_specific="y"
@@ -436,7 +432,7 @@ esac
 
 patch_kernelversion_specific="n"
 patch_architecture_specific="y"
-patch_link r m kernel/cobalt/arch/$xenomai_arch arch/$linux_arch/xenomai
+patch_link r m kernel/cobalt/arch/$linux_arch arch/$linux_arch/xenomai
 patch_architecture_specific="n"
 patch_link n m kernel/cobalt kernel/xenomai
 patch_link n m kernel/cobalt/arch/generic kernel/xenomai/hal
@@ -444,7 +440,7 @@ patch_link n m kernel/cobalt/nucleus kernel/xenomai/nucleus
 patch_link n m kernel/cobalt/rtdm kernel/xenomai/rtdm
 patch_link r m kernel/drivers drivers/xenomai
 patch_architecture_specific="y"
-patch_link r n include/asm-$xenomai_arch $linux_include_asm/xenomai
+patch_link r n include/asm-$linux_arch arch/$linux_arch/include/asm/xenomai
 patch_architecture_specific="n"
 patch_link r n include/asm-generic include/asm-generic/xenomai
 patch_link n n include/cobalt include/xenomai
