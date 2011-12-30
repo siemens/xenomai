@@ -31,9 +31,8 @@ static inline void xnarch_program_timer_shot(unsigned long delay)
 	rthal_timer_program_shot(d);
 }
 
-static inline int xnarch_send_timer_ipi(xnarch_cpumask_t mask)
+static inline void xnarch_send_timer_ipi(xnarch_cpumask_t mask)
 {
-	return -1;	/* No SMP support */
 }
 
 #endif /* !_XENO_ASM_SH_BITS_TIMER_H */
