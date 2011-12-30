@@ -44,7 +44,7 @@ union __xeno_cond {
 
 #define COBALT_COND_MAGIC 0x86860505
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__)
+#ifdef __KERNEL__
 
 #include "internal.h"
 

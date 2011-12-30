@@ -69,7 +69,6 @@ typedef struct cobalt_kqueues {
 	xnqueue_t monitorq;
 } cobalt_kqueues_t;
 
-#ifndef __XENO_SIM__
 typedef struct {
 	cobalt_kqueues_t kqueues;
 	cobalt_assocq_t uqds;
@@ -83,11 +82,9 @@ typedef struct {
 } cobalt_queues_t;
 
 extern int cobalt_muxid;
-#endif /* !__XENO_SIM__ */
 
 extern cobalt_kqueues_t cobalt_global_kqueues;
 
-#ifndef __XENO_SIM__
 static inline cobalt_queues_t *cobalt_queues(void)
 {
 	xnshadow_ppd_t *ppd;
@@ -104,20 +101,15 @@ static inline cobalt_queues_t *cobalt_queues(void)
 
 	return ppd2queues(ppd);
 }
-#endif /* !__XENO_SIM__ */
 
 static inline cobalt_kqueues_t *cobalt_kqueues(int pshared)
 {
-#ifndef __XENO_SIM__
 	xnshadow_ppd_t *ppd;
 
 	if (pshared || !(ppd = xnshadow_ppd_get(cobalt_muxid)))
 		return &cobalt_global_kqueues;
 
 	return &ppd2queues(ppd)->kqueues;
-#else /* __XENO_SIM__ */
-	return &cobalt_global_kqueues;
-#endif /* __XENO_SIM__ */
 }
 
 static inline void ns2ts(struct timespec *ts, xnticks_t nsecs)

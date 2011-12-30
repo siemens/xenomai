@@ -68,7 +68,7 @@ static inline int xnsynch_fast_release(xnarch_atomic_t *fastlock,
 		cur_ownerh);
 }
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__)
+#ifdef __KERNEL__
 
 #define XNSYNCH_CLAIMED 0x10	/* Claimed by other thread(s) w/ PIP */
 
@@ -206,6 +206,6 @@ void xnsynch_forget_sleeper(struct xnthread *thread);
 }
 #endif
 
-#endif /* __KERNEL__ || __XENO_SIM__ */
+#endif /* __KERNEL__ */
 
 #endif /* !_XENO_NUCLEUS_SYNCH_H_ */

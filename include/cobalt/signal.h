@@ -19,22 +19,15 @@
 #ifndef _XENO_POSIX_SIGNAL_H
 #define _XENO_POSIX_SIGNAL_H
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__)
+#ifdef __KERNEL__
 
 #include <nucleus/xenomai.h>
-
-#ifdef __KERNEL__
 #include <linux/signal.h>
 
 /* These are not defined in kernel-space headers. */
 #define sa_sigaction sa_handler
 typedef void (*sighandler_t) (int sig);
 typedef unsigned long sig_atomic_t;
-#endif /* __KERNEL__ */
-
-#ifdef __XENO_SIM__
-#include <posix_overrides.h>
-#endif /* __XENO_SIM__ */
 
 #undef sigemptyset
 #undef sigfillset
@@ -105,14 +98,16 @@ int pthread_sigqueue_np (struct cobalt_thread *thread, int sig, union sigval val
 }
 #endif
 
-#else /* !(__KERNEL__ || __XENO_SIM__) */
+#else /* !__KERNEL__ */
 
 #include_next <signal.h>
-/* In case signal.h is included for a side effect of an __need* macro, include
-   it a second time to get all definitions. */
+/*
+ * In case <signal.h> is included as a side effect of an __need*
+ * macro, include it a second time to get all definitions.
+ */
 #include_next <signal.h>
 
-#endif /* !(__KERNEL__ || __XENO_SIM__) */
+#endif /* !__KERNEL__ */
 
 /*
  * Those are pseudo-signals only available with pthread_kill() to

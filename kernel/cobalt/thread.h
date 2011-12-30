@@ -76,9 +76,7 @@ struct cobalt_thread {
 	struct xnholder monitor_link;
 	int monitor_queued;
 
-#ifndef __XENO_SIM__
 	struct cobalt_hkey hkey;
-#endif
 };
 
 #define cobalt_current_thread() thread2pthread(xnpod_current_thread())

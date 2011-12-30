@@ -86,7 +86,7 @@ static inline void initq(xnqueue_t *qslot)
 
 #if XENO_DEBUG(QUEUES)
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__)
+#ifdef __KERNEL__
 
 #define XENO_DEBUG_CHECK_QUEUE(__qslot)					\
 	do {								\
@@ -142,7 +142,7 @@ static inline void initq(xnqueue_t *qslot)
 		xnlock_put_irqrestore(&(__qslot)->lock,s);		\
 	} while(0)
 
-#else /* !(__KERNEL__ || __XENO_SIM__) */
+#else /* !__KERNEL__ */
 
 /* Disable queue checks in user-space code which does not run as part
    of any virtual machine, e.g. skin call interface libs. */
@@ -151,7 +151,7 @@ static inline void initq(xnqueue_t *qslot)
 #define XENO_DEBUG_INSERT_QUEUE(__qslot,__holder)
 #define XENO_DEBUG_REMOVE_QUEUE(__qslot,__holder)
 
-#endif /* __KERNEL__ || __XENO_SIM__ */
+#endif /* !__KERNEL__ */
 
 /* Write the following as macros so that line numbering information
    keeps pointing at the real caller in diagnosis messages. */

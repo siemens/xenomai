@@ -34,7 +34,7 @@ struct cobalt_monitor_data {
 	unsigned long flags;
 };
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__)
+#ifdef __KERNEL__
 
 #include <nucleus/synch.h>
 
@@ -72,6 +72,6 @@ void cobalt_monitor_pkg_init(void);
 
 void cobalt_monitor_pkg_cleanup(void);
 
-#endif
+#endif /* __KERNEL__ */
 
 #endif /* !_POSIX_MONITOR_H */

@@ -20,15 +20,15 @@
  * \ingroup clock
  */
 
-#ifndef _XENO_NUCLEUS_TIMEBASE_H
-#define _XENO_NUCLEUS_TIMEBASE_H
+#ifndef _XENO_NUCLEUS_CLOCK_H
+#define _XENO_NUCLEUS_CLOCK_H
 
 /*! \addtogroup clock
  *@{*/
 
 #include <nucleus/queue.h>
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__)
+#ifdef __KERNEL__
 
 #include <nucleus/vfile.h>
 
@@ -84,8 +84,8 @@ void xnclock_init_proc(void);
 
 void xnclock_cleanup_proc(void);
 
-#endif /* __KERNEL__ || __XENO_SIM__ */
+#endif /* __KERNEL__ */
 
 /*@}*/
 
-#endif /* !_XENO_NUCLEUS_TIMEBASE_H */
+#endif /* !_XENO_NUCLEUS_CLOCK_H */

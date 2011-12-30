@@ -461,10 +461,8 @@ static inline int pthread_create(pthread_t *tid, const pthread_attr_t * attr)
 	appendq(thread->container, &thread->link);
 	xnlock_put_irqrestore(&nklock, s);
 
-#ifndef __XENO_SIM__
 	thread->hkey.u_tid = 0;
 	thread->hkey.mm = NULL;
-#endif
 
 	/* We need an anonymous registry entry to obtain a handle for fast
 	   mutex locking. */
@@ -580,10 +578,8 @@ static inline int pthread_set_mode_np(int clrmask, int setmask, int *mode_r)
 	xnthread_t *cur = xnpod_current_thread();
 	xnflags_t valid_flags = XNLOCK, old;
 
-#ifndef __XENO_SIM__
 	if (xnthread_test_state(cur, XNSHADOW))
 		valid_flags |= XNTHREAD_STATE_SPARE1 | XNTRAPSW;
-#endif
 
 	/* XNTHREAD_STATE_SPARE1 is used as the CONFORMING mode bit. */
 

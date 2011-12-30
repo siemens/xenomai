@@ -270,8 +270,6 @@ int cobalt_desc_get(cobalt_desc_t ** descp, int fd, unsigned magic)
 	return 0;
 }
 
-#ifndef __XENO_SIM__
-
 DEFINE_XNLOCK(cobalt_assoc_lock);
 
 static int cobalt_assoc_lookup_inner(cobalt_assocq_t * q,
@@ -381,8 +379,6 @@ void cobalt_assocq_destroy(cobalt_assocq_t * q, void (*destroy) (cobalt_assoc_t 
 	xnlock_put_irqrestore(&cobalt_assoc_lock, s);
 }
 
-#endif /* !__XENO_SIM__ */
-
 cobalt_kqueues_t cobalt_global_kqueues;
 
 int cobalt_reg_pkg_init(unsigned buckets_count, unsigned maxfds)
@@ -424,9 +420,8 @@ int cobalt_reg_pkg_init(unsigned buckets_count, unsigned maxfds)
 		cobalt_reg.fdsmap[mapsize - 1] =
 		    (1 << (maxfds % BITS_PER_INT)) - 1;
 
-#ifndef __XENO_SIM__
 	xnlock_init(&cobalt_assoc_lock);
-#endif
+
 	return 0;
 }
 

@@ -42,7 +42,7 @@
 #define XNSCHED_HIGH_PRIO	99
 #define XNSCHED_IRQ_PRIO	XNSCHED_RT_MAX_PRIO /* For IRQ servers. */
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__)
+#ifdef __KERNEL__
 
 #if defined(CONFIG_XENO_OPT_SCALABLE_SCHED) && \
   XNSCHED_RT_NR_PRIO > XNSCHED_MLQ_LEVELS
@@ -116,6 +116,6 @@ static inline int xnsched_rt_init_tcb(struct xnthread *thread)
 
 void xnsched_rt_tick(struct xnthread *curr);
 
-#endif /* __KERNEL__ || __XENO_SIM__ */
+#endif /* __KERNEL__ */
 
 #endif /* !_XENO_NUCLEUS_SCHED_RT_H */

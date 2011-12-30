@@ -26,7 +26,7 @@
 #include <nucleus/clock.h>
 #include <nucleus/stat.h>
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__)
+#ifdef __KERNEL__
 
 #ifndef CONFIG_XENO_OPT_DEBUG_TIMERS
 #define CONFIG_XENO_OPT_DEBUG_TIMERS  0
@@ -432,6 +432,6 @@ char *xntimer_format_time(xnticks_t value,
 }
 #endif
 
-#endif /* __KERNEL__ || __XENO_SIM__ */
+#endif /* __KERNEL__ */
 
 #endif /* !_XENO_NUCLEUS_TIMER_H */

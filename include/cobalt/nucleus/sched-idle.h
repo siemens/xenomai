@@ -30,7 +30,7 @@
 /* Idle priority level - actually never used for indexing. */
 #define XNSCHED_IDLE_PRIO	-1
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__)
+#ifdef __KERNEL__
 
 extern struct xnsched_class xnsched_class_idle;
 
@@ -64,6 +64,6 @@ static inline int xnsched_idle_init_tcb(struct xnthread *thread)
 	return 0;
 }
 
-#endif /* __KERNEL__ || __XENO_SIM__ */
+#endif /* __KERNEL__ */
 
 #endif /* !_XENO_NUCLEUS_SCHED_IDLE_H */

@@ -19,16 +19,11 @@
 #ifndef _XENO_ERRNO_H
 #define _XENO_ERRNO_H
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__)
+#ifdef __KERNEL__
 
 #include <nucleus/xenomai.h>
-
-#ifdef __KERNEL__
 #include <linux/errno.h>
 #include <linux/unistd.h>         /* conflicting declaration of errno. */
-#else /* __XENO_SIM__ */
-#include <posix_overrides.h>
-#endif /* __KERNEL__ */
 
 /* errno values pasted from Linux asm/errno.h and bits/errno.h (ENOTSUP). */
 #define ENOTSUP         EOPNOTSUPP
@@ -46,10 +41,10 @@ int *xnthread_get_errno_location(xnthread_t *thread);
 }
 #endif
 
-#else /* !(__KERNEL__ || __XENO_SIM__) */
+#else /* !__KERNEL__ */
 
 #include_next <errno.h>
 
-#endif /* !(__KERNEL__ || __XENO_SIM__) */
+#endif /* !__KERNEL__ */
 
 #endif /* _XENO_ERRNO_H */

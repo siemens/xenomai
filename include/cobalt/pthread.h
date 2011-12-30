@@ -19,21 +19,13 @@
 #ifndef _XENO_POSIX_PTHREAD_H
 #define _XENO_POSIX_PTHREAD_H
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__)
+#ifdef __KERNEL__
 
 #include <nucleus/xenomai.h>
-
-#ifdef __KERNEL__
 #include <linux/types.h>
 #include <sched.h>
-#endif /* __KERNEL__ */
 
-#ifdef __XENO_SIM__
-#include <posix_overrides.h>
-#define PTHREAD_STACK_MIN   8192
-#else /* __XENO_SIM__ */
 #define PTHREAD_STACK_MIN   1024
-#endif /* __XENO_SIM__ */
 
 #define PTHREAD_CREATE_JOINABLE 0
 #define PTHREAD_CREATE_DETACHED 1
@@ -101,7 +93,6 @@ typedef struct cobalt_once {
 	int routine_called;
 } pthread_once_t;
 
-#ifdef __KERNEL__
 /* The following definitions are copied from linuxthread pthreadtypes.h. */
 struct _pthread_fastlock
 {
@@ -127,9 +118,7 @@ typedef struct
   struct _pthread_fastlock __m_lock;
 } pthread_mutex_t;
 
-#endif /* __KERNEL__ */
-
-#else /* !(__KERNEL__ || __XENO_SIM__) */
+#else /* !__KERNEL__ */
 
 #include <sched.h>
 #include_next <pthread.h>
@@ -138,7 +127,7 @@ typedef struct
 
 struct timespec;
 
-#endif /* __KERNEL__ || __XENO_SIM__ */
+#endif /* __KERNEL__ */
 
 #ifndef PTHREAD_PRIO_NONE
 #define PTHREAD_PRIO_NONE    0
@@ -194,11 +183,11 @@ struct cobalt_monitor_shadow {
 	int flags;
 };
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__)
+#ifdef __KERNEL__
 typedef struct cobalt_mutexattr pthread_mutexattr_t;
 
 typedef struct cobalt_condattr pthread_condattr_t;
-#else /* !(__KERNEL__ || __XENO_SIM__) */
+#else /* !__KERNEL__ */
 
 typedef struct {
 	pthread_attr_t std;
@@ -398,6 +387,6 @@ int pthread_attr_setscope_ex(pthread_attr_ex_t *attr_ex,
 }
 #endif
 
-#endif /* __KERNEL__ || __XENO_SIM__ */
+#endif /* !__KERNEL__ */
 
 #endif /* _XENO_POSIX_PTHREAD_H */

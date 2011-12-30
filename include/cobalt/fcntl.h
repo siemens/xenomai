@@ -19,13 +19,10 @@
 #ifndef _XENO_POSIX_FCNTL_H
 #define _XENO_POSIX_FCNTL_H
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__)
+#ifdef __KERNEL__
 
 #include <nucleus/xenomai.h>
-
-#ifdef __KERNEL__
 #include <linux/fcntl.h>
-#endif /* __KERNEL__ */
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,7 +34,7 @@ int open(const char *path, int oflag, ...);
 }
 #endif
 
-#else /* !(__KERNEL__ || __XENO_SIM__) */
+#else /* !__KERNEL__ */
 
 #include <time.h>
 #include_next <fcntl.h>
@@ -52,6 +49,6 @@ COBALT_DECL(int, open(const char *path, int oflag, ...));
 }
 #endif
 
-#endif /* !(__KERNEL__ || __XENO_SIM__) */
+#endif /* !__KERNEL__ */
 
 #endif /* _XENO_POSIX_FCNTL_H */

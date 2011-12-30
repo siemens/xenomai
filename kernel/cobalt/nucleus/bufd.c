@@ -145,9 +145,6 @@
 #include <nucleus/pod.h>
 #include <nucleus/bufd.h>
 #include <nucleus/assert.h>
-
-#ifndef __XENO_SIM__
-
 #include <asm/xenomai/syscall.h>
 
 /*!
@@ -688,51 +685,6 @@ void xnbufd_invalidate(struct xnbufd *bufd)
 	bufd->b_off = 0;
 }
 EXPORT_SYMBOL_GPL(xnbufd_invalidate);
-
-#else /* __XENO_SIM__ */
-
-void xnbufd_map_kmem(struct xnbufd *bufd, void *ptr, size_t len)
-{
-	bufd->b_ptr = ptr;
-	bufd->b_len = len;
-	bufd->b_off = 0;
-}
-EXPORT_SYMBOL_GPL(xnbufd_map_kmem);
-
-ssize_t xnbufd_copy_to_kmem(void *to, struct xnbufd *bufd, size_t len)
-{
-	if (len == 0)
-		goto out;
-
-	memcpy(to, bufd->b_ptr, len);
-	bufd->b_off += len;
-out:
-	return bufd->b_off;
-}
-EXPORT_SYMBOL_GPL(xnbufd_copy_to_kmem);
-
-ssize_t xnbufd_copy_from_kmem(struct xnbufd *bufd, void *from, size_t len)
-{
-	if (len == 0)
-		goto out;
-
-	memcpy(bufd->b_ptr, from, len);
-	bufd->b_off += len;
-out:
-	return bufd->b_off;
-}
-EXPORT_SYMBOL_GPL(xnbufd_copy_from_kmem);
-
-void xnbufd_invalidate(struct xnbufd *bufd)
-{
-#if XENO_DEBUG(NUCLEUS)
-	bufd->b_ptr = (caddr_t)-1;
-#endif
-	bufd->b_off = 0;
-}
-EXPORT_SYMBOL_GPL(xnbufd_invalidate);
-
-#endif /* __XENO_SIM__ */
 
 /*!
  * \fn void xnbufd_unmap_kread(struct xnbufd *bufd)

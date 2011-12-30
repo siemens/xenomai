@@ -4,8 +4,6 @@
 #include <nucleus/ppd.h>
 #include <nucleus/heap.h>
 
-#ifndef __XENO_SIM__
-
 struct xnsys_ppd {
 	xnshadow_ppd_t ppd;
 	xnheap_t sem_heap;
@@ -26,7 +24,5 @@ static inline struct xnsys_ppd *xnsys_ppd_get(int global)
 
 	return ppd2sys(ppd);
 }
-
-#endif /* !__XENO_SIM__ */
 
 #endif /* _XENO_NUCLEUS_SYS_PPD_H */

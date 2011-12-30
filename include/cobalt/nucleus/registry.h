@@ -28,7 +28,7 @@
 
 #define XNOBJECT_SELF  XN_NO_HANDLE
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__)
+#ifdef __KERNEL__
 
 #include <nucleus/synch.h>
 #include <nucleus/vfile.h>
@@ -197,6 +197,6 @@ extern struct xnpnode_ops xnregistry_vfsnap_ops;
 
 extern struct xnpnode_ops xnregistry_vlink_ops;
 
-#endif /* __KERNEL__ || __XENO_SIM__ */
+#endif /* __KERNEL__ */
 
 #endif /* !_XENO_NUCLEUS_REGISTRY_H */

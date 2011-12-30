@@ -19,28 +19,21 @@
 #ifndef _XENO_POSIX_MQUEUE_H
 #define _XENO_POSIX_MQUEUE_H
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__)
+#ifdef __KERNEL__
 
 #include <nucleus/xenomai.h>
-
-#ifdef __KERNEL__
 #include <linux/types.h>
 #include <linux/signal.h>
 #include <linux/fcntl.h>
-#endif /* !__KERNEL__ */
 
-#ifdef __XENO_SIM__
-#include <posix_overrides.h>
-#endif /* __XENO_SIM__ */
-
-#else /* !(__KERNEL__ || __XENO_SIM__) */
+#else /* !__KERNEL__ */
 
 #include <xeno_config.h>
 #include <fcntl.h>
 
-#endif /* !(__KERNEL__ || __XENO_SIM__) */
+#endif /* !__KERNEL__ */
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__) || !defined(HAVE_MQUEUE_H)
+#if defined(__KERNEL__) || !defined(HAVE_MQUEUE_H)
 
 #ifndef MQ_PRIO_MAX
 #define MQ_PRIO_MAX 32768
@@ -57,7 +50,7 @@ struct mq_attr {
     long    mq_curmsgs;
 };
 
-#else /* !(__KERNEL__ || __XENO_SIM__ || !HAVE_MQUEUE_H) */
+#else /* !(__KERNEL__ || !HAVE_MQUEUE_H) */
 
 #include_next <mqueue.h>
 #include <cobalt/wrappers.h>
@@ -112,6 +105,6 @@ COBALT_DECL(int, mq_notify(mqd_t mqdes,
 }
 #endif
 
-#endif /* !(__KERNEL__ || __XENO_SIM__ || !HAVE_MQUEUE_H) */
+#endif /* !(__KERNEL__ || !HAVE_MQUEUE_H) */
 
 #endif /* _XENO_POSIX_MQUEUE_H */

@@ -31,10 +31,7 @@
  */
 
 #include <nucleus/pod.h>
-#ifdef __KERNEL__
 #include <rtdm/syscall.h>
-#endif /* __KERNEL__ */
-
 #include "rtdm/internal.h"
 
 MODULE_DESCRIPTION("Real-Time Driver Model");

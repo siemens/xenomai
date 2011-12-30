@@ -19,24 +19,18 @@
 #ifndef _XENO_POSIX_TIME_H
 #define _XENO_POSIX_TIME_H
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__)
+#ifdef __KERNEL__
 
 #include <nucleus/xenomai.h>
-
-#ifdef __KERNEL__
 #include <linux/time.h>
-#define DELAYTIMER_MAX UINT_MAX
-#endif /* __KERNEL__ */
 
-#ifdef __XENO_SIM__
-#include <posix_overrides.h>
-#endif /* __XENO_SIM__ */
+#define DELAYTIMER_MAX UINT_MAX
 
 #ifndef TIMER_ABSTIME
 #define TIMER_ABSTIME 1
 #endif
 
-#else /* !(__KERNEL__ || __XENO_SIM__) */
+#else /* !__KERNEL__ */
 
 #include_next <time.h>
 /*
@@ -46,7 +40,7 @@
 #include_next <time.h>
 #include <cobalt/wrappers.h>
 
-#endif /* !(__KERNEL__ || __XENO_SIM__) */
+#endif /* !__KERNEL__ */
 
 #ifndef CLOCK_MONOTONIC
 /* Some archs do not implement this, but Xenomai always does. */
@@ -65,7 +59,7 @@
  */
 #define CLOCK_HOST_REALTIME 42
 
-#if !(defined(__KERNEL__) || defined(__XENO_SIM__))
+#ifndef __KERNEL__
 
 #ifdef __cplusplus
 extern "C" {
@@ -108,6 +102,6 @@ COBALT_DECL(int, timer_getoverrun(timer_t timerid));
 }
 #endif
 
-#endif /* !(__KERNEL__ || __XENO_SIM__) */
+#endif /* !__KERNEL__ */
 
 #endif /* _XENO_POSIX_TIME_H */

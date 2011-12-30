@@ -81,10 +81,6 @@ struct xnpod {
 	atomic_counter_t timerlck; /*!< Timer lock depth.  */
 
 	int refcnt;		/*!< Reference count.  */
-
-#ifdef __XENO_SIM__
-	void (*schedhook) (xnthread_t *thread, xnflags_t mask);	/*!< Internal scheduling hook. */
-#endif	/* __XENO_SIM__ */
 };
 
 typedef struct xnpod xnpod_t;
@@ -166,10 +162,6 @@ void __xnpod_schedule(struct xnsched *sched);
 #define xnpod_current_root() \
     (&xnpod_current_sched()->rootcb)
 
-#ifdef __XENO_SIM__
-#define xnpod_current_p(thread) \
-    (xnpod_current_thread() == (thread))
-#else /* !__XENO_SIM__ */
 #define xnpod_current_p(thread)						\
 	({								\
 		int __shadow_p = xnthread_test_state(thread, XNSHADOW);	\
@@ -177,7 +169,6 @@ void __xnpod_schedule(struct xnsched *sched);
 			: thread == xnpod_current_thread();		\
 		__curr_p;						\
 	})
-#endif /* !__XENO_SIM__ */
 
 #define xnpod_locked_p() \
     xnthread_test_state(xnpod_current_thread(), XNLOCK)

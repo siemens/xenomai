@@ -1,7 +1,7 @@
 #ifndef _XENO_POSIX_SELECT_H
 #define _XENO_POSIX_SELECT_H
 
-#if !(defined(__KERNEL__) || defined(__XENO_SIM__))
+#ifndef __KERNEL__
 
 #include_next <sys/select.h>
 #include <cobalt/wrappers.h>
@@ -18,6 +18,6 @@ COBALT_DECL(int, select(int __nfds, fd_set *__restrict __readfds,
 }
 #endif
 
-#endif /* !(__KERNEL__ || __XENO_SIM__) */
+#endif /* !__KERNEL__ */
 
 #endif /* _XENO_POSIX_SELECT_H */

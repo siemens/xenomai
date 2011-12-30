@@ -104,9 +104,6 @@ static inline void xnstat_counter_set(xnstat_counter_t *c, unsigned long value)
 
 #else /* !CONFIG_XENO_OPT_STATS */
 typedef struct xnstat_exectime {
-#ifdef __XENO_SIM__
-    int dummy;
-#endif /* __XENO_SIM__ */
 } xnstat_exectime_t;
 
 #define xnstat_exectime_now()					({ 0; })
@@ -120,9 +117,6 @@ typedef struct xnstat_exectime {
 #define xnstat_exectime_reset_stats(account)			do { } while (0)
 
 typedef struct xnstat_counter {
-#ifdef __XENO_SIM__
-    int dummy;
-#endif /* __XENO_SIM__ */
 } xnstat_counter_t;
 
 #define xnstat_counter_inc(c) ({ do { } while(0); 0; })

@@ -28,16 +28,6 @@
 
 #include <nucleus/types.h>
 
-#ifdef __XENO_SIM__
-
-struct xnbufd {
-	caddr_t b_ptr;		/* src/dst buffer address */
-	size_t b_len;		/* total length of buffer */
-	off_t b_off;		/* # of bytes read/written */
-};
-
-#else /* !__XENO_SIM__ */
-
 struct mm_struct;
 
 struct xnbufd {
@@ -67,8 +57,6 @@ static inline void xnbufd_map_uwrite(struct xnbufd *bufd,
 ssize_t xnbufd_unmap_uread(struct xnbufd *bufd);
 
 ssize_t xnbufd_unmap_uwrite(struct xnbufd *bufd);
-
-#endif /* !__XENO_SIM__ */
 
 void xnbufd_map_kmem(struct xnbufd *bufd,
 		     void *ptr, size_t len);

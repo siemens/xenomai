@@ -1084,8 +1084,6 @@ int xnheap_check_block(xnheap_t *heap, void *block)
 }
 EXPORT_SYMBOL_GPL(xnheap_check_block);
 
-#ifndef __XENO_SIM__
-
 #include <asm/io.h>
 #include <linux/miscdevice.h>
 #include <linux/device.h>
@@ -1475,44 +1473,6 @@ void xnheap_umount(void)
 {
 	misc_deregister(&xnheap_dev);
 }
-
-#else /* __XENO_SIM__ */
-
-static void xnheap_free_extent(xnheap_t *heap,
-			       void *extent, u_long size, void *cookie)
-{
-	xnarch_free_host_mem(extent, size);
-}
-
-int xnheap_init_mapped(xnheap_t *heap, u_long heapsize, int memflags)
-{
-	void *heapaddr;
-	int ret;
-
-	if ((memflags & XNHEAP_GFP_NONCACHED)
-	    && memflags != XNHEAP_GFP_NONCACHED)
-		return -EINVAL;
-
-	heapaddr = xnarch_alloc_host_mem(heapsize);
-	if (heapaddr) {
-		ret = xnheap_init(heap, heapaddr, heapsize, XNHEAP_PAGE_SIZE);
-		if (ret)
-			xnarch_free_host_mem(heapaddr, heapsize);
-
-		return ret;
-	}
-
-	return -ENOMEM;
-}
-
-void xnheap_destroy_mapped(xnheap_t *heap,
-			   void (*release)(struct xnheap *heap),
-			   void __user *mapaddr)
-{
-	xnheap_destroy(heap, &xnheap_free_extent, NULL);
-}
-
-#endif /* __XENO_SIM__ */
 
 EXPORT_SYMBOL_GPL(xnheap_init_mapped);
 EXPORT_SYMBOL_GPL(xnheap_destroy_mapped);

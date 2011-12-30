@@ -46,10 +46,6 @@
 #include <nucleus/select.h>
 #include <asm/xenomai/bits/pod.h>
 
-/*
- * NOTE: We need to initialize the globals; remember that this code
- * also runs over the simulator in user-space.
- */
 xnpod_t nkpod_struct;
 EXPORT_SYMBOL_GPL(nkpod_struct);
 
@@ -58,11 +54,11 @@ DEFINE_XNLOCK(nklock);
 EXPORT_SYMBOL_GPL(nklock);
 #endif /* CONFIG_SMP || XENO_DEBUG(XNLOCK) */
 
-u_long nklatency = 0;
+u_long nklatency;
 EXPORT_SYMBOL_GPL(nklatency);
 
 /* Already accounted for in nklatency, kept separately for user information. */
-u_long nktimerlat = 0;
+u_long nktimerlat;
 
 xnarch_cpumask_t nkaffinity = XNPOD_ALL_CPUS;
 
@@ -291,9 +287,7 @@ static void xnpod_flush_stackpool(xnheap_t *heap,
  * Initializes the core interface pod which can subsequently be used
  * to start real-time activities. Once the core pod is active,
  * real-time skins can be stacked over. There can only be a single
- * core pod active in the host environment. Such environment can be
- * confined to a process (e.g. simulator), or expand machine-wide
- * (e.g. I-pipe).
+ * core pod active in the host environment.
  *
  * @return 0 is returned on success. Otherwise:
  *
@@ -340,9 +334,6 @@ int xnpod_init(void)
 	initq(&pod->tswitchq);
 	initq(&pod->tdeleteq);
 	xnarch_atomic_set(&pod->timerlck, 0);
-#ifdef __XENO_SIM__
-	pod->schedhook = NULL;
-#endif
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -529,10 +520,8 @@ void xnpod_fire_callouts(xnqueue_t *hookq, xnthread_t *thread)
  * thread. This name is copied to a safe place into the thread
  * descriptor. This name might be used in various situations by the
  * nucleus for issuing human-readable diagnostic messages, so it is
- * usually a good idea to provide a sensible value here. The simulator
- * even uses this name intensively to identify threads in the
- * debugging GUI it provides. However, passing NULL here is always
- * legal and means "anonymous".
+ * usually a good idea to provide a sensible value here.  NULL is fine
+ * though and means "anonymous".
  *
  * - flags: A set of creation flags affecting the operation. The
  * following flags can be part of this bitmask, each of them affecting
@@ -743,14 +732,12 @@ int xnpod_start_thread(struct xnthread *thread,
 	trace_mark(xn_nucleus, thread_start, "thread %p thread_name %s",
 		   thread, xnthread_name(thread));
 
-#ifndef __XENO_SIM__
 	if (xnthread_test_state(thread, XNSHADOW)) {
 		xnlock_put_irqrestore(&nklock, s);
 		xnshadow_start(thread);
 		xnlock_get_irqsave(&nklock, s);
 		goto run_hooks;
 	}
-#endif /* !__XENO_SIM__ */
 
 	/* Setup the initial stack frame. */
 
@@ -760,15 +747,7 @@ int xnpod_start_thread(struct xnthread *thread,
 
 	xnpod_resume_thread(thread, XNDORMANT);
 
-#ifdef __XENO_SIM__
-	if (!(attr->mode & XNSUSP) && nkpod->schedhook)
-		nkpod->schedhook(thread, XNREADY);
-#endif /* __XENO_SIM__ */
-
-
-#ifndef __XENO_SIM__
 run_hooks:
-#endif
 	xnpod_run_hooks(&nkpod->tstartq, thread, "START");
 
 schedule:
@@ -987,7 +966,6 @@ void xnpod_delete_thread(xnthread_t *thread)
 
 	sched = thread->sched;
 
-#ifndef __XENO_SIM__
 	/*
 	 * This block serves two purposes:
 	 *
@@ -1037,7 +1015,6 @@ void xnpod_delete_thread(xnthread_t *thread)
 		 */
 		goto unlock_and_exit;
 	}
-#endif /* !__XENO_SIM__ */
 
 	/*
 	 * If thread is not current, has the deferred cancelability
@@ -1060,11 +1037,6 @@ void xnpod_delete_thread(xnthread_t *thread)
 		xnthread_set_info(thread, XNCANPND);
 		goto unlock_and_exit;
 	}
-
-#ifdef __XENO_SIM__
-	if (nkpod->schedhook)
-		nkpod->schedhook(thread, XNDELETED);
-#endif /* __XENO_SIM__ */
 
 	trace_mark(xn_nucleus, thread_delete, "thread %p thread_name %s",
 		   thread, xnthread_name(thread));
@@ -1283,7 +1255,6 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 
 	/* Is the thread ready to run? */
 	if (!xnthread_test_state(thread, XNTHREAD_BLOCK_BITS)) {
-#ifndef __XENO_SIM__
 		/*
 		 * If attempting to suspend a runnable (shadow) thread
 		 * which is pending a forced switch to secondary mode,
@@ -1306,8 +1277,6 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 			xnthread_set_info(thread, XNBREAK);
 			goto unlock_and_exit;
 		}
-#endif /* !__XENO_SIM__ */
-
 		xnthread_clear_info(thread, XNRMID | XNTIMEO | XNBREAK | XNWAKEN | XNROBBED);
 	}
 
@@ -1345,11 +1314,6 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 	if (wchan)
 		thread->wchan = wchan;
 
-#ifdef __XENO_SIM__
-	if (nkpod->schedhook)
-		nkpod->schedhook(thread, mask);
-#endif /* __XENO_SIM__ */
-
 	if (thread == sched->curr) {
 		/*
 		 * If the current thread is being relaxed, we must
@@ -1380,7 +1344,7 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 		 */
 		xnpod_schedule();
 	}
-#ifndef __XENO_SIM__
+
 	/*
 	 * Ok, this one is an interesting corner case, which requires
 	 * a bit of background first. Here, we handle the case of
@@ -1428,7 +1392,6 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 		  * send a migration signal.
 		  */
 		xnshadow_suspend(thread);
-#endif /* !__XENO_SIM__ */
 
       unlock_and_exit:
 
@@ -1582,14 +1545,7 @@ enqueue:
 ready:
 	xnthread_set_state(thread, XNREADY);
 	xnsched_set_resched(sched);
-
-#ifdef __XENO_SIM__
-	if (thread != sched->curr && nkpod->schedhook)
-		nkpod->schedhook(thread, XNREADY);
-#endif /* __XENO_SIM__ */
-
-      unlock_and_exit:
-
+unlock_and_exit:
 	xnlock_put_irqrestore(&nklock, s);
 }
 EXPORT_SYMBOL_GPL(xnpod_resume_thread);
@@ -1798,14 +1754,12 @@ int __xnpod_set_thread_schedparam(struct xnthread *thread,
 	if (!xnthread_test_state(thread, XNTHREAD_BLOCK_BITS|XNREADY|XNLOCK))
 		xnsched_putback(thread);
 
-#ifndef __XENO_SIM__
 	if (propagate) {
 		if (xnthread_test_state(thread, XNRELAX))
 			xnshadow_renice(thread);
 		else if (xnthread_test_state(thread, XNSHADOW))
 			xnthread_set_info(thread, XNPRIOSET);
 	}
-#endif /* !__XENO_SIM__ */
 
 unlock_and_exit:
 
@@ -2123,11 +2077,7 @@ reschedule:
 		   prev, xnthread_name(prev),
 		   next, xnthread_name(next));
 
-#ifndef __XENO_SIM__
 	shadow = xnthread_test_state(prev, XNSHADOW);
-#else
-	(void)shadow;
-#endif /* __XENO_SIM__ */
 
 	if (xnthread_test_state(next, XNROOT)) {
 		xnsched_reset_watchdog(sched);
@@ -2154,7 +2104,6 @@ reschedule:
 
 	xnpod_switch_to(sched, prev, next);
 
-#ifndef __XENO_SIM__
 	/*
 	 * Test whether we transitioned from primary mode to secondary
 	 * over a shadow thread. This may happen in two cases:
@@ -2168,7 +2117,6 @@ reschedule:
 	 */
 	if (shadow && xnarch_root_domain_p())
 		goto shadow_epilogue;
-#endif /* __XENO_SIM__ */
 
 	switched = 1;
 	sched = xnsched_finish_unlocked_switch(sched);
@@ -2190,11 +2138,6 @@ reschedule:
 
 	__xnpod_switch_fpu(sched);
 
-#ifdef __XENO_SIM__
-	if (nkpod->schedhook)
-		nkpod->schedhook(curr, XNRUNNING);
-#endif /* __XENO_SIM__ */
-
 	xnpod_run_hooks(&nkpod->tswitchq, curr, "SWITCH");
 
       signal_unlock_and_exit:
@@ -2210,7 +2153,6 @@ reschedule:
 
 	return;
 
-#ifndef __XENO_SIM__
       shadow_epilogue:
 	/*
 	 * Shadow on entry and root without shadow extension on exit?
@@ -2231,8 +2173,6 @@ reschedule:
 	 * xnpod_suspend_thread when relaxing a thread.
 	 */
 	XENO_BUGON(NUCLEUS, !hard_irqs_disabled());
-	return;
-#endif /* !__XENO_SIM__ */
 }
 EXPORT_SYMBOL_GPL(__xnpod_schedule);
 
@@ -2467,7 +2407,6 @@ int xnpod_handle_exception(struct ipipe_trap_data *d)
 		   (void *)xnarch_fault_pc(d),
 		   xnarch_fault_trap(d));
 
-#ifdef __KERNEL__
 	if (xnarch_fault_fpu_p(d)) {
 		if (__xnpod_fault_init_fpu(thread))
 			return 1;
@@ -2521,7 +2460,6 @@ int xnpod_handle_exception(struct ipipe_trap_data *d)
 		xnshadow_relax(xnarch_fault_notify(d),
 			       SIGDEBUG_MIGRATE_FAULT);
 	}
-#endif /* __KERNEL__ */
 
 	return 0;
 }

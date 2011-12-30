@@ -690,8 +690,6 @@ AC_CONFIG_FILES([ \
 	include/asm-nios2/bits/Makefile \
 	include/asm-sh/Makefile \
 	include/asm-sh/bits/Makefile \
-	include/asm-sim/Makefile \
-	include/asm-sim/bits/Makefile \
 	include/cobalt/Makefile \
 	include/cobalt/sys/Makefile \
 	include/cobalt/nucleus/Makefile \

@@ -93,7 +93,6 @@ int __init __xeno_sys_init(void)
 	if (ret)
 		goto fail;
 
-#ifndef __XENO_SIM__
 	ret = xnheap_init_mapped(&__xnsys_global_ppd.sem_heap,
 				 CONFIG_XENO_OPT_GLOBAL_SEM_HEAPSZ * 1024,
 				 XNARCH_SHARED_HEAP_FLAGS);
@@ -103,9 +102,7 @@ int __init __xeno_sys_init(void)
 	xnheap_set_label(&__xnsys_global_ppd.sem_heap, "global sem heap");
 
 	xnheap_init_vdso();
-#endif /* !__XENO_SIM__ */
 
-#ifdef __KERNEL__
 	xnpod_mount();
 	xnintr_mount();
 
@@ -126,7 +123,6 @@ int __init __xeno_sys_init(void)
 	ret = xnheap_mount();
 	if (ret)
 		goto cleanup_shadow;
-#endif /* __KERNEL__ */
 
 	xnloginfo("real-time nucleus v%s (%s) loaded.\n",
 		  XENO_VERSION_STRING, XENO_VERSION_NAME);
@@ -142,8 +138,6 @@ int __init __xeno_sys_init(void)
 	xnarch_cpus_and(nkaffinity, nkaffinity, xnarch_supported_cpus);
 
 	return 0;
-
-#ifdef __KERNEL__
 
       cleanup_shadow:
 
@@ -168,8 +162,6 @@ int __init __xeno_sys_init(void)
 
 	xnarch_exit();
 
-#endif /* __KERNEL__ */
-
       fail:
 
 	xnlogerr("system init failed, code %d.\n", ret);
@@ -183,22 +175,18 @@ void __exit __xeno_sys_exit(void)
 {
 	xnpod_shutdown(XNPOD_NORMAL_EXIT);
 
-#ifndef __XENO_SIM__
 	/* Must take place before xnpod_umount(). */
 	xnshadow_cleanup();
-#endif
 
 	xnpod_umount();
 
 	xnarch_exit();
 
-#ifndef __XENO_SIM__
 	xnheap_umount();
 #ifdef CONFIG_XENO_OPT_PIPE
 	xnpipe_umount();
 #endif
 	xnheap_destroy_mapped(&__xnsys_global_ppd.sem_heap, NULL, NULL);
-#endif /* !__XENO_SIM__ */
 
 	xnloginfo("real-time nucleus unloaded.\n");
 }

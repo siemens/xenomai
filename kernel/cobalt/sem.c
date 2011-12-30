@@ -65,8 +65,6 @@ typedef struct cobalt_named_sem {
 #define sem2named_sem(saddr) ((nsem_t *)(saddr))
 #define node2sem(naddr) container_of(naddr, nsem_t, nodebase)
 
-#ifndef __XENO_SIM__
-
 typedef struct cobalt_uptr {
 	struct mm_struct *mm;
 	unsigned refcnt;
@@ -75,8 +73,6 @@ typedef struct cobalt_uptr {
 } cobalt_uptr_t;
 
 #define link2uptr(laddr) container_of(laddr, cobalt_uptr_t, link)
-
-#endif /* !__XENO_SIM__ */
 
 static int sem_destroy_inner(cobalt_sem_t *sem, cobalt_kqueues_t *q)
 {
@@ -1023,7 +1019,6 @@ int cobalt_sem_broadcast_np(struct __shadow_sem __user *u_sem)
 	return err;
 }
 
-#ifndef __XENO_SIM__
 static void usem_cleanup(cobalt_assoc_t *assoc)
 {
 	struct cobalt_sem *sem = (struct cobalt_sem *) cobalt_assoc_key(assoc);
@@ -1041,7 +1036,6 @@ void cobalt_sem_usems_cleanup(cobalt_queues_t *q)
 {
 	cobalt_assocq_destroy(&q->usems, &usem_cleanup);
 }
-#endif /* !__XENO_SIM__ */
 
 void cobalt_semq_cleanup(cobalt_kqueues_t *q)
 {

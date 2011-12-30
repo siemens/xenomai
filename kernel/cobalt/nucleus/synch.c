@@ -379,12 +379,10 @@ static void xnsynch_renice_thread(struct xnthread *thread,
 	if (thread->wchan)
 		xnsynch_requeue_sleeper(thread);
 
-#ifndef __XENO_SIM__
 	if (xnthread_test_state(thread, XNRELAX))
 		xnshadow_renice(thread);
 	else if (xnthread_test_state(thread, XNSHADOW))
 		xnthread_set_info(thread, XNPRIOSET);
-#endif /* !__XENO_SIM__ */
 }
 
 /*!

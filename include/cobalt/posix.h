@@ -21,24 +21,6 @@
 
 #define COBALT_SKIN_MAGIC           0x50534531
 
-#ifdef __XENO_SIM__
-
-#include <cobalt/errno.h>
-#include <cobalt/sched.h>
-#include <cobalt/pthread.h>
-#include <cobalt/sched.h>
-#include <cobalt/signal.h>
-#include <cobalt/semaphore.h>
-#include <cobalt/mqueue.h>
-#include <cobalt/time.h>
-#include <cobalt/fcntl.h>
-#include <cobalt/unistd.h>
-#include <cobalt/sys/mman.h>
-#include <cobalt/sys/ioctl.h>
-#include <cobalt/sys/socket.h>
-
-#else /* !__XENO_SIM */
-
 #include <errno.h>
 #include <pthread.h>
 #include <sched.h>
@@ -51,7 +33,5 @@
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
-
-#endif /* !__XENO_SIM */
 
 #endif /* !_XENO_SKIN_POSIX_H */

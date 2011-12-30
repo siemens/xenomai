@@ -29,17 +29,12 @@
  *@{*/
 
 #include <stdarg.h>
-
+#include <linux/fs.h>		/* ERR_PTR */
 #include <nucleus/queue.h>
-
 #include "registry.h"
 #include "internal.h"		/* Magics, time conversion */
 #include "thread.h"		/* errno. */
-#ifdef __KERNEL__
-#include <linux/fs.h>		/* Make sure ERR_PTR is defined for all kernel versions */
 #include "apc.h"
-#endif /* __KERNEL__ */
-
 #include "mq.h"
 
 /* Temporary definitions. */
@@ -157,11 +152,9 @@ static inline void cobalt_mq_destroy(cobalt_mq_t *mq)
 	xnlock_put_irqrestore(&nklock, s);
 	xnselect_destroy(&mq->read_select);
 	xnselect_destroy(&mq->write_select);
-#ifdef __KERNEL__
 	if (!xnpod_root_p())
 		cobalt_schedule_lostage(COBALT_LO_FREE_REQ, mq->mem, mq->memsize);
 	else
-#endif /* __KERNEL__ */
 		xnarch_free_host_mem(mq->mem, mq->memsize);
 
 	if (resched)
@@ -867,7 +860,6 @@ int cobalt_mq_select_bind(mqd_t fd, struct xnselector *selector,
 	return err;
 }
 
-#ifndef __XENO_SIM__
 static void uqd_cleanup(cobalt_assoc_t *assoc)
 {
 	cobalt_ufd_t *ufd = assoc2ufd(assoc);
@@ -883,7 +875,6 @@ void cobalt_mq_uqds_cleanup(cobalt_queues_t *q)
 {
 	cobalt_assocq_destroy(&q->uqds, &uqd_cleanup);
 }
-#endif /* !__XENO_SIM__ */
 
 /* mq_open(name, oflags, mode, attr, ufd) */
 int cobalt_mq_open(const char __user *u_name, int oflags,

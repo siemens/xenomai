@@ -150,15 +150,7 @@ do { \
 	xnarch_halt(); \
 } while (0)
 
-#ifdef __XENO_SIM__
-#define SKIN_INIT(name)  __xeno_skin_init(void)
-#define SKIN_EXIT(name)  __xeno_skin_exit(void)
-#else /* !__XENO_SIM__ */
 #define SKIN_INIT(name)  __ ## name ## _skin_init(void)
 #define SKIN_EXIT(name)  __ ## name ## _skin_exit(void)
-#endif /* __XENO_SIM__ */
-
-#define root_thread_init __xeno_user_init
-#define root_thread_exit __xeno_user_exit
 
 #endif /* !_XENO_NUCLEUS_TYPES_H */

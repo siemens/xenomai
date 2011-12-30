@@ -26,8 +26,6 @@
 #include <nucleus/types.h>
 #include <nucleus/hostrt.h>
 
-#ifndef __XENO_SIM__
-
 /*
  * Data shared between Xenomai kernel/userland and the Linux kernel/userland
  * on the global semaphore heap. The features element indicates which data are
@@ -73,11 +71,5 @@ static inline int xnvdso_test_feature(unsigned long long feature)
 }
 
 void xnheap_init_vdso(void);
-
-#else /* __XENO_SIM__ */
-
-static inline void xnheap_init_vdso(void) { }
-
-#endif /* __XENO_SIM__ */
 
 #endif /* _XENO_NUCLEUS_VDSO_H */

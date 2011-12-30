@@ -31,7 +31,7 @@
 #define __xntrace_op_special		6
 #define __xntrace_op_special_u64	7
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__)
+#ifdef __KERNEL__
 
 #include <asm/xenomai/system.h>
 
@@ -47,7 +47,7 @@
 #define xntrace_panic_freeze()		xnarch_trace_panic_freeze()
 #define xntrace_panic_dump()		xnarch_trace_panic_dump()
 
-#else /* !(defined(__KERNEL__) || defined(__XENO_SIM__)) */
+#else /* !__KERNEL__ */
 
 #include <asm/xenomai/syscall.h>
 
@@ -94,6 +94,6 @@ static inline int xntrace_special_u64(unsigned char id, unsigned long long v)
 				(unsigned long)(v & 0xFFFFFFFF));
 }
 
-#endif /* defined(__KERNEL__) || defined(__XENO_SIM__) */
+#endif /* !__KERNEL__ */
 
 #endif /* !_XENO_NUCLEUS_TRACE_H */

@@ -48,7 +48,7 @@ union __xeno_mutex {
 
 #define COBALT_MUTEX_MAGIC (0x86860303)
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__)
+#ifdef __KERNEL__
 
 #include "internal.h"
 #include "thread.h"
@@ -167,6 +167,7 @@ void cobalt_mutexq_cleanup(cobalt_kqueues_t *q);
 void cobalt_mutex_pkg_init(void);
 
 void cobalt_mutex_pkg_cleanup(void);
+
 #else /* ! __KERNEL__ */
 
 extern unsigned long xeno_sem_heap[2];
@@ -183,6 +184,7 @@ static inline xnarch_atomic_t *mutex_get_ownerp(struct __shadow_mutex *shadow)
 {
 	return &mutex_get_datp(shadow)->owner;
 }
+
 #endif /* __KERNEL__ */
 
 #endif /* !_POSIX_MUTEX_H */

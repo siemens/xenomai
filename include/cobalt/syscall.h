@@ -19,9 +19,7 @@
 #ifndef _POSIX_SYSCALL_H
 #define _POSIX_SYSCALL_H
 
-#ifndef __XENO_SIM__
 #include <asm/xenomai/syscall.h>
-#endif /* __XENO_SIM__ */
 
 #define sc_cobalt_thread_create         0
 #define sc_cobalt_thread_setschedparam  2

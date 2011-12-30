@@ -19,7 +19,7 @@
 #ifndef _XENO_POSIX_SYS_IOCTL_H
 #define _XENO_POSIX_SYS_IOCTL_H
 
-#if !(defined(__KERNEL__) || defined(__XENO_SIM__))
+#ifndef __KERNEL__
 
 #include_next <sys/ioctl.h>
 #include <cobalt/wrappers.h>
@@ -34,6 +34,6 @@ COBALT_DECL(int, ioctl(int fildes, unsigned long int request, ...));
 }
 #endif
 
-#endif /* !(__KERNEL__ || __XENO_SIM__) */
+#endif /* !__KERNEL__ */
 
 #endif /* _XENO_POSIX_SYS_IOCTL_H */

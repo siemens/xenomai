@@ -19,23 +19,14 @@
 #ifndef _XENO_POSIX_SCHED_H
 #define _XENO_POSIX_SCHED_H
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__)
+#ifdef __KERNEL__
 
 #include <nucleus/xenomai.h>
-
-#ifdef __KERNEL__
 #include <linux/sched.h>
-#endif /* __KERNEL__ */
-
-#ifdef __XENO_SIM__
-#include <posix_overrides.h>
-#define SCHED_FIFO	1
-#define SCHED_RR	2
-#endif /* __XENO_SIM__ */
 
 #define SCHED_OTHER 0
 
-#else /* !(__KERNEL__ || __XENO_SIM__) */
+#else /* !__KERNEL__ */
 
 #include_next <sched.h>
 #include <cobalt/wrappers.h>
@@ -46,7 +37,7 @@ COBALT_DECL(int, sched_get_priority_min(int policy));
 
 COBALT_DECL(int, sched_get_priority_max(int policy));
 
-#endif /* !(__KERNEL__ || __XENO_SIM__) */
+#endif /* !__KERNEL__ */
 
 #ifndef __sched_extensions_defined
 #define __sched_extensions_defined

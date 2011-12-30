@@ -45,10 +45,8 @@
  *
  */
 
-#ifdef __KERNEL__
 #include <cobalt/syscall.h>
 #include "apc.h"
-#endif /* __KERNEL__ */
 #include <cobalt/posix.h>
 #include "internal.h"
 #include "cond.h"
@@ -74,39 +72,33 @@ static void cobalt_shutdown(int xtype)
 	cobalt_sem_pkg_cleanup();
 	cobalt_mutex_pkg_cleanup();
 	cobalt_reg_pkg_cleanup();
-#ifdef __KERNEL__
 	cobalt_syscall_cleanup();
 	cobalt_apc_pkg_cleanup();
-#endif /* __KERNEL__ */
 	xnpod_shutdown(xtype);
 }
 
 int SKIN_INIT(posix)
 {
-	int err;
+	int ret;
 
 	xnprintf("starting POSIX services.\n");
 
-	err = xnpod_init();
-	if (err != 0)
+	ret = xnpod_init();
+	if (ret)
 		goto fail;
 
-#ifdef __KERNEL__
-	err = cobalt_apc_pkg_init();
-	if (err)
+	ret = cobalt_apc_pkg_init();
+	if (ret)
 		goto fail_shutdown_pod;
-	err = cobalt_syscall_init();
-#endif /* __KERNEL__ */
 
-	if (err != 0) {
-#ifdef __KERNEL__
+	ret = cobalt_syscall_init();
+	if (ret) {
 		cobalt_apc_pkg_cleanup();
-#endif /* __KERNEL__ */
 	fail_shutdown_pod:
-		xnpod_shutdown(err);
-	  fail:
-		xnlogerr("POSIX skin init failed, code %d.\n", err);
-		return err;
+		xnpod_shutdown(ret);
+	fail:
+		xnlogerr("POSIX skin init failed, code %d.\n", ret);
+		return ret;
 	}
 
 	cobalt_reg_pkg_init(64, 128);	/* FIXME: replace with compilation constants. */

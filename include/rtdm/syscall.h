@@ -20,9 +20,7 @@
 #ifndef _RTDM_SYSCALL_H
 #define _RTDM_SYSCALL_H
 
-#ifndef __XENO_SIM__
 #include <asm/xenomai/syscall.h>
-#endif /* __XENO_SIM__ */
 
 #define RTDM_SKIN_MAGIC		0x5254444D
 

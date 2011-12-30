@@ -30,7 +30,7 @@
 
 #include <nucleus/thread.h>
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__)
+#ifdef __KERNEL__
 
 #include <nucleus/schedqueue.h>
 #include <nucleus/sched-tp.h>
@@ -98,11 +98,9 @@ typedef struct xnsched {
 	xnstat_exectime_t *current_account;	/*!< Currently active account */
 #endif
 
-#ifndef __XENO_SIM__
 	struct task_struct *gatekeeper;
 	struct semaphore gksync;
 	struct xnthread *gktarget;
-#endif
 
 } xnsched_t;
 
@@ -490,12 +488,12 @@ static inline void xnsched_forget(struct xnthread *thread)
 
 #endif /* !CONFIG_XENO_OPT_SCHED_CLASSES */
 
-#else /* !(__KERNEL__ || __XENO_SIM__) */
+#else /* !__KERNEL__ */
 
 #include <nucleus/sched-idle.h>
 #include <nucleus/sched-rt.h>
 
-#endif /* !(__KERNEL__ || __XENO_SIM__) */
+#endif /* !__KERNEL__ */
 
 /*@}*/
 

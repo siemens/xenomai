@@ -37,7 +37,7 @@
 /* Operational flags. */
 #define XN_ISR_ATTACHED	 0x10000
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__)
+#ifdef __KERNEL__
 
 #include <nucleus/types.h>
 #include <nucleus/stat.h>
@@ -138,6 +138,6 @@ int xnintr_query_next(int irq, xnintr_iterator_t *iterator,
 }
 #endif
 
-#endif /* __KERNEL__ || __XENO_SIM__ */
+#endif /* __KERNEL__ */
 
 #endif /* !_XENO_NUCLEUS_INTR_H */

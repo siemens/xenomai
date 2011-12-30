@@ -19,7 +19,7 @@
 #ifndef _XENO_POSIX_SOCKET_H
 #define _XENO_POSIX_SOCKET_H
 
-#if !(defined(__KERNEL__) || defined(__XENO_SIM__))
+#ifndef __KERNEL__
 
 #include_next <sys/socket.h>
 #include <cobalt/wrappers.h>
@@ -78,6 +78,6 @@ COBALT_DECL(int, shutdown(int fd, int how));
 }
 #endif
 
-#endif /* !(__KERNEL__ || __XENO_SIM__) */
+#endif /* !__KERNEL__ */
 
 #endif /* _XENO_POSIX_SOCKET_H */

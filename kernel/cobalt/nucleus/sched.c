@@ -90,7 +90,6 @@ static void xnsched_watchdog_handler(struct xntimer *timer)
 	if (likely(++sched->wdcount < wd_timeout_arg))
 		return;
 
-#ifndef __XENO_SIM__
 	if (xnthread_test_state(thread, XNSHADOW)) {
 		trace_mark(xn_nucleus, watchdog_signal,
 			   "thread %p thread_name %s",
@@ -98,9 +97,7 @@ static void xnsched_watchdog_handler(struct xntimer *timer)
 		xnprintf("watchdog triggered -- signaling runaway thread "
 			 "'%s'\n", xnthread_name(thread));
 		xnshadow_call_mayday(thread, SIGDEBUG_WATCHDOG);
-	} else
-#endif /* !__XENO_SIM__ */
-	{
+	} else {
 		trace_mark(xn_nucleus, watchdog, "thread %p thread_name %s",
 			   thread, xnthread_name(thread));
 		xnprintf("watchdog triggered -- killing runaway thread '%s'\n",
@@ -217,10 +214,6 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
 			xnsched_requeue(curr);
 			xnthread_set_state(curr, XNREADY);
 		}
-#ifdef __XENO_SIM__
-		if (nkpod->schedhook)
-			nkpod->schedhook(curr, XNREADY);
-#endif /* __XENO_SIM__ */
 	}
 
 	/*

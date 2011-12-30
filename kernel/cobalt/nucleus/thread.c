@@ -71,9 +71,6 @@ int xnthread_init(struct xnthread *thread,
 #ifndef CONFIG_XENO_HW_FPU
 	flags &= ~XNFPU;
 #endif
-#ifdef __XENO_SIM__
-	flags &= ~XNSHADOW;
-#endif
 	if (flags & (XNSHADOW|XNROOT))
 		stacksize = 0;
 	else {
@@ -89,13 +86,11 @@ int xnthread_init(struct xnthread *thread,
 		thread->idtag = ++idtags ?: 1;
 
 #if CONFIG_XENO_OPT_SYS_STACKPOOLSZ == 0
-#ifndef __XENO_SIM__
 	if (stacksize > 0) {
 		xnlogerr("%s: cannot create kernel thread '%s' (CONFIG_XENO_OPT_SYS_STACKPOOLSZ == 0)\n",
 			 __FUNCTION__, attr->name);
 		return -ENOMEM;
 	}
-#endif
 #else
 	ret = xnarch_alloc_stack(tcb, stacksize);
 	if (ret) {

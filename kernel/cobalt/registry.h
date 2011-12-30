@@ -74,10 +74,10 @@ int cobalt_desc_destroy(cobalt_desc_t *desc);
 
 #define COBALT_PERMS_MASK  (O_RDONLY | O_WRONLY | O_RDWR)
 
-
-/* Associative lists, used for association of user-space to kernel-space
-   objects. */
-#ifndef __XENO_SIM__
+/*
+ * Associative lists, used for association of user-space to
+ * kernel-space objects.
+ */
 struct mm_struct;
 
 DECLARE_EXTERN_XNLOCK(cobalt_assoc_lock);
@@ -116,6 +116,5 @@ cobalt_assoc_t *cobalt_assoc_lookup(cobalt_assocq_t *q,
 
 cobalt_assoc_t *cobalt_assoc_remove(cobalt_assocq_t *q,
 				  u_long key);
-#endif /* !__XENO_SIM__ */
 
 #endif /* COBALT_REGISTRY_H */

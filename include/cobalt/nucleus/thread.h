@@ -150,18 +150,12 @@ typedef struct xnthread_info {
 
 } xnthread_info_t;
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__)
+#ifdef __KERNEL__
 
 #include <nucleus/stat.h>
 #include <nucleus/timer.h>
 #include <nucleus/registry.h>
 #include <nucleus/schedparam.h>
-
-#ifdef __XENO_SIM__
-/* Pseudo-status (must not conflict with other bits) */
-#define XNRUNNING  XNTHREAD_STATE_SPARE0
-#define XNDELETED  XNTHREAD_STATE_SPARE1
-#endif /* __XENO_SIM__ */
 
 #define XNTHREAD_INVALID_ASR  ((void (*)(xnsigmask_t))0)
 
@@ -299,14 +293,12 @@ typedef struct xnthread {
 
 	void *cookie;		/* Cookie to pass to the entry routine */
 
-#ifndef __XENO_SIM__
 	struct pt_regs *regs;		/* Current register frame */
 	unsigned long __user *u_mode;	/* Thread mode variable in userland. */
 #ifdef CONFIG_XENO_OPT_DEBUG
 	const char *exe_path;	/* Executable path */
 	u32 proghash;		/* Hash value for exe_path */
 #endif
-#endif /* !__XENO_SIM__ */
 
     XNARCH_DECL_DISPLAY_CONTEXT();
 
@@ -361,11 +353,9 @@ typedef struct xnhook {
 #define xnthread_affine_p(thread, cpu)     xnarch_cpu_isset(cpu, (thread)->affinity)
 #define xnthread_get_exectime(thread)      xnstat_exectime_get_total(&(thread)->stat.account)
 #define xnthread_get_lastswitch(thread)    xnstat_exectime_get_last_switch((thread)->sched)
-#ifndef __XENO_SIM__
 #define xnthread_inc_rescnt(thread)        ({ (thread)->hrescnt++; })
 #define xnthread_dec_rescnt(thread)        ({ --(thread)->hrescnt; })
 #define xnthread_get_rescnt(thread)        ((thread)->hrescnt)
-#endif /* !__XENO_SIM__ */
 
 static inline unsigned xnthread_get_magic(struct xnthread *t)
 {
@@ -443,6 +433,6 @@ void xnthread_finish_wait(struct xnthread_wait_context *wc,
 }
 #endif
 
-#endif /* __KERNEL__ || __XENO_SIM__ */
+#endif /* __KERNEL__ */
 
 #endif /* !_XENO_NUCLEUS_THREAD_H */
