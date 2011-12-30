@@ -89,7 +89,7 @@ unsigned long rthal_timer_calibrate(void)
 	rthal_time_t t, dt;
 	int i, count;
 
-	local_irq_save_hw(flags);
+	flags = hard_local_irq_save();
 
 	/* Read the current latch value, whatever the current mode is. */
 
@@ -115,7 +115,7 @@ unsigned long rthal_timer_calibrate(void)
 
 	dt = rthal_rdtsc() - t;
 
-	local_irq_restore_hw(flags);
+	flags = hard_local_irq_restore();
 
 	/*
 	 * Reset the max trace, since it contains the calibration time
@@ -131,7 +131,7 @@ static void rthal_timer_set_oneshot(void)
 	unsigned long flags;
 	int count;
 
-	local_irq_save_hw(flags);
+	flags = hard_local_irq_save();
 	/*
 	 * We should be running in rate generator mode (M2) on entry,
 	 * so read the current latch value, in order to roughly
@@ -153,18 +153,18 @@ static void rthal_timer_set_oneshot(void)
 	outb_p(0x38, PIT_MODE);
 	outb(count & 0xff, PIT_CH0);
 	outb(count >> 8, PIT_CH0);
-	local_irq_restore_hw(flags);
+	hard_local_irq_restore(flags);
 }
 
 static void rthal_timer_set_periodic(void)
 {
 	unsigned long flags;
 
-	local_irq_save_hw(flags);
+	flags = hard_local_irq_save();
 	outb_p(0x34, PIT_MODE);
 	outb(LATCH & 0xff, PIT_CH0);
 	outb(LATCH >> 8, PIT_CH0);
-	local_irq_restore_hw(flags);
+	hard_local_irq_restore(flags);
 }
 
 int rthal_timer_request(void (*tick_handler)(void),

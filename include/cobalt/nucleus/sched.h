@@ -206,11 +206,11 @@ int xnsched_maybe_resched_after_unlocked_switch(struct xnsched *sched)
 
 #ifdef CONFIG_SMP
 #define xnsched_finish_unlocked_switch(__sched__)	\
-	({ XENO_BUGON(NUCLEUS, !irqs_disabled_hw());	\
+	({ XENO_BUGON(NUCLEUS, !hard_irqs_disabled());	\
 		xnpod_current_sched(); })
 #else /* !CONFIG_SMP */
 #define xnsched_finish_unlocked_switch(__sched__)	\
-	({ XENO_BUGON(NUCLEUS, !irqs_disabled_hw());	\
+	({ XENO_BUGON(NUCLEUS, !hard_irqs_disabled());	\
 		(__sched__); })
 #endif /* !CONFIG_SMP */
 

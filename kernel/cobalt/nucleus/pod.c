@@ -2230,7 +2230,7 @@ reschedule:
 	 * handler that hit before we call xnpod_schedule in
 	 * xnpod_suspend_thread when relaxing a thread.
 	 */
-	XENO_BUGON(NUCLEUS, !irqs_disabled_hw());
+	XENO_BUGON(NUCLEUS, !hard_irqs_disabled());
 	return;
 #endif /* !__XENO_SIM__ */
 }

@@ -295,6 +295,72 @@ static inline void ipipe_end_irq(unsigned int irq)
 	desc->ipipe_end(irq, desc);
 }
 
+static inline int hard_irqs_disabled(void)
+{
+	return irqs_disabled_hw();
+}
+
+static inline void hard_local_irq_disable(void)
+{
+	local_irq_disable_hw();
+}
+
+static inline void hard_local_irq_enable(void)
+{
+	local_irq_enable_hw();
+}
+
+static inline unsigned long hard_local_irq_save(void)
+{
+	unsigned long flags;
+
+	local_irq_save_hw(flags);
+
+	return flags;
+}
+
+static inline void hard_local_irq_restore(unsigned long flags)
+{
+	local_irq_restore_hw(flags);
+}
+
+static inline unsigned long hard_local_save_flags(void)
+{
+	unsigned long flags;
+
+	local_save_flags_hw(flags);
+
+	return flags;
+}
+
+static inline unsigned long hard_smp_local_irq_save(void)
+{
+	unsigned long flags;
+
+	local_irq_save_hw_smp(flags);
+
+	return flags;
+}
+
+static inline void hard_smp_local_irq_restore(unsigned long flags)
+{
+	local_irq_restore_hw_smp(flags);
+}
+
+static inline unsigned long hard_cond_local_irq_save(void)
+{
+	unsigned long flags;
+
+	local_irq_save_hw_cond(flags);
+
+	return flags;
+}
+
+static inline void hard_cond_local_irq_restore(unsigned long flags)
+{
+	local_irq_restore_hw_cond(flags);
+}
+
 #else /* !CONFIG_XENO_LEGACY_IPIPE */
 
 static inline void alloc_ptd_key(void) { }

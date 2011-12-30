@@ -121,7 +121,7 @@ static inline void xnarch_init_thread(xnarchtcb_t *tcb,
 
 	/* Prepare the bootstrap stack. */
 
-	local_save_flags_hw(flags);
+	flags = hard_local_save_flags();
 
 	rsp = (unsigned long *)((unsigned long)tcb->stackbase + tcb->stacksize -
 				sizeof(struct xnarch_x8664_initstack) - 8);

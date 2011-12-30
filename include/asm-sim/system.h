@@ -67,7 +67,7 @@ typedef int spl_t;
 #define splexit(x)  mvm_set_irqmask(x)
 #define splnone()   mvm_set_irqmask(0)
 #define spltest()   (mvm_get_irqmask() != 0)
-#define irqs_disabled_hw() spltest()
+#define hard_irqs_disabled() spltest()
 
 struct xnlock {
 };

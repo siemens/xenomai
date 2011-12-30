@@ -51,9 +51,9 @@ static inline void atomic_set_mask(unsigned long mask, unsigned long *addr)
 {
 	unsigned long flags;
 
-	local_irq_save_hw(flags);
+	flags = hard_local_irq_save();
 	*addr |= mask;
-	local_irq_restore_hw(flags);
+	hard_local_irq_restore(flags);
 }
 #endif /* arm <= armv5 */
 

@@ -174,10 +174,10 @@ static inline void xnarch_notify_halt(void)
 			  (ipipe_irq_handler_t)xnarch_finalize_cpu,
 			  NULL, NULL);
 
-	local_irq_save_hw(flags);
+	flags = hard_local_irq_save();
 	cpu_clear(ipipe_processor_id(), other_cpus);
 	ipipe_send_ipi(IPIPE_SERVICE_IPI2, other_cpus);
-	local_irq_restore_hw(flags);
+	hard_local_irq_restore(flags);
 
 	for(cpu=0; cpu < nr_cpus-1; ++cpu)
 		down(&xnarch_finalize_sync);

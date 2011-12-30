@@ -107,7 +107,7 @@ unsigned long rthal_timer_calibrate(void)
 	u32 d;
 	int n;
 
-	local_irq_save_hw(flags);
+	flags = hard_local_irq_save();
 
 	ipipe_read_tsc(t);
 
@@ -116,7 +116,7 @@ unsigned long rthal_timer_calibrate(void)
 	for (n = 1; n < 100; n++)
 		ipipe_read_tsc(v);
 
-	local_irq_restore_hw(flags);
+	hard_local_irq_restore(flags);
 
 	d = (u32)(v - t);
 	freq = rthal_get_clockfreq();

@@ -101,10 +101,7 @@ static inline void xnarch_init_thread(xnarchtcb_t * tcb,
 				      int imask,
 				      struct xnthread *thread, char *name)
 {
-	unsigned long flags;
 	struct cpu_context_save *regs;
-
-	local_save_flags_hw(flags);
 
 	regs = &tcb->ti.cpu_context;
 	memset(regs, 0, sizeof(*regs));
