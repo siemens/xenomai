@@ -61,7 +61,9 @@ static inline void xnarch_chain_irq(unsigned int irq)
 static inline void xnarch_set_irq_affinity(unsigned int irq,
 					   xnarch_cpumask_t affinity)
 {
+#ifdef CONFIG_SMP
 	ipipe_set_irq_affinity(irq, affinity);
+#endif
 }
 
 static inline void *xnarch_get_irq_cookie(unsigned int irq)
