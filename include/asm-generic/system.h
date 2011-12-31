@@ -397,6 +397,16 @@ static inline int xnarch_remap_kmem_page_range(struct vm_area_struct *vma,
 	return remap_pfn_range(vma, from, to >> PAGE_SHIFT, size, prot);
 }
 
+static inline void *xnarch_alloc_pages(size_t size)
+{
+	return alloc_pages_exact(size, GFP_KERNEL);
+}
+
+static inline void xnarch_free_pages(void *p, size_t size)
+{
+	return free_pages_exact(p, size);
+}
+
 #define xnarch_finalize_no_switch(dead_tcb) do { } while(0)
 
 #ifdef rthal_fault_range

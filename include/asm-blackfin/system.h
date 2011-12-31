@@ -85,30 +85,6 @@ typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
 
 #define xnarch_fault_notify(d) (!xnarch_fault_bp_p(d))
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-static inline void *xnarch_alloc_host_mem(u_long bytes)
-{
-	return kmalloc(bytes,GFP_KERNEL);
-}
-
-static inline void xnarch_free_host_mem(void *chunk, u_long bytes)
-{
-	kfree(chunk);
-}
-
-static inline void *xnarch_alloc_stack_mem(u_long bytes)
-{
-	return kmalloc(bytes, GFP_KERNEL);
-}
-
-static inline void xnarch_free_stack_mem(void *chunk, u_long bytes)
-{
-	kfree(chunk);
-}
-
 #define __xnarch_head_syscall_entry()				\
 	do	{						\
 		if (xnsched_resched_p(xnpod_current_sched()))	\
@@ -116,10 +92,6 @@ static inline void xnarch_free_stack_mem(void *chunk, u_long bytes)
 	} while(0)
 
 #define xnarch_head_syscall_entry	__xnarch_head_syscall_entry
-
-#ifdef __cplusplus
-}
-#endif
 
 #else /* !__KERNEL__ */
 

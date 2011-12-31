@@ -84,40 +84,6 @@ typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
 				(d)->exception == IPIPE_TRAP_BP)
 #define xnarch_fault_notify(d) (!xnarch_fault_bp_p(d))
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-static inline void *xnarch_alloc_host_mem(u_long bytes)
-{
-	if (bytes > 128 * 1024)
-		return vmalloc(bytes);
-
-	return kmalloc(bytes, GFP_KERNEL);
-}
-
-static inline void xnarch_free_host_mem(void *chunk, u_long bytes)
-{
-	if (bytes > 128 * 1024)
-		vfree(chunk);
-	else
-		kfree(chunk);
-}
-
-static inline void *xnarch_alloc_stack_mem(u_long bytes)
-{
-	return kmalloc(bytes, GFP_KERNEL);
-}
-
-static inline void xnarch_free_stack_mem(void *chunk, u_long bytes)
-{
-	kfree(chunk);
-}
-
-#ifdef __cplusplus
-}
-#endif
-
 #else /* !__KERNEL__ */
 
 #include <nucleus/system.h>

@@ -317,7 +317,7 @@ static void *cobalt_eventcb(int event, void *data)
 
 	switch (event) {
 	case XNSHADOW_CLIENT_ATTACH:
-		q = (cobalt_queues_t *) xnarch_alloc_host_mem(sizeof(*q));
+		q = kmalloc(sizeof(*q), GFP_KERNEL);
 		if (q == NULL)
 			return ERR_PTR(-ENOSPC);
 
@@ -343,7 +343,7 @@ static void *cobalt_eventcb(int event, void *data)
 		cobalt_mutexq_cleanup(&q->kqueues);
 		cobalt_condq_cleanup(&q->kqueues);
 
-		xnarch_free_host_mem(q, sizeof(*q));
+		kfree(q);
 
 		return NULL;
 	}

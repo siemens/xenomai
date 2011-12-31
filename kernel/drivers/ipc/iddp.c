@@ -188,7 +188,7 @@ static void __iddp_free_mbuf(struct iddp_socket *sk,
 static void __iddp_flush_pool(struct xnheap *heap,
 			      void *poolmem, u_long poolsz, void *cookie)
 {
-	xnarch_free_host_mem(poolmem, poolsz);
+	xnarch_free_pages(poolmem, poolsz);
 }
 
 static int iddp_socket(struct rtipc_private *priv,
@@ -564,7 +564,7 @@ static int __iddp_bind_socket(struct rtipc_private *priv,
 	poolsz = sk->poolsz;
 	if (poolsz > 0) {
 		poolsz = xnheap_rounded_size(poolsz, XNHEAP_PAGE_SIZE);
-		poolmem = xnarch_alloc_host_mem(poolsz);
+		poolmem = xnarch_alloc_pages(poolsz);
 		if (poolmem == NULL) {
 			ret = -ENOMEM;
 			goto fail;
@@ -573,7 +573,7 @@ static int __iddp_bind_socket(struct rtipc_private *priv,
 		ret = xnheap_init(&sk->privpool,
 				  poolmem, poolsz, XNHEAP_PAGE_SIZE);
 		if (ret) {
-			xnarch_free_host_mem(poolmem, poolsz);
+			xnarch_free_pages(poolmem, poolsz);
 			goto fail;
 		}
 		xnheap_set_label(&sk->privpool, "ippd: %d", port);

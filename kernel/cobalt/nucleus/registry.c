@@ -115,8 +115,8 @@ int xnregistry_init(void)
 
 	int n, ret;
 
-	registry_obj_slots =
-		xnarch_alloc_host_mem(CONFIG_XENO_OPT_REGISTRY_NRSLOTS * sizeof(struct xnobject));
+	registry_obj_slots = kmalloc(CONFIG_XENO_OPT_REGISTRY_NRSLOTS *
+				     sizeof(struct xnobject), GFP_KERNEL);
 	if (registry_obj_slots == NULL)
 		return -ENOMEM;
 
@@ -157,8 +157,8 @@ int xnregistry_init(void)
 
 	registry_hash_entries =
 	    primes[obj_hash_max(CONFIG_XENO_OPT_REGISTRY_NRSLOTS / 100)];
-	registry_hash_table = xnarch_alloc_host_mem(sizeof(struct xnobject *) *
-						    registry_hash_entries);
+	registry_hash_table = kmalloc(sizeof(struct xnobject *) *
+				      registry_hash_entries, GFP_KERNEL);
 
 	if (registry_hash_table == NULL) {
 #ifdef CONFIG_XENO_OPT_VFILE
@@ -205,9 +205,7 @@ void xnregistry_cleanup(void)
 	}
 #endif /* CONFIG_XENO_OPT_VFILE */
 
-	xnarch_free_host_mem(registry_hash_table,
-		       sizeof(struct xnobject *) * registry_hash_entries);
-
+	kfree(registry_hash_table);
 	xnsynch_destroy(&registry_hash_synch);
 
 #ifdef CONFIG_XENO_OPT_VFILE
@@ -217,8 +215,7 @@ void xnregistry_cleanup(void)
 	xnvfile_destroy_dir(&registry_vfroot);
 #endif /* CONFIG_XENO_OPT_VFILE */
 
-	xnarch_free_host_mem(registry_obj_slots,
-			     CONFIG_XENO_OPT_REGISTRY_NRSLOTS * sizeof(struct xnobject));
+	kfree(registry_obj_slots);
 }
 
 #ifdef CONFIG_XENO_OPT_VFILE

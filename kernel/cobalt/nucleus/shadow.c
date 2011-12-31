@@ -1742,7 +1742,7 @@ static struct xnsysent __systab[] = {
 static void post_ppd_release(struct xnheap *h)
 {
 	struct xnsys_ppd *p = container_of(h, struct xnsys_ppd, sem_heap);
-	xnarch_free_host_mem(p, sizeof(*p));
+	kfree(p);
 }
 
 static inline char *get_exe_path(struct task_struct *p)
@@ -1799,7 +1799,7 @@ static void *xnshadow_sys_event(int event, void *data)
 
 	switch(event) {
 	case XNSHADOW_CLIENT_ATTACH:
-		p = xnarch_alloc_host_mem(sizeof(*p));
+		p = kmalloc(sizeof(*p), GFP_KERNEL);
 		if (p == NULL)
 			return ERR_PTR(-ENOMEM);
 
@@ -1807,7 +1807,7 @@ static void *xnshadow_sys_event(int event, void *data)
 					 CONFIG_XENO_OPT_SEM_HEAPSZ * 1024,
 					 XNARCH_SHARED_HEAP_FLAGS);
 		if (ret) {
-			xnarch_free_host_mem(p, sizeof(*p));
+			kfree(p);
 			return ERR_PTR(ret);
 		}
 
@@ -1819,7 +1819,7 @@ static void *xnshadow_sys_event(int event, void *data)
 			printk(KERN_WARNING
 			       "Xenomai: %s[%d] cannot map MAYDAY page\n",
 			       current->comm, current->pid);
-			xnarch_free_host_mem(p, sizeof(*p));
+			kfree(p);
 			return ERR_PTR(-ENOMEM);
 		}
 
@@ -2667,7 +2667,7 @@ int xnshadow_mount(void)
 	}
 
 	size = sizeof(xnqueue_t) * PPD_HASH_SIZE;
-	ppd_hash = xnarch_alloc_host_mem(size);
+	ppd_hash = kmalloc(size, GFP_KERNEL);
 	if (ppd_hash == NULL) {
 		xnshadow_cleanup();
 		printk(KERN_WARNING
@@ -2695,8 +2695,8 @@ void xnshadow_cleanup(void)
 	}
 
 	if (ppd_hash)
-		xnarch_free_host_mem(ppd_hash,
-			       sizeof(xnqueue_t) * PPD_HASH_SIZE);
+		kfree(ppd_hash);
+
 	ppd_hash = NULL;
 
 	for_each_online_cpu(cpu) {

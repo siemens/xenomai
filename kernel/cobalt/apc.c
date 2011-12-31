@@ -62,7 +62,7 @@ static void cobalt_lostage_handle_request(void *cookie)
 		rq->out = (reqnum + 1) & (COBALT_LO_MAX_REQUESTS - 1);
 
 		if (req->type == COBALT_LO_FREE_REQ)
-			xnarch_free_host_mem(req->arg, req->size);
+			xnarch_free_pages(req->arg, req->size);
 	}
 }
 

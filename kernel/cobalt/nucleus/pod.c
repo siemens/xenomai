@@ -269,14 +269,14 @@ void xnpod_schedule_deferred(void)
 static void xnpod_flush_heap(xnheap_t *heap,
 			     void *extaddr, u_long extsize, void *cookie)
 {
-	xnarch_free_host_mem(extaddr, extsize);
+	xnarch_free_pages(extaddr, extsize);
 }
 
 #if CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0
 static void xnpod_flush_stackpool(xnheap_t *heap,
 				  void *extaddr, u_long extsize, void *cookie)
 {
-	xnarch_free_stack_mem(extaddr, extsize);
+	xnarch_free_pages(extaddr, extsize);
 }
 #endif
 
@@ -337,7 +337,7 @@ int xnpod_init(void)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	heapaddr = xnarch_alloc_host_mem(xnmod_sysheap_size);
+	heapaddr = xnarch_alloc_pages(xnmod_sysheap_size);
 	if (heapaddr == NULL ||
 	    xnheap_init(&kheap, heapaddr, xnmod_sysheap_size,
 			XNHEAP_PAGE_SIZE) != 0) {
@@ -358,11 +358,11 @@ int xnpod_init(void)
 	 * requires, still allowing the system heap to rely on a
 	 * vmalloc'ed segment.
 	 */
-	heapaddr = xnarch_alloc_stack_mem(CONFIG_XENO_OPT_SYS_STACKPOOLSZ * 1024);
+	heapaddr = xnarch_alloc_pages(CONFIG_XENO_OPT_SYS_STACKPOOLSZ * 1024);
 	if (heapaddr == NULL ||
 	    xnheap_init(&kstacks, heapaddr, CONFIG_XENO_OPT_SYS_STACKPOOLSZ * 1024,
 			XNHEAP_PAGE_SIZE) != 0) {
-		xnheap_destroy(&kheap, &xnpod_flush_heap, NULL);
+		xnheap_destroy(&kheap, xnpod_flush_heap, NULL);
 		return -ENOMEM;
 	}
 	xnheap_set_label(&kstacks, "stack pool");
@@ -468,7 +468,7 @@ void xnpod_shutdown(int xtype)
 
 	xnregistry_cleanup();
 	xnarch_notify_halt();
-	xnheap_destroy(&kheap, &xnpod_flush_heap, NULL);
+	xnheap_destroy(&kheap, xnpod_flush_heap, NULL);
 #if CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0
 	xnheap_destroy(&kstacks, &xnpod_flush_stackpool, NULL);
 #endif

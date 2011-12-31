@@ -169,7 +169,7 @@ static int bufp_close(struct rtipc_private *priv,
 		xnregistry_remove(sk->handle);
 
 	if (sk->bufmem)
-		xnarch_free_host_mem(sk->bufmem, sk->bufsz);
+		xnarch_free_pages(sk->bufmem, sk->bufsz);
 
 	return 0;
 }
@@ -716,7 +716,7 @@ static int __bufp_bind_socket(struct rtipc_private *priv,
 	if (sk->bufsz == 0)
 		return -ENOBUFS;
 
-	sk->bufmem = xnarch_alloc_host_mem(sk->bufsz);
+	sk->bufmem = xnarch_alloc_pages(sk->bufsz);
 	if (sk->bufmem == NULL) {
 		ret = -ENOMEM;
 		goto fail;
@@ -731,7 +731,7 @@ static int __bufp_bind_socket(struct rtipc_private *priv,
 		ret = xnregistry_enter(sk->label, sk,
 				       &sk->handle, &__bufp_pnode.node);
 		if (ret) {
-			xnarch_free_host_mem(sk->bufmem, sk->bufsz);
+			xnarch_free_pages(sk->bufmem, sk->bufsz);
 			goto fail;
 		}
 	}

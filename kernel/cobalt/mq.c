@@ -115,9 +115,8 @@ static inline int cobalt_mq_init(cobalt_mq_t * mq, const struct mq_attr *attr)
 	memsize = msgsize * attr->mq_maxmsg;
 	memsize = PAGE_ALIGN(memsize);
 
-	mem = (char *)xnarch_alloc_host_mem(memsize);
-
-	if (!mem)
+	mem = xnarch_alloc_pages(memsize);
+	if (mem == NULL)
 		return ENOSPC;
 
 	mq->memsize = memsize;
@@ -155,7 +154,7 @@ static inline void cobalt_mq_destroy(cobalt_mq_t *mq)
 	if (!xnpod_root_p())
 		cobalt_schedule_lostage(COBALT_LO_FREE_REQ, mq->mem, mq->memsize);
 	else
-		xnarch_free_host_mem(mq->mem, mq->memsize);
+		xnarch_free_pages(mq->mem, mq->memsize);
 
 	if (resched)
 		xnpod_schedule();

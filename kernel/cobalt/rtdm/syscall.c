@@ -110,8 +110,8 @@ static void *rtdm_skin_callback(int event, void *data)
 
 	switch (event) {
 	case XNSHADOW_CLIENT_ATTACH:
-		process = xnarch_alloc_host_mem(sizeof(*process));
-		if (!process)
+		process = kmalloc(sizeof(*process), GFP_KERNEL);
+		if (process == NULL)
 			return ERR_PTR(-ENOSPC);
 
 #ifdef CONFIG_XENO_OPT_VFILE
@@ -127,7 +127,7 @@ static void *rtdm_skin_callback(int event, void *data)
 
 		cleanup_owned_contexts(process);
 
-		xnarch_free_host_mem(process, sizeof(*process));
+		kfree(process);
 
 		break;
 	}

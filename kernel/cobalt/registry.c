@@ -394,8 +394,8 @@ int cobalt_reg_pkg_init(unsigned buckets_count, unsigned maxfds)
 	size = sizeof(cobalt_node_t) * buckets_count +
 		sizeof(cobalt_desc_t) * maxfds + sizeof(unsigned) * mapsize;
 
-	chunk = (char *)xnarch_alloc_host_mem(size);
-	if (!chunk)
+	chunk = kmalloc(size, GFP_KERNEL);
+	if (chunk == NULL)
 		return ENOMEM;
 
 	cobalt_reg.node_buckets = (cobalt_node_t **) chunk;
@@ -427,8 +427,8 @@ int cobalt_reg_pkg_init(unsigned buckets_count, unsigned maxfds)
 
 void cobalt_reg_pkg_cleanup(void)
 {
-	size_t size;
 	unsigned i;
+
 	for (i = 0; i < cobalt_reg.maxfds; i++)
 		if (cobalt_reg.descs[i]) {
 #if XENO_DEBUG(POSIX)
@@ -447,9 +447,5 @@ void cobalt_reg_pkg_cleanup(void)
 	}
 #endif /* XENO_DEBUG(POSIX) */
 
-	size = sizeof(cobalt_node_t) * cobalt_reg.buckets_count
-		+ sizeof(cobalt_desc_t) * cobalt_reg.maxfds
-		+ sizeof(unsigned) * cobalt_reg.mapsz;
-
-	xnarch_free_host_mem(cobalt_reg.node_buckets, size);
+	kfree(cobalt_reg.node_buckets);
 }
