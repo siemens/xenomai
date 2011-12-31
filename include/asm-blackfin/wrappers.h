@@ -26,9 +26,8 @@
 
 #include <asm-generic/xenomai/wrappers.h> /* Read the generic portion. */
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
-#undef CAN_ERR_MASK
-#endif
+#define __put_user_inatomic __put_user
+#define __get_user_inatomic __get_user
 
 #define wrap_phys_mem_prot(filp,pfn,size,prot)	(prot)
 
