@@ -300,8 +300,6 @@ typedef struct xnthread {
 	u32 proghash;		/* Hash value for exe_path */
 #endif
 
-    XNARCH_DECL_DISPLAY_CONTEXT();
-
 #ifdef CONFIG_XENO_LEGACY_IPIPE
 	struct ipipe_threadinfo ipipe_data;
 #endif

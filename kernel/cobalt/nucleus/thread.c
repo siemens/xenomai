@@ -165,8 +165,6 @@ int xnthread_init(struct xnthread *thread,
 	if (ret)
 		goto fail;
 
-	xnarch_init_display_context(thread);
-
 	return 0;
 
 fail:

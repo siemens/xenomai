@@ -116,8 +116,6 @@ typedef struct xnheap {
 	/* Callback upon last munmap. */
 	void (*release)(struct xnheap *heap);
 
-	XNARCH_DECL_DISPLAY_CONTEXT();
-
 	xnholder_t stat_link;	/* Link in heapq */
 
 	char label[XNOBJECT_NAME_LEN+16];

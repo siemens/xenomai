@@ -303,8 +303,6 @@ typedef struct xntimer {
 
 	xnstat_counter_t fired; /* !< Number of timer events. */
 
-	XNARCH_DECL_DISPLAY_CONTEXT();
-
 } xntimer_t;
 
 #ifdef CONFIG_SMP

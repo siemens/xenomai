@@ -619,8 +619,6 @@ void __xntimer_init(xntimer_t *timer, void (*handler) (xntimer_t *timer))
 #else
 	(void)s;
 #endif /* CONFIG_XENO_OPT_STATS */
-
-	xnarch_init_display_context(timer);
 }
 EXPORT_SYMBOL_GPL(__xntimer_init);
 

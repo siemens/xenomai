@@ -109,8 +109,6 @@ typedef struct xnsynch {
 
     void (*cleanup)(struct xnsynch *synch); /* Cleanup handler */
 
-    XNARCH_DECL_DISPLAY_CONTEXT();
-
 } xnsynch_t;
 
 #define xnsynch_test_flags(synch,flags)	testbits((synch)->status,flags)

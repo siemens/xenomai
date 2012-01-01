@@ -415,12 +415,4 @@ static inline void xnarch_free_pages(void *p, size_t size)
 static inline void xnarch_head_syscall_entry(void)	{ }
 #endif
 
-/* Dashboard and graph control. */
-#define XNARCH_DECL_DISPLAY_CONTEXT();
-#define xnarch_init_display_context(obj)
-#define xnarch_create_display(obj,name,tag)
-#define xnarch_delete_display(obj)
-#define xnarch_post_graph(obj,state)
-#define xnarch_post_graph_if(obj,state,cond)
-
 #endif /* !_XENO_ASM_GENERIC_SYSTEM_H */

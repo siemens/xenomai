@@ -118,7 +118,6 @@ void xnsynch_init(struct xnsynch *synch, xnflags_t flags, xnarch_atomic_t *fastl
 	} else
 		synch->fastlock = NULL;
 	initpq(&synch->pendq);
-	xnarch_init_display_context(synch);
 }
 EXPORT_SYMBOL_GPL(xnsynch_init);
 
@@ -254,8 +253,6 @@ struct xnthread *xnsynch_wakeup_one_sleeper(struct xnsynch *synch)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	xnarch_post_graph_if(synch, 0, emptypq_p(&synch->pendq));
-
 	return thread;
 }
 EXPORT_SYMBOL_GPL(xnsynch_wakeup_one_sleeper);
@@ -286,8 +283,6 @@ int xnsynch_wakeup_many_sleepers(struct xnsynch *synch, int nr)
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
-
-	xnarch_post_graph_if(synch, 0, emptypq_p(&synch->pendq));
 
 	return nr;
 }
@@ -356,8 +351,6 @@ struct xnpholder *xnsynch_wakeup_this_sleeper(struct xnsynch *synch, struct xnph
 	xnpod_resume_thread(thread, XNPEND);
 
 	xnlock_put_irqrestore(&nklock, s);
-
-	xnarch_post_graph_if(synch, 0, emptypq_p(&synch->pendq));
 
 	return nholder;
 }
@@ -883,8 +876,6 @@ int xnsynch_flush(struct xnsynch *synch, xnflags_t reason)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	xnarch_post_graph_if(synch, 0, emptypq_p(&synch->pendq));
-
 	return status;
 }
 EXPORT_SYMBOL_GPL(xnsynch_flush);
@@ -949,8 +940,6 @@ void xnsynch_forget_sleeper(struct xnthread *thread)
 			}
 		}
 	}
-
-	xnarch_post_graph_if(synch, 0, emptypq_p(&synch->pendq));
 }
 EXPORT_SYMBOL_GPL(xnsynch_forget_sleeper);
 

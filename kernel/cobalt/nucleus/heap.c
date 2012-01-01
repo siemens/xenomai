@@ -335,8 +335,6 @@ int xnheap_init(xnheap_t *heap,
 	xnvfile_touch_tag(&vfile_tag);
 	xnlock_put_irqrestore(&nklock, s);
 
-	xnarch_init_display_context(heap);
-
 	return 0;
 }
 EXPORT_SYMBOL_GPL(xnheap_init);
