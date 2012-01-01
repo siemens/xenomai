@@ -23,21 +23,6 @@
 #include <nucleus/queue.h>
 #include <nucleus/clock.h>
 
-#define XNMOD_GHOLDER_REALLOC   128 /* Realloc count */
-#define XNMOD_GHOLDER_THRESHOLD 64  /* Safety threshold */
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void xnmod_alloc_glinks(xnqueue_t *freehq);
-
-#ifdef __cplusplus
-}
-#endif
-
-extern xnqueue_t xnmod_glink_queue;
-
 extern u_long xnmod_sysheap_size;
 
 #endif /* !_XENO_NUCLEUS_MODULE_H */

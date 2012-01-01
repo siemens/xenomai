@@ -44,43 +44,12 @@ u_long sysheap_size_arg = CONFIG_XENO_OPT_SYS_HEAPSZ;
 module_param_named(sysheap_size, sysheap_size_arg, ulong, 0444);
 MODULE_PARM_DESC(sysheap_size, "System heap size (Kb)");
 
-xnqueue_t xnmod_glink_queue;
-EXPORT_SYMBOL_GPL(xnmod_glink_queue);
-
 u_long xnmod_sysheap_size;
 
 int xeno_nucleus_status = -EINVAL;
 
 struct xnsys_ppd __xnsys_global_ppd;
 EXPORT_SYMBOL_GPL(__xnsys_global_ppd);
-
-void xnmod_alloc_glinks(xnqueue_t *freehq)
-{
-	xngholder_t *sholder, *eholder;
-
-	sholder = xnheap_alloc(&kheap,
-			       sizeof(xngholder_t) * XNMOD_GHOLDER_REALLOC);
-
-	if (!sholder) {
-		/* If we are running out of memory but still have some free
-		   holders, just return silently, hoping that the contention
-		   will disappear before we have no other choice than
-		   allocating memory eventually. Otherwise, we have to raise a
-		   fatal error right now. */
-
-		if (emptyq_p(freehq))
-			xnpod_fatal("cannot allocate generic holders");
-
-		return;
-	}
-
-	for (eholder = sholder + XNMOD_GHOLDER_REALLOC;
-	     sholder < eholder; sholder++) {
-		inith(&sholder->glink.plink);
-		appendq(freehq, &sholder->glink.plink);
-	}
-}
-EXPORT_SYMBOL_GPL(xnmod_alloc_glinks);
 
 #ifdef CONFIG_XENO_OPT_DEBUG
 #define boot_notice " [DEBUG]"
@@ -135,8 +104,6 @@ int __init xenomai_init(void)
 
 	xnloginfo("Xenomai/cobalt v%s enabled%s\n",
 		  XENO_VERSION_STRING, boot_notice);
-
-	initq(&xnmod_glink_queue);
 
 	xeno_nucleus_status = 0;
 
