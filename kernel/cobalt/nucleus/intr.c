@@ -35,7 +35,6 @@
 #include <nucleus/pod.h>
 #include <nucleus/intr.h>
 #include <nucleus/stat.h>
-#include <asm/xenomai/bits/intr.h>
 
 #define XNINTR_MAX_UNHANDLED	1000
 
@@ -211,9 +210,9 @@ static void xnintr_shirq_handler(unsigned irq, void *cookie)
 		shirq->unhandled = 0;
 
 	if (s & XN_ISR_PROPAGATE)
-		xnarch_chain_irq(irq);
+		ipipe_post_irq_root(irq);
 	else if (!(s & XN_ISR_NOENABLE))
-		xnarch_end_irq(irq);
+		ipipe_end_irq(irq);
 
 	xnstat_exectime_switch(sched, prev);
 
@@ -295,9 +294,9 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 		shirq->unhandled = 0;
 
 	if (s & XN_ISR_PROPAGATE)
-		xnarch_chain_irq(irq);
+		ipipe_post_irq_root(irq);
 	else if (!(s & XN_ISR_NOENABLE))
-		xnarch_end_irq(irq);
+		ipipe_end_irq(irq);
 
 	xnstat_exectime_switch(sched, prev);
 
@@ -341,8 +340,8 @@ static inline int xnintr_irq_attach(xnintr_t *intr)
 		}
 		shirq->unhandled = 0;
 
-		err = xnarch_hook_irq(intr->irq, handler,
-				      (ipipe_irq_ackfn_t)intr->iack, intr);
+		err = ipipe_request_irq(&rthal_archdata.domain,
+					intr->irq, handler, intr, (ipipe_irq_ackfn_t)intr->iack);
 		if (err)
 			return err;
 	}
@@ -372,7 +371,7 @@ static inline void xnintr_irq_detach(xnintr_t *intr)
 
 			/* Release the IRQ line if this was the last user */
 			if (shirq->handlers == NULL)
-				xnarch_release_irq(intr->irq);
+				ipipe_free_irq(&rthal_archdata.domain, intr->irq);
 
 			return;
 		}
@@ -395,9 +394,9 @@ typedef struct xnintr_irq {
 static xnintr_irq_t xnirqs[XNARCH_NR_IRQS];
 #endif /* CONFIG_SMP || XENO_DEBUG(XNLOCK) */
 
-static inline xnintr_t *xnintr_shirq_first(unsigned irq)
+static inline xnintr_t *xnintr_shirq_first(unsigned int irq)
 {
-	return xnarch_get_irq_cookie(irq);
+	return __ipipe_irq_cookie(&rthal_archdata.domain, irq);
 }
 
 static inline xnintr_t *xnintr_shirq_next(xnintr_t *prev)
@@ -407,8 +406,9 @@ static inline xnintr_t *xnintr_shirq_next(xnintr_t *prev)
 
 static inline int xnintr_irq_attach(xnintr_t *intr)
 {
-	return xnarch_hook_irq(intr->irq, &xnintr_irq_handler,
-			       (ipipe_irq_ackfn_t)intr->iack, intr);
+	return ipipe_request_irq(&rthal_archdata.domain,
+				 intr->irq, xnintr_irq_handler, intr,
+				 (ipipe_irq_ackfn_t)intr->iack);
 }
 
 static inline void xnintr_irq_detach(xnintr_t *intr)
@@ -416,7 +416,7 @@ static inline void xnintr_irq_detach(xnintr_t *intr)
 	int irq = intr->irq;
 
 	xnlock_get(&xnirqs[irq].lock);
-	xnarch_release_irq(irq);
+	ipipe_free_irq(&rthal_archdata.domain, irq);
 	xnlock_put(&xnirqs[irq].lock);
 
 	xnintr_sync_stat_references(intr);
@@ -453,7 +453,7 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 	 * interrupt service routine, so the scheduler pointer will
 	 * remain valid throughout this function.
 	 */
-	intr = xnarch_get_irq_cookie(irq);
+	intr = __ipipe_irq_cookie(&rthal_archdata.domain, irq);
 	if (unlikely(!intr)) {
 		s = 0;
 		goto unlock_and_exit;
@@ -483,9 +483,9 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 	xnlock_put(&xnirqs[irq].lock);
 
 	if (s & XN_ISR_PROPAGATE)
-		xnarch_chain_irq(irq);
+		ipipe_post_irq_root(irq);
 	else if (!(s & XN_ISR_NOENABLE))
-		xnarch_end_irq(irq);
+		ipipe_end_irq(irq);
 
 	xnstat_exectime_switch(sched, prev);
 
@@ -537,7 +537,7 @@ int __init xnintr_mount(void)
  *
  * - XN_ISR_NOENABLE causes the nucleus to ask the real-time control
  * layer _not_ to re-enable the IRQ line (read the following section).
- * xnarch_end_irq() must be called to re-enable the IRQ line later.
+ * ipipe_end_irq() must be called to re-enable the IRQ line later.
  *
  * - XN_ISR_PROPAGATE tells the nucleus to require the real-time
  * control layer to forward the IRQ. For instance, this would cause
@@ -714,7 +714,7 @@ int xnintr_attach(xnintr_t *intr, void *cookie)
 	memset(&intr->stat, 0, sizeof(intr->stat));
 
 #ifdef CONFIG_SMP
-	xnarch_set_irq_affinity(intr->irq, nkaffinity);
+	ipipe_set_irq_affinity(intr->irq, nkaffinity);
 #endif /* CONFIG_SMP */
 
 	xnlock_get_irqsave(&intrlock, s);
@@ -819,7 +819,7 @@ void xnintr_enable(xnintr_t *intr)
 {
 	trace_mark(xn_nucleus, irq_enable, "irq %u", intr->irq);
 
-	xnarch_enable_irq(intr->irq);
+	ipipe_enable_irq(intr->irq);
 }
 EXPORT_SYMBOL_GPL(xnintr_enable);
 
@@ -848,7 +848,7 @@ void xnintr_disable(xnintr_t *intr)
 {
 	trace_mark(xn_nucleus, irq_disable, "irq %u", intr->irq);
 
-	xnarch_disable_irq(intr->irq);
+	ipipe_disable_irq(intr->irq);
 }
 EXPORT_SYMBOL_GPL(xnintr_disable);
 
@@ -873,7 +873,9 @@ void xnintr_affinity(xnintr_t *intr, xnarch_cpumask_t cpumask)
 	trace_mark(xn_nucleus, irq_affinity, "irq %u %lu",
 		   intr->irq, *(unsigned long *)&cpumask);
 
-	xnarch_set_irq_affinity(intr->irq, cpumask);
+#ifdef CONFIG_SMP
+	ipipe_set_irq_affinity(intr->irq, cpumask);
+#endif
 }
 EXPORT_SYMBOL_GPL(xnintr_affinity);
 

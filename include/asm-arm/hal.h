@@ -90,6 +90,8 @@
 #error "Unsupported ARM machine"
 #endif /* CONFIG_ARCH_SA1100 */
 
+#define RTHAL_HOST_TICK_IRQ RTHAL_TIMER_IRQ
+
 typedef unsigned long long rthal_time_t;
 
 #if __LINUX_ARM_ARCH__ < 5

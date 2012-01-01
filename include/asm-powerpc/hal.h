@@ -70,6 +70,7 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 #define RTHAL_HOST_TIMER_IPI	IPIPE_SERVICE_IPI4
 #endif
 #endif /* CONFIG_SMP */
+#define RTHAL_HOST_TICK_IRQ	RTHAL_TIMER_IRQ
 
 #define DECREMENTER_MAX		0x7fffffff
 

@@ -2,7 +2,6 @@ includesubdir = $(includedir)/asm-blackfin/bits
 
 includesub_HEADERS =	\
 	bind.h		\
-	intr.h		\
 	pod.h		\
 	sched.h		\
 	shadow.h	\

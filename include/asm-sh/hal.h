@@ -33,6 +33,7 @@
 #define RTHAL_ARCH_NAME		"SuperH"
 #define RTHAL_TIMER_DEVICE	"TMU0"
 #define RTHAL_TIMER_IRQ		__ipipe_hrtimer_irq
+#define RTHAL_HOST_TICK_IRQ	RTHAL_TIMER_IRQ
 #define RTHAL_CLOCK_DEVICE	"TMU1"
 #define RTHAL_CLOCK_MEMBASE     __pa(__ipipe_tsc)
 

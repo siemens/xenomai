@@ -39,6 +39,12 @@
 
 #include <asm-generic/xenomai/hal.h>	/* Read the generic bits. */
 
+/*
+ * We have a dedicated timer on this arch, so no need for
+ * piggybacking the kernel timer.
+ */
+#undef RTHAL_HOST_TICK_IRQ
+
 typedef unsigned long long rthal_time_t;
 
 static inline __attribute_const__ unsigned long ffnz(unsigned long ul)

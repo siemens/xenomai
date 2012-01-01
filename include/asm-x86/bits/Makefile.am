@@ -2,7 +2,6 @@ includesubdir = $(includedir)/asm-x86/bits
 
 includesub_HEADERS =	\
 	bind.h		\
-	intr.h		\
 	pod_32.h	\
 	pod_64.h	\
 	pod.h		\

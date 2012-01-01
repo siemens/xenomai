@@ -349,6 +349,13 @@ static inline void xnarch_send_ipi (xnarch_cpumask_t cpumask)
 
 #endif /* !(CONFIG_SMP || XENO_DEBUG(XNLOCK)) */
 
+static inline void xnarch_relay_tick(void)
+{
+#ifdef RTHAL_HOST_TICK_IRQ
+	ipipe_post_irq_root(RTHAL_HOST_TICK_IRQ);
+#endif
+}
+
 #define xnlock_sync_irq(lock, x)			\
 	do {						\
 		xnlock_put_irqrestore(lock, x);		\

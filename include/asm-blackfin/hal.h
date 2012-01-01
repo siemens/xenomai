@@ -48,6 +48,8 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 #include <asm/xenomai/atomic.h>
 
 #define RTHAL_TIMER_IRQ		IRQ_CORETMR
+#define RTHAL_HOST_TICK_IRQ	RTHAL_TIMER_IRQ
+
 /* The NMI watchdog timer is clocked by the system clock. */
 #define RTHAL_NMICLK_FREQ	get_sclk()
 
