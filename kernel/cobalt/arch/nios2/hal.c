@@ -97,8 +97,3 @@ void rthal_arch_cleanup(void)
 {
 	printk(KERN_INFO "Xenomai: hal/nios2 stopped.\n");
 }
-
-EXPORT_SYMBOL_GPL(rthal_arch_init);
-EXPORT_SYMBOL_GPL(rthal_arch_cleanup);
-EXPORT_SYMBOL_GPL(rthal_thread_switch);
-EXPORT_SYMBOL_GPL(rthal_thread_trampoline);

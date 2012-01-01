@@ -236,7 +236,6 @@ void rthal_timer_notify_switch(enum clock_event_mode mode,
 
 	rthal_ktimer_saved_mode = mode;
 }
-EXPORT_SYMBOL_GPL(rthal_timer_notify_switch);
 
 unsigned long rthal_timer_calibrate(void)
 {
@@ -268,14 +267,3 @@ void rthal_arch_cleanup(void)
 	/* Nothing to cleanup so far. */
 	printk(KERN_INFO "Xenomai: hal/powerpc stopped.\n");
 }
-
-EXPORT_SYMBOL_GPL(rthal_arch_init);
-EXPORT_SYMBOL_GPL(rthal_arch_cleanup);
-EXPORT_SYMBOL_GPL(rthal_thread_switch);
-EXPORT_SYMBOL_GPL(rthal_thread_trampoline);
-
-#ifdef CONFIG_XENO_HW_FPU
-EXPORT_SYMBOL_GPL(rthal_init_fpu);
-EXPORT_SYMBOL_GPL(rthal_save_fpu);
-EXPORT_SYMBOL_GPL(rthal_restore_fpu);
-#endif /* CONFIG_XENO_HW_FPU */

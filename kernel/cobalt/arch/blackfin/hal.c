@@ -193,7 +193,6 @@ void rthal_timer_notify_switch(enum clock_event_mode mode,
 
 	rthal_ktimer_saved_mode = mode;
 }
-EXPORT_SYMBOL_GPL(rthal_timer_notify_switch);
 
 unsigned long rthal_timer_calibrate(void)
 {
@@ -224,11 +223,6 @@ void rthal_arch_cleanup(void)
 	printk(KERN_INFO "Xenomai: hal/blackfin stopped.\n");
 }
 
-EXPORT_SYMBOL_GPL(rthal_arch_init);
-EXPORT_SYMBOL_GPL(rthal_arch_cleanup);
-EXPORT_SYMBOL_GPL(rthal_thread_switch);
-EXPORT_SYMBOL_GPL(rthal_thread_trampoline);
-EXPORT_SYMBOL_GPL(rthal_defer_switch_p);
 #ifndef CONFIG_SMP
 EXPORT_SYMBOL_GPL(rthal_atomic_set_mask);
 EXPORT_SYMBOL_GPL(rthal_atomic_clear_mask);

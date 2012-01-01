@@ -50,5 +50,4 @@ long rthal_strncpy_from_user(char *dst, const char __user * src, long count)
 	__do_strncpy_from_user(dst, src, count, res);
 	return res;
 }
-
 EXPORT_SYMBOL_GPL(rthal_strncpy_from_user);

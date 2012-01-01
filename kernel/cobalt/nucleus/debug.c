@@ -536,6 +536,7 @@ void xnlock_dbg_prepare_acquire(unsigned long long *start)
 {
 	*start = rthal_rdtsc();
 }
+EXPORT_SYMBOL_GPL(xnlock_dbg_prepare_acquire);
 
 void xnlock_dbg_prepare_spin(unsigned *spin_limit)
 {

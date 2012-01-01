@@ -47,7 +47,6 @@
 static volatile int sync_op;
 
 rthal_u32frac_t rthal_tsc_to_timer;
-EXPORT_SYMBOL_GPL(rthal_tsc_to_timer);
 
 #define RTHAL_CALIBRATE_LOOPS 10
 
@@ -301,7 +300,6 @@ void rthal_timer_notify_switch(enum clock_event_mode mode,
 
 	rthal_ktimer_saved_mode = mode;
 }
-EXPORT_SYMBOL_GPL(rthal_timer_notify_switch);
 
 void __rthal_arm_fault_range(struct vm_area_struct *vma)
 {
@@ -341,14 +339,3 @@ void rthal_arch_cleanup(void)
 	/* Nothing to cleanup so far. */
 	printk(KERN_INFO "Xenomai: hal/arm stopped.\n");
 }
-
-EXPORT_SYMBOL_GPL(rthal_arch_init);
-EXPORT_SYMBOL_GPL(rthal_arch_cleanup);
-EXPORT_SYMBOL_GPL(rthal_thread_switch);
-EXPORT_SYMBOL_GPL(rthal_thread_trampoline);
-EXPORT_SYMBOL_GPL(__rthal_arm_fault_range);
-#if defined(CONFIG_VFP) && defined(CONFIG_XENO_HW_FPU)
-EXPORT_SYMBOL_GPL(last_VFP_context);
-EXPORT_SYMBOL_GPL(rthal_vfp_save);
-EXPORT_SYMBOL_GPL(rthal_vfp_load);
-#endif /* CONFIG_VFP && CONFIG_XENO_HW_FPU */

@@ -98,7 +98,6 @@ void rthal_timer_notify_switch(enum clock_event_mode mode,
 			       struct clock_event_device *cdev)
 {
 }
-EXPORT_SYMBOL_GPL(rthal_timer_notify_switch);
 
 unsigned long rthal_timer_calibrate(void)
 {
@@ -135,6 +134,3 @@ void rthal_arch_cleanup(void)
 {
 	printk(KERN_INFO "Xenomai: hal/SuperH stopped.\n");
 }
-
-EXPORT_SYMBOL_GPL(rthal_arch_init);
-EXPORT_SYMBOL_GPL(rthal_arch_cleanup);

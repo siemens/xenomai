@@ -290,7 +290,6 @@ int rthal_init(void)
 
 	return 0;
 }
-EXPORT_SYMBOL_GPL(rthal_init);
 
 void rthal_exit(void)
 {
@@ -301,7 +300,6 @@ void rthal_exit(void)
 	ipipe_free_virq(rthal_archdata.escalate_virq);
 	rthal_arch_cleanup();
 }
-EXPORT_SYMBOL_GPL(rthal_exit);
 
 unsigned long long __rthal_generic_full_divmod64(unsigned long long a,
 						 unsigned long long b,
@@ -397,7 +395,3 @@ EXPORT_SYMBOL_GPL(__rthal_generic_full_divmod64);
  */
 
 /*@}*/
-
-EXPORT_SYMBOL_GPL(rthal_timer_request);
-EXPORT_SYMBOL_GPL(rthal_timer_release);
-EXPORT_SYMBOL_GPL(rthal_timer_calibrate);

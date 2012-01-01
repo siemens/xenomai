@@ -405,7 +405,6 @@ void rthal_timer_notify_switch(enum clock_event_mode mode,
 
 	rthal_ktimer_saved_mode = mode;
 }
-EXPORT_SYMBOL_GPL(rthal_timer_notify_switch);
 
 int rthal_arch_init(void)
 {
@@ -421,11 +420,9 @@ int rthal_arch_init(void)
 
 	return 0;
 }
-EXPORT_SYMBOL_GPL(rthal_arch_init);
 
 void rthal_arch_cleanup(void)
 {
 }
-EXPORT_SYMBOL_GPL(rthal_arch_cleanup);
 
 /*@}*/
