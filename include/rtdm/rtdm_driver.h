@@ -34,13 +34,14 @@
 #include <asm/atomic.h>
 #include <linux/list.h>
 
-#include <nucleus/xenomai.h>
 #include <nucleus/heap.h>
 #include <nucleus/pod.h>
+#include <nucleus/intr.h>
 #include <nucleus/synch.h>
 #include <nucleus/select.h>
 #include <nucleus/vfile.h>
 #include <nucleus/clock.h>
+#include <nucleus/version.h>
 #include <rtdm/rtdm.h>
 
 /* debug support */

@@ -21,7 +21,6 @@
 
 #ifdef __KERNEL__
 
-#include <nucleus/xenomai.h>
 #include <linux/fcntl.h>
 
 #ifdef __cplusplus

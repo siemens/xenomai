@@ -21,7 +21,6 @@
 
 #ifdef __KERNEL__
 
-#include <nucleus/xenomai.h>
 #include <linux/types.h>
 #include <linux/signal.h>
 #include <linux/fcntl.h>

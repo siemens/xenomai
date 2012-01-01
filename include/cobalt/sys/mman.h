@@ -21,7 +21,6 @@
 
 #ifdef __KERNEL__
 
-#include <nucleus/xenomai.h>
 #include <asm/mman.h>
 
 #define MAP_FAILED ((void *) -1)

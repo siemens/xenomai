@@ -21,7 +21,6 @@
 
 #ifdef __KERNEL__
 
-#include <nucleus/xenomai.h>
 #include <linux/time.h>
 
 #define DELAYTIMER_MAX UINT_MAX

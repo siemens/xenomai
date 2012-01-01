@@ -19,7 +19,8 @@
 #ifndef _POSIX_INTERNAL_H
 #define _POSIX_INTERNAL_H
 
-#include <nucleus/xenomai.h>
+#include <nucleus/pod.h>
+#include <nucleus/heap.h>
 #include <nucleus/ppd.h>
 #include <nucleus/select.h>
 #include <cobalt/posix.h>

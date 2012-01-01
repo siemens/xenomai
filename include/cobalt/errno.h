@@ -21,9 +21,10 @@
 
 #ifdef __KERNEL__
 
-#include <nucleus/xenomai.h>
 #include <linux/errno.h>
 #include <linux/unistd.h>         /* conflicting declaration of errno. */
+
+struct xnthread;
 
 /* errno values pasted from Linux asm/errno.h and bits/errno.h (ENOTSUP). */
 #define ENOTSUP         EOPNOTSUPP
@@ -31,15 +32,7 @@
 
 #define errno (*xnthread_get_errno_location(xnpod_current_thread()))
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-int *xnthread_get_errno_location(xnthread_t *thread);
-
-#ifdef __cplusplus
-}
-#endif
+int *xnthread_get_errno_location(struct xnthread *thread);
 
 #else /* !__KERNEL__ */
 

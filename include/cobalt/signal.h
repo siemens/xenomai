@@ -21,7 +21,6 @@
 
 #ifdef __KERNEL__
 
-#include <nucleus/xenomai.h>
 #include <linux/signal.h>
 
 /* These are not defined in kernel-space headers. */
