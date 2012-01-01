@@ -34,7 +34,6 @@
 #include "registry.h"
 #include "internal.h"		/* Magics, time conversion */
 #include "thread.h"		/* errno. */
-#include "apc.h"
 #include "mq.h"
 
 /* Temporary definitions. */
@@ -152,7 +151,7 @@ static inline void cobalt_mq_destroy(cobalt_mq_t *mq)
 	xnselect_destroy(&mq->read_select);
 	xnselect_destroy(&mq->write_select);
 	if (!xnpod_root_p())
-		cobalt_schedule_lostage(COBALT_LO_FREE_REQ, mq->mem, mq->memsize);
+		xnshadow_post_linux(LO_FREEMEM_REQ, mq->mem, mq->memsize);
 	else
 		xnarch_free_pages(mq->mem, mq->memsize);
 

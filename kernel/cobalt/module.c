@@ -46,7 +46,6 @@
  */
 
 #include <cobalt/syscall.h>
-#include "apc.h"
 #include <cobalt/posix.h>
 #include "internal.h"
 #include "cond.h"
@@ -73,7 +72,6 @@ static void cobalt_shutdown(int xtype)
 	cobalt_mutex_pkg_cleanup();
 	cobalt_reg_pkg_cleanup();
 	cobalt_syscall_cleanup();
-	cobalt_apc_pkg_cleanup();
 	xnpod_shutdown(xtype);
 }
 
@@ -87,14 +85,8 @@ int SKIN_INIT(posix)
 	if (ret)
 		goto fail;
 
-	ret = cobalt_apc_pkg_init();
-	if (ret)
-		goto fail_shutdown_pod;
-
 	ret = cobalt_syscall_init();
 	if (ret) {
-		cobalt_apc_pkg_cleanup();
-	fail_shutdown_pod:
 		xnpod_shutdown(ret);
 	fail:
 		xnlogerr("POSIX skin init failed, code %d.\n", ret);

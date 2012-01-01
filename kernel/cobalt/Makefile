@@ -12,7 +12,6 @@ xeno_cobalt-y := \
 	registry.o \
 	mq.o \
 	module.o \
-	apc.o \
 	syscall.o \
 	monitor.o
 

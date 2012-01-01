@@ -74,21 +74,13 @@ struct xnskin_slot {
 static int lostage_apc;
 
 static struct __lostagerq {
-
 	int in, out;
-
 	struct {
-#define LO_START_REQ  0
-#define LO_WAKEUP_REQ 1
-#define LO_SIGGRP_REQ 2
-#define LO_SIGTHR_REQ 3
-#define LO_UNMAP_REQ  4
 		int type;
-		struct task_struct *task;
-		int arg;
+		void *ptr;
+		size_t val;
 #define LO_MAX_REQUESTS 64	/* Must be a ^2 */
 	} req[LO_MAX_REQUESTS];
-
 } lostagerq[XNARCH_NR_CPUS];
 
 #define xnshadow_sig_mux(sig, arg) ((sig) | ((arg) << 8))
@@ -315,17 +307,17 @@ static inline void unlock_timers(void)
 
 static void lostage_handler(void *cookie)
 {
-	int cpu, reqnum, type, arg, sig, sigarg;
+	int cpu, reqnum, type, sig, sigarg;
 	struct __lostagerq *rq;
 	struct task_struct *p;
+	size_t val;
 
 	cpu = smp_processor_id();
 	rq = &lostagerq[cpu];
 
 	while ((reqnum = rq->out) != rq->in) {
 		type = rq->req[reqnum].type;
-		p = rq->req[reqnum].task;
-		arg = rq->req[reqnum].arg;
+		val = rq->req[reqnum].val;
 
 		/* make sure we read the request before releasing its slot */
 		barrier();
@@ -343,11 +335,12 @@ static void lostage_handler(void *cookie)
 			xnpod_schedule();
 			/* fall through */
 		case LO_START_REQ:
+			p = rq->req[reqnum].ptr;
 			wake_up_process(p);
 			break;
-
 		case LO_SIGTHR_REQ:
-			xnshadow_sig_demux(arg, sig, sigarg);
+			p = rq->req[reqnum].ptr;
+			xnshadow_sig_demux(val, sig, sigarg);
 			if (sig == SIGSHADOW || sig == SIGDEBUG) {
 				siginfo_t si;
 				memset(&si, '\0', sizeof(si));
@@ -358,28 +351,32 @@ static void lostage_handler(void *cookie)
 			} else
 				send_sig(sig, p, 1);
 			break;
-
 		case LO_SIGGRP_REQ:
-			kill_proc_info(arg, SEND_SIG_PRIV, p->pid);
+			p = rq->req[reqnum].ptr;
+			kill_proc_info(val, SEND_SIG_PRIV, p->pid);
+			break;
+		case LO_FREEMEM_REQ:
+			xnarch_free_pages(rq->req[reqnum].ptr, val);
 			break;
 		}
 	}
 }
 
-static void schedule_linux_call(int type, struct task_struct *p, int arg)
+void xnshadow_post_linux(int type, void *ptr, size_t val)
 {
-	int cpu = ipipe_processor_id(), reqnum;
 	struct __lostagerq *rq;
+	int cpu, reqnum;
 	spl_t s;
 
-	XENO_ASSERT(NUCLEUS, p,
-		xnpod_fatal("schedule_linux_call() invoked "
-			    "with NULL task pointer (req=%d, arg=%d)?!", type,
-			    arg);
+	XENO_ASSERT(NUCLEUS, ptr,
+		xnpod_fatal("%s() invoked "
+			    "with NULL arg pointer (req=%d, arg=%Zu)?!",
+			    __FUNCTION__, type, val);
 		);
 
 	splhigh(s);
 
+	cpu = ipipe_processor_id();
 	rq = &lostagerq[cpu];
 	reqnum = rq->in;
 	rq->in = (reqnum + 1) & (LO_MAX_REQUESTS - 1);
@@ -387,8 +384,8 @@ static void schedule_linux_call(int type, struct task_struct *p, int arg)
 	    xnpod_fatal("lostage queue overflow on CPU %d! "
 			"Increase LO_MAX_REQUESTS", cpu);
 	rq->req[reqnum].type = type;
-	rq->req[reqnum].task = p;
-	rq->req[reqnum].arg = arg;
+	rq->req[reqnum].ptr = ptr;
+	rq->req[reqnum].val = val;
 
 	__rthal_apc_schedule(lostage_apc);
 
@@ -673,7 +670,7 @@ void xnshadow_relax(int notify, int reason)
 	 * xnpod_suspend_thread() has an interrupts-on section built in.
 	 */
 	splmax();
-	schedule_linux_call(LO_WAKEUP_REQ, p, 0);
+	xnshadow_post_linux(LO_WAKEUP_REQ, p, 0);
 
 	/*
 	 * Task nklock to synchronize the Linux task state manipulation with
@@ -1077,7 +1074,7 @@ void xnshadow_unmap(xnthread_t *thread)
 
 	destroy_threadinfo();
 
-	schedule_linux_call(LO_UNMAP_REQ, p, xnthread_get_magic(thread));
+	xnshadow_post_linux(LO_UNMAP_REQ, p, xnthread_get_magic(thread));
 }
 EXPORT_SYMBOL_GPL(xnshadow_unmap);
 
@@ -1091,7 +1088,7 @@ void xnshadow_start(struct xnthread *thread)
 
 	if (p->state == TASK_INTERRUPTIBLE)
 		/* Wakeup the Linux mate waiting on the barrier. */
-		schedule_linux_call(LO_START_REQ, p, 0);
+		xnshadow_post_linux(LO_START_REQ, p, 0);
 }
 EXPORT_SYMBOL_GPL(xnshadow_start);
 
@@ -1864,7 +1861,7 @@ substitute_linux_syscall(struct pt_regs *regs)
 
 void xnshadow_send_sig(xnthread_t *thread, int sig, int arg, int specific)
 {
-	schedule_linux_call(specific ? LO_SIGTHR_REQ : LO_SIGGRP_REQ,
+	xnshadow_post_linux(specific ? LO_SIGTHR_REQ : LO_SIGGRP_REQ,
 			    xnthread_user_task(thread),
 			    xnshadow_sig_mux(sig, specific ? arg : 0));
 }
