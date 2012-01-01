@@ -15,14 +15,12 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- */
-
-/*!
+ *
  * \defgroup nucleus Xenomai nucleus.
  *
  * An abstract RTOS core.
  */
-
+#include <linux/init.h>
 #include <nucleus/module.h>
 #include <nucleus/pod.h>
 #include <nucleus/timer.h>
@@ -34,8 +32,9 @@
 #include <nucleus/pipe.h>
 #endif /* CONFIG_XENO_OPT_PIPE */
 #include <nucleus/select.h>
-#include <asm/xenomai/bits/init.h>
 #include <nucleus/vdso.h>
+#include <asm/xenomai/calibration.h>
+#include <asm-generic/xenomai/bits/timeconv.h>
 
 MODULE_DESCRIPTION("Xenomai nucleus");
 MODULE_AUTHOR("rpm@xenomai.org");
@@ -83,15 +82,25 @@ void xnmod_alloc_glinks(xnqueue_t *freehq)
 }
 EXPORT_SYMBOL_GPL(xnmod_alloc_glinks);
 
-int __init __xeno_sys_init(void)
+#ifdef CONFIG_XENO_OPT_DEBUG
+#define boot_notice " [DEBUG]"
+#else
+#define boot_notice ""
+#endif
+
+int __init xenomai_init(void)
 {
 	int ret;
 
 	xnmod_sysheap_size = module_param_value(sysheap_size_arg) * 1024;
 
-	ret = xnarch_init();
+	ret = rthal_init();
 	if (ret)
 		goto fail;
+
+	xnarch_init_timeconv(RTHAL_CLOCK_FREQ);
+	nktimerlat = rthal_timer_calibrate();
+	nklatency = xnarch_ns_to_tsc(xnarch_get_sched_latency()) + nktimerlat;
 
 	ret = xnheap_init_mapped(&__xnsys_global_ppd.sem_heap,
 				 CONFIG_XENO_OPT_GLOBAL_SEM_HEAPSZ * 1024,
@@ -124,12 +133,8 @@ int __init __xeno_sys_init(void)
 	if (ret)
 		goto cleanup_shadow;
 
-	xnloginfo("real-time nucleus v%s (%s) loaded.\n",
-		  XENO_VERSION_STRING, XENO_VERSION_NAME);
-
-#ifdef CONFIG_XENO_OPT_DEBUG
-	xnloginfo("debug mode enabled.\n");
-#endif
+	xnloginfo("Xenomai/cobalt v%s enabled%s\n",
+		  XENO_VERSION_STRING, boot_notice);
 
 	initq(&xnmod_glink_queue);
 
@@ -139,30 +144,26 @@ int __init __xeno_sys_init(void)
 
 	return 0;
 
-      cleanup_shadow:
-
+cleanup_shadow:
 	xnshadow_cleanup();
 
-      cleanup_select:
-
+cleanup_select:
 	xnselect_umount();
 
-      cleanup_pipe:
+cleanup_pipe:
 
 #ifdef CONFIG_XENO_OPT_PIPE
 	xnpipe_umount();
 
-      cleanup_proc:
+cleanup_proc:
 
 #endif /* CONFIG_XENO_OPT_PIPE */
 
 	xnpod_umount();
 
-      cleanup_arch:
-
-	xnarch_exit();
-
-      fail:
+cleanup_arch:
+	rthal_exit();
+fail:
 
 	xnlogerr("system init failed, code %d.\n", ret);
 
@@ -170,26 +171,4 @@ int __init __xeno_sys_init(void)
 
 	return ret;
 }
-
-void __exit __xeno_sys_exit(void)
-{
-	xnpod_shutdown(XNPOD_NORMAL_EXIT);
-
-	/* Must take place before xnpod_umount(). */
-	xnshadow_cleanup();
-
-	xnpod_umount();
-
-	xnarch_exit();
-
-	xnheap_umount();
-#ifdef CONFIG_XENO_OPT_PIPE
-	xnpipe_umount();
-#endif
-	xnheap_destroy_mapped(&__xnsys_global_ppd.sem_heap, NULL, NULL);
-
-	xnloginfo("real-time nucleus unloaded.\n");
-}
-
-module_init(__xeno_sys_init);
-module_exit(__xeno_sys_exit);
+__initcall(xenomai_init);

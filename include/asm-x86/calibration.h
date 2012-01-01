@@ -20,10 +20,6 @@
 #ifndef _XENO_ASM_X86_CALIBRATION_H
 #define _XENO_ASM_X86_CALIBRATION_H
 
-#ifndef _XENO_ASM_X86_BITS_INIT_H
-#error "please don't include asm/calibration.h directly"
-#endif
-
 #include <asm/processor.h>
 
 static inline unsigned long xnarch_get_sched_latency (void)

@@ -237,6 +237,8 @@ void rthal_apc_free(int apc)
 }
 EXPORT_SYMBOL_GPL(rthal_apc_free);
 
+void xnpod_schedule_handler(void);
+
 int rthal_init(void)
 {
 	int ret;
@@ -267,45 +269,36 @@ int rthal_init(void)
 	rthal_archdata.timer_freq = rthal_timerfreq_arg;
 	rthal_archdata.clock_freq = rthal_clockfreq_arg;
 
-	/*
-	 * Allocate a virtual interrupt to handle apcs within the
-	 * Linux domain.
-	 */
-	rthal_archdata.apc_virq = ipipe_alloc_virq();
-	if (rthal_archdata.apc_virq == 0) {
-		printk(KERN_ERR "Xenomai: no virtual interrupt available.\n");
-		ret = -EBUSY;
-		goto out_arch_cleanup;
-	}
+	ipipe_register_head(&rthal_archdata.domain, "Xenomai");
 
-	ret = ipipe_request_irq(ipipe_current_domain,
+	rthal_archdata.apc_virq = ipipe_alloc_virq();
+	BUG_ON(rthal_archdata.apc_virq == 0);
+	rthal_archdata.escalate_virq = ipipe_alloc_virq();
+	BUG_ON(rthal_archdata.escalate_virq == 0);
+
+	ret = ipipe_request_irq(ipipe_root_domain,
 				rthal_archdata.apc_virq,
 				&rthal_apc_handler,
 				NULL, NULL);
-	if (ret) {
-		printk(KERN_ERR "Xenomai: failed to request IRQ.\n");
-		goto out_free_irq;
-	}
+	BUG_ON(ret);
 
-	ipipe_register_head(&rthal_archdata.domain, "Xenomai");
-
-	printk(KERN_INFO "Xenomai: hal/%s enabled.\n", RTHAL_ARCH_NAME);
+	ret = ipipe_request_irq(&rthal_archdata.domain,
+				rthal_archdata.escalate_virq,
+				(ipipe_irq_handler_t)xnpod_schedule_handler,
+				NULL, NULL);
+	BUG_ON(ret);
 
 	return 0;
-out_free_irq:
-	ipipe_free_virq(rthal_archdata.apc_virq);
-out_arch_cleanup:
-	rthal_arch_cleanup();
-
-	return ret;
 }
 EXPORT_SYMBOL_GPL(rthal_init);
 
 void rthal_exit(void)
 {
-	ipipe_free_irq(ipipe_current_domain, rthal_archdata.apc_virq);
-	ipipe_free_virq(rthal_archdata.apc_virq);
 	ipipe_unregister_head(&rthal_archdata.domain);
+	ipipe_free_irq(ipipe_root_domain, rthal_archdata.apc_virq);
+	ipipe_free_virq(rthal_archdata.apc_virq);
+	ipipe_free_irq(&rthal_archdata.domain, rthal_archdata.escalate_virq);
+	ipipe_free_virq(rthal_archdata.escalate_virq);
 	rthal_arch_cleanup();
 }
 EXPORT_SYMBOL_GPL(rthal_exit);

@@ -49,6 +49,7 @@ struct rthal_archdata {
 	unsigned int apc_virq;
 	unsigned long apc_map;
 	unsigned long apc_pending[NR_CPUS];
+	unsigned int escalate_virq;
 	struct {
 		void (*handler)(void *cookie);
 		void *cookie;

@@ -23,17 +23,11 @@
 #ifndef _XENO_ASM_POWERPC_CALIBRATION_H
 #define _XENO_ASM_POWERPC_CALIBRATION_H
 
-#ifndef _XENO_ASM_POWERPC_BITS_INIT_H
-#error "please don't include asm/calibration.h directly"
-#endif
-
 static inline unsigned long xnarch_get_sched_latency(void)
 {
 #if CONFIG_XENO_OPT_TIMING_SCHEDLAT != 0
 #define __sched_latency CONFIG_XENO_OPT_TIMING_SCHEDLAT
 #else
-
-
 #if defined(CONFIG_PPC_PASEMI)
 #define __sched_latency 1000
 #elif defined(CONFIG_WALNUT)

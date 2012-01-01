@@ -23,10 +23,6 @@
 #ifndef _XENO_ASM_ARM_CALIBRATION_H
 #define _XENO_ASM_ARM_CALIBRATION_H
 
-#ifndef _XENO_ASM_ARM_BITS_INIT_H
-#error "please don't include asm/calibration.h directly"
-#endif
-
 static inline unsigned long xnarch_get_sched_latency (void)
 {
 #if CONFIG_XENO_OPT_TIMING_SCHEDLAT != 0

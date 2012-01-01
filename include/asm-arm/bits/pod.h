@@ -239,10 +239,8 @@ static inline void xnarch_restore_fpu(xnarchtcb_t * tcb)
 
 static inline int xnarch_escalate(void)
 {
-	extern int xnarch_escalation_virq;
-
-	if (ipipe_current_domain == ipipe_root_domain) {
-		ipipe_raise_irq(xnarch_escalation_virq);
+	if (ipipe_root_p) {
+		ipipe_raise_irq(rthal_archdata.escalate_virq);
 		return 1;
 	}
 

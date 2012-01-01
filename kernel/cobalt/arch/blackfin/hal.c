@@ -200,8 +200,12 @@ unsigned long rthal_timer_calibrate(void)
 	return 20;	/* 20 clock cycles */
 }
 
+void xnpod_schedule_deferred(void);
+
 int rthal_arch_init(void)
 {
+	__ipipe_irq_tail_hook = (unsigned long)xnpod_schedule_deferred;
+
 	if (rthal_clockfreq_arg == 0)
 		rthal_clockfreq_arg = rthal_get_clockfreq();
 
@@ -215,6 +219,8 @@ int rthal_arch_init(void)
 
 void rthal_arch_cleanup(void)
 {
+	__ipipe_irq_tail_hook = 0;
+	smp_mb();
 	printk(KERN_INFO "Xenomai: hal/blackfin stopped.\n");
 }
 

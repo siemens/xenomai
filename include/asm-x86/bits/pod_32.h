@@ -284,16 +284,4 @@ static inline void xnarch_enable_fpu(xnarchtcb_t * tcb)
 
 #endif /* CONFIG_XENO_HW_FPU */
 
-static inline int xnarch_escalate(void)
-{
-	extern int xnarch_escalation_virq;
-
-	if (ipipe_current_domain == ipipe_root_domain) {
-		ipipe_raise_irq(xnarch_escalation_virq);
-		return 1;
-	}
-
-	return 0;
-}
-
 #endif /* !_XENO_ASM_X86_BITS_POD_32_H */
