@@ -76,7 +76,7 @@ unsigned long rthal_timer_calibrate(void)
 	 */
 	ipipe_trace_max_reset();
 
-	return rthal_imuldiv(dt, 20, RTHAL_CLOCK_FREQ);
+	return rthal_ulldiv(dt, 20, NULL);
 }
 
 #else /* !CONFIG_X86_LOCAL_APIC */
@@ -123,7 +123,7 @@ unsigned long rthal_timer_calibrate(void)
 	 */
 	ipipe_trace_max_reset();
 
-	return rthal_imuldiv(dt, 20, RTHAL_CLOCK_FREQ);
+	return rthal_ulldiv(dt, 20, NULL);
 }
 
 static void rthal_timer_set_oneshot(void)

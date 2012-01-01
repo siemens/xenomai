@@ -64,9 +64,8 @@ void rthal_timer_release(int cpu)
 
 unsigned long rthal_timer_calibrate(void)
 {
-	unsigned long flags, freq;
+	unsigned long flags;
 	u64 t, v;
-	u32 d;
 	int n;
 
 	flags = hard_local_irq_save();
@@ -75,15 +74,12 @@ unsigned long rthal_timer_calibrate(void)
 
 	barrier();
 
-	for (n = 1; n < 100; n++)
+	for (n = 1; n <= 100; n++)
 		ipipe_read_tsc(v);
 
 	hard_local_irq_restore(flags);
 
-	d = (u32)(v - t);
-	freq = rthal_get_clockfreq();
-
-	return ((1000000000 / freq) * (d / n));
+	return rthal_ulldiv(v - t, n, NULL);
 }
 
 int rthal_arch_init(void)

@@ -34,28 +34,6 @@ void xnpod_schedule_handler(void);
 
 void xnpod_schedule_deferred(void);
 
-unsigned long xnarch_calibrate_timer(void)
-{
-	/*
-	 * Compute the time needed to program the decrementer in
-	 * aperiodic mode. The return value is expressed in timebase
-	 * ticks.
-	 */
-	return xnarch_ns_to_tsc(rthal_timer_calibrate())? : 1;
-}
-
-int xnarch_calibrate_sched(void)
-{
-	nktimerlat = xnarch_calibrate_timer();
-
-	if (nktimerlat == 0)
-		return -ENODEV;
-
-	nklatency = xnarch_ns_to_tsc(xnarch_get_sched_latency()) + nktimerlat;
-
-	return 0;
-}
-
 static inline int xnarch_init(void)
 {
 	int ret;
@@ -68,9 +46,11 @@ static inline int xnarch_init(void)
 
 	xnarch_init_timeconv(RTHAL_CLOCK_FREQ);
 
-	ret = xnarch_calibrate_sched();
-	if (ret)
-		return ret;
+	nktimerlat = rthal_timer_calibrate();
+	if (nktimerlat == 0)
+		return -ENODEV;
+
+	nklatency = xnarch_ns_to_tsc(xnarch_get_sched_latency()) + nktimerlat;
 
 	xnarch_escalation_virq = ipipe_alloc_virq();
 	if (xnarch_escalation_virq == 0)

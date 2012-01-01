@@ -240,7 +240,7 @@ EXPORT_SYMBOL_GPL(rthal_timer_notify_switch);
 
 unsigned long rthal_timer_calibrate(void)
 {
-	return 1000000000 / RTHAL_CLOCK_FREQ;
+	return 5;	/* 5 clock cycles. */
 }
 
 int rthal_arch_init(void)
