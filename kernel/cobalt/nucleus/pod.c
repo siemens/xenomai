@@ -1098,8 +1098,6 @@ void xnpod_delete_thread(xnthread_t *thread)
 		 */
 		xnthread_cleanup_tcb(thread);
 
-		xnarch_finalize_no_switch(xnthread_archtcb(thread));
-
 		if (xnthread_test_state(sched->curr, XNROOT))
 			xnfreesync();
 	}

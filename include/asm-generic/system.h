@@ -403,8 +403,6 @@ static inline void xnarch_free_pages(void *p, size_t size)
 	return free_pages_exact(p, size);
 }
 
-#define xnarch_finalize_no_switch(dead_tcb) do { } while(0)
-
 #ifdef rthal_fault_range
 #define xnarch_fault_range(vma) rthal_fault_range(vma)
 #else /* !rthal_fault_range */

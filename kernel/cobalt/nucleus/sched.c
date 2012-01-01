@@ -262,8 +262,6 @@ void __xnsched_finalize_zombie(struct xnsched *sched)
 
 	xnthread_cleanup_tcb(thread);
 
-	xnarch_finalize_no_switch(xnthread_archtcb(thread));
-
 	if (xnthread_test_state(sched->curr, XNROOT))
 		xnfreesync();
 
