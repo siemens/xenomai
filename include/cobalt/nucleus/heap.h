@@ -107,7 +107,14 @@ typedef struct xnheap {
 
 	xnholder_t *idleq[XNARCH_NR_CPUS];
 
-	xnarch_heapcb_t archdep;
+	/* # of active user-space mappings. */
+	unsigned long numaps;
+	/* Kernel memory flags (0 if vmalloc()). */
+	int kmflags;
+	/* Shared heap memory base. */
+	void *heapbase;
+	/* Callback upon last munmap. */
+	void (*release)(struct xnheap *heap);
 
 	XNARCH_DECL_DISPLAY_CONTEXT();
 
@@ -207,7 +214,7 @@ void xnheap_destroy_mapped(xnheap_t *heap,
 			   void __user *mapaddr);
 
 #define xnheap_base_memory(heap) \
-	((unsigned long)((heap)->archdep.heapbase))
+	((unsigned long)((heap)->heapbase))
 
 #define xnheap_mapped_offset(heap,ptr) \
 	(((caddr_t)(ptr)) - (caddr_t)xnheap_base_memory(heap))

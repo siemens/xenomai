@@ -69,7 +69,6 @@ HEAP {
 #include <nucleus/heap.h>
 #include <nucleus/vfile.h>
 #include <nucleus/assert.h>
-#include <asm/xenomai/bits/heap.h>
 
 struct xnheap kheap;		/* System heap */
 EXPORT_SYMBOL_GPL(kheap);
@@ -319,9 +318,12 @@ int xnheap_init(xnheap_t *heap,
 	inith(&heap->stat_link);
 	initq(&heap->extents);
 	xnlock_init(&heap->lock);
-	xnarch_init_heapcb(&heap->archdep);
+	heap->numaps = 0;
+	heap->kmflags = 0;
+	heap->heapbase = NULL;
+	heap->release = NULL;
 	memset(heap->buckets, 0, sizeof(heap->buckets));
-	extent = (xnextent_t *)heapaddr;
+	extent = heapaddr;
 	init_extent(heap, extent);
 
 	appendq(&heap->extents, &extent->link);
@@ -1165,7 +1167,7 @@ static void xnheap_vmopen(struct vm_area_struct *vma)
 	xnheap_t *heap = vma->vm_private_data;
 
 	spin_lock(&kheapq_lock);
-	heap->archdep.numaps++;
+	heap->numaps++;
 	spin_unlock(&kheapq_lock);
 }
 
@@ -1175,13 +1177,13 @@ static void xnheap_vmclose(struct vm_area_struct *vma)
 
 	spin_lock(&kheapq_lock);
 
-	if (--heap->archdep.numaps == 0 && heap->archdep.release) {
+	if (--heap->numaps == 0 && heap->release) {
 		removeq(&kheapq, &heap->link);
 		spin_unlock(&kheapq_lock);
-		__unreserve_and_free_heap(heap->archdep.heapbase,
+		__unreserve_and_free_heap(heap->heapbase,
 					  xnheap_extentsize(heap),
-					  heap->archdep.kmflags);
-		heap->archdep.release(heap);
+					  heap->kmflags);
+		heap->release(heap);
 		return;
 	}
 
@@ -1206,7 +1208,7 @@ static inline struct xnheap *__validate_heap_addr(void *addr)
 
 	for (h = getheadq(&kheapq); h; h = nextq(&kheapq, h)) {
 		heap = link2heap(h);
-		if (heap == addr && heap->archdep.release == NULL)
+		if (heap == addr && heap->release == NULL)
 			return heap;
 	}
 
@@ -1241,14 +1243,14 @@ static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 		return -EINVAL;
 	}
 
-	heap->archdep.numaps++;
+	heap->numaps++;
 
 	spin_unlock(&kheapq_lock);
 
 	vma->vm_private_data = file->private_data;
 	vma->vm_ops = &xnheap_vmops;
 	size = vma->vm_end - vma->vm_start;
-	kmflags = heap->archdep.kmflags;
+	kmflags = heap->kmflags;
 	ret = -ENXIO;
 
 	/*
@@ -1369,9 +1371,8 @@ int xnheap_init_mapped(xnheap_t *heap, u_long heapsize, int memflags)
 		return err;
 	}
 
-	heap->archdep.kmflags = memflags;
-	heap->archdep.heapbase = heapbase;
-	heap->archdep.release = NULL;
+	heap->kmflags = memflags;
+	heap->heapbase = heapbase;
 
 	spin_lock(&kheapq_lock);
 	appendq(&kheapq, &heap->link);
@@ -1414,7 +1415,7 @@ void xnheap_destroy_mapped(xnheap_t *heap,
 	 */
 	if (mapaddr) {
 		down_write(&current->mm->mmap_sem);
-		heap->archdep.release = NULL;
+		heap->release = NULL;
 		do_munmap(current->mm, (unsigned long)mapaddr, len);
 		up_write(&current->mm->mmap_sem);
 	}
@@ -1426,9 +1427,9 @@ void xnheap_destroy_mapped(xnheap_t *heap,
 	 */
 	spin_lock(&kheapq_lock);
 
-	if (heap->archdep.numaps > 0) {
+	if (heap->numaps > 0) {
 		/* The release handler is supposed to clean up the rest. */
-		heap->archdep.release = release;
+		heap->release = release;
 		spin_unlock(&kheapq_lock);
 		XENO_ASSERT(NUCLEUS, release != NULL, /* nop */);
 		return;
@@ -1446,8 +1447,8 @@ void xnheap_destroy_mapped(xnheap_t *heap,
 
 	spin_unlock(&kheapq_lock);
 
-	__unreserve_and_free_heap(heap->archdep.heapbase, len,
-				  heap->archdep.kmflags);
+	__unreserve_and_free_heap(heap->heapbase, len, heap->kmflags);
+
 	if (release)
 		release(heap);
 }

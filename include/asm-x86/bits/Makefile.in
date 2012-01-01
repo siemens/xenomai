@@ -243,7 +243,6 @@ top_srcdir = @top_srcdir@
 includesubdir = $(includedir)/asm-x86/bits
 includesub_HEADERS = \
 	bind.h		\
-	heap.h		\
 	intr.h		\
 	pod_32.h	\
 	pod_64.h	\

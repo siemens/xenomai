@@ -2,7 +2,6 @@ includesubdir = $(includedir)/asm-powerpc/bits
 
 includesub_HEADERS =	\
 	bind.h		\
-	heap.h		\
 	intr.h		\
 	pod.h		\
 	sched.h		\

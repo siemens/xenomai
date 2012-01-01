@@ -202,17 +202,6 @@ typedef cpumask_t xnarch_cpumask_t;
 #define xnarch_supported_cpus			rthal_supported_cpus
 #define xnarch_cpu_supported(cpu)		rthal_cpu_supported(cpu)
 
-struct xnheap;
-
-typedef struct xnarch_heapcb {
-
-	unsigned long numaps;	/* # of active user-space mappings. */
-	int kmflags;		/* Kernel memory flags (0 if vmalloc()). */
-	void *heapbase;		/* Shared heap memory base. */
-	void (*release)(struct xnheap *heap); /* callback upon last unmap */
-
-} xnarch_heapcb_t;
-
 unsigned long long xnarch_get_host_time(void);
 
 unsigned long long xnarch_get_cpu_time(void);
