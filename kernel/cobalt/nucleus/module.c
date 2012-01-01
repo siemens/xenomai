@@ -21,8 +21,8 @@
  * An abstract RTOS core.
  */
 #include <linux/init.h>
-#include <nucleus/module.h>
 #include <nucleus/pod.h>
+#include <nucleus/clock.h>
 #include <nucleus/timer.h>
 #include <nucleus/heap.h>
 #include <nucleus/intr.h>
@@ -40,12 +40,6 @@ MODULE_DESCRIPTION("Xenomai nucleus");
 MODULE_AUTHOR("rpm@xenomai.org");
 MODULE_LICENSE("GPL");
 
-u_long sysheap_size_arg = CONFIG_XENO_OPT_SYS_HEAPSZ;
-module_param_named(sysheap_size, sysheap_size_arg, ulong, 0444);
-MODULE_PARM_DESC(sysheap_size, "System heap size (Kb)");
-
-u_long xnmod_sysheap_size;
-
 int xeno_nucleus_status = -EINVAL;
 
 struct xnsys_ppd __xnsys_global_ppd;
@@ -60,8 +54,6 @@ EXPORT_SYMBOL_GPL(__xnsys_global_ppd);
 int __init xenomai_init(void)
 {
 	int ret;
-
-	xnmod_sysheap_size = module_param_value(sysheap_size_arg) * 1024;
 
 	ret = rthal_init();
 	if (ret)

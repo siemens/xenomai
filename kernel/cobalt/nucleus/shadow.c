@@ -48,7 +48,7 @@
 #include <nucleus/pod.h>
 #include <nucleus/heap.h>
 #include <nucleus/synch.h>
-#include <nucleus/module.h>
+#include <nucleus/clock.h>
 #include <nucleus/shadow.h>
 #include <nucleus/ppd.h>
 #include <nucleus/trace.h>

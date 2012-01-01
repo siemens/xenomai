@@ -40,7 +40,7 @@
 #include <nucleus/heap.h>
 #include <nucleus/intr.h>
 #include <nucleus/registry.h>
-#include <nucleus/module.h>
+#include <nucleus/clock.h>
 #include <nucleus/stat.h>
 #include <nucleus/assert.h>
 #include <nucleus/select.h>
@@ -337,9 +337,9 @@ int xnpod_init(void)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	heapaddr = xnarch_alloc_pages(xnmod_sysheap_size);
+	heapaddr = xnarch_alloc_pages(CONFIG_XENO_OPT_SYS_HEAPSZ * 1024);
 	if (heapaddr == NULL ||
-	    xnheap_init(&kheap, heapaddr, xnmod_sysheap_size,
+	    xnheap_init(&kheap, heapaddr, CONFIG_XENO_OPT_SYS_HEAPSZ * 1024,
 			XNHEAP_PAGE_SIZE) != 0) {
 		return -ENOMEM;
 	}

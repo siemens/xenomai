@@ -251,7 +251,6 @@ includesub_HEADERS = \
 	hostrt.h \
 	intr.h \
 	map.h \
-	module.h \
 	pipe.h \
 	pod.h \
 	ppd.h \

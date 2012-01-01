@@ -34,7 +34,7 @@
 #include <nucleus/pod.h>
 #include <nucleus/synch.h>
 #include <nucleus/thread.h>
-#include <nucleus/module.h>
+#include <nucleus/clock.h>
 
 #define w_bprio(t)	xnsched_weighted_bprio(t)
 #define w_cprio(t)	xnsched_weighted_cprio(t)

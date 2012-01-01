@@ -28,7 +28,7 @@
 
 #include <nucleus/pod.h>
 #include <nucleus/timer.h>
-#include <nucleus/module.h>
+#include <nucleus/clock.h>
 
 /*!
  * \fn void xnclock_adjust(xnsticks_t delta)

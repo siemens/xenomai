@@ -24,7 +24,7 @@
 #include <nucleus/synch.h>
 #include <nucleus/heap.h>
 #include <nucleus/intr.h>
-#include <nucleus/module.h>
+#include <nucleus/clock.h>
 #include <nucleus/version.h>
 
 #endif /* !_XENO_NUCLEUS_XENOMAI_H */
