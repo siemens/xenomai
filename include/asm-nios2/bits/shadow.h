@@ -68,8 +68,6 @@ int xnarch_local_syscall(unsigned long a1, unsigned long a2,
 	return 0;
 }
 
-#define xnarch_schedule_tail(prev) do { } while(0)
-
 static inline void xnarch_setup_mayday_page(void *page)
 {
 	/*

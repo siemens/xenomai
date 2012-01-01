@@ -571,8 +571,6 @@ redo:
 	xnpod_switch_fpu(sched);
 #endif /* CONFIG_XENO_HW_FPU */
 
-	xnarch_schedule_tail(this_task);
-
 	if (xnthread_signaled_p(thread))
 		xnpod_dispatch_signals();
 

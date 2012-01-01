@@ -53,8 +53,6 @@ static inline int xnarch_local_syscall(struct pt_regs *regs)
 	return -ENOSYS;
 }
 
-#define xnarch_schedule_tail(prev) do { } while(0)
-
 static inline void xnarch_setup_mayday_page(void *page)
 {
 	u16 insn[11];

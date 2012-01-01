@@ -44,10 +44,6 @@ int xnarch_local_syscall(void)
 	return -ENOSYS;
 }
 
-static void xnarch_schedule_tail(struct task_struct *prev)
-{
-}
-
 static inline void xnarch_setup_mayday_page(void *page)
 {
 	/*

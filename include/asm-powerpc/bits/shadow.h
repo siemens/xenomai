@@ -63,8 +63,6 @@ int xnarch_local_syscall(void)
 	return -ENOSYS;
 }
 
-#define xnarch_schedule_tail(prev) do { } while(0)
-
 static inline void xnarch_setup_mayday_page(void *page)
 {
 	/*
