@@ -7,12 +7,14 @@
 #define PROC_ACCT  "/proc/xenomai/acct"
 #define PROC_PID  "/proc/%d/cmdline"
 
-#define ACCT_FMT   "%u %d %lu %lu %lu %lx %Lu %Lu %Lu %[^\n]"
-#define ACCT_NFMT  10
+#define ACCT_FMT_1  "%u %d %lu %lu %lu %lx %Lu %Lu %Lu"
+#define ACCT_FMT_2  ACCT_FMT_1 " %[^\n]"
+#define ACCT_NFMT_1 9
+#define ACCT_NFMT_2 10
 
 int main(int argc, char *argv[])
 {
-	char cmdpath[sizeof(PROC_PID) + 32], cmdbuf[BUFSIZ], name[64];
+	char cmdpath[sizeof(PROC_PID) + 32], cmdbuf[BUFSIZ], acctbuf[BUFSIZ], name[64];
 	unsigned long ssw, csw, pf, state, sec;
 	unsigned long long account_period,
 		exectime_period, exectime_total, v;
@@ -27,10 +29,19 @@ int main(int argc, char *argv[])
 	printf("%-6s %-17s   %-24s %s\n\n",
 	       "PID", "TIME", "THREAD", "CMD");
 
-	while (fscanf(acctfp, ACCT_FMT,
+	while (fgets(acctbuf, sizeof(acctbuf), acctfp) != NULL) {
+		if (sscanf(acctbuf, ACCT_FMT_2,
 		      &cpu, &pid, &ssw, &csw, &pf, &state,
 		      &account_period, &exectime_period,
-		      &exectime_total, name) == ACCT_NFMT) {
+		      &exectime_total, name) != ACCT_NFMT_2) {
+			strcpy(name, "");
+			if (sscanf(acctbuf, ACCT_FMT_1,
+			      &cpu, &pid, &ssw, &csw, &pf, &state,
+			     &account_period, &exectime_period,
+			     &exectime_total) != ACCT_NFMT_1) {
+				break;
+			}
+		}
 
 		snprintf(cmdpath, sizeof(cmdpath), PROC_PID, pid);
 		cmdfp = fopen(cmdpath, "r");
