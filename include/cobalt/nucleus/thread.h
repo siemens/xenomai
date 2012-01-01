@@ -108,12 +108,11 @@
 #define XNKICKED  0x00000008 /**< Forced out of primary mode (shadow only) */
 #define XNWAKEN   0x00000010 /**< Thread waken up upon resource availability */
 #define XNROBBED  0x00000020 /**< Robbed from resource ownership */
-#define XNATOMIC  0x00000040 /**< In atomic switch from secondary to primary mode */
-#define XNAFFSET  0x00000080 /**< CPU affinity changed from primary mode */
-#define XNPRIOSET 0x00000100 /**< Priority changed from primary mode */
-#define XNABORT   0x00000200 /**< Thread is being aborted */
-#define XNCANPND  0x00000400 /**< Cancellation request is pending */
-#define XNSWREP   0x00000800 /**< Mode switch already reported */
+#define XNAFFSET  0x00000040 /**< CPU affinity changed from primary mode */
+#define XNPRIOSET 0x00000080 /**< Priority changed from primary mode */
+#define XNABORT   0x00000100 /**< Thread is being aborted */
+#define XNCANPND  0x00000200 /**< Cancellation request is pending */
+#define XNSWREP   0x00000400 /**< Mode switch already reported */
 
 /* These information flags are available to the real-time interfaces */
 #define XNTHREAD_INFO_SPARE0  0x10000000

@@ -532,13 +532,9 @@ redo:
 		   thread, xnthread_name(thread), this_task->comm);
 
 	sched->gktarget = thread;
-	xnthread_set_info(thread, XNATOMIC);
 	set_current_state(TASK_INTERRUPTIBLE | TASK_ATOMICSWITCH);
-
 	wake_up_process(sched->gatekeeper);
 	hijack_current();
-
-	xnthread_clear_info(thread, XNATOMIC);
 
 	/*
 	 * Rare case: we might have received a signal before entering
