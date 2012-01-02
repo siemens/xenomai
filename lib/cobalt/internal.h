@@ -4,6 +4,10 @@
 #include <pthread.h>
 #include <asm-generic/bits/current.h>
 
+void xeno_sigshadow_install_once(void);
+
+extern int __cobalt_muxid;
+
 struct cobalt_threadstat;
 struct cobalt_monitor_shadow;
 

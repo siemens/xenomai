@@ -19,8 +19,7 @@
 #include <errno.h>
 #include <cobalt/syscall.h>
 #include <time.h>
-
-extern int __cobalt_muxid;
+#include "internal.h"
 
 int __wrap_timer_create(clockid_t clockid,
 			const struct sigevent *__restrict__ evp,

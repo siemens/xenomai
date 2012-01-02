@@ -23,8 +23,7 @@
 #include <cobalt/syscall.h>
 #include <kernel/cobalt/mutex.h>
 #include <asm-generic/bits/current.h>
-
-extern int __cobalt_muxid;
+#include "internal.h"
 
 int __wrap_pthread_mutexattr_init(pthread_mutexattr_t *attr)
 {

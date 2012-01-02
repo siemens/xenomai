@@ -5,5 +5,4 @@ includesub_HEADERS = \
 	current.h \
 	pod.h \
 	shadow.h \
-	sigshadow.h \
 	timeconv.h

@@ -27,8 +27,7 @@
 #include <asm-generic/xenomai/timeconv.h>
 #include <sys/types.h>
 #include <nucleus/vdso.h>
-
-extern int __cobalt_muxid;
+#include "internal.h"
 
 static xnsysinfo_t __cobalt_sysinfo;
 

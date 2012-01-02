@@ -28,8 +28,6 @@
 #include <asm-generic/bits/current.h>
 #include "internal.h"
 
-extern int __cobalt_muxid;
-
 extern unsigned long xeno_sem_heap[2];
 
 void __cobalt_thread_harden(void)

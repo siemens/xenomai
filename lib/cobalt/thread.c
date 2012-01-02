@@ -27,10 +27,8 @@
 #include <semaphore.h>
 #include <cobalt/syscall.h>
 #include <asm-generic/bits/current.h>
-#include <asm-generic/bits/sigshadow.h>
 #include <asm-generic/stack.h>
-
-extern int __cobalt_muxid;
+#include "internal.h"
 
 static pthread_attr_ex_t default_attr_ex;
 

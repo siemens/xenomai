@@ -23,8 +23,7 @@
 #include <cobalt/syscall.h>
 #include <pthread.h>
 #include <mqueue.h>
-
-extern int __cobalt_muxid;
+#include "internal.h"
 
 mqd_t __wrap_mq_open(const char *name, int oflags, ...)
 {

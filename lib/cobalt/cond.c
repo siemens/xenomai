@@ -24,8 +24,6 @@
 #include <asm-generic/bits/current.h>
 #include "internal.h"
 
-extern int __cobalt_muxid;
-
 extern unsigned long xeno_sem_heap[2];
 
 static inline unsigned long *cond_get_signalsp(struct __shadow_cond *shadow)

@@ -24,8 +24,7 @@
 #include <kernel/cobalt/sem.h>
 #include <cobalt/syscall.h>
 #include <semaphore.h>
-
-extern int __cobalt_muxid;
+#include "internal.h"
 
 int __wrap_sem_init(sem_t *sem, int pshared, unsigned value)
 {

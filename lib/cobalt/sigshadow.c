@@ -3,7 +3,6 @@
 #include <execinfo.h>
 
 #include <asm/xenomai/syscall.h>
-#include <asm-generic/xenomai/bits/sigshadow.h>
 
 static struct sigaction xeno_saved_sigshadow_action;
 
