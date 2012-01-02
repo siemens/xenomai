@@ -36,6 +36,11 @@ struct ipipe_trap_data {
 	struct pt_regs *regs;
 };
 
+struct ipipe_work_header {
+	size_t size;
+	void (*handler)(struct ipipe_work_header *work);
+};
+
 #ifndef CONFIG_XENO_OPT_HOSTRT
 #define IPIPE_EVENT_HOSTRT  -1	/* Never received */
 #endif
@@ -206,27 +211,7 @@ static inline void ipipe_set_hooks(struct ipipe_domain *ipd,
 	}
 }
 
-static inline void alloc_ptd_key(void)
-{
-	int key = ipipe_alloc_ptdkey();
-	/* In emulation mode, we want PTD key #0, no matter what. */
-	BUG_ON(key != 0);
-}
-
-static inline void free_ptd_key(void)
-{
-	ipipe_free_ptdkey(0);
-}
-
-static inline void set_ptd(struct ipipe_threadinfo *p)
-{
-	current->ptd[0] = p;
-}
-
-static inline void clear_ptd(void)
-{
-	current->ptd[0] = NULL;
-}
+void ipipe_post_work_root(struct ipipe_work_header *work);
 
 static inline
 struct ipipe_threadinfo *ipipe_task_threadinfo(struct task_struct *p)
@@ -242,14 +227,6 @@ static inline
 struct ipipe_threadinfo *ipipe_current_threadinfo(void)
 {
 	return ipipe_task_threadinfo(current);
-}
-
-static inline void hijack_current(void)
-{ 
-	int cpu = task_cpu(current);
-
-	rthal_archdata.task_hijacked[cpu] = current;
-	schedule();
 }
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,37) && defined(CONFIG_GENERIC_HARDIRQS)
@@ -361,21 +338,6 @@ static inline void hard_cond_local_irq_restore(unsigned long flags)
 	local_irq_restore_hw_cond(flags);
 }
 
-#else /* !CONFIG_XENO_LEGACY_IPIPE */
-
-static inline void alloc_ptd_key(void) { }
-
-static inline void free_ptd_key(void) { }
-
-#define set_ptd(p)  do { } while (0)
-
-static inline void clear_ptd(void) { }
-
-static inline void hijack_current(void)
-{ 
-	schedule();
-}
-
-#endif /* !CONFIG_XENO_LEGACY_IPIPE */
+#endif /* CONFIG_XENO_LEGACY_IPIPE */
 
 #endif /* _XENO_ASM_GENERIC_IPIPE_WRAPPERS_H */

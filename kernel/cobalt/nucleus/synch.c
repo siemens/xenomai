@@ -713,7 +713,7 @@ void __xnsynch_fixup_rescnt(struct xnthread *thread)
 {
 	if (xnthread_get_rescnt(thread) == 0)
 		xnshadow_send_sig(thread, SIGDEBUG,
-				  SIGDEBUG_MIGRATE_PRIOINV, 1);
+				  SIGDEBUG_MIGRATE_PRIOINV);
 	else
 		xnthread_dec_rescnt(thread);
 }
@@ -1018,7 +1018,7 @@ void xnsynch_detect_claimed_relax(struct xnthread *owner)
 			if (xnthread_test_state(sleeper, XNTRAPSW)) {
 				xnthread_set_info(sleeper, XNSWREP);
 				xnshadow_send_sig(sleeper, SIGDEBUG,
-						  SIGDEBUG_MIGRATE_PRIOINV, 1);
+						  SIGDEBUG_MIGRATE_PRIOINV);
 			}
 		}
 	}

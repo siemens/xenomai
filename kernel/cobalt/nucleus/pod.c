@@ -1006,7 +1006,7 @@ void xnpod_delete_thread(xnthread_t *thread)
 	    !xnthread_test_info(thread, XNABORT) &&
 	    !xnpod_current_p(thread)) {
 		if (!xnpod_userspace_p())
-			xnshadow_send_sig(thread, SIGKILL, 0, 1);
+			xnshadow_send_sig(thread, SIGKILL, 0);
 		/*
 		 * Otherwise, assume the interface library has issued
 		 * pthread_cancel on the target thread, which should

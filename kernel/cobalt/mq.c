@@ -138,8 +138,30 @@ static inline int cobalt_mq_init(cobalt_mq_t * mq, const struct mq_attr *attr)
 	return 0;
 }
 
+struct lostage_memfree {
+	struct ipipe_work_header work; /* Must be first. */
+	void *mem;
+	size_t memsize;
+};
+
+static void lostage_mq_memfree(struct ipipe_work_header *work)
+{
+	struct lostage_memfree *rq;
+
+	rq = container_of(work, struct lostage_memfree, work);
+	xnarch_free_pages(rq->mem, rq->memsize);
+}
+
 static inline void cobalt_mq_destroy(cobalt_mq_t *mq)
 {
+	struct lostage_memfree freework = {
+		.work = {
+			.size = sizeof(freework),
+			.handler = lostage_mq_memfree,
+		},
+		.mem = mq->mem,
+		.memsize = mq->memsize,
+	};
 	int resched;
 	spl_t s;
 
@@ -150,10 +172,7 @@ static inline void cobalt_mq_destroy(cobalt_mq_t *mq)
 	xnlock_put_irqrestore(&nklock, s);
 	xnselect_destroy(&mq->read_select);
 	xnselect_destroy(&mq->write_select);
-	if (!xnpod_root_p())
-		xnshadow_post_linux(LO_FREEMEM_REQ, mq->mem, mq->memsize);
-	else
-		xnarch_free_pages(mq->mem, mq->memsize);
+	ipipe_post_work_root(&freework.work);
 
 	if (resched)
 		xnpod_schedule();

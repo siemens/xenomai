@@ -29,13 +29,6 @@
 #define XNSHADOW_CLIENT_ATTACH  0
 #define XNSHADOW_CLIENT_DETACH  1
 
-#define LO_START_REQ    0
-#define LO_WAKEUP_REQ   1
-#define LO_SIGGRP_REQ   2
-#define LO_SIGTHR_REQ   3
-#define LO_UNMAP_REQ    4
-#define LO_FREEMEM_REQ  5
-
 struct xnthread;
 struct xnmutex;
 struct pt_regs;
@@ -113,15 +106,12 @@ void xnshadow_reset_shield(void);
 
 void xnshadow_send_sig(struct xnthread *thread,
 		       int sig,
-		       int arg,
-		       int specific);
+		       int arg);
 
 void xnshadow_call_mayday(struct xnthread *thread, int sigtype);
 
 void xnshadow_kick(struct xnthread *thread);
 
 void xnshadow_demote(struct xnthread *thread);
-
-void xnshadow_post_linux(int type, void *ptr, size_t val);
 
 #endif /* !_XENO_NUCLEUS_SHADOW_H */

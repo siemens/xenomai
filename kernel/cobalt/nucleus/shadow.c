@@ -2,7 +2,7 @@
  * \brief Real-time shadow services.
  * \author Philippe Gerum
  *
- * Copyright (C) 2001-2008 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2001-2012 Philippe Gerum <rpm@xenomai.org>.
  * Copyright (C) 2004 The RTAI project <http://www.rtai.org>
  * Copyright (C) 2004 The HYADES project <http://www.hyades-itea.org>
  * Copyright (C) 2005 The Xenomai project <http://www.xenomai.org>
@@ -71,26 +71,6 @@ MODULE_PARM_DESC(xenomai_gid, "GID of the group with access to Xenomai services"
 struct xnskin_slot {
 	struct xnskin_props *props;
 } skins[XENOMAI_SKINS_NR];
-
-static int lostage_apc;
-
-static struct __lostagerq {
-	int in, out;
-	struct {
-		int type;
-		void *ptr;
-		size_t val;
-#define LO_MAX_REQUESTS 64	/* Must be a ^2 */
-	} req[LO_MAX_REQUESTS];
-} lostagerq[XNARCH_NR_CPUS];
-
-#define xnshadow_sig_mux(sig, arg) ((sig) | ((arg) << 8))
-#define xnshadow_sig_demux(muxed, sig, arg) \
-	do {				     \
-		int _muxed = (muxed);	     \
-		(sig) = _muxed & 0xff;	     \
-		(arg) = _muxed >> 8;	     \
-	} while (0)
 
 static int nucleus_muxid = -1;
 
@@ -298,91 +278,67 @@ static inline void unlock_timers(void)
 		clrbits(nkclock.status, XNTBLCK);
 }
 
-static void lostage_handler(void *cookie)
+struct lostage_wakeup {
+	struct ipipe_work_header work; /* Must be first. */
+	struct task_struct *task;
+};
+
+static void lostage_task_wakeup(struct ipipe_work_header *work)
 {
-	int cpu, reqnum, type, sig, sigarg;
-	struct __lostagerq *rq;
+	struct lostage_wakeup *rq;
 	struct task_struct *p;
-	size_t val;
 
-	cpu = smp_processor_id();
-	rq = &lostagerq[cpu];
+	rq = container_of(work, struct lostage_wakeup, work);
+	p = rq->task;
 
-	while ((reqnum = rq->out) != rq->in) {
-		type = rq->req[reqnum].type;
-		val = rq->req[reqnum].val;
+	trace_mark(xn_nucleus, lostage_wakeup, "comm %s pid %d",
+		   p->comm, p->pid);
 
-		/* make sure we read the request before releasing its slot */
-		barrier();
-
-		rq->out = (reqnum + 1) & (LO_MAX_REQUESTS - 1);
-
-		trace_mark(xn_nucleus, lostage_work,
-			   "type %d comm %s pid %d",
-			   type, p->comm, p->pid);
-
-		switch (type) {
-		case LO_UNMAP_REQ:
-			/* fall through */
-		case LO_WAKEUP_REQ:
-			xnpod_schedule();
-			/* fall through */
-		case LO_START_REQ:
-			p = rq->req[reqnum].ptr;
-			wake_up_process(p);
-			break;
-		case LO_SIGTHR_REQ:
-			p = rq->req[reqnum].ptr;
-			xnshadow_sig_demux(val, sig, sigarg);
-			if (sig == SIGSHADOW || sig == SIGDEBUG) {
-				siginfo_t si;
-				memset(&si, '\0', sizeof(si));
-				si.si_signo = sig;
-				si.si_code = SI_QUEUE;
-				si.si_int = sigarg;
-				send_sig_info(sig, &si, p);
-			} else
-				send_sig(sig, p, 1);
-			break;
-		case LO_SIGGRP_REQ:
-			p = rq->req[reqnum].ptr;
-			kill_proc_info(val, SEND_SIG_PRIV, p->pid);
-			break;
-		case LO_FREEMEM_REQ:
-			xnarch_free_pages(rq->req[reqnum].ptr, val);
-			break;
-		}
-	}
+	xnpod_schedule();	/* XXX: why this? */
+	wake_up_process(p);
 }
 
-void xnshadow_post_linux(int type, void *ptr, size_t val)
+static void post_wakeup(struct task_struct *p)
 {
-	struct __lostagerq *rq;
-	int cpu, reqnum;
-	spl_t s;
+	struct lostage_wakeup wakework = {
+		.work = {
+			.size = sizeof(wakework),
+			.handler = lostage_task_wakeup,
+		},
+		.task = p,
+	};
 
-	XENO_ASSERT(NUCLEUS, ptr,
-		xnpod_fatal("%s() invoked "
-			    "with NULL arg pointer (req=%d, arg=%Zu)?!",
-			    __FUNCTION__, type, val);
-		);
+	ipipe_post_work_root(&wakework.work);
+}
 
-	splhigh(s);
+struct lostage_signal {
+	struct ipipe_work_header work; /* Must be first. */
+	struct task_struct *task;
+	int signo, sigval;
+};
 
-	cpu = ipipe_processor_id();
-	rq = &lostagerq[cpu];
-	reqnum = rq->in;
-	rq->in = (reqnum + 1) & (LO_MAX_REQUESTS - 1);
-	if (XENO_DEBUG(NUCLEUS) && rq->in == rq->out)
-	    xnpod_fatal("lostage queue overflow on CPU %d! "
-			"Increase LO_MAX_REQUESTS", cpu);
-	rq->req[reqnum].type = type;
-	rq->req[reqnum].ptr = ptr;
-	rq->req[reqnum].val = val;
+static void lostage_task_signal(struct ipipe_work_header *work)
+{
+	struct lostage_signal *rq;
+	struct task_struct *p;
+	siginfo_t si;
+	int signo;
 
-	__rthal_apc_schedule(lostage_apc);
+	rq = container_of(work, struct lostage_signal, work);
+	p = rq->task;
+	signo = rq->signo;
 
-	splexit(s);
+	trace_mark(xn_nucleus, lostage_signal, "comm %s pid %d sig %d",
+		   p->comm, p->pid, signo);
+
+	if (signo == SIGSHADOW || signo == SIGDEBUG) {
+		memset(&si, '\0', sizeof(si));
+		si.si_signo = signo;
+		si.si_code = SI_QUEUE;
+		si.si_int = rq->sigval;
+		send_sig_info(signo, &si, p);
+	} else
+		send_sig(signo, p, 1);
 }
 
 static inline int normalize_priority(int prio)
@@ -660,7 +616,7 @@ void xnshadow_relax(int notify, int reason)
 	 * xnpod_suspend_thread() has an interrupts-on section built in.
 	 */
 	splmax();
-	xnshadow_post_linux(LO_WAKEUP_REQ, p, 0);
+	post_wakeup(p);
 
 	/*
 	 * Task nklock to synchronize the Linux task state manipulation with
@@ -696,8 +652,7 @@ void xnshadow_relax(int notify, int reason)
 		prio = normalize_priority(xnthread_current_priority(thread));
 		xnthread_clear_info(thread, XNPRIOSET);
 		xnshadow_send_sig(thread, SIGSHADOW,
-				  sigshadow_int(SIGSHADOW_ACTION_RENICE, prio),
-				  1);
+				  sigshadow_int(SIGSHADOW_ACTION_RENICE, prio));
 	}
 
 #ifdef CONFIG_SMP
@@ -827,8 +782,7 @@ void xnshadow_demote(struct xnthread *thread) /* nklock locked, irqs off */
 	 * real-time scheduling.
 	 */
 	xnshadow_send_sig(thread, SIGSHADOW,
-			  sigshadow_int(SIGSHADOW_ACTION_RENICE, 0),
-			  1);
+			  sigshadow_int(SIGSHADOW_ACTION_RENICE, 0));
 }
 EXPORT_SYMBOL_GPL(xnshadow_demote);
 
@@ -1064,7 +1018,7 @@ void xnshadow_unmap(xnthread_t *thread)
 
 	destroy_threadinfo();
 
-	xnshadow_post_linux(LO_UNMAP_REQ, p, xnthread_get_magic(thread));
+	post_wakeup(p);
 }
 EXPORT_SYMBOL_GPL(xnshadow_unmap);
 
@@ -1078,7 +1032,7 @@ void xnshadow_start(struct xnthread *thread)
 
 	if (p->state == TASK_INTERRUPTIBLE)
 		/* Wakeup the Linux mate waiting on the barrier. */
-		xnshadow_post_linux(LO_START_REQ, p, 0);
+		post_wakeup(p);
 }
 EXPORT_SYMBOL_GPL(xnshadow_start);
 
@@ -1093,13 +1047,13 @@ void xnshadow_renice(struct xnthread *thread)
 	int prio = normalize_priority(thread->cprio);
 
 	xnshadow_send_sig(thread, SIGSHADOW,
-			  sigshadow_int(SIGSHADOW_ACTION_RENICE, prio), 1);
+			  sigshadow_int(SIGSHADOW_ACTION_RENICE, prio));
 }
 
 void xnshadow_suspend(struct xnthread *thread)
 {
 	/* Called with nklock locked, Xenomai interrupts off. */
-	xnshadow_send_sig(thread, SIGSHADOW, SIGSHADOW_ACTION_HARDEN, 1);
+	xnshadow_send_sig(thread, SIGSHADOW, SIGSHADOW_ACTION_HARDEN);
 }
 EXPORT_SYMBOL_GPL(xnshadow_suspend);
 
@@ -1206,7 +1160,7 @@ void xnshadow_call_mayday(struct xnthread *thread, int sigtype)
 {
 	struct task_struct *p = xnthread_archtcb(thread)->user_task;
 	xnthread_set_info(thread, XNKICKED);
-	xnshadow_send_sig(thread, SIGDEBUG, sigtype, 1);
+	xnshadow_send_sig(thread, SIGDEBUG, sigtype);
 	xnarch_call_mayday(p);
 }
 EXPORT_SYMBOL_GPL(xnshadow_call_mayday);
@@ -1849,11 +1803,19 @@ substitute_linux_syscall(struct pt_regs *regs)
 	return 0;
 }
 
-void xnshadow_send_sig(xnthread_t *thread, int sig, int arg, int specific)
+void xnshadow_send_sig(xnthread_t *thread, int sig, int arg)
 {
-	xnshadow_post_linux(specific ? LO_SIGTHR_REQ : LO_SIGGRP_REQ,
-			    xnthread_user_task(thread),
-			    xnshadow_sig_mux(sig, specific ? arg : 0));
+	struct lostage_signal sigwork = {
+		.work = {
+			.size = sizeof(sigwork),
+			.handler = lostage_task_signal,
+		},
+		.task = xnthread_user_task(thread),
+		.signo = sig,
+		.sigval = arg,
+	};
+
+	ipipe_post_work_root(&sigwork.work);
 }
 EXPORT_SYMBOL_GPL(xnshadow_send_sig);
 
@@ -2619,15 +2581,13 @@ int xnshadow_mount(void)
 	unsigned i, size;
 	int cpu, ret;
 
+	__xnshadow_init();
+
 	sema_init(&completion_mutex, 1);
-	alloc_ptd_key();
 
 	ret = xndebug_init();
 	if (ret)
 		return ret;
-
-	lostage_apc =
-	    rthal_apc_alloc("lostage_handler", &lostage_handler, NULL);
 
 	for_each_online_cpu(cpu) {
 		if (!xnarch_cpu_supported(cpu))
@@ -2696,8 +2656,7 @@ void xnshadow_cleanup(void)
 		kthread_stop(sched->gatekeeper);
 	}
 
-	rthal_apc_free(lostage_apc);
-	free_ptd_key();
+	__xnshadow_exit();
 
 	mayday_cleanup_page();
 

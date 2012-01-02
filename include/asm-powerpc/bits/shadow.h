@@ -27,6 +27,7 @@
 #error "Pure kernel header included from user-space!"
 #endif
 
+#include <asm-generic/xenomai/bits/shadow.h>
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
 #include <asm/cache.h>
 #else
