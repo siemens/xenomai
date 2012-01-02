@@ -38,6 +38,7 @@
 #include <linux/unistd.h>
 #include <linux/wait.h>
 #include <linux/init.h>
+#include <linux/sched.h>
 #include <linux/kthread.h>
 #include <linux/mman.h>
 #include <linux/mm.h>
@@ -285,14 +286,6 @@ static inline void request_syscall_restart(xnthread_t *thread,
 	xnshadow_relax(notify, SIGDEBUG_MIGRATE_SIGNAL);
 }
 
-static inline void set_linux_task_priority(struct task_struct *p, int prio)
-{
-	if (__ipipe_setscheduler_root(p, prio ? SCHED_FIFO : SCHED_NORMAL, prio) < 0)
-		printk(KERN_WARNING
-		       "Xenomai: invalid Linux priority level: %d, task=%s\n",
-		       prio, p->comm);
-}
-
 static inline void lock_timers(void)
 {
 	xnarch_atomic_inc(&nkpod->timerlck);
@@ -399,18 +392,21 @@ static inline int normalize_priority(int prio)
 
 static int gatekeeper_thread(void *data)
 {
-	struct task_struct *this_task = current;
-	int cpu = (long)data;
-	struct xnsched *sched = xnpod_sched_slot(cpu);
+	struct sched_param param = { .sched_priority = MAX_RT_PRIO - 1 };
 	struct xnthread *target;
+	struct task_struct *p;
+	struct xnsched *sched;
+	int cpu = (long)data;
 	cpumask_t cpumask;
 	spl_t s;
 
-	this_task->flags |= PF_NOFREEZE;
-	sigfillset(&this_task->blocked);
+	p = current;
+	sched = xnpod_sched_slot(cpu);
+	p->flags |= PF_NOFREEZE;
+	sigfillset(&p->blocked);
 	cpumask = cpumask_of_cpu(cpu);
-	set_cpus_allowed(this_task, cpumask);
-	set_linux_task_priority(this_task, MAX_RT_PRIO - 1);
+	set_cpus_allowed(p, cpumask);
+	sched_setscheduler_nocheck(p, SCHED_FIFO, &param);
 
 	set_current_state(TASK_INTERRUPTIBLE);
 	up(&sched->gksync);	/* Sync with xnshadow_mount(). */
