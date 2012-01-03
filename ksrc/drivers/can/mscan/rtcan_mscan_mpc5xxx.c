@@ -155,7 +155,7 @@ static u32 __devinit mpc512x_can_get_clock(struct of_device *ofdev,
 	}
 
 	/* Determine the MSCAN device index from the physical address */
-	pval = of_get_property(ofdev->node, "reg", &plen);
+	pval = of_get_property(mpc5xxx_get_of_node(ofdev), "reg", &plen);
 	BUG_ON(!pval || plen < sizeof(*pval));
 	clockidx = (*pval & 0x80) ? 1 : 0;
 	if (*pval & 0x2000)
@@ -171,11 +171,11 @@ static u32 __devinit mpc512x_can_get_clock(struct of_device *ofdev,
 	 */
 	if (clock_name && !strcmp(clock_name, "ip")) {
 		*mscan_clksrc = MSCAN_CLKSRC_IPS;
-		freq = mpc5xxx_get_bus_frequency(ofdev->node);
+		freq = mpc5xxx_get_bus_frequency(mpc5xxx_get_of_node(ofdev));
 	} else {
 		*mscan_clksrc = MSCAN_CLKSRC_BUS;
 
-		pval = of_get_property(ofdev->node,
+		pval = of_get_property(mpc5xxx_get_of_node(ofdev),
 				       "fsl,mscan-clock-divider", &plen);
 		if (pval && plen == sizeof(*pval))
 			clockdiv = *pval;
