@@ -172,7 +172,7 @@ static inline void cobalt_mq_destroy(cobalt_mq_t *mq)
 	xnlock_put_irqrestore(&nklock, s);
 	xnselect_destroy(&mq->read_select);
 	xnselect_destroy(&mq->write_select);
-	ipipe_post_work_root(&freework.work);
+	ipipe_post_work_root(&freework, work);
 
 	if (resched)
 		xnpod_schedule();

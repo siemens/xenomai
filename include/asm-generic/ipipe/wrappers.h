@@ -211,7 +211,16 @@ static inline void ipipe_set_hooks(struct ipipe_domain *ipd,
 	}
 }
 
-void ipipe_post_work_root(struct ipipe_work_header *work);
+void __ipipe_post_work_root(struct ipipe_work_header *work);
+
+#define ipipe_post_work_root(p, header)			\
+	do {						\
+		void header_not_at_start(void);		\
+		if (offsetof(typeof(*(p)), header)) {	\
+			header_not_at_start();		\
+		}					\
+		__ipipe_post_work_root(&(p)->header);	\
+	} while (0)
 
 static inline
 struct ipipe_threadinfo *ipipe_task_threadinfo(struct task_struct *p)

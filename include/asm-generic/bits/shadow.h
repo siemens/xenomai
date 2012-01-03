@@ -57,7 +57,7 @@ static void do_lostage_work(unsigned int virq, void *cookie)
 	}
 }
 
-void ipipe_post_work_root(struct ipipe_work_header *work)
+void __ipipe_post_work_root(struct ipipe_work_header *work)
 {
 	unsigned long flags;
 	void *tail;

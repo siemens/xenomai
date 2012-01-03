@@ -308,7 +308,7 @@ static void post_wakeup(struct task_struct *p)
 		.task = p,
 	};
 
-	ipipe_post_work_root(&wakework.work);
+	ipipe_post_work_root(&wakework, work);
 }
 
 struct lostage_signal {
@@ -1815,7 +1815,7 @@ void xnshadow_send_sig(xnthread_t *thread, int sig, int arg)
 		.sigval = arg,
 	};
 
-	ipipe_post_work_root(&sigwork.work);
+	ipipe_post_work_root(&sigwork, work);
 }
 EXPORT_SYMBOL_GPL(xnshadow_send_sig);
 
