@@ -35,10 +35,6 @@
 #include <asm/mmu.h>
 #include <asm/ptrace.h>
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32)
-#error "Kernel >= 2.6.32 required"
-#endif
-	
 /*
  * void rthal_thread_switch(struct thread_struct *prev, struct thread_struct *next, int kthreadp)
  */
