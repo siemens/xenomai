@@ -91,8 +91,11 @@ static unsigned pool_buf_size;
 static unsigned long pool_start, pool_len;
 #endif /* CONFIG_XENO_FASTSYNCH */
 
+static pthread_once_t init_once = PTHREAD_ONCE_INIT;
+
 static void cleanup_buffer(struct print_buffer *buffer);
 static void print_buffers(void);
+static void spawn_printer_thread(void);
 
 /* *** rt_print API *** */
 
@@ -344,6 +347,8 @@ int rt_print_init(size_t buffer_size, const char *buffer_name)
 	unsigned long old_bitmap;
 	unsigned j;
 
+	pthread_once(&init_once, spawn_printer_thread);
+
 	if (!size)
 		size = default_buffer_size;
 	else if (size < RT_PRINT_LINE_BREAK)
@@ -415,6 +420,8 @@ int rt_print_init(size_t buffer_size, const char *buffer_name)
 void rt_print_auto_init(int enable)
 {
 	auto_init = enable;
+	if (enable)
+		pthread_once(&init_once, spawn_printer_thread);
 }
 
 void rt_print_cleanup(void)
@@ -432,6 +439,7 @@ void rt_print_cleanup(void)
 	}
 
 	pthread_cancel(printer_thread);
+	printer_thread = 0;
 }
 
 const char *rt_print_buffer_name(void)
@@ -596,9 +604,16 @@ static void print_buffers(void)
 	}
 }
 
+static void unlock(void *cookie)
+{
+	pthread_mutex_t *mutex = (pthread_mutex_t *)cookie;
+	pthread_mutex_unlock(mutex);
+}
+
 static void *printer_loop(void *arg)
 {
 	while (1) {
+		pthread_cleanup_push(unlock, &buffer_lock);
 		pthread_mutex_lock(&buffer_lock);
 
 		while (buffers == 0)
@@ -606,7 +621,7 @@ static void *printer_loop(void *arg)
 
 		print_buffers();
 
-		pthread_mutex_unlock(&buffer_lock);
+		pthread_cleanup_pop(1);
 
 		nanosleep(&print_period, NULL);
 	}
@@ -620,6 +635,7 @@ static void spawn_printer_thread(void)
 
 	pthread_attr_init(&thattr);
 	pthread_attr_setstacksize(&thattr, xeno_stacksize(0));
+	pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_DETACHED);
 	pthread_create(&printer_thread, &thattr, printer_loop, NULL);
 }
 
@@ -653,10 +669,11 @@ static void forked_child_init(void)
 			cleanup_buffer(*pbuffer);
 	}
 
-	spawn_printer_thread();
+	if (printer_thread)
+		spawn_printer_thread();
 }
 
-static __attribute__ ((constructor)) void __rt_print_init(void)
+static __attribute__((constructor)) void __rt_print_init(void)
 {
 	const char *value_str;
 	unsigned long long period;
@@ -752,7 +769,6 @@ static __attribute__ ((constructor)) void __rt_print_init(void)
 
 	pthread_cond_init(&printer_wakeup, NULL);
 
-	spawn_printer_thread();
 	pthread_atfork(NULL, NULL, forked_child_init);
 }
 

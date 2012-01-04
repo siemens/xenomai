@@ -416,6 +416,11 @@ sa1100      | -march=armv4t -msoft-float | --enable-arm-quirks=sa1100
 * Depending on the gcc versions, the flag for armv7 may be
 -march=armv7-a or -march=armv7a.
 
+It is possible to build for an older architecture version (v6 instead
+of v7, or v4 instead of v5), if your toolchain does not support the
+target architecture, the only rule being that if SMP is enabled, the
+architecture should not be less than v6.
+
 2.5 Building for NIOS II
 --------------------
 
