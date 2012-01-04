@@ -159,18 +159,7 @@ static inline int __ipipe_disable_ondemand_mappings(struct task_struct *p)
 	return ipipe_disable_ondemand_mappings(p);
 }
 
-static inline void __ipipe_reenter_root(void)
-{
-	struct task_struct *prev;
-	int policy, prio, cpu;
-
-	cpu = task_cpu(current);
-	policy = current->rt_priority ? SCHED_FIFO : SCHED_NORMAL;
-	prio = current->rt_priority;
-	prev = rthal_archdata.task_hijacked[cpu];
-
-	ipipe_reenter_root(prev, policy, prio);
-}
+static inline void __ipipe_complete_domain_migration(void) { }
 
 static inline void ipipe_raise_mayday(struct task_struct *p)
 {

@@ -346,81 +346,14 @@ static inline int normalize_priority(int prio)
 	return prio < MAX_RT_PRIO ? prio : MAX_RT_PRIO - 1;
 }
 
-static int gatekeeper_thread(void *data)
-{
-	struct sched_param param = { .sched_priority = MAX_RT_PRIO - 1 };
-	struct xnthread *target;
-	struct task_struct *p;
-	struct xnsched *sched;
-	int cpu = (long)data;
-	cpumask_t cpumask;
-	spl_t s;
-
-	p = current;
-	sched = xnpod_sched_slot(cpu);
-	p->flags |= PF_NOFREEZE;
-	sigfillset(&p->blocked);
-	cpumask = cpumask_of_cpu(cpu);
-	set_cpus_allowed(p, cpumask);
-	sched_setscheduler_nocheck(p, SCHED_FIFO, &param);
-
-	set_current_state(TASK_INTERRUPTIBLE);
-	up(&sched->gksync);	/* Sync with xnshadow_mount(). */
-
-	for (;;) {
-		up(&sched->gksync); /* Make the request token available. */
-		schedule();
-
-		if (kthread_should_stop())
-			break;
-
-		/*
-		 * Real-time shadow TCBs are always removed on behalf
-		 * of the killed thread.
-		 */
-		target = sched->gktarget;
-
-		/*
-		 * In the very rare case where the requestor has been
-		 * awaken by a signal before we have been able to
-		 * process the pending request, just ignore the
-		 * latter.
-		 */
-		if ((xnthread_user_task(target)->state & ~TASK_ATOMICSWITCH) == TASK_INTERRUPTIBLE) {
-			xnlock_get_irqsave(&nklock, s);
-#ifdef CONFIG_SMP
-			/*
-			 * If the task changed its CPU while in
-			 * secondary mode, change the CPU of the
-			 * underlying Xenomai shadow too. We do not
-			 * migrate the thread timers here, it would
-			 * not work. For a "full" migration comprising
-			 * timers, using xnpod_migrate_thread is
-			 * required.
-			 */
-			if (target->sched != sched)
-				xnsched_migrate_passive(target, sched);
-#endif /* CONFIG_SMP */
-			xnpod_resume_thread(target, XNRELAX);
-			xnlock_put_irqrestore(&nklock, s);
-			xnpod_schedule();
-		}
-		set_current_state(TASK_INTERRUPTIBLE);
-	}
-
-	return 0;
-}
-
 /*!
  * @internal
  * \fn int xnshadow_harden(void);
  * \brief Migrate a Linux task to the Xenomai domain.
  *
  * This service causes the transition of "current" from the Linux
- * domain to Xenomai. This is obtained by asking the gatekeeper to
- * resume the shadow mated with "current" then triggering the
- * rescheduling procedure in the Xenomai domain. The shadow will
- * resume in the Xenomai domain as returning from schedule().
+ * domain to Xenomai. The shadow will resume in the Xenomai domain as
+ * returning from schedule().
  *
  * Environments:
  *
@@ -431,29 +364,27 @@ static int gatekeeper_thread(void *data)
  * Rescheduling: always.
  */
 
+#ifdef CONFIG_XENO_LEGACY_IPIPE
+
 int xnshadow_harden(void)
 {
-	struct task_struct *this_task = current;
+	struct task_struct *p = current;
+	struct gatekeeper_data *gd;
 	struct xnthread *thread;
 	struct xnsched *sched;
-	int cpu, err;
+	int cpu;
 
 redo:
 	thread = xnshadow_current();
 	if (thread == NULL)
 		return -EPERM;
 
-	cpu = task_cpu(this_task);
-	sched = xnpod_sched_slot(cpu);
+	cpu = task_cpu(p);
+	gd = &per_cpu(shadow_migration, cpu);
 
 	/* Grab the request token. */
-	if (down_interruptible(&sched->gksync)) {
-		err = -ERESTARTSYS;
-		goto failed;
-	}
-
-	if (thread->u_mode)
-		*(thread->u_mode) = thread->state & ~XNRELAX;
+	if (down_interruptible(&gd->gksync))
+		return -ERESTARTSYS;
 
 	preempt_disable();
 
@@ -463,11 +394,14 @@ redo:
 	 * don't mistakenly send the request to the wrong
 	 * gatekeeper.
 	 */
-	if (cpu != task_cpu(this_task)) {
+	if (cpu != task_cpu(p)) {
 		preempt_enable();
-		up(&sched->gksync);
+		up(&gd->gksync);
 		goto redo;
 	}
+
+	if (thread->u_mode)
+		*(thread->u_mode) = thread->state & ~XNRELAX;
 
 	/*
 	 * Set up the request to move "current" from the Linux domain
@@ -481,12 +415,13 @@ redo:
 
 	trace_mark(xn_nucleus, shadow_gohard,
 		   "thread %p thread_name %s comm %s",
-		   thread, xnthread_name(thread), this_task->comm);
+		   thread, xnthread_name(thread), p->comm);
 
-	sched->gktarget = thread;
+	gd->gktarget = thread;
+	gd->task_hijacked = p;
 	set_current_state(TASK_INTERRUPTIBLE | TASK_ATOMICSWITCH);
-	wake_up_process(sched->gatekeeper);
-	hijack_current();
+	wake_up_process(gd->gatekeeper);
+	schedule();
 
 	/*
 	 * Rare case: we might have received a signal before entering
@@ -496,8 +431,8 @@ redo:
 	 * fail; the caller will have to process this signal anyway.
 	 */
 	if (ipipe_current_domain == ipipe_root_domain) {
-		if (XENO_DEBUG(NUCLEUS) && (!signal_pending(this_task)
-		    || this_task->state != TASK_RUNNING))
+		if (XENO_DEBUG(NUCLEUS) && (!signal_pending(p)
+		    || p->state != TASK_RUNNING))
 			xnpod_fatal
 			    ("xnshadow_harden() failed for thread %s[%d]",
 			     thread->name, xnthread_user_pid(thread));
@@ -508,17 +443,15 @@ redo:
 		 * idea to resume it for the Xenomai domain if, later on, we
 		 * may happen to reenter TASK_INTERRUPTIBLE state.
 		 */
-		down(&sched->gksync);
-		up(&sched->gksync);
+		down(&gd->gksync);
+		up(&gd->gksync);
 
 		return -ERESTARTSYS;
 	}
 
 	/* "current" is now running into the Xenomai domain. */
 	sched = xnsched_finish_unlocked_switch(thread->sched);
-
 	xnsched_finalize_zombie(sched);
-
 #ifdef CONFIG_XENO_HW_FPU
 	xnpod_switch_fpu(sched);
 #endif /* CONFIG_XENO_HW_FPU */
@@ -538,7 +471,7 @@ redo:
 	 * entering TASK_ATOMICSWITCH and starting the migration in
 	 * the gatekeeker thread is just silently queued up to here.
 	 */
-	if (signal_pending(this_task)) {
+	if (signal_pending(p)) {
 		xnshadow_relax(!xnthread_test_state(thread, XNDEBUG),
 			       SIGDEBUG_MIGRATE_SIGNAL);
 		return -ERESTARTSYS;
@@ -547,13 +480,103 @@ redo:
 	xnsched_resched_after_unlocked_switch();
 
 	return 0;
-
-      failed:
-	if (thread->u_mode)
-		*(thread->u_mode) = thread->state;
-	return err;
 }
 EXPORT_SYMBOL_GPL(xnshadow_harden);
+
+#else /* !CONFIG_XENO_LEGACY_IPIPE */
+
+void ipipe_migration_hook(struct task_struct *p) /* hw IRQs off */
+{
+	struct xnthread *thread = xnshadow_thread(p);
+	struct xnsched *sched;
+
+	xnlock_get(&nklock);
+
+#ifdef CONFIG_SMP
+	/*
+	 * If the task moved to another CPU while in secondary mode,
+	 * update the CPU of the underlying Xenomai shadow to reflect
+	 * the new situation. We do not migrate the thread timers
+	 * here, this would not work. For a "full" migration including
+	 * timers, using xnpod_migrate_thread() is required.
+	 */
+	sched = xnpod_sched_slot(task_cpu(p));
+	if (sched != thread->sched)
+		xnsched_migrate_passive(thread, sched);
+
+#else
+	(void)sched;
+#endif /* CONFIG_SMP */
+
+	xnpod_resume_thread(thread, XNRELAX);
+
+	xnlock_put(&nklock);
+
+	xnpod_schedule();
+}
+
+int xnshadow_harden(void)
+{
+	struct task_struct *p = current;
+	struct xnthread *thread;
+	struct xnsched *sched;
+	int ret;
+
+	thread = xnshadow_current();
+	if (thread == NULL)
+		return -EPERM;
+
+	if (signal_pending(p))
+		return -ERESTARTSYS;
+
+	trace_mark(xn_nucleus, shadow_gohard,
+		   "thread %p name %s comm %s",
+		   thread, xnthread_name(thread), p->comm);
+
+	if (thread->u_mode)
+		*(thread->u_mode) = thread->state & ~XNRELAX;
+
+	ret = __ipipe_migrate_head();
+	if (ret) {
+		*(thread->u_mode) = thread->state | XNRELAX;
+		return ret;
+	}
+
+	/* "current" is now running into the Xenomai domain. */
+	sched = xnsched_finish_unlocked_switch(thread->sched);
+	xnsched_finalize_zombie(sched);
+#ifdef CONFIG_XENO_HW_FPU
+	xnpod_switch_fpu(sched);
+#endif /* CONFIG_XENO_HW_FPU */
+
+	if (xnthread_signaled_p(thread))
+		xnpod_dispatch_signals();
+
+	xnlock_clear_irqon(&nklock);
+
+	trace_mark(xn_nucleus, shadow_hardened, "thread %p name %s",
+		   thread, xnthread_name(thread));
+
+	/*
+	 * Recheck pending signals once again. As we block task
+	 * wakeups during the migration and handle_sigwake_event()
+	 * ignores signals until XNRELAX is cleared, any signal
+	 * between entering TASK_HARDENING and starting the migration
+	 * is just silently queued up to here.
+	 */
+	if (signal_pending(p)) {
+		xnshadow_relax(!xnthread_test_state(thread, XNDEBUG),
+			       SIGDEBUG_MIGRATE_SIGNAL);
+		return -ERESTARTSYS;
+	}
+
+	xnsched_resched_after_unlocked_switch();
+
+	return 0;
+}
+EXPORT_SYMBOL_GPL(xnshadow_harden);
+
+#endif /* !CONFIG_XENO_LEGACY_IPIPE */
 
 /*!
  * @internal
@@ -584,7 +607,6 @@ EXPORT_SYMBOL_GPL(xnshadow_harden);
  * @note "current" is valid here since the shadow runs with the
  * properties of the Linux task.
  */
-
 void xnshadow_relax(int notify, int reason)
 {
 	xnthread_t *thread = xnpod_current_thread();
@@ -2577,9 +2599,8 @@ void xnshadow_release_events(void)
 
 int xnshadow_mount(void)
 {
-	struct xnsched *sched;
-	unsigned i, size;
-	int cpu, ret;
+	unsigned int i, size;
+	int ret;
 
 	__xnshadow_init();
 
@@ -2588,20 +2609,6 @@ int xnshadow_mount(void)
 	ret = xndebug_init();
 	if (ret)
 		return ret;
-
-	for_each_online_cpu(cpu) {
-		if (!xnarch_cpu_supported(cpu))
-			continue;
-
-		sched = &nkpod_struct.sched[cpu];
-		sema_init(&sched->gksync, 0);
-		xnarch_memory_barrier();
-		sched->gatekeeper =
-		    kthread_create(&gatekeeper_thread, (void *)(long)cpu,
-				   "gatekeeper/%d", cpu);
-		wake_up_process(sched->gatekeeper);
-		down(&sched->gksync);
-	}
 
 	/*
 	 * Setup the mayday page early, before userland can mess with
@@ -2633,27 +2640,14 @@ int xnshadow_mount(void)
 
 void xnshadow_cleanup(void)
 {
-	struct xnsched *sched;
-	int cpu;
-
 	if (nucleus_muxid >= 0) {
 		xnshadow_unregister_interface(nucleus_muxid);
 		nucleus_muxid = -1;
 	}
 
-	if (ppd_hash)
+	if (ppd_hash) {
 		kfree(ppd_hash);
-
-	ppd_hash = NULL;
-
-	for_each_online_cpu(cpu) {
-		if (!xnarch_cpu_supported(cpu))
-			continue;
-
-		sched = &nkpod_struct.sched[cpu];
-		down(&sched->gksync);
-		sched->gktarget = NULL;
-		kthread_stop(sched->gatekeeper);
+		ppd_hash = NULL;
 	}
 
 	__xnshadow_exit();

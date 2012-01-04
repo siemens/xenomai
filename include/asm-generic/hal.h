@@ -60,9 +60,6 @@ struct rthal_archdata {
 #ifdef CONFIG_SMP
 	cpumask_t supported_cpus;
 #endif
-#ifdef CONFIG_XENO_LEGACY_IPIPE
-	struct task_struct *task_hijacked[NR_CPUS];
-#endif
 };
 
 extern struct rthal_archdata rthal_archdata;

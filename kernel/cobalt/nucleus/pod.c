@@ -2152,6 +2152,7 @@ reschedule:
 	return;
 
       shadow_epilogue:
+	__ipipe_complete_domain_migration();
 	/*
 	 * Shadow on entry and root without shadow extension on exit?
 	 * Mmmm... This must be the user-space mate of a deleted

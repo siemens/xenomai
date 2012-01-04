@@ -97,11 +97,6 @@ typedef struct xnsched {
 	xnticks_t last_account_switch;	/*!< Last account switch date (ticks). */
 	xnstat_exectime_t *current_account;	/*!< Currently active account */
 #endif
-
-	struct task_struct *gatekeeper;
-	struct semaphore gksync;
-	struct xnthread *gktarget;
-
 } xnsched_t;
 
 union xnsched_policy_param;

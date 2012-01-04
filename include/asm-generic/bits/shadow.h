@@ -26,6 +26,15 @@
 
 #ifdef CONFIG_XENO_LEGACY_IPIPE
 
+struct gatekeeper_data {
+	struct task_struct *task_hijacked;
+	struct task_struct *gatekeeper;
+	struct semaphore gksync;
+	struct xnthread *gktarget;
+};
+
+static DEFINE_PER_CPU(struct gatekeeper_data, shadow_migration);
+
 #define WORKBUF_SIZE 2048
 static DEFINE_PER_CPU_ALIGNED(unsigned char[WORKBUF_SIZE], work_buf);
 static DEFINE_PER_CPU(void *, work_tail);
@@ -78,8 +87,89 @@ out:
 	ipipe_restore_head(flags);
 }
 
+static inline void __ipipe_reenter_root(void)
+{
+	struct task_struct *prev;
+	int policy, prio, cpu;
+
+	cpu = task_cpu(current);
+	policy = current->rt_priority ? SCHED_FIFO : SCHED_NORMAL;
+	prio = current->rt_priority;
+	prev = per_cpu(shadow_migration, cpu).task_hijacked;
+
+	ipipe_reenter_root(prev, policy, prio);
+}
+
+static int gatekeeper_thread(void *data)
+{
+	struct sched_param param = { .sched_priority = MAX_RT_PRIO - 1 };
+	struct xnthread *target;
+	struct task_struct *p;
+	struct xnsched *sched;
+	int cpu = (long)data;
+	cpumask_t cpumask;
+	spl_t s;
+
+	p = current;
+	sched = xnpod_sched_slot(cpu);
+	p->flags |= PF_NOFREEZE;
+	sigfillset(&p->blocked);
+	cpumask = cpumask_of_cpu(cpu);
+	set_cpus_allowed(p, cpumask);
+	sched_setscheduler_nocheck(p, SCHED_FIFO, &param);
+
+	set_current_state(TASK_INTERRUPTIBLE);
+	/* Sync with __xnshadow_init(). */
+	up(&per_cpu(shadow_migration, cpu).gksync);
+
+	for (;;) {
+		/* Make the request token available. */
+		up(&per_cpu(shadow_migration, cpu).gksync);
+		schedule();
+
+		if (kthread_should_stop())
+			break;
+
+		/*
+		 * Real-time shadow TCBs are always removed on behalf
+		 * of the killed thread.
+		 */
+		target = per_cpu(shadow_migration, cpu).gktarget;
+
+		/*
+		 * In the very rare case where the requestor has been
+		 * awaken by a signal before we have been able to
+		 * process the pending request, just ignore the
+		 * latter.
+		 */
+		if ((xnthread_user_task(target)->state & ~TASK_ATOMICSWITCH) == TASK_INTERRUPTIBLE) {
+			xnlock_get_irqsave(&nklock, s);
+#ifdef CONFIG_SMP
+			/*
+			 * If the task changed its CPU while in
+			 * secondary mode, change the CPU of the
+			 * underlying Xenomai shadow too. We do not
+			 * migrate the thread timers here, it would
+			 * not work. For a "full" migration comprising
+			 * timers, using xnpod_migrate_thread is
+			 * required.
+			 */
+			if (target->sched != sched)
+				xnsched_migrate_passive(target, sched);
+#endif /* CONFIG_SMP */
+			xnpod_resume_thread(target, XNRELAX);
+			xnlock_put_irqrestore(&nklock, s);
+			xnpod_schedule();
+		}
+		set_current_state(TASK_INTERRUPTIBLE);
+	}
+
+	return 0;
+}
+
 static inline void __xnshadow_init(void)
 {
+	struct gatekeeper_data *gd;
 	int key, cpu;
 
 	key = ipipe_alloc_ptdkey();
@@ -94,10 +184,37 @@ static inline void __xnshadow_init(void)
 
 	ipipe_request_irq(ipipe_root_domain, lostage_virq,
 			  do_lostage_work, NULL, NULL);
+
+	for_each_online_cpu(cpu) {
+		gd = &per_cpu(shadow_migration, cpu);
+		if (!xnarch_cpu_supported(cpu)) {
+			gd->gatekeeper = NULL;
+			continue;
+		}
+		sema_init(&gd->gksync, 0);
+		xnarch_memory_barrier();
+		gd->gatekeeper = kthread_create(gatekeeper_thread,
+						(void *)(long)cpu,
+						"gatekeeper/%d", cpu);
+		wake_up_process(gd->gatekeeper);
+		down(&gd->gksync);
+	}
 }
 
 static inline void __xnshadow_exit(void)
 {
+	struct gatekeeper_data *gd;
+	int cpu;
+
+	for_each_online_cpu(cpu) {
+		gd = &per_cpu(shadow_migration, cpu);
+		if (gd->gatekeeper) {
+			down(&gd->gksync);
+			gd->gktarget = NULL;
+			kthread_stop(gd->gatekeeper);
+		}
+	}
+
 	ipipe_free_irq(ipipe_root_domain, lostage_virq);
 	ipipe_free_virq(lostage_virq);
 	ipipe_free_ptdkey(0);
@@ -113,14 +230,6 @@ static inline void clear_ptd(void)
 	current->ptd[0] = NULL;
 }
 
-static inline void hijack_current(void)
-{ 
-	int cpu = task_cpu(current);
-
-	rthal_archdata.task_hijacked[cpu] = current;
-	schedule();
-}
-
 #else /* !CONFIG_XENO_LEGACY_IPIPE */
 
 static inline void __xnshadow_init(void) { }
@@ -130,11 +239,6 @@ static inline void __xnshadow_exit(void) { }
 #define set_ptd(p)  do { } while (0)
 
 static inline void clear_ptd(void) { }
-
-static inline void hijack_current(void)
-{ 
-	schedule();
-}
 
 #endif /* !CONFIG_XENO_LEGACY_IPIPE */
 
