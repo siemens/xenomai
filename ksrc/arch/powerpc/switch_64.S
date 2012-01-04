@@ -139,6 +139,14 @@ _GLOBAL(rthal_thread_switch)
 	SAVE_10GPRS(22, r1)
 	mflr	r20		/* Return to switch caller */
 	mfmsr	r22
+#ifdef CONFIG_PPC_BOOK3E
+	wrteei	0
+#else
+	rldicl	r0,r22,48,1	/* clear MSR_EE */
+	rotldi	r0,r0,16
+	MTMSRD(r0)
+	isync
+#endif /* CONFIG_PPC_BOOK3E */
 	li	r0, MSR_FP
 #ifdef CONFIG_VSX
 BEGIN_FTR_SECTION
@@ -274,6 +282,14 @@ _GLOBAL(rthal_thread_switch)
 	SAVE_10GPRS(22, r1)
 	mflr	r20		/* Return to switch caller */
 	mfmsr	r22
+#ifdef CONFIG_PPC_BOOK3E
+	wrteei	0
+#else
+	rldicl	r0,r22,48,1	/* clear MSR_EE */
+	rotldi	r0,r0,16
+	MTMSRD(r0)
+	isync
+#endif /* CONFIG_PPC_BOOK3E */
 	li	r0, MSR_FP
 #ifdef CONFIG_VSX
 BEGIN_FTR_SECTION

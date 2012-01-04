@@ -46,6 +46,9 @@ _GLOBAL(rthal_thread_switch)
 	SAVE_NVGPRS(r1)
 	stw	r0,_NIP(r1)	/* Return to switch caller */
 	mfmsr	r11
+	rlwinm	r0,r11,0,17,15	/* clear MSR_EE in r0 */
+	MTMSRD(r11)
+	isync
 	li	r0,MSR_FP	/* Disable floating-point */
 #ifdef CONFIG_ALTIVEC
 BEGIN_FTR_SECTION
