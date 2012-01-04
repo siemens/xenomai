@@ -87,11 +87,11 @@ pthread_t cobalt_thread_find(const struct cobalt_hkey *hkey);
 
 int cobalt_thread_create(unsigned long tid, int policy,
 			 struct sched_param_ex __user *u_param,
-			 unsigned long __user *u_mode);
+			 unsigned long __user *u_window_offset);
 
 pthread_t cobalt_thread_shadow(struct task_struct *p,
 			       struct cobalt_hkey *hkey,
-			       unsigned long __user *u_mode_offset);
+			       unsigned long __user *u_window_offset);
 
 int cobalt_thread_make_periodic_np(unsigned long tid,
 				   clockid_t clk_id,
@@ -114,13 +114,13 @@ int cobalt_thread_stat(unsigned long tid,
 int cobalt_thread_setschedparam(unsigned long tid,
 				int policy,
 				struct sched_param __user *u_param,
-				unsigned long __user *u_mode_offset,
+				unsigned long __user *u_window_offset,
 				int __user *u_promoted);
 
 int cobalt_thread_setschedparam_ex(unsigned long tid,
 				   int policy,
 				   struct sched_param __user *u_param,
-				   unsigned long __user *u_mode_offset,
+				   unsigned long __user *u_window_offset,
 				   int __user *u_promoted);
 
 int cobalt_thread_getschedparam(unsigned long tid,

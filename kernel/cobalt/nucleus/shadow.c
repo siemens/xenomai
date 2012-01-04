@@ -400,8 +400,7 @@ redo:
 		goto redo;
 	}
 
-	if (thread->u_mode)
-		*(thread->u_mode) = thread->state & ~XNRELAX;
+	xnthread_clear_sync_window(thread, XNRELAX);
 
 	/*
 	 * Set up the request to move "current" from the Linux domain
@@ -533,12 +532,11 @@ int xnshadow_harden(void)
 		   "thread %p name %s comm %s",
 		   thread, xnthread_name(thread), p->comm);
 
-	if (thread->u_mode)
-		*(thread->u_mode) = thread->state & ~XNRELAX;
+	xnthread_clear_sync_window(thread, XNRELAX);
 
 	ret = __ipipe_migrate_head();
 	if (ret) {
-		*(thread->u_mode) = thread->state | XNRELAX;
+		xnthread_set_sync_window(thread, XNRELAX);
 		return ret;
 	}
 
@@ -678,22 +676,24 @@ void xnshadow_relax(int notify, int reason)
 	}
 
 #ifdef CONFIG_SMP
-	/* If the shadow thread changed its CPU affinity while in
-	   primary mode, reset the CPU affinity of its Linux
-	   counter-part when returning to secondary mode. [Actually,
-	   there is no service changing the CPU affinity from primary
-	   mode available from the nucleus --rpm]. */
+	/*
+	 * If the shadow thread changed its CPU affinity while in
+	 * primary mode, reset the CPU affinity of its Linux
+	 * counter-part when returning to secondary mode. [Actually,
+	 * there is no service changing the CPU affinity from primary
+	 * mode available from the nucleus --rpm].
+	 */
 	if (xnthread_test_info(thread, XNAFFSET)) {
 		xnthread_clear_info(thread, XNAFFSET);
 		set_cpus_allowed(p, xnthread_affinity(thread));
 	}
 #endif /* CONFIG_SMP */
 
-	/* "current" is now running into the Linux domain on behalf of the
-	   root thread. */
-
-	if (thread->u_mode)
-		*(thread->u_mode) = thread->state;
+	/*
+	 * "current" is now running into the Linux domain on behalf of
+	 * the root thread.
+	 */
+	xnthread_sync_window(thread);
 
 	trace_mark(xn_nucleus, shadow_relaxed,
 		  "thread %p thread_name %s comm %s",
@@ -832,7 +832,7 @@ static inline void destroy_threadinfo(void)
 }
 
 /**
- * @fn int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion, unsigned long __user *u_mode_offset)
+ * @fn int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion, unsigned long __user *u_window_offset)
  * @internal
  * @brief Create a shadow thread context.
  *
@@ -856,12 +856,10 @@ static inline void destroy_threadinfo(void)
  * immediately started and "current" immediately resumes in the Xenomai
  * domain from this service.
  *
- * @param u_mode_offset is the address of a user space address where
- * we will store the offset of the "u_mode" thread variable in the
- * process shared heap. This thread variable reflects the current
- * thread mode (primary or secondary). The nucleus will try to update
- * the variable before switching to secondary  or after switching from
- * primary mode.
+ * @param u_window_offset will receive the offset of the per-thread
+ * "u_window" structure in the process shared heap associated to @a
+ * thread. This structure reflects thread state information visible
+ * from userland through a shared memory window.
  *
  * @return 0 is returned on success. Otherwise:
  *
@@ -892,12 +890,12 @@ static inline void destroy_threadinfo(void)
  */
 
 int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
-		 unsigned long __user *u_mode_offset)
+		 unsigned long __user *u_window_offset)
 {
+	struct xnthread_user_window *u_window;
 	struct xnthread_start_attr attr;
 	xnarch_cpumask_t affinity;
 	struct xnsys_ppd *sys_ppd;
-	unsigned long *u_mode;
 	xnheap_t *sem_heap;
 	spl_t s;
 	int ret;
@@ -908,7 +906,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 	if (xnshadow_current() || xnthread_test_state(thread, XNMAPPED))
 		return -EBUSY;
 
-	if (!access_wok(u_mode_offset, sizeof(*u_mode_offset)))
+	if (!access_wok(u_window_offset, sizeof(*u_window_offset)))
 		return -EFAULT;
 
 #ifdef CONFIG_MMU
@@ -930,8 +928,8 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 	xnlock_put_irqrestore(&nklock, s);
 
 	sem_heap = &sys_ppd->sem_heap;
-	u_mode = xnheap_alloc(sem_heap, sizeof(*u_mode));
-	if (!u_mode)
+	u_window = xnheap_alloc(sem_heap, sizeof(*u_window));
+	if (u_window == NULL)
 		return -ENOMEM;
 
 	/* Restrict affinity to a single CPU of nkaffinity & current set. */
@@ -947,8 +945,8 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 	xnarch_init_shadow_tcb(xnthread_archtcb(thread), thread,
 			       xnthread_name(thread));
 
-	thread->u_mode = u_mode;
-	__xn_put_user(xnheap_mapped_offset(sem_heap, u_mode), u_mode_offset);
+	thread->u_window = u_window;
+	__xn_put_user(xnheap_mapped_offset(sem_heap, u_window), u_window_offset);
 
 	xnthread_set_state(thread, XNMAPPED);
 	xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
@@ -990,8 +988,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 	if (ret)
 		return ret;
 
-	if (thread->u_mode)
-		*(thread->u_mode) = thread->state;
+	xnthread_sync_window(thread);
 
 	ret = xnshadow_harden();
 
@@ -1021,8 +1018,8 @@ void xnshadow_unmap(xnthread_t *thread)
 	xnthread_clear_state(thread, XNMAPPED);
 
 	sys_ppd = xnsys_ppd_get(0);
-	xnheap_free(&sys_ppd->sem_heap, thread->u_mode);
-	thread->u_mode = NULL;
+	xnheap_free(&sys_ppd->sem_heap, thread->u_window);
+	thread->u_window = NULL;
 
 	xnarch_atomic_dec(&sys_ppd->refcnt);
 
@@ -2115,7 +2112,7 @@ restart:
 	/* Update the stats and userland-visible state. */
 	if (thread) {
 		xnstat_counter_inc(&thread->stat.xsc);
-		*thread->u_mode = thread->state;
+		xnthread_sync_window(thread);
 	}
 
 	trace_mark(xn_nucleus, syscall_histage_exit,
@@ -2291,7 +2288,7 @@ restart:
 	/* Update the stats and userland-visible state. */
 	if (thread) {
 		xnstat_counter_inc(&thread->stat.xsc);
-		*thread->u_mode = thread->state;
+		xnthread_sync_window(thread);
 	}
 
 	trace_mark(xn_nucleus, syscall_lostage_exit,

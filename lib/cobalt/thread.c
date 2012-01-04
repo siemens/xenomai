@@ -55,7 +55,7 @@ int __wrap_pthread_setschedparam(pthread_t thread,
 	if (ret == 0 && promoted) {
 		xeno_sigshadow_install_once();
 		xeno_set_current();
-		xeno_set_current_mode(mode_offset);
+		xeno_set_current_window(mode_offset);
 		if (policy != SCHED_OTHER)
 			XENOMAI_SYSCALL1(sc_nucleus_migrate, XENOMAI_XENO_DOMAIN);
 	}
@@ -86,7 +86,7 @@ int pthread_setschedparam_ex(pthread_t thread,
 	if (ret == 0 && promoted) {
 		xeno_sigshadow_install_once();
 		xeno_set_current();
-		xeno_set_current_mode(mode_offset);
+		xeno_set_current_window(mode_offset);
 		if (policy != SCHED_OTHER)
 			XENOMAI_SYSCALL1(sc_nucleus_migrate, XENOMAI_XENO_DOMAIN);
 	}
@@ -214,7 +214,7 @@ static void *__pthread_trampoline(void *p)
 				policy, &param_ex, &mode_offset);
 	if (ret == 0) {
 		xeno_set_current();
-		xeno_set_current_mode(mode_offset);
+		xeno_set_current_window(mode_offset);
 	}
 
 	/*

@@ -30,9 +30,11 @@
 
 #ifdef CONFIG_XENO_COBALT
 
+struct xnthread_user_window;
+
 struct threadobj_corespec {
 	xnhandle_t handle;
-	unsigned long *u_mode;
+	struct xnthread_user_window *u_window;
 };
 
 struct threadobj_stat {

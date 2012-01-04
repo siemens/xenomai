@@ -192,13 +192,13 @@ static void cobalt_monitor_wakeup(struct cobalt_monitor *mon)
 		h = nextq(&mon->waiters, h);
 		p = &tid->threadbase;
 		/*
-		 * A thread might receive XNGRANT albeit it does not
-		 * wait on a monitor, or it might have timed out
-		 * before we got there, so we really have to check
+		 * A thread might receive a grant signal albeit it
+		 * does not wait on a monitor, or it might have timed
+		 * out before we got there, so we really have to check
 		 * that ->wchan does match our sleep queue.
 		 */
-		if (bcast || ((*p->u_mode & XNGRANT) &&
-			      p->wchan == &tid->monitor_synch)) {
+		if (bcast ||
+		    (p->u_window->granted && p->wchan == &tid->monitor_synch)) {
 			xnsynch_wakeup_this_sleeper(&tid->monitor_synch,
 						    &p->plink);
 			removeq(&mon->waiters, &tid->monitor_link);
@@ -272,7 +272,7 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_monsh,
 	if (event & COBALT_MONITOR_WAITDRAIN)
 		synch = &mon->drain;
 	else {
-		*cur->threadbase.u_mode &= ~XNGRANT;
+		cur->threadbase.u_window->granted = 0;
 		appendq(&mon->waiters, &cur->monitor_link);
 		cur->monitor_queued = 1;
 	}

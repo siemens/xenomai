@@ -4,7 +4,7 @@
 #include <pthread.h>
 #include <nucleus/thread.h>
 
-extern pthread_key_t xeno_current_mode_key;
+extern pthread_key_t xeno_current_window_key;
 
 xnhandle_t xeno_slow_get_current(void);
 
@@ -12,7 +12,7 @@ xnhandle_t xeno_slow_get_current(void);
 extern __thread __attribute__ ((tls_model (CONFIG_XENO_TLS_MODEL)))
 xnhandle_t xeno_current;
 extern __thread __attribute__ ((tls_model (CONFIG_XENO_TLS_MODEL)))
-unsigned long *xeno_current_mode;
+struct xnthread_user_window *xeno_current_window;
 
 static inline xnhandle_t xeno_get_current(void)
 {
@@ -23,12 +23,12 @@ static inline xnhandle_t xeno_get_current(void)
 
 static inline unsigned long xeno_get_current_mode(void)
 {
-	return xeno_current_mode ? *xeno_current_mode : XNRELAX;
+	return xeno_current_window ? xeno_current_window->state : XNRELAX;
 }
 
-static inline unsigned long *xeno_get_current_mode_ptr(void)
+static inline struct xnthread_user_window *xeno_get_current_window(void)
 {
-	return xeno_current ? xeno_current_mode : NULL;
+	return xeno_current ? xeno_current_window : NULL;
 }
 
 #else /* ! HAVE_TLS */
@@ -53,16 +53,16 @@ static inline xnhandle_t xeno_get_current_fast(void)
 
 static inline unsigned long xeno_get_current_mode(void)
 {
-	unsigned long *mode;
+	struct xnthread_user_window *window;
 
-	mode = pthread_getspecific(xeno_current_mode_key);
+	window = pthread_getspecific(xeno_current_window_key);
 
-	return mode ? *mode : XNRELAX;
+	return window ? window->state : XNRELAX;
 }
 
-static inline unsigned long *xeno_get_current_mode_ptr(void)
+static inline struct xnthread_user_window *xeno_get_current_window(void)
 {
-	return pthread_getspecific(xeno_current_mode_key);
+	return pthread_getspecific(xeno_current_window_key);
 }
 
 #endif /* ! HAVE_TLS */
@@ -71,6 +71,6 @@ void xeno_init_current_keys(void);
 
 void xeno_set_current(void);
 
-void xeno_set_current_mode(unsigned long offset);
+void xeno_set_current_window(unsigned long offset);
 
 #endif /* _XENO_ASM_GENERIC_CURRENT_H */

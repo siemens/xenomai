@@ -50,18 +50,11 @@
 #define XNRRB     0x00008000 /**< Undergoes a round-robin scheduling */
 #define XNASDI    0x00010000 /**< ASR are disabled */
 #define XNDEFCAN  0x00020000 /**< Deferred cancelability mode (self-set only) */
-#define XNGRANT   0x00040000 /**< Granted monitor-protected resource */
-
-/*
- * Some skins may depend on the following fields to live in the high
- * 16-bit word, in order to be combined with the emulated RTOS flags
- * which use the low one, so don't change them carelessly.
- */
-#define XNTRAPSW  0x00080000 /**< Trap execution mode switches */
-#define XNFPU     0x00100000 /**< Thread uses FPU */
-#define XNSHADOW  0x00200000 /**< Shadow thread */
-#define XNROOT    0x00400000 /**< Root thread (that is, Linux/IDLE) */
-#define XNOTHER   0x00800000 /**< Non real-time shadow (prio=0) */
+#define XNTRAPSW  0x00040000 /**< Trap execution mode switches */
+#define XNFPU     0x00080000 /**< Thread uses FPU */
+#define XNSHADOW  0x00100000 /**< Shadow thread */
+#define XNROOT    0x00200000 /**< Root thread (that is, Linux/IDLE) */
+#define XNOTHER   0x00400000 /**< Non real-time shadow (prio=0) */
 
 /*! @} */ /* Ends doxygen comment group: nucleus_state_flags */
 
@@ -148,6 +141,11 @@ typedef struct xnthread_info {
 	char name[XNOBJECT_NAME_LEN];  /**< Symbolic name assigned at creation. */
 
 } xnthread_info_t;
+
+struct xnthread_user_window {
+	unsigned long state;
+	unsigned int granted : 1;
+};
 
 #ifdef __KERNEL__
 
@@ -293,7 +291,7 @@ typedef struct xnthread {
 	void *cookie;		/* Cookie to pass to the entry routine */
 
 	struct pt_regs *regs;		/* Current register frame */
-	unsigned long __user *u_mode;	/* Thread mode variable in userland. */
+	struct xnthread_user_window *u_window;	/* Data visible from userland. */
 #ifdef CONFIG_XENO_OPT_DEBUG
 	const char *exe_path;	/* Executable path */
 	u32 proghash;		/* Hash value for exe_path */
@@ -376,6 +374,23 @@ struct xnthread *xnthread_lookup(xnhandle_t threadh)
 {
 	struct xnthread *thread = (struct xnthread *)xnregistry_lookup(threadh);
 	return (thread && xnthread_handle(thread) == threadh) ? thread : NULL;
+}
+
+static inline void xnthread_sync_window(struct xnthread *thread)
+{
+	thread->u_window->state = thread->state;
+}
+
+static inline
+void xnthread_clear_sync_window(struct xnthread *thread, int bits)
+{
+	thread->u_window->state = thread->state & ~bits;
+}
+
+static inline
+void xnthread_set_sync_window(struct xnthread *thread, int bits)
+{
+	thread->u_window->state = thread->state | bits;
 }
 
 /*

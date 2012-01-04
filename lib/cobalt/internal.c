@@ -168,20 +168,22 @@ int cobalt_monitor_wait(cobalt_monitor_t *mon, int event,
 	return ret ?: opret;
 }
 
-void cobalt_monitor_grant(cobalt_monitor_t *mon, unsigned long *u_mode)
+void cobalt_monitor_grant(cobalt_monitor_t *mon,
+			  struct xnthread_user_window *u_window)
 {
 	struct cobalt_monitor_data *datp = get_monitor_data(mon);
 
 	datp->flags |= COBALT_MONITOR_GRANTED;
-	*u_mode |= XNGRANT;
+	u_window->granted = 1;
 }
 
-int cobalt_monitor_grant_sync(cobalt_monitor_t *mon, unsigned long *u_mode)
+int cobalt_monitor_grant_sync(cobalt_monitor_t *mon,
+			  struct xnthread_user_window *u_window)
 {
 	struct cobalt_monitor_data *datp = get_monitor_data(mon);
 	int ret, oldtype;
 
-	cobalt_monitor_grant(mon, u_mode);
+	cobalt_monitor_grant(mon, u_window);
 
 	if ((datp->flags & COBALT_MONITOR_PENDED) == 0)
 		return 0;
@@ -200,19 +202,19 @@ int cobalt_monitor_grant_sync(cobalt_monitor_t *mon, unsigned long *u_mode)
 	return ret;
 }
 
-void cobalt_monitor_grant_all(cobalt_monitor_t *mon, unsigned long *u_mode)
+void cobalt_monitor_grant_all(cobalt_monitor_t *mon)
 {
 	struct cobalt_monitor_data *datp = get_monitor_data(mon);
 
 	datp->flags |= COBALT_MONITOR_GRANTED|COBALT_MONITOR_BROADCAST;
 }
 
-int cobalt_monitor_grant_all_sync(cobalt_monitor_t *mon, unsigned long *u_mode)
+int cobalt_monitor_grant_all_sync(cobalt_monitor_t *mon)
 {
 	struct cobalt_monitor_data *datp = get_monitor_data(mon);
 	int ret, oldtype;
 
-	cobalt_monitor_grant_all(mon, u_mode);
+	cobalt_monitor_grant_all(mon);
 
 	if ((datp->flags & COBALT_MONITOR_PENDED) == 0)
 		return 0;

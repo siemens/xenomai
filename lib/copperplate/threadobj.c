@@ -106,7 +106,7 @@ static inline void threadobj_setup_corespec(struct threadobj *thobj)
 {
 	pthread_set_name_np(pthread_self(), thobj->name);
 	thobj->core.handle = xeno_get_current();
-	thobj->core.u_mode = xeno_get_current_mode_ptr();
+	thobj->core.u_window = xeno_get_current_window();
 }
 
 static inline void threadobj_cleanup_corespec(struct threadobj *thobj)

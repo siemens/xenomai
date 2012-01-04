@@ -15,7 +15,7 @@ extern unsigned long xeno_sem_heap[2];
 __thread __attribute__ ((tls_model (CONFIG_XENO_TLS_MODEL)))
 xnhandle_t xeno_current = XN_NO_HANDLE;
 __thread __attribute__ ((tls_model (CONFIG_XENO_TLS_MODEL)))
-unsigned long *xeno_current_mode;
+struct xnthread_user_window *xeno_current_window;
 
 static inline void __xeno_set_current(xnhandle_t current)
 {
@@ -26,13 +26,14 @@ void xeno_init_current_keys(void)
 {
 }
 
-void xeno_set_current_mode(unsigned long offset)
+void xeno_set_current_window(unsigned long offset)
 {
-	xeno_current_mode = (unsigned long *)(xeno_sem_heap[0] + offset);
+	xeno_current_window = (struct xnthread_user_window *)
+		(xeno_sem_heap[0] + offset);
 }
 #else /* !HAVE_TLS */
 
-pthread_key_t xeno_current_mode_key;
+pthread_key_t xeno_current_window_key;
 pthread_key_t xeno_current_key;
 
 static inline void __xeno_set_current(xnhandle_t current)
@@ -55,7 +56,7 @@ static void init_current_keys(void)
 
 	pthread_atfork(NULL, NULL, &xeno_current_fork_handler);
 
-	err = pthread_key_create(&xeno_current_mode_key, NULL);
+	err = pthread_key_create(&xeno_current_window_key, NULL);
 	if (err) {
 	  error_exit:
 		fprintf(stderr, "Xenomai: error creating TSD key: %s\n",
@@ -70,9 +71,9 @@ void xeno_init_current_keys(void)
 	pthread_once(&xeno_init_current_keys_once, init_current_keys);
 }
 
-void xeno_set_current_mode(unsigned long offset)
+void xeno_set_current_window(unsigned long offset)
 {
-	pthread_setspecific(xeno_current_mode_key,
+	pthread_setspecific(xeno_current_window_key,
 			    (void *)(xeno_sem_heap[0] + offset));
 }
 #endif /* !HAVE_TLS */

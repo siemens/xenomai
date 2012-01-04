@@ -30,6 +30,7 @@
 #define XNSHADOW_CLIENT_DETACH  1
 
 struct xnthread;
+struct xnthread_user_window;
 struct xnmutex;
 struct pt_regs;
 struct timespec;
@@ -79,7 +80,7 @@ void xnshadow_release_events(void);
 
 int xnshadow_map(struct xnthread *thread,
 		 xncompletion_t __user *u_completion,
-		 unsigned long __user *u_mode_offset);
+		 unsigned long __user *u_window_offset);
 
 void xnshadow_unmap(struct xnthread *thread);
 

@@ -94,7 +94,7 @@ int monitor_wait_drain(struct syncobj *sobj, const struct timespec *timeout)
 static inline
 void monitor_grant(struct syncobj *sobj, struct threadobj *thobj)
 {
-	cobalt_monitor_grant(&sobj->core.monitor, thobj->core.u_mode);
+	cobalt_monitor_grant(&sobj->core.monitor, thobj->core.u_window);
 }
 
 static inline

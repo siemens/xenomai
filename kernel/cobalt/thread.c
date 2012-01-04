@@ -511,7 +511,7 @@ static inline int pthread_make_periodic_np(pthread_t thread,
 {
 
 	xnticks_t start, period;
-	int err;
+	int ret;
 	spl_t s;
 
 	if (clock_id != CLOCK_MONOTONIC &&
@@ -522,20 +522,20 @@ static inline int pthread_make_periodic_np(pthread_t thread,
 	xnlock_get_irqsave(&nklock, s);
 
 	if (!cobalt_obj_active(thread, COBALT_THREAD_MAGIC, struct cobalt_thread)) {
-		err = -ESRCH;
+		ret = -ESRCH;
 		goto unlock_and_exit;
 	}
 
 	start = ts2ns(starttp);
 	period = ts2ns(periodtp);
-	err = xnpod_set_thread_periodic(&thread->threadbase, start,
+	ret = xnpod_set_thread_periodic(&thread->threadbase, start,
 					clock_flag(TIMER_ABSTIME, clock_id),
 					period);
       unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return err;
+	return ret;
 }
 
 /**
@@ -848,12 +848,12 @@ static inline int pthread_setschedparam_ex(pthread_t tid, int pol,
 int cobalt_thread_setschedparam(unsigned long tid,
 				int policy,
 				struct sched_param __user *u_param,
-				unsigned long __user *u_mode_offset,
+				unsigned long __user *u_window_offset,
 				int __user *u_promoted)
 {
 	struct sched_param param;
 	struct cobalt_hkey hkey;
-	int err, promoted = 0;
+	int ret, promoted = 0;
 	pthread_t k_tid;
 
 	if (__xn_safe_copy_from_user(&param, u_param, sizeof(param)))
@@ -863,43 +863,43 @@ int cobalt_thread_setschedparam(unsigned long tid,
 	hkey.mm = current->mm;
 	k_tid = cobalt_thread_find(&hkey);
 
-	if (!k_tid && u_mode_offset) {
+	if (k_tid == NULL && u_window_offset) {
 		/*
 		 * If the syscall applies to "current", and the latter
 		 * is not a Xenomai thread already, then shadow it.
 		 */
-		k_tid = cobalt_thread_shadow(current, &hkey, u_mode_offset);
+		k_tid = cobalt_thread_shadow(current, &hkey, u_window_offset);
 		if (IS_ERR(k_tid))
 			return PTR_ERR(k_tid);
 
 		promoted = 1;
 	}
 	if (k_tid)
-		err = pthread_setschedparam(k_tid, policy, &param);
+		ret = pthread_setschedparam(k_tid, policy, &param);
 	else
 		/*
 		 * target thread is not a real-time thread, and is not current,
 		 * so can not be promoted, try again with the real
 		 * pthread_setschedparam service.
 		 */
-		err = -EPERM;
+		ret = -EPERM;
 
-	if (err == 0 &&
+	if (ret == 0 &&
 	    __xn_safe_copy_to_user(u_promoted, &promoted, sizeof(promoted)))
-		err = -EFAULT;
+		ret = -EFAULT;
 
-	return err;
+	return ret;
 }
 
 int cobalt_thread_setschedparam_ex(unsigned long tid,
 				   int policy,
 				   struct sched_param __user *u_param,
-				   unsigned long __user *u_mode_offset,
+				   unsigned long __user *u_window_offset,
 				   int __user *u_promoted)
 {
 	struct sched_param_ex param;
 	struct cobalt_hkey hkey;
-	int err, promoted = 0;
+	int ret, promoted = 0;
 	pthread_t k_tid;
 
 	if (__xn_safe_copy_from_user(&param, u_param, sizeof(param)))
@@ -909,23 +909,23 @@ int cobalt_thread_setschedparam_ex(unsigned long tid,
 	hkey.mm = current->mm;
 	k_tid = cobalt_thread_find(&hkey);
 
-	if (!k_tid && u_mode_offset) {
-		k_tid = cobalt_thread_shadow(current, &hkey, u_mode_offset);
+	if (k_tid == NULL && u_window_offset) {
+		k_tid = cobalt_thread_shadow(current, &hkey, u_window_offset);
 		if (IS_ERR(k_tid))
 			return PTR_ERR(k_tid);
 
 		promoted = 1;
 	}
 	if (k_tid)
-		err = pthread_setschedparam_ex(k_tid, policy, &param);
+		ret = pthread_setschedparam_ex(k_tid, policy, &param);
 	else
-		err = -EPERM;
+		ret = -EPERM;
 
-	if (err == 0 &&
+	if (ret == 0 &&
 	    __xn_safe_copy_to_user(u_promoted, &promoted, sizeof(promoted)))
-		err = -EFAULT;
+		ret = -EFAULT;
 
-	return err;
+	return ret;
 }
 
 
@@ -949,7 +949,7 @@ int cobalt_thread_setschedparam_ex(unsigned long tid,
 
 int cobalt_thread_create(unsigned long tid, int policy,
 			 struct sched_param_ex __user *u_param,
-			 unsigned long __user *u_mode)
+			 unsigned long __user *u_window_offset)
 {
 	struct task_struct *p = current;
 	struct sched_param_ex param;
@@ -986,7 +986,7 @@ int cobalt_thread_create(unsigned long tid, int policy,
 		return ret;
 
 	h_tid = task_pid_vnr(p);
-	ret = xnshadow_map(&k_tid->threadbase, NULL, u_mode);
+	ret = xnshadow_map(&k_tid->threadbase, NULL, u_window_offset);
 	if (ret)
 		goto fail;
 
@@ -1007,38 +1007,38 @@ fail:
 
 pthread_t cobalt_thread_shadow(struct task_struct *p,
 			       struct cobalt_hkey *hkey,
-			       unsigned long __user *u_mode_offset)
+			       unsigned long __user *u_window_offset)
 {
 	pthread_attr_t attr;
 	pthread_t k_tid;
 	pid_t h_tid;
-	int err;
+	int ret;
 
 	attr = default_thread_attr;
 	attr.detachstate = PTHREAD_CREATE_DETACHED;
 	attr.name = p->comm;
 
-	err = pthread_create(&k_tid, &attr);
+	ret = pthread_create(&k_tid, &attr);
 
-	if (err)
-		return ERR_PTR(-err);
+	if (ret)
+		return ERR_PTR(-ret);
 
 	h_tid = task_pid_vnr(p);
-	err = xnshadow_map(&k_tid->threadbase, NULL, u_mode_offset);
+	ret = xnshadow_map(&k_tid->threadbase, NULL, u_window_offset);
 	/*
 	 * From now on, we run in primary mode, so we refrain from
 	 * calling regular kernel services (e.g. like
 	 * task_pid_vnr()).
 	 */
-	if (err == 0 && !cobalt_thread_hash(hkey, k_tid, h_tid))
-		err = -EAGAIN;
+	if (ret == 0 && !cobalt_thread_hash(hkey, k_tid, h_tid))
+		ret = -EAGAIN;
 
-	if (err)
+	if (ret)
 		xnpod_delete_thread(&k_tid->threadbase);
 	else
 		k_tid->hkey = *hkey;
 
-	return err ? ERR_PTR(err) : k_tid;
+	return ret ? ERR_PTR(ret) : k_tid;
 }
 
 int cobalt_thread_make_periodic_np(unsigned long tid,
@@ -1066,14 +1066,14 @@ int cobalt_thread_make_periodic_np(unsigned long tid,
 int cobalt_thread_wait_np(unsigned long __user *u_overruns)
 {
 	unsigned long overruns;
-	int err;
+	int ret;
 
-	err = xnpod_wait_thread_period(&overruns);
+	ret = xnpod_wait_thread_period(&overruns);
 
-	if (u_overruns && (err == 0 || err == -ETIMEDOUT))
+	if (u_overruns && (ret == 0 || ret == -ETIMEDOUT))
 		__xn_put_user(overruns, u_overruns);
 
-	return err;
+	return ret;
 }
 
 int cobalt_thread_set_mode_np(int clrmask, int setmask, int __user *u_mode_r)
@@ -1248,7 +1248,7 @@ int cobalt_thread_getschedparam(unsigned long tid,
 	struct sched_param param;
 	struct cobalt_hkey hkey;
 	pthread_t k_tid;
-	int policy, err;
+	int policy, ret;
 
 	hkey.u_tid = tid;
 	hkey.mm = current->mm;
@@ -1257,9 +1257,9 @@ int cobalt_thread_getschedparam(unsigned long tid,
 	if (!k_tid)
 		return -ESRCH;
 
-	err = pthread_getschedparam(k_tid, &policy, &param);
-	if (err)
-		return err;
+	ret = pthread_getschedparam(k_tid, &policy, &param);
+	if (ret)
+		return ret;
 
 	if (__xn_safe_copy_to_user(u_policy, &policy, sizeof(int)))
 		return -EFAULT;
@@ -1274,7 +1274,7 @@ int cobalt_thread_getschedparam_ex(unsigned long tid,
 	struct sched_param_ex param;
 	struct cobalt_hkey hkey;
 	pthread_t k_tid;
-	int policy, err;
+	int policy, ret;
 
 	hkey.u_tid = tid;
 	hkey.mm = current->mm;
@@ -1283,9 +1283,9 @@ int cobalt_thread_getschedparam_ex(unsigned long tid,
 	if (!k_tid)
 		return -ESRCH;
 
-	err = pthread_getschedparam_ex(k_tid, &policy, &param);
-	if (err)
-		return err;
+	ret = pthread_getschedparam_ex(k_tid, &policy, &param);
+	if (ret)
+		return ret;
 
 	if (__xn_safe_copy_to_user(u_policy, &policy, sizeof(int)))
 		return -EFAULT;
