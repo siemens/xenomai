@@ -1,4 +1,4 @@
-SUBDIRS=custom-stylesheets xenomai
+SUBDIRS=custom-stylesheets
 
 include docbook.rules
 

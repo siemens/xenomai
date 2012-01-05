@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>Xenomai API: ksrc/arch/arm/hal.c File Reference</title>
+<title>Xenomai: kernel/cobalt/arch/arm/hal.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -30,7 +30,7 @@
   <div class="summary">
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
-<h1>ksrc/arch/arm/hal.c File Reference</h1>  </div>
+<h1>kernel/cobalt/arch/arm/hal.c File Reference</h1>  </div>
 </div>
 <div class="contents">
 
@@ -39,28 +39,125 @@
 <div class="dynheader">
 Include dependency graph for hal.c:</div>
 <div class="dyncontent">
-<div class="center"><img src="arm_2hal_8c__incl.png" border="0" usemap="#ksrc_2arch_2arm_2hal_8c" alt=""/></div>
+<div class="center"><img src="arm_2hal_8c__incl.png" border="0" usemap="#kernel_2cobalt_2arch_2arm_2hal_8c" alt=""/></div>
+<map name="kernel_2cobalt_2arch_2arm_2hal_8c" id="kernel_2cobalt_2arch_2arm_2hal_8c">
+</map>
 </div>
 <table class="memberdecls">
 <tr><td colspan="2"><h2><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga174a498bd8ee10a2279a9f79b9823bf6">rthal_timer_request</a> (void(*tick_handler)(void), void(*mode_emul)(enum clock_event_mode mode, struct clock_event_device *cdev), int(*tick_emul)(unsigned long delay, struct clock_event_device *cdev), int cpu)</td></tr>
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Grab the hardware timer.  <a href="group__hal.html#ga174a498bd8ee10a2279a9f79b9823bf6"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga1ff77e4ea7ed60ba6a1b1a61a513058d">rthal_timer_release</a> (int cpu)</td></tr>
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release the hardware timer.  <a href="group__hal.html#ga1ff77e4ea7ed60ba6a1b1a61a513058d"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#gae84c63d8728c72e9374da3a86df14d64">rthal_irq_host_request</a> (unsigned irq, rthal_irq_host_handler_t handler, char *name, void *dev_id)</td></tr>
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Install a shared Linux interrupt handler.  <a href="group__hal.html#gae84c63d8728c72e9374da3a86df14d64"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga80403d346662fcc3c960f12e4d5b8e09">rthal_irq_host_release</a> (unsigned irq, void *dev_id)</td></tr>
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Uninstall a shared Linux interrupt handler.  <a href="group__hal.html#ga80403d346662fcc3c960f12e4d5b8e09"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="arm_2hal_8c.html#ga174a498bd8ee10a2279a9f79b9823bf6">rthal_timer_request</a> (void(*tick_handler)(void), void(*mode_emul)(enum clock_event_mode mode, struct clock_event_device *cdev), int(*tick_emul)(unsigned long delay, struct clock_event_device *cdev), int cpu)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Grab the hardware timer.  <a href="#ga174a498bd8ee10a2279a9f79b9823bf6"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="arm_2hal_8c.html#ga1ff77e4ea7ed60ba6a1b1a61a513058d">rthal_timer_release</a> (int cpu)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release the hardware timer.  <a href="#ga1ff77e4ea7ed60ba6a1b1a61a513058d"></a><br/></td></tr>
 </table>
 <hr/><a name="_details"></a><h2>Detailed Description</h2>
 <p>Adeos-based Real-Time Abstraction Layer for ARM. </p>
 <p>ARM port Copyright (C) 2005 Stelian Pop</p>
 <p>Xenomai is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, Inc., 675 Mass Ave, Cambridge MA 02139, USA; either version 2 of the License, or (at your option) any later version.</p>
 <p>Xenomai is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.</p>
-<p>You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. </p>
+<p>You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.</p>
+<p>ARM-specific HAL services. </p>
+<hr/><h2>Function Documentation</h2>
+<a class="anchor" id="ga1ff77e4ea7ed60ba6a1b1a61a513058d"></a><!-- doxytag: member="hal.c::rthal_timer_release" ref="ga1ff77e4ea7ed60ba6a1b1a61a513058d" args="(int cpu)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void rthal_timer_release </td>
+          <td>(</td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>cpu</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Wed Nov 2 2011 18:01:09 for Xenomai API by&nbsp;
+<div class="memdoc">
+
+<p>Release the hardware timer. </p>
+<p>Releases the hardware timer, thus reverting the effect of a previous call to <a class="el" href="arm_2hal_8c.html#ga174a498bd8ee10a2279a9f79b9823bf6" title="Grab the hardware timer.">rthal_timer_request()</a>. In case the timer hardware is shared with Linux, a periodic setup suitable for the Linux kernel will be reset.</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>cpu</em>&nbsp;</td><td>The CPU number the timer was grabbed from.</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>Environments:</p>
+<p>This service can be called from:</p>
+<ul>
+<li>Linux domain context. </li>
+</ul>
+
+</div>
+</div>
+<a class="anchor" id="ga174a498bd8ee10a2279a9f79b9823bf6"></a><!-- doxytag: member="hal.c::rthal_timer_request" ref="ga174a498bd8ee10a2279a9f79b9823bf6" args="(void(*tick_handler)(void), void(*mode_emul)(enum clock_event_mode mode, struct clock_event_device *cdev), int(*tick_emul)(unsigned long delay, struct clock_event_device *cdev), int cpu)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int rthal_timer_request </td>
+          <td>(</td>
+          <td class="paramtype">void(*)(void)&nbsp;</td>
+          <td class="paramname"> <em>tick_handler</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void(*)(enum clock_event_mode mode, struct clock_event_device *cdev)&nbsp;</td>
+          <td class="paramname"> <em>mode_emul</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int(*)(unsigned long delay, struct clock_event_device *cdev)&nbsp;</td>
+          <td class="paramname"> <em>tick_emul</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>cpu</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Grab the hardware timer. </p>
+<p><a class="el" href="arm_2hal_8c.html#ga174a498bd8ee10a2279a9f79b9823bf6" title="Grab the hardware timer.">rthal_timer_request()</a> grabs and tunes the hardware timer in oneshot mode in order to clock the master time base. GENERIC_CLOCKEVENTS is required from the host kernel.</p>
+<p>A user-defined routine is registered as the clock tick handler. This handler will always be invoked on behalf of the Xenomai domain for each incoming tick.</p>
+<p>Host tick emulation is a way to share the clockchip hardware between Linux and Xenomai, when the former provides support for oneshot timing (i.e. high resolution timers and no-HZ scheduler ticking).</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>tick_handler</em>&nbsp;</td><td>The address of the Xenomai tick handler which will process each incoming tick.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>mode_emul</em>&nbsp;</td><td>The optional address of a callback to be invoked upon mode switch of the host tick device, notified by the Linux kernel.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>tick_emul</em>&nbsp;</td><td>The optional address of a callback to be invoked upon setup of the next shot date for the host tick device, notified by the Linux kernel.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>cpu</em>&nbsp;</td><td>The CPU number to grab the timer from.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>a positive value is returned on success, representing the duration of a Linux periodic tick expressed as a count of nanoseconds; zero should be returned when the Linux kernel does not undergo periodic timing on the given CPU (e.g. oneshot mode). Otherwise:</dd></dl>
+<ul>
+<li>-EBUSY is returned if the hardware timer has already been grabbed. <a class="el" href="arm_2hal_8c.html#ga174a498bd8ee10a2279a9f79b9823bf6" title="Grab the hardware timer.">rthal_timer_request()</a> must be issued before <a class="el" href="arm_2hal_8c.html#ga174a498bd8ee10a2279a9f79b9823bf6" title="Grab the hardware timer.">rthal_timer_request()</a> is called again.</li>
+</ul>
+<ul>
+<li>-ENODEV is returned if the hardware timer cannot be used. This situation may occur after the kernel disabled the timer due to invalid calibration results; in such a case, such hardware is unusable for any timing duties.</li>
+</ul>
+<p>Environments:</p>
+<p>This service can be called from:</p>
+<ul>
+<li>Linux domain context. </li>
+</ul>
+
+</div>
+</div>
+</div>
+<hr class="footer"/><address class="footer"><small>Generated on Thu Jan 5 2012 10:14:30 for Xenomai by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

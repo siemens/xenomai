@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>Xenomai API: xnthread_info Struct Reference</title>
+<title>Xenomai: xnthread_info Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -59,6 +59,8 @@ Data Fields</h2></td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Number of context switches.  <a href="#a0f37e0dae023bbc0e6b1261820e93a75"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnthread__info.html#a07ab43417cfb80961d262dea9cbfcee8">pagefaults</a></td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Number of triggered page faults.  <a href="#a07ab43417cfb80961d262dea9cbfcee8"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnthread__info.html#a3657f0b4689f902894f8ed81fc067429">syscalls</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Number of Xenomai syscalls.  <a href="#a3657f0b4689f902894f8ed81fc067429"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">char&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnthread__info.html#aa232983a3c19c17a115d9d041c946b2a">name</a> [XNOBJECT_NAME_LEN]</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Symbolic name assigned at creation.  <a href="#aa232983a3c19c17a115d9d041c946b2a"></a><br/></td></tr>
 </table>
@@ -232,11 +234,26 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="a3657f0b4689f902894f8ed81fc067429"></a><!-- doxytag: member="xnthread_info::syscalls" ref="a3657f0b4689f902894f8ed81fc067429" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned long <a class="el" href="structxnthread__info.html#a3657f0b4689f902894f8ed81fc067429">xnthread_info::syscalls</a></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Number of Xenomai syscalls. </p>
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
-<li>include/nucleus/<a class="el" href="include_2nucleus_2thread_8h_source.html">thread.h</a></li>
+<li>include/cobalt/nucleus/<a class="el" href="include_2cobalt_2nucleus_2thread_8h_source.html">thread.h</a></li>
 </ul>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Wed Nov 2 2011 18:01:11 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Thu Jan 5 2012 10:14:30 for Xenomai by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

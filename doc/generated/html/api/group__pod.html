@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>Xenomai API: Real-time pod services.</title>
+<title>Xenomai: Real-time pod services.</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -26,22 +26,9 @@
 <a href="#files">Files</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
-<h1>Real-time pod services.<br/>
-<small>
-[<a class="el" href="group__nucleus.html">Xenomai nucleus.</a>]</small>
-</h1>  </div>
+<h1>Real-time pod services.</h1>  </div>
 </div>
 <div class="contents">
-
-<p><div class="dynheader">
-Collaboration diagram for Real-time pod services.:</div>
-<div class="dyncontent">
-<center><table><tr><td><img src="group__pod.png" border="0" alt="" usemap="#group____pod"/>
-<map name="group____pod" id="group____pod">
-<area shape="rect" id="node1" href="group__nucleus.html" title="Xenomai nucleus." alt="" coords="7,5,143,35"/></map>
-</td></tr></table></center>
-</div>
-</p>
 <table class="memberdecls">
 <tr><td colspan="2"><h2><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
@@ -61,6 +48,8 @@ Files</h2></td></tr>
 </p>
 <tr><td colspan="2"><h2><a name="func-members"></a>
 Functions</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga67d180d67fca6d74759d9fab3a0b1f0d">__xnpod_reset_thread</a> (struct xnthread *thread)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Reset the thread.  <a href="#ga67d180d67fca6d74759d9fab3a0b1f0d"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga167bb3b4251ac8b8a3e7f358d236908a">xnpod_init</a> (void)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize the core pod.  <a href="#ga167bb3b4251ac8b8a3e7f358d236908a"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga10d3c13efa3ab06ac23017710b13314e">xnpod_enable_timesource</a> (void)</td></tr>
@@ -75,8 +64,6 @@ Functions</h2></td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initial start of a newly created thread.  <a href="#gad322f6afd62430705486a9036d0b7d66"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#gad86de7feeb37bbac6f6660916c3fe099">xnpod_stop_thread</a> (xnthread_t *thread)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Stop a thread.  <a href="#gad86de7feeb37bbac6f6660916c3fe099"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga61624578d0f1979f1ca6a5e9e49a74a3">xnpod_restart_thread</a> (xnthread_t *thread)</td></tr>
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Restart a thread.  <a href="#ga61624578d0f1979f1ca6a5e9e49a74a3"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#gad2b761fb70cad30339f092edb4a89587">xnpod_delete_thread</a> (xnthread_t *thread)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete a thread.  <a href="#gad2b761fb70cad30339f092edb4a89587"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga75278c2ac6f43741eca9cc1d60072eac">xnpod_abort_thread</a> (xnthread_t *thread)</td></tr>
@@ -97,8 +84,10 @@ Functions</h2></td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Deliver pending asynchronous signals to the running thread.  <a href="#gafd49fb1aa94c5f44f8c23d66a77b5581"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">static void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#gacf5b53f0405351327b89b0cc4976b962">xnpod_schedule</a> (void)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Rescheduling procedure entry point.  <a href="#gacf5b53f0405351327b89b0cc4976b962"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#gaed5776a428e7c59b52b1da76f0d765fa">xnpod_set_thread_periodic</a> (xnthread_t *thread, xnticks_t idate, xnticks_t period)</td></tr>
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Make a thread periodic.  <a href="#gaed5776a428e7c59b52b1da76f0d765fa"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#gaceabb0032b9c8ffcfc3bf3ff53ae0c76">xnpod_handle_exception</a> (struct ipipe_trap_data *d)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Exception handler.  <a href="#gaceabb0032b9c8ffcfc3bf3ff53ae0c76"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga1d9aa43e61e6e0b28675412e4cfcc6b0">xnpod_set_thread_periodic</a> (xnthread_t *thread, xnticks_t idate, xntmode_t timeout_mode, xnticks_t period)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Make a thread periodic.  <a href="#ga1d9aa43e61e6e0b28675412e4cfcc6b0"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#gaf836996e4a3378928f2a9f93a4915cfa">xnpod_wait_thread_period</a> (unsigned long *overruns_r)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait for the next periodic release point.  <a href="#gaf836996e4a3378928f2a9f93a4915cfa"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga4b8647e7a6969962c788669ff8d46d3b">xnpod_set_thread_tslice</a> (struct xnthread *thread, xnticks_t quantum)</td></tr>
@@ -109,12 +98,36 @@ Functions</h2></td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Remove a nucleus hook.  <a href="#gace800481d23255eebe45f969e9434adf"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ga657259b9accb3be41574f9970baef393">xnpod_welcome_thread</a> (xnthread_t *thread, int imask)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Thread prologue.  <a href="#ga657259b9accb3be41574f9970baef393"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#gaf95cac21ec23e44282461905dd3fc153">xnpod_trap_fault</a> (xnarch_fltinfo_t *fltinfo)</td></tr>
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Default fault handler.  <a href="#gaf95cac21ec23e44282461905dd3fc153"></a><br/></td></tr>
 </table>
 <hr/><a name="_details"></a><h2>Detailed Description</h2>
 <p>Real-time pod services. </p>
 <hr/><h2>Function Documentation</h2>
+<a class="anchor" id="ga67d180d67fca6d74759d9fab3a0b1f0d"></a><!-- doxytag: member="pod.h::__xnpod_reset_thread" ref="ga67d180d67fca6d74759d9fab3a0b1f0d" args="(struct xnthread *thread)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void __xnpod_reset_thread </td>
+          <td>(</td>
+          <td class="paramtype">struct xnthread *&nbsp;</td>
+          <td class="paramname"> <em>thread</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Reset the thread. </p>
+<p><b>For internal use only.</b></p>
+<p>This internal routine resets the state of a thread so that it can be subsequently stopped or restarted. </p>
+
+<p>References <a class="el" href="group__nucleus__state__flags.html#ga2defcfb1f04f077baeac9881cbdda627">XNLOCK</a>, <a class="el" href="group__pod.html#gac3a7bf9e973782a8cfd6495a1786e812">xnpod_resume_thread()</a>, <a class="el" href="group__pod.html#gae5f0d19e7a499b9b262f68a43ab545dd">xnpod_unblock_thread()</a>, <a class="el" href="group__nucleus__state__flags.html#ga6b605ad2bb16ae2386821be8ce8d341b">XNSUSP</a>, and <a class="el" href="group__synch.html#ga51146a2d5bd0ec6a10d2fcd685946938">xnsynch_release_all_ownerships()</a>.</p>
+
+<p>Referenced by <a class="el" href="group__pod.html#gad86de7feeb37bbac6f6660916c3fe099">xnpod_stop_thread()</a>.</p>
+
+</div>
+</div>
 <a class="anchor" id="ga75278c2ac6f43741eca9cc1d60072eac"></a><!-- doxytag: member="pod.h::xnpod_abort_thread" ref="ga75278c2ac6f43741eca9cc1d60072eac" args="(xnthread_t *thread)" -->
 <div class="memitem">
 <div class="memproto">
@@ -218,8 +231,6 @@ Functions</h2></td></tr>
 </ul>
 <p>Rescheduling: never. </p>
 
-<p>Referenced by <a class="el" href="group__task.html#ga7452f367f9e17bf2fc0b70f717b96dd8">rt_task_add_hook()</a>.</p>
-
 </div>
 </div>
 <a class="anchor" id="gad2b761fb70cad30339f092edb4a89587"></a><!-- doxytag: member="pod.h::xnpod_delete_thread" ref="gad2b761fb70cad30339f092edb4a89587" args="(xnthread_t *thread)" -->
@@ -260,7 +271,7 @@ Functions</h2></td></tr>
 
 <p>References <a class="el" href="structxnsched.html#afd2e6c15e470a38b385930c613856e7b">xnsched::curr</a>, <a class="el" href="structxnsched.html#ad700d0003b158a60599221047b2fc52e">xnsched::status</a>, <a class="el" href="group__nucleus__info__flags.html#gab4d67b921f5bff0675e12ea03c4af9e4">XNABORT</a>, <a class="el" href="group__nucleus__info__flags.html#ga544132c42225c5240327d0554cfaeff0">XNCANPND</a>, <a class="el" href="group__nucleus__state__flags.html#ga4a3196a5300e6ec862a18b272d859960">XNDEFCAN</a>, <a class="el" href="group__nucleus__state__flags.html#ga5fa9672a03ebd4beaf7ab3caa5699fa6">XNDORMANT</a>, <a class="el" href="group__nucleus__state__flags.html#gae9aeb1b75ad94bca4f56f57481ffc309">XNMIGRATE</a>, <a class="el" href="group__nucleus__state__flags.html#ga153b45ee5ddcc4da154ca8a018ac1871">XNPEND</a>, <a class="el" href="group__pod.html#gacf5b53f0405351327b89b0cc4976b962">xnpod_schedule()</a>, <a class="el" href="group__pod.html#gae5f0d19e7a499b9b262f68a43ab545dd">xnpod_unblock_thread()</a>, <a class="el" href="group__nucleus__state__flags.html#ga93d516291e0645195b35d63fbf0e0433">XNREADY</a>, <a class="el" href="group__nucleus__state__flags.html#ga73d7b1a4f5a25545ff21140a0598075a">XNROOT</a>, <a class="el" href="group__select.html#ga9f4741ca8d6794f1b45478a24b1104de">xnselector_destroy()</a>, <a class="el" href="group__synch.html#ga997e546948920193bb36ab8d120fbab7">xnsynch_forget_sleeper()</a>, <a class="el" href="group__synch.html#ga51146a2d5bd0ec6a10d2fcd685946938">xnsynch_release_all_ownerships()</a>, <a class="el" href="group__timer.html#ga782e10b2cd24a5c303b316375940ca15">xntimer_destroy()</a>, and <a class="el" href="group__nucleus__state__flags.html#gaa5b9ff889ab0bfbfb96a435cbea25d6a">XNZOMBIE</a>.</p>
 
-<p>Referenced by <a class="el" href="group__task.html#ga03387550693c21d0223f739570ccd992">rt_task_create()</a>, <a class="el" href="group__task.html#gab6e0d411830710e8cc82d77b9df19510">rt_task_delete()</a>, <a class="el" href="group__rtdmtask.html#ga44b0701b6c28fa8035711f800fdcd371">rtdm_task_init()</a>, <a class="el" href="group__pod.html#ga75278c2ac6f43741eca9cc1d60072eac">xnpod_abort_thread()</a>, and <a class="el" href="group__pod.html#ga824dc22468666c9f14da1842f0184b84">xnpod_shutdown()</a>.</p>
+<p>Referenced by <a class="el" href="group__rtdmtask.html#ga44b0701b6c28fa8035711f800fdcd371">rtdm_task_init()</a>, <a class="el" href="group__pod.html#ga75278c2ac6f43741eca9cc1d60072eac">xnpod_abort_thread()</a>, and <a class="el" href="group__pod.html#ga824dc22468666c9f14da1842f0184b84">xnpod_shutdown()</a>.</p>
 
 </div>
 </div>
@@ -281,7 +292,7 @@ Functions</h2></td></tr>
 <div class="memdoc">
 
 <p>Stop the core time source. </p>
-<p>Releases the hardware timer, and deactivates the master time base.</p>
+<p>Releases the hardware timer, and deactivates the system clock.</p>
 <p>Environments:</p>
 <p>This service can be called from:</p>
 <ul>
@@ -339,9 +350,8 @@ Functions</h2></td></tr>
 <div class="memdoc">
 
 <p>Activate the core time source. </p>
-<p>Xenomai implements the notion of time base, by which software timers that belong to different skins may be clocked separately according to distinct frequencies, or aperiodically. In the periodic case, delays and timeouts are given in counts of ticks; the duration of a tick is specified by the time base. In the aperiodic case, timings are directly specified in nanoseconds.</p>
-<p>Only a single aperiodic (i.e. tick-less) time base may exist in the system, and the nucleus provides for it through the nktbase object. All skins depending on aperiodic timings should bind to the latter, also known as the master time base. Skins depending on periodic timings may create and bind to their own time base. Such a periodic time base is managed as a slave object of the master one. A cascading software timer, which is fired by the master time base according to the appropriate frequency, triggers in turn the update process of the associated slave time base, which eventually fires the elapsed software timers controlled by the latter.</p>
-<p>Xenomai always controls the underlying hardware timer in a tick-less fashion, also known as the oneshot mode. The <a class="el" href="group__pod.html#ga10d3c13efa3ab06ac23017710b13314e" title="Activate the core time source.">xnpod_enable_timesource()</a> service configures the timer chip as needed, and activates the master time base.</p>
+<p>On every architecture, Xenomai directly manages a hardware timer clocked in one-shot mode, to support any number of software timers internally. Timings are always specified as a count of nanoseconds.</p>
+<p>The <a class="el" href="group__pod.html#ga10d3c13efa3ab06ac23017710b13314e" title="Activate the core time source.">xnpod_enable_timesource()</a> service configures the hardware timer chip. Because Xenomai most often interposes on the system timer used by the Linux kernel, a software timer may be started to relay periodic ticks to the host kernel if needed.</p>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 is returned on success. Otherwise:</dd></dl>
 <ul>
 <li>-ENODEV is returned if a failure occurred while configuring the hardware timer.</li>
@@ -349,19 +359,45 @@ Functions</h2></td></tr>
 <ul>
 <li>-ENOSYS is returned if no active pod exists.</li>
 </ul>
-<p>Side-effect: A host timing service is started in order to relay the canonical periodical tick to the underlying architecture, regardless of the frequency used for Xenomai's system tick. This routine does not call the rescheduling procedure.</p>
 <p>Environments:</p>
 <p>This service can be called from:</p>
 <ul>
-<li>Kernel module initialization/cleanup code</li>
-<li>User-space task in secondary mode</li>
+<li>Regular Linux kernel context.</li>
 </ul>
-<p>Rescheduling: never.</p>
-<dl class="note"><dt><b>Note:</b></dt><dd>Built-in support for periodic timing depends on CONFIG_XENO_OPT_TIMING_PERIODIC. </dd></dl>
+<p>Rescheduling: never. </p>
 
-<p>References <a class="el" href="structxnsched.html#ae2818d36a93ef25f121c67f2ff34d236">xnsched::htimer</a>, <a class="el" href="group__intr.html#ga6017e33c5871d313b4de053d938dd95b">xnintr_init()</a>, and <a class="el" href="group__timer.html#ga0ad3c70bed7fe1a45b45ee0875f031ab">xntimer_start()</a>.</p>
+<p>References <a class="el" href="structxnsched.html#ae2818d36a93ef25f121c67f2ff34d236">xnsched::htimer</a>, <a class="el" href="group__intr.html#ga6017e33c5871d313b4de053d938dd95b">xnintr_init()</a>, and <a class="el" href="group__timer.html#ga3e6bbea74e4fa1d64dbd6f38cbb39b73">xntimer_start()</a>.</p>
 
 <p>Referenced by <a class="el" href="group__pod.html#ga167bb3b4251ac8b8a3e7f358d236908a">xnpod_init()</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="gaceabb0032b9c8ffcfc3bf3ff53ae0c76"></a><!-- doxytag: member="pod.h::xnpod_handle_exception" ref="gaceabb0032b9c8ffcfc3bf3ff53ae0c76" args="(struct ipipe_trap_data *d)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int xnpod_handle_exception </td>
+          <td>(</td>
+          <td class="paramtype">struct ipipe_trap_data *&nbsp;</td>
+          <td class="paramname"> <em>d</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Exception handler. </p>
+<p>This is the handler which is called whenever an exception/fault is caught over the primary domain.</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>d</em>&nbsp;</td><td>A pointer to the trap information block received from the pipeline core. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>References <a class="el" href="group__pod.html#ga767221cf87c198c5dc071e9f597dcb3a">xnpod_suspend_thread()</a>, <a class="el" href="group__shadow.html#ga8de86a334ac2c5aeeebccf88fcee03ab">xnshadow_relax()</a>, and <a class="el" href="group__nucleus__state__flags.html#ga6b605ad2bb16ae2386821be8ce8d341b">XNSUSP</a>.</p>
 
 </div>
 </div>
@@ -382,7 +418,7 @@ Functions</h2></td></tr>
 <div class="memdoc">
 
 <p>Initialize the core pod. </p>
-<p>Initializes the core interface pod which can subsequently be used to start real-time activities. Once the core pod is active, real-time skins can be stacked over. There can only be a single core pod active in the host environment. Such environment can be confined to a process (e.g. simulator), or expand machine-wide (e.g. I-pipe).</p>
+<p>Initializes the core interface pod which can subsequently be used to start real-time activities. Once the core pod is active, real-time skins can be stacked over. There can only be a single core pod active in the host environment.</p>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 is returned on success. Otherwise:</dd></dl>
 <ul>
 <li>-ENOMEM is returned if the memory manager fails to initialize.</li>
@@ -393,7 +429,7 @@ Functions</h2></td></tr>
 <li>Kernel module initialization code </li>
 </ul>
 
-<p>References <a class="el" href="structxnpod.html#a26e8700e411f5292fa5372aa2faa28f6">xnpod::refcnt</a>, <a class="el" href="structxnsched.html#a0804d68b819bdf478bb74b8baa3954bb">xnsched::rootcb</a>, <a class="el" href="structxnpod.html#a8f4d9384fc5c6b00d9e403d50c7f5b47">xnpod::sched</a>, <a class="el" href="structxnpod.html#a7b0b15bd11482596b1affb73f4fe54ff">xnpod::status</a>, <a class="el" href="structxnpod.html#a20ab294c2e3b46322f11260ad8b44f4d">xnpod::tdeleteq</a>, <a class="el" href="structxnpod.html#a7937ecf81ab970ab2189dd6208dc3679">xnpod::threadq</a>, <a class="el" href="structxnpod.html#a9a61219dd75a7b26024a79a73bce6540">xnpod::timerlck</a>, <a class="el" href="structxnpod.html#af29706fbb96466d41e15421454bdb53c">xnpod::tsliced</a>, <a class="el" href="structxnpod.html#a86acf95fd43b98008659bfdd38c6af9b">xnpod::tslicer</a>, <a class="el" href="structxnpod.html#a1bb945357ab40191bbd55252dc2218dc">xnpod::tstartq</a>, <a class="el" href="structxnpod.html#afbd1d126d1d74f3d433d164e404a0d2f">xnpod::tswitchq</a>, <a class="el" href="group__heap.html#gaf33cea7788162687767ca7c8c149f6ab">xnheap_destroy()</a>, <a class="el" href="group__heap.html#gad65beaf18754ad1f85c479eaf9219042">xnheap_init()</a>, <a class="el" href="group__heap.html#gabfa339d98cfd2271b5d80d64b20c0e2c">xnheap_set_label()</a>, <a class="el" href="group__pod.html#ga10d3c13efa3ab06ac23017710b13314e">xnpod_enable_timesource()</a>, <a class="el" href="group__pod.html#ga824dc22468666c9f14da1842f0184b84">xnpod_shutdown()</a>, and <a class="el" href="group__timer.html#ga834e46fb4c1ecaab949eea77b9dee284">xntimer_init()</a>.</p>
+<p>References <a class="el" href="structxnpod.html#a26e8700e411f5292fa5372aa2faa28f6">xnpod::refcnt</a>, <a class="el" href="structxnsched.html#a0804d68b819bdf478bb74b8baa3954bb">xnsched::rootcb</a>, <a class="el" href="structxnpod.html#a8f4d9384fc5c6b00d9e403d50c7f5b47">xnpod::sched</a>, <a class="el" href="structxnpod.html#a7b0b15bd11482596b1affb73f4fe54ff">xnpod::status</a>, <a class="el" href="structxnpod.html#a20ab294c2e3b46322f11260ad8b44f4d">xnpod::tdeleteq</a>, <a class="el" href="structxnpod.html#a7937ecf81ab970ab2189dd6208dc3679">xnpod::threadq</a>, <a class="el" href="structxnpod.html#a9a61219dd75a7b26024a79a73bce6540">xnpod::timerlck</a>, <a class="el" href="structxnpod.html#a1bb945357ab40191bbd55252dc2218dc">xnpod::tstartq</a>, <a class="el" href="structxnpod.html#afbd1d126d1d74f3d433d164e404a0d2f">xnpod::tswitchq</a>, <a class="el" href="group__heap.html#gaf33cea7788162687767ca7c8c149f6ab">xnheap_destroy()</a>, <a class="el" href="group__heap.html#gad65beaf18754ad1f85c479eaf9219042">xnheap_init()</a>, <a class="el" href="group__heap.html#gabfa339d98cfd2271b5d80d64b20c0e2c">xnheap_set_label()</a>, <a class="el" href="group__pod.html#ga10d3c13efa3ab06ac23017710b13314e">xnpod_enable_timesource()</a>, and <a class="el" href="group__pod.html#ga824dc22468666c9f14da1842f0184b84">xnpod_shutdown()</a>.</p>
 
 </div>
 </div>
@@ -450,10 +486,7 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <ul>
-<li>name: An ASCII string standing for the symbolic name of the thread. This name is copied to a safe place into the thread descriptor. This name might be used in various situations by the nucleus for issuing human-readable diagnostic messages, so it is usually a good idea to provide a sensible value here. The simulator even uses this name intensively to identify threads in the debugging GUI it provides. However, passing NULL here is always legal and means "anonymous".</li>
-</ul>
-<ul>
-<li>tbase: The time base descriptor to refer to for all timed operations issued by the new thread. See <a class="el" href="group__timebase.html#gafcb0a76ac26eaaa768db89cb54e3f24a" title="Allocate a time base.">xntbase_alloc()</a> for detailed explanations about time bases.</li>
+<li>name: An ASCII string standing for the symbolic name of the thread. This name is copied to a safe place into the thread descriptor. This name might be used in various situations by the nucleus for issuing human-readable diagnostic messages, so it is usually a good idea to provide a sensible value here. NULL is fine though and means "anonymous".</li>
 </ul>
 <ul>
 <li>flags: A set of creation flags affecting the operation. The following flags can be part of this bitmask, each of them affecting the nucleus behaviour regarding the created thread:</li>
@@ -496,7 +529,7 @@ Functions</h2></td></tr>
 
 <p>References <a class="el" href="group__nucleus__state__flags.html#ga5fa9672a03ebd4beaf7ab3caa5699fa6">XNDORMANT</a>, <a class="el" href="group__nucleus__state__flags.html#ga6b2ca9336a15f94f3a2e0665982ed081">XNFPU</a>, <a class="el" href="group__pod.html#ga767221cf87c198c5dc071e9f597dcb3a">xnpod_suspend_thread()</a>, <a class="el" href="group__nucleus__state__flags.html#gac664c3bae93da4141d2fc8e88a91afd8">XNSHADOW</a>, and <a class="el" href="group__nucleus__state__flags.html#ga6b605ad2bb16ae2386821be8ce8d341b">XNSUSP</a>.</p>
 
-<p>Referenced by <a class="el" href="group__posix__thread.html#gae6e819ed048e4c4a4ee96fa6f426852c">pthread_create()</a>, <a class="el" href="group__task.html#ga03387550693c21d0223f739570ccd992">rt_task_create()</a>, and <a class="el" href="group__rtdmtask.html#ga44b0701b6c28fa8035711f800fdcd371">rtdm_task_init()</a>.</p>
+<p>Referenced by <a class="el" href="group__cobalt__thread.html#ga3832074a8217566e79b476a964c7eb25">pthread_create()</a>, and <a class="el" href="group__rtdmtask.html#ga44b0701b6c28fa8035711f800fdcd371">rtdm_task_init()</a>.</p>
 
 </div>
 </div>
@@ -581,45 +614,6 @@ Functions</h2></td></tr>
 </ul>
 <p>Rescheduling: never. </p>
 
-<p>Referenced by <a class="el" href="group__task.html#ga585bcffb3757845534eed69edd1a27d2">rt_task_remove_hook()</a>.</p>
-
-</div>
-</div>
-<a class="anchor" id="ga61624578d0f1979f1ca6a5e9e49a74a3"></a><!-- doxytag: member="pod.h::xnpod_restart_thread" ref="ga61624578d0f1979f1ca6a5e9e49a74a3" args="(xnthread_t *thread)" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void xnpod_restart_thread </td>
-          <td>(</td>
-          <td class="paramtype">xnthread_t *&nbsp;</td>
-          <td class="paramname"> <em>thread</em></td>
-          <td>&nbsp;)&nbsp;</td>
-          <td></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>Restart a thread. </p>
-<p>Restarts a previously started thread. The thread is first terminated then respawned using the same information that prevailed when it was first started, including the mode bits and interrupt mask initially passed to the <a class="el" href="group__pod.html#gad322f6afd62430705486a9036d0b7d66" title="Initial start of a newly created thread.">xnpod_start_thread()</a> service. As a consequence of this call, the thread entry point is rerun.</p>
-<dl><dt><b>Parameters:</b></dt><dd>
-  <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>The descriptor address of the affected thread which must have been previously started by the <a class="el" href="group__pod.html#gad322f6afd62430705486a9036d0b7d66" title="Initial start of a newly created thread.">xnpod_start_thread()</a> service.</td></tr>
-  </table>
-  </dd>
-</dl>
-<p>Self-restarting a thread is allowed. However, restarting the root thread is not. Restarting a thread which was never started once leads to a null-effect.</p>
-<p>Environments:</p>
-<p>This service can be called from:</p>
-<ul>
-<li>Kernel module initialization/cleanup code</li>
-<li>Kernel-based task</li>
-</ul>
-<p>Rescheduling: possible. </p>
-
-<p>References <a class="el" href="group__pod.html#gacf5b53f0405351327b89b0cc4976b962">xnpod_schedule()</a>, <a class="el" href="group__nucleus__state__flags.html#gacc86813fad4e877dcc16b98cdb64ef60">XNRESTART</a>, <a class="el" href="group__nucleus__state__flags.html#ga73d7b1a4f5a25545ff21140a0598075a">XNROOT</a>, <a class="el" href="group__nucleus__state__flags.html#gac664c3bae93da4141d2fc8e88a91afd8">XNSHADOW</a>, and <a class="el" href="group__nucleus__state__flags.html#ga0843357a4c7a592e9d5f9cb1ce84ea8e">XNSTARTED</a>.</p>
-
 </div>
 </div>
 <a class="anchor" id="gac3a7bf9e973782a8cfd6495a1786e812"></a><!-- doxytag: member="pod.h::xnpod_resume_thread" ref="gac3a7bf9e973782a8cfd6495a1786e812" args="(xnthread_t *thread, xnflags_t mask)" -->
@@ -685,9 +679,9 @@ Functions</h2></td></tr>
 </ul>
 <p>Rescheduling: never. </p>
 
-<p>References <a class="el" href="structxnsched.html#afd2e6c15e470a38b385930c613856e7b">xnsched::curr</a>, <a class="el" href="group__nucleus__state__flags.html#gaa31d298d298eb696ccf840473b94912c">XNDELAY</a>, <a class="el" href="group__nucleus__state__flags.html#ga9394cc02e730535e3dd8b0aabb08ea86">XNHELD</a>, <a class="el" href="group__nucleus__state__flags.html#ga153b45ee5ddcc4da154ca8a018ac1871">XNPEND</a>, <a class="el" href="group__nucleus__state__flags.html#ga93d516291e0645195b35d63fbf0e0433">XNREADY</a>, <a class="el" href="group__synch.html#ga997e546948920193bb36ab8d120fbab7">xnsynch_forget_sleeper()</a>, and <a class="el" href="group__timer.html#ga1244411df9784d63d3e2f99016d62643">xntimer_stop()</a>.</p>
+<p>References <a class="el" href="group__nucleus__state__flags.html#gaa31d298d298eb696ccf840473b94912c">XNDELAY</a>, <a class="el" href="group__nucleus__state__flags.html#ga9394cc02e730535e3dd8b0aabb08ea86">XNHELD</a>, <a class="el" href="group__nucleus__state__flags.html#ga153b45ee5ddcc4da154ca8a018ac1871">XNPEND</a>, <a class="el" href="group__nucleus__state__flags.html#ga93d516291e0645195b35d63fbf0e0433">XNREADY</a>, <a class="el" href="group__synch.html#ga997e546948920193bb36ab8d120fbab7">xnsynch_forget_sleeper()</a>, and <a class="el" href="group__timer.html#ga1244411df9784d63d3e2f99016d62643">xntimer_stop()</a>.</p>
 
-<p>Referenced by <a class="el" href="group__posix__signal.html#ga5aafacc071cdfafd0eb992004dee3e62">pthread_kill()</a>, <a class="el" href="group__task.html#ga1fab1aa24ef6f199546fd9669ae711be">rt_task_resume()</a>, <a class="el" href="group__pod.html#gad322f6afd62430705486a9036d0b7d66">xnpod_start_thread()</a>, <a class="el" href="group__pod.html#gae5f0d19e7a499b9b262f68a43ab545dd">xnpod_unblock_thread()</a>, <a class="el" href="group__synch.html#ga82beb68147bc5f0306ab02a61a9dc76b">xnsynch_flush()</a>, <a class="el" href="group__synch.html#gad5992ddbdb81821cb29bae8900eb65ac">xnsynch_wakeup_one_sleeper()</a>, and <a class="el" href="group__synch.html#ga9e530d12df9881251231af489208762e">xnsynch_wakeup_this_sleeper()</a>.</p>
+<p>Referenced by <a class="el" href="group__pod.html#ga67d180d67fca6d74759d9fab3a0b1f0d">__xnpod_reset_thread()</a>, <a class="el" href="group__pod.html#gad322f6afd62430705486a9036d0b7d66">xnpod_start_thread()</a>, <a class="el" href="group__pod.html#gae5f0d19e7a499b9b262f68a43ab545dd">xnpod_unblock_thread()</a>, <a class="el" href="group__synch.html#ga82beb68147bc5f0306ab02a61a9dc76b">xnsynch_flush()</a>, <a class="el" href="group__synch.html#gad5992ddbdb81821cb29bae8900eb65ac">xnsynch_wakeup_one_sleeper()</a>, and <a class="el" href="group__synch.html#ga9e530d12df9881251231af489208762e">xnsynch_wakeup_this_sleeper()</a>.</p>
 
 </div>
 </div>
@@ -734,7 +728,7 @@ Functions</h2></td></tr>
 
 <p>References <a class="el" href="structxnsched.html#a4e9ca82832cb0709308e7d78e7f9d694">xnsched::lflags</a>, and <a class="el" href="structxnsched.html#ad700d0003b158a60599221047b2fc52e">xnsched::status</a>.</p>
 
-<p>Referenced by <a class="el" href="group__posix__cancel.html#ga9e77a80c073787bf9a593e9c619dce27">pthread_cancel()</a>, <a class="el" href="group__posix__cond.html#gaabb82be87ab0b0a96fc68d4a83c2f343">pthread_cond_broadcast()</a>, <a class="el" href="group__posix__cond.html#ga691c7dd41acc6a4f25561a13158b0933">pthread_cond_signal()</a>, <a class="el" href="group__posix__thread.html#ga7c275c509c26566b6dd95a2de1668a2f">pthread_detach()</a>, <a class="el" href="group__posix__thread.html#gaa79c99cc7b194918a2def257246f11c6">pthread_join()</a>, <a class="el" href="group__posix__signal.html#ga5aafacc071cdfafd0eb992004dee3e62">pthread_kill()</a>, <a class="el" href="group__posix__mutex.html#gab6fc0b5282dd100530311128e4f5ff19">pthread_mutex_unlock()</a>, <a class="el" href="group__posix__thread.html#ga9dd3db5524fccb05a8868b7c33ccaa79">pthread_set_mode_np()</a>, <a class="el" href="group__posix__sched.html#ga95276f88e1a2cae7a37f792123a99144">pthread_setschedparam()</a>, <a class="el" href="group__posix__sched.html#gad5eceef44b79a09a1a86e7a1950a74e7">pthread_setschedparam_ex()</a>, <a class="el" href="group__posix__signal.html#gac2530d4faf68aaab3605c92ea8e78a03">pthread_sigmask()</a>, <a class="el" href="group__posix__signal.html#ga64f37159dcc60bf98364a8950fd05338">pthread_sigqueue_np()</a>, <a class="el" href="group__alarm.html#gaf00e05b47b1183816480e270d326f9ac">rt_alarm_delete()</a>, <a class="el" href="group__buffer.html#gaf78c43664dda8a17c5c63ad4be2da179">rt_buffer_clear()</a>, <a class="el" href="group__buffer.html#gabd852c3c957d2dd37c15899119a3551e">rt_buffer_delete()</a>, <a class="el" href="group__cond.html#ga37c6424e266f5c1df3439116dd429878">rt_cond_broadcast()</a>, <a class="el" href="group__cond.html#gaba59b188f10b142b4f2500dd719aa35f">rt_cond_delete()</a>, <a class="el" href="group__cond.html#gab7a59ee47db48a78ca45e4655b569dc9">rt_cond_signal()</a>, <a class="el" href="group__event.html#gabccfea1cd018493ef5a28c6fe8e90d7c">rt_event_delete()</a>, <a class="el" href="group__event.html#gafda4c544f2429005c4b15de3a7ffc902">rt_event_signal()</a>, <a class="el" href="group__native__heap.html#ga300ca8c868d02dad99790fe39b443f6f">rt_heap_free()</a>, <a class="el" href="group__interrupt.html#ga6da6ddd4e65b0feb47278dae74cab6c9">rt_intr_delete()</a>, <a class="el" href="group__mutex.html#gad0c2342227f821bd09f580b6a9684179">rt_mutex_delete()</a>, <a class="el" href="group__mutex.html#gac87911b7279f55ef2f5f9aefe36ff070">rt_mutex_release()</a>, <a class="el" href="group__native__queue.html#ga8b1dcb15753bdfce02f25f166e18948d">rt_queue_send()</a>, <a class="el" href="group__semaphore.html#ga4a8963240e68d164a2e5bb148da44fbc">rt_sem_broadcast()</a>, <a class="el" href="group__semaphore.html#gaa14cefc4dae46a7c95859e7fe46df888">rt_sem_delete()</a>, <a class="el" href="group__semaphore.html#gaa5a7927862a511a27741223e08e48270">rt_sem_v()</a>, <a class="el" href="group__task.html#ga8e17be7a49ac32bbeb3085b3cd1a9915">rt_task_catch()</a>, <a class="el" href="group__task.html#ga70e65c2efb499c48c6d15010a1c630a3">rt_task_notify()</a>, <a class="el" href="group__task.html#gacd8a4fb2d11f0548bd053dfbf92f9e9d">rt_task_reply()</a>, <a class="el" href="group__task.html#ga1fab1aa24ef6f199546fd9669ae711be">rt_task_resume()</a>, <a class="el" href="group__task.html#ga915e7edfb0aaddb643794d7abc7093bf">rt_task_set_mode()</a>, <a class="el" href="group__task.html#ga3bed8d001e212a3328a4e7e73f1765e8">rt_task_set_priority()</a>, <a class="el" href="group__task.html#ga770281eeca009c0a08a7c4a9fd849ac1">rt_task_unblock()</a>, <a class="el" href="group__rtdmsync.html#ga1217402b82034b26fe25c26f1e5b32c9">rtdm_event_signal()</a>, <a class="el" href="group__rtdmsync.html#ga829dbd8c5709d798ed06947b27001fed">rtdm_sem_up()</a>, <a class="el" href="group__posix__sem.html#ga3ceb2577b76aaad3be6fd83e959c66e3">sem_post()</a>, <a class="el" href="group__pod.html#gad2b761fb70cad30339f092edb4a89587">xnpod_delete_thread()</a>, <a class="el" href="group__pod.html#ga4d14486d26a32a2660697f5a88d8301d">xnpod_migrate_thread()</a>, <a class="el" href="group__pod.html#ga61624578d0f1979f1ca6a5e9e49a74a3">xnpod_restart_thread()</a>, <a class="el" href="group__pod.html#ga824dc22468666c9f14da1842f0184b84">xnpod_shutdown()</a>, <a class="el" href="group__pod.html#gad322f6afd62430705486a9036d0b7d66">xnpod_start_thread()</a>, <a class="el" href="group__pod.html#gad86de7feeb37bbac6f6660916c3fe099">xnpod_stop_thread()</a>, <a class="el" href="group__pod.html#ga767221cf87c198c5dc071e9f597dcb3a">xnpod_suspend_thread()</a>, <a class="el" href="group__registry.html#ga28aefd9be7367aa495753142005e1d5a">xnregistry_enter()</a>, <a class="el" href="group__registry.html#ga632c1545496b004eecb7ce8d41b3aabd">xnregistry_put()</a>, <a class="el" href="group__select.html#ga8546a4a6f997a8c29451673d5b7f0e86">xnselect_bind()</a>, and <a class="el" href="group__select.html#ga56e4b5bf3e35dd80c23e95cad8fa1614">xnselect_destroy()</a>.</p>
+<p>Referenced by <a class="el" href="group__cobalt__cancel.html#ga9e77a80c073787bf9a593e9c619dce27">pthread_cancel()</a>, <a class="el" href="group__cobalt__thread.html#ga023e824df57ad2d88d42bb6e4c6711f3">pthread_set_mode_np()</a>, <a class="el" href="group__cobalt__thread.html#ga4b9fb2bbdfba8fbc876ae33493e6bcc8">pthread_setschedparam()</a>, <a class="el" href="group__cobalt__thread.html#gaeff2a24c4ed33b06b9d158259bcfa328">pthread_setschedparam_ex()</a>, <a class="el" href="group__rtdmsync.html#ga1217402b82034b26fe25c26f1e5b32c9">rtdm_event_signal()</a>, <a class="el" href="group__rtdmsync.html#ga829dbd8c5709d798ed06947b27001fed">rtdm_sem_up()</a>, <a class="el" href="group__pod.html#gad2b761fb70cad30339f092edb4a89587">xnpod_delete_thread()</a>, <a class="el" href="group__pod.html#ga4d14486d26a32a2660697f5a88d8301d">xnpod_migrate_thread()</a>, <a class="el" href="group__pod.html#ga824dc22468666c9f14da1842f0184b84">xnpod_shutdown()</a>, <a class="el" href="group__pod.html#gad322f6afd62430705486a9036d0b7d66">xnpod_start_thread()</a>, <a class="el" href="group__pod.html#gad86de7feeb37bbac6f6660916c3fe099">xnpod_stop_thread()</a>, <a class="el" href="group__pod.html#ga767221cf87c198c5dc071e9f597dcb3a">xnpod_suspend_thread()</a>, <a class="el" href="group__registry.html#ga28aefd9be7367aa495753142005e1d5a">xnregistry_enter()</a>, <a class="el" href="group__registry.html#ga632c1545496b004eecb7ce8d41b3aabd">xnregistry_put()</a>, <a class="el" href="group__select.html#ga8546a4a6f997a8c29451673d5b7f0e86">xnselect_bind()</a>, and <a class="el" href="group__select.html#ga56e4b5bf3e35dd80c23e95cad8fa1614">xnselect_destroy()</a>.</p>
 
 </div>
 </div>
@@ -785,9 +779,6 @@ Functions</h2></td></tr>
 <ul>
 <li>XNASDI disables the asynchronous signal handling for this thread. See <a class="el" href="group__pod.html#gacf5b53f0405351327b89b0cc4976b962" title="Rescheduling procedure entry point.">xnpod_schedule()</a> for more on this.</li>
 </ul>
-<ul>
-<li>XNRPIOFF disables thread priority coupling between Xenomai and Linux schedulers. This bit prevents the root Linux thread from inheriting the priority of the running shadow Xenomai thread. Use CONFIG_XENO_OPT_RPIOFF to globally disable priority coupling.</li>
-</ul>
 <p>Environments:</p>
 <p>This service can be called from:</p>
 <ul>
@@ -798,11 +789,11 @@ Functions</h2></td></tr>
 
 <p>References <a class="el" href="group__nucleus__state__flags.html#ga2defcfb1f04f077baeac9881cbdda627">XNLOCK</a>.</p>
 
-<p>Referenced by <a class="el" href="group__posix__thread.html#ga9dd3db5524fccb05a8868b7c33ccaa79">pthread_set_mode_np()</a>, and <a class="el" href="group__task.html#ga915e7edfb0aaddb643794d7abc7093bf">rt_task_set_mode()</a>.</p>
+<p>Referenced by <a class="el" href="group__cobalt__thread.html#ga023e824df57ad2d88d42bb6e4c6711f3">pthread_set_mode_np()</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="gaed5776a428e7c59b52b1da76f0d765fa"></a><!-- doxytag: member="pod.h::xnpod_set_thread_periodic" ref="gaed5776a428e7c59b52b1da76f0d765fa" args="(xnthread_t *thread, xnticks_t idate, xnticks_t period)" -->
+<a class="anchor" id="ga1d9aa43e61e6e0b28675412e4cfcc6b0"></a><!-- doxytag: member="pod.h::xnpod_set_thread_periodic" ref="ga1d9aa43e61e6e0b28675412e4cfcc6b0" args="(xnthread_t *thread, xnticks_t idate, xntmode_t timeout_mode, xnticks_t period)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -817,6 +808,12 @@ Functions</h2></td></tr>
           <td></td>
           <td class="paramtype">xnticks_t&nbsp;</td>
           <td class="paramname"> <em>idate</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">xntmode_t&nbsp;</td>
+          <td class="paramname"> <em>timeout_mode</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -838,8 +835,9 @@ Functions</h2></td></tr>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>The descriptor address of the affected thread. This thread is immediately delayed until the first periodic release point is reached.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>idate</em>&nbsp;</td><td>The initial (absolute) date of the first release point, expressed in clock ticks (see note). The affected thread will be delayed until this point is reached. If <em>idate</em> is equal to XN_INFINITE, the current system date is used, and no initial delay takes place.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>period</em>&nbsp;</td><td>The period of the thread, expressed in clock ticks (see note). As a side-effect, passing XN_INFINITE attempts to stop the thread's periodic timer; in the latter case, the routine always exits succesfully, regardless of the previous state of this timer.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>idate</em>&nbsp;</td><td>The initial (absolute) date of the first release point, expressed in nanoseconds. The affected thread will be delayed by the first call to <a class="el" href="group__pod.html#gaf836996e4a3378928f2a9f93a4915cfa" title="Wait for the next periodic release point.">xnpod_wait_thread_period()</a> until this point is reached. If <em>idate</em> is equal to XN_INFINITE, the current system date is used, and no initial delay takes place. In the latter case, <em>timeout_mode</em> is not considered and can have any valid value.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>timeout_mode</em>&nbsp;</td><td>The mode of the <em>idate</em> parameter. It can either be set to XN_ABSOLUTE or XN_REALTIME with <em>idate</em> different from XN_INFINITE (see also <a class="el" href="group__timer.html#ga3e6bbea74e4fa1d64dbd6f38cbb39b73" title="Arm a timer.">xntimer_start()</a>).</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>period</em>&nbsp;</td><td>The period of the thread, expressed in nanoseconds. As a side-effect, passing XN_INFINITE attempts to stop the thread's periodic timer; in the latter case, the routine always exits succesfully, regardless of the previous state of this timer.</td></tr>
   </table>
   </dd>
 </dl>
@@ -848,10 +846,7 @@ Functions</h2></td></tr>
 <li>-ETIMEDOUT is returned <em>idate</em> is different from XN_INFINITE and represents a date in the past.</li>
 </ul>
 <ul>
-<li>-EWOULDBLOCK is returned if the relevant time base has not been initialized by a call to xnpod_init_timebase().</li>
-</ul>
-<ul>
-<li>-EINVAL is returned if <em>period</em> is different from XN_INFINITE but shorter than the scheduling latency value for the target system, as available from /proc/xenomai/latency.</li>
+<li>-EINVAL is returned if <em>period</em> is different from XN_INFINITE but shorter than the scheduling latency value for the target system, as available from /proc/xenomai/latency. -EINVAL is also returned if <em>timeout_mode</em> is not compatible with <em>idate</em>, such as XN_RELATIVE with <em>idate</em> different from XN_INFINITE.</li>
 </ul>
 <p>Environments:</p>
 <p>This service can be called from:</p>
@@ -860,12 +855,11 @@ Functions</h2></td></tr>
 <li>Kernel-based task</li>
 <li>User-space task</li>
 </ul>
-<p>Rescheduling: possible if the operation affects the current thread and <em>idate</em> has not elapsed yet.</p>
-<dl class="note"><dt><b>Note:</b></dt><dd>The <em>idate</em> and <em>period</em> values will be interpreted as jiffies if <em>thread</em> is bound to a periodic time base (see xnpod_init_thread), or nanoseconds otherwise. </dd></dl>
+<p>Rescheduling: none. </p>
 
-<p>References <a class="el" href="group__nucleus__state__flags.html#gaa31d298d298eb696ccf840473b94912c">XNDELAY</a>, <a class="el" href="group__pod.html#ga767221cf87c198c5dc071e9f597dcb3a">xnpod_suspend_thread()</a>, <a class="el" href="group__timer.html#ga0ad3c70bed7fe1a45b45ee0875f031ab">xntimer_start()</a>, and <a class="el" href="group__timer.html#ga1244411df9784d63d3e2f99016d62643">xntimer_stop()</a>.</p>
+<p>References <a class="el" href="group__timer.html#ga3e6bbea74e4fa1d64dbd6f38cbb39b73">xntimer_start()</a>, and <a class="el" href="group__timer.html#ga1244411df9784d63d3e2f99016d62643">xntimer_stop()</a>.</p>
 
-<p>Referenced by <a class="el" href="group__posix__thread.html#gafe8deaa3c89e0a07e59f0e58f9ec1473">pthread_make_periodic_np()</a>, <a class="el" href="group__task.html#gababee94264156693cd4f5b9b70d3c5a1">rt_task_set_periodic()</a>, and <a class="el" href="group__rtdmtask.html#ga44b0701b6c28fa8035711f800fdcd371">rtdm_task_init()</a>.</p>
+<p>Referenced by <a class="el" href="group__cobalt__thread.html#ga28163bf08c41512d1e0a5079fb14081c">pthread_make_periodic_np()</a>, and <a class="el" href="group__rtdmtask.html#ga44b0701b6c28fa8035711f800fdcd371">rtdm_task_init()</a>.</p>
 
 </div>
 </div>
@@ -932,7 +926,7 @@ Functions</h2></td></tr>
 </ul>
 <p>Rescheduling: never. </p>
 
-<p>Referenced by <a class="el" href="group__posix__sched.html#ga95276f88e1a2cae7a37f792123a99144">pthread_setschedparam()</a>, <a class="el" href="group__posix__sched.html#gad5eceef44b79a09a1a86e7a1950a74e7">pthread_setschedparam_ex()</a>, and <a class="el" href="group__task.html#ga3bed8d001e212a3328a4e7e73f1765e8">rt_task_set_priority()</a>.</p>
+<p>Referenced by <a class="el" href="group__cobalt__thread.html#ga4b9fb2bbdfba8fbc876ae33493e6bcc8">pthread_setschedparam()</a>, and <a class="el" href="group__cobalt__thread.html#gaeff2a24c4ed33b06b9d158259bcfa328">pthread_setschedparam_ex()</a>.</p>
 
 </div>
 </div>
@@ -966,27 +960,24 @@ Functions</h2></td></tr>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>The descriptor address of the affected thread.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>quantum</em>&nbsp;</td><td>The time quantum assigned to the thread expressed in time-slicing ticks (see note). If <em>quantum</em> is different from XN_INFINITE, the time-slice for the thread is set to that value and its current time credit is refilled (i.e. the thread is given a full time-slice to run next). Otherwise, if <em>quantum</em> equals XN_INFINITE, time-slicing is stopped for that thread.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>quantum</em>&nbsp;</td><td>The time quantum assigned to the thread expressed in nanoseconds. If <em>quantum</em> is different from XN_INFINITE, the time-slice for the thread is set to that value and its current time credit is refilled (i.e. the thread is given a full time-slice to run next). Otherwise, if <em>quantum</em> equals XN_INFINITE, time-slicing is stopped for that thread.</td></tr>
   </table>
   </dd>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 is returned upon success. Otherwise:</dd></dl>
 <ul>
-<li>-EINVAL is returned if the base scheduling class of the target thread does not support time-slicing.</li>
+<li>-EINVAL is returned if <em>quantum</em> is not XN_INFINITE, and the base scheduling class of the target thread does not support time-slicing.</li>
 </ul>
 <p>Environments:</p>
 <p>This service can be called from:</p>
 <ul>
-<li>Kernel module initialization/cleanup code</li>
-<li>Kernel-based task</li>
-<li>User-space task</li>
+<li>Any kernel context.</li>
 </ul>
-<p>Rescheduling: never.</p>
-<dl class="note"><dt><b>Note:</b></dt><dd>If <em>thread</em> is bound to a periodic timebase, <em>quantum</em> represents the number of periodic ticks in that timebase. Otherwise, if <em>thread</em> is bound to the master time base, a full time-slice will last: <em>quantum</em> * CONFIG_XENO_OPT_TIMING_VIRTICK. </dd></dl>
+<p>Rescheduling: never. </p>
 
-<p>References <a class="el" href="group__nucleus__state__flags.html#ga6f451131910f816dd01fe1ec1fb50fe9">XNRRB</a>, <a class="el" href="group__timer.html#ga0ad3c70bed7fe1a45b45ee0875f031ab">xntimer_start()</a>, and <a class="el" href="group__timer.html#ga1244411df9784d63d3e2f99016d62643">xntimer_stop()</a>.</p>
+<p>References <a class="el" href="group__nucleus__state__flags.html#ga6f451131910f816dd01fe1ec1fb50fe9">XNRRB</a>, <a class="el" href="group__timer.html#ga3e6bbea74e4fa1d64dbd6f38cbb39b73">xntimer_start()</a>, and <a class="el" href="group__timer.html#ga1244411df9784d63d3e2f99016d62643">xntimer_stop()</a>.</p>
 
-<p>Referenced by <a class="el" href="group__posix__thread.html#gae6e819ed048e4c4a4ee96fa6f426852c">pthread_create()</a>, <a class="el" href="group__posix__sched.html#ga95276f88e1a2cae7a37f792123a99144">pthread_setschedparam()</a>, <a class="el" href="group__posix__sched.html#gad5eceef44b79a09a1a86e7a1950a74e7">pthread_setschedparam_ex()</a>, and <a class="el" href="group__task.html#ga9250436d7bd9e49a0320161d2e9373ae">rt_task_slice()</a>.</p>
+<p>Referenced by <a class="el" href="group__cobalt__thread.html#ga3832074a8217566e79b476a964c7eb25">pthread_create()</a>, <a class="el" href="group__cobalt__thread.html#ga4b9fb2bbdfba8fbc876ae33493e6bcc8">pthread_setschedparam()</a>, and <a class="el" href="group__cobalt__thread.html#gaeff2a24c4ed33b06b9d158259bcfa328">pthread_setschedparam_ex()</a>.</p>
 
 </div>
 </div>
@@ -1022,7 +1013,7 @@ Functions</h2></td></tr>
 </ul>
 <p>Rescheduling: never. </p>
 
-<p>References <a class="el" href="group__heap.html#gaf33cea7788162687767ca7c8c149f6ab">xnheap_destroy()</a>, <a class="el" href="group__pod.html#gad2b761fb70cad30339f092edb4a89587">xnpod_delete_thread()</a>, <a class="el" href="group__pod.html#ga179f47d6e98446843f059790112dcce3">xnpod_disable_timesource()</a>, <a class="el" href="group__pod.html#gacf5b53f0405351327b89b0cc4976b962">xnpod_schedule()</a>, <a class="el" href="group__nucleus__state__flags.html#ga73d7b1a4f5a25545ff21140a0598075a">XNROOT</a>, and <a class="el" href="group__timer.html#ga782e10b2cd24a5c303b316375940ca15">xntimer_destroy()</a>.</p>
+<p>References <a class="el" href="group__heap.html#gaf33cea7788162687767ca7c8c149f6ab">xnheap_destroy()</a>, <a class="el" href="group__pod.html#gad2b761fb70cad30339f092edb4a89587">xnpod_delete_thread()</a>, <a class="el" href="group__pod.html#ga179f47d6e98446843f059790112dcce3">xnpod_disable_timesource()</a>, <a class="el" href="group__pod.html#gacf5b53f0405351327b89b0cc4976b962">xnpod_schedule()</a>, and <a class="el" href="group__nucleus__state__flags.html#ga73d7b1a4f5a25545ff21140a0598075a">XNROOT</a>.</p>
 
 <p>Referenced by <a class="el" href="group__pod.html#ga167bb3b4251ac8b8a3e7f358d236908a">xnpod_init()</a>.</p>
 
@@ -1104,9 +1095,9 @@ Functions</h2></td></tr>
 </ul>
 <p>Rescheduling: possible. </p>
 
-<p>References <a class="el" href="group__nucleus__state__flags.html#ga5fa9672a03ebd4beaf7ab3caa5699fa6">XNDORMANT</a>, <a class="el" href="group__pod.html#gac3a7bf9e973782a8cfd6495a1786e812">xnpod_resume_thread()</a>, <a class="el" href="group__pod.html#gacf5b53f0405351327b89b0cc4976b962">xnpod_schedule()</a>, <a class="el" href="group__nucleus__state__flags.html#ga93d516291e0645195b35d63fbf0e0433">XNREADY</a>, <a class="el" href="group__nucleus__state__flags.html#gac664c3bae93da4141d2fc8e88a91afd8">XNSHADOW</a>, <a class="el" href="group__nucleus__state__flags.html#ga0843357a4c7a592e9d5f9cb1ce84ea8e">XNSTARTED</a>, and <a class="el" href="group__nucleus__state__flags.html#ga6b605ad2bb16ae2386821be8ce8d341b">XNSUSP</a>.</p>
+<p>References <a class="el" href="group__nucleus__state__flags.html#ga5fa9672a03ebd4beaf7ab3caa5699fa6">XNDORMANT</a>, <a class="el" href="group__pod.html#gac3a7bf9e973782a8cfd6495a1786e812">xnpod_resume_thread()</a>, <a class="el" href="group__pod.html#gacf5b53f0405351327b89b0cc4976b962">xnpod_schedule()</a>, <a class="el" href="group__nucleus__state__flags.html#gac664c3bae93da4141d2fc8e88a91afd8">XNSHADOW</a>, <a class="el" href="group__nucleus__state__flags.html#ga0843357a4c7a592e9d5f9cb1ce84ea8e">XNSTARTED</a>, and <a class="el" href="group__nucleus__state__flags.html#ga6b605ad2bb16ae2386821be8ce8d341b">XNSUSP</a>.</p>
 
-<p>Referenced by <a class="el" href="group__posix__thread.html#gae6e819ed048e4c4a4ee96fa6f426852c">pthread_create()</a>, <a class="el" href="group__task.html#gac9638918b8310a430088f5c9a04d2bb7">rt_task_start()</a>, <a class="el" href="group__rtdmtask.html#ga44b0701b6c28fa8035711f800fdcd371">rtdm_task_init()</a>, and <a class="el" href="group__shadow.html#ga7204facd253dcde78c214e107e2ceafa">xnshadow_map()</a>.</p>
+<p>Referenced by <a class="el" href="group__rtdmtask.html#ga44b0701b6c28fa8035711f800fdcd371">rtdm_task_init()</a>, and <a class="el" href="group__shadow.html#ga44dd0d4f99bf2717a0d3f7d95838575c">xnshadow_map()</a>.</p>
 
 </div>
 </div>
@@ -1143,7 +1134,7 @@ Functions</h2></td></tr>
 </ul>
 <p>Rescheduling: possible. </p>
 
-<p>References <a class="el" href="group__nucleus__state__flags.html#ga5fa9672a03ebd4beaf7ab3caa5699fa6">XNDORMANT</a>, <a class="el" href="group__pod.html#gacf5b53f0405351327b89b0cc4976b962">xnpod_schedule()</a>, <a class="el" href="group__pod.html#ga767221cf87c198c5dc071e9f597dcb3a">xnpod_suspend_thread()</a>, and <a class="el" href="group__nucleus__state__flags.html#ga73d7b1a4f5a25545ff21140a0598075a">XNROOT</a>.</p>
+<p>References <a class="el" href="group__pod.html#ga67d180d67fca6d74759d9fab3a0b1f0d">__xnpod_reset_thread()</a>, <a class="el" href="group__nucleus__state__flags.html#ga5fa9672a03ebd4beaf7ab3caa5699fa6">XNDORMANT</a>, <a class="el" href="group__pod.html#gacf5b53f0405351327b89b0cc4976b962">xnpod_schedule()</a>, <a class="el" href="group__pod.html#ga767221cf87c198c5dc071e9f597dcb3a">xnpod_suspend_thread()</a>, and <a class="el" href="group__nucleus__state__flags.html#ga73d7b1a4f5a25545ff21140a0598075a">XNROOT</a>.</p>
 
 </div>
 </div>
@@ -1210,8 +1201,8 @@ Functions</h2></td></tr>
 </ul>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>timeout</em>&nbsp;</td><td>The timeout which may be used to limit the time the thread pends on a resource. This value is a wait time given in ticks (see note). It can either be relative, absolute monotonic, or absolute adjustable depending on <em>timeout_mode</em>. Passing XN_INFINITE <b>and</b> setting <em>timeout_mode</em> to XN_RELATIVE specifies an unbounded wait. All other values are used to initialize a watchdog timer. If the current operation mode of the system timer is oneshot and <em>timeout</em> elapses before <a class="el" href="group__pod.html#ga767221cf87c198c5dc071e9f597dcb3a" title="Suspend a thread.">xnpod_suspend_thread()</a> has completed, then the target thread will not be suspended, and this routine leads to a null effect.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>timeout_mode</em>&nbsp;</td><td>The mode of the <em>timeout</em> parameter. It can either be set to XN_RELATIVE, XN_ABSOLUTE, or XN_REALTIME (see also <a class="el" href="group__timer.html#ga0ad3c70bed7fe1a45b45ee0875f031ab" title="Arm a timer.">xntimer_start()</a>).</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>timeout</em>&nbsp;</td><td>The timeout which may be used to limit the time the thread pends on a resource. This value is a wait time given in nanoseconds. It can either be relative, absolute monotonic, or absolute adjustable depending on <em>timeout_mode</em>. Passing XN_INFINITE <b>and</b> setting <em>timeout_mode</em> to XN_RELATIVE specifies an unbounded wait. All other values are used to initialize a watchdog timer. If the current operation mode of the system timer is oneshot and <em>timeout</em> elapses before <a class="el" href="group__pod.html#ga767221cf87c198c5dc071e9f597dcb3a" title="Suspend a thread.">xnpod_suspend_thread()</a> has completed, then the target thread will not be suspended, and this routine leads to a null effect.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>timeout_mode</em>&nbsp;</td><td>The mode of the <em>timeout</em> parameter. It can either be set to XN_RELATIVE, XN_ABSOLUTE, or XN_REALTIME (see also <a class="el" href="group__timer.html#ga3e6bbea74e4fa1d64dbd6f38cbb39b73" title="Arm a timer.">xntimer_start()</a>).</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>wchan</em>&nbsp;</td><td>The address of a pended resource. This parameter is used internally by the synchronization object implementation code to specify on which object the suspended thread pends. NULL is a legitimate value when this parameter does not apply to the current suspending mode (e.g. XNSUSP).</td></tr>
   </table>
   </dd>
@@ -1225,41 +1216,11 @@ Functions</h2></td></tr>
 <li>Kernel-based task</li>
 <li>User-space task</li>
 </ul>
-<p>Rescheduling: possible if the current thread suspends itself.</p>
-<dl class="note"><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if <em>thread</em> is bound to a periodic time base (see xnpod_init_thread), or nanoseconds otherwise. </dd></dl>
+<p>Rescheduling: possible if the current thread suspends itself. </p>
 
-<p>References <a class="el" href="structxnsched.html#afd2e6c15e470a38b385930c613856e7b">xnsched::curr</a>, <a class="el" href="group__nucleus__info__flags.html#ga6aa575e1a99b9c931d3b1feb8bc7a36f">XNBREAK</a>, <a class="el" href="group__nucleus__state__flags.html#gaa31d298d298eb696ccf840473b94912c">XNDELAY</a>, <a class="el" href="group__nucleus__state__flags.html#ga5fa9672a03ebd4beaf7ab3caa5699fa6">XNDORMANT</a>, <a class="el" href="group__nucleus__state__flags.html#ga9394cc02e730535e3dd8b0aabb08ea86">XNHELD</a>, <a class="el" href="group__nucleus__info__flags.html#gab6ee242aa7e0f98235c5099cd345984c">XNKICKED</a>, <a class="el" href="group__pod.html#gacf5b53f0405351327b89b0cc4976b962">xnpod_schedule()</a>, <a class="el" href="group__nucleus__state__flags.html#ga93d516291e0645195b35d63fbf0e0433">XNREADY</a>, <a class="el" href="group__nucleus__state__flags.html#gadf5508cd88c2678ae01dfaf5570c661c">XNRELAX</a>, <a class="el" href="group__nucleus__info__flags.html#gab07d9dea73645dbba353dc2452c15b40">XNRMID</a>, <a class="el" href="group__nucleus__info__flags.html#gad28db508d297929d6a0ec30964639d65">XNROBBED</a>, <a class="el" href="group__nucleus__state__flags.html#ga73d7b1a4f5a25545ff21140a0598075a">XNROOT</a>, <a class="el" href="group__nucleus__state__flags.html#gac664c3bae93da4141d2fc8e88a91afd8">XNSHADOW</a>, <a class="el" href="group__nucleus__state__flags.html#ga6b605ad2bb16ae2386821be8ce8d341b">XNSUSP</a>, <a class="el" href="group__synch.html#ga997e546948920193bb36ab8d120fbab7">xnsynch_forget_sleeper()</a>, <a class="el" href="group__nucleus__info__flags.html#gaa11d7fc754db50d3a1f1e41611d324e9">XNTIMEO</a>, <a class="el" href="group__timer.html#ga0ad3c70bed7fe1a45b45ee0875f031ab">xntimer_start()</a>, and <a class="el" href="group__nucleus__info__flags.html#ga53e49fa49b312e5266b31d66f7465d44">XNWAKEN</a>.</p>
+<p>References <a class="el" href="structxnsched.html#afd2e6c15e470a38b385930c613856e7b">xnsched::curr</a>, <a class="el" href="group__nucleus__info__flags.html#ga6aa575e1a99b9c931d3b1feb8bc7a36f">XNBREAK</a>, <a class="el" href="group__nucleus__state__flags.html#gaa31d298d298eb696ccf840473b94912c">XNDELAY</a>, <a class="el" href="group__nucleus__state__flags.html#ga5fa9672a03ebd4beaf7ab3caa5699fa6">XNDORMANT</a>, <a class="el" href="group__nucleus__state__flags.html#ga9394cc02e730535e3dd8b0aabb08ea86">XNHELD</a>, <a class="el" href="group__nucleus__info__flags.html#gab6ee242aa7e0f98235c5099cd345984c">XNKICKED</a>, <a class="el" href="group__pod.html#gacf5b53f0405351327b89b0cc4976b962">xnpod_schedule()</a>, <a class="el" href="group__nucleus__state__flags.html#ga93d516291e0645195b35d63fbf0e0433">XNREADY</a>, <a class="el" href="group__nucleus__state__flags.html#gadf5508cd88c2678ae01dfaf5570c661c">XNRELAX</a>, <a class="el" href="group__nucleus__info__flags.html#gab07d9dea73645dbba353dc2452c15b40">XNRMID</a>, <a class="el" href="group__nucleus__info__flags.html#gad28db508d297929d6a0ec30964639d65">XNROBBED</a>, <a class="el" href="group__nucleus__state__flags.html#ga73d7b1a4f5a25545ff21140a0598075a">XNROOT</a>, <a class="el" href="group__nucleus__state__flags.html#gac664c3bae93da4141d2fc8e88a91afd8">XNSHADOW</a>, <a class="el" href="group__nucleus__state__flags.html#ga6b605ad2bb16ae2386821be8ce8d341b">XNSUSP</a>, <a class="el" href="group__synch.html#ga997e546948920193bb36ab8d120fbab7">xnsynch_forget_sleeper()</a>, <a class="el" href="group__nucleus__info__flags.html#gaa11d7fc754db50d3a1f1e41611d324e9">XNTIMEO</a>, <a class="el" href="group__timer.html#ga3e6bbea74e4fa1d64dbd6f38cbb39b73">xntimer_start()</a>, and <a class="el" href="group__nucleus__info__flags.html#ga53e49fa49b312e5266b31d66f7465d44">XNWAKEN</a>.</p>
 
-<p>Referenced by <a class="el" href="group__posix__time.html#ga924d51d78cdcd9d7dee2613fb3a33cd1">clock_nanosleep()</a>, <a class="el" href="group__posix__signal.html#ga5aafacc071cdfafd0eb992004dee3e62">pthread_kill()</a>, <a class="el" href="group__task.html#gad5225e5fb8d583fbdfa5299f322b8366">rt_task_sleep()</a>, <a class="el" href="group__task.html#ga0dc2deebe7500c9d21ff05d51d5efaa8">rt_task_sleep_until()</a>, <a class="el" href="group__task.html#ga926a4b10e3631f76c5f38910e6eea24c">rt_task_suspend()</a>, <a class="el" href="group__pod.html#ga75278c2ac6f43741eca9cc1d60072eac">xnpod_abort_thread()</a>, <a class="el" href="group__pod.html#gad71ebccc5b7b3d367f65127a8849c036">xnpod_init_thread()</a>, <a class="el" href="group__pod.html#gaed5776a428e7c59b52b1da76f0d765fa">xnpod_set_thread_periodic()</a>, <a class="el" href="group__pod.html#gad86de7feeb37bbac6f6660916c3fe099">xnpod_stop_thread()</a>, <a class="el" href="group__pod.html#gaf95cac21ec23e44282461905dd3fc153">xnpod_trap_fault()</a>, <a class="el" href="group__pod.html#gaf836996e4a3378928f2a9f93a4915cfa">xnpod_wait_thread_period()</a>, <a class="el" href="group__shadow.html#ga7204facd253dcde78c214e107e2ceafa">xnshadow_map()</a>, <a class="el" href="group__shadow.html#ga8de86a334ac2c5aeeebccf88fcee03ab">xnshadow_relax()</a>, <a class="el" href="group__synch.html#ga6d4ad886901c751a4f3c51b90fc8f91f">xnsynch_acquire()</a>, and <a class="el" href="group__synch.html#ga2747e9834546af461f118e7c90c9613e">xnsynch_sleep_on()</a>.</p>
-
-</div>
-</div>
-<a class="anchor" id="gaf95cac21ec23e44282461905dd3fc153"></a><!-- doxytag: member="pod.c::xnpod_trap_fault" ref="gaf95cac21ec23e44282461905dd3fc153" args="(xnarch_fltinfo_t *fltinfo)" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void xnpod_trap_fault </td>
-          <td>(</td>
-          <td class="paramtype">xnarch_fltinfo_t *&nbsp;</td>
-          <td class="paramname"> <em>fltinfo</em></td>
-          <td>&nbsp;)&nbsp;</td>
-          <td></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>Default fault handler. </p>
-<p>This is the default handler which is called whenever an uncontrolled exception or fault is caught. If the fault is caught on behalf of a real-time thread, the fault is not propagated to the host system. Otherwise, the fault is unhandled by the nucleus and simply propagated.</p>
-<dl><dt><b>Parameters:</b></dt><dd>
-  <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>fltinfo</em>&nbsp;</td><td>An opaque pointer to the arch-specific buffer describing the fault. The actual layout is defined by the xnarch_fltinfo_t type in each arch-dependent layer file. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p>References <a class="el" href="group__pod.html#ga767221cf87c198c5dc071e9f597dcb3a">xnpod_suspend_thread()</a>, <a class="el" href="group__shadow.html#ga8de86a334ac2c5aeeebccf88fcee03ab">xnshadow_relax()</a>, and <a class="el" href="group__nucleus__state__flags.html#ga6b605ad2bb16ae2386821be8ce8d341b">XNSUSP</a>.</p>
+<p>Referenced by <a class="el" href="group__pod.html#ga75278c2ac6f43741eca9cc1d60072eac">xnpod_abort_thread()</a>, <a class="el" href="group__pod.html#gaceabb0032b9c8ffcfc3bf3ff53ae0c76">xnpod_handle_exception()</a>, <a class="el" href="group__pod.html#gad71ebccc5b7b3d367f65127a8849c036">xnpod_init_thread()</a>, <a class="el" href="group__pod.html#gad86de7feeb37bbac6f6660916c3fe099">xnpod_stop_thread()</a>, <a class="el" href="group__pod.html#gaf836996e4a3378928f2a9f93a4915cfa">xnpod_wait_thread_period()</a>, <a class="el" href="group__shadow.html#ga44dd0d4f99bf2717a0d3f7d95838575c">xnshadow_map()</a>, <a class="el" href="group__shadow.html#ga8de86a334ac2c5aeeebccf88fcee03ab">xnshadow_relax()</a>, <a class="el" href="group__synch.html#ga6d4ad886901c751a4f3c51b90fc8f91f">xnsynch_acquire()</a>, and <a class="el" href="group__synch.html#ga2747e9834546af461f118e7c90c9613e">xnsynch_sleep_on()</a>.</p>
 
 </div>
 </div>
@@ -1302,7 +1263,7 @@ Functions</h2></td></tr>
 
 <p>References <a class="el" href="group__nucleus__info__flags.html#ga6aa575e1a99b9c931d3b1feb8bc7a36f">XNBREAK</a>, <a class="el" href="group__nucleus__state__flags.html#gaa31d298d298eb696ccf840473b94912c">XNDELAY</a>, <a class="el" href="group__nucleus__state__flags.html#ga153b45ee5ddcc4da154ca8a018ac1871">XNPEND</a>, and <a class="el" href="group__pod.html#gac3a7bf9e973782a8cfd6495a1786e812">xnpod_resume_thread()</a>.</p>
 
-<p>Referenced by <a class="el" href="group__posix__cancel.html#ga9e77a80c073787bf9a593e9c619dce27">pthread_cancel()</a>, <a class="el" href="group__posix__signal.html#ga5aafacc071cdfafd0eb992004dee3e62">pthread_kill()</a>, <a class="el" href="group__task.html#gacd8a4fb2d11f0548bd053dfbf92f9e9d">rt_task_reply()</a>, <a class="el" href="group__task.html#ga770281eeca009c0a08a7c4a9fd849ac1">rt_task_unblock()</a>, and <a class="el" href="group__pod.html#gad2b761fb70cad30339f092edb4a89587">xnpod_delete_thread()</a>.</p>
+<p>Referenced by <a class="el" href="group__pod.html#ga67d180d67fca6d74759d9fab3a0b1f0d">__xnpod_reset_thread()</a>, <a class="el" href="group__cobalt__cancel.html#ga9e77a80c073787bf9a593e9c619dce27">pthread_cancel()</a>, and <a class="el" href="group__pod.html#gad2b761fb70cad30339f092edb4a89587">xnpod_delete_thread()</a>.</p>
 
 </div>
 </div>
@@ -1332,7 +1293,7 @@ Functions</h2></td></tr>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 is returned upon success; if <em>overruns_r</em> is valid, zero is copied to the pointed memory location. Otherwise:</dd></dl>
 <ul>
-<li>-EWOULDBLOCK is returned if <a class="el" href="group__pod.html#gaed5776a428e7c59b52b1da76f0d765fa" title="Make a thread periodic.">xnpod_set_thread_periodic()</a> has not previously been called for the calling thread.</li>
+<li>-EWOULDBLOCK is returned if <a class="el" href="group__pod.html#ga1d9aa43e61e6e0b28675412e4cfcc6b0" title="Make a thread periodic.">xnpod_set_thread_periodic()</a> has not previously been called for the calling thread.</li>
 </ul>
 <ul>
 <li>-EINTR is returned if <a class="el" href="group__pod.html#gae5f0d19e7a499b9b262f68a43ab545dd" title="Unblock a thread.">xnpod_unblock_thread()</a> has been called for the waiting thread before the next periodic release point has been reached. In this case, the overrun counter is reset too.</li>
@@ -1350,8 +1311,6 @@ Functions</h2></td></tr>
 <p>Rescheduling: always, unless the current release point has already been reached. In the latter case, the current thread immediately returns from this service without being delayed. </p>
 
 <p>References <a class="el" href="group__nucleus__info__flags.html#ga6aa575e1a99b9c931d3b1feb8bc7a36f">XNBREAK</a>, <a class="el" href="group__nucleus__state__flags.html#gaa31d298d298eb696ccf840473b94912c">XNDELAY</a>, <a class="el" href="group__pod.html#ga767221cf87c198c5dc071e9f597dcb3a">xnpod_suspend_thread()</a>, and <a class="el" href="group__timer.html#ga5609dd2602efe2c5b04eda28b22b9720">xntimer_get_overruns()</a>.</p>
-
-<p>Referenced by <a class="el" href="group__posix__thread.html#ga1f18e6e7dd5342463ca8546ef3a36c34">pthread_wait_np()</a>, and <a class="el" href="group__task.html#ga1645d3a072ef3cefeed3bcbb27dcf108">rt_task_wait_period()</a>.</p>
 
 </div>
 </div>
@@ -1385,12 +1344,12 @@ Functions</h2></td></tr>
 <p>This internal routine is called on behalf of a (re)starting thread's prologue before the user entry point is invoked. This call is reserved for internal housekeeping chores and cannot be inlined.</p>
 <p>Entered with nklock locked, irqs off. </p>
 
-<p>References <a class="el" href="group__nucleus__state__flags.html#ga2defcfb1f04f077baeac9881cbdda627">XNLOCK</a>, <a class="el" href="group__pod.html#gafd49fb1aa94c5f44f8c23d66a77b5581">xnpod_dispatch_signals()</a>, and <a class="el" href="group__nucleus__state__flags.html#gacc86813fad4e877dcc16b98cdb64ef60">XNRESTART</a>.</p>
+<p>References <a class="el" href="group__nucleus__state__flags.html#ga2defcfb1f04f077baeac9881cbdda627">XNLOCK</a>, and <a class="el" href="group__pod.html#gafd49fb1aa94c5f44f8c23d66a77b5581">xnpod_dispatch_signals()</a>.</p>
 
 </div>
 </div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Wed Nov 2 2011 18:01:09 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Thu Jan 5 2012 10:14:30 for Xenomai by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

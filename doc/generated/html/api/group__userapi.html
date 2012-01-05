@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>Xenomai API: User API</title>
+<title>Xenomai: User API</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -37,7 +37,7 @@ Collaboration diagram for User API:</div>
 <div class="dyncontent">
 <center><table><tr><td><img src="group__userapi.png" border="0" alt="" usemap="#group____userapi"/>
 <map name="group____userapi" id="group____userapi">
-<area shape="rect" id="node2" href="group__rtdm.html" title="Real&#45;Time Driver Model" alt="" coords="5,5,173,35"/></map>
+<area shape="rect" id="node2" href="group__rtdm.html" title="Real&#45;Time Driver Model" alt="" coords="7,5,172,35"/></map>
 </td></tr></table></center>
 </div>
 </p>
@@ -131,7 +131,7 @@ Functions</h2></td></tr>
 <p>Accept a connection requests. </p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_socket() </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga95cfb4d81e3faf578015cad5750b22a3" title="Create a socket.">rt_dev_socket()</a> </td></tr>
     <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>addr</em>&nbsp;</td><td>Buffer for remote address </td></tr>
     <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>addrlen</em>&nbsp;</td><td>Address buffer size</td></tr>
   </table>
@@ -179,7 +179,7 @@ Functions</h2></td></tr>
 <p>Bind to local address. </p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_socket() </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga95cfb4d81e3faf578015cad5750b22a3" title="Create a socket.">rt_dev_socket()</a> </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>my_addr</em>&nbsp;</td><td>Address buffer </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>addrlen</em>&nbsp;</td><td>Address buffer size</td></tr>
   </table>
@@ -190,7 +190,7 @@ Functions</h2></td></tr>
 <p>Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.</p>
 <p>Rescheduling: possible.</p>
 <dl class="see"><dt><b>See also:</b></dt><dd><code>bind()</code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanrecv_8c-example.html#a19">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a17">rtcansend.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanrecv_8c-example.html#a23">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a17">rtcansend.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -213,17 +213,18 @@ Functions</h2></td></tr>
 <p>Close a device or socket. </p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_open() or rt_dev_socket()</td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga4a76768928826e715850196e34db6d1a" title="Open a device.">rt_dev_open()</a> or <a class="el" href="group__userapi.html#ga95cfb4d81e3faf578015cad5750b22a3" title="Create a socket.">rt_dev_socket()</a></td></tr>
   </table>
   </dd>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 on success, otherwise a negative error code.</dd></dl>
-<dl class="note"><dt><b>Note:</b></dt><dd>If the matching rt_dev_open() or rt_dev_socket() call took place in non-real-time context, rt_dev_close() must be issued within non-real-time as well. Otherwise, the call will fail.</dd></dl>
+<dl class="note"><dt><b>Note:</b></dt><dd>If the matching <a class="el" href="group__userapi.html#ga4a76768928826e715850196e34db6d1a" title="Open a device.">rt_dev_open()</a> or <a class="el" href="group__userapi.html#ga95cfb4d81e3faf578015cad5750b22a3" title="Create a socket.">rt_dev_socket()</a> call took place in non-real-time context, <a class="el" href="group__userapi.html#gaa34c1ddf4e2deb727a1ab3cd648ce5d9" title="Close a device or socket.">rt_dev_close()</a> must be issued within non-real-time as well. Otherwise, the call will fail.</dd></dl>
 <p>Environments:</p>
 <p>Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.</p>
 <p>Rescheduling: possible.</p>
-<dl class="see"><dt><b>See also:</b></dt><dd><code><a class="el" href="group__posix__shm.html#gaafbcde67669a1b96577e735ddebd8634" title="Close a file descriptor.">close()</a></code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
-
+<dl class="see"><dt><b>See also:</b></dt><dd><code>close()</code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanconfig_8c-example.html#a21">rtcanconfig.c</a>, <a class="el" href="rtcanrecv_8c-example.html#a2">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a2">rtcansend.c</a>.</dd>
+</dl>
 </div>
 </div>
 <a class="anchor" id="ga122e2d5dd89478cd6c85d4cea0f91099"></a><!-- doxytag: member="core.c::rt_dev_connect" ref="ga122e2d5dd89478cd6c85d4cea0f91099" args="(int fd, const struct sockaddr *serv_addr, socklen_t addrlen)" -->
@@ -260,7 +261,7 @@ Functions</h2></td></tr>
 <p>Connect to remote address. </p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_socket() </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga95cfb4d81e3faf578015cad5750b22a3" title="Create a socket.">rt_dev_socket()</a> </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>serv_addr</em>&nbsp;</td><td>Address buffer </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>addrlen</em>&nbsp;</td><td>Address buffer size</td></tr>
   </table>
@@ -308,7 +309,7 @@ Functions</h2></td></tr>
 <p>Get socket destination address. </p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_socket() </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga95cfb4d81e3faf578015cad5750b22a3" title="Create a socket.">rt_dev_socket()</a> </td></tr>
     <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>name</em>&nbsp;</td><td>Address buffer </td></tr>
     <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>namelen</em>&nbsp;</td><td>Address buffer size</td></tr>
   </table>
@@ -356,7 +357,7 @@ Functions</h2></td></tr>
 <p>Get local socket address. </p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_socket() </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga95cfb4d81e3faf578015cad5750b22a3" title="Create a socket.">rt_dev_socket()</a> </td></tr>
     <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>name</em>&nbsp;</td><td>Address buffer </td></tr>
     <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>namelen</em>&nbsp;</td><td>Address buffer size</td></tr>
   </table>
@@ -416,7 +417,7 @@ Functions</h2></td></tr>
 <p>Get socket option. </p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_socket() </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga95cfb4d81e3faf578015cad5750b22a3" title="Create a socket.">rt_dev_socket()</a> </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>level</em>&nbsp;</td><td>Addressed stack level </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>optname</em>&nbsp;</td><td>Option name ID </td></tr>
     <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>optval</em>&nbsp;</td><td>Value buffer </td></tr>
@@ -466,7 +467,7 @@ Functions</h2></td></tr>
 <p>Issue an IOCTL. </p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_open() or rt_dev_socket() </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga4a76768928826e715850196e34db6d1a" title="Open a device.">rt_dev_open()</a> or <a class="el" href="group__userapi.html#ga95cfb4d81e3faf578015cad5750b22a3" title="Create a socket.">rt_dev_socket()</a> </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>request</em>&nbsp;</td><td>IOCTL code </td></tr>
     <tr><td valign="top"></td><td valign="top"><em>...</em>&nbsp;</td><td>Optional third argument, depending on IOCTL function (<code>void</code> <code>*</code> or <code>unsigned</code> <code>long</code>)</td></tr>
   </table>
@@ -477,7 +478,8 @@ Functions</h2></td></tr>
 <p>Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.</p>
 <p>Rescheduling: possible.</p>
 <dl class="see"><dt><b>See also:</b></dt><dd><code>ioctl()</code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
-
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanconfig_8c-example.html#a4">rtcanconfig.c</a>, <a class="el" href="rtcanrecv_8c-example.html#a17">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a14">rtcansend.c</a>.</dd>
+</dl>
 </div>
 </div>
 <a class="anchor" id="ga0fe0e2ce5bf5f23733c5dd6b068fbbd4"></a><!-- doxytag: member="core.c::rt_dev_listen" ref="ga0fe0e2ce5bf5f23733c5dd6b068fbbd4" args="(int fd, int backlog)" -->
@@ -508,7 +510,7 @@ Functions</h2></td></tr>
 <p>Listen for incomming connection requests. </p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_socket() </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga95cfb4d81e3faf578015cad5750b22a3" title="Create a socket.">rt_dev_socket()</a> </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>backlog</em>&nbsp;</td><td>Maximum queue length</td></tr>
   </table>
   </dd>
@@ -603,7 +605,7 @@ Functions</h2></td></tr>
 <p>Read from device. </p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_open() </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga4a76768928826e715850196e34db6d1a" title="Open a device.">rt_dev_open()</a> </td></tr>
     <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>buf</em>&nbsp;</td><td>Input buffer </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>nbyte</em>&nbsp;</td><td>Number of bytes to read</td></tr>
   </table>
@@ -657,7 +659,7 @@ Functions</h2></td></tr>
 <p>Receive message from socket. </p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_socket() </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga95cfb4d81e3faf578015cad5750b22a3" title="Create a socket.">rt_dev_socket()</a> </td></tr>
     <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>buf</em>&nbsp;</td><td>Message buffer </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>len</em>&nbsp;</td><td>Message buffer size </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>flags</em>&nbsp;</td><td>Message flags</td></tr>
@@ -724,7 +726,7 @@ Functions</h2></td></tr>
 <p>Receive message from socket. </p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_socket() </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga95cfb4d81e3faf578015cad5750b22a3" title="Create a socket.">rt_dev_socket()</a> </td></tr>
     <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>buf</em>&nbsp;</td><td>Message buffer </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>len</em>&nbsp;</td><td>Message buffer size </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>flags</em>&nbsp;</td><td>Message flags </td></tr>
@@ -738,11 +740,8 @@ Functions</h2></td></tr>
 <p>Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.</p>
 <p>Rescheduling: possible.</p>
 <dl class="see"><dt><b>See also:</b></dt><dd><code>recvfrom()</code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
-
-<p>References <a class="el" href="group__userapi.html#ga0cc144457c649f197d485581686273dd">rt_dev_recvfrom()</a>.</p>
-
-<p>Referenced by <a class="el" href="group__userapi.html#ga0cc144457c649f197d485581686273dd">rt_dev_recvfrom()</a>.</p>
-
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanrecv_8c-example.html#a5">rtcanrecv.c</a>.</dd>
+</dl>
 </div>
 </div>
 <a class="anchor" id="gacea5109e178100cdecaa9053c64632d1"></a><!-- doxytag: member="core.c::rt_dev_recvmsg" ref="gacea5109e178100cdecaa9053c64632d1" args="(int fd, struct msghdr *msg, int flags)" -->
@@ -779,7 +778,7 @@ Functions</h2></td></tr>
 <p>Receive message from socket. </p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_socket() </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga95cfb4d81e3faf578015cad5750b22a3" title="Create a socket.">rt_dev_socket()</a> </td></tr>
     <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>msg</em>&nbsp;</td><td>Message descriptor </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>flags</em>&nbsp;</td><td>Message flags</td></tr>
   </table>
@@ -790,7 +789,8 @@ Functions</h2></td></tr>
 <p>Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.</p>
 <p>Rescheduling: possible.</p>
 <dl class="see"><dt><b>See also:</b></dt><dd><code>recvmsg()</code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
-
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanrecv_8c-example.html#a4">rtcanrecv.c</a>.</dd>
+</dl>
 </div>
 </div>
 <a class="anchor" id="ga8e6eeb1cc9924ed11f3f457d4153697d"></a><!-- doxytag: member="core.c::rt_dev_send" ref="ga8e6eeb1cc9924ed11f3f457d4153697d" args="(int fd, const void *buf, size_t len, int flags)" -->
@@ -833,7 +833,7 @@ Functions</h2></td></tr>
 <p>Transmit message to socket. </p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_socket() </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga95cfb4d81e3faf578015cad5750b22a3" title="Create a socket.">rt_dev_socket()</a> </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>buf</em>&nbsp;</td><td>Message buffer </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>len</em>&nbsp;</td><td>Message buffer size </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>flags</em>&nbsp;</td><td>Message flags</td></tr>
@@ -845,7 +845,7 @@ Functions</h2></td></tr>
 <p>Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.</p>
 <p>Rescheduling: possible.</p>
 <dl class="see"><dt><b>See also:</b></dt><dd><code>send()</code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcansend_8c-example.html#a5">rtcansend.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcansend_8c-example.html#a3">rtcansend.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -883,7 +883,7 @@ Functions</h2></td></tr>
 <p>Transmit message to socket. </p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_socket() </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga95cfb4d81e3faf578015cad5750b22a3" title="Create a socket.">rt_dev_socket()</a> </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>msg</em>&nbsp;</td><td>Message descriptor </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>flags</em>&nbsp;</td><td>Message flags</td></tr>
   </table>
@@ -949,7 +949,7 @@ Functions</h2></td></tr>
 <p>Transmit message to socket. </p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_socket() </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga95cfb4d81e3faf578015cad5750b22a3" title="Create a socket.">rt_dev_socket()</a> </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>buf</em>&nbsp;</td><td>Message buffer </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>len</em>&nbsp;</td><td>Message buffer size </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>flags</em>&nbsp;</td><td>Message flags </td></tr>
@@ -963,7 +963,7 @@ Functions</h2></td></tr>
 <p>Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.</p>
 <p>Rescheduling: possible.</p>
 <dl class="see"><dt><b>See also:</b></dt><dd><code>sendto()</code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcansend_8c-example.html#a6">rtcansend.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcansend_8c-example.html#a4">rtcansend.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -1013,7 +1013,7 @@ Functions</h2></td></tr>
 <p>Set socket option. </p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_socket() </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga95cfb4d81e3faf578015cad5750b22a3" title="Create a socket.">rt_dev_socket()</a> </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>level</em>&nbsp;</td><td>Addressed stack level </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>optname</em>&nbsp;</td><td>Option name ID </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>optval</em>&nbsp;</td><td>Value buffer </td></tr>
@@ -1026,7 +1026,7 @@ Functions</h2></td></tr>
 <p>Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.</p>
 <p>Rescheduling: possible.</p>
 <dl class="see"><dt><b>See also:</b></dt><dd><code>setsockopt()</code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanrecv_8c-example.html#a15">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a12">rtcansend.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanrecv_8c-example.html#a19">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a11">rtcansend.c</a>.</dd>
 </dl>
 </div>
 </div>
@@ -1058,7 +1058,7 @@ Functions</h2></td></tr>
 <p>Shut down parts of a connection. </p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_socket() </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga95cfb4d81e3faf578015cad5750b22a3" title="Create a socket.">rt_dev_socket()</a> </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>how</em>&nbsp;</td><td>Specifies the part to be shut down (<code>SHUT_xxx</code>)</td></tr>
   </table>
   </dd>
@@ -1116,7 +1116,8 @@ Functions</h2></td></tr>
 <p>Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.</p>
 <p>Rescheduling: possible.</p>
 <dl class="see"><dt><b>See also:</b></dt><dd><code>socket()</code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
-
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanconfig_8c-example.html#a1">rtcanconfig.c</a>, <a class="el" href="rtcanrecv_8c-example.html#a14">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a8">rtcansend.c</a>.</dd>
+</dl>
 </div>
 </div>
 <a class="anchor" id="gae966625748b547779bb8c5385e7fb2aa"></a><!-- doxytag: member="core.c::rt_dev_write" ref="gae966625748b547779bb8c5385e7fb2aa" args="(int fd, const void *buf, size_t nbyte)" -->
@@ -1153,7 +1154,7 @@ Functions</h2></td></tr>
 <p>Write to device. </p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by rt_dev_open() </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__userapi.html#ga4a76768928826e715850196e34db6d1a" title="Open a device.">rt_dev_open()</a> </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>buf</em>&nbsp;</td><td>Output buffer </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>nbyte</em>&nbsp;</td><td>Number of bytes to write</td></tr>
   </table>
@@ -1168,7 +1169,7 @@ Functions</h2></td></tr>
 </div>
 </div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Wed Nov 2 2011 18:01:10 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Thu Jan 5 2012 10:14:30 for Xenomai by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

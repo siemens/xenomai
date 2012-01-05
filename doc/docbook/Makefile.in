@@ -268,7 +268,7 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-SUBDIRS = custom-stylesheets xenomai
+SUBDIRS = custom-stylesheets
 
 # -*- makefile -*-
 dbx_docdir = $(docdir)

@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>Xenomai API: Task Services</title>
+<title>Xenomai: Task Services</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -74,7 +74,7 @@ Functions</h2></td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Busy-wait a specified amount of time.  <a href="#gaa3940cfff7cc72d7bc064a3e279d74ac"></a><br/></td></tr>
 <tr><td colspan="2"><h2><a name="member-group"></a>
 Task Priority Range</h2></td></tr>
-<tr><td colspan="2"><p><a class="anchor" id="amgrp7b76feb5dd60eb2fa4dedc6d1d7bb08e"></a> <a class="anchor" id="taskprio"></a> Maximum and minimum task priorities </p>
+<tr><td colspan="2"><p><a class="anchor" id="amgrp7b76feb5dd60eb2fa4dedc6d1d7bb08e"></a> <a class="anchor" id="rtdmtaskprio"></a> Maximum and minimum task priorities </p>
 <br/><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga06f12fa27637f0a61906a02bbfd27c8c"></a><!-- doxytag: member="rtdmtask::RTDM_TASK_LOWEST_PRIORITY" ref="ga06f12fa27637f0a61906a02bbfd27c8c" args="" -->
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_TASK_LOWEST_PRIORITY</b>&nbsp;&nbsp;&nbsp;XNSCHED_LOW_PRIO</td></tr>
@@ -82,7 +82,7 @@ Task Priority Range</h2></td></tr>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_TASK_HIGHEST_PRIORITY</b>&nbsp;&nbsp;&nbsp;XNSCHED_HIGH_PRIO</td></tr>
 <tr><td colspan="2"><h2><a name="member-group"></a>
 Task Priority Modification</h2></td></tr>
-<tr><td colspan="2"><p><a class="anchor" id="amgrp482005f3a30d055ef9be299fb2742198"></a> <a class="anchor" id="changetaskprio"></a> Raise or lower task priorities by one level </p>
+<tr><td colspan="2"><p><a class="anchor" id="amgrp482005f3a30d055ef9be299fb2742198"></a> <a class="anchor" id="rtdmchangetaskprio"></a> Raise or lower task priorities by one level </p>
 <br/><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga74e3f9b76fae80c8fb189b842d683eaa"></a><!-- doxytag: member="rtdmtask::RTDM_TASK_RAISE_PRIORITY" ref="ga74e3f9b76fae80c8fb189b842d683eaa" args="" -->
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTDM_TASK_RAISE_PRIORITY</b>&nbsp;&nbsp;&nbsp;(+1)</td></tr>
@@ -268,7 +268,7 @@ Task Priority Modification</h2></td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>name</em>&nbsp;</td><td>Optional task name </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>task_proc</em>&nbsp;</td><td>Procedure to be executed by the task </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>arg</em>&nbsp;</td><td>Custom argument passed to <code>task_proc()</code> on entry </td></tr>
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>priority</em>&nbsp;</td><td>Priority of the task, see also <a class="el" href="group__rtdmtask.html#taskprio">Task Priority Range</a> </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>priority</em>&nbsp;</td><td>Priority of the task, see also <a class="el" href="group__rtdmtask.html#rtdmtaskprio">Task Priority Range</a> </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>period</em>&nbsp;</td><td>Period in nanoseconds of a cyclic task, 0 for non-cyclic mode</td></tr>
   </table>
   </dd>
@@ -283,7 +283,7 @@ Task Priority Modification</h2></td></tr>
 </ul>
 <p>Rescheduling: possible. </p>
 
-<p>References <a class="el" href="group__pod.html#gad2b761fb70cad30339f092edb4a89587">xnpod_delete_thread()</a>, <a class="el" href="group__pod.html#gad71ebccc5b7b3d367f65127a8849c036">xnpod_init_thread()</a>, <a class="el" href="group__pod.html#gaed5776a428e7c59b52b1da76f0d765fa">xnpod_set_thread_periodic()</a>, and <a class="el" href="group__pod.html#gad322f6afd62430705486a9036d0b7d66">xnpod_start_thread()</a>.</p>
+<p>References <a class="el" href="group__pod.html#gad2b761fb70cad30339f092edb4a89587">xnpod_delete_thread()</a>, <a class="el" href="group__pod.html#gad71ebccc5b7b3d367f65127a8849c036">xnpod_init_thread()</a>, <a class="el" href="group__pod.html#ga1d9aa43e61e6e0b28675412e4cfcc6b0">xnpod_set_thread_periodic()</a>, and <a class="el" href="group__pod.html#gad322f6afd62430705486a9036d0b7d66">xnpod_start_thread()</a>.</p>
 
 </div>
 </div>
@@ -409,7 +409,7 @@ This service does not trigger the termination of the targeted task. The user has
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>task</em>&nbsp;</td><td>Task handle as returned by <a class="el" href="group__rtdmtask.html#ga44b0701b6c28fa8035711f800fdcd371" title="Intialise and start a real-time task.">rtdm_task_init()</a> </td></tr>
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>priority</em>&nbsp;</td><td>New priority of the task, see also <a class="el" href="group__rtdmtask.html#taskprio">Task Priority Range</a></td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>priority</em>&nbsp;</td><td>New priority of the task, see also <a class="el" href="group__rtdmtask.html#rtdmtaskprio">Task Priority Range</a></td></tr>
   </table>
   </dd>
 </dl>
@@ -535,7 +535,7 @@ This service does not trigger the termination of the targeted task. The user has
 <div class="memdoc">
 
 <p>Sleep until a specified absolute time. </p>
-<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000004">Deprecated:</a></b></dt><dd>Use rtdm_task_sleep_abs instead!</dd></dl>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000001">Deprecated:</a></b></dt><dd>Use rtdm_task_sleep_abs instead!</dd></dl>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>wakeup_time</em>&nbsp;</td><td>Absolute timeout in nanoseconds</td></tr>
@@ -624,7 +624,7 @@ This service does not trigger the termination of the targeted task. The user has
 </div>
 </div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Wed Nov 2 2011 18:01:10 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Thu Jan 5 2012 10:14:30 for Xenomai by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

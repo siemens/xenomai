@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>Xenomai API: Inter-Driver API</title>
+<title>Xenomai: Inter-Driver API</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -192,7 +192,7 @@ Functions</h2></td></tr>
 <div class="memdoc">
 
 <p>Close a device or socket. </p>
-<p>Refer to rt_dev_close() for parameters and return values</p>
+<p>Refer to <a class="el" href="group__userapi.html#gaa34c1ddf4e2deb727a1ab3cd648ce5d9" title="Close a device or socket.">rt_dev_close()</a> for parameters and return values</p>
 <p>Environments:</p>
 <p>Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.</p>
 <p>Rescheduling: possible. </p>
@@ -275,7 +275,7 @@ Functions</h2></td></tr>
 
 <p>References <a class="el" href="structrtdm__dev__context.html#adca0cb98487cc1a5947e5ff76f62109a">rtdm_dev_context::close_lock_count</a>.</p>
 
-<p>Referenced by <a class="el" href="group__interdrv.html#ga0f7da4cec7713ed732ffd99040e219e2">rtdm_select_bind()</a>.</p>
+<p>Referenced by <a class="el" href="group__rtdmsync.html#ga0f7da4cec7713ed732ffd99040e219e2">rtdm_select_bind()</a>.</p>
 
 </div>
 </div>
@@ -385,7 +385,7 @@ Functions</h2></td></tr>
 </ul>
 <p>Rescheduling: never. </p>
 
-<p>Referenced by <a class="el" href="group__interdrv.html#ga0f7da4cec7713ed732ffd99040e219e2">rtdm_select_bind()</a>.</p>
+<p>Referenced by <a class="el" href="group__rtdmsync.html#ga0f7da4cec7713ed732ffd99040e219e2">rtdm_select_bind()</a>.</p>
 
 </div>
 </div>
@@ -550,7 +550,7 @@ Functions</h2></td></tr>
 <div class="memdoc">
 
 <p>Issue an IOCTL. </p>
-<p>Refer to rt_dev_ioctl() for parameters and return values</p>
+<p>Refer to <a class="el" href="group__userapi.html#ga72b69315a44f235b05627a0c257c01f4" title="Issue an IOCTL.">rt_dev_ioctl()</a> for parameters and return values</p>
 <p>Environments:</p>
 <p>Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.</p>
 <p>Rescheduling: possible. </p>
@@ -622,7 +622,7 @@ Functions</h2></td></tr>
 <div class="memdoc">
 
 <p>Open a device. </p>
-<p>Refer to rt_dev_open() for parameters and return values</p>
+<p>Refer to <a class="el" href="group__userapi.html#ga4a76768928826e715850196e34db6d1a" title="Open a device.">rt_dev_open()</a> for parameters and return values</p>
 <p>Environments:</p>
 <p>Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.</p>
 <p>Rescheduling: possible. </p>
@@ -661,7 +661,7 @@ Functions</h2></td></tr>
 <div class="memdoc">
 
 <p>Read from device. </p>
-<p>Refer to rt_dev_read() for parameters and return values</p>
+<p>Refer to <a class="el" href="group__userapi.html#ga89c490849c0e1879ae672a23b84a1eda" title="Read from device.">rt_dev_read()</a> for parameters and return values</p>
 <p>Environments:</p>
 <p>Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.</p>
 <p>Rescheduling: possible. </p>
@@ -763,7 +763,7 @@ Functions</h2></td></tr>
 <div class="memdoc">
 
 <p>Receive message from socket. </p>
-<p>Refer to rt_dev_recvfrom() for parameters and return values</p>
+<p>Refer to <a class="el" href="group__userapi.html#ga0cc144457c649f197d485581686273dd" title="Receive message from socket.">rt_dev_recvfrom()</a> for parameters and return values</p>
 <p>Environments:</p>
 <p>Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.</p>
 <p>Rescheduling: possible. </p>
@@ -802,7 +802,7 @@ Functions</h2></td></tr>
 <div class="memdoc">
 
 <p>Receive message from socket. </p>
-<p>Refer to rt_dev_recvmsg() for parameters and return values</p>
+<p>Refer to <a class="el" href="group__userapi.html#gacea5109e178100cdecaa9053c64632d1" title="Receive message from socket.">rt_dev_recvmsg()</a> for parameters and return values</p>
 <p>Environments:</p>
 <p>Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.</p>
 <p>Rescheduling: possible. </p>
@@ -955,7 +955,7 @@ Functions</h2></td></tr>
 <div class="memdoc">
 
 <p>Transmit message to socket. </p>
-<p>Refer to rt_dev_sendmsg() for parameters and return values</p>
+<p>Refer to <a class="el" href="group__userapi.html#ga751340ba2f9be0b6a514c73f760561b3" title="Transmit message to socket.">rt_dev_sendmsg()</a> for parameters and return values</p>
 <p>Environments:</p>
 <p>Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.</p>
 <p>Rescheduling: possible. </p>
@@ -1135,7 +1135,7 @@ Functions</h2></td></tr>
 <div class="memdoc">
 
 <p>Create a socket. </p>
-<p>Refer to rt_dev_socket() for parameters and return values</p>
+<p>Refer to <a class="el" href="group__userapi.html#ga95cfb4d81e3faf578015cad5750b22a3" title="Create a socket.">rt_dev_socket()</a> for parameters and return values</p>
 <p>Environments:</p>
 <p>Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.</p>
 <p>Rescheduling: possible. </p>
@@ -1174,7 +1174,7 @@ Functions</h2></td></tr>
 <div class="memdoc">
 
 <p>Write to device. </p>
-<p>Refer to rt_dev_write() for parameters and return values</p>
+<p>Refer to <a class="el" href="group__userapi.html#gae966625748b547779bb8c5385e7fb2aa" title="Write to device.">rt_dev_write()</a> for parameters and return values</p>
 <p>Environments:</p>
 <p>Depends on driver implementation, see <a class="el" href="group__profiles.html">Device Profiles</a>.</p>
 <p>Rescheduling: possible. </p>
@@ -1182,7 +1182,7 @@ Functions</h2></td></tr>
 </div>
 </div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Wed Nov 2 2011 18:01:10 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Thu Jan 5 2012 10:14:30 for Xenomai by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

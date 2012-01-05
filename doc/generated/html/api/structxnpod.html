@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>Xenomai API: xnpod Struct Reference</title>
+<title>Xenomai: xnpod Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -56,8 +56,6 @@ Data Fields</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">xnqueue_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#afbd1d126d1d74f3d433d164e404a0d2f">tswitchq</a></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">xnqueue_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#a20ab294c2e3b46322f11260ad8b44f4d">tdeleteq</a></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">atomic_counter_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#a9a61219dd75a7b26024a79a73bce6540">timerlck</a></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">xntimer_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#a86acf95fd43b98008659bfdd38c6af9b">tslicer</a></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#af29706fbb96466d41e15421454bdb53c">tsliced</a></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnpod.html#a26e8700e411f5292fa5372aa2faa28f6">refcnt</a></td></tr>
 </table>
 <hr/><a name="_details"></a><h2>Detailed Description</h2>
@@ -160,38 +158,6 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="af29706fbb96466d41e15421454bdb53c"></a><!-- doxytag: member="xnpod::tsliced" ref="af29706fbb96466d41e15421454bdb53c" args="" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int <a class="el" href="structxnpod.html#af29706fbb96466d41e15421454bdb53c">xnpod::tsliced</a></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-<p>Number of threads using the slicer </p>
-
-<p>Referenced by <a class="el" href="group__pod.html#ga167bb3b4251ac8b8a3e7f358d236908a">xnpod_init()</a>.</p>
-
-</div>
-</div>
-<a class="anchor" id="a86acf95fd43b98008659bfdd38c6af9b"></a><!-- doxytag: member="xnpod::tslicer" ref="a86acf95fd43b98008659bfdd38c6af9b" args="" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">xntimer_t <a class="el" href="structxnpod.html#a86acf95fd43b98008659bfdd38c6af9b">xnpod::tslicer</a></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-<p>Time-slicing timer for aperiodic mode </p>
-
-<p>Referenced by <a class="el" href="group__pod.html#ga167bb3b4251ac8b8a3e7f358d236908a">xnpod_init()</a>.</p>
-
-</div>
-</div>
 <a class="anchor" id="a1bb945357ab40191bbd55252dc2218dc"></a><!-- doxytag: member="xnpod::tstartq" ref="a1bb945357ab40191bbd55252dc2218dc" args="" -->
 <div class="memitem">
 <div class="memproto">
@@ -225,10 +191,10 @@ Data Fields</h2></td></tr>
 </div>
 </div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
-<li>include/nucleus/<a class="el" href="pod_8h_source.html">pod.h</a></li>
+<li>include/cobalt/nucleus/<a class="el" href="pod_8h_source.html">pod.h</a></li>
 </ul>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Wed Nov 2 2011 18:01:11 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Thu Jan 5 2012 10:14:30 for Xenomai by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

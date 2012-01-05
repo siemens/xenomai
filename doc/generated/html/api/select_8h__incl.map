@@ -1,0 +1,14 @@
+<map id="G" name="G">
+<area shape="rect" id="node3" href="$include_2cobalt_2nucleus_2thread_8h_source.html" title="nucleus/thread.h" alt="" coords="321,83,449,112"/>
+<area shape="rect" id="node5" href="$cobalt_2nucleus_2types_8h_source.html" title="nucleus/types.h" alt="" coords="336,392,459,421"/>
+<area shape="rect" id="node16" href="$stat_8h_source.html" title="nucleus/stat.h" alt="" coords="275,237,387,267"/>
+<area shape="rect" id="node19" href="$include_2cobalt_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="325,160,445,189"/>
+<area shape="rect" id="node35" href="$include_2cobalt_2nucleus_2registry_8h.html" title="This file is part of the Xenomai project." alt="" coords="469,160,603,189"/>
+<area shape="rect" id="node42" href="$schedparam_8h_source.html" title="nucleus/schedparam.h" alt="" coords="627,160,792,189"/>
+<area shape="rect" id="node11" href="$compiler_8h_source.html" title="nucleus/compiler.h" alt="" coords="325,469,467,499"/>
+<area shape="rect" id="node13" href="$assert_8h_source.html" title="nucleus/assert.h" alt="" coords="491,469,616,499"/>
+<area shape="rect" id="node21" href="$include_2cobalt_2nucleus_2clock_8h.html" title="nucleus/clock.h" alt="" coords="608,237,725,267"/>
+<area shape="rect" id="node23" href="$include_2cobalt_2nucleus_2queue_8h_source.html" title="nucleus/queue.h" alt="" coords="461,315,587,344"/>
+<area shape="rect" id="node27" href="$vfile_8h.html" title="This file is part of the Xenomai project." alt="" coords="611,315,723,344"/>
+<area shape="rect" id="node38" href="$synch_8h_source.html" title="nucleus/synch.h" alt="" coords="461,237,584,267"/>
+</map>

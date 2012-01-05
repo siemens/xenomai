@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>Xenomai API: File descriptors events multiplexing services.</title>
+<title>Xenomai: File descriptors events multiplexing services.</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -25,22 +25,9 @@
 <a href="#files">Files</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
-<h1>File descriptors events multiplexing services.<br/>
-<small>
-[<a class="el" href="group__nucleus.html">Xenomai nucleus.</a>]</small>
-</h1>  </div>
+<h1>File descriptors events multiplexing services.</h1>  </div>
 </div>
 <div class="contents">
-
-<p><div class="dynheader">
-Collaboration diagram for File descriptors events multiplexing services.:</div>
-<div class="dyncontent">
-<center><table><tr><td><img src="group__select.png" border="0" alt="" usemap="#group____select"/>
-<map name="group____select" id="group____select">
-<area shape="rect" id="node1" href="group__nucleus.html" title="Xenomai nucleus." alt="" coords="7,5,143,35"/></map>
-</td></tr></table></center>
-</div>
-</p>
 <table class="memberdecls">
 <tr><td colspan="2"><h2><a name="files"></a>
 Files</h2></td></tr>
@@ -60,6 +47,8 @@ Functions</h2></td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a <em>struct</em> <em>xnselect</em> structure.  <a href="#ga80b33cc02e860dc6ffbd08e8da376e5b"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__select.html#ga8546a4a6f997a8c29451673d5b7f0e86">xnselect_bind</a> (struct xnselect *select_block, struct xnselect_binding *binding, struct xnselector *selector, unsigned type, unsigned index, unsigned state)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bind a file descriptor (represented by its <em>xnselect</em> structure) to a selector block.  <a href="#ga8546a4a6f997a8c29451673d5b7f0e86"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">static int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__select.html#ga5c52efed417210c06bd9f108bfdffed2">xnselect_signal</a> (struct xnselect *select_block, unsigned state)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Signal a file descriptor state change.  <a href="#ga5c52efed417210c06bd9f108bfdffed2"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__select.html#ga56e4b5bf3e35dd80c23e95cad8fa1614">xnselect_destroy</a> (struct xnselect *select_block)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Destroy the <em>xnselect</em> structure associated with a file descriptor.  <a href="#ga56e4b5bf3e35dd80c23e95cad8fa1614"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__select.html#gaf5576af13d5ffd6056311c2746a706a0">xnselector_init</a> (struct xnselector *selector)</td></tr>
@@ -84,7 +73,7 @@ Functions</h2></td></tr>
 <li>a <em>struct</em> <em>xnselector</em> structure, the selection structure, passed by the thread calling the xnselect service, where this service does all its housekeeping. </li>
 </ul>
 <hr/><h2>Function Documentation</h2>
-<a class="anchor" id="ga4af23e0a42dbc61a04be36d5739a165f"></a><!-- doxytag: member="select.c::xnselect" ref="ga4af23e0a42dbc61a04be36d5739a165f" args="(struct xnselector *selector, fd_set *out_fds[XNSELECT_MAX_TYPES], fd_set *in_fds[XNSELECT_MAX_TYPES], int nfds, xnticks_t timeout, xntmode_t timeout_mode)" -->
+<a class="anchor" id="ga4af23e0a42dbc61a04be36d5739a165f"></a><!-- doxytag: member="select.h::xnselect" ref="ga4af23e0a42dbc61a04be36d5739a165f" args="(struct xnselector *selector, fd_set *out_fds[XNSELECT_MAX_TYPES], fd_set *in_fds[XNSELECT_MAX_TYPES], int nfds, xnticks_t timeout, xntmode_t timeout_mode)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -160,7 +149,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ga8546a4a6f997a8c29451673d5b7f0e86"></a><!-- doxytag: member="select.c::xnselect_bind" ref="ga8546a4a6f997a8c29451673d5b7f0e86" args="(struct xnselect *select_block, struct xnselect_binding *binding, struct xnselector *selector, unsigned type, unsigned index, unsigned state)" -->
+<a class="anchor" id="ga8546a4a6f997a8c29451673d5b7f0e86"></a><!-- doxytag: member="select.h::xnselect_bind" ref="ga8546a4a6f997a8c29451673d5b7f0e86" args="(struct xnselect *select_block, struct xnselect_binding *binding, struct xnselector *selector, unsigned type, unsigned index, unsigned state)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -237,7 +226,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ga56e4b5bf3e35dd80c23e95cad8fa1614"></a><!-- doxytag: member="select.c::xnselect_destroy" ref="ga56e4b5bf3e35dd80c23e95cad8fa1614" args="(struct xnselect *select_block)" -->
+<a class="anchor" id="ga56e4b5bf3e35dd80c23e95cad8fa1614"></a><!-- doxytag: member="select.h::xnselect_destroy" ref="ga56e4b5bf3e35dd80c23e95cad8fa1614" args="(struct xnselect *select_block)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -266,7 +255,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ga80b33cc02e860dc6ffbd08e8da376e5b"></a><!-- doxytag: member="select.c::xnselect_init" ref="ga80b33cc02e860dc6ffbd08e8da376e5b" args="(struct xnselect *select_block)" -->
+<a class="anchor" id="ga80b33cc02e860dc6ffbd08e8da376e5b"></a><!-- doxytag: member="select.h::xnselect_init" ref="ga80b33cc02e860dc6ffbd08e8da376e5b" args="(struct xnselect *select_block)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -295,7 +284,52 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ga9f4741ca8d6794f1b45478a24b1104de"></a><!-- doxytag: member="select.c::xnselector_destroy" ref="ga9f4741ca8d6794f1b45478a24b1104de" args="(struct xnselector *selector)" -->
+<a class="anchor" id="ga5c52efed417210c06bd9f108bfdffed2"></a><!-- doxytag: member="select.h::xnselect_signal" ref="ga5c52efed417210c06bd9f108bfdffed2" args="(struct xnselect *select_block, unsigned state)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">static int xnselect_signal </td>
+          <td>(</td>
+          <td class="paramtype">struct xnselect *&nbsp;</td>
+          <td class="paramname"> <em>select_block</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned&nbsp;</td>
+          <td class="paramname"> <em>state</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td><code> [inline, static]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Signal a file descriptor state change. </p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>select_block</em>&nbsp;</td><td>pointer to an <em>xnselect</em> structure representing the file descriptor whose state changed; </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>state</em>&nbsp;</td><td>new value of the state.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl><dt><b>Return values:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>1</em>&nbsp;</td><td>if rescheduling is needed; </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>0</em>&nbsp;</td><td>otherwise. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Referenced by <a class="el" href="group__rtdmsync.html#ga732fe3cf3370df0f296f06fc4ac7f925">rtdm_event_clear()</a>, <a class="el" href="group__rtdmsync.html#ga1217402b82034b26fe25c26f1e5b32c9">rtdm_event_signal()</a>, <a class="el" href="group__rtdmsync.html#gaf76f858a3951ca2e20d3b1e00afa17e0">rtdm_event_timedwait()</a>, <a class="el" href="group__rtdmsync.html#ga8aadb120a93df5dfd717c5bac6d4c1a9">rtdm_sem_timeddown()</a>, and <a class="el" href="group__rtdmsync.html#ga829dbd8c5709d798ed06947b27001fed">rtdm_sem_up()</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="ga9f4741ca8d6794f1b45478a24b1104de"></a><!-- doxytag: member="select.h::xnselector_destroy" ref="ga9f4741ca8d6794f1b45478a24b1104de" args="(struct xnselector *selector)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -324,7 +358,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="gaf5576af13d5ffd6056311c2746a706a0"></a><!-- doxytag: member="select.c::xnselector_init" ref="gaf5576af13d5ffd6056311c2746a706a0" args="(struct xnselector *selector)" -->
+<a class="anchor" id="gaf5576af13d5ffd6056311c2746a706a0"></a><!-- doxytag: member="select.h::xnselector_init" ref="gaf5576af13d5ffd6056311c2746a706a0" args="(struct xnselector *selector)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -359,7 +393,7 @@ Functions</h2></td></tr>
 </div>
 </div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Wed Nov 2 2011 18:01:10 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Thu Jan 5 2012 10:14:30 for Xenomai by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

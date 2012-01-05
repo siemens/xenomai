@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>Xenomai API: include/rtdm/rtipc.h File Reference</title>
+<title>Xenomai: include/rtdm/rtipc.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -42,7 +42,7 @@ Include dependency graph for rtipc.h:</div>
 <div class="dyncontent">
 <div class="center"><img src="rtipc_8h__incl.png" border="0" usemap="#include_2rtdm_2rtipc_8h" alt=""/></div>
 <map name="include_2rtdm_2rtipc_8h" id="include_2rtdm_2rtipc_8h">
-<area shape="rect" id="node9" href="nucleus_2types_8h_source.html" title="nucleus/types.h" alt="" coords="367,83,489,112"/><area shape="rect" id="node20" href="rtdm_8h.html" title="Real&#45;Time Driver Model for Xenomai, user API header." alt="" coords="829,83,928,112"/><area shape="rect" id="node15" href="compiler_8h_source.html" title="nucleus/compiler.h" alt="" coords="200,160,341,189"/><area shape="rect" id="node17" href="assert_8h_source.html" title="nucleus/assert.h" alt="" coords="365,160,491,189"/></map>
+<area shape="rect" id="node9" href="cobalt_2nucleus_2types_8h_source.html" title="nucleus/types.h" alt="" coords="367,83,489,112"/><area shape="rect" id="node20" href="rtdm_8h.html" title="Real&#45;Time Driver Model for Xenomai, user API header." alt="" coords="829,83,928,112"/><area shape="rect" id="node15" href="compiler_8h_source.html" title="nucleus/compiler.h" alt="" coords="200,160,341,189"/><area shape="rect" id="node17" href="assert_8h_source.html" title="nucleus/assert.h" alt="" coords="365,160,491,189"/></map>
 </div>
 
 <p><a href="rtipc_8h_source.html">Go to the source code of this file.</a></p>
@@ -95,7 +95,7 @@ Defines</h2></td></tr>
 <tr><td colspan="2"><div class="groupText"><p><a class="anchor" id="amgrp84cddea41d8d5358ac3bf17013b5c8f3"></a> <a class="anchor" id="sockopts_socket"></a> Setting and getting supported standard socket level options. </p>
 </div></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtipc.html#gab9d2f7ca5c94bd51cdab3e1913b66e2d">SO_SNDTIMEO</a>&nbsp;&nbsp;&nbsp;defined_by_kernel_header_file</td></tr>
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight"><a class="el" href="group__rtipc.html#gga16af7b253440dadd46a80a4b9fddba4da7f1e80711306177a6f5d48031efe0080">IPCPROTO_IDDP</a> and <a class="el" href="group__rtipc.html#gga16af7b253440dadd46a80a4b9fddba4dafb2400ca0886ef0a4eff1328afd92c18">IPCPROTO_BUFP</a> protocols support the standard SO_SNDTIMEO socket option, from the <code>SOL_SOCKET</code> level.  <a href="group__rtipc.html#gab9d2f7ca5c94bd51cdab3e1913b66e2d"></a><br/></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight"><a class="el" href="group__rtipc.html#gga05589fbab0657f08285ebdfe93f5ec9ea7f1e80711306177a6f5d48031efe0080">IPCPROTO_IDDP</a> and <a class="el" href="group__rtipc.html#gga05589fbab0657f08285ebdfe93f5ec9eafb2400ca0886ef0a4eff1328afd92c18">IPCPROTO_BUFP</a> protocols support the standard SO_SNDTIMEO socket option, from the <code>SOL_SOCKET</code> level.  <a href="group__rtipc.html#gab9d2f7ca5c94bd51cdab3e1913b66e2d"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtipc.html#gaf2d1ed6a34336a6f3df80fb518325846">SO_RCVTIMEO</a>&nbsp;&nbsp;&nbsp;defined_by_kernel_header_file</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">All RTIPC protocols support the standard SO_RCVTIMEO socket option, from the <code>SOL_SOCKET</code> level.  <a href="group__rtipc.html#gaf2d1ed6a34336a6f3df80fb518325846"></a><br/></td></tr>
 <tr><td colspan="2"><h2><a name="typedef-members"></a>
@@ -108,10 +108,10 @@ Enumerations</h2></td></tr>
 <tr><td colspan="2"><div class="groupHeader">RTIPC protocol list</div></td></tr>
 <tr><td colspan="2"><div class="groupText"><p><a class="anchor" id="amgrpa5f58e33be14382c1ac419177bf39328"></a> <a class="anchor" id="RTIPC_PROTO"></a> protocols for the PF_RTIPC protocol family </p>
 </div></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">enum &nbsp;</td><td class="memItemRight" valign="bottom">{ <a class="el" href="group__rtipc.html#gga16af7b253440dadd46a80a4b9fddba4da9a5b551f46faa3b63b002fdde789e2ba">IPCPROTO_IPC</a> =  0, 
-<a class="el" href="group__rtipc.html#gga16af7b253440dadd46a80a4b9fddba4da28a488c3e7fc47dee4d5757f215f62e9">IPCPROTO_XDDP</a> =  1, 
-<a class="el" href="group__rtipc.html#gga16af7b253440dadd46a80a4b9fddba4da7f1e80711306177a6f5d48031efe0080">IPCPROTO_IDDP</a> =  2, 
-<a class="el" href="group__rtipc.html#gga16af7b253440dadd46a80a4b9fddba4dafb2400ca0886ef0a4eff1328afd92c18">IPCPROTO_BUFP</a> =  3
+<tr><td class="memItemLeft" align="right" valign="top">enum &nbsp;</td><td class="memItemRight" valign="bottom">{ <a class="el" href="group__rtipc.html#gga05589fbab0657f08285ebdfe93f5ec9ea9a5b551f46faa3b63b002fdde789e2ba">IPCPROTO_IPC</a> =  0, 
+<a class="el" href="group__rtipc.html#gga05589fbab0657f08285ebdfe93f5ec9ea28a488c3e7fc47dee4d5757f215f62e9">IPCPROTO_XDDP</a> =  1, 
+<a class="el" href="group__rtipc.html#gga05589fbab0657f08285ebdfe93f5ec9ea7f1e80711306177a6f5d48031efe0080">IPCPROTO_IDDP</a> =  2, 
+<a class="el" href="group__rtipc.html#gga05589fbab0657f08285ebdfe93f5ec9eafb2400ca0886ef0a4eff1328afd92c18">IPCPROTO_BUFP</a> =  3
  }</td></tr>
 <tr><td colspan="2"><h2><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -146,7 +146,7 @@ Functions</h2></td></tr>
 <p>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.</p>
 <p>You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. </p>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Wed Nov 2 2011 18:01:08 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Thu Jan 5 2012 10:14:30 for Xenomai by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

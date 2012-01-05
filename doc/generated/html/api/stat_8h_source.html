@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>Xenomai API: include/nucleus/stat.h Source File</title>
+<title>Xenomai: include/cobalt/nucleus/stat.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -27,7 +27,7 @@
   </div>
 <div class="header">
   <div class="headertitle">
-<h1>include/nucleus/stat.h</h1>  </div>
+<h1>include/cobalt/nucleus/stat.h</h1>  </div>
 </div>
 <div class="contents">
 <div class="fragment"><pre class="fragment"><a name="l00001"></a>00001 <span class="comment">/*</span>
@@ -136,52 +136,46 @@
 <a name="l00104"></a>00104 
 <a name="l00105"></a>00105 <span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_OPT_STATS */</span>
 <a name="l00106"></a>00106 <span class="keyword">typedef</span> <span class="keyword">struct </span>xnstat_exectime {
-<a name="l00107"></a>00107 <span class="preprocessor">#ifdef __XENO_SIM__</span>
-<a name="l00108"></a>00108 <span class="preprocessor"></span>    <span class="keywordtype">int</span> dummy;
-<a name="l00109"></a>00109 <span class="preprocessor">#endif </span><span class="comment">/* __XENO_SIM__ */</span>
-<a name="l00110"></a>00110 } xnstat_exectime_t;
-<a name="l00111"></a>00111 
-<a name="l00112"></a>00112 <span class="preprocessor">#define xnstat_exectime_now()                                   ({ 0; })</span>
-<a name="l00113"></a>00113 <span class="preprocessor"></span><span class="preprocessor">#define xnstat_exectime_update(sched, date)                     do { } while (0)</span>
-<a name="l00114"></a>00114 <span class="preprocessor"></span><span class="preprocessor">#define xnstat_exectime_set_current(sched, new_account)         ({ (void)sched; NULL; })</span>
-<a name="l00115"></a>00115 <span class="preprocessor"></span><span class="preprocessor">#define xnstat_exectime_get_current(sched)                      ({ (void)sched; NULL; })</span>
-<a name="l00116"></a>00116 <span class="preprocessor"></span><span class="preprocessor">#define xnstat_exectime_finalize(sched, new_account)            do { } while (0)</span>
-<a name="l00117"></a>00117 <span class="preprocessor"></span><span class="preprocessor">#define xnstat_exectime_get_start(account)                      ({ 0; })</span>
-<a name="l00118"></a>00118 <span class="preprocessor"></span><span class="preprocessor">#define xnstat_exectime_get_total(account)                      ({ 0; })</span>
-<a name="l00119"></a>00119 <span class="preprocessor"></span><span class="preprocessor">#define xnstat_exectime_get_last_switch(sched)                  ({ 0; })</span>
-<a name="l00120"></a>00120 <span class="preprocessor"></span><span class="preprocessor">#define xnstat_exectime_reset_stats(account)                    do { } while (0)</span>
-<a name="l00121"></a>00121 <span class="preprocessor"></span>
-<a name="l00122"></a>00122 <span class="keyword">typedef</span> <span class="keyword">struct </span>xnstat_counter {
-<a name="l00123"></a>00123 <span class="preprocessor">#ifdef __XENO_SIM__</span>
-<a name="l00124"></a>00124 <span class="preprocessor"></span>    <span class="keywordtype">int</span> dummy;
-<a name="l00125"></a>00125 <span class="preprocessor">#endif </span><span class="comment">/* __XENO_SIM__ */</span>
-<a name="l00126"></a>00126 } xnstat_counter_t;
-<a name="l00127"></a>00127 
-<a name="l00128"></a>00128 <span class="preprocessor">#define xnstat_counter_inc(c) ({ do { } while(0); 0; })</span>
-<a name="l00129"></a>00129 <span class="preprocessor"></span><span class="preprocessor">#define xnstat_counter_get(c) ({ 0; })</span>
-<a name="l00130"></a>00130 <span class="preprocessor"></span><span class="preprocessor">#define xnstat_counter_set(c, value) do { } while (0)</span>
-<a name="l00131"></a>00131 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_STATS */</span>
-<a name="l00132"></a>00132 
-<a name="l00133"></a>00133 <span class="comment">/* Account the exectime of the current account until now, switch to</span>
-<a name="l00134"></a>00134 <span class="comment">   new_account, and return the previous one. */</span>
-<a name="l00135"></a>00135 <span class="preprocessor">#define xnstat_exectime_switch(sched, new_account) \</span>
-<a name="l00136"></a>00136 <span class="preprocessor">({ \</span>
-<a name="l00137"></a>00137 <span class="preprocessor">        xnstat_exectime_update(sched, xnstat_exectime_now()); \</span>
-<a name="l00138"></a>00138 <span class="preprocessor">        xnstat_exectime_set_current(sched, new_account); \</span>
-<a name="l00139"></a>00139 <span class="preprocessor">})</span>
-<a name="l00140"></a>00140 <span class="preprocessor"></span>
-<a name="l00141"></a>00141 <span class="comment">/* Account the exectime of the current account until given start time, switch</span>
-<a name="l00142"></a>00142 <span class="comment">   to new_account, and return the previous one. */</span>
-<a name="l00143"></a>00143 <span class="preprocessor">#define xnstat_exectime_lazy_switch(sched, new_account, date) \</span>
-<a name="l00144"></a>00144 <span class="preprocessor">({ \</span>
-<a name="l00145"></a>00145 <span class="preprocessor">        xnstat_exectime_update(sched, date); \</span>
-<a name="l00146"></a>00146 <span class="preprocessor">        xnstat_exectime_set_current(sched, new_account); \</span>
-<a name="l00147"></a>00147 <span class="preprocessor">})</span>
-<a name="l00148"></a>00148 <span class="preprocessor"></span>
-<a name="l00149"></a>00149 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_STAT_H */</span>
+<a name="l00107"></a>00107 } xnstat_exectime_t;
+<a name="l00108"></a>00108 
+<a name="l00109"></a>00109 <span class="preprocessor">#define xnstat_exectime_now()                                   ({ 0; })</span>
+<a name="l00110"></a>00110 <span class="preprocessor"></span><span class="preprocessor">#define xnstat_exectime_update(sched, date)                     do { } while (0)</span>
+<a name="l00111"></a>00111 <span class="preprocessor"></span><span class="preprocessor">#define xnstat_exectime_set_current(sched, new_account)         ({ (void)sched; NULL; })</span>
+<a name="l00112"></a>00112 <span class="preprocessor"></span><span class="preprocessor">#define xnstat_exectime_get_current(sched)                      ({ (void)sched; NULL; })</span>
+<a name="l00113"></a>00113 <span class="preprocessor"></span><span class="preprocessor">#define xnstat_exectime_finalize(sched, new_account)            do { } while (0)</span>
+<a name="l00114"></a>00114 <span class="preprocessor"></span><span class="preprocessor">#define xnstat_exectime_get_start(account)                      ({ 0; })</span>
+<a name="l00115"></a>00115 <span class="preprocessor"></span><span class="preprocessor">#define xnstat_exectime_get_total(account)                      ({ 0; })</span>
+<a name="l00116"></a>00116 <span class="preprocessor"></span><span class="preprocessor">#define xnstat_exectime_get_last_switch(sched)                  ({ 0; })</span>
+<a name="l00117"></a>00117 <span class="preprocessor"></span><span class="preprocessor">#define xnstat_exectime_reset_stats(account)                    do { } while (0)</span>
+<a name="l00118"></a>00118 <span class="preprocessor"></span>
+<a name="l00119"></a>00119 <span class="keyword">typedef</span> <span class="keyword">struct </span>xnstat_counter {
+<a name="l00120"></a>00120 } xnstat_counter_t;
+<a name="l00121"></a>00121 
+<a name="l00122"></a>00122 <span class="preprocessor">#define xnstat_counter_inc(c) ({ do { } while(0); 0; })</span>
+<a name="l00123"></a>00123 <span class="preprocessor"></span><span class="preprocessor">#define xnstat_counter_get(c) ({ 0; })</span>
+<a name="l00124"></a>00124 <span class="preprocessor"></span><span class="preprocessor">#define xnstat_counter_set(c, value) do { } while (0)</span>
+<a name="l00125"></a>00125 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_STATS */</span>
+<a name="l00126"></a>00126 
+<a name="l00127"></a>00127 <span class="comment">/* Account the exectime of the current account until now, switch to</span>
+<a name="l00128"></a>00128 <span class="comment">   new_account, and return the previous one. */</span>
+<a name="l00129"></a>00129 <span class="preprocessor">#define xnstat_exectime_switch(sched, new_account) \</span>
+<a name="l00130"></a>00130 <span class="preprocessor">({ \</span>
+<a name="l00131"></a>00131 <span class="preprocessor">        xnstat_exectime_update(sched, xnstat_exectime_now()); \</span>
+<a name="l00132"></a>00132 <span class="preprocessor">        xnstat_exectime_set_current(sched, new_account); \</span>
+<a name="l00133"></a>00133 <span class="preprocessor">})</span>
+<a name="l00134"></a>00134 <span class="preprocessor"></span>
+<a name="l00135"></a>00135 <span class="comment">/* Account the exectime of the current account until given start time, switch</span>
+<a name="l00136"></a>00136 <span class="comment">   to new_account, and return the previous one. */</span>
+<a name="l00137"></a>00137 <span class="preprocessor">#define xnstat_exectime_lazy_switch(sched, new_account, date) \</span>
+<a name="l00138"></a>00138 <span class="preprocessor">({ \</span>
+<a name="l00139"></a>00139 <span class="preprocessor">        xnstat_exectime_update(sched, date); \</span>
+<a name="l00140"></a>00140 <span class="preprocessor">        xnstat_exectime_set_current(sched, new_account); \</span>
+<a name="l00141"></a>00141 <span class="preprocessor">})</span>
+<a name="l00142"></a>00142 <span class="preprocessor"></span>
+<a name="l00143"></a>00143 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_STAT_H */</span>
 </pre></div></div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Wed Nov 2 2011 18:01:06 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Thu Jan 5 2012 10:14:29 for Xenomai by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

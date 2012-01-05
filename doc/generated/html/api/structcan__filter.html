@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>Xenomai API: can_filter Struct Reference</title>
+<title>Xenomai: can_filter Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -50,8 +50,8 @@ Data Fields</h2></td></tr>
 <hr/><a name="_details"></a><h2>Detailed Description</h2>
 <p>Filter for reception of CAN messages. </p>
 <p>This filter works as follows: A received CAN ID is AND'ed bitwise with <code>can_mask</code> and then compared to <code>can_id</code>. This also includes the <a class="el" href="group__rtcan.html#ga5ae55ab3741140024858bd7b8762ea42">CAN_EFF_FLAG</a> and <a class="el" href="group__rtcan.html#gaf324d65226057755175038a15d9bbd75">CAN_RTR_FLAG</a> of <a class="el" href="group__rtcan.html#CAN_xxx_FLAG">CAN_xxx_FLAG</a>. If this comparison is true, the message will be received by the socket. The logic can be inverted with the <code>can_id</code> flag <a class="el" href="group__rtcan.html#ga5cb484fa2d90489f6b4e7a77c254c59f">CAN_INV_FILTER</a> :</p>
-<div class="fragment"><pre class="fragment"> <span class="keywordflow">if</span> (<a class="code" href="structcan__filter.html#aac0f27fee94e90063d8a80f4928e1298" title="CAN ID which must match with incoming IDs after passing the mask.">can_id</a> &amp; <a class="code" href="group__rtcan.html#ga5cb484fa2d90489f6b4e7a77c254c59f" title="Invert CAN filter definition, only valid in struct can_filter.">CAN_INV_FILTER</a>) {
-    <span class="keywordflow">if</span> ((received_can_id &amp; <a class="code" href="structcan__filter.html#afa419227fe42bf1ce84a7c41600f1f90" title="Mask which is applied to incoming IDs.">can_mask</a>) != (<a class="code" href="structcan__filter.html#aac0f27fee94e90063d8a80f4928e1298" title="CAN ID which must match with incoming IDs after passing the mask.">can_id</a> &amp; ~CAN_INV_FILTER))
+<div class="fragment"><pre class="fragment"> <span class="keywordflow">if</span> (<a class="code" href="structcan__filter.html#aac0f27fee94e90063d8a80f4928e1298" title="CAN ID which must match with incoming IDs after passing the mask.">can_id</a> &amp; CAN_INV_FILTER) {
+    <span class="keywordflow">if</span> ((received_can_id &amp; can_mask) != (<a class="code" href="structcan__filter.html#aac0f27fee94e90063d8a80f4928e1298" title="CAN ID which must match with incoming IDs after passing the mask.">can_id</a> &amp; ~CAN_INV_FILTER))
        accept-message;
  } <span class="keywordflow">else</span> {
     <span class="keywordflow">if</span> ((received_can_id &amp; can_mask) == <a class="code" href="structcan__filter.html#aac0f27fee94e90063d8a80f4928e1298" title="CAN ID which must match with incoming IDs after passing the mask.">can_id</a>)
@@ -59,7 +59,7 @@ Data Fields</h2></td></tr>
  }
 </pre></div><p>Multiple filters can be arranged in a filter list and set with <a class="el" href="group__rtcan.html#Sockopts">Sockopts</a>. If one of these filters matches a CAN ID upon reception of a CAN frame, this frame is accepted. </p>
 <dl><dt><b>Examples: </b></dt><dd>
-<p><a class="el" href="rtcan__rtt_8c-example.html#_a10">rtcan_rtt.c</a>, and <a class="el" href="rtcanrecv_8c-example.html#_a1">rtcanrecv.c</a>.</p>
+<p><a class="el" href="rtcanrecv_8c-example.html#_a1">rtcanrecv.c</a>.</p>
 </dd>
 </dl><hr/><h2>Field Documentation</h2>
 <a class="anchor" id="aac0f27fee94e90063d8a80f4928e1298"></a><!-- doxytag: member="can_filter::can_id" ref="aac0f27fee94e90063d8a80f4928e1298" args="" -->
@@ -98,7 +98,7 @@ Data Fields</h2></td></tr>
 <li>include/rtdm/<a class="el" href="rtcan_8h_source.html">rtcan.h</a></li>
 </ul>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Wed Nov 2 2011 18:01:11 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Thu Jan 5 2012 10:14:30 for Xenomai by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

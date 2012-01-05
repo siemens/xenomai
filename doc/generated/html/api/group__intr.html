@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>Xenomai API: Interrupt management.</title>
+<title>Xenomai: Interrupt management.</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -25,26 +25,13 @@
 <a href="#files">Files</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
-<h1>Interrupt management.<br/>
-<small>
-[<a class="el" href="group__nucleus.html">Xenomai nucleus.</a>]</small>
-</h1>  </div>
+<h1>Interrupt management.</h1>  </div>
 </div>
 <div class="contents">
-
-<p><div class="dynheader">
-Collaboration diagram for Interrupt management.:</div>
-<div class="dyncontent">
-<center><table><tr><td><img src="group__intr.png" border="0" alt="" usemap="#group____intr"/>
-<map name="group____intr" id="group____intr">
-<area shape="rect" id="node2" href="group__nucleus.html" title="Xenomai nucleus." alt="" coords="7,5,143,35"/></map>
-</td></tr></table></center>
-</div>
-</p>
 <table class="memberdecls">
 <tr><td colspan="2"><h2><a name="files"></a>
 Files</h2></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">file &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="ksrc_2nucleus_2intr_8c.html">intr.c</a></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">file &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="intr_8c.html">intr.c</a></td></tr>
 
 <p><tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight"><p>Interrupt management. </p>
 <br/></td></tr>
@@ -59,10 +46,10 @@ Functions</h2></td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Attach an interrupt object.  <a href="#ga52a4435332aa1dbdc18edb58231c83f0"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__intr.html#ga83769b98f398774590e57ad8664925aa">xnintr_detach</a> (xnintr_t *intr)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Detach an interrupt object.  <a href="#ga83769b98f398774590e57ad8664925aa"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__intr.html#ga083e000abd434e4d0fca8f6b6bbd49de">xnintr_enable</a> (xnintr_t *intr)</td></tr>
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Enable an interrupt object.  <a href="#ga083e000abd434e4d0fca8f6b6bbd49de"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__intr.html#ga05570451a808b44216140e00b0eae713">xnintr_disable</a> (xnintr_t *intr)</td></tr>
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Disable an interrupt object.  <a href="#ga05570451a808b44216140e00b0eae713"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__intr.html#ga27acf9b043df6c7f10e53f349251f584">xnintr_enable</a> (xnintr_t *intr)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Enable an interrupt object.  <a href="#ga27acf9b043df6c7f10e53f349251f584"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__intr.html#gaea2bd2546819eb188439d981fd55fee9">xnintr_disable</a> (xnintr_t *intr)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Disable an interrupt object.  <a href="#gaea2bd2546819eb188439d981fd55fee9"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__intr.html#ga2ac234b14abb49cfbb149f94bf9eaee6">xnintr_affinity</a> (xnintr_t *intr, xnarch_cpumask_t cpumask)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set interrupt's processor affinity.  <a href="#ga2ac234b14abb49cfbb149f94bf9eaee6"></a><br/></td></tr>
 </table>
@@ -103,7 +90,6 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="return"><dt><b>Returns:</b></dt><dd>the previous cpumask on success, or an empty mask on failure.</dd></dl>
 <dl class="note"><dt><b>Note:</b></dt><dd>Depending on architectures, setting more than one bit in <em>cpumask</em> could be meaningless. </dd></dl>
 
 </div>
@@ -159,7 +145,7 @@ Functions</h2></td></tr>
 <p>Rescheduling: never.</p>
 <dl class="note"><dt><b>Note:</b></dt><dd>Attaching an interrupt resets the tracked number of receipts to zero. </dd></dl>
 
-<p>Referenced by <a class="el" href="group__posix__intr.html#gaf3a9c7f6f99728f07d14a64518033acb">pthread_intr_attach_np()</a>, <a class="el" href="group__interrupt.html#gaa0a9d98556ec838008f408a56e79d304">rt_intr_create()</a>, and <a class="el" href="group__rtdmirq.html#ga9bb3d95218ac5261e4033fb0bf695073">rtdm_irq_request()</a>.</p>
+<p>Referenced by <a class="el" href="group__rtdmirq.html#ga9bb3d95218ac5261e4033fb0bf695073">rtdm_irq_request()</a>.</p>
 
 </div>
 </div>
@@ -197,8 +183,6 @@ Functions</h2></td></tr>
 <p>Rescheduling: never. </p>
 
 <p>References <a class="el" href="group__intr.html#ga83769b98f398774590e57ad8664925aa">xnintr_detach()</a>.</p>
-
-<p>Referenced by <a class="el" href="group__interrupt.html#ga6da6ddd4e65b0feb47278dae74cab6c9">rt_intr_delete()</a>.</p>
 
 </div>
 </div>
@@ -239,16 +223,16 @@ Functions</h2></td></tr>
 </ul>
 <p>Rescheduling: never. </p>
 
-<p>Referenced by <a class="el" href="group__rtdmirq.html#ga9bb3d95218ac5261e4033fb0bf695073">rtdm_irq_request()</a>, and <a class="el" href="group__intr.html#gac50dd884fca5ccb3502a218f9ffae520">xnintr_destroy()</a>.</p>
+<p>Referenced by <a class="el" href="group__intr.html#gac50dd884fca5ccb3502a218f9ffae520">xnintr_destroy()</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="ga05570451a808b44216140e00b0eae713"></a><!-- doxytag: member="intr.c::xnintr_disable" ref="ga05570451a808b44216140e00b0eae713" args="(xnintr_t *intr)" -->
+<a class="anchor" id="gaea2bd2546819eb188439d981fd55fee9"></a><!-- doxytag: member="intr.c::xnintr_disable" ref="gaea2bd2546819eb188439d981fd55fee9" args="(xnintr_t *intr)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int xnintr_disable </td>
+          <td class="memname">void xnintr_disable </td>
           <td>(</td>
           <td class="paramtype">xnintr_t *&nbsp;</td>
           <td class="paramname"> <em>intr</em></td>
@@ -267,7 +251,6 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="return"><dt><b>Returns:</b></dt><dd>0 is returned on success. Otherwise, -EINVAL is returned if a low-level error occurred while disabling the interrupt.</dd></dl>
 <p>Environments:</p>
 <p>This service can be called from:</p>
 <ul>
@@ -276,16 +259,14 @@ Functions</h2></td></tr>
 </ul>
 <p>Rescheduling: never. </p>
 
-<p>Referenced by <a class="el" href="group__posix__intr.html#ga2aa9b968ad1d3101d6ef5c4ab1ce9f25">pthread_intr_control_np()</a>, and <a class="el" href="group__interrupt.html#ga9cf127812ea07326d5f4924f3e28eb3f">rt_intr_disable()</a>.</p>
-
 </div>
 </div>
-<a class="anchor" id="ga083e000abd434e4d0fca8f6b6bbd49de"></a><!-- doxytag: member="intr.c::xnintr_enable" ref="ga083e000abd434e4d0fca8f6b6bbd49de" args="(xnintr_t *intr)" -->
+<a class="anchor" id="ga27acf9b043df6c7f10e53f349251f584"></a><!-- doxytag: member="intr.c::xnintr_enable" ref="ga27acf9b043df6c7f10e53f349251f584" args="(xnintr_t *intr)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int xnintr_enable </td>
+          <td class="memname">void xnintr_enable </td>
           <td>(</td>
           <td class="paramtype">xnintr_t *&nbsp;</td>
           <td class="paramname"> <em>intr</em></td>
@@ -304,7 +285,6 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="return"><dt><b>Returns:</b></dt><dd>0 is returned on success. Otherwise, -EINVAL is returned if a low-level error occurred while enabling the interrupt.</dd></dl>
 <p>Environments:</p>
 <p>This service can be called from:</p>
 <ul>
@@ -313,7 +293,7 @@ Functions</h2></td></tr>
 </ul>
 <p>Rescheduling: never. </p>
 
-<p>Referenced by <a class="el" href="group__posix__intr.html#ga2aa9b968ad1d3101d6ef5c4ab1ce9f25">pthread_intr_control_np()</a>, <a class="el" href="group__interrupt.html#gac712ee67f90d053a21bdb0041a63e17c">rt_intr_enable()</a>, and <a class="el" href="group__rtdmirq.html#ga9bb3d95218ac5261e4033fb0bf695073">rtdm_irq_request()</a>.</p>
+<p>Referenced by <a class="el" href="group__rtdmirq.html#ga9bb3d95218ac5261e4033fb0bf695073">rtdm_irq_request()</a>.</p>
 
 </div>
 </div>
@@ -379,7 +359,7 @@ Functions</h2></td></tr>
 <p>In addition, one of the following bits may be set by the ISR :</p>
 <p>NOTE: use these bits with care and only when you do understand their effect on the system. The ISR is not encouraged to use these bits in case it shares the IRQ line with other ISRs in the real-time domain.</p>
 <ul>
-<li>XN_ISR_NOENABLE causes the nucleus to ask the real-time control layer _not_ to re-enable the IRQ line (read the following section). xnarch_end_irq() must be called to re-enable the IRQ line later.</li>
+<li>XN_ISR_NOENABLE causes the nucleus to ask the real-time control layer _not_ to re-enable the IRQ line (read the following section). ipipe_end_irq() must be called to re-enable the IRQ line later.</li>
 </ul>
 <ul>
 <li>XN_ISR_PROPAGATE tells the nucleus to require the real-time control layer to forward the IRQ. For instance, this would cause the Adeos control layer to propagate the interrupt down the interrupt pipeline to other Adeos domains, such as Linux. This is the regular way to share interrupts between the nucleus and the host system. In effect, XN_ISR_PROPAGATE implies XN_ISR_NOENABLE since it would make no sense to re-enable the interrupt channel before the next domain down the pipeline has had a chance to process the propagated interrupt.</li>
@@ -412,12 +392,12 @@ Functions</h2></td></tr>
 </ul>
 <p>Rescheduling: never. </p>
 
-<p>Referenced by <a class="el" href="group__posix__intr.html#gaf3a9c7f6f99728f07d14a64518033acb">pthread_intr_attach_np()</a>, <a class="el" href="group__interrupt.html#gaa0a9d98556ec838008f408a56e79d304">rt_intr_create()</a>, <a class="el" href="group__rtdmirq.html#ga9bb3d95218ac5261e4033fb0bf695073">rtdm_irq_request()</a>, and <a class="el" href="group__pod.html#ga10d3c13efa3ab06ac23017710b13314e">xnpod_enable_timesource()</a>.</p>
+<p>Referenced by <a class="el" href="group__rtdmirq.html#ga9bb3d95218ac5261e4033fb0bf695073">rtdm_irq_request()</a>, and <a class="el" href="group__pod.html#ga10d3c13efa3ab06ac23017710b13314e">xnpod_enable_timesource()</a>.</p>
 
 </div>
 </div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Wed Nov 2 2011 18:01:09 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Thu Jan 5 2012 10:14:30 for Xenomai by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>Xenomai API: ksrc/nucleus/bufd.c File Reference</title>
+<title>Xenomai: kernel/cobalt/nucleus/bufd.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -30,15 +30,15 @@
   <div class="summary">
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
-<h1>ksrc/nucleus/bufd.c File Reference</h1>  </div>
+<h1>kernel/cobalt/nucleus/bufd.c File Reference</h1>  </div>
 </div>
 <div class="contents">
 <div class="dynheader">
 Include dependency graph for bufd.c:</div>
 <div class="dyncontent">
-<div class="center"><img src="bufd_8c__incl.png" border="0" usemap="#ksrc_2nucleus_2bufd_8c" alt=""/></div>
-<map name="ksrc_2nucleus_2bufd_8c" id="ksrc_2nucleus_2bufd_8c">
-<area shape="rect" id="node3" href="nucleus_2heap_8h_source.html" title="nucleus/heap.h" alt="" coords="919,160,1036,189"/><area shape="rect" id="node15" href="assert_8h_source.html" title="nucleus/assert.h" alt="" coords="553,624,679,653"/><area shape="rect" id="node19" href="pod_8h.html" title="Real&#45;time pod interface header." alt="" coords="757,83,867,112"/><area shape="rect" id="node63" href="bufd_8h.html" title="nucleus/bufd.h" alt="" coords="253,160,368,189"/><area shape="rect" id="node5" href="nucleus_2queue_8h_source.html" title="nucleus/queue.h" alt="" coords="599,469,724,499"/><area shape="rect" id="node7" href="nucleus_2types_8h_source.html" title="nucleus/types.h" alt="" coords="227,547,349,576"/><area shape="rect" id="node13" href="compiler_8h_source.html" title="nucleus/compiler.h" alt="" coords="217,624,359,653"/><area shape="rect" id="node21" href="sched_8h.html" title="Scheduler interface header." alt="" coords="639,160,764,189"/><area shape="rect" id="node23" href="include_2nucleus_2thread_8h_source.html" title="nucleus/thread.h" alt="" coords="44,237,172,267"/><area shape="rect" id="node34" href="vfile_8h.html" title="This file is part of the Xenomai project." alt="" coords="393,469,505,499"/><area shape="rect" id="node51" href="schedqueue_8h_source.html" title="nucleus/schedqueue.h" alt="" coords="808,315,973,344"/><area shape="rect" id="node54" href="sched-tp_8h.html" title="Definitions for the TP scheduling class." alt="" coords="196,237,337,267"/><area shape="rect" id="node56" href="sched-sporadic_8h.html" title="Definitions for the SSP scheduling class." alt="" coords="361,237,545,267"/><area shape="rect" id="node59" href="sched-idle_8h.html" title="Definitions for the IDLE scheduling class." alt="" coords="569,237,721,267"/><area shape="rect" id="node61" href="sched-rt_8h.html" title="Definitions for the RT scheduling class." alt="" coords="796,237,935,267"/><area shape="rect" id="node26" href="stat_8h_source.html" title="nucleus/stat.h" alt="" coords="116,392,228,421"/><area shape="rect" id="node29" href="include_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="112,315,232,344"/><area shape="rect" id="node42" href="include_2nucleus_2registry_8h.html" title="This file is part of the Xenomai project." alt="" coords="307,315,440,344"/><area shape="rect" id="node49" href="schedparam_8h_source.html" title="nucleus/schedparam.h" alt="" coords="464,315,629,344"/><area shape="rect" id="node31" href="timebase_8h.html" title="nucleus/timebase.h" alt="" coords="411,392,557,421"/><area shape="rect" id="node45" href="synch_8h_source.html" title="nucleus/synch.h" alt="" coords="581,392,704,421"/></map>
+<div class="center"><img src="bufd_8c__incl.png" border="0" usemap="#kernel_2cobalt_2nucleus_2bufd_8c" alt=""/></div>
+<map name="kernel_2cobalt_2nucleus_2bufd_8c" id="kernel_2cobalt_2nucleus_2bufd_8c">
+<area shape="rect" id="node3" href="include_2cobalt_2nucleus_2heap_8h_source.html" title="nucleus/heap.h" alt="" coords="919,160,1036,189"/><area shape="rect" id="node15" href="assert_8h_source.html" title="nucleus/assert.h" alt="" coords="573,624,699,653"/><area shape="rect" id="node19" href="pod_8h.html" title="Real&#45;time pod interface header." alt="" coords="757,83,867,112"/><area shape="rect" id="node63" href="bufd_8h.html" title="nucleus/bufd.h" alt="" coords="253,160,368,189"/><area shape="rect" id="node5" href="include_2cobalt_2nucleus_2queue_8h_source.html" title="nucleus/queue.h" alt="" coords="600,469,725,499"/><area shape="rect" id="node7" href="cobalt_2nucleus_2types_8h_source.html" title="nucleus/types.h" alt="" coords="247,547,369,576"/><area shape="rect" id="node13" href="compiler_8h_source.html" title="nucleus/compiler.h" alt="" coords="237,624,379,653"/><area shape="rect" id="node21" href="sched_8h.html" title="Scheduler interface header." alt="" coords="639,160,764,189"/><area shape="rect" id="node23" href="include_2cobalt_2nucleus_2thread_8h_source.html" title="nucleus/thread.h" alt="" coords="44,237,172,267"/><area shape="rect" id="node34" href="vfile_8h.html" title="This file is part of the Xenomai project." alt="" coords="404,469,516,499"/><area shape="rect" id="node51" href="schedqueue_8h_source.html" title="nucleus/schedqueue.h" alt="" coords="808,315,973,344"/><area shape="rect" id="node54" href="sched-tp_8h.html" title="Definitions for the TP scheduling class." alt="" coords="196,237,337,267"/><area shape="rect" id="node56" href="sched-sporadic_8h.html" title="Definitions for the SSP scheduling class." alt="" coords="361,237,545,267"/><area shape="rect" id="node59" href="sched-idle_8h.html" title="Definitions for the IDLE scheduling class." alt="" coords="569,237,721,267"/><area shape="rect" id="node61" href="sched-rt_8h.html" title="Definitions for the RT scheduling class." alt="" coords="796,237,935,267"/><area shape="rect" id="node26" href="stat_8h_source.html" title="nucleus/stat.h" alt="" coords="137,392,249,421"/><area shape="rect" id="node29" href="include_2cobalt_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="133,315,253,344"/><area shape="rect" id="node42" href="include_2cobalt_2nucleus_2registry_8h.html" title="This file is part of the Xenomai project." alt="" coords="328,315,461,344"/><area shape="rect" id="node49" href="schedparam_8h_source.html" title="nucleus/schedparam.h" alt="" coords="485,315,651,344"/><area shape="rect" id="node31" href="include_2cobalt_2nucleus_2clock_8h.html" title="nucleus/clock.h" alt="" coords="432,392,549,421"/><area shape="rect" id="node45" href="synch_8h_source.html" title="nucleus/synch.h" alt="" coords="592,392,715,421"/></map>
 </div>
 <table class="memberdecls">
 <tr><td colspan="2"><h2><a name="func-members"></a>
@@ -64,7 +64,7 @@ Functions</h2></td></tr>
 <p>Xenomai is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.</p>
 <p>You should have received a copy of the GNU General Public License along with Xenomai; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. </p>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Wed Nov 2 2011 18:01:09 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Thu Jan 5 2012 10:14:30 for Xenomai by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

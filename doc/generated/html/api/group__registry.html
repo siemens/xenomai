@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>Xenomai API: Registry services.</title>
+<title>Xenomai: Registry services.</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -25,31 +25,18 @@
 <a href="#files">Files</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
-<h1>Registry services.<br/>
-<small>
-[<a class="el" href="group__nucleus.html">Xenomai nucleus.</a>]</small>
-</h1>  </div>
+<h1>Registry services.</h1>  </div>
 </div>
 <div class="contents">
-
-<p><div class="dynheader">
-Collaboration diagram for Registry services.:</div>
-<div class="dyncontent">
-<center><table><tr><td><img src="group__registry.png" border="0" alt="" usemap="#group____registry"/>
-<map name="group____registry" id="group____registry">
-<area shape="rect" id="node2" href="group__nucleus.html" title="Xenomai nucleus." alt="" coords="7,5,143,35"/></map>
-</td></tr></table></center>
-</div>
-</p>
 <table class="memberdecls">
 <tr><td colspan="2"><h2><a name="files"></a>
 Files</h2></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">file &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="include_2nucleus_2registry_8h.html">registry.h</a></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">file &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="include_2cobalt_2nucleus_2registry_8h.html">registry.h</a></td></tr>
 
 <p><tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight"><p>This file is part of the Xenomai project. </p>
 <br/></td></tr>
 </p>
-<tr><td class="memItemLeft" align="right" valign="top">file &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="nucleus_2registry_8c.html">registry.c</a></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">file &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="kernel_2cobalt_2nucleus_2registry_8c.html">registry.c</a></td></tr>
 
 <p><tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight"><p>This file is part of the Xenomai project. </p>
 <br/></td></tr>
@@ -116,8 +103,8 @@ Functions</h2></td></tr>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>key</em>&nbsp;</td><td>A valid NULL-terminated string which identifies the object to bind to.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>timeout</em>&nbsp;</td><td>The timeout which may be used to limit the time the thread wait for the object to be registered. This value is a wait time given in ticks (see note). It can either be relative, absolute monotonic (XN_ABSOLUTE), or absolute adjustable (XN_REALTIME) depending on <em>timeout_mode</em>. Passing XN_INFINITE <b>and</b> setting <em>timeout_mode</em> to XN_RELATIVE specifies an unbounded wait. Passing XN_NONBLOCK causes the service to return immediately without waiting if the object is not registered on entry. All other values are used as a wait limit.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>timeout_mode</em>&nbsp;</td><td>The mode of the <em>timeout</em> parameter. It can either be set to XN_RELATIVE, XN_ABSOLUTE, or XN_REALTIME (see also <a class="el" href="group__timer.html#ga0ad3c70bed7fe1a45b45ee0875f031ab" title="Arm a timer.">xntimer_start()</a>).</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>timeout</em>&nbsp;</td><td>The timeout which may be used to limit the time the thread wait for the object to be registered. This value is a wait time given as a count of nanoseconds. It can either be relative, absolute monotonic (XN_ABSOLUTE), or absolute adjustable (XN_REALTIME) depending on <em>timeout_mode</em>. Passing XN_INFINITE <b>and</b> setting <em>timeout_mode</em> to XN_RELATIVE specifies an unbounded wait. Passing XN_NONBLOCK causes the service to return immediately without waiting if the object is not registered on entry. All other values are used as a wait limit.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>timeout_mode</em>&nbsp;</td><td>The mode of the <em>timeout</em> parameter. It can either be set to XN_RELATIVE, XN_ABSOLUTE, or XN_REALTIME (see also <a class="el" href="group__timer.html#ga3e6bbea74e4fa1d64dbd6f38cbb39b73" title="Arm a timer.">xntimer_start()</a>).</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>phandle</em>&nbsp;</td><td>A pointer to a memory location which will be written upon success with the generic handle defined by the registry for the retrieved object. Contents of this memory is undefined upon failure.</td></tr>
   </table>
   </dd>
@@ -144,10 +131,9 @@ Functions</h2></td></tr>
 <ul>
 <li>Kernel-based thread.</li>
 </ul>
-<p>Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation.</p>
-<dl class="note"><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if <em>thread</em> is bound to a periodic time base (see xnpod_init_thread), or nanoseconds otherwise. </dd></dl>
+<p>Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation. </p>
 
-<p>References <a class="el" href="group__nucleus__info__flags.html#ga6aa575e1a99b9c931d3b1feb8bc7a36f">XNBREAK</a>, <a class="el" href="group__synch.html#ga2747e9834546af461f118e7c90c9613e">xnsynch_sleep_on()</a>, <a class="el" href="group__timebase.html#ga5246b53b5b2d1b11d4fab4312fd16fda">xntbase_get_time()</a>, and <a class="el" href="group__nucleus__info__flags.html#gaa11d7fc754db50d3a1f1e41611d324e9">XNTIMEO</a>.</p>
+<p>References <a class="el" href="group__nucleus__info__flags.html#ga6aa575e1a99b9c931d3b1feb8bc7a36f">XNBREAK</a>, <a class="el" href="group__synch.html#ga2747e9834546af461f118e7c90c9613e">xnsynch_sleep_on()</a>, and <a class="el" href="group__nucleus__info__flags.html#gaa11d7fc754db50d3a1f1e41611d324e9">XNTIMEO</a>.</p>
 
 </div>
 </div>
@@ -218,8 +204,6 @@ Functions</h2></td></tr>
 <p>Rescheduling: possible. </p>
 
 <p>References <a class="el" href="group__pod.html#gacf5b53f0405351327b89b0cc4976b962">xnpod_schedule()</a>, and <a class="el" href="group__synch.html#ga4c07b8ec87b14cf18ef512f0e0aade51">xnsynch_init()</a>.</p>
-
-<p>Referenced by <a class="el" href="group__alarm.html#ga22353f79379121bbebfa0e72bbde5028">rt_alarm_create()</a>, <a class="el" href="group__buffer.html#ga7aa6a3b48ba6b6ecdd7f2ad9152d2a61">rt_buffer_create()</a>, <a class="el" href="group__cond.html#ga04646a121e57765848eb2a51ed6be855">rt_cond_create()</a>, <a class="el" href="group__event.html#ga8b0fbb2b816c62081afe86bf897c503c">rt_event_create()</a>, <a class="el" href="group__native__heap.html#ga1d19ad24dc9f94b969aa0f574170bdc4">rt_heap_create()</a>, <a class="el" href="group__interrupt.html#gaa0a9d98556ec838008f408a56e79d304">rt_intr_create()</a>, <a class="el" href="group__pipe.html#ga29521cc898afa0069963964955167aa5">rt_pipe_create()</a>, <a class="el" href="group__native__queue.html#gaacad717bbd6d75338fada8f5b4a67b3f">rt_queue_create()</a>, and <a class="el" href="group__semaphore.html#gaba36e3ac8972ea74feb60640e58d1ceb">rt_sem_create()</a>.</p>
 
 </div>
 </div>
@@ -375,7 +359,7 @@ Functions</h2></td></tr>
 </ul>
 <p>Rescheduling: never. </p>
 
-<p>Referenced by <a class="el" href="group__alarm.html#gaf00e05b47b1183816480e270d326f9ac">rt_alarm_delete()</a>, <a class="el" href="group__buffer.html#gabd852c3c957d2dd37c15899119a3551e">rt_buffer_delete()</a>, <a class="el" href="group__cond.html#gaba59b188f10b142b4f2500dd719aa35f">rt_cond_delete()</a>, <a class="el" href="group__event.html#gabccfea1cd018493ef5a28c6fe8e90d7c">rt_event_delete()</a>, <a class="el" href="group__interrupt.html#ga6da6ddd4e65b0feb47278dae74cab6c9">rt_intr_delete()</a>, <a class="el" href="group__mutex.html#gad0c2342227f821bd09f580b6a9684179">rt_mutex_delete()</a>, <a class="el" href="group__pipe.html#ga1d84976a1b9b668366261ca9b836b677">rt_pipe_delete()</a>, <a class="el" href="group__semaphore.html#gaa14cefc4dae46a7c95859e7fe46df888">rt_sem_delete()</a>, and <a class="el" href="group__registry.html#ga7e98a4706164f3ff2c82dc064cf3231e">xnregistry_remove_safe()</a>.</p>
+<p>Referenced by <a class="el" href="group__registry.html#ga7e98a4706164f3ff2c82dc064cf3231e">xnregistry_remove_safe()</a>.</p>
 
 </div>
 </div>
@@ -409,7 +393,7 @@ Functions</h2></td></tr>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>handle</em>&nbsp;</td><td>The generic handle of the object to remove.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>timeout</em>&nbsp;</td><td>If the object is locked on entry, <em>param</em> gives the number of clock ticks to wait for the unlocking to occur (see note). Passing XN_INFINITE causes the caller to block indefinitely until the object is unlocked. Passing XN_NONBLOCK causes the service to return immediately without waiting if the object is locked on entry.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>timeout</em>&nbsp;</td><td>If the object is locked on entry, <em>param</em> gives the number of nanoseconds to wait for the unlocking to occur. Passing XN_INFINITE causes the caller to block indefinitely until the object is unlocked. Passing XN_NONBLOCK causes the service to return immediately without waiting if the object is locked on entry.</td></tr>
   </table>
   </dd>
 </dl>
@@ -438,15 +422,14 @@ Functions</h2></td></tr>
 <ul>
 <li>Kernel-based thread.</li>
 </ul>
-<p>Rescheduling: possible if the object to remove is currently locked and the calling context can sleep.</p>
-<dl class="note"><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if the current thread is bound to a periodic time base (see xnpod_init_thread), or nanoseconds otherwise. </dd></dl>
+<p>Rescheduling: possible if the object to remove is currently locked and the calling context can sleep. </p>
 
 <p>References <a class="el" href="group__nucleus__info__flags.html#ga6aa575e1a99b9c931d3b1feb8bc7a36f">XNBREAK</a>, <a class="el" href="group__registry.html#ga477bb20ccb4bcf87c343aca8e58f9ef9">xnregistry_remove()</a>, <a class="el" href="group__synch.html#ga2747e9834546af461f118e7c90c9613e">xnsynch_sleep_on()</a>, and <a class="el" href="group__nucleus__info__flags.html#gaa11d7fc754db50d3a1f1e41611d324e9">XNTIMEO</a>.</p>
 
 </div>
 </div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Wed Nov 2 2011 18:01:09 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Thu Jan 5 2012 10:14:30 for Xenomai by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>Xenomai API: include/analogy/analogy.h Source File</title>
+<title>Xenomai: include/analogy/analogy.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -69,7 +69,7 @@
 <a name="l00057"></a>00057 
 <a name="l00058"></a>00058 <span class="keywordtype">int</span> a4l_sys_nbchaninfo(<span class="keywordtype">int</span> fd, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx_subd, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *nb);
 <a name="l00059"></a>00059 
-<a name="l00060"></a>00060 <span class="keywordtype">int</span> a4l_sys_chaninfo(<span class="keywordtype">int</span> fd, 
+<a name="l00060"></a>00060 <span class="keywordtype">int</span> a4l_sys_chaninfo(<span class="keywordtype">int</span> fd,
 <a name="l00061"></a>00061                      <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx_subd, a4l_chinfo_t *info);
 <a name="l00062"></a>00062 
 <a name="l00063"></a>00063 <span class="keywordtype">int</span> a4l_sys_nbrnginfo(<span class="keywordtype">int</span> fd,
@@ -109,7 +109,7 @@
 <a name="l00097"></a>00097 <span class="preprocessor">#define a4l_is_rng_global(x) ((x)-&gt;flags &amp; A4L_RNG_GLOBAL)</span>
 <a name="l00098"></a>00098 <span class="preprocessor"></span>
 <a name="l00099"></a>00099 <span class="keywordtype">int</span> <a class="code" href="group__async1__lib.html#gae802726a40cc65522546fb2f75cd5f3f" title="Send a command to an Analoy device.">a4l_snd_command</a>(<a class="code" href="structa4l__descriptor.html" title="Structure containing device-information useful to users.">a4l_desc_t</a> *dsc, <a class="code" href="structa4l__cmd__desc.html" title="Structure describing the asynchronous instruction.">a4l_cmd_t</a> *cmd);
-<a name="l00100"></a>00100     
+<a name="l00100"></a>00100 
 <a name="l00101"></a>00101 <span class="keywordtype">int</span> <a class="code" href="group__async1__lib.html#ga70dd6f96f60e9c839eb1ffc8538fc6c7" title="Cancel an asynchronous acquisition.">a4l_snd_cancel</a>(<a class="code" href="structa4l__descriptor.html" title="Structure containing device-information useful to users.">a4l_desc_t</a> *dsc, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx_subd);
 <a name="l00102"></a>00102 
 <a name="l00103"></a>00103 <span class="keywordtype">int</span> <a class="code" href="group__async1__lib.html#ga247528c4d75db12782aad05b41faf394" title="Change the size of the asynchronous buffer.">a4l_set_bufsize</a>(<a class="code" href="structa4l__descriptor.html" title="Structure containing device-information useful to users.">a4l_desc_t</a> *dsc,
@@ -128,7 +128,7 @@
 <a name="l00116"></a>00116 
 <a name="l00117"></a>00117 <span class="keywordtype">int</span> <a class="code" href="group__async1__lib.html#ga43ab969b00aae973ef4b67c234b17720" title="Get the available data count.">a4l_poll</a>(<a class="code" href="structa4l__descriptor.html" title="Structure containing device-information useful to users.">a4l_desc_t</a> *dsc,
 <a name="l00118"></a>00118              <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx_subd, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> ms_timeout);
-<a name="l00119"></a>00119     
+<a name="l00119"></a>00119 
 <a name="l00120"></a>00120 <span class="keywordtype">int</span> <a class="code" href="group__async1__lib.html#gad1ba6a0d5954e5e68365a206d55ee251" title="Map the asynchronous ring-buffer into a user-space.">a4l_mmap</a>(<a class="code" href="structa4l__descriptor.html" title="Structure containing device-information useful to users.">a4l_desc_t</a> *dsc,
 <a name="l00121"></a>00121              <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx_subd, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> size, <span class="keywordtype">void</span> **ptr);
 <a name="l00122"></a>00122 
@@ -148,7 +148,7 @@
 <a name="l00136"></a>00136                    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx_subd,
 <a name="l00137"></a>00137                    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> chan_desc,
 <a name="l00138"></a>00138                    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> delay, <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> nbyte);
-<a name="l00139"></a>00139         
+<a name="l00139"></a>00139 
 <a name="l00140"></a>00140 <span class="keywordtype">int</span> <a class="code" href="group__sync2__lib.html#ga0e21a27f85ceed1ec3186608f92d47f4" title="Perform a synchronous acquisition read operation.">a4l_sync_read</a>(<a class="code" href="structa4l__descriptor.html" title="Structure containing device-information useful to users.">a4l_desc_t</a> *dsc,
 <a name="l00141"></a>00141                   <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx_subd,
 <a name="l00142"></a>00142                   <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> chan_desc,
@@ -194,7 +194,7 @@
 <a name="l00182"></a>00182 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* __ANALOGY_ANALOGY__ */</span>
 </pre></div></div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Wed Nov 2 2011 18:01:06 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Thu Jan 5 2012 10:14:29 for Xenomai by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

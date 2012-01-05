@@ -1,0 +1,10 @@
+<map id="G" name="G">
+<area shape="rect" id="node5" href="$analogy_2types_8h.html" title="Analogy for Linux, misc declarations." alt="" coords="104,315,227,344"/>
+<area shape="rect" id="node7" href="$descriptor_8h.html" title="Analogy for Linux, descriptor related features." alt="" coords="315,83,464,112"/>
+<area shape="rect" id="node9" href="$subdevice_8h.html" title="Analogy for Linux, subdevice related features." alt="" coords="313,160,465,189"/>
+<area shape="rect" id="node25" href="$device_8h.html" title="Analogy for Linux, device related features." alt="" coords="489,160,617,189"/>
+<area shape="rect" id="node14" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations." alt="" coords="436,315,572,344"/>
+<area shape="rect" id="node16" href="$instruction_8h.html" title="Analogy for Linux, instruction related features." alt="" coords="312,237,467,267"/>
+<area shape="rect" id="node20" href="$command_8h.html" title="Analogy for Linux, driver facilities." alt="" coords="541,237,693,267"/>
+<area shape="rect" id="node23" href="$channel__range_8h.html" title="Analogy for Linux, channel, range related features." alt="" coords="717,237,899,267"/>
+</map>

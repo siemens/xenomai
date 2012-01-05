@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>Xenomai API: include/rtdm/syscall.h Source File</title>
+<title>Xenomai: include/rtdm/syscall.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -52,49 +52,45 @@
 <a name="l00020"></a>00020 <span class="preprocessor">#ifndef _RTDM_SYSCALL_H</span>
 <a name="l00021"></a>00021 <span class="preprocessor"></span><span class="preprocessor">#define _RTDM_SYSCALL_H</span>
 <a name="l00022"></a>00022 <span class="preprocessor"></span>
-<a name="l00023"></a>00023 <span class="preprocessor">#ifndef __XENO_SIM__</span>
-<a name="l00024"></a>00024 <span class="preprocessor"></span><span class="preprocessor">#include &lt;asm/xenomai/syscall.h&gt;</span>
-<a name="l00025"></a>00025 <span class="preprocessor">#endif </span><span class="comment">/* __XENO_SIM__ */</span>
-<a name="l00026"></a>00026 
-<a name="l00027"></a>00027 <span class="preprocessor">#define RTDM_SKIN_MAGIC         0x5254444D</span>
-<a name="l00028"></a>00028 <span class="preprocessor"></span>
-<a name="l00029"></a>00029 <span class="preprocessor">#define __rtdm_fdcount          0</span>
-<a name="l00030"></a>00030 <span class="preprocessor"></span><span class="preprocessor">#define __rtdm_open             1</span>
-<a name="l00031"></a>00031 <span class="preprocessor"></span><span class="preprocessor">#define __rtdm_socket           2</span>
-<a name="l00032"></a>00032 <span class="preprocessor"></span><span class="preprocessor">#define __rtdm_close            3</span>
-<a name="l00033"></a>00033 <span class="preprocessor"></span><span class="preprocessor">#define __rtdm_ioctl            4</span>
-<a name="l00034"></a>00034 <span class="preprocessor"></span><span class="preprocessor">#define __rtdm_read             5</span>
-<a name="l00035"></a>00035 <span class="preprocessor"></span><span class="preprocessor">#define __rtdm_write            6</span>
-<a name="l00036"></a>00036 <span class="preprocessor"></span><span class="preprocessor">#define __rtdm_recvmsg          7</span>
-<a name="l00037"></a>00037 <span class="preprocessor"></span><span class="preprocessor">#define __rtdm_sendmsg          8</span>
+<a name="l00023"></a>00023 <span class="preprocessor">#include &lt;asm/xenomai/syscall.h&gt;</span>
+<a name="l00024"></a>00024 
+<a name="l00025"></a>00025 <span class="preprocessor">#define RTDM_SKIN_MAGIC         0x5254444D</span>
+<a name="l00026"></a>00026 <span class="preprocessor"></span>
+<a name="l00027"></a>00027 <span class="preprocessor">#define sc_rtdm_fdcount         0</span>
+<a name="l00028"></a>00028 <span class="preprocessor"></span><span class="preprocessor">#define sc_rtdm_open            1</span>
+<a name="l00029"></a>00029 <span class="preprocessor"></span><span class="preprocessor">#define sc_rtdm_socket          2</span>
+<a name="l00030"></a>00030 <span class="preprocessor"></span><span class="preprocessor">#define sc_rtdm_close           3</span>
+<a name="l00031"></a>00031 <span class="preprocessor"></span><span class="preprocessor">#define sc_rtdm_ioctl           4</span>
+<a name="l00032"></a>00032 <span class="preprocessor"></span><span class="preprocessor">#define sc_rtdm_read            5</span>
+<a name="l00033"></a>00033 <span class="preprocessor"></span><span class="preprocessor">#define sc_rtdm_write           6</span>
+<a name="l00034"></a>00034 <span class="preprocessor"></span><span class="preprocessor">#define sc_rtdm_recvmsg         7</span>
+<a name="l00035"></a>00035 <span class="preprocessor"></span><span class="preprocessor">#define sc_rtdm_sendmsg         8</span>
+<a name="l00036"></a>00036 <span class="preprocessor"></span>
+<a name="l00037"></a>00037 <span class="preprocessor">#ifdef __KERNEL__</span>
 <a name="l00038"></a>00038 <span class="preprocessor"></span>
-<a name="l00039"></a>00039 <span class="preprocessor">#ifdef __KERNEL__</span>
-<a name="l00040"></a>00040 <span class="preprocessor"></span>
-<a name="l00041"></a>00041 <span class="preprocessor">#ifdef __cplusplus</span>
-<a name="l00042"></a>00042 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {
-<a name="l00043"></a>00043 <span class="preprocessor">#endif</span>
-<a name="l00044"></a>00044 <span class="preprocessor"></span>
-<a name="l00045"></a>00045 <span class="keyword">extern</span> <span class="keywordtype">int</span> __rtdm_muxid;
+<a name="l00039"></a>00039 <span class="preprocessor">#ifdef __cplusplus</span>
+<a name="l00040"></a>00040 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {
+<a name="l00041"></a>00041 <span class="preprocessor">#endif</span>
+<a name="l00042"></a>00042 <span class="preprocessor"></span>
+<a name="l00043"></a>00043 <span class="keyword">extern</span> <span class="keywordtype">int</span> __rtdm_muxid;
+<a name="l00044"></a>00044 
+<a name="l00045"></a>00045 <span class="keywordtype">int</span> __init rtdm_syscall_init(<span class="keywordtype">void</span>);
 <a name="l00046"></a>00046 
-<a name="l00047"></a>00047 <span class="keywordtype">int</span> __init rtdm_syscall_init(<span class="keywordtype">void</span>);
-<a name="l00048"></a>00048 
-<a name="l00049"></a>00049 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_PERVASIVE</span>
-<a name="l00050"></a>00050 <span class="preprocessor"></span><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_syscall_cleanup(<span class="keywordtype">void</span>)
-<a name="l00051"></a>00051 {
-<a name="l00052"></a>00052         xnshadow_unregister_interface(__rtdm_muxid);
-<a name="l00053"></a>00053 }
+<a name="l00047"></a>00047 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_syscall_cleanup(<span class="keywordtype">void</span>)
+<a name="l00048"></a>00048 {
+<a name="l00049"></a>00049         xnshadow_unregister_interface(__rtdm_muxid);
+<a name="l00050"></a>00050 }
+<a name="l00051"></a>00051 
+<a name="l00052"></a>00052 <span class="preprocessor">#ifdef __cplusplus</span>
+<a name="l00053"></a>00053 <span class="preprocessor"></span>}
 <a name="l00054"></a>00054 <span class="preprocessor">#endif</span>
 <a name="l00055"></a>00055 <span class="preprocessor"></span>
-<a name="l00056"></a>00056 <span class="preprocessor">#ifdef __cplusplus</span>
-<a name="l00057"></a>00057 <span class="preprocessor"></span>}
-<a name="l00058"></a>00058 <span class="preprocessor">#endif</span>
-<a name="l00059"></a>00059 <span class="preprocessor"></span>
-<a name="l00060"></a>00060 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
-<a name="l00061"></a>00061 
-<a name="l00062"></a>00062 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_SYSCALL_H */</span>
+<a name="l00056"></a>00056 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
+<a name="l00057"></a>00057 
+<a name="l00058"></a>00058 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_SYSCALL_H */</span>
 </pre></div></div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Wed Nov 2 2011 18:01:06 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Thu Jan 5 2012 10:14:30 for Xenomai by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

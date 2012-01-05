@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>Xenomai API: include/rtdm/rtdm.h Source File</title>
+<title>Xenomai: include/rtdm/rtdm.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -198,7 +198,7 @@
 <a name="l00282"></a>00282 <span class="preprocessor">#define rt_dev_sendmsg(fd, msg, flags)                          \</span>
 <a name="l00283"></a>00283 <span class="preprocessor">        __rt_dev_sendmsg(NULL, fd, msg, flags)</span>
 <a name="l00284"></a>00284 <span class="preprocessor"></span>
-<a name="l00285"></a>00285 <span class="keyword">static</span> <span class="keyword">inline</span> ssize_t rt_dev_recvfrom(<span class="keywordtype">int</span> fd, <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> len, <span class="keywordtype">int</span> flags,
+<a name="l00285"></a>00285 <span class="keyword">static</span> <span class="keyword">inline</span> ssize_t <a class="code" href="group__userapi.html#ga0cc144457c649f197d485581686273dd" title="Receive message from socket.">rt_dev_recvfrom</a>(<span class="keywordtype">int</span> fd, <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> len, <span class="keywordtype">int</span> flags,
 <a name="l00286"></a>00286                                       <span class="keyword">struct</span> sockaddr *from,
 <a name="l00287"></a>00287                                       socklen_t *fromlen)
 <a name="l00288"></a>00288 {
@@ -216,7 +216,7 @@
 <a name="l00300"></a>00300         msg.msg_control = NULL;
 <a name="l00301"></a>00301         msg.msg_controllen = 0;
 <a name="l00302"></a>00302 
-<a name="l00303"></a>00303         ret = rt_dev_recvmsg(fd, &amp;msg, flags);
+<a name="l00303"></a>00303         ret = <a class="code" href="group__userapi.html#gacea5109e178100cdecaa9053c64632d1" title="Receive message from socket.">rt_dev_recvmsg</a>(fd, &amp;msg, flags);
 <a name="l00304"></a>00304         <span class="keywordflow">if</span> (ret &gt;= 0 &amp;&amp; from)
 <a name="l00305"></a>00305                 *fromlen = msg.msg_namelen;
 <a name="l00306"></a>00306         <span class="keywordflow">return</span> ret;
@@ -228,137 +228,140 @@
 <a name="l00312"></a>00312 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {
 <a name="l00313"></a>00313 <span class="preprocessor">#endif</span>
 <a name="l00314"></a>00314 <span class="preprocessor"></span>
-<a name="l00315"></a>00315 <span class="keywordtype">int</span> rt_dev_open(<span class="keyword">const</span> <span class="keywordtype">char</span> *path, <span class="keywordtype">int</span> oflag, ...);
-<a name="l00316"></a>00316 <span class="keywordtype">int</span> rt_dev_socket(<span class="keywordtype">int</span> protocol_family, <span class="keywordtype">int</span> socket_type, <span class="keywordtype">int</span> protocol);
-<a name="l00317"></a>00317 <span class="keywordtype">int</span> rt_dev_close(<span class="keywordtype">int</span> fd);
-<a name="l00318"></a>00318 <span class="keywordtype">int</span> rt_dev_ioctl(<span class="keywordtype">int</span> fd, <span class="keywordtype">int</span> request, ...);
-<a name="l00319"></a>00319 ssize_t rt_dev_read(<span class="keywordtype">int</span> fd, <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> nbyte);
-<a name="l00320"></a>00320 ssize_t rt_dev_write(<span class="keywordtype">int</span> fd, <span class="keyword">const</span> <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> nbyte);
-<a name="l00321"></a>00321 ssize_t rt_dev_recvmsg(<span class="keywordtype">int</span> fd, <span class="keyword">struct</span> msghdr *msg, <span class="keywordtype">int</span> flags);
-<a name="l00322"></a>00322 ssize_t rt_dev_sendmsg(<span class="keywordtype">int</span> fd, <span class="keyword">const</span> <span class="keyword">struct</span> msghdr *msg, <span class="keywordtype">int</span> flags);
-<a name="l00323"></a>00323 
-<a name="l00324"></a>00324 ssize_t rt_dev_recvfrom(<span class="keywordtype">int</span> fd, <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> len, <span class="keywordtype">int</span> flags,
-<a name="l00325"></a>00325                         <span class="keyword">struct</span> sockaddr *from, socklen_t *fromlen);
-<a name="l00326"></a>00326 
-<a name="l00327"></a>00327 <span class="preprocessor">#ifdef __cplusplus</span>
-<a name="l00328"></a>00328 <span class="preprocessor"></span>}
-<a name="l00329"></a>00329 <span class="preprocessor">#endif</span>
-<a name="l00330"></a>00330 <span class="preprocessor"></span>
-<a name="l00331"></a>00331 <span class="preprocessor">#endif </span><span class="comment">/* !__KERNEL__ */</span>
-<a name="l00332"></a>00332 
-<a name="l00333"></a>00333 <span class="preprocessor">#ifdef __cplusplus</span>
-<a name="l00334"></a>00334 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {
-<a name="l00335"></a>00335 <span class="preprocessor">#endif</span>
-<a name="l00336"></a>00336 <span class="preprocessor"></span>
-<a name="l00337"></a>00337 <span class="keyword">static</span> <span class="keyword">inline</span> ssize_t <a class="code" href="group__userapi.html#ga57c712a42db215de74f0cdf42936450d" title="Receive message from socket.">rt_dev_recv</a>(<span class="keywordtype">int</span> fd, <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> len, <span class="keywordtype">int</span> flags)
-<a name="l00338"></a>00338 {
-<a name="l00339"></a>00339         <span class="keywordflow">return</span> rt_dev_recvfrom(fd, buf, len, flags, NULL, NULL);
-<a name="l00340"></a>00340 }
-<a name="l00341"></a>00341 
-<a name="l00342"></a>00342 <span class="keyword">static</span> <span class="keyword">inline</span> ssize_t <a class="code" href="group__userapi.html#ga6a3a39ea1a35258935a32e1870955269" title="Transmit message to socket.">rt_dev_sendto</a>(<span class="keywordtype">int</span> fd, <span class="keyword">const</span> <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> len,
-<a name="l00343"></a>00343                                     <span class="keywordtype">int</span> flags, <span class="keyword">const</span> <span class="keyword">struct</span> sockaddr *to,
-<a name="l00344"></a>00344                                     socklen_t tolen)
-<a name="l00345"></a>00345 {
-<a name="l00346"></a>00346         <span class="keyword">struct </span>iovec iov;
-<a name="l00347"></a>00347         <span class="keyword">struct </span>msghdr msg;
-<a name="l00348"></a>00348 
-<a name="l00349"></a>00349         iov.iov_base = (<span class="keywordtype">void</span> *)buf;
-<a name="l00350"></a>00350         iov.iov_len = len;
+<a name="l00315"></a>00315 <span class="preprocessor">#include &lt;unistd.h&gt;</span>
+<a name="l00316"></a>00316 <span class="preprocessor">#include &lt;fcntl.h&gt;</span>
+<a name="l00317"></a>00317 <span class="preprocessor">#include &lt;sys/ioctl.h&gt;</span>
+<a name="l00318"></a>00318 <span class="preprocessor">#include &lt;sys/socket.h&gt;</span>
+<a name="l00319"></a>00319 
+<a name="l00320"></a>00320 <span class="preprocessor">#define rt_dev_open     open</span>
+<a name="l00321"></a>00321 <span class="preprocessor"></span><span class="preprocessor">#define rt_dev_socket   socket</span>
+<a name="l00322"></a>00322 <span class="preprocessor"></span><span class="preprocessor">#define rt_dev_close    close</span>
+<a name="l00323"></a>00323 <span class="preprocessor"></span><span class="preprocessor">#define rt_dev_ioctl    ioctl</span>
+<a name="l00324"></a>00324 <span class="preprocessor"></span><span class="preprocessor">#define rt_dev_read     read</span>
+<a name="l00325"></a>00325 <span class="preprocessor"></span><span class="preprocessor">#define rt_dev_write    write</span>
+<a name="l00326"></a>00326 <span class="preprocessor"></span><span class="preprocessor">#define rt_dev_recvmsg  recvmsg</span>
+<a name="l00327"></a>00327 <span class="preprocessor"></span><span class="preprocessor">#define rt_dev_sendmsg  sendmsg</span>
+<a name="l00328"></a>00328 <span class="preprocessor"></span><span class="preprocessor">#define rt_dev_recvfrom recvfrom</span>
+<a name="l00329"></a>00329 <span class="preprocessor"></span>
+<a name="l00330"></a>00330 <span class="preprocessor">#ifdef __cplusplus</span>
+<a name="l00331"></a>00331 <span class="preprocessor"></span>}
+<a name="l00332"></a>00332 <span class="preprocessor">#endif</span>
+<a name="l00333"></a>00333 <span class="preprocessor"></span>
+<a name="l00334"></a>00334 <span class="preprocessor">#endif </span><span class="comment">/* !__KERNEL__ */</span>
+<a name="l00335"></a>00335 
+<a name="l00336"></a>00336 <span class="preprocessor">#ifdef __cplusplus</span>
+<a name="l00337"></a>00337 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {
+<a name="l00338"></a>00338 <span class="preprocessor">#endif</span>
+<a name="l00339"></a>00339 <span class="preprocessor"></span>
+<a name="l00340"></a>00340 <span class="keyword">static</span> <span class="keyword">inline</span> ssize_t <a class="code" href="group__userapi.html#ga57c712a42db215de74f0cdf42936450d" title="Receive message from socket.">rt_dev_recv</a>(<span class="keywordtype">int</span> fd, <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> len, <span class="keywordtype">int</span> flags)
+<a name="l00341"></a>00341 {
+<a name="l00342"></a>00342         <span class="keywordflow">return</span> <a class="code" href="group__userapi.html#ga0cc144457c649f197d485581686273dd" title="Receive message from socket.">rt_dev_recvfrom</a>(fd, buf, len, flags, NULL, NULL);
+<a name="l00343"></a>00343 }
+<a name="l00344"></a>00344 
+<a name="l00345"></a>00345 <span class="keyword">static</span> <span class="keyword">inline</span> ssize_t <a class="code" href="group__userapi.html#ga6a3a39ea1a35258935a32e1870955269" title="Transmit message to socket.">rt_dev_sendto</a>(<span class="keywordtype">int</span> fd, <span class="keyword">const</span> <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> len,
+<a name="l00346"></a>00346                                     <span class="keywordtype">int</span> flags, <span class="keyword">const</span> <span class="keyword">struct</span> sockaddr *to,
+<a name="l00347"></a>00347                                     socklen_t tolen)
+<a name="l00348"></a>00348 {
+<a name="l00349"></a>00349         <span class="keyword">struct </span>iovec iov;
+<a name="l00350"></a>00350         <span class="keyword">struct </span>msghdr msg;
 <a name="l00351"></a>00351 
-<a name="l00352"></a>00352         msg.msg_name = (<span class="keyword">struct </span>sockaddr *)to;
-<a name="l00353"></a>00353         msg.msg_namelen = tolen;
-<a name="l00354"></a>00354         msg.msg_iov = &amp;iov;
-<a name="l00355"></a>00355         msg.msg_iovlen = 1;
-<a name="l00356"></a>00356         msg.msg_control = NULL;
-<a name="l00357"></a>00357         msg.msg_controllen = 0;
-<a name="l00358"></a>00358 
-<a name="l00359"></a>00359         <span class="keywordflow">return</span> rt_dev_sendmsg(fd, &amp;msg, flags);
-<a name="l00360"></a>00360 }
+<a name="l00352"></a>00352         iov.iov_base = (<span class="keywordtype">void</span> *)buf;
+<a name="l00353"></a>00353         iov.iov_len = len;
+<a name="l00354"></a>00354 
+<a name="l00355"></a>00355         msg.msg_name = (<span class="keyword">struct </span>sockaddr *)to;
+<a name="l00356"></a>00356         msg.msg_namelen = tolen;
+<a name="l00357"></a>00357         msg.msg_iov = &amp;iov;
+<a name="l00358"></a>00358         msg.msg_iovlen = 1;
+<a name="l00359"></a>00359         msg.msg_control = NULL;
+<a name="l00360"></a>00360         msg.msg_controllen = 0;
 <a name="l00361"></a>00361 
-<a name="l00362"></a>00362 <span class="keyword">static</span> <span class="keyword">inline</span> ssize_t <a class="code" href="group__userapi.html#ga8e6eeb1cc9924ed11f3f457d4153697d" title="Transmit message to socket.">rt_dev_send</a>(<span class="keywordtype">int</span> fd, <span class="keyword">const</span> <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> len,
-<a name="l00363"></a>00363                                   <span class="keywordtype">int</span> flags)
-<a name="l00364"></a>00364 {
-<a name="l00365"></a>00365         <span class="keywordflow">return</span> <a class="code" href="group__userapi.html#ga6a3a39ea1a35258935a32e1870955269" title="Transmit message to socket.">rt_dev_sendto</a>(fd, buf, len, flags, NULL, 0);
-<a name="l00366"></a>00366 }
-<a name="l00367"></a>00367 
-<a name="l00368"></a>00368 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__userapi.html#ga4ebcc7a2e18eec6697a4db7bd699d5d7" title="Get socket option.">rt_dev_getsockopt</a>(<span class="keywordtype">int</span> fd, <span class="keywordtype">int</span> level, <span class="keywordtype">int</span> optname,
-<a name="l00369"></a>00369                                     <span class="keywordtype">void</span> *optval, socklen_t *optlen)
-<a name="l00370"></a>00370 {
-<a name="l00371"></a>00371         <span class="keyword">struct </span>_rtdm_getsockopt_args args =
-<a name="l00372"></a>00372                 { level, optname, optval, optlen };
-<a name="l00373"></a>00373 
-<a name="l00374"></a>00374         <span class="keywordflow">return</span> rt_dev_ioctl(fd, _RTIOC_GETSOCKOPT, &amp;args);
-<a name="l00375"></a>00375 }
+<a name="l00362"></a>00362         <span class="keywordflow">return</span> <a class="code" href="group__userapi.html#ga751340ba2f9be0b6a514c73f760561b3" title="Transmit message to socket.">rt_dev_sendmsg</a>(fd, &amp;msg, flags);
+<a name="l00363"></a>00363 }
+<a name="l00364"></a>00364 
+<a name="l00365"></a>00365 <span class="keyword">static</span> <span class="keyword">inline</span> ssize_t <a class="code" href="group__userapi.html#ga8e6eeb1cc9924ed11f3f457d4153697d" title="Transmit message to socket.">rt_dev_send</a>(<span class="keywordtype">int</span> fd, <span class="keyword">const</span> <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> len,
+<a name="l00366"></a>00366                                   <span class="keywordtype">int</span> flags)
+<a name="l00367"></a>00367 {
+<a name="l00368"></a>00368         <span class="keywordflow">return</span> <a class="code" href="group__userapi.html#ga6a3a39ea1a35258935a32e1870955269" title="Transmit message to socket.">rt_dev_sendto</a>(fd, buf, len, flags, NULL, 0);
+<a name="l00369"></a>00369 }
+<a name="l00370"></a>00370 
+<a name="l00371"></a>00371 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__userapi.html#ga4ebcc7a2e18eec6697a4db7bd699d5d7" title="Get socket option.">rt_dev_getsockopt</a>(<span class="keywordtype">int</span> fd, <span class="keywordtype">int</span> level, <span class="keywordtype">int</span> optname,
+<a name="l00372"></a>00372                                     <span class="keywordtype">void</span> *optval, socklen_t *optlen)
+<a name="l00373"></a>00373 {
+<a name="l00374"></a>00374         <span class="keyword">struct </span>_rtdm_getsockopt_args args =
+<a name="l00375"></a>00375                 { level, optname, optval, optlen };
 <a name="l00376"></a>00376 
-<a name="l00377"></a>00377 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__userapi.html#gaada2561361357285840c5b054fe20681" title="Set socket option.">rt_dev_setsockopt</a>(<span class="keywordtype">int</span> fd, <span class="keywordtype">int</span> level, <span class="keywordtype">int</span> optname,
-<a name="l00378"></a>00378                                     <span class="keyword">const</span> <span class="keywordtype">void</span> *optval, socklen_t optlen)
-<a name="l00379"></a>00379 {
-<a name="l00380"></a>00380         <span class="keyword">struct </span>_rtdm_setsockopt_args args =
-<a name="l00381"></a>00381                 { level, optname, (<span class="keywordtype">void</span> *)optval, optlen };
-<a name="l00382"></a>00382 
-<a name="l00383"></a>00383         <span class="keywordflow">return</span> rt_dev_ioctl(fd, _RTIOC_SETSOCKOPT, &amp;args);
-<a name="l00384"></a>00384 }
+<a name="l00377"></a>00377         <span class="keywordflow">return</span> <a class="code" href="group__userapi.html#ga72b69315a44f235b05627a0c257c01f4" title="Issue an IOCTL.">rt_dev_ioctl</a>(fd, _RTIOC_GETSOCKOPT, &amp;args);
+<a name="l00378"></a>00378 }
+<a name="l00379"></a>00379 
+<a name="l00380"></a>00380 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__userapi.html#gaada2561361357285840c5b054fe20681" title="Set socket option.">rt_dev_setsockopt</a>(<span class="keywordtype">int</span> fd, <span class="keywordtype">int</span> level, <span class="keywordtype">int</span> optname,
+<a name="l00381"></a>00381                                     <span class="keyword">const</span> <span class="keywordtype">void</span> *optval, socklen_t optlen)
+<a name="l00382"></a>00382 {
+<a name="l00383"></a>00383         <span class="keyword">struct </span>_rtdm_setsockopt_args args =
+<a name="l00384"></a>00384                 { level, optname, (<span class="keywordtype">void</span> *)optval, optlen };
 <a name="l00385"></a>00385 
-<a name="l00386"></a>00386 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__userapi.html#ga5442e4f8737560e3294bd5bab61ad3fd" title="Bind to local address.">rt_dev_bind</a>(<span class="keywordtype">int</span> fd, <span class="keyword">const</span> <span class="keyword">struct</span> sockaddr *my_addr,
-<a name="l00387"></a>00387                               socklen_t addrlen)
-<a name="l00388"></a>00388 {
-<a name="l00389"></a>00389         <span class="keyword">struct </span>_rtdm_setsockaddr_args args = { my_addr, addrlen };
-<a name="l00390"></a>00390 
-<a name="l00391"></a>00391         <span class="keywordflow">return</span> rt_dev_ioctl(fd, _RTIOC_BIND, &amp;args);
-<a name="l00392"></a>00392 }
+<a name="l00386"></a>00386         <span class="keywordflow">return</span> <a class="code" href="group__userapi.html#ga72b69315a44f235b05627a0c257c01f4" title="Issue an IOCTL.">rt_dev_ioctl</a>(fd, _RTIOC_SETSOCKOPT, &amp;args);
+<a name="l00387"></a>00387 }
+<a name="l00388"></a>00388 
+<a name="l00389"></a>00389 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__userapi.html#ga5442e4f8737560e3294bd5bab61ad3fd" title="Bind to local address.">rt_dev_bind</a>(<span class="keywordtype">int</span> fd, <span class="keyword">const</span> <span class="keyword">struct</span> sockaddr *my_addr,
+<a name="l00390"></a>00390                               socklen_t addrlen)
+<a name="l00391"></a>00391 {
+<a name="l00392"></a>00392         <span class="keyword">struct </span>_rtdm_setsockaddr_args args = { my_addr, addrlen };
 <a name="l00393"></a>00393 
-<a name="l00394"></a>00394 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__userapi.html#ga122e2d5dd89478cd6c85d4cea0f91099" title="Connect to remote address.">rt_dev_connect</a>(<span class="keywordtype">int</span> fd, <span class="keyword">const</span> <span class="keyword">struct</span> sockaddr *serv_addr,
-<a name="l00395"></a>00395                                  socklen_t addrlen)
-<a name="l00396"></a>00396 {
-<a name="l00397"></a>00397         <span class="keyword">struct </span>_rtdm_setsockaddr_args args = { serv_addr, addrlen };
-<a name="l00398"></a>00398 
-<a name="l00399"></a>00399         <span class="keywordflow">return</span> rt_dev_ioctl(fd, _RTIOC_CONNECT, &amp;args);
-<a name="l00400"></a>00400 }
+<a name="l00394"></a>00394         <span class="keywordflow">return</span> <a class="code" href="group__userapi.html#ga72b69315a44f235b05627a0c257c01f4" title="Issue an IOCTL.">rt_dev_ioctl</a>(fd, _RTIOC_BIND, &amp;args);
+<a name="l00395"></a>00395 }
+<a name="l00396"></a>00396 
+<a name="l00397"></a>00397 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__userapi.html#ga122e2d5dd89478cd6c85d4cea0f91099" title="Connect to remote address.">rt_dev_connect</a>(<span class="keywordtype">int</span> fd, <span class="keyword">const</span> <span class="keyword">struct</span> sockaddr *serv_addr,
+<a name="l00398"></a>00398                                  socklen_t addrlen)
+<a name="l00399"></a>00399 {
+<a name="l00400"></a>00400         <span class="keyword">struct </span>_rtdm_setsockaddr_args args = { serv_addr, addrlen };
 <a name="l00401"></a>00401 
-<a name="l00402"></a>00402 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__userapi.html#ga0fe0e2ce5bf5f23733c5dd6b068fbbd4" title="Listen for incomming connection requests.">rt_dev_listen</a>(<span class="keywordtype">int</span> fd, <span class="keywordtype">int</span> backlog)
-<a name="l00403"></a>00403 {
-<a name="l00404"></a>00404         <span class="keywordflow">return</span> rt_dev_ioctl(fd, _RTIOC_LISTEN, backlog);
-<a name="l00405"></a>00405 }
-<a name="l00406"></a>00406 
-<a name="l00407"></a>00407 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__userapi.html#gaf6072f0befa5df3fc1ab89529756fa6f" title="Accept a connection requests.">rt_dev_accept</a>(<span class="keywordtype">int</span> fd, <span class="keyword">struct</span> sockaddr *addr,
-<a name="l00408"></a>00408                                 socklen_t *addrlen)
-<a name="l00409"></a>00409 {
-<a name="l00410"></a>00410         <span class="keyword">struct </span>_rtdm_getsockaddr_args args = { addr, addrlen };
-<a name="l00411"></a>00411 
-<a name="l00412"></a>00412         <span class="keywordflow">return</span> rt_dev_ioctl(fd, _RTIOC_ACCEPT, &amp;args);
-<a name="l00413"></a>00413 }
+<a name="l00402"></a>00402         <span class="keywordflow">return</span> <a class="code" href="group__userapi.html#ga72b69315a44f235b05627a0c257c01f4" title="Issue an IOCTL.">rt_dev_ioctl</a>(fd, _RTIOC_CONNECT, &amp;args);
+<a name="l00403"></a>00403 }
+<a name="l00404"></a>00404 
+<a name="l00405"></a>00405 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__userapi.html#ga0fe0e2ce5bf5f23733c5dd6b068fbbd4" title="Listen for incomming connection requests.">rt_dev_listen</a>(<span class="keywordtype">int</span> fd, <span class="keywordtype">int</span> backlog)
+<a name="l00406"></a>00406 {
+<a name="l00407"></a>00407         <span class="keywordflow">return</span> <a class="code" href="group__userapi.html#ga72b69315a44f235b05627a0c257c01f4" title="Issue an IOCTL.">rt_dev_ioctl</a>(fd, _RTIOC_LISTEN, backlog);
+<a name="l00408"></a>00408 }
+<a name="l00409"></a>00409 
+<a name="l00410"></a>00410 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__userapi.html#gaf6072f0befa5df3fc1ab89529756fa6f" title="Accept a connection requests.">rt_dev_accept</a>(<span class="keywordtype">int</span> fd, <span class="keyword">struct</span> sockaddr *addr,
+<a name="l00411"></a>00411                                 socklen_t *addrlen)
+<a name="l00412"></a>00412 {
+<a name="l00413"></a>00413         <span class="keyword">struct </span>_rtdm_getsockaddr_args args = { addr, addrlen };
 <a name="l00414"></a>00414 
-<a name="l00415"></a>00415 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__userapi.html#ga8cd0e12cde039b13ed4e195009859a68" title="Get local socket address.">rt_dev_getsockname</a>(<span class="keywordtype">int</span> fd, <span class="keyword">struct</span> sockaddr *name,
-<a name="l00416"></a>00416                                      socklen_t *namelen)
-<a name="l00417"></a>00417 {
-<a name="l00418"></a>00418         <span class="keyword">struct </span>_rtdm_getsockaddr_args args = { name, namelen };
-<a name="l00419"></a>00419 
-<a name="l00420"></a>00420         <span class="keywordflow">return</span> rt_dev_ioctl(fd, _RTIOC_GETSOCKNAME, &amp;args);
-<a name="l00421"></a>00421 }
+<a name="l00415"></a>00415         <span class="keywordflow">return</span> <a class="code" href="group__userapi.html#ga72b69315a44f235b05627a0c257c01f4" title="Issue an IOCTL.">rt_dev_ioctl</a>(fd, _RTIOC_ACCEPT, &amp;args);
+<a name="l00416"></a>00416 }
+<a name="l00417"></a>00417 
+<a name="l00418"></a>00418 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__userapi.html#ga8cd0e12cde039b13ed4e195009859a68" title="Get local socket address.">rt_dev_getsockname</a>(<span class="keywordtype">int</span> fd, <span class="keyword">struct</span> sockaddr *name,
+<a name="l00419"></a>00419                                      socklen_t *namelen)
+<a name="l00420"></a>00420 {
+<a name="l00421"></a>00421         <span class="keyword">struct </span>_rtdm_getsockaddr_args args = { name, namelen };
 <a name="l00422"></a>00422 
-<a name="l00423"></a>00423 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__userapi.html#gaf8820904f66c985fff36ab16f2d88c0d" title="Get socket destination address.">rt_dev_getpeername</a>(<span class="keywordtype">int</span> fd, <span class="keyword">struct</span> sockaddr *name,
-<a name="l00424"></a>00424                                      socklen_t *namelen)
-<a name="l00425"></a>00425 {
-<a name="l00426"></a>00426         <span class="keyword">struct </span>_rtdm_getsockaddr_args args = { name, namelen };
-<a name="l00427"></a>00427 
-<a name="l00428"></a>00428         <span class="keywordflow">return</span> rt_dev_ioctl(fd, _RTIOC_GETPEERNAME, &amp;args);
-<a name="l00429"></a>00429 }
+<a name="l00423"></a>00423         <span class="keywordflow">return</span> <a class="code" href="group__userapi.html#ga72b69315a44f235b05627a0c257c01f4" title="Issue an IOCTL.">rt_dev_ioctl</a>(fd, _RTIOC_GETSOCKNAME, &amp;args);
+<a name="l00424"></a>00424 }
+<a name="l00425"></a>00425 
+<a name="l00426"></a>00426 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__userapi.html#gaf8820904f66c985fff36ab16f2d88c0d" title="Get socket destination address.">rt_dev_getpeername</a>(<span class="keywordtype">int</span> fd, <span class="keyword">struct</span> sockaddr *name,
+<a name="l00427"></a>00427                                      socklen_t *namelen)
+<a name="l00428"></a>00428 {
+<a name="l00429"></a>00429         <span class="keyword">struct </span>_rtdm_getsockaddr_args args = { name, namelen };
 <a name="l00430"></a>00430 
-<a name="l00431"></a>00431 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__userapi.html#gacf4718e173241ee16a2d01e2a9b4fb94" title="Shut down parts of a connection.">rt_dev_shutdown</a>(<span class="keywordtype">int</span> fd, <span class="keywordtype">int</span> how)
-<a name="l00432"></a>00432 {
-<a name="l00433"></a>00433         <span class="keywordflow">return</span> rt_dev_ioctl(fd, _RTIOC_SHUTDOWN, how);
-<a name="l00434"></a>00434 }
-<a name="l00435"></a>00435 
-<a name="l00436"></a>00436 <span class="preprocessor">#ifdef __cplusplus</span>
-<a name="l00437"></a>00437 <span class="preprocessor"></span>}
-<a name="l00438"></a>00438 <span class="preprocessor">#endif</span>
-<a name="l00439"></a>00439 <span class="preprocessor"></span>
-<a name="l00440"></a>00440 <span class="preprocessor">#endif </span><span class="comment">/* RTDM_NO_DEFAULT_USER_API */</span>
-<a name="l00441"></a>00441 
-<a name="l00442"></a>00442 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_H */</span>
+<a name="l00431"></a>00431         <span class="keywordflow">return</span> <a class="code" href="group__userapi.html#ga72b69315a44f235b05627a0c257c01f4" title="Issue an IOCTL.">rt_dev_ioctl</a>(fd, _RTIOC_GETPEERNAME, &amp;args);
+<a name="l00432"></a>00432 }
+<a name="l00433"></a>00433 
+<a name="l00434"></a>00434 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__userapi.html#gacf4718e173241ee16a2d01e2a9b4fb94" title="Shut down parts of a connection.">rt_dev_shutdown</a>(<span class="keywordtype">int</span> fd, <span class="keywordtype">int</span> how)
+<a name="l00435"></a>00435 {
+<a name="l00436"></a>00436         <span class="keywordflow">return</span> <a class="code" href="group__userapi.html#ga72b69315a44f235b05627a0c257c01f4" title="Issue an IOCTL.">rt_dev_ioctl</a>(fd, _RTIOC_SHUTDOWN, how);
+<a name="l00437"></a>00437 }
+<a name="l00438"></a>00438 
+<a name="l00439"></a>00439 <span class="preprocessor">#ifdef __cplusplus</span>
+<a name="l00440"></a>00440 <span class="preprocessor"></span>}
+<a name="l00441"></a>00441 <span class="preprocessor">#endif</span>
+<a name="l00442"></a>00442 <span class="preprocessor"></span>
+<a name="l00443"></a>00443 <span class="preprocessor">#endif </span><span class="comment">/* RTDM_NO_DEFAULT_USER_API */</span>
+<a name="l00444"></a>00444 
+<a name="l00445"></a>00445 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_H */</span>
 </pre></div></div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Wed Nov 2 2011 18:01:06 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Thu Jan 5 2012 10:14:29 for Xenomai by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

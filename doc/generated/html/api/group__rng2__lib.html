@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>Xenomai API: Range / conversion API</title>
+<title>Xenomai: Range / conversion API</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -435,7 +435,6 @@ Functions</h2></td></tr>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>chan</em>&nbsp;</td><td>Channel descriptor </td></tr>
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>rng</em>&nbsp;</td><td>Range descriptor </td></tr>
     <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>dst</em>&nbsp;</td><td>Ouput buffer </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>src</em>&nbsp;</td><td>Input buffer </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>cnt</em>&nbsp;</td><td>Count of transfer to copy</td></tr>
@@ -444,7 +443,7 @@ Functions</h2></td></tr>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>the count of copy performed, otherwise a negative error code:</dd></dl>
 <ul>
-<li>-EINVAL is returned if some argument is missing or wrong; chan, rng and the pointers should be checked; check also the kernel log ("dmesg"); WARNING: <a class="el" href="group__descriptor1__lib.html#ga4899cdf9b31aa0cbe0d95bf3c2f2f981" title="Fill the descriptor with subdevices, channels and ranges data.">a4l_fill_desc()</a> should be called before using <a class="el" href="group__rng2__lib.html#ga8bdf03857c96f739e43a699c0ee8b777" title="Pack unsigned long values into raw data (for the driver).">a4l_ultoraw()</a> </li>
+<li>-EINVAL is returned if some argument is missing or wrong; chan, dst and src pointers should be checked; check also the kernel log ("dmesg"); WARNING: <a class="el" href="group__descriptor1__lib.html#ga4899cdf9b31aa0cbe0d95bf3c2f2f981" title="Fill the descriptor with subdevices, channels and ranges data.">a4l_fill_desc()</a> should be called before using <a class="el" href="group__rng2__lib.html#ga8bdf03857c96f739e43a699c0ee8b777" title="Pack unsigned long values into raw data (for the driver).">a4l_ultoraw()</a> </li>
 </ul>
 
 <p>References <a class="el" href="group__rng2__lib.html#gae9709df63a769dc56c1014a90c7a6c64">a4l_sizeof_chan()</a>.</p>
@@ -561,7 +560,6 @@ Functions</h2></td></tr>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>chan</em>&nbsp;</td><td>Channel descriptor </td></tr>
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>rng</em>&nbsp;</td><td>Range descriptor </td></tr>
     <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>dst</em>&nbsp;</td><td>Ouput buffer </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>src</em>&nbsp;</td><td>Input buffer </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>cnt</em>&nbsp;</td><td>Count of transfer to copy</td></tr>
@@ -570,7 +568,7 @@ Functions</h2></td></tr>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>the count of copy performed, otherwise a negative error code:</dd></dl>
 <ul>
-<li>-EINVAL is returned if some argument is missing or wrong; chan, rng and the pointers should be checked; check also the kernel log ("dmesg"); WARNING: <a class="el" href="group__descriptor1__lib.html#ga4899cdf9b31aa0cbe0d95bf3c2f2f981" title="Fill the descriptor with subdevices, channels and ranges data.">a4l_fill_desc()</a> should be called before using <a class="el" href="group__rng2__lib.html#ga8bdf03857c96f739e43a699c0ee8b777" title="Pack unsigned long values into raw data (for the driver).">a4l_ultoraw()</a> </li>
+<li>-EINVAL is returned if some argument is missing or wrong; chan, dst and src pointers should be checked; check also the kernel log ("dmesg"); WARNING: <a class="el" href="group__descriptor1__lib.html#ga4899cdf9b31aa0cbe0d95bf3c2f2f981" title="Fill the descriptor with subdevices, channels and ranges data.">a4l_fill_desc()</a> should be called before using <a class="el" href="group__rng2__lib.html#ga8bdf03857c96f739e43a699c0ee8b777" title="Pack unsigned long values into raw data (for the driver).">a4l_ultoraw()</a> </li>
 </ul>
 
 <p>References <a class="el" href="group__rng2__lib.html#gae9709df63a769dc56c1014a90c7a6c64">a4l_sizeof_chan()</a>.</p>
@@ -578,7 +576,7 @@ Functions</h2></td></tr>
 </div>
 </div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Wed Nov 2 2011 18:01:10 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Thu Jan 5 2012 10:14:30 for Xenomai by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

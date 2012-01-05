@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>Xenomai API: Device Registration Services</title>
+<title>Xenomai: Device Registration Services</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -56,14 +56,14 @@ Modules</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html">Synchronisation Services</a></td></tr>
 <tr><td colspan="2"><h2><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">static void *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga765ab311ea9024a7ff210e963acd7a14">rtdm_context_to_private</a> (struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context)</td></tr>
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Locate the driver private area associated to a device context structure.  <a href="#ga765ab311ea9024a7ff210e963acd7a14"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">static struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#gacc982b978fc3967b0e9d6d308f79c6ee">rtdm_private_to_context</a> (void *dev_private)</td></tr>
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Locate a device context structure from its driver private area.  <a href="#gacc982b978fc3967b0e9d6d308f79c6ee"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga6a191b3d206680c48cad2047adb9fc98">rtdm_dev_register</a> (struct <a class="el" href="structrtdm__device.html">rtdm_device</a> *device)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Register a RTDM device.  <a href="#ga6a191b3d206680c48cad2047adb9fc98"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga9cc04a9b6e1710d9ad3860de8d81bf14">rtdm_dev_unregister</a> (struct <a class="el" href="structrtdm__device.html">rtdm_device</a> *device, unsigned int poll_delay)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unregisters a RTDM device.  <a href="#ga9cc04a9b6e1710d9ad3860de8d81bf14"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">static void *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#ga765ab311ea9024a7ff210e963acd7a14">rtdm_context_to_private</a> (struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Locate the driver private area associated to a device context structure.  <a href="#ga765ab311ea9024a7ff210e963acd7a14"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">static struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__devregister.html#gacc982b978fc3967b0e9d6d308f79c6ee">rtdm_private_to_context</a> (void *dev_private)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Locate a device context structure from its driver private area.  <a href="#gacc982b978fc3967b0e9d6d308f79c6ee"></a><br/></td></tr>
 <tr><td colspan="2"><h2><a name="member-group"></a>
 Operation Handler Prototypes</h2></td></tr>
 <tr><td colspan="2"><p><a class="anchor" id="amgrp606463ab19d2c973586ec9a2f23a1186"></a> </p>
@@ -256,7 +256,7 @@ Driver Versioning</h2></td></tr>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>0 on success. On failure return either -ENOSYS, to request that this handler be called again from the opposite realtime/non-realtime context, -EAGAIN to request a recall after a grace period, or a valid negative error code according to IEEE Std 1003.1.</dd></dl>
 <dl class="note"><dt><b>Note:</b></dt><dd>Drivers must be prepared for that case that the close handler is invoked more than once per open context (even if the handler already completed an earlier run successfully). The driver has to avoid releasing resources twice as well as returning false errors on successive close invocations.</dd></dl>
-<dl class="see"><dt><b>See also:</b></dt><dd><code><a class="el" href="group__posix__shm.html#gaafbcde67669a1b96577e735ddebd8634" title="Close a file descriptor.">close()</a></code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
+<dl class="see"><dt><b>See also:</b></dt><dd><code>close()</code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
 
 </div>
 </div>
@@ -621,7 +621,7 @@ Driver Versioning</h2></td></tr>
 </div>
 </div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Wed Nov 2 2011 18:01:10 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Thu Jan 5 2012 10:14:30 for Xenomai by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

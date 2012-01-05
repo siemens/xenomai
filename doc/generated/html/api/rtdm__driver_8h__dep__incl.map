@@ -1,0 +1,8 @@
+<map id="G" name="G">
+<area shape="rect" id="node3" href="$drvlib_8c.html" title="Real&#45;Time Driver Model for Xenomai, driver library." alt="" coords="5,83,192,112"/>
+<area shape="rect" id="node5" href="$kernel_2cobalt_2rtdm_2internal_8h_source.html" title="kernel/cobalt/rtdm/internal.h" alt="" coords="216,83,419,112"/>
+<area shape="rect" id="node13" href="$syscall_8c.html" title="This file is part of the Xenomai project." alt="" coords="443,83,603,112"/>
+<area shape="rect" id="node7" href="$core_8c.html" title="Real&#45;Time Driver Model for Xenomai, device operation multiplexing." alt="" coords="15,160,196,189"/>
+<area shape="rect" id="node9" href="$cobalt_2rtdm_2device_8c.html" title="Real&#45;Time Driver Model for Xenomai, device management." alt="" coords="220,160,415,189"/>
+<area shape="rect" id="node11" href="$rtdm_2module_8c.html" title="Real&#45;Time Driver Model for Xenomai." alt="" coords="439,160,641,189"/>
+</map>

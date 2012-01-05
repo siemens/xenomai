@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>Xenomai API: Data Fields</title>
+<title>Xenomai: Data Fields</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen.css" rel="stylesheet" type="text/css"/>
 </head>
@@ -38,10 +38,10 @@
   </div>
   <div class="tabs3">
     <ul class="tablist">
-      <li><a href="globals_func.html#index_a"><span>a</span></a></li>
+      <li><a href="globals_func.html#index__"><span>_</span></a></li>
+      <li><a href="globals_func_0x61.html#index_a"><span>a</span></a></li>
       <li><a href="globals_func_0x62.html#index_b"><span>b</span></a></li>
       <li><a href="globals_func_0x63.html#index_c"><span>c</span></a></li>
-      <li><a href="globals_func_0x65.html#index_e"><span>e</span></a></li>
       <li><a href="globals_func_0x67.html#index_g"><span>g</span></a></li>
       <li><a href="globals_func_0x72.html#index_r"><span>r</span></a></li>
       <li><a href="globals_func_0x73.html#index_s"><span>s</span></a></li>
@@ -89,6 +89,9 @@
 <li>xnbufd_unmap_uwrite()
 : <a class="el" href="group__bufd.html#ga018218c68a27436fc90b1d5486ab1c71">bufd.h</a>
 </li>
+<li>xnclock_adjust()
+: <a class="el" href="group__clock.html#ga1e6422c2edf8f452457afaafcde03201">clock.h</a>
+</li>
 <li>xnheap_alloc()
 : <a class="el" href="group__heap.html#gaaa8ae99881c9e6a4f8b56aa79f983bdb">heap.c</a>
 </li>
@@ -126,10 +129,10 @@
 : <a class="el" href="group__intr.html#ga83769b98f398774590e57ad8664925aa">intr.c</a>
 </li>
 <li>xnintr_disable()
-: <a class="el" href="group__intr.html#ga05570451a808b44216140e00b0eae713">intr.c</a>
+: <a class="el" href="group__intr.html#gaea2bd2546819eb188439d981fd55fee9">intr.c</a>
 </li>
 <li>xnintr_enable()
-: <a class="el" href="group__intr.html#ga083e000abd434e4d0fca8f6b6bbd49de">intr.c</a>
+: <a class="el" href="group__intr.html#ga27acf9b043df6c7f10e53f349251f584">intr.c</a>
 </li>
 <li>xnintr_init()
 : <a class="el" href="group__intr.html#ga6017e33c5871d313b4de053d938dd95b">intr.c</a>
@@ -170,6 +173,9 @@
 <li>xnpod_enable_timesource()
 : <a class="el" href="group__pod.html#ga10d3c13efa3ab06ac23017710b13314e">pod.h</a>
 </li>
+<li>xnpod_handle_exception()
+: <a class="el" href="group__pod.html#gaceabb0032b9c8ffcfc3bf3ff53ae0c76">pod.h</a>
+</li>
 <li>xnpod_init()
 : <a class="el" href="group__pod.html#ga167bb3b4251ac8b8a3e7f358d236908a">pod.h</a>
 </li>
@@ -182,9 +188,6 @@
 <li>xnpod_remove_hook()
 : <a class="el" href="group__pod.html#gace800481d23255eebe45f969e9434adf">pod.h</a>
 </li>
-<li>xnpod_restart_thread()
-: <a class="el" href="group__pod.html#ga61624578d0f1979f1ca6a5e9e49a74a3">pod.h</a>
-</li>
 <li>xnpod_resume_thread()
 : <a class="el" href="group__pod.html#gac3a7bf9e973782a8cfd6495a1786e812">pod.h</a>
 </li>
@@ -195,7 +198,7 @@
 : <a class="el" href="group__pod.html#ga629c06b152dabfdb679b6e49bd9f7734">pod.h</a>
 </li>
 <li>xnpod_set_thread_periodic()
-: <a class="el" href="group__pod.html#gaed5776a428e7c59b52b1da76f0d765fa">pod.h</a>
+: <a class="el" href="group__pod.html#ga1d9aa43e61e6e0b28675412e4cfcc6b0">pod.h</a>
 </li>
 <li>xnpod_set_thread_schedparam()
 : <a class="el" href="group__pod.html#ga6d535ef9821e98fd7f257b50a3c8d595">pod.h</a>
@@ -214,9 +217,6 @@
 </li>
 <li>xnpod_suspend_thread()
 : <a class="el" href="group__pod.html#ga767221cf87c198c5dc071e9f597dcb3a">pod.h</a>
-</li>
-<li>xnpod_trap_fault()
-: <a class="el" href="group__pod.html#gaf95cac21ec23e44282461905dd3fc153">pod.c</a>
 </li>
 <li>xnpod_unblock_thread()
 : <a class="el" href="group__pod.html#gae5f0d19e7a499b9b262f68a43ab545dd">pod.h</a>
@@ -259,31 +259,34 @@
 : <a class="el" href="group__sched.html#ga4cb702f4a99401c3c1c73811f55e990f">sched.h</a>
 </li>
 <li>xnselect()
-: <a class="el" href="group__select.html#ga4af23e0a42dbc61a04be36d5739a165f">select.c</a>
+: <a class="el" href="group__select.html#ga4af23e0a42dbc61a04be36d5739a165f">select.h</a>
 </li>
 <li>xnselect_bind()
-: <a class="el" href="group__select.html#ga8546a4a6f997a8c29451673d5b7f0e86">select.c</a>
+: <a class="el" href="group__select.html#ga8546a4a6f997a8c29451673d5b7f0e86">select.h</a>
 </li>
 <li>xnselect_destroy()
-: <a class="el" href="group__select.html#ga56e4b5bf3e35dd80c23e95cad8fa1614">select.c</a>
+: <a class="el" href="group__select.html#ga56e4b5bf3e35dd80c23e95cad8fa1614">select.h</a>
 </li>
 <li>xnselect_init()
-: <a class="el" href="group__select.html#ga80b33cc02e860dc6ffbd08e8da376e5b">select.c</a>
+: <a class="el" href="group__select.html#ga80b33cc02e860dc6ffbd08e8da376e5b">select.h</a>
+</li>
+<li>xnselect_signal()
+: <a class="el" href="group__select.html#ga5c52efed417210c06bd9f108bfdffed2">select.h</a>
 </li>
 <li>xnselector_destroy()
-: <a class="el" href="group__select.html#ga9f4741ca8d6794f1b45478a24b1104de">select.c</a>
+: <a class="el" href="group__select.html#ga9f4741ca8d6794f1b45478a24b1104de">select.h</a>
 </li>
 <li>xnselector_init()
-: <a class="el" href="group__select.html#gaf5576af13d5ffd6056311c2746a706a0">select.c</a>
+: <a class="el" href="group__select.html#gaf5576af13d5ffd6056311c2746a706a0">select.h</a>
 </li>
 <li>xnshadow_harden()
 : <a class="el" href="group__shadow.html#ga5f631762c7381866d70177afb2ba123b">shadow.c</a>
 </li>
 <li>xnshadow_map()
-: <a class="el" href="group__shadow.html#ga7204facd253dcde78c214e107e2ceafa">shadow.c</a>
+: <a class="el" href="group__shadow.html#ga44dd0d4f99bf2717a0d3f7d95838575c">shadow.c</a>
 </li>
 <li>xnshadow_ppd_get()
-: <a class="el" href="group__shadow.html#ga14c8b586498491f886d7b5335f92c3b1">shadow.c</a>
+: <a class="el" href="group__shadow.html#gac5016a7e4ae5f2f61f0cbc450a93e670">shadow.c</a>
 </li>
 <li>xnshadow_relax()
 : <a class="el" href="group__shadow.html#ga8de86a334ac2c5aeeebccf88fcee03ab">shadow.c</a>
@@ -306,9 +309,6 @@
 <li>xnsynch_peek_pendq()
 : <a class="el" href="group__synch.html#gae02c775ea161a0c27b919d019d170bc2">synch.c</a>
 </li>
-<li>xnsynch_release()
-: <a class="el" href="group__synch.html#ga1208abb6b3d0017a4e0c43b9baff8cfb">synch.c</a>
-</li>
 <li>xnsynch_release_all_ownerships()
 : <a class="el" href="group__synch.html#ga51146a2d5bd0ec6a10d2fcd685946938">synch.c</a>
 </li>
@@ -324,39 +324,9 @@
 <li>xnsynch_wakeup_this_sleeper()
 : <a class="el" href="group__synch.html#ga9e530d12df9881251231af489208762e">synch.c</a>
 </li>
-<li>xntbase_adjust_time()
-: <a class="el" href="group__timebase.html#gad5b8cfb5270e9f8b73c167d1c7f7d1b2">timebase.h</a>
-</li>
-<li>xntbase_alloc()
-: <a class="el" href="group__timebase.html#gafcb0a76ac26eaaa768db89cb54e3f24a">timebase.h</a>
-</li>
-<li>xntbase_convert()
-: <a class="el" href="group__timebase.html#ga61ff1abcbe816dd7ce6be2e2c7f2e44b">timebase.h</a>
-</li>
-<li>xntbase_free()
-: <a class="el" href="group__timebase.html#gaf94b8dda1e4cc484c13cb004689a795e">timebase.h</a>
-</li>
-<li>xntbase_get_time()
-: <a class="el" href="group__timebase.html#ga5246b53b5b2d1b11d4fab4312fd16fda">timebase.h</a>
-</li>
-<li>xntbase_start()
-: <a class="el" href="group__timebase.html#gae596e43dbf89abb299aa29ae841ec8e0">timebase.h</a>
-</li>
-<li>xntbase_stop()
-: <a class="el" href="group__timebase.html#ga23ae261bf7e2eaa09f05c4c6069a41e1">timebase.h</a>
-</li>
-<li>xntbase_switch()
-: <a class="el" href="group__timebase.html#gadf44dc347a2b8cb921cbc9f4e2768320">timebase.h</a>
-</li>
-<li>xntbase_tick()
-: <a class="el" href="group__timebase.html#ga15896b6c498acdc5e2516ad0cc9df5ac">timebase.h</a>
-</li>
-<li>xntbase_update()
-: <a class="el" href="group__timebase.html#ga71112e6b362918b602e01d86d4c07654">timebase.h</a>
-</li>
 <li>xntimer_destroy()
-: <a class="el" href="group__timer.html#ga782e10b2cd24a5c303b316375940ca15">timer.h</a>
-, <a class="el" href="group__timer.html#ga782e10b2cd24a5c303b316375940ca15">timer.c</a>
+: <a class="el" href="group__timer.html#ga782e10b2cd24a5c303b316375940ca15">timer.c</a>
+, <a class="el" href="group__timer.html#ga782e10b2cd24a5c303b316375940ca15">timer.h</a>
 </li>
 <li>xntimer_freeze()
 : <a class="el" href="group__timer.html#ga5cad677279089ef19d3710b1b6452a71">timer.h</a>
@@ -369,28 +339,24 @@
 : <a class="el" href="group__timer.html#gab0d00a02bf04fdd48987d5d4efa68190">timer.h</a>
 </li>
 <li>xntimer_get_overruns()
-: <a class="el" href="group__timer.html#ga5609dd2602efe2c5b04eda28b22b9720">timer.c</a>
-, <a class="el" href="group__timer.html#ga5609dd2602efe2c5b04eda28b22b9720">timer.h</a>
+: <a class="el" href="group__timer.html#ga5609dd2602efe2c5b04eda28b22b9720">timer.h</a>
+, <a class="el" href="group__timer.html#ga5609dd2602efe2c5b04eda28b22b9720">timer.c</a>
 </li>
 <li>xntimer_get_timeout()
 : <a class="el" href="group__timer.html#ga00d603a038b09e436717b84975b00abf">timer.h</a>
 </li>
 <li>xntimer_init()
-: <a class="el" href="group__timer.html#ga834e46fb4c1ecaab949eea77b9dee284">timer.c</a>
+: <a class="el" href="group__timer.html#ga092f4a34fe661a9eb4fa060057c6a223">timer.c</a>
 </li>
 <li>xntimer_start()
-: <a class="el" href="group__timer.html#ga0ad3c70bed7fe1a45b45ee0875f031ab">timer.h</a>
+: <a class="el" href="group__timer.html#ga3e6bbea74e4fa1d64dbd6f38cbb39b73">timer.h</a>
 </li>
 <li>xntimer_stop()
 : <a class="el" href="group__timer.html#ga1244411df9784d63d3e2f99016d62643">timer.h</a>
 </li>
-<li>xntimer_tick_aperiodic()
-: <a class="el" href="group__timer.html#ga26727f15ac845719913dcb703bf0c3fa">timer.h</a>
-, <a class="el" href="group__timer.html#ga26727f15ac845719913dcb703bf0c3fa">timer.c</a>
-</li>
-<li>xntimer_tick_periodic()
-: <a class="el" href="group__timer.html#ga9b5391e752a8e16d89fb6a99c76bb7b1">timer.h</a>
-, <a class="el" href="group__timer.html#ga9b5391e752a8e16d89fb6a99c76bb7b1">timer.c</a>
+<li>xntimer_tick()
+: <a class="el" href="group__timer.html#gac0d06663b15475972061d88a5a2dbb8d">timer.h</a>
+, <a class="el" href="group__timer.html#gac0d06663b15475972061d88a5a2dbb8d">timer.c</a>
 </li>
 <li>xnvfile_destroy()
 : <a class="el" href="group__vfile.html#ga5429178db74b9dd23378cb8f0942629e">vfile.h</a>
@@ -418,7 +384,7 @@
 </li>
 </ul>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Wed Nov 2 2011 18:01:11 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Thu Jan 5 2012 10:14:30 for Xenomai by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>
