@@ -144,7 +144,7 @@ typedef struct xnthread_info {
 
 struct xnthread_user_window {
 	unsigned long state;
-	unsigned int granted : 1;
+	unsigned long grant_value;
 };
 
 #ifdef __KERNEL__

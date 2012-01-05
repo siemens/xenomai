@@ -198,7 +198,7 @@ static void cobalt_monitor_wakeup(struct cobalt_monitor *mon)
 		 * that ->wchan does match our sleep queue.
 		 */
 		if (bcast ||
-		    (p->u_window->granted && p->wchan == &tid->monitor_synch)) {
+		    (p->u_window->grant_value && p->wchan == &tid->monitor_synch)) {
 			xnsynch_wakeup_this_sleeper(&tid->monitor_synch,
 						    &p->plink);
 			removeq(&mon->waiters, &tid->monitor_link);
@@ -272,7 +272,7 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_monsh,
 	if (event & COBALT_MONITOR_WAITDRAIN)
 		synch = &mon->drain;
 	else {
-		cur->threadbase.u_window->granted = 0;
+		cur->threadbase.u_window->grant_value = 0;
 		appendq(&mon->waiters, &cur->monitor_link);
 		cur->monitor_queued = 1;
 	}

@@ -174,7 +174,7 @@ void cobalt_monitor_grant(cobalt_monitor_t *mon,
 	struct cobalt_monitor_data *datp = get_monitor_data(mon);
 
 	datp->flags |= COBALT_MONITOR_GRANTED;
-	u_window->granted = 1;
+	u_window->grant_value = 1;
 }
 
 int cobalt_monitor_grant_sync(cobalt_monitor_t *mon,
