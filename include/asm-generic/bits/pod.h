@@ -151,39 +151,8 @@ static inline void xnarch_release_ipi(void)
 	return ipipe_free_irq(&rthal_archdata.domain, IPIPE_SERVICE_IPI0);
 }
 
-static struct semaphore xnarch_finalize_sync;
-
-static void xnarch_finalize_cpu(unsigned irq)
-{
-	up(&xnarch_finalize_sync);
-}
-
 static inline void xnarch_notify_halt(void)
 {
-	xnarch_cpumask_t other_cpus = cpu_online_map;
-	int cpu, nr_cpus = num_online_cpus();
-	unsigned long flags;
-
-	sema_init(&xnarch_finalize_sync,0);
-
-	/* Here ipipe_current_domain is in fact root, since xnarch_notify_halt is
-	   called from xnpod_shutdown, itself called from Linux
-	   context. */
-
-	ipipe_request_irq(ipipe_current_domain, IPIPE_SERVICE_IPI2,
-			  (ipipe_irq_handler_t)xnarch_finalize_cpu,
-			  NULL, NULL);
-
-	flags = hard_local_irq_save();
-	cpu_clear(ipipe_processor_id(), other_cpus);
-	ipipe_send_ipi(IPIPE_SERVICE_IPI2, other_cpus);
-	hard_local_irq_restore(flags);
-
-	for(cpu=0; cpu < nr_cpus-1; ++cpu)
-		down(&xnarch_finalize_sync);
-
-	ipipe_free_irq(ipipe_current_domain, IPIPE_SERVICE_IPI2);
-
 	rthal_release_control();
 }
 
