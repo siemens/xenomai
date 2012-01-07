@@ -157,7 +157,7 @@ static void xnarch_switch_htick_mode(enum clock_event_mode mode, struct clock_ev
 static inline int xnarch_hook_ipi (void (*handler)(void))
 {
     return rthal_virtualize_irq(&rthal_domain,
-				RTHAL_SERVICE_IPI0,
+				RTHAL_RESCHEDULE_IPI,
 				(rthal_irq_handler_t) handler,
 				NULL,
 				NULL,
@@ -167,7 +167,7 @@ static inline int xnarch_hook_ipi (void (*handler)(void))
 static inline int xnarch_release_ipi (void)
 {
     return rthal_virtualize_irq(&rthal_domain,
-				RTHAL_SERVICE_IPI0,
+				RTHAL_RESCHEDULE_IPI,
 				NULL,
 				NULL,
 				NULL,

@@ -57,8 +57,17 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 
 #define RTHAL_TIMER_IRQ		IPIPE_TIMER_VIRQ
 #ifdef CONFIG_SMP
-#define RTHAL_TIMER_IPI		IPIPE_SERVICE_IPI3
+#define RTHAL_TIMER_IPI		RTHAL_HRTIMER_IPI
+#ifndef CONFIG_IPIPE_CORE
+/*
+ * RTHAL_HOST_TIMER_IPI is only needed with old kernels with no
+ * support for generic clock events. So either we have a legacy kernel
+ * with a legacy pipeline, or we are running over a recent pipeline
+ * core (i.e. >= linux kernel 3.1) therefore we do have generic clock
+ * events, which means we don't need the host timer IPI.
+ */
 #define RTHAL_HOST_TIMER_IPI	IPIPE_SERVICE_IPI4
+#endif
 #endif /* CONFIG_SMP */
 
 #define DECREMENTER_MAX		0x7fffffff
