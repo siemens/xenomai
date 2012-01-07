@@ -193,7 +193,11 @@ static inline void rthal_timer_program_shot (unsigned long delay)
 static inline struct mm_struct *rthal_get_active_mm(void)
 {
 #ifdef TIF_MMSWITCH_INT
+#ifdef CONFIG_IPIPE_CORE
+	return __this_cpu_read(ipipe_percpu.active_mm);
+#else
 	return per_cpu(ipipe_active_mm, smp_processor_id());
+#endif
 #else /* !TIF_MMSWITCH_INT */
 	return current->active_mm;
 #endif /* !TIF_MMSWITCH_INT */

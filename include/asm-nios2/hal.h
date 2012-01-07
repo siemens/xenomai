@@ -67,11 +67,7 @@ static inline void rthal_timer_program_shot(unsigned long delay)
 
 static inline struct mm_struct *rthal_get_active_mm(void)
 {
-#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
-	return per_cpu(ipipe_active_mm, ipipe_processor_id());
-#else
 	return current->active_mm;
-#endif
 }
 
 #ifdef CONFIG_XENO_OPT_TIMING_PERIODIC

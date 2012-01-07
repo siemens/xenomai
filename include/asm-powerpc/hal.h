@@ -104,10 +104,14 @@ static inline void rthal_timer_program_shot(unsigned long delay)
 static inline struct mm_struct *rthal_get_active_mm(void)
 {
 #ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
-	return per_cpu(ipipe_active_mm, smp_processor_id());
+#ifdef CONFIG_IPIPE_CORE
+	return __this_cpu_read(ipipe_percpu.active_mm);
 #else
-	return current->active_mm;
+	return per_cpu(ipipe_active_mm, smp_processor_id());
 #endif
+#else  /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
+	return current->active_mm;
+#endif  /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
 }
 
     /* Private interface -- Internal use only */
