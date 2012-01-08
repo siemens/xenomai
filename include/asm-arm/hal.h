@@ -152,7 +152,7 @@ static inline __attribute_const__ unsigned long ffnz (unsigned long ul)
 #endif /* RTHAL_TIMER_IRQ */
 
 #ifndef RTHAL_TIMER_IPI
-#define RTHAL_TIMER_IPI RTHAL_SERVICE_IPI3
+#define RTHAL_TIMER_IPI RTHAL_HRTIMER_IPI
 #endif /* RTHAL_TIMER_IPI */
 
 #ifdef __IPIPE_FEATURE_SYSINFO_V2
@@ -193,7 +193,11 @@ static inline void rthal_timer_program_shot (unsigned long delay)
 static inline struct mm_struct *rthal_get_active_mm(void)
 {
 #ifdef TIF_MMSWITCH_INT
+#ifdef CONFIG_IPIPE_CORE
+	return __this_cpu_read(ipipe_percpu.active_mm);
+#else
 	return per_cpu(ipipe_active_mm, smp_processor_id());
+#endif
 #else /* !TIF_MMSWITCH_INT */
 	return current->active_mm;
 #endif /* !TIF_MMSWITCH_INT */

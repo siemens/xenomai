@@ -157,7 +157,7 @@ static void xnarch_switch_htick_mode(enum clock_event_mode mode, struct clock_ev
 static inline int xnarch_hook_ipi (void (*handler)(void))
 {
     return rthal_virtualize_irq(&rthal_domain,
-				RTHAL_SERVICE_IPI0,
+				RTHAL_RESCHEDULE_IPI,
 				(rthal_irq_handler_t) handler,
 				NULL,
 				NULL,
@@ -167,54 +167,15 @@ static inline int xnarch_hook_ipi (void (*handler)(void))
 static inline int xnarch_release_ipi (void)
 {
     return rthal_virtualize_irq(&rthal_domain,
-				RTHAL_SERVICE_IPI0,
+				RTHAL_RESCHEDULE_IPI,
 				NULL,
 				NULL,
 				NULL,
 				IPIPE_PASS_MASK);
 }
 
-static struct semaphore xnarch_finalize_sync;
-
-static void xnarch_finalize_cpu(unsigned irq)
-{
-    up(&xnarch_finalize_sync);
-}
-
 static inline void xnarch_notify_halt(void)
 {
-    xnarch_cpumask_t other_cpus = cpu_online_map;
-    int cpu, nr_cpus = num_online_cpus();
-    unsigned long flags;
-
-    sema_init(&xnarch_finalize_sync,0);
-
-    /* Here rthal_current_domain is in fact root, since xnarch_notify_halt is
-       called from xnpod_shutdown, itself called from Linux
-       context. */
-
-    rthal_virtualize_irq(rthal_current_domain,
-			 RTHAL_SERVICE_IPI2,
-			 (rthal_irq_handler_t)xnarch_finalize_cpu,
-			 NULL,
-			 NULL,
-			 IPIPE_HANDLE_MASK);
-
-    rthal_local_irq_save_hw(flags);
-    cpu_clear(rthal_processor_id(), other_cpus);
-    rthal_send_ipi(RTHAL_SERVICE_IPI2, other_cpus);
-    rthal_local_irq_restore_hw(flags);
-
-    for(cpu=0; cpu < nr_cpus-1; ++cpu)
-	down(&xnarch_finalize_sync);
-
-    rthal_virtualize_irq(rthal_current_domain,
-			 RTHAL_SERVICE_IPI2,
-			 NULL,
-			 NULL,
-			 NULL,
-			 IPIPE_PASS_MASK);
-
     rthal_release_control();
 }
 

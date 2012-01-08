@@ -3,6 +3,7 @@ config XENO_OPT_NUCLEUS
 	tristate "Nucleus"
 	default y
 	select IPIPE_LEGACY if IPIPE_CORE
+	select XENO_OPT_PIPELINE_HEAD if IPIPE_CORE
 
 if XENO_OPT_NUCLEUS != n
 
@@ -14,10 +15,9 @@ config XENO_OPT_PERVASIVE
 
 	Enable pervasive real-time support for user-space Linux
 	processes, which is the default operating mode for
-	Xenomai. Switching this option out only leaves the
-	minimal support needed for running in-kernel
-	applications, which directly call the real-time APIs from
-	kernel modules.
+	Xenomai. Switching this option out only leaves the minimal
+	support needed for running in-kernel applications, which
+	directly call the real-time APIs from kernel modules.
 
 config XENO_OPT_PRIOCPL
 	depends on XENO_OPT_PERVASIVE
@@ -54,7 +54,7 @@ config XENO_OPT_PRIOCPL
 	If in doubt, say Y.
 
 config XENO_OPT_PIPELINE_HEAD
-	bool "Optimize as pipeline head"
+	bool "Optimize as pipeline head (DEPRECATED)"
 	default y
 	help
 
@@ -70,6 +70,9 @@ config XENO_OPT_PIPELINE_HEAD
 	optimizations, which some older patches might not provide. In
 	the latter case, this option will simply have no effect. If in
 	doubt, say 'Y' here.
+
+	NOTE: this feature is forced in when running over the pipeline
+	core series.
 
 config XENO_OPT_SCHED_CLASSES
 	bool "Extra scheduling classes"

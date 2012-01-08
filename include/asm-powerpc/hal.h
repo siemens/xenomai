@@ -57,8 +57,17 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 
 #define RTHAL_TIMER_IRQ		IPIPE_TIMER_VIRQ
 #ifdef CONFIG_SMP
-#define RTHAL_TIMER_IPI		IPIPE_SERVICE_IPI3
+#define RTHAL_TIMER_IPI		RTHAL_HRTIMER_IPI
+#ifndef CONFIG_IPIPE_CORE
+/*
+ * RTHAL_HOST_TIMER_IPI is only needed with old kernels with no
+ * support for generic clock events. So either we have a legacy kernel
+ * with a legacy pipeline, or we are running over a recent pipeline
+ * core (i.e. >= linux kernel 3.1) therefore we do have generic clock
+ * events, which means we don't need the host timer IPI.
+ */
 #define RTHAL_HOST_TIMER_IPI	IPIPE_SERVICE_IPI4
+#endif
 #endif /* CONFIG_SMP */
 
 #define DECREMENTER_MAX		0x7fffffff
@@ -95,10 +104,14 @@ static inline void rthal_timer_program_shot(unsigned long delay)
 static inline struct mm_struct *rthal_get_active_mm(void)
 {
 #ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
-	return per_cpu(ipipe_active_mm, smp_processor_id());
+#ifdef CONFIG_IPIPE_CORE
+	return __this_cpu_read(ipipe_percpu.active_mm);
 #else
-	return current->active_mm;
+	return per_cpu(ipipe_active_mm, smp_processor_id());
 #endif
+#else  /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
+	return current->active_mm;
+#endif  /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
 }
 
     /* Private interface -- Internal use only */
