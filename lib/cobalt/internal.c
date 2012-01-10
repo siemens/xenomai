@@ -19,6 +19,7 @@
 #include <sys/types.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <signal.h>
 #include <errno.h>
 #include <pthread.h>
 #include <nucleus/synch.h>
