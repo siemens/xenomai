@@ -266,7 +266,7 @@ unsigned long rthal_timer_calibrate(void)
 
 	dt = rthal_rdtsc() - t;
 
-	flags = hard_local_irq_restore();
+	hard_local_irq_restore(flags);
 
 	/*
 	 * Reset the max trace, since it contains the calibration time

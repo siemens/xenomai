@@ -976,19 +976,20 @@ static inline int format_irq_proc(unsigned int irq,
 		return 0;
 	}
 
-	if (irq >= IPIPE_SERVICE_IPI0 && irq <= IPIPE_SERVICE_IPI3) {
-		xnvfile_printf(it, "         [IPI%d]", irq - IPIPE_SERVICE_IPI0);
-		return 0;
-	}
+	switch (irq) {
 #ifdef CONFIG_SMP
-	else if (irq == IPIPE_CRITICAL_IPI) {
-		xnvfile_puts(it, "         [critical sync]");
+	case IPIPE_RESCHEDULE_IPI:
+		xnvfile_puts(it, "         [reschedule]");
 		return 0;
-	}
+	case IPIPE_CRITICAL_IPI:
+		xnvfile_puts(it, "         [sync]");
+		return 0;
 #endif /* CONFIG_SMP */
-	else if (ipipe_virtual_irq_p(irq)) {
-		xnvfile_puts(it, "         [virtual]");
-		return 0;
+	default:
+		if (ipipe_virtual_irq_p(irq)) {
+			xnvfile_puts(it, "         [virtual]");
+			return 0;
+		}
 	}
 
 	xnlock_get_irqsave(&intrlock, s);

@@ -318,7 +318,7 @@ static inline void xnlock_put_irqrestore(struct xnlock *lock, spl_t flags)
 static inline void xnarch_send_ipi(xnarch_cpumask_t cpumask)
 {
 #ifdef CONFIG_SMP
-	ipipe_send_ipi(IPIPE_SERVICE_IPI0, cpumask);
+	ipipe_send_ipi(IPIPE_RESCHEDULE_IPI, cpumask);
 #endif /* CONFIG_SMP */
 }
 

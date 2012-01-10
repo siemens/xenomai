@@ -141,14 +141,14 @@ static void xnarch_switch_htick_mode(enum clock_event_mode mode, struct clock_ev
 
 static inline int xnarch_hook_ipi(void (*handler)(void))
 {
-	return ipipe_request_irq(&rthal_archdata.domain, IPIPE_SERVICE_IPI0,
+	return ipipe_request_irq(&rthal_archdata.domain, IPIPE_RESCHEDULE_IPI,
 				 (ipipe_irq_handler_t) handler,
 				 NULL, NULL);
 }
 
 static inline void xnarch_release_ipi(void)
 {
-	return ipipe_free_irq(&rthal_archdata.domain, IPIPE_SERVICE_IPI0);
+	return ipipe_free_irq(&rthal_archdata.domain, IPIPE_RESCHEDULE_IPI);
 }
 
 static inline void xnarch_notify_halt(void)

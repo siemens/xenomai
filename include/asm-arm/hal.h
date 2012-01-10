@@ -149,7 +149,7 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 #endif /* RTHAL_TIMER_IRQ */
 
 #ifndef RTHAL_TIMER_IPI
-#define RTHAL_TIMER_IPI IPIPE_SERVICE_IPI3
+#define RTHAL_TIMER_IPI IPIPE_HRTIMER_IPI
 #endif /* RTHAL_TIMER_IPI */
 
 #define RTHAL_TSC_INFO(p)	((p)->arch_tsc)

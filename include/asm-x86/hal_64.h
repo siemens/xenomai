@@ -49,8 +49,8 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 #include <asm/xenomai/atomic.h>
 #include <asm/xenomai/smi.h>
 
-#define RTHAL_APIC_TIMER_VECTOR		IPIPE_SERVICE_VECTOR3
-#define RTHAL_APIC_TIMER_IPI		IPIPE_SERVICE_IPI3
+#define RTHAL_APIC_TIMER_VECTOR		IPIPE_HRTIMER_VECTOR
+#define RTHAL_APIC_TIMER_IPI		IPIPE_HRTIMER_IPI
 #define RTHAL_APIC_ICOUNT		((RTHAL_TIMER_FREQ + HZ/2)/HZ)
 #define RTHAL_TIMER_IRQ			RTHAL_APIC_TIMER_IPI
 #define RTHAL_HOST_TICK_IRQ		ipipe_apic_vector_irq(LOCAL_TIMER_VECTOR)
