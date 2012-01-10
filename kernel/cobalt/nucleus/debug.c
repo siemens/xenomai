@@ -192,8 +192,7 @@ DEFINE_PRIVATE_XNLOCK(relax_lock);
 void xndebug_notify_relax(struct xnthread *thread, int reason)
 {
 	xnshadow_send_sig(thread, SIGSHADOW,
-			  sigshadow_int(SIGSHADOW_ACTION_BACKTRACE, reason),
-			  1);
+			  sigshadow_int(SIGSHADOW_ACTION_BACKTRACE, reason));
 }
 
 void xndebug_trace_relax(int nr, unsigned long __user *u_backtrace,

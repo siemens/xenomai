@@ -990,7 +990,7 @@ void xnsynch_detect_relaxed_owner(struct xnsynch *synch, struct xnthread *sleepe
 	    xnthread_test_state(synch->owner, XNRELAX)) {
 		xnthread_set_info(sleeper, XNSWREP);
 		xnshadow_send_sig(sleeper, SIGDEBUG,
-				  SIGDEBUG_MIGRATE_PRIOINV, 1);
+				  SIGDEBUG_MIGRATE_PRIOINV);
 	} else
 		xnthread_clear_info(sleeper,  XNSWREP);
 }
