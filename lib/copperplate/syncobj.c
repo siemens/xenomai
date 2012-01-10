@@ -319,7 +319,7 @@ static inline void enqueue_waiter(struct syncobj *sobj,
 	struct threadobj *__thobj;
 
 	thobj->wait_prio = threadobj_get_priority(thobj);
-	if ((sobj->flags & SYNCOBJ_PRIO) == 0 || list_empty(&sobj->grant_list)) {
+	if (list_empty(&sobj->grant_list) || (sobj->flags & SYNCOBJ_PRIO) == 0) {
 		list_append(&thobj->wait_link, &sobj->grant_list);
 		return;
 	}
