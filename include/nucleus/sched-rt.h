@@ -87,7 +87,7 @@ static inline void __xnsched_rt_setparam(struct xnthread *thread,
 {
 	thread->cprio = p->rt.prio;
 	if (xnthread_test_state(thread, XNSHADOW)) {
-		if (thread->cprio)
+		if (thread->bprio || !xnthread_test_state(thread, XNBOOST))
 			xnthread_clear_state(thread, XNOTHER);
 		else
 			xnthread_set_state(thread, XNOTHER);
