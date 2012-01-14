@@ -11,13 +11,18 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <errno.h>
 #include <stdarg.h>
+
+#include <unistd.h>
+#include <signal.h>
 #include <sys/mman.h>
 #include <pthread.h>
-#include <native/timer.h>
+#ifndef __UCLIBC__
+#include <execinfo.h>
+#endif /* !__UCLIBC__ */
 
+#include <native/timer.h>
 #ifndef XENO_POSIX
 #include <native/task.h>
 #include <native/mutex.h>
@@ -53,6 +58,32 @@ typedef RT_MUTEX mutex_t;
 typedef RT_TASK thread_t;
 typedef RT_COND cond_t;
 #endif /* __NATIVE_SKIN__ */
+
+static const char *reason_str[] = {
+	[SIGDEBUG_UNDEFINED] = "undefined",
+	[SIGDEBUG_MIGRATE_SIGNAL] = "received signal",
+	[SIGDEBUG_MIGRATE_SYSCALL] = "invoked syscall",
+	[SIGDEBUG_MIGRATE_FAULT] = "triggered fault",
+	[SIGDEBUG_MIGRATE_PRIOINV] = "affected by priority inversion",
+	[SIGDEBUG_NOMLOCK] = "missing mlockall",
+	[SIGDEBUG_WATCHDOG] = "runaway thread",
+};
+
+void sigdebug(int sig, siginfo_t *si, void *context)
+{
+	unsigned int reason = si->si_value.sival_int;
+	void *bt[32];
+	int nentries;
+
+	printf("\nSIGDEBUG received, reason %d: %s\n", reason,
+	       reason <= SIGDEBUG_WATCHDOG ? reason_str[reason] : "<unknown>");
+#ifndef __UCLIBC__
+	/* Dump a backtrace of the frame which caused the switch to
+	   secondary mode: */
+	nentries = backtrace(bt,sizeof(bt) / sizeof(bt[0]));
+	backtrace_symbols_fd(bt,nentries,fileno(stdout));
+#endif /* !__UCLIBC__ */
+}
 
 void timespec_add(struct timespec *ts, unsigned long long value)
 {
@@ -270,8 +301,11 @@ int dispatch(const char *service_name,
 #ifdef XENO_POSIX
 		thread = va_arg(ap, pthread_t *);
 		pthread_attr_init(&threadattr);
-		pthread_attr_setschedpolicy(&threadattr, SCHED_FIFO);
 		param.sched_priority = va_arg(ap, int);
+		if (param.sched_priority)
+			pthread_attr_setschedpolicy(&threadattr, SCHED_FIFO);
+		else
+			pthread_attr_setschedpolicy(&threadattr, SCHED_OTHER);
 		pthread_attr_setschedparam(&threadattr, &param);
 		pthread_attr_setinheritsched(&threadattr,
 					     PTHREAD_EXPLICIT_SCHED);
@@ -791,6 +825,39 @@ void recursive_condwait(void)
 	dispatch("rec_condwait join", THREAD_JOIN, 1, 0, &cond_signaler_tid);
 }
 
+void nrt_lock(void *cookie)
+{
+	mutex_t *mutex = (mutex_t *)cookie;
+
+	check_current_mode(0);
+	check_current_prio(0);
+	dispatch("auto_switchback mutex_lock 1", MUTEX_LOCK, 1, 0, mutex);
+	check_current_mode(1);
+	ms_sleep(11);
+	check_current_prio(2);
+	dispatch("auto_switchback mutex_unlock 1", MUTEX_UNLOCK, 1, 0, mutex);
+	check_current_mode(0);
+}
+
+void auto_switchback(void)
+{
+	thread_t nrt_lock_tid;
+	mutex_t mutex;
+
+	fprintf(stderr, "auto_switchback\n");
+
+	dispatch("auto_switchback mutex_init", MUTEX_CREATE, 1, 0, &mutex, 1,
+		 PTHREAD_MUTEX_RECURSIVE);
+	dispatch("auto_switchback nrt thread_create", THREAD_CREATE, 1, 0,
+		 &nrt_lock_tid, 0, nrt_lock, &mutex);
+	ms_sleep(11);
+	dispatch("auto_switchback mutex_lock 2", MUTEX_LOCK, 1, 0, &mutex);
+	dispatch("auto_switchback mutex_unlock 2", MUTEX_UNLOCK, 1, 0, &mutex);
+
+	dispatch("auto_switchback join", THREAD_JOIN, 1, 0, &nrt_lock_tid);
+	dispatch("auto_switchback mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
+}
+
 int main(void)
 {
 #ifdef XENO_POSIX
@@ -798,8 +865,14 @@ int main(void)
 #else /* __NATIVE_SKIN__ */
 	RT_TASK main_tid;
 #endif /* __NATIVE_SKIN__ */
+	struct sigaction sa;
 
 	mlockall(MCL_CURRENT | MCL_FUTURE);
+
+	sigemptyset(&sa.sa_mask);
+	sa.sa_sigaction = sigdebug;
+	sa.sa_flags = SA_SIGINFO;
+	sigaction(SIGDEBUG, &sa, NULL);
 
 	/* Set scheduling parameters for the current process */
 #ifdef XENO_POSIX
@@ -820,6 +893,7 @@ int main(void)
 	deny_stealing();
 	simple_condwait();
 	recursive_condwait();
+	auto_switchback();
 	fprintf(stderr, "Test OK\n");
 	return 0;
 }
