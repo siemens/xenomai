@@ -2537,7 +2537,8 @@ int do_losyscall_event(unsigned event, rthal_pipeline_stage_t *stage,
 			   xnthread_get_rescnt(thread) == 0)
 			sysflags |= __xn_exec_switchback;
 	}
-	if (!sigs && (sysflags & __xn_exec_switchback) != 0 && switched)
+	if (!sigs && (sysflags & __xn_exec_switchback) != 0
+	    && (switched || xnpod_primary_p()))
 		xnshadow_relax(0, 0);
 
       ret_handled:
