@@ -10,6 +10,7 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include <sys/select.h>
+#include <time.h>
 
 #define CHILD_SCRIPT  0
 #define CHILD_CHECKED 1
@@ -46,6 +47,13 @@ static struct child script, load;
 void handle_checked_child(struct child *child, fd_set *fds);
 void handle_script_child(struct child *child, fd_set *fds);
 void handle_load_child(struct child *child, fd_set *fds);
+
+static inline time_t mono_time(void)
+{
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	return ts.tv_sec;
+}
 
 int child_initv(struct child *child, int type, char *argv[])
 {
@@ -302,7 +310,7 @@ void cleanup(void)
 void termsig(int sig)
 {
 	sigexit = sig;
-	sigexit_start = time(NULL);
+	sigexit_start = mono_time();
 	children_kill(CHILD_ANY, SIGTERM);
 	signal(sig, SIG_DFL);
 }
@@ -335,7 +343,7 @@ void copy(int from, int to)
 
 void handle_checked_child(struct child *child, fd_set *fds)
 {
-	time_t now = time(NULL);
+	time_t now = mono_time();
 
 	if (FD_ISSET(child->out, fds)) {
 		copy(child->out, STDOUT_FILENO);
@@ -445,7 +453,7 @@ void handle_load_child(struct child *child, fd_set *fds)
 		copy(child->out, STDOUT_FILENO);
 
 	if (child->dead) {
-		time_t now = time(NULL);
+		time_t now = mono_time();
 
 		if (!termload_start) {
 			if (sigexit) {
@@ -506,6 +514,7 @@ void setpath(void)
 		snprintf(path, path_len, TESTDIR);
 
 	setenv("PATH", path, 1);
+	free(path);
 }
 
 int main(int argc, char *argv[])
@@ -612,7 +621,7 @@ int main(int argc, char *argv[])
 			child->handle(child, &in);
 		}
 
-		if (sigexit_start && time(NULL) >= sigexit_start + 30) {
+		if (sigexit_start && mono_time() >= sigexit_start + 30) {
 			fail_fprintf(stderr, "timeout waiting for all "
 				     "children, sending SIGKILL\n");
 			children_kill(CHILD_ANY, SIGKILL);
