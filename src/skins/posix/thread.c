@@ -175,6 +175,8 @@ static void *__pthread_trampoline(void *arg)
 	policy = iargs->policy;
 	parent_prio = iargs->parent_prio;
 
+	__real_pthread_setschedparam(pthread_self(), policy, &param);
+
 	/* Do _not_ inline the call to pthread_self() in the syscall
 	   macro: this trashes the syscall regs on some archs. */
 	err = XENOMAI_SKINCALL4(__pse51_muxid, __pse51_thread_create, tid,
