@@ -603,10 +603,15 @@ static int __sem_open(struct pt_regs *regs)
 	union __xeno_sem *sm;
 	pse51_assoc_t *assoc;
 	unsigned long uaddr;
+	pse51_queues_t *q;
 	pse51_usem_t *usm;
 	int oflags, err;
 	long len;
 	spl_t s;
+
+	q = pse51_queues();
+	if (!q)
+		return -EPERM;
 
 	if (__xn_safe_copy_from_user(&uaddr,
 				     (void __user *)__xn_reg_arg1(regs), sizeof(uaddr)))
@@ -637,8 +642,7 @@ static int __sem_open(struct pt_regs *regs)
 		return -thread_get_errno();
 
 	xnlock_get_irqsave(&pse51_assoc_lock, s);
-	assoc = pse51_assoc_lookup(&pse51_queues()->usems,
-				   (u_long)sm->shadow_sem.sem);
+	assoc = pse51_assoc_lookup(&q->usems, (u_long)sm->shadow_sem.sem);
 
 	if (assoc) {
 		usm = assoc2usem(assoc);
@@ -660,10 +664,7 @@ static int __sem_open(struct pt_regs *regs)
 	usm->refcnt = 1;
 
 	xnlock_get_irqsave(&pse51_assoc_lock, s);
-	assoc =
-	    pse51_assoc_lookup(&pse51_queues()->usems,
-			       (u_long)sm->shadow_sem.sem);
-
+	assoc = pse51_assoc_lookup(&q->usems, (u_long)sm->shadow_sem.sem);
 	if (assoc) {
 		assoc2usem(assoc)->refcnt++;
 		xnlock_put_irqrestore(&nklock, s);
@@ -672,8 +673,7 @@ static int __sem_open(struct pt_regs *regs)
 		goto got_usm;
 	}
 
-	pse51_assoc_insert(&pse51_queues()->usems,
-			   &usm->assoc, (u_long)sm->shadow_sem.sem);
+	pse51_assoc_insert(&q->usems, &usm->assoc, (u_long)sm->shadow_sem.sem);
 	xnlock_put_irqrestore(&pse51_assoc_lock, s);
 
       got_usm:
@@ -696,8 +696,13 @@ static int __sem_close(struct pt_regs *regs)
 	union __xeno_sem sm;
 	unsigned long uaddr;
 	int closed = 0, err;
+	pse51_queues_t *q;
 	pse51_usem_t *usm;
 	spl_t s;
+
+	q = pse51_queues();
+	if (!q)
+		return -EPERM;
 
 	uaddr = (unsigned long)__xn_reg_arg1(regs);
 
@@ -707,10 +712,7 @@ static int __sem_close(struct pt_regs *regs)
 
 	xnlock_get_irqsave(&pse51_assoc_lock, s);
 
-	assoc =
-	    pse51_assoc_lookup(&pse51_queues()->usems,
-			       (u_long)sm.shadow_sem.sem);
-
+	assoc = pse51_assoc_lookup(&q->usems, (u_long)sm.shadow_sem.sem);
 	if (!assoc) {
 		xnlock_put_irqrestore(&pse51_assoc_lock, s);
 		return -EINVAL;
@@ -721,8 +723,7 @@ static int __sem_close(struct pt_regs *regs)
 	err = sem_close(&sm.native_sem);
 
 	if (!err && (closed = (--usm->refcnt == 0)))
-		pse51_assoc_remove(&pse51_queues()->usems,
-				   (u_long)sm.shadow_sem.sem);
+		pse51_assoc_remove(&q->usems, (u_long)sm.shadow_sem.sem);
 
 	xnlock_put_irqrestore(&pse51_assoc_lock, s);
 
@@ -1692,10 +1693,15 @@ static int __mq_open(struct pt_regs *regs)
 	struct mq_attr locattr, *attr;
 	char name[PSE51_MAXNAME];
 	pse51_ufd_t *assoc;
+	pse51_queues_t *q;
 	int err, oflags;
 	mqd_t kqd, uqd;
 	unsigned len;
 	mode_t mode;
+
+	q = pse51_queues();
+	if (!q)
+		return -EPERM;
 
 	len = __xn_safe_strncpy_from_user(name,
 					  (const char __user *)__xn_reg_arg1(regs),
@@ -1736,9 +1742,7 @@ static int __mq_open(struct pt_regs *regs)
 
 	assoc->kfd = kqd;
 
-	err = pse51_assoc_insert(&pse51_queues()->uqds,
-				 &assoc->assoc, (u_long)uqd);
-
+	err = pse51_assoc_insert(&q->uqds, &assoc->assoc, (u_long)uqd);
 	if (err) {
 		xnfree(assoc);
 		mq_close(kqd);
@@ -1750,13 +1754,17 @@ static int __mq_open(struct pt_regs *regs)
 static int __mq_close(struct pt_regs *regs)
 {
 	pse51_assoc_t *assoc;
+	pse51_queues_t *q;
 	mqd_t uqd;
 	int err;
 
+	q = pse51_queues();
+	if(!q)
+		return -EPERM;
+
 	uqd = (mqd_t) __xn_reg_arg1(regs);
 
-	assoc = pse51_assoc_remove(&pse51_queues()->uqds, (u_long)uqd);
-
+	assoc = pse51_assoc_remove(&q->uqds, (u_long)uqd);
 	if (!assoc)
 		return -EBADF;
 
@@ -1790,11 +1798,15 @@ static int __mq_getattr(struct pt_regs *regs)
 {
 	pse51_assoc_t *assoc;
 	struct mq_attr attr;
+	pse51_queues_t *q;
 	pse51_ufd_t *ufd;
 	int err;
 
-	assoc = pse51_assoc_lookup(&pse51_queues()->uqds,
-				   (u_long)__xn_reg_arg1(regs));
+	q = pse51_queues();
+	if(!q)
+		return -EPERM;
+
+	assoc = pse51_assoc_lookup(&q->uqds, (u_long)__xn_reg_arg1(regs));
 	if (!assoc)
 		return -EBADF;
 
@@ -1813,11 +1825,15 @@ static int __mq_setattr(struct pt_regs *regs)
 {
 	struct mq_attr attr, oattr;
 	pse51_assoc_t *assoc;
+	pse51_queues_t *q;
 	pse51_ufd_t *ufd;
 	int err;
 
-	assoc = pse51_assoc_lookup(&pse51_queues()->uqds,
-				   (u_long)__xn_reg_arg1(regs));
+	q = pse51_queues();
+	if(!q)
+		return -EPERM;
+
+	assoc = pse51_assoc_lookup(&q->uqds, (u_long)__xn_reg_arg1(regs));
 	if (!assoc)
 		return -EBADF;
 
@@ -1842,19 +1858,21 @@ static int __mq_setattr(struct pt_regs *regs)
 static int __mq_send(struct pt_regs *regs)
 {
 	pse51_assoc_t *assoc;
+	pse51_queues_t *q;
 	pse51_msg_t *msg;
 	pse51_ufd_t *ufd;
 	pse51_mq_t *mq;
 	unsigned prio;
 	size_t len;
 
+	q = pse51_queues();
+	if(!q)
+		return -EPERM;
+
 	len = (size_t) __xn_reg_arg3(regs);
 	prio = __xn_reg_arg4(regs);
 
-	assoc =
-	    pse51_assoc_lookup(&pse51_queues()->uqds,
-			       (u_long)__xn_reg_arg1(regs));
-
+	assoc = pse51_assoc_lookup(&q->uqds, (u_long)__xn_reg_arg1(regs));
 	if (!assoc)
 		return -EBADF;
 
@@ -1883,19 +1901,21 @@ static int __mq_timedsend(struct pt_regs *regs)
 {
 	struct timespec timeout, *timeoutp;
 	pse51_assoc_t *assoc;
+	pse51_queues_t *q;
 	pse51_msg_t *msg;
 	pse51_ufd_t *ufd;
 	pse51_mq_t *mq;
 	unsigned prio;
 	size_t len;
 
+	q = pse51_queues();
+	if(!q)
+		return -EPERM;
+
 	len = (size_t) __xn_reg_arg3(regs);
 	prio = __xn_reg_arg4(regs);
 
-	assoc =
-	    pse51_assoc_lookup(&pse51_queues()->uqds,
-			       (u_long)__xn_reg_arg1(regs));
-
+	assoc = pse51_assoc_lookup(&q->uqds, (u_long)__xn_reg_arg1(regs));
 	if (!assoc)
 		return -EBADF;
 
@@ -1931,6 +1951,7 @@ static int __mq_timedsend(struct pt_regs *regs)
 static int __mq_receive(struct pt_regs *regs)
 {
 	pse51_assoc_t *assoc;
+	pse51_queues_t *q;
 	pse51_ufd_t *ufd;
 	pse51_msg_t *msg;
 	pse51_mq_t *mq;
@@ -1938,8 +1959,11 @@ static int __mq_receive(struct pt_regs *regs)
 	ssize_t len;
 	int err;
 
-	assoc = pse51_assoc_lookup(&pse51_queues()->uqds,
-				   (u_long)__xn_reg_arg1(regs));
+	q = pse51_queues();
+	if(!q)
+		return -EPERM;
+
+	assoc = pse51_assoc_lookup(&q->uqds, (u_long)__xn_reg_arg1(regs));
 	if (!assoc)
 		return -EBADF;
 
@@ -1988,6 +2012,7 @@ static int __mq_timedreceive(struct pt_regs *regs)
 {
 	struct timespec timeout, *timeoutp;
 	pse51_assoc_t *assoc;
+	pse51_queues_t *q;
 	pse51_ufd_t *ufd;
 	pse51_msg_t *msg;
 	pse51_mq_t *mq;
@@ -1995,8 +2020,11 @@ static int __mq_timedreceive(struct pt_regs *regs)
 	ssize_t len;
 	int err;
 
-	assoc = pse51_assoc_lookup(&pse51_queues()->uqds,
-				   (u_long)__xn_reg_arg1(regs));
+	q = pse51_queues();
+	if(!q)
+		return -EPERM;
+
+	assoc = pse51_assoc_lookup(&q->uqds, (u_long)__xn_reg_arg1(regs));
 	if (!assoc)
 		return -EBADF;
 
@@ -2050,12 +2078,14 @@ static int __mq_notify(struct pt_regs *regs)
 {
 	pse51_assoc_t *assoc;
 	struct sigevent sev;
+	pse51_queues_t *q;
 	pse51_ufd_t *ufd;
 
-	assoc =
-	    pse51_assoc_lookup(&pse51_queues()->uqds,
-			       (u_long)__xn_reg_arg1(regs));
+	q = pse51_queues();
+	if(!q)
+		return -EPERM;
 
+	assoc = pse51_assoc_lookup(&q->uqds, (u_long)__xn_reg_arg1(regs));
 	if (!assoc)
 		return -EBADF;
 
@@ -2290,7 +2320,7 @@ static int __timer_getoverrun(struct pt_regs *regs)
 #ifdef CONFIG_XENO_OPT_POSIX_SELECT
 static int fd_valid_p(int fd)
 {
-	pse51_assoc_t *assoc;
+	pse51_queues_t *q;
 #if defined(CONFIG_XENO_SKIN_RTDM) || defined (CONFIG_XENO_SKIN_RTDM_MODULE)
 	const int rtdm_fd_start = FD_SETSIZE - RTDM_FD_MAX;
 
@@ -2305,8 +2335,11 @@ static int fd_valid_p(int fd)
 	}
 #endif /* RTDM */
 
-	assoc = pse51_assoc_lookup(&pse51_queues()->uqds, fd);
-	return assoc != NULL;
+	q = pse51_queues();
+	if (!q)
+		return 0;
+
+	return pse51_assoc_lookup(&q->uqds, fd) != NULL;
 }
 
 static int first_fd_valid_p(fd_set *fds[XNSELECT_MAX_TYPES], int nfds)
@@ -2326,6 +2359,7 @@ static int first_fd_valid_p(fd_set *fds[XNSELECT_MAX_TYPES], int nfds)
 static int select_bind_one(struct xnselector *selector, unsigned type, int fd)
 {
 	pse51_assoc_t *assoc;
+	pse51_queues_t *q;
 #if defined(CONFIG_XENO_SKIN_RTDM) || defined (CONFIG_XENO_SKIN_RTDM_MODULE)
 	const int rtdm_fd_start = FD_SETSIZE - RTDM_FD_MAX;
 
@@ -2334,7 +2368,11 @@ static int select_bind_one(struct xnselector *selector, unsigned type, int fd)
 					selector, type, fd);
 #endif /* CONFIG_XENO_SKIN_RTDM */
 
-	assoc = pse51_assoc_lookup(&pse51_queues()->uqds, fd);
+	q = pse51_queues();
+	if (!q)
+		return -EPERM;
+
+	assoc = pse51_assoc_lookup(&q->uqds, fd);
 	if (!assoc)
 		return -EBADF;
 
@@ -2477,8 +2515,13 @@ static int __shm_open(struct pt_regs *regs)
 	char name[PSE51_MAXNAME];
 	int ufd, kfd, oflag, err;
 	pse51_ufd_t *assoc;
+	pse51_queues_t *q;
 	unsigned len;
 	mode_t mode;
+
+	q = pse51_queues();
+	if (!q)
+		return -EPERM;
 
 	len = __xn_safe_strncpy_from_user(name,
 					  (const char __user *)__xn_reg_arg1(regs),
@@ -2510,10 +2553,7 @@ static int __shm_open(struct pt_regs *regs)
 
 	ufd = (int)__xn_reg_arg4(regs);
 
-	err =
-	    pse51_assoc_insert(&pse51_queues()->ufds, &assoc->assoc,
-			       (u_long)ufd);
-
+	err = pse51_assoc_insert(&q->ufds, &assoc->assoc, (u_long)ufd);
 	if (err) {
 		xnfree(assoc);
 		close(kfd);
@@ -2547,13 +2587,15 @@ static int __shm_unlink(struct pt_regs *regs)
 static int __shm_close(struct pt_regs *regs)
 {
 	pse51_assoc_t *assoc;
+	pse51_queues_t *q;
 	pse51_ufd_t *ufd;
 	int err;
 
-	assoc =
-	    pse51_assoc_remove(&pse51_queues()->ufds,
-			       (u_long)__xn_reg_arg1(regs));
+	q = pse51_queues();
+	if (!q)
+		return -EPERM;
 
+	assoc = pse51_assoc_remove(&q->ufds, (u_long)__xn_reg_arg1(regs));
 	if (!assoc)
 		return -EBADF;
 
@@ -2569,16 +2611,18 @@ static int __shm_close(struct pt_regs *regs)
 static int __ftruncate(struct pt_regs *regs)
 {
 	pse51_assoc_t *assoc;
+	pse51_queues_t *q;
 	pse51_ufd_t *ufd;
 	off_t len;
 	int err;
 
-	len = (off_t) __xn_reg_arg2(regs);
+	q = pse51_queues();
+	if (!q)
+		return -EPERM;
 
-	assoc =
-	    pse51_assoc_lookup(&pse51_queues()->ufds,
-			       (u_long)__xn_reg_arg1(regs));
+	len = (off_t)__xn_reg_arg2(regs);
 
+	assoc = pse51_assoc_lookup(&q->ufds, (u_long)__xn_reg_arg1(regs));
 	if (!assoc)
 		return -EBADF;
 
@@ -2603,18 +2647,20 @@ static int __mmap_prologue(struct pt_regs *regs)
 	pse51_mmap_param_t mmap_param;
 	pse51_assoc_t *assoc;
 	struct xnheap *heap;
+	pse51_queues_t *q;
 	pse51_ufd_t *ufd;
 	size_t len;
 	off_t off;
 	int err;
 
+	q = pse51_queues();
+	if (!q)
+		return -EPERM;
+
 	len = (size_t) __xn_reg_arg1(regs);
 	off = (off_t) __xn_reg_arg3(regs);
 
-	assoc =
-	    pse51_assoc_lookup(&pse51_queues()->ufds,
-			       (u_long)__xn_reg_arg2(regs));
-
+	assoc = pse51_assoc_lookup(&q->ufds, (u_long)__xn_reg_arg2(regs));
 	if (!assoc)
 		return -EBADF;
 
@@ -2696,14 +2742,19 @@ static int __munmap_prologue(struct pt_regs *regs)
 	pse51_assoc_t *assoc;
 	unsigned long uaddr;
 	pse51_umap_t *umap;
+	pse51_queues_t *q;
 	xnheap_t *heap;
 	size_t len;
 	int err;
 
+	q = pse51_queues();
+	if (!q)
+		return -EPERM;
+
 	uaddr = (unsigned long)__xn_reg_arg1(regs);
 	len = (size_t) __xn_reg_arg2(regs);
 
-	assoc = pse51_assoc_lookup(&pse51_queues()->umaps, uaddr);
+	assoc = pse51_assoc_lookup(&q->umaps, uaddr);
 
 	if (!assoc)
 		return -EBADF;
