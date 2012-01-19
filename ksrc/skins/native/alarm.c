@@ -59,20 +59,28 @@ static int vfile_rewind(struct xnvfile_snapshot_iterator *it)
 {
 	struct vfile_priv *priv = xnvfile_iterator_priv(it);
 	RT_ALARM *alarm = xnvfile_priv(it->vfile);
+	int nr;
 
 	alarm = xeno_h2obj_validate(alarm, XENO_ALARM_MAGIC, RT_ALARM);
 	if (alarm == NULL)
 		return -EIDRM;
 
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	priv->curr = getheadpq(xnsynch_wait_queue(&alarm->synch_base));
+	nr = xnsynch_nsleepers(&alarm->synch_base);
+#else
+	priv->curr = NULL;
+	nr = 0;
+#endif
 	priv->interval = rt_timer_tsc2ns(xntimer_interval(&alarm->timer_base));
 	priv->expiries = alarm->expiries;
 
-	return xnsynch_nsleepers(&alarm->synch_base);
+	return nr;
 }
 
 static int vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
 {
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	struct vfile_priv *priv = xnvfile_iterator_priv(it);
 	RT_ALARM *alarm = xnvfile_priv(it->vfile);
 	struct vfile_data *p = data;
@@ -89,6 +97,9 @@ static int vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
 	strncpy(p->name, xnthread_name(thread), sizeof(p->name));
 
 	return 1;
+#else
+	return 0;
+#endif
 }
 
 static int vfile_show(struct xnvfile_snapshot_iterator *it, void *data)

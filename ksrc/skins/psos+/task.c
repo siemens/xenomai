@@ -231,9 +231,9 @@ u_long t_start(u_long tid,
 	if (xnthread_test_state(&task->threadbase, XNSHADOW)) {
 		attr.entry = (void (*)(void *))startaddr;
 		attr.cookie = (void *)xnthread_handle(&task->threadbase);
-	}
+	} else
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
-	else {
+	{
 		attr.entry = psostask_trampoline;
 		attr.cookie = task;
 	}

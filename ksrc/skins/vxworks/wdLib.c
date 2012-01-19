@@ -39,19 +39,27 @@ static int vfile_rewind(struct xnvfile_snapshot_iterator *it)
 {
 	struct vfile_priv *priv = xnvfile_iterator_priv(it);
 	wind_wd_t *wd = xnvfile_priv(it->vfile);
+	int nr;
 
 	wd = wind_h2obj_active((WDOG_ID)wd, WIND_WD_MAGIC, wind_wd_t);
 	if (wd == NULL)
 		return -EIDRM;
 
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	priv->curr = getheadpq(xnsynch_wait_queue(&wd->rh->wdsynch));
+	nr = xnsynch_nsleepers(&wd->rh->wdsynch);
+#else
+	priv->curr = NULL;
+	nr = 0;
+#endif
 	priv->timeout = xntimer_get_timeout(&wd->timerbase);
 
-	return xnsynch_nsleepers(&wd->rh->wdsynch);
+	return nr;
 }
 
 static int vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
 {
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	struct vfile_priv *priv = xnvfile_iterator_priv(it);
 	wind_wd_t *wd = xnvfile_priv(it->vfile);
 	struct vfile_data *p = data;
@@ -71,6 +79,9 @@ static int vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
 	strncpy(p->name, xnthread_name(thread), sizeof(p->name));
 
 	return 1;
+#else
+	return 0;
+#endif
 }
 
 static int vfile_show(struct xnvfile_snapshot_iterator *it, void *data)

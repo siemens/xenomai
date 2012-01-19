@@ -684,6 +684,7 @@ xnsynch_release_thread(struct xnsynch *synch, struct xnthread *lastowner)
 
 	XENO_BUGON(NUCLEUS, !testbits(synch->status, XNSYNCH_OWNER));
 
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (xnthread_test_state(lastowner, XNOTHER)) {
 		if (xnthread_get_rescnt(lastowner) == 0)
 			xnshadow_send_sig(lastowner, SIGDEBUG,
@@ -691,6 +692,7 @@ xnsynch_release_thread(struct xnsynch *synch, struct xnthread *lastowner)
 		else
 			xnthread_dec_rescnt(lastowner);
 	}
+#endif
 	lastownerh = xnthread_handle(lastowner);
 
 	if (use_fastlock &&

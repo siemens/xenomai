@@ -814,8 +814,7 @@ ssize_t xnvfile_get_blob(struct xnvfile_input *input,
 	if (nbytes < size)
 		nbytes = size;
 
-	if (nbytes > 0 &&
-	    __xn_safe_copy_from_user(data, input->u_buf, nbytes))
+	if (nbytes > 0 && copy_from_user(data, input->u_buf, nbytes))
 		return -EFAULT;
 
 	return nbytes;
