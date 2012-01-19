@@ -1006,7 +1006,7 @@ EXPORT_SYMBOL_GPL(xnsynch_release_all_ownerships);
 void xnsynch_detect_relaxed_owner(struct xnsynch *synch, struct xnthread *sleeper)
 {
 	if (xnthread_test_state(sleeper, XNTRAPSW) &&
-	    xnthread_test_info(sleeper, XNSWREP) &&
+	    !xnthread_test_info(sleeper, XNSWREP) &&
 	    xnthread_test_state(synch->owner, XNRELAX)) {
 		xnthread_set_info(sleeper, XNSWREP);
 		xnshadow_send_sig(sleeper, SIGDEBUG,
