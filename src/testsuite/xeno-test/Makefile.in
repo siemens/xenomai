@@ -59,7 +59,7 @@ am__installdirs = "$(DESTDIR)$(testdir)" "$(DESTDIR)$(bindir)" \
 PROGRAMS = $(test_PROGRAMS)
 xeno_test_run_SOURCES = xeno-test-run.c
 xeno_test_run_OBJECTS = xeno_test_run-xeno-test-run.$(OBJEXT)
-xeno_test_run_LDADD = $(LDADD)
+xeno_test_run_DEPENDENCIES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -258,6 +258,7 @@ testdir = @XENO_TEST_DIR@
 test_SCRIPTS = xeno-test-run-wrapper dohell
 bin_SCRIPTS = xeno-test
 xeno_test_run_CPPFLAGS = -DTESTDIR=\"$(testdir)\"
+xeno_test_run_LDADD = -lrt
 EXTRA_DIST = $(test_SCRIPTS) xeno-test.in
 CLEANFILES = xeno-test
 all: all-am
