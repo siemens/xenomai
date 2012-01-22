@@ -431,11 +431,19 @@ void __rthal_arm_fault_range(struct vm_area_struct *vma)
 {
 	unsigned long addr;
 
-	if ((vma->vm_flags & VM_MAYREAD))
+	if ((vma->vm_flags & VM_MAYREAD)) {
+		unsigned flags;
+
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 22)
+		flags = (vma->vm_flags & VM_MAYWRITE) ? FAULT_FLAG_WRITE : 0;
+#else /* linux <= 2.6.22 */
+		flags = vma->vm_flags & VM_MAYWRITE
+#endif /* linux <= 2.6.22 */
+
 		for (addr = vma->vm_start;
 		     addr != vma->vm_end; addr += PAGE_SIZE)
-			handle_mm_fault(vma->vm_mm, vma, addr,
-					vma->vm_flags & VM_MAYWRITE);
+			handle_mm_fault(vma->vm_mm, vma, addr, flags);
+	}
 }
 
 static inline
