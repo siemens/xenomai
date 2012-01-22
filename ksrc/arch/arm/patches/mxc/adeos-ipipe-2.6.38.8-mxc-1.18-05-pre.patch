@@ -260,10 +260,10 @@ index 5b72ff4..d17b3c9 100644
 +
 +#endif /* if defined(CONFIG_SOC_IMX50) */
 diff --git a/arch/arm/plat-mxc/include/mach/common.h b/arch/arm/plat-mxc/include/mach/common.h
-index 77f9e67..aea2cd3 100644
+index c063423..aea2cd3 100644
 --- a/arch/arm/plat-mxc/include/mach/common.h
 +++ b/arch/arm/plat-mxc/include/mach/common.h
-@@ -1,19 +1,11 @@
+@@ -1,25 +1,16 @@
  /*
 - * Copyright (C) 2004-2011 Freescale Semiconductor, Inc. All Rights Reserved.
 - *
@@ -289,7 +289,13 @@ index 77f9e67..aea2cd3 100644
   */
  
  #ifndef __ASM_ARCH_MXC_COMMON_H__
-@@ -31,18 +23,7 @@ extern void mx35_map_io(void);
+ #define __ASM_ARCH_MXC_COMMON_H__
+ 
+-struct fec_platform_data;
+ struct platform_device;
+ struct clk;
+ 
+@@ -32,18 +23,7 @@ extern void mx35_map_io(void);
  extern void mx50_map_io(void);
  extern void mx51_map_io(void);
  extern void mx53_map_io(void);
@@ -308,7 +314,7 @@ index 77f9e67..aea2cd3 100644
  extern void mxc_init_irq(void __iomem *);
  extern void tzic_init_irq(void __iomem *);
  extern void mx1_init_irq(void);
-@@ -54,7 +35,6 @@ extern void mx35_init_irq(void);
+@@ -55,7 +35,6 @@ extern void mx35_init_irq(void);
  extern void mx50_init_irq(void);
  extern void mx51_init_irq(void);
  extern void mx53_init_irq(void);
@@ -316,7 +322,7 @@ index 77f9e67..aea2cd3 100644
  extern void mxc91231_init_irq(void);
  extern void epit_timer_init(struct clk *timer_clk, void __iomem *base, int irq);
  extern void mxc_timer_init(struct clk *timer_clk, void __iomem *, int);
-@@ -68,10 +48,6 @@ extern int mx51_clocks_init(unsigned long ckil, unsigned long osc,
+@@ -69,11 +48,6 @@ extern int mx51_clocks_init(unsigned long ckil, unsigned long osc,
  			unsigned long ckih1, unsigned long ckih2);
  extern int mx53_clocks_init(unsigned long ckil, unsigned long osc,
  			unsigned long ckih1, unsigned long ckih2);
@@ -324,10 +330,11 @@ index 77f9e67..aea2cd3 100644
 -			unsigned long ckih1);
 -extern int mx6_clocks_init(unsigned long ckil, unsigned long osc,
 -			unsigned long ckih1, unsigned long ckih2);
+-extern void imx6_init_fec(struct fec_platform_data fec_data);
  extern int mxc91231_clocks_init(unsigned long fref);
  extern int mxc_register_gpios(void);
  extern int mxc_register_device(struct platform_device *pdev, void *data);
-@@ -82,5 +58,4 @@ extern void mxc91231_arch_reset(int, const char *);
+@@ -84,5 +58,4 @@ extern void mxc91231_arch_reset(int, const char *);
  extern void mxc91231_prepare_idle(void);
  extern void mx51_efikamx_reset(void);
  extern int mx53_revision(void);

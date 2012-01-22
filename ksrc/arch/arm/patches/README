@@ -45,13 +45,13 @@ o Texas Instrument OMAP3 and OMAP4
 
 -- SOC specific instructions
 
----- MXC (tested on iMX51 and iMX53)
+---- MXC (tested on iMX51, iMX53, iMX6Q)
 
-1- Checkout the "rel_imx_2.6.38_11.09.01" tag in the Freescale IMX git [2],
+1- Checkout the "rel_imx_2.6.38_11.11.01" tag in the Freescale IMX git [2],
    or in the Denx git tree [3];
-2- apply mxc/adeos-ipipe-2.6.38.8-mxc-1.18-03-pre.patch;
-3- apply adeos-ipipe-2.6.38.8-arm-1.18-03.patch
-3- apply mxc/adeos-ipipe-2.6.38.8-mxc-1.18-03-post.patch;
+2- apply mxc/adeos-ipipe-2.6.38.8-mxc-1.18-05-pre.patch;
+3- apply adeos-ipipe-2.6.38.8-arm-1.18-05.patch
+3- apply mxc/adeos-ipipe-2.6.38.8-mxc-1.18-05-post.patch;
 4- you can resume to generic installation instructions.
 
 
@@ -60,5 +60,3 @@ o Texas Instrument OMAP3 and OMAP4
 [1] http://www.gna.org/projects/adeos/
 [2] http://opensource.freescale.com/pub/scm/imx/linux-2.6-imx.git
 [3] git://git.denx.de/linux-denx.git
-
-
