@@ -177,7 +177,7 @@ config XENO_OPT_TIMER_WHEEL_STEP
 	the timer wheel use the next hash bucket.
 
 config XENO_OPT_HOSTRT
-       depends on HAVE_IPIPE_HOSTRT
+       depends on IPIPE_HAVE_HOSTRT
        def_bool y
 
 config XENO_OPT_PIPE
