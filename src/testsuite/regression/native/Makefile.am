@@ -2,7 +2,7 @@ tstdir = @XENO_TEST_DIR@/regression/native
 
 noinst_HEADERS = check.h
 
-tst_PROGRAMS = leaks tsc mayday heap
+tst_PROGRAMS = leaks tsc mayday heap sigdebug
 
 CPPFLAGS = $(XENO_USER_CFLAGS) \
 	-I$(top_srcdir)/include
