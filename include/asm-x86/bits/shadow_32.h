@@ -70,7 +70,7 @@ static inline void xnarch_setup_mayday_page(void *page)
 	 * Also note that if SEP is present, we always assume NPTL on
 	 * the user side.
 	 */
-	static const struct {
+	static const struct __attribute__ ((__packed__)) {
 		struct __attribute__ ((__packed__)) {
 			u8 op;
 			u32 imm;
@@ -94,7 +94,7 @@ static inline void xnarch_setup_mayday_page(void *page)
 		.bug = 0x0b0f,
 	};
 
-	static const struct {
+	static const struct __attribute__ ((__packed__)) {
 		struct __attribute__ ((__packed__)) {
 			u8 op;
 			u32 imm;

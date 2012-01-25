@@ -84,7 +84,7 @@ static inline void xnarch_setup_mayday_page(void *page)
 	 * We don't mess with ASTAT here, so no need to save/restore
 	 * it in handle/fixup code.
 	 */
-	static const struct {
+	static const struct __attribute__ ((__packed__)) {
 		struct __attribute__ ((__packed__)) {
 			u16 op;
 			u16 imm;

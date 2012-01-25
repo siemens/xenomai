@@ -66,7 +66,7 @@ static inline void xnarch_setup_mayday_page(void *page)
 	 * We intentionally don't mess with EFLAGS here, so that we
 	 * don't have to save/restore it in handle/fixup code.
 	 */
-	static const struct {
+	static const struct __attribute__ ((__packed__)) {
 		struct __attribute__ ((__packed__)) {
 			u8 op;
 			u32 imm;
