@@ -193,21 +193,21 @@ static inline void xnarch_setup_mayday_page(void *page)
 	 *
 	 * ifdef ARM_EABI
 	 *
-	 * e3a00f8a 	mov	r0, #552	; 0x228
-	 * e28003c3 	add	r0, r0, #201326595	; 0xc000003
-	 * e3a0780f 	mov	r7, #983040	; 0xf0000
-	 * e2877042 	add	r7, r7, #66	; 0x42
+	 * e59f000c     ldr     r0, [pc, #12]
+	 * e59f700c     ldr     r7, [pc, #12]
 	 * ef000000 	svc	0x00000000
 	 * e3a00000 	mov	r0, #0
 	 * e5800000 	str	r0, [r0]	; <bug>
+	 * 0a00022b     .word   0x0a00022b	; __xn_sys_mayday << 24
+	 * 000f0042     .word   0x000f0042
 	 *
 	 * elif ARM_OABI
 	 *
-	 * e3a00f8a 	mov	r0, #552	; 0x228
-	 * e28003c3 	add	r0, r0, #201326595	; 0xc000003
+	 * e59f0008     ldr     r0, [pc, #8]
 	 * ef9f0042 	swi	0x009f0042
 	 * e3a00000 	mov	r0, #0
 	 * e5800000 	str	r0, [r0]	; <bug>
+	 * 0a00022b     .word   0x0a00022b	; __xn_sys_mayday << 24
 	 *
 	 * endif
 	 *
@@ -219,35 +219,35 @@ static inline void xnarch_setup_mayday_page(void *page)
 	 */
 #ifdef CONFIG_XENO_ARM_EABI
 	static const struct {
-		u32 mov_muxl;
-		u32 add_muxh;
-		u32 mov_sysh;
-		u32 add_sysl;
+		u32 ldr_r0;
+		u32 ldr_r7;
 		u32 swi_0;
 		u32 mov_r0;
 		u32 str_r0;
+		u32 cst_r0;
+		u32 cst_r7;
 	} code = {
-		.mov_muxl = 0xe3a00f8a,
-		.add_muxh = 0xe28003c3,
-		.mov_sysh = 0xe3a0780f,
-		.add_sysl = 0xe2877042,
+		.ldr_r0 = 0xe59f000c,
+		.ldr_r7 = 0xe59f700c,
 		.swi_0 = 0xef000000,
 		.mov_r0 = 0xe3a00000,
-		.str_r0 = 0xe5800000
+		.str_r0 = 0xe5800000,
+		.cst_r0 = 0x0a00022b,
+		.cst_r7 = 0x000f0042,
 	};
 #else /* OABI */
 	static const struct {
-		u32 mov_muxl;
-		u32 add_muxh;
+		u32 ldr_r0;
 		u32 swi_syscall;
 		u32 mov_r0;
 		u32 str_r0;
+		u32 cst_r0,
 	} code = {
-		.mov_muxl = 0xe3a00f8a,
-		.add_muxh = 0xe28003c3,
+		.ldr_r0 = 0xe59f0008,
 		.swi_syscall = 0x009f0042,
 		.mov_r0 = 0xe3a00000,
-		.str_r0 = 0xe5800000
+		.str_r0 = 0xe5800000,
+		.cst_r0 = 0x0a00022b,
 	};
 #endif /* OABI */
 
