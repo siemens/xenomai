@@ -36,8 +36,8 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-tst_PROGRAMS = leaks$(EXEEXT) tsc$(EXEEXT) mayday$(EXEEXT) \
-	heap$(EXEEXT)
+tst_PROGRAMS = leaks$(EXEEXT) tsc$(EXEEXT) heap$(EXEEXT) \
+	sigdebug$(EXEEXT)
 subdir = src/testsuite/regression/native
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
@@ -70,10 +70,10 @@ leaks_LDADD = $(LDADD)
 leaks_DEPENDENCIES = ../../../skins/native/libnative.la \
 	../../../skins/rtdm/librtdm.la \
 	../../../skins/common/libxenomai.la
-mayday_SOURCES = mayday.c
-mayday_OBJECTS = mayday.$(OBJEXT)
-mayday_LDADD = $(LDADD)
-mayday_DEPENDENCIES = ../../../skins/native/libnative.la \
+sigdebug_SOURCES = sigdebug.c
+sigdebug_OBJECTS = sigdebug.$(OBJEXT)
+sigdebug_LDADD = $(LDADD)
+sigdebug_DEPENDENCIES = ../../../skins/native/libnative.la \
 	../../../skins/rtdm/librtdm.la \
 	../../../skins/common/libxenomai.la
 tsc_SOURCES = tsc.c
@@ -95,8 +95,8 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = heap.c leaks.c mayday.c tsc.c
-DIST_SOURCES = heap.c leaks.c mayday.c tsc.c
+SOURCES = heap.c leaks.c sigdebug.c tsc.c
+DIST_SOURCES = heap.c leaks.c sigdebug.c tsc.c
 HEADERS = $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
@@ -348,9 +348,9 @@ heap$(EXEEXT): $(heap_OBJECTS) $(heap_DEPENDENCIES)
 leaks$(EXEEXT): $(leaks_OBJECTS) $(leaks_DEPENDENCIES) 
 	@rm -f leaks$(EXEEXT)
 	$(LINK) $(leaks_OBJECTS) $(leaks_LDADD) $(LIBS)
-mayday$(EXEEXT): $(mayday_OBJECTS) $(mayday_DEPENDENCIES) 
-	@rm -f mayday$(EXEEXT)
-	$(LINK) $(mayday_OBJECTS) $(mayday_LDADD) $(LIBS)
+sigdebug$(EXEEXT): $(sigdebug_OBJECTS) $(sigdebug_DEPENDENCIES) 
+	@rm -f sigdebug$(EXEEXT)
+	$(LINK) $(sigdebug_OBJECTS) $(sigdebug_LDADD) $(LIBS)
 tsc$(EXEEXT): $(tsc_OBJECTS) $(tsc_DEPENDENCIES) 
 	@rm -f tsc$(EXEEXT)
 	$(LINK) $(tsc_OBJECTS) $(tsc_LDADD) $(LIBS)
@@ -363,7 +363,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/heap.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/leaks.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mayday.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sigdebug.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tsc.Po@am__quote@
 
 .c.o:
