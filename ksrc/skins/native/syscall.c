@@ -1020,13 +1020,21 @@ static int __rt_timer_inquire(struct pt_regs *regs)
 
 static int __rt_timer_spin(struct pt_regs *regs)
 {
+	xnthread_t *thread = xnpod_current_thread();
+	struct task_struct *p = current;
+	RTIME etime;
 	RTIME ns;
 
 	if (__xn_safe_copy_from_user(&ns, (void __user *)__xn_reg_arg1(regs),
 				     sizeof(ns)))
 		return -EFAULT;
 
-	rt_timer_spin(ns);
+	etime = xnarch_get_cpu_tsc() + xnarch_ns_to_tsc(ns);
+	while ((SRTIME)(xnarch_get_cpu_tsc() - etime) < 0) {
+		if (signal_pending(p) || xnthread_amok_p(thread))
+			return -EINTR;
+		cpu_relax();
+	}
 
 	return 0;
 }
