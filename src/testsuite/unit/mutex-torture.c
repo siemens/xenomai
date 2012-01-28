@@ -46,6 +46,7 @@
 #define THREAD_DETACH		11
 #define THREAD_CREATE		12
 #define THREAD_JOIN		13
+#define THREAD_RENICE           14
 
 #define NS_PER_MS	1000000
 
@@ -141,19 +142,19 @@ void check_current_prio(int expected_prio)
 	}
 }
 
-void check_current_mode(int expected_primary_mode)
+void check_current_mode(int mask, int expected_value)
 {
-	int current_in_primary;
+	int current_mode;
 
 	/* This is a unit test, and in this circonstance, we are allowed to
 	   call xeno_get_current_mode. But please do not do that in your
 	   own code. */
-	current_in_primary = !(xeno_get_current_mode() & XNRELAX);
+	current_mode = xeno_get_current_mode() & mask;
 
-	if (current_in_primary != expected_primary_mode) {
+	if (current_mode != expected_value) {
 		fprintf(stderr,
-			"FAILURE: current mode (%d) != expected mode (%d)\n",
-			current_in_primary, expected_primary_mode);
+			"FAILURE: current mode (%x) != expected mode (%x)\n",
+			current_mode, expected_value);
 		exit(EXIT_FAILURE);
 	}
 }
@@ -329,6 +330,23 @@ int dispatch(const char *service_name,
 #else /* __NATIVE_SKIN__ */
 		thread = va_arg(ap, RT_TASK *);
 		status = rt_task_join(thread);
+#endif /* __NATIVE_SKIN__ */
+		break;
+
+	case THREAD_RENICE:
+#ifdef XENO_POSIX
+		param.sched_priority = va_arg(ap, int);
+		if (param.sched_priority)
+			status = pthread_setschedparam(pthread_self(),
+						       SCHED_FIFO, &param);
+		else
+			status = pthread_setschedparam(pthread_self(),
+						       SCHED_OTHER, &param);
+#else /* __NATIVE_SKIN__ */
+		prio = va_arg(ap, int);
+		status = -rt_task_set_priority(rt_task_self(), prio);
+		if (status < 0)
+			status = 0;
 #endif /* __NATIVE_SKIN__ */
 		break;
 
@@ -526,11 +544,11 @@ void mode_switch(void)
 
 	dispatch("switch mutex_init", MUTEX_CREATE, 1, 0, &mutex, 1, 0);
 
-	check_current_mode(0);
+	check_current_mode(XNRELAX, XNRELAX);
 
 	dispatch("switch mutex_lock", MUTEX_LOCK, 1, 0, &mutex);
 
-	check_current_mode(1);
+	check_current_mode(XNRELAX, 0);
 
 	dispatch("switch mutex_unlock", MUTEX_UNLOCK, 1, 0, &mutex);
 	dispatch("switch mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
@@ -829,14 +847,25 @@ void nrt_lock(void *cookie)
 {
 	mutex_t *mutex = (mutex_t *)cookie;
 
-	check_current_mode(0);
+	/* Check that XNOTHER flag gets cleared and set back when
+	   changing priority */
+	check_current_mode(XNRELAX | XNOTHER, XNRELAX | XNOTHER);
 	check_current_prio(0);
+	dispatch("auto_switchback renice 1", THREAD_RENICE, 1, 0, 1);
+	check_current_mode(XNOTHER, 0);
+	check_current_prio(1);
+	dispatch("auto_switchback renice 2", THREAD_RENICE, 1, 0, 0);
+	check_current_mode(XNRELAX | XNOTHER, XNRELAX | XNOTHER);
+	check_current_prio(0);
+
+	/* Check mode changes for auto-switchback threads while using
+	   mutexes with priority inheritance */
 	dispatch("auto_switchback mutex_lock 1", MUTEX_LOCK, 1, 0, mutex);
-	check_current_mode(1);
+	check_current_mode(XNRELAX, 0);
 	ms_sleep(11);
 	check_current_prio(2);
 	dispatch("auto_switchback mutex_unlock 1", MUTEX_UNLOCK, 1, 0, mutex);
-	check_current_mode(0);
+	check_current_mode(XNRELAX | XNOTHER, XNRELAX | XNOTHER);
 }
 
 void auto_switchback(void)
