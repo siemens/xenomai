@@ -121,26 +121,16 @@ static inline unsigned long long rthal_rdtsc(void)
 static inline void rthal_timer_program_shot(unsigned long delay)
 {
 #ifdef CONFIG_X86_LOCAL_APIC
-	if (delay == 0) {
-		/* Pend the timer interrupt. */
-		ipipe_post_irq_head(RTHAL_APIC_TIMER_IPI);
-	} else {
-		/*
-		 * Note: reading before writing just to work around
-		 * the Pentium APIC double write bug. apic_read()
-		 * expands to nil whenever CONFIG_X86_GOOD_APIC is
-		 * set. --rpm
-		 */
-		apic_read(APIC_TMICT);
+	if (likely(delay))
 		apic_write(APIC_TMICT, delay);
-	}
+	else
+		ipipe_post_irq_head(RTHAL_APIC_TIMER_IPI);
 #else /* !CONFIG_X86_LOCAL_APIC */
-	if (delay == 0)
-		ipipe_post_irq_head(RTHAL_TIMER_IRQ);
-	else {
+	if (likely(delay)) {
 		outb(delay & 0xff, PIT_CH0);
 		outb(delay >> 8, PIT_CH0);
-	}
+	} else
+		ipipe_post_irq_head(RTHAL_TIMER_IRQ);
 #endif /* CONFIG_X86_LOCAL_APIC */
 }
 

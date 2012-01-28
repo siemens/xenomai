@@ -77,7 +77,7 @@ static inline unsigned long long rthal_rdtsc(void)
 static inline void rthal_timer_program_shot(unsigned long delay)
 {
 	if (likely(delay))
-		apic_write(APIC_TMICT,delay);
+		apic_write(APIC_TMICT, delay);
 	else
 		/* Pend the timer interrupt. */
 		ipipe_post_irq_head(RTHAL_APIC_TIMER_IPI);
