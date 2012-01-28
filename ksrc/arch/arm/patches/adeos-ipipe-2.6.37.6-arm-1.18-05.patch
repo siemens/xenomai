@@ -987,7 +987,7 @@ index 0000000..3a0bf32
 +#endif /* __ASM_ARM_FCSE_H */
 diff --git a/arch/arm/include/asm/ipipe.h b/arch/arm/include/asm/ipipe.h
 new file mode 100644
-index 0000000..1108ba6
+index 0000000..6602a2e
 --- /dev/null
 +++ b/arch/arm/include/asm/ipipe.h
 @@ -0,0 +1,340 @@
@@ -1023,10 +1023,10 @@ index 0000000..1108ba6
 +#include <linux/ipipe_percpu.h>
 +#include <linux/ipipe_trace.h>
 +
-+#define IPIPE_ARCH_STRING	"1.18-04"
++#define IPIPE_ARCH_STRING	"1.18-05"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	18
-+#define IPIPE_PATCH_NUMBER	4
++#define IPIPE_PATCH_NUMBER	5
 +
 +#ifdef CONFIG_SMP
 +#define ipipe_processor_id()	hard_smp_processor_id()
@@ -10371,7 +10371,7 @@ index 1d706cf..ac1c1fd 100644
  	u32 l;
  
 diff --git a/arch/arm/plat-omap/gpio.c b/arch/arm/plat-omap/gpio.c
-index c05c653..79898e3 100644
+index c05c653..7881e7e 100644
 --- a/arch/arm/plat-omap/gpio.c
 +++ b/arch/arm/plat-omap/gpio.c
 @@ -20,7 +20,9 @@
@@ -10494,7 +10494,7 @@ index c05c653..79898e3 100644
 +			continue;
 +
 +#ifdef CONFIG_IPIPE
-+		if (nonroot) {
++		if (!nonroot) {
 +			local_irq_enable_hw();
 +			local_irq_disable_hw();
 +		}
@@ -10521,7 +10521,7 @@ index c05c653..79898e3 100644
  /*
   * We need to unmask the GPIO bank interrupt as soon as possible to
   * avoid missing GPIO interrupts for other lines in the bank.
-@@ -1286,7 +1337,6 @@ static void gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
+@@ -1286,12 +1337,15 @@ static void gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
  {
  	void __iomem *isr_reg = NULL;
  	u32 isr;
@@ -10529,7 +10529,16 @@ index c05c653..79898e3 100644
  	struct gpio_bank *bank;
  	u32 retrigger = 0;
  	int unmasked = 0;
-@@ -1322,6 +1372,13 @@ static void gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
+ 
++#ifndef CONFIG_IPIPE
+ 	desc->chip->ack(irq);
++#else /* CONFIG_IPIPE */
++	desc->chip->mask_ack(irq);
++#endif /* CONFIG_IPIPE */
+ 
+ 	bank = get_irq_data(irq);
+ #ifdef CONFIG_ARCH_OMAP1
+@@ -1322,6 +1376,13 @@ static void gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
  		u32 isr_saved, level_mask = 0;
  		u32 enabled;
  
@@ -10543,7 +10552,21 @@ index c05c653..79898e3 100644
  		enabled = _get_gpio_irqbank_mask(bank);
  		isr_saved = isr = __raw_readl(isr_reg) & enabled;
  
-@@ -1351,27 +1408,14 @@ static void gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
+@@ -1339,39 +1400,28 @@ static void gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
+ 		_clear_gpio_irqbank(bank, isr_saved & ~level_mask);
+ 		_enable_gpio_irqbank(bank, isr_saved & ~level_mask, 1);
+ 
++#ifndef CONFIG_IPIPE
+ 		/* if there is only edge sensitive GPIO pin interrupts
+ 		configured, we could unmask GPIO bank interrupt immediately */
+ 		if (!level_mask && !unmasked) {
+ 			unmasked = 1;
+ 			desc->chip->unmask(irq);
+ 		}
++#endif /* !CONFIG_IPIPE */
+ 
+ 		isr |= retrigger;
+ 		retrigger = 0;
  		if (!isr)
  			break;
  
@@ -10578,7 +10601,7 @@ index c05c653..79898e3 100644
  	}
  	/* if bank has any level sensitive GPIO pin interrupt
  	configured, we must unmask the bank interrupt only after
-@@ -1407,6 +1451,16 @@ static void gpio_mask_irq(unsigned int irq)
+@@ -1407,6 +1457,16 @@ static void gpio_mask_irq(unsigned int irq)
  	_set_gpio_triggering(bank, get_gpio_index(gpio), IRQ_TYPE_NONE);
  }
  
@@ -10595,7 +10618,7 @@ index c05c653..79898e3 100644
  static void gpio_unmask_irq(unsigned int irq)
  {
  	unsigned int gpio = irq - IH_GPIO_BASE;
-@@ -1433,6 +1487,7 @@ static struct irq_chip gpio_irq_chip = {
+@@ -1433,6 +1493,7 @@ static struct irq_chip gpio_irq_chip = {
  	.shutdown	= gpio_irq_shutdown,
  	.ack		= gpio_ack_irq,
  	.mask		= gpio_mask_irq,
@@ -10603,7 +10626,7 @@ index c05c653..79898e3 100644
  	.unmask		= gpio_unmask_irq,
  	.set_type	= gpio_irq_type,
  	.set_wake	= gpio_wake_enable,
-@@ -1937,6 +1992,11 @@ static int __init _omap_gpio_init(void)
+@@ -1937,6 +1998,11 @@ static int __init _omap_gpio_init(void)
  		set_irq_chained_handler(bank->irq, gpio_irq_handler);
  		set_irq_data(bank->irq, bank);
  
@@ -10615,7 +10638,7 @@ index c05c653..79898e3 100644
  		if (cpu_is_omap34xx() || cpu_is_omap44xx()) {
  			sprintf(clk_name, "gpio%d_dbck", i + 1);
  			bank->dbck = clk_get(NULL, clk_name);
-@@ -1961,6 +2021,166 @@ static int __init _omap_gpio_init(void)
+@@ -1961,6 +2027,166 @@ static int __init _omap_gpio_init(void)
  	return 0;
  }
  
