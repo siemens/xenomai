@@ -241,10 +241,10 @@ static inline void xnarch_setup_mayday_page(void *page)
 		u32 swi_syscall;
 		u32 mov_r0;
 		u32 str_r0;
-		u32 cst_r0,
+		u32 cst_r0;
 	} code = {
 		.ldr_r0 = 0xe59f0008,
-		.swi_syscall = 0x009f0042,
+		.swi_syscall = 0xef9f0042,
 		.mov_r0 = 0xe3a00000,
 		.str_r0 = 0xe5800000,
 		.cst_r0 = 0x0a00022b,
