@@ -53,8 +53,6 @@ static const char *reason_str[] = {
 void sigdebug(int sig, siginfo_t *si, void *context)
 {
 	unsigned int reason = si->si_value.sival_int;
-	void *bt[32];
-	int nentries;
 
 	printf("\nSIGDEBUG received, reason %d: %s\n", reason,
 	       reason <= SIGDEBUG_WATCHDOG ? reason_str[reason] : "<unknown>");
@@ -725,7 +723,7 @@ void recursive_condwait(void)
 
 void nrt_lock(void *cookie)
 {
-	mutex_t *mutex = (mutex_t *)cookie;
+	pthread_mutex_t *mutex = cookie;
 
 	/* Check that XNOTHER flag gets cleared and set back when
 	   changing priority */
@@ -750,8 +748,8 @@ void nrt_lock(void *cookie)
 
 void auto_switchback(void)
 {
-	thread_t nrt_lock_tid;
-	mutex_t mutex;
+	pthread_t nrt_lock_tid;
+	pthread_mutex_t mutex;
 
 	fprintf(stderr, "auto_switchback\n");
 

@@ -97,8 +97,8 @@ COBALT_DECL(ssize_t, mq_timedreceive(mqd_t q,
 				     unsigned *__restrict__ prio,
 				     const struct timespec *__restrict__ timeout));
 
-COBALT_DECL(int, mq_notify(mqd_t mqdes,
-			   const struct sigevent *notification));
+COBALT_DECL(int, mq_notify(mqd_t q,
+			   const struct sigevent *evp));
 
 #ifdef __cplusplus
 }

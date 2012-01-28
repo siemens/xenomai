@@ -179,7 +179,6 @@ void worker(void *cookie)
 		dump_histogram();
 
 	exit(0);
->>>>>>> testsuite/unit: sanitize wakeup-time
 }
 
 int main(int argc, char *const *argv)

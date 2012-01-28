@@ -34,6 +34,7 @@
 #include "registry.h"
 #include "internal.h"		/* Magics, time conversion */
 #include "thread.h"		/* errno. */
+#include "timer.h"
 #include "mq.h"
 
 /* Temporary definitions. */
@@ -48,6 +49,11 @@ struct cobalt_mq {
 	size_t memsize;
 	char *mem;
 	xnqueue_t avail;
+
+	/* mq_notify */
+	cobalt_siginfo_t si;
+	mqd_t target_qd;
+	pthread_t target;
 
 	struct mq_attr attr;
 
@@ -132,6 +138,7 @@ static inline int cobalt_mq_init(cobalt_mq_t * mq, const struct mq_attr *attr)
 	}
 
 	mq->attr = *attr;
+	mq->target = NULL;
 	xnselect_init(&mq->read_select);
 	xnselect_init(&mq->write_select);
 
@@ -378,6 +385,8 @@ static inline int mq_close(mqd_t fd)
 	if (err)
 		goto err_unlock;
 
+	if (mq->target_qd == fd)
+		mq->target = NULL;
 	if (cobalt_node_removed_p(&mq->nodebase)) {
 		xnlock_put_irqrestore(&nklock, s);
 
@@ -565,6 +574,36 @@ cobalt_mq_timedsend_inner(cobalt_mq_t **mqp, mqd_t fd,
 	return msg;
 }
 
+struct mq_signal {
+	struct ipipe_work_header work; /* Must be first. */
+	struct task_struct *task;
+	cobalt_siginfo_t si;	
+};
+
+static void mq_do_notify(struct ipipe_work_header *work)
+{
+	struct mq_signal *rq;
+	siginfo_t *si;
+
+	rq = container_of(work, struct mq_signal, work);
+	si = &rq->si.info;
+	send_sig_info(si->si_signo, si, rq->task);
+}
+
+static void mq_send_signal(cobalt_mq_t *mq)
+{
+	struct mq_signal sigwork = {
+		.work = {
+			.size = sizeof(sigwork),
+			.handler = mq_do_notify,
+		},
+		.task = xnthread_user_task(&mq->target->threadbase),
+		.si = mq->si,
+	};
+
+	ipipe_post_work_root(&sigwork, work);
+}
+
 static int
 cobalt_mq_finish_send(mqd_t fd, cobalt_mq_t *mq, cobalt_msg_t *msg)
 {
@@ -586,6 +625,15 @@ cobalt_mq_finish_send(mqd_t fd, cobalt_mq_t *mq, cobalt_msg_t *msg)
 
 	if (xnsynch_wakeup_one_sleeper(&mq->receivers))
 		resched = 1;
+	else if (mq->target && countpq(&mq->queued) == 1) {
+		/*
+		 * First message and no pending reader? send a signal
+		 * if mq_notify was called.
+		 */
+		mq_send_signal(mq);
+		resched = 1;
+		mq->target = NULL;
+	}
 
   unref:
 	cobalt_node_put(&mq->nodebase);
@@ -822,6 +870,117 @@ static inline int mq_setattr(mqd_t fd,
 	return 0;
 }
 
+/**
+ * Register the current thread to be notified of message arrival at an empty
+ * message queue.
+ *
+ * If @a evp is not @a NULL and is the address of a @b sigevent structure with
+ * the @a sigev_notify member set to SIGEV_SIGNAL, the current thread will be
+ * notified by a signal when a message is sent to the message queue @a fd, the
+ * queue is empty, and no thread is blocked in call to mq_receive() or
+ * mq_timedreceive(). After the notification, the thread is unregistered.
+ *
+ * If @a evp is @a NULL or the @a sigev_notify member is SIGEV_NONE, the current
+ * thread is unregistered.
+ *
+ * Only one thread may be registered at a time.
+ *
+ * If the current thread is not a Xenomai POSIX skin thread (created with
+ * pthread_create()), this service fails.
+ *
+ * Note that signals sent to user-space Xenomai POSIX skin threads will cause
+ * them to switch to secondary mode.
+ *
+ * @param fd message queue descriptor;
+ *
+ * @param evp pointer to an event notification structure.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EINVAL, @a evp is invalid;
+ * - EPERM, the caller context is invalid;
+ * - EBADF, @a fd is not a valid message queue descriptor;
+ * - EBUSY, another thread is already registered.
+ *
+ * @par Valid contexts:
+ * - Xenomai kernel-space POSIX skin thread,
+ * - Xenomai user-space POSIX skin thread (switches to primary mode).
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_notify.html">
+ * Specification.</a>
+ *
+ */
+static inline int mq_notify(mqd_t fd, const struct sigevent *evp)
+{
+	pthread_t thread = cobalt_current_thread();
+	cobalt_desc_t *desc;
+	cobalt_mq_t *mq;
+	int err;
+	spl_t s;
+
+	if (evp && ((evp->sigev_notify != SIGEV_SIGNAL &&
+		     evp->sigev_notify != SIGEV_NONE) ||
+		    (unsigned int)(evp->sigev_signo - 1) > SIGRTMAX - 1))
+		return -EINVAL;
+
+	if (xnpod_asynch_p() || thread == NULL)
+		return -EPERM;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	err = cobalt_desc_get(&desc, fd, COBALT_MQ_MAGIC);
+	if (err)
+		goto unlock_and_error;
+
+	mq = node2mq(cobalt_desc_node(desc));
+	if (mq->target && mq->target != thread) {
+		err = -EBUSY;
+		goto unlock_and_error;
+	}
+
+	if (evp == NULL || evp->sigev_notify == SIGEV_NONE)
+		/* Here, mq->target == cobalt_current_thread() or NULL. */
+		mq->target = NULL;
+	else {
+		mq->target = thread;
+		mq->target_qd = fd;
+		mq->si.info.si_signo = evp->sigev_signo;
+		mq->si.info.si_code = SI_MESGQ;
+		mq->si.info.si_value = evp->sigev_value;
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+	return 0;
+
+      unlock_and_error:
+	xnlock_put_irqrestore(&nklock, s);
+	return err;
+}
+
+int cobalt_mq_notify(mqd_t fd, const struct sigevent *__user evp)
+{
+	cobalt_assoc_t *assoc;
+	struct sigevent sev;
+	cobalt_queues_t *q;
+	cobalt_ufd_t *ufd;
+
+	q = cobalt_queues();
+	if (q == NULL)
+		return -EPERM;
+
+	assoc = cobalt_assoc_lookup(&q->uqds, fd);
+	if (assoc == NULL)
+		return -EBADF;
+
+	if (evp && __xn_safe_copy_from_user(&sev, evp, sizeof(sev)))
+		return -EFAULT;
+
+	ufd = assoc2ufd(assoc);
+
+	return mq_notify(ufd->kfd, evp ? &sev : NULL);
+}
+
 int cobalt_mq_select_bind(mqd_t fd, struct xnselector *selector,
 			 unsigned type, unsigned index)
 {
@@ -927,8 +1086,8 @@ int cobalt_mq_open(const char __user *u_name, int oflags,
 		attr = NULL;
 
 	kqd = mq_open(name, oflags, mode, attr);
-	if (kqd == -1)
-		return -thread_get_errno();
+	if ((long)kqd < 0)
+		return (int)(long)kqd;
 
 	assoc = xnmalloc(sizeof(*assoc));
 	if (assoc == NULL) {
@@ -964,14 +1123,13 @@ int cobalt_mq_close(mqd_t uqd)
 	err = mq_close(assoc2ufd(assoc)->kfd);
 	xnfree(assoc2ufd(assoc));
 
-	return !err ? 0 : -thread_get_errno();
+	return err;
 }
 
 int cobalt_mq_unlink(const char __user *u_name)
 {
 	char name[COBALT_MAXNAME];
 	unsigned len;
-	int err;
 
 	len = __xn_safe_strncpy_from_user(name, u_name, sizeof(name));
 	if (len < 0)
@@ -979,9 +1137,7 @@ int cobalt_mq_unlink(const char __user *u_name)
 	if (len >= sizeof(name))
 		return -ENAMETOOLONG;
 
-	err = mq_unlink(name);
-
-	return err ? -thread_get_errno() : 0;
+	return mq_unlink(name);
 }
 
 int cobalt_mq_getattr(mqd_t uqd, struct mq_attr __user *u_attr)
@@ -1004,7 +1160,7 @@ int cobalt_mq_getattr(mqd_t uqd, struct mq_attr __user *u_attr)
 
 	err = mq_getattr(ufd->kfd, &attr);
 	if (err)
-		return -thread_get_errno();
+		return err;
 
 	return __xn_safe_copy_to_user(u_attr, &attr, sizeof(attr));
 }
@@ -1033,7 +1189,7 @@ int cobalt_mq_setattr(mqd_t uqd, const struct mq_attr __user *u_attr,
 
 	err = mq_setattr(ufd->kfd, &attr, &oattr);
 	if (err)
-		return -thread_get_errno();
+		return err;
 
 	if (u_oattr)
 		return __xn_safe_copy_to_user(u_oattr, &oattr, sizeof(oattr));

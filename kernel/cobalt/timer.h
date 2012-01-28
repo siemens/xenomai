@@ -21,6 +21,14 @@
 
 #include "thread.h"        /* For struct itimerspec. */
 
+typedef struct {
+    siginfo_t info;
+    xnpholder_t link;
+
+#define link2siginfo(iaddr) container_of(iaddr, cobalt_siginfo_t, link)
+
+} cobalt_siginfo_t;
+
 int cobalt_timer_create(clockid_t clock,
 			const struct sigevent __user *u_sev,
 			timer_t __user *u_tm);

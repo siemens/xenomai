@@ -36,6 +36,8 @@ int cobalt_mq_timedreceive(mqd_t uqd, void __user *u_buf,
 			   unsigned int __user *u_prio,
 			   const struct timespec __user *u_ts);
 
+int cobalt_mq_notify(mqd_t fd, const struct sigevent *__user evp);
+
 void cobalt_mq_uqds_cleanup(cobalt_queues_t *q);
 
 int cobalt_mq_pkg_init(void);

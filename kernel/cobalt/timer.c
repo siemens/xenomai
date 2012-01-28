@@ -29,14 +29,6 @@
 
 #define COBALT_TIMER_MAX  128
 
-typedef struct {
-    siginfo_t info;
-    xnpholder_t link;
-
-#define link2siginfo(iaddr) container_of(iaddr, cobalt_siginfo_t, link)
-
-} cobalt_siginfo_t;
-
 struct cobalt_timer {
 
 	xntimer_t timerbase;
