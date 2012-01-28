@@ -21,8 +21,6 @@
 #include <native/sem.h>
 #include <native/timer.h>
 
-#define WRITE_TEST_SIZE		(4*1024)
-
 unsigned int expected_reason;
 bool sigdebug_received;
 pthread_t rt_task_thread;
@@ -88,7 +86,7 @@ void rt_task_body(void *cookie)
 
 	rt_printf("syscall\n");
 	setup_checkdebug(SIGDEBUG_MIGRATE_SYSCALL);
-	syscall(-1);
+	sched_yield();
 	check_sigdebug_received("SIGDEBUG_MIGRATE_SYSCALL");
 
 	rt_printf("signal\n");
@@ -103,7 +101,6 @@ void rt_task_body(void *cookie)
 	err = rt_mutex_acquire(&prio_invert, TM_INFINITE);
 	check("rt_mutex_acquire", err, -EINTR);
 	check_sigdebug_received("SIGDEBUG_MIGRATE_PRIOINV");
-
 
 	rt_printf("page fault\n");
 	setup_checkdebug(SIGDEBUG_MIGRATE_FAULT);
@@ -239,7 +236,7 @@ int main(int argc, char **argv)
 	check_no_error("rt_sem_signal", err);
 	pthread_kill(rt_task_thread, SIGUSR1);
 
-	rt_task_sleep(20000000);
+	rt_task_sleep(20000000LL);
 
 	err = rt_mutex_release(&prio_invert);
 	check_no_error("rt_mutex_release", err);
