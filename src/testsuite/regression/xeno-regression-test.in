@@ -37,20 +37,18 @@ set -ex
 
 echo 0 > /proc/xenomai/latency || :
 
-# in-tree tests
 @testdir@/arith
+@testdir@/clocktest -C 42 -T 30 || :
 @testdir@/clocktest -T 30
 @testdir@/cond-torture-native
 @testdir@/cond-torture-posix
 @testdir@/mutex-torture-native
 @testdir@/mutex-torture-posix
-
-# the tests in this tree
 @testdir@/regression/posix/leaks
 @testdir@/regression/posix/shm
 @testdir@/regression/native/heap
 @testdir@/regression/native/leaks
-@testdir@/regression/native/mayday
+@testdir@/regression/native/sigdebug
 @testdir@/regression/native/tsc
 @testdir@/regression/native+posix/mq_select
 
