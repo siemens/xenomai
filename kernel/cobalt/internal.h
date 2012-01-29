@@ -19,15 +19,24 @@
 #ifndef _POSIX_INTERNAL_H
 #define _POSIX_INTERNAL_H
 
+#include <errno.h>
+#include <pthread.h>
+#include <sched.h>
+#include <signal.h>
+#include <semaphore.h>
+#include <mqueue.h>
+#include <time.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
 #include <nucleus/pod.h>
 #include <nucleus/heap.h>
 #include <nucleus/ppd.h>
 #include <nucleus/select.h>
-#include <cobalt/posix.h>
-#include "registry.h"
-
-/* debug support */
 #include <nucleus/assert.h>
+#include <cobalt/syscall.h>
+#include "registry.h"
 
 #ifndef CONFIG_XENO_OPT_DEBUG_POSIX
 #define CONFIG_XENO_OPT_DEBUG_POSIX 0

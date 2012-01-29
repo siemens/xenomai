@@ -52,6 +52,7 @@
 #include <asm-generic/xenomai/arith.h>
 #include <asm-generic/xenomai/system.h>
 #include "thread.h"
+#include "internal.h"
 
 /**
  * Read the host-synchronised realtime clock.

@@ -45,8 +45,6 @@
  *
  */
 
-#include <cobalt/syscall.h>
-#include <cobalt/posix.h>
 #include "internal.h"
 #include "cond.h"
 #include "mutex.h"
@@ -56,6 +54,7 @@
 #include "timer.h"
 #include "registry.h"
 #include "monitor.h"
+#include "internal.h"
 
 MODULE_DESCRIPTION("POSIX/COBALT interface");
 MODULE_AUTHOR("gilles.chanteperdrix@xenomai.org");

@@ -5,7 +5,6 @@ includesub_HEADERS = \
 	errno.h \
 	fcntl.h \
 	mqueue.h \
-	posix.h \
 	pthread.h \
 	sched.h \
 	semaphore.h \

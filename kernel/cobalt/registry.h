@@ -3,8 +3,6 @@
 
 #include <stdarg.h>
 #include <nucleus/queue.h>
-#include <nucleus/synch.h>
-#include <cobalt/posix.h>
 
 #define COBALT_MAXNAME 64
 

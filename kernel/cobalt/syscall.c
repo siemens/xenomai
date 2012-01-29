@@ -22,23 +22,17 @@
 
 #include <linux/types.h>
 #include <linux/err.h>
-#include <asm/xenomai/wrappers.h>
-#include <nucleus/ppd.h>
-#include <nucleus/sys_ppd.h>
-#include <nucleus/assert.h>
-#include <cobalt/syscall.h>
-#include <cobalt/posix.h>
 #include "thread.h"
 #include "mutex.h"
 #include "cond.h"
 #include "mq.h"
-#include "registry.h"	/* For COBALT_MAXNAME. */
 #include "sem.h"
 #include "timer.h"
 #include "monitor.h"
 #include "sched.h"
 #include "clock.h"
 #include <rtdm/rtdm_driver.h>
+
 #define RTDM_FD_MAX CONFIG_XENO_OPT_RTDM_FILDES
 
 int cobalt_muxid;

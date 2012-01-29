@@ -16,6 +16,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
+#include <sys/types.h>
+#include <sys/mman.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,11 +25,9 @@
 #include <signal.h>
 #include <limits.h>
 #include <unistd.h>
-#include <sys/types.h>
 #include <nucleus/heap.h>
-#include <cobalt/posix.h>
-#include <cobalt/syscall.h>
 #include <rtdm/syscall.h>
+#include <cobalt/syscall.h>
 #include <kernel/cobalt/mutex.h>
 #include <rtdk.h>
 #include <asm/xenomai/bits/bind.h>

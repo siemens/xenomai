@@ -26,6 +26,7 @@
 #include "thread.h"
 #include "timer.h"
 #include "sem.h"
+#include "internal.h"
 
 #define COBALT_TIMER_MAX  128
 

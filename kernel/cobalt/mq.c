@@ -36,6 +36,7 @@
 #include "thread.h"		/* errno. */
 #include "timer.h"
 #include "mq.h"
+#include "internal.h"
 
 /* Temporary definitions. */
 struct cobalt_mq {
