@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _XENO_SKIN_POSIX_H
-#define _XENO_SKIN_POSIX_H
+#ifndef _COBALT_POSIX_H
+#define _COBALT_POSIX_H
 
 #define COBALT_SKIN_MAGIC           0x50534531
 
@@ -33,4 +33,4 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 
-#endif /* !_XENO_SKIN_POSIX_H */
+#endif /* !_COBALT_POSIX_H */

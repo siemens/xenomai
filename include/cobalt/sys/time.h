@@ -15,8 +15,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-#ifndef _XENO_POSIX_SYS_TIME_H
-#define _XENO_POSIX_SYS_TIME_H
+#ifndef _COBALT_SYS_TIME_H
+#define _COBALT_SYS_TIME_H
 
 #ifndef __KERNEL__
 
@@ -38,4 +38,4 @@ COBALT_DECL(int, gettimeofday(struct timeval *tv,
 
 #endif	/* !__KERNEL__ */
 
-#endif /* !_XENO_POSIX_SYS_TIME_H */
+#endif /* !_COBALT_SYS_TIME_H */

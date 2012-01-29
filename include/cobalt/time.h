@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _XENO_POSIX_TIME_H
-#define _XENO_POSIX_TIME_H
+#ifndef _COBALT_TIME_H
+#define _COBALT_TIME_H
 
 #ifdef __KERNEL__
 
@@ -103,4 +103,4 @@ COBALT_DECL(int, timer_getoverrun(timer_t timerid));
 
 #endif /* !__KERNEL__ */
 
-#endif /* _XENO_POSIX_TIME_H */
+#endif /* !_COBALT_TIME_H */

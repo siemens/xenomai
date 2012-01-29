@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _XENO_POSIX_SOCKET_H
-#define _XENO_POSIX_SOCKET_H
+#ifndef _COBALT_SOCKET_H
+#define _COBALT_SOCKET_H
 
 #ifndef __KERNEL__
 
@@ -80,4 +80,4 @@ COBALT_DECL(int, shutdown(int fd, int how));
 
 #endif /* !__KERNEL__ */
 
-#endif /* _XENO_POSIX_SOCKET_H */
+#endif /* !_COBALT_SOCKET_H */

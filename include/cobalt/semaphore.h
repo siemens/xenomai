@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _XENO_POSIX_SEMAPHORE_H
-#define _XENO_POSIX_SEMAPHORE_H
+#ifndef _COBALT_SEMAPHORE_H
+#define _COBALT_SEMAPHORE_H
 
 #ifdef __KERNEL__
 
@@ -104,4 +104,4 @@ union __xeno_sem {
 #define SEM_WARNDEL  0x10
 #define SEM_RAWCLOCK 0x20
 
-#endif /* _XENO_POSIX_SEMAPHORE_H */
+#endif /* !_COBALT_SEMAPHORE_H */

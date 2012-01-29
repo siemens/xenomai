@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _XENO_POSIX_MQUEUE_H
-#define _XENO_POSIX_MQUEUE_H
+#ifndef _COBALT_MQUEUE_H
+#define _COBALT_MQUEUE_H
 
 #ifdef __KERNEL__
 
@@ -106,4 +106,4 @@ COBALT_DECL(int, mq_notify(mqd_t q,
 
 #endif /* !(__KERNEL__ || !HAVE_MQUEUE_H) */
 
-#endif /* _XENO_POSIX_MQUEUE_H */
+#endif /* !_COBALT_MQUEUE_H */

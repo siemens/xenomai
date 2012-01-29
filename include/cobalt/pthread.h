@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _XENO_POSIX_PTHREAD_H
-#define _XENO_POSIX_PTHREAD_H
+#ifndef _COBALT_PTHREAD_H
+#define _COBALT_PTHREAD_H
 
 #ifdef __KERNEL__
 
@@ -388,4 +388,4 @@ int pthread_attr_setscope_ex(pthread_attr_ex_t *attr_ex,
 
 #endif /* !__KERNEL__ */
 
-#endif /* _XENO_POSIX_PTHREAD_H */
+#endif /* !_COBALT_PTHREAD_H */

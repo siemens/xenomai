@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _XENO_POSIX_SCHED_H
-#define _XENO_POSIX_SCHED_H
+#ifndef _COBALT_SCHED_H
+#define _COBALT_SCHED_H
 
 #ifdef __KERNEL__
 
@@ -75,4 +75,4 @@ struct sched_param_ex {
 
 #endif /* __sched_extensions_defined */
 
-#endif /* SCHED_H */
+#endif /* !_COBALT_SCHED_H */

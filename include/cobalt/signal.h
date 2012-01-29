@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _XENO_POSIX_SIGNAL_H
-#define _XENO_POSIX_SIGNAL_H
+#ifndef _COBALT_SIGNAL_H
+#define _COBALT_SIGNAL_H
 
 #ifdef __KERNEL__
 
@@ -125,4 +125,4 @@ int pthread_sigqueue_np (struct cobalt_thread *thread, int sig, union sigval val
 #define SIGKICK (SIGRTMAX + 4)
 #define SIGDEMT (SIGRTMAX + 5)
 
-#endif /* _XENO_POSIX_SIGNAL_H */
+#endif /* !_COBALT_SIGNAL_H */

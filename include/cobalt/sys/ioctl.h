@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _XENO_POSIX_SYS_IOCTL_H
-#define _XENO_POSIX_SYS_IOCTL_H
+#ifndef _COBALT_SYS_IOCTL_H
+#define _COBALT_SYS_IOCTL_H
 
 #ifndef __KERNEL__
 
@@ -36,4 +36,4 @@ COBALT_DECL(int, ioctl(int fildes, unsigned long int request, ...));
 
 #endif /* !__KERNEL__ */
 
-#endif /* _XENO_POSIX_SYS_IOCTL_H */
+#endif /* !_COBALT_SYS_IOCTL_H */
