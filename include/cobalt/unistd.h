@@ -23,21 +23,6 @@
 
 #include <linux/types.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#undef close
-#define close cobalt_shm_close
-
-int cobalt_shm_close(int fildes);
-
-int ftruncate(int fildes, off_t length);
-
-#ifdef __cplusplus
-}
-#endif
-
 #else /* !__KERNEL__ */
 
 #include_next <unistd.h>
@@ -45,19 +30,6 @@ int ftruncate(int fildes, off_t length);
 
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-COBALT_DECL(int, ftruncate(int fildes, long length));
-
-#if __WORDSIZE == 32
-#if defined(_LARGEFILE64_SOURCE) \
-	|| defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64
-COBALT_DECL(int, ftruncate64(int fildes, long long length));
-#endif
-
-#if defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64
-#define __real_ftruncate __real_ftruncate64
-#endif
 #endif
 
 COBALT_DECL(ssize_t, read(int fd, void *buf, size_t nbyte));

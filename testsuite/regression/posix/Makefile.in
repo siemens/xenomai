@@ -36,7 +36,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-test_PROGRAMS = leaks$(EXEEXT) shm$(EXEEXT)
+test_PROGRAMS = leaks$(EXEEXT)
 subdir = testsuite/regression/posix
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
@@ -61,10 +61,6 @@ leaks_SOURCES = leaks.c
 leaks_OBJECTS = leaks.$(OBJEXT)
 leaks_LDADD = $(LDADD)
 leaks_DEPENDENCIES = ../../../lib/cobalt/libcobalt.la
-shm_SOURCES = shm.c
-shm_OBJECTS = shm.$(OBJEXT)
-shm_LDADD = $(LDADD)
-shm_DEPENDENCIES = ../../../lib/cobalt/libcobalt.la
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/lib/include
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
@@ -77,8 +73,8 @@ LTCOMPILE = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = leaks.c shm.c
-DIST_SOURCES = leaks.c shm.c
+SOURCES = leaks.c
+DIST_SOURCES = leaks.c
 HEADERS = $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
@@ -331,9 +327,6 @@ clean-testPROGRAMS:
 leaks$(EXEEXT): $(leaks_OBJECTS) $(leaks_DEPENDENCIES) 
 	@rm -f leaks$(EXEEXT)
 	$(LINK) $(leaks_OBJECTS) $(leaks_LDADD) $(LIBS)
-shm$(EXEEXT): $(shm_OBJECTS) $(shm_DEPENDENCIES) 
-	@rm -f shm$(EXEEXT)
-	$(LINK) $(shm_OBJECTS) $(shm_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -342,7 +335,6 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/leaks.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/shm.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

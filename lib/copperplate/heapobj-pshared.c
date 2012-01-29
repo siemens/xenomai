@@ -613,7 +613,7 @@ static int create_heap(struct heapobj *hobj, const char *session,
 		goto errno_fail;
 
 	if (sbuf.st_size > 0) {
-		heap = __STD(mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0));
+		heap = mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
 		if (heap == MAP_FAILED)
 			goto errno_fail;
 		if (heap->cpid && kill(heap->cpid, 0) == 0) {
@@ -622,14 +622,14 @@ static int create_heap(struct heapobj *hobj, const char *session,
 			__STD(close(fd));
 			return __bt(-EEXIST);
 		}
-		__STD(munmap(heap, len));
+		munmap(heap, len);
 	}
 
-	ret = __STD(ftruncate(fd, len));
+	ret = ftruncate(fd, len);
 	if (ret)
 		goto unlink_fail;
 
-	heap = __STD(mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0));
+	heap = mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
 	if (heap == MAP_FAILED)
 		goto unlink_fail;
 
@@ -707,7 +707,7 @@ void heapobj_destroy(struct heapobj *hobj)
 	}
 
 	cpid = heap->cpid;
-	__STD(munmap(heap, hobj->size + sizeof(*heap)));
+	munmap(heap, hobj->size + sizeof(*heap));
 	__STD(close(hobj->fd));
 
 	if (cpid == copperplate_get_tid() || (cpid && kill(cpid, 0)))
@@ -730,7 +730,7 @@ int heapobj_extend(struct heapobj *hobj, size_t size, void *mem)
 
 	write_lock_safe(&heap->lock, state);
 	newsize = size + hobj->size + sizeof(*heap) + sizeof(*extent);
-	ret = __STD(ftruncate(hobj->fd, newsize));
+	ret = ftruncate(hobj->fd, newsize);
 	if (ret) {
 		ret = __bt(-errno);
 		goto out;

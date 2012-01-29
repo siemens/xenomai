@@ -30,7 +30,6 @@
 #include <time.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <sys/mman.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 

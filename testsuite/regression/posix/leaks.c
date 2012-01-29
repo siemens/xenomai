@@ -15,8 +15,6 @@
 #include "check.h"
 
 #define SEM_NAME "/sem"
-#define SHM_NAME "/shm"
-#define SHM_SZ 16384
 #define MQ_NAME "/mq"
 
 #define check_used(object, before, failed)				\
@@ -62,7 +60,6 @@ int main(void)
 	pthread_t thread;
 	sem_t sem, *psem;
 	timer_t tm;
-	void *shm;
 
 	mlockall(MCL_CURRENT|MCL_FUTURE);
 
@@ -101,16 +98,6 @@ int main(void)
 	check_unix(timer_create(CLOCK_MONOTONIC, &sevt, &tm));
 	check_unix(timer_delete(tm));
 	check_used("timer", before, failed);
-
-	before = get_used();
-	check_unix(fd = shm_open(SHM_NAME, O_CREAT | O_RDWR, 0644));
-	check_unix(ftruncate(fd, SHM_SZ));
-	shm = mmap(NULL, SHM_SZ, PROT_READ, MAP_SHARED, fd, 0);
-	check_unix(shm == MAP_FAILED ? -1 : 0);
-	check_unix(munmap(shm, SHM_SZ));
-	check_unix(close(fd));
-	check_unix(shm_unlink(SHM_NAME));
-	check_used("shm", before, failed);
 
 	before = get_used();
 	check_unix(fd = mq_open(MQ_NAME, O_RDWR | O_CREAT, 0644, NULL));

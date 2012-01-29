@@ -4,7 +4,7 @@ CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 
 noinst_HEADERS = check.h
 
-test_PROGRAMS = leaks shm
+test_PROGRAMS = leaks
 
 CPPFLAGS = $(XENO_USER_CFLAGS) \
 	-I$(top_srcdir)/include
