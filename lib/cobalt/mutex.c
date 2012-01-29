@@ -233,7 +233,6 @@ int __wrap_pthread_mutex_trylock(pthread_mutex_t *mutex)
 	struct __shadow_mutex *_mutex =
 		&((union __xeno_mutex *)mutex)->shadow_mutex;
 	unsigned long status;
-	struct timespec ts;
 	xnhandle_t cur;
 	int err;
 
@@ -271,21 +270,15 @@ int __wrap_pthread_mutex_trylock(pthread_mutex_t *mutex)
 
 do_syscall:
 
-	__RT(clock_gettime(CLOCK_REALTIME, &ts));
 	do {
-		err = XENOMAI_SKINCALL2(__cobalt_muxid,
-					sc_cobalt_mutex_timedlock, _mutex, &ts);
+		err = XENOMAI_SKINCALL1(__cobalt_muxid,
+					sc_cobalt_mutex_trylock, _mutex);
 	} while (err == -EINTR);
 
-	if (err) {
-		if (err == -ETIMEDOUT || err == -EDEADLK)
-			return EBUSY;
-		return -err;
-	}
+	if (!err)
+		_mutex->lockcnt = 1;
 
-	_mutex->lockcnt = 1;
-
-	return 0;
+	return -err;
 }
 
 int __wrap_pthread_mutex_unlock(pthread_mutex_t *mutex)
