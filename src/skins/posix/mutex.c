@@ -296,12 +296,8 @@ int __wrap_pthread_mutex_trylock(pthread_mutex_t *mutex)
 	xnhandle_t cur;
 
 	cur = xeno_get_current();
-	if (cur == XN_NO_HANDLE)
+	if (unlikely(cur == XN_NO_HANDLE))
 		return EPERM;
-
-	status = xeno_get_current_mode();
-	if (unlikely(status & XNOTHER))
-		goto do_syscall;
 
 	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
 		return EINVAL;
@@ -310,6 +306,10 @@ int __wrap_pthread_mutex_trylock(pthread_mutex_t *mutex)
 		err = -EINVAL;
 		goto out;
 	}
+
+	status = xeno_get_current_mode();
+	if (unlikely(status & XNOTHER))
+		goto do_syscall;
 
 	if (unlikely(status & XNRELAX)) {
 		do {
