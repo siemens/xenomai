@@ -77,7 +77,7 @@ am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgconfigdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libpthread_rt_la_LIBADD =
+libpthread_rt_la_DEPENDENCIES = ../common/libxenomai.la
 am_libpthread_rt_la_OBJECTS = libpthread_rt_la-init.lo \
 	libpthread_rt_la-thread.lo libpthread_rt_la-timer.lo \
 	libpthread_rt_la-semaphore.lo libpthread_rt_la-clock.lo \
@@ -282,6 +282,9 @@ libpthread_rt_la_SOURCES = \
 	rtdm.c \
 	printf.c \
 	wrappers.c
+
+libpthread_rt_la_LIBADD = \
+	../common/libxenomai.la
 
 libpthread_rt_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \

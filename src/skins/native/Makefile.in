@@ -77,7 +77,7 @@ am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgconfigdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libnative_la_LIBADD =
+libnative_la_DEPENDENCIES = ../common/libxenomai.la
 am_libnative_la_OBJECTS = libnative_la-alarm.lo libnative_la-buffer.lo \
 	libnative_la-cond.lo libnative_la-event.lo \
 	libnative_la-heap.lo libnative_la-init.lo libnative_la-intr.lo \
@@ -283,6 +283,9 @@ libnative_la_SOURCES = \
 	timer.c \
 	wrappers.c \
 	wrappers.h
+
+libnative_la_LIBADD = \
+	../common/libxenomai.la
 
 libnative_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \

@@ -77,7 +77,7 @@ am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgconfigdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libuitron_la_LIBADD =
+libuitron_la_DEPENDENCIES = ../common/libxenomai.la
 am_libuitron_la_OBJECTS = libuitron_la-flag.lo libuitron_la-init.lo \
 	libuitron_la-mbx.lo libuitron_la-sem.lo libuitron_la-task.lo
 libuitron_la_OBJECTS = $(am_libuitron_la_OBJECTS)
@@ -267,6 +267,9 @@ libuitron_la_SOURCES = \
 	mbx.c \
 	sem.c \
 	task.c
+
+libuitron_la_LIBADD = \
+	../common/libxenomai.la
 
 libuitron_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
