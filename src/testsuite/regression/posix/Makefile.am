@@ -2,6 +2,8 @@ tstdir = @XENO_TEST_DIR@/regression/posix
 
 noinst_HEADERS = check.h
 
+CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
+
 tst_PROGRAMS = leaks shm
 
 CPPFLAGS = $(XENO_USER_CFLAGS) \
