@@ -13,6 +13,9 @@ libpsos_la_SOURCES = \
 	task.c \
 	tm.c
 
+libpsos_la_LIBADD = \
+	../common/libxenomai.la
+
 libpsos_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
 	-I$(top_srcdir)/include

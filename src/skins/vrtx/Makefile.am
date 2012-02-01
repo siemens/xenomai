@@ -18,6 +18,9 @@ libvrtx_la_SOURCES = \
 	wrappers.c \
 	wrappers.h
 
+libvrtx_la_LIBADD = \
+	../common/libxenomai.la
+
 libvrtx_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
 	-I$(top_srcdir)/include

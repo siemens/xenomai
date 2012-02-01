@@ -11,6 +11,9 @@ libuitron_la_SOURCES = \
 	sem.c \
 	task.c
 
+libuitron_la_LIBADD = \
+	../common/libxenomai.la
+
 libuitron_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
 	-I$(top_srcdir)/include

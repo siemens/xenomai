@@ -27,6 +27,9 @@ libpthread_rt_la_SOURCES = \
 	printf.c \
 	wrappers.c
 
+libpthread_rt_la_LIBADD = \
+	../common/libxenomai.la
+
 libpthread_rt_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
 	-I$(top_srcdir)/include \
