@@ -19,9 +19,6 @@ libvxworks_la_SOURCES = \
 	wrappers.c \
 	wrappers.h
 
-libvxworks_la_LIBADD = \
-	../common/libxenomai.la
-
 libvxworks_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
 	-I$(top_srcdir)/include

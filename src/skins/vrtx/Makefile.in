@@ -77,7 +77,7 @@ am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgconfigdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libvrtx_la_DEPENDENCIES = ../common/libxenomai.la
+libvrtx_la_LIBADD =
 am_libvrtx_la_OBJECTS = libvrtx_la-event.lo libvrtx_la-heap.lo \
 	libvrtx_la-init.lo libvrtx_la-mb.lo libvrtx_la-mx.lo \
 	libvrtx_la-pt.lo libvrtx_la-queue.lo libvrtx_la-sem.lo \
@@ -276,9 +276,6 @@ libvrtx_la_SOURCES = \
 	time.c \
 	wrappers.c \
 	wrappers.h
-
-libvrtx_la_LIBADD = \
-	../common/libxenomai.la
 
 libvrtx_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \

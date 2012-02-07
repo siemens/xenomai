@@ -77,7 +77,7 @@ am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgconfigdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-librtdm_la_DEPENDENCIES = ../common/libxenomai.la
+librtdm_la_LIBADD =
 am_librtdm_la_OBJECTS = librtdm_la-core.lo librtdm_la-init.lo
 librtdm_la_OBJECTS = $(am_librtdm_la_OBJECTS)
 librtdm_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
@@ -263,9 +263,6 @@ librtdm_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 1:0:0 -lpthread
 librtdm_la_SOURCES = \
 	core.c \
 	init.c
-
-librtdm_la_LIBADD = \
-	../common/libxenomai.la
 
 librtdm_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \

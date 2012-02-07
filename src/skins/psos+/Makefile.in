@@ -77,7 +77,7 @@ am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgconfigdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libpsos_la_DEPENDENCIES = ../common/libxenomai.la
+libpsos_la_LIBADD =
 am_libpsos_la_OBJECTS = libpsos_la-asr.lo libpsos_la-init.lo \
 	libpsos_la-queue.lo libpsos_la-rn.lo libpsos_la-sem.lo \
 	libpsos_la-task.lo libpsos_la-tm.lo
@@ -270,9 +270,6 @@ libpsos_la_SOURCES = \
 	sem.c \
 	task.c \
 	tm.c
-
-libpsos_la_LIBADD = \
-	../common/libxenomai.la
 
 libpsos_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \

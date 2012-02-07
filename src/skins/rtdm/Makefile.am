@@ -8,9 +8,6 @@ librtdm_la_SOURCES = \
 	core.c \
 	init.c
 
-librtdm_la_LIBADD = \
-	../common/libxenomai.la
-
 librtdm_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
 	-I$(top_srcdir)/include
