@@ -72,7 +72,7 @@ int main(void)
 
 	fprintf(stderr, "Checking select service with posix message queues\n");
 
-	check_native(rt_task_shadow(&main_tcb, NULL, 0, 0));
+	rt_task_shadow(&main_tcb, NULL, 0, 0);
 
 	mq = mq_open("/select_test_mq", O_RDWR | O_CREAT | O_NONBLOCK, 0, NULL);
 	check_unix(mq == -1 ? -1 : 0);
