@@ -448,13 +448,13 @@ else
 fi
 AC_MSG_RESULT([done])
 
-dnl Exported CFLAGS and LDFLAGS, shared with internal flags
-XENO_USER_APP_CFLAGS="-D_GNU_SOURCE -D_REENTRANT"
-XENO_USER_APP_LDFLAGS=
+dnl Common CFLAGS and LDFLAGS
+XENO_USER_CFLAGS="-D_GNU_SOURCE -D_REENTRANT -Wall -Werror-implicit-function-declaration -pipe"
+XENO_USER_LDFLAGS=
 
-dnl Internal CFLAGS and LDFLAGS, may be enhanced per-arch below
-XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -Werror-implicit-function-declaration -pipe"
-XENO_USER_LDFLAGS="$XENO_USER_APP_LDFLAGS"
+dnl Exported CFLAGS and LDFLAGS, may be enhanced per-arch below
+XENO_USER_APP_CFLAGS=$XENO_USER_CFLAGS
+XENO_USER_APP_LDFLAGS=$XENO_USER_LDFLAGS
 
 case $XENO_TARGET_ARCH in
  x86)
