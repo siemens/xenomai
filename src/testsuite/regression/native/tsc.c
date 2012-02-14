@@ -29,7 +29,7 @@ int main(int argc, const char *argv[])
 
 #ifdef __ARMEL__
 	if (argc == 2 && !strcmp(argv[1], "-w")) {
-		secs = (rt_timer_tsc2ns(__xn_tscinfo.mask + 1ULL) + 999999999) / 1000000000;
+		secs = (rt_timer_tsc2ns(__xn_tscinfo.kinfo.mask + 1ULL) + 999999999) / 1000000000;
 		fprintf(stderr, "ARM: counter wrap time: %Lu seconds\n", secs);
 		min = (2 * secs + 59) / 60;
 		secs = min * 60;

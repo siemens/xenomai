@@ -241,18 +241,20 @@ struct __xn_tscinfo {
 };
 
 #ifndef __KERNEL__
-extern struct __xn_tscinfo __xn_tscinfo;
+/* Putting kuser_tsc_get and kinfo.counter in the same struct results
+   in less operations in PIC code, thus optimizes */
+typedef unsigned long long rdtsc_t(volatile unsigned *vaddr);
+struct __xn_full_tscinfo {
+	struct __xn_tscinfo kinfo;
+	rdtsc_t *kuser_tsc_get;
+};
+extern struct __xn_full_tscinfo __xn_tscinfo;
 
 #ifdef CONFIG_XENO_ARM_TSC_TYPE
 static inline unsigned long long __xn_rdtsc(void)
 {
 #if CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_KUSER
-	typedef unsigned long long rdtsc_t(volatile unsigned *vaddr);
-	rdtsc_t *const kuser_tsc_get =
-		(rdtsc_t *)(0xffff1004 -
-			    ((*(unsigned *)(0xffff0ffc) + 3) << 5));
-
-	return kuser_tsc_get(__xn_tscinfo.counter);
+	return __xn_tscinfo.kuser_tsc_get(__xn_tscinfo.kinfo.counter);
 
 #elif CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING
 	volatile unsigned long long *const tscp = __xn_tscinfo.tsc;
