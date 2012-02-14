@@ -12444,11 +12444,11 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: done" >&5
 $as_echo "done" >&6; }
 
-XENO_USER_CFLAGS="-D_GNU_SOURCE -D_REENTRANT -Wall -Werror-implicit-function-declaration -pipe"
-XENO_USER_LDFLAGS=
+XENO_USER_APP_CFLAGS="-D_GNU_SOURCE -D_REENTRANT"
+XENO_USER_APP_LDFLAGS=
 
-XENO_USER_APP_CFLAGS=$XENO_USER_CFLAGS
-XENO_USER_APP_LDFLAGS=$XENO_USER_LDFLAGS
+XENO_USER_CFLAGS="$XENO_USER_APP_CFLAGS -Wall -Werror-implicit-function-declaration -pipe"
+XENO_USER_LDFLAGS="$XENO_USER_APP_LDFLAGS"
 
 case $XENO_TARGET_ARCH in
  x86)
