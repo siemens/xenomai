@@ -951,6 +951,8 @@ static inline int rtdm_nrtsig_init(rtdm_nrtsig_t *nrt_sig,
 
 static inline void rtdm_nrtsig_destroy(rtdm_nrtsig_t *nrt_sig)
 {
+	rthal_virtualize_irq(rthal_root_domain, *nrt_sig, NULL, NULL, NULL, 0);
+
 	rthal_free_virq(*nrt_sig);
 }
 

@@ -106,6 +106,8 @@ static inline int xnarch_init(void)
 static inline void xnarch_exit(void)
 {
 	rthal_trap_catch(xnarch_old_trap_handler);
+	rthal_virtualize_irq(&rthal_domain,
+			     xnarch_escalation_virq, NULL, NULL, NULL, 0);
 	rthal_free_virq(xnarch_escalation_virq);
 	rthal_exit();
 }
