@@ -18,8 +18,13 @@ depends on XENO_OPT_NUCLEUS
 
 config IPIPE_WANT_PREEMPTIBLE_SWITCH
 	bool
-	default y if (XENO_HW_UNLOCKED_SWITCH || SMP)
-	default n if !XENO_HW_UNLOCKED_SWITCH && !SMP
+	default y if XENO_HW_UNLOCKED_SWITCH
+	default n if !XENO_HW_UNLOCKED_SWITCH
+
+config SELECT_HW_UNLOCKED_SWITCH_ON_SMP
+       bool
+       select XENO_HW_UNLOCKED_SWITCH
+       default y if SMP
 
 config XENO_HW_FPU
 	bool "Enable FPU support"
@@ -42,8 +47,8 @@ config XENO_HW_UNLOCKED_SWITCH
 	and/or local interrupts may execute concurrently.
 
 	This option reduces interrupt latency when costly cache and
-	TLB flushes are required to switch context, and may improve
-	concurrency on some SMP/multi-core systems as well.
+	TLB flushes are required to switch context, and is mandatory
+	on SMP/multi-core systems.
 
 	You definitely want to enable that option on embedded ARM
 	platforms.
