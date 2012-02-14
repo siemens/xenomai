@@ -155,7 +155,9 @@ static inline __attribute_const__ unsigned long ffnz (unsigned long ul)
 #define RTHAL_TIMER_IPI RTHAL_HRTIMER_IPI
 #endif /* RTHAL_TIMER_IPI */
 
-#ifdef __IPIPE_FEATURE_SYSINFO_V2
+#ifdef CONFIG_IPIPE_CORE
+#define RTHAL_TSC_INFO(p)	((p)->arch.tsc)
+#elif defined(__IPIPE_FEATURE_SYSINFO_V2)
 #define RTHAL_TSC_INFO(p)	((p)->arch_tsc)
 #else
 #define RTHAL_TSC_INFO(p)	((p)->archdep.tsc)
@@ -192,15 +194,13 @@ static inline void rthal_timer_program_shot (unsigned long delay)
 
 static inline struct mm_struct *rthal_get_active_mm(void)
 {
-#ifdef TIF_MMSWITCH_INT
-#ifdef CONFIG_IPIPE_CORE
-	return __this_cpu_read(ipipe_percpu.active_mm);
-#else
-	return per_cpu(ipipe_active_mm, smp_processor_id());
-#endif
-#else /* !TIF_MMSWITCH_INT */
+#if !defined(TIF_MMSWITCH_INT) || !defined(CONFIG_XENO_HW_UNLOCKED_SWITCH)
 	return current->active_mm;
-#endif /* !TIF_MMSWITCH_INT */
+#elif defined(CONFIG_IPIPE_CORE)
+	return __this_cpu_read(ipipe_percpu.active_mm);
+#else /* !CONFIG_IPIPE_CORE */
+	return per_cpu(ipipe_active_mm, smp_processor_id());
+#endif /* !CONFIG_IPIPE_CORE */
 }
 
 /* Private interface -- Internal use only */
@@ -249,7 +249,7 @@ static inline void rthal_init_fpu(rthal_fpenv_t *fpuenv)
 #ifdef CONFIG_VFP
 asmlinkage void rthal_vfp_save(union vfp_state *vfp, unsigned fpexc);
 
-asmlinkage void rthal_vfp_load(union vfp_state *vfp);
+asmlinkage void rthal_vfp_load(union vfp_state *vfp, unsigned cpu);
 
 static inline void rthal_save_fpu(rthal_fpenv_t *fpuenv, unsigned fpexc)
 {
@@ -258,7 +258,7 @@ static inline void rthal_save_fpu(rthal_fpenv_t *fpuenv, unsigned fpexc)
 
 static inline void rthal_restore_fpu(rthal_fpenv_t *fpuenv)
 {
-    rthal_vfp_load(&fpuenv->vfpstate);
+    rthal_vfp_load(&fpuenv->vfpstate, rthal_processor_id());
 }
 
 #define rthal_vfp_fmrx(_vfp_) ({			\
@@ -274,10 +274,12 @@ static inline void rthal_restore_fpu(rthal_fpenv_t *fpuenv)
 		 ", cr0, 0 @ fmxr " #_vfp_ ", %0":	\
 		 /* */ : "r" (_var_))
 
-extern union vfp_state *last_VFP_context[NR_CPUS];
+extern union vfp_state *vfp_current_hw_state[NR_CPUS];
+
 static inline rthal_fpenv_t *rthal_get_fpu_owner(void)
 {
 	union vfp_state *vfp_owner;
+	unsigned cpu;
 #ifdef CONFIG_SMP
 	unsigned fpexc;
 
@@ -286,9 +288,15 @@ static inline rthal_fpenv_t *rthal_get_fpu_owner(void)
 		return NULL;
 #endif
 
-	vfp_owner = last_VFP_context[ipipe_processor_id()];
+	cpu = ipipe_processor_id();
+	vfp_owner = vfp_current_hw_state[cpu];
 	if (!vfp_owner)
 		return NULL;
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0) && defined(CONFIG_SMP)
+	if (vfp_owner->hard.cpu != cpu)
+		return NULL;
+#endif /* linux >= 3.2.0 */
 
 	return container_of(vfp_owner, rthal_fpenv_t, vfpstate);
 }

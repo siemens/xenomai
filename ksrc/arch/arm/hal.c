@@ -507,7 +507,7 @@ EXPORT_SYMBOL_GPL(rthal_thread_switch);
 EXPORT_SYMBOL_GPL(rthal_thread_trampoline);
 EXPORT_SYMBOL_GPL(__rthal_arm_fault_range);
 #if defined(CONFIG_VFP) && defined(CONFIG_XENO_HW_FPU)
-EXPORT_SYMBOL_GPL(last_VFP_context);
+EXPORT_SYMBOL_GPL(vfp_current_hw_state);
 EXPORT_SYMBOL_GPL(rthal_vfp_save);
 EXPORT_SYMBOL_GPL(rthal_vfp_load);
 #endif /* CONFIG_VFP && CONFIG_XENO_HW_FPU */

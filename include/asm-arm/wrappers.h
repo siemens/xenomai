@@ -98,7 +98,11 @@ static inline void fp_init(union fp_state *state)
 #define FPEXC_EN FPEXC_ENABLE
 #endif
 
-#if !defined(__IPIPE_FEATURE_UNMASKED_CONTEXT_SWITCH) && defined(TIF_MMSWITCH_INT)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 1, 0)
+#define vfp_current_hw_state last_VFP_context
+#endif /* Linux < 3.1 */
+
+#if !defined(CONFIG_IPIPE_CORE) && !defined(__IPIPE_FEATURE_UNMASKED_CONTEXT_SWITCH) && defined(TIF_MMSWITCH_INT)
 /*
  * Legacy ARM patches might provide unmasked context switch support
  * without defining the common config option; force this support in.

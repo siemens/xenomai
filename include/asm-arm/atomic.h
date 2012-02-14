@@ -244,6 +244,7 @@ static inline int xnarch_atomic_dec_and_test(xnarch_atomic_t *v)
 #include <linux/bitops.h>
 #include <asm/atomic.h>
 #include <asm/system.h>
+#include <asm/xenomai/hal.h>
 
 static inline void
 xnarch_atomic_set_mask(unsigned long *addr, unsigned long mask)

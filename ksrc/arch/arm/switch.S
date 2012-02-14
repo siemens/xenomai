@@ -97,8 +97,12 @@ ENTRY(rthal_vfp_save)
 
 /* Copied from no_old_VFP_process in arch/arm/vfp/vfphw.S
  * r0 = pointer to union vfp_state
+ * r1 = current cpu
  */
 ENTRY(rthal_vfp_load)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0) && defined(CONFIG_SMP)
+    str 	r1, [r0, #VFP_CPU]
+#endif
     VFPFLDMIA	r0, r2			@ reload the working registers while
 					@ FPEXC is in a safe state
     ldmia	r0, {r1, r2, r3, r12}	@ load FPEXC, FPSCR, FPINST, FPINST2

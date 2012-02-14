@@ -146,6 +146,7 @@ static inline void xnarch_enable_fpu(xnarchtcb_t *tcb)
 		*/
 	} else if (tcb->fpup && tcb->fpup == rthal_task_fpenv(tcb->user_task)) {
 		unsigned fpexc = rthal_enable_fpu();
+		unsigned cpu;
 #ifndef CONFIG_SMP
 		if (likely(!(fpexc & RTHAL_VFP_ANY_EXC)
 			   && !(rthal_vfp_fmrx(FPSCR) & FPSCR_IXE)))
@@ -165,7 +166,9 @@ static inline void xnarch_enable_fpu(xnarchtcb_t *tcb)
 		   systems for still unknown reasons.
 		*/
 		rthal_save_fpu(tcb->fpup, fpexc);
-		last_VFP_context[rthal_processor_id()] = NULL;
+
+		cpu = rthal_processor_id();
+		vfp_current_hw_state[cpu] = NULL;
 		rthal_disable_fpu();
 	}
 #else /* !CONFIG_VFP */
@@ -221,12 +224,13 @@ static inline void xnarch_restore_fpu(xnarchtcb_t * tcb)
 	   the newly switched thread uses the FPU, to allow the kernel handler
 	   to pick the correct FPU context.
 
-	   Further set last_VFP_context to NULL to avoid the Linux kernel to
+	   Further set vfp_current_hw_state to NULL to avoid the Linux kernel to
 	   save, when the fault occur, the current FPU context, the one of an RT
 	   task, into the FPU area of the last non RT task which used the FPU
 	   before the preemption by Xenomai.
 	*/
-		last_VFP_context[rthal_processor_id()] = NULL;
+		unsigned cpu = rthal_processor_id();
+		vfp_current_hw_state[cpu] = NULL;
 		rthal_disable_fpu();
 	}
 #else /* !CONFIG_VFP */
