@@ -87,6 +87,9 @@
 #elif defined(CONFIG_SMP) && defined(CONFIG_HAVE_ARM_TWD)
 #define RTHAL_TIMER_DEVICE	"local_timer"
 #define RTHAL_CLOCK_DEVICE	"global_timer"
+#elif defined(CONFIG_PLAT_SPEAR)
+#define RTHAL_TIMER_DEVICE      "tmr0"
+#define RTHAL_CLOCK_DEVICE	"tmr1"
 #else
 #error "Unsupported ARM machine"
 #endif /* CONFIG_ARCH_SA1100 */
