@@ -26,6 +26,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <syslog.h>
+#include <signal.h>
 
 #include <rtdk.h>
 #include <nucleus/types.h>	/* For BITS_PER_LONG */
@@ -612,6 +613,11 @@ static void unlock(void *cookie)
 
 static void *printer_loop(void *arg)
 {
+	sigset_t mask;
+
+	sigemptyset(&mask);
+	pthread_sigmask(SIG_BLOCK, &mask, NULL);
+
 	while (1) {
 		pthread_cleanup_push(unlock, &buffer_lock);
 		pthread_mutex_lock(&buffer_lock);
