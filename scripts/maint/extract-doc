@@ -26,7 +26,7 @@ Options:
 "
 
 ECHO=echo
-GIT_CLONE="git-clone"
+GIT_CLONE="git clone"
 RSYNC="rsync"
 
 # Parse command line arguments.
@@ -34,24 +34,24 @@ while :; do
     case "$1" in
     # Really verbose, output details
     -v|--verbose) SVN=svn
-        RSYNC="rsync -v"
-        ;;
-    
+	RSYNC="rsync -v"
+	;;
+
     # Really silent, for cron jobs
     -q|--quiet) ECHO=:
-        RSYNC="rsync -q"
-	GIT_CLONE="git-clone -q"
-        ;;
+	RSYNC="rsync -q"
+	GIT_CLONE="git clone -q"
+	;;
 
     # Debugging
     -d|--debug) set -x
-        ;;
+	;;
 
     -h|--help) cat <<EOF
 $USAGE
 EOF
-        exit 0
-        ;;
+	exit 0
+	;;
 
     *) break
        ;;
@@ -105,4 +105,3 @@ done
 
 cd ..
 rm -Rf $tmpdir
-
