@@ -164,7 +164,7 @@ static void critical_sync(void)
 	}
 }
 #else /* CONFIG_SMP */
-#define rthal_critical_sync NULL
+#define critical_sync NULL
 #endif /* !CONFIG_SMP */
 
 static void rthal_timer_set_oneshot(int rt_mode)

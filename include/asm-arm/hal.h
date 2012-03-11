@@ -152,7 +152,7 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 #define RTHAL_TIMER_IPI IPIPE_HRTIMER_IPI
 #endif /* RTHAL_TIMER_IPI */
 
-#define RTHAL_TSC_INFO(p)	((p)->arch_tsc)
+#define RTHAL_TSC_INFO(p)	((p)->arch.tsc)
 
 #define RTHAL_SHARED_HEAP_FLAGS (cache_is_vivt() ? XNHEAP_GFP_NONCACHED : 0)
 
@@ -219,7 +219,7 @@ static inline void rthal_init_fpu(rthal_fpenv_t *fpuenv)
 #ifdef CONFIG_VFP
 asmlinkage void rthal_vfp_save(union vfp_state *vfp, unsigned fpexc);
 
-asmlinkage void rthal_vfp_load(union vfp_state *vfp);
+asmlinkage void rthal_vfp_load(union vfp_state *vfp, unsigned cpu);
 
 static inline void rthal_save_fpu(rthal_fpenv_t *fpuenv, unsigned fpexc)
 {
@@ -228,7 +228,7 @@ static inline void rthal_save_fpu(rthal_fpenv_t *fpuenv, unsigned fpexc)
 
 static inline void rthal_restore_fpu(rthal_fpenv_t *fpuenv)
 {
-	rthal_vfp_load(&fpuenv->vfpstate);
+	rthal_vfp_load(&fpuenv->vfpstate, ipipe_processor_id());
 }
 
 #define rthal_vfp_fmrx(_vfp_) ({					\
@@ -244,10 +244,12 @@ static inline void rthal_restore_fpu(rthal_fpenv_t *fpuenv)
 		     ", cr0, 0 @ fmxr " #_vfp_ ", %0":		\
 		     /* */ : "r" (_var_))
 
-extern union vfp_state *last_VFP_context[NR_CPUS];
+extern union vfp_state *vfp_current_hw_state[NR_CPUS];
+
 static inline rthal_fpenv_t *rthal_get_fpu_owner(void)
 {
 	union vfp_state *vfp_owner;
+	unsigned cpu;
 #ifdef CONFIG_SMP
 	unsigned fpexc;
 
@@ -256,9 +258,15 @@ static inline rthal_fpenv_t *rthal_get_fpu_owner(void)
 		return NULL;
 #endif
 
-	vfp_owner = last_VFP_context[ipipe_processor_id()];
+	cpu = ipipe_processor_id();
+	vfp_owner = vfp_current_hw_state[cpu];
 	if (!vfp_owner)
 		return NULL;
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0) && defined(CONFIG_SMP)
+	if (vfp_owner->hard.cpu != cpu)
+		return NULL;
+#endif /* linux >= 3.2.0 */
 
 	return container_of(vfp_owner, rthal_fpenv_t, vfpstate);
 }
@@ -324,4 +332,3 @@ static const char *const rthal_fault_labels[] = {
 #endif /* !_XENO_ASM_ARM_HAL_H */
 
 // vim: ts=4 et sw=4 sts=4
-indent-reg
