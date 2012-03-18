@@ -38,6 +38,8 @@
 #include <asm/vfp.h>
 #endif /* CONFIG_VFP */
 
+#ifndef CONFIG_IPIPE_CORE
+
 #if defined(CONFIG_ARCH_AT91)
 #include <linux/stringify.h>
 #define RTHAL_TIMER_DEVICE	"at91_tc" __stringify(CONFIG_IPIPE_AT91_TC)
@@ -89,6 +91,13 @@
 #else
 #error "Unsupported ARM machine"
 #endif /* CONFIG_ARCH_SA1100 */
+
+#else /* I-ipipe core */
+
+#define RTHAL_TIMER_DEVICE (ipipe_timer_name())
+#define RTHAL_CLOCK_DEVICE "ipipe_tsc"
+
+#endif /* I-ipipe core */
 
 #define RTHAL_HOST_TICK_IRQ RTHAL_TIMER_IRQ
 
@@ -152,7 +161,11 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 #define RTHAL_TIMER_IPI IPIPE_HRTIMER_IPI
 #endif /* RTHAL_TIMER_IPI */
 
+#ifdef CONFIG_IPIPE_CORE
 #define RTHAL_TSC_INFO(p)	((p)->arch.tsc)
+#else /* !CONFIG_IPIPE_CORE */
+#define RTHAL_TSC_INFO(p)	((p)->arch_tsc)
+#endif  /* !CONFIG_IPIPE_CORE */
 
 #define RTHAL_SHARED_HEAP_FLAGS (cache_is_vivt() ? XNHEAP_GFP_NONCACHED : 0)
 
@@ -173,10 +186,14 @@ static inline struct task_struct *rthal_current_host_task(int cpuid)
 
 static inline void rthal_timer_program_shot(unsigned long delay)
 {
+#ifndef CONFIG_IPIPE_CORE
 	if (delay == 0)
 		ipipe_post_irq_head(RTHAL_TIMER_IRQ);
 	else
 		__ipipe_mach_set_dec(delay);
+#else /* I-pipe core */
+	ipipe_timer_set(delay);
+#endif /* I-pipe core */
 }
 
 /* Private interface -- Internal use only */
