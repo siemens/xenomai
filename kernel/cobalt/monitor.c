@@ -97,6 +97,7 @@ int cobalt_monitor_init(struct cobalt_monitor_shadow __user *u_monsh,
 
 	datp->flags = 0;
 	datoff = xnheap_mapped_offset(heap, datp);
+	monsh.flags = flags;
 	monsh.monitor = mon;
 	monsh.u.data_offset = datoff;
 
