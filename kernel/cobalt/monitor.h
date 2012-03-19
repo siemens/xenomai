@@ -21,8 +21,6 @@
 
 #include <asm/xenomai/atomic.h>
 
-#define COBALT_MONITOR_MAGIC 0x86861111
-
 #define COBALT_MONITOR_GRANTED    0x01
 #define COBALT_MONITOR_DRAINED    0x02
 #define COBALT_MONITOR_SIGNALED   0x03 /* i.e. GRANTED or DRAINED */
