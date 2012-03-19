@@ -31,6 +31,7 @@
 #include "monitor.h"
 #include "sched.h"
 #include "clock.h"
+#include "event.h"
 #include <rtdm/rtdm_driver.h>
 
 #define RTDM_FD_MAX CONFIG_XENO_OPT_RTDM_FILDES
@@ -303,6 +304,10 @@ static struct xnsysent __systab[] = {
 	SKINCALL_DEF(sc_cobalt_monitor_wait, cobalt_monitor_wait, nonrestartable),
 	SKINCALL_DEF(sc_cobalt_monitor_sync, cobalt_monitor_sync, nonrestartable),
 	SKINCALL_DEF(sc_cobalt_monitor_exit, cobalt_monitor_exit, primary),
+	SKINCALL_DEF(sc_cobalt_event_init, cobalt_event_init, any),
+	SKINCALL_DEF(sc_cobalt_event_destroy, cobalt_event_destroy, any),
+	SKINCALL_DEF(sc_cobalt_event_wait, cobalt_event_wait, primary),
+	SKINCALL_DEF(sc_cobalt_event_sync, cobalt_event_sync, any),
 };
 
 static void *cobalt_eventcb(int event, void *data)
@@ -321,6 +326,7 @@ static void *cobalt_eventcb(int event, void *data)
 		initq(&q->kqueues.threadq);
 		initq(&q->kqueues.timerq);
 		initq(&q->kqueues.monitorq);
+		initq(&q->kqueues.eventq);
 		cobalt_assocq_init(&q->uqds);
 		cobalt_assocq_init(&q->usems);
 
@@ -336,6 +342,7 @@ static void *cobalt_eventcb(int event, void *data)
 		cobalt_semq_cleanup(&q->kqueues);
 		cobalt_mutexq_cleanup(&q->kqueues);
 		cobalt_condq_cleanup(&q->kqueues);
+		cobalt_eventq_cleanup(&q->kqueues);
 
 		kfree(q);
 

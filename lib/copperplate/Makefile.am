@@ -6,6 +6,7 @@ libcopperplate_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 0:0:0
 libcopperplate_la_SOURCES =	\
 	clockobj.c	\
 	cluster.c	\
+	eventobj.c 		\
 	hash.c 		\
 	init.c		\
 	internal.c	\

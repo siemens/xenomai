@@ -110,6 +110,7 @@ int __fnref_register(const char *libname,
 #define sem_scope_attribute	SEM_PSHARED
 #define thread_scope_attribute	PTHREAD_SCOPE_SYSTEM
 #define monitor_scope_attribute	COBALT_MONITOR_SHARED
+#define event_scope_attribute	COBALT_EVENT_SHARED
 
 #else /* !CONFIG_XENO_PSHARED */
 
@@ -131,6 +132,7 @@ int __fnref_register(const char *libname,
 #define sem_scope_attribute	0
 #define thread_scope_attribute	PTHREAD_SCOPE_PROCESS
 #define monitor_scope_attribute	0
+#define event_scope_attribute	0
 
 #endif /* !CONFIG_XENO_PSHARED */
 

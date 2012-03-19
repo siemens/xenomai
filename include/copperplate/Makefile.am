@@ -5,6 +5,7 @@ includesub_HEADERS =	\
 	clockobj.h	\
 	cluster.h	\
 	debug.h		\
+	eventobj.h	\
 	hash.h		\
 	heapobj.h	\
 	init.h		\

@@ -101,6 +101,10 @@
 #define sc_cobalt_monitor_wait          86
 #define sc_cobalt_monitor_sync          87
 #define sc_cobalt_monitor_exit          88
+#define sc_cobalt_event_init            89
+#define sc_cobalt_event_wait            90
+#define sc_cobalt_event_sync            91
+#define sc_cobalt_event_destroy         92
 
 #ifdef __KERNEL__
 

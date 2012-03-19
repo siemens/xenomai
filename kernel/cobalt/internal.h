@@ -54,6 +54,7 @@
 #define COBALT_MQD_MAGIC         COBALT_MAGIC(0B)
 #define COBALT_INTR_MAGIC        COBALT_MAGIC(0C)
 #define COBALT_TIMER_MAGIC       COBALT_MAGIC(0E)
+#define COBALT_EVENT_MAGIC       COBALT_MAGIC(0F)
 
 #define COBALT_MIN_PRIORITY      XNSCHED_LOW_PRIO
 #define COBALT_MAX_PRIORITY      XNSCHED_HIGH_PRIO
@@ -76,6 +77,7 @@ typedef struct cobalt_kqueues {
 	xnqueue_t threadq;
 	xnqueue_t timerq;
 	xnqueue_t monitorq;
+	xnqueue_t eventq;
 } cobalt_kqueues_t;
 
 typedef struct {

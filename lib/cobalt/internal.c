@@ -14,6 +14,10 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
+ *
+ * --
+ * Internal Cobalt services. No sanity check will be done with
+ * respect to object validity, callers have to take care of this.
  */
 
 #include <sys/types.h>
@@ -26,6 +30,7 @@
 #include <nucleus/thread.h>
 #include <cobalt/syscall.h>
 #include <kernel/cobalt/monitor.h>
+#include <kernel/cobalt/event.h>
 #include <asm-generic/bits/current.h>
 #include "internal.h"
 
@@ -317,4 +322,98 @@ void cobalt_handle_sigdebug(int sig, siginfo_t *si, void *context)
 	sa.sa_flags = 0;
 	sigaction(SIGXCPU, &sa, NULL);
 	pthread_kill(pthread_self(), SIGXCPU);
+}
+
+static inline
+struct cobalt_event_data *get_event_data(cobalt_event_t *event)
+{
+	return event->flags & COBALT_EVENT_SHARED ?
+		(void *)xeno_sem_heap[1] + event->u.data_offset :
+		event->u.data;
+}
+
+int cobalt_event_init(cobalt_event_t *event, unsigned long value,
+		      int flags)
+{
+	struct cobalt_event_data *datp;
+	int ret;
+
+	ret = XENOMAI_SKINCALL3(__cobalt_muxid,
+				sc_cobalt_event_init,
+				event, value, flags);
+	if (ret)
+		return ret;
+
+	if ((flags & COBALT_EVENT_SHARED) == 0) {
+		datp = (void *)xeno_sem_heap[0] + event->u.data_offset;
+		event->u.data = datp;
+	}
+
+	datp = get_event_data(event);
+	memset(datp, 0, sizeof(*datp));
+
+	return 0;
+}
+
+int cobalt_event_destroy(cobalt_event_t *event)
+{
+	return XENOMAI_SKINCALL1(__cobalt_muxid,
+				 sc_cobalt_event_destroy,
+				 event);
+}
+
+int cobalt_event_post(cobalt_event_t *event, unsigned long bits)
+{
+	struct cobalt_event_data *datp = get_event_data(event);
+
+	if (bits == 0)
+		return 0;
+
+	__sync_or_and_fetch(&datp->value, bits); /* full barrier. */
+
+	if ((datp->flags & COBALT_EVENT_PENDED) == 0)
+		return 0;
+
+	return XENOMAI_SKINCALL1(__cobalt_muxid,
+				 sc_cobalt_event_sync, event);
+}
+
+int cobalt_event_wait(cobalt_event_t *event,
+		      unsigned long bits, unsigned long *bits_r,
+		      int mode, const struct timespec *timeout)
+{
+	int ret, oldtype;
+
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+
+	ret = XENOMAI_SKINCALL5(__cobalt_muxid,
+				sc_cobalt_event_wait,
+				event, bits, bits_r, mode, timeout);
+
+	pthread_setcanceltype(oldtype, NULL);
+
+	return ret;
+}
+
+unsigned long cobalt_event_clear(cobalt_event_t *event,
+				 unsigned long bits)
+{
+	struct cobalt_event_data *datp = get_event_data(event);
+
+	return __sync_fetch_and_and(&datp->value, ~bits);
+}
+
+int cobalt_event_inquire(cobalt_event_t *event, unsigned long *bits_r)
+{
+	struct cobalt_event_data *datp = get_event_data(event);
+
+	/*
+	 * We don't guarantee clean readings, this service is
+	 * primarily for debug purposes when the caller won't bet the
+	 * house on the values returned.
+	 */
+	__sync_synchronize();
+	*bits_r = datp->value;
+
+	return datp->nwaiters;
 }

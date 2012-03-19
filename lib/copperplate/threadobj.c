@@ -35,10 +35,12 @@
 #include "copperplate/syncobj.h"
 #include "copperplate/cluster.h"
 #include "copperplate/clockobj.h"
+#include "copperplate/eventobj.h"
 #include "internal.h"
 
 union copperplate_wait_union {
 	struct syncluster_wait_struct syncluster_wait;
+	struct eventobj_wait_struct eventobj_wait;
 };
 
 static void threadobj_finalize(void *p);

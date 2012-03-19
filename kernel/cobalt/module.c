@@ -54,6 +54,7 @@
 #include "timer.h"
 #include "registry.h"
 #include "monitor.h"
+#include "event.h"
 #include "internal.h"
 
 MODULE_DESCRIPTION("POSIX/COBALT interface");
@@ -65,6 +66,7 @@ static void cobalt_shutdown(int xtype)
 	cobalt_thread_pkg_cleanup();
 	cobalt_timer_pkg_cleanup();
 	cobalt_monitor_pkg_cleanup();
+	cobalt_event_pkg_cleanup();
 	cobalt_mq_pkg_cleanup();
 	cobalt_cond_pkg_cleanup();
 	cobalt_sem_pkg_cleanup();
@@ -97,6 +99,7 @@ int SKIN_INIT(posix)
 	cobalt_sem_pkg_init();
 	cobalt_cond_pkg_init();
 	cobalt_mq_pkg_init();
+	cobalt_event_pkg_init();
 	cobalt_monitor_pkg_init();
 	cobalt_timer_pkg_init();
 

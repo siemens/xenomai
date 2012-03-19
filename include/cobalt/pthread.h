@@ -182,6 +182,27 @@ struct cobalt_monitor_shadow {
 	int flags;
 };
 
+struct cobalt_event;
+struct cobalt_event_data;
+
+/* Creation flags. */
+#define COBALT_EVENT_FIFO    0x0
+#define COBALT_EVENT_PRIO    0x1
+#define COBALT_EVENT_SHARED  0x2
+
+/* Wait mode. */
+#define COBALT_EVENT_ALL  0x0
+#define COBALT_EVENT_ANY  0x1
+
+struct cobalt_event_shadow {
+	struct cobalt_event *event;
+	union {
+		struct cobalt_event_data *data;
+		unsigned int data_offset;
+	} u;
+	int flags;
+};
+
 #ifdef __KERNEL__
 typedef struct cobalt_mutexattr pthread_mutexattr_t;
 
@@ -197,6 +218,8 @@ typedef struct {
 } pthread_attr_ex_t;
 
 typedef struct cobalt_monitor_shadow cobalt_monitor_t;
+
+typedef struct cobalt_event_shadow cobalt_event_t;
 
 #ifdef __cplusplus
 extern "C" {
