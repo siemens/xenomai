@@ -41,7 +41,7 @@ struct ipipe_work_header {
 	void (*handler)(struct ipipe_work_header *work);
 };
 
-#ifndef CONFIG_XENO_OPT_HOSTRT
+#if !defined(CONFIG_XENO_OPT_HOSTRT) && !defined(CONFIG_HAVE_IPIPE_HOSTRT)
 #define IPIPE_EVENT_HOSTRT  -1	/* Never received */
 #endif
 #define IPIPE_KEVT_SCHEDULE	IPIPE_EVENT_SCHEDULE
