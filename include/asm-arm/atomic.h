@@ -47,14 +47,14 @@ static inline void atomic_set_mask(unsigned long mask, unsigned long *addr)
 			 : "cc");
 }
 #else /* arm <= armv5 */
-static inline void atomic_set_mask(unsigned long mask, unsigned long *addr)
-{
-	unsigned long flags;
-
-	flags = hard_local_irq_save();
-	*addr |= mask;
-	hard_local_irq_restore(flags);
-}
+#define atomic_set_mask(mask, addr)					\
+	({								\
+		unsigned long flags;					\
+									\
+		flags = hard_local_irq_save();				\
+		*(unsigned long *)(addr) |= (unsigned long)(mask);	\
+		hard_local_irq_restore(flags);				\
+	})
 #endif /* arm <= armv5 */
 
 #else /* !__KERNEL__ */
