@@ -89,13 +89,18 @@ int __wrap_pthread_cond_init(pthread_cond_t *cond,
 			     const pthread_condattr_t * attr)
 {
 	struct __shadow_cond *_cnd = &((union __xeno_cond *)cond)->shadow_cond;
+	unsigned long *pending_signalsp;
 	int err;
 
 	err = XENOMAI_SKINCALL2(__cobalt_muxid, sc_cobalt_cond_init, _cnd, attr);
 	if (!err && !_cnd->attr.pshared) {
-		_cnd->pending_signals = (unsigned long *)
+		pending_signalsp = (unsigned long *)
 			(xeno_sem_heap[0] + _cnd->pending_signals_offset);
-	}
+		_cnd->pending_signals = pending_signalsp;
+	} else
+		pending_signalsp = cond_get_signalsp(_cnd);
+
+	__cobalt_prefault(pending_signalsp);
 
 	return -err;
 }
@@ -243,7 +248,7 @@ int __wrap_pthread_cond_signal(pthread_cond_t *cond)
 
 	mutex_datp = cond_get_mutex_datp(_cnd);
 	if (mutex_datp) {
-		unsigned long flags = mutex_datp->flags ;
+		unsigned long flags = mutex_datp->flags;
 
 		if (unlikely(flags & COBALT_MUTEX_ERRORCHECK)) {
 			xnhandle_t cur = xeno_get_current();

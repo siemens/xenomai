@@ -81,6 +81,7 @@ int __wrap_pthread_mutex_init(pthread_mutex_t *mutex,
 {
 	struct __shadow_mutex *_mutex =
 		&((union __xeno_mutex *)mutex)->shadow_mutex;
+	struct mutex_dat *datp;
 	int err;
 
 	if (_mutex->magic == COBALT_MUTEX_MAGIC) {
@@ -93,9 +94,14 @@ int __wrap_pthread_mutex_init(pthread_mutex_t *mutex,
 
 	err = -XENOMAI_SKINCALL2(__cobalt_muxid,sc_cobalt_mutex_init,_mutex,attr);
 
-	if (!_mutex->attr.pshared)
-		_mutex->dat = (struct mutex_dat *)
+	if (!_mutex->attr.pshared) {
+		datp = (struct mutex_dat *)
 			(xeno_sem_heap[0] + _mutex->dat_offset);
+		_mutex->dat = datp;
+	} else
+		datp = mutex_get_datp(_mutex);
+
+	__cobalt_prefault(datp);
 
 	return err;
 }

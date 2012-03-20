@@ -8,6 +8,7 @@
 #include <nucleus/vdso.h>
 #include <asm/xenomai/syscall.h>
 #include <asm-generic/bits/current.h>
+#include "internal.h"
 
 extern unsigned long xeno_sem_heap[2];
 
@@ -30,6 +31,7 @@ void xeno_set_current_window(unsigned long offset)
 {
 	xeno_current_window = (struct xnthread_user_window *)
 		(xeno_sem_heap[0] + offset);
+	__cobalt_prefault(xeno_current_window);
 }
 #else /* !HAVE_TLS */
 
@@ -73,8 +75,11 @@ void xeno_init_current_keys(void)
 
 void xeno_set_current_window(unsigned long offset)
 {
-	pthread_setspecific(xeno_current_window_key,
-			    (void *)(xeno_sem_heap[0] + offset));
+	struct xnthread_user_window *window;
+
+	window = (void *)(xeno_sem_heap[0] + offset);
+	pthread_setspecific(xeno_current_window_key, window);
+	__cobalt_prefault(window);
 }
 #endif /* !HAVE_TLS */
 

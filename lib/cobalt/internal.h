@@ -12,6 +12,10 @@ struct xnthread_user_window;
 struct cobalt_threadstat;
 struct cobalt_monitor_shadow;
 
+void ___cobalt_prefault(void *p, size_t len);
+
+#define __cobalt_prefault(p) ___cobalt_prefault(p, sizeof(*p))
+
 void __cobalt_thread_harden(void);
 
 int __cobalt_thread_stat(pthread_t tid,

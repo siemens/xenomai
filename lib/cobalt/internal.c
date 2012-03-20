@@ -23,6 +23,7 @@
 #include <sys/types.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <signal.h>
 #include <errno.h>
 #include <pthread.h>
@@ -51,6 +52,18 @@ int __cobalt_thread_stat(pthread_t tid, struct cobalt_threadstat *stat)
 				 sc_cobalt_thread_getstat, tid, stat);
 }
 
+void ___cobalt_prefault(void *p, size_t len)
+{
+	volatile char *_p = (volatile char *)p, *end;
+	long pagesz = sysconf(_SC_PAGESIZE);
+
+	end = _p + len;
+	do {
+		*_p = *_p;
+		_p += pagesz;
+	} while (_p < end);
+}
+
 static inline
 struct cobalt_monitor_data *get_monitor_data(cobalt_monitor_t *mon)
 {
@@ -73,7 +86,10 @@ int cobalt_monitor_init(cobalt_monitor_t *mon, int flags)
 	if ((flags & COBALT_MONITOR_SHARED) == 0) {
 		datp = (void *)xeno_sem_heap[0] + mon->u.data_offset;
 		mon->u.data = datp;
-	}
+	} else
+		datp = get_monitor_data(mon);
+
+	__cobalt_prefault(datp);
 
 	return 0;
 }
@@ -130,7 +146,7 @@ int cobalt_monitor_exit(cobalt_monitor_t *mon)
 	unsigned long status;
 	xnhandle_t cur;
 
-	xnarch_memory_barrier();
+	__sync_synchronize();
 
 	datp = get_monitor_data(mon);
 	if ((datp->flags & COBALT_MONITOR_PENDED) &&
@@ -347,10 +363,10 @@ int cobalt_event_init(cobalt_event_t *event, unsigned long value,
 	if ((flags & COBALT_EVENT_SHARED) == 0) {
 		datp = (void *)xeno_sem_heap[0] + event->u.data_offset;
 		event->u.data = datp;
-	}
+	} else
+		datp = get_event_data(event);
 
-	datp = get_event_data(event);
-	memset(datp, 0, sizeof(*datp));
+	__cobalt_prefault(datp);
 
 	return 0;
 }
