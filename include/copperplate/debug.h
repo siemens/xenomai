@@ -19,15 +19,12 @@
 #ifndef _COPPERPLATE_DEBUG_H
 #define _COPPERPLATE_DEBUG_H
 
+#include <stdint.h>
+#include <stddef.h>
+
 #ifdef __XENO_DEBUG__
 
-#include <stdint.h>
 #include <pthread.h>
-
-static inline int bad_pointer(const void *ptr)
-{
-	return ptr == NULL || ((intptr_t)ptr & (sizeof(intptr_t)-1)) != 0;
-}
 
 static inline int must_check(void)
 {
@@ -101,11 +98,6 @@ int debug_pkg_init(void);
 
 #else /* !__XENO_DEBUG__ */
 
-static inline int bad_pointer(const void *ptr)
-{
-	return 0;
-}
-
 static inline int must_check(void)
 {
 	return 0;
@@ -145,5 +137,10 @@ struct backtrace_data {
 #define debug_pkg_init()	({ 0; })
 
 #endif /* !__XENO_DEBUG__ */
+
+static inline int bad_pointer(const void *ptr)
+{
+	return ptr == NULL || ((intptr_t)ptr & (sizeof(intptr_t)-1)) != 0;
+}
 
 #endif /* _COPPERPLATE_DEBUG_H */
