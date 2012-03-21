@@ -26,7 +26,6 @@
 #include "internal.h"
 #include "task.h"
 #include "buffer.h"
-#include "event.h"
 #include "queue.h"
 #include "timer.h"
 #include "heap.h"
@@ -34,7 +33,6 @@
 union alchemy_wait_union {
 	struct alchemy_task_wait task_wait;
 	struct alchemy_buffer_wait buffer_wait;
-	struct alchemy_event_wait event_wait;
 	struct alchemy_queue_wait queue_wait;
 	struct alchemy_heap_wait heap_wait;
 };

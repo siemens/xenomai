@@ -32,12 +32,14 @@ static struct alchemy_namegen event_namegen = {
 	.length = sizeof ((struct alchemy_event *)0)->name,
 };
 
-DEFINE_SYNC_LOOKUP(event, RT_EVENT);
+DEFINE_LOOKUP_PRIVATE(event, RT_EVENT);
 
-static void event_finalize(struct syncobj *sobj)
+static void event_finalize(struct eventobj *evobj)
 {
-	struct alchemy_event *evcb;
-	evcb = container_of(sobj, struct alchemy_event, sobj);
+	struct alchemy_event *evcb = container_of(evobj, struct alchemy_event, evobj);
+	/* We should never fail here, so we backtrace. */
+	__bt(syncluster_delobj(&alchemy_event_table, &evcb->cobj));
+	evcb->magic = ~event_magic;
 	xnfree(evcb);
 }
 fnref_register(libalchemy, event_finalize);
@@ -45,7 +47,7 @@ fnref_register(libalchemy, event_finalize);
 int rt_event_create(RT_EVENT *event, const char *name,
 		    unsigned long ivalue, int mode)
 {
-	int sobj_flags = 0, ret = 0;
+	int evobj_flags = 0, ret = 0;
 	struct alchemy_event *evcb;
 	struct service svc;
 
@@ -62,16 +64,18 @@ int rt_event_create(RT_EVENT *event, const char *name,
 
 	alchemy_build_name(evcb->name, name, &event_namegen);
 	evcb->magic = event_magic;
-	evcb->value = ivalue;
-	evcb->mode = mode;
 	if (mode & EV_PRIO)
-		sobj_flags = SYNCOBJ_PRIO;
+		evobj_flags = EVOBJ_PRIO;
 
-	syncobj_init(&evcb->sobj, sobj_flags,
-		     fnref_put(libalchemy, event_finalize));
+	ret = eventobj_init(&evcb->evobj, ivalue, evobj_flags,
+			    fnref_put(libalchemy, event_finalize));
+	if (ret) {
+		xnfree(evcb);
+		goto out;
+	}
 
 	if (syncluster_addobj(&alchemy_event_table, evcb->name, &evcb->cobj)) {
-		syncobj_uninit(&evcb->sobj);
+		eventobj_destroy(&evcb->evobj);
 		xnfree(evcb);
 		ret = -EEXIST;
 	} else
@@ -85,7 +89,6 @@ out:
 int rt_event_delete(RT_EVENT *event)
 {
 	struct alchemy_event *evcb;
-	struct syncstate syns;
 	struct service svc;
 	int ret = 0;
 
@@ -94,13 +97,19 @@ int rt_event_delete(RT_EVENT *event)
 
 	COPPERPLATE_PROTECT(svc);
 
-	evcb = get_alchemy_event(event, &syns, &ret);
+	evcb = find_alchemy_event(event, &ret);
 	if (evcb == NULL)
 		goto out;
 
-	syncluster_delobj(&alchemy_event_table, &evcb->cobj);
-	evcb->magic = ~event_magic; /* Prevent further reference. */
-	syncobj_destroy(&evcb->sobj, &syns);
+	/*
+	 * XXX: we rely on copperplate's eventobj to check for event
+	 * existence, so we refrain from altering the object memory
+	 * until we know it was valid. So the only safe place to
+	 * negate the magic tag, deregister from the cluster and
+	 * release the memory is in the finalizer routine, which is
+	 * only called for valid objects.
+	 */
+	ret = eventobj_destroy(&evcb->evobj);
 out:
 	COPPERPLATE_UNPROTECT(svc);
 
@@ -111,55 +120,24 @@ int rt_event_wait_timed(RT_EVENT *event,
 			unsigned long mask, unsigned long *mask_r,
 			int mode, const struct timespec *abs_timeout)
 {
-	struct alchemy_event_wait *wait;
-	unsigned long bits, testval;
+	int evobj_mode = 0, ret = 0;
 	struct alchemy_event *evcb;
-	struct syncstate syns;
 	struct service svc;
-	int ret = 0;
 
 	if (!threadobj_current_p() && !alchemy_poll_mode(abs_timeout))
 		return -EPERM;
 
 	COPPERPLATE_PROTECT(svc);
 
-	evcb = get_alchemy_event(event, &syns, &ret);
+	evcb = find_alchemy_event(event, &ret);
 	if (evcb == NULL)
 		goto out;
 
-	if (mask == 0) {
-		*mask_r = evcb->value;
-		goto done;
-	}
+	if (mode & EV_ANY)
+		evobj_mode = EVOBJ_ANY;
 
-	bits = evcb->value & mask;
-	testval = mode & EV_ANY ? bits : mask;
-	*mask_r = bits;
-
-	if (bits && bits == testval)
-		goto done;
-
-	if (alchemy_poll_mode(abs_timeout)) {
-		ret = -EWOULDBLOCK;
-		goto done;
-	}
-
-	wait = threadobj_prepare_wait(struct alchemy_event_wait);
-	wait->mask = mask;
-	wait->mode = mode;
-
-	ret = syncobj_wait_grant(&evcb->sobj, abs_timeout, &syns);
-	if (ret) {
-		if (ret == -EIDRM) {
-			threadobj_finish_wait();
-			goto out;
-		}
-	} else
-		*mask_r = wait->mask;
-
-	threadobj_finish_wait();
-done:
-	put_alchemy_event(evcb, &syns);
+	ret = eventobj_wait(&evcb->evobj, mask, mask_r,
+			    evobj_mode, abs_timeout);
 out:
 	COPPERPLATE_UNPROTECT(svc);
 
@@ -168,36 +146,17 @@ out:
 
 int rt_event_signal(RT_EVENT *event, unsigned long mask)
 {
-	struct alchemy_event_wait *wait;
-	struct threadobj *thobj, *tmp;
-	unsigned long bits, testval;
 	struct alchemy_event *evcb;
-	struct syncstate syns;
 	struct service svc;
 	int ret = 0;
 
 	COPPERPLATE_PROTECT(svc);
 
-	evcb = get_alchemy_event(event, &syns, &ret);
+	evcb = find_alchemy_event(event, &ret);
 	if (evcb == NULL)
 		goto out;
 
-	evcb->value |= mask;
-
-	if (!syncobj_grant_wait_p(&evcb->sobj))
-		goto done;
-
-	syncobj_for_each_waiter_safe(&evcb->sobj, thobj, tmp) {
-		wait = threadobj_get_wait(thobj);
-		bits = wait->mask & mask;
-		testval = wait->mode & EV_ANY ? bits : mask;
-		if (bits && bits == testval) {
-			wait->mask = bits;
-			syncobj_grant_to(&evcb->sobj, thobj);
-		}
-	}
-done:
-	put_alchemy_event(evcb, &syns);
+	ret = eventobj_post(&evcb->evobj, mask);
 out:
 	COPPERPLATE_UNPROTECT(svc);
 
@@ -208,22 +167,16 @@ int rt_event_clear(RT_EVENT *event,
 		   unsigned long mask, unsigned long *mask_r)
 {
 	struct alchemy_event *evcb;
-	struct syncstate syns;
 	struct service svc;
 	int ret = 0;
 
 	COPPERPLATE_PROTECT(svc);
 
-	evcb = get_alchemy_event(event, &syns, &ret);
+	evcb = find_alchemy_event(event, &ret);
 	if (evcb == NULL)
 		goto out;
 
-	if (mask_r)
-		*mask_r = evcb->value;
-
-	evcb->value &= ~mask;
-
-	put_alchemy_event(evcb, &syns);
+	ret = eventobj_clear(&evcb->evobj, mask, mask_r);
 out:
 	COPPERPLATE_UNPROTECT(svc);
 
@@ -233,21 +186,20 @@ out:
 int rt_event_inquire(RT_EVENT *event, RT_EVENT_INFO *info)
 {
 	struct alchemy_event *evcb;
-	struct syncstate syns;
 	struct service svc;
 	int ret = 0;
 
 	COPPERPLATE_PROTECT(svc);
 
-	evcb = get_alchemy_event(event, &syns, &ret);
+	evcb = find_alchemy_event(event, &ret);
 	if (evcb == NULL)
 		goto out;
 
-	info->value = evcb->value;
-	info->nwaiters = syncobj_count_grant(&evcb->sobj);
-	strcpy(info->name, evcb->name);
+	ret = eventobj_inquire(&evcb->evobj, &info->value);
+	if (ret < 0)
+		goto out;
 
-	put_alchemy_event(evcb, &syns);
+	strcpy(info->name, evcb->name);
 out:
 	COPPERPLATE_UNPROTECT(svc);
 

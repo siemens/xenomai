@@ -51,6 +51,8 @@ static void foreground_task(void *arg)
 		ret = rt_event_wait(&event, 2 << n * 2, &flags, EV_ALL, TM_INFINITE);
 		traceobj_assert(&trobj, ret == 0);
 		traceobj_assert(&trobj, flags == 2 << n * 2);
+		ret = rt_event_clear(&event, flags, NULL);
+		traceobj_assert(&trobj, ret == 0);
 	}
 
 	rt_task_sleep(1000000ULL);

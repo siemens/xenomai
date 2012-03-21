@@ -19,22 +19,15 @@
 #ifndef _ALCHEMY_EVENT_H
 #define _ALCHEMY_EVENT_H
 
-#include <copperplate/syncobj.h>
+#include <copperplate/eventobj.h>
 #include <copperplate/cluster.h>
 #include <alchemy/event.h>
 
 struct alchemy_event {
 	unsigned int magic;	/* Must be first. */
 	char name[32];
-	struct syncobj sobj;
+	struct eventobj evobj;
 	struct clusterobj cobj;
-	unsigned long value;
-	int mode;
-};
-
-struct alchemy_event_wait {
-	unsigned long mask;
-	int mode;
 };
 
 #define event_magic	0x8484ebeb
