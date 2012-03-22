@@ -111,7 +111,11 @@ void xnshadow_send_sig(struct xnthread *thread,
 
 void xnshadow_call_mayday(struct xnthread *thread, int sigtype);
 
+void __xnshadow_kick(struct xnthread *thread);
+
 void xnshadow_kick(struct xnthread *thread);
+
+void __xnshadow_demote(struct xnthread *thread);
 
 void xnshadow_demote(struct xnthread *thread);
 

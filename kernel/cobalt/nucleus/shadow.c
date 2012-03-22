@@ -745,7 +745,7 @@ int xnshadow_force_wakeup(struct xnthread *thread) /* nklock locked, irqs off */
 	return ret;
 }
 
-void xnshadow_kick(struct xnthread *thread) /* nklock locked, irqs off */
+void __xnshadow_kick(struct xnthread *thread) /* nklock locked, irqs off */
 {
 	struct task_struct *p = xnthread_archtcb(thread)->user_task;
 
@@ -786,16 +786,25 @@ void xnshadow_kick(struct xnthread *thread) /* nklock locked, irqs off */
 	if (thread != xnpod_current_thread())
 		xnarch_call_mayday(p);
 }
+
+void xnshadow_kick(struct xnthread *thread)
+{
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+	__xnshadow_kick(thread);
+	xnlock_put_irqrestore(&nklock, s);
+}
 EXPORT_SYMBOL_GPL(xnshadow_kick);
 
-void xnshadow_demote(struct xnthread *thread) /* nklock locked, irqs off */
+void __xnshadow_demote(struct xnthread *thread) /* nklock locked, irqs off */
 {
 	/*
 	 * First we kick the thread out of primary mode, and have it
 	 * resume execution immediately over the regular linux
 	 * context.
 	 */
-	xnshadow_kick(thread);
+	__xnshadow_kick(thread);
 	/*
 	 * Then we send it a renice action signal to demote it from
 	 * SCHED_FIFO to SCHED_OTHER. In effect, we turned that thread
@@ -805,6 +814,15 @@ void xnshadow_demote(struct xnthread *thread) /* nklock locked, irqs off */
 	 */
 	xnshadow_send_sig(thread, SIGSHADOW,
 			  sigshadow_int(SIGSHADOW_ACTION_RENICE, 0));
+}
+
+void xnshadow_demote(struct xnthread *thread)
+{
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+	__xnshadow_demote(thread);
+	xnlock_put_irqrestore(&nklock, s);
 }
 EXPORT_SYMBOL_GPL(xnshadow_demote);
 
