@@ -85,8 +85,9 @@ struct threadobj_stat {
 #define THREADOBJ_ROUNDROBIN	0x2	/* Undergoes round-robin. */
 #define THREADOBJ_STARTED	0x4	/* threadobj_start() called. */
 #define THREADOBJ_WARMUP	0x8	/* threadobj_prologue() not called yet. */
-#define THREADOBJ_ABORTED	0x10	/* cancelled before start. */
+#define THREADOBJ_ABORTED	0x10	/* Cancelled before start. */
 #define THREADOBJ_LOCKED	0x20	/* threadobj_lock() granted (debug only). */
+#define THREADOBJ_RUNNING	0x40	/* Running user code. */
 #define THREADOBJ_DEBUG		0x8000	/* Debug mode enabled. */
 
 #define THREADOBJ_IRQCONTEXT    ((struct threadobj *)-2UL)
@@ -242,10 +243,14 @@ void threadobj_init(struct threadobj *thobj,
 
 void threadobj_start(struct threadobj *thobj);
 
+void threadobj_shadow(struct threadobj *thobj);
+
 int threadobj_prologue(struct threadobj *thobj,
 		       const char *name);
 
-void threadobj_wait_start(struct threadobj *thobj);
+void threadobj_wait_start(void);
+
+void threadobj_notify_entry(void);
 
 int threadobj_cancel(struct threadobj *thobj);
 

@@ -242,8 +242,8 @@ static void *task_trampoline(void *arg)
 	COPPERPLATE_UNPROTECT(svc);
 
 	/* Wait for someone to run taskActivate() upon us. */
-	threadobj_wait_start(&task->thobj);
-
+	threadobj_wait_start();
+	threadobj_notify_entry();
 	args->entry(args->arg0, args->arg1, args->arg2, args->arg3,
 		    args->arg4, args->arg5, args->arg6, args->arg7,
 		    args->arg8, args->arg9);

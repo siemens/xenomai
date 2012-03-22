@@ -923,42 +923,31 @@ void threadobj_init(struct threadobj *thobj,
 	threadobj_init_corespec(thobj);
 }
 
-void threadobj_start(struct threadobj *thobj)	/* thobj->lock held. */
-{
-	__threadobj_check_locked(thobj);
+/*
+ * NOTE: to spare us the need for passing the equivalent of a
+ * syncstate argument to each thread locking operation, we hold the
+ * cancel state of the locker directly into the locked thread, prior
+ * to disabling cancellation for the calling thread.
+ *
+ * However, this means that we must save some state information on the
+ * stack prior to calling any service which releases that lock
+ * implicitly, such as pthread_cond_wait(). Failing to do so would
+ * introduce the possibility for the saved state to be overwritten by
+ * another thread which managed to grab the lock after
+ * pthread_cond_wait() dropped it.
+ *
+ * XXX: cancel_state is held in the descriptor of the target thread,
+ * not the current one, because we allow non-copperplate threads to
+ * call these services, and these have no threadobj descriptor.
+ */
 
-	if (thobj->status & THREADOBJ_STARTED)
-		return;
-
-	thobj->status |= THREADOBJ_STARTED;
-	__RT(pthread_cond_signal(&thobj->barrier));
-}
-
-void threadobj_wait_start(struct threadobj *thobj) /* thobj->lock free. */
+static int start_sync(struct threadobj *thobj, int mask)
 {
 	int oldstate, status;
 
-	threadobj_lock(thobj);
-
-	/*
-	 * NOTE: to spare us the need for passing the equivalent of a
-	 * syncstate argument to each thread locking operation, we
-	 * hold the cancel state of the locker directly into the
-	 * locked thread, prior to disabling cancellation for the
-	 * calling thread.
-	 *
-	 * However, this means that we must save some state
-	 * information on the stack prior to calling any service which
-	 * releases that lock implicitly, such as
-	 * pthread_cond_wait(). Failing to do so would introduce the
-	 * possibility for the saved state to be overwritten by
-	 * another thread which managed to grab the lock after
-	 * pthread_cond_wait() dropped it.
-	 */
-
 	for (;;) {
 		status = thobj->status;
-		if (status & (THREADOBJ_STARTED|THREADOBJ_ABORTED))
+		if (status & mask)
 			break;
 		oldstate = thobj->cancel_state;
 		__threadobj_tag_unlocked(thobj);
@@ -967,7 +956,46 @@ void threadobj_wait_start(struct threadobj *thobj) /* thobj->lock free. */
 		thobj->cancel_state = oldstate;
 	}
 
-	threadobj_unlock(thobj);
+	return status;
+}
+
+void threadobj_start(struct threadobj *thobj)	/* thobj->lock held. */
+{
+	struct threadobj *current = threadobj_current();
+
+	__threadobj_check_locked(thobj);
+
+	if (thobj->status & THREADOBJ_STARTED)
+		return;
+
+	thobj->status |= THREADOBJ_STARTED;
+	__RT(pthread_cond_signal(&thobj->barrier));
+
+	if (current && thobj->priority <= current->priority)
+		return;
+	/*
+	 * Caller needs synchronization with the thread being started,
+	 * which has higher priority. We shall wait until that thread
+	 * enters the user code, or aborts prior to reaching that
+	 * point, whichever comes first.
+	 */
+	start_sync(thobj, THREADOBJ_RUNNING);
+}
+
+void threadobj_shadow(struct threadobj *thobj)
+{
+	__threadobj_check_locked(thobj);
+	thobj->status |= THREADOBJ_STARTED|THREADOBJ_RUNNING;
+}
+
+void threadobj_wait_start(void) /* current->lock free. */
+{
+	struct threadobj *current = threadobj_current();
+	int status;
+
+	threadobj_lock(current);
+	status = start_sync(current, THREADOBJ_STARTED|THREADOBJ_ABORTED);
+	threadobj_unlock(current);
 
 	/*
 	 * We may have preempted the guy who set THREADOBJ_ABORTED in
@@ -977,6 +1005,16 @@ void threadobj_wait_start(struct threadobj *thobj) /* thobj->lock free. */
 	 */
 	while (status & THREADOBJ_ABORTED)
 		pause();
+}
+
+void threadobj_notify_entry(void) /* current->lock free. */
+{
+	struct threadobj *current = threadobj_current();
+
+	threadobj_lock(current);
+	current->status |= THREADOBJ_RUNNING;
+	__RT(pthread_cond_signal(&current->barrier));
+	threadobj_unlock(current);
 }
 
 /* thobj->lock free, cancellation disabled. */

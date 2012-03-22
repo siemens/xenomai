@@ -173,7 +173,7 @@ static int task_prologue(struct alchemy_task *tcb)
 
 	COPPERPLATE_PROTECT(svc);
 
-	threadobj_wait_start(&tcb->thobj);
+	threadobj_wait_start();
 
 	threadobj_lock(&tcb->thobj);
 
@@ -198,6 +198,7 @@ static void *task_trampoline(void *arg)
 		goto out;
 	}
 
+	threadobj_notify_entry();
 	tcb->entry(tcb->arg);
 out:
 	threadobj_lock(&tcb->thobj);
@@ -409,7 +410,7 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 		goto out;
 
 	threadobj_lock(&tcb->thobj);
-	threadobj_start(&tcb->thobj); /* We won't wait in prologue. */
+	threadobj_shadow(&tcb->thobj); /* We won't wait in prologue. */
 	threadobj_unlock(&tcb->thobj);
 	ret = task_prologue(tcb);
 	if (ret) {

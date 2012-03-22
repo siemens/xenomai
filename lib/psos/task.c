@@ -185,7 +185,7 @@ static void *task_trampoline(void *arg)
 
 	COPPERPLATE_PROTECT(svc);
 
-	threadobj_wait_start(&task->thobj);
+	threadobj_wait_start();
 
 	threadobj_lock(&task->thobj);
 
@@ -199,6 +199,7 @@ static void *task_trampoline(void *arg)
 
 	COPPERPLATE_UNPROTECT(svc);
 
+	threadobj_notify_entry();
 	args->entry(args->arg0, args->arg1, args->arg2, args->arg3);
 done:
 	threadobj_lock(&task->thobj);
