@@ -7,7 +7,7 @@
 static struct traceobj trobj;
 
 static int tseq[] = {
-	7, 1, 2, 8, 3, 4, 5, 6
+	7, 1, 2, 3, 4, 5, 6
 };
 
 static u_long tid;
@@ -68,8 +68,6 @@ int main(int argc, char *const argv[])
 
 	ret = t_start(tid, 0, task, args);
 	traceobj_assert(&trobj, ret == SUCCESS);
-
-	traceobj_mark(&trobj, 8);
 
 	traceobj_join(&trobj);
 

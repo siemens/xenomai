@@ -53,9 +53,6 @@ static void main_task(void *arg)
 
 	traceobj_mark(&trobj, 5);
 
-	ret = rt_alarm_create(&alrm, "ALARM", alarm_handler, &alrm);
-	traceobj_assert(&trobj, ret == 0);
-
 	ret = rt_alarm_start(&alrm, 200000000ULL, 200000000ULL);
 	traceobj_assert(&trobj, ret == 0);
 
@@ -79,6 +76,9 @@ int main(int argc, char *const argv[])
 	copperplate_init(&argc, &argv);
 
 	traceobj_init(&trobj, argv[0], sizeof(tseq) / sizeof(int));
+
+	ret = rt_alarm_create(&alrm, "ALARM", alarm_handler, &alrm);
+	traceobj_assert(&trobj, ret == 0);
 
 	ret = rt_task_spawn(&t_main, "main_task", 0,  50, 0, main_task, NULL);
 	traceobj_assert(&trobj, ret == 0);
