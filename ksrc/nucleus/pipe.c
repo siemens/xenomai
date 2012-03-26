@@ -1033,6 +1033,8 @@ static unsigned xnpipe_poll(struct file *file, poll_table *pt)
 
 	if (testbits(state->status, XNPIPE_KERN_CONN))
 		w_mask |= (POLLOUT | POLLWRNORM);
+	else
+		r_mask |= POLLHUP;
 
 	if (!emptyq_p(&state->outq))
 		r_mask |= (POLLIN | POLLRDNORM);
