@@ -154,7 +154,7 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 /*
  * Default setting, unless pre-set in the machine-dependent section.
  */
-#define RTHAL_TIMER_IRQ		__ipipe_mach_hrtimer_irq
+#define RTHAL_TIMER_IRQ		__ipipe_hrtimer_irq
 #endif /* RTHAL_TIMER_IRQ */
 
 #ifndef RTHAL_TIMER_IPI
