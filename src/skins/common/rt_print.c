@@ -615,7 +615,7 @@ static void *printer_loop(void *arg)
 {
 	sigset_t mask;
 
-	sigemptyset(&mask);
+	sigfillset(&mask);
 	pthread_sigmask(SIG_BLOCK, &mask, NULL);
 
 	while (1) {
