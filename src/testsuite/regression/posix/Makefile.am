@@ -4,7 +4,7 @@ noinst_HEADERS = check.h
 
 CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 
-tst_PROGRAMS = leaks shm
+tst_PROGRAMS = leaks shm mprotect
 
 CPPFLAGS = $(XENO_USER_CFLAGS) \
 	-I$(top_srcdir)/include/posix \

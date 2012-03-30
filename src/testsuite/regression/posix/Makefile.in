@@ -36,7 +36,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-tst_PROGRAMS = leaks$(EXEEXT) shm$(EXEEXT)
+tst_PROGRAMS = leaks$(EXEEXT) shm$(EXEEXT) mprotect$(EXEEXT)
 subdir = src/testsuite/regression/posix
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
@@ -62,6 +62,11 @@ leaks_OBJECTS = leaks.$(OBJEXT)
 leaks_LDADD = $(LDADD)
 leaks_DEPENDENCIES = ../../../skins/posix/libpthread_rt.la \
 	../../../skins/common/libxenomai.la
+mprotect_SOURCES = mprotect.c
+mprotect_OBJECTS = mprotect.$(OBJEXT)
+mprotect_LDADD = $(LDADD)
+mprotect_DEPENDENCIES = ../../../skins/posix/libpthread_rt.la \
+	../../../skins/common/libxenomai.la
 shm_SOURCES = shm.c
 shm_OBJECTS = shm.$(OBJEXT)
 shm_LDADD = $(LDADD)
@@ -79,8 +84,8 @@ LTCOMPILE = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = leaks.c shm.c
-DIST_SOURCES = leaks.c shm.c
+SOURCES = leaks.c mprotect.c shm.c
+DIST_SOURCES = leaks.c mprotect.c shm.c
 HEADERS = $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
@@ -330,6 +335,9 @@ clean-tstPROGRAMS:
 leaks$(EXEEXT): $(leaks_OBJECTS) $(leaks_DEPENDENCIES) 
 	@rm -f leaks$(EXEEXT)
 	$(LINK) $(leaks_OBJECTS) $(leaks_LDADD) $(LIBS)
+mprotect$(EXEEXT): $(mprotect_OBJECTS) $(mprotect_DEPENDENCIES) 
+	@rm -f mprotect$(EXEEXT)
+	$(LINK) $(mprotect_OBJECTS) $(mprotect_LDADD) $(LIBS)
 shm$(EXEEXT): $(shm_OBJECTS) $(shm_DEPENDENCIES) 
 	@rm -f shm$(EXEEXT)
 	$(LINK) $(shm_OBJECTS) $(shm_LDADD) $(LIBS)
@@ -341,6 +349,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/leaks.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mprotect.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/shm.Po@am__quote@
 
 .c.o:

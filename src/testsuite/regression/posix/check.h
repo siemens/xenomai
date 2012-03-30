@@ -25,4 +25,14 @@
 		rc;                                                     \
 	})
 
+#define check_mmap(expr)						\
+	({                                                              \
+		void *rc = (expr);					\
+		if (rc == MAP_FAILED) {					\
+			fprintf(stderr, "%s:%d: "#expr ": %s\n", __FILE__, __LINE__, strerror(errno)); \
+			exit(EXIT_FAILURE);				\
+		}                                                       \
+		rc;                                                     \
+	})
+
 #endif /* POSIX_CHECK_H */
