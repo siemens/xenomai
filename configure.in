@@ -529,6 +529,10 @@ if test x$use_assert = x; then
    XENO_USER_CFLAGS="-DNDEBUG $XENO_USER_CFLAGS"
 fi
 
+case "$XENO_TARGET_ARCH" in
+x86) XENO_USER_CFLAGS="$XENO_USER_CFLAGS -fno-omit-frame-pointer";;
+esac
+
 XENO_USER_CFLAGS="$XENO_USER_CFLAGS -D__XENO__ -D__IN_XENO__ -Wstrict-prototypes"
 
 AC_MSG_CHECKING([whether ld supports @file])
