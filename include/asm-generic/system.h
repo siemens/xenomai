@@ -165,6 +165,7 @@ static inline int xnlock_dbg_release(struct xnlock *lock)
 #define XNARCH_TIMER_IRQ		RTHAL_TIMER_IRQ
 #define XNARCH_TIMER_DEVICE		RTHAL_TIMER_DEVICE
 #define XNARCH_CLOCK_DEVICE		RTHAL_CLOCK_DEVICE
+#define XNARCH_PERCPU_TIMER_IRQ(cpu)	RTHAL_PERCPU_TIMER_IRQ(cpu)
 
 #define XNARCH_PROMPT "Xenomai: "
 #define xnarch_loginfo(fmt, args...)	printk(KERN_INFO XNARCH_PROMPT fmt, ##args)

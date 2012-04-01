@@ -66,6 +66,11 @@ extern struct rthal_archdata rthal_archdata;
 
 #define RTHAL_TIMER_FREQ	(rthal_archdata.timer_freq)
 #define RTHAL_CLOCK_FREQ	(rthal_archdata.clock_freq)
+#ifdef CONFIG_IPIPE_CORE
+#define RTHAL_PERCPU_TIMER_IRQ(cpu) per_cpu(ipipe_percpu.hrtimer_irq, cpu)
+#else /* !CONFIG_IPIPE_CORE */
+#define RTHAL_PERCPU_TIMER_IRQ(cpu) RTHAL_TIMER_IRQ
+#endif /* !CONFIG_IPIPE_CORE */
 
 #include <asm-generic/xenomai/ipipe/wrappers.h>
 

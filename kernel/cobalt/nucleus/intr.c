@@ -970,14 +970,19 @@ static inline int format_irq_proc(unsigned int irq,
 {
 	struct xnintr *intr;
 	spl_t s;
+	int cpu;
 
-	if (irq == XNARCH_TIMER_IRQ) {
-		xnvfile_puts(it, "         [timer]");
-		return 0;
-	}
+	for_each_online_cpu(cpu)
+		if (irq == XNARCH_PERCPU_TIMER_IRQ(cpu)) {
+			xnvfile_printf(it, "         [timer%d]", cpu);
+			return 0;
+		}
 
 	switch (irq) {
 #ifdef CONFIG_SMP
+	case IPIPE_HRTIMER_IPI:
+		xnvfile_puts(it, "         [timer-ipi]");
+		return 0;
 	case IPIPE_RESCHEDULE_IPI:
 		xnvfile_puts(it, "         [reschedule]");
 		return 0;
@@ -1017,7 +1022,7 @@ static int irq_vfile_show(struct xnvfile_regular_iterator *it,
 
 	/* FIXME: We assume the entire output fits in a single page. */
 
-	xnvfile_puts(it, "IRQ ");
+	xnvfile_puts(it, "  IRQ ");
 
 	for_each_online_cpu(cpu)
 		xnvfile_printf(it, "        CPU%d", cpu);
@@ -1026,7 +1031,7 @@ static int irq_vfile_show(struct xnvfile_regular_iterator *it,
 		if (__ipipe_irq_handler(&rthal_archdata.domain, irq) == NULL)
 			continue;
 
-		xnvfile_printf(it, "\n%3d:", irq);
+		xnvfile_printf(it, "\n%5d:", irq);
 
 		for_each_online_cpu(cpu) {
 			xnvfile_printf(it, "%12lu",
