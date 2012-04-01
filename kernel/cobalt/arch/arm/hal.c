@@ -220,14 +220,11 @@ int rthal_timer_request(
 	unsigned long dummy, *tmfreq = &dummy;
 	int tickval, ret;
 
-	if (rthal_timerfreq_arg == 0)
-		tmfreq = &rthal_archdata.timer_freq;
-
 #ifndef CONFIG_IPIPE_CORE
 	ret = ipipe_request_tickdev(RTHAL_TIMER_DEVICE, mode_emul, tick_emul, cpu,
 				    tmfreq);
 #else /* I-ipipe timers */
-	ret = ipipe_timer_start(tick_handler, mode_emul, tick_emul, cpu, tmfreq);
+	ret = ipipe_timer_start(tick_handler, mode_emul, tick_emul, cpu);
 #endif /* I-ipipe timers */
 	switch (ret) {
 	case CLOCK_EVT_MODE_PERIODIC:
@@ -361,6 +358,5 @@ void rthal_arch_cleanup(void)
 #ifdef CONFIG_IPIPE_CORE
 	ipipe_timers_release();
 #endif /* CONFIG_IPIPE_CORE */
-	/* Nothing to cleanup so far. */
 	printk(KERN_INFO "Xenomai: hal/arm stopped.\n");
 }
