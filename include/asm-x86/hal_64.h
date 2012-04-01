@@ -24,7 +24,11 @@
 #define _XENO_ASM_X86_HAL_64_H
 
 #define RTHAL_ARCH_NAME			"x86_64"
+#ifndef CONFIG_IPIPE_CORE
 #define RTHAL_TIMER_DEVICE		"lapic"
+#else /* I-pipe core */
+#define RTHAL_TIMER_DEVICE		(ipipe_timer_name())
+#endif /* I-pipe core */
 #define RTHAL_CLOCK_DEVICE		"tsc"
 
 #include <asm/xenomai/wrappers.h>
@@ -49,12 +53,18 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 #include <asm/xenomai/atomic.h>
 #include <asm/xenomai/smi.h>
 
+#ifndef CONFIG_IPIPE_CORE
 #define RTHAL_APIC_TIMER_VECTOR		IPIPE_HRTIMER_VECTOR
 #define RTHAL_APIC_TIMER_IPI		IPIPE_HRTIMER_IPI
 #define RTHAL_APIC_ICOUNT		((RTHAL_TIMER_FREQ + HZ/2)/HZ)
 #define RTHAL_TIMER_IRQ			RTHAL_APIC_TIMER_IPI
 #define RTHAL_HOST_TICK_IRQ		ipipe_apic_vector_irq(LOCAL_TIMER_VECTOR)
 #define RTHAL_BCAST_TICK_IRQ		0
+#else /* CONFIG_IPIPE_CORE */
+#define RTHAL_TIMER_IRQ			__ipipe_hrtimer_irq
+#define RTHAL_TIMER_IPI			IPIPE_HRTIMER_IPI
+#define RTHAL_HOST_TICK_IRQ		RTHAL_TIMER_IRQ
+#endif /* CONFIG_IPIPE_CORE */
 
 static inline void rthal_grab_control(void)
 {
@@ -76,11 +86,15 @@ static inline unsigned long long rthal_rdtsc(void)
 
 static inline void rthal_timer_program_shot(unsigned long delay)
 {
+#ifndef CONFIG_IPIPE_CORE
 	if (likely(delay))
 		apic_write(APIC_TMICT, delay);
 	else
 		/* Pend the timer interrupt. */
 		ipipe_post_irq_head(RTHAL_APIC_TIMER_IPI);
+#else
+	ipipe_timer_set(delay);
+#endif
 }
 
 static const char *const rthal_fault_labels[] = {

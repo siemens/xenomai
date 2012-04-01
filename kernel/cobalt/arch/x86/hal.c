@@ -35,6 +35,8 @@
 
 enum rthal_ktimer_mode rthal_ktimer_saved_mode;
 
+#ifndef CONFIG_IPIPE_CORE
+
 #ifdef CONFIG_X86_LOCAL_APIC
 
 static volatile int sync_op;
@@ -424,5 +426,138 @@ int rthal_arch_init(void)
 void rthal_arch_cleanup(void)
 {
 }
+
+#else /* I-pipe core */
+
+unsigned long rthal_timer_calibrate(void)
+{
+	unsigned long delay = (RTHAL_TIMER_FREQ + HZ / 2) / HZ;
+	unsigned long flags;
+	rthal_time_t t, dt;
+	int i;
+
+	flags = ipipe_critical_enter(NULL);
+
+	ipipe_timer_set(delay);
+
+	t = rthal_rdtsc();
+
+	for (i = 0; i < 100; i++)
+		ipipe_timer_set(delay);
+
+	dt = rthal_rdtsc() - t;
+
+	ipipe_critical_exit(flags);
+
+	/*
+	 * Reset the max trace, since it contains the calibration time
+	 * now.
+	 */
+	ipipe_trace_max_reset();
+
+	/*
+	 * Compute average with a 5% margin to avoid negative
+	 * latencies with PIT.
+	 */
+	return rthal_ulldiv(dt, i + 5, NULL);
+}
+
+int rthal_timer_request(
+	void (*tick_handler)(void),
+	void (*mode_emul)(enum clock_event_mode mode,
+			  struct clock_event_device *cdev),
+	int (*tick_emul)(unsigned long delay,
+			 struct clock_event_device *cdev),
+	int cpu)
+{
+	int tickval, ret;
+
+	ret = ipipe_timer_start(tick_handler, mode_emul, tick_emul, cpu);
+	switch (ret) {
+	case CLOCK_EVT_MODE_PERIODIC:
+		/* oneshot tick emulation callback won't be used, ask
+		 * the caller to start an internal timer for emulating
+		 * a periodic tick. */
+		tickval = 1000000000UL / HZ;
+		break;
+
+	case CLOCK_EVT_MODE_ONESHOT:
+		/* oneshot tick emulation */
+		tickval = 1;
+		break;
+
+	case CLOCK_EVT_MODE_UNUSED:
+		/* we don't need to emulate the tick at all. */
+		tickval = 0;
+		break;
+
+	case CLOCK_EVT_MODE_SHUTDOWN:
+		return -ENODEV;
+
+	default:
+		return ret;
+	}
+
+#ifdef CONFIG_SMP
+	if (cpu == 0) {
+		ret = ipipe_request_irq(&rthal_archdata.domain,
+					RTHAL_TIMER_IPI,
+					(ipipe_irq_handler_t)tick_handler,
+					NULL, NULL);
+		if (ret) {
+			ipipe_timer_stop(cpu);
+			return ret;
+		}
+	}
+#endif
+
+	rthal_ktimer_saved_mode = ret;
+
+	return tickval;
+}
+
+void rthal_timer_release(int cpu)
+{
+	ipipe_timer_stop(cpu);
+#ifdef CONFIG_SMP
+	if (cpu == 0)
+		ipipe_free_irq(&rthal_archdata.domain, RTHAL_TIMER_IPI);
+#endif /* CONFIG_SMP */
+}
+
+void rthal_timer_notify_switch(enum clock_event_mode mode,
+			       struct clock_event_device *cdev)
+{
+	if (ipipe_processor_id() > 0)
+		/*
+		 * We assume all CPUs switch the same way, so we only
+		 * track mode switches from the boot CPU.
+		 */
+		return;
+
+	rthal_ktimer_saved_mode = mode;
+}
+
+int rthal_arch_init(void)
+{
+	int rc = ipipe_timers_request();
+	if (rc < 0)
+		return rc;
+
+	if (rthal_clockfreq_arg == 0)
+		rthal_clockfreq_arg = rthal_get_clockfreq();
+
+	if (rthal_timerfreq_arg == 0)
+		rthal_timerfreq_arg = rthal_get_timerfreq();
+
+	return 0;
+}
+
+void rthal_arch_cleanup(void)
+{
+	ipipe_timers_release();
+	printk(KERN_INFO "Xenomai: hal/x86 stopped.\n");
+}
+#endif /* I-pipe core */
 
 /*@}*/

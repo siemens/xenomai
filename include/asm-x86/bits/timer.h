@@ -39,8 +39,13 @@ static inline void xnarch_program_timer_shot(unsigned long delay)
 static inline void xnarch_send_timer_ipi(xnarch_cpumask_t mask)
 {
 #ifdef CONFIG_SMP
+#ifndef CONFIG_IPIPE_CORE
 	ipipe_send_ipi(RTHAL_APIC_TIMER_IPI, mask);
+#else /* CONFIG_IPIPE_CORE */
+	ipipe_send_ipi(RTHAL_TIMER_IPI, mask);
+#endif /* CONFIG_IPIPE_CORE */
 #endif /* CONFIG_SMP */
+
 }
 
 #endif /* !_XENO_ASM_X86_BITS_TIMER_H */

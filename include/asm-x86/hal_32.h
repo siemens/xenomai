@@ -38,10 +38,14 @@
 #define _XENO_ASM_X86_HAL_32_H
 
 #define RTHAL_ARCH_NAME			"i386"
+#ifndef CONFIG_IPIPE_CORE
 #ifdef CONFIG_X86_LOCAL_APIC
 # define RTHAL_TIMER_DEVICE		"lapic"
 #else
 # define RTHAL_TIMER_DEVICE		"pit"
+#endif
+#else
+# define RTHAL_TIMER_DEVICE		(ipipe_timer_name())
 #endif
 # define RTHAL_CLOCK_DEVICE		"tsc"
 
@@ -88,6 +92,7 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 #include <asm/xenomai/atomic.h>
 #include <asm/xenomai/smi.h>
 
+#ifndef CONFIG_IPIPE_CORE
 #ifdef CONFIG_X86_LOCAL_APIC
 #define RTHAL_APIC_TIMER_VECTOR	IPIPE_HRTIMER_VECTOR
 #define RTHAL_APIC_TIMER_IPI	IPIPE_HRTIMER_IPI
@@ -99,6 +104,11 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 #define RTHAL_TIMER_IRQ		0	/* i8253 PIT interrupt. */
 #define RTHAL_HOST_TICK_IRQ	0	/* Host tick is emulated by Xenomai. */
 #endif /* CONFIG_X86_LOCAL_APIC */
+#else /* CONFIG_IPIPE_CORE */
+#define RTHAL_TIMER_IRQ		__ipipe_hrtimer_irq
+#define RTHAL_TIMER_IPI		IPIPE_HRTIMER_IPI
+#define RTHAL_HOST_TICK_IRQ	RTHAL_TIMER_IRQ
+#endif /* CONFIG_IPIPE_CORE */
 
 static inline void rthal_grab_control(void)
 {
@@ -120,6 +130,7 @@ static inline unsigned long long rthal_rdtsc(void)
 
 static inline void rthal_timer_program_shot(unsigned long delay)
 {
+#ifndef CONFIG_IPIPE_CORE
 #ifdef CONFIG_X86_LOCAL_APIC
 	if (likely(delay))
 		apic_write(APIC_TMICT, delay);
@@ -132,6 +143,9 @@ static inline void rthal_timer_program_shot(unsigned long delay)
 	} else
 		ipipe_post_irq_head(RTHAL_TIMER_IRQ);
 #endif /* CONFIG_X86_LOCAL_APIC */
+#else /* I-pipe core */
+	ipipe_timer_set(delay);
+#endif /* I-pipe core */
 }
 
 static const char *const rthal_fault_labels[] = {

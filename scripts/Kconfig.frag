@@ -1,6 +1,6 @@
 config XENOMAI
 	depends on GENERIC_CLOCKEVENTS
-	depends on (X86_TSC || !X86) && (!HPET_TIMER || !X86 || X86_LOCAL_APIC)
+	depends on X86_TSC || !X86
 	bool "Xenomai"
 	select IPIPE
 	default y
@@ -23,8 +23,3 @@ endif
 if !GENERIC_CLOCKEVENTS
 comment "NOTE: Xenomai needs CONFIG_GENERIC_CLOCKEVENTS"
 endif
-
-comment "NOTE: Xenomai needs either X86_LOCAL_APIC enabled or HPET_TIMER disabled."
-	depends on !X86_LOCAL_APIC && X86 && HPET_TIMER
-comment "(menu Processor type and features)"
-	depends on !X86_LOCAL_APIC && X86 && HPET_TIMER
