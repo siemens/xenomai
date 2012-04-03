@@ -40,7 +40,7 @@ unsigned long long get_used(void)
 		used += hd.used;
 
 	if (used == 0) {
-		fprintf(stderr, "Error: could not get size of used memory\n");
+		rt_fprintf(stderr, "Error: could not get size of used memory\n");
 		exit(EXIT_FAILURE);
 	}
 
