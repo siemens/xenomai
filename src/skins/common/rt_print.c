@@ -274,7 +274,12 @@ int rt_printf(const char *format, ...)
 
 int rt_fputs(const char *s, FILE *stream)
 {
-	return print_to_buffer(stream, 0, RT_PRINT_MODE_FWRITE, strlen(s), s);
+	int res;
+
+	res = print_to_buffer(stream, 0, RT_PRINT_MODE_FWRITE, strlen(s), s);
+	if (res < 0)
+		return res;
+	return print_to_buffer(stream, 0, RT_PRINT_MODE_FWRITE, 1, "\n");
 }
 
 int rt_puts(const char *s)
