@@ -13,9 +13,7 @@
 #include <asm-generic/xenomai/bits/bind.h>
 #include <asm/xenomai/syscall.h>
 
-__attribute__((weak)) struct __xn_tscinfo __xn_tscinfo = {
-  type: -1
-};
+__attribute__((weak)) struct __xn_tscinfo __xn_tscinfo;
 
 static inline void xeno_arm_features_check(struct xnfeatinfo *finfo)
 {
@@ -24,13 +22,16 @@ static inline void xeno_arm_features_check(struct xnfeatinfo *finfo)
 	int err, fd;
 	void *addr;
 
-	if (__xn_tscinfo.type != -1)
+	if (__xn_tscinfo.counter != NULL)
 		return;
 
 	err = XENOMAI_SYSCALL2(sc_nucleus_arch,
 			       XENOMAI_SYSARCH_TSCINFO, &__xn_tscinfo);
-	if (err)
-		goto error;
+	if (err) {
+		fprintf(stderr, "Xenomai init: error when retrieving ARM tsc"
+			" emulation information.\n");
+		exit(EXIT_FAILURE);
+	}
 
 	fd = open("/dev/mem", O_RDONLY | O_SYNC);
 	if (fd == -1) {
@@ -40,27 +41,6 @@ static inline void xeno_arm_features_check(struct xnfeatinfo *finfo)
 
 	page_size = sysconf(_SC_PAGESIZE);
 
-	switch(__xn_tscinfo.type) {
-	case __XN_TSC_TYPE_FREERUNNING:
-	case __XN_TSC_TYPE_FREERUNNING_COUNTDOWN:
-	case __XN_TSC_TYPE_FREERUNNING_FAST_WRAP:
-	case __XN_TSC_TYPE_DECREMENTER:
-		goto domap;
-
-	case __XN_TSC_TYPE_NONE:
-	  error:
-		fprintf(stderr, "Xenomai: Your board/configuration does not"
-			" allow tsc emulation in user-space: %d\n", err);
-		exit(EXIT_FAILURE);
-		break;
-
-	default:
-		fprintf(stderr,
-			"Xenomai: kernel/user tsc emulation mismatch.\n");
-		exit(EXIT_FAILURE);
-	}
-
-  domap:
 	phys_addr = (unsigned long) __xn_tscinfo.counter;
 
 	addr = mmap(NULL, page_size, PROT_READ, MAP_SHARED,

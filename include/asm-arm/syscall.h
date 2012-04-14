@@ -230,12 +230,11 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define XENOMAI_SYSARCH_XCHG			3
 #define XENOMAI_SYSARCH_TSCINFO                 4
 
+typedef unsigned long long __xn_rdtsc_t(volatile unsigned *);
+
 struct __xn_tscinfo {
-	int type;		/* Must remain first member */
-	unsigned mask;
 	volatile unsigned *counter;
-	volatile unsigned *last_cnt; /* Only used by decrementers */
-	volatile unsigned long long *tsc;
+	__xn_rdtsc_t *tsc_get;
 };
 
 #ifndef __KERNEL__
@@ -243,12 +242,7 @@ extern struct __xn_tscinfo __xn_tscinfo;
 
 static inline unsigned long long __xn_rdtsc(void)
 {
-	typedef unsigned long long rdtsc_t(volatile unsigned *vaddr);
-	rdtsc_t *const kuser_tsc_get =
-		(rdtsc_t *)(0xffff1004 -
-			    ((*(unsigned *)(0xffff0ffc) + 3) << 5));
-
-	return kuser_tsc_get(__xn_tscinfo.counter);
+	return __xn_tscinfo.tsc_get(__xn_tscinfo.counter);
 }
 #endif /* !__KERNEL__ */
 
