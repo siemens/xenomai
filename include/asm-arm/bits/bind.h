@@ -45,11 +45,8 @@ static inline void xeno_arm_features_check(struct xnfeatinfo *finfo)
 
 	switch(__xn_tscinfo.kinfo.type) {
 #if CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_KUSER
-	case __XN_TSC_TYPE_FREERUNNING:
-	case __XN_TSC_TYPE_FREERUNNING_COUNTDOWN:
-	case __XN_TSC_TYPE_FREERUNNING_FAST_WRAP:
-	case __XN_TSC_TYPE_DECREMENTER:
-		__xn_tscinfo.kuser_tsc_get = 
+	default:
+		__xn_tscinfo.kuser_tsc_get =
 			(rdtsc_t *)(0xffff1004 -
 				    ((*(unsigned *)(0xffff0ffc) + 3) << 5));
 		goto domap;
@@ -69,21 +66,25 @@ static inline void xeno_arm_features_check(struct xnfeatinfo *finfo)
 #endif /* __XN_TSC_TYPE_FREERUNNING_FAST_WRAP */
 		goto domap;
 
+	default:
+		fprintf(stderr,
+			"Xenomai: kernel/user tsc emulation mismatch.\n");
+		exit(EXIT_FAILURE);
+		break;
 #elif CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_DECREMENTER
 	case __XN_TSC_TYPE_DECREMENTER:
 		goto domap;
 
+	default:
+		fprintf(stderr,
+			"Xenomai: kernel/user tsc emulation mismatch.\n");
+		exit(EXIT_FAILURE);
+		break;
 #endif /* CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_DECREMENTER */
 	case __XN_TSC_TYPE_NONE:
 	  error:
 		fprintf(stderr, "Xenomai: Your board/configuration does not"
 			" allow tsc emulation in user-space: %d\n", err);
-		exit(EXIT_FAILURE);
-		break;
-
-	default:
-		fprintf(stderr,
-			"Xenomai: kernel/user tsc emulation mismatch.\n");
 		exit(EXIT_FAILURE);
 	}
 

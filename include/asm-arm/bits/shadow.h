@@ -162,6 +162,18 @@ static inline int xnarch_local_syscall(struct pt_regs *regs)
 			info.tsc = RTHAL_TSC_INFO(&ipipe_info).u.fr.tsc;
 			break;
 #endif /* IPIPE_TSC_TYPE_FREERUNNING_COUNTDOWN */
+#ifdef IPIPE_TSC_TYPE_FREERUNNING_TWICE
+		case IPIPE_TSC_TYPE_FREERUNNING_TWICE:
+			/*
+			 * Requires kuser, not backward compatible
+			 * with old xenomai versions
+			 */
+			info.type = __XN_TSC_TYPE_KUSER,
+			info.counter = RTHAL_TSC_INFO(&ipipe_info).u.fr.counter;
+			info.mask = RTHAL_TSC_INFO(&ipipe_info).u.fr.mask;
+			info.tsc = RTHAL_TSC_INFO(&ipipe_info).u.fr.tsc;
+			break;
+#endif /* IPIPE_TSC_TYPE_FREERUNNING_TWICE */
 		case IPIPE_TSC_TYPE_NONE:
 			return -ENOSYS;
 
