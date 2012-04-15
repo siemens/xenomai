@@ -40,6 +40,8 @@
 
 enum rthal_ktimer_mode rthal_ktimer_saved_mode;
 
+#ifndef CONFIG_IPIPE_CORE
+
 #define RTHAL_SET_ONESHOT_XENOMAI	1
 #define RTHAL_SET_ONESHOT_LINUX		2
 #define RTHAL_SET_PERIODIC		3
@@ -93,6 +95,12 @@ static void rthal_timer_set_periodic(void)
 	rthal_setup_periodic_coretmr();
 	ipipe_critical_exit(flags);
 }
+#else /* I-pipe core */
+#define rthal_setup_oneshot_coretmr() do { } while (0)
+#define rthal_setup_periodic_coretmr() do { } while (0)
+#define rthal_timer_set_oneshot(rt_mode) do { } while (0)
+#define rthal_timer_set_periodic() do { } while (0)
+#endif /* I-pipe core */
 
 static int cpu_timers_requested;
 
@@ -106,11 +114,12 @@ int rthal_timer_request(void (*tick_handler)(void),
 	unsigned long dummy, *tmfreq = &dummy;
 	int tickval, ret, res;
 
-	if (rthal_timerfreq_arg == 0)
-		tmfreq = &rthal_archdata.timer_freq;
-
+#ifndef CONFIG_IPIPE_CORE
 	res = ipipe_request_tickdev("bfin_core_timer", mode_emul, tick_emul, cpu,
 				    tmfreq);
+#else /* I-pipe timers */
+	res = ipipe_timer_start(tick_handler, mode_emul, tick_emul, cpu);
+#endif /* I-pipe timers */
 	switch (res) {
 	case CLOCK_EVT_MODE_PERIODIC:
 		/* Oneshot tick emulation callback won't be used, ask
@@ -151,12 +160,14 @@ int rthal_timer_request(void (*tick_handler)(void),
 	if (cpu_timers_requested++ > 0)
 		goto out;
 
+#ifndef CONFIG_IPIPE_CORE
 	ret = ipipe_request_irq(&rthal_archdata.domain,
 				RTHAL_TIMER_IRQ,
 				(ipipe_irq_handler_t)tick_handler,
 				NULL, NULL);
 	if (ret)
 		return ret;
+#endif /* !I-pipe core */
 
 	rthal_timer_set_oneshot(1);
 
@@ -166,12 +177,18 @@ out:
 
 void rthal_timer_release(int cpu)
 {
+#ifndef CONFIG_IPIPE_CORE
 	ipipe_release_tickdev(cpu);
+#else /* I-pipe core */
+	ipipe_timer_stop(cpu);
+#endif /* I-pipe core */
 
 	if (--cpu_timers_requested > 0)
 		return;
 
+#ifndef CONFIG_IPIPE_CORE
 	ipipe_free_irq(&rthal_archdata.domain, RTHAL_TIMER_IRQ);
+#endif /* !I-pipe core */
 
 	if (rthal_ktimer_saved_mode == KTIMER_MODE_PERIODIC)
 		rthal_timer_set_periodic();
@@ -203,21 +220,28 @@ void xnpod_schedule_deferred(void);
 
 int rthal_arch_init(void)
 {
+#ifdef CONFIG_IPIPE_CORE
+	int rc = ipipe_timers_request();
+	if (rc < 0)
+		return rc;
+#endif /* CONFIG_IPIPE_CORE */
+
 	__ipipe_irq_tail_hook = (unsigned long)xnpod_schedule_deferred;
 
 	if (rthal_clockfreq_arg == 0)
 		rthal_clockfreq_arg = rthal_get_clockfreq();
 
-	/*
-	 * Timer frequency is determined later when grabbing the
-	 * system timer.
-	 */
+	if (rthal_timerfreq_arg == 0)
+		rthal_timerfreq_arg = rthal_get_timerfreq();
 
 	return 0;
 }
 
 void rthal_arch_cleanup(void)
 {
+#ifdef CONFIG_IPIPE_CORE
+	ipipe_timers_release();
+#endif /* CONFIG_IPIPE_CORE */
 	__ipipe_irq_tail_hook = 0;
 	smp_mb();
 	printk(KERN_INFO "Xenomai: hal/blackfin stopped.\n");

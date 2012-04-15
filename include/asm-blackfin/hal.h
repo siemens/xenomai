@@ -30,7 +30,11 @@
 #include <asm/div64.h>
 
 #define RTHAL_ARCH_NAME		"blackfin"
+#ifndef CONFIG_IPIPE_CORE
 #define RTHAL_TIMER_DEVICE	"coretmr"
+#else /* CONFIG_IPIPE_CORE */
+#define RTHAL_TIMER_DEVICE	(ipipe_timer_name())
+#endif /* CONFIG_IPIPE_CORE */
 #define RTHAL_CLOCK_DEVICE	"cyclectr"
 
 typedef unsigned long long rthal_time_t;
@@ -47,7 +51,11 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 #include <asm/processor.h>
 #include <asm/xenomai/atomic.h>
 
+#ifndef CONFIG_IPIPE_CORE
 #define RTHAL_TIMER_IRQ		IRQ_CORETMR
+#else /* CONFIG_IPIPE_CORE */
+#define RTHAL_TIMER_IRQ		__ipipe_hrtimer_irq
+#endif /* CONFIG_IPIPE_CORE */
 #define RTHAL_HOST_TICK_IRQ	RTHAL_TIMER_IRQ
 
 /* The NMI watchdog timer is clocked by the system clock. */
@@ -65,6 +73,7 @@ static inline unsigned long long rthal_rdtsc(void)
 
 static inline void rthal_timer_program_shot(unsigned long delay)
 {
+#ifndef CONFIG_IPIPE_CORE
 	if (delay < 2)
 		ipipe_post_irq_head(RTHAL_TIMER_IRQ);
 	else {
@@ -74,6 +83,9 @@ static inline void rthal_timer_program_shot(unsigned long delay)
 		CSYNC();
 		bfin_write_TCNTL(TMPWR | TMREN);
 	}
+#else /* !CONFIG_IPIPE_CORE */
+	ipipe_timer_set(delay);
+#endif /* !CONFIG_IPIPE_CORE */
 }
 
     /* Private interface -- Internal use only */
