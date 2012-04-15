@@ -274,7 +274,30 @@ int rt_fputs(const char *s, FILE *stream)
 
 int rt_puts(const char *s)
 {
-	return rt_fputs(s, stdout);
+	int res;
+
+	res = rt_fputs(s, stdout);
+	if (res < 0)
+		return res;
+
+	return print_to_buffer(stdout, 0, RT_PRINT_MODE_FWRITE, 1, "\n");
+}
+
+int rt_fputc(int c, FILE *stream)
+{
+	unsigned char uc = c;
+	int rc;
+
+	rc = print_to_buffer(stream, 0, RT_PRINT_MODE_FWRITE, 1, (char *)&uc);
+	if (rc < 0)
+		return EOF;
+
+	return (int)uc;
+}
+
+int rt_putchar(int c)
+{
+	return rt_fputc(c, stdout);
 }
 
 size_t rt_fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
@@ -803,10 +826,38 @@ int __wrap_fputs(const char *s, FILE *stream)
 
 int __wrap_puts(const char *s)
 {
-	return __wrap_fputs(s, stdout);
+	if (unlikely(xeno_get_current() != XN_NO_HANDLE &&
+		     !(xeno_get_current_mode() & XNRELAX)))
+		return rt_puts(s);
+	else {
+		rt_print_flush_buffers();
+		return __real_puts(s);
+	}
 }
 
-size_t __wrap_fwrite(void *ptr, size_t size, size_t nmemb, FILE *stream)
+int __wrap_fputc(int c, FILE *stream)
+{
+	if (unlikely(xeno_get_current() != XN_NO_HANDLE &&
+		     !(xeno_get_current_mode() & XNRELAX)))
+		return rt_fputc(c, stream);
+	else {
+		rt_print_flush_buffers();
+		return __real_fputc(c, stream);
+	}
+}
+
+int __wrap_putchar(int c)
+{
+	if (unlikely(xeno_get_current() != XN_NO_HANDLE &&
+		     !(xeno_get_current_mode() & XNRELAX)))
+		return rt_putchar(c);
+	else {
+		rt_print_flush_buffers();
+		return __real_putchar(c);
+	}
+}
+
+size_t __wrap_fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
 	if (unlikely(xeno_get_current() != XN_NO_HANDLE &&
 		     !(xeno_get_current_mode() & XNRELAX)))

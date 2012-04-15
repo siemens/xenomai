@@ -87,6 +87,8 @@
 --wrap printf
 --wrap puts
 --wrap fputs
+--wrap fputc
+--wrap putchar
 --wrap fwrite
 --wrap syslog
 --wrap vsyslog
