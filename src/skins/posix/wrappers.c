@@ -365,6 +365,18 @@ int __real_fputs(const char *s, FILE *stream)
 }
 
 __attribute__ ((weak))
+int __real_fputc(int c, FILE *stream)
+{
+	return fputc(c, stream);
+}
+
+__attribute__ ((weak))
+int __real_putchar(int c)
+{
+	return putchar(c);
+}
+
+__attribute__ ((weak))
 size_t __real_fwrite(const void *ptr, size_t sz, size_t nmemb, FILE *stream)
 {
 	return fwrite(ptr, sz, nmemb, stream);

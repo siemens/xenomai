@@ -274,17 +274,35 @@ int rt_printf(const char *format, ...)
 
 int rt_fputs(const char *s, FILE *stream)
 {
-	int res;
-
-	res = print_to_buffer(stream, 0, RT_PRINT_MODE_FWRITE, strlen(s), s);
-	if (res < 0)
-		return res;
-	return print_to_buffer(stream, 0, RT_PRINT_MODE_FWRITE, 1, "\n");
+	return print_to_buffer(stream, 0, RT_PRINT_MODE_FWRITE, strlen(s), s);
 }
 
 int rt_puts(const char *s)
 {
-	return rt_fputs(s, stdout);
+	int res;
+
+	res = rt_fputs(s, stdout);
+	if (res < 0)
+		return res;
+
+	return print_to_buffer(stdout, 0, RT_PRINT_MODE_FWRITE, 1, "\n");
+}
+
+int rt_fputc(int c, FILE *stream)
+{
+	unsigned char uc = c;
+	int rc;
+
+	rc = print_to_buffer(stream, 0, RT_PRINT_MODE_FWRITE, 1, (char *)&uc);
+	if (rc < 0)
+		return EOF;
+
+	return (int)uc;
+}
+
+int rt_putchar(int c)
+{
+	return rt_fputc(c, stdout);
 }
 
 size_t rt_fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)

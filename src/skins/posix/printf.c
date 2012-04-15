@@ -56,7 +56,35 @@ int __wrap_fputs(const char *s, FILE *stream)
 
 int __wrap_puts(const char *s)
 {
-	return __wrap_fputs(s, stdout);
+	if (unlikely(xeno_get_current() != XN_NO_HANDLE &&
+		     !(xeno_get_current_mode() & XNRELAX)))
+		return rt_puts(s);
+	else {
+		rt_print_flush_buffers();
+		return __real_puts(s);
+	}
+}
+
+int __wrap_fputc(int c, FILE *stream)
+{
+	if (unlikely(xeno_get_current() != XN_NO_HANDLE &&
+		     !(xeno_get_current_mode() & XNRELAX)))
+		return rt_fputc(c, stream);
+	else {
+		rt_print_flush_buffers();
+		return __real_fputc(c, stream);
+	}
+}
+
+int __wrap_putchar(int c)
+{
+	if (unlikely(xeno_get_current() != XN_NO_HANDLE &&
+		     !(xeno_get_current_mode() & XNRELAX)))
+		return rt_putchar(c);
+	else {
+		rt_print_flush_buffers();
+		return __real_putchar(c);
+	}
 }
 
 size_t __wrap_fwrite(void *ptr, size_t size, size_t nmemb, FILE *stream)

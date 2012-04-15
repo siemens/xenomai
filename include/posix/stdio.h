@@ -23,6 +23,10 @@ int __real_puts(const char *s);
 
 int __real_fputs(const char *s, FILE *stream);
 
+int __real_fputc(int c, FILE *stream);
+
+int __real_putchar(int c);
+
 size_t __real_fwrite(const void *ptr, size_t sz, size_t nmemb, FILE *stream);
 
 #ifdef __cplusplus
