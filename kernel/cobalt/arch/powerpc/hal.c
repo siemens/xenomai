@@ -54,6 +54,8 @@ static volatile int sync_op;
 
 enum rthal_ktimer_mode rthal_ktimer_saved_mode;
 
+#ifndef CONFIG_IPIPE_CORE
+
 #define RTHAL_SET_ONESHOT_XENOMAI	1
 #define RTHAL_SET_ONESHOT_LINUX		2
 #define RTHAL_SET_PERIODIC		3
@@ -134,6 +136,12 @@ static void rthal_timer_set_periodic(void)
 	rthal_disarm_decr(0);
 	ipipe_critical_exit(flags);
 }
+#else /* I-pipe core */
+#define rthal_setup_oneshot_dec() do { } while (0)
+#define rthal_setup_periodic_dec() do { } while (0)
+#define rthal_timer_set_oneshot(rt_mode) do { } while (0)
+#define rthal_timer_set_periodic() do { } while (0)
+#endif /* I-pipe core */
 
 static int cpu_timers_requested;
 
@@ -147,11 +155,12 @@ int rthal_timer_request(void (*tick_handler)(void),
 	unsigned long dummy, *tmfreq = &dummy;
 	int tickval, ret, res;
 
-	if (rthal_timerfreq_arg == 0)
-		tmfreq = &rthal_archdata.timer_freq;
-
+#ifndef CONFIG_IPIPE_CORE
 	res = ipipe_request_tickdev("decrementer", mode_emul, tick_emul, cpu,
 				    tmfreq);
+#else /* CONFIG_IPIPE_CORE */
+	res = ipipe_timer_start(tick_handler, mode_emul, tick_emul, cpu);
+#endif /* CONFIG_IPIPE_CORE */
 	switch (res) {
 	case CLOCK_EVT_MODE_PERIODIC:
 		/* oneshot tick emulation callback won't be used, ask
@@ -185,13 +194,14 @@ int rthal_timer_request(void (*tick_handler)(void),
 	if (cpu_timers_requested++ > 0)
 		goto out;
 
+#ifndef CONFIG_IPIPE_CORE
 	ret = ipipe_request_irq(&rthal_archdata.domain,
 				RTHAL_TIMER_IRQ,
 				(ipipe_irq_handler_t)tick_handler,
 				NULL, NULL);
 	if (ret)
 		return ret;
-
+#endif /* !I-ipipe core */
 #ifdef CONFIG_SMP
 	ret = ipipe_request_irq(&rthal_archdata.domain,
 				RTHAL_TIMER_IPI,
@@ -208,7 +218,11 @@ out:
 
 void rthal_timer_release(int cpu)
 {
+#ifndef CONFIG_IPIPE_CORE
 	ipipe_release_tickdev(cpu);
+#else /* I-pipe core */
+	ipipe_timer_stop(cpu);
+#endif /* I-pipe core */
 
 	if (--cpu_timers_requested > 0)
 		return;
@@ -216,7 +230,9 @@ void rthal_timer_release(int cpu)
 #ifdef CONFIG_SMP
 	ipipe_free_irq(&rthal_archdata.domain, RTHAL_TIMER_IPI);
 #endif /* CONFIG_SMP */
+#ifndef CONFIG_IPIPE_CORE
 	ipipe_free_irq(&rthal_archdata.domain, RTHAL_TIMER_IRQ);
+#endif /* !I-pipe core */
 
 	if (rthal_ktimer_saved_mode == KTIMER_MODE_PERIODIC)
 		rthal_timer_set_periodic();
@@ -244,6 +260,9 @@ unsigned long rthal_timer_calibrate(void)
 
 int rthal_arch_init(void)
 {
+#ifdef CONFIG_IPIPE_CORE
+	int rc;
+#endif /* I-pipe core */
 #ifdef CONFIG_ALTIVEC
 	if (!cpu_has_feature(CPU_FTR_ALTIVEC)) {
 		printk
@@ -252,6 +271,11 @@ int rthal_arch_init(void)
 		return -ENODEV;
 	}
 #endif /* CONFIG_ALTIVEC */
+#ifdef CONFIG_IPIPE_CORE
+	rc = ipipe_timers_request();
+	if (rc < 0)
+		return rc;
+#endif /* I-pipe core */
 
 	if (rthal_timerfreq_arg == 0)
 		rthal_timerfreq_arg = (unsigned long)rthal_get_timerfreq();
@@ -264,6 +288,9 @@ int rthal_arch_init(void)
 
 void rthal_arch_cleanup(void)
 {
+#ifdef CONFIG_IPIPE_CORE
+	ipipe_timers_release();
+#endif /* I-pipe core */
 	/* Nothing to cleanup so far. */
 	printk(KERN_INFO "Xenomai: hal/powerpc stopped.\n");
 }

@@ -32,7 +32,11 @@
 #include <asm-generic/xenomai/hal.h>	/* Read the generic bits. */
 
 #define RTHAL_ARCH_NAME		"powerpc"
+#ifndef CONFIG_IPIPE_CORE
 #define RTHAL_TIMER_DEVICE	"decrementer"
+#else /* CONFIG_IPIPE_CORE */
+#define RTHAL_TIMER_DEVICE	(ipipe_timer_name())
+#endif /* CONFIG_IPIPE_CORE */
 #define RTHAL_CLOCK_DEVICE	"timebase"
 
 typedef unsigned long long rthal_time_t;
@@ -76,6 +80,7 @@ static inline unsigned long long rthal_rdtsc(void)
 
 static inline void rthal_timer_program_shot(unsigned long delay)
 {
+#ifndef CONFIG_IPIPE_CORE
 	if (delay < 3)
 		ipipe_post_irq_head(RTHAL_TIMER_IRQ);
 	else {
@@ -91,6 +96,9 @@ static inline void rthal_timer_program_shot(unsigned long delay)
 		set_dec((int)delay);
 #endif /* CONFIG_40x */
 	}
+#else /* !CONFIG_IPIPE_CORE */
+	ipipe_timer_set(delay);
+#endif /* !CONFIG_IPIPE_CORE */
 }
 
     /* Private interface -- Internal use only */
