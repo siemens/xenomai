@@ -588,7 +588,7 @@ struct xnsched_class xnsched_class_sporadic = {
 	.sched_init_vfile	=	xnsched_sporadic_init_vfile,
 	.sched_cleanup_vfile	=	xnsched_sporadic_cleanup_vfile,
 #endif
-	.weight			=	XNSCHED_CLASS_WEIGHT(1),
+	.weight			=	XNSCHED_CLASS_WEIGHT(2),
 	.name			=	"pss"
 };
 EXPORT_SYMBOL_GPL(xnsched_class_sporadic);

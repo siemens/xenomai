@@ -51,13 +51,13 @@ static void xnsched_register_class(struct xnsched_class *sched_class)
 void xnsched_register_classes(void)
 {
 	xnsched_register_class(&xnsched_class_idle);
-	xnsched_register_class(&xnsched_class_rt);
-#ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
-	xnsched_register_class(&xnsched_class_sporadic);
-#endif
 #ifdef CONFIG_XENO_OPT_SCHED_TP
 	xnsched_register_class(&xnsched_class_tp);
 #endif
+#ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
+	xnsched_register_class(&xnsched_class_sporadic);
+#endif
+	xnsched_register_class(&xnsched_class_rt);
 }
 
 #ifdef CONFIG_XENO_OPT_WATCHDOG

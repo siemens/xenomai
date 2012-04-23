@@ -48,9 +48,10 @@
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
-#if defined(CONFIG_XENO_OPT_SCALABLE_SCHED) && \
-  XNSCHED_RT_NR_PRIO > XNSCHED_MLQ_LEVELS
-#error "RT class cannot use multi-level queue (too many priority levels)"
+#if XNSCHED_RT_NR_PRIO > XNSCHED_CLASS_MAX_PRIO ||	\
+  (defined(CONFIG_XENO_OPT_SCALABLE_SCHED) &&		\
+   XNSCHED_RT_NR_PRIO > XNSCHED_MLQ_LEVELS)
+#error "RT class has too many priority levels"
 #endif
 
 extern struct xnsched_class xnsched_class_rt;
