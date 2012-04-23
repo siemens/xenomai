@@ -133,8 +133,8 @@ struct xnsched_class {
 	const char *name;
 };
 
-#define XNSCHED_CLASS_MAX_THREADS	32768
-#define XNSCHED_CLASS_WEIGHT(n)		(n * XNSCHED_CLASS_MAX_THREADS)
+#define XNSCHED_CLASS_MAX_PRIO		1024
+#define XNSCHED_CLASS_WEIGHT(n)		(n * XNSCHED_CLASS_MAX_PRIO)
 
 /* Placeholder for current thread priority */
 #define XNSCHED_RUNPRIO   0x80000000

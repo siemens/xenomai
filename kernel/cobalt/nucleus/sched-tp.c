@@ -79,8 +79,7 @@ static void xnsched_tp_init(struct xnsched *sched)
 
 	/*
 	 * Build the runqueues. Thread priorities for the TP policy
-	 * are the same as RT priorities. TP is actually a superset of
-	 * RT.
+	 * are valid RT priorities. TP is actually a subset of RT.
 	 */
 	for (n = 0; n < CONFIG_XENO_OPT_SCHED_TP_NRPART; n++)
 		sched_initpq(&tp->partitions[n].runnable,
@@ -200,7 +199,7 @@ static void xnsched_tp_migrate(struct xnthread *thread, struct xnsched *sched)
 	/*
 	 * Since our partition schedule is a per-scheduler property,
 	 * it cannot apply to a thread that moves to another CPU
-	 * anymore. So we downgrade that thread to the RT class when a
+	 * anymore. So we upgrade that thread to the RT class when a
 	 * CPU migration occurs. A subsequent call to
 	 * xnsched_set_policy() may move it back to TP scheduling,
 	 * with a partition assignment that fits the remote CPU's
@@ -277,7 +276,6 @@ struct xnvfile_directory sched_tp_vfroot;
 struct vfile_sched_tp_priv {
 	struct xnholder *curr;
 };
-
 
 struct vfile_sched_tp_data {
 	int cpu;
@@ -395,7 +393,7 @@ struct xnsched_class xnsched_class_tp = {
 	.sched_init_vfile	=	xnsched_tp_init_vfile,
 	.sched_cleanup_vfile	=	xnsched_tp_cleanup_vfile,
 #endif
-	.weight			=	XNSCHED_CLASS_WEIGHT(2),
+	.weight			=	XNSCHED_CLASS_WEIGHT(1),
 	.name			=	"tp"
 };
 EXPORT_SYMBOL_GPL(xnsched_class_tp);
