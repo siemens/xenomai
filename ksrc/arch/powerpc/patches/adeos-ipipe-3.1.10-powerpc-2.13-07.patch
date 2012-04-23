@@ -65,6 +65,16 @@ index 6926b61..361330a 100644
  config HIGHMEM
  	bool "High memory support"
  	depends on PPC32
+diff --git a/arch/powerpc/Makefile b/arch/powerpc/Makefile
+index 57af16e..90e3387 100644
+--- a/arch/powerpc/Makefile
++++ b/arch/powerpc/Makefile
+@@ -264,3 +264,5 @@ checkbin:
+ 
+ CLEAN_FILES += $(TOUT)
+ 
++
++drivers-$(CONFIG_XENOMAI) += arch/powerpc/xenomai/
 diff --git a/arch/powerpc/boot/Makefile b/arch/powerpc/boot/Makefile
 index c26200b..29e87da 100644
 --- a/arch/powerpc/boot/Makefile
@@ -296,7 +306,7 @@ index bb712c9..8885e9b 100644
   * or should we not care like we do now ? --BenH.
 diff --git a/arch/powerpc/include/asm/ipipe.h b/arch/powerpc/include/asm/ipipe.h
 new file mode 100644
-index 0000000..977028d
+index 0000000..43d81fd
 --- /dev/null
 +++ b/arch/powerpc/include/asm/ipipe.h
 @@ -0,0 +1,280 @@
@@ -348,10 +358,10 @@ index 0000000..977028d
 +#include <asm/paca.h>
 +#endif
 +
-+#define IPIPE_ARCH_STRING	"2.13-06"
++#define IPIPE_ARCH_STRING	"2.13-07"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	13
-+#define IPIPE_PATCH_NUMBER	6
++#define IPIPE_PATCH_NUMBER	7
 +
 +#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 +
@@ -1395,7 +1405,7 @@ index 836f231..7407173 100644
  				 _TIF_SECCOMP | _TIF_SYSCALL_TRACEPOINT)
  
 diff --git a/arch/powerpc/include/asm/time.h b/arch/powerpc/include/asm/time.h
-index fe6f7c2..4ec3018 100644
+index bc3c745..7a52ec6 100644
 --- a/arch/powerpc/include/asm/time.h
 +++ b/arch/powerpc/include/asm/time.h
 @@ -28,6 +28,7 @@
@@ -2232,7 +2242,7 @@ index f8e971b..0757b6f 100644
  	/* Alignment Interrupt */
  	ALIGNMENT_EXCEPTION
 diff --git a/arch/powerpc/kernel/head_64.S b/arch/powerpc/kernel/head_64.S
-index 3564c49..d235b88 100644
+index 3564c49..d235b88a 100644
 --- a/arch/powerpc/kernel/head_64.S
 +++ b/arch/powerpc/kernel/head_64.S
 @@ -611,14 +611,20 @@ __secondary_start:
@@ -2448,10 +2458,10 @@ index ba31954..d0a9b16 100644
  	sync
 diff --git a/arch/powerpc/kernel/ipipe.c b/arch/powerpc/kernel/ipipe.c
 new file mode 100644
-index 0000000..7252c78
+index 0000000..8c5710c
 --- /dev/null
 +++ b/arch/powerpc/kernel/ipipe.c
-@@ -0,0 +1,710 @@
+@@ -0,0 +1,706 @@
 +/* -*- linux-c -*-
 + * linux/arch/powerpc/kernel/ipipe.c
 + *
@@ -2535,10 +2545,6 @@ index 0000000..7252c78
 +void __ipipe_register_ipi(unsigned int irq)
 +{
 +	__ipipe_ipi_irq = irq;
-+	mb();
-+#ifndef CONFIG_DEBUGGER
-+	irq_get_chip(irq)->irq_startup(irq_get_irq_data(irq));
-+#endif
 +}
 +
 +static void __ipipe_ipi_demux(int irq, struct pt_regs *regs)
@@ -3163,7 +3169,7 @@ index 0000000..7252c78
 +EXPORT_SYMBOL_GPL(atomic_clear_mask);
 +#endif	/* !CONFIG_PPC64 */
 diff --git a/arch/powerpc/kernel/irq.c b/arch/powerpc/kernel/irq.c
-index d281fb6..bc355cb 100644
+index 4b1e82a..a19c336 100644
 --- a/arch/powerpc/kernel/irq.c
 +++ b/arch/powerpc/kernel/irq.c
 @@ -99,6 +99,8 @@ EXPORT_SYMBOL(irq_desc);
@@ -3175,7 +3181,7 @@ index d281fb6..bc355cb 100644
  static inline notrace unsigned long get_hard_enabled(void)
  {
  	unsigned long enabled;
-@@ -187,6 +189,9 @@ notrace void arch_local_irq_restore(unsigned long en)
+@@ -184,6 +186,9 @@ notrace void arch_local_irq_restore(unsigned long en)
  	__hard_irq_enable();
  }
  EXPORT_SYMBOL(arch_local_irq_restore);
@@ -3185,7 +3191,7 @@ index d281fb6..bc355cb 100644
  #endif /* CONFIG_PPC64 */
  
  int arch_show_interrupts(struct seq_file *p, int prec)
-@@ -283,7 +288,8 @@ void migrate_irqs(void)
+@@ -280,7 +285,8 @@ void migrate_irqs(void)
  }
  #endif
  
@@ -3195,7 +3201,7 @@ index d281fb6..bc355cb 100644
  {
  	struct thread_info *curtp, *irqtp;
  	unsigned long saved_sp_limit;
-@@ -326,8 +332,14 @@ static inline void handle_one_irq(unsigned int irq)
+@@ -323,8 +329,14 @@ static inline void handle_one_irq(unsigned int irq)
  	if (irqtp->flags)
  		set_bits(irqtp->flags, &curtp->flags);
  }
@@ -3211,7 +3217,7 @@ index d281fb6..bc355cb 100644
  {
  #ifdef CONFIG_DEBUG_STACKOVERFLOW
  	long sp;
-@@ -343,6 +355,16 @@ static inline void check_stack_overflow(void)
+@@ -340,6 +352,16 @@ static inline void check_stack_overflow(void)
  #endif
  }
  
@@ -3228,7 +3234,7 @@ index d281fb6..bc355cb 100644
  void do_IRQ(struct pt_regs *regs)
  {
  	struct pt_regs *old_regs = set_irq_regs(regs);
-@@ -383,7 +405,9 @@ void __init init_IRQ(void)
+@@ -380,7 +402,9 @@ void __init init_IRQ(void)
  
  	exc_lvl_ctx_init();
  
@@ -3238,7 +3244,7 @@ index d281fb6..bc355cb 100644
  }
  
  #if defined(CONFIG_BOOKE) || defined(CONFIG_40x)
-@@ -422,6 +446,7 @@ void exc_lvl_ctx_init(void)
+@@ -419,6 +443,7 @@ void exc_lvl_ctx_init(void)
  }
  #endif
  
@@ -3246,7 +3252,7 @@ index d281fb6..bc355cb 100644
  struct thread_info *softirq_ctx[NR_CPUS] __read_mostly;
  struct thread_info *hardirq_ctx[NR_CPUS] __read_mostly;
  
-@@ -464,6 +489,9 @@ static inline void do_softirq_onstack(void)
+@@ -461,6 +486,9 @@ static inline void do_softirq_onstack(void)
  	if (irqtp->flags)
  		set_bits(irqtp->flags, &curtp->flags);
  }
@@ -3504,7 +3510,7 @@ index 7bf2187..27f1d76 100644
  	current->active_mm = &init_mm;
  
 diff --git a/arch/powerpc/kernel/time.c b/arch/powerpc/kernel/time.c
-index 03b29a6..d9a95ed 100644
+index 2de304a..f70b9e6 100644
 --- a/arch/powerpc/kernel/time.c
 +++ b/arch/powerpc/kernel/time.c
 @@ -127,6 +127,8 @@ struct decrementer_clock {
@@ -4584,7 +4590,7 @@ index 1aa478b..b45f80e 100644
  
  /**
 diff --git a/arch/powerpc/platforms/pseries/lpar.c b/arch/powerpc/platforms/pseries/lpar.c
-index c9a29da..fbb039d 100644
+index 2178cc4..d21d070 100644
 --- a/arch/powerpc/platforms/pseries/lpar.c
 +++ b/arch/powerpc/platforms/pseries/lpar.c
 @@ -166,7 +166,7 @@ static long pSeries_lpar_hpte_insert(unsigned long hpte_group,
@@ -5244,6 +5250,16 @@ index 984cd20..1c6b4a3 100644
  }
  
  static struct uic * __init uic_init_one(struct device_node *node)
+diff --git a/drivers/Makefile b/drivers/Makefile
+index 7fa433a..51e1d9a 100644
+--- a/drivers/Makefile
++++ b/drivers/Makefile
+@@ -127,3 +127,5 @@ obj-$(CONFIG_IOMMU_SUPPORT)	+= iommu/
+ 
+ # Virtualization drivers
+ obj-$(CONFIG_VIRT_DRIVERS)	+= virt/
++
++obj-$(CONFIG_XENOMAI) += xenomai/
 diff --git a/drivers/pci/htirq.c b/drivers/pci/htirq.c
 index db057b6..7fe364e 100644
 --- a/drivers/pci/htirq.c
@@ -7121,7 +7137,7 @@ index bc2994e..5e2da8d 100644
  #define write_unlock_irq(lock)		_raw_write_unlock_irq(lock)
  
 diff --git a/include/linux/rwlock_api_smp.h b/include/linux/rwlock_api_smp.h
-index 9c9f049..62c8941 100644
+index 9c9f049..62c894150 100644
 --- a/include/linux/rwlock_api_smp.h
 +++ b/include/linux/rwlock_api_smp.h
 @@ -141,7 +141,9 @@ static inline int __raw_write_trylock(rwlock_t *lock)
@@ -7478,7 +7494,7 @@ index a26e2fb..71348f2 100644
  
  #define arch_read_can_lock(lock)	(((void)(lock), 1))
 diff --git a/init/Kconfig b/init/Kconfig
-index d627783..ce4171e 100644
+index d627783..17c6257 100644
 --- a/init/Kconfig
 +++ b/init/Kconfig
 @@ -87,6 +87,7 @@ config CROSS_COMPILE
@@ -7489,6 +7505,44 @@ index d627783..ce4171e 100644
  	help
  	  Append an extra string to the end of your kernel version.
  	  This will show up when you type uname, for example.
+@@ -1399,3 +1400,37 @@ config PADATA
+ 	bool
+ 
+ source "kernel/Kconfig.locks"
++
++menu "Real-time sub-system"
++
++if APM || CPU_FREQ || ACPI_PROCESSOR || INTEL_IDLE
++comment "WARNING! You enabled APM, CPU Frequency scaling, ACPI 'processor'"
++comment "or Intel cpuidle option. These options are known to cause troubles"
++comment "with Xenomai, disable them."
++endif
++
++comment "NOTE: Xenomai conflicts with PC speaker support."
++	depends on !X86_TSC && X86 && INPUT_PCSPKR
++comment "(menu Device Drivers/Input device support/Miscellaneous devices)"
++	depends on !X86_TSC && X86 && INPUT_PCSPKR
++
++comment "NOTE: Xenomai needs either X86_LOCAL_APIC enabled or HPET_TIMER disabled."
++	depends on (!X86_LOCAL_APIC || !X86_TSC) && X86 && HPET_TIMER
++comment "(menu Processor type and features)"
++	depends on (!X86_LOCAL_APIC || !X86_TSC) && X86 && HPET_TIMER
++
++config XENOMAI
++	depends on ((X86_TSC || !X86 || !INPUT_PCSPKR) && (!HPET_TIMER || !X86 || (X86_LOCAL_APIC && X86_TSC)))
++	bool "Xenomai"
++	default y
++        select IPIPE
++
++        help
++          Xenomai is a real-time extension to the Linux kernel. Note
++          that Xenomai relies on Adeos interrupt pipeline (CONFIG_IPIPE
++          option) to be enabled, so enabling this option selects the
++          CONFIG_IPIPE option.
++
++source "arch/powerpc/xenomai/Kconfig"
++
++endmenu
 diff --git a/init/main.c b/init/main.c
 index 03b408d..4c31fab 100644
 --- a/init/main.c
@@ -7531,7 +7585,7 @@ index 03b408d..4c31fab 100644
  	usermodehelper_enable();
  	do_initcalls();
 diff --git a/kernel/Makefile b/kernel/Makefile
-index eca595e..45d0946 100644
+index eca595e..86de49b 100644
 --- a/kernel/Makefile
 +++ b/kernel/Makefile
 @@ -86,6 +86,7 @@ obj-$(CONFIG_TREE_RCU_TRACE) += rcutree_trace.o
@@ -7542,8 +7596,14 @@ index eca595e..45d0946 100644
  obj-$(CONFIG_SYSCTL) += utsname_sysctl.o
  obj-$(CONFIG_TASK_DELAY_ACCT) += delayacct.o
  obj-$(CONFIG_TASKSTATS) += taskstats.o tsacct.o
+@@ -138,3 +139,5 @@ quiet_cmd_timeconst  = TIMEC   $@
+ targets += timeconst.h
+ $(obj)/timeconst.h: $(src)/timeconst.pl FORCE
+ 	$(call if_changed,timeconst)
++
++obj-$(CONFIG_XENOMAI) += xenomai/
 diff --git a/kernel/exit.c b/kernel/exit.c
-index 2913b35..087f348 100644
+index 9e316ae..23a0bc8 100644
 --- a/kernel/exit.c
 +++ b/kernel/exit.c
 @@ -979,6 +979,7 @@ NORET_TYPE void do_exit(long code)
@@ -11598,10 +11658,10 @@ index 039b889..309e58e 100644
  static void free_desc(unsigned int irq)
  {
 diff --git a/kernel/lockdep.c b/kernel/lockdep.c
-index 91d67ce..65e15a7 100644
+index 4479606..a68dbde 100644
 --- a/kernel/lockdep.c
 +++ b/kernel/lockdep.c
-@@ -2525,7 +2525,7 @@ void trace_hardirqs_on_caller(unsigned long ip)
+@@ -2526,7 +2526,7 @@ void trace_hardirqs_on_caller(unsigned long ip)
  		return;
  	}
  
@@ -11610,7 +11670,7 @@ index 91d67ce..65e15a7 100644
  		return;
  
  	if (DEBUG_LOCKS_WARN_ON(unlikely(early_boot_irqs_disabled)))
-@@ -2558,7 +2558,7 @@ void trace_hardirqs_off_caller(unsigned long ip)
+@@ -2559,7 +2559,7 @@ void trace_hardirqs_off_caller(unsigned long ip)
  	if (unlikely(!debug_locks || current->lockdep_recursion))
  		return;
  
@@ -11619,7 +11679,7 @@ index 91d67ce..65e15a7 100644
  		return;
  
  	if (curr->hardirqs_enabled) {
-@@ -2590,7 +2590,7 @@ void trace_softirqs_on(unsigned long ip)
+@@ -2591,7 +2591,7 @@ void trace_softirqs_on(unsigned long ip)
  	if (unlikely(!debug_locks || current->lockdep_recursion))
  		return;
  
@@ -11628,7 +11688,7 @@ index 91d67ce..65e15a7 100644
  		return;
  
  	if (curr->softirqs_enabled) {
-@@ -2626,7 +2626,7 @@ void trace_softirqs_off(unsigned long ip)
+@@ -2627,7 +2627,7 @@ void trace_softirqs_off(unsigned long ip)
  	if (unlikely(!debug_locks || current->lockdep_recursion))
  		return;
  
@@ -12044,7 +12104,7 @@ index b50b0f0..b48bb2f 100644
 +
 +#endif /* CONFIG_IPIPE */
 diff --git a/kernel/signal.c b/kernel/signal.c
-index 291c970..63e5475 100644
+index 195331c..018541a 100644
 --- a/kernel/signal.c
 +++ b/kernel/signal.c
 @@ -681,6 +681,7 @@ void signal_wake_up(struct task_struct *t, int resume)
@@ -12609,7 +12669,7 @@ index 5a688a2..3f234b3 100644
  	if (vma_wants_writenotify(vma)) {
  		vma->vm_page_prot = vm_get_page_prot(newflags & ~VM_SHARED);
 diff --git a/mm/vmalloc.c b/mm/vmalloc.c
-index 56faf31..ca07731 100644
+index 3a65d6f7..8376f2a 100644
 --- a/mm/vmalloc.c
 +++ b/mm/vmalloc.c
 @@ -171,6 +171,8 @@ static int vmap_page_range_noflush(unsigned long start, unsigned long end,
