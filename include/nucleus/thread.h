@@ -401,8 +401,8 @@ typedef struct xnhook {
 #define xnthread_amok_p(thread)            xnthread_test_info(thread, XNAMOK)
 #define xnthread_clear_amok(thread)        xnthread_clear_info(thread, XNAMOK)
 #else /* !CONFIG_XENO_OPT_WATCHDOG */
-#define xnthread_amok_p(thread)            (0)
-#define xnthread_clear_amok(thread)        do { } while (0)
+#define xnthread_amok_p(thread)            ({ (void)(thread); 0; })
+#define xnthread_clear_amok(thread)        do { (void)(thread); } while (0)
 #endif /* !CONFIG_XENO_OPT_WATCHDOG */
 
 /* Class-level operations for threads. */
