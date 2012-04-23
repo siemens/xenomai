@@ -62,9 +62,104 @@ static struct {
 
 enum rthal_ktimer_mode rthal_ktimer_saved_mode;
 
+static int cpu_timers_requested;
+
+#ifdef CONFIG_IPIPE_CORE
+
+#define rthal_setup_oneshot_dec() do { } while (0)
+#define rthal_setup_periodic_dec() do { } while (0)
+#define rthal_timer_set_oneshot(rt_mode) do { } while (0)
+#define rthal_timer_set_periodic() do { } while (0)
+
+static inline
+int rthal_tickdev_request(void (*tick_handler)(void),
+			  void (*mode_emul)(enum clock_event_mode mode,
+					    struct clock_event_device *cdev),
+			  int (*tick_emul)(unsigned long delay,
+					   struct clock_event_device *cdev),
+			  int cpu,
+			  unsigned long *tmfreq)
+{
+	int ret, tickval;
+
+	ret = ipipe_timer_start(tick_handler, mode_emul, tick_emul, cpu);
+	switch (ret) {
+	case CLOCK_EVT_MODE_PERIODIC:
+		/*
+		 * Oneshot tick emulation callback won't be used, ask
+		 * the caller to start an internal timer for emulating
+		 * a periodic tick.
+		 */
+		tickval = 1000000000UL / HZ;
+		break;
+
+	case CLOCK_EVT_MODE_ONESHOT:
+		/* Oneshot tick emulation */
+		tickval = 1;
+		break;
+
+	case CLOCK_EVT_MODE_UNUSED:
+		/* We don't need to emulate the tick at all. */
+		tickval = 0;
+		break;
+
+	case CLOCK_EVT_MODE_SHUTDOWN:
+		return -ENODEV;
+
+	default:
+		return ret;
+	}
+
+	rthal_ktimer_saved_mode = ret;
+
+	/*
+	 * The rest of the initialization should only be performed
+	 * once by a single CPU.
+	 */
+	if (cpu_timers_requested++ > 0)
+		return tickval;
+
+#ifdef CONFIG_SMP
+	ret = rthal_irq_request(RTHAL_TIMER_IPI,
+				(rthal_irq_handler_t)tick_handler,
+				NULL, NULL);
+	if (ret)
+		return ret;
+#endif
+	rthal_timer_set_oneshot(1);
+
+	return tickval;
+}
+
+static inline void rthal_tickdev_release(int cpu)
+{
+	ipipe_timer_stop(cpu);
+
+	if (--cpu_timers_requested > 0)
+		return;
+
+#ifdef CONFIG_SMP
+	rthal_irq_release(RTHAL_TIMER_IPI);
+#endif /* CONFIG_SMP */
+
+	if (rthal_ktimer_saved_mode == KTIMER_MODE_PERIODIC)
+		rthal_timer_set_periodic();
+	else if (rthal_ktimer_saved_mode == KTIMER_MODE_ONESHOT)
+		rthal_timer_set_oneshot(0);
+}
+
+static inline int rthal_tickdev_enum(void)
+{
+	return ipipe_timers_request();
+}
+
+#else /* !CONFIG_IPIPE_CORE */
+
 #define RTHAL_SET_ONESHOT_XENOMAI	1
 #define RTHAL_SET_ONESHOT_LINUX		2
 #define RTHAL_SET_PERIODIC		3
+
+#ifdef CONFIG_GENERIC_CLOCKEVENTS
 
 static inline void rthal_disarm_decr(int disarmed)
 {
@@ -154,41 +249,36 @@ static void rthal_timer_set_periodic(void)
 	rthal_critical_exit(flags);
 }
 
-static int cpu_timers_requested;
-
-#ifdef CONFIG_GENERIC_CLOCKEVENTS
-
-int rthal_timer_request(
-	void (*tick_handler)(void),
-	void (*mode_emul)(enum clock_event_mode mode,
-			  struct clock_event_device *cdev),
-	int (*tick_emul)(unsigned long delay,
-			 struct clock_event_device *cdev),
-	int cpu)
+static inline
+int rthal_tickdev_request(void (*tick_handler)(void),
+			  void (*mode_emul)(enum clock_event_mode mode,
+					    struct clock_event_device *cdev),
+			  int (*tick_emul)(unsigned long delay,
+					   struct clock_event_device *cdev),
+			  int cpu,
+			  unsigned long *tmfreq)
 {
-	unsigned long dummy, *tmfreq = &dummy;
-	int tickval, err, res;
+	int ret, tickval;
 
-	if (rthal_timerfreq_arg == 0)
-		tmfreq = &rthal_tunables.timer_freq;
-
-	res = ipipe_request_tickdev("decrementer", mode_emul, tick_emul, cpu,
-				    tmfreq);
-	switch (res) {
+	ret = ipipe_request_tickdev("decrementer", mode_emul, tick_emul,
+				    cpu, tmfreq);
+	switch (ret) {
 	case CLOCK_EVT_MODE_PERIODIC:
-		/* oneshot tick emulation callback won't be used, ask
+		/*
+		 * Oneshot tick emulation callback won't be used, ask
 		 * the caller to start an internal timer for emulating
-		 * a periodic tick. */
+		 * a periodic tick.
+		 */
 		tickval = 1000000000UL / HZ;
 		break;
 
 	case CLOCK_EVT_MODE_ONESHOT:
-		/* oneshot tick emulation */
+		/* Oneshot tick emulation */
 		tickval = 1;
 		break;
 
 	case CLOCK_EVT_MODE_UNUSED:
-		/* we don't need to emulate the tick at all. */
+		/* We don't need to emulate the tick at all. */
 		tickval = 0;
 		break;
 
@@ -196,41 +286,38 @@ int rthal_timer_request(
 		return -ENODEV;
 
 	default:
-		return res;
+		return ret;
 	}
-	rthal_ktimer_saved_mode = res;
+
+	rthal_ktimer_saved_mode = ret;
 
 	/*
 	 * The rest of the initialization should only be performed
 	 * once by a single CPU.
 	 */
 	if (cpu_timers_requested++ > 0)
-		goto out;
+		return tickval;
 
-	err = rthal_irq_request(RTHAL_TIMER_IRQ,
-				(rthal_irq_handler_t) tick_handler,
+	ret = rthal_irq_request(RTHAL_TIMER_IRQ,
+				(rthal_irq_handler_t)tick_handler,
 				NULL, NULL);
-	if (err)
-		return err;
-
+	if (ret)
+		return ret;
 #ifdef CONFIG_SMP
-	err = rthal_irq_request(RTHAL_TIMER_IPI,
-				(rthal_irq_handler_t) tick_handler,
+	ret = rthal_irq_request(RTHAL_TIMER_IPI,
+				(rthal_irq_handler_t)tick_handler,
 				NULL, NULL);
-	if (err)
-		return err;
+	if (ret)
+		return ret;
 #endif
-
 	rthal_timer_set_oneshot(1);
 
-out:
 	return tickval;
 }
 
-void rthal_timer_release(int cpu)
+static inline void rthal_tickdev_release(int cpu)
 {
 	ipipe_release_tickdev(cpu);
-
 	if (--cpu_timers_requested > 0)
 		return;
 
@@ -243,6 +330,39 @@ void rthal_timer_release(int cpu)
 		rthal_timer_set_periodic();
 	else if (rthal_ktimer_saved_mode == KTIMER_MODE_ONESHOT)
 		rthal_timer_set_oneshot(0);
+}
+
+static inline int rthal_tickdev_enum(void)
+{
+	return 0;
+}
+
+#endif /* CONFIG_GENERIC_CLOCKEVENTS */
+
+#endif /* !CONFIG_IPIPE_CORE */
+
+#ifdef CONFIG_GENERIC_CLOCKEVENTS
+
+int rthal_timer_request(
+	void (*tick_handler)(void),
+	void (*mode_emul)(enum clock_event_mode mode,
+			  struct clock_event_device *cdev),
+	int (*tick_emul)(unsigned long delay,
+			 struct clock_event_device *cdev),
+	int cpu)
+{
+	unsigned long dummy, *tmfreq = &dummy;
+
+	if (rthal_timerfreq_arg == 0)
+		tmfreq = &rthal_tunables.timer_freq;
+
+	return rthal_tickdev_request(tick_handler, mode_emul, tick_emul,
+				     cpu, tmfreq);
+}
+
+void rthal_timer_release(int cpu)
+{
+	rthal_tickdev_release(cpu);
 }
 
 void rthal_timer_notify_switch(enum clock_event_mode mode,
@@ -428,6 +548,8 @@ RTHAL_DECLARE_DOMAIN(rthal_domain_entry);
 
 int rthal_arch_init(void)
 {
+	int ret;
+
 #ifdef CONFIG_ALTIVEC
 	if (!cpu_has_feature(CPU_FTR_ALTIVEC)) {
 		printk
@@ -436,6 +558,10 @@ int rthal_arch_init(void)
 		return -ENODEV;
 	}
 #endif /* CONFIG_ALTIVEC */
+
+	ret = rthal_tickdev_enum();
+	if (ret)
+		return ret;
 
 	if (rthal_cpufreq_arg == 0)
 		rthal_cpufreq_arg = (unsigned long)rthal_get_cpufreq();
