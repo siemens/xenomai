@@ -66,11 +66,6 @@ static int cpu_timers_requested;
 
 #ifdef CONFIG_IPIPE_CORE
 
-#define rthal_setup_oneshot_dec() do { } while (0)
-#define rthal_setup_periodic_dec() do { } while (0)
-#define rthal_timer_set_oneshot(rt_mode) do { } while (0)
-#define rthal_timer_set_periodic() do { } while (0)
-
 static inline
 int rthal_tickdev_request(void (*tick_handler)(void),
 			  void (*mode_emul)(enum clock_event_mode mode,
@@ -126,8 +121,6 @@ int rthal_tickdev_request(void (*tick_handler)(void),
 	if (ret)
 		return ret;
 #endif
-	rthal_timer_set_oneshot(1);
-
 	return tickval;
 }
 
@@ -141,14 +134,9 @@ static inline void rthal_tickdev_release(int cpu)
 #ifdef CONFIG_SMP
 	rthal_irq_release(RTHAL_TIMER_IPI);
 #endif /* CONFIG_SMP */
-
-	if (rthal_ktimer_saved_mode == KTIMER_MODE_PERIODIC)
-		rthal_timer_set_periodic();
-	else if (rthal_ktimer_saved_mode == KTIMER_MODE_ONESHOT)
-		rthal_timer_set_oneshot(0);
 }
 
-static inline int rthal_tickdev_enum(void)
+static inline int rthal_tickdev_select(void)
 {
 	return ipipe_timers_request();
 }
@@ -332,7 +320,7 @@ static inline void rthal_tickdev_release(int cpu)
 		rthal_timer_set_oneshot(0);
 }
 
-static inline int rthal_tickdev_enum(void)
+static inline int rthal_tickdev_select(void)
 {
 	return 0;
 }
@@ -559,7 +547,7 @@ int rthal_arch_init(void)
 	}
 #endif /* CONFIG_ALTIVEC */
 
-	ret = rthal_tickdev_enum();
+	ret = rthal_tickdev_select();
 	if (ret)
 		return ret;
 

@@ -31,7 +31,12 @@
 
 #include <asm-generic/xenomai/hal.h>	/* Read the generic bits. */
 
+#ifdef CONFIG_IPIPE_CORE
+#include <linux/ipipe_tickdev.h>
+#define RTHAL_TIMER_DEVICE	ipipe_timer_name()
+#else
 #define RTHAL_TIMER_DEVICE	"decrementer"
+#endif
 #define RTHAL_CLOCK_DEVICE	"timebase"
 
 typedef unsigned long long rthal_time_t;
@@ -84,6 +89,9 @@ static inline unsigned long long rthal_rdtsc(void)
 
 static inline void rthal_timer_program_shot(unsigned long delay)
 {
+#ifdef CONFIG_IPIPE_CORE
+	ipipe_timer_set(delay);
+#else /* !CONFIG_IPIPE_CORE */
 	if (delay < 3)
 		rthal_schedule_irq_head(RTHAL_TIMER_IRQ);
 	else {
@@ -99,6 +107,7 @@ static inline void rthal_timer_program_shot(unsigned long delay)
 		set_dec((int)delay);
 #endif /* CONFIG_40x */
 	}
+#endif /* !CONFIG_IPIPE_CORE */
 }
 
 static inline struct mm_struct *rthal_get_active_mm(void)
