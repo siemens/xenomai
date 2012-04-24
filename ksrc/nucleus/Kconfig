@@ -367,7 +367,7 @@ config XENO_OPT_SELECT
 	bool
 
 config XENO_OPT_HOSTRT
-       depends on HAVE_IPIPE_HOSTRT
+       depends on HAVE_IPIPE_HOSTRT || IPIPE_HAVE_HOSTRT
        def_bool y
 
 menu "Timing"
