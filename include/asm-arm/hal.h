@@ -39,6 +39,11 @@
 #include <asm/vfp.h>
 #endif /* CONFIG_VFP */
 
+#ifdef CONFIG_IPIPE_CORE
+#define RTHAL_TIMER_DEVICE	(ipipe_timer_name())
+#define RTHAL_CLOCK_DEVICE	"ipipe_tsc"
+#define RTHAL_TIMER_IRQ		__ipipe_hrtimer_irq
+#else /* !CONFIG_IPIPE_CORE */
 #if defined(CONFIG_ARCH_AT91)
 #include <linux/stringify.h>
 #define RTHAL_TIMER_DEVICE	"at91_tc" __stringify(CONFIG_IPIPE_AT91_TC)
@@ -93,6 +98,7 @@
 #else
 #error "Unsupported ARM machine"
 #endif /* CONFIG_ARCH_SA1100 */
+#endif /* !CONFIG_IPIPE_CORE */
 
 typedef unsigned long long rthal_time_t;
 
@@ -189,10 +195,14 @@ static inline struct task_struct *rthal_current_host_task (int cpuid)
 
 static inline void rthal_timer_program_shot (unsigned long delay)
 {
-    if(!delay)
-	rthal_schedule_irq_head(RTHAL_TIMER_IRQ);
-    else
-	__ipipe_mach_set_dec(delay);
+#ifdef CONFIG_IPIPE_CORE
+	ipipe_timer_set(delay);
+#else /* !CONFIG_IPIPE_CORE */
+	if(!delay)
+		rthal_schedule_irq_head(RTHAL_TIMER_IRQ);
+	else
+		__ipipe_mach_set_dec(delay);
+#endif /* !CONFIG_IPIPE_CORE */
 }
 
 static inline struct mm_struct *rthal_get_active_mm(void)

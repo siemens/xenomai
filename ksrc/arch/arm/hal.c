@@ -61,6 +61,33 @@ static struct {
 
 enum rthal_ktimer_mode rthal_ktimer_saved_mode;
 
+static int cpu_timers_requested;
+
+#ifdef CONFIG_IPIPE_CORE
+
+#define steal_timer(stolen) do { } while (0)
+#define force_oneshot_hw_mode() do { } while (0)
+#define restore_normal_hw_mode() do { } while (0)
+#define rthal_timer_set_oneshot(rt_mode) do { } while (0)
+#define rthal_timer_set_periodic() do { } while (0)
+
+#define rthal_tickdev_select() \
+	ipipe_timers_request()
+
+#define rthal_tickdev_unselect() \
+	ipipe_timers_release()
+
+#define rthal_tickdev_request(tick_handler, mode_emul, tick_emul, cpu, tmfreq) \
+	({								\
+		(void)(tmfreq);						\
+		ipipe_timer_start(tick_handler, mode_emul, tick_emul, cpu); \
+	})
+
+#define rthal_tickdev_release(cpu) \
+	ipipe_timer_stop(cpu)
+
+#else /* !I-pipe core */
+
 #define RTHAL_SET_ONESHOT_XENOMAI	1
 #define RTHAL_SET_ONESHOT_LINUX		2
 #define RTHAL_SET_PERIODIC		3
@@ -94,61 +121,6 @@ static inline void restore_normal_hw_mode(void)
 	 * for the active clockevent.
 	 */
 	__ipipe_mach_release_timer();
-}
-
-unsigned long rthal_timer_calibrate(void)
-{
-	unsigned long long start, end, sum = 0, sum_sq = 0;
-	volatile unsigned const_delay = 0xffffffff;
-	unsigned long result, flags, tsc_lat;
-	unsigned int delay = const_delay;
-	long long diff;
-	int i, j;
-
-	flags = rthal_critical_enter(NULL);
-
-	/*
-	 * Hw interrupts off, other CPUs quiesced, no migration
-	 * possible. We can now fiddle with the timer chip (per-cpu
-	 * local or global, rthal_timer_program_shot() will handle
-	 * this transparently via the I-pipe).
-	 */
-	steal_timer(1);
-	force_oneshot_hw_mode();
-
-	rthal_read_tsc(start);
-	barrier();
-	rthal_read_tsc(end);
-	tsc_lat = end - start;
-	barrier();
-
-	for (i = 0; i < RTHAL_CALIBRATE_LOOPS; i++) {
-		flush_cache_all();
-		for (j = 0; j < RTHAL_CALIBRATE_LOOPS; j++) {
-			rthal_read_tsc(start);
-			barrier();
-			rthal_timer_program_shot(
-				rthal_nodiv_imuldiv_ceil(delay, rthal_tsc_to_timer));
-			barrier();
-			rthal_read_tsc(end);
-			diff = end - start - tsc_lat;
-			if (diff > 0) {
-				sum += diff;
-				sum_sq += diff * diff;
-			}
-		}
-	}
-
-	restore_normal_hw_mode();
-
-	rthal_critical_exit(flags);
-
-	/* Use average + standard deviation as timer programming latency. */
-	do_div(sum, RTHAL_CALIBRATE_LOOPS * RTHAL_CALIBRATE_LOOPS);
-	do_div(sum_sq, RTHAL_CALIBRATE_LOOPS * RTHAL_CALIBRATE_LOOPS);
-	result = sum + int_sqrt(sum_sq - sum * sum) + 1;
-
-	return result;
 }
 
 #ifdef CONFIG_SMP
@@ -205,7 +177,73 @@ static void rthal_timer_set_periodic(void)
 	rthal_critical_exit(flags);
 }
 
-static int cpu_timers_requested;
+#define rthal_tickdev_select() (0)
+
+#define rthal_tickdev_unselect() do { } while (0)
+
+#define rthal_tickdev_request(tick_handler, mode_emul, tick_emul, cpu, tmfreq)\
+	ipipe_request_tickdev(RTHAL_TIMER_DEVICE, \
+			      mode_emul, iick_emul, cpu, tmfreq)
+
+#define rthal_tickdev_release(cpu) \
+	ipipe_release_tickdev(cpu)
+
+#endif /* !I-pipe core */
+
+unsigned long rthal_timer_calibrate(void)
+{
+	unsigned long long start, end, sum = 0, sum_sq = 0;
+	volatile unsigned const_delay = 0xffffffff;
+	unsigned long result, flags, tsc_lat;
+	unsigned int delay = const_delay;
+	long long diff;
+	int i, j;
+
+	flags = rthal_critical_enter(NULL);
+
+	/*
+	 * Hw interrupts off, other CPUs quiesced, no migration
+	 * possible. We can now fiddle with the timer chip (per-cpu
+	 * local or global, rthal_timer_program_shot() will handle
+	 * this transparently via the I-pipe).
+	 */
+	steal_timer(1);
+	force_oneshot_hw_mode();
+
+	rthal_read_tsc(start);
+	barrier();
+	rthal_read_tsc(end);
+	tsc_lat = end - start;
+	barrier();
+
+	for (i = 0; i < RTHAL_CALIBRATE_LOOPS; i++) {
+		flush_cache_all();
+		for (j = 0; j < RTHAL_CALIBRATE_LOOPS; j++) {
+			rthal_read_tsc(start);
+			barrier();
+			rthal_timer_program_shot(
+				rthal_nodiv_imuldiv_ceil(delay, rthal_tsc_to_timer));
+			barrier();
+			rthal_read_tsc(end);
+			diff = end - start - tsc_lat;
+			if (diff > 0) {
+				sum += diff;
+				sum_sq += diff * diff;
+			}
+		}
+	}
+
+	restore_normal_hw_mode();
+
+	rthal_critical_exit(flags);
+
+	/* Use average + standard deviation as timer programming latency. */
+	do_div(sum, RTHAL_CALIBRATE_LOOPS * RTHAL_CALIBRATE_LOOPS);
+	do_div(sum_sq, RTHAL_CALIBRATE_LOOPS * RTHAL_CALIBRATE_LOOPS);
+	result = sum + int_sqrt(sum_sq - sum * sum) + 1;
+
+	return result;
+}
 
 #ifdef CONFIG_GENERIC_CLOCKEVENTS
 
@@ -220,11 +258,7 @@ int rthal_timer_request(
 	unsigned long dummy, *tmfreq = &dummy;
 	int tickval, ret;
 
-	if (rthal_timerfreq_arg == 0)
-		tmfreq = &rthal_tunables.timer_freq;
-
-	ret = ipipe_request_tickdev(RTHAL_TIMER_DEVICE, mode_emul, tick_emul, cpu,
-				    tmfreq);
+	ret = rthal_tickdev_request(tick_handler, mode_emul, tick_emul, cpu, tmfreq);
 	switch (ret) {
 	case CLOCK_EVT_MODE_PERIODIC:
 		/* oneshot tick emulation callback won't be used, ask
@@ -259,11 +293,13 @@ int rthal_timer_request(
 	if (cpu_timers_requested++ > 0)
 		goto out;
 
+#ifndef CONFIG_IPIPE_CORE
 	ret = rthal_irq_request(RTHAL_TIMER_IRQ,
 				(rthal_irq_handler_t)tick_handler,
 				NULL, NULL);
 	if (ret)
 		return ret;
+#endif /* CONFIG_IPIPE_CORE */
 
 #ifdef CONFIG_SMP
 	ret = rthal_irq_request(RTHAL_TIMER_IPI,
@@ -280,12 +316,14 @@ out:
 
 void rthal_timer_release(int cpu)
 {
-	ipipe_release_tickdev(cpu);
+	rthal_tickdev_release(cpu);
 
 	if (--cpu_timers_requested > 0)
 		return;
 
+#ifdef CONIFG_IPIPE_CORE
 	rthal_irq_release(RTHAL_TIMER_IRQ);
+#endif /* CONFIG_IIPE_CORE */
 #ifdef CONFIG_SMP
 	rthal_irq_release(RTHAL_TIMER_IPI);
 #endif /* CONFIG_SMP */
@@ -316,6 +354,12 @@ int rthal_timer_request(void (*handler)(void), int cpu)
 {
 	int ret;
 
+#ifdef CONFIG_IPIPE_CORE
+	ret = rthal_tickdev_request(handler, NULL, NULL, cpu, NULL);
+	if (ret < 0)
+		return ret;
+#endif /* CONFIG_IPIPE_CORE */
+
 	/*
 	 * The rest of the initialization should only be performed
 	 * once by a single CPU.
@@ -325,14 +369,13 @@ int rthal_timer_request(void (*handler)(void), int cpu)
 
 	rthal_ktimer_saved_mode = KTIMER_MODE_PERIODIC;
 
-	if (rthal_timerfreq_arg == 0)
-		rthal_tunables.timer_freq = rthal_cpufreq_arg;
-
+#ifndef CONFIG_IPIPE_CORE
 	ret = rthal_irq_request(RTHAL_TIMER_IRQ,
 				(rthal_irq_handler_t) handler,
 				NULL, NULL);
 	if (ret)
 		return ret;
+#endif /* !CONFIG_IPIPE_CORE */
 
 	rthal_timer_set_oneshot(1);
 
@@ -341,10 +384,16 @@ int rthal_timer_request(void (*handler)(void), int cpu)
 
 void rthal_timer_release(int cpu)
 {
+#ifdef CONFIG_IPIPE_CORE
+	rthal_tickdev_release(cpu);
+#endif /* CONFIG_IPIPE_CORE */
+
 	if (--cpu_timers_requested > 0)
 		return;
 
+#ifndef CONFIG_IPIPE_CORE
 	rthal_irq_release(RTHAL_TIMER_IRQ);
+#endif /* !CONFIG_IPIPE_CORE */
 	rthal_timer_set_periodic();
 }
 
@@ -478,6 +527,10 @@ RTHAL_DECLARE_DOMAIN(rthal_domain_entry);
 
 int rthal_arch_init(void)
 {
+	int ret = rthal_tickdev_select();
+	if (ret < 0)
+		return ret;
+
 	if (rthal_cpufreq_arg == 0)
 		rthal_cpufreq_arg = rthal_get_cpufreq();
 
@@ -495,7 +548,7 @@ int rthal_arch_init(void)
 
 void rthal_arch_cleanup(void)
 {
-	/* Nothing to cleanup so far. */
+	rthal_tickdev_unselect();
 	printk(KERN_INFO "Xenomai: hal/arm stopped.\n");
 }
 
