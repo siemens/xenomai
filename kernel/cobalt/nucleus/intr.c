@@ -974,7 +974,7 @@ static inline int format_irq_proc(unsigned int irq,
 
 	for_each_online_cpu(cpu)
 		if (irq == XNARCH_PERCPU_TIMER_IRQ(cpu)) {
-			xnvfile_printf(it, "         [timer%d]", cpu);
+			xnvfile_printf(it, "         [timer/%d]", cpu);
 			return 0;
 		}
 
