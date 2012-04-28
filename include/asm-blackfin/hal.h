@@ -29,7 +29,11 @@
 #include <asm-generic/xenomai/hal.h>	/* Read the generic bits. */
 #include <asm/div64.h>
 
+#ifdef CONFIG_IPIPE_CORE
+#define RTHAL_TIMER_DEVICE	(ipipe_timer_name())
+#else /* !CONFIG_IPIPE_CORE */
 #define RTHAL_TIMER_DEVICE	"coretmr"
+#endif /* !CONFIG_IPIPE_CORE */
 #define RTHAL_CLOCK_DEVICE	"cyclectr"
 
 typedef unsigned long long rthal_time_t;
@@ -46,7 +50,11 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 #include <asm/processor.h>
 #include <asm/xenomai/atomic.h>
 
+#ifdef CONFIG_IPIPE_CORE
+#define RTHAL_TIMER_IRQ		__ipipe_hrtimer_irq
+#else /* !CONFIG_IPIPE_CORE */
 #define RTHAL_TIMER_IRQ		IRQ_CORETMR
+#endif /* !CONFIG_IPIPE_CORE */
 /* The NMI watchdog timer is clocked by the system clock. */
 #define RTHAL_NMICLK_FREQ	get_sclk()
 
@@ -62,6 +70,9 @@ static inline unsigned long long rthal_rdtsc(void)
 
 static inline void rthal_timer_program_shot(unsigned long delay)
 {
+#ifdef CONFIG_IPIPE_CORE
+	ipipe_timer_set(delay);
+#else /* !CONFIG_IPIPE_CORE */
 	if (delay < 2)
 		rthal_schedule_irq_head(RTHAL_TIMER_IRQ);
 	else {
@@ -71,6 +82,7 @@ static inline void rthal_timer_program_shot(unsigned long delay)
 		CSYNC();
 		bfin_write_TCNTL(TMPWR | TMREN);
 	}
+#endif /* !CONFIG_IPIPE_CORE */
 }
 
     /* Private interface -- Internal use only */

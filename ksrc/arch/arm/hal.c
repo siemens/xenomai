@@ -258,7 +258,8 @@ int rthal_timer_request(
 	unsigned long dummy, *tmfreq = &dummy;
 	int tickval, ret;
 
-	ret = rthal_tickdev_request(tick_handler, mode_emul, tick_emul, cpu, tmfreq);
+	ret = rthal_tickdev_request(tick_handler,
+				    mode_emul, tick_emul, cpu, tmfreq);
 	switch (ret) {
 	case CLOCK_EVT_MODE_PERIODIC:
 		/* oneshot tick emulation callback won't be used, ask

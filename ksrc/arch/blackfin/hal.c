@@ -50,6 +50,74 @@ static struct {
 
 enum rthal_ktimer_mode rthal_ktimer_saved_mode;
 
+#ifdef CONFIG_IPIPE_CORE
+
+#define rthal_tickdev_select() \
+	ipipe_timers_request()
+
+#define rthal_tickdev_unselect() \
+	ipipe_timers_release()
+
+static inline
+int rthal_timer_request(void (*tick_handler)(void),
+			  void (*mode_emul)(enum clock_event_mode mode,
+					    struct clock_event_device *cdev),
+			  int (*tick_emul)(unsigned long delay,
+					   struct clock_event_device *cdev),
+			  int cpu)
+{
+	int ret, tickval;
+
+	ret = ipipe_timer_start(tick_handler, mode_emul, tick_emul, cpu);
+
+	switch (ret) {
+#ifdef CONFIG_GENERIC_CLOCKEVENTS
+	case CLOCK_EVT_MODE_PERIODIC:
+		/*
+		 * Oneshot tick emulation callback won't be used, ask
+		 * the caller to start an internal timer for emulating
+		 * a periodic tick.
+		 */
+		tickval = 1000000000UL / HZ;
+		break;
+
+	case CLOCK_EVT_MODE_ONESHOT:
+		/* Oneshot tick emulation */
+		tickval = 1;
+		break;
+
+	case CLOCK_EVT_MODE_UNUSED:
+		/* We don't need to emulate the tick at all. */
+		tickval = 0;
+		break;
+
+	case CLOCK_EVT_MODE_SHUTDOWN:
+		return -ENODEV;
+#else /* !CONFIG_GENERIC_CLOCKEVENTS */
+	case 0:
+		/* We don't need to emulate the tick at all. */
+		tickval = 0;
+		break;
+#endif /* !CONFIG_GENERIC_CLOCKEVENTS */
+
+	default:
+		return ret;
+	}
+
+	rthal_ktimer_saved_mode = ret;
+
+	return tickval;
+}
+
+static inline void rthal_timer_release(int cpu)
+{
+	ipipe_timer_stop(cpu);
+}
+
+#else /* !I-pipe core */
+
+static int cpu_timers_requested;
+
 #define RTHAL_SET_ONESHOT_XENOMAI	1
 #define RTHAL_SET_ONESHOT_LINUX		2
 #define RTHAL_SET_PERIODIC		3
@@ -116,7 +184,9 @@ static void rthal_timer_set_periodic(void)
 	rthal_critical_exit(flags);
 }
 
-static int cpu_timers_requested;
+#define rthal_tickdev_select() (0)
+
+#define rthal_tickdev_unselect() do { } while (0)
 
 #ifdef CONFIG_GENERIC_CLOCKEVENTS
 
@@ -131,11 +201,8 @@ int rthal_timer_request(
 	unsigned long dummy, *tmfreq = &dummy;
 	int tickval, err, res;
 
-	if (rthal_timerfreq_arg == 0)
-		tmfreq = &rthal_tunables.timer_freq;
-
-	res = ipipe_request_tickdev("bfin_core_timer", mode_emul, tick_emul, cpu,
-				    tmfreq);
+	res = ipipe_tickdev_request("bfin_core_timer", tick_handler,
+				    mode_emul, tick_emul, cpu, tmfreq);
 	switch (res) {
 	case CLOCK_EVT_MODE_PERIODIC:
 		/* Oneshot tick emulation callback won't be used, ask
@@ -205,21 +272,6 @@ void rthal_timer_release(int cpu)
 		rthal_irq_disable(RTHAL_TIMER_IRQ);
 }
 
-void rthal_timer_notify_switch(enum clock_event_mode mode,
-			       struct clock_event_device *cdev)
-{
-	if (rthal_processor_id() > 0)
-		/*
-		 * We assume all CPUs switch the same way, so we only
-		 * track mode switches from the boot CPU.
-		 */
-		return;
-
-	rthal_ktimer_saved_mode = mode;
-}
-
-EXPORT_SYMBOL_GPL(rthal_timer_notify_switch);
-
 #else /* !CONFIG_GENERIC_CLOCKEVENTS */
 /*
  * We never override the system tick when the generic clock event
@@ -227,7 +279,13 @@ EXPORT_SYMBOL_GPL(rthal_timer_notify_switch);
  * timer exclusively available to us in such case, unconditionally
  * moving the kernel tick source to GPTMR0.
  */
-int rthal_timer_request(void (*tick_handler) (void), int cpu)
+int rthal_timer_request(
+	void (*tick_handler)(void),
+	void (*mode_emul)(enum clock_event_mode mode,
+			  struct clock_event_device *cdev),
+	int (*tick_emul)(unsigned long delay,
+			 struct clock_event_device *cdev),
+	int cpu)
 {
 	int err;
 
@@ -262,6 +320,25 @@ void rthal_timer_release(int cpu)
 }
 
 #endif /* !CONFIG_GENERIC_CLOCKEVENTS */
+
+#endif /* !I-pipe core */
+
+#ifdef CONFIG_GENERIC_CLOCKEVENTS
+void rthal_timer_notify_switch(enum clock_event_mode mode,
+			       struct clock_event_device *cdev)
+{
+	if (rthal_processor_id() > 0)
+		/*
+		 * We assume all CPUs switch the same way, so we only
+		 * track mode switches from the boot CPU.
+		 */
+		return;
+
+	rthal_ktimer_saved_mode = mode;
+}
+
+EXPORT_SYMBOL_GPL(rthal_timer_notify_switch);
+#endif /* CONFIG_GENERIC_CLOCKEVENTS */
 
 unsigned long rthal_timer_calibrate(void)
 {
@@ -371,8 +448,15 @@ RTHAL_DECLARE_DOMAIN(rthal_domain_entry);
 
 int rthal_arch_init(void)
 {
+	int ret = rthal_tickdev_select();
+	if (ret < 0)
+		return ret;
+
 	if (rthal_cpufreq_arg == 0)
 		rthal_cpufreq_arg = rthal_get_cpufreq();
+
+	if (rthal_timerfreq_arg == 0)
+		rthal_timerfreq_arg = rthal_get_timerfreq();
 
 	if (rthal_clockfreq_arg == 0)
 		rthal_clockfreq_arg = rthal_get_clockfreq();
@@ -387,6 +471,7 @@ int rthal_arch_init(void)
 
 void rthal_arch_cleanup(void)
 {
+	rthal_tickdev_unselect();
 	printk(KERN_INFO "Xenomai: hal/blackfin stopped.\n");
 }
 
