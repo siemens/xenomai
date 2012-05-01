@@ -193,7 +193,7 @@ static void rthal_timer_set_periodic(void)
 unsigned long rthal_timer_calibrate(void)
 {
 	unsigned long long start, end, sum = 0, sum_sq = 0;
-	volatile unsigned const_delay = 0xffffffff;
+	volatile unsigned const_delay = rthal_timerfreq_arg / HZ;
 	unsigned long result, flags, tsc_lat;
 	unsigned int delay = const_delay;
 	long long diff;
