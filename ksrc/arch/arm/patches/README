@@ -47,11 +47,11 @@ o Texas Instrument OMAP3 and OMAP4
 
 ---- MXC (tested on iMX51, iMX53, iMX6Q)
 
-1- Checkout the "rel_imx_2.6.38_11.11.01" tag in the Freescale IMX git [2],
+1- Checkout the "rel_imx_3.0.15_12.03.00" tag in the Freescale IMX git [2],
    or in the Denx git tree [3];
-2- apply mxc/adeos-ipipe-2.6.38.8-mxc-1.18-05-pre.patch;
-3- apply adeos-ipipe-2.6.38.8-arm-1.18-05.patch
-3- apply mxc/adeos-ipipe-2.6.38.8-mxc-1.18-05-post.patch;
+2- apply mxc/adeos-ipipe-3.0.13-mxc-1.18-08-pre.patch;
+3- apply adeos-ipipe-3.0.13-arm-1.18-08.patch
+3- apply mxc/adeos-ipipe-3.0.13-mxc-1.18-08-post.patch;
 4- you can resume to generic installation instructions.
 
 

@@ -1,0 +1,316 @@
+diff --git a/arch/arm/kernel/smp_twd.c b/arch/arm/kernel/smp_twd.c
+index a5a2f45..2c277d4 100644
+--- a/arch/arm/kernel/smp_twd.c
++++ b/arch/arm/kernel/smp_twd.c
+@@ -17,21 +17,15 @@
+ #include <linux/clockchips.h>
+ #include <linux/irq.h>
+ #include <linux/io.h>
+-#include <linux/clk.h>
+-#include <linux/cpufreq.h>
+-#include <linux/err.h>
+ 
+ #include <asm/smp_twd.h>
+ #include <asm/hardware/gic.h>
+ 
+ /* set up by the platform code */
+ void __iomem *twd_base;
+-static struct clk *twd_clk;
+ 
+ static unsigned long twd_timer_rate;
+ 
+-static struct clock_event_device __percpu **twd_evt;
+-
+ static void twd_set_mode(enum clock_event_mode mode,
+ 			struct clock_event_device *clk)
+ {
+@@ -43,18 +37,15 @@ static void twd_set_mode(enum clock_event_mode mode,
+ 		ctrl = TWD_TIMER_CONTROL_ENABLE | TWD_TIMER_CONTROL_IT_ENABLE
+ 			| TWD_TIMER_CONTROL_PERIODIC;
+ 		__raw_writel(twd_timer_rate / HZ, twd_base + TWD_TIMER_LOAD);
+-		gic_enable_ppi(clk->irq);
+ 		break;
+ 	case CLOCK_EVT_MODE_ONESHOT:
+ 		/* period set, and timer enabled in 'next_event' hook */
+ 		ctrl = TWD_TIMER_CONTROL_IT_ENABLE | TWD_TIMER_CONTROL_ONESHOT;
+-		gic_enable_ppi(clk->irq);
+ 		break;
+ 	case CLOCK_EVT_MODE_UNUSED:
+ 	case CLOCK_EVT_MODE_SHUTDOWN:
+ 	default:
+ 		ctrl = 0;
+-		gic_disable_ppi(clk->irq);
+ 	}
+ 
+ 	__raw_writel(ctrl, twd_base + TWD_TIMER_CONTROL);
+@@ -89,55 +80,6 @@ int twd_timer_ack(void)
+ 	return 0;
+ }
+ 
+-static struct clk *twd_get_clock(void)
+-{
+-	return clk_get_sys("smp_twd", NULL);
+-}
+-
+-#ifdef CONFIG_CPU_FREQ
+-/*
+- * Updates clockevent frequency when the cpu frequency changes.
+- * Called on the cpu that is changing frequency with interrupts disabled.
+- */
+-static void twd_update_frequency(void *data)
+-{
+-	twd_timer_rate = clk_get_rate(twd_clk);
+-
+-	clockevents_update_freq(*__this_cpu_ptr(twd_evt), twd_timer_rate);
+-}
+-
+-static int twd_cpufreq_transition(struct notifier_block *nb,
+-	unsigned long state, void *data)
+-{
+-	struct cpufreq_freqs *freqs = data;
+-
+-	/*
+-	 * The twd clock events must be reprogrammed to account for the new
+-	 * frequency.  The timer is local to a cpu, so cross-call to the
+-	 * changing cpu.
+-	 */
+-	if (state == CPUFREQ_POSTCHANGE || state == CPUFREQ_RESUMECHANGE)
+-		smp_call_function_single(freqs->cpu, twd_update_frequency,
+-			NULL, 1);
+-
+-	return NOTIFY_OK;
+-}
+-
+-static struct notifier_block twd_cpufreq_nb = {
+-	.notifier_call = twd_cpufreq_transition,
+-};
+-
+-static int twd_cpufreq_init(void)
+-{
+-	if (twd_evt && *__this_cpu_ptr(twd_evt) && !IS_ERR(twd_clk))
+-		return cpufreq_register_notifier(&twd_cpufreq_nb,
+-			CPUFREQ_TRANSITION_NOTIFIER);
+-
+-	return 0;
+-}
+-core_initcall(twd_cpufreq_init);
+-
+-#endif
+ static void __cpuinit twd_calibrate_rate(void)
+ {
+ 	unsigned long count;
+@@ -182,24 +124,7 @@ static void __cpuinit twd_calibrate_rate(void)
+  */
+ void __cpuinit twd_timer_setup(struct clock_event_device *clk)
+ {
+-	struct clock_event_device **this_cpu_clk;
+-
+-	if (!twd_evt) {
+-
+-		twd_evt = alloc_percpu(struct clock_event_device *);
+-		if (!twd_evt) {
+-			pr_err("twd: can't allocate memory\n");
+-			return;
+-		}
+-	}
+-
+-	if (!twd_clk)
+-		twd_clk = twd_get_clock();
+-
+-	if (!IS_ERR_OR_NULL(twd_clk))
+-		twd_timer_rate = clk_get_rate(twd_clk);
+-	else
+-		twd_calibrate_rate();
++	twd_calibrate_rate();
+ 
+ 	clk->name = "local_timer";
+ 	clk->features = CLOCK_EVT_FEAT_PERIODIC | CLOCK_EVT_FEAT_ONESHOT |
+@@ -207,13 +132,13 @@ void __cpuinit twd_timer_setup(struct clock_event_device *clk)
+ 	clk->rating = 350;
+ 	clk->set_mode = twd_set_mode;
+ 	clk->set_next_event = twd_set_next_event;
+-
+-	this_cpu_clk = __this_cpu_ptr(twd_evt);
+-	*this_cpu_clk = clk;
+-
+-	clockevents_config_and_register(clk, twd_timer_rate,
+-					0xf, 0xffffffff);
++	clk->shift = 20;
++	clk->mult = div_sc(twd_timer_rate, NSEC_PER_SEC, clk->shift);
++	clk->max_delta_ns = clockevent_delta2ns(0xffffffff, clk);
++	clk->min_delta_ns = clockevent_delta2ns(0xf, clk);
+ 
+ 	/* Make sure our local interrupt controller has this enabled */
+ 	gic_enable_ppi(clk->irq);
++
++	clockevents_register_device(clk);
+ }
+diff --git a/arch/arm/plat-mxc/cpu.c b/arch/arm/plat-mxc/cpu.c
+index 143a9b7..386e0d5 100755
+--- a/arch/arm/plat-mxc/cpu.c
++++ b/arch/arm/plat-mxc/cpu.c
+@@ -1,70 +1,11 @@
+-/*
+- * Copyright (C) 2011 Freescale Semiconductor, Inc. All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+-
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+-
+- * You should have received a copy of the GNU General Public License along
+- * with this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+- */
+ 
+ #include <linux/module.h>
+-#include <mach/clock.h>
+ 
+ unsigned int __mxc_cpu_type;
+ EXPORT_SYMBOL(__mxc_cpu_type);
+-extern int mxc_early_serial_console_init(unsigned long base, struct clk *clk);
+-void (*set_num_cpu_op)(int num);
+ 
+ void mxc_set_cpu_type(unsigned int type)
+ {
+ 	__mxc_cpu_type = type;
+ }
+ 
+-int mxc_jtag_enabled;		/* OFF: 0 (default), ON: 1 */
+-int uart_at_24; 			/* OFF: 0 (default); ON: 1 */
+-/*
+- * Here are the JTAG options from the command line. By default JTAG
+- * is OFF which means JTAG is not connected and WFI is enabled
+- *
+- *       "on" --  JTAG is connected, so WFI is disabled
+- *       "off" -- JTAG is disconnected, so WFI is enabled
+- */
+-
+-static int __init jtag_wfi_setup(char *p)
+-{
+-	if (memcmp(p, "on", 2) == 0) {
+-		mxc_jtag_enabled = 1;
+-		p += 2;
+-	} else if (memcmp(p, "off", 3) == 0) {
+-		mxc_jtag_enabled = 0;
+-		p += 3;
+-	}
+-	return 0;
+-}
+-early_param("jtag", jtag_wfi_setup);
+-/**
+- * early_console_setup - setup debugging console
+- *
+- * Consoles started here require little enough setup that we can start using
+- * them very early in the boot process, either right after the machine
+- * vector initialization, or even before if the drivers can detect their hw.
+- *
+- * Returns non-zero if a console couldn't be setup.
+- * This function is developed based on
+- * early_console_setup function as defined in arch/ia64/kernel/setup.c
+- */
+-void __init early_console_setup(unsigned long base, struct clk *clk)
+-{
+-#ifdef CONFIG_SERIAL_IMX_CONSOLE
+-	mxc_early_serial_console_init(base, clk);
+-#endif
+-}
+diff --git a/arch/arm/plat-mxc/include/mach/common.h b/arch/arm/plat-mxc/include/mach/common.h
+index 5cc9d62..da79918 100755
+--- a/arch/arm/plat-mxc/include/mach/common.h
++++ b/arch/arm/plat-mxc/include/mach/common.h
+@@ -1,29 +1,19 @@
+ /*
+- * Copyright (C) 2004-2012 Freescale Semiconductor, Inc. All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+-
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
++ * Copyright 2004-2007 Freescale Semiconductor, Inc. All Rights Reserved.
++ */
+ 
+- * You should have received a copy of the GNU General Public License along
+- * with this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
++/*
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
+  */
+ 
+ #ifndef __ASM_ARCH_MXC_COMMON_H__
+ #define __ASM_ARCH_MXC_COMMON_H__
+ 
+-struct fec_platform_data;
+ struct platform_device;
+ struct clk;
+ 
+-extern char *gp_reg_id;
+ extern void mx1_map_io(void);
+ extern void mx21_map_io(void);
+ extern void mx25_map_io(void);
+@@ -33,8 +23,6 @@ extern void mx35_map_io(void);
+ extern void mx50_map_io(void);
+ extern void mx51_map_io(void);
+ extern void mx53_map_io(void);
+-extern void mx6_map_io(void);
+-extern void mxc91231_map_io(void);
+ extern void imx1_init_early(void);
+ extern void imx21_init_early(void);
+ extern void imx25_init_early(void);
+@@ -44,7 +32,6 @@ extern void imx35_init_early(void);
+ extern void imx50_init_early(void);
+ extern void imx51_init_early(void);
+ extern void imx53_init_early(void);
+-extern void mxc91231_init_early(void);
+ extern void mxc_init_irq(void __iomem *);
+ extern void tzic_init_irq(void __iomem *);
+ extern void mx1_init_irq(void);
+@@ -56,8 +43,6 @@ extern void mx35_init_irq(void);
+ extern void mx50_init_irq(void);
+ extern void mx51_init_irq(void);
+ extern void mx53_init_irq(void);
+-extern void mx6_init_irq(void);
+-extern void mxc91231_init_irq(void);
+ extern void epit_timer_init(struct clk *timer_clk, void __iomem *base, int irq);
+ extern void mxc_timer_init(struct clk *timer_clk, void __iomem *, int);
+ extern int mx1_clocks_init(unsigned long fref);
+@@ -70,27 +55,11 @@ extern int mx51_clocks_init(unsigned long ckil, unsigned long osc,
+ 			unsigned long ckih1, unsigned long ckih2);
+ extern int mx53_clocks_init(unsigned long ckil, unsigned long osc,
+ 			unsigned long ckih1, unsigned long ckih2);
+-extern int mx50_clocks_init(unsigned long ckil, unsigned long osc,
+-			unsigned long ckih1);
+-extern int mx6_clocks_init(unsigned long ckil, unsigned long osc,
+-			unsigned long ckih1, unsigned long ckih2);
+-extern void imx6_init_fec(struct fec_platform_data fec_data);
+-extern int mxc91231_clocks_init(unsigned long fref);
+ extern int mxc_register_gpios(void);
+ extern int mxc_register_device(struct platform_device *pdev, void *data);
+ extern void mxc_set_cpu_type(unsigned int type);
+ extern void mxc_arch_reset_init(void __iomem *);
+-extern void mxc91231_power_off(void);
+-extern void mxc91231_arch_reset(int, const char *);
+-extern void mxc91231_prepare_idle(void);
+ extern void mx51_efikamx_reset(void);
+ extern int mx53_revision(void);
+-extern int mx50_revision(void);
+ extern int mx53_display_revision(void);
+-extern unsigned long mx6_timer_rate(void);
+-extern int mxs_reset_block(void __iomem *, int);
+-extern void early_console_setup(unsigned long base, struct clk *clk);
+-extern void mx6_cpu_regulator_init(void);
+-extern int mx6q_sabreauto_init_pfuze100(u32 int_gpio);
+-extern int mx6q_sabresd_init_pfuze100(u32 int_gpio);
+ #endif
