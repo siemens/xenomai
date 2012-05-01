@@ -183,7 +183,7 @@ static void rthal_timer_set_periodic(void)
 
 #define rthal_tickdev_request(tick_handler, mode_emul, tick_emul, cpu, tmfreq)\
 	ipipe_request_tickdev(RTHAL_TIMER_DEVICE, \
-			      mode_emul, iick_emul, cpu, tmfreq)
+			      mode_emul, tick_emul, cpu, tmfreq)
 
 #define rthal_tickdev_release(cpu) \
 	ipipe_release_tickdev(cpu)
