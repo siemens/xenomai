@@ -38,7 +38,7 @@ static rtdm_lock_t rtcan_devices_rt_lock = RTDM_LOCK_UNLOCKED;
 
 static int rtcan_global_init_done;
 
-DEFINE_SEMAPHORE(rtcan_devices_nrt_lock);
+DEFINE_BINARY_SEMAPHORE(rtcan_devices_nrt_lock);
 
 /* Spinlock for all reception lists and also for some members in
  * struct rtcan_socket */

@@ -113,7 +113,7 @@ static int nucleus_muxid = -1;
 
 static struct semaphore completion_mutex;
 
-static DEFINE_SEMAPHORE(registration_mutex);
+static DEFINE_BINARY_SEMAPHORE(registration_mutex);
 
 static inline struct task_struct *get_switch_lock_owner(void)
 {

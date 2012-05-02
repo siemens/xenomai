@@ -493,6 +493,46 @@ void rthal_apc_free(int apc)
 	clear_bit(apc, &rthal_apc_map);
 }
 
+#ifdef CONFIG_PREEMPT_RT
+
+static inline int setup_apc_handler(void)
+{
+	int cpu;
+
+	for_each_online_cpu(cpu) {
+		rthal_apc_servers[cpu] =
+			kthread_create(rthal_apc_thread,
+				       (void *)(unsigned long)cpu,
+				       "apc/%d", cpu);
+		if (rthal_apc_servers[cpu] == NULL)
+			return -ENOMEM;
+		wake_up_process(rthal_apc_servers[cpu]);
+	}
+
+	return 0;
+}
+
+static inline void cleanup_apc_handler(void)
+{
+	int cpu;
+
+	for_each_online_cpu(cpu) {
+		if (rthal_apc_servers[cpu])
+			kthread_stop(rthal_apc_servers[cpu]);
+	}
+}
+
+#else  /* !CONFIG_PREEMPT_RT */
+
+static inline int setup_apc_handler(void)
+{
+	return 0;
+}
+
+static inline void cleanup_apc_handler(void) { }
+
+#endif  /* !CONFIG_PREEMPT_RT */
+
 int rthal_init(void)
 {
     int err;
@@ -548,6 +588,10 @@ int rthal_init(void)
 	goto out_free_irq;
     }
 
+    err = setup_apc_handler();
+    if (err)
+	    goto fail;
+
     err = rthal_register_domain(&rthal_domain,
 				"Xenomai",
 				RTHAL_DOMAIN_ID,
@@ -575,6 +619,8 @@ int rthal_init(void)
     rthal_virtualize_irq(rthal_current_domain, rthal_apc_virq, NULL, NULL, NULL,
 			 0);
 
+    cleanup_apc_handler();
+
   out_free_irq:
     rthal_free_virq(rthal_apc_virq);
 
@@ -592,6 +638,8 @@ void rthal_exit(void)
 			     NULL, 0);
 	rthal_free_virq(rthal_apc_virq);
     }
+
+    cleanup_apc_handler();
 
     if (rthal_init_done)
 	rthal_unregister_domain(&rthal_domain);

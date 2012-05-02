@@ -174,14 +174,14 @@ static void xnpipe_wakeup_proc(void *cookie)
 					xnlock_get_irqsave(&nklock, s);
 				}
 			}
-#ifdef CONFIG_SMP
+#if defined(CONFIG_SMP) || defined(CONFIG_PREEMPT_RT)
 			/*
-			 * A waiter may have entered/left the queue
-			 * from another CPU, so we need to refetch the
-			 * sleep queue head to be safe.
+			 * Assume a waiter might have entered/left the
+			 * queue, so we need to refetch the sleep
+			 * queue head to be safe.
 			 */
 			nh = getheadq(&xnpipe_sleepq);
-#endif /* CONFIG_SMP */
+#endif
 		}
 	}
 
@@ -190,7 +190,6 @@ static void xnpipe_wakeup_proc(void *cookie)
 	 * subscribers.
 	 */
 	nh = getheadq(&xnpipe_asyncq);
-
 	while ((h = nh) != NULL) {
 		nh = nextq(&xnpipe_asyncq, h);
 		state = link2xnpipe(h, alink);
@@ -200,7 +199,7 @@ static void xnpipe_wakeup_proc(void *cookie)
 			xnlock_put_irqrestore(&nklock, s);
 			kill_fasync(&state->asyncq, xnpipe_asyncsig, POLL_IN);
 			xnlock_get_irqsave(&nklock, s);
-#ifdef CONFIG_SMP
+#if defined(CONFIG_SMP) || defined(CONFIG_PREEMPT_RT)
 			nh = getheadq(&xnpipe_asyncq);
 #endif
 		}

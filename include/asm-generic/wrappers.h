@@ -637,7 +637,11 @@ static inline void wrap_proc_dir_entry_owner(struct proc_dir_entry *entry)
 
 #ifndef DEFINE_SEMAPHORE
 /* Legacy DECLARE_MUTEX vanished in 2.6.37 */
-#define DEFINE_SEMAPHORE(sem) DECLARE_MUTEX(sem)
+#define DEFINE_BINARY_SEMAPHORE(sem) DECLARE_MUTEX(sem)
+#elif CONFIG_PREEMPT_RT
+#define DEFINE_BINARY_SEMAPHORE(sem) DEFINE_SEMAPHORE(sem, 1)
+#else
+#define DEFINE_BINARY_SEMAPHORE(sem) DEFINE_SEMAPHORE(sem)
 #endif
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,37) && defined(CONFIG_GENERIC_HARDIRQS)
