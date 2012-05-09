@@ -33,7 +33,7 @@
 #define __put_user_inatomic __put_user
 #define __get_user_inatomic __get_user
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 1, 0)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 1, 0) && !defined(CONFIG_VFP_3_2_BACKPORT)
 #define vfp_current_hw_state last_VFP_context
 #endif /* Linux < 3.1 */
 

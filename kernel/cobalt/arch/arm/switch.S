@@ -100,7 +100,8 @@ ENTRY(rthal_vfp_save)
  * r1 = current cpu
  */
 ENTRY(rthal_vfp_load)
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0) && defined(CONFIG_SMP)
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0) \
+	|| defined(CONFIG_VFP_3_2_BACKPORT)) && defined(CONFIG_SMP)
     str 	r1, [r0, #VFP_CPU]
 #endif
     VFPFLDMIA	r0, r2			@ reload the working registers while
