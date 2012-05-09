@@ -253,6 +253,10 @@ static inline void rthal_init_fpu(rthal_fpenv_t *fpuenv)
     /* vfpstate has already been zeroed by xnarch_init_fpu */
     fpuenv->vfpstate.hard.fpexc = FPEXC_EN;
     fpuenv->vfpstate.hard.fpscr = FPSCR_ROUND_NEAREST;
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0) \
+     || defined(CONFIG_VFP_3_2_BACKPORT)) && defined(CONFIG_SMP)
+    fpuenv->vfpstate.hard.cpu = NR_CPUS;
+#endif /* linux >= 3.2.0 */
 #endif
 }
 
@@ -306,7 +310,8 @@ static inline rthal_fpenv_t *rthal_get_fpu_owner(void)
 	if (!vfp_owner)
 		return NULL;
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0) && defined(CONFIG_SMP)
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0) \
+     || defined(CONFIG_VFP_3_2_BACKPORT)) && defined(CONFIG_SMP)
 	if (vfp_owner->hard.cpu != cpu)
 		return NULL;
 #endif /* linux >= 3.2.0 */
@@ -326,6 +331,7 @@ static inline rthal_fpenv_t *rthal_get_fpu_owner(void)
 	rthal_vfp_fmxr(FPEXC, _fpexc & ~RTHAL_VFP_ANY_EXC);	\
 	_fpexc;							\
     })
+
 
 #else /* !CONFIG_VFP */
 static inline void rthal_save_fpu(rthal_fpenv_t *fpuenv)
