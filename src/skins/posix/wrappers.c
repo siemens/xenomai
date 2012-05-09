@@ -280,7 +280,6 @@ void *__real_mmap(void *addr,
 }
 
 /* 32 bits platform */
-#if __WORDSIZE == 32
 #ifdef HAVE_FTRUNCATE64
 __attribute__ ((weak))
 int __real_ftruncate64(int fildes, long long length)
@@ -297,7 +296,6 @@ void *__real_mmap64(void *addr,
 	return mmap64(addr, len, prot, flags, fd, off);
 }
 #endif /* HAVE_MMAP64 */
-#endif /* 32 bits */
 
 __attribute__ ((weak))
 int __real_munmap(void *addr, size_t len)

@@ -136,8 +136,7 @@ void *__wrap_mmap(void *addr,
 	return MAP_FAILED;
 }
 
-/* 32 bits platform */
-#if __WORDSIZE == 32
+/* LFS support */
 int __wrap_ftruncate64(int fildes, long long length)
 {
 	int err;
@@ -214,7 +213,6 @@ void *__wrap_mmap64(void *addr,
 	errno = err;
 	return MAP_FAILED;
 }
-#endif
 
 int __shm_close(int fd)
 {

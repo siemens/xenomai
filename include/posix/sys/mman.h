@@ -70,7 +70,6 @@ void *__real_mmap(void *addr,
 		  int fildes,
 		  long off);
 
-#if __WORDSIZE == 32
 #if defined(_LARGEFILE64_SOURCE) \
 	|| defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64
 void *__real_mmap64(void *addr,
@@ -83,7 +82,6 @@ void *__real_mmap64(void *addr,
 
 #if defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64
 #define __real_mmap __real_mmap64
-#endif
 #endif
 
 int __real_munmap(void *addr, size_t len);
