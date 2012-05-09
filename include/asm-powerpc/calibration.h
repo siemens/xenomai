@@ -82,6 +82,8 @@ static inline unsigned long xnarch_get_sched_latency(void)
 #define __sched_latency 2000
 #elif defined(CONFIG_KUP4K)
 #define __sched_latency 22000
+#elif defined(CONFIG_P1022_DS)
+#define __sched_latency 3000
 /*
  * Check for the most generic configs at the bottom of this list, so
  * that the most specific choices available are picked first.
