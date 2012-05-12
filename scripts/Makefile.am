@@ -12,4 +12,5 @@ EXTRA_DIST = \
 	prepare-patch.sh \
 	wrap-link.sh \
 	Kconfig.frag \
-	$(wildcard postinstall.sh)
+	$(wildcard postinstall.sh) \
+	histo.gp
