@@ -60,12 +60,15 @@ int test_loops = 0;		/* outer loop count */
 
 /* Warmup time : in order to avoid spurious cache effects on low-end machines. */
 #define WARMUP_TIME 1
-#define HISTOGRAM_CELLS 100
+#define HISTOGRAM_CELLS 300
 int histogram_size = HISTOGRAM_CELLS;
 long *histogram_avg = NULL, *histogram_max = NULL, *histogram_min = NULL;
 
+char *do_gnuplot = NULL;
 int do_histogram = 0, do_stats = 0, finished = 0;
 int bucketsize = 1000;		/* default = 1000ns, -B <size> to override */
+
+#define need_histo() (do_histogram || do_stats || do_gnuplot)
 
 static inline void add_histogram(long *histogram, long addval)
 {
@@ -151,12 +154,12 @@ void latency(void *cookie)
 				gmaxjitter = dt;
 			}
 
-			if (!(finished || warmup) && (do_histogram || do_stats))
+			if (!(finished || warmup) && need_histo())
 				add_histogram(histogram_avg, dt);
 		}
 
 		if (!warmup) {
-			if (!finished && (do_histogram || do_stats)) {
+			if (!finished && need_histo()) {
 				add_histogram(histogram_max, maxj);
 				add_histogram(histogram_min, minj);
 			}
@@ -210,8 +213,7 @@ void display(void *cookie)
 		config.period = period_ns;
 		config.priority = priority;
 		config.warmup_loops = WARMUP_TIME;
-		config.histogram_size = (do_histogram
-					 || do_stats) ? histogram_size : 0;
+		config.histogram_size = need_histo() ? histogram_size : 0;
 		config.histogram_bucketsize = bucketsize;
 		config.freeze_max = freeze_max;
 
@@ -333,6 +335,33 @@ double dump_histogram(long *histogram, char *kind)
 	return avg;
 }
 
+void dump_histo_gnuplot(long *histogram)
+{
+	unsigned start, stop;
+	FILE *f;
+	int n;
+
+	f = fopen(do_gnuplot, "w");
+	if (!f)
+		return;
+
+	for (n = 0; n < histogram_size && histogram[n] == 0L; n++)
+		;
+	start = n;
+
+	for (n = histogram_size - 1; n >= 0 && histogram[n] == 0L; n--)
+		;
+	stop = n;
+
+	fprintf(f, "%g 1\n", start * bucketsize / 1000.0);
+	for (n = start; n <= stop; n++)
+		fprintf(f, "%g %ld\n",
+			(n + 0.5) * bucketsize / 1000.0, histogram[n] + 1);
+	fprintf(f, "%g 1\n", (stop + 1) * bucketsize / 1000.0);
+
+	fclose(f);
+}
+
 void dump_stats(long *histogram, char *kind, double avg)
 {
 	int n, total_hits = 0;
@@ -372,6 +401,9 @@ void dump_hist_stats(void)
 	dump_stats(histogram_min, "min", minavg);
 	dump_stats(histogram_avg, "avg", avgavg);
 	dump_stats(histogram_max, "max", maxavg);
+
+	if (do_gnuplot)
+		dump_histo_gnuplot(histogram_avg);
 }
 
 void cleanup(void)
@@ -405,7 +437,7 @@ void cleanup(void)
 	if (benchdev >= 0)
 		rt_dev_close(benchdev);
 
-	if (do_histogram || do_stats)
+	if (need_histo())
 		dump_hist_stats();
 
 	time(&test_end);
@@ -474,8 +506,12 @@ int main(int argc, char **argv)
 	char task_name[16];
 	sigset_t mask;
 
-	while ((c = getopt(argc, argv, "hp:l:T:qH:B:sD:t:fc:P:b")) != EOF)
+	while ((c = getopt(argc, argv, "g:hp:l:T:qH:B:sD:t:fc:P:b")) != EOF)
 		switch (c) {
+		case 'g':
+			do_gnuplot = strdup(optarg);
+			break;
+
 		case 'h':
 
 			do_histogram = 1;
@@ -549,6 +585,7 @@ int main(int argc, char **argv)
 			fprintf(stderr,
 "usage: latency [options]\n"
 "  [-h]                         # print histograms of min, avg, max latencies\n"
+"  [-g <file>]                  # dump histogram to <file> in gnuplot format\n"
 "  [-s]                         # print statistics of min, avg, max latencies\n"
 "  [-H <histogram-size>]        # default = 200, increase if your last bucket is full\n"
 "  [-B <bucket-size>]           # default = 1000ns, decrease for more resolution\n"

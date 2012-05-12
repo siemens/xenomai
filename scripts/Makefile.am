@@ -15,4 +15,5 @@ EXTRA_DIST = \
 	Modules.frag \
 	defconfig.frag \
 	help_from_kconfig.pl \
-	$(wildcard postinstall.sh)
+	$(wildcard postinstall.sh) \
+	histo.gp
