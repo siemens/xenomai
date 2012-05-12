@@ -38,7 +38,84 @@ static struct {
 	int count;
 } rthal_linux_irq[IPIPE_NR_XIRQS];
 
-#ifdef CONFIG_X86_LOCAL_APIC
+static int cpu_timers_requested;
+
+#ifdef CONFIG_IPIPE_CORE
+
+int rthal_timer_request(
+	void (*tick_handler)(void),
+	void (*mode_emul)(enum clock_event_mode mode,
+			  struct clock_event_device *cdev),
+	int (*tick_emul)(unsigned long delay,
+			 struct clock_event_device *cdev),
+	int cpu)
+{
+	int tickval, res;
+
+	res = ipipe_timer_start(tick_handler, mode_emul, tick_emul, cpu);
+
+	switch (res) {
+	case CLOCK_EVT_MODE_PERIODIC:
+		/* oneshot tick emulation callback won't be used, ask
+		 * the caller to start an internal timer for emulating
+		 * a periodic tick. */
+		tickval = 1000000000UL / HZ;
+		break;
+
+	case CLOCK_EVT_MODE_ONESHOT:
+		/* oneshot tick emulation */
+		tickval = 1;
+		break;
+
+	case CLOCK_EVT_MODE_UNUSED:
+		/* we don't need to emulate the tick at all. */
+		tickval = 0;
+		break;
+
+	case CLOCK_EVT_MODE_SHUTDOWN:
+		res = -ENODEV;
+		/* fall through */
+
+	default:
+		return res;
+	}
+	rthal_ktimer_saved_mode = res;
+
+	if (cpu_timers_requested++ > 0)
+		return tickval;
+
+#ifdef CONFIG_SMP
+	if (num_online_cpus() > 1) {
+		int err = rthal_irq_request(RTHAL_TIMER_IPI,
+					(rthal_irq_handler_t) tick_handler,
+					NULL, NULL);
+		if (err)
+			return err;
+
+	}
+#endif /* CONFIG_SMP */
+
+	return tickval;
+}
+
+void rthal_timer_release(int cpu)
+{
+	ipipe_timer_stop(cpu);
+
+	/*
+	 * The rest of the cleanup work should only be performed once
+	 * by the last releasing CPU.
+	 */
+	if (--cpu_timers_requested > 0)
+		return;
+
+#ifdef CONFIG_SMP
+	if (num_online_cpus() > 1)
+		rthal_irq_release(RTHAL_TIMER_IPI);
+#endif
+}
+
+#elif defined(CONFIG_X86_LOCAL_APIC)
 
 #define RTHAL_SET_ONESHOT_XENOMAI	1
 #define RTHAL_SET_ONESHOT_LINUX		2
@@ -99,8 +176,6 @@ static void rthal_timer_set_periodic(void)
 	rthal_critical_exit(flags);
 }
 
-static int cpu_timers_requested;
-
 #ifdef CONFIG_GENERIC_CLOCKEVENTS
 
 int rthal_timer_request(
@@ -115,7 +190,7 @@ int rthal_timer_request(
 	int tickval, err, res;
 
 	if (cpu_timers_requested == 0) {
-		err = rthal_irq_request(RTHAL_APIC_TIMER_IPI,
+		err = rthal_irq_request(RTHAL_TIMER_IPI,
 					(rthal_irq_handler_t) tick_handler,
 					NULL, NULL);
 		if (err)
@@ -160,7 +235,7 @@ int rthal_timer_request(
 
 	default:
 		if (cpu_timers_requested == 0)
-			rthal_irq_release(RTHAL_APIC_TIMER_IPI);
+			rthal_irq_release(RTHAL_TIMER_IPI);
 		return res;
 	}
 	rthal_ktimer_saved_mode = res;
@@ -214,7 +289,7 @@ int rthal_timer_request(void (*tick_handler)(void), int cpu)
 	 * support for clock events, we do not need to relay the host tick
 	 * since 8254 interrupts are already flowing normally to Linux
 	 * (i.e. the nucleus does not intercept them, but uses a dedicated
-	 * APIC-based timer interrupt instead, i.e. RTHAL_APIC_TIMER_IPI).
+	 * APIC-based timer interrupt instead, i.e. RTHAL_TIMER_IPI).
 	 *
 	 * This code works both for UP+LAPIC and SMP configurations.
 	 */
@@ -230,7 +305,7 @@ int rthal_timer_request(void (*tick_handler)(void), int cpu)
 	if (cpu_timers_requested++ > 0)
 		goto out;
 
-	err = rthal_irq_request(RTHAL_APIC_TIMER_IPI,
+	err = rthal_irq_request(RTHAL_TIMER_IPI,
 			  (rthal_irq_handler_t) tick_handler, NULL, NULL);
 
 	if (err)
@@ -277,9 +352,8 @@ void rthal_timer_release(int cpu)
 	else if (rthal_ktimer_saved_mode == KTIMER_MODE_ONESHOT)
 		rthal_timer_set_oneshot(0);
 
-	rthal_irq_release(RTHAL_APIC_TIMER_IPI);
+	rthal_irq_release(RTHAL_TIMER_IPI);
 }
-
 #endif /* CONFIG_X86_LOCAL_APIC */
 
 #ifdef CONFIG_GENERIC_CLOCKEVENTS

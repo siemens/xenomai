@@ -68,24 +68,30 @@ static void dummy_mksound(unsigned int hz, unsigned int ticks)
 #include <asm/nmi.h>
 #endif
 
-#ifdef CONFIG_X86_LOCAL_APIC
+#if defined(CONFIG_X86_LOCAL_APIC) || defined(CONFIG_IPIPE_CORE)
 
 unsigned long rthal_timer_calibrate(void)
 {
-	unsigned long flags, v;
+	unsigned long v, flags;
 	rthal_time_t t, dt;
 	int i;
 
+#ifndef CONFIG_IPIPE_CORE
+	v = 1;
+#else /* I-pipe core */
+	v = RTHAL_TIMER_FREQ / HZ;
+#endif /* I-pipe core */
+
 	flags = rthal_critical_enter(NULL);
+
+	rthal_timer_program_shot(v);
 
 	t = rthal_rdtsc();
 
-	for (i = 0; i < 20; i++) {
-		v = apic_read(APIC_TMICT);
-		apic_write(APIC_TMICT, v);
-	}
+	for (i = 0; i < 100; i++)
+		rthal_timer_program_shot(v);
 
-	dt = (rthal_rdtsc() - t) / 2;
+	dt = (rthal_rdtsc() - t);
 
 	rthal_critical_exit(flags);
 
@@ -94,7 +100,7 @@ unsigned long rthal_timer_calibrate(void)
 	rthal_trace_max_reset();
 #endif /* CONFIG_IPIPE_TRACE_IRQSOFF */
 
-	return rthal_imuldiv(dt, 20, RTHAL_CPU_FREQ);
+	return rthal_ulldiv(dt, i + 5, NULL);
 }
 
 #else /* !CONFIG_X86_LOCAL_APIC */
@@ -138,7 +144,7 @@ unsigned long rthal_timer_calibrate(void)
 	rthal_trace_max_reset();
 #endif /* CONFIG_IPIPE_TRACE_IRQSOFF */
 
-	return rthal_imuldiv(dt, 20, RTHAL_CPU_FREQ);
+	return rthal_ulldiv(dt, i, NULL);
 }
 
 static void rthal_timer_set_oneshot(void)
@@ -330,6 +336,11 @@ rthal_time_t rthal_get_8254_tsc(void)
 
 int rthal_arch_init(void)
 {
+#ifdef CONFIG_IPIPE_CORE
+	int rc = ipipe_timers_request();
+	if (rc < 0)
+		return rc;
+#else /* !I-pipe core */
 #ifdef CONFIG_X86_LOCAL_APIC
 	if (!boot_cpu_has(X86_FEATURE_APIC)) {
 		printk("Xenomai: Local APIC absent or disabled!\n"
@@ -344,6 +355,7 @@ int rthal_arch_init(void)
 	old_mksound = kd_mksound;
 	kd_mksound = &dummy_mksound;
 #endif /* !CONFIG_X86_LOCAL_APIC && Linux < 2.6 && !CONFIG_X86_TSC && CONFIG_VT */
+#endif /* !I-pipe core */
 
 	if (rthal_cpufreq_arg == 0)
 #ifdef CONFIG_X86_TSC
@@ -358,15 +370,24 @@ int rthal_arch_init(void)
 	if (rthal_clockfreq_arg == 0)
 		rthal_clockfreq_arg = rthal_get_clockfreq();
 
+#ifdef CONFIG_IPIPE_CORE
+	if (rthal_timerfreq_arg == 0)
+		rthal_timerfreq_arg = rthal_get_timerfreq();
+#endif
+
 	return 0;
 }
 
 void rthal_arch_cleanup(void)
 {
+#ifdef CONFIG_IPIPE_CORE
+	ipipe_timers_release();
+#else /* !I-pipe core */
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0) && !defined(CONFIG_X86_TSC) && defined(CONFIG_VT)
 	/* Restore previous PC speaker code. */
 	kd_mksound = old_mksound;
 #endif /* Linux < 2.6 && !CONFIG_X86_TSC && CONFIG_VT */
+#endif /* !I-pipe core */
 	printk(KERN_INFO "Xenomai: hal/i386 stopped.\n");
 }
 
