@@ -1094,6 +1094,7 @@ int cobalt_thread_set_name_np(unsigned long tid, const char __user *u_name)
 {
 	char name[XNOBJECT_NAME_LEN];
 	struct cobalt_hkey hkey;
+	struct task_struct *p;
 	pthread_t k_tid;
 
 	if (__xn_safe_strncpy_from_user(name, u_name,
@@ -1105,6 +1106,10 @@ int cobalt_thread_set_name_np(unsigned long tid, const char __user *u_name)
 	hkey.u_tid = tid;
 	hkey.mm = current->mm;
 	k_tid = cobalt_thread_find(&hkey);
+
+	p = xnthread_user_task(&k_tid->threadbase);
+	strncpy(p->comm, name, sizeof(p->comm));
+	p->comm[sizeof(p->comm) - 1] = '\0';
 
 	return pthread_set_name_np(k_tid, name);
 }
