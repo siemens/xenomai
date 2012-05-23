@@ -21,8 +21,8 @@ config XENO_OPT_PERVASIVE
 
 config XENO_OPT_PRIOCPL
 	depends on XENO_OPT_PERVASIVE
-	bool "Priority coupling support"
-	default y
+	bool "Priority coupling support (DEPRECATED)"
+	default n
 	help
 
 	This option builds in the priority coupling support between
@@ -51,7 +51,9 @@ config XENO_OPT_PRIOCPL
 	support globally. Otherwise, no priority coupling will ever
 	occur.
 
-	If in doubt, say Y.
+	Most applications do not require priority coupling, and should
+	leave this option disabled, unless you really know what you
+	are doing. If in doubt, say N.
 
 config XENO_OPT_PIPELINE_HEAD
 	bool "Optimize as pipeline head (DEPRECATED)"
