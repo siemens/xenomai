@@ -24,7 +24,11 @@
 #define _XENO_ASM_X86_HAL_64_H
 
 #define RTHAL_ARCH_NAME			"x86_64"
+#ifdef CONFIG_IPIPE
+#define RTHAL_TIMER_DEVICE		(ipipe_timer_name())
+#else /* !I-ipipe core */
 #define RTHAL_TIMER_DEVICE		"lapic"
+#endif /* !I-ipipe core */
 #define RTHAL_CLOCK_DEVICE		"tsc"
 
 #include <asm/xenomai/wrappers.h>
@@ -50,17 +54,19 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 #include <asm/xenomai/smi.h>
 
 #ifdef CONFIG_IPIPE_CORE
-#define RTHAL_HRTIMER_VECTOR	IPIPE_HRTIMER_VECTOR
-#else
+#define RTHAL_TIMER_IRQ		__ipipe_hrtimer_irq
+#define RTHAL_HOST_TICK_IRQ	__ipipe_hrtimer_irq
+#define RTHAL_TIMER_IPI		RTHAL_HRTIMER_IPI
+#else /* !I-ipipe core */
 #define RTHAL_HRTIMER_VECTOR	IPIPE_SERVICE_VECTOR0
-#endif
 #define RTHAL_APIC_TIMER_VECTOR	RTHAL_HRTIMER_VECTOR
-#define RTHAL_APIC_TIMER_IPI	RTHAL_HRTIMER_IPI
+#define RTHAL_TIMER_IPI		RTHAL_HRTIMER_IPI
 #define RTHAL_APIC_ICOUNT	((RTHAL_TIMER_FREQ + HZ/2)/HZ)
-#define RTHAL_TIMER_IRQ		RTHAL_APIC_TIMER_IPI
+#define RTHAL_TIMER_IRQ		RTHAL_TIMER_IPI
 #define RTHAL_NMICLK_FREQ	RTHAL_CPU_FREQ
 #define RTHAL_HOST_TICK_IRQ	ipipe_apic_vector_irq(LOCAL_TIMER_VECTOR)
 #define RTHAL_BCAST_TICK_IRQ	0
+#endif /* !I-ipipe core */
 
 static inline void rthal_grab_control(void)
 {
@@ -82,6 +88,9 @@ static inline unsigned long long rthal_rdtsc(void)
 
 static inline void rthal_timer_program_shot(unsigned long delay)
 {
+#ifdef CONFIG_IPIPE_CORE
+	ipipe_timer_set(delay);
+#else /* !I-pipe core */
 /* With head-optimization, callers are expected to have switched off
    hard-IRQs already -- no need for additional protection in this
    case. */
@@ -94,10 +103,11 @@ static inline void rthal_timer_program_shot(unsigned long delay)
 		apic_write(APIC_TMICT,delay);
 	else
 		/* Pend the timer interrupt. */
-		rthal_schedule_irq_head(RTHAL_APIC_TIMER_IPI);
+		rthal_schedule_irq_head(RTHAL_TIMER_IPI);
 #ifndef CONFIG_XENO_OPT_PIPELINE_HEAD
 	rthal_local_irq_restore_hw(flags);
 #endif /* CONFIG_XENO_OPT_PIPELINE_HEAD */
+#endif /* !I-pipe core */
 }
 
 static const char *const rthal_fault_labels[] = {

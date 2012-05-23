@@ -55,7 +55,7 @@ static inline unsigned long xnarch_calibrate_timer(void)
 	/* Compute the time needed to program the APIC timer in aperiodic
 	   mode. The return value is expressed in CPU ticks. It is assumed
 	   that CONFIG_X86_LOCAL_APIC is always enabled for x86_64. */
-	return xnarch_ns_to_tsc(rthal_timer_calibrate())? : 1;
+	return rthal_timer_calibrate()? : 1;
 }
 
 int xnarch_calibrate_sched(void)

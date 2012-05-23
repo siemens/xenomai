@@ -25,6 +25,9 @@
 
 #include <linux/ipipe.h>
 
+#ifdef CONFIG_IPIPE_CORE
+#define RTHAL_COMPAT_TIMERFREQ		__ipipe_hrtimer_freq
+#else
 #ifdef CONFIG_X86_LOCAL_APIC
 #ifdef __IPIPE_FEATURE_APIC_TIMER_FREQ
 #define RTHAL_COMPAT_TIMERFREQ		__ipipe_apic_timer_freq
@@ -34,6 +37,7 @@
 #endif
 #else
 #define RTHAL_COMPAT_TIMERFREQ		CLOCK_TICK_RATE
+#endif
 #endif
 
 #if defined(CONFIG_GENERIC_CLOCKEVENTS) && !defined(__IPIPE_FEATURE_REQUEST_TICKDEV)

@@ -1663,7 +1663,12 @@ static int xnshadow_sys_mayday(struct pt_regs *regs)
 		 * relax. See do_hisyscall_event().
 		 */
 		xnarch_fixup_mayday(xnthread_archtcb(cur), regs);
-		return 0;
+
+		/* returning 0 here would clobber the register holding
+		   the return value. Instead, return whatever value
+		   xnarch_fixup_mayday set for this register, in order
+		   not to undo what xnarch_fixup_mayday did. */
+		return __xn_reg_rval(regs);
 	}
 
 	printk(KERN_WARNING

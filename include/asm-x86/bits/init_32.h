@@ -58,7 +58,7 @@ static inline unsigned long xnarch_calibrate_timer(void)
 	   kernel configuration Xenomai is compiled against, the
 	   calibrated value will either refer to the local APIC or
 	   8254 timer latency value. */
-	return xnarch_ns_to_tsc(rthal_timer_calibrate())? : 1;
+	return rthal_timer_calibrate() ? : 1;
 }
 
 int xnarch_calibrate_sched(void)

@@ -56,7 +56,6 @@ extern "C" {
 
 int __real_ftruncate(int fildes, long length);
 
-#if __WORDSIZE == 32
 #if defined(_LARGEFILE64_SOURCE) \
 	|| defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64
 int __real_ftruncate64(int fildes, long long length);
@@ -64,7 +63,6 @@ int __real_ftruncate64(int fildes, long long length);
 
 #if defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64
 #define __real_ftruncate __real_ftruncate64
-#endif
 #endif
 
 ssize_t __real_read(int fd, void *buf, size_t nbyte);
