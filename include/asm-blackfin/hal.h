@@ -30,6 +30,7 @@
 #include <asm/div64.h>
 
 #ifdef CONFIG_IPIPE_CORE
+#include <linux/ipipe_tickdev.h>
 #define RTHAL_TIMER_DEVICE	(ipipe_timer_name())
 #else /* !CONFIG_IPIPE_CORE */
 #define RTHAL_TIMER_DEVICE	"coretmr"

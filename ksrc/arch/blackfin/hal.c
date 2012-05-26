@@ -58,7 +58,6 @@ enum rthal_ktimer_mode rthal_ktimer_saved_mode;
 #define rthal_tickdev_unselect() \
 	ipipe_timers_release()
 
-static inline
 int rthal_timer_request(void (*tick_handler)(void),
 			  void (*mode_emul)(enum clock_event_mode mode,
 					    struct clock_event_device *cdev),
@@ -109,7 +108,7 @@ int rthal_timer_request(void (*tick_handler)(void),
 	return tickval;
 }
 
-static inline void rthal_timer_release(int cpu)
+void rthal_timer_release(int cpu)
 {
 	ipipe_timer_stop(cpu);
 }
