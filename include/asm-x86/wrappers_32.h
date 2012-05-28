@@ -93,6 +93,7 @@ typedef phys_addr_t resource_size_t;
 		:"1" (addr),"g" ((int)(size)),"g" (task_thread_info(task)->addr_limit.seg)); \
 	flag == 0; })
 
+#ifdef TS_USEDFPU
 #define wrap_test_fpu_used(task)  \
    (task_thread_info(task)->status & TS_USEDFPU)
 #define wrap_set_fpu_used(task)   \
@@ -103,7 +104,17 @@ do { \
 do { \
    task_thread_info(task)->status &= ~TS_USEDFPU; \
 } while(0)
-
+#else /* !defined(TS_USEDFPU) */
+#define wrap_test_fpu_used(task) ((task)->thread.has_fpu)
+#define wrap_set_fpu_used(task)			\
+	do {					\
+		(task)->thread.has_fpu = 1;	\
+	} while(0)
+#define wrap_clear_fpu_used(task)		\
+	do {					\
+		(task)->thread.has_fpu = 0;	\
+	} while(0)
+#endif /* !defined(TS_USEDFPU) */
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22)
 #define wrap_iobitmap_base(tss)  (tss)->io_bitmap_base
