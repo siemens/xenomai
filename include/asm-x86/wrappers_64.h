@@ -81,6 +81,29 @@ typedef union thread_xstate x86_fpustate;
 #define x86_fpustate_ptr(t) ((t)->fpu.state)
 #endif
 
+#ifdef TS_USEDFPU
+#define wrap_test_fpu_used(task)  \
+   (task_thread_info(task)->status & TS_USEDFPU)
+#define wrap_set_fpu_used(task)   \
+do { \
+   task_thread_info(task)->status |= TS_USEDFPU; \
+} while(0)
+#define wrap_clear_fpu_used(task) \
+do { \
+   task_thread_info(task)->status &= ~TS_USEDFPU; \
+} while(0)
+#else /* !defined(TS_USEDFPU) */
+#define wrap_test_fpu_used(task) ((task)->thread.has_fpu)
+#define wrap_set_fpu_used(task)			\
+	do {					\
+		(task)->thread.has_fpu = 1;	\
+	} while(0)
+#define wrap_clear_fpu_used(task)		\
+	do {					\
+		(task)->thread.has_fpu = 0;	\
+	} while(0)
+#endif /* !defined(TS_USEDFPU) */
+
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34)
 #define per_cpu_var(var) (var)
 #endif /* Linux >= 2.6.34 */
