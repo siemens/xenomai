@@ -200,7 +200,7 @@ int rthal_timer_request(
 	unsigned long dummy, *tmfreq = &dummy;
 	int tickval, err, res;
 
-	res = ipipe_tickdev_request("bfin_core_timer", tick_handler,
+	res = ipipe_request_tickdev("bfin_core_timer",
 				    mode_emul, tick_emul, cpu, tmfreq);
 	switch (res) {
 	case CLOCK_EVT_MODE_PERIODIC:
