@@ -42,6 +42,12 @@ union wind_wait_union {
 
 struct cluster wind_task_table;
 
+DEFINE_PRIVATE_LIST(wind_task_list);
+
+pthread_mutex_t wind_task_lock;
+
+int wind_time_slice = 0;
+
 static unsigned long anon_tids;
 
 static struct wind_task *find_wind_task(TASK_ID tid)
@@ -129,6 +135,10 @@ void put_wind_task(struct wind_task *task)
 static void task_finalizer(struct threadobj *thobj)
 {
 	struct wind_task *task = container_of(thobj, struct wind_task, thobj);
+
+	write_lock_nocancel(&wind_task_lock);
+	pvlist_remove(&task->next);
+	write_unlock(&wind_task_lock);
 
 	task->tcb->status |= WIND_DEAD;
 	cluster_delobj(&wind_task_table, &task->cobj);
@@ -224,6 +234,7 @@ static void *task_trampoline(void *arg)
 {
 	struct wind_task *task = arg;
 	struct wind_task_args *args = &task->args;
+	struct timespec quantum;
 	struct service svc;
 	int ret;
 
@@ -233,16 +244,30 @@ static void *task_trampoline(void *arg)
 
 	COPPERPLATE_PROTECT(svc);
 
+	write_lock_nocancel(&wind_task_lock);
+	pvlist_append(&task->next, &wind_task_list);
+	write_unlock(&wind_task_lock);
+
 	ret = __bt(registry_add_file(&task->fsobj, O_RDONLY,
 				     "/vxworks/tasks/%s", task->name));
 	if (ret)
 		warning("failed to export task %s to registry",
 			task->name);
 
-	COPPERPLATE_UNPROTECT(svc);
-
 	/* Wait for someone to run taskActivate() upon us. */
 	threadobj_wait_start();
+
+	/* Turn on time slicing if RR globally enabled. */
+	if (wind_time_slice) {
+		clockobj_ticks_to_timespec(&wind_clock,
+					   wind_time_slice, &quantum);
+		threadobj_lock(&task->thobj);
+		threadobj_set_rr(&task->thobj, &quantum);
+		threadobj_unlock(&task->thobj);
+	}
+
+	COPPERPLATE_UNPROTECT(svc);
+
 	threadobj_notify_entry();
 	args->entry(args->arg0, args->arg1, args->arg2, args->arg3,
 		    args->arg4, args->arg5, args->arg6, args->arg7,

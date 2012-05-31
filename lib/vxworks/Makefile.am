@@ -6,6 +6,7 @@ libvxworks_la_SOURCES = \
 	init.c		\
 	errnoLib.c	\
 	intLib.c	\
+	kernLib.c	\
 	lstLib.c	\
 	memPartLib.c	\
 	memPartLib.h	\

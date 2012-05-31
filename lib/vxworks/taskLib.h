@@ -52,7 +52,28 @@ struct wind_task {
 	struct threadobj thobj;
 	struct fsobj fsobj;
 	struct clusterobj cobj;
+	struct pvholder next;
 };
+
+#define do_each_wind_task(__task, __action)				\
+	({								\
+		__label__ out;						\
+		int __ret;						\
+		push_cleanup_lock(&wind_task_lock);			\
+		read_lock(&wind_task_lock);				\
+		if (!pvlist_empty(&wind_task_list))			\
+			pvlist_for_each_entry(__task, &wind_task_list, next) { \
+				threadobj_lock(&(__task)->thobj);	\
+				__ret = __action;			\
+				threadobj_unlock(&(__task)->thobj);	\
+				if (__ret)				\
+					goto out;			\
+			}						\
+		read_unlock(&wind_task_lock);				\
+		pop_cleanup_lock(&wind_task_lock);			\
+	out:								\
+		__ret;							\
+	})
 
 int wind_task_get_priority(struct wind_task *task);
 
@@ -76,5 +97,11 @@ struct wind_task *get_wind_task_or_self(TASK_ID tid);
 void put_wind_task(struct wind_task *task);
 
 extern struct cluster wind_task_table;
+
+extern struct pvlist wind_task_list;
+
+extern pthread_mutex_t wind_task_lock;
+
+extern int wind_time_slice;
 
 #endif /* _VXWORKS_TASKLIB_H */

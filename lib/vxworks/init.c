@@ -82,6 +82,8 @@ static int vxworks_init(void)
 		return __bt(ret);
 	}
 
+	__RT(pthread_mutex_init(&wind_task_lock, NULL));
+
 	return 0;
 }
 
