@@ -21,6 +21,7 @@
 
 #include <sys/types.h>
 #include <stdarg.h>
+#include <time.h>
 #include <pthread.h>
 #include <sched.h>
 #include <xeno_config.h>

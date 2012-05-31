@@ -18,13 +18,13 @@
  * Thread object abstraction.
  */
 
-#include <sys/time.h>
 #include <signal.h>
 #include <memory.h>
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <time.h>
 #include <fcntl.h>
 #include <assert.h>
 #include <limits.h>
@@ -63,14 +63,6 @@ int threadobj_high_prio;
 
 int threadobj_irq_prio;
 
-static DEFINE_PRIVATE_LIST(thread_list);
-
-static pthread_mutex_t list_lock;
-
-static int global_rr;
-
-static struct timespec global_quantum;
-
 static void cancel_sync(struct threadobj *thobj);
 
 #ifdef HAVE_TLS
@@ -104,11 +96,13 @@ static inline void threadobj_init_corespec(struct threadobj *thobj)
 {
 }
 
-static inline void threadobj_setup_corespec(struct threadobj *thobj)
+static inline int threadobj_setup_corespec(struct threadobj *thobj)
 {
 	pthread_set_name_np(pthread_self(), thobj->name);
 	thobj->core.handle = xeno_get_current();
 	thobj->core.u_window = xeno_get_current_window();
+
+	return 0;
 }
 
 static inline void threadobj_cleanup_corespec(struct threadobj *thobj)
@@ -282,7 +276,6 @@ int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock hel
 
 	__threadobj_check_locked(thobj);
 
-	thobj->priority = prio;
 	policy = SCHED_RT;
 	if (prio == 0) {
 		thobj->status &= ~THREADOBJ_ROUNDROBIN;
@@ -292,10 +285,12 @@ int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock hel
 		policy = SCHED_RR;
 	}
 
+	thobj->priority = prio;
+	thobj->policy = policy;
 	threadobj_unlock(thobj);
 	/*
 	 * XXX: as a side effect, resetting SCHED_RR will refill the
-	 * time credit for the target thread with the last rrperiod
+	 * time credit for the target thread with the last quantum
 	 * set.
 	 */
 	xparam.sched_priority = prio;
@@ -338,80 +333,25 @@ static int set_rr(struct threadobj *thobj, struct timespec *quantum)
 	pthread_t tid = thobj->tid;
 	int ret, policy;
 
-	policy = SCHED_RT;
-	if (quantum == NULL) {
+	if (quantum && (quantum->tv_sec || quantum->tv_nsec)) {
+		policy = SCHED_RR;
+		xparam.sched_rr_quantum = *quantum;
+		thobj->status |= THREADOBJ_ROUNDROBIN;
+		thobj->tslice = *quantum;
+		xparam.sched_priority = thobj->priority ?: 1;
+	} else {
+		policy = thobj->policy;
+		thobj->status &= ~THREADOBJ_ROUNDROBIN;
 		xparam.sched_rr_quantum.tv_sec = 0;
 		xparam.sched_rr_quantum.tv_nsec = 0;
-		thobj->status &= ~THREADOBJ_ROUNDROBIN;
-	} else {
-		thobj->tslice = *quantum;
-		xparam.sched_rr_quantum = *quantum;
-		if (quantum->tv_sec == 0 && quantum->tv_nsec == 0)
-			thobj->status &= ~THREADOBJ_ROUNDROBIN;
-		else {
-			thobj->status |= THREADOBJ_ROUNDROBIN;
-			policy = SCHED_RR;
-		}
+		xparam.sched_priority = thobj->priority;
 	}
 
-	xparam.sched_priority = thobj->priority;
 	threadobj_unlock(thobj);
 	ret = pthread_setschedparam_ex(tid, policy, &xparam);
 	threadobj_lock(thobj);
 
 	return __bt(-ret);
-}
-
-int threadobj_set_rr(struct threadobj *thobj, struct timespec *quantum)
-{				/* thobj->lock held if valid */
-	int ret;
-
-	if (thobj) {
-		__threadobj_check_locked(thobj);
-		return __bt(set_rr(thobj, quantum));
-	}
-
-	global_rr = (quantum != NULL);
-	if (global_rr)
-		global_quantum = *quantum;
-
-	/*
-	 * XXX: Enable round-robin for all threads locally known by
-	 * the current process. Round-robin is most commonly about
-	 * having multiple threads getting an equal share of time for
-	 * running the same bulk of code, so applying this policy
-	 * session-wide to multiple Xenomai processes would not make
-	 * much sense. I.e. one is better off having all those threads
-	 * running within a single process.
-	 */
-	ret = 0;
-	push_cleanup_lock(&list_lock);
-	read_lock(&list_lock);
-
-	if (!pvlist_empty(&thread_list)) {
-		pvlist_for_each_entry(thobj, &thread_list, thread_link) {
-			threadobj_lock(thobj);
-			ret = set_rr(thobj, quantum);
-			threadobj_unlock(thobj);
-			if (ret)
-				break;
-		}
-	}
-
-	read_unlock(&list_lock);
-	pop_cleanup_lock(&list_lock);
-
-	return __bt(ret);
-}
-
-int threadobj_start_rr(struct timespec *quantum)
-{
-	return __bt(threadobj_set_rr(NULL, quantum));
-}
-
-void threadobj_stop_rr(void)
-{
-	threadobj_set_rr(NULL, NULL);
 }
 
 int threadobj_set_periodic(struct threadobj *thobj,
@@ -454,6 +394,8 @@ int threadobj_stat(struct threadobj *thobj, struct threadobj_stat *p) /* thobj->
 #include <sys/prctl.h>
 #include "copperplate/notifier.h"
 
+#define sigev_notify_thread_id	 _sigev_un._tid
+
 static int threadobj_lock_prio;
 
 static void unblock_sighandler(int sig)
@@ -462,6 +404,19 @@ static void unblock_sighandler(int sig)
 	 * nop -- we just want the receiving thread to unblock with
 	 * EINTR if applicable.
 	 */
+}
+
+static void roundrobin_handler(int sig)
+{
+	struct threadobj *current = threadobj_current();
+
+	/*
+	 * We do manual round-robin over SCHED_FIFO(RT) to allow for
+	 * multiple arbitrary time slices (i.e. vs the kernel
+	 * pre-defined and fixed one).
+	 */
+	if (current && (current->status & THREADOBJ_ROUNDROBIN) != 0)
+		sched_yield();
 }
 
 static inline void pkg_init_corespec(void)
@@ -479,6 +434,8 @@ static inline void pkg_init_corespec(void)
 	memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = unblock_sighandler;
 	sigaction(SIGRELS, &sa, NULL);
+	sa.sa_handler = roundrobin_handler;
+	sigaction(SIGVTALRM, &sa, NULL);
 
 	notifier_pkg_init();
 }
@@ -514,19 +471,44 @@ static inline void threadobj_init_corespec(struct threadobj *thobj)
 	pthread_condattr_setclock(&cattr, CLOCK_COPPERPLATE);
 	pthread_cond_init(&thobj->core.grant_sync, &cattr);
 	pthread_condattr_destroy(&cattr);
+	thobj->core.rr_timer = NULL;
 }
 
-static inline void threadobj_setup_corespec(struct threadobj *thobj)
+static inline int threadobj_setup_corespec(struct threadobj *thobj)
 {
+	struct sigevent sev;
+	int ret;
+
 	prctl(PR_SET_NAME, (unsigned long)thobj->name, 0, 0, 0);
 	notifier_init(&thobj->core.notifier, notifier_callback, 1);
 	thobj->core.period = 0;
+
+	/*
+	 * Create the per-thread round-robin timer.
+	 *
+	 * XXX: It is a bit overkill doing this here instead of on
+	 * demand, but we must get the internal ID from the running
+	 * thread, and unlike with set_rr(), threadobj_current() ==
+	 * thobj is guaranteed in threadobj_setup_corespec().
+	 */
+	sev.sigev_notify = SIGEV_SIGNAL|SIGEV_THREAD_ID;
+	sev.sigev_signo = SIGVTALRM;
+	sev.sigev_notify_thread_id = copperplate_get_tid();
+
+	ret = timer_create(CLOCK_THREAD_CPUTIME_ID, &sev,
+			   &thobj->core.rr_timer);
+	if (ret)
+		return __bt(-errno);
+
+	return 0;
 }
 
 static inline void threadobj_cleanup_corespec(struct threadobj *thobj)
 {
 	notifier_destroy(&thobj->core.notifier);
 	pthread_cond_destroy(&thobj->core.grant_sync);
+	if (thobj->core.rr_timer)
+		timer_delete(thobj->core.rr_timer);
 }
 
 static inline void threadobj_run_corespec(struct threadobj *thobj)
@@ -587,7 +569,6 @@ int threadobj_lock_sched(struct threadobj *thobj) /* thobj->lock held */
 {
 	pthread_t tid = thobj->tid;
 	struct sched_param param;
-	int policy, ret;
 
 	__threadobj_check_locked(thobj);
 
@@ -596,13 +577,11 @@ int threadobj_lock_sched(struct threadobj *thobj) /* thobj->lock held */
 	if (thobj->schedlock_depth++ > 0)
 		return 0;
 
-	ret = pthread_getschedparam(tid, &policy, &param);
-	if (ret)
-		return __bt(-ret);
-
-	thobj->core.prio_unlocked = param.sched_priority;
+	thobj->core.prio_unlocked = thobj->priority;
+	thobj->core.policy_unlocked = thobj->policy;
 	thobj->status |= THREADOBJ_SCHEDLOCK;
 	thobj->priority = threadobj_lock_prio;
+	thobj->policy = SCHED_RT;
 	param.sched_priority = threadobj_lock_prio;
 
 	return __bt(-pthread_setschedparam(tid, SCHED_RT, &param));
@@ -627,7 +606,7 @@ int threadobj_unlock_sched(struct threadobj *thobj) /* thobj->lock held */
 	thobj->status &= ~THREADOBJ_SCHEDLOCK;
 	thobj->priority = thobj->core.prio_unlocked;
 	param.sched_priority = thobj->core.prio_unlocked;
-	policy = param.sched_priority ? SCHED_RT : SCHED_OTHER;
+	policy = thobj->core.policy_unlocked;
 	threadobj_unlock(thobj);
 	ret = pthread_setschedparam(tid, policy, &param);
 	threadobj_lock(thobj);
@@ -650,17 +629,25 @@ int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock hel
 	 */
 	if (thobj->status & THREADOBJ_SCHEDLOCK) {
 		thobj->core.prio_unlocked = prio;
+		thobj->core.policy_unlocked = prio ? SCHED_RT : SCHED_OTHER;
 		return 0;
 	}
 
 	thobj->priority = prio;
+	policy = SCHED_RT;
+	if (prio == 0) {
+		thobj->status &= ~THREADOBJ_ROUNDROBIN;
+		policy = SCHED_OTHER;
+	}
+
+	thobj->priority = prio;
+	thobj->policy = policy;
 	threadobj_unlock(thobj);
 	/*
 	 * Since we released the thread container lock, we now rely on
 	 * the pthread interface to recheck the tid for existence.
 	 */
 	param.sched_priority = prio;
-	policy = prio ? SCHED_RT : SCHED_OTHER;
 
 	return pthread_setschedparam(tid, policy, &param);
 }
@@ -686,112 +673,56 @@ int threadobj_set_mode(struct threadobj *thobj,
 	return ret;
 }
 
-static void roundrobin_handler(int sig)
+static inline int set_rr(struct threadobj *thobj, struct timespec *quantum)
 {
-	struct threadobj *current = threadobj_current();
+	pthread_t tid = thobj->tid;
+	struct sched_param param;
+	struct itimerspec value;
+	int policy, ret;
 
-	/*
-	 * We do manual round-robin within SCHED_FIFO(RT) to allow for
-	 * multiple time slices system-wide.
-	 */
-	if (current && (current->status & THREADOBJ_ROUNDROBIN))
-		sched_yield();
-}
-
-static inline void set_rr(struct threadobj *thobj, struct timespec *quantum)
-{
-	if (quantum) {
-		thobj->status |= THREADOBJ_ROUNDROBIN;
+	if (quantum && (quantum->tv_sec || quantum->tv_nsec)) {
+		value.it_interval = *quantum;
+		value.it_value = *quantum;
 		thobj->tslice = *quantum;
-	} else
-		thobj->status &= ~THREADOBJ_ROUNDROBIN;
-}
 
-int threadobj_set_rr(struct threadobj *thobj, struct timespec *quantum)
-{				/* thobj->lock held if valid */
-	if (thobj) {
-		__threadobj_check_locked(thobj);
-		set_rr(thobj, quantum);
-		return 0;
-	}
-
-	global_rr = (quantum != NULL);
-	if (global_rr)
-		global_quantum = *quantum;
-
-	/*
-	 * XXX: Enable round-robin for all threads locally known by
-	 * the current process. Round-robin is most commonly about
-	 * having multiple threads getting an equal share of time for
-	 * running the same bulk of code, so applying this policy
-	 * session-wide to multiple Xenomai processes would not make
-	 * much sense. I.e. one is better off having all those threads
-	 * running within a single process.
-	 */
-	push_cleanup_lock(&list_lock);
-	read_lock(&list_lock);
-
-	if (!pvlist_empty(&thread_list)) {
-		pvlist_for_each_entry(thobj, &thread_list, thread_link) {
-			threadobj_lock(thobj);
-			set_rr(thobj, quantum);
-			threadobj_unlock(thobj);
+		if (thobj->status & THREADOBJ_ROUNDROBIN) {
+			/* Changing quantum of ongoing RR. */
+			ret = timer_settime(thobj->core.rr_timer, 0, &value, NULL);
+			return ret ? __bt(-errno) : 0;
 		}
+
+		thobj->status |= THREADOBJ_ROUNDROBIN;
+		/*
+		 * Switch to SCHED_FIFO policy, assign default prio=1
+		 * if coming from SCHED_OTHER. We use a per-thread
+		 * timer to implement manual round-robin.
+		 */
+		policy = SCHED_FIFO;
+		param.sched_priority = thobj->priority ?: 1;
+		ret = timer_settime(thobj->core.rr_timer, 0, &value, NULL);
+		if (ret)
+			return __bt(-errno);
+	} else {
+		if ((thobj->status & THREADOBJ_ROUNDROBIN) == 0)
+			return 0;
+		thobj->status &= ~THREADOBJ_ROUNDROBIN;
+		/*
+		 * Disarm timer and reset scheduling parameters to
+		 * former policy.
+		 */
+		value.it_value.tv_sec = 0;
+		value.it_value.tv_nsec = 0;
+		value.it_interval = value.it_value;
+		timer_settime(thobj->core.rr_timer, 0, &value, NULL);
+		param.sched_priority = thobj->priority;
+		policy = thobj->policy;
 	}
 
-	read_unlock(&list_lock);
-	pop_cleanup_lock(&list_lock);
+	threadobj_unlock(thobj);
+	ret = pthread_setschedparam(tid, policy, &param);
+	threadobj_lock(thobj);
 
-	return 0;
-}
-
-int threadobj_start_rr(struct timespec *quantum)
-{
-	struct itimerval value, ovalue;
-	struct sigaction sa;
-	int ret;
-
-	ret = threadobj_set_rr(NULL, quantum);
-	if (ret)
-		return __bt(ret);
-
-	value.it_interval.tv_sec = quantum->tv_sec;
-	value.it_interval.tv_usec = quantum->tv_nsec / 1000;
-
-	ret = getitimer(ITIMER_VIRTUAL, &ovalue);
-	if (ret == 0 &&
-	    value.it_interval.tv_sec == ovalue.it_interval.tv_sec &&
-	    value.it_interval.tv_usec == ovalue.it_interval.tv_usec)
-		return 0;	/* Already enabled. */
-
-	memset(&sa, 0, sizeof(sa));
-	sa.sa_handler = roundrobin_handler;
-	sigaction(SIGVTALRM, &sa, NULL);
-
-	value.it_value = value.it_interval;
-	ret = setitimer(ITIMER_VIRTUAL, &value, NULL);
-	if (ret)
-		return __bt(-errno);
-
-	return 0;
-}
-
-void threadobj_stop_rr(void)
-{
-	struct itimerval value;
-	struct sigaction sa;
-
-	threadobj_set_rr(NULL, NULL);
-
-	value.it_value.tv_sec = 0;
-	value.it_value.tv_usec = 0;
-	value.it_interval = value.it_value;
-
-	setitimer(ITIMER_VIRTUAL, &value, NULL);
-
-	memset(&sa, 0, sizeof(sa));
-	sa.sa_handler = SIG_DFL;
-	sigaction(SIGVTALRM, &sa, NULL);
+	return __bt(-ret);
 }
 
 int threadobj_set_periodic(struct threadobj *thobj,
@@ -899,6 +830,7 @@ void threadobj_init(struct threadobj *thobj,
 	thobj->schedlock_depth = 0;
 	thobj->status = THREADOBJ_WARMUP;
 	thobj->priority = idata->priority;
+	thobj->policy = idata->priority ? SCHED_RT : SCHED_OTHER;
 	holder_init(&thobj->wait_link);
 	thobj->suspend_hook = idata->suspend_hook;
 	thobj->cnode = __node_id;
@@ -1021,6 +953,7 @@ void threadobj_notify_entry(void) /* current->lock free. */
 int threadobj_prologue(struct threadobj *thobj, const char *name)
 {
 	struct threadobj *current = threadobj_current();
+	int ret;
 
 	/*
 	 * Check whether we overlay the default main TCB we set in
@@ -1039,18 +972,13 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 		pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
 
 	thobj->name = name;
-	backtrace_init_context(&thobj->btd, name);
-	threadobj_setup_corespec(thobj);
-
-	write_lock_nocancel(&list_lock);
-	pvlist_append(&thobj->thread_link, &thread_list);
-	write_unlock(&list_lock);
-
 	thobj->errno_pointer = &errno;
-	threadobj_set_current(thobj);
+	backtrace_init_context(&thobj->btd, name);
+	ret = threadobj_setup_corespec(thobj);
+	if (ret)
+		return __bt(ret);
 
-	if (global_rr)
-		threadobj_set_rr(thobj, &global_quantum);
+	threadobj_set_current(thobj);
 
 	threadobj_lock(thobj);
 	thobj->status &= ~THREADOBJ_WARMUP;
@@ -1095,10 +1023,6 @@ static void threadobj_finalize(void *p) /* thobj->lock free */
 
 	if (thobj->wait_sobj)
 		__syncobj_cleanup_wait(thobj->wait_sobj, thobj);
-
-	write_lock_nocancel(&list_lock);
-	pvlist_remove(&thobj->thread_link);
-	write_unlock(&list_lock);
 
 	if (thobj->tracer)
 		traceobj_unwind(thobj->tracer);
@@ -1145,6 +1069,22 @@ void threadobj_spin(ticks_t ns)
 	end = clockobj_get_tsc() + clockobj_ns_to_tsc(ns);
 	while (clockobj_get_tsc() < end)
 		cpu_relax();
+}
+
+int threadobj_set_rr(struct threadobj *thobj, struct timespec *quantum)
+{				/* thobj->lock held */
+	__threadobj_check_locked(thobj);
+
+	/*
+	 * It makes no sense to enable/disable round-robin while
+	 * holding the scheduler lock. Prevent this, which makes our
+	 * logic simpler in the Mercury case with respect to tracking
+	 * the current scheduling parameters.
+	 */
+	if (thobj->status & THREADOBJ_SCHEDLOCK)
+		return -EINVAL;
+
+	return __bt(set_rr(thobj, quantum));
 }
 
 #ifdef __XENO_DEBUG__
@@ -1194,8 +1134,6 @@ void threadobj_pkg_init(void)
 {
 	threadobj_irq_prio = __RT(sched_get_priority_max(SCHED_RT));
 	threadobj_high_prio = threadobj_irq_prio - 1;
-
-	__RT(pthread_mutex_init(&list_lock, NULL));
 
 	threadobj_init_key();
 

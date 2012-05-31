@@ -61,7 +61,9 @@ struct threadobj_stat {
 
 struct threadobj_corespec {
 	pthread_cond_t grant_sync;
+	int policy_unlocked;
 	int prio_unlocked;
+	timer_t rr_timer;
 	struct notifier notifier;
 	struct timespec wakeup;
 	ticks_t period;
@@ -125,6 +127,7 @@ struct threadobj {
 	int schedlock_depth;
 	int cancel_state;
 	int status;
+	int policy;
 	int priority;
 	pid_t cnode;
 	const char *name;
@@ -142,7 +145,6 @@ struct threadobj {
 	struct timespec tslice;
 	pthread_cond_t barrier;
 	struct traceobj *tracer;
-	struct pvholder thread_link;
 	struct backtrace_data btd;
 };
 
@@ -272,10 +274,6 @@ int threadobj_set_mode(struct threadobj *thobj,
 		       int clrmask, int setmask, int *mode_r);
 
 int threadobj_set_rr(struct threadobj *thobj, struct timespec *quantum);
-
-int threadobj_start_rr(struct timespec *quantum);
-
-void threadobj_stop_rr(void);
 
 int threadobj_set_periodic(struct threadobj *thobj,
 			   struct timespec *idate, struct timespec *period);
