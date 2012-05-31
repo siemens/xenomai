@@ -19,6 +19,7 @@ TESTS :=	\
 	task-5	\
 	task-6	\
 	task-7	\
+	task-8	\
 	mq-1	\
 	mq-2	\
 	mq-3	\
@@ -28,7 +29,7 @@ TESTS :=	\
 	mutex-1	\
 	event-1	\
 	heap-1	\
-	buffer-1 \
+	buffer-1
 
 CFLAGS := $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --skin=alchemy --cflags) -g
 LDFLAGS := $(shell DESTDIR=$(DESTDIR) $(XENO_CONFIG) --skin=alchemy --ldflags)
