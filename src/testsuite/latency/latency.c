@@ -455,7 +455,7 @@ void cleanup(void)
 	if (max_relaxed > 0)
 		printf(
 "Warning! some latency maxima may have been due to involuntary mode switches.\n"
-"Please contact xenomai-help@gna.org\n");
+"Please contact xenomai@xenomai.org\n");
 
 	if (histogram_avg)
 		free(histogram_avg);
