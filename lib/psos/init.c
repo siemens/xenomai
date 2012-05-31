@@ -39,10 +39,19 @@ unsigned int psos_long_names;
 
 static unsigned int clock_resolution = 1000000; /* 1ms */
 
+static unsigned int time_slice = 1000000; /* 1ms */
+
 static const struct option psos_options[] = {
 	{
 #define clock_resolution_opt	0
 		.name = "psos-clock-resolution",
+		.has_arg = 1,
+		.flag = NULL,
+		.val = 0
+	},
+	{
+#define time_slice_opt	1
+		.name = "psos-time-slice",
 		.has_arg = 1,
 		.flag = NULL,
 		.val = 0
@@ -61,6 +70,9 @@ static int psos_parse_option(int optnum, const char *optarg)
 	case clock_resolution_opt:
 		clock_resolution = atoi(optarg);
 		break;
+	case time_slice_opt:
+		time_slice = atoi(optarg);
+		break;
 	default:
 		/* Paranoid, can't happen. */
 		return -EINVAL;
@@ -71,7 +83,8 @@ static int psos_parse_option(int optnum, const char *optarg)
 
 static void psos_help(void)
 {
-        fprintf(stderr, "--psos-clock-resolution=<ns>  tick value (default 1ms)\n");
+        fprintf(stderr, "--psos-clock-resolution=<ns>    tick value (default 1ms)\n");
+        fprintf(stderr, "--psos-time-slice=<psos-ticks>  round-robin time slice\n");
 }
 
 static int psos_init(void)
@@ -99,8 +112,8 @@ static int psos_init(void)
 		return __bt(ret);
 	}
 
-	/* FIXME: this default 10-ticks value should be user-settable */
-	clockobj_ticks_to_timespec(&psos_clock, 10, &psos_rrperiod);
+	/* Convert pSOS ticks to timespec. */
+	clockobj_ticks_to_timespec(&psos_clock, time_slice, &psos_rrperiod);
 
 	return 0;
 }
