@@ -22,12 +22,13 @@ arith_CPPFLAGS = \
 	-I$(top_srcdir)/include		\
 	-Wno-missing-prototypes 
 
-arith_LDFLAGS = @XENO_USER_LDFLAGS@
+arith_LDFLAGS =
 
 arith_LDADD = \
 	../../lib/alchemy/libalchemy.la \
 	../../lib/copperplate/libcopperplate.la \
 	$(coredep_lib) \
+	@XENO_USER_LDADD@		\
 	-lpthread -lrt -lm
 
 mutex_torture_SOURCES = mutex-torture.c
@@ -38,12 +39,13 @@ mutex_torture_CPPFLAGS =		\
 	-I$(top_srcdir)/include		\
 	-Wno-missing-prototypes 
 
-mutex_torture_LDFLAGS = $(XENO_POSIX_WRAPPERS) @XENO_USER_LDFLAGS@
+mutex_torture_LDFLAGS = $(XENO_POSIX_WRAPPERS)
 
 mutex_torture_LDADD = \
 	../../lib/alchemy/libalchemy.la \
 	../../lib/copperplate/libcopperplate.la \
 	$(coredep_lib) \
+	@XENO_USER_LDADD@		\
 	-lpthread -lrt -lm
 
 cond_torture_SOURCES = cond-torture.c
@@ -54,12 +56,13 @@ cond_torture_CPPFLAGS =		\
 	-I$(top_srcdir)/include		\
 	-Wno-missing-prototypes 
 
-cond_torture_LDFLAGS = $(XENO_POSIX_WRAPPERS) @XENO_USER_LDFLAGS@
+cond_torture_LDFLAGS = $(XENO_POSIX_WRAPPERS)
 
 cond_torture_LDADD = \
 	../../lib/alchemy/libalchemy.la \
 	../../lib/copperplate/libcopperplate.la \
 	$(coredep_lib) \
+	@XENO_USER_LDADD@		\
 	-lpthread -lrt -lm
 
 check_vdso_SOURCES = check-vdso.c
@@ -69,10 +72,11 @@ check_vdso_CPPFLAGS =			\
 	-I$(top_srcdir)/include		\
 	-Wno-missing-prototypes 
 
-check_vdso_LDFLAGS = @XENO_USER_LDFLAGS@
+check_vdso_LDFLAGS =
 
 check_vdso_LDADD = \
 	$(coredep_lib) \
+	@XENO_USER_LDADD@	\
 	-lpthread -lrt -lm
 
 else
@@ -86,12 +90,13 @@ wakeup_time_CPPFLAGS =			\
 	-I$(top_srcdir)/include		\
 	-Wno-missing-prototypes 
 
-wakeup_time_LDFLAGS = @XENO_USER_LDFLAGS@
+wakeup_time_LDFLAGS =
 
 wakeup_time_LDADD = \
 	../../lib/alchemy/libalchemy.la \
 	../../lib/copperplate/libcopperplate.la \
 	$(coredep_lib) \
+	@XENO_USER_LDADD@		\
 	-lpthread -lrt -lm
 
 rtdm_SOURCES = rtdm.c
@@ -102,10 +107,11 @@ rtdm_CPPFLAGS =				\
 	-I$(top_srcdir)/include		\
 	-Wno-missing-prototypes 
 
-rtdm_LDFLAGS = $(XENO_POSIX_WRAPPERS) @XENO_USER_LDFLAGS@
+rtdm_LDFLAGS = $(XENO_POSIX_WRAPPERS)
 
 rtdm_LDADD = \
 	../../lib/alchemy/libalchemy.la \
 	../../lib/copperplate/libcopperplate.la \
 	$(coredep_lib) \
+	@XENO_USER_LDADD@		\
 	-lpthread -lrt -lm

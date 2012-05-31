@@ -621,7 +621,7 @@ XENO_TEST_DIR
 XENO_FUSE_CFLAGS
 XENO_USER_APP_LDFLAGS
 XENO_USER_APP_CFLAGS
-XENO_USER_LDFLAGS
+XENO_USER_LDADD
 XENO_USER_CFLAGS
 XENO_LIB_LDFLAGS
 XENO_HOST_STRING
@@ -12779,7 +12779,8 @@ if ${ac_cv_lib_fuse_fuse_new+:} false; then :
   $as_echo_n "(cached) " >&6
 else
   ac_check_lib_save_LIBS=$LIBS
-LIBS="-lfuse  $LIBS"
+LIBS="-lfuse -lpthread -lrt -ldl
+	 $LIBS"
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -12818,7 +12819,6 @@ _ACEOF
 
 else
   as_fn_error $? "Cannot find libfuse (FUSE development package) on this system" "$LINENO" 5
-
 fi
 
 	CPPFLAGS="$save_CPPFLAGS"
@@ -13502,6 +13502,7 @@ if ${ac_cv_atomic_builtins+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
+LIBS=
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -13530,15 +13531,15 @@ if test "$ac_cv_atomic_builtins" != "yes"; then
 fi
 
 XENO_USER_CFLAGS="-D_GNU_SOURCE -D_REENTRANT -fstrict-aliasing -Wall -pipe -Wstrict-prototypes -Wmissing-prototypes -Wno-long-long -Wno-unused-parameter -Werror"
-XENO_USER_LDFLAGS=
+XENO_USER_LDADD=
 
 if test x$use_registry = xy; then
    XENO_FUSE_CFLAGS=$fuse_cflags
-   XENO_USER_LDFLAGS="$XENO_USER_LDFLAGS $fuse_ldflags"
+   XENO_USER_LDADD="$XENO_USER_LDADD $fuse_ldflags"
 fi
 
 XENO_USER_APP_CFLAGS=$XENO_USER_CFLAGS
-XENO_USER_APP_LDFLAGS=$XENO_USER_LDFLAGS
+XENO_USER_APP_LDFLAGS=$XENO_USER_LDADD
 
 if test x$debug_mode = xpartial; then
    XENO_USER_CFLAGS="-g -O2 -D__XENO_DEBUG__ $XENO_USER_CFLAGS -fno-omit-frame-pointer"

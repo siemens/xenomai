@@ -9,8 +9,9 @@ test_PROGRAMS = leaks
 CPPFLAGS = $(XENO_USER_CFLAGS) \
 	-I$(top_srcdir)/include
 
-LDFLAGS = $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS)
+LDFLAGS = $(XENO_POSIX_WRAPPERS)
 
-LDADD = \
-	../../../lib/cobalt/libcobalt.la \
+LDADD = 					\
+	../../../lib/cobalt/libcobalt.la	\
+	@XENO_USER_LDADD@			\
 	-lpthread -lrt -lm

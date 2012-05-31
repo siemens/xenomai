@@ -182,7 +182,7 @@ XENO_TEST_DIR = @XENO_TEST_DIR@
 XENO_USER_APP_CFLAGS = @XENO_USER_APP_CFLAGS@
 XENO_USER_APP_LDFLAGS = @XENO_USER_APP_LDFLAGS@
 XENO_USER_CFLAGS = @XENO_USER_CFLAGS@
-XENO_USER_LDFLAGS = @XENO_USER_LDFLAGS@
+XENO_USER_LDADD = @XENO_USER_LDADD@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -247,12 +247,13 @@ latency_CPPFLAGS = \
 	-I$(top_srcdir)/include		\
 	-Wno-missing-prototypes 
 
-latency_LDFLAGS = @XENO_USER_LDFLAGS@
+latency_LDFLAGS = 
 core_libs = $(am__append_1)
 latency_LDADD = \
 	../../lib/alchemy/libalchemy.la		\
 	../../lib/copperplate/libcopperplate.la	\
 	$(core_libs)				\
+	 @XENO_USER_LDADD@			\
 	-lpthread -lrt -lm
 
 all: all-am

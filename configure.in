@@ -269,7 +269,8 @@ if test x$use_registry = xy; then
 		AC_MSG_ERROR([Cannot find fuse.h (part of libfuse development package) on this system])
 	)
 	AC_CHECK_LIB(fuse, fuse_new,,
-		AC_MSG_ERROR([Cannot find libfuse (FUSE development package) on this system])
+		AC_MSG_ERROR([Cannot find libfuse (FUSE development package) on this system]),
+		[-lpthread -lrt -ldl]
 	)
 	CPPFLAGS="$save_CPPFLAGS"
 	AC_LANG_RESTORE
@@ -495,6 +496,7 @@ dnl Check for atomic builtins. For now we only check for the legacy
 dnl interface, i.e. __sync_*.
 
 AC_CACHE_CHECK([whether the compiler provides atomic builtins], ac_cv_atomic_builtins, [
+LIBS=
 AC_TRY_LINK([
 int atomic_sub(int i) { return __sync_sub_and_fetch(&i, 1); }
 int atomic_add(int i) { return __sync_add_and_fetch(&i, 1); }
@@ -506,16 +508,16 @@ fi
 
 dnl Common CFLAGS and LDFLAGS
 XENO_USER_CFLAGS="-D_GNU_SOURCE -D_REENTRANT -fstrict-aliasing -Wall -pipe -Wstrict-prototypes -Wmissing-prototypes -Wno-long-long -Wno-unused-parameter -Werror"
-XENO_USER_LDFLAGS=
+XENO_USER_LDADD=
 
 if test x$use_registry = xy; then
    XENO_FUSE_CFLAGS=$fuse_cflags
-   XENO_USER_LDFLAGS="$XENO_USER_LDFLAGS $fuse_ldflags"
+   XENO_USER_LDADD="$XENO_USER_LDADD $fuse_ldflags"
 fi
 
 dnl Exported CFLAGS and LDFLAGS, may be enhanced per-arch below
 XENO_USER_APP_CFLAGS=$XENO_USER_CFLAGS
-XENO_USER_APP_LDFLAGS=$XENO_USER_LDFLAGS
+XENO_USER_APP_LDFLAGS=$XENO_USER_LDADD
 
 if test x$debug_mode = xpartial; then
    XENO_USER_CFLAGS="-g -O2 -D__XENO_DEBUG__ $XENO_USER_CFLAGS -fno-omit-frame-pointer"
@@ -541,7 +543,7 @@ AC_CACHE_VAL(ac_cv_ld_file_option,
   AC_LANG_C
   save_LDFLAGS="$LDFLAGS"
   [LDFLAGS="-Wl,@/dev/null"]
-  AC_LINK_IFELSE([main(){}],
+  AC_LINK_IFELSE([AC_LANG_SOURCE([main(){}])],
     [ac_cv_ld_file_option=yes],
     [ac_cv_ld_file_option=no])
   LDFLAGS="$save_LDFLAGS"
@@ -637,7 +639,7 @@ AC_SUBST(XENO_BUILD_STRING)
 AC_SUBST(XENO_HOST_STRING)
 AC_SUBST(XENO_LIB_LDFLAGS)
 AC_SUBST(XENO_USER_CFLAGS)
-AC_SUBST(XENO_USER_LDFLAGS)
+AC_SUBST(XENO_USER_LDADD)
 AC_SUBST(XENO_USER_APP_CFLAGS)
 AC_SUBST(XENO_USER_APP_LDFLAGS)
 AC_SUBST(XENO_FUSE_CFLAGS)

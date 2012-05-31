@@ -11,8 +11,9 @@ cyclictest_CPPFLAGS =			\
 	-I$(top_srcdir)/include		\
 	-Wno-missing-prototypes -DIPIPE_TRACE=1
 
-cyclictest_LDFLAGS = $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS)
+cyclictest_LDFLAGS = $(XENO_POSIX_WRAPPERS)
 
-cyclictest_LDADD = \
-	../../lib/cobalt/libcobalt.la \
+cyclictest_LDADD =			\
+	../../lib/cobalt/libcobalt.la	\
+	 @XENO_USER_LDADD@		\
 	-lpthread -lrt

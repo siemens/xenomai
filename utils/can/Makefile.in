@@ -147,9 +147,7 @@ INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LATEX_BATCHMODE = @LATEX_BATCHMODE@
 LATEX_MODE = @LATEX_MODE@
 LD = @LD@
-LDFLAGS = \
-	@XENO_USER_LDFLAGS@
-
+LDFLAGS = 
 LD_FILE_OPTION = @LD_FILE_OPTION@
 LEX = @LEX@
 LEXLIB = @LEXLIB@
@@ -195,7 +193,7 @@ XENO_TEST_DIR = @XENO_TEST_DIR@
 XENO_USER_APP_CFLAGS = @XENO_USER_APP_CFLAGS@
 XENO_USER_APP_LDFLAGS = @XENO_USER_APP_LDFLAGS@
 XENO_USER_CFLAGS = @XENO_USER_CFLAGS@
-XENO_USER_LDFLAGS = @XENO_USER_LDFLAGS@
+XENO_USER_LDADD = @XENO_USER_LDADD@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -255,19 +253,22 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 rtcanconfig_SOURCES = rtcanconfig.c
 rtcanconfig_LDADD = \
-	../../lib/cobalt/libcobalt.la
+	../../lib/cobalt/libcobalt.la	\
+	@XENO_USER_LDADD@
 
 rtcanrecv_SOURCES = rtcanrecv.c
 rtcanrecv_LDADD = \
 	../../lib/alchemy/libalchemy.la \
 	../../lib/copperplate/libcopperplate.la \
-	../../lib/cobalt/libcobalt.la
+	../../lib/cobalt/libcobalt.la	\
+	@XENO_USER_LDADD@
 
 rtcansend_SOURCES = rtcansend.c
 rtcansend_LDADD = \
 	../../lib/alchemy/libalchemy.la \
 	../../lib/copperplate/libcopperplate.la \
-	../../lib/cobalt/libcobalt.la
+	../../lib/cobalt/libcobalt.la	\
+	@XENO_USER_LDADD@
 
 all: all-am
 

@@ -9,7 +9,7 @@ latency_CPPFLAGS = 			\
 	-I$(top_srcdir)/include		\
 	-Wno-missing-prototypes 
 
-latency_LDFLAGS = @XENO_USER_LDFLAGS@
+latency_LDFLAGS =
 
 core_libs =
 if XENO_COBALT
@@ -20,4 +20,5 @@ latency_LDADD = \
 	../../lib/alchemy/libalchemy.la		\
 	../../lib/copperplate/libcopperplate.la	\
 	$(core_libs)				\
+	 @XENO_USER_LDADD@			\
 	-lpthread -lrt -lm

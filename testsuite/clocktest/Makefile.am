@@ -11,8 +11,9 @@ clocktest_CPPFLAGS =			\
 	-I$(top_srcdir)/include		\
 	-Wno-missing-prototypes 
 
-clocktest_LDFLAGS = $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS)
+clocktest_LDFLAGS = $(XENO_POSIX_WRAPPERS)
 
-clocktest_LDADD = \
-	../../lib/cobalt/libcobalt.la \
+clocktest_LDADD =			\
+	../../lib/cobalt/libcobalt.la	\
+	 @XENO_USER_LDADD@		\
 	-lpthread -lrt

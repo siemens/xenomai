@@ -11,8 +11,9 @@ switchtest_CPPFLAGS =			\
 	-I$(top_srcdir)/include		\
 	-Wno-missing-prototypes 
 
-switchtest_LDFLAGS =  $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS)
+switchtest_LDFLAGS =  $(XENO_POSIX_WRAPPERS)
 
-switchtest_LDADD = \
-	../../lib/cobalt/libcobalt.la \
+switchtest_LDADD = 			\
+	../../lib/cobalt/libcobalt.la 	\
+	@XENO_USER_LDADD@		\
 	-lpthread -lrt
