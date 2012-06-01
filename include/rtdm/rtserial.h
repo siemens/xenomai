@@ -27,7 +27,7 @@
  *
  * This is the common interface a RTDM-compliant serial device has to provide.
  * Feel free to comment on this profile via the Xenomai mailing list
- * (Xenomai-core@gna.org) or directly to the author (jan.kiszka@web.de).
+ * (Xenomai@xenomai.org) or directly to the author (jan.kiszka@web.de).
  *
  * @b Profile @b Revision: 3
  * @n
