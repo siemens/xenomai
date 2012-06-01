@@ -102,10 +102,10 @@ BOOL taskIsSuspended(TASK_ID task_id)
 
 STATUS taskGetInfo(TASK_ID task_id, TASK_DESC *desc)
 {
+	int vfirst, vlast, ret;
 	struct wind_task *task;
 	struct WIND_TCB *tcb;
 	pthread_attr_t attr;
-	int vfirst, vlast;
 	size_t stacksize;
 	void *stackbase;
 
@@ -123,19 +123,30 @@ STATUS taskGetInfo(TASK_ID task_id, TASK_DESC *desc)
 	strncpy(desc->td_name, task->name, sizeof(desc->td_name));
 	desc->td_entry = tcb->entry;
 	desc->td_errorStatus = *task->thobj.errno_pointer;
-	pthread_getattr_np(task->thobj.tid, &attr);
+	ret = pthread_getattr_np(task->thobj.tid, &attr);
 	put_wind_task(task);
 
-	pthread_attr_getstack(&attr, &stackbase, &stacksize);
-	desc->td_stacksize = stacksize;
-	desc->td_pStackBase = stackbase;
+	/*
+	 * If the target does not support pthread_getattr_np(), we are
+	 * out of luck for determining the stack information. We just
+	 * zero it.
+	 */
+	if (ret) {
+		/* No idea, buddy. */
+		desc->td_stacksize = 0;
+		desc->td_pStackBase = NULL;
+	} else {
+		pthread_attr_getstack(&attr, &stackbase, &stacksize);
+		desc->td_stacksize = stacksize;
+		desc->td_pStackBase = stackbase;
 
-	if (&vfirst < &vlast)
-		/* Stack grows upward. */
-		desc->td_pStackEnd = (caddr_t)stackbase + stacksize;
-	else
-		/* Stack grows downward. */
-		desc->td_pStackEnd = (caddr_t)stackbase - stacksize;
+		if (&vfirst < &vlast)
+			/* Stack grows upward. */
+			desc->td_pStackEnd = (caddr_t)stackbase + stacksize;
+		else
+			/* Stack grows downward. */
+			desc->td_pStackEnd = (caddr_t)stackbase - stacksize;
+	}
 
 	return OK;
 }

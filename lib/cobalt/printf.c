@@ -835,6 +835,8 @@ int __wrap_puts(const char *s)
 	}
 }
 
+#if !defined(__UCLIBC__) || !defined(__STDIO_PUTC_MACRO)
+
 int __wrap_fputc(int c, FILE *stream)
 {
 	if (unlikely(xeno_get_current() != XN_NO_HANDLE &&
@@ -856,6 +858,20 @@ int __wrap_putchar(int c)
 		return __real_putchar(c);
 	}
 }
+
+#else
+
+int __wrap_fputc(int c, FILE *stream)
+{
+	return fputc(c, stream);
+}
+
+int __wrap_putchar(int c)
+{
+	return putchar(c);
+}
+
+#endif /* !(__UCLIBC__ && __STDIO_PUTC_MACRO) */
 
 size_t __wrap_fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 {

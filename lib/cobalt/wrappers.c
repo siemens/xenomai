@@ -36,6 +36,7 @@
 #include <semaphore.h>
 #include <limits.h>
 #include <fcntl.h>
+#include <sched.h>
 #include <unistd.h>
 #include <malloc.h>
 
@@ -318,6 +319,8 @@ int __real_fputs(const char *s, FILE *stream)
 	return fputs(s, stream);
 }
 
+#if !defined(__UCLIBC__) || !defined(__STDIO_PUTC_MACRO)
+
 __attribute__ ((weak))
 int __real_fputc(int c, FILE *stream)
 {
@@ -329,6 +332,8 @@ int __real_putchar(int c)
 {
 	return putchar(c);
 }
+
+#endif /* !(__UCLIBC__ && __STDIO_PUTC_MACRO) */
 
 __attribute__ ((weak))
 size_t __real_fwrite(const void *ptr, size_t sz, size_t nmemb, FILE *stream)
@@ -375,3 +380,24 @@ int __real_clock_gettime(clockid_t clk_id, struct timespec *tp)
 {
 	return clock_gettime(clk_id, tp);
 }
+
+#ifdef __PROVIDE_CPU_COUNT
+
+int __sched_cpucount(size_t setsize, const cpu_set_t *setp)
+{
+	int count, shift;
+	const char *p;
+
+	for (count = 0, p = setp; p < setp + setsize; p++) {
+		shift = *p;
+		while (shift) {
+			if (shift & 1)
+				count++;
+			shift >>= 1;
+		}
+	}
+
+	return count;
+}
+
+#endif /* __PROVIDE_CPU_COUNT */

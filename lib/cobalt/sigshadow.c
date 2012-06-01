@@ -1,8 +1,18 @@
 #include <pthread.h>
 #include <signal.h>
-#include <execinfo.h>
-
 #include <asm/xenomai/syscall.h>
+
+#ifdef __UCLIBC__
+static inline int backtrace(void **buffer, int size)
+{
+	/*
+	 * We have no backtrace support in uClibc.
+	 */
+	return 0;
+}
+#else /* !__UCLIBC__ */
+#include <execinfo.h>
+#endif /* !__UCLIBC__ */
 
 static struct sigaction xeno_saved_sigshadow_action;
 

@@ -120,6 +120,7 @@ typedef struct
 #else /* !__KERNEL__ */
 
 #include <sched.h>
+#include <errno.h>
 #include_next <pthread.h>
 #include <nucleus/thread.h>
 #include <cobalt/wrappers.h>
@@ -405,6 +406,28 @@ int pthread_attr_getscope_ex(const pthread_attr_ex_t *attr_ex,
 
 int pthread_attr_setscope_ex(pthread_attr_ex_t *attr_ex,
 			     int scope);
+
+#ifdef __UCLIBC__
+/*
+ * uClibc does not provide the following routines, so we define them
+ * here. Note: let the compiler decides whether it wants to actually
+ * inline these routines, i.e. do not force always_inline.
+ */
+inline __attribute__ ((weak))
+int pthread_atfork(void (*prepare)(void), void (*parent)(void),
+		   void (*child)(void))
+{
+	return 0;
+}
+
+inline __attribute__ ((weak))
+int pthread_getattr_np(pthread_t th, pthread_attr_t *attr)
+{
+	return ENOSYS;
+}
+
+#endif /* __UCLIBC__ */
+
 #ifdef __cplusplus
 }
 #endif

@@ -23,7 +23,6 @@
 #ifdef __KERNEL__
 #include <linux/errno.h>
 #else /* !__KERNEL__ */
-#include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
 #include <errno.h>

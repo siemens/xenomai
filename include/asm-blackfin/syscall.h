@@ -152,32 +152,6 @@ static inline unsigned long long __xn_rdtsc (void)
     return u.t;
 }
 
-/* uClibc does not provide pthread_atfork() for this arch; provide it
-   here. Note: let the compiler decides whether it wants to actually
-   inline this routine, i.e. do not force always_inline. */
-inline __attribute__((weak)) int pthread_atfork(void (*prepare)(void),
-						void (*parent)(void),
-						void (*child)(void))
-{
-	return 0;
-}
-
-#include <errno.h>
-
-inline __attribute__((weak)) int shm_open(const char *name,
-					  int oflag,
-					  mode_t mode)
-{
-	errno = ENOSYS;
-	return -1;
-}
-
-inline __attribute__((weak)) int shm_unlink(const char *name)
-{
-	errno = ENOSYS;
-	return -1;
-}
-
 #endif /* __KERNEL__ */
 
 #endif /* !_XENO_ASM_BLACKFIN_SYSCALL_H */

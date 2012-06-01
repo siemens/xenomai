@@ -24,9 +24,21 @@ COBALT_DECL(int, puts(const char *s));
 
 COBALT_DECL(int, fputs(const char *s, FILE *stream));
 
+#if !defined(__UCLIBC__) || !defined(__STDIO_PUTC_MACRO)
+
 COBALT_DECL(int, fputc(int c, FILE *stream));
 
 COBALT_DECL(int, putchar(int c));
+
+#else
+
+int __wrap_fputc(int c, FILE *stream);
+#define __real_fputc __wrap_fputc
+
+int __wrap_putchar(int c);
+#define __real_putchar __wrap_putchar
+
+#endif
 
 COBALT_DECL(size_t, fwrite(const void *ptr, size_t sz, size_t nmemb, FILE *stream));
 
