@@ -112,9 +112,10 @@ int rthal_timer_request(void (*tick_handler)(void),
 			int cpu)
 {
 	unsigned long dummy, *tmfreq = &dummy;
-	int tickval, ret, res;
-
+	int tickval, res;
 #ifndef CONFIG_IPIPE_CORE
+	int ret;
+
 	res = ipipe_request_tickdev("bfin_core_timer", mode_emul, tick_emul, cpu,
 				    tmfreq);
 #else /* I-pipe timers */
