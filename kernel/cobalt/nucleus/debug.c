@@ -37,6 +37,8 @@
 #include <nucleus/heap.h>
 #include <nucleus/sys_ppd.h>
 
+#ifdef CONFIG_XENO_OPT_DEBUG_TRACE_RELAX
+
 #define SYMBOL_HSLOTS	(1 << 8)
 
 struct hashed_symbol {
@@ -93,7 +95,6 @@ out:
 	return s;
 }
 
-#ifdef CONFIG_XENO_OPT_DEBUG_TRACE_RELAX
 /*
  * We define a static limit (RELAX_SPOTNR) for spot records to limit
  * the memory consumption (we pull record memory from the system
