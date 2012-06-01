@@ -1216,11 +1216,12 @@ static int xnshadow_sys_mayday(void)
 		 */
 		xnarch_fixup_mayday(xnthread_archtcb(cur), cur->regs);
 
-		/* returning 0 here would clobber the register holding
-		   the return value. Instead, return whatever value
-		   xnarch_fixup_mayday set for this register, in order
-		   not to undo what xnarch_fixup_mayday did. */
-		return __xn_reg_rval(regs);
+		/*
+		 * Return whatever value xnarch_fixup_mayday set for
+		 * this register, in order not to undo what
+		 * xnarch_fixup_mayday did.
+		 */
+		return __xn_reg_rval(cur->regs);
 	}
 
 	printk(KERN_WARNING
