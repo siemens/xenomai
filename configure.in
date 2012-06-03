@@ -484,7 +484,7 @@ AC_CACHE_VAL(ac_cv_ld_file_option,
   AC_LANG_C
   save_LDFLAGS="$LDFLAGS"
   [LDFLAGS="-Wl,@/dev/null"]
-  AC_LINK_IFELSE([main(){}],
+  AC_LINK_IFELSE([AC_LANG_SOURCE([main(){}])],
     [ac_cv_ld_file_option=yes],
     [ac_cv_ld_file_option=no])
   LDFLAGS="$save_LDFLAGS"

@@ -17,4 +17,4 @@ LDADD = \
 	../../../skins/posix/libpthread_rt.la \
 	../../../skins/rtdm/librtdm.la \
 	../../../skins/common/libxenomai.la \
-	-lpthread -lm
+	-lpthread -lrt -lm

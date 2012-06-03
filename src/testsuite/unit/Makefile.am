@@ -24,7 +24,7 @@ arith_LDFLAGS = @XENO_USER_LDFLAGS@
 arith_LDADD = \
 	../../skins/native/libnative.la \
 	../../skins/common/libxenomai.la \
-	-lpthread -lm
+	-lpthread -lrt -lm
 
 wakeup_time_SOURCES = wakeup-time.c
 
@@ -37,7 +37,7 @@ wakeup_time_LDFLAGS = @XENO_USER_LDFLAGS@
 wakeup_time_LDADD = \
 	../../skins/native/libnative.la \
 	../../skins/common/libxenomai.la \
-	-lpthread -lm
+	-lpthread -lrt -lm
 
 mutex_torture_posix_SOURCES = mutex-torture.c
 
@@ -64,7 +64,7 @@ mutex_torture_native_LDFLAGS = @XENO_USER_LDFLAGS@
 mutex_torture_native_LDADD = \
 	../../skins/native/libnative.la \
 	../../skins/common/libxenomai.la \
-	-lpthread -lm
+	-lpthread -lrt -lm
 
 cond_torture_posix_SOURCES = cond-torture.c
 
@@ -91,7 +91,7 @@ cond_torture_native_LDFLAGS = @XENO_USER_LDFLAGS@
 cond_torture_native_LDADD = \
 	../../skins/native/libnative.la \
 	../../skins/common/libxenomai.la \
-	-lpthread -lm
+	-lpthread -lrt -lm
 
 check_vdso_SOURCES = check-vdso.c
 
@@ -104,7 +104,7 @@ check_vdso_LDFLAGS = @XENO_USER_LDFLAGS@
 check_vdso_LDADD = \
 	../../skins/native/libnative.la \
 	../../skins/common/libxenomai.la \
-	-lpthread -lm
+	-lpthread -lrt -lm
 
 rtdm_SOURCES = rtdm.c
 

@@ -15,4 +15,4 @@ LDFLAGS = $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS)
 LDADD = \
 	../../../skins/posix/libpthread_rt.la \
 	../../../skins/common/libxenomai.la \
-	-lpthread -lm
+	-lpthread -lrt -lm

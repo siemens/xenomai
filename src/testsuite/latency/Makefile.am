@@ -15,4 +15,4 @@ latency_LDADD = \
 	../../skins/native/libnative.la \
 	../../skins/rtdm/librtdm.la \
 	../../skins/common/libxenomai.la \
-	-lpthread -lm
+	-lpthread -lrt -lm
