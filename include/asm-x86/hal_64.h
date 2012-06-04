@@ -24,8 +24,8 @@
 #define _XENO_ASM_X86_HAL_64_H
 
 #define RTHAL_ARCH_NAME			"x86_64"
-#ifdef CONFIG_IPIPE
-#define RTHAL_TIMER_DEVICE		(ipipe_timer_name())
+#ifdef CONFIG_IPIPE_CORE
+#define RTHAL_TIMER_DEVICE		ipipe_timer_name()
 #else /* !I-ipipe core */
 #define RTHAL_TIMER_DEVICE		"lapic"
 #endif /* !I-ipipe core */
