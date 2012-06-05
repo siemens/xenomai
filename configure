@@ -12653,7 +12653,7 @@ fi
 $as_echo "${CONFIG_SMP:-no}" >&6; }
 
 
-CONFIG_XENO_X86_SEP=
+CONFIG_XENO_X86_SEP=y
 CONFIG_X86_TSC=y
 
 if test $XENO_TARGET_ARCH = x86; then
