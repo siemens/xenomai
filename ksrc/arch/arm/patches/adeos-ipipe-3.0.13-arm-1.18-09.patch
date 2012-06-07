@@ -1,5 +1,5 @@
 diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index 2456bad..48e52a3 100644
+index 2456bad..8ee9c4c 100644
 --- a/arch/arm/Kconfig
 +++ b/arch/arm/Kconfig
 @@ -52,6 +52,9 @@ config HAVE_SCHED_CLOCK
@@ -36,6 +36,17 @@ index 2456bad..48e52a3 100644
  source kernel/Kconfig.preempt
  
  config HZ
+@@ -2023,6 +2036,10 @@ config NEON
+ 	  Say Y to include support code for NEON, the ARMv7 Advanced SIMD
+ 	  Extension.
+ 
++config VFP_3_2_BACKPORT
++       bool
++       default y if VFP
++
+ endmenu
+ 
+ menu "Userspace binary formats"
 diff --git a/arch/arm/boot/compressed/head.S b/arch/arm/boot/compressed/head.S
 index 940b201..d1a1c64 100644
 --- a/arch/arm/boot/compressed/head.S
@@ -995,7 +1006,7 @@ index 4384d81..f4efd23 100644
  void sp804_clockevents_init(void __iomem *, unsigned int, const char *);
 diff --git a/arch/arm/include/asm/ipipe.h b/arch/arm/include/asm/ipipe.h
 new file mode 100644
-index 0000000..6e12980
+index 0000000..2528d43
 --- /dev/null
 +++ b/arch/arm/include/asm/ipipe.h
 @@ -0,0 +1,341 @@
@@ -1031,10 +1042,10 @@ index 0000000..6e12980
 +#include <linux/ipipe_percpu.h>
 +#include <linux/ipipe_trace.h>
 +
-+#define IPIPE_ARCH_STRING	"1.18-08"
++#define IPIPE_ARCH_STRING	"1.18-09"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	18
-+#define IPIPE_PATCH_NUMBER	8
++#define IPIPE_PATCH_NUMBER	9
 +
 +#ifdef CONFIG_SMP
 +#define ipipe_processor_id()	hard_smp_processor_id()
@@ -2482,8 +2493,38 @@ index a5b31af..9d7ece5 100644
 +obj-$(CONFIG_IPIPE_ARM_KUSER_TSC) += ipipe_tsc.o ipipe_tsc_asm.o
  
  extra-y := $(head-y) init_task.o vmlinux.lds
+diff --git a/arch/arm/kernel/asm-offsets.c b/arch/arm/kernel/asm-offsets.c
+index 927522c..30d1ad6 100644
+--- a/arch/arm/kernel/asm-offsets.c
++++ b/arch/arm/kernel/asm-offsets.c
+@@ -1,7 +1,7 @@
+ /*
+  * Copyright (C) 1995-2003 Russell King
+  *               2001-2002 Keith Owens
+- *     
++ *
+  * Generate definitions needed by assembly language modules.
+  * This code generates raw asm output which is post-processed to extract
+  * and format the required data.
+@@ -59,6 +59,9 @@ int main(void)
+   DEFINE(TI_TP_VALUE,		offsetof(struct thread_info, tp_value));
+   DEFINE(TI_FPSTATE,		offsetof(struct thread_info, fpstate));
+   DEFINE(TI_VFPSTATE,		offsetof(struct thread_info, vfpstate));
++#ifdef CONFIG_SMP
++  DEFINE(VFP_CPU,		offsetof(union vfp_state, hard.cpu));
++#endif
+ #ifdef CONFIG_ARM_THUMBEE
+   DEFINE(TI_THUMBEE_STATE,	offsetof(struct thread_info, thumbee_state));
+ #endif
+@@ -129,5 +132,5 @@ int main(void)
+   DEFINE(DMA_BIDIRECTIONAL,	DMA_BIDIRECTIONAL);
+   DEFINE(DMA_TO_DEVICE,		DMA_TO_DEVICE);
+   DEFINE(DMA_FROM_DEVICE,	DMA_FROM_DEVICE);
+-  return 0; 
++  return 0;
+ }
 diff --git a/arch/arm/kernel/entry-armv.S b/arch/arm/kernel/entry-armv.S
-index 90c62cd..11c5064 100644
+index 90c62cd..a376727 100644
 --- a/arch/arm/kernel/entry-armv.S
 +++ b/arch/arm/kernel/entry-armv.S
 @@ -4,6 +4,7 @@
@@ -2681,6 +2722,7 @@ index 90c62cd..11c5064 100644
   UNWIND(.fnstart	)
   UNWIND(.cantunwind	)
 +#ifdef CONFIG_IPIPE
++	disable_irq
 +#if !defined(CONFIG_SMP)
 +	ldr	r0, =ipipe_percpu_domain
 +	ldr	r1, =ipipe_root
@@ -2691,7 +2733,6 @@ index 90c62cd..11c5064 100644
 +	cmp     r0, #1
 +#endif /* CONFIG_SMP */
 +	beq     1f
-+	disable_irq
 +	slow_restore_user_regs          @ Fast exit path over non-root domains
 +1:
 +#endif /* CONFIG_IPIPE */
@@ -2964,10 +3005,10 @@ index 051166c..043ca62 100644
   * have in theory up to 7 arguments to a function - r0 to r6.
 diff --git a/arch/arm/kernel/ipipe.c b/arch/arm/kernel/ipipe.c
 new file mode 100644
-index 0000000..6cb7401
+index 0000000..aea4782
 --- /dev/null
 +++ b/arch/arm/kernel/ipipe.c
-@@ -0,0 +1,676 @@
+@@ -0,0 +1,678 @@
 +/* -*- linux-c -*-
 + * linux/arch/arm/kernel/ipipe.c
 + *
@@ -3347,7 +3388,7 @@ index 0000000..6cb7401
 +#ifdef CONFIG_SMP
 +asmlinkage int __ipipe_check_root(void)
 +{
-+	return ipipe_root_domain_p;
++	return __ipipe_root_domain_p;
 +}
 +
 +asmlinkage int __ipipe_check_root_interruptible(void)
@@ -3453,13 +3494,15 @@ index 0000000..6cb7401
 +	else {
 +		head = __ipipe_pipeline.next;
 +		next_domain = list_entry(head, struct ipipe_domain, p_link);
-+		if (!(flags & IPIPE_IRQF_NOSYNC)
-+		    && likely(test_bit(IPIPE_WIRED_FLAG, &next_domain->irqs[irq].control))) {
++		if (likely(test_bit(IPIPE_WIRED_FLAG, &next_domain->irqs[irq].control))) {
 +			if (!m_ack && next_domain->irqs[irq].acknowledge) {
 +				desc = ipipe_virtual_irq_p(irq) ? NULL : irq_to_desc(irq);
 +				next_domain->irqs[irq].acknowledge(irq, desc);
 +			}
-+			__ipipe_dispatch_wired(next_domain, irq);
++			if ((flags & IPIPE_IRQF_NOSYNC) == 0)
++				__ipipe_dispatch_wired(next_domain, irq);
++			else
++				__ipipe_set_irq_pending(next_domain, irq);
 +			return;
 +		}
 +	}
@@ -4191,7 +4234,7 @@ index e7f92a4..3b968bf 100644
  static void smp_timer_broadcast(const struct cpumask *mask)
  {
 diff --git a/arch/arm/kernel/smp_twd.c b/arch/arm/kernel/smp_twd.c
-index 2c277d4..461b25c 100644
+index 2c277d4..054873d 100644
 --- a/arch/arm/kernel/smp_twd.c
 +++ b/arch/arm/kernel/smp_twd.c
 @@ -17,15 +17,143 @@
@@ -4228,7 +4271,7 @@ index 2c277d4..461b25c 100644
 +
 +void __ipipe_ack_localtimer(unsigned irq, struct irq_desc *desc)
 +{
-+	writel_relaxed(1, twd_base + TWD_TIMER_INTSTAT);
++	__raw_writel(1, twd_base + TWD_TIMER_INTSTAT);
 +}
 +
 +asmlinkage void __ipipe_grab_localtimer(struct pt_regs *regs)
@@ -4243,7 +4286,7 @@ index 2c277d4..461b25c 100644
 +		return;
 +	}
 +
-+	writel_relaxed(delay, twd_base + TWD_TIMER_COUNTER);
++	__raw_writel(delay, twd_base + TWD_TIMER_COUNTER);
 +}
 +EXPORT_SYMBOL(__ipipe_mach_set_dec);
 +
@@ -5237,7 +5280,7 @@ index 29dff18..11d868e 100644
  
  void __init at91sam9rl_init_interrupts(unsigned int priority[NR_AIC_IRQS])
 diff --git a/arch/arm/mach-at91/gpio.c b/arch/arm/mach-at91/gpio.c
-index 4615528..620b6c1 100644
+index 4615528..37a3e82 100644
 --- a/arch/arm/mach-at91/gpio.c
 +++ b/arch/arm/mach-at91/gpio.c
 @@ -19,12 +19,20 @@
@@ -5283,39 +5326,24 @@ index 4615528..620b6c1 100644
  	.irq_mask	= gpio_irq_mask,
  	.irq_unmask	= gpio_irq_unmask,
  	.irq_set_type	= gpio_irq_type,
-@@ -393,6 +409,13 @@ static void gpio_irq_handler(unsigned irq, struct irq_desc *desc)
+@@ -393,6 +409,7 @@ static void gpio_irq_handler(unsigned irq, struct irq_desc *desc)
  
  	/* temporarily mask (level sensitive) parent IRQ */
  	chip->irq_ack(idata);
-+#ifdef CONFIG_IPIPE
-+	if (!(*at91_gpio->nonroot_gpios)) {
-+		local_irq_enable_hw();
-+		local_irq_disable_hw();
-+	}
-+#endif /* CONFIG_IPIPE */
 +
  	for (;;) {
  		/* Reading ISR acks pending (edge triggered) GPIO interrupts.
  		 * When there none are pending, we're finished unless we need
-@@ -410,8 +433,15 @@ static void gpio_irq_handler(unsigned irq, struct irq_desc *desc)
- 		pin = at91_gpio->chip.base;
+@@ -411,7 +428,7 @@ static void gpio_irq_handler(unsigned irq, struct irq_desc *desc)
  
  		while (isr) {
--			if (isr & 1)
+ 			if (isr & 1)
 -				generic_handle_irq(pin);
-+			if (isr & 1) {
 +				ipipe_handle_chained_irq(pin);
-+#ifdef CONFIG_IPIPE
-+				if (!(*at91_gpio->nonroot_gpios)) {
-+					local_irq_enable_hw();
-+					local_irq_disable_hw();
-+				}
-+#endif /* CONFIG_IPIPE */
-+			}
  			pin++;
  			isr >>= 1;
  		}
-@@ -420,6 +450,84 @@ static void gpio_irq_handler(unsigned irq, struct irq_desc *desc)
+@@ -420,6 +437,84 @@ static void gpio_irq_handler(unsigned irq, struct irq_desc *desc)
  	/* now it may re-trigger */
  }
  
@@ -5400,7 +5428,7 @@ index 4615528..620b6c1 100644
  /*--------------------------------------------------------------------------*/
  
  #ifdef CONFIG_DEBUG_FS
-@@ -618,13 +726,19 @@ void __init at91_gpio_init(struct at91_gpio_bank *data, int nr_banks)
+@@ -618,13 +713,19 @@ void __init at91_gpio_init(struct at91_gpio_bank *data, int nr_banks)
  		at91_gpio->chip.base = PIN_BASE + i * 32;
  		at91_gpio->regbase = at91_gpio->bank->offset +
  			(void __iomem *)AT91_VA_BASE_SYS;
@@ -9781,6 +9809,19 @@ index f0cc8e1..c9360e6 100644
  	f->chip.irq_unmask = fpga_irq_unmask;
  
  	if (parent_irq != -1) {
+diff --git a/arch/arm/vfp/Makefile b/arch/arm/vfp/Makefile
+index 6de73aa..a81404c 100644
+--- a/arch/arm/vfp/Makefile
++++ b/arch/arm/vfp/Makefile
+@@ -7,7 +7,7 @@
+ # ccflags-y := -DDEBUG
+ # asflags-y := -DDEBUG
+ 
+-KBUILD_AFLAGS	:=$(KBUILD_AFLAGS:-msoft-float=-Wa,-mfpu=softvfp+vfp)
++KBUILD_AFLAGS	:=$(KBUILD_AFLAGS:-msoft-float=-Wa,-mfpu=softvfp+vfp -mfloat-abi=soft)
+ LDFLAGS		+=--no-warn-mismatch
+ 
+ obj-y			+= vfp.o
 diff --git a/arch/arm/vfp/entry.S b/arch/arm/vfp/entry.S
 index 4fa9903..e46bae3 100644
 --- a/arch/arm/vfp/entry.S
@@ -9810,7 +9851,7 @@ index 4fa9903..e46bae3 100644
  	get_thread_info	r10
  	ldr	r4, [r10, #TI_PREEMPT]	@ get preempt count
 diff --git a/arch/arm/vfp/vfphw.S b/arch/arm/vfp/vfphw.S
-index 9897dcf..de4ae09 100644
+index 9897dcf..7ffd505 100644
 --- a/arch/arm/vfp/vfphw.S
 +++ b/arch/arm/vfp/vfphw.S
 @@ -19,7 +19,7 @@
@@ -9818,7 +9859,7 @@ index 9897dcf..de4ae09 100644
  
  	.macro	DBGSTR, str
 -#ifdef DEBUG
-+#if defined(DEBUG) && !defined(CONFIG_IPIPE)
++#if defined(DEBUG)
  	stmfd	sp!, {r0-r3, ip, lr}
  	add	r0, pc, #4
  	bl	printk
@@ -9827,7 +9868,7 @@ index 9897dcf..de4ae09 100644
  
  	.macro  DBGSTR1, str, arg
 -#ifdef DEBUG
-+#if defined(DEBUG) && !defined(CONFIG_IPIPE)
++#if defined(DEBUG)
  	stmfd	sp!, {r0-r3, ip, lr}
  	mov	r1, \arg
  	add	r0, pc, #4
@@ -9836,26 +9877,142 @@ index 9897dcf..de4ae09 100644
  
  	.macro  DBGSTR3, str, arg1, arg2, arg3
 -#ifdef DEBUG
-+#if defined(DEBUG) && !defined(CONFIG_IPIPE)
++#if defined(DEBUG)
  	stmfd	sp!, {r0-r3, ip, lr}
  	mov	r3, \arg3
  	mov	r2, \arg2
-@@ -87,6 +87,14 @@ ENTRY(vfp_support_entry)
- 					@ still there.  In this case, we do
- 					@ not want to drop a pending exception.
+@@ -58,6 +58,23 @@
+ #endif
+ 	.endm
  
++	.macro TRACE_SAVE, arg
++#ifdef CONFIG_FPU_TRACE
++	stmfd	sp!, {r0-r3, ip, lr}
++	mov	r0, \arg
++	bl	fp_trace_save
++	ldmfd	sp!, {r0-r3, ip, lr}
++#endif /* CONFIG_FPU_TRACE */
++	.endm
++
++	.macro TRACE_RESTORE, arg
++#ifdef CONFIG_FPU_TRACE
++	stmfd	sp!, {r0-r3, ip, lr}
++	mov	r0, \arg
++	bl	fp_trace_restore
++	ldmfd	sp!, {r0-r3, ip, lr}
++#endif /* CONFIG_FPU_TRACE */
++	.endm
+ 
+ @ VFP hardware support entry point.
+ @
+@@ -77,27 +94,32 @@ ENTRY(vfp_support_entry)
+ 	bne	look_for_VFP_exceptions	@ VFP is already enabled
+ 
+ 	DBGSTR1 "enable %x", r10
+-	ldr	r3, last_VFP_context_address
++	ldr	r3, vfp_current_hw_state_address
+ 	orr	r1, r1, #FPEXC_EN	@ user FPEXC has the enable bit set
+-	ldr	r4, [r3, r11, lsl #2]	@ last_VFP_context pointer
++	ldr	r4, [r3, r11, lsl #2]	@ vfp_current_hw_state pointer
+ 	bic	r5, r1, #FPEXC_EX	@ make sure exceptions are disabled
+-	cmp	r4, r10
+-	beq	check_for_exception	@ we are returning to the same
+-					@ process, so the registers are
+-					@ still there.  In this case, we do
+-					@ not want to drop a pending exception.
++	cmp	r4, r10			@ this thread owns the hw context?
++#ifndef CONFIG_SMP
++	@ For UP, checking that this thread owns the hw context is
++	@ sufficient to determine that the hardware state is valid.
++	beq	vfp_hw_state_valid
+ 
++	@ On UP, we lazily save the VFP context.  As a different
++	@ thread wants ownership of the VFP hardware, save the old
++	@ state if there was a previous (valid) owner.
++
 +	enable_irq
 +#ifdef CONFIG_IPIPE
 +	disable_irq
-+#ifdef CONFIG_SMP
-+	mrc	p15, 0, r11, c0, c0, 5  @ reload current CPU number
-+#endif
-+	ldr	r4, [r3, r11, lsl #2]	@ reload last_VFP_context pointer
++	ldr	r4, [r3, r11, lsl #2]	@ reload vfp_current_hw_state pointer
 +#endif
  	VFPFMXR	FPEXC, r5		@ enable VFP, disable any pending
  					@ exceptions, so we can get at the
  					@ rest of it
-@@ -139,6 +147,7 @@ check_for_exception:
+ 
+-#ifndef CONFIG_SMP
+-	@ Save out the current registers to the old thread state
+-	@ No need for SMP since this is not done lazily
+-
+ 	DBGSTR1	"save old state %p", r4
+-	cmp	r4, #0
+-	beq	no_old_VFP_process
++	cmp	r4, #0			@ if the vfp_current_hw_state is NULL
++	beq	vfp_reload_hw		@ then the hw state needs reloading
+ 	VFPFSTMIA r4, r5		@ save the working registers
+ 	VFPFMRX	r5, FPSCR		@ current status
+ #ifndef CONFIG_CPU_FEROCEON
+@@ -110,13 +132,47 @@ ENTRY(vfp_support_entry)
+ 1:
+ #endif
+ 	stmia	r4, {r1, r5, r6, r8}	@ save FPEXC, FPSCR, FPINST, FPINST2
+-					@ and point r4 at the word at the
+-					@ start of the register dump
++vfp_reload_hw:
++
++#else
++	@ For SMP, if this thread does not own the hw context, then we
++	@ need to reload it.  No need to save the old state as on SMP,
++	@ we always save the state when we switch away from a thread.
++	bne	vfp_reload_hw
++
++	@ This thread has ownership of the current hardware context.
++	@ However, it may have been migrated to another CPU, in which
++	@ case the saved state is newer than the hardware context.
++	@ Check this by looking at the CPU number which the state was
++	@ last loaded onto.
++	ldr	ip, [r10, #VFP_CPU]
++	teq	ip, r11
++	beq	vfp_hw_state_valid
++
++#if 0
++vfp_reload_hw:
++	enable_irq
++#ifdef CONFIG_IPIPE
++	disable_irq
++	mrc     p15, 0, ip, c0, c0, 5  @ reload current CPU number
++	and	r11, ip, #15
++#endif
++#else
++vfp_reload_hw:
++#endif
++
++	@ We're loading this threads state into the VFP hardware. Update
++	@ the CPU number which contains the most up to date VFP context.
++	str	r11, [r10, #VFP_CPU]
++
++	VFPFMXR	FPEXC, r5		@ enable VFP, disable any pending
++					@ exceptions, so we can get at the
++					@ rest of it
+ #endif
+ 
+-no_old_VFP_process:
+ 	DBGSTR1	"load state %p", r10
+-	str	r10, [r3, r11, lsl #2]	@ update the last_VFP_context pointer
++	str	r10, [r3, r11, lsl #2]	@ update the vfp_current_hw_state pointer
++	TRACE_RESTORE r10
+ 					@ Load the saved state back into the VFP
+ 	VFPFLDMIA r10, r5		@ reload the working registers while
+ 					@ FPEXC is in a safe state
+@@ -132,13 +188,15 @@ no_old_VFP_process:
+ #endif
+ 	VFPFMXR	FPSCR, r5		@ restore status
+ 
+-check_for_exception:
++@ The context stored in the VFP hardware is up to date with this thread
++vfp_hw_state_valid:
+ 	tst	r1, #FPEXC_EX
+ 	bne	process_exception	@ might as well handle the pending
+ 					@ exception before retrying branch
  					@ out before setting an FPEXC that
  					@ stops us reading stuff
  	VFPFMXR	FPEXC, r1		@ restore FPEXC last
@@ -9863,7 +10020,7 @@ index 9897dcf..de4ae09 100644
  	sub	r2, r2, #4
  	str	r2, [sp, #S_PC]		@ retry the instruction
  #ifdef CONFIG_PREEMPT
-@@ -164,6 +173,7 @@ look_for_VFP_exceptions:
+@@ -164,6 +222,7 @@ look_for_VFP_exceptions:
  	@ Fall into hand on to next handler - appropriate coproc instr
  	@ not recognised by VFP
  
@@ -9871,28 +10028,130 @@ index 9897dcf..de4ae09 100644
  	DBGSTR	"not VFP"
  #ifdef CONFIG_PREEMPT
  	get_thread_info	r10
+@@ -193,7 +252,9 @@ ENTRY(vfp_save_state)
+ 	@ r0 - save location
+ 	@ r1 - FPEXC
+ 	DBGSTR1	"save VFP state %p", r0
++	mov	r3, r0
+ 	VFPFSTMIA r0, r2		@ save the working registers
++	TRACE_SAVE r3
+ 	VFPFMRX	r2, FPSCR		@ current status
+ 	tst	r1, #FPEXC_EX		@ is there additional state to save?
+ 	beq	1f
+@@ -207,8 +268,8 @@ ENTRY(vfp_save_state)
+ ENDPROC(vfp_save_state)
+ 
+ 	.align
+-last_VFP_context_address:
+-	.word	last_VFP_context
++vfp_current_hw_state_address:
++	.word	vfp_current_hw_state
+ 
+ 	.macro	tbl_branch, base, tmp, shift
+ #ifdef CONFIG_THUMB2_KERNEL
 diff --git a/arch/arm/vfp/vfpmodule.c b/arch/arm/vfp/vfpmodule.c
-index f25e7ec..28f09ea 100644
+index f25e7ec..eaf6547 100644
 --- a/arch/arm/vfp/vfpmodule.c
 +++ b/arch/arm/vfp/vfpmodule.c
-@@ -48,6 +48,7 @@ unsigned int VFP_arch;
+@@ -8,7 +8,6 @@
+  * it under the terms of the GNU General Public License version 2 as
+  * published by the Free Software Foundation.
+  */
+-#include <linux/module.h>
+ #include <linux/types.h>
+ #include <linux/cpu.h>
+ #include <linux/kernel.h>
+@@ -33,7 +32,6 @@ void vfp_support_entry(void);
+ void vfp_null_entry(void);
+ 
+ void (*vfp_vector)(void) = vfp_null_entry;
+-union vfp_state *last_VFP_context[NR_CPUS];
+ 
+ /*
+  * Dual-use variable.
+@@ -43,39 +41,87 @@ union vfp_state *last_VFP_context[NR_CPUS];
+ unsigned int VFP_arch;
+ 
+ /*
++ * The pointer to the vfpstate structure of the thread which currently
++ * owns the context held in the VFP hardware, or NULL if the hardware
++ * context is invalid.
++ *
++ * For UP, this is sufficient to tell which thread owns the VFP context.
++ * However, for SMP, we also need to check the CPU number stored in the
++ * saved state too to catch migrations.
++ */
++union vfp_state *vfp_current_hw_state[NR_CPUS];
++
++/*
++ * Is 'thread's most up to date state stored in this CPUs hardware?
++ * Must be called from non-preemptible context.
++ */
++static bool vfp_state_in_hw(unsigned int cpu, struct thread_info *thread)
++{
++#ifdef CONFIG_SMP
++	if (thread->vfpstate.hard.cpu != cpu)
++		return false;
++#endif
++	return vfp_current_hw_state[cpu] == &thread->vfpstate;
++}
++
++/*
++ * Force a reload of the VFP context from the thread structure.  We do
++ * this by ensuring that access to the VFP hardware is disabled, and
++ * clear vfp_current_hw_state.  Must be called from non-preemptible context.
++ */
++static void vfp_force_reload(unsigned int cpu, struct thread_info *thread)
++{
++	if (vfp_state_in_hw(cpu, thread)) {
++		fmxr(FPEXC, fmrx(FPEXC) & ~FPEXC_EN);
++		vfp_current_hw_state[cpu] = NULL;
++	}
++#ifdef CONFIG_SMP
++	thread->vfpstate.hard.cpu = NR_CPUS;
++#endif
++}
++
++/*
+  * Per-thread VFP initialization.
+  */
  static void vfp_thread_flush(struct thread_info *thread)
  {
  	union vfp_state *vfp = &thread->vfpstate;
 +	unsigned long flags;
  	unsigned int cpu;
  
- 	memset(vfp, 0, sizeof(union vfp_state));
-@@ -60,22 +61,23 @@ static void vfp_thread_flush(struct thread_info *thread)
- 	 * that the modification of last_VFP_context[] and hardware disable
- 	 * are done for the same CPU and without preemption.
+-	memset(vfp, 0, sizeof(union vfp_state));
+-
+-	vfp->hard.fpexc = FPEXC_EN;
+-	vfp->hard.fpscr = FPSCR_ROUND_NEAREST;
+-
+ 	/*
+ 	 * Disable VFP to ensure we initialize it first.  We must ensure
+-	 * that the modification of last_VFP_context[] and hardware disable
+-	 * are done for the same CPU and without preemption.
++	 * that the modification of vfp_current_hw_state[] and hardware
++	 * disable are done for the same CPU and without preemption.
++	 *
++	 * Do this first to ensure that preemption won't overwrite our
++	 * state saving should access to the VFP be enabled at this point.
  	 */
 -	cpu = get_cpu();
+-	if (last_VFP_context[cpu] == vfp)
+-		last_VFP_context[cpu] = NULL;
 +	cpu = ipipe_get_cpu(flags);
- 	if (last_VFP_context[cpu] == vfp)
- 		last_VFP_context[cpu] = NULL;
++	if (vfp_current_hw_state[cpu] == vfp)
++		vfp_current_hw_state[cpu] = NULL;
  	fmxr(FPEXC, fmrx(FPEXC) & ~FPEXC_EN);
 -	put_cpu();
++
++	memset(vfp, 0, sizeof(union vfp_state));
++
++	vfp->hard.fpexc = FPEXC_EN;
++	vfp->hard.fpscr = FPSCR_ROUND_NEAREST;
++#ifdef CONFIG_SMP
++	vfp->hard.cpu = NR_CPUS;
++#endif
 +	ipipe_put_cpu(flags);
  }
  
@@ -9904,14 +10163,26 @@ index f25e7ec..28f09ea 100644
 +	unsigned long flags;
 +	unsigned int cpu = ipipe_get_cpu(flags);
  
- 	if (last_VFP_context[cpu] == vfp)
- 		last_VFP_context[cpu] = NULL;
+-	if (last_VFP_context[cpu] == vfp)
+-		last_VFP_context[cpu] = NULL;
 -	put_cpu();
++	if (vfp_current_hw_state[cpu] == vfp)
++		vfp_current_hw_state[cpu] = NULL;
 +	ipipe_put_cpu(flags);
  }
  
  static void vfp_thread_copy(struct thread_info *thread)
-@@ -112,6 +114,7 @@ static void vfp_thread_copy(struct thread_info *thread)
+@@ -84,6 +130,9 @@ static void vfp_thread_copy(struct thread_info *thread)
+ 
+ 	vfp_sync_hwstate(parent);
+ 	thread->vfpstate = parent->vfpstate;
++#ifdef CONFIG_SMP
++	thread->vfpstate.hard.cpu = NR_CPUS;
++#endif
+ }
+ 
+ /*
+@@ -112,6 +161,7 @@ static void vfp_thread_copy(struct thread_info *thread)
  static int vfp_notifier(struct notifier_block *self, unsigned long cmd, void *v)
  {
  	struct thread_info *thread = v;
@@ -9919,7 +10190,7 @@ index f25e7ec..28f09ea 100644
  	u32 fpexc;
  #ifdef CONFIG_SMP
  	unsigned int cpu;
-@@ -119,8 +122,9 @@ static int vfp_notifier(struct notifier_block *self, unsigned long cmd, void *v)
+@@ -119,8 +169,9 @@ static int vfp_notifier(struct notifier_block *self, unsigned long cmd, void *v)
  
  	switch (cmd) {
  	case THREAD_NOTIFY_SWITCH:
@@ -9930,7 +10201,27 @@ index f25e7ec..28f09ea 100644
  #ifdef CONFIG_SMP
  		cpu = thread->cpu;
  
-@@ -147,6 +151,7 @@ static int vfp_notifier(struct notifier_block *self, unsigned long cmd, void *v)
+@@ -129,17 +180,8 @@ static int vfp_notifier(struct notifier_block *self, unsigned long cmd, void *v)
+ 		 * case the thread migrates to a different CPU. The
+ 		 * restoring is done lazily.
+ 		 */
+-		if ((fpexc & FPEXC_EN) && last_VFP_context[cpu]) {
+-			vfp_save_state(last_VFP_context[cpu], fpexc);
+-			last_VFP_context[cpu]->hard.cpu = cpu;
+-		}
+-		/*
+-		 * Thread migration, just force the reloading of the
+-		 * state on the new CPU in case the VFP registers
+-		 * contain stale data.
+-		 */
+-		if (thread->vfpstate.hard.cpu != cpu)
+-			last_VFP_context[cpu] = NULL;
++		if ((fpexc & FPEXC_EN) && vfp_current_hw_state[cpu])
++			vfp_save_state(vfp_current_hw_state[cpu], fpexc);
+ #endif
+ 
+ 		/*
+@@ -147,6 +189,7 @@ static int vfp_notifier(struct notifier_block *self, unsigned long cmd, void *v)
  		 * old state.
  		 */
  		fmxr(FPEXC, fpexc & ~FPEXC_EN);
@@ -9938,7 +10229,17 @@ index f25e7ec..28f09ea 100644
  		break;
  
  	case THREAD_NOTIFY_FLUSH:
-@@ -290,7 +295,7 @@ static u32 vfp_emulate_instruction(u32 inst, u32 fpscr, struct pt_regs *regs)
+@@ -158,7 +201,9 @@ static int vfp_notifier(struct notifier_block *self, unsigned long cmd, void *v)
+ 		break;
+ 
+ 	case THREAD_NOTIFY_COPY:
++		local_irq_save_hw_cond(flags);
+ 		vfp_thread_copy(thread);
++		local_irq_restore_hw_cond(flags);
+ 		break;
+ 	}
+ 
+@@ -290,7 +335,7 @@ static u32 vfp_emulate_instruction(u32 inst, u32 fpscr, struct pt_regs *regs)
   */
  void VFP_bounce(u32 trigger, u32 fpexc, struct pt_regs *regs)
  {
@@ -9947,7 +10248,7 @@ index f25e7ec..28f09ea 100644
  
  	pr_debug("VFP: bounce: trigger %08x fpexc %08x\n", trigger, fpexc);
  
-@@ -320,6 +325,7 @@ void VFP_bounce(u32 trigger, u32 fpexc, struct pt_regs *regs)
+@@ -320,6 +365,7 @@ void VFP_bounce(u32 trigger, u32 fpexc, struct pt_regs *regs)
  		/*
  		 * Synchronous exception, emulate the trigger instruction
  		 */
@@ -9955,7 +10256,7 @@ index f25e7ec..28f09ea 100644
  		goto emulate;
  	}
  
-@@ -332,7 +338,18 @@ void VFP_bounce(u32 trigger, u32 fpexc, struct pt_regs *regs)
+@@ -332,7 +378,18 @@ void VFP_bounce(u32 trigger, u32 fpexc, struct pt_regs *regs)
  		trigger = fmrx(FPINST);
  		regs->ARM_pc -= 4;
  #endif
@@ -9975,7 +10276,7 @@ index f25e7ec..28f09ea 100644
  		/*
  		 * Illegal combination of bits. It can be caused by an
  		 * unallocated VFP instruction but with FPSCR.IXE set and not
-@@ -372,18 +389,14 @@ void VFP_bounce(u32 trigger, u32 fpexc, struct pt_regs *regs)
+@@ -372,18 +429,14 @@ void VFP_bounce(u32 trigger, u32 fpexc, struct pt_regs *regs)
  	if (fpexc ^ (FPEXC_EX | FPEXC_FP2V))
  		goto exit;
  
@@ -9996,17 +10297,83 @@ index f25e7ec..28f09ea 100644
  	preempt_enable();
  }
  
-@@ -445,7 +458,8 @@ static inline void vfp_pm_init(void) { }
+@@ -397,9 +450,7 @@ static void vfp_enable(void *unused)
+ 	set_copro_access(access | CPACC_FULL(10) | CPACC_FULL(11));
+ }
  
+-#ifdef CONFIG_PM
+-#include <linux/syscore_ops.h>
+-
++#ifdef CONFIG_CPU_PM
+ static int vfp_pm_suspend(void)
+ {
+ 	struct thread_info *ti = current_thread_info();
+@@ -415,7 +466,7 @@ static int vfp_pm_suspend(void)
+ 	}
+ 
+ 	/* clear any information we had about last context state */
+-	memset(last_VFP_context, 0, sizeof(last_VFP_context));
++	memset(vfp_current_hw_state, 0, sizeof(vfp_current_hw_state));
+ 
+ 	return 0;
+ }
+@@ -429,29 +480,44 @@ static void vfp_pm_resume(void)
+ 	fmxr(FPEXC, fmrx(FPEXC) & ~FPEXC_EN);
+ }
+ 
+-static struct syscore_ops vfp_pm_syscore_ops = {
+-	.suspend	= vfp_pm_suspend,
+-	.resume		= vfp_pm_resume,
++static int vfp_cpu_pm_notifier(struct notifier_block *self, unsigned long cmd,
++	void *v)
++{
++	switch (cmd) {
++	case CPU_PM_ENTER:
++		vfp_pm_suspend();
++		break;
++	case CPU_PM_ENTER_FAILED:
++	case CPU_PM_EXIT:
++		vfp_pm_resume();
++		break;
++	}
++	return NOTIFY_OK;
++}
++
++static struct notifier_block vfp_cpu_pm_notifier_block = {
++	.notifier_call = vfp_cpu_pm_notifier,
+ };
+ 
+ static void vfp_pm_init(void)
+ {
+-	register_syscore_ops(&vfp_pm_syscore_ops);
++	cpu_pm_register_notifier(&vfp_cpu_pm_notifier_block);
+ }
+ 
+ #else
+ static inline void vfp_pm_init(void) { }
+-#endif /* CONFIG_PM */
++#endif /* CONFIG_CPU_PM */
+ 
++/*
++ * Ensure that the VFP state stored in 'thread->vfpstate' is up to date
++ * with the hardware state.
++ */
  void vfp_sync_hwstate(struct thread_info *thread)
  {
 -	unsigned int cpu = get_cpu();
 +	unsigned long flags;
 +	unsigned int cpu = ipipe_get_cpu(flags);
  
- 	/*
- 	 * If the thread we're interested in is the current owner of the
-@@ -462,12 +476,13 @@ void vfp_sync_hwstate(struct thread_info *thread)
+-	/*
+-	 * If the thread we're interested in is the current owner of the
+-	 * hardware VFP state, then we need to save its state.
+-	 */
+-	if (last_VFP_context[cpu] == &thread->vfpstate) {
++	if (vfp_state_in_hw(cpu, thread)) {
+ 		u32 fpexc = fmrx(FPEXC);
+ 
+ 		/*
+@@ -462,40 +528,18 @@ void vfp_sync_hwstate(struct thread_info *thread)
  		fmxr(FPEXC, fpexc);
  	}
  
@@ -10014,25 +10381,82 @@ index f25e7ec..28f09ea 100644
 +	ipipe_put_cpu(flags);
  }
  
++/* Ensure that the thread reloads the hardware VFP state on the next use. */
  void vfp_flush_hwstate(struct thread_info *thread)
  {
 -	unsigned int cpu = get_cpu();
+-
+-	/*
+-	 * If the thread we're interested in is the current owner of the
+-	 * hardware VFP state, then we need to save its state.
+-	 */
+-	if (last_VFP_context[cpu] == &thread->vfpstate) {
+-		u32 fpexc = fmrx(FPEXC);
 +	unsigned long flags;
 +	unsigned int cpu = ipipe_get_cpu(flags);
  
- 	/*
- 	 * If the thread we're interested in is the current owner of the
-@@ -495,7 +510,7 @@ void vfp_flush_hwstate(struct thread_info *thread)
- 	 */
- 	thread->vfpstate.hard.cpu = NR_CPUS;
- #endif
+-		fmxr(FPEXC, fpexc & ~FPEXC_EN);
+-
+-		/*
+-		 * Set the context to NULL to force a reload the next time
+-		 * the thread uses the VFP.
+-		 */
+-		last_VFP_context[cpu] = NULL;
+-	}
++	vfp_force_reload(cpu, thread);
+ 
+-#ifdef CONFIG_SMP
+-	/*
+-	 * For SMP we still have to take care of the case where the thread
+-	 * migrates to another CPU and then back to the original CPU on which
+-	 * the last VFP user is still the same thread. Mark the thread VFP
+-	 * state as belonging to a non-existent CPU so that the saved one will
+-	 * be reloaded in the above case.
+-	 */
+-	thread->vfpstate.hard.cpu = NR_CPUS;
+-#endif
 -	put_cpu();
 +	ipipe_put_cpu(flags);
  }
  
  /*
+@@ -513,8 +557,7 @@ static int vfp_hotplug(struct notifier_block *b, unsigned long action,
+ 	void *hcpu)
+ {
+ 	if (action == CPU_DYING || action == CPU_DYING_FROZEN) {
+-		unsigned int cpu = (long)hcpu;
+-		last_VFP_context[cpu] = NULL;
++		vfp_force_reload((long)hcpu, current_thread_info());
+ 	} else if (action == CPU_STARTING || action == CPU_STARTING_FROZEN)
+ 		vfp_enable(NULL);
+ 	return NOTIFY_OK;
+@@ -582,7 +625,6 @@ static int __init vfp_init(void)
+ 				elf_hwcap |= HWCAP_VFPv3D16;
+ 		}
+ #endif
+-#ifdef CONFIG_NEON
+ 		/*
+ 		 * Check for the presence of the Advanced SIMD
+ 		 * load/store instructions, integer and single
+@@ -590,10 +632,15 @@ static int __init vfp_init(void)
+ 		 * for NEON if the hardware has the MVFR registers.
+ 		 */
+ 		if ((read_cpuid_id() & 0x000f0000) == 0x000f0000) {
++#ifdef CONFIG_NEON
+ 			if ((fmrx(MVFR1) & 0x000fff00) == 0x00011100)
+ 				elf_hwcap |= HWCAP_NEON;
+-		}
+ #endif
++#if 0
++			if ((fmrx(MVFR1) & 0xf0000000) == 0x10000000)
++				elf_hwcap |= HWCAP_VFPv4;
++#endif
++		}
+ 	}
+ 	return 0;
+ }
 diff --git a/drivers/gpio/gpio-omap.c b/drivers/gpio/gpio-omap.c
-index 35bebde..5be24b3 100644
+index 35bebde..cf7b714 100644
 --- a/drivers/gpio/gpio-omap.c
 +++ b/drivers/gpio/gpio-omap.c
 @@ -21,6 +21,7 @@
@@ -10142,56 +10566,23 @@ index 35bebde..5be24b3 100644
  {
  	void __iomem *reg = bank->base;
  	u32 l;
-@@ -1008,6 +1024,41 @@ static void omap_gpio_free(struct gpio_chip *chip, unsigned offset)
+@@ -1008,6 +1024,7 @@ static void omap_gpio_free(struct gpio_chip *chip, unsigned offset)
  	spin_unlock_irqrestore(&bank->lock, flags);
  }
  
 +
-+static void gpio_demux_inner(struct gpio_bank *bank, u32 isr, int nonroot)
-+{
-+	unsigned int gpio_irq, gpio_index;
-+
-+	gpio_irq = bank->virtual_irq_start;
-+	for (; isr != 0; isr >>= 1, gpio_irq++) {
-+		if (!(isr & 1))
-+			continue;
-+
-+#ifdef CONFIG_IPIPE
-+		if (!nonroot) {
-+			local_irq_enable_hw();
-+			local_irq_disable_hw();
-+		}
-+#endif /* CONFIG_IPIPE */
-+
-+#ifdef CONFIG_ARCH_OMAP1
-+		gpio_index = get_gpio_index(irq_to_gpio(gpio_irq));
-+
-+		/*
-+		 * Some chips can't respond to both rising and falling
-+		 * at the same time.  If this irq was requested with
-+		 * both flags, we need to flip the ICR data for the IRQ
-+		 * to respond to the IRQ for the opposite direction.
-+		 * This will be indicated in the bank toggle_mask.
-+		 */
-+		if (bank->toggle_mask & (1 << gpio_index))
-+			_toggle_gpio_edge_triggering(bank, gpio_index);
-+#endif
-+		ipipe_handle_chained_irq(gpio_irq);
-+	}
-+}
-+
-+
  /*
   * We need to unmask the GPIO bank interrupt as soon as possible to
   * avoid missing GPIO interrupts for other lines in the bank.
-@@ -1019,13 +1070,12 @@ static void omap_gpio_free(struct gpio_chip *chip, unsigned offset)
+@@ -1019,13 +1036,13 @@ static void omap_gpio_free(struct gpio_chip *chip, unsigned offset)
   */
  static void gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
  {
-+	struct irq_chip *chip = irq_desc_get_chip(desc);
- 	void __iomem *isr_reg = NULL;
+-	void __iomem *isr_reg = NULL;
 -	u32 isr;
--	unsigned int gpio_irq, gpio_index;
++	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	unsigned int gpio_irq, gpio_index;
++	void __iomem *isr_reg = NULL;
  	struct gpio_bank *bank;
  	u32 retrigger = 0;
  	int unmasked = 0;
@@ -10200,46 +10591,10 @@ index 35bebde..5be24b3 100644
  
  	chained_irq_enter(chip, desc);
  
-@@ -1063,6 +1113,13 @@ static void gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
- 		u32 isr_saved, level_mask = 0;
- 		u32 enabled;
+@@ -1100,18 +1117,17 @@ static void gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
+ 				continue;
  
-+#ifdef CONFIG_IPIPE
-+		if (!bank->nonroot_gpios) {
-+			local_irq_enable_hw();
-+			local_irq_disable_hw();
-+		}
-+#endif /* CONFIG_IPIPE */
-+
- 		enabled = _get_gpio_irqbank_mask(bank);
- 		isr_saved = isr = __raw_readl(isr_reg) & enabled;
- 
-@@ -1080,39 +1137,27 @@ static void gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
- 		_clear_gpio_irqbank(bank, isr_saved & ~level_mask);
- 		_enable_gpio_irqbank(bank, isr_saved & ~level_mask, 1);
- 
-+#ifndef CONFIG_IPIPE
- 		/* if there is only edge sensitive GPIO pin interrupts
- 		configured, we could unmask GPIO bank interrupt immediately */
- 		if (!level_mask && !unmasked) {
- 			unmasked = 1;
- 			chained_irq_exit(chip, desc);
- 		}
-+#endif /* CONFIG_IPIPE */
- 
- 		isr |= retrigger;
- 		retrigger = 0;
- 		if (!isr)
- 			break;
- 
--		gpio_irq = bank->virtual_irq_start;
--		for (; isr != 0; isr >>= 1, gpio_irq++) {
--			gpio_index = get_gpio_index(irq_to_gpio(gpio_irq));
--
--			if (!(isr & 1))
--				continue;
--
--#ifdef CONFIG_ARCH_OMAP1
+ #ifdef CONFIG_ARCH_OMAP1
 -			/*
 -			 * Some chips can't respond to both rising and falling
 -			 * at the same time.  If this irq was requested with
@@ -10247,23 +10602,23 @@ index 35bebde..5be24b3 100644
 -			 * to respond to the IRQ for the opposite direction.
 -			 * This will be indicated in the bank toggle_mask.
 -			 */
--			if (bank->toggle_mask & (1 << gpio_index))
--				_toggle_gpio_edge_triggering(bank, gpio_index);
--#endif
++		/*
++		 * Some chips can't respond to both rising and falling
++		 * at the same time.  If this irq was requested with
++		 * both flags, we need to flip the ICR data for the IRQ
++		 * to respond to the IRQ for the opposite direction.
++		 * This will be indicated in the bank toggle_mask.
++		 */
+ 			if (bank->toggle_mask & (1 << gpio_index))
+ 				_toggle_gpio_edge_triggering(bank, gpio_index);
+ #endif
 -
 -			generic_handle_irq(gpio_irq);
--		}
-+#ifdef CONFIG_IPIPE
-+	       if (bank->nonroot_gpios)
-+		       gpio_demux_inner(bank, isr & bank->nonroot_gpios, 1);
-+	       gpio_demux_inner(bank, isr & ~bank->nonroot_gpios, 0);
-+#else /* !CONFIG_IPIPE */
-+	       gpio_demux_inner(bank, isr, 0);
-+#endif /* !CONFIG_IPIPE */
++			ipipe_handle_chained_irq(gpio_irq);
+ 		}
  	}
  	/* if bank has any level sensitive GPIO pin interrupt
- 	configured, we must unmask the bank interrupt only after
-@@ -1154,6 +1199,19 @@ static void gpio_mask_irq(struct irq_data *d)
+@@ -1154,6 +1170,19 @@ static void gpio_mask_irq(struct irq_data *d)
  	spin_unlock_irqrestore(&bank->lock, flags);
  }
  
@@ -10283,7 +10638,7 @@ index 35bebde..5be24b3 100644
  static void gpio_unmask_irq(struct irq_data *d)
  {
  	unsigned int gpio = d->irq - IH_GPIO_BASE;
-@@ -1182,6 +1240,7 @@ static struct irq_chip gpio_irq_chip = {
+@@ -1182,6 +1211,7 @@ static struct irq_chip gpio_irq_chip = {
  	.irq_shutdown	= gpio_irq_shutdown,
  	.irq_ack	= gpio_ack_irq,
  	.irq_mask	= gpio_mask_irq,
@@ -10291,7 +10646,7 @@ index 35bebde..5be24b3 100644
  	.irq_unmask	= gpio_unmask_irq,
  	.irq_set_type	= gpio_irq_type,
  	.irq_set_wake	= gpio_wake_enable,
-@@ -1570,6 +1629,12 @@ static void __devinit omap_gpio_chip_init(struct gpio_bank *bank)
+@@ -1570,6 +1600,12 @@ static void __devinit omap_gpio_chip_init(struct gpio_bank *bank)
  		irq_set_handler(j, handle_simple_irq);
  		set_irq_flags(j, IRQF_VALID);
  	}
@@ -10304,7 +10659,7 @@ index 35bebde..5be24b3 100644
  	irq_set_chained_handler(bank->irq, gpio_irq_handler);
  	irq_set_handler_data(bank->irq, bank);
  }
-@@ -1640,6 +1705,171 @@ static int __devinit omap_gpio_probe(struct platform_device *pdev)
+@@ -1640,6 +1676,171 @@ static int __devinit omap_gpio_probe(struct platform_device *pdev)
  	return 0;
  }
  
@@ -10529,7 +10884,7 @@ index eb3b5f8..cd3c867 100644
  }
 -
 diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
-index 56c05ef..4ef0ba47 100644
+index 56c05ef..4ef0ba4 100644
 --- a/drivers/misc/Kconfig
 +++ b/drivers/misc/Kconfig
 @@ -89,7 +89,7 @@ config ATMEL_TCLIB
