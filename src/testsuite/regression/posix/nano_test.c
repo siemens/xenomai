@@ -1,7 +1,11 @@
-#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <errno.h>
-#include <assert.h>
+
+#include <signal.h>
 #include <sys/mman.h>
+#include <sys/time.h>
+
 #include "check.h"
 
 static sig_atomic_t gotsig;
