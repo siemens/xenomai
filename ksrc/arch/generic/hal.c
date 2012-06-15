@@ -581,7 +581,7 @@ int rthal_init(void)
 
     err = rthal_virtualize_irq(rthal_current_domain,
 			       rthal_apc_virq,
-			       &rthal_apc_handler,
+			       rthal_apc_trampoline,
 			       NULL, NULL, IPIPE_HANDLE_MASK);
     if (err) {
 	printk(KERN_ERR "Xenomai: Failed to virtualize IRQ.\n");
