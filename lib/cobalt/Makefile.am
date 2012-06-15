@@ -32,7 +32,7 @@ libcobalt_la_SOURCES = \
 	wrappers.c
 
 libcobalt_la_CPPFLAGS =				\
-	@XENO_USER_CFLAGS@ -Wno-missing-prototypes	\
+	@XENO_COBALT_CFLAGS@ -Wno-missing-prototypes	\
 	-I$(top_srcdir)					\
 	-I$(top_srcdir)/include
 
