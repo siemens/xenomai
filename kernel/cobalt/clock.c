@@ -206,6 +206,7 @@ int cobalt_clock_nanosleep(clockid_t clock_id, int flags,
 {
 	struct timespec rqt, rmt, *rmtp = NULL;
 	xnthread_t *cur;
+	xnsticks_t rem;
 	int err = 0;
 	spl_t s;
 
@@ -234,18 +235,10 @@ int cobalt_clock_nanosleep(clockid_t clock_id, int flags,
 			     clock_flag(flags, clock_id), NULL);
 
 	if (xnthread_test_info(cur, XNBREAK)) {
-
 		if (flags == 0 && rmtp) {
-			xnticks_t now, expiry;
-			xnsticks_t rem;
-
-			now = clock_get_ticks(clock_id);
-			expiry = xntimer_get_date(&cur->rtimer);
+			rem = xntimer_get_timeout_stopped(&cur->rtimer);
 			xnlock_put_irqrestore(&nklock, s);
-			rem = expiry - now;
-
-			ns2ts(rmtp, rem > 0 ? rem : 0);
-
+			ns2ts(rmtp, rem > 1 ? rem : 0);
 			if (__xn_safe_copy_to_user(u_rmt, rmtp, sizeof(*u_rmt)))
 				return -EFAULT;
 		} else
