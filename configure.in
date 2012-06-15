@@ -464,13 +464,9 @@ fi
 
 XENO_USER_CFLAGS="$XENO_USER_CFLAGS -D__XENO__ -D__IN_XENO__ -Wstrict-prototypes"
 
-XENO_LIB_CFLAGS="$XENO_USER_CFLAGS"
-XENO_LIB_LDFLAGS="$XENO_USER_LDFLAGS"
-
 case $XENO_TARGET_ARCH in
  x86)
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -fstrict-aliasing $gcc_w_noalias"
-	XENO_LIB_CFLAGS="$XENO_LIB_CFLAGS -fno-omit-frame-pointer -fstrict-aliasing $gcc_w_noalias"
 	;;
  powerpc)
 	;;
@@ -478,6 +474,15 @@ case $XENO_TARGET_ARCH in
 	# Produce libraries in FDPIC format.
 	;;
  arm)
+	;;
+esac
+
+XENO_LIB_CFLAGS="$XENO_USER_CFLAGS"
+XENO_LIB_LDFLAGS="$XENO_USER_LDFLAGS"
+
+case "$build_for" in
+ i*86*-*)
+	XENO_LIB_CFLAGS="$XENO_LIB_CFLAGS -fno-omit-frame-pointer"
 	;;
 esac
 
