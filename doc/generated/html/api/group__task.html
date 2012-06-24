@@ -1372,7 +1372,7 @@ When called from a user-space task, this service may need to allocate some tempo
 <p>If, however, you install a signal handler for SIGWINCH after creating or shadowing the first Xenomai thread, you have to explicitly call the function xeno_sigwinch_handler at the beginning of your signal handler, using its return to know if the signal was in fact an internal signal of Xenomai (in which case it returns 1), or if you should handle the signal (in which case it returns 0). xeno_sigwinch_handler prototype is:</p>
 <p><b>int xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt);</b></p>
 <p>Which means that you should register your handler with sigaction, using the SA_SIGINFO flag, and pass all the arguments you received to xeno_sigwinch_handler. </p>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanrecv_8c-example.html#a23">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a19">rtcansend.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanrecv_8c-example.html#a22">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a18">rtcansend.c</a>.</dd>
 </dl>
 <p>References <a class="el" href="group__posix__tsd.html#ga31469375891078185bda93f0e4411a2c">pthread_getspecific()</a>, <a class="el" href="group__posix__thread.html#ga4c4f5f3b4f8f45d9d897847d53b11aaa">pthread_self()</a>, <a class="el" href="group__posix__cancel.html#ga636480bad96654729ecf18017c2820cd">pthread_setcanceltype()</a>, and <a class="el" href="group__posix__tsd.html#ga2187333dd46ce08d9d2e044f79fad705">pthread_setspecific()</a>.</p>
 
@@ -1932,7 +1932,7 @@ When called from a user-space task, this service may need to allocate some tempo
 </div>
 </div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Wed Nov 2 2011 18:01:10 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Tue Jul 10 2012 20:41:25 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

@@ -4,7 +4,7 @@
 <area shape="rect" id="node69" href="$nucleus_2heap_8h_source.html" title="nucleus/heap.h" alt="" coords="1289,315,1407,344"/>
 <area shape="rect" id="node72" href="$include_2rtdm_2syscall_8h_source.html" title="rtdm/syscall.h" alt="" coords="1436,83,1545,112"/>
 <area shape="rect" id="node75" href="$rtdm_2internal_8h_source.html" title="rtdm/internal.h" alt="" coords="680,83,797,112"/>
-<area shape="rect" id="node5" href="$sched_8h.html" title="Scheduler interface header." alt="" coords="611,392,736,421"/>
+<area shape="rect" id="node5" href="$nucleus_2sched_8h.html" title="Scheduler interface header." alt="" coords="611,392,736,421"/>
 <area shape="rect" id="node7" href="$include_2nucleus_2thread_8h_source.html" title="nucleus/thread.h" alt="" coords="5,469,133,499"/>
 <area shape="rect" id="node31" href="$vfile_8h.html" title="This file is part of the Xenomai project." alt="" coords="856,701,968,731"/>
 <area shape="rect" id="node48" href="$schedqueue_8h_source.html" title="nucleus/schedqueue.h" alt="" coords="1131,624,1296,653"/>
@@ -25,7 +25,7 @@
 <area shape="rect" id="node63" href="$shadow_8h_source.html" title="nucleus/shadow.h" alt="" coords="2221,237,2355,267"/>
 <area shape="rect" id="node79" href="$rtdm__driver_8h.html" title="Real&#45;Time Driver Model for Xenomai, driver API header." alt="" coords="976,160,1117,189"/>
 <area shape="rect" id="node85" href="$xenomai_8h_source.html" title="nucleus/xenomai.h" alt="" coords="1084,237,1225,267"/>
-<area shape="rect" id="node103" href="$select_8h.html" title="file descriptors events multiplexing header." alt="" coords="187,392,312,421"/>
+<area shape="rect" id="node103" href="$nucleus_2select_8h.html" title="file descriptors events multiplexing header." alt="" coords="187,392,312,421"/>
 <area shape="rect" id="node107" href="$rtdm_8h.html" title="Real&#45;Time Driver Model for Xenomai, user API header." alt="" coords="1657,237,1756,267"/>
 <area shape="rect" id="node90" href="$include_2nucleus_2intr_8h_source.html" title="nucleus/intr.h" alt="" coords="437,547,544,576"/>
 <area shape="rect" id="node94" href="$module_8h_source.html" title="nucleus/module.h" alt="" coords="1081,547,1215,576"/>

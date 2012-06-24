@@ -49,6 +49,10 @@ Functions</h2></td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Map an I/O memory range into the address space of the user.  <a href="#gaa49b4fbd57a98a9ccda1f243b40bc519"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#gaa6a363aa6e2e017d3493a9c175755fa5">rtdm_munmap</a> (rtdm_user_info_t *user_info, void *ptr, size_t len)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unmap a user memory range.  <a href="#gaa6a363aa6e2e017d3493a9c175755fa5"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#gab0b2db892afe1bd77a80f6b8367eb0c9">rtdm_ratelimit</a> (struct rtdm_ratelimit_state *rs, const char *func)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Enforces a rate limit.  <a href="#gab0b2db892afe1bd77a80f6b8367eb0c9"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#gac164efcdc1eff8bffe9e22aa933d52f4">rtdm_printk_ratelimited</a> (const char *format,...)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Real-time safe rate-limited message printing on kernel console.  <a href="#gac164efcdc1eff8bffe9e22aa933d52f4"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga7fe4c8a85d03bec31852634a681791e3">rtdm_printk</a> (const char *format,...)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Real-time safe message printing on kernel console.  <a href="#ga7fe4c8a85d03bec31852634a681791e3"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga34dfd5c060c67acc684eb4b4256cd4ba">rtdm_malloc</a> (size_t size)</td></tr>
@@ -590,6 +594,100 @@ RTDM supports two models for unmapping the user memory range again. One is expli
 
 </div>
 </div>
+<a class="anchor" id="gac164efcdc1eff8bffe9e22aa933d52f4"></a><!-- doxytag: member="drvlib.c::rtdm_printk_ratelimited" ref="gac164efcdc1eff8bffe9e22aa933d52f4" args="(const char *format,...)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void rtdm_printk_ratelimited </td>
+          <td>(</td>
+          <td class="paramtype">const char *&nbsp;</td>
+          <td class="paramname"> <em>format</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&nbsp;</td>
+          <td class="paramname"> <em>...</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Real-time safe rate-limited message printing on kernel console. </p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>format</em>&nbsp;</td><td>Format string (conforming standard <code>printf()</code>) </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>...</em>&nbsp;</td><td>Arguments referred by <em>format</em> </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>On success, this service returns the number of characters printed. Otherwise, a negative error code is returned.</dd></dl>
+<p>Environments:</p>
+<p>This service can be called from:</p>
+<ul>
+<li>Kernel module initialization/cleanup code</li>
+<li>Interrupt service routine (consider the overhead!)</li>
+<li>Kernel-based task</li>
+<li>User-space task (RT, non-RT)</li>
+</ul>
+<p>Rescheduling: never in real-time context, possible in non-real-time environments. </p>
+
+</div>
+</div>
+<a class="anchor" id="gab0b2db892afe1bd77a80f6b8367eb0c9"></a><!-- doxytag: member="drvlib.c::rtdm_ratelimit" ref="gab0b2db892afe1bd77a80f6b8367eb0c9" args="(struct rtdm_ratelimit_state *rs, const char *func)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int rtdm_ratelimit </td>
+          <td>(</td>
+          <td class="paramtype">struct rtdm_ratelimit_state *&nbsp;</td>
+          <td class="paramname"> <em>rs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&nbsp;</td>
+          <td class="paramname"> <em>func</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Enforces a rate limit. </p>
+<p>This function enforces a rate limit: not more than -&gt;burst callbacks in every -&gt;interval.</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>rtdm_ratelimit_state</em>&nbsp;</td><td>data </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>name</em>&nbsp;</td><td>of calling function</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 means callback will be suppressed and 1 means go ahead and do it</dd></dl>
+<p>Environments:</p>
+<p>This service can be called from:</p>
+<ul>
+<li>Kernel module initialization/cleanup code</li>
+<li>Kernel-based task</li>
+<li>User-space task (RT, non-RT)</li>
+</ul>
+<p>Rescheduling: possible. </p>
+
+<p>References <a class="el" href="group__clock.html#ga6cca1db0fd4c207ad92cdc9e9442afa5">rtdm_clock_read()</a>, <a class="el" href="group__rtdmsync.html#ga985473873f9e32af688fe8a23634693d">rtdm_lock_get_irqsave</a>, and <a class="el" href="group__rtdmsync.html#ga4f1f8e33baf33b162636f63dec61aebd">rtdm_lock_put_irqrestore</a>.</p>
+
+</div>
+</div>
 <a class="anchor" id="ga341dedfbeeb511848ba5f5a9535cc0a7"></a><!-- doxytag: member="drvlib.c::rtdm_read_user_ok" ref="ga341dedfbeeb511848ba5f5a9535cc0a7" args="(rtdm_user_info_t *user_info, const void __user *ptr, size_t size)" -->
 <div class="memitem">
 <div class="memproto">
@@ -919,7 +1017,7 @@ RTDM supports two models for unmapping the user memory range again. One is expli
 </div>
 </div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Wed Nov 2 2011 18:01:10 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Tue Jul 10 2012 20:41:25 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

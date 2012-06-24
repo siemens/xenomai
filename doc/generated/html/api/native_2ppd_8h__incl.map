@@ -2,7 +2,7 @@
 <area shape="rect" id="node3" href="$pod_8h.html" title="Real&#45;time pod interface header." alt="" coords="848,83,957,112"/>
 <area shape="rect" id="node60" href="$nucleus_2ppd_8h_source.html" title="nucleus/ppd.h" alt="" coords="1185,83,1295,112"/>
 <area shape="rect" id="node69" href="$nucleus_2heap_8h_source.html" title="nucleus/heap.h" alt="" coords="1085,160,1203,189"/>
-<area shape="rect" id="node5" href="$sched_8h.html" title="Scheduler interface header." alt="" coords="551,160,676,189"/>
+<area shape="rect" id="node5" href="$nucleus_2sched_8h.html" title="Scheduler interface header." alt="" coords="551,160,676,189"/>
 <area shape="rect" id="node7" href="$include_2nucleus_2thread_8h_source.html" title="nucleus/thread.h" alt="" coords="469,237,597,267"/>
 <area shape="rect" id="node31" href="$vfile_8h.html" title="This file is part of the Xenomai project." alt="" coords="309,469,421,499"/>
 <area shape="rect" id="node48" href="$schedqueue_8h_source.html" title="nucleus/schedqueue.h" alt="" coords="987,315,1152,344"/>

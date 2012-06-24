@@ -1,14 +1,39 @@
 <map id="G" name="G">
-<area shape="rect" id="node7" href="$descriptor_8h.html" title="Analogy for Linux, descriptor related features." alt="" coords="544,160,693,189"/>
+<area shape="rect" id="node3" href="$stdio_8h_source.html" title="stdio.h" alt="" coords="489,83,553,112"/>
+<area shape="rect" id="node7" href="$descriptor_8h.html" title="Analogy for Linux, descriptor related features." alt="" coords="603,160,752,189"/>
 <area shape="rect" id="node28" href="$analogy_8h.html" title="Analogy for Linux, library facilities." alt="" coords="721,83,857,112"/>
-<area shape="rect" id="node34" href="$src_2drvlib_2analogy_2syscall_8h.html" title="Analogy for Linux, internal declarations." alt="" coords="881,83,956,112"/>
-<area shape="rect" id="node48" href="$root__leaf_8h.html" title="Analogy for Linux, root / leaf system." alt="" coords="980,83,1071,112"/>
-<area shape="rect" id="node9" href="$subdevice_8h.html" title="Analogy for Linux, subdevice related features." alt="" coords="428,237,580,267"/>
-<area shape="rect" id="node26" href="$device_8h.html" title="Analogy for Linux, device related features." alt="" coords="276,237,404,267"/>
+<area shape="rect" id="node109" href="$include_2posix_2syscall_8h_source.html" title="syscall.h" alt="" coords="881,83,956,112"/>
+<area shape="rect" id="node113" href="$root__leaf_8h.html" title="Analogy for Linux, root / leaf system." alt="" coords="980,83,1071,112"/>
+<area shape="rect" id="node9" href="$subdevice_8h.html" title="Analogy for Linux, subdevice related features." alt="" coords="425,237,577,267"/>
+<area shape="rect" id="node26" href="$device_8h.html" title="Analogy for Linux, device related features." alt="" coords="613,237,741,267"/>
 <area shape="rect" id="node13" href="$analogy_2types_8h.html" title="Analogy for Linux, misc declarations." alt="" coords="677,392,800,421"/>
-<area shape="rect" id="node15" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations." alt="" coords="379,392,515,421"/>
-<area shape="rect" id="node17" href="$instruction_8h.html" title="Analogy for Linux, instruction related features." alt="" coords="547,315,701,344"/>
-<area shape="rect" id="node21" href="$command_8h.html" title="Analogy for Linux, driver facilities." alt="" coords="371,315,523,344"/>
-<area shape="rect" id="node24" href="$channel__range_8h.html" title="Analogy for Linux, channel, range related features." alt="" coords="115,315,296,344"/>
-<area shape="rect" id="node36" href="$rtdm_8h.html" title="Real&#45;Time Driver Model for Xenomai, user API header." alt="" coords="1021,160,1120,189"/>
+<area shape="rect" id="node15" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations." alt="" coords="127,392,263,421"/>
+<area shape="rect" id="node17" href="$instruction_8h.html" title="Analogy for Linux, instruction related features." alt="" coords="232,315,387,344"/>
+<area shape="rect" id="node21" href="$command_8h.html" title="Analogy for Linux, driver facilities." alt="" coords="5,315,157,344"/>
+<area shape="rect" id="node24" href="$channel__range_8h.html" title="Analogy for Linux, channel, range related features." alt="" coords="411,315,592,344"/>
+<area shape="rect" id="node30" href="$unistd_8h_source.html" title="unistd.h" alt="" coords="833,160,905,189"/>
+<area shape="rect" id="node32" href="$xenomai_8h_source.html" title="nucleus/xenomai.h" alt="" coords="977,237,1119,267"/>
+<area shape="rect" id="node34" href="$pod_8h.html" title="Real&#45;time pod interface header." alt="" coords="1277,315,1387,344"/>
+<area shape="rect" id="node73" href="$synch_8h_source.html" title="nucleus/synch.h" alt="" coords="1239,624,1361,653"/>
+<area shape="rect" id="node92" href="$nucleus_2heap_8h_source.html" title="nucleus/heap.h" alt="" coords="863,392,980,421"/>
+<area shape="rect" id="node95" href="$include_2nucleus_2intr_8h_source.html" title="nucleus/intr.h" alt="" coords="2199,547,2305,576"/>
+<area shape="rect" id="node99" href="$module_8h_source.html" title="nucleus/module.h" alt="" coords="928,547,1061,576"/>
+<area shape="rect" id="node103" href="$version_8h_source.html" title="nucleus/version.h" alt="" coords="827,315,960,344"/>
+<area shape="rect" id="node36" href="$nucleus_2sched_8h.html" title="Scheduler interface header." alt="" coords="1465,392,1591,421"/>
+<area shape="rect" id="node38" href="$include_2nucleus_2thread_8h_source.html" title="nucleus/thread.h" alt="" coords="1949,469,2077,499"/>
+<area shape="rect" id="node62" href="$vfile_8h.html" title="This file is part of the Xenomai project." alt="" coords="1513,701,1625,731"/>
+<area shape="rect" id="node79" href="$schedqueue_8h_source.html" title="nucleus/schedqueue.h" alt="" coords="1049,624,1215,653"/>
+<area shape="rect" id="node82" href="$sched-tp_8h.html" title="Definitions for the TP scheduling class." alt="" coords="1784,469,1925,499"/>
+<area shape="rect" id="node84" href="$sched-sporadic_8h.html" title="Definitions for the SSP scheduling class." alt="" coords="1187,469,1371,499"/>
+<area shape="rect" id="node87" href="$sched-idle_8h.html" title="Definitions for the IDLE scheduling class." alt="" coords="1395,469,1547,499"/>
+<area shape="rect" id="node89" href="$sched-rt_8h.html" title="Definitions for the RT scheduling class." alt="" coords="1621,469,1760,499"/>
+<area shape="rect" id="node40" href="$nucleus_2types_8h_source.html" title="nucleus/types.h" alt="" coords="1651,779,1773,808"/>
+<area shape="rect" id="node51" href="$stat_8h_source.html" title="nucleus/stat.h" alt="" coords="2105,624,2217,653"/>
+<area shape="rect" id="node54" href="$include_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="1953,547,2073,576"/>
+<area shape="rect" id="node70" href="$include_2nucleus_2registry_8h.html" title="This file is part of the Xenomai project." alt="" coords="1607,547,1740,576"/>
+<area shape="rect" id="node77" href="$schedparam_8h_source.html" title="nucleus/schedparam.h" alt="" coords="1764,547,1929,576"/>
+<area shape="rect" id="node46" href="$compiler_8h_source.html" title="nucleus/compiler.h" alt="" coords="1568,856,1709,885"/>
+<area shape="rect" id="node48" href="$assert_8h_source.html" title="nucleus/assert.h" alt="" coords="1419,856,1544,885"/>
+<area shape="rect" id="node56" href="$timebase_8h.html" title="nucleus/timebase.h" alt="" coords="1385,624,1532,653"/>
+<area shape="rect" id="node58" href="$nucleus_2queue_8h_source.html" title="nucleus/queue.h" alt="" coords="1237,701,1363,731"/>
 </map>

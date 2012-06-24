@@ -9,8 +9,8 @@
 <area shape="rect" id="node66" href="$nucleus_2heap_8h_source.html" title="nucleus/heap.h" alt="" coords="1539,160,1656,189"/>
 <area shape="rect" id="node69" href="$include_2nucleus_2intr_8h_source.html" title="nucleus/intr.h" alt="" coords="181,315,288,344"/>
 <area shape="rect" id="node74" href="$module_8h_source.html" title="nucleus/module.h" alt="" coords="1480,315,1613,344"/>
-<area shape="rect" id="node80" href="$select_8h.html" title="file descriptors events multiplexing header." alt="" coords="416,160,541,189"/>
-<area shape="rect" id="node9" href="$sched_8h.html" title="Scheduler interface header." alt="" coords="893,160,1019,189"/>
+<area shape="rect" id="node80" href="$nucleus_2select_8h.html" title="file descriptors events multiplexing header." alt="" coords="416,160,541,189"/>
+<area shape="rect" id="node9" href="$nucleus_2sched_8h.html" title="Scheduler interface header." alt="" coords="893,160,1019,189"/>
 <area shape="rect" id="node11" href="$include_2nucleus_2thread_8h_source.html" title="nucleus/thread.h" alt="" coords="413,237,541,267"/>
 <area shape="rect" id="node35" href="$vfile_8h.html" title="This file is part of the Xenomai project." alt="" coords="952,469,1064,499"/>
 <area shape="rect" id="node52" href="$schedqueue_8h_source.html" title="nucleus/schedqueue.h" alt="" coords="1216,392,1381,421"/>

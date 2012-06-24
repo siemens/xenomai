@@ -17,7 +17,7 @@
 <area shape="rect" id="node33" href="$vfile_8h.html" title="This file is part of the Xenomai project." alt="" coords="972,547,1084,576"/>
 <area shape="rect" id="node60" href="$pod_8h.html" title="Real&#45;time pod interface header." alt="" coords="821,160,931,189"/>
 <area shape="rect" id="node77" href="$nucleus_2ppd_8h_source.html" title="nucleus/ppd.h" alt="" coords="375,160,484,189"/>
-<area shape="rect" id="node62" href="$sched_8h.html" title="Scheduler interface header." alt="" coords="1117,237,1243,267"/>
+<area shape="rect" id="node62" href="$nucleus_2sched_8h.html" title="Scheduler interface header." alt="" coords="1117,237,1243,267"/>
 <area shape="rect" id="node65" href="$schedqueue_8h_source.html" title="nucleus/schedqueue.h" alt="" coords="432,392,597,421"/>
 <area shape="rect" id="node68" href="$sched-tp_8h.html" title="Definitions for the TP scheduling class." alt="" coords="1016,315,1157,344"/>
 <area shape="rect" id="node70" href="$sched-sporadic_8h.html" title="Definitions for the SSP scheduling class." alt="" coords="1181,315,1365,344"/>

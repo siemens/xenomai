@@ -13,7 +13,7 @@
 <area shape="rect" id="node39" href="$pod_8h.html" title="Real&#45;time pod interface header." alt="" coords="863,160,972,189"/>
 <area shape="rect" id="node67" href="$nucleus_2ppd_8h_source.html" title="nucleus/ppd.h" alt="" coords="1179,160,1288,189"/>
 <area shape="rect" id="node76" href="$nucleus_2heap_8h_source.html" title="nucleus/heap.h" alt="" coords="1525,237,1643,267"/>
-<area shape="rect" id="node41" href="$sched_8h.html" title="Scheduler interface header." alt="" coords="723,237,848,267"/>
+<area shape="rect" id="node41" href="$nucleus_2sched_8h.html" title="Scheduler interface header." alt="" coords="723,237,848,267"/>
 <area shape="rect" id="node43" href="$include_2nucleus_2thread_8h_source.html" title="nucleus/thread.h" alt="" coords="255,315,383,344"/>
 <area shape="rect" id="node55" href="$schedqueue_8h_source.html" title="nucleus/schedqueue.h" alt="" coords="949,392,1115,421"/>
 <area shape="rect" id="node58" href="$sched-tp_8h.html" title="Definitions for the TP scheduling class." alt="" coords="796,315,937,344"/>

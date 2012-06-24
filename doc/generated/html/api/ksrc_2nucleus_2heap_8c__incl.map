@@ -4,7 +4,7 @@
 <area shape="rect" id="node19" href="$assert_8h_source.html" title="nucleus/assert.h" alt="" coords="825,624,951,653"/>
 <area shape="rect" id="node33" href="$vfile_8h.html" title="This file is part of the Xenomai project." alt="" coords="231,469,343,499"/>
 <area shape="rect" id="node63" href="$nucleus_2heap_8h_source.html" title="nucleus/heap.h" alt="" coords="1064,160,1181,189"/>
-<area shape="rect" id="node7" href="$sched_8h.html" title="Scheduler interface header." alt="" coords="620,160,745,189"/>
+<area shape="rect" id="node7" href="$nucleus_2sched_8h.html" title="Scheduler interface header." alt="" coords="620,160,745,189"/>
 <area shape="rect" id="node50" href="$schedqueue_8h_source.html" title="nucleus/schedqueue.h" alt="" coords="965,315,1131,344"/>
 <area shape="rect" id="node53" href="$sched-tp_8h.html" title="Definitions for the TP scheduling class." alt="" coords="544,237,685,267"/>
 <area shape="rect" id="node55" href="$sched-sporadic_8h.html" title="Definitions for the SSP scheduling class." alt="" coords="709,237,893,267"/>

@@ -46,7 +46,7 @@
 <a name="l00038"></a>00038 <span class="preprocessor">#include &lt;nucleus/heap.h&gt;</span>
 <a name="l00039"></a>00039 <span class="preprocessor">#include &lt;<a class="code" href="pod_8h.html" title="Real-time pod interface header.">nucleus/pod.h</a>&gt;</span>
 <a name="l00040"></a>00040 <span class="preprocessor">#include &lt;nucleus/synch.h&gt;</span>
-<a name="l00041"></a>00041 <span class="preprocessor">#include &lt;<a class="code" href="select_8h.html" title="file descriptors events multiplexing header.">nucleus/select.h</a>&gt;</span>
+<a name="l00041"></a>00041 <span class="preprocessor">#include &lt;<a class="code" href="nucleus_2select_8h.html" title="file descriptors events multiplexing header.">nucleus/select.h</a>&gt;</span>
 <a name="l00042"></a>00042 <span class="preprocessor">#include &lt;<a class="code" href="vfile_8h.html" title="This file is part of the Xenomai project.">nucleus/vfile.h</a>&gt;</span>
 <a name="l00043"></a>00043 <span class="preprocessor">#include &lt;<a class="code" href="rtdm_8h.html" title="Real-Time Driver Model for Xenomai, user API header.">rtdm/rtdm.h</a>&gt;</span>
 <a name="l00044"></a>00044 
@@ -419,371 +419,404 @@
 <a name="l00951"></a>00951 
 <a name="l00952"></a>00952 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__nrtsignal.html#ga4417c31c4990c3655f8ab4e7de6afa49" title="Release a non-realtime signal handler.">rtdm_nrtsig_destroy</a>(rtdm_nrtsig_t *nrt_sig)
 <a name="l00953"></a>00953 {
-<a name="l00954"></a>00954         rthal_free_virq(*nrt_sig);
-<a name="l00955"></a>00955 }
-<a name="l00956"></a>00956 
-<a name="l00957"></a>00957 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__nrtsignal.html#ga80f0f176bdef54a4f3f3e202b156e450" title="Trigger non-real-time signal.">rtdm_nrtsig_pend</a>(rtdm_nrtsig_t *nrt_sig)
-<a name="l00958"></a>00958 {
-<a name="l00959"></a>00959         rthal_trigger_irq(*nrt_sig);
-<a name="l00960"></a>00960 }
-<a name="l00961"></a>00961 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
-<a name="l00962"></a>00962 
-<a name="l00963"></a>00963 <span class="comment">/* --- timer services --- */</span>
+<a name="l00954"></a>00954         rthal_virtualize_irq(rthal_root_domain, *nrt_sig, NULL, NULL, NULL, 0);
+<a name="l00955"></a>00955 
+<a name="l00956"></a>00956         rthal_free_virq(*nrt_sig);
+<a name="l00957"></a>00957 }
+<a name="l00958"></a>00958 
+<a name="l00959"></a>00959 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__nrtsignal.html#ga80f0f176bdef54a4f3f3e202b156e450" title="Trigger non-real-time signal.">rtdm_nrtsig_pend</a>(rtdm_nrtsig_t *nrt_sig)
+<a name="l00960"></a>00960 {
+<a name="l00961"></a>00961         rthal_trigger_irq(*nrt_sig);
+<a name="l00962"></a>00962 }
+<a name="l00963"></a>00963 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
 <a name="l00964"></a>00964 
-<a name="l00970"></a>00970 <span class="keyword">typedef</span> xntimer_t rtdm_timer_t;
-<a name="l00971"></a>00971 
-<a name="l00977"></a><a class="code" href="group__rtdmtimer.html#ga31b7b9a042260702a110bfe2c9bcac61">00977</a> <span class="keyword">typedef</span> void (*<a class="code" href="group__rtdmtimer.html#ga31b7b9a042260702a110bfe2c9bcac61" title="Timer handler.">rtdm_timer_handler_t</a>)(rtdm_timer_t *timer);
-<a name="l00978"></a>00978 
-<a name="l00984"></a><a class="code" href="group__rtdmtimer.html#gad0bffecd0182d68967ebb5b47df0bcd0">00984</a> <span class="keyword">enum</span> <a class="code" href="group__rtdmtimer.html#gad0bffecd0182d68967ebb5b47df0bcd0">rtdm_timer_mode</a> {
-<a name="l00986"></a><a class="code" href="group__rtdmtimer.html#ggad0bffecd0182d68967ebb5b47df0bcd0addd5d0b543bebdb1187330b7f52a94f8">00986</a>         <a class="code" href="group__rtdmtimer.html#ggad0bffecd0182d68967ebb5b47df0bcd0addd5d0b543bebdb1187330b7f52a94f8" title="Monotonic timer with relative timeout.">RTDM_TIMERMODE_RELATIVE</a> = XN_RELATIVE,
-<a name="l00987"></a>00987 
-<a name="l00989"></a><a class="code" href="group__rtdmtimer.html#ggad0bffecd0182d68967ebb5b47df0bcd0a77b27da267c09a5a586aab86c9cd22e2">00989</a>         <a class="code" href="group__rtdmtimer.html#ggad0bffecd0182d68967ebb5b47df0bcd0a77b27da267c09a5a586aab86c9cd22e2" title="Monotonic timer with absolute timeout.">RTDM_TIMERMODE_ABSOLUTE</a> = XN_ABSOLUTE,
-<a name="l00990"></a>00990 
-<a name="l00992"></a><a class="code" href="group__rtdmtimer.html#ggad0bffecd0182d68967ebb5b47df0bcd0a8c206cf25cb340fd7ccee4489df6a220">00992</a>         <a class="code" href="group__rtdmtimer.html#ggad0bffecd0182d68967ebb5b47df0bcd0a8c206cf25cb340fd7ccee4489df6a220" title="Adjustable timer with absolute timeout.">RTDM_TIMERMODE_REALTIME</a> = XN_REALTIME
-<a name="l00993"></a>00993 };
-<a name="l00998"></a>00998 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid broken doxygen output */</span>
-<a name="l00999"></a>00999 <span class="preprocessor">#define rtdm_timer_init(timer, handler, name)           \</span>
-<a name="l01000"></a>01000 <span class="preprocessor">({                                                      \</span>
-<a name="l01001"></a>01001 <span class="preprocessor">        xntimer_init((timer), rtdm_tbase, handler);     \</span>
-<a name="l01002"></a>01002 <span class="preprocessor">        xntimer_set_name((timer), (name));              \</span>
-<a name="l01003"></a>01003 <span class="preprocessor">        0;                                              \</span>
-<a name="l01004"></a>01004 <span class="preprocessor">})</span>
-<a name="l01005"></a>01005 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
-<a name="l01006"></a>01006 
-<a name="l01007"></a>01007 <span class="keywordtype">void</span> <a class="code" href="group__rtdmtimer.html#gac75c6e2f7c838b11d8e261be3a7a0326" title="Destroy a timer.">rtdm_timer_destroy</a>(rtdm_timer_t *timer);
+<a name="l00965"></a>00965 <span class="comment">/* --- timer services --- */</span>
+<a name="l00966"></a>00966 
+<a name="l00972"></a>00972 <span class="keyword">typedef</span> xntimer_t rtdm_timer_t;
+<a name="l00973"></a>00973 
+<a name="l00979"></a><a class="code" href="group__rtdmtimer.html#ga31b7b9a042260702a110bfe2c9bcac61">00979</a> <span class="keyword">typedef</span> void (*<a class="code" href="group__rtdmtimer.html#ga31b7b9a042260702a110bfe2c9bcac61" title="Timer handler.">rtdm_timer_handler_t</a>)(rtdm_timer_t *timer);
+<a name="l00980"></a>00980 
+<a name="l00986"></a><a class="code" href="group__rtdmtimer.html#gad0bffecd0182d68967ebb5b47df0bcd0">00986</a> <span class="keyword">enum</span> <a class="code" href="group__rtdmtimer.html#gad0bffecd0182d68967ebb5b47df0bcd0">rtdm_timer_mode</a> {
+<a name="l00988"></a><a class="code" href="group__rtdmtimer.html#ggad0bffecd0182d68967ebb5b47df0bcd0addd5d0b543bebdb1187330b7f52a94f8">00988</a>         <a class="code" href="group__rtdmtimer.html#ggad0bffecd0182d68967ebb5b47df0bcd0addd5d0b543bebdb1187330b7f52a94f8" title="Monotonic timer with relative timeout.">RTDM_TIMERMODE_RELATIVE</a> = XN_RELATIVE,
+<a name="l00989"></a>00989 
+<a name="l00991"></a><a class="code" href="group__rtdmtimer.html#ggad0bffecd0182d68967ebb5b47df0bcd0a77b27da267c09a5a586aab86c9cd22e2">00991</a>         <a class="code" href="group__rtdmtimer.html#ggad0bffecd0182d68967ebb5b47df0bcd0a77b27da267c09a5a586aab86c9cd22e2" title="Monotonic timer with absolute timeout.">RTDM_TIMERMODE_ABSOLUTE</a> = XN_ABSOLUTE,
+<a name="l00992"></a>00992 
+<a name="l00994"></a><a class="code" href="group__rtdmtimer.html#ggad0bffecd0182d68967ebb5b47df0bcd0a8c206cf25cb340fd7ccee4489df6a220">00994</a>         <a class="code" href="group__rtdmtimer.html#ggad0bffecd0182d68967ebb5b47df0bcd0a8c206cf25cb340fd7ccee4489df6a220" title="Adjustable timer with absolute timeout.">RTDM_TIMERMODE_REALTIME</a> = XN_REALTIME
+<a name="l00995"></a>00995 };
+<a name="l01000"></a>01000 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid broken doxygen output */</span>
+<a name="l01001"></a>01001 <span class="preprocessor">#define rtdm_timer_init(timer, handler, name)           \</span>
+<a name="l01002"></a>01002 <span class="preprocessor">({                                                      \</span>
+<a name="l01003"></a>01003 <span class="preprocessor">        xntimer_init((timer), rtdm_tbase, handler);     \</span>
+<a name="l01004"></a>01004 <span class="preprocessor">        xntimer_set_name((timer), (name));              \</span>
+<a name="l01005"></a>01005 <span class="preprocessor">        0;                                              \</span>
+<a name="l01006"></a>01006 <span class="preprocessor">})</span>
+<a name="l01007"></a>01007 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
 <a name="l01008"></a>01008 
-<a name="l01009"></a>01009 <span class="keywordtype">int</span> <a class="code" href="group__rtdmtimer.html#ga429ca4935762583edb6e1ebc955fe958" title="Start a timer.">rtdm_timer_start</a>(rtdm_timer_t *timer, <a class="code" href="group__rtdm.html#gad3b24c25feabadba465f8797d8c7fe27" title="RTDM type for representing absolute dates.">nanosecs_abs_t</a> expiry,
-<a name="l01010"></a>01010                      <a class="code" href="group__rtdm.html#gaededf91e760e3268235351dcc9d9dcda" title="RTDM type for representing relative intervals.">nanosecs_rel_t</a> interval, <span class="keyword">enum</span> <a class="code" href="group__rtdmtimer.html#gad0bffecd0182d68967ebb5b47df0bcd0">rtdm_timer_mode</a> mode);
-<a name="l01011"></a>01011 
-<a name="l01012"></a>01012 <span class="keywordtype">void</span> <a class="code" href="group__rtdmtimer.html#ga7f2accf693db9ed5a537b86a58bccd94" title="Stop a timer.">rtdm_timer_stop</a>(rtdm_timer_t *timer);
+<a name="l01009"></a>01009 <span class="keywordtype">void</span> <a class="code" href="group__rtdmtimer.html#gac75c6e2f7c838b11d8e261be3a7a0326" title="Destroy a timer.">rtdm_timer_destroy</a>(rtdm_timer_t *timer);
+<a name="l01010"></a>01010 
+<a name="l01011"></a>01011 <span class="keywordtype">int</span> <a class="code" href="group__rtdmtimer.html#ga429ca4935762583edb6e1ebc955fe958" title="Start a timer.">rtdm_timer_start</a>(rtdm_timer_t *timer, <a class="code" href="group__rtdm.html#gad3b24c25feabadba465f8797d8c7fe27" title="RTDM type for representing absolute dates.">nanosecs_abs_t</a> expiry,
+<a name="l01012"></a>01012                      <a class="code" href="group__rtdm.html#gaededf91e760e3268235351dcc9d9dcda" title="RTDM type for representing relative intervals.">nanosecs_rel_t</a> interval, <span class="keyword">enum</span> <a class="code" href="group__rtdmtimer.html#gad0bffecd0182d68967ebb5b47df0bcd0">rtdm_timer_mode</a> mode);
 <a name="l01013"></a>01013 
-<a name="l01014"></a>01014 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
-<a name="l01015"></a>01015 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__rtdmtimer.html#gaf585049063aa6ffb2f79511c0a091119" title="Start a timer from inside a timer handler.">rtdm_timer_start_in_handler</a>(rtdm_timer_t *timer,
-<a name="l01016"></a>01016                                               <a class="code" href="group__rtdm.html#gad3b24c25feabadba465f8797d8c7fe27" title="RTDM type for representing absolute dates.">nanosecs_abs_t</a> expiry,
-<a name="l01017"></a>01017                                               <a class="code" href="group__rtdm.html#gaededf91e760e3268235351dcc9d9dcda" title="RTDM type for representing relative intervals.">nanosecs_rel_t</a> interval,
-<a name="l01018"></a>01018                                               <span class="keyword">enum</span> <a class="code" href="group__rtdmtimer.html#gad0bffecd0182d68967ebb5b47df0bcd0">rtdm_timer_mode</a> mode)
-<a name="l01019"></a>01019 {
-<a name="l01020"></a>01020         <span class="keywordflow">return</span> <a class="code" href="group__timer.html#ga0ad3c70bed7fe1a45b45ee0875f031ab" title="Arm a timer.">xntimer_start</a>(timer, xntbase_ns2ticks_ceil(rtdm_tbase, expiry),
-<a name="l01021"></a>01021                              xntbase_ns2ticks_ceil(rtdm_tbase, interval),
-<a name="l01022"></a>01022                              (xntmode_t)mode);
-<a name="l01023"></a>01023 }
-<a name="l01024"></a>01024 
-<a name="l01025"></a>01025 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmtimer.html#gaf76e21cc3429370612b76493fdb6d23e" title="Stop a timer from inside a timer handler.">rtdm_timer_stop_in_handler</a>(rtdm_timer_t *timer)
-<a name="l01026"></a>01026 {
-<a name="l01027"></a>01027         <a class="code" href="group__timer.html#ga1244411df9784d63d3e2f99016d62643" title="Disarm a timer.">xntimer_stop</a>(timer);
-<a name="l01028"></a>01028 }
-<a name="l01029"></a>01029 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
-<a name="l01030"></a>01030 
-<a name="l01031"></a>01031 <span class="comment">/* --- task services --- */</span>
-<a name="l01037"></a>01037 <span class="keyword">typedef</span> xnthread_t rtdm_task_t;
-<a name="l01038"></a>01038 
-<a name="l01044"></a><a class="code" href="group__rtdmtask.html#gaa3cb481ab12462f5e54ff6fee12813e5">01044</a> <span class="keyword">typedef</span> void (*<a class="code" href="group__rtdmtask.html#gaa3cb481ab12462f5e54ff6fee12813e5" title="Real-time task procedure.">rtdm_task_proc_t</a>)(<span class="keywordtype">void</span> *arg);
-<a name="l01045"></a>01045 
-<a name="l01050"></a>01050 <span class="preprocessor">#define RTDM_TASK_LOWEST_PRIORITY       XNSCHED_LOW_PRIO</span>
-<a name="l01051"></a>01051 <span class="preprocessor"></span><span class="preprocessor">#define RTDM_TASK_HIGHEST_PRIORITY      XNSCHED_HIGH_PRIO</span>
-<a name="l01052"></a>01052 <span class="preprocessor"></span>
-<a name="l01058"></a>01058 <span class="preprocessor">#define RTDM_TASK_RAISE_PRIORITY        (+1)</span>
-<a name="l01059"></a>01059 <span class="preprocessor"></span><span class="preprocessor">#define RTDM_TASK_LOWER_PRIORITY        (-1)</span>
-<a name="l01060"></a>01060 <span class="preprocessor"></span>
-<a name="l01064"></a>01064 <span class="keywordtype">int</span> <a class="code" href="group__rtdmtask.html#ga44b0701b6c28fa8035711f800fdcd371" title="Intialise and start a real-time task.">rtdm_task_init</a>(rtdm_task_t *task, <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
-<a name="l01065"></a>01065                    <a class="code" href="group__rtdmtask.html#gaa3cb481ab12462f5e54ff6fee12813e5" title="Real-time task procedure.">rtdm_task_proc_t</a> task_proc, <span class="keywordtype">void</span> *arg,
-<a name="l01066"></a>01066                    <span class="keywordtype">int</span> priority, <a class="code" href="group__rtdm.html#gaededf91e760e3268235351dcc9d9dcda" title="RTDM type for representing relative intervals.">nanosecs_rel_t</a> period);
-<a name="l01067"></a>01067 <span class="keywordtype">int</span> __rtdm_task_sleep(xnticks_t timeout, xntmode_t mode);
-<a name="l01068"></a>01068 <span class="keywordtype">void</span> <a class="code" href="group__rtdmtask.html#gaa3940cfff7cc72d7bc064a3e279d74ac" title="Busy-wait a specified amount of time.">rtdm_task_busy_sleep</a>(<a class="code" href="group__rtdm.html#gaededf91e760e3268235351dcc9d9dcda" title="RTDM type for representing relative intervals.">nanosecs_rel_t</a> delay);
-<a name="l01069"></a>01069 
-<a name="l01070"></a>01070 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
-<a name="l01071"></a>01071 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmtask.html#ga7b5581febb2732127736817ca44e86e3" title="Destroy a real-time task.">rtdm_task_destroy</a>(rtdm_task_t *task)
-<a name="l01072"></a>01072 {
-<a name="l01073"></a>01073         <a class="code" href="group__pod.html#gad2b761fb70cad30339f092edb4a89587" title="Delete a thread.">xnpod_delete_thread</a>(task);
-<a name="l01074"></a>01074 }
-<a name="l01075"></a>01075 
-<a name="l01076"></a>01076 <span class="keywordtype">void</span> <a class="code" href="group__rtdmtask.html#ga8a60a2a7ba5fec7dac5336b3e8f256cc" title="Wait on a real-time task to terminate.">rtdm_task_join_nrt</a>(rtdm_task_t *task, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> poll_delay);
+<a name="l01014"></a>01014 <span class="keywordtype">void</span> <a class="code" href="group__rtdmtimer.html#ga7f2accf693db9ed5a537b86a58bccd94" title="Stop a timer.">rtdm_timer_stop</a>(rtdm_timer_t *timer);
+<a name="l01015"></a>01015 
+<a name="l01016"></a>01016 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
+<a name="l01017"></a>01017 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__rtdmtimer.html#gaf585049063aa6ffb2f79511c0a091119" title="Start a timer from inside a timer handler.">rtdm_timer_start_in_handler</a>(rtdm_timer_t *timer,
+<a name="l01018"></a>01018                                               <a class="code" href="group__rtdm.html#gad3b24c25feabadba465f8797d8c7fe27" title="RTDM type for representing absolute dates.">nanosecs_abs_t</a> expiry,
+<a name="l01019"></a>01019                                               <a class="code" href="group__rtdm.html#gaededf91e760e3268235351dcc9d9dcda" title="RTDM type for representing relative intervals.">nanosecs_rel_t</a> interval,
+<a name="l01020"></a>01020                                               <span class="keyword">enum</span> <a class="code" href="group__rtdmtimer.html#gad0bffecd0182d68967ebb5b47df0bcd0">rtdm_timer_mode</a> mode)
+<a name="l01021"></a>01021 {
+<a name="l01022"></a>01022         <span class="keywordflow">return</span> <a class="code" href="group__timer.html#ga0ad3c70bed7fe1a45b45ee0875f031ab" title="Arm a timer.">xntimer_start</a>(timer, xntbase_ns2ticks_ceil(rtdm_tbase, expiry),
+<a name="l01023"></a>01023                              xntbase_ns2ticks_ceil(rtdm_tbase, interval),
+<a name="l01024"></a>01024                              (xntmode_t)mode);
+<a name="l01025"></a>01025 }
+<a name="l01026"></a>01026 
+<a name="l01027"></a>01027 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmtimer.html#gaf76e21cc3429370612b76493fdb6d23e" title="Stop a timer from inside a timer handler.">rtdm_timer_stop_in_handler</a>(rtdm_timer_t *timer)
+<a name="l01028"></a>01028 {
+<a name="l01029"></a>01029         <a class="code" href="group__timer.html#ga1244411df9784d63d3e2f99016d62643" title="Disarm a timer.">xntimer_stop</a>(timer);
+<a name="l01030"></a>01030 }
+<a name="l01031"></a>01031 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
+<a name="l01032"></a>01032 
+<a name="l01033"></a>01033 <span class="comment">/* --- task services --- */</span>
+<a name="l01039"></a>01039 <span class="keyword">typedef</span> xnthread_t rtdm_task_t;
+<a name="l01040"></a>01040 
+<a name="l01046"></a><a class="code" href="group__rtdmtask.html#gaa3cb481ab12462f5e54ff6fee12813e5">01046</a> <span class="keyword">typedef</span> void (*<a class="code" href="group__rtdmtask.html#gaa3cb481ab12462f5e54ff6fee12813e5" title="Real-time task procedure.">rtdm_task_proc_t</a>)(<span class="keywordtype">void</span> *arg);
+<a name="l01047"></a>01047 
+<a name="l01052"></a>01052 <span class="preprocessor">#define RTDM_TASK_LOWEST_PRIORITY       XNSCHED_LOW_PRIO</span>
+<a name="l01053"></a>01053 <span class="preprocessor"></span><span class="preprocessor">#define RTDM_TASK_HIGHEST_PRIORITY      XNSCHED_HIGH_PRIO</span>
+<a name="l01054"></a>01054 <span class="preprocessor"></span>
+<a name="l01060"></a>01060 <span class="preprocessor">#define RTDM_TASK_RAISE_PRIORITY        (+1)</span>
+<a name="l01061"></a>01061 <span class="preprocessor"></span><span class="preprocessor">#define RTDM_TASK_LOWER_PRIORITY        (-1)</span>
+<a name="l01062"></a>01062 <span class="preprocessor"></span>
+<a name="l01066"></a>01066 <span class="keywordtype">int</span> <a class="code" href="group__rtdmtask.html#ga44b0701b6c28fa8035711f800fdcd371" title="Intialise and start a real-time task.">rtdm_task_init</a>(rtdm_task_t *task, <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
+<a name="l01067"></a>01067                    <a class="code" href="group__rtdmtask.html#gaa3cb481ab12462f5e54ff6fee12813e5" title="Real-time task procedure.">rtdm_task_proc_t</a> task_proc, <span class="keywordtype">void</span> *arg,
+<a name="l01068"></a>01068                    <span class="keywordtype">int</span> priority, <a class="code" href="group__rtdm.html#gaededf91e760e3268235351dcc9d9dcda" title="RTDM type for representing relative intervals.">nanosecs_rel_t</a> period);
+<a name="l01069"></a>01069 <span class="keywordtype">int</span> __rtdm_task_sleep(xnticks_t timeout, xntmode_t mode);
+<a name="l01070"></a>01070 <span class="keywordtype">void</span> <a class="code" href="group__rtdmtask.html#gaa3940cfff7cc72d7bc064a3e279d74ac" title="Busy-wait a specified amount of time.">rtdm_task_busy_sleep</a>(<a class="code" href="group__rtdm.html#gaededf91e760e3268235351dcc9d9dcda" title="RTDM type for representing relative intervals.">nanosecs_rel_t</a> delay);
+<a name="l01071"></a>01071 
+<a name="l01072"></a>01072 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
+<a name="l01073"></a>01073 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmtask.html#ga7b5581febb2732127736817ca44e86e3" title="Destroy a real-time task.">rtdm_task_destroy</a>(rtdm_task_t *task)
+<a name="l01074"></a>01074 {
+<a name="l01075"></a>01075         <a class="code" href="group__pod.html#gad2b761fb70cad30339f092edb4a89587" title="Delete a thread.">xnpod_delete_thread</a>(task);
+<a name="l01076"></a>01076 }
 <a name="l01077"></a>01077 
-<a name="l01078"></a>01078 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmtask.html#ga286f2d3ff73b3e9c5f24d5a1122a57d2" title="Adjust real-time task priority.">rtdm_task_set_priority</a>(rtdm_task_t *task, <span class="keywordtype">int</span> priority)
-<a name="l01079"></a>01079 {
-<a name="l01080"></a>01080         <span class="keyword">union </span>xnsched_policy_param param = { .rt = { .prio = priority } };
-<a name="l01081"></a>01081         <a class="code" href="group__pod.html#ga6d535ef9821e98fd7f257b50a3c8d595" title="Change the base scheduling parameters of a thread.">xnpod_set_thread_schedparam</a>(task, &amp;xnsched_class_rt, &amp;param);
-<a name="l01082"></a>01082         <a class="code" href="group__pod.html#gacf5b53f0405351327b89b0cc4976b962" title="Rescheduling procedure entry point.">xnpod_schedule</a>();
-<a name="l01083"></a>01083 }
-<a name="l01084"></a>01084 
-<a name="l01085"></a>01085 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__rtdmtask.html#gaa5b32e7ff35bda7c6d929f8a894149b3" title="Adjust real-time task period.">rtdm_task_set_period</a>(rtdm_task_t *task,
-<a name="l01086"></a>01086                                        <a class="code" href="group__rtdm.html#gaededf91e760e3268235351dcc9d9dcda" title="RTDM type for representing relative intervals.">nanosecs_rel_t</a> period)
-<a name="l01087"></a>01087 {
-<a name="l01088"></a>01088         <span class="keywordflow">if</span> (period &lt; 0)
-<a name="l01089"></a>01089                 period = 0;
-<a name="l01090"></a>01090         <span class="keywordflow">return</span> <a class="code" href="group__pod.html#gaed5776a428e7c59b52b1da76f0d765fa" title="Make a thread periodic.">xnpod_set_thread_periodic</a>(task, XN_INFINITE,
-<a name="l01091"></a>01091                                          xntbase_ns2ticks_ceil
-<a name="l01092"></a>01092                                          (xnthread_time_base(task), period));
-<a name="l01093"></a>01093 }
-<a name="l01094"></a>01094 
-<a name="l01095"></a>01095 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__rtdmtask.html#gae52cca97ebaf78eec2e31553a4dacd5e" title="Activate a blocked real-time task.">rtdm_task_unblock</a>(rtdm_task_t *task)
-<a name="l01096"></a>01096 {
-<a name="l01097"></a>01097         <span class="keywordtype">int</span> res = <a class="code" href="group__pod.html#gae5f0d19e7a499b9b262f68a43ab545dd" title="Unblock a thread.">xnpod_unblock_thread</a>(task);
-<a name="l01098"></a>01098 
-<a name="l01099"></a>01099         <a class="code" href="group__pod.html#gacf5b53f0405351327b89b0cc4976b962" title="Rescheduling procedure entry point.">xnpod_schedule</a>();
-<a name="l01100"></a>01100         <span class="keywordflow">return</span> res;
-<a name="l01101"></a>01101 }
-<a name="l01102"></a>01102 
-<a name="l01103"></a>01103 <span class="keyword">static</span> <span class="keyword">inline</span> rtdm_task_t *<a class="code" href="group__rtdmtask.html#gafd58b762de7269549d1e54699ceebc0d" title="Get current real-time task.">rtdm_task_current</a>(<span class="keywordtype">void</span>)
-<a name="l01104"></a>01104 {
-<a name="l01105"></a>01105         <span class="keywordflow">return</span> xnpod_current_thread();
-<a name="l01106"></a>01106 }
-<a name="l01107"></a>01107 
-<a name="l01108"></a>01108 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__rtdmtask.html#ga577886a7588cdceac10f1b7b6ffcd1c7" title="Wait on next real-time task period.">rtdm_task_wait_period</a>(<span class="keywordtype">void</span>)
-<a name="l01109"></a>01109 {
-<a name="l01110"></a>01110         XENO_ASSERT(RTDM, !xnpod_unblockable_p(), <span class="keywordflow">return</span> -EPERM;);
-<a name="l01111"></a>01111         <span class="keywordflow">return</span> <a class="code" href="group__pod.html#gaf836996e4a3378928f2a9f93a4915cfa" title="Wait for the next periodic release point.">xnpod_wait_thread_period</a>(NULL);
-<a name="l01112"></a>01112 }
-<a name="l01113"></a>01113 
-<a name="l01114"></a>01114 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__rtdmtask.html#gabfae53746165a83a75965b7b0f6710a0" title="Sleep a specified amount of time.">rtdm_task_sleep</a>(<a class="code" href="group__rtdm.html#gaededf91e760e3268235351dcc9d9dcda" title="RTDM type for representing relative intervals.">nanosecs_rel_t</a> delay)
-<a name="l01115"></a>01115 {
-<a name="l01116"></a>01116         <span class="keywordflow">return</span> __rtdm_task_sleep(delay, XN_RELATIVE);
-<a name="l01117"></a>01117 }
-<a name="l01118"></a>01118 
-<a name="l01119"></a>01119 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span>
-<a name="l01120"></a>01120 <a class="code" href="group__rtdmtask.html#ga1763346568d041f9c66d68224816d15b" title="Sleep until a specified absolute time.">rtdm_task_sleep_abs</a>(<a class="code" href="group__rtdm.html#gad3b24c25feabadba465f8797d8c7fe27" title="RTDM type for representing absolute dates.">nanosecs_abs_t</a> wakeup_date, <span class="keyword">enum</span> <a class="code" href="group__rtdmtimer.html#gad0bffecd0182d68967ebb5b47df0bcd0">rtdm_timer_mode</a> mode)
-<a name="l01121"></a>01121 {
-<a name="l01122"></a>01122         <span class="comment">/* For the sake of a consistent API usage... */</span>
-<a name="l01123"></a>01123         <span class="keywordflow">if</span> (mode != <a class="code" href="group__rtdmtimer.html#ggad0bffecd0182d68967ebb5b47df0bcd0a77b27da267c09a5a586aab86c9cd22e2" title="Monotonic timer with absolute timeout.">RTDM_TIMERMODE_ABSOLUTE</a> &amp;&amp; mode != <a class="code" href="group__rtdmtimer.html#ggad0bffecd0182d68967ebb5b47df0bcd0a8c206cf25cb340fd7ccee4489df6a220" title="Adjustable timer with absolute timeout.">RTDM_TIMERMODE_REALTIME</a>)
-<a name="l01124"></a>01124                 <span class="keywordflow">return</span> -EINVAL;
-<a name="l01125"></a>01125         <span class="keywordflow">return</span> __rtdm_task_sleep(wakeup_date, (xntmode_t)mode);
-<a name="l01126"></a>01126 }
-<a name="l01127"></a>01127 
-<a name="l01128"></a>01128 <span class="comment">/* rtdm_task_sleep_abs shall be used instead */</span>
-<a name="l01129"></a>01129 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> __deprecated <a class="code" href="group__rtdmtask.html#ga741998821c05483db33f17d77c733d99" title="Sleep until a specified absolute time.">rtdm_task_sleep_until</a>(<a class="code" href="group__rtdm.html#gad3b24c25feabadba465f8797d8c7fe27" title="RTDM type for representing absolute dates.">nanosecs_abs_t</a> wakeup_time)
-<a name="l01130"></a>01130 {
-<a name="l01131"></a>01131         <span class="keywordflow">return</span> __rtdm_task_sleep(wakeup_time, XN_REALTIME);
-<a name="l01132"></a>01132 }
-<a name="l01133"></a>01133 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
-<a name="l01134"></a>01134 
-<a name="l01135"></a>01135 <span class="comment">/* --- timeout sequences */</span>
+<a name="l01078"></a>01078 <span class="keywordtype">void</span> <a class="code" href="group__rtdmtask.html#ga8a60a2a7ba5fec7dac5336b3e8f256cc" title="Wait on a real-time task to terminate.">rtdm_task_join_nrt</a>(rtdm_task_t *task, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> poll_delay);
+<a name="l01079"></a>01079 
+<a name="l01080"></a>01080 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmtask.html#ga286f2d3ff73b3e9c5f24d5a1122a57d2" title="Adjust real-time task priority.">rtdm_task_set_priority</a>(rtdm_task_t *task, <span class="keywordtype">int</span> priority)
+<a name="l01081"></a>01081 {
+<a name="l01082"></a>01082         <span class="keyword">union </span>xnsched_policy_param param = { .rt = { .prio = priority } };
+<a name="l01083"></a>01083         <a class="code" href="group__pod.html#ga6d535ef9821e98fd7f257b50a3c8d595" title="Change the base scheduling parameters of a thread.">xnpod_set_thread_schedparam</a>(task, &amp;xnsched_class_rt, &amp;param);
+<a name="l01084"></a>01084         <a class="code" href="group__pod.html#gacf5b53f0405351327b89b0cc4976b962" title="Rescheduling procedure entry point.">xnpod_schedule</a>();
+<a name="l01085"></a>01085 }
+<a name="l01086"></a>01086 
+<a name="l01087"></a>01087 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__rtdmtask.html#gaa5b32e7ff35bda7c6d929f8a894149b3" title="Adjust real-time task period.">rtdm_task_set_period</a>(rtdm_task_t *task,
+<a name="l01088"></a>01088                                        <a class="code" href="group__rtdm.html#gaededf91e760e3268235351dcc9d9dcda" title="RTDM type for representing relative intervals.">nanosecs_rel_t</a> period)
+<a name="l01089"></a>01089 {
+<a name="l01090"></a>01090         <span class="keywordflow">if</span> (period &lt; 0)
+<a name="l01091"></a>01091                 period = 0;
+<a name="l01092"></a>01092         <span class="keywordflow">return</span> <a class="code" href="group__pod.html#gaed5776a428e7c59b52b1da76f0d765fa" title="Make a thread periodic.">xnpod_set_thread_periodic</a>(task, XN_INFINITE,
+<a name="l01093"></a>01093                                          xntbase_ns2ticks_ceil
+<a name="l01094"></a>01094                                          (xnthread_time_base(task), period));
+<a name="l01095"></a>01095 }
+<a name="l01096"></a>01096 
+<a name="l01097"></a>01097 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__rtdmtask.html#gae52cca97ebaf78eec2e31553a4dacd5e" title="Activate a blocked real-time task.">rtdm_task_unblock</a>(rtdm_task_t *task)
+<a name="l01098"></a>01098 {
+<a name="l01099"></a>01099         <span class="keywordtype">int</span> res = <a class="code" href="group__pod.html#gae5f0d19e7a499b9b262f68a43ab545dd" title="Unblock a thread.">xnpod_unblock_thread</a>(task);
+<a name="l01100"></a>01100 
+<a name="l01101"></a>01101         <a class="code" href="group__pod.html#gacf5b53f0405351327b89b0cc4976b962" title="Rescheduling procedure entry point.">xnpod_schedule</a>();
+<a name="l01102"></a>01102         <span class="keywordflow">return</span> res;
+<a name="l01103"></a>01103 }
+<a name="l01104"></a>01104 
+<a name="l01105"></a>01105 <span class="keyword">static</span> <span class="keyword">inline</span> rtdm_task_t *<a class="code" href="group__rtdmtask.html#gafd58b762de7269549d1e54699ceebc0d" title="Get current real-time task.">rtdm_task_current</a>(<span class="keywordtype">void</span>)
+<a name="l01106"></a>01106 {
+<a name="l01107"></a>01107         <span class="keywordflow">return</span> xnpod_current_thread();
+<a name="l01108"></a>01108 }
+<a name="l01109"></a>01109 
+<a name="l01110"></a>01110 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__rtdmtask.html#ga577886a7588cdceac10f1b7b6ffcd1c7" title="Wait on next real-time task period.">rtdm_task_wait_period</a>(<span class="keywordtype">void</span>)
+<a name="l01111"></a>01111 {
+<a name="l01112"></a>01112         XENO_ASSERT(RTDM, !xnpod_unblockable_p(), <span class="keywordflow">return</span> -EPERM;);
+<a name="l01113"></a>01113         <span class="keywordflow">return</span> <a class="code" href="group__pod.html#gaf836996e4a3378928f2a9f93a4915cfa" title="Wait for the next periodic release point.">xnpod_wait_thread_period</a>(NULL);
+<a name="l01114"></a>01114 }
+<a name="l01115"></a>01115 
+<a name="l01116"></a>01116 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__rtdmtask.html#gabfae53746165a83a75965b7b0f6710a0" title="Sleep a specified amount of time.">rtdm_task_sleep</a>(<a class="code" href="group__rtdm.html#gaededf91e760e3268235351dcc9d9dcda" title="RTDM type for representing relative intervals.">nanosecs_rel_t</a> delay)
+<a name="l01117"></a>01117 {
+<a name="l01118"></a>01118         <span class="keywordflow">return</span> __rtdm_task_sleep(delay, XN_RELATIVE);
+<a name="l01119"></a>01119 }
+<a name="l01120"></a>01120 
+<a name="l01121"></a>01121 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span>
+<a name="l01122"></a>01122 <a class="code" href="group__rtdmtask.html#ga1763346568d041f9c66d68224816d15b" title="Sleep until a specified absolute time.">rtdm_task_sleep_abs</a>(<a class="code" href="group__rtdm.html#gad3b24c25feabadba465f8797d8c7fe27" title="RTDM type for representing absolute dates.">nanosecs_abs_t</a> wakeup_date, <span class="keyword">enum</span> <a class="code" href="group__rtdmtimer.html#gad0bffecd0182d68967ebb5b47df0bcd0">rtdm_timer_mode</a> mode)
+<a name="l01123"></a>01123 {
+<a name="l01124"></a>01124         <span class="comment">/* For the sake of a consistent API usage... */</span>
+<a name="l01125"></a>01125         <span class="keywordflow">if</span> (mode != <a class="code" href="group__rtdmtimer.html#ggad0bffecd0182d68967ebb5b47df0bcd0a77b27da267c09a5a586aab86c9cd22e2" title="Monotonic timer with absolute timeout.">RTDM_TIMERMODE_ABSOLUTE</a> &amp;&amp; mode != <a class="code" href="group__rtdmtimer.html#ggad0bffecd0182d68967ebb5b47df0bcd0a8c206cf25cb340fd7ccee4489df6a220" title="Adjustable timer with absolute timeout.">RTDM_TIMERMODE_REALTIME</a>)
+<a name="l01126"></a>01126                 <span class="keywordflow">return</span> -EINVAL;
+<a name="l01127"></a>01127         <span class="keywordflow">return</span> __rtdm_task_sleep(wakeup_date, (xntmode_t)mode);
+<a name="l01128"></a>01128 }
+<a name="l01129"></a>01129 
+<a name="l01130"></a>01130 <span class="comment">/* rtdm_task_sleep_abs shall be used instead */</span>
+<a name="l01131"></a>01131 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> __deprecated <a class="code" href="group__rtdmtask.html#ga741998821c05483db33f17d77c733d99" title="Sleep until a specified absolute time.">rtdm_task_sleep_until</a>(<a class="code" href="group__rtdm.html#gad3b24c25feabadba465f8797d8c7fe27" title="RTDM type for representing absolute dates.">nanosecs_abs_t</a> wakeup_time)
+<a name="l01132"></a>01132 {
+<a name="l01133"></a>01133         <span class="keywordflow">return</span> __rtdm_task_sleep(wakeup_time, XN_REALTIME);
+<a name="l01134"></a>01134 }
+<a name="l01135"></a>01135 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
 <a name="l01136"></a>01136 
-<a name="l01137"></a>01137 <span class="keyword">typedef</span> <a class="code" href="group__rtdm.html#gad3b24c25feabadba465f8797d8c7fe27" title="RTDM type for representing absolute dates.">nanosecs_abs_t</a> rtdm_toseq_t;
+<a name="l01137"></a>01137 <span class="comment">/* --- timeout sequences */</span>
 <a name="l01138"></a>01138 
-<a name="l01139"></a>01139 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#ga531ddf80690059302409f760bd7f14d4" title="Initialise a timeout sequence.">rtdm_toseq_init</a>(rtdm_toseq_t *timeout_seq, <a class="code" href="group__rtdm.html#gaededf91e760e3268235351dcc9d9dcda" title="RTDM type for representing relative intervals.">nanosecs_rel_t</a> timeout);
+<a name="l01139"></a>01139 <span class="keyword">typedef</span> <a class="code" href="group__rtdm.html#gad3b24c25feabadba465f8797d8c7fe27" title="RTDM type for representing absolute dates.">nanosecs_abs_t</a> rtdm_toseq_t;
 <a name="l01140"></a>01140 
-<a name="l01141"></a>01141 <span class="comment">/* --- event services --- */</span>
+<a name="l01141"></a>01141 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#ga531ddf80690059302409f760bd7f14d4" title="Initialise a timeout sequence.">rtdm_toseq_init</a>(rtdm_toseq_t *timeout_seq, <a class="code" href="group__rtdm.html#gaededf91e760e3268235351dcc9d9dcda" title="RTDM type for representing relative intervals.">nanosecs_rel_t</a> timeout);
 <a name="l01142"></a>01142 
-<a name="l01143"></a>01143 <span class="keyword">typedef</span> <span class="keyword">struct </span>{
-<a name="l01144"></a>01144         xnsynch_t synch_base;
-<a name="l01145"></a>01145         DECLARE_XNSELECT(select_block);
-<a name="l01146"></a>01146 } rtdm_event_t;
-<a name="l01147"></a>01147 
-<a name="l01148"></a>01148 <span class="preprocessor">#define RTDM_EVENT_PENDING              XNSYNCH_SPARE1</span>
-<a name="l01149"></a>01149 <span class="preprocessor"></span>
-<a name="l01150"></a>01150 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#gaddf08d8ba5a44668bb360070a114fb19" title="Initialise an event.">rtdm_event_init</a>(rtdm_event_t *event, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> pending);
-<a name="l01151"></a>01151 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_RTDM_SELECT</span>
-<a name="l01152"></a>01152 <span class="preprocessor"></span><span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ga839656c781d87069dd1bf1c84c38e9d9" title="Bind a selector to an event.">rtdm_event_select_bind</a>(rtdm_event_t *event, rtdm_selector_t *selector,
-<a name="l01153"></a>01153                            <span class="keyword">enum</span> <a class="code" href="group__rtdmsync.html#gae18228df8c70c9da1f90f61b01e92501">rtdm_selecttype</a> type, <span class="keywordtype">unsigned</span> fd_index);
-<a name="l01154"></a>01154 <span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_OPT_RTDM_SELECT */</span>
-<a name="l01155"></a>01155 <span class="preprocessor">#define rtdm_event_select_bind(e, s, t, i) ({ (void)(e); -EBADF; })</span>
-<a name="l01156"></a>01156 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* !CONFIG_XENO_OPT_RTDM_SELECT */</span>
-<a name="l01157"></a>01157 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ga1c433b50c53d49d164b084751861e855" title="Wait on event occurrence.">rtdm_event_wait</a>(rtdm_event_t *event);
-<a name="l01158"></a>01158 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#gaf76f858a3951ca2e20d3b1e00afa17e0" title="Wait on event occurrence with timeout.">rtdm_event_timedwait</a>(rtdm_event_t *event, <a class="code" href="group__rtdm.html#gaededf91e760e3268235351dcc9d9dcda" title="RTDM type for representing relative intervals.">nanosecs_rel_t</a> timeout,
-<a name="l01159"></a>01159                          rtdm_toseq_t *timeout_seq);
-<a name="l01160"></a>01160 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#ga1217402b82034b26fe25c26f1e5b32c9" title="Signal an event occurrence.">rtdm_event_signal</a>(rtdm_event_t *event);
-<a name="l01161"></a>01161 
-<a name="l01162"></a>01162 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#ga732fe3cf3370df0f296f06fc4ac7f925" title="Clear event state.">rtdm_event_clear</a>(rtdm_event_t *event);
+<a name="l01143"></a>01143 <span class="comment">/* --- event services --- */</span>
+<a name="l01144"></a>01144 
+<a name="l01145"></a>01145 <span class="keyword">typedef</span> <span class="keyword">struct </span>{
+<a name="l01146"></a>01146         xnsynch_t synch_base;
+<a name="l01147"></a>01147         DECLARE_XNSELECT(select_block);
+<a name="l01148"></a>01148 } rtdm_event_t;
+<a name="l01149"></a>01149 
+<a name="l01150"></a>01150 <span class="preprocessor">#define RTDM_EVENT_PENDING              XNSYNCH_SPARE1</span>
+<a name="l01151"></a>01151 <span class="preprocessor"></span>
+<a name="l01152"></a>01152 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#gaddf08d8ba5a44668bb360070a114fb19" title="Initialise an event.">rtdm_event_init</a>(rtdm_event_t *event, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> pending);
+<a name="l01153"></a>01153 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_RTDM_SELECT</span>
+<a name="l01154"></a>01154 <span class="preprocessor"></span><span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ga839656c781d87069dd1bf1c84c38e9d9" title="Bind a selector to an event.">rtdm_event_select_bind</a>(rtdm_event_t *event, rtdm_selector_t *selector,
+<a name="l01155"></a>01155                            <span class="keyword">enum</span> <a class="code" href="group__rtdmsync.html#gae18228df8c70c9da1f90f61b01e92501">rtdm_selecttype</a> type, <span class="keywordtype">unsigned</span> fd_index);
+<a name="l01156"></a>01156 <span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_OPT_RTDM_SELECT */</span>
+<a name="l01157"></a>01157 <span class="preprocessor">#define rtdm_event_select_bind(e, s, t, i) ({ (void)(e); -EBADF; })</span>
+<a name="l01158"></a>01158 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* !CONFIG_XENO_OPT_RTDM_SELECT */</span>
+<a name="l01159"></a>01159 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ga1c433b50c53d49d164b084751861e855" title="Wait on event occurrence.">rtdm_event_wait</a>(rtdm_event_t *event);
+<a name="l01160"></a>01160 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#gaf76f858a3951ca2e20d3b1e00afa17e0" title="Wait on event occurrence with timeout.">rtdm_event_timedwait</a>(rtdm_event_t *event, <a class="code" href="group__rtdm.html#gaededf91e760e3268235351dcc9d9dcda" title="RTDM type for representing relative intervals.">nanosecs_rel_t</a> timeout,
+<a name="l01161"></a>01161                          rtdm_toseq_t *timeout_seq);
+<a name="l01162"></a>01162 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#ga1217402b82034b26fe25c26f1e5b32c9" title="Signal an event occurrence.">rtdm_event_signal</a>(rtdm_event_t *event);
 <a name="l01163"></a>01163 
-<a name="l01164"></a>01164 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
-<a name="l01165"></a>01165 <span class="keywordtype">void</span> __rtdm_synch_flush(xnsynch_t *synch, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> reason);
-<a name="l01166"></a>01166 
-<a name="l01167"></a>01167 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#ga7c9745d1db8e6de244a6c2690cbb8b22" title="Signal an event occurrence to currently listening waiters.">rtdm_event_pulse</a>(rtdm_event_t *event)
-<a name="l01168"></a>01168 {
-<a name="l01169"></a>01169         trace_mark(xn_rtdm, event_pulse, <span class="stringliteral">&quot;event %p&quot;</span>, event);
-<a name="l01170"></a>01170         __rtdm_synch_flush(&amp;event-&gt;synch_base, 0);
-<a name="l01171"></a>01171 }
-<a name="l01172"></a>01172 
-<a name="l01173"></a>01173 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#ga7b27d0206027a07958d4a09017e8a3fe" title="Destroy an event.">rtdm_event_destroy</a>(rtdm_event_t *event)
-<a name="l01174"></a>01174 {
-<a name="l01175"></a>01175         trace_mark(xn_rtdm, event_destroy, <span class="stringliteral">&quot;event %p&quot;</span>, event);
-<a name="l01176"></a>01176         __rtdm_synch_flush(&amp;event-&gt;synch_base, <a class="code" href="group__nucleus__info__flags.html#gab07d9dea73645dbba353dc2452c15b40" title="Pending on a removed resource.">XNRMID</a>);
-<a name="l01177"></a>01177         <a class="code" href="group__select.html#ga56e4b5bf3e35dd80c23e95cad8fa1614" title="Destroy the xnselect structure associated with a file descriptor.">xnselect_destroy</a>(&amp;event-&gt;select_block);
-<a name="l01178"></a>01178 }
-<a name="l01179"></a>01179 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
-<a name="l01180"></a>01180 
-<a name="l01181"></a>01181 <span class="comment">/* --- semaphore services --- */</span>
+<a name="l01164"></a>01164 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#ga732fe3cf3370df0f296f06fc4ac7f925" title="Clear event state.">rtdm_event_clear</a>(rtdm_event_t *event);
+<a name="l01165"></a>01165 
+<a name="l01166"></a>01166 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
+<a name="l01167"></a>01167 <span class="keywordtype">void</span> __rtdm_synch_flush(xnsynch_t *synch, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> reason);
+<a name="l01168"></a>01168 
+<a name="l01169"></a>01169 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#ga7c9745d1db8e6de244a6c2690cbb8b22" title="Signal an event occurrence to currently listening waiters.">rtdm_event_pulse</a>(rtdm_event_t *event)
+<a name="l01170"></a>01170 {
+<a name="l01171"></a>01171         trace_mark(xn_rtdm, event_pulse, <span class="stringliteral">&quot;event %p&quot;</span>, event);
+<a name="l01172"></a>01172         __rtdm_synch_flush(&amp;event-&gt;synch_base, 0);
+<a name="l01173"></a>01173 }
+<a name="l01174"></a>01174 
+<a name="l01175"></a>01175 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#ga7b27d0206027a07958d4a09017e8a3fe" title="Destroy an event.">rtdm_event_destroy</a>(rtdm_event_t *event)
+<a name="l01176"></a>01176 {
+<a name="l01177"></a>01177         trace_mark(xn_rtdm, event_destroy, <span class="stringliteral">&quot;event %p&quot;</span>, event);
+<a name="l01178"></a>01178         __rtdm_synch_flush(&amp;event-&gt;synch_base, <a class="code" href="group__nucleus__info__flags.html#gab07d9dea73645dbba353dc2452c15b40" title="Pending on a removed resource.">XNRMID</a>);
+<a name="l01179"></a>01179         <a class="code" href="group__select.html#ga56e4b5bf3e35dd80c23e95cad8fa1614" title="Destroy the xnselect structure associated with a file descriptor.">xnselect_destroy</a>(&amp;event-&gt;select_block);
+<a name="l01180"></a>01180 }
+<a name="l01181"></a>01181 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
 <a name="l01182"></a>01182 
-<a name="l01183"></a>01183 <span class="keyword">typedef</span> <span class="keyword">struct </span>{
-<a name="l01184"></a>01184         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> value;
-<a name="l01185"></a>01185         xnsynch_t synch_base;
-<a name="l01186"></a>01186         DECLARE_XNSELECT(select_block);
-<a name="l01187"></a>01187 } rtdm_sem_t;
-<a name="l01188"></a>01188 
-<a name="l01189"></a>01189 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#gae1172824e463d7705ed3033e8aea133d" title="Initialise a semaphore.">rtdm_sem_init</a>(rtdm_sem_t *sem, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> value);
-<a name="l01190"></a>01190 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_RTDM_SELECT</span>
-<a name="l01191"></a>01191 <span class="preprocessor"></span><span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#gaf61f576b0ff06f99399b27725aef0ae1" title="Bind a selector to a semaphore.">rtdm_sem_select_bind</a>(rtdm_sem_t *sem, rtdm_selector_t *selector,
-<a name="l01192"></a>01192                          <span class="keyword">enum</span> <a class="code" href="group__rtdmsync.html#gae18228df8c70c9da1f90f61b01e92501">rtdm_selecttype</a> type, <span class="keywordtype">unsigned</span> fd_index);
-<a name="l01193"></a>01193 <span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_OPT_RTDM_SELECT */</span>
-<a name="l01194"></a>01194 <span class="preprocessor">#define rtdm_sem_select_bind(s, se, t, i) ({ (void)(s); -EBADF; })</span>
-<a name="l01195"></a>01195 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* !CONFIG_XENO_OPT_RTDM_SELECT */</span>
-<a name="l01196"></a>01196 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ga59da1b60b7279c1fc4355e2e0b2cc77c" title="Decrement a semaphore.">rtdm_sem_down</a>(rtdm_sem_t *sem);
-<a name="l01197"></a>01197 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ga8aadb120a93df5dfd717c5bac6d4c1a9" title="Decrement a semaphore with timeout.">rtdm_sem_timeddown</a>(rtdm_sem_t *sem, <a class="code" href="group__rtdm.html#gaededf91e760e3268235351dcc9d9dcda" title="RTDM type for representing relative intervals.">nanosecs_rel_t</a> timeout,
-<a name="l01198"></a>01198                        rtdm_toseq_t *timeout_seq);
-<a name="l01199"></a>01199 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#ga829dbd8c5709d798ed06947b27001fed" title="Increment a semaphore.">rtdm_sem_up</a>(rtdm_sem_t *sem);
-<a name="l01200"></a>01200 
-<a name="l01201"></a>01201 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
-<a name="l01202"></a>01202 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#gaf16f45217e54201ff3f24753982c41f8" title="Destroy a semaphore.">rtdm_sem_destroy</a>(rtdm_sem_t *sem)
-<a name="l01203"></a>01203 {
-<a name="l01204"></a>01204         trace_mark(xn_rtdm, <a class="code" href="group__posix__sem.html#ga6dbe34606b393161567a658a32be87af" title="Destroy an unnamed semaphore.">sem_destroy</a>, <span class="stringliteral">&quot;sem %p&quot;</span>, sem);
-<a name="l01205"></a>01205         __rtdm_synch_flush(&amp;sem-&gt;synch_base, <a class="code" href="group__nucleus__info__flags.html#gab07d9dea73645dbba353dc2452c15b40" title="Pending on a removed resource.">XNRMID</a>);
-<a name="l01206"></a>01206         <a class="code" href="group__select.html#ga56e4b5bf3e35dd80c23e95cad8fa1614" title="Destroy the xnselect structure associated with a file descriptor.">xnselect_destroy</a>(&amp;sem-&gt;select_block);
-<a name="l01207"></a>01207 }
-<a name="l01208"></a>01208 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
-<a name="l01209"></a>01209 
-<a name="l01210"></a>01210 <span class="comment">/* --- mutex services --- */</span>
+<a name="l01183"></a>01183 <span class="comment">/* --- semaphore services --- */</span>
+<a name="l01184"></a>01184 
+<a name="l01185"></a>01185 <span class="keyword">typedef</span> <span class="keyword">struct </span>{
+<a name="l01186"></a>01186         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> value;
+<a name="l01187"></a>01187         xnsynch_t synch_base;
+<a name="l01188"></a>01188         DECLARE_XNSELECT(select_block);
+<a name="l01189"></a>01189 } rtdm_sem_t;
+<a name="l01190"></a>01190 
+<a name="l01191"></a>01191 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#gae1172824e463d7705ed3033e8aea133d" title="Initialise a semaphore.">rtdm_sem_init</a>(rtdm_sem_t *sem, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> value);
+<a name="l01192"></a>01192 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_RTDM_SELECT</span>
+<a name="l01193"></a>01193 <span class="preprocessor"></span><span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#gaf61f576b0ff06f99399b27725aef0ae1" title="Bind a selector to a semaphore.">rtdm_sem_select_bind</a>(rtdm_sem_t *sem, rtdm_selector_t *selector,
+<a name="l01194"></a>01194                          <span class="keyword">enum</span> <a class="code" href="group__rtdmsync.html#gae18228df8c70c9da1f90f61b01e92501">rtdm_selecttype</a> type, <span class="keywordtype">unsigned</span> fd_index);
+<a name="l01195"></a>01195 <span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_OPT_RTDM_SELECT */</span>
+<a name="l01196"></a>01196 <span class="preprocessor">#define rtdm_sem_select_bind(s, se, t, i) ({ (void)(s); -EBADF; })</span>
+<a name="l01197"></a>01197 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* !CONFIG_XENO_OPT_RTDM_SELECT */</span>
+<a name="l01198"></a>01198 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ga59da1b60b7279c1fc4355e2e0b2cc77c" title="Decrement a semaphore.">rtdm_sem_down</a>(rtdm_sem_t *sem);
+<a name="l01199"></a>01199 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ga8aadb120a93df5dfd717c5bac6d4c1a9" title="Decrement a semaphore with timeout.">rtdm_sem_timeddown</a>(rtdm_sem_t *sem, <a class="code" href="group__rtdm.html#gaededf91e760e3268235351dcc9d9dcda" title="RTDM type for representing relative intervals.">nanosecs_rel_t</a> timeout,
+<a name="l01200"></a>01200                        rtdm_toseq_t *timeout_seq);
+<a name="l01201"></a>01201 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#ga829dbd8c5709d798ed06947b27001fed" title="Increment a semaphore.">rtdm_sem_up</a>(rtdm_sem_t *sem);
+<a name="l01202"></a>01202 
+<a name="l01203"></a>01203 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
+<a name="l01204"></a>01204 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#gaf16f45217e54201ff3f24753982c41f8" title="Destroy a semaphore.">rtdm_sem_destroy</a>(rtdm_sem_t *sem)
+<a name="l01205"></a>01205 {
+<a name="l01206"></a>01206         trace_mark(xn_rtdm, <a class="code" href="group__posix__sem.html#ga6dbe34606b393161567a658a32be87af" title="Destroy an unnamed semaphore.">sem_destroy</a>, <span class="stringliteral">&quot;sem %p&quot;</span>, sem);
+<a name="l01207"></a>01207         __rtdm_synch_flush(&amp;sem-&gt;synch_base, <a class="code" href="group__nucleus__info__flags.html#gab07d9dea73645dbba353dc2452c15b40" title="Pending on a removed resource.">XNRMID</a>);
+<a name="l01208"></a>01208         <a class="code" href="group__select.html#ga56e4b5bf3e35dd80c23e95cad8fa1614" title="Destroy the xnselect structure associated with a file descriptor.">xnselect_destroy</a>(&amp;sem-&gt;select_block);
+<a name="l01209"></a>01209 }
+<a name="l01210"></a>01210 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
 <a name="l01211"></a>01211 
-<a name="l01212"></a>01212 <span class="keyword">typedef</span> <span class="keyword">struct </span>{
-<a name="l01213"></a>01213         xnsynch_t synch_base;
-<a name="l01214"></a>01214 } rtdm_mutex_t;
-<a name="l01215"></a>01215 
-<a name="l01216"></a>01216 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#ga8d58a144bf71df7b38bb887d036cbbb5" title="Initialise a mutex.">rtdm_mutex_init</a>(rtdm_mutex_t *mutex);
-<a name="l01217"></a>01217 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ga67c8f85c844df1aeed806e343a1b6437" title="Request a mutex.">rtdm_mutex_lock</a>(rtdm_mutex_t *mutex);
-<a name="l01218"></a>01218 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ga0789968300701ba2a940f5fe8b1fd4d8" title="Request a mutex with timeout.">rtdm_mutex_timedlock</a>(rtdm_mutex_t *mutex, <a class="code" href="group__rtdm.html#gaededf91e760e3268235351dcc9d9dcda" title="RTDM type for representing relative intervals.">nanosecs_rel_t</a> timeout,
-<a name="l01219"></a>01219                          rtdm_toseq_t *timeout_seq);
-<a name="l01220"></a>01220 
-<a name="l01221"></a>01221 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
-<a name="l01222"></a>01222 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#gab40ed579324d8cc76387a0e06dd0f82a" title="Release a mutex.">rtdm_mutex_unlock</a>(rtdm_mutex_t *mutex)
-<a name="l01223"></a>01223 {
-<a name="l01224"></a>01224         XENO_ASSERT(RTDM, !xnpod_asynch_p(), <span class="keywordflow">return</span>;);
-<a name="l01225"></a>01225 
-<a name="l01226"></a>01226         trace_mark(xn_rtdm, mutex_unlock, <span class="stringliteral">&quot;mutex %p&quot;</span>, mutex);
+<a name="l01212"></a>01212 <span class="comment">/* --- mutex services --- */</span>
+<a name="l01213"></a>01213 
+<a name="l01214"></a>01214 <span class="keyword">typedef</span> <span class="keyword">struct </span>{
+<a name="l01215"></a>01215         xnsynch_t synch_base;
+<a name="l01216"></a>01216 } rtdm_mutex_t;
+<a name="l01217"></a>01217 
+<a name="l01218"></a>01218 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#ga8d58a144bf71df7b38bb887d036cbbb5" title="Initialise a mutex.">rtdm_mutex_init</a>(rtdm_mutex_t *mutex);
+<a name="l01219"></a>01219 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ga67c8f85c844df1aeed806e343a1b6437" title="Request a mutex.">rtdm_mutex_lock</a>(rtdm_mutex_t *mutex);
+<a name="l01220"></a>01220 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ga0789968300701ba2a940f5fe8b1fd4d8" title="Request a mutex with timeout.">rtdm_mutex_timedlock</a>(rtdm_mutex_t *mutex, <a class="code" href="group__rtdm.html#gaededf91e760e3268235351dcc9d9dcda" title="RTDM type for representing relative intervals.">nanosecs_rel_t</a> timeout,
+<a name="l01221"></a>01221                          rtdm_toseq_t *timeout_seq);
+<a name="l01222"></a>01222 
+<a name="l01223"></a>01223 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
+<a name="l01224"></a>01224 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#gab40ed579324d8cc76387a0e06dd0f82a" title="Release a mutex.">rtdm_mutex_unlock</a>(rtdm_mutex_t *mutex)
+<a name="l01225"></a>01225 {
+<a name="l01226"></a>01226         XENO_ASSERT(RTDM, !xnpod_asynch_p(), <span class="keywordflow">return</span>;);
 <a name="l01227"></a>01227 
-<a name="l01228"></a>01228         <span class="keywordflow">if</span> (unlikely(<a class="code" href="group__synch.html#ga1208abb6b3d0017a4e0c43b9baff8cfb" title="Give the resource ownership to the next waiting thread.">xnsynch_release</a>(&amp;mutex-&gt;synch_base) != NULL))
-<a name="l01229"></a>01229                 <a class="code" href="group__pod.html#gacf5b53f0405351327b89b0cc4976b962" title="Rescheduling procedure entry point.">xnpod_schedule</a>();
-<a name="l01230"></a>01230 }
-<a name="l01231"></a>01231 
-<a name="l01232"></a>01232 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#gad13170b569d0a4cdb46072e1e3a45527" title="Destroy a mutex.">rtdm_mutex_destroy</a>(rtdm_mutex_t *mutex)
-<a name="l01233"></a>01233 {
-<a name="l01234"></a>01234         trace_mark(xn_rtdm, mutex_destroy, <span class="stringliteral">&quot;mutex %p&quot;</span>, mutex);
-<a name="l01235"></a>01235 
-<a name="l01236"></a>01236         __rtdm_synch_flush(&amp;mutex-&gt;synch_base, <a class="code" href="group__nucleus__info__flags.html#gab07d9dea73645dbba353dc2452c15b40" title="Pending on a removed resource.">XNRMID</a>);
-<a name="l01237"></a>01237 }
-<a name="l01238"></a>01238 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
-<a name="l01239"></a>01239 
-<a name="l01240"></a>01240 <span class="comment">/* --- utility functions --- */</span>
+<a name="l01228"></a>01228         trace_mark(xn_rtdm, mutex_unlock, <span class="stringliteral">&quot;mutex %p&quot;</span>, mutex);
+<a name="l01229"></a>01229 
+<a name="l01230"></a>01230         <span class="keywordflow">if</span> (unlikely(<a class="code" href="group__synch.html#ga1208abb6b3d0017a4e0c43b9baff8cfb" title="Give the resource ownership to the next waiting thread.">xnsynch_release</a>(&amp;mutex-&gt;synch_base) != NULL))
+<a name="l01231"></a>01231                 <a class="code" href="group__pod.html#gacf5b53f0405351327b89b0cc4976b962" title="Rescheduling procedure entry point.">xnpod_schedule</a>();
+<a name="l01232"></a>01232 }
+<a name="l01233"></a>01233 
+<a name="l01234"></a>01234 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#gad13170b569d0a4cdb46072e1e3a45527" title="Destroy a mutex.">rtdm_mutex_destroy</a>(rtdm_mutex_t *mutex)
+<a name="l01235"></a>01235 {
+<a name="l01236"></a>01236         trace_mark(xn_rtdm, mutex_destroy, <span class="stringliteral">&quot;mutex %p&quot;</span>, mutex);
+<a name="l01237"></a>01237 
+<a name="l01238"></a>01238         __rtdm_synch_flush(&amp;mutex-&gt;synch_base, <a class="code" href="group__nucleus__info__flags.html#gab07d9dea73645dbba353dc2452c15b40" title="Pending on a removed resource.">XNRMID</a>);
+<a name="l01239"></a>01239 }
+<a name="l01240"></a>01240 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
 <a name="l01241"></a>01241 
-<a name="l01242"></a>01242 <span class="preprocessor">#define rtdm_printk(format, ...)        printk(format, ##__VA_ARGS__)</span>
-<a name="l01243"></a>01243 <span class="preprocessor"></span>
-<a name="l01244"></a>01244 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
-<a name="l01245"></a>01245 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> *<a class="code" href="group__util.html#ga34dfd5c060c67acc684eb4b4256cd4ba" title="Allocate memory block in real-time context.">rtdm_malloc</a>(<span class="keywordtype">size_t</span> size)
-<a name="l01246"></a>01246 {
-<a name="l01247"></a>01247         <span class="keywordflow">return</span> xnmalloc(size);
-<a name="l01248"></a>01248 }
-<a name="l01249"></a>01249 
-<a name="l01250"></a>01250 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__util.html#ga8d15b2cbb2fbf35b88362491af4e6a36" title="Release real-time memory block.">rtdm_free</a>(<span class="keywordtype">void</span> *ptr)
-<a name="l01251"></a>01251 {
-<a name="l01252"></a>01252         xnfree(ptr);
-<a name="l01253"></a>01253 }
+<a name="l01242"></a>01242 <span class="comment">/* --- utility functions --- */</span>
+<a name="l01243"></a>01243 
+<a name="l01244"></a>01244 <span class="preprocessor">#define rtdm_printk(format, ...)        printk(format, ##__VA_ARGS__)</span>
+<a name="l01245"></a>01245 <span class="preprocessor"></span>
+<a name="l01246"></a>01246 <span class="keyword">struct </span>rtdm_ratelimit_state {
+<a name="l01247"></a>01247         rtdm_lock_t     lock;           <span class="comment">/* protect the state */</span>
+<a name="l01248"></a>01248         <a class="code" href="group__rtdm.html#gad3b24c25feabadba465f8797d8c7fe27" title="RTDM type for representing absolute dates.">nanosecs_abs_t</a>  interval;
+<a name="l01249"></a>01249         <span class="keywordtype">int</span>             burst;
+<a name="l01250"></a>01250         <span class="keywordtype">int</span>             printed;
+<a name="l01251"></a>01251         <span class="keywordtype">int</span>             missed;
+<a name="l01252"></a>01252         <a class="code" href="group__rtdm.html#gad3b24c25feabadba465f8797d8c7fe27" title="RTDM type for representing absolute dates.">nanosecs_abs_t</a>  begin;
+<a name="l01253"></a>01253 };
 <a name="l01254"></a>01254 
-<a name="l01255"></a>01255 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_PERVASIVE</span>
-<a name="l01256"></a>01256 <span class="preprocessor"></span><span class="keywordtype">int</span> <a class="code" href="group__util.html#gadf5ddcdee106f1eaf4b93b2d633da441" title="Map a kernel memory range into the address space of the user.">rtdm_mmap_to_user</a>(rtdm_user_info_t *user_info,
-<a name="l01257"></a>01257                       <span class="keywordtype">void</span> *src_addr, <span class="keywordtype">size_t</span> len,
-<a name="l01258"></a>01258                       <span class="keywordtype">int</span> prot, <span class="keywordtype">void</span> **pptr,
-<a name="l01259"></a>01259                       <span class="keyword">struct</span> vm_operations_struct *vm_ops,
-<a name="l01260"></a>01260                       <span class="keywordtype">void</span> *vm_private_data);
-<a name="l01261"></a>01261 <span class="keywordtype">int</span> <a class="code" href="group__util.html#gaa49b4fbd57a98a9ccda1f243b40bc519" title="Map an I/O memory range into the address space of the user.">rtdm_iomap_to_user</a>(rtdm_user_info_t *user_info,
-<a name="l01262"></a>01262                        phys_addr_t src_addr, <span class="keywordtype">size_t</span> len,
-<a name="l01263"></a>01263                        <span class="keywordtype">int</span> prot, <span class="keywordtype">void</span> **pptr,
-<a name="l01264"></a>01264                        <span class="keyword">struct</span> vm_operations_struct *vm_ops,
-<a name="l01265"></a>01265                        <span class="keywordtype">void</span> *vm_private_data);
-<a name="l01266"></a>01266 <span class="keywordtype">int</span> <a class="code" href="group__util.html#gaa6a363aa6e2e017d3493a9c175755fa5" title="Unmap a user memory range.">rtdm_munmap</a>(rtdm_user_info_t *user_info, <span class="keywordtype">void</span> *ptr, <span class="keywordtype">size_t</span> len);
-<a name="l01267"></a>01267 
-<a name="l01268"></a>01268 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#ga341dedfbeeb511848ba5f5a9535cc0a7" title="Check if read access to user-space memory block is safe.">rtdm_read_user_ok</a>(rtdm_user_info_t *user_info,
-<a name="l01269"></a>01269                                     <span class="keyword">const</span> <span class="keywordtype">void</span> __user *ptr, <span class="keywordtype">size_t</span> size)
-<a name="l01270"></a>01270 {
-<a name="l01271"></a>01271         <span class="keywordflow">return</span> access_rok(ptr, size);
-<a name="l01272"></a>01272 }
-<a name="l01273"></a>01273 
-<a name="l01274"></a>01274 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#ga6cecee5411773e81c83d04824864a62d" title="Check if read/write access to user-space memory block is safe.">rtdm_rw_user_ok</a>(rtdm_user_info_t *user_info,
-<a name="l01275"></a>01275                                   <span class="keyword">const</span> <span class="keywordtype">void</span> __user *ptr, <span class="keywordtype">size_t</span> size)
-<a name="l01276"></a>01276 {
-<a name="l01277"></a>01277         <span class="keywordflow">return</span> access_wok(ptr, size);
-<a name="l01278"></a>01278 }
-<a name="l01279"></a>01279 
-<a name="l01280"></a>01280 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#ga99abc944640745604b4a77204d2d0777" title="Copy user-space memory block to specified buffer.">rtdm_copy_from_user</a>(rtdm_user_info_t *user_info,
-<a name="l01281"></a>01281                                       <span class="keywordtype">void</span> *dst, <span class="keyword">const</span> <span class="keywordtype">void</span> __user *src,
-<a name="l01282"></a>01282                                       <span class="keywordtype">size_t</span> size)
-<a name="l01283"></a>01283 {
-<a name="l01284"></a>01284         <span class="keywordflow">return</span> __xn_copy_from_user(dst, src, size) ? -EFAULT : 0;
-<a name="l01285"></a>01285 }
-<a name="l01286"></a>01286 
-<a name="l01287"></a>01287 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#ga8e2ada3a5665c1366cd2c91f304bfa34" title="Check if read access to user-space memory block and copy it to specified buffer.">rtdm_safe_copy_from_user</a>(rtdm_user_info_t *user_info,
-<a name="l01288"></a>01288                                            <span class="keywordtype">void</span> *dst, <span class="keyword">const</span> <span class="keywordtype">void</span> __user *src,
-<a name="l01289"></a>01289                                            <span class="keywordtype">size_t</span> size)
-<a name="l01290"></a>01290 {
-<a name="l01291"></a>01291         <span class="keywordflow">return</span> (!access_rok(src, size) ||
-<a name="l01292"></a>01292                 __xn_copy_from_user(dst, src, size)) ? -EFAULT : 0;
-<a name="l01293"></a>01293 }
-<a name="l01294"></a>01294 
-<a name="l01295"></a>01295 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#gab19ad9751ca1c56a53aafeb7ce8a6faf" title="Copy specified buffer to user-space memory block.">rtdm_copy_to_user</a>(rtdm_user_info_t *user_info,
-<a name="l01296"></a>01296                                     <span class="keywordtype">void</span> __user *dst, <span class="keyword">const</span> <span class="keywordtype">void</span> *src,
-<a name="l01297"></a>01297                                     <span class="keywordtype">size_t</span> size)
-<a name="l01298"></a>01298 {
-<a name="l01299"></a>01299         <span class="keywordflow">return</span> __xn_copy_to_user(dst, src, size) ? -EFAULT : 0;
-<a name="l01300"></a>01300 }
-<a name="l01301"></a>01301 
-<a name="l01302"></a>01302 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#ga53f7bacd08774bfd26e13798cbfb21b8" title="Check if read/write access to user-space memory block is safe and copy specified buffer to it...">rtdm_safe_copy_to_user</a>(rtdm_user_info_t *user_info,
-<a name="l01303"></a>01303                                          <span class="keywordtype">void</span> __user *dst, <span class="keyword">const</span> <span class="keywordtype">void</span> *src,
-<a name="l01304"></a>01304                                          <span class="keywordtype">size_t</span> size)
-<a name="l01305"></a>01305 {
-<a name="l01306"></a>01306         <span class="keywordflow">return</span> (!access_wok(dst, size) ||
-<a name="l01307"></a>01307                 __xn_copy_to_user(dst, src, size)) ? -EFAULT : 0;
-<a name="l01308"></a>01308 }
-<a name="l01309"></a>01309 
-<a name="l01310"></a>01310 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#ga9512ab3a85bea45a47bd033bad8b4828" title="Copy user-space string to specified buffer.">rtdm_strncpy_from_user</a>(rtdm_user_info_t *user_info,
-<a name="l01311"></a>01311                                          <span class="keywordtype">char</span> *dst,
-<a name="l01312"></a>01312                                          <span class="keyword">const</span> <span class="keywordtype">char</span> __user *src, <span class="keywordtype">size_t</span> count)
-<a name="l01313"></a>01313 {
-<a name="l01314"></a>01314         <span class="keywordflow">if</span> (unlikely(!access_rok(src, 1)))
-<a name="l01315"></a>01315                 <span class="keywordflow">return</span> -EFAULT;
-<a name="l01316"></a>01316         <span class="keywordflow">return</span> __xn_strncpy_from_user(dst, src, count);
-<a name="l01317"></a>01317 }
-<a name="l01318"></a>01318 
-<a name="l01319"></a>01319 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#ga321a8c48467a6268fa201c16833524db" title="Test if the caller is capable of running in real-time context.">rtdm_rt_capable</a>(rtdm_user_info_t *user_info)
-<a name="l01320"></a>01320 {
-<a name="l01321"></a>01321         XENO_ASSERT(RTDM, !xnpod_asynch_p(), <span class="keywordflow">return</span> 0;);
-<a name="l01322"></a>01322 
-<a name="l01323"></a>01323         <span class="keywordflow">return</span> (user_info ? xnshadow_thread(user_info) != NULL
-<a name="l01324"></a>01324                           : !xnpod_root_p());
-<a name="l01325"></a>01325 }
-<a name="l01326"></a>01326 
-<a name="l01327"></a>01327 <span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_OPT_PERVASIVE */</span>
-<a name="l01328"></a>01328 <span class="comment">/* Define void user&lt;-&gt;kernel services that simply fail */</span>
-<a name="l01329"></a>01329 <span class="preprocessor">#define rtdm_mmap_to_user(...)          ({ -ENOSYS; })</span>
-<a name="l01330"></a>01330 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_munmap(...)                ({ -ENOSYS; })</span>
-<a name="l01331"></a>01331 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_read_user_ok(...)          ({ 0; })</span>
-<a name="l01332"></a>01332 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_rw_user_ok(...)            ({ 0; })</span>
-<a name="l01333"></a>01333 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_copy_from_user(...)        ({ -ENOSYS; })</span>
-<a name="l01334"></a>01334 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_safe_copy_from_user(...)   ({ -ENOSYS; })</span>
-<a name="l01335"></a>01335 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_copy_to_user(...)          ({ -ENOSYS; })</span>
-<a name="l01336"></a>01336 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_safe_copy_to_user(...)     ({ -ENOSYS; })</span>
-<a name="l01337"></a>01337 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_strncpy_from_user(...)     ({ -ENOSYS; })</span>
-<a name="l01338"></a>01338 <span class="preprocessor"></span>
-<a name="l01339"></a>01339 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#ga321a8c48467a6268fa201c16833524db" title="Test if the caller is capable of running in real-time context.">rtdm_rt_capable</a>(rtdm_user_info_t *user_info)
-<a name="l01340"></a>01340 {
-<a name="l01341"></a>01341         XENO_ASSERT(RTDM, !xnpod_asynch_p(), <span class="keywordflow">return</span> 0;);
+<a name="l01255"></a>01255 <span class="keywordtype">int</span> <a class="code" href="group__util.html#gab0b2db892afe1bd77a80f6b8367eb0c9" title="Enforces a rate limit.">rtdm_ratelimit</a>(<span class="keyword">struct</span> rtdm_ratelimit_state *rs, <span class="keyword">const</span> <span class="keywordtype">char</span> *func);
+<a name="l01256"></a>01256 
+<a name="l01257"></a>01257 <span class="preprocessor">#define DEFINE_RTDM_RATELIMIT_STATE(name, interval_init, burst_init)    \</span>
+<a name="l01258"></a>01258 <span class="preprocessor">        struct rtdm_ratelimit_state name = {                            \</span>
+<a name="l01259"></a>01259 <span class="preprocessor">                .lock           = RTDM_LOCK_UNLOCKED,                   \</span>
+<a name="l01260"></a>01260 <span class="preprocessor">                .interval       = interval_init,                        \</span>
+<a name="l01261"></a>01261 <span class="preprocessor">                .burst          = burst_init,                           \</span>
+<a name="l01262"></a>01262 <span class="preprocessor">        }</span>
+<a name="l01263"></a>01263 <span class="preprocessor"></span>
+<a name="l01264"></a>01264 <span class="comment">/* We use the Linux defaults */</span>
+<a name="l01265"></a>01265 <span class="preprocessor">#define DEF_RTDM_RATELIMIT_INTERVAL     5000000000LL</span>
+<a name="l01266"></a>01266 <span class="preprocessor"></span><span class="preprocessor">#define DEF_RTDM_RATELIMIT_BURST        10</span>
+<a name="l01267"></a>01267 <span class="preprocessor"></span>
+<a name="l01268"></a>01268 <span class="preprocessor">#define rtdm_printk_ratelimited(fmt, ...)  ({                           \</span>
+<a name="l01269"></a>01269 <span class="preprocessor">        static DEFINE_RTDM_RATELIMIT_STATE(_rs,                         \</span>
+<a name="l01270"></a>01270 <span class="preprocessor">                                           DEF_RTDM_RATELIMIT_INTERVAL, \</span>
+<a name="l01271"></a>01271 <span class="preprocessor">                                           DEF_RTDM_RATELIMIT_BURST);   \</span>
+<a name="l01272"></a>01272 <span class="preprocessor">                                                                        \</span>
+<a name="l01273"></a>01273 <span class="preprocessor">        if (rtdm_ratelimit(&amp;_rs, __func__))                             \</span>
+<a name="l01274"></a>01274 <span class="preprocessor">                printk(fmt, ##__VA_ARGS__);                             \</span>
+<a name="l01275"></a>01275 <span class="preprocessor">})</span>
+<a name="l01276"></a>01276 <span class="preprocessor"></span>
+<a name="l01277"></a>01277 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
+<a name="l01278"></a>01278 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> *<a class="code" href="group__util.html#ga34dfd5c060c67acc684eb4b4256cd4ba" title="Allocate memory block in real-time context.">rtdm_malloc</a>(<span class="keywordtype">size_t</span> size)
+<a name="l01279"></a>01279 {
+<a name="l01280"></a>01280         <span class="keywordflow">return</span> xnmalloc(size);
+<a name="l01281"></a>01281 }
+<a name="l01282"></a>01282 
+<a name="l01283"></a>01283 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__util.html#ga8d15b2cbb2fbf35b88362491af4e6a36" title="Release real-time memory block.">rtdm_free</a>(<span class="keywordtype">void</span> *ptr)
+<a name="l01284"></a>01284 {
+<a name="l01285"></a>01285         xnfree(ptr);
+<a name="l01286"></a>01286 }
+<a name="l01287"></a>01287 
+<a name="l01288"></a>01288 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_PERVASIVE</span>
+<a name="l01289"></a>01289 <span class="preprocessor"></span><span class="keywordtype">int</span> <a class="code" href="group__util.html#gadf5ddcdee106f1eaf4b93b2d633da441" title="Map a kernel memory range into the address space of the user.">rtdm_mmap_to_user</a>(rtdm_user_info_t *user_info,
+<a name="l01290"></a>01290                       <span class="keywordtype">void</span> *src_addr, <span class="keywordtype">size_t</span> len,
+<a name="l01291"></a>01291                       <span class="keywordtype">int</span> prot, <span class="keywordtype">void</span> **pptr,
+<a name="l01292"></a>01292                       <span class="keyword">struct</span> vm_operations_struct *vm_ops,
+<a name="l01293"></a>01293                       <span class="keywordtype">void</span> *vm_private_data);
+<a name="l01294"></a>01294 <span class="keywordtype">int</span> <a class="code" href="group__util.html#gaa49b4fbd57a98a9ccda1f243b40bc519" title="Map an I/O memory range into the address space of the user.">rtdm_iomap_to_user</a>(rtdm_user_info_t *user_info,
+<a name="l01295"></a>01295                        phys_addr_t src_addr, <span class="keywordtype">size_t</span> len,
+<a name="l01296"></a>01296                        <span class="keywordtype">int</span> prot, <span class="keywordtype">void</span> **pptr,
+<a name="l01297"></a>01297                        <span class="keyword">struct</span> vm_operations_struct *vm_ops,
+<a name="l01298"></a>01298                        <span class="keywordtype">void</span> *vm_private_data);
+<a name="l01299"></a>01299 <span class="keywordtype">int</span> <a class="code" href="group__util.html#gaa6a363aa6e2e017d3493a9c175755fa5" title="Unmap a user memory range.">rtdm_munmap</a>(rtdm_user_info_t *user_info, <span class="keywordtype">void</span> *ptr, <span class="keywordtype">size_t</span> len);
+<a name="l01300"></a>01300 
+<a name="l01301"></a>01301 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#ga341dedfbeeb511848ba5f5a9535cc0a7" title="Check if read access to user-space memory block is safe.">rtdm_read_user_ok</a>(rtdm_user_info_t *user_info,
+<a name="l01302"></a>01302                                     <span class="keyword">const</span> <span class="keywordtype">void</span> __user *ptr, <span class="keywordtype">size_t</span> size)
+<a name="l01303"></a>01303 {
+<a name="l01304"></a>01304         <span class="keywordflow">return</span> access_rok(ptr, size);
+<a name="l01305"></a>01305 }
+<a name="l01306"></a>01306 
+<a name="l01307"></a>01307 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#ga6cecee5411773e81c83d04824864a62d" title="Check if read/write access to user-space memory block is safe.">rtdm_rw_user_ok</a>(rtdm_user_info_t *user_info,
+<a name="l01308"></a>01308                                   <span class="keyword">const</span> <span class="keywordtype">void</span> __user *ptr, <span class="keywordtype">size_t</span> size)
+<a name="l01309"></a>01309 {
+<a name="l01310"></a>01310         <span class="keywordflow">return</span> access_wok(ptr, size);
+<a name="l01311"></a>01311 }
+<a name="l01312"></a>01312 
+<a name="l01313"></a>01313 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#ga99abc944640745604b4a77204d2d0777" title="Copy user-space memory block to specified buffer.">rtdm_copy_from_user</a>(rtdm_user_info_t *user_info,
+<a name="l01314"></a>01314                                       <span class="keywordtype">void</span> *dst, <span class="keyword">const</span> <span class="keywordtype">void</span> __user *src,
+<a name="l01315"></a>01315                                       <span class="keywordtype">size_t</span> size)
+<a name="l01316"></a>01316 {
+<a name="l01317"></a>01317         <span class="keywordflow">return</span> __xn_copy_from_user(dst, src, size) ? -EFAULT : 0;
+<a name="l01318"></a>01318 }
+<a name="l01319"></a>01319 
+<a name="l01320"></a>01320 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#ga8e2ada3a5665c1366cd2c91f304bfa34" title="Check if read access to user-space memory block and copy it to specified buffer.">rtdm_safe_copy_from_user</a>(rtdm_user_info_t *user_info,
+<a name="l01321"></a>01321                                            <span class="keywordtype">void</span> *dst, <span class="keyword">const</span> <span class="keywordtype">void</span> __user *src,
+<a name="l01322"></a>01322                                            <span class="keywordtype">size_t</span> size)
+<a name="l01323"></a>01323 {
+<a name="l01324"></a>01324         <span class="keywordflow">return</span> (!access_rok(src, size) ||
+<a name="l01325"></a>01325                 __xn_copy_from_user(dst, src, size)) ? -EFAULT : 0;
+<a name="l01326"></a>01326 }
+<a name="l01327"></a>01327 
+<a name="l01328"></a>01328 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#gab19ad9751ca1c56a53aafeb7ce8a6faf" title="Copy specified buffer to user-space memory block.">rtdm_copy_to_user</a>(rtdm_user_info_t *user_info,
+<a name="l01329"></a>01329                                     <span class="keywordtype">void</span> __user *dst, <span class="keyword">const</span> <span class="keywordtype">void</span> *src,
+<a name="l01330"></a>01330                                     <span class="keywordtype">size_t</span> size)
+<a name="l01331"></a>01331 {
+<a name="l01332"></a>01332         <span class="keywordflow">return</span> __xn_copy_to_user(dst, src, size) ? -EFAULT : 0;
+<a name="l01333"></a>01333 }
+<a name="l01334"></a>01334 
+<a name="l01335"></a>01335 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#ga53f7bacd08774bfd26e13798cbfb21b8" title="Check if read/write access to user-space memory block is safe and copy specified buffer to it...">rtdm_safe_copy_to_user</a>(rtdm_user_info_t *user_info,
+<a name="l01336"></a>01336                                          <span class="keywordtype">void</span> __user *dst, <span class="keyword">const</span> <span class="keywordtype">void</span> *src,
+<a name="l01337"></a>01337                                          <span class="keywordtype">size_t</span> size)
+<a name="l01338"></a>01338 {
+<a name="l01339"></a>01339         <span class="keywordflow">return</span> (!access_wok(dst, size) ||
+<a name="l01340"></a>01340                 __xn_copy_to_user(dst, src, size)) ? -EFAULT : 0;
+<a name="l01341"></a>01341 }
 <a name="l01342"></a>01342 
-<a name="l01343"></a>01343         <span class="keywordflow">return</span> !xnpod_root_p();
-<a name="l01344"></a>01344 }
-<a name="l01345"></a>01345 
-<a name="l01346"></a>01346 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_PERVASIVE */</span>
-<a name="l01347"></a>01347 
-<a name="l01348"></a>01348 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#ga8f9fcd0e274324096628dfede6fb10f2" title="Test if running in a real-time task.">rtdm_in_rt_context</a>(<span class="keywordtype">void</span>)
-<a name="l01349"></a>01349 {
-<a name="l01350"></a>01350         <span class="keywordflow">return</span> (rthal_current_domain != rthal_root_domain);
-<a name="l01351"></a>01351 }
-<a name="l01352"></a>01352 
-<a name="l01353"></a>01353 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
-<a name="l01354"></a>01354 
-<a name="l01355"></a>01355 <span class="keywordtype">int</span> rtdm_exec_in_rt(<span class="keyword">struct</span> <a class="code" href="structrtdm__dev__context.html" title="Device context.">rtdm_dev_context</a> *context,
-<a name="l01356"></a>01356                     rtdm_user_info_t *user_info, <span class="keywordtype">void</span> *arg,
-<a name="l01357"></a>01357                     rtdm_rt_handler_t handler);
-<a name="l01358"></a>01358 
-<a name="l01359"></a>01359 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_DRIVER_H */</span>
+<a name="l01343"></a>01343 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#ga9512ab3a85bea45a47bd033bad8b4828" title="Copy user-space string to specified buffer.">rtdm_strncpy_from_user</a>(rtdm_user_info_t *user_info,
+<a name="l01344"></a>01344                                          <span class="keywordtype">char</span> *dst,
+<a name="l01345"></a>01345                                          <span class="keyword">const</span> <span class="keywordtype">char</span> __user *src, <span class="keywordtype">size_t</span> count)
+<a name="l01346"></a>01346 {
+<a name="l01347"></a>01347         <span class="keywordflow">if</span> (unlikely(!access_rok(src, 1)))
+<a name="l01348"></a>01348                 <span class="keywordflow">return</span> -EFAULT;
+<a name="l01349"></a>01349         <span class="keywordflow">return</span> __xn_strncpy_from_user(dst, src, count);
+<a name="l01350"></a>01350 }
+<a name="l01351"></a>01351 
+<a name="l01352"></a>01352 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#ga321a8c48467a6268fa201c16833524db" title="Test if the caller is capable of running in real-time context.">rtdm_rt_capable</a>(rtdm_user_info_t *user_info)
+<a name="l01353"></a>01353 {
+<a name="l01354"></a>01354         XENO_ASSERT(RTDM, !xnpod_asynch_p(), <span class="keywordflow">return</span> 0;);
+<a name="l01355"></a>01355 
+<a name="l01356"></a>01356         <span class="keywordflow">return</span> (user_info ? xnshadow_thread(user_info) != NULL
+<a name="l01357"></a>01357                           : !xnpod_root_p());
+<a name="l01358"></a>01358 }
+<a name="l01359"></a>01359 
+<a name="l01360"></a>01360 <span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_OPT_PERVASIVE */</span>
+<a name="l01361"></a>01361 <span class="comment">/* Define void user&lt;-&gt;kernel services that simply fail */</span>
+<a name="l01362"></a>01362 <span class="preprocessor">#define rtdm_mmap_to_user(...)          ({ -ENOSYS; })</span>
+<a name="l01363"></a>01363 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_munmap(...)                ({ -ENOSYS; })</span>
+<a name="l01364"></a>01364 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_read_user_ok(...)          ({ 0; })</span>
+<a name="l01365"></a>01365 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_rw_user_ok(...)            ({ 0; })</span>
+<a name="l01366"></a>01366 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_copy_from_user(...)        ({ -ENOSYS; })</span>
+<a name="l01367"></a>01367 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_safe_copy_from_user(...)   ({ -ENOSYS; })</span>
+<a name="l01368"></a>01368 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_copy_to_user(...)          ({ -ENOSYS; })</span>
+<a name="l01369"></a>01369 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_safe_copy_to_user(...)     ({ -ENOSYS; })</span>
+<a name="l01370"></a>01370 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_strncpy_from_user(...)     ({ -ENOSYS; })</span>
+<a name="l01371"></a>01371 <span class="preprocessor"></span>
+<a name="l01372"></a>01372 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#ga321a8c48467a6268fa201c16833524db" title="Test if the caller is capable of running in real-time context.">rtdm_rt_capable</a>(rtdm_user_info_t *user_info)
+<a name="l01373"></a>01373 {
+<a name="l01374"></a>01374         XENO_ASSERT(RTDM, !xnpod_asynch_p(), <span class="keywordflow">return</span> 0;);
+<a name="l01375"></a>01375 
+<a name="l01376"></a>01376         <span class="keywordflow">return</span> !xnpod_root_p();
+<a name="l01377"></a>01377 }
+<a name="l01378"></a>01378 
+<a name="l01379"></a>01379 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_PERVASIVE */</span>
+<a name="l01380"></a>01380 
+<a name="l01381"></a>01381 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#ga8f9fcd0e274324096628dfede6fb10f2" title="Test if running in a real-time task.">rtdm_in_rt_context</a>(<span class="keywordtype">void</span>)
+<a name="l01382"></a>01382 {
+<a name="l01383"></a>01383         <span class="keywordflow">return</span> (rthal_current_domain != rthal_root_domain);
+<a name="l01384"></a>01384 }
+<a name="l01385"></a>01385 
+<a name="l01386"></a>01386 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
+<a name="l01387"></a>01387 
+<a name="l01388"></a>01388 <span class="keywordtype">int</span> rtdm_exec_in_rt(<span class="keyword">struct</span> <a class="code" href="structrtdm__dev__context.html" title="Device context.">rtdm_dev_context</a> *context,
+<a name="l01389"></a>01389                     rtdm_user_info_t *user_info, <span class="keywordtype">void</span> *arg,
+<a name="l01390"></a>01390                     rtdm_rt_handler_t handler);
+<a name="l01391"></a>01391 
+<a name="l01392"></a>01392 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_DRIVER_H */</span>
 </pre></div></div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Wed Nov 2 2011 18:01:06 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Tue Jul 10 2012 20:41:22 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

@@ -404,8 +404,8 @@
 <a name="l00401"></a>00401 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_amok_p(thread)            xnthread_test_info(thread, XNAMOK)</span>
 <a name="l00402"></a>00402 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_clear_amok(thread)        xnthread_clear_info(thread, XNAMOK)</span>
 <a name="l00403"></a>00403 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_OPT_WATCHDOG */</span>
-<a name="l00404"></a>00404 <span class="preprocessor">#define xnthread_amok_p(thread)            (0)</span>
-<a name="l00405"></a>00405 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_clear_amok(thread)        do { } while (0)</span>
+<a name="l00404"></a>00404 <span class="preprocessor">#define xnthread_amok_p(thread)            ({ (void)(thread); 0; })</span>
+<a name="l00405"></a>00405 <span class="preprocessor"></span><span class="preprocessor">#define xnthread_clear_amok(thread)        do { (void)(thread); } while (0)</span>
 <a name="l00406"></a>00406 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* !CONFIG_XENO_OPT_WATCHDOG */</span>
 <a name="l00407"></a>00407 
 <a name="l00408"></a>00408 <span class="comment">/* Class-level operations for threads. */</span>
@@ -473,7 +473,7 @@
 <a name="l00470"></a>00470 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_THREAD_H */</span>
 </pre></div></div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Wed Nov 2 2011 18:01:06 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Tue Jul 10 2012 20:41:22 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

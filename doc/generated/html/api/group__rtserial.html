@@ -143,6 +143,16 @@ RTSER_xxx_HAND</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gaa706ffbdcaa26529b2f78ac9208cb3c3"></a><!-- doxytag: member="rtserial::RTSER_DEF_HAND" ref="gaa706ffbdcaa26529b2f78ac9208cb3c3" args="" -->
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTSER_DEF_HAND</b>&nbsp;&nbsp;&nbsp;RTSER_NO_HAND</td></tr>
 <tr><td colspan="2"><h2><a name="member-group"></a>
+RTSER_RS485_xxx</h2></td></tr>
+<tr><td colspan="2"><p><a class="anchor" id="amgrp50af5643332e01d8426be7d8edb61a37"></a> <a class="anchor" id="RTSER_RS485_xxx"></a> RS485 mode with automatic RTS handling </p>
+<br/><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga18e8f061ce3200f1ecaad77dd1409f0e"></a><!-- doxytag: member="rtserial::RTSER_RS485_DISABLE" ref="ga18e8f061ce3200f1ecaad77dd1409f0e" args="" -->
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTSER_RS485_DISABLE</b>&nbsp;&nbsp;&nbsp;0x00</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gadc782f4e308f64a8a6fc10f84ccdf8b3"></a><!-- doxytag: member="rtserial::RTSER_RS485_ENABLE" ref="gadc782f4e308f64a8a6fc10f84ccdf8b3" args="" -->
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTSER_RS485_ENABLE</b>&nbsp;&nbsp;&nbsp;0x01</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gae08c31726fdbd004c8ed6c65dac796f1"></a><!-- doxytag: member="rtserial::RTSER_DEF_RS485" ref="gae08c31726fdbd004c8ed6c65dac796f1" args="" -->
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTSER_DEF_RS485</b>&nbsp;&nbsp;&nbsp;RTSER_RS485_DISABLE</td></tr>
+<tr><td colspan="2"><h2><a name="member-group"></a>
 RTSER_FIFO_xxx</h2></td></tr>
 <tr><td colspan="2"><p><a class="anchor" id="amgrp4f78b44eee99efd255b9bb50009e8b61"></a> <a class="anchor" id="RTSER_FIFO_xxx"></a> Reception FIFO interrupt threshold </p>
 <br/><br/></td></tr>
@@ -186,6 +196,8 @@ RTSER_EVENT_xxx</h2></td></tr>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTSER_EVENT_MODEMHI</b>&nbsp;&nbsp;&nbsp;0x04</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga603070bbc0175ec5df97f67fbffb47d7"></a><!-- doxytag: member="rtserial::RTSER_EVENT_MODEMLO" ref="ga603070bbc0175ec5df97f67fbffb47d7" args="" -->
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTSER_EVENT_MODEMLO</b>&nbsp;&nbsp;&nbsp;0x08</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gae423f9fa2f98a8ec0e71be021b86f70a"></a><!-- doxytag: member="rtserial::RTSER_EVENT_TXEMPTY" ref="gae423f9fa2f98a8ec0e71be021b86f70a" args="" -->
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTSER_EVENT_TXEMPTY</b>&nbsp;&nbsp;&nbsp;0x10</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga07c9ab11956bd5ffbc9d306131cf3316"></a><!-- doxytag: member="rtserial::RTSER_DEF_EVENT_MASK" ref="ga07c9ab11956bd5ffbc9d306131cf3316" args="" -->
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTSER_DEF_EVENT_MASK</b>&nbsp;&nbsp;&nbsp;0x00</td></tr>
 <tr><td colspan="2"><h2><a name="member-group"></a>
@@ -214,6 +226,8 @@ RTSER_SET_xxx</h2></td></tr>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTSER_SET_TIMESTAMP_HISTORY</b>&nbsp;&nbsp;&nbsp;0x0800</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga65f3c98d76b179a3cf0e620e7a16ef77"></a><!-- doxytag: member="rtserial::RTSER_SET_EVENT_MASK" ref="ga65f3c98d76b179a3cf0e620e7a16ef77" args="" -->
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTSER_SET_EVENT_MASK</b>&nbsp;&nbsp;&nbsp;0x1000</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga15f786684a5691b8527966325684dcc8"></a><!-- doxytag: member="rtserial::RTSER_SET_RS485" ref="ga15f786684a5691b8527966325684dcc8" args="" -->
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><b>RTSER_SET_RS485</b>&nbsp;&nbsp;&nbsp;0x2000</td></tr>
 <tr><td colspan="2"><h2><a name="member-group"></a>
 RTSER_LSR_xxx</h2></td></tr>
 <tr><td colspan="2"><p><a class="anchor" id="amgrp24703d5dc1ddcda9115f381ba26ff482"></a> <a class="anchor" id="RTSER_LSR_xxx"></a> Line status bits </p>
@@ -294,7 +308,7 @@ IOCTLs</h2></td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait on serial device events according to previously set mask.  <a href="#ga3e3c22ccee4a2f49481e7084246c06ff"></a><br/></td></tr>
 </table>
 <hr/><a name="_details"></a><h2>Detailed Description</h2>
-<p>This is the common interface a RTDM-compliant serial device has to provide. Feel free to comment on this profile via the Xenomai mailing list (<a href="mailto:Xenomai-core@gna.org">Xenomai-core@gna.org</a>) or directly to the author (<a href="mailto:jan.kiszka@web.de">jan.kiszka@web.de</a>).</p>
+<p>This is the common interface a RTDM-compliant serial device has to provide. Feel free to comment on this profile via the Xenomai mailing list (<a href="mailto:Xenomai@xenomai.org">Xenomai@xenomai.org</a>) or directly to the author (<a href="mailto:jan.kiszka@web.de">jan.kiszka@web.de</a>).</p>
 <p><b>Profile</b> <b>Revision:</b> 3 <br/>
  <br/>
  </p>
@@ -564,7 +578,7 @@ IOCTLs</h2></td></tr>
 </div>
 </div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Wed Nov 2 2011 18:01:10 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Tue Jul 10 2012 20:41:25 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

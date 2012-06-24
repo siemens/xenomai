@@ -1,7 +1,7 @@
 <map id="G" name="G">
 <area shape="rect" id="node3" href="$pod_8h.html" title="Real&#45;time pod interface header." alt="" coords="840,83,949,112"/>
 <area shape="rect" id="node60" href="$include_2native_2timer_8h.html" title="This file is part of the Xenomai project." alt="" coords="1495,237,1604,267"/>
-<area shape="rect" id="node5" href="$sched_8h.html" title="Scheduler interface header." alt="" coords="615,160,740,189"/>
+<area shape="rect" id="node5" href="$nucleus_2sched_8h.html" title="Scheduler interface header." alt="" coords="615,160,740,189"/>
 <area shape="rect" id="node7" href="$include_2nucleus_2thread_8h_source.html" title="nucleus/thread.h" alt="" coords="1004,237,1132,267"/>
 <area shape="rect" id="node31" href="$vfile_8h.html" title="This file is part of the Xenomai project." alt="" coords="711,469,823,499"/>
 <area shape="rect" id="node48" href="$schedqueue_8h_source.html" title="nucleus/schedqueue.h" alt="" coords="1401,392,1567,421"/>

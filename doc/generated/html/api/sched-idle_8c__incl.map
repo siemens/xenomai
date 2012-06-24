@@ -1,5 +1,5 @@
 <map id="G" name="G">
-<area shape="rect" id="node3" href="$sched_8h.html" title="Scheduler interface header." alt="" coords="663,83,788,112"/>
+<area shape="rect" id="node3" href="$nucleus_2sched_8h.html" title="Scheduler interface header." alt="" coords="663,83,788,112"/>
 <area shape="rect" id="node5" href="$include_2nucleus_2thread_8h_source.html" title="nucleus/thread.h" alt="" coords="452,160,580,189"/>
 <area shape="rect" id="node29" href="$vfile_8h.html" title="This file is part of the Xenomai project." alt="" coords="75,392,187,421"/>
 <area shape="rect" id="node46" href="$schedqueue_8h_source.html" title="nucleus/schedqueue.h" alt="" coords="724,237,889,267"/>

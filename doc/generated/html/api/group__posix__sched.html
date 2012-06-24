@@ -239,8 +239,7 @@ an error number if:<ul>
 <p>If, however, you install a signal handler for SIGWINCH after creating or shadowing the first Xenomai thread, you have to explicitly call the function xeno_sigwinch_handler at the beginning of your signal handler, using its return to know if the signal was in fact an internal signal of Xenomai (in which case it returns 1), or if you should handle the signal (in which case it returns 0). xeno_sigwinch_handler prototype is:</p>
 <p><b>int xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt);</b></p>
 <p>Which means that you should register your handler with sigaction, using the SA_SIGINFO flag, and pass all the arguments you received to xeno_sigwinch_handler. </p>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcan__rtt_8c-example.html#a4">rtcan_rtt.c</a>.</dd>
-</dl>
+
 <p>References <a class="el" href="group__pod.html#gacf5b53f0405351327b89b0cc4976b962">xnpod_schedule()</a>, <a class="el" href="group__pod.html#ga6d535ef9821e98fd7f257b50a3c8d595">xnpod_set_thread_schedparam()</a>, and <a class="el" href="group__pod.html#ga4b8647e7a6969962c788669ff8d46d3b">xnpod_set_thread_tslice()</a>.</p>
 
 <p>Referenced by <a class="el" href="group__posix__sched.html#gad5eceef44b79a09a1a86e7a1950a74e7">pthread_setschedparam_ex()</a>.</p>
@@ -460,7 +459,7 @@ an error number if:<ul>
 </div>
 </div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Wed Nov 2 2011 18:01:11 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Tue Jul 10 2012 20:41:25 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

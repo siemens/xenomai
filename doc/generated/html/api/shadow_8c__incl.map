@@ -10,7 +10,7 @@
 <area shape="rect" id="node97" href="$trace_8h_source.html" title="nucleus/trace.h" alt="" coords="1765,469,1885,499"/>
 <area shape="rect" id="node101" href="$sys__ppd_8h_source.html" title="nucleus/sys_ppd.h" alt="" coords="1876,83,2015,112"/>
 <area shape="rect" id="node105" href="$vdso_8h.html" title="Definitions for global semaphore heap shared objects." alt="" coords="1411,83,1528,112"/>
-<area shape="rect" id="node21" href="$sched_8h.html" title="Scheduler interface header." alt="" coords="816,160,941,189"/>
+<area shape="rect" id="node21" href="$nucleus_2sched_8h.html" title="Scheduler interface header." alt="" coords="816,160,941,189"/>
 <area shape="rect" id="node23" href="$include_2nucleus_2thread_8h_source.html" title="nucleus/thread.h" alt="" coords="1056,237,1184,267"/>
 <area shape="rect" id="node47" href="$vfile_8h.html" title="This file is part of the Xenomai project." alt="" coords="747,469,859,499"/>
 <area shape="rect" id="node64" href="$schedqueue_8h_source.html" title="nucleus/schedqueue.h" alt="" coords="1444,392,1609,421"/>

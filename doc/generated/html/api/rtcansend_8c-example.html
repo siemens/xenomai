@@ -89,7 +89,7 @@ RT_TASK rt_task_desc;
         <span class="keywordflow">if</span> (ret) {
             fprintf(stderr, <span class="stringliteral">&quot;rt_dev_close: %s\n&quot;</span>, strerror(-ret));
         }
-        <a name="a2"></a><a class="code" href="group__task.html#gab6e0d411830710e8cc82d77b9df19510" title="Delete a real-time task.">rt_task_delete</a>(&amp;rt_task_desc);
+        exit(EXIT_SUCCESS);
     }
 }
 
@@ -106,14 +106,14 @@ RT_TASK rt_task_desc;
     <span class="keywordtype">int</span> i, j, ret;
 
     <span class="keywordflow">for</span> (i = 0; i &lt; loops; i++) {
-        <a name="a3"></a><a class="code" href="group__task.html#gad5225e5fb8d583fbdfa5299f322b8366" title="Delay the calling task (relative).">rt_task_sleep</a>(<a name="a4"></a><a class="code" href="group__native__timer.html#gaad812d18e51f398fbb0e5392b2acdf2f" title="Convert nanoseconds to internal clock ticks.">rt_timer_ns2ticks</a>(delay));
+        <a name="a2"></a><a class="code" href="group__task.html#gad5225e5fb8d583fbdfa5299f322b8366" title="Delay the calling task (relative).">rt_task_sleep</a>(<a name="a3"></a><a class="code" href="group__native__timer.html#gaad812d18e51f398fbb0e5392b2acdf2f" title="Convert nanoseconds to internal clock ticks.">rt_timer_ns2ticks</a>(delay));
         <span class="keywordflow">if</span> (count)
             memcpy(&amp;frame.data[0], &amp;i, <span class="keyword">sizeof</span>(i));
         <span class="comment">/* Note: sendto avoids the definiton of a receive filter list */</span>
         <span class="keywordflow">if</span> (use_send)
-            ret = <a name="a5"></a><a class="code" href="group__userapi.html#ga8e6eeb1cc9924ed11f3f457d4153697d" title="Transmit message to socket.">rt_dev_send</a>(s, (<span class="keywordtype">void</span> *)&amp;frame, <span class="keyword">sizeof</span>(<a class="code" href="structcan__frame.html" title="Raw CAN frame.">can_frame_t</a>), 0);
+            ret = <a name="a4"></a><a class="code" href="group__userapi.html#ga8e6eeb1cc9924ed11f3f457d4153697d" title="Transmit message to socket.">rt_dev_send</a>(s, (<span class="keywordtype">void</span> *)&amp;frame, <span class="keyword">sizeof</span>(<a class="code" href="structcan__frame.html" title="Raw CAN frame.">can_frame_t</a>), 0);
         <span class="keywordflow">else</span>
-            ret = <a name="a6"></a><a class="code" href="group__userapi.html#ga6a3a39ea1a35258935a32e1870955269" title="Transmit message to socket.">rt_dev_sendto</a>(s, (<span class="keywordtype">void</span> *)&amp;frame, <span class="keyword">sizeof</span>(<a class="code" href="structcan__frame.html" title="Raw CAN frame.">can_frame_t</a>), 0,
+            ret = <a name="a5"></a><a class="code" href="group__userapi.html#ga6a3a39ea1a35258935a32e1870955269" title="Transmit message to socket.">rt_dev_sendto</a>(s, (<span class="keywordtype">void</span> *)&amp;frame, <span class="keyword">sizeof</span>(<a class="code" href="structcan__frame.html" title="Raw CAN frame.">can_frame_t</a>), 0,
                                 (<span class="keyword">struct</span> sockaddr *)&amp;to_addr, <span class="keyword">sizeof</span>(to_addr));
         <span class="keywordflow">if</span> (ret &lt; 0) {
             <span class="keywordflow">switch</span> (ret) {
@@ -133,10 +133,10 @@ RT_TASK rt_task_desc;
             <span class="keywordflow">break</span>;
         }
         <span class="keywordflow">if</span> (verbose &amp;&amp; (i % print) == 0) {
-            <span class="keywordflow">if</span> (frame.can_id &amp; <a name="a7"></a><a class="code" href="group__rtcan.html#ga5ae55ab3741140024858bd7b8762ea42" title="Extended frame.">CAN_EFF_FLAG</a>)
-                printf(<span class="stringliteral">&quot;&lt;0x%08x&gt;&quot;</span>, frame.can_id &amp; <a name="a8"></a><a class="code" href="group__rtcan.html#ga83b943dca61d0aad5b07ec01c3317572" title="Bit mask for extended CAN IDs.">CAN_EFF_MASK</a>);
+            <span class="keywordflow">if</span> (frame.can_id &amp; <a name="a6"></a><a class="code" href="group__rtcan.html#ga5ae55ab3741140024858bd7b8762ea42" title="Extended frame.">CAN_EFF_FLAG</a>)
+                printf(<span class="stringliteral">&quot;&lt;0x%08x&gt;&quot;</span>, frame.can_id &amp; <a name="a7"></a><a class="code" href="group__rtcan.html#ga83b943dca61d0aad5b07ec01c3317572" title="Bit mask for extended CAN IDs.">CAN_EFF_MASK</a>);
             <span class="keywordflow">else</span>
-                printf(<span class="stringliteral">&quot;&lt;0x%03x&gt;&quot;</span>, frame.can_id &amp; <a name="a9"></a><a class="code" href="group__rtcan.html#gafe4fc3f9cab58aeeb463861289e8ce93" title="Bit mask for standard CAN IDs.">CAN_SFF_MASK</a>);
+                printf(<span class="stringliteral">&quot;&lt;0x%03x&gt;&quot;</span>, frame.can_id &amp; <a name="a8"></a><a class="code" href="group__rtcan.html#gafe4fc3f9cab58aeeb463861289e8ce93" title="Bit mask for standard CAN IDs.">CAN_SFF_MASK</a>);
             printf(<span class="stringliteral">&quot; [%d]&quot;</span>, frame.can_dlc);
             <span class="keywordflow">for</span> (j = 0; j &lt; frame.can_dlc; j++) {
                 printf(<span class="stringliteral">&quot; %02x&quot;</span>, frame.data[j]);
@@ -244,7 +244,7 @@ RT_TASK rt_task_desc;
     <span class="keywordflow">if</span> (verbose)
         printf(<span class="stringliteral">&quot;interface %s\n&quot;</span>, argv[optind]);
 
-    ret = rt_dev_socket(<a name="a10"></a><a class="code" href="group__rtcan.html#gaeac0c3db7a1e021f17987bcc76893849" title="CAN protocol family.">PF_CAN</a>, SOCK_RAW, <a name="a11"></a><a class="code" href="group__rtcan.html#ga57682d9a1e4f4d90943dbaa683582bf5" title="Raw protocol of PF_CAN, applicable to socket type SOCK_RAW.">CAN_RAW</a>);
+    ret = rt_dev_socket(<a name="a9"></a><a class="code" href="group__rtcan.html#gaeac0c3db7a1e021f17987bcc76893849" title="CAN protocol family.">PF_CAN</a>, SOCK_RAW, <a name="a10"></a><a class="code" href="group__rtcan.html#ga57682d9a1e4f4d90943dbaa683582bf5" title="Raw protocol of PF_CAN, applicable to socket type SOCK_RAW.">CAN_RAW</a>);
     <span class="keywordflow">if</span> (ret &lt; 0) {
         fprintf(stderr, <span class="stringliteral">&quot;rt_dev_socket: %s\n&quot;</span>, strerror(-ret));
         <span class="keywordflow">return</span> -1;
@@ -252,7 +252,7 @@ RT_TASK rt_task_desc;
     s = ret;
 
     <span class="keywordflow">if</span> (loopback &gt;= 0) {
-        ret = <a name="a12"></a><a class="code" href="group__userapi.html#gaada2561361357285840c5b054fe20681" title="Set socket option.">rt_dev_setsockopt</a>(s, <a name="a13"></a><a class="code" href="group__rtcan.html#gad981aa82a29d828882a2fb4c35c1cdd7" title="CAN socket levels.">SOL_CAN_RAW</a>, <a name="a14"></a><a class="code" href="group__rtcan.html#gaa7eb7dc3aa940a0aca20d3a564a147d9" title="CAN TX loopback.">CAN_RAW_LOOPBACK</a>,
+        ret = <a name="a11"></a><a class="code" href="group__userapi.html#gaada2561361357285840c5b054fe20681" title="Set socket option.">rt_dev_setsockopt</a>(s, <a name="a12"></a><a class="code" href="group__rtcan.html#gad981aa82a29d828882a2fb4c35c1cdd7" title="CAN socket levels.">SOL_CAN_RAW</a>, <a name="a13"></a><a class="code" href="group__rtcan.html#gaa7eb7dc3aa940a0aca20d3a564a147d9" title="CAN TX loopback.">CAN_RAW_LOOPBACK</a>,
                                 &amp;loopback, <span class="keyword">sizeof</span>(loopback));
         <span class="keywordflow">if</span> (ret &lt; 0) {
             fprintf(stderr, <span class="stringliteral">&quot;rt_dev_setsockopt: %s\n&quot;</span>, strerror(-ret));
@@ -266,7 +266,7 @@ RT_TASK rt_task_desc;
     <span class="keywordflow">if</span> (verbose)
         printf(<span class="stringliteral">&quot;s=%d, ifr_name=%s\n&quot;</span>, s, ifr.ifr_name);
 
-    ret = rt_dev_ioctl(s, <a name="a15"></a><a class="code" href="group__rtcan.html#gaee74ae50c8ea0a6aee277c6f124a3866" title="Get CAN interface index by name.">SIOCGIFINDEX</a>, &amp;ifr);
+    ret = rt_dev_ioctl(s, <a name="a14"></a><a class="code" href="group__rtcan.html#gaee74ae50c8ea0a6aee277c6f124a3866" title="Get CAN interface index by name.">SIOCGIFINDEX</a>, &amp;ifr);
     <span class="keywordflow">if</span> (ret &lt; 0) {
         fprintf(stderr, <span class="stringliteral">&quot;rt_dev_ioctl: %s\n&quot;</span>, strerror(-ret));
         <span class="keywordflow">goto</span> failure;
@@ -277,13 +277,13 @@ RT_TASK rt_task_desc;
     to_addr.can_family = AF_CAN;
     <span class="keywordflow">if</span> (use_send) {
         <span class="comment">/* Suppress definiton of a default receive filter list */</span>
-        ret = <a class="code" href="group__userapi.html#gaada2561361357285840c5b054fe20681" title="Set socket option.">rt_dev_setsockopt</a>(s, <a class="code" href="group__rtcan.html#gad981aa82a29d828882a2fb4c35c1cdd7" title="CAN socket levels.">SOL_CAN_RAW</a>, <a name="a16"></a><a class="code" href="group__rtcan.html#ga87313c6e632294aa4582899a3bbc89e4" title="CAN filter definition.">CAN_RAW_FILTER</a>, NULL, 0);
+        ret = <a class="code" href="group__userapi.html#gaada2561361357285840c5b054fe20681" title="Set socket option.">rt_dev_setsockopt</a>(s, <a class="code" href="group__rtcan.html#gad981aa82a29d828882a2fb4c35c1cdd7" title="CAN socket levels.">SOL_CAN_RAW</a>, <a name="a15"></a><a class="code" href="group__rtcan.html#ga87313c6e632294aa4582899a3bbc89e4" title="CAN filter definition.">CAN_RAW_FILTER</a>, NULL, 0);
         <span class="keywordflow">if</span> (ret &lt; 0) {
             fprintf(stderr, <span class="stringliteral">&quot;rt_dev_setsockopt: %s\n&quot;</span>, strerror(-ret));
             <span class="keywordflow">goto</span> failure;
         }
 
-        ret = <a name="a17"></a><a class="code" href="group__userapi.html#ga5442e4f8737560e3294bd5bab61ad3fd" title="Bind to local address.">rt_dev_bind</a>(s, (<span class="keyword">struct</span> sockaddr *)&amp;to_addr, <span class="keyword">sizeof</span>(to_addr));
+        ret = <a name="a16"></a><a class="code" href="group__userapi.html#ga5442e4f8737560e3294bd5bab61ad3fd" title="Bind to local address.">rt_dev_bind</a>(s, (<span class="keyword">struct</span> sockaddr *)&amp;to_addr, <span class="keyword">sizeof</span>(to_addr));
         <span class="keywordflow">if</span> (ret &lt; 0) {
             fprintf(stderr, <span class="stringliteral">&quot;rt_dev_bind: %s\n&quot;</span>, strerror(-ret));
             <span class="keywordflow">goto</span> failure;
@@ -311,7 +311,7 @@ RT_TASK rt_task_desc;
     <span class="keywordflow">if</span> (timeout) {
         <span class="keywordflow">if</span> (verbose)
             printf(<span class="stringliteral">&quot;Timeout: %lld ns\n&quot;</span>, (<span class="keywordtype">long</span> <span class="keywordtype">long</span>)timeout);
-        ret = rt_dev_ioctl(s, <a name="a18"></a><a class="code" href="group__rtcan.html#gad3758528585b2779e8949df671f1cf6c" title="Specify a transmission timeout for a socket.">RTCAN_RTIOC_SND_TIMEOUT</a>, &amp;timeout);
+        ret = rt_dev_ioctl(s, <a name="a17"></a><a class="code" href="group__rtcan.html#gad3758528585b2779e8949df671f1cf6c" title="Specify a transmission timeout for a socket.">RTCAN_RTIOC_SND_TIMEOUT</a>, &amp;timeout);
         <span class="keywordflow">if</span> (ret) {
             fprintf(stderr, <span class="stringliteral">&quot;rt_dev_ioctl SND_TIMEOUT: %s\n&quot;</span>, strerror(-ret));
             <span class="keywordflow">goto</span> failure;
@@ -319,7 +319,7 @@ RT_TASK rt_task_desc;
     }
 
     snprintf(name, <span class="keyword">sizeof</span>(name), <span class="stringliteral">&quot;rtcansend-%d&quot;</span>, getpid());
-    ret = <a name="a19"></a><a class="code" href="group__task.html#ga72e0a9355d06c346a95bf88b857a9749" title="Turns the current Linux task into a native Xenomai task.">rt_task_shadow</a>(&amp;rt_task_desc, name, 1, 0);
+    ret = <a name="a18"></a><a class="code" href="group__task.html#ga72e0a9355d06c346a95bf88b857a9749" title="Turns the current Linux task into a native Xenomai task.">rt_task_shadow</a>(&amp;rt_task_desc, name, 1, 0);
     <span class="keywordflow">if</span> (ret) {
         fprintf(stderr, <span class="stringliteral">&quot;rt_task_shadow: %s\n&quot;</span>, strerror(-ret));
         <span class="keywordflow">goto</span> failure;
@@ -336,7 +336,7 @@ RT_TASK rt_task_desc;
 }
 </pre></div> </div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Wed Nov 2 2011 18:01:06 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Tue Jul 10 2012 20:41:22 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

@@ -5,7 +5,7 @@
 <area shape="rect" id="node64" href="$sys__ppd_8h_source.html" title="nucleus/sys_ppd.h" alt="" coords="1071,83,1210,112"/>
 <area shape="rect" id="node76" href="$task_8h.html" title="This file is part of the Xenomai project." alt="" coords="698,83,802,112"/>
 <area shape="rect" id="node82" href="$include_2native_2mutex_8h.html" title="This file is part of the Xenomai project." alt="" coords="555,83,672,112"/>
-<area shape="rect" id="node5" href="$sched_8h.html" title="Scheduler interface header." alt="" coords="691,160,816,189"/>
+<area shape="rect" id="node5" href="$nucleus_2sched_8h.html" title="Scheduler interface header." alt="" coords="691,160,816,189"/>
 <area shape="rect" id="node7" href="$include_2nucleus_2thread_8h_source.html" title="nucleus/thread.h" alt="" coords="252,237,380,267"/>
 <area shape="rect" id="node31" href="$vfile_8h.html" title="This file is part of the Xenomai project." alt="" coords="610,469,722,499"/>
 <area shape="rect" id="node48" href="$schedqueue_8h_source.html" title="nucleus/schedqueue.h" alt="" coords="940,392,1106,421"/>
