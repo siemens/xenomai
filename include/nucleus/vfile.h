@@ -2,7 +2,7 @@
  * @file
  * This file is part of the Xenomai project.
  *
- * @note Copyright (C) 2010 Philippe Gerum <rpm@xenomai.org> 
+ * @note Copyright (C) 2010 Philippe Gerum <rpm@xenomai.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -248,7 +248,7 @@ struct xnvfile_regular_ops {
 	 * @return the number of bytes read from the input descriptor
 	 * if the call succeeds. Otherwise, a negative error code.
 	 * Return values from parsing helper routines are commonly
-	 * passed back to the caller by the @ref show_store
+	 * passed back to the caller by the @ref store
 	 * "store() handler".
 	 *
 	 * @note This handler is optional, and may be omitted for

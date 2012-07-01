@@ -1,4 +1,4 @@
-/*!\file sched.c
+/*!\file nucleus/sched.c
  * \author Philippe Gerum
  *
  * Copyright (C) 2008 Philippe Gerum <rpm@xenomai.org>.
