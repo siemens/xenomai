@@ -2,7 +2,7 @@
  * @file
  * This file is part of the Xenomai project.
  *
- * @note Copyright (C) 2010 Philippe Gerum <rpm@xenomai.org> 
+ * @note Copyright (C) 2010 Philippe Gerum <rpm@xenomai.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -811,7 +811,7 @@ ssize_t xnvfile_get_blob(struct xnvfile_input *input,
 {
 	ssize_t nbytes = input->size;
 
-	if (nbytes < size)
+	if (nbytes > size)
 		nbytes = size;
 
 	if (nbytes > 0 && copy_from_user(data, input->u_buf, nbytes))
@@ -904,7 +904,7 @@ ssize_t xnvfile_get_integer(struct xnvfile_input *input, long *valp)
 	ssize_t nbytes;
 	long val;
 
-	nbytes = xnvfile_get_blob(input, buf, sizeof(buf));
+	nbytes = xnvfile_get_blob(input, buf, sizeof(buf) - 1);
 	if (nbytes < 0)
 		return nbytes;
 
