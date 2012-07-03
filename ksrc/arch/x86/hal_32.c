@@ -296,6 +296,12 @@ void rthal_setup_8254_tsc(void)
 	unsigned long flags;
 	int count;
 
+#ifdef CONFIG_IPIPE_CORE
+	if (cpu_has_tsc)
+		printk("Xenomai: your configuration has tsc disabled while "
+		       "your cpu has a tsc\nYou would get better performances "
+		       "by enabling tsc in kernel configuration.\n");
+#endif
 	rthal_local_irq_save_hw(flags);
 
 	outb_p(0x0, PIT_MODE);

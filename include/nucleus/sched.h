@@ -1,4 +1,4 @@
-/*!\file sched.h
+/*!\file nucleus/sched.h
  * \brief Scheduler interface header.
  * \author Philippe Gerum
  *
@@ -298,7 +298,7 @@ void xnsched_migrate_passive(struct xnthread *thread,
  * @param sched_class The scheduling class which should rotate its
  * runqueue.
  *
- * @param sched_param The scheduling parameter providing rotation
+ * @param param The scheduling parameter providing rotation
  * information to the specified scheduling class.
  *
  * Environments:

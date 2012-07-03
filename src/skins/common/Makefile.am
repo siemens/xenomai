@@ -17,5 +17,5 @@ libxenomai_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 0:0:0 \
 	-lpthread -lrt
 
 libxenomai_la_CPPFLAGS = \
-	@XENO_USER_CFLAGS@ \
+	@XENO_LIB_CFLAGS@ \
 	-I$(top_srcdir)/include

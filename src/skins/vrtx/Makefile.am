@@ -19,5 +19,5 @@ libvrtx_la_SOURCES = \
 	wrappers.h
 
 libvrtx_la_CPPFLAGS = \
-	@XENO_USER_CFLAGS@ \
+	@XENO_LIB_CFLAGS@ \
 	-I$(top_srcdir)/include

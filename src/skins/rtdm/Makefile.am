@@ -9,5 +9,5 @@ librtdm_la_SOURCES = \
 	init.c
 
 librtdm_la_CPPFLAGS = \
-	@XENO_USER_CFLAGS@ \
+	@XENO_LIB_CFLAGS@ \
 	-I$(top_srcdir)/include

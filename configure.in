@@ -456,20 +456,6 @@ dnl Internal CFLAGS and LDFLAGS, may be enhanced per-arch below
 XENO_USER_CFLAGS="$XENO_USER_APP_CFLAGS -Wall -Werror-implicit-function-declaration -pipe"
 XENO_USER_LDFLAGS="$XENO_USER_APP_LDFLAGS"
 
-case $XENO_TARGET_ARCH in
- x86)
-	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -fno-omit-frame-pointer -fstrict-aliasing $gcc_w_noalias"
-	;;
- powerpc)
-	;;
- blackfin|nios2)
-	# Produce libraries in FDPIC format.
-	;;
- arm)
-	XENO_USER_CFLAGS="$XENO_USER_CFLAGS"
-	;;
-esac
-
 if test x$debug_symbols = xy; then
    XENO_USER_CFLAGS="-g $XENO_USER_CFLAGS"
 else
@@ -477,6 +463,28 @@ else
 fi
 
 XENO_USER_CFLAGS="$XENO_USER_CFLAGS -D__XENO__ -D__IN_XENO__ -Wstrict-prototypes"
+
+case $XENO_TARGET_ARCH in
+ x86)
+	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -fstrict-aliasing $gcc_w_noalias"
+	;;
+ powerpc)
+	;;
+ blackfin|nios2)
+	# Produce libraries in FDPIC format.
+	;;
+ arm)
+	;;
+esac
+
+XENO_LIB_CFLAGS="$XENO_USER_CFLAGS"
+XENO_LIB_LDFLAGS="$XENO_USER_LDFLAGS"
+
+case "$build_for" in
+ i*86*-*)
+	XENO_LIB_CFLAGS="$XENO_LIB_CFLAGS -fno-omit-frame-pointer"
+	;;
+esac
 
 AC_MSG_CHECKING([whether ld supports @file])
 AC_CACHE_VAL(ac_cv_ld_file_option,
@@ -611,6 +619,8 @@ AC_SUBST(LATEX_MODE)
 AC_SUBST(XENO_TARGET_ARCH)
 AC_SUBST(XENO_BUILD_STRING)
 AC_SUBST(XENO_HOST_STRING)
+AC_SUBST(XENO_LIB_CFLAGS)
+AC_SUBST(XENO_LIB_LDFLAGS)
 AC_SUBST(XENO_USER_CFLAGS)
 AC_SUBST(XENO_USER_LDFLAGS)
 AC_SUBST(XENO_USER_APP_CFLAGS)

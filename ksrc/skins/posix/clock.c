@@ -336,15 +336,12 @@ int clock_nanosleep(clockid_t clock_id,
 	if (xnthread_test_info(cur, XNBREAK)) {
 
 		if (flags == 0 && rmtp) {
-			xnticks_t now, expiry;
 			xnsticks_t rem;
 
-			now = clock_get_ticks(clock_id);
-			expiry = xntimer_get_date(&cur->rtimer);
+			rem = xntimer_get_timeout_stopped(&cur->rtimer);
 			xnlock_put_irqrestore(&nklock, s);
-			rem = expiry - now;
 
-			ticks2ts(rmtp, rem > 0 ? rem : 0);
+			ticks2ts(rmtp, rem > 1 ? rem : 0);
 		} else
 			xnlock_put_irqrestore(&nklock, s);
 

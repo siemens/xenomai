@@ -45,6 +45,8 @@ echo 0 > /proc/xenomai/latency || :
 @testdir@/mutex-torture-native
 @testdir@/mutex-torture-posix
 @testdir@/regression/posix/leaks
+@testdir@/regression/posix/mprotect
+@testdir@/regression/posix/nano_test
 @testdir@/regression/posix/shm
 @testdir@/regression/native/heap
 @testdir@/regression/native/leaks
