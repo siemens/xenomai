@@ -147,17 +147,6 @@ static inline int rthal_tickdev_select(void)
 #define RTHAL_SET_ONESHOT_LINUX		2
 #define RTHAL_SET_PERIODIC		3
 
-#ifdef CONFIG_GENERIC_CLOCKEVENTS
-
-static inline void rthal_disarm_decr(int disarmed)
-{
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
-	disarm_decr[rthal_processor_id()] = disarmed;
-#else
-	per_cpu(disarm_decr, rthal_processor_id()) = disarmed;
-#endif
-}
-
 static inline void rthal_setup_oneshot_dec(void)
 {
 #ifdef CONFIG_40x
@@ -173,6 +162,15 @@ static inline void rthal_setup_periodic_dec(void)
 #else /* !CONFIG_40x */
 	set_dec(tb_ticks_per_jiffy);
 #endif /* CONFIG_40x */
+}
+
+static inline void rthal_disarm_decr(int disarmed)
+{
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
+	disarm_decr[rthal_processor_id()] = disarmed;
+#else
+	per_cpu(disarm_decr, rthal_processor_id()) = disarmed;
+#endif
 }
 
 #ifdef CONFIG_SMP
@@ -236,6 +234,13 @@ static void rthal_timer_set_periodic(void)
 	rthal_disarm_decr(0);
 	rthal_critical_exit(flags);
 }
+
+static inline int rthal_tickdev_select(void)
+{
+	return 0;
+}
+
+#ifdef CONFIG_GENERIC_CLOCKEVENTS
 
 static inline
 int rthal_tickdev_request(void (*tick_handler)(void),
@@ -318,11 +323,6 @@ static inline void rthal_tickdev_release(int cpu)
 		rthal_timer_set_periodic();
 	else if (rthal_ktimer_saved_mode == KTIMER_MODE_ONESHOT)
 		rthal_timer_set_oneshot(0);
-}
-
-static inline int rthal_tickdev_select(void)
-{
-	return 0;
 }
 
 #endif /* CONFIG_GENERIC_CLOCKEVENTS */
