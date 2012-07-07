@@ -242,6 +242,10 @@ unsigned long rthal_timer_calibrate(void)
 	rthal_time_t t, dt;
 	int i, count;
 
+	if (cpu_has_tsc)
+		printk("Xenomai: this configuration has APIC disabled albeit "
+		       "CPU has a TSC.\You should enable APIC for better performances.");
+
 	flags = hard_local_irq_save();
 
 	/* Read the current latch value, whatever the current mode is. */
