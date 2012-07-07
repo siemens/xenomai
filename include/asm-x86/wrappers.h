@@ -30,7 +30,7 @@
 #define __get_user_inatomic __get_user
 #define __put_user_inatomic __put_user
 
-#ifdef CONFIG_X86_32
+#ifdef TS_USEDFPU
 
 #define wrap_test_fpu_used(task)				\
 	(task_thread_info(task)->status & TS_USEDFPU)
@@ -45,7 +45,19 @@
 		task_thread_info(task)->status &= ~TS_USEDFPU;	\
 	} while(0)
 
-#endif /* CONFIG_X86_32 */
+#else /* !defined(TS_USEDFPU) */
+
+#define wrap_test_fpu_used(task) ((task)->thread.has_fpu)
+#define wrap_set_fpu_used(task)			\
+	do {					\
+		(task)->thread.has_fpu = 1;	\
+	} while(0)
+#define wrap_clear_fpu_used(task)		\
+	do {					\
+		(task)->thread.has_fpu = 0;	\
+	} while(0)
+
+#endif /* !defined(TS_USEDFPU) */
 
 #define wrap_strncpy_from_user(dstP, srcP, n)		\
 	rthal_strncpy_from_user(dstP, srcP, n)

@@ -42,7 +42,7 @@ static inline void xnarch_leave_root(xnarchtcb_t *rootcb)
 	rootcb->user_task = rootcb->active_task = current;
 	rootcb->rspp = &current->thread.sp;
 	rootcb->ripp = &current->thread.rip;
-	rootcb->ts_usedfpu = !!(task_thread_info(current)->status & TS_USEDFPU);
+	rootcb->ts_usedfpu = !!wrap_test_fpu_used(current)
 	rootcb->cr0_ts = (read_cr0() & 8) != 0;
 	/* So that xnarch_save_fpu() will operate on the right FPU area. */
 	if (rootcb->cr0_ts || rootcb->ts_usedfpu)
@@ -65,7 +65,7 @@ static inline void xnarch_switch_to(xnarchtcb_t *out_tcb, xnarchtcb_t *in_tcb)
 	struct task_struct *next = in_tcb->user_task;
 
 	if (likely(next != NULL)) {
-		if (task_thread_info(prev)->status & TS_USEDFPU)
+		if (wrap_test_fpu_used(prev))
 			/*
 			 * __switch_to will try and use __unlazy_fpu,
 			 * so we need to clear the ts bit.
@@ -166,7 +166,7 @@ static inline void xnarch_init_fpu(xnarchtcb_t * tcb)
 		   fpu usage bit is necessary for xnarch_save_fpu to
 		   save the FPU state at next switch. */
 		xnarch_set_fpu_init(task);
-		task_thread_info(task)->status |= TS_USEDFPU;
+		wrap_set_fpu_used(task);
 	}
 }
 
@@ -197,19 +197,19 @@ static inline void xnarch_save_fpu(xnarchtcb_t *tcb)
 	if (!tcb->is_root) {
 		if (task) {
 			/* fpu not used or already saved by __switch_to. */
-			if (!(task_thread_info(task)->status & TS_USEDFPU))
+			if (wrap_test_fpu_used(task) == 0)
 				return;
 
 			/* Tell Linux that we already saved the state
 			 * of the FPU hardware of this task. */
-			task_thread_info(task)->status &= ~TS_USEDFPU;
+			wrap_clear_fpu_used(task);
 		}
 	} else {
 		if (tcb->cr0_ts ||
-		    (tcb->ts_usedfpu && !(task_thread_info(task)->status & TS_USEDFPU)))
+		    (tcb->ts_usedfpu && wrap_test_fpu_used(task) == 0))
 			return;
 
-		task_thread_info(task)->status &= ~TS_USEDFPU;
+		wrap_clear_fpu_used(task);
 	}
 
 	clts();
@@ -250,7 +250,7 @@ static inline void xnarch_restore_fpu(xnarchtcb_t * tcb)
 
 			/* Tell Linux that this task has altered the state of
 			 * the FPU hardware. */
-			task_thread_info(task)->status |= TS_USEDFPU;
+			wrap_set_fpu_used(task);
 		}
 	} else {
 		/* Restore state of FPU only if TS bit in cr0 was clear. */
@@ -260,7 +260,7 @@ static inline void xnarch_restore_fpu(xnarchtcb_t * tcb)
 		}
 
 		if (tcb->ts_usedfpu
-		    && !(task_thread_info(task)->status & TS_USEDFPU)) {
+		    && wrap_test_fpu_used(task) == 0) {
 			/* __switch_to saved the fpu context, no need to restore
 			   it since we are switching to root, where fpu can be
 			   in lazy state. */
