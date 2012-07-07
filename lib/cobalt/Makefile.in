@@ -208,6 +208,7 @@ SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
 XENO_BUILD_STRING = @XENO_BUILD_STRING@
+XENO_COBALT_CFLAGS = @XENO_COBALT_CFLAGS@
 XENO_FUSE_CFLAGS = @XENO_FUSE_CFLAGS@
 XENO_HOST_STRING = @XENO_HOST_STRING@
 XENO_LIB_LDFLAGS = @XENO_LIB_LDFLAGS@
@@ -305,7 +306,7 @@ libcobalt_la_SOURCES = \
 	wrappers.c
 
 libcobalt_la_CPPFLAGS = \
-	@XENO_USER_CFLAGS@ -Wno-missing-prototypes	\
+	@XENO_COBALT_CFLAGS@ -Wno-missing-prototypes	\
 	-I$(top_srcdir)					\
 	-I$(top_srcdir)/include
 
