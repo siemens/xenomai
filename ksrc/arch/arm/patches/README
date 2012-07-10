@@ -1,27 +1,28 @@
 -- arch/arm/patches
 
-Xenomai needs special kernel support to deliver fast and
-deterministic response time to external interrupts, and also to
-provide real-time services highly integrated with the standard Linux
-kernel.
+Xenomai needs special kernel support to deliver fast and deterministic
+response time to external interrupts, and also to provide real-time
+services highly integrated with the standard Linux kernel.
 
-This support is provided by the Adeos real-time enabler [1], in the
+This support is provided by the interrupt pipeline (aka I-pipe) in the
 form of a kernel patch you have to apply against a vanilla kernel
 tree, before you attempt to compile the Xenomai codebase against the
 latter kernel.
 
-Apply one of the patches found in this directory to the corresponding
-kernel release. You may want to have a look at the README.*INSTALL
-guides at the top of the Xenomai tree for more information.
+Apply one of the patches found into this directory against the
+corresponding kernel release. You may want to have a look at the
+README.*INSTALL guides at the top of the Xenomai tree for more
+information.
 
 This directory only contains the most recent patches; you may find the
-complete collection of Adeos/I-pipe patches at the following
-location (see note):
+complete collection of I-pipe patches at the following locations (see
+note):
 
-* all existing I-pipe patches for the combo ARM architecture:
+* all existing I-pipe patches for the ARM architecture:
 http://download.gna.org/adeos/patches/v2.6/arm/
+http://download.gna.org/adeos/patches/v3.x/arm/
 
-NOTE: not all these patches are guaranteed to work with the current
+NOTE: not all older patches are guaranteed to work with the current
 Xenomai release.  However, there is a good chance most of them do,
 since we try hard to maintain backward compatibility. Also note that
 by default, all patches apply to the mainline kernel, we do not try
@@ -47,8 +48,8 @@ o Texas Instrument OMAP3 and OMAP4
 
 ---- MXC (tested on iMX51, iMX53, iMX6Q)
 
-1- Checkout the "rel_imx_3.0.15_12.03.00" tag in the Freescale IMX git [2],
-   or in the Denx git tree [3];
+1- Checkout the "rel_imx_3.0.15_12.03.00" tag in the Freescale IMX git [1],
+   or in the Denx git tree [2];
 2- apply mxc/adeos-ipipe-3.0.13-mxc-1.18-08-pre.patch;
 3- apply adeos-ipipe-3.0.13-arm-1.18-08.patch
 3- apply mxc/adeos-ipipe-3.0.13-mxc-1.18-08-post.patch;
@@ -57,6 +58,5 @@ o Texas Instrument OMAP3 and OMAP4
 
 -- External links
 
-[1] http://www.gna.org/projects/adeos/
-[2] http://opensource.freescale.com/pub/scm/imx/linux-2.6-imx.git
-[3] git://git.denx.de/linux-denx.git
+[1] http://opensource.freescale.com/pub/scm/imx/linux-2.6-imx.git
+[2] git://git.denx.de/linux-denx.git

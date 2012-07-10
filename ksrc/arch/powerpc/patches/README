@@ -4,84 +4,26 @@ Xenomai needs special kernel support to deliver fast and deterministic
 response time to external interrupts, and also to provide real-time
 services highly integrated with the standard Linux kernel.
 
-This support is provided by the Adeos real-time enabler, in the form
-of a kernel patch you have to apply against a vanilla kernel tree,
-before you attempt to compile the Xenomai codebase against the latter
-kernel.
+This support is provided by the interrupt pipeline (aka I-pipe) in the
+form of a kernel patch you have to apply against a vanilla kernel
+tree, before you attempt to compile the Xenomai codebase against the
+latter kernel.
 
-On the PowerPC 32bit architecture, Xenomai is supported on the v2.4,
-v2.6 and v3.0 Linux kernel series, for which the appropriate Adeos
-patches exist. Apply one of those patches against the corresponding
-kernel release. You may want to have a look at the README.*INSTALL
-guides at the top of the Xenomai tree for more information.
+Apply one of the patches found into this directory against the
+corresponding kernel release. You may want to have a look at the
+README.*INSTALL guides at the top of the Xenomai tree for more
+information.
 
-This directory only contains the most recent patches used to validate
-this Xenomai release on powerpc platforms; you may find the complete
-collection of Adeos/I-pipe patches at the following locations (see
+This directory only contains the most recent patches; you may find the
+complete collection of I-pipe patches at the following locations (see
 note):
 
-* http://download.gna.org/adeos/patches/v3.x/powerpc/
+* all existing I-pipe patches for the powerpc architecture (32+64bit):
+http://download.gna.org/adeos/patches/v2.6/powerpc/
+http://download.gna.org/adeos/patches/v3.x/powerpc/
 
-* older I-pipe patches are available from:
-http://download.gna.org/adeos/patches/v3.x/powerpc/older/
-http://download.gna.org/adeos/patches/v2.6/powerpc
-http://download.gna.org/adeos/patches/v2.4/powerpc
-
-=====================================================================
-=====================================================================
-=====================================================================
-=====================================================================
 NOTE: not all older patches are guaranteed to work with the current
 Xenomai release.  However, there is a good chance most of them do,
-since we try hard to maintain backward compatibility. In other words,
-you are NOT absolutely required to upgrade your working kernel setup
-to run this newer Xenomai release, albeit bugs have probably been
-fixed in more recent I-pipe patches. YMMV.
-=====================================================================
-=====================================================================
-=====================================================================
-=====================================================================
+since we try hard to maintain backward compatibility.
 
-The reference kernel tree those patches are based on varied over time,
-here is a map detailing this evolution:
-
-		Linux v2.4.x
-		~~~~~~~~~~~~
-
-From git://www.denx.de/git/linuxppc_2_4_devel
-
-Patch release		Commit #
-----------------------	----------------------------------------
-2.4.25-DENX-1.2-xx/ppc	6d7d0e61a0f7837da59369a19a4eaa0063653bbf
-2.4.25-DENX-2.2-xx/ppc	5bab6d641ff5ba139f9f41869502cb7c96d785bc
-
-
-		from Linux v2.6.22 to v2.6.32
-		~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-From git://www.denx.de/git/linux-2.6-denx.git
-
-Patch release			Commit #
-----------------------------	----------------------------------------
-2.6.22-DENX-*/powerpc		3e833ffb06a4ce14f2680a0afe9abd5342188e17
-2.6.23-DENX-1.6-00/ppc		208aa3df8645608ff3febb65f83219173dfe4979
-2.6.23-DENX-2.0-03/powerpc	3e44e7de644b521c5301c806d90da6feb99158d5
-2.6.24.6-DENX-2.4-03/powerpc	331e1d1ac8b64e9c4c37906d3e005f9adda574ab
-2.6.24-DENX-*/powerpc		031edb4f3cced0933e3e08f96a3fb4805c2e4cac
-2.6.25-DENX-*/powerpc		3d51d2d5fc46e87210575edf784263034edba1d7
-2.6.26-DENX-*/powerpc		7b56671345f62f1baf2772ad5736e4f59ed0f213
-2.6.27-DENX-*/powerpc		43b4f8924d387ef2f35c4956b94aae1f02d8e4ce
-2.6.28.5-DENX-*/powerpc		5931215bdb5412fdd80bebad1d66158dc149ea18
-2.6.29.1-DENX-*/powerpc		ad6bad4bf6888f89353945ba90df3b6a5b42b8fa
-2.6.29.4-DENX-*/powerpc		5e2fc2073ede8e33409fad91f4caf6db30cbfd76
-2.6.30-DENX-*/powerpc		7cb16ec2590815a67e5fb5c8994ead536613d922
-2.6.30.3-DENX-*/powerpc		193e7866fc30ae29454fcc4d110166a86a963c9f
-2.6.32.3-DENX-*/powerpc		224f363857f05ab44dab3441112965f0a7966788
-
-		from Linux v2.6.20 to v2.6.21
-		from Linux v2.6.33 onward
-		~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-From ftp://ftp.kernel.org/pub/linux/kernel/v2.6/
-
-	All patches are based on mainline kernel releases.
+All patches are based on mainline kernel releases.
