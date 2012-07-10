@@ -41,6 +41,7 @@ o Intel IXP4XX based
 o Intel PXA based
 o Intel SA1100-based
 o Samsung S3C2410
+o STMicroelectronics SPEAr600
 o Texas Instrument OMAP3 and OMAP4
 
 
@@ -50,9 +51,9 @@ o Texas Instrument OMAP3 and OMAP4
 
 1- Checkout the "rel_imx_3.0.15_12.03.00" tag in the Freescale IMX git [1],
    or in the Denx git tree [2];
-2- apply mxc/adeos-ipipe-3.0.13-mxc-1.18-08-pre.patch;
-3- apply adeos-ipipe-3.0.13-arm-1.18-08.patch
-3- apply mxc/adeos-ipipe-3.0.13-mxc-1.18-08-post.patch;
+2- apply mxc/adeos-ipipe-3.0.36-mxc-1.18-11-pre.patch;
+3- apply adeos-ipipe-3.0.36-arm-1.18-11.patch
+3- apply mxc/adeos-ipipe-3.0.36-mxc-1.18-11-post.patch;
 4- you can resume to generic installation instructions.
 
 
