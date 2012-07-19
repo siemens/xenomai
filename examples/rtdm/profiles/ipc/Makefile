@@ -39,6 +39,9 @@ CFLAGS=$(shell $(XENOCONFIG) --skin=posix --cflags) $(MY_CFLAGS)
 
 LDFLAGS=$(shell $(XENOCONFIG) --skin=posix --ldflags) $(MY_LDFLAGS) -lrtdm
 
+%: %.c
+	$(CC) -o $@ $< $(CFLAGS) $(LDFLAGS)
+
 # Add the Xenomai libdir to the runtime library search path for the
 # binary, to make life easier for beginners if Xenomai's libs are not
 # in any default search path.
