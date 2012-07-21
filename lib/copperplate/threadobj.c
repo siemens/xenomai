@@ -756,6 +756,9 @@ int threadobj_wait_period(struct threadobj *thobj,
 	assert(thobj == threadobj_current());
 
 	period = thobj->core.period;
+	if (period == 0)
+		return -EWOULDBLOCK;
+
 	wakeup = thobj->core.wakeup;
 	ret = threadobj_sleep(&wakeup);
 	if (ret)
