@@ -40,7 +40,6 @@
 #else
 #include <asm/hardirq.h>
 #endif
-#include <asm/system.h>
 #include <asm/irq.h>
 #include <asm/xenomai/hal.h>
 #include <stdarg.h>

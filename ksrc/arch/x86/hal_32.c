@@ -44,7 +44,6 @@
 #include <linux/module.h>
 #include <linux/console.h>
 #include <linux/bitops.h>
-#include <asm/system.h>
 #include <asm/hardirq.h>
 #include <asm/desc.h>
 #include <asm/io.h>

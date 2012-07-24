@@ -33,6 +33,10 @@
 #endif /* CONFIG_XENO_OPT_HOSTRT || __IPIPE_FEATURE_REQUEST_TICKDEV */
 #include <asm/io.h>
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,4,0)
+#include <asm/system.h>
+#endif /* kernel < 3.4.0 */
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
 
 #include <linux/wrapper.h>
