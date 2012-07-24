@@ -679,4 +679,44 @@ static inline void wrap_proc_dir_entry_owner(struct proc_dir_entry *entry)
 	})
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,4,0)
+#define cpu_online_mask &(cpu_online_map)
+#endif
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,4,0)
+static inline void __FD_SET(unsigned long __fd, __kernel_fd_set *__fdsetp)
+{
+        unsigned long __tmp = __fd / __NFDBITS;
+        unsigned long __rem = __fd % __NFDBITS;
+        __fdsetp->fds_bits[__tmp] |= (1UL<<__rem);
+}
+
+static inline void __FD_CLR(unsigned long __fd, __kernel_fd_set *__fdsetp)
+{
+        unsigned long __tmp = __fd / __NFDBITS;
+        unsigned long __rem = __fd % __NFDBITS;
+        __fdsetp->fds_bits[__tmp] &= ~(1UL<<__rem);
+}
+
+static inline int __FD_ISSET(unsigned long __fd, const __kernel_fd_set *__p)
+{
+        unsigned long __tmp = __fd / __NFDBITS;
+        unsigned long __rem = __fd % __NFDBITS;
+        return (__p->fds_bits[__tmp] & (1UL<<__rem)) != 0;
+}
+
+static inline void __FD_ZERO(__kernel_fd_set *__p)
+{
+	unsigned long *__tmp = __p->fds_bits;
+	int __i;
+
+	__i = __FDSET_LONGS;
+	while (__i) {
+		__i--;
+		*__tmp = 0;
+		__tmp++;
+	}
+}
+#endif
+
 #endif /* _XENO_ASM_GENERIC_WRAPPERS_H */
