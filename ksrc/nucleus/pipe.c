@@ -29,7 +29,6 @@
 #include <linux/device.h>
 #include <asm/io.h>
 #include <asm/uaccess.h>
-#include <asm/system.h>
 #include <nucleus/pod.h>
 #include <nucleus/heap.h>
 #include <nucleus/pipe.h>

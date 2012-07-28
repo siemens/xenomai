@@ -260,6 +260,7 @@ static inline void xnarch_restore_fpu(xnarchtcb_t * tcb)
 	} else {
 		/* Restore state of FPU only if TS bit in cr0 was clear. */
 		if (tcb->cr0_ts) {
+			wrap_clear_fpu_used(task);
 			stts();
 			return;
 		}

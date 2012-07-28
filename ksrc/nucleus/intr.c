@@ -990,20 +990,19 @@ static inline int format_irq_proc(unsigned int irq,
 		return 0;
 	}
 
-	switch (irq) {
 #ifdef CONFIG_SMP
-	case RTHAL_RESCHEDULE_IPI:
+	if (irq == RTHAL_RESCHEDULE_IPI) {
 		xnvfile_puts(it, "         [reschedule]");
 		return 0;
-	case RTHAL_CRITICAL_IPI:
+	}
+	if (irq == RTHAL_CRITICAL_IPI) {
 		xnvfile_puts(it, "         [sync]");
 		return 0;
+	}
 #endif /* CONFIG_SMP */
-	default:
-		if (rthal_virtual_irq_p(irq)) {
-			xnvfile_puts(it, "         [virtual]");
-			return 0;
-		}
+	if (rthal_virtual_irq_p(irq)) {
+		xnvfile_puts(it, "         [virtual]");
+		return 0;
 	}
 
 	xnlock_get_irqsave(&intrlock, s);

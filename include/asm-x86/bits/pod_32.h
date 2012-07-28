@@ -236,11 +236,13 @@ static inline void xnarch_restore_fpu(xnarchtcb_t * tcb)
 	} else {
 		/* Restore state of FPU only if TS bit in cr0 was clear. */
 		if (tcb->cr0_ts) {
+			wrap_clear_fpu_used(task);
 			stts();
 			return;
 		}
 
-		if (tcb->ts_usedfpu && !wrap_test_fpu_used(task)) {
+		if (tcb->ts_usedfpu 
+		    && wrap_test_fpu_used(task) == 0) {
 			/* __switch_to saved the fpu context, no need to restore
 			   it since we are switching to root, where fpu can be
 			   in lazy state. */
