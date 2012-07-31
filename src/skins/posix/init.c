@@ -33,8 +33,8 @@
 #include <asm/xenomai/bits/bind.h>
 
 int __pse51_muxid = -1;
-int __rtdm_muxid = -1;
-int __rtdm_fd_start = INT_MAX;
+int __pse51_rtdm_muxid = -1;
+int __pse51_rtdm_fd_start = INT_MAX;
 static int fork_handler_registered;
 
 int __wrap_pthread_setschedparam(pthread_t, int, const struct sched_param *);
@@ -63,8 +63,8 @@ void __init_posix_interface(void)
 	muxid = XENOMAI_SYSBIND(RTDM_SKIN_MAGIC,
 				XENOMAI_FEAT_DEP, XENOMAI_ABI_REV, NULL);
 	if (muxid > 0) {
-		__rtdm_muxid = __xn_mux_shifted_id(muxid);
-		__rtdm_fd_start = FD_SETSIZE - XENOMAI_SKINCALL0(__rtdm_muxid,
+		__pse51_rtdm_muxid = __xn_mux_shifted_id(muxid);
+		__pse51_rtdm_fd_start = FD_SETSIZE - XENOMAI_SKINCALL0(__pse51_rtdm_muxid,
 								 __rtdm_fdcount);
 	}
 
