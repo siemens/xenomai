@@ -79,7 +79,7 @@ static inline void xnarch_switch_to(struct xnarchtcb *out_tcb, struct xnarchtcb 
 	next_mm = in_tcb->active_mm;
 
 	if (next_mm && likely(prev_mm != next_mm))
-		__switch_mm(prev_mm, next_mm, next);
+		wrap_switch_mm(prev_mm, next_mm, next);
 
 	rthal_thread_switch(out_tcb->tsp, in_tcb->tsp, next == NULL);
 	barrier();

@@ -125,7 +125,7 @@ static inline void xnarch_switch_to(xnarchtcb_t *out_tcb,
 
 #ifdef __IPIPE_FEATURE_HARDENED_SWITCHMM
 	if (next_mm && likely(prev_mm != next_mm))
-		__switch_mm(prev_mm, next_mm, next);
+		wrap_switch_mm(prev_mm, next_mm, next);
 #else /* !__IPIPE_FEATURE_HARDENED_SWITCHMM */
 	if (likely(prev_mm != next_mm)) {
 #ifdef CONFIG_ALTIVEC

@@ -424,8 +424,24 @@ static inline void *kzalloc(size_t size, int flags)
 #define pgprot_noncached(p) (p)
 #endif /* !pgprot_noncached */
 
-#define wrap_switch_mm(prev,next,task)	\
-    switch_mm(prev,next,task)
+#ifdef CONFIG_IPIPE_CORE
+#if IPIPE_CORE_APIREV >= 2
+#define wrap_switch_mm(prev, next, tsk) \
+	ipipe_head_switch_mm(prev, next, tsk)
+#else /* IPIPE_CORE_APIREV < 2 */
+#define wrap_switch_mm(prev, next, tsk) \
+	__switch_mm(prev, next, tsk)
+#endif /* IPIPE_CORE_APIREV < 2 */
+#else /* !I-pipe core */
+#ifdef __IPIPE_FEATURE_HARDENED_SWITCHMM
+#define wrap_switch_mm(prev, next, tsk) \
+	__switch_mm(prev, next, tsk)
+#else /* !__IPIPE_FEATURE_HARDENED_SWITCHMM */
+#define wrap_switch_mm(prev, next, tsk) \
+	switch_mm(prev, next, tsk)
+#endif /* !__IPIPE_FEATURE_HARDENED_SWITCHMM */
+#endif /* !I-pipe core */
+
 #define wrap_enter_lazy_tlb(mm,task)	\
     enter_lazy_tlb(mm,task)
 

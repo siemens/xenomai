@@ -80,7 +80,7 @@ static inline void mpu_switch(struct task_struct *prev,
 {
 	if (next && next != prev) {
 		struct mm_struct *oldmm = prev->active_mm;
-		switch_mm(oldmm, next->active_mm, next);
+		wrap_switch_mm(oldmm, next->active_mm, next);
 	}
 }
 
