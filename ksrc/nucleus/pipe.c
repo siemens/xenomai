@@ -923,7 +923,7 @@ static ssize_t xnpipe_write(struct file *file,
 	return (ssize_t)count;
 }
 
-static long DECLARE_IOCTL_HANDLER(xnpipe_ioctl, file, cmd, arg)
+static DECLARE_IOCTL_HANDLER(xnpipe_ioctl, file, cmd, arg)
 {
 	struct xnpipe_state *state = file->private_data;
 	int ret = 0;
