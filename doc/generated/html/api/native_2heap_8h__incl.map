@@ -1,23 +1,25 @@
-<area shape="rect" href="$synch_8h-source.html" title="nucleus/synch.h" alt="" coords="521,471,644,497">
-<area shape="rect" href="$nucleus_2heap_8h-source.html" title="nucleus/heap.h" alt="" coords="185,161,303,188">
-<area shape="rect" href="$native_2types_8h.html" title="This file is part of the Xenomai project." alt="" coords="1393,548,1505,575">
-<area shape="rect" href="$native_2ppd_8h.html" title="This file is part of the Xenomai project." alt="" coords="341,84,440,111">
-<area shape="rect" href="$nucleus_2queue_8h-source.html" title="nucleus/queue.h" alt="" coords="619,548,744,575">
-<area shape="rect" href="$nucleus_2types_8h-source.html" title="nucleus/types.h" alt="" coords="1075,625,1195,652">
-<area shape="rect" href="$assert_8h-source.html" title="nucleus/assert.h" alt="" coords="845,703,971,729">
-<area shape="rect" href="$compiler_8h-source.html" title="nucleus/compiler.h" alt="" coords="995,703,1133,729">
-<area shape="rect" href="$pod_8h.html" title="Real&#45;time pod interface header." alt="" coords="640,161,749,188">
-<area shape="rect" href="$nucleus_2ppd_8h-source.html" title="nucleus/ppd.h" alt="" coords="327,161,436,188">
-<area shape="rect" href="$sched_8h.html" title="Scheduler interface header." alt="" coords="748,239,871,265">
-<area shape="rect" href="$include_2nucleus_2thread_8h-source.html" title="nucleus/thread.h" alt="" coords="1288,316,1416,343">
-<area shape="rect" href="$schedqueue_8h-source.html" title="nucleus/schedqueue.h" alt="" coords="567,393,729,420">
-<area shape="rect" href="$sched-tp_8h.html" title="Definitions for the TP scheduling class." alt="" coords="739,316,880,343">
-<area shape="rect" href="$sched-sporadic_8h.html" title="Definitions for the SSP scheduling class." alt="" coords="904,316,1088,343">
-<area shape="rect" href="$sched-idle_8h.html" title="Definitions for the IDLE scheduling class." alt="" coords="1112,316,1264,343">
-<area shape="rect" href="$sched-rt_8h.html" title="Definitions for the RT scheduling class." alt="" coords="576,316,715,343">
-<area shape="rect" href="$stat_8h-source.html" title="nucleus/stat.h" alt="" coords="1151,471,1263,497">
-<area shape="rect" href="$include_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="1147,393,1267,420">
-<area shape="rect" href="$include_2nucleus_2registry_8h.html" title="This file is part of the Xenomai project." alt="" coords="989,393,1123,420">
-<area shape="rect" href="$schedparam_8h-source.html" title="nucleus/schedparam.h" alt="" coords="800,393,965,420">
-<area shape="rect" href="$timebase_8h.html" title="nucleus/timebase.h" alt="" coords="840,471,987,497">
-<area shape="rect" href="$shadow_8h-source.html" title="nucleus/shadow.h" alt="" coords="300,239,433,265">
+<map id="G" name="G">
+<area shape="rect" id="node3" href="$synch_8h_source.html" title="nucleus/synch.h" alt="" coords="492,469,609,499"/>
+<area shape="rect" id="node19" href="$nucleus_2heap_8h_source.html" title="nucleus/heap.h" alt="" coords="179,160,288,189"/>
+<area shape="rect" id="node22" href="$native_2types_8h.html" title="This file is part of the Xenomai project." alt="" coords="1319,547,1423,576"/>
+<area shape="rect" id="node25" href="$native_2ppd_8h.html" title="This file is part of the Xenomai project." alt="" coords="324,83,417,112"/>
+<area shape="rect" id="node5" href="$nucleus_2queue_8h_source.html" title="nucleus/queue.h" alt="" coords="588,547,705,576"/>
+<area shape="rect" id="node7" href="$nucleus_2types_8h_source.html" title="nucleus/types.h" alt="" coords="1007,624,1121,653"/>
+<area shape="rect" id="node15" href="$assert_8h_source.html" title="nucleus/assert.h" alt="" coords="789,701,907,731"/>
+<area shape="rect" id="node13" href="$compiler_8h_source.html" title="nucleus/compiler.h" alt="" coords="931,701,1061,731"/>
+<area shape="rect" id="node27" href="$pod_8h.html" title="Real&#45;time pod interface header." alt="" coords="611,160,712,189"/>
+<area shape="rect" id="node60" href="$nucleus_2ppd_8h_source.html" title="nucleus/ppd.h" alt="" coords="312,160,413,189"/>
+<area shape="rect" id="node29" href="$sched_8h.html" title="Scheduler interface header." alt="" coords="711,237,828,267"/>
+<area shape="rect" id="node31" href="$include_2nucleus_2thread_8h_source.html" title="nucleus/thread.h" alt="" coords="1219,315,1336,344"/>
+<area shape="rect" id="node49" href="$schedqueue_8h_source.html" title="nucleus/schedqueue.h" alt="" coords="540,392,692,421"/>
+<area shape="rect" id="node52" href="$sched-tp_8h.html" title="Definitions for the TP scheduling class." alt="" coords="704,315,835,344"/>
+<area shape="rect" id="node54" href="$sched-sporadic_8h.html" title="Definitions for the SSP scheduling class." alt="" coords="859,315,1029,344"/>
+<area shape="rect" id="node56" href="$sched-idle_8h.html" title="Definitions for the IDLE scheduling class." alt="" coords="1053,315,1195,344"/>
+<area shape="rect" id="node58" href="$sched-rt_8h.html" title="Definitions for the RT scheduling class." alt="" coords="552,315,680,344"/>
+<area shape="rect" id="node34" href="$stat_8h_source.html" title="nucleus/stat.h" alt="" coords="1085,469,1189,499"/>
+<area shape="rect" id="node37" href="$include_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="1083,392,1192,421"/>
+<area shape="rect" id="node43" href="$include_2nucleus_2registry_8h.html" title="This file is part of the Xenomai project." alt="" coords="933,392,1059,421"/>
+<area shape="rect" id="node47" href="$schedparam_8h_source.html" title="nucleus/schedparam.h" alt="" coords="757,392,909,421"/>
+<area shape="rect" id="node39" href="$timebase_8h.html" title="nucleus/timebase.h" alt="" coords="796,469,929,499"/>
+<area shape="rect" id="node63" href="$shadow_8h_source.html" title="nucleus/shadow.h" alt="" coords="287,237,412,267"/>
+</map>

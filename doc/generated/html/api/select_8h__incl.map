@@ -1,11 +1,13 @@
-<area shape="rect" href="$include_2nucleus_2thread_8h-source.html" title="nucleus/thread.h" alt="" coords="449,84,577,111">
-<area shape="rect" href="$nucleus_2types_8h-source.html" title="nucleus/types.h" alt="" coords="319,393,439,420">
-<area shape="rect" href="$stat_8h-source.html" title="nucleus/stat.h" alt="" coords="323,239,435,265">
-<area shape="rect" href="$include_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="453,161,573,188">
-<area shape="rect" href="$include_2nucleus_2registry_8h.html" title="This file is part of the Xenomai project." alt="" coords="615,161,748,188">
-<area shape="rect" href="$schedparam_8h-source.html" title="nucleus/schedparam.h" alt="" coords="772,161,937,188">
-<area shape="rect" href="$compiler_8h-source.html" title="nucleus/compiler.h" alt="" coords="5,471,144,497">
-<area shape="rect" href="$assert_8h-source.html" title="nucleus/assert.h" alt="" coords="485,471,611,497">
-<area shape="rect" href="$timebase_8h.html" title="nucleus/timebase.h" alt="" coords="459,239,605,265">
-<area shape="rect" href="$nucleus_2queue_8h-source.html" title="nucleus/queue.h" alt="" coords="473,316,599,343">
-<area shape="rect" href="$synch_8h-source.html" title="nucleus/synch.h" alt="" coords="629,239,752,265">
+<map id="G" name="G">
+<area shape="rect" id="node3" href="$include_2nucleus_2thread_8h_source.html" title="nucleus/thread.h" alt="" coords="425,83,543,112"/>
+<area shape="rect" id="node5" href="$nucleus_2types_8h_source.html" title="nucleus/types.h" alt="" coords="301,392,416,421"/>
+<area shape="rect" id="node16" href="$stat_8h_source.html" title="nucleus/stat.h" alt="" coords="307,237,411,267"/>
+<area shape="rect" id="node19" href="$include_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="429,160,539,189"/>
+<area shape="rect" id="node28" href="$include_2nucleus_2registry_8h.html" title="This file is part of the Xenomai project." alt="" coords="579,160,704,189"/>
+<area shape="rect" id="node34" href="$schedparam_8h_source.html" title="nucleus/schedparam.h" alt="" coords="728,160,880,189"/>
+<area shape="rect" id="node11" href="$compiler_8h_source.html" title="nucleus/compiler.h" alt="" coords="5,469,136,499"/>
+<area shape="rect" id="node13" href="$assert_8h_source.html" title="nucleus/assert.h" alt="" coords="459,469,576,499"/>
+<area shape="rect" id="node21" href="$timebase_8h.html" title="nucleus/timebase.h" alt="" coords="435,237,568,267"/>
+<area shape="rect" id="node23" href="$nucleus_2queue_8h_source.html" title="nucleus/queue.h" alt="" coords="447,315,564,344"/>
+<area shape="rect" id="node31" href="$synch_8h_source.html" title="nucleus/synch.h" alt="" coords="592,237,709,267"/>
+</map>

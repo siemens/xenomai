@@ -1,5 +1,7 @@
-<area shape="rect" href="$analogy_2types_8h.html" title="Analogy for Linux, misc declarations." alt="" coords="101,161,224,188">
-<area shape="rect" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations." alt="" coords="287,161,423,188">
-<area shape="rect" href="$instruction_8h.html" title="Analogy for Linux, instruction related features." alt="" coords="163,84,317,111">
-<area shape="rect" href="$command_8h.html" title="Analogy for Linux, driver facilities." alt="" coords="392,84,544,111">
-<area shape="rect" href="$channel__range_8h.html" title="Analogy for Linux, channel, range related features." alt="" coords="568,84,749,111">
+<map id="G" name="G">
+<area shape="rect" id="node5" href="$analogy_2types_8h.html" title="Analogy for Linux, misc declarations." alt="" coords="101,160,216,189"/>
+<area shape="rect" id="node7" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations." alt="" coords="276,160,401,189"/>
+<area shape="rect" id="node9" href="$instruction_8h.html" title="Analogy for Linux, instruction related features." alt="" coords="160,83,301,112"/>
+<area shape="rect" id="node13" href="$command_8h.html" title="Analogy for Linux, driver facilities." alt="" coords="376,83,515,112"/>
+<area shape="rect" id="node16" href="$channel__range_8h.html" title="Analogy for Linux, channel, range related features." alt="" coords="539,83,704,112"/>
+</map>

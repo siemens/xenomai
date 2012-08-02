@@ -1,3 +1,5 @@
-<area shape="rect" href="$ksrc_2skins_2native_2heap_8c.html" title="This file is part of the Xenomai project." alt="" coords="5,84,179,111">
-<area shape="rect" href="$skins_2native_2module_8c.html" title="This file is part of the Xenomai project." alt="" coords="203,84,392,111">
-<area shape="rect" href="$native_2syscall_8c.html" title="This file is part of the Xenomai project." alt="" coords="416,84,600,111">
+<map id="G" name="G">
+<area shape="rect" id="node3" href="$ksrc_2skins_2native_2heap_8c.html" title="This file is part of the Xenomai project." alt="" coords="5,83,168,112"/>
+<area shape="rect" id="node5" href="$skins_2native_2module_8c.html" title="This file is part of the Xenomai project." alt="" coords="192,83,371,112"/>
+<area shape="rect" id="node7" href="$native_2syscall_8c.html" title="This file is part of the Xenomai project." alt="" coords="395,83,571,112"/>
+</map>

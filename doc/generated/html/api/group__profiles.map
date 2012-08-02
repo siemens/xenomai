@@ -1,0 +1,7 @@
+<map id="structs" name="structs">
+<area shape="rect" id="node2" href="$group__rtcan.html" title="CAN Devices" alt="" coords="401,5,503,35"/>
+<area shape="rect" id="node3" href="$group__rtserial.html" title="Serial Devices" alt="" coords="399,59,505,88"/>
+<area shape="rect" id="node4" href="$group__rttesting.html" title="Testing Devices" alt="" coords="393,112,511,141"/>
+<area shape="rect" id="node5" href="$group__rtipc.html" title="Real&#45;time IPC Devices" alt="" coords="373,165,531,195"/>
+<area shape="rect" id="node6" href="$group__rtdm.html" title="Real&#45;Time Driver Model" alt="" coords="5,85,165,115"/>
+</map>

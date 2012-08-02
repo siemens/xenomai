@@ -1,5 +1,7 @@
-<area shape="rect" href="$async_8c.html" title="Analogy for Linux, command, transfer, etc." alt="" coords="5,84,189,111">
-<area shape="rect" href="$descriptor_8c.html" title="Analogy for Linux, descriptor related features." alt="" coords="213,84,424,111">
-<area shape="rect" href="$info_8c.html" title="Analogy for Linux, device, subdevice, etc." alt="" coords="448,84,619,111">
-<area shape="rect" href="$sync_8c.html" title="Analogy for Linux, instruction related features." alt="" coords="643,84,819,111">
-<area shape="rect" href="$sys_8c.html" title="Analogy for Linux, descriptor related features." alt="" coords="843,84,1011,111">
+<map id="G" name="G">
+<area shape="rect" id="node3" href="$async_8c.html" title="Analogy for Linux, command, transfer, etc." alt="" coords="5,83,179,112"/>
+<area shape="rect" id="node5" href="$descriptor_8c.html" title="Analogy for Linux, descriptor related features." alt="" coords="203,83,397,112"/>
+<area shape="rect" id="node7" href="$info_8c.html" title="Analogy for Linux, device, subdevice, etc." alt="" coords="421,83,581,112"/>
+<area shape="rect" id="node9" href="$sync_8c.html" title="Analogy for Linux, instruction related features." alt="" coords="605,83,771,112"/>
+<area shape="rect" id="node11" href="$sys_8c.html" title="Analogy for Linux, descriptor related features." alt="" coords="795,83,955,112"/>
+</map>

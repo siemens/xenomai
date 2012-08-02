@@ -1,5 +1,7 @@
-<area shape="rect" href="$analogy__driver_8h.html" title="Analogy for Linux, driver facilities." alt="" coords="231,161,409,188">
-<area shape="rect" href="$8255_8h.html" title="Hardware driver for 8255 chip." alt="" coords="323,84,387,111">
-<area shape="rect" href="$os__facilities_8h.html" title="Analogy for Linux, Operation system facilities." alt="" coords="68,239,228,265">
-<area shape="rect" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations." alt="" coords="252,239,388,265">
-<area shape="rect" href="$device_8h.html" title="Analogy for Linux, device related features." alt="" coords="412,239,540,265">
+<map id="G" name="G">
+<area shape="rect" id="node7" href="$analogy__driver_8h.html" title="Analogy for Linux, driver facilities." alt="" coords="220,160,385,189"/>
+<area shape="rect" id="node15" href="$8255_8h.html" title="Hardware driver for 8255 chip." alt="" coords="307,83,368,112"/>
+<area shape="rect" id="node9" href="$os__facilities_8h.html" title="Analogy for Linux, Operation system facilities." alt="" coords="67,237,216,267"/>
+<area shape="rect" id="node11" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations." alt="" coords="240,237,365,267"/>
+<area shape="rect" id="node13" href="$device_8h.html" title="Analogy for Linux, device related features." alt="" coords="389,237,509,267"/>
+</map>

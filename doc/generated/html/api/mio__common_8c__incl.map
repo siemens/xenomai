@@ -1,9 +1,11 @@
-<area shape="rect" href="$8255_8h.html" title="Hardware driver for 8255 chip." alt="" coords="113,161,220,188">
-<area shape="rect" href="$mite_8h.html" title="Hardware driver for NI Mite PCI interface chip." alt="" coords="265,84,327,111">
-<area shape="rect" href="$ni__stc_8h.html" title="Register descriptions for NI DAQ&#45;STC chip." alt="" coords="351,84,420,111">
-<area shape="rect" href="$ni__mio_8h.html" title="Hardware driver for NI Mite PCI interface chip." alt="" coords="444,84,519,111">
-<area shape="rect" href="$analogy__driver_8h.html" title="Analogy for Linux, driver facilities." alt="" coords="168,239,347,265">
-<area shape="rect" href="$os__facilities_8h.html" title="Analogy for Linux, Operation system facilities." alt="" coords="5,316,165,343">
-<area shape="rect" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations." alt="" coords="189,316,325,343">
-<area shape="rect" href="$device_8h.html" title="Analogy for Linux, device related features." alt="" coords="349,316,477,343">
-<area shape="rect" href="$ni__tio_8h.html" title="Hardware driver for NI general purpose counter." alt="" coords="401,161,468,188">
+<map id="G" name="G">
+<area shape="rect" id="node3" href="$8255_8h.html" title="Hardware driver for 8255 chip." alt="" coords="103,160,204,189"/>
+<area shape="rect" id="node13" href="$mite_8h.html" title="Hardware driver for NI Mite PCI interface chip." alt="" coords="251,83,309,112"/>
+<area shape="rect" id="node18" href="$ni__stc_8h.html" title="Register descriptions for NI DAQ&#45;STC chip." alt="" coords="333,83,400,112"/>
+<area shape="rect" id="node23" href="$ni__mio_8h.html" title="Hardware driver for NI Mite PCI interface chip." alt="" coords="424,83,493,112"/>
+<area shape="rect" id="node5" href="$analogy__driver_8h.html" title="Analogy for Linux, driver facilities." alt="" coords="159,237,324,267"/>
+<area shape="rect" id="node7" href="$os__facilities_8h.html" title="Analogy for Linux, Operation system facilities." alt="" coords="5,315,155,344"/>
+<area shape="rect" id="node9" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations." alt="" coords="179,315,304,344"/>
+<area shape="rect" id="node11" href="$device_8h.html" title="Analogy for Linux, device related features." alt="" coords="328,315,448,344"/>
+<area shape="rect" id="node20" href="$ni__tio_8h.html" title="Hardware driver for NI general purpose counter." alt="" coords="383,160,447,189"/>
+</map>
