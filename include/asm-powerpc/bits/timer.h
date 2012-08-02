@@ -29,6 +29,7 @@
 
 static inline void xnarch_program_timer_shot(unsigned long delay)
 {
+#if !defined(CONFIG_IPIPE_CORE) || IPIPE_CORE_APIREV < 2
 	/*
 	 * Even though some architectures may use a 64 bits delay
 	 * here, we voluntarily limit to 32 bits, 4 billions ticks
@@ -38,6 +39,9 @@ static inline void xnarch_program_timer_shot(unsigned long delay)
 	 */
 	rthal_timer_program_shot(rthal_imuldiv_ceil
 				 (delay, RTHAL_TIMER_FREQ, RTHAL_CLOCK_FREQ));
+#else
+	rthal_timer_program_shot(delay)
+#endif
 }
 
 static inline void xnarch_send_timer_ipi(xnarch_cpumask_t mask)

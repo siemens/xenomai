@@ -739,4 +739,12 @@ static inline void __FD_ZERO(__kernel_fd_set *__p)
 }
 #endif
 
+#ifdef CONFIG_IPIPE_CORE
+#if IPIPE_CORE_APIREV >= 2
+#define wrap_ipipe_timers_request(mask) ipipe_timers_request(mask)
+#else /* IPIPE_CORE_APIREV < 2 */
+#define wrap_ipipe_timers_request(mask) ipipe_timers_request()
+#endif /* IPIPE_CORE_APIREV < 2 */
+#endif /* I-pipe core */
+
 #endif /* _XENO_ASM_GENERIC_WRAPPERS_H */

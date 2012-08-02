@@ -138,7 +138,7 @@ static inline void rthal_tickdev_release(int cpu)
 
 static inline int rthal_tickdev_select(void)
 {
-	return ipipe_timers_request();
+	return wrap_ipipe_timers_request(&rthal_supported_cpus);
 }
 
 #else /* !CONFIG_IPIPE_CORE */

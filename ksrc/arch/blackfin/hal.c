@@ -53,7 +53,7 @@ enum rthal_ktimer_mode rthal_ktimer_saved_mode;
 #ifdef CONFIG_IPIPE_CORE
 
 #define rthal_tickdev_select() \
-	ipipe_timers_request()
+	wrap_ipipe_timers_request(&rthal_supported_cpus)
 
 #define rthal_tickdev_unselect() \
 	ipipe_timers_release()

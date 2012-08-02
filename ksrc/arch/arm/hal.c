@@ -49,8 +49,6 @@
 #endif /* CONFIG_PROC_FS */
 #include <stdarg.h>
 
-rthal_u32frac_t rthal_tsc_to_timer;
-EXPORT_SYMBOL_GPL(rthal_tsc_to_timer);
 
 #define RTHAL_CALIBRATE_LOOPS 10
 
@@ -65,6 +63,11 @@ static int cpu_timers_requested;
 
 #ifdef CONFIG_IPIPE_CORE
 
+#if IPIPE_CORE_APIREV < 2
+rthal_u32frac_t rthal_tsc_to_timer;
+EXPORT_SYMBOL_GPL(rthal_tsc_to_timer);
+#endif
+
 #define steal_timer(stolen) do { } while (0)
 #define force_oneshot_hw_mode() do { } while (0)
 #define restore_normal_hw_mode() do { } while (0)
@@ -72,7 +75,7 @@ static int cpu_timers_requested;
 #define rthal_timer_set_periodic() do { } while (0)
 
 #define rthal_tickdev_select() \
-	ipipe_timers_request()
+	wrap_ipipe_timers_request(&rthal_supported_cpus)
 
 #define rthal_tickdev_unselect() \
 	ipipe_timers_release()
@@ -87,6 +90,9 @@ static int cpu_timers_requested;
 	ipipe_timer_stop(cpu)
 
 #else /* !I-pipe core */
+
+rthal_u32frac_t rthal_tsc_to_timer;
+EXPORT_SYMBOL_GPL(rthal_tsc_to_timer);
 
 #define RTHAL_SET_ONESHOT_XENOMAI	1
 #define RTHAL_SET_ONESHOT_LINUX		2
@@ -193,7 +199,7 @@ static void rthal_timer_set_periodic(void)
 unsigned long rthal_timer_calibrate(void)
 {
 	unsigned long long start, end, sum = 0, sum_sq = 0;
-	volatile unsigned const_delay = rthal_timerfreq_arg / HZ;
+	volatile unsigned const_delay = rthal_clockfreq_arg / HZ;
 	unsigned long result, flags, tsc_lat;
 	unsigned int delay = const_delay;
 	long long diff;
@@ -221,8 +227,12 @@ unsigned long rthal_timer_calibrate(void)
 		for (j = 0; j < RTHAL_CALIBRATE_LOOPS; j++) {
 			rthal_read_tsc(start);
 			barrier();
+#if !defined(CONFIG_IPIPE_CORE) || IPIPE_CORE_APIREV < 2
 			rthal_timer_program_shot(
 				rthal_nodiv_imuldiv_ceil(delay, rthal_tsc_to_timer));
+#else
+			rthal_timer_program_shot(delay);
+#endif
 			barrier();
 			rthal_read_tsc(end);
 			diff = end - start - tsc_lat;
@@ -541,8 +551,10 @@ int rthal_arch_init(void)
 	if (rthal_clockfreq_arg == 0)
 		rthal_clockfreq_arg = rthal_get_clockfreq();
 
+#if !defined(CONFIG_IPIPE_CORE) || IPIPE_CORE_APIREV < 2
 	xnarch_init_u32frac(&rthal_tsc_to_timer,
 			    rthal_timerfreq_arg, rthal_clockfreq_arg);
+#endif
 
 	return 0;
 }

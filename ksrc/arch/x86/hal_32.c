@@ -342,7 +342,7 @@ rthal_time_t rthal_get_8254_tsc(void)
 int rthal_arch_init(void)
 {
 #ifdef CONFIG_IPIPE_CORE
-	int rc = ipipe_timers_request();
+	int rc = wrap_ipipe_timers_request(&rthal_supported_cpus);
 	if (rc < 0)
 		return rc;
 #else /* !I-pipe core */

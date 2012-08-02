@@ -535,21 +535,18 @@ static inline void cleanup_apc_handler(void) { }
 int rthal_init(void)
 {
     int err;
+#ifdef CONFIG_SMP
+    int cpu;
+    cpus_clear(rthal_supported_cpus);
+    for (cpu = 0; cpu < BITS_PER_LONG; cpu++)
+	    if (supported_cpus_arg & (1 << cpu))
+		    cpu_set(cpu, rthal_supported_cpus);
+#endif /* CONFIG_SMP */
 
     err = rthal_arch_init();
 
     if (err)
 	goto out;
-
-#ifdef CONFIG_SMP
-    {
-	int cpu;
-	cpus_clear(rthal_supported_cpus);
-	for (cpu = 0; cpu < BITS_PER_LONG; cpu++)
-	    if (supported_cpus_arg & (1 << cpu))
-		cpu_set(cpu, rthal_supported_cpus);
-    }
-#endif /* CONFIG_SMP */
 
     /*
      * The arch-dependent support must have updated the various

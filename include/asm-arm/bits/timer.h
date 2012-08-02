@@ -29,6 +29,7 @@
 
 #include <asm/xenomai/arith.h>
 
+#if !defined(CONFIG_IPIPE_CORE) || IPIPE_CORE_APIREV < 2
 extern rthal_u32frac_t rthal_tsc_to_timer;
 
 static inline void xnarch_program_timer_shot(unsigned long delay)
@@ -36,6 +37,12 @@ static inline void xnarch_program_timer_shot(unsigned long delay)
 	rthal_timer_program_shot(
 		rthal_nodiv_imuldiv_ceil(delay, rthal_tsc_to_timer));
 }
+#else
+static inline void xnarch_program_timer_shot(unsigned long delay)
+{
+	rthal_timer_program_shot(delay);
+}
+#endif
 
 static inline void xnarch_send_timer_ipi(xnarch_cpumask_t mask)
 {
