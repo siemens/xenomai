@@ -2,8 +2,8 @@ Source: xenomai
 Section: devel
 Priority: extra
 Maintainer: Roland Stigge <stigge@antcom.de>
-Build-Depends: debhelper (>= 7), dh-kpatches, findutils (>= 4.2.28)
-Standards-Version: 3.9.1
+Build-Depends: debhelper (>= 8), findutils (>= 4.2.28), autotools-dev, autoconf, automake, libtool
+Standards-Version: 3.9.3
 Homepage: http://www.xenomai.org/
 
 Package: xenomai-runtime
@@ -27,7 +27,7 @@ Description: Xenomai runtime utilities
 Package: linux-patch-xenomai
 Section: kernel
 Architecture: all
-Depends: ${kpatch:Depends}, ${misc:Depends}
+Depends: ${misc:Depends}
 Suggests: xenomai, linux-source-2.6, kernel-package
 Description: Linux kernel patches for Xenomai
  Xenomai is a real-time development framework cooperating with the Linux

@@ -46,10 +46,13 @@ else
 	CONFIG_OPTS += --build $(DEB_BUILD_GNU_TYPE)
 endif
 
+# necessary from GCC 4.6 on
+CFLAGS += -fno-omit-frame-pointer
+
 build: build-arch build-indep
 
 build-arch: build-arch-stamp
-build-arch-stamp: config.status patch-stamp
+build-arch-stamp: config.status xenomai-patch-stamp
 	dh_testdir
 	$(MAKE)
 	touch build-arch-stamp
@@ -59,31 +62,31 @@ build-indep-stamp: config.status
 	dh_testdir
 	touch build-indep-stamp
 
-patch-stamp:
+xenomai-patch-stamp:
 	dh_testdir
-	cp debian/linux-patch-xenomai.kpatches.in debian/linux-patch-xenomai.kpatches
 	for i in arm i386 powerpc x86_64 x86 ; do \
 		bash $(CURDIR)/scripts/prepare-patch.sh $$i ; \
 	done
-	touch patch-stamp
+	touch xenomai-patch-stamp
 
 config.status: configure-stamp
 configure-stamp:
 	dh_testdir
-	./configure $(CONFIG_OPTS)
+	autoreconf -fi
+	./configure $(CONFIG_OPTS) --with-testdir=/usr/lib/xenomai/testsuite
 	touch configure-stamp
 
 clean:
 	dh_testdir
 	dh_testroot
-	rm -f *-stamp
-	dh_clean
-	if test -f Makefile ; then \
+	rm -f configure-stamp xenomai-patch-stamp build-indep-stamp build-arch-stamp
+	-if test -f Makefile ; then \
 	    $(MAKE) distclean ; \
 	fi
+	dh_clean
 	rm -fR $(CURDIR)/tmp
 	rm -f $(CURDIR)/*.patch
-	rm -f $(CURDIR)/debian/*.kpatches
+	-rm -f configure
 
 install: build
 	dh_testdir
@@ -92,6 +95,8 @@ install: build
 	dh_installdirs
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp/
 	dh_install --sourcedir=$(CURDIR)/debian/tmp
+	# Patch collection:
+	cp adeos-ipipe-*.patch $(CURDIR)/debian/linux-patch-xenomai/usr/src/kernel-patches/diffs/xenomai
 	# xeno-config should be only in libxenomai-dev
 	rm -f $(CURDIR)/debian/xenomai-runtime/usr/bin/xeno-config
 	rm -f $(CURDIR)/debian/xenomai-runtime/usr/share/man/man1/xeno-config.1
@@ -103,7 +108,8 @@ install: build
 	rm -rf $(CURDIR)/debian/xenomai-doc/usr/share/doc/xenomai-doc/ps
 	cp debian/libxenomai1.lintian $(CURDIR)/debian/libxenomai1/usr/share/lintian/overrides/libxenomai1
 	cp debian/libxenomai-dev.lintian $(CURDIR)/debian/libxenomai-dev/usr/share/lintian/overrides/libxenomai-dev
-	dh_installkpatches
+	# remove *.la files
+	rm $(CURDIR)/debian/libxenomai-dev/usr/lib/*.la
 
 # Build architecture-independent files here.
 binary-indep: build install
@@ -113,17 +119,12 @@ binary-indep: build install
 	dh_link -i
 	dh_installchangelogs -i
 	dh_strip -i
-	dh_compress -i -X.pdf
+	dh_compress -i -X.pdf $(CURDIR)/debian/linux-patch-xenomai/usr/src/kernel-patches/diffs/xenomai/*
 	dh_fixperms -i
 	dh_makeshlibs -i
 	dh_installdeb -i
 	dh_shlibdeps -i
 	dh_gencontrol -i
-#	 Here follows a little hackery to insert the patch list        
-#	 into the control file for linux-patch-xenomai
-	cat $(CURDIR)/debian/linux-patch-xenomai.kpatches | \
-	    sed -e 's/^$$/./;s/^/ /' >> \
-	        $(CURDIR)/debian/linux-patch-xenomai/DEBIAN/control
 	dh_md5sums -i
 	dh_builddeb -i
 

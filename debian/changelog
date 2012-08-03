@@ -1,3 +1,9 @@
+xenomai (2.6.1) unstable; urgency=low
+
+  * New release, integrated with debian/ subdir
+
+ -- Roland Stigge <stigge@antcom.de>  Fri, 03 Aug 2012 14:49:57 +0200
+
 xenomai (2.5.3) unstable; urgency=low
 
   * Switch to dpkg-source 3.0 (native) format
