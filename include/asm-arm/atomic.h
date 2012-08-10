@@ -183,6 +183,9 @@ xnarch_atomic_cmpxchg(xnarch_atomic_t *ptr,
 		"ldrex	%1, [%3]\n"
 		"mov	%0, #0\n"
 		"teq	%1, %4\n"
+#ifdef __thumb__
+		"it	eq\n"
+#endif
 		"strexeq %0, %5, [%3]\n"
 		    : "=&r" (res), "=&r" (curval), "+Qo" (ptr->counter)
 		    : "r" (&ptr->counter), "Ir" (oldval), "r" (newval)
