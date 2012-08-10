@@ -147,6 +147,15 @@ static inline int xnarch_fault_fpu_p(struct xnarch_fltinfo *fi)
 	if (unlikely(thumb_mode(fi->regs))) {
 		unsigned short thumbh, thumbl;
 
+#if defined(CONFIG_ARM_THUMB) && __LINUX_ARM_ARCH__ >= 6 && defined(CONFIG_CPU_V7)
+#if __LINUX_ARM_ARCH__ < 7
+		if (cpu_architecture() < CPU_ARCH_ARMv7)
+#else
+		if (0)
+#endif /* arch < 7 */
+#endif /* thumb && arch >= 6 && cpu_v7 */
+			return 0;
+
 		thumbh = *(unsigned short *) pc;
 		thumbl = *((unsigned short *) pc + 1);
 
@@ -189,8 +198,9 @@ static inline int xnarch_fault_fpu_p(struct xnarch_fltinfo *fi)
 		/* If an exception is pending, the VFP fault is not really an
 		   "FPU unavailable" fault, so we return undefinstr in that
 		   case, the nucleus will let linux handle the fault. */
-		if (rthal_vfp_fmrx(FPEXC) & (FPEXC_EX|FPEXC_DEX)
-		    || rthal_vfp_fmrx(FPSCR) & FPSCR_IXE)
+		exc = rthal_vfp_fmrx(FPEXC);
+		if (exc & (FPEXC_EX|FPEXC_DEX)
+		    || ((exc & FPEXC_EN) && rthal_vfp_fmrx(FPSCR) & FPSCR_IXE))
 			exc = IPIPE_TRAP_UNDEFINSTR;
 		else
 			exc = IPIPE_TRAP_VFP;
