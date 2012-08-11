@@ -28,7 +28,6 @@
 #include <linux/bitops.h>
 #include <linux/version.h>
 #include <asm/atomic.h>
-#include <asm/system.h>
 
 #define xnarch_atomic_xchg(ptr,v)	xchg(ptr,v)
 #define xnarch_memory_barrier()		smp_mb()

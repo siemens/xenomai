@@ -54,7 +54,6 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 
 #ifndef __cplusplus
 #include <linux/irq.h>
-#include <asm/system.h>
 #include <asm/time.h>
 #include <asm/timex.h>
 #include <asm/xenomai/atomic.h>
