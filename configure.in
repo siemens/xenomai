@@ -520,9 +520,9 @@ XENO_USER_APP_CFLAGS=$XENO_USER_CFLAGS
 XENO_USER_APP_LDFLAGS=$XENO_USER_LDADD
 
 if test x$debug_mode = xpartial; then
-   XENO_USER_CFLAGS="-g -O2 -D__XENO_DEBUG__ $XENO_USER_CFLAGS -fno-omit-frame-pointer"
+   XENO_USER_CFLAGS="-g -O2 -D__XENO_DEBUG__ $XENO_USER_CFLAGS"
 elif test x$debug_mode = xfull; then
-   XENO_USER_CFLAGS="-g -D__XENO_DEBUG__ -D__XENO_DEBUG_FULL__ -fno-omit-frame-pointer $XENO_USER_CFLAGS"
+   XENO_USER_CFLAGS="-g -D__XENO_DEBUG__ -D__XENO_DEBUG_FULL__ $XENO_USER_CFLAGS"
 else
    XENO_USER_CFLAGS="-O2 $XENO_USER_CFLAGS"
 fi

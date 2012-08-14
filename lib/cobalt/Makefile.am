@@ -6,8 +6,6 @@ noinst_HEADERS =	\
 
 lib_LTLIBRARIES = libcobalt.la
 
-CPPFLAGS += -I$(top_srcdir)/kernel/cobalt
-
 libcobalt_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 2:0:0 -lpthread -lrt
 
 libcobalt_la_SOURCES = \
@@ -31,8 +29,9 @@ libcobalt_la_SOURCES = \
 	printf.c \
 	wrappers.c
 
-libcobalt_la_CPPFLAGS =				\
+libcobalt_la_CPPFLAGS =					\
 	@XENO_COBALT_CFLAGS@ -Wno-missing-prototypes	\
+	-I$(top_srcdir)/kernel/cobalt			\
 	-I$(top_srcdir)					\
 	-I$(top_srcdir)/include
 
