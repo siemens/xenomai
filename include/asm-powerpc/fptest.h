@@ -3,7 +3,6 @@
 
 #ifdef __KERNEL__
 #include <linux/module.h>
-#include <asm/system.h>
 
 static inline int fp_kernel_supported(void)
 {

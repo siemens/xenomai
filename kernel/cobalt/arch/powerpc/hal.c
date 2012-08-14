@@ -34,7 +34,6 @@
 #include <linux/irq.h>
 #include <linux/console.h>
 #include <linux/ipipe_tickdev.h>
-#include <asm/system.h>
 #include <asm/hardirq.h>
 #include <asm/hw_irq.h>
 #include <asm/irq.h>
@@ -152,16 +151,16 @@ int rthal_timer_request(void (*tick_handler)(void),
 					 struct clock_event_device *cdev),
 			int cpu)
 {
-	unsigned long dummy, *tmfreq = &dummy;
-	int tickval, ret, res;
+	int tickval, ret;
 
 #ifndef CONFIG_IPIPE_CORE
-	res = ipipe_request_tickdev("decrementer", mode_emul, tick_emul, cpu,
+	unsigned long dummy, *tmfreq = &dummy;
+	ret = ipipe_request_tickdev("decrementer", mode_emul, tick_emul, cpu,
 				    tmfreq);
 #else /* CONFIG_IPIPE_CORE */
-	res = ipipe_timer_start(tick_handler, mode_emul, tick_emul, cpu);
+	ret = ipipe_timer_start(tick_handler, mode_emul, tick_emul, cpu);
 #endif /* CONFIG_IPIPE_CORE */
-	switch (res) {
+	switch (ret) {
 	case CLOCK_EVT_MODE_PERIODIC:
 		/* oneshot tick emulation callback won't be used, ask
 		 * the caller to start an internal timer for emulating
@@ -183,9 +182,9 @@ int rthal_timer_request(void (*tick_handler)(void),
 		return -ENODEV;
 
 	default:
-		return res;
+		return ret;
 	}
-	rthal_ktimer_saved_mode = res;
+	rthal_ktimer_saved_mode = ret;
 
 	/*
 	 * The rest of the initialization should only be performed
