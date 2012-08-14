@@ -4,27 +4,36 @@ Xenomai needs special kernel support to deliver fast and deterministic
 response time to external interrupts, and also to provide real-time
 services highly integrated with the standard Linux kernel.
 
-This support is provided by the Adeos real-time enabler [1], in the
+This support is provided by the interrupt pipeline (aka I-pipe) in the
 form of a kernel patch you have to apply against a vanilla kernel
 tree, before you attempt to compile the Xenomai codebase against the
 latter kernel.
 
-For the SH4 (SuperH 32bit) architecture, I-pipe patches are currently
-based on STMicroelectronics 'STLinux' kernel releases [2].
+Apply one of the patches found into this directory against the
+corresponding kernel release. You may want to have a look at the
+README.*INSTALL guides at the top of the Xenomai tree for more
+information.
+
+This directory only contains the most recent patches; you may find the
+complete collection of I-pipe patches at the following locations (see
+note):
+
+* all existing I-pipe patches for the SH architecture:
+http://download.gna.org/adeos/patches/v2.6/sh/
+
+NOTE: not all older patches are guaranteed to work with the current
+Xenomai release.  However, there is a good chance most of them do,
+since we try hard to maintain backward compatibility.  For the SH4
+(SuperH 32bit) architecture, I-pipe patches are currently based on
+STMicroelectronics 'STLinux' kernel releases [1].
 
 Tested boards:
 
 - STMicro MB442
-
-This directory only contains the most recent patches used to validate
-this Xenomai release on SH4 platforms; you may find the complete
-collection of Adeos/I-pipe patches at the following location (see
-note): http://download.gna.org/adeos/patches/v2.6/sh
 
 Patch			        Based on
 ------------------------------------------------------------------------
 
 2.6.32.10			STLinux-2.4
 
-[1] http://www.gna.org/projects/adeos/
-[2] ftp://ftp.stlinux.com/pub/stlinux/
+[1] ftp://ftp.stlinux.com/pub/stlinux/
