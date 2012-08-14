@@ -71,6 +71,7 @@ void monitor_exit(struct syncobj *sobj)
 	int ret;
 	ret = cobalt_monitor_exit(&sobj->core.monitor);
 	assert(ret == 0);
+	(void)ret;
 }
 
 static inline
@@ -108,6 +109,7 @@ static inline void syncobj_init_corespec(struct syncobj *sobj)
 	int flags = monitor_scope_attribute, ret;
 	ret = cobalt_monitor_init(&sobj->core.monitor, flags);
 	assert(ret == 0);
+	(void)ret;
 }
 
 static inline void syncobj_cleanup_corespec(struct syncobj *sobj)
