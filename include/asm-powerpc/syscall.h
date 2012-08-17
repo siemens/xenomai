@@ -169,9 +169,9 @@ static inline unsigned long long __xn_rdtsc(void)
 	} u;
 	unsigned long __tbu;
 
-	__asm__ __volatile__("1: mftbu %0\n"
-			     "mftb %1\n"
-			     "mftbu %2\n"
+	__asm__ __volatile__("1: mfspr %0,269\n"
+			     "mfspr %1,268\n"
+			     "mfspr %2,269\n"
 			     "cmpw %2,%0\n"
 			     "bne- 1b\n":"=r"(u.v[0]),
 			     "=r"(u.v[1]), "=r"(__tbu));
