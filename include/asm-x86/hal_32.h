@@ -74,7 +74,6 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 }
 
 #ifndef __cplusplus
-#include <asm/system.h>
 #include <asm/io.h>
 #include <asm/timex.h>
 #include <asm/processor.h>
