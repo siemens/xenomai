@@ -41,6 +41,15 @@ config XENO_DRIVERS_CAN_SJA1000_IXXAT_PCI
 	the second channel working, Xenomai's shared interrupt support
 	must be enabled.
 
+config XENO_DRIVERS_CAN_SJA1000_ADV_PCI
+	depends on XENO_DRIVERS_CAN_SJA1000 && PCI
+	tristate "ADVANTECH PCI Cards"
+	help
+
+	This driver is for the ADVANTECH PCI cards (1 or more channels)
+	It supports the 1680U and some other ones.
+
+
 config XENO_DRIVERS_CAN_SJA1000_PLX_PCI
 	depends on XENO_DRIVERS_CAN_SJA1000 && PCI
 	tristate "PLX90xx PCI-bridge based Cards"
