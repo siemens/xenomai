@@ -9,6 +9,7 @@ obj-$(CONFIG_XENO_DRIVERS_CAN_SJA1000_PEAK_PCI) += xeno_can_peak_pci.o
 obj-$(CONFIG_XENO_DRIVERS_CAN_SJA1000_PEAK_DNG) += xeno_can_peak_dng.o
 obj-$(CONFIG_XENO_DRIVERS_CAN_SJA1000_PLX_PCI) += xeno_can_plx_pci.o
 obj-$(CONFIG_XENO_DRIVERS_CAN_SJA1000_IXXAT_PCI) += xeno_can_ixxat_pci.o
+obj-$(CONFIG_XENO_DRIVERS_CAN_SJA1000_ADV_PCI) += xeno_can_adv_pci.o
 obj-$(CONFIG_XENO_DRIVERS_CAN_SJA1000_EMS_PCI) += xeno_can_ems_pci.o
 obj-$(CONFIG_XENO_DRIVERS_CAN_SJA1000_ESD_PCI) += xeno_can_esd_pci.o
 obj-$(CONFIG_XENO_DRIVERS_CAN_SJA1000_ISA) += xeno_can_isa.o
@@ -19,6 +20,7 @@ xeno_can_peak_pci-y := rtcan_peak_pci.o
 xeno_can_peak_dng-y := rtcan_peak_dng.o
 xeno_can_plx_pci-y := rtcan_plx_pci.o
 xeno_can_ixxat_pci-y := rtcan_ixxat_pci.o
+xeno_can_adv_pci-y := rtcan_adv_pci.o
 xeno_can_ems_pci-y := rtcan_ems_pci.o
 xeno_can_esd_pci-y := rtcan_esd_pci.o
 xeno_can_isa-y := rtcan_isa.o
@@ -35,6 +37,7 @@ obj-$(CONFIG_XENO_DRIVERS_CAN_SJA1000_PEAK_PCI) += xeno_can_peak_pci.o
 obj-$(CONFIG_XENO_DRIVERS_CAN_SJA1000_PEAK_DNG) += xeno_can_peak_dng.o 
 obj-$(CONFIG_XENO_DRIVERS_CAN_SJA1000_PLX_PCI) += xeno_can_plx_pci.o
 obj-$(CONFIG_XENO_DRIVERS_CAN_SJA1000_IXXAT_PCI) += xeno_can_ixxat_pci.o
+obj-$(CONFIG_XENO_DRIVERS_CAN_SJA1000_ADV_PCI) += xeno_can_adv_pci.o
 obj-$(CONFIG_XENO_DRIVERS_CAN_SJA1000_EMS_PCI) += xeno_can_ems_pci.o
 obj-$(CONFIG_XENO_DRIVERS_CAN_SJA1000_ESD_PCI) += xeno_can_esd_pci.o
 obj-$(CONFIG_XENO_DRIVERS_CAN_SJA1000_ISA) += xeno_can_isa.o 
@@ -47,6 +50,7 @@ xeno_can_peak_pci-objs := rtcan_peak_pci.o
 xeno_can_peak_dng-objs := rtcan_peak_dng.o
 xeno_can_plx_pci-objs := rtcan_plx_pci.o
 xeno_can_ixxat_pci-objs := rtcan_ixxat_pci.o
+xeno_can_adv_pci-objs := rtcan_adv_pci.o
 xeno_can_ems_pci-objs := rtcan_ems_pci.o
 xeno_can_esd_pci-objs := rtcan_esd_pci.o
 xeno_can_isa-objs := rtcan_isa.o
@@ -72,6 +76,9 @@ xeno_can_plx_pci.o: $(xeno_can_plx_pci-objs)
 
 xeno_can_ixxat_pci.o: $(xeno_can_ixxat_pci-objs)
 	$(LD) -r -o $@ $(xeno_can_ixxat_pci-objs)
+
+xeno_can_adv_pci.o: $(xeno_can_adv_pci-objs)
+	$(LD) -r -o $@ $(xeno_can_adv_pci-objs)
 
 xeno_can_ems_pci.o: $(xeno_can_ems_pci-objs)
 	$(LD) -r -o $@ $(xeno_can_ems_pci-objs)
