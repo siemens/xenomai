@@ -183,7 +183,7 @@ static inline int xnlock_dbg_release(struct xnlock *lock)
 typedef cpumask_t xnarch_cpumask_t;
 
 #ifdef CONFIG_SMP
-#define xnarch_cpu_online_map			cpu_online_map
+#define xnarch_cpu_online_map			(*cpu_online_mask)
 #else
 #define xnarch_cpu_online_map			cpumask_of_cpu(0)
 #endif

@@ -28,7 +28,6 @@ typedef unsigned long atomic_flags_t;
 #ifdef __KERNEL__
 #include <linux/bitops.h>
 #include <asm/atomic.h>
-#include <asm/system.h>
 #include <asm/xenomai/wrappers.h>
 
 typedef atomic_long_t atomic_counter_t;
