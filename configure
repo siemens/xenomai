@@ -622,18 +622,24 @@ XENO_LIB_CFLAGS
 XENO_HOST_STRING
 XENO_BUILD_STRING
 XENO_TARGET_ARCH
+ASCIIDODC
 LATEX_MODE
 LATEX_BATCHMODE
 DOXYGEN_SHOW_INCLUDE_FILES
 CONFIG_XENO_FAST_WRAP_FALSE
 CONFIG_XENO_FAST_WRAP_TRUE
 LD_FILE_OPTION
+CONFIG_XENO_ASCIIDOC_FALSE
+CONFIG_XENO_ASCIIDOC_TRUE
 CONFIG_XENO_DOC_DOX_FALSE
 CONFIG_XENO_DOC_DOX_TRUE
 CONFIG_XENO_SHARED_FALSE
 CONFIG_XENO_SHARED_TRUE
 CONFIG_XENO_FASTSYNCH_FALSE
 CONFIG_XENO_FASTSYNCH_TRUE
+W3M
+A2X
+ASCIIDOC
 DBX_ABS_SRCDIR_FALSE
 DBX_ABS_SRCDIR_TRUE
 DBX_XSL_ROOT
@@ -806,6 +812,7 @@ enable_dbx_network
 with_dbx_root
 with_docbook_xsl_root
 enable_verbose_latex
+enable_asciidoc
 enable_posix_auto_mlockall
 enable_psos_auto_mlockall
 enable_uitron_auto_mlockall
@@ -1476,6 +1483,7 @@ Optional Features:
                           through network (default is to die if local
                           installation can not be found by configure).
   --enable-verbose-latex  Uses LaTeX non-stop mode
+  --enable-asciidoc       Build Asciidoc documentation
   --enable-posix-auto-mlockall
                           Enable Xenomai POSIX skin library to automatically
                           call mlockall at startup. This option is mainly
@@ -13184,6 +13192,152 @@ else
    LATEX_MODE=batchmode
 fi
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for asciidoc documentation" >&5
+$as_echo_n "checking for asciidoc documentation... " >&6; }
+# Check whether --enable-asciidoc was given.
+if test "${enable_asciidoc+set}" = set; then :
+  enableval=$enable_asciidoc; case "$enableval" in
+	y | yes) CONFIG_XENO_ASCIIDOC=y ;;
+	*) unset CONFIG_XENO_ASCIIDOC ;;
+	esac
+fi
+
+
+if test \! -d $srcdir/doc ; then
+    if test x$CONFIG_XENO_ASCIIDOC = xy ;
+    then
+	as_fn_error $? "documentation tree is missing." "$LINENO" 5
+    fi
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: not present" >&5
+$as_echo "not present" >&6; }
+else
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${CONFIG_XENO_ASCIIDOC:-no}" >&5
+$as_echo "${CONFIG_XENO_ASCIIDOC:-no}" >&6; }
+fi
+
+# Extract the first word of "asciidoc", so it can be a program name with args.
+set dummy asciidoc; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if test "${ac_cv_prog_ASCIIDOC+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test -n "$ASCIIDOC"; then
+  ac_cv_prog_ASCIIDOC="$ASCIIDOC" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_ASCIIDOC="asciidoc"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+fi
+fi
+ASCIIDOC=$ac_cv_prog_ASCIIDOC
+if test -n "$ASCIIDOC"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ASCIIDOC" >&5
+$as_echo "$ASCIIDOC" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+if test x${CONFIG_XENO_ASCIIDOC} = xy -a x"$ASCIIDOC" = x ; then
+   as_fn_error $? "Missing the asciidoc tool to generate the documentation." "$LINENO" 5
+fi
+# Extract the first word of "a2x", so it can be a program name with args.
+set dummy a2x; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if test "${ac_cv_prog_A2X+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test -n "$A2X"; then
+  ac_cv_prog_A2X="$A2X" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_A2X="a2x"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+fi
+fi
+A2X=$ac_cv_prog_A2X
+if test -n "$A2X"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $A2X" >&5
+$as_echo "$A2X" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+if test x${CONFIG_XENO_ASCIIDOC} = xy -a x"$A2X" = x ; then
+   as_fn_error $? "Missing the a2x tool to generate the documentation." "$LINENO" 5
+fi
+# Extract the first word of "w3m", so it can be a program name with args.
+set dummy w3m; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if test "${ac_cv_prog_W3M+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test -n "$W3M"; then
+  ac_cv_prog_W3M="$W3M" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_W3M="w3m"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+fi
+fi
+W3M=$ac_cv_prog_W3M
+if test -n "$W3M"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $W3M" >&5
+$as_echo "$W3M" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+if test x${CONFIG_XENO_ASCIIDOC} = xy -a x"$W3M" = x ; then
+   as_fn_error $? "Missing the w3m tool to generate the documentation." "$LINENO" 5
+fi
+
+
+
 for ac_header in mqueue.h
 do :
   ac_fn_c_check_header_mongrel "$LINENO" "mqueue.h" "ac_cv_header_mqueue_h" "$ac_includes_default"
@@ -13294,6 +13448,15 @@ _ACEOF
 else
   CONFIG_XENO_DOC_DOX_TRUE='#'
   CONFIG_XENO_DOC_DOX_FALSE=
+fi
+
+
+ if test "$CONFIG_XENO_ASCIIDOC" = y; then
+  CONFIG_XENO_ASCIIDOC_TRUE=
+  CONFIG_XENO_ASCIIDOC_FALSE='#'
+else
+  CONFIG_XENO_ASCIIDOC_TRUE='#'
+  CONFIG_XENO_ASCIIDOC_FALSE=
 fi
 
 
@@ -13650,6 +13813,10 @@ $as_echo "$XENO_TEST_DIR" >&6; }
 
 
 
+
+
+
+
 CONFIG_STATUS_DEPENDENCIES='$(top_srcdir)/src/skins/posix/posix.wrappers'
 
 
@@ -13670,7 +13837,7 @@ if test x"$LD_FILE_OPTION" = x"yes" ; then
 fi
 
 if test \! x$XENO_MAYBE_DOCDIR = x ; then
-      ac_config_files="$ac_config_files doc/Makefile doc/txt/Makefile doc/man/Makefile doc/man/clocktest.man doc/man/cyclictest.man doc/man/irqbench.man doc/man/irqloop.man doc/man/klatency.man doc/man/latency.man doc/man/rtcanconfig.man doc/man/rtcanrecv.man doc/man/rtcansend.man doc/man/switchbench.man doc/man/switchtest.man doc/man/xeno.man doc/man/xeno-config.man doc/doxygen/Makefile doc/doxygen/Doxyfile-common doc/doxygen/Doxyfile doc/doxygen/Doxyfile-native doc/doxygen/Doxyfile-nucleus doc/doxygen/Doxyfile-posix doc/doxygen/Doxyfile-rtdm doc/docbook/Makefile doc/docbook/catalog doc/docbook/custom-stylesheets/Makefile doc/docbook/custom-stylesheets/xsl/Makefile doc/docbook/custom-stylesheets/xsl/common/Makefile doc/docbook/custom-stylesheets/xsl/fo/Makefile doc/docbook/custom-stylesheets/xsl/html/Makefile doc/docbook/custom-stylesheets/xsl/html/chunk.xsl doc/docbook/custom-stylesheets/xsl/html/onechunk.xsl doc/docbook/xenomai/Makefile"
+      ac_config_files="$ac_config_files doc/Makefile doc/txt/Makefile doc/man/Makefile doc/man/clocktest.man doc/man/cyclictest.man doc/man/irqbench.man doc/man/irqloop.man doc/man/klatency.man doc/man/latency.man doc/man/rtcanconfig.man doc/man/rtcanrecv.man doc/man/rtcansend.man doc/man/switchbench.man doc/man/switchtest.man doc/man/xeno.man doc/man/xeno-config.man doc/doxygen/Makefile doc/doxygen/Doxyfile-common doc/doxygen/Doxyfile doc/doxygen/Doxyfile-native doc/doxygen/Doxyfile-nucleus doc/doxygen/Doxyfile-posix doc/doxygen/Doxyfile-rtdm doc/asciidoc/Makefile doc/docbook/Makefile doc/docbook/catalog doc/docbook/custom-stylesheets/Makefile doc/docbook/custom-stylesheets/xsl/Makefile doc/docbook/custom-stylesheets/xsl/common/Makefile doc/docbook/custom-stylesheets/xsl/fo/Makefile doc/docbook/custom-stylesheets/xsl/html/Makefile doc/docbook/custom-stylesheets/xsl/html/chunk.xsl doc/docbook/custom-stylesheets/xsl/html/onechunk.xsl doc/docbook/xenomai/Makefile"
 
 fi
 
@@ -13818,6 +13985,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${CONFIG_XENO_DOC_DOX_TRUE}" && test -z "${CONFIG_XENO_DOC_DOX_FALSE}"; then
   as_fn_error $? "conditional \"CONFIG_XENO_DOC_DOX\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${CONFIG_XENO_ASCIIDOC_TRUE}" && test -z "${CONFIG_XENO_ASCIIDOC_FALSE}"; then
+  as_fn_error $? "conditional \"CONFIG_XENO_ASCIIDOC\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${CONFIG_XENO_FAST_WRAP_TRUE}" && test -z "${CONFIG_XENO_FAST_WRAP_FALSE}"; then
@@ -14805,6 +14976,7 @@ do
     "doc/doxygen/Doxyfile-nucleus") CONFIG_FILES="$CONFIG_FILES doc/doxygen/Doxyfile-nucleus" ;;
     "doc/doxygen/Doxyfile-posix") CONFIG_FILES="$CONFIG_FILES doc/doxygen/Doxyfile-posix" ;;
     "doc/doxygen/Doxyfile-rtdm") CONFIG_FILES="$CONFIG_FILES doc/doxygen/Doxyfile-rtdm" ;;
+    "doc/asciidoc/Makefile") CONFIG_FILES="$CONFIG_FILES doc/asciidoc/Makefile" ;;
     "doc/docbook/Makefile") CONFIG_FILES="$CONFIG_FILES doc/docbook/Makefile" ;;
     "doc/docbook/catalog") CONFIG_FILES="$CONFIG_FILES doc/docbook/catalog" ;;
     "doc/docbook/custom-stylesheets/Makefile") CONFIG_FILES="$CONFIG_FILES doc/docbook/custom-stylesheets/Makefile" ;;

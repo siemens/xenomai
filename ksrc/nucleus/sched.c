@@ -278,8 +278,10 @@ void __xnsched_finalize_zombie(struct xnsched *sched)
 
 	xnarch_finalize_no_switch(xnthread_archtcb(thread));
 
+#if 0
 	if (xnthread_test_state(sched->curr, XNROOT))
 		xnfreesync();
+#endif
 
 	sched->zombie = NULL;
 }

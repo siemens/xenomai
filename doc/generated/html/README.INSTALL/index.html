@@ -1,0 +1,825 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="AsciiDoc 8.5.2" />
+<title>Installing Xenomai 2.6.1</title>
+<link rel="stylesheet" href="../asciidoc-css/xhtml11.css" type="text/css" />
+<link rel="stylesheet" href="../asciidoc-css/xhtml11-quirks.css" type="text/css" />
+<script type="text/javascript">
+/*<![CDATA[*/
+window.onload = function(){asciidoc.footnotes(); asciidoc.toc(3);}
+/*]]>*/
+</script>
+<script type="text/javascript" src="../asciidoc-js/asciidoc-xhtml11.js"></script>
+</head>
+<body style="max-width:55em">
+<div id="header">
+<h1>Installing Xenomai 2.6.1</h1>
+<div id="toc">
+  <div id="toctitle">Table of Contents</div>
+  <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph"><p>The latest version of this document is available at
+<a href="http://www.xenomai.org/documentation/xenomai-2.6/html/README.INSTALL/">this address</a>.</p></div>
+<div class="paragraph"><p>For questions, corrections and improvements, write to
+<a href="mailto:xenomai@xenomai.org">the mailing list</a>.</p></div>
+</div>
+</div>
+<h2 id="_introduction">1. Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Starting with version 2.1, Xenomai follows a split source model,
+decoupling the kernel space support from the user-space libraries used
+in accessing the former.</p></div>
+<div class="paragraph"><p>To this end, kernel and user-space Xenomai components are respectively
+available under the <tt>ksrc/</tt> and <tt>src/</tt> sub-trees.</p></div>
+<div class="paragraph"><p>The <tt>ksrc/</tt> sub-tree providing the kernel space support is seen as a
+built-in extension of the Linux kernel, and no more as a collection of
+separate out-of-tree modules. A direct benefit of such approach is the
+ability to build the Xenomai real-time subsystem statically into the
+target kernel, or as loadable modules as with earlier versions.
+therefore, the usual Linux kernel configuration process will be
+normally used to define the various settings for the Xenomai kernel
+components. Sections <a href="#prepare-kernel">"Preparing the target kernel"</a>
+and <a href="#compile-kernel">"Configuring and building the kernel"</a>
+document the installation process of this kernel space support.</p></div>
+<div class="paragraph"><p>The <tt>src/</tt> sub-tree contains the various user-space libraries and
+commands provided by the Xenomai framework. This tree can be built
+separately from the kernel support, even if the latter is absent from
+the build system. Section <a href="#userspace">"Building the user-space support"</a>
+documents the installation process of this user-space support.</p></div>
+<div class="paragraph"><p>If you are using a Debian based distribution, it is also
+possible to install, and even build Xenomai as a set of Debian
+packages. For further details, see
+<a href="http://www.xenomai.org/index.php/Building_Debian_packages">this page</a>.</p></div>
+</div>
+<h2 id="_installation_steps">2. Installation steps</h2>
+<div class="sectionbody">
+<h3 id="prepare-kernel">2.1. Preparing the target kernel</h3><div style="clear:left"></div>
+<div class="paragraph"><p>Xenomai provides a real-time sub-system seamlessly integrated to
+Linux, therefore the first step is to build it as part of the target
+kernel. To this end, <tt>scripts/prepare-kernel.sh</tt> is a shell script which
+sets up the target kernel properly. The syntax is as follows:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>$ scripts/prepare-kernel.sh --linux=&lt;linux-srctree&gt;
+[--adeos=&lt;adeos-patch&gt;] [--arch=&lt;target-arch&gt;]</tt></pre>
+</div></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+<tt>--linux</tt>
+</dt>
+<dd>
+<p>
+specifies the path of the target kernel source tree. Such
+    kernel tree being configured or not makes no difference and is
+    valid either way.
+</p>
+</dd>
+<dt class="hdlist1">
+<tt>--adeos</tt>
+</dt>
+<dd>
+<p>
+specifies the path of the Adeos patch to apply against the
+    kernel tree. Suitable patches are available with Xenomai under
+    <tt>ksrc/arch/&lt;target-arch&gt;/patches</tt>. This parameter can be omitted if
+    Adeos has already been patched in or the script shall suggest an
+    appropriate one. In any case, the script will not try to apply it
+    again whenever a former patch is detected.
+</p>
+</dd>
+<dt class="hdlist1">
+<tt>--arch</tt>
+</dt>
+<dd>
+<p>
+tells the script about the target architecture. If
+    unspecified, the build system architecture is detected and
+    suggested as a reasonable default.
+</p>
+</dd>
+</dl></div>
+<div class="paragraph"><p>For instance, the following command would prepare the Linux tree
+located at <tt>/usr/src/linux-2.6.23-ipipe</tt> in order to include the Xenomai
+support:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>$ cd xenomai-2.4
+$ scripts/prepare-kernel.sh --linux=/usr/src/linux-2.6.23-ipipe</tt></pre>
+</div></div>
+<div class="paragraph"><p>Note: The script will infer the location of the Xenomai kernel code
+from its own location within the Xenomai source tree. In other words,
+if <tt>/usr/src/xenomai-2.4/script/prepare-kernel.sh</tt> is executing, then
+Xenomai&#8217;s kernel support available from <tt>/usr/src/xenomai-2.4/ksrc</tt> will
+be bound to the target kernel.</p></div>
+<h3 id="compile-kernel">2.2. Configuring and building the target kernel</h3><div style="clear:left"></div>
+<div class="paragraph"><p>Once the target kernel has been prepared, the kernel should be configured
+following its usual configuration procedure. All Xenomai configuration
+options are available from the "Real-time subsystem" toplevel menu.</p></div>
+<div class="paragraph"><p>There are several important kernel configuration options, some are
+documented in the <a href="TROUBLESHOOTING.html#kconf">TROUBLESHOOTING</a>
+guide, others in the <a href="#examples">"Typical installation procedures"</a>
+for the architecture you are using.</p></div>
+<div class="paragraph"><p>Once configured, the kernel should be built as usual.</p></div>
+<div class="paragraph"><p>If you want several different configs/builds at hand, you can reuse
+the same source by adding <tt>O=../build-&lt;target&gt;</tt> to each make
+invocation. See section <a href="#powerpc">"Building for the PowerPC architecture"</a>
+for an example</p></div>
+<div class="paragraph"><p>In order to cross-compile the Linux kernel, pass an ARCH and
+CROSS_COMPILE variable on make command line. See sections
+<a href="#powerpc">"Building for the PowerPC architecture"</a>,
+<a href="#blackfin">"Building for the Blackfin"</a>, <a href="#arm">"Building for ARM"</a>
+and <a href="#nios2">"Building for NIOS II"</a> for examples.</p></div>
+<h3 id="userspace">2.3. Building the user-space support</h3><div style="clear:left"></div>
+<div class="paragraph"><p>A regular autoconf script is provided in order to prepare for building
+the user-space support. The options listed below can be passed to this
+script. Those options only affect the libraries compiled as part of
+Xenomai&#8217;s user-space support, but in any case, they never impact the
+kernel-based support.</p></div>
+<h4 id="_feature_conflict_resolution">2.3.1. Feature conflict resolution</h4>
+<div class="paragraph"><p>Because of the strong decoupling between the kernel and user-space
+build procedures, Xenomai needs to make sure that all user-space
+options selected at configuration time will be consistent with the
+actual support the runtime libraries will get from the target
+kernel. For instance, enabling TSC support in user-space for x86
+albeit the kernel has been compiled with <tt>CONFIG_X86_TSC</tt> disabled would
+certainly lead to runtime problems if uncaught, since Xenomai and the
+application would not agree on the high precision clock to use for
+their timings.  Furthermore, most of these issues cannot be probed for
+during compilation, because the target generally has different
+features than the host, even when they are the same arch (ex 386 vs 686).</p></div>
+<div class="paragraph"><p>In order to solve those potential issues, each Xenomai architecture
+port defines a set of critical features which is tested for
+consistency, each time a user-space application binds itself to a
+real-time interface in kernel space. Unresolvable conflicts are
+reported and the execution stops immediately in such a case.</p></div>
+<div class="paragraph"><p>Options that need perfect matching between both sides are marked as
+"strong" in the following lists, others that may differ are marked as
+"weak". The way Xenomai deals with tolerated discrepancies is decided
+on a case-by-case basis, depending on the option considered. When
+not applicable, the binding type remains unspecified.</p></div>
+<div class="paragraph"><p>For instance, a kernel providing SMP support can run either UP or SMP
+user-space applications since the SMP option&#8217;s binding is weak. On the
+other hand, x86-based applications linked against Xenomai libraries
+which have been compiled with the x86-tsc option on, must run on a
+kernel built with <tt>CONFIG_X86_TSC</tt> set, since the x86-tsc option&#8217;s
+binding is strong.</p></div>
+<h4 id="_generic_configure_options">2.3.2. Generic configure options</h4>
+<div class="tableblock">
+<table rules="cols"
+width="100%"
+frame="hsides"
+cellspacing="0" cellpadding="4">
+<col width="33%" />
+<col width="33%" />
+<col width="33%" />
+<thead>
+<tr>
+<th align="center" valign="top">NAME               </th>
+<th align="center" valign="top">DESCRIPTION                    </th>
+<th align="center" valign="top">[BINDING,] DEFAULT
+<span class="footnoteref"><br /><a href="#_footnote_disable">[disable]</a><br /></span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" valign="top"><p class="table"><tt>--prefix</tt></p></td>
+<td align="left" valign="top"><p class="table">Installation directory</p></td>
+<td align="left" valign="top"><p class="table"><tt>/usr/xenomai</tt></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table"><tt>--enable-debug</tt></p></td>
+<td align="left" valign="top"><p class="table">Enable debug symbols (<tt>-g</tt>)</p></td>
+<td align="left" valign="top"><p class="table">disabled</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table"><tt>--enable-smp</tt></p></td>
+<td align="left" valign="top"><p class="table">Enable SMP support</p></td>
+<td align="left" valign="top"><p class="table">weak, disabled</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 id="_arch_specific_configure_options">2.3.3. Arch-specific configure options</h4>
+<div class="tableblock">
+<table rules="cols"
+width="100%"
+frame="hsides"
+cellspacing="0" cellpadding="4">
+<col width="33%" />
+<col width="33%" />
+<col width="33%" />
+<thead>
+<tr>
+<th align="center" valign="top">NAME              </th>
+<th align="center" valign="top">DESCRIPTION                    </th>
+<th align="center" valign="top">[BINDING,] DEFAULT
+<span class="footnote" id="_footnote_disable"><br />[Each option enabled by default can be forcibly disabled by passing <tt>--disable-&lt;option&gt;</tt> to the configure script.]<br /></span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" valign="top"><p class="table"><tt>--enable-x86-sep</tt></p></td>
+<td align="left" valign="top"><p class="table">Enable x86 SEP instructions
+                      for issuing syscalls.
+                      You will also need NPTL.</p></td>
+<td align="left" valign="top"><p class="table">strong, disabled</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table"><tt>--enable-x86-tsc</tt></p></td>
+<td align="left" valign="top"><p class="table">Enable x86 TSC for timings
+                      You must have TSC for this.</p></td>
+<td align="left" valign="top"><p class="table">strong, enabled</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table"><tt>--enable-arm-tsc</tt></p></td>
+<td align="left" valign="top"><p class="table">Enable ARM TSC emulation.
+                      <span class="footnote"><br />[In the unusual
+                      situation where Xenomai kernel
+                      support for the target SOC does
+                      not support the kuser generic
+                      emulation, pass this option to
+                      use another tsc emulation.
+                      See <tt>--help</tt> for a list of valid
+                      values.]<br /></span></p></td>
+<td align="left" valign="top"><p class="table">weak, kuser</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table"><tt>--enable-arm-quirks</tt></p></td>
+<td align="left" valign="top"><p class="table">Enable quirks for specific ARM
+                     SOCs Currently sa1100 and
+                     xscale3 are supported.</p></td>
+<td align="left" valign="top"><p class="table">weak, disabled</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 id="_cross_compilation">2.3.4. Cross-compilation</h4>
+<div class="paragraph"><p>In order to cross-compile Xenomai user-space support, you will need to
+pass a <tt>--host</tt> and <tt>--build</tt> option to the configure script. The
+<tt>--host</tt> option allow to select the architecture for which the
+libraries and programs are built. The <tt>--build</tt> option allows to
+choose the architecture on which the compilation tools are run,
+i.e. the system running the configure script.</p></div>
+<div class="paragraph"><p>Since cross-compiling requires specific tools, such tools are
+generally prefixed with the host architecture name; for example, a
+compiler for the power PC architecture may be named
+<tt>powerpc-405-linux-gnu-gcc</tt>.</p></div>
+<div class="paragraph"><p>When passing the option <tt>--host=powerpc-405-linux-gnu</tt> to configure,
+configure will automatically use <tt>powerpc-405-linux-gnu-</tt> as a prefix
+to all compilation tools names and infer the host architecture name
+from this prefix. If configure is unable to infer the architecture
+name from the cross-compilation tools prefix, you will have to
+manually pass the name of all compilation tools using at least the CC
+and LD, variables on configure command line. See sections
+<a href="#powerpc">"Building for the PowerPC architecture"</a> and
+<a href="#blackfin">"Building for the Blackfin"</a> for an example using the CC
+and LD variable, or <a href="#arm">"Building for ARM"</a> for an example using
+the <tt>--host</tt> argument.</p></div>
+<div class="paragraph"><p>The easiest way to build a GNU cross-compiler might involve using
+crosstool-ng, available <a href="http://crosstool-ng.org/">here</a>.</p></div>
+<div class="paragraph"><p>If you want to avoid to build your own cross compiler, you might if
+find easier to use the ELDK. It includes the GNU cross development
+tools, such as the compilers, binutils, gdb, etc., and a number of
+pre-built target tools and libraries necessary to provide some
+functionality on the target system. See
+<a href="http://www.denx.de/wiki/DULG/ELDK">here</a> for further details.</p></div>
+<div class="paragraph"><p>Some other pre-built toolchains:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Mentor Sourcery CodeBench Lite Edition, available
+<a href="http://www.mentor.com/embedded-software/sourcery-tools/sourcery-codebench/editions/lite-edition/">here</a>;
+</p>
+</li>
+<li>
+<p>
+Linaro toolchain (for the ARM architecture), available
+<a href="https://launchpad.net/linaro-toolchain-binaries">here</a>.
+</p>
+</li>
+</ul></div>
+</div>
+<h2 id="examples">3. Typical installation procedures</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>The examples in following sections use the following conventions:</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+<tt>$linux_tree</tt>
+</dt>
+<dd>
+<p>
+path to the target kernel sources
+</p>
+</dd>
+<dt class="hdlist1">
+<tt>$xenomai_root</tt>
+</dt>
+<dd>
+<p>
+path to the Xenomai sources
+</p>
+</dd>
+<dt class="hdlist1">
+<tt>$build_root</tt>
+</dt>
+<dd>
+<p>
+path to a clean build directory
+</p>
+</dd>
+<dt class="hdlist1">
+<tt>$staging_dir</tt>
+</dt>
+<dd>
+<p>
+path to a directory that will hold the installed file
+ temporarily before they are moved to their final location; when used
+ in a cross-compilation setup, it is usually a NFS mount point from
+ the target&#8217;s root directory to the local build host, as a
+ consequence of which running <tt>make&#160;DESTDIR=$staging_dir&#160;install</tt> on
+ the host immediately updates the target system with the installed
+ programs and libraries.
+</p>
+</dd>
+</dl></div>
+<h3 id="_building_for_x86_32_64bit">3.1. Building for x86_32/64bit</h3><div style="clear:left"></div>
+<div class="paragraph"><p>Since Linux 2.6.24, x86_32 and x86_64 trees are merged. Therefore,
+building Xenomai for 2.6.24 or later is almost the same, regardless of
+the 32/64bit issue. You should note, however, that it is not possible
+to run xenomai libraries compiled for x86_32 with a kernel compiled
+for x86_64.</p></div>
+<div class="paragraph"><p>Assuming that you want to build natively for a x86_64 system (x86_32
+cross-build options from x86_64 appear between brackets), you would
+typically run:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>$ $xenomai_root/scripts/prepare-kernel.sh --arch=x86 \
+  --adeos=$xenomai_root/ksrc/arch/x86/patches/adeos-ipipe-2.6.29.4-x86-X.Y-ZZ.patch \
+  --linux=$linux_tree
+$ cd $linux_tree
+$ make [ARCH=i386] xconfig/gconfig/menuconfig</tt></pre>
+</div></div>
+<div class="paragraph"><p>&#8230;configure the kernel (see also the recommended settings
+<a href="http://www.xenomai.org/index.php/Configuring_x86_kernels">here</a>).</p></div>
+<div class="paragraph"><p>Enable Xenomai options, then install as needed with:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>$ make [ARCH=i386] bzImage modules
+$ mkdir $build_root &amp;&amp; cd $build_root
+$ $xenomai_root/configure --enable-x86-sep (*) \
+  [--host=i686-linux CFLAGS="-m32 -O2" LDFLAGS="-m32"]
+$ make install</tt></pre>
+</div></div>
+<div class="paragraph"><p>(*) Make sure to pass --enable-smp as well if building for a SMP-capable
+system.</p></div>
+<div class="paragraph"><p>Now, let&#8217;s say that you really want to build Xenomai for a
+Pentium-based x86 32bit platform running a legacy 2.6.23 kernel, using
+the native host toolchain; the typical steps would be as follows:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>$ $xenomai_root/scripts/prepare-kernel.sh --arch=i386 \
+  --adeos=$xenomai_root/ksrc/arch/x86/patches/adeos-ipipe-2.6.23-i386-X.Y-ZZ.patch \
+  --linux=$linux_tree
+$ cd $linux_tree
+$ make xconfig/gconfig/menuconfig</tt></pre>
+</div></div>
+<div class="paragraph"><p>&#8230;configure the kernel (see also the recommended settings
+<a href="http://www.xenomai.org/index.php/Configuring_x86_kernels">here</a>).</p></div>
+<div class="paragraph"><p>Enable Xenomai options, then install as needed with:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>$ make bzImage modules
+$ mkdir $build_root &amp;&amp; cd $build_root
+$ $xenomai_root/configure --enable-x86-sep
+$ make install</tt></pre>
+</div></div>
+<div class="paragraph"><p>Similarly, for a legacy kernel on a 64bit platform, you would use:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>$ $xenomai_root/scripts/prepare-kernel.sh --arch=x86_64 \
+  --adeos=$xenomai_root/ksrc/arch/x86/patches/adeos-ipipe-2.6.23-x86_64-X.Y-ZZ.patch \
+  --linux=$linux_tree
+$ cd $linux_tree
+$ make xconfig/gconfig/menuconfig</tt></pre>
+</div></div>
+<div class="paragraph"><p>&#8230;configure the kernel (see also the recommended settings
+<a href="http://www.xenomai.org/index.php/Configuring_x86_kernels">here</a>).</p></div>
+<div class="paragraph"><p>Enable Xenomai options, then install as needed with:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>$ make bzImage modules
+$ mkdir $build_root &amp;&amp; cd $build_root
+$ $xenomai_root/configure
+$ make install</tt></pre>
+</div></div>
+<div class="paragraph"><p>Once the compilation has completed, /usr/xenomai should contain the
+user-space librairies and header files you would use to build
+applications that call Xenomai&#8217;s real-time support in kernel space.</p></div>
+<div class="paragraph"><p>The remaining examples illustrate how to cross-compile Xenomai for
+various architectures. Of course, you will have to install the proper
+cross-compilation toolchain for the target system first, in order to
+build Xenomai.</p></div>
+<h3 id="powerpc">3.2. Building for the PowerPC architecture</h3><div style="clear:left"></div>
+<div class="paragraph"><p>PowerPC has a legacy <tt>arch/ppc</tt> branch, and a newer, current
+<tt>arch/powerpc</tt> tree. Xenomai supports both, but using <tt>arch/powerpc</tt> is
+definitely recommended. To help the preparation script to pick the
+right one, you have to specify either <tt>--arch=powerpc</tt> (current) or
+<tt>--arch=ppc</tt> (legacy). Afterwards, the rest should be a no-brainer:</p></div>
+<div class="paragraph"><p>A typical cross-compilation setup, in order to build Xenomai for a
+lite5200 board running a recent 2.6.29.4 kernel. We use DENX&#8217;s ELDK
+cross-compiler:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>$ $xenomai_root/scripts/prepare-kernel.sh --arch=powerpc \
+  --adeos=$xenomai_root/ksrc/arch/powerpc/patches/adeos-ipipe-2.6.29.4-powerpc-2.6-00.patch \
+  --linux=$linux_tree
+$ cd $linux_tree
+$ make ARCH=powerpc CROSS_COMPILE=ppc_6xx- xconfig/gconfig/menuconfig</tt></pre>
+</div></div>
+<div class="paragraph"><p>&#8230;select the kernel and Xenomai options, save the configuration</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>$ make ARCH=powerpc CROSS_COMPILE=ppc_6xx- uImage modules</tt></pre>
+</div></div>
+<div class="paragraph"><p>&#8230;manually install the u-boot image and modules to the proper location</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>$ cd $build_root
+$ $xenomai_root/configure --host=powerpc-unknown-linux-gnu \
+  CC=ppc_6xx-gcc AR=ppc_6xx-ar LD=ppc_6xx-ld
+$ make DESTDIR=$staging_dir install</tt></pre>
+</div></div>
+<div class="paragraph"><p>Another cross-compilation setup, in order to build Xenomai for a
+powerpc64 PA-Semi board running a recent 2.6.29.4 kernel:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>$ $xenomai_root/scripts/prepare-kernel.sh --arch=powerpc \
+  --adeos=$xenomai_root/ksrc/arch/powerpc/patches/adeos-ipipe-2.6.29.4-powerpc-2.6-00.patch \
+  --linux=$linux_tree
+$ cd $linux_tree
+$ make ARCH=powerpc CROSS_COMPILE=powerpc64-linux- xconfig/gconfig/menuconfig</tt></pre>
+</div></div>
+<div class="paragraph"><p>&#8230;select the kernel and Xenomai options, save the configuration</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>$ make ARCH=powerpc CROSS_COMPILE=powerpc64-linux-</tt></pre>
+</div></div>
+<div class="paragraph"><p>&#8230;manually install the vmlinux image and modules to the proper location</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>$ cd $build_root
+$ $xenomai_root/configure --enable-smp --host=powerpc64-linux \
+  CC=powerpc64-linux-gcc AR=powerpc64-linux-ar LD=powerpc64-linux-ld
+$ make DESTDIR=$staging_dir install</tt></pre>
+</div></div>
+<div class="paragraph"><p>Yet another cross-compilation setup, this time for building Xenomai
+for a PowerPC-405-based system running a legacy <tt>arch/ppc</tt> 2.6.14
+kernel (we do support recent ones as well on this platform):</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>$ $xenomai_root/scripts/prepare-kernel.sh --arch=ppc \
+  --adeos=$xenomai_root/ksrc/arch/powerpc/patches/adeos-ipipe-2.6.14-ppc-1.5-*.patch \
+  --linux=$linux_tree
+$ mkdir -p $build_root/linux
+$ cd $linux_tree
+$ make ARCH=ppc CROSS_COMPILE=ppc_4xx- O=$build_root/linux xconfig/gconfig/menuconfig</tt></pre>
+</div></div>
+<div class="paragraph"><p>&#8230;select the kernel and Xenomai options, save the configuration</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>$ make ARCH=ppc CROSS_COMPILE=ppc_4xx- O=$build_root/linux bzImage modules</tt></pre>
+</div></div>
+<div class="paragraph"><p>&#8230;manually install the kernel image, system map and modules to the proper location</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>$ make $build_root/xenomai &amp;&amp; cd $build_root/xenomai
+$ $xenomai_root/configure --build=i686-pc-linux-gnu --host=ppc-unknown-linux-gnu \
+  CC=ppc_4xx-gcc LD=ppc_4xx-ld
+$ make DESTDIR=$staging_dir install</tt></pre>
+</div></div>
+<h3 id="blackfin">3.3. Building for the Blackfin</h3><div style="clear:left"></div>
+<div class="paragraph"><p>The Blackfin is an MMU-less, DSP-type architecture running uClinux.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>$ $xenomai_root/scripts/prepare-kernel.sh --arch=blackfin \
+  --adeos=$xenomai_root/ksrc/arch/blackfin/patches/adeos-ipipe-bf53x-*.patch \
+  --linux=$linux_tree
+$ cd $linux_tree
+$ make ARCH=blackfin CROSS_COMPILE=bfin-uclinux- xconfig/gconfig/menuconfig</tt></pre>
+</div></div>
+<div class="paragraph"><p>&#8230;select the kernel and Xenomai options, then compile with:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>$ make linux image</tt></pre>
+</div></div>
+<div class="paragraph"><p>&#8230;then install as needed</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>$ cp images/linux /tftpboot/...</tt></pre>
+</div></div>
+<div class="paragraph"><p>&#8230;build the user-space support</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>$ mkdir $build_root &amp;&amp; cd $build_root
+$ $xenomai_root/configure --host=blackfin-unknown-linux-gnu \
+  CC=bfin-linux-uclibc-gcc AR=bfin-linux-uclibc-ar LD=bfin-linux-uclibc-ld
+$ make DESTDIR=$staging_dir install</tt></pre>
+</div></div>
+<div class="paragraph"><p>You may also want to have a look at the hands-on description about
+configuring and building a Xenomai system for the Blackfin
+architecture, available at
+<a href="http://docs.blackfin.uclinux.org/doku.php?id=linux-kernel:adeos">this
+address</a>.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/note.png" alt="Note" />
+</td>
+<td class="content">Xenomai uses the FDPIC shared library format on this
+architecture. In case of problem running the testsuite, try restarting
+the last two build steps, passing the <tt>--disable-shared</tt> option to the
+"configure" script.</td>
+</tr></table>
+</div>
+<h3 id="arm">3.4. Building for ARM</h3><div style="clear:left"></div>
+<div class="paragraph"><p>Using codesourcery toolchain named <tt>arm-none-linux-gnueabi-gcc</tt> and
+compiling for a CSB637 board (AT91RM9200 based), a typical compilation
+will look like:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>$ $xenomai_root/scripts/prepare-kernel.sh --arch=arm \
+  --adeos=$xenomai_root/ksrc/arch/arm/patches/adeos-ipipe-2.6.20-arm-* \
+  --linux=$linux_tree
+$ cd $linux_tree
+$ mkdir -p $build_root/linux
+$ make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi- O=$build_root/linux \
+  csb637_defconfig
+$ make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi- O=$build_root/linux \
+  bzImage modules</tt></pre>
+</div></div>
+<div class="paragraph"><p>&#8230;manually install the kernel image, system map and modules to the proper location</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>$ mkdir $build_root/xenomai &amp;&amp; cd $build_root/xenomai
+$ $xenomai_root/configure CFLAGS="-march=armv4t" LDFLAGS="-march=armv4t" \
+  --build=i686-pc-linux-gnu --host=arm-none-linux-gnueabi-
+$ make DESTDIR=$staging_dir install</tt></pre>
+</div></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/important.png" alt="Important" />
+</td>
+<td class="content">Contrarily to previous releases, Xenomai no longer passes any
+arm architecture specific flags, or FPU flags to gcc, so, users
+are expected to pass them using the CFLAGS and LDFLAGS variables as
+demonstrated above, where the AT91RM9200 is based on the ARM920T core,
+implementing the <tt>armv4</tt> architecture. The following table summarizes the
+CFLAGS and options which were automatically passed in previous
+revisions and which now need to be explicitely passed to configure,
+for the supported SOCs:</td>
+</tr></table>
+</div>
+<div class="tableblock">
+<table rules="cols"
+width="100%"
+frame="hsides"
+cellspacing="0" cellpadding="4">
+<caption class="title">Table 1. ARM configure options and compilation flags</caption>
+<col width="33%" />
+<col width="33%" />
+<col width="33%" />
+<thead>
+<tr>
+<th align="center" valign="top">SOC       </th>
+<th align="center" valign="top"> CFLAGS                           </th>
+<th align="center" valign="top"> configure options</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" valign="top"><p class="table">at91rm9200</p></td>
+<td align="left" valign="top"><p class="table"><tt>-march=armv4t -msoft-float</tt></p></td>
+<td align="left" valign="top"><p class="table"><tt></tt></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">at91sam9x</p></td>
+<td align="left" valign="top"><p class="table"><tt>-march=armv5 -msoft-float</tt></p></td>
+<td align="left" valign="top"><p class="table"><tt></tt></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">imx1</p></td>
+<td align="left" valign="top"><p class="table"><tt>-march=armv4t -msoft-float</tt></p></td>
+<td align="left" valign="top"><p class="table"><tt></tt></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">imx21</p></td>
+<td align="left" valign="top"><p class="table"><tt>-march=armv5 -msoft-float</tt></p></td>
+<td align="left" valign="top"><p class="table"><tt></tt></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">imx31</p></td>
+<td align="left" valign="top"><p class="table"><tt>-march=armv6 -mfpu=vfp</tt></p></td>
+<td align="left" valign="top"><p class="table"><tt></tt></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">imx51/imx53</p></td>
+<td align="left" valign="top"><p class="table"><tt>-march=armv7-a -mfpu=vfp3</tt>
+                <span class="footnote" id="_footnote_armv7"><br />[Depending on the                 gcc versions the flag for armv7                 may be <tt>-march=armv7-a</tt> or                 <tt>-march=armv7a</tt>]<br /></span></p></td>
+<td align="left" valign="top"><p class="table"><tt></tt></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">imx6q</p></td>
+<td align="left" valign="top"><p class="table"><tt>-march=armv7-a -mfpu=vfp3</tt> <span class="footnoteref"><br /><a href="#_footnote_armv7">[armv7]</a><br /></span></p></td>
+<td align="left" valign="top"><p class="table"><tt>--enable-smp</tt></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">ixp4xx</p></td>
+<td align="left" valign="top"><p class="table"><tt>-march=armv5 -msoft-float</tt></p></td>
+<td align="left" valign="top"><p class="table"><tt><tt>--enable-arm-tsc=ixp4xx</tt></tt></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">omap3</p></td>
+<td align="left" valign="top"><p class="table"><tt>-march=armv7-a -mfpu=vfp3</tt> <span class="footnoteref"><br /><a href="#_footnote_armv7">[armv7]</a><br /></span></p></td>
+<td align="left" valign="top"><p class="table"><tt></tt></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">omap4</p></td>
+<td align="left" valign="top"><p class="table"><tt>-march=armv7-a -mfpu=vfp3</tt> <span class="footnoteref"><br /><a href="#_footnote_armv7">[armv7]</a><br /></span></p></td>
+<td align="left" valign="top"><p class="table"><tt>--enable-smp</tt></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">orion</p></td>
+<td align="left" valign="top"><p class="table"><tt>-march=armv5 -mfpu=vfp</tt></p></td>
+<td align="left" valign="top"><p class="table"><tt></tt></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">pxa</p></td>
+<td align="left" valign="top"><p class="table"><tt>-march=armv5 -msoft-float</tt></p></td>
+<td align="left" valign="top"><p class="table"><tt></tt></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">pxa3xx</p></td>
+<td align="left" valign="top"><p class="table"><tt>-march=armv5 -msoft-float</tt></p></td>
+<td align="left" valign="top"><p class="table"><tt>--enable-arm-quirks=xscale3</tt></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">s3c24xx</p></td>
+<td align="left" valign="top"><p class="table"><tt>-march=armv4t -msoft-float</tt></p></td>
+<td align="left" valign="top"><p class="table"><tt></tt></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">sa1100</p></td>
+<td align="left" valign="top"><p class="table"><tt>-march=armv4t -msoft-float</tt></p></td>
+<td align="left" valign="top"><p class="table"><tt>--enable-arm-quirks=sa1100</tt></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="paragraph"><p>It is possible to build for an older architecture version (v6 instead
+of v7, or v4 instead of v5), if your toolchain does not support the
+target architecture, the only restriction being that if SMP is
+enabled, the architecture should not be less than v6.</p></div>
+<h3 id="nios2">3.5. Building for NIOS II</h3><div style="clear:left"></div>
+<div class="paragraph"><p>NIOS II is a softcore processor developped by Altera and is dedicated
+to the Altera&#8217;s FPGA circuits.</p></div>
+<div class="paragraph"><p>NIOS II with no MMU enabled is supported by the uClinux distribution.</p></div>
+<h4 id="_minimum_hardware_requirements">3.5.1. Minimum hardware requirements</h4>
+<div class="paragraph"><p>You have to start with a minimal system with at least:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+A Nios II processor in f or s core version, with hardware
+  multiplier, (f-core suggested, s-core is slower) and with no MMU
+  enabled.
+</p>
+</li>
+<li>
+<p>
+SDRAM (minimum requirement 8MB).
+</p>
+</li>
+<li>
+<p>
+One full featured timer named sys_clk_timer used for uClinux.
+</p>
+</li>
+<li>
+<p>
+A jtag/serial uart or a real serial uart (preferred).
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Note in Linux, IRQ 0 means auto-detected, so you must not use IRQ 0
+for ANY devices.</p></div>
+<div class="paragraph"><p>The Xenomai port for NIOS II uses extra hardware that you have to add
+in SOPC builder:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+A full featured 32-bit Timer named hrtimer with a 1 microsecond period.
+</p>
+</li>
+<li>
+<p>
+A full featured High Resolution 64-bit Timer named hrclock used for
+time stamping (1 microsecond period for example).
+</p>
+</li>
+</ul></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/important.png" alt="Important" />
+</td>
+<td class="content">Please respect hrtimer and hrclock names, the Xenomai port
+depends on them!</td>
+</tr></table>
+</div>
+<div class="paragraph"><p>You have to use Altera&#8217;s Quartus II version 9.0 at least for synthesis.</p></div>
+<div class="paragraph"><p>A good start for your design is to use reference design shipped with
+your target board.</p></div>
+<div class="paragraph"><p>For example, with an Altera&#8217;s board, you may use the <em>standard</em>
+design. <em>Standard</em> reference designs for Altera&#8217;s boards are available
+<a href="http://www.altera.com/support/examples/nios2/exm-nios2.html">here</a>.</p></div>
+<h4 id="_xenomai_compilation_for_nios_ii">3.5.2. Xenomai compilation for NIOS II</h4>
+<div class="paragraph"><p>You should first verify that uClinux without Xenomai can run on the
+target board.</p></div>
+<div class="paragraph"><p>The typical actions for building the uClinux kernel for NIOS II
+(available <a href="http://www.nioswiki.com/">here</a>) are:</p></div>
+<div class="paragraph"><p>If <tt>$uClinux-dist</tt> is the path of NIOS II uClinux release, for
+example:</p></div>
+<div class="paragraph"><p><tt>/home/test/nios2-linux/uClinux-dist</tt></p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>$ cd $uClinux-dist
+$ make menuconfig
+$ make vendor_hwselect SYSPTF=&lt;path to your system ptf&gt;
+$ make</tt></pre>
+</div></div>
+<div class="paragraph"><p>If the NIOS II cross-compiler is called <tt>nios2-linux-gcc</tt>, a typical
+compilation will look like:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>$ $xenomai_root/scripts/prepare-kernel.sh --arch=nios2 \
+  --adeos=$xenomai_root/ksrc/arch/nios2/patches/adeos-ipipe-2.6.26-rc6-nios2-* \
+  --linux=$linux_tree
+$ $xenomai_root/configure --host=nios2-linux
+$ make install DESTDIR=$uClinux-dist/romf
+$ cd $uClinux-dist
+$ make</tt></pre>
+</div></div>
+</div>
+<h2 id="_testing_the_installation">4. Testing the installation</h2>
+<div class="sectionbody">
+<h3 id="_testing_the_kernel">4.1. Testing the kernel</h3><div style="clear:left"></div>
+<div class="paragraph"><p>In order to test the Xenomai installation, you should first try to boot the
+patched kernel. The kernel boot logs should show messages like:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>I-pipe: head domain Xenomai registered.
+Xenomai: hal/&lt;arch&gt; started.
+Xenomai: scheduling class idle registered.
+Xenomai: scheduling class rt registered.
+Xenomai: real-time nucleus v2.6.1 (Light Years Away) loaded.
+Xenomai: debug mode enabled.
+Xenomai: starting native API services.
+Xenomai: starting POSIX services.
+Xenomai: starting RTDM services.</tt></pre>
+</div></div>
+<div class="paragraph"><p>Where &lt;arch&gt; is the architecture you are using. If the kernel fails
+to boot, or the log messages indicates an error status instead, see the
+<a href="TROUBLESHOOTING.html#kerror">TROUBLESHOOTING</a> guide.</p></div>
+<h3 id="_testing_the_user_space_support">4.2. Testing the user-space support</h3><div style="clear:left"></div>
+<div class="paragraph"><p>In order to test Xenomai user-space support, launch the latency test:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>$ /usr/xenomai/bin/latency</tt></pre>
+</div></div>
+<div class="paragraph"><p>The latency test should display a message every second with minimal,
+maximal and average latency values. If the latency test displays an
+error message, hangs, or displays unexpected values, see the
+<a href="TROUBLESHOOTING.html#latency">TROUBLESHOOTING</a> guide.</p></div>
+<div class="paragraph"><p>If the latency test succeeds, you should try next to run the <tt>xeno-test</tt> test
+in order to evaluate the latency of your system. Try:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>$ xeno-test --help</tt></pre>
+</div></div>
+</div>
+</div>
+<div id="footnotes"><hr /></div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2012-08-21 23:31:20 CEST
+</div>
+</div>
+</body>
+</html>
