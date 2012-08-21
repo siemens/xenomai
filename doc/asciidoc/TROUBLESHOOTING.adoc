@@ -287,7 +287,7 @@ A common reason for this error is when you run a kernel compiled with
 Xenomai 2.6.1 support on a system where you have a user-space
 installed by your Debian based Linux distribution (notably Ubuntu)
 from the 2.5 branch, this can not work, the two branches use different
-ABIs. See link:README.INSTALL.html[README.INSTALL] for details on how
+ABIs. See link:../README.INSTALL/index.html[README.INSTALL] for details on how
 to compile a user-space support, or to build a new +xenomai-runtime+
 Debian package.
 
@@ -303,7 +303,7 @@ Since kernel-space support and user-space support are compiled
 separately, each Xenomai application checks, at startup, whether the
 kernel and user-space supports have been configured with compatible
 options. If you see this message, it means they have not. See
-link:README.INSTALL.html#_feature_conflict_resolution[README.INSTALL]
+link:../README.INSTALL/index.html#_feature_conflict_resolution[README.INSTALL]
 for further details. The following sections detail the most frequent
 reasons for this message.
 

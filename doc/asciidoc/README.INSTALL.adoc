@@ -96,7 +96,7 @@ following its usual configuration procedure. All Xenomai configuration
 options are available from the "Real-time subsystem" toplevel menu.
 
 There are several important kernel configuration options, some are
-documented in the link:TROUBLESHOOTING.html#kconf[TROUBLESHOOTING]
+documented in the link:../TROUBLESHOOTING/index.html#kconf[TROUBLESHOOTING]
 guide, others in the <<examples,"Typical installation procedures">>
 for the architecture you are using.
 
@@ -649,7 +649,7 @@ Xenomai: starting RTDM services.
 
 Where #<arch># is the architecture you are using. If the kernel fails
 to boot, or the log messages indicates an error status instead, see the
-link:TROUBLESHOOTING.html#kerror[TROUBLESHOOTING] guide.
+link:../TROUBLESHOOTING/index.html#kerror[TROUBLESHOOTING] guide.
 
 
 Testing the user-space support
@@ -664,7 +664,7 @@ $ /usr/xenomai/bin/latency
 The latency test should display a message every second with minimal,
 maximal and average latency values. If the latency test displays an
 error message, hangs, or displays unexpected values, see the
-link:TROUBLESHOOTING.html#latency[TROUBLESHOOTING] guide.
+link:../TROUBLESHOOTING/index.html#latency[TROUBLESHOOTING] guide.
 
 If the latency test succeeds, you should try next to run the +xeno-test+ test
 in order to evaluate the latency of your system. Try:
