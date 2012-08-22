@@ -1,5 +1,5 @@
 HTML_DOCS=README.INSTALL TROUBLESHOOTING \
-	asciidoc-icons asciidoc-icons/callout asciidoc-css asciidoc-js
+	asciidoc-icons asciidoc-icons/callouts asciidoc-css asciidoc-js
 PDF_DOCS=README.INSTALL.pdf TROUBLESHOOTING.pdf
 EXTRA_DIST=README.INSTALL.adoc TROUBLESHOOTING.adoc plaintext.conf plaintext_postproc.awk plaintext.xsl
 
@@ -44,8 +44,9 @@ $(tmpdir)/%.txt: %.adoc Makefile plaintext.conf plaintext.xsl
 %.txt: $(tmpdir)/%.txt Makefile plaintext_postproc.awk
 	awk -f $(srcdir)/plaintext_postproc.awk $(tmpdir)/$*.txt > $@
 
-asciidoc-icons asciidoc-icons/callout:
-	@cp -a /usr/share/asciidoc/icons $@
+asciidoc-icons asciidoc-icons/callouts:
+	@$(RM) -R asciidoc-icons
+	@cp -a /usr/share/asciidoc/icons asciidoc-icons
 
 asciidoc-css:
 	@$(mkdir_p) $@
