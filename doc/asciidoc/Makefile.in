@@ -231,7 +231,7 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-HTML_DOCS = README.INSTALL TROUBLESHOOTING asciidoc-icons asciidoc-css asciidoc-js
+HTML_DOCS = README.INSTALL TROUBLESHOOTING asciidoc-icons asciidoc-icons/callout asciidoc-css asciidoc-js
 PDF_DOCS = README.INSTALL.pdf TROUBLESHOOTING.pdf
 EXTRA_DIST = README.INSTALL.adoc TROUBLESHOOTING.adoc plaintext.conf plaintext_postproc.awk plaintext.xsl
 @CONFIG_XENO_ASCIIDOC_FALSE@HTML_DOCSDIR = $(srcdir)/../generated/html/
@@ -461,9 +461,8 @@ uninstall-am: uninstall-local
 @CONFIG_XENO_ASCIIDOC_TRUE@%.txt: $(tmpdir)/%.txt Makefile plaintext_postproc.awk
 @CONFIG_XENO_ASCIIDOC_TRUE@	awk -f $(srcdir)/plaintext_postproc.awk $(tmpdir)/$*.txt > $@
 
-@CONFIG_XENO_ASCIIDOC_TRUE@asciidoc-icons:
-@CONFIG_XENO_ASCIIDOC_TRUE@	@$(mkdir_p) $@
-@CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/share/asciidoc/icons/*.png $@
+@CONFIG_XENO_ASCIIDOC_TRUE@asciidoc-icons asciidoc-icons/callout:
+@CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/share/asciidoc/icons $@
 
 @CONFIG_XENO_ASCIIDOC_TRUE@asciidoc-css:
 @CONFIG_XENO_ASCIIDOC_TRUE@	@$(mkdir_p) $@
