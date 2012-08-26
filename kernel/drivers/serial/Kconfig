@@ -68,4 +68,12 @@ config XENO_DRIVERS_MPC52XX_UART
 	help
 	Real-time UART driver for the PSC on the MPC5200 processor.
 
+config XENO_DRIVERS_IMX_UART
+	depends on XENO_SKIN_RTDM && (ARCH_IMX || ARCH_MXC)
+	tristate "RT IMX UART driver"
+	select RATIONAL
+	help
+	Real-time UART driver for the Freescale Semiconductor MXC Internal
+	UART compatible controllers.
+
 endmenu
