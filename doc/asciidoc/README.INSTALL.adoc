@@ -662,12 +662,54 @@ $ /usr/xenomai/bin/latency
 ------------------------------------------------------------------------------
 
 The latency test should display a message every second with minimal,
-maximal and average latency values. If the latency test displays an
+maximal and average latency values, such as:
+
+------------------------------------------------------------------------------
+# latency -T 25
+== Sampling period: 100 us
+== Test mode: periodic user-mode task
+== All results in microseconds
+warming up...
+RTT|  00:00:01  (periodic user-mode task, 100 us period, priority 99)
+RTH|----lat min|----lat avg|----lat max|-overrun|---msw|---lat best|--lat worst
+RTD|      1.615|      1.923|      9.846|       0|     0|      1.615|      9.846
+RTD|      1.615|      1.923|      9.692|       0|     0|      1.615|      9.846
+RTD|      1.538|      1.923|     10.230|       0|     0|      1.538|     10.230
+RTD|      1.615|      1.923|     10.384|       0|     0|      1.538|     10.384
+RTD|      1.615|      1.923|     11.230|       0|     0|      1.538|     11.230
+RTD|      1.615|      1.923|      9.923|       0|     0|      1.538|     11.230
+RTD|      1.615|      1.923|      9.923|       0|     0|      1.538|     11.230
+RTD|      1.615|      1.923|     11.076|       0|     0|      1.538|     11.230
+RTD|      1.615|      1.923|     10.538|       0|     0|      1.538|     11.230
+RTD|      1.615|      1.923|     11.076|       0|     0|      1.538|     11.230
+RTD|      1.615|      1.923|     10.615|       0|     0|      1.538|     11.230
+RTD|      1.615|      1.923|     10.076|       0|     0|      1.538|     11.230
+RTD|      1.615|      1.923|      9.923|       0|     0|      1.538|     11.230
+RTD|      1.538|      1.923|     10.538|       0|     0|      1.538|     11.230
+RTD|      1.615|      1.923|     10.923|       0|     0|      1.538|     11.230
+RTD|      1.538|      1.923|     10.153|       0|     0|      1.538|     11.230
+RTD|      1.615|      1.923|      9.615|       0|     0|      1.538|     11.230
+RTD|      1.615|      1.923|     10.769|       0|     0|      1.538|     11.230
+RTD|      1.615|      1.923|      9.153|       0|     0|      1.538|     11.230
+RTD|      1.538|      1.923|     10.307|       0|     0|      1.538|     11.230
+RTD|      1.615|      1.923|      9.538|       0|     0|      1.538|     11.230
+RTT|  00:00:22  (periodic user-mode task, 100 us period, priority 99)
+RTH|----lat min|----lat avg|----lat max|-overrun|---msw|---lat best|--lat worst
+RTD|      1.615|      1.923|     11.384|       0|     0|      1.538|     11.384
+RTD|      1.615|      1.923|     10.076|       0|     0|      1.538|     11.384
+RTD|      1.538|      1.923|      9.538|       0|     0|      1.538|     11.384
+---|-----------|-----------|-----------|--------|------|-------------------------
+RTS|      1.538|      1.923|     11.384|       0|     0|    00:00:25/00:00:25
+#
+------------------------------------------------------------------------------
+
+If the latency test displays an
 error message, hangs, or displays unexpected values, see the
 link:../TROUBLESHOOTING/index.html#latency[TROUBLESHOOTING] guide.
 
-If the latency test succeeds, you should try next to run the +xeno-test+ test
-in order to evaluate the latency of your system. Try:
+If the latency test succeeds, you should try next to run a latency
+test under load to evaluate the latency test of your system, the
++xeno-test+ script allows doing that. Try:
 
 ------------------------------------------------------------------------------
 $ xeno-test --help

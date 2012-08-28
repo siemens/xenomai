@@ -4,6 +4,9 @@ Troubleshooting guide
 This file is a troubleshooting guide about various known issues
 regarding Xenomai.
 
+The latest version is available at
+http://www.xenomai.org/documentation/xenomai-2.6/html/TROUBLESHOOTING/[this address].
+
 
 [[kconf]]
 Kernel configuration
