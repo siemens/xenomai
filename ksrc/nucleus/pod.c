@@ -2233,6 +2233,11 @@ reschedule:
 	(void)shadow;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
+	if (xnthread_test_state(next, XNROOT)) {
+		xnsched_reset_watchdog(sched);
+		xnfreesync();
+	}
+
 	if (zombie)
 		xnsched_zombie_hooks(prev);
 
@@ -2240,6 +2245,13 @@ reschedule:
 
 	if (xnthread_test_state(prev, XNROOT))
 		xnarch_leave_root(xnthread_archtcb(prev));
+	else if (xnthread_test_state(next, XNROOT)) {
+		if (testbits(sched->lflags, XNHTICK))
+			xnintr_host_tick(sched);
+		if (testbits(sched->lflags, XNHDEFER))
+			xntimer_next_local_shot(sched);
+		xnarch_enter_root(xnthread_archtcb(next));
+	}
 
 	xnstat_exectime_switch(sched, &next->stat.account);
 	xnstat_counter_inc(&next->stat.csw);
@@ -2275,7 +2287,8 @@ reschedule:
 			 xnthread_current_priority(curr));
 
 	if (zombie)
-		goto zombie_fatal;
+		xnpod_fatal("zombie thread %s (%p) would not die...",
+			    prev->name, prev);
 
 	xnsched_finalize_zombie(sched);
 
@@ -2293,24 +2306,9 @@ reschedule:
 	if (xnthread_signaled_p(curr))
 		xnpod_dispatch_signals();
 
-	if (switched) {
-		int is_root = xnthread_test_state(curr, XNROOT);
-
-		if (is_root)
-			xnarch_enter_root(xnthread_archtcb(curr));
-
-		if (xnsched_maybe_resched_after_unlocked_switch(sched))
-			goto reschedule;
-			
-		if (is_root) {
-			xnsched_reset_watchdog(sched);
-			xnfreesync();
-			if (testbits(sched->lflags, XNHTICK))
-				xnintr_host_tick(sched);
-			if (testbits(sched->lflags, XNHDEFER))
-				xntimer_next_local_shot(sched);
-		}
-	}
+	if (switched &&
+	    xnsched_maybe_resched_after_unlocked_switch(sched))
+		goto reschedule;
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -2335,11 +2333,6 @@ reschedule:
 	XENO_BUGON(NUCLEUS, !irqs_disabled_hw());
 	return;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
-
-  zombie_fatal:
-	xnpod_fatal("zombie thread %s (%p) would not die...",
-		    prev->name, prev);
-	
 }
 EXPORT_SYMBOL_GPL(__xnpod_schedule);
 
