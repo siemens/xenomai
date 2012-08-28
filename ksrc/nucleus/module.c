@@ -92,8 +92,19 @@ static inline void init_hostrt(void)
 	nkvdso->hostrt_data.live = 0;
 	rthal_catch_hostrt(&hostrt_event);
 }
+
+static inline void cleanup_hostrt(void)
+{
+	rthal_catch_hostrt(NULL);
+}
 #else
-static inline void init_hostrt(void) { }
+static inline void init_hostrt(void)
+{
+}
+
+static inline void cleanup_hostrt(void)
+{
+}
 #endif /* CONFIG_XENO_OPT_HOSTRT */
 
 MODULE_DESCRIPTION("Xenomai nucleus");
@@ -235,8 +246,9 @@ int __init __xeno_sys_init(void)
 
 	xnpod_umount();
 
-      cleanup_arch:
+	cleanup_hostrt();
 
+  cleanup_arch:
 	xnarch_exit();
 
 #endif /* __KERNEL__ */
@@ -261,7 +273,7 @@ void __exit __xeno_sys_exit(void)
 
 	xntbase_umount();
 	xnpod_umount();
-
+	cleanup_hostrt();
 	xnarch_exit();
 
 #ifdef __KERNEL__
