@@ -126,13 +126,13 @@ int xnselect_bind(struct xnselect *select_block,
 
 	appendq(&selector->bindings, &binding->slink);
 	appendq(&select_block->bindings, &binding->link);
-	__FD_SET(index, &selector->fds[type].expected);
+	__FD_SET__(index, &selector->fds[type].expected);
 	if (state) {
-		__FD_SET(index, &selector->fds[type].pending);
+		__FD_SET__(index, &selector->fds[type].pending);
 		if (xnselect_wakeup(selector))
 			xnpod_schedule();
 	} else
-		__FD_CLR(index, &selector->fds[type].pending);
+		__FD_CLR__(index, &selector->fds[type].pending);
 
 	return 0;
 }
@@ -153,15 +153,15 @@ int __xnselect_signal(struct xnselect *select_block, unsigned state)
 
 		selector = binding->selector;
 		if (state) {
-			if (!__FD_ISSET(binding->bit_index,
+			if (!__FD_ISSET__(binding->bit_index,
 					&selector->fds[binding->type].pending)) {
-				__FD_SET(binding->bit_index,
+				__FD_SET__(binding->bit_index,
 					 &selector->fds[binding->type].pending);
 				if (xnselect_wakeup(selector))
 					resched = 1;
 			}
 		} else
-			__FD_CLR(binding->bit_index,
+			__FD_CLR__(binding->bit_index,
 				 &selector->fds[binding->type].pending);
 	}
 
@@ -190,11 +190,11 @@ void xnselect_destroy(struct xnselect *select_block)
 		binding = link2binding(holder, link);
 		selector = binding->selector;
 
-		__FD_CLR(binding->bit_index,
+		__FD_CLR__(binding->bit_index,
 			 &selector->fds[binding->type].expected);
-		if (!__FD_ISSET(binding->bit_index,
+		if (!__FD_ISSET__(binding->bit_index,
 				&selector->fds[binding->type].pending)) {
-			__FD_SET(binding->bit_index,
+			__FD_SET__(binding->bit_index,
 				 &selector->fds[binding->type].pending);
 			if (xnselect_wakeup(selector))
 				resched = 1;
@@ -217,14 +217,14 @@ fd_set_andnot(fd_set *result, fd_set *first, fd_set *second, unsigned n)
 {
 	unsigned i, not_empty = 0;
 
-	for (i = 0; i < __FDELT(n); i++)
+	for (i = 0; i < __FDELT__(n); i++)
 		if((result->fds_bits[i] =
 		    first->fds_bits[i] & ~(second->fds_bits[i])))
 			not_empty = 1;
 
-	if (i < __FDSET_LONGS
+	if (i < __FDSET_LONGS__
 	    && (result->fds_bits[i] =
-		first->fds_bits[i] & ~(second->fds_bits[i]) & (__FDMASK(n) - 1)))
+		first->fds_bits[i] & ~(second->fds_bits[i]) & (__FDMASK__(n) - 1)))
 		not_empty = 1;
 
 	return not_empty;
@@ -235,14 +235,14 @@ fd_set_and(fd_set *result, fd_set *first, fd_set *second, unsigned n)
 {
 	unsigned i, not_empty = 0;
 
-	for (i = 0; i < __FDELT(n); i++)
+	for (i = 0; i < __FDELT__(n); i++)
 		if((result->fds_bits[i] =
 		    first->fds_bits[i] & second->fds_bits[i]))
 			not_empty = 1;
 
-	if (i < __FDSET_LONGS
+	if (i < __FDSET_LONGS__
 	    && (result->fds_bits[i] =
-		first->fds_bits[i] & second->fds_bits[i] & (__FDMASK(n) - 1)))
+		first->fds_bits[i] & second->fds_bits[i] & (__FDMASK__(n) - 1)))
 		not_empty = 1;
 
 	return not_empty;
@@ -252,12 +252,12 @@ static void fd_set_zerofill(fd_set *set, unsigned n)
 {
 	unsigned i;
 
-	i = __FDELT(n);
+	i = __FDELT__(n);
 
-	if (i < __FDSET_LONGS)
-		set->fds_bits[i] &= (__FDMASK(n) - 1);
+	if (i < __FDSET_LONGS__)
+		set->fds_bits[i] &= (__FDMASK__(n) - 1);
 
-	for(i++; i < __FDSET_LONGS; i++)
+	for(i++; i < __FDSET_LONGS__; i++)
 		set->fds_bits[i] = 0;
 }
 
@@ -265,12 +265,12 @@ static unsigned fd_set_popcount(fd_set *set, unsigned n)
 {
 	unsigned count = 0, i;
 
-	for (i = 0; i < __FDELT(n); i++)
+	for (i = 0; i < __FDELT__(n); i++)
 		if (set->fds_bits[i])
 			count += hweight_long(set->fds_bits[i]);
 
-	if (i < __FDSET_LONGS && (set->fds_bits[i] & (__FDMASK(n) - 1)))
-		count += hweight_long(set->fds_bits[i] & (__FDMASK(n) - 1));
+	if (i < __FDSET_LONGS__ && (set->fds_bits[i] & (__FDMASK__(n) - 1)))
+		count += hweight_long(set->fds_bits[i] & (__FDMASK__(n) - 1));
 
 	return count;
 }
@@ -288,8 +288,8 @@ int xnselector_init(struct xnselector *selector)
 
 	xnsynch_init(&selector->synchbase, XNSYNCH_FIFO, NULL);
 	for (i = 0; i < XNSELECT_MAX_TYPES; i++) {
-		__FD_ZERO(&selector->fds[i].expected);
-		__FD_ZERO(&selector->fds[i].pending);
+		__FD_ZERO__(&selector->fds[i].expected);
+		__FD_ZERO__(&selector->fds[i].pending);
 	}
 	initq(&selector->bindings);
 	return 0;

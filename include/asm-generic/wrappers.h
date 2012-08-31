@@ -700,44 +700,28 @@ static inline void wrap_proc_dir_entry_owner(struct proc_dir_entry *entry)
 #endif
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,4,0)
+
 #define cpu_online_mask &(cpu_online_map)
-#endif
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,4,0)
-static inline void __FD_SET(unsigned long __fd, __kernel_fd_set *__fdsetp)
+#include <linux/sched.h>
+#include <linux/mm.h>
+
+static inline
+unsigned long vm_mmap(struct file *file, unsigned long addr,
+	unsigned long len, unsigned long prot,
+	unsigned long flag, unsigned long offset)
 {
-        unsigned long __tmp = __fd / __NFDBITS;
-        unsigned long __rem = __fd % __NFDBITS;
-        __fdsetp->fds_bits[__tmp] |= (1UL<<__rem);
+	struct mm_struct *mm = current->mm;
+	int ret;
+
+	down_write(&mm->mmap_sem);
+	ret = do_mmap(file, addr, len, prot, flag, offset);
+	up_write(&mm->mmap_sem);
+
+	return ret;
 }
 
-static inline void __FD_CLR(unsigned long __fd, __kernel_fd_set *__fdsetp)
-{
-        unsigned long __tmp = __fd / __NFDBITS;
-        unsigned long __rem = __fd % __NFDBITS;
-        __fdsetp->fds_bits[__tmp] &= ~(1UL<<__rem);
-}
-
-static inline int __FD_ISSET(unsigned long __fd, const __kernel_fd_set *__p)
-{
-        unsigned long __tmp = __fd / __NFDBITS;
-        unsigned long __rem = __fd % __NFDBITS;
-        return (__p->fds_bits[__tmp] & (1UL<<__rem)) != 0;
-}
-
-static inline void __FD_ZERO(__kernel_fd_set *__p)
-{
-	unsigned long *__tmp = __p->fds_bits;
-	int __i;
-
-	__i = __FDSET_LONGS;
-	while (__i) {
-		__i--;
-		*__tmp = 0;
-		__tmp++;
-	}
-}
-#endif
+#endif /* LINUX_VERSION_CODE < 3.4.0 */
 
 #ifdef CONFIG_IPIPE_CORE
 #if IPIPE_CORE_APIREV >= 2
