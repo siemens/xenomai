@@ -30,7 +30,7 @@
 #error "Linux kernel 3.0 or above required for this architecture"
 #endif
 
-#define wrap_strncpy_from_user(dstP, srcP, n)	__strncpy_from_user(dstP, srcP, n)
+#include <asm/uaccess.h>
 
 #define wrap_phys_mem_prot(filp,pfn,size,prot) \
   phys_mem_access_prot(filp, pfn, size, prot)
@@ -74,5 +74,11 @@
 #define of_platform_driver platform_driver
 #define of_register_platform_driver platform_driver_register
 #define of_unregister_platform_driver platform_driver_unregister
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
+#define wrap_strncpy_from_user(dstP, srcP, n)	strncpy_from_user(dstP, srcP, n)
+#else
+#define wrap_strncpy_from_user(dstP, srcP, n)	__strncpy_from_user(dstP, srcP, n)
+#endif
 
 #endif /* _XENO_ASM_POWERPC_WRAPPERS_H */
