@@ -36,7 +36,6 @@
 #include <linux/errno.h>
 #include <linux/module.h>
 #include <asm/time.h>
-#include <asm/system.h>
 #include <asm/atomic.h>
 #include <asm/io.h>
 #include <asm/uaccess.h>

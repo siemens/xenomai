@@ -24,7 +24,6 @@
 
 #include <linux/ptrace.h>
 #include <asm-generic/xenomai/system.h>
-#include <asm/system.h>
 #include <asm/processor.h>
 
 #define XNARCH_THREAD_STACKSZ   8192
