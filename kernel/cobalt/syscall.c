@@ -41,7 +41,7 @@ int cobalt_muxid;
 static int fd_valid_p(int fd)
 {
 	cobalt_queues_t *q;
-	const int rtdm_fd_start = FD_SETSIZE - RTDM_FD_MAX;
+	const int rtdm_fd_start = __FD_SETSIZE - RTDM_FD_MAX;
 
 	if (fd >= rtdm_fd_start) {
 		struct rtdm_dev_context *ctx;
@@ -78,7 +78,7 @@ static int select_bind_one(struct xnselector *selector, unsigned type, int fd)
 {
 	cobalt_assoc_t *assoc;
 	cobalt_queues_t *q;
-	const int rtdm_fd_start = FD_SETSIZE - RTDM_FD_MAX;
+	const int rtdm_fd_start = __FD_SETSIZE - RTDM_FD_MAX;
 
 	if (fd >= rtdm_fd_start)
 		return rtdm_select_bind(fd - rtdm_fd_start,
@@ -156,7 +156,7 @@ static int __select(int nfds,
 		mode = XN_ABSOLUTE;
 	}
 
-	fds_size = __FDELT(nfds + __NFDBITS - 1) * sizeof(long);
+	fds_size = __FDELT__(nfds + __NFDBITS - 1) * sizeof(long);
 
 	for (i = 0; i < XNSELECT_MAX_TYPES; i++)
 		if (ufd_sets[i]) {

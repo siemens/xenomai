@@ -1183,9 +1183,7 @@ static unsigned long map_mayday_page(struct task_struct *p)
 
 	old_fops = filp->f_op;
 	filp->f_op = &mayday_fops;
-	down_write(&p->mm->mmap_sem);
-	u_addr = do_mmap(filp, 0, PAGE_SIZE, PROT_EXEC|PROT_READ, MAP_SHARED, 0);
-	up_write(&p->mm->mmap_sem);
+	u_addr = vm_mmap(filp, 0, PAGE_SIZE, PROT_EXEC|PROT_READ, MAP_SHARED, 0);
 	filp->f_op = (typeof(filp->f_op))old_fops;
 	filp_close(filp, p->files);
 

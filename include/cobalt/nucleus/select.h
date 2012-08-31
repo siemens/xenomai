@@ -1,4 +1,4 @@
-/**\file
+/*!\file nucleus/select.h
  * \brief file descriptors events multiplexing header.
  * \author Gilles Chanteperdrix
  *
@@ -44,6 +44,47 @@ struct xnselector {
 	xnholder_t destroy_link;
 	xnqueue_t bindings; /* only used by xnselector_destroy */
 };
+
+#define __NFDBITS__	(8 * sizeof(unsigned long))
+#define __FDSET_LONGS__	(__FD_SETSIZE/__NFDBITS__)
+#define	__FDELT__(d)	((d) / __NFDBITS__)
+#define	__FDMASK__(d)	(1UL << ((d) % __NFDBITS__))
+
+static inline void __FD_SET__(unsigned long __fd, __kernel_fd_set *__fdsetp)
+{
+        unsigned long __tmp = __fd / __NFDBITS__;
+        unsigned long __rem = __fd % __NFDBITS__;
+        __fdsetp->fds_bits[__tmp] |= (1UL<<__rem);
+}
+
+static inline void __FD_CLR__(unsigned long __fd, __kernel_fd_set *__fdsetp)
+{
+        unsigned long __tmp = __fd / __NFDBITS__;
+        unsigned long __rem = __fd % __NFDBITS__;
+        __fdsetp->fds_bits[__tmp] &= ~(1UL<<__rem);
+}
+
+static inline int __FD_ISSET__(unsigned long __fd, const __kernel_fd_set *__p)
+{
+        unsigned long __tmp = __fd / __NFDBITS__;
+        unsigned long __rem = __fd % __NFDBITS__;
+        return (__p->fds_bits[__tmp] & (1UL<<__rem)) != 0;
+}
+
+static inline void __FD_ZERO__(__kernel_fd_set *__p)
+{
+	unsigned long *__tmp = __p->fds_bits;
+	int __i;
+
+	__i = __FDSET_LONGS__;
+	while (__i) {
+		__i--;
+		*__tmp = 0;
+		__tmp++;
+	}
+}
+
+#ifdef CONFIG_XENO_OPT_SELECT
 
 struct xnselect {
 	xnqueue_t bindings;
@@ -112,6 +153,16 @@ int xnselect_umount(void);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
+
+#else /* !CONFIG_XENO_OPT_SELECT */
+struct xnselector;
+#define DECLARE_XNSELECT(name)
+#define xnselect_init(block)
+#define xnselect_bind(select_block,binding,selector,type,bit_index,state) \
+	({ -EBADF; })
+#define xnselect_signal(block, state) ({ int __ret = 0; __ret; })
+#define xnselect_destroy(block)
+#endif /* !CONFIG_XENO_OPT_SELECT */
 
 /*@}*/
 

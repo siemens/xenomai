@@ -1890,10 +1890,8 @@ static int rtdm_do_mmap(rtdm_user_info_t *user_info,
 	old_priv_data = filp->private_data;
 	filp->private_data = mmap_data;
 
-	down_write(&user_info->mm->mmap_sem);
-	u_addr = do_mmap(filp, (unsigned long)*pptr, len, prot,
-			 MAP_SHARED, 0);
-	up_write(&user_info->mm->mmap_sem);
+	u_addr = vm_mmap(filp, (unsigned long)*pptr, len, prot,
+ 			 MAP_SHARED, 0);
 
 	filp->f_op = (typeof(filp->f_op))old_fops;
 	filp->private_data = old_priv_data;

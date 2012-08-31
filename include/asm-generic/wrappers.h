@@ -57,42 +57,27 @@ static inline struct task_struct *wrap_find_task_by_pid(pid_t nr)
 #endif /* !pgprot_noncached */
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,4,0)
-#include <asm/system.h>
-#define cpu_online_mask (&cpu_online_map)
-#else /* >= 3.4.0 */
-static inline void __FD_SET(unsigned long __fd, __kernel_fd_set *__fdsetp)
+
+#define cpu_online_mask &(cpu_online_map)
+
+#include <linux/sched.h>
+#include <linux/mm.h>
+
+static inline
+unsigned long vm_mmap(struct file *file, unsigned long addr,
+	unsigned long len, unsigned long prot,
+	unsigned long flag, unsigned long offset)
 {
-        unsigned long __tmp = __fd / __NFDBITS;
-        unsigned long __rem = __fd % __NFDBITS;
-        __fdsetp->fds_bits[__tmp] |= (1UL<<__rem);
+	struct mm_struct *mm = current->mm;
+	int ret;
+
+	down_write(&mm->mmap_sem);
+	ret = do_mmap(file, addr, len, prot, flag, offset);
+	up_write(&mm->mmap_sem);
+
+	return ret;
 }
 
-static inline void __FD_CLR(unsigned long __fd, __kernel_fd_set *__fdsetp)
-{
-        unsigned long __tmp = __fd / __NFDBITS;
-        unsigned long __rem = __fd % __NFDBITS;
-        __fdsetp->fds_bits[__tmp] &= ~(1UL<<__rem);
-}
-
-static inline int __FD_ISSET(unsigned long __fd, const __kernel_fd_set *__p)
-{
-        unsigned long __tmp = __fd / __NFDBITS;
-        unsigned long __rem = __fd % __NFDBITS;
-        return (__p->fds_bits[__tmp] & (1UL<<__rem)) != 0;
-}
-
-static inline void __FD_ZERO(__kernel_fd_set *__p)
-{
-	unsigned long *__tmp = __p->fds_bits;
-	int __i;
-
-	__i = __FDSET_LONGS;
-	while (__i) {
-		__i--;
-		*__tmp = 0;
-		__tmp++;
-	}
-}
-#endif /* >= 3.4.0 */
+#endif /* LINUX_VERSION_CODE < 3.4.0 */
 
 #endif /* _XENO_ASM_GENERIC_WRAPPERS_H */
