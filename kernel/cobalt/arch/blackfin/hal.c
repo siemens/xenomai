@@ -31,7 +31,6 @@
 #include <linux/module.h>
 #include <linux/ipipe_tickdev.h>
 #include <asm/time.h>
-#include <asm/system.h>
 #include <asm/atomic.h>
 #include <asm/io.h>
 #include <asm/uaccess.h>
