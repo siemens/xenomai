@@ -25,8 +25,7 @@
 #endif
 
 #include <linux/version.h>
-
-#define wrap_strncpy_from_user(dstP, srcP, n)	__strncpy_from_user(dstP, srcP, n)
+#include <asm/uaccess.h>
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
 
@@ -202,6 +201,12 @@ typedef irq_handler_t rthal_irq_host_handler_t;
 #define of_platform_driver platform_driver
 #define of_register_platform_driver platform_driver_register
 #define of_unregister_platform_driver platform_driver_unregister
+#endif
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
+#define wrap_strncpy_from_user(dstP, srcP, n)	strncpy_from_user(dstP, srcP, n)
+#else
+#define wrap_strncpy_from_user(dstP, srcP, n)	__strncpy_from_user(dstP, srcP, n)
 #endif
 
 #endif /* _XENO_ASM_POWERPC_WRAPPERS_H */
