@@ -86,7 +86,7 @@ static inline int xnarch_init(void)
 	set_cpus_allowed(current, cpumask_of_cpu(0));
 #endif /* CONFIG_SMP && MODULE */
 
-	xnarch_init_timeconv(RTHAL_CPU_FREQ);
+	xnarch_init_timeconv(RTHAL_CLOCK_FREQ);
 
 	ret = xnarch_calibrate_sched();
 	if (ret)

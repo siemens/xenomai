@@ -554,7 +554,7 @@ int rthal_init(void)
      */
 
     /* check the CPU frequency first and abort if it's invalid */
-    if (rthal_cpufreq_arg == 0) {
+    if (rthal_clockfreq_arg == 0) {
 	printk(KERN_ERR "Xenomai has detected a CPU frequency of 0. Aborting.\n");
 	return -ENODEV;
     }

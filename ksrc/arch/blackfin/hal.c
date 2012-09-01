@@ -340,7 +340,7 @@ EXPORT_SYMBOL_GPL(rthal_timer_notify_switch);
 
 unsigned long rthal_timer_calibrate(void)
 {
-	return (1000000000 / RTHAL_CPU_FREQ) * 100;	/* 100 CPU cycles -- FIXME */
+	return (1000000000 / RTHAL_CLOCK_FREQ) * 100;	/* 100 CPU cycles -- FIXME */
 }
 
 int rthal_irq_enable(unsigned irq)

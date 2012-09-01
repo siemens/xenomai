@@ -34,7 +34,7 @@ static inline void xnarch_program_timer_shot(unsigned long delay)
 	 * handler would simply occur after 4 billions ticks.
 	 */
 	rthal_timer_program_shot(rthal_imuldiv_ceil
-				 (delay, RTHAL_TIMER_FREQ, RTHAL_CPU_FREQ));
+				 (delay, RTHAL_TIMER_FREQ, RTHAL_CLOCK_FREQ));
 #else
 	rthal_timer_program_shot(delay);
 #endif
