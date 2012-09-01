@@ -23,7 +23,6 @@
 #include <asm-generic/xenomai/features.h>
 
 #ifdef __KERNEL__
-#include <asm/xenomai/wrappers.h>
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 /*
  * The kernel will deal dynamically with the actual SEP support
@@ -42,15 +41,12 @@
 /* The ABI revision level we use on this arch. */
 #define XENOMAI_ABI_REV   4UL
 
-#if defined(CONFIG_IPIPE_CORE) && IPIPE_CORE_APIREV >= 2
-#define __xn_feat_x86_tsc_mask \
-	(cpu_has_tsc ? __xn_feat_x86_tsc : 0)
-#elif defined(CONFIG_X86_TSC)
-#define __xn_feat_x86_tsc_mask	__xn_feat_x86_tsc
-#define XNARCH_HAVE_NONPRIV_TSC	1
-#else /* !TSC */
-#define __xn_feat_x86_tsc_mask	0
-#endif /* !TSC */
+#ifdef CONFIG_X86_TSC
+#define __xn_feat_x86_tsc_mask __xn_feat_x86_tsc
+#define XNARCH_HAVE_NONPRIV_TSC  1
+#else
+#define __xn_feat_x86_tsc_mask   0
+#endif
 
 #ifdef CONFIG_XENO_X86_SEP
 #define __xn_feat_x86_sep_mask  __xn_feat_x86_sep

@@ -45,9 +45,7 @@
 #else
 # define RTHAL_TIMER_DEVICE		"pit"
 #endif
-#if defined(CONFIG_IPIPE_CORE) && IPIPE_CORE_APIREV >= 2
-# define RTHAL_CLOCK_DEVICE		(cpu_has_tsc ? "tsc" : "pit")
-#elif defined(CONFIG_X86_TSC)
+#ifdef CONFIG_X86_TSC
 # define RTHAL_CLOCK_DEVICE		"tsc"
 #else
 # define RTHAL_CLOCK_DEVICE		"pit"
@@ -137,19 +135,19 @@ static inline void rthal_release_control(void)
 	rthal_smi_restore();
 }
 
-#ifdef RTHAL_USE_TSC
+#ifdef CONFIG_X86_TSC
 static inline unsigned long long rthal_rdtsc(void)
 {
 	unsigned long long t;
 	rthal_read_tsc(t);
 	return t;
 }
-#else /* !RTHAL_USE_TSC */
+#else /* !CONFIG_X86_TSC */
 #define RTHAL_8254_COUNT2LATCH  0xfffe
 void rthal_setup_8254_tsc(void);
 rthal_time_t rthal_get_8254_tsc(void);
 #define rthal_rdtsc() rthal_get_8254_tsc()
-#endif /* !RTHAL_USE_TSC */
+#endif /* CONFIG_X86_TSC */
 
 static inline void rthal_timer_program_shot(unsigned long delay)
 {

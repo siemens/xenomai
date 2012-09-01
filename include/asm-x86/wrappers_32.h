@@ -250,9 +250,4 @@ typedef union thread_xstate x86_fpustate;
 #define x86_fpustate_ptr(t) ((t)->fpu.state)
 #endif
 
-#if defined(CONFIG_X86_TSC) || \
-	(defined(CONFIG_IPIPE_CORE) && IPIPE_CORE_APIREV >= 2)
-#define RTHAL_USE_TSC
-#endif
-
 #endif /* _XENO_ASM_X86_WRAPPERS_32_H */

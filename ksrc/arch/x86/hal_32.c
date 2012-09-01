@@ -282,7 +282,7 @@ void rthal_timer_release(int cpu)
 
 #endif /* !CONFIG_X86_LOCAL_APIC */
 
-#ifndef RTHAL_USE_TSC
+#ifndef CONFIG_X86_TSC
 
 static rthal_time_t rthal_tsc_8254;
 
@@ -337,7 +337,7 @@ rthal_time_t rthal_get_8254_tsc(void)
 	return t;
 }
 
-#endif /* !RTHAL_USE_TSC */
+#endif /* !CONFIG_X86_TSC */
 
 int rthal_arch_init(void)
 {
@@ -363,14 +363,14 @@ int rthal_arch_init(void)
 #endif /* !I-pipe core */
 
 	if (rthal_cpufreq_arg == 0)
-#ifdef RTHAL_USE_TSC
+#ifdef CONFIG_X86_TSC
 		/* FIXME: 4Ghz barrier is close... */
 		rthal_cpufreq_arg = rthal_get_cpufreq();
-#else /* !RTHAL_USE_TSC */
+#else /* ! CONFIG_X86_TSC */
 		rthal_cpufreq_arg = CLOCK_TICK_RATE;
 
 	rthal_setup_8254_tsc();
-#endif /* !RTHAL_USE_TSC */
+#endif /* CONFIG_X86_TSC */
 
 	if (rthal_clockfreq_arg == 0)
 		rthal_clockfreq_arg = rthal_get_clockfreq();
@@ -400,6 +400,6 @@ void rthal_arch_cleanup(void)
 
 EXPORT_SYMBOL_GPL(rthal_arch_init);
 EXPORT_SYMBOL_GPL(rthal_arch_cleanup);
-#ifndef RTHAL_USE_TSC
+#ifndef CONFIG_X86_TSC
 EXPORT_SYMBOL_GPL(rthal_get_8254_tsc);
-#endif /* !RTHAL_USE_TSC */
+#endif /* !CONFIG_X86_TSC */
