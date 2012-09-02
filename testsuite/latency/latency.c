@@ -468,18 +468,46 @@ void faulthand(int sig)
 	kill(getpid(), sig);
 }
 
-void mode_sw(int sig)
+static const char *reason_str[] = {
+	[SIGDEBUG_UNDEFINED] = "latency: received SIGXCPU for unknown reason",
+	[SIGDEBUG_MIGRATE_SIGNAL] = "received signal",
+	[SIGDEBUG_MIGRATE_SYSCALL] = "invoked syscall",
+	[SIGDEBUG_MIGRATE_FAULT] = "triggered fault",
+	[SIGDEBUG_MIGRATE_PRIOINV] = "affected by priority inversion",
+	[SIGDEBUG_NOMLOCK] = "Xenomai: process memory not locked "
+	"(missing mlockall?)",
+	[SIGDEBUG_WATCHDOG] = "Xenomai: watchdog triggered "
+	"(period too short?)",
+};
+
+void sigdebug(int sig, siginfo_t *si, void *context)
 {
-	const char buffer[] = "Spurious mode switch detected, aborting.\n"
+	const char fmt[] = "Mode switch detected (reason: %s), aborting.\n"
 		"Enable XENO_OPT_DEBUG_TRACE_RELAX to find the cause.\n";
+	unsigned int reason = si->si_value.sival_int;
 	int n __attribute__ ((unused));
+	static char buffer[256];
 
 	if (!stop_upon_switch) {
 		++sampling_relaxed;
 		return;
 	}
 
-	n = write(STDERR_FILENO, buffer, sizeof(buffer));
+	if (reason > SIGDEBUG_WATCHDOG)
+		reason = SIGDEBUG_UNDEFINED;
+
+	switch(reason) {
+	case SIGDEBUG_UNDEFINED:
+	case SIGDEBUG_NOMLOCK:
+	case SIGDEBUG_WATCHDOG:
+		n = snprintf(buffer, sizeof(buffer), "%s\n",
+			     reason_str[reason]);
+		write(STDERR_FILENO, buffer, n);
+		exit(EXIT_FAILURE);
+	}
+
+	n = snprintf(buffer, sizeof(buffer), fmt, reason_str[reason]);
+	n = write(STDERR_FILENO, buffer, n);
 	signal(sig, SIG_DFL);
 	kill(getpid(), sig);
 }
@@ -487,6 +515,7 @@ void mode_sw(int sig)
 int main(int argc, char *const *argv)
 {
 	int cpu = 0, c, err, sig;
+	struct sigaction sa;
 	char task_name[16];
 	sigset_t mask;
 
@@ -624,7 +653,10 @@ int main(int argc, char *const *argv)
 	sigaddset(&mask, SIGALRM);
 	pthread_sigmask(SIG_BLOCK, &mask, NULL);
 
-	signal(SIGXCPU, mode_sw);
+	sigemptyset(&sa.sa_mask);
+	sa.sa_sigaction = sigdebug;
+	sa.sa_flags = SA_SIGINFO;
+	sigaction(SIGDEBUG, &sa, NULL);
 
 	if (freeze_max) {
 		/* If something goes wrong, we want to freeze the current
