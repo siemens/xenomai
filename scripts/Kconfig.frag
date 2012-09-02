@@ -3,6 +3,7 @@ config XENOMAI
 	depends on X86_TSC || !X86
 	bool "Xenomai"
 	select IPIPE
+	select IPIPE_WANT_APIREV_2 if IPIPE_CORE
 	default y
 	help
 	  Xenomai is a real-time extension to the Linux kernel. Note
