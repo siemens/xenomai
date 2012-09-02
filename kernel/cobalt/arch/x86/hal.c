@@ -548,6 +548,14 @@ int rthal_arch_init(void)
 	if (rc < 0)
 		return rc;
 
+#ifdef CONFIG_X86_TSC
+	if (!cpu_has_tsc) {
+		printk("Xenomai: TSC support compiled in, but CPU has no TSC\n"
+		       "         Fix CPU selection in your kernel configuration\n"
+		return -ENODEV;
+	}
+#endif /* CONFIG_X86_TSC */
+
 	if (rthal_clockfreq_arg == 0)
 		rthal_clockfreq_arg = rthal_get_clockfreq();
 
