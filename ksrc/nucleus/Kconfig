@@ -3,6 +3,7 @@ config XENO_OPT_NUCLEUS
 	tristate "Nucleus"
 	default y
 	select IPIPE_LEGACY if IPIPE_CORE
+	select IPIPE_WANT_APIREV_2 if IPIPE_CORE
 	select XENO_OPT_PIPELINE_HEAD if IPIPE_CORE
 
 if XENO_OPT_NUCLEUS != n
