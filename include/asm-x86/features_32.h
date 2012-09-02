@@ -33,7 +33,9 @@
  */
 #define CONFIG_XENO_X86_SEP  1
 #endif /* KERNEL_VERSION >= 2.6.0 */
-#endif /* __KERNEL__ */
+#else /* !__KERNEL__ */
+#define cpu_has_tsc 1
+#endif /* !__KERNEL__ */
 
 #define __xn_feat_x86_sep 0x00000001
 #define __xn_feat_x86_tsc 0x00000002
@@ -42,7 +44,7 @@
 #define XENOMAI_ABI_REV   4UL
 
 #ifdef CONFIG_X86_TSC
-#define __xn_feat_x86_tsc_mask __xn_feat_x86_tsc
+#define __xn_feat_x86_tsc_mask (cpu_has_tsc ? __xn_feat_x86_tsc : 0)
 #define XNARCH_HAVE_NONPRIV_TSC  1
 #else
 #define __xn_feat_x86_tsc_mask   0

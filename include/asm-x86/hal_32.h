@@ -46,7 +46,7 @@
 # define RTHAL_TIMER_DEVICE		"pit"
 #endif
 #ifdef CONFIG_X86_TSC
-# define RTHAL_CLOCK_DEVICE		"tsc"
+# define RTHAL_CLOCK_DEVICE		(cpu_has_tsc ? "tsc" : "pit")
 #else
 # define RTHAL_CLOCK_DEVICE		"pit"
 #endif
