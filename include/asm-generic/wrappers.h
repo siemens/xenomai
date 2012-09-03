@@ -427,7 +427,7 @@ static inline void *kzalloc(size_t size, int flags)
 #ifdef CONFIG_IPIPE_CORE
 #if IPIPE_CORE_APIREV >= 2
 #define wrap_switch_mm(prev, next, tsk) \
-	ipipe_head_switch_mm(prev, next, tsk)
+	ipipe_switch_mm_head(prev, next, tsk)
 #else /* IPIPE_CORE_APIREV < 2 */
 #define wrap_switch_mm(prev, next, tsk) \
 	__switch_mm(prev, next, tsk)
