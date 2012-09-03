@@ -26,7 +26,7 @@
 
 static inline void xnarch_program_timer_shot(unsigned long delay)
 {
-#if !defined(CONFIG_IPIPE_CORE) || IPIPE_CORE_APIREV < 2
+#if IPIPE_CORE_APIREV < 2
 	unsigned long d;
 	d = rthal_imuldiv_ceil(delay, RTHAL_TIMER_FREQ, RTHAL_CLOCK_FREQ);
 	rthal_timer_program_shot(d);

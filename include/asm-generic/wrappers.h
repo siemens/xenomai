@@ -25,6 +25,7 @@
 #error "Pure kernel header included from user-space!"
 #endif
 
+#include <linux/ipipe.h>
 #include <linux/version.h>
 #include <linux/module.h>
 #include <linux/slab.h>
@@ -32,6 +33,10 @@
 #include <linux/ipipe_tickdev.h>
 #endif /* CONFIG_XENO_OPT_HOSTRT || __IPIPE_FEATURE_REQUEST_TICKDEV */
 #include <asm/io.h>
+
+#ifndef CONFIG_IPIPE_CORE
+#define IPIPE_CORE_APIREV  0
+#endif
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,4,0)
 #include <asm/system.h>
@@ -424,23 +429,19 @@ static inline void *kzalloc(size_t size, int flags)
 #define pgprot_noncached(p) (p)
 #endif /* !pgprot_noncached */
 
-#ifdef CONFIG_IPIPE_CORE
 #if IPIPE_CORE_APIREV >= 2
 #define wrap_switch_mm(prev, next, tsk) \
 	ipipe_switch_mm_head(prev, next, tsk)
-#else /* IPIPE_CORE_APIREV < 2 */
+#elif IPIPE_CORE_APIREV == 1
 #define wrap_switch_mm(prev, next, tsk) \
 	__switch_mm(prev, next, tsk)
-#endif /* IPIPE_CORE_APIREV < 2 */
-#else /* !I-pipe core */
-#ifdef __IPIPE_FEATURE_HARDENED_SWITCHMM
+#elif defined(__IPIPE_FEATURE_HARDENED_SWITCHMM)
 #define wrap_switch_mm(prev, next, tsk) \
 	__switch_mm(prev, next, tsk)
-#else /* !__IPIPE_FEATURE_HARDENED_SWITCHMM */
+#else
 #define wrap_switch_mm(prev, next, tsk) \
 	switch_mm(prev, next, tsk)
-#endif /* !__IPIPE_FEATURE_HARDENED_SWITCHMM */
-#endif /* !I-pipe core */
+#endif
 
 #define wrap_enter_lazy_tlb(mm,task)	\
     enter_lazy_tlb(mm,task)
@@ -726,12 +727,10 @@ unsigned long vm_mmap(struct file *file, unsigned long addr,
 
 #endif /* LINUX_VERSION_CODE < 3.4.0 */
 
-#ifdef CONFIG_IPIPE_CORE
 #if IPIPE_CORE_APIREV >= 2
 #define wrap_select_timers(mask) ipipe_select_timers(mask)
-#else /* IPIPE_CORE_APIREV < 2 */
+#elif IPIPE_CORE_APIREV == 1
 #define wrap_select_timers(mask) ipipe_timers_request()
-#endif /* IPIPE_CORE_APIREV < 2 */
-#endif /* I-pipe core */
+#endif
 
 #endif /* _XENO_ASM_GENERIC_WRAPPERS_H */

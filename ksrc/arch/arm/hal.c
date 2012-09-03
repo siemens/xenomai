@@ -227,7 +227,7 @@ unsigned long rthal_timer_calibrate(void)
 		for (j = 0; j < RTHAL_CALIBRATE_LOOPS; j++) {
 			rthal_read_tsc(start);
 			barrier();
-#if !defined(CONFIG_IPIPE_CORE) || IPIPE_CORE_APIREV < 2
+#if IPIPE_CORE_APIREV < 2
 			rthal_timer_program_shot(
 				rthal_nodiv_imuldiv_ceil(delay, rthal_tsc_to_timer));
 #else
@@ -551,7 +551,7 @@ int rthal_arch_init(void)
 	if (rthal_clockfreq_arg == 0)
 		rthal_clockfreq_arg = rthal_get_clockfreq();
 
-#if !defined(CONFIG_IPIPE_CORE) || IPIPE_CORE_APIREV < 2
+#if IPIPE_CORE_APIREV < 2
 	xnarch_init_u32frac(&rthal_tsc_to_timer,
 			    rthal_timerfreq_arg, rthal_clockfreq_arg);
 #endif
