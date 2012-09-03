@@ -728,9 +728,9 @@ unsigned long vm_mmap(struct file *file, unsigned long addr,
 
 #ifdef CONFIG_IPIPE_CORE
 #if IPIPE_CORE_APIREV >= 2
-#define wrap_ipipe_timers_request(mask) ipipe_timers_request(mask)
+#define wrap_select_timers(mask) ipipe_select_timers(mask)
 #else /* IPIPE_CORE_APIREV < 2 */
-#define wrap_ipipe_timers_request(mask) ipipe_timers_request()
+#define wrap_select_timers(mask) ipipe_timers_request()
 #endif /* IPIPE_CORE_APIREV < 2 */
 #endif /* I-pipe core */
 
