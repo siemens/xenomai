@@ -381,6 +381,7 @@ void pthread_exit(void *value_ptr)
 
 	xnlock_get_irqsave(&nklock, s);
 	pse51_thread_abort(cur, value_ptr);
+	(void)s;
 }
 
 /**
@@ -494,6 +495,7 @@ int pthread_join(pthread_t thread, void **value_ptr)
 			schedule_timeout_interruptible(HZ/100);
 
 			xnlock_get_irqsave(&nklock, ignored);
+			(void)ignored;
 
 			if (thread->nrt_joiners == -1) {
 				/* Another thread detached the target thread. */

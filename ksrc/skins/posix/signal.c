@@ -1099,6 +1099,7 @@ static void pse51_dispatch_shadow_signals(xnsigmask_t sigs)
 	   Linux. */
 	xnshadow_relax(1, SIGDEBUG_MIGRATE_SIGNAL);
 	xnlock_get_irqsave(&nklock, dummy);
+	(void)dummy;
 }
 
 void pse51_signal_handle_request(pthread_t thread)

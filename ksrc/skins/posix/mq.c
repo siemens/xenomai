@@ -268,7 +268,7 @@ mqd_t mq_open(const char *name, int oflags, ...)
 	}
 
 	va_start(ap, oflags);
-	mode = va_arg(ap, int);	/* unused */
+	mode = va_arg(ap, int); (void)mode; /* unused */
 	attr = va_arg(ap, struct mq_attr *);
 	va_end(ap);
 

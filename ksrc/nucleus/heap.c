@@ -1045,9 +1045,9 @@ EXPORT_SYMBOL_GPL(xnheap_finalize_free_inner);
 int xnheap_check_block(xnheap_t *heap, void *block)
 {
 	xnextent_t *extent = NULL;
-	u_long pagenum, boffset;
 	xnholder_t *holder;
 	int ptype, err = 0;
+	u_long pagenum;
 	spl_t s;
 
 	xnlock_get_irqsave(&heap->lock, s);
@@ -1068,9 +1068,6 @@ int xnheap_check_block(xnheap_t *heap, void *block)
 
 	/* Compute the heading page number in the page map. */
 	pagenum = ((caddr_t) block - extent->membase) >> heap->pageshift;
-	boffset =
-	    ((caddr_t) block -
-	     (extent->membase + (pagenum << heap->pageshift)));
 	ptype = extent->pagemap[pagenum].type;
 
 	if (ptype == XNHEAP_PFREE ||	/* Unallocated page? */

@@ -349,6 +349,7 @@ struct xnsched *xnsched_finish_unlocked_switch(struct xnsched *sched)
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
+	(void)s;
 
 #ifdef CONFIG_SMP
 	/* If current thread migrated while suspended */

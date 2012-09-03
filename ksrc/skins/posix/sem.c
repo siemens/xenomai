@@ -317,7 +317,7 @@ sem_t *sem_open(const char *name, int oflags, ...)
 	named_sem->descriptor.shadow_sem.sem = &named_sem->sembase;
 
 	va_start(ap, oflags);
-	mode = va_arg(ap, int);	/* unused */
+	mode = va_arg(ap, int);	(void)mode; /* unused */
 	value = va_arg(ap, unsigned);
 	va_end(ap);
 
