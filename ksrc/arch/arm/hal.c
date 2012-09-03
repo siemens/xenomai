@@ -75,7 +75,7 @@ EXPORT_SYMBOL_GPL(rthal_tsc_to_timer);
 #define rthal_timer_set_periodic() do { } while (0)
 
 #define rthal_tickdev_select() \
-	wrap_ipipe_timers_request(&rthal_supported_cpus)
+	wrap_select_timers(&rthal_supported_cpus)
 
 #define rthal_tickdev_unselect() \
 	ipipe_timers_release()
