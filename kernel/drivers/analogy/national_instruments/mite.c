@@ -42,8 +42,6 @@
  * ISSUES:
  */
 
-#include <asm/system.h>
-
 #include "mite.h"
 
 #ifdef CONFIG_DEBUG_MITE
@@ -276,7 +274,7 @@ void a4l_mite_list_devices(void)
 
 
 
-struct mite_struct * a4l_mite_find_device(int bus,
+struct mite_struct * a4l_mite_find_device(int bus, 
 					  int slot, unsigned short device_id)
 {
 	struct list_head *this;
