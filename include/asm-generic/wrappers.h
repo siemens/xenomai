@@ -701,10 +701,13 @@ static inline void wrap_proc_dir_entry_owner(struct proc_dir_entry *entry)
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,4,0)
 
-#define cpu_online_mask &(cpu_online_map)
-
 #include <linux/sched.h>
 #include <linux/mm.h>
+#include <linux/smp.h>
+
+#ifndef cpu_online_map
+#define cpu_online_mask (&cpu_online_map)
+#endif
 
 static inline
 unsigned long vm_mmap(struct file *file, unsigned long addr,
