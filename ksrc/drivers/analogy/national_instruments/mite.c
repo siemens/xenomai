@@ -42,8 +42,6 @@
  * ISSUES:
  */
 
-#include <asm/system.h>
-
 #include "mite.h"
 
 #ifdef CONFIG_DEBUG_MITE
