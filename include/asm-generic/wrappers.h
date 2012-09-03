@@ -58,10 +58,13 @@ static inline struct task_struct *wrap_find_task_by_pid(pid_t nr)
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,4,0)
 
-#define cpu_online_mask &(cpu_online_map)
-
 #include <linux/sched.h>
 #include <linux/mm.h>
+#include <linux/smp.h>
+
+#ifndef cpu_online_map
+#define cpu_online_mask (&cpu_online_map)
+#endif
 
 static inline
 unsigned long vm_mmap(struct file *file, unsigned long addr,
