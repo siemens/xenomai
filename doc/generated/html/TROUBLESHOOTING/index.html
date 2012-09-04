@@ -27,6 +27,10 @@ window.onload = function(){asciidoc.footnotes(); asciidoc.toc(3);}
 <div class="sectionbody">
 <div class="paragraph"><p>This file is a troubleshooting guide about various known issues
 regarding Xenomai.</p></div>
+<div class="paragraph"><p>The latest version is available at
+<a href="http://www.xenomai.org/documentation/xenomai-2.6/html/TROUBLESHOOTING/">this address</a>.</p></div>
+<div class="paragraph"><p>For questions, corrections and improvements, write to
+<a href="mailto:xenomai@xenomai.org">the mailing list</a>.</p></div>
 </div>
 </div>
 <h2 id="kconf">1. Kernel configuration</h2>
@@ -97,7 +101,7 @@ Xenomai: starting RTDM services.</tt></pre>
 </div></div>
 <div class="paragraph"><p>Where &lt;arch&gt; is the architecture you use, check the following
 sections, they describe the usual error messages you may encounter.</p></div>
-<h3 id="_the_kernel_stops_after_uncompressing_linux_8230_done_booting_the_kernel">2.1. The kernel stops after "Uncompressing Linux&#8230; done, booting the kernel."</h3><div style="clear:left"></div>
+<h3 id="_kernel_stops_after_uncompressing_linux_8230_done_booting_the_kernel">2.1. Kernel stops after "Uncompressing Linux&#8230; done, booting the kernel."</h3><div style="clear:left"></div>
 <div class="paragraph"><p>This means that the kernel crashes before the console is enabled. You
 should enable the <tt>CONFIG_EARLY_PRINTK</tt> option. For some architectures
 (blackfin, x86, arm), enabling this option also requires passing the
@@ -105,21 +109,33 @@ should enable the <tt>CONFIG_EARLY_PRINTK</tt> option. For some architectures
 <em>Documentation/kernel-parameters.txt</em> for possible values.</p></div>
 <div class="paragraph"><p>For the ARM architecture, you have to enable <tt>CONFIG_DEBUG_KERNEL</tt> and
 <tt>CONFIG_DEBUG_LL</tt> in order to be able to enable <tt>CONFIG_EARLY_PRINTK</tt>.</p></div>
-<h3 id="_the_kernel_stops_with_an_oops">2.2. The kernel stops with an OOPS</h3><div style="clear:left"></div>
+<h3 id="_kernel_stops_with_an_oops">2.2. Kernel stops with an OOPS</h3><div style="clear:left"></div>
 <div class="paragraph"><p>Please make sure that you have followed the <a href="#kconf">"Kernel configuration"</a> section. Then, try capturing the oops text (using a
 serial console or netconsole) post the oops to the
 <a href="mailto:xenomai@xenomai.org">xenomai mailing list</a>, with the kernel
 configuration you used to compile the failing kernel.</p></div>
-<h3 id="_the_kernel_boots_but_does_not_print_any_message">2.3. The kernel boots but does not print any message</h3><div style="clear:left"></div>
+<h3 id="_kernel_boots_but_does_not_print_any_message">2.3. Kernel boots but does not print any message</h3><div style="clear:left"></div>
 <div class="paragraph"><p>Your distribution may be configured to pass the <tt>quiet</tt> option on the
 kernel command line. In this case, the kernel does not print all the
 log messages, however, they are still available using the <tt>dmesg</tt>
 command.</p></div>
-<h3 id="_i_pipe_could_not_find_timer_for_cpu_x">2.4. I-pipe: could not find timer for cpu #x</h3><div style="clear:left"></div>
+<h3 id="notsc">2.4. Xenomai: compiled for TSC, but CPU has no TSC</h3><div style="clear:left"></div>
+<div class="paragraph"><p>You selected a CPU which as a TSC ("Pentium classic", and above), but
+the CPU on which you run the kernel has no TSC. This issue was
+resolved in the I-pipe core for Linux 3.4, but for prior versions, you
+need to select a CPU without a TSC when configuring the kernel, and
+recompile the kernel.</p></div>
+<h3 id="_xenomai_has_detected_a_cpu_frequency_of_0">2.5. Xenomai has detected a CPU frequency of 0</h3><div style="clear:left"></div>
+<div class="paragraph"><p>This happens when running in emulators. In such a case, Xenomai can
+not run as it needs to know the clock frequency.</p></div>
+<div class="paragraph"><p>This may also happen when using I-pipe core patch for Linux 3.2,
+compiled for a CPU with a TSC, but running on a CPU without a TSC, as
+in the <a href="#notsc">"Xenomai: compiled for TSC</a> case.</p></div>
+<h3 id="_i_pipe_could_not_find_timer_for_cpu_x">2.6. I-pipe: could not find timer for cpu #x</h3><div style="clear:left"></div>
 <div class="paragraph"><p>See <a href="#ENODEV">code -19</a>.</p></div>
-<h3 id="_xenomai_local_apic_absent_or_disabled">2.5. Xenomai: Local APIC absent or disabled!</h3><div style="clear:left"></div>
+<h3 id="_xenomai_local_apic_absent_or_disabled">2.7. Xenomai: Local APIC absent or disabled!</h3><div style="clear:left"></div>
 <div class="paragraph"><p>See <a href="#ENODEV">code -19</a>.</p></div>
-<h3 id="SMI">2.6. Xenomai: SMI-enabled chipset found, but SMI workaround disabled</h3><div style="clear:left"></div>
+<h3 id="SMI">2.8. Xenomai: SMI-enabled chipset found, but SMI workaround disabled</h3><div style="clear:left"></div>
 <div class="paragraph"><p>First you should run the latency test under some load and see if
 you experience any pathological latency ("pathological" meaning more
 than, say, 100 micro-seconds). If you do not observe any such latency,
@@ -169,11 +185,11 @@ of the CPU. Thus, switching it off <strong>can cause hardware damage</strong> in
 overheat situations. Do not disable SMIs if you are in this case.</td>
 </tr></table>
 </div>
-<h3 id="ENODEV">2.7. Xenomai: system init failed, code -19</h3><div style="clear:left"></div>
+<h3 id="ENODEV">2.9. Xenomai: system init failed, code -19</h3><div style="clear:left"></div>
 <div class="paragraph"><p>The most probable reason is that Xenomai could not find a timer.</p></div>
 <div class="paragraph"><p>Check that you have not enabled one of the options in the
 <a href="#kconf">"Kernel configuration"</a> section.</p></div>
-<h4 id="_on_x86">2.7.1. On x86</h4>
+<h4 id="_on_x86">2.9.1. On x86</h4>
 <div class="paragraph"><p>You will most likely also see the following message:</p></div>
 <div class="listingblock">
 <div class="content">
@@ -204,7 +220,7 @@ more information about this parameter.
 </p>
 </li>
 </ul></div>
-<h4 id="_on_other_supported_platforms">2.7.2. On other supported platforms</h4>
+<h4 id="_on_other_supported_platforms">2.9.2. On other supported platforms</h4>
 <div class="paragraph"><p>As on x86, on other platforms where Xenomai shares the timer with
 Linux, the timer is only used if it was not shut down by Linux. So you
 should check the log for messages about disabled timers. You can also
@@ -229,7 +245,7 @@ the complete kernel boot log.
 </p>
 </li>
 </ul></div>
-<h4 id="_on_a_new_i_pipe_port">2.7.3. On a new I-pipe port</h4>
+<h4 id="_on_a_new_i_pipe_port">2.9.3. On a new I-pipe port</h4>
 <div class="paragraph"><p>You will most likely also see the following message:</p></div>
 <div class="listingblock">
 <div class="content">
@@ -243,7 +259,7 @@ lack a <tt>struct ipipe_timer</tt> definition, and its registration with
 <div class="paragraph"><p>For an example on the ARM platform see
 <a href="http://www.xenomai.org/index.php/I-pipe-core:ArmPorting#The_general_case">this
 page</a>.</p></div>
-<h3 id="_xenomai_system_init_failed_code_22">2.8. Xenomai: system init failed, code -22</h3><div style="clear:left"></div>
+<h3 id="_xenomai_system_init_failed_code_22">2.10. Xenomai: system init failed, code -22</h3><div style="clear:left"></div>
 <div class="paragraph"><p>On the ppc64 platform, check whether <tt>CONFIG_PPC_64K_PAGES</tt> is defined
 in your kernel configuration. If so, then you likely need to raise all
 Xenomai parameters defining the size of internal heaps, such as
@@ -257,20 +273,26 @@ parameters are currently based on the assumption that PAGE_SIZE = 4k.</p></div>
 <div class="paragraph"><p>The first test to run to see if Xenomai is running correctly on your
 platform is the latency test. The following sections describe the
 usual reasons for this test not to run correctly.</p></div>
-<h3 id="_xenomai_enable_x86_sep_needs_nptl_and_linux_2_6_x_or_higher">3.1. Xenomai: --enable-x86-sep needs NPTL and Linux 2.6.x or higher</h3><div style="clear:left"></div>
+<h3 id="_xenomai_binding_failed_operation_not_permitted">3.1. Xenomai: binding failed: Operation not permitted</h3><div style="clear:left"></div>
+<div class="paragraph"><p>This error message means that you are trying to run the latency test
+as a non-root user. Using Xenomai services requires root privileges
+(more precisely <tt>CAP_SYS_NICE</tt>). However, you can allow a specific group
+to access Xenomai services, by following the instructions on
+<a href="http://xenomai.org/index.php/Non-root_RT">this page</a>.</p></div>
+<h3 id="_xenomai_enable_x86_sep_needs_nptl_and_linux_2_6_x_or_higher">3.2. Xenomai: --enable-x86-sep needs NPTL and Linux 2.6.x or higher</h3><div style="clear:left"></div>
 <div class="paragraph"><p>On the x86 architecture, the configure script option
 <tt>--enable-x86-sep</tt> allows Xenomai to use the SYSENTER/SYSEXIT
 mechanism for issuing system calls.</p></div>
 <div class="paragraph"><p>However, this mechanism requires support from the libc. Currently, we
 know the glibc with NPTL has this support, other libraries will cause
 Xenomai applications to fail with this error message.</p></div>
-<h3 id="_latency_failed_to_open_benchmark_device">3.2. latency: failed to open benchmark device</h3><div style="clear:left"></div>
+<h3 id="_latency_failed_to_open_benchmark_device">3.3. latency: failed to open benchmark device</h3><div style="clear:left"></div>
 <div class="paragraph"><p>You have launched <tt>latency -t 1</tt> or <tt>latency -t 2</tt> which both require
-the kernel to have been configured with the
-<tt>CONFIG_XENO_DRIVERS_TIMERBENCH</tt> option.</p></div>
-<h3 id="_hardware_tsc_is_not_a_fast_wrapping_one">3.3. Hardware tsc is not a fast wrapping one</h3><div style="clear:left"></div>
+the kernel to have been compiled with the
+<tt>CONFIG_XENO_DRIVERS_TIMERBENCH</tt> option enabled.</p></div>
+<h3 id="_hardware_tsc_is_not_a_fast_wrapping_one">3.4. Hardware tsc is not a fast wrapping one</h3><div style="clear:left"></div>
 <div class="paragraph"><p>See the <a href="#arm-tsc">"ARM tsc emulation issues"</a> section.</p></div>
-<h3 id="_xenomai_incompatible_abi_revision_level">3.4. Xenomai: incompatible ABI revision level</h3><div style="clear:left"></div>
+<h3 id="_xenomai_incompatible_abi_revision_level">3.5. Xenomai: incompatible ABI revision level</h3><div style="clear:left"></div>
 <div class="paragraph"><p>Each Xenomai branch (2.1, 2.2, 2.3, 2.4, 2.5, 2.6,&#8230;) defines a
 kernel/user ABI, so that it is possible to mix kernels and user-space
 supports of different versions in the same branch. So, for instance,
@@ -289,7 +311,7 @@ Debian package.</p></div>
 <div class="paragraph"><p>If you compiled and installed the correct Xenomai user-space support,
 there are probably files on your system remaining from a previous
 installation.</p></div>
-<h3 id="_xenomai_incompatible_feature_set">3.5. Xenomai: incompatible feature set</h3><div style="clear:left"></div>
+<h3 id="_xenomai_incompatible_feature_set">3.6. Xenomai: incompatible feature set</h3><div style="clear:left"></div>
 <div class="paragraph"><p>Since kernel-space support and user-space support are compiled
 separately, each Xenomai application checks, at startup, whether the
 kernel and user-space supports have been configured with compatible
@@ -297,21 +319,21 @@ options. If you see this message, it means they have not. See
 <a href="../README.INSTALL/index.html#_feature_conflict_resolution">README.INSTALL</a>
 for further details. The following sections detail the most frequent
 reasons for this message.</p></div>
-<h4 id="_missing_kuser_tsc">3.5.1. missing="kuser_tsc"</h4>
+<h4 id="_missing_kuser_tsc">3.6.1. missing="kuser_tsc"</h4>
 <div class="paragraph"><p>See the <a href="#arm-tsc">"ARM tsc emulation issues"</a> section.</p></div>
-<h4 id="_missing_sep">3.5.2. missing="sep"</h4>
+<h4 id="_missing_sep">3.6.2. missing="sep"</h4>
 <div class="paragraph"><p>On the x86 architecture, the configure script option
 <tt>--enable-x86-sep</tt> allows Xenomai to use the SYSENTER/SYSEXIT
 mechanism for issuing system calls.</p></div>
 <div class="paragraph"><p>However, this mechanism requires a recent kernel (2.6 or higher).</p></div>
-<h4 id="_missing_smp_nosmp">3.5.3. missing="smp/nosmp"</h4>
+<h4 id="_missing_smp_nosmp">3.6.3. missing="smp/nosmp"</h4>
 <div class="paragraph"><p>For kernel-space and user-space supports to be compatible, both should
 be compiled with the same setting for SMP.</p></div>
 <div class="paragraph"><p>SMP support in kernel-space is enabled with the <tt>CONFIG_SMP</tt> option.</p></div>
 <div class="paragraph"><p>SMP support in user-space is enabled by passing <tt>--enable-smp</tt> to the
 configure script, and disabled by passing <tt>--disable-smp</tt> (SMP is
 enabled by default on some platforms).</p></div>
-<h4 id="_missing_tsc">3.5.4. missing="tsc"</h4>
+<h4 id="_missing_tsc">3.6.4. missing="tsc"</h4>
 <div class="paragraph"><p>This error is specific to the x86 architecture. You enabled tsc in
 user-space by passing the <tt>--enable-x86-tsc</tt> option, but you selected
 a processor when configuring the kernel which has no tsc.</p></div>
@@ -321,9 +343,9 @@ your kernel and should select the exact processor you are using in the
 kernel configuration and recompile it.</p></div>
 <div class="paragraph"><p>If your processor does not have a tsc, you should not pass the
 <tt>--enable-x86-tsc</tt> option to the configure script.</p></div>
-<h3 id="_xenomai_kernel_user_tsc_emulation_mismatch">3.6. Xenomai: kernel/user tsc emulation mismatch</h3><div style="clear:left"></div>
+<h3 id="_xenomai_kernel_user_tsc_emulation_mismatch">3.7. Xenomai: kernel/user tsc emulation mismatch</h3><div style="clear:left"></div>
 <div class="paragraph"><p>See the <a href="#arm-tsc">"ARM tsc emulation issues"</a> section.</p></div>
-<h3 id="_xenomai_native_skin_or_config_xeno_opt_pervasive_disabled">3.7. Xenomai: native skin or CONFIG_XENO_OPT_PERVASIVE disabled</h3><div style="clear:left"></div>
+<h3 id="_xenomai_native_skin_or_config_xeno_opt_pervasive_disabled">3.8. Xenomai: native skin or CONFIG_XENO_OPT_PERVASIVE disabled</h3><div style="clear:left"></div>
 <div class="paragraph"><p>Possible reasons for this error are:</p></div>
 <div class="ulist"><ul>
 <li>
@@ -351,19 +373,25 @@ on an x86_64 kernel.
 </p>
 </li>
 </ul></div>
-<h3 id="_latency_not_found">3.8. latency: not found</h3><div style="clear:left"></div>
+<h3 id="_latency_not_found">3.9. latency: not found</h3><div style="clear:left"></div>
 <div class="paragraph"><p>On the ARM platform this message happens when there is a mismatch
 between kernel and user for the EABI setting: for instance you
 compiled the user-space support with a toolchain generating OABI code,
 and are trying to run the result on a kernel with <tt>CONFIG_AEABI</tt> but
 without <tt>CONFIG_OABI_COMPAT</tt>. Or vice versa, when running user-space
 compiled with an EABI toolchain on a kernel without <tt>CONFIG_AEABI</tt>.</p></div>
-<h3 id="_xenomai_your_board_configuration_does_not_allow_tsc_emulation">3.9. Xenomai: Your board/configuration does not allow tsc emulation</h3><div style="clear:left"></div>
+<h3 id="short-period">3.10. Xenomai: watchdog triggered (period too short?)</h3><div style="clear:left"></div>
+<div class="paragraph"><p>Xenomai watchdog has stopped the latency test because it was using all
+the CPU in primary mode. This is likely due to a too short period,
+re-run the latency test passing a longer period using the <tt>-p</tt> option.</p></div>
+<h3 id="_xenomai_your_board_configuration_does_not_allow_tsc_emulation">3.11. Xenomai: Your board/configuration does not allow tsc emulation</h3><div style="clear:left"></div>
 <div class="paragraph"><p>See the <a href="#arm-tsc">"ARM tsc emulation issues"</a> section.</p></div>
-<h3 id="_the_latency_test_hangs">3.10. the latency test hangs</h3><div style="clear:left"></div>
+<h3 id="_the_latency_test_hangs">3.12. the latency test hangs</h3><div style="clear:left"></div>
 <div class="paragraph"><p>The most common reason for this issues is a too short period passed
-with the <tt>-p</tt> option, try increasing the period.</p></div>
-<h3 id="_the_latency_test_shows_high_latencies">3.11. the latency test shows high latencies</h3><div style="clear:left"></div>
+with the <tt>-p</tt> option, try increasing the period. If you enable the
+watchdog (option <tt>CONFIG_XENO_OPT_WATCHDOG</tt>, in your kernel
+configuration), you should see the <a href="#short-period">"Xenomai: watchdog triggered (period too short?)"</a> message.</p></div>
+<h3 id="_the_latency_test_shows_high_latencies">3.13. the latency test shows high latencies</h3><div style="clear:left"></div>
 <div class="paragraph"><p>The latency test runs, but you are seeing high latencies.</p></div>
 <div class="ulist"><ul>
 <li>
@@ -416,11 +444,11 @@ if you observe high latencies while running X-window, try disabling
 <div class="content">
 <pre><tt>        Option "NoAccel"</tt></pre>
 </div></div>
-<h3 id="arm-tsc">3.12. ARM tsc emulation issues</h3><div style="clear:left"></div>
+<h3 id="arm-tsc">3.14. ARM tsc emulation issues</h3><div style="clear:left"></div>
 <div class="paragraph"><p>In order to allow applications to measure short durations with as
 little overhead as possible, Xenomai uses a 64 bits high resolution
 counter. On x86, the counter used for this purpose is the time-stamp
-counter, with its "rdtsc" instruction.</p></div>
+counter, aka "tsc".</p></div>
 <div class="paragraph"><p>ARM processors generally do not have a 64 bits high resolution counter
 available in user-space, so this counter is emulated by reading
 whatever high resolution counter is available on the processor, and
@@ -485,8 +513,9 @@ should recompile Xenomai user-space support passing the
 <div class="sectionbody">
 <div class="paragraph"><p>The switchtest test creates many kernel threads, this means that the
 options <tt>CONFIG_XENO_OPT_SYS_HEAPSZ</tt> and
-<tt>CONFIG_XENO_OPT_SYS_STACKPOOLSZ</tt> should be configured to large enough
-values. Try increasing them and recompiling.</p></div>
+<tt>CONFIG_XENO_OPT_SYS_STACKPOOLSZ</tt>, in your kernel configuration,
+should be configured to large enough values. Try increasing them and
+recompiling the kernel.</p></div>
 </div>
 <h2 id="_problem_with_my_code_not_xenomai_code">5. Problem with my code (not Xenomai code)</h2>
 <div class="sectionbody">
@@ -535,7 +564,26 @@ document, see
 <div class="paragraph"><p>You may switch those warnings off by enabling the
 <tt>CONFIG_XENO_OPT_NOWARN_DEPRECATED</tt> option in your kernel configuration,
 but nevertheless, you have been <strong>WARNED</strong>.</p></div>
-<h3 id="_high_latencies_when_transitioning_from_primary_to_secondary_mode">5.2. High latencies when transitioning from primary to secondary mode</h3><div style="clear:left"></div>
+<h3 id="_xenomai_process_memory_not_locked_missing_mlockall_at_startup">5.2. "Xenomai: process memory not locked (missing mlockall?)" at startup</h3><div style="clear:left"></div>
+<div class="paragraph"><p>In order to avoid unwanted transitions to secondary domain, an
+application using Xenomai services should call, before any Xenomai
+service:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>mlockall(MCL_CURRENT | MCL_FUTURE);</tt></pre>
+</div></div>
+<div class="paragraph"><p>Even if your system has no swap, the Linux kernel may "swap out" some
+pages, for instance the program pages which are known to exist on
+flash or on disk, causing page faults (and a secondary mode switch for
+xenomai threads running in primary mode) when the program tries to access
+this page.</p></div>
+<div class="paragraph"><p>So, Xenomai libraries abort when an application which has not called
+<tt>mlockall</tt> is detected.</p></div>
+<div class="paragraph"><p>Note that some skins allow <tt>mlockall</tt> to be called automatically by
+Xenomai libraries startup, this is enabled when configuring Xenomai
+user-space support with the <tt>configure</tt> script.</p></div>
+<div class="paragraph"><p>See <tt>configure --help</tt>.</p></div>
+<h3 id="_high_latencies_when_transitioning_from_primary_to_secondary_mode">5.3. High latencies when transitioning from primary to secondary mode</h3><div style="clear:left"></div>
 <div class="paragraph"><p>Such transition requires to wake up the Linux task underlying your
 real-time thread when running in secondary mode, since the latter
 needs to leave the Xenomai domain for executing under the control of the
@@ -588,7 +636,7 @@ disk drivers.
 </p>
 </li>
 </ul></div>
-<h3 id="_any_xenomai_service_fails_with_code_38_enosys">5.3. Any Xenomai service fails with code -38 (ENOSYS)</h3><div style="clear:left"></div>
+<h3 id="_any_xenomai_service_fails_with_code_38_enosys">5.4. Any Xenomai service fails with code -38 (ENOSYS)</h3><div style="clear:left"></div>
 <div class="paragraph"><p>Possible reasons for this error are:</p></div>
 <div class="ulist"><ul>
 <li>
@@ -617,7 +665,7 @@ on an x86_64 kernel.
 </p>
 </li>
 </ul></div>
-<h3 id="_my_application_reserves_a_lot_of_memory">5.4. My application reserves a lot of memory</h3><div style="clear:left"></div>
+<h3 id="_my_application_reserves_a_lot_of_memory">5.5. My application reserves a lot of memory</h3><div style="clear:left"></div>
 <div class="paragraph"><p>Your user-space application unexpectedly reserves a lot of virtual
 memory, as reported by "<tt>top</tt>" or <em>/proc/&lt;pid&gt;/maps</em>. Sometimes OOM
 situations even appear during runtime on systems with limited memory.</p></div>
@@ -645,7 +693,7 @@ like calling:</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2012-08-21 23:41:17 CEST
+Last updated 2012-09-06 01:18:37 CEST
 </div>
 </div>
 </body>
