@@ -282,7 +282,7 @@ void rthal_timer_release(int cpu)
 
 #endif /* !CONFIG_X86_LOCAL_APIC */
 
-#ifndef CONFIG_X86_TSC
+#if !defined(CONFIG_X86_TSC) && IPIPE_CORE_APIREV < 2
 
 static rthal_time_t rthal_tsc_8254;
 
@@ -337,7 +337,7 @@ rthal_time_t rthal_get_8254_tsc(void)
 	return t;
 }
 
-#endif /* !CONFIG_X86_TSC */
+#endif /* !CONFIG_X86_TSC && IPIPE_CORE_APIREV < 2*/
 
 int rthal_arch_init(void)
 {
@@ -372,7 +372,7 @@ int rthal_arch_init(void)
 #endif /* !I-pipe core */
 
 	if (rthal_cpufreq_arg == 0)
-#ifdef CONFIG_X86_TSC
+#if defined(CONFIG_X86_TSC) || IPIPE_CORE_APIREV >= 2
 		/* FIXME: 4Ghz barrier is close... */
 		rthal_cpufreq_arg = rthal_get_cpufreq();
 #else /* ! CONFIG_X86_TSC */
@@ -409,6 +409,6 @@ void rthal_arch_cleanup(void)
 
 EXPORT_SYMBOL_GPL(rthal_arch_init);
 EXPORT_SYMBOL_GPL(rthal_arch_cleanup);
-#ifndef CONFIG_X86_TSC
+#if !defined(CONFIG_X86_TSC) && IPIPE_CORE_APIREV < 2
 EXPORT_SYMBOL_GPL(rthal_get_8254_tsc);
-#endif /* !CONFIG_X86_TSC */
+#endif /* !CONFIG_X86_TSC && IPIPE_CORE_APIREV < 2 */
