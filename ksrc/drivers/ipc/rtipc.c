@@ -166,16 +166,14 @@ static int rtipc_close(struct rtdm_dev_context *context,
 		       rtdm_user_info_t *user_info)
 {
 	struct rtipc_private *p;
-	int ret;
 
 	p = rtdm_context_to_private(context);
-	ret = p->proto->proto_ops.close(p, user_info);
-	if (ret)
-		return ret;
-
-	kfree(p->state);
-
-	return 0;
+	/*
+	 * CAUTION: p->state shall be released by the
+	 * proto_ops.close() handler when appropriate (which may be
+	 * done asynchronously later, see XDDP).
+	 */
+	return p->proto->proto_ops.close(p, user_info);
 }
 
 static ssize_t rtipc_recvmsg(struct rtdm_dev_context *context,

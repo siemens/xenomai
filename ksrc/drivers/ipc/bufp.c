@@ -171,6 +171,8 @@ static int bufp_close(struct rtipc_private *priv,
 	if (sk->bufmem)
 		xnarch_free_host_mem(sk->bufmem, sk->bufsz);
 
+	kfree(sk);
+
 	return 0;
 }
 
