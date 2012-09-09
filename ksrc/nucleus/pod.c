@@ -1187,11 +1187,11 @@ void xnpod_delete_thread(xnthread_t *thread)
 	if (xnthread_test_state(thread, XNPEND))
 		xnsynch_forget_sleeper(thread);
 
+	xnthread_set_state(thread, XNZOMBIE);
+
 	xnsynch_release_all_ownerships(thread);
 
 	__xnpod_giveup_fpu(sched, thread);
-
-	xnthread_set_state(thread, XNZOMBIE);
 
 	if (sched->curr == thread) {
 		/*

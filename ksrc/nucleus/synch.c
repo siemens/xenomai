@@ -608,7 +608,8 @@ static void xnsynch_clear_boost(struct xnsynch *synch,
 			target = owner;
 	}
 
-	if (w_cprio(owner) != wprio)
+	if (w_cprio(owner) != wprio &&
+	    !xnthread_test_state(owner, XNZOMBIE))
 		xnsynch_renice_thread(owner, target);
 }
 
