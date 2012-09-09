@@ -11,6 +11,10 @@
 #define __xn_rdtsc() rt_timer_tsc()
 #endif /* !XNARCH_HAVE_NONPRIV_TSC */
 
+unsigned long long vals[32];
+unsigned j;
+#define CNT (sizeof(vals)/sizeof(vals[0]))
+
 int main(int argc, const char *argv[])
 {
 	unsigned long long runtime, start, jump, tsc1, tsc2;
@@ -25,6 +29,7 @@ int main(int argc, const char *argv[])
 	g_sum = 0;
 	g_loops = 0;
 	one_sec = rt_timer_ns2tsc(1000000000);
+	fprintf(stderr, "one_sec: %Lu\n", one_sec);
 	runtime = __xn_rdtsc();
 
 #ifdef __ARMEL__
@@ -53,6 +58,12 @@ int main(int argc, const char *argv[])
 			if (tsc2 < tsc1)
 				goto err2;
 
+			vals[j] = tsc1;
+			if (++j == CNT)
+				j = 0;
+			vals[j] = tsc2;
+			if (++j == CNT)
+				j = 0;
 			dt = tsc2 - tsc1;
 
 			if (dt > 80)
@@ -65,6 +76,11 @@ int main(int argc, const char *argv[])
 			sum += dt;
 			++loops;
 		} while (tsc2 - start < one_sec);
+#if 0
+		printf("start: %Lu -> %Lu\n", start, tsc2);
+		for (i = (j - CNT + 1) & (CNT - 1); i != j; i = (i + 1) & (CNT - 1))
+			printf("%Lx\n", vals[i]);
+#endif
 
 		fprintf(stderr, "min: %u, max: %u, avg: %g\n",
 			min, max, (double)sum / loops);

@@ -474,23 +474,52 @@ void faulthand(int sig)
 	kill(getpid(), sig);
 }
 
-void mode_sw(int sig)
+static const char *reason_str[] = {
+	[SIGDEBUG_UNDEFINED] = "latency: received SIGXCPU for unknown reason",
+	[SIGDEBUG_MIGRATE_SIGNAL] = "received signal",
+	[SIGDEBUG_MIGRATE_SYSCALL] = "invoked syscall",
+	[SIGDEBUG_MIGRATE_FAULT] = "triggered fault",
+	[SIGDEBUG_MIGRATE_PRIOINV] = "affected by priority inversion",
+	[SIGDEBUG_NOMLOCK] = "Xenomai: process memory not locked "
+	"(missing mlockall?)",
+	[SIGDEBUG_WATCHDOG] = "Xenomai: watchdog triggered "
+	"(period too short?)",
+};
+
+static char buffer[256];
+
+void sigdebug(int sig, siginfo_t *si, void *context)
 {
 #ifndef __UCLIBC__
-	const char buffer[] = "Mode switch, aborting. Backtrace:\n";
+	const char fmt[] = "Mode switch (reason: %s), aborting. Backtrace:\n";
 	static void *bt[200];
 #else /* __UCLIBC__ */
-	const char buffer[] = "Mode switch, aborting."
+	const char fmt[] = "Mode switch (reason: %s), aborting."
 		" Backtrace unavailable with uclibc.\n";
 #endif /* __UCLIBC__ */
+	unsigned int reason = si->si_value.sival_int;
 	unsigned n;
+
+	if (reason > SIGDEBUG_WATCHDOG)
+		reason = SIGDEBUG_UNDEFINED;
+
+	switch(reason) {
+	case SIGDEBUG_UNDEFINED:
+	case SIGDEBUG_NOMLOCK:
+	case SIGDEBUG_WATCHDOG:
+		n = snprintf(buffer, sizeof(buffer),
+			     "%s\n", reason_str[reason]);
+		write(STDERR_FILENO, buffer, n);
+		exit(EXIT_FAILURE);
+	}
 
 	if (!stop_upon_switch) {
 		++sampling_relaxed;
 		return;
 	}
 
-	n = write(STDERR_FILENO, buffer, sizeof(buffer));
+	n = snprintf(buffer, sizeof(buffer), fmt, reason_str[reason]);
+	n = write(STDERR_FILENO, buffer, n);
 #ifndef __UCLIBC__
 	n = backtrace(bt, sizeof(bt)/sizeof(bt[0]));
 	backtrace_symbols_fd(bt, n, STDERR_FILENO);
@@ -503,6 +532,7 @@ void mode_sw(int sig)
 int main(int argc, char **argv)
 {
 	int cpu = 0, c, err, sig;
+	struct sigaction sa;
 	char task_name[16];
 	sigset_t mask;
 
@@ -638,7 +668,10 @@ int main(int argc, char **argv)
 	sigaddset(&mask, SIGALRM);
 	pthread_sigmask(SIG_BLOCK, &mask, NULL);
 
-	signal(SIGXCPU, mode_sw);
+	sigemptyset(&sa.sa_mask);
+	sa.sa_sigaction = sigdebug;
+	sa.sa_flags = SA_SIGINFO;
+	sigaction(SIGDEBUG, &sa, NULL);
 
 	if (freeze_max) {
 		/* If something goes wrong, we want to freeze the current

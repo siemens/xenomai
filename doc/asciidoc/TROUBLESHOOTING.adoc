@@ -7,6 +7,9 @@ regarding Xenomai.
 The latest version is available at
 http://www.xenomai.org/documentation/xenomai-2.6/html/TROUBLESHOOTING/[this address].
 
+For questions, corrections and improvements, write to
+mailto:xenomai@xenomai.org[the mailing list].
+
 
 [[kconf]]
 Kernel configuration
@@ -59,8 +62,8 @@ Where <arch> is the architecture you use, check the following
 sections, they describe the usual error messages you may encounter.
 
 
-The kernel stops after "Uncompressing Linux... done, booting the kernel."
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Kernel stops after "Uncompressing Linux... done, booting the kernel."
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This means that the kernel crashes before the console is enabled. You
 should enable the +CONFIG_EARLY_PRINTK+ option. For some architectures
@@ -72,8 +75,8 @@ For the ARM architecture, you have to enable +CONFIG_DEBUG_KERNEL+ and
 +CONFIG_DEBUG_LL+ in order to be able to enable +CONFIG_EARLY_PRINTK+.
 
 
-The kernel stops with an OOPS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Kernel stops with an OOPS
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Please make sure that you have followed the <<kconf,"Kernel
 configuration">> section. Then, try capturing the oops text (using a
@@ -82,13 +85,35 @@ mailto:xenomai@xenomai.org[xenomai mailing list], with the kernel
 configuration you used to compile the failing kernel.
 
 
-The kernel boots but does not print any message
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Kernel boots but does not print any message
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Your distribution may be configured to pass the +quiet+ option on the
 kernel command line. In this case, the kernel does not print all the
 log messages, however, they are still available using the +dmesg+
 command.
+
+
+[[notsc]]
+Xenomai: compiled for TSC, but CPU has no TSC
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You selected a CPU which as a TSC ("Pentium classic", and above), but
+the CPU on which you run the kernel has no TSC. This issue was
+resolved in the I-pipe core for Linux 3.4, but for prior versions, you
+need to select a CPU without a TSC when configuring the kernel, and
+recompile the kernel.
+
+
+Xenomai has detected a CPU frequency of 0
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This happens when running in emulators. In such a case, Xenomai can
+not run as it needs to know the clock frequency.
+
+This may also happen when using I-pipe core patch for Linux 3.2,
+compiled for a CPU with a TSC, but running on a CPU without a TSC, as
+in the <<notsc,"Xenomai: compiled for TSC, but CPU has no TSC">> case.
 
 
 I-pipe: could not find timer for cpu #x
@@ -248,6 +273,16 @@ platform is the latency test. The following sections describe the
 usual reasons for this test not to run correctly.
 
 
+Xenomai: binding failed: Operation not permitted
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This error message means that you are trying to run the latency test
+as a non-root user. Using Xenomai services requires root privileges
+(more precisely +CAP_SYS_NICE+). However, you can allow a specific group
+to access Xenomai services, by following the instructions on
+http://xenomai.org/index.php/Non-root_RT[this page].
+
+
 Xenomai: --enable-x86-sep needs NPTL and Linux 2.6.x or higher
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -264,8 +299,8 @@ latency: failed to open benchmark device
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You have launched +latency -t 1+ or +latency -t 2+ which both require
-the kernel to have been configured with the
-+CONFIG_XENO_DRIVERS_TIMERBENCH+ option.
+the kernel to have been compiled with the
++CONFIG_XENO_DRIVERS_TIMERBENCH+ option enabled.
 
 Hardware tsc is not a fast wrapping one
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -391,6 +426,14 @@ and are trying to run the result on a kernel with +CONFIG_AEABI+ but
 without +CONFIG_OABI_COMPAT+. Or vice versa, when running user-space
 compiled with an EABI toolchain on a kernel without +CONFIG_AEABI+.
 
+[[short-period]]
+Xenomai: watchdog triggered (period too short?)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Xenomai watchdog has stopped the latency test because it was using all
+the CPU in primary mode. This is likely due to a too short period,
+re-run the latency test passing a longer period using the +-p+ option.
+
 
 Xenomai: Your board/configuration does not allow tsc emulation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -402,7 +445,10 @@ the latency test hangs
 ~~~~~~~~~~~~~~~~~~~~~~
 
 The most common reason for this issues is a too short period passed
-with the +-p+ option, try increasing the period.
+with the +-p+ option, try increasing the period. If you enable the
+watchdog (option +CONFIG_XENO_OPT_WATCHDOG+, in your kernel
+configuration), you should see the <<short-period, "Xenomai: watchdog
+triggered (period too short?)">> message.
 
 
 the latency test shows high latencies
@@ -452,7 +498,7 @@ ARM tsc emulation issues
 In order to allow applications to measure short durations with as
 little overhead as possible, Xenomai uses a 64 bits high resolution
 counter. On x86, the counter used for this purpose is the time-stamp
-counter, with its "rdtsc" instruction.
+counter, aka "tsc".
 
 ARM processors generally do not have a 64 bits high resolution counter
 available in user-space, so this counter is emulated by reading
@@ -527,8 +573,9 @@ switchtest fails with "pthread_create: Resource temporarily unavailable"
 
 The switchtest test creates many kernel threads, this means that the
 options +CONFIG_XENO_OPT_SYS_HEAPSZ+ and
-+CONFIG_XENO_OPT_SYS_STACKPOOLSZ+ should be configured to large enough
-values. Try increasing them and recompiling.
++CONFIG_XENO_OPT_SYS_STACKPOOLSZ+, in your kernel configuration,
+should be configured to large enough values. Try increasing them and
+recompiling the kernel.
 
 
 Problem with my code (not Xenomai code)
@@ -560,6 +607,33 @@ http://www.xenomai.org/index.php/Xenomai:Roadmap#What_Will_Change_With_Xenomai_3
 You may switch those warnings off by enabling the
 +CONFIG_XENO_OPT_NOWARN_DEPRECATED+ option in your kernel configuration,
 but nevertheless, you have been *WARNED*.
+
+
+"Xenomai: process memory not locked (missing mlockall?)" at startup
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In order to avoid unwanted transitions to secondary domain, an
+application using Xenomai services should call, before any Xenomai
+service:
+
+-------------------------------------------------------------------------------
+mlockall(MCL_CURRENT | MCL_FUTURE);
+-------------------------------------------------------------------------------
+
+Even if your system has no swap, the Linux kernel may "swap out" some
+pages, for instance the program pages which are known to exist on
+flash or on disk, causing page faults (and a secondary mode switch for
+xenomai threads running in primary mode) when the program tries to access
+this page.
+
+So, Xenomai libraries abort when an application which has not called
++mlockall+ is detected.
+
+Note that some skins allow +mlockall+ to be called automatically by
+Xenomai libraries startup, this is enabled when configuring Xenomai
+user-space support with the +configure+ script.
+
+See +configure --help+.
 
 
 High latencies when transitioning from primary to secondary mode

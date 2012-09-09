@@ -360,6 +360,15 @@ int rthal_arch_init(void)
 	old_mksound = kd_mksound;
 	kd_mksound = &dummy_mksound;
 #endif /* !CONFIG_X86_LOCAL_APIC && Linux < 2.6 && !CONFIG_X86_TSC && CONFIG_VT */
+#ifdef CONFIG_X86_TSC
+	if (!cpu_has_tsc) {
+		printk("Xenomai: compiled for TSC, but CPU has no TSC\n"
+		       "         Recompile the kernel selecting a CPU without "
+		       "TSC\n");
+		rthal_smi_restore();
+		return -ENODEV;
+	}
+#endif /* X86_TSC */
 #endif /* !I-pipe core */
 
 	if (rthal_cpufreq_arg == 0)
