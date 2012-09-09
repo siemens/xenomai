@@ -42,6 +42,7 @@ struct xddp_socket {
 	size_t poolsz;
 	xnhandle_t handle;
 	char label[XNOBJECT_NAME_LEN];
+	int fd;			/* i.e. RTDM socket fd */
 
 	struct xddp_message *buffer;
 	int buffer_port;
@@ -115,21 +116,16 @@ static void __xddp_flush_pool(xnheap_t *heap,
 	xnarch_free_pages(poolmem, poolsz);
 }
 
-static void *__xddp_alloc_handler(size_t size, void *xstate) /* nklock free */
+static void *__xddp_alloc_handler(size_t size, void *skarg) /* nklock free */
 {
-	struct rtdm_dev_context *context = xstate;
-	struct rtipc_private *priv;
-	struct xddp_socket *sk;
+	struct xddp_socket *sk = skarg;
 	void *buf;
-
-	priv = rtdm_context_to_private(context);
-	sk = priv->state;
 
 	/* Try to allocate memory for the incoming message. */
 	buf = xnheap_alloc(sk->bufpool, size);
 	if (unlikely(buf == NULL)) {
 		if (sk->monitor)
-			sk->monitor(context->fd, XDDP_EVTNOBUF, size);
+			sk->monitor(sk->fd, XDDP_EVTNOBUF, size);
 		if (size > xnheap_max_contiguous(sk->bufpool))
 			buf = (void *)-1; /* Will never succeed. */
 	}
@@ -159,15 +155,10 @@ static int __xddp_resize_streambuf(struct xddp_socket *sk) /* sk->lock held */
 	return 0;
 }
 
-static void __xddp_free_handler(void *buf, void *xstate) /* nklock free */
+static void __xddp_free_handler(void *buf, void *skarg) /* nklock free */
 {
-	struct rtdm_dev_context *context = xstate;
-	struct rtipc_private *priv;
+	struct xddp_socket *sk = skarg;
 	rtdm_lockctx_t lockctx;
-	struct xddp_socket *sk;
-
-	priv = rtdm_context_to_private(context);
-	sk = priv->state;
 
 	if (buf != sk->buffer) {
 		xnheap_free(sk->bufpool, buf);
@@ -193,52 +184,38 @@ static void __xddp_free_handler(void *buf, void *xstate) /* nklock free */
 	rtdm_lock_put_irqrestore(&sk->lock, lockctx);
 }
 
-static void __xddp_output_handler(xnpipe_mh_t *mh, void *xstate) /* nklock held */
+static void __xddp_output_handler(xnpipe_mh_t *mh, void *skarg) /* nklock held */
 {
-	struct rtdm_dev_context *context = xstate;
-	struct rtipc_private *priv;
-	struct xddp_socket *sk;
-
-	priv = rtdm_context_to_private(context);
-	sk = priv->state;
+	struct xddp_socket *sk = skarg;
 
 	if (sk->monitor)
-		sk->monitor(context->fd, XDDP_EVTOUT, xnpipe_m_size(mh));
+		sk->monitor(sk->fd, XDDP_EVTOUT, xnpipe_m_size(mh));
 }
 
-static int __xddp_input_handler(xnpipe_mh_t *mh, int retval, void *xstate) /* nklock held */
+static int __xddp_input_handler(xnpipe_mh_t *mh, int retval, void *skarg) /* nklock held */
 {
-	struct rtdm_dev_context *context = xstate;
-	struct rtipc_private *priv;
-	struct xddp_socket *sk;
-
-	priv = rtdm_context_to_private(context);
-	sk = priv->state;
+	struct xddp_socket *sk = skarg;
 
 	if (sk->monitor == NULL)
 		return retval;
 
 	if (retval == 0)
 		/* Callee may alter the return value passed to userland. */
-		retval = sk->monitor(context->fd, XDDP_EVTIN,
-				     xnpipe_m_size(mh));
+		retval = sk->monitor(sk->fd, XDDP_EVTIN, xnpipe_m_size(mh));
 	else if (retval == -EPIPE && mh == NULL)
-		sk->monitor(context->fd, XDDP_EVTDOWN, 0);
+		sk->monitor(sk->fd, XDDP_EVTDOWN, 0);
 
 	return retval;
 }
 
-static void __xddp_release_handler(void *xstate) /* nklock free */
+static void __xddp_release_handler(void *skarg) /* nklock free */
 {
-	struct rtdm_dev_context *context = xstate;
-	struct rtipc_private *priv;
-	struct xddp_socket *sk;
-
-	priv = rtdm_context_to_private(context);
-	sk = priv->state;
+	struct xddp_socket *sk = skarg;
 
 	if (sk->bufpool == &sk->privpool)
 		xnheap_destroy(&sk->privpool, __xddp_flush_pool, NULL);
+
+	kfree(sk);
 }
 
 static int xddp_socket(struct rtipc_private *priv,
@@ -734,6 +711,8 @@ static int __xddp_bind_socket(struct rtipc_private *priv,
 		sk->curbufsz = sk->reqbufsz;
 	}
 
+	sk->fd = rtdm_private_to_context(priv)->fd;
+
 	ops.output = &__xddp_output_handler;
 	ops.input = &__xddp_input_handler;
 	ops.alloc_ibuf = &__xddp_alloc_handler;
@@ -741,15 +720,13 @@ static int __xddp_bind_socket(struct rtipc_private *priv,
 	ops.free_obuf = &__xddp_free_handler;
 	ops.release = &__xddp_release_handler;
 
-	ret = xnpipe_connect(sa->sipc_port, &ops,
-			     rtdm_private_to_context(priv));
+	ret = xnpipe_connect(sa->sipc_port, &ops, sk);
 	if (ret < 0) {
 		if (ret == -EBUSY)
 			ret = -EADDRINUSE;
 	fail_freeheap:
 		if (sk->bufpool == &sk->privpool)
-			xnheap_destroy(&sk->privpool,
-				       __xddp_flush_pool, NULL);
+			xnheap_destroy(&sk->privpool, __xddp_flush_pool, NULL);
 	fail:
 		clear_bit(_XDDP_BINDING, &sk->status);
 		return ret;
@@ -776,7 +753,7 @@ static int __xddp_bind_socket(struct rtipc_private *priv,
 	}
 
 	RTDM_EXECUTE_ATOMICALLY(
-		portmap[sk->minor] = rtdm_private_to_context(priv)->fd;
+		portmap[sk->minor] = sk->fd;
 		__clear_bit(_XDDP_BINDING, &sk->status);
 		__set_bit(_XDDP_BOUND, &sk->status);
 	);

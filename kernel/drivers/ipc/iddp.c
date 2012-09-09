@@ -244,6 +244,8 @@ static int iddp_close(struct rtipc_private *priv,
 		xnheap_free(&kheap, mbuf);
 	}
 
+	kfree(sk);
+
 	return 0;
 }
 
