@@ -10,7 +10,7 @@
 	({                                                              \
 		int rc = (expr);                                        \
 		if (rc > 0) {                                           \
-			fprintf(stderr, "FAILURE %s:%d: "#expr ": %s\n", __FILE__, __LINE__, strerror(rc)); \
+			fprintf(stderr, "FAILURE %s:%d: %s: %s\n", __FILE__, __LINE__, #expr, strerror(rc)); \
 			exit(EXIT_FAILURE);				\
 		}                                                       \
 		rc;                                                     \
@@ -20,7 +20,7 @@
 	({                                                              \
 		int rc = (expr);                                        \
 		if (rc < 0) {                                           \
-			fprintf(stderr, "FAILURE %s:%d: "#expr ": %s\n", __FILE__, __LINE__, strerror(errno)); \
+			fprintf(stderr, "FAILURE %s:%d: %s: %s\n", __FILE__, __LINE__, #expr, strerror(errno)); \
 			exit(EXIT_FAILURE);				\
 		}                                                       \
 		rc;                                                     \
@@ -30,7 +30,7 @@
 	({                                                              \
 		void *rc = (expr);					\
 		if (rc == MAP_FAILED) {					\
-			fprintf(stderr, "FAILURE %s:%d: "#expr ": %s\n", __FILE__, __LINE__, strerror(errno)); \
+			fprintf(stderr, "FAILURE %s:%d: %s: %s\n", __FILE__, __LINE__, #expr, strerror(errno)); \
 			exit(EXIT_FAILURE);				\
 		}                                                       \
 		rc;                                                     \
