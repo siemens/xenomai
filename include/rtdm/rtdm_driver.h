@@ -899,6 +899,7 @@ int rtdm_irq_request(rtdm_irq_t *irq_handle, unsigned int irq_no,
 #ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
 static inline int rtdm_irq_free(rtdm_irq_t *irq_handle)
 {
+	XENO_ASSERT(RTDM, xnpod_root_p(), return -EPERM;);
 	return xnintr_detach(irq_handle);
 }
 

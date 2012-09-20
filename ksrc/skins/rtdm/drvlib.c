@@ -1617,8 +1617,7 @@ EXPORT_SYMBOL_GPL(rtdm_mutex_timedlock);
  * This service can be called from:
  *
  * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
+ * - User-space task (non-RT)
  *
  * Rescheduling: never.
  */
@@ -1627,6 +1626,8 @@ int rtdm_irq_request(rtdm_irq_t *irq_handle, unsigned int irq_no,
 		     const char *device_name, void *arg)
 {
 	int err;
+
+	XENO_ASSERT(RTDM, xnpod_root_p(), return -EPERM;);
 
 	xnintr_init(irq_handle, device_name, irq_no, handler, NULL, flags);
 
@@ -1661,8 +1662,7 @@ EXPORT_SYMBOL_GPL(rtdm_irq_request);
  * This service can be called from:
  *
  * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
+ * - User-space task (non-RT)
  *
  * Rescheduling: never.
  */
@@ -1679,7 +1679,9 @@ int rtdm_irq_free(rtdm_irq_t *irq_handle);
  * interrupt masking at device level (via corresponding control registers etc.)
  * over masking at line level. Keep in mind that the latter is incompatible
  * with IRQ line sharing and can also be more costly as interrupt controller
- * access requires broader synchronization.
+ * access requires broader synchronization. Also, certain IRQ types may not
+ * allow the invocation over RT and interrupt contexts. The caller is
+ * responsible for excluding such conflicts.
  *
  * Environments:
  *
@@ -1705,7 +1707,9 @@ int rtdm_irq_enable(rtdm_irq_t *irq_handle);
  * interrupt masking at device level (via corresponding control registers etc.)
  * over masking at line level. Keep in mind that the latter is incompatible
  * with IRQ line sharing and can also be more costly as interrupt controller
- * access requires broader synchronization.
+ * access requires broader synchronization. Also, certain IRQ types may not
+ * allow the invocation over RT and interrupt contexts. The caller is
+ * responsible for excluding such conflicts.
  *
  * Environments:
  *
