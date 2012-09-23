@@ -11,10 +11,6 @@
 #define __xn_rdtsc() rt_timer_tsc()
 #endif /* !XNARCH_HAVE_NONPRIV_TSC */
 
-unsigned long long vals[32];
-unsigned j;
-#define CNT (sizeof(vals)/sizeof(vals[0]))
-
 int main(int argc, const char *argv[])
 {
 	unsigned long long runtime, start, jump, tsc1, tsc2;
@@ -29,7 +25,6 @@ int main(int argc, const char *argv[])
 	g_sum = 0;
 	g_loops = 0;
 	one_sec = rt_timer_ns2tsc(1000000000);
-	fprintf(stderr, "one_sec: %Lu\n", one_sec);
 	runtime = __xn_rdtsc();
 
 #ifdef __ARMEL__
@@ -52,18 +47,18 @@ int main(int argc, const char *argv[])
 		tsc2 = start = __xn_rdtsc();
 		do {
 			tsc1 = __xn_rdtsc();
-			if (tsc1 < tsc2)
+			if (tsc1 < tsc2) {
+				fprintf(stderr, "%016Lx -> %016Lx\n",
+					tsc2, tsc1);
 				goto err1;
+			}
 			tsc2 = __xn_rdtsc();
-			if (tsc2 < tsc1)
+			if (tsc2 < tsc1) {
+				fprintf(stderr, "%016Lx -> %016Lx\n",
+					tsc1, tsc2);
 				goto err2;
+			}
 
-			vals[j] = tsc1;
-			if (++j == CNT)
-				j = 0;
-			vals[j] = tsc2;
-			if (++j == CNT)
-				j = 0;
 			dt = tsc2 - tsc1;
 
 			if (dt > 80)
@@ -76,11 +71,6 @@ int main(int argc, const char *argv[])
 			sum += dt;
 			++loops;
 		} while (tsc2 - start < one_sec);
-#if 0
-		printf("start: %Lu -> %Lu\n", start, tsc2);
-		for (i = (j - CNT + 1) & (CNT - 1); i != j; i = (i + 1) & (CNT - 1))
-			printf("%Lx\n", vals[i]);
-#endif
 
 		fprintf(stderr, "min: %u, max: %u, avg: %g\n",
 			min, max, (double)sum / loops);
@@ -107,8 +97,8 @@ int main(int argc, const char *argv[])
 	jump = tsc1 - tsc2;
 
   display:
-	fprintf(stderr, "tsc not monotonic after %Lu.%09Lu ticks, ",
-		runtime / 1000000000ULL, runtime % 1000000000ULL);
+	fprintf(stderr, "tsc not monotonic after %Lu ticks, ",
+		runtime);
 	fprintf(stderr, "jumped back %Lu tick\n", jump);
 
 	return EXIT_FAILURE;
