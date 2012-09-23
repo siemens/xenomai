@@ -158,9 +158,9 @@ static int vprint_to_buffer(FILE *stream, int priority, unsigned int mode,
 	if (mode == RT_PRINT_MODE_FORMAT) {
 		if (stream != RT_PRINT_SYSLOG_STREAM) {
 			/* We do not need the terminating \0 */
-			res = vsnprintf(head->data, len + 1, format, args);
+			res = vsnprintf(head->data, len, format, args);
 
-			if (res < len + 1) {
+			if (res < len) {
 				/* Text was written completely, res contains its
 				   length */
 				len = res;
