@@ -72,9 +72,60 @@ int xnarch_local_syscall(unsigned long a1, unsigned long a2,
 		if (error)
 			return error;
 
-		info.counter = RTHAL_TSC_INFO(&ipipe_info).u.fr.counter;
-		info.tsc_get =
-			(__xn_rdtsc_t *)(((char *)&__ipipe_tsc_get) + 4);
+		switch (RTHAL_TSC_INFO(&ipipe_info).type) {
+		case IPIPE_TSC_TYPE_FREERUNNING:
+			info.type = __XN_TSC_TYPE_FREERUNNING,
+			info.counter = RTHAL_TSC_INFO(&ipipe_info).u.fr.counter;
+			info.mask = RTHAL_TSC_INFO(&ipipe_info).u.fr.mask;
+			info.tsc = RTHAL_TSC_INFO(&ipipe_info).u.fr.tsc;
+			break;
+		case IPIPE_TSC_TYPE_DECREMENTER:
+			info.type = __XN_TSC_TYPE_DECREMENTER,
+			info.counter = RTHAL_TSC_INFO(&ipipe_info).u.dec.counter;
+			info.mask = RTHAL_TSC_INFO(&ipipe_info).u.dec.mask;
+			info.last_cnt = RTHAL_TSC_INFO(&ipipe_info).u.dec.last_cnt;
+			info.tsc = RTHAL_TSC_INFO(&ipipe_info).u.dec.tsc;
+			break;
+#ifdef IPIPE_TSC_TYPE_FREERUNNING_COUNTDOWN
+		case IPIPE_TSC_TYPE_FREERUNNING_COUNTDOWN:
+			info.type = __XN_TSC_TYPE_FREERUNNING_COUNTDOWN,
+			info.counter = RTHAL_TSC_INFO(&ipipe_info).u.fr.counter;
+			info.mask = RTHAL_TSC_INFO(&ipipe_info).u.fr.mask;
+			info.tsc = RTHAL_TSC_INFO(&ipipe_info).u.fr.tsc;
+			break;
+#endif /* IPIPE_TSC_TYPE_FREERUNNING_COUNTDOWN */
+#ifdef IPIPE_TSC_TYPE_FREERUNNING_TWICE
+		case IPIPE_TSC_TYPE_FREERUNNING_TWICE:
+			/*
+			 * Requires kuser, not backward compatible
+			 * with old xenomai versions
+			 */
+			info.type = __XN_TSC_TYPE_KUSER,
+			info.counter = RTHAL_TSC_INFO(&ipipe_info).u.fr.counter;
+			info.mask = RTHAL_TSC_INFO(&ipipe_info).u.fr.mask;
+			info.tsc = RTHAL_TSC_INFO(&ipipe_info).u.fr.tsc;
+			break;
+#endif /* IPIPE_TSC_TYPE_FREERUNNING_TWICE */
+		default:
+#if IPIPE_CORE_APIREV >= 1
+			/*
+			 * Newer tsc types, require kuser, not
+			 * backward compatible with old xenomai
+			 * versions
+			 */
+			info.type = __XN_TSC_TYPE_KUSER;
+			info.counter = (void *)
+				RTHAL_TSC_INFO(&ipipe_info).u.counter_paddr;
+			info.mask = RTHAL_TSC_INFO(&ipipe_info).u.mask;
+			info.tsc = RTHAL_TSC_INFO(&ipipe_info).u.fr.tsc;
+			break;
+#else
+			return -EINVAL;
+#endif /* IPIPE_CORE_APIREV >= 1 */
+		case IPIPE_TSC_TYPE_NONE:
+			return -ENOSYS;
+
+		}
 
 		if (__xn_copy_to_user((void *)a2, &info, sizeof(info)))
 			return -EFAULT;

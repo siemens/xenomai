@@ -233,8 +233,11 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 typedef unsigned long long __xn_rdtsc_t(volatile unsigned *);
 
 struct __xn_tscinfo {
+	int type;		/* Must remain first member */
+	unsigned mask;
 	volatile unsigned *counter;
-	__xn_rdtsc_t *tsc_get;
+	volatile unsigned *last_cnt; /* Only used by decrementers */
+	volatile unsigned long long *tsc;
 };
 
 #ifndef __KERNEL__
