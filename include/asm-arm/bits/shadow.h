@@ -174,11 +174,25 @@ static inline int xnarch_local_syscall(struct pt_regs *regs)
 			info.tsc = RTHAL_TSC_INFO(&ipipe_info).u.fr.tsc;
 			break;
 #endif /* IPIPE_TSC_TYPE_FREERUNNING_TWICE */
+		default:
+#if IPIPE_CORE_APIREV >= 1
+			/*
+			 * Newer tsc types, require kuser, not
+			 * backward compatible with old xenomai
+			 * versions
+			 */
+			info.type = __XN_TSC_TYPE_KUSER;
+			info.counter = (void *)
+				RTHAL_TSC_INFO(&ipipe_info).u.counter_paddr;
+			info.mask = RTHAL_TSC_INFO(&ipipe_info).u.mask;
+			info.tsc = RTHAL_TSC_INFO(&ipipe_info).u.fr.tsc;
+			break;
+#else
+			return -EINVAL;
+#endif /* IPIPE_CORE_APIREV >= 1 */
 		case IPIPE_TSC_TYPE_NONE:
 			return -ENOSYS;
 
-		default:
-			return -EINVAL;
 		}
 
 		if (__xn_copy_to_user((void *)__xn_reg_arg2(regs),
