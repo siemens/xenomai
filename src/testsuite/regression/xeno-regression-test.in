@@ -49,6 +49,7 @@ echo 0 > /proc/xenomai/latency || :
 @testdir@/regression/posix/nano_test
 @testdir@/regression/posix/shm
 @testdir@/regression/posix/xddp_test
+@testdir@/regression/posix/test_pip_exit
 @testdir@/regression/native/heap
 @testdir@/regression/native/leaks
 @testdir@/regression/native/sigdebug
