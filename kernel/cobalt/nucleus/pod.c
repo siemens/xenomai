@@ -2916,8 +2916,33 @@ static int lock_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 	return 0;
 }
 
+static ssize_t lock_vfile_store(struct xnvfile_input *input)
+{
+	ssize_t ret;
+	spl_t s;
+	int cpu;
+
+	long val;
+
+	ret = xnvfile_get_integer(input, &val);
+	if (ret < 0)
+		return ret;
+
+	if (val != 0)
+		return -EINVAL;
+
+	for_each_online_cpu(cpu) {
+		xnlock_get_irqsave(&nklock, s);
+		memset(&xnlock_stats[cpu], '\0', sizeof(xnlock_stats[cpu]));
+		xnlock_put_irqrestore(&nklock, s);
+	}
+
+	return ret;
+}
+
 static struct xnvfile_regular_ops lock_vfile_ops = {
 	.show = lock_vfile_show,
+	.store = lock_vfile_store,
 };
 
 static struct xnvfile_regular lock_vfile = {
