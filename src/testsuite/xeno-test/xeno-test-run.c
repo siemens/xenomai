@@ -5,7 +5,8 @@
 #include <ctype.h>
 
 #include <sys/types.h>
-#include <sys/fcntl.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <signal.h>
 #include <sys/wait.h>
@@ -16,6 +17,8 @@
 #define CHILD_CHECKED 1
 #define CHILD_LOAD    2
 #define CHILD_ANY     -1
+
+#define TIMEOUT 30
 
 struct child {
 	unsigned type: 2;
@@ -156,7 +159,7 @@ int child_initv(struct child *child, int type, char *argv[])
 	}
 
 	time(&child->timeout);
-	child->timeout += 300;
+	child->timeout += TIMEOUT * 60;
 
 	switch(type) {
 	case CHILD_CHECKED:
@@ -347,7 +350,7 @@ void handle_checked_child(struct child *child, fd_set *fds)
 
 	if (FD_ISSET(child->out, fds)) {
 		copy(child->out, STDOUT_FILENO);
-		child->timeout = now + 300;
+		child->timeout = now + TIMEOUT * 60;
 	}
 
 	if (child->dead) {
@@ -381,8 +384,8 @@ void handle_checked_child(struct child *child, fd_set *fds)
 	}
 
 	if (now > child->timeout) {
-		fail_fprintf(stderr, "child %d produced no output for 5 minutes.\n",
-			   child->pid);
+		fail_fprintf(stderr, "child %d produced no output for %d minutes.\n",
+			     child->pid, TIMEOUT);
 		exit(EXIT_FAILURE);
 	}
 
@@ -404,7 +407,9 @@ void handle_script_child(struct child *child, fd_set *fds)
 	if (!FD_ISSET(child->out, fds))
 		return;
 
-	sz = read(child->out, buffer + pos, sizeof(buffer) - pos);
+	sz = read(child->out, buffer + pos, sizeof(buffer) - (pos + 1));
+	buffer[pos + sz] = '\0';
+
 	for (l = buffer; (eol = strchr(l, '\n')); l = eol + 1) {
 		char buf[16];
 		*eol = '\0';
