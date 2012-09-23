@@ -402,9 +402,9 @@ static int __pthread_wait_np(struct pt_regs *regs)
 	err = -pthread_wait_np(&overruns);
 
 	if (__xn_reg_arg1(regs) && (err == 0 || err == -ETIMEDOUT))
-		if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs),
-					   &overruns, sizeof(overruns)))
-			err = -EFAULT;
+		__xn_put_user(overruns,
+			      (unsigned long __user *)__xn_reg_arg1(regs));
+
 	return err;
 }
 
