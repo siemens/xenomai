@@ -1073,7 +1073,7 @@ static int affinity_vfile_show(struct xnvfile_regular_iterator *it,
 
 	for (cpu = 0; cpu < BITS_PER_LONG; cpu++)
 		if (xnarch_cpu_isset(cpu, nkaffinity))
-			val |= (1 << cpu);
+			val |= (1ul << cpu);
 
 	xnvfile_printf(it, "%08lx\n", val);
 
