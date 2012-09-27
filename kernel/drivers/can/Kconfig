@@ -63,9 +63,12 @@ config XENO_DRIVERS_CAN_BUS_ERR
 
 config XENO_DRIVERS_CAN_CALC_BITTIME_OLD
 	depends on XENO_DRIVERS_CAN
-	bool "Old bit-time calculation algorithm"
+	bool "Old bit-time calculation algorithm (deprecated)"
 	default n
 	help
+
+	This option allows to enable the old algorithm to calculate the
+	CAN bit-timing parameters for backward compatibility.
 
 config XENO_DRIVERS_CAN_VIRT
 	depends on XENO_DRIVERS_CAN
@@ -74,6 +77,13 @@ config XENO_DRIVERS_CAN_VIRT
 
 	This driver provides two CAN ports that are virtually interconnected.
 	More ports can be enabled with the module parameter "devices".
+
+config XENO_DRIVERS_CAN_FLEXCAN
+	depends on XENO_DRIVERS_CAN && !XENO_DRIVERS_CAN_CALC_BITTIME_OLD
+	tristate "Freescale FLEXCAN based chips"
+	help
+
+	Say Y here if you want to support for Freescale FlexCAN.
 
 source drivers/xenomai/can/mscan/Kconfig
 source drivers/xenomai/can/sja1000/Kconfig
