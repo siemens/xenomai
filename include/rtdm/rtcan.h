@@ -422,6 +422,11 @@ typedef enum CAN_MODE can_mode_t;
  * test operation. */
 #define CAN_CTRLMODE_LOOPBACK   0x2
 
+/*! Triple sampling mode
+ *
+ * In this mode the CAN controller uses Triple sampling. */
+#define CAN_CTRLMODE_3_SAMPLES  0x4
+
 /** @} */
 
 /** See @ref CAN_CTRLMODE */
@@ -433,13 +438,16 @@ typedef int can_ctrlmode_t;
  * @{ */
 enum CAN_STATE {
 	/** CAN controller is error active */
+	CAN_STATE_ERROR_ACTIVE = 0,
 	CAN_STATE_ACTIVE = 0,
 
 	/** CAN controller is error active, warning level is reached */
-	CAN_STATE_BUS_WARNING,
+	CAN_STATE_ERROR_WARNING = 1,
+	CAN_STATE_BUS_WARNING = 1,
 
 	/** CAN controller is error passive */
-	CAN_STATE_BUS_PASSIVE,
+	CAN_STATE_ERROR_PASSIVE = 2,
+	CAN_STATE_BUS_PASSIVE = 2,
 
 	/** CAN controller went into Bus Off */
 	CAN_STATE_BUS_OFF,
