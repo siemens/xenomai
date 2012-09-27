@@ -62,6 +62,12 @@ config XENO_DRIVERS_CAN_BUS_ERR
 	processing. This option is automatically selected for CAN controllers
 	supporting bus error interrupts like the SJA1000.
 
+config XENO_DRIVERS_CAN_CALC_BITTIME_OLD
+	depends on XENO_DRIVERS_CAN
+	bool "Old bit-time calculation algorithm"
+	default n
+	help
+
 config XENO_DRIVERS_CAN_VIRT
 	depends on XENO_DRIVERS_CAN
 	tristate "Virtual CAN bus driver"
