@@ -37,6 +37,8 @@
 #ifndef _XENO_ASM_X86_HAL_32_H
 #define _XENO_ASM_X86_HAL_32_H
 
+#include <asm/xenomai/wrappers.h>
+
 #define RTHAL_ARCH_NAME			"i386"
 #ifndef CONFIG_IPIPE_CORE
 #ifdef CONFIG_X86_LOCAL_APIC
@@ -48,8 +50,6 @@
 # define RTHAL_TIMER_DEVICE		(ipipe_timer_name())
 #endif
 # define RTHAL_CLOCK_DEVICE		"tsc"
-
-#include <asm/xenomai/wrappers.h>
 
 #include <asm-generic/xenomai/hal.h>	/* Read the generic bits. */
 
