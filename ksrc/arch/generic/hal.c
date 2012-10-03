@@ -538,7 +538,7 @@ int rthal_init(void)
 #ifdef CONFIG_SMP
     int cpu;
     cpus_clear(rthal_supported_cpus);
-    for (cpu = 0; cpu < BITS_PER_LONG; cpu++)
+    for (cpu = 0; cpu < num_online_cpus(); cpu++)
 	    if (supported_cpus_arg & (1 << cpu))
 		    cpu_set(cpu, rthal_supported_cpus);
 #endif /* CONFIG_SMP */
