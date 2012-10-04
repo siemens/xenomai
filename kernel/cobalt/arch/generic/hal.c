@@ -57,6 +57,9 @@ static unsigned long supported_cpus_arg = -1;
 module_param_named(supported_cpus, supported_cpus_arg, ulong, 0444);
 #endif /* CONFIG_SMP */
 
+unsigned long rthal_disable;
+module_param_named(disable, rthal_disable, ulong, 0444);
+
 static IPIPE_DEFINE_SPINLOCK(rthal_apc_lock);
 
 struct rthal_archdata rthal_archdata;
@@ -191,6 +194,11 @@ void xnpod_schedule_handler(void);
 int rthal_init(void)
 {
 	int ret;
+
+	if (rthal_disable) {
+		printk("Xenomai: disabled on kernel command line\n");
+		return -ENOENT;
+	}
 
 	ret = rthal_arch_init();
 	if (ret)
