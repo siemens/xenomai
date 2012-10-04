@@ -55,6 +55,9 @@ module_param_named(timerfreq, rthal_timerfreq_arg, ulong, 0444);
 unsigned long rthal_clockfreq_arg;
 module_param_named(clockfreq, rthal_clockfreq_arg, ulong, 0444);
 
+unsigned long rthal_disable;
+module_param_named(disable, rthal_disable, ulong, 0444);
+
 #ifdef CONFIG_SMP
 static unsigned long supported_cpus_arg = -1;
 module_param_named(supported_cpus, supported_cpus_arg, ulong, 0444);
@@ -542,6 +545,11 @@ int rthal_init(void)
 	    if (supported_cpus_arg & (1 << cpu))
 		    cpu_set(cpu, rthal_supported_cpus);
 #endif /* CONFIG_SMP */
+
+    if (rthal_disable) {
+	    printk("Xenomai: disabled on kernel command line\n");
+	    return -ENOENT;
+    }
 
     err = rthal_arch_init();
 
