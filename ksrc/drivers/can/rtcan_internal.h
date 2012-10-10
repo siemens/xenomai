@@ -115,4 +115,14 @@
 # define RTCAN_RTDM_DBG(fmt,args...) do {} while (0)
 #endif
 
+#define rtcan_priv(dev)			(dev)->priv
+#define rtcandev_dbg(dev, fmt, args...)				\
+	printk(KERN_DEBUG "%s: " fmt, (dev)->name, ##args)
+#define rtcandev_info(dev, fmt, args...)			\
+	printk(KERN_INFO "%s: " fmt, (dev)->name, ##args)
+#define rtcandev_warn(dev, fmt, args...)			\
+	printk(KERN_WARNING "%s: " fmt, (dev)->name, ##args)
+#define rtcandev_err(dev, fmt, args...)				\
+	printk(KERN_ERR "%s: " fmt, (dev)->name, ##args)
+
 #endif /* __RTCAN_INTERNAL_H_ */

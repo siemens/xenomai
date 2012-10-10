@@ -42,6 +42,20 @@
 
 #define MSCAN_SET_MODE_RETRIES	255
 
+#ifndef CONFIG_XENO_DRIVERS_CAN_CALC_BITTIME_OLD
+static struct can_bittiming_const mscan_bittiming_const = {
+	.name = "mscan",
+	.tseg1_min = 4,
+	.tseg1_max = 16,
+	.tseg2_min = 2,
+	.tseg2_max = 8,
+	.sjw_max = 4,
+	.brp_min = 1,
+	.brp_max = 64,
+	.brp_inc = 1,
+};
+#endif
+
 /**
  *  Reception Interrupt handler
  *
@@ -722,6 +736,9 @@ int rtcan_mscan_register(struct rtcan_device *dev, int irq, int mscan_clksrc)
 	dev->hard_start_xmit = rtcan_mscan_start_xmit;
 	dev->do_set_mode = rtcan_mscan_set_mode;
 	dev->do_set_bit_time = rtcan_mscan_set_bit_time;
+#ifndef CONFIG_XENO_DRIVERS_CAN_CALC_BITTIME_OLD
+	dev->bittiming_const = &mscan_bittiming_const;
+#endif
 
 	/* Register IRQ handler and pass device structure as arg */
 	ret = rtdm_irq_request(&dev->irq_handle, irq, rtcan_mscan_interrupt,

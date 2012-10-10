@@ -83,6 +83,19 @@ MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("RT-Socket-CAN driver for SJA1000");
 MODULE_SUPPORTED_DEVICE("SJA1000 CAN controller");
 
+#ifndef CONFIG_XENO_DRIVERS_CAN_CALC_BITTIME_OLD
+static struct can_bittiming_const sja1000_bittiming_const = {
+	.name = "sja1000",
+	.tseg1_min = 1,
+	.tseg1_max = 16,
+	.tseg2_min = 1,
+	.tseg2_max = 8,
+	.sjw_max = 4,
+	.brp_min = 1,
+	.brp_max = 64,
+	.brp_inc = 1,
+};
+#endif
 
 static inline void rtcan_sja_rx_interrupt(struct rtcan_device *dev,
 					  struct rtcan_skb *skb)
@@ -622,6 +635,7 @@ int rtcan_sja_set_bit_time(struct rtcan_device *dev,
 	return -EINVAL;
     }
 
+    printk("%s: btr0=%#x btr1=%#x\n", __func__, btr0, btr1);
     chip->write_reg(dev, SJA_BTR0, btr0);
     chip->write_reg(dev, SJA_BTR1, btr1);
 
@@ -757,6 +771,10 @@ int rtcan_sja1000_register(struct rtcan_device *dev)
     dev->do_get_state = rtcan_sja_get_state;
     dev->do_set_bit_time = rtcan_sja_set_bit_time;
     dev->do_enable_bus_err = rtcan_sja_enable_bus_err;
+#ifndef CONFIG_XENO_DRIVERS_CAN_CALC_BITTIME_OLD
+    dev->bittiming_const = &sja1000_bittiming_const;
+#endif
+
     chip->bus_err_on = 1;
 
     ret = rtdm_irq_request(&dev->irq_handle,
