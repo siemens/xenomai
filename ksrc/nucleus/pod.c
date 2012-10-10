@@ -2336,40 +2336,22 @@ reschedule:
 }
 EXPORT_SYMBOL_GPL(__xnpod_schedule);
 
-void xnpod_lock_sched(void)
+void ___xnpod_lock_sched(struct xnthread *curr)
 {
-	struct xnthread *curr;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	curr = xnpod_current_thread();
-
 	if (xnthread_lock_count(curr)++ == 0)
 		xnthread_set_state(curr, XNLOCK);
-
-	xnlock_put_irqrestore(&nklock, s);
 }
-EXPORT_SYMBOL_GPL(xnpod_lock_sched);
+EXPORT_SYMBOL_GPL(___xnpod_lock_sched);
 
-void xnpod_unlock_sched(void)
+void ___xnpod_unlock_sched(struct xnthread *curr)
 {
-	struct xnthread *curr;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	curr = xnpod_current_thread();
-
 	if (--xnthread_lock_count(curr) == 0) {
 		xnthread_clear_state(curr, XNLOCK);
 		xnsched_set_self_resched(curr->sched);
 		xnpod_schedule();
 	}
-
-	xnlock_put_irqrestore(&nklock, s);
 }
-EXPORT_SYMBOL_GPL(xnpod_unlock_sched);
+EXPORT_SYMBOL_GPL(___xnpod_unlock_sched);
 
 /*!
  * \fn int xnpod_add_hook(int type,void (*routine)(xnthread_t *))

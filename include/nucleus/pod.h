@@ -288,9 +288,49 @@ static inline void xnpod_schedule(void)
 	__xnpod_schedule(sched);
 }
 
-void xnpod_lock_sched(void);
+void ___xnpod_lock_sched(struct xnthread *curr);
 
-void xnpod_unlock_sched(void);
+void ___xnpod_unlock_sched(struct xnthread *curr);
+
+static inline void __xnpod_lock_sched(void)
+{
+	struct xnthread *curr;
+
+	barrier();
+	curr = xnpod_current_thread();
+	___xnpod_lock_sched(curr);
+}
+
+static inline void __xnpod_unlock_sched(void)
+{
+	struct xnthread *curr;
+
+	barrier();
+	curr = xnpod_current_thread();
+	___xnpod_unlock_sched(curr);
+}
+
+static inline void xnpod_lock_sched(void)
+{
+	struct xnthread *curr;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+	curr = xnpod_current_thread();
+	___xnpod_lock_sched(curr);
+	xnlock_put_irqrestore(&nklock, s);
+}
+
+static inline void xnpod_unlock_sched(void)
+{
+	struct xnthread *curr;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+	curr = xnpod_current_thread();
+	___xnpod_unlock_sched(curr);
+	xnlock_put_irqrestore(&nklock, s);
+}
 
 void xnpod_fire_callouts(xnqueue_t *hookq,
 			 xnthread_t *thread);
