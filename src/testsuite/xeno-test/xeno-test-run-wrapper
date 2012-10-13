@@ -1,18 +1,21 @@
 #! /bin/bash
 
+XENO_TEST_IN="/tmp/xeno-test-in-$$"
+XENO_TEST_OUT="/tmp/xeno-test-out-$$"
+
 check_alive()
 {
-    echo check_alive ${1+"$@"} >&1023
+    echo check_alive ${1+"$@"} > "$XENO_TEST_OUT"
 }
 
 start_load()
 {
-    echo start_load >&1023
+    echo start_load > "$XENO_TEST_OUT"
 }
 
 wait_load()
 {
-    read rc <&1022
+    read rc < "$XENO_TEST_IN"
 }
 
 script="$1"; shift
