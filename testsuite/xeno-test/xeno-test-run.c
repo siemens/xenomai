@@ -60,32 +60,22 @@ static inline time_t mono_time(void)
 
 int child_initv(struct child *child, int type, char *argv[])
 {
-	int pipe_in[2];
+	char pipe_in_name[256];
+	char pipe_out_name[256];
 	int pipe_out[2];
 	int err, i;
 	pid_t pid;
 
-	if (pipe(pipe_out) < 0)
-		return -errno;
-
-	/* Set the CLOEXEC flag so that we do not leak file
-	   descriptors in our children. */
-	fcntl(pipe_out[0], F_SETFD,
-	      fcntl(pipe_out[0], F_GETFD) | FD_CLOEXEC);
-	fcntl(pipe_out[1], F_SETFD,
-	      fcntl(pipe_out[0], F_GETFD) | FD_CLOEXEC);
-
-	if (type == CHILD_SCRIPT) {
-		if (pipe(pipe_in) < 0)
-			goto err_close_pipe_out;
+	if (type != CHILD_SCRIPT) {
+		if (pipe(pipe_out) < 0)
+			return -errno;
 
 		/* Set the CLOEXEC flag so that we do not leak file
 		   descriptors in our children. */
-		fcntl(pipe_in[0], F_SETFD,
+		fcntl(pipe_out[0], F_SETFD,
 		      fcntl(pipe_out[0], F_GETFD) | FD_CLOEXEC);
-		fcntl(pipe_in[1], F_SETFD,
+		fcntl(pipe_out[1], F_SETFD,
 		      fcntl(pipe_out[0], F_GETFD) | FD_CLOEXEC);
-
 	}
 
 	sigprocmask(SIG_BLOCK, &sigchld_mask, NULL);
@@ -93,7 +83,7 @@ int child_initv(struct child *child, int type, char *argv[])
 	if (pid < 0) {
 		sigprocmask(SIG_UNBLOCK, &sigchld_mask, NULL);
 		err = -errno;
-		goto out_close_pipe;
+		goto err_close_pipe_out;
 	}
 
 	if (pid == 0) {
@@ -117,14 +107,24 @@ int child_initv(struct child *child, int type, char *argv[])
 			break;
 
 		case CHILD_SCRIPT:
-			if (dup2(pipe_in[0], 1022) < 0) {
-				fail_perror("dup2(pipe_in)");
+			snprintf(pipe_in_name, sizeof(pipe_in_name),
+				 "/tmp/xeno-test-in-%u",
+				 (unsigned)getpid());
+			unlink(pipe_in_name);
+			if (mkfifo(pipe_in_name, 0666) < 0) {
+				fail_perror("mkfifo(pipe_in)");
 				_exit(EXIT_FAILURE);
 			}
-			if (dup2(pipe_out[1], 1023) < 0) {
-				fail_perror("dup2(pipe_out)");
+
+			snprintf(pipe_out_name, sizeof(pipe_out_name),
+				 "/tmp/xeno-test-out-%u",
+				 (unsigned)getpid());
+			unlink(pipe_out_name);
+			if (mkfifo(pipe_out_name, 0666) < 0) {
+				fail_perror("mkfifo(pipe_in)");
 				_exit(EXIT_FAILURE);
 			}
+
 			break;
 		}
 
@@ -147,16 +147,26 @@ int child_initv(struct child *child, int type, char *argv[])
 		fprintf(stderr, " %s", argv[i]);
 	fputc('\n', stderr);
 
-	close(pipe_out[1]);
-	fcntl(pipe_out[0], F_SETFL,
-	      fcntl(pipe_out[0], F_GETFL) | O_NONBLOCK);
-	child->out = pipe_out[0];
-	FD_SET(child->out, &inputs);
+	if (type != CHILD_SCRIPT) {
+		close(pipe_out[1]);
+		fcntl(pipe_out[0], F_SETFL,
+		      fcntl(pipe_out[0], F_GETFL) | O_NONBLOCK);
+		child->out = pipe_out[0];
+	} else {
+		child->out = open(pipe_out_name, O_RDONLY | O_NONBLOCK);
+		if (child->out == -1)
+			return -errno;
 
-	if (type == CHILD_SCRIPT) {
-		close(pipe_in[0]);
-		child->in = pipe_in[1];
+		/*
+		 * We can not open pipe_in right now (opening in non
+		 * blocking mode would returns -ENXIO, and opening in
+		 * blocking mode would block the process until the
+		 * child opens the other end of the fifo, which is not
+		 * what we want).
+		 */
+		child->in = -1;
 	}
+	FD_SET(child->out, &inputs);
 
 	time(&child->timeout);
 	child->timeout += TIMEOUT * 60;
@@ -175,14 +185,11 @@ int child_initv(struct child *child, int type, char *argv[])
 
 	return 0;
 
-  out_close_pipe:
-	if (type == CHILD_SCRIPT) {
-		close(pipe_in[0]);
-		close(pipe_in[1]);
-	}
   err_close_pipe_out:
-	close(pipe_out[0]);
-	close(pipe_out[1]);
+	if (type != CHILD_SCRIPT) {
+		close(pipe_out[0]);
+		close(pipe_out[1]);
+	}
 	return err;
 }
 
@@ -234,8 +241,18 @@ void child_cleanup(struct child *child)
 
 	FD_CLR(child->out, &inputs);
 	close(child->out);
-	if (child->type == CHILD_SCRIPT)
+	if (child->type == CHILD_SCRIPT) {
+		char pipe_in_name[256];
+		char pipe_out_name[256];
+		snprintf(pipe_in_name, sizeof(pipe_in_name),
+			 "/tmp/xeno-test-in-%u", (unsigned)child->pid);
+		unlink(pipe_in_name);
+
+		snprintf(pipe_out_name, sizeof(pipe_out_name),
+			 "/tmp/xeno-test-out-%u", (unsigned)child->pid);
+		unlink(pipe_out_name);
 		close(child->in);
+	}
 }
 
 struct child *child_search_pid(pid_t pid)
@@ -487,7 +504,16 @@ void handle_load_child(struct child *child, fd_set *fds)
 			if (sigexit)
 				return;
 
-			write(script.in, "0\n", 2);
+			if (script.in == -1) {
+				char pipe_in_name[256];
+				snprintf(pipe_in_name, sizeof(pipe_in_name),
+					 "/tmp/xeno-test-in-%u",
+					 (unsigned)script.pid);
+				fprintf(stderr, "pipe_in: %s\n", pipe_in_name);
+				script.in = open(pipe_in_name, O_WRONLY);
+			}
+			if (script.in != -1)
+				write(script.in, "0\n", 2);
 			termload_start = 0;
 		}
 	}
