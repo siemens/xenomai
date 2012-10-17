@@ -23,6 +23,8 @@
  * @{
 */
 
+#include <linux/mutex.h>
+
 #include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/intr.h>
 #include <cobalt/kernel/stat.h>
@@ -31,7 +33,7 @@
 
 #define XNINTR_MAX_UNHANDLED	1000
 
-DEFINE_PRIVATE_XNLOCK(intrlock);
+static DEFINE_MUTEX(intrlock);
 
 #ifdef CONFIG_XENO_OPT_STATS
 xnintr_t nktimer;	     /* Only for statistics */
@@ -723,7 +725,6 @@ EXPORT_SYMBOL_GPL(xnintr_destroy);
 int xnintr_attach(xnintr_t *intr, void *cookie)
 {
 	int ret;
-	spl_t s;
 
 	secondary_mode_only();
 
@@ -737,7 +738,7 @@ int xnintr_attach(xnintr_t *intr, void *cookie)
 	ipipe_set_irq_affinity(intr->irq, nkaffinity);
 #endif /* CONFIG_SMP */
 
-	xnlock_get_irqsave(&intrlock, s);
+	mutex_lock(&intrlock);
 
 	if (intr->flags & XN_ISR_ATTACHED) {
 		ret = -EBUSY;
@@ -751,7 +752,7 @@ int xnintr_attach(xnintr_t *intr, void *cookie)
 	intr->flags |= XN_ISR_ATTACHED;
 	stat_counter_inc();
 out:
-	xnlock_put_irqrestore(&intrlock, s);
+	mutex_lock(&intrlock);
 
 	return ret;
 }
@@ -784,13 +785,11 @@ EXPORT_SYMBOL_GPL(xnintr_attach);
  */
 void xnintr_detach(xnintr_t *intr)
 {
-	spl_t s;
-
 	secondary_mode_only();
 
 	trace_mark(xn_nucleus, irq_detach, "irq %u", intr->irq);
 
-	xnlock_get_irqsave(&intrlock, s);
+	mutex_lock(&intrlock);
 
 	if (intr->flags & XN_ISR_ATTACHED) {
 		intr->flags &= ~XN_ISR_ATTACHED;
@@ -798,7 +797,7 @@ void xnintr_detach(xnintr_t *intr)
 		stat_counter_dec();
 	}
 
-	xnlock_put_irqrestore(&intrlock, s);
+	mutex_unlock(&intrlock);
 }
 EXPORT_SYMBOL_GPL(xnintr_detach);
 
@@ -901,6 +900,15 @@ static inline int xnintr_is_timer_irq(int irq)
 }
 
 #ifdef CONFIG_XENO_OPT_STATS
+int xnintr_get_query_lock(void)
+{
+	return mutex_lock_interruptible(&intrlock) ? -ERESTARTSYS : 0;
+}
+
+void xnintr_put_query_lock(void)
+{
+	mutex_unlock(&intrlock);
+}
 
 int xnintr_query_init(xnintr_iterator_t *iterator)
 {
@@ -926,9 +934,8 @@ int xnintr_query_next(int irq, xnintr_iterator_t *iterator, char *name_buf)
 {
 	struct xnirqstat *statp;
 	xnticks_t last_switch;
-	int ret = 0, cpu;
 	xnintr_t *intr;
-	spl_t s;
+	int cpu;
 
 	for (cpu = iterator->cpu + 1; cpu < num_present_cpus(); ++cpu) {
 		if (cpu_online(cpu))
@@ -938,12 +945,8 @@ int xnintr_query_next(int irq, xnintr_iterator_t *iterator, char *name_buf)
 		cpu = 0;
 	iterator->cpu = cpu;
 
-	xnlock_get_irqsave(&intrlock, s);
-
-	if (iterator->list_rev != xnintr_list_rev) {
-		ret = -EAGAIN;
-		goto unlock_and_exit;
-	}
+	if (iterator->list_rev != xnintr_list_rev)
+		return -EAGAIN;
 
 	if (!iterator->prev) {
 		if (xnintr_is_timer_irq(irq))
@@ -956,8 +959,7 @@ int xnintr_query_next(int irq, xnintr_iterator_t *iterator, char *name_buf)
 	if (intr == NULL) {
 		cpu = -1;
 		iterator->prev = NULL;
-		ret = -ENODEV;
-		goto unlock_and_exit;
+		return -ENODEV;
 	}
 
 	snprintf(name_buf, XNOBJECT_NAME_LEN, "IRQ%d: %s", irq, intr->name);
@@ -979,10 +981,7 @@ int xnintr_query_next(int irq, xnintr_iterator_t *iterator, char *name_buf)
 	if (cpu + 1 == num_present_cpus())
 		iterator->prev = intr;
 
-unlock_and_exit:
-	xnlock_put_irqrestore(&intrlock, s);
-
-	return ret;
+	return 0;
 }
 #endif /* CONFIG_XENO_OPT_STATS */
 
@@ -994,7 +993,6 @@ static inline int format_irq_proc(unsigned int irq,
 				  struct xnvfile_regular_iterator *it)
 {
 	struct xnintr *intr;
-	spl_t s;
 	int cpu;
 
 	for_each_realtime_cpu(cpu)
@@ -1022,7 +1020,7 @@ static inline int format_irq_proc(unsigned int irq,
 		}
 	}
 
-	xnlock_get_irqsave(&intrlock, s);
+	mutex_lock(&intrlock);
 
 	intr = xnintr_shirq_first(irq);
 	if (intr) {
@@ -1035,7 +1033,7 @@ static inline int format_irq_proc(unsigned int irq,
 		} while (intr);
 	}
 
-	xnlock_put_irqrestore(&intrlock, s);
+	mutex_unlock(&intrlock);
 
 	return 0;
 }

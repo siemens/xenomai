@@ -998,6 +998,30 @@ static struct xnvfile_snapshot_ops vfile_schedlist_ops = {
 
 #ifdef CONFIG_XENO_OPT_STATS
 
+static spl_t vfile_schedstat_lock_s;
+
+static int vfile_schedstat_get_lock(struct xnvfile *vfile)
+{
+	int ret;
+
+	ret = xnintr_get_query_lock();
+	if (ret < 0)
+		return ret;
+	xnlock_get_irqsave(&nklock, vfile_schedstat_lock_s);
+	return 0;
+}
+
+static void vfile_schedstat_put_lock(struct xnvfile *vfile)
+{
+	xnlock_put_irqrestore(&nklock, vfile_schedstat_lock_s);
+	xnintr_put_query_lock();
+}
+
+static struct xnvfile_lock_ops vfile_schedstat_lockops = {
+	.get = vfile_schedstat_get_lock,
+	.put = vfile_schedstat_put_lock,
+};
+
 struct vfile_schedstat_priv {
 	int irq;
 	struct xnthread *curr;
@@ -1028,6 +1052,7 @@ static struct xnvfile_snapshot schedstat_vfile = {
 	.datasz = sizeof(struct vfile_schedstat_data),
 	.tag = &nkthreadlist_tag,
 	.ops = &vfile_schedstat_ops,
+	.entry = { .lockops = &vfile_schedstat_lockops },
 };
 
 static int vfile_schedstat_rewind(struct xnvfile_snapshot_iterator *it)

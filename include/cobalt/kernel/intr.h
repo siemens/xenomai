@@ -133,6 +133,10 @@ void xnintr_affinity(xnintr_t *intr,
 
 int xnintr_query_init(xnintr_iterator_t *iterator);
 
+int xnintr_get_query_lock(void);
+
+void xnintr_put_query_lock(void);
+
 int xnintr_query_next(int irq, xnintr_iterator_t *iterator,
 		      char *name_buf);
 
