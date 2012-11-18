@@ -5,7 +5,6 @@ APPLICATIONS = satch
 
 ### Note: to override the search path for the xeno-config script, use "make XENO=..."
 
-
 ### List of modules to be build
 MODULES = satch
 
@@ -14,7 +13,6 @@ MODULES = satch
 all::
 
 satch: satch.c
-
 
 ###### USER SPACE BUILD (no change required normally) ######
 ifeq ($(KERNELRELEASE),)
@@ -35,9 +33,10 @@ endif
 
 CC=$(shell $(XENOCONFIG) --cc)
 
-CFLAGS=-DCONSUMER $(shell $(XENOCONFIG) --skin=posix --cflags) $(APP_CFLAGS)
+CFLAGS=-DCONSUMER $(shell $(XENOCONFIG) --skin=posix --cflags) $(MY_CFLAGS)
 
-LDFLAGS=$(shell $(XENOCONFIG) --skin=posix --ldflags) $(APP_LDFLAGS)
+LDFLAGS=$(MY_LDFLAGS)
+LDLIBS=$(shell $(XENOCONFIG) --skin=posix --ldflags)
 
 # This includes the library path of given Xenomai into the binary to make live
 # easier for beginners if Xenomai's libs are not in any default search path.
@@ -55,7 +54,6 @@ endif
 
 ###### KERNEL MODULE BUILD (no change required normally) ######
 ifneq ($(MODULES),)
-
 ### Default to sources of currently running kernel
 KSRC ?= /lib/modules/$(shell uname -r)/build
 
@@ -65,12 +63,14 @@ PWD      := $(shell if [ "$$PWD" != "" ]; then echo $$PWD; else pwd; fi)
 
 ### Kernel 2.6 or 3.0
 PATCHLEVEL:=$(shell sed 's/PATCHLEVEL = \(.*\)/\1/;t;d' $(KSRC)/Makefile)
-ifneq ($(PATCHLEVEL),4)
+VERSION:=$(shell sed 's/VERSION = \(.*\)/\1/;t;d' $(KSRC)/Makefile)
+ifneq ($(VERSION).$(PATCHLEVEL),2.4)
 
 obj-m        := $(OBJS)
 EXTRA_CFLAGS := -DPRODUCER -I$(KSRC)/include/xenomai -I$(KSRC)/include/xenomai/posix $(ADD_CFLAGS)
 
 all::
+	echo $(MAKE) -C $(KSRC) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) SUBDIRS=$(PWD) modules
 	$(MAKE) -C $(KSRC) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) SUBDIRS=$(PWD) modules
 	$(RM) *.o
 
@@ -82,6 +82,7 @@ INCLUDE := -I$(KSRC)/include/xenomai -I$(KSRC)/include/xenomai/compat -I$(KSRC)/
 CFLAGS  += $(shell $(MAKE) -s -C $(KSRC) CC=$(CC) ARCH=$(ARCH) SUBDIRS=$(PWD) modules) $(INCLUDE)
 
 all:: $(OBJS)
+	/bin/false
 
 endif
 
