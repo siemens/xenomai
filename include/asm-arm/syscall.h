@@ -257,9 +257,9 @@ static inline unsigned long long __xn_rdtsc(void)
 	return __xn_tscinfo.kuser_tsc_get(__xn_tscinfo.kinfo.counter);
 
 #elif CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING
-	volatile unsigned long long *const tscp = __xn_tscinfo.tsc;
-	volatile unsigned *const counterp = __xn_tscinfo.counter;
-	const unsigned mask = __xn_tscinfo.mask;
+	volatile unsigned long long *const tscp = __xn_tscinfo.kinfo.tsc;
+	volatile unsigned *const counterp = __xn_tscinfo.kinfo.counter;
+	const unsigned mask = __xn_tscinfo.kinfo.mask;
 	register unsigned long long result;
 	unsigned counter;
 
@@ -272,9 +272,9 @@ static inline unsigned long long __xn_rdtsc(void)
 	return (result & ~((unsigned long long) mask)) | (counter & mask);
 
 #elif CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_COUNTDOWN
-	volatile unsigned long long *const tscp = __xn_tscinfo.tsc;
-	volatile unsigned *const counterp = __xn_tscinfo.counter;
-	const unsigned mask = __xn_tscinfo.mask;
+	volatile unsigned long long *const tscp = __xn_tscinfo.kinfo.tsc;
+	volatile unsigned *const counterp = __xn_tscinfo.kinfo.counter;
+	const unsigned mask = __xn_tscinfo.kinfo.mask;
 	register unsigned long long result;
 	unsigned counter;
 
@@ -287,9 +287,9 @@ static inline unsigned long long __xn_rdtsc(void)
 	return (result & ~((unsigned long long) mask)) | (counter & mask);
 
 #elif CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_FAST_WRAP
-	volatile unsigned long long *const tscp = __xn_tscinfo.tsc;
-	volatile unsigned *const counterp = __xn_tscinfo.counter;
-	const unsigned mask = __xn_tscinfo.mask;
+	volatile unsigned long long *const tscp = __xn_tscinfo.kinfo.tsc;
+	volatile unsigned *const counterp = __xn_tscinfo.kinfo.counter;
+	const unsigned mask = __xn_tscinfo.kinfo.mask;
 	register unsigned long long after, before;
 	unsigned counter;
 
@@ -305,10 +305,10 @@ static inline unsigned long long __xn_rdtsc(void)
 	return (before & ~((unsigned long long) mask)) | (counter & mask);
 
 #elif CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_DECREMENTER
-	volatile unsigned long long *const tscp = __xn_tscinfo.tsc;
-	volatile unsigned *const counterp = __xn_tscinfo.counter;
-	volatile unsigned *const last_cntp = __xn_tscinfo.last_cnt;
-	const unsigned mask = __xn_tscinfo.mask;
+	volatile unsigned long long *const tscp = __xn_tscinfo.kinfo.tsc;
+	volatile unsigned *const counterp = __xn_tscinfo.kinfo.counter;
+	volatile unsigned *const last_cntp = __xn_tscinfo.kinfo.last_cnt;
+	const unsigned mask = __xn_tscinfo.kinfo.mask;
 	register unsigned long long after, before;
 	unsigned counter, last_cnt;
 
