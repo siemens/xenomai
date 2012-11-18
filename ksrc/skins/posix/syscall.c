@@ -435,9 +435,11 @@ static int __pthread_set_name_np(struct pt_regs *regs)
 	hkey.u_tid = __xn_reg_arg1(regs);
 	hkey.mm = current->mm;
 	k_tid = __pthread_find(&hkey);
-	p = xnthread_user_task(&k_tid->threadbase);
-	strncpy(p->comm, name, sizeof(p->comm));
-	p->comm[sizeof(p->comm) - 1] = '\0';
+	if (k_tid) {
+		p = xnthread_user_task(&k_tid->threadbase);
+		strncpy(p->comm, name, sizeof(p->comm));
+		p->comm[sizeof(p->comm) - 1] = '\0';
+	}
 
 	return -pthread_set_name_np(k_tid, name);
 }
