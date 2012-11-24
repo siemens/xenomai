@@ -98,6 +98,8 @@ typedef atomic_t xnarch_atomic_t;
 
 #else /* !__KERNEL__ */
 
+#include <xeno_config.h>
+
 #ifndef __powerpc64__
 typedef struct { unsigned int counter; } xnarch_atomic_t;
 /* Always enable the work-around for 405 boards in user-space for
