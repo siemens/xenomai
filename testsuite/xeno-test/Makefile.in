@@ -275,7 +275,7 @@ pkgdir = $(pkgdatadir)
 test_SCRIPTS = xeno-test-run-wrapper dohell
 bin_SCRIPTS = xeno-test
 xeno_test_run_CPPFLAGS = -DTESTDIR=\"$(testdir)\" -D_GNU_SOURCE
-xeno_test_run_LDADD = -lrt
+xeno_test_run_LDADD = -lpthread -lrt
 EXTRA_DIST = $(test_SCRIPTS) xeno-test.in
 CLEANFILES = xeno-test
 all: all-am
