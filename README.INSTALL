@@ -172,11 +172,12 @@ Xenomai deals with tolerated discrepancies is decided on a case-by-case basis,
 depending on the option considered. When not applicable, the binding type
 remains unspecified.
 
-For instance, a kernel providing SMP support can run either UP or SMP
-user-space applications since the SMP option’s binding is weak. On the other
-hand, x86-based applications linked against Xenomai libraries which have been
-compiled with the x86-tsc option on, must run on a kernel built with
-CONFIG_X86_TSC set, since the x86-tsc option’s binding is strong.
+For instance, UP and SMP-enabled kernels can run either UP or
+SMP-enabled user-space applications indifferently, since the SMP
+option’s binding is weak. On the other hand, x86-based applications
+linked against Xenomai libraries which have been compiled with the
+x86-tsc option on, must run on a kernel built with CONFIG_X86_TSC set,
+since the x86-tsc option’s binding is strong.
 
 
 2.3.2. Generic configure options
@@ -188,7 +189,22 @@ CONFIG_X86_TSC set, since the x86-tsc option’s binding is strong.
 
 --enable-debug  Enable debug symbols (-g)  disabled
 
---enable-smp    Enable SMP support         weak, disabled
+--enable-smp    Enable SMP support         weak(*)
+
+(*) The SMP switch is used to tell the build system whether CPU
+synchronization instructions should be emitted in atomic constructs
+appearing in some Xenomai libraries, enabling them for SMP
+execution. This feature is turned on by default on all SMP-enabled
+architectures Xenomai supports except ARM, i.e. x86_32/64 and
+powerpc_32/64.  One may override this default setting by passing
+--disable-smp explicitely for those architectures.
+
+Xenomai code for running over SMP-enabled ARM platforms must still be
+explicitely configured with --enable-smp.
+
+SMP-enabled userland code may run over SMP or UP kernels. However,
+Xenomai will deny running UP-only userland code (i.e. when
+--disable-smp is in effect) over an SMP kernel.
 
 
 2.3.3. Arch-specific configure options
@@ -301,12 +317,9 @@ Enable Xenomai options, then install as needed with:
 
 $ make [ARCH=i386] bzImage modules
 $ mkdir $build_root && cd $build_root
-$ $xenomai_root/configure --enable-x86-sep (*) \
+$ $xenomai_root/configure --enable-x86-sep \
   [--host=i686-linux CFLAGS="-m32 -O2" LDFLAGS="-m32"]
 $ make install
-
-(*) Make sure to pass --enable-smp as well if building for a SMP-capable
-system.
 
 Now, let’s say that you really want to build Xenomai for a Pentium-based x86
 32bit platform running a legacy 2.6.23 kernel, using the native host toolchain;
@@ -400,7 +413,7 @@ $ make ARCH=powerpc CROSS_COMPILE=powerpc64-linux-
 …manually install the vmlinux image and modules to the proper location
 
 $ cd $build_root
-$ $xenomai_root/configure --enable-smp --host=powerpc64-linux \
+$ $xenomai_root/configure --host=powerpc64-linux \
   CC=powerpc64-linux-gcc AR=powerpc64-linux-ar LD=powerpc64-linux-ld
 $ make DESTDIR=$staging_dir install
 

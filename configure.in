@@ -145,12 +145,15 @@ AC_ARG_ENABLE(debug,
 	esac])
 AC_MSG_RESULT(${debug_symbols:-no})
 
-dnl SMP support (default: off)
+dnl SMP support (default: on for all SMP-capable architecture except
+dnl ARM, off otherwise)
 
-CONFIG_SMP=
-if test $XENO_TARGET_ARCH = x86; then
-	CONFIG_SMP=y
-fi
+case $XENO_TARGET_ARCH in
+x86|powerpc)
+	CONFIG_SMP=y ;;
+*)
+	unset CONFIG_SMP ;;
+esac
 AC_MSG_CHECKING(for SMP support)
 AC_ARG_ENABLE(smp,
 	AS_HELP_STRING([--enable-smp], [Enable SMP support]),
