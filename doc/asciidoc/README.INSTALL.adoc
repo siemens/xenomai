@@ -176,7 +176,7 @@ footnoteref:[disable]
 		       to tell the build system whether
 		       CPU synchronization instructions
 		       should be emitted in atomic 
-		       constructts appearing in some
+		       constructs appearing in some
 		       Xenomai libraries, enabling them
 		       for SMP execution. This feature
 		       is turned on by default on all 
@@ -184,15 +184,15 @@ footnoteref:[disable]
 		       supports, i.e. x86_32/64, 
 		       powerpc_32/64 and ARM. One may
 		       override this default setting
-		       by passing --disable-smp explicitely
+		       by passing +--disable-smp+ explicitely
 		       for those architectures.
 
 		       SMP-enabled userland code may run
 		       over SMP or UP kernels. However,
 		       Xenomai will deny running UP-only
-		       userland code (i.e. when --disable-smp
+		       userland code (i.e. when +--disable-smp+
 		       is in effect) over an SMP kernel.]
-		      	      	  		       |weak, disabled
+		      	      	  		       |weak
 |============================================================================
 
 

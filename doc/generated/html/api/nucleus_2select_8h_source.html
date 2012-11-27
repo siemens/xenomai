@@ -51,80 +51,119 @@
 <a name="l00045"></a>00045         xnqueue_t bindings; <span class="comment">/* only used by xnselector_destroy */</span>
 <a name="l00046"></a>00046 };
 <a name="l00047"></a>00047 
-<a name="l00048"></a>00048 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_SELECT</span>
-<a name="l00049"></a>00049 <span class="preprocessor"></span>
-<a name="l00050"></a>00050 <span class="keyword">struct </span><a class="code" href="group__select.html#ga4af23e0a42dbc61a04be36d5739a165f" title="Check the state of a number of file descriptors, wait for a state change if no descriptor is ready...">xnselect</a> {
-<a name="l00051"></a>00051         xnqueue_t bindings;
-<a name="l00052"></a>00052 };
-<a name="l00053"></a>00053 
-<a name="l00054"></a>00054 <span class="preprocessor">#define DECLARE_XNSELECT(name) struct xnselect name</span>
-<a name="l00055"></a>00055 <span class="preprocessor"></span>
-<a name="l00056"></a>00056 <span class="keyword">struct </span>xnselect_binding {
-<a name="l00057"></a>00057         <span class="keyword">struct </span>xnselector *selector;
-<a name="l00058"></a>00058         <span class="keyword">struct </span><a class="code" href="group__select.html#ga4af23e0a42dbc61a04be36d5739a165f" title="Check the state of a number of file descriptors, wait for a state change if no descriptor is ready...">xnselect</a> *fd;
-<a name="l00059"></a>00059         <span class="keywordtype">unsigned</span> type;
-<a name="l00060"></a>00060         <span class="keywordtype">unsigned</span> bit_index;
-<a name="l00061"></a>00061         xnholder_t link;  <span class="comment">/* link in selected fds list. */</span>
-<a name="l00062"></a>00062         xnholder_t slink; <span class="comment">/* link in selector list */</span>
-<a name="l00063"></a>00063 };
-<a name="l00064"></a>00064 
-<a name="l00065"></a>00065 <span class="preprocessor">#ifdef __cplusplus</span>
-<a name="l00066"></a>00066 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {
-<a name="l00067"></a>00067 <span class="preprocessor">#endif </span><span class="comment">/* __cplusplus */</span>
-<a name="l00068"></a>00068 
-<a name="l00069"></a>00069 <span class="keywordtype">void</span> <a class="code" href="group__select.html#ga80b33cc02e860dc6ffbd08e8da376e5b" title="Initialize a struct xnselect structure.">xnselect_init</a>(<span class="keyword">struct</span> <a class="code" href="group__select.html#ga4af23e0a42dbc61a04be36d5739a165f" title="Check the state of a number of file descriptors, wait for a state change if no descriptor is ready...">xnselect</a> *select_block);
-<a name="l00070"></a>00070 
-<a name="l00071"></a>00071 <span class="keywordtype">int</span> <a class="code" href="group__select.html#ga8546a4a6f997a8c29451673d5b7f0e86" title="Bind a file descriptor (represented by its xnselect structure) to a selector block.">xnselect_bind</a>(<span class="keyword">struct</span> <a class="code" href="group__select.html#ga4af23e0a42dbc61a04be36d5739a165f" title="Check the state of a number of file descriptors, wait for a state change if no descriptor is ready...">xnselect</a> *select_block,
-<a name="l00072"></a>00072                   <span class="keyword">struct</span> xnselect_binding *binding,
-<a name="l00073"></a>00073                   <span class="keyword">struct</span> xnselector *selector,
-<a name="l00074"></a>00074                   <span class="keywordtype">unsigned</span> type,
-<a name="l00075"></a>00075                   <span class="keywordtype">unsigned</span> bit_index,
-<a name="l00076"></a>00076                   <span class="keywordtype">unsigned</span> state);
-<a name="l00077"></a>00077 
-<a name="l00078"></a>00078 <span class="keywordtype">int</span> __xnselect_signal(<span class="keyword">struct</span> <a class="code" href="group__select.html#ga4af23e0a42dbc61a04be36d5739a165f" title="Check the state of a number of file descriptors, wait for a state change if no descriptor is ready...">xnselect</a> *select_block, <span class="keywordtype">unsigned</span> state);
-<a name="l00079"></a>00079 
-<a name="l00090"></a>00090 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span>
-<a name="l00091"></a>00091 xnselect_signal(<span class="keyword">struct</span> <a class="code" href="group__select.html#ga4af23e0a42dbc61a04be36d5739a165f" title="Check the state of a number of file descriptors, wait for a state change if no descriptor is ready...">xnselect</a> *select_block, <span class="keywordtype">unsigned</span> state)
-<a name="l00092"></a>00092 {
-<a name="l00093"></a>00093         <span class="keywordflow">if</span> (!emptyq_p(&amp;select_block-&gt;bindings))
-<a name="l00094"></a>00094                 <span class="keywordflow">return</span> __xnselect_signal(select_block, state);
-<a name="l00095"></a>00095         <span class="keywordflow">return</span> 0;
-<a name="l00096"></a>00096 }
-<a name="l00097"></a>00097 
-<a name="l00098"></a>00098 <span class="keywordtype">void</span> <a class="code" href="group__select.html#ga56e4b5bf3e35dd80c23e95cad8fa1614" title="Destroy the xnselect structure associated with a file descriptor.">xnselect_destroy</a>(<span class="keyword">struct</span> <a class="code" href="group__select.html#ga4af23e0a42dbc61a04be36d5739a165f" title="Check the state of a number of file descriptors, wait for a state change if no descriptor is ready...">xnselect</a> *select_block);
-<a name="l00099"></a>00099 
-<a name="l00100"></a>00100 <span class="keywordtype">int</span> <a class="code" href="group__select.html#gaf5576af13d5ffd6056311c2746a706a0" title="Initialize a selector structure.">xnselector_init</a>(<span class="keyword">struct</span> xnselector *selector);
-<a name="l00101"></a>00101 
-<a name="l00102"></a>00102 <span class="keywordtype">int</span> <a class="code" href="group__select.html#ga4af23e0a42dbc61a04be36d5739a165f" title="Check the state of a number of file descriptors, wait for a state change if no descriptor is ready...">xnselect</a>(<span class="keyword">struct</span> xnselector *selector,
-<a name="l00103"></a>00103              fd_set *out_fds[XNSELECT_MAX_TYPES],
-<a name="l00104"></a>00104              fd_set *in_fds[XNSELECT_MAX_TYPES],
-<a name="l00105"></a>00105              <span class="keywordtype">int</span> nfds,
-<a name="l00106"></a>00106              xnticks_t timeout, xntmode_t timeout_mode);
+<a name="l00048"></a>00048 <span class="preprocessor">#define __NFDBITS__     (8 * sizeof(unsigned long))</span>
+<a name="l00049"></a>00049 <span class="preprocessor"></span><span class="preprocessor">#define __FDSET_LONGS__ (__FD_SETSIZE/__NFDBITS__)</span>
+<a name="l00050"></a>00050 <span class="preprocessor"></span><span class="preprocessor">#define __FDELT__(d)    ((d) / __NFDBITS__)</span>
+<a name="l00051"></a>00051 <span class="preprocessor"></span><span class="preprocessor">#define __FDMASK__(d)   (1UL &lt;&lt; ((d) % __NFDBITS__))</span>
+<a name="l00052"></a>00052 <span class="preprocessor"></span>
+<a name="l00053"></a>00053 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> __FD_SET__(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> __fd, __kernel_fd_set *__fdsetp)
+<a name="l00054"></a>00054 {
+<a name="l00055"></a>00055         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> __tmp = __fd / __NFDBITS__;
+<a name="l00056"></a>00056         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> __rem = __fd % __NFDBITS__;
+<a name="l00057"></a>00057         __fdsetp-&gt;fds_bits[__tmp] |= (1UL&lt;&lt;__rem);
+<a name="l00058"></a>00058 }
+<a name="l00059"></a>00059 
+<a name="l00060"></a>00060 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> __FD_CLR__(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> __fd, __kernel_fd_set *__fdsetp)
+<a name="l00061"></a>00061 {
+<a name="l00062"></a>00062         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> __tmp = __fd / __NFDBITS__;
+<a name="l00063"></a>00063         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> __rem = __fd % __NFDBITS__;
+<a name="l00064"></a>00064         __fdsetp-&gt;fds_bits[__tmp] &amp;= ~(1UL&lt;&lt;__rem);
+<a name="l00065"></a>00065 }
+<a name="l00066"></a>00066 
+<a name="l00067"></a>00067 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> __FD_ISSET__(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> __fd, <span class="keyword">const</span> __kernel_fd_set *__p)
+<a name="l00068"></a>00068 {
+<a name="l00069"></a>00069         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> __tmp = __fd / __NFDBITS__;
+<a name="l00070"></a>00070         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> __rem = __fd % __NFDBITS__;
+<a name="l00071"></a>00071         <span class="keywordflow">return</span> (__p-&gt;fds_bits[__tmp] &amp; (1UL&lt;&lt;__rem)) != 0;
+<a name="l00072"></a>00072 }
+<a name="l00073"></a>00073 
+<a name="l00074"></a>00074 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> __FD_ZERO__(__kernel_fd_set *__p)
+<a name="l00075"></a>00075 {
+<a name="l00076"></a>00076         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *__tmp = __p-&gt;fds_bits;
+<a name="l00077"></a>00077         <span class="keywordtype">int</span> __i;
+<a name="l00078"></a>00078 
+<a name="l00079"></a>00079         __i = __FDSET_LONGS__;
+<a name="l00080"></a>00080         <span class="keywordflow">while</span> (__i) {
+<a name="l00081"></a>00081                 __i--;
+<a name="l00082"></a>00082                 *__tmp = 0;
+<a name="l00083"></a>00083                 __tmp++;
+<a name="l00084"></a>00084         }
+<a name="l00085"></a>00085 }
+<a name="l00086"></a>00086 
+<a name="l00087"></a>00087 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_SELECT</span>
+<a name="l00088"></a>00088 <span class="preprocessor"></span>
+<a name="l00089"></a>00089 <span class="keyword">struct </span><a class="code" href="group__select.html#ga4af23e0a42dbc61a04be36d5739a165f" title="Check the state of a number of file descriptors, wait for a state change if no descriptor is ready...">xnselect</a> {
+<a name="l00090"></a>00090         xnqueue_t bindings;
+<a name="l00091"></a>00091 };
+<a name="l00092"></a>00092 
+<a name="l00093"></a>00093 <span class="preprocessor">#define DECLARE_XNSELECT(name) struct xnselect name</span>
+<a name="l00094"></a>00094 <span class="preprocessor"></span>
+<a name="l00095"></a>00095 <span class="keyword">struct </span>xnselect_binding {
+<a name="l00096"></a>00096         <span class="keyword">struct </span>xnselector *selector;
+<a name="l00097"></a>00097         <span class="keyword">struct </span><a class="code" href="group__select.html#ga4af23e0a42dbc61a04be36d5739a165f" title="Check the state of a number of file descriptors, wait for a state change if no descriptor is ready...">xnselect</a> *fd;
+<a name="l00098"></a>00098         <span class="keywordtype">unsigned</span> type;
+<a name="l00099"></a>00099         <span class="keywordtype">unsigned</span> bit_index;
+<a name="l00100"></a>00100         xnholder_t link;  <span class="comment">/* link in selected fds list. */</span>
+<a name="l00101"></a>00101         xnholder_t slink; <span class="comment">/* link in selector list */</span>
+<a name="l00102"></a>00102 };
+<a name="l00103"></a>00103 
+<a name="l00104"></a>00104 <span class="preprocessor">#ifdef __cplusplus</span>
+<a name="l00105"></a>00105 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {
+<a name="l00106"></a>00106 <span class="preprocessor">#endif </span><span class="comment">/* __cplusplus */</span>
 <a name="l00107"></a>00107 
-<a name="l00108"></a>00108 <span class="keywordtype">void</span> <a class="code" href="group__select.html#ga9f4741ca8d6794f1b45478a24b1104de" title="Destroy a selector block.">xnselector_destroy</a>(<span class="keyword">struct</span> xnselector *selector);
+<a name="l00108"></a>00108 <span class="keywordtype">void</span> <a class="code" href="group__select.html#ga80b33cc02e860dc6ffbd08e8da376e5b" title="Initialize a struct xnselect structure.">xnselect_init</a>(<span class="keyword">struct</span> <a class="code" href="group__select.html#ga4af23e0a42dbc61a04be36d5739a165f" title="Check the state of a number of file descriptors, wait for a state change if no descriptor is ready...">xnselect</a> *select_block);
 <a name="l00109"></a>00109 
-<a name="l00110"></a>00110 <span class="keywordtype">int</span> xnselect_mount(<span class="keywordtype">void</span>);
-<a name="l00111"></a>00111 
-<a name="l00112"></a>00112 <span class="keywordtype">int</span> xnselect_umount(<span class="keywordtype">void</span>);
-<a name="l00113"></a>00113 
-<a name="l00114"></a>00114 <span class="preprocessor">#ifdef __cplusplus</span>
-<a name="l00115"></a>00115 <span class="preprocessor"></span>}
-<a name="l00116"></a>00116 <span class="preprocessor">#endif </span><span class="comment">/* __cplusplus */</span>
-<a name="l00117"></a>00117 
-<a name="l00118"></a>00118 <span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_OPT_SELECT */</span>
-<a name="l00119"></a>00119 <span class="keyword">struct </span>xnselector;
-<a name="l00120"></a>00120 <span class="preprocessor">#define DECLARE_XNSELECT(name)</span>
-<a name="l00121"></a>00121 <span class="preprocessor"></span><span class="preprocessor">#define xnselect_init(block)</span>
-<a name="l00122"></a>00122 <span class="preprocessor"></span><span class="preprocessor">#define xnselect_bind(select_block,binding,selector,type,bit_index,state) \</span>
-<a name="l00123"></a>00123 <span class="preprocessor">        ({ -EBADF; })</span>
-<a name="l00124"></a>00124 <span class="preprocessor"></span><span class="preprocessor">#define xnselect_signal(block, state) ({ int __ret = 0; __ret; })</span>
-<a name="l00125"></a>00125 <span class="preprocessor"></span><span class="preprocessor">#define xnselect_destroy(block)</span>
-<a name="l00126"></a>00126 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* !CONFIG_XENO_OPT_SELECT */</span>
-<a name="l00127"></a>00127 
-<a name="l00130"></a>00130 <span class="preprocessor">#endif </span><span class="comment">/* XNSELECT_H */</span>
+<a name="l00110"></a>00110 <span class="keywordtype">int</span> <a class="code" href="group__select.html#ga8546a4a6f997a8c29451673d5b7f0e86" title="Bind a file descriptor (represented by its xnselect structure) to a selector block.">xnselect_bind</a>(<span class="keyword">struct</span> <a class="code" href="group__select.html#ga4af23e0a42dbc61a04be36d5739a165f" title="Check the state of a number of file descriptors, wait for a state change if no descriptor is ready...">xnselect</a> *select_block,
+<a name="l00111"></a>00111                   <span class="keyword">struct</span> xnselect_binding *binding,
+<a name="l00112"></a>00112                   <span class="keyword">struct</span> xnselector *selector,
+<a name="l00113"></a>00113                   <span class="keywordtype">unsigned</span> type,
+<a name="l00114"></a>00114                   <span class="keywordtype">unsigned</span> bit_index,
+<a name="l00115"></a>00115                   <span class="keywordtype">unsigned</span> state);
+<a name="l00116"></a>00116 
+<a name="l00117"></a>00117 <span class="keywordtype">int</span> __xnselect_signal(<span class="keyword">struct</span> <a class="code" href="group__select.html#ga4af23e0a42dbc61a04be36d5739a165f" title="Check the state of a number of file descriptors, wait for a state change if no descriptor is ready...">xnselect</a> *select_block, <span class="keywordtype">unsigned</span> state);
+<a name="l00118"></a>00118 
+<a name="l00129"></a>00129 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span>
+<a name="l00130"></a>00130 xnselect_signal(<span class="keyword">struct</span> <a class="code" href="group__select.html#ga4af23e0a42dbc61a04be36d5739a165f" title="Check the state of a number of file descriptors, wait for a state change if no descriptor is ready...">xnselect</a> *select_block, <span class="keywordtype">unsigned</span> state)
+<a name="l00131"></a>00131 {
+<a name="l00132"></a>00132         <span class="keywordflow">if</span> (!emptyq_p(&amp;select_block-&gt;bindings))
+<a name="l00133"></a>00133                 <span class="keywordflow">return</span> __xnselect_signal(select_block, state);
+<a name="l00134"></a>00134         <span class="keywordflow">return</span> 0;
+<a name="l00135"></a>00135 }
+<a name="l00136"></a>00136 
+<a name="l00137"></a>00137 <span class="keywordtype">void</span> <a class="code" href="group__select.html#ga56e4b5bf3e35dd80c23e95cad8fa1614" title="Destroy the xnselect structure associated with a file descriptor.">xnselect_destroy</a>(<span class="keyword">struct</span> <a class="code" href="group__select.html#ga4af23e0a42dbc61a04be36d5739a165f" title="Check the state of a number of file descriptors, wait for a state change if no descriptor is ready...">xnselect</a> *select_block);
+<a name="l00138"></a>00138 
+<a name="l00139"></a>00139 <span class="keywordtype">int</span> <a class="code" href="group__select.html#gaf5576af13d5ffd6056311c2746a706a0" title="Initialize a selector structure.">xnselector_init</a>(<span class="keyword">struct</span> xnselector *selector);
+<a name="l00140"></a>00140 
+<a name="l00141"></a>00141 <span class="keywordtype">int</span> <a class="code" href="group__select.html#ga4af23e0a42dbc61a04be36d5739a165f" title="Check the state of a number of file descriptors, wait for a state change if no descriptor is ready...">xnselect</a>(<span class="keyword">struct</span> xnselector *selector,
+<a name="l00142"></a>00142              fd_set *out_fds[XNSELECT_MAX_TYPES],
+<a name="l00143"></a>00143              fd_set *in_fds[XNSELECT_MAX_TYPES],
+<a name="l00144"></a>00144              <span class="keywordtype">int</span> nfds,
+<a name="l00145"></a>00145              xnticks_t timeout, xntmode_t timeout_mode);
+<a name="l00146"></a>00146 
+<a name="l00147"></a>00147 <span class="keywordtype">void</span> <a class="code" href="group__select.html#ga9f4741ca8d6794f1b45478a24b1104de" title="Destroy a selector block.">xnselector_destroy</a>(<span class="keyword">struct</span> xnselector *selector);
+<a name="l00148"></a>00148 
+<a name="l00149"></a>00149 <span class="keywordtype">int</span> xnselect_mount(<span class="keywordtype">void</span>);
+<a name="l00150"></a>00150 
+<a name="l00151"></a>00151 <span class="keywordtype">int</span> xnselect_umount(<span class="keywordtype">void</span>);
+<a name="l00152"></a>00152 
+<a name="l00153"></a>00153 <span class="preprocessor">#ifdef __cplusplus</span>
+<a name="l00154"></a>00154 <span class="preprocessor"></span>}
+<a name="l00155"></a>00155 <span class="preprocessor">#endif </span><span class="comment">/* __cplusplus */</span>
+<a name="l00156"></a>00156 
+<a name="l00157"></a>00157 <span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_OPT_SELECT */</span>
+<a name="l00158"></a>00158 <span class="keyword">struct </span>xnselector;
+<a name="l00159"></a>00159 <span class="preprocessor">#define DECLARE_XNSELECT(name)</span>
+<a name="l00160"></a>00160 <span class="preprocessor"></span><span class="preprocessor">#define xnselect_init(block)</span>
+<a name="l00161"></a>00161 <span class="preprocessor"></span><span class="preprocessor">#define xnselect_bind(select_block,binding,selector,type,bit_index,state) \</span>
+<a name="l00162"></a>00162 <span class="preprocessor">        ({ -EBADF; })</span>
+<a name="l00163"></a>00163 <span class="preprocessor"></span><span class="preprocessor">#define xnselect_signal(block, state) ({ int __ret = 0; __ret; })</span>
+<a name="l00164"></a>00164 <span class="preprocessor"></span><span class="preprocessor">#define xnselect_destroy(block)</span>
+<a name="l00165"></a>00165 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* !CONFIG_XENO_OPT_SELECT */</span>
+<a name="l00166"></a>00166 
+<a name="l00169"></a>00169 <span class="preprocessor">#endif </span><span class="comment">/* XNSELECT_H */</span>
 </pre></div></div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Tue Aug 21 2012 23:32:40 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Tue Nov 27 2012 23:52:24 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

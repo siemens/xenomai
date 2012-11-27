@@ -172,39 +172,34 @@ Xenomai deals with tolerated discrepancies is decided on a case-by-case basis,
 depending on the option considered. When not applicable, the binding type
 remains unspecified.
 
-For instance, UP and SMP-enabled kernels can run either UP or
-SMP-enabled user-space applications indifferently, since the SMP
-option’s binding is weak. On the other hand, x86-based applications
-linked against Xenomai libraries which have been compiled with the
-x86-tsc option on, must run on a kernel built with CONFIG_X86_TSC set,
-since the x86-tsc option’s binding is strong.
+For instance, UP and SMP-enabled kernels can run either UP or SMP-enabled
+user-space applications indifferently, since the SMP option’s binding is weak.
+On the other hand, x86-based applications linked against Xenomai libraries
+which have been compiled with the x86-tsc option on, must run on a kernel built
+with CONFIG_X86_TSC set, since the x86-tsc option’s binding is strong.
 
 
 2.3.2. Generic configure options
 --------------------------------
 
-     NAME              DESCRIPTION         [BINDING,] DEFAULT ^[a]
+       NAME                   DESCRIPTION             [BINDING,] DEFAULT ^[a]
 
---prefix        Installation directory     /usr/xenomai
+--prefix             Installation directory         /usr/xenomai
 
---enable-debug  Enable debug symbols (-g)  disabled
+--enable-debug       Enable debug symbols (-g)      disabled
 
---enable-smp    Enable SMP support         weak(*)
+--enable-smp         Enable SMP support ^[a]        weak
 
-(*) The SMP switch is used to tell the build system whether CPU
-synchronization instructions should be emitted in atomic constructs
-appearing in some Xenomai libraries, enabling them for SMP
-execution. This feature is turned on by default on all SMP-enabled
-architectures Xenomai supports except ARM, i.e. x86_32/64 and
-powerpc_32/64.  One may override this default setting by passing
---disable-smp explicitely for those architectures.
+^[a] The SMP switch is used to tell the build system whether CPU
+synchronization instructions should be emitted in atomic constructs appearing
+in some Xenomai libraries, enabling them for SMP execution. This feature is
+turned on by default on all SMP-enabled architecture Xenomai supports, i.e.
+x86_32/64, powerpc_32/64 and ARM. One may override this default setting by
+passing --disable-smp explicitely for those architectures.
 
-Xenomai code for running over SMP-enabled ARM platforms must still be
-explicitely configured with --enable-smp.
-
-SMP-enabled userland code may run over SMP or UP kernels. However,
-Xenomai will deny running UP-only userland code (i.e. when
---disable-smp is in effect) over an SMP kernel.
+SMP-enabled userland code may run over SMP or UP kernels. However, Xenomai will
+deny running UP-only userland code (i.e. when --disable-smp is in effect) over
+an SMP kernel.
 
 
 2.3.3. Arch-specific configure options
@@ -527,13 +522,13 @@ imx31         -march=armv6 -mfpu=vfp
 
 imx51/imx53   -march=armv7-a -mfpu=vfp3 ^[a]
 
-imx6q         -march=armv7-a -mfpu=vfp3 ^[a]     --enable-smp
+imx6q         -march=armv7-a -mfpu=vfp3 ^[a]
 
 ixp4xx        -march=armv5 -msoft-float          --enable-arm-tsc=ixp4xx
 
 omap3         -march=armv7-a -mfpu=vfp3 ^[a]
 
-omap4         -march=armv7-a -mfpu=vfp3 ^[a]     --enable-smp
+omap4         -march=armv7-a -mfpu=vfp3 ^[a]
 
 orion         -march=armv5 -mfpu=vfp
 

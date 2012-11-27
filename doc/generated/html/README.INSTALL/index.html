@@ -164,12 +164,12 @@ reported and the execution stops immediately in such a case.</p></div>
 "weak". The way Xenomai deals with tolerated discrepancies is decided
 on a case-by-case basis, depending on the option considered. When
 not applicable, the binding type remains unspecified.</p></div>
-<div class="paragraph"><p>For instance, a kernel providing SMP support can run either UP or SMP
-user-space applications since the SMP option&#8217;s binding is weak. On the
-other hand, x86-based applications linked against Xenomai libraries
-which have been compiled with the x86-tsc option on, must run on a
-kernel built with <tt>CONFIG_X86_TSC</tt> set, since the x86-tsc option&#8217;s
-binding is strong.</p></div>
+<div class="paragraph"><p>For instance, UP and SMP-enabled kernels can run either UP or
+SMP-enabled user-space applications indifferently, since the SMP
+option&#8217;s binding is weak. On the other hand, x86-based applications
+linked against Xenomai libraries which have been compiled with the
+x86-tsc option on, must run on a kernel built with CONFIG_X86_TSC set,
+since the x86-tsc option&#8217;s binding is strong.</p></div>
 <h4 id="_generic_configure_options">2.3.2. Generic configure options</h4>
 <div class="tableblock">
 <table rules="cols"
@@ -200,8 +200,27 @@ cellspacing="0" cellpadding="4">
 </tr>
 <tr>
 <td align="left" valign="top"><p class="table"><tt>--enable-smp</tt></p></td>
-<td align="left" valign="top"><p class="table">Enable SMP support</p></td>
-<td align="left" valign="top"><p class="table">weak, disabled</p></td>
+<td align="left" valign="top"><p class="table">Enable SMP support
+                       <span class="footnote"><br />[The SMP switch is used
+                       to tell the build system whether
+                       CPU synchronization instructions
+                       should be emitted in atomic
+                       constructs appearing in some
+                       Xenomai libraries, enabling them
+                       for SMP execution. This feature
+                       is turned on by default on all
+                       SMP-enabled architecture Xenomai
+                       supports, i.e. x86_32/64,
+                       powerpc_32/64 and ARM. One may
+                       override this default setting
+                       by passing <tt>--disable-smp</tt> explicitely
+                       for those architectures.</p>
+<p class="table">                       SMP-enabled userland code may run
+                       over SMP or UP kernels. However,
+                       Xenomai will deny running UP-only
+                       userland code (i.e. when <tt>--disable-smp</tt>
+                       is in effect) over an SMP kernel.]<br /></span></p></td>
+<td align="left" valign="top"><p class="table">weak</p></td>
 </tr>
 </tbody>
 </table>
@@ -373,12 +392,10 @@ $ make [ARCH=i386] xconfig/gconfig/menuconfig</tt></pre>
 <div class="content">
 <pre><tt>$ make [ARCH=i386] bzImage modules
 $ mkdir $build_root &amp;&amp; cd $build_root
-$ $xenomai_root/configure --enable-x86-sep (*) \
+$ $xenomai_root/configure --enable-x86-sep \
   [--host=i686-linux CFLAGS="-m32 -O2" LDFLAGS="-m32"]
 $ make install</tt></pre>
 </div></div>
-<div class="paragraph"><p>(*) Make sure to pass --enable-smp as well if building for a SMP-capable
-system.</p></div>
 <div class="paragraph"><p>Now, let&#8217;s say that you really want to build Xenomai for a
 Pentium-based x86 32bit platform running a legacy 2.6.23 kernel, using
 the native host toolchain; the typical steps would be as follows:</p></div>
@@ -475,7 +492,7 @@ $ make ARCH=powerpc CROSS_COMPILE=powerpc64-linux- xconfig/gconfig/menuconfig</t
 <div class="listingblock">
 <div class="content">
 <pre><tt>$ cd $build_root
-$ $xenomai_root/configure --enable-smp --host=powerpc64-linux \
+$ $xenomai_root/configure --host=powerpc64-linux \
   CC=powerpc64-linux-gcc AR=powerpc64-linux-ar LD=powerpc64-linux-ld
 $ make DESTDIR=$staging_dir install</tt></pre>
 </div></div>
@@ -638,7 +655,7 @@ cellspacing="0" cellpadding="4">
 <tr>
 <td align="left" valign="top"><p class="table">imx6q</p></td>
 <td align="left" valign="top"><p class="table"><tt>-march=armv7-a -mfpu=vfp3</tt> <span class="footnoteref"><br /><a href="#_footnote_armv7">[armv7]</a><br /></span></p></td>
-<td align="left" valign="top"><p class="table"><tt>--enable-smp</tt></p></td>
+<td align="left" valign="top"><p class="table"><tt></tt></p></td>
 </tr>
 <tr>
 <td align="left" valign="top"><p class="table">ixp4xx</p></td>
@@ -653,7 +670,7 @@ cellspacing="0" cellpadding="4">
 <tr>
 <td align="left" valign="top"><p class="table">omap4</p></td>
 <td align="left" valign="top"><p class="table"><tt>-march=armv7-a -mfpu=vfp3</tt> <span class="footnoteref"><br /><a href="#_footnote_armv7">[armv7]</a><br /></span></p></td>
-<td align="left" valign="top"><p class="table"><tt>--enable-smp</tt></p></td>
+<td align="left" valign="top"><p class="table"><tt></tt></p></td>
 </tr>
 <tr>
 <td align="left" valign="top"><p class="table">orion</p></td>
@@ -859,7 +876,7 @@ test under load to evaluate the latency test of your system, the
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2012-08-27 21:44:53 CEST
+Last updated 2012-11-27 23:52:02 CEST
 </div>
 </div>
 </body>

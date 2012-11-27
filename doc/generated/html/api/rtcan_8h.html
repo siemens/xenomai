@@ -110,6 +110,7 @@ Defines</h2></td></tr>
 </div></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#gae4ba49824d17e7d06300cb8b4a4bff45">CAN_CTRLMODE_LISTENONLY</a>&nbsp;&nbsp;&nbsp;0x1</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga19ec0cc4379e80c32cbd333cf7c145e9">CAN_CTRLMODE_LOOPBACK</a>&nbsp;&nbsp;&nbsp;0x2</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga9ac4d541a8af54f03f51e1574676dd19">CAN_CTRLMODE_3_SAMPLES</a>&nbsp;&nbsp;&nbsp;0x4</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Timestamp switches</div></td></tr>
 <tr><td colspan="2"><div class="groupText"><p><a class="anchor" id="amgrp34b6790f0f944121855121121dbb08f7"></a> <a class="anchor" id="RTCAN_TIMESTAMPS"></a> Arguments to pass to <a class="el" href="group__rtcan.html#gaedd7bd75a1983735052fed62e101e5ce">RTCAN_RTIOC_TAKE_TIMESTAMP</a> </p>
 </div></td></tr>
@@ -390,10 +391,10 @@ Enumerations</h2></td></tr>
 <tr><td colspan="2"><div class="groupText"><p><a class="anchor" id="amgrpbeee666541059166baa8758375561c32"></a> <a class="anchor" id="CAN_STATE"></a> States a CAN controller can be in. </p>
 </div></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">enum &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga8680f5710e1a13d553067cc32c86226b">CAN_STATE</a> { <br/>
-&nbsp;&nbsp;<a class="el" href="group__rtcan.html#gga8680f5710e1a13d553067cc32c86226ba7db2add3bd2ed5a01893a3d2a012ac67">CAN_STATE_ACTIVE</a> =  0, 
-<a class="el" href="group__rtcan.html#gga8680f5710e1a13d553067cc32c86226ba8e8ffc38c3886c8ab4b7a6ebd24db2e1">CAN_STATE_BUS_WARNING</a>, 
-<a class="el" href="group__rtcan.html#gga8680f5710e1a13d553067cc32c86226ba16806979589ee8f20ee84c767903b667">CAN_STATE_BUS_PASSIVE</a>, 
-<a class="el" href="group__rtcan.html#gga8680f5710e1a13d553067cc32c86226ba679935a8710667fcb99423d217cd9959">CAN_STATE_BUS_OFF</a>, 
+&nbsp;&nbsp;<a class="el" href="group__rtcan.html#gga8680f5710e1a13d553067cc32c86226ba026154ef3a7f9cb633e43ab7e63d769c">CAN_STATE_ERROR_ACTIVE</a> =  0
+, <a class="el" href="group__rtcan.html#gga8680f5710e1a13d553067cc32c86226ba15263a89961afbc4e813c7ccfc59e5ff">CAN_STATE_ERROR_WARNING</a> =  1
+, <a class="el" href="group__rtcan.html#gga8680f5710e1a13d553067cc32c86226bac2cd08cde738273c5e5df8306c48d8ae">CAN_STATE_ERROR_PASSIVE</a> =  2
+, <a class="el" href="group__rtcan.html#gga8680f5710e1a13d553067cc32c86226ba679935a8710667fcb99423d217cd9959">CAN_STATE_BUS_OFF</a>, 
 <br/>
 &nbsp;&nbsp;<a class="el" href="group__rtcan.html#gga8680f5710e1a13d553067cc32c86226bacc4b4039f38316b01662d775eeb981ff">CAN_STATE_SCANNING_BAUDRATE</a>, 
 <a class="el" href="group__rtcan.html#gga8680f5710e1a13d553067cc32c86226ba644e7a441f2e607b93528d3128508cc8">CAN_STATE_STOPPED</a>, 
@@ -414,7 +415,7 @@ Copyright (C) 2005, 2006 Sebastian Smolorz &lt;<a href="mailto:Sebastian.Smolorz
 <p>General Public License for more details.</p>
 <p>You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. </p>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Tue Aug 21 2012 23:32:41 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Tue Nov 27 2012 23:52:26 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

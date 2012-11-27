@@ -279,71 +279,111 @@
 <a name="l00288"></a>00288         __xnpod_schedule(sched);
 <a name="l00289"></a>00289 }
 <a name="l00290"></a>00290 
-<a name="l00291"></a>00291 <span class="keywordtype">void</span> xnpod_lock_sched(<span class="keywordtype">void</span>);
+<a name="l00291"></a>00291 <span class="keywordtype">void</span> ___xnpod_lock_sched(<span class="keyword">struct</span> xnthread *<a class="code" href="structxnsched.html#afd2e6c15e470a38b385930c613856e7b">curr</a>);
 <a name="l00292"></a>00292 
-<a name="l00293"></a>00293 <span class="keywordtype">void</span> xnpod_unlock_sched(<span class="keywordtype">void</span>);
+<a name="l00293"></a>00293 <span class="keywordtype">void</span> ___xnpod_unlock_sched(<span class="keyword">struct</span> xnthread *<a class="code" href="structxnsched.html#afd2e6c15e470a38b385930c613856e7b">curr</a>);
 <a name="l00294"></a>00294 
-<a name="l00295"></a>00295 <span class="keywordtype">void</span> xnpod_fire_callouts(xnqueue_t *hookq,
-<a name="l00296"></a>00296                          xnthread_t *thread);
-<a name="l00297"></a>00297 
-<a name="l00298"></a>00298 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnpod_run_hooks(<span class="keyword">struct</span> xnqueue *q,
-<a name="l00299"></a>00299                                    <span class="keyword">struct</span> xnthread *thread, <span class="keyword">const</span> <span class="keywordtype">char</span> *type)
-<a name="l00300"></a>00300 {
-<a name="l00301"></a>00301         <span class="keywordflow">if</span> (!emptyq_p(q)) {
-<a name="l00302"></a>00302                 trace_mark(xn_nucleus, thread_callout,
-<a name="l00303"></a>00303                            <span class="stringliteral">&quot;thread %p thread_name %s hook %s&quot;</span>,
-<a name="l00304"></a>00304                            thread, xnthread_name(thread), type);
-<a name="l00305"></a>00305                 xnpod_fire_callouts(q, thread);
-<a name="l00306"></a>00306         }
-<a name="l00307"></a>00307 }
-<a name="l00308"></a>00308 
-<a name="l00309"></a>00309 <span class="keywordtype">int</span> <a class="code" href="group__pod.html#gaed5776a428e7c59b52b1da76f0d765fa" title="Make a thread periodic.">xnpod_set_thread_periodic</a>(xnthread_t *thread,
-<a name="l00310"></a>00310                               xnticks_t idate,
-<a name="l00311"></a>00311                               xnticks_t period);
+<a name="l00295"></a>00295 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> __xnpod_lock_sched(<span class="keywordtype">void</span>)
+<a name="l00296"></a>00296 {
+<a name="l00297"></a>00297         <span class="keyword">struct </span>xnthread *curr;
+<a name="l00298"></a>00298 
+<a name="l00299"></a>00299         barrier();
+<a name="l00300"></a>00300         curr = xnpod_current_thread();
+<a name="l00301"></a>00301         ___xnpod_lock_sched(curr);
+<a name="l00302"></a>00302 }
+<a name="l00303"></a>00303 
+<a name="l00304"></a>00304 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> __xnpod_unlock_sched(<span class="keywordtype">void</span>)
+<a name="l00305"></a>00305 {
+<a name="l00306"></a>00306         <span class="keyword">struct </span>xnthread *curr;
+<a name="l00307"></a>00307 
+<a name="l00308"></a>00308         barrier();
+<a name="l00309"></a>00309         curr = xnpod_current_thread();
+<a name="l00310"></a>00310         ___xnpod_unlock_sched(curr);
+<a name="l00311"></a>00311 }
 <a name="l00312"></a>00312 
-<a name="l00313"></a>00313 <span class="keywordtype">int</span> <a class="code" href="group__pod.html#gaf836996e4a3378928f2a9f93a4915cfa" title="Wait for the next periodic release point.">xnpod_wait_thread_period</a>(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *overruns_r);
-<a name="l00314"></a>00314 
-<a name="l00315"></a>00315 <span class="keywordtype">int</span> <a class="code" href="group__pod.html#ga4b8647e7a6969962c788669ff8d46d3b" title="Set thread time-slicing information.">xnpod_set_thread_tslice</a>(<span class="keyword">struct</span> xnthread *thread,
-<a name="l00316"></a>00316                             xnticks_t quantum);
+<a name="l00313"></a>00313 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnpod_lock_sched(<span class="keywordtype">void</span>)
+<a name="l00314"></a>00314 {
+<a name="l00315"></a>00315         <span class="keyword">struct </span>xnthread *curr;
+<a name="l00316"></a>00316         spl_t s;
 <a name="l00317"></a>00317 
-<a name="l00318"></a>00318 <span class="keyword">static</span> <span class="keyword">inline</span> xntime_t xnpod_get_cpu_time(<span class="keywordtype">void</span>)
-<a name="l00319"></a>00319 {
-<a name="l00320"></a>00320         <span class="keywordflow">return</span> xnarch_get_cpu_time();
-<a name="l00321"></a>00321 }
-<a name="l00322"></a>00322 
-<a name="l00323"></a>00323 <span class="keywordtype">int</span> <a class="code" href="group__pod.html#ga96e6b70fb05da3603bebacde76b16f22" title="Install a nucleus hook.">xnpod_add_hook</a>(<span class="keywordtype">int</span> type, <span class="keywordtype">void</span> (*routine) (xnthread_t *));
-<a name="l00324"></a>00324 
-<a name="l00325"></a>00325 <span class="keywordtype">int</span> <a class="code" href="group__pod.html#gace800481d23255eebe45f969e9434adf" title="Remove a nucleus hook.">xnpod_remove_hook</a>(<span class="keywordtype">int</span> type, <span class="keywordtype">void</span> (*routine) (xnthread_t *));
-<a name="l00326"></a>00326 
-<a name="l00327"></a>00327 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnpod_yield(<span class="keywordtype">void</span>)
-<a name="l00328"></a>00328 {
-<a name="l00329"></a>00329         <a class="code" href="group__pod.html#gac3a7bf9e973782a8cfd6495a1786e812" title="Resume a thread.">xnpod_resume_thread</a>(xnpod_current_thread(), 0);
-<a name="l00330"></a>00330         <a class="code" href="group__pod.html#gacf5b53f0405351327b89b0cc4976b962" title="Rescheduling procedure entry point.">xnpod_schedule</a>();
-<a name="l00331"></a>00331 }
-<a name="l00332"></a>00332 
-<a name="l00333"></a>00333 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnpod_delay(xnticks_t timeout)
-<a name="l00334"></a>00334 {
-<a name="l00335"></a>00335         <a class="code" href="group__pod.html#ga767221cf87c198c5dc071e9f597dcb3a" title="Suspend a thread.">xnpod_suspend_thread</a>(xnpod_current_thread(), <a class="code" href="group__nucleus__state__flags.html#gaa31d298d298eb696ccf840473b94912c" title="Delayed.">XNDELAY</a>, timeout, XN_RELATIVE, NULL);
-<a name="l00336"></a>00336 }
+<a name="l00318"></a>00318         xnlock_get_irqsave(&amp;nklock, s);
+<a name="l00319"></a>00319         curr = xnpod_current_thread();
+<a name="l00320"></a>00320         ___xnpod_lock_sched(curr);
+<a name="l00321"></a>00321         xnlock_put_irqrestore(&amp;nklock, s);
+<a name="l00322"></a>00322 }
+<a name="l00323"></a>00323 
+<a name="l00324"></a>00324 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnpod_unlock_sched(<span class="keywordtype">void</span>)
+<a name="l00325"></a>00325 {
+<a name="l00326"></a>00326         <span class="keyword">struct </span>xnthread *curr;
+<a name="l00327"></a>00327         spl_t s;
+<a name="l00328"></a>00328 
+<a name="l00329"></a>00329         xnlock_get_irqsave(&amp;nklock, s);
+<a name="l00330"></a>00330         curr = xnpod_current_thread();
+<a name="l00331"></a>00331         ___xnpod_unlock_sched(curr);
+<a name="l00332"></a>00332         xnlock_put_irqrestore(&amp;nklock, s);
+<a name="l00333"></a>00333 }
+<a name="l00334"></a>00334 
+<a name="l00335"></a>00335 <span class="keywordtype">void</span> xnpod_fire_callouts(xnqueue_t *hookq,
+<a name="l00336"></a>00336                          xnthread_t *thread);
 <a name="l00337"></a>00337 
-<a name="l00338"></a>00338 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnpod_suspend_self(<span class="keywordtype">void</span>)
-<a name="l00339"></a>00339 {
-<a name="l00340"></a>00340         <a class="code" href="group__pod.html#ga767221cf87c198c5dc071e9f597dcb3a" title="Suspend a thread.">xnpod_suspend_thread</a>(xnpod_current_thread(), <a class="code" href="group__nucleus__state__flags.html#ga6b605ad2bb16ae2386821be8ce8d341b" title="Suspended.">XNSUSP</a>, XN_INFINITE, XN_RELATIVE, NULL);
-<a name="l00341"></a>00341 }
-<a name="l00342"></a>00342 
-<a name="l00343"></a>00343 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnpod_delete_self(<span class="keywordtype">void</span>)
-<a name="l00344"></a>00344 {
-<a name="l00345"></a>00345         <a class="code" href="group__pod.html#gad2b761fb70cad30339f092edb4a89587" title="Delete a thread.">xnpod_delete_thread</a>(xnpod_current_thread());
-<a name="l00346"></a>00346 }
-<a name="l00347"></a>00347 
-<a name="l00348"></a>00348 <span class="preprocessor">#ifdef __cplusplus</span>
-<a name="l00349"></a>00349 <span class="preprocessor"></span>}
-<a name="l00350"></a>00350 <span class="preprocessor">#endif</span>
-<a name="l00351"></a>00351 <span class="preprocessor"></span>
-<a name="l00354"></a>00354 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_POD_H */</span>
+<a name="l00338"></a>00338 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnpod_run_hooks(<span class="keyword">struct</span> xnqueue *q,
+<a name="l00339"></a>00339                                    <span class="keyword">struct</span> xnthread *thread, <span class="keyword">const</span> <span class="keywordtype">char</span> *type)
+<a name="l00340"></a>00340 {
+<a name="l00341"></a>00341         <span class="keywordflow">if</span> (!emptyq_p(q)) {
+<a name="l00342"></a>00342                 trace_mark(xn_nucleus, thread_callout,
+<a name="l00343"></a>00343                            <span class="stringliteral">&quot;thread %p thread_name %s hook %s&quot;</span>,
+<a name="l00344"></a>00344                            thread, xnthread_name(thread), type);
+<a name="l00345"></a>00345                 xnpod_fire_callouts(q, thread);
+<a name="l00346"></a>00346         }
+<a name="l00347"></a>00347 }
+<a name="l00348"></a>00348 
+<a name="l00349"></a>00349 <span class="keywordtype">int</span> <a class="code" href="group__pod.html#gaed5776a428e7c59b52b1da76f0d765fa" title="Make a thread periodic.">xnpod_set_thread_periodic</a>(xnthread_t *thread,
+<a name="l00350"></a>00350                               xnticks_t idate,
+<a name="l00351"></a>00351                               xnticks_t period);
+<a name="l00352"></a>00352 
+<a name="l00353"></a>00353 <span class="keywordtype">int</span> <a class="code" href="group__pod.html#gaf836996e4a3378928f2a9f93a4915cfa" title="Wait for the next periodic release point.">xnpod_wait_thread_period</a>(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *overruns_r);
+<a name="l00354"></a>00354 
+<a name="l00355"></a>00355 <span class="keywordtype">int</span> <a class="code" href="group__pod.html#ga4b8647e7a6969962c788669ff8d46d3b" title="Set thread time-slicing information.">xnpod_set_thread_tslice</a>(<span class="keyword">struct</span> xnthread *thread,
+<a name="l00356"></a>00356                             xnticks_t quantum);
+<a name="l00357"></a>00357 
+<a name="l00358"></a>00358 <span class="keyword">static</span> <span class="keyword">inline</span> xntime_t xnpod_get_cpu_time(<span class="keywordtype">void</span>)
+<a name="l00359"></a>00359 {
+<a name="l00360"></a>00360         <span class="keywordflow">return</span> xnarch_get_cpu_time();
+<a name="l00361"></a>00361 }
+<a name="l00362"></a>00362 
+<a name="l00363"></a>00363 <span class="keywordtype">int</span> <a class="code" href="group__pod.html#ga96e6b70fb05da3603bebacde76b16f22" title="Install a nucleus hook.">xnpod_add_hook</a>(<span class="keywordtype">int</span> type, <span class="keywordtype">void</span> (*routine) (xnthread_t *));
+<a name="l00364"></a>00364 
+<a name="l00365"></a>00365 <span class="keywordtype">int</span> <a class="code" href="group__pod.html#gace800481d23255eebe45f969e9434adf" title="Remove a nucleus hook.">xnpod_remove_hook</a>(<span class="keywordtype">int</span> type, <span class="keywordtype">void</span> (*routine) (xnthread_t *));
+<a name="l00366"></a>00366 
+<a name="l00367"></a>00367 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnpod_yield(<span class="keywordtype">void</span>)
+<a name="l00368"></a>00368 {
+<a name="l00369"></a>00369         <a class="code" href="group__pod.html#gac3a7bf9e973782a8cfd6495a1786e812" title="Resume a thread.">xnpod_resume_thread</a>(xnpod_current_thread(), 0);
+<a name="l00370"></a>00370         <a class="code" href="group__pod.html#gacf5b53f0405351327b89b0cc4976b962" title="Rescheduling procedure entry point.">xnpod_schedule</a>();
+<a name="l00371"></a>00371 }
+<a name="l00372"></a>00372 
+<a name="l00373"></a>00373 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnpod_delay(xnticks_t timeout)
+<a name="l00374"></a>00374 {
+<a name="l00375"></a>00375         <a class="code" href="group__pod.html#ga767221cf87c198c5dc071e9f597dcb3a" title="Suspend a thread.">xnpod_suspend_thread</a>(xnpod_current_thread(), <a class="code" href="group__nucleus__state__flags.html#gaa31d298d298eb696ccf840473b94912c" title="Delayed.">XNDELAY</a>, timeout, XN_RELATIVE, NULL);
+<a name="l00376"></a>00376 }
+<a name="l00377"></a>00377 
+<a name="l00378"></a>00378 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnpod_suspend_self(<span class="keywordtype">void</span>)
+<a name="l00379"></a>00379 {
+<a name="l00380"></a>00380         <a class="code" href="group__pod.html#ga767221cf87c198c5dc071e9f597dcb3a" title="Suspend a thread.">xnpod_suspend_thread</a>(xnpod_current_thread(), <a class="code" href="group__nucleus__state__flags.html#ga6b605ad2bb16ae2386821be8ce8d341b" title="Suspended.">XNSUSP</a>, XN_INFINITE, XN_RELATIVE, NULL);
+<a name="l00381"></a>00381 }
+<a name="l00382"></a>00382 
+<a name="l00383"></a>00383 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnpod_delete_self(<span class="keywordtype">void</span>)
+<a name="l00384"></a>00384 {
+<a name="l00385"></a>00385         <a class="code" href="group__pod.html#gad2b761fb70cad30339f092edb4a89587" title="Delete a thread.">xnpod_delete_thread</a>(xnpod_current_thread());
+<a name="l00386"></a>00386 }
+<a name="l00387"></a>00387 
+<a name="l00388"></a>00388 <span class="preprocessor">#ifdef __cplusplus</span>
+<a name="l00389"></a>00389 <span class="preprocessor"></span>}
+<a name="l00390"></a>00390 <span class="preprocessor">#endif</span>
+<a name="l00391"></a>00391 <span class="preprocessor"></span>
+<a name="l00394"></a>00394 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_POD_H */</span>
 </pre></div></div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Tue Aug 21 2012 23:32:40 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Tue Nov 27 2012 23:52:24 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

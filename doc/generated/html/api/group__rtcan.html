@@ -123,10 +123,10 @@ CAN controller states</h2></td></tr>
 <tr><td colspan="2"><p><a class="anchor" id="amgrpbeee666541059166baa8758375561c32"></a> <a class="anchor" id="CAN_STATE"></a> States a CAN controller can be in. </p>
 <br/><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">enum &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga8680f5710e1a13d553067cc32c86226b">CAN_STATE</a> { <br/>
-&nbsp;&nbsp;<a class="el" href="group__rtcan.html#gga8680f5710e1a13d553067cc32c86226ba7db2add3bd2ed5a01893a3d2a012ac67">CAN_STATE_ACTIVE</a> =  0, 
-<a class="el" href="group__rtcan.html#gga8680f5710e1a13d553067cc32c86226ba8e8ffc38c3886c8ab4b7a6ebd24db2e1">CAN_STATE_BUS_WARNING</a>, 
-<a class="el" href="group__rtcan.html#gga8680f5710e1a13d553067cc32c86226ba16806979589ee8f20ee84c767903b667">CAN_STATE_BUS_PASSIVE</a>, 
-<a class="el" href="group__rtcan.html#gga8680f5710e1a13d553067cc32c86226ba679935a8710667fcb99423d217cd9959">CAN_STATE_BUS_OFF</a>, 
+&nbsp;&nbsp;<a class="el" href="group__rtcan.html#gga8680f5710e1a13d553067cc32c86226ba026154ef3a7f9cb633e43ab7e63d769c">CAN_STATE_ERROR_ACTIVE</a> =  0
+, <a class="el" href="group__rtcan.html#gga8680f5710e1a13d553067cc32c86226ba15263a89961afbc4e813c7ccfc59e5ff">CAN_STATE_ERROR_WARNING</a> =  1
+, <a class="el" href="group__rtcan.html#gga8680f5710e1a13d553067cc32c86226bac2cd08cde738273c5e5df8306c48d8ae">CAN_STATE_ERROR_PASSIVE</a> =  2
+, <a class="el" href="group__rtcan.html#gga8680f5710e1a13d553067cc32c86226ba679935a8710667fcb99423d217cd9959">CAN_STATE_BUS_OFF</a>, 
 <br/>
 &nbsp;&nbsp;<a class="el" href="group__rtcan.html#gga8680f5710e1a13d553067cc32c86226bacc4b4039f38316b01662d775eeb981ff">CAN_STATE_SCANNING_BAUDRATE</a>, 
 <a class="el" href="group__rtcan.html#gga8680f5710e1a13d553067cc32c86226ba644e7a441f2e607b93528d3128508cc8">CAN_STATE_STOPPED</a>, 
@@ -174,6 +174,7 @@ CAN controller modes</h2></td></tr>
 <br/><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#gae4ba49824d17e7d06300cb8b4a4bff45">CAN_CTRLMODE_LISTENONLY</a>&nbsp;&nbsp;&nbsp;0x1</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga19ec0cc4379e80c32cbd333cf7c145e9">CAN_CTRLMODE_LOOPBACK</a>&nbsp;&nbsp;&nbsp;0x2</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#ga9ac4d541a8af54f03f51e1574676dd19">CAN_CTRLMODE_3_SAMPLES</a>&nbsp;&nbsp;&nbsp;0x4</td></tr>
 <tr><td colspan="2"><h2><a name="member-group"></a>
 Timestamp switches</h2></td></tr>
 <tr><td colspan="2"><p><a class="anchor" id="amgrp34b6790f0f944121855121121dbb08f7"></a> <a class="anchor" id="RTCAN_TIMESTAMPS"></a> Arguments to pass to <a class="el" href="group__rtcan.html#gaedd7bd75a1983735052fed62e101e5ce">RTCAN_RTIOC_TAKE_TIMESTAMP</a> </p>
@@ -552,6 +553,21 @@ Environments: RT (non-RT optional)<br/>
 </ul>
 <b>Note:</b> A successful completion of the function call does not implicate a successful transmission of the message. </dd></dl>
 <hr/><h2>Define Documentation</h2>
+<a class="anchor" id="ga9ac4d541a8af54f03f51e1574676dd19"></a><!-- doxytag: member="rtcan.h::CAN_CTRLMODE_3_SAMPLES" ref="ga9ac4d541a8af54f03f51e1574676dd19" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define CAN_CTRLMODE_3_SAMPLES&nbsp;&nbsp;&nbsp;0x4</td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+<p>Triple sampling mode</p>
+<p>In this mode the CAN controller uses Triple sampling. </p>
+
+</div>
+</div>
 <a class="anchor" id="gae4ba49824d17e7d06300cb8b4a4bff45"></a><!-- doxytag: member="rtcan.h::CAN_CTRLMODE_LISTENONLY" ref="gae4ba49824d17e7d06300cb8b4a4bff45" args="" -->
 <div class="memitem">
 <div class="memproto">
@@ -1160,7 +1176,7 @@ Environments: RT (non-RT optional)<br/>
 <li>Kernel-based task</li>
 <li>User-space task (RT, non-RT)</li>
 </ul>
-<dl class="note"><dt><b>Note:</b></dt><dd>Setting a CAN controller into normal operation after a bus-off can take some time (128 occurrences of 11 consecutive recessive bits). In such a case, although this IOCTL will return immediately with success and <a class="el" href="group__rtcan.html#ga5b5f750db08d56f40489679f22236ef4">SIOCGCANSTATE</a> will report <a class="el" href="group__rtcan.html#gga8680f5710e1a13d553067cc32c86226ba7db2add3bd2ed5a01893a3d2a012ac67">CAN_STATE_ACTIVE</a>, bus-off recovery may still be in progress. <br/>
+<dl class="note"><dt><b>Note:</b></dt><dd>Setting a CAN controller into normal operation after a bus-off can take some time (128 occurrences of 11 consecutive recessive bits). In such a case, although this IOCTL will return immediately with success and <a class="el" href="group__rtcan.html#ga5b5f750db08d56f40489679f22236ef4">SIOCGCANSTATE</a> will report CAN_STATE_ACTIVE, bus-off recovery may still be in progress. <br/>
  If a controller is bus-off, setting it into stop mode will return no error but the controller remains bus-off.</dd></dl>
 <p>Rescheduling: possible. </p>
 <dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanconfig_8c-example.html#a18">rtcanconfig.c</a>.</dd>
@@ -1267,7 +1283,7 @@ Environments: RT (non-RT optional)<br/>
 </td></tr>
 <tr><td valign="top"><em><a class="anchor" id="ggac0d6cdda2cf4abb51116b86bc99acf99af9c617b6b198770017f6e7198bfb50b6"></a><!-- doxytag: member="CAN_MODE_START" ref="ggac0d6cdda2cf4abb51116b86bc99acf99af9c617b6b198770017f6e7198bfb50b6" args="" -->CAN_MODE_START</em>&nbsp;</td><td>
 <p>Set controller into normal operation. <br/>
- Coming from stopped mode or bus off, the controller begins with no errors in <a class="el" href="group__rtcan.html#gga8680f5710e1a13d553067cc32c86226ba7db2add3bd2ed5a01893a3d2a012ac67">CAN_STATE_ACTIVE</a>. </p>
+ Coming from stopped mode or bus off, the controller begins with no errors in CAN_STATE_ACTIVE. </p>
 </td></tr>
 <tr><td valign="top"><em><a class="anchor" id="ggac0d6cdda2cf4abb51116b86bc99acf99a57866c198e12c54747aca0786dc33e3e"></a><!-- doxytag: member="CAN_MODE_SLEEP" ref="ggac0d6cdda2cf4abb51116b86bc99acf99a57866c198e12c54747aca0786dc33e3e" args="" -->CAN_MODE_SLEEP</em>&nbsp;</td><td>
 <p>Set controller into Sleep mode. <br/>
@@ -1292,13 +1308,13 @@ Environments: RT (non-RT optional)<br/>
 </div>
 <div class="memdoc">
 <dl><dt><b>Enumerator: </b></dt><dd><table border="0" cellspacing="2" cellpadding="0">
-<tr><td valign="top"><em><a class="anchor" id="gga8680f5710e1a13d553067cc32c86226ba7db2add3bd2ed5a01893a3d2a012ac67"></a><!-- doxytag: member="CAN_STATE_ACTIVE" ref="gga8680f5710e1a13d553067cc32c86226ba7db2add3bd2ed5a01893a3d2a012ac67" args="" -->CAN_STATE_ACTIVE</em>&nbsp;</td><td>
+<tr><td valign="top"><em><a class="anchor" id="gga8680f5710e1a13d553067cc32c86226ba026154ef3a7f9cb633e43ab7e63d769c"></a><!-- doxytag: member="CAN_STATE_ERROR_ACTIVE" ref="gga8680f5710e1a13d553067cc32c86226ba026154ef3a7f9cb633e43ab7e63d769c" args="" -->CAN_STATE_ERROR_ACTIVE</em>&nbsp;</td><td>
 <p>CAN controller is error active. </p>
 </td></tr>
-<tr><td valign="top"><em><a class="anchor" id="gga8680f5710e1a13d553067cc32c86226ba8e8ffc38c3886c8ab4b7a6ebd24db2e1"></a><!-- doxytag: member="CAN_STATE_BUS_WARNING" ref="gga8680f5710e1a13d553067cc32c86226ba8e8ffc38c3886c8ab4b7a6ebd24db2e1" args="" -->CAN_STATE_BUS_WARNING</em>&nbsp;</td><td>
+<tr><td valign="top"><em><a class="anchor" id="gga8680f5710e1a13d553067cc32c86226ba15263a89961afbc4e813c7ccfc59e5ff"></a><!-- doxytag: member="CAN_STATE_ERROR_WARNING" ref="gga8680f5710e1a13d553067cc32c86226ba15263a89961afbc4e813c7ccfc59e5ff" args="" -->CAN_STATE_ERROR_WARNING</em>&nbsp;</td><td>
 <p>CAN controller is error active, warning level is reached. </p>
 </td></tr>
-<tr><td valign="top"><em><a class="anchor" id="gga8680f5710e1a13d553067cc32c86226ba16806979589ee8f20ee84c767903b667"></a><!-- doxytag: member="CAN_STATE_BUS_PASSIVE" ref="gga8680f5710e1a13d553067cc32c86226ba16806979589ee8f20ee84c767903b667" args="" -->CAN_STATE_BUS_PASSIVE</em>&nbsp;</td><td>
+<tr><td valign="top"><em><a class="anchor" id="gga8680f5710e1a13d553067cc32c86226bac2cd08cde738273c5e5df8306c48d8ae"></a><!-- doxytag: member="CAN_STATE_ERROR_PASSIVE" ref="gga8680f5710e1a13d553067cc32c86226bac2cd08cde738273c5e5df8306c48d8ae" args="" -->CAN_STATE_ERROR_PASSIVE</em>&nbsp;</td><td>
 <p>CAN controller is error passive. </p>
 </td></tr>
 <tr><td valign="top"><em><a class="anchor" id="gga8680f5710e1a13d553067cc32c86226ba679935a8710667fcb99423d217cd9959"></a><!-- doxytag: member="CAN_STATE_BUS_OFF" ref="gga8680f5710e1a13d553067cc32c86226ba679935a8710667fcb99423d217cd9959" args="" -->CAN_STATE_BUS_OFF</em>&nbsp;</td><td>
@@ -1320,7 +1336,7 @@ Environments: RT (non-RT optional)<br/>
 </div>
 </div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Tue Aug 21 2012 23:32:42 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Tue Nov 27 2012 23:52:26 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>
