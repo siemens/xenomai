@@ -389,14 +389,18 @@ However, this mechanism requires a recent kernel (2.6 or higher).
 3.6.3. missing="smp/nosmp"
 --------------------------
 
-For kernel-space and user-space supports to be compatible, both should be
-compiled with the same setting for SMP.
+On some SMP-capable architectures, for kernel-space and user-space supports to
+be compatible, both should be compiled with the same setting for SMP.
 
 SMP support in kernel-space is enabled with the CONFIG_SMP option.
 
-SMP support in user-space is enabled by passing --enable-smp to the configure
-script, and disabled by passing --disable-smp (SMP is enabled by default on
-some platforms).
+For these architectures, SMP support in user-space is enabled by passing
+--enable-smp to the configure script, and disabled by passing --disable-smp
+(SMP is enabled by default on some platforms).
+
+Other SMP-capable architectures may run userland code built with --enable-smp
+or --disable-smp over the same kernel indifferently, at no noticeable
+performance cost. These architectures never receive such SMP-related error.
 
 
 3.6.4. missing="tsc"

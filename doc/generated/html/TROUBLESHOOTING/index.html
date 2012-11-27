@@ -327,12 +327,17 @@ reasons for this message.</p></div>
 mechanism for issuing system calls.</p></div>
 <div class="paragraph"><p>However, this mechanism requires a recent kernel (2.6 or higher).</p></div>
 <h4 id="_missing_smp_nosmp">3.6.3. missing="smp/nosmp"</h4>
-<div class="paragraph"><p>For kernel-space and user-space supports to be compatible, both should
-be compiled with the same setting for SMP.</p></div>
+<div class="paragraph"><p>On some SMP-capable architectures, for kernel-space and user-space
+supports to be compatible, both should be compiled with the same
+setting for SMP.</p></div>
 <div class="paragraph"><p>SMP support in kernel-space is enabled with the <tt>CONFIG_SMP</tt> option.</p></div>
-<div class="paragraph"><p>SMP support in user-space is enabled by passing <tt>--enable-smp</tt> to the
-configure script, and disabled by passing <tt>--disable-smp</tt> (SMP is
-enabled by default on some platforms).</p></div>
+<div class="paragraph"><p>For these architectures, SMP support in user-space is enabled by
+passing <tt>--enable-smp</tt> to the configure script, and disabled by passing
+<tt>--disable-smp</tt> (SMP is enabled by default on some platforms).</p></div>
+<div class="paragraph"><p>Other SMP-capable architectures may run userland code built with
+<tt>--enable-smp</tt> or <tt>--disable-smp</tt> over the same kernel indifferently, at
+no noticeable performance cost. These architectures never receive such
+SMP-related error.</p></div>
 <h4 id="_missing_tsc">3.6.4. missing="tsc"</h4>
 <div class="paragraph"><p>This error is specific to the x86 architecture. You enabled tsc in
 user-space by passing the <tt>--enable-x86-tsc</tt> option, but you selected
@@ -693,7 +698,7 @@ like calling:</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2012-10-09 19:52:50 CEST
+Last updated 2012-11-28 00:19:41 CEST
 </div>
 </div>
 </body>
