@@ -84,7 +84,7 @@ static void *realtime_thread(void *arg)
 static void *regular_thread(void *arg)
 {
 	char buf[128], *devname;
-	int fd, ret;
+	int fd;
 
 	check_unix(asprintf(&devname, "/dev/rtp%d", XDDP_PORT));
 
@@ -93,7 +93,7 @@ static void *regular_thread(void *arg)
 
 	for (;;) {
 		/* Get the next message from realtime_thread. */
-		ret = read(fd, buf, sizeof(buf));
+		read(fd, buf, sizeof(buf));
 
 		usleep(10000);
 	}
