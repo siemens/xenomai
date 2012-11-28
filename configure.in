@@ -145,6 +145,30 @@ AC_ARG_ENABLE(debug,
 	esac])
 AC_MSG_RESULT(${debug_symbols:-no})
 
+dnl Implementation of atomic operations in userland
+
+case $XENO_TARGET_ARCH in
+arm)
+	atomic_ops=builtins ;;
+*)
+	atomic_ops=ad-hoc ;;
+esac
+AC_MSG_CHECKING(for atomic operation support)
+AC_ARG_WITH(atomic-ops,
+	AS_HELP_STRING([--with-atomic-ops], [Select implementation of atomic ops]),
+	[case "$withval" in
+	y | yes | built*)
+	    	atomic_ops=builtins
+	    	;;
+	ad-hoc|adhoc)
+	    	atomic_ops=ad-hoc
+	    	;;
+	*)
+		AC_MSG_ERROR([invalid switch "$withval" for atomic-ops (builtins/ad-hoc)])
+		;;
+	esac])
+AC_MSG_RESULT(${atomic_ops})
+
 dnl SMP support (default: on for all SMP-capable architecture except
 dnl ARM, off otherwise)
 
@@ -420,6 +444,11 @@ dnl Userland may want to know about MMU availability on the target.
 dnl For now, we assume that having fork() means having an MMU.
 dnl
 test x$ac_cv_func_fork = xyes && AC_DEFINE(CONFIG_MMU,1,[config])
+
+dnl Where we should get the atomic ops implementation from: "builtins"
+dnl means gcc __sync_*() routines, "ad-hoc" means Xenomai's ad hoc
+dnl implementation.
+test x$atomic_ops = xbuiltins && AC_DEFINE(CONFIG_XENO_ATOMIC_BUILTINS,1,[config])
 
 test x$CONFIG_X86_TSC = xy && AC_DEFINE(CONFIG_X86_TSC,1,[config])
 

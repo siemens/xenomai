@@ -21,6 +21,9 @@
 /* config */
 #undef CONFIG_XENO_ARM_TSC_TYPE
 
+/* config */
+#undef CONFIG_XENO_ATOMIC_BUILTINS
+
 /* Build system alias */
 #undef CONFIG_XENO_BUILD_STRING
 

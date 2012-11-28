@@ -193,6 +193,25 @@ footnoteref:[disable]
 		       userland code (i.e. when +--disable-smp+
 		       is in effect) over an SMP kernel.]
 		      	      	  		       |weak
+|--with-atomic-ops=    Selects which implementation of atomic
+		       access operations shall be used within
+		       Xenomai libraries:
+
+		       +--with-atomic-ops=builtins+ selects the
+		       GCC builtins, i.e. __sync_*()
+		       services.
+    
+			+--with-atomic-ops=ad-hoc+ selects the
+			ad hoc Xenomai implementation.
+    
+			When this switch is not specified, a
+			conservative choice is made depending
+			on the target architecture.
+    
+			Unless the GCC toolchain is outdated (i.e.
+			does not provide these operations) or broken,
+			+--with-atomic-ops=builtins+ should be used.
+						   	  | arch-dependent
 |============================================================================
 
 
