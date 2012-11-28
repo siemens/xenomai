@@ -10,12 +10,6 @@
 #undef CONFIG_X86_TSC
 
 /* config */
-#undef CONFIG_XENO_ARM_ASM_ATOMIC
-
-/* config */
-#undef CONFIG_XENO_ARM_GCC_ATOMIC
-
-/* config */
 #undef CONFIG_XENO_ARM_SA1100
 
 /* config */

@@ -814,7 +814,6 @@ enable_x86_sep
 enable_x86_tsc
 enable_arm_tsc
 enable_arm_quirks
-enable_arm_atomic
 enable_doc_install
 enable_dox_doc
 enable_dbx
@@ -1486,11 +1485,6 @@ Optional Features:
                           s3c24x, sa1100.
   --enable-arm-quirks     Enable quirks for specific systems. Currently
                           supported quirks are for sa1100 and xscale3.
-  --enable-arm-atomic     Select whether to rely on gcc or directly use inline
-                          assembly to provide atomic instructions, valid
-                          values are "gcc" and "asm", default is "gcc" and
-                          should be fine except if you are using a broken
-                          toolchain
   --disable-doc-install   Do not install documentation
   --enable-dox-doc        Build Doxygen documentation
   --enable-dbx            Build Docbook XML documentation.
@@ -12784,28 +12778,6 @@ if test "${enable_arm_quirks+set}" = set; then :
 fi
 
 
-  arm_atomic=gcc
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ARM atomic instructions type" >&5
-$as_echo_n "checking for ARM atomic instructions type... " >&6; }
-  # Check whether --enable-arm-atomic was given.
-if test "${enable_arm_atomic+set}" = set; then :
-  enableval=$enable_arm_atomic; case "$enableval" in
-	gcc)  arm_atomic=gcc;;
-	asm)  arm_atomic=asm;;
-	*)    unset arm_atomic;;
-	esac
-fi
-
-  unset CONFIG_XENO_ARM_GCC_ATOMIC
-  unset CONFIG_XENO_ARM_ASM_ATOMIC
-  case "$arm_atomic" in
-  gcc) CONFIG_XENO_ARM_GCC_ATOMIC=y;;
-  asm) CONFIG_XENO_ARM_ASM_ATOMIC=y;;
-  *)  as_fn_error $? "Invalid value for arm-atomic option, valid values are \"gcc\" and \"asm\"" "$LINENO" 5
-  esac
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${arm_atomic}" >&5
-$as_echo "${arm_atomic}" >&6; }
-
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ARM SA1100 architecture" >&5
 $as_echo_n "checking for ARM SA1100 architecture... " >&6; }
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${CONFIG_XENO_ARM_SA1100:-no}" >&5
@@ -13488,12 +13460,6 @@ $as_echo "#define CONFIG_X86_TSC 1" >>confdefs.h
 
 test x$CONFIG_XENO_ARM_SA1100 = xy &&
 $as_echo "#define CONFIG_XENO_ARM_SA1100 1" >>confdefs.h
-
-test x$CONFIG_XENO_ARM_GCC_ATOMIC = xy &&
-$as_echo "#define CONFIG_XENO_ARM_GCC_ATOMIC 1" >>confdefs.h
-
-test x$CONFIG_XENO_ARM_ASM_ATOMIC = xy &&
-$as_echo "#define CONFIG_XENO_ARM_ASM_ATOMIC 1" >>confdefs.h
 
 test x$CONFIG_XENO_CPU_XSC3 = xy &&
 $as_echo "#define CONFIG_XENO_CPU_XSC3 1" >>confdefs.h

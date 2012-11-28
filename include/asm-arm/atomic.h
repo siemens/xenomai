@@ -36,7 +36,7 @@ xnarch_atomic_set(xnarch_atomic_t *ptr, unsigned long val)
 	ptr->counter = val;
 }
 
-#ifdef CONFIG_XENO_ARM_GCC_ATOMIC
+#ifdef CONFIG_XENO_ATOMIC_BUILTINS
 #define xnarch_memory_barrier()	__sync_synchronize()
 #define xnarch_read_memory_barrier() xnarch_memory_barrier()
 #define xnarch_write_memory_barrier() xnarch_memory_barrier()
@@ -45,8 +45,8 @@ xnarch_atomic_set(xnarch_atomic_t *ptr, unsigned long val)
         __sync_val_compare_and_swap(&(v)->counter,      \
                                     (unsigned long)(o), \
                                     (unsigned long)(n))
-#else /* CONFIG_XENO_ARM_ASM_ATOMIC || __KERNEL__ */
+#else /* CONFIG_XENO_ATOMIC_BUILTINS */
 #include <asm/xenomai/atomic_asm.h>
-#endif /* CONFIG_XENO_ARM_ASM_ATOMIC || __KERNEL__ */
+#endif /* CONFIG_XENO_ATOMIC_BUILTINS */
 
 #endif /* !_XENO_ASM_ARM_ATOMIC_H */

@@ -20,8 +20,12 @@
  * 02111-1307, USA.
  */
 
-#ifndef _XENO_ASM_ARM_ASM_ATOMIC_H
-#define _XENO_ASM_ARM_ASM_ATOMIC_H
+#ifndef _XENO_ASM_ARM_ATOMIC_ASM_H
+#define _XENO_ASM_ARM_ATOMIC_ASM_H
+
+#ifndef _XENO_ASM_ARM_ATOMIC_H
+#error "please don't include asm/atomic_asm.h directly"
+#endif
 
 extern void __xnarch_xchg_called_with_bad_pointer(void);
 
@@ -475,4 +479,4 @@ xnarch_atomic_clear_mask(xnarch_atomic_t *v, long mask)
 #endif /* __KERNEL__ */
 #endif /* ARM arch <= 5 */
 
-#endif /* !_XENO_ASM_ARM_ASM_ATOMIC_H */
+#endif /* !_XENO_ASM_ARM_ATOMIC_ASM_H */
