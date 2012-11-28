@@ -82,6 +82,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #else /* !__KERNEL__ */
 
 #include <errno.h>
+#include <time.h>
 
 /*
  * The following code defines an inline syscall mechanism used by
@@ -177,6 +178,10 @@ inline __attribute__((weak)) int shm_unlink(const char *name)
 	errno = ENOSYS;
 	return -1;
 }
+
+int clock_nanosleep(clockid_t __clock_id, int __flags,
+		    const struct timespec *__req,
+		    struct timespec *__rem);
 
 #endif /* __KERNEL__ */
 
