@@ -285,7 +285,7 @@ struct xnsched *xnsched_finish_unlocked_switch(struct xnsched *sched)
 #endif /* CONFIG_SMP */
 
 	last = sched->last;
-	__clrbits(sched->status, XNSWLOCK);
+	__clrbits(sched->status, XNINSW);
 
 	/* Detect a thread which called xnpod_migrate_thread */
 	if (last->sched != sched) {

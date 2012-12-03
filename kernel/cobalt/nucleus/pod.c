@@ -1090,7 +1090,7 @@ void xnpod_delete_thread(xnthread_t *thread)
 		xnsched_set_resched(sched);
 		xnpod_schedule();
 #ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
-	} else if (!testbits(sched->status, XNSWLOCK) &&
+	} else if (!testbits(sched->status, XNINSW) &&
 		   !xnthread_test_state(thread, XNMIGRATE)) {
 		/*
 		 * When killing a thread in the course of a context
@@ -1947,7 +1947,7 @@ static inline void xnpod_switch_to(xnsched_t *sched,
 {
 #ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
 	sched->last = prev;
-	__setbits(sched->status, XNSWLOCK);
+	__setbits(sched->status, XNINSW);
 	xnlock_clear_irqon(&nklock);
 #endif /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
 
