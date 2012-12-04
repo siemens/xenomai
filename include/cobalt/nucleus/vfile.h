@@ -32,6 +32,7 @@
 #include <linux/proc_fs.h>
 #include <linux/seq_file.h>
 #include <nucleus/types.h>
+#include <nucleus/lock.h>
 
 struct xnvfile_directory;
 struct xnvfile_regular_iterator;
@@ -611,10 +612,6 @@ int xnvfile_init_root(void);
 
 void xnvfile_destroy_root(void);
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 int xnvfile_init_snapshot(const char *name,
 			  struct xnvfile_snapshot *vfile,
 			  struct xnvfile_directory *parent);
@@ -645,10 +642,6 @@ ssize_t xnvfile_get_integer(struct xnvfile_input *input, long *valp);
 int __vfile_hostlock_get(struct xnvfile *vfile);
 
 void __vfile_hostlock_put(struct xnvfile *vfile);
-
-#ifdef __cplusplus
-}
-#endif
 
 static inline
 void xnvfile_destroy_snapshot(struct xnvfile_snapshot *vfile)

@@ -26,7 +26,9 @@
 #include <nucleus/timer.h>
 #include <nucleus/intr.h>
 #include <nucleus/heap.h>
-#include <asm/xenomai/bits/sched.h>
+#include <nucleus/shadow.h>
+#include <asm/xenomai/arith.h>
+#include <asm/xenomai/thread.h>
 
 static struct xnsched_class *xnsched_class_highest;
 
@@ -146,7 +148,7 @@ void xnsched_init(struct xnsched *sched, int cpu)
 	xntimer_set_sched(&sched->htimer, sched);
 	sched->zombie = NULL;
 #ifdef CONFIG_SMP
-	xnarch_cpus_clear(sched->resched);
+	cpus_clear(sched->resched);
 #endif
 
 	attr.flags = XNROOT | XNSTARTED | XNFPU;
@@ -158,7 +160,7 @@ void xnsched_init(struct xnsched *sched, int cpu)
 	xnthread_init(&sched->rootcb, &attr,
 		      sched, &xnsched_class_idle, &param);
 
-	sched->rootcb.affinity = xnarch_cpumask_of_cpu(cpu);
+	sched->rootcb.affinity = cpumask_of_cpu(cpu);
 	xnstat_exectime_set_current(sched, &sched->rootcb.stat.account);
 #ifdef CONFIG_XENO_HW_FPU
 	sched->fpuholder = &sched->rootcb;
@@ -774,7 +776,7 @@ static int vfile_schedstat_rewind(struct xnvfile_snapshot_iterator *it)
 	 */
 	priv->curr = getheadq(&nkpod->threadq);
 	priv->irq = 0;
-	irqnr = xnintr_query_init(&priv->intr_it) * XNARCH_NR_CPUS;
+	irqnr = xnintr_query_init(&priv->intr_it) * NR_CPUS;
 
 	return irqnr + countq(&nkpod->threadq);
 }
@@ -825,7 +827,7 @@ static int vfile_schedstat_next(struct xnvfile_snapshot_iterator *it,
 	return 1;
 
 scan_irqs:
-	if (priv->irq >= XNARCH_NR_IRQS)
+	if (priv->irq >= IPIPE_NR_IRQS)
 		return 0;	/* All done. */
 
 	ret = xnintr_query_next(priv->irq++, &priv->intr_it, p->name);

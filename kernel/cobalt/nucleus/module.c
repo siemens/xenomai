@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2001-2012 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
@@ -21,24 +21,41 @@
  * An abstract RTOS core.
  */
 #include <linux/init.h>
+#include <linux/ipipe.h>
 #include <nucleus/pod.h>
 #include <nucleus/clock.h>
 #include <nucleus/timer.h>
 #include <nucleus/heap.h>
 #include <nucleus/intr.h>
+#include <nucleus/apc.h>
 #include <nucleus/version.h>
 #include <nucleus/sys_ppd.h>
-#ifdef CONFIG_XENO_OPT_PIPE
 #include <nucleus/pipe.h>
-#endif /* CONFIG_XENO_OPT_PIPE */
 #include <nucleus/select.h>
 #include <nucleus/vdso.h>
-#include <asm/xenomai/calibration.h>
 #include <asm-generic/xenomai/bits/timeconv.h>
+#include <asm/xenomai/calibration.h>
 
 MODULE_DESCRIPTION("Xenomai nucleus");
 MODULE_AUTHOR("rpm@xenomai.org");
 MODULE_LICENSE("GPL");
+
+static unsigned long timerfreq_arg;
+module_param_named(timerfreq, timerfreq_arg, ulong, 0444);
+
+static unsigned long clockfreq_arg;
+module_param_named(clockfreq, clockfreq_arg, ulong, 0444);
+
+#ifdef CONFIG_SMP
+static unsigned long supported_cpus_arg = -1;
+module_param_named(supported_cpus, supported_cpus_arg, ulong, 0444);
+#endif /* CONFIG_SMP */
+
+static unsigned long disable_arg;
+module_param_named(disable, disable_arg, ulong, 0444);
+
+struct xnarch_machdata xnarch_machdata;
+EXPORT_SYMBOL_GPL(xnarch_machdata);
 
 int xeno_nucleus_status = -EINVAL;
 
@@ -51,23 +68,111 @@ EXPORT_SYMBOL_GPL(__xnsys_global_ppd);
 #define boot_notice ""
 #endif
 
-int __init xenomai_init(void)
+static int __init mach_setup(void)
+{
+	int ret, virq, __maybe_unused cpu;
+	struct ipipe_sysinfo sysinfo;
+
+	if (disable_arg) {
+		printk("Xenomai: disabled on kernel command line\n");
+		return -ENOSYS;
+	}
+
+#ifdef CONFIG_SMP
+	cpus_clear(xnarch_machdata.supported_cpus);
+	for (cpu = 0; cpu < num_online_cpus(); cpu++)
+		if (supported_cpus_arg & (1 << cpu))
+			cpu_set(cpu, xnarch_machdata.supported_cpus);
+#endif /* CONFIG_SMP */
+
+	ret = ipipe_select_timers(&xnarch_supported_cpus);
+	if (ret < 0)
+		return ret;
+
+	ipipe_get_sysinfo(&sysinfo);
+
+	if (timerfreq_arg == 0)
+		timerfreq_arg = sysinfo.sys_hrtimer_freq;
+
+	if (clockfreq_arg == 0)
+		clockfreq_arg = sysinfo.sys_hrclock_freq;
+
+	if (clockfreq_arg == 0) {
+		printk(KERN_ERR "Xenomai: null clock frequency? Aborting.\n");
+		return -ENODEV;
+	}
+
+	xnarch_machdata.timer_freq = timerfreq_arg;
+	xnarch_machdata.clock_freq = clockfreq_arg;
+
+	if (xnarch_machdesc.init) {
+		ret = xnarch_machdesc.init();
+		if (ret)
+			return ret;
+	}
+
+	ipipe_register_head(&xnarch_machdata.domain, "Xenomai");
+
+	ret = -EBUSY;
+	virq = ipipe_alloc_virq();
+	if (virq == 0)
+		goto cleanup;
+
+	xnarch_machdata.apc_virq = virq;
+
+	virq = ipipe_alloc_virq();
+	if (virq == 0)
+		goto fail_virq;
+
+	xnarch_machdata.escalate_virq = virq;
+
+	ipipe_request_irq(&xnarch_machdata.domain,
+			  xnarch_machdata.escalate_virq,
+			  (ipipe_irq_handler_t)__xnpod_schedule_handler,
+			  NULL, NULL);
+
+	xnarch_init_timeconv(xnarch_machdata.clock_freq);
+
+	return 0;
+
+fail_virq:
+	ipipe_free_virq(virq);
+
+cleanup:
+	if (xnarch_machdesc.cleanup)
+		xnarch_machdesc.cleanup();
+
+	return ret;
+}
+
+static __init void mach_cleanup(void)
+{
+	ipipe_unregister_head(&xnarch_machdata.domain);
+	ipipe_free_irq(&xnarch_machdata.domain, xnarch_machdata.escalate_virq);
+	ipipe_free_virq(xnarch_machdata.escalate_virq);
+	ipipe_timers_release();
+}
+
+static int __init xenomai_init(void)
 {
 	int ret;
 
-	ret = rthal_init();
+	ret = mach_setup();
 	if (ret)
 		goto fail;
 
-	xnarch_init_timeconv(RTHAL_CLOCK_FREQ);
-	nktimerlat = rthal_timer_calibrate();
+	ret = xnapc_init();
+	if (ret)
+		goto cleanup_mach;
+
+	nktimerlat = xnarch_timer_calibrate();
 	nklatency = xnarch_ns_to_tsc(xnarch_get_sched_latency()) + nktimerlat;
 
 	ret = xnheap_init_mapped(&__xnsys_global_ppd.sem_heap,
 				 CONFIG_XENO_OPT_GLOBAL_SEM_HEAPSZ * 1024,
 				 XNARCH_SHARED_HEAP_FLAGS);
 	if (ret)
-		goto cleanup_arch;
+		goto cleanup_apc;
 
 	xnheap_set_label(&__xnsys_global_ppd.sem_heap, "global sem heap");
 
@@ -99,7 +204,7 @@ int __init xenomai_init(void)
 
 	xeno_nucleus_status = 0;
 
-	xnarch_cpus_and(nkaffinity, nkaffinity, xnarch_supported_cpus);
+	cpus_and(nkaffinity, nkaffinity, xnarch_supported_cpus);
 
 	return 0;
 
@@ -120,8 +225,11 @@ cleanup_proc:
 
 	xnpod_umount();
 
-cleanup_arch:
-	rthal_exit();
+cleanup_apc:
+	xnapc_cleanup();
+
+cleanup_mach:
+	mach_cleanup();
 fail:
 
 	xnlogerr("system init failed, code %d.\n", ret);

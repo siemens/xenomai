@@ -82,7 +82,7 @@
 /* Copied from vfp_save_state in arch/arm/vfp/vfphw.S
  * r0 = pointer to union vfp_state, r1 = fpexc
  */
-ENTRY(rthal_vfp_save)
+ENTRY(__asm_vfp_save)
 	VFPFSTMIA	r0, r2		@ save the working registers
 	VFPFMRX		r2, FPSCR	@ current status
 	tst		r1, #FPEXC_EX	@ is there additional state to save?
@@ -94,13 +94,13 @@ ENTRY(rthal_vfp_save)
 1:
 	stmia		r0, {r1, r2, r3, r12}	@ save FPEXC, FPSCR, FPINST, FPINST2
 	mov		pc, lr
-ENDPROC(rthal_vfp_save)
+ENDPROC(__asm_vfp_save)
 
 /* Copied from no_old_VFP_process in arch/arm/vfp/vfphw.S
  * r0 = pointer to union vfp_state
  * r1 = current cpu
  */
-ENTRY(rthal_vfp_load)
+ENTRY(__asm_vfp_load)
 #ifdef CONFIG_SMP
 	str		r1, [r0, #VFP_CPU]
 #endif
@@ -116,7 +116,7 @@ ENTRY(rthal_vfp_load)
 1:
 	VFPFMXR		FPSCR, r2	@ restore status
 	mov		pc, lr
-ENDPROC(rthal_vfp_load)
+ENDPROC(__asm_vfp_load)
 #endif
 
 /*
@@ -144,7 +144,7 @@ ENDPROC(rthal_vfp_load)
  *  Calling args:
  * r0 = previous task_struct, r1 = previous thread_info, r2 = next thread_info
  */
-ENTRY(rthal_thread_switch)
+ENTRY(__asm_thread_switch)
 	add     ip, r1, #TI_CPU_SAVE
 	ldr     r3, [r2, #TI_TP_VALUE]
  ARM(	stmia	ip!, {r4 - sl, fp, sp, lr} )	@ Store most regs on stack
@@ -166,13 +166,13 @@ ENTRY(rthal_thread_switch)
  THUMB(	ldmia	ip!, {r4 - sl, fp}	   )	@ Load all regs saved previously
  THUMB(	ldr	sp, [ip], #4		   )
  THUMB(	ldr	pc, [ip]		   )
-ENDPROC(rthal_thread_switch)
+ENDPROC(__asm_thread_switch)
 
 /*
- * r4 = xnarch_thread_trampoline
- * r5 = xnarchtcb_t *
+ * r4 = thread_trampoline
+ * r5 = struct xnarchtcb *
  */
-ENTRY(rthal_thread_trampoline)
+ENTRY(__asm_thread_trampoline)
 	mov	r0, r5
 	mov	pc, r4
-ENDPROC(rthal_thread_trampoline)
+ENDPROC(__asm_thread_trampoline)

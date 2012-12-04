@@ -59,10 +59,6 @@ typedef struct xnobject {
 
 #define link2xnobj(ln)		container_of(ln, struct xnobject, link)
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 int xnregistry_init(void);
 
 void xnregistry_cleanup(void);
@@ -188,10 +184,6 @@ void *xnregistry_get(xnhandle_t handle);
 void *xnregistry_fetch(xnhandle_t handle);
 
 u_long xnregistry_put(xnhandle_t handle);
-
-#ifdef __cplusplus
-}
-#endif
 
 extern struct xnpnode_ops xnregistry_vfsnap_ops;
 

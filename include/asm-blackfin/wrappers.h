@@ -29,18 +29,6 @@
 #define __put_user_inatomic __put_user
 #define __get_user_inatomic __get_user
 
-#define wrap_phys_mem_prot(filp,pfn,size,prot)	(prot)
-
 #define wrap_strncpy_from_user(dstP, srcP, n)	strncpy_from_user(dstP, srcP, n)
-
-#ifdef CONFIG_XENO_LEGACY_IPIPE
-
-#if !defined(CONFIG_GENERIC_HARDIRQS) \
-	|| LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)
-#define ipipe_enable_irq(irq)   irq_to_desc(irq)->chip->enable(irq)
-#define ipipe_disable_irq(irq)  irq_to_desc(irq)->chip->disable(irq)
-#endif
-
-#endif /* CONFIG_XENO_LEGACY_IPIPE */
 
 #endif /* _XENO_ASM_BLACKFIN_WRAPPERS_H */

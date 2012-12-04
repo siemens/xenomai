@@ -13,7 +13,7 @@
 #include <nucleus/vdso.h>
 #include <asm/xenomai/syscall.h>
 #include <asm-generic/sem_heap.h>
-#include <asm-generic/bits/current.h>
+#include <asm-generic/current.h>
 
 #define PRIVATE 0
 #define SHARED 1
@@ -92,7 +92,7 @@ static void unmap_on_fork(void)
 
 static void xeno_init_vdso(void)
 {
-	xnsysinfo_t sysinfo;
+	struct xnsysinfo sysinfo;
 	int err;
 
 	err = XENOMAI_SYSCALL2(sc_nucleus_info, 0, &sysinfo);

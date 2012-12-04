@@ -45,6 +45,8 @@
 #include <linux/cred.h>
 #include <linux/jhash.h>
 #include <linux/file.h>
+#include <linux/ptrace.h>
+#include <linux/vmalloc.h>
 #include <asm/signal.h>
 #include <nucleus/pod.h>
 #include <nucleus/heap.h>
@@ -57,9 +59,11 @@
 #include <nucleus/sys_ppd.h>
 #include <nucleus/vdso.h>
 #include <nucleus/debug.h>
+#include <nucleus/shadow.h>
 #include <asm/xenomai/features.h>
 #include <asm/xenomai/syscall.h>
-#include <asm/xenomai/bits/shadow.h>
+#include <asm/xenomai/thread.h>
+#include <asm-generic/xenomai/mayday.h>
 
 #define EVENT_PROPAGATE   0
 #define EVENT_STOP        1
@@ -363,127 +367,6 @@ static inline int normalize_priority(int prio)
  *
  * Rescheduling: always.
  */
-
-#ifdef CONFIG_XENO_LEGACY_IPIPE
-
-int xnshadow_harden(void)
-{
-	struct task_struct *p = current;
-	struct gatekeeper_data *gd;
-	struct xnthread *thread;
-	struct xnsched *sched;
-	int cpu;
-
-redo:
-	thread = xnshadow_current();
-	if (thread == NULL)
-		return -EPERM;
-
-	cpu = task_cpu(p);
-	gd = &per_cpu(shadow_migration, cpu);
-
-	/* Grab the request token. */
-	if (down_interruptible(&gd->gksync))
-		return -ERESTARTSYS;
-
-	preempt_disable();
-
-	/*
-	 * Assume that we might have been migrated while waiting for
-	 * the token. Redo acquisition in such a case, so that we
-	 * don't mistakenly send the request to the wrong
-	 * gatekeeper.
-	 */
-	if (cpu != task_cpu(p)) {
-		preempt_enable();
-		up(&gd->gksync);
-		goto redo;
-	}
-
-	xnthread_clear_sync_window(thread, XNRELAX);
-
-	/*
-	 * Set up the request to move "current" from the Linux domain
-	 * to the Xenomai domain. This will cause the shadow thread to
-	 * resume using the register state of the current Linux
-	 * task. For this to happen, we set up the migration data,
-	 * prepare to suspend the current task, wake up the gatekeeper
-	 * which will perform the actual transition, then schedule
-	 * out.
-	 */
-
-	trace_mark(xn_nucleus, shadow_gohard,
-		   "thread %p thread_name %s comm %s",
-		   thread, xnthread_name(thread), p->comm);
-
-	gd->gktarget = thread;
-	gd->task_hijacked = p;
-	set_current_state(TASK_INTERRUPTIBLE | TASK_ATOMICSWITCH);
-	wake_up_process(gd->gatekeeper);
-	schedule();
-
-	/*
-	 * Rare case: we might have received a signal before entering
-	 * schedule() and returned early from it. Since TASK_UNINTERRUPTIBLE
-	 * is unavailable to us without wrecking the runqueue's count of
-	 * uniniterruptible tasks, we just notice the issue and gracefully
-	 * fail; the caller will have to process this signal anyway.
-	 */
-	if (ipipe_current_domain == ipipe_root_domain) {
-		if (XENO_DEBUG(NUCLEUS) && (!signal_pending(p)
-		    || p->state != TASK_RUNNING))
-			xnpod_fatal
-			    ("xnshadow_harden() failed for thread %s[%d]",
-			     thread->name, xnthread_user_pid(thread));
-
-		/*
-		 * Synchronize with the chosen gatekeeper so that it no longer
-		 * holds any reference to this thread and does not develop the
-		 * idea to resume it for the Xenomai domain if, later on, we
-		 * may happen to reenter TASK_INTERRUPTIBLE state.
-		 */
-		down(&gd->gksync);
-		up(&gd->gksync);
-
-		return -ERESTARTSYS;
-	}
-
-	/* "current" is now running into the Xenomai domain. */
-	sched = xnsched_finish_unlocked_switch(thread->sched);
-	xnsched_finalize_zombie(sched);
-#ifdef CONFIG_XENO_HW_FPU
-	xnpod_switch_fpu(sched);
-#endif /* CONFIG_XENO_HW_FPU */
-
-	if (xnthread_signaled_p(thread))
-		xnpod_dispatch_signals();
-
-	xnlock_clear_irqon(&nklock);
-
-	trace_mark(xn_nucleus, shadow_hardened, "thread %p thread_name %s",
-		   thread, xnthread_name(thread));
-
-	/*
-	 * Recheck pending signals once again. As we block task
-	 * wakeups during the migration and handle_sigwake_event()
-	 * ignores signals until XNRELAX is left, any signal between
-	 * entering TASK_ATOMICSWITCH and starting the migration in
-	 * the gatekeeker thread is just silently queued up to here.
-	 */
-	if (signal_pending(p)) {
-		xnshadow_relax(!xnthread_test_state(thread, XNDEBUG),
-			       SIGDEBUG_MIGRATE_SIGNAL);
-		return -ERESTARTSYS;
-	}
-
-	xnsched_resched_after_unlocked_switch();
-
-	return 0;
-}
-EXPORT_SYMBOL_GPL(xnshadow_harden);
-
-#else /* !CONFIG_XENO_LEGACY_IPIPE */
-
 void ipipe_migration_hook(struct task_struct *p) /* hw IRQs off */
 {
 	struct xnthread *thread = xnshadow_thread(p);
@@ -502,7 +385,6 @@ void ipipe_migration_hook(struct task_struct *p) /* hw IRQs off */
 	sched = xnpod_sched_slot(task_cpu(p));
 	if (sched != thread->sched)
 		xnsched_migrate_passive(thread, sched);
-
 #else
 	(void)sched;
 #endif /* CONFIG_SMP */
@@ -573,8 +455,6 @@ int xnshadow_harden(void)
 	return 0;
 }
 EXPORT_SYMBOL_GPL(xnshadow_harden);
-
-#endif /* !CONFIG_XENO_LEGACY_IPIPE */
 
 /*!
  * @internal
@@ -836,7 +716,6 @@ static inline void init_threadinfo(struct xnthread *thread)
 {
 	struct ipipe_threadinfo *p;
 
-	set_ptd(&thread->ipipe_data);
 	p = ipipe_current_threadinfo();
 	p->thread = thread;
 	p->mm = current->mm;
@@ -846,7 +725,6 @@ static inline void destroy_threadinfo(void)
 {
 	struct ipipe_threadinfo *p = ipipe_current_threadinfo();
 	p->thread = NULL;
-	clear_ptd();
 }
 
 /**
@@ -912,7 +790,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 {
 	struct xnthread_user_window *u_window;
 	struct xnthread_start_attr attr;
-	xnarch_cpumask_t affinity;
+	cpumask_t affinity;
 	struct xnsys_ppd *sys_ppd;
 	xnheap_t *sem_heap;
 	spl_t s;
@@ -951,8 +829,8 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 		return -ENOMEM;
 
 	/* Restrict affinity to a single CPU of nkaffinity & current set. */
-	xnarch_cpus_and(affinity, current->cpus_allowed, nkaffinity);
-	affinity = xnarch_cpumask_of_cpu(xnarch_first_cpu(affinity));
+	cpus_and(affinity, current->cpus_allowed, nkaffinity);
+	affinity = cpumask_of_cpu(first_cpu(affinity));
 	set_cpus_allowed(current, affinity);
 
 	trace_mark(xn_nucleus, shadow_map,
@@ -1016,7 +894,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 	 */
 	xnthread_set_info(thread, XNPRIOSET);
 
-	xnarch_trace_pid(xnthread_user_pid(thread),
+	xntrace_pid(xnthread_user_pid(thread),
 			 xnthread_current_priority(thread));
 
 	return ret;
@@ -1149,7 +1027,7 @@ static void stringify_feature_set(u_long fset, char *buf, int size)
 static int mayday_map(struct file *filp, struct vm_area_struct *vma)
 {
 	vma->vm_pgoff = (unsigned long)mayday_page >> PAGE_SHIFT;
-	return xnarch_remap_vm_page(vma, vma->vm_start,
+	return xnheap_remap_vm_page(vma, vma->vm_start,
 				    (unsigned long)mayday_page);
 }
 
@@ -1279,7 +1157,7 @@ static inline int raise_cap(int cap)
 }
 
 static int xnshadow_sys_bind(unsigned int magic,
-			     xnsysinfo_t __user *u_breq)
+			     struct xnsysinfo __user *u_breq)
 {
 	xnshadow_ppd_t *ppd = NULL, *sys_ppd = NULL;
 	unsigned long featreq, featmis;
@@ -1444,15 +1322,15 @@ eventcb_done:
 	return muxid;
 }
 
-static int xnshadow_sys_info(int muxid, xnsysinfo_t __user *u_info)
+static int xnshadow_sys_info(int muxid, struct xnsysinfo __user *u_info)
 {
-	xnsysinfo_t info;
+	struct xnsysinfo info;
 
 	if (muxid < 0 || muxid > XENOMAI_SKINS_NR ||
 	    skins[muxid].props == NULL)
 		return -EINVAL;
 
-	info.clockfreq = xnarch_get_clock_freq();
+	info.clockfreq = xnarch_machdata.clock_freq;
 	info.vdso = xnheap_mapped_offset(&xnsys_ppd_get(1)->sem_heap,
 					 nkvdso);
 
@@ -1589,35 +1467,35 @@ static int xnshadow_sys_trace(int op, unsigned long a1,
 
 	switch (op) {
 	case __xntrace_op_max_begin:
-		err = xnarch_trace_max_begin(a1);
+		err = xntrace_max_begin(a1);
 		break;
 
 	case __xntrace_op_max_end:
-		err = xnarch_trace_max_end(a1);
+		err = xntrace_max_end(a1);
 		break;
 
 	case __xntrace_op_max_reset:
-		err = xnarch_trace_max_reset();
+		err = xntrace_max_reset();
 		break;
 
 	case __xntrace_op_user_start:
-		err = xnarch_trace_user_start();
+		err = xntrace_user_start();
 		break;
 
 	case __xntrace_op_user_stop:
-		err = xnarch_trace_user_stop(a1);
+		err = xntrace_user_stop(a1);
 		break;
 
 	case __xntrace_op_user_freeze:
-		err = xnarch_trace_user_freeze(a1, a2);
+		err = xntrace_user_freeze(a1, a2);
 		break;
 
 	case __xntrace_op_special:
-		err = xnarch_trace_special(a1 & 0xFF, a2);
+		err = xntrace_special(a1 & 0xFF, a2);
 		break;
 
 	case __xntrace_op_special_u64:
-		err = xnarch_trace_special_u64(a1 & 0xFF,
+		err = xntrace_special_u64(a1 & 0xFF,
 					       (((u64) a2) << 32) | a3);
 		break;
 	}
@@ -2057,7 +1935,7 @@ restart:
 	if ((sysflags & __xn_exec_lostage) != 0) {
 		/* Syscall must run into the Linux domain. */
 
-		if (ipd == &rthal_archdata.domain) {
+		if (ipd == &xnarch_machdata.domain) {
 			/*
 			 * Request originates from the Xenomai domain:
 			 * just relax the caller and execute the
@@ -2078,7 +1956,7 @@ restart:
 		 * Syscall must be processed either by Xenomai, or by
 		 * the calling domain.
 		 */
-		if (ipd != &rthal_archdata.domain)
+		if (ipd != &xnarch_machdata.domain)
 			/*
 			 * Request originates from the Linux domain:
 			 * propagate the event to our Linux-based
@@ -2410,7 +2288,7 @@ static int handle_schedule_event(struct task_struct *next_task)
 			int sigpending = signal_pending(next_task);
 
 			if (!xnthread_test_state(next, XNRELAX)) {
-				xnarch_trace_panic_freeze();
+				xntrace_panic_freeze();
 				show_stack(xnthread_user_task(next), NULL);
 				xnpod_fatal
 				    ("Hardened thread %s[%d] running in Linux"" domain?! (status=0x%lx, sig=%d, prev=%s[%d])",
@@ -2421,7 +2299,7 @@ static int handle_schedule_event(struct task_struct *next_task)
 				      properly recover from a stopped state. */
 				   xnthread_test_state(next, XNSTARTED)
 				   && xnthread_test_state(next, XNPEND)) {
-				xnarch_trace_panic_freeze();
+				xntrace_panic_freeze();
 				show_stack(xnthread_user_task(next), NULL);
 				xnpod_fatal
 				    ("blocked thread %s[%d] rescheduled?! (status=0x%lx, sig=%d, prev=%s[%d])",
@@ -2596,7 +2474,7 @@ int ipipe_trap_hook(struct ipipe_trap_data *data)
 	 * raise a fatal error when some Linux fixup code is available
 	 * to solve the error condition.
 	 */
-	rthal_archdata.faults[ipipe_processor_id()][data->exception]++;
+	xnarch_machdata.faults[ipipe_processor_id()][data->exception]++;
 	if (xnpod_handle_exception(data))
 		return EVENT_STOP;
 
@@ -2607,12 +2485,12 @@ void xnshadow_grab_events(void)
 {
 	init_hostrt();
 	ipipe_set_hooks(ipipe_root_domain, IPIPE_SYSCALL|IPIPE_KEVENT);
-	ipipe_set_hooks(&rthal_archdata.domain,	IPIPE_SYSCALL|IPIPE_TRAP);
+	ipipe_set_hooks(&xnarch_machdata.domain,	IPIPE_SYSCALL|IPIPE_TRAP);
 }
 
 void xnshadow_release_events(void)
 {
-	ipipe_set_hooks(&rthal_archdata.domain,	0);
+	ipipe_set_hooks(&xnarch_machdata.domain,	0);
 	ipipe_set_hooks(ipipe_root_domain, 0);
 }
 
@@ -2620,8 +2498,6 @@ int xnshadow_mount(void)
 {
 	unsigned int i, size;
 	int ret;
-
-	__xnshadow_init();
 
 	sema_init(&completion_mutex, 1);
 
@@ -2668,8 +2544,6 @@ void xnshadow_cleanup(void)
 		kfree(ppd_hash);
 		ppd_hash = NULL;
 	}
-
-	__xnshadow_exit();
 
 	mayday_cleanup_page();
 

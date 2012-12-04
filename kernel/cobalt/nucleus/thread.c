@@ -23,7 +23,7 @@
 #include <nucleus/thread.h>
 #include <nucleus/sched.h>
 #include <nucleus/clock.h>
-#include <asm/xenomai/bits/thread.h>
+#include <asm/xenomai/thread.h>
 
 static unsigned idtags;
 

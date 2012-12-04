@@ -27,7 +27,7 @@
 
 #include <linux/module.h>
 #include <linux/delay.h>
-
+#include <nucleus/apc.h>
 #include "rtdm/internal.h"
 
 #define SET_DEFAULT_OP(device, operation)				\
@@ -458,7 +458,7 @@ int __init rtdm_dev_init(void)
 
 	sema_init(&nrt_dev_lock, 1);
 
-	rtdm_apc = rthal_apc_alloc("deferred RTDM close", rtdm_apc_handler,
+	rtdm_apc = xnapc_alloc("deferred RTDM close", rtdm_apc_handler,
 				   NULL);
 	if (rtdm_apc < 0)
 		return rtdm_apc;
@@ -499,7 +499,7 @@ err_out2:
 	kfree(rtdm_named_devices);
 
 err_out1:
-	rthal_apc_free(rtdm_apc);
+	xnapc_free(rtdm_apc);
 
 	return err;
 }
@@ -510,7 +510,7 @@ void rtdm_dev_cleanup(void)
 	 * Note: no need to flush the cleanup_queue as no device is allowed
 	 * to deregister as long as there are references.
 	 */
-	rthal_apc_free(rtdm_apc);
+	xnapc_free(rtdm_apc);
 	kfree(rtdm_named_devices);
 	kfree(rtdm_protocol_devices);
 }

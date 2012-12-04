@@ -64,6 +64,9 @@ HEAP {
  *@{*/
 
 #include <stdarg.h>
+#include <linux/sched.h>
+#include <linux/mm.h>
+#include <linux/semaphore.h>
 #include <nucleus/pod.h>
 #include <nucleus/thread.h>
 #include <nucleus/heap.h>
@@ -255,7 +258,7 @@ static void init_extent(xnheap_t *heap, xnextent_t *extent)
 int xnheap_init(xnheap_t *heap,
 		void *heapaddr, u_long heapsize, u_long pagesize)
 {
-	unsigned cpu, nr_cpus = xnarch_num_online_cpus();
+	unsigned cpu, nr_cpus = num_online_cpus();
 	u_long hdrsize, shiftsize, pageshift;
 	xnextent_t *extent;
 	spl_t s;
@@ -1019,11 +1022,13 @@ void xnheap_schedule_free(xnheap_t *heap, void *block, xnholder_t *link)
 	spl_t s;
 
 	xnlock_get_irqsave(&heap->lock, s);
-	/* Hack: we only need a one-way linked list for remembering the
-	   idle objects through the 'next' field, so the 'last' field of
-	   the link is used to point at the beginning of the freed
-	   memory. */
-	cpu = xnarch_current_cpu();
+	/*
+	 * NOTE: we only need a one-way linked list for remembering
+	 * the idle objects through the 'next' field, so the 'last'
+	 * field of the link is used to point at the beginning of the
+	 * freed memory.
+	 */
+	cpu = ipipe_processor_id();
 	link->last = (xnholder_t *)block;
 	link->next = heap->idleq[cpu];
 	heap->idleq[cpu] = link;
@@ -1283,20 +1288,21 @@ static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 			vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
 
 		while (size > 0) {
-			if (xnarch_remap_vm_page(vma, maddr, vaddr))
+			if (xnheap_remap_vm_page(vma, maddr, vaddr))
 				goto deref_out;
 
 			maddr += PAGE_SIZE;
 			vaddr += PAGE_SIZE;
 			size -= PAGE_SIZE;
 		}
-	} else if (xnarch_remap_io_page_range(file,vma,
+	} else if (xnheap_remap_io_page_range(file,vma,
 					      vma->vm_start,
 					      __pa(vaddr),
 					      size, vma->vm_page_prot))
 		goto deref_out;
 
-	xnarch_fault_range(vma);
+	if (xnarch_machdesc.prefault)
+		xnarch_machdesc.prefault(vma);
 #else /* !CONFIG_MMU */
 	if ((kmflags & ~XNHEAP_GFP_NONCACHED) != 0 ||
 	    kmflags == XNHEAP_GFP_NONCACHED)
@@ -1449,6 +1455,38 @@ void xnheap_destroy_mapped(xnheap_t *heap,
 
 	if (release)
 		release(heap);
+}
+
+int xnheap_remap_vm_page(struct vm_area_struct *vma,
+			 unsigned long from, unsigned long to)
+{
+	struct page *page = vmalloc_to_page((void *)to);
+#ifdef CONFIG_MMU
+	return vm_insert_page(vma, from, page);
+#else
+	unsigned long pfn = page_to_pfn(page);
+	return remap_pfn_range(vma, from, pfn, PAGE_SHIFT, vma->vm_page_prot);
+#endif
+}
+
+int xnheap_remap_io_page_range(struct file *filp,
+			       struct vm_area_struct *vma,
+			       unsigned long from, phys_addr_t to,
+			       unsigned long size, pgprot_t prot)
+{
+#ifdef __HAVE_PHYS_MEM_ACCESS_PROT
+	prot = phys_mem_access_prot(filp, to >> PAGE_SHIFT, size, prot);
+#endif
+	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+	/* Sets VM_RESERVED | VM_IO | VM_PFNMAP on the vma. */
+	return remap_pfn_range(vma, from, to >> PAGE_SHIFT, size, prot);
+}
+
+int xnheap_remap_kmem_page_range(struct vm_area_struct *vma,
+				 unsigned long from, unsigned long to,
+				 unsigned long size, pgprot_t prot)
+{
+	return remap_pfn_range(vma, from, to >> PAGE_SHIFT, size, prot);
 }
 
 static struct file_operations xnheap_fops = {

@@ -128,7 +128,6 @@ echo $p | patch_append kernel/Makefile
 # there, so that we don't pollute the Xenomai source tree with
 # compilation files.
 patch_link n m kernel/cobalt kernel/xenomai
-patch_link n m kernel/cobalt/arch/generic kernel/xenomai/hal
 patch_link n m kernel/cobalt/nucleus kernel/xenomai/nucleus
 patch_link n m kernel/cobalt/rtdm kernel/xenomai/rtdm
 patch_link r m kernel/drivers drivers/xenomai

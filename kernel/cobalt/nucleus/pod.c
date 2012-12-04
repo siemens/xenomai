@@ -1,6 +1,6 @@
-/*!\file pod.c
- * \brief Real-time pod services.
- * \author Philippe Gerum
+/**@file pod.c
+ * @brief Real-time pod services.
+ * @author Philippe Gerum
  *
  * Copyright (C) 2001-2008 Philippe Gerum <rpm@xenomai.org>.
  * Copyright (C) 2004 The RTAI project <http://www.rtai.org>
@@ -22,17 +22,20 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  *
- * \ingroup pod
+ * @ingroup pod
  */
 
-/*!
- * \ingroup nucleus
- * \defgroup pod Real-time pod services.
+/**
+ * @ingroup nucleus
+ * @defgroup pod Real-time pod services.
  *
  * Real-time pod services.
  *@{*/
 
 #include <stdarg.h>
+#include <linux/kallsyms.h>
+#include <linux/ptrace.h>
+#include <linux/sched.h>
 #include <nucleus/version.h>
 #include <nucleus/pod.h>
 #include <nucleus/timer.h>
@@ -44,15 +47,12 @@
 #include <nucleus/stat.h>
 #include <nucleus/assert.h>
 #include <nucleus/select.h>
-#include <asm/xenomai/bits/pod.h>
+#include <nucleus/shadow.h>
+#include <nucleus/lock.h>
+#include <asm/xenomai/thread.h>
 
 xnpod_t nkpod_struct;
 EXPORT_SYMBOL_GPL(nkpod_struct);
-
-DEFINE_XNLOCK(nklock);
-#if defined(CONFIG_SMP) || XENO_DEBUG(XNLOCK)
-EXPORT_SYMBOL_GPL(nklock);
-#endif /* CONFIG_SMP || XENO_DEBUG(XNLOCK) */
 
 u_long nklatency;
 EXPORT_SYMBOL_GPL(nklatency);
@@ -60,7 +60,7 @@ EXPORT_SYMBOL_GPL(nklatency);
 /* Already accounted for in nklatency, kept separately for user information. */
 u_long nktimerlat;
 
-xnarch_cpumask_t nkaffinity = XNPOD_ALL_CPUS;
+cpumask_t nkaffinity = XNPOD_ALL_CPUS;
 
 #ifdef CONFIG_XENO_OPT_DEBUG
 struct xnvfile_directory debug_vfroot;
@@ -145,7 +145,7 @@ void xnpod_switch_fpu(xnsched_t *sched)
 
 static inline int __xnpod_fault_init_fpu(struct xnthread *thread)
 {
-	xnarchtcb_t *tcb = xnthread_archtcb(thread);
+	struct xnarchtcb *tcb = xnthread_archtcb(thread);
 
 	if (xnpod_shadow_p() && !xnarch_fpu_init_p(tcb->user_task)) {
 		/*
@@ -188,21 +188,28 @@ static inline int __xnpod_fault_init_fpu(struct xnthread *thread)
 
 #endif /* !CONFIG_XENO_HW_FPU */
 
-void xnpod_fatal_helper(const char *format, ...)
+void xnpod_fatal(const char *format, ...)
 {
 	static char msg_buf[1024];
-	const unsigned nr_cpus = xnarch_num_online_cpus();
+	const unsigned nr_cpus = num_online_cpus();
+	struct xnthread *thread;
 	xnholder_t *holder;
+	xnsched_t *sched;
+	char pbuf[16];
 	xnticks_t now;
 	unsigned cpu;
 	va_list ap;
+	int cprio;
 	spl_t s;
+
+	xntrace_panic_freeze();
+	ipipe_prepare_panic();
 
 	xnlock_get_irqsave(&nklock, s);
 
 	va_start(ap, format);
 	vsnprintf(msg_buf, sizeof(msg_buf), format, ap);
-	xnlogerr("%s", msg_buf);
+	printk(KERN_ERR "%s", msg_buf);
 	va_end(ap);
 
 	if (!xnpod_active_p() || xnpod_fatal_p())
@@ -211,49 +218,48 @@ void xnpod_fatal_helper(const char *format, ...)
 	__setbits(nkpod->status, XNFATAL);
 	now = xnclock_read_monotonic();
 
-	xnlogerr_noprompt("\n %-3s  %-6s %-8s %-8s %-8s  %s\n",
-			  "CPU", "PID", "PRI", "TIMEOUT", "STAT", "NAME");
+	printk(KERN_ERR "\n %-3s  %-6s %-8s %-8s %-8s  %s\n",
+	       "CPU", "PID", "PRI", "TIMEOUT", "STAT", "NAME");
 
 	for (cpu = 0; cpu < nr_cpus; ++cpu) {
-		xnsched_t *sched = xnpod_sched_slot(cpu);
-		char pbuf[16];
+		sched = xnpod_sched_slot(cpu);
 
 		holder = getheadq(&nkpod->threadq);
-
 		while (holder) {
-			xnthread_t *thread = link2thread(holder, glink);
-			int cprio;
-
+			thread = link2thread(holder, glink);
 			holder = nextq(&nkpod->threadq, holder);
-
 			if (thread->sched != sched)
 				continue;
 
 			cprio = xnthread_current_priority(thread);
 			snprintf(pbuf, sizeof(pbuf), "%3d", cprio);
 
-			xnlogerr_noprompt("%c%3u  %-6d %-8s %-8Lu %.8lx  %s\n",
-					  thread == sched->curr ? '>' : ' ',
-					  cpu,
-					  xnthread_user_pid(thread),
-					  pbuf,
-					  xnthread_get_timeout(thread, now),
-					  xnthread_state_flags(thread),
-					  xnthread_name(thread));
+			printk(KERN_ERR "%c%3u  %-6d %-8s %-8Lu %.8lx  %s\n",
+			       thread == sched->curr ? '>' : ' ',
+			       cpu,
+			       xnthread_user_pid(thread),
+			       pbuf,
+			       xnthread_get_timeout(thread, now),
+			       xnthread_state_flags(thread),
+			       xnthread_name(thread));
 		}
 	}
 
-	xnlogerr_noprompt("Master time base: clock=%Lu\n",
-			  xnclock_read_raw());
+	printk(KERN_ERR "Master time base: clock=%Lu\n", xnclock_read_raw());
 #ifdef CONFIG_SMP
-	xnlogerr_noprompt("Current CPU: #%d\n", xnarch_current_cpu());
+	printk(KERN_ERR "Current CPU: #%d\n", ipipe_processor_id());
 #endif
-      out:
+out:
 	xnlock_put_irqrestore(&nklock, s);
-}
-EXPORT_SYMBOL_GPL(xnpod_fatal_helper);
 
-void xnpod_schedule_handler(void) /* Called with hw interrupts off. */
+	show_stack(NULL,NULL);
+	xntrace_panic_dump();
+	for (;;)
+		cpu_relax();
+}
+EXPORT_SYMBOL_GPL(xnpod_fatal);
+
+void __xnpod_schedule_handler(void) /* hw interrupts off. */
 {
 	trace_mark(xn_nucleus, sched_remote, MARK_NOARGS);
 	xnarch_memory_barrier();
@@ -269,14 +275,14 @@ void xnpod_schedule_deferred(void)
 static void xnpod_flush_heap(xnheap_t *heap,
 			     void *extaddr, u_long extsize, void *cookie)
 {
-	xnarch_free_pages(extaddr, extsize);
+	free_pages_exact(extaddr, extsize);
 }
 
 #if CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0
 static void xnpod_flush_stackpool(xnheap_t *heap,
 				  void *extaddr, u_long extsize, void *cookie)
 {
-	xnarch_free_pages(extaddr, extsize);
+	free_pages_exact(extaddr, extsize);
 }
 #endif
 
@@ -303,7 +309,7 @@ static void xnpod_flush_stackpool(xnheap_t *heap,
 int xnpod_init(void)
 {
 	extern int xeno_nucleus_status;
-	int cpu, nr_cpus = xnarch_num_online_cpus();
+	int cpu, nr_cpus = num_online_cpus();
 	struct xnsched *sched;
 	struct xnpod *pod;
 	void *heapaddr;
@@ -337,7 +343,7 @@ int xnpod_init(void)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	heapaddr = xnarch_alloc_pages(CONFIG_XENO_OPT_SYS_HEAPSZ * 1024);
+	heapaddr = alloc_pages_exact(CONFIG_XENO_OPT_SYS_HEAPSZ * 1024, GFP_KERNEL);
 	if (heapaddr == NULL ||
 	    xnheap_init(&kheap, heapaddr, CONFIG_XENO_OPT_SYS_HEAPSZ * 1024,
 			XNHEAP_PAGE_SIZE) != 0) {
@@ -358,7 +364,7 @@ int xnpod_init(void)
 	 * requires, still allowing the system heap to rely on a
 	 * vmalloc'ed segment.
 	 */
-	heapaddr = xnarch_alloc_pages(CONFIG_XENO_OPT_SYS_STACKPOOLSZ * 1024);
+	heapaddr = alloc_pages_exact(CONFIG_XENO_OPT_SYS_STACKPOOLSZ * 1024, GFP_KERNEL);
 	if (heapaddr == NULL ||
 	    xnheap_init(&kstacks, heapaddr, CONFIG_XENO_OPT_SYS_STACKPOOLSZ * 1024,
 			XNHEAP_PAGE_SIZE) != 0) {
@@ -375,13 +381,17 @@ int xnpod_init(void)
 			appendq(&pod->threadq, &sched->rootcb.glink);
 	}
 
-	xnarch_hook_ipi(&xnpod_schedule_handler);
+#ifdef CONFIG_SMP
+	ipipe_request_irq(&xnarch_machdata.domain, IPIPE_RESCHEDULE_IPI,
+			  (ipipe_irq_handler_t)__xnpod_schedule_handler,
+			  NULL, NULL);
+#endif
 
 	xnregistry_init();
 
 	__setbits(pod->status, XNPEXEC);
 	xnarch_memory_barrier();
-	xnarch_notify_ready();
+	xnshadow_grab_events();
 
 	ret = xnpod_enable_timesource();
 	if (ret) {
@@ -441,7 +451,10 @@ void xnpod_shutdown(int xtype)
 	xnlock_put_irqrestore(&nklock, s);
 
 	xnpod_disable_timesource();
-	xnarch_notify_shutdown();
+	xnshadow_release_events();
+#ifdef CONFIG_SMP
+	ipipe_free_irq(&xnarch_machdata.domain, IPIPE_RESCHEDULE_IPI);
+#endif
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -459,7 +472,7 @@ void xnpod_shutdown(int xtype)
 
 	__clrbits(nkpod->status, XNPEXEC);
 
-	for (cpu = 0; cpu < xnarch_num_online_cpus(); cpu++) {
+	for (cpu = 0; cpu < num_online_cpus(); cpu++) {
 		sched = xnpod_sched_slot(cpu);
 		xnsched_destroy(sched);
 	}
@@ -467,7 +480,6 @@ void xnpod_shutdown(int xtype)
 	xnlock_put_irqrestore(&nklock, s);
 
 	xnregistry_cleanup();
-	xnarch_notify_halt();
 	xnheap_destroy(&kheap, xnpod_flush_heap, NULL);
 #if CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0
 	xnheap_destroy(&kstacks, &xnpod_flush_stackpool, NULL);
@@ -687,7 +699,7 @@ EXPORT_SYMBOL_GPL(xnpod_init_thread);
 int xnpod_start_thread(struct xnthread *thread,
 		       const struct xnthread_start_attr *attr)
 {
-	xnarch_cpumask_t affinity;
+	cpumask_t affinity;
 	int ret = 0;
 	spl_t s;
 
@@ -707,18 +719,18 @@ int xnpod_start_thread(struct xnthread *thread,
 	/* This is our initial start. */
 
 	affinity = attr->affinity;
-	xnarch_cpus_and(affinity, affinity, nkaffinity);
-	thread->affinity = xnarch_cpu_online_map;
-	xnarch_cpus_and(thread->affinity, affinity, thread->affinity);
+	cpus_and(affinity, affinity, nkaffinity);
+	thread->affinity = *cpu_online_mask;
+	cpus_and(thread->affinity, affinity, thread->affinity);
 
-	if (xnarch_cpus_empty(thread->affinity)) {
+	if (cpus_empty(thread->affinity)) {
 		ret = -EINVAL;
 		goto unlock_and_exit;
 	}
 #ifdef CONFIG_SMP
-	if (!xnarch_cpu_isset(xnsched_cpu(thread->sched), thread->affinity)) {
+	if (!cpu_isset(xnsched_cpu(thread->sched), thread->affinity)) {
 		xnsched_t *sched;
-		sched = xnpod_sched_slot(xnarch_first_cpu(thread->affinity));
+		sched = xnpod_sched_slot(first_cpu(thread->affinity));
 		xnsched_migrate_passive(thread, sched);
 	}
 #endif /* CONFIG_SMP */
@@ -1462,7 +1474,7 @@ void xnpod_resume_thread(struct xnthread *thread, xnflags_t mask)
 	trace_mark(xn_nucleus, thread_resume,
 		   "thread %p thread_name %s mask %lu",
 		   thread, xnthread_name(thread), mask);
-	xnarch_trace_pid(xnthread_user_task(thread) ?
+	xntrace_pid(xnthread_user_task(thread) ?
 			 xnarch_user_pid(xnthread_archtcb(thread)) : -1,
 			 xnthread_current_priority(thread));
 
@@ -1799,12 +1811,12 @@ int xnpod_migrate_thread(int cpu)
 
 	thread = xnpod_current_thread();
 
-	if (!xnarch_cpu_isset(cpu, thread->affinity)) {
+	if (!cpu_isset(cpu, thread->affinity)) {
 		ret = -EPERM;
 		goto unlock_and_exit;
 	}
 
-	if (cpu == xnarch_current_cpu())
+	if (cpu == ipipe_processor_id())
 		goto unlock_and_exit;
 
 	sched = xnpod_sched_slot(cpu);
@@ -1881,9 +1893,9 @@ void xnpod_dispatch_signals(void)
 	thread->asrlevel++;
 
 	/* Setup ASR interrupt mask then fire it. */
-	savedmask = xnarch_setimask(asrimask);
+	savedmask = xnpod_setimask(asrimask);
 	asr(sigs);
-	xnarch_setimask(savedmask);
+	xnpod_setimask(savedmask);
 
 	/* Reset the thread mode bits */
 	thread->asrlevel--;
@@ -1912,7 +1924,7 @@ void xnpod_welcome_thread(xnthread_t *thread, int imask)
 	trace_mark(xn_nucleus, thread_boot, "thread %p thread_name %s",
 		   thread, xnthread_name(thread));
 
-	xnarch_trace_pid(-1, xnthread_current_priority(thread));
+	xntrace_pid(-1, xnthread_current_priority(thread));
 
 	if (xnthread_test_state(thread, XNLOCK))
 		/* Actually grab the scheduler lock. */
@@ -2015,10 +2027,10 @@ static inline int __xnpod_test_resched(struct xnsched *sched)
 	int resched = testbits(sched->status, XNRESCHED);
 #ifdef CONFIG_SMP
 	/* Send resched IPI to remote CPU(s). */
-	if (unlikely(!xnarch_cpus_empty(sched->resched))) {
+	if (unlikely(!cpus_empty(sched->resched))) {
 		xnarch_memory_barrier();
-		xnarch_send_ipi(sched->resched);
-		xnarch_cpus_clear(sched->resched);
+		ipipe_send_ipi(IPIPE_RESCHEDULE_IPI, sched->resched);
+		cpus_clear(sched->resched);
 	}
 #else
 	resched = xnsched_resched_p(sched);
@@ -2042,7 +2054,7 @@ void __xnpod_schedule(struct xnsched *sched)
 
 	curr = sched->curr;
 
-	xnarch_trace_pid(xnthread_user_task(curr) ?
+	xntrace_pid(xnthread_user_task(curr) ?
 			 xnarch_user_pid(xnthread_archtcb(curr)) : -1,
 			 xnthread_current_priority(curr));
 reschedule:
@@ -2113,7 +2125,7 @@ reschedule:
 	 * In both cases, we are running over the epilogue of Linux's
 	 * schedule, and should skip our epilogue code.
 	 */
-	if (shadow && xnarch_root_domain_p())
+	if (shadow && ipipe_root_p)
 		goto shadow_epilogue;
 
 	switched = 1;
@@ -2124,7 +2136,7 @@ reschedule:
 	 */
 	curr = sched->curr;
 
-	xnarch_trace_pid(xnthread_user_task(curr) ?
+	xntrace_pid(xnthread_user_task(curr) ?
 			 xnarch_user_pid(xnthread_archtcb(curr)) : -1,
 			 xnthread_current_priority(curr));
 
@@ -2433,15 +2445,15 @@ int xnpod_handle_exception(struct ipipe_trap_data *d)
 	if (xnpod_shadow_p()) {
 		thread->regs = xnarch_fault_regs(d);
 #if XENO_DEBUG(NUCLEUS)
-		if (!xnarch_fault_um(d)) {
-			xnarch_trace_panic_freeze();
+		if (!user_mode(d->regs)) {
+			xntrace_panic_freeze();
 			xnprintf
 			    ("Switching %s to secondary mode after exception #%u in "
 			     "kernel-space at 0x%lx (pid %d)\n", thread->name,
 			     xnarch_fault_trap(d),
 			     xnarch_fault_pc(d),
 			     xnthread_user_pid(thread));
-			xnarch_trace_panic_dump();
+			xntrace_panic_dump();
 		} else if (xnarch_fault_notify(d))	/* Don't report debug traps */
 			xnprintf
 			    ("Switching %s to secondary mode after exception #%u from "
@@ -2510,30 +2522,27 @@ int xnpod_enable_timesource(void)
 
 #ifdef CONFIG_XENO_OPT_STATS
 	/*
-	 * Only for statistical purpose, the clock interrupt will be
-	 * attached directly by the arch-dependent layer
-	 * (xnarch_start_timer).
+	 * Only for statistical purpose, the timer interrupt is
+	 * attached by xntimer_grab_hardware().
 	 */
-	xnintr_init(&nktimer, "[timer]", XNARCH_TIMER_IRQ, NULL, NULL, 0);
+	xnintr_init(&nktimer, "[timer]",
+		    per_cpu(ipipe_percpu.hrtimer_irq, 0), NULL, NULL, 0);
 #endif /* CONFIG_XENO_OPT_STATS */
 
 	xnlock_put_irqrestore(&nklock, s);
 
 	nkclock.wallclock_offset =
-	  xnarch_get_host_time() - xnarch_get_cpu_time();
+		xnclock_get_host_time() - xnclock_read_monotonic();
 
-	for (cpu = 0; cpu < xnarch_num_online_cpus(); cpu++) {
+	for (cpu = 0; cpu < num_online_cpus(); cpu++) {
 
 		if (!xnarch_cpu_supported(cpu))
 			continue;
 
-		sched = xnpod_sched_slot(cpu);
-
-		htickval = xnarch_start_timer(&xnintr_clock_handler, cpu);
-
+		htickval = xntimer_grab_hardware(cpu);
 		if (htickval < 0) {
 			while (--cpu >= 0)
-				xnarch_stop_timer(cpu);
+				xntimer_release_hardware(cpu);
 
 			return htickval;
 		}
@@ -2551,7 +2560,7 @@ int xnpod_enable_timesource(void)
 		 *
 		 * - nucleus timers may be started only _after_ the hw
 		 * timer has been set up for the target CPU through a
-		 * call to xnarch_start_timer().
+		 * call to xntimer_grab_hardware().
 		 *
 		 * - we don't compensate for the elapsed portion of
 		 * the current host tick, since we cannot get this
@@ -2560,9 +2569,10 @@ int xnpod_enable_timesource(void)
 		 * the jiffies clocksource anyway.
 		 *
 		 * - we must not hold the nklock across calls to
-		 * xnarch_start_timer().
+		 * xntimer_grab_hardware().
 		 */
 
+		sched = xnpod_sched_slot(cpu);
 		if (htickval > 1)
 			xntimer_start(&sched->htimer, htickval, htickval, XN_RELATIVE);
 		else
@@ -2608,16 +2618,16 @@ void xnpod_disable_timesource(void)
 	 * timer, since this could cause deadlock situations to arise
 	 * on SMP systems.
 	 */
-	for (cpu = 0; cpu < xnarch_num_online_cpus(); cpu++)
+	for (cpu = 0; cpu < num_online_cpus(); cpu++)
 		if (xnarch_cpu_supported(cpu))
-			xnarch_stop_timer(cpu);
+			xntimer_release_hardware(cpu);
 
 	xntimer_freeze();
 
 	/*
 	 * NOTE: The nktimer interrupt object is not destroyed on
 	 * purpose since this would be mostly redundant after
-	 * xnarch_stop_timer() has been called. In any case, no
+	 * xntimer_release_hardware() has been called. In any case, no
 	 * resource is associated with this object.
 	 */
 }
@@ -2884,7 +2894,7 @@ EXPORT_SYMBOL_GPL(xnpod_set_thread_tslice);
 
 #if XENO_DEBUG(XNLOCK)
 
-struct xnlockinfo xnlock_stats[XNARCH_NR_CPUS];
+struct xnlockinfo xnlock_stats[NR_CPUS];
 EXPORT_SYMBOL_GPL(xnlock_stats);
 
 static int lock_vfile_show(struct xnvfile_regular_iterator *it, void *data)
@@ -3005,18 +3015,18 @@ static int faults_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 	for_each_online_cpu(cpu)
 		xnvfile_printf(it, "        CPU%d", cpu);
 
-	for (trap = 0; rthal_fault_labels[trap]; trap++) {
-		if (*rthal_fault_labels[trap] == '\0')
+	for (trap = 0; xnarch_machdesc.fault_labels[trap]; trap++) {
+		if (*xnarch_machdesc.fault_labels[trap] == '\0')
 			continue;
 
 		xnvfile_printf(it, "\n%3d: ", trap);
 
 		for_each_online_cpu(cpu)
 			xnvfile_printf(it, "%12u",
-				       rthal_archdata.faults[cpu][trap]);
+				       xnarch_machdata.faults[cpu][trap]);
 
 		xnvfile_printf(it, "    (%s)",
-			       rthal_fault_labels[trap]);
+			       xnarch_machdesc.fault_labels[trap]);
 	}
 
 	xnvfile_putc(it, '\n');
@@ -3044,18 +3054,18 @@ static int apc_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 		xnvfile_printf(it, "         CPU%d", cpu);
 
 	for (apc = 0; apc < BITS_PER_LONG; apc++) {
-		if (!test_bit(apc, &rthal_archdata.apc_map))
+		if (!test_bit(apc, &xnarch_machdata.apc_map))
 			continue; /* Not hooked. */
 
 		xnvfile_printf(it, "\n%3d: ", apc);
 
 		for_each_online_cpu(cpu)
 			xnvfile_printf(it, "%12lu",
-				       rthal_archdata.apc_table[apc].hits[cpu]);
+				       xnarch_machdata.apc_table[apc].hits[cpu]);
 
-		if (rthal_archdata.apc_table[apc].name)
+		if (xnarch_machdata.apc_table[apc].name)
 			xnvfile_printf(it, "    (%s)",
-				       rthal_archdata.apc_table[apc].name);
+				       xnarch_machdata.apc_table[apc].name);
 	}
 
 	xnvfile_putc(it, '\n');

@@ -28,10 +28,9 @@ struct xnfeatinfo_nios2 {
 #include <asm-generic/xenomai/features.h>
 
 #ifdef __KERNEL__
-#include <asm/xenomai/hal.h>
 static inline void collect_arch_features(struct xnfeatinfo *finfo)
 {
-	finfo->feat_arch.hrclock_membase = RTHAL_CLOCK_MEMBASE;
+	finfo->feat_arch.hrclock_membase = __ipipe_hrclock_membase;
 }
 #endif
 

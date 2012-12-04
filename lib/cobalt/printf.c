@@ -29,10 +29,9 @@
 
 #include <rtdk.h>
 #include <nucleus/types.h>	/* For BITS_PER_LONG */
-#include <asm/xenomai/system.h>
 #include <asm/xenomai/atomic.h>	/* For atomic_cmpxchg */
 #include <asm-generic/stack.h>
-#include <asm-generic/bits/current.h>
+#include <asm-generic/current.h>
 
 #define RT_PRINT_BUFFER_ENV		"RT_PRINT_BUFFER"
 #define RT_PRINT_DEFAULT_BUFFER		16*1024
@@ -775,8 +774,8 @@ static __attribute__ ((destructor)) void __rt_print_exit(void)
 
 int __wrap_vfprintf(FILE *stream, const char *fmt, va_list args)
 {
-	if (unlikely(xeno_get_current() != XN_NO_HANDLE &&
-		     !(xeno_get_current_mode() & XNRELAX)))
+	if (xeno_get_current() != XN_NO_HANDLE &&
+		     !(xeno_get_current_mode() & XNRELAX))
 		return rt_vfprintf(stream, fmt, args);
 	else {
 		rt_print_flush_buffers();
@@ -815,8 +814,8 @@ int __wrap_printf(const char *fmt, ...)
 
 int __wrap_fputs(const char *s, FILE *stream)
 {
-	if (unlikely(xeno_get_current() != XN_NO_HANDLE &&
-		     !(xeno_get_current_mode() & XNRELAX)))
+	if (xeno_get_current() != XN_NO_HANDLE &&
+		     !(xeno_get_current_mode() & XNRELAX))
 		return rt_fputs(s, stream);
 	else {
 		rt_print_flush_buffers();
@@ -826,8 +825,8 @@ int __wrap_fputs(const char *s, FILE *stream)
 
 int __wrap_puts(const char *s)
 {
-	if (unlikely(xeno_get_current() != XN_NO_HANDLE &&
-		     !(xeno_get_current_mode() & XNRELAX)))
+	if (xeno_get_current() != XN_NO_HANDLE &&
+		     !(xeno_get_current_mode() & XNRELAX))
 		return rt_puts(s);
 	else {
 		rt_print_flush_buffers();
@@ -839,8 +838,8 @@ int __wrap_puts(const char *s)
 
 int __wrap_fputc(int c, FILE *stream)
 {
-	if (unlikely(xeno_get_current() != XN_NO_HANDLE &&
-		     !(xeno_get_current_mode() & XNRELAX)))
+	if (xeno_get_current() != XN_NO_HANDLE &&
+		     !(xeno_get_current_mode() & XNRELAX))
 		return rt_fputc(c, stream);
 	else {
 		rt_print_flush_buffers();
@@ -850,8 +849,8 @@ int __wrap_fputc(int c, FILE *stream)
 
 int __wrap_putchar(int c)
 {
-	if (unlikely(xeno_get_current() != XN_NO_HANDLE &&
-		     !(xeno_get_current_mode() & XNRELAX)))
+	if (xeno_get_current() != XN_NO_HANDLE &&
+		     !(xeno_get_current_mode() & XNRELAX))
 		return rt_putchar(c);
 	else {
 		rt_print_flush_buffers();
@@ -875,8 +874,8 @@ int __wrap_putchar(int c)
 
 size_t __wrap_fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
-	if (unlikely(xeno_get_current() != XN_NO_HANDLE &&
-		     !(xeno_get_current_mode() & XNRELAX)))
+	if (xeno_get_current() != XN_NO_HANDLE &&
+		     !(xeno_get_current_mode() & XNRELAX))
 		return rt_fwrite(ptr, size, nmemb, stream);
 	else {
 		rt_print_flush_buffers();
@@ -887,8 +886,8 @@ size_t __wrap_fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 
 void __wrap_vsyslog(int priority, const char *fmt, va_list ap)
 {
-	if (unlikely(xeno_get_current() != XN_NO_HANDLE &&
-		     !(xeno_get_current_mode() & XNRELAX)))
+	if (xeno_get_current() != XN_NO_HANDLE &&
+		     !(xeno_get_current_mode() & XNRELAX))
 		return rt_vsyslog(priority, fmt, ap);
 	else {
 		rt_print_flush_buffers();

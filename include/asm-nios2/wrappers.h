@@ -26,20 +26,8 @@
 
 #include <asm-generic/xenomai/wrappers.h> /* Read the generic portion. */
 
-#define wrap_phys_mem_prot(filp, pfn, size, prot)  (prot)
-
 #define wrap_strncpy_from_user(dstP, srcP, n)	strncpy_from_user(dstP, srcP, n)
 
 #define PAGE_SHARED  __pgprot(0)
-
-#ifdef CONFIG_XENO_LEGACY_IPIPE
-
-#if !defined(CONFIG_GENERIC_HARDIRQS) \
-	|| LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)
-#define ipipe_enable_irq(irq)   irq_to_desc(irq)->chip->enable(irq)
-#define ipipe_disable_irq(irq)  irq_to_desc(irq)->chip->disable(irq)
-#endif
-
-#endif /* CONFIG_XENO_LEGACY_IPIPE */
 
 #endif /* _XENO_ASM_NIOS2_WRAPPERS_H */

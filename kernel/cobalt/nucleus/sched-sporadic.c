@@ -100,7 +100,7 @@ static void sporadic_drop_handler(struct xntimer *timer)
 static void sporadic_schedule_drop(struct xnthread *thread)
 {
 	struct xnsched_sporadic_data *pss = thread->pss;
-	xnticks_t now = xnpod_get_cpu_time();
+	xnticks_t now = xnclock_read_monotonic();
 	int ret;
 
 	pss->resume_date = now;
@@ -126,7 +126,7 @@ static void sporadic_replenish_handler(struct xntimer *timer)
 	XENO_BUGON(NUCLEUS, pss->repl_pending <= 0);
 
 retry:
-	now = xnpod_get_cpu_time();
+	now = xnclock_read_monotonic();
 
 	do {
 		r = pss->repl_out;
@@ -210,7 +210,7 @@ static void sporadic_suspend_activity(struct xnthread *thread)
 
 	if (pss->budget > 0) {
 		xntimer_stop(&pss->drop_timer);
-		budget = sporadic_diff_time(xnpod_get_cpu_time(), pss->resume_date);
+		budget = sporadic_diff_time(xnclock_read_monotonic(), pss->resume_date);
 		sporadic_post_recharge(thread, budget);
 	}
 }

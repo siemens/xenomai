@@ -22,6 +22,7 @@
 
 #ifdef __KERNEL__
 #include <linux/errno.h>
+#include <linux/compiler.h>
 #else /* !__KERNEL__ */
 #include <string.h>
 #include <sys/types.h>
@@ -32,9 +33,8 @@
 #endif /* !BITS_PER_LONG */
 #endif /* __KERNEL__ */
 
-#include <asm/xenomai/system.h>
-#include <nucleus/compiler.h>
 #include <nucleus/assert.h>
+#include <asm/xenomai/atomic.h>
 
 #ifdef CONFIG_LTT
 #include <linux/marker.h>
@@ -122,34 +122,12 @@ typedef atomic_flags_t xnflags_t;
 #define minval(a,b) ((a) < (b) ? (a) : (b))
 #define maxval(a,b) ((a) > (b) ? (a) : (b))
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#define xnprintf(fmt,args...)  printk(KERN_INFO "Xenomai: " fmt , ##args)
+#define xnloginfo(fmt,args...) printk(KERN_INFO "Xenomai: " fmt , ##args)
+#define xnlogwarn(fmt,args...) printk(KERN_WARNING "Xenomai: " fmt , ##args)
+#define xnlogerr(fmt,args...)  printk(KERN_ERR "Xenomai: " fmt , ##args)
+#define xnlogerr_noprompt(fmt,args...) printk(KERN_ERR fmt , ##args)
 
-void xnpod_fatal_helper(const char *format, ...);
-
-int __xeno_user_init(void);
-
-void __xeno_user_exit(void);
-
-#ifdef __cplusplus
-}
-#endif
-
-#define xnprintf(fmt,args...)  xnarch_printf(fmt , ##args)
-#define xnloginfo(fmt,args...) xnarch_loginfo(fmt , ##args)
-#define xnlogwarn(fmt,args...) xnarch_logwarn(fmt , ##args)
-#define xnlogerr(fmt,args...)  xnarch_logerr(fmt , ##args)
-#define xnlogerr_noprompt(fmt,args...) xnarch_logerr_noprompt(fmt , ##args)
-
-#define xnpod_fatal(format,args...) \
-do { \
-	xnarch_begin_panic(); \
-	xnpod_fatal_helper(format,##args); \
-	xnarch_halt(); \
-} while (0)
-
-#define SKIN_INIT(name)  __ ## name ## _skin_init(void)
-#define SKIN_EXIT(name)  __ ## name ## _skin_exit(void)
+void xnpod_fatal(const char *format, ...);
 
 #endif /* !_XENO_NUCLEUS_TYPES_H */

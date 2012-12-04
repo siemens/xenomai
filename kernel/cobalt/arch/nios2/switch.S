@@ -42,11 +42,11 @@
  * so that hybrid scheduling between kernel and user-space Xenomai
  * threads is possible.
  *
- * void rthal_thread_switch(struct thread_struct *prev,
+ * void __asm_thread_switch(struct thread_struct *prev,
  *                          struct thread_struct *next,
  *                          int kernp)
  */
-ENTRY(rthal_thread_switch)
+ENTRY(__asm_thread_switch)
 	rdctl	r7,status			/* save thread status reg */
 	stw	r7,THREAD_KPSR(r4)	
 	SAVE_SWITCH_STACK
@@ -62,7 +62,7 @@ no_curr_update:
 	wrctl	status,r7
 	ret
 
-ENTRY(rthal_thread_trampoline)
+ENTRY(__asm_thread_trampoline)
 	ldw	r4,0(sp)
 	ldw	ra,4(sp)
 	addi	sp,sp,8

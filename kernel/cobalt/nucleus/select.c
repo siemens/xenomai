@@ -50,6 +50,7 @@
 #include <nucleus/pod.h>
 #include <nucleus/synch.h>
 #include <nucleus/select.h>
+#include <nucleus/apc.h>
 #include <linux/types.h>
 #include <linux/bitops.h>	/* For hweight_long */
 
@@ -405,7 +406,7 @@ void xnselector_destroy(struct xnselector *selector)
 	inith(&selector->destroy_link);
 	xnlock_get_irqsave(&nklock, s);
 	appendq(&xnselectors, &selector->destroy_link);
-	__rthal_apc_schedule(xnselect_apc);
+	__xnapc_schedule(xnselect_apc);
 	xnlock_put_irqrestore(&nklock, s);
 }
 EXPORT_SYMBOL_GPL(xnselector_destroy);
@@ -449,7 +450,7 @@ static void xnselector_destroy_loop(void *cookie)
 int xnselect_mount(void)
 {
 	initq(&xnselectors);
-	xnselect_apc = rthal_apc_alloc("xnselectors_destroy",
+	xnselect_apc = xnapc_alloc("xnselectors_destroy",
 				       xnselector_destroy_loop, NULL);
 	if (xnselect_apc < 0)
 		return xnselect_apc;
@@ -459,7 +460,7 @@ int xnselect_mount(void)
 
 int xnselect_umount(void)
 {
-	rthal_apc_free(xnselect_apc);
+	xnapc_free(xnselect_apc);
 	return 0;
 }
 

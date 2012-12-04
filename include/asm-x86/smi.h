@@ -1,7 +1,4 @@
 /**
- *   @ingroup hal
- *   @file
- *
  *   Copyright &copy; 2005 Gilles Chanteperdrix.
  *
  *   SMI workaround for x86.
@@ -26,38 +23,20 @@
 #error "Pure kernel header included from user-space!"
 #endif
 
-#ifndef _XENO_ASM_X86_HAL_H
+#ifndef _XENO_ASM_X86_MACHINE_H
 #error "please don't include asm/smi.h directly"
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #if defined(CONFIG_XENO_HW_SMI_DETECT) && defined(CONFIG_XENO_HW_SMI_WORKAROUND)
-
-void rthal_smi_disable(void);
-
-void rthal_smi_restore(void);
-
+void mach_x86_smi_disable(void);
+void mach_x86_smi_restore(void);
 #else /* !CONFIG_XENO_HW_SMI_DETECT || !CONFIG_XENO_HW_SMI_WORKAROUND */
-
-#define rthal_smi_disable()
-
-#define rthal_smi_restore()
-
+static inline void mach_x86_smi_disable(void) { }
+static inline void mach_x86_smi_restore(void) { }
 #endif /* !CONFIG_XENO_HW_SMI_DETECT || !CONFIG_XENO_HW_SMI_WORKAROUND */
 
 #ifdef CONFIG_XENO_HW_SMI_DETECT
-
-void rthal_smi_init(void);
-
+void mach_x86_smi_init(void);
 #else /* !CONFIG_XENO_HW_SMI_DETECT */
-
-#define rthal_smi_init()
-
+static inline void mach_x86_smi_init(void) { }
 #endif /* CONFIG_XENO_HW_SMI_DETECT */
-
-#ifdef __cplusplus
-}
-#endif

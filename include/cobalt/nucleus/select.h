@@ -22,8 +22,8 @@
  * \ingroup select
  */
 
-#ifndef XNSELECT_H
-#define XNSELECT_H
+#ifndef _XENO_NUCLEUS_XNSELECT_H
+#define _XENO_NUCLEUS_XNSELECT_H
 
 /*! \addtogroup select
  *@{*/
@@ -99,10 +99,6 @@ struct xnselect_binding {
 	xnholder_t slink; /* link in selector list */
 };
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
 void xnselect_init(struct xnselect *select_block);
 
 int xnselect_bind(struct xnselect *select_block,
@@ -148,10 +144,6 @@ int xnselect_mount(void);
 
 int xnselect_umount(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
 /*@}*/
 
-#endif /* XNSELECT_H */
+#endif /* _XENO_NUCLEUS_XNSELECT_H */

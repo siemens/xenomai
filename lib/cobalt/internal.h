@@ -2,7 +2,7 @@
 #define XENO_COBALT_INTERNAL_H
 
 #include <pthread.h>
-#include <asm-generic/bits/current.h>
+#include <asm-generic/current.h>
 
 void xeno_sigshadow_install_once(void);
 

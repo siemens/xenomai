@@ -63,7 +63,7 @@ typedef struct xnsched {
 	int cpu;
 	struct xnthread *curr;		/*!< Current thread. */
 #ifdef CONFIG_SMP
-	xnarch_cpumask_t resched;	/*!< Mask of CPUs needing rescheduling. */
+	cpumask_t resched;	/*!< Mask of CPUs needing rescheduling. */
 #endif
 
 	struct xnsched_rt rt;		/*!< Context of built-in real-time class. */
@@ -164,7 +164,7 @@ static inline int xnsched_resched_p(struct xnsched *sched)
   if (current_sched == (__sched__))					\
       __setbits(current_sched->status, XNRESCHED);			\
   else if (!xnsched_resched_p(__sched__)) {				\
-      xnarch_cpu_set(xnsched_cpu(__sched__), current_sched->resched);	\
+      cpu_set(xnsched_cpu(__sched__), current_sched->resched);	\
       __setbits((__sched__)->status, XNRESCHED);			\
       __setbits(current_sched->status, XNRESCHED);			\
   }									\

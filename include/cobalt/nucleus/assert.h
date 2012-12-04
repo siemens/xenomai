@@ -21,16 +21,17 @@
 #define _XENO_NUCLEUS_ASSERT_H
 
 #include <nucleus/types.h>
+#include <nucleus/trace.h>
 
 #define XENO_DEBUG(subsystem)			\
 	(CONFIG_XENO_OPT_DEBUG_##subsystem > 0)
 
 #define XENO_ASSERT(subsystem,cond,action)  do {			\
 		if (unlikely(XENO_DEBUG(subsystem) && !(cond))) {	\
-			xnarch_trace_panic_freeze();			\
+			xntrace_panic_freeze();				\
 			xnlogerr("assertion failed at %s:%d (%s)\n",	\
 				 __FILE__, __LINE__, (#cond));		\
-			xnarch_trace_panic_dump();			\
+			xntrace_panic_dump();			\
 			action;						\
 		}							\
 	} while(0)

@@ -31,9 +31,9 @@
  *
  * We protect all caller-saved registers across switches.
  *
- * void rthal_thread_switch(struct thread_struct *prev, struct thread_struct *next)
+ * void __asm_switch_context(struct thread_struct *prev, struct thread_struct *next)
  */
-ENTRY(_rthal_thread_switch)
+ENTRY(___asm_switch_context)
 
 	[--sp] = rets;
 	[--sp] = fp;
@@ -64,7 +64,7 @@ switch_point:
 	rets = [sp++];
 	rts;
 
-ENTRY(_rthal_thread_trampoline)
+ENTRY(___asm_thread_trampoline)
 	r0 = [sp++];
 	jump switch_point
 
@@ -81,10 +81,10 @@ ENTRY(_rthal_thread_trampoline)
  * switching context would cause the core to branch back to kernel
  * code without supervisor privileges (due to nested RTIs).
  *
- * int rthal_defer_switch_p(void)
+ * int __asm_defer_switch_p(void)
  */
 
-ENTRY(_rthal_defer_switch_p)
+ENTRY(___asm_defer_switch_p)
 
 	p2.l = lo(ILAT);
 	p2.h = hi(ILAT);

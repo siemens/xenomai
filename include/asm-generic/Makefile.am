@@ -4,14 +4,14 @@ noinst_HEADERS = sem_heap.h
 includesub_HEADERS = \
 	arith.h \
 	atomic.h \
+	current.h \
 	features.h \
-	hal.h \
+	machine.h \
+	mayday.h \
 	pci_ids.h \
 	stack.h \
 	syscall.h \
-	system.h \
 	timeconv.h \
-	trace.h \
 	wrappers.h
 
 SUBDIRS = bits ipipe

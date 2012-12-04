@@ -18,9 +18,9 @@
  */
 
 	.align	2
-	.globl rthal_thread_trampoline
+	.globl __asm_thread_trampoline
 	.balign	32
-rthal_thread_trampoline:
+__asm_thread_trampoline:
 	mov.l	@r15+, r10
 	mov.l	@r15+, r9
 	mov.l	@r15+, r4

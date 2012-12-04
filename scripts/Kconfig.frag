@@ -1,9 +1,8 @@
 config XENOMAI
-	depends on GENERIC_CLOCKEVENTS
+	depends on IPIPE_CORE
 	depends on X86_TSC || !X86
 	bool "Xenomai"
 	select IPIPE
-	select IPIPE_WANT_APIREV_2 if IPIPE_CORE
 	default y
 	help
 	  Xenomai is a real-time extension to the Linux kernel. Note
@@ -13,6 +12,12 @@ config XENOMAI
 
 if XENOMAI
 source "arch/@LINUX_ARCH@/xenomai/Kconfig"
+endif
+
+if IPIPE && !IPIPE_CORE
+comment "WARNING! This Xenomai release only supports the latest pipeline"
+comment "implementation, aka I-pipe \"core\" series. The legacy pipeline"
+comment "I see there is too old."
 endif
 
 if APM || CPU_FREQ || ACPI_PROCESSOR || INTEL_IDLE

@@ -27,8 +27,8 @@ static unsigned long long clockfreq;
 #ifdef XNARCH_HAVE_LLMULSHFT
 static unsigned int tsc_scale, tsc_shift;
 #ifdef XNARCH_HAVE_NODIV_LLIMD
-static rthal_u32frac_t tsc_frac;
-static rthal_u32frac_t bln_frac;
+static struct xnarch_u32frac tsc_frac;
+static struct xnarch_u32frac bln_frac;
 #endif
 #endif
 

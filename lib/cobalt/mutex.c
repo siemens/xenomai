@@ -22,7 +22,7 @@
 #include <nucleus/synch.h>
 #include <cobalt/syscall.h>
 #include <kernel/cobalt/mutex.h>
-#include <asm-generic/bits/current.h>
+#include <asm-generic/current.h>
 #include "internal.h"
 
 int __wrap_pthread_mutexattr_init(pthread_mutexattr_t *attr)
@@ -141,9 +141,9 @@ int __wrap_pthread_mutex_lock(pthread_mutex_t *mutex)
 	 * obtain them via a syscall.
 	 */
 	status = xeno_get_current_mode();
-	if (likely(!(status & (XNRELAX|XNOTHER)))) {
+	if ((status & (XNRELAX|XNOTHER)) == 0) {
 		err = xnsynch_fast_acquire(mutex_get_ownerp(_mutex), cur);
-		if (likely(!err)) {
+		if (err == 0) {
 			_mutex->lockcnt = 1;
 			return 0;
 		}
@@ -196,9 +196,9 @@ int __wrap_pthread_mutex_timedlock(pthread_mutex_t *mutex,
 
 	/* See __wrap_pthread_mutex_lock() */
 	status = xeno_get_current_mode();
-	if (likely(!(status & (XNRELAX|XNOTHER)))) {
+	if ((status & (XNRELAX|XNOTHER)) == 0) {
 		err = xnsynch_fast_acquire(mutex_get_ownerp(_mutex), cur);
-		if (likely(!err)) {
+		if (err == 0) {
 			_mutex->lockcnt = 1;
 			return 0;
 		}
@@ -246,13 +246,13 @@ int __wrap_pthread_mutex_trylock(pthread_mutex_t *mutex)
 	if (cur == XN_NO_HANDLE)
 		return EPERM;
 
-	if (unlikely(_mutex->magic != COBALT_MUTEX_MAGIC))
+	if (_mutex->magic != COBALT_MUTEX_MAGIC)
 		return EINVAL;
 
 	status = xeno_get_current_mode();
-	if (likely((status & (XNRELAX|XNOTHER)) == 0)) {
+	if ((status & (XNRELAX|XNOTHER)) == 0) {
 		err = xnsynch_fast_acquire(mutex_get_ownerp(_mutex), cur);
-		if (likely(err == 0)) {
+		if (err == 0) {
 			_mutex->lockcnt = 1;
 			return 0;
 		}
@@ -295,7 +295,7 @@ int __wrap_pthread_mutex_unlock(pthread_mutex_t *mutex)
 	xnhandle_t cur = XN_NO_HANDLE;
 	int err;
 
-	if (unlikely(_mutex->magic != COBALT_MUTEX_MAGIC))
+	if (_mutex->magic != COBALT_MUTEX_MAGIC)
 		return EINVAL;
 
 	cur = xeno_get_current();
@@ -314,10 +314,10 @@ int __wrap_pthread_mutex_unlock(pthread_mutex_t *mutex)
 	if ((datp->flags & COBALT_MUTEX_COND_SIGNAL))
 		goto do_syscall;
 
-	if (unlikely(xeno_get_current_mode() & XNOTHER))
+	if (xeno_get_current_mode() & XNOTHER)
 		goto do_syscall;
 
-	if (likely(xnsynch_fast_release(&datp->owner, cur)))
+	if (xnsynch_fast_release(&datp->owner, cur))
 		return 0;
 do_syscall:
 

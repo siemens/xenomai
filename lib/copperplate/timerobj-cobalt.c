@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <memory.h>
+#include <limits.h>
 #include <pthread.h>
 #include <semaphore.h>
 #include "copperplate/list.h"

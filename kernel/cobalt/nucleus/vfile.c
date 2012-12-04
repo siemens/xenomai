@@ -74,6 +74,7 @@
 
 #include <stdarg.h>
 #include <linux/ctype.h>
+#include <linux/uaccess.h>
 #include <nucleus/pod.h>
 #include <nucleus/assert.h>
 #include <nucleus/vfile.h>

@@ -59,12 +59,26 @@ void xnclock_adjust(xnsticks_t delta)
 	xnticks_t now;
 
 	nkclock.wallclock_offset += delta;
-	now = xnarch_get_cpu_time() + nkclock.wallclock_offset;
+	now = xnclock_read_monotonic() + nkclock.wallclock_offset;
 	xntimer_adjust_all(delta);
 
 	trace_mark(xn_nucleus, clock_adjust, "delta %Lu", delta);
 }
 EXPORT_SYMBOL_GPL(xnclock_adjust);
+
+xnticks_t xnclock_get_host_time(void)
+{
+	struct timeval tv;
+	do_gettimeofday(&tv);
+	return tv.tv_sec * 1000000000ULL + tv.tv_usec * 1000;
+}
+EXPORT_SYMBOL_GPL(xnclock_get_host_time);
+
+xnticks_t xnclock_read_monotonic(void)
+{
+	return xnarch_tsc_to_ns(xnclock_read_raw());
+}
+EXPORT_SYMBOL_GPL(xnclock_read_monotonic);
 
 #ifdef CONFIG_XENO_OPT_VFILE
 

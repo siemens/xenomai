@@ -35,7 +35,7 @@ static void xeno_init_timeconv_inner(void)
 void xeno_init_timeconv(int muxid)
 {
 	static pthread_once_t init_timeconv_once = PTHREAD_ONCE_INIT;
-	xnsysinfo_t sysinfo;
+	struct xnsysinfo sysinfo;
 	int ret;
 
 	ret = XENOMAI_SYSCALL2(sc_nucleus_info, muxid, &sysinfo);

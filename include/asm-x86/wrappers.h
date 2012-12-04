@@ -25,6 +25,7 @@
 #error "Pure kernel header included from user-space!"
 #endif
 
+#include <linux/version.h>
 #include <asm-generic/xenomai/wrappers.h> /* Read the generic portion. */
 
 #define __get_user_inatomic __get_user
@@ -69,20 +70,9 @@
 #endif /* Linux >= 3.4.0 */
 
 #define wrap_strncpy_from_user(dstP, srcP, n)		\
-	rthal_strncpy_from_user(dstP, srcP, n)
-
-#define wrap_phys_mem_prot(filp, pfn, size, prot)  (prot)
+	strncpy_from_user_nocheck(dstP, srcP, n)
 
 typedef union thread_xstate x86_fpustate;
 #define x86_fpustate_ptr(t) ((t)->fpu.state)
-
-#ifdef CONFIG_XENO_LEGACY_IPIPE
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)
-#define ipipe_enable_irq(irq)   irq_to_desc(irq)->chip->unmask(irq)
-#define ipipe_disable_irq(irq)  irq_to_desc(irq)->chip->mask(irq)
-#endif
-
-#endif /* CONFIG_XENO_LEGACY_IPIPE */
 
 #endif /* _XENO_ASM_X86_WRAPPERS_H */

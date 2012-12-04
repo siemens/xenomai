@@ -20,8 +20,6 @@
 #ifndef _XENO_NUCLEUS_BHEAP_H
 #define _XENO_NUCLEUS_BHEAP_H
 
-#include <nucleus/compiler.h>
-
 /* debug support */
 #include <nucleus/assert.h>
 

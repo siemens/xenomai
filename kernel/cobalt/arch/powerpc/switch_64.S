@@ -36,9 +36,9 @@
 #include <asm/ptrace.h>
 
 /*
- * void rthal_thread_switch(struct thread_struct *prev, struct thread_struct *next, int kthreadp)
+ * void __asm_thread_switch(struct thread_struct *prev, struct thread_struct *next, int kthreadp)
  */
-_GLOBAL(rthal_thread_switch)
+_GLOBAL(__asm_thread_switch)
 	mflr	r0
 	std	r0,16(r1)
 	stdu	r1,-SWITCH_FRAME_SIZE(r1)
@@ -174,7 +174,7 @@ END_FTR_SECTION_IFSET(CPU_FTR_ALTIVEC)
 	addi	r1,r1,SWITCH_FRAME_SIZE
 	blr
 	
-_GLOBAL(rthal_thread_trampoline)
+_GLOBAL(__asm_thread_trampoline)
 	stdu	r1,-STACK_FRAME_OVERHEAD(r1)
 	mr	r3,r22
 	mr	r2,r24

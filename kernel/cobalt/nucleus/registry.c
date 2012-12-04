@@ -40,6 +40,7 @@
 #include <nucleus/heap.h>
 #include <nucleus/registry.h>
 #include <nucleus/thread.h>
+#include <nucleus/apc.h>
 #include <nucleus/assert.h>
 
 #ifndef CONFIG_XENO_OPT_DEBUG_REGISTRY
@@ -132,7 +133,7 @@ int xnregistry_init(void)
 	}
 
 	registry_proc_apc =
-	    rthal_apc_alloc("registry_export", &registry_proc_schedule, NULL);
+	    xnapc_alloc("registry_export", &registry_proc_schedule, NULL);
 
 	if (registry_proc_apc < 0) {
 		xnvfile_destroy_regular(&usage_vfile);
@@ -164,7 +165,7 @@ int xnregistry_init(void)
 #ifdef CONFIG_XENO_OPT_VFILE
 		xnvfile_destroy_regular(&usage_vfile);
 		xnvfile_destroy_dir(&registry_vfroot);
-		rthal_apc_free(registry_proc_apc);
+		xnapc_free(registry_proc_apc);
 #endif /* CONFIG_XENO_OPT_VFILE */
 		return -ENOMEM;
 	}
@@ -209,7 +210,7 @@ void xnregistry_cleanup(void)
 	xnsynch_destroy(&registry_hash_synch);
 
 #ifdef CONFIG_XENO_OPT_VFILE
-	rthal_apc_free(registry_proc_apc);
+	xnapc_free(registry_proc_apc);
 	flush_scheduled_work();
 	xnvfile_destroy_regular(&usage_vfile);
 	xnvfile_destroy_dir(&registry_vfroot);
@@ -476,7 +477,7 @@ static inline void registry_export_pnode(struct xnobject *object,
 	object->pnode = pnode;
 	removeq(&registry_obj_busyq, &object->link);
 	appendq(&registry_obj_procq, &object->link);
-	__rthal_apc_schedule(registry_proc_apc);
+	__xnapc_schedule(registry_proc_apc);
 }
 
 static inline void registry_unexport_pnode(struct xnobject *object)
@@ -492,7 +493,7 @@ static inline void registry_unexport_pnode(struct xnobject *object)
 			object->pnode->ops->touch(object);
 		removeq(&registry_obj_busyq, &object->link);
 		appendq(&registry_obj_procq, &object->link);
-		__rthal_apc_schedule(registry_proc_apc);
+		__xnapc_schedule(registry_proc_apc);
 	} else {
 		/*
 		 * Unexporting before the lower stage has had a chance

@@ -29,7 +29,7 @@
 #include <nucleus/vdso.h>
 #include "internal.h"
 
-static xnsysinfo_t __cobalt_sysinfo;
+static struct xnsysinfo __cobalt_sysinfo;
 
 void cobalt_clock_init(int muxid)
 {
@@ -67,7 +67,7 @@ static int __do_clock_host_realtime(struct timespec *ts, void *tzp)
 
 	hostrt_data = &nkvdso->hostrt_data;
 
-	if (unlikely(!hostrt_data->live))
+	if (!hostrt_data->live)
 		return -1;
 
 	/*

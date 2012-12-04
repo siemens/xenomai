@@ -954,8 +954,8 @@ int cobalt_thread_create(unsigned long tid, int policy,
 	struct task_struct *p = current;
 	struct sched_param_ex param;
 	struct cobalt_hkey hkey;
+	pthread_t k_tid = NULL;
 	pthread_attr_t attr;
-	pthread_t k_tid;
 	pid_t h_tid;
 	int ret;
 
@@ -1009,8 +1009,8 @@ pthread_t cobalt_thread_shadow(struct task_struct *p,
 			       struct cobalt_hkey *hkey,
 			       unsigned long __user *u_window_offset)
 {
+	pthread_t k_tid = NULL;
 	pthread_attr_t attr;
-	pthread_t k_tid;
 	pid_t h_tid;
 	int ret;
 

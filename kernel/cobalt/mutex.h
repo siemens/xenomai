@@ -81,7 +81,7 @@ static inline int cobalt_mutex_acquire_unchecked(xnthread_t *cur,
 	else
 		xnsynch_acquire(&mutex->synchbase, XN_INFINITE, XN_RELATIVE);
 
-	if (unlikely(xnthread_test_info(cur, XNBREAK | XNRMID | XNTIMEO))) {
+	if (xnthread_test_info(cur, XNBREAK | XNRMID | XNTIMEO)) {
 		if (xnthread_test_info(cur, XNBREAK))
 			return -EINTR;
 		else if (xnthread_test_info(cur, XNTIMEO))
@@ -174,10 +174,10 @@ extern unsigned long xeno_sem_heap[2];
 
 static inline struct mutex_dat *mutex_get_datp(struct __shadow_mutex *shadow)
 {
-	if (likely(!shadow->attr.pshared))
-		return shadow->dat;
+	if (shadow->attr.pshared)
+		return (struct mutex_dat *)(xeno_sem_heap[1] + shadow->dat_offset);
 
-	return (struct mutex_dat *)(xeno_sem_heap[1] + shadow->dat_offset);
+	return shadow->dat;
 }
 
 static inline xnarch_atomic_t *mutex_get_ownerp(struct __shadow_mutex *shadow)

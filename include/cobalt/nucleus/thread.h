@@ -149,10 +149,13 @@ struct xnthread_user_window {
 
 #ifdef __KERNEL__
 
+#include <linux/sched.h>
 #include <nucleus/stat.h>
 #include <nucleus/timer.h>
 #include <nucleus/registry.h>
 #include <nucleus/schedparam.h>
+#include <asm/xenomai/machine.h>
+#include <asm/xenomai/thread.h>
 
 #define XNTHREAD_INVALID_ASR  ((void (*)(xnsigmask_t))0)
 
@@ -179,7 +182,7 @@ struct xnthread_init_attr {
 struct xnthread_start_attr {
 	xnflags_t mode;
 	int imask;
-	xnarch_cpumask_t affinity;
+	cpumask_t affinity;
 	void (*entry)(void *cookie);
 	void *cookie;
 };
@@ -192,7 +195,7 @@ typedef void (*xnasr_t)(xnsigmask_t sigs);
 
 typedef struct xnthread {
 
-	xnarchtcb_t tcb;		/* Architecture-dependent block -- Must be first */
+	struct xnarchtcb tcb;		/* Architecture-dependent block -- Must be first */
 
 	xnflags_t state;		/* Thread state flags */
 
@@ -214,7 +217,7 @@ typedef struct xnthread {
 
 	unsigned idtag;			/* Unique ID tag */
 
-	xnarch_cpumask_t affinity;	/* Processor affinity. */
+	cpumask_t affinity;	/* Processor affinity. */
 
 	int bprio;			/* Base priority (before PIP boost) */
 
@@ -296,10 +299,6 @@ typedef struct xnthread {
 	const char *exe_path;	/* Executable path */
 	u32 proghash;		/* Hash value for exe_path */
 #endif
-
-#ifdef CONFIG_XENO_LEGACY_IPIPE
-	struct ipipe_threadinfo ipipe_data;
-#endif
 } xnthread_t;
 
 #define XNHOOK_THREAD_START  1
@@ -345,7 +344,7 @@ typedef struct xnhook {
     (xnthread_test_state((thread),XNROOT) || !xnthread_user_task(thread) ? \
     0 : xnarch_user_pid(xnthread_archtcb(thread)))
 #define xnthread_affinity(thread)          ((thread)->affinity)
-#define xnthread_affine_p(thread, cpu)     xnarch_cpu_isset(cpu, (thread)->affinity)
+#define xnthread_affine_p(thread, cpu)     cpu_isset(cpu, (thread)->affinity)
 #define xnthread_get_exectime(thread)      xnstat_exectime_get_total(&(thread)->stat.account)
 #define xnthread_get_lastswitch(thread)    xnstat_exectime_get_last_switch((thread)->sched)
 #define xnthread_inc_rescnt(thread)        ({ (thread)->hrescnt++; })
@@ -418,10 +417,6 @@ xnsynch_release(struct xnsynch *synch, struct xnthread *thread)
 	return __xnsynch_transfer_ownership(synch, thread);
 }
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 int xnthread_init(struct xnthread *thread,
 		  const struct xnthread_init_attr *attr,
 		  struct xnsched *sched,
@@ -440,10 +435,6 @@ void xnthread_prepare_wait(struct xnthread_wait_context *wc);
 
 void xnthread_finish_wait(struct xnthread_wait_context *wc,
 			  void (*cleanup)(struct xnthread_wait_context *wc));
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* __KERNEL__ */
 

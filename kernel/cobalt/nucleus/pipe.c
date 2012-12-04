@@ -32,6 +32,7 @@
 #include <nucleus/pod.h>
 #include <nucleus/heap.h>
 #include <nucleus/pipe.h>
+#include <nucleus/apc.h>
 
 static int xnpipe_asyncsig = SIGIO;
 
@@ -210,7 +211,7 @@ static void xnpipe_wakeup_proc(void *cookie)
 
 static inline void xnpipe_schedule_request(void) /* hw IRQs off */
 {
-	__rthal_apc_schedule(xnpipe_wakeup_apc);
+	__xnapc_schedule(xnpipe_wakeup_apc);
 }
 
 static inline ssize_t xnpipe_flush_bufq(void (*fn)(void *buf, void *xstate),
@@ -1115,7 +1116,7 @@ int xnpipe_mount(void)
 	}
 
 	xnpipe_wakeup_apc =
-	    rthal_apc_alloc("pipe_wakeup", &xnpipe_wakeup_proc, NULL);
+	    xnapc_alloc("pipe_wakeup", &xnpipe_wakeup_proc, NULL);
 
 	return 0;
 }
@@ -1124,7 +1125,7 @@ void xnpipe_umount(void)
 {
 	int i;
 
-	rthal_apc_free(xnpipe_wakeup_apc);
+	xnapc_free(xnpipe_wakeup_apc);
 	unregister_chrdev(XNPIPE_DEV_MAJOR, "rtpipe");
 
 	for (i = 0; i < XNPIPE_NDEVS; i++)

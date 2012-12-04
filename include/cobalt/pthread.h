@@ -78,7 +78,7 @@ typedef struct cobalt_threadattr {
 	struct sched_param_ex schedparam_ex;
 	char *name;
 	int fp;
-	xnarch_cpumask_t affinity;
+	cpumask_t affinity;
 
 } pthread_attr_t;
 

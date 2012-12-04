@@ -30,10 +30,11 @@
 #include <asm/ptrace.h>
 
 /*
- * struct task_struct *rthal_thread_switch(struct thread_struct *prev, struct thread_struct *next)
+ * struct task_struct *
+ * __asm_thread_switch(struct thread_struct *prev, struct thread_struct *next)
  */
 	.align	7
-_GLOBAL(rthal_thread_switch)
+_GLOBAL(__asm_thread_switch)
 	stwu	r1,-INT_FRAME_SIZE(r1)
 	mflr	r0
 	stw	r0,INT_FRAME_SIZE+4(r1)
@@ -116,7 +117,7 @@ same_current:
 	addi	r1,r1,INT_FRAME_SIZE
 	blr
 
-_GLOBAL(rthal_thread_trampoline)
+_GLOBAL(__asm_thread_trampoline)
 	stwu	r1,-STACK_FRAME_OVERHEAD(r1)
 	mr	r3,r22
 	mtlr	r23

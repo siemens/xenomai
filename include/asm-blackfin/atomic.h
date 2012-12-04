@@ -22,13 +22,13 @@
 
 #ifdef __KERNEL__
 
-#include <asm/xenomai/hal.h>
+#include <asm/xenomai/machine.h>
 
 #define xnarch_atomic_set_mask(pflags, mask)	\
-	rthal_atomic_set_mask((pflags), (mask))
+	__asm_atomic_set_mask((pflags), (mask))
 
 #define xnarch_atomic_clear_mask(pflags, mask)			\
-	rthal_atomic_clear_mask((pflags), (mask))
+	__asm_atomic_clear_mask((pflags), (mask))
 
 #endif /* __KERNEL__ */
 

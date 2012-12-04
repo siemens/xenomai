@@ -334,10 +334,6 @@ static inline int xntimer_reload_p(xntimer_t *timer)
 		(XNTIMER_PERIODIC|XNTIMER_DEQUEUED);
 }
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #ifdef CONFIG_XENO_OPT_STATS
 #define xntimer_init(timer, handler)			\
 	do {						\
@@ -416,19 +412,19 @@ void xntimer_tick(void);
 void xntimer_adjust_all(xnsticks_t delta);
 
 #ifdef CONFIG_SMP
-int xntimer_migrate(xntimer_t *timer,
-		    struct xnsched *sched);
+int xntimer_migrate(xntimer_t *timer, struct xnsched *sched);
 #else /* ! CONFIG_SMP */
-#define xntimer_migrate(timer, sched)		do { } while(0)
+#define xntimer_migrate(timer, sched)	do { } while(0)
 #endif /* CONFIG_SMP */
 
 #define xntimer_set_sched(timer, sched)	xntimer_migrate(timer, sched)
 
 char *xntimer_format_time(xnticks_t value,
 			  char *buf, size_t bufsz);
-#ifdef __cplusplus
-}
-#endif
+
+int xntimer_grab_hardware(int cpu);
+
+void xntimer_release_hardware(int cpu);
 
 #endif /* __KERNEL__ */
 

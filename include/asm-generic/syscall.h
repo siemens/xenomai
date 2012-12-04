@@ -47,10 +47,10 @@ struct xnbindreq {
 #define XENOMAI_LINUX_DOMAIN  0
 #define XENOMAI_XENO_DOMAIN   1
 
-typedef struct xnsysinfo {
+struct xnsysinfo {
 	unsigned long long clockfreq;	/* Real-time clock frequency */
 	unsigned long vdso;		/* Offset of nkvdso in the sem heap */
-} xnsysinfo_t;
+};
 
 #define SIGSHADOW  SIGWINCH
 #define SIGSHADOW_ACTION_HARDEN     1
@@ -79,7 +79,7 @@ typedef struct xnsysinfo {
 #include <linux/types.h>
 #include <asm/uaccess.h>
 #include <asm/xenomai/wrappers.h>
-#include <asm/xenomai/hal.h>
+#include <asm/xenomai/machine.h>
 
 struct task_struct;
 struct pt_regs;
@@ -173,6 +173,10 @@ static inline int __xn_safe_strncpy_from_user(char *dst,
 		return -EFAULT;
 	return __xn_strncpy_from_user(dst, src, count);
 }
+
+#ifndef xnarch_head_syscall_entry
+static inline void xnarch_head_syscall_entry(void) { }
+#endif
 
 #else /* !__KERNEL__ */
 

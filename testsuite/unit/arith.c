@@ -30,7 +30,7 @@ static volatile long long arg = 0x3ffffffffffffffULL;
 				++rejected;				\
 		}							\
 		if (rejected < 10000) {					\
-			avg = rthal_llimd(avg, 10000, 10000 - rejected); \
+			avg = xnarch_llimd(avg, 10000, 10000 - rejected); \
 			avg = rt_timer_tsc2ns(avg) - calib;		\
 			fprintf(stderr, "%s: 0x%016llx: %lld.%03llu ns," \
 				" rejected %d/10000\n",			\
@@ -46,7 +46,7 @@ int main(void)
 	unsigned mul, shft, rejected;
 	long long avg, calib = 0;
 #ifdef XNARCH_HAVE_NODIV_LLIMD
-	rthal_u32frac_t frac;
+	struct xnarch_u32frac frac;
 #endif
 	int i;
 
@@ -62,11 +62,11 @@ int main(void)
 		arg, nsec_per_sec, sample_freq);
 	bench("inline calibration", 0);
 	calib = avg;
-	bench("inlined llimd", rthal_llimd(arg, nsec_per_sec, sample_freq));
-	bench("inlined llmulshft", rthal_llmulshft(arg, mul, shft));
+	bench("inlined llimd", xnarch_llimd(arg, nsec_per_sec, sample_freq));
+	bench("inlined llmulshft", xnarch_llmulshft(arg, mul, shft));
 #ifdef XNARCH_HAVE_NODIV_LLIMD
 	bench("inlined nodiv_llimd",
-	      rthal_nodiv_llimd(arg, frac.frac, frac.integ));
+	      xnarch_nodiv_llimd(arg, frac.frac, frac.integ));
 #endif /* XNARCH_HAVE_NODIV_LLIMD */
 
 	calib = 0;
@@ -86,11 +86,11 @@ int main(void)
 	calib = 0;
 	bench("inline calibration", 0);
 	calib = avg;
-	bench("inlined llimd", rthal_llimd(-arg, nsec_per_sec, sample_freq));
-	bench("inlined llmulshft", rthal_llmulshft(-arg, mul, shft));
+	bench("inlined llimd", xnarch_llimd(-arg, nsec_per_sec, sample_freq));
+	bench("inlined llmulshft", xnarch_llmulshft(-arg, mul, shft));
 #ifdef XNARCH_HAVE_NODIV_LLIMD
 	bench("inlined nodiv_llimd",
-	      rthal_nodiv_llimd(-arg, frac.frac, frac.integ));
+	      xnarch_nodiv_llimd(-arg, frac.frac, frac.integ));
 #endif /* XNARCH_HAVE_NODIV_LLIMD */
 
 	calib = 0;
@@ -111,7 +111,7 @@ int main(void)
 	bench("inline calibration", 0);
 	calib = avg;
 	bench("inlined nodiv_ullimd",
-	      rthal_nodiv_ullimd(arg, frac.frac, frac.integ));
+	      xnarch_nodiv_ullimd(arg, frac.frac, frac.integ));
 
 	calib = 0;
 	bench("out of line calibration", dummy());

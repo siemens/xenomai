@@ -25,6 +25,7 @@
 #ifndef __RTCAN_MSCAN_REGS_H_
 #define __RTCAN_MSCAN_REGS_H_
 
+#include <linux/version.h>
 #include <linux/of_platform.h>
 #include <asm/mpc52xx.h>
 

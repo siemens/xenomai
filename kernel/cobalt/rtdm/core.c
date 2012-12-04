@@ -29,6 +29,7 @@
 #include <nucleus/pod.h>
 #include <nucleus/ppd.h>
 #include <nucleus/heap.h>
+#include <nucleus/apc.h>
 #include <rtdm/syscall.h>
 
 #include "rtdm/internal.h"
@@ -418,7 +419,7 @@ int __rt_dev_close(rtdm_user_info_t *user_info, int fd)
 		xnlock_put_irqrestore(&rt_fildes_lock, s);
 
 		if (ret == -EAGAIN) {
-			rthal_apc_schedule(rtdm_apc);
+			xnapc_schedule(rtdm_apc);
 			ret = 0;
 		}
 		goto unlock_out;

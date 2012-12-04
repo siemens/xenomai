@@ -1,7 +1,3 @@
-config XENO_LEGACY_IPIPE
-	def_bool y
-	depends on !IPIPE_CORE
-
 menu "Core features"
 
 config XENO_OPT_SCHED_CLASSES

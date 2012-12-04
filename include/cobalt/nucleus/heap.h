@@ -22,8 +22,6 @@
 #ifndef _XENO_NUCLEUS_HEAP_H
 #define _XENO_NUCLEUS_HEAP_H
 
-#include <nucleus/queue.h>
-
 /*
  * CONSTRAINTS:
  *
@@ -45,6 +43,9 @@
  */
 
 #ifdef __KERNEL__
+
+#include <linux/mm.h>
+#include <nucleus/queue.h>
 
 #define XNHEAP_PAGE_SIZE	512 /* A reasonable value for the xnheap page size */
 #define XNHEAP_PAGE_MASK	(~(XNHEAP_PAGE_SIZE-1))
@@ -105,7 +106,7 @@ typedef struct xnheap {
 		int fcount;
 	} buckets[XNHEAP_NBUCKETS];
 
-	xnholder_t *idleq[XNARCH_NR_CPUS];
+	xnholder_t *idleq[NR_CPUS];
 
 	/* # of active user-space mappings. */
 	unsigned long numaps;
@@ -187,10 +188,6 @@ static inline size_t xnheap_rounded_size(size_t hsize, size_t psize)
 	return xnheap_align(hsize, psize);
 }
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* Private interface. */
 
 #ifdef __KERNEL__
@@ -264,7 +261,7 @@ void xnheap_finalize_free_inner(xnheap_t *heap,
 
 static inline void xnheap_finalize_free(xnheap_t *heap)
 {
-	int cpu = xnarch_current_cpu();
+	int cpu = ipipe_processor_id();
 
 	XENO_ASSERT(NUCLEUS,
 		    spltest() != 0,
@@ -277,9 +274,17 @@ static inline void xnheap_finalize_free(xnheap_t *heap)
 int xnheap_check_block(xnheap_t *heap,
 		       void *block);
 
-#ifdef __cplusplus
-}
-#endif
+int xnheap_remap_vm_page(struct vm_area_struct *vma,
+			 unsigned long from, unsigned long to);
+
+int xnheap_remap_io_page_range(struct file *filp,
+			       struct vm_area_struct *vma,
+			       unsigned long from, phys_addr_t to,
+			       unsigned long size, pgprot_t prot);
+
+int xnheap_remap_kmem_page_range(struct vm_area_struct *vma,
+				 unsigned long from, unsigned long to,
+				 unsigned long size, pgprot_t prot);
 
 #endif /* __KERNEL__ */
 

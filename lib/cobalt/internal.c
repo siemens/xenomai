@@ -33,7 +33,7 @@
 #include <cobalt/syscall.h>
 #include <kernel/cobalt/monitor.h>
 #include <kernel/cobalt/event.h>
-#include <asm-generic/bits/current.h>
+#include <asm-generic/current.h>
 #include "internal.h"
 
 extern unsigned long xeno_sem_heap[2];

@@ -22,6 +22,7 @@
 #define _XENO_NUCLEUS_STAT_H
 
 #include <nucleus/types.h>  /* This pulls in linux/config.h with legacy kernels. */
+#include <nucleus/clock.h>
 
 #ifdef CONFIG_XENO_OPT_STATS
 
@@ -35,7 +36,7 @@ typedef struct xnstat_exectime {
 
 /* Return current date which can be passed to other xnstat services for
    immediate or lazy accounting. */
-#define xnstat_exectime_now() xnarch_get_cpu_tsc()
+#define xnstat_exectime_now() xnclock_read_raw()
 
 /* Accumulate exectime of the current account until the given date. */
 #define xnstat_exectime_update(sched, date) \
@@ -63,7 +64,7 @@ do { \
    switch date and set the new account). */
 #define xnstat_exectime_finalize(sched, new_account) \
 do { \
-	(sched)->last_account_switch = xnarch_get_cpu_tsc(); \
+	(sched)->last_account_switch = xnclock_read_raw(); \
 	(sched)->current_account = (new_account); \
 } while (0)
 
@@ -79,7 +80,7 @@ do { \
 #define xnstat_exectime_reset_stats(stat) \
 do { \
 	(stat)->total = 0; \
-	(stat)->start = xnarch_get_cpu_tsc(); \
+	(stat)->start = xnclock_read_raw(); \
 } while (0)
 
 

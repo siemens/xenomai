@@ -26,7 +26,7 @@
 #include <sys/types.h>
 #include <semaphore.h>
 #include <cobalt/syscall.h>
-#include <asm-generic/bits/current.h>
+#include <asm-generic/current.h>
 #include <asm-generic/stack.h>
 #include "internal.h"
 

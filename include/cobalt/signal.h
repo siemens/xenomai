@@ -50,10 +50,6 @@ typedef unsigned long sig_atomic_t;
 
 struct cobalt_thread;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 int sigemptyset(sigset_t *set);
 
 int sigfillset(sigset_t *set);
@@ -92,10 +88,6 @@ int sigtimedwait(const sigset_t *__restrict__ user_set,
 		 const struct timespec *__restrict__ timeout);
 
 int pthread_sigqueue_np (struct cobalt_thread *thread, int sig, union sigval value);
-
-#ifdef __cplusplus
-}
-#endif
 
 #else /* !__KERNEL__ */
 

@@ -21,18 +21,18 @@
 #include <cobalt/syscall.h>
 #include <kernel/cobalt/mutex.h>
 #include <kernel/cobalt/cond.h>
-#include <asm-generic/bits/current.h>
+#include <asm-generic/current.h>
 #include "internal.h"
 
 extern unsigned long xeno_sem_heap[2];
 
 static inline unsigned long *cond_get_signalsp(struct __shadow_cond *shadow)
 {
-	if (likely(!shadow->attr.pshared))
-		return shadow->pending_signals;
+	if (shadow->attr.pshared)
+		return (unsigned long *)(xeno_sem_heap[1]
+					 + shadow->pending_signals_offset);
 
-	return (unsigned long *)(xeno_sem_heap[1]
-				 + shadow->pending_signals_offset);
+	return shadow->pending_signals;
 }
 
 static inline struct mutex_dat *
@@ -41,11 +41,11 @@ cond_get_mutex_datp(struct __shadow_cond *shadow)
 	if (shadow->mutex_datp == (struct mutex_dat *)~0UL)
 		return NULL;
 
-	if (likely(!shadow->attr.pshared))
-		return shadow->mutex_datp;
+	if (shadow->attr.pshared)
+		return (struct mutex_dat *)(xeno_sem_heap[1]
+					    + shadow->mutex_datp_offset);
 
-	return (struct mutex_dat *)(xeno_sem_heap[1]
-				    + shadow->mutex_datp_offset);
+	return shadow->mutex_datp;
 }
 
 int __wrap_pthread_condattr_init(pthread_condattr_t *attr)
@@ -242,26 +242,24 @@ int __wrap_pthread_cond_signal(pthread_cond_t *cond)
 	struct __shadow_cond *_cnd = &((union __xeno_cond *)cond)->shadow_cond;
 	unsigned long pending_signals, *pending_signalsp;
 	struct mutex_dat *mutex_datp;
+	unsigned long flags;
+	xnhandle_t cur;
 
 	if (_cnd->magic != COBALT_COND_MAGIC)
 		return EINVAL;
 
 	mutex_datp = cond_get_mutex_datp(_cnd);
 	if (mutex_datp) {
-		unsigned long flags = mutex_datp->flags;
-
-		if (unlikely(flags & COBALT_MUTEX_ERRORCHECK)) {
-			xnhandle_t cur = xeno_get_current();
-
+		flags = mutex_datp->flags;
+		if (flags & COBALT_MUTEX_ERRORCHECK) {
+			cur = xeno_get_current();
 			if (cur == XN_NO_HANDLE)
 				return EPERM;
 
 			if (xnsynch_fast_owner_check(&mutex_datp->owner, cur) < 0)
 				return EPERM;
 		}
-
 		mutex_datp->flags = flags | COBALT_MUTEX_COND_SIGNAL;
-
 		pending_signalsp = cond_get_signalsp(_cnd);
 		pending_signals = *pending_signalsp;
 		if (pending_signals != ~0UL)
@@ -275,26 +273,24 @@ int __wrap_pthread_cond_broadcast(pthread_cond_t *cond)
 {
 	struct __shadow_cond *_cnd = &((union __xeno_cond *)cond)->shadow_cond;
 	struct mutex_dat *mutex_datp;
+	unsigned long flags;
+	xnhandle_t cur;
 
 	if (_cnd->magic != COBALT_COND_MAGIC)
 		return EINVAL;
 
 	mutex_datp = cond_get_mutex_datp(_cnd);
 	if (mutex_datp) {
-		unsigned long flags = mutex_datp->flags ;
-
-		if (unlikely(flags & COBALT_MUTEX_ERRORCHECK)) {
-			xnhandle_t cur = xeno_get_current();
-
+		flags = mutex_datp->flags ;
+		if (flags & COBALT_MUTEX_ERRORCHECK) {
+			cur = xeno_get_current();
 			if (cur == XN_NO_HANDLE)
 				return EPERM;
 
 			if (xnsynch_fast_owner_check(&mutex_datp->owner, cur) < 0)
 				return EPERM;
 		}
-
 		mutex_datp->flags = flags | COBALT_MUTEX_COND_SIGNAL;
-
 		*cond_get_signalsp(_cnd) = ~0UL;
 	}
 

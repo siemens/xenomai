@@ -22,6 +22,7 @@
 #define _XENO_NUCLEUS_QUEUE_H
 
 #include <nucleus/types.h>
+#include <nucleus/lock.h>
 #include <nucleus/assert.h>
 
 /* Basic element holder */

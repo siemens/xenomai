@@ -68,7 +68,7 @@ typedef struct xnintr {
 	xnstat_counter_t hits;	  /* !< Number of handled receipts since attachment. */
 	xnstat_exectime_t account; /* !< Runtime accounting entity */
 	xnstat_exectime_t sum; /* !< Accumulated accounting entity */
-    } stat[XNARCH_NR_CPUS];
+    } stat[NR_CPUS];
 
 } xnintr_t;
 
@@ -91,10 +91,6 @@ typedef struct xnintr_iterator {
 } xnintr_iterator_t;
 
 extern xnintr_t nktimer;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 int xnintr_mount(void);
 
@@ -127,16 +123,12 @@ void xnintr_enable(xnintr_t *intr);
 void xnintr_disable(xnintr_t *intr);
 
 void xnintr_affinity(xnintr_t *intr,
-		     xnarch_cpumask_t cpumask);
+		     cpumask_t cpumask);
 
 int xnintr_query_init(xnintr_iterator_t *iterator);
 
 int xnintr_query_next(int irq, xnintr_iterator_t *iterator,
 		      char *name_buf);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* __KERNEL__ */
 

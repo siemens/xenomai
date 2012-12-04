@@ -7,7 +7,7 @@
 #include <nucleus/thread.h>
 #include <nucleus/vdso.h>
 #include <asm/xenomai/syscall.h>
-#include <asm-generic/bits/current.h>
+#include <asm-generic/current.h>
 #include "internal.h"
 
 extern unsigned long xeno_sem_heap[2];

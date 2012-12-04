@@ -478,7 +478,7 @@ static int rtswitch_create_ktask(rtswitch_context_t *ctx,
 	if (!err) {
 		sattr.mode = 0;
 		sattr.imask = 0;
-		sattr.affinity = xnarch_cpumask_of_cpu(ctx->cpu);
+		sattr.affinity = cpumask_of_cpu(ctx->cpu);
 		sattr.entry = rtswitch_ktask;
 		sattr.cookie = &arg;
 		err = xnpod_start_thread(&task->ktask, &sattr);
@@ -567,7 +567,7 @@ static int rtswitch_ioctl_nrt(struct rtdm_dev_context *context,
 						(unsigned long) arg);
 
 	case RTTST_RTIOC_SWTEST_SET_CPU:
-		if ((unsigned long) arg > xnarch_num_online_cpus() - 1)
+		if ((unsigned long) arg > num_online_cpus() - 1)
 			return -EINVAL;
 
 		ctx->cpu = (unsigned long) arg;

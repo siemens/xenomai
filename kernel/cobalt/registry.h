@@ -3,6 +3,7 @@
 
 #include <stdarg.h>
 #include <nucleus/queue.h>
+#include <nucleus/lock.h>
 
 #define COBALT_MAXNAME 64
 

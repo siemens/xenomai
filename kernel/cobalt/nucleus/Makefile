@@ -2,8 +2,8 @@
 obj-$(CONFIG_XENOMAI) += xeno_nucleus.o
 
 xeno_nucleus-y := \
-	bufd.o heap.o intr.o pod.o registry.o \
-	synch.o thread.o clock.o timer.o shadow.o \
+	apc.o arith.o bufd.o heap.o intr.o lock.o pod.o \
+	 registry.o synch.o thread.o clock.o timer.o shadow.o \
 	sched.o sched-idle.o sched-rt.o select.o
 
 xeno_nucleus-$(CONFIG_XENO_OPT_SCHED_SPORADIC) += sched-sporadic.o

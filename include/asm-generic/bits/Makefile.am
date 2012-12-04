@@ -2,7 +2,4 @@ includesubdir = $(includedir)/asm-generic/bits
 
 includesub_HEADERS = \
 	bind.h \
-	current.h \
-	pod.h \
-	shadow.h \
 	timeconv.h

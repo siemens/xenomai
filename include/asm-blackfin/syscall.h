@@ -79,6 +79,10 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
     return __xn_reg_rval(regs) == -EINTR;
 }
 
+int xnarch_local_syscall(unsigned long a1, unsigned long a2,
+			 unsigned long a3, unsigned long a4,
+			 unsigned long a5);
+
 #else /* !__KERNEL__ */
 
 #include <errno.h>

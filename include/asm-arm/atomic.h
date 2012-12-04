@@ -27,10 +27,6 @@
 #include <linux/version.h>
 #include <asm/irqflags.h>
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,35)
-#error "Linux version at least 2.6.35 is required for correct atomic operations"
-#endif /* Linux < 2.6.35 */
-
 #if __LINUX_ARM_ARCH__ >= 6
 static inline void atomic_set_mask(unsigned long mask, unsigned long *addr)
 {

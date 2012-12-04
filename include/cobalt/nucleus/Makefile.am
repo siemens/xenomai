@@ -1,14 +1,15 @@
 includesubdir = $(includedir)/cobalt/nucleus
 
 includesub_HEADERS = \
+	apc.h \
 	assert.h \
 	bheap.h \
 	bufd.h \
-	compiler.h \
 	debug.h \
 	heap.h \
 	hostrt.h \
 	intr.h \
+	lock.h \
 	map.h \
 	pipe.h \
 	pod.h \
@@ -26,7 +27,6 @@ includesub_HEADERS = \
 	shadow.h \
 	stat.h \
 	synch.h \
-	system.h \
 	sys_ppd.h \
 	thread.h \
 	clock.h \

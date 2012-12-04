@@ -22,7 +22,7 @@
 
 #include <asm/xenomai/features.h>
 
-#define __rthal_add96and64(l0, l1, l2, s0, s1)		\
+#define xnarch_add96and64(l0, l1, l2, s0, s1)		\
 	do {						\
 	  unsigned long cl, ch;				\
 	  __asm__ ("%2 = %2 + %6\n\t"			\

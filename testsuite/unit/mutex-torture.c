@@ -19,8 +19,8 @@
 #include <sys/mman.h>
 #include <pthread.h>
 #include <alchemy/timer.h>
-#include <asm-generic/xenomai/bits/current.h> /* For internal use, do not use
-					 in your code. */
+#include <asm-generic/xenomai/current.h> /* For internal use, do not use
+					    in your code. */
 #include <asm-generic/xenomai/stack.h>
 
 #define MUTEX_CREATE		1

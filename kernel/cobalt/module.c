@@ -17,7 +17,7 @@
  */
 
 /**
- * @defgroup posix POSIX skin.
+ * @defgroup posix COBALT/posix skin.
  *
  * Xenomai POSIX skin is an implementation of a small subset of the Single
  * Unix specification over Xenomai generic RTOS core.
@@ -45,6 +45,7 @@
  *
  */
 
+#include <linux/init.h>
 #include "internal.h"
 #include "cond.h"
 #include "mutex.h"
@@ -57,30 +58,15 @@
 #include "event.h"
 #include "internal.h"
 
-MODULE_DESCRIPTION("POSIX/COBALT interface");
+MODULE_DESCRIPTION("COBALT/posix interface");
 MODULE_AUTHOR("gilles.chanteperdrix@xenomai.org");
 MODULE_LICENSE("GPL");
 
-static void cobalt_shutdown(int xtype)
-{
-	cobalt_thread_pkg_cleanup();
-	cobalt_timer_pkg_cleanup();
-	cobalt_monitor_pkg_cleanup();
-	cobalt_event_pkg_cleanup();
-	cobalt_mq_pkg_cleanup();
-	cobalt_cond_pkg_cleanup();
-	cobalt_sem_pkg_cleanup();
-	cobalt_mutex_pkg_cleanup();
-	cobalt_reg_pkg_cleanup();
-	cobalt_syscall_cleanup();
-	xnpod_shutdown(xtype);
-}
-
-int SKIN_INIT(posix)
+static int __init __cobalt_init(void)
 {
 	int ret;
 
-	xnprintf("starting POSIX services.\n");
+	xnprintf("starting Cobalt services.\n");
 
 	ret = xnpod_init();
 	if (ret)
@@ -90,7 +76,7 @@ int SKIN_INIT(posix)
 	if (ret) {
 		xnpod_shutdown(ret);
 	fail:
-		xnlogerr("POSIX skin init failed, code %d.\n", ret);
+		xnlogerr("Cobalt init failed, code %d.\n", ret);
 		return ret;
 	}
 
@@ -107,12 +93,4 @@ int SKIN_INIT(posix)
 
 	return 0;
 }
-
-void SKIN_EXIT(posix)
-{
-	xnprintf("stopping POSIX services.\n");
-	cobalt_shutdown(XNPOD_NORMAL_EXIT);
-}
-
-module_init(__posix_skin_init);
-module_exit(__posix_skin_exit);
+device_initcall(__cobalt_init);

@@ -464,7 +464,7 @@ int cobalt_timer_create(clockid_t clock,
 {
 	union __xeno_sem sm, __user *u_sem;
 	struct sigevent sev, *evp = &sev;
-	timer_t tm;
+	timer_t tm = 0;
 	int ret;
 
 	if (u_sev) {

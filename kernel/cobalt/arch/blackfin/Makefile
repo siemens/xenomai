@@ -1,6 +1,6 @@
 obj-$(CONFIG_XENOMAI) += bfin_hal.o
 
-bfin_hal-y := hal.o switch.o
+bfin_hal-y := machine.o mayday.o thread.o switch.o syscall.o
 
 ifndef CONFIG_SMP
 bfin_hal-y += atomic.o

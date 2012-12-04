@@ -21,7 +21,7 @@
 #include <asm/blackfin.h>
 #include <asm/entry.h>
 
-ENTRY(_rthal_atomic_set_mask)
+ENTRY(___asm_atomic_set_mask)
 	p0 = r0;
 	cli r0
 	r2 = [p0];
@@ -29,9 +29,9 @@ ENTRY(_rthal_atomic_set_mask)
 	[p0] = r2;
 	sti r0
 	rts;
-ENDPROC(_rthal_atomic_set_mask)
+ENDPROC(___asm_atomic_set_mask)
 
-ENTRY(_rthal_atomic_clear_mask)
+ENTRY(___asm_atomic_clear_mask)
 	p0 = r0;
 	r1 = ~r1
 	cli r0
@@ -40,4 +40,4 @@ ENTRY(_rthal_atomic_clear_mask)
 	[p0] = r2;
 	sti r0
 	rts;
-ENDPROC(_rthal_atomic_clear_mask)
+ENDPROC(___asm_atomic_clear_mask)

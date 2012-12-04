@@ -30,7 +30,7 @@ static inline unsigned long xnarch_get_sched_latency (void)
 	sched_latency = CONFIG_XENO_OPT_TIMING_SCHEDLAT;
 #else /* !CONFIG_XENO_OPT_TIMING_SCHEDLAT */
 
-	if (strcmp(RTHAL_TIMER_DEVICE, "lapic") == 0) {
+	if (strcmp(ipipe_timer_name(), "lapic") == 0) {
 #ifdef CONFIG_SMP
 		if (num_online_cpus() > 1)
 			sched_latency = 3350;
@@ -39,7 +39,7 @@ static inline unsigned long xnarch_get_sched_latency (void)
 #else /* !SMP */
 		sched_latency = 1000;
 #endif /* !SMP */
-	} else if (strcmp(RTHAL_TIMER_DEVICE, "pit")) { /* HPET */
+	} else if (strcmp(ipipe_timer_name(), "pit")) { /* HPET */
 #ifdef CONFIG_SMP
 		if (num_online_cpus() > 1)
 			sched_latency = 3350;
@@ -49,21 +49,7 @@ static inline unsigned long xnarch_get_sched_latency (void)
 		sched_latency = 1000;
 #endif /* !SMP */
 	} else {
-		/*
-		 * Use the bogomips formula to identify low-end x86 boards
-		 * when using the 8254 PIT. The following is still grossly
-		 * experimental and needs work (i.e. more specific cases), but
-		 * the approach is definitely saner than previous attempts to
-		 * guess such value dynamically.
-		 */
-#ifdef CONFIG_IPIPE_CORE
 #define __bogomips (this_cpu_read(cpu_info.loops_per_jiffy)/(500000/HZ))
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,38)
-#define __bogomips (cpu_info.loops_per_jiffy/(500000/HZ))
-#else
-#define __bogomips (current_cpu_data.loops_per_jiffy/(500000/HZ))
-#endif
-
 		sched_latency = (__bogomips < 250 ? 17000 :
 				 __bogomips < 2500 ? 4200 :
 				 3500);

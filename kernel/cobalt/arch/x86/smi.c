@@ -1,7 +1,4 @@
 /**
- *   @ingroup hal
- *   @file
- *
  *   SMI workaround for x86.
  *
  *   Cut/Pasted from Vitor Angelo "smi" module.
@@ -30,9 +27,9 @@
 #include <linux/pci_ids.h>
 #include <linux/reboot.h>
 #include <asm-generic/xenomai/pci_ids.h>
-#include <asm/xenomai/hal.h>
+#include <asm/xenomai/machine.h>
 
-static struct pci_device_id rthal_smi_pci_tbl[] = {
+static struct pci_device_id smi_pci_tbl[] = {
 	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801AA_0)},
 	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801AB_0)},
 	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801BA_0)},
@@ -89,7 +86,7 @@ pci.ids database, ICH5-M ?)
 #define BIOS_EN_BIT         (0x01 << 2)
 #define GBL_SMI_EN_BIT      (0x01)	/* This is reset by a PCI reset event! */
 
-static const unsigned rthal_smi_masked_bits =
+static const unsigned smi_masked_bits =
 #ifdef CONFIG_XENO_HW_SMI_ALL
     GBL_SMI_EN_BIT;
 #else /* !defined(CONFIG_XENO_HW_SMI_ALL) */
@@ -122,53 +119,53 @@ static const unsigned rthal_smi_masked_bits =
 
 #endif /* !defined(CONFIG_XENO_HW_SMI_ALL) */
 
-static unsigned rthal_smi_saved_bits;
-static unsigned short rthal_smi_en_addr;
+static unsigned int smi_saved_bits;
+static unsigned short smi_en_addr;
 
 #define mask_bits(v, p) outl(inl(p)&~(v),(p))
 #define set_bits(v, p)  outl(inl(p)|(v), (p))
 
-static int rthal_smi_reboot(struct notifier_block *nb, ulong event, void *buf);
+static int smi_reboot(struct notifier_block *nb, ulong event, void *buf);
 
-static struct notifier_block rthal_smi_notifier = {
-	.notifier_call = rthal_smi_reboot
+static struct notifier_block smi_notifier = {
+	.notifier_call = smi_reboot
 };
 
-static int rthal_smi_reboot(struct notifier_block *nb, ulong event, void *buf)
+static int smi_reboot(struct notifier_block *nb, ulong event, void *buf)
 {
 	if (((event == SYS_RESTART) || (event == SYS_HALT) ||
-	     (event == SYS_POWER_OFF)) && rthal_smi_en_addr)
-		set_bits(rthal_smi_saved_bits, rthal_smi_en_addr);
+	     (event == SYS_POWER_OFF)) && smi_en_addr)
+		set_bits(smi_saved_bits, smi_en_addr);
 
 	return NOTIFY_DONE;
 }
 
-void rthal_smi_disable(void)
+void mach_x86_smi_disable(void)
 {
-	if (!rthal_smi_en_addr)
+	if (!smi_en_addr)
 		return;
 
-	rthal_smi_saved_bits = inl(rthal_smi_en_addr) & rthal_smi_masked_bits;
-	mask_bits(rthal_smi_masked_bits, rthal_smi_en_addr);
+	smi_saved_bits = inl(smi_en_addr) & smi_masked_bits;
+	mask_bits(smi_masked_bits, smi_en_addr);
 
-	if (inl(rthal_smi_en_addr) & rthal_smi_masked_bits)
+	if (inl(smi_en_addr) & smi_masked_bits)
 		printk("Xenomai: SMI workaround failed!\n");
 	else
 		printk("Xenomai: SMI workaround enabled\n");
 
-	register_reboot_notifier(&rthal_smi_notifier);
+	register_reboot_notifier(&smi_notifier);
 }
 
-void rthal_smi_restore(void)
+void mach_x86_smi_restore(void)
 {
-	if (!rthal_smi_en_addr)
+	if (!smi_en_addr)
 		return;
 
 	printk("Xenomai: SMI configuration restored\n");
 
-	set_bits(rthal_smi_saved_bits, rthal_smi_en_addr);
+	set_bits(smi_saved_bits, smi_en_addr);
 
-	unregister_reboot_notifier(&rthal_smi_notifier);
+	unregister_reboot_notifier(&smi_notifier);
 }
 
 static unsigned short get_smi_en_addr(struct pci_dev *dev)
@@ -182,7 +179,7 @@ static unsigned short get_smi_en_addr(struct pci_dev *dev)
 
 #endif /* CONFIG_XENO_HW_SMI_WORKAROUND */
 
-void rthal_smi_init(void)
+void mach_x86_smi_init(void)
 {
 	struct pci_dev *dev = NULL;
 	struct pci_device_id *id;
@@ -191,7 +188,7 @@ void rthal_smi_init(void)
 	 * Do not use pci_register_driver, pci_enable_device, ...
 	 * Just register the used ports.
 	 */
-	for (id = &rthal_smi_pci_tbl[0]; dev == NULL && id->vendor != 0; id++)
+	for (id = &smi_pci_tbl[0]; dev == NULL && id->vendor != 0; id++)
 		dev = pci_get_device(id->vendor, id->device, NULL);
 
 	if (dev == NULL || dev->bus->number || dev->devfn != DEVFN) {
@@ -200,7 +197,7 @@ void rthal_smi_init(void)
 	}
 #ifdef CONFIG_XENO_HW_SMI_WORKAROUND
 	printk("Xenomai: SMI-enabled chipset found\n");
-	rthal_smi_en_addr = get_smi_en_addr(dev);
+	smi_en_addr = get_smi_en_addr(dev);
 #else /* ! CONFIG_XENO_HW_SMI_WORKAROUND */
 	printk
 	    ("Xenomai: SMI-enabled chipset found, but SMI workaround disabled\n"

@@ -20,7 +20,7 @@ static inline unsigned xnread_seqcount_begin(const xnseqcount_t *s)
 repeat:
 	ret = s->sequence;
 	xnarch_read_memory_barrier();
-	if (unlikely(ret & 1)) {
+	if (ret & 1) {
 		cpu_relax();
 		goto repeat;
 	}

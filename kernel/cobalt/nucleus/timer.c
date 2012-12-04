@@ -1,6 +1,6 @@
 /**
  * @file
- * @note Copyright (C) 2001,2002,2003,2007 Philippe Gerum <rpm@xenomai.org>.
+ * @note Copyright (C) 2001,2002,2003,2007,2012 Philippe Gerum <rpm@xenomai.org>.
  *       Copyright (C) 2004 Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>
  *
  * Xenomai is free software; you can redistribute it and/or modify it
@@ -35,10 +35,15 @@
  *
  *@{*/
 
+#include <linux/ipipe.h>
+#include <linux/ipipe_tickdev.h>
+#include <linux/sched.h>
 #include <nucleus/pod.h>
 #include <nucleus/thread.h>
 #include <nucleus/timer.h>
-#include <asm/xenomai/bits/timer.h>
+#include <nucleus/intr.h>
+#include <nucleus/clock.h>
+#include <asm/xenomai/arith.h>
 
 static inline void xntimer_enqueue(xntimer_t *timer)
 {
@@ -107,16 +112,16 @@ void xntimer_next_local_shot(xnsched_t *sched)
 	}
 
 	delay = xntimerh_date(&timer->aplink) -
-		(xnarch_get_cpu_tsc() + nklatency);
+		(xnclock_read_raw() + nklatency);
 
 	if (delay < 0)
 		delay = 0;
 	else if (delay > ULONG_MAX)
 		delay = ULONG_MAX;
 
-	xnarch_trace_tick((unsigned)delay);
+	xntrace_tick((unsigned)delay);
 
-	xnarch_program_timer_shot(delay);
+	ipipe_timer_set(delay);
 }
 
 static inline int xntimer_heading_p(struct xntimer *timer)
@@ -140,7 +145,10 @@ static inline int xntimer_heading_p(struct xntimer *timer)
 
 static inline void xntimer_next_remote_shot(xnsched_t *sched)
 {
-	xnarch_send_timer_ipi(xnarch_cpumask_of_cpu(xnsched_cpu(sched)));
+#ifdef CONFIG_SMP
+	cpumask_t mask = cpumask_of_cpu(xnsched_cpu(sched));
+	ipipe_send_ipi(IPIPE_HRTIMER_IPI, mask);
+#endif
 }
 
 static void xntimer_adjust(xntimer_t *timer, xnsticks_t delta)
@@ -155,7 +163,7 @@ static void xntimer_adjust(xntimer_t *timer, xnsticks_t delta)
 
 	period = xntimer_interval(timer);
 	timer->pexpect -= delta;
-	diff = xnarch_get_cpu_tsc() - xntimerh_date(&timer->aplink);
+	diff = xnclock_read_raw() - xntimerh_date(&timer->aplink);
 
 	if ((xnsticks_t) (diff - period) >= 0) {
 		/*
@@ -193,7 +201,7 @@ void xntimer_adjust_all(xnsticks_t delta)
 
 	initq(&adjq);
 	delta = xnarch_ns_to_tsc(delta);
-	for (cpu = 0, nr_cpus = xnarch_num_online_cpus(); cpu < nr_cpus; cpu++) {
+	for (cpu = 0, nr_cpus = num_online_cpus(); cpu < nr_cpus; cpu++) {
 		xnsched_t *sched = xnpod_sched_slot(cpu);
 		xntimerq_t *q = &sched->timerqueue;
 		xnholder_t *adjholder;
@@ -275,7 +283,7 @@ int xntimer_start(xntimer_t *timer,
 	if (!testbits(timer->status, XNTIMER_DEQUEUED))
 		xntimer_dequeue(timer);
 
-	now = xnarch_get_cpu_tsc();
+	now = xnclock_read_raw();
 
 	__clrbits(timer->status,
 		  XNTIMER_REALTIME | XNTIMER_FIRED | XNTIMER_PERIODIC);
@@ -415,7 +423,7 @@ xnticks_t xntimer_get_timeout(xntimer_t *timer)
 	if (!xntimer_running_p(timer))
 		return XN_INFINITE;
 
-	tsc = xnarch_get_cpu_tsc();
+	tsc = xnclock_read_raw();
 	if (xntimerh_date(&timer->aplink) < tsc)
 		return 1;	/* Will elapse shortly. */
 
@@ -485,7 +493,7 @@ void xntimer_tick(void)
 	 */
 	__setbits(sched->status, XNINTCK);
 
-	now = xnarch_get_cpu_tsc();
+	now = xnclock_read_raw();
 	while ((holder = xntimerq_head(timerq)) != NULL) {
 		timer = aplink2timer(holder);
 		/*
@@ -507,7 +515,7 @@ void xntimer_tick(void)
 			if (likely(!testbits(nkclock.status, XNTBLCK)
 				   || testbits(timer->status, XNTIMER_NOBLCK))) {
 				timer->handler(timer);
-				now = xnarch_get_cpu_tsc();
+				now = xnclock_read_raw();
 				/*
 				 * If the elapsed timer has no reload
 				 * value, or was re-enqueued or killed
@@ -782,7 +790,7 @@ void xntimer_freeze(void)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	nr_cpus = xnarch_num_online_cpus();
+	nr_cpus = num_online_cpus();
 
 	for (cpu = 0; cpu < nr_cpus; cpu++) {
 		xntimerq_t *timerq = &xnpod_sched_slot(cpu)->timerqueue;
@@ -826,6 +834,222 @@ char *xntimer_format_time(xnticks_t value, char *buf, size_t bufsz)
 }
 EXPORT_SYMBOL_GPL(xntimer_format_time);
 
+/**
+ * @internal
+ * @fn static int program_htick_shot(unsigned long delay, struct clock_event_device *cdev)
+ *
+ * @brief Program next host tick as a Xenomai timer event.
+ *
+ * Program the next shot for the host tick on the current CPU.
+ * Emulation is done using a nucleus timer attached to the master
+ * timebase.
+ *
+ * @param delay The time delta from the current date to the next tick,
+ * expressed as a count of nanoseconds.
+ *
+ * @param cdev An pointer to the clock device which notifies us.
+ *
+ * Environment:
+ *
+ * This routine is a callback invoked from the kernel's clock event
+ * handlers.
+ *
+ * @note GENERIC_CLOCKEVENTS is required from the host kernel.
+ *
+ * Rescheduling: never.
+ */
+static int program_htick_shot(unsigned long delay,
+			      struct clock_event_device *cdev)
+{
+	xnsched_t *sched;
+	int ret;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+	sched = xnpod_current_sched();
+	ret = xntimer_start(&sched->htimer, delay, XN_INFINITE, XN_RELATIVE);
+	xnlock_put_irqrestore(&nklock, s);
+
+	return ret ? -ETIME : 0;
+}
+
+/**
+ * @internal
+ * @fn void switch_htick_mode(enum clock_event_mode mode, struct clock_event_device *cdev)
+ *
+ * @brief Tick mode switch emulation callback.
+ *
+ * Changes the host tick mode for the tick device of the current CPU.
+ *
+ * @param mode The new mode to switch to. The possible values are:
+ *
+ * - CLOCK_EVT_MODE_ONESHOT, for a switch to oneshot mode.
+ *
+ * - CLOCK_EVT_MODE_PERIODIC, for a switch to periodic mode. The current
+ * implementation for the generic clockevent layer Linux exhibits
+ * should never downgrade from a oneshot to a periodic tick mode, so
+ * this mode should not be encountered. This said, the associated code
+ * is provided, basically for illustration purposes.
+ *
+ * - CLOCK_EVT_MODE_SHUTDOWN, indicates the removal of the current
+ * tick device. Normally, the nucleus only interposes on tick devices
+ * which should never be shut down, so this mode should not be
+ * encountered.
+ *
+ * @param cdev An opaque pointer to the clock device which notifies us.
+ *
+ * Environment:
+ *
+ * This routine is a callback invoked from the kernel's clock event
+ * handlers.
+ *
+ * @note GENERIC_CLOCKEVENTS is required from the host kernel.
+ *
+ * Rescheduling: never.
+ */
+static void switch_htick_mode(enum clock_event_mode mode,
+			      struct clock_event_device *cdev)
+{
+	xnsched_t *sched;
+	xnticks_t tickval;
+	spl_t s;
+
+	if (mode == CLOCK_EVT_MODE_ONESHOT)
+		return;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	sched = xnpod_current_sched();
+
+	switch (mode) {
+	case CLOCK_EVT_MODE_PERIODIC:
+		tickval = 1000000000UL / HZ;
+		xntimer_start(&sched->htimer, tickval, tickval, XN_RELATIVE);
+		break;
+
+	case CLOCK_EVT_MODE_SHUTDOWN:
+		xntimer_stop(&sched->htimer);
+		break;
+
+	default:
+#if XENO_DEBUG(TIMERS)
+		xnlogerr("host tick: invalid mode `%d'?\n", mode);
+#endif
+		;
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+}
+
+/**
+ * \fn int xntimer_grab_hardware(int cpu)
+ * \brief Grab the hardware timer.
+ *
+ * xntimer_grab_hardware() grabs and tunes the hardware timer in oneshot
+ * mode in order to clock the master time base. GENERIC_CLOCKEVENTS is
+ * required from the host kernel.
+ *
+ * Host tick emulation is performed for sharing the clockchip hardware
+ * between Linux and Xenomai, when the former provides support for
+ * oneshot timing (i.e. high resolution timers and no-HZ scheduler
+ * ticking).
+ *
+ * @param cpu The CPU number to grab the timer from.
+ *
+ * @return a positive value is returned on success, representing the
+ * duration of a Linux periodic tick expressed as a count of
+ * nanoseconds; zero should be returned when the Linux kernel does not
+ * undergo periodic timing on the given CPU (e.g. oneshot
+ * mode). Otherwise:
+ *
+ * - -EBUSY is returned if the hardware timer has already been
+ * grabbed.  xntimer_release_hardware() must be issued before
+ * xntimer_grab_hardware() is called again.
+ *
+ * - -ENODEV is returned if the hardware timer cannot be used.  This
+ * situation may occur after the kernel disabled the timer due to
+ * invalid calibration results; in such a case, such hardware is
+ * unusable for any timing duties.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Linux domain context.
+ */
+int xntimer_grab_hardware(int cpu)
+{
+	int tickval, ret;
+
+	ret = ipipe_timer_start(xnintr_clock_handler,
+				switch_htick_mode, program_htick_shot, cpu);
+	switch (ret) {
+	case CLOCK_EVT_MODE_PERIODIC:
+		/* oneshot tick emulation callback won't be used, ask
+		 * the caller to start an internal timer for emulating
+		 * a periodic tick. */
+		tickval = 1000000000UL / HZ;
+		break;
+
+	case CLOCK_EVT_MODE_ONESHOT:
+		/* oneshot tick emulation */
+		tickval = 1;
+		break;
+
+	case CLOCK_EVT_MODE_UNUSED:
+		/* we don't need to emulate the tick at all. */
+		tickval = 0;
+		break;
+
+	case CLOCK_EVT_MODE_SHUTDOWN:
+		return -ENODEV;
+
+	default:
+		return ret;
+	}
+
+#ifdef CONFIG_SMP
+	if (cpu == 0) {
+		ret = ipipe_request_irq(&xnarch_machdata.domain,
+					IPIPE_HRTIMER_IPI,
+					(ipipe_irq_handler_t)xnintr_clock_handler,
+					NULL, NULL);
+		if (ret) {
+			ipipe_timer_stop(cpu);
+			return ret;
+		}
+	}
+#endif
+
+	return tickval;
+}
+
+/**
+ * \fn void xntimer_release_hardware(int cpu)
+ * \brief Release the hardware timer.
+ *
+ * Releases the hardware timer, thus reverting the effect of a
+ * previous call to xntimer_grab_hardware(). In case the timer
+ * hardware is shared with Linux, a periodic setup suitable for the
+ * Linux kernel is reset.
+ *
+ * @param cpu The CPU number the timer was grabbed from.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Linux domain context.
+ */
+void xntimer_release_hardware(int cpu)
+{
+	ipipe_timer_stop(cpu);
+#ifdef CONFIG_SMP
+	if (cpu == 0)
+		ipipe_free_irq(&xnarch_machdata.domain, IPIPE_HRTIMER_IPI);
+#endif /* CONFIG_SMP */
+}
+
 #ifdef CONFIG_XENO_OPT_VFILE
 
 #include <nucleus/vfile.h>
@@ -846,7 +1070,7 @@ static int timer_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 		       "status=%s%s:setup=%Lu:clock=%Lu:timerdev=%s:clockdev=%s\n",
 		       tm_status, wd_status, xnarch_tsc_to_ns(nktimerlat),
 		       xnclock_read_raw(),
-		       XNARCH_TIMER_DEVICE, XNARCH_CLOCK_DEVICE);
+		       ipipe_timer_name(), ipipe_clock_name());
 	return 0;
 }
 

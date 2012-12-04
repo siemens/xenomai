@@ -70,6 +70,11 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 	return __xn_reg_rval(regs) == -EINTR;
 }
 
+static inline int xnarch_local_syscall(void)
+{
+	return -ENOSYS;
+}
+
 #else /* !__KERNEL__ */
 
 #include <errno.h>

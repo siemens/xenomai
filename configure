@@ -829,6 +829,8 @@ enable_pshared
 enable_registry
 enable_smp
 enable_x86_sep
+enable_arm_tsc
+enable_arm_quirks
 enable_doc_install
 enable_dox_doc
 enable_dbx
@@ -1492,6 +1494,17 @@ Optional Features:
   --enable-registry       Export real-time objects to a registry
   --enable-smp            Enable SMP support
   --enable-x86-sep        Enable x86 SEP instructions for issuing syscalls
+  --enable-arm-tsc        You only need this option if you get the following
+                          message when starting an application: Xenomai:
+                          incompatible feature set (userland requires
+                          "kuser_tsc ...", kernel provides "...",
+                          missing="kuser_tsc"). In that case, this option
+                          allows to select the machine for which a user-space
+                          tsc emulation should be generated. Valid machines
+                          are at91, kuser, imx, ixp4xx, omap, orion, pxa,
+                          s3c24x, sa1100.
+  --enable-arm-quirks     Enable quirks for specific systems. Currently
+                          supported quirks are for sa1100 and xscale3.
   --disable-doc-install   Do not install documentation
   --enable-dox-doc        Build Doxygen documentation
   --enable-dbx            Build Docbook XML documentation.
@@ -12893,6 +12906,70 @@ $as_echo "${CONFIG_XENO_X86_SEP:-no}" >&6; }
 fi
 
 
+if test $XENO_TARGET_ARCH = arm ; then
+
+  unset CONFIG_XENO_ARM_SA1100
+  unset CONFIG_XENO_CPU_XSC3
+  CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_KUSER
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ARM tsc type" >&5
+$as_echo_n "checking for ARM tsc type... " >&6; }
+  # Check whether --enable-arm-tsc was given.
+if test "${enable_arm_tsc+set}" = set; then :
+  enableval=$enable_arm_tsc; case "$enableval" in
+	at91*)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING_FAST_WRAP;;
+
+	integrator) unset tsc_type;;
+
+	ixp4xx)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING;;
+
+	imx*|mx*)   CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING;;
+
+	kuser)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_KUSER;;
+
+	omap*)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING;;
+
+	orion)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING_COUNTDOWN;;
+
+	pxa*)	    CONFIG_XENO_CPU_XSC3=y
+		    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING;;
+
+	s3c24*)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_DECREMENTER;;
+
+	sa1100)	    CONFIG_XENO_ARM_SA1100=y
+		    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING;;
+
+	n | no)	    unset CONFIG_XENO_ARM_TSC_TYPE;;
+
+	*)as_fn_error $? "Invalid SOC selected: \"$enableval\"" "$LINENO" 5;;
+	esac
+fi
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${enable_arm_tsc:-kuser}" >&5
+$as_echo "${enable_arm_tsc:-kuser}" >&6; }
+
+  # Check whether --enable-arm-quirks was given.
+if test "${enable_arm_quirks+set}" = set; then :
+  enableval=$enable_arm_quirks; case "$enableval" in
+	sa1100)	 CONFIG_XENO_ARM_SA1100=y;;
+	xscale3) CONFIG_XENO_CPU_XSC3=y;;
+	*)as_fn_error $? "Invalid SOC selected: \"$enableval\"" "$LINENO" 5;;
+	esac
+fi
+
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ARM SA1100 architecture" >&5
+$as_echo_n "checking for ARM SA1100 architecture... " >&6; }
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${CONFIG_XENO_ARM_SA1100:-no}" >&5
+$as_echo "${CONFIG_XENO_ARM_SA1100:-no}" >&6; }
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ARM Xscale3 architecture" >&5
+$as_echo_n "checking for ARM Xscale3 architecture... " >&6; }
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${CONFIG_XENO_CPU_XSC3:-no}" >&5
+$as_echo "${CONFIG_XENO_CPU_XSC3:-no}" >&6; }
+fi
+
+
 if test x"$docdir" = x; then
 	docdir=$datadir/doc/$PACKAGE-$VERSION
 fi
@@ -13537,6 +13614,17 @@ $as_echo "#define CONFIG_XENO_X86_SEP 1" >>confdefs.h
 
 test x$CONFIG_SMP = xy &&
 $as_echo "#define CONFIG_SMP 1" >>confdefs.h
+
+test x$CONFIG_XENO_ARM_SA1100 = xy &&
+$as_echo "#define CONFIG_XENO_ARM_SA1100 1" >>confdefs.h
+
+test x$CONFIG_XENO_CPU_XSC3 = xy &&
+$as_echo "#define CONFIG_XENO_CPU_XSC3 1" >>confdefs.h
+
+test $CONFIG_XENO_ARM_TSC_TYPE &&
+cat >>confdefs.h <<_ACEOF
+#define CONFIG_XENO_ARM_TSC_TYPE $CONFIG_XENO_ARM_TSC_TYPE
+_ACEOF
 
 
 test x$ac_cv_func_fork = xyes &&

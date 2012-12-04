@@ -24,9 +24,8 @@
 #error "Pure kernel header included from user-space!"
 #endif
 
+#include <linux/version.h>
 #include <asm-generic/xenomai/wrappers.h> /* Read the generic portion. */
-
-#define wrap_phys_mem_prot(filp, pfn, size, prot)  (prot)
 
 #define wrap_strncpy_from_user(dstP, srcP, n)	__strncpy_from_user(dstP, srcP, n)
 
@@ -36,16 +35,6 @@
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 1, 0) && !defined(CONFIG_VFP_3_2_BACKPORT)
 #define vfp_current_hw_state last_VFP_context
 #endif /* Linux < 3.1 */
-
-#ifdef CONFIG_XENO_LEGACY_IPIPE
-
-#if !defined(CONFIG_GENERIC_HARDIRQS) \
-	|| LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)
-#define ipipe_enable_irq(irq)   irq_to_desc(irq)->chip->unmask(irq)
-#define ipipe_disable_irq(irq)  irq_to_desc(irq)->chip->mask(irq)
-#endif
-
-#endif /* CONFIG_XENO_LEGACY_IPIPE */
 
 static inline void fp_init(union fp_state *state)
 {

@@ -214,7 +214,7 @@ void xnsched_tp_start_schedule(struct xnsched *sched)
 	struct xnsched_tp *tp = &sched->tp;
 
 	tp->wnext = 0;
-	tp->tf_start = xnpod_get_cpu_time();
+	tp->tf_start = xnclock_read_monotonic();
 	tp_schedule_next(&sched->tp);
 }
 EXPORT_SYMBOL_GPL(xnsched_tp_start_schedule);

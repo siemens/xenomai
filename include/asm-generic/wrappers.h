@@ -28,13 +28,10 @@
 #include <linux/version.h>
 #include <linux/module.h>
 #include <linux/slab.h>
+#include <linux/ipipe.h>
 #include <linux/ipipe_tickdev.h>
 #include <asm/io.h>
 #include <linux/pid.h>
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,35)
-#error "Linux kernel 2.6.35 or above required"
-#endif
 
 #ifdef CONFIG_IPIPE_LEGACY
 #error "CONFIG_IPIPE_LEGACY must be switched off"
@@ -44,12 +41,6 @@ static inline struct task_struct *wrap_find_task_by_pid(pid_t nr)
 {
 	return pid_task(find_pid_ns(nr, &init_pid_ns), PIDTYPE_PID);
 }
-
-#include <linux/semaphore.h>
-#ifndef DEFINE_SEMAPHORE
-/* Legacy DECLARE_MUTEX vanished in 2.6.37 */
-#define DEFINE_SEMAPHORE(sem) DECLARE_MUTEX(sem)
-#endif
 
 #include <linux/mm.h>
 #ifndef pgprot_noncached
@@ -72,7 +63,7 @@ unsigned long vm_mmap(struct file *file, unsigned long addr,
 	unsigned long flag, unsigned long offset)
 {
 	struct mm_struct *mm = current->mm;
-	int ret;
+	unsigned long ret;
 
 	down_write(&mm->mmap_sem);
 	ret = do_mmap(file, addr, len, prot, flag, offset);

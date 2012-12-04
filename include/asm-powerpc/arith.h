@@ -23,11 +23,11 @@
 
 #ifdef __powerpc64__
 
-#define rthal_nodiv_ullimd(op, frac, integ) \
-	rthal_powerpc64_nodiv_ullimd((op), (frac), (integ))
+#define xnarch_nodiv_ullimd(op, frac, integ) \
+	mach_powerpc_nodiv_ullimd((op), (frac), (integ))
 
 static inline __attribute__((__const__)) unsigned long long
-rthal_powerpc64_nodiv_ullimd(const unsigned long long op,
+mach_powerpc_nodiv_ullimd(const unsigned long long op,
 			     const unsigned long long frac,
 			     const unsigned rhs_integ)
 {
@@ -51,7 +51,7 @@ rthal_powerpc64_nodiv_ullimd(const unsigned long long op,
 
 #else /* !__powerpc64__ */
 
-#define __rthal_add96and64(l0, l1, l2, s0, s1)		\
+#define xnarch_add96and64(l0, l1, l2, s0, s1)		\
 	do {						\
 		__asm__ ("addc %2, %2, %4\n\t"		\
 			 "adde %1, %1, %3\n\t"		\

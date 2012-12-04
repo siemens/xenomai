@@ -22,7 +22,7 @@
 #include <rtdk.h>
 #include <nucleus/thread.h>
 #include <asm-generic/syscall.h>
-#include <asm-generic/bits/current.h>
+#include <asm-generic/current.h>
 
 static void assert_nrt_inner(void)
 {
@@ -43,8 +43,8 @@ static void assert_nrt_inner(void)
 
 void assert_nrt(void)
 {
-	if (unlikely(xeno_get_current() != XN_NO_HANDLE &&
-		     !(xeno_get_current_mode() & XNRELAX)))
+	if (xeno_get_current() != XN_NO_HANDLE &&
+		     !(xeno_get_current_mode() & XNRELAX))
 		assert_nrt_inner();
 }
 
@@ -55,8 +55,8 @@ void assert_nrt(void)
  */
 void assert_nrt_fast(void)
 {
-	if (unlikely(xeno_get_current_fast() != XN_NO_HANDLE &&
-		     !(xeno_get_current_mode() & XNRELAX)))
+	if (xeno_get_current_fast() != XN_NO_HANDLE &&
+		     !(xeno_get_current_mode() & XNRELAX))
 		assert_nrt_inner();
 }
 

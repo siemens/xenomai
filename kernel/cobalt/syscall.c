@@ -32,6 +32,7 @@
 #include "sched.h"
 #include "clock.h"
 #include "event.h"
+#include <nucleus/select.h>
 #include <rtdm/rtdm_driver.h>
 
 #define RTDM_FD_MAX CONFIG_XENO_OPT_RTDM_FILDES
@@ -156,7 +157,7 @@ static int __select(int nfds,
 		mode = XN_ABSOLUTE;
 	}
 
-	fds_size = __FDELT__(nfds + __NFDBITS - 1) * sizeof(long);
+	fds_size = __FDELT__(nfds + __NFDBITS__ - 1) * sizeof(long);
 
 	for (i = 0; i < XNSELECT_MAX_TYPES; i++)
 		if (ufd_sets[i]) {

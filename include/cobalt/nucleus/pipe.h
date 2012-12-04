@@ -111,10 +111,6 @@ extern struct xnpipe_state xnpipe_states[];
 
 #define xnminor_from_state(s) (s - xnpipe_states)
 
-#ifdef __cplusplus
-extern "C" {
-#endif				/* __cplusplus */
-
 int xnpipe_mount(void);
 
 void xnpipe_umount(void);
@@ -135,10 +131,6 @@ ssize_t xnpipe_recv(int minor,
 		    struct xnpipe_mh **pmh, xnticks_t timeout);
 
 int xnpipe_flush(int minor, int mode);
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 
 static inline struct xnholder *xnpipe_m_link(xnpipe_mh_t *mh)
 {

@@ -21,6 +21,7 @@
 
 #ifdef __KERNEL__
 #include <linux/version.h>
+#include <linux/ipipe.h>
 #ifndef xnfeatinfo_archdep
 #define collect_arch_features(finfo) do { (void)(finfo); } while (0)
 #endif /* !xnfeatinfo_archdep */

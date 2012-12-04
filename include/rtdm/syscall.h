@@ -36,9 +36,7 @@
 
 #ifdef __KERNEL__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <nucleus/shadow.h>
 
 extern int __rtdm_muxid;
 
@@ -48,10 +46,6 @@ static inline void rtdm_syscall_cleanup(void)
 {
 	xnshadow_unregister_interface(__rtdm_muxid);
 }
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* __KERNEL__ */
 

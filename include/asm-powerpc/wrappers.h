@@ -32,9 +32,6 @@
 
 #include <asm/uaccess.h>
 
-#define wrap_phys_mem_prot(filp,pfn,size,prot) \
-  phys_mem_access_prot(filp, pfn, size, prot)
-
 #ifdef CONFIG_PPC64
 #define wrap_range_ok(task,addr,size) \
     __access_ok(((__force unsigned long)(addr)),(size),(task->thread.fs))

@@ -108,17 +108,9 @@
 
 #ifdef __KERNEL__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 int cobalt_syscall_init(void);
 
 void cobalt_syscall_cleanup(void);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* __KERNEL__ */
 

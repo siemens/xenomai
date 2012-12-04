@@ -1,26 +1,17 @@
 includesubdir = $(includedir)/asm-x86
 
 includesub_HEADERS =	\
-	arith_32.h	\
-	arith_64.h	\
-	arith.h	\
+	arith.h		\
 	atomic.h	\
 	calibration.h	\
 	features_32.h	\
 	features_64.h	\
 	features.h	\
 	fptest.h	\
-	hal_32.h	\
-	hal_64.h	\
-	hal.h		\
+	machine.h	\
 	smi.h		\
-	switch_32.h	\
-	switch_64.h	\
-	switch.h	\
 	syscall.h	\
-	system_32.h	\
-	system_64.h	\
-	system.h	\
+	thread.h	\
 	wrappers.h
 
 SUBDIRS = bits

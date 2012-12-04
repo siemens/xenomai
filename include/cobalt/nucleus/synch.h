@@ -22,7 +22,8 @@
 #ifndef _XENO_NUCLEUS_SYNCH_H
 #define _XENO_NUCLEUS_SYNCH_H
 
-#include <nucleus/queue.h>
+#include <nucleus/types.h>
+#include <asm/xenomai/atomic.h>
 
 /* Creation flags */
 #define XNSYNCH_FIFO    0x0
@@ -49,16 +50,17 @@ static inline int xnsynch_fast_owner_check(xnarch_atomic_t *fastlock,
 static inline int xnsynch_fast_acquire(xnarch_atomic_t *fastlock,
 				       xnhandle_t new_ownerh)
 {
-	xnhandle_t lock_state =
-		xnarch_atomic_cmpxchg(fastlock, XN_NO_HANDLE, new_ownerh);
+	xnhandle_t h;
 
-	if (likely(lock_state == XN_NO_HANDLE))
-		return 0;
+	h = xnarch_atomic_cmpxchg(fastlock, XN_NO_HANDLE, new_ownerh);
+	if (h != XN_NO_HANDLE) {
+		if (xnhandle_mask_spare(h) == new_ownerh)
+			return -EBUSY;
 
-	if (xnhandle_mask_spare(lock_state) == new_ownerh)
-		return -EBUSY;
+		return -EAGAIN;
+	}
 
-	return -EAGAIN;
+	return 0;
 }
 
 static inline int xnsynch_fast_release(xnarch_atomic_t *fastlock,
@@ -69,6 +71,8 @@ static inline int xnsynch_fast_release(xnarch_atomic_t *fastlock,
 }
 
 #ifdef __KERNEL__
+
+#include <nucleus/queue.h>
 
 #define XNSYNCH_CLAIMED 0x10	/* Claimed by other thread(s) w/ PIP */
 
@@ -129,10 +133,6 @@ typedef struct xnsynch {
 #define xnsynch_fast_set_claimed(fastlock, enable) \
 	(((fastlock) & ~XNSYNCH_FLCLAIM) | ((enable) ? XNSYNCH_FLCLAIM : 0))
 #define xnsynch_fast_mask_claimed(fastlock) ((fastlock & ~XNSYNCH_FLCLAIM))
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void __xnsynch_fixup_rescnt(struct xnthread *thread);
 
@@ -199,10 +199,6 @@ void xnsynch_release_all_ownerships(struct xnthread *thread);
 void xnsynch_requeue_sleeper(struct xnthread *thread);
 
 void xnsynch_forget_sleeper(struct xnthread *thread);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* __KERNEL__ */
 

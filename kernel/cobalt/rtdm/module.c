@@ -30,6 +30,7 @@
  * to extend a device profile with more hardware-specific functions.
  */
 
+#include <linux/init.h>
 #include <nucleus/pod.h>
 #include <rtdm/syscall.h>
 #include "rtdm/internal.h"
@@ -38,15 +39,7 @@ MODULE_DESCRIPTION("Real-Time Driver Model");
 MODULE_AUTHOR("jan.kiszka@web.de");
 MODULE_LICENSE("GPL");
 
-static void __exit rtdm_skin_shutdown(int xtype)
-{
-	rtdm_dev_cleanup();
-	rtdm_proc_cleanup();
-	rtdm_syscall_cleanup();
-	xnpod_shutdown(xtype);
-}
-
-static int __init SKIN_INIT(rtdm)
+static int __init __rtdm_init(void)
 {
 	int err;
 
@@ -82,15 +75,7 @@ cleanup_pod:
 	xnpod_shutdown(err);
 
 fail:
-	xnlogerr("RTDM skin init failed, code %d.\n", err);
+	xnlogerr("RTDM init failed, code %d.\n", err);
 	return err;
 }
-
-static void __exit SKIN_EXIT(rtdm)
-{
-	xnprintf("stopping RTDM services.\n");
-	rtdm_skin_shutdown(XNPOD_NORMAL_EXIT);
-}
-
-module_init(__rtdm_skin_init);
-module_exit(__rtdm_skin_exit);
+device_initcall(__rtdm_init);

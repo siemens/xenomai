@@ -26,8 +26,6 @@
 #ifndef __KERNEL__
 #include <time.h>
 #include <sys/types.h>
-#else /* __KERNEL__ */
-#include <asm-generic/xenomai/system.h>
 #endif /* __KERNEL__ */
 #include <nucleus/seqlock.h>
 

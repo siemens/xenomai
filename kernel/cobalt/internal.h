@@ -36,6 +36,7 @@
 #include <nucleus/select.h>
 #include <nucleus/assert.h>
 #include <cobalt/syscall.h>
+#include <asm/xenomai/arith.h>
 #include "registry.h"
 
 #ifndef CONFIG_XENO_OPT_DEBUG_POSIX

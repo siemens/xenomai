@@ -467,9 +467,9 @@ EXPORT_SYMBOL_GPL(rtdm_task_join_nrt);
  */
 void rtdm_task_busy_sleep(nanosecs_rel_t delay)
 {
-	xnticks_t wakeup = xnarch_get_cpu_tsc() + xnarch_ns_to_tsc(delay);
+	xnticks_t wakeup = xnclock_read_raw() + xnarch_ns_to_tsc(delay);
 
-	while ((xnsticks_t)(xnarch_get_cpu_tsc() - wakeup) < 0)
+	while ((xnsticks_t)(xnclock_read_raw() - wakeup) < 0)
 		cpu_relax();
 }
 
@@ -1822,27 +1822,28 @@ static int rtdm_mmap_buffer(struct file *filp, struct vm_area_struct *vma)
 		XENO_ASSERT(RTDM, (size % PAGE_SIZE) == 0, return -EINVAL);
 
 		while (mapped_size < size) {
-			if (xnarch_remap_vm_page(vma, maddr, vaddr))
+			if (xnheap_remap_vm_page(vma, maddr, vaddr))
 				return -EAGAIN;
 
 			maddr += PAGE_SIZE;
 			vaddr += PAGE_SIZE;
 			mapped_size += PAGE_SIZE;
 		}
-		xnarch_fault_range(vma);
+		if (xnarch_machdesc.prefault)
+			xnarch_machdesc.prefault(vma);
 		ret = 0;
 	} else
 #else
 	vma->vm_pgoff = paddr >> PAGE_SHIFT;
 #endif /* CONFIG_MMU */
 	if (mmap_data->src_paddr)
-		ret = xnarch_remap_io_page_range(filp, vma, maddr, paddr,
+		ret = xnheap_remap_io_page_range(filp, vma, maddr, paddr,
 						 size, PAGE_SHARED);
 	else {
-		ret = xnarch_remap_kmem_page_range(vma, maddr, paddr,
+		ret = xnheap_remap_kmem_page_range(vma, maddr, paddr,
 						   size, PAGE_SHARED);
-		if (!ret)
-			xnarch_fault_range(vma);
+		if (ret == 0 && xnarch_machdesc.prefault)
+			xnarch_machdesc.prefault(vma);
 	}
 
 	return ret;

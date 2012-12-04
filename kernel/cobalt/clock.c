@@ -49,8 +49,7 @@
  *@{*/
 
 #include <nucleus/vdso.h>
-#include <asm-generic/xenomai/arith.h>
-#include <asm-generic/xenomai/system.h>
+#include <asm/xenomai/arith.h>
 #include "thread.h"
 #include "internal.h"
 
@@ -94,7 +93,7 @@ static int do_clock_host_realtime(struct timespec *tp)
 retry:
 	seq = xnread_seqcount_begin(&hostrt_data->seqcount);
 
-	now = xnarch_get_cpu_tsc();
+	now = xnclock_read_raw();
 	base = hostrt_data->cycle_last;
 	mask = hostrt_data->mask;
 	mult = hostrt_data->mult;
@@ -159,7 +158,7 @@ int cobalt_clock_gettime(clockid_t clock_id, struct timespec __user *u_ts)
 
 	case CLOCK_MONOTONIC:
 	case CLOCK_MONOTONIC_RAW:
-		cpu_time = xnpod_get_cpu_time();
+		cpu_time = xnclock_read_monotonic();
 		ts.tv_sec =
 			xnarch_uldivrem(cpu_time, ONE_BILLION, &ts.tv_nsec);
 		break;

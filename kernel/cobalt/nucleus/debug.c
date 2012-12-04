@@ -35,6 +35,7 @@
 #include <nucleus/pod.h>
 #include <nucleus/debug.h>
 #include <nucleus/heap.h>
+#include <nucleus/clock.h>
 #include <nucleus/sys_ppd.h>
 
 #ifdef CONFIG_XENO_OPT_DEBUG_TRACE_RELAX
@@ -534,7 +535,7 @@ extern struct xnlockinfo xnlock_stats[];
 
 void xnlock_dbg_prepare_acquire(unsigned long long *start)
 {
-	*start = rthal_rdtsc();
+	*start = xnclock_read_raw();
 }
 EXPORT_SYMBOL_GPL(xnlock_dbg_prepare_acquire);
 
@@ -567,7 +568,7 @@ void xnlock_dbg_acquired(struct xnlock *lock, int cpu, unsigned long long *start
 			 const char *file, int line, const char *function)
 {
 	lock->lock_date = *start;
-	lock->spin_time = rthal_rdtsc() - *start;
+	lock->spin_time = xnclock_read_raw() - *start;
 	lock->file = file;
 	lock->function = function;
 	lock->line = line;
@@ -581,8 +582,8 @@ int xnlock_dbg_release(struct xnlock *lock)
 	struct xnlockinfo *stats;
 	int cpu;
 
-	lock_time = rthal_rdtsc() - lock->lock_date;
-	cpu = xnarch_current_cpu();
+	lock_time = xnclock_read_raw() - lock->lock_date;
+	cpu = ipipe_processor_id();
 	stats = &xnlock_stats[cpu];
 
 	if (unlikely(atomic_read(&lock->owner) != cpu)) {

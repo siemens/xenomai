@@ -26,11 +26,11 @@
 /*! \addtogroup clock
  *@{*/
 
-#include <nucleus/queue.h>
-
 #ifdef __KERNEL__
 
+#include <nucleus/queue.h>
 #include <nucleus/vfile.h>
+#include <asm-generic/xenomai/timeconv.h>
 
 #define XNTBLCK  0x00000001	/* Time base is locked. */
 
@@ -46,19 +46,14 @@ struct xnclock {
 
 extern struct xnclock nkclock;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 static inline xnticks_t xnclock_get_offset(void)
 {
 	return nkclock.wallclock_offset;
 }
 
-static inline xnticks_t xnclock_read_monotonic(void)
-{
-	return xnarch_get_cpu_time();
-}
+xnticks_t xnclock_get_host_time(void);
+
+xnticks_t xnclock_read_monotonic(void);
 
 static inline xnticks_t xnclock_read(void)
 {
@@ -71,14 +66,12 @@ static inline xnticks_t xnclock_read(void)
 
 static inline xnticks_t xnclock_read_raw(void)
 {
-	return xnarch_get_cpu_tsc();
+	unsigned long long t;
+	ipipe_read_tsc(t);
+	return t;
 }
 
 void xnclock_adjust(xnsticks_t delta);
-
-#ifdef __cplusplus
-}
-#endif
 
 void xnclock_init_proc(void);
 

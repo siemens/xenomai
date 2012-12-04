@@ -360,21 +360,13 @@ if test \! -r $linux_tree/arch/$linux_arch/include/asm/ipipe.h; then
    exit 2
 fi
 
-ipipe_legacy=`grep '^#define.*IPIPE_ARCH_STRING.*"' $linux_tree/arch/$linux_arch/include/asm/ipipe.h 2>/dev/null|head -n1|sed -e 's,.*"\(.*\)"$,\1,'`
-
-if test \! "x$ipipe_legacy" = x; then
-   if test x$verbose = x1; then
-     echo "Legacy I-pipe/$linux_arch $ipipe_legacy installed."
-   fi
-else
-   ipipe_core=`grep '^#define.*IPIPE_CORE_RELEASE.*' $linux_tree/arch/$linux_arch/include/asm/ipipe.h 2>/dev/null|head -n1|sed -e 's,[^0-9]*\([0-9]*\)$,\1,'`
-   if test "x$ipipe_core" = x; then
-       echo "$me: $linux_tree has no I-pipe support for $linux_arch" >&2
-       exit 2
-   fi
-   if test x$verbose = x1; then
-     echo "I-pipe core/$linux_arch #$ipipe_core installed."
-   fi
+ipipe_core=`grep '^#define.*IPIPE_CORE_RELEASE.*' $linux_tree/arch/$linux_arch/include/asm/ipipe.h 2>/dev/null|head -n1|sed -e 's,[^0-9]*\([0-9]*\)$,\1,'`
+if test "x$ipipe_core" = x; then
+    echo "$me: $linux_tree has no I-pipe support for $linux_arch" >&2
+    exit 2
+fi
+if test x$verbose = x1; then
+   echo "I-pipe core/$linux_arch #$ipipe_core installed."
 fi
 
 patch_kernelversion_specific="y"
@@ -397,7 +389,7 @@ case $linux_VERSION.$linux_PATCHLEVEL in
     fi
 
     if ! grep -q CONFIG_XENOMAI $linux_tree/arch/$linux_arch/Makefile; then
-	p="core-\$(CONFIG_XENOMAI)	+= kernel/xenomai/hal/ arch/$linux_arch/xenomai/"
+	p="core-\$(CONFIG_XENOMAI)	+= arch/$linux_arch/xenomai/"
 	echo $p | patch_append arch/$linux_arch/Makefile
     fi
 
@@ -435,7 +427,6 @@ patch_architecture_specific="y"
 patch_link r m kernel/cobalt/arch/$linux_arch arch/$linux_arch/xenomai
 patch_architecture_specific="n"
 patch_link n m kernel/cobalt kernel/xenomai
-patch_link n m kernel/cobalt/arch/generic kernel/xenomai/hal
 patch_link n m kernel/cobalt/nucleus kernel/xenomai/nucleus
 patch_link n m kernel/cobalt/rtdm kernel/xenomai/rtdm
 patch_link r m kernel/drivers drivers/xenomai

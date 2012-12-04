@@ -23,15 +23,7 @@
 
 #include <linux/fcntl.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 int open(const char *path, int oflag, ...);
-
-#ifdef __cplusplus
-}
-#endif
 
 #else /* !__KERNEL__ */
 

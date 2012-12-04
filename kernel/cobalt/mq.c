@@ -121,7 +121,7 @@ static inline int cobalt_mq_init(cobalt_mq_t * mq, const struct mq_attr *attr)
 	memsize = msgsize * attr->mq_maxmsg;
 	memsize = PAGE_ALIGN(memsize);
 
-	mem = xnarch_alloc_pages(memsize);
+	mem = alloc_pages_exact(memsize, GFP_KERNEL);
 	if (mem == NULL)
 		return ENOSPC;
 
@@ -157,7 +157,7 @@ static void lostage_mq_memfree(struct ipipe_work_header *work)
 	struct lostage_memfree *rq;
 
 	rq = container_of(work, struct lostage_memfree, work);
-	xnarch_free_pages(rq->mem, rq->memsize);
+	free_pages_exact(rq->mem, rq->memsize);
 }
 
 static inline void cobalt_mq_destroy(cobalt_mq_t *mq)

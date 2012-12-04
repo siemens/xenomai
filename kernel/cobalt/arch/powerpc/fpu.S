@@ -57,7 +57,7 @@ END_FTR_SECTION_IFSET(CPU_FTR_601)
 #define __FPSCR(base)	THREAD_FPR0+32*8(base)
 
 /* r3 = &thread_struct (tcb->fpup) */
-_GLOBAL(rthal_save_fpu)
+_GLOBAL(__asm_save_fpu)
 	mfmsr	r5
 	ori	r5,r5,MSR_FP
 	SYNC
@@ -69,7 +69,7 @@ _GLOBAL(rthal_save_fpu)
 	blr
 
 /* r3 = &thread_struct */
-_GLOBAL(rthal_init_fpu)
+_GLOBAL(__asm_init_fpu)
 	mfmsr	r5
 	ori	r5,r5,MSR_FP|MSR_FE0|MSR_FE1
 	SYNC
@@ -78,7 +78,7 @@ _GLOBAL(rthal_init_fpu)
 	/* Fallback wanted. */
 	
 /* r3 = &thread_struct (tcb->fpup) */
-_GLOBAL(rthal_restore_fpu)
+_GLOBAL(__asm_restore_fpu)
 	mfmsr	r5
 	ori	r5,r5,MSR_FP
 	SYNC

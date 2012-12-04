@@ -2,7 +2,7 @@
 #define STACKSIZE_H
 
 #include <stdint.h>
-
+#include <limits.h>
 #include <unistd.h>
 #include <pthread.h>
 

@@ -41,7 +41,9 @@
 #include <nucleus/select.h>
 #include <nucleus/vfile.h>
 #include <nucleus/clock.h>
+#include <nucleus/apc.h>
 #include <nucleus/version.h>
+#include <nucleus/shadow.h>
 #include <rtdm/rtdm.h>
 
 /* debug support */
@@ -588,7 +590,7 @@ static inline void rtdm_context_unlock(struct rtdm_dev_context *context)
 		    /* just warn if context was a dangling pointer */);
 	smp_mb__before_atomic_dec();
 	if (unlikely(atomic_dec_and_test(&context->close_lock_count)))
-		rthal_apc_schedule(rtdm_apc);
+		xnapc_schedule(rtdm_apc);
 }
 
 static inline void rtdm_context_put(struct rtdm_dev_context *context)

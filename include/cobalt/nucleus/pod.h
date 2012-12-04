@@ -50,7 +50,7 @@
 #define XNPOD_NORMAL_EXIT  0x0
 #define XNPOD_FATAL_EXIT   0x1
 
-#define XNPOD_ALL_CPUS  XNARCH_CPU_MASK_ALL
+#define XNPOD_ALL_CPUS  CPU_MASK_ALL
 
 #define XNPOD_FATAL_BUFSZ  16384
 
@@ -68,7 +68,7 @@ struct xnpod {
 
 	xnflags_t status;	/*!< Status bitmask. */
 
-	xnsched_t sched[XNARCH_NR_CPUS];	/*!< Per-cpu scheduler slots. */
+	xnsched_t sched[NR_CPUS];	/*!< Per-cpu scheduler slots. */
 
 	xnqueue_t threadq;	/*!< All existing threads. */
 #ifdef CONFIG_XENO_OPT_VFILE
@@ -91,7 +91,7 @@ extern u_long nklatency;
 
 extern u_long nktimerlat;
 
-extern xnarch_cpumask_t nkaffinity;
+extern cpumask_t nkaffinity;
 
 extern xnpod_t nkpod_struct;
 
@@ -115,10 +115,6 @@ static inline void xnpod_umount(void)
 	xnpod_cleanup_proc();
 }
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 int __xnpod_set_thread_schedparam(struct xnthread *thread,
 				  struct xnsched_class *sched_class,
 				  const union xnsched_policy_param *sched_param,
@@ -130,13 +126,15 @@ void xnpod_switch_fpu(xnsched_t *sched);
 
 void __xnpod_schedule(struct xnsched *sched);
 
+void __xnpod_schedule_handler(void);
+
 	/* -- Beginning of the exported interface */
 
 #define xnpod_sched_slot(cpu) \
     (&nkpod->sched[cpu])
 
 #define xnpod_current_sched() \
-    xnpod_sched_slot(xnarch_current_cpu())
+    xnpod_sched_slot(ipipe_processor_id())
 
 #define xnpod_active_p() \
     testbits(nkpod->status, XNPEXEC)
@@ -237,6 +235,8 @@ int xnpod_migrate_thread(int cpu);
 
 void xnpod_dispatch_signals(void);
 
+void xnpod_welcome_thread(struct xnthread *, int);
+
 static inline void xnpod_schedule(void)
 {
 	struct xnsched *sched;
@@ -307,11 +307,6 @@ int xnpod_wait_thread_period(unsigned long *overruns_r);
 int xnpod_set_thread_tslice(struct xnthread *thread,
 			    xnticks_t quantum);
 
-static inline xntime_t xnpod_get_cpu_time(void)
-{
-	return xnarch_get_cpu_time();
-}
-
 int xnpod_add_hook(int type, void (*routine) (xnthread_t *));
 
 int xnpod_remove_hook(int type, void (*routine) (xnthread_t *));
@@ -336,10 +331,6 @@ static inline void xnpod_delete_self(void)
 {
 	xnpod_delete_thread(xnpod_current_thread());
 }
-
-#ifdef __cplusplus
-}
-#endif
 
 /*@}*/
 

@@ -90,6 +90,10 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 	return __xn_reg_rval(regs) == -EINTR;
 }
 
+int xnarch_local_syscall(unsigned long a1, unsigned long a2,
+			 unsigned long a3, unsigned long a4,
+			 unsigned long a5);
+
 #else /* !__KERNEL__ */
 
 #include <errno.h>		/* For -ERESTART */
@@ -222,6 +226,10 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define XENOMAI_SKINCALL5(id,op,a1,a2,a3,a4,a5)		\
 	XENOMAI_DO_SYSCALL(5,id,op,a1,a2,a3,a4,a5)
 
+#ifdef CONFIG_XENO_ARM_TSC_TYPE
+#define XNARCH_HAVE_NONPRIV_TSC  1
+#endif /* CONFIG_XENO_ARM_TSC_TYPE */
+
 #endif /* __KERNEL__ */
 
 #define XENOMAI_SYSARCH_ATOMIC_ADD_RETURN	0
@@ -230,25 +238,109 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define XENOMAI_SYSARCH_XCHG			3
 #define XENOMAI_SYSARCH_TSCINFO                 4
 
-typedef unsigned long long __xn_rdtsc_t(volatile unsigned *);
+typedef unsigned long long __xn_rdtsc_t(volatile unsigned int *);
 
 struct __xn_tscinfo {
 	int type;		/* Must remain first member */
-	unsigned mask;
-	volatile unsigned *counter;
-	volatile unsigned *last_cnt; /* Only used by decrementers */
+	unsigned int mask;
+	volatile unsigned int *counter;
+	volatile unsigned int *last_cnt; /* Only used by decrementers */
 	volatile unsigned long long *tsc;
 };
 
 #ifndef __KERNEL__
-extern struct __xn_tscinfo __xn_tscinfo;
+/*
+ *  Putting kuser_tsc_get and kinfo.counter in the same struct results
+ * in less operations in PIC code, thus optimizes.
+ */
+typedef unsigned long long rdtsc_t(volatile unsigned int *vaddr);
+struct __xn_full_tscinfo {
+	struct __xn_tscinfo kinfo;
+	rdtsc_t *kuser_tsc_get;
+};
+extern struct __xn_full_tscinfo __xn_tscinfo;
 
+#ifdef CONFIG_XENO_ARM_TSC_TYPE
 static inline unsigned long long __xn_rdtsc(void)
 {
-	return __xn_tscinfo.tsc_get(__xn_tscinfo.counter);
+#if CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_KUSER
+	return __xn_tscinfo.kuser_tsc_get(__xn_tscinfo.kinfo.counter);
+
+#elif CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING
+	volatile unsigned long long *const tscp = __xn_tscinfo.kinfo.tsc;
+	volatile unsigned *const counterp = __xn_tscinfo.kinfo.counter;
+	const unsigned mask = __xn_tscinfo.kinfo.mask;
+	register unsigned long long result;
+	unsigned counter;
+
+	__asm__ ("ldmia %1, %M0\n": "=r"(result): "r"(tscp), "m"(*tscp));
+	__asm__ __volatile__ ("" : /* */ : /* */ : "memory");
+	counter = *counterp;
+
+	if ((counter & mask) < ((unsigned) result & mask))
+		result += mask + 1ULL;
+	return (result & ~((unsigned long long) mask)) | (counter & mask);
+
+#elif CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_COUNTDOWN
+	volatile unsigned long long *const tscp = __xn_tscinfo.kinfo.tsc;
+	volatile unsigned *const counterp = __xn_tscinfo.kinfo.counter;
+	const unsigned mask = __xn_tscinfo.kinfo.mask;
+	register unsigned long long result;
+	unsigned counter;
+
+	__asm__ ("ldmia %1, %M0\n": "=r"(result): "r"(tscp), "m"(*tscp));
+	__asm__ __volatile__ ("" : /* */ : /* */ : "memory");
+	counter = mask - *counterp;
+
+	if ((counter & mask) > ((unsigned) result & mask))
+		result += mask + 1ULL;
+	return (result & ~((unsigned long long) mask)) | (counter & mask);
+
+#elif CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_FAST_WRAP
+	volatile unsigned long long *const tscp = __xn_tscinfo.kinfo.tsc;
+	volatile unsigned *const counterp = __xn_tscinfo.kinfo.counter;
+	const unsigned mask = __xn_tscinfo.kinfo.mask;
+	register unsigned long long after, before;
+	unsigned counter;
+
+	__asm__ ("ldmia %1, %M0\n": "=r"(after): "r"(tscp), "m"(*tscp));
+	do {
+		before = after;
+		counter = *counterp;
+		__asm__ __volatile__ ("" : /* */ : /* */ : "memory");
+		__asm__ ("ldmia %1, %M0\n" : "=r"(after): "r"(tscp), "m"(*tscp));
+	} while (((unsigned) after) != ((unsigned) before));
+	if ((counter & mask) < ((unsigned) before & mask))
+		before += mask + 1;
+	return (before & ~((unsigned long long) mask)) | (counter & mask);
+
+#elif CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_DECREMENTER
+	volatile unsigned long long *const tscp = __xn_tscinfo.kinfo.tsc;
+	volatile unsigned *const counterp = __xn_tscinfo.kinfo.counter;
+	volatile unsigned *const last_cntp = __xn_tscinfo.kinfo.last_cnt;
+	const unsigned mask = __xn_tscinfo.kinfo.mask;
+	register unsigned long long after, before;
+	unsigned counter, last_cnt;
+
+	__asm__ ("ldmia %1, %M0\n": "=r"(after): "r"(tscp), "m"(*tscp));
+	do {
+		before = after;
+		counter = *counterp;
+		last_cnt = *last_cntp;
+		/* compiler barrier. */
+		__asm__ __volatile__ ("" : /* */ : /* */ : "memory");
+		__asm__ ("ldmia %1, %M0\n": "=r"(after): "r"(tscp), "m"(*tscp));
+	} while (after != before);
+
+	counter &= mask;
+	last_cnt &= mask;
+	if (counter > last_cnt)
+		before += mask + 1ULL;
+	return (before + last_cnt - counter);
+
+#endif /* CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_DECREMENTER */
 }
+#endif /* CONFIG_XENO_ARM_TSC_TYPE */
 #endif /* !__KERNEL__ */
 
 #endif /* !_XENO_ASM_ARM_SYSCALL_H */
-
-// vim: ts=4 et sw=4 sts=4

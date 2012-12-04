@@ -7,6 +7,12 @@
 #undef CONFIG_SMP
 
 /* config */
+#undef CONFIG_XENO_ARM_SA1100
+
+/* config */
+#undef CONFIG_XENO_ARM_TSC_TYPE
+
+/* config */
 #undef CONFIG_XENO_ASYNC_CANCEL
 
 /* Build system alias */
@@ -17,6 +23,9 @@
 
 /* Compiler */
 #undef CONFIG_XENO_COMPILER
+
+/* config */
+#undef CONFIG_XENO_CPU_XSC3
 
 /* config */
 #undef CONFIG_XENO_DEFAULT_PERIOD
