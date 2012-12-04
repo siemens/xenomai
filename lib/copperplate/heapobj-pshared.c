@@ -598,9 +598,9 @@ static int create_heap(struct heapobj *hobj, const char *session,
 	snprintf(hobj->fsname, sizeof(hobj->fsname), "/xeno:%s", hobj->name);
 
 	if (flags & HOBJ_FORCE)
-		__STD(shm_unlink(hobj->fsname));
+		shm_unlink(hobj->fsname);
 
-	fd = __STD(shm_open(hobj->fsname, O_RDWR|O_CREAT, 0600));
+	fd = shm_open(hobj->fsname, O_RDWR|O_CREAT, 0600);
 	if (fd < 0)
 		return __bt(-errno);
 
@@ -646,7 +646,7 @@ finish:
 	return 0;
 unlink_fail:
 	ret = __bt(-errno);
-	__STD(shm_unlink(hobj->fsname));
+	shm_unlink(hobj->fsname);
 	goto close_fail;
 errno_fail:
 	ret = __bt(-errno);
@@ -711,7 +711,7 @@ void heapobj_destroy(struct heapobj *hobj)
 	__STD(close(hobj->fd));
 
 	if (cpid == copperplate_get_tid() || (cpid && kill(cpid, 0)))
-		__STD(shm_unlink(hobj->fsname));
+		shm_unlink(hobj->fsname);
 }
 
 int heapobj_extend(struct heapobj *hobj, size_t size, void *mem)
