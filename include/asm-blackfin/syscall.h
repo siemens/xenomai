@@ -152,6 +152,21 @@ static inline unsigned long long __xn_rdtsc (void)
     return u.t;
 }
 
-#endif /* __KERNEL__ */
+int shm_open(const char *name, int oflag, mode_t mode);
+inline __attribute__((weak))
+int shm_open(const char *name, int oflag, mode_t mode)
+{
+	errno = ENOSYS;
+	return -1;
+}
+
+int shm_unlink(const char *name);
+inline __attribute__((weak)) int shm_unlink(const char *name)
+{
+	errno = ENOSYS;
+	return -1;
+}
+
+#endif /* !__KERNEL__ */
 
 #endif /* !_XENO_ASM_BLACKFIN_SYSCALL_H */
