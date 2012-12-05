@@ -1200,6 +1200,7 @@ void xnpod_delete_thread(xnthread_t *thread)
 		 * thread zombie state to go through the rescheduling
 		 * procedure then actually destroy the thread object.
 		 */
+		__clrbits(sched->status, XNINLOCK);
 		xnsched_set_resched(sched);
 		xnpod_schedule();
 #ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
@@ -1452,6 +1453,7 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 #endif /* __XENO_SIM__ */
 
 	if (thread == sched->curr) {
+		__clrbits(sched->status, XNINLOCK);
 		/*
 		 * If the current thread is being relaxed, we must
 		 * have been called from xnshadow_relax(), in which
@@ -2302,13 +2304,15 @@ reschedule:
 	xnpod_run_hooks(&nkpod->tswitchq, curr, "SWITCH");
 
       signal_unlock_and_exit:
-
 	if (xnthread_signaled_p(curr))
 		xnpod_dispatch_signals();
 
 	if (switched &&
 	    xnsched_maybe_resched_after_unlocked_switch(sched))
 		goto reschedule;
+
+	if (xnthread_lock_count(curr))
+		__setbits(sched->status, XNINLOCK);
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -2336,18 +2340,27 @@ reschedule:
 }
 EXPORT_SYMBOL_GPL(__xnpod_schedule);
 
-void ___xnpod_lock_sched(struct xnthread *curr)
+void ___xnpod_lock_sched(xnsched_t *sched)
 {
-	if (xnthread_lock_count(curr)++ == 0)
+	struct xnthread *curr = sched->curr;
+
+	if (xnthread_lock_count(curr)++ == 0) {
+		__setbits(sched->status, XNINLOCK);
 		xnthread_set_state(curr, XNLOCK);
+	}
 }
 EXPORT_SYMBOL_GPL(___xnpod_lock_sched);
 
-void ___xnpod_unlock_sched(struct xnthread *curr)
+void ___xnpod_unlock_sched(xnsched_t *sched)
 {
+	struct xnthread *curr = sched->curr;
+	XENO_ASSERT(NUCLEUS, xnthread_lock_count(curr) > 0,
+		    xnpod_fatal("Unbalanced lock/unlock");
+		    );
+
 	if (--xnthread_lock_count(curr) == 0) {
 		xnthread_clear_state(curr, XNLOCK);
-		xnsched_set_self_resched(curr->sched);
+		__clrbits(sched->status, XNINLOCK);
 		xnpod_schedule();
 	}
 }
