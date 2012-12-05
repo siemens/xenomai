@@ -669,7 +669,9 @@ int rtdm_select_bind(int fd, rtdm_selector_t *selector,
 	spl_t __rtdm_s;					\
 							\
 	xnlock_get_irqsave(&nklock, __rtdm_s);		\
+	__xnpod_lock_sched();				\
 	code_block;					\
+	__xnpod_unlock_sched();				\
 	xnlock_put_irqrestore(&nklock, __rtdm_s);	\
 }
 #endif
@@ -731,6 +733,7 @@ typedef unsigned long rtdm_lockctx_t;
 	do {							\
 		XENO_BUGON(RTDM, !spltest());			\
 		spin_lock(lock);				\
+		__xnpod_lock_sched();				\
 	} while (0)
 #endif
 
@@ -750,7 +753,11 @@ typedef unsigned long rtdm_lockctx_t;
  *
  * Rescheduling: never.
  */
-#define rtdm_lock_put(lock)	spin_unlock(lock)
+#define rtdm_lock_put(lock)			\
+	do {					\
+		spin_unlock(lock);		\
+		__xnpod_unlock_sched();		\
+	} while (0)
 
 /**
  * Acquire lock and disable preemption
@@ -769,8 +776,11 @@ typedef unsigned long rtdm_lockctx_t;
  *
  * Rescheduling: never.
  */
-#define rtdm_lock_get_irqsave(lock, context)	\
-	spin_lock_irqsave(lock, context)
+#define rtdm_lock_get_irqsave(lock, context)		\
+	do {						\
+		spin_lock_irqsave(lock, context);	\
+		__xnpod_lock_sched();			\
+	} while (0)
 
 /**
  * Release lock and restore preemption state
@@ -789,8 +799,12 @@ typedef unsigned long rtdm_lockctx_t;
  *
  * Rescheduling: possible.
  */
-#define rtdm_lock_put_irqrestore(lock, context)	\
-	spin_unlock_irqrestore(lock, context)
+#define rtdm_lock_put_irqrestore(lock, context)		\
+	do {						\
+		spin_unlock(lock);			\
+		__xnpod_unlock_sched();			\
+		ipipe_restore_head(context);		\
+	} while (0)
 
 /**
  * Disable preemption locally
