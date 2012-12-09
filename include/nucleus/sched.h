@@ -40,8 +40,9 @@
 /* Sched status flags */
 #define XNKCOUT		0x80000000	/* Sched callout context */
 #define XNINTCK		0x40000000	/* In master tick handler context */
-#define XNSWLOCK	0x20000000	/* In context switch */
+#define XNINSW		0x20000000	/* In context switch */
 #define XNRESCHED	0x10000000	/* Needs rescheduling */
+#define XNINLOCK	0x08000000	/* Scheduler locked */
 
 /* Sched local flags */
 #define XNHTICK		0x00008000	/* Host tick pending  */

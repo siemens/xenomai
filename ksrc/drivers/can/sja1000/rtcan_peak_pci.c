@@ -71,13 +71,15 @@ struct rtcan_peak_pci
 #define PITA_MISC        0x1C        // miscellanoes register
 
 #define PEAK_PCI_VENDOR_ID   0x001C  // the PCI device and vendor IDs
-#define PEAK_PCI_DEVICE_ID   0x0001
+#define PEAK_PCI_DEVICE_ID   0x0001  // Device ID for PCI and older PCIe cards
+#define PEAK_PCIE_DEVICE_ID  0x0003  // Device ID for newer PCIe cards (IPEH-003027)
 
 #define PCI_CONFIG_PORT_SIZE 0x1000  // size of the config io-memory
 #define PCI_PORT_SIZE        0x0400  // size of a channel io-memory
 
 static struct pci_device_id peak_pci_tbl[] = {
 	{PEAK_PCI_VENDOR_ID, PEAK_PCI_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+	{PEAK_PCI_VENDOR_ID, PEAK_PCIE_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
 	{ }
 };
 MODULE_DEVICE_TABLE (pci, peak_pci_tbl);
