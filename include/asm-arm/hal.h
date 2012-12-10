@@ -207,10 +207,10 @@ static inline void rthal_timer_program_shot (unsigned long delay)
 
 static inline struct mm_struct *rthal_get_active_mm(void)
 {
-#if !defined(TIF_MMSWITCH_INT) || !defined(CONFIG_XENO_HW_UNLOCKED_SWITCH)
+#if defined(CONFIG_IPIPE_CORE)
+	return ipipe_get_active_mm();
+#elif !defined(TIF_MMSWITCH_INT) || !defined(CONFIG_XENO_HW_UNLOCKED_SWITCH)
 	return current->active_mm;
-#elif defined(CONFIG_IPIPE_CORE)
-	return __this_cpu_read(ipipe_percpu.active_mm);
 #else /* !CONFIG_IPIPE_CORE */
 	return per_cpu(ipipe_active_mm, smp_processor_id());
 #endif /* !CONFIG_IPIPE_CORE */
