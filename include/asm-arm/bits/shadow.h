@@ -296,6 +296,11 @@ static inline void xnarch_handle_mayday(struct xnarchtcb *tcb,
 #ifdef CONFIG_XENO_ARM_EABI
 	tcb->mayday.r7 = regs->ARM_r7;
 #endif
+#ifdef CONFIG_ARM_THUMB
+	/* The code on the mayday page must be run in ARM mode */
+	tcb->mayday.psr = regs->ARM_cpsr;
+	regs->ARM_cpsr &= ~PSR_T_BIT;
+#endif
 	regs->ARM_pc = tramp;
 }
 
@@ -306,6 +311,9 @@ static inline void xnarch_fixup_mayday(struct xnarchtcb *tcb,
 	regs->ARM_r0 = tcb->mayday.r0;
 #ifdef CONFIG_XENO_ARM_EABI
 	regs->ARM_r7 = tcb->mayday.r7;
+#endif
+#ifdef CONFIG_ARM_THUMB
+	regs->ARM_cpsr = tcb->mayday.psr;
 #endif
 }
 
