@@ -100,6 +100,9 @@ struct xnarchtcb {
 #ifdef CONFIG_XENO_ARM_EABI
 		unsigned long r7;
 #endif
+#ifdef CONFIG_ARM_THUMB
+		unsigned long psr;
+#endif
 	} mayday;
 	struct xnthread *self;
 	int imask;
