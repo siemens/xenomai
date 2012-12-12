@@ -189,7 +189,7 @@ index 0b72282..6574056 100644
  /*
 diff --git a/arch/x86/include/asm/ipipe.h b/arch/x86/include/asm/ipipe.h
 new file mode 100644
-index 0000000..fdaeeb0
+index 0000000..708a3d9
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe.h
 @@ -0,0 +1,158 @@
@@ -220,10 +220,10 @@ index 0000000..fdaeeb0
 +#ifdef CONFIG_IPIPE
 +
 +#ifndef IPIPE_ARCH_STRING
-+#define IPIPE_ARCH_STRING	"2.11-01"
++#define IPIPE_ARCH_STRING	"2.11-03"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	11
-+#define IPIPE_PATCH_NUMBER	1
++#define IPIPE_PATCH_NUMBER	3
 +#endif
 +
 +DECLARE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
@@ -464,7 +464,7 @@ index 0000000..26be5e3
 +#endif	/* !__X86_IPIPE_32_H */
 diff --git a/arch/x86/include/asm/ipipe_64.h b/arch/x86/include/asm/ipipe_64.h
 new file mode 100644
-index 0000000..c99830b
+index 0000000..0fb92b4
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe_64.h
 @@ -0,0 +1,116 @@
@@ -515,8 +515,8 @@ index 0000000..c99830b
 +#define __ipipe_hrtimer_freq	__ipipe_cpu_freq
 +#define __ipipe_hrclock_freq	__ipipe_cpu_freq
 +
-+#define ipipe_tsc2ns(t)	(((t) * 1000UL) / (__ipipe_clock_freq / 1000000UL))
-+#define ipipe_tsc2us(t)	((t) / (__ipipe_clock_freq / 1000000UL))
++#define ipipe_tsc2ns(t)	(((t) * 1000UL) / (__ipipe_cpu_freq / 1000000UL))
++#define ipipe_tsc2us(t)	((t) / (__ipipe_cpu_freq / 1000000UL))
 +
 +/* Private interface -- Internal use only */
 +
@@ -3105,10 +3105,10 @@ index 20757cb..269c884 100644
  handle_real_irq:
 diff --git a/arch/x86/kernel/ipipe.c b/arch/x86/kernel/ipipe.c
 new file mode 100644
-index 0000000..5be7005
+index 0000000..b2e2a5b
 --- /dev/null
 +++ b/arch/x86/kernel/ipipe.c
-@@ -0,0 +1,856 @@
+@@ -0,0 +1,857 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/x86/kernel/ipipe.c
 + *
@@ -3671,7 +3671,8 @@ index 0000000..5be7005
 +		ipipe_trace_panic_freeze();
 +
 +		/* Always warn about user land and unfixable faults. */
-+		if ((error_code & 4) || !search_exception_tables(instruction_pointer(regs))) {
++		if (user_mode_vm(regs) ||
++		    !search_exception_tables(instruction_pointer(regs))) {
 +			printk(KERN_ERR "BUG: Unhandled exception over domain"
 +			       " %s at 0x%lx - switching to ROOT\n",
 +			       ipd->name, instruction_pointer(regs));
@@ -4959,10 +4960,10 @@ index 32f9fd6..0fcf21b 100644
  #endif /* LINUX_HARDIRQ_H */
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..fb0789e
+index 0000000..a0a8a0d
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,779 @@
+@@ -0,0 +1,781 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -5611,7 +5612,9 @@ index 0000000..fb0789e
 +
 +void *ipipe_get_ptd(int key);
 +
++struct vm_area_struct;
 +int ipipe_disable_ondemand_mappings(struct task_struct *tsk);
++int ipipe_pin_vma(struct mm_struct *mm, struct vm_area_struct *vma);
 +
 +static inline void ipipe_nmi_enter(void)
 +{
@@ -6551,7 +6554,7 @@ index bc2994e..5e2da8d 100644
  #define write_unlock_irq(lock)		_raw_write_unlock_irq(lock)
  
 diff --git a/include/linux/rwlock_api_smp.h b/include/linux/rwlock_api_smp.h
-index 9c9f049..62c8941 100644
+index 9c9f049..62c894150 100644
 --- a/include/linux/rwlock_api_smp.h
 +++ b/include/linux/rwlock_api_smp.h
 @@ -141,7 +141,9 @@ static inline int __raw_write_trylock(rwlock_t *lock)
@@ -6566,7 +6569,7 @@ index 9c9f049..62c8941 100644
  static inline void __raw_read_lock(rwlock_t *lock)
  {
 diff --git a/include/linux/sched.h b/include/linux/sched.h
-index d2a5da9..061b662 100644
+index d2a5da91..061b662 100644
 --- a/include/linux/sched.h
 +++ b/include/linux/sched.h
 @@ -62,6 +62,7 @@ struct sched_param {
@@ -6917,7 +6920,7 @@ index b14f6a9..e400972 100644
  
  #define arch_read_can_lock(lock)	(((void)(lock), 1))
 diff --git a/init/Kconfig b/init/Kconfig
-index 47dd02f..e432dc8 100644
+index 47dd02f..e432dc88 100644
 --- a/init/Kconfig
 +++ b/init/Kconfig
 @@ -93,6 +93,7 @@ config CROSS_COMPILE
@@ -10840,7 +10843,7 @@ index 0000000..f013ef4
 +#endif /* CONFIG_IPIPE_TRACE_MCOUNT */
 +}
 diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
-index baa5c4a..b79ec1d 100644
+index baa5c4a..aeb8cc1 100644
 --- a/kernel/irq/chip.c
 +++ b/kernel/irq/chip.c
 @@ -15,6 +15,7 @@
@@ -11052,6 +11055,15 @@ index baa5c4a..b79ec1d 100644
  	/* Uninstall? */
  	if (handle == handle_bad_irq) {
  		if (desc->irq_data.chip != &no_irq_chip)
+@@ -731,7 +878,7 @@ __set_irq_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
+ 	desc->name = name;
+ 
+ 	if (handle != handle_bad_irq && is_chained) {
+-		desc->status &= ~IRQ_DISABLED;
++		desc->status &= ~(IRQ_DISABLED | IRQ_MASKED);
+ 		desc->status |= IRQ_NOREQUEST | IRQ_NOPROBE;
+ 		desc->depth = 0;
+ 		desc->irq_data.chip->irq_startup(&desc->irq_data);
 diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
 index 2039bea..17bad02 100644
 --- a/kernel/irq/irqdesc.c
@@ -11069,6 +11081,19 @@ index 2039bea..17bad02 100644
  
  struct irq_desc *irq_to_desc_alloc_node(unsigned int irq, int node)
  {
+diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
+index 9033c1c..57fdf57 100644
+--- a/kernel/irq/manage.c
++++ b/kernel/irq/manage.c
+@@ -785,7 +785,7 @@ __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
+ 
+ 		if (!(desc->status & IRQ_NOAUTOEN)) {
+ 			desc->depth = 0;
+-			desc->status &= ~IRQ_DISABLED;
++			desc->status &= ~(IRQ_DISABLED | IRQ_MASKED);
+ 			desc->irq_data.chip->irq_startup(&desc->irq_data);
+ 		} else
+ 			/* Undo nested disables: */
 diff --git a/kernel/lockdep.c b/kernel/lockdep.c
 index 0d2058d..1ac7e20 100644
 --- a/kernel/lockdep.c
@@ -11316,7 +11341,7 @@ index 3623152..beb8497 100644
  
  #ifdef CONFIG_A11Y_BRAILLE_CONSOLE
 diff --git a/kernel/sched.c b/kernel/sched.c
-index c164920..3651908 100644
+index c164920c..3651908 100644
 --- a/kernel/sched.c
 +++ b/kernel/sched.c
 @@ -2423,7 +2423,8 @@ static int try_to_wake_up(struct task_struct *p, unsigned int state,
@@ -11536,7 +11561,7 @@ index c164920..3651908 100644
 +
 +#endif /* CONFIG_IPIPE */
 diff --git a/kernel/signal.c b/kernel/signal.c
-index bf11d26..9e907e1 100644
+index bf11d269..9e907e1 100644
 --- a/kernel/signal.c
 +++ b/kernel/signal.c
 @@ -558,6 +558,7 @@ void signal_wake_up(struct task_struct *t, int resume)
@@ -11766,7 +11791,7 @@ index 4689cb0..3d12764 100644
  
  	/*
 diff --git a/mm/memory.c b/mm/memory.c
-index c8fff70..949d965 100644
+index c8fff70..18a59619 100644
 --- a/mm/memory.c
 +++ b/mm/memory.c
 @@ -647,6 +647,32 @@ out:
@@ -11925,7 +11950,7 @@ index c8fff70..949d965 100644
  /*
   * This routine handles present pages, when users try to write
   * to a shared page. It is done by copying the page to a new address
-@@ -3795,3 +3841,111 @@ void copy_user_huge_page(struct page *dst, struct page *src,
+@@ -3795,3 +3841,118 @@ void copy_user_huge_page(struct page *dst, struct page *src,
  	}
  }
  #endif /* CONFIG_TRANSPARENT_HUGEPAGE || CONFIG_HUGETLBFS */
@@ -11991,13 +12016,31 @@ index c8fff70..949d965 100644
 +	return 0;
 +}
 +
-+int ipipe_disable_ondemand_mappings(struct task_struct *tsk)
++int ipipe_pin_vma(struct mm_struct *mm, struct vm_area_struct *vma)
 +{
 +	unsigned long addr, next, end;
++	pgd_t *pgd;
++
++	addr = vma->vm_start;
++	end = vma->vm_end;
++
++	pgd = pgd_offset(mm, addr);
++	do {
++		next = pgd_addr_end(addr, end);
++		if (pgd_none_or_clear_bad(pgd))
++			continue;
++		if (ipipe_pin_pud_range(mm, pgd, vma, addr, next))
++			return -ENOMEM;
++	} while (pgd++, addr = next, addr != end);
++
++	return 0;
++}
++
++int ipipe_disable_ondemand_mappings(struct task_struct *tsk)
++{
 +	struct vm_area_struct *vma;
 +	struct mm_struct *mm;
 +	int result = 0;
-+	pgd_t *pgd;
 +
 +	mm = get_task_mm(tsk);
 +	if (!mm)
@@ -12008,23 +12051,12 @@ index c8fff70..949d965 100644
 +		goto done_mm;
 +
 +	for (vma = mm->mmap; vma; vma = vma->vm_next) {
-+		if (!is_cow_mapping(vma->vm_flags)
-+		    || !(vma->vm_flags & VM_WRITE))
-+			continue;
-+
-+		addr = vma->vm_start;
-+		end = vma->vm_end;
-+
-+		pgd = pgd_offset(mm, addr);
-+		do {
-+			next = pgd_addr_end(addr, end);
-+			if (pgd_none_or_clear_bad(pgd))
-+				continue;
-+			if (ipipe_pin_pud_range(mm, pgd, vma, addr, next)) {
-+				result = -ENOMEM;
++		if (is_cow_mapping(vma->vm_flags) &&
++		    (vma->vm_flags & VM_WRITE)) {
++			result = ipipe_pin_vma(mm, vma);
++			if (result < 0)
 +				goto done_mm;
-+			}
-+		} while (pgd++, addr = next, addr != end);
++		}
 +	}
 +	set_bit(MMF_VM_PINNED, &mm->flags);
 +
@@ -12062,7 +12094,7 @@ index 9e82e93..a4bd34d 100644
  
  	if (active_mm != mm)
 diff --git a/mm/mprotect.c b/mm/mprotect.c
-index 5a688a2..3f234b3 100644
+index 5a688a2..af5da94 100644
 --- a/mm/mprotect.c
 +++ b/mm/mprotect.c
 @@ -147,6 +147,7 @@ mprotect_fixup(struct vm_area_struct *vma, struct vm_area_struct **pprev,
@@ -12092,6 +12124,31 @@ index 5a688a2..3f234b3 100644
  
  	if (vma_wants_writenotify(vma)) {
  		vma->vm_page_prot = vm_get_page_prot(newflags & ~VM_SHARED);
+@@ -214,6 +224,24 @@ success:
+ 	}
+ 
+ 	mmu_notifier_invalidate_range_start(mm, start, end);
++#ifdef CONFIG_IPIPE
++	/*
++	 * Privatize potential COW pages
++	 */
++	if (test_bit(MMF_VM_PINNED, &mm->flags) &&
++	    (((vma->vm_flags | mm->def_flags) & (VM_LOCKED | VM_WRITE)) ==
++	     (VM_LOCKED | VM_WRITE))) {
++		error = ipipe_pin_vma(mm, vma);
++		if (error)
++			/*
++			 * OOM. Just revert the fake VM_SHARED so that the
++			 * zero page cannot be overwritten.
++			 */
++			vma->vm_page_prot =
++				pgprot_modify(vma->vm_page_prot,
++					      vm_get_page_prot(newflags));
++	}
++#endif
+ 	if (is_vm_hugetlb_page(vma))
+ 		hugetlb_change_protection(vma, start, end, vma->vm_page_prot);
+ 	else
 diff --git a/mm/vmalloc.c b/mm/vmalloc.c
 index f9b1667..c2a5ed2 100644
 --- a/mm/vmalloc.c
