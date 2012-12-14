@@ -716,7 +716,7 @@ unsigned long vm_mmap(struct file *file, unsigned long addr,
 	unsigned long flag, unsigned long offset)
 {
 	struct mm_struct *mm = current->mm;
-	int ret;
+	unsigned long ret;
 
 	down_write(&mm->mmap_sem);
 	ret = do_mmap(file, addr, len, prot, flag, offset);
