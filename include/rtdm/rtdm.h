@@ -317,15 +317,15 @@ extern "C" {
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 
-#define rt_dev_open	open
-#define rt_dev_socket	socket
-#define rt_dev_close	close
-#define rt_dev_ioctl	ioctl
-#define rt_dev_read	read
-#define rt_dev_write	write
-#define rt_dev_recvmsg	recvmsg
-#define rt_dev_sendmsg	sendmsg
-#define rt_dev_recvfrom recvfrom
+#define rt_dev_open	__RT(open)
+#define rt_dev_socket	__RT(socket)
+#define rt_dev_close	__RT(close)
+#define rt_dev_ioctl	__RT(ioctl)
+#define rt_dev_read	__RT(read)
+#define rt_dev_write	__RT(write)
+#define rt_dev_recvmsg	__RT(recvmsg)
+#define rt_dev_sendmsg	__RT(sendmsg)
+#define rt_dev_recvfrom __RT(recvfrom)
 
 #ifdef __cplusplus
 }
