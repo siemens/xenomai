@@ -388,7 +388,7 @@ int __sched_cpucount(size_t setsize, const cpu_set_t *setp)
 	int count, shift;
 	const char *p;
 
-	for (count = 0, p = setp; p < setp + setsize; p++) {
+	for (count = 0, p = setp; p < (char *)setp + setsize; p++) {
 		shift = *p;
 		while (shift) {
 			if (shift & 1)
