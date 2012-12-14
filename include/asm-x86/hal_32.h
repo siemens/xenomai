@@ -223,7 +223,7 @@ static const char *const rthal_fault_labels[] = {
 
 static inline int rthal_set_apic_base(int lvtt_value)
 {
-	if (APIC_INTEGRATED(GET_APIC_VERSION(apic_read(APIC_LVR))))
+	if (!APIC_INTEGRATED(GET_APIC_VERSION(apic_read(APIC_LVR))))
 		lvtt_value |= SET_APIC_TIMER_BASE(APIC_TIMER_BASE_DIV);
 
 	return lvtt_value;
