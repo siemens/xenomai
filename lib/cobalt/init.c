@@ -43,7 +43,7 @@ static int fork_handler_registered;
 static pthread_t xeno_main_tid;
 struct xnfeatinfo xeno_featinfo;
 
-int __wrap_pthread_setschedparam(pthread_t, int, const struct sched_param *);
+int __RT(pthread_setschedparam)(pthread_t, int, const struct sched_param *);
 void cobalt_clock_init(int);
 
 static void sigill_handler(int sig)
@@ -143,6 +143,7 @@ static int bind_interface(void)
 static __attribute__ ((constructor))
 void __init_cobalt_interface(void)
 {
+	pthread_t tid = pthread_self();
 	struct sched_param parm;
 	struct xnbindreq breq;
 	int policy, muxid, ret;
@@ -188,14 +189,15 @@ void __init_cobalt_interface(void)
 		perror("Xenomai Posix skin init: mlockall");
 		exit(EXIT_FAILURE);
 	}
-	ret = __STD(pthread_getschedparam(pthread_self(), &policy, &parm));
+
+	ret = __STD(pthread_getschedparam(tid, &policy, &parm));
 	if (ret) {
 		fprintf(stderr, "Xenomai Posix skin init: "
 			"pthread_getschedparam: %s\n", strerror(ret));
 		exit(EXIT_FAILURE);
 	}
 
-	ret = __wrap_pthread_setschedparam(pthread_self(), policy, &parm);
+	ret = __RT(pthread_setschedparam(tid, policy, &parm));
 	if (ret) {
 		fprintf(stderr, "Xenomai Posix skin init: "
 			"pthread_setschedparam: %s\n", strerror(ret));
