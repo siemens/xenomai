@@ -249,7 +249,7 @@ fd_set_and(fd_set *result, fd_set *first, fd_set *second, unsigned n)
 	return not_empty;
 }
 
-static void fd_set_zerofill(fd_set *set, unsigned n)
+static void fd_set_zeropad(fd_set *set, unsigned n)
 {
 	unsigned i;
 
@@ -335,6 +335,10 @@ int xnselect(struct xnselector *selector,
 
 	thread = xnpod_current_thread();
 
+	for (i = 0; i < XNSELECT_MAX_TYPES; i++)
+		if (out_fds[i])
+			fd_set_zeropad(out_fds[i], nfds);
+
 	xnlock_get_irqsave(&nklock, s);
 	for (i = 0; i < XNSELECT_MAX_TYPES; i++)
 		if (out_fds[i]
@@ -343,12 +347,8 @@ int xnselect(struct xnselector *selector,
 			not_empty = 1;
 	xnlock_put_irqrestore(&nklock, s);
 
-	if (not_empty) {
-		for (i = 0; i < XNSELECT_MAX_TYPES; i++)
-			if (out_fds[i])
-				fd_set_zerofill(out_fds[i], nfds);
+	if (not_empty)
 		return -ECHRNG;
-	}
 
 	xnlock_get_irqsave(&nklock, s);
 	for (i = 0; i < XNSELECT_MAX_TYPES; i++)
@@ -373,10 +373,6 @@ int xnselect(struct xnselector *selector,
 
 	if (not_empty) {
 		unsigned count;
-
-		for (i = 0; i < XNSELECT_MAX_TYPES; i++)
-			if (out_fds[i])
-				fd_set_zerofill(out_fds[i], nfds);
 
 		for (count = 0, i = 0; i < XNSELECT_MAX_TYPES; i++)
 			if (out_fds[i])

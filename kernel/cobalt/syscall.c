@@ -212,7 +212,7 @@ static int __select(int nfds,
 			return -EFAULT;
 	}
 
-	if (err > 0)
+	if (err >= 0)
 		for (i = 0; i < XNSELECT_MAX_TYPES; i++)
 			if (ufd_sets[i]
 			    && __xn_copy_to_user((void __user *) ufd_sets[i],
