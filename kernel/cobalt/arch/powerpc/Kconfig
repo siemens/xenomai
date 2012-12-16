@@ -8,8 +8,12 @@ config XENO_HW_MATH_EMU
 
 menu "Hardware options"
 
+config IPIPE_WANT_ACTIVE_MM
+        bool
+
 config IPIPE_WANT_PREEMPTIBLE_SWITCH
         bool
+	select IPIPE_WANT_ACTIVE_MM
 	default y if XENO_HW_UNLOCKED_SWITCH
 	default n if !XENO_HW_UNLOCKED_SWITCH
 
