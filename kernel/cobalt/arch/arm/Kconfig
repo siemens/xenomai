@@ -9,6 +9,9 @@ config IPIPE_WANT_PREEMPTIBLE_SWITCH
 	default y if (XENO_HW_UNLOCKED_SWITCH || SMP)
 	default n if !XENO_HW_UNLOCKED_SWITCH && !SMP
 
+config IPIPE_WANT_ACTIVE_MM
+       def_bool y
+
 config XENO_HW_FPU
 	bool "FPU support"
 	default y
