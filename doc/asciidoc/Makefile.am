@@ -1,7 +1,22 @@
-HTML_DOCS=README.INSTALL TROUBLESHOOTING \
-	asciidoc-icons asciidoc-icons/callouts asciidoc-css asciidoc-js
-PDF_DOCS=README.INSTALL.pdf TROUBLESHOOTING.pdf
-EXTRA_DIST=README.INSTALL.adoc TROUBLESHOOTING.adoc
+HTML_DOCS = \
+	README.INSTALL \
+	TROUBLESHOOTING \
+	asciidoc-icons \
+	asciidoc-icons/callouts \
+	asciidoc-css \
+	asciidoc-js
+
+PDF_DOCS = \
+	README.INSTALL.pdf \
+	TROUBLESHOOTING.pdf
+
+EXTRA_DIST = \
+	README.INSTALL.adoc \
+	TROUBLESHOOTING.adoc \
+	plaintext.conf \
+	plaintext_postproc.awk \
+	plaintext.xsl \
+	asciidoc.rules
 
 if !CONFIG_XENO_ASCIIDOC
 HTML_DOCSDIR = $(srcdir)/../generated/html/
@@ -10,7 +25,9 @@ else
 HTML_DOCSDIR = ./
 PDF_DOCSDIR = ./
 
-TXT_DOCS=README.INSTALL.txt TROUBLESHOOTING.txt
+TXT_DOCS = \
+	README.INSTALL.txt \
+	TROUBLESHOOTING.txt
 
 all-local: $(HTML_DOCS) $(PDF_DOCS) $(TXT_DOCS)
 
@@ -30,7 +47,7 @@ asciidoc-js:
 
 endif
 
-include $(top_srcdir)/doc/asciidoc.rules
+include $(top_srcdir)/doc/asciidoc/asciidoc.rules
 
 install-data-local: install-docs-local
 

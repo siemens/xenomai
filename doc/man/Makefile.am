@@ -56,7 +56,7 @@ all-local: $(HTML_DOCS)
 
 endif
 
-include $(top_srcdir)/doc/asciidoc.rules
+include $(top_srcdir)/doc/asciidoc/asciidoc.rules
 
 install-data-local: install-docs-local
 

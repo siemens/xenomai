@@ -35,7 +35,7 @@ build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(top_srcdir)/doc/asciidoc.rules \
+	$(top_srcdir)/doc/asciidoc/asciidoc.rules \
 	$(top_srcdir)/doc/install-dist.rules
 subdir = doc/asciidoc
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -231,16 +231,35 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-HTML_DOCS = README.INSTALL TROUBLESHOOTING \
-	asciidoc-icons asciidoc-icons/callouts asciidoc-css asciidoc-js
+HTML_DOCS = \
+	README.INSTALL \
+	TROUBLESHOOTING \
+	asciidoc-icons \
+	asciidoc-icons/callouts \
+	asciidoc-css \
+	asciidoc-js
 
-PDF_DOCS = README.INSTALL.pdf TROUBLESHOOTING.pdf
-EXTRA_DIST = README.INSTALL.adoc TROUBLESHOOTING.adoc
+PDF_DOCS = \
+	README.INSTALL.pdf \
+	TROUBLESHOOTING.pdf
+
+EXTRA_DIST = \
+	README.INSTALL.adoc \
+	TROUBLESHOOTING.adoc \
+	plaintext.conf \
+	plaintext_postproc.awk \
+	plaintext.xsl \
+	asciidoc.rules
+
 @CONFIG_XENO_ASCIIDOC_FALSE@HTML_DOCSDIR = $(srcdir)/../generated/html/
 @CONFIG_XENO_ASCIIDOC_TRUE@HTML_DOCSDIR = ./
 @CONFIG_XENO_ASCIIDOC_FALSE@PDF_DOCSDIR = $(srcdir)/../generated/pdf/
 @CONFIG_XENO_ASCIIDOC_TRUE@PDF_DOCSDIR = ./
-@CONFIG_XENO_ASCIIDOC_TRUE@TXT_DOCS = README.INSTALL.txt TROUBLESHOOTING.txt
+@CONFIG_XENO_ASCIIDOC_TRUE@TXT_DOCS = \
+@CONFIG_XENO_ASCIIDOC_TRUE@	README.INSTALL.txt \
+@CONFIG_XENO_ASCIIDOC_TRUE@	TROUBLESHOOTING.txt
+
+@CONFIG_XENO_ASCIIDOC_FALSE@CLEANFILES = $(man1_MANS)
 @CONFIG_XENO_ASCIIDOC_TRUE@ASCIIDOC_HTML_OPTS = -a icons -a iconsdir=../asciidoc-icons \
 @CONFIG_XENO_ASCIIDOC_TRUE@	-a linkcss -a stylesdir=../asciidoc-css -a scriptsdir=../asciidoc-js \
 @CONFIG_XENO_ASCIIDOC_TRUE@	-a toc -a toclevels=3 -a max-width=55em -a xenover=$(PACKAGE_VERSION)
@@ -254,7 +273,7 @@ GEN_DOC_DIST_ROOT = $(doc_top_distdir)/doc/generated
 all: all-am
 
 .SUFFIXES:
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/doc/asciidoc.rules $(top_srcdir)/doc/install-dist.rules $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/doc/asciidoc/asciidoc.rules $(top_srcdir)/doc/install-dist.rules $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -352,6 +371,7 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -457,7 +477,7 @@ uninstall-am: uninstall-local
 @CONFIG_XENO_ASCIIDOC_TRUE@	@$(mkdir_p) $@
 @CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/share/asciidoc/javascripts/asciidoc-xhtml11.js $@
 @CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/share/asciidoc/javascripts/toc.js $@
-@CONFIG_XENO_ASCIIDOC_FALSE@%.1: $(MAN_DOCSDIR)/%.1
+@CONFIG_XENO_ASCIIDOC_FALSE@$(man1_MANS): %.1: $(MAN_DOCSDIR)/%.1
 @CONFIG_XENO_ASCIIDOC_FALSE@	@cp $< $@
 
 @CONFIG_XENO_ASCIIDOC_TRUE@%: %.adoc Makefile
@@ -470,18 +490,18 @@ uninstall-am: uninstall-local
 @CONFIG_XENO_ASCIIDOC_TRUE@%.pdf: %.adoc Makefile
 @CONFIG_XENO_ASCIIDOC_TRUE@	$(A2X) -f pdf -D . $(ASCIIDOC_PDF_OPTS) $<
 
-@CONFIG_XENO_ASCIIDOC_TRUE@$(tmpdir)/%.txt: %.adoc Makefile $(top_srcdir)/doc/plaintext.conf $(top_srcdir)/doc/plaintext.xsl
+@CONFIG_XENO_ASCIIDOC_TRUE@$(tmpdir)/%.txt: %.adoc Makefile $(top_srcdir)/doc/asciidoc/plaintext.conf $(top_srcdir)/doc/asciidoc/plaintext.xsl
 @CONFIG_XENO_ASCIIDOC_TRUE@	@$(mkdir_p) $(tmpdir)
-@CONFIG_XENO_ASCIIDOC_TRUE@	$(ASCIIDOC) --backend docbook -f $(top_srcdir)/doc/plaintext.conf \
+@CONFIG_XENO_ASCIIDOC_TRUE@	$(ASCIIDOC) --backend docbook -f $(top_srcdir)/doc/asciidoc/plaintext.conf \
 @CONFIG_XENO_ASCIIDOC_TRUE@		--doctype article $(ASCIIDOC_TXT_OPTS) \
 @CONFIG_XENO_ASCIIDOC_TRUE@		--out-file $(tmpdir)/$*.xml $<
 @CONFIG_XENO_ASCIIDOC_TRUE@	xsltproc --stringparam toc.section.depth 3 --nonet \
-@CONFIG_XENO_ASCIIDOC_TRUE@		--output $(tmpdir)/$*.html $(top_srcdir)/doc/plaintext.xsl \
+@CONFIG_XENO_ASCIIDOC_TRUE@		--output $(tmpdir)/$*.html $(top_srcdir)/doc/asciidoc/plaintext.xsl \
 @CONFIG_XENO_ASCIIDOC_TRUE@		$(tmpdir)/$*.xml
 @CONFIG_XENO_ASCIIDOC_TRUE@	w3m -cols 80 -dump -T text/html -no-graph $(tmpdir)/$*.html > $@
 
-@CONFIG_XENO_ASCIIDOC_TRUE@%.txt: $(tmpdir)/%.txt Makefile $(top_srcdir)/doc/plaintext_postproc.awk
-@CONFIG_XENO_ASCIIDOC_TRUE@	awk -f $(top_srcdir)/doc/plaintext_postproc.awk $(tmpdir)/$*.txt > $@
+@CONFIG_XENO_ASCIIDOC_TRUE@%.txt: $(tmpdir)/%.txt Makefile $(top_srcdir)/doc/asciidoc/plaintext_postproc.awk
+@CONFIG_XENO_ASCIIDOC_TRUE@	awk -f $(top_srcdir)/doc/asciidoc/plaintext_postproc.awk $(tmpdir)/$*.txt > $@
 
 install-htmldocs: $(HTML_DOCS:%=$(HTML_DOCSDIR)%)
 	docs="$(HTML_DOCS)"; abs_builddir=$$PWD; \

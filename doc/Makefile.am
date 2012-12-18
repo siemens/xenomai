@@ -1,7 +1,5 @@
 SUBDIRS=asciidoc docbook doxygen man txt
 
-EXTRA_DIST = plaintext.conf plaintext_postproc.awk plaintext.xsl
-
 GENERATE_DOC=$(top_srcdir)/scripts/maint/generate-doc
 
 generate-doc:
