@@ -1,0 +1,118 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="AsciiDoc 8.5.2" />
+<title>IRQLOOP(1)</title>
+<link rel="stylesheet" href="../asciidoc-css/xhtml11.css" type="text/css" />
+<link rel="stylesheet" href="../asciidoc-css/xhtml11-quirks.css" type="text/css" />
+<script type="text/javascript">
+/*<![CDATA[*/
+window.onload = function(){asciidoc.footnotes(); asciidoc.toc(3);}
+/*]]>*/
+</script>
+<script type="text/javascript" src="../asciidoc-js/asciidoc-xhtml11.js"></script>
+</head>
+<body style="max-width:55em">
+<div id="header">
+<h1>IRQLOOP(1)</h1>
+<span id="revdate">2008/04/19</span>
+<div id="toc">
+  <div id="toctitle">Table of Contents</div>
+  <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
+</div>
+</div>
+<div id="content">
+<h2 id="_name">1. NAME</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>irqloop - Xenomai IRQ benchmark, target program</p></div>
+</div>
+<h2 id="_synopsis">2. SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="paragraph"><p><strong>irqloop</strong> [ options ]</p></div>
+</div>
+<h2 id="_description">3. DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph"><p><strong>irqloop</strong> is part of the Xenomai test suite and benchmarks IRQs. It is the
+program running on the target machine which is running a suitable Xenomai
+enabled kernel with the respective module (xeno_posix). The additional tool
+<strong>irqbench</strong>(1) is running on a plain Linux host, connected via RS232 or
+Laplink with the target.</p></div>
+</div>
+<h2 id="_options">4. OPTIONS</h2>
+<div class="sectionbody">
+<div class="paragraph"><p><strong>irqloop</strong> accepts the following options:</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+<strong>-D &lt;testing_device_no&gt;</strong>
+</dt>
+<dd>
+<p>
+        number of testing device, default=0
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-t &lt;test_mode&gt;</strong>
+</dt>
+<dd>
+<p>
+        0=user task (default)
+        1=kernel task
+        2=IRQ handler
+        3=hard-IRQ handler
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-P &lt;priority&gt;</strong>
+</dt>
+<dd>
+<p>
+        task priority (test mode 0 and 1 only)
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-o &lt;port_type&gt;</strong>
+</dt>
+<dd>
+<p>
+        0=serial (default), 1=parallel
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-a &lt;port_io_address&gt;</strong>
+</dt>
+<dd>
+<p>
+        default=0x3f8/0x378
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-i &lt;port_irq&gt;</strong>
+</dt>
+<dd>
+<p>
+        default=4/7
+</p>
+</dd>
+</dl></div>
+</div>
+<h2 id="_see_also">5. "SEE ALSO"</h2>
+<div class="sectionbody">
+<div class="paragraph"><p><strong>/usr/share/doc/xenomai-doc/txt/irqloop.txt,</strong>
+<strong>irqbench(1)</strong></p></div>
+</div>
+<h2 id="_author">6. AUTHOR</h2>
+<div class="sectionbody">
+<div class="paragraph"><p><strong>irqloop</strong> was written by Jan Kiszka. This man page
+was written by Roland Stigge.</p></div>
+</div>
+</div>
+<div id="footnotes"><hr /></div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2012-12-18 20:33:56 CEST
+</div>
+</div>
+</body>
+</html>

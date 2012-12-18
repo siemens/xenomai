@@ -1,0 +1,73 @@
+// ** The above line should force tbl to be a preprocessor **
+// Man page for rtcanrecv
+//
+// Copyright (C) 2008 Roland Stigge <stigge@antcom.de>
+//
+// You may distribute under the terms of the GNU General Public
+// License as specified in the file COPYING that comes with the
+// Xenomai distribution.
+//
+//
+RTCANRECV(1)
+============
+:doctype: manpage
+:revdate: 2008/04/19
+:man source: Xenomai
+:man version: {xenover}
+:man manual: Xenomai Manual
+
+NAME
+-----
+rtcanrecv - Xenomai tool for receiving CAN messages
+
+SYNOPSIS
+---------
+// The general command line
+*rtcanrecv* [<can-interface>] [Options]
+
+DESCRIPTION
+------------
+*rtcanrecv* is part of Xenomai. It is used to receive messages via a CAN
+interface. The system must run a suitable Xenomai enabled kernel with the
+respective module (xeno_native and the CAN driver).
+
+OPTIONS
+--------
+<can-interface> is the CAN interface file.
+
+*rtcanrecv* accepts the following options:
+
+*-f, --filter=id:mask[:id:mask]...*::
+apply filter
+
+*-e, --error=mask*::
+receive error messages
+
+*-t, --timeout=MS*::
+timeout in ms
+
+*-T, --timestamp*::
+with absolute timestamp
+
+*-R, --timestamp-rel*::
+with relative timestamp
+
+*-v, --verbose*::
+be verbose
+
+*-p, --print=MODULO*::
+print every MODULO message
+
+*-h, --help*::
+this help
+
+"SEE ALSO"
+-----------
+* rtcanconfig (1),*
+* rtcanrecv (1)*
+
+AUTHORS
+--------
+*rtcanrecv* was written by Wolfgang Grandegger, Jan
+Kiszka and Philippe Gerum. This man page
+was written by Roland Stigge.

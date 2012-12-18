@@ -842,7 +842,14 @@ dist-psdocs: $(PS_DOCS:%=$(PS_DOCSDIR)%)
 	    $(INSTALL_DATA) $$f $$dest; \
 	done
 
-dist-docs-hook: all-local dist-htmldocs dist-pdfdocs dist-psdocs
+dist-mans: $(man1_MANS:%=$(MAN_DOCSDIR)%)
+	docs="$^"; dest=$(GEN_DOC_DIST_ROOT)/man; \
+	$(mkinstalldirs) $$dest && \
+	for f in $$docs; do \
+	    $(INSTALL_DATA) $$f $$dest; \
+	done
+
+dist-docs-hook: all-local dist-htmldocs dist-pdfdocs dist-psdocs dist-mans
 
 # To make distcheck happy.
 uninstall-docs:

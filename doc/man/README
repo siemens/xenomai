@@ -1,0 +1,10 @@
+To add the new foo.1 manual page, you have to:
+- add a foo.adoc file in the doc/man directory
+- add foo to the HTML_DOCS variable (to generate the html version of the
+manual page) in doc/man/Makefile.am
+- add foo.adoc to the EXTRA_DIST variable in doc/man/Makefile.am
+- add foo.1 to the man1_MANS variable
+- run scripts/bootstrap; configure
+
+
+Then you should be able to run make in the build directory.

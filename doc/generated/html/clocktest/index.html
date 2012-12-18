@@ -1,0 +1,87 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="AsciiDoc 8.5.2" />
+<title>CLOCKTEST(1)</title>
+<link rel="stylesheet" href="../asciidoc-css/xhtml11.css" type="text/css" />
+<link rel="stylesheet" href="../asciidoc-css/xhtml11-quirks.css" type="text/css" />
+<script type="text/javascript">
+/*<![CDATA[*/
+window.onload = function(){asciidoc.footnotes(); asciidoc.toc(3);}
+/*]]>*/
+</script>
+<script type="text/javascript" src="../asciidoc-js/asciidoc-xhtml11.js"></script>
+</head>
+<body style="max-width:55em">
+<div id="header">
+<h1>CLOCKTEST(1)</h1>
+<span id="revdate">2008/04/01</span>
+<div id="toc">
+  <div id="toctitle">Table of Contents</div>
+  <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
+</div>
+</div>
+<div id="content">
+<h2 id="_name">1. NAME</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>clocktest - Xenomai Clock Test</p></div>
+</div>
+<h2 id="_synopsis">2. SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="paragraph"><p><strong>clocktest</strong> [<em>OPTIONS</em>]</p></div>
+</div>
+<h2 id="_description">3. DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph"><p><strong>clocktest</strong> is part of the Xenomai test suite and tests the Clock. For each
+CPU, it repeatedly prints a time offset (compared to the reference
+gettimeofday()), a drift value, the number of warps and the maximum warp in
+microseconds.</p></div>
+<div class="paragraph"><p>For this program to work, you need to run a suitable Xenomai enabled kernel
+with the respective module (xeno_posix).</p></div>
+</div>
+<h2 id="_options">4. OPTIONS</h2>
+<div class="sectionbody">
+<div class="dlist"><dl>
+<dt class="hdlist1">
+<strong>-C &lt;clock_id&gt;</strong>
+</dt>
+<dd>
+<p>
+        clock to be tested, default=0 (CLOCK_REALTIME=0, CLOCK_MONOTONIC=1,
+CLOCK_HOST_REALTIME=42)
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-T &lt;test_duration_seconds&gt;</strong>
+</dt>
+<dd>
+<p>
+        default=0 (Never stop, ^C to end)
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-D</strong>
+</dt>
+<dd>
+<p>
+        print extra diagnostics for CLOCK_HOST_REALTIME
+</p>
+</dd>
+</dl></div>
+</div>
+<h2 id="_author">5. AUTHOR</h2>
+<div class="sectionbody">
+<div class="paragraph"><p><strong>clocktest</strong> was written by Jan Kiszka. This man page
+was written by Roland Stigge.</p></div>
+</div>
+</div>
+<div id="footnotes"><hr /></div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2012-12-18 20:33:56 CEST
+</div>
+</div>
+</body>
+</html>

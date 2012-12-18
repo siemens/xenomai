@@ -1,0 +1,105 @@
+// ** The above line should force tbl to be a preprocessor **
+// Man page for xeno-config
+//
+// Copyright (C) 2005, 2006 Romain Lenglet <rlenglet@users.forge.objectweb.org>
+//
+// You may distribute under the terms of the GNU General Public
+// License as specified in the file COPYING that comes with the
+// Xenomai distribution.
+//
+//
+XENO-CONFIG(1)
+==============
+:doctype: manpage
+:revdate: 2006/03/27
+:man source: Xenomai
+:man version: {xenover}
+:man manual: Xenomai Manual
+
+NAME
+-----
+xeno-config - Display Xenomai libraries configuration
+
+SYNOPSIS
+---------
+// The general command line
+*xeno-config*
+
+*xeno-config* *--v* | *--verbose*
+
+*xeno-config --help*::
+
+*xeno-config* [*--version*] [*--cc*] [*--arch*] [*--prefix*] [*--xeno-cflags*] [*--xeno-ldflags*] [*--posix-cflags*] [*--posix-ldflags*] [*--lib*-dir*|*--library-dir*|*--libdir*|*--user-libdir*]
+
+DESCRIPTION
+------------
+*xeno-config* is a script that is used to to display the compiler and linker flags that are required for building applications that use Xenomai.
+Any combination of options can be chosen (except *--verbose* and *--help*) to display configuration information, and options can be given in any order.
+The command output one line for each option, in the same order as the options.
+
+When *xeno-config --verbose* is executed, all configuration information is displayed in a different, more human-readable format.
+
+When *xeno-config* is executed without any options, the output is equivalent to than when executing *xeno-config --verbose* then *xeno-config --help*.
+
+// ********************************************************************
+
+OPTIONS
+--------
+
+*--v, --verbose*::
+Outputs all configuration information, in a human-readable format.
+
+*--help*::
+Outputs the list of available command-line options.
+
+*--version*::
+Outputs one line with the installed Xenomai version.
+
+*--cc*::
+Outputs one line with the path to the C compiler command that was used to compiled Xenomai.
+
+*--arch*::
+Outputs one line with the architecture to compile to, e.g. i386.
+May be different from the architecture of the currently running system, if cross-compiling.
+
+*--prefix*::
+Outputs one line with the absolute path to the base Xenomai installation directory.
+
+*--xeno-cflags*::
+Outputs one line with the C compiler command-line options that are necessary to compile applications that use the Xenomai libraries.
+
+*--xeno-ldflags*::
+Outputs one line with the C compiler command-line options that are necessary to link applications against the Xenomai libraries.
+
+*--posix-cflags*::
+Outputs one line with the C compiler command-line options that are necessary to compile applications that use Xenomai's Posix-compatible layer library.
+
+*--posix-ldflags*::
+Outputs one line with the C compiler command-line options that are necessary to link applications against Xenomai's Posix-compatible layer library.
+
+*--lib*-dir, --library-dir, --libdir, --user-libdir*::
+Outputs one line with the absolute path to Xenomai's libraries.
+In the *--lib*-dir* option name, the *** is meant as a wildcard: *--lib-dir*, *--libfoo-dir* and *--libbar-dir* are all valid and synonymous options.
+
+ENVIRONMENT VARIABLES
+------------------------
+
+*DESTDIR*::
+If the *DESTDIR* variable is set, its content is prepended to the Xenomai installed directories and files names output by the
+*--prefix* and *--library-dir* options, and to the Xenomai installation directories in the flags output by the
+*--xeno-cflags*, *--xeno-ldflags*, *--posix-cflags*, *--posix-ldflags*
+options.
+
+If *DESTDIR* was set when compiling and installing Xenomai, e.g. for cross-compilation, *DESTDIR* must be set to the same value before calling *xeno-config*, in order to output valid directory and file names.
+
+RETURN CODES
+---------------
+
+*0*::
+Successful script execution.
+
+*1*::
+The
+*--posix-ldflags*
+option has been given but Posix support is not available in Xenomai;
+or an invalid argument has been given on the command-line.

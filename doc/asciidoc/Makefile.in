@@ -241,14 +241,14 @@ EXTRA_DIST = README.INSTALL.adoc TROUBLESHOOTING.adoc
 @CONFIG_XENO_ASCIIDOC_FALSE@PDF_DOCSDIR = $(srcdir)/../generated/pdf/
 @CONFIG_XENO_ASCIIDOC_TRUE@PDF_DOCSDIR = ./
 @CONFIG_XENO_ASCIIDOC_TRUE@TXT_DOCS = README.INSTALL.txt TROUBLESHOOTING.txt
-ASCIIDOC_HTML_OPTS = -a icons -a iconsdir=../asciidoc-icons \
-	-a linkcss -a stylesdir=../asciidoc-css -a scriptsdir=../asciidoc-js \
-	-a toc -a toclevels=3 -a max-width=55em -a xenover=$(PACKAGE_VERSION)
+@CONFIG_XENO_ASCIIDOC_TRUE@ASCIIDOC_HTML_OPTS = -a icons -a iconsdir=../asciidoc-icons \
+@CONFIG_XENO_ASCIIDOC_TRUE@	-a linkcss -a stylesdir=../asciidoc-css -a scriptsdir=../asciidoc-js \
+@CONFIG_XENO_ASCIIDOC_TRUE@	-a toc -a toclevels=3 -a max-width=55em -a xenover=$(PACKAGE_VERSION)
 
-ASCIIDOC_PDF_OPTS = -a icons -a toc -a toclevels=3 -a xenover=$(PACKAGE_VERSION)
-ASCIIDOC_MAN_OPTS = -a xenover=$(PACKAGE_VERSION)
-ASCIIDOC_TXT_OPTS = -a xenover=$(PACKAGE_VERSION) -a encoding=ascii
-tmpdir = adoc_plaintext
+@CONFIG_XENO_ASCIIDOC_TRUE@ASCIIDOC_PDF_OPTS = -a icons -a toc -a toclevels=3 -a xenover=$(PACKAGE_VERSION)
+@CONFIG_XENO_ASCIIDOC_TRUE@ASCIIDOC_MAN_OPTS = -a xenover=$(PACKAGE_VERSION)
+@CONFIG_XENO_ASCIIDOC_TRUE@ASCIIDOC_TXT_OPTS = -a xenover=$(PACKAGE_VERSION) -a encoding=ascii
+@CONFIG_XENO_ASCIIDOC_TRUE@tmpdir = adoc_plaintext
 doc_top_distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)
 GEN_DOC_DIST_ROOT = $(doc_top_distdir)/doc/generated
 all: all-am
@@ -457,29 +457,31 @@ uninstall-am: uninstall-local
 @CONFIG_XENO_ASCIIDOC_TRUE@	@$(mkdir_p) $@
 @CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/share/asciidoc/javascripts/asciidoc-xhtml11.js $@
 @CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/share/asciidoc/javascripts/toc.js $@
+@CONFIG_XENO_ASCIIDOC_FALSE@%.1: $(MAN_DOCSDIR)/%.1
+@CONFIG_XENO_ASCIIDOC_FALSE@	@cp $< $@
 
-%: %.adoc Makefile
-	@$(mkdir_p) $@
-	$(ASCIIDOC) -n -b xhtml11 $(ASCIIDOC_HTML_OPTS) -o $@/index.html $<
+@CONFIG_XENO_ASCIIDOC_TRUE@%: %.adoc Makefile
+@CONFIG_XENO_ASCIIDOC_TRUE@	@$(mkdir_p) $@
+@CONFIG_XENO_ASCIIDOC_TRUE@	$(ASCIIDOC) -n -b xhtml11 $(ASCIIDOC_HTML_OPTS) -o $@/index.html $<
 
-%.man: %.adoc Makefile
-	$(A2X) -f manpage -D . $(ASCIIDOC_MAN_OPTS) $<       
+@CONFIG_XENO_ASCIIDOC_TRUE@%.1: %.adoc Makefile
+@CONFIG_XENO_ASCIIDOC_TRUE@	$(A2X) -f manpage -D . $(ASCIIDOC_MAN_OPTS) $<       
 
-%.pdf: %.adoc Makefile
-	$(A2X) -f pdf -D . $(ASCIIDOC_PDF_OPTS) $<
+@CONFIG_XENO_ASCIIDOC_TRUE@%.pdf: %.adoc Makefile
+@CONFIG_XENO_ASCIIDOC_TRUE@	$(A2X) -f pdf -D . $(ASCIIDOC_PDF_OPTS) $<
 
-$(tmpdir)/%.txt: %.adoc Makefile $(top_srcdir)/doc/plaintext.conf $(top_srcdir)/doc/plaintext.xsl
-	@$(mkdir_p) $(tmpdir)
-	$(ASCIIDOC) --backend docbook -f $(top_srcdir)/doc/plaintext.conf \
-		--doctype article $(ASCIIDOC_TXT_OPTS) \
-		--out-file $(tmpdir)/$*.xml $<
-	xsltproc --stringparam toc.section.depth 3 --nonet \
-		--output $(tmpdir)/$*.html $(top_srcdir)/doc/plaintext.xsl \
-		$(tmpdir)/$*.xml
-	w3m -cols 80 -dump -T text/html -no-graph $(tmpdir)/$*.html > $@
+@CONFIG_XENO_ASCIIDOC_TRUE@$(tmpdir)/%.txt: %.adoc Makefile $(top_srcdir)/doc/plaintext.conf $(top_srcdir)/doc/plaintext.xsl
+@CONFIG_XENO_ASCIIDOC_TRUE@	@$(mkdir_p) $(tmpdir)
+@CONFIG_XENO_ASCIIDOC_TRUE@	$(ASCIIDOC) --backend docbook -f $(top_srcdir)/doc/plaintext.conf \
+@CONFIG_XENO_ASCIIDOC_TRUE@		--doctype article $(ASCIIDOC_TXT_OPTS) \
+@CONFIG_XENO_ASCIIDOC_TRUE@		--out-file $(tmpdir)/$*.xml $<
+@CONFIG_XENO_ASCIIDOC_TRUE@	xsltproc --stringparam toc.section.depth 3 --nonet \
+@CONFIG_XENO_ASCIIDOC_TRUE@		--output $(tmpdir)/$*.html $(top_srcdir)/doc/plaintext.xsl \
+@CONFIG_XENO_ASCIIDOC_TRUE@		$(tmpdir)/$*.xml
+@CONFIG_XENO_ASCIIDOC_TRUE@	w3m -cols 80 -dump -T text/html -no-graph $(tmpdir)/$*.html > $@
 
-%.txt: $(tmpdir)/%.txt Makefile $(top_srcdir)/doc/plaintext_postproc.awk
-	awk -f $(top_srcdir)/doc/plaintext_postproc.awk $(tmpdir)/$*.txt > $@
+@CONFIG_XENO_ASCIIDOC_TRUE@%.txt: $(tmpdir)/%.txt Makefile $(top_srcdir)/doc/plaintext_postproc.awk
+@CONFIG_XENO_ASCIIDOC_TRUE@	awk -f $(top_srcdir)/doc/plaintext_postproc.awk $(tmpdir)/$*.txt > $@
 
 install-htmldocs: $(HTML_DOCS:%=$(HTML_DOCSDIR)%)
 	docs="$(HTML_DOCS)"; abs_builddir=$$PWD; \
@@ -540,7 +542,14 @@ dist-psdocs: $(PS_DOCS:%=$(PS_DOCSDIR)%)
 	    $(INSTALL_DATA) $$f $$dest; \
 	done
 
-dist-docs-hook: all-local dist-htmldocs dist-pdfdocs dist-psdocs
+dist-mans: $(man1_MANS:%=$(MAN_DOCSDIR)%)
+	docs="$^"; dest=$(GEN_DOC_DIST_ROOT)/man; \
+	$(mkinstalldirs) $$dest && \
+	for f in $$docs; do \
+	    $(INSTALL_DATA) $$f $$dest; \
+	done
+
+dist-docs-hook: all-local dist-htmldocs dist-pdfdocs dist-psdocs dist-mans
 
 # To make distcheck happy.
 uninstall-docs:

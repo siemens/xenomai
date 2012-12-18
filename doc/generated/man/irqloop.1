@@ -1,0 +1,76 @@
+'\" t
+.\"     Title: irqloop
+.\"    Author: [see the "AUTHOR" section]
+.\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
+.\"      Date: 12/18/2012
+.\"    Manual: Xenomai Manual
+.\"    Source: Xenomai 2.6.1
+.\"  Language: English
+.\"
+.TH "IRQLOOP" "1" "12/18/2012" "Xenomai 2\&.6\&.1" "Xenomai Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+irqloop \- Xenomai IRQ benchmark, target program
+.SH "SYNOPSIS"
+.sp
+\fBirqloop\fR [ options ]
+.SH "DESCRIPTION"
+.sp
+\fBirqloop\fR is part of the Xenomai test suite and benchmarks IRQs\&. It is the program running on the target machine which is running a suitable Xenomai enabled kernel with the respective module (xeno_posix)\&. The additional tool \fBirqbench\fR(1) is running on a plain Linux host, connected via RS232 or Laplink with the target\&.
+.SH "OPTIONS"
+.sp
+\fBirqloop\fR accepts the following options:
+.PP
+\fB\-D <testing_device_no>\fR
+.RS 4
+number of testing device, default=0
+.RE
+.PP
+\fB\-t <test_mode>\fR
+.RS 4
+0=user task (default) 1=kernel task 2=IRQ handler 3=hard\-IRQ handler
+.RE
+.PP
+\fB\-P <priority>\fR
+.RS 4
+task priority (test mode 0 and 1 only)
+.RE
+.PP
+\fB\-o <port_type>\fR
+.RS 4
+0=serial (default), 1=parallel
+.RE
+.PP
+\fB\-a <port_io_address>\fR
+.RS 4
+default=0x3f8/0x378
+.RE
+.PP
+\fB\-i <port_irq>\fR
+.RS 4
+default=4/7
+.RE
+.SH ""SEE ALSO""
+.sp
+\fB/usr/share/doc/xenomai\-doc/txt/irqloop\&.txt,\fR \fBirqbench(1)\fR
+.SH "AUTHOR"
+.sp
+\fBirqloop\fR was written by Jan Kiszka\&. This man page was written by Roland Stigge\&.

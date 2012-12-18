@@ -1,0 +1,65 @@
+'\" t
+.\"     Title: switchbench
+.\"    Author: [see the "AUTHOR" section]
+.\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
+.\"      Date: 12/18/2012
+.\"    Manual: Xenomai Manual
+.\"    Source: Xenomai 2.6.1
+.\"  Language: English
+.\"
+.TH "SWITCHBENCH" "1" "12/18/2012" "Xenomai 2\&.6\&.1" "Xenomai Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+switchbench \- Xenomai latency test for task switches
+.SH "SYNOPSIS"
+.sp
+\fBswitchbench\fR [ options ]
+.SH "DESCRIPTION"
+.sp
+\fBswitchbench\fR is part of Xenomai\&. It can be used to test task switch latencies\&. A suitable Xenomai enabled kernel with the respective module (xeno_posix) must be installed\&.
+.SH "OPTIONS"
+.sp
+\fBswitchbench\fR accepts the following options:
+.PP
+\fB\-h\fR
+.RS 4
+enable histogram
+.RE
+.PP
+\fB\-p <period_us>\fR
+.RS 4
+timer period
+.RE
+.PP
+\fB\-n <samples>\fR
+.RS 4
+number of samples to collect
+.RE
+.PP
+\fB\-i <samples>\fR
+.RS 4
+number of
+\fIfirst\fR
+samples to ignore
+.RE
+.SH "AUTHOR"
+.sp
+\fBswitchbench\fR was written by Philippe Gerum and Max Krasnyansky\&. This man page was written by Roland Stigge\&.

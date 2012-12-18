@@ -1,0 +1,191 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="AsciiDoc 8.5.2" />
+<title>XENO-CONFIG(1)</title>
+<link rel="stylesheet" href="../asciidoc-css/xhtml11.css" type="text/css" />
+<link rel="stylesheet" href="../asciidoc-css/xhtml11-quirks.css" type="text/css" />
+<script type="text/javascript">
+/*<![CDATA[*/
+window.onload = function(){asciidoc.footnotes(); asciidoc.toc(3);}
+/*]]>*/
+</script>
+<script type="text/javascript" src="../asciidoc-js/asciidoc-xhtml11.js"></script>
+</head>
+<body style="max-width:55em">
+<div id="header">
+<h1>XENO-CONFIG(1)</h1>
+<span id="revdate">2006/03/27</span>
+<div id="toc">
+  <div id="toctitle">Table of Contents</div>
+  <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
+</div>
+</div>
+<div id="content">
+<h2 id="_name">1. NAME</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>xeno-config - Display Xenomai libraries configuration</p></div>
+</div>
+<h2 id="_synopsis">2. SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="paragraph"><p><strong>xeno-config</strong></p></div>
+<div class="paragraph"><p><strong>xeno-config</strong> <strong>--v</strong> | <strong>--verbose</strong></p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+<strong>xeno-config --help</strong>
+</dt>
+<dd>
+<p>
+<strong>xeno-config</strong> [<strong>--version</strong>] [<strong>--cc</strong>] [<strong>--arch</strong>] [<strong>--prefix</strong>] [<strong>--xeno-cflags</strong>] [<strong>--xeno-ldflags</strong>] [<strong>--posix-cflags</strong>] [<strong>--posix-ldflags</strong>] [<strong>--lib</strong>-dir*|<strong>--library-dir</strong>|<strong>--libdir</strong>|<strong>--user-libdir</strong>]
+</p>
+</dd>
+</dl></div>
+</div>
+<h2 id="_description">3. DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph"><p><strong>xeno-config</strong> is a script that is used to to display the compiler and linker flags that are required for building applications that use Xenomai.
+Any combination of options can be chosen (except <strong>--verbose</strong> and <strong>--help</strong>) to display configuration information, and options can be given in any order.
+The command output one line for each option, in the same order as the options.</p></div>
+<div class="paragraph"><p>When <strong>xeno-config --verbose</strong> is executed, all configuration information is displayed in a different, more human-readable format.</p></div>
+<div class="paragraph"><p>When <strong>xeno-config</strong> is executed without any options, the output is equivalent to than when executing <strong>xeno-config --verbose</strong> then <strong>xeno-config --help</strong>.</p></div>
+</div>
+<h2 id="_options">4. OPTIONS</h2>
+<div class="sectionbody">
+<div class="dlist"><dl>
+<dt class="hdlist1">
+<strong>--v, --verbose</strong>
+</dt>
+<dd>
+<p>
+Outputs all configuration information, in a human-readable format.
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>--help</strong>
+</dt>
+<dd>
+<p>
+Outputs the list of available command-line options.
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>--version</strong>
+</dt>
+<dd>
+<p>
+Outputs one line with the installed Xenomai version.
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>--cc</strong>
+</dt>
+<dd>
+<p>
+Outputs one line with the path to the C compiler command that was used to compiled Xenomai.
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>--arch</strong>
+</dt>
+<dd>
+<p>
+Outputs one line with the architecture to compile to, e.g. i386.
+May be different from the architecture of the currently running system, if cross-compiling.
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>--prefix</strong>
+</dt>
+<dd>
+<p>
+Outputs one line with the absolute path to the base Xenomai installation directory.
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>--xeno-cflags</strong>
+</dt>
+<dd>
+<p>
+Outputs one line with the C compiler command-line options that are necessary to compile applications that use the Xenomai libraries.
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>--xeno-ldflags</strong>
+</dt>
+<dd>
+<p>
+Outputs one line with the C compiler command-line options that are necessary to link applications against the Xenomai libraries.
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>--posix-cflags</strong>
+</dt>
+<dd>
+<p>
+Outputs one line with the C compiler command-line options that are necessary to compile applications that use Xenomai&#8217;s Posix-compatible layer library.
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>--posix-ldflags</strong>
+</dt>
+<dd>
+<p>
+Outputs one line with the C compiler command-line options that are necessary to link applications against Xenomai&#8217;s Posix-compatible layer library.
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>--lib</strong>-dir, --library-dir, --libdir, --user-libdir*
+</dt>
+<dd>
+<p>
+Outputs one line with the absolute path to Xenomai&#8217;s libraries.
+In the <strong>--lib</strong>-dir* option name, the <strong>*</strong> is meant as a wildcard: <strong>--lib-dir</strong>, <strong>--libfoo-dir</strong> and <strong>--libbar-dir</strong> are all valid and synonymous options.
+</p>
+</dd>
+</dl></div>
+<div class="paragraph"><p>ENVIRONMENT VARIABLES</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>*DESTDIR*::
+If the *DESTDIR* variable is set, its content is prepended to the Xenomai installed directories and files names output by the
+*--prefix* and *--library-dir* options, and to the Xenomai installation directories in the flags output by the
+*--xeno-cflags*, *--xeno-ldflags*, *--posix-cflags*, *--posix-ldflags*
+options.
+
+If *DESTDIR* was set when compiling and installing Xenomai, e.g. for cross-compilation, *DESTDIR* must be set to the same value before calling *xeno-config*, in order to output valid directory and file names.
+
+RETURN CODES</tt></pre>
+</div></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+<strong>0</strong>
+</dt>
+<dd>
+<p>
+Successful script execution.
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>1</strong>
+</dt>
+<dd>
+<p>
+The
+<strong>--posix-ldflags</strong>
+option has been given but Posix support is not available in Xenomai;
+or an invalid argument has been given on the command-line.
+</p>
+</dd>
+</dl></div>
+</div>
+</div>
+<div id="footnotes"><hr /></div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2012-12-18 20:33:56 CEST
+</div>
+</div>
+</body>
+</html>

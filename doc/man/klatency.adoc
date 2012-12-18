@@ -1,0 +1,54 @@
+// ** The above line should force tbl to be a preprocessor **
+// Man page for klatency
+//
+// Copyright (C) 2008 Roland Stigge <stigge@antcom.de>
+//
+// You may distribute under the terms of the GNU General Public
+// License as specified in the file COPYING that comes with the
+// Xenomai distribution.
+//
+//
+KLATENCY(1)
+===========
+:doctype: manpage
+:revdate: 2008/04/19
+:man source: Xenomai
+:man version: {xenover}
+:man manual: Xenomai Manual
+
+NAME
+-----
+klatency - Xenomai kernel latency test
+
+SYNOPSIS
+---------
+// The general command line
+*klatency* [ options ]
+
+DESCRIPTION
+------------
+*klatency* is part of the Xenomai test suite. It is a latency measurement
+tool dedicated to kernel-based activities.  The system must run a suitable
+Xenomai enabled kernel with the respective module (klat_pipe).
+
+OPTIONS
+--------
+*klatency* accepts the following options
+
+*-l <data-lines per header>*::
+default=21, 0 to suppress headers
+
+*-T <test_duration_seconds>*::
+default=0, so ^C to end
+
+*-q*::
+supresses RTD, RTH lines if -T is used
+
+*-P <rt_pipe_no>*::
+number of testing pipe, default=auto
+
+AUTHOR
+-------
+*klatency* was written by Philippe Gerum. This man page
+was written by Roland Stigge.
+

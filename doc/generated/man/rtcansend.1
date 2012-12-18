@@ -1,0 +1,130 @@
+'\" t
+.\"     Title: rtcansend
+.\"    Author: [see the "AUTHORS" section]
+.\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
+.\"      Date: 12/18/2012
+.\"    Manual: Xenomai Manual
+.\"    Source: Xenomai 2.6.1
+.\"  Language: English
+.\"
+.TH "RTCANSEND" "1" "12/18/2012" "Xenomai 2\&.6\&.1" "Xenomai Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+rtcansend \- Xenomai tool for sending CAN messages
+.SH "SYNOPSIS"
+.sp
+\fBrtcansend\fR <can\-interface> [Options] <can\-msg>
+.SH "DESCRIPTION"
+.sp
+\fBrtcansend\fR is part of Xenomai\&. It is used to send messages via a CAN interface\&. The system must run a suitable Xenomai enabled kernel with the respective module (xeno_native and the CAN driver)\&.
+.SH "OPTIONS"
+.sp
+<can\-interface> is the CAN interface file\&.
+.sp
+<can\-msg> can consist of up to 8 bytes given as a space separated list\&.
+.sp
+\fBrtcansend\fR accepts the following options:
+.PP
+\fB\-i, \-\-identifier=ID\fR
+.RS 4
+CAN Identifier (default = 1)
+.RE
+.PP
+\fB\-r, \-\-rtr\fR
+.RS 4
+send remote request
+.RE
+.PP
+\fB\-e, \-\-extended\fR
+.RS 4
+send extended frame
+.RE
+.PP
+\fB\-l, \-\-loop=COUNT\fR
+.RS 4
+send message COUNT times
+.RE
+.PP
+\fB\-c, \-\-count\fR
+.RS 4
+message count in data[0\-3]
+.RE
+.PP
+\fB\-d, \-\-delay=MS\fR
+.RS 4
+delay in ms (default = 1ms)
+.RE
+.PP
+\fB\-s, \-\-send\fR
+.RS 4
+use send instead of sendto
+.RE
+.PP
+\fB\-t, \-\-timeout=MS\fR
+.RS 4
+timeout in ms
+.RE
+.PP
+\fB\-L, \-\-loopback=0|1\fR
+.RS 4
+switch local loopback off or on
+.RE
+.PP
+\fB\-v, \-\-verbose\fR
+.RS 4
+be verbose
+.RE
+.PP
+\fB\-p, \-\-print=MODULO\fR
+.RS 4
+print every MODULO message
+.RE
+.PP
+\fB\-h, \-\-help\fR
+.RS 4
+a usage description
+.RE
+.SH ""SEE ALSO""
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+rtcanconfig (1),*
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+rtcanrecv (1)*
+.RE
+.SH "AUTHORS"
+.sp
+\fBrtcansend\fR was written by Wolfgang Grandegger, Jan Kiszka and Philippe Gerum\&. This man page was written by Roland Stigge\&.

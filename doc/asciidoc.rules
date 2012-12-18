@@ -1,3 +1,8 @@
+if !CONFIG_XENO_ASCIIDOC
+%.1: $(MAN_DOCSDIR)/%.1
+	@cp $< $@
+else
+
 ASCIIDOC_HTML_OPTS=-a icons -a iconsdir=../asciidoc-icons \
 	-a linkcss -a stylesdir=../asciidoc-css -a scriptsdir=../asciidoc-js \
 	-a toc -a toclevels=3 -a max-width=55em -a xenover=$(PACKAGE_VERSION)
@@ -14,7 +19,7 @@ tmpdir=adoc_plaintext
 	@$(mkdir_p) $@
 	$(ASCIIDOC) -n -b xhtml11 $(ASCIIDOC_HTML_OPTS) -o $@/index.html $<
 
-%.man: %.adoc Makefile
+%.1: %.adoc Makefile
 	$(A2X) -f manpage -D . $(ASCIIDOC_MAN_OPTS) $<       
 
 %.pdf: %.adoc Makefile
@@ -32,5 +37,6 @@ $(tmpdir)/%.txt: %.adoc Makefile $(top_srcdir)/doc/plaintext.conf $(top_srcdir)/
 
 %.txt: $(tmpdir)/%.txt Makefile $(top_srcdir)/doc/plaintext_postproc.awk
 	awk -f $(top_srcdir)/doc/plaintext_postproc.awk $(tmpdir)/$*.txt > $@
+endif
 
 include $(top_srcdir)/doc/install-dist.rules

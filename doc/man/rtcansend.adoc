@@ -1,0 +1,87 @@
+// ** The above line should force tbl to be a preprocessor **
+// Man page for rtcansend
+//
+// Copyright (C) 2008 Roland Stigge <stigge@antcom.de>
+//
+// You may distribute under the terms of the GNU General Public
+// License as specified in the file COPYING that comes with the
+// Xenomai distribution.
+//
+//
+RTCANSEND(1)
+============
+:doctype: manpage
+:revdate: 2008/04/19
+:man source: Xenomai
+:man version: {xenover}
+:man manual: Xenomai Manual
+
+NAME
+-----
+rtcansend - Xenomai tool for sending CAN messages
+
+SYNOPSIS
+---------
+// The general command line
+*rtcansend* <can-interface> [Options] <can-msg>
+
+DESCRIPTION
+------------
+*rtcansend* is part of Xenomai. It is used to send messages via a CAN
+interface. The system must run a suitable Xenomai enabled kernel with the
+respective module (xeno_native and the CAN driver).
+
+OPTIONS
+--------
+<can-interface> is the CAN interface file.
+
+<can-msg> can consist of up to 8 bytes given as a space separated list.
+
+*rtcansend* accepts the following options:
+
+*-i, --identifier=ID*::
+CAN Identifier (default = 1)
+
+*-r, --rtr*::
+send remote request
+
+*-e, --extended*::
+send extended frame
+
+*-l, --loop=COUNT*::
+send message COUNT times
+
+*-c, --count*::
+message count in data[0-3]
+
+*-d, --delay=MS*::
+delay in ms (default = 1ms)
+
+*-s, --send*::
+use send instead of sendto
+
+*-t, --timeout=MS*::
+timeout in ms
+
+*-L, --loopback=0|1*::
+switch local loopback off or on
+
+*-v, --verbose*::
+be verbose
+
+*-p, --print=MODULO*::
+print every MODULO message
+
+*-h, --help*::
+a usage description
+
+"SEE ALSO"
+-----------
+* rtcanconfig (1),*
+* rtcanrecv (1)*
+
+AUTHORS
+--------
+*rtcansend* was written by Wolfgang Grandegger, Jan
+Kiszka and Philippe Gerum. This man page
+was written by Roland Stigge.
