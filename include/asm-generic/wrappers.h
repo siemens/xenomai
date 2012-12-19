@@ -508,6 +508,17 @@ static inline void *kzalloc(size_t size, int flags)
 #define IRQF_SHARED			SA_SHIRQ
 #endif /* < 2.6.18 */
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
+#define clamp(val, min, max) ({			\
+	typeof(val) __val = (val);		\
+	typeof(min) __min = (min);		\
+	typeof(max) __max = (max);		\
+	(void) (&__val == &__min);		\
+	(void) (&__val == &__max);		\
+	__val = __val < __min ? __min: __val;	\
+	__val > __max ? __max: __val; })
+#endif /* < 2.6.25 */
+
 #if defined(CONFIG_LTT) || \
     (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,31) && defined(CONFIG_MARKERS))
 
