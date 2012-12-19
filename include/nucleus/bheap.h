@@ -46,13 +46,13 @@ typedef struct bheaph {
 typedef struct bheap {
 	unsigned sz;
 	unsigned last;
-	bheaph_t *elems[1]; /* only padding, indexing starts at 1 */
+	bheaph_t *elems[];
 } bheap_t;
 
 #define DECLARE_BHEAP_CONTAINER(name, sz)       \
 	struct {				\
 		bheap_t bheap;			\
-		bheaph_t *elems[sz];		\
+		bheaph_t *elems[sz + 1];	\
 	} name
 
 /* Check the binary heap invariant. */
