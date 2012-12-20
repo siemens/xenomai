@@ -569,7 +569,7 @@ static void print_buffers(void)
 	struct print_buffer *buffer;
 	struct entry_head *head;
 	off_t read_pos;
-	int len;
+	int len, ret;
 
 	while (1) {
 		buffer = get_next_buffer();
@@ -587,8 +587,9 @@ static void print_buffers(void)
 				syslog(head->priority,
 				       "%s", head->data);
 			} else {
-				fwrite(head->data,
-				       head->len, 1, head->dest);
+				ret = fwrite(head->data,
+					     head->len, 1, head->dest);
+				(void)ret;
 			}
 
 			read_pos += sizeof(*head) + len;
