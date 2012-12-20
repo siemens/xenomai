@@ -97,9 +97,10 @@ void atomic_clear_mask(unsigned long mask, unsigned long *ptr);
 
 typedef atomic_t atomic_counter_t;
 typedef atomic_t xnarch_atomic_t;
-typedef unsigned long atomic_flags_t;
 
 #endif /* !CONFIG_PPC64 */
+
+typedef unsigned long atomic_flags_t;
 
 #else /* !__KERNEL__ */
 
