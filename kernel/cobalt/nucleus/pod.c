@@ -2421,10 +2421,10 @@ int xnpod_handle_exception(struct ipipe_trap_data *d)
 	}
 
 	if (!xnpod_userspace_p()) {
-		xnprintf
-		    ("suspending kernel thread %p ('%s') at 0x%lx after exception #0x%x\n",
-		     thread, thread->name, xnarch_fault_pc(d),
-		     xnarch_fault_trap(d));
+		printk(XENO_WARN
+		       "suspending kernel thread %p ('%s') at 0x%lx after exception #0x%x\n",
+		       thread, thread->name, xnarch_fault_pc(d),
+		       xnarch_fault_trap(d));
 
 		xnpod_suspend_thread(thread, XNSUSP, XN_INFINITE, XN_RELATIVE, NULL);
 		return 1;
@@ -2442,20 +2442,20 @@ int xnpod_handle_exception(struct ipipe_trap_data *d)
 #if XENO_DEBUG(NUCLEUS)
 		if (!user_mode(d->regs)) {
 			xntrace_panic_freeze();
-			xnprintf
-			    ("Switching %s to secondary mode after exception #%u in "
-			     "kernel-space at 0x%lx (pid %d)\n", thread->name,
-			     xnarch_fault_trap(d),
-			     xnarch_fault_pc(d),
-			     xnthread_user_pid(thread));
+			printk(XENO_WARN
+			       "switching %s to secondary mode after exception #%u in "
+			       "kernel-space at 0x%lx (pid %d)\n", thread->name,
+			       xnarch_fault_trap(d),
+			       xnarch_fault_pc(d),
+			       xnthread_user_pid(thread));
 			xntrace_panic_dump();
 		} else if (xnarch_fault_notify(d))	/* Don't report debug traps */
-			xnprintf
-			    ("Switching %s to secondary mode after exception #%u from "
-			     "user-space at 0x%lx (pid %d)\n", thread->name,
-			     xnarch_fault_trap(d),
-			     xnarch_fault_pc(d),
-			     xnthread_user_pid(thread));
+			printk(XENO_WARN
+			       "switching %s to secondary mode after exception #%u from "
+			       "user-space at 0x%lx (pid %d)\n", thread->name,
+			       xnarch_fault_trap(d),
+			       xnarch_fault_pc(d),
+			       xnthread_user_pid(thread));
 #endif /* XENO_DEBUG(NUCLEUS) */
 		if (xnarch_fault_pf_p(d))
 			/* The page fault counter is not SMP-safe, but it's a

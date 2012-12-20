@@ -714,13 +714,11 @@ unlock_and_exit:
 
 #if XENO_DEBUG(REGISTRY)
 	if (ret)
-		xnlogerr("FAILED to register object %s (%s), status %d\n",
-			 key,
-			 pnode ? pnode->dirname : "unknown type",
-			 ret);
+		printk(XENO_ERR "FAILED to register object %s (%s), status %d\n",
+		       key, pnode ? pnode->dirname : "unknown type", ret);
 	else if (pnode)
-		xnloginfo("registered exported object %s (%s)\n",
-			  key, pnode->dirname);
+		printk(XENO_INFO "registered exported object %s (%s)\n",
+		       key, pnode->dirname);
 #endif
 
 	return ret;
@@ -889,9 +887,8 @@ int xnregistry_remove(xnhandle_t handle)
 	 * slot is still valid. Note: we only report about exported
 	 * objects. */
 	if (object->pnode)
-		xnloginfo("unregistered exported object %s (%s)\n",
-			  object->key,
-			  object->pnode->dirname);
+		printk(XENO_INFO "unregistered exported object %s (%s)\n",
+		       object->key, object->pnode->dirname);
 #endif
 
 	object->objaddr = NULL;

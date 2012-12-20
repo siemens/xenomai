@@ -462,8 +462,8 @@ void cleanup_owned_contexts(void *owner)
 
 		if (context) {
 			if (XENO_DEBUG(RTDM_APPL))
-				xnprintf("RTDM: closing file descriptor %d.\n",
-					 fd);
+				printk(XENO_INFO "closing RTDM file descriptor %d\n",
+				       fd);
 
 			ret = __rt_dev_close(NULL, fd);
 			XENO_ASSERT(RTDM, ret == 0 || ret == -EBADF,

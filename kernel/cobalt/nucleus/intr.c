@@ -207,8 +207,8 @@ static void xnintr_shirq_handler(unsigned irq, void *cookie)
 
 	if (unlikely(s == XN_ISR_NONE)) {
 		if (++shirq->unhandled == XNINTR_MAX_UNHANDLED) {
-			xnlogerr("%s: IRQ%d not handled. Disabling IRQ "
-				 "line.\n", __FUNCTION__, irq);
+			printk(XENO_ERR "%s: IRQ%d not handled. Disabling IRQ line\n"
+			       __FUNCTION__, irq);
 			s |= XN_ISR_NOENABLE;
 		}
 	} else
@@ -285,14 +285,13 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 	xnlock_put(&shirq->lock);
 
 	if (counter > MAX_EDGEIRQ_COUNTER)
-		xnlogerr
-		    ("xnintr_edge_shirq_handler() : failed to get the IRQ%d line free.\n",
-		     irq);
+		printk(XENO_ERR "%s: failed to get the IRQ%d line free\n",
+		       __FUNCTION__, irq);
 
 	if (unlikely(s == XN_ISR_NONE)) {
 		if (++shirq->unhandled == XNINTR_MAX_UNHANDLED) {
-			xnlogerr("%s: IRQ%d not handled. Disabling IRQ "
-				 "line.\n", __FUNCTION__, irq);
+			printk(XENO_ERR "%s: IRQ%d not handled. Disabling IRQ line\n",
+			       __FUNCTION__, irq);
 			s |= XN_ISR_NOENABLE;
 		}
 	} else
@@ -383,8 +382,8 @@ static inline void xnintr_irq_detach(xnintr_t *intr)
 		p = &e->next;
 	}
 
-	xnlogerr("attempted to detach a non previously attached interrupt "
-		 "object.\n");
+	printk(XENO_ERR "attempted to detach a non previously attached interrupt "
+	       "object\n");
 }
 
 #else /* !CONFIG_XENO_OPT_SHIRQ */
@@ -470,8 +469,8 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 	s = intr->isr(intr);
 	if (unlikely(s == XN_ISR_NONE)) {
 		if (++intr->unhandled == XNINTR_MAX_UNHANDLED) {
-			xnlogerr("%s: IRQ%d not handled. Disabling IRQ "
-				 "line.\n", __FUNCTION__, irq);
+			printk(XENO_ERR "%s: IRQ%d not handled. Disabling IRQ line\n",
+			       __FUNCTION__, irq);
 			s |= XN_ISR_NOENABLE;
 		}
 	} else {

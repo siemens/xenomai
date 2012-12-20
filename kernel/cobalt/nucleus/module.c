@@ -199,8 +199,7 @@ static int __init xenomai_init(void)
 	if (ret)
 		goto cleanup_shadow;
 
-	xnloginfo("Xenomai/cobalt v%s enabled%s\n",
-		  XENO_VERSION_STRING, boot_notice);
+	printk(XENO_INFO "Cobalt v%s enabled%s\n", XENO_VERSION_STRING, boot_notice);
 
 	xeno_nucleus_status = 0;
 
@@ -232,7 +231,7 @@ cleanup_mach:
 	mach_cleanup();
 fail:
 
-	xnlogerr("system init failed, code %d.\n", ret);
+	printk(XENO_ERR "system init failed, code %d\n", ret);
 
 	xeno_nucleus_status = ret;
 

@@ -398,7 +398,8 @@ void cobalt_mutexq_cleanup(cobalt_kqueues_t *q)
 		xnlock_put_irqrestore(&nklock, s);
 		cobalt_mutex_destroy_inner(link2mutex(holder), q);
 #if XENO_DEBUG(POSIX)
-		xnprintf("Posix: destroying mutex %p.\n", link2mutex(holder));
+		printk(XENO_INFO "deleting Cobalt mutex %p\n",
+		       link2mutex(holder));
 #endif /* XENO_DEBUG(POSIX) */
 		xnlock_get_irqsave(&nklock, s);
 	}

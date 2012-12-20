@@ -926,14 +926,12 @@ static void switch_htick_mode(enum clock_event_mode mode,
 		tickval = 1000000000UL / HZ;
 		xntimer_start(&sched->htimer, tickval, tickval, XN_RELATIVE);
 		break;
-
 	case CLOCK_EVT_MODE_SHUTDOWN:
 		xntimer_stop(&sched->htimer);
 		break;
-
 	default:
 #if XENO_DEBUG(TIMERS)
-		xnlogerr("host tick: invalid mode `%d'?\n", mode);
+		printk(XENO_ERR "host tick: invalid mode `%d'?\n", mode);
 #endif
 		;
 	}

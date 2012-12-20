@@ -47,7 +47,7 @@ static void xnsched_register_class(struct xnsched_class *sched_class)
 	XENO_BUGON(NUCLEUS, sched_class->next &&
 		   sched_class->next->weight > sched_class->weight);
 
-	xnloginfo("scheduling class %s registered.\n", sched_class->name);
+	printk(XENO_INFO "scheduling class %s registered.\n", sched_class->name);
 }
 
 void xnsched_register_classes(void)
@@ -96,14 +96,15 @@ static void xnsched_watchdog_handler(struct xntimer *timer)
 		trace_mark(xn_nucleus, watchdog_signal,
 			   "thread %p thread_name %s",
 			   thread, xnthread_name(thread));
-		xnprintf("watchdog triggered -- signaling runaway thread "
-			 "'%s'\n", xnthread_name(thread));
+		printk(XENO_WARN "watchdog triggered -- signaling runaway thread "
+		       "'%s'\n", xnthread_name(thread));
 		xnshadow_call_mayday(thread, SIGDEBUG_WATCHDOG);
 	} else {
 		trace_mark(xn_nucleus, watchdog, "thread %p thread_name %s",
 			   thread, xnthread_name(thread));
-		xnprintf("watchdog triggered -- killing runaway thread '%s'\n",
-			 xnthread_name(thread));
+		printk(XENO_WARN
+		       "watchdog triggered -- killing runaway thread '%s'\n",
+		       xnthread_name(thread));
 		xnpod_delete_thread(thread);
 	}
 	xnsched_reset_watchdog(sched);

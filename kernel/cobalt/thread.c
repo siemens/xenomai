@@ -1369,7 +1369,7 @@ void cobalt_threadq_cleanup(cobalt_kqueues_t *q)
 			thread_destroy(thread);
 		xnlock_put_irqrestore(&nklock, s);
 #if XENO_DEBUG(POSIX)
-		xnprintf("POSIX: destroyed thread %p\n", thread);
+		printk(XENO_INFO "destroyed Cobalt thread %p\n", thread);
 #endif /* XENO_DEBUG(POSIX) */
 		xnlock_get_irqsave(&nklock, s);
 	}

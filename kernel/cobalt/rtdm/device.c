@@ -204,26 +204,26 @@ int rtdm_dev_register(struct rtdm_device *device)
 
 	/* Sanity check: structure version */
 	XENO_ASSERT(RTDM, device->struct_version == RTDM_DEVICE_STRUCT_VER,
-		    xnlogerr("RTDM: invalid rtdm_device version (%d, "
-			     "required %d)\n", device->struct_version,
-			     RTDM_DEVICE_STRUCT_VER);
+		    printk(XENO_ERR "invalid rtdm_device version (%d, "
+			   "required %d)\n", device->struct_version,
+			   RTDM_DEVICE_STRUCT_VER);
 		    return -EINVAL;);
 
 	/* Sanity check: proc_name specified? */
 	XENO_ASSERT(RTDM, device->proc_name,
-		    xnlogerr("RTDM: no vfile (/proc) name specified\n");
+		    printk(XENO_ERR "no vfile (/proc) name specified for RTDM device\n");
 		    return -EINVAL;);
 
 	switch (device->device_flags & RTDM_DEVICE_TYPE_MASK) {
 	case RTDM_NAMED_DEVICE:
 		/* Sanity check: any open handler? */
 		XENO_ASSERT(RTDM, ANY_HANDLER(*device, open),
-			    xnlogerr("RTDM: missing open handler\n");
+			    printk(XENO_ERR "missing open handler for RTDM device\n");
 			    return -EINVAL;);
 		if (device->open_rt &&
 		    device->socket_rt != (void *)rtdm_no_support)
-			xnlogerr("RTDM: RT open handler is deprecated, "
-				 "driver requires update.\n");
+			printk(XENO_ERR "RT open handler is deprecated, "
+			       "RTDM driver requires update\n");
 		SET_DEFAULT_OP_IF_NULL(*device, open);
 		SET_DEFAULT_OP(*device, socket);
 		break;
@@ -231,12 +231,12 @@ int rtdm_dev_register(struct rtdm_device *device)
 	case RTDM_PROTOCOL_DEVICE:
 		/* Sanity check: any socket handler? */
 		XENO_ASSERT(RTDM, ANY_HANDLER(*device, socket),
-			    xnlogerr("RTDM: missing socket handler\n");
+			    printk(XENO_ERR "missing socket handler for RTDM device\n");
 			    return -EINVAL;);
 		if (device->socket_rt &&
 		    device->socket_rt != (void *)rtdm_no_support)
-			xnlogerr("RTDM: RT socket creation handler is "
-				 "deprecated, driver requires update.\n");
+			printk(XENO_ERR "RT socket creation handler is "
+			       "deprecated, RTDM driver requires update\n");
 		SET_DEFAULT_OP_IF_NULL(*device, socket);
 		SET_DEFAULT_OP(*device, open);
 		break;
@@ -248,13 +248,13 @@ int rtdm_dev_register(struct rtdm_device *device)
 	/* Sanity check: non-RT close handler?
 	 * (Always required for forced cleanup) */
 	if (!device->ops.close_nrt) {
-		xnlogerr("RTDM: missing non-RT close handler\n");
+		printk(XENO_ERR "missing non-RT close handler for RTDM device\n");
 		return -EINVAL;
 	}
 	if (device->ops.close_rt &&
 	    device->ops.close_rt != (void *)rtdm_no_support)
-		xnlogerr("RTDM: RT close handler is deprecated, driver "
-			 "requires update.\n");
+		printk(XENO_ERR "RT close handler is deprecated, RTDM driver "
+		       "requires update\n");
 	else
 		device->ops.close_rt = (void *)rtdm_no_support;
 
@@ -274,8 +274,8 @@ int rtdm_dev_register(struct rtdm_device *device)
 		    kmalloc(sizeof(struct rtdm_dev_context) +
 			    device->context_size, GFP_KERNEL);
 		if (!device->reserved.exclusive_context) {
-			xnlogerr("RTDM: no memory for exclusive context "
-				 "(context size: %ld)\n",
+			printk(XENO_ERR "no memory for exclusive context of RTDM device "
+			       "(context size: %ld)\n",
 				 (long)device->context_size);
 			return -ENOMEM;
 		}
@@ -339,9 +339,10 @@ int rtdm_dev_register(struct rtdm_device *device)
 			     existing_dev->protocol_family)
 			    && (device->socket_type ==
 				existing_dev->socket_type)) {
-				xnlogerr("RTDM: protocol %u:%u already "
-					 "exists\n", device->protocol_family,
-					 device->socket_type);
+				printk(XENO_ERR "protocol %u:%u already "
+				       "registered by RTDM device\n",
+				       device->protocol_family,
+				       device->socket_type);
 				ret = -EEXIST;
 				goto err;
 			}
@@ -426,8 +427,8 @@ int rtdm_dev_unregister(struct rtdm_device *device, unsigned int poll_delay)
 		}
 
 		if (!__test_and_set_bit(0, &warned))
-			xnlogwarn("RTDM: device %s still in use - waiting for "
-				  "release...\n", reg_dev->device_name);
+			printk(XENO_WARN "RTDM device %s still in use - waiting for"
+			       "release...\n", reg_dev->device_name);
 		msleep(poll_delay);
 		trace_mark(xn_rtdm, dev_poll, "device %p", device);
 

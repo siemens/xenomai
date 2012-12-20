@@ -432,7 +432,7 @@ void cobalt_reg_pkg_cleanup(void)
 	for (i = 0; i < cobalt_reg.maxfds; i++)
 		if (cobalt_reg.descs[i]) {
 #if XENO_DEBUG(POSIX)
-			xnprintf("Posix: destroying descriptor %d.\n", i);
+			printk(XENO_INFO "releasing descriptor %d\n", i);
 #endif /* XENO_DEBUG(POSIX) */
 			cobalt_desc_destroy(cobalt_reg.descs[i]);
 		}
@@ -442,8 +442,8 @@ void cobalt_reg_pkg_cleanup(void)
 		for (node = cobalt_reg.node_buckets[i];
 		     node;
 		     node = node->next)
-			xnprintf("Posix: node \"%s\" left aside.\n",
-				 node->name);
+		  printk(XENO_WARN "node \"%s\" left aside\n",
+			 node->name);
 	}
 #endif /* XENO_DEBUG(POSIX) */
 

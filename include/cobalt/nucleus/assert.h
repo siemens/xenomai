@@ -29,7 +29,7 @@
 #define XENO_ASSERT(subsystem,cond,action)  do {			\
 		if (unlikely(XENO_DEBUG(subsystem) && !(cond))) {	\
 			xntrace_panic_freeze();				\
-			xnlogerr("assertion failed at %s:%d (%s)\n",	\
+			printk(XENO_ERR "assertion failed at %s:%d (%s)\n",	\
 				 __FILE__, __LINE__, (#cond));		\
 			xntrace_panic_dump();			\
 			action;						\

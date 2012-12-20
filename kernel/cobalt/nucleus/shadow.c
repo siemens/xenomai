@@ -2067,8 +2067,8 @@ restart:
 			 */
 			goto propagate_syscall;
 
-		xnlogwarn("bad syscall %ld/%ld -- no skin loaded.\n",
-			  __xn_mux_id(regs), __xn_mux_op(regs));
+		printk(XENO_WARN "bad syscall %ld/%ld\n",
+		       __xn_mux_id(regs), __xn_mux_op(regs));
 
 		__xn_error_return(regs, -ENOSYS);
 		return EVENT_STOP;

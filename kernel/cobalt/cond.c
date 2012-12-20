@@ -477,7 +477,7 @@ void cobalt_condq_cleanup(cobalt_kqueues_t *q)
 		xnlock_put_irqrestore(&nklock, s);
 		cond_destroy_internal(link2cond(holder), q);
 #if XENO_DEBUG(POSIX)
-		xnprintf("Posix: destroying condition variable %p.\n",
+		printk(XENO_INFO "deleting Cobalt condvar %p\n",
 			 link2cond(holder));
 #endif /* XENO_DEBUG(POSIX) */
 		xnlock_get_irqsave(&nklock, s);

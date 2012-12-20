@@ -597,7 +597,7 @@ void cobalt_timerq_cleanup(cobalt_kqueues_t *q)
 		cobalt_timer_delete_inner(tm, q, 1);
 		xnlock_put_irqrestore(&nklock, s);
 #if XENO_DEBUG(POSIX)
-		xnprintf("Posix timer %u deleted\n", (unsigned) tm);
+		printk(XENO_INFO "deleting Cobalt timer %u\n", (unsigned)tm);
 #endif /* XENO_DEBUG(POSIX) */
 		xnlock_get_irqsave(&nklock, s);
 	}

@@ -61,7 +61,7 @@ static int __init __rtdm_init(void)
 
 	rtdm_initialised = 1;
 
-	xnprintf("starting RTDM services.\n");
+	printk(KERN_INFO "starting RTDM services\n");
 
 	return 0;
 
@@ -75,7 +75,7 @@ cleanup_pod:
 	xnpod_shutdown(err);
 
 fail:
-	xnlogerr("RTDM init failed, code %d.\n", err);
+	printk(XENO_ERR "RTDM init failed, code %d\n", err);
 	return err;
 }
 device_initcall(__rtdm_init);

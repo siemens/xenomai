@@ -1027,7 +1027,7 @@ static void usem_cleanup(cobalt_assoc_t *assoc)
 	nsem_t *nsem = sem2named_sem(sem);
 
 #if XENO_DEBUG(POSIX)
-	xnprintf("Posix: closing semaphore \"%s\".\n", nsem->nodebase.name);
+	printk(KERN_INFO "closing Cobalt semaphore \"%s\"\n", nsem->nodebase.name);
 #endif /* XENO_DEBUG(POSIX) */
 	sem_close(&nsem->descriptor.shadow_sem);
 	xnfree(usem);
@@ -1051,10 +1051,10 @@ void cobalt_semq_cleanup(cobalt_kqueues_t *q)
 		xnlock_put_irqrestore(&nklock, s);
 #if XENO_DEBUG(POSIX)
 		if (sem->flags & SEM_NAMED)
-			xnprintf("Posix: unlinking semaphore \"%s\".\n",
-				 sem2named_sem(sem)->nodebase.name);
+			printk(XENO_INFO "unlinking Cobalt semaphore \"%s\"\n",
+			       sem2named_sem(sem)->nodebase.name);
 		else
-			xnprintf("Posix: destroying semaphore %p.\n", sem);
+			printk(XENO_INFO "deleting Cobalt semaphore %p\n", sem);
 #endif /* XENO_DEBUG(POSIX) */
 		xnlock_get_irqsave(&nklock, s);
 		if (sem->flags & SEM_NAMED)

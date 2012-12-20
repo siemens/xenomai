@@ -66,7 +66,7 @@ static int __init __cobalt_init(void)
 {
 	int ret;
 
-	xnprintf("starting Cobalt services.\n");
+	printk(XENO_INFO "starting Cobalt services.\n");
 
 	ret = xnpod_init();
 	if (ret)
@@ -76,7 +76,7 @@ static int __init __cobalt_init(void)
 	if (ret) {
 		xnpod_shutdown(ret);
 	fail:
-		xnlogerr("Cobalt init failed, code %d.\n", ret);
+		printk(XENO_INFO "Cobalt init failed, code %d.\n", ret);
 		return ret;
 	}
 

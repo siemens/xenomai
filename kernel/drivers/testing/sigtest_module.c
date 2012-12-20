@@ -103,7 +103,7 @@ int SKIN_INIT(sigtest)
 {
 	int err;
 
-	xnprintf("starting sigtest services\n");
+	printk(XENO_INFO "starting sigtest services\n");
 
 	err = xnpod_init();
 	if (err)
@@ -125,7 +125,7 @@ int SKIN_INIT(sigtest)
 
 void SKIN_EXIT(sigtest)
 {
-	xnprintf("stopping sigtest services\n");
+	printk(XENO_INFO "stopping sigtest services\n");
 	xntimer_destroy(&sigtest_timer);
 	xnshadow_unregister_interface(muxid);
 	xnpod_shutdown(XNPOD_NORMAL_EXIT);

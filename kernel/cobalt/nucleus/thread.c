@@ -87,15 +87,17 @@ int xnthread_init(struct xnthread *thread,
 
 #if CONFIG_XENO_OPT_SYS_STACKPOOLSZ == 0
 	if (stacksize > 0) {
-		xnlogerr("%s: cannot create kernel thread '%s' (CONFIG_XENO_OPT_SYS_STACKPOOLSZ == 0)\n",
-			 __FUNCTION__, attr->name);
+		printk(XENO_ERR
+		       "%s: cannot create kernel thread '%s' (CONFIG_XENO_OPT_SYS_STACKPOOLSZ == 0)\n",
+		       __FUNCTION__, attr->name);
 		return -ENOMEM;
 	}
 #else
 	ret = xnarch_alloc_stack(tcb, stacksize);
 	if (ret) {
-		xnlogerr("%s: no stack for kernel thread '%s' (raise CONFIG_XENO_OPT_SYS_STACKPOOLSZ)\n",
-			 __FUNCTION__, attr->name);
+		printk(XENO_ERR
+		       "%s: no stack for kernel thread '%s' (raise CONFIG_XENO_OPT_SYS_STACKPOOLSZ)\n",
+		       __FUNCTION__, attr->name);
 		return ret;
 	}
 #endif

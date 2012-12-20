@@ -388,7 +388,7 @@ int rtdm_proc_register_device(struct rtdm_device *device)
 	return 0;
 
       err_out:
-	xnlogerr("RTDM: error while creating device vfile\n");
+	printk(XENO_ERR "error while creating RTDM device vfile\n");
 	return ret;
 }
 

@@ -1041,8 +1041,8 @@ static void uqd_cleanup(cobalt_assoc_t *assoc)
 {
 	cobalt_ufd_t *ufd = assoc2ufd(assoc);
 #if XENO_DEBUG(POSIX)
-	xnprintf("Posix: closing message queue descriptor %lu.\n",
-		 cobalt_assoc_key(assoc));
+	printk(XENO_INFO "closing Cobalt mq descriptor 0x%lu\n",
+	       cobalt_assoc_key(assoc));
 #endif /* XENO_DEBUG(POSIX) */
 	mq_close(ufd->kfd);
 	xnfree(ufd);
@@ -1417,8 +1417,8 @@ void cobalt_mq_pkg_cleanup(void)
 		xnlock_put_irqrestore(&nklock, s);
 		cobalt_mq_destroy(mq);
 #if XENO_DEBUG(POSIX)
-		xnprintf("Posix: unlinking message queue \"%s\".\n",
-			 mq->nodebase.name);
+		printk(XENO_INFO "unlinking Cobalt mq \"%s\"\n",
+		       mq->nodebase.name);
 #endif /* XENO_DEBUG(POSIX) */
 		xnfree(mq);
 		xnlock_get_irqsave(&nklock, s);

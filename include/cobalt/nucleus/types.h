@@ -122,11 +122,9 @@ typedef atomic_flags_t xnflags_t;
 #define minval(a,b) ((a) < (b) ? (a) : (b))
 #define maxval(a,b) ((a) > (b) ? (a) : (b))
 
-#define xnprintf(fmt,args...)  printk(KERN_INFO "Xenomai: " fmt , ##args)
-#define xnloginfo(fmt,args...) printk(KERN_INFO "Xenomai: " fmt , ##args)
-#define xnlogwarn(fmt,args...) printk(KERN_WARNING "Xenomai: " fmt , ##args)
-#define xnlogerr(fmt,args...)  printk(KERN_ERR "Xenomai: " fmt , ##args)
-#define xnlogerr_noprompt(fmt,args...) printk(KERN_ERR fmt , ##args)
+#define XENO_INFO KERN_INFO    "[Xenomai] "
+#define XENO_WARN KERN_WARNING "[Xenomai] "
+#define XENO_ERR  KERN_ERR     "[Xenomai] "
 
 void xnpod_fatal(const char *format, ...);
 
