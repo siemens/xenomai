@@ -2829,6 +2829,47 @@ static int __munmap_epilogue(struct pt_regs *regs)
 
 #endif /* !CONFIG_XENO_OPT_POSIX_SHM */
 
+#ifdef CONFIG_XENO_OPT_SCHED_TP
+/*
+ * int __sched_setconfig_np(int cpu, int policy, union sched_config *p, size_t len)
+ */
+static int __sched_setconfig_np(struct pt_regs *regs)
+{
+	union sched_config __user *u_config, *buf;
+	int len, ret, cpu, policy;
+
+	cpu = __xn_reg_arg1(regs);
+	if (cpu < 0 || cpu >= NR_CPUS || !cpu_online(cpu))
+		return -EINVAL;
+
+	policy = __xn_reg_arg2(regs);
+	u_config = (union sched_config __user *)__xn_reg_arg3(regs);
+	len = __xn_reg_arg4(regs);
+	if (len == 0)
+		return -EINVAL;
+
+	buf = xnmalloc(len);
+	if (buf == NULL)
+		return -ENOMEM;
+
+	if (__xn_safe_copy_from_user(buf, (void __user *)u_config, len)) {
+		ret = -EFAULT;
+		goto out;
+	}
+
+	ret = -sched_setconfig_np(cpu, policy, buf, len);
+out:
+	xnfree(buf);
+
+	return ret;
+}
+
+#else /* !CONFIG_XENO_OPT_SCHED_TP */
+
+#define __sched_setconfig_np        __pse51_call_not_available
+
+#endif /* !CONFIG_XENO_OPT_SCHED_TP */
+
 int __pse51_call_not_available(struct pt_regs *regs)
 {
 	return -ENOSYS;
@@ -2940,6 +2981,7 @@ static xnsysent_t __systab[] = {
 	[__pse51_condattr_setpshared] =
 	    {&__pthread_condattr_setpshared, __xn_exec_any},
 	[__pse51_select] = {&__select, __xn_exec_primary},
+	[__pse51_sched_setconfig_np] = {&__sched_setconfig_np, __xn_exec_any},
 };
 
 static void __shadow_delete_hook(xnthread_t *thread)

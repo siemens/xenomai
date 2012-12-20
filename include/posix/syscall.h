@@ -104,6 +104,7 @@
 #define __pse51_select                77
 #define __pse51_thread_setschedparam_ex	78
 #define __pse51_thread_getschedparam_ex	79
+#define __pse51_sched_setconfig_np	80
 
 #ifdef __KERNEL__
 

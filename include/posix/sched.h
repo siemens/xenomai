@@ -66,10 +66,10 @@ int __real_sched_yield(void);
 
 #ifndef SCHED_SPORADIC
 #define SCHED_SPORADIC		10
-#define sched_ss_low_priority	ss.__sched_low_priority
-#define sched_ss_repl_period	ss.__sched_repl_period
-#define sched_ss_init_budget	ss.__sched_init_budget
-#define sched_ss_max_repl	ss.__sched_max_repl
+#define sched_ss_low_priority	sched_u.ss.__sched_low_priority
+#define sched_ss_repl_period	sched_u.ss.__sched_repl_period
+#define sched_ss_init_budget	sched_u.ss.__sched_init_budget
+#define sched_ss_max_repl	sched_u.ss.__sched_max_repl
 #endif	/* !SCHED_SPORADIC */
 
 struct __sched_ss_param {
@@ -79,10 +79,51 @@ struct __sched_ss_param {
 	int __sched_max_repl;
 };
 
+#ifndef SCHED_TP
+#define SCHED_TP		11
+#define sched_tp_partition	sched_u.tp.__sched_partition
+#endif	/* !SCHED_TP */
+
+struct __sched_tp_param {
+	int __sched_partition;
+};
+
 struct sched_param_ex {
 	int sched_priority;
-	struct __sched_ss_param ss;
+	union {
+		struct __sched_ss_param ss;
+		struct __sched_tp_param tp;
+	} sched_u;
 };
+
+struct sched_tp_window {
+	struct timespec offset;
+	struct timespec duration;
+	int ptid;
+};
+
+struct __sched_config_tp {
+	int nr_windows;
+	struct sched_tp_window windows[0];
+};
+
+union sched_config {
+	struct __sched_config_tp tp;
+};
+
+#define sched_tp_confsz(nr_win) \
+  (sizeof(struct __sched_config_tp) + nr_win * sizeof(struct sched_tp_window))
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int sched_setconfig_np(int cpu, int policy,
+		       union sched_config *config, size_t len);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __sched_extensions_defined */
 

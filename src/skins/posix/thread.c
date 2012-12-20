@@ -316,6 +316,14 @@ int pthread_set_name_np(pthread_t thread, const char *name)
 				  __pse51_thread_set_name, thread, name);
 }
 
+int sched_setconfig_np(int cpu, int policy,
+		       union sched_config *config, size_t len)
+{
+	return -XENOMAI_SKINCALL4(__pse51_muxid,
+				  __pse51_sched_setconfig_np,
+				  cpu, policy, config, len);
+}
+
 int __wrap_pthread_kill(pthread_t thread, int sig)
 {
 	int err;

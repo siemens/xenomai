@@ -11,7 +11,8 @@ test_PROGRAMS = \
 	cond-torture-posix \
 	cond-torture-native \
 	check-vdso \
-	rtdm
+	rtdm \
+	sched-tp
 
 arith_SOURCES = arith.c arith-noinline.c arith-noinline.h
 
@@ -117,5 +118,18 @@ rtdm_LDFLAGS = $(XENO_POSIX_WRAPPERS) @XENO_USER_LDFLAGS@
 rtdm_LDADD = \
 	../../skins/posix/libpthread_rt.la \
 	../../skins/native/libnative.la \
+	../../skins/common/libxenomai.la \
+	-lpthread -lrt -lm
+
+sched_tp_SOURCES = sched-tp.c
+
+sched_tp_CPPFLAGS = \
+	-I$(top_srcdir)/include/posix @XENO_USER_CFLAGS@ -g -DXENO_POSIX \
+	-I$(top_srcdir)/include
+
+sched_tp_LDFLAGS = $(XENO_POSIX_WRAPPERS) @XENO_USER_LDFLAGS@
+
+sched_tp_LDADD = \
+	../../skins/posix/libpthread_rt.la \
 	../../skins/common/libxenomai.la \
 	-lpthread -lrt -lm
