@@ -59,10 +59,10 @@ static inline void xnarch_switch_threads(xnarchtcb_t *out_tcb,
 			     "popl %%edi\n\t"
 			     "popl %%ecx\n\t"
 			     "popfl\n\t":	/* no output */
-			     :"m"(out_tcb->espp),
-			      "m"(out_tcb->eipp),
-			      "m"(in_tcb->espp),
-			      "m"(in_tcb->eipp),
+			     :"m"(out_tcb->spp),
+			      "m"(out_tcb->ipp),
+			      "m"(in_tcb->spp),
+			      "m"(in_tcb->ipp),
 			      "b"(out_tcb),
 			      "S"(in_tcb), "a"(outproc), "d"(inproc));
 
@@ -90,11 +90,13 @@ static inline void xnarch_switch_threads(xnarchtcb_t *out_tcb,
 			     "=&c"(ecx_out),
 			     "=S"(esi_out),
 			     "=D"(edi_out), "+a"(outproc), "+d"(inproc)
-			     :"m"(out_tcb->espp),
-			      "m"(out_tcb->eipp),
-			      "m"(in_tcb->espp), "m"(in_tcb->eipp));
+			     :"m"(out_tcb->spp),
+			      "m"(out_tcb->ipp),
+			      "m"(in_tcb->spp), "m"(in_tcb->ipp));
 
 #endif /* GCC version < 3.2 */
 }
+
+#define xnarch_thread_head()	do { } while (0)
 
 #endif /* !_XENO_ASM_X86_SWITCH_32_H */

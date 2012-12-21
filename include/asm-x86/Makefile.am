@@ -19,8 +19,6 @@ includesub_HEADERS =	\
 	switch_64.h	\
 	switch.h	\
 	syscall.h	\
-	system_32.h	\
-	system_64.h	\
 	system.h	\
 	wrappers_32.h	\
 	wrappers_64.h	\
