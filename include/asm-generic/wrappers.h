@@ -99,10 +99,6 @@
 #define __copy_to_user_inatomic		__copy_to_user
 #define __copy_from_user_inatomic	__copy_from_user
 
-/* Seqfiles */
-#define SEQ_START_TOKEN ((void *)1)
-#define SEQ_SKIP 	0	/* not implemented. */
-
 /* Sched and process flags */
 #define MAX_RT_PRIO 100
 #define task_cpu(p) ((p)->processor)
@@ -366,8 +362,6 @@ static inline void *kzalloc(size_t size, int flags)
 
 	return ptr;
 }
-
-#define cpu_online(cpu)               (cpu_online_map & (1UL << (cpu)))
 
 #else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0) */
 
@@ -721,7 +715,14 @@ static inline void wrap_proc_dir_entry_owner(struct proc_dir_entry *entry)
 
 #ifndef cpu_online_map
 #define cpu_online_mask (&cpu_online_map)
-#endif
+#ifndef cpu_online
+#ifdef CONFIG_SMP
+#define cpu_online(cpu)	(cpu_online_map & (1UL << (cpu)))
+#else /* !CONFIG_SMP */
+#define cpu_online(cpu)	((cpu) == 0)
+#endif /* !CONFIG_SMP */
+#endif /* !cpu_online */
+#endif /* !cpu_online_map */
 
 static inline
 unsigned long vm_mmap(struct file *file, unsigned long addr,
@@ -739,6 +740,14 @@ unsigned long vm_mmap(struct file *file, unsigned long addr,
 }
 
 #endif /* LINUX_VERSION_CODE < 3.4.0 */
+
+#include <linux/seq_file.h>
+#ifndef SEQ_START_TOKEN
+#define SEQ_START_TOKEN ((void *)1)
+#endif
+#ifndef SEQ_SKIP
+#define SEQ_SKIP 	0	/* not implemented. */
+#endif
 
 #if IPIPE_CORE_APIREV >= 2
 #define wrap_select_timers(mask) ipipe_select_timers(mask)
