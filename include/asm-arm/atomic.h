@@ -45,8 +45,8 @@ xnarch_atomic_set(xnarch_atomic_t *ptr, unsigned long val)
         __sync_val_compare_and_swap(&(v)->counter,      \
                                     (unsigned long)(o), \
                                     (unsigned long)(n))
-#else /* CONFIG_XENO_ATOMIC_BUILTINS */
+#else /* !CONFIG_XENO_ATOMIC_BUILTINS */
 #include <asm/xenomai/atomic_asm.h>
-#endif /* CONFIG_XENO_ATOMIC_BUILTINS */
+#endif /* !CONFIG_XENO_ATOMIC_BUILTINS */
 
 #endif /* !_XENO_ASM_ARM_ATOMIC_H */
