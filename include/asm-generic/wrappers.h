@@ -715,6 +715,7 @@ static inline void wrap_proc_dir_entry_owner(struct proc_dir_entry *entry)
 
 #ifndef cpu_online_map
 #define cpu_online_mask (&cpu_online_map)
+#endif /* !cpu_online_map */
 #ifndef cpu_online
 #ifdef CONFIG_SMP
 #define cpu_online(cpu)	(cpu_online_map & (1UL << (cpu)))
@@ -722,7 +723,6 @@ static inline void wrap_proc_dir_entry_owner(struct proc_dir_entry *entry)
 #define cpu_online(cpu)	((cpu) == 0)
 #endif /* !CONFIG_SMP */
 #endif /* !cpu_online */
-#endif /* !cpu_online_map */
 
 static inline
 unsigned long vm_mmap(struct file *file, unsigned long addr,
