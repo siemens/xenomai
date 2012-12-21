@@ -367,6 +367,8 @@ static inline void *kzalloc(size_t size, int flags)
 	return ptr;
 }
 
+#define cpu_online(cpu)               (cpu_online_map & (1UL << (cpu)))
+
 #else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0) */
 
 #define compat_module_param_array(name, type, count, perm) \
