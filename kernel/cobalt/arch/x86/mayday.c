@@ -92,22 +92,6 @@ void xnarch_setup_mayday_page(void *page)
 	/* no cache flush required. */
 }
 
-void xnarch_handle_mayday(struct xnarchtcb *tcb, struct pt_regs *regs,
-			  unsigned long tramp)
-{
-	tcb->mayday.esp = regs->sp;
-	tcb->mayday.eip = regs->ip;
-	tcb->mayday.eax = regs->ax;
-	regs->ip = tramp;
-}
-
-void xnarch_fixup_mayday(struct xnarchtcb *tcb, struct pt_regs *regs)
-{
-	regs->ip = tcb->mayday.eip;
-	regs->ax = tcb->mayday.eax;
-	regs->sp = tcb->mayday.esp;
-}
-
 #else /* CONFIG_X86_64 */
 
 void xnarch_setup_mayday_page(void *page)
@@ -143,21 +127,23 @@ void xnarch_setup_mayday_page(void *page)
 	/* no cache flush required. */
 }
 
+#endif /* CONFIG_X86_64 */
+
 void xnarch_handle_mayday(struct xnarchtcb *tcb, struct pt_regs *regs,
 			  unsigned long tramp)
 {
-	tcb->mayday.eip = regs->ip;
-	tcb->mayday.eax = regs->ax;
+	tcb->mayday.sp = regs->sp;
+	tcb->mayday.ip = regs->ip;
+	tcb->mayday.ax = regs->ax;
 	regs->ip = tramp;
 }
 
 void xnarch_fixup_mayday(struct xnarchtcb *tcb, struct pt_regs *regs)
 {
-	regs->ip = tcb->mayday.eip;
-	regs->ax = tcb->mayday.eax;
+	regs->ip = tcb->mayday.ip;
+	regs->ax = tcb->mayday.ax;
+	regs->sp = tcb->mayday.sp;
 }
-
-#endif /* CONFIG_X86_64 */
 
 void xnarch_call_mayday(struct task_struct *p)
 {

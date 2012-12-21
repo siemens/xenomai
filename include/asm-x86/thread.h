@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2007 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2001-20012 Philippe Gerum <rpm@xenomai.org>.
  * Copyright (C) 2004-2006 Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>.
  * Copyright (C) 2004 The HYADES Project (http://www.hyades-itea.org).
  *
@@ -37,37 +37,24 @@ struct xnarchtcb {
 	x86_fpustate i387 __attribute__ ((aligned (16)));
 	unsigned int stacksize;
 	unsigned long *stackbase;
-#ifdef CONFIG_X86_32
-	unsigned long esp;
-	unsigned long eip;
-#else /* CONFIG_X86_64 */
-	unsigned long rsp;
-	unsigned long rip;
-	unsigned long *rspp;
-	unsigned long *ripp;
+	unsigned long sp;
+	unsigned long *spp;
+	unsigned long ip;
+	unsigned long *ipp;
+	x86_fpustate *fpup;
 #ifdef CONFIG_CC_STACKPROTECTOR
 	unsigned long canary;
 #endif
-#endif /* CONFIG_X86_64 */
 	struct {
-		unsigned long eip;
-		unsigned long eax;
-#ifdef CONFIG_X86_32
-		unsigned long esp;
-#endif
+		unsigned long ip;
+		unsigned long ax;
+		unsigned long sp;
 	} mayday;
-
 	struct task_struct *user_task;
 	struct task_struct *active_task;
-
-	unsigned long *espp;
-	unsigned long *eipp;
-	x86_fpustate *fpup;
-
 	unsigned is_root: 1;
 	unsigned ts_usedfpu: 1;
 	unsigned cr0_ts: 1;
-
 	struct xnthread *self;
 	int imask;
 	const char *name;
@@ -84,19 +71,15 @@ struct xnarchtcb {
 #warning "Xenomai: outdated gcc/x86_32 release detected"
 #error "           please upgrade to gcc 3.2 or later"
 #endif
-
 #define XNARCH_THREAD_STACKSZ 4096
+#else /* CONFIG_X86_64 */
+#define XNARCH_THREAD_STACKSZ 8192
+#endif /* CONFIG_X86_64 */
 
 static inline int xnarch_shadow_p(struct xnarchtcb *tcb, struct task_struct *task)
 {
-	return tcb->espp == &task->thread.sp;
+	return tcb->spp == &task->thread.sp;
 }
-
-#else /* CONFIG_X86_64 */
-
-#define XNARCH_THREAD_STACKSZ 8192
-
-#endif /* CONFIG_X86_64 */
 
 #define xnarch_stack_size(tcb)  ((tcb)->stacksize)
 #define xnarch_stack_base(tcb)	((tcb)->stackbase)

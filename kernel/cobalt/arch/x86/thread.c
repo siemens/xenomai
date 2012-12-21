@@ -27,6 +27,8 @@
 #include <nucleus/heap.h>
 #include <nucleus/clock.h>
 
+asmlinkage static void thread_trampoline(struct xnarchtcb *tcb);
+
 #ifdef CONFIG_X86_32
 
 static inline void do_switch_threads(struct xnarchtcb *out_tcb,
@@ -56,38 +58,26 @@ static inline void do_switch_threads(struct xnarchtcb *out_tcb,
 			     "=&c"(ecx_out),
 			     "=S"(esi_out),
 			     "=D"(edi_out), "+a"(outproc), "+d"(inproc)
-			     :"m"(out_tcb->espp),
-			      "m"(out_tcb->eipp),
-			      "m"(in_tcb->espp), "m"(in_tcb->eipp));
-}
-
-asmlinkage static void thread_trampoline(struct xnthread *self,
-					 int imask, void (*entry) (void *),
-					 void *cookie)
-{
-	/* xnpod_welcome_thread() will do clts() if needed. */
-	stts();
-	xnpod_welcome_thread(self, imask);
-	entry(cookie);
-	xnpod_delete_thread(self);
+			     :"m"(out_tcb->spp),
+			      "m"(out_tcb->ipp),
+			      "m"(in_tcb->spp), "m"(in_tcb->ipp));
 }
 
 void xnarch_init_thread(struct xnarchtcb *tcb,
 			void (*entry) (void *),	void *cookie,
 			int imask, struct xnthread *thread, char *name)
 {
-	unsigned long **psp = (unsigned long **)&tcb->esp;
+	unsigned long **psp = (unsigned long **)&tcb->sp;
 
-	tcb->eip = (unsigned long)&thread_trampoline;
-	tcb->esp = (unsigned long)tcb->stackbase;
+	tcb->ip = (unsigned long)thread_trampoline;
+	tcb->sp = (unsigned long)tcb->stackbase;
 	*psp = (unsigned long *)
 		(((unsigned long)*psp + tcb->stacksize - 0x10) & ~0xf);
-	*--(*psp) = (unsigned long)cookie;
-	*--(*psp) = (unsigned long)entry;
-	*--(*psp) = (unsigned long)imask;
-	*--(*psp) = (unsigned long)thread;
+	*--(*psp) = (unsigned long)tcb;
 	*--(*psp) = 0;
 }
+
+#define thread_prologue		do { } while (0)
 
 #else /* CONFIG_X86_64 */
 
@@ -210,26 +200,19 @@ struct xnarch_x8664_initstack {
 			     : "memory", "cc" __SWITCH_CLOBBER_LIST);	\
 	})
 
-asmlinkage void __thread_head(void);
+#define thread_prologue							\
+asm volatile(".globl __thread_prologue\n\t"				\
+	       "__thread_prologue:\n\t"					\
+	       init_kernel_canary					\
+	       "popq	%%rbp\n\t"					\
+	       "popfq\n\t"						\
+	       "popq	%%rdi\n\t"					\
+	       "ret\n\t"						\
+	       : init_canary_oparam					\
+	       : /* no input */						\
+	       : "cc", "memory" __HEAD_CLOBBER_LIST)
 
-asmlinkage void thread_trampoline(struct xnarchtcb *tcb)
-{
-	/* xnpod_welcome_thread() will do clts() if needed. */
-	stts();
-	xnpod_welcome_thread(tcb->self, tcb->imask);
-	tcb->entry(tcb->cookie);
-	xnpod_delete_thread(tcb->self);
-	asm volatile(".globl __thread_head\n\t"				\
-		     "__thread_head:\n\t"				\
-		     init_kernel_canary					\
-		     "popq	%%rbp\n\t"				\
-		     "popfq\n\t"					\
-		     "popq	%%rdi\n\t"				\
-		     "ret\n\t"						\
-		     : init_canary_oparam				\
-		     : /* no input */					\
-		     : "cc", "memory" __HEAD_CLOBBER_LIST);
-}
+asmlinkage void __thread_prologue(void);
 
 void xnarch_init_thread(struct xnarchtcb *tcb,
 			void (*entry)(void *), void *cookie,
@@ -254,8 +237,8 @@ void xnarch_init_thread(struct xnarchtcb *tcb,
 	tcb->canary = (unsigned long)xnclock_read_raw() ^ childregs->arg;
 	childregs->canary = tcb->canary;
 #endif
-	tcb->rsp = (unsigned long)childregs;
-	tcb->rip = (unsigned long)&__thread_head; /* Will branch there at startup. */
+	tcb->sp = (unsigned long)childregs;
+	tcb->ip = (unsigned long)__thread_prologue; /* Will branch there at startup. */
 	tcb->entry = entry;
 	tcb->cookie = cookie;
 	tcb->self = thread;
@@ -264,6 +247,16 @@ void xnarch_init_thread(struct xnarchtcb *tcb,
 }
 
 #endif /* CONFIG_X86_64 */
+
+asmlinkage static void thread_trampoline(struct xnarchtcb *tcb)
+{
+	/* xnpod_welcome_thread() will do clts() if needed. */
+	stts();
+	xnpod_welcome_thread(tcb->self, tcb->imask);
+	tcb->entry(tcb->cookie);
+	xnpod_delete_thread(tcb->self);
+	thread_prologue;
+}
 
 void xnarch_leave_root(struct xnarchtcb *rootcb)
 {
@@ -274,8 +267,8 @@ void xnarch_leave_root(struct xnarchtcb *rootcb)
 	rootcb->ts_usedfpu = wrap_test_fpu_used(current) != 0;
 	rootcb->cr0_ts = (read_cr0() & 8) != 0;
 #ifdef CONFIG_X86_64
-	rootcb->rspp = &current->thread.sp;
-	rootcb->ripp = &current->thread.rip;
+	rootcb->spp = &current->thread.sp;
+	rootcb->ipp = &current->thread.rip;
 #endif
 	/* So that xnarch_save_fpu() will operate on the right FPU area. */
 	if (rootcb->cr0_ts || rootcb->ts_usedfpu)
@@ -335,8 +328,8 @@ void xnarch_switch_to(struct xnarchtcb *out_tcb, struct xnarchtcb *in_tcb)
 	}
 #else /* CONFIG_X86_64 */
 	do_switch_threads(prev, next,
-			  out_tcb->rspp, in_tcb->rspp,
-			  out_tcb->ripp, in_tcb->ripp,
+			  out_tcb->spp, in_tcb->spp,
+			  out_tcb->ipp, in_tcb->ipp,
 			  switch_canary(in_tcb));
 #endif /* CONFIG_X86_64 */
 
@@ -534,14 +527,9 @@ void xnarch_init_root_tcb(struct xnarchtcb *tcb,
 {
 	tcb->user_task = current;
 	tcb->active_task = NULL;
-#ifdef CONFIG_X86_32
-	tcb->esp = 0;
-	tcb->espp = &tcb->esp;
-	tcb->eipp = &tcb->eip;
-#else
-	tcb->rspp = &tcb->rsp;
-	tcb->ripp = &tcb->rip;
-#endif
+	tcb->sp = 0;
+	tcb->spp = &tcb->sp;
+	tcb->ipp = &tcb->ip;
 	tcb->fpup = NULL;
 	tcb->entry = NULL;
 	tcb->cookie = NULL;
@@ -559,13 +547,12 @@ void xnarch_init_shadow_tcb(struct xnarchtcb *tcb,
 
 	tcb->user_task = task;
 	tcb->active_task = NULL;
+	tcb->sp = 0;
+	tcb->spp = &task->thread.sp;
 #ifdef CONFIG_X86_32
-	tcb->esp = 0;
-	tcb->espp = &task->thread.sp;
-	tcb->eipp = &task->thread.ip;
+	tcb->ipp = &task->thread.ip;
 #else
-	tcb->rspp = &task->thread.sp;
-	tcb->ripp = &task->thread.rip; /* <!> raw naming intended. */
+	tcb->ipp = &task->thread.rip; /* <!> raw naming intended. */
 #endif
 	tcb->fpup = x86_fpustate_ptr(&task->thread);
 	tcb->entry = NULL;
@@ -579,14 +566,9 @@ void xnarch_init_tcb(struct xnarchtcb *tcb)
 {
 	tcb->user_task = NULL;
 	tcb->active_task = NULL;
-#ifdef CONFIG_X86_32
-	tcb->espp = &tcb->esp;
-	tcb->eipp = &tcb->eip;
-#else
-	tcb->rspp = &tcb->rsp;
-	tcb->ripp = &tcb->rip;
-	tcb->mayday.eip = 0;
-#endif
+	tcb->spp = &tcb->sp;
+	tcb->ipp = &tcb->ip;
+	tcb->mayday.ip = 0;
 	tcb->fpup = &tcb->i387;
 	tcb->is_root = 0;
 }
