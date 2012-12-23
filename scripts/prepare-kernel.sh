@@ -601,6 +601,11 @@ for d in include/* ; do
         patch_link r n $d $destdir
     fi
 done
+if test -r $linux_tree/arch/$linux_arch/include/asm/ipipe.h -a \
+    -d $xenomai_root/include/asm-$xenomai_arch/ipipe
+then
+    patch_link n n include/asm-$xenomai_arch/ipipe arch/$linux_arch/include/ipipe
+fi
 
 if test "x$output_patch" != "x"; then
     if test x$verbose = x1; then
