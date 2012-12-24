@@ -105,6 +105,7 @@
 #define sc_cobalt_event_wait            90
 #define sc_cobalt_event_sync            91
 #define sc_cobalt_event_destroy         92
+#define sc_cobalt_sched_setconfig_np	93
 
 #ifdef __KERNEL__
 

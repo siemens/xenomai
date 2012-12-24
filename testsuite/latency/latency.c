@@ -468,6 +468,8 @@ void faulthand(int sig)
 	kill(getpid(), sig);
 }
 
+#ifdef CONFIG_XENO_COBALT
+
 static const char *reason_str[] = {
 	[SIGDEBUG_UNDEFINED] = "latency: received SIGXCPU for unknown reason",
 	[SIGDEBUG_MIGRATE_SIGNAL] = "received signal",
@@ -480,7 +482,7 @@ static const char *reason_str[] = {
 	"(period too short?)",
 };
 
-void sigdebug(int sig, siginfo_t *si, void *context)
+static void sigdebug(int sig, siginfo_t *si, void *context)
 {
 	const char fmt[] = "Mode switch detected (reason: %s), aborting.\n"
 		"Enable XENO_OPT_DEBUG_TRACE_RELAX to find the cause.\n";
@@ -512,10 +514,12 @@ void sigdebug(int sig, siginfo_t *si, void *context)
 	kill(getpid(), sig);
 }
 
+#endif /* CONFIG_XENO_COBALT */
+
 int main(int argc, char *const *argv)
 {
+	struct sigaction sa __attribute__((unused));
 	int cpu = 0, c, err, sig;
-	struct sigaction sa;
 	char task_name[16];
 	sigset_t mask;
 
@@ -653,10 +657,12 @@ int main(int argc, char *const *argv)
 	sigaddset(&mask, SIGALRM);
 	pthread_sigmask(SIG_BLOCK, &mask, NULL);
 
+#ifdef CONFIG_XENO_COBALT
 	sigemptyset(&sa.sa_mask);
 	sa.sa_sigaction = sigdebug;
 	sa.sa_flags = SA_SIGINFO;
 	sigaction(SIGDEBUG, &sa, NULL);
+#endif
 
 	if (freeze_max) {
 		/* If something goes wrong, we want to freeze the current

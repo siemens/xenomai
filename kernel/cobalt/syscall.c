@@ -309,6 +309,7 @@ static struct xnsysent __systab[] = {
 	SKINCALL_DEF(sc_cobalt_event_destroy, cobalt_event_destroy, any),
 	SKINCALL_DEF(sc_cobalt_event_wait, cobalt_event_wait, primary),
 	SKINCALL_DEF(sc_cobalt_event_sync, cobalt_event_sync, any),
+	SKINCALL_DEF(sc_cobalt_sched_setconfig_np, cobalt_sched_setconfig_np, any),
 };
 
 static void *cobalt_eventcb(int event, void *data)

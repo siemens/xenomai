@@ -375,6 +375,14 @@ int pthread_probe_np(pid_t tid)
 				 sc_cobalt_thread_probe, tid);
 }
 
+int sched_setconfig_np(int cpu, int policy,
+		       union sched_config *config, size_t len)
+{
+	return -XENOMAI_SKINCALL4(__cobalt_muxid,
+				  sc_cobalt_sched_setconfig_np,
+				  cpu, policy, config, len);
+}
+
 int __wrap_pthread_kill(pthread_t thread, int sig)
 {
 	int ret;

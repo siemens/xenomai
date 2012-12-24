@@ -261,8 +261,8 @@ pthread_getschedparam(pthread_t tid, int *pol, struct sched_param *par)
  * that also supports Xenomai-specific or additional POSIX scheduling
  * policies, which are not available with the host Linux environment.
  *
- * Typically, SCHED_SPORADIC parameters can be retrieved from this
- * call.
+ * Typically, SCHED_SPORADIC or SCHED_TP parameters can be retrieved
+ * from this call.
  *
  * @param tid target thread;
  *
@@ -314,6 +314,12 @@ pthread_getschedparam_ex(pthread_t tid, int *pol, struct sched_param_ex *par)
 		ns2ts(&par->sched_ss_repl_period, thread->pss->param.repl_period);
 		ns2ts(&par->sched_ss_init_budget, thread->pss->param.init_budget);
 		par->sched_ss_max_repl = thread->pss->param.max_repl;
+		goto unlock_and_exit;
+	}
+#endif
+#ifdef CONFIG_XENO_OPT_SCHED_TP
+	if (base_class == &xnsched_class_tp) {
+		par->sched_tp_partition = thread->tps - thread->sched->tp.partitions;
 		goto unlock_and_exit;
 	}
 #endif
@@ -723,6 +729,7 @@ pthread_setschedparam(pthread_t tid, int pol, const struct sched_param *par)
 		/* falldown wanted */
 	case SCHED_FIFO:
 	case SCHED_SPORADIC:
+	case SCHED_TP:
 		if (prio < COBALT_MIN_PRIORITY || prio > COBALT_MAX_PRIORITY)
 			goto fail;
 		break;
@@ -757,8 +764,8 @@ pthread_setschedparam(pthread_t tid, int pol, const struct sched_param *par)
  * that supports Xenomai-specific or additional scheduling policies,
  * which are not available with the host Linux environment.
  *
- * Typically, a Xenomai thread policy can be set to SCHED_SPORADIC
- * using this call.
+ * Typically, a Xenomai thread policy can be set to SCHED_SPORADIC or
+ * SCHED_TP using this call.
  *
  * @param tid target thread;
  *
@@ -782,7 +789,7 @@ pthread_setschedparam(pthread_t tid, int pol, const struct sched_param *par)
 static inline int pthread_setschedparam_ex(pthread_t tid, int pol,
 					   const struct sched_param_ex *par)
 {
-	union xnsched_policy_param param;
+	union xnsched_policy_param param __attribute__((unused));
 	struct sched_param short_param;
 	xnticks_t tslice;
 	int ret = 0;
@@ -831,8 +838,15 @@ static inline int pthread_setschedparam_ex(pthread_t tid, int pol,
 		ret = xnpod_set_thread_schedparam(&tid->threadbase,
 						  &xnsched_class_sporadic, &param);
 		break;
-#else
-		(void)param;
+#endif
+#ifdef CONFIG_XENO_OPT_SCHED_TP
+	case SCHED_TP:
+		xnpod_set_thread_tslice(&tid->threadbase, XN_INFINITE);
+		param.tp.prio = par->sched_priority;
+		param.tp.ptid = par->sched_tp_partition;
+		ret = xnpod_set_thread_schedparam(&tid->threadbase,
+						  &xnsched_class_tp, &param);
+		break;
 #endif
 	}
 
@@ -1304,6 +1318,7 @@ int cobalt_sched_min_prio(int policy)
 	case SCHED_FIFO:
 	case SCHED_RR:
 	case SCHED_SPORADIC:
+	case SCHED_TP:
 	case SCHED_COBALT:
 		return COBALT_MIN_PRIORITY;
 
@@ -1321,6 +1336,7 @@ int cobalt_sched_max_prio(int policy)
 	case SCHED_FIFO:
 	case SCHED_RR:
 	case SCHED_SPORADIC:
+	case SCHED_TP:
 		return COBALT_MAX_PRIORITY;
 
 	case SCHED_COBALT:
@@ -1344,6 +1360,158 @@ int cobalt_sched_yield(void)
 	xnpod_yield();
 
 	return policy == SCHED_OTHER;
+}
+
+#ifdef CONFIG_XENO_OPT_SCHED_TP
+
+static inline
+int set_tp_config(int cpu, union sched_config *config, size_t len)
+{
+	xnticks_t offset, duration, next_offset;
+	struct xnsched_tp_schedule *gps, *ogps;
+	struct xnsched_tp_window *w;
+	struct sched_tp_window *p;
+	struct xnsched *sched;
+	spl_t s;
+	int n;
+
+	gps = xnmalloc(sizeof(*gps) + config->tp.nr_windows * sizeof(*w));
+	if (gps == NULL)
+		goto fail;
+
+	for (n = 0, p = config->tp.windows, w = gps->pwins, next_offset = 0;
+	     n < config->tp.nr_windows; n++, p++, w++) {
+		/*
+		 * Time windows must be strictly contiguous. Holes may
+		 * be defined using windows assigned to the pseudo
+		 * partition #-1.
+		 */
+		offset = ts2ticks_ceil(&p->offset);
+		if (offset != next_offset)
+			goto cleanup_and_fail;
+
+		duration = ts2ticks_ceil(&p->duration);
+		if (duration <= 0)
+			goto cleanup_and_fail;
+
+		if (p->ptid < -1 ||
+		    p->ptid >= CONFIG_XENO_OPT_SCHED_TP_NRPART)
+			goto cleanup_and_fail;
+
+		w->w_offset = next_offset;
+		w->w_part = p->ptid;
+		next_offset += duration;
+	}
+
+	gps->pwin_nr = n;
+	gps->tf_duration = next_offset;
+	sched = xnpod_sched_slot(cpu);
+
+	xnlock_get_irqsave(&nklock, s);
+	ogps = xnsched_tp_set_schedule(sched, gps);
+	xnsched_tp_start_schedule(sched);
+	xnlock_put_irqrestore(&nklock, s);
+
+	if (ogps)
+		xnfree(ogps);
+
+	return 0;
+
+cleanup_and_fail:
+	xnfree(gps);
+fail:
+	return EINVAL;
+}
+
+#else /* !CONFIG_XENO_OPT_SCHED_TP */
+
+static inline
+int set_tp_config(int cpu, union sched_config *config, size_t len)
+{
+	return EINVAL;
+}
+
+#endif /* !CONFIG_XENO_OPT_SCHED_TP */
+
+/**
+ * Load CPU-specific scheduler settings for a given policy.
+ *
+ * Currently, this call only supports the SCHED_TP policy, for loading
+ * the temporal partitions. A configuration is strictly local to the
+ * target @a cpu, and may differ from other processors.
+ *
+ * @param cpu processor to load the configuration of.
+ *
+ * @param policy scheduling policy to which the configuration data
+ * applies. Currently, only SCHED_TP is valid.
+ *
+ * @param p a pointer to the configuration data to load for @a
+ * cpu, applicable to @a policy.
+ *
+ * Settings applicable to SCHED_TP:
+ *
+ * This call installs the temporal partitions for @a cpu.
+ *
+ * - config.tp.windows should be a non-null set of time windows,
+ * defining the scheduling time slots for @a cpu. Each window defines
+ * its offset from the start of the global time frame
+ * (windows[].offset), a duration (windows[].duration), and the
+ * partition id it applies to (windows[].ptid).
+ *
+ * Time windows must be strictly contiguous, i.e. windows[n].offset +
+ * windows[n].duration shall equal windows[n + 1].offset.
+ * If windows[].ptid is in the range
+ * [0..CONFIG_XENO_OPT_SCHED_TP_NRPART-1], SCHED_TP threads which
+ * belong to the partition being referred to may run for the duration
+ * of the time window.
+ *
+ * Time holes may be defined using windows assigned to the pseudo
+ * partition #-1, during which no SCHED_TP threads may be scheduled.
+ *
+ * - config.tp.nr_windows should define the number of elements present
+ * in the config.tp.windows[] array.
+ *
+ * @param len size of the configuration data (in bytes).
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, @a cpu is invalid, @a policy is different from SCHED_TP,
+ * SCHED_TP support is not compiled in (see CONFIG_XENO_OPT_SCHED_TP),
+ * @a len is zero, or @a p contains invalid parameters.
+ * - ENOMEM, lack of memory to perform the operation.
+ */
+int cobalt_sched_setconfig_np(int cpu, int policy,
+			      union sched_config __user *u_config, size_t len)
+{
+	union sched_config *buf;
+	int ret;
+
+	if (cpu < 0 || cpu >= NR_CPUS || !cpu_online(cpu))
+		return -EINVAL;
+
+	if (len == 0)
+		return -EINVAL;
+
+	buf = xnmalloc(len);
+	if (buf == NULL)
+		return -ENOMEM;
+
+	if (__xn_safe_copy_from_user(buf, (void __user *)u_config, len)) {
+		ret = -EFAULT;
+		goto out;
+	}
+
+	switch (policy)	{
+	case SCHED_TP:
+		ret = -set_tp_config(cpu, buf, len);
+		break;
+	default:
+		ret = -EINVAL;
+	}
+out:
+	xnfree(buf);
+
+	return ret;
 }
 
 void cobalt_threadq_cleanup(cobalt_kqueues_t *q)
