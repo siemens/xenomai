@@ -282,7 +282,7 @@ int pthread_getschedparam_ex(pthread_t tid, int *pol, struct sched_param_ex *par
 		goto unlock_and_exit;
 	}
 #endif
-#ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
+#ifdef CONFIG_XENO_OPT_SCHED_TP
 	if (base_class == &xnsched_class_tp) {
 		*pol = SCHED_TP;
 		par->sched_tp_partition = thread->tps - thread->sched->tp.partitions;
