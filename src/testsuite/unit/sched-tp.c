@@ -22,7 +22,7 @@ pthread_t threadA, threadB, threadC;
 
 sem_t barrier;
 
-void *thread_body(void *arg)
+static void *thread_body(void *arg)
 {
 	pthread_t me = pthread_self();
 	struct sched_param_ex param;
@@ -46,9 +46,11 @@ void *thread_body(void *arg)
 		ts.tv_nsec = 10000000;
 		clock_nanosleep(CLOCK_MONOTONIC, 0, &ts, NULL);
 	}
+
+	return NULL;
 }
 
-void cleanup(int sig)
+static void cleanup(int sig)
 {
 	pthread_cancel(threadC);
 	pthread_cancel(threadB);
