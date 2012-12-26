@@ -583,6 +583,25 @@ options +CONFIG_XENO_OPT_SYS_HEAPSZ+ and
 should be configured to large enough values. Try increasing them and
 recompiling the kernel.
 
+Known Bugs and Limitations
+--------------------------
+
+2.6.2/x86
+~~~~~~~~~
+
+2.6.2 (like any previous Xenomai release) does not handle the extended
+processor state (xsave/xrstor) yet.
+
+2.6.2 automatically disables this CPU feature at boot when the host
+kernel detects it, so no action is to be taken by the user. However,
+this feature shall be disabled manually for older Xenomai releases, by
+passing the "noxsave" parameter on the kernel command line (see
+Documentation/kernel-parameters.txt).
+
+Failing to do so, running with extended processor state support
+enabled on these Xenomai releases beget random execution errors in
+userland, typically when the switchtest program runs in the
+background, due to incorrect FPU management in real-time mode.
 
 Problem with my code (not Xenomai code)
 ---------------------------------------
