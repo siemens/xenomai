@@ -285,10 +285,10 @@ index bb712c9..8885e9b 100644
   * or should we not care like we do now ? --BenH.
 diff --git a/arch/powerpc/include/asm/ipipe.h b/arch/powerpc/include/asm/ipipe.h
 new file mode 100644
-index 0000000..ec036cf
+index 0000000..62ac2ce
 --- /dev/null
 +++ b/arch/powerpc/include/asm/ipipe.h
-@@ -0,0 +1,188 @@
+@@ -0,0 +1,187 @@
 +/*
 + *   include/asm-powerpc/ipipe.h
 + *
@@ -337,7 +337,7 @@ index 0000000..ec036cf
 +#include <asm/paca.h>
 +#endif
 +
-+#define IPIPE_CORE_RELEASE	1
++#define IPIPE_CORE_RELEASE	2
 +
 +struct ipipe_domain;
 +
@@ -399,13 +399,12 @@ index 0000000..ec036cf
 +
 +/* Private interface -- Internal use only */
 +
-+#define __ipipe_check_platform()		do { } while(0)
 +#define __ipipe_enable_irq(irq)			enable_irq(irq)
 +#define __ipipe_disable_irq(irq)		disable_irq(irq)
 +#define __ipipe_enable_irqdesc(ipd, irq)	do { } while(0)
 +#define __ipipe_disable_irqdesc(ipd, irq)	do { } while(0)
 +
-+void __ipipe_init_platform(void);
++void __ipipe_early_core_setup(void);
 +
 +void __ipipe_enable_pipeline(void);
 +
@@ -479,7 +478,7 @@ index 0000000..ec036cf
 +#endif /* !__ASM_POWERPC_IPIPE_H */
 diff --git a/arch/powerpc/include/asm/ipipe_base.h b/arch/powerpc/include/asm/ipipe_base.h
 new file mode 100644
-index 0000000..e61f4eb
+index 0000000..52b01b8
 --- /dev/null
 +++ b/arch/powerpc/include/asm/ipipe_base.h
 @@ -0,0 +1,135 @@
@@ -518,7 +517,7 @@ index 0000000..e61f4eb
 +
 +/* 
 + * The first virtual interrupt is reserved for the timer (see
-+ * __ipipe_init_platform). 
++ * __ipipe_early_core_setup).
 + */
 +#define IPIPE_TIMER_VIRQ	IPIPE_VIRQ_BASE
 +
@@ -1266,6 +1265,62 @@ index bc3c745..5d4f71a 100644
  };
  
  DECLARE_PER_CPU(struct cpu_usage, cpu_usage_array);
+diff --git a/arch/powerpc/include/asm/uaccess.h b/arch/powerpc/include/asm/uaccess.h
+index bd0fb84..7219315 100644
+--- a/arch/powerpc/include/asm/uaccess.h
++++ b/arch/powerpc/include/asm/uaccess.h
+@@ -126,6 +126,21 @@ struct exception_table_entry {
+ #define __get_user_unaligned __get_user
+ #define __put_user_unaligned __put_user
+ 
++#ifdef CONFIG_IPIPE
++/*
++ * Calling from atomic context should be allowed for all __nocheck
++ * accessors. The head domain may do this, provided page faulting is
++ * duly prevented.
++ */
++#define __chk_might_sleep(__pu)	do { } while (0)
++#else
++#define __chk_might_sleep(__pu)					\
++	do {							\
++		if (!is_kernel_addr((unsigned long)__pu))	\
++			might_sleep();				\
++	} while (0)
++#endif
++
+ extern long __put_user_bad(void);
+ 
+ /*
+@@ -186,8 +201,7 @@ do {								\
+ ({								\
+ 	long __pu_err;						\
+ 	__typeof__(*(ptr)) __user *__pu_addr = (ptr);		\
+-	if (!is_kernel_addr((unsigned long)__pu_addr))		\
+-		might_sleep();					\
++	__chk_might_sleep(__pu_addr);				\
+ 	__chk_user_ptr(ptr);					\
+ 	__put_user_size((x), __pu_addr, (size), __pu_err);	\
+ 	__pu_err;						\
+@@ -276,8 +290,7 @@ do {								\
+ 	unsigned long __gu_val;					\
+ 	const __typeof__(*(ptr)) __user *__gu_addr = (ptr);	\
+ 	__chk_user_ptr(ptr);					\
+-	if (!is_kernel_addr((unsigned long)__gu_addr))		\
+-		might_sleep();					\
++	__chk_might_sleep(__gu_addr);				\
+ 	__get_user_size(__gu_val, __gu_addr, (size), __gu_err);	\
+ 	(x) = (__typeof__(*(ptr)))__gu_val;			\
+ 	__gu_err;						\
+@@ -290,8 +303,7 @@ do {								\
+ 	long long __gu_val;					\
+ 	const __typeof__(*(ptr)) __user *__gu_addr = (ptr);	\
+ 	__chk_user_ptr(ptr);					\
+-	if (!is_kernel_addr((unsigned long)__gu_addr))		\
+-		might_sleep();					\
++	__chk_might_sleep(__gu_addr);				\
+ 	__get_user_size(__gu_val, __gu_addr, (size), __gu_err);	\
+ 	(x) = (__typeof__(*(ptr)))__gu_val;			\
+ 	__gu_err;						\
 diff --git a/arch/powerpc/kernel/Makefile b/arch/powerpc/kernel/Makefile
 index ce4f7f1..15888d7 100644
 --- a/arch/powerpc/kernel/Makefile
@@ -2334,10 +2389,10 @@ index 3a70845..cef2db7 100644
  	SAVE_GPR(2, r1)
 diff --git a/arch/powerpc/kernel/ipipe.c b/arch/powerpc/kernel/ipipe.c
 new file mode 100644
-index 0000000..715cd96
+index 0000000..dd2fee4
 --- /dev/null
 +++ b/arch/powerpc/kernel/ipipe.c
-@@ -0,0 +1,543 @@
+@@ -0,0 +1,544 @@
 +/* -*- linux-c -*-
 + * linux/arch/powerpc/kernel/ipipe.c
 + *
@@ -2530,13 +2585,13 @@ index 0000000..715cd96
 +
 +#endif	/* CONFIG_SMP */
 +
-+void __ipipe_init_platform(void)
++void __ipipe_early_core_setup(void)
 +{
 +	unsigned int virq;
 +	/*
 +	 * Allocate all the virtual IRQs we need. We expect fixed virq
 +	 * numbers starting at IPIPE_VIRQ_BASE, so we request them
-+	 * early in init_platform().
++	 * early.
 +	 */
 +	virq = ipipe_alloc_virq();
 +	BUG_ON(virq != IPIPE_TIMER_VIRQ);
@@ -2578,7 +2633,8 @@ index 0000000..715cd96
 +				  __ipipe_ack_irq);
 +	/*
 +	 * We use a virtual IRQ to handle the timer irq (decrementer
-+	 * trap) which was allocated early in __ipipe_init_platform().
++	 * trap) which was allocated early in
++	 * __ipipe_early_core_setup().
 +	 */
 +	ipipe_request_irq(ipipe_root_domain,
 +			  IPIPE_TIMER_VIRQ,
@@ -4137,6 +4193,211 @@ index 558e30c..66e4d08 100644
  static void flush_range(struct mm_struct *mm, unsigned long start,
  			unsigned long end)
  {
+diff --git a/arch/powerpc/platforms/52xx/mpc52xx_pic.c b/arch/powerpc/platforms/52xx/mpc52xx_pic.c
+index 1a9a495..f0db193 100644
+--- a/arch/powerpc/platforms/52xx/mpc52xx_pic.c
++++ b/arch/powerpc/platforms/52xx/mpc52xx_pic.c
+@@ -142,35 +142,63 @@ static unsigned char mpc52xx_map_senses[4] = {
+ };
+ 
+ /* Utility functions */
+-static inline void io_be_setbit(u32 __iomem *addr, int bitno)
++static inline void __io_be_setbit(u32 __iomem *addr, int bitno)
+ {
+ 	out_be32(addr, in_be32(addr) | (1 << bitno));
+ }
+ 
+-static inline void io_be_clrbit(u32 __iomem *addr, int bitno)
++static inline void io_be_setbit(u32 __iomem *addr, int bitno)
++{
++	unsigned long flags;
++
++	flags = hard_local_irq_save();
++	__io_be_setbit(addr, bitno);
++	hard_local_irq_restore(flags);
++}
++
++static inline void __io_be_clrbit(u32 __iomem *addr, int bitno)
+ {
+ 	out_be32(addr, in_be32(addr) & ~(1 << bitno));
+ }
+ 
++static inline void io_be_clrbit(u32 __iomem *addr, int bitno)
++{
++	unsigned long flags;
++
++	flags = hard_local_irq_save();
++	__io_be_clrbit(addr, bitno);
++	hard_local_irq_restore(flags);
++}
++
+ /*
+  * IRQ[0-3] interrupt irq_chip
+  */
+ static void mpc52xx_extirq_mask(struct irq_data *d)
+ {
+ 	int l2irq = irqd_to_hwirq(d) & MPC52xx_IRQ_L2_MASK;
+-	io_be_clrbit(&intr->ctrl, 11 - l2irq);
++	unsigned long flags;
++
++	flags = hard_local_irq_save();
++	__io_be_clrbit(&intr->ctrl, 11 - l2irq);
++	ipipe_lock_irq(d->irq);
++	hard_local_irq_restore(flags);
+ }
+ 
+ static void mpc52xx_extirq_unmask(struct irq_data *d)
+ {
+ 	int l2irq = irqd_to_hwirq(d) & MPC52xx_IRQ_L2_MASK;
+-	io_be_setbit(&intr->ctrl, 11 - l2irq);
++	unsigned long flags;
++
++	flags = hard_local_irq_save();
++	__io_be_setbit(&intr->ctrl, 11 - l2irq);
++	ipipe_unlock_irq(d->irq);
++	hard_local_irq_restore(flags);
+ }
+ 
+ static void mpc52xx_extirq_ack(struct irq_data *d)
+ {
+ 	int l2irq = irqd_to_hwirq(d) & MPC52xx_IRQ_L2_MASK;
+-	io_be_setbit(&intr->ctrl, 27-l2irq);
++	__io_be_setbit(&intr->ctrl, 27-l2irq);
+ }
+ 
+ static int mpc52xx_extirq_set_type(struct irq_data *d, unsigned int flow_type)
+@@ -217,22 +245,38 @@ static int mpc52xx_null_set_type(struct irq_data *d, unsigned int flow_type)
+ 	return 0; /* Do nothing so that the sense mask will get updated */
+ }
+ 
++static void mpc52xx_main_mask_ack(struct irq_data *d)
++{
++	int l2irq = irqd_to_hwirq(d) & MPC52xx_IRQ_L2_MASK;
++	__io_be_setbit(&intr->main_mask, 16 - l2irq);
++}
++
+ static void mpc52xx_main_mask(struct irq_data *d)
+ {
+ 	int l2irq = irqd_to_hwirq(d) & MPC52xx_IRQ_L2_MASK;
+-	io_be_setbit(&intr->main_mask, 16 - l2irq);
++	unsigned long flags;
++
++	flags = hard_local_irq_save();
++	__io_be_setbit(&intr->main_mask, 16 - l2irq);
++	ipipe_lock_irq(d->irq);
++	hard_local_irq_restore(flags);
+ }
+ 
+ static void mpc52xx_main_unmask(struct irq_data *d)
+ {
+ 	int l2irq = irqd_to_hwirq(d) & MPC52xx_IRQ_L2_MASK;
+-	io_be_clrbit(&intr->main_mask, 16 - l2irq);
++	unsigned long flags;
++
++	flags = hard_local_irq_save();
++	__io_be_clrbit(&intr->main_mask, 16 - l2irq);
++	ipipe_unlock_irq(d->irq);
++	hard_local_irq_restore(flags);
+ }
+ 
+ static struct irq_chip mpc52xx_main_irqchip = {
+ 	.name = "MPC52xx Main",
+ 	.irq_mask = mpc52xx_main_mask,
+-	.irq_mask_ack = mpc52xx_main_mask,
++	.irq_mask_ack = mpc52xx_main_mask_ack,
+ 	.irq_unmask = mpc52xx_main_unmask,
+ 	.irq_set_type = mpc52xx_null_set_type,
+ };
+@@ -240,22 +284,38 @@ static struct irq_chip mpc52xx_main_irqchip = {
+ /*
+  * Peripherals interrupt irq_chip
+  */
++static void mpc52xx_periph_mask_ack(struct irq_data *d)
++{
++	int l2irq = irqd_to_hwirq(d) & MPC52xx_IRQ_L2_MASK;
++	__io_be_setbit(&intr->per_mask, 31 - l2irq);
++}
++
+ static void mpc52xx_periph_mask(struct irq_data *d)
+ {
+ 	int l2irq = irqd_to_hwirq(d) & MPC52xx_IRQ_L2_MASK;
+-	io_be_setbit(&intr->per_mask, 31 - l2irq);
++	unsigned long flags;
++
++	flags = hard_local_irq_save();
++	__io_be_setbit(&intr->per_mask, 31 - l2irq);
++	ipipe_lock_irq(d->irq);
++	hard_local_irq_restore(flags);
+ }
+ 
+ static void mpc52xx_periph_unmask(struct irq_data *d)
+ {
+ 	int l2irq = irqd_to_hwirq(d) & MPC52xx_IRQ_L2_MASK;
+-	io_be_clrbit(&intr->per_mask, 31 - l2irq);
++	unsigned long flags;
++
++	flags = hard_local_irq_save();
++	__io_be_clrbit(&intr->per_mask, 31 - l2irq);
++	ipipe_unlock_irq(d->irq);
++	hard_local_irq_restore(flags);
+ }
+ 
+ static struct irq_chip mpc52xx_periph_irqchip = {
+ 	.name = "MPC52xx Peripherals",
+ 	.irq_mask = mpc52xx_periph_mask,
+-	.irq_mask_ack = mpc52xx_periph_mask,
++	.irq_mask_ack = mpc52xx_periph_mask_ack,
+ 	.irq_unmask = mpc52xx_periph_unmask,
+ 	.irq_set_type = mpc52xx_null_set_type,
+ };
+@@ -263,29 +323,40 @@ static struct irq_chip mpc52xx_periph_irqchip = {
+ /*
+  * SDMA interrupt irq_chip
+  */
+-static void mpc52xx_sdma_mask(struct irq_data *d)
++static void mpc52xx_sdma_mask_ack(struct irq_data *d)
+ {
+ 	int l2irq = irqd_to_hwirq(d) & MPC52xx_IRQ_L2_MASK;
+-	io_be_setbit(&sdma->IntMask, l2irq);
++	__io_be_setbit(&sdma->IntMask, l2irq);
++	out_be32(&sdma->IntPend, 1 << l2irq);
+ }
+ 
+-static void mpc52xx_sdma_unmask(struct irq_data *d)
++static void mpc52xx_sdma_mask(struct irq_data *d)
+ {
+ 	int l2irq = irqd_to_hwirq(d) & MPC52xx_IRQ_L2_MASK;
+-	io_be_clrbit(&sdma->IntMask, l2irq);
++	unsigned long flags;
++
++	flags = hard_local_irq_save();
++	__io_be_setbit(&sdma->IntMask, l2irq);
++	ipipe_lock_irq(d->irq);
++	hard_local_irq_restore(flags);
+ }
+ 
+-static void mpc52xx_sdma_ack(struct irq_data *d)
++static void mpc52xx_sdma_unmask(struct irq_data *d)
+ {
+ 	int l2irq = irqd_to_hwirq(d) & MPC52xx_IRQ_L2_MASK;
+-	out_be32(&sdma->IntPend, 1 << l2irq);
++	unsigned long flags;
++
++	flags = hard_local_irq_save();
++	__io_be_clrbit(&sdma->IntMask, l2irq);
++	ipipe_unlock_irq(d->irq);
++	hard_local_irq_restore(flags);
+ }
+ 
+ static struct irq_chip mpc52xx_sdma_irqchip = {
+ 	.name = "MPC52xx SDMA",
+ 	.irq_mask = mpc52xx_sdma_mask,
+ 	.irq_unmask = mpc52xx_sdma_unmask,
+-	.irq_ack = mpc52xx_sdma_ack,
++	.irq_mask_ack = mpc52xx_sdma_mask_ack,
+ 	.irq_set_type = mpc52xx_null_set_type,
+ };
+ 
 diff --git a/arch/powerpc/platforms/82xx/pq2ads-pci-pic.c b/arch/powerpc/platforms/82xx/pq2ads-pci-pic.c
 index 8ccf9ed..a19fcb5 100644
 --- a/arch/powerpc/platforms/82xx/pq2ads-pci-pic.c
@@ -5011,10 +5272,18 @@ index 3330fec..f9e0745 100644
  
  static struct uic * __init uic_init_one(struct device_node *node)
 diff --git a/drivers/gpio/gpio-mpc8xxx.c b/drivers/gpio/gpio-mpc8xxx.c
-index edcffd6..5efaf25 100644
+index edcffd6..e77010d 100644
 --- a/drivers/gpio/gpio-mpc8xxx.c
 +++ b/drivers/gpio/gpio-mpc8xxx.c
-@@ -161,8 +161,8 @@ static void mpc8xxx_gpio_irq_cascade(unsigned int irq, struct irq_desc *desc)
+@@ -17,6 +17,7 @@
+ #include <linux/gpio.h>
+ #include <linux/slab.h>
+ #include <linux/irq.h>
++#include <linux/ipipe.h>
+ 
+ #define MPC8XXX_GPIO_PINS	32
+ 
+@@ -161,8 +162,8 @@ static void mpc8xxx_gpio_irq_cascade(unsigned int irq, struct irq_desc *desc)
  
  	mask = in_be32(mm->regs + GPIO_IER) & in_be32(mm->regs + GPIO_IMR);
  	if (mask)
@@ -5328,6 +5597,22 @@ index 61fa862..d36ceb9 100644
   * RLIMIT_STACK default maximum - some architectures override it:
   */
  #ifndef _STK_LIM_MAX
+diff --git a/include/ipipe/setup.h b/include/ipipe/setup.h
+new file mode 100644
+index 0000000..c2bc521
+--- /dev/null
++++ b/include/ipipe/setup.h
+@@ -0,0 +1,10 @@
++#ifndef _IPIPE_SETUP_H
++#define _IPIPE_SETUP_H
++
++/*
++ * Placeholders for setup hooks defined by client domains.
++ */
++
++static inline void __ipipe_early_client_setup(void) { }
++
++#endif /* !_IPIPE_SETUP_H */
 diff --git a/include/ipipe/thread_info.h b/include/ipipe/thread_info.h
 new file mode 100644
 index 0000000..1f6e9c3
@@ -8472,10 +8757,10 @@ index 0000000..1147bf4
 +}
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..ff51eb8
+index 0000000..1f32d4a
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1704 @@
+@@ -0,0 +1,1706 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -8512,6 +8797,7 @@ index 0000000..ff51eb8
 +#endif	/* CONFIG_PROC_FS */
 +#include <linux/ipipe_trace.h>
 +#include <linux/ipipe.h>
++#include <ipipe/setup.h>
 +
 +struct ipipe_domain ipipe_root;
 +EXPORT_SYMBOL_GPL(ipipe_root);
@@ -8771,21 +9057,22 @@ index 0000000..ff51eb8
 +	fixup_percpu_data();
 +
 +	/*
-+	 * Do the early init stuff. At this point, the kernel does not
-+	 * provide much services yet: be careful.
-+	 */
-+	__ipipe_check_platform(); /* Do platform dependent checks first. */
-+
-+	/*
 +	 * A lightweight registration code for the root domain. We are
 +	 * running on the boot CPU, hw interrupts are off, and
 +	 * secondary CPUs are still lost in space.
 +	 */
-+
 +	ipd->name = "Linux";
 +	ipd->context_offset = root_context_offset();
 +	init_stage(ipd);
-+	__ipipe_init_platform();
++
++	/*
++	 * Do the early init stuff. First we do the per-arch pipeline
++	 * core setup, then we run the per-client setup code. At this
++	 * point, the kernel does not provide much services yet: be
++	 * careful.
++	 */
++	__ipipe_early_core_setup();
++	__ipipe_early_client_setup();
 +
 +#ifdef CONFIG_PRINTK
 +	__ipipe_printk_virq = ipipe_alloc_virq();
