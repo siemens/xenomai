@@ -266,11 +266,11 @@ Spinlock with Preemption Deactivation</h2></td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Dynamic lock initialisation.  <a href="group__rtdmsync.html#ga6abf985ea7a0b13ec564cf0107fd8cba"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga65a4897268e15bda462b871976cb3909">rtdm_lock_get</a>(lock)&nbsp;&nbsp;&nbsp;rthal_spin_lock(lock)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Acquire lock from non-preemptible contexts.  <a href="group__rtdmsync.html#ga65a4897268e15bda462b871976cb3909"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga963bdb01102d0076cd64f6bc72a347da">rtdm_lock_put</a>(lock)&nbsp;&nbsp;&nbsp;rthal_spin_unlock(lock)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga963bdb01102d0076cd64f6bc72a347da">rtdm_lock_put</a>(lock)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release lock without preemption restoration.  <a href="group__rtdmsync.html#ga963bdb01102d0076cd64f6bc72a347da"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga985473873f9e32af688fe8a23634693d">rtdm_lock_get_irqsave</a>(lock, context)&nbsp;&nbsp;&nbsp;rthal_spin_lock_irqsave(lock, context)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga985473873f9e32af688fe8a23634693d">rtdm_lock_get_irqsave</a>(lock, context)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Acquire lock and disable preemption.  <a href="group__rtdmsync.html#ga985473873f9e32af688fe8a23634693d"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga4f1f8e33baf33b162636f63dec61aebd">rtdm_lock_put_irqrestore</a>(lock, context)&nbsp;&nbsp;&nbsp;rthal_spin_unlock_irqrestore(lock, context)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga4f1f8e33baf33b162636f63dec61aebd">rtdm_lock_put_irqrestore</a>(lock, context)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release lock and restore preemption state.  <a href="group__rtdmsync.html#ga4f1f8e33baf33b162636f63dec61aebd"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga3d563fc5def018f743c55c452e061758">rtdm_lock_irqsave</a>(context)&nbsp;&nbsp;&nbsp;rthal_local_irq_save(context)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Disable preemption locally.  <a href="group__rtdmsync.html#ga3d563fc5def018f743c55c452e061758"></a><br/></td></tr>
@@ -294,7 +294,7 @@ Copyright (C) 2008 Gilles Chanteperdrix &lt;<a href="mailto:gilles.chanteperdrix
 <p>Xenomai is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.</p>
 <p>You should have received a copy of the GNU General Public License along with Xenomai; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. </p>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Tue Nov 27 2012 23:52:26 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Wed Dec 26 2012 18:15:30 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

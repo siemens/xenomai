@@ -70,11 +70,11 @@ typedef unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a clas
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Dynamic lock initialisation.  <a href="#ga6abf985ea7a0b13ec564cf0107fd8cba"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga65a4897268e15bda462b871976cb3909">rtdm_lock_get</a>(lock)&nbsp;&nbsp;&nbsp;rthal_spin_lock(lock)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Acquire lock from non-preemptible contexts.  <a href="#ga65a4897268e15bda462b871976cb3909"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga963bdb01102d0076cd64f6bc72a347da">rtdm_lock_put</a>(lock)&nbsp;&nbsp;&nbsp;rthal_spin_unlock(lock)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga963bdb01102d0076cd64f6bc72a347da">rtdm_lock_put</a>(lock)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release lock without preemption restoration.  <a href="#ga963bdb01102d0076cd64f6bc72a347da"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga985473873f9e32af688fe8a23634693d">rtdm_lock_get_irqsave</a>(lock, context)&nbsp;&nbsp;&nbsp;rthal_spin_lock_irqsave(lock, context)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga985473873f9e32af688fe8a23634693d">rtdm_lock_get_irqsave</a>(lock, context)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Acquire lock and disable preemption.  <a href="#ga985473873f9e32af688fe8a23634693d"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga4f1f8e33baf33b162636f63dec61aebd">rtdm_lock_put_irqrestore</a>(lock, context)&nbsp;&nbsp;&nbsp;rthal_spin_unlock_irqrestore(lock, context)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga4f1f8e33baf33b162636f63dec61aebd">rtdm_lock_put_irqrestore</a>(lock, context)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release lock and restore preemption state.  <a href="#ga4f1f8e33baf33b162636f63dec61aebd"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#ga3d563fc5def018f743c55c452e061758">rtdm_lock_irqsave</a>(context)&nbsp;&nbsp;&nbsp;rthal_local_irq_save(context)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Disable preemption locally.  <a href="#ga3d563fc5def018f743c55c452e061758"></a><br/></td></tr>
@@ -270,12 +270,16 @@ Global Lock across Scheduler Invocation</h2></td></tr>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td></td><td>&nbsp;&nbsp;&nbsp;rthal_spin_lock_irqsave(lock, context)</td>
+          <td></td><td></td><td></td>
         </tr>
       </table>
 </div>
 <div class="memdoc">
-
+<b>Value:</b><div class="fragment"><pre class="fragment"><span class="keywordflow">do</span> {                                            \
+                rthal_spin_lock_irqsave(lock, context); \
+                __xnpod_lock_sched();                   \
+        } <span class="keywordflow">while</span> (0)
+</pre></div>
 <p>Acquire lock and disable preemption. </p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
@@ -412,12 +416,16 @@ Global Lock across Scheduler Invocation</h2></td></tr>
           <td class="paramtype">&nbsp;</td>
           <td class="paramname">lock</td>
           <td>&nbsp;)&nbsp;</td>
-          <td>&nbsp;&nbsp;&nbsp;rthal_spin_unlock(lock)</td>
+          <td></td>
         </tr>
       </table>
 </div>
 <div class="memdoc">
-
+<b>Value:</b><div class="fragment"><pre class="fragment"><span class="keywordflow">do</span> {                                    \
+                rthal_spin_unlock(lock);        \
+                __xnpod_unlock_sched();         \
+        } <span class="keywordflow">while</span> (0)
+</pre></div>
 <p>Release lock without preemption restoration. </p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
@@ -456,12 +464,17 @@ Global Lock across Scheduler Invocation</h2></td></tr>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td></td><td>&nbsp;&nbsp;&nbsp;rthal_spin_unlock_irqrestore(lock, context)</td>
+          <td></td><td></td><td></td>
         </tr>
       </table>
 </div>
 <div class="memdoc">
-
+<b>Value:</b><div class="fragment"><pre class="fragment"><span class="keywordflow">do</span> {                                            \
+                rthal_spin_unlock(lock);                \
+                __xnpod_unlock_sched();                 \
+                rthal_local_irq_restore(context);       \
+        } <span class="keywordflow">while</span> (0)
+</pre></div>
 <p>Release lock and restore preemption state. </p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
@@ -2082,7 +2095,7 @@ Global Lock across Scheduler Invocation</h2></td></tr>
 </div>
 </div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Tue Nov 27 2012 23:52:26 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Wed Dec 26 2012 18:15:31 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

@@ -47,13 +47,17 @@ Table of Contents
     3.14. ARM tsc emulation issues
 
 4. switchtest fails with "pthread_create: Resource temporarily unavailable"
-5. Problem with my code (not Xenomai code)
+5. Known Bugs and Limitations
 
-    5.1. "Warning: <service> is deprecated" while compiling kernel code
-    5.2. "Xenomai: process memory not locked (missing mlockall?)" at startup
-    5.3. High latencies when transitioning from primary to secondary mode
-    5.4. Any Xenomai service fails with code -38 (ENOSYS)
-    5.5. My application reserves a lot of memory
+    5.1. 2.6.2/x86
+
+6. Problem with my code (not Xenomai code)
+
+    6.1. "Warning: <service> is deprecated" while compiling kernel code
+    6.2. "Xenomai: process memory not locked (missing mlockall?)" at startup
+    6.3. High latencies when transitioning from primary to secondary mode
+    6.4. Any Xenomai service fails with code -38 (ENOSYS)
+    6.5. My application reserves a lot of memory
 
 -------------------------------------------------------------------------------
 
@@ -579,11 +583,32 @@ configuration, should be configured to large enough values. Try increasing them
 and recompiling the kernel.
 
 
-5. Problem with my code (not Xenomai code)
+5. Known Bugs and Limitations
+-----------------------------
+
+
+5.1. 2.6.2/x86
+--------------
+
+2.6.2 (like any previous Xenomai release) does not handle the extended
+processor state (xsave/xrstor) yet.
+
+2.6.2 automatically disables this CPU feature at boot when the host kernel
+detects it, so no action is to be taken by the user. However, this feature
+shall be disabled manually for older Xenomai releases, by passing the "noxsave"
+parameter on the kernel command line (see Documentation/kernel-parameters.txt).
+
+Failing to do so, running with extended processor state support enabled on
+these Xenomai releases beget random execution errors in userland, typically
+when the switchtest program runs in the background, due to incorrect FPU
+management in real-time mode.
+
+
+6. Problem with my code (not Xenomai code)
 ------------------------------------------
 
 
-5.1. "Warning: <service> is deprecated" while compiling kernel code
+6.1. "Warning: <service> is deprecated" while compiling kernel code
 -------------------------------------------------------------------
 
 Where <service> is a thread creation service, one of:
@@ -610,7 +635,7 @@ CONFIG_XENO_OPT_NOWARN_DEPRECATED option in your kernel configuration, but
 nevertheless, you have been WARNED.
 
 
-5.2. "Xenomai: process memory not locked (missing mlockall?)" at startup
+6.2. "Xenomai: process memory not locked (missing mlockall?)" at startup
 ------------------------------------------------------------------------
 
 In order to avoid unwanted transitions to secondary domain, an application
@@ -633,7 +658,7 @@ with the configure script.
 See configure --help.
 
 
-5.3. High latencies when transitioning from primary to secondary mode
+6.3. High latencies when transitioning from primary to secondary mode
 ---------------------------------------------------------------------
 
 Such transition requires to wake up the Linux task underlying your real-time
@@ -674,7 +699,7 @@ granularity improves at each new release, there are still a few catches:
     activity from the Linux domain, including disk drivers.
 
 
-5.4. Any Xenomai service fails with code -38 (ENOSYS)
+6.4. Any Xenomai service fails with code -38 (ENOSYS)
 -----------------------------------------------------
 
 Possible reasons for this error are:
@@ -690,7 +715,7 @@ Possible reasons for this error are:
     x86_64 kernel.
 
 
-5.5. My application reserves a lot of memory
+6.5. My application reserves a lot of memory
 --------------------------------------------
 
 Your user-space application unexpectedly reserves a lot of virtual memory, as

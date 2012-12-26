@@ -400,7 +400,7 @@ an error number if:<ul>
 <p>Get schedparam attribute. </p>
 <p>This service stores, at the address <em>par</em>, the limited form of the <em>schedparam</em> attribute in the attribute object <em>attr</em>.</p>
 <p>The limited form only defines the <em>sched_priority</em> member, that is sufficent to hold the scheduling parameter for SCHED_FIFO, SCHED_RR and SCHED_OTHER class members. Threads created with <em>attr</em> will use the value of this attribute as a scheduling priority if the attribute <em>inheritsched</em> is set to PTHREAD_EXPLICIT_SCHED. Valid priorities range from 1 to 99.</p>
-<p><a class="el" href="group__posix__threadattr.html#gac7026e5a69f8e3a04b03b144392d4df1" title="Get schedparam_ex extended attribute.">pthread_attr_getschedparam_ex()</a> should be used to retrieve the parameters for extended scheduling classes, such as SCHED_SPORADIC.</p>
+<p><a class="el" href="group__posix__threadattr.html#gac7026e5a69f8e3a04b03b144392d4df1" title="Get schedparam_ex extended attribute.">pthread_attr_getschedparam_ex()</a> should be used to retrieve the parameters for extended scheduling classes, such as SCHED_SPORADIC or SCHED_TP.</p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>attribute object;</td></tr>
@@ -445,7 +445,7 @@ an error number if:<ul>
 
 <p>Get schedparam_ex extended attribute. </p>
 <p>This service is an extended version of <a class="el" href="group__posix__threadattr.html#ga8b69613ee83bf326af4b15de5e00ec99" title="Get schedparam attribute.">pthread_attr_getschedparam()</a>, that also supports Xenomai-specific or additional POSIX scheduling policies, which are not available with the host Linux environment.</p>
-<p>Typically, SCHED_SPORADIC parameters can be retrieved from this call.</p>
+<p>Typically, SCHED_SPORADIC or SCHED_TP parameters can be retrieved from this call.</p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>attribute object;</td></tr>
@@ -490,7 +490,7 @@ an error number if:<ul>
 
 <p>Get schedpolicy attribute. </p>
 <p>This service stores, at the address <em>policy</em>, the value of the <em>policy</em> attribute in the attribute object <em>attr</em>.</p>
-<p>Threads created with the attribute object <em>attr</em> use the value of this attribute as scheduling policy if the <em>inheritsched</em> attribute is set to PTHREAD_EXPLICIT_SCHED. The value of this attribute is one of SCHED_FIFO, SCHED_RR, SCHED_SPORADIC or SCHED_OTHER.</p>
+<p>Threads created with the attribute object <em>attr</em> use the value of this attribute as scheduling policy if the <em>inheritsched</em> attribute is set to PTHREAD_EXPLICIT_SCHED. The value of this attribute is one of SCHED_FIFO, SCHED_RR, SCHED_SPORADIC, SCHED_TP or SCHED_OTHER.</p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>attribute object;</td></tr>
@@ -951,7 +951,7 @@ an error number if:<ul>
 
 <p>Set extended schedparam_ex attribute. </p>
 <p>This service is an extended version of <a class="el" href="group__posix__threadattr.html#ga7d0bf4f0734aca888f89f7341b1df222" title="Set schedparam attribute.">pthread_attr_setschedparam()</a>, that also supports Xenomai-specific or additional POSIX scheduling policies, which are not available with the host Linux environment.</p>
-<p>Typically, SCHED_SPORADIC parameters can be set using this call.</p>
+<p>Typically, SCHED_SPORADIC or SCHED_TP parameters can be set using this call.</p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>attribute object;</td></tr>
@@ -996,7 +996,7 @@ an error number if:<ul>
 
 <p>Set schedpolicy attribute. </p>
 <p>This service set to <em>policy</em> the value of the <em>policy</em> attribute in the attribute object <em>attr</em>.</p>
-<p>Threads created with the attribute object <em>attr</em> use the value of this attribute as scheduling policy if the <em>inheritsched</em> attribute is set to PTHREAD_EXPLICIT_SCHED. The value of this attribute is one of SCHED_FIFO, SCHED_RR, SCHED_SPORADIC or SCHED_OTHER.</p>
+<p>Threads created with the attribute object <em>attr</em> use the value of this attribute as scheduling policy if the <em>inheritsched</em> attribute is set to PTHREAD_EXPLICIT_SCHED. The value of this attribute is one of SCHED_FIFO, SCHED_RR, SCHED_SPORADIC, SCHED_TP or SCHED_OTHER.</p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>attribute object;</td></tr>
@@ -1111,7 +1111,7 @@ an error number if:<ul>
 </div>
 </div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Tue Nov 27 2012 23:52:27 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Wed Dec 26 2012 18:15:31 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

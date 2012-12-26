@@ -268,58 +268,58 @@
 <a name="l00277"></a>00277 <span class="comment">         * unlocked context switch.</span>
 <a name="l00278"></a>00278 <span class="comment">         */</span>
 <a name="l00279"></a>00279 <span class="preprocessor">#if XENO_DEBUG(NUCLEUS)</span>
-<a name="l00280"></a>00280 <span class="preprocessor"></span>        <span class="keywordflow">if</span> (testbits(sched-&gt;<a class="code" href="structxnsched.html#ad700d0003b158a60599221047b2fc52e">status</a> | sched-&gt;<a class="code" href="structxnsched.html#a4e9ca82832cb0709308e7d78e7f9d694">lflags</a>, XNKCOUT|XNINIRQ|XNSWLOCK))
+<a name="l00280"></a>00280 <span class="preprocessor"></span>        <span class="keywordflow">if</span> (testbits(sched-&gt;<a class="code" href="structxnsched.html#ad700d0003b158a60599221047b2fc52e">status</a> | sched-&gt;<a class="code" href="structxnsched.html#a4e9ca82832cb0709308e7d78e7f9d694">lflags</a>, XNKCOUT|XNINIRQ|XNINSW))
 <a name="l00281"></a>00281                 <span class="keywordflow">return</span>;
 <a name="l00282"></a>00282 <span class="preprocessor">#else </span><span class="comment">/* !XENO_DEBUG(NUCLEUS) */</span>
 <a name="l00283"></a>00283         <span class="keywordflow">if</span> (testbits(sched-&gt;<a class="code" href="structxnsched.html#ad700d0003b158a60599221047b2fc52e">status</a> | sched-&gt;<a class="code" href="structxnsched.html#a4e9ca82832cb0709308e7d78e7f9d694">lflags</a>,
-<a name="l00284"></a>00284                      XNKCOUT|XNINIRQ|XNSWLOCK|XNRESCHED) != XNRESCHED)
+<a name="l00284"></a>00284                      XNKCOUT|XNINIRQ|XNINSW|XNRESCHED|XNINLOCK) != XNRESCHED)
 <a name="l00285"></a>00285                 <span class="keywordflow">return</span>;
 <a name="l00286"></a>00286 <span class="preprocessor">#endif </span><span class="comment">/* !XENO_DEBUG(NUCLEUS) */</span>
 <a name="l00287"></a>00287 
 <a name="l00288"></a>00288         __xnpod_schedule(sched);
 <a name="l00289"></a>00289 }
 <a name="l00290"></a>00290 
-<a name="l00291"></a>00291 <span class="keywordtype">void</span> ___xnpod_lock_sched(<span class="keyword">struct</span> xnthread *<a class="code" href="structxnsched.html#afd2e6c15e470a38b385930c613856e7b">curr</a>);
+<a name="l00291"></a>00291 <span class="keywordtype">void</span> ___xnpod_lock_sched(<a class="code" href="structxnsched.html" title="Scheduling information structure.">xnsched_t</a> *sched);
 <a name="l00292"></a>00292 
-<a name="l00293"></a>00293 <span class="keywordtype">void</span> ___xnpod_unlock_sched(<span class="keyword">struct</span> xnthread *<a class="code" href="structxnsched.html#afd2e6c15e470a38b385930c613856e7b">curr</a>);
+<a name="l00293"></a>00293 <span class="keywordtype">void</span> ___xnpod_unlock_sched(<a class="code" href="structxnsched.html" title="Scheduling information structure.">xnsched_t</a> *sched);
 <a name="l00294"></a>00294 
 <a name="l00295"></a>00295 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> __xnpod_lock_sched(<span class="keywordtype">void</span>)
 <a name="l00296"></a>00296 {
-<a name="l00297"></a>00297         <span class="keyword">struct </span>xnthread *curr;
+<a name="l00297"></a>00297         <a class="code" href="structxnsched.html" title="Scheduling information structure.">xnsched_t</a> *sched;
 <a name="l00298"></a>00298 
 <a name="l00299"></a>00299         barrier();
-<a name="l00300"></a>00300         curr = xnpod_current_thread();
-<a name="l00301"></a>00301         ___xnpod_lock_sched(curr);
+<a name="l00300"></a>00300         sched = xnpod_current_sched();
+<a name="l00301"></a>00301         ___xnpod_lock_sched(sched);
 <a name="l00302"></a>00302 }
 <a name="l00303"></a>00303 
 <a name="l00304"></a>00304 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> __xnpod_unlock_sched(<span class="keywordtype">void</span>)
 <a name="l00305"></a>00305 {
-<a name="l00306"></a>00306         <span class="keyword">struct </span>xnthread *curr;
+<a name="l00306"></a>00306         <a class="code" href="structxnsched.html" title="Scheduling information structure.">xnsched_t</a> *sched;
 <a name="l00307"></a>00307 
 <a name="l00308"></a>00308         barrier();
-<a name="l00309"></a>00309         curr = xnpod_current_thread();
-<a name="l00310"></a>00310         ___xnpod_unlock_sched(curr);
+<a name="l00309"></a>00309         sched = xnpod_current_sched();
+<a name="l00310"></a>00310         ___xnpod_unlock_sched(sched);
 <a name="l00311"></a>00311 }
 <a name="l00312"></a>00312 
 <a name="l00313"></a>00313 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnpod_lock_sched(<span class="keywordtype">void</span>)
 <a name="l00314"></a>00314 {
-<a name="l00315"></a>00315         <span class="keyword">struct </span>xnthread *curr;
+<a name="l00315"></a>00315         <a class="code" href="structxnsched.html" title="Scheduling information structure.">xnsched_t</a> *sched;
 <a name="l00316"></a>00316         spl_t s;
 <a name="l00317"></a>00317 
 <a name="l00318"></a>00318         xnlock_get_irqsave(&amp;nklock, s);
-<a name="l00319"></a>00319         curr = xnpod_current_thread();
-<a name="l00320"></a>00320         ___xnpod_lock_sched(curr);
+<a name="l00319"></a>00319         sched = xnpod_current_sched();
+<a name="l00320"></a>00320         ___xnpod_lock_sched(sched);
 <a name="l00321"></a>00321         xnlock_put_irqrestore(&amp;nklock, s);
 <a name="l00322"></a>00322 }
 <a name="l00323"></a>00323 
 <a name="l00324"></a>00324 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnpod_unlock_sched(<span class="keywordtype">void</span>)
 <a name="l00325"></a>00325 {
-<a name="l00326"></a>00326         <span class="keyword">struct </span>xnthread *curr;
+<a name="l00326"></a>00326         <a class="code" href="structxnsched.html" title="Scheduling information structure.">xnsched_t</a> *sched;
 <a name="l00327"></a>00327         spl_t s;
 <a name="l00328"></a>00328 
 <a name="l00329"></a>00329         xnlock_get_irqsave(&amp;nklock, s);
-<a name="l00330"></a>00330         curr = xnpod_current_thread();
-<a name="l00331"></a>00331         ___xnpod_unlock_sched(curr);
+<a name="l00330"></a>00330         sched = xnpod_current_sched();
+<a name="l00331"></a>00331         ___xnpod_unlock_sched(sched);
 <a name="l00332"></a>00332         xnlock_put_irqrestore(&amp;nklock, s);
 <a name="l00333"></a>00333 }
 <a name="l00334"></a>00334 
@@ -383,7 +383,7 @@
 <a name="l00394"></a>00394 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_POD_H */</span>
 </pre></div></div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Tue Nov 27 2012 23:52:24 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Wed Dec 26 2012 18:15:27 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

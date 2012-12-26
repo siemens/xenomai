@@ -78,13 +78,13 @@
 <a name="l00046"></a>00046 <span class="keyword">typedef</span> <span class="keyword">struct </span>bheap {
 <a name="l00047"></a>00047         <span class="keywordtype">unsigned</span> sz;
 <a name="l00048"></a>00048         <span class="keywordtype">unsigned</span> last;
-<a name="l00049"></a>00049         bheaph_t *elems[1]; <span class="comment">/* only padding, indexing starts at 1 */</span>
+<a name="l00049"></a>00049         bheaph_t *elems[];
 <a name="l00050"></a>00050 } bheap_t;
 <a name="l00051"></a>00051 
 <a name="l00052"></a>00052 <span class="preprocessor">#define DECLARE_BHEAP_CONTAINER(name, sz)       \</span>
 <a name="l00053"></a>00053 <span class="preprocessor">        struct {                                \</span>
 <a name="l00054"></a>00054 <span class="preprocessor">                bheap_t bheap;                  \</span>
-<a name="l00055"></a>00055 <span class="preprocessor">                bheaph_t *elems[sz];            \</span>
+<a name="l00055"></a>00055 <span class="preprocessor">                bheaph_t *elems[sz + 1];        \</span>
 <a name="l00056"></a>00056 <span class="preprocessor">        } name</span>
 <a name="l00057"></a>00057 <span class="preprocessor"></span>
 <a name="l00058"></a>00058 <span class="comment">/* Check the binary heap invariant. */</span>
@@ -274,7 +274,7 @@
 <a name="l00242"></a>00242 <span class="preprocessor">#endif </span><span class="comment">/* _XENO_NUCLEUS_BHEAP_H */</span>
 </pre></div></div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Tue Nov 27 2012 23:52:24 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Wed Dec 26 2012 18:15:27 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

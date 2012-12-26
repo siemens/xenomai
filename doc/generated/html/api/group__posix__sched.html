@@ -62,13 +62,16 @@ Functions</h2></td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set the extended scheduling policy and parameters of the specified thread.  <a href="#gad5eceef44b79a09a1a86e7a1950a74e7"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__sched.html#ga357cd4b34c13011749dfffb42b489f09">sched_yield</a> (void)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Yield the processor.  <a href="#ga357cd4b34c13011749dfffb42b489f09"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__sched.html#gae5d877571baf3279acf755f016d2373f">sched_setconfig_np</a> (int cpu, int policy, union sched_config *config, size_t len)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Load CPU-specific scheduler settings for a given policy.  <a href="#gae5d877571baf3279acf755f016d2373f"></a><br/></td></tr>
 </table>
 <hr/><a name="_details"></a><h2>Detailed Description</h2>
 <p>Thread scheduling services. </p>
-<p>Xenomai POSIX skin supports the scheduling policies SCHED_FIFO, SCHED_RR, SCHED_SPORADIC and SCHED_OTHER.</p>
+<p>Xenomai POSIX skin supports the scheduling policies SCHED_FIFO, SCHED_RR, SCHED_SPORADIC, SCHED_TP and SCHED_OTHER.</p>
 <p>The SCHED_OTHER policy is mainly useful for user-space non-realtime activities that need to synchronize with real-time activities.</p>
 <p>The SCHED_RR policy is only effective if the time base is periodic (i.e. if configured with the compilation constant <em>CONFIG_XENO_OPT_POSIX_PERIOD</em> or the <em>xeno_nucleus</em> module parameter <em>tick_arg</em> set to a non null value). The SCHED_RR round-robin time slice is configured with the <em>xeno_posix</em> module parameter <em>time_slice</em>, as a count of system timer clock ticks.</p>
 <p>The SCHED_SPORADIC policy provides a mean to schedule aperiodic or sporadic threads in periodic-based systems.</p>
+<p>The SCHED_TP policy divides the scheduling time into a recurring global frame, which is itself divided into an arbitrary number of time partitions. Only threads assigned to the current partition are deemed runnable, and scheduled according to a FIFO-based rule within this partition. When completed, the current partition is advanced automatically to the next one by the scheduler, and the global time frame recurs from the first partition defined, when the last partition has ended.</p>
 <p>The scheduling policy and priority of a thread is set when creating a thread, by using thread creation attributes (see <a class="el" href="group__posix__threadattr.html#gad437fe8caa3ef9f0cb7d69f6f6479df9" title="Set inheritsched attribute.">pthread_attr_setinheritsched()</a>, <a class="el" href="group__posix__threadattr.html#ga79b4c9e71486a87ef3014f1c660b33eb" title="Set schedpolicy attribute.">pthread_attr_setschedpolicy()</a> and <a class="el" href="group__posix__threadattr.html#ga7d0bf4f0734aca888f89f7341b1df222" title="Set schedparam attribute.">pthread_attr_setschedparam()</a>), or when the thread is already running by using the service <a class="el" href="group__posix__sched.html#ga95276f88e1a2cae7a37f792123a99144" title="Set the scheduling policy and parameters of the specified thread.">pthread_setschedparam()</a>.</p>
 <dl class="see"><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_08.html#tag_02_08_04">Specification.</a> </dd></dl>
 <hr/><h2>Function Documentation</h2>
@@ -158,7 +161,7 @@ an error number if:<ul>
 
 <p>Get the extended scheduling policy and parameters of the specified thread. </p>
 <p>This service is an extended version of <a class="el" href="group__posix__sched.html#gabe5d6e7c9f3293447657b3a6f7d25282" title="Get the scheduling policy and parameters of the specified thread.">pthread_getschedparam()</a>, that also supports Xenomai-specific or additional POSIX scheduling policies, which are not available with the host Linux environment.</p>
-<p>Typically, SCHED_SPORADIC parameters can be retrieved from this call.</p>
+<p>Typically, SCHED_SPORADIC or SCHED_TP parameters can be retrieved from this call.</p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>tid</em>&nbsp;</td><td>target thread;</td></tr>
@@ -218,7 +221,7 @@ an error number if:<ul>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>tid</em>&nbsp;</td><td>target thread;</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>pol</em>&nbsp;</td><td>scheduling policy, one of SCHED_FIFO, SCHED_RR or SCHED_OTHER;</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>pol</em>&nbsp;</td><td>scheduling policy, one of SCHED_FIFO, SCHED_RR, SCHED_SPORADIC, SCHED_TP or SCHED_OTHER;</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>par</em>&nbsp;</td><td>scheduling parameters address.</td></tr>
   </table>
   </dd>
@@ -279,7 +282,7 @@ an error number if:<ul>
 
 <p>Set the extended scheduling policy and parameters of the specified thread. </p>
 <p>This service is an extended version of <a class="el" href="group__posix__sched.html#ga95276f88e1a2cae7a37f792123a99144" title="Set the scheduling policy and parameters of the specified thread.">pthread_setschedparam()</a>, that supports Xenomai-specific or additional POSIX scheduling policies, which are not available with the host Linux environment.</p>
-<p>Typically, a Xenomai thread policy can be set to SCHED_SPORADIC using this call.</p>
+<p>Typically, a Xenomai thread policy can be set to SCHED_SPORADIC or SCHED_TP using this call.</p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>tid</em>&nbsp;</td><td>target thread;</td></tr>
@@ -322,7 +325,7 @@ an error number if:<ul>
 <p>This service returns the maximum priority of the scheduling policy <em>policy</em>.</p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>policy</em>&nbsp;</td><td>scheduling policy, one of SCHED_FIFO, SCHED_RR, or SCHED_OTHER.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>policy</em>&nbsp;</td><td>scheduling policy, one of SCHED_FIFO, SCHED_RR, SCHED_SPORADIC, SCHED_TP or SCHED_OTHER.</td></tr>
   </table>
   </dd>
 </dl>
@@ -361,7 +364,7 @@ an error number if:<ul>
 <p>This service returns the minimum priority of the scheduling policy <em>policy</em>.</p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>policy</em>&nbsp;</td><td>scheduling policy, one of SCHED_FIFO, SCHED_RR, or SCHED_OTHER.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>policy</em>&nbsp;</td><td>scheduling policy, one of SCHED_FIFO, SCHED_RR, SCHED_SPORADIC, SCHED_TP or SCHED_OTHER.</td></tr>
   </table>
   </dd>
 </dl>
@@ -430,6 +433,79 @@ an error number if:<ul>
 
 </div>
 </div>
+<a class="anchor" id="gae5d877571baf3279acf755f016d2373f"></a><!-- doxytag: member="sched.c::sched_setconfig_np" ref="gae5d877571baf3279acf755f016d2373f" args="(int cpu, int policy, union sched_config *config, size_t len)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int sched_setconfig_np </td>
+          <td>(</td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>cpu</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>policy</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">union sched_config *&nbsp;</td>
+          <td class="paramname"> <em>config</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&nbsp;</td>
+          <td class="paramname"> <em>len</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Load CPU-specific scheduler settings for a given policy. </p>
+<p>Currently, this call only supports the SCHED_TP policy, for loading the temporal partitions. A configuration is strictly local to the target <em>cpu</em>, and may differ from other processors.</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>cpu</em>&nbsp;</td><td>processor to load the configuration of.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>policy</em>&nbsp;</td><td>scheduling policy to which the configuration data applies. Currently, only SCHED_TP is valid.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>p</em>&nbsp;</td><td>a pointer to the configuration data to load for <em>cpu</em>, applicable to <em>policy</em>.</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>Settings applicable to SCHED_TP:</p>
+<p>This call installs the temporal partitions for <em>cpu</em>.</p>
+<ul>
+<li>config.tp.windows should be a non-null set of time windows, defining the scheduling time slots for <em>cpu</em>. Each window defines its offset from the start of the global time frame (windows[].offset), a duration (windows[].duration), and the partition id it applies to (windows[].ptid).</li>
+</ul>
+<p>Time windows must be strictly contiguous, i.e. windows[n].offset + windows[n].duration shall equal windows[n + 1].offset. If windows[].ptid is in the range [0..CONFIG_XENO_OPT_SCHED_TP_NRPART-1], SCHED_TP threads which belong to the partition being referred to may run for the duration of the time window.</p>
+<p>Time holes may be defined using windows assigned to the pseudo partition #-1, during which no SCHED_TP threads may be scheduled.</p>
+<ul>
+<li>config.tp.nr_windows should define the number of elements present in the config.tp.windows[] array.</li>
+</ul>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>len</em>&nbsp;</td><td>size of the configuration data (in bytes).</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>0 on success; </dd>
+<dd>
+an error number if:<ul>
+<li>EINVAL, <em>cpu</em> is invalid, <em>policy</em> is different from SCHED_TP, SCHED_TP support is not compiled in (see CONFIG_XENO_OPT_SCHED_TP), <em>len</em> is zero, or <em>p</em> contains invalid parameters.</li>
+<li>ENOMEM, lack of memory to perform the operation. </li>
+</ul>
+</dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="ga357cd4b34c13011749dfffb42b489f09"></a><!-- doxytag: member="sched.c::sched_yield" ref="ga357cd4b34c13011749dfffb42b489f09" args="(void)" -->
 <div class="memitem">
 <div class="memproto">
@@ -459,7 +535,7 @@ an error number if:<ul>
 </div>
 </div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Tue Nov 27 2012 23:52:26 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Wed Dec 26 2012 18:15:31 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

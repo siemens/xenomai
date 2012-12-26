@@ -522,9 +522,24 @@ options <tt>CONFIG_XENO_OPT_SYS_HEAPSZ</tt> and
 should be configured to large enough values. Try increasing them and
 recompiling the kernel.</p></div>
 </div>
-<h2 id="_problem_with_my_code_not_xenomai_code">5. Problem with my code (not Xenomai code)</h2>
+<h2 id="_known_bugs_and_limitations">5. Known Bugs and Limitations</h2>
 <div class="sectionbody">
-<h3 id="_warning_lt_service_gt_is_deprecated_while_compiling_kernel_code">5.1. "Warning: &lt;service&gt; is deprecated" while compiling kernel code</h3><div style="clear:left"></div>
+<h3 id="_2_6_2_x86">5.1. 2.6.2/x86</h3><div style="clear:left"></div>
+<div class="paragraph"><p>2.6.2 (like any previous Xenomai release) does not handle the extended
+processor state (xsave/xrstor) yet.</p></div>
+<div class="paragraph"><p>2.6.2 automatically disables this CPU feature at boot when the host
+kernel detects it, so no action is to be taken by the user. However,
+this feature shall be disabled manually for older Xenomai releases, by
+passing the "noxsave" parameter on the kernel command line (see
+Documentation/kernel-parameters.txt).</p></div>
+<div class="paragraph"><p>Failing to do so, running with extended processor state support
+enabled on these Xenomai releases beget random execution errors in
+userland, typically when the switchtest program runs in the
+background, due to incorrect FPU management in real-time mode.</p></div>
+</div>
+<h2 id="_problem_with_my_code_not_xenomai_code">6. Problem with my code (not Xenomai code)</h2>
+<div class="sectionbody">
+<h3 id="_warning_lt_service_gt_is_deprecated_while_compiling_kernel_code">6.1. "Warning: &lt;service&gt; is deprecated" while compiling kernel code</h3><div style="clear:left"></div>
 <div class="paragraph"><p>Where &lt;service&gt; is a thread creation service, one of:</p></div>
 <div class="ulist"><ul>
 <li>
@@ -569,7 +584,7 @@ document, see
 <div class="paragraph"><p>You may switch those warnings off by enabling the
 <tt>CONFIG_XENO_OPT_NOWARN_DEPRECATED</tt> option in your kernel configuration,
 but nevertheless, you have been <strong>WARNED</strong>.</p></div>
-<h3 id="_xenomai_process_memory_not_locked_missing_mlockall_at_startup">5.2. "Xenomai: process memory not locked (missing mlockall?)" at startup</h3><div style="clear:left"></div>
+<h3 id="_xenomai_process_memory_not_locked_missing_mlockall_at_startup">6.2. "Xenomai: process memory not locked (missing mlockall?)" at startup</h3><div style="clear:left"></div>
 <div class="paragraph"><p>In order to avoid unwanted transitions to secondary domain, an
 application using Xenomai services should call, before any Xenomai
 service:</p></div>
@@ -588,7 +603,7 @@ this page.</p></div>
 Xenomai libraries startup, this is enabled when configuring Xenomai
 user-space support with the <tt>configure</tt> script.</p></div>
 <div class="paragraph"><p>See <tt>configure --help</tt>.</p></div>
-<h3 id="_high_latencies_when_transitioning_from_primary_to_secondary_mode">5.3. High latencies when transitioning from primary to secondary mode</h3><div style="clear:left"></div>
+<h3 id="_high_latencies_when_transitioning_from_primary_to_secondary_mode">6.3. High latencies when transitioning from primary to secondary mode</h3><div style="clear:left"></div>
 <div class="paragraph"><p>Such transition requires to wake up the Linux task underlying your
 real-time thread when running in secondary mode, since the latter
 needs to leave the Xenomai domain for executing under the control of the
@@ -641,7 +656,7 @@ disk drivers.
 </p>
 </li>
 </ul></div>
-<h3 id="_any_xenomai_service_fails_with_code_38_enosys">5.4. Any Xenomai service fails with code -38 (ENOSYS)</h3><div style="clear:left"></div>
+<h3 id="_any_xenomai_service_fails_with_code_38_enosys">6.4. Any Xenomai service fails with code -38 (ENOSYS)</h3><div style="clear:left"></div>
 <div class="paragraph"><p>Possible reasons for this error are:</p></div>
 <div class="ulist"><ul>
 <li>
@@ -670,7 +685,7 @@ on an x86_64 kernel.
 </p>
 </li>
 </ul></div>
-<h3 id="_my_application_reserves_a_lot_of_memory">5.5. My application reserves a lot of memory</h3><div style="clear:left"></div>
+<h3 id="_my_application_reserves_a_lot_of_memory">6.5. My application reserves a lot of memory</h3><div style="clear:left"></div>
 <div class="paragraph"><p>Your user-space application unexpectedly reserves a lot of virtual
 memory, as reported by "<tt>top</tt>" or <em>/proc/&lt;pid&gt;/maps</em>. Sometimes OOM
 situations even appear during runtime on systems with limited memory.</p></div>
@@ -698,7 +713,7 @@ like calling:</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2012-12-16 17:35:00 CEST
+Last updated 2012-12-26 18:11:12 CEST
 </div>
 </div>
 </body>
