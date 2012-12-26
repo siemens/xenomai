@@ -10,9 +10,11 @@
  */
 static inline void __ipipe_early_client_setup(void)
 {
-	setup_clear_cpu_cap(X86_FEATURE_XSAVE);
-	setup_clear_cpu_cap(X86_FEATURE_XSAVEOPT);
-	printk(KERN_INFO "Xenomai: forcing noxsave");
+	if (cpu_has_xsave) {
+		setup_clear_cpu_cap(X86_FEATURE_XSAVE);
+		setup_clear_cpu_cap(X86_FEATURE_XSAVEOPT);
+		printk(KERN_INFO "Xenomai: forcing noxsave");
+	}
 }
 
 #endif	/* cpu_has_xsave */
