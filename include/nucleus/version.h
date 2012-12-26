@@ -26,8 +26,8 @@
 					    CONFIG_XENO_VERSION_MINOR, \
 					    CONFIG_XENO_REVISION_LEVEL)
 
-#define XENO_VERSION_NAME	"Light Years Away"
+#define XENO_VERSION_NAME	"Day At The Beach"
 
-#define XENO_VERSION_STRING	"2.6.1"
+#define XENO_VERSION_STRING	"2.6.2"
 
 #endif /* _XENO_NUCLEUS_VERSION_H */
