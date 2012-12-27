@@ -21,7 +21,7 @@ patch_append() {
 #    echo "diff -u1wbr orig/$file new/$file" >> $patch_file
     echo "--- linux/$file	1970-01-01 01:00:00.000000000 +0100" >> $patch_file
     echo "+++ linux-patched/$file	2007-03-06 17:55:58.000000000 +0000" >> $patch_file
-    echo "@@ -500,0 +500,2 @@" >> $patch_file
+    echo "@@ -500000,0 +500000,2 @@" >> $patch_file
     echo "+" >> $patch_file
     cat >> $patch_file
 }
@@ -78,7 +78,7 @@ diff_addons() {
 
     echo "--- linux/init/Kconfig	1970-01-01 01:00:00.000000000 +0100" >> $patch_file
     echo "+++ linux-patched/init/Kconfig	2007-03-06 17:55:58.000000000 +0000" >> $patch_file
-    echo "@@ -1400,0 +1400,$lines @@" >> $patch_file
+    echo "@@ -500000,0 +500000,$lines @@" >> $patch_file
     sed -e "s,@LINUX_ARCH@,$linux_arch,g" $xenomai_root/scripts/Kconfig.frag | sed 's/^/+/' >> $patch_file
     echo " " >> $patch_file
 }
@@ -148,7 +148,7 @@ generate_patch >> $patch_file
 
 cd $xenomai_root
 
-find $xenomai_root/ksrc/ -name "adeos-ipipe-2.6.*-$supported_arch-*.patch" |
+find $xenomai_root/ksrc/ -name "*ipipe*-$supported_arch-*.patch" |
 while read f ; do
 
     file=`basename $f`
