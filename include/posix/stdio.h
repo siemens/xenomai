@@ -2,9 +2,10 @@
 
 #include_next <stdio.h>
 
-#ifndef STDIO_H
-#define STDIO_H
+#ifndef _XENO_POSIX_STDIO_H
+#define _XENO_POSIX_STDIO_H
 
+#include <stddef.h>
 #include <stdarg.h>
 
 #ifdef __cplusplus
@@ -33,6 +34,6 @@ size_t __real_fwrite(const void *ptr, size_t sz, size_t nmemb, FILE *stream);
 }
 #endif /* __cplusplus */
 
-#endif /* STDIO_H */
+#endif /* _XENO_POSIX_STDIO_H */
 
 #endif /* !__KERNEL__ */
