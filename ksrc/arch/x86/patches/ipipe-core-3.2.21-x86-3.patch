@@ -256,7 +256,7 @@ index 615fa90..f60651a 100644
  extern void default_send_IPI_mask_sequence_phys(const struct cpumask *mask,
 diff --git a/arch/x86/include/asm/ipipe.h b/arch/x86/include/asm/ipipe.h
 new file mode 100644
-index 0000000..7bd1277
+index 0000000..09f250e
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe.h
 @@ -0,0 +1,104 @@
@@ -286,7 +286,7 @@ index 0000000..7bd1277
 +
 +#ifdef CONFIG_IPIPE
 +
-+#define IPIPE_CORE_RELEASE	2
++#define IPIPE_CORE_RELEASE	3
 +
 +struct ipipe_domain;
 +
@@ -1456,7 +1456,7 @@ index f7a41e4..057bdfe 100644
  
  static void flat_send_IPI_mask(const struct cpumask *cpumask, int vector)
 diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 6d939d7..9bbe781 100644
+index 6d939d7..c30efb5 100644
 --- a/arch/x86/kernel/apic/io_apic.c
 +++ b/arch/x86/kernel/apic/io_apic.c
 @@ -73,8 +73,8 @@
@@ -1763,12 +1763,12 @@ index 6d939d7..9bbe781 100644
  #ifdef CONFIG_SMP
  	chip->irq_set_affinity = ir_ioapic_set_affinity;
 +#ifdef CONFIG_IPIPE
-+	chip->irq_move = move_xxapic_irq,
++	chip->irq_move = move_xxapic_irq;
 +#endif
 +#endif
 +#ifdef CONFIG_IPIPE
-+	chip->irq_hold = hold_ioapic_irq,
-+	chip->irq_release = release_ioapic_irq,
++	chip->irq_hold = hold_ioapic_irq;
++	chip->irq_release = release_ioapic_irq;
  #endif
  }
  #endif /* CONFIG_IRQ_REMAP */
