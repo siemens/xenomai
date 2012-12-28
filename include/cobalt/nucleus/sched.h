@@ -294,19 +294,19 @@ static inline void xnsched_rotate(struct xnsched *sched,
 	sched_class->sched_rotate(sched, sched_param);
 }
 
-static inline int xnsched_init_tcb(struct xnthread *thread)
+static inline int xnsched_init_thread(struct xnthread *thread)
 {
 	int ret = 0;
 
-	xnsched_idle_init_tcb(thread);
-	xnsched_rt_init_tcb(thread);
+	xnsched_idle_init_thread(thread);
+	xnsched_rt_init_thread(thread);
 #ifdef CONFIG_XENO_OPT_SCHED_TP
-	ret = xnsched_tp_init_tcb(thread);
+	ret = xnsched_tp_init_thread(thread);
 	if (ret)
 		return ret;
 #endif /* CONFIG_XENO_OPT_SCHED_TP */
 #ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
-	ret = xnsched_sporadic_init_tcb(thread);
+	ret = xnsched_sporadic_init_thread(thread);
 	if (ret)
 		return ret;
 #endif /* CONFIG_XENO_OPT_SCHED_SPORADIC */

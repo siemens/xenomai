@@ -1085,7 +1085,7 @@ void rtdm_task_busy_sleep(nanosecs_rel_t delay);
 #ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
 static inline void rtdm_task_destroy(rtdm_task_t *task)
 {
-	xnpod_delete_thread(task);
+	xnpod_cancel_thread(task);
 }
 
 void rtdm_task_join_nrt(rtdm_task_t *task, unsigned int poll_delay);
@@ -1116,7 +1116,7 @@ static inline int rtdm_task_unblock(rtdm_task_t *task)
 
 static inline rtdm_task_t *rtdm_task_current(void)
 {
-	return xnpod_current_thread();
+	return xnshadow_current();
 }
 
 static inline int rtdm_task_wait_period(void)

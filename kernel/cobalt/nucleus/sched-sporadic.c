@@ -258,8 +258,7 @@ static void xnsched_sporadic_setparam(struct xnthread *thread,
 		}
 	}
 
-	if (xnthread_test_state(thread, XNSHADOW))
-		xnthread_clear_state(thread, XNOTHER);
+	xnthread_clear_state(thread, XNOTHER);
 	thread->cprio = p->pss.current_prio;
 }
 
@@ -441,7 +440,7 @@ static int vfile_sched_sporadic_next(struct xnvfile_snapshot_iterator *it,
 		return VFILE_SEQ_SKIP;
 
 	p->cpu = xnsched_cpu(thread->sched);
-	p->pid = xnthread_user_pid(thread);
+	p->pid = xnthread_host_pid(thread);
 	memcpy(p->name, thread->name, sizeof(p->name));
 	p->current_prio = thread->cprio;
 	p->low_prio = thread->pss->param.low_prio;

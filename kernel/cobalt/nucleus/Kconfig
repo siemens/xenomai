@@ -231,26 +231,6 @@ config XENO_OPT_SYS_HEAPSZ
 	the nucleus and the real-time APIs. The size is expressed in
 	Kilobytes.
 
-config XENO_OPT_SYS_STACKPOOLSZ
-        depends on XENO_GENERIC_STACKPOOL
-	int "Size of the private stack pool (Kb)"
-	default 128
-	help
-
-	On this architecture, kernel-based Xenomai threads get the
-	stack space they need from a private memory pool.  If you
-	don't start any kernel-based thread (i.e. no RTDM driver
-	thread, no real-time task created from an application embodied
-	into a kernel module, no switchtest driver), you may leave a
-	zero value for this option. The size is expressed in Kilobytes.
-
-if !XENO_GENERIC_STACKPOOL
-
-config XENO_OPT_SYS_STACKPOOLSZ
-        int
-	default 0
-endif	
-
 config XENO_OPT_SEM_HEAPSZ
 	int "Size of private semaphores heap (Kb)"
 	default 32
@@ -314,12 +294,12 @@ config XENO_OPT_DEBUG_NUCLEUS
 	doing.
 
 config XENO_OPT_DEBUG_XNLOCK
-	bool "Spinlocks monitoring"
+	bool "Spinlock latency measurement"
 	default y if SMP
 	help
 
 	This option activates measurements of Xenomai spinlocks
-	spinning time and duration. It should have a low overhad, and
+	spinning time and duration. It should have a low overhead, and
 	helps finding latency spots due to masking
 	sections. Statistics about the longest masking section may be
 	found in /proc/xenomai/lock.

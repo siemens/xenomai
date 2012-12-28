@@ -70,7 +70,6 @@ typedef struct cobalt_threadattr {
 
 	unsigned magic;
 	int detachstate;
-	size_t stacksize;
 	int inheritsched;
 	int policy;
 

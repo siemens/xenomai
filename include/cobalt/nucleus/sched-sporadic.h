@@ -57,7 +57,7 @@ struct xnsched_sporadic {
 #endif
 };
 
-static inline int xnsched_sporadic_init_tcb(struct xnthread *thread)
+static inline int xnsched_sporadic_init_thread(struct xnthread *thread)
 {
 	thread->pss = NULL;
 

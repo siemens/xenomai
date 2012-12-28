@@ -35,6 +35,7 @@ struct xnmutex;
 struct pt_regs;
 struct timespec;
 struct timeval;
+struct completion;
 
 struct xnskin_props {
 	const char *name;
@@ -48,6 +49,8 @@ static inline struct xnthread *xnshadow_current(void)
 {
 	return ipipe_current_threadinfo()->thread;
 }
+
+#define xnshadow_current_p(thread) (xnshadow_current() == (thread))
 
 static inline struct xnthread *xnshadow_thread(struct task_struct *p)
 {
@@ -78,9 +81,11 @@ void xnshadow_grab_events(void);
 
 void xnshadow_release_events(void);
 
-int xnshadow_map(struct xnthread *thread,
-		 xncompletion_t __user *u_completion,
-		 unsigned long __user *u_window_offset);
+int xnshadow_map_user(struct xnthread *thread,
+		      unsigned long __user *u_window_offset);
+
+int xnshadow_map_kernel(struct xnthread *thread,
+			struct completion *done);
 
 void xnshadow_unmap(struct xnthread *thread);
 
@@ -89,15 +94,6 @@ int xnshadow_harden(void);
 void xnshadow_relax(int notify, int reason);
 
 void xnshadow_renice(struct xnthread *thread);
-
-void xnshadow_suspend(struct xnthread *thread);
-
-void xnshadow_start(struct xnthread *thread);
-
-void xnshadow_signal_completion(xncompletion_t __user *u_completion,
-				int err);
-
-void xnshadow_exit(void);
 
 int xnshadow_register_interface(struct xnskin_props *props);
 

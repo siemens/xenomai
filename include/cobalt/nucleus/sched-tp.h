@@ -57,7 +57,7 @@ struct xnsched_tp {
 	struct xnqueue threads;		 /* !< Assigned thread queue */
 };
 
-static inline int xnsched_tp_init_tcb(struct xnthread *thread)
+static inline int xnsched_tp_init_thread(struct xnthread *thread)
 {
 	inith(&thread->tp_link);
 	thread->tps = NULL;

@@ -300,7 +300,7 @@ void xndebug_trace_relax(int nr, unsigned long __user *u_backtrace,
 	 */
 	spot.depth = depth;
 	spot.proghash = thread->proghash;
-	spot.pid = xnthread_user_pid(thread);
+	spot.pid = xnthread_host_pid(thread);
 	spot.reason = reason;
 	strcpy(spot.thread, thread->name);
 	hash = jhash2((u32 *)&spot, sizeof(spot) / sizeof(u32), 0);
@@ -628,13 +628,17 @@ void xndebug_shadow_init(struct xnthread *thread)
 {
 	struct xnsys_ppd *sys_ppd;
 	size_t len;
+	spl_t s;
 
-	xnlock_get(&nklock);
+	xnlock_get_irqsave(&nklock, s);
 	sys_ppd = xnsys_ppd_get(0);
-	xnlock_put(&nklock);
+	xnlock_put_irqrestore(&nklock, s);
 	/*
 	 * The caller is current, so we know for sure that sys_ppd
 	 * will still be valid after we dropped the lock.
+	 *
+	 * NOTE: Kernel shadows all share the system global ppd
+	 * descriptor with no refcounting.
 	 */
 	thread->exe_path = sys_ppd->exe_path ?: "(unknown)";
 	/*

@@ -99,8 +99,7 @@ static void xnsched_tp_setparam(struct xnthread *thread,
 {
 	struct xnsched *sched = thread->sched;
 
-	if (xnthread_test_state(thread, XNSHADOW))
-		xnthread_clear_state(thread, XNOTHER);
+	xnthread_clear_state(thread, XNOTHER);
 	thread->tps = &sched->tp.partitions[p->tp.ptid];
 	thread->cprio = p->tp.prio;
 }
@@ -321,7 +320,7 @@ static int vfile_sched_tp_next(struct xnvfile_snapshot_iterator *it,
 		return VFILE_SEQ_SKIP;
 
 	p->cpu = xnsched_cpu(thread->sched);
-	p->pid = xnthread_user_pid(thread);
+	p->pid = xnthread_host_pid(thread);
 	memcpy(p->name, thread->name, sizeof(p->name));
 	p->ptid = thread->tps - thread->sched->tp.partitions;
 	p->prio = thread->cprio;

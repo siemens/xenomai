@@ -19,13 +19,13 @@
 #ifndef _XENO_ASM_GENERIC_IPIPE_THREAD_INFO_H
 #define _XENO_ASM_GENERIC_IPIPE_THREAD_INFO_H
 
+struct xnthread;
+struct mm_struct;
+
 struct ipipe_threadinfo {
 	struct xnthread *thread;
 	struct mm_struct *mm;
 };
-
-struct xnthread;
-struct mm_struct;
 
 static inline void __ipipe_init_threadinfo(struct ipipe_threadinfo *p)
 {

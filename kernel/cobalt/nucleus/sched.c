@@ -75,16 +75,15 @@ MODULE_PARM_DESC(watchdog_timeout, "Watchdog timeout (s)");
  *
  * This internal routine handles incoming watchdog ticks to detect
  * software lockups. It kills any offending thread which is found to
- * monopolize the CPU so as to starve the Linux kernel for more than
- * four seconds.
+ * monopolize the CPU so as to starve the Linux kernel for too long.
  */
 
 static void xnsched_watchdog_handler(struct xntimer *timer)
 {
 	struct xnsched *sched = xnpod_current_sched();
-	struct xnthread *thread = sched->curr;
+	struct xnthread *curr = sched->curr;
 
-	if (likely(xnthread_test_state(thread, XNROOT))) {
+	if (likely(xnthread_test_state(curr, XNROOT))) {
 		xnsched_reset_watchdog(sched);
 		return;
 	}
@@ -92,21 +91,20 @@ static void xnsched_watchdog_handler(struct xntimer *timer)
 	if (likely(++sched->wdcount < wd_timeout_arg))
 		return;
 
-	if (xnthread_test_state(thread, XNSHADOW)) {
-		trace_mark(xn_nucleus, watchdog_signal,
-			   "thread %p thread_name %s",
-			   thread, xnthread_name(thread));
-		printk(XENO_WARN "watchdog triggered -- signaling runaway thread "
-		       "'%s'\n", xnthread_name(thread));
-		xnshadow_call_mayday(thread, SIGDEBUG_WATCHDOG);
+	trace_mark(xn_nucleus, watchdog_signal,
+		   "thread %p thread_name %s",
+		   curr, xnthread_name(curr));
+
+	if (xnthread_test_state(curr, XNUSER)) {
+		printk(XENO_WARN "watchdog triggered -- runaway thread "
+		       "'%s' signaled\n", xnthread_name(curr));
+		xnshadow_call_mayday(curr, SIGDEBUG_WATCHDOG);
 	} else {
-		trace_mark(xn_nucleus, watchdog, "thread %p thread_name %s",
-			   thread, xnthread_name(thread));
-		printk(XENO_WARN
-		       "watchdog triggered -- killing runaway thread '%s'\n",
-		       xnthread_name(thread));
-		xnpod_delete_thread(thread);
+		printk(XENO_WARN "watchdog triggered -- runaway thread "
+		       "'%s' cancelled\n", xnthread_name(curr));
+		xnpod_cancel_thread(curr);
 	}
+
 	xnsched_reset_watchdog(sched);
 }
 
@@ -154,7 +152,6 @@ void xnsched_init(struct xnsched *sched, int cpu)
 
 	attr.flags = XNROOT | XNSTARTED | XNFPU;
 	attr.name = root_name;
-	attr.stacksize = 0;
 	attr.ops = NULL;
 	param.idle.prio = XNSCHED_IDLE_PRIO;
 
@@ -167,9 +164,7 @@ void xnsched_init(struct xnsched *sched, int cpu)
 	sched->fpuholder = &sched->rootcb;
 #endif /* CONFIG_XENO_HW_FPU */
 
-	xnarch_init_root_tcb(xnthread_archtcb(&sched->rootcb),
-			     &sched->rootcb,
-			     xnthread_name(&sched->rootcb));
+	xnthread_init_root_tcb(&sched->rootcb);
 
 #ifdef CONFIG_XENO_OPT_WATCHDOG
 	xntimer_init_noblock(&sched->wdtimer, xnsched_watchdog_handler);
@@ -195,8 +190,8 @@ void xnsched_destroy(struct xnsched *sched)
 /* Must be called with nklock locked, interrupts off. */
 struct xnthread *xnsched_pick_next(struct xnsched *sched)
 {
+	struct xnsched_class *p __maybe_unused;
 	struct xnthread *curr = sched->curr;
-	struct xnsched_class *p;
 	struct xnthread *thread;
 
 	if (!xnthread_test_state(curr, XNTHREAD_BLOCK_BITS | XNZOMBIE)) {
@@ -234,7 +229,7 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
 
 	return NULL; /* Never executed because of the idle class. */
 #else /* !CONFIG_XENO_OPT_SCHED_CLASSES */
-	thread = __xnsched_rt_pick(sched); (void)p;
+	thread = __xnsched_rt_pick(sched);
 	if (unlikely(thread == NULL))
 		thread = &sched->rootcb;
 
@@ -263,7 +258,7 @@ void __xnsched_finalize_zombie(struct xnsched *sched)
 {
 	struct xnthread *thread = sched->zombie;
 
-	xnthread_cleanup_tcb(thread);
+	xnthread_cleanup(thread);
 
 	if (xnthread_test_state(sched->curr, XNROOT))
 		xnfreesync();
@@ -672,7 +667,7 @@ static int vfile_schedlist_next(struct xnvfile_snapshot_iterator *it,
 	priv->curr = nextq(&nkpod->threadq, priv->curr);
 
 	p->cpu = xnsched_cpu(thread->sched);
-	p->pid = xnthread_user_pid(thread);
+	p->pid = xnthread_host_pid(thread);
 	memcpy(p->name, thread->name, sizeof(p->name));
 	p->cprio = thread->cprio;
 	p->state = xnthread_state_flags(thread);
@@ -804,7 +799,7 @@ static int vfile_schedstat_next(struct xnvfile_snapshot_iterator *it,
 
 	sched = thread->sched;
 	p->cpu = xnsched_cpu(sched);
-	p->pid = xnthread_user_pid(thread);
+	p->pid = xnthread_host_pid(thread);
 	memcpy(p->name, thread->name, sizeof(p->name));
 	p->state = xnthread_state_flags(thread);
 	p->ssw = xnstat_counter_get(&thread->stat.ssw);

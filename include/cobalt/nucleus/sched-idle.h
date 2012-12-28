@@ -39,8 +39,7 @@ extern struct xnsched_class xnsched_class_idle;
 static inline void __xnsched_idle_setparam(struct xnthread *thread,
 					   const union xnsched_policy_param *p)
 {
-	if (xnthread_test_state(thread, XNSHADOW))
-		xnthread_clear_state(thread, XNOTHER);
+	xnthread_clear_state(thread, XNOTHER);
 	thread->cprio = p->idle.prio;
 }
 
@@ -59,7 +58,7 @@ static inline void __xnsched_idle_trackprio(struct xnthread *thread,
 		thread->cprio = XNSCHED_IDLE_PRIO;
 }
 
-static inline int xnsched_idle_init_tcb(struct xnthread *thread)
+static inline int xnsched_idle_init_thread(struct xnthread *thread)
 {
 	return 0;
 }

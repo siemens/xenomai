@@ -103,9 +103,9 @@ static int create_instance(struct rtdm_device *device,
 			   rtdm_user_info_t *user_info, int nrt_mem)
 {
 	struct rtdm_dev_context *context;
-	xnshadow_ppd_t *ppd = NULL;
-	int fd;
+	xnshadow_ppd_t *ppd;
 	spl_t s;
+	int fd;
 
 	/*
 	 * Reset to NULL so that we can always use cleanup_files/instance to

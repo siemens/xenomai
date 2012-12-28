@@ -609,7 +609,7 @@ void __xntimer_init(xntimer_t *timer, void (*handler) (xntimer_t *timer))
 	timer->sched = xnpod_current_sched();
 
 #ifdef CONFIG_XENO_OPT_STATS
-	if (!xnpod_current_thread() || xnpod_shadow_p())
+	if (!xnpod_current_thread() || !xnpod_root_p())
 		snprintf(timer->name, XNOBJECT_NAME_LEN, "%d/%s",
 			 current->pid, current->comm);
 	else

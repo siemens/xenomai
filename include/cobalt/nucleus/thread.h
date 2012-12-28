@@ -39,22 +39,21 @@
 #define XNDORMANT 0x00000010 /**< Not started yet or killed */
 #define XNZOMBIE  0x00000020 /**< Zombie thread in deletion process */
 #define XNSTARTED 0x00000080 /**< Thread has been started */
-#define XNMAPPED  0x00000100 /**< Mapped to a regular Linux task (shadow only) */
+#define XNMAPPED  0x00000100 /**< Thread is mapped to a linux task */
 #define XNRELAX   0x00000200 /**< Relaxed shadow thread (blocking bit) */
 #define XNMIGRATE 0x00000400 /**< Thread is currently migrating to another CPU. */
 #define XNHELD    0x00000800 /**< Thread is held to process emergency. */
 
 #define XNBOOST   0x00001000 /**< Undergoes a PIP boost */
-#define XNDEBUG   0x00002000 /**< Hit a debugger breakpoint (shadow only) */
+#define XNDEBUG   0x00002000 /**< Hit a debugger breakpoint */
 #define XNLOCK    0x00004000 /**< Holds the scheduler lock (i.e. not preemptible) */
 #define XNRRB     0x00008000 /**< Undergoes a round-robin scheduling */
 #define XNASDI    0x00010000 /**< ASR are disabled */
-#define XNDEFCAN  0x00020000 /**< Deferred cancelability mode (self-set only) */
-#define XNTRAPSW  0x00040000 /**< Trap execution mode switches */
-#define XNFPU     0x00080000 /**< Thread uses FPU */
-#define XNSHADOW  0x00100000 /**< Shadow thread */
-#define XNROOT    0x00200000 /**< Root thread (that is, Linux/IDLE) */
-#define XNOTHER   0x00400000 /**< Non real-time shadow (prio=0) */
+#define XNTRAPSW  0x00020000 /**< Trap execution mode switches */
+#define XNFPU     0x00040000 /**< Thread uses FPU */
+#define XNROOT    0x00080000 /**< Root thread (that is, Linux/IDLE) */
+#define XNOTHER   0x00100000 /**< Non real-time shadow (prio=0) */
+#define XNUSER    0x00200000 /**< Shadow thread running in userland */
 
 /*! @} */ /* Ends doxygen comment group: nucleus_state_flags */
 
@@ -73,9 +72,8 @@
   'l' -> Locks scheduler.
   'r' -> Undergoes round-robin.
   't' -> Mode switches trapped.
-  'f' -> FPU enabled (for kernel threads).
 */
-#define XNTHREAD_STATE_LABELS  "SWDRU....X.HbTlr...tf..."
+#define XNTHREAD_STATE_LABELS  "SWDRU....X.HbTlr...t....."
 
 #define XNTHREAD_BLOCK_BITS   (XNSUSP|XNPEND|XNDELAY|XNDORMANT|XNRELAX|XNMIGRATE|XNHELD)
 #define XNTHREAD_MODE_BITS    (XNLOCK|XNRRB|XNASDI|XNTRAPSW)
@@ -98,14 +96,13 @@
 #define XNTIMEO   0x00000001 /**< Woken up due to a timeout condition */
 #define XNRMID    0x00000002 /**< Pending on a removed resource */
 #define XNBREAK   0x00000004 /**< Forcibly awaken from a wait state */
-#define XNKICKED  0x00000008 /**< Forced out of primary mode (shadow only) */
+#define XNKICKED  0x00000008 /**< Forced out of primary mode */
 #define XNWAKEN   0x00000010 /**< Thread waken up upon resource availability */
 #define XNROBBED  0x00000020 /**< Robbed from resource ownership */
 #define XNAFFSET  0x00000040 /**< CPU affinity changed from primary mode */
 #define XNPRIOSET 0x00000080 /**< Priority changed from primary mode */
-#define XNABORT   0x00000100 /**< Thread is being aborted */
-#define XNCANPND  0x00000200 /**< Cancellation request is pending */
-#define XNSWREP   0x00000400 /**< Mode switch already reported */
+#define XNCANCELD 0x00000100 /**< Cancellation request is pending */
+#define XNSWREP   0x00000200 /**< Mode switch already reported */
 
 /* These information flags are available to the real-time interfaces */
 #define XNTHREAD_INFO_SPARE0  0x10000000
@@ -175,7 +172,6 @@ struct xnthread_operations {
 struct xnthread_init_attr {
 	struct xnthread_operations *ops;
 	xnflags_t flags;
-	unsigned int stacksize;
 	const char *name;
 };
 
@@ -188,7 +184,7 @@ struct xnthread_start_attr {
 };
 
 struct xnthread_wait_context {
-	unsigned long oldstate;
+	/* anchor object */
 };
 
 typedef void (*xnasr_t)(xnsigmask_t sigs);
@@ -339,10 +335,9 @@ typedef struct xnhook {
 #define xnthread_stack_end(thread)         xnarch_stack_end(xnthread_archtcb(thread))
 #define xnthread_handle(thread)            ((thread)->registry.handle)
 #define xnthread_signaled_p(thread)        ((thread)->signals != 0)
-#define xnthread_user_task(thread)         xnarch_user_task(xnthread_archtcb(thread))
-#define xnthread_user_pid(thread) \
-    (xnthread_test_state((thread),XNROOT) || !xnthread_user_task(thread) ? \
-    0 : xnarch_user_pid(xnthread_archtcb(thread)))
+#define xnthread_host_task(thread)         (xnthread_archtcb(thread)->core.host_task)
+#define xnthread_host_pid(thread)	   (xnthread_test_state((thread),XNROOT) ? 0 : \
+					    xnthread_archtcb(thread)->core.host_task->pid)
 #define xnthread_affinity(thread)          ((thread)->affinity)
 #define xnthread_affine_p(thread, cpu)     cpu_isset(cpu, (thread)->affinity)
 #define xnthread_get_exectime(thread)      xnstat_exectime_get_total(&(thread)->stat.account)
@@ -377,19 +372,22 @@ struct xnthread *xnthread_lookup(xnhandle_t threadh)
 
 static inline void xnthread_sync_window(struct xnthread *thread)
 {
-	thread->u_window->state = thread->state;
+	if (thread->u_window)
+		thread->u_window->state = thread->state;
 }
 
 static inline
 void xnthread_clear_sync_window(struct xnthread *thread, int bits)
 {
-	thread->u_window->state = thread->state & ~bits;
+	if (thread->u_window)
+		thread->u_window->state = thread->state & ~bits;
 }
 
 static inline
 void xnthread_set_sync_window(struct xnthread *thread, int bits)
 {
-	thread->u_window->state = thread->state | bits;
+	if (thread->u_window)
+		thread->u_window->state = thread->state | bits;
 }
 
 /*
@@ -423,7 +421,12 @@ int xnthread_init(struct xnthread *thread,
 		  struct xnsched_class *sched_class,
 		  const union xnsched_policy_param *sched_param);
 
-void xnthread_cleanup_tcb(struct xnthread *thread);
+void xnthread_init_shadow_tcb(struct xnthread *thread,
+			      struct task_struct *task);
+
+void xnthread_init_root_tcb(struct xnthread *thread);
+
+void xnthread_cleanup(struct xnthread *thread);
 
 char *xnthread_format_status(xnflags_t status, char *buf, int size);
 
@@ -435,6 +438,11 @@ void xnthread_prepare_wait(struct xnthread_wait_context *wc);
 
 void xnthread_finish_wait(struct xnthread_wait_context *wc,
 			  void (*cleanup)(struct xnthread_wait_context *wc));
+
+static inline int normalize_priority(int prio)
+{
+	return prio < MAX_RT_PRIO ? prio : MAX_RT_PRIO - 1;
+}
 
 #endif /* __KERNEL__ */
 

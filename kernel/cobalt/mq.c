@@ -598,7 +598,7 @@ static void mq_send_signal(cobalt_mq_t *mq)
 			.size = sizeof(sigwork),
 			.handler = mq_do_notify,
 		},
-		.task = xnthread_user_task(&mq->target->threadbase),
+		.task = xnthread_host_task(&mq->target->threadbase),
 		.si = mq->si,
 	};
 

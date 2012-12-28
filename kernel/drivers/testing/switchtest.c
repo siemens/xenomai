@@ -470,7 +470,6 @@ static int rtswitch_create_ktask(rtswitch_context_t *ctx,
 	iattr.name = name;
 	iattr.flags = init_flags;
 	iattr.ops = NULL;
-	iattr.stacksize = 0;
 	param.rt.prio = 1;
 
 	err = xnpod_init_thread(&task->ktask,
@@ -484,7 +483,7 @@ static int rtswitch_create_ktask(rtswitch_context_t *ctx,
 		err = xnpod_start_thread(&task->ktask, &sattr);
 	} else
 		/*
-		 * In order to avoid calling xnpod_delete_thread with
+		 * In order to avoid calling xnpod_cancel_thread with
 		 * invalid thread.
 		 */
 		task->base.flags = 0;
@@ -539,7 +538,7 @@ static int rtswitch_close(struct rtdm_dev_context *context,
 			rtswitch_task_t *task = &ctx->tasks[i];
 
 			if (task->base.flags & RTSWITCH_KERNEL)
-				xnpod_delete_thread(&task->ktask);
+				xnpod_cancel_thread(&task->ktask);
 			rtdm_event_destroy(&task->rt_synch);
 		}
 		kfree(ctx->tasks);

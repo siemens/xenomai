@@ -125,10 +125,6 @@ typedef struct xnheap {
 
 extern xnheap_t kheap;
 
-#if CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0
-extern xnheap_t kstacks;
-#endif
-
 #define xnheap_extentsize(heap)		((heap)->extentsize)
 #define xnheap_page_size(heap)		((heap)->pagesize)
 #define xnheap_page_count(heap)		((heap)->npages)
@@ -164,13 +160,6 @@ static inline size_t xnheap_internal_overhead(size_t hsize, size_t psize)
 #define xnmalloc(size)     xnheap_alloc(&kheap,size)
 #define xnfree(ptr)        xnheap_free(&kheap,ptr)
 #define xnfreesync()       xnheap_finalize_free(&kheap)
-#define xnfreesafe(thread, ptr, ln)				\
-	do {							\
-		if (xnpod_current_p(thread))			\
-			xnheap_schedule_free(&kheap, ptr, ln);	\
-		else						\
-			xnheap_free(&kheap,ptr);		\
-	} while(0)
 
 static inline size_t xnheap_rounded_size(size_t hsize, size_t psize)
 {
@@ -295,7 +284,6 @@ int xnheap_remap_kmem_page_range(struct vm_area_struct *vma,
 #define XNHEAP_PROC_PRIVATE_HEAP 0
 #define XNHEAP_PROC_SHARED_HEAP  1
 #define XNHEAP_SYS_HEAP          2
-#define XNHEAP_SYS_STACKPOOL     3
 
 struct xnheap_desc {
 	unsigned long handle;

@@ -17,17 +17,19 @@
  * 02111-1307, USA.
  */
 
+#include <linux/kthread.h>
 #include <nucleus/pod.h>
 #include <nucleus/synch.h>
 #include <nucleus/heap.h>
 #include <nucleus/thread.h>
 #include <nucleus/sched.h>
 #include <nucleus/clock.h>
+#include <nucleus/shadow.h>
 #include <asm/xenomai/thread.h>
 
-static unsigned idtags;
+static unsigned int idtags;
 
-static void xnthread_timeout_handler(xntimer_t *timer)
+static void timeout_handler(xntimer_t *timer)
 {
 	struct xnthread *thread = container_of(timer, xnthread_t, rtimer);
 
@@ -35,7 +37,7 @@ static void xnthread_timeout_handler(xntimer_t *timer)
 	xnpod_resume_thread(thread, XNDELAY);
 }
 
-static void xnthread_periodic_handler(xntimer_t *timer)
+static void periodic_handler(xntimer_t *timer)
 {
 	struct xnthread *thread = container_of(timer, xnthread_t, ptimer);
 	/*
@@ -46,10 +48,68 @@ static void xnthread_periodic_handler(xntimer_t *timer)
 		xnpod_resume_thread(thread, XNDELAY);
 }
 
-static void xnthread_roundrobin_handler(xntimer_t *timer)
+static void roundrobin_handler(xntimer_t *timer)
 {
 	struct xnthread *thread = container_of(timer, struct xnthread, rrbtimer);
 	xnsched_tick(thread);
+}
+
+struct kthread_arg {
+	struct xnthread *thread;
+	struct completion *done;
+};
+
+static int kthread_trampoline(void *arg)
+{
+	struct kthread_arg *ka = arg;
+	struct xnthread *thread = ka->thread;
+	struct sched_param param;
+	int ret, policy, prio;
+
+	if (thread->sched_class == &xnsched_class_idle) {
+		policy = SCHED_NORMAL;
+		prio = 0;
+	} else {
+		policy = SCHED_FIFO;
+		prio = normalize_priority(thread->cprio);
+	}
+
+	param.sched_priority = prio;
+	sched_setscheduler(current, policy, &param);
+
+	ret = xnshadow_map_kernel(thread, ka->done);
+	if (ret) {
+		printk(XENO_WARN "failed to create kernel shadow %s\n",
+		       thread->name);
+		return ret;
+	}
+
+	trace_mark(xn_nucleus, thread_boot, "thread %p thread_name %s",
+		   thread, xnthread_name(thread));
+
+	thread->entry(thread->cookie);
+
+	xnpod_cancel_thread(thread);
+
+	return 0;
+}
+
+static inline int spawn_kthread(struct xnthread *thread)
+{
+	DECLARE_COMPLETION_ONSTACK(done);
+	struct kthread_arg ka = {
+		.thread = thread,
+		.done = &done
+	};
+	struct task_struct *p;
+
+	p = kthread_run(kthread_trampoline, &ka, "%s", thread->name);
+	if (IS_ERR(p))
+		return PTR_ERR(p);
+
+	wait_for_completion(&done);
+
+	return 0;
 }
 
 int xnthread_init(struct xnthread *thread,
@@ -58,64 +118,33 @@ int xnthread_init(struct xnthread *thread,
 		  struct xnsched_class *sched_class,
 		  const union xnsched_policy_param *sched_param)
 {
-	unsigned int stacksize = attr->stacksize;
+	DECLARE_COMPLETION_ONSTACK(done);
 	xnflags_t flags = attr->flags;
-	struct xnarchtcb *tcb;
 	int ret;
-
-	/* Setup the TCB. */
-	tcb = xnthread_archtcb(thread);
-	xnarch_init_tcb(tcb);
 
 	flags &= ~XNSUSP;
 #ifndef CONFIG_XENO_HW_FPU
 	flags &= ~XNFPU;
 #endif
-	if (flags & (XNSHADOW|XNROOT))
-		stacksize = 0;
-	else {
-		if (stacksize == 0) /* Pick a reasonable default. */
-			stacksize = XNARCH_THREAD_STACKSZ;
-		/* Align stack size on a natural word boundary */
-		stacksize &= ~(sizeof(long) - 1);
-	}
-
 	if (flags & XNROOT)
 		thread->idtag = 0;
-	else
+	else {
 		thread->idtag = ++idtags ?: 1;
-
-#if CONFIG_XENO_OPT_SYS_STACKPOOLSZ == 0
-	if (stacksize > 0) {
-		printk(XENO_ERR
-		       "%s: cannot create kernel thread '%s' (CONFIG_XENO_OPT_SYS_STACKPOOLSZ == 0)\n",
-		       __FUNCTION__, attr->name);
-		return -ENOMEM;
+		flags |= XNDORMANT;
 	}
-#else
-	ret = xnarch_alloc_stack(tcb, stacksize);
-	if (ret) {
-		printk(XENO_ERR
-		       "%s: no stack for kernel thread '%s' (raise CONFIG_XENO_OPT_SYS_STACKPOOLSZ)\n",
-		       __FUNCTION__, attr->name);
-		return ret;
-	}
-#endif
-	if (stacksize)
-		memset(xnarch_stack_base(tcb), 0, stacksize);
 
 	if (attr->name)
 		xnobject_copy_name(thread->name, attr->name);
 	else
 		snprintf(thread->name, sizeof(thread->name), "%p", thread);
 
-	xntimer_init(&thread->rtimer, xnthread_timeout_handler);
+	xntimer_init(&thread->rtimer, timeout_handler);
 	xntimer_set_name(&thread->rtimer, thread->name);
 	xntimer_set_priority(&thread->rtimer, XNTIMER_HIPRIO);
-	xntimer_init(&thread->ptimer, xnthread_periodic_handler);
+	xntimer_init(&thread->ptimer, periodic_handler);
 	xntimer_set_name(&thread->ptimer, thread->name);
 	xntimer_set_priority(&thread->ptimer, XNTIMER_HIPRIO);
-	xntimer_init(&thread->rrbtimer, xnthread_roundrobin_handler);
+	xntimer_init(&thread->rrbtimer, roundrobin_handler);
 	xntimer_set_name(&thread->rrbtimer, thread->name);
 	xntimer_set_priority(&thread->rrbtimer, XNTIMER_LOPRIO);
 
@@ -154,35 +183,56 @@ int xnthread_init(struct xnthread *thread,
 	thread->init_class = sched_class;
 	thread->base_class = NULL; /* xnsched_set_policy() will set it. */
 	thread->init_schedparam = *sched_param;
-	ret = xnsched_init_tcb(thread);
+	ret = xnsched_init_thread(thread);
 	if (ret)
-		goto fail;
+		return ret;
 
-	/*
-	 * We must set the scheduling policy last; the scheduling
-	 * class implementation code may need the TCB to be fully
-	 * initialized to proceed.
-	 */
 	ret = xnsched_set_policy(thread, sched_class, sched_param);
 	if (ret)
-		goto fail;
+		return ret;
 
-	return 0;
+	if ((flags & (XNUSER|XNROOT)) == 0)
+		ret = spawn_kthread(thread);
 
-fail:
-#if CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0
-	xnarch_free_stack(tcb);
-#endif
 	return ret;
 }
 
-void xnthread_cleanup_tcb(xnthread_t *thread)
+void xnthread_init_shadow_tcb(struct xnthread *thread, struct task_struct *task)
+{
+	struct xnarchtcb *tcb = xnthread_archtcb(thread);
+
+	memset(tcb, 0, sizeof(*tcb));
+	tcb->core.host_task = task;
+	tcb->core.tsp = &task->thread;
+	tcb->core.mm = task->mm;
+	tcb->core.active_mm = task->mm;
+#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
+	tcb->core.tip = task_thread_info(task);
+#endif
+#ifdef CONFIG_XENO_HW_FPU
+	tcb->core.user_fpu_owner = task;
+#endif /* CONFIG_XENO_HW_FPU */
+	xnarch_init_shadow_tcb(tcb);
+}
+
+void xnthread_init_root_tcb(struct xnthread *thread)
+{
+	struct xnarchtcb *tcb = xnthread_archtcb(thread);
+
+	memset(tcb, 0, sizeof(*tcb));
+	tcb->core.host_task = current;
+	tcb->core.tsp = &tcb->core.ts;
+	tcb->core.mm = current->mm;
+#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
+	tcb->core.tip = &tcb->core.ti;
+#endif
+	xnarch_init_root_tcb(tcb);
+}
+
+void xnthread_cleanup(struct xnthread *thread)
 {
 	/* Does not wreck the TCB, only releases the held resources. */
 
-#if CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0
-	xnarch_free_stack(xnthread_archtcb(thread));
-#endif
 	if (thread->registry.handle != XN_NO_HANDLE)
 		xnregistry_remove(thread->registry.handle);
 
@@ -205,16 +255,6 @@ char *xnthread_format_status(xnflags_t status, char *buf, int size)
 		c = labels[pos];
 
 		switch (1 << pos) {
-		case XNFPU:
-			/*
-			 * Only output the FPU flag for kernel-based
-			 * threads; Others get the same level of fp
-			 * support than any user-space tasks on the
-			 * current platform.
-			 */
-			if (status & (XNSHADOW | XNROOT))
-				continue;
-			break;
 		case XNROOT:
 			c = 'R'; /* Always mark root as runnable. */
 			break;
@@ -288,31 +328,27 @@ xnticks_t xnthread_get_period(xnthread_t *thread)
 }
 EXPORT_SYMBOL_GPL(xnthread_get_period);
 
-/* NOTE: caller must provide locking */
+/* NOTE: caller must provide for locking */
 void xnthread_prepare_wait(struct xnthread_wait_context *wc)
 {
 	struct xnthread *curr = xnpod_current_thread();
 
 	curr->wcontext = wc;
-	wc->oldstate = xnthread_test_state(curr, XNDEFCAN);
-	xnthread_set_state(curr, XNDEFCAN);
 }
 EXPORT_SYMBOL_GPL(xnthread_prepare_wait);
 
-/* NOTE: caller must provide locking */
+/* NOTE: caller must provide for locking */
 void xnthread_finish_wait(struct xnthread_wait_context *wc,
 			  void (*cleanup)(struct xnthread_wait_context *wc))
 {
 	struct xnthread *curr = xnpod_current_thread();
 
 	curr->wcontext = NULL;
-	if ((wc->oldstate & XNDEFCAN) == 0)
-		xnthread_clear_state(curr, XNDEFCAN);
 
-	if (xnthread_test_state(curr, XNCANPND)) {
+	if (xnthread_test_info(curr, XNCANCELD)) {
 		if (cleanup)
 			cleanup(wc);
-		xnpod_delete_self();
+		xnpod_cancel_thread(curr);
 	}
 }
 EXPORT_SYMBOL_GPL(xnthread_finish_wait);

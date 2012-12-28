@@ -120,6 +120,8 @@ int __xnpod_set_thread_schedparam(struct xnthread *thread,
 				  const union xnsched_policy_param *sched_param,
 				  int propagate);
 
+void __xnpod_cleanup_thread(struct xnthread *thread);
+
 #ifdef CONFIG_XENO_HW_FPU
 void xnpod_switch_fpu(xnsched_t *sched);
 #endif /* CONFIG_XENO_HW_FPU */
@@ -154,19 +156,9 @@ void __xnpod_schedule_handler(void);
 		testbits(sched->status | sched->lflags, XNKCOUT|XNINIRQ); \
 	})
 
-#define xnpod_current_thread() \
-    (xnpod_current_sched()->curr)
+#define xnpod_current_thread()	(xnpod_current_sched()->curr)
 
-#define xnpod_current_root() \
-    (&xnpod_current_sched()->rootcb)
-
-#define xnpod_current_p(thread)						\
-	({								\
-		int __shadow_p = xnthread_test_state(thread, XNSHADOW);	\
-		int __curr_p = __shadow_p ? xnshadow_current() == thread \
-			: thread == xnpod_current_thread();		\
-		__curr_p;						\
-	})
+#define xnpod_current_root()	(&xnpod_current_sched()->rootcb)
 
 #define xnpod_locked_p() \
     xnthread_test_state(xnpod_current_thread(), XNLOCK)
@@ -175,13 +167,7 @@ void __xnpod_schedule_handler(void);
     (xnpod_asynch_p() || xnthread_test_state(xnpod_current_thread(), XNROOT))
 
 #define xnpod_root_p() \
-    xnthread_test_state(xnpod_current_thread(),XNROOT)
-
-#define xnpod_shadow_p() \
-    xnthread_test_state(xnpod_current_thread(),XNSHADOW)
-
-#define xnpod_userspace_p() \
-    xnthread_test_state(xnpod_current_thread(),XNROOT|XNSHADOW)
+    xnthread_test_state(xnpod_current_thread(), XNROOT)
 
 #define xnpod_primary_p() \
     (!(xnpod_asynch_p() || xnpod_root_p()))
@@ -208,9 +194,9 @@ int xnpod_start_thread(xnthread_t *thread,
 
 void xnpod_stop_thread(xnthread_t *thread);
 
-void xnpod_delete_thread(xnthread_t *thread);
+void xnpod_testcancel_thread(void);
 
-void xnpod_abort_thread(xnthread_t *thread);
+void xnpod_cancel_thread(xnthread_t *thread);
 
 xnflags_t xnpod_set_thread_mode(xnthread_t *thread,
 				xnflags_t clrmask,
@@ -234,8 +220,6 @@ int xnpod_set_thread_schedparam(struct xnthread *thread,
 int xnpod_migrate_thread(int cpu);
 
 void xnpod_dispatch_signals(void);
-
-void xnpod_welcome_thread(struct xnthread *, int);
 
 static inline void xnpod_schedule(void)
 {
@@ -370,7 +354,7 @@ static inline void xnpod_suspend_self(void)
 
 static inline void xnpod_delete_self(void)
 {
-	xnpod_delete_thread(xnpod_current_thread());
+	xnpod_cancel_thread(xnpod_current_thread());
 }
 
 /*@}*/

@@ -59,7 +59,9 @@ EXPORT_SYMBOL_GPL(xnarch_machdata);
 
 int xeno_nucleus_status = -EINVAL;
 
-struct xnsys_ppd __xnsys_global_ppd;
+struct xnsys_ppd __xnsys_global_ppd = {
+	.exe_path = "vmlinux",
+};
 EXPORT_SYMBOL_GPL(__xnsys_global_ppd);
 
 #ifdef CONFIG_XENO_OPT_DEBUG

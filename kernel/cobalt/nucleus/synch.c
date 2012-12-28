@@ -375,7 +375,7 @@ static void xnsynch_renice_thread(struct xnthread *thread,
 
 	if (xnthread_test_state(thread, XNRELAX))
 		xnshadow_renice(thread);
-	else if (xnthread_test_state(thread, XNSHADOW))
+	else
 		xnthread_set_info(thread, XNPRIOSET);
 }
 
@@ -476,8 +476,7 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 	} while (!xnsynch_fast_is_claimed(fastlock));
 
 	owner = xnthread_lookup(xnsynch_fast_mask_claimed(fastlock));
-
-	if (!owner) {
+	if (owner == NULL) {
 		/* The handle is broken, therefore pretend that the synch
 		   object was deleted to signal an error. */
 		xnthread_set_info(thread, XNRMID);

@@ -22,6 +22,6 @@ typedef struct xnshadow_ppd_t {
 #define xnshadow_ppd_mm(ppd)    ((ppd)->key.mm)
 
 /* Call with nklock locked irqs off. */
-xnshadow_ppd_t *xnshadow_ppd_get(unsigned muxid);
+xnshadow_ppd_t *xnshadow_ppd_get(unsigned int muxid);
 
 #endif /* _XENO_NUCLEUS_PPD_H */

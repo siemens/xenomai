@@ -83,7 +83,7 @@ static inline void __xnsched_rt_setparam(struct xnthread *thread,
 					 const union xnsched_policy_param *p)
 {
 	thread->cprio = p->rt.prio;
-	if (xnthread_test_state(thread, XNSHADOW | XNBOOST) == XNSHADOW) {
+	if (!xnthread_test_state(thread, XNBOOST)) {
 		if (thread->cprio)
 			xnthread_clear_state(thread, XNOTHER);
 		else
@@ -110,7 +110,7 @@ static inline void __xnsched_rt_forget(struct xnthread *thread)
 {
 }
 
-static inline int xnsched_rt_init_tcb(struct xnthread *thread)
+static inline int xnsched_rt_init_thread(struct xnthread *thread)
 {
 	return 0;
 }

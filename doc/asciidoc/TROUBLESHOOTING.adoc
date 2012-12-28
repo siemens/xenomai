@@ -22,10 +22,6 @@ increasing the time it takes to get out of these sleep states, hence
 the latency of an idle system. Also, on some CPU, entering these deep
 sleep states causes the timers used by Xenomai to stop functioning.
 
-CONFIG_CC_STACKPROTECTOR:: This option must be disabled on all platforms
-except x86_64: it requires changes to the context switches currently
-only implemented for x86_64.
-
 CONFIG_KGDB:: This option can not be enabled with current versions of
 the I-pipe patch.
 
@@ -230,10 +226,10 @@ Xenomai: system init failed, code -22
 On the ppc64 platform, check whether +CONFIG_PPC_64K_PAGES+ is defined
 in your kernel configuration. If so, then you likely need to raise all
 Xenomai parameters defining the size of internal heaps, such as
-+CONFIG_XENO_OPT_SYS_HEAPSZ+, +CONFIG_XENO_OPT_GLOBAL_SEM_HEAPSZ+,
-+CONFIG_XENO_OPT_SEM_HEAPSZ+ and +CONFIG_XENO_OPT_SYS_STACKPOOLSZ+, so
-that (size / 64k) > 2. The default values for these
-parameters are currently based on the assumption that PAGE_SIZE = 4k.
++CONFIG_XENO_OPT_SYS_HEAPSZ+, +CONFIG_XENO_OPT_GLOBAL_SEM_HEAPSZ+ and
++CONFIG_XENO_OPT_SEM_HEAPSZ+, so that (size / 64k) > 2. The default
+values for these parameters are currently based on the assumption that
+PAGE_SIZE = 4k.
 
 
 [[latency]]
@@ -523,9 +519,8 @@ switchtest fails with "pthread_create: Resource temporarily unavailable"
 ------------------------------------------------------------------------
 
 The switchtest test creates many kernel threads, this means that the
-options +CONFIG_XENO_OPT_SYS_HEAPSZ+ and
-+CONFIG_XENO_OPT_SYS_STACKPOOLSZ+ should be configured to large enough
-values. Try increasing them and recompiling.
+option +CONFIG_XENO_OPT_SYS_HEAPSZ+ should be set to large enough
+values. Try increasing it and recompiling.
 
 
 Problem with my code (not Xenomai code)

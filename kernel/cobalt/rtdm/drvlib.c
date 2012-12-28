@@ -127,13 +127,7 @@ nanosecs_abs_t rtdm_clock_read_monotonic(void);
  *
  * @return 0 on success, otherwise negative error code
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
+ * Calling context: This service can be called from secondary mode only.
  *
  * Rescheduling: possible.
  */
@@ -149,7 +143,6 @@ int rtdm_task_init(rtdm_task_t *task, const char *name,
 	iattr.name = name;
 	iattr.flags = 0;
 	iattr.ops = NULL;
-	iattr.stacksize = 0;
 	param.rt.prio = priority;
 
 	err = xnpod_init_thread(task, &iattr, &xnsched_class_rt, &param);
@@ -181,7 +174,7 @@ int rtdm_task_init(rtdm_task_t *task, const char *name,
 	return 0;
 
       cleanup_out:
-	xnpod_delete_thread(task);
+	xnpod_cancel_thread(task);
 	return err;
 }
 

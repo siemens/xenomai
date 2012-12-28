@@ -11,6 +11,7 @@ includesub_HEADERS = \
 	pci_ids.h \
 	stack.h \
 	syscall.h \
+	thread.h \
 	timeconv.h \
 	wrappers.h
 

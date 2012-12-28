@@ -19,7 +19,7 @@ static inline struct xnsys_ppd *xnsys_ppd_get(int global)
 {
 	xnshadow_ppd_t *ppd;
 
-	if (global || !(ppd = xnshadow_ppd_get(0)))
+	if (global || (ppd = xnshadow_ppd_get(0)) == NULL)
 		return &__xnsys_global_ppd;
 
 	return ppd2sys(ppd);

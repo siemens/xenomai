@@ -142,11 +142,7 @@ int cobalt_sched_setconfig_np(int cpu,
 			      union sched_config __user *u_config,
 			      size_t len);
 
-void cobalt_threadq_cleanup(cobalt_kqueues_t *q);
-
 void cobalt_thread_pkg_init(u_long rrperiod);
-
-void cobalt_thread_pkg_cleanup(void);
 
 /* round-robin period. */
 extern xnticks_t cobalt_time_slice;

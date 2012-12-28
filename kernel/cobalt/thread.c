@@ -37,17 +37,16 @@
 xnticks_t cobalt_time_slice;
 
 static const pthread_attr_t default_thread_attr = {
-      magic:COBALT_THREAD_ATTR_MAGIC,
-      detachstate:PTHREAD_CREATE_JOINABLE,
-      stacksize:PTHREAD_STACK_MIN,
-      inheritsched:PTHREAD_EXPLICIT_SCHED,
-      policy:SCHED_OTHER,
-      schedparam_ex:{
-      sched_priority:0},
-
-      name:NULL,
-      fp:1,
-      affinity:XNPOD_ALL_CPUS,
+	.magic = COBALT_THREAD_ATTR_MAGIC,
+	.detachstate = PTHREAD_CREATE_JOINABLE,
+	.inheritsched = PTHREAD_EXPLICIT_SCHED,
+	.policy = SCHED_OTHER,
+	.schedparam_ex = {
+		.sched_priority = 0
+	},
+	.name = NULL,
+	.fp = 1,
+	.affinity = XNPOD_ALL_CPUS,
 };
 
 static unsigned cobalt_get_magic(void)
@@ -182,27 +181,23 @@ static void thread_destroy(pthread_t thread)
 	xnheap_schedule_free(&kheap, thread, &thread->link);
 }
 
-static void thread_delete_hook(xnthread_t *xnthread)
+static void thread_delete_hook(struct xnthread *thread)
 {
-	pthread_t thread = thread2pthread(xnthread);
+	pthread_t tid = thread2pthread(thread);
 	spl_t s;
 
-	if (!thread)
+	if (tid == NULL)
 		return;
 
 	xnlock_get_irqsave(&nklock, s);
-
-	cobalt_mark_deleted(thread);
-	cobalt_timer_cleanup_thread(thread);
-	thread_destroy(thread);
-
+	cobalt_mark_deleted(tid);
+	cobalt_timer_cleanup_thread(tid);
+	thread_destroy(tid);
 	xnlock_put_irqrestore(&nklock, s);
 
-	if (xnthread_test_state(xnthread, XNSHADOW)) {
-		cobalt_thread_unhash(&thread->hkey);
-		if (xnthread_test_state(xnthread, XNMAPPED))
-			xnshadow_unmap(xnthread);
-	}
+	cobalt_thread_unhash(&tid->hkey);
+	if (xnthread_test_state(thread, XNMAPPED))
+		xnshadow_unmap(thread);
 }
 
 /**
@@ -389,13 +384,12 @@ unlock_and_exit:
  * using the SA_SIGINFO flag, and pass all the arguments you received
  * to xeno_sigwinch_handler.
  */
-static inline int pthread_create(pthread_t *tid, const pthread_attr_t * attr)
+static inline int pthread_create(pthread_t *tid, const pthread_attr_t *attr)
 {
 	union xnsched_policy_param param;
 	struct xnthread_init_attr iattr;
 	pthread_t thread, cur;
 	xnflags_t flags = 0;
-	size_t stacksize;
 	const char *name;
 	int prio, ret;
 	spl_t s;
@@ -427,18 +421,16 @@ static inline int pthread_create(pthread_t *tid, const pthread_attr_t * attr)
 	}
 
 	prio = thread->attr.schedparam_ex.sched_priority;
-	stacksize = thread->attr.stacksize;
 	name = thread->attr.name;
 
 	if (thread->attr.fp)
 		flags |= XNFPU;
 
-	flags |= XNSHADOW;
+	flags |= XNUSER;
 
 	iattr.name = name;
 	iattr.flags = flags;
 	iattr.ops = &cobalt_thread_ops;
-	iattr.stacksize = stacksize;
 	param.rt.prio = prio;
 
 	if (xnpod_init_thread(&thread->threadbase,
@@ -581,13 +573,10 @@ static inline int pthread_make_periodic_np(pthread_t thread,
  */
 static inline int pthread_set_mode_np(int clrmask, int setmask, int *mode_r)
 {
-	xnthread_t *cur = xnpod_current_thread();
-	xnflags_t valid_flags = XNLOCK, old;
-
-	if (xnthread_test_state(cur, XNSHADOW))
-		valid_flags |= XNTHREAD_STATE_SPARE1 | XNTRAPSW;
-
 	/* XNTHREAD_STATE_SPARE1 is used as the CONFORMING mode bit. */
+	const xnflags_t valid_flags = XNLOCK|XNTHREAD_STATE_SPARE1|XNTRAPSW;
+	xnthread_t *cur = xnpod_current_thread();
+	xnflags_t old;
 
 	if ((clrmask & ~valid_flags) != 0 || (setmask & ~valid_flags) != 0)
 		return -EINVAL;
@@ -942,7 +931,6 @@ int cobalt_thread_setschedparam_ex(unsigned long tid,
 	return ret;
 }
 
-
 /*
  * We want to keep the native pthread_t token unmodified for Xenomai
  * mapped threads, and keep it pointing at a genuine NPTL/LinuxThreads
@@ -1000,7 +988,7 @@ int cobalt_thread_create(unsigned long tid, int policy,
 		return ret;
 
 	h_tid = task_pid_vnr(p);
-	ret = xnshadow_map(&k_tid->threadbase, NULL, u_window_offset);
+	ret = xnshadow_map_user(&k_tid->threadbase, u_window_offset);
 	if (ret)
 		goto fail;
 
@@ -1014,7 +1002,7 @@ int cobalt_thread_create(unsigned long tid, int policy,
 	return 0;
 
 fail:
-	xnpod_delete_thread(&k_tid->threadbase);
+	xnpod_cancel_thread(&k_tid->threadbase);
 
 	return ret;
 }
@@ -1033,12 +1021,11 @@ pthread_t cobalt_thread_shadow(struct task_struct *p,
 	attr.name = p->comm;
 
 	ret = pthread_create(&k_tid, &attr);
-
 	if (ret)
 		return ERR_PTR(-ret);
 
 	h_tid = task_pid_vnr(p);
-	ret = xnshadow_map(&k_tid->threadbase, NULL, u_window_offset);
+	ret = xnshadow_map_user(&k_tid->threadbase, u_window_offset);
 	/*
 	 * From now on, we run in primary mode, so we refrain from
 	 * calling regular kernel services (e.g. like
@@ -1048,7 +1035,7 @@ pthread_t cobalt_thread_shadow(struct task_struct *p,
 		ret = -EAGAIN;
 
 	if (ret)
-		xnpod_delete_thread(&k_tid->threadbase);
+		xnpod_cancel_thread(&k_tid->threadbase);
 	else
 		k_tid->hkey = *hkey;
 
@@ -1121,7 +1108,7 @@ int cobalt_thread_set_name_np(unsigned long tid, const char __user *u_name)
 	hkey.mm = current->mm;
 	k_tid = cobalt_thread_find(&hkey);
 
-	p = xnthread_user_task(&k_tid->threadbase);
+	p = xnthread_host_task(&k_tid->threadbase);
 	strncpy(p->comm, name, sizeof(p->comm));
 	p->comm[sizeof(p->comm) - 1] = '\0';
 
@@ -1159,8 +1146,7 @@ int cobalt_thread_kill(unsigned long tid, int sig)
 	hkey.u_tid = tid;
 	hkey.mm = current->mm;
 	k_tid = cobalt_thread_find(&hkey);
-
-	if (!k_tid)
+	if (k_tid == NULL)
 		return -ESRCH;
 	/*
 	 * We have to take care of self-suspension, when the
@@ -1171,8 +1157,8 @@ int cobalt_thread_kill(unsigned long tid, int sig)
 	 * overkill, since no other signal would require this, so we
 	 * handle that case locally here.
 	 */
-	if (sig == SIGSUSP && xnpod_current_p(&k_tid->threadbase)) {
-		if (!xnpod_shadow_p()) {
+	if (sig == SIGSUSP && xnshadow_current_p(&k_tid->threadbase)) {
+		if (xnpod_root_p()) {
 			ret = xnshadow_harden();
 			if (ret)
 				return ret;
@@ -1386,11 +1372,11 @@ int set_tp_config(int cpu, union sched_config *config, size_t len)
 		 * be defined using windows assigned to the pseudo
 		 * partition #-1.
 		 */
-		offset = ts2ticks_ceil(&p->offset);
+		offset = ts2ns(&p->offset);
 		if (offset != next_offset)
 			goto cleanup_and_fail;
 
-		duration = ts2ticks_ceil(&p->duration);
+		duration = ts2ns(&p->duration);
 		if (duration <= 0)
 			goto cleanup_and_fail;
 
@@ -1514,48 +1500,11 @@ out:
 	return ret;
 }
 
-void cobalt_threadq_cleanup(cobalt_kqueues_t *q)
-{
-	xnholder_t *holder;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	while ((holder = getheadq(&q->threadq)) != NULL) {
-		pthread_t thread = link2pthread(holder);
-
-		/* Enter the abort state (see xnpod_abort_thread()). */
-		if (!xnpod_current_p(&thread->threadbase))
-			xnpod_suspend_thread(&thread->threadbase, XNDORMANT,
-					     XN_INFINITE, XN_RELATIVE, NULL);
-		if (cobalt_obj_active
-		    (thread, COBALT_THREAD_MAGIC, struct cobalt_thread)) {
-			/* Remaining running thread. */
-			xnpod_delete_thread(&thread->threadbase);
-		} else
-			/* Remaining TCB (joinable thread, which was never joined). */
-			thread_destroy(thread);
-		xnlock_put_irqrestore(&nklock, s);
-#if XENO_DEBUG(POSIX)
-		printk(XENO_INFO "destroyed Cobalt thread %p\n", thread);
-#endif /* XENO_DEBUG(POSIX) */
-		xnlock_get_irqsave(&nklock, s);
-	}
-
-	xnlock_put_irqrestore(&nklock, s);
-}
-
 void cobalt_thread_pkg_init(u_long rrperiod)
 {
 	initq(&cobalt_global_kqueues.threadq);
 	cobalt_time_slice = rrperiod;
 	xnpod_add_hook(XNHOOK_THREAD_DELETE, thread_delete_hook);
-}
-
-void cobalt_thread_pkg_cleanup(void)
-{
-	cobalt_threadq_cleanup(&cobalt_global_kqueues);
-	xnpod_remove_hook(XNHOOK_THREAD_DELETE, thread_delete_hook);
 }
 
 /*@}*/

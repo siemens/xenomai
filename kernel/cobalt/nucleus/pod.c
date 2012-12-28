@@ -69,27 +69,6 @@ EXPORT_SYMBOL_GPL(debug_vfroot);
 
 #ifdef CONFIG_XENO_HW_FPU
 
-static inline void __xnpod_init_fpu(struct xnsched *sched,
-				    struct xnthread *thread)
-{
-	/*
-	 * When switching to a newly created thread, it is necessary
-	 * to switch FPU contexts, as a replacement for xnpod_schedule
-	 * epilogue (a newly created was not switched out by calling
-	 * xnpod_schedule, since it is new).
-	 */
-	if (xnthread_test_state(thread, XNFPU)) {
-		if (sched->fpuholder != NULL &&
-		    xnarch_fpu_ptr(xnthread_archtcb(sched->fpuholder)) !=
-		    xnarch_fpu_ptr(xnthread_archtcb(thread)))
-			xnarch_save_fpu(xnthread_archtcb(sched->fpuholder));
-
-		xnarch_init_fpu(xnthread_archtcb(thread));
-
-		sched->fpuholder = thread;
-	}
-}
-
 static inline void __xnpod_giveup_fpu(struct xnsched *sched,
 				      struct xnthread *thread)
 {
@@ -143,30 +122,7 @@ void xnpod_switch_fpu(xnsched_t *sched)
 	__xnpod_switch_fpu(sched);
 }
 
-static inline int __xnpod_fault_init_fpu(struct xnthread *thread)
-{
-	struct xnarchtcb *tcb = xnthread_archtcb(thread);
-
-	if (xnpod_shadow_p() && !xnarch_fpu_init_p(tcb->user_task)) {
-		/*
-		 * The faulting task is a shadow using the FPU for the
-		 * first time, initialize its FPU. Of course if
-		 * Xenomai is not compiled with support for FPU, such
-		 * use of the FPU is an error.
-		 */
-		xnarch_init_fpu(tcb);
-		return 1;
-	}
-
-	return 0;
-}
-
 #else /* !CONFIG_XENO_HW_FPU */
-
-static inline void __xnpod_init_fpu(struct xnsched *sched,
-				    struct xnthread *thread)
-{
-}
 
 static inline void __xnpod_giveup_fpu(struct xnsched *sched,
 				      struct xnthread *thread)
@@ -179,11 +135,6 @@ static inline void __xnpod_release_fpu(struct xnthread *thread)
 
 static inline void __xnpod_switch_fpu(struct xnsched *sched)
 {
-}
-
-static inline int __xnpod_fault_init_fpu(struct xnthread *thread)
-{
-	return 0;
 }
 
 #endif /* !CONFIG_XENO_HW_FPU */
@@ -237,7 +188,7 @@ void xnpod_fatal(const char *format, ...)
 			printk(KERN_ERR "%c%3u  %-6d %-8s %-8Lu %.8lx  %s\n",
 			       thread == sched->curr ? '>' : ' ',
 			       cpu,
-			       xnthread_user_pid(thread),
+			       xnthread_host_pid(thread),
 			       pbuf,
 			       xnthread_get_timeout(thread, now),
 			       xnthread_state_flags(thread),
@@ -277,14 +228,6 @@ static void xnpod_flush_heap(xnheap_t *heap,
 {
 	free_pages_exact(extaddr, extsize);
 }
-
-#if CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0
-static void xnpod_flush_stackpool(xnheap_t *heap,
-				  void *extaddr, u_long extsize, void *cookie)
-{
-	free_pages_exact(extaddr, extsize);
-}
-#endif
 
 /*!
  * \fn int xnpod_init(void)
@@ -350,29 +293,6 @@ int xnpod_init(void)
 		return -ENOMEM;
 	}
 	xnheap_set_label(&kheap, "main heap");
-
-#if CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0
-	/*
-	 * We have to differentiate the system heap memory from the
-	 * pool the kernel thread stacks will be obtained from,
-	 * because on some architectures, vmalloc memory may not be
-	 * accessed while running in physical addressing mode
-	 * (e.g. exception trampoline code on powerpc with standard
-	 * MMU support - CONFIG_PPC_STD_MMU).  Therefore, we manage a
-	 * private stack pool for kernel-based threads which will be
-	 * populated with the kind of memory the underlying arch
-	 * requires, still allowing the system heap to rely on a
-	 * vmalloc'ed segment.
-	 */
-	heapaddr = alloc_pages_exact(CONFIG_XENO_OPT_SYS_STACKPOOLSZ * 1024, GFP_KERNEL);
-	if (heapaddr == NULL ||
-	    xnheap_init(&kstacks, heapaddr, CONFIG_XENO_OPT_SYS_STACKPOOLSZ * 1024,
-			XNHEAP_PAGE_SIZE) != 0) {
-		xnheap_destroy(&kheap, xnpod_flush_heap, NULL);
-		return -ENOMEM;
-	}
-	xnheap_set_label(&kstacks, "stack pool");
-#endif /* CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0 */
 
 	for (cpu = 0; cpu < nr_cpus; ++cpu) {
 		sched = &pod->sched[cpu];
@@ -442,12 +362,6 @@ void xnpod_shutdown(int xtype)
 		return;	/* No-op */
 	}
 
-	/*
-	 * FIXME: We must release the lock before disabling the time
-	 * source, so we accept a potential race due to another skin
-	 * being pushed while we remove the current pod, which is
-	 * clearly not a common situation anyway.
-	 */
 	xnlock_put_irqrestore(&nklock, s);
 
 	xnpod_disable_timesource();
@@ -465,7 +379,7 @@ void xnpod_shutdown(int xtype)
 		thread = link2thread(h, glink);
 
 		if (!xnthread_test_state(thread, XNROOT))
-			xnpod_delete_thread(thread);
+			xnpod_cancel_thread(thread);
 	}
 
 	xnpod_schedule();
@@ -481,9 +395,6 @@ void xnpod_shutdown(int xtype)
 
 	xnregistry_cleanup();
 	xnheap_destroy(&kheap, xnpod_flush_heap, NULL);
-#if CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0
-	xnheap_destroy(&kstacks, &xnpod_flush_stackpool, NULL);
-#endif
 }
 EXPORT_SYMBOL_GPL(xnpod_shutdown);
 
@@ -512,9 +423,8 @@ void xnpod_fire_callouts(xnqueue_t *hookq, xnthread_t *thread)
  * \fn void xnpod_init_thread(struct xnthread *thread,const struct xnthread_init_attr *attr,struct xnsched_class *sched_class,const union xnsched_policy_param *sched_param)
  * \brief Initialize a new thread.
  *
- * Initializes a new thread attached to the active pod. The thread is
- * left in an innocuous state until it is actually started by
- * xnpod_start_thread().
+ * Initializes a new thread. The thread is left dormant until it is
+ * actually started by xnpod_start_thread().
  *
  * @param thread The address of a thread descriptor the nucleus will
  * use to store the thread-specific data.  This descriptor must always
@@ -540,25 +450,19 @@ void xnpod_fire_callouts(xnqueue_t *hookq, xnthread_t *thread)
  * the nucleus behaviour regarding the created thread:
  *
  *   - XNSUSP creates the thread in a suspended state. In such a case,
- * the thread will have to be explicitly resumed using the
+ * the thread shall be explicitly resumed using the
  * xnpod_resume_thread() service for its execution to actually begin,
  * additionally to issuing xnpod_start_thread() for it. This flag can
  * also be specified when invoking xnpod_start_thread() as a starting
  * mode.
  *
- *   - XNFPU (enable FPU) tells the nucleus that the new thread will
- * use the floating-point unit. In such a case, the nucleus will
- * handle the FPU context save/restore ops upon thread switches at the
- * expense of a few additional cycles per context switch. By default,
- * a thread is not expected to use the FPU. This flag is simply
- * ignored when the nucleus runs on behalf of a userspace-based
- * real-time control layer since the FPU management is always active
- * if present.
+ * - XNUSER shall be set if @a thread will be mapped over an existing
+ * user-space task. Otherwise, a new kernel host task is created, then
+ * paired with the new Xenomai thread.
  *
- * - stacksize: The size of the stack (in bytes) for the new
- * thread. If zero is passed, the nucleus will use a reasonable
- * pre-defined size depending on the underlying real-time control
- * layer.
+ * - XNFPU (enable FPU) tells the nucleus that the new thread may use
+ * the floating-point unit. XNFPU is implicitly assumed for user-space
+ * threads even if not set in @a flags.
  *
  * - ops: A pointer to a structure defining the class-level operations
  * available for this thread. Fields from this structure must have
@@ -571,27 +475,17 @@ void xnpod_fire_callouts(xnqueue_t *hookq, xnthread_t *thread)
  * new thread; @a sched_param must be valid within the context of @a
  * sched_class.
  *
- * @return 0 is returned on success. Otherwise, one of the following
- * error codes indicates the cause of the failure:
+ * @return 0 is returned on success. Otherwise, the following error
+ * code indicates the cause of the failure:
  *
- *         - -EINVAL is returned if @a attr->flags has invalid bits set.
- *
- *         - -ENOMEM is returned if not enough memory is available
- *         from the system heap to create the new thread's stack.
+ * - -EINVAL is returned if @a attr->flags has invalid bits set.
  *
  * Side-effect: This routine does not call the rescheduling procedure.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task
+ * Calling context: This service can be called from secondary mode only.
  *
  * Rescheduling: never.
  */
-
 int xnpod_init_thread(struct xnthread *thread,
 		      const struct xnthread_init_attr *attr,
 		      struct xnsched_class *sched_class,
@@ -601,7 +495,7 @@ int xnpod_init_thread(struct xnthread *thread,
 	spl_t s;
 	int ret;
 
-	if (attr->flags & ~(XNFPU | XNSHADOW | XNSUSP))
+	if (attr->flags & ~(XNFPU | XNUSER | XNSUSP))
 		return -EINVAL;
 
 	ret = xnthread_init(thread, attr, sched, sched_class, sched_param);
@@ -616,8 +510,6 @@ int xnpod_init_thread(struct xnthread *thread,
 	xnlock_get_irqsave(&nklock, s);
 	appendq(&nkpod->threadq, &thread->glink);
 	xnvfile_touch_tag(&nkpod->threadlist_tag);
-	xnpod_suspend_thread(thread, XNDORMANT | (attr->flags & XNSUSP), XN_INFINITE,
-			     XN_RELATIVE, NULL);
 	xnlock_put_irqrestore(&nklock, s);
 
 	return 0;
@@ -699,6 +591,7 @@ EXPORT_SYMBOL_GPL(xnpod_init_thread);
 int xnpod_start_thread(struct xnthread *thread,
 		       const struct xnthread_start_attr *attr)
 {
+	struct xnsched *sched __maybe_unused;
 	cpumask_t affinity;
 	int ret = 0;
 	spl_t s;
@@ -729,7 +622,6 @@ int xnpod_start_thread(struct xnthread *thread,
 	}
 #ifdef CONFIG_SMP
 	if (!cpu_isset(xnsched_cpu(thread->sched), thread->affinity)) {
-		xnsched_t *sched;
 		sched = xnpod_sched_slot(first_cpu(thread->affinity));
 		xnsched_migrate_passive(thread, sched);
 	}
@@ -744,29 +636,12 @@ int xnpod_start_thread(struct xnthread *thread,
 	trace_mark(xn_nucleus, thread_start, "thread %p thread_name %s",
 		   thread, xnthread_name(thread));
 
-	if (xnthread_test_state(thread, XNSHADOW)) {
-		xnlock_put_irqrestore(&nklock, s);
-		xnshadow_start(thread);
-		xnlock_get_irqsave(&nklock, s);
-		goto run_hooks;
-	}
-
-	/* Setup the initial stack frame. */
-
-	xnarch_init_thread(xnthread_archtcb(thread),
-			   attr->entry, attr->cookie, attr->imask,
-			   thread, thread->name);
-
 	xnpod_resume_thread(thread, XNDORMANT);
 
-run_hooks:
 	xnpod_run_hooks(&nkpod->tstartq, thread, "START");
-
 schedule:
 	xnpod_schedule();
-
 unlock_and_exit:
-
 	xnlock_put_irqrestore(&nklock, s);
 
 	return ret;
@@ -926,131 +801,27 @@ xnflags_t xnpod_set_thread_mode(xnthread_t *thread,
 }
 EXPORT_SYMBOL_GPL(xnpod_set_thread_mode);
 
-/*!
- * \fn void xnpod_delete_thread(xnthread_t *thread)
- *
- * \brief Delete a thread.
- *
- * Terminates a thread and releases all the nucleus resources it
- * currently holds. A thread exists in the system since
- * xnpod_init_thread() has been called to create it, so this service
- * must be called in order to destroy it afterwards.
- *
- * @param thread The descriptor address of the terminated thread.
- *
- * The target thread's resources may not be immediately removed if
- * this is an active shadow thread running in user-space. In such a
- * case, the mated Linux task is sent a termination signal instead,
- * and the actual deletion is deferred until the task exit event is
- * called.
- *
- * The DELETE hooks are called on behalf of the calling context (if
- * any). The information stored in the thread control block remains
- * valid until all hooks have been called.
- *
- * Self-terminating a thread is allowed. In such a case, this service
- * does not return to the caller.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: possible if the current thread self-deletes.
- */
-
-void xnpod_delete_thread(xnthread_t *thread)
+static inline int moving_target(struct xnsched *sched, struct xnthread *thread)
 {
-	xnsched_t *sched;
-	spl_t s;
-
-	XENO_ASSERT(NUCLEUS, !xnthread_test_state(thread, XNROOT),
-		    xnpod_fatal("attempt to delete the root thread");
-		);
-
-	xnlock_get_irqsave(&nklock, s);
-
-	if (xnthread_test_state(thread, XNZOMBIE))
-		goto unlock_and_exit;	/* No double-deletion. */
-
-	sched = thread->sched;
-
+	int ret = 0;
+#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
 	/*
-	 * This block serves two purposes:
-	 *
-	 * 1) Make sure Linux counterparts of shadow threads do exit
-	 * upon deletion request from the nucleus through a call to
-	 * xnpod_delete_thread().
-	 *
-	 * 2) Make sure shadow threads are removed from the system on
-	 * behalf of their own context, by sending them a lethal
-	 * signal when it is not the case instead of wiping out their
-	 * TCB. We only do that whenever the caller is a kernel-based
-	 * Xenomai context. In such a case, the deletion is
-	 * asynchronous, and killed thread will later enter
-	 * xnpod_delete_thread() from the exit notification handler
-	 * (I-pipe).
-	 *
-	 * Sidenote: xnpod_delete_thread() might be called for
-	 * cleaning up a just created shadow task which has not been
-	 * successfully mapped, so we need to make sure that we have
-	 * an associated Linux mate before trying to send it a signal
-	 * (i.e. user_task extension != NULL). This will also prevent
-	 * any action on kernel-based Xenomai threads for which the
-	 * user TCB extension is always NULL.  We don't send any
-	 * signal to unstarted threads because GDB (6.x) has some
-	 * problems dealing with vanishing threads under some
-	 * circumstances, likely when asynchronous cancellation is in
-	 * effect. In most cases, this is a non-issue since
-	 * pthread_cancel() is requested from the skin interface
-	 * library in parallel on the target thread. In the rare case
-	 * of calling xnpod_delete_thread() from kernel space against
-	 * a created but unstarted user-space task, the Linux thread
-	 * mated to the Xenomai shadow might linger unexpectedly on
-	 * the startup barrier.
+	 * When deleting a thread in the course of a context switch or
+	 * in flight to another CPU with nklock unlocked on a distant
+	 * CPU, do nothing, this case will be caught in
+	 * xnsched_finish_unlocked_switch.
 	 */
+	ret = testbits(sched->status, XNINSW) ||
+		xnthread_test_state(thread, XNMIGRATE);
+#endif
+	return ret;
+}
 
-	if (xnthread_user_task(thread) != NULL &&
-	    !xnthread_test_state(thread, XNDORMANT) &&
-	    !xnthread_test_info(thread, XNABORT) &&
-	    !xnpod_current_p(thread)) {
-		if (!xnpod_userspace_p())
-			xnshadow_send_sig(thread, SIGKILL, 0);
-		/*
-		 * Otherwise, assume the interface library has issued
-		 * pthread_cancel on the target thread, which should
-		 * cause the current service to be called for
-		 * self-deletion of that thread.
-		 */
-		goto unlock_and_exit;
-	}
+void __xnpod_cleanup_thread(struct xnthread *thread) /* nklock held, irqs off */
+{
+	struct xnsched *sched = thread->sched;
 
-	/*
-	 * If thread is not current, has the deferred cancelability
-	 * bit set, and is currently blocked on a synchronization
-	 * object, then unblock it immediately but defer actual
-	 * deletion if it became runnable (i.e. XNSUSP/XNHELD might be
-	 * set as well). The code responsible for putting that thread
-	 * to sleep should process the XNCANPND condition on the
-	 * resumption path, then eventually call xnpod_delete_self()
-	 * as soon as all cleanup actions are done.
-	 *
-	 * In other words, XNDEFCAN pertains to the thread management
-	 * logic, to allow wait state finalization code to run before
-	 * kernel threads are actually wiped out from the system.
-	 */
-	if (sched->curr != thread &&
-	    xnthread_test_state(thread, XNDEFCAN) &&
-	    xnpod_unblock_thread(thread) &&
-	    xnthread_test_state(thread, XNTHREAD_BLOCK_BITS) == 0) {
-		xnthread_set_info(thread, XNCANPND);
-		goto unlock_and_exit;
-	}
-
-	trace_mark(xn_nucleus, thread_delete, "thread %p thread_name %s",
+	trace_mark(xn_nucleus, thread_cleanup, "thread %p thread_name %s",
 		   thread, xnthread_name(thread));
 
 	removeq(&nkpod->threadq, &thread->glink);
@@ -1080,28 +851,7 @@ void xnpod_delete_thread(xnthread_t *thread)
 
 	__xnpod_giveup_fpu(sched, thread);
 
-	if (sched->curr == thread) {
-		/*
-		 * We first need to pick a new curr before
-		 * switching out the current one forever. Use the
-		 * thread zombie state to go through the rescheduling
-		 * procedure then actually destroy the thread object.
-		 */
-		__clrbits(sched->status, XNINLOCK);
-		xnsched_set_resched(sched);
-		xnpod_schedule();
-#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
-	} else if (!testbits(sched->status, XNINSW) &&
-		   !xnthread_test_state(thread, XNMIGRATE)) {
-		/*
-		 * When killing a thread in the course of a context
-		 * switch or in flight to another CPU with nklock
-		 * unlocked on a distant CPU, do nothing, this case
-		 * will be caught in xnsched_finish_unlocked_switch.
-		 */
-#else /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
-	} else {
-#endif /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
+	if (!moving_target(sched, thread)) {
 		xnpod_run_hooks(&nkpod->tdeleteq, thread, "DELETE");
 
 		xnsched_forget(thread);
@@ -1109,58 +859,99 @@ void xnpod_delete_thread(xnthread_t *thread)
 		 * Note: the thread control block must remain
 		 * available until the user hooks have been called.
 		 */
-		xnthread_cleanup_tcb(thread);
+		xnthread_cleanup(thread);
 
 		if (xnthread_test_state(sched->curr, XNROOT))
 			xnfreesync();
 	}
-
-      unlock_and_exit:
-
-	xnlock_put_irqrestore(&nklock, s);
 }
-EXPORT_SYMBOL_GPL(xnpod_delete_thread);
 
-/*!
- * \fn void xnpod_abort_thread(xnthread_t *thread)
+/**
+ * @fn void xnpod_testcancel_thread(void)
  *
- * \brief Abort a thread.
+ * @brief Introduce a thread cancellation point.
  *
- * Unconditionally terminates a thread and releases all the nucleus
- * resources it currently holds, regardless of whether the target
- * thread is currently active in kernel or user-space.
- * xnpod_abort_thread() should be reserved for use by skin cleanup
- * routines; xnpod_delete_thread() should be preferred as the common
- * method for removing threads from a running system.
+ * Terminates the current thread if a cancellation request is pending
+ * for it, i.e. if xnpod_cancel_thread() was called.
  *
- * @param thread The descriptor address of the terminated thread.
+ * Calling context: This service may be called from all runtime modes.
  *
- * This service forces a call to xnpod_delete_thread() for the target
- * thread.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: possible if the current thread self-deletes.
+ * Rescheduling: always in case of cancellation from primary mode.
  */
-void xnpod_abort_thread(xnthread_t *thread)
+void xnpod_testcancel_thread(void)
+{
+	struct xnthread *curr = xnshadow_current();
+
+	if (curr == NULL || !xnthread_test_info(curr, XNCANCELD))
+		return;
+
+	if (!xnthread_test_state(curr, XNRELAX))
+		xnshadow_relax(0, 0);
+
+	do_exit(0);
+}
+EXPORT_SYMBOL_GPL(xnpod_testcancel_thread);
+
+/**
+ * @fn void xnpod_cancel_thread(struct xnthread *thread)
+ *
+ * @brief Cancel a thread.
+ *
+ * Request cancellation of a thread. This service forces @a thread to
+ * exit from any blocking call. @a thread will terminate as soon as it
+ * reaches a cancellation point. Cancellation points are defined for
+ * the following situations:
+ *
+ * - @a thread calls xnpod_cancel_thread().
+ * - @a thread calls any blocking Xenomai service that would otherwise
+ * lead to suspension in xnpod_suspend_thread().
+ * - @a thread resumes from xnpod_suspend_thread().
+ * - @a thread invokes a Linux syscall (user-space shadow only).
+ * - @a thread receives a Linux signal (user-space shadow only).
+ *
+ * @param thread The descriptor address of the thread to terminate.
+ *
+ * Calling context: This service may be called from all runtime modes.
+ *
+ * Rescheduling: always in case of self-cancellation from primary mode.
+ */
+void xnpod_cancel_thread(struct xnthread *thread)
 {
 	spl_t s;
 
+	XENO_ASSERT(NUCLEUS, !xnthread_test_state(thread, XNROOT),
+		    xnpod_fatal("attempt to cancel the root thread");
+		);
+
 	xnlock_get_irqsave(&nklock, s);
-	if (!xnpod_current_p(thread))
-		xnpod_suspend_thread(thread, XNDORMANT,
-				     XN_INFINITE, XN_RELATIVE, NULL);
-	xnthread_set_info(thread, XNABORT);
-	xnpod_delete_thread(thread);
+
+	if (xnthread_test_info(thread, XNCANCELD))
+		goto check_self_cancel;
+
+	trace_mark(xn_nucleus, thread_cancel, "thread %p thread_name %s",
+		   thread, xnthread_name(thread));
+
+	xnthread_set_info(thread, XNCANCELD);
+
+	if (xnthread_test_state(thread, XNDORMANT)) {
+		__xnpod_cleanup_thread(thread);
+		goto unlock_and_exit;
+	}
+
+check_self_cancel:
+	if (xnshadow_current_p(thread)) {
+		xnlock_put_irqrestore(&nklock, s);
+		xnpod_testcancel_thread();
+		/* ... won't return ... */
+		XENO_BUGON(NUCLEUS, 1);
+	}
+
+	__xnshadow_kick(thread);
+
+unlock_and_exit:
 	xnlock_put_irqrestore(&nklock, s);
 }
-EXPORT_SYMBOL_GPL(xnpod_abort_thread);
+EXPORT_SYMBOL_GPL(xnpod_cancel_thread);
 
 /*!
  * \fn void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
@@ -1286,14 +1077,16 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 			}
 			xnthread_clear_info(thread, XNRMID | XNTIMEO);
 			xnthread_set_info(thread, XNBREAK);
-			goto unlock_and_exit;
+			xnlock_put_irqrestore(&nklock, s);
+			xnpod_testcancel_thread();
+			return;
 		}
 		xnthread_clear_info(thread, XNRMID | XNTIMEO | XNBREAK | XNWAKEN | XNROBBED);
 	}
 
-	/* Don't start the timer for a thread indefinitely delayed by
-	   a call to xnpod_suspend_thread(thread,XNDELAY,XN_INFINITE,XN_RELATIVE,NULL). */
-
+	/*
+	 * Don't start the timer for a thread delayed indefinitely.
+	 */
 	if (timeout != XN_INFINITE || timeout_mode != XN_RELATIVE) {
 		xntimer_set_sched(&thread->rtimer, thread->sched);
 		if (xntimer_start(&thread->rtimer, timeout, XN_INFINITE,
@@ -1339,13 +1132,11 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 		 * __xnpod_schedule right after the call to
 		 * xnarch_escalate but before we lock the nklock, we
 		 * would enter the critical section in xnpod_schedule
-		 * while the current Adeos domain is Linux, which
-		 * would defeat the purpose of having called
-		 * xnarch_escalate().
+		 * while running in secondary mode, which would defeat
+		 * the purpose of xnarch_escalate().
 		 */
 		if (mask & XNRELAX) {
 			xnlock_clear_irqon(&nklock);
-
 			splmax();
 			xnpod_schedule();
 			return;
@@ -1355,16 +1146,24 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 		 * xnpod_schedule will trigger the IPI as needed.
 		 */
 		xnpod_schedule();
+
+		if (xnthread_test_info(thread, XNCANCELD)) {
+			xnlock_put_irqrestore(&nklock, s);
+			xnpod_testcancel_thread();
+			/* ... won't return ... */
+			XENO_BUGON(NUCLEUS, 1);
+		}
+		goto unlock_and_exit;
 	}
 
 	/*
 	 * Ok, this one is an interesting corner case, which requires
 	 * a bit of background first. Here, we handle the case of
-	 * suspending a _relaxed_ shadow which is _not_ the current
-	 * thread.  The net effect is that we are attempting to stop
-	 * the shadow thread at the nucleus level, whilst this thread
-	 * is actually running some code under the control of the
-	 * Linux scheduler (i.e. it's relaxed).  To make this
+	 * suspending a _relaxed_ user shadow which is _not_ the
+	 * current thread.  The net effect is that we are attempting
+	 * to stop the shadow thread at the nucleus level, whilst this
+	 * thread is actually running some code under the control of
+	 * the Linux scheduler (i.e. it's relaxed).  To make this
 	 * possible, we force the target Linux task to migrate back to
 	 * the Xenomai domain by sending it a SIGSHADOW signal the
 	 * skin interface libraries trap for this specific internal
@@ -1383,8 +1182,8 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 	 * processing any syscall which may block the caller; IOW,
 	 * __xn_exec_primary must be set in the mode flags for
 	 * those. So there is no need to deal specifically with the
-	 * relax+suspend issue when the about to be suspended thread
-	 * is current, since it must not be relaxed anyway.
+	 * relax+suspend issue when the current thread is about to be
+	 * suspended thread, since it can't be relaxed anyway.
 	 *
 	 * - among all blocking bits (XNTHREAD_BLOCK_BITS), only
 	 * XNSUSP, XNDELAY, XNDORMANT and XNHELD may be applied by the
@@ -1392,21 +1191,17 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 	 * added by the caller to its own state, XNMIGRATE and XNRELAX
 	 * have special semantics escaping this issue.
 	 *
-	 * Also note that we don't signal threads which are in a
-	 * dormant state, since they are already suspended by
-	 * definition.
+	 * We don't signal threads which are in a dormant state, since
+	 * they are already suspended by definition.
+	 *
+	 * XXX: forcing immediate suspension on a relaxed kernel
+	 * shadow is not supported.
 	 */
-	else if ((oldstate & (XNSHADOW | XNTHREAD_BLOCK_BITS)) == (XNSHADOW | XNRELAX) &&
-		 /* I.e. if the thread is a running relaxed shadow */
-		 (mask & (XNDELAY | XNSUSP | XNDORMANT | XNHELD)) != 0)
-		 /*
-		  * And we apply any of the above blocking bits, then
-		  * send a migration signal.
-		  */
-		xnshadow_suspend(thread);
+	if (((oldstate & (XNTHREAD_BLOCK_BITS|XNUSER)) == (XNRELAX|XNUSER)) &&
+	    (mask & (XNDELAY | XNSUSP | XNDORMANT | XNHELD)) != 0)
+		xnshadow_send_sig(thread, SIGSHADOW, SIGSHADOW_ACTION_HARDEN);
 
-      unlock_and_exit:
-
+unlock_and_exit:
 	xnlock_put_irqrestore(&nklock, s);
 }
 EXPORT_SYMBOL_GPL(xnpod_suspend_thread);
@@ -1476,9 +1271,8 @@ void xnpod_resume_thread(struct xnthread *thread, xnflags_t mask)
 	trace_mark(xn_nucleus, thread_resume,
 		   "thread %p thread_name %s mask %lu",
 		   thread, xnthread_name(thread), mask);
-	xntrace_pid(xnthread_user_task(thread) ?
-			 xnarch_user_pid(xnthread_archtcb(thread)) : -1,
-			 xnthread_current_priority(thread));
+
+	xntrace_pid(xnthread_host_pid(thread), xnthread_current_priority(thread));
 
 	sched = thread->sched;
 	oldstate = thread->state;
@@ -1769,7 +1563,7 @@ int __xnpod_set_thread_schedparam(struct xnthread *thread,
 	if (propagate) {
 		if (xnthread_test_state(thread, XNRELAX))
 			xnshadow_renice(thread);
-		else if (xnthread_test_state(thread, XNSHADOW))
+		else if (!xnthread_test_state(thread, XNROOT))
 			xnthread_set_info(thread, XNPRIOSET);
 	}
 
@@ -1905,45 +1699,6 @@ void xnpod_dispatch_signals(void)
 	xnthread_set_state(thread, oldmode);
 }
 
-/*!
- * @internal
- * \fn void xnpod_welcome_thread(xnthread_t *thread, int imask)
- * \brief Thread prologue.
- *
- * This internal routine is called on behalf of a (re)starting
- * thread's prologue before the user entry point is invoked. This call
- * is reserved for internal housekeeping chores and cannot be inlined.
- *
- * Entered with nklock locked, irqs off.
- */
-
-void xnpod_welcome_thread(xnthread_t *thread, int imask)
-{
-	xnsched_t *sched = xnsched_finish_unlocked_switch(thread->sched);
-
-	xnsched_finalize_zombie(sched);
-
-	trace_mark(xn_nucleus, thread_boot, "thread %p thread_name %s",
-		   thread, xnthread_name(thread));
-
-	xntrace_pid(-1, xnthread_current_priority(thread));
-
-	if (xnthread_test_state(thread, XNLOCK))
-		/* Actually grab the scheduler lock. */
-		xnpod_lock_sched();
-
-	__xnpod_init_fpu(sched, thread);
-
-	if (xnthread_signaled_p(thread))
-		xnpod_dispatch_signals();
-
-	xnlock_clear_irqoff(&nklock);
-	splexit(!!imask);
-
-	xnsched_resched_after_unlocked_switch();
-}
-EXPORT_SYMBOL_GPL(xnpod_welcome_thread);
-
 static inline void xnpod_switch_to(xnsched_t *sched,
 				   xnthread_t *prev, xnthread_t *next)
 {
@@ -2024,7 +1779,7 @@ static inline void xnpod_switch_to(xnsched_t *sched,
  * @note The switch hooks are called on behalf of the resuming thread.
  */
 
-static inline int __xnpod_test_resched(struct xnsched *sched)
+static inline int test_resched(struct xnsched *sched)
 {
 	int resched = testbits(sched->status, XNRESCHED);
 #ifdef CONFIG_SMP
@@ -2041,6 +1796,34 @@ static inline int __xnpod_test_resched(struct xnsched *sched)
 	return resched;
 }
 
+static inline void enter_root(struct xnthread *root)
+{
+	struct xnarchtcb *rootcb __maybe_unused = xnthread_archtcb(root);
+
+#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
+	if (rootcb->core.mm == NULL)
+		set_ti_thread_flag(rootcb->core.tip, TIF_MMSWITCH_INT);
+#endif
+	ipipe_unmute_pic();
+}
+
+static inline void leave_root(struct xnthread *root)
+{
+	struct xnarchtcb *rootcb = xnthread_archtcb(root);
+	struct task_struct *p = current;
+
+	ipipe_notify_root_preemption();
+	ipipe_mute_pic();
+	/* Remember the preempted Linux task pointer. */
+	rootcb->core.host_task = p;
+	rootcb->core.tsp = &p->thread;
+	rootcb->core.mm = rootcb->core.active_mm = ipipe_get_active_mm();
+#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
+	rootcb->core.tip = task_thread_info(p);
+#endif
+	xnarch_leave_root(rootcb);
+}
+
 void __xnpod_schedule(struct xnsched *sched)
 {
 	int zombie, switched, need_resched, shadow;
@@ -2055,13 +1838,10 @@ void __xnpod_schedule(struct xnsched *sched)
 	xnlock_get_irqsave(&nklock, s);
 
 	curr = sched->curr;
-
-	xntrace_pid(xnthread_user_task(curr) ?
-			 xnarch_user_pid(xnthread_archtcb(curr)) : -1,
-			 xnthread_current_priority(curr));
+	xntrace_pid(xnthread_host_pid(curr), xnthread_current_priority(curr));
 reschedule:
 	switched = 0;
-	need_resched = __xnpod_test_resched(sched);
+	need_resched = test_resched(sched);
 #if !XENO_DEBUG(NUCLEUS)
 	if (!need_resched)
 		goto signal_unlock_and_exit;
@@ -2089,8 +1869,6 @@ reschedule:
 		   prev, xnthread_name(prev),
 		   next, xnthread_name(next));
 
-	shadow = xnthread_test_state(prev, XNSHADOW);
-
 	if (xnthread_test_state(next, XNROOT)) {
 		xnsched_reset_watchdog(sched);
 		xnfreesync();
@@ -2100,15 +1878,17 @@ reschedule:
 		xnsched_zombie_hooks(prev);
 
 	sched->curr = next;
+	shadow = 1;
 
-	if (xnthread_test_state(prev, XNROOT))
-		xnarch_leave_root(xnthread_archtcb(prev));
-	else if (xnthread_test_state(next, XNROOT)) {
+	if (xnthread_test_state(prev, XNROOT)) {
+		leave_root(prev);
+		shadow = 0;
+	} else if (xnthread_test_state(next, XNROOT)) {
 		if (testbits(sched->lflags, XNHTICK))
 			xnintr_host_tick(sched);
 		if (testbits(sched->lflags, XNHDEFER))
 			xntimer_next_local_shot(sched);
-		xnarch_enter_root(xnthread_archtcb(next));
+		enter_root(next);
 	}
 
 	xnstat_exectime_switch(sched, &next->stat.account);
@@ -2137,10 +1917,7 @@ reschedule:
 	 * because of relaxed/hardened transitions.
 	 */
 	curr = sched->curr;
-
-	xntrace_pid(xnthread_user_task(curr) ?
-			 xnarch_user_pid(xnthread_archtcb(curr)) : -1,
-			 xnthread_current_priority(curr));
+	xntrace_pid(xnthread_host_pid(curr), xnthread_current_priority(curr));
 
 	if (zombie)
 		xnpod_fatal("zombie thread %s (%p) would not die...",
@@ -2152,7 +1929,7 @@ reschedule:
 
 	xnpod_run_hooks(&nkpod->tswitchq, curr, "SWITCH");
 
-      signal_unlock_and_exit:
+ signal_unlock_and_exit:
 	if (xnthread_signaled_p(curr))
 		xnpod_dispatch_signals();
 
@@ -2167,7 +1944,8 @@ reschedule:
 
 	return;
 
-      shadow_epilogue:
+shadow_epilogue:
+
 	__ipipe_complete_domain_migration();
 	/*
 	 * Shadow on entry and root without shadow extension on exit?
@@ -2177,7 +1955,8 @@ reschedule:
 	 */
 	if (xnshadow_current() == NULL) {
 		splnone();
-		xnshadow_exit();
+		__ipipe_reenter_root();
+		do_exit(0);
 	}
 
 	/*
@@ -2399,10 +2178,10 @@ EXPORT_SYMBOL_GPL(xnpod_remove_hook);
  */
 int xnpod_handle_exception(struct ipipe_trap_data *d)
 {
-	xnthread_t *thread;
+	struct xnthread *thread;
+	struct xnarchtcb *tcb;
 
-	if (!xnpod_active_p() ||
-	    (!xnpod_interrupt_p() && xnpod_idle_p()))
+	if (!xnpod_active_p() || (!xnpod_interrupt_p() && xnpod_idle_p()))
 		return 0;
 
 	thread = xnpod_current_thread();
@@ -2414,58 +2193,53 @@ int xnpod_handle_exception(struct ipipe_trap_data *d)
 		   xnarch_fault_trap(d));
 
 	if (xnarch_fault_fpu_p(d)) {
-		if (__xnpod_fault_init_fpu(thread))
-			return 1;
+		if (!xnthread_test_state(thread, XNROOT)) {
+			/* FPU exception received in primary mode. */
+			tcb = xnthread_archtcb(thread);
+			if (xnarch_handle_fpu_fault(tcb))
+				return 1;
+		}
 		print_symbol("invalid use of FPU in Xenomai context at %s\n",
 			     xnarch_fault_pc(d));
 	}
 
-	if (!xnpod_userspace_p()) {
-		printk(XENO_WARN
-		       "suspending kernel thread %p ('%s') at 0x%lx after exception #0x%x\n",
-		       thread, thread->name, xnarch_fault_pc(d),
-		       xnarch_fault_trap(d));
-
-		xnpod_suspend_thread(thread, XNSUSP, XN_INFINITE, XN_RELATIVE, NULL);
-		return 1;
-	}
-
+	if (xnthread_test_state(thread, XNROOT))
+		return 0;
 	/*
-	 * If we experienced a trap on behalf of a shadow thread, just
-	 * move the second to the Linux domain, so that the host O/S
-	 * (e.g. Linux) can attempt to process the exception. This is
-	 * especially useful in order to handle user-space errors or
-	 * debug stepping properly.
+	 * If we experienced a trap on behalf of a shadow thread
+	 * running in primary mode, move it to the Linux domain,
+	 * leaving the kernel process the exception.
 	 */
-	if (xnpod_shadow_p()) {
-		thread->regs = xnarch_fault_regs(d);
-#if XENO_DEBUG(NUCLEUS)
-		if (!user_mode(d->regs)) {
-			xntrace_panic_freeze();
-			printk(XENO_WARN
-			       "switching %s to secondary mode after exception #%u in "
-			       "kernel-space at 0x%lx (pid %d)\n", thread->name,
-			       xnarch_fault_trap(d),
-			       xnarch_fault_pc(d),
-			       xnthread_user_pid(thread));
-			xntrace_panic_dump();
-		} else if (xnarch_fault_notify(d))	/* Don't report debug traps */
-			printk(XENO_WARN
-			       "switching %s to secondary mode after exception #%u from "
-			       "user-space at 0x%lx (pid %d)\n", thread->name,
-			       xnarch_fault_trap(d),
-			       xnarch_fault_pc(d),
-			       xnthread_user_pid(thread));
-#endif /* XENO_DEBUG(NUCLEUS) */
-		if (xnarch_fault_pf_p(d))
-			/* The page fault counter is not SMP-safe, but it's a
-			   simple indicator that something went wrong wrt memory
-			   locking anyway. */
-			xnstat_counter_inc(&thread->stat.pf);
+	thread->regs = xnarch_fault_regs(d);
 
-		xnshadow_relax(xnarch_fault_notify(d),
-			       SIGDEBUG_MIGRATE_FAULT);
-	}
+#if XENO_DEBUG(NUCLEUS)
+	if (!user_mode(d->regs)) {
+		xntrace_panic_freeze();
+		printk(XENO_WARN
+		       "switching %s to secondary mode after exception #%u in "
+		       "kernel-space at 0x%lx (pid %d)\n", thread->name,
+		       xnarch_fault_trap(d),
+		       xnarch_fault_pc(d),
+		       xnthread_host_pid(thread));
+		xntrace_panic_dump();
+	} else if (xnarch_fault_notify(d)) /* Don't report debug traps */
+		printk(XENO_WARN
+		       "switching %s to secondary mode after exception #%u from "
+		       "user-space at 0x%lx (pid %d)\n", thread->name,
+		       xnarch_fault_trap(d),
+		       xnarch_fault_pc(d),
+		       xnthread_host_pid(thread));
+#endif /* XENO_DEBUG(NUCLEUS) */
+
+	if (xnarch_fault_pf_p(d))
+		/*
+		 * The page fault counter is not SMP-safe, but it's a
+		 * simple indicator that something went wrong wrt
+		 * memory locking anyway.
+		 */
+		xnstat_counter_inc(&thread->stat.pf);
+
+	xnshadow_relax(xnarch_fault_notify(d), SIGDEBUG_MIGRATE_FAULT);
 
 	return 0;
 }

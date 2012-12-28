@@ -76,10 +76,6 @@ HEAP {
 struct xnheap kheap;		/* System heap */
 EXPORT_SYMBOL_GPL(kheap);
 
-#if CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0
-struct xnheap kstacks;		/* Private stack pool */
-#endif
-
 static DEFINE_XNQUEUE(heapq);	/* Heap list for v-file dump */
 
 #ifdef CONFIG_XENO_OPT_VFILE
