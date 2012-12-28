@@ -26,4 +26,4 @@ includesub_HEADERS =	\
 	wrappers_64.h	\
 	wrappers.h
 
-SUBDIRS = bits
+SUBDIRS = bits ipipe
