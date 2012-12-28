@@ -2,9 +2,10 @@
 
 #include_next <stdio.h>
 
-#ifndef STDIO_H
-#define STDIO_H
+#ifndef _COBALT_STDIO_H
+#define _COABLT_STDIO_H
 
+#include <stddef.h>
 #include <stdarg.h>
 #include <cobalt/wrappers.h>
 
@@ -46,6 +47,6 @@ COBALT_DECL(size_t, fwrite(const void *ptr, size_t sz, size_t nmemb, FILE *strea
 }
 #endif /* __cplusplus */
 
-#endif /* STDIO_H */
+#endif /* _COBALT_STDIO_H */
 
 #endif /* !__KERNEL__ */
