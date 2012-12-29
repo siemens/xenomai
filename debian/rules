@@ -11,43 +11,16 @@ DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
 DEB_HOST_GNU_TYPE=$(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 DEB_BUILD_GNU_TYPE=$(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 
-ifeq ($(DEB_HOST_ARCH), i386)
-# Note: Would like to use --includedir=/usr/include/xenomai, but
-# there appears to be a `make install` problem.
-	CONFIG_OPTS = \
-	            --enable-x86-tsc
-endif
-ifeq ($(DEB_HOST_ARCH), amd64)
-	CONFIG_OPTS = \
-	            --enable-smp \
-	            --enable-x86-tsc \
-	            --enable-x86-sep
-endif
-ifeq ($(DEB_HOST_ARCH), powerpc)
-	CONFIG_OPTS =
-endif
-ifeq ($(DEB_HOST_ARCH), armeb)
-	CONFIG_OPTS = --enable-arm-mach=generic --enable-arm-eabi
-endif
-ifeq ($(DEB_HOST_ARCH), armel)
-	CONFIG_OPTS = --enable-arm-mach=generic --enable-arm-eabi
-endif
-ifeq ($(DEB_HOST_ARCH), arm)
-	CONFIG_OPTS = --enable-arm-mach=generic
-endif
-	CONFIG_OPTS += --prefix=/usr \
-	            --includedir=/usr/include/xenomai \
-	            --mandir=/usr/share/man \
-		    --with-testdir=/usr/lib/xenomai
+CONFIG_OPTS = --prefix=/usr \
+            --includedir=/usr/include/xenomai \
+            --mandir=/usr/share/man \
+	    --with-testdir=/usr/lib/xenomai
 
 ifneq ($(DEB_HOST_GNU_TYPE),$(DEB_BUILD_GNU_TYPE))
 	CONFIG_OPTS += --build $(DEB_BUILD_GNU_TYPE) --host $(DEB_HOST_GNU_TYPE)
 else
 	CONFIG_OPTS += --build $(DEB_BUILD_GNU_TYPE)
 endif
-
-# necessary from GCC 4.6 on
-CFLAGS += -fno-omit-frame-pointer
 
 build: build-arch build-indep
 
