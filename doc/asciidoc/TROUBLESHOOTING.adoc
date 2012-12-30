@@ -188,6 +188,7 @@ The most probable reason is that Xenomai could not find a timer.
 Check that you have not enabled one of the options in the
 <<kconf,"Kernel configuration">> section.
 
+
 On x86
 ^^^^^^
 
@@ -214,6 +215,24 @@ required since 2.6.9-rc4 for boxen which APIC hardware is disabled by
 default by the BIOS. You may want to look at the file
 'Documentation/kernel-parameters.txt' from the Linux source tree, for
 more information about this parameter.
+
+
+On AMD x86_64
+^^^^^^^^^^^^^
+
+You will most likely also see the following message:
+
+--------------------------------------------
+I-pipe: cannot use LAPIC as a tick device
+I-pipe: disable C1E power state in your BIOS
+--------------------------------------------
+
+Xenomai sends this message if C1E option is enabled in a BIOS. To fix
+this issue please disable C1E support in the BIOS. In some Award BIOS
+this option is located in the +Advanced BIOS Features->+ menu (+AMD
+C1E Support+).
+IMPORTANT: Disabling +AMD K8 Cool&Quiet+ option in a BIOS does not
+solve the problem.
 
 
 On other supported platforms
