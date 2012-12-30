@@ -27,6 +27,10 @@
 #error "please don't include asm/atomic_asm.h directly"
 #endif
 
+#if __LINUX_ARM_ARCH__ < 6 && defined(CONFIG_SMP)
+#error "SMP not supported below armv6 with ad-hoc atomic operations, compile without SMP or with -march=armv6 or above"
+#endif
+
 extern void __xnarch_xchg_called_with_bad_pointer(void);
 
 #define xnarch_read_memory_barrier()		xnarch_memory_barrier()
