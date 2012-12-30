@@ -4,7 +4,7 @@ usage() {
     cat <<EOF
 $0 [ -b path ] [ -s server ] [ -p port ] [ -m mntpoint ] [ -l path | seconds ]
 
-Generate load, using an assorted set of commands and optionnaly:
+Generate load, using an assorted set of commands and optionally:
 - hackbench if the path to the hackbench binary is specified with -b;
 - nc to send TCP data to "server" port "port" if -s is specified (if -p
 is not specified, the port 9, aka discard is used);

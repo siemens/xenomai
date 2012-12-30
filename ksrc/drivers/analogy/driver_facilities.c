@@ -113,8 +113,8 @@ EXPORT_SYMBOL_GPL(a4l_unregister_drv);
  * - chan_desc: to describe the channels which compose the subdevice;
  * - rng_desc: to declare the usable ranges;
  *
- * The functions callbakcs are:
- * - do_cmd() and do_cmdtest(): to performe asynchronous acquisitions
+ * The functions callbacks are:
+ * - do_cmd() and do_cmdtest(): to perform asynchronous acquisitions
  *   thanks to commands;
  * - cancel(): to abort a working asynchronous acquisition;
  * - munge(): to apply modifications on the data freshly acquired
@@ -124,7 +124,7 @@ EXPORT_SYMBOL_GPL(a4l_unregister_drv);
  *   acquisition device is DMA capable, many cache-misses and
  *   cache-replaces will occur (the benefits of the DMA controller
  *   will vanish);
- * - trigger(): optionnaly to launch an asynchronous acquisition;
+ * - trigger(): optionally to launch an asynchronous acquisition;
  * - insn_read(), insn_write(), insn_bits(), insn_config(): to perform
  *   synchronous acquisition operations.
  *
