@@ -185,21 +185,21 @@ footnoteref:[disable]
 		       powerpc_32/64 and ARM. One may
 		       override this default setting
 		       by passing +--disable-smp+ explicitely
-		       for those architectures.
-
+		       for those architectures. +
+ +
 		       SMP-enabled userland code may run
 		       over SMP or UP kernels. However,
 		       Xenomai will deny running UP-only
 		       userland code (i.e. when +--disable-smp+
 		       is in effect) over an SMP kernel.]
 		      	      	  		       |weak
-|--with-atomic-ops=    Selects which implementation of atomic
-		       access operations shall be used within
-		       Xenomai libraries:
+|--with-atomic-ops=    |Selects which implementation of atomic
+		        access operations shall be used within
+		        Xenomai libraries:
 
-		       +--with-atomic-ops=builtins+ selects the
-		       GCC builtins, i.e. __sync_*()
-		       services.
+		        +--with-atomic-ops=builtins+ selects the
+		        GCC builtins, i.e. __sync_*()
+		        services.
     
 			+--with-atomic-ops=ad-hoc+ selects the
 			ad hoc Xenomai implementation.
