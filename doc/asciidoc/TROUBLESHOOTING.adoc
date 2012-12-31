@@ -231,6 +231,7 @@ Xenomai sends this message if C1E option is enabled in a BIOS. To fix
 this issue please disable C1E support in the BIOS. In some Award BIOS
 this option is located in the +Advanced BIOS Features->+ menu (+AMD
 C1E Support+).
+
 IMPORTANT: Disabling +AMD K8 Cool&Quiet+ option in a BIOS does not
 solve the problem.
 
