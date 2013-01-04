@@ -62,10 +62,12 @@
 #define RTHAL_HRTIMER_IPI	IPIPE_HRTIMER_IPI
 #define RTHAL_RESCHEDULE_IPI	IPIPE_RESCHEDULE_IPI
 #define RTHAL_CRITICAL_IPI	IPIPE_CRITICAL_IPI
+#define RTHAL_PERCPU_TIMER_IRQ(cpu) per_cpu(ipipe_percpu.hrtimer_irq, cpu)
 #else /* !I-pipe core */
 #define RTHAL_HRTIMER_IPI	IPIPE_SERVICE_IPI0
 #define RTHAL_RESCHEDULE_IPI	IPIPE_SERVICE_IPI1
 #define RTHAL_CRITICAL_IPI	IPIPE_CRITICAL_IPI
+#define RTHAL_PERCPU_TIMER_IRQ(cpu) RTHAL_TIMER_IRQ
 #endif /* !I-pipe core */
 
 enum rthal_ktimer_mode { /* <!> Must follow enum clock_event_mode */
