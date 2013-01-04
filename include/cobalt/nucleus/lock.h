@@ -101,7 +101,9 @@ void xnlock_dbg_acquired(struct xnlock *lock, int cpu,
 			 unsigned long long *start,
 			 const char *file, int line,
 			 const char *function);
-int xnlock_dbg_release(struct xnlock *lock);
+int xnlock_dbg_release(struct xnlock *lock,
+			 const char *file, int line,
+			 const char *function);
 
 #else /* !XENO_DEBUG(XNLOCK) */
 
@@ -146,8 +148,11 @@ static inline int xnlock_dbg_release(struct xnlock *lock)
 #if defined(CONFIG_SMP) || XENO_DEBUG(XNLOCK)
 
 #define xnlock_get(lock)		__xnlock_get(lock  XNLOCK_DBG_CONTEXT)
+#define xnlock_put(lock)		__xnlock_put(lock  XNLOCK_DBG_CONTEXT)
 #define xnlock_get_irqsave(lock,x) \
 	((x) = __xnlock_get_irqsave(lock  XNLOCK_DBG_CONTEXT))
+#define xnlock_put_irqrestore(lock,x) \
+	__xnlock_put_irqrestore(lock,x  XNLOCK_DBG_CONTEXT)
 #define xnlock_clear_irqoff(lock)	xnlock_put_irqrestore(lock, 1)
 #define xnlock_clear_irqon(lock)	xnlock_put_irqrestore(lock, 0)
 
@@ -181,9 +186,9 @@ static inline int __xnlock_get(struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARG
 	return 0;
 }
 
-static inline void xnlock_put(struct xnlock *lock)
+static inline void __xnlock_put(struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
 {
-	if (xnlock_dbg_release(lock))
+	if (xnlock_dbg_release(lock /*, */ XNLOCK_DBG_PASS_CONTEXT))
 		return;
 
 	/*
@@ -207,11 +212,12 @@ __xnlock_get_irqsave(struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
 	return flags;
 }
 
-static inline void xnlock_put_irqrestore(struct xnlock *lock, spl_t flags)
+static inline void __xnlock_put_irqrestore(struct xnlock *lock, spl_t flags
+					   /*, */ XNLOCK_DBG_CONTEXT_ARGS)
 {
 	/* Only release the lock if we didn't take it recursively. */
 	if (!(flags & 2))
-		xnlock_put(lock);
+		__xnlock_put(lock /*, */ XNLOCK_DBG_PASS_CONTEXT);
 
 	splexit(flags & 1);
 }

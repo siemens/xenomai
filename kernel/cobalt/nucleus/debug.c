@@ -551,7 +551,7 @@ void xnlock_dbg_spinning(struct xnlock *lock, int cpu,
 {
 	if (--*spin_limit == 0) {
 		ipipe_prepare_panic();
-		printk(KERN_ERR "Xenomai: stuck on nucleus lock %p\n"
+		printk(KERN_ERR "Xenomai: stuck on lock %p\n"
 				"	  waiter = %s:%u (%s(), CPU #%d)\n"
 				"	  owner	 = %s:%u (%s(), CPU #%d)\n",
 		       lock, file, line, function, cpu,
@@ -576,7 +576,8 @@ void xnlock_dbg_acquired(struct xnlock *lock, int cpu, unsigned long long *start
 }
 EXPORT_SYMBOL_GPL(xnlock_dbg_acquired);
 
-int xnlock_dbg_release(struct xnlock *lock)
+int xnlock_dbg_release(struct xnlock *lock,
+		       const char *file, int line, const char *function)
 {
 	unsigned long long lock_time;
 	struct xnlockinfo *stats;
@@ -586,18 +587,28 @@ int xnlock_dbg_release(struct xnlock *lock)
 	cpu = ipipe_processor_id();
 	stats = &xnlock_stats[cpu];
 
+	if (lock->file == NULL) {
+		lock->file = "??";
+		lock->line = 0;
+		lock->function = "invalid";
+	}
+
 	if (unlikely(atomic_read(&lock->owner) != cpu)) {
 		ipipe_prepare_panic();
-		printk(KERN_ERR "Xenomai: unlocking unlocked nucleus lock %p"
+		printk(KERN_ERR "Xenomai: lock %p already unlocked"
 				" on CPU #%d\n"
-				"         owner  = %s:%u (%s(), CPU #%d)\n",
+				"         last owner = %s:%u (%s(), CPU #%d)\n",
 		       lock, cpu, lock->file, lock->line, lock->function,
 		       lock->cpu);
 		show_stack(NULL,NULL);
 		return 1;
 	}
 
-	lock->cpu = -lock->cpu;	/* File that we released it. */
+	/* File that we released it. */
+	lock->cpu = -lock->cpu;
+	lock->file = file;
+	lock->line = line;
+	lock->function = function;
 
 	if (lock_time > stats->lock_time) {
 		stats->lock_time = lock_time;
