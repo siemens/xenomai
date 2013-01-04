@@ -883,7 +883,19 @@ void xnintr_affinity(xnintr_t *intr, cpumask_t cpumask)
 }
 EXPORT_SYMBOL_GPL(xnintr_affinity);
 
+static inline int xnintr_is_timer_irq(int irq)
+{
+	int cpu;
+
+	for_each_online_cpu(cpu)
+		if (irq == per_cpu(ipipe_percpu.hrtimer_irq, cpu))
+			return 1;
+
+	return 0;
+}
+
 #ifdef CONFIG_XENO_OPT_STATS
+
 int xnintr_query_init(xnintr_iterator_t *iterator)
 {
 	iterator->cpu = -1;
@@ -924,7 +936,7 @@ int xnintr_query_next(int irq, xnintr_iterator_t *iterator, char *name_buf)
 	}
 
 	if (!iterator->prev) {
-		if (irq == per_cpu(ipipe_percpu.hrtimer_irq, cpu))
+		if (xnintr_is_timer_irq(irq))
 			intr = &nktimer;
 		else
 			intr = xnintr_shirq_first(irq);
@@ -977,7 +989,7 @@ static inline int format_irq_proc(unsigned int irq,
 	int cpu;
 
 	for_each_online_cpu(cpu)
-		if (irq == per_cpu(ipipe_percpu.hrtimer_irq, cpu)) {
+		if (xnintr_is_timer_irq(irq)) {
 			xnvfile_printf(it, "         [timer/%d]", cpu);
 			return 0;
 		}
