@@ -909,10 +909,11 @@ scan_irqs:
 	if (priv->irq >= XNARCH_NR_IRQS)
 		return 0;	/* All done. */
 
-	ret = xnintr_query_next(priv->irq++, &priv->intr_it, p->name);
+	ret = xnintr_query_next(priv->irq, &priv->intr_it, p->name);
 	if (ret) {
 		if (ret == -EAGAIN)
 			xnvfile_touch(it->vfile); /* force rewind. */
+		priv->irq++;
 		return VFILE_SEQ_SKIP;
 	}
 
