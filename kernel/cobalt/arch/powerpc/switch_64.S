@@ -36,7 +36,8 @@
 #include <asm/ptrace.h>
 
 /*
- * void __asm_thread_switch(struct thread_struct *prev, struct thread_struct *next, int kthreadp)
+ * struct task_struct *
+ * __asm_thread_switch(struct thread_struct *prev, struct thread_struct *next)
  */
 _GLOBAL(__asm_thread_switch)
 	mflr	r0
@@ -89,12 +90,8 @@ END_FTR_SECTION_IFSET(CPU_FTR_ALTIVEC)
 	ld	r8,KSP(r4)	/* new stack pointer */
 	ld	r3,PACACURRENT(r13) /* we must return "prev" when paired to switch_to() */
 
-	cmpwi	cr5,r5,0	/* is it a kernel thread */
-        bne-	cr5,10f		/* if so, don't touch 'current' */
-
 	addi	r6,r4,-THREAD	/* Convert THREAD to 'current' */
 	std	r6,PACACURRENT(r13)	/* Set new 'current' */
-10:
 #ifdef CONFIG_PPC_BOOK3S
 BEGIN_FTR_SECTION
   BEGIN_FTR_SECTION_NESTED(95)
@@ -144,8 +141,6 @@ END_FTR_SECTION_IFSET(MMU_FTR_1T_SEGMENT)
 	isync
 2:
 #endif /* !CONFIG_PPC_BOOK3S */
-	bne-	cr5,11f		/* kernel thread: don't update KSAVE */
-
 	clrrdi	r7,r8,THREAD_SHIFT	/* base of new stack */
 	/* Note: this uses SWITCH_FRAME_SIZE rather than INT_FRAME_SIZE
 	   because we don't need to leave the 288-byte ABI gap at the
@@ -172,11 +167,4 @@ END_FTR_SECTION_IFSET(CPU_FTR_ALTIVEC)
 	ld	r7,_NIP(r1)	/* Return to _switch caller in new task */
 	mtlr	r7
 	addi	r1,r1,SWITCH_FRAME_SIZE
-	blr
-	
-_GLOBAL(__asm_thread_trampoline)
-	stdu	r1,-STACK_FRAME_OVERHEAD(r1)
-	mr	r3,r22
-	mr	r2,r24
-	mtlr	r23
 	blr

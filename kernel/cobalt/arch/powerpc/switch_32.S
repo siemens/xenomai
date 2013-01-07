@@ -78,12 +78,8 @@ END_FTR_SECTION_IFSET(CPU_FTR_SPE)
 #endif /* CONFIG_SMP */
 
 	lwz	r1,KSP(r4)	/* Load new stack pointer */
-
 	mr	r3,r2
 	lwz	r0,PGDIR(r4)
-        cmpwi   r0, 0
-        beq-	same_current
-
 	tophys(r0,r4)
 	CLR_TOP32(r0)
 	mtspr	SPRN_SPRG3,r0	/* Update current THREAD phys addr */
@@ -106,8 +102,6 @@ END_FTR_SECTION_IFSET(CPU_FTR_SPE)
 #endif
 #endif /* CONFIG_SPE */
 
-same_current:
-		
 	lwz	r0,_CCR(r1)
 	mtcrf	0xFF,r0
 	REST_NVGPRS(r1)
@@ -115,10 +109,4 @@ same_current:
 	lwz	r4,_NIP(r1)
 	mtlr	r4
 	addi	r1,r1,INT_FRAME_SIZE
-	blr
-
-_GLOBAL(__asm_thread_trampoline)
-	stwu	r1,-STACK_FRAME_OVERHEAD(r1)
-	mr	r3,r22
-	mtlr	r23
 	blr

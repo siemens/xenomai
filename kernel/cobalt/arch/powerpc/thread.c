@@ -24,127 +24,39 @@
 #include <linux/ipipe.h>
 #include <linux/mm.h>
 #include <asm/mmu_context.h>
-#include <nucleus/pod.h>
-#include <nucleus/heap.h>
-
-#ifdef CONFIG_PPC64
-
-asmlinkage struct task_struct *
-__asm_thread_switch(struct thread_struct *prev_t,
-		    struct thread_struct *next_t,
-		    int kthreadp);
-
-/* from process.c/copy_thread */
-static unsigned long get_stack_vsid(unsigned long ksp)
-{
-	unsigned long vsid;
-	unsigned long llp = mmu_psize_defs[mmu_linear_psize].sllp;
-
-	if (mmu_has_feature(MMU_FTR_1T_SEGMENT))
-		vsid = get_kernel_vsid(ksp, MMU_SEGSIZE_1T)
-			<< SLB_VSID_SHIFT_1T;
-	else
-		vsid = get_kernel_vsid(ksp, MMU_SEGSIZE_256M)
-			<< SLB_VSID_SHIFT;
-
-	vsid |= SLB_VSID_KERNEL | llp;
-
-	return vsid;
-}
-
-#else /* !CONFIG_PPC64 */
+#include <nucleus/thread.h>
 
 asmlinkage struct task_struct *
 __asm_thread_switch(struct thread_struct *prev,
 		    struct thread_struct *next);
 
-#endif /* !CONFIG_PPC64 */
-
-asmlinkage void __asm_thread_trampoline(void);
-
-void xnarch_enter_root(struct xnarchtcb *rootcb)
-{
-#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
-	if (!rootcb->mm)
-		set_ti_thread_flag(rootcb->tip, TIF_MMSWITCH_INT);
-#endif
-	ipipe_unmute_pic();
-}
-
 void xnarch_switch_to(struct xnarchtcb *out_tcb,
 		      struct xnarchtcb *in_tcb)
 {
-	struct mm_struct *prev_mm = out_tcb->active_mm, *next_mm;
-	struct task_struct *prev = out_tcb->active_task;
-	struct task_struct *next = in_tcb->user_task;
+	struct mm_struct *prev_mm, *next_mm;
+	struct task_struct *next;
 
-	if (likely(next != NULL)) {
-		in_tcb->active_task = next;
-		in_tcb->active_mm = in_tcb->mm;
-		ipipe_clear_foreign_stack(&xnarch_machdata.domain);
+	next = in_tcb->core.host_task;
+	prev_mm = out_tcb->core.active_mm;
+
+	next_mm = in_tcb->core.mm;
+	if (next_mm == NULL) {
+		in_tcb->core.active_mm = prev_mm;
+		enter_lazy_tlb(prev_mm, next);
 	} else {
-		in_tcb->active_task = prev;
-		in_tcb->active_mm = prev_mm;
-		ipipe_set_foreign_stack(&xnarch_machdata.domain);
+		ipipe_switch_mm_head(prev_mm, next_mm, next);
+		/*
+		 * We might be switching back to the root thread,
+		 * which we preempted earlier, shortly after "current"
+		 * dropped its mm context in the do_exit() path
+		 * (next->mm == NULL). In that particular case, the
+		 * kernel expects a lazy TLB state for leaving the mm.
+		 */
+		if (next->mm == NULL)
+			enter_lazy_tlb(prev_mm, next);
 	}
 
-	next_mm = in_tcb->active_mm;
-	if (next_mm && likely(prev_mm != next_mm))
-		__switch_mm(prev_mm, next_mm, next);
-
-#ifdef CONFIG_PPC64
-	__asm_thread_switch(out_tcb->tsp, in_tcb->tsp, next == NULL);
-#else
-	__asm_thread_switch(out_tcb->tsp, in_tcb->tsp);
-#endif
-}
-
-asmlinkage static void thread_trampoline(struct xnarchtcb *tcb)
-{
-	xnpod_welcome_thread(tcb->self, tcb->imask);
-	tcb->entry(tcb->cookie);
-	xnpod_delete_thread(tcb->self);
-}
-
-void xnarch_init_thread(struct xnarchtcb *tcb,
-			void (*entry)(void *),
-			void *cookie,
-			int imask,
-			struct xnthread *thread, char *name)
-{
-	struct pt_regs *childregs;
-	unsigned long sp;
-
-	/*
-	 * Stack space is guaranteed to have been fully zeroed. We do
-	 * this earlier in xnthread_init() which runs with interrupts
-	 * on, to reduce latency.
-	 */
-	sp = (unsigned long)tcb->stackbase + tcb->stacksize;
-	sp -= sizeof(struct pt_regs);
-	childregs = (struct pt_regs *)sp;
-	sp -= STACK_FRAME_OVERHEAD;
-
-	tcb->ts.ksp = sp;
-	tcb->entry = entry;
-	tcb->cookie = cookie;
-	tcb->self = thread;
-	tcb->imask = imask;
-	tcb->name = name;
-
-#ifdef CONFIG_PPC64
-	childregs->nip = ((unsigned long *)__asm_thread_trampoline)[0];
-	childregs->gpr[2] = ((unsigned long *)__asm_thread_trampoline)[1];
-	childregs->gpr[22] = (unsigned long)tcb;
-	childregs->gpr[23] = ((unsigned long *)thread_trampoline)[0];	/* lr = entry addr. */
-	childregs->gpr[24] = ((unsigned long *)thread_trampoline)[1];	/* r2 = TOC base. */
-	if (mmu_has_feature(MMU_FTR_SLB))
-		tcb->ts.ksp_vsid = get_stack_vsid(tcb->ts.ksp);
-#else /* !CONFIG_PPC64 */
-	childregs->nip = (unsigned long)__asm_thread_trampoline;
-	childregs->gpr[22] = (unsigned long)tcb;
-	childregs->gpr[23] = (unsigned long)thread_trampoline;
-#endif	/* !CONFIG_PPC64 */
+	__asm_thread_switch(out_tcb->core.tsp, in_tcb->core.tsp);
 }
 
 #ifdef CONFIG_XENO_HW_FPU
@@ -206,19 +118,17 @@ asmlinkage void __asm_restore_fpu(struct thread_struct *ts);
 void xnarch_init_fpu(struct xnarchtcb *tcb)
 {
 	/*
-	 * Initialize the FPU for an emerging kernel-based RT
-	 * thread. This must be run on behalf of the emerging thread.
-	 * xnarch_init_tcb() guarantees that all FPU regs are zeroed
-	 * in tcb.
+	 * This must run on behalf of the thread we initialize the FPU
+	 * for. All FPU regs are guaranteed zero.
 	 */
-	__asm_init_fpu(&tcb->ts);
+	__asm_init_fpu(&tcb->core.ts);
 }
 
 void xnarch_enable_fpu(struct xnarchtcb *tcb)
 {
-	struct task_struct *task = tcb->user_task;
+	struct task_struct *task = tcb->core.host_task;
 
-	if (task && task != tcb->user_fpu_owner)
+	if (task && task != tcb->core.user_fpu_owner)
 		do_disable_fpu();
 	else
 		do_enable_fpu();
@@ -229,9 +139,9 @@ void xnarch_save_fpu(struct xnarchtcb *tcb)
 	if (tcb->fpup) {
 		__asm_save_fpu(tcb->fpup);
 
-		if (tcb->user_fpu_owner &&
-		    tcb->user_fpu_owner->thread.regs)
-			tcb->user_fpu_owner->thread.regs->msr &= ~(MSR_FP|MSR_FE0|MSR_FE1);
+		if (tcb->core.user_fpu_owner &&
+		    tcb->core.user_fpu_owner->thread.regs)
+			tcb->core.user_fpu_owner->thread.regs->msr &= ~(MSR_FP|MSR_FE0|MSR_FE1);
 	}
 }
 
@@ -246,8 +156,8 @@ void xnarch_restore_fpu(struct xnarchtcb *tcb)
 		 * Note: Only enable FP in MSR, if it was enabled when
 		 * we saved the fpu state.
 		 */
-		if (tcb->user_fpu_owner) {
-			ts = &tcb->user_fpu_owner->thread;
+		if (tcb->core.user_fpu_owner) {
+			ts = &tcb->core.user_fpu_owner->thread;
 			regs = ts->regs;
 			if (regs) {
 				regs->msr &= ~(MSR_FE0|MSR_FE1);
@@ -259,31 +169,19 @@ void xnarch_restore_fpu(struct xnarchtcb *tcb)
 	 * FIXME: We restore FPU "as it was" when Xenomai preempted Linux,
 	 * whereas we could be much lazier.
 	 */
-	if (tcb->user_task && tcb->user_task != tcb->user_fpu_owner)
+	if (tcb->core.host_task && tcb->core.host_task != tcb->core.user_fpu_owner)
 		do_disable_fpu();
 }
 
-#endif /* CONFIG_XENO_HW_FPU */
-
 void xnarch_leave_root(struct xnarchtcb *rootcb)
 {
-	struct task_struct *p = current;
-
-	ipipe_mute_pic();
-	/* Remember the preempted Linux task pointer. */
-	rootcb->user_task = rootcb->active_task = p;
-	rootcb->tsp = &p->thread;
-	rootcb->mm = rootcb->active_mm = ipipe_get_active_mm();
-#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
-	rootcb->tip = task_thread_info(p);
-#endif
-#ifdef CONFIG_XENO_HW_FPU
-	rootcb->user_fpu_owner = get_fpu_owner(rootcb->user_task);
+	rootcb->core.user_fpu_owner = get_fpu_owner(rootcb->core.host_task);
 	/* So that xnarch_save_fpu() will operate on the right FPU area. */
-	rootcb->fpup = rootcb->user_fpu_owner ?
-		&rootcb->user_fpu_owner->thread : NULL;
-#endif /* CONFIG_XENO_HW_FPU */
+	rootcb->fpup = rootcb->core.user_fpu_owner ?
+		&rootcb->core.user_fpu_owner->thread : NULL;
 }
+
+#endif /* CONFIG_XENO_HW_FPU */
 
 int xnarch_escalate(void)
 {
@@ -293,93 +191,4 @@ int xnarch_escalate(void)
 	}
 
 	return 0;
-}
-
-void xnarch_init_tcb(struct xnarchtcb *tcb)
-{
-	tcb->user_task = NULL;
-	tcb->active_task = NULL;
-	tcb->tsp = &tcb->ts;
-	tcb->mm = NULL;
-	tcb->active_mm = NULL;
-#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
-	tcb->tip = &tcb->ti;
-#endif
-	/* Note: .pgdir(ppc32) == NULL for a Xenomai kthread. */
-	memset(&tcb->ts, 0, sizeof(tcb->ts));
-#ifdef CONFIG_XENO_HW_FPU
-	tcb->user_fpu_owner = NULL;
-	tcb->fpup = &tcb->ts;
-#endif /* CONFIG_XENO_HW_FPU */
-	/* Must be followed by xnarch_init_thread(). */
-}
-
-void xnarch_init_root_tcb(struct xnarchtcb *tcb,
-			  struct xnthread *thread,
-			  const char *name)
-{
-	tcb->user_task = current;
-	tcb->active_task = NULL;
-	tcb->tsp = &tcb->ts;
-	tcb->mm = current->mm;
-	tcb->active_mm = NULL;
-#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
-	tcb->tip = &tcb->ti;
-#endif
-#ifdef CONFIG_XENO_HW_FPU
-	tcb->user_fpu_owner = NULL;
-	tcb->fpup = NULL;
-#endif /* CONFIG_XENO_HW_FPU */
-	tcb->entry = NULL;
-	tcb->cookie = NULL;
-	tcb->self = thread;
-	tcb->imask = 0;
-	tcb->name = name;
-}
-
-void xnarch_init_shadow_tcb(struct xnarchtcb *tcb,
-			    struct xnthread *thread,
-			    const char *name)
-{
-	struct task_struct *task = current;
-
-	tcb->user_task = task;
-	tcb->active_task = NULL;
-	tcb->tsp = &task->thread;
-	tcb->mm = task->mm;
-	tcb->active_mm = NULL;
-#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
-	tcb->tip = task_thread_info(task);
-#endif
-#ifdef CONFIG_XENO_HW_FPU
-	tcb->user_fpu_owner = task;
-	tcb->fpup = &task->thread;
-#endif /* CONFIG_XENO_HW_FPU */
-	tcb->entry = NULL;
-	tcb->cookie = NULL;
-	tcb->self = thread;
-	tcb->imask = 0;
-	tcb->name = name;
-}
-
-int xnarch_alloc_stack(struct xnarchtcb *tcb, size_t stacksize)
-{
-	int ret = 0;
-
-	tcb->stacksize = stacksize;
-	if (stacksize == 0)
-		tcb->stackbase = NULL;
-	else {
-		tcb->stackbase = xnheap_alloc(&kstacks, stacksize);
-		if (tcb->stackbase == NULL)
-			ret = -ENOMEM;
-	}
-
-	return ret;
-}
-
-void xnarch_free_stack(struct xnarchtcb *tcb)
-{
-	if (tcb->stackbase)
-		xnheap_free(&kstacks, tcb->stackbase);
 }
