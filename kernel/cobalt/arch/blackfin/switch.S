@@ -24,12 +24,6 @@
 
 /*
  * Switch context routine for Xenomai threads.
- * Kernel-based threads are basically seen as co-routines.
- * The context is saved/restored to/from regular thread_structs,
- * so that hybrid scheduling between kernel and user-space Xenomai
- * threads is possible.
- *
- * We protect all caller-saved registers across switches.
  *
  * void __asm_switch_context(struct thread_struct *prev, struct thread_struct *next)
  */
@@ -63,10 +57,6 @@ switch_point:
 	fp = [sp++];
 	rets = [sp++];
 	rts;
-
-ENTRY(___asm_thread_trampoline)
-	r0 = [sp++];
-	jump switch_point
 
 /*
  * Check for a reason to block context switching for Xenomai. This may

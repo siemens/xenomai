@@ -20,57 +20,37 @@
 #include <linux/sched.h>
 #include <linux/ipipe.h>
 #include <linux/mm.h>
-#include <nucleus/pod.h>
-#include <nucleus/heap.h>
+#include <asm/mmu_context.h>
+#include <nucleus/thread.h>
 
-asmlinkage struct task_struct *
+asmlinkage void
 __asm_switch_context(struct thread_struct *prev,
 		     struct thread_struct *next);
-
-asmlinkage void __asm_thread_trampoline(void);
 
 asmlinkage int __asm_defer_switch_p(void);
 
 #ifdef CONFIG_MPU
 
 static inline
-struct task_struct *mpu_get_prev(struct xnarchtcb *tcb)
+void mpu_switch(struct xnarchtcb *out_tcb, struct xnarchtcb *in_tcb)
 {
-	return tcb->active_task;
-}
+	struct mm_struct *prev_mm, *next_mm;
+	struct task_struct *next;
 
-static inline
-void mpu_set_next(struct xnarchtcb *tcb, struct task_struct *next)
-{
-	tcb->active_task = next;
-}
+	next = in_tcb->core.host_task;
+	prev_mm = out_tcb->core.active_mm;
 
-static inline
-void mpu_switch(struct task_struct *prev, struct task_struct *next)
-{
-	struct mm_struct *oldmm;
-
-	if (next && next != prev) {
-		oldmm = prev->active_mm;
-		switch_mm(oldmm, next->active_mm, next);
-	}
+	next_mm = in_tcb->core.mm;
+	if (next_mm == NULL)
+		in_tcb->core.active_mm = prev_mm;
+	else
+		ipipe_switch_mm_head(prev_mm, next_mm, next);
 }
 
 #else /* !CONFIG_MPU */
 
 static inline
-struct task_struct *mpu_get_prev(struct xnarchtcb *tcb)
-{
-	return NULL;
-}
-
-static inline
-void mpu_set_next(struct xnarchtcb *tcb, struct task_struct *next)
-{
-}
-
-static inline
-void mpu_switch(struct task_struct *prev, struct task_struct *next)
+void mpu_switch(struct xnarchtcb *out_tcb, struct xnarchtcb *in_tcb)
 {
 }
 
@@ -78,65 +58,8 @@ void mpu_switch(struct task_struct *prev, struct task_struct *next)
 
 void xnarch_switch_to(struct xnarchtcb *out_tcb, struct xnarchtcb *in_tcb)
 {
-	struct task_struct *prev = mpu_get_prev(out_tcb);
-	struct task_struct *next = in_tcb->user_task;
-
-	if (likely(next != NULL)) {
-		mpu_set_next(in_tcb, next);
-		ipipe_clear_foreign_stack(&xnarch_machdata.domain);
-	} else {
-		mpu_set_next(in_tcb, prev);
-		ipipe_set_foreign_stack(&xnarch_machdata.domain);
-	}
-
-	mpu_switch(prev, next);
-
-	__asm_switch_context(out_tcb->tsp, in_tcb->tsp);
-}
-
-asmlinkage static void thread_trampoline(struct xnarchtcb *tcb)
-{
-	xnpod_welcome_thread(tcb->self, tcb->imask);
-	tcb->entry(tcb->cookie);
-	xnpod_delete_thread(tcb->self);
-}
-
-void xnarch_init_thread(struct xnarchtcb *tcb,
-			void (*entry)(void *),
-			void *cookie,
-			int imask,
-			struct xnthread *thread, char *name)
-{
-	unsigned long ksp, *switchregs;
-
-	ksp = (((unsigned long)tcb->stackbase + tcb->stacksize - 40) & ~0xf);
-	switchregs = (unsigned long *)ksp;
-	/*
-	 * Stack space is guaranteed to be clear, so R7:4, P5:3, fp
-	 * are already zero. We only need to set r0 and rets.
-	 */
-	switchregs[0] = (unsigned long)tcb;	/* r0 */
-	switchregs[9] = (unsigned long)thread_trampoline; /* rets */
-
-	tcb->ts.ksp = ksp;
-	tcb->ts.pc = (unsigned long)__asm_thread_trampoline;
-	tcb->ts.usp = 0;
-
-	tcb->entry = entry;
-	tcb->cookie = cookie;
-	tcb->self = thread;
-	tcb->imask = imask;
-	tcb->name = name;
-}
-
-void xnarch_leave_root(struct xnarchtcb *rootcb)
-{
-	/* Remember the preempted Linux task pointer. */
-	rootcb->user_task = current;
-#ifdef CONFIG_MPU
-	rootcb->active_task = current;
-#endif
-	rootcb->tsp = &current->thread;
+	mpu_switch(out_tcb, in_tcb);
+	__asm_switch_context(out_tcb->core.tsp, in_tcb->core.tsp);
 }
 
 int xnarch_escalate(void)
@@ -179,70 +102,4 @@ int xnarch_escalate(void)
 	__ipipe_unlock_root();
 
 	return 0;
-}
-
-void xnarch_init_root_tcb(struct xnarchtcb *tcb,
-			  struct xnthread *thread,
-			  const char *name)
-{
-	tcb->user_task = current;
-#ifdef CONFIG_MPU
-	tcb->active_task = NULL;
-#endif
-	tcb->tsp = &tcb->ts;
-	tcb->entry = NULL;
-	tcb->cookie = NULL;
-	tcb->self = thread;
-	tcb->imask = 0;
-	tcb->name = name;
-}
-
-void xnarch_init_shadow_tcb(struct xnarchtcb *tcb,
-			    struct xnthread *thread,
-			    const char *name)
-{
-	struct task_struct *task = current;
-
-	tcb->user_task = task;
-#ifdef CONFIG_MPU
-	tcb->active_task = NULL;
-#endif
-	tcb->tsp = &task->thread;
-	tcb->entry = NULL;
-	tcb->cookie = NULL;
-	tcb->self = thread;
-	tcb->imask = 0;
-	tcb->name = name;
-}
-
-void xnarch_init_tcb(struct xnarchtcb *tcb)
-{
-
-	tcb->user_task = NULL;
-#ifdef CONFIG_MPU
-	tcb->active_task = NULL;
-#endif
-	tcb->tsp = &tcb->ts;
-}
-
-int xnarch_alloc_stack(struct xnarchtcb *tcb, size_t stacksize)
-{
-	int ret = 0;
-
-	tcb->stacksize = stacksize;
-	if (stacksize == 0)
-		tcb->stackbase = NULL;
-	else {
-		tcb->stackbase = xnmalloc(stacksize);
-		if (tcb->stackbase == NULL)
-			ret = -ENOMEM;
-	}
-
-	return ret;
-}
-
-void xnarch_free_stack(struct xnarchtcb *tcb)
-{
-	if (tcb->stackbase)
-		xnfree(tcb->stackbase);
 }
