@@ -1,7 +1,3 @@
-config XENO_GENERIC_STACKPOOL
-	bool
-	default y
-
 menu "Hardware options"
 
 config IPIPE_WANT_PREEMPTIBLE_SWITCH

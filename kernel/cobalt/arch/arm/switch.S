@@ -47,11 +47,6 @@
 #endif /* CONFIG_CPU_USE_DOMAINS */
 #endif /* Linux >= 2.6.38 */
 
-#ifdef CONFIG_CC_STACKPROTECTOR
-#warning "Buffer overflow detection not supported for Xenomai on ARM"
-#error "Disable CONFIG_CC_STACKPROTECTOR in your kernel configuration"
-#endif
-
 	.macro fpu_switch tmp
 #ifdef CONFIG_VFP
 	@ Always disable VFP so we can lazily save/restore the old
@@ -167,12 +162,3 @@ ENTRY(__asm_thread_switch)
  THUMB(	ldr	sp, [ip], #4		   )
  THUMB(	ldr	pc, [ip]		   )
 ENDPROC(__asm_thread_switch)
-
-/*
- * r4 = thread_trampoline
- * r5 = struct xnarchtcb *
- */
-ENTRY(__asm_thread_trampoline)
-	mov	r0, r5
-	mov	pc, r4
-ENDPROC(__asm_thread_trampoline)
