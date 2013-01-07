@@ -91,6 +91,16 @@ int main(int argc, char **argv)
 	check_value("read zero", zero_mem[0], 0);
 
 	pthread_set_mode_np(PTHREAD_WARNSW, 0);
+
+	test1_mem = check_mmap(mmap(0, MEMSIZE, PROT_NONE,
+				    MAP_PRIVATE | MAP_ANONYMOUS, 0, 0));
+	check_unix(mprotect(test1_mem, MEMSIZE, PROT_READ | PROT_WRITE));
+
+	printf("memory read/write after access enable\n");
+	check_value("read mem", test1_mem[0], 0);
+	test1_mem[0] = 0xff;
+	check_value("read zero", zero_mem[0], 0);
+
 	fprintf(stderr, "Test OK\n");
 
 	return 0;
