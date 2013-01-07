@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2011,2013 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -19,18 +19,10 @@
 
 #include <linux/sched.h>
 #include <linux/ipipe.h>
-#include <asm/system.h>
-#include <nucleus/pod.h>
-#include <nucleus/heap.h>
-#include <asm/xenomai/thread.h>
+#include <linux/mm.h>
+#include <asm/mmu_context.h>
+#include <nucleus/thread.h>
 
-asmlinkage void __asm_thread_trampoline(void);
-
-/*
- * Most of this code was lifted from the regular Linux task switching
- * code. A provision for handling Xenomai-originated kernel threads
- * (aka "hybrid scheduling" is added).
- */
 #define do_switch_threads(otcb, itcb, prev, next)		\
 	({							\
 	register u32 *__ts1 __asm__ ("r1");			\
@@ -42,16 +34,16 @@ asmlinkage void __asm_thread_trampoline(void);
 	struct task_struct *__last = prev;			\
 	struct xnarchtcb *__ltcb = otcb;			\
 								\
-	if (otcb->tsp == &prev->thread &&			\
+	if (otcb->core.tsp == &prev->thread &&			\
 	    is_dsp_enabled(prev))				\
 		__save_dsp(prev);				\
 								\
-	__ts1 = (u32 *)&otcb->tsp->sp;				\
-	__ts2 = (u32 *)&otcb->tsp->pc;				\
+	__ts1 = (u32 *)&otcb->core.tsp->sp;			\
+	__ts2 = (u32 *)&otcb->core.tsp->pc;			\
 	__ts4 = (u32 *)prev;					\
 	__ts5 = (u32 *)next;					\
-	__ts6 = (u32 *)&itcb->tsp->sp;				\
-	__ts7 = itcb->tsp->pc;					\
+	__ts6 = (u32 *)&itcb->core.tsp->sp;			\
+	__ts7 = itcb->core.tsp->pc;				\
 								\
 	__asm__ __volatile__ (					\
 		".balign 4\n\t"					\
@@ -68,10 +60,6 @@ asmlinkage void __asm_thread_trampoline(void);
 		"mov.l	@r6, r15\t! change to new stack\n\t"	\
 		"mova	1f, %0\n\t"				\
 		"mov.l	%0, @r2\t! save PC\n\t"			\
-		"mov	#0, r8\n\t"				\
-		"cmp/eq r5, r8\n\t"				\
-		"bt/s   3f\n\t"					\
-		" lds	r7, pr\t!  return to saved PC\n\t"	\
 		"mov.l	2f, %0\n\t"				\
 		"jmp	@%0\t! call __switch_to\n\t"		\
 		" nop\t\n\t"					\
@@ -95,7 +83,7 @@ asmlinkage void __asm_thread_trampoline(void);
 		  "r" (__ts5), "r" (__ts6), "r" (__ts7)		\
 		: "r3", "t");					\
 								\
-	if (__ltcb->tsp == &__last->thread &&			\
+	if (__ltcb->core.tsp == &__last->thread &&		\
 	    is_dsp_enabled(__last))				\
 		__restore_dsp(__last);				\
 								\
@@ -104,62 +92,30 @@ asmlinkage void __asm_thread_trampoline(void);
 
 void xnarch_switch_to(struct xnarchtcb *out_tcb, struct xnarchtcb *in_tcb)
 {
-	struct mm_struct *prev_mm = out_tcb->active_mm, *next_mm;
-	struct task_struct *prev = out_tcb->active_task;
-	struct task_struct *next = in_tcb->user_task;
+	struct mm_struct *prev_mm, *next_mm;
+	struct task_struct *next;
 
-	if (likely(next)) {
-		in_tcb->active_task = next;
-		in_tcb->active_mm = in_tcb->mm;
-		ipipe_clear_foreign_stack(&xnarch_machdata.domain);
+	next = in_tcb->core.host_task;
+	prev_mm = out_tcb->core.active_mm;
+
+	next_mm = in_tcb->core.mm;
+	if (next_mm == NULL) {
+		in_tcb->core.active_mm = prev_mm;
+		enter_lazy_tlb(prev_mm, next);
 	} else {
-		in_tcb->active_task = prev;
-		in_tcb->active_mm = prev_mm;
-		ipipe_set_foreign_stack(&xnarch_machdata.domain);
+		switch_mm(prev_mm, next_mm, next);
+		/*
+		 * We might be switching back to the root thread,
+		 * which we preempted earlier, shortly after "current"
+		 * dropped its mm context in the do_exit() path
+		 * (next->mm == NULL). In that particular case, the
+		 * kernel expects a lazy TLB state for leaving the mm.
+		 */
+		if (next->mm == NULL)
+			enter_lazy_tlb(prev_mm, next);
 	}
 
-	next_mm = in_tcb->active_mm;
-
-	if (next_mm && likely(prev_mm != next_mm))
-		__switch_mm(prev_mm, next_mm, next);
-
 	do_switch_threads(out_tcb, in_tcb, prev, next);
-}
-
-asmlinkage void xnarch_thread_trampoline(struct xnarchtcb *tcb)
-{
-	xnpod_welcome_thread(tcb->self, tcb->imask);
-	tcb->entry(tcb->cookie);
-	xnpod_delete_thread(tcb->self);
-}
-
-void xnarch_init_thread(struct xnarchtcb *tcb,
-			void (*entry)(void *), void *cookie, int imask,
-			struct xnthread *thread, char *name)
-{
-	unsigned long *sp, sr, gbr;
-
-	/*
-	 * Stack space is guaranteed to have been fully zeroed. We do
-	 * this earlier in xnthread_init() which runs with interrupts
-	 * on, to reduce latency.
-	 */
-	sp = (void *)tcb->stackbase + tcb->stacksize;
-	*--sp = (unsigned long)tcb;
-	sr = SR_MD;
-#ifdef CONFIG_SH_FPU
-	sr |= SR_FD;	/* Disable FPU */
-#endif
-	*--sp = (unsigned long)sr;
-	__asm__ __volatile__ ("stc gbr, %0" : "=r" (gbr));
-	*--sp = (unsigned long)gbr;
-	tcb->ts.sp = (unsigned long)sp;
-	tcb->ts.pc = (unsigned long)__asm_thread_trampoline;
-	tcb->entry = entry;
-	tcb->cookie = cookie;
-	tcb->self = thread;
-	tcb->imask = imask;
-	tcb->name = name;
 }
 
 #ifdef CONFIG_XENO_HW_FPU
@@ -278,19 +234,17 @@ static inline void do_init_fpu(struct thread_struct *ts)
 void xnarch_init_fpu(struct xnarchtcb *tcb)
 {
 	/*
-	 * Initialize the FPU for an emerging kernel-based RT
-	 * thread. This must be run on behalf of the emerging thread.
-	 * xnarch_init_tcb() guarantees that all FPU regs are zeroed
-	 * in tcb.
+	 * This must run on behalf of the thread we initialize the FPU
+	 * for. All FPU regs are guaranteed zero.
 	 */
-	do_init_fpu(&tcb->ts);
+	do_init_fpu(&tcb->core.ts);
 }
 
 inline void xnarch_enable_fpu(struct xnarchtcb *tcb)
 {
-	struct task_struct *task = tcb->user_task;
+	struct task_struct *task = tcb->core.host_task;
 
-	if (task && task != tcb->user_fpu_owner)
+	if (task != tcb->core.user_fpu_owner)
 		disable_fpu();
 	else
 		enable_fpu();
@@ -302,8 +256,8 @@ void xnarch_save_fpu(struct xnarchtcb *tcb)
 
 	if (tcb->fpup) {
 		do_save_fpu(tcb->fpup);
-		if (tcb->user_fpu_owner) {
-			regs = task_pt_regs(tcb->user_fpu_owner);
+		if (tcb->core.user_fpu_owner) {
+			regs = task_pt_regs(tcb->core.user_fpu_owner);
 			regs->sr |= SR_FD;
 		}
 	}
@@ -319,31 +273,24 @@ void xnarch_restore_fpu(struct xnarchtcb *tcb)
 		 * Note: Only enable FPU in SR, if it was enabled when
 		 * we saved the fpu state.
 		 */
-		if (tcb->user_fpu_owner) {
-			regs = task_pt_regs(tcb->user_fpu_owner);
+		if (tcb->core.user_fpu_owner) {
+			regs = task_pt_regs(tcb->core.user_fpu_owner);
 			regs->sr &= ~SR_FD;
 		}
 	}
 
-	if (tcb->user_task && tcb->user_task != tcb->user_fpu_owner)
+	if (tcb->core.host_task != tcb->core.user_fpu_owner)
 		disable_fpu();
 }
 
-#endif /* CONFIG_XENO_HW_FPU */
-
 void xnarch_leave_root(struct xnarchtcb *rootcb)
 {
-	struct task_struct *p = current;
-
-	rootcb->user_task = rootcb->active_task = p;
-	rootcb->tsp = &p->thread;
-	rootcb->mm = rootcb->active_mm = ipipe_get_active_mm();
-#ifdef CONFIG_XENO_HW_FPU
-	rootcb->user_fpu_owner = get_fpu_owner(p);
-	rootcb->fpup = rootcb->user_fpu_owner ?
-		&rootcb->user_fpu_owner->thread : NULL;
-#endif /* CONFIG_XENO_HW_FPU */
+	rootcb->core.user_fpu_owner = get_fpu_owner(rootcb->core.host_task);
+	rootcb->fpup = rootcb->core.user_fpu_owner ?
+		&rootcb->core.user_fpu_owner->thread : NULL;
 }
+
+#endif /* CONFIG_XENO_HW_FPU */
 
 int xnarch_escalate(void)
 {
@@ -353,58 +300,4 @@ int xnarch_escalate(void)
 	}
 
 	return 0;
-}
-
-void xnarch_init_root_tcb(struct xnarchtcb *tcb,
-			  struct xnthread *thread, const char *name)
-{
-	tcb->user_task = current;
-	tcb->active_task = NULL;
-	tcb->tsp = &tcb->ts;
-	tcb->mm = current->mm;
-	tcb->active_mm = NULL;
-#ifdef CONFIG_XENO_HW_FPU
-	tcb->user_fpu_owner = NULL;
-	tcb->fpup = NULL;
-#endif /* CONFIG_XENO_HW_FPU */
-	tcb->entry = NULL;
-	tcb->cookie = NULL;
-	tcb->self = thread;
-	tcb->imask = 0;
-	tcb->name = name;
-}
-
-void xnarch_init_shadow_tcb(struct xnarchtcb *tcb,
-			    struct xnthread *thread, const char *name)
-{
-	struct task_struct *task = current;
-
-	tcb->user_task = task;
-	tcb->active_task = NULL;
-	tcb->tsp = &task->thread;
-	tcb->mm = task->mm;
-	tcb->active_mm = NULL;
-#ifdef CONFIG_XENO_HW_FPU
-	tcb->user_fpu_owner = task;
-	tcb->fpup = &task->thread;
-#endif /* CONFIG_XENO_HW_FPU */
-	tcb->entry = NULL;
-	tcb->cookie = NULL;
-	tcb->self = thread;
-	tcb->imask = 0;
-	tcb->name = name;
-}
-
-void xnarch_init_tcb(struct xnarchtcb *tcb)
-{
-	tcb->user_task = NULL;
-	tcb->active_task = NULL;
-	tcb->tsp = &tcb->ts;
-	tcb->mm = NULL;
-	tcb->active_mm = NULL;
-	memset(&tcb->ts, 0, sizeof(tcb->ts));
-#ifdef CONFIG_XENO_HW_FPU
-	tcb->user_fpu_owner = NULL;
-	tcb->fpup = &tcb->ts;
-#endif /* CONFIG_XENO_HW_FPU */
 }

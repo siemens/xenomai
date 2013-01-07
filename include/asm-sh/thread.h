@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2011,2013 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -17,54 +17,25 @@
  * 02111-1307, USA.
  */
 
-#ifndef _XENO_ASM_SH_BITS_THREAD_H
-#define _XENO_ASM_SH_BITS_THREAD_H
+#ifndef _XENO_ASM_SH_THREAD_H
+#define _XENO_ASM_SH_THREAD_H
 
-#ifndef __KERNEL__
-#error "Pure kernel header included from user-space!"
-#endif
-
-#include <asm/ptrace.h>
-#include <asm/processor.h>
-#include <asm/xenomai/wrappers.h>
-
-struct xnthread;
-struct task_struct;
+#include <asm-generic/xenomai/thread.h>
 
 struct xnarchtcb {
-	struct task_struct *user_task;
-	struct task_struct *active_task;
-	struct thread_struct *tsp;
-	struct mm_struct *mm;
-	struct mm_struct *active_mm;
-	struct {
-		unsigned long pc;
-		unsigned long r3;
-	} mayday;
-	struct thread_struct ts;
+	struct xntcb core;
 #ifdef CONFIG_XENO_HW_FPU
 	struct thread_struct *fpup;
-	struct task_struct *user_fpu_owner;
 #define xnarch_fpu_ptr(tcb)     ((tcb)->fpup)
 #else
 #define xnarch_fpu_ptr(tcb)     NULL
 #endif
-	unsigned int stacksize;
-	unsigned long *stackbase;
-	struct xnthread *self;
-	int imask;
-	const char *name;
-	void (*entry)(void *cookie);
-	void *cookie;
+	struct {
+		unsigned long pc;
+		unsigned long r3;
+	} mayday;
 };
 
-#define XNARCH_THREAD_STACKSZ   4096
-
-#define xnarch_stack_size(tcb)  ((tcb)->stacksize)
-#define xnarch_stack_base(tcb)	((tcb)->stackbase)
-#define xnarch_stack_end(tcb)	((caddr_t)(tcb)->stackbase - (tcb)->stacksize)
-#define xnarch_user_task(tcb)   ((tcb)->user_task)
-#define xnarch_user_pid(tcb)    ((tcb)->user_task->pid)
 #define xnarch_fault_trap(d)   ((d)->exception)
 #define xnarch_fault_code(d)   0
 #define xnarch_fault_pc(d)     ((d)->regs->pc)
@@ -76,10 +47,31 @@ struct xnarchtcb {
 
 static inline void xnarch_enter_root(struct xnarchtcb *rootcb) { }
 
-static inline int xnarch_fpu_init_p(struct task_struct *task)
+#ifdef CONFIG_XENO_HW_FPU
+
+void xnarch_leave_root(struct xnarchtcb *rootcb);
+
+static inline void xnarch_init_root_tcb(struct xnarchtcb *tcb)
 {
-	/* No lazy FPU init on SH4. */
-	return 1;
+	tcb->fpup = NULL;
 }
 
-#endif /* !_XENO_ASM_SH_BITS_THREAD_H */
+static inline void xnarch_init_shadow_tcb(struct xnarchtcb *tcb)
+{
+	tcb->fpup = &tcb->core.host_task->thread;
+}
+
+#else /* !CONFIG_XENO_HW_FPU */
+
+static inline void xnarch_leave_root(struct xnarchtcb *rootcb) { }
+static inline void xnarch_init_root_tcb(struct xnarchtcb *tcb) { }
+static inline void xnarch_init_shadow_tcb(struct xnarchtcb *tcb) { }
+
+#endif /* !CONFIG_XENO_HW_FPU */
+
+static inline int xnarch_handle_fpu_fault(struct xnarchtcb *tcb)
+{
+	return 0;
+}
+
+#endif /* !_XENO_ASM_SH_THREAD_H */
