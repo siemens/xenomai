@@ -415,24 +415,12 @@ EXPORT_SYMBOL_GPL(__rtdm_task_sleep);
  */
 void rtdm_task_join_nrt(rtdm_task_t *task, unsigned int poll_delay)
 {
-	spl_t s;
-
 	XENO_ASSERT(RTDM, xnpod_root_p(), return;);
 
 	trace_mark(xn_rtdm, task_joinnrt, "thread %p poll_delay %u",
 		   task, poll_delay);
 
-	xnlock_get_irqsave(&nklock, s);
-
-	while (!xnthread_test_state(task, XNZOMBIE)) {
-		xnlock_put_irqrestore(&nklock, s);
-
-		msleep(poll_delay);
-
-		xnlock_get_irqsave(&nklock, s);
-	}
-
-	xnlock_put_irqrestore(&nklock, s);
+	xnpod_join_thread(task);
 }
 
 EXPORT_SYMBOL_GPL(rtdm_task_join_nrt);
