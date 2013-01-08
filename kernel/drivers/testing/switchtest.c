@@ -536,8 +536,10 @@ static int rtswitch_close(struct rtdm_dev_context *context,
 		for (i = 0; i < ctx->next_index; i++) {
 			rtswitch_task_t *task = &ctx->tasks[i];
 
-			if (task->base.flags & RTSWITCH_KERNEL)
-				xnpod_cancel_thread(&task->ktask);
+			if (task->base.flags & RTSWITCH_KERNEL) {
+				rtdm_task_destroy(&task->ktask);
+				rtdm_task_join_nrt(&task->ktask, 0);
+			}
 			rtdm_event_destroy(&task->rt_synch);
 		}
 		kfree(ctx->tasks);
