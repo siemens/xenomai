@@ -210,7 +210,7 @@ typedef struct xnthread {
 	struct xnsched_sporadic_data *pss; /* Sporadic scheduling data. */
 #endif
 
-	unsigned idtag;			/* Unique ID tag */
+	unsigned int idtag;	/* Unique ID tag */
 
 	cpumask_t affinity;	/* Processor affinity. */
 

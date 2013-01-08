@@ -198,6 +198,8 @@ void xnpod_testcancel_thread(void);
 
 void xnpod_cancel_thread(xnthread_t *thread);
 
+void xnpod_join_thread(xnthread_t *thread);
+
 xnflags_t xnpod_set_thread_mode(xnthread_t *thread,
 				xnflags_t clrmask,
 				xnflags_t setmask);

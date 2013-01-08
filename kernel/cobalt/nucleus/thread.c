@@ -120,6 +120,7 @@ int xnthread_init(struct xnthread *thread,
 {
 	DECLARE_COMPLETION_ONSTACK(done);
 	xnflags_t flags = attr->flags;
+	spl_t s;
 	int ret;
 
 	flags &= ~XNSUSP;
@@ -129,7 +130,9 @@ int xnthread_init(struct xnthread *thread,
 	if (flags & XNROOT)
 		thread->idtag = 0;
 	else {
+		xnlock_get_irqsave(&nklock, s);
 		thread->idtag = ++idtags ?: 1;
+		xnlock_put_irqrestore(&nklock, s);
 		flags |= XNDORMANT;
 	}
 

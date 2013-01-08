@@ -2159,11 +2159,8 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 	if (xnthread_test_state(thread, XNDEBUG))
 		unlock_timers();
 
-	xnlock_get_irqsave(&nklock, s);
 	/* __xnpod_cleanup_thread() -> hook -> xnshadow_unmap() */
 	__xnpod_cleanup_thread(thread);
-	xnlock_put_irqrestore(&nklock, s);
-
 	destroy_threadinfo();
 
 	if (xnthread_test_state(thread, XNUSER)) {

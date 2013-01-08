@@ -36,6 +36,7 @@
 #include <linux/kallsyms.h>
 #include <linux/ptrace.h>
 #include <linux/sched.h>
+#include <linux/wait.h>
 #include <nucleus/version.h>
 #include <nucleus/pod.h>
 #include <nucleus/timer.h>
@@ -66,6 +67,8 @@ cpumask_t nkaffinity = XNPOD_ALL_CPUS;
 struct xnvfile_directory debug_vfroot;
 EXPORT_SYMBOL_GPL(debug_vfroot);
 #endif
+
+static DECLARE_WAIT_QUEUE_HEAD(nkjoinq);
 
 #ifdef CONFIG_XENO_HW_FPU
 
@@ -807,7 +810,7 @@ static inline int moving_target(struct xnsched *sched, struct xnthread *thread)
 	return ret;
 }
 
-void __xnpod_cleanup_thread(struct xnthread *thread) /* nklock held, irqs off */
+static void cleanup_thread(struct xnthread *thread) /* nklock held, irqs off */
 {
 	struct xnsched *sched = thread->sched;
 
@@ -826,6 +829,7 @@ void __xnpod_cleanup_thread(struct xnthread *thread) /* nklock held, irqs off */
 	xntimer_destroy(&thread->rtimer);
 	xntimer_destroy(&thread->ptimer);
 	xntimer_destroy(&thread->rrbtimer);
+	thread->idtag = 0;
 
 	if (thread->selector) {
 		xnselector_destroy(thread->selector);
@@ -854,6 +858,17 @@ void __xnpod_cleanup_thread(struct xnthread *thread) /* nklock held, irqs off */
 		if (xnthread_test_state(sched->curr, XNROOT))
 			xnfreesync();
 	}
+}
+
+void __xnpod_cleanup_thread(struct xnthread *thread)
+{
+	spl_t s;
+
+	XENO_BUGON(NUCLEUS, !ipipe_root_p);
+	xnlock_get_irqsave(&nklock, s);
+	cleanup_thread(thread);
+	xnlock_put_irqrestore(&nklock, s);
+	wake_up(&nkjoinq);
 }
 
 /**
@@ -924,7 +939,7 @@ void xnpod_cancel_thread(struct xnthread *thread)
 	xnthread_set_info(thread, XNCANCELD);
 
 	if (xnthread_test_state(thread, XNDORMANT)) {
-		__xnpod_cleanup_thread(thread);
+		cleanup_thread(thread);
 		goto unlock_and_exit;
 	}
 
@@ -942,6 +957,53 @@ unlock_and_exit:
 	xnlock_put_irqrestore(&nklock, s);
 }
 EXPORT_SYMBOL_GPL(xnpod_cancel_thread);
+
+/**
+ * @fn void xnpod_join_thread(struct xnthread *thread)
+ *
+ * @brief Join with a terminated thread.
+ *
+ * This service waits for @a thread to terminate after a call to
+ * xnpod_cancel_thread().  If that thread has already terminated or is
+ * dormant at the time of the call, then xnpod_join_thread() returns
+ * immediately.
+ *
+ * @param thread The descriptor address of the thread to join with.
+ *
+ * Calling context: This service may be called from secondary mode
+ * only.
+ *
+ * Rescheduling: always if @a thread did not terminate yet at the time
+ * of the call.
+ */
+void xnpod_join_thread(struct xnthread *thread)
+{
+	unsigned int tag;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	tag = thread->idtag;
+	if (xnthread_test_info(thread, XNDORMANT) || tag == 0) {
+		xnlock_put_irqrestore(&nklock, s);
+		return;
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	trace_mark(xn_nucleus, thread_join, "thread %p thread_name %s",
+		   thread, xnthread_name(thread));
+
+	/*
+	 * Only a very few threads are likely to terminate within a
+	 * short time frame at any point in time, so experiencing a
+	 * thundering herd effect due to synchronizing on a single
+	 * wait queue is quite unlikely. In any case, we run in
+	 * secondary mode.
+	 */
+	wait_event(nkjoinq, thread->idtag != tag);
+}
+EXPORT_SYMBOL_GPL(xnpod_join_thread);
 
 /*!
  * \fn void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
