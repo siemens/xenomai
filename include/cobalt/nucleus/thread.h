@@ -177,7 +177,6 @@ struct xnthread_init_attr {
 
 struct xnthread_start_attr {
 	xnflags_t mode;
-	int imask;
 	cpumask_t affinity;
 	void (*entry)(void *cookie);
 	void *cookie;
@@ -267,8 +266,6 @@ typedef struct xnthread {
 	int asrimask;			/* Thread's interrupt mask for ASR */
 
 	unsigned asrlevel;		/* ASR execution level (ASRs are reentrant) */
-
-	int imask;			/* Initial interrupt mask */
 
 	int imode;			/* Initial mode */
 

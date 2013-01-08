@@ -168,7 +168,6 @@ int xnthread_init(struct xnthread *thread,
 	memset(&thread->stat, 0, sizeof(thread->stat));
 
 	/* These will be filled by xnpod_start_thread() */
-	thread->imask = 0;
 	thread->imode = 0;
 	thread->entry = NULL;
 	thread->cookie = 0;

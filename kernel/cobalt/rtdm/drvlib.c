@@ -163,7 +163,6 @@ int rtdm_task_init(rtdm_task_t *task, const char *name,
 	}
 
 	sattr.mode = 0;
-	sattr.imask = 0;
 	sattr.affinity = XNPOD_ALL_CPUS;
 	sattr.entry = task_proc;
 	sattr.cookie = arg;

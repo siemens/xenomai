@@ -476,7 +476,6 @@ static int rtswitch_create_ktask(rtswitch_context_t *ctx,
 				&iattr, &xnsched_class_rt, &param);
 	if (!err) {
 		sattr.mode = 0;
-		sattr.imask = 0;
 		sattr.affinity = cpumask_of_cpu(ctx->cpu);
 		sattr.entry = rtswitch_ktask;
 		sattr.cookie = &arg;

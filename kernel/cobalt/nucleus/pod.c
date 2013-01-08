@@ -550,15 +550,6 @@ EXPORT_SYMBOL_GPL(xnpod_init_thread);
  * case, the thread will have to be explicitly resumed using the
  * xnpod_resume_thread() service for its execution to actually begin.
  *
- * - imask: The interrupt mask that should be asserted when the thread
- * starts. The processor interrupt state will be set to the given
- * value when the thread starts running. The interpretation of this
- * value might be different across real-time layers, but a non-zero
- * value should always mark an interrupt masking in effect
- * (e.g. local_irq_disable()). Conversely, a zero value should always
- * mark a fully preemptible state regarding interrupts
- * (e.g. local_irq_enable()).
- *
  * - affinity: The processor affinity of this thread. Passing
  * XNPOD_ALL_CPUS or an empty affinity set means "any cpu".
  *
@@ -628,7 +619,6 @@ int xnpod_start_thread(struct xnthread *thread,
 #endif /* CONFIG_SMP */
 
 	xnthread_set_state(thread, (attr->mode & (XNTHREAD_MODE_BITS | XNSUSP)) | XNSTARTED);
-	thread->imask = attr->imask;
 	thread->imode = (attr->mode & XNTHREAD_MODE_BITS);
 	thread->entry = attr->entry;
 	thread->cookie = attr->cookie;
@@ -902,9 +892,9 @@ EXPORT_SYMBOL_GPL(xnpod_testcancel_thread);
  * reaches a cancellation point. Cancellation points are defined for
  * the following situations:
  *
- * - @a thread calls xnpod_cancel_thread().
+ * - @a thread self-cancels by a call to xnpod_cancel_thread().
  * - @a thread calls any blocking Xenomai service that would otherwise
- * lead to suspension in xnpod_suspend_thread().
+ * lead to a suspension in xnpod_suspend_thread().
  * - @a thread resumes from xnpod_suspend_thread().
  * - @a thread invokes a Linux syscall (user-space shadow only).
  * - @a thread receives a Linux signal (user-space shadow only).
@@ -1659,7 +1649,6 @@ EXPORT_SYMBOL_GPL(xnpod_migrate_thread);
 void xnpod_dispatch_signals(void)
 {
 	xnthread_t *thread = xnpod_current_thread();
-	int asrimask, savedmask;
 	xnflags_t oldmode;
 	xnsigmask_t sigs;
 	xnasr_t asr;
@@ -1677,23 +1666,15 @@ void xnpod_dispatch_signals(void)
 	/* Start the asynchronous service routine */
 	oldmode = xnthread_test_state(thread, XNTHREAD_MODE_BITS);
 	sigs = thread->signals;
-	asrimask = thread->asrimask;
 	asr = thread->asr;
 
 	/* Clear pending signals mask since an ASR can be reentrant */
 	thread->signals = 0;
 
-	/* Reset ASR mode bits */
 	xnthread_clear_state(thread, XNTHREAD_MODE_BITS);
 	xnthread_set_state(thread, thread->asrmode);
 	thread->asrlevel++;
-
-	/* Setup ASR interrupt mask then fire it. */
-	savedmask = xnpod_setimask(asrimask);
 	asr(sigs);
-	xnpod_setimask(savedmask);
-
-	/* Reset the thread mode bits */
 	thread->asrlevel--;
 	xnthread_clear_state(thread, XNTHREAD_MODE_BITS);
 	xnthread_set_state(thread, oldmode);

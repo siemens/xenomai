@@ -862,7 +862,6 @@ int xnshadow_map_user(struct xnthread *thread,
 		xnthread_set_state(thread, XNOTHER);
 
 	attr.mode = 0;
-	attr.imask = 0;
 	attr.affinity = affinity;
 	attr.entry = NULL;
 	attr.cookie = NULL;

@@ -43,15 +43,6 @@ typedef unsigned long spl_t;
 #define splnone()   ipipe_unstall_head()
 #define spltest()   ipipe_test_head()
 
-static inline int xnpod_setimask(int imask)
-{
-	spl_t s;
-
-	splhigh(s);
-	splexit(!!imask);
-	return !!s;
-}
-
 #ifndef CONFIG_XENO_OPT_DEBUG_XNLOCK
 #define CONFIG_XENO_OPT_DEBUG_XNLOCK 0
 #endif
