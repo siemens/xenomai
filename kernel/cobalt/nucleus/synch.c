@@ -714,7 +714,7 @@ void __xnsynch_fixup_rescnt(struct xnthread *thread)
 {
 	if (xnthread_get_rescnt(thread) == 0)
 		xnshadow_send_sig(thread, SIGDEBUG,
-				  SIGDEBUG_MIGRATE_PRIOINV);
+				  SIGDEBUG_RESCNT_IMBALANCE);
 	else
 		xnthread_dec_rescnt(thread);
 }

@@ -68,6 +68,7 @@ struct xnsysinfo {
 #define SIGDEBUG_MIGRATE_PRIOINV	4
 #define SIGDEBUG_NOMLOCK		5
 #define SIGDEBUG_WATCHDOG		6
+#define SIGDEBUG_RESCNT_IMBALANCE	7
 
 #define sigdebug_code(si)	((si)->si_value.sival_int)
 #define sigdebug_reason(si)	(sigdebug_code(si) & 0xff)
