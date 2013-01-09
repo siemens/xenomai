@@ -442,6 +442,8 @@ int pthread_mutex_trylock(pthread_mutex_t *mx)
 			}
 		}
 	}
+	if (xnthread_test_state(cur, XNOTHER) && !err)
+		xnthread_inc_rescnt(cur);
 
   unlock_and_return:
 	cb_read_unlock(&shadow->lock, s);
