@@ -61,6 +61,7 @@ typedef struct xnsysinfo {
 #define SIGDEBUG_MIGRATE_PRIOINV	4
 #define SIGDEBUG_NOMLOCK		5
 #define SIGDEBUG_WATCHDOG		6
+#define SIGDEBUG_RESCNT_IMBALANCE	7
 
 #ifdef __KERNEL__
 

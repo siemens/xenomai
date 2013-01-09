@@ -689,7 +689,7 @@ xnsynch_release_thread(struct xnsynch *synch, struct xnthread *lastowner)
 	if (xnthread_test_state(lastowner, XNOTHER)) {
 		if (xnthread_get_rescnt(lastowner) == 0)
 			xnshadow_send_sig(lastowner, SIGDEBUG,
-					  SIGDEBUG_MIGRATE_PRIOINV, 1);
+					  SIGDEBUG_RESCNT_IMBALANCE, 1);
 		else
 			xnthread_dec_rescnt(lastowner);
 	}
