@@ -27,7 +27,7 @@ AC_SUBST(DBX_DOC_ROOT)
 
 AC_MSG_CHECKING(whether compiling Docbook XML documentation)
 AC_ARG_ENABLE(dbx, 
-        AS_HELP_STRING([--enable-dbx],[Build Docbook XML documentation.]),
+        AS_HELP_STRING([--enable-dbx],[Build Docbook XML documentation. [default=no]]),
 	[case "$enableval" in
 	y | ye | yes) DBX_DOC=yes;;
 	*) DBX_DOC="" ;;
@@ -78,7 +78,7 @@ AC_MSG_CHECKING(whether Docbook XML documentation generation can use network.)
 AC_ARG_ENABLE(dbx-network,
         AS_HELP_STRING([--enable-dbx-network],[Try to access Docbook DTD and
 XSL stylesheets through network (default is to die if local installation can not
-be found by configure).]),
+be found by configure). [default=no]]),
         [ case "$enable_dbx_network" in 
            y | yes | yes )
                 DBX_NET=yes;;
