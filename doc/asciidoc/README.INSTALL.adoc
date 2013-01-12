@@ -192,7 +192,7 @@ footnoteref:[disable]
 		       Xenomai will deny running UP-only
 		       userland code (i.e. when +--disable-smp+
 		       is in effect) over an SMP kernel.]
-		      	      	  		       |weak
+		      	      	  		       |weak, enabled
 |--with-atomic-ops=    |Selects which implementation of atomic
 		        access operations shall be used within
 		        Xenomai libraries:
@@ -226,7 +226,7 @@ disabled by passing +--disable-<option>+ to the configure script.]
 
 |--enable-x86-sep    |Enable x86 SEP instructions
 		      for issuing syscalls.
-		      You will also need NPTL.        |strong, disabled
+		      You will also need NPTL.        |strong, enabled
 
 |--enable-x86-tsc    |Enable x86 TSC for timings
 		      You must have TSC for this.     |strong, enabled
