@@ -695,14 +695,14 @@ Testing the user-space support
 In order to test Xenomai user-space support, launch the latency test:
 
 ------------------------------------------------------------------------------
-$ /usr/xenomai/bin/latency
+$ xeno latency
 ------------------------------------------------------------------------------
 
 The latency test should display a message every second with minimal,
 maximal and average latency values, such as:
 
 ------------------------------------------------------------------------------
-# latency -T 25
+# xeno latency -T 25
 == Sampling period: 100 us
 == Test mode: periodic user-mode task
 == All results in microseconds
