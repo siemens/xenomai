@@ -366,8 +366,6 @@ int rt_mutex_acquire_inner(RT_MUTEX *mutex, RTIME timeout,
 	thread = xnpod_current_thread();
 
 	if (xnsynch_owner_check(&mutex->synch_base, thread) == 0) {
-		if (xnthread_test_state(thread, XNOTHER))
-			xnthread_inc_rescnt(thread);
 		mutex->lockcnt++;
 		return 0;
 	}
