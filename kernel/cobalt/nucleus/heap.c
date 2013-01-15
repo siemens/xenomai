@@ -1477,9 +1477,9 @@ int xnheap_remap_io_page_range(struct file *filp,
 #ifdef __HAVE_PHYS_MEM_ACCESS_PROT
 	prot = phys_mem_access_prot(filp, to >> PAGE_SHIFT, size, prot);
 #endif
-	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+	vma->vm_page_prot = pgprot_noncached(prot);
 	/* Sets VM_RESERVED | VM_IO | VM_PFNMAP on the vma. */
-	return remap_pfn_range(vma, from, to >> PAGE_SHIFT, size, prot);
+	return remap_pfn_range(vma, from, to >> PAGE_SHIFT, size, vma->vm_page_prot);
 }
 
 int xnheap_remap_kmem_page_range(struct vm_area_struct *vma,
