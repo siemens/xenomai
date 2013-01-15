@@ -595,42 +595,6 @@ static inline int pthread_set_mode_np(int clrmask, int setmask, int *mode_r)
 }
 
 /**
- * Set a thread name.
- *
- * This service set to @a name, the name of @a thread. This name is used for
- * displaying information in /proc/xenomai/sched.
- *
- * This service is a non-portable extension of the POSIX interface.
- *
- * @param thread target thread;
- *
- * @param name name of the thread.
- *
- * @return 0 on success;
- * @return an error number if:
- * - ESRCH, @a thread is invalid.
- *
- */
-static inline int pthread_set_name_np(pthread_t thread, const char *name)
-{
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	if (!cobalt_obj_active(thread, COBALT_THREAD_MAGIC, struct cobalt_thread)) {
-		xnlock_put_irqrestore(&nklock, s);
-		return -ESRCH;
-	}
-
-	snprintf(xnthread_name(&thread->threadbase),
-		 XNOBJECT_NAME_LEN, "%s", name);
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	return 0;
-}
-
-/**
  * Set the scheduling policy and parameters of the specified thread.
  *
  * This service set the scheduling policy of the Xenomai POSIX skin thread @a
@@ -1097,22 +1061,33 @@ int cobalt_thread_set_name_np(unsigned long tid, const char __user *u_name)
 	struct cobalt_hkey hkey;
 	struct task_struct *p;
 	pthread_t k_tid;
+	spl_t s;
 
 	if (__xn_safe_strncpy_from_user(name, u_name,
 					sizeof(name) - 1) < 0)
 		return -EFAULT;
 
 	name[sizeof(name) - 1] = '\0';
-
 	hkey.u_tid = tid;
 	hkey.mm = current->mm;
+
+	xnlock_get_irqsave(&nklock, s);
 	k_tid = cobalt_thread_find(&hkey);
+	if (k_tid == NULL) {
+		xnlock_put_irqrestore(&nklock, s);
+		return -ESRCH;
+	}
 
 	p = xnthread_host_task(&k_tid->threadbase);
+	get_task_struct(p);
+	xnlock_put_irqrestore(&nklock, s);
 	strncpy(p->comm, name, sizeof(p->comm));
 	p->comm[sizeof(p->comm) - 1] = '\0';
+	snprintf(xnthread_name(&k_tid->threadbase),
+		 XNOBJECT_NAME_LEN - 1, "%s", name);
+	put_task_struct(p);
 
-	return pthread_set_name_np(k_tid, name);
+	return 0;
 }
 
 int cobalt_thread_probe_np(pid_t h_tid)
