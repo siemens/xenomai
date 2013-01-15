@@ -897,14 +897,14 @@ EXPORT_SYMBOL_GPL(xnintr_affinity);
 
 #include <nucleus/vfile.h>
 
-static bool xnintr_is_timer_irq(int irq)
+static int xnintr_is_timer_irq(int irq)
 {
 	int cpu;
 
 	for_each_online_cpu(cpu)
 		if (irq == XNARCH_PERCPU_TIMER_IRQ(cpu))
-			return true;
-	return false;
+			return 1;
+	return 0;
 }
 
 #ifdef CONFIG_XENO_OPT_STATS
