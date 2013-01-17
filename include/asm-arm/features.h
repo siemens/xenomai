@@ -61,7 +61,8 @@
 #define __LINUX_ARM_ARCH__ 5
 #endif /* armv5 */
 
-#if defined(__ARM_ARCH_6__) || defined(__ARM_ARCH_6K__)
+#if defined(__ARM_ARCH_6__) || defined(__ARM_ARCH_6K__) \
+	|| defined(__ARM_ARCH_6Z__) || defined(__ARM_ARCH_6ZK__)
 #define __LINUX_ARM_ARCH__ 6
 #endif /* armv6 */
 
