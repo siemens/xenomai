@@ -277,7 +277,8 @@ static inline void xnpod_schedule(void)
 	 * unlocked context switch.
 	 */
 #if XENO_DEBUG(NUCLEUS)
-	if (testbits(sched->status | sched->lflags, XNKCOUT|XNINIRQ|XNINSW))
+	if (testbits(sched->status | sched->lflags,
+		     XNKCOUT|XNINIRQ|XNINSW|XNINLOCK))
 		return;
 #else /* !XENO_DEBUG(NUCLEUS) */
 	if (testbits(sched->status | sched->lflags,
