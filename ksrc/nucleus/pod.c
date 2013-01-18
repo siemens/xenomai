@@ -2176,7 +2176,7 @@ static inline int __xnpod_test_resched(struct xnsched *sched)
 #else
 	resched = xnsched_resched_p(sched);
 #endif
-	clrbits(sched->status, XNRESCHED);
+	__clrbits(sched->status, XNRESCHED);
 	return resched;
 }
 
