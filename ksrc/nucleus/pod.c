@@ -1200,7 +1200,7 @@ void xnpod_delete_thread(xnthread_t *thread)
 		 * thread zombie state to go through the rescheduling
 		 * procedure then actually destroy the thread object.
 		 */
-		__clrbits(sched->status, XNINLOCK);
+		__clrbits(sched->lflags, XNINLOCK);
 		xnsched_set_resched(sched);
 		xnpod_schedule();
 #ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
@@ -1453,7 +1453,7 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 #endif /* __XENO_SIM__ */
 
 	if (thread == sched->curr) {
-		__clrbits(sched->status, XNINLOCK);
+		__clrbits(sched->lflags, XNINLOCK);
 		/*
 		 * If the current thread is being relaxed, we must
 		 * have been called from xnshadow_relax(), in which
@@ -2312,7 +2312,7 @@ reschedule:
 		goto reschedule;
 
 	if (xnthread_lock_count(curr))
-		__setbits(sched->status, XNINLOCK);
+		__setbits(sched->lflags, XNINLOCK);
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -2345,7 +2345,7 @@ void ___xnpod_lock_sched(xnsched_t *sched)
 	struct xnthread *curr = sched->curr;
 
 	if (xnthread_lock_count(curr)++ == 0) {
-		__setbits(sched->status, XNINLOCK);
+		__setbits(sched->lflags, XNINLOCK);
 		xnthread_set_state(curr, XNLOCK);
 	}
 }
@@ -2360,7 +2360,7 @@ void ___xnpod_unlock_sched(xnsched_t *sched)
 
 	if (--xnthread_lock_count(curr) == 0) {
 		xnthread_clear_state(curr, XNLOCK);
-		__clrbits(sched->status, XNINLOCK);
+		__clrbits(sched->lflags, XNINLOCK);
 		xnpod_schedule();
 	}
 }
