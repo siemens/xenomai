@@ -820,7 +820,7 @@ static void lostage_handler(void *cookie)
 
 static void schedule_linux_call(int type, struct task_struct *p, int arg)
 {
-	int cpu = rthal_processor_id(), reqnum;
+	int cpu, reqnum;
 	struct __lostagerq *rq;
 	spl_t s;
 
@@ -832,6 +832,7 @@ static void schedule_linux_call(int type, struct task_struct *p, int arg)
 
 	splhigh(s);
 
+	cpu = rthal_processor_id();
 	rq = &lostagerq[cpu];
 	reqnum = rq->in;
 	rq->in = (reqnum + 1) & (LO_MAX_REQUESTS - 1);
