@@ -256,7 +256,7 @@ index 615fa90..f60651a 100644
  extern void default_send_IPI_mask_sequence_phys(const struct cpumask *mask,
 diff --git a/arch/x86/include/asm/ipipe.h b/arch/x86/include/asm/ipipe.h
 new file mode 100644
-index 0000000..09f250e
+index 0000000..406327c
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe.h
 @@ -0,0 +1,104 @@
@@ -286,7 +286,7 @@ index 0000000..09f250e
 +
 +#ifdef CONFIG_IPIPE
 +
-+#define IPIPE_CORE_RELEASE	3
++#define IPIPE_CORE_RELEASE	5
 +
 +struct ipipe_domain;
 +
@@ -1304,7 +1304,7 @@ index 8baca3c..de939cb 100644
  obj-$(CONFIG_APM)		+= apm.o
  obj-$(CONFIG_SMP)		+= smp.o
 diff --git a/arch/x86/kernel/apic/apic.c b/arch/x86/kernel/apic/apic.c
-index c4e3581..591a97cb 100644
+index c4e3581..4d3f522 100644
 --- a/arch/x86/kernel/apic/apic.c
 +++ b/arch/x86/kernel/apic/apic.c
 @@ -34,6 +34,7 @@
@@ -1351,25 +1351,29 @@ index c4e3581..591a97cb 100644
  
  /*
   * The local apic timer can be used for any function which is CPU local.
-@@ -515,6 +527,17 @@ static void __cpuinit setup_APIC_timer(void)
+@@ -515,6 +527,21 @@ static void __cpuinit setup_APIC_timer(void)
  
  	memcpy(levt, &lapic_clockevent, sizeof(*levt));
  	levt->cpumask = cpumask_of(smp_processor_id());
 +#ifdef CONFIG_IPIPE
-+	if (!(lapic_clockevent.features & CLOCK_EVT_FEAT_DUMMY))
++	if (!(lapic_clockevent.features & CLOCK_EVT_FEAT_DUMMY)
++	    && !cpu_has_amd_erratum(amd_erratum_400))
 +		levt->ipipe_timer = &__get_cpu_var(lapic_itimer);
 +	else {
-+	       printk(KERN_INFO
-+		      "I-pipe: cannot use LAPIC as a tick device\n");
-+	       if (cpu_has_amd_erratum(amd_erratum_400))
-+		       printk(KERN_INFO
-+			      "I-pipe: disable C1E power state in your BIOS\n");
++		static atomic_t printed = ATOMIC_INIT(-1);
++		printk(KERN_INFO
++		       "I-pipe: cannot use LAPIC on cpu #%d as a tick device\n",
++		       smp_processor_id());
++		if (cpu_has_amd_erratum(amd_erratum_400)
++		    && atomic_inc_and_test(&printed))
++			printk(KERN_INFO
++			       "I-pipe: disable C1E power state in your BIOS\n");
 +	}
 +#endif /* CONFIG_IPIPE */
  
  	clockevents_register_device(levt);
  }
-@@ -1017,7 +1040,7 @@ void lapic_shutdown(void)
+@@ -1017,7 +1044,7 @@ void lapic_shutdown(void)
  	if (!cpu_has_apic && !apic_from_smp_config())
  		return;
  
@@ -1378,7 +1382,7 @@ index c4e3581..591a97cb 100644
  
  #ifdef CONFIG_X86_32
  	if (!enabled_via_apicbase)
-@@ -1027,7 +1050,7 @@ void lapic_shutdown(void)
+@@ -1027,7 +1054,7 @@ void lapic_shutdown(void)
  		disable_local_APIC();
  
  
@@ -1387,7 +1391,7 @@ index c4e3581..591a97cb 100644
  }
  
  /*
-@@ -1299,7 +1322,7 @@ void __cpuinit setup_local_APIC(void)
+@@ -1299,7 +1326,7 @@ void __cpuinit setup_local_APIC(void)
  			value = apic_read(APIC_ISR + i*0x10);
  			for (j = 31; j >= 0; j--) {
  				if (value & (1<<j)) {
@@ -1396,7 +1400,7 @@ index c4e3581..591a97cb 100644
  					acked++;
  				}
  			}
-@@ -1822,7 +1845,7 @@ void smp_spurious_interrupt(struct pt_regs *regs)
+@@ -1822,7 +1849,7 @@ void smp_spurious_interrupt(struct pt_regs *regs)
  	 */
  	v = apic_read(APIC_ISR + ((SPURIOUS_APIC_VECTOR & ~0x1f) >> 1));
  	if (v & (1 << (SPURIOUS_APIC_VECTOR & 0x1f)))
@@ -1405,7 +1409,7 @@ index c4e3581..591a97cb 100644
  
  	inc_irq_stat(irq_spurious_count);
  
-@@ -2113,13 +2136,13 @@ static int lapic_suspend(void)
+@@ -2113,13 +2140,13 @@ static int lapic_suspend(void)
  		apic_pm_state.apic_thmr = apic_read(APIC_LVTTHMR);
  #endif
  
@@ -1421,7 +1425,7 @@ index c4e3581..591a97cb 100644
  	return 0;
  }
  
-@@ -2132,7 +2155,7 @@ static void lapic_resume(void)
+@@ -2132,7 +2159,7 @@ static void lapic_resume(void)
  	if (!apic_pm_state.active)
  		return;
  
@@ -1430,7 +1434,7 @@ index c4e3581..591a97cb 100644
  	if (intr_remapping_enabled) {
  		/*
  		 * IO-APIC and PIC have their own resume routines.
-@@ -2188,7 +2211,7 @@ static void lapic_resume(void)
+@@ -2188,7 +2215,7 @@ static void lapic_resume(void)
  	if (intr_remapping_enabled)
  		reenable_intr_remapping(x2apic_mode);
  
@@ -5129,10 +5133,10 @@ index e6bb36a..898a91a 100644
  
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..f282637
+index 0000000..b8e628e
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,399 @@
+@@ -0,0 +1,419 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -5203,6 +5207,7 @@ index 0000000..f282637
 +void __ipipe_reenter_root(void);
 +
 +int __ipipe_disable_ondemand_mappings(struct task_struct *p);
++
 +int __ipipe_pin_vma(struct mm_struct *mm, struct vm_area_struct *vma);
 +
 +#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
@@ -5435,31 +5440,50 @@ index 0000000..f282637
 +
 +static inline void ipipe_enable_irq(unsigned int irq)
 +{
-+	struct irq_desc *desc = irq_to_desc(irq);
-+	struct irq_chip *chip = irq_desc_get_chip(desc);
++	struct irq_desc *desc;
++	struct irq_chip *chip;
 +
-+	if (WARN_ON_ONCE(chip->irq_unmask == NULL))
++	desc = irq_to_desc(irq);
++	if (desc == NULL)
 +		return;
 +
-+	chip->irq_unmask(&desc->irq_data);
++	chip = irq_desc_get_chip(desc);
++
++	if (WARN_ON_ONCE(chip->irq_enable == NULL && chip->irq_unmask == NULL))
++		return;
++
++	if (chip->irq_enable)
++		chip->irq_enable(&desc->irq_data);
++	else
++		chip->irq_unmask(&desc->irq_data);
 +}
 +
 +static inline void ipipe_disable_irq(unsigned int irq)
 +{
-+	struct irq_desc *desc = irq_to_desc(irq);
-+	struct irq_chip *chip = irq_desc_get_chip(desc);
++	struct irq_desc *desc;
++	struct irq_chip *chip;
 +
-+	if (WARN_ON_ONCE(chip->irq_mask == NULL))
++	desc = irq_to_desc(irq);
++	if (desc == NULL)
 +		return;
 +
-+	chip->irq_mask(&desc->irq_data);
++	chip = irq_desc_get_chip(desc);
++
++	if (WARN_ON_ONCE(chip->irq_disable == NULL && chip->irq_mask == NULL))
++		return;
++
++	if (chip->irq_disable)
++		chip->irq_disable(&desc->irq_data);
++	else
++		chip->irq_mask(&desc->irq_data);
 +}
 +
 +static inline void ipipe_end_irq(unsigned int irq)
 +{
 +	struct irq_desc *desc = irq_to_desc(irq);
 +
-+	desc->ipipe_end(irq, desc);
++	if (desc)
++		desc->ipipe_end(irq, desc);
 +}
 +
 +static inline int ipipe_chained_irq_p(unsigned int irq)
@@ -8190,10 +8214,10 @@ index 0000000..1147bf4
 +}
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..1f32d4a
+index 0000000..19dfead
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1706 @@
+@@ -0,0 +1,1729 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -9258,25 +9282,50 @@ index 0000000..1f32d4a
 +{
 +}
 +
++#ifdef CONFIG_IPIPE_LEGACY
++
++static inline void complete_domain_migration(void) /* hw IRQs off */
++{
++	current->state &= ~TASK_HARDENING;
++}
++
++#else /* !CONFIG_IPIPE_LEGACY */
++
 +static void complete_domain_migration(void) /* hw IRQs off */
 +{
++	struct ipipe_percpu_domain_data *p;
 +	struct ipipe_percpu_data *pd;
-+	struct task_struct *p;
++	struct task_struct *t;
 +
++	ipipe_root_only();
 +	pd = __this_cpu_ptr(&ipipe_percpu);
-+	p = pd->task_hijacked;
-+	if (p) {
-+		p->state &= ~TASK_HARDENING;
-+		pd->task_hijacked = NULL;
-+		ipipe_migration_hook(p);
-+	}
++	t = pd->task_hijacked;
++	if (t == NULL)
++		return;
++
++	pd->task_hijacked = NULL;
++	t->state &= ~TASK_HARDENING;
++	if (t->state != TASK_INTERRUPTIBLE)
++		/* Migration aborted (by signal). */
++		return;
++
++	p = ipipe_this_cpu_head_context();
++	IPIPE_WARN_ONCE(test_bit(IPIPE_STALL_FLAG, &p->status));
++	/*
++	 * hw IRQs are disabled, but the completion hook assumes the
++	 * head domain is logically stalled: fix it up.
++	 */
++	__set_bit(IPIPE_STALL_FLAG, &p->status);
++	ipipe_migration_hook(t);
++	__clear_bit(IPIPE_STALL_FLAG, &p->status);
 +}
++
++#endif /* !CONFIG_IPIPE_LEGACY */
 +
 +void __ipipe_complete_domain_migration(void)
 +{
 +	unsigned long flags;
 +
-+	ipipe_root_only();
 +	flags = hard_local_irq_save();
 +	complete_domain_migration();
 +	hard_local_irq_restore(flags);
@@ -9291,12 +9340,10 @@ index 0000000..1f32d4a
 +	hard_local_irq_disable();
 +#endif
 +	x = __ipipe_root_p;
-+
-+#ifdef CONFIG_IPIPE_LEGACY
-+	current->state &= ~TASK_HARDENING;
-+#else
-+	complete_domain_migration();
-+#endif	/* !CONFIG_IPIPE_LEGACY */
++#ifndef CONFIG_IPIPE_LEGACY
++	if (x)
++#endif
++		complete_domain_migration();
 +
 +#ifndef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 +	if (x)
@@ -9902,10 +9949,10 @@ index 0000000..1f32d4a
 +EXPORT_SYMBOL_GPL(__ipipe_post_work_root);
 diff --git a/kernel/ipipe/timer.c b/kernel/ipipe/timer.c
 new file mode 100644
-index 0000000..a2b8672
+index 0000000..d7d129a
 --- /dev/null
 +++ b/kernel/ipipe/timer.c
-@@ -0,0 +1,383 @@
+@@ -0,0 +1,393 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/timer.c
 + *
@@ -10167,6 +10214,7 @@ index 0000000..a2b8672
 +{
 +	struct clock_event_device *evtdev;
 +	struct ipipe_timer *timer;
++	struct irq_desc *desc;
 +	unsigned long flags;
 +	int steal, rc;
 +
@@ -10207,6 +10255,10 @@ index 0000000..a2b8672
 +  done:
 +	ipipe_critical_exit(flags);
 +
++	desc = irq_to_desc(timer->irq);
++	if (desc && irqd_irq_disabled(&desc->irq_data))
++		ipipe_enable_irq(timer->irq);
++
 +	return rc;
 +}
 +
@@ -10214,10 +10266,15 @@ index 0000000..a2b8672
 +{
 +	struct clock_event_device *evtdev;
 +	struct ipipe_timer *timer;
++	struct irq_desc *desc;
 +	unsigned long flags;
 +
 +	timer = per_cpu(percpu_timer, cpu);
 +	evtdev = timer->host_timer;
++
++	desc = irq_to_desc(timer->irq);
++	if (desc && irqd_irq_disabled(&desc->irq_data))
++		ipipe_disable_irq(timer->irq);
 +
 +	flags = ipipe_critical_enter(NULL);
 +
