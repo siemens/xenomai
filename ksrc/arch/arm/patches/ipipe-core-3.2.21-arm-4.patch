@@ -1109,7 +1109,7 @@ index 4384d81..f4efd23 100644
  void sp804_clockevents_init(void __iomem *, unsigned int, const char *);
 diff --git a/arch/arm/include/asm/ipipe.h b/arch/arm/include/asm/ipipe.h
 new file mode 100644
-index 0000000..198c7cb
+index 0000000..bb2801c
 --- /dev/null
 +++ b/arch/arm/include/asm/ipipe.h
 @@ -0,0 +1,270 @@
@@ -1152,7 +1152,7 @@ index 0000000..198c7cb
 +#include <linux/ipipe_trace.h>
 +#include <mach/irqs.h>
 +
-+#define IPIPE_CORE_RELEASE	2
++#define IPIPE_CORE_RELEASE	4
 +
 +struct ipipe_domain;
 +
@@ -2888,10 +2888,10 @@ index 9a8531e..052e118 100644
   * have in theory up to 7 arguments to a function - r0 to r6.
 diff --git a/arch/arm/kernel/ipipe.c b/arch/arm/kernel/ipipe.c
 new file mode 100644
-index 0000000..04c36f2
+index 0000000..482907d
 --- /dev/null
 +++ b/arch/arm/kernel/ipipe.c
-@@ -0,0 +1,525 @@
+@@ -0,0 +1,513 @@
 +/* -*- linux-c -*-
 + * linux/arch/arm/kernel/ipipe.c
 + *
@@ -3151,12 +3151,6 @@ index 0000000..04c36f2
 +{
 +	unsigned long flags;
 +
-+	if (ipd != &ipipe_root) {
-+		struct irq_desc *desc = irq_to_desc(irq);
-+		if(desc && !desc->action)
-+			enable_irq(irq);
-+	}
-+
 +	if (!ipipe_pic_muter.enable_irqdesc)
 +		return;
 +
@@ -3187,12 +3181,6 @@ index 0000000..04c36f2
 +		__ipipe_irqbits[irq / BITS_PER_LONG]
 +			&= ~(1 << (irq % BITS_PER_LONG));
 +	spin_unlock_irqrestore(&__ipipe_irqbits_lock, flags);
-+
-+	if (ipd != &ipipe_root) {
-+		struct irq_desc *desc = irq_to_desc(irq);
-+		if(desc && !desc->action)
-+			disable_irq(irq);
-+	}
 +}
 +EXPORT_SYMBOL_GPL(__ipipe_disable_irqdesc);
 +
@@ -8507,7 +8495,7 @@ index f0ba072..bf2e46f 100644
  
  	desc->irq_data.chip->irq_ack(&desc->irq_data);
 diff --git a/arch/arm/plat-mxc/Kconfig b/arch/arm/plat-mxc/Kconfig
-index b3a1f2b..17a217d 100644
+index b3a1f2b3..17a217d 100644
 --- a/arch/arm/plat-mxc/Kconfig
 +++ b/arch/arm/plat-mxc/Kconfig
 @@ -41,6 +41,7 @@ endmenu
@@ -9151,7 +9139,7 @@ index 1fe6917..50d1834 100644
  	u32			pm_save[4];
  #endif
 diff --git a/arch/arm/plat-samsung/time.c b/arch/arm/plat-samsung/time.c
-index e3bb806..b375631 100644
+index e3bb806..ac2077a 100644
 --- a/arch/arm/plat-samsung/time.c
 +++ b/arch/arm/plat-samsung/time.c
 @@ -3,6 +3,8 @@
@@ -9405,7 +9393,7 @@ index e3bb806..b375631 100644
  	/* timers reload after counting zero, so reduce the count by 1 */
  
  	tcnt--;
-@@ -226,23 +331,42 @@ static void s3c2410_timer_setup (void)
+@@ -226,23 +331,44 @@ static void s3c2410_timer_setup (void)
  	__raw_writel(tcfg1, S3C2410_TCFG1);
  	__raw_writel(tcfg0, S3C2410_TCFG0);
  
@@ -9454,12 +9442,14 @@ index e3bb806..b375631 100644
 +
 +#ifdef CONFIG_IPIPE
 +	s3c2410_itimer.freq = tcnt * HZ;
++	/* hardware timer can't be reloaded below 120ns */
++	s3c2410_itimer.min_delay_ticks = ipipe_timer_ns2ticks(&s3c2410_itimer, 120);
 +	ipipe_timer_register(&s3c2410_itimer);
 +#endif /* CONFIG_IPIPE */
  }
  
  static void __init s3c2410_timer_resources(void)
-@@ -282,6 +406,8 @@ static void __init s3c2410_timer_init(void)
+@@ -282,6 +408,8 @@ static void __init s3c2410_timer_init(void)
  
  struct sys_timer s3c24xx_timer = {
  	.init		= s3c2410_timer_init,
@@ -10974,10 +10964,10 @@ index e6bb36a..898a91a 100644
  
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..f282637
+index 0000000..b8e628e
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,399 @@
+@@ -0,0 +1,419 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -11048,6 +11038,7 @@ index 0000000..f282637
 +void __ipipe_reenter_root(void);
 +
 +int __ipipe_disable_ondemand_mappings(struct task_struct *p);
++
 +int __ipipe_pin_vma(struct mm_struct *mm, struct vm_area_struct *vma);
 +
 +#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
@@ -11280,31 +11271,50 @@ index 0000000..f282637
 +
 +static inline void ipipe_enable_irq(unsigned int irq)
 +{
-+	struct irq_desc *desc = irq_to_desc(irq);
-+	struct irq_chip *chip = irq_desc_get_chip(desc);
++	struct irq_desc *desc;
++	struct irq_chip *chip;
 +
-+	if (WARN_ON_ONCE(chip->irq_unmask == NULL))
++	desc = irq_to_desc(irq);
++	if (desc == NULL)
 +		return;
 +
-+	chip->irq_unmask(&desc->irq_data);
++	chip = irq_desc_get_chip(desc);
++
++	if (WARN_ON_ONCE(chip->irq_enable == NULL && chip->irq_unmask == NULL))
++		return;
++
++	if (chip->irq_enable)
++		chip->irq_enable(&desc->irq_data);
++	else
++		chip->irq_unmask(&desc->irq_data);
 +}
 +
 +static inline void ipipe_disable_irq(unsigned int irq)
 +{
-+	struct irq_desc *desc = irq_to_desc(irq);
-+	struct irq_chip *chip = irq_desc_get_chip(desc);
++	struct irq_desc *desc;
++	struct irq_chip *chip;
 +
-+	if (WARN_ON_ONCE(chip->irq_mask == NULL))
++	desc = irq_to_desc(irq);
++	if (desc == NULL)
 +		return;
 +
-+	chip->irq_mask(&desc->irq_data);
++	chip = irq_desc_get_chip(desc);
++
++	if (WARN_ON_ONCE(chip->irq_disable == NULL && chip->irq_mask == NULL))
++		return;
++
++	if (chip->irq_disable)
++		chip->irq_disable(&desc->irq_data);
++	else
++		chip->irq_mask(&desc->irq_data);
 +}
 +
 +static inline void ipipe_end_irq(unsigned int irq)
 +{
 +	struct irq_desc *desc = irq_to_desc(irq);
 +
-+	desc->ipipe_end(irq, desc);
++	if (desc)
++		desc->ipipe_end(irq, desc);
 +}
 +
 +static inline int ipipe_chained_irq_p(unsigned int irq)
@@ -14035,10 +14045,10 @@ index 0000000..1147bf4
 +}
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..1f32d4a
+index 0000000..19dfead
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1706 @@
+@@ -0,0 +1,1729 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -15103,25 +15113,50 @@ index 0000000..1f32d4a
 +{
 +}
 +
++#ifdef CONFIG_IPIPE_LEGACY
++
++static inline void complete_domain_migration(void) /* hw IRQs off */
++{
++	current->state &= ~TASK_HARDENING;
++}
++
++#else /* !CONFIG_IPIPE_LEGACY */
++
 +static void complete_domain_migration(void) /* hw IRQs off */
 +{
++	struct ipipe_percpu_domain_data *p;
 +	struct ipipe_percpu_data *pd;
-+	struct task_struct *p;
++	struct task_struct *t;
 +
++	ipipe_root_only();
 +	pd = __this_cpu_ptr(&ipipe_percpu);
-+	p = pd->task_hijacked;
-+	if (p) {
-+		p->state &= ~TASK_HARDENING;
-+		pd->task_hijacked = NULL;
-+		ipipe_migration_hook(p);
-+	}
++	t = pd->task_hijacked;
++	if (t == NULL)
++		return;
++
++	pd->task_hijacked = NULL;
++	t->state &= ~TASK_HARDENING;
++	if (t->state != TASK_INTERRUPTIBLE)
++		/* Migration aborted (by signal). */
++		return;
++
++	p = ipipe_this_cpu_head_context();
++	IPIPE_WARN_ONCE(test_bit(IPIPE_STALL_FLAG, &p->status));
++	/*
++	 * hw IRQs are disabled, but the completion hook assumes the
++	 * head domain is logically stalled: fix it up.
++	 */
++	__set_bit(IPIPE_STALL_FLAG, &p->status);
++	ipipe_migration_hook(t);
++	__clear_bit(IPIPE_STALL_FLAG, &p->status);
 +}
++
++#endif /* !CONFIG_IPIPE_LEGACY */
 +
 +void __ipipe_complete_domain_migration(void)
 +{
 +	unsigned long flags;
 +
-+	ipipe_root_only();
 +	flags = hard_local_irq_save();
 +	complete_domain_migration();
 +	hard_local_irq_restore(flags);
@@ -15136,12 +15171,10 @@ index 0000000..1f32d4a
 +	hard_local_irq_disable();
 +#endif
 +	x = __ipipe_root_p;
-+
-+#ifdef CONFIG_IPIPE_LEGACY
-+	current->state &= ~TASK_HARDENING;
-+#else
-+	complete_domain_migration();
-+#endif	/* !CONFIG_IPIPE_LEGACY */
++#ifndef CONFIG_IPIPE_LEGACY
++	if (x)
++#endif
++		complete_domain_migration();
 +
 +#ifndef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 +	if (x)
@@ -15747,10 +15780,10 @@ index 0000000..1f32d4a
 +EXPORT_SYMBOL_GPL(__ipipe_post_work_root);
 diff --git a/kernel/ipipe/timer.c b/kernel/ipipe/timer.c
 new file mode 100644
-index 0000000..a2b8672
+index 0000000..d7d129a
 --- /dev/null
 +++ b/kernel/ipipe/timer.c
-@@ -0,0 +1,383 @@
+@@ -0,0 +1,393 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/timer.c
 + *
@@ -16012,6 +16045,7 @@ index 0000000..a2b8672
 +{
 +	struct clock_event_device *evtdev;
 +	struct ipipe_timer *timer;
++	struct irq_desc *desc;
 +	unsigned long flags;
 +	int steal, rc;
 +
@@ -16052,6 +16086,10 @@ index 0000000..a2b8672
 +  done:
 +	ipipe_critical_exit(flags);
 +
++	desc = irq_to_desc(timer->irq);
++	if (desc && irqd_irq_disabled(&desc->irq_data))
++		ipipe_enable_irq(timer->irq);
++
 +	return rc;
 +}
 +
@@ -16059,10 +16097,15 @@ index 0000000..a2b8672
 +{
 +	struct clock_event_device *evtdev;
 +	struct ipipe_timer *timer;
++	struct irq_desc *desc;
 +	unsigned long flags;
 +
 +	timer = per_cpu(percpu_timer, cpu);
 +	evtdev = timer->host_timer;
++
++	desc = irq_to_desc(timer->irq);
++	if (desc && irqd_irq_disabled(&desc->irq_data))
++		ipipe_disable_irq(timer->irq);
 +
 +	flags = ipipe_critical_enter(NULL);
 +
