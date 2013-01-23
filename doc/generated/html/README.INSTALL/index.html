@@ -4,7 +4,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <meta name="generator" content="AsciiDoc 8.5.2" />
-<title>Installing Xenomai 2.6.2</title>
+<title>Installing Xenomai 2.6.2.1</title>
 <link rel="stylesheet" href="../asciidoc-css/xhtml11.css" type="text/css" />
 <link rel="stylesheet" href="../asciidoc-css/xhtml11-quirks.css" type="text/css" />
 <script type="text/javascript">
@@ -16,7 +16,7 @@ window.onload = function(){asciidoc.footnotes(); asciidoc.toc(3);}
 </head>
 <body style="max-width:55em">
 <div id="header">
-<h1>Installing Xenomai 2.6.2</h1>
+<h1>Installing Xenomai 2.6.2.1</h1>
 <div id="toc">
   <div id="toctitle">Table of Contents</div>
   <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
@@ -214,13 +214,32 @@ cellspacing="0" cellpadding="4">
                        powerpc_32/64 and ARM. One may
                        override this default setting
                        by passing <tt>--disable-smp</tt> explicitely
-                       for those architectures.</p>
-<p class="table">                       SMP-enabled userland code may run
+                       for those architectures.<br />
+<br />
+                       SMP-enabled userland code may run
                        over SMP or UP kernels. However,
                        Xenomai will deny running UP-only
                        userland code (i.e. when <tt>--disable-smp</tt>
                        is in effect) over an SMP kernel.]<br /></span></p></td>
-<td align="left" valign="top"><p class="table">weak</p></td>
+<td align="left" valign="top"><p class="table">weak, enabled</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table"><tt>--with-atomic-ops=</tt></p></td>
+<td align="left" valign="top"><p class="table">Selects which implementation of atomic
+                        access operations shall be used within
+                        Xenomai libraries:</p>
+<p class="table">                        <tt>--with-atomic-ops=builtins</tt> selects the
+                        GCC builtins, i.e. <em>_sync</em>*()
+                        services.</p>
+<p class="table">                        <tt>--with-atomic-ops=ad-hoc</tt> selects the
+                        ad hoc Xenomai implementation.</p>
+<p class="table">                        When this switch is not specified, a
+                        conservative choice is made depending
+                        on the target architecture.</p>
+<p class="table">                        Unless the GCC toolchain is outdated (i.e.
+                        does not provide these operations) or broken,
+                        <tt>--with-atomic-ops=builtins</tt> should be used.</p></td>
+<td align="left" valign="top"><p class="table">arch-dependent</p></td>
 </tr>
 </tbody>
 </table>
@@ -248,7 +267,7 @@ cellspacing="0" cellpadding="4">
 <td align="left" valign="top"><p class="table">Enable x86 SEP instructions
                       for issuing syscalls.
                       You will also need NPTL.</p></td>
-<td align="left" valign="top"><p class="table">strong, disabled</p></td>
+<td align="left" valign="top"><p class="table">strong, enabled</p></td>
 </tr>
 <tr>
 <td align="left" valign="top"><p class="table"><tt>--enable-x86-tsc</tt></p></td>
@@ -818,13 +837,13 @@ to boot, or the log messages indicates an error status instead, see the
 <div class="paragraph"><p>In order to test Xenomai user-space support, launch the latency test:</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><tt>$ /usr/xenomai/bin/latency</tt></pre>
+<pre><tt>$ xeno latency</tt></pre>
 </div></div>
 <div class="paragraph"><p>The latency test should display a message every second with minimal,
 maximal and average latency values, such as:</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><tt># latency -T 25
+<pre><tt># xeno latency -T 25
 == Sampling period: 100 us
 == Test mode: periodic user-mode task
 == All results in microseconds
@@ -876,7 +895,7 @@ test under load to evaluate the latency test of your system, the
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2012-12-16 17:35:00 CEST
+Last updated 2013-01-15 06:25:25 CEST
 </div>
 </div>
 </body>

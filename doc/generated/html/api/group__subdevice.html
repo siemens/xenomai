@@ -136,12 +136,12 @@ Subdevice status</h2></td></tr>
 <li>chan_desc: to describe the channels which compose the subdevice;</li>
 <li>rng_desc: to declare the usable ranges;</li>
 </ul>
-<p>The functions callbakcs are:</p>
+<p>The functions callbacks are:</p>
 <ul>
-<li>do_cmd() and do_cmdtest(): to performe asynchronous acquisitions thanks to commands;</li>
+<li>do_cmd() and do_cmdtest(): to perform asynchronous acquisitions thanks to commands;</li>
 <li>cancel(): to abort a working asynchronous acquisition;</li>
 <li>munge(): to apply modifications on the data freshly acquired during an asynchronous transfer. Warning: using this feature with can significantly reduce the performances (if the munge operation is complex, it will trigger high CPU charge and if the acquisition device is DMA capable, many cache-misses and cache-replaces will occur (the benefits of the DMA controller will vanish);</li>
-<li>trigger(): optionnaly to launch an asynchronous acquisition;</li>
+<li>trigger(): optionally to launch an asynchronous acquisition;</li>
 <li>insn_read(), insn_write(), insn_bits(), insn_config(): to perform synchronous acquisition operations.</li>
 </ul>
 <p>Once the subdevice is filled, it must be inserted into the driver structure thanks to <a class="el" href="group__subdevice.html#ga229e7725db234534da6e6973c63f1cef" title="Add a subdevice to the driver descriptor.">a4l_add_subd()</a>. </p>
@@ -261,7 +261,7 @@ Subdevice status</h2></td></tr>
 </div>
 </div>
 </div>
-<hr class="footer"/><address class="footer"><small>Generated on Wed Dec 26 2012 18:15:31 for Xenomai API by&nbsp;
+<hr class="footer"/><address class="footer"><small>Generated on Wed Jan 23 2013 13:24:04 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.1 </small></address>
 </body>

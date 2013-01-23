@@ -1,4 +1,4 @@
-Installing Xenomai 2.6.2
+Installing Xenomai 2.6.2.1
 
 -------------------------------------------------------------------------------
 
@@ -182,24 +182,42 @@ with CONFIG_X86_TSC set, since the x86-tsc option’s binding is strong.
 2.3.2. Generic configure options
 --------------------------------
 
-       NAME                   DESCRIPTION             [BINDING,] DEFAULT ^[a]
+      NAME                         DESCRIPTION                    [BINDING,]
+                                                                 DEFAULT ^[a]
 
---prefix             Installation directory         /usr/xenomai
+--prefix           Installation directory                       /usr/xenomai
 
---enable-debug       Enable debug symbols (-g)      disabled
+--enable-debug     Enable debug symbols (-g)                    disabled
 
---enable-smp         Enable SMP support ^[a]        weak
+--enable-smp       Enable SMP support ^[a]                      weak, enabled
+
+--with-atomic-ops  Selects which implementation of atomic       arch-dependent
+=                  access operations shall be used within
+                   Xenomai libraries:
+
+                   --with-atomic-ops=builtins selects the GCC
+                   builtins, i.e. _sync*() services.
+
+                   --with-atomic-ops=ad-hoc selects the ad hoc
+                   Xenomai implementation.
+
+                   When this switch is not specified, a
+                   conservative choice is made depending on
+                   the target architecture.
+
+                   Unless the GCC toolchain is outdated (i.e.
+                   does not provide these operations) or
+                   broken, --with-atomic-ops=builtins should
+                   be used.
 
 ^[a] The SMP switch is used to tell the build system whether CPU
 synchronization instructions should be emitted in atomic constructs appearing
 in some Xenomai libraries, enabling them for SMP execution. This feature is
 turned on by default on all SMP-enabled architecture Xenomai supports, i.e.
 x86_32/64, powerpc_32/64 and ARM. One may override this default setting by
-passing --disable-smp explicitely for those architectures.
-
-SMP-enabled userland code may run over SMP or UP kernels. However, Xenomai will
-deny running UP-only userland code (i.e. when --disable-smp is in effect) over
-an SMP kernel.
+passing --disable-smp explicitely for those architectures. SMP-enabled userland
+code may run over SMP or UP kernels. However, Xenomai will deny running UP-only
+userland code (i.e. when --disable-smp is in effect) over an SMP kernel.
 
 
 2.3.3. Arch-specific configure options
@@ -209,7 +227,7 @@ an SMP kernel.
                                                                    DEFAULT ^[a]
 
 --enable-x86-sep     Enable x86 SEP instructions for issuing       strong,
-                     syscalls. You will also need NPTL.            disabled
+                     syscalls. You will also need NPTL.            enabled
 
 --enable-x86-tsc     Enable x86 TSC for timings You must have TSC  strong,
                      for this.                                     enabled
@@ -654,12 +672,12 @@ guide.
 
 In order to test Xenomai user-space support, launch the latency test:
 
-$ /usr/xenomai/bin/latency
+$ xeno latency
 
 The latency test should display a message every second with minimal, maximal
 and average latency values, such as:
 
-# latency -T 25
+# xeno latency -T 25
 == Sampling period: 100 us
 == Test mode: periodic user-mode task
 == All results in microseconds
