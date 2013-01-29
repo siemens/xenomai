@@ -53,6 +53,20 @@ static void tp_schedule_next(struct xnsched_tp *tp)
 		ret = xntimer_start(&tp->tf_timer, t, XN_INFINITE, XN_ABSOLUTE);
 		if (ret != -ETIMEDOUT)
 			break;
+		/*
+		 * We are late, make sure to remain within the bounds
+		 * of a valid time frame before advancing to the next
+		 * window. Otherwise, fix up by advancing to the next
+		 * time frame immediately.
+		 */
+		for (;;) {
+			t = tp->tf_start + tp->gps->tf_duration;
+			if (xnpod_get_cpu_time() > t) {
+				tp->tf_start = t;
+				tp->wnext = 0;
+			} else
+				break;
+		}
 	}
 
 	sched = container_of(tp, struct xnsched, tp);
