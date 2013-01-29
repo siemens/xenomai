@@ -1147,6 +1147,8 @@ int main(int argc, const char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
+	fp_features_init();
+
 	/* Parse command line options. */
 	opterr = 0;
 	for (;;) {
