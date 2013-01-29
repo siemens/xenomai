@@ -54,6 +54,10 @@ static void __attribute__((constructor)) fp_init(void)
 
 #endif /* !__KERNEL__ */
 
+static inline void fp_features_init(void)
+{
+}
+
 static inline void fp_regs_set(unsigned val)
 {
 	if (have_vfp) {

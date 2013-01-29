@@ -36,6 +36,10 @@ static inline void fp_linux_end(void)
 #define printk printf
 #endif /* !__KERNEL__ */
 
+static inline void fp_features_init(void)
+{
+}
+
 static inline void fp_regs_set(unsigned val)
 {
 	uint64_t fpval = val;

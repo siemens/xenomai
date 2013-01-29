@@ -749,6 +749,8 @@ int __init __switchtest_init(void)
 {
 	int err;
 
+	fp_features_init();
+
 	do {
 		snprintf(device.device_name, RTDM_MAX_DEVNAME_LEN,
 			 "rttest-switchtest%d",
