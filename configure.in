@@ -752,7 +752,6 @@ AC_CONFIG_FILES([ \
 	include/asm-blackfin/bits/Makefile \
 	include/asm-x86/Makefile \
 	include/asm-x86/bits/Makefile \
-	include/asm-x86/ipipe/Makefile \
 	include/asm-powerpc/Makefile \
 	include/asm-powerpc/bits/Makefile \
 	include/asm-arm/Makefile \
