@@ -157,62 +157,39 @@ void xnarch_switch_to(struct xnarchtcb *out_tcb, struct xnarchtcb *in_tcb)
 
 #ifdef CONFIG_XENO_HW_FPU
 
-static inline int __do_save_i387(x86_fpustate *fpup)
+static inline void __do_save_i387(x86_fpustate *fpup)
 {
-	int err = 0;
-
 #ifdef CONFIG_X86_32
 	if (cpu_has_fxsr)
 		__asm__ __volatile__("fxsave %0; fnclex":"=m"(*fpup));
 	else
 		__asm__ __volatile__("fnsave %0; fwait":"=m"(*fpup));
 #else /* CONFIG_X86_64 */
-	struct i387_fxsave_struct *fx = &fpup->fxsave;
-
-	asm volatile("1:  rex64/fxsave (%[fx])\n\t"
-		     "2:\n"
-		     ".section .fixup,\"ax\"\n"
-		     "3:  movl $-1,%[err]\n"
-		     "    jmp  2b\n"
-		     ".previous\n"
-		     ".section __ex_table,\"a\"\n"
-		     "   .align 8\n"
-		     "   .quad  1b,3b\n"
-		     ".previous"
-		     : [err] "=r" (err), "=m" (*fx)
-		     : [fx] "cdaSDb" (fx), "0" (0));
+#ifdef CONFIG_AS_FXSAVEQ
+	asm volatile("fxsaveq %0" : "=m" (fpup->fxsave));
+#else /* !CONFIG_AS_FXSAVEQ */
+	asm volatile("rex64/fxsave (%[fx])"
+		     : "=m" (fpup->fxsave)
+		     : [fx] "R" (&fpup->fxsave));
+#endif /* !CONFIG_AS_FXSAVEQ */
 #endif /* CONFIG_X86_64 */
-
-	return err;
 }
 
-static inline int __do_restore_i387(x86_fpustate *fpup)
+static inline void __do_restore_i387(x86_fpustate *fpup)
 {
-	int err = 0;
-
 #ifdef CONFIG_X86_32
 	if (cpu_has_fxsr)
 		__asm__ __volatile__("fxrstor %0": /* no output */ :"m"(*fpup));
 	else
 		__asm__ __volatile__("frstor %0": /* no output */ :"m"(*fpup));
 #else /* CONFIG_X86_64 */
-	struct i387_fxsave_struct *fx = &fpup->fxsave;
-
-	asm volatile("1:  rex64/fxrstor (%[fx])\n\t"
-		     "2:\n"
-		     ".section .fixup,\"ax\"\n"
-		     "3:  movl $-1,%[err]\n"
-		     "    jmp  2b\n"
-		     ".previous\n"
-		     ".section __ex_table,\"a\"\n"
-		     "   .align 8\n"
-		     "   .quad  1b,3b\n"
-		     ".previous"
-		     : [err] "=r" (err)
-		     : [fx] "cdaSDb" (fx), "m" (*fx), "0" (0));
+#ifdef CONFIG_AS_FXSAVEQ
+	asm volatile("fxrstorq %0" : : "m" (fpup->fxsave));
+#else /* !CONFIG_AS_FXSAVEQ */
+	asm volatile("rex64/fxrstor (%0)"
+		     : : "R" (&fpup->fxsave), "m" (fpup->fxsave));
+#endif /* !CONFIG_AS_FXSAVEQ */
 #endif /* CONFIG_X86_64 */
-
-	return err;
 }
 
 int xnarch_handle_fpu_fault(struct xnarchtcb *tcb)
@@ -250,11 +227,9 @@ void xnarch_restore_fpu(struct xnarchtcb *tcb)
 {
 	struct task_struct *p = tcb->core.host_task;
 
-	if (tcb->is_root || tsk_used_math(p) == 0) {
+	if (tcb->is_root || tsk_used_math(p) == 0)
 		/* Restore lazy mode */
 		return;
-	}
-	
 
 	/*
 	 * Restore the FPU hardware with valid fp registers from a
