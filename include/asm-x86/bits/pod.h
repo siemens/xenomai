@@ -227,8 +227,31 @@ static inline void xnarch_init_fpu(xnarchtcb_t * tcb)
 	}
 }
 
+#ifdef CONFIG_X86_64
+#define XSAVE_PREFIX	"0x48,"
+#define XSAVE_SUFFIX	"q"
+#else
+#define XSAVE_PREFIX
+#define XSAVE_SUFFIX
+#endif
+
 static inline void __save_i387(x86_fpustate *fpup)
 {
+#ifdef cpu_has_xsave
+	if (cpu_has_xsave) {
+#if defined(CONFIG_AS_AVX) || defined CONFIG_X86_32
+		asm volatile("xsave" XSAVE_SUFFIX " %0"
+			     : "=m" (fpup->xsave) : "a" (-1), "d" (-1)
+			     : "memory");
+#else /* !CONFIG_AS_AVX */
+		asm volatile(".byte " XSAVE_PREFIX "0x0f,0xae,0x27"
+			     : : "D" (&fpup->xsave), "m" (fpup->xsave),
+			         "a" (-1), "d" (-1)
+			     : "memory");
+#endif /* !CONFIG_AS_AVX */
+		return;
+	}
+#endif /* cpu_has_xsave */
 #ifdef CONFIG_X86_32
 	if (cpu_has_fxsr)
 		__asm__ __volatile__("fxsave %0; fnclex":"=m"(*fpup));
@@ -274,6 +297,21 @@ static inline void xnarch_save_fpu(xnarchtcb_t *tcb)
 
 static inline void __restore_i387(x86_fpustate *fpup)
 {
+#ifdef cpu_has_xsave
+	if (cpu_has_xsave) {
+#if defined(CONFIG_AS_AVX) || defined CONFIG_X86_32
+		asm volatile("xrstor" XSAVE_SUFFIX " %0"
+			     : : "m" (fpup->xsave), "a" (-1), "d" (-1)
+			     : "memory");
+#else /* !CONFIG_AS_AVX */
+		asm volatile(".byte " XSAVE_PREFIX "0x0f,0xae,0x2f"
+			     : : "D" (&fpup->xsave), "m" (fpup->xsave),
+			         "a" (-1), "d" (-1)
+			     : "memory");
+#endif /* !CONFIG_AS_AVX */
+		return;
+	}
+#endif /* cpu_has_xsave */
 #ifdef CONFIG_X86_32
 	if (cpu_has_fxsr)
 		__asm__ __volatile__("fxrstor %0": /* no output */

@@ -34,6 +34,8 @@ static inline void xnarch_init_tcb(xnarchtcb_t * tcb)
 	tcb->fpup = &tcb->i387;
 	tcb->is_root = 0;
 	tcb->mayday.ip = 0;
+	/* Required to initialize the xsave header */
+	memset(&tcb->i387, 0, sizeof(tcb->i387));
 	/* Must be followed by xnarch_init_thread(). */
 }
 
