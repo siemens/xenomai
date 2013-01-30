@@ -63,7 +63,7 @@ static inline void do_switch_threads(struct xnarchtcb *out_tcb,
 	({								\
 		long __rdi, __rsi, __rax, __rbx, __rcx, __rdx;		\
 									\
-		asm volatile("pushfq\n\t"				\
+		__asm__ __volatile__("pushfq\n\t"			\
 			     "pushq	%%rbp\n\t"			\
 			     "movq	%%rsi, %%rbp\n\t"		\
 			     "movq	%%rsp, (%%rdx)\n\t"		\
@@ -157,8 +157,31 @@ void xnarch_switch_to(struct xnarchtcb *out_tcb, struct xnarchtcb *in_tcb)
 
 #ifdef CONFIG_XENO_HW_FPU
 
+#ifdef CONFIG_X86_64
+#define XSAVE_PREFIX	"0x48,"
+#define XSAVE_SUFFIX	"q"
+#else
+#define XSAVE_PREFIX
+#define XSAVE_SUFFIX
+#endif
+
 static inline void __do_save_i387(x86_fpustate *fpup)
 {
+#ifdef cpu_has_xsave
+	if (cpu_has_xsave) {
+#if defined(CONFIG_AS_AVX) || defined CONFIG_X86_32
+		__asm__ __volatile__("xsave" XSAVE_SUFFIX " %0"
+			     : "=m" (fpup->xsave) : "a" (-1), "d" (-1)
+			     : "memory");
+#else /* !CONFIG_AS_AVX */
+		__asm __volatile__(".byte " XSAVE_PREFIX "0x0f,0xae,0x27"
+			     : : "D" (&fpup->xsave), "m" (fpup->xsave),
+			         "a" (-1), "d" (-1)
+			     : "memory");
+#endif /* !CONFIG_AS_AVX */
+		return;
+	}
+#endif /* cpu_has_xsave */
 #ifdef CONFIG_X86_32
 	if (cpu_has_fxsr)
 		__asm__ __volatile__("fxsave %0; fnclex":"=m"(*fpup));
@@ -166,9 +189,9 @@ static inline void __do_save_i387(x86_fpustate *fpup)
 		__asm__ __volatile__("fnsave %0; fwait":"=m"(*fpup));
 #else /* CONFIG_X86_64 */
 #ifdef CONFIG_AS_FXSAVEQ
-	asm volatile("fxsaveq %0" : "=m" (fpup->fxsave));
+	__asm __volatile__("fxsaveq %0" : "=m" (fpup->fxsave));
 #else /* !CONFIG_AS_FXSAVEQ */
-	asm volatile("rex64/fxsave (%[fx])"
+	__asm__ __volatile__("rex64/fxsave (%[fx])"
 		     : "=m" (fpup->fxsave)
 		     : [fx] "R" (&fpup->fxsave));
 #endif /* !CONFIG_AS_FXSAVEQ */
@@ -177,6 +200,21 @@ static inline void __do_save_i387(x86_fpustate *fpup)
 
 static inline void __do_restore_i387(x86_fpustate *fpup)
 {
+#ifdef cpu_has_xsave
+	if (cpu_has_xsave) {
+#if defined(CONFIG_AS_AVX) || defined CONFIG_X86_32
+		__asm__ __volatile__("xrstor" XSAVE_SUFFIX " %0"
+			     : : "m" (fpup->xsave), "a" (-1), "d" (-1)
+			     : "memory");
+#else /* !CONFIG_AS_AVX */
+		__asm__ __volatile__(".byte " XSAVE_PREFIX "0x0f,0xae,0x2f"
+			     : : "D" (&fpup->xsave), "m" (fpup->xsave),
+			         "a" (-1), "d" (-1)
+			     : "memory");
+#endif /* !CONFIG_AS_AVX */
+		return;
+	}
+#endif /* cpu_has_xsave */
 #ifdef CONFIG_X86_32
 	if (cpu_has_fxsr)
 		__asm__ __volatile__("fxrstor %0": /* no output */ :"m"(*fpup));
@@ -184,9 +222,9 @@ static inline void __do_restore_i387(x86_fpustate *fpup)
 		__asm__ __volatile__("frstor %0": /* no output */ :"m"(*fpup));
 #else /* CONFIG_X86_64 */
 #ifdef CONFIG_AS_FXSAVEQ
-	asm volatile("fxrstorq %0" : : "m" (fpup->fxsave));
+	__asm__ __volatile__("fxrstorq %0" : : "m" (fpup->fxsave));
 #else /* !CONFIG_AS_FXSAVEQ */
-	asm volatile("rex64/fxrstor (%0)"
+	__asm__ __volatile__("rex64/fxrstor (%0)"
 		     : : "R" (&fpup->fxsave), "m" (fpup->fxsave));
 #endif /* !CONFIG_AS_FXSAVEQ */
 #endif /* CONFIG_X86_64 */
