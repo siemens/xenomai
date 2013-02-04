@@ -1461,10 +1461,11 @@ Optional Features:
   --enable-fast-install[=PKGS]
                           optimize for fast installation [default=yes]
   --disable-libtool-lock  avoid locking (might break parallel builds)
-  --enable-debug          Enable debug symbols in programs
-  --enable-smp            Enable SMP support
+  --enable-debug          Enable debug symbols in programs [default=no]
+  --enable-smp            Enable SMP support [default=yes on x86, Power, ARM]
   --enable-x86-sep        Enable x86 SEP instructions for issuing syscalls
-  --enable-x86-tsc        Enable x86 TSC for timings
+                          [default=yes]
+  --enable-x86-tsc        Enable x86 TSC for timings [default=yes]
   --enable-arm-tsc        You only need this option if you get the following
                           message when starting an application: Xenomai:
                           incompatible feature set (userland requires
@@ -1473,38 +1474,40 @@ Optional Features:
                           allows to select the machine for which a user-space
                           tsc emulation should be generated. Valid machines
                           are at91, kuser, imx, ixp4xx, omap, orion, pxa,
-                          s3c24x, sa1100.
+                          s3c24x, sa1100. [default=no]
   --enable-arm-quirks     Enable quirks for specific systems. Currently
                           supported quirks are for sa1100 and xscale3.
-  --disable-doc-install   Do not install documentation
-  --enable-dox-doc        Build Doxygen documentation
-  --enable-dbx            Build Docbook XML documentation.
+                          [default=no]
+  --disable-doc-install   Do not install documentation [default=no]
+  --enable-dox-doc        Build Doxygen documentation [default=no]
+  --enable-dbx            Build Docbook XML documentation. [default=no]
   --enable-dbx-network    Try to access Docbook DTD and XSL stylesheets
                           through network (default is to die if local
                           installation can not be found by configure).
-  --enable-verbose-latex  Uses LaTeX non-stop mode
-  --enable-asciidoc       Build Asciidoc documentation
+                          [default=no]
+  --enable-verbose-latex  Uses LaTeX non-stop mode [default=no]
+  --enable-asciidoc       Build Asciidoc documentation [default=no]
   --enable-posix-auto-mlockall
                           Enable Xenomai POSIX skin library to automatically
                           call mlockall at startup. This option is mainly
                           useful for running third-parties programs such as
                           the Open Posix Testsuite unmodified with Xenomai
-                          POSIX skin
+                          POSIX skin [default=no]
   --enable-psos-auto-mlockall
                           Enable the Xenomai pSOS skin library to
                           automatically call mlockall at process startup.
                           Unless this option is switched on, the application
                           will have to lock its memory explicitly while
-                          initializing.
+                          initializing. [default=no]
   --enable-uitron-auto-mlockall
                           Enable the Xenomai uITRON skin library to
                           automatically call mlockall at process startup.
                           Unless this option is switched on, the application
                           will have to lock its memory explicitly while
-                          initializing.
+                          initializing. [default=no]
   --enable-dlopen-skins   Disable TLS features and automatic main thread
                           mapping by the POSIX skin to allows dlopen'ing
-                          Xenomai libs.
+                          Xenomai libs. [default=no]
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -1516,6 +1519,7 @@ Optional Packages:
   --with-sysroot=DIR Search for dependent libraries within DIR
                         (or the compiler's sysroot if not specified).
   --with-atomic-ops       Select implementation of atomic ops
+                          [default=builtins on ARM, ad-hoc otherwise]
   --with-dbx-root         specify the Docbook XML root (that is, the directory
                           where docbookx.dtd should be found). Default is to
                           use well-known locations (or network if
@@ -13859,7 +13863,7 @@ base=asm-generic
 ac_config_links="$ac_config_links src/include/$base/xenomai:$srcdir/include/$base"
 
 
-ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config scripts/xeno src/Makefile src/skins/Makefile src/skins/common/Makefile src/skins/posix/Makefile src/skins/native/Makefile src/skins/native/libxenomai_native.pc src/skins/vxworks/Makefile src/skins/vxworks/libxenomai_vxworks.pc src/skins/psos+/Makefile src/skins/psos+/libxenomai_psos+.pc src/skins/vrtx/Makefile src/skins/vrtx/libxenomai_vrtx.pc src/skins/rtdm/Makefile src/skins/rtdm/libxenomai_rtdm.pc src/skins/uitron/Makefile src/skins/uitron/libxenomai_uitron.pc src/drvlib/Makefile src/drvlib/analogy/Makefile src/include/Makefile src/testsuite/Makefile src/testsuite/latency/Makefile src/testsuite/cyclic/Makefile src/testsuite/switchtest/Makefile src/testsuite/irqbench/Makefile src/testsuite/clocktest/Makefile src/testsuite/klatency/Makefile src/testsuite/unit/Makefile src/testsuite/xeno-test/Makefile src/testsuite/regression/Makefile src/testsuite/regression/native/Makefile src/testsuite/regression/posix/Makefile src/testsuite/regression/native+posix/Makefile src/utils/Makefile src/utils/can/Makefile src/utils/analogy/Makefile src/utils/ps/Makefile include/Makefile include/asm-generic/Makefile include/asm-generic/bits/Makefile include/asm-blackfin/Makefile include/asm-blackfin/bits/Makefile include/asm-x86/Makefile include/asm-x86/bits/Makefile include/asm-x86/ipipe/Makefile include/asm-powerpc/Makefile include/asm-powerpc/bits/Makefile include/asm-arm/Makefile include/asm-arm/bits/Makefile include/asm-nios2/Makefile include/asm-nios2/bits/Makefile include/asm-sh/Makefile include/asm-sh/bits/Makefile include/asm-sim/Makefile include/asm-sim/bits/Makefile include/native/Makefile include/nucleus/Makefile include/posix/Makefile include/posix/sys/Makefile include/psos+/Makefile include/rtdm/Makefile include/analogy/Makefile include/uitron/Makefile include/vrtx/Makefile include/vxworks/Makefile"
+ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config scripts/xeno src/Makefile src/skins/Makefile src/skins/common/Makefile src/skins/posix/Makefile src/skins/native/Makefile src/skins/native/libxenomai_native.pc src/skins/vxworks/Makefile src/skins/vxworks/libxenomai_vxworks.pc src/skins/psos+/Makefile src/skins/psos+/libxenomai_psos+.pc src/skins/vrtx/Makefile src/skins/vrtx/libxenomai_vrtx.pc src/skins/rtdm/Makefile src/skins/rtdm/libxenomai_rtdm.pc src/skins/uitron/Makefile src/skins/uitron/libxenomai_uitron.pc src/drvlib/Makefile src/drvlib/analogy/Makefile src/include/Makefile src/testsuite/Makefile src/testsuite/latency/Makefile src/testsuite/cyclic/Makefile src/testsuite/switchtest/Makefile src/testsuite/irqbench/Makefile src/testsuite/clocktest/Makefile src/testsuite/klatency/Makefile src/testsuite/unit/Makefile src/testsuite/xeno-test/Makefile src/testsuite/regression/Makefile src/testsuite/regression/native/Makefile src/testsuite/regression/posix/Makefile src/testsuite/regression/native+posix/Makefile src/utils/Makefile src/utils/can/Makefile src/utils/analogy/Makefile src/utils/ps/Makefile include/Makefile include/asm-generic/Makefile include/asm-generic/bits/Makefile include/asm-blackfin/Makefile include/asm-blackfin/bits/Makefile include/asm-x86/Makefile include/asm-x86/bits/Makefile include/asm-powerpc/Makefile include/asm-powerpc/bits/Makefile include/asm-arm/Makefile include/asm-arm/bits/Makefile include/asm-nios2/Makefile include/asm-nios2/bits/Makefile include/asm-sh/Makefile include/asm-sh/bits/Makefile include/asm-sim/Makefile include/asm-sim/bits/Makefile include/native/Makefile include/nucleus/Makefile include/posix/Makefile include/posix/sys/Makefile include/psos+/Makefile include/rtdm/Makefile include/analogy/Makefile include/uitron/Makefile include/vrtx/Makefile include/vxworks/Makefile"
 
 
 if test x"$LD_FILE_OPTION" = x"yes" ; then
@@ -14963,7 +14967,6 @@ do
     "include/asm-blackfin/bits/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-blackfin/bits/Makefile" ;;
     "include/asm-x86/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-x86/Makefile" ;;
     "include/asm-x86/bits/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-x86/bits/Makefile" ;;
-    "include/asm-x86/ipipe/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-x86/ipipe/Makefile" ;;
     "include/asm-powerpc/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-powerpc/Makefile" ;;
     "include/asm-powerpc/bits/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-powerpc/bits/Makefile" ;;
     "include/asm-arm/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-arm/Makefile" ;;
