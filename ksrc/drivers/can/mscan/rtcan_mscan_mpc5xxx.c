@@ -46,14 +46,14 @@ struct mpc5xxx_can_data {
 };
 
 #ifdef CONFIG_PPC_MPC52xx
-static struct of_device_id __devinitdata mpc52xx_cdm_ids[] = {
+static struct of_device_id mpc52xx_cdm_ids[] = {
 	{ .compatible = "fsl,mpc5200-cdm", },
 	{}
 };
 
-static u32 __devinit mpc52xx_can_get_clock(struct of_device *ofdev,
-					   const char *clock_name,
-					   int *mscan_clksrc)
+static u32 mpc52xx_can_get_clock(struct of_device *ofdev,
+				 const char *clock_name,
+				 int *mscan_clksrc)
 {
 	unsigned int pvr;
 	struct mpc52xx_cdm  __iomem *cdm;
@@ -104,9 +104,9 @@ static u32 __devinit mpc52xx_can_get_clock(struct of_device *ofdev,
 	return freq;
 }
 #else /* !CONFIG_PPC_MPC5200 */
-static u32 __devinit mpc52xx_can_get_clock(struct of_device *ofdev,
-					   const char *clock_name,
-					   int *mscan_clksrc)
+static u32 mpc52xx_can_get_clock(struct of_device *ofdev,
+				 const char *clock_name,
+				 int *mscan_clksrc)
 {
 	return 0;
 }
@@ -127,14 +127,14 @@ struct mpc512x_clockctl {
 	u32 mccr[4];		/* MSCAN Clk Ctrl Reg 1-3 */
 };
 
-static struct of_device_id __devinitdata mpc512x_clock_ids[] = {
+static struct of_device_id mpc512x_clock_ids[] = {
 	{ .compatible = "fsl,mpc5121-clock", },
 	{}
 };
 
-static u32 __devinit mpc512x_can_get_clock(struct of_device *ofdev,
-					   const char *clock_name,
-					   int *mscan_clksrc)
+static u32 mpc512x_can_get_clock(struct of_device *ofdev,
+				 const char *clock_name,
+				 int *mscan_clksrc)
 {
 	struct mpc512x_clockctl __iomem *clockctl;
 	struct device_node *np_clock;
@@ -242,9 +242,9 @@ exit_unmap:
 	return freq;
 }
 #else /* !CONFIG_PPC_MPC512x */
-static u32 __devinit mpc512x_can_get_clock(struct of_device *ofdev,
-					   const char *clock_name,
-					   int *mscan_clksrc)
+static u32 mpc512x_can_get_clock(struct of_device *ofdev,
+				 const char *clock_name,
+				 int *mscan_clksrc)
 {
 	return 0;
 }
@@ -252,10 +252,10 @@ static u32 __devinit mpc512x_can_get_clock(struct of_device *ofdev,
 
 static struct of_device_id mpc5xxx_can_table[];
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0)
-static int __devinit mpc5xxx_can_probe(struct of_device *ofdev,
-				       const struct of_device_id *id)
+static int mpc5xxx_can_probe(struct of_device *ofdev,
+			     const struct of_device_id *id)
 #else /* Linux >= 3.0 */
-static int __devinit mpc5xxx_can_probe(struct of_device *ofdev)
+static int mpc5xxx_can_probe(struct of_device *ofdev)
 #endif /* Linux >= 3.0 */
 {
 	struct device_node *np = mpc5xxx_get_of_node(ofdev);
@@ -332,7 +332,7 @@ exit_unmap_mem:
 	return err;
 }
 
-static int __devexit mpc5xxx_can_remove(struct of_device *ofdev)
+static int mpc5xxx_can_remove(struct of_device *ofdev)
 {
 	struct rtcan_device *dev = dev_get_drvdata(&ofdev->dev);
 
@@ -345,17 +345,17 @@ static int __devexit mpc5xxx_can_remove(struct of_device *ofdev)
 	return 0;
 }
 
-static struct mpc5xxx_can_data __devinitdata mpc5200_can_data = {
+static struct mpc5xxx_can_data mpc5200_can_data = {
 	.type = MSCAN_TYPE_MPC5200,
 	.get_clock = mpc52xx_can_get_clock,
 };
 
-static struct mpc5xxx_can_data __devinitdata mpc5121_can_data = {
+static struct mpc5xxx_can_data mpc5121_can_data = {
 	.type = MSCAN_TYPE_MPC5121,
 	.get_clock = mpc512x_can_get_clock,
 };
 
-static struct of_device_id __devinitdata mpc5xxx_can_table[] = {
+static struct of_device_id mpc5xxx_can_table[] = {
 	{ .compatible = "fsl,mpc5200-mscan", .data = &mpc5200_can_data, },
 	/* Note that only MPC5121 Rev. 2 (and later) is supported */
 	{ .compatible = "fsl,mpc5121-mscan", .data = &mpc5121_can_data, },
@@ -370,14 +370,14 @@ static struct of_platform_driver mpc5xxx_can_driver = {
 		.of_match_table = mpc5xxx_can_table,
 	},
 	.probe = mpc5xxx_can_probe,
-	.remove = __devexit_p(mpc5xxx_can_remove),
+	.remove = mpc5xxx_can_remove,
 };
 #else
 static struct of_platform_driver mpc5xxx_can_driver = {
 	.owner = THIS_MODULE,
 	.name = RTCAN_DRV_NAME,
 	.probe = mpc5xxx_can_probe,
-	.remove = __devexit_p(mpc5xxx_can_remove),
+	.remove = mpc5xxx_can_remove,
 	.match_table = mpc5xxx_can_table,
 };
 #endif

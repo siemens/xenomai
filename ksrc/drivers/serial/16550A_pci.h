@@ -212,8 +212,8 @@ DEFINE_PCI_DEVICE_TABLE( rt_16550_pci_table ) = {
 	{ }
 };
 
-static int __devinit rt_16550_pci_probe( struct pci_dev *pdev,
-					 const struct pci_device_id *ent )
+static int rt_16550_pci_probe(struct pci_dev *pdev,
+			      const struct pci_device_id *ent)
 {
 	struct rt_16550_pci_board *board;
 	int err;
@@ -253,7 +253,7 @@ static int __devinit rt_16550_pci_probe( struct pci_dev *pdev,
 	return 0;
 }
 
-static void __devexit rt_16550_pci_remove( struct pci_dev *pdev ) {
+static void rt_16550_pci_remove(struct pci_dev *pdev) {
 	pci_disable_device( pdev );
 };
 
@@ -261,7 +261,7 @@ static struct pci_driver rt_16550_pci_driver = {
 	.name     = RT_16550_DRIVER_NAME,
 	.id_table = rt_16550_pci_table,
 	.probe    = rt_16550_pci_probe,
-	.remove   = __devexit_p(rt_16550_pci_remove)
+	.remove   = rt_16550_pci_remove
 };
 
 static int pci_registered;

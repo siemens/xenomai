@@ -252,8 +252,8 @@ failure:
 	return err;
 }
 
-static int __devinit ems_pci_init_one (struct pci_dev *pdev,
-				       const struct pci_device_id *ent)
+static int ems_pci_init_one(struct pci_dev *pdev,
+			    const struct pci_device_id *ent)
 {
 	struct rtcan_device *master_dev = NULL;
 	int err;
@@ -291,7 +291,7 @@ failure:
 
 }
 
-static void __devexit ems_pci_remove_one (struct pci_dev *pdev)
+static void ems_pci_remove_one(struct pci_dev *pdev)
 {
 	struct rtcan_device *dev = pci_get_drvdata(pdev);
 	struct rtcan_ems_pci *board = (struct rtcan_ems_pci *)dev->board_priv;
@@ -312,7 +312,7 @@ static struct pci_driver rtcan_ems_pci_driver = {
 	.name		= RTCAN_DRV_NAME,
 	.id_table	= ems_pci_tbl,
 	.probe		= ems_pci_init_one,
-	.remove		= __devexit_p(ems_pci_remove_one),
+	.remove		= ems_pci_remove_one,
 };
 
 static int __init rtcan_ems_pci_init(void)

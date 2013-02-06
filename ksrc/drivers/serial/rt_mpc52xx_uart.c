@@ -236,7 +236,7 @@ static struct of_device_id mpc5200_gpio_ids[] = {
 	{}
 };
 
-static void __devinit rt_mpc52xx_uart_init_hw(struct rt_mpc52xx_uart_port *port)
+static void rt_mpc52xx_uart_init_hw(struct rt_mpc52xx_uart_port *port)
 {
 	struct mpc52xx_gpio __iomem *gpio;
 	struct device_node *gpio_np;
@@ -1242,7 +1242,7 @@ static ssize_t rt_mpc52xx_uart_write(struct rtdm_dev_context *context,
 	return ret;
 }
 
-static const struct rtdm_device __devinitdata device_tmpl = {
+static const struct rtdm_device device_tmpl = {
 	.struct_version		= RTDM_DEVICE_STRUCT_VER,
 
 	.device_flags		= RTDM_NAMED_DEVICE | RTDM_EXCLUSIVE,
@@ -1273,10 +1273,10 @@ static const struct rtdm_device __devinitdata device_tmpl = {
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,0,0)
 
-static int __devinit rt_mpc52xx_uart_of_probe(struct platform_device *op)
+static int rt_mpc52xx_uart_of_probe(struct platform_device *op)
 #else
-static int __devinit rt_mpc52xx_uart_of_probe(struct platform_device *op,
-					      const struct of_device_id *match)
+static int rt_mpc52xx_uart_of_probe(struct platform_device *op,
+				    const struct of_device_id *match)
 #endif
 {
 	struct rt_mpc52xx_uart_port *port;
@@ -1385,7 +1385,7 @@ out_kfree_port:
 	return ret;
 }
 
-static int __devinit rt_mpc52xx_uart_of_remove(struct platform_device *op)
+static int rt_mpc52xx_uart_of_remove(struct platform_device *op)
 {
 	struct rtdm_device *dev = dev_get_drvdata(&op->dev);
 	struct rt_mpc52xx_uart_port *port = dev->device_data;
@@ -1413,7 +1413,7 @@ MODULE_DEVICE_TABLE(of, rt_mpc52xx_uart_of_match);
 
 static struct of_platform_driver rt_mpc52xx_uart_of_driver = {
 	.probe = rt_mpc52xx_uart_of_probe,
-	.remove	=  __devexit_p(rt_mpc52xx_uart_of_remove),
+	.remove	=  rt_mpc52xx_uart_of_remove,
 	.driver = {
 		.name = "rt-mpc52xx-psc-uart",
 		.owner = THIS_MODULE,
