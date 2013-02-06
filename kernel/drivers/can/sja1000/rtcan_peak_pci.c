@@ -265,8 +265,8 @@ static int rtcan_peak_pci_add_chan(struct pci_dev *pdev, int channel,
     return ret;
 }
 
-static int __devinit peak_pci_init_one (struct pci_dev *pdev,
-					const struct pci_device_id *ent)
+static int peak_pci_init_one(struct pci_dev *pdev,
+			     const struct pci_device_id *ent)
 {
     int ret;
     u16 sub_sys_id;
@@ -318,7 +318,7 @@ static int __devinit peak_pci_init_one (struct pci_dev *pdev,
 
 }
 
-static void __devexit peak_pci_remove_one (struct pci_dev *pdev)
+static void peak_pci_remove_one(struct pci_dev *pdev)
 {
     struct rtcan_device *dev = pci_get_drvdata(pdev);
     struct rtcan_peak_pci *board = (struct rtcan_peak_pci *)dev->board_priv;
@@ -336,7 +336,7 @@ static struct pci_driver rtcan_peak_pci_driver = {
 	.name		= RTCAN_DRV_NAME,
 	.id_table	= peak_pci_tbl,
 	.probe		= peak_pci_init_one,
-	.remove		= __devexit_p(peak_pci_remove_one),
+	.remove		= peak_pci_remove_one,
 };
 
 static int __init rtcan_peak_pci_init(void)

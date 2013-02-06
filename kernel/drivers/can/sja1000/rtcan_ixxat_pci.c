@@ -204,8 +204,8 @@ static int rtcan_ixxat_pci_add_chan(struct pci_dev *pdev,
     return ret;
 }
 
-static int __devinit ixxat_pci_init_one (struct pci_dev *pdev,
-					 const struct pci_device_id *ent)
+static int ixxat_pci_init_one(struct pci_dev *pdev,
+			      const struct pci_device_id *ent)
 {
     int ret, channel, conf_addr;
     unsigned long addr;
@@ -273,7 +273,7 @@ failure:
     return ret;
 }
 
-static void __devexit ixxat_pci_remove_one (struct pci_dev *pdev)
+static void ixxat_pci_remove_one(struct pci_dev *pdev)
 {
     struct rtcan_device *dev = pci_get_drvdata(pdev);
     struct rtcan_ixxat_pci *board = (struct rtcan_ixxat_pci *)dev->board_priv;
@@ -291,7 +291,7 @@ static struct pci_driver rtcan_ixxat_pci_driver = {
 	.name = RTCAN_DRV_NAME,
 	.id_table = ixxat_pci_tbl,
 	.probe = ixxat_pci_init_one,
-	.remove = __devexit_p(ixxat_pci_remove_one),
+	.remove = ixxat_pci_remove_one,
 };
 
 static int __init rtcan_ixxat_pci_init(void)

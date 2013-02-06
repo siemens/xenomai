@@ -92,7 +92,7 @@
 #define PCIMIO_IRQ_POLARITY 1
 
 /* The following two tables must be in the same order */
-static struct pci_device_id ni_pci_table[] __devinitdata = {
+static struct pci_device_id ni_pci_table[] __maybe_unused = {
 	{ PCI_VENDOR_ID_NATINST, 0x0162, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
 	{ PCI_VENDOR_ID_NATINST, 0x1170, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
 	{ PCI_VENDOR_ID_NATINST, 0x1180, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },

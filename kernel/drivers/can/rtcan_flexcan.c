@@ -906,7 +906,7 @@ int flexcan_set_mode(struct rtcan_device *dev, can_mode_t mode,
 	return err;
 }
 
-static int __devinit register_flexcandev(struct rtcan_device *dev)
+static int register_flexcandev(struct rtcan_device *dev)
 {
 	struct flexcan_priv *priv = rtcan_priv(dev);
 	struct flexcan_regs __iomem *regs = priv->base;
@@ -955,13 +955,13 @@ out_chip_disable:
 	return err;
 }
 
-static void __devexit unregister_flexcandev(struct rtcan_device *dev)
+static void unregister_flexcandev(struct rtcan_device *dev)
 {
 	flexcan_mode_stop(dev, NULL);
 	rtcan_dev_unregister(dev);
 }
 
-static int __devinit flexcan_probe(struct platform_device *pdev)
+static int flexcan_probe(struct platform_device *pdev)
 {
 	struct rtcan_device *dev;
 	struct flexcan_priv *priv;
@@ -1071,7 +1071,7 @@ out_clock:
 	return err;
 }
 
-static int __devexit flexcan_remove(struct platform_device *pdev)
+static int flexcan_remove(struct platform_device *pdev)
 {
 	struct rtcan_device *dev = platform_get_drvdata(pdev);
 	struct flexcan_priv *priv = rtcan_priv(dev);
@@ -1107,7 +1107,7 @@ static struct platform_driver flexcan_driver = {
 		.of_match_table = flexcan_of_match,
 	},
 	.probe = flexcan_probe,
-	.remove = __devexit_p(flexcan_remove),
+	.remove = flexcan_remove,
 };
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,1,0)

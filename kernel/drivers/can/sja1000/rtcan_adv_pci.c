@@ -236,8 +236,8 @@ failure:
 	return ret;
 }
 
-static int __devinit adv_pci_init_one(struct pci_dev *pdev,
-				      const struct pci_device_id *ent)
+static int adv_pci_init_one(struct pci_dev *pdev,
+			    const struct pci_device_id *ent)
 {
 	int ret, channel;
 	unsigned int nb_ports = 0;
@@ -332,7 +332,7 @@ failure:
 	return ret;
 }
 
-static void __devexit adv_pci_remove_one(struct pci_dev *pdev)
+static void adv_pci_remove_one(struct pci_dev *pdev)
 {
 	struct rtcan_device *dev = pci_get_drvdata(pdev);
 	struct rtcan_adv_pci *board = (struct rtcan_adv_pci *)dev->board_priv;
@@ -351,7 +351,7 @@ static struct pci_driver rtcan_adv_pci_driver = {
 	.name = RTCAN_DRV_NAME,
 	.id_table = adv_pci_tbl,
 	.probe = adv_pci_init_one,
-	.remove = __devexit_p(adv_pci_remove_one),
+	.remove = adv_pci_remove_one,
 };
 
 static int __init rtcan_adv_pci_init(void)

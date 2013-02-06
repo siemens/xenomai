@@ -216,8 +216,8 @@ failure:
 	return ret;
 }
 
-static int __devinit esd_pci_init_one(struct pci_dev *pdev,
-				      const struct pci_device_id *ent)
+static int esd_pci_init_one(struct pci_dev *pdev,
+			    const struct pci_device_id *ent)
 {
 	int ret, channel;
 	void __iomem *base_addr;
@@ -306,7 +306,7 @@ failure:
 	return ret;
 }
 
-static void __devexit esd_pci_remove_one(struct pci_dev *pdev)
+static void esd_pci_remove_one(struct pci_dev *pdev)
 {
 	struct rtcan_device *dev = pci_get_drvdata(pdev);
 	struct rtcan_esd_pci *board = (struct rtcan_esd_pci *)dev->board_priv;
@@ -337,7 +337,7 @@ static struct pci_driver rtcan_esd_pci_driver = {
 	.name = RTCAN_DRV_NAME,
 	.id_table = esd_pci_tbl,
 	.probe = esd_pci_init_one,
-	.remove = __devexit_p(esd_pci_remove_one),
+	.remove = esd_pci_remove_one,
 };
 
 static int __init rtcan_esd_pci_init(void)
