@@ -6,12 +6,12 @@ comment "or Intel cpuidle option. These options are known to cause troubles"
 comment "with Xenomai, disable them."
 endif
 
+if !IPIPE_CORE
 comment "NOTE: Xenomai conflicts with PC speaker support."
 	depends on !X86_TSC && X86 && INPUT_PCSPKR
 comment "(menu Device Drivers/Input device support/Miscellaneous devices)"
 	depends on !X86_TSC && X86 && INPUT_PCSPKR
 
-if !IPIPE_CORE
 comment "NOTE: Xenomai needs either X86_LOCAL_APIC enabled or HPET_TIMER disabled."
 	depends on (!X86_LOCAL_APIC || !X86_TSC) && X86 && HPET_TIMER
 comment "(menu Processor type and features)"
@@ -19,7 +19,6 @@ comment "(menu Processor type and features)"
 endif
 
 config XENOMAI
-	depends on ((X86_TSC || !X86 || !INPUT_PCSPKR) && (IPIPE_CORE || !HPET_TIMER || !X86 || (X86_LOCAL_APIC && X86_TSC)))
 	bool "Xenomai"
 	default y
 	select IPIPE

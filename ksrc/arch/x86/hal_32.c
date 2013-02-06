@@ -280,6 +280,15 @@ void rthal_timer_release(int cpu)
 
 #if !defined(CONFIG_X86_TSC) && IPIPE_CORE_APIREV < 2
 
+#if defined(CONFIG_INPUT_PCSPKR) || defined(CONFIG_INPUT_PCSPKR_MODULE)
+#error Disable PC Speaker (CONFIG_INPUT_PCSPKR) in your configuration
+#endif
+
+#if defined(HPET_TIMER) && !(X86_LOCAL_APIC && X86_TSC)
+#error Disable HPET (CONFIG_HPET_TIMER) or enable LAPIC \
+       (CONFIG_X86_LOCAL_APIC) in your configuration
+#endif
+
 static rthal_time_t rthal_tsc_8254;
 
 static int rthal_last_8254_counter2;
