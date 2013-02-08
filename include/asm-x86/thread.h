@@ -34,8 +34,6 @@ struct xnarchtcb {
 	unsigned long *ipp;
 	x86_fpustate *fpup;
 	unsigned int is_root: 1;
-	unsigned int ts_usedfpu: 1;
-	unsigned int cr0_ts: 1;
 	struct {
 		unsigned long ip;
 		unsigned long ax;

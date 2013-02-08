@@ -88,21 +88,11 @@ void xnarch_leave_root(struct xnarchtcb *rootcb)
 {
 	struct task_struct *p = current;
 
-	rootcb->ts_usedfpu = wrap_test_fpu_used(p) != 0;
-	rootcb->cr0_ts = (read_cr0() & 8) != 0;
 #ifdef CONFIG_X86_64
 	rootcb->spp = &p->thread.sp;
 	rootcb->ipp = &p->thread.rip;
 #endif
-	/* So that xnarch_save_fpu() will operate on the right FPU area. */
-	if (rootcb->cr0_ts || rootcb->ts_usedfpu)
-		rootcb->fpup = x86_fpustate_ptr(&p->thread);
-	else
-		/*
-		 * The kernel is currently using fpu in kernel-space,
-		 * do not clobber the user-space fpu backup area.
-		 */
-		rootcb->fpup = &rootcb->i387;
+	rootcb->fpup = x86_fpustate_ptr(&p->thread);
 }
 
 void xnarch_switch_to(struct xnarchtcb *out_tcb, struct xnarchtcb *in_tcb)
@@ -253,98 +243,32 @@ int xnarch_handle_fpu_fault(struct xnarchtcb *tcb)
 
 void xnarch_save_fpu(struct xnarchtcb *tcb)
 {
-	struct task_struct *p = tcb->core.host_task;
-
-	if (tcb->is_root == 0) {
-		/* fpu not used or already saved by __switch_to. */
-		if (wrap_test_fpu_used(p) == 0)
-			return;
-
-		/*
-		 * Tell Linux that we already saved the state of the
-		 * FPU hardware of this task.
-		 */
-		wrap_clear_fpu_used(p);
-	} else {
-		if (tcb->cr0_ts ||
-		    (tcb->ts_usedfpu && wrap_test_fpu_used(p) == 0))
-			return;
-
-		wrap_clear_fpu_used(p);
-	}
-
-	clts();
-
-	__do_save_i387(tcb->fpup);
+	/* Already saved by __switch_to */
 }
 
 void xnarch_restore_fpu(struct xnarchtcb *tcb)
 {
 	struct task_struct *p = tcb->core.host_task;
 
-	if (tcb->is_root == 0) {
-		if (tsk_used_math(p) == 0) {
-			stts();
-			return;	/* Uninit fpu area -- do not restore. */
-		}
-
-		/*
-		 * Tell Linux that this task has altered the state of
-		 * the FPU hardware.
-		 */
-		wrap_set_fpu_used(p);
-	} else {
-		/*
-		 * Restore state of FPU only if TS bit in cr0 was
-		 * clear.
-		 */
-		if (tcb->cr0_ts) {
-			wrap_clear_fpu_used(p);
-			stts();
-			return;
-		}
-
-		if (tcb->ts_usedfpu && !wrap_test_fpu_used(p)) {
-			/*
-			 * __switch_to saved the fpu context, no need
-			 * to restore it since we are switching to
-			 * root, where fpu can be in lazy state.
-			 */
-			stts();
-			return;
-		}
+	if (tcb->is_root || tsk_used_math(p) == 0) {
+		/* Restore lazy mode */
+		return;
 	}
+	
 
 	/*
 	 * Restore the FPU hardware with valid fp registers from a
-	 * user-space or kernel thread.
+	 * RT user-space or kernel thread.
 	 */
 	clts();
 
 	__do_restore_i387(tcb->fpup);
+	wrap_set_fpu_used(p);
 }
 
 void xnarch_enable_fpu(struct xnarchtcb *tcb)
 {
-	struct task_struct *p = tcb->core.host_task;
-
-	if (tcb->is_root == 0) {
-		if (tsk_used_math(p) == 0)
-			return;
-		/*
-		 * We used to test here if __switch_to had not saved
-		 * current fpu state, but this can not happen, since
-		 * xnarch_enable_fpu may only be called when switching
-		 * back to a user-space task after one or several
-		 * switches to non-fpu kernel-space real-time tasks,
-		 * so xnarch_switch_to never uses __switch_to.
-		 */
-	} else if (tcb->cr0_ts)
-		return;
-
-	/* The comment in the non-root case applies here too. */
-
-	clts();
+	xnarch_restore_fpu(tcb);
 }
 
 #endif /* CONFIG_XENO_HW_FPU */
@@ -354,8 +278,8 @@ void xnarch_init_root_tcb(struct xnarchtcb *tcb)
 	tcb->sp = 0;
 	tcb->spp = &tcb->sp;
 	tcb->ipp = &tcb->ip;
-	tcb->fpup = NULL;
 	tcb->is_root = 1;
+	tcb->fpup = NULL;
 }
 
 void xnarch_init_shadow_tcb(struct xnarchtcb *tcb)
