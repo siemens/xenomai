@@ -14,26 +14,5 @@ corresponding kernel release. You may want to have a look at the
 README.*INSTALL guides at the top of the Xenomai tree for more
 information.
 
-This directory only contains the most recent patches; you may find the
-complete collection of I-pipe patches at the following locations (see
-note):
-
-* all existing I-pipe patches for the SH architecture:
-http://download.gna.org/adeos/patches/v2.6/sh/
-
-NOTE: not all older patches are guaranteed to work with the current
-Xenomai release.  However, there is a good chance most of them do,
-since we try hard to maintain backward compatibility.  For the SH4
-(SuperH 32bit) architecture, I-pipe patches are currently based on
-STMicroelectronics 'STLinux' kernel releases [1].
-
-Tested boards:
-
-- STMicro MB442
-
-Patch			        Based on
-------------------------------------------------------------------------
-
-2.6.32.10			STLinux-2.4
-
-[1] ftp://ftp.stlinux.com/pub/stlinux/
+Xenomai 3.x requires the latest IPIPE core series (API revision >= 2).
+SH is NOT yet supported over the Xenomai 3.x architecture.
