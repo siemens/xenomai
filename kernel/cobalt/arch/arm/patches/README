@@ -14,50 +14,10 @@ corresponding kernel release. You may want to have a look at the
 README.*INSTALL guides at the top of the Xenomai tree for more
 information.
 
-This directory only contains the most recent patches; you may find the
-complete collection of I-pipe patches at the following locations (see
-note):
-
-* all existing I-pipe patches for the ARM architecture:
-http://download.gna.org/adeos/patches/v2.6/arm/
+This directory only contains the most recent patches for ARM
+platforms; you may find the complete collection of I-pipe patches at
+the following locations (see note):
 http://download.gna.org/adeos/patches/v3.x/arm/
 
-NOTE: not all older patches are guaranteed to work with the current
-Xenomai release.  However, there is a good chance most of them do,
-since we try hard to maintain backward compatibility. Also note that
-by default, all patches apply to the mainline kernel, we do not try
-and be compatible with all the ARM vendor-specific kernel branches
-around. If a patch applies to a vendor-specific branch, it will be
-stated clearly in this file.
-
--- supported boards
-
-o ARM Integrator/CP ARM 1136
-o Atmel AT91 (AT91RM9200, AT91SAM926x, AT91SAM9RL, AT91SAM9G20) with or without
-the AT91 patch.
-o Freescale MXC family (IMX1, IMX21, IMX27, IMX31, IMX51i, IMX3 - see below -)
-  for use with linux-2.6-imx branch.
-o Intel IXP4XX based
-o Intel PXA based
-o Intel SA1100-based
-o Samsung S3C2410
-o STMicroelectronics SPEAr600
-o Texas Instrument OMAP3 and OMAP4
-
-
--- SOC specific instructions
-
----- MXC (tested on iMX51, iMX53, iMX6Q)
-
-1- Checkout the "rel_imx_3.0.15_12.03.00" tag in the Freescale IMX git [1],
-   or in the Denx git tree [2];
-2- apply mxc/adeos-ipipe-3.0.36-mxc-1.18-11-pre.patch;
-3- apply adeos-ipipe-3.0.36-arm-1.18-11.patch
-3- apply mxc/adeos-ipipe-3.0.36-mxc-1.18-11-post.patch;
-4- you can resume to generic installation instructions.
-
-
--- External links
-
-[1] http://opensource.freescale.com/pub/scm/imx/linux-2.6-imx.git
-[2] git://git.denx.de/linux-denx.git
+NOTE:
+Xenomai 3.x requires the latest IPIPE core series (API revision >= 2).
