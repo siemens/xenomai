@@ -14,14 +14,10 @@ corresponding kernel release. You may want to have a look at the
 README.*INSTALL guides at the top of the Xenomai tree for more
 information.
 
-This directory only contains the most recent patches; you may find the
-complete collection of I-pipe patches at the following locations (see
-note):
-
-* all existing I-pipe patches for the x86 architecture (32+64bit):
-http://download.gna.org/adeos/patches/v2.6/x86/
+This directory only contains the most recent patches for x86 32/64bit
+platforms; you may find the complete collection of I-pipe patches at
+the following locations (see note):
 http://download.gna.org/adeos/patches/v3.x/x86/
 
-NOTE: not all older patches are guaranteed to work with the current
-Xenomai release.  However, there is a good chance most of them do,
-since we try hard to maintain backward compatibility.
+NOTE:
+Xenomai 3.x requires the latest IPIPE core series (API revision >= 2).
