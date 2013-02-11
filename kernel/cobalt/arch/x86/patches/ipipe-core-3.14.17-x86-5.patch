@@ -51,6 +51,106 @@ index c718d9f..a48da09 100644
  config X86_UP_APIC
  	bool "Local APIC support on uniprocessors"
  	depends on X86_32 && !SMP && !X86_32_NON_STANDARD && !PCI_MSI
+diff --git a/arch/x86/ia32/ia32entry.S b/arch/x86/ia32/ia32entry.S
+index 4299eb0..f55a4f0 100644
+--- a/arch/x86/ia32/ia32entry.S
++++ b/arch/x86/ia32/ia32entry.S
+@@ -83,6 +83,43 @@
+ 	CFI_UNDEFINED	r15
+ 	.endm
+ 
++	.macro IPIPE_IA32_SYSCALL nr fast_exit post_exit
++#ifdef CONFIG_IPIPE
++	testl $_TIP_NOTIFY,TI_ipipe+THREAD_INFO(%rsp,RIP-ARGOFFSET)
++	jnz 1f
++	cmpq $(IA32_NR_syscalls),\nr
++	jb 2f
++1:
++	pushq_cfi \nr
++	movl %edi,%r8d
++	movl %esi,%r10d
++	movl %edx,%edx	/* zero extension */
++	movl %ecx,%esi
++	movl %ebx,%edi
++	SAVE_ARGS 0,1,1
++	leaq -ARGOFFSET(%rsp),%rdi
++	call __ipipe_notify_syscall
++	movq %rax,%rdi
++	movq RAX-ARGOFFSET(%rsp),%rax
++	addq $ARG_SKIP+8, %rsp
++	movq %rax,RAX-ARGOFFSET(%rsp)
++	testl $_TIP_HEAD,TI_ipipe+THREAD_INFO(%rsp,RIP-ARGOFFSET)
++	jnz \fast_exit
++	test %rdi,%rdi
++	jnz \post_exit
++	movq ORIG_RAX-ARGOFFSET(%rsp),%rax
++	movq RCX-ARGOFFSET(%rsp),%rcx
++	movq RDI-ARGOFFSET(%rsp),%rdi
++	movq RSI-ARGOFFSET(%rsp),%rsi
++	movq RDX-ARGOFFSET(%rsp),%rdx
++	movq R10-ARGOFFSET(%rsp),%r10
++	movq R9-ARGOFFSET(%rsp),%r9
++	movq R8-ARGOFFSET(%rsp),%r8
++2:
++	/* Keep going with regular syscall */
++#endif
++	.endm
++
+ #ifdef CONFIG_PARAVIRT
+ ENTRY(native_usergs_sysret32)
+ 	swapgs
+@@ -152,6 +189,7 @@ ENTRY(ia32_sysenter_target)
+ 	_ASM_EXTABLE(1b,ia32_badarg)
+ 	ASM_CLAC
+ 	orl     $TS_COMPAT,TI_status+THREAD_INFO(%rsp,RIP-ARGOFFSET)
++	IPIPE_IA32_SYSCALL %rax sysexit_from_sys_call sysexit_work
+ 	testl   $_TIF_WORK_SYSCALL_ENTRY,TI_flags+THREAD_INFO(%rsp,RIP-ARGOFFSET)
+ 	CFI_REMEMBER_STATE
+ 	jnz  sysenter_tracesys
+@@ -162,6 +200,7 @@ sysenter_do_call:
+ sysenter_dispatch:
+ 	call	*ia32_sys_call_table(,%rax,8)
+ 	movq	%rax,RAX-ARGOFFSET(%rsp)
++sysexit_work:
+ 	DISABLE_INTERRUPTS(CLBR_NONE)
+ 	TRACE_IRQS_OFF
+ 	testl	$_TIF_ALLWORK_MASK,TI_flags+THREAD_INFO(%rsp,RIP-ARGOFFSET)
+@@ -309,6 +348,7 @@ ENTRY(ia32_cstar_target)
+ 	_ASM_EXTABLE(1b,ia32_badarg)
+ 	ASM_CLAC
+ 	orl     $TS_COMPAT,TI_status+THREAD_INFO(%rsp,RIP-ARGOFFSET)
++	IPIPE_IA32_SYSCALL %rax sysretl_from_sys_call cstar_work
+ 	testl   $_TIF_WORK_SYSCALL_ENTRY,TI_flags+THREAD_INFO(%rsp,RIP-ARGOFFSET)
+ 	CFI_REMEMBER_STATE
+ 	jnz   cstar_tracesys
+@@ -319,6 +359,7 @@ cstar_do_call:
+ cstar_dispatch:
+ 	call *ia32_sys_call_table(,%rax,8)
+ 	movq %rax,RAX-ARGOFFSET(%rsp)
++cstar_work:
+ 	DISABLE_INTERRUPTS(CLBR_NONE)
+ 	TRACE_IRQS_OFF
+ 	testl $_TIF_ALLWORK_MASK,TI_flags+THREAD_INFO(%rsp,RIP-ARGOFFSET)
+@@ -419,6 +460,7 @@ ENTRY(ia32_syscall)
+ 	   this could be a problem. */
+ 	SAVE_ARGS 0,1,0
+ 	orl $TS_COMPAT,TI_status+THREAD_INFO(%rsp,RIP-ARGOFFSET)
++	IPIPE_IA32_SYSCALL %rax fast_exit_syscall ia32_ret_from_sys_call
+ 	testl $_TIF_WORK_SYSCALL_ENTRY,TI_flags+THREAD_INFO(%rsp,RIP-ARGOFFSET)
+ 	jnz ia32_tracesys
+ 	cmpq $(IA32_NR_syscalls-1),%rax
+@@ -430,7 +472,10 @@ ia32_sysret:
+ 	movq %rax,RAX-ARGOFFSET(%rsp)
+ ia32_ret_from_sys_call:
+ 	CLEAR_RREGS -ARGOFFSET
+-	jmp int_ret_from_sys_call 
++	jmp int_ret_from_sys_call
++fast_exit_syscall:
++	CLEAR_RREGS -ARGOFFSET
++	jmp int_fast_exit
+ 
+ ia32_tracesys:			 
+ 	SAVE_REST
 diff --git a/arch/x86/include/asm/apic.h b/arch/x86/include/asm/apic.h
 index 1d2091a..7a88574 100644
 --- a/arch/x86/include/asm/apic.h
@@ -168,10 +268,44 @@ index 50d033a..f87cb28 100644
  static inline bool is_debug_idt_enabled(void)
  {
 diff --git a/arch/x86/include/asm/fpu-internal.h b/arch/x86/include/asm/fpu-internal.h
-index cea1c76..08199ca 100644
+index cea1c76..50c8311 100644
 --- a/arch/x86/include/asm/fpu-internal.h
 +++ b/arch/x86/include/asm/fpu-internal.h
-@@ -424,8 +424,12 @@ static inline fpu_switch_t switch_fpu_prepare(struct task_struct *old, struct ta
+@@ -353,23 +353,31 @@ static inline void __drop_fpu(struct task_struct *tsk)
+ {
+ 	if (__thread_has_fpu(tsk)) {
+ 		/* Ignore delayed exceptions from user space */
++#ifdef CONFIG_IPIPE
++		asm volatile("sti\n"
++			     "1: fwait\n"
++			     "2: cli\n"
++			     _ASM_EXTABLE(1b, 2b));
++#else
+ 		asm volatile("1: fwait\n"
+ 			     "2:\n"
+ 			     _ASM_EXTABLE(1b, 2b));
++#endif
+ 		__thread_fpu_end(tsk);
+ 	}
+ }
+ 
+ static inline void drop_fpu(struct task_struct *tsk)
+ {
++	unsigned long flags;
+ 	/*
+ 	 * Forget coprocessor state..
+ 	 */
+-	preempt_disable();
++	flags = hard_preempt_disable();
+ 	tsk->thread.fpu_counter = 0;
+ 	__drop_fpu(tsk);
+ 	clear_used_math();
+-	preempt_enable();
++	hard_preempt_enable(flags);
+ }
+ 
+ static inline void drop_init_fpu(struct task_struct *tsk)
+@@ -424,8 +432,12 @@ static inline fpu_switch_t switch_fpu_prepare(struct task_struct *old, struct ta
  	 * If the task has used the math, pre-load the FPU on xsave processors
  	 * or if the past 5 consecutive context-switches used math.
  	 */
@@ -184,7 +318,7 @@ index cea1c76..08199ca 100644
  	if (__thread_has_fpu(old)) {
  		if (!__save_init_fpu(old))
  			cpu = ~0;
-@@ -433,15 +437,18 @@ static inline fpu_switch_t switch_fpu_prepare(struct task_struct *old, struct ta
+@@ -433,15 +445,18 @@ static inline fpu_switch_t switch_fpu_prepare(struct task_struct *old, struct ta
  		old->thread.fpu.has_fpu = 0;	/* But leave fpu_owner_task! */
  
  		/* Don't change CR0.TS if we just switch! */
@@ -203,7 +337,7 @@ index cea1c76..08199ca 100644
  		if (fpu.preload) {
  			new->thread.fpu_counter++;
  			if (!use_eager_fpu() && fpu_lazy_restore(new, cpu))
-@@ -450,6 +457,7 @@ static inline fpu_switch_t switch_fpu_prepare(struct task_struct *old, struct ta
+@@ -450,6 +465,7 @@ static inline fpu_switch_t switch_fpu_prepare(struct task_struct *old, struct ta
  				prefetch(new->thread.fpu.state);
  			__thread_fpu_begin(new);
  		}
@@ -211,7 +345,7 @@ index cea1c76..08199ca 100644
  	}
  	return fpu;
  }
-@@ -462,10 +470,12 @@ static inline fpu_switch_t switch_fpu_prepare(struct task_struct *old, struct ta
+@@ -462,10 +478,12 @@ static inline fpu_switch_t switch_fpu_prepare(struct task_struct *old, struct ta
   */
  static inline void switch_fpu_finish(struct task_struct *new, fpu_switch_t fpu)
  {
@@ -308,7 +442,7 @@ index 615fa90..e0a62ab 100644
  extern void default_send_IPI_mask_sequence_phys(const struct cpumask *mask,
 diff --git a/arch/x86/include/asm/ipipe.h b/arch/x86/include/asm/ipipe.h
 new file mode 100644
-index 0000000..e2572fd
+index 0000000..459297f
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe.h
 @@ -0,0 +1,96 @@
@@ -338,7 +472,7 @@ index 0000000..e2572fd
 +
 +#ifdef CONFIG_IPIPE
 +
-+#define IPIPE_CORE_RELEASE	4
++#define IPIPE_CORE_RELEASE	5
 +
 +struct ipipe_domain;
 +
@@ -2765,7 +2899,7 @@ index c5a9cb9..1a8704f 100644
  	CFI_ENDPROC
  END(general_protection)
 diff --git a/arch/x86/kernel/entry_64.S b/arch/x86/kernel/entry_64.S
-index 03cd2a8..05330e5 100644
+index 03cd2a8..728146f 100644
 --- a/arch/x86/kernel/entry_64.S
 +++ b/arch/x86/kernel/entry_64.S
 @@ -50,6 +50,7 @@
@@ -2938,7 +3072,23 @@ index 03cd2a8..05330e5 100644
  	/* Handle a signal */
  sysret_signal:
  	TRACE_IRQS_ON
-@@ -973,7 +1053,31 @@ END(interrupt)
+@@ -765,9 +845,15 @@ GLOBAL(int_with_check)
+ 	movl TI_flags(%rcx),%edx
+ 	andl %edi,%edx
+ 	jnz   int_careful
++int_retint:
+ 	andl    $~TS_COMPAT,TI_status(%rcx)
+ 	jmp   retint_swapgs
+ 
++GLOBAL(int_fast_exit)
++	DISABLE_INTERRUPTS(CLBR_NONE)
++	GET_THREAD_INFO(%rcx)
++	jmp int_retint
++
+ 	/* Either reschedule or signal or syscall exit tracking needed. */
+ 	/* First do a reschedule test. */
+ 	/* edx:	work, edi: workmask */
+@@ -973,7 +1059,31 @@ END(interrupt)
  	subq $ORIG_RAX-RBP, %rsp
  	CFI_ADJUST_CFA_OFFSET ORIG_RAX-RBP
  	SAVE_ARGS_IRQ
@@ -2970,7 +3120,7 @@ index 03cd2a8..05330e5 100644
  	.endm
  
  /*
-@@ -986,10 +1090,27 @@ END(interrupt)
+@@ -986,10 +1096,27 @@ END(interrupt)
  	 */
  	.p2align CONFIG_X86_L1_CACHE_SHIFT
  common_interrupt:
@@ -2998,7 +3148,7 @@ index 03cd2a8..05330e5 100644
  	/* 0(%rsp): old_rsp-ARGOFFSET */
  ret_from_intr:
  	DISABLE_INTERRUPTS(CLBR_NONE)
-@@ -1003,7 +1124,7 @@ ret_from_intr:
+@@ -1003,7 +1130,7 @@ ret_from_intr:
  	CFI_DEF_CFA_REGISTER	rsp
  	CFI_ADJUST_CFA_OFFSET	RBP-ARGOFFSET
  
@@ -3007,7 +3157,7 @@ index 03cd2a8..05330e5 100644
  	GET_THREAD_INFO(%rcx)
  	testl $3,CS-ARGOFFSET(%rsp)
  	je retint_kernel
-@@ -1023,20 +1144,20 @@ retint_check:
+@@ -1023,20 +1150,20 @@ retint_check:
  	jnz  retint_careful
  
  retint_swapgs:		/* return to user-space */
@@ -3032,7 +3182,7 @@ index 03cd2a8..05330e5 100644
  restore_args:
  	RESTORE_ARGS 1,8,1
  
-@@ -1141,7 +1262,15 @@ ENTRY(retint_kernel)
+@@ -1141,7 +1268,15 @@ ENTRY(retint_kernel)
  	jnz  retint_restore_args
  	bt   $9,EFLAGS-ARGOFFSET(%rsp)	/* interrupts off? */
  	jnc  retint_restore_args
@@ -3049,7 +3199,7 @@ index 03cd2a8..05330e5 100644
  	jmp exit_intr
  #endif
  	CFI_ENDPROC
-@@ -1186,6 +1315,31 @@ END(__do_double_fault)
+@@ -1186,6 +1321,31 @@ END(__do_double_fault)
  /*
   * APIC interrupts.
   */
@@ -3081,7 +3231,7 @@ index 03cd2a8..05330e5 100644
  .macro apicinterrupt3 num sym do_sym
  ENTRY(\sym)
  	INTR_FRAME
-@@ -1197,6 +1351,7 @@ ENTRY(\sym)
+@@ -1197,6 +1357,7 @@ ENTRY(\sym)
  	CFI_ENDPROC
  END(\sym)
  .endm
@@ -3089,7 +3239,7 @@ index 03cd2a8..05330e5 100644
  
  #ifdef CONFIG_TRACING
  #define trace(sym) trace_##sym
-@@ -1253,6 +1408,14 @@ apicinterrupt CALL_FUNCTION_VECTOR \
+@@ -1253,6 +1414,14 @@ apicinterrupt CALL_FUNCTION_VECTOR \
  	call_function_interrupt smp_call_function_interrupt
  apicinterrupt RESCHEDULE_VECTOR \
  	reschedule_interrupt smp_reschedule_interrupt
@@ -3104,7 +3254,7 @@ index 03cd2a8..05330e5 100644
  #endif
  
  apicinterrupt ERROR_APIC_VECTOR \
-@@ -1268,7 +1431,7 @@ apicinterrupt IRQ_WORK_VECTOR \
+@@ -1268,7 +1437,7 @@ apicinterrupt IRQ_WORK_VECTOR \
  /*
   * Exception entry points.
   */
@@ -3113,7 +3263,7 @@ index 03cd2a8..05330e5 100644
  ENTRY(\sym)
  	INTR_FRAME
  	ASM_CLAC
-@@ -1280,13 +1443,28 @@ ENTRY(\sym)
+@@ -1280,13 +1449,28 @@ ENTRY(\sym)
  	DEFAULT_FRAME 0
  	movq %rsp,%rdi		/* pt_regs pointer */
  	xorl %esi,%esi		/* no error code */
@@ -3143,7 +3293,7 @@ index 03cd2a8..05330e5 100644
  ENTRY(\sym)
  	INTR_FRAME
  	ASM_CLAC
-@@ -1295,10 +1473,25 @@ ENTRY(\sym)
+@@ -1295,10 +1479,25 @@ ENTRY(\sym)
  	subq $ORIG_RAX-R15, %rsp
  	CFI_ADJUST_CFA_OFFSET ORIG_RAX-R15
  	call save_paranoid
@@ -3170,7 +3320,7 @@ index 03cd2a8..05330e5 100644
  	jmp paranoid_exit	/* %ebx: no swapgs flag */
  	CFI_ENDPROC
  END(\sym)
-@@ -1314,8 +1507,8 @@ ENTRY(\sym)
+@@ -1314,8 +1513,8 @@ ENTRY(\sym)
  	subq $ORIG_RAX-R15, %rsp
  	CFI_ADJUST_CFA_OFFSET ORIG_RAX-R15
  	call save_paranoid
@@ -3180,7 +3330,7 @@ index 03cd2a8..05330e5 100644
  	xorl %esi,%esi		/* no error code */
  	subq $EXCEPTION_STKSZ, INIT_TSS_IST(\ist)
  	call \do_sym
-@@ -1325,7 +1518,7 @@ ENTRY(\sym)
+@@ -1325,7 +1524,7 @@ ENTRY(\sym)
  END(\sym)
  .endm
  
@@ -3189,7 +3339,7 @@ index 03cd2a8..05330e5 100644
  ENTRY(\sym)
  	XCPT_FRAME
  	ASM_CLAC
-@@ -1337,25 +1530,40 @@ ENTRY(\sym)
+@@ -1337,25 +1536,40 @@ ENTRY(\sym)
  	movq %rsp,%rdi			/* pt_regs pointer */
  	movq ORIG_RAX(%rsp),%rsi	/* get error code */
  	movq $-1,ORIG_RAX(%rsp)		/* no syscall to restart */
@@ -3236,7 +3386,7 @@ index 03cd2a8..05330e5 100644
  ENTRY(\sym)
  	XCPT_FRAME
  	ASM_CLAC
-@@ -1364,29 +1572,44 @@ ENTRY(\sym)
+@@ -1364,29 +1578,44 @@ ENTRY(\sym)
  	CFI_ADJUST_CFA_OFFSET ORIG_RAX-R15
  	call save_paranoid
  	DEFAULT_FRAME 0
@@ -3294,7 +3444,7 @@ index 03cd2a8..05330e5 100644
  
  
  	/* Reload gs selector with exception handling */
-@@ -1422,15 +1645,19 @@ ENTRY(do_softirq_own_stack)
+@@ -1422,15 +1651,19 @@ ENTRY(do_softirq_own_stack)
  	CFI_REL_OFFSET rbp,0
  	mov  %rsp,%rbp
  	CFI_DEF_CFA_REGISTER rbp
@@ -3314,7 +3464,7 @@ index 03cd2a8..05330e5 100644
  	ret
  	CFI_ENDPROC
  END(do_softirq_own_stack)
-@@ -1547,16 +1774,21 @@ apicinterrupt3 HYPERVISOR_CALLBACK_VECTOR \
+@@ -1547,16 +1780,21 @@ apicinterrupt3 HYPERVISOR_CALLBACK_VECTOR \
   */
  	.pushsection .kprobes.text, "ax"
  
@@ -3338,7 +3488,7 @@ index 03cd2a8..05330e5 100644
  #ifdef CONFIG_KVM_GUEST
  errorentry async_page_fault do_async_page_fault
  #endif
-@@ -1582,8 +1814,13 @@ ENTRY(paranoid_exit)
+@@ -1582,8 +1820,13 @@ ENTRY(paranoid_exit)
  	DEFAULT_FRAME
  	DISABLE_INTERRUPTS(CLBR_NONE)
  	TRACE_IRQS_OFF_DEBUG
@@ -3352,7 +3502,7 @@ index 03cd2a8..05330e5 100644
  	testl $3,CS(%rsp)
  	jnz   paranoid_userspace
  paranoid_swapgs:
-@@ -1654,7 +1891,6 @@ ENTRY(error_entry)
+@@ -1654,7 +1897,6 @@ ENTRY(error_entry)
  error_swapgs:
  	SWAPGS
  error_sti:
@@ -4141,7 +4291,7 @@ index 0000000..ac71e70
 +EXPORT_PER_CPU_SYMBOL_GPL(irq_stack_union);
 +#endif
 diff --git a/arch/x86/kernel/irq.c b/arch/x86/kernel/irq.c
-index d99f31d..1b03f92 100644
+index d99f31d..e4e9508 100644
 --- a/arch/x86/kernel/irq.c
 +++ b/arch/x86/kernel/irq.c
 @@ -44,7 +44,7 @@ void ack_bad_irq(unsigned int irq)
@@ -4168,6 +4318,15 @@ index d99f31d..1b03f92 100644
  	if (!handle_irq(irq, regs)) {
  		ack_APIC_irq();
  
+@@ -295,6 +296,8 @@ int check_irq_vectors_for_cpu_disable(void)
+ 		irq = __this_cpu_read(vector_irq[vector]);
+ 		if (irq >= 0) {
+ 			desc = irq_to_desc(irq);
++			if (!desc)
++				continue;
+ 			data = irq_desc_get_irq_data(desc);
+ 			cpumask_copy(&affinity_new, data->affinity);
+ 			cpu_clear(this_cpu, affinity_new);
 diff --git a/arch/x86/kernel/irqinit.c b/arch/x86/kernel/irqinit.c
 index 7f50156..4fd14e1 100644
 --- a/arch/x86/kernel/irqinit.c
@@ -4291,7 +4450,7 @@ index a311ffc..482b42f 100644
  
  	return IS_ERR(pd) ? PTR_ERR(pd) : 0;
 diff --git a/arch/x86/kernel/process.c b/arch/x86/kernel/process.c
-index 3fb8d95..dcbf094 100644
+index 3fb8d95..5b7d190 100644
 --- a/arch/x86/kernel/process.c
 +++ b/arch/x86/kernel/process.c
 @@ -93,6 +93,10 @@ void arch_task_cache_init(void)
@@ -4305,7 +4464,25 @@ index 3fb8d95..dcbf094 100644
  }
  
  /*
-@@ -128,12 +132,14 @@ void flush_thread(void)
+@@ -107,8 +111,16 @@ void exit_thread(void)
+ 	if (bp) {
+ 		struct tss_struct *tss = &per_cpu(init_tss, get_cpu());
+ 
+-		t->io_bitmap_ptr = NULL;
++		/*
++		 * The caller may be preempted via I-pipe: to make
++		 * sure TIF_IO_BITMAP always denotes a valid I/O
++		 * bitmap when set, we clear it _before_ the I/O
++		 * bitmap pointer. No cache coherence issue ahead as
++		 * migration is currently locked (the primary domain
++		 * may never migrate either).
++		 */
+ 		clear_thread_flag(TIF_IO_BITMAP);
++		t->io_bitmap_ptr = NULL;
+ 		/*
+ 		 * Careful, clear this in the TSS too:
+ 		 */
+@@ -128,12 +140,14 @@ void flush_thread(void)
  	flush_ptrace_hw_breakpoint(tsk);
  	memset(tsk->thread.tls_array, 0, sizeof(tsk->thread.tls_array));
  	drop_init_fpu(tsk);
@@ -4320,7 +4497,7 @@ index 3fb8d95..dcbf094 100644
  }
  
  static void hard_disable_TSC(void)
-@@ -329,7 +335,7 @@ bool xen_set_default_idle(void)
+@@ -329,7 +343,7 @@ bool xen_set_default_idle(void)
  #endif
  void stop_this_cpu(void *dummy)
  {
@@ -4329,7 +4506,7 @@ index 3fb8d95..dcbf094 100644
  	/*
  	 * Remove this CPU:
  	 */
-@@ -368,6 +374,10 @@ static void amd_e400_idle(void)
+@@ -368,6 +382,10 @@ static void amd_e400_idle(void)
  			if (!boot_cpu_has(X86_FEATURE_NONSTOP_TSC))
  				mark_tsc_unstable("TSC halt in AMD C1E");
  			pr_info("System has AMD C1E enabled\n");
