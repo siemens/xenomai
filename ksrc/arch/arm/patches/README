@@ -53,11 +53,23 @@ o Texas Instrument OMAP3 and OMAP4
    or in the Denx git tree [2];
 2- apply mxc/adeos-ipipe-3.0.36-mxc-1.18-11-pre.patch;
 3- apply adeos-ipipe-3.0.36-arm-1.18-11.patch
-3- apply mxc/adeos-ipipe-3.0.36-mxc-1.18-11-post.patch;
-4- you can resume to generic installation instructions.
+4- apply mxc/adeos-ipipe-3.0.36-mxc-1.18-11-post.patch;
+5- you can resume to generic installation instructions.
+
+
+---- Beaglebone
+
+1- Checkout the "origin/linux-ti33x-psp-3.2.21-r13g+gitr720e07b4c1f687b61b147b31c698cb6816d72f01" branch in the Koen Kooi repository [3], or see [4] for an
+alternate repository,
+2- apply beaglebone/ipipe-core-3.2.21-beaglebone-pre.patch,
+3- apply ipipe-core-3.2.21-arm*.patch
+4- apply beaglebone/ipipe-core-3.2.21-beaglebone-post.patch,
+5- you can resume to generic installation instructions.
 
 
 -- External links
 
 [1] http://opensource.freescale.com/pub/scm/imx/linux-2.6-imx.git
 [2] git://git.denx.de/linux-denx.git
+[3] git://github.com/koenkooi/linux
+[4] http://www.xenomai.org/pipermail/xenomai/2013-February/027584.html

@@ -1,0 +1,286 @@
+--- a/arch/arm/mach-omap2/irq.c
++++ b/arch/arm/mach-omap2/irq.c
+@@ -15,6 +15,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/io.h>
+ #include <mach/hardware.h>
++#include <asm/exception.h>
+ #include <asm/ipipe.h>
+ #include <asm/mach/irq.h>
+ 
+@@ -37,6 +38,11 @@
+ /* Number of IRQ state bits in each MIR register */
+ #define IRQ_BITS_PER_REG	32
+ 
++#define OMAP2_IRQ_BASE		OMAP2_L4_IO_ADDRESS(OMAP24XX_IC_BASE)
++#define OMAP3_IRQ_BASE		OMAP2_L4_IO_ADDRESS(OMAP34XX_IC_BASE)
++#define INTCPS_SIR_IRQ_OFFSET	0x0040	/* omap2/3 active interrupt offset */
++#define ACTIVEIRQ_MASK		0x7f	/* omap2/3 active interrupt bits */
++
+ #if !defined(MULTI_OMAP1) && !defined(MULTI_OMAP2)
+ #define inline_single inline
+ #else
+@@ -52,10 +58,12 @@
+ static struct omap_irq_bank {
+ 	void __iomem *base_reg;
+ 	unsigned int nr_irqs;
++	unsigned int nr_regs_req;
+ } __attribute__ ((aligned(4))) irq_banks[] = {
+ 	{
+ 		/* MPU INTC */
+ 		.nr_irqs	= 96,
++		.nr_regs_req	= 3,
+ 	},
+ };
+ 
+@@ -65,8 +73,8 @@ struct omap3_intc_regs {
+ 	u32 protection;
+ 	u32 idle;
+ 	u32 threshold;
+-	u32 ilr[INTCPS_NR_IRQS];
+-	u32 mir[INTCPS_NR_MIR_REGS];
++	u32 ilr[INTCPS_MAX_NR_IRQS];
++	u32 mir[INTCPS_MAX_NR_REGS_REQ];
+ };
+ 
+ /* INTC bank register get/set */
+@@ -162,6 +170,7 @@ omap_alloc_gc(void __iomem *base, unsign
+ 
+ static void __init omap_init_irq(u32 base, int nr_irqs)
+ {
++	void __iomem *omap_irq_base;
+ 	unsigned long nr_of_irqs = 0;
+ 	unsigned int nr_banks = 0;
+ 	int i, j;
+@@ -174,6 +183,7 @@ static void __init omap_init_irq(u32 bas
+ 		struct omap_irq_bank *bank = irq_banks + i;
+ 
+ 		bank->nr_irqs = nr_irqs;
++		bank->nr_regs_req = 0;
+ 
+ 		/* Static mapping, never released */
+ 		bank->base_reg = ioremap(base, SZ_4K);
+@@ -184,8 +194,10 @@ static void __init omap_init_irq(u32 bas
+ 
+ 		omap_irq_bank_init_one(bank);
+ 
+-		for (j = 0; j < bank->nr_irqs; j += 32)
++		for (j = 0; j < bank->nr_irqs; j += 32) {
+ 			omap_alloc_gc(bank->base_reg + j, j, 32);
++			bank->nr_regs_req++;
++		}
+ 
+ 		nr_of_irqs += bank->nr_irqs;
+ 		nr_banks++;
+@@ -205,6 +217,50 @@ void __init omap3_init_irq(void)
+ 	omap_init_irq(OMAP34XX_IC_BASE, 96);
+ }
+ 
++void __init ti81xx_init_irq(void)
++{
++	omap_init_irq(OMAP34XX_IC_BASE, 128);
++}
++
++static inline void omap_intc_handle_irq(void __iomem *base_addr,
++		unsigned int no_regs_req, struct pt_regs *regs)
++{
++	u32 irqnr = 0;
++
++	do {
++		int i = 0;
++
++		for (i = 0; i < no_regs_req; i++) {
++			irqnr = readl_relaxed(base_addr + 0x98 + (0x20 * i));
++			if (irqnr)
++				goto out;
++		}
++
++out:
++		if (!irqnr)
++			break;
++
++		irqnr = readl_relaxed(base_addr + INTCPS_SIR_IRQ_OFFSET);
++		irqnr &= ACTIVEIRQ_MASK;
++
++		if (irqnr)
++		{
++#ifdef CONFIG_IPIPE
++			ipipe_handle_multi_irq(irqnr, regs);
++#else
++			handle_IRQ(irqnr, regs);
++#endif
++		}
++		
++	} while (irqnr);
++}
++
++asmlinkage void __exception_irq_entry omap2_intc_handle_irq(struct pt_regs *regs)
++{
++	void __iomem *base_addr = OMAP2_IRQ_BASE;
++	omap_intc_handle_irq(base_addr, irq_banks[0].nr_regs_req, regs);
++}
++
+ void __init ti816x_init_irq(void)
+ {
+ 	omap_init_irq(OMAP34XX_IC_BASE, 128);
+@@ -292,10 +348,10 @@ void omap_intc_save_context(void)
+ 			intc_bank_read_reg(bank, INTC_IDLE);
+ 		intc_context[ind].threshold =
+ 			intc_bank_read_reg(bank, INTC_THRESHOLD);
+-		for (i = 0; i < INTCPS_NR_IRQS; i++)
++		for (i = 0; i < bank->nr_irqs; i++)
+ 			intc_context[ind].ilr[i] =
+ 				intc_bank_read_reg(bank, (0x100 + 0x4*i));
+-		for (i = 0; i < INTCPS_NR_MIR_REGS; i++)
++		for (i = 0; i < bank->nr_regs_req; i++)
+ 			intc_context[ind].mir[i] =
+ 				intc_bank_read_reg(&irq_banks[0], INTC_MIR0 +
+ 				(0x20 * i));
+@@ -318,10 +374,10 @@ void omap_intc_restore_context(void)
+ 					bank, INTC_IDLE);
+ 		intc_bank_write_reg(intc_context[ind].threshold,
+ 					bank, INTC_THRESHOLD);
+-		for (i = 0; i < INTCPS_NR_IRQS; i++)
++		for (i = 0; i < bank->nr_irqs; i++)
+ 			intc_bank_write_reg(intc_context[ind].ilr[i],
+ 				bank, (0x100 + 0x4*i));
+-		for (i = 0; i < INTCPS_NR_MIR_REGS; i++)
++		for (i = 0; i < bank->nr_regs_req; i++)
+ 			intc_bank_write_reg(intc_context[ind].mir[i],
+ 				 &irq_banks[0], INTC_MIR0 + (0x20 * i));
+ 	}
+@@ -348,4 +404,10 @@ void omap3_intc_resume_idle(void)
+ 	/* Re-enable autoidle */
+ 	intc_bank_write_reg(1, &irq_banks[0], INTC_SYSCONFIG);
+ }
++
++asmlinkage void __exception_irq_entry omap3_intc_handle_irq(struct pt_regs *regs)
++{
++	void __iomem *base_addr = OMAP3_IRQ_BASE;
++	omap_intc_handle_irq(base_addr, irq_banks[0].nr_regs_req, regs);
++}
+ #endif /* CONFIG_ARCH_OMAP3 */
+--- a/arch/arm/mach-omap2/mux.c
++++ b/arch/arm/mach-omap2/mux.c
+@@ -806,7 +806,8 @@ static void __init omap_mux_free_names(s
+ static int __init omap_mux_late_init(void)
+ {
+ 	struct omap_mux_partition *partition;
+-	int ret;
++	int ret = -1;
++	int irq = -1;
+ 
+ 	list_for_each_entry(partition, &mux_partitions, node) {
+ 		struct omap_mux_entry *e, *tmp;
+@@ -827,13 +828,18 @@ static int __init omap_mux_late_init(voi
+ 		}
+ 	}
+ 
+-	ret = request_irq(omap_prcm_event_to_irq("io"),
+-		omap_hwmod_mux_handle_irq, IRQF_SHARED | IRQF_NO_SUSPEND,
+-			"hwmod_io", omap_mux_late_init);
+-
++	irq = omap_prcm_event_to_irq("io");
++	
++	if(irq >= 0)
++	{
++		ret = request_irq(irq,
++			omap_hwmod_mux_handle_irq, IRQF_SHARED | IRQF_NO_SUSPEND,
++				"hwmod_io", omap_mux_late_init);
++	}
++	
+ 	if (ret)
+-		pr_warning("mux: Failed to setup hwmod io irq %d\n", ret);
+-
++		pr_warning("mux: Failed to setup hwmod io irq %d\n", irq);
++	
+ 	omap_mux_dbg_init();
+ 
+ 	return 0;
+--- a/arch/arm/plat-omap/include/plat/irqs.h
++++ b/arch/arm/plat-omap/include/plat/irqs.h
+@@ -30,6 +30,7 @@
+ 
+ /* All OMAP4 specific defines are moved to irqs-44xx.h */
+ #include "irqs-44xx.h"
++#include "irqs-33xx.h"
+ 
+ /*
+  * IRQ numbers for interrupt handler 1
+@@ -357,7 +358,7 @@
+ #define INT_35XX_EMAC_C0_TX_PULSE_IRQ	69
+ #define INT_35XX_EMAC_C0_MISC_PULSE_IRQ	70
+ #define INT_35XX_USBOTG_IRQ		71
+-#define INT_35XX_UART4			84
++#define INT_35XX_UART4_IRQ		84
+ #define INT_35XX_CCDC_VD0_IRQ		88
+ #define INT_35XX_CCDC_VD1_IRQ		92
+ #define INT_35XX_CCDC_VD2_IRQ		93
+@@ -433,6 +434,12 @@
+ 
+ #define OMAP_IRQ_BIT(irq)	(1 << ((irq) % 32))
+ 
++/*
++ * Max from AM33XX device
++ */
++#define INTCPS_MAX_NR_REGS_REQ	4
++#define INTCPS_MAX_NR_IRQS	128
++
+ #define INTCPS_NR_MIR_REGS	3
+ #define INTCPS_NR_IRQS		96
+ 
+--- a/arch/arm/mach-omap2/timer.c
++++ b/arch/arm/mach-omap2/timer.c
+@@ -63,17 +63,20 @@
+ #define OMAP2_32K_SOURCE	"func_32k_ck"
+ #define OMAP3_32K_SOURCE	"omap_32k_fck"
+ #define OMAP4_32K_SOURCE	"sys_32k_ck"
++#define AM33XX_CLKEV_SOURCE OMAP4_MPU_SOURCE
+ #define AM33XX_RTC32K_SOURCE	"clk_32768_ck"
+ 
+ #ifdef CONFIG_OMAP_32K_TIMER
+ #define OMAP2_CLKEV_SOURCE	OMAP2_32K_SOURCE
+ #define OMAP3_CLKEV_SOURCE	OMAP3_32K_SOURCE
+ #define OMAP4_CLKEV_SOURCE	OMAP4_32K_SOURCE
++#define AM33XX_MPU_SOURCE	AM33XX_RTC32K_SOURCE
+ #define OMAP3_SECURE_TIMER	12
+ #else
+ #define OMAP2_CLKEV_SOURCE	OMAP2_MPU_SOURCE
+ #define OMAP3_CLKEV_SOURCE	OMAP3_MPU_SOURCE
+ #define OMAP4_CLKEV_SOURCE	OMAP4_MPU_SOURCE
++#define AM33XX_MPU_SOURCE	OMAP4_MPU_SOURCE
+ #define OMAP3_SECURE_TIMER	1
+ #endif
+ 
+@@ -475,7 +478,15 @@ OMAP_SYS_TIMER_INIT(2, 1, OMAP2_CLKEV_SO
+ OMAP_SYS_TIMER(2)
+ #endif
+ 
++#ifdef CONFIG_ARCH_OMAP2
++OMAP_SYS_TIMER_INIT(2, 1, OMAP2_CLKEV_SOURCE, 2, OMAP2_MPU_SOURCE)
++OMAP_SYS_TIMER(2)
++#endif
++
+ #ifdef CONFIG_ARCH_OMAP3
++
++#ifndef CONFIG_SOC_OMAPAM33XX
++
+ #ifndef CONFIG_IPIPE
+ OMAP_SYS_TIMER_INIT(3, 1, OMAP3_CLKEV_SOURCE, 2, OMAP3_MPU_SOURCE)
+ #else
+@@ -485,8 +496,14 @@ OMAP_SYS_TIMER(3)
+ OMAP_SYS_TIMER_INIT(3_secure, OMAP3_SECURE_TIMER, OMAP3_CLKEV_SOURCE,
+ 			2, OMAP3_MPU_SOURCE)
+ OMAP_SYS_TIMER(3_secure)
+-OMAP_SYS_TIMER_INIT(3_am33xx, 2, OMAP4_MPU_SOURCE, 1, AM33XX_RTC32K_SOURCE)
++
++#else // #ifdef CONFIG_SOC_OMAPAM33XX
++
++OMAP_SYS_TIMER_INIT(3_am33xx, 2, AM33XX_CLKEV_SOURCE, 1, AM33XX_MPU_SOURCE)
+ OMAP_SYS_TIMER(3_am33xx)
++
++#endif
++
+ #endif
+ 
+ #ifdef CONFIG_ARCH_OMAP4
