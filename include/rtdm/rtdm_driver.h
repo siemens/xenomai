@@ -968,6 +968,7 @@ static inline int rtdm_nrtsig_init(rtdm_nrtsig_t *nrt_sig,
 
 static inline void rtdm_nrtsig_destroy(rtdm_nrtsig_t *nrt_sig)
 {
+	ipipe_free_irq(ipipe_root_domain, *nrt_sig);
 	ipipe_free_virq(*nrt_sig);
 }
 
