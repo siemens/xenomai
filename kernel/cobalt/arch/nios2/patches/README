@@ -14,28 +14,6 @@ corresponding kernel release. You may want to have a look at the
 README.*INSTALL guides at the top of the Xenomai tree for more
 information.
 
-This directory only contains the most recent patches; you may find the
-complete collection of I-pipe patches at the following locations (see
-note):
-
-* all existing I-pipe patches for the nios2 architecture:
-http://download.gna.org/adeos/patches/v2.6/nios2/
-
-NOTE: not all older patches are guaranteed to work with the current
-Xenomai release.  However, there is a good chance most of them do,
-since we try hard to maintain backward compatibility.  For the NIOS2
-architecture, I-pipe patches are based on Thomas Chou's
-<thomas@wytron.com.tw> public tree [1].
-
-NOTE: Xenomai 2.6.x for the nios2 architecture is based on the
-'nios2mmu' branch from the reference git tree [2]. All prior patches
-for 2.6.30 based on the 'test-nios2' branch from the latter tree are
-not supported over 2.6.x. People who need the former MMU-less support
-should stick with Xenomai 2.5.x.
-
-Patch			        Based on GIT commit # / TAG
-------------------------------------------------------------------------
-
-2.6.35				e3b9b6407018eb00998a122925f4c88f6f0e9a7c
-
-[1] git://sopc.et.ntust.edu.tw/git/linux-2.6.git
+NOTE:
+Xenomai 3.x requires the latest IPIPE core series (API revision >= 2).
+nios2 is NOT yet supported over the Xenomai 3.x architecture.
