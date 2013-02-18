@@ -184,16 +184,13 @@ static void thread_destroy(pthread_t thread)
 static void thread_delete_hook(struct xnthread *thread)
 {
 	pthread_t tid = thread2pthread(thread);
-	spl_t s;
 
 	if (tid == NULL)
 		return;
 
-	xnlock_get_irqsave(&nklock, s);
 	cobalt_mark_deleted(tid);
 	cobalt_timer_cleanup_thread(tid);
 	thread_destroy(tid);
-	xnlock_put_irqrestore(&nklock, s);
 
 	cobalt_thread_unhash(&tid->hkey);
 	if (xnthread_test_state(thread, XNMAPPED))
