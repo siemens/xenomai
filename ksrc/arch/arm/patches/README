@@ -67,9 +67,18 @@ alternate repository,
 5- you can resume to generic installation instructions.
 
 
+---- Raspberry Pi
+
+From [5]:
+1- Apply the I-pipe core patch to a Linux version 3.5.7
+2- apply raspberry/ipipe-core-3.5.7-raspberry-post.patch
+3- you can resume to generic installation instructions.
+
+
 -- External links
 
 [1] http://opensource.freescale.com/pub/scm/imx/linux-2.6-imx.git
 [2] git://git.denx.de/linux-denx.git
 [3] git://github.com/koenkooi/linux
 [4] http://www.xenomai.org/pipermail/xenomai/2013-February/027584.html
+[5] http://www.xenomai.org/pipermail/xenomai/2013-February/027752.html
