@@ -52,25 +52,19 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-@XENO_COBALT_TRUE@am__append_1 = \
-@XENO_COBALT_TRUE@	timerobj-cobalt.c
-
-@XENO_COBALT_TRUE@am__append_2 = -I$(top_srcdir)/lib
-@XENO_COBALT_FALSE@am__append_3 = \
-@XENO_COBALT_FALSE@	timerobj-mercury.c	\
-@XENO_COBALT_FALSE@	notifier.c
-
-@XENO_REGISTRY_TRUE@am__append_4 = libregistry.la
-@XENO_DEBUG_TRUE@am__append_5 = debug.c
+@XENO_COBALT_TRUE@am__append_1 = -I$(top_srcdir)/lib
+@XENO_COBALT_FALSE@am__append_2 = notifier.c
+@XENO_REGISTRY_TRUE@am__append_3 = libregistry.la
+@XENO_DEBUG_TRUE@am__append_4 = debug.c
 
 # The process shareable heap has real-time properties, therefore it
 # fits both the cobalt and mercury cores equally. Yummie.
-@XENO_PSHARED_TRUE@am__append_6 = heapobj-pshared.c reference.c
+@XENO_PSHARED_TRUE@am__append_5 = heapobj-pshared.c reference.c
 # We always need to build tlsf/malloc support; in the pshared case, it
 # will provide for private memory allocation.
-@XENO_TLSF_TRUE@am__append_7 = libtlsf.la
-@XENO_TLSF_TRUE@am__append_8 = heapobj-tlsf.c
-@XENO_TLSF_FALSE@am__append_9 = heapobj-malloc.c
+@XENO_TLSF_TRUE@am__append_6 = libtlsf.la
+@XENO_TLSF_TRUE@am__append_7 = heapobj-tlsf.c
+@XENO_TLSF_FALSE@am__append_8 = heapobj-malloc.c
 subdir = lib/copperplate
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in COPYING
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -117,31 +111,26 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES) $(noinst_LTLIBRARIES)
-libcopperplate_la_DEPENDENCIES = $(am__append_4) $(am__append_7)
+libcopperplate_la_DEPENDENCIES = $(am__append_3) $(am__append_6)
 am__libcopperplate_la_SOURCES_DIST = clockobj.c cluster.c eventobj.c \
 	hash.c init.c internal.c internal.h syncobj.c semobj.c \
-	threadobj.c traceobj.c timerobj-cobalt.c timerobj-mercury.c \
-	notifier.c debug.c heapobj-pshared.c reference.c \
-	heapobj-tlsf.c heapobj-malloc.c
-@XENO_COBALT_TRUE@am__objects_1 =  \
-@XENO_COBALT_TRUE@	libcopperplate_la-timerobj-cobalt.lo
-@XENO_COBALT_FALSE@am__objects_2 =  \
-@XENO_COBALT_FALSE@	libcopperplate_la-timerobj-mercury.lo \
-@XENO_COBALT_FALSE@	libcopperplate_la-notifier.lo
-@XENO_DEBUG_TRUE@am__objects_3 = libcopperplate_la-debug.lo
-@XENO_PSHARED_TRUE@am__objects_4 =  \
+	threadobj.c timerobj.c traceobj.c notifier.c debug.c \
+	heapobj-pshared.c reference.c heapobj-tlsf.c heapobj-malloc.c
+@XENO_COBALT_FALSE@am__objects_1 = libcopperplate_la-notifier.lo
+@XENO_DEBUG_TRUE@am__objects_2 = libcopperplate_la-debug.lo
+@XENO_PSHARED_TRUE@am__objects_3 =  \
 @XENO_PSHARED_TRUE@	libcopperplate_la-heapobj-pshared.lo \
 @XENO_PSHARED_TRUE@	libcopperplate_la-reference.lo
-@XENO_TLSF_TRUE@am__objects_5 = libcopperplate_la-heapobj-tlsf.lo
-@XENO_TLSF_FALSE@am__objects_6 = libcopperplate_la-heapobj-malloc.lo
+@XENO_TLSF_TRUE@am__objects_4 = libcopperplate_la-heapobj-tlsf.lo
+@XENO_TLSF_FALSE@am__objects_5 = libcopperplate_la-heapobj-malloc.lo
 am_libcopperplate_la_OBJECTS = libcopperplate_la-clockobj.lo \
 	libcopperplate_la-cluster.lo libcopperplate_la-eventobj.lo \
 	libcopperplate_la-hash.lo libcopperplate_la-init.lo \
 	libcopperplate_la-internal.lo libcopperplate_la-syncobj.lo \
 	libcopperplate_la-semobj.lo libcopperplate_la-threadobj.lo \
-	libcopperplate_la-traceobj.lo $(am__objects_1) \
-	$(am__objects_2) $(am__objects_3) $(am__objects_4) \
-	$(am__objects_5) $(am__objects_6)
+	libcopperplate_la-timerobj.lo libcopperplate_la-traceobj.lo \
+	$(am__objects_1) $(am__objects_2) $(am__objects_3) \
+	$(am__objects_4) $(am__objects_5)
 libcopperplate_la_OBJECTS = $(am_libcopperplate_la_OBJECTS)
 libcopperplate_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -349,11 +338,11 @@ lib_LTLIBRARIES = libcopperplate.la
 libcopperplate_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 0:0:0
 libcopperplate_la_SOURCES = clockobj.c cluster.c eventobj.c hash.c \
 	init.c internal.c internal.h syncobj.c semobj.c threadobj.c \
-	traceobj.c $(am__append_1) $(am__append_3) $(am__append_5) \
-	$(am__append_6) $(am__append_8) $(am__append_9)
+	timerobj.c traceobj.c $(am__append_2) $(am__append_4) \
+	$(am__append_5) $(am__append_7) $(am__append_8)
 libcopperplate_la_CPPFLAGS = @XENO_USER_CFLAGS@ -I$(top_srcdir) \
-	-I$(top_srcdir)/include $(am__append_2)
-libcopperplate_la_LIBADD = $(am__append_4) $(am__append_7)
+	-I$(top_srcdir)/include $(am__append_1)
+libcopperplate_la_LIBADD = $(am__append_3) $(am__append_6)
 @XENO_REGISTRY_TRUE@noinst_LTLIBRARIES = libregistry.la
 @XENO_TLSF_TRUE@noinst_LTLIBRARIES = libtlsf.la
 @XENO_REGISTRY_TRUE@libregistry_la_SOURCES = registry.c
@@ -476,8 +465,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-semobj.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-syncobj.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-threadobj.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-timerobj-cobalt.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-timerobj-mercury.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-timerobj.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-traceobj.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libregistry_la-registry.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libtlsf_la-tlsf.Plo@am__quote@
@@ -566,26 +554,19 @@ libcopperplate_la-threadobj.lo: threadobj.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcopperplate_la-threadobj.lo `test -f 'threadobj.c' || echo '$(srcdir)/'`threadobj.c
 
+libcopperplate_la-timerobj.lo: timerobj.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcopperplate_la-timerobj.lo -MD -MP -MF $(DEPDIR)/libcopperplate_la-timerobj.Tpo -c -o libcopperplate_la-timerobj.lo `test -f 'timerobj.c' || echo '$(srcdir)/'`timerobj.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libcopperplate_la-timerobj.Tpo $(DEPDIR)/libcopperplate_la-timerobj.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='timerobj.c' object='libcopperplate_la-timerobj.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcopperplate_la-timerobj.lo `test -f 'timerobj.c' || echo '$(srcdir)/'`timerobj.c
+
 libcopperplate_la-traceobj.lo: traceobj.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcopperplate_la-traceobj.lo -MD -MP -MF $(DEPDIR)/libcopperplate_la-traceobj.Tpo -c -o libcopperplate_la-traceobj.lo `test -f 'traceobj.c' || echo '$(srcdir)/'`traceobj.c
 @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libcopperplate_la-traceobj.Tpo $(DEPDIR)/libcopperplate_la-traceobj.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='traceobj.c' object='libcopperplate_la-traceobj.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcopperplate_la-traceobj.lo `test -f 'traceobj.c' || echo '$(srcdir)/'`traceobj.c
-
-libcopperplate_la-timerobj-cobalt.lo: timerobj-cobalt.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcopperplate_la-timerobj-cobalt.lo -MD -MP -MF $(DEPDIR)/libcopperplate_la-timerobj-cobalt.Tpo -c -o libcopperplate_la-timerobj-cobalt.lo `test -f 'timerobj-cobalt.c' || echo '$(srcdir)/'`timerobj-cobalt.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libcopperplate_la-timerobj-cobalt.Tpo $(DEPDIR)/libcopperplate_la-timerobj-cobalt.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='timerobj-cobalt.c' object='libcopperplate_la-timerobj-cobalt.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcopperplate_la-timerobj-cobalt.lo `test -f 'timerobj-cobalt.c' || echo '$(srcdir)/'`timerobj-cobalt.c
-
-libcopperplate_la-timerobj-mercury.lo: timerobj-mercury.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcopperplate_la-timerobj-mercury.lo -MD -MP -MF $(DEPDIR)/libcopperplate_la-timerobj-mercury.Tpo -c -o libcopperplate_la-timerobj-mercury.lo `test -f 'timerobj-mercury.c' || echo '$(srcdir)/'`timerobj-mercury.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libcopperplate_la-timerobj-mercury.Tpo $(DEPDIR)/libcopperplate_la-timerobj-mercury.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='timerobj-mercury.c' object='libcopperplate_la-timerobj-mercury.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcopperplate_la-timerobj-mercury.lo `test -f 'timerobj-mercury.c' || echo '$(srcdir)/'`timerobj-mercury.c
 
 libcopperplate_la-notifier.lo: notifier.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcopperplate_la-notifier.lo -MD -MP -MF $(DEPDIR)/libcopperplate_la-notifier.Tpo -c -o libcopperplate_la-notifier.lo `test -f 'notifier.c' || echo '$(srcdir)/'`notifier.c

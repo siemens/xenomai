@@ -14,6 +14,7 @@ libcopperplate_la_SOURCES =	\
 	syncobj.c	\
 	semobj.c	\
 	threadobj.c	\
+	timerobj.c	\
 	traceobj.c
 
 libcopperplate_la_CPPFLAGS =		\
@@ -24,13 +25,9 @@ libcopperplate_la_CPPFLAGS =		\
 libcopperplate_la_LIBADD =
 
 if XENO_COBALT
-libcopperplate_la_SOURCES +=	\
-	timerobj-cobalt.c
 libcopperplate_la_CPPFLAGS +=	-I$(top_srcdir)/lib
 else
-libcopperplate_la_SOURCES +=	\
-	timerobj-mercury.c	\
-	notifier.c
+libcopperplate_la_SOURCES += notifier.c
 endif
 
 if XENO_REGISTRY

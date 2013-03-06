@@ -394,8 +394,6 @@ int threadobj_stat(struct threadobj *thobj, struct threadobj_stat *p) /* thobj->
 #include <sys/prctl.h>
 #include "copperplate/notifier.h"
 
-#define sigev_notify_thread_id	 _sigev_un._tid
-
 static int threadobj_lock_prio;
 
 static void unblock_sighandler(int sig)

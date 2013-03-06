@@ -27,6 +27,8 @@
 #include <xeno_config.h>
 #include <copperplate/list.h>
 
+#define sigev_notify_thread_id	 _sigev_un._tid
+
 struct coppernode {
 	unsigned int mem_pool;
 	const char *session_label;

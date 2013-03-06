@@ -22,30 +22,15 @@
 #include <pthread.h>
 #include <time.h>
 #include <copperplate/lock.h>
-
-#ifdef CONFIG_XENO_COBALT
-
 #include <copperplate/list.h>
 
-struct timerobj_corespec {
-	struct itimerspec spec;
-	struct pvholder link;
-};
-
-#else  /* CONFIG_XENO_MERCURY */
-
-struct timerobj_corespec {
-	/* Nothing specific. */
-};
-
-#endif /* CONFIG_XENO_MERCURY */
-
 struct timerobj {
-	struct timerobj_corespec core;
+	struct itimerspec itspec;
 	void (*handler)(struct timerobj *tmobj);
 	timer_t timer;
 	pthread_mutex_t lock;
 	int cancel_state;
+	struct pvholder next;
 };
 
 static inline int timerobj_lock(struct timerobj *tmobj)
