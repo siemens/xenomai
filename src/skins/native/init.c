@@ -24,7 +24,7 @@
 #include <pthread.h>
 #include <native/syscall.h>
 #include <native/task.h>
-#include <asm/xenomai/bits/bind.h>
+#include <asm-generic/xenomai/bits/bind.h>
 
 int __native_muxid = -1;
 static int fork_handler_registered;

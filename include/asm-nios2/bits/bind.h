@@ -12,7 +12,7 @@
 
 #include <asm-generic/xenomai/bits/bind.h>
 
-__attribute__((weak)) volatile void *xeno_nios2_hrclock = NULL;
+volatile void *xeno_nios2_hrclock = NULL;
 
 static inline void xeno_nios2_features_check(struct xnfeatinfo *finfo)
 {

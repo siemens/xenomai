@@ -14,10 +14,8 @@
 
 struct xnarch_tsc_area;
 
-__attribute__((weak))
 volatile struct xnarch_tsc_area *xeno_sh_tsc = NULL;
 
-__attribute__((weak))
 volatile unsigned long *xeno_sh_tcnt = NULL;
 
 static volatile void *__xeno_kmem_map(unsigned long pa, unsigned int pagesz)
