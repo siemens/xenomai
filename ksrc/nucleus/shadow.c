@@ -1430,8 +1430,10 @@ void xnshadow_unmap(xnthread_t *thread)
 	rpi_pop(thread);
 
 	sys_ppd = xnsys_ppd_get(0);
-	xnheap_free(&sys_ppd->sem_heap, thread->u_mode);
-	thread->u_mode = NULL;
+	if (thread->u_mode) {
+		xnheap_free(&sys_ppd->sem_heap, thread->u_mode);
+		thread->u_mode = NULL;
+	}
 
 	xnarch_atomic_dec(&sys_ppd->refcnt);
 
@@ -2379,7 +2381,7 @@ int do_hisyscall_event(unsigned event, rthal_pipeline_stage_t *stage,
       ret_handled:
 
 	/* Update the userland-visible state. */
-	if (thread)
+	if (thread && thread->u_mode)
 		*thread->u_mode = thread->state;
 
 	trace_mark(xn_nucleus, syscall_histage_exit,
@@ -2549,7 +2551,7 @@ int do_losyscall_event(unsigned event, rthal_pipeline_stage_t *stage,
       ret_handled:
 
 	/* Update the userland-visible state. */
-	if (thread)
+	if (thread && thread->u_mode)
 		*thread->u_mode = thread->state;
 
 	trace_mark(xn_nucleus, syscall_lostage_exit,
