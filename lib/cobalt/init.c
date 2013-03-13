@@ -39,6 +39,7 @@
 int __cobalt_muxid = -1;
 int __rtdm_muxid = -1;
 int __rtdm_fd_start = INT_MAX;
+struct sigaction __cobalt_orig_sigdebug;
 static int fork_handler_registered;
 static pthread_t xeno_main_tid;
 struct xnfeatinfo xeno_featinfo;
@@ -170,7 +171,7 @@ void __init_cobalt_interface(void)
 	sa.sa_sigaction = cobalt_handle_sigdebug;
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = SA_SIGINFO;
-	sigaction(SIGXCPU, &sa, NULL);
+	sigaction(SIGXCPU, &sa, &__cobalt_orig_sigdebug);
 
 	cobalt_clock_init(muxid);
 
