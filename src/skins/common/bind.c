@@ -14,6 +14,7 @@
 #include "sem_heap.h"
 
 int xeno_sigxcpu_no_mlock = 1;
+struct sigaction xeno_orig_sigdebug_sa;
 static pthread_t xeno_main_tid;
 
 static void xeno_sigill_handler(int sig)
@@ -117,8 +118,6 @@ void xeno_fault_stack(void)
 
 void xeno_handle_mlock_alert(int sig, siginfo_t *si, void *context)
 {
-	struct sigaction sa;
-
 	if (si->si_value.sival_int == SIGDEBUG_NOMLOCK) {
 		fprintf(stderr, "Xenomai: process memory not locked "
 			"(missing mlockall?)\n");
@@ -128,11 +127,8 @@ void xeno_handle_mlock_alert(int sig, siginfo_t *si, void *context)
 
 	/* XNTRAPSW was set for the thread but no user-defined handler
 	   has been set to override our internal handler, so let's
-	   invoke the default signal action. */
-
-	sa.sa_handler = SIG_DFL;
-	sigemptyset(&sa.sa_mask);
-	sa.sa_flags = 0;
-	sigaction(SIGXCPU, &sa, NULL);
+	   restore the setting before we registered and re-raise the
+	   signal. Usually triggers the default signal action. */
+	sigaction(SIGXCPU, &xeno_orig_sigdebug_sa, NULL);
 	pthread_kill(pthread_self(), SIGXCPU);
 }
