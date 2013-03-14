@@ -13,7 +13,6 @@
 #include <asm/xenomai/bits/bind.h>
 #include "sem_heap.h"
 
-int xeno_sigxcpu_no_mlock = 1;
 struct sigaction xeno_orig_sigdebug_sa;
 static pthread_t xeno_main_tid;
 
