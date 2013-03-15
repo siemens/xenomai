@@ -39,7 +39,7 @@ unsigned int psos_long_names;
 
 static unsigned int clock_resolution = 1000000; /* 1ms */
 
-static unsigned int time_slice = 1000000; /* 1ms */
+static unsigned int time_slice_in_ticks = 5;
 
 static const struct option psos_options[] = {
 	{
@@ -71,7 +71,7 @@ static int psos_parse_option(int optnum, const char *optarg)
 		clock_resolution = atoi(optarg);
 		break;
 	case time_slice_opt:
-		time_slice = atoi(optarg);
+		time_slice_in_ticks = atoi(optarg);
 		break;
 	default:
 		/* Paranoid, can't happen. */
@@ -113,7 +113,7 @@ static int psos_init(void)
 	}
 
 	/* Convert pSOS ticks to timespec. */
-	clockobj_ticks_to_timespec(&psos_clock, time_slice, &psos_rrperiod);
+	clockobj_ticks_to_timespec(&psos_clock, time_slice_in_ticks, &psos_rrperiod);
 
 	return 0;
 }
