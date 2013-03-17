@@ -165,7 +165,7 @@ static int rtcan_read_proc_sockets(char *buf, char **start, off_t offset,
     struct rtdm_dev_context *context;
     struct rtcan_device *dev;
     char name[IFNAMSIZ] = "not-bound";
-    char rx_timeout[20], tx_timeout[16];
+    char rx_timeout[20], tx_timeout[20];
     rtdm_lockctx_t lock_ctx;
     int ifindex;
     RTCAN_PROC_PRINT_VARS(120);
