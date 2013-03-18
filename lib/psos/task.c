@@ -189,11 +189,11 @@ static void *task_trampoline(void *arg)
 
 	threadobj_lock(&task->thobj);
 
-	if (task->mode & T_NOPREEMPT)
-		threadobj_lock_sched(&task->thobj);
-
 	if (task->mode & T_TSLICE)
 		threadobj_set_rr(&task->thobj, &psos_rrperiod);
+
+	if (task->mode & T_NOPREEMPT)
+		threadobj_lock_sched(&task->thobj);
 
 	threadobj_unlock(&task->thobj);
 
