@@ -55,16 +55,18 @@ target_triplet = @target@
 @XENO_COBALT_TRUE@am__append_1 = -I$(top_srcdir)/lib
 @XENO_COBALT_FALSE@am__append_2 = notifier.c
 @XENO_REGISTRY_TRUE@am__append_3 = libregistry.la
-@XENO_DEBUG_TRUE@am__append_4 = debug.c
+@XENO_REGISTRY_TRUE@am__append_4 = libregistry.la
+@XENO_DEBUG_TRUE@am__append_5 = debug.c
 
 # The process shareable heap has real-time properties, therefore it
 # fits both the cobalt and mercury cores equally. Yummie.
-@XENO_PSHARED_TRUE@am__append_5 = heapobj-pshared.c reference.c
+@XENO_PSHARED_TRUE@am__append_6 = heapobj-pshared.c reference.c
 # We always need to build tlsf/malloc support; in the pshared case, it
 # will provide for private memory allocation.
-@XENO_TLSF_TRUE@am__append_6 = libtlsf.la
-@XENO_TLSF_TRUE@am__append_7 = heapobj-tlsf.c
-@XENO_TLSF_FALSE@am__append_8 = heapobj-malloc.c
+@XENO_TLSF_TRUE@am__append_7 = libtlsf.la
+@XENO_TLSF_TRUE@am__append_8 = libtlsf.la
+@XENO_TLSF_TRUE@am__append_9 = heapobj-tlsf.c
+@XENO_TLSF_FALSE@am__append_10 = heapobj-malloc.c
 subdir = lib/copperplate
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in COPYING
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -111,7 +113,8 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES) $(noinst_LTLIBRARIES)
-libcopperplate_la_DEPENDENCIES = $(am__append_3) $(am__append_6)
+libcopperplate_la_DEPENDENCIES = libversion.la $(am__append_3) \
+	$(am__append_7)
 am__libcopperplate_la_SOURCES_DIST = clockobj.c cluster.c eventobj.c \
 	hash.c init.c internal.c internal.h syncobj.c semobj.c \
 	threadobj.c timerobj.c traceobj.c notifier.c debug.c \
@@ -145,6 +148,12 @@ libtlsf_la_LIBADD =
 am_libtlsf_la_OBJECTS = libtlsf_la-tlsf.lo
 libtlsf_la_OBJECTS = $(am_libtlsf_la_OBJECTS)
 @XENO_TLSF_TRUE@am_libtlsf_la_rpath =
+libversion_la_LIBADD =
+am_libversion_la_OBJECTS = libversion_la-version.lo
+libversion_la_OBJECTS = $(am_libversion_la_OBJECTS)
+libversion_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libversion_la_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/lib/include
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
@@ -159,9 +168,10 @@ LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
 SOURCES = $(libcopperplate_la_SOURCES) $(libregistry_la_SOURCES) \
-	$(libtlsf_la_SOURCES)
+	$(libtlsf_la_SOURCES) $(libversion_la_SOURCES)
 DIST_SOURCES = $(am__libcopperplate_la_SOURCES_DIST) \
-	$(am__libregistry_la_SOURCES_DIST) $(libtlsf_la_SOURCES)
+	$(am__libregistry_la_SOURCES_DIST) $(libtlsf_la_SOURCES) \
+	$(libversion_la_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -338,13 +348,15 @@ lib_LTLIBRARIES = libcopperplate.la
 libcopperplate_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 0:0:0
 libcopperplate_la_SOURCES = clockobj.c cluster.c eventobj.c hash.c \
 	init.c internal.c internal.h syncobj.c semobj.c threadobj.c \
-	timerobj.c traceobj.c $(am__append_2) $(am__append_4) \
-	$(am__append_5) $(am__append_7) $(am__append_8)
+	timerobj.c traceobj.c $(am__append_2) $(am__append_5) \
+	$(am__append_6) $(am__append_9) $(am__append_10)
 libcopperplate_la_CPPFLAGS = @XENO_USER_CFLAGS@ -I$(top_srcdir) \
 	-I$(top_srcdir)/include $(am__append_1)
-libcopperplate_la_LIBADD = $(am__append_3) $(am__append_6)
-@XENO_REGISTRY_TRUE@noinst_LTLIBRARIES = libregistry.la
-@XENO_TLSF_TRUE@noinst_LTLIBRARIES = libtlsf.la
+libcopperplate_la_LIBADD = libversion.la $(am__append_3) \
+	$(am__append_7)
+noinst_LTLIBRARIES = libversion.la $(am__append_4) $(am__append_8)
+libversion_la_CFLAGS = @XENO_USER_CFLAGS@
+libversion_la_SOURCES = version.c
 @XENO_REGISTRY_TRUE@libregistry_la_SOURCES = registry.c
 @XENO_REGISTRY_TRUE@libregistry_la_CPPFLAGS = \
 @XENO_REGISTRY_TRUE@	$(libcopperplate_la_CPPFLAGS)	\
@@ -443,6 +455,8 @@ libregistry.la: $(libregistry_la_OBJECTS) $(libregistry_la_DEPENDENCIES) $(EXTRA
 	$(LINK) $(am_libregistry_la_rpath) $(libregistry_la_OBJECTS) $(libregistry_la_LIBADD) $(LIBS)
 libtlsf.la: $(libtlsf_la_OBJECTS) $(libtlsf_la_DEPENDENCIES) $(EXTRA_libtlsf_la_DEPENDENCIES) 
 	$(LINK) $(am_libtlsf_la_rpath) $(libtlsf_la_OBJECTS) $(libtlsf_la_LIBADD) $(LIBS)
+libversion.la: $(libversion_la_OBJECTS) $(libversion_la_DEPENDENCIES) $(EXTRA_libversion_la_DEPENDENCIES) 
+	$(libversion_la_LINK)  $(libversion_la_OBJECTS) $(libversion_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -469,6 +483,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-traceobj.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libregistry_la-registry.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libtlsf_la-tlsf.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libversion_la-version.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -624,6 +639,13 @@ libtlsf_la-tlsf.lo: tlsf/tlsf.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libtlsf_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libtlsf_la-tlsf.lo `test -f 'tlsf/tlsf.c' || echo '$(srcdir)/'`tlsf/tlsf.c
 
+libversion_la-version.lo: version.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libversion_la_CFLAGS) $(CFLAGS) -MT libversion_la-version.lo -MD -MP -MF $(DEPDIR)/libversion_la-version.Tpo -c -o libversion_la-version.lo `test -f 'version.c' || echo '$(srcdir)/'`version.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libversion_la-version.Tpo $(DEPDIR)/libversion_la-version.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='version.c' object='libversion_la-version.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libversion_la_CFLAGS) $(CFLAGS) -c -o libversion_la-version.lo `test -f 'version.c' || echo '$(srcdir)/'`version.c
+
 mostlyclean-libtool:
 	-rm -f *.lo
 
@@ -751,7 +773,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
+clean-am: clean-generic clean-libLTLIBRARIES clean-libtool clean-local \
 	clean-noinstLTLIBRARIES mostlyclean-am
 
 distclean: distclean-am
@@ -823,24 +845,42 @@ uninstall-am: uninstall-libLTLIBRARIES
 .MAKE: install-am install-strip
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
-	clean-libLTLIBRARIES clean-libtool clean-noinstLTLIBRARIES \
-	ctags distclean distclean-compile distclean-generic \
-	distclean-libtool distclean-tags distdir dvi dvi-am html \
-	html-am info info-am install install-am install-data \
-	install-data-am install-dvi install-dvi-am install-exec \
-	install-exec-am install-html install-html-am install-info \
-	install-info-am install-libLTLIBRARIES install-man install-pdf \
-	install-pdf-am install-ps install-ps-am install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-libLTLIBRARIES
+	clean-libLTLIBRARIES clean-libtool clean-local \
+	clean-noinstLTLIBRARIES ctags distclean distclean-compile \
+	distclean-generic distclean-libtool distclean-tags distdir dvi \
+	dvi-am html html-am info info-am install install-am \
+	install-data install-data-am install-dvi install-dvi-am \
+	install-exec install-exec-am install-html install-html-am \
+	install-info install-info-am install-libLTLIBRARIES \
+	install-man install-pdf install-pdf-am install-ps \
+	install-ps-am install-strip installcheck installcheck-am \
+	installdirs maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-compile mostlyclean-generic \
+	mostlyclean-libtool pdf pdf-am ps ps-am tags uninstall \
+	uninstall-am uninstall-libLTLIBRARIES
 
+version.c: git-stamp.h
+
+git-stamp.h: git-stamp
+	@set -x; if test -r $(top_srcdir)/.git; then						\
+	  stamp=`git --git-dir=$(top_srcdir)/.git rev-list --abbrev-commit -1 HEAD`;	\
+	  if test \! -s $@ || grep -wvq $$stamp $@; then				\
+		date=`git --git-dir=$(top_srcdir)/.git log -1 $$stamp --pretty=format:%ci`;	\
+		echo "#define GIT_STAMP \"#$$stamp ($$date)\"" > $@;			\
+	  fi;										\
+	elif test \! -r $@ -o -s $@; then						\
+	    rm -f $@ && touch $@;							\
+	fi; true
+
+clean-local:
+	$(RM) git-stamp.h
 
 sparse:
 	@for i in $(libcopperplate_la_SOURCES) $(libtlsf_la_SOURCES); do \
 		$(SPARSE) $(CHECKFLAGS) $(srcdir)/$$i; \
 	done
+
+.PHONY: git-stamp
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

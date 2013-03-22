@@ -122,19 +122,10 @@ static const struct option base_options[] = {
 	}
 };
 
-#ifdef CONFIG_XENO_COBALT
-#define core_name "cobalt"
-#else /* CONFIG_XENO_MERCURY */
-#define core_name "mercury"
-#endif
-
-static void print_version(void)
+static inline void print_version(void)
 {
-	fprintf(stderr, "Xenomai/%s v%d.%d.%d\n",
-		core_name,
-		CONFIG_XENO_VERSION_MAJOR,
-		CONFIG_XENO_VERSION_MINOR,
-		CONFIG_XENO_REVISION_LEVEL);
+	extern const char *xenomai_version_string;
+	fprintf(stderr, "%s\n", xenomai_version_string);
 }
 
 static void usage(void)

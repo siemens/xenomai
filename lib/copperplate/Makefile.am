@@ -22,17 +22,36 @@ libcopperplate_la_CPPFLAGS =		\
 	-I$(top_srcdir)			\
 	-I$(top_srcdir)/include
 
-libcopperplate_la_LIBADD =
-
 if XENO_COBALT
 libcopperplate_la_CPPFLAGS +=	-I$(top_srcdir)/lib
 else
 libcopperplate_la_SOURCES += notifier.c
 endif
 
+libcopperplate_la_LIBADD = libversion.la
+
+noinst_LTLIBRARIES = libversion.la
+libversion_la_CFLAGS = @XENO_USER_CFLAGS@
+libversion_la_SOURCES = version.c
+version.c: git-stamp.h
+
+git-stamp.h: git-stamp
+	@set -x; if test -r $(top_srcdir)/.git; then						\
+	  stamp=`git --git-dir=$(top_srcdir)/.git rev-list --abbrev-commit -1 HEAD`;	\
+	  if test \! -s $@ || grep -wvq $$stamp $@; then				\
+		date=`git --git-dir=$(top_srcdir)/.git log -1 $$stamp --pretty=format:%ci`;	\
+		echo "#define GIT_STAMP \"#$$stamp ($$date)\"" > $@;			\
+	  fi;										\
+	elif test \! -r $@ -o -s $@; then						\
+	    rm -f $@ && touch $@;							\
+	fi; true
+
+clean-local:
+	$(RM) git-stamp.h
+
 if XENO_REGISTRY
 libcopperplate_la_LIBADD += libregistry.la
-noinst_LTLIBRARIES = libregistry.la
+noinst_LTLIBRARIES += libregistry.la
 
 libregistry_la_SOURCES = registry.c
 
@@ -54,7 +73,7 @@ endif
 # will provide for private memory allocation.
 if XENO_TLSF
 libcopperplate_la_LIBADD +=	libtlsf.la
-noinst_LTLIBRARIES = libtlsf.la
+noinst_LTLIBRARIES += libtlsf.la
 libcopperplate_la_SOURCES += heapobj-tlsf.c
 else
 libcopperplate_la_SOURCES += heapobj-malloc.c
@@ -78,3 +97,5 @@ sparse:
 	@for i in $(libcopperplate_la_SOURCES) $(libtlsf_la_SOURCES); do \
 		$(SPARSE) $(CHECKFLAGS) $(srcdir)/$$i; \
 	done
+
+.PHONY: git-stamp
