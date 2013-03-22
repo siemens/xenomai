@@ -108,6 +108,13 @@ static const struct option base_options[] = {
 		.val = 1
 	},
 	{
+#define version_opt	9
+		.name = "version",
+		.has_arg = 0,
+		.flag = NULL,
+		.val = 0
+	},
+	{
 		.name = NULL,
 		.has_arg = 0,
 		.flag = NULL,
@@ -115,10 +122,26 @@ static const struct option base_options[] = {
 	}
 };
 
+#ifdef CONFIG_XENO_COBALT
+#define core_name "cobalt"
+#else /* CONFIG_XENO_MERCURY */
+#define core_name "mercury"
+#endif
+
+static void print_version(void)
+{
+	fprintf(stderr, "Xenomai/%s v%d.%d.%d\n",
+		core_name,
+		CONFIG_XENO_VERSION_MAJOR,
+		CONFIG_XENO_VERSION_MINOR,
+		CONFIG_XENO_REVISION_LEVEL);
+}
+
 static void usage(void)
 {
 	struct copperskin *skin;
 
+	print_version();
         fprintf(stderr, "usage: program <options>, where options may be:\n");
         fprintf(stderr, "--mem-pool-size=<sizeK>          size of the main heap (kbytes)\n");
         fprintf(stderr, "--no-mlock                       do not lock memory at init (Mercury only)\n");
@@ -128,6 +151,7 @@ static void usage(void)
         fprintf(stderr, "--reset                          remove any older session\n");
         fprintf(stderr, "--cpu-affinity=<cpu[,cpu]...>    set CPU affinity of threads\n");
         fprintf(stderr, "--silent                         tame down verbosity\n");
+        fprintf(stderr, "--version                        get version information\n");
 	
 	pvlist_for_each_entry(skin, &skins, __reserved.next) {
 		if (skin->help)
@@ -334,6 +358,9 @@ static int parse_base_options(int *argcp, char *const **argvp,
 		case reset_session_opt:
 		case silent_opt:
 			break;
+		case version_opt:
+			print_version();
+			exit(0);
 		case help_opt:
 			usage();
 			exit(0);
