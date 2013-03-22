@@ -52,6 +52,20 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
+@XENO_COBALT_TRUE@am__append_1 = rtdk.h
+@XENO_COBALT_TRUE@am__append_2 = \
+@XENO_COBALT_TRUE@	asm-generic 	\
+@XENO_COBALT_TRUE@	asm-blackfin 	\
+@XENO_COBALT_TRUE@	asm-x86 	\
+@XENO_COBALT_TRUE@	asm-powerpc 	\
+@XENO_COBALT_TRUE@	asm-arm 	\
+@XENO_COBALT_TRUE@	asm-nios2 	\
+@XENO_COBALT_TRUE@	asm-sh 		\
+@XENO_COBALT_TRUE@	analogy 	\
+@XENO_COBALT_TRUE@	cobalt 		\
+@XENO_COBALT_TRUE@	rtdm
+
+@XENO_COBALT_FALSE@am__append_3 = mercury
 subdir = include
 DIST_COMMON = $(am__include_HEADERS_DIST) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in COPYING
@@ -84,7 +98,7 @@ am__can_run_installinfo = \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
-am__include_HEADERS_DIST = rtdk.h
+am__include_HEADERS_DIST = version.h rtdk.h
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -121,9 +135,9 @@ AM_RECURSIVE_TARGETS = $(RECURSIVE_TARGETS:-recursive=) \
 	distdir
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = alchemy copperplate mercury psos vxworks asm-generic \
+DIST_SUBDIRS = copperplate alchemy psos vxworks asm-generic \
 	asm-blackfin asm-x86 asm-powerpc asm-arm asm-nios2 asm-sh \
-	analogy cobalt rtdm
+	analogy cobalt rtdm mercury
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 am__relativize = \
   dir0=`pwd`; \
@@ -315,32 +329,9 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 nodist_include_HEADERS = $(CONFIG_HEADER)
-@XENO_COBALT_TRUE@include_HEADERS = \
-@XENO_COBALT_TRUE@	rtdk.h
-
-@XENO_COBALT_FALSE@SUBDIRS = \
-@XENO_COBALT_FALSE@	alchemy		\
-@XENO_COBALT_FALSE@	copperplate	\
-@XENO_COBALT_FALSE@	mercury		\
-@XENO_COBALT_FALSE@	psos 		\
-@XENO_COBALT_FALSE@	vxworks
-
-@XENO_COBALT_TRUE@SUBDIRS = \
-@XENO_COBALT_TRUE@	asm-generic 	\
-@XENO_COBALT_TRUE@	asm-blackfin 	\
-@XENO_COBALT_TRUE@	asm-x86 	\
-@XENO_COBALT_TRUE@	asm-powerpc 	\
-@XENO_COBALT_TRUE@	asm-arm 	\
-@XENO_COBALT_TRUE@	asm-nios2 	\
-@XENO_COBALT_TRUE@	asm-sh 		\
-@XENO_COBALT_TRUE@	alchemy		\
-@XENO_COBALT_TRUE@	analogy 	\
-@XENO_COBALT_TRUE@	psos 		\
-@XENO_COBALT_TRUE@	vxworks 	\
-@XENO_COBALT_TRUE@	cobalt 		\
-@XENO_COBALT_TRUE@	copperplate 	\
-@XENO_COBALT_TRUE@	rtdm
-
+include_HEADERS = version.h $(am__append_1)
+SUBDIRS = copperplate alchemy psos vxworks $(am__append_2) \
+	$(am__append_3)
 EXTRA_DIST = testing
 all: all-recursive
 

@@ -37,7 +37,7 @@
 #include <linux/ptrace.h>
 #include <linux/sched.h>
 #include <linux/wait.h>
-#include <nucleus/version.h>
+#include <xenomai/version.h>
 #include <nucleus/pod.h>
 #include <nucleus/timer.h>
 #include <nucleus/synch.h>

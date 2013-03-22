@@ -22,13 +22,13 @@
  */
 #include <linux/init.h>
 #include <linux/ipipe.h>
+#include <xenomai/version.h>
 #include <nucleus/pod.h>
 #include <nucleus/clock.h>
 #include <nucleus/timer.h>
 #include <nucleus/heap.h>
 #include <nucleus/intr.h>
 #include <nucleus/apc.h>
-#include <nucleus/version.h>
 #include <nucleus/sys_ppd.h>
 #include <nucleus/pipe.h>
 #include <nucleus/select.h>

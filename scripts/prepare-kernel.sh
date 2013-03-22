@@ -79,37 +79,41 @@ patch_ed() {
 }
 
 patch_link() {
-    recursive="$1"              # "r" or "n"
-    link_makefiles="$2"         # "m" or "n"
+    recursive="$1"         # "r" or "n"
+    link_file="$2"         # "m", "n" or some file (basename) from $target_dir
     target_dir="$3"
     link_dir="$4"
 
     (
-        recursive_opt=""
-        directorytype_opt=""
-        if test x$recursive = xr; then
-            recursive_opts="-mindepth 1"
-            directorytype_opt="-type d -o"
-        else
-            recursive_opt="-maxdepth 1"
-        fi
-        link_makefiles_opt=""
-        if test x$link_makefiles = xm; then
-            link_makefiles_opt="-name Makefile -o"
-        fi
+        if test \! \( x$link_file = xm -o x$link_file = xn \); then
+	   find_clean_opt="-name $link_file"
+	   find_link_opt=$find_clean_opt
+	else
+           link_makefiles_opt=""
+           if test x$link_file = xm; then
+              link_makefiles_opt="-name Makefile -o"
+           fi
+           if test x$recursive = xr; then
+	       recursive_opts="-mindepth 1"
+	       dir_opt="-type d -o"
+           else
+	       recursive_opt="-maxdepth 1"
+	       dir_opt=""
+           fi
+	   find_clean_opt="$recursive_opt \( $dir_opt $link_makefiles_opt -name Kconfig -o -name '*.[chS]' \)"
+	   find_link_opt="$recursive_opt \( $link_makefiles_opt -name Kconfig -o -name '*.[chS]' \)"
+	fi
 
         if test "x$output_patch" = "x" -a -e $linux_tree/$link_dir; then
             cd $linux_tree/$link_dir &&
-	    find . $recursive_opt \( $directorytype_opt \
-                $link_makefiles_opt -name $config_file -o -name '*.[chS]' \) |
-            while read f; do
+	    eval find . $find_clean_opt |
+	    while read f; do
                 if test -L $f -a ! -e $xenomai_root/$target_dir/$f; then rm -Rf $f; fi
             done
         fi
 
         cd $xenomai_root/$target_dir &&
-        find . $recursive_opt \
-            \( $link_makefiles_opt -name $config_file -o -name '*.[chS]' \) |
+        eval find . $find_link_opt |
         while read f; do
             f=`echo $f | cut -d/ -f2-`
             d=`dirname $f`
@@ -128,7 +132,6 @@ patch_link() {
             fi
         done
     )
-
 }
 
 generate_patch() {
@@ -379,14 +382,22 @@ case $linux_VERSION.$linux_PATCHLEVEL in
 
     2.6|3.*)
 
-    config_file=Kconfig
-
     patch_architecture_specific="y"
 
     if ! grep -q XENOMAI $linux_tree/init/Kconfig; then
-	sed -e "s,@LINUX_ARCH@,$linux_arch,g" $xenomai_root/scripts/Kconfig.frag |
+	version_stamp=`cat $xenomai_root/config/version`
+	version_major=`expr $version_stamp : '\([[0-9]]*\)' || true`
+	version_minor=`expr $version_stamp : '[[0-9]]*\.\([[0-9]*]*\)' || true`
+	revision_level=`expr $version_stamp : '[[0-9]]*\.[[0-9]*]*\.\([[0-9]*]*\)' || true`
+	sed -e "s,@LINUX_ARCH@,$linux_arch,g" \
+	    -e "s,@VERSION_MAJOR@,$version_major,g" \
+	    -e "s,@VERSION_MINOR@,$version_minor,g" \
+	    -e "s,@REVISION_LEVEL@,$revision_level,g" \
+	    $xenomai_root/scripts/Kconfig.frag |
             patch_append init/Kconfig
     fi
+
+test "x$CONFIG_XENO_REVISION_LEVEL" = "x" && CONFIG_XENO_REVISION_LEVEL=0
 
     if ! grep -q CONFIG_XENOMAI $linux_tree/arch/$linux_arch/Makefile; then
 	p="core-\$(CONFIG_XENOMAI)	+= arch/$linux_arch/xenomai/"
@@ -435,6 +446,7 @@ patch_link r n include/asm-$linux_arch arch/$linux_arch/include/asm/xenomai
 patch_architecture_specific="n"
 patch_link r n include/asm-generic include/asm-generic/xenomai
 patch_link n n include/cobalt include/xenomai
+patch_link n version.h include include/xenomai
 cd $xenomai_root
 for d in include/* ; do
     if test -d $d -a -z "`echo $d | grep '^include/asm-'`"; then

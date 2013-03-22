@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2001-2013 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
@@ -17,15 +17,23 @@
  * 02111-1307, USA.
  */
 
-#ifndef _XENO_NUCLEUS_VERSION_H
-#define _XENO_NUCLEUS_VERSION_H
+#ifndef _XENOMAI_VERSION_H
+#define _XENOMAI_VERSION_H
 
-#define XENO_VERSION(maj,min,rev)  (((maj)<<16)|((min)<<8)|(rev))
+#ifndef __KERNEL__
+#include <xeno_config.h>
+#define __stringify_1(x...)	#x
+#define __stringify(x...)	__stringify_1(x)
+#endif
+
+#define XENO_VERSION(maj, min, rev)  (((maj)<<16)|((min)<<8)|(rev))
 
 #define XENO_VERSION_CODE  XENO_VERSION(CONFIG_XENO_VERSION_MAJOR, \
 					    CONFIG_XENO_VERSION_MINOR, \
 					    CONFIG_XENO_REVISION_LEVEL)
 
-#define XENO_VERSION_STRING	"2.99.0"
+#define XENO_VERSION_STRING	__stringify(CONFIG_XENO_VERSION_MAJOR) "." \
+			        __stringify(CONFIG_XENO_VERSION_MINOR) "." \
+				__stringify(CONFIG_XENO_REVISION_LEVEL)
 
-#endif /* _XENO_NUCLEUS_VERSION_H */
+#endif /* _XENOMAI_VERSION_H */

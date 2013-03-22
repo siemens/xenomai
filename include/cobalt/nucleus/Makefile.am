@@ -35,5 +35,4 @@ includesub_HEADERS = \
 	types.h \
 	vdso.h \
 	seqlock.h \
-	version.h \
 	vfile.h

@@ -22,3 +22,15 @@ endif
 if !GENERIC_CLOCKEVENTS
 comment "NOTE: Xenomai 3.x requires CONFIG_GENERIC_CLOCKEVENTS"
 endif
+
+config XENO_VERSION_MAJOR
+       int
+       default @VERSION_MAJOR@
+
+config XENO_VERSION_MINOR
+       int
+       default @VERSION_MINOR@
+
+config XENO_REVISION_LEVEL
+       int
+       default @REVISION_LEVEL@

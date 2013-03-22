@@ -61,6 +61,9 @@
 #undef CONFIG_XENO_TLS_MODEL
 
 /* config */
+#undef CONFIG_XENO_UAPI_LEVEL
+
+/* config */
 #undef CONFIG_XENO_VERSION_MAJOR
 
 /* config */

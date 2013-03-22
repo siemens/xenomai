@@ -2336,7 +2336,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 CONFIG_XENO_VERSION_MAJOR=`expr $PACKAGE_VERSION : '\([0-9]*\)'`
 CONFIG_XENO_VERSION_MINOR=`expr $PACKAGE_VERSION : '[0-9]*\.\([0-9]*\)'`
 CONFIG_XENO_REVISION_LEVEL=`expr $PACKAGE_VERSION : '[0-9]*\.[0-9]*\.\([0-9]*\)'`
-test "x$CONFIG_XENO_REVISION_LEVEL" = "x" && CONFIG_XENO_REVISION_LEVEL=0
+CONFIG_XENO_UAPI_LEVEL=`cat $srcdir/config/apirev`
 
 rtcore_type=cobalt
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether we build for Cobalt or Mercury core" >&5
@@ -13605,6 +13605,11 @@ _ACEOF
 
 cat >>confdefs.h <<_ACEOF
 #define CONFIG_XENO_REVISION_LEVEL $CONFIG_XENO_REVISION_LEVEL
+_ACEOF
+
+
+cat >>confdefs.h <<_ACEOF
+#define CONFIG_XENO_UAPI_LEVEL $CONFIG_XENO_UAPI_LEVEL
 _ACEOF
 
 

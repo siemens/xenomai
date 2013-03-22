@@ -34,6 +34,7 @@
 #include <asm/atomic.h>
 #include <linux/list.h>
 
+#include <xenomai/version.h>
 #include <nucleus/heap.h>
 #include <nucleus/pod.h>
 #include <nucleus/intr.h>
@@ -42,7 +43,6 @@
 #include <nucleus/vfile.h>
 #include <nucleus/clock.h>
 #include <nucleus/apc.h>
-#include <nucleus/version.h>
 #include <nucleus/shadow.h>
 #include <rtdm/rtdm.h>
 
