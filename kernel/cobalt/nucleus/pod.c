@@ -2157,7 +2157,7 @@ int xnpod_enable_timesource(void)
 		sched = xnpod_sched_slot(cpu);
 		if (htickval > 1)
 			xntimer_start(&sched->htimer, htickval, htickval, XN_RELATIVE);
-		else
+		else if (htickval == 1)
 			xntimer_start(&sched->htimer, 0, 0, XN_RELATIVE);
 
 #if defined(CONFIG_XENO_OPT_WATCHDOG)
