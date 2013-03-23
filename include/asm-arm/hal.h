@@ -235,7 +235,9 @@ typedef struct rthal_fpenv {
      */
     __u8                    used_cp[16];    /* thread used copro */
     unsigned long           tp_value;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 18)
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,7,0) && defined(CONFIG_CRUNCH)) \
+	|| (LINUX_VERSION_CODE < KERNEL_VERSION(3,7,0)			\
+	    && LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 18))
     struct crunch_state     crunchstate;
 #endif /* Linux version >= 2.6.18 */
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 15)

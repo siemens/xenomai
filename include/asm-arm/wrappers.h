@@ -30,7 +30,11 @@
 
 #define wrap_phys_mem_prot(filp,pfn,size,prot)	(prot)
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,8,0)
 #define wrap_strncpy_from_user(dstP, srcP, n)	__strncpy_from_user(dstP, srcP, n)
+#else
+#define wrap_strncpy_from_user(dstP, srcP, n)	strncpy_from_user(dstP, srcP, n)
+#endif
 
 #define rthal_irq_desc_status(irq)	(rthal_irq_descp(irq)->status)
 
