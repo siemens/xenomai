@@ -23,6 +23,11 @@
 #ifndef _XENO_ASM_ARM_CALIBRATION_H
 #define _XENO_ASM_ARM_CALIBRATION_H
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,8,0)
+extern unsigned omap_rev(void);
+#define cpu_is_omap44xx() ((omap_rev() & 0xff) == 0x44)
+#endif
+
 static inline unsigned long xnarch_get_sched_latency (void)
 {
 #if CONFIG_XENO_OPT_TIMING_SCHEDLAT != 0

@@ -27,7 +27,11 @@
 #include <linux/version.h>
 #include <asm-generic/xenomai/wrappers.h> /* Read the generic portion. */
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,8,0)
 #define wrap_strncpy_from_user(dstP, srcP, n)	__strncpy_from_user(dstP, srcP, n)
+#else
+#define wrap_strncpy_from_user(dstP, srcP, n)	strncpy_from_user(dstP, srcP, n)
+#endif
 
 #define __put_user_inatomic __put_user
 #define __get_user_inatomic __get_user
