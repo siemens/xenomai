@@ -1780,7 +1780,7 @@ static int xnshadow_sys_bind(struct pt_regs *regs)
 		return -ENOEXEC;
 
 	if (!capable(CAP_SYS_NICE) &&
-	    (xn_gid_arg == -1 || !in_group_p(xn_gid_arg)))
+	    (xn_gid_arg == -1 || !in_group_p(KGIDT_INIT(xn_gid_arg))))
 		return -EPERM;
 
 	/* Raise capabilities for the caller in case they are lacking yet. */
