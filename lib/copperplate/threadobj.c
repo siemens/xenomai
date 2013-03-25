@@ -1002,7 +1002,9 @@ static void cancel_sync(struct threadobj *thobj) /* thobj->lock held */
 
 	while (thobj->status & THREADOBJ_WARMUP) {
 		oldstate = thobj->cancel_state;
+		__threadobj_tag_unlocked(thobj);
 		__RT(pthread_cond_wait(&thobj->barrier, &thobj->lock));
+		__threadobj_tag_locked(thobj);
 		thobj->cancel_state = oldstate;
 	}
 
