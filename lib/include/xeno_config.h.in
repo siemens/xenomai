@@ -28,6 +28,12 @@
 #undef CONFIG_XENO_CPU_XSC3
 
 /* config */
+#undef CONFIG_XENO_DEBUG
+
+/* config */
+#undef CONFIG_XENO_DEBUG_FULL
+
+/* config */
 #undef CONFIG_XENO_DEFAULT_PERIOD
 
 /* Host system alias */

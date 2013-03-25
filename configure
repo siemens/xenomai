@@ -12636,6 +12636,9 @@ else
   XENO_DEBUG_FALSE=
 fi
 
+test \! x$debug_mode = x &&
+$as_echo "#define CONFIG_XENO_DEBUG 1" >>confdefs.h
+
  if test x$debug_mode = xfull; then
   XENO_DEBUG_FULL_TRUE=
   XENO_DEBUG_FULL_FALSE='#'
@@ -12643,6 +12646,9 @@ else
   XENO_DEBUG_FULL_TRUE='#'
   XENO_DEBUG_FULL_FALSE=
 fi
+
+test x$debug_mode = xfull &&
+$as_echo "#define CONFIG_XENO_DEBUG_FULL 1" >>confdefs.h
 
 
 
