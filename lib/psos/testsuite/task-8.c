@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <xeno_config.h>
 #include <copperplate/init.h>
 #include <copperplate/traceobj.h>
 #include <psos/psos.h>
@@ -72,6 +73,12 @@ static void main_task(u_long a1, u_long a2, u_long a3, u_long a4)
 	traceobj_mark(&trobj, 7);
 }
 
+#ifdef CONFIG_XENO_DEBUG_FULL
+#define threshold_quantum 50
+#else
+#define threshold_quantum 1000
+#endif
+
 int main(int argc, char *const argv[])
 {
 	u_long args[] = { 1, 2, 3, 4 }, tid, delta, max;
@@ -96,8 +103,7 @@ int main(int argc, char *const argv[])
 		delta = count1 - count2;
 		max = count1;
 	}
-	
-	traceobj_assert(&trobj, delta < max / 1000);
+	traceobj_assert(&trobj, delta < max / threshold_quantum);
 
 	traceobj_verify(&trobj, tseq, sizeof(tseq) / sizeof(int));
 
