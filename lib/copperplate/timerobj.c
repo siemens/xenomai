@@ -98,7 +98,7 @@ static inline int timerobj_init_corespec(struct timerobj *tmobj)
 	struct sigevent sev;
 	int ret;
 
-	sev.sigev_notify = SIGEV_SIGNAL|SIGEV_THREAD_ID;
+	sev.sigev_notify = SIGEV_THREAD_ID;
 	sev.sigev_signo = SIGALRM;
 	sev.sigev_notify_thread_id = svpid;
 
@@ -127,9 +127,11 @@ static inline int timersv_pend_corespec(void)
 	sigset_t set;
 	int sig, ret;
 
+	sigemptyset(&set);
+	sigaddset(&set, SIGALRM);
 	ret = sigwait(&set, &sig);
 	if (ret)
-		return -errno;
+		return -ret;
 
 	return 0;
 }
