@@ -750,6 +750,9 @@ struct vfile_schedstat_data {
 	xnticks_t exectime_period;
 	xnticks_t account_period;
 	xnticks_t exectime_total;
+	struct xnsched_class *sched_class;
+	xnticks_t period;
+	int cprio;
 };
 
 static struct xnvfile_snapshot_ops vfile_schedstat_ops;
@@ -806,6 +809,9 @@ static int vfile_schedstat_next(struct xnvfile_snapshot_iterator *it,
 	p->csw = xnstat_counter_get(&thread->stat.csw);
 	p->xsc = xnstat_counter_get(&thread->stat.xsc);
 	p->pf = xnstat_counter_get(&thread->stat.pf);
+	p->sched_class = thread->sched_class;
+	p->cprio = thread->cprio;
+	p->period = xnthread_get_period(thread);
 
 	period = sched->last_account_switch - thread->stat.lastperiod.start;
 	if (period == 0 && thread == sched->curr) {
@@ -847,6 +853,9 @@ scan_irqs:
 	p->ssw = 0;
 	p->xsc = 0;
 	p->pf = 0;
+	p->sched_class = &xnsched_class_idle;
+	p->cprio = 0;
+	p->period = 0;
 
 	return 1;
 }
@@ -891,12 +900,15 @@ static int vfile_schedacct_show(struct xnvfile_snapshot_iterator *it,
 	if (p == NULL)
 		return 0;
 
-	xnvfile_printf(it, "%u %d %lu %lu %lu %lu %.8lx %Lu %Lu %Lu %s\n",
+	xnvfile_printf(it, "%u %d %lu %lu %lu %lu %.8lx %Lu %Lu %Lu %s %s %d %Lu\n",
 		       p->cpu, p->pid, p->ssw, p->csw, p->xsc, p->pf, p->state,
 		       xnarch_tsc_to_ns(p->account_period),
 		       xnarch_tsc_to_ns(p->exectime_period),
 		       xnarch_tsc_to_ns(p->exectime_total),
-		       p->name);
+		       p->name,
+		       p->sched_class->name,
+		       p->cprio,
+		       p->period);
 
 	return 0;
 }
