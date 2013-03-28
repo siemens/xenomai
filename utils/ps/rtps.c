@@ -4,7 +4,7 @@
 #include <errno.h>
 #include <stdlib.h>
 
-#define PROC_ACCT  "/proc/xenomai/acct"
+#define PROC_ACCT  "/proc/xenomai/sched/acct"
 #define PROC_PID  "/proc/%d/cmdline"
 
 #define ACCT_FMT_1  "%u %d %lu %lu %lu %lx %Lu %Lu %Lu"
