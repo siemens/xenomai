@@ -188,7 +188,7 @@ static inline char *task_decode_status(struct wind_task *task, char *buf)
 	return buf + 1;
 }
 
-static size_t task_registry_read(struct fsobj *fsobj,
+static ssize_t task_registry_read(struct fsobj *fsobj,
 				 char *buf, size_t size, off_t offset)
 {
 	struct wind_task *task;
@@ -202,7 +202,7 @@ static size_t task_registry_read(struct fsobj *fsobj,
 	len += sprintf(buf + len, "priority   = %d\n", wind_task_get_priority(task));
 	len += sprintf(buf + len, "lock_depth = %d\n", threadobj_get_lockdepth(&task->thobj));
 
-	return len;
+	return (ssize_t)len;
 }
 
 static struct registry_operations registry_ops = {

@@ -107,6 +107,9 @@ int copperplate_create_thread(int prio,
 
 int copperplate_renice_thread(pthread_t tid, int prio);
 
+void copperplate_bootstrap_minimal(const char *arg0,
+				   char *mountpt);
+
 #ifdef __cplusplus
 }
 #endif

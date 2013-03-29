@@ -150,12 +150,6 @@ static void usage(void)
 	}
 }
 
-static void do_cleanup(void)
-{
-	if (__node_info.no_registry == 0)
-		registry_pkg_destroy();
-}
-
 static int collect_cpu_affinity(const char *cpu_list)
 {
 	char *s = strdup(cpu_list), *p, *n;
@@ -426,6 +420,42 @@ static int parse_skin_options(int *argcp, int largc, char **uargv,
 	return 0;
 }
 
+/*
+ * Routine to bring up the basic copperplate features, but not enough
+ * to run over a non-POSIX real-time interface though. For internal
+ * code only, such as sysregd. No code traversed should depend on
+ * __node_info.
+ */
+void copperplate_bootstrap_minimal(const char *arg0, char *mountpt)
+{
+	int ret;
+
+	__RT(clock_gettime(CLOCK_COPPERPLATE, &__init_date));
+	__node_id = copperplate_get_tid();
+
+	ret = debug_pkg_init();
+	if (ret) {
+		warning("failed to initialize debugging features");
+		goto fail;
+	}
+
+	ret = heapobj_pkg_init_private();
+	if (ret) {
+		warning("failed to initialize main private heap");
+		goto fail;
+	}
+
+	ret = __registry_pkg_init(arg0, mountpt);
+	if (ret)
+		goto fail;
+
+	return;
+fail:
+	panic("initialization failed, %s", symerror(ret));
+}
+
+/* The application-level copperplate init call. */
+
 void copperplate_init(int *argcp, char *const **argvp)
 {
 	int ret, largc, base_opt_start;
@@ -493,7 +523,6 @@ void copperplate_init(int *argcp, char *const **argvp)
 			goto fail;
 	}
 
-	atexit(do_cleanup);
 	threadobj_pkg_init();
 	ret = timerobj_pkg_init();
 	if (ret) {

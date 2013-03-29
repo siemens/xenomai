@@ -49,6 +49,9 @@
 #undef CONFIG_XENO_MERCURY
 
 /* config */
+#undef CONFIG_XENO_PREFIX
+
+/* config */
 #undef CONFIG_XENO_PSHARED
 
 /* config */

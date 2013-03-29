@@ -512,6 +512,7 @@ AC_DEFINE_UNQUOTED(CONFIG_XENO_VERSION_MAJOR,$CONFIG_XENO_VERSION_MAJOR,[config]
 AC_DEFINE_UNQUOTED(CONFIG_XENO_VERSION_MINOR,$CONFIG_XENO_VERSION_MINOR,[config])
 AC_DEFINE_UNQUOTED(CONFIG_XENO_REVISION_LEVEL,$CONFIG_XENO_REVISION_LEVEL,[config])
 AC_DEFINE_UNQUOTED(CONFIG_XENO_UAPI_LEVEL,$CONFIG_XENO_UAPI_LEVEL,[config])
+AC_DEFINE_UNQUOTED(CONFIG_XENO_PREFIX,"$prefix",[config])
 
 dnl
 dnl Features we enabled and likely want to find at kernel level.
@@ -777,6 +778,7 @@ AC_CONFIG_FILES([ \
 	lib/Makefile \
 	lib/cobalt/Makefile \
 	lib/copperplate/Makefile \
+	lib/copperplate/regd/Makefile \
 	lib/alchemy/Makefile \
 	lib/vxworks/Makefile \
 	lib/psos/Makefile \

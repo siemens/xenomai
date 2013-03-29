@@ -30,10 +30,10 @@ struct fsobj;
 #ifdef CONFIG_XENO_REGISTRY
 
 struct registry_operations {
-	size_t (*read)(struct fsobj *fsobj,
-		       char *buf, size_t size, off_t offset);
-	size_t (*write)(struct fsobj *fsobj,
-			const char *buf, size_t size, off_t offset);
+	ssize_t (*read)(struct fsobj *fsobj,
+			char *buf, size_t size, off_t offset);
+	ssize_t (*write)(struct fsobj *fsobj,
+			 const char *buf, size_t size, off_t offset);
 };
 
 struct regfs_dir;
@@ -68,7 +68,9 @@ void registry_destroy_file(struct fsobj *fsobj);
 
 void registry_touch_file(struct fsobj *fsobj);
 
-int registry_pkg_init(char *arg0);
+int __registry_pkg_init(const char *arg0, char *mountpt);
+
+int registry_pkg_init(const char *arg0);
 
 void registry_pkg_destroy(void);
 
@@ -116,7 +118,7 @@ void registry_touch_file(struct fsobj *fsobj)
 }
 
 static inline
-int registry_pkg_init(char *arg0)
+int registry_pkg_init(const char *arg0)
 {
 	return 0;
 }

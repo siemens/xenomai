@@ -89,6 +89,12 @@ libtlsf_la_CPPFLAGS =			\
 	-I$(top_srcdir)/include		\
 	-DTLSF_USE_LOCKS=1 -DUSE_MMAP=1 -DTLSF_STATISTIC=1
 
+SUBDIRS = .
+
+if XENO_REGISTRY
+SUBDIRS += regd
+endif
+
 EXTRA_DIST = tlsf/README
 
 SPARSE = sparse
