@@ -57,10 +57,6 @@
 
 #include <asm-generic/xenomai/hal.h>	/* Read the generic bits. */
 
-#ifndef CONFIG_X86_WP_WORKS_OK
-#error "Xenomai has to rely on the WP bit, CONFIG_M486 or better required"
-#endif /* CONFIG_X86_WP_WORKS_OK */
-
 #if defined(CONFIG_X86_LOCAL_APIC) && \
   defined(apic_write_around) && !defined(CONFIG_X86_GOOD_APIC)
 #error "Xenomai needs a working LAPIC - if your machine has a bad one, you"

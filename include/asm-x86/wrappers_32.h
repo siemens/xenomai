@@ -93,6 +93,12 @@ typedef phys_addr_t resource_size_t;
 		:"1" (addr),"g" ((int)(size)),"g" (task_thread_info(task)->addr_limit.seg)); \
 	flag == 0; })
 
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(3,8,0)
+#ifndef CONFIG_X86_WP_WORKS_OK
+#error "Xenomai has to rely on the WP bit, CONFIG_M486 or better required"
+#endif /* CONFIG_X86_WP_WORKS_OK */
+#endif /* Linux <= 3.8.0 */
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,4,0)
 #ifdef TS_USEDFPU
 #define wrap_test_fpu_used(task)  \
