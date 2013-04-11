@@ -46,9 +46,15 @@ struct xnfeatinfo xeno_featinfo;
 int __RT(pthread_setschedparam)(pthread_t, int, const struct sched_param *);
 void cobalt_clock_init(int);
 
+#define report_error(fmt, args...) \
+	__real_fprintf(stderr, "Xenomai/cobalt: " fmt "\n", ##args)
+#define report_error_cont(fmt, args...) \
+	__real_fprintf(stderr, "                " fmt "\n", ##args)
+
 static void sigill_handler(int sig)
 {
-	fprintf(stderr, "Xenomai disabled in kernel?\n");
+	const char *m = "Xenomai disabled in kernel?\n";
+	write(2, m, sizeof(m) - 1);
 	exit(EXIT_FAILURE);
 }
 
@@ -83,8 +89,8 @@ static int bind_interface(void)
 
 	/* Some sanity checks first. */
 	if (access(XNHEAP_DEV_NAME, 0)) {
-		fprintf(stderr, "Xenomai: %s is missing\n(chardev, major=10 minor=%d)\n",
-			XNHEAP_DEV_NAME, XNHEAP_DEV_MINOR);
+		report_error("%s is missing\n(chardev, major=10 minor=%d)",
+			     XNHEAP_DEV_NAME, XNHEAP_DEV_MINOR);
 		exit(EXIT_FAILURE);
 	}
 
@@ -103,15 +109,14 @@ static int bind_interface(void)
 
 	switch (muxid) {
 	case -EINVAL:
-		fprintf(stderr, "Xenomai: incompatible feature set\n");
-		fprintf(stderr,
-			"(userland requires \"%s\", kernel provides \"%s\", missing=\"%s\").\n",
-			f->feat_man_s, f->feat_all_s, f->feat_mis_s);
+		report_error("incompatible feature set");
+		report_error_cont("(userland requires \"%s\", kernel provides \"%s\", missing=\"%s\")",
+				  f->feat_man_s, f->feat_all_s, f->feat_mis_s);
 		exit(EXIT_FAILURE);
 
 	case -ENOEXEC:
-		fprintf(stderr, "Xenomai: incompatible ABI revision level\n");
-		fprintf(stderr, "(user-space requires '%lu', kernel provides '%lu').\n",
+		report_error("incompatible ABI revision level");
+		report_error_cont("(user-space requires '%lu', kernel provides '%lu')",
 			XENOMAI_ABI_REV, f->feat_abirev);
 		exit(EXIT_FAILURE);
 
@@ -121,8 +126,7 @@ static int bind_interface(void)
 	}
 
 	if (muxid < 0) {
-		fprintf(stderr, "Xenomai: binding failed: %s.\n",
-			strerror(-muxid));
+		report_error("binding failed: %s", strerror(-muxid));
 		exit(EXIT_FAILURE);
 	}
 
@@ -154,8 +158,7 @@ void __init_cobalt_interface(void)
 
 	muxid = bind_interface();
 	if (muxid < 0) {
-		fprintf(stderr,
-			"Xenomai: Cobalt interface unavailable\n");
+		report_error("interface unavailable");
 		exit(EXIT_FAILURE);
 	}
 
@@ -186,21 +189,19 @@ void __init_cobalt_interface(void)
 	 * dlopen.
 	 */
 	if (mlockall(MCL_CURRENT | MCL_FUTURE)) {
-		perror("Xenomai Posix skin init: mlockall");
+		perror("Xenomai/cobalt: mlockall");
 		exit(EXIT_FAILURE);
 	}
 
 	ret = __STD(pthread_getschedparam(tid, &policy, &parm));
 	if (ret) {
-		fprintf(stderr, "Xenomai Posix skin init: "
-			"pthread_getschedparam: %s\n", strerror(ret));
+		report_error("pthread_getschedparam: %s", strerror(ret));
 		exit(EXIT_FAILURE);
 	}
 
 	ret = __RT(pthread_setschedparam(tid, policy, &parm));
 	if (ret) {
-		fprintf(stderr, "Xenomai Posix skin init: "
-			"pthread_setschedparam: %s\n", strerror(ret));
+		report_error("pthread_setschedparam: %s", strerror(ret));
 		exit(EXIT_FAILURE);
 	}
 
@@ -210,17 +211,16 @@ no_shadow:
 
 	ret = pthread_atfork(NULL, NULL, &__init_cobalt_interface);
 	if (ret) {
-		fprintf(stderr, "Xenomai Posix skin init: "
-			"pthread_atfork: %s\n", strerror(ret));
+		report_error("pthread_atfork: %s", strerror(ret));
 		exit(EXIT_FAILURE);
 	}
 	fork_handler_registered = 1;
 
 	if (sizeof(struct __shadow_mutex) > sizeof(pthread_mutex_t)) {
-		fprintf(stderr, "sizeof(pthread_mutex_t): %d <"
-			" sizeof(shadow_mutex): %d !\n",
-			(int) sizeof(pthread_mutex_t),
-			(int) sizeof(struct __shadow_mutex));
+		report_error("sizeof(pthread_mutex_t): %d <"
+			     " sizeof(shadow_mutex): %d !",
+			     (int) sizeof(pthread_mutex_t),
+			     (int) sizeof(struct __shadow_mutex));
 		exit(EXIT_FAILURE);
 	}
 }

@@ -35,8 +35,8 @@ void cobalt_clock_init(int muxid)
 {
 	int err = -XENOMAI_SYSCALL2(sc_nucleus_info, muxid, &__cobalt_sysinfo);
 	if (err) {
-		fprintf(stderr, "Xenomai Posix skin init: "
-			"sys_info: %s\n", strerror(err));
+		fprintf(stderr, "Xenomai/cobalt: "
+			"sc_nucleus_info call failed: %s\n", strerror(err));
 		exit(EXIT_FAILURE);
 	}
 }
