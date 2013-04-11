@@ -116,11 +116,6 @@ while test $# -gt 0; do
     arg="$1"
     shift
     case "$arg" in
-	*cobalt*)
-	    stage2_args="$stage2_args $arg"
-	    stage2=:
-	    ;;
-
 	-Xlinker)
 	    arg="$1"
 	    shift
@@ -148,6 +143,13 @@ while test $# -gt 0; do
 
 	-Wl,*)
 	    add_linker_flag "$arg"
+	    ;;
+
+	*cobalt*)
+	    # linker directives might contain this pattern as well, so
+	    # match it later in the test sequence.
+	    stage2_args="$stage2_args $arg"
+	    stage2=:
 	    ;;
 
 	-o)
