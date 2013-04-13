@@ -19,6 +19,9 @@
  *   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#ifndef _XENO_ASM_X86_SMI_H
+#define _XENO_ASM_X86_SMI_H
+
 #ifndef __KERNEL__
 #error "Pure kernel header included from user-space!"
 #endif
@@ -27,16 +30,8 @@
 #error "please don't include asm/smi.h directly"
 #endif
 
-#if defined(CONFIG_XENO_HW_SMI_DETECT) && defined(CONFIG_XENO_HW_SMI_WORKAROUND)
 void mach_x86_smi_disable(void);
 void mach_x86_smi_restore(void);
-#else /* !CONFIG_XENO_HW_SMI_DETECT || !CONFIG_XENO_HW_SMI_WORKAROUND */
-static inline void mach_x86_smi_disable(void) { }
-static inline void mach_x86_smi_restore(void) { }
-#endif /* !CONFIG_XENO_HW_SMI_DETECT || !CONFIG_XENO_HW_SMI_WORKAROUND */
-
-#ifdef CONFIG_XENO_HW_SMI_DETECT
 void mach_x86_smi_init(void);
-#else /* !CONFIG_XENO_HW_SMI_DETECT */
-static inline void mach_x86_smi_init(void) { }
-#endif /* CONFIG_XENO_HW_SMI_DETECT */
+
+#endif /* !_XENO_ASM_X86_SMI_64_H */
