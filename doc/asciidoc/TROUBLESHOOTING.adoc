@@ -131,52 +131,59 @@ See <<ENODEV, code -19>>.
 Xenomai: SMI-enabled chipset found, but SMI workaround disabled
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-First you should run the latency test under some load and see if
-you experience any pathological latency ("pathological" meaning more
-than, say, 100 micro-seconds). If you do not observe any such latency,
-then this warning is harmless, and if you find it annoying, you may
-disable "SMI detection" in Xenomai's configuration menu. You can skip
+First you should run the latency test under some load and see if you
+experience any pathological latency ("pathological" meaning more than,
+say, 100 micro-seconds). If you do not observe any such latency, then
+this warning is harmless, and if you find it annoying, you may add the
+parameter "xeno_hal.smi=-1" on the kernel command line. You can skip
 the rest of this section.
 
 If you observe any high latency then you have a problem with SMI, and
-this warning was intended for you. But the Xenomai configuration menu
-allow you to enable two workarounds which may help you. These
-workarounds may be found in the Machine/SMI workaround sub-menu of
-Xenomai configuration menu.
+this warning was intended for you. But the Xenomai patched kernel
+parameters allow you to enable two workarounds which may help you. These
+workarounds are enabled by adding the parameter "xeno_hal.smi=1" on
+the kernel command line.
 
 The first workaround which you should try is to disable all SMI
-sources. In order to do this, in the Xenomai configuration menu, select
-the options "Enable SMI workaround" and "Globally disable SMI". This
-option is the safest workaround, because when enabled, no SMI can
-interfere with hardware interrupt management behind your back and
-cause high latencies.  Once this workaround enabled, you should run
-the latency test again, verify that your high latency disappeared but
-most importantly, verify that every peripheral you intend to use with
-Xenomai is working properly. If everything is working properly, then you
-are done with SMI.
+sources. In order to do this, simply boot with the parameter
+"xeno_hal.smi=1" on the kernel command line. This option is the most
+reliable workaround, because when enabled, no SMI can interfere with
+hardware interrupt management behind your back and cause high
+latencies. Once this workaround enabled, you should run the latency
+test again, verify that your high latency disappeared but most
+importantly, verify that every peripheral you intend to use with
+Xenomai is working properly. 
+
+If everything is working properly, then try and stress-test the
+system, and check for overheating. If the motherboard sensors do not
+allow to check temperature, and you get an unexplained reboot in the
+middle of the stress-test, chances are that you have an overheating
+issue, otherwise, you are done with the SMI workaround.
+
+IMPORTANT: if your system is over-heating you should not disable the
+SMI globally as the SMI are probably needed for controlling the
+cooling of your system, so disabling them globally may damage your
+system. Try the next section. Otherwise, you are done with SMI.
 
 If some peripheral is not working properly, then it probably needs
 SMI, in which case you can not simply disable SMI globally, you will
 need to disable all SMI sources on your system except the SMI needed
-by your peripheral. This is a much less safe choice, since Xenomai has
+by your peripheral. The same goes if the system overheat, you have to
+find a waytto keep the SMI source which is controlling the thermal
+control enabled. This is a much less reliable choice, since you have
 to know all SMI sources to disable them, one by one. In order to
-choose this second workaround, unselect the option "Globally disable
-SMI", and select the option corresponding to your peripheral. For
-example, if you need legacy USB emulation to get your USB mouse
-working, select the option "Enable legacy USB emulation". You should
-then run the latency test again and verify that you do not observe any
-high latency and that all your peripherals are functioning
-correctly. If you can not find your peripheral in the list proposed in
-the Xenomai configuration menu, drop a mail to the
-mailto:xenomai@xenomai.org[Xenomai mailing list], we will try and
-possibly add the proper option if needed. If when running the latency
-test again, your peripheral is working properly and you still observe
-high latencies, then you are out of luck, the peripheral you want is
-likely to be the cause of such latencies.
+choose this second workaround, check in the documentation for the
+Intel chipset you use, for the documentation of the SMI_EN
+register. Then set the "xeno_hal.smi_mask" parameter on the kernel
+command line with a value where all bits set to 0 will be disabled
+when Xenomai starts.
 
-IMPORTANT: On some systems, SMI may be involved in thermal throttling
-of the CPU. Thus, switching it off *can cause hardware damage* in
-overheat situations. Do not disable SMIs if you are in this case.
+You should then run the latency test again and verify that you do not
+observe any high latency and that all your peripherals are functioning
+correctly. If when running the latency test again, your peripheral is
+working properly and you still observe high latencies, then you are
+out of luck, the peripheral you want is likely to be the cause of such
+latencies.
 
 
 [[ENODEV]]
