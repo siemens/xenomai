@@ -738,6 +738,7 @@ static inline void destroy_threadinfo(void)
 {
 	struct ipipe_threadinfo *p = ipipe_current_threadinfo();
 	p->thread = NULL;
+	p->mm = NULL;
 }
 
 /**
@@ -2152,6 +2153,7 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 	XENO_BUGON(NUCLEUS, !xnpod_root_p());
 
 	thread = xnshadow_current();
+	XENO_BUGON(NUCLEUS, thread == NULL);
 
 	trace_mark(xn_nucleus, shadow_exit, "thread %p thread_name %s",
 		   thread, xnthread_name(thread));
@@ -2161,7 +2163,6 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 
 	/* __xnpod_cleanup_thread() -> hook -> xnshadow_unmap() */
 	__xnpod_cleanup_thread(thread);
-	destroy_threadinfo();
 
 	if (xnthread_test_state(thread, XNUSER)) {
 		xnlock_get_irqsave(&nklock, s);
@@ -2171,6 +2172,8 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 		if (!xnarch_atomic_get(&sys_ppd->refcnt))
 			ppd_remove_mm(mm, detach_ppd);
 	}
+
+	destroy_threadinfo();
 
 	return EVENT_PROPAGATE;
 }
@@ -2302,14 +2305,32 @@ static int handle_sigwake_event(struct task_struct *p)
 static int handle_cleanup_event(struct mm_struct *mm)
 {
 	struct xnsys_ppd *sys_ppd;
+	struct xnthread *thread;
 	struct mm_struct *old;
+	spl_t s;
 
 	/* We are NOT called for exiting kernel shadows. */
 
 	old = xnshadow_swap_mm(mm);
 
+	xnlock_get_irqsave(&nklock, s);
 	sys_ppd = xnsys_ppd_get(0);
+	xnlock_put_irqrestore(&nklock, s);
 	if (sys_ppd != &__xnsys_global_ppd) {
+		/*
+		 * Detect a userland shadow running exec(), i.e. still
+		 * attached to the current linux task (no prior
+		 * destroy_threadinfo). In this case, we emulate a
+		 * task exit, since the Xenomai binding shall not
+		 * survive the exec() syscall. Since the process will
+		 * keep on running though, we have to disable the
+		 * event notifier manually for it.
+		 */
+		thread = xnshadow_current();
+		if (thread && (current->flags & PF_EXITING) == 0) {
+			handle_taskexit_event(current);
+			ipipe_disable_notifier(current);
+		}
 		if (xnarch_atomic_dec_and_test(&sys_ppd->refcnt))
 			ppd_remove_mm(mm, detach_ppd);
 	}
