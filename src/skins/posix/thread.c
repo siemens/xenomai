@@ -26,8 +26,8 @@
 #include <sys/types.h>
 #include <semaphore.h>
 #include <posix/syscall.h>
-#include <asm-generic/bits/current.h>
-#include <asm-generic/bits/sigshadow.h>
+#include <asm-generic/current.h>
+#include <asm-generic/sigshadow.h>
 #include <asm-generic/stack.h>
 
 extern int __pse51_muxid;

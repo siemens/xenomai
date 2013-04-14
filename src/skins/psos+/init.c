@@ -20,7 +20,7 @@
 #include <errno.h>
 #include <sys/mman.h>
 #include <psos+/psos.h>
-#include <asm-generic/xenomai/bits/bind.h>
+#include <asm-generic/xenomai/bind.h>
 
 int __psos_muxid = -1;
 

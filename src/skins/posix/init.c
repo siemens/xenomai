@@ -26,11 +26,11 @@
 #include <posix/posix.h>
 #include <posix/syscall.h>
 #include <rtdm/syscall.h>
-#include <asm-generic/bits/sigshadow.h>
+#include <asm-generic/sigshadow.h>
 #include <posix/mutex.h>
 #include <rtdk.h>
 
-#include <asm-generic/xenomai/bits/bind.h>
+#include <asm-generic/xenomai/bind.h>
 
 int __pse51_muxid = -1;
 int __pse51_rtdm_muxid = -1;

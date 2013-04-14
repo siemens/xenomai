@@ -6,7 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <asm-generic/xenomai/bits/bind.h>
+#include <asm-generic/xenomai/bind.h>
 #include <asm/xenomai/features.h>
 
 #ifdef __i386__

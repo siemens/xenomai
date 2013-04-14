@@ -27,8 +27,8 @@
 #include <string.h>
 #include <psos+/psos.h>
 #include <psos+/long_names.h>
-#include <asm-generic/bits/sigshadow.h>
-#include <asm-generic/bits/current.h>
+#include <asm-generic/sigshadow.h>
+#include <asm-generic/current.h>
 #include <asm-generic/stack.h>
 
 extern int __psos_muxid;

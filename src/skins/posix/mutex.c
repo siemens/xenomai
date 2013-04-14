@@ -23,14 +23,13 @@
 #include <posix/mutex.h>
 #include <posix/syscall.h>
 #include <posix/cb_lock.h>
-#include <asm-generic/bits/current.h>
+#include <asm-generic/current.h>
+#include <asm-generic/sem_heap.h>
 
 extern int __pse51_muxid;
 
 #ifdef CONFIG_XENO_FASTSYNCH
 #define PSE51_MUTEX_MAGIC (0x86860303)
-
-extern unsigned long xeno_sem_heap[2];
 
 static xnarch_atomic_t *get_ownerp(struct __shadow_mutex *shadow)
 {

@@ -2,7 +2,7 @@
 #include <signal.h>
 
 #include <asm/xenomai/syscall.h>
-#include <asm-generic/xenomai/bits/sigshadow.h>
+#include <asm-generic/xenomai/sigshadow.h>
 
 static struct sigaction xeno_saved_sigshadow_action;
 

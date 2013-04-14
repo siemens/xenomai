@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <rtdm/syscall.h>
-#include <asm-generic/xenomai/bits/bind.h>
+#include <asm-generic/xenomai/bind.h>
 
 int __rtdm_muxid = -1;
 

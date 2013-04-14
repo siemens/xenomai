@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <syslog.h>
 #include <rtdk.h>
-#include <asm-generic/bits/current.h>
+#include <asm-generic/current.h>
 
 int __wrap_vfprintf(FILE *stream, const char *fmt, va_list args)
 {

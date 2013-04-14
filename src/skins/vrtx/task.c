@@ -29,8 +29,8 @@
 #include <limits.h>
 #include <nucleus/sched.h>
 #include <vrtx/vrtx.h>
-#include <asm-generic/bits/sigshadow.h>
-#include <asm-generic/bits/current.h>
+#include <asm-generic/sigshadow.h>
+#include <asm-generic/current.h>
 #include <asm-generic/stack.h>
 #include "wrappers.h"
 

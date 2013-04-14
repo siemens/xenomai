@@ -10,7 +10,7 @@
 #include <unistd.h>
 #include <limits.h>
 
-#include <asm-generic/xenomai/bits/bind.h>
+#include <asm-generic/xenomai/bind.h>
 #include <asm/xenomai/syscall.h>
 
 struct __xn_full_tscinfo __xn_tscinfo = {

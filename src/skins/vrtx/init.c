@@ -23,7 +23,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <vrtx/vrtx.h>
-#include <asm-generic/xenomai/bits/bind.h>
+#include <asm-generic/xenomai/bind.h>
 
 int __vrtx_muxid = -1;
 

@@ -10,7 +10,7 @@
 #include <unistd.h>
 #include <limits.h>
 
-#include <asm-generic/xenomai/bits/bind.h>
+#include <asm-generic/xenomai/bind.h>
 
 volatile void *xeno_nios2_hrclock = NULL;
 

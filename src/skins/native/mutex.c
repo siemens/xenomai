@@ -21,10 +21,10 @@
 #include <nucleus/thread.h>
 #include <native/syscall.h>
 #include <native/mutex.h>
-#include <asm-generic/bits/current.h>
+#include <asm-generic/current.h>
+#include <asm-generic/sem_heap.h>
 
 extern int __native_muxid;
-extern unsigned long xeno_sem_heap[2];
 
 int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 {

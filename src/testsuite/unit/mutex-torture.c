@@ -29,7 +29,7 @@
 #include <native/sem.h>
 #include <native/cond.h>
 #endif /* __NATIVE_SKIN */
-#include <asm-generic/xenomai/bits/current.h> /* For internal use, do not use
+#include <asm-generic/xenomai/current.h> /* For internal use, do not use
 					 in your code. */
 #include <asm-generic/xenomai/stack.h>
 

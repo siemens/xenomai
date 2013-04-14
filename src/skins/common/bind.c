@@ -7,7 +7,7 @@
 
 #include <nucleus/heap.h>
 #include <asm/xenomai/syscall.h>
-#include <asm-generic/xenomai/bits/current.h>
+#include <asm-generic/xenomai/current.h>
 #include <asm-generic/xenomai/timeconv.h>
 #include <asm-generic/xenomai/stack.h>
 #include <asm/xenomai/bits/bind.h>
