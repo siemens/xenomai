@@ -66,7 +66,15 @@ int rt_mutex_bind(RT_MUTEX *mutex, const char *name, RTIME timeout)
 
 int rt_mutex_delete(RT_MUTEX *mutex)
 {
-	return XENOMAI_SKINCALL1(__native_muxid, __native_mutex_delete, mutex);
+	int err;
+	
+	err = XENOMAI_SKINCALL1(__native_muxid, __native_mutex_delete, mutex);
+#ifdef CONFIG_XENO_FASTSYNCH
+	if (err == 0)
+		mutex->fastlock = NULL;
+#endif /* CONFIG_XENO_FASTSYNCH */
+
+	return err;
 }
 
 static int rt_mutex_acquire_inner(RT_MUTEX *mutex, RTIME timeout, xntmode_t mode)
