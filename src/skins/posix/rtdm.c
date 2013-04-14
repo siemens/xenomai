@@ -87,7 +87,8 @@ int __wrap_socket(int protocol_family, int socket_type, int protocol)
 				protocol_family, socket_type, protocol);
 	if (ret >= 0)
 		ret += __pse51_rtdm_fd_start;
-	else if (ret == -EAFNOSUPPORT || ret == -ENOSYS) {
+	else if (ret == -EAFNOSUPPORT || ret == -EPROTONOSUPPORT || 
+		 ret == -ENOSYS) {
 		ret = __real_socket(protocol_family, socket_type, protocol);
 
 		if (ret >= __pse51_rtdm_fd_start) {
