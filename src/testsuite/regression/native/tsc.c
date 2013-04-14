@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <unistd.h>
+#include <sched.h>
 #include <sys/mman.h>
 
 #include <native/timer.h>
@@ -11,6 +13,26 @@
 #define __xn_rdtsc() rt_timer_tsc()
 #endif /* !XNARCH_HAVE_NONPRIV_TSC */
 
+#ifdef HAVE_RECENT_SETAFFINITY
+#define do_sched_setaffinity(pid,len,mask) sched_setaffinity(pid,len,mask)
+#define do_sched_getaffinity(pid,len,mask) sched_setaffinity(pid,len,mask)
+#else /* !HAVE_RECENT_SETAFFINITY */
+#ifdef HAVE_OLD_SETAFFINITY
+#define do_sched_setaffinity(pid,len,mask) sched_setaffinity(pid,mask)
+#define do_sched_getaffinity(pid,len,mask) sched_setaffinity(pid,mask)
+#else /* !HAVE_OLD_SETAFFINITY */
+#ifndef __cpu_set_t_defined
+typedef unsigned long cpu_set_t;
+#endif
+#define do_sched_setaffinity(pid,len,mask) 0
+#define do_sched_getaffinity(pid,len,mask) 0
+#ifndef CPU_ZERO
+#define	 CPU_ZERO(set)		do { *(set) = 0; } while(0)
+#define	 CPU_SET(n,set)	do { *(set) |= (1 << n); } while(0)
+#endif
+#endif /* HAVE_OLD_SETAFFINITY */
+#endif /* HAVE_RECENT_SETAFFINITY */
+
 int main(int argc, const char *argv[])
 {
 	unsigned long long runtime, start, jump, tsc1, tsc2;
@@ -18,7 +40,22 @@ int main(int argc, const char *argv[])
 	unsigned long long loops, g_loops;
 	unsigned dt, min, max, g_min, g_max;
 	unsigned long long secs;
-	unsigned i;
+	unsigned i, margin;
+
+#if CONFIG_SMP
+	/* Pin the test to the CPU it is currently running on */
+	cpu_set_t mask;
+	
+	if (do_sched_getaffinity(0, sizeof(mask), &mask) == 0)
+		for (i = 0; i < sysconf(_SC_NPROCESSORS_ONLN); i++)
+			if (CPU_ISSET(i, &mask)) {
+				CPU_ZERO(&mask);
+				CPU_SET(i, &mask);
+				
+				do_sched_setaffinity(0, sizeof(mask), &mask);
+				break;
+			}
+#endif
 
 	g_min = ~0U;
 	g_max = 0;
@@ -26,6 +63,9 @@ int main(int argc, const char *argv[])
 	g_loops = 0;
 	one_sec = rt_timer_ns2tsc(1000000000);
 	runtime = __xn_rdtsc();
+	margin = rt_timer_ns2tsc(2000);
+	if (margin < 80)
+		margin = 80;
 
 #ifdef __ARMEL__
 	if (argc == 2 && !strcmp(argv[1], "-w")) {
@@ -61,7 +101,7 @@ int main(int argc, const char *argv[])
 
 			dt = tsc2 - tsc1;
 
-			if (dt > 80)
+			if (dt > margin)
 				continue;
 
 			if (dt < min)
