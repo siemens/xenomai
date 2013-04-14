@@ -1,3 +1,4 @@
+#include <linux/vmalloc.h>
 #include <nucleus/pod.h>
 #include <nucleus/synch.h>
 #include <nucleus/thread.h>
@@ -323,7 +324,7 @@ static int rtswitch_set_tasks_count(rtswitch_context_t *ctx, unsigned count)
 	if (ctx->tasks_count == count)
 		return 0;
 
-	tasks = kmalloc(count * sizeof(*tasks), GFP_KERNEL);
+	tasks = vmalloc(count * sizeof(*tasks));
 
 	if (!tasks)
 		return -ENOMEM;
@@ -331,7 +332,7 @@ static int rtswitch_set_tasks_count(rtswitch_context_t *ctx, unsigned count)
 	down(&ctx->lock);
 
 	if (ctx->tasks)
-		kfree(ctx->tasks);
+		vfree(ctx->tasks);
 
 	ctx->tasks = tasks;
 	ctx->tasks_count = count;
@@ -543,7 +544,7 @@ static int rtswitch_close(struct rtdm_dev_context *context,
 			}
 			rtdm_event_destroy(&task->rt_synch);
 		}
-		kfree(ctx->tasks);
+		vfree(ctx->tasks);
 	}
 	rtdm_timer_destroy(&ctx->wake_up_delay);
 	rtdm_nrtsig_destroy(&ctx->wake_utask);
