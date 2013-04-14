@@ -32,6 +32,7 @@
 #include <asm/xenomai/atomic.h>	/* For atomic_cmpxchg */
 #include <asm-generic/stack.h>
 #include <asm-generic/current.h>
+#include "internal.h"
 
 #define RT_PRINT_BUFFER_ENV		"RT_PRINT_BUFFER"
 #define RT_PRINT_DEFAULT_BUFFER		16*1024
@@ -666,7 +667,7 @@ static void forked_child_init(void)
 	spawn_printer_thread();
 }
 
-static __attribute__ ((constructor)) void __rt_print_init(void)
+void cobalt_print_init(void)
 {
 	const char *value_str;
 	unsigned long long period;
@@ -740,7 +741,7 @@ static __attribute__ ((constructor)) void __rt_print_init(void)
 			xnarch_atomic_set(&pool_bitmap[i], ~0UL);
 		if (buffers_count % BITS_PER_LONG)
 			xnarch_atomic_set(&pool_bitmap[i],
-					  (1UL << (buffers_count % BITS_PER_LONG))					  - 1);
+					  (1UL << (buffers_count % BITS_PER_LONG)) - 1);
 
 		for (i = 0; i < buffers_count; i++) {
 			struct print_buffer *buffer =
@@ -761,9 +762,11 @@ static __attribute__ ((constructor)) void __rt_print_init(void)
 
 	spawn_printer_thread();
 	pthread_atfork(NULL, NULL, forked_child_init);
+
+	rt_print_auto_init(1);
 }
 
-static __attribute__ ((destructor)) void __rt_print_exit(void)
+void cobalt_print_exit(void)
 {
 	if (buffers) {
 		/* Flush the buffers. Do not call print_buffers here

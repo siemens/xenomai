@@ -14,6 +14,7 @@
 #include <asm/xenomai/syscall.h>
 #include <asm-generic/sem_heap.h>
 #include <asm-generic/current.h>
+#include "internal.h"
 
 #define PRIVATE 0
 #define SHARED 1

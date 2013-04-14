@@ -154,8 +154,6 @@ void __init_cobalt_interface(void)
 	struct sigaction sa;
 	const char *p;
 
-	rt_print_auto_init(1);
-
 	muxid = bind_interface();
 	if (muxid < 0) {
 		report_error("interface unavailable");
@@ -223,4 +221,6 @@ no_shadow:
 			     (int) sizeof(struct __shadow_mutex));
 		exit(EXIT_FAILURE);
 	}
+
+	cobalt_print_init();
 }

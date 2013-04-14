@@ -23,6 +23,7 @@
 #include <nucleus/thread.h>
 #include <asm-generic/syscall.h>
 #include <asm-generic/current.h>
+#include <unistd.h>
 
 static void assert_nrt_inner(void)
 {
@@ -32,8 +33,8 @@ static void assert_nrt_inner(void)
 	err = XENOMAI_SYSCALL1(sc_nucleus_current_info, &info);
 
 	if (err) {
-		fprintf(stderr, "sc_nucleus_current_info failed: %s\n",
-			strerror(-err));
+		fprintf(stderr, "sc_nucleus_current_info failed: %s, window=%p, state=%lx, pid=%d\n",
+			strerror(-err), xeno_current_window, xeno_current_window->state, getpid());
 		return;
 	}
 

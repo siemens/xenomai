@@ -71,4 +71,8 @@ int cobalt_event_inquire(cobalt_event_t *event,
 
 int cobalt_event_destroy(cobalt_event_t *event);
 
+void cobalt_print_init(void);
+
+void cobalt_print_exit(void);
+
 #endif /* XENO_COBALT_INTERNAL_H */

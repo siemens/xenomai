@@ -12,9 +12,13 @@
 
 extern unsigned long xeno_sem_heap[2];
 
+static void child_fork_handler(void);
+
 #ifdef HAVE_TLS
+
 __thread __attribute__ ((tls_model (CONFIG_XENO_TLS_MODEL)))
 xnhandle_t xeno_current = XN_NO_HANDLE;
+
 __thread __attribute__ ((tls_model (CONFIG_XENO_TLS_MODEL)))
 struct xnthread_user_window *xeno_current_window;
 
@@ -23,8 +27,9 @@ static inline void __xeno_set_current(xnhandle_t current)
 	xeno_current = current;
 }
 
-void xeno_init_current_keys(void)
+static void init_current_keys(void)
 {
+	pthread_atfork(NULL, NULL, &child_fork_handler);
 }
 
 void xeno_set_current_window(unsigned long offset)
@@ -33,6 +38,7 @@ void xeno_set_current_window(unsigned long offset)
 		(xeno_sem_heap[0] + offset);
 	__cobalt_prefault(xeno_current_window);
 }
+
 #else /* !HAVE_TLS */
 
 pthread_key_t xeno_current_window_key;
@@ -44,19 +50,13 @@ static inline void __xeno_set_current(xnhandle_t current)
 	pthread_setspecific(xeno_current_key, (void *)current);
 }
 
-static void xeno_current_fork_handler(void)
-{
-	if (xeno_get_current() != XN_NO_HANDLE)
-		__xeno_set_current(XN_NO_HANDLE);
-}
-
 static void init_current_keys(void)
 {
 	int err = pthread_key_create(&xeno_current_key, NULL);
 	if (err)
 		goto error_exit;
 
-	pthread_atfork(NULL, NULL, &xeno_current_fork_handler);
+	pthread_atfork(NULL, NULL, &child_fork_handler);
 
 	err = pthread_key_create(&xeno_current_window_key, NULL);
 	if (err) {
@@ -67,12 +67,6 @@ static void init_current_keys(void)
 	}
 }
 
-void xeno_init_current_keys(void)
-{
-	static pthread_once_t xeno_init_current_keys_once = PTHREAD_ONCE_INIT;
-	pthread_once(&xeno_init_current_keys_once, init_current_keys);
-}
-
 void xeno_set_current_window(unsigned long offset)
 {
 	struct xnthread_user_window *window;
@@ -81,7 +75,14 @@ void xeno_set_current_window(unsigned long offset)
 	pthread_setspecific(xeno_current_window_key, window);
 	__cobalt_prefault(window);
 }
+
 #endif /* !HAVE_TLS */
+
+static void child_fork_handler(void)
+{
+	if (xeno_get_current() != XN_NO_HANDLE)
+		__xeno_set_current(XN_NO_HANDLE);
+}
 
 xnhandle_t xeno_slow_get_current(void)
 {
@@ -105,4 +106,10 @@ void xeno_set_current(void)
 		exit(EXIT_FAILURE);
 	}
 	__xeno_set_current(current);
+}
+
+void xeno_init_current_keys(void)
+{
+	static pthread_once_t xeno_init_current_keys_once = PTHREAD_ONCE_INIT;
+	pthread_once(&xeno_init_current_keys_once, init_current_keys);
 }
