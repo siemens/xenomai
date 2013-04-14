@@ -106,7 +106,7 @@ void ms_sleep(int time)
 
 	nanosleep(&ts, NULL);
 #else /* __NATIVE_SKIN__ */
-	rt_task_sleep(time*NS_PER_MS);
+	rt_task_sleep(rt_timer_ns2ticks(time*NS_PER_MS) + 1);
 #endif /* __NATIVE_SKIN__ */
 }
 
@@ -233,7 +233,7 @@ int dispatch(const char *service_name,
 		timespec_add(&ts, timeout);
 		status = pthread_mutex_timedlock(mutex, &ts);
 #else /* __NATIVE_SKIN__ */
-		status = -rt_mutex_acquire(mutex, timeout);
+		status = -rt_mutex_acquire(mutex, rt_timer_ns2ticks(timeout) + 1);
 #endif /* __NATIVE_SKIN__ */
 		break;
 

@@ -152,7 +152,7 @@ typedef RT_MUTEX mutex_t;
 typedef RT_TASK *thread_t;
 typedef RT_COND cond_t;
 
-#define timer_read() rt_timer_read()
+#define timer_read() rt_timer_ticks2ns(rt_timer_read())
 
 int __mutex_init(mutex_t *mutex, const char *name, int type, int pi)
 {
@@ -174,13 +174,15 @@ int __cond_init(cond_t *cond, const char *name, int absolute)
 }
 #define cond_init(cond, absolute) __cond_init(cond, #cond, absolute)
 #define cond_signal(cond) rt_cond_signal(cond)
-#define cond_wait(cond, mutex, ns) rt_cond_wait(cond, mutex, (RTIME)ns)
+#define cond_wait(cond, mutex, ns) \
+	rt_cond_wait(cond, mutex, ns == XN_INFINITE ? ns : (rt_timer_ns2ticks(ns) + 1))
 #define cond_wait_until(cond, mutex, ns) \
-	rt_cond_wait_until(cond, mutex, (RTIME)ns)
+	rt_cond_wait_until(cond, mutex, rt_timer_ns2ticks(ns) + 1)
 #define cond_destroy(cond) rt_cond_delete(cond)
 
 #define thread_self() rt_task_self()
-#define thread_msleep(ms) rt_task_sleep((RTIME)ms * NS_PER_MS)
+#define thread_msleep(ms) \
+	rt_task_sleep(rt_timer_ns2ticks((RTIME)ms * NS_PER_MS) + 1)
 int
 thread_spawn_inner(thread_t *thread, const char *name,
 		   int prio, void *(*handler)(void *), void *cookie)
