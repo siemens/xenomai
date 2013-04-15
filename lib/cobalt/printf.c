@@ -95,8 +95,9 @@ static void print_buffers(void);
 
 /* *** rt_print API *** */
 
-static int vprint_to_buffer(FILE *stream, int priority, unsigned int mode,
-			    size_t sz, const char *format, va_list args)
+static int 
+vprint_to_buffer(FILE *stream, int fortify_level, int priority, 
+		 unsigned int mode, size_t sz, const char *format, va_list args)
 {
 	struct print_buffer *buffer = pthread_getspecific(buffer_key);
 	off_t write_pos, read_pos;
@@ -158,6 +159,16 @@ static int vprint_to_buffer(FILE *stream, int priority, unsigned int mode,
 	if (mode == RT_PRINT_MODE_FORMAT) {
 		if (stream != RT_PRINT_SYSLOG_STREAM) {
 			/* We do not need the terminating \0 */
+#ifdef CONFIG_XENO_FORTIFY
+			if (fortify_level > 0)
+				res = __vsnprintf_chk(head->data, len,
+						      fortify_level - 1,
+						      len > 0 ? len : 0, 
+						      format, args);
+			else
+#else
+				(void)fortify_level;
+#endif
 			res = vsnprintf(head->data, len, format, args);
 
 			if (res < len) {
@@ -170,7 +181,15 @@ static int vprint_to_buffer(FILE *stream, int priority, unsigned int mode,
 			}
 		} else {
 			/* We DO need the terminating \0 */
-			res = vsnprintf(head->data, len, format, args);
+#ifdef CONFIG_XENO_FORTIFY
+			if (fortify_level > 0)
+				res = __vsnprintf_chk(head->data, len,
+						      fortify_level - 1,
+						      len > 0 ? len : 0, 
+						      format, args);
+			else
+#endif
+				res = vsnprintf(head->data, len, format, args);
 
 			if (res < len) {
 				/* Text was written completely, res contains its
@@ -226,7 +245,7 @@ static int print_to_buffer(FILE *stream, int priority, unsigned int mode,
 	int ret;
 
 	va_start(args, format);
-	ret = vprint_to_buffer(stream, priority, mode, sz, format, args);
+	ret = vprint_to_buffer(stream, 0, priority, mode, sz, format, args);
 	va_end(args);
 
 	return ret;
@@ -234,9 +253,19 @@ static int print_to_buffer(FILE *stream, int priority, unsigned int mode,
 
 int rt_vfprintf(FILE *stream, const char *format, va_list args)
 {
-	return vprint_to_buffer(stream, 0,
+	return vprint_to_buffer(stream, 0, 0,
 				RT_PRINT_MODE_FORMAT, 0, format, args);
 }
+
+#ifdef CONFIG_XENO_FORTIFY
+
+int __rt_vfprintf_chk(FILE *stream, int level, const char *fmt, va_list args)
+{
+	return vprint_to_buffer(stream, level + 1, 0,
+				RT_PRINT_MODE_FORMAT, 0, fmt, args);
+}
+
+#endif
 
 int rt_vprintf(const char *format, va_list args)
 {
@@ -312,16 +341,26 @@ void rt_syslog(int priority, const char *format, ...)
 	va_list args;
 
 	va_start(args, format);
-	vprint_to_buffer(RT_PRINT_SYSLOG_STREAM, priority,
+	vprint_to_buffer(RT_PRINT_SYSLOG_STREAM, 0, priority,
 			 RT_PRINT_MODE_FORMAT, 0, format, args);
 	va_end(args);
 }
 
 void rt_vsyslog(int priority, const char *format, va_list args)
 {
-	vprint_to_buffer(RT_PRINT_SYSLOG_STREAM, priority,
+	vprint_to_buffer(RT_PRINT_SYSLOG_STREAM, 0, priority,
 			 RT_PRINT_MODE_FORMAT, 0, format, args);
 }
+
+#ifdef CONFIG_XENO_FORTIFY
+
+void __rt_vsyslog_chk(int priority, int level, const char *fmt, va_list args)
+{
+	vprint_to_buffer(RT_PRINT_SYSLOG_STREAM, level + 1, priority,
+			 RT_PRINT_MODE_FORMAT, 0, fmt, args);
+}
+
+#endif
 
 static void set_buffer_name(struct print_buffer *buffer, const char *name)
 {
@@ -681,7 +720,7 @@ void cobalt_print_init(void)
 		errno = 0;
 		default_buffer_size = strtol(value_str, NULL, 10);
 		if (errno || default_buffer_size < RT_PRINT_LINE_BREAK) {
-			__real_fprintf(stderr, "Invalid %s\n", RT_PRINT_BUFFER_ENV);
+			__STD(fprintf(stderr, "Invalid %s\n", RT_PRINT_BUFFER_ENV));
 			exit(1);
 		}
 	}
@@ -692,7 +731,7 @@ void cobalt_print_init(void)
 		errno = 0;
 		period = strtoll(value_str, NULL, 10);
 		if (errno) {
-			__real_fprintf(stderr, "Invalid %s\n", RT_PRINT_PERIOD_ENV);
+			__STD(fprintf(stderr, "Invalid %s\n", RT_PRINT_PERIOD_ENV));
 			exit(1);
 		}
 	}
@@ -710,8 +749,8 @@ void cobalt_print_init(void)
 			errno = 0;
 			buffers_count = strtoul(value_str, NULL, 0);
 			if (errno) {
-				__real_fprintf(stderr, "Invalid %s\n",
-					       RT_PRINT_BUFFERS_COUNT_ENV);
+				__STD(fprintf(stderr, "Invalid %s\n",
+					      RT_PRINT_BUFFERS_COUNT_ENV));
 				exit(1);
 			}
 		}
@@ -723,8 +762,8 @@ void cobalt_print_init(void)
 
 		pool_bitmap = malloc(pool_bitmap_len * sizeof(*pool_bitmap));
 		if (!pool_bitmap) {
-			__real_fprintf(stderr, "Error allocating rt_printf "
-				"buffers\n");
+			__STD(fprintf(stderr, "Error allocating rt_printf "
+				      "buffers\n"));
 			exit(1);
 		}
 
@@ -732,8 +771,8 @@ void cobalt_print_init(void)
 		pool_len = buffers_count * pool_buf_size;
 		pool_start = (unsigned long)malloc(pool_len);
 		if (!pool_start) {
-			__real_fprintf(stderr, "Error allocating rt_printf "
-				       "buffers\n");
+			__STD(fprintf(stderr, "Error allocating rt_printf "
+				      "buffers\n"));
 			exit(1);
 		}
 
@@ -783,13 +822,13 @@ COBALT_IMPL(int, vfprintf, (FILE *stream, const char *fmt, va_list args))
 		return rt_vfprintf(stream, fmt, args);
 	else {
 		rt_print_flush_buffers();
-		return __real_vfprintf(stream, fmt, args);
+		return __STD(vfprintf(stream, fmt, args));
 	}
 }
 
 COBALT_IMPL(int, vprintf, (const char *fmt, va_list args))
 {
-	return __wrap_vfprintf(stdout, fmt, args);
+	return __COBALT(vfprintf(stdout, fmt, args));
 }
 
 COBALT_IMPL(int, fprintf, (FILE *stream, const char *fmt, ...))
@@ -798,7 +837,7 @@ COBALT_IMPL(int, fprintf, (FILE *stream, const char *fmt, ...))
 	int rc;
 
 	va_start(args, fmt);
-	rc = __wrap_vfprintf(stream, fmt, args);
+	rc = __COBALT(vfprintf(stream, fmt, args));
 	va_end(args);
 
 	return rc;
@@ -810,7 +849,7 @@ COBALT_IMPL(int, printf, (const char *fmt, ...))
 	int rc;
 
 	va_start(args, fmt);
-	rc = __wrap_vfprintf(stdout, fmt, args);
+	rc = __COBALT(vfprintf(stdout, fmt, args));
 	va_end(args);
 
 	return rc;
@@ -823,7 +862,7 @@ COBALT_IMPL(int, fputs, (const char *s, FILE *stream))
 		return rt_fputs(s, stream);
 	else {
 		rt_print_flush_buffers();
-		return __real_fputs(s, stream);
+		return __STD(fputs(s, stream));
 	}
 }
 
@@ -834,7 +873,7 @@ COBALT_IMPL(int, puts, (const char *s))
 		return rt_puts(s);
 	else {
 		rt_print_flush_buffers();
-		return __real_puts(s);
+		return __STD(puts(s));
 	}
 }
 
@@ -847,7 +886,7 @@ COBALT_IMPL(int, fputc, (int c, FILE *stream))
 		return rt_fputc(c, stream);
 	else {
 		rt_print_flush_buffers();
-		return __real_fputc(c, stream);
+		return __STD(fputc(c, stream));
 	}
 }
 
@@ -858,7 +897,7 @@ COBALT_IMPL(int, putchar, (int c))
 		return rt_putchar(c);
 	else {
 		rt_print_flush_buffers();
-		return __real_putchar(c);
+		return __STD(putchar(c));
 	}
 }
 
@@ -883,7 +922,7 @@ COBALT_IMPL(size_t, fwrite, (const void *ptr, size_t size, size_t nmemb, FILE *s
 		return rt_fwrite(ptr, size, nmemb, stream);
 	else {
 		rt_print_flush_buffers();
-		return __real_fwrite(ptr, size, nmemb, stream);
+		return __STD(fwrite(ptr, size, nmemb, stream));
 	}
 
 }
@@ -895,7 +934,7 @@ COBALT_IMPL(void, vsyslog, (int priority, const char *fmt, va_list ap))
 		return rt_vsyslog(priority, fmt, ap);
 	else {
 		rt_print_flush_buffers();
-		__real_vsyslog(priority, fmt, ap);
+		__STD(vsyslog(priority, fmt, ap));
 	}
 }
 
@@ -904,6 +943,85 @@ COBALT_IMPL(void, syslog, (int priority, const char *fmt, ...))
 	va_list args;
 
 	va_start(args, fmt);
-	__wrap_vsyslog(priority, fmt, args);
+	__COBALT(vsyslog(priority, fmt, args));
+	va_end(args);
+}
+
+/* 
+ * Checked versions for -D_FORTIFY_SOURCE
+ */
+COBALT_IMPL(int, __vfprintf_chk, (FILE *f, int flag, const char *fmt, va_list ap))
+{
+#ifdef CONFIG_XENO_FORTIFY
+	if (xeno_get_current() != XN_NO_HANDLE &&
+	    !(xeno_get_current_mode() & XNRELAX))
+		return __rt_vfprintf_chk(f, flag, fmt, ap);
+	else {
+		rt_print_flush_buffers();
+		return __STD(__vfprintf_chk(f, flag, fmt, ap));
+	}
+#else
+	__STD(fprintf(stderr, 
+		      "Xenomai has to be compiled with --enable-fortify "
+		      "to support applications\ncompiled with "
+		      "-D_FORTIFY_SOURCE\n"));
+	exit(EXIT_FAILURE);
+#endif
+}
+
+COBALT_IMPL(int, __vprintf_chk, (int flag, const char *fmt, va_list ap))
+{
+	return __COBALT(__vfprintf_chk(stdout, flag, fmt, ap));
+}
+
+COBALT_IMPL(int, __fprintf_chk, (FILE *f, int flag, const char *fmt, ...))
+{
+	va_list args;
+	int ret;
+
+	va_start(args, fmt);
+	ret = __COBALT(__vfprintf_chk(f, flag, fmt, args));
+	va_end(args);
+
+	return ret;
+}
+
+COBALT_IMPL(int, __printf_chk, (int flag, const char *fmt, ...))
+{
+	va_list args;
+	int ret;
+
+	va_start(args, fmt);
+	ret = __COBALT(__vprintf_chk(flag, fmt, args));
+	va_end(args);
+
+	return ret;
+}
+
+COBALT_IMPL(void, __vsyslog_chk, (int pri, int flag, const char *fmt, va_list ap))
+{
+#ifdef CONFIG_XENO_FORTIFY
+	if (xeno_get_current() != XN_NO_HANDLE &&
+	     !(xeno_get_current_mode() & XNRELAX))
+		return __rt_vsyslog_chk(pri, flag, fmt, ap);
+	else {
+		rt_print_flush_buffers();
+		__STD(__vsyslog_chk(pri, flag, fmt, ap));
+	}
+#else
+	__STD(fprintf(stderr, 
+		      "Xenomai needs to be compiled with --enable-fortify "
+		      "to support applications\ncompiled with "
+		      "-D_FORTIFY_SOURCE\n"));
+	exit(EXIT_FAILURE);
+#endif
+}
+
+COBALT_IMPL(void, __syslog_chk, (int pri, int flag, const char *fmt, ...))
+{
+	va_list args;
+
+	va_start(args, fmt);
+	__COBALT(__vsyslog_chk(pri, flag, fmt, args));
 	va_end(args);
 }

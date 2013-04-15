@@ -43,6 +43,7 @@ static inline const char *rt_print_buffer_name(void)
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <xeno_config.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -65,6 +66,10 @@ void rt_print_cleanup(void);
 void rt_print_auto_init(int enable);
 const char *rt_print_buffer_name(void);
 void rt_print_flush_buffers(void);
+#ifdef CONFIG_XENO_FORTIFY
+int __rt_vfprintf_chk(FILE *stream, int level, const char *fmt, va_list args);
+void __rt_vsyslog_chk(int priority, int level, const char *fmt, va_list args);
+#endif
 
 void assert_nrt(void);
 

@@ -7,6 +7,7 @@
 
 #include <stddef.h>
 #include <stdarg.h>
+#include <xeno_config.h>
 #include <cobalt/wrappers.h>
 
 #ifdef __cplusplus
@@ -14,6 +15,11 @@ extern "C" {
 #endif /* __cplusplus */
 
 COBALT_DECL(int, vfprintf(FILE *stream, const char *fmt, va_list args));
+
+#ifdef CONFIG_XENO_FORTIFY
+COBALT_DECL(int, __vfprintf_chk(FILE *stream, int level,
+				const char *fmt, va_list ap));
+#endif
 
 COBALT_DECL(int, vprintf(const char *fmt, va_list args));
 
