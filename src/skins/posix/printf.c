@@ -118,3 +118,62 @@ void __wrap_syslog(int priority, const char *fmt, ...)
 	__wrap_vsyslog(priority, fmt, args);
 	va_end(args);
 }
+
+/* 
+ * Checked versions for -D_FORTIFY_SOURCE
+ *
+ * Do not do any check: if you want to compile your programs with
+ * -D_FORTIFY_SOURCE, you should compile Xenomai with
+ * -D_FORTIFY_SOURCE, so that the call to snprintf in vprint_to_buffer
+ * will in fact do the verifications.
+ *
+ * Forcibly invoking the _chk version of snprintf would break on
+ * alternative libcs such as uclibc where _FORTIFY_SOURCE may not be
+ * available.
+ */
+int __wrap___vfprintf_chk(FILE *f, int flag, const char *fmt, va_list ap)
+{
+	return __wrap_vfprintf(f, fmt, ap);
+}
+int __wrap___vprintf_chk(int flag, const char *fmt, va_list ap)
+{
+	return __wrap_vprintf(fmt, ap);
+}
+
+int __wrap___fprintf_chk(FILE *f, int flag, const char *fmt, ...)
+{
+	va_list args;
+	int ret;
+
+	va_start(args, fmt);
+	ret = __wrap___vfprintf_chk(f, flag, fmt, args);
+	va_end(args);
+
+	return ret;
+}
+
+int __wrap___printf_chk(int flag, const char *fmt, ...)
+{
+	va_list args;
+	int ret;
+
+	va_start(args, fmt);
+	ret = __wrap___vprintf_chk(flag, fmt, args);
+	va_end(args);
+
+	return ret;
+}
+
+void __wrap___vsyslog_chk(int pri, int flag, const char *fmt, va_list ap)
+{
+	__wrap_vsyslog(pri, fmt, ap);
+}
+
+void __wrap___syslog_chk(int pri, int flag, const char *fmt, ...)
+{
+	va_list args;
+
+	va_start(args, fmt);
+	__wrap___vsyslog_chk(pri, flag, fmt, args);
+	va_end(args);
+}

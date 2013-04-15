@@ -103,3 +103,9 @@
 --wrap malloc
 --wrap free
 --wrap gettimeofday
+--wrap __vfprintf_chk
+--wrap __vprintf_chk
+--wrap __fprintf_chk
+--wrap __printf_chk
+--wrap __vsyslog_chk
+--wrap __syslog_chk
