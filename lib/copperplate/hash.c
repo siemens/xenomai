@@ -192,6 +192,33 @@ out:
 	return obj;
 }
 
+int hash_walk(struct hash_table *t,
+	      int (*walk)(struct hash_table *t, struct hashobj *obj))
+{
+	struct hash_bucket *bucket;
+	struct hashobj *obj, *tmp;
+	int ret, n;
+
+	read_lock_nocancel(&t->lock);
+
+	for (n = 0; n < HASHSLOTS; n++) {
+		bucket = &t->table[n];
+		if (list_empty(&bucket->obj_list))
+			continue;
+		list_for_each_entry_safe(obj, tmp, &bucket->obj_list, link) {
+			read_unlock(&t->lock);
+			ret = walk(t, obj);
+			if (ret)
+				return __bt(ret);
+			read_lock_nocancel(&t->lock);
+		}
+	}
+
+	read_unlock(&t->lock);
+
+	return 0;
+}
+
 #ifdef CONFIG_XENO_PSHARED
 
 int __hash_enter_probe(struct hash_table *t,
@@ -359,6 +386,33 @@ out:
 	read_unlock(&t->lock);
 
 	return obj;
+}
+
+int pvhash_walk(struct pvhash_table *t,
+		int (*walk)(struct pvhash_table *t, struct pvhashobj *obj))
+{
+	struct pvhash_bucket *bucket;
+	struct pvhashobj *obj, *tmp;
+	int ret, n;
+
+	read_lock_nocancel(&t->lock);
+
+	for (n = 0; n < HASHSLOTS; n++) {
+		bucket = &t->table[n];
+		if (pvlist_empty(&bucket->obj_list))
+			continue;
+		pvlist_for_each_entry_safe(obj, tmp, &bucket->obj_list, link) {
+			read_unlock(&t->lock);
+			ret = walk(t, obj);
+			if (ret)
+				return __bt(ret);
+			read_lock_nocancel(&t->lock);
+		}
+	}
+
+	read_unlock(&t->lock);
+
+	return 0;
 }
 
 #endif /* CONFIG_XENO_PSHARED */

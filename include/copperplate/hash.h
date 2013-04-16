@@ -95,6 +95,9 @@ int hash_remove(struct hash_table *t, struct hashobj *delobj);
 
 struct hashobj *hash_search(struct hash_table *t, const char *key);
 
+int hash_walk(struct hash_table *t,
+		int (*walk)(struct hash_table *t, struct hashobj *obj));
+
 #ifdef CONFIG_XENO_PSHARED
 
 int __hash_enter_probe(struct hash_table *t,
@@ -144,12 +147,17 @@ int pvhash_enter_dup(struct pvhash_table *t,
 int pvhash_remove(struct pvhash_table *t, struct pvhashobj *delobj);
 
 struct pvhashobj *pvhash_search(struct pvhash_table *t, const char *key);
+
+int pvhash_walk(struct pvhash_table *t,
+		int (*walk)(struct pvhash_table *t, struct pvhashobj *obj));
+
 #else /* !CONFIG_XENO_PSHARED */
 #define pvhash_init		hash_init
 #define pvhash_enter		hash_enter
 #define pvhash_enter_dup	hash_enter_dup
 #define pvhash_remove		hash_remove
 #define pvhash_search		hash_search
+#define pvhash_walk		hash_walk
 #endif /* !CONFIG_XENO_PSHARED */
 
 #ifdef __cplusplus
