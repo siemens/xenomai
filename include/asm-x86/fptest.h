@@ -121,11 +121,10 @@ static inline unsigned fp_regs_check(unsigned val)
 			"vmovupd %%ymm5,%5;"
 			"vmovupd %%ymm6,%6;"
 			"vmovupd %%ymm7,%7;"
-			:
-			: "m" (vec[0][0]), "m" (vec[1][0]),
-			  "m" (vec[2][0]), "m" (vec[3][0]),
-			  "m" (vec[4][0]), "m" (vec[5][0]),
-			  "m" (vec[6][0]), "m" (vec[7][0]));
+			: "=m" (vec[0][0]), "=m" (vec[1][0]),
+			  "=m" (vec[2][0]), "=m" (vec[3][0]),
+			  "=m" (vec[4][0]), "=m" (vec[5][0]),
+			  "=m" (vec[6][0]), "=m" (vec[7][0]));
 	} else if (fp_features & FP_FEATURE_SSE) {
 		__asm__ __volatile__(
 			"movupd %%xmm0,%0;"
@@ -136,11 +135,10 @@ static inline unsigned fp_regs_check(unsigned val)
 			"movupd %%xmm5,%5;"
 			"movupd %%xmm6,%6;"
 			"movupd %%xmm7,%7;"
-			:
-			: "m" (vec[0][0]), "m" (vec[1][0]),
-			  "m" (vec[2][0]), "m" (vec[3][0]),
-			  "m" (vec[4][0]), "m" (vec[5][0]),
-			  "m" (vec[6][0]), "m" (vec[7][0]));
+			: "=m" (vec[0][0]), "=m" (vec[1][0]),
+			  "=m" (vec[2][0]), "=m" (vec[3][0]),
+			  "=m" (vec[4][0]), "=m" (vec[5][0]),
+			  "=m" (vec[6][0]), "=m" (vec[7][0]));
 	}
 
 	for (i = 0; i < 8; i++)
