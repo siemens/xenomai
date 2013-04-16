@@ -819,6 +819,7 @@ enable_uitron_auto_mlockall
 enable_dlopen_skins
 with___thread
 with_testdir
+enable_fortify
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1508,6 +1509,8 @@ Optional Features:
   --enable-dlopen-skins   Disable TLS features and automatic main thread
                           mapping by the POSIX skin to allows dlopen'ing
                           Xenomai libs. [default=no]
+  --enable-fortify        Enable support for applications compiled with
+                          _FORTIFY_SOURCE
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -13833,6 +13836,33 @@ fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $XENO_TEST_DIR" >&5
 $as_echo "$XENO_TEST_DIR" >&6; }
+
+unset want_fortify
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for fortify support" >&5
+$as_echo_n "checking for fortify support... " >&6; }
+# Check whether --enable-fortify was given.
+if test "${enable_fortify+set}" = set; then :
+  enableval=$enable_fortify; case "$enableval" in
+              y | yes) want_fortify=yes;;
+	      *) want_fortify=no;;
+	      esac
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: ${want_fortify:-autodetect}" >&5
+$as_echo "${want_fortify:-autodetect}" >&6; }
+if test x"$want_fortify" != xno; then
+   ac_fn_c_check_func "$LINENO" "__vfprintf_chk" "ac_cv_func___vfprintf_chk"
+if test "x$ac_cv_func___vfprintf_chk" = x""yes; then :
+
+$as_echo "#define CONFIG_XENO_FORTIFY 1" >>confdefs.h
+
+else
+  if test x"$want_fortify" = "xyes"; then
+	      as_fn_error $? "Fortify support enabled but not available" "$LINENO" 5
+	       fi
+fi
+
+fi
 
 
 

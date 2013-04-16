@@ -100,8 +100,9 @@ static void spawn_printer_thread(void);
 
 /* *** rt_print API *** */
 
-static int vprint_to_buffer(FILE *stream, int priority, unsigned int mode,
-			    size_t sz, const char *format, va_list args)
+static int 
+vprint_to_buffer(FILE *stream, int fortify_level, int priority, 
+		 unsigned int mode, size_t sz, const char *format, va_list args)
 {
 	struct print_buffer *buffer = pthread_getspecific(buffer_key);
 	off_t write_pos, read_pos;
@@ -163,7 +164,17 @@ static int vprint_to_buffer(FILE *stream, int priority, unsigned int mode,
 	if (mode == RT_PRINT_MODE_FORMAT) {
 		if (stream != RT_PRINT_SYSLOG_STREAM) {
 			/* We do not need the terminating \0 */
-			res = vsnprintf(head->data, len, format, args);
+#ifdef CONFIG_XENO_FORTIFY
+			if (fortify_level > 0)
+				res = __vsnprintf_chk(head->data, len,
+						      fortify_level - 1,
+						      len > 0 ? len : 0, 
+						      format, args);
+			else
+#else
+				(void)fortify_level;
+#endif
+				res = vsnprintf(head->data, len, format, args);
 
 			if (res < len) {
 				/* Text was written completely, res contains its
@@ -175,7 +186,15 @@ static int vprint_to_buffer(FILE *stream, int priority, unsigned int mode,
 			}
 		} else {
 			/* We DO need the terminating \0 */
-			res = vsnprintf(head->data, len, format, args);
+#ifdef CONFIG_XENO_FORTIFY
+			if (fortify_level > 0)
+				res = __vsnprintf_chk(head->data, len,
+						      fortify_level - 1,
+						      len > 0 ? len : 0, 
+						      format, args);
+			else
+#endif
+				res = vsnprintf(head->data, len, format, args);
 
 			if (res < len) {
 				/* Text was written completely, res contains its
@@ -231,7 +250,7 @@ static int print_to_buffer(FILE *stream, int priority, unsigned int mode,
 	int ret;
 
 	va_start(args, format);
-	ret = vprint_to_buffer(stream, priority, mode, sz, format, args);
+	ret = vprint_to_buffer(stream, 0, priority, mode, sz, format, args);
 	va_end(args);
 
 	return ret;
@@ -239,9 +258,17 @@ static int print_to_buffer(FILE *stream, int priority, unsigned int mode,
 
 int rt_vfprintf(FILE *stream, const char *format, va_list args)
 {
-	return vprint_to_buffer(stream, 0,
+	return vprint_to_buffer(stream, 0, 0,
 				RT_PRINT_MODE_FORMAT, 0, format, args);
 }
+
+#ifdef CONFIG_XENO_FORTIFY
+int __rt_vfprintf_chk(FILE *stream, int level, const char *fmt, va_list args)
+{
+	return vprint_to_buffer(stream, level + 1, 0,
+				RT_PRINT_MODE_FORMAT, 0, fmt, args);
+}
+#endif
 
 int rt_vprintf(const char *format, va_list args)
 {
@@ -317,16 +344,24 @@ void rt_syslog(int priority, const char *format, ...)
 	va_list args;
 
 	va_start(args, format);
-	vprint_to_buffer(RT_PRINT_SYSLOG_STREAM, priority,
+	vprint_to_buffer(RT_PRINT_SYSLOG_STREAM, 0, priority,
 			 RT_PRINT_MODE_FORMAT, 0, format, args);
 	va_end(args);
 }
 
 void rt_vsyslog(int priority, const char *format, va_list args)
 {
-	vprint_to_buffer(RT_PRINT_SYSLOG_STREAM, priority,
+	vprint_to_buffer(RT_PRINT_SYSLOG_STREAM, 0, priority,
 			 RT_PRINT_MODE_FORMAT, 0, format, args);
 }
+
+#ifdef CONFIG_XENO_FORTIFY
+void __rt_vsyslog_chk(int priority, int level, const char *fmt, va_list args)
+{
+	vprint_to_buffer(RT_PRINT_SYSLOG_STREAM, level + 1, priority,
+			 RT_PRINT_MODE_FORMAT, 0, fmt, args);
+}
+#endif
 
 static void set_buffer_name(struct print_buffer *buffer, const char *name)
 {

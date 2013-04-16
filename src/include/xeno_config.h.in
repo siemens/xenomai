@@ -33,6 +33,9 @@
 /* config */
 #undef CONFIG_XENO_FASTSYNCH
 
+/* configure */
+#undef CONFIG_XENO_FORTIFY
+
 /* Host system alias */
 #undef CONFIG_XENO_HOST_STRING
 

@@ -395,3 +395,19 @@ void __real_vsyslog(int priority, const char *fmt, va_list ap)
 {
 	vsyslog(priority, fmt, ap);
 }
+
+#ifdef CONFIG_XENO_FORTIFY
+__attribute__ ((weak))
+int __real___vfprintf_chk(FILE *stream, int level, const char *fmt, va_list ap)
+{
+	return __vfprintf_chk(stream, level, fmt, ap);
+}
+
+__attribute__ ((weak))
+void __real___vsyslog_chk(int priority, int level, const char *fmt, va_list ap)
+{
+	extern void __vsyslog_chk(int, int, const char *, va_list);
+
+	__vsyslog_chk(priority, level, fmt, ap);
+}
+#endif

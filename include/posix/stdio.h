@@ -7,12 +7,17 @@
 
 #include <stddef.h>
 #include <stdarg.h>
+#include <xeno_config.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
 int __real_vfprintf(FILE *stream, const char *fmt, va_list args);
+
+#ifdef CONFIG_XENO_FORTIFY
+int __real___vfprintf_chk(FILE *stream, int level, const char *fmt, va_list ap);
+#endif
 
 int __real_vprintf(const char *fmt, va_list args);
 
