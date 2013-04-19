@@ -126,7 +126,7 @@ u_long rn_create(const char *name, void *saddr, u_long length,
 		goto out;
 	}
 
-	ret = heapobj_init(&rn->hobj, name, length, saddr);
+	ret = __heapobj_init(&rn->hobj, name, length, saddr);
 	if (ret) {
 		ret = ERR_TINYRN;
 		xnfree(rn);

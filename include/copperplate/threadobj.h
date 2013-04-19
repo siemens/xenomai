@@ -121,17 +121,18 @@ struct threadobj {
 	pthread_t tid;
 	pthread_mutex_t lock;
 
-	void (*finalizer)(struct threadobj *thobj);
-	void (*suspend_hook)(struct threadobj *thobj, int status);
-	int *errno_pointer;
 	int schedlock_depth;
 	int cancel_state;
 	int status;
 	int policy;
 	int priority;
 	pid_t cnode;
-	const char *name;
+	pid_t pid;
+	char name[32];
 
+	void (*finalizer)(struct threadobj *thobj);
+	void (*suspend_hook)(struct threadobj *thobj, int status);
+	int *errno_pointer;
 	/* Those members belong exclusively to the syncobj code. */
 	struct syncobj *wait_sobj;
 	struct holder wait_link;
@@ -145,6 +146,7 @@ struct threadobj {
 	struct timespec tslice;
 	pthread_cond_t barrier;
 	struct traceobj *tracer;
+	struct sysgroup_memspec memspec;
 	struct backtrace_data btd;
 };
 

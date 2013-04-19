@@ -26,6 +26,7 @@
 #include <sched.h>
 #include <xeno_config.h>
 #include <copperplate/list.h>
+#include <copperplate/heapobj.h>
 
 #define sigev_notify_thread_id	 _sigev_un._tid
 
@@ -39,6 +40,31 @@ struct coppernode {
 	int no_registry;
 	int reset_session;
 	int silent_mode;
+};
+
+#define HOBJ_MINLOG2    3
+#define HOBJ_MAXLOG2    22     /* Must hold pagemap::bcount objects */
+#define HOBJ_NBUCKETS   (HOBJ_MAXLOG2 - HOBJ_MINLOG2 + 2)
+
+/*
+ * The struct below has to live in shared memory; no direct reference
+ * to process local memory in there.
+ */
+struct shared_heap {
+	char name[32];
+	pthread_mutex_t lock;
+	struct list extents;
+	size_t extentsize;
+	size_t hdrsize;
+	size_t npages;
+	size_t ubytes;
+	size_t total;
+	size_t maxcont;
+	struct sysgroup_memspec memspec;
+	struct {
+		memoff_t freelist;
+		int fcount;
+	} buckets[HOBJ_NBUCKETS];
 };
 
 extern pid_t __node_id;

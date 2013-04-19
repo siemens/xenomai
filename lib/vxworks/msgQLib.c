@@ -96,8 +96,8 @@ MSG_Q_ID msgQCreate(int maxMsgs, int maxMsgLength, int options)
 	 * must share the same allocation base). Create the heap
 	 * object accordingly.
 	 */
-	if (heapobj_init_array_shareable(&mq->pool, NULL, maxMsgLength +
-					 sizeof(struct msgholder), maxMsgs)) {
+	if (heapobj_init_array(&mq->pool, NULL, maxMsgLength +
+			       sizeof(struct msgholder), maxMsgs)) {
 		xnfree(mq);
 	no_mem:
 		errno = S_memLib_NOT_ENOUGH_MEMORY;

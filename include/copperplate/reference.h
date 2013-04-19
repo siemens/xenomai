@@ -89,7 +89,7 @@ static inline int __fnref_nofn(void *fnaddr)
 	}
 #define fnref_declare(l, s)	extern int __refvar(l, s)
 
-extern void *__pshared_heap;
+extern void *__main_heap;
 
 int pshared_check(void *heap, void *addr);
 
@@ -122,7 +122,7 @@ int __fnref_register(const char *libname,
 #define fnref_register(l, s)
 #define fnref_declare(l, s)
 
-#define __pshared_heap	NULL
+#define __main_heap	NULL
 
 #define __memoff(base, addr)	(addr)
 #define __memptr(base, off)	(off)

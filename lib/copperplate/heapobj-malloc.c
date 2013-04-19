@@ -23,8 +23,8 @@
 #include "copperplate/heapobj.h"
 #include "copperplate/debug.h"
 
-int heapobj_init_private(struct heapobj *hobj, const char *name,
-			 size_t size, void *mem)
+int __heapobj_init_private(struct heapobj *hobj, const char *name,
+			   size_t size, void *mem)
 {
 	/*
 	 * There is no local pool when working with malloc, we just
@@ -45,7 +45,7 @@ int heapobj_init_private(struct heapobj *hobj, const char *name,
 int heapobj_init_array_private(struct heapobj *hobj, const char *name,
 			       size_t size, int elems)
 {
-	return __bt(heapobj_init_private(hobj, name, size * elems, NULL));
+	return __bt(__heapobj_init_private(hobj, name, size * elems, NULL));
 }
 
 int heapobj_pkg_init_private(void)

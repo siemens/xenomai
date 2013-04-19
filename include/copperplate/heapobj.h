@@ -27,31 +27,27 @@
 #include <pthread.h>
 #include <xeno_config.h>
 #include <copperplate/reference.h>
+#include <copperplate/lock.h>
+#include <copperplate/list.h>
 #include <copperplate/wrappers.h>
 #include <copperplate/debug.h>
 
-struct heapobj;
-
+struct heapobj {
+	void *pool;
+	size_t size;
+	char name[32];
 #ifdef CONFIG_XENO_PSHARED
-
-struct heapobj {
-	void *pool;
-	size_t size;
-	char name[64];
-	char fsname[64];
-	int fd;
-	int flags;
+	char fsname[256];
+#endif
 };
 
-#else /* !CONFIG_XENO_PSHARED */
-
-struct heapobj {
-	void *pool;
-	size_t size;
-	char name[64];
+struct sysgroup {
+	int thread_count;
+	struct list thread_list;
+	int heap_count;
+	struct list heap_list;
+	pthread_mutex_t lock;
 };
-
-#endif /* !CONFIG_XENO_PSHARED */
 
 #ifdef __cplusplus
 extern "C" {
@@ -59,8 +55,8 @@ extern "C" {
 
 int heapobj_pkg_init_private(void);
 
-int heapobj_init_private(struct heapobj *hobj, const char *name,
-			 size_t size, void *mem);
+int __heapobj_init_private(struct heapobj *hobj, const char *name,
+			   size_t size, void *mem);
 
 int heapobj_init_array_private(struct heapobj *hobj, const char *name,
 			       size_t size, int elems);
@@ -210,26 +206,25 @@ static inline char *pvstrdup(const char *ptr)
 
 #ifdef CONFIG_XENO_PSHARED
 
-/*
- * The heap control block is always heading the shared memory segment,
- * so that any process can access this information right after the
- * segment is mmapped. This also ensures that offset 0 will never
- * refer to a valid page or block.
- */
-extern void *__pshared_heap;
-#define main_heap		(*((struct heap *)__pshared_heap))
+extern void *__main_heap;
 
-extern struct hash_table *__pshared_catalog;
-#define main_catalog		(*((struct hash_table *)__pshared_catalog))
+extern struct hash_table *__main_catalog;
+#define main_catalog	(*((struct hash_table *)__main_catalog))
+
+extern struct sysgroup *__main_sysgroup;
+
+struct sysgroup_memspec {
+	struct holder next;
+};
 
 static inline void *mainheap_ptr(memoff_t off)
 {
-	return off ? (void *)__memptr(__pshared_heap, off) : NULL;
+	return off ? (void *)__memptr(__main_heap, off) : NULL;
 }
 
 static inline memoff_t mainheap_off(void *addr)
 {
-	return addr ? (memoff_t)__memoff(__pshared_heap, addr) : 0;
+	return addr ? (memoff_t)__memoff(__main_heap, addr) : 0;
 }
 
 /*
@@ -244,7 +239,7 @@ static inline memoff_t mainheap_off(void *addr)
 		type handle;						\
 		assert(__builtin_types_compatible_p(typeof(type), unsigned long) || \
 		       __builtin_types_compatible_p(typeof(type), uintptr_t)); \
-		assert(ptr == NULL || __memchk(__pshared_heap, ptr));	\
+		assert(ptr == NULL || __memchk(__main_heap, ptr));	\
 		handle = (type)mainheap_off(ptr);			\
 		handle|1;						\
 	})
@@ -262,19 +257,61 @@ static inline memoff_t mainheap_off(void *addr)
 		ptr;							\
 	})
 
+static inline void
+__sysgroup_add(struct sysgroup_memspec *obj, struct list *q, int *countp)
+{
+	write_lock_nocancel(&__main_sysgroup->lock);
+	(*countp)++;
+	list_append(&obj->next, q);
+	write_unlock(&__main_sysgroup->lock);
+}
+
+#define sysgroup_add(__group, __obj)	\
+	__sysgroup_add(__obj, &(__main_sysgroup->__group ## _list),	\
+		       &(__main_sysgroup->__group ## _count))
+
+static inline void
+__sysgroup_remove(struct sysgroup_memspec *obj, int *countp)
+{
+	write_lock_nocancel(&__main_sysgroup->lock);
+	(*countp)--;
+	list_remove(&obj->next);
+	write_unlock(&__main_sysgroup->lock);
+}
+
+#define sysgroup_remove(__group, __obj)	\
+	__sysgroup_remove(__obj, &(__main_sysgroup->__group ## _count))
+
+static inline void sysgroup_lock(void)
+{
+	read_lock_nocancel(&__main_sysgroup->lock);
+}
+
+static inline void sysgroup_unlock(void)
+{
+	read_unlock(&__main_sysgroup->lock);
+}
+
+#define sysgroup_count(__group)	\
+	(__main_sysgroup->__group ## _count)
+
+#define for_each_sysgroup(__obj, __group)	\
+	list_for_each_entry(__obj, &(__main_sysgroup->__group ## _list), next)
+
 int heapobj_pkg_init_shared(void);
 
 int heapobj_init(struct heapobj *hobj, const char *name,
-		 size_t size, void *mem);
+		 size_t size);
+
+static inline int __heapobj_init(struct heapobj *hobj, const char *name,
+				 size_t size, void *unused)
+{
+	/* Can't work on user-defined memory in shared mode. */
+	return heapobj_init(hobj, name, size);
+}
 
 int heapobj_init_array(struct heapobj *hobj, const char *name,
 		       size_t size, int elems);
-
-int heapobj_init_shareable(struct heapobj *hobj, const char *name,
-			   size_t size);
-
-int heapobj_init_array_shareable(struct heapobj *hobj, const char *name,
-				 size_t size, int elems);
 
 void heapobj_destroy(struct heapobj *hobj);
 
@@ -292,6 +329,10 @@ size_t heapobj_validate(struct heapobj *hobj,
 
 size_t heapobj_inquire(struct heapobj *hobj);
 
+int heapobj_bind_session(const char *session);
+
+void heapobj_unbind_session(void);
+
 void *xnmalloc(size_t size);
 
 void xnfree(void *ptr);
@@ -299,6 +340,9 @@ void xnfree(void *ptr);
 char *xnstrdup(const char *ptr);
 
 #else /* !CONFIG_XENO_PSHARED */
+
+struct sysgroup_memspec {
+};
 
 /*
  * Whether an object is laid in some shared heap. Never if pshared
@@ -314,7 +358,7 @@ static inline int pshared_check(void *heap, void *addr)
 		type handle;						\
 		assert(__builtin_types_compatible_p(typeof(type), unsigned long) || \
 		       __builtin_types_compatible_p(typeof(type), uintptr_t)); \
-		assert(ptr == NULL || __memchk(__pshared_heap, ptr));	\
+		assert(ptr == NULL || __memchk(__main_heap, ptr));	\
 		handle = (type)ptr;					\
 		handle;							\
 	})
@@ -327,34 +371,30 @@ static inline int pshared_check(void *heap, void *addr)
 		ptr;							\
 	})
 
+#define sysgroup_add(__group, __obj)	do { } while (0)
+#define sysgroup_remove(__group, __obj)	do { } while (0)
+
 static inline int heapobj_pkg_init_shared(void)
 {
 	return 0;
 }
 
-static inline int heapobj_init(struct heapobj *hobj, const char *name,
-			       size_t size, void *mem)
+static inline int __heapobj_init(struct heapobj *hobj, const char *name,
+				 size_t size, void *mem)
 {
-	return heapobj_init_private(hobj, name, size, mem);
+	return __heapobj_init_private(hobj, name, size, mem);
+}
+
+static inline int heapobj_init(struct heapobj *hobj, const char *name,
+			       size_t size)
+{
+	return __heapobj_init_private(hobj, name, size, NULL);
 }
 
 static inline int heapobj_init_array(struct heapobj *hobj, const char *name,
 				     size_t size, int elems)
 {
 	return heapobj_init_array_private(hobj, name, size, elems);
-}
-
-static inline int heapobj_init_shareable(struct heapobj *hobj,
-					 const char *name, size_t size)
-{
-	return heapobj_init(hobj, name, size, NULL);
-}
-
-static inline int heapobj_init_array_shareable(struct heapobj *hobj,
-					       const char *name,
-					       size_t size, int elems)
-{
-	return heapobj_init_array(hobj, name, size, elems);
 }
 
 static inline void heapobj_destroy(struct heapobj *hobj)
@@ -390,6 +430,13 @@ static inline size_t heapobj_inquire(struct heapobj *hobj)
 {
 	return pvheapobj_inquire(hobj);
 }
+
+static inline int heapobj_bind_session(const char *session)
+{
+	return -ENOSYS;
+}
+
+static inline void heapobj_unbind_session(void) { }
 
 static inline void *xnmalloc(size_t size)
 {

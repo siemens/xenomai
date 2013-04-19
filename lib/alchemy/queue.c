@@ -132,12 +132,10 @@ int rt_queue_create(RT_QUEUE *queue, const char *name,
 	 * sharing between processes.
 	 */
 	if (qlimit == Q_UNLIMITED)
-		ret = heapobj_init_shareable(&qcb->hobj, qcb->name,
-					     poolsize);
+		ret = heapobj_init(&qcb->hobj, qcb->name, poolsize);
 	else
-		ret = heapobj_init_array_shareable(&qcb->hobj, qcb->name,
-						   poolsize / qlimit,
-						   qlimit);
+		ret = heapobj_init_array(&qcb->hobj, qcb->name,
+					 poolsize / qlimit, qlimit);
 	if (ret) {
 		xnfree(qcb);
 		goto out;

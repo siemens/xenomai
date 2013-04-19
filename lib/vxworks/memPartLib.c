@@ -54,7 +54,7 @@ PART_ID memPartCreate(char *pPool, unsigned int poolSize)
 	if (mp == NULL)
 		goto fail;
 
-	if (heapobj_init(&mp->hobj, NULL, poolSize, pPool)) {
+	if (__heapobj_init(&mp->hobj, NULL, poolSize, pPool)) {
 		xnfree(mp);
 	fail:
 		errno = S_memLib_NOT_ENOUGH_MEMORY;

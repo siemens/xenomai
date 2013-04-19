@@ -74,7 +74,7 @@ int __hash_enter(struct hash_table *t,
 
 static inline void hash_init(struct hash_table *t)
 {
-	__hash_init(__pshared_heap, t);
+	__hash_init(__main_heap, t);
 }
 
 void hash_destroy(struct hash_table *t);

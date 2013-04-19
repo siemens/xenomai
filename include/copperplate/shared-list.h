@@ -36,16 +36,21 @@ struct list {
 	struct holder head;
 };
 
-static inline void __inith(void *heap, struct holder *holder)
+static inline void __inith_nocheck(void *heap, struct holder *holder)
 {
-	assert(__hchk(heap, holder));
 	holder->next = __hoff(heap, holder);
 	holder->prev = __hoff(heap, holder);
 }
 
+static inline void __inith(void *heap, struct holder *holder)
+{
+	assert(__hchk(heap, holder));
+	__inith_nocheck(heap, holder);
+}
+
 static inline void inith(struct holder *holder)
 {
-	__inith(__pshared_heap, holder);
+	__inith(__main_heap, holder);
 }
 
 static inline void __ath(void *heap, struct holder *head,
@@ -60,7 +65,7 @@ static inline void __ath(void *heap, struct holder *head,
 
 static inline void ath(struct holder *head, struct holder *holder)
 {
-	__ath(__pshared_heap, head, holder);
+	__ath(__main_heap, head, holder);
 }
 
 static inline void __dth(void *heap, struct holder *holder)
@@ -71,7 +76,7 @@ static inline void __dth(void *heap, struct holder *holder)
 
 static inline void dth(struct holder *holder)
 {
-	__dth(__pshared_heap, holder);
+	__dth(__main_heap, holder);
 }
 
 static inline void __list_init(void *heap, struct list *list)
@@ -79,14 +84,24 @@ static inline void __list_init(void *heap, struct list *list)
 	__inith(heap, &list->head);
 }
 
+static inline void __list_init_nocheck(void *heap, struct list *list)
+{
+	__inith_nocheck(heap, &list->head);
+}
+
 static inline void list_init(struct list *list)
 {
-	__list_init(__pshared_heap, list);
+	__list_init(__main_heap, list);
 }
 
 static inline void __holder_init(void *heap, struct holder *holder)
 {
 	__inith(heap, holder);
+}
+
+static inline void __holder_init_nocheck(void *heap, struct holder *holder)
+{
+	__inith_nocheck(heap, holder);
 }
 
 static inline void holder_init(struct holder *holder)
@@ -106,7 +121,7 @@ static inline int __holder_linked(void *heap, const struct holder *holder)
  */
 static inline int holder_linked(const struct holder *holder)
 {
-	return __holder_linked(__pshared_heap, holder);
+	return __holder_linked(__main_heap, holder);
 }
 
 static inline void __list_prepend(void *heap, struct holder *holder,
@@ -117,7 +132,7 @@ static inline void __list_prepend(void *heap, struct holder *holder,
 
 static inline void list_prepend(struct holder *holder, struct list *list)
 {
-	__list_prepend(__pshared_heap, holder, list);
+	__list_prepend(__main_heap, holder, list);
 }
 
 static inline void __list_append(void *heap, struct holder *holder,
@@ -128,7 +143,7 @@ static inline void __list_append(void *heap, struct holder *holder,
 
 static inline void list_append(struct holder *holder, struct list *list)
 {
-	__list_append(__pshared_heap, holder, list);
+	__list_append(__main_heap, holder, list);
 }
 
 static inline void __list_insert(void *heap, struct holder *next, struct holder *prev)
@@ -138,7 +153,7 @@ static inline void __list_insert(void *heap, struct holder *next, struct holder 
 
 static inline void list_insert(struct holder *next, struct holder *prev)
 {
-	__list_insert(__pshared_heap, next, prev);
+	__list_insert(__main_heap, next, prev);
 }
 
 static inline void __list_join(void *heap, struct list *lsrc,
@@ -158,7 +173,7 @@ static inline void __list_join(void *heap, struct list *lsrc,
 
 static inline void list_join(struct list *lsrc, struct list *ldst)
 {
-	__list_join(__pshared_heap, lsrc, ldst);
+	__list_join(__main_heap, lsrc, ldst);
 }
 
 static inline void __list_remove(void *heap, struct holder *holder)
@@ -168,7 +183,7 @@ static inline void __list_remove(void *heap, struct holder *holder)
 
 static inline void list_remove(struct holder *holder)
 {
-	__list_remove(__pshared_heap, holder);
+	__list_remove(__main_heap, holder);
 }
 
 static inline void __list_remove_init(void *heap, struct holder *holder)
@@ -179,7 +194,7 @@ static inline void __list_remove_init(void *heap, struct holder *holder)
 
 static inline void list_remove_init(struct holder *holder)
 {
-	__list_remove_init(__pshared_heap, holder);
+	__list_remove_init(__main_heap, holder);
 }
 
 static inline int __list_empty(void *heap, const struct list *list)
@@ -189,7 +204,7 @@ static inline int __list_empty(void *heap, const struct list *list)
 
 static inline int list_empty(const struct list *list)
 {
-	return __list_empty(__pshared_heap, list);
+	return __list_empty(__main_heap, list);
 }
 
 static inline struct holder *__list_pop(void *heap, struct list *list)
@@ -201,7 +216,7 @@ static inline struct holder *__list_pop(void *heap, struct list *list)
 
 static inline struct holder *list_pop(struct list *list)
 {
-	return __list_pop(__pshared_heap, list);
+	return __list_pop(__main_heap, list);
 }
 
 static inline int __list_heading_p(void *heap, const struct holder *holder,
@@ -213,7 +228,7 @@ static inline int __list_heading_p(void *heap, const struct holder *holder,
 static inline int list_heading_p(const struct holder *holder,
 				 const struct list *list)
 {
-	return __list_heading_p(__pshared_heap, holder, list);
+	return __list_heading_p(__main_heap, holder, list);
 }
 
 #define list_entry(ptr, type, member)				\
@@ -223,34 +238,34 @@ static inline int list_heading_p(const struct holder *holder,
 	list_entry(__hptr((heap), (list)->head.next), type, member)
 
 #define list_first_entry(list, type, member)			\
-	__list_first_entry(__pshared_heap, list, type, member)
+	__list_first_entry(__main_heap, list, type, member)
 
 #define __list_last_entry(heap, list, type, member)		\
 	list_entry(__hptr((heap), (list)->head.prev), type, member)
 
 #define list_last_entry(list, type, member)			\
-	__list_last_entry(__pshared_heap, list, type, member)
+	__list_last_entry(__main_heap, list, type, member)
 
 #define __list_pop_entry(heap, list, type, member) ({			\
 			struct holder *__holder = __list_pop((heap), list); \
 			list_entry(__holder, type, member); })
 
 #define list_pop_entry(list, type, member)				\
-	__list_pop_entry(__pshared_heap, list, type, member)
+	__list_pop_entry(__main_heap, list, type, member)
 
 #define __list_for_each(heap, pos, list)				\
 	for (pos = __hptr((heap), (list)->head.next);			\
 	     pos != &(list)->head; pos = __hptr((heap), (pos)->next))
 
 #define list_for_each(pos, list)					\
-	__list_for_each(__pshared_heap, pos, list)
+	__list_for_each(__main_heap, pos, list)
 
 #define __list_for_each_reverse(heap, pos, list)			\
 	for (pos = __hptr((heap), (list)->head.prev);			\
 	     pos != &(list)->head; pos = __hptr((heap), (pos)->prev))
 
 #define list_for_each_reverse(pos, list)				\
-	__list_for_each_reverse(__pshared_heap, pos, list)
+	__list_for_each_reverse(__main_heap, pos, list)
 
 #define __list_for_each_safe(heap, pos, tmp, list)			\
 	for (pos = __hptr((heap), (list)->head.next),			\
@@ -259,7 +274,7 @@ static inline int list_heading_p(const struct holder *holder,
 	     pos = tmp, tmp = __hptr((heap), (pos)->next))
 
 #define list_for_each_safe(pos, tmp, list)				\
-	__list_for_each_safe(__pshared_heap, pos, tmp, list)
+	__list_for_each_safe(__main_heap, pos, tmp, list)
 
 #define __list_for_each_entry(heap, pos, list, member)			\
 	for (pos = list_entry(__hptr((heap), (list)->head.next),	\
@@ -269,7 +284,7 @@ static inline int list_heading_p(const struct holder *holder,
 			      typeof(*pos), member))
 
 #define list_for_each_entry(pos, list, member)				\
-	__list_for_each_entry(__pshared_heap, pos, list, member)
+	__list_for_each_entry(__main_heap, pos, list, member)
 
 #define __list_for_each_entry_safe(heap, pos, tmp, list, member)	\
 	for (pos = list_entry(__hptr((heap), (list)->head.next),	\
@@ -281,7 +296,7 @@ static inline int list_heading_p(const struct holder *holder,
 					 typeof(*pos), member))
 
 #define list_for_each_entry_safe(pos, tmp, list, member)		\
-	__list_for_each_entry_safe(__pshared_heap, pos, tmp, list, member)
+	__list_for_each_entry_safe(__main_heap, pos, tmp, list, member)
 
 #define __list_for_each_entry_reverse(heap, pos, list, member)		\
 	for (pos = list_entry(__hptr((heap), (list)->head.prev),	\
@@ -291,6 +306,6 @@ static inline int list_heading_p(const struct holder *holder,
 			      typeof(*pos), member))
 
 #define list_for_each_entry_reverse(pos, list, member)			\
-	__list_for_each_entry_reverse(__pshared_heap, pos, list, member)
+	__list_for_each_entry_reverse(__main_heap, pos, list, member)
 
 #endif /* !_COPPERPLATE_SHARED_LIST_H */

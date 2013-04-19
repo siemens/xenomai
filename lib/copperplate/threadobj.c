@@ -36,6 +36,7 @@
 #include "copperplate/cluster.h"
 #include "copperplate/clockobj.h"
 #include "copperplate/eventobj.h"
+#include "copperplate/heapobj.h"
 #include "internal.h"
 
 union copperplate_wait_union {
@@ -835,6 +836,8 @@ void threadobj_init(struct threadobj *thobj,
 	holder_init(&thobj->wait_link);
 	thobj->suspend_hook = idata->suspend_hook;
 	thobj->cnode = __node_id;
+	thobj->pid = 0;
+
 	/*
 	 * CAUTION: wait_union and wait_size have been set in
 	 * __threadobj_alloc(), do not overwrite.
@@ -967,12 +970,18 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 		 * called.
 		 */
 		assert(current->magic == 0);
+		sysgroup_remove(thread, &current->memspec);
 		threadobj_finalize(current);
 		threadobj_free(current);
 	} else
 		pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
 
-	thobj->name = name;
+	if (name) {
+		strncpy(thobj->name, name, sizeof(thobj->name) - 1);
+		thobj->name[sizeof(thobj->name) - 1] = '\0';
+	} else
+		*thobj->name = '\0';
+
 	thobj->errno_pointer = &errno;
 	backtrace_init_context(&thobj->btd, name);
 	ret = threadobj_setup_corespec(thobj);
@@ -980,6 +989,13 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 		return __bt(ret);
 
 	threadobj_set_current(thobj);
+	thobj->pid = copperplate_get_tid();
+
+	/*
+	 * Link the thread to the shared queue, so that sysregd can
+	 * retrieve it. Nop if --disable-pshared.
+	 */
+	sysgroup_add(thread, &thobj->memspec);
 
 	threadobj_lock(thobj);
 	thobj->status &= ~THREADOBJ_WARMUP;
@@ -1023,9 +1039,12 @@ static void threadobj_finalize(void *p) /* thobj->lock free */
 
 	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
 	threadobj_set_current(p);
+	thobj->pid = 0;
 
 	if (thobj->wait_sobj)
 		__syncobj_cleanup_wait(thobj->wait_sobj, thobj);
+
+	sysgroup_remove(thread, &thobj->memspec);
 
 	if (thobj->tracer)
 		traceobj_unwind(thobj->tracer);

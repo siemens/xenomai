@@ -32,8 +32,8 @@
 
 static int tlsf_pool_overhead;
 
-int heapobj_init_private(struct heapobj *hobj, const char *name,
-			 size_t size, void *mem)
+int __heapobj_init_private(struct heapobj *hobj, const char *name,
+			   size_t size, void *mem)
 {
 	if (mem == NULL) {
 		/*
@@ -69,7 +69,7 @@ int heapobj_init_array_private(struct heapobj *hobj, const char *name,
 	poolsz = (size + TLSF_BLOCK_ALIGN - 1) & ~(TLSF_BLOCK_ALIGN - 1);
 	poolsz *= elems;
 
-	return __bt(heapobj_init_private(hobj, name, poolsz, NULL));
+	return __bt(__heapobj_init_private(hobj, name, poolsz, NULL));
 }
 
 int heapobj_pkg_init_private(void)

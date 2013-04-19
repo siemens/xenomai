@@ -141,7 +141,7 @@ int rt_heap_create(RT_HEAP *heap,
 	 * The memory pool has to be part of the main heap for proper
 	 * sharing between processes.
 	 */
-	if (heapobj_init_shareable(&hcb->hobj, NULL, heapsz)) {
+	if (heapobj_init(&hcb->hobj, NULL, heapsz)) {
 		xnfree(hcb);
 		goto out;
 	}

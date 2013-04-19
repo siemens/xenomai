@@ -46,22 +46,8 @@
 #define HOBJ_PAGE_MASK		(~(HOBJ_PAGE_SIZE-1))
 #define HOBJ_PAGE_ALIGN(addr)	(((addr)+HOBJ_PAGE_SIZE-1)&HOBJ_PAGE_MASK)
 
-#define HOBJ_MINLOG2    3
-#define HOBJ_MAXLOG2    22	/* Must hold pagemap::bcount objects */
 #define HOBJ_MINALIGNSZ (1U << 4) /* i.e. 16 bytes */
-#define HOBJ_NBUCKETS   (HOBJ_MAXLOG2 - HOBJ_MINLOG2 + 2)
 #define HOBJ_MAXEXTSZ   (1U << 31) /* i.e. 2Gb */
-
-#define HOBJ_FORCE      0x1	/* Force cleanup */
-#define HOBJ_SHAREABLE  0x2	/* Allocate from main heap to allow sharing */
-
-/*
- * The base address of the shared memory segment, as seen by each
- * individual process.
- */
-void *__pshared_heap;
-
-struct hash_table *__pshared_catalog;
 
 enum {
 	page_free =0,
@@ -74,7 +60,7 @@ struct page_map {
 	unsigned int bcount : 24; /* Number of active blocks. */
 };
 
-struct heap_extent {
+struct shared_extent {
 	struct holder link;
 	memoff_t membase;	/* Base address of the page array */
 	memoff_t memlim;	/* Memory limit of page array */
@@ -83,25 +69,32 @@ struct heap_extent {
 };
 
 /*
- * The struct below has to live in shared memory; no direct reference
- * to process local memory in there.
+ * The main heap consists of a shared heap at its core, with
+ * additional session-wide information.
  */
-struct heap {
-	pthread_mutex_t lock;
-	struct list extents;
-	size_t extentsize;
-	size_t hdrsize;
-	size_t npages;
-	size_t ubytes;
-	size_t maxcont;
-	struct {
-		memoff_t freelist;
-		int fcount;
-	} buckets[HOBJ_NBUCKETS];
+struct session_heap {
+	struct shared_heap base;
 	int cpid;
 	memoff_t maplen;
 	struct hash_table catalog;
+	struct sysgroup sysgroup;
 };
+
+/*
+ * The base address of the shared memory heap, as seen by each
+ * individual process. Its control block is always first, so that
+ * different processes can access this information right after the
+ * segment is mmapped. This also ensures that offset 0 will never
+ * refer to a valid page or block.
+ */
+void *__main_heap;
+#define main_heap	(*(struct session_heap *)__main_heap)
+
+/* A table of shared clusters for the session. */
+struct hash_table *__main_catalog;
+
+/* Pointer to the system list group. */
+struct sysgroup *__main_sysgroup;
 
 static struct heapobj main_pool;
 
@@ -123,17 +116,17 @@ static inline size_t internal_overhead(size_t hsize)
 	   o * (p + m) = h * m + e * p
 	   o = (h * m + e *p) / (p + m)
 	*/
-	return __align_to((sizeof(struct heap_extent) * HOBJ_PAGE_SIZE
+	return __align_to((sizeof(struct shared_extent) * HOBJ_PAGE_SIZE
 			   + sizeof(struct page_map) * hsize)
 			  / (HOBJ_PAGE_SIZE + sizeof(struct page_map)), HOBJ_PAGE_SIZE);
 }
 
-static void init_extent(struct heap *heap, struct heap_extent *extent)
+static void init_extent(struct shared_heap *heap, struct shared_extent *extent)
 {
 	caddr_t freepage;
 	int n, lastpgnum;
 
-	__holder_init(heap, &extent->link);
+	__holder_init_nocheck(heap, &extent->link);
 
 	/* The initial extent starts right after the header. */
 	extent->membase = __moff(heap, extent) + heap->hdrsize;
@@ -156,11 +149,14 @@ static void init_extent(struct heap *heap, struct heap_extent *extent)
 	extent->freelist = extent->membase;
 }
 
-static void init_heap(struct heap *heap, void *mem, size_t size)
+static void init_heap(struct shared_heap *heap, const char *name,
+		      void *mem, size_t size)
 {
-	struct heap_extent *extent;
+	struct shared_extent *extent;
 	pthread_mutexattr_t mattr;
 
+	strncpy(heap->name, name, sizeof(heap->name) - 1);
+	heap->name[sizeof(heap->name) - 1] = '\0';
 	heap->extentsize = size;
 	heap->hdrsize = internal_overhead(size);
 	heap->npages = (size - heap->hdrsize) >> HOBJ_PAGE_SHIFT;
@@ -172,10 +168,10 @@ static void init_heap(struct heap *heap, void *mem, size_t size)
 	 */
 	assert(heap->npages >= 2);
 
-	heap->cpid = copperplate_get_tid();
 	heap->ubytes = 0;
-	heap->maxcont = heap->npages * HOBJ_PAGE_SIZE;
-	__list_init(heap, &heap->extents);
+	heap->total = heap->npages * HOBJ_PAGE_SIZE;
+	heap->maxcont = heap->total;
+	__list_init_nocheck(heap, &heap->extents);
 
 	__RT(pthread_mutexattr_init(&mattr));
 	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
@@ -186,16 +182,34 @@ static void init_heap(struct heap *heap, void *mem, size_t size)
 	memset(heap->buckets, 0, sizeof(heap->buckets));
 	extent = mem;
 	init_extent(heap, extent);
-
-	__hash_init(heap, &heap->catalog);
 	__list_append(heap, &extent->link, &heap->extents);
 }
 
-static caddr_t get_free_range(struct heap *heap, size_t bsize, int log2size)
+static void init_main_heap(struct session_heap *m_heap, void *mem, size_t size)
+{
+	pthread_mutexattr_t mattr;
+
+	init_heap(&m_heap->base, "main", mem, size);
+	m_heap->cpid = copperplate_get_tid();
+
+	__RT(pthread_mutexattr_init(&mattr));
+	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
+	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_SHARED));
+	__RT(pthread_mutex_init(&m_heap->sysgroup.lock, &mattr));
+	__RT(pthread_mutexattr_destroy(&mattr));
+
+	__hash_init(m_heap, &m_heap->catalog);
+	m_heap->sysgroup.thread_count = 0;
+	__list_init(m_heap, &m_heap->sysgroup.thread_list);
+	m_heap->sysgroup.heap_count = 0;
+	__list_init(m_heap, &m_heap->sysgroup.heap_list);
+}
+
+static caddr_t get_free_range(struct shared_heap *heap, size_t bsize, int log2size)
 {
 	caddr_t block, eblock, freepage, lastpage, headpage, freehead = NULL;
+	struct shared_extent *extent;
 	size_t pnum, pcont, fcont;
-	struct heap_extent *extent;
 
 	__list_for_each_entry(heap, extent, &heap->extents, link) {
 		freepage = __mref_check(heap, extent->freelist);
@@ -290,9 +304,9 @@ align_alloc_size(size_t size)
 	return __align_to(size, HOBJ_MINALIGNSZ);
 }
 
-static void *alloc_block(struct heap *heap, size_t size)
+static void *alloc_block(struct shared_heap *heap, size_t size)
 {
-	struct heap_extent *extent;
+	struct shared_extent *extent;
 	int log2size, ilog;
 	size_t pnum, bsize;
 	caddr_t block;
@@ -363,12 +377,12 @@ done:
 	return block;
 }
 
-static int free_block(struct heap *heap, void *block)
+static int free_block(struct shared_heap *heap, void *block)
 {
 	caddr_t freepage, lastpage, nextpage, tailpage, freeptr;
 	int log2size, ret = 0, nblocks, xpage, ilog;
 	size_t pnum, pcont, boffset, bsize, npages;
-	struct heap_extent *extent;
+	struct shared_extent *extent;
 	memoff_t *tailptr;
 
 	write_lock_nocancel(&heap->lock);
@@ -516,10 +530,10 @@ out:
 	return __bt(ret);
 }
 
-static size_t check_block(struct heap *heap, void *block)
+static size_t check_block(struct shared_heap *heap, void *block)
 {
 	size_t pnum, boffset, bsize, ret = 0;
-	struct heap_extent *extent;
+	struct shared_extent *extent;
 	int ptype;
 
 	read_lock_nocancel(&heap->lock);
@@ -553,10 +567,12 @@ out:
 	return ret;
 }
 
-static int create_heap(struct heapobj *hobj, const char *session,
-		       const char *name, size_t size, int flags)
+static int create_main_heap(void)
 {
-	struct heap *heap;
+	const char *session = __node_info.session_label;
+	size_t size = __node_info.mem_pool;
+	struct heapobj *hobj = &main_pool;
+	struct session_heap *m_heap;
 	struct stat sbuf;
 	memoff_t len;
 	int ret, fd;
@@ -566,38 +582,24 @@ static int create_heap(struct heapobj *hobj, const char *session,
 	 * header, but we still make sure of this in debug mode, so
 	 * that we can rely on __align_to() for rounding to the
 	 * minimum size in production builds, without any further
-	 * test (e.g. like size >= sizeof(struct heap_extent)).
+	 * test (e.g. like size >= sizeof(struct shared_extent)).
 	 */
-	assert(HOBJ_PAGE_SIZE > sizeof(struct heap_extent));
+	assert(HOBJ_PAGE_SIZE > sizeof(struct shared_extent));
 
 	size += internal_overhead(size);
 	size = __align_to(size, HOBJ_PAGE_SIZE);
 	if (size > HOBJ_MAXEXTSZ)
 		return __bt(-EINVAL);
 
-	if (size - sizeof(struct heap_extent) < HOBJ_PAGE_SIZE * 2)
+	if (size - sizeof(struct shared_extent) < HOBJ_PAGE_SIZE * 2)
 		size += HOBJ_PAGE_SIZE * 2;
 
-	len = size + sizeof(*heap);
+	len = size + sizeof(*m_heap);
 
-	if (flags & HOBJ_SHAREABLE) {
-		heap = alloc_block(&main_heap, len);
-		if (heap == NULL)
-			return __bt(-ENOMEM);
-		fd = -1;
-		heap->maplen = len;
-		init_heap(heap, (caddr_t)heap + sizeof(*heap), size);
-		goto finish;
-	}
-
-	if (name)
-		snprintf(hobj->name, sizeof(hobj->name), "%s:%s", session, name);
-	else
-		snprintf(hobj->name, sizeof(hobj->name), "%s:%p", session, hobj);
-
+	snprintf(hobj->name, sizeof(hobj->name), "%s.main-heap", session);
 	snprintf(hobj->fsname, sizeof(hobj->fsname), "/xeno:%s", hobj->name);
 
-	if (flags & HOBJ_FORCE)
+	if (__node_info.reset_session)
 		shm_unlink(hobj->fsname);
 
 	fd = shm_open(hobj->fsname, O_RDWR|O_CREAT, 0600);
@@ -613,35 +615,43 @@ static int create_heap(struct heapobj *hobj, const char *session,
 		goto errno_fail;
 
 	if (sbuf.st_size > 0) {
-		heap = mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
-		if (heap == MAP_FAILED)
+		m_heap = mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+		if (m_heap == MAP_FAILED)
 			goto errno_fail;
-		if (heap->cpid && kill(heap->cpid, 0) == 0) {
-			if (heap->maplen == len)
+		if (m_heap->cpid && kill(m_heap->cpid, 0) == 0) {
+			if (m_heap->maplen == len) {
+				hobj->pool = &m_heap->base;
+				__main_heap = m_heap;
+				__main_sysgroup = &m_heap->sysgroup;
 				goto done;
+			}
+			munmap(m_heap, len);
 			__STD(close(fd));
 			return __bt(-EEXIST);
 		}
-		munmap(heap, len);
+		munmap(m_heap, len);
 	}
 
 	ret = ftruncate(fd, len);
 	if (ret)
 		goto unlink_fail;
 
-	heap = mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
-	if (heap == MAP_FAILED)
+	m_heap = mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+	if (m_heap == MAP_FAILED)
 		goto unlink_fail;
 
-	heap->maplen = len;
-	init_heap(heap, (caddr_t)heap + sizeof(*heap), size);
+	m_heap->maplen = len;
+	hobj->pool = &m_heap->base; /* Must be set prior to calling init_main_heap() */
+	init_main_heap(m_heap, (caddr_t)m_heap + sizeof(*m_heap), size);
+	/* We need these globals set up before updating a sysgroup. */
+	__main_heap = m_heap;
+	__main_sysgroup = &m_heap->sysgroup;
+	sysgroup_add(heap, &m_heap->base.memspec);
 done:
 	flock(fd, LOCK_UN);
-finish:
-	hobj->pool = heap;
+	__STD(close(fd));
 	hobj->size = size;
-	hobj->fd = fd;
-	hobj->flags = flags;
+	__main_catalog = &m_heap->catalog;
 
 	return 0;
 unlink_fail:
@@ -656,71 +666,178 @@ close_fail:
 	return ret;
 }
 
+static int bind_main_heap(const char *session)
+{
+	struct heapobj *hobj = &main_pool;
+	struct session_heap *m_heap;
+	struct stat sbuf;
+	memoff_t len;
+	int ret, fd;
+
+	/* No error tracking, this is for internal users. */
+
+	snprintf(hobj->name, sizeof(hobj->name), "%s.main-heap", session);
+	snprintf(hobj->fsname, sizeof(hobj->fsname), "/xeno:%s", hobj->name);
+
+	fd = shm_open(hobj->fsname, O_RDWR, 0400);
+	if (fd < 0)
+		return -errno;
+
+	ret = flock(fd, LOCK_EX);
+	if (ret)
+		goto errno_fail;
+
+	ret = fstat(fd, &sbuf);
+	if (ret)
+		goto errno_fail;
+
+	len = sbuf.st_size;
+	if (len < sizeof(*m_heap)) {
+		ret = -EINVAL;
+		goto fail;
+	}
+
+	m_heap = mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+	if (m_heap == MAP_FAILED)
+		goto errno_fail;
+
+	__STD(close(fd));
+
+	if (m_heap->cpid == 0 || kill(m_heap->cpid, 0)) {
+		munmap(m_heap, len);
+		return -ENOENT;
+	}
+
+	hobj->pool = &m_heap->base;
+	hobj->size = len - sizeof(*m_heap);
+	__main_heap = m_heap;
+	__main_catalog = &m_heap->catalog;
+	__main_sysgroup = &m_heap->sysgroup;
+
+	return 0;
+
+errno_fail:
+	ret = -errno;
+fail:
+	__STD(close(fd));
+
+	return ret;
+}
+
 int pshared_check(void *__heap, void *__addr)
 {
-	struct heap *heap = __heap;
-	return __addr >= __heap && __addr < __heap + heap->maplen;
+	struct shared_heap *heap = __heap;
+	struct shared_extent *extent;
+	struct session_heap *m_heap;
+
+	/*
+	 * Fast check for the main heap: we have a single extent for
+	 * this one, so the address shall fall into the file-backed
+	 * memory range.
+	 */
+	if (heap == main_pool.pool) {
+		m_heap = container_of(heap, struct session_heap, base);
+		return __addr >= (void *)m_heap &&
+			__addr < (void *)m_heap + m_heap->maplen;
+	}
+
+	/*
+	 * Secondary (nested) heap: some refs may fall into the
+	 * header, check for this first.
+	 */
+	if (__addr >= __heap && __addr < __heap + sizeof(*heap))
+		return 1;
+
+	/*
+	 * This address must be referring to some payload data within
+	 * the nested heap, check that it falls into one of the heap
+	 * extents.
+	 */
+	assert(!list_empty(&heap->extents));
+
+	__list_for_each_entry(heap, extent, &heap->extents, link) {
+		if (__moff(heap, __addr) >= extent->membase &&
+		    __moff(heap, __addr) < extent->memlim)
+			return 1;
+	}
+
+	return 0;
 }
 
-int heapobj_init(struct heapobj *hobj, const char *name,
-		 size_t size, void *mem)
+int heapobj_init(struct heapobj *hobj, const char *name, size_t size)
 {
-	int flags = __node_info.reset_session ? HOBJ_FORCE : 0;
+	const char *session = __node_info.session_label;
+	struct shared_heap *heap;
+	size_t len;
 
-	return __bt(create_heap(hobj, __node_info.session_label, name,
-				size, flags));
-}
+	size += internal_overhead(size);
+	size = __align_to(size, HOBJ_PAGE_SIZE);
+	if (size > HOBJ_MAXEXTSZ)
+		return __bt(-EINVAL);
 
-int heapobj_init_shareable(struct heapobj *hobj, const char *name,
-			   size_t size)
-{
-	int flags = __node_info.reset_session ? HOBJ_FORCE : 0;
+	if (size - sizeof(struct shared_extent) < HOBJ_PAGE_SIZE * 2)
+		size += HOBJ_PAGE_SIZE * 2;
 
-	return __bt(create_heap(hobj, __node_info.session_label, name,
-				size, flags | HOBJ_SHAREABLE));
+	len = size + sizeof(*heap);
+
+	/*
+	 * Create a heap nested in the main shared heap to hold data
+	 * we can share among processes which belong to the same
+	 * session.
+	 */
+	heap = alloc_block(&main_heap.base, len);
+	if (heap == NULL) {
+		warning("%s() failed for %Zu bytes, raise --mem-pool-size?",
+			__func__);
+		return __bt(-ENOMEM);
+	}
+
+	if (name)
+		snprintf(hobj->name, sizeof(hobj->name), "%s.%s", session, name);
+	else
+		snprintf(hobj->name, sizeof(hobj->name), "%s.%p", session, hobj);
+
+	hobj->pool = heap;
+	hobj->size = size;
+	init_heap(heap, hobj->name, (caddr_t)heap + sizeof(*heap), size);
+	sysgroup_add(heap, &heap->memspec);
+
+	return 0;
 }
 
 int heapobj_init_array(struct heapobj *hobj, const char *name,
 		       size_t size, int elems)
 {
 	size = align_alloc_size(size);
-	return __bt(heapobj_init(hobj, name, size * elems, NULL));
-}
-
-int heapobj_init_array_shareable(struct heapobj *hobj, const char *name,
-				 size_t size, int elems)
-{
-	size = align_alloc_size(size);
-	return __bt(heapobj_init_shareable(hobj, name, size * elems));
+	return __bt(heapobj_init(hobj, name, size * elems));
 }
 
 void heapobj_destroy(struct heapobj *hobj)
 {
-	struct heap *heap = hobj->pool;
+	struct shared_heap *heap = hobj->pool;
 	int cpid;
 
 	__RT(pthread_mutex_destroy(&heap->lock));
 
-	if (hobj->flags & HOBJ_SHAREABLE) {
-		free_block(&main_heap, heap);
+	if (hobj != &main_pool) {
+		sysgroup_remove(heap, &heap->memspec);
+		free_block(&main_heap.base, heap);
 		return;
 	}
 
-	cpid = heap->cpid;
-	munmap(heap, hobj->size + sizeof(*heap));
-	__STD(close(hobj->fd));
+	__RT(pthread_mutex_destroy(&main_heap.sysgroup.lock));
+	cpid = main_heap.cpid;
+	munmap(&main_heap, main_heap.maplen);
 
 	if (cpid == copperplate_get_tid() || (cpid && kill(cpid, 0)))
 		shm_unlink(hobj->fsname);
 }
 
-int heapobj_extend(struct heapobj *hobj, size_t size, void *mem)
+int heapobj_extend(struct heapobj *hobj, size_t size, void *unused)
 {
-	struct heap *heap = hobj->pool;
-	struct heap_extent *extent;
-	size_t newsize;
-	int ret, state;
-	caddr_t p;
+	struct shared_heap *heap = hobj->pool;
+	struct shared_extent *extent;
+	int state;
 
 	if (hobj == &main_pool)	/* Can't extend the main pool. */
 		return __bt(-EINVAL);
@@ -728,34 +845,19 @@ int heapobj_extend(struct heapobj *hobj, size_t size, void *mem)
 	if (size <= HOBJ_PAGE_SIZE * 2)
 		return __bt(-EINVAL);
 
+	size = align_alloc_size(size);
 	write_lock_safe(&heap->lock, state);
-	newsize = size + hobj->size + sizeof(*heap) + sizeof(*extent);
-	ret = ftruncate(hobj->fd, newsize);
-	if (ret) {
-		ret = __bt(-errno);
-		goto out;
-	}
-
-	/*
-	 * We do not allow the kernel to move the mapping address, so
-	 * it is safe referring to the heap contents while extending
-	 * it.
-	 */
-	p = mremap(heap, heap->maplen, newsize, 0);
-	if (p == MAP_FAILED) {
-		ret = __bt(-errno);
-		goto out;
-	}
-
-	heap->maplen = newsize;
-	extent = (struct heap_extent *)(p + hobj->size + sizeof(*heap));
+	extent = alloc_block(&main_heap.base, size + sizeof(*extent));
 	init_extent(heap, extent);
 	__list_append(heap, &extent->link, &heap->extents);
-	hobj->size = newsize - sizeof(*heap);
-out:
+	if (size > heap->maxcont)
+		heap->maxcont = size;
+	heap->total += size;
+	hobj->size += size;
+
 	write_unlock_safe(&heap->lock, state);
 
-	return ret;
+	return 0;
 }
 
 void *heapobj_alloc(struct heapobj *hobj, size_t size)
@@ -775,18 +877,18 @@ size_t heapobj_validate(struct heapobj *hobj, void *ptr)
 
 size_t heapobj_inquire(struct heapobj *hobj)
 {
-	struct heap *heap = hobj->pool;
+	struct shared_heap *heap = hobj->pool;
 	return heap->ubytes;
 }
 
 void *xnmalloc(size_t size)
 {
-	return alloc_block(&main_heap, size);
+	return alloc_block(&main_heap.base, size);
 }
 
 void xnfree(void *ptr)
 {
-	free_block(&main_heap, ptr);
+	free_block(&main_heap.base, ptr);
 }
 
 char *xnstrdup(const char *ptr)
@@ -804,13 +906,7 @@ int heapobj_pkg_init_shared(void)
 {
 	int ret;
 
-	ret = heapobj_init(&main_pool, "main", __node_info.mem_pool, NULL);
-	if (ret == 0) {
-		__pshared_heap = main_pool.pool;
-		__pshared_catalog = &main_heap.catalog;
-		return 0;
-	}
-
+	ret = create_main_heap();
 	if (ret == -EEXIST) {
 		if (__node_info.reset_session)
 			/* Init failed despite override. */
@@ -823,4 +919,17 @@ int heapobj_pkg_init_shared(void)
 	}
 
 	return __bt(ret);
+}
+
+int heapobj_bind_session(const char *session)
+{
+	/* No error tracking, this is for internal users. */
+	return bind_main_heap(session);
+}
+
+void heapobj_unbind_session(void)
+{
+	size_t len = main_heap.maplen;
+
+	munmap(&main_heap, len);
 }
