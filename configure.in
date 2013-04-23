@@ -66,10 +66,8 @@ else
   build_for=$host_alias
 fi
 
-use__thread=no
 case "$build_for" in
  i*86*-*)
-	use__thread=yes
 	XENO_TARGET_ARCH=x86
 	CONFIG_XENO_FASTSYNCH=y
 	CONFIG_XENO_DEFAULT_PERIOD=100000
@@ -95,7 +93,6 @@ case "$build_for" in
 	# what architecture we are running
 	;;
  x86_64-*|amd64-*)
-	use__thread=yes
 	XENO_TARGET_ARCH=x86
 	CONFIG_XENO_FASTSYNCH=y
 	CONFIG_XENO_DEFAULT_PERIOD=100000
@@ -576,29 +573,17 @@ LD_FILE_OPTION=$ac_cv_ld_file_option
 AC_SUBST(LD_FILE_OPTION)
 AM_CONDITIONAL(CONFIG_XENO_FAST_WRAP,[test "$LD_FILE_OPTION" = "yes"])
 
-AC_MSG_CHECKING(whether to enable dlopen support for skin libraries)
-AC_ARG_ENABLE(dlopen-skins,
-	AC_HELP_STRING([--enable-dlopen-skins], [Disable TLS features and
-automatic main thread mapping by the POSIX skin to allows dlopen'ing Xenomai
-libs. [default=no]]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_LIBS_DLOPEN=y ;;
-	*) unset CONFIG_XENO_LIBS_DLOPEN ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_LIBS_DLOPEN:-no})
-if test x$CONFIG_XENO_LIBS_DLOPEN = xy; then
-	AC_DEFINE(CONFIG_XENO_LIBS_DLOPEN,1,[config])
-fi
-
 XENO_DLOPEN_CONSTRAINT=
+use__thread=no
 
 AC_ARG_WITH([__thread],
-	    AC_HELP_STRING([--without-__thread],
-			   [do not use TLS features]),
+	    AC_HELP_STRING([--with-__thread],
+			   [use optimized TLS features (x86 only),
+disabling the ability to use dlopen on Xenomai skin libraries]),
 	    [use__thread=$withval])
 
 dnl Check whether the compiler supports the __thread keyword.
-if test "x$use__thread" != xno -a "x$CONFIG_XENO_LIBS_DLOPEN" != xy; then
+if test "x$use__thread" = xyes; then
 	AC_CACHE_CHECK([for __thread], libc_cv_gcc___thread,
 	[cat > conftest.c <<\EOF
 __thread int a __attribute__ ((tls_model ("initial-exec"))) = 42;
