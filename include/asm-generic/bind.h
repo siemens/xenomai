@@ -5,10 +5,6 @@
 #include <stdlib.h>
 #include <signal.h>
 
-extern struct sigaction xeno_orig_sigdebug_sa;
-
-void xeno_handle_mlock_alert(int sig, siginfo_t *si, void *context);
-
 int 
 xeno_bind_skin_opt(unsigned skin_magic, const char *skin, const char *module);
 
@@ -16,7 +12,6 @@ static inline int
 xeno_bind_skin(unsigned skin_magic, const char *skin, const char *module)
 {
 	int muxid = xeno_bind_skin_opt(skin_magic, skin, module);
-	struct sigaction sa;
 
 	if (muxid == -1) {
 		fprintf(stderr,
@@ -24,11 +19,6 @@ xeno_bind_skin(unsigned skin_magic, const char *skin, const char *module)
 			"(modprobe %s?)\n", skin, module);
 		exit(EXIT_FAILURE);
 	}
-
-	sa.sa_sigaction = xeno_handle_mlock_alert;
-	sigemptyset(&sa.sa_mask);
-	sa.sa_flags = SA_SIGINFO;
-	sigaction(SIGXCPU, &sa, &xeno_orig_sigdebug_sa);
 
 	return muxid;
 }

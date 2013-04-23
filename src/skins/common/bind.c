@@ -14,7 +14,6 @@
 #include <asm/xenomai/bits/bind.h>
 #include "sem_heap.h"
 
-struct sigaction xeno_orig_sigdebug_sa;
 static pthread_t xeno_main_tid;
 
 static void xeno_sigill_handler(int sig)
@@ -119,21 +118,4 @@ void xeno_fault_stack(void)
 
 		stk[0] = stk[sizeof(stk) - 1] = 0xA5;
 	}
-}
-
-void xeno_handle_mlock_alert(int sig, siginfo_t *si, void *context)
-{
-	if (si->si_value.sival_int == SIGDEBUG_NOMLOCK) {
-		fprintf(stderr, "Xenomai: process memory not locked "
-			"(missing mlockall?)\n");
-		fflush(stderr);
-		exit(4);
-	}
-
-	/* XNTRAPSW was set for the thread but no user-defined handler
-	   has been set to override our internal handler, so let's
-	   restore the setting before we registered and re-raise the
-	   signal. Usually triggers the default signal action. */
-	sigaction(SIGXCPU, &xeno_orig_sigdebug_sa, NULL);
-	pthread_kill(pthread_self(), SIGXCPU);
 }
