@@ -43,11 +43,10 @@ void pse51_clock_init(int);
 static __attribute__ ((constructor))
 void __init_posix_interface(void)
 {
-#ifndef CONFIG_XENO_LIBS_DLOPEN
 	struct sched_param parm;
 	int policy;
-#endif /* !CONFIG_XENO_LIBS_DLOPEN */
 	int muxid, err;
+	const char *noshadow;
 
 	rt_print_auto_init(1);
 
@@ -68,22 +67,24 @@ void __init_posix_interface(void)
 								 __rtdm_fdcount);
 	}
 
-	/* Don't use auto-shadowing if we are likely invoked from dlopen. */
-#ifndef CONFIG_XENO_LIBS_DLOPEN
-	err = __real_pthread_getschedparam(pthread_self(), &policy, &parm);
-	if (err) {
-		fprintf(stderr, "Xenomai Posix skin init: "
-			"pthread_getschedparam: %s\n", strerror(err));
-		exit(EXIT_FAILURE);
-	}
+	noshadow = getenv("XENO_NOSHADOW");
+	if (!noshadow || !*noshadow) {
+		err = __real_pthread_getschedparam(pthread_self(), &policy,
+						   &parm);
+		if (err) {
+			fprintf(stderr, "Xenomai Posix skin init: "
+				"pthread_getschedparam: %s\n", strerror(err));
+			exit(EXIT_FAILURE);
+		}
 
-	err = __wrap_pthread_setschedparam(pthread_self(), policy, &parm);
-	if (err) {
-		fprintf(stderr, "Xenomai Posix skin init: "
-			"pthread_setschedparam: %s\n", strerror(err));
-		exit(EXIT_FAILURE);
+		err = __wrap_pthread_setschedparam(pthread_self(), policy,
+						   &parm);
+		if (err) {
+			fprintf(stderr, "Xenomai Posix skin init: "
+				"pthread_setschedparam: %s\n", strerror(err));
+			exit(EXIT_FAILURE);
+		}
 	}
-#endif /* !CONFIG_XENO_LIBS_DLOPEN */
 
 	if (fork_handler_registered)
 		return;
