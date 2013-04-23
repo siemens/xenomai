@@ -576,51 +576,6 @@ LD_FILE_OPTION=$ac_cv_ld_file_option
 AC_SUBST(LD_FILE_OPTION)
 AM_CONDITIONAL(CONFIG_XENO_FAST_WRAP,[test "$LD_FILE_OPTION" = "yes"])
 
-AC_MSG_CHECKING(whether the POSIX skin library automatically calls mlockall)
-AC_ARG_ENABLE(posix-auto-mlockall,
-	AS_HELP_STRING([--enable-posix-auto-mlockall], [Enable Xenomai POSIX
-skin library to automatically call mlockall at startup. This option is mainly
-useful for running third-parties programs such as the Open Posix Testsuite
-unmodified with Xenomai POSIX skin [default=no]]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_POSIX_AUTO_MLOCKALL=y ;;
-	*) unset CONFIG_XENO_POSIX_AUTO_MLOCKALL ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_POSIX_AUTO_MLOCKALL:-no})
-if test x$CONFIG_XENO_POSIX_AUTO_MLOCKALL = xy; then
-	AC_DEFINE(CONFIG_XENO_POSIX_AUTO_MLOCKALL,1,[config])
-fi
-
-AC_MSG_CHECKING(whether the pSOS skin library automatically calls mlockall)
-AC_ARG_ENABLE(psos-auto-mlockall,
-	AS_HELP_STRING([--enable-psos-auto-mlockall], [Enable the
-Xenomai pSOS skin library to automatically call mlockall at
-process startup. Unless this option is switched on, the application
-will have to lock its memory explicitly while initializing. [default=no]]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_PSOS_AUTO_MLOCKALL=y ;;
-	*) unset CONFIG_XENO_PSOS_AUTO_MLOCKALL ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_PSOS_AUTO_MLOCKALL:-no})
-if test x$CONFIG_XENO_POSIX_PSOS_MLOCKALL = xy; then
-	AC_DEFINE(CONFIG_XENO_PSOS_AUTO_MLOCKALL,1,[config])
-fi
-
-AC_MSG_CHECKING(whether the uITRON skin library automatically calls mlockall)
-AC_ARG_ENABLE(uitron-auto-mlockall,
-	AS_HELP_STRING([--enable-uitron-auto-mlockall], [Enable the
-Xenomai uITRON skin library to automatically call mlockall at
-process startup. Unless this option is switched on, the application
-will have to lock its memory explicitly while initializing. [default=no]]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_UITRON_AUTO_MLOCKALL=y ;;
-	*) unset CONFIG_XENO_UITRON_AUTO_MLOCKALL ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_UITRON_AUTO_MLOCKALL:-no})
-if test x$CONFIG_XENO_POSIX_UITRON_MLOCKALL = xy; then
-	AC_DEFINE(CONFIG_XENO_UITRON_AUTO_MLOCKALL,1,[config])
-fi
-
 AC_MSG_CHECKING(whether to enable dlopen support for skin libraries)
 AC_ARG_ENABLE(dlopen-skins,
 	AC_HELP_STRING([--enable-dlopen-skins], [Disable TLS features and

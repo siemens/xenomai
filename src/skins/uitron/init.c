@@ -33,13 +33,7 @@ void __init_xeno_interface(void)
 	__uitron_muxid = xeno_bind_skin(uITRON_SKIN_MAGIC, "uitron", "xeno_uitron");
 	__uitron_muxid = __xn_mux_shifted_id(__uitron_muxid);
 
-	/* Shadow the main thread. mlock the whole memory for the time
-	   of the syscall, in order to avoid the SIGXCPU signal. */
-	if (mlockall(MCL_CURRENT | MCL_FUTURE)) {
-		perror("Xenomai uITRON skin init: mlockall() failed");
-		exit(EXIT_FAILURE);
-	}
-
+	/* Shadow the main thread. */
 	pk_ctsk.stksz = 0;
 	pk_ctsk.itskpri = 0;	/* non-RT shadow. */
 	err = shd_tsk(1, &pk_ctsk);
@@ -48,11 +42,4 @@ void __init_xeno_interface(void)
 		fprintf(stderr, "Xenomai uITRON skin init: shd_tsk() failed, status %d", err);
 		exit(EXIT_FAILURE);
 	}
-
-#ifndef CONFIG_XENO_UITRON_AUTO_MLOCKALL
-	if (munlockall()) {
-		perror("Xenomai uITRON skin init: munlockall");
-		exit(EXIT_FAILURE);
-	}
-#endif /* !CONFIG_XENO_UITRON_AUTO_MLOCKALL */
 }

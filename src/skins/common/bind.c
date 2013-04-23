@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/mman.h>
 
 #include <nucleus/heap.h>
 #include <asm/xenomai/syscall.h>
@@ -89,6 +90,11 @@ xeno_bind_skin_opt(unsigned skin_magic, const char *skin, const char *module)
 	if (muxid < 0) {
 		fprintf(stderr, "Xenomai: binding failed: %s.\n",
 			strerror(-muxid));
+		exit(EXIT_FAILURE);
+	}
+
+	if (mlockall(MCL_CURRENT | MCL_FUTURE)) {
+		perror("Xenomai: mlockall");
 		exit(EXIT_FAILURE);
 	}
 
