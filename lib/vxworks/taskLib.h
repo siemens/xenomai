@@ -96,6 +96,8 @@ struct wind_task *get_wind_task_or_self(TASK_ID tid);
 
 void put_wind_task(struct wind_task *task);
 
+int get_task_status(struct wind_task *task);
+
 extern struct cluster wind_task_table;
 
 extern struct pvlist wind_task_list;

@@ -18,7 +18,7 @@ void ___cobalt_prefault(void *p, size_t len);
 
 void __cobalt_thread_harden(void);
 
-int __cobalt_thread_stat(pthread_t tid,
+int __cobalt_thread_stat(pid_t pid,
 			 struct cobalt_threadstat *stat);
 
 int cobalt_monitor_init(cobalt_monitor_t *mon, int flags);

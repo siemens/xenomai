@@ -31,13 +31,6 @@ struct cobalt_hkey {
 	struct mm_struct *mm;
 };
 
-struct cobalt_hash {
-	pthread_t k_tid;	/* Xenomai in-kernel (nucleus) tid */
-	pid_t h_tid;		/* Host (linux) tid */
-	struct cobalt_hkey hkey;
-	struct cobalt_hash *next;
-};
-
 typedef struct {
 	cobalt_sigset_t mask;
 	xnpqueue_t list;
@@ -83,8 +76,6 @@ struct cobalt_thread {
 
 #define thread_name(thread) ((thread)->attr.name)
 
-pthread_t cobalt_thread_find(const struct cobalt_hkey *hkey);
-
 int cobalt_thread_create(unsigned long tid, int policy,
 			 struct sched_param_ex __user *u_param,
 			 unsigned long __user *u_window_offset);
@@ -108,7 +99,7 @@ int cobalt_thread_probe_np(pid_t h_tid);
 
 int cobalt_thread_kill(unsigned long tid, int sig);
 
-int cobalt_thread_stat(unsigned long tid,
+int cobalt_thread_stat(pid_t pid,
 		       struct cobalt_threadstat __user *u_stat);
 
 int cobalt_thread_setschedparam(unsigned long tid,

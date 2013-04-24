@@ -85,7 +85,9 @@ int monitor_wait_grant(struct syncobj *sobj,
 }
 
 static inline
-int monitor_wait_drain(struct syncobj *sobj, const struct timespec *timeout)
+int monitor_wait_drain(struct syncobj *sobj,
+		       struct threadobj *current,
+		       const struct timespec *timeout)
 {
 	return cobalt_monitor_wait(&sobj->core.monitor,
 				   COBALT_MONITOR_WAITDRAIN,
@@ -149,7 +151,9 @@ int monitor_wait_grant(struct syncobj *sobj,
 }
 
 static inline
-int monitor_wait_drain(struct syncobj *sobj, const struct timespec *timeout)
+int monitor_wait_drain(struct syncobj *sobj,
+		       struct threadobj *current,
+		       const struct timespec *timeout)
 {
 	if (timeout)
 		return -pthread_cond_timedwait(&sobj->core.drain_sync,
@@ -429,17 +433,16 @@ struct threadobj *syncobj_peek_drain(struct syncobj *sobj)
 	return thobj;
 }
 
-static inline int wait_epilogue(struct syncobj *sobj,
-				struct syncstate *syns,
-				struct threadobj *current)
+static int wait_epilogue(struct syncobj *sobj,
+			 struct syncstate *syns,
+			 struct threadobj *current)
 {
+	current->run_state = __THREAD_S_RUNNING;
+
 	if (current->wait_sobj) {
 		dequeue_waiter(sobj, current);
 		current->wait_sobj = NULL;
 	}
-
-	if (current->wait_hook)
-		current->wait_hook(sobj, SYNCOBJ_RESUME);
 
 	sobj->wait_count--;
 	assert(sobj->wait_count >= 0);
@@ -469,17 +472,16 @@ int syncobj_wait_grant(struct syncobj *sobj, const struct timespec *timeout,
 
 	assert(current != NULL);
 
+	current->run_state = timeout ? __THREAD_S_TIMEDWAIT : __THREAD_S_WAIT;
+	threadobj_save_timeout(&current->core, timeout);
 	current->wait_status = 0;
 	enqueue_waiter(sobj, current);
 	current->wait_sobj = sobj;
 	sobj->grant_count++;
 	sobj->wait_count++;
 
-	if (current->wait_hook)
-		current->wait_hook(sobj, SYNCOBJ_BLOCK);
-
 	/*
-	 * XXX: we are guaranteed to be in deferred cancel mode, with
+	 * NOTE: we are guaranteed to be in deferred cancel mode, with
 	 * cancelability disabled (in syncobj_lock); re-enable it
 	 * before pending on the condvar.
 	 */
@@ -508,27 +510,26 @@ int syncobj_wait_drain(struct syncobj *sobj, const struct timespec *timeout,
 
 	assert(current != NULL);
 
+	current->run_state = timeout ? __THREAD_S_TIMEDWAIT : __THREAD_S_WAIT;
+	threadobj_save_timeout(&current->core, timeout);
 	current->wait_status = SYNCOBJ_DRAINWAIT;
 	list_append(&current->wait_link, &sobj->drain_list);
 	current->wait_sobj = sobj;
 	sobj->drain_count++;
 	sobj->wait_count++;
 
-	if (current->wait_hook)
-		current->wait_hook(sobj, SYNCOBJ_BLOCK);
-
 	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &state);
 	assert(state == PTHREAD_CANCEL_DISABLE);
 
 	/*
-	 * XXX: Since the DRAINED signal is broadcast to all waiters,
+	 * NOTE: Since the DRAINED signal is broadcast to all waiters,
 	 * a race may exist for acting upon it among those
 	 * threads. Therefore the caller must check that the drain
 	 * condition is still true before proceeding.
 	 */
 	do {
 		__syncobj_tag_unlocked(sobj);
-		ret = monitor_wait_drain(sobj, timeout);
+		ret = monitor_wait_drain(sobj, current, timeout);
 		__syncobj_tag_locked(sobj);
 	} while (ret == 0 && current->wait_sobj);
 

@@ -57,7 +57,7 @@ struct backtrace_data {
 	do {								\
 		struct threadobj *__thobj = threadobj_current();	\
 		if (__thobj == NULL ||					\
-		    (__thobj->status & THREADOBJ_DEBUG) != 0)		\
+		    (__thobj->status & __THREAD_S_DEBUG) != 0)		\
 			__debug(__thobj, __fmt, ##__args);		\
 	} while (0)
 

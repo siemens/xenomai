@@ -245,8 +245,6 @@ static int create_tcb(struct alchemy_task **tcbp, RT_TASK *task,
 	tcb->flowgen = 0;
 
 	idata.magic = task_magic;
-	idata.wait_hook = NULL;
-	idata.suspend_hook = NULL;
 	idata.finalizer = task_finalizer;
 	idata.priority = prio;
 	threadobj_init(&tcb->thobj, &idata);
@@ -616,7 +614,7 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 		goto out;
 
 	threadobj_lock(&tcb->thobj);
-	threadobj_shadow(&tcb->thobj); /* We won't wait in prologue. */
+	threadobj_shadow();	/* We won't wait in prologue. */
 	threadobj_unlock(&tcb->thobj);
 	ret = task_prologue(tcb);
 	if (ret) {

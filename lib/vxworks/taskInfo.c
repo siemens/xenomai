@@ -78,10 +78,10 @@ BOOL taskIsReady(TASK_ID task_id)
 	if (task == NULL)
 		return 0;
 
-	status = task->tcb->status;
+	status = get_task_status(task);
 	put_wind_task(task);
 
-	return (status & (WIND_SUSPEND|WIND_DELAY)) == 0;
+	return status == WIND_READY;
 }
 
 BOOL taskIsSuspended(TASK_ID task_id)
@@ -93,11 +93,11 @@ BOOL taskIsSuspended(TASK_ID task_id)
 	if (task == NULL)
 		return 0;
 
-	status = task->tcb->status;
+	status = threadobj_get_status(&task->thobj);
 
 	put_wind_task(task);
 
-	return (status & WIND_SUSPEND) != 0;
+	return (status & __THREAD_S_SUSPENDED) != 0;
 }
 
 STATUS taskGetInfo(TASK_ID task_id, TASK_DESC *desc)
@@ -118,7 +118,7 @@ STATUS taskGetInfo(TASK_ID task_id, TASK_DESC *desc)
 	tcb = task->tcb;
 	desc->td_tid = task_id;
 	desc->td_priority = wind_task_get_priority(task);
-	desc->td_status = tcb->status;
+	desc->td_status = get_task_status(task);
 	desc->td_flags = tcb->flags;
 	strncpy(desc->td_name, task->name, sizeof(desc->td_name));
 	desc->td_entry = tcb->entry;

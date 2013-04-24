@@ -158,12 +158,14 @@ struct cobalt_condattr {
 struct cobalt_cond;
 
 struct cobalt_threadstat {
+	int cpu;
 	unsigned long status;
 	unsigned long long xtime;
 	unsigned long msw;
 	unsigned long csw;
 	unsigned long xsc;
 	unsigned long pf;
+	unsigned long long timeout;
 };
 
 struct cobalt_monitor;

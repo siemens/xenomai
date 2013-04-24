@@ -169,29 +169,15 @@ int threadobj_cancel(struct threadobj *thobj)
 
 int threadobj_suspend(struct threadobj *thobj) /* thobj->lock held */
 {
-	struct threadobj *current = threadobj_current();
 	pthread_t tid = thobj->tid;
 	int ret;
 
 	__threadobj_check_locked(thobj);
 
-	/*
-	 * XXX: we must guarantee that a THREADOBJ_SUSPEND event is sent
-	 * only once the target thread is in an innocuous state,
-	 * i.e. about to suspend if current, or suspended
-	 * otherwise. This way, the hook routine may always safely
-	 * assume that the thread state in userland will not change,
-	 * until that thread is resumed.
-	 */
-	if (thobj->suspend_hook && thobj == current)
-		thobj->suspend_hook(thobj, THREADOBJ_SUSPEND);
-
+	thobj->status |= __THREAD_S_SUSPENDED;
 	threadobj_unlock(thobj);
 	ret = __RT(pthread_kill(tid, SIGSUSP));
 	threadobj_lock(thobj);
-
-	if (thobj->suspend_hook && thobj != current)
-		thobj->suspend_hook(thobj, THREADOBJ_SUSPEND);
 
 	return __bt(-ret);
 }
@@ -206,16 +192,7 @@ int threadobj_resume(struct threadobj *thobj) /* thobj->lock held */
 	if (thobj == threadobj_current())
 		return 0;
 
-	/*
-	 * XXX: we must guarantee that a THREADOBJ_RESUME event is
-	 * sent while the target thread is still in an innocuous
-	 * state, prior to being actually resuled. This way, the hook
-	 * routine may always safely assume that the thread state in
-	 * userland will not change, until that point.
-	 */
-	if (thobj->suspend_hook)
-		thobj->suspend_hook(thobj, THREADOBJ_RESUME);
-
+	thobj->status &= ~__THREAD_S_SUSPENDED;
 	threadobj_unlock(thobj);
 	ret = __RT(pthread_kill(tid, SIGRESM));
 	threadobj_lock(thobj);
@@ -232,7 +209,7 @@ int threadobj_lock_sched(struct threadobj *thobj) /* thobj->lock held */
 	if (thobj->schedlock_depth++ > 0)
 		return 0;
 
-	thobj->status |= THREADOBJ_SCHEDLOCK;
+	thobj->status |= __THREAD_S_NOPREEMPT;
 	/*
 	 * In essence, we can't be scheduled out as a result of
 	 * locking the scheduler, so no need to drop the thread lock
@@ -261,7 +238,7 @@ int threadobj_unlock_sched(struct threadobj *thobj) /* thobj->lock held */
 	if (--thobj->schedlock_depth > 0)
 		return 0;
 
-	thobj->status &= ~THREADOBJ_SCHEDLOCK;
+	thobj->status &= ~__THREAD_S_NOPREEMPT;
 	threadobj_unlock(thobj);
 	ret = pthread_set_mode_np(PTHREAD_LOCK_SCHED, 0, NULL);
 	threadobj_lock(thobj);
@@ -279,9 +256,9 @@ int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock hel
 
 	policy = SCHED_RT;
 	if (prio == 0) {
-		thobj->status &= ~THREADOBJ_ROUNDROBIN;
+		thobj->status &= ~__THREAD_S_RR;
 		policy = SCHED_OTHER;
-	} else if (thobj->status & THREADOBJ_ROUNDROBIN) {
+	} else if (thobj->status & __THREAD_S_RR) {
 		xparam.sched_rr_quantum = thobj->tslice;
 		policy = SCHED_RR;
 	}
@@ -337,12 +314,12 @@ static int set_rr(struct threadobj *thobj, struct timespec *quantum)
 	if (quantum && (quantum->tv_sec || quantum->tv_nsec)) {
 		policy = SCHED_RR;
 		xparam.sched_rr_quantum = *quantum;
-		thobj->status |= THREADOBJ_ROUNDROBIN;
+		thobj->status |= __THREAD_S_RR;
 		thobj->tslice = *quantum;
 		xparam.sched_priority = thobj->priority ?: 1;
 	} else {
 		policy = thobj->policy;
-		thobj->status &= ~THREADOBJ_ROUNDROBIN;
+		thobj->status &= ~__THREAD_S_RR;
 		xparam.sched_rr_quantum.tv_sec = 0;
 		xparam.sched_rr_quantum.tv_nsec = 0;
 		xparam.sched_priority = thobj->priority;
@@ -376,16 +353,18 @@ int threadobj_stat(struct threadobj *thobj, struct threadobj_stat *p) /* thobj->
 
 	__threadobj_check_locked(thobj);
 
-	ret = __cobalt_thread_stat(thobj->tid, &stat);
+	ret = __cobalt_thread_stat(thobj->pid, &stat);
 	if (ret)
 		return __bt(ret);
 
+	p->cpu = stat.cpu;
 	p->status = stat.status;
 	p->xtime = stat.xtime;
 	p->msw = stat.msw;
 	p->csw = stat.csw;
 	p->xsc = stat.xsc;
 	p->pf = stat.pf;
+	p->timeout = stat.timeout;
 
 	return 0;
 }
@@ -414,7 +393,7 @@ static void roundrobin_handler(int sig)
 	 * multiple arbitrary time slices (i.e. vs the kernel
 	 * pre-defined and fixed one).
 	 */
-	if (current && (current->status & THREADOBJ_ROUNDROBIN) != 0)
+	if (current && (current->status & __THREAD_S_RR) != 0)
 		sched_yield();
 }
 
@@ -446,16 +425,18 @@ static void notifier_callback(const struct notifier *nf)
 	current = container_of(nf, struct threadobj, core.notifier);
 	assert(current == threadobj_current());
 
-	if (current->suspend_hook) {
-		threadobj_lock(current);
-		current->suspend_hook(current, THREADOBJ_SUSPEND);
-		threadobj_unlock(current);
-		notifier_wait(nf);
-		threadobj_lock(current);
-		current->suspend_hook(current, THREADOBJ_RESUME);
-		threadobj_unlock(current);
-	} else
-		notifier_wait(nf); /* Wait for threadobj_resume(). */
+	/*
+	 * In the Mercury case, we mark the thread as suspended only
+	 * when the notifier handler is entered, not from
+	 * threadobj_suspend().
+	 */
+	threadobj_lock(current);
+	current->status |= __THREAD_S_SUSPENDED;
+	threadobj_unlock(current);
+	notifier_wait(nf); /* Wait for threadobj_resume(). */
+	threadobj_lock(current);
+	current->status &= ~__THREAD_S_SUSPENDED;
+	threadobj_unlock(current);
 }
 
 static inline void threadobj_init_corespec(struct threadobj *thobj)
@@ -578,7 +559,7 @@ int threadobj_lock_sched(struct threadobj *thobj) /* thobj->lock held */
 
 	thobj->core.prio_unlocked = thobj->priority;
 	thobj->core.policy_unlocked = thobj->policy;
-	thobj->status |= THREADOBJ_SCHEDLOCK;
+	thobj->status |= __THREAD_S_NOPREEMPT;
 	thobj->priority = threadobj_lock_prio;
 	thobj->policy = SCHED_RT;
 	param.sched_priority = threadobj_lock_prio;
@@ -602,7 +583,7 @@ int threadobj_unlock_sched(struct threadobj *thobj) /* thobj->lock held */
 	if (--thobj->schedlock_depth > 0)
 		return 0;
 
-	thobj->status &= ~THREADOBJ_SCHEDLOCK;
+	thobj->status &= ~__THREAD_S_NOPREEMPT;
 	thobj->priority = thobj->core.prio_unlocked;
 	param.sched_priority = thobj->core.prio_unlocked;
 	policy = thobj->core.policy_unlocked;
@@ -626,7 +607,7 @@ int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock hel
 	 * the target thread holds the scheduler lock, but only record
 	 * the level to set when unlocking.
 	 */
-	if (thobj->status & THREADOBJ_SCHEDLOCK) {
+	if (thobj->status & __THREAD_S_NOPREEMPT) {
 		thobj->core.prio_unlocked = prio;
 		thobj->core.policy_unlocked = prio ? SCHED_RT : SCHED_OTHER;
 		return 0;
@@ -635,7 +616,7 @@ int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock hel
 	thobj->priority = prio;
 	policy = SCHED_RT;
 	if (prio == 0) {
-		thobj->status &= ~THREADOBJ_ROUNDROBIN;
+		thobj->status &= ~__THREAD_S_RR;
 		policy = SCHED_OTHER;
 	}
 
@@ -658,7 +639,7 @@ int threadobj_set_mode(int clrmask, int setmask, int *mode_r) /* current->lock h
 
 	__threadobj_check_locked(current);
 
-	if (current->status & THREADOBJ_SCHEDLOCK)
+	if (current->status & __THREAD_S_NOPREEMPT)
 		old |= __THREAD_M_LOCK;
 
 	if (setmask & __THREAD_M_LOCK)
@@ -666,7 +647,7 @@ int threadobj_set_mode(int clrmask, int setmask, int *mode_r) /* current->lock h
 	else if (clrmask & __THREAD_M_LOCK)
 		threadobj_unlock_sched(current);
 
-	if (*mode_r)
+	if (mode_r)
 		*mode_r = old;
 
 	return ret;
@@ -684,13 +665,13 @@ static inline int set_rr(struct threadobj *thobj, struct timespec *quantum)
 		value.it_value = *quantum;
 		thobj->tslice = *quantum;
 
-		if (thobj->status & THREADOBJ_ROUNDROBIN) {
+		if (thobj->status & __THREAD_S_RR) {
 			/* Changing quantum of ongoing RR. */
 			ret = timer_settime(thobj->core.rr_timer, 0, &value, NULL);
 			return ret ? __bt(-errno) : 0;
 		}
 
-		thobj->status |= THREADOBJ_ROUNDROBIN;
+		thobj->status |= __THREAD_S_RR;
 		/*
 		 * Switch to SCHED_FIFO policy, assign default prio=1
 		 * if coming from SCHED_OTHER. We use a per-thread
@@ -702,9 +683,9 @@ static inline int set_rr(struct threadobj *thobj, struct timespec *quantum)
 		if (ret)
 			return __bt(-errno);
 	} else {
-		if ((thobj->status & THREADOBJ_ROUNDROBIN) == 0)
+		if ((thobj->status & __THREAD_S_RR) == 0)
 			return 0;
-		thobj->status &= ~THREADOBJ_ROUNDROBIN;
+		thobj->status &= ~__THREAD_S_RR;
 		/*
 		 * Disarm timer and reset scheduling parameters to
 		 * former policy.
@@ -788,7 +769,28 @@ int threadobj_wait_period(struct threadobj *thobj,
 int threadobj_stat(struct threadobj *thobj,
 		   struct threadobj_stat *stat) /* thobj->lock held */
 {
+	struct timespec now, delta;
+
 	__threadobj_check_locked(thobj);
+
+	stat->cpu = sched_getcpu();
+	if (stat->cpu < 0)
+		stat->cpu = 0;	/* assume uniprocessor on ENOSYS */
+
+	stat->status = threadobj_get_status(thobj);
+
+	if (thobj->run_state & (__THREAD_S_TIMEDWAIT|__THREAD_S_DELAYED)) {
+		__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
+		timespec_sub(&delta, &thobj->core.timeout, &now);
+		stat->timeout = timespec_scalar(&delta);
+		/*
+		 * The timeout might fire as we are calculating the
+		 * delta: sanitize any negative value as 1.
+		 */
+		if ((sticks_t)stat->timeout < 0)
+			stat->timeout = 1;
+	} else
+		stat->timeout = 0;
 
 	return 0;
 }
@@ -828,13 +830,12 @@ void threadobj_init(struct threadobj *thobj,
 	thobj->tracer = NULL;
 	thobj->wait_sobj = NULL;
 	thobj->finalizer = idata->finalizer;
-	thobj->wait_hook = idata->wait_hook;
 	thobj->schedlock_depth = 0;
-	thobj->status = THREADOBJ_WARMUP;
+	thobj->status = __THREAD_S_WARMUP;
+	thobj->run_state = __THREAD_S_DORMANT;
 	thobj->priority = idata->priority;
 	thobj->policy = idata->priority ? SCHED_RT : SCHED_OTHER;
 	holder_init(&thobj->wait_link);
-	thobj->suspend_hook = idata->suspend_hook;
 	thobj->cnode = __node_id;
 	thobj->pid = 0;
 
@@ -901,10 +902,10 @@ void threadobj_start(struct threadobj *thobj)	/* thobj->lock held. */
 
 	__threadobj_check_locked(thobj);
 
-	if (thobj->status & THREADOBJ_STARTED)
+	if (thobj->status & __THREAD_S_STARTED)
 		return;
 
-	thobj->status |= THREADOBJ_STARTED;
+	thobj->status |= __THREAD_S_STARTED;
 	__RT(pthread_cond_signal(&thobj->barrier));
 
 	if (current && thobj->priority <= current->priority)
@@ -915,13 +916,15 @@ void threadobj_start(struct threadobj *thobj)	/* thobj->lock held. */
 	 * enters the user code, or aborts prior to reaching that
 	 * point, whichever comes first.
 	 */
-	start_sync(thobj, THREADOBJ_RUNNING);
+	start_sync(thobj, __THREAD_S_ACTIVE);
 }
 
-void threadobj_shadow(struct threadobj *thobj)
+void threadobj_shadow(void)
 {
-	__threadobj_check_locked(thobj);
-	thobj->status |= THREADOBJ_STARTED|THREADOBJ_RUNNING;
+	struct threadobj *current = threadobj_current();
+
+	__threadobj_check_locked(current);
+	current->status |= __THREAD_S_STARTED|__THREAD_S_ACTIVE;
 }
 
 void threadobj_wait_start(void) /* current->lock free. */
@@ -930,16 +933,16 @@ void threadobj_wait_start(void) /* current->lock free. */
 	int status;
 
 	threadobj_lock(current);
-	status = start_sync(current, THREADOBJ_STARTED|THREADOBJ_ABORTED);
+	status = start_sync(current, __THREAD_S_STARTED|__THREAD_S_ABORTED);
 	threadobj_unlock(current);
 
 	/*
-	 * We may have preempted the guy who set THREADOBJ_ABORTED in
+	 * We may have preempted the guy who set __THREAD_S_ABORTED in
 	 * our status before it had a chance to issue pthread_cancel()
 	 * on us, so we need to go idle into a cancellation point to
 	 * wait for it: use pause() for this.
 	 */
-	while (status & THREADOBJ_ABORTED)
+	while (status & __THREAD_S_ABORTED)
 		pause();
 }
 
@@ -948,7 +951,8 @@ void threadobj_notify_entry(void) /* current->lock free. */
 	struct threadobj *current = threadobj_current();
 
 	threadobj_lock(current);
-	current->status |= THREADOBJ_RUNNING;
+	current->status |= __THREAD_S_ACTIVE;
+	current->run_state = __THREAD_S_RUNNING;
 	__RT(pthread_cond_signal(&current->barrier));
 	threadobj_unlock(current);
 }
@@ -998,7 +1002,7 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 	sysgroup_add(thread, &thobj->memspec);
 
 	threadobj_lock(thobj);
-	thobj->status &= ~THREADOBJ_WARMUP;
+	thobj->status &= ~__THREAD_S_WARMUP;
 	__RT(pthread_cond_signal(&thobj->barrier));
 	threadobj_unlock(thobj);
 
@@ -1016,7 +1020,7 @@ static void cancel_sync(struct threadobj *thobj) /* thobj->lock held */
 
 	__threadobj_check_locked(thobj);
 
-	while (thobj->status & THREADOBJ_WARMUP) {
+	while (thobj->status & __THREAD_S_WARMUP) {
 		oldstate = thobj->cancel_state;
 		__threadobj_tag_unlocked(thobj);
 		__RT(pthread_cond_wait(&thobj->barrier, &thobj->lock));
@@ -1024,10 +1028,27 @@ static void cancel_sync(struct threadobj *thobj) /* thobj->lock held */
 		thobj->cancel_state = oldstate;
 	}
 
-	if ((thobj->status & THREADOBJ_STARTED) == 0) {
-		thobj->status |= THREADOBJ_ABORTED;
+	if ((thobj->status & __THREAD_S_STARTED) == 0) {
+		thobj->status |= __THREAD_S_ABORTED;
 		__RT(pthread_cond_signal(&thobj->barrier));
 	}
+}
+
+int threadobj_sleep(struct timespec *ts)
+{
+	struct threadobj *current = threadobj_current();
+	int ret;
+
+	/*
+	 * clock_nanosleep() returns -EINTR upon threadobj_unblock()
+	 * with both Cobalt and Mercury cores.
+	 */
+	current->run_state = __THREAD_S_DELAYED;
+	threadobj_save_timeout(&current->core, ts);
+	ret = -__RT(clock_nanosleep(CLOCK_COPPERPLATE, TIMER_ABSTIME, ts, NULL));
+	current->run_state = __THREAD_S_RUNNING;
+
+	return ret;
 }
 
 static void threadobj_finalize(void *p) /* thobj->lock free */
@@ -1103,7 +1124,7 @@ int threadobj_set_rr(struct threadobj *thobj, struct timespec *quantum)
 	 * logic simpler in the Mercury case with respect to tracking
 	 * the current scheduling parameters.
 	 */
-	if (thobj->status & THREADOBJ_SCHEDLOCK)
+	if (thobj->status & __THREAD_S_NOPREEMPT)
 		return -EINVAL;
 
 	return __bt(set_rr(thobj, quantum));
@@ -1143,11 +1164,10 @@ static inline void main_overlay(void)
 		panic("failed to allocate main tcb");
 
 	idata.magic = 0x0;
-	idata.wait_hook = NULL;
-	idata.suspend_hook = NULL;
 	idata.finalizer = NULL;
 	idata.priority = 0;
 	threadobj_init(tcb, &idata);
+	tcb->status = __THREAD_S_STARTED|__THREAD_S_ACTIVE;
 	threadobj_prologue(tcb, "main");
 	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
 }

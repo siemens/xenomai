@@ -47,10 +47,10 @@ void __cobalt_thread_harden(void)
 		XENOMAI_SYSCALL1(sc_nucleus_migrate, XENOMAI_XENO_DOMAIN);
 }
 
-int __cobalt_thread_stat(pthread_t tid, struct cobalt_threadstat *stat)
+int __cobalt_thread_stat(pid_t pid, struct cobalt_threadstat *stat)
 {
 	return XENOMAI_SKINCALL2(__cobalt_muxid,
-				 sc_cobalt_thread_getstat, tid, stat);
+				 sc_cobalt_thread_getstat, pid, stat);
 }
 
 void ___cobalt_prefault(void *p, size_t len)

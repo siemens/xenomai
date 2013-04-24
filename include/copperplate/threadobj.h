@@ -38,6 +38,8 @@ struct threadobj_corespec {
 };
 
 struct threadobj_stat {
+	/** Current CPU for thread. */
+	int cpu;
 	/** Cobalt thread status bits. */
 	unsigned long status;
 	/** Execution time in primary mode (ns). */
@@ -50,9 +52,21 @@ struct threadobj_stat {
 	unsigned long xsc;
 	/** Number of page faults. */
 	unsigned long pf;
+	/** Current timeout value (ns). */
+	ticks_t timeout;
 };
 
 #define SCHED_RT  SCHED_COBALT
+
+static inline
+void threadobj_save_timeout(struct threadobj_corespec *corespec,
+			    const struct timespec *timeout)
+{
+	/*
+	 * We retrieve this information from the nucleus directly via
+	 * __cobalt_thread_stat().
+	 */
+}
 
 #else  /* CONFIG_XENO_MERCURY */
 
@@ -67,51 +81,67 @@ struct threadobj_corespec {
 	struct notifier notifier;
 	struct timespec wakeup;
 	ticks_t period;
+	/** Timeout reported by sysregd. */
+	struct timespec timeout;
 };
 
 struct threadobj_stat {
+	/** Current CPU for thread. */
+	int cpu;
 	/** Mercury thread status bits. */
 	unsigned long status;
+	/** Current timeout value (ns). */
+	ticks_t timeout;
 };
 
 #define SCHED_RT  SCHED_FIFO
 
+static inline
+void threadobj_save_timeout(struct threadobj_corespec *corespec,
+			    const struct timespec *timeout)
+{
+	if (timeout)
+		corespec->timeout = *timeout;
+}
+
 #endif /* CONFIG_XENO_MERCURY */
 
-/* threadobj->suspend_hook(event) */
-#define THREADOBJ_SUSPEND	0x1	/* Just suspended. */
-#define THREADOBJ_RESUME	0x2	/* About to resume. */
-
-/* threadobj->status */
-#define THREADOBJ_SCHEDLOCK	0x1	/* Holds the scheduler lock. */
-#define THREADOBJ_ROUNDROBIN	0x2	/* Undergoes round-robin. */
-#define THREADOBJ_STARTED	0x4	/* threadobj_start() called. */
-#define THREADOBJ_WARMUP	0x8	/* threadobj_prologue() not called yet. */
-#define THREADOBJ_ABORTED	0x10	/* Cancelled before start. */
-#define THREADOBJ_LOCKED	0x20	/* threadobj_lock() granted (debug only). */
-#define THREADOBJ_RUNNING	0x40	/* Running user code. */
-#define THREADOBJ_DEBUG		0x8000	/* Debug mode enabled. */
-
-#define THREADOBJ_IRQCONTEXT    ((struct threadobj *)-2UL)
+/*
+ * threadobj->status, updated with ->lock held.
+ */
+#define __THREAD_S_NOPREEMPT	(1 << 0)	/* Holds the scheduler lock. */
+#define __THREAD_S_RR		(1 << 1)	/* Undergoes round-robin. */
+#define __THREAD_S_STARTED	(1 << 2)	/* threadobj_start() called. */
+#define __THREAD_S_WARMUP	(1 << 3)	/* threadobj_prologue() not called yet. */
+#define __THREAD_S_ABORTED	(1 << 4)	/* Cancelled before start. */
+#define __THREAD_S_LOCKED	(1 << 5)	/* threadobj_lock() granted (debug only). */
+#define __THREAD_S_ACTIVE	(1 << 6)	/* Running user code. */
+#define __THREAD_S_SUSPENDED	(1 << 7)	/* Suspended via threadobj_suspend(). */
+#define __THREAD_S_DEBUG	(1 << 15)	/* Debug mode enabled. */
+/*
+ * threadobj->run_state, locklessly updated by "current", merged
+ * with ->status bits by threadobj_get_status().
+ */
+#define __THREAD_S_RUNNING	0
+#define __THREAD_S_DORMANT	(1 << 8)
+#define __THREAD_S_WAIT		(1 << 9)
+#define __THREAD_S_TIMEDWAIT	(1 << 10)
+#define __THREAD_S_DELAYED	(1 << 11)
 
 /* threadobj mode bits */
-#define __THREAD_M_LOCK		0x80000000 /* Toggle scheduler lock. */
-#define __THREAD_M_WARNSW	0x40000000 /* Toggle switch warning bit. */
-#define __THREAD_M_CONFORMING	0x20000000 /* Switch to conforming mode. */
-#define __THREAD_M_SPARESTART	0
-#define __THREAD_M_SPARECOUNT	12
-#define __THREAD_M_SPARE0	0x00000001
-#define __THREAD_M_SPARE1	0x00000002
-#define __THREAD_M_SPARE2	0x00000004
-#define __THREAD_M_SPARE3	0x00000008
-#define __THREAD_M_SPARE4	0x00000010
-#define __THREAD_M_SPARE5	0x00000020
-#define __THREAD_M_SPARE6	0x00000040
-#define __THREAD_M_SPARE7	0x00000080
-#define __THREAD_M_SPARE8	0x00000100
-#define __THREAD_M_SPARE9	0x00000200
-#define __THREAD_M_SPARE10	0x00000400
-#define __THREAD_M_SPARE11	0x00000800
+#define __THREAD_M_LOCK		(1 << 0) /* Toggle scheduler lock. */
+#define __THREAD_M_WARNSW	(1 << 1) /* Toggle switch warning bit. */
+#define __THREAD_M_CONFORMING	(1 << 2) /* Switch to conforming mode. */
+#define __THREAD_M_SPARE0	(1 << 16)
+#define __THREAD_M_SPARE1	(1 << 17)
+#define __THREAD_M_SPARE2	(1 << 18)
+#define __THREAD_M_SPARE3	(1 << 19)
+#define __THREAD_M_SPARE4	(1 << 20)
+#define __THREAD_M_SPARE5	(1 << 21)
+#define __THREAD_M_SPARE6	(1 << 22)
+#define __THREAD_M_SPARE7	(1 << 23)
+
+#define THREADOBJ_IRQCONTEXT    ((struct threadobj *)-2UL)
 
 struct traceobj;
 struct syncobj;
@@ -124,6 +154,7 @@ struct threadobj {
 	int schedlock_depth;
 	int cancel_state;
 	int status;
+	int run_state;
 	int policy;
 	int priority;
 	pid_t cnode;
@@ -131,14 +162,12 @@ struct threadobj {
 	char name[32];
 
 	void (*finalizer)(struct threadobj *thobj);
-	void (*suspend_hook)(struct threadobj *thobj, int status);
 	int *errno_pointer;
 	/* Those members belong exclusively to the syncobj code. */
 	struct syncobj *wait_sobj;
 	struct holder wait_link;
 	int wait_status;
 	int wait_prio;
-	void (*wait_hook)(struct syncobj *sobj, int status);
 	void *wait_union;
 	size_t wait_size;
 
@@ -155,8 +184,6 @@ struct threadobj_init_data {
 	cpu_set_t affinity;
 	int priority;
 	void (*finalizer)(struct threadobj *thobj);
-	void (*wait_hook)(struct syncobj *sobj, int status);
-	void (*suspend_hook)(struct threadobj *thobj, int status);
 };
 
 extern int threadobj_high_prio;
@@ -199,18 +226,18 @@ static inline struct threadobj *threadobj_current(void)
 
 static inline void __threadobj_tag_locked(struct threadobj *thobj)
 {
-	thobj->status |= THREADOBJ_LOCKED;
+	thobj->status |= __THREAD_S_LOCKED;
 }
 
 static inline void __threadobj_tag_unlocked(struct threadobj *thobj)
 {
-	assert(thobj->status & THREADOBJ_LOCKED);
-	thobj->status &= ~THREADOBJ_LOCKED;
+	assert(thobj->status & __THREAD_S_LOCKED);
+	thobj->status &= ~__THREAD_S_LOCKED;
 }
 
 static inline void __threadobj_check_locked(struct threadobj *thobj)
 {
-	assert(thobj->status & THREADOBJ_LOCKED);
+	assert(thobj->status & __THREAD_S_LOCKED);
 }
 
 #else /* !__XENO_DEBUG__ */
@@ -247,7 +274,7 @@ void threadobj_init(struct threadobj *thobj,
 
 void threadobj_start(struct threadobj *thobj);
 
-void threadobj_shadow(struct threadobj *thobj);
+void threadobj_shadow(void);
 
 int threadobj_prologue(struct threadobj *thobj,
 		       const char *name);
@@ -286,6 +313,8 @@ void threadobj_spin(ticks_t ns);
 
 int threadobj_stat(struct threadobj *thobj,
 		   struct threadobj_stat *stat);
+
+int threadobj_sleep(struct timespec *ts);
 
 #ifdef CONFIG_XENO_PSHARED
 
@@ -379,15 +408,6 @@ static inline void threadobj_yield(void)
 	__RT(sched_yield());
 }
 
-static inline int threadobj_sleep(struct timespec *ts)
-{
-	/*
-	 * XXX: guaranteed to return -EINTR upon threadobj_unblock()
-	 * with both Cobalt and Mercury cores.
-	 */
-	return -__RT(clock_nanosleep(CLOCK_COPPERPLATE, TIMER_ABSTIME, ts, NULL));
-}
-
 static inline unsigned int threadobj_get_magic(struct threadobj *thobj)
 {
 	return thobj->magic;
@@ -406,7 +426,7 @@ static inline int threadobj_get_lockdepth(struct threadobj *thobj)
 
 static inline int threadobj_get_status(struct threadobj *thobj)
 {
-	return thobj->status;
+	return thobj->status|thobj->run_state;
 }
 
 static inline int threadobj_get_errno(struct threadobj *thobj)
@@ -432,6 +452,11 @@ static inline void *threadobj_get_wait(struct threadobj *thobj)
 static inline const char *threadobj_get_name(struct threadobj *thobj)
 {
 	return thobj->name;
+}
+
+static inline pid_t threadobj_get_pid(struct threadobj *thobj)
+{
+	return thobj->pid;
 }
 
 #endif /* _COPPERPLATE_THREADOBJ_H */

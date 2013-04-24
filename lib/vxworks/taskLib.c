@@ -92,7 +92,7 @@ struct wind_task *get_wind_task(TASK_ID tid)
 	 * chance is pthread_mutex_lock() in threadobj_lock()
 	 * detecting a wrong mutex kind and bailing out.
 	 *
-	 * XXX: threadobj_lock() disables cancellability for the
+	 * NOTE: threadobj_lock() disables cancellability for the
 	 * caller upon success, until the lock is dropped in
 	 * threadobj_unlock(), so there is no way it may vanish while
 	 * holding the lock. Therefore we need no cleanup handler
@@ -132,6 +132,21 @@ void put_wind_task(struct wind_task *task)
 	threadobj_unlock(&task->thobj);
 }
 
+int get_task_status(struct wind_task *task)
+{
+	int status = threadobj_get_status(&task->thobj), ret = WIND_READY;
+
+	if (status & __THREAD_S_SUSPENDED)
+		ret |= WIND_SUSPEND;
+
+	if (status & (__THREAD_S_WAIT|__THREAD_S_TIMEDWAIT))
+		ret |= WIND_PEND;
+	else if (status & __THREAD_S_DELAYED)
+		ret |= WIND_DELAY;
+
+	return ret;
+}
+
 static void task_finalizer(struct threadobj *thobj)
 {
 	struct wind_task *task = container_of(thobj, struct wind_task, thobj);
@@ -149,32 +164,6 @@ static void task_finalizer(struct threadobj *thobj)
 	threadobj_free(task);
 }
 
-/*
- * XXX: A wait hook always runs on behalf of the target task, no lock
- * is needed to access the current TCB. A suspend hook may run over
- * any thread context, and always runs with the thread lock held
- * for this reason.
- */
-static void task_wait_hook(struct syncobj *sobj, int status)
-{
-	struct wind_task *task = wind_task_current();
-
-	if (status & SYNCOBJ_BLOCK)
-		task->tcb->status |= WIND_PEND;
-	else
-		task->tcb->status &= ~WIND_PEND;
-}
-
-static void task_suspend_hook(struct threadobj *thobj, int status)
-{
-	struct wind_task *task = container_of(thobj, struct wind_task, thobj);
-
-	if (status & THREADOBJ_SUSPEND)
-		task->tcb->status |= WIND_SUSPEND;
-	else
-		task->tcb->status &= ~WIND_SUSPEND;
-}
-
 #ifdef CONFIG_XENO_REGISTRY
 
 static inline char *task_decode_status(struct wind_task *task, char *buf)
@@ -183,22 +172,18 @@ static inline char *task_decode_status(struct wind_task *task, char *buf)
 
 	*buf = '\0';
 	status = threadobj_get_status(&task->thobj);
-	if (status & THREADOBJ_SCHEDLOCK)
+	if (status & __THREAD_S_NOPREEMPT)
 		strcat(buf, "+sched_lock");
-	if (status & THREADOBJ_ROUNDROBIN)
+	if (status & __THREAD_S_RR)
 		strcat(buf, "+sched_rr");
-
-	status = task->tcb->status;
-	if (status == WIND_READY)
+	if (status & __THREAD_S_SUSPENDED)
+		strcat(buf, "+suspended");
+	if (status & (__THREAD_S_WAIT|__THREAD_S_TIMEDWAIT))
+		strcat(buf, "+pending");
+	else if (status & __THREAD_S_DELAYED)
+		strcat(buf, "+delayed");
+	else
 		strcat(buf, "+ready");
-	else {
-		if (status & WIND_SUSPEND)
-			strcat(buf, "+suspended");
-		if (status & WIND_PEND)
-			strcat(buf, "+pending");
-		if (status & WIND_DELAY)
-			strcat(buf, "+delayed");
-	}
 
 	return buf + 1;
 }
@@ -362,23 +347,12 @@ static STATUS __taskInit(struct wind_task *task,
 
 	task->tcb = tcb;
 	tcb->opaque = task;
-	/*
-	 * CAUTION: tcb->status in only modified by the owner task
-	 * (see suspend/resume hooks), or when such task is guaranteed
-	 * not to be running, e.g. in taskActivate(). So we do NOT
-	 * take any lock specifically for updating it. However, we
-	 * know that a memory barrier will be issued shortly after
-	 * such updates because of other locking being in effect, so
-	 * we don't explicitely have to provide for it.
-	 */
 	tcb->status = WIND_SUSPEND;
 	tcb->safeCnt = 0;
 	tcb->flags = flags;
 	tcb->entry = entry;
 
 	idata.magic = task_magic;
-	idata.wait_hook = task_wait_hook;
-	idata.suspend_hook = task_suspend_hook;
 	idata.finalizer = task_finalizer;
 	idata.priority = cprio;
 	threadobj_init(&task->thobj, &idata);
@@ -864,9 +838,7 @@ STATUS taskDelay(int ticks)
 	COPPERPLATE_PROTECT(svc);
 
 	clockobj_ticks_to_timeout(&wind_clock, ticks, &rqt);
-	current->tcb->status |= WIND_DELAY;
 	ret = threadobj_sleep(&rqt);
-	current->tcb->status &= ~WIND_DELAY;
 	if (ret) {
 		errno = -ret;
 		ret = ERROR;

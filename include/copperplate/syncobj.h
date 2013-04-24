@@ -33,10 +33,6 @@
 #define SYNCOBJ_SIGNALED	0x2
 #define SYNCOBJ_DRAINWAIT	0x4
 
-/* threadobj->wait_hook(status) */
-#define SYNCOBJ_BLOCK	0x1
-#define SYNCOBJ_RESUME	0x2
-
 #define SYNCOBJ_MAGIC  0xf9f99f9f
 
 struct threadobj;
