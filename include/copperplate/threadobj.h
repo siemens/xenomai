@@ -270,8 +270,7 @@ int threadobj_unlock_sched(struct threadobj *thobj);
 
 int threadobj_set_priority(struct threadobj *thobj, int prio);
 
-int threadobj_set_mode(struct threadobj *thobj,
-		       int clrmask, int setmask, int *mode_r);
+int threadobj_set_mode(int clrmask, int setmask, int *mode_r);
 
 int threadobj_set_rr(struct threadobj *thobj, struct timespec *quantum);
 

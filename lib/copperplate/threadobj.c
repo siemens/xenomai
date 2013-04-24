@@ -298,12 +298,12 @@ int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock hel
 	return pthread_setschedparam_ex(tid, policy, &xparam);
 }
 
-int threadobj_set_mode(struct threadobj *thobj,
-		       int clrmask, int setmask, int *mode_r) /* thobj->lock held */
+int threadobj_set_mode(int clrmask, int setmask, int *mode_r) /* current->lock held */
 {
+	struct threadobj *current = threadobj_current();
 	int ret, __clrmask = 0, __setmask = 0;
 
-	__threadobj_check_locked(thobj);
+	__threadobj_check_locked(current);
 
 	if (setmask & __THREAD_M_LOCK)
 		__setmask |= PTHREAD_LOCK_SCHED;
@@ -320,9 +320,9 @@ int threadobj_set_mode(struct threadobj *thobj,
 	else if (clrmask & __THREAD_M_CONFORMING)
 		__clrmask |= PTHREAD_CONFORMING;
 
-	threadobj_unlock(thobj);
+	threadobj_unlock(current);
 	ret = pthread_set_mode_np(__clrmask, __setmask, mode_r);
-	threadobj_lock(thobj);
+	threadobj_lock(current);
 
 	return ret;
 }
@@ -650,20 +650,20 @@ int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock hel
 	return pthread_setschedparam(tid, policy, &param);
 }
 
-int threadobj_set_mode(struct threadobj *thobj,
-		       int clrmask, int setmask, int *mode_r) /* thobj->lock held */
+int threadobj_set_mode(int clrmask, int setmask, int *mode_r) /* current->lock held */
 {
+	struct threadobj *current = threadobj_current();
 	int ret = 0, old = 0;
 
-	__threadobj_check_locked(thobj);
+	__threadobj_check_locked(current);
 
-	if (thobj->status & THREADOBJ_SCHEDLOCK)
+	if (current->status & THREADOBJ_SCHEDLOCK)
 		old |= __THREAD_M_LOCK;
 
 	if (setmask & __THREAD_M_LOCK)
-		ret = __bt(threadobj_lock_sched_once(thobj));
+		ret = __bt(threadobj_lock_sched_once(current));
 	else if (clrmask & __THREAD_M_LOCK)
-		threadobj_unlock_sched(thobj);
+		threadobj_unlock_sched(current);
 
 	if (*mode_r)
 		*mode_r = old;

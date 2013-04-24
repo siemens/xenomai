@@ -957,7 +957,7 @@ int rt_task_set_mode(int clrmask, int setmask, int *mode_r)
 	if (tcb == NULL)
 		goto out;
 
-	ret = threadobj_set_mode(&tcb->thobj, clrmask, setmask, mode_r);
+	ret = threadobj_set_mode(clrmask, setmask, mode_r);
 	put_alchemy_task(tcb);
 out:
 	COPPERPLATE_UNPROTECT(svc);
