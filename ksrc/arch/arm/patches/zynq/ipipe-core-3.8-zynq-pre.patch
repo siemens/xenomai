@@ -1,0 +1,249 @@
+diff --git a/arch/arm/common/gic.c b/arch/arm/common/gic.c
+index d4a9a45..87dfa90 100644
+--- a/arch/arm/common/gic.c
++++ b/arch/arm/common/gic.c
+@@ -22,7 +22,6 @@
+  * As such, the enable set/clear, pending set/clear and active bit
+  * registers are banked per-cpu for these sources.
+  */
+-#include <linux/module.h>
+ #include <linux/init.h>
+ #include <linux/kernel.h>
+ #include <linux/err.h>
+@@ -244,14 +243,9 @@ static int gic_set_affinity(struct irq_data *d, const struct cpumask *mask_val,
+ {
+ 	void __iomem *reg = gic_dist_base(d) + GIC_DIST_TARGET + (gic_irq(d) & ~3);
+ 	unsigned int shift = (gic_irq(d) % 4) * 8;
+-	unsigned int cpu;
++	unsigned int cpu = cpumask_any_and(mask_val, cpu_online_mask);
+ 	u32 val, mask, bit;
+ 
+-	if (force)
+-		cpu = cpumask_any_and(mask_val, cpu_possible_mask);
+-	else
+-		cpu = cpumask_any_and(mask_val, cpu_online_mask);
+-
+ 	if (cpu >= NR_GIC_CPU_IF || cpu >= nr_cpu_ids)
+ 		return -EINVAL;
+ 
+@@ -265,17 +259,6 @@ static int gic_set_affinity(struct irq_data *d, const struct cpumask *mask_val,
+ 
+ 	return IRQ_SET_MASK_OK;
+ }
+-
+-void gic_set_cpu(unsigned int cpu, unsigned int irq)
+-{
+-	struct irq_data *d = irq_get_irq_data(irq);
+-	struct cpumask mask;
+-
+-	cpumask_clear(&mask);
+-	cpumask_set_cpu(cpu, &mask);
+-	gic_set_affinity(d, &mask, true);
+-}
+-EXPORT_SYMBOL(gic_set_cpu);
+ #endif
+ 
+ #ifdef CONFIG_PM
+@@ -813,7 +796,6 @@ void gic_raise_softirq(const struct cpumask *mask, unsigned int irq)
+ 	/* this always happens on GIC0 */
+ 	writel_relaxed(map << 16 | irq, gic_data_dist_base(&gic_data[0]) + GIC_DIST_SOFTINT);
+ }
+-EXPORT_SYMBOL(gic_raise_softirq);
+ #endif
+ 
+ #ifdef CONFIG_OF
+diff --git a/arch/arm/kernel/smp.c b/arch/arm/kernel/smp.c
+index e694e23..84f4cbf 100644
+--- a/arch/arm/kernel/smp.c
++++ b/arch/arm/kernel/smp.c
+@@ -434,24 +434,14 @@ void arch_send_call_function_single_ipi(int cpu)
+ 	smp_cross_call(cpumask_of(cpu), IPI_CALL_FUNC_SINGLE);
+ }
+ 
+-struct ipi {
+-	const char *desc;
+-	void (*handler)(void);
+-};
+-
+-static void ipi_timer(void);
+-static void ipi_cpu_stop(void);
+-
+-static struct ipi ipi_types[NR_IPI] = {
+-#define S(x, s, f)	[x].desc = s, [x].handler = f
+-	S(IPI_WAKEUP, "CPU wakeup interrupts", NULL),
+-	S(IPI_TIMER, "Timer broadcast interrupts", ipi_timer),
+-	S(IPI_RESCHEDULE, "Rescheduling interrupts", scheduler_ipi),
+-	S(IPI_CALL_FUNC, "Function call interrupts",
+-					generic_smp_call_function_interrupt),
+-	S(IPI_CALL_FUNC_SINGLE, "Single function call interrupts",
+-				generic_smp_call_function_single_interrupt),
+-	S(IPI_CPU_STOP, "CPU stop interrupts", ipi_cpu_stop),
++static const char *ipi_types[NR_IPI] = {
++#define S(x,s)	[x] = s
++	S(IPI_WAKEUP, "CPU wakeup interrupts"),
++	S(IPI_TIMER, "Timer broadcast interrupts"),
++	S(IPI_RESCHEDULE, "Rescheduling interrupts"),
++	S(IPI_CALL_FUNC, "Function call interrupts"),
++	S(IPI_CALL_FUNC_SINGLE, "Single function call interrupts"),
++	S(IPI_CPU_STOP, "CPU stop interrupts"),
+ };
+ 
+ void show_ipi_list(struct seq_file *p, int prec)
+@@ -459,13 +449,13 @@ void show_ipi_list(struct seq_file *p, int prec)
+ 	unsigned int cpu, i;
+ 
+ 	for (i = 0; i < NR_IPI; i++) {
+-		if (ipi_types[i].handler) {
+-			seq_printf(p, "%*s%u: ", prec - 1, "IPI", i);
+-			for_each_present_cpu(cpu)
+-				seq_printf(p, "%10u ",
+-					__get_irq_stat(cpu, ipi_irqs[i]));
+-			seq_printf(p, " %s\n", ipi_types[i].desc);
+-		}
++		seq_printf(p, "%*s%u: ", prec - 1, "IPI", i);
++
++		for_each_online_cpu(cpu)
++			seq_printf(p, "%10u ",
++				   __get_irq_stat(cpu, ipi_irqs[i]));
++
++		seq_printf(p, " %s\n", ipi_types[i]);
+ 	}
+ }
+ 
+@@ -567,10 +557,8 @@ static DEFINE_RAW_SPINLOCK(stop_lock);
+ /*
+  * ipi_cpu_stop - handle IPI from smp_send_stop()
+  */
+-static void ipi_cpu_stop(void)
++static void ipi_cpu_stop(unsigned int cpu)
+ {
+-	unsigned int cpu = smp_processor_id();
+-
+ 	if (system_state == SYSTEM_BOOTING ||
+ 	    system_state == SYSTEM_RUNNING) {
+ 		raw_spin_lock(&stop_lock);
+@@ -601,48 +589,48 @@ void handle_IPI(int ipinr, struct pt_regs *regs)
+ 	unsigned int cpu = smp_processor_id();
+ 	struct pt_regs *old_regs = set_irq_regs(regs);
+ 
+-	if (ipi_types[ipinr].handler) {
++	if (ipinr < NR_IPI)
+ 		__inc_irq_stat(cpu, ipi_irqs[ipinr]);
++
++	switch (ipinr) {
++	case IPI_WAKEUP:
++		break;
++
++	case IPI_TIMER:
+ 		irq_enter();
+-		(*ipi_types[ipinr].handler)();
++		ipi_timer();
+ 		irq_exit();
+-	} else
+-		pr_debug("CPU%u: Unknown IPI message 0x%x\n", cpu, ipinr);
+-
+-	set_irq_regs(old_regs);
+-}
++		break;
+ 
+-/*
+- * set_ipi_handler:
+- * Interface provided for a kernel module to specify an IPI handler function.
+- */
+-int set_ipi_handler(int ipinr, void *handler, char *desc)
+-{
+-	unsigned int cpu = smp_processor_id();
++	case IPI_RESCHEDULE:
++		scheduler_ipi();
++		break;
+ 
+-	if (ipi_types[ipinr].handler) {
+-		pr_crit("CPU%u: IPI handler 0x%x already registered to %pf\n",
+-					cpu, ipinr, ipi_types[ipinr].handler);
+-		return -1;
+-	}
++	case IPI_CALL_FUNC:
++		irq_enter();
++		generic_smp_call_function_interrupt();
++		irq_exit();
++		break;
+ 
+-	ipi_types[ipinr].handler = handler;
+-	ipi_types[ipinr].desc = desc;
++	case IPI_CALL_FUNC_SINGLE:
++		irq_enter();
++		generic_smp_call_function_single_interrupt();
++		irq_exit();
++		break;
+ 
+-	return 0;
+-}
+-EXPORT_SYMBOL(set_ipi_handler);
++	case IPI_CPU_STOP:
++		irq_enter();
++		ipi_cpu_stop(cpu);
++		irq_exit();
++		break;
+ 
+-/*
+- * clear_ipi_handler:
+- * Interface provided for a kernel module to clear an IPI handler function.
+- */
+-void clear_ipi_handler(int ipinr)
+-{
+-	ipi_types[ipinr].handler = NULL;
+-	ipi_types[ipinr].desc = NULL;
++	default:
++		printk(KERN_CRIT "CPU%u: Unknown IPI message 0x%x\n",
++		       cpu, ipinr);
++		break;
++	}
++	set_irq_regs(old_regs);
+ }
+-EXPORT_SYMBOL(clear_ipi_handler);
+ 
+ void smp_send_reschedule(int cpu)
+ {
+diff --git a/arch/powerpc/kernel/fpu.S b/arch/powerpc/kernel/fpu.S
+index 9ce310a..e0ada05 100644
+--- a/arch/powerpc/kernel/fpu.S
++++ b/arch/powerpc/kernel/fpu.S
+@@ -58,21 +58,6 @@ END_FTR_SECTION_IFSET(CPU_FTR_VSX);					\
+  * enable the FPU for the current task and return to the task.
+  */
+ _GLOBAL(load_up_fpu)
+-#if defined(CONFIG_XILINX_VIRTEX_5_FXT) && defined(CONFIG_PPC_FPU)
+-	li	r3,0
+-	lis	r5,excep_state@h
+-	ori	r5,r5,excep_state@l
+-	stw	r3,0(r5)
+-
+-	mfspr   r5,SPRN_CCR0
+-	/* set CCR0[9] to disable the load miss queue inside the ppc440 */
+-	oris    r5,r5, (1<<6)
+-	/* set CCR0[26] to ... */
+-	ori	r5,r5, (1<<5)
+-	mtspr   SPRN_CCR0,r5
+-	isync
+-#endif
+-
+ 	mfmsr	r5
+ 	ori	r5,r5,MSR_FP
+ #ifdef CONFIG_VSX
+@@ -140,16 +125,6 @@ END_FTR_SECTION_IFSET(CPU_FTR_VSX)
+  * Enables the FPU for use in the kernel on return.
+  */
+ _GLOBAL(giveup_fpu)
+-#if defined(CONFIG_XILINX_VIRTEX_5_FXT) && defined(CONFIG_PPC_FPU)
+-	mfspr   r5,SPRN_CCR0
+-	/* set CCR0[9] to disable the load miss queue inside the ppc440 */
+-	oris    r5,r5, (1<<6)
+-	/* set CCR0[26] to ... */
+-	ori	r5,r5, (1<<5)
+-	mtspr   SPRN_CCR0,r5
+-	isync
+-#endif
+-
+ 	mfmsr	r5
+ 	ori	r5,r5,MSR_FP
+ #ifdef CONFIG_VSX
