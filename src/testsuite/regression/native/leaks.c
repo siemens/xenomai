@@ -16,6 +16,7 @@
 
 #include <nucleus/heap.h>
 #include <rtdk.h>
+#include <asm/xenomai/syscall.h>
 
 #include "check.h"
 

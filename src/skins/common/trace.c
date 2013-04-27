@@ -1,4 +1,5 @@
 #include <nucleus/trace.h>
+#include <asm/xenomai/syscall.h>
 
 int xntrace_max_begin(unsigned long v)
 {

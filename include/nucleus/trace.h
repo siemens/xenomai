@@ -41,15 +41,16 @@
 #define xntrace_user_start()		xnarch_trace_user_start()
 #define xntrace_user_stop(v)		xnarch_trace_user_stop(v)
 #define xntrace_user_freeze(v, once)	xnarch_trace_user_freeze(v, once)
-#define xntrace_special(id, v)	xnarch_trace_special(id, v)
+#define xntrace_special(id, v)		xnarch_trace_special(id, v)
 #define xntrace_special_u64(id, v)	xnarch_trace_special_u64(id, v)
-#define xntrace_pid(pid, prio)	xnarch_trace_pid(pid, prio)
-#define xntrace_panic_freeze()	xnarch_trace_panic_freeze()
+#define xntrace_pid(pid, prio)		xnarch_trace_pid(pid, prio)
+#define xntrace_panic_freeze()		xnarch_trace_panic_freeze()
 #define xntrace_panic_dump()		xnarch_trace_panic_dump()
 
 #else /* !(defined(__KERNEL__) || defined(__XENO_SIM__)) */
 
-#include <asm/xenomai/syscall.h>
+#include <asm-generic/xenomai/syscall.h>
+#include <asm/xenomai/tsc.h>
 
 int xntrace_max_begin(unsigned long v);
 
