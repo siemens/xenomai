@@ -21,6 +21,7 @@
 #define _XENO_ASM_BLACKFIN_SYSCALL_H
 
 #include <asm-generic/xenomai/syscall.h>
+#include <asm/xenomai/tsc.h>
 
 /* The way we mangle Xenomai syscalls with our multiplexer
    marker. Note: watch out for the p0 sign convention used by Linux
@@ -129,29 +130,6 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define XENOMAI_SKINCALL3(id,op,a1,a2,a3)       XENOMAI_DO_SYSCALL(3,id,op,a1,a2,a3)
 #define XENOMAI_SKINCALL4(id,op,a1,a2,a3,a4)    XENOMAI_DO_SYSCALL(4,id,op,a1,a2,a3,a4)
 #define XENOMAI_SKINCALL5(id,op,a1,a2,a3,a4,a5) XENOMAI_DO_SYSCALL(5,id,op,a1,a2,a3,a4,a5)
-
-static inline unsigned long long __xn_rdtsc (void)
-{
-    union {
-	struct {
-	    unsigned long l;
-	    unsigned long h;
-	} s;
-	unsigned long long t;
-    } u;
-    unsigned long cy2;
-
-    __asm__ __volatile__ (	"1: %0 = CYCLES2\n"
-				"%1 = CYCLES\n"
-				"%2 = CYCLES2\n"
-				"CC = %2 == %0\n"
-				"if !cc jump 1b\n"
-				:"=d" (u.s.h),
-				"=d" (u.s.l),
-				"=d" (cy2)
-				: /*no input*/ : "cc");
-    return u.t;
-}
 
 /* uClibc does not provide pthread_atfork() for this arch; provide it
    here. Note: let the compiler decides whether it wants to actually
