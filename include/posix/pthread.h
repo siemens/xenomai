@@ -427,7 +427,7 @@ struct sched_param_ex;
 extern "C" {
 #endif
 
-#ifndef HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL
+#ifndef CONFIG_XENO_HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL
 int pthread_mutexattr_getprotocol(const pthread_mutexattr_t *attr,
 				  int *proto);
 
@@ -435,7 +435,7 @@ int pthread_mutexattr_setprotocol(pthread_mutexattr_t *attr,
 				  int proto);
 #endif
 
-#ifndef HAVE_PTHREAD_CONDATTR_SETCLOCK
+#ifndef CONFIG_XENO_HAVE_PTHREAD_CONDATTR_SETCLOCK
 int pthread_condattr_getclock(const pthread_condattr_t *attr,
 			      clockid_t *clk_id);
 
@@ -500,7 +500,7 @@ int __real_pthread_mutexattr_gettype(const pthread_mutexattr_t *attr,
 
 int __real_pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type);
 
-#ifdef HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL
+#ifdef CONFIG_XENO_HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL
 int __real_pthread_mutexattr_getprotocol(const pthread_mutexattr_t *attr,
 					 int *proto);
 

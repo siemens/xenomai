@@ -36,6 +36,15 @@
 /* configure */
 #undef CONFIG_XENO_FORTIFY
 
+/* config */
+#undef CONFIG_XENO_HAVE_MQUEUE_H
+
+/* config */
+#undef CONFIG_XENO_HAVE_PTHREAD_CONDATTR_SETCLOCK
+
+/* config */
+#undef CONFIG_XENO_HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL
+
 /* Host system alias */
 #undef CONFIG_XENO_HOST_STRING
 

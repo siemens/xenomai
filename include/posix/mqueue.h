@@ -40,7 +40,7 @@
 
 #endif /* !(__KERNEL__ || __XENO_SIM__) */
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__) || !defined(HAVE_MQUEUE_H)
+#if defined(__KERNEL__) || defined(__XENO_SIM__) || !defined(CONFIG_XENO_HAVE_MQUEUE_H)
 
 #ifndef MQ_PRIO_MAX
 #define MQ_PRIO_MAX 32768
@@ -104,7 +104,7 @@ int mq_unlink(const char *name);
 }
 #endif
 
-#else /* !(__KERNEL__ || __XENO_SIM__ || !HAVE_MQUEUE_H) */
+#else /* !(__KERNEL__ || __XENO_SIM__ || !CONFIG_XENO_HAVE_MQUEUE_H) */
 
 __extension__
 #include_next <mqueue.h>
@@ -156,6 +156,6 @@ int __real_mq_notify(mqd_t mqdes, const struct sigevent *notification);
 }
 #endif
 
-#endif /* !(__KERNEL__ || __XENO_SIM__ || !HAVE_MQUEUE_H) */
+#endif /* !(__KERNEL__ || __XENO_SIM__ || !CONFIG_XENO_HAVE_MQUEUE_H) */
 
 #endif /* _XENO_POSIX_MQUEUE_H */
