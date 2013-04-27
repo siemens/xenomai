@@ -21,6 +21,7 @@
 #define _XENO_ASM_SH_SYSCALL_H
 
 #include <asm-generic/xenomai/syscall.h>
+#include <asm/xenomai/tsc.h>
 
 #define __xn_mux_shifted_id(id)	     (id << 24)
 #define __xn_mux_code(shifted_id,op) (shifted_id|((op << 16) & 0xff0000)|(__xn_sys_mux & 0xffff))
@@ -73,7 +74,6 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #else /* !__KERNEL__ */
 
 #include <errno.h>
-#include <endian.h>
 #include <asm/xenomai/atomic.h>
 
 /*
@@ -179,37 +179,6 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define XENOMAI_SKINCALL3(id,op,a1,a2,a3)       XENOMAI_DO_SYSCALL(3,id,op,a1,a2,a3)
 #define XENOMAI_SKINCALL4(id,op,a1,a2,a3,a4)    XENOMAI_DO_SYSCALL(4,id,op,a1,a2,a3,a4)
 #define XENOMAI_SKINCALL5(id,op,a1,a2,a3,a4,a5) XENOMAI_DO_SYSCALL(5,id,op,a1,a2,a3,a4,a5)
-
-struct xnarch_tsc_area {
-	struct {
-#if __BYTE_ORDER == __BIG_ENDIAN
-		unsigned long high;
-		unsigned long low;
-#else /* __LITTLE_ENDIAN */
-		unsigned long low;
-		unsigned long high;
-#endif /* __LITTLE_ENDIAN */
-	} tsc;
-	unsigned long counter_pa;
-};
-
-extern volatile struct xnarch_tsc_area *xeno_sh_tsc;
-
-extern volatile unsigned long *xeno_sh_tcnt;
-
-static inline unsigned long long __xn_rdtsc(void)
-{
-	unsigned long long tsc;
-	unsigned long low;
-
-	tsc = xeno_sh_tsc->tsc.high;
-	low = *xeno_sh_tcnt ^ 0xffffffffUL;
-	if (low < xeno_sh_tsc->tsc.low)
-		tsc++;
-	tsc = (tsc << 32)|low;
-
-	return tsc;
-}
 
 #endif /* __KERNEL__ */
 
