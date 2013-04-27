@@ -517,7 +517,7 @@ static inline void insertgqf(xngqueue_t *gqslot, void *data, int prio)
 {
 	xngholder_t *holder = allocgh(gqslot);
 	holder->data = data;
-	return insertpqf(&gqslot->gqueue, &holder->glink, prio);
+	insertpqf(&gqslot->gqueue, &holder->glink, prio);
 }
 
 static inline void insertgql(xngqueue_t *gqslot, void *data, int prio)

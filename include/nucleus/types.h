@@ -130,16 +130,16 @@ void __xeno_user_exit(void);
 }
 #endif
 
-#define xnprintf(fmt,args...)  xnarch_printf(fmt , ##args)
-#define xnloginfo(fmt,args...) xnarch_loginfo(fmt , ##args)
-#define xnlogwarn(fmt,args...) xnarch_logwarn(fmt , ##args)
-#define xnlogerr(fmt,args...)  xnarch_logerr(fmt , ##args)
-#define xnlogerr_noprompt(fmt,args...) xnarch_logerr_noprompt(fmt , ##args)
+#define xnprintf(...)  xnarch_printf(__VA_ARGS__)
+#define xnloginfo(...) xnarch_loginfo(__VA_ARGS__)
+#define xnlogwarn(...) xnarch_logwarn(__VA_ARGS__)
+#define xnlogerr(...)  xnarch_logerr(__VA_ARGS__)
+#define xnlogerr_noprompt(...) xnarch_logerr_noprompt(__VA_ARGS__)
 
-#define xnpod_fatal(format,args...) \
+#define xnpod_fatal(...) \
 do { \
 	xnarch_begin_panic(); \
-	xnpod_fatal_helper(format,##args); \
+	xnpod_fatal_helper(__VA_ARGS__); \
 	xnarch_halt(); \
 } while (0)
 
