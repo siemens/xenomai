@@ -24,6 +24,7 @@
 #define _XENO_ASM_POWERPC_SYSCALL_H
 
 #include <asm-generic/xenomai/syscall.h>
+#include <asm/xenomai/tsc.h>
 
 #define __xn_mux_code(shifted_id,op) ((op << 24)|shifted_id|(__xn_sys_mux & 0xffff))
 #define __xn_mux_shifted_id(id) ((id << 16) & 0xff0000)
@@ -150,32 +151,6 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define XENOMAI_SKINCALL3(id,op,a1,a2,a3)       XENOMAI_DO_SYSCALL(3,id,op,a1,a2,a3)
 #define XENOMAI_SKINCALL4(id,op,a1,a2,a3,a4)    XENOMAI_DO_SYSCALL(4,id,op,a1,a2,a3,a4)
 #define XENOMAI_SKINCALL5(id,op,a1,a2,a3,a4,a5) XENOMAI_DO_SYSCALL(5,id,op,a1,a2,a3,a4,a5)
-
-static inline unsigned long long __xn_rdtsc(void)
-#if defined(__powerpc64__)
-{
-	unsigned long long t;
-
-	__asm__ __volatile__("mftb %0\n":"=r"(t));
-	return t;
-}
-#else				/* !__powerpc64__ */
-{
-	union {
-		unsigned long long t;
-		unsigned long v[2];
-	} u;
-	unsigned long __tbu;
-
-	__asm__ __volatile__("1: mfspr %0,269\n"
-			     "mfspr %1,268\n"
-			     "mfspr %2,269\n"
-			     "cmpw %2,%0\n"
-			     "bne- 1b\n":"=r"(u.v[0]),
-			     "=r"(u.v[1]), "=r"(__tbu));
-	return u.t;
-}
-#endif /* __powerpc64__ */
 
 #endif /* __KERNEL__ */
 
