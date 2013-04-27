@@ -10,6 +10,7 @@ includesub_HEADERS = \
 	hal.h \
 	syscall.h \
 	system.h \
+	tsc.h \
 	wrappers.h
 
 SUBDIRS = bits
