@@ -132,6 +132,7 @@ typedef struct
 #else /* !(__KERNEL__ || __XENO_SIM__) */
 
 #include <sched.h>
+__extension__
 #include_next <pthread.h>
 #include <nucleus/thread.h>
 #include <nucleus/intr.h>

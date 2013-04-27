@@ -1,5 +1,6 @@
 #ifndef __KERNEL__
 
+__extension__
 #include_next <stdio.h>
 
 #ifndef _XENO_POSIX_STDIO_H

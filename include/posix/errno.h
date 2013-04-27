@@ -48,6 +48,7 @@ int *xnthread_get_errno_location(xnthread_t *thread);
 
 #else /* !(__KERNEL__ || __XENO_SIM__) */
 
+__extension__ 
 #include_next <errno.h>
 
 #endif /* !(__KERNEL__ || __XENO_SIM__) */

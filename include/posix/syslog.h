@@ -2,6 +2,7 @@
 #define SYSLOG_H
 
 #include <stdarg.h>
+__extension__
 #include_next <syslog.h>
 #include <xeno_config.h>
 

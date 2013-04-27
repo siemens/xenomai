@@ -28,6 +28,7 @@
 #endif /* __KERNEL__ */
 
 #ifdef __XENO_SIM__
+__extension__
 #include_next <sys/mman.h>
 #include <posix_overrides.h>
 #endif /* __XENO_SIM__ */
@@ -53,6 +54,7 @@ int munmap(void *addr, size_t len);
 
 #else /* !(__KERNEL__ || __XENO_SIM__) */
 
+__extension__
 #include_next <sys/mman.h>
 
 #ifdef __cplusplus

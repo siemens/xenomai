@@ -3,6 +3,7 @@
 
 #if !(defined(__KERNEL__) || defined(__XENO_SIM__))
 
+__extension__
 #include_next <sys/select.h>
 
 #ifdef __cplusplus

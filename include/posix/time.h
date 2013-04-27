@@ -38,9 +38,11 @@
 
 #else /* !(__KERNEL__ || __XENO_SIM__) */
 
+__extension__
 #include_next <time.h>
 /* In case time.h is included for a side effect of an __need* macro, include it
    a second time to get all definitions. */
+__extension__
 #include_next <time.h>
 
 #endif /* !(__KERNEL__ || __XENO_SIM__) */
