@@ -21,6 +21,7 @@
 #define _XENO_ASM_X86_SYSCALL_H
 
 #include <asm-generic/xenomai/syscall.h>
+#include <asm/xenomai/tsc.h>
 
 #define __xn_mux_code(shifted_id,op) ((op << 24)|shifted_id|(__xn_sys_mux & 0x7fff))
 #define __xn_mux_shifted_id(id) ((id << 16) & 0xff0000)
@@ -311,22 +312,6 @@ static inline void __xn_get_ebp(void **dest)
 #define XENOMAI_SKINCALL3(id,op,a1,a2,a3)	XENOMAI_SKIN_MUX(3,id,op,a1,a2,a3)
 #define XENOMAI_SKINCALL4(id,op,a1,a2,a3,a4)	XENOMAI_SKIN_MUX(4,id,op,a1,a2,a3,a4)
 #define XENOMAI_SKINCALL5(id,op,a1,a2,a3,a4,a5)	XENOMAI_SKIN_MUX(5,id,op,a1,a2,a3,a4,a5)
-
-static inline unsigned long long __xn_rdtsc(void)
-{
-#ifdef __i386__
-	unsigned long long t;
-
-	asm volatile ("rdtsc" : "=A" (t));
-	return t;
-
-#else /* x86_64 */
-	unsigned int __a,__d;
-
-	asm volatile ("rdtsc" : "=a" (__a), "=d" (__d));
-	return ((unsigned long)__a) | (((unsigned long)__d) << 32);
-#endif /* x86_64 */
-}
 
 #endif /* !__KERNEL__ */
 

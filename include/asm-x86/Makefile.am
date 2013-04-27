@@ -20,6 +20,7 @@ includesub_HEADERS =	\
 	switch.h	\
 	syscall.h	\
 	system.h	\
+	tsc.h		\
 	wrappers_32.h	\
 	wrappers_64.h	\
 	wrappers.h
