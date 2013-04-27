@@ -27,13 +27,13 @@ static inline unsigned long long __xn_rdtsc(void)
 #ifdef __i386__
 	unsigned long long t;
 
-	asm volatile ("rdtsc" : "=A" (t));
+	__asm__ __volatile__ ("rdtsc" : "=A" (t));
 	return t;
 
 #else /* x86_64 */
 	unsigned int __a,__d;
 
-	asm volatile ("rdtsc" : "=a" (__a), "=d" (__d));
+	__asm__ __volatile__ ("rdtsc" : "=a" (__a), "=d" (__d));
 	return ((unsigned long)__a) | (((unsigned long)__d) << 32);
 #endif /* x86_64 */
 }

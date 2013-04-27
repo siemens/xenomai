@@ -28,7 +28,7 @@
 
 static inline void cpu_relax(void)
 {
-	asm volatile("rep; nop" ::: "memory");
+	__asm__ __volatile__("rep; nop" ::: "memory");
 }
 
 #ifdef __i386__

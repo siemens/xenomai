@@ -76,7 +76,7 @@ typedef struct { unsigned long counter; } xnarch_atomic_t;
 
 static inline void cpu_relax(void)
 {
-	asm volatile("rep; nop" ::: "memory");
+	__asm__ __volatile__("rep; nop" ::: "memory");
 }
 #else /* !CONFIG_XENO_ATOMIC_BUILTINS */
 #include <asm/xenomai/atomic_asm.h>
