@@ -65,7 +65,7 @@ __xnarch_xchg(volatile void *ptr, unsigned long x, int size)
 
 	switch (size) {
 	case 1:
-		asm volatile("@	__xchg1\n"
+		__asm__ __volatile__("@	__xchg1\n"
 		"1:	ldrexb	%0, [%4]\n"
 		"	strexb	%1, %3, [%4]\n"
 		"	teq	%1, #0\n"
@@ -76,7 +76,7 @@ __xnarch_xchg(volatile void *ptr, unsigned long x, int size)
 			: "cc");
 		break;
 	case 4:
-		asm volatile("@	__xchg4\n"
+		__asm__ __volatile__("@	__xchg4\n"
 		"1:	ldrex	%0, [%4]\n"
 		"	strex	%1, %3, [%4]\n"
 		"	teq	%1, #0\n"
@@ -293,7 +293,7 @@ __xchg(volatile void *ptr, unsigned long x, unsigned int size)
     XENOMAI_SYSCALL5(__xn_sys_arch,
 		     XENOMAI_SYSARCH_XCHG, ptr, x, size, &ret);
 #else
-    asm volatile("@ __xchg4\n"
+    __asm__ __volatile__("@ __xchg4\n"
 "   swp	    %0, %1, [%2]"
     : "=&r" (ret)
     : "r" (x), "r" (ptr)
@@ -357,7 +357,7 @@ xnarch_atomic_cmpxchg(xnarch_atomic_t *ptr,
 	register unsigned long asm_tmp asm("r3");
 
 	do {
-		asm volatile (
+		__asm__ __volatile__ (
 			"mov %1, #0xffff0fff\n\t"
 			"mov lr, pc\n\t"
 			"add pc, %1, #(0xffff0fc0 - 0xffff0fff)\n\t"
@@ -380,7 +380,7 @@ xnarch_atomic_add_return(int i, xnarch_atomic_t *v)
 	register unsigned long asm_lr asm("lr");
 	register unsigned long asm_tmp asm("r3");
 
-	asm volatile ( \
+	__asm__ __volatile__ ( \
 		"1: @ xnarch_atomic_add\n\t"
 		"ldr	%0, [%4]\n\t"
 		"mov	%1, #0xffff0fff\n\t"
@@ -404,7 +404,7 @@ xnarch_atomic_sub_return(int i, xnarch_atomic_t *v)
 	register unsigned long asm_lr asm("lr");
 	register unsigned long asm_tmp asm("r3");
 
-	asm volatile ( \
+	__asm__ __volatile__ ( \
 		"1: @ xnarch_atomic_sub\n\t"
 		"ldr	%0, [%4]\n\t"
 		"mov	%1, #0xffff0fff\n\t"
@@ -428,7 +428,7 @@ xnarch_atomic_set_mask(xnarch_atomic_t *v, long mask)
 	register unsigned long asm_lr asm("lr");
 	register unsigned long asm_tmp asm("r3");
 
-	asm volatile ( \
+	__asm__ __volatile__ ( \
 		"1: @ xnarch_atomic_set_mask\n\t" \
 		"ldr	%0, [%4]\n\t" \
 		"mov	%1, #0xffff0fff\n\t" \
@@ -451,7 +451,7 @@ xnarch_atomic_clear_mask(xnarch_atomic_t *v, long mask)
 	register unsigned long asm_lr asm("lr");
 	register unsigned long asm_tmp asm("r3");
 
-	asm volatile ( \
+	__asm__ __volatile__ ( \
 		"1: @ xnarch_atomic_clear_mask\n\t" \
 		"ldr	%0, [%4]\n\t" \
 		"mov	%1, #0xffff0fff\n\t" \
