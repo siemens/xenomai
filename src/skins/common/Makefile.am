@@ -11,6 +11,7 @@ libxenomai_la_SOURCES = \
 	sem_heap.c \
 	sigshadow.c \
 	timeconv.c \
+	trace.c \
 	wrappers.c
 
 libxenomai_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 0:0:0 \
