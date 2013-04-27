@@ -199,6 +199,7 @@ int main(int argc, char **argv)
 	sigaction(SIGUSR1, &sa, NULL);
 
 	printf("mlockall\n");
+	munlockall();
 	setup_checkdebug(SIGDEBUG_NOMLOCK);
 	err = rt_task_shadow(&main_task, "main_task", 0, 0);
 	check("rt_task_shadow", err, -EINTR);
