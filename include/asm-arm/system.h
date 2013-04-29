@@ -263,5 +263,3 @@ static inline void xnarch_free_stack_mem(void *chunk, u_long bytes)
 #endif /* __KERNEL__ */
 
 #endif /* !_XENO_ASM_ARM_SYSTEM_H */
-
-// vim: ts=4 et sw=4 sts=4

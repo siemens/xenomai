@@ -231,5 +231,3 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define XENOMAI_SYSARCH_TSCINFO                 4
 
 #endif /* !_XENO_ASM_ARM_SYSCALL_H */
-
-// vim: ts=4 et sw=4 sts=4

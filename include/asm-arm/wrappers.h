@@ -116,5 +116,3 @@ static inline void fp_init(union fp_state *state)
 #endif
 
 #endif /* _XENO_ASM_ARM_WRAPPERS_H */
-
-// vim: ts=4 et sw=4 sts=4

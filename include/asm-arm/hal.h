@@ -381,5 +381,3 @@ static const char *const rthal_fault_labels[] = {
 #endif /* !__cplusplus */
 
 #endif /* !_XENO_ASM_ARM_HAL_H */
-
-// vim: ts=4 et sw=4 sts=4

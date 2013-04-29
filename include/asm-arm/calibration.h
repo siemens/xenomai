@@ -56,5 +56,3 @@ static inline unsigned long xnarch_get_sched_latency (void)
 }
 
 #endif /* !_XENO_ASM_ARM_CALIBRATION_H */
-
-// vim: ts=4 et sw=4 sts=4
