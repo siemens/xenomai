@@ -334,7 +334,7 @@ Xenomai: incompatible feature set
 (userland requires "kuser_tsc ...", kernel provides "...", missing="kuser_tsc").
 In that case, this option allows to select the machine for which a
 user-space tsc emulation should be generated. Valid machines are at91,
-kuser, imx, ixp4xx, omap, orion, pxa, s3c24x, sa1100.]),
+kuser, imx, ixp4xx, omap, orion, pxa, s3c24x, sa1100. [default=kuser]]),
 	[case "$enableval" in
 	at91*)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING_FAST_WRAP;;
 
@@ -344,7 +344,7 @@ kuser, imx, ixp4xx, omap, orion, pxa, s3c24x, sa1100.]),
 
 	imx*|mx*)   CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING;;
 
-	kuser)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_KUSER;;
+	generic|kuser)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_KUSER;;
 
 	omap*)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING;;
 
