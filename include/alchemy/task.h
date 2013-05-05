@@ -42,6 +42,7 @@
 
 struct RT_TASK {
 	uintptr_t handle;
+	pthread_t thread;
 };
 
 typedef struct RT_TASK RT_TASK;
@@ -109,6 +110,8 @@ int rt_task_shadow(RT_TASK *task,
 		   const char *name,
 		   int prio,
 		   int mode);
+
+int rt_task_join(RT_TASK *task);
 
 int rt_task_set_periodic(RT_TASK *task,
 			 RTIME idate, RTIME period);

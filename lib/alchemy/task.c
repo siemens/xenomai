@@ -369,6 +369,8 @@ int rt_task_create(RT_TASK *task, const char *name,
 					     &tcb->thobj.tid));
 	if (ret)
 		delete_tcb(tcb);
+	else
+		task->thread = tcb->thobj.tid;
 out:
 	COPPERPLATE_UNPROTECT(svc);
 
@@ -402,9 +404,6 @@ out:
  *
  * - Regular POSIX threads
  * - Xenomai threads
- *
- * @note rt_task_delete() may block until the deleted task exits a
- * safe section, previously entered by a call to rt_task_safe().
  */
 int rt_task_delete(RT_TASK *task)
 {
@@ -428,7 +427,8 @@ int rt_task_delete(RT_TASK *task)
 	threadobj_lock(&tcb->thobj);
 	/*
 	 * Prevent further reference to this zombie, including via
-	 * alchemy_task_current().
+	 * alchemy_task_current(). Only rt_task_join() will be able to
+	 * find it.
 	 */
 	threadobj_set_magic(&tcb->thobj, ~task_magic);
 	threadobj_unlock(&tcb->thobj);
@@ -460,6 +460,53 @@ out:
 	COPPERPLATE_UNPROTECT(svc);
 
 	return ret;
+}
+
+/**
+ * @fn int rt_task_join(RT_TASK *task)
+ * @brief Wait on the termination of a real-time task.
+ *
+ * This service blocks the caller in non-real-time context until @a
+ * task has terminated. All resources are released after successful
+ * completion of this service.
+ *
+ * The specified task must have been created by the same process that
+ * wants to join it, and the T_JOINABLE mode flag must have been set
+ * on creation to rt_task_create().
+ *
+ * Tasks created with the T_JOINABLE flag shall be joined by a
+ * subsequent call to rt_task_join() once successfully deleted, to
+ * reclaim all resources.
+ *
+ * @param task The descriptor address of the task to join.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a task is not a valid task descriptor.
+ *
+ * - -EINVAL is returned if the task was not created with T_JOINABLE
+ * set or some other task is already waiting on the termination.
+ *
+ * - -EDEADLK is returned if @a task refers to the caller.
+ *
+ * - -ESRCH is returned if @a task no longer exists or refers to task
+ * created by a different process.
+ *
+ * Valid calling context:
+ *
+ * - Regular POSIX threads
+ * - Xenomai threads
+ *
+ * @note After successful completion of this service, it is neither
+ * required nor valid to additionally invoke rt_task_delete() on the
+ * same task.
+ */
+int rt_task_join(RT_TASK *task)
+{
+	if (bad_pointer(task))
+		return -EINVAL;
+
+	return -pthread_join(task->thread, NULL);
 }
 
 /**
@@ -635,6 +682,7 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 	struct threadobj *current = threadobj_current();
 	struct alchemy_task *tcb;
 	struct service svc;
+	pthread_t self;
 	int ret;
 
 	COPPERPLATE_PROTECT(svc);
@@ -660,7 +708,11 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 		goto out;
 	}
 
-	ret = __bt(copperplate_renice_thread(pthread_self(), prio));
+	self = pthread_self();
+	if (task)
+		task->thread = self;
+
+	ret = __bt(copperplate_renice_thread(self, prio));
 out:
 	COPPERPLATE_UNPROTECT(svc);
 
