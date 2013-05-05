@@ -36,12 +36,10 @@
 /* Cobalt only, nop over Mercury. */
 #define T_WARNSW	__THREAD_M_WARNSW
 #define T_CONFORMING	__THREAD_M_CONFORMING
+#define T_JOINABLE	__THREAD_M_SPARE0
 /* Deprecated, compat only. */
 #define T_FPU		0x0
-/* CPU mask, up to 8 cpus [0-7] */
-#define T_CPU(cpu)	(1 << (__THREAD_M_SPARESTART + (cpu & 7)))
-#define T_CPUMASK	((-1 >> (32 - __THREAD_M_SPARESTART - 8)) & \
-			 ~(__THREAD_M_SPARESTART ? (-1 >> (32 - __THREAD_M_SPARESTART)) : 0))
+
 struct RT_TASK {
 	uintptr_t handle;
 };
@@ -94,6 +92,9 @@ int rt_task_create(RT_TASK *task,
 		   int mode);
 
 int rt_task_delete(RT_TASK *task);
+
+int rt_task_set_affinity(RT_TASK *task,
+			 const cpu_set_t *cpus);
 
 int rt_task_start(RT_TASK *task,
 		  void (*entry)(void *arg),

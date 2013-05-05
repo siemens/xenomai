@@ -159,14 +159,6 @@ static int task_prologue(struct alchemy_task *tcb)
 	struct service svc;
 	int ret;
 
-	if (CPU_COUNT(&tcb->affinity) > 0) {
-		ret = sched_setaffinity(0, sizeof(tcb->affinity),
-					&tcb->affinity);
-		if (ret)
-			warning("cannot set CPU affinity for task %s",
-				tcb->name);
-	}
-
 	ret = __bt(threadobj_prologue(&tcb->thobj, tcb->name));
 	if (ret)
 		return ret;
@@ -213,13 +205,13 @@ static int create_tcb(struct alchemy_task **tcbp, RT_TASK *task,
 {
 	struct threadobj_init_data idata;
 	struct alchemy_task *tcb;
-	int cpu, ret;
+	int ret;
 
 	ret = check_task_priority(prio);
 	if (ret)
 		return ret;
 
-	if (mode & ~(T_CPUMASK|T_LOCK))
+	if (mode & ~T_LOCK)
 		return -EINVAL;
 
 	tcb = threadobj_alloc(struct alchemy_task, thobj,
@@ -234,10 +226,6 @@ static int create_tcb(struct alchemy_task **tcbp, RT_TASK *task,
 	tcb->arg = NULL;
 
 	CPU_ZERO(&tcb->affinity);
-	for (cpu = 0; cpu < 8; cpu++) {
-		if (mode & T_CPU(cpu))
-			CPU_SET(cpu, &tcb->affinity);
-	}
 
 	tcb->safecount = 0;
 	syncobj_init(&tcb->sobj_safe, 0, fnref_null);
@@ -316,9 +304,6 @@ static void delete_tcb(struct alchemy_task *tcb)
  *
  * - T_SUSP causes the task to start in suspended mode; a call to
  * rt_task_resume() is required to actually start its execution.
- *
- * - T_CPU(cpuid) makes the new task affine to CPU # @b cpuid. CPU
- * identifiers range from 0 to 7 (inclusive).
  *
  * - T_JOINABLE allows another task to wait on the termination of the
  * new task. rt_task_join() shall be called for this task to clean up
@@ -474,6 +459,59 @@ out:
 }
 
 /**
+ * @fn int rt_task_set_affinity(RT_TASK *task, const cpu_set_t *cpus)
+ * @brief Set CPU affinity of real-time task.
+ *
+ * This calls makes @a task affine to the set of CPUs defined by @a
+ * cpus.
+ *
+ * @param task The descriptor address of the task.  If @a task is
+ * NULL, the CPU affinity of the current task is changed.
+ *
+ * @param cpus The set of CPUs @a task should be affine to.
+ *
+ * @return 0 is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a task is NULL but the caller is not a
+ * Xenomai task, or if @a task is non-NULL but not a valid task
+ * descriptor.
+ *
+ * - -EINVAL is returned if @a cpus contains no processors that are
+ * currently physically on the system and permitted to the process
+ * according to any restrictions that may be imposed by the "cpuset"
+ * mechanism described in cpuset(7).
+ *
+ * Valid calling context:
+ *
+ * - Xenomai threads if @a task is NULL, or any otherwise.
+ */
+int rt_task_set_affinity(RT_TASK *task, const cpu_set_t *cpus)
+{
+	struct alchemy_task *tcb;
+	struct service svc;
+	int ret;
+
+	COPPERPLATE_PROTECT(svc);
+
+	tcb = get_alchemy_task_or_self(task, &ret);
+	if (tcb == NULL)
+		goto out;
+
+	tcb->affinity = *cpus;
+
+	ret = sched_setaffinity(threadobj_get_pid(&tcb->thobj),
+				sizeof(tcb->affinity), &tcb->affinity);
+	if (ret)
+		ret = -errno;
+
+	put_alchemy_task(tcb);
+out:
+	COPPERPLATE_UNPROTECT(svc);
+
+	return ret;
+}
+
+/**
  * @fn int rt_task_start(RT_TASK *task, void (*entry)(void *arg), void *arg)
  * @brief Start a real-time task.
  *
@@ -558,9 +596,6 @@ out:
  * - T_SUSP causes the task to suspend before returning from this
  * service; a call to rt_task_resume() is required to resume
  * execution.
- *
- * - T_CPU(cpuid) makes the new task affine to CPU # @b cpuid. CPU
- * identifiers range from 0 to 7 (inclusive).
  *
  * @return 0 is returned upon success. Otherwise:
  *

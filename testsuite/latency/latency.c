@@ -4,6 +4,7 @@
 #include <string.h>
 #include <errno.h>
 #include <signal.h>
+#include <sched.h>
 #include <time.h>
 #include <sys/mman.h>
 #include <sys/time.h>
@@ -519,8 +520,9 @@ static void sigdebug(int sig, siginfo_t *si, void *context)
 int main(int argc, char *const *argv)
 {
 	struct sigaction sa __attribute__((unused));
-	int cpu = 0, c, err, sig;
+	int c, err, sig, cpu = 0;
 	char task_name[16];
+	cpu_set_t cpus;
 	sigset_t mask;
 
 	copperplate_init(&argc, &argv);
@@ -588,7 +590,11 @@ int main(int argc, char *const *argv)
 			break;
 
 		case 'c':
-			cpu = T_CPU(atoi(optarg));
+			cpu = atoi(optarg);
+			if (cpu < 0 || cpu >= CPU_SETSIZE) {
+				fprintf(stderr, "latency: invalid CPU #%d\n", cpu);
+				return 1;
+			}
 			break;
 
 		case 'P':
@@ -715,14 +721,24 @@ int main(int argc, char *const *argv)
 	}
 
 	if (test_mode == USER_TASK) {
+		CPU_ZERO(&cpus);
+		CPU_SET(cpu, &cpus);
 		snprintf(task_name, sizeof(task_name), "sampling-%d", getpid());
 		err =
 		    rt_task_create(&latency_task, task_name, 0, priority,
-				   T_FPU | cpu | T_WARNSW);
+				   T_FPU | T_WARNSW);
 
 		if (err) {
 			fprintf(stderr,
 				"latency: failed to create latency task, code %d\n",
+				err);
+			return 0;
+		}
+
+		err = rt_task_set_affinity(&latency_task, &cpus);
+		if (err) {
+			fprintf(stderr,
+				"latency: failed to set CPU affinity, code %d\n",
 				err);
 			return 0;
 		}
