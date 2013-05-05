@@ -44,7 +44,7 @@ union copperplate_wait_union {
 	struct eventobj_wait_struct eventobj_wait;
 };
 
-static void threadobj_finalize(void *p);
+static void finalize_thread(void *p);
 
 /*
  * NOTE on cancellation handling: Most traditional RTOSes guarantee
@@ -52,19 +52,16 @@ static void threadobj_finalize(void *p);
  * i.e. the deletion service returns to the caller only __after__ the
  * deleted thread entered an innocuous state, i.e. dormant/dead.
  *
- * For this reason, we always pthread_join() cancelled threads
- * internally (see threadobj_cancel(), which might lead to a priority
- * inversion. This is more acceptable than not guaranteeing
- * synchronous behavior, which is mandatory to make sure that our
- * thread finalizer has run for the cancelled thread, prior to
- * returning from threadobj_cancel().
+ * For this reason, we always wait for the cancelled threads
+ * internally (see threadobj_cancel()), which might lead to a priority
+ * inversion. This is the price for guaranteeing that
+ * threadobj_cancel() returns only after the cancelled thread
+ * finalizer has run.
  */
 
 int threadobj_high_prio;
 
 int threadobj_irq_prio;
-
-static void cancel_sync(struct threadobj *thobj);
 
 #ifdef HAVE_TLS
 
@@ -81,7 +78,7 @@ pthread_key_t threadobj_tskey;
 
 static inline void threadobj_init_key(void)
 {
-	if (pthread_key_create(&threadobj_tskey, threadobj_finalize))
+	if (pthread_key_create(&threadobj_tskey, finalize_thread))
 		panic("failed to allocate TSD key");
 }
 
@@ -115,29 +112,8 @@ static inline void threadobj_run_corespec(struct threadobj *thobj)
 	__cobalt_thread_harden();
 }
 
-/* thobj->lock held on entry, released on return */
-int threadobj_cancel(struct threadobj *thobj)
+static inline void threadobj_cancel_corespec(struct threadobj *thobj) /* thobj->lock held */
 {
-	pthread_t tid;
-
-	__threadobj_check_locked(thobj);
-
-	/*
-	 * This basically makes the thread enter a zombie state, since
-	 * it won't be reachable by anyone after its magic has been
-	 * trashed.
-	 */
-	thobj->magic = ~thobj->magic;
-
-	if (thobj == threadobj_current()) {
-		threadobj_unlock(thobj);
-		pthread_exit(NULL);
-	}
-
-	tid = thobj->tid;
-	cancel_sync(thobj);
-	threadobj_unlock(thobj);
-
 	/*
 	 * Send a SIGDEMT signal to demote the target thread, to make
 	 * sure pthread_cancel() will be effective asap.
@@ -161,10 +137,7 @@ int threadobj_cancel(struct threadobj *thobj)
 	 * than the caller of threadobj_cancel()), but will receive
 	 * the following cancellation request asap.
 	 */
-	__RT(pthread_kill(tid, SIGDEMT));
-	pthread_cancel(tid);
-
-	return __bt(-pthread_join(tid, NULL));
+	__RT(pthread_kill(thobj->tid, SIGDEMT));
 }
 
 int threadobj_suspend(struct threadobj *thobj) /* thobj->lock held */
@@ -495,32 +468,8 @@ static inline void threadobj_run_corespec(struct threadobj *thobj)
 {
 }
 
-/* thobj->lock held on entry, released on return */
-int threadobj_cancel(struct threadobj *thobj)
+static inline void threadobj_cancel_corespec(struct threadobj *thobj)
 {
-	pthread_t tid;
-
-	__threadobj_check_locked(thobj);
-
-	/*
-	 * This basically makes the thread enter a zombie state, since
-	 * it won't be reachable by anyone after its magic has been
-	 * trashed.
-	 */
-	thobj->magic = ~thobj->magic;
-
-	if (thobj == threadobj_current()) {
-		threadobj_unlock(thobj);
-		pthread_exit(NULL);
-	}
-
-	cancel_sync(thobj);
-	tid = thobj->tid;
-	threadobj_unlock(thobj);
-
-	pthread_cancel(tid);
-
-	return __bt(-pthread_join(tid, NULL));
 }
 
 int threadobj_suspend(struct threadobj *thobj) /* thobj->lock held */
@@ -838,6 +787,7 @@ void threadobj_init(struct threadobj *thobj,
 	holder_init(&thobj->wait_link);
 	thobj->cnode = __node_id;
 	thobj->pid = 0;
+	thobj->cancel_sem = NULL;
 
 	/*
 	 * CAUTION: wait_union and wait_size have been set in
@@ -919,12 +869,12 @@ void threadobj_start(struct threadobj *thobj)	/* thobj->lock held. */
 	start_sync(thobj, __THREAD_S_ACTIVE);
 }
 
-void threadobj_shadow(void)
+void threadobj_shadow(struct threadobj *thobj)
 {
-	struct threadobj *current = threadobj_current();
-
-	__threadobj_check_locked(current);
-	current->status |= __THREAD_S_STARTED|__THREAD_S_ACTIVE;
+	assert(thobj != threadobj_current());
+	threadobj_lock(thobj);
+	thobj->status |= __THREAD_S_STARTED|__THREAD_S_ACTIVE;
+	threadobj_unlock(thobj);
 }
 
 void threadobj_wait_start(void) /* current->lock free. */
@@ -975,7 +925,7 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 		 */
 		assert(current->magic == 0);
 		sysgroup_remove(thread, &current->memspec);
-		threadobj_finalize(current);
+		finalize_thread(current);
 		threadobj_free(current);
 	} else
 		pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
@@ -1016,10 +966,33 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 
 static void cancel_sync(struct threadobj *thobj) /* thobj->lock held */
 {
-	int oldstate;
+	pthread_t tid = thobj->tid;
+	int oldstate, ret = 0;
+	sem_t *sem;
 
 	__threadobj_check_locked(thobj);
 
+	/*
+	 * We have to allocate the cancel sync sema4 in the main heap
+	 * dynamically, so that it always live in valid memory when we
+	 * wait on it and the cancelled thread posts it. This has to
+	 * be true regardless of whether --enable-pshared is in
+	 * effect, or thobj becomes stale after the finalizer has run
+	 * (we cannot host this sema4 in thobj for this reason).
+	 */
+	sem = xnmalloc(sizeof(*sem));
+	if (sem == NULL)
+		ret = -ENOMEM;
+	else
+		__STD(sem_init(sem, sem_scope_attribute, 0));
+
+	thobj->cancel_sem = sem;
+
+	/*
+	 * If the thread to delete is warming up, wait until it
+	 * reaches the start barrier before sending the cancellation
+	 * signal.
+	 */
 	while (thobj->status & __THREAD_S_WARMUP) {
 		oldstate = thobj->cancel_state;
 		__threadobj_tag_unlocked(thobj);
@@ -1028,9 +1001,35 @@ static void cancel_sync(struct threadobj *thobj) /* thobj->lock held */
 		thobj->cancel_state = oldstate;
 	}
 
+	/*
+	 * Ok, now we shall raise the abort flag if the thread was not
+	 * started yet, to kick it out of the barrier wait. We are
+	 * covered by the target thread lock we hold, so we can't race
+	 * with threadobj_start().
+	 */
 	if ((thobj->status & __THREAD_S_STARTED) == 0) {
 		thobj->status |= __THREAD_S_ABORTED;
 		__RT(pthread_cond_signal(&thobj->barrier));
+	}
+
+	threadobj_cancel_corespec(thobj);
+
+	threadobj_unlock(thobj);
+
+	pthread_cancel(tid);
+
+	/*
+	 * Not being able to sync up with the cancelled thread is not
+	 * considered fatal, despite it's likely bad news for sure, so
+	 * that we can keep on cleaning up the mess, hoping for the
+	 * best.
+	 */
+	if (sem == NULL || __STD(sem_wait(sem)))
+		warning("cannot sync with thread finalizer, %s",
+			symerror(sem ? -errno : ret));
+	if (sem) {
+		__STD(sem_destroy(sem));
+		xnfree(sem);
 	}
 }
 
@@ -1051,7 +1050,29 @@ int threadobj_sleep(struct timespec *ts)
 	return ret;
 }
 
-static void threadobj_finalize(void *p) /* thobj->lock free */
+/* thobj->lock held on entry, released on return */
+int threadobj_cancel(struct threadobj *thobj)
+{
+	__threadobj_check_locked(thobj);
+
+	/*
+	 * This basically makes the thread enter a zombie state, since
+	 * it won't be reachable by anyone after its magic has been
+	 * trashed.
+	 */
+	thobj->magic = ~thobj->magic;
+
+	if (thobj == threadobj_current()) {
+		threadobj_unlock(thobj);
+		pthread_exit(NULL);
+	}
+
+	cancel_sync(thobj);
+
+	return 0;
+}
+
+static void finalize_thread(void *p) /* thobj->lock free */
 {
 	struct threadobj *thobj = p;
 
@@ -1072,6 +1093,15 @@ static void threadobj_finalize(void *p) /* thobj->lock free */
 
 	backtrace_dump(&thobj->btd);
 	backtrace_destroy_context(&thobj->btd);
+
+	if (thobj->cancel_sem)
+		/* Release the killer from threadobj_cancel(). */
+		sem_post(thobj->cancel_sem);
+
+	/*
+	 * Careful: once the user-defined finalizer has run, thobj may
+	 * be laid on stale memory. Do not refer to its contents.
+	 */
 
 	if (thobj->finalizer)
 		thobj->finalizer(thobj);

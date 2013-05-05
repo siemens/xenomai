@@ -349,8 +349,8 @@ int rt_task_create(RT_TASK *task, const char *name,
 		   int stksize, int prio, int mode)
 {
 	struct alchemy_task *tcb;
+	int detachstate, ret;
 	struct service svc;
-	int ret;
 
 	COPPERPLATE_PROTECT(svc);
 
@@ -361,8 +361,12 @@ int rt_task_create(RT_TASK *task, const char *name,
 	/* We want this to be set prior to spawning the thread. */
 	tcb->self = *task;
 
+	detachstate = mode & T_JOINABLE ?
+		PTHREAD_CREATE_JOINABLE : PTHREAD_CREATE_DETACHED;
+
 	ret = __bt(copperplate_create_thread(prio, task_trampoline, tcb,
-					     stksize, &tcb->thobj.tid));
+					     stksize, detachstate,
+					     &tcb->thobj.tid));
 	if (ret)
 		delete_tcb(tcb);
 out:
@@ -648,9 +652,8 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 	if (ret)
 		goto out;
 
-	threadobj_lock(&tcb->thobj);
-	threadobj_shadow();	/* We won't wait in prologue. */
-	threadobj_unlock(&tcb->thobj);
+	threadobj_shadow(&tcb->thobj);	/* We won't wait in prologue. */
+
 	ret = task_prologue(tcb);
 	if (ret) {
 		delete_tcb(tcb);

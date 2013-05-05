@@ -21,6 +21,7 @@
 
 #include <time.h>
 #include <sched.h>
+#include <semaphore.h>
 #include <pthread.h>
 #include <copperplate/list.h>
 #include <copperplate/lock.h>
@@ -175,6 +176,7 @@ struct threadobj {
 	struct timespec tslice;
 	pthread_cond_t barrier;
 	struct traceobj *tracer;
+	sem_t *cancel_sem;
 	struct sysgroup_memspec memspec;
 	struct backtrace_data btd;
 };
@@ -274,7 +276,7 @@ void threadobj_init(struct threadobj *thobj,
 
 void threadobj_start(struct threadobj *thobj);
 
-void threadobj_shadow(void);
+void threadobj_shadow(struct threadobj *thobj);
 
 int threadobj_prologue(struct threadobj *thobj,
 		       const char *name);

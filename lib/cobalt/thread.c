@@ -246,10 +246,10 @@ int pthread_create_ex(pthread_t *tid,
 		      const pthread_attr_ex_t *attr_ex,
 		      void *(*start) (void *), void *arg)
 {
+	int inherit, detachstate, ret;
 	struct pthread_iargs iargs;
 	struct sched_param param;
 	pthread_attr_t attr;
-	int inherit, ret;
 	pthread_t ltid;
 	size_t stksz;
 
@@ -284,6 +284,7 @@ int pthread_create_ex(pthread_t *tid,
 		 */
 		pthread_attr_setinheritsched(&attr, PTHREAD_INHERIT_SCHED);
 
+	pthread_attr_getdetachstate(&attr, &detachstate);
 	pthread_attr_getstacksize(&attr, &stksz);
 	pthread_attr_setstacksize(&attr, xeno_stacksize(stksz));
 
@@ -306,6 +307,8 @@ int pthread_create_ex(pthread_t *tid,
 	ret = iargs.ret;
 	if (ret == 0)
 		*tid = ltid;
+	else if (detachstate == PTHREAD_CREATE_JOINABLE)
+		pthread_join(ltid, NULL);
 fail:
 	__STD(sem_destroy(&iargs.sync));
 

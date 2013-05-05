@@ -103,6 +103,7 @@ int copperplate_probe_node(unsigned int id);
 int copperplate_create_thread(int prio,
 			      void *(*start)(void *arg), void *arg,
 			      size_t stacksize,
+			      int detachstate,
 			      pthread_t *tid);
 
 int copperplate_renice_thread(pthread_t tid, int prio);

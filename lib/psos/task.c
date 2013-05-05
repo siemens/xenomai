@@ -312,7 +312,8 @@ u_long t_create(const char *name, u_long prio,
 	threadobj_init(&task->thobj, &idata);
 
 	ret = __bt(copperplate_create_thread(cprio, task_trampoline, task,
-					     ustack, &task->thobj.tid));
+					     ustack, PTHREAD_CREATE_DETACHED,
+					     &task->thobj.tid));
 	if (ret) {
 		cluster_delobj(&psos_task_table, &task->cobj);
 		threadobj_destroy(&task->thobj);
@@ -433,13 +434,16 @@ u_long t_setpri(u_long tid, u_long newprio, u_long *oldprio_r)
 u_long t_delete(u_long tid)
 {
 	struct psos_task *task;
+	struct service svc;
 	int ret;
 
 	task = get_psos_task_or_self(tid, &ret);
 	if (task == NULL)
 		return ret;
 
+	COPPERPLATE_PROTECT(svc);
 	ret = threadobj_cancel(&task->thobj);
+	COPPERPLATE_UNPROTECT(svc);
 	if (ret)
 		return ERR_OBJDEL;
 

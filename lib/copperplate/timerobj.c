@@ -225,6 +225,7 @@ static int timerobj_spawn_server(void)
 	ret = __bt(copperplate_create_thread(threadobj_irq_prio,
 					     timerobj_server, NULL,
 					     PTHREAD_STACK_MIN * 16,
+					     PTHREAD_CREATE_DETACHED,
 					     &svthread));
 
 	/* Wait for timer server to initialize. */
