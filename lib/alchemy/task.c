@@ -168,15 +168,12 @@ static int task_prologue(struct alchemy_task *tcb)
 	threadobj_wait_start();
 
 	threadobj_lock(&tcb->thobj);
-
-	if (tcb->mode & T_LOCK)
-		threadobj_lock_sched(&tcb->thobj);
-
+	ret = threadobj_set_mode(0, tcb->mode, NULL);
 	threadobj_unlock(&tcb->thobj);
 
 	COPPERPLATE_UNPROTECT(svc);
 
-	return 0;
+	return ret;
 }
 
 static void *task_trampoline(void *arg)
@@ -210,9 +207,6 @@ static int create_tcb(struct alchemy_task **tcbp, RT_TASK *task,
 	ret = check_task_priority(prio);
 	if (ret)
 		return ret;
-
-	if (mode & ~T_LOCK)
-		return -EINVAL;
 
 	tcb = threadobj_alloc(struct alchemy_task, thobj,
 			      union alchemy_wait_union);
@@ -300,14 +294,21 @@ static void delete_tcb(struct alchemy_task *tcb)
  * in the [0 .. 99] range, where 0 is the lowest effective priority. 
  *
  * @param mode The task creation mode. The following flags can be
- * OR'ed into this bitmask, each of them affecting the new task:
- *
- * - T_SUSP causes the task to start in suspended mode; a call to
- * rt_task_resume() is required to actually start its execution.
+ * OR'ed into this bitmask:
  *
  * - T_JOINABLE allows another task to wait on the termination of the
  * new task. rt_task_join() shall be called for this task to clean up
  * any resources after its termination.
+ *
+ * - T_LOCK causes the new task to lock the scheduler prior to
+ * entering the user routine specified by rt_task_start(). A call to
+ * rt_task_set_mode() from the new task is required to drop this lock.
+ *
+ * - When running over the Cobalt core, T_WARNSW causes the SIGXCPU
+ * signal to be sent to the current task whenever it switches to the
+ * secondary mode. This feature is useful to detect unwanted
+ * migrations to the Linux domain. This flag has no effect over the
+ * Mercury core.
  *
  * @return 0 is returned upon success. Otherwise:
  *
@@ -351,6 +352,9 @@ int rt_task_create(RT_TASK *task, const char *name,
 	struct alchemy_task *tcb;
 	int detachstate, ret;
 	struct service svc;
+
+	if (mode & ~(T_LOCK | T_WARNSW | T_JOINABLE))
+		return -EINVAL;
 
 	COPPERPLATE_PROTECT(svc);
 
@@ -641,16 +645,22 @@ out:
  * @param prio The base priority of the task. This value must be in
  * the [0 .. 99] range, where 0 is the lowest effective priority.
  *
- * @param mode The task creation mode. The following flags can be
- * OR'ed into this bitmask, each of them affecting the new task:
+ * @param mode The task shadowing mode. The following flags can be
+ * OR'ed into this bitmask:
  *
- * - T_SUSP causes the task to suspend before returning from this
- * service; a call to rt_task_resume() is required to resume
- * execution.
+ * - T_LOCK causes the current task to lock the scheduler before
+ * returning to the caller. A call to rt_task_set_mode() from the
+ * current task is required to drop this lock.
+ *
+ * - When running over the Cobalt core, T_WARNSW causes the SIGXCPU
+ * signal to be sent to the current task whenever it switches to the
+ * secondary mode. This feature is useful to detect unwanted
+ * migrations to the Linux domain. This flag has no effect over the
+ * Mercury core.
  *
  * @return 0 is returned upon success. Otherwise:
  *
- * - -EINVAL is returned if either @a prio or @a mode are invalid.
+ * - -EINVAL is returned if @a prio is invalid.
  *
  * - -ENOMEM is returned if the system fails to get memory from the
  * main heap in order to create the task extension.
@@ -684,6 +694,9 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 	struct service svc;
 	pthread_t self;
 	int ret;
+
+	if (mode & ~(T_LOCK | T_WARNSW))
+		return -EINVAL;
 
 	COPPERPLATE_PROTECT(svc);
 
