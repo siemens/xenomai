@@ -80,7 +80,10 @@ struct RT_TASK_INFO {
 
 typedef struct RT_TASK_INFO RT_TASK_INFO;
 
-static const RT_TASK no_alchemy_task = { .handle = 0 };
+static const RT_TASK no_alchemy_task = {
+	.handle = 0,
+	.thread = 0
+};
 
 #ifdef __cplusplus
 extern "C" {
