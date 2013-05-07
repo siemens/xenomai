@@ -245,8 +245,8 @@ out:
  * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
  * and the semaphore count is null on entry to the call.
 
- * - -EINTR is returned if rt_task_unblock() has been called for the
- * waiting task before the request is satisfied.
+ * - -EINTR is returned if rt_task_unblock() was called for the
+ * current task before the request is satisfied.
  *
  * - -EINVAL is returned if @a sem is not a valid semaphore
  * descriptor.
@@ -255,8 +255,8 @@ out:
  * sleeping on it. In such a case, @a sem is no more valid upon
  * return of this service.
  *
- * - -EPERM is returned if this service could block, but was called
- * from a context which cannot sleep, i.e. not from a Xenomai thread.
+ * - -EPERM is returned if this service should block, but was not
+ * called from a Xenomai thread.
  *
  * Valid calling contexts:
  *
@@ -435,8 +435,8 @@ out:
  *
  * @return Zero is returned upon success. Otherwise:
  *
- * - -EINTR is returned if rt_task_unblock() has been called for the
- * waiting task before the retrieval has completed.
+ * - -EINTR is returned if rt_task_unblock() was called for the
+ * current task before the retrieval has completed.
  *
  * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
  * and the searched object is not registered on entry.
@@ -444,8 +444,8 @@ out:
  * - -ETIMEDOUT is returned if the object cannot be retrieved within
  * the specified amount of time.
  *
- * - -EPERM is returned if this service could block, but was called
- * from a context which cannot sleep, i.e. not from a Xenomai thread.
+ * - -EPERM is returned if this service should block, but was not
+ * called from a Xenomai thread.
  *
  * Valid calling contexts:
  *

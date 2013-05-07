@@ -311,7 +311,7 @@ static void delete_tcb(struct alchemy_task *tcb)
  * migrations to the Linux domain. This flag has no effect over the
  * Mercury core.
  *
- * @return 0 is returned upon success. Otherwise:
+ * @return Zero is returned upon success. Otherwise:
  *
  * - -EINVAL is returned if either @a prio, @a mode or @a stksize are
  * invalid.
@@ -321,9 +321,6 @@ static void delete_tcb(struct alchemy_task *tcb)
  *
  * - -EEXIST is returned if the @a name is conflicting with an already
  * registered task.
- *
- * - -EPERM is returned if this service was called from an
- * asynchronous context.
  *
  * Valid calling context:
  *
@@ -393,7 +390,8 @@ out:
  * subsequent call to rt_task_join() once successfully deleted, to
  * reclaim all resources.
  *
- * @param task The descriptor address of the deleted task.
+ * @param task The descriptor address of the deleted task, or NULL for
+ * self-deletion.
  *
  * @return Zero is returned upon success. Otherwise:
  *
@@ -402,13 +400,12 @@ out:
  * - -EIDRM is returned if @a task is deleted while the caller was
  * waiting for the target task to exit a safe section.
  *
- * - -EPERM is returned if this service was called from an
- * asynchronous context.
+ * - -EPERM is returned if @a task is NULL and this service was called
+ * from an invalid context.
  *
  * Valid calling context:
  *
- * - Regular POSIX threads
- * - Xenomai threads
+ * - Alchemy tasks only if @a task is NULL, any otherwise.
  */
 int rt_task_delete(RT_TASK *task)
 {
@@ -526,7 +523,7 @@ int rt_task_join(RT_TASK *task)
  *
  * @param cpus The set of CPUs @a task should be affine to.
  *
- * @return 0 is returned upon success. Otherwise:
+ * @return Zero is returned upon success. Otherwise:
  *
  * - -EINVAL is returned if @a task is NULL but the caller is not a
  * Xenomai task, or if @a task is non-NULL but not a valid task
@@ -539,7 +536,7 @@ int rt_task_join(RT_TASK *task)
  *
  * Valid calling context:
  *
- * - Xenomai threads if @a task is NULL, or any otherwise.
+ * - Alchemy tasks if @a task is NULL, any otherwise.
  */
 int rt_task_set_affinity(RT_TASK *task, const cpu_set_t *cpus)
 {
@@ -650,7 +647,8 @@ out:
  * OR'ed into this bitmask:
  *
  * - T_LOCK causes the current task to lock the scheduler before
- * returning to the caller. A call to rt_task_set_mode() from the
+ * returning to the caller, preventing all further involuntary task
+ * switches on the current CPU. A call to rt_task_set_mode() from the
  * current task is required to drop this lock.
  *
  * - When running over the Cobalt core, T_WARNSW causes the SIGXCPU
@@ -659,7 +657,7 @@ out:
  * migrations to the Linux domain. This flag has no effect over the
  * Mercury core.
  *
- * @return 0 is returned upon success. Otherwise:
+ * @return Zero is returned upon success. Otherwise:
  *
  * - -EINVAL is returned if @a prio is invalid.
  *
@@ -672,8 +670,8 @@ out:
  * - -EBUSY is returned if the caller is already mapped to a Xenomai
  * task context.
  *
- * - -EPERM is returned if this service was called from an
- * asynchronous context.
+ * - -EPERM is returned if this service was called from an invalid
+ * context.
  *
  * Valid calling context:
  *
@@ -754,7 +752,7 @@ out:
  * note). Passing TM_INFINITE stops the task's periodic timer if
  * enabled, then returns successfully.
  *
- * @return 0 is returned upon success. Otherwise:
+ * @return Zero is returned upon success. Otherwise:
  *
  * - -EINVAL is returned if @a task is NULL but the caller is not a
  * Xenomai task, or if @a task is non-NULL but not a valid task
@@ -765,7 +763,7 @@ out:
  *
  * Valid calling contexts:
  *
- * - Xenomai threads
+ * - Alchemy tasks if @a task is NULL, any otherwise.
  *
  * Core specifics:
  *
@@ -820,8 +818,9 @@ out:
  * returns -ETIMEDOUT or success. The memory location remains
  * unmodified otherwise. If NULL, this count will not be returned.
  *
- * @return 0 is returned upon success. If @a overruns_r is non-NULL,
- * zero is written to the pointed memory location. Otherwise:
+ * @return Zero is returned upon success. If @a overruns_r is
+ * non-NULL, zero is written to the pointed memory
+ * location. Otherwise:
  *
  * - -EWOULDBLOCK is returned if rt_task_set_periodic() was not called
  * for the current task.
@@ -835,8 +834,12 @@ out:
  * task. If @a overruns_r is non-NULL, the count of pending overruns
  * is written to the pointed memory location.
  *
- * - -EPERM is returned if this service was called from an
- * asynchronous context.
+ * - -EPERM is returned if this service was called from an invalid
+ * context.
+ *
+ * Valid calling context:
+ *
+ * - Alchemy tasks.
  *
  * @note If the current release point has already been reached at the
  * time of the call, the current task immediately returns from this
@@ -853,24 +856,35 @@ int rt_task_wait_period(unsigned long *overruns_r)
 	return threadobj_wait_period(&tcb->thobj, overruns_r);
 }
 
-int rt_task_sleep(RTIME delay)
-{
-	struct timespec ts;
-	struct service svc;
-
-	if (!threadobj_current_p())
-		return -EPERM;
-
-	if (delay == 0)
-		return 0;
-
-	COPPERPLATE_PROTECT(svc);
-	clockobj_ticks_to_timeout(&alchemy_clock, delay, &ts);
-	COPPERPLATE_UNPROTECT(svc);
-
-	return threadobj_sleep(&ts);
-}
-
+/**
+ * @fn int rt_task_sleep_until(RTIME date)
+ * @brief Delay the current real-time task (with absolute wakeup date).
+ *
+ * Delay the execution of the calling task until a given date is
+ * reached. The caller is put to sleep, and does not consume any CPU
+ * time in such a state.
+ *
+ * @param date An absolute date expressed in clock ticks, specifying a
+ * wakeup date (see note).
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINTR is returned if rt_task_unblock() was called for the
+ * current task.
+ *
+ * - -ETIMEDOUT is returned if @a date has already elapsed.
+ *
+ * - -EPERM is returned if this service was called from an invalid
+ * context.
+ *
+ * Valid calling context:
+ *
+ * - Xenomai threads
+ *
+ * @note The @a date value is interpreted as a multiple of the Alchemy
+ * clock resolution (see --alchemy-clock-resolution option, defaults
+ * to 1 nanosecond).
+ */
 int rt_task_sleep_until(RTIME date)
 {
 	struct timespec ts;
@@ -892,6 +906,78 @@ int rt_task_sleep_until(RTIME date)
 	return threadobj_sleep(&ts);
 }
 
+/**
+ * @fn int rt_task_sleep(RTIME delay)
+ * @brief Delay the current real-time task (with relative delay).
+ *
+ * This routine is a variant of rt_task_sleep_until() accepting a
+ * relative timeout specification.
+ *
+ * @param delay A relative delay expressed in clock ticks (see
+ * note). A zero delay causes this service to return immediately to
+ * the caller with a success status.
+ *
+ * @return See rt_task_sleep_until().
+ *
+ * @note The @a delay value is interpreted as a multiple of the
+ * Alchemy clock resolution (see --alchemy-clock-resolution option,
+ * defaults to 1 nanosecond).
+ */
+int rt_task_sleep(RTIME delay)
+{
+	struct timespec ts;
+	struct service svc;
+
+	if (!threadobj_current_p())
+		return -EPERM;
+
+	if (delay == 0)
+		return 0;
+
+	COPPERPLATE_PROTECT(svc);
+	clockobj_ticks_to_timeout(&alchemy_clock, delay, &ts);
+	COPPERPLATE_UNPROTECT(svc);
+
+	return threadobj_sleep(&ts);
+}
+
+/**
+ * @fn int rt_task_spawn(RT_TASK *task, const char *name, int stksize, int prio, int mode, void (*entry)(void *arg), void *arg)
+ * @brief Create and start a real-time task.
+ *
+ * This service spawns a task by combining calls to rt_task_create()
+ * and rt_task_start() for the new task.
+ *
+ * @param task The address of a task descriptor which can be later
+ * used to identify uniquely the created object, upon success of this
+ * call.
+ *
+ * @param name An ASCII string standing for the symbolic name of the
+ * task. When non-NULL and non-empty, a copy of this string is
+ * used for indexing the created task into the object registry.
+ *
+ * @param stksize The size of the stack (in bytes) for the new
+ * task. If zero is passed, a system-dependent default size will be
+ * substituted.
+ *
+ * @param prio The base priority of the new task. This value must be
+ * in the [0 .. 99] range, where 0 is the lowest effective priority. 
+ *
+ * @param mode The task creation mode. See rt_task_create().
+ *
+ * @param entry The address of the task entry point.
+ *
+ * @param arg A user-defined opaque argument @a entry will receive.
+ *
+ * @return See rt_task_create().
+ *
+ * Valid calling context:
+ *
+ * - Regular POSIX threads
+ * - Xenomai threads
+ *
+ * Core specifics: see rt_task_create().
+ */
 int rt_task_spawn(RT_TASK *task, const char *name,
 		  int stksize, int prio, int mode,
 		  void (*entry)(void *arg),
@@ -906,11 +992,67 @@ int rt_task_spawn(RT_TASK *task, const char *name,
 	return rt_task_start(task, entry, arg);
 }
 
+/**
+ * @fn int rt_task_same(RT_TASK *task1, RT_TASK *task2)
+ * @brief Compare real-time task descriptors.
+ *
+ * This predicate returns true if @a task1 and @a task2 refer to the
+ * same task.
+ *
+ * @param task1 First task descriptor to compare.
+ *
+ * @param task2 Second task descriptor to compare.
+ *
+ * @return A non-zero value is returned if both descriptors refer to
+ * the same task, zero otherwise.
+ */
 int rt_task_same(RT_TASK *task1, RT_TASK *task2)
 {
 	return task1->handle == task2->handle;
 }
 
+/**
+ * @fn int rt_task_suspend(RT_TASK *task)
+ * @brief Suspend a real-time task.
+ *
+ * Forcibly suspend the execution of a task. This task will not be
+ * eligible for scheduling until it is explicitly resumed by a call to
+ * rt_task_resume(). In other words, the suspended state caused by a
+ * call to rt_task_suspend() is cumulative with respect to the delayed
+ * and blocked states caused by other services, and is managed
+ * separately from them.
+ *
+ * A nesting count is maintained so that rt_task_suspend() and
+ * rt_task_resume() must be used in pairs.
+ *
+ * Receiving a Linux signal causes the suspended task to resume
+ * immediately.
+ *
+ * @param task The descriptor address of the task to suspend. If @a
+ * task is NULL, the current task is suspended.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a task is NULL but the caller is not a
+ * Xenomai task, or if @a task is non-NULL but not a valid task
+ * descriptor.
+ *
+ * - -EINTR is returned if a Linux signal has been received by the
+ * caller if suspended.
+ *
+ * - -EPERM is returned if @a task is NULL and this service was called
+ * from an invalid context.
+ *
+ * Valid calling context:
+ *
+ * - Alchemy tasks if @a task is NULL, any otherwise.
+ *
+ * @note Blocked and suspended task states are cumulative. Therefore,
+ * suspending a task currently waiting on a synchronization object
+ * (e.g. semaphore, queue) holds its execution until it is resumed,
+ * despite the awaited resource may have been acquired, or a timeout
+ * has elapsed in the meantime.
+ */
 int rt_task_suspend(RT_TASK *task)
 {
 	struct alchemy_task *tcb;
@@ -933,6 +1075,28 @@ out:
 	return ret;
 }
 
+/**
+ * @fn int rt_task_resume(RT_TASK *task)
+ * @brief Resume a real-time task.
+ *
+ * Forcibly resume the execution of a task which was previously
+ * suspended by a call to rt_task_suspend(), if the suspend nesting
+ * count decrements to zero.
+ *
+ * @param task The descriptor address of the task to resume.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a task is not a valid task descriptor.
+ *
+ * Valid calling context: any.
+ *
+ * @note Blocked and suspended task states are cumulative. Therefore,
+ * resuming a task currently waiting on a synchronization object
+ * (e.g. semaphore, queue) does not make it eligible for scheduling
+ * until the awaited resource is eventually acquired, or a timeout
+ * elapses.
+ */
 int rt_task_resume(RT_TASK *task)
 {
 	struct alchemy_task *tcb;
@@ -955,6 +1119,20 @@ out:
 	return ret;
 }
 
+/**
+ * @fn RT_TASK *rt_task_self(void)
+ * @brief Retrieve the current task descriptor.
+ *
+ * Return the address of the current Alchemy task descriptor.
+ *
+ * @return The address of the task descriptor referring to the current
+ * Alchemy task is returned upon success, or NULL if not called from an
+ * valid task context.
+ *
+ * Valid calling context:
+ *
+ * - Alchemy tasks.
+ */
 RT_TASK *rt_task_self(void)
 {
 	struct alchemy_task *tcb;
@@ -966,6 +1144,41 @@ RT_TASK *rt_task_self(void)
 	return &tcb->self;
 }
 
+/**
+ * @fn int rt_task_set_priority(RT_TASK *task, int prio)
+ * @brief Change the base priority of a real-time task.
+ *
+ * The base priority of a task defines the relative importance of the
+ * work being done by each task, which gains conrol of the CPU
+ * accordingly.
+ *
+ * Changing the base priority of a task does not affect the priority
+ * boost the target task might have obtained as a consequence of a
+ * priority inheritance undergoing.
+ *
+ * @param task The descriptor address of the task to update. If @a
+ * task is NULL, the priority of the current task is changed.
+ *
+ * @param prio The new priority. This value must range from [T_LOPRIO
+ * .. T_HIPRIO] (inclusive) where T_LOPRIO is the lowest effective
+ * priority.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a task is not a valid task descriptor, or
+ * if @a prio is invalid.
+ *
+ * - -EPERM is returned if @a task is NULL and this service was called
+ * from an invalid context.
+ *
+ * Valid calling context:
+ *
+ * - Alchemy tasks if @a task is NULL, any otherwise.
+ *
+ * @note Assigning the same priority to a running or ready task moves
+ * it to the end of its priority group, thus causing a manual
+ * round-robin.
+ */
 int rt_task_set_priority(RT_TASK *task, int prio)
 {
 	struct alchemy_task *tcb;
@@ -989,6 +1202,22 @@ out:
 	return ret;
 }
 
+/**
+ * @fn int rt_task_yield(void)
+ * @brief Manual round-robin.
+ *
+ * Move the current task to the end of its priority group, so that the
+ * next equal-priority task in ready state is switched in.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EPERM is returned if this service was called from an invalid
+ * context.
+ *
+ * Valid calling context:
+ *
+ * - Xenomai threads.
+ */
 int rt_task_yield(void)
 {
 	if (!threadobj_current_p())
@@ -999,6 +1228,27 @@ int rt_task_yield(void)
 	return 0;
 }
 
+/**
+ * @fn int rt_task_unblock(RT_TASK *task)
+ * @brief Unblock a real-time task.
+ *
+ * Break the task out of any wait it is currently in.  This call
+ * clears all delay and/or resource wait condition for the target
+ * task.
+ *
+ * However, rt_task_unblock() does not resume a task which has been
+ * forcibly suspended by a previous call to rt_task_suspend().  If all
+ * suspensive conditions are gone, the task becomes eligible anew for
+ * scheduling.
+ *
+ * @param task The descriptor address of the task to unblock.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a task is not a valid task descriptor.
+ *
+ * Valid calling context: any.
+ */
 int rt_task_unblock(RT_TASK *task)
 {
 	struct alchemy_task *tcb;
@@ -1019,6 +1269,40 @@ out:
 	return ret;
 }
 
+/**
+ * @fn int rt_task_slice(RT_TASK *task, RTIME quantum)
+ * @brief Set a task's round-robin quantum.
+ *
+ * Set the time credit allotted to a task undergoing the round-robin
+ * scheduling. If @a quantum is non-zero, rt_task_slice() also refills
+ * the current quantum for the target task, otherwise, time-slicing is
+ * stopped for that task.
+ *
+ * In other words, rt_task_slice() should be used to toggle
+ * round-robin scheduling for an Alchemy task.
+ *
+ * @param task The descriptor address of the task to update. If @a
+ * task is NULL, the time credit of the current task is changed.
+ *
+ * @param quantum The round-robin quantum for the task expressed in
+ * clock ticks (see note).
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a task is not a valid task descriptor, or
+ * if @a prio is invalid.
+ *
+ * - -EPERM is returned if @a task is NULL and this service was called
+ * from an invalid context.
+ *
+ * Valid calling context:
+ *
+ * - Alchemy tasks if @a task is NULL, any otherwise.
+ *
+ * @note The @a quantum value is interpreted as a multiple of the
+ * Alchemy clock resolution (see --alchemy-clock-resolution option,
+ * defaults to 1 nanosecond).
+ */
 int rt_task_slice(RT_TASK *task, RTIME quantum)
 {
 	struct alchemy_task *tcb;
@@ -1042,6 +1326,68 @@ out:
 	return ret;
 }
 
+/**
+ * @fn int rt_task_set_mode(int clrmask, int setmask, int *mode_r)
+ * @brief Change the current task mode.
+ *
+ * Each Alchemy task has a set of internal flags determining several
+ * operating conditions. rt_task_set_mode() takes a bitmask of mode
+ * bits to clear for disabling the corresponding modes for the current
+ * task, and another one to set for enabling them. The mode bits which
+ * were previously in effect before the change can be returned upon
+ * request.
+ *
+ * The following bits can be part of the bitmask:
+ *
+ * - T_LOCK causes the current task to lock the scheduler on the
+ * current CPU, preventing all further involuntary task switches on
+ * this CPU. Clearing this bit unlocks the scheduler.
+ *
+ * - Only when running over the Cobalt core:
+ *
+ *   - T_WARNSW causes the SIGXCPU signal to be sent to the current
+ * task whenever it switches to the secondary mode. This feature is
+ * useful to detect unwanted migrations to the Linux domain.
+ *
+ *   - T_CONFORMING can be passed in @a setmask to switch the current
+ * Alchemy task to its preferred runtime mode. The only meaningful use
+ * of this switch is to force a real-time task back to primary
+ * mode (see note). Any other use leads to a nop.
+ *
+ * These two last flags have no effect over the Mercury core, and are
+ * simply ignored.
+ *
+ * @param clrmask A bitmask of mode bits to clear for the current
+ * task, before @a setmask is applied. Zero is an acceptable value
+ * which leads to a no-op.
+ *
+ * @param setmask A bitmask of mode bits to set for the current
+ * task. Zero is an acceptable value which leads to a no-op.
+ *
+ * @param mode_r If non-NULL, @a mode_r must be a pointer to a memory
+ * location which will be written upon success with the previous set
+ * of active mode bits. If NULL, the previous set of active mode bits
+ * will not be returned.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a task is not a valid task descriptor, or
+ * if any bit from @a clrmask or @a setmask is invalid.
+
+ * - -EPERM is returned if this service was called from an invalid
+ * context.
+ *
+ * Valid calling context:
+ *
+ * - Alchemy tasks.
+ *
+ * @note Forcing the task mode using the T_CONFORMING bit from user
+ * code is almost always wrong, since the Xenomai/cobalt core handles
+ * mode switches internally when/if required. Most often, manual mode
+ * switching from applications introduces useless overhead. This mode
+ * bit is part of the API only to cover rare use cases in middleware
+ * code based on the Alchemy interface.
+ */
 int rt_task_set_mode(int clrmask, int setmask, int *mode_r)
 {
 	struct alchemy_task *tcb;
@@ -1071,6 +1417,34 @@ out:
 	return ret;
 }
 
+/**
+ * @fn int rt_task_inquire(RT_TASK *task, RT_TASK_INFO *info)
+ * @brief Retrieve information about a real-time task.
+ *
+ * Return various information about an Alchemy task. This service may
+ * also be used to probe for task existence.
+ *
+ * @param task The descriptor address of the task. If @a task is NULL,
+ * information about the current task is returned.
+ *
+ * @param info  The address of a structure the task information will be
+ * written to. Passing NULL is valid, in which case the system is only
+ * probed for existence of the specified task.
+ *
+ * @return Zero is returned if the task exists. In addition, if @a
+ * info is non-NULL, it is filled in with task information.
+ *
+ * - -EINVAL is returned if @a task is not a valid task descriptor, or
+ * if @a prio is invalid.
+ *
+ * - -EPERM is returned if @a task is NULL and this service was called
+ * from an invalid context.
+ *
+ * Valid calling context:
+ *
+ * - Alchemy tasks if @a task is NULL, any otherwise.
+
+ */
 int rt_task_inquire(RT_TASK *task, RT_TASK_INFO *info)
 {
 	struct alchemy_task *tcb;
@@ -1097,6 +1471,131 @@ out:
 	return ret;
 }
 
+/**
+ * @fn ssize_t rt_task_send_until(RT_TASK *task, RT_TASK_MCB *mcb_s, RT_TASK_MCB *mcb_r, RTIME timeout)
+ * @brief Send a message to a real-time task (with absolute timeout date).
+ *
+ * This service is part of the synchronous message passing support
+ * available to Alchemy tasks. The caller sends a variable-sized
+ * message to another task, waiting for the remote to receive the
+ * initial message by a call to rt_task_receive(), then reply to it
+ * using rt_task_reply().
+ *
+ * A basic message control block is used to store the location and
+ * size of the data area to send or retrieve upon reply, in addition
+ * to a user-defined operation code.
+ *
+ * @param task The descriptor address of the recipient task.
+ *
+ * @param mcb_s The address of the message control block referring to
+ * the message to be sent. The fields from this control block should
+ * be set as follows:
+ *
+ * - mcb_s->data should contain the address of the payload data to
+ * send to the remote task.
+ *
+ * - mcb_s->size should contain the size in bytes of the payload data
+ * pointed at by mcb_s->data. Zero is a legitimate value, and
+ * indicates that no payload data will be transferred. In the latter
+ * case, mcb_s->data will be ignored.
+ *
+ * - mcb_s->opcode is an opaque operation code carried during the
+ * message transfer, the caller can fill with any appropriate
+ * value. It will be made available "as is" to the remote task into
+ * the operation code field by the rt_task_receive() service.
+ *
+ * @param mcb_r The address of an optional message control block
+ * referring to the reply message area. If @a mcb_r is NULL and a
+ * reply is sent back by the remote task, the reply message will be
+ * discarded, and -ENOBUFS will be returned to the caller. When @a
+ * mcb_r is valid, the fields from this control block should be set as
+ * follows:
+ *
+ * - mcb_r->data should contain the address of a buffer large enough
+ * to collect the reply data from the remote task.
+ *
+ * - mcb_r->size should contain the size in bytes of the buffer space
+ * pointed at by mcb_r->data. If mcb_r->size is lower than the actual
+ * size of the reply message, no data copy takes place and -ENOBUFS is
+ * returned to the caller.
+ *
+ * Upon return, mcb_r->opcode will contain the status code sent back
+ * from the remote task using rt_task_reply(), or zero if unspecified.
+ *
+ * @param timeout An absolute date expressed in clock ticks,
+ * specifying a time limit to wait for the recipient task to reply to
+ * the initial message (see note). Passing TM_INFINITE causes the
+ * caller to block indefinitely until a reply is received.  Passing
+ * TM_NONBLOCK causes the service to return without blocking in case
+ * the recipient task is not waiting for messages at the time of the
+ * call.
+ *
+ * @return A positive value is returned upon success, representing the
+ * length (in bytes) of the reply message returned by the remote
+ * task. Zero is a success status, meaning either that @a mcb_r was
+ * NULL on entry, or that no actual message was passed to the remote
+ * call to rt_task_reply(). Otherwise:
+ *
+ * - -EINVAL is returned if @a task is not a valid task descriptor.
+ *
+ * - -EPERM is returned if this service was called from an invalid
+ * context.
+ *
+ * - -ENOBUFS is returned if @a mcb_r does not point at a message area
+ * large enough to collect the remote task's reply. This includes the
+ * case where @a mcb_r is NULL on entry, despite the remote task
+ * attempts to send a reply message.
+ *
+ * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
+ * and the recipient @a task is not currently waiting for a message on
+ * the rt_task_receive() service.
+ *
+ * - -EIDRM is returned if @a task has been deleted while waiting for
+ * a reply.
+ *
+ * - -EINTR is returned if rt_task_unblock() was called for the
+ * current task before any reply was received from the recipient @a
+ * task.
+ *
+ * Valid calling context:
+ *
+ * - Xenomai threads
+ *
+ * @note The @a timeout value is interpreted as a multiple of the
+ * Alchemy clock resolution (see --alchemy-clock-resolution option,
+ * defaults to 1 nanosecond).
+ */
+
+/**
+ * @fn ssize_t rt_task_send(RT_TASK *task, RT_TASK_MCB *mcb_s, RT_TASK_MCB *mcb_r, RTIME timeout)
+ * @brief Send a message to a real-time task (with relative timeout date).
+ *
+ * This routine is a variant of rt_task_send_until() accepting a
+ * relative timeout specification.
+ *
+ * @param task The descriptor address of the recipient task.
+ *
+ * @param mcb_s The address of the message control block referring to
+ * the message to be sent. See rt_task_send_until().
+ *
+ * @param mcb_r The address of an optional message control block
+ * referring to the reply message area. See rt_task_send_until().
+ *
+ * @param timeout A relative timeout expressed in clock ticks. See
+ * rt_task_send_until().
+ *
+ * @return A positive value is returned upon success, representing the
+ * length (in bytes) of the reply message returned by the remote
+ * task. See rt_task_send_until().
+ *
+ * Valid calling context:
+ *
+ * - Xenomai threads
+ *
+ * @note The @a timeout value is interpreted as a multiple of the
+ * Alchemy clock resolution (see --alchemy-clock-resolution option,
+ * defaults to 1 nanosecond).
+ */
 ssize_t rt_task_send_timed(RT_TASK *task,
 			   RT_TASK_MCB *mcb_s, RT_TASK_MCB *mcb_r,
 			   const struct timespec *abs_timeout)
@@ -1174,6 +1673,95 @@ out:
 	return ret;
 }
 
+/**
+ * @fn ssize_t rt_task_receive_until(RT_TASK_MCB *mcb_r, RTIME timeout)
+ * @brief Receive a message from a real-time task (with absolute timeout date).
+ *
+ * This service is part of the synchronous message passing support
+ * available to Alchemy tasks. The caller receives a variable-sized
+ * message from another task. The sender is blocked until the caller
+ * invokes rt_task_reply() to finish the transaction.
+ *
+ * A basic message control block is used to store the location and
+ * size of the data area to receive from the client, in addition to a
+ * user-defined operation code.
+ *
+ * @param mcb_r The address of a message control block referring to
+ * the receive message area. The fields from this control block should
+ * be set as follows:
+ *
+ * - mcb_r->data should contain the address of a buffer large enough
+ * to collect the data sent by the remote task;
+ *
+ * - mcb_r->size should contain the size in bytes of the buffer space
+ * pointed at by mcb_r->data. If mcb_r->size is lower than the actual
+ * size of the received message, no data copy takes place and -ENOBUFS
+ * is returned to the caller. See note.
+ *
+ * Upon return, mcb_r->opcode will contain the operation code sent
+ * from the remote task using rt_task_send().
+ *
+ * @param timeout The number of clock ticks to wait for receiving a
+ * message (see note). Passing TM_INFINITE causes the caller to block
+ * indefinitely until a remote task eventually sends a message.
+ * Passing TM_NONBLOCK causes the service to return immediately
+ * without waiting if no remote task is currently waiting for sending
+ * a message.
+ *
+ * @return A strictly positive value is returned upon success,
+ * representing a flow identifier for the opening transaction; this
+ * token should be passed to rt_task_reply(), in order to send back a
+ * reply to and unblock the remote task appropriately. Otherwise:
+ *
+ * - -EPERM is returned if this service was called from an invalid
+ * context.
+ *
+ * - -EINTR is returned if rt_task_unblock() was called for the
+ * current task before a message was received.
+ *
+ * - -ENOBUFS is returned if @a mcb_r does not point at a message area
+ * large enough to collect the remote task's message.
+ *
+ * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
+ * and no remote task is currently waiting for sending a message to
+ * the caller.
+ *
+ * - -ETIMEDOUT is returned if no message was received within the @a
+ * timeout.
+ *
+ * Valid calling context:
+ *
+ * - Alchemy tasks
+ *
+ * @note The @a timeout value is interpreted as a multiple of the
+ * Alchemy clock resolution (see --alchemy-clock-resolution option,
+ * defaults to 1 nanosecond).
+ */
+/**
+ * @fn ssize_t rt_task_receive(RT_TASK_MCB *mcb_r, RTIME timeout)
+ * @brief Receive a message from a real-time task (with relative timeout date).
+ *
+ * This routine is a variant of rt_task_receive_until() accepting a
+ * relative timeout specification.
+ *
+ * @param mcb_r The address of a message control block referring to
+ * the receive message area. See rt_task_receive_until().
+ *
+ * @param timeout A relative timeout expressed in clock ticks. See
+ * rt_task_receive_until().
+ *
+ * @return A strictly positive value is returned upon success,
+ * representing a flow identifier for the opening transaction. See
+ * rt_task_receive_until().
+
+ * Valid calling context:
+ *
+ * - Alchemy tasks
+ *
+ * @note The @a timeout value is interpreted as a multiple of the
+ * Alchemy clock resolution (see --alchemy-clock-resolution option,
+ * defaults to 1 nanosecond).
+ */
 int rt_task_receive_timed(RT_TASK_MCB *mcb_r,
 			  const struct timespec *abs_timeout)
 {
@@ -1226,6 +1814,67 @@ done:
 	return ret;
 }
 
+/**
+ * @fn int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
+ * @brief Reply to a remote task message.
+ *
+ * This service is part of the synchronous message passing support
+ * available to Alchemy tasks. The caller sends a variable-sized
+ * message back to a remote task, in response to this task's initial
+ * message received by a call to rt_task_receive(). As a consequence
+ * of calling rt_task_reply(), the remote task will be unblocked from
+ * the rt_task_send() service.
+ *
+ * A basic message control block is used to store the location and
+ * size of the data area to send back, in addition to a user-defined
+ * status code.
+ *
+ * @param flowid The flow identifier returned by a previous call to
+ * rt_task_receive() which uniquely identifies the current
+ * transaction.
+ *
+ * @param mcb_s The address of an optional message control block
+ * referring to the message to be sent back. If @a mcb_s is NULL, the
+ * remote will be unblocked without getting any reply data. When @a
+ * mcb_s is valid, the fields from this control block should be set as
+ * follows:
+ *
+ * - mcb_s->data should contain the address of the payload data to
+ * send to the remote task.
+ *
+ * - mcb_s->size should contain the size in bytes of the payload data
+ * pointed at by mcb_s->data. Zero is a legitimate value, and
+ * indicates that no payload data will be transferred. In the latter
+ * case, mcb_s->data will be ignored.
+ *
+ * - mcb_s->opcode is an opaque status code carried during the message
+ * transfer the caller can fill with any appropriate value. It will be
+ * made available "as is" to the remote task into the status code
+ * field by the rt_task_send() service. If @a mcb_s is NULL, Zero will
+ * be returned to the remote task into the status code field.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a flowid is invalid.
+ *
+ * - -ENXIO is returned if @a flowid does not match the expected
+ * identifier returned from the latest call of the current task to
+ * rt_task_receive(), or if the remote task stopped waiting for the
+ * reply in the meantime (e.g. the remote could have been deleted or
+ * forcibly unblocked).
+ *
+ * - -ENOBUFS is returned if the reply data referred to by @a mcb_s is
+*  larger than the reply area mentioned by the remote task when
+*  calling rt_task_send(). In such a case, the remote task also
+*  receives -ENOBUFS on return from rt_task_send().
+ *
+ * - -EPERM is returned if this service was called from an invalid
+ * context.
+ *
+ * Valid calling context:
+ *
+ * - Alchemy tasks
+ */
 int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
 {
 	struct alchemy_task_wait *wait = NULL;
@@ -1289,6 +1938,52 @@ done:
 	return ret;
 }
 
+/**
+ * @fn int rt_task_bind(RT_TASK *task, const char *name, RTIME timeout)
+ * @brief Bind to a task.
+ *
+ * This routine creates a new descriptor to refer to an existing
+ * Alchemy task identified by its symbolic name. If the object does
+ * not exist on entry, the caller may block until a task of the given
+ * name is created.
+ *
+ * @param task The address of a task descriptor filled in by the
+ * operation. Contents of this memory is undefined upon failure.
+ *
+ * @param name A valid NULL-terminated name which identifies the task
+ * to bind to. This string should match the object name argument
+ * passed to rt_task_create(), or rt_task_shadow().
+ *
+ * @param timeout The number of clock ticks to wait for the
+ * registration to occur (see note). Passing TM_INFINITE causes the
+ * caller to block indefinitely until the object is
+ * registered. Passing TM_NONBLOCK causes the service to return
+ * immediately without waiting if the object is not registered on
+ * entry.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINTR is returned if rt_task_unblock() was called for the
+ * current task before the retrieval has completed.
+ *
+ * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
+ * and the searched object is not registered on entry.
+ *
+ * - -ETIMEDOUT is returned if the object cannot be retrieved within
+ * the specified amount of time.
+ *
+ * - -EPERM is returned if this service should block, but was not
+ * called from a Xenomai thread.
+ *
+ * Valid calling contexts:
+ *
+ * - Xenomai threads
+ * - Any other context if @a timeout equals TM_NONBLOCK.
+ *
+ * @note The @a timeout value is interpreted as a multiple of the
+ * Alchemy clock resolution (see --alchemy-clock-resolution option,
+ * defaults to 1 nanosecond).
+ */
 int rt_task_bind(RT_TASK *task,
 		 const char *name, RTIME timeout)
 {
@@ -1299,6 +1994,16 @@ int rt_task_bind(RT_TASK *task,
 				   &task->handle);
 }
 
+/**
+ * @fn int rt_task_unbind(RT_TASK *task)
+ * @brief Unbind from a task.
+ *
+ * @param task The descriptor address of the task to unbind from.
+ *
+ * This routine releases a previous binding to an Alchemy task. After
+ * this call has returned, the descriptor is no more valid for
+ * referencing this object.
+ */
 int rt_task_unbind(RT_TASK *task)
 {
 	*task = no_alchemy_task;

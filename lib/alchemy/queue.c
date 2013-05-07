@@ -283,8 +283,8 @@ out:
  * they are assigned a valid memory space to store internal
  * information.
  *
- * @return 0 is returned upon success, or -EINVAL if @a buf is not a
- * valid message buffer previously allocated by the rt_queue_alloc()
+ * @return Zero is returned upon success, or -EINVAL if @a buf is not
+ * a valid message buffer previously allocated by the rt_queue_alloc()
  * service, or the caller did not get ownership of the message through
  * a successful return from rt_queue_receive().
  *
@@ -619,8 +619,8 @@ out:
  * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
  * and no message is immediately available on entry to the call.
 
- * - -EINTR is returned if rt_task_unblock() has been called for the
- * receiving task before a message was available.
+ * - -EINTR is returned if rt_task_unblock() was called for the
+ * current task before a message was available.
  *
  * - -EINVAL is returned if @a q is not a valid queue descriptor.
  *
@@ -628,8 +628,8 @@ out:
  * waiting for a message. In such event, @a q is no more valid upon
  * return of this service.
  *
- * - -EPERM is returned if this service could block, but was called
- * from a context which cannot sleep, i.e. not from a Xenomai thread.
+ * - -EPERM is returned if this service should block, but was not
+ * called from a Xenomai thread.
  *
  * Valid calling contexts:
  *
@@ -744,8 +744,8 @@ out:
  * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
  * and no message is immediately available on entry to the call.
 
- * - -EINTR is returned if rt_task_unblock() has been called for the
- * receiving task before a message was available.
+ * - -EINTR is returned if rt_task_unblock() was called for the
+ * current task before a message was available.
  *
  * - -EINVAL is returned if @a q is not a valid queue descriptor.
  *
@@ -753,8 +753,8 @@ out:
  * waiting for a message. In such event, @a q is no more valid upon
  * return of this service.
  *
- * - -EPERM is returned if this service could block, but was called
- * from a context which cannot sleep, i.e. not from a Xenomai thread.
+ * - -EPERM is returned if this service should block, but was not
+ * called from a Xenomai thread.
  *
  * Valid calling contexts:
  *
@@ -963,8 +963,8 @@ out:
  *
  * @return Zero is returned upon success. Otherwise:
  *
- * - -EINTR is returned if rt_task_unblock() has been called for the
- * waiting task before the retrieval has completed.
+ * - -EINTR is returned if rt_task_unblock() was called for the
+ * current task before the retrieval has completed.
  *
  * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
  * and the searched object is not registered on entry.
@@ -972,8 +972,8 @@ out:
  * - -ETIMEDOUT is returned if the object cannot be retrieved within
  * the specified amount of time.
  *
- * - -EPERM is returned if this service could block, but was called
- * from a context which cannot sleep, i.e. not from a Xenomai thread.
+ * - -EPERM is returned if this service should block, but was not
+ * called from a Xenomai thread.
  *
  * Valid calling contexts:
  *

@@ -263,8 +263,8 @@ int rt_cond_broadcast(RT_COND *cond)
  *
  * - -EWOULDBLOCK is returned if @a timeout equals TM_NONBLOCK.
 
- * - -EINTR is returned if rt_task_unblock() has been called for the
- * blocked task.
+ * - -EINTR is returned if rt_task_unblock() was called for the
+ * current task.
  *
  * - -EINVAL is returned if @a cond is not a valid condition variable
  * descriptor.
@@ -273,8 +273,8 @@ int rt_cond_broadcast(RT_COND *cond)
  * waiting on the condition variable. In such event, @a cond is no
  * more valid upon return of this service.
  *
- * - -EPERM is returned if this service could block, but was called
- * from a context which cannot sleep, i.e. not from a Xenomai thread.
+ * - -EPERM is returned if this service should block, but was not
+ * called from a Xenomai thread.
  *
  * Valid calling contexts:
  *
@@ -378,8 +378,8 @@ int rt_cond_inquire(RT_COND *cond, RT_COND_INFO *info)
  *
  * @return Zero is returned upon success. Otherwise:
  *
- * - -EINTR is returned if rt_task_unblock() has been called for the
- * waiting task before the retrieval has completed.
+ * - -EINTR is returned if rt_task_unblock() was called for the
+ * current task before the retrieval has completed.
  *
  * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
  * and the searched object is not registered on entry.
@@ -387,8 +387,8 @@ int rt_cond_inquire(RT_COND *cond, RT_COND_INFO *info)
  * - -ETIMEDOUT is returned if the object cannot be retrieved within
  * the specified amount of time.
  *
- * - -EPERM is returned if this service could block, but was called
- * from a context which cannot sleep, i.e. not from a Xenomai thread.
+ * - -EPERM is returned if this service should block, but was not
+ * called from a Xenomai thread.
  *
  * Valid calling contexts:
  *

@@ -208,8 +208,8 @@ out:
  * - -EWOULDBLOCK is returned if @a timeout equals TM_NONBLOCK and the
  * mutex is not immediately available.
  *
- * - -EINTR is returned if rt_task_unblock() has been called for the
- * blocked task.
+ * - -EINTR is returned if rt_task_unblock() was called for the
+ * current task.
  *
  * - -EINVAL is returned if @a mutex is not a valid mutex descriptor.
  *
@@ -217,8 +217,8 @@ out:
  * waiting on it. In such event, @a mutex is no more valid upon return
  * of this service.
  *
- * - -EPERM is returned if this service could block, but was called
- * from a context which cannot sleep, i.e. not from a Xenomai thread.
+ * - -EPERM is returned if this service should block, but was not
+ * called from a Xenomai thread.
  *
  * Valid calling contexts:
  *
@@ -421,8 +421,8 @@ out:
  *
  * @return Zero is returned upon success. Otherwise:
  *
- * - -EINTR is returned if rt_task_unblock() has been called for the
- * waiting task before the retrieval has completed.
+ * - -EINTR is returned if rt_task_unblock() was called for the
+ * current task before the retrieval has completed.
  *
  * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
  * and the searched object is not registered on entry.
@@ -430,8 +430,8 @@ out:
  * - -ETIMEDOUT is returned if the object cannot be retrieved within
  * the specified amount of time.
  *
- * - -EPERM is returned if this service could block, but was called
- * from a context which cannot sleep, i.e. not from a Xenomai thread.
+ * - -EPERM is returned if this service should block, but was not
+ * called from a Xenomai thread.
  *
  * Valid calling contexts:
  *
