@@ -140,12 +140,9 @@ static void task_finalizer(struct threadobj *thobj)
 	tcb = container_of(thobj, struct alchemy_task, thobj);
 	syncluster_delobj(&alchemy_task_table, &tcb->cobj);
 	/*
-	 * Both the safe and msg syncs may be pended by other threads,
-	 * so we do have to use syncobj_destroy() for them (i.e. NOT
-	 * syncobj_uninit()).
+	 * The msg sync may be pended by other threads, so we do have
+	 * to use syncobj_destroy() on it (i.e. NOT syncobj_uninit()).
 	 */
-	__bt(syncobj_lock(&tcb->sobj_safe, &syns));
-	syncobj_destroy(&tcb->sobj_safe, &syns);
 	__bt(syncobj_lock(&tcb->sobj_msg, &syns));
 	syncobj_destroy(&tcb->sobj_msg, &syns);
 	threadobj_destroy(&tcb->thobj);
@@ -221,9 +218,7 @@ static int create_tcb(struct alchemy_task **tcbp, RT_TASK *task,
 
 	CPU_ZERO(&tcb->affinity);
 
-	tcb->safecount = 0;
 	tcb->suspends = 0;
-	syncobj_init(&tcb->sobj_safe, 0, fnref_null);
 	syncobj_init(&tcb->sobj_msg, SYNCOBJ_PRIO, fnref_null);
 	tcb->flowgen = 0;
 
@@ -257,7 +252,6 @@ static int create_tcb(struct alchemy_task **tcbp, RT_TASK *task,
 static void delete_tcb(struct alchemy_task *tcb)
 {
 	threadobj_destroy(&tcb->thobj);
-	syncobj_uninit(&tcb->sobj_safe);
 	syncobj_uninit(&tcb->sobj_msg);
 	threadobj_free(tcb);
 }
@@ -397,20 +391,19 @@ out:
  *
  * - -EINVAL is returned if @a task is not a valid task descriptor.
  *
- * - -EIDRM is returned if @a task is deleted while the caller was
- * waiting for the target task to exit a safe section.
- *
  * - -EPERM is returned if @a task is NULL and this service was called
- * from an invalid context.
+ * from an invalid context. In addition, this error is always raised
+ * when this service is called from asynchronous context, such as a
+ * timer/alarm handler.
  *
  * Valid calling context:
  *
- * - Alchemy tasks only if @a task is NULL, any otherwise.
+ * - Alchemy tasks only if @a task is NULL, any thread context
+ * otherwise.
  */
 int rt_task_delete(RT_TASK *task)
 {
 	struct alchemy_task *tcb;
-	struct syncstate syns;
 	struct service svc;
 	int ret;
 
@@ -421,47 +414,13 @@ int rt_task_delete(RT_TASK *task)
 	if (tcb == NULL)
 		return ret;
 
-	if (tcb == alchemy_task_current()) /* Self-deletion. */
-		pthread_exit(NULL);
-
 	COPPERPLATE_PROTECT(svc);
-
 	threadobj_lock(&tcb->thobj);
-	/*
-	 * Prevent further reference to this zombie, including via
-	 * alchemy_task_current(). Only rt_task_join() will be able to
-	 * find it.
-	 */
-	threadobj_set_magic(&tcb->thobj, ~task_magic);
-	threadobj_unlock(&tcb->thobj);
-
-	if (syncobj_lock(&tcb->sobj_safe, &syns)) {
-		ret = -EIDRM;
-		goto out;
-	}
-
-	while (tcb->safecount) {
-		ret = syncobj_wait_grant(&tcb->sobj_safe, NULL, &syns);
-		if (ret) {
-			if (ret == -EIDRM)
-				goto out;
-
-			syncobj_unlock(&tcb->sobj_safe, &syns);
-			return ret;
-		}
-	}
-
-	syncobj_unlock(&tcb->sobj_safe, &syns);
-
-	threadobj_lock(&tcb->thobj);
-
-	ret = threadobj_cancel(&tcb->thobj);
-	if (ret)
-		ret = -EIDRM;
-out:
+	/* Self-deletion is handled by threadobj_cancel(). */
+	threadobj_cancel(&tcb->thobj);
 	COPPERPLATE_UNPROTECT(svc);
 
-	return ret;
+	return 0;
 }
 
 /**
