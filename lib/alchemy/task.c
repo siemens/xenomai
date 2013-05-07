@@ -222,6 +222,7 @@ static int create_tcb(struct alchemy_task **tcbp, RT_TASK *task,
 	CPU_ZERO(&tcb->affinity);
 
 	tcb->safecount = 0;
+	tcb->suspends = 0;
 	syncobj_init(&tcb->sobj_safe, 0, fnref_null);
 	syncobj_init(&tcb->sobj_msg, SYNCOBJ_PRIO, fnref_null);
 	tcb->flowgen = 0;
@@ -922,7 +923,9 @@ int rt_task_suspend(RT_TASK *task)
 	if (tcb == NULL)
 		goto out;
 
-	ret = threadobj_suspend(&tcb->thobj);
+	if (tcb->suspends++ == 0)
+		ret = threadobj_suspend(&tcb->thobj);
+
 	put_alchemy_task(tcb);
 out:
 	COPPERPLATE_UNPROTECT(svc);
@@ -934,7 +937,7 @@ int rt_task_resume(RT_TASK *task)
 {
 	struct alchemy_task *tcb;
 	struct service svc;
-	int ret;
+	int ret = 0;
 
 	COPPERPLATE_PROTECT(svc);
 
@@ -942,7 +945,9 @@ int rt_task_resume(RT_TASK *task)
 	if (tcb == NULL)
 		goto out;
 
-	ret = threadobj_resume(&tcb->thobj);
+	if (tcb->suspends > 0 && --tcb->suspends == 0)
+		ret = threadobj_resume(&tcb->thobj);
+
 	put_alchemy_task(tcb);
 out:
 	COPPERPLATE_UNPROTECT(svc);

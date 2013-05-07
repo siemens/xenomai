@@ -33,6 +33,7 @@ struct alchemy_task {
 	int mode;
 	cpu_set_t affinity;
 	int safecount;
+	int suspends;
 	struct syncobj sobj_safe;
 	struct syncobj sobj_msg;
 	int flowgen;
