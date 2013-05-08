@@ -24,34 +24,4 @@
 #define __RT(call)	call
 #define __STD(call)	call
 
-#ifndef HAVE_PTHREAD_CONDATTR_SETCLOCK
-
-#include <pthread.h>
-
-static inline
-int pthread_condattr_setclock(pthread_condattr_t *attr,
-			      clockid_t clk_id)
-{
-	return ENOSYS;
-}
-
-#endif /* !HAVE_PTHREAD_CONDATTR_SETCLOCK */
-
-#ifndef HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL
-
-enum
-{
-  PTHREAD_PRIO_NONE,
-  PTHREAD_PRIO_INHERIT,
-  PTHREAD_PRIO_PROTECT
-};
-
-static inline
-int pthread_mutexattr_setprotocol(pthread_mutexattr_t *attr, int protocol)
-{
-	return ENOSYS;
-}
-
-#endif /* !HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL */
-
 #endif /* _MERCURY_WRAPPERS_H */
