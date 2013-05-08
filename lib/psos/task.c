@@ -193,7 +193,7 @@ static void *task_trampoline(void *arg)
 		threadobj_set_rr(&task->thobj, &psos_rrperiod);
 
 	if (task->mode & T_NOPREEMPT)
-		threadobj_lock_sched(&task->thobj);
+		threadobj_lock_sched();
 
 	threadobj_unlock(&task->thobj);
 
@@ -546,9 +546,9 @@ u_long t_mode(u_long mask, u_long newmask, u_long *oldmode_r)
 	task->mode |= (newmask & mask);
 
 	if (task->mode & T_NOPREEMPT)
-		threadobj_lock_sched_once(&task->thobj);
+		threadobj_lock_sched_once();
 	else if (*oldmode_r & T_NOPREEMPT)
-		threadobj_unlock_sched(&task->thobj);
+		threadobj_unlock_sched();
 
 	/*
 	 * Copperplate won't accept to turn round-robin on/off when

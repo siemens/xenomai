@@ -173,16 +173,16 @@ int threadobj_resume(struct threadobj *thobj) /* thobj->lock held */
 	return __bt(-ret);
 }
 
-int threadobj_lock_sched(struct threadobj *thobj) /* thobj->lock held */
+int threadobj_lock_sched(void) /* current->lock held */
 {
-	__threadobj_check_locked(thobj);
+	struct threadobj *current = threadobj_current();
 
-	assert(thobj == threadobj_current());
+	__threadobj_check_locked(current);
 
-	if (thobj->schedlock_depth++ > 0)
+	if (current->schedlock_depth++ > 0)
 		return 0;
 
-	thobj->status |= __THREAD_S_NOPREEMPT;
+	current->status |= __THREAD_S_NOPREEMPT;
 	/*
 	 * In essence, we can't be scheduled out as a result of
 	 * locking the scheduler, so no need to drop the thread lock
@@ -191,13 +191,11 @@ int threadobj_lock_sched(struct threadobj *thobj) /* thobj->lock held */
 	return __bt(-pthread_set_mode_np(0, PTHREAD_LOCK_SCHED, NULL));
 }
 
-int threadobj_unlock_sched(struct threadobj *thobj) /* thobj->lock held */
+int threadobj_unlock_sched(void) /* current->lock held */
 {
-	int ret;
+	struct threadobj *current = threadobj_current();
 
-	__threadobj_check_locked(thobj);
-
-	assert(thobj == threadobj_current());
+	__threadobj_check_locked(current);
 
 	/*
 	 * Higher layers may not know about the current locking level
@@ -205,18 +203,15 @@ int threadobj_unlock_sched(struct threadobj *thobj) /* thobj->lock held */
 	 * unbalanced calls here, and let them decide of the outcome
 	 * in case of error.
 	 */
-	if (thobj->schedlock_depth == 0)
+	if (current->schedlock_depth == 0)
 		return __bt(-EINVAL);
 
-	if (--thobj->schedlock_depth > 0)
+	if (--current->schedlock_depth > 0)
 		return 0;
 
-	thobj->status &= ~__THREAD_S_NOPREEMPT;
-	threadobj_unlock(thobj);
-	ret = pthread_set_mode_np(PTHREAD_LOCK_SCHED, 0, NULL);
-	threadobj_lock(thobj);
+	current->status &= ~__THREAD_S_NOPREEMPT;
 
-	return __bt(-ret);
+	return __bt(-pthread_set_mode_np(PTHREAD_LOCK_SCHED, 0, NULL));
 }
 
 int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock held, dropped */
@@ -494,51 +489,49 @@ int threadobj_resume(struct threadobj *thobj) /* thobj->lock held */
 	return __bt(notifier_release(&thobj->core.notifier));
 }
 
-int threadobj_lock_sched(struct threadobj *thobj) /* thobj->lock held */
+int threadobj_lock_sched(void) /* current->lock held */
 {
-	pthread_t tid = thobj->tid;
+	struct threadobj *current = threadobj_current();
+	pthread_t tid = current->tid;
 	struct sched_param param;
 
-	__threadobj_check_locked(thobj);
+	__threadobj_check_locked(current);
 
-	assert(thobj == threadobj_current());
-
-	if (thobj->schedlock_depth++ > 0)
+	if (current->schedlock_depth++ > 0)
 		return 0;
 
-	thobj->core.prio_unlocked = thobj->priority;
-	thobj->core.policy_unlocked = thobj->policy;
-	thobj->status |= __THREAD_S_NOPREEMPT;
-	thobj->priority = threadobj_lock_prio;
-	thobj->policy = SCHED_RT;
+	current->core.prio_unlocked = current->priority;
+	current->core.policy_unlocked = current->policy;
+	current->status |= __THREAD_S_NOPREEMPT;
+	current->priority = threadobj_lock_prio;
+	current->policy = SCHED_RT;
 	param.sched_priority = threadobj_lock_prio;
 
 	return __bt(-pthread_setschedparam(tid, SCHED_RT, &param));
 }
 
-int threadobj_unlock_sched(struct threadobj *thobj) /* thobj->lock held */
+int threadobj_unlock_sched(void) /* current->lock held */
 {
-	pthread_t tid = thobj->tid;
+	struct threadobj *current = threadobj_current();
+	pthread_t tid = current->tid;
 	struct sched_param param;
 	int policy, ret;
 
-	__threadobj_check_locked(thobj);
+	__threadobj_check_locked(current);
 
-	assert(thobj == threadobj_current());
-
-	if (thobj->schedlock_depth == 0)
+	if (current->schedlock_depth == 0)
 		return __bt(-EINVAL);
 
-	if (--thobj->schedlock_depth > 0)
+	if (--current->schedlock_depth > 0)
 		return 0;
 
-	thobj->status &= ~__THREAD_S_NOPREEMPT;
-	thobj->priority = thobj->core.prio_unlocked;
-	param.sched_priority = thobj->core.prio_unlocked;
-	policy = thobj->core.policy_unlocked;
-	threadobj_unlock(thobj);
+	current->status &= ~__THREAD_S_NOPREEMPT;
+	current->priority = current->core.prio_unlocked;
+	param.sched_priority = current->core.prio_unlocked;
+	policy = current->core.policy_unlocked;
+	threadobj_unlock(current);
 	ret = pthread_setschedparam(tid, policy, &param);
-	threadobj_lock(thobj);
+	threadobj_lock(current);
 
 	return __bt(-ret);
 }
@@ -592,9 +585,9 @@ int threadobj_set_mode(int clrmask, int setmask, int *mode_r) /* current->lock h
 		old |= __THREAD_M_LOCK;
 
 	if (setmask & __THREAD_M_LOCK)
-		ret = __bt(threadobj_lock_sched_once(current));
+		ret = __bt(threadobj_lock_sched_once());
 	else if (clrmask & __THREAD_M_LOCK)
-		threadobj_unlock_sched(current);
+		threadobj_unlock_sched();
 
 	if (mode_r)
 		*mode_r = old;

@@ -782,7 +782,7 @@ STATUS taskLock(void)
 	}
 
 	COPPERPLATE_PROTECT(svc);
-	threadobj_lock_sched(&task->thobj);
+	threadobj_lock_sched();
 	COPPERPLATE_UNPROTECT(svc);
 	put_wind_task(task);
 
@@ -806,7 +806,7 @@ STATUS taskUnlock(void)
 	}
 
 	COPPERPLATE_PROTECT(svc);
-	threadobj_unlock_sched(&task->thobj);
+	threadobj_unlock_sched();
 	COPPERPLATE_UNPROTECT(svc);
 	put_wind_task(task);
 

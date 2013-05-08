@@ -295,9 +295,9 @@ int threadobj_resume(struct threadobj *thobj);
 
 int threadobj_unblock(struct threadobj *thobj);
 
-int threadobj_lock_sched(struct threadobj *thobj);
+int threadobj_lock_sched(void);
 
-int threadobj_unlock_sched(struct threadobj *thobj);
+int threadobj_unlock_sched(void);
 
 int threadobj_set_priority(struct threadobj *thobj, int prio);
 
@@ -397,10 +397,12 @@ static inline int threadobj_current_p(void)
 	return current && current != THREADOBJ_IRQCONTEXT;
 }
 
-static inline int threadobj_lock_sched_once(struct threadobj *thobj)
+static inline int threadobj_lock_sched_once(void)
 {
-	if (thobj->schedlock_depth == 0)
-		return threadobj_lock_sched(thobj);
+	struct threadobj *current = threadobj_current();
+
+	if (current->schedlock_depth == 0)
+		return threadobj_lock_sched();
 
 	return 0;
 }
