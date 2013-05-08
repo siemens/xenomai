@@ -25,7 +25,7 @@
 
 int __rtdm_muxid = -1;
 
-static __attribute__ ((constructor))
+static __attribute__ ((constructor, noclone))
 void __init_rtdm_interface(void)
 {
 	/* The following call may fail; binding errors will be

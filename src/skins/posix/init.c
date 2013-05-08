@@ -40,7 +40,7 @@ static int fork_handler_registered;
 int __wrap_pthread_setschedparam(pthread_t, int, const struct sched_param *);
 void pse51_clock_init(int);
 
-static __attribute__ ((constructor))
+static __attribute__ ((constructor, noclone))
 void __init_posix_interface(void)
 {
 	struct sched_param parm;

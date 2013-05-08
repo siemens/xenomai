@@ -24,7 +24,7 @@
 
 int __uitron_muxid = -1;
 
-static __attribute__ ((constructor))
+static __attribute__ ((constructor, noclone))
 void __init_xeno_interface(void)
 {
 	T_CTSK pk_ctsk;

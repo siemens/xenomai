@@ -336,7 +336,7 @@ int __wrap_pthread_kill(pthread_t thread, int sig)
 	return err;
 }
 
-static __attribute__((constructor)) void pse51_thread_init(void)
+static __attribute__((constructor, noclone)) void pse51_thread_init(void)
 {
 	pthread_attr_init(&default_attr);
 #ifdef _CS_GNU_LIBPTHREAD_VERSION
