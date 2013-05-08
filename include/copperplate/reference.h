@@ -107,7 +107,7 @@ int __fnref_register(const char *libname,
 #define __memchk(base, addr)	pshared_check(base, addr)
 
 #define mutex_scope_attribute	PTHREAD_PROCESS_SHARED
-#define sem_scope_attribute	SEM_PSHARED
+#define sem_scope_attribute	1
 #define thread_scope_attribute	PTHREAD_SCOPE_SYSTEM
 #define monitor_scope_attribute	COBALT_MONITOR_SHARED
 #define event_scope_attribute	COBALT_EVENT_SHARED
