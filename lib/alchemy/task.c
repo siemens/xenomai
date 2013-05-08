@@ -812,7 +812,7 @@ int rt_task_wait_period(unsigned long *overruns_r)
 	if (tcb == NULL)
 		return -EPERM;
 
-	return threadobj_wait_period(&tcb->thobj, overruns_r);
+	return threadobj_wait_period(overruns_r);
 }
 
 /**

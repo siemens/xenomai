@@ -307,10 +307,8 @@ int threadobj_set_periodic(struct threadobj *thobj,
 					 CLOCK_COPPERPLATE, idate, period);
 }
 
-int threadobj_wait_period(struct threadobj *thobj,
-			  unsigned long *overruns_r)
+int threadobj_wait_period(unsigned long *overruns_r)
 {
-	assert(thobj == threadobj_current());
 	return -pthread_wait_np(overruns_r);
 }
 
@@ -667,21 +665,19 @@ int threadobj_set_periodic(struct threadobj *thobj,
 	return 0;
 }
 
-int threadobj_wait_period(struct threadobj *thobj,
-			  unsigned long *overruns_r)
+int threadobj_wait_period(unsigned long *overruns_r)
 {
+	struct threadobj *current = threadobj_current();
 	struct timespec now, delta, wakeup;
 	unsigned long overruns = 0;
 	ticks_t d, period;
 	int ret;
 
-	assert(thobj == threadobj_current());
-
-	period = thobj->core.period;
+	period = current->core.period;
 	if (period == 0)
 		return -EWOULDBLOCK;
 
-	wakeup = thobj->core.wakeup;
+	wakeup = current->core.wakeup;
 	ret = threadobj_sleep(&wakeup);
 	if (ret)
 		return ret;
@@ -694,10 +690,10 @@ int threadobj_wait_period(struct threadobj *thobj,
 	d = timespec_scalar(&delta);
 	if (d >= period) {
 		overruns = d / period;
-		timespec_adds(&thobj->core.wakeup, &wakeup,
+		timespec_adds(&current->core.wakeup, &wakeup,
 			      overruns * (period + 1));
 	} else
-		timespec_adds(&thobj->core.wakeup, &wakeup, period);
+		timespec_adds(&current->core.wakeup, &wakeup, period);
 
 	if (overruns)
 		ret = -ETIMEDOUT;

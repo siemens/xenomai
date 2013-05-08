@@ -308,8 +308,7 @@ int threadobj_set_rr(struct threadobj *thobj, struct timespec *quantum);
 int threadobj_set_periodic(struct threadobj *thobj,
 			   struct timespec *idate, struct timespec *period);
 
-int threadobj_wait_period(struct threadobj *thobj,
-			  unsigned long *overruns_r);
+int threadobj_wait_period(unsigned long *overruns_r);
 
 void threadobj_spin(ticks_t ns);
 
