@@ -140,55 +140,14 @@ static inline char *pvstrdup(const char *ptr)
 
 #include <malloc.h>
 
-static inline
-void pvheapobj_destroy(struct heapobj *hobj)
-{
-}
-
-static inline
-int pvheapobj_extend(struct heapobj *hobj, size_t size, void *mem)
-{
-	return 0;
-}
-
-static inline
-void *pvheapobj_alloc(struct heapobj *hobj, size_t size)
+static inline void *pvmalloc(size_t size)
 {
 	/*
-	 * XXX: We don't want debug _nrt assertions to trigger when
+	 * NOTE: We don't want debug _nrt assertions to trigger when
 	 * running over Cobalt if the user picked this allocator, so
 	 * we make sure to call the glibc directly, not the Cobalt
 	 * wrappers.
 	 */
-	return __STD(malloc(size));
-}
-
-static inline
-void pvheapobj_free(struct heapobj *hobj, void *ptr)
-{
-	__STD(free(ptr));
-}
-
-static inline
-size_t pvheapobj_validate(struct heapobj *hobj, void *ptr)
-{
-	/*
-	 * We will likely get hard validation here, i.e. crash or
-	 * abort if the pointer is wrong. TLSF is a bit smarter, and
-	 * pshared definitely does the right thing.
-	 */
-	return malloc_usable_size(ptr);
-}
-
-static inline
-size_t pvheapobj_inquire(struct heapobj *hobj)
-{
-	struct mallinfo m = mallinfo();
-	return m.uordblks;
-}
-
-static inline void *pvmalloc(size_t size)
-{
 	return __STD(malloc(size));
 }
 
@@ -201,6 +160,18 @@ static inline char *pvstrdup(const char *ptr)
 {
 	return strdup(ptr);
 }
+
+void pvheapobj_destroy(struct heapobj *hobj);
+
+int pvheapobj_extend(struct heapobj *hobj, size_t size, void *mem);
+
+void *pvheapobj_alloc(struct heapobj *hobj, size_t size);
+
+void pvheapobj_free(struct heapobj *hobj, void *ptr);
+
+size_t pvheapobj_inquire(struct heapobj *hobj);
+
+size_t pvheapobj_validate(struct heapobj *hobj, void *ptr);
 
 #endif /* !CONFIG_XENO_TLSF */
 

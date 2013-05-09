@@ -20,19 +20,51 @@
 #include <stdio.h>
 #include <string.h>
 #include <malloc.h>
+#include <assert.h>
+#include <pthread.h>
+#include "copperplate/lock.h"
 #include "copperplate/heapobj.h"
 #include "copperplate/debug.h"
+
+#define MALLOC_MAGIC 0xabbfcddc
+
+struct pool_header {
+	pthread_mutex_t lock;
+	size_t used;
+};
+
+struct block_header {
+	unsigned int magic;
+	size_t size;
+};
 
 int __heapobj_init_private(struct heapobj *hobj, const char *name,
 			   size_t size, void *mem)
 {
+	pthread_mutexattr_t mattr;
+	struct pool_header *ph;
+
 	/*
 	 * There is no local pool when working with malloc, we just
 	 * use the global process arena. This should not be an issue
 	 * since this mode is aimed at debugging, particularly to be
 	 * used along with Valgrind.
+	 *
+	 * However, we maintain a control header to track the amount
+	 * of memory currently consumed in each heap.
 	 */
-	hobj->pool = mem;	/* Never used. */
+	ph = malloc(sizeof(*ph));
+	if (ph == NULL)
+		return __bt(-ENOMEM);
+
+	__RT(pthread_mutexattr_init(&mattr));
+	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
+	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
+	__RT(pthread_mutex_init(&ph->lock, &mattr));
+	__RT(pthread_mutexattr_destroy(&mattr));
+	ph->used = 0;
+
+	hobj->pool = ph;
 	hobj->size = size;
 	if (name)
 		snprintf(hobj->name, sizeof(hobj->name), "%s", name);
@@ -46,6 +78,99 @@ int heapobj_init_array_private(struct heapobj *hobj, const char *name,
 			       size_t size, int elems)
 {
 	return __bt(__heapobj_init_private(hobj, name, size * elems, NULL));
+}
+
+void pvheapobj_destroy(struct heapobj *hobj)
+{
+	struct pool_header *ph = hobj->pool;
+
+	__RT(pthread_mutex_destroy(&ph->lock));
+	__STD(free(ph));
+}
+
+int pvheapobj_extend(struct heapobj *hobj, size_t size, void *mem)
+{
+	struct pool_header *ph = hobj->pool;
+
+	write_lock_nocancel(&ph->lock);
+	hobj->size += size;
+	write_unlock(&ph->lock);
+
+	return 0;
+}
+
+void *pvheapobj_alloc(struct heapobj *hobj, size_t size)
+{
+	struct pool_header *ph = hobj->pool;
+	struct block_header *bh;
+	void *ptr = NULL;
+
+	push_cleanup_lock(&ph->lock);
+	write_lock(&ph->lock);
+
+	/* Enforce hard limit. */
+	if (ph->used + size > hobj->size)
+		goto out;
+
+	ptr = __STD(malloc(size + sizeof(*bh)));
+	if (ptr == NULL)
+		goto out;
+
+	bh = ptr;
+	bh->magic = MALLOC_MAGIC;
+	bh->size = size;
+	ph->used += size;
+	ptr = bh + 1;
+out:
+	write_unlock(&ph->lock);
+	pop_cleanup_lock(&ph->lock);
+
+	return ptr;
+}
+
+void pvheapobj_free(struct heapobj *hobj, void *ptr)
+{
+	struct block_header *bh = ptr - sizeof(*bh);
+	struct pool_header *ph = hobj->pool;
+
+	push_cleanup_lock(&ph->lock);
+	write_lock(&ph->lock);
+	assert(hobj->size >= bh->size);
+	ph->used -= bh->size;
+	__STD(free(bh));
+	write_unlock(&ph->lock);
+	pop_cleanup_lock(&ph->lock);
+}
+
+size_t pvheapobj_inquire(struct heapobj *hobj)
+{
+	struct pool_header *ph = hobj->pool;
+
+	return ph->used;
+}
+
+size_t pvheapobj_validate(struct heapobj *hobj, void *ptr)
+{
+	struct block_header *bh;
+
+	/* Catch trivially wrong cases: NULL or unaligned. */
+	if (ptr == NULL)
+		return 0;
+
+	if ((unsigned long)ptr & (sizeof(unsigned long)-1))
+		return 0;
+
+	/*
+	 * We will likely get hard validation here, i.e. crash or
+	 * abort if the pointer is out of the address space. TLSF is a
+	 * bit smarter, and pshared definitely does the right thing.
+	 */
+
+	bh = ptr - sizeof(*bh);
+	if (bh->magic != MALLOC_MAGIC)
+		return 0;
+
+	return bh->size;
 }
 
 int heapobj_pkg_init_private(void)
