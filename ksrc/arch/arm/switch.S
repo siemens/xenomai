@@ -37,7 +37,7 @@
 	.endm
 #endif
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 31)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 31)
 #define ARM(x...)	x
 #define THUMB(x...)
 #endif
