@@ -77,7 +77,7 @@ fnref_register(libalchemy, queue_finalize);
  * @param poolsize The size (in bytes) of the message buffer pool to
  * be pre-allocated for holding messages. Message buffers will be
  * claimed and released to this pool.  The buffer pool memory cannot
- * be extended.
+ * be extended. See note.
  *
  * @param mode The queue creation mode. The following flags can be
  * OR'ed into this bitmask, each of them affecting the new queue:
@@ -105,6 +105,17 @@ fnref_register(libalchemy, queue_finalize);
  *
  * @note Queues can be shared by multiple processes which belong to
  * the same Xenomai session.
+ *
+ * @note Each message pending into the queue consumes four long words
+ * plus the actual payload size, aligned to the next long word
+ * boundary. e.g. a 6 byte message on a 32 bit platform would require
+ * 24 bytes of storage into the pool.
+ *
+ * When @a qlimit is given (i.e. different from Q_UNLIMITED), this
+ * overhead is accounted for automatically, so that @a qlimit messages
+ * of @a poolsize / @a qlimit bytes can be stored into the pool
+ * concurrently. Otherwise, @a poolsize is increased by 5% internally
+ * to cope with such overhead.
  */
 int rt_queue_create(RT_QUEUE *queue, const char *name,
 		    size_t poolsize, size_t qlimit, int mode)
@@ -130,12 +141,19 @@ int rt_queue_create(RT_QUEUE *queue, const char *name,
 	/*
 	 * The message pool has to be part of the main heap for proper
 	 * sharing between processes.
+	 *
+	 * We have the message descriptor overhead to cope with when
+	 * allocating the buffer pool. When the queue limit is not
+	 * known, assume 5% overhead.
 	 */
 	if (qlimit == Q_UNLIMITED)
-		ret = heapobj_init(&qcb->hobj, qcb->name, poolsize);
+		ret = heapobj_init(&qcb->hobj, qcb->name,
+				   poolsize + (poolsize / 5));
 	else
 		ret = heapobj_init_array(&qcb->hobj, qcb->name,
-					 poolsize / qlimit, qlimit);
+					 (poolsize / qlimit) *
+					 sizeof(struct alchemy_queue_msg),
+					 qlimit);
 	if (ret) {
 		xnfree(qcb);
 		goto out;
