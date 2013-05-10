@@ -98,6 +98,7 @@ static inline int timerobj_init_corespec(struct timerobj *tmobj)
 	struct sigevent sev;
 	int ret;
 
+	memset(&sev, 0, sizeof(sev));
 	sev.sigev_notify = SIGEV_THREAD_ID;
 	sev.sigev_signo = SIGALRM;
 	sev.sigev_notify_thread_id = svpid;
