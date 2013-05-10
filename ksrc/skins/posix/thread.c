@@ -715,6 +715,9 @@ int pthread_set_mode_np(int clrmask, int setmask)
  */
 int pthread_set_name_np(pthread_t thread, const char *name)
 {
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+	struct task_struct *p;
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -726,6 +729,14 @@ int pthread_set_name_np(pthread_t thread, const char *name)
 
 	snprintf(xnthread_name(&thread->threadbase), XNOBJECT_NAME_LEN, "%s",
 		 name);
+
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+	p = xnthread_user_task(&thread->threadbase);
+	if (p) {
+		strncpy(p->comm, name, sizeof(p->comm));
+		p->comm[sizeof(p->comm) - 1] = '\0';
+	}
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	xnlock_put_irqrestore(&nklock, s);
 
