@@ -2098,15 +2098,19 @@ static int __rt_queue_bind(struct pt_regs *regs)
 	int err;
 	spl_t s;
 
-	xnlock_get_irqsave(&nklock, s);
-
 	err =
 	    __rt_bind_helper(p, regs, &ph.opaque, XENO_QUEUE_MAGIC,
 			     (void **)&q, 0);
 
 	if (err)
-		goto unlock_and_exit;
+		return err;
 
+	xnlock_get_irqsave(&nklock, s);
+	if (xeno_test_magic(q, XENO_QUEUE_MAGIC) == 0) {
+		xnlock_put_irqrestore(&nklock, s);
+
+		return -EACCES;
+	}
 	ph.opaque2 = &q->bufpool;
 	ph.mapsize = xnheap_extentsize(&q->bufpool);
 	ph.area = xnheap_base_memory(&q->bufpool);
@@ -2123,12 +2127,6 @@ static int __rt_queue_bind(struct pt_regs *regs)
 		xnshadow_relax(0, 0);
 
 	return 0;
-
-      unlock_and_exit:
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	return err;
 }
 
 /*
@@ -2622,15 +2620,19 @@ static int __rt_heap_bind(struct pt_regs *regs)
 	int err;
 	spl_t s;
 
-	xnlock_get_irqsave(&nklock, s);
-
 	err =
 	    __rt_bind_helper(p, regs, &ph.opaque, XENO_HEAP_MAGIC,
 			     (void **)&heap, 0);
 
 	if (err)
-		goto unlock_and_exit;
+		return err;
 
+	xnlock_get_irqsave(&nklock, s);
+	if (xeno_test_magic(heap, XENO_HEAP_MAGIC) == 0) {
+		xnlock_put_irqrestore(&nklock, s);
+
+		return -EACCES;
+	}
 	ph.opaque2 = &heap->heap_base;
 	ph.mapsize = xnheap_extentsize(&heap->heap_base);
 	ph.area = xnheap_base_memory(&heap->heap_base);
@@ -2648,12 +2650,6 @@ static int __rt_heap_bind(struct pt_regs *regs)
 		xnshadow_relax(0, 0);
 
 	return 0;
-
-      unlock_and_exit:
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	return err;
 }
 
 /*
