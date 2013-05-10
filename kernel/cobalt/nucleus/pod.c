@@ -760,6 +760,9 @@ EXPORT_SYMBOL_GPL(xnpod_stop_thread);
  *
  * Rescheduling: never, therefore, the caller should reschedule if
  * XNLOCK has been passed into @a clrmask.
+ *
+ * @note Setting @a clrmask and @a setmask to zero leads to a nop,
+ * only returning the previous mode if @a mode_r is a valid address.
  */
 
 xnflags_t xnpod_set_thread_mode(xnthread_t *thread,

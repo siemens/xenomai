@@ -556,7 +556,7 @@ static inline int pthread_make_periodic_np(pthread_t thread,
  * - PTHREAD_CONFORMING can be passed in @a setmask to switch the
  * current user-space task to its preferred runtime mode. The only
  * meaningful use of this switch is to force a real-time shadow back
- * to primary mode. Any other use either cause to a nop, or an error.
+ * to primary mode. Any other use leads to a nop.
  *
  * PTHREAD_LOCK_SCHED is valid for any Xenomai thread, the other bits are only
  * valid for Xenomai user-space threads.
@@ -576,20 +576,23 @@ static inline int pthread_make_periodic_np(pthread_t thread,
  * @return an error number if:
  * - EINVAL, some bit in @a clrmask or @a setmask is invalid.
  *
+ * @note Setting @a clrmask and @a setmask to zero leads to a nop,
+ * only returning the previous mode if @a mode_r is a valid address.
  */
 static inline int pthread_set_mode_np(int clrmask, int setmask, int *mode_r)
 {
-	/* XNTHREAD_STATE_SPARE1 is used as the CONFORMING mode bit. */
-	const xnflags_t valid_flags = XNLOCK|XNTHREAD_STATE_SPARE1|XNTRAPSW;
+	const xnflags_t valid_flags = XNLOCK|XNTRAPSW;
 	xnthread_t *cur = xnpod_current_thread();
 	xnflags_t old;
 
+	/*
+	 * The conforming mode bit is actually zero, since jumping to
+	 * this code entailed switching to the proper mode already.
+	 */
 	if ((clrmask & ~valid_flags) != 0 || (setmask & ~valid_flags) != 0)
 		return -EINVAL;
 
-	old = xnpod_set_thread_mode(cur,
-				    clrmask & ~XNTHREAD_STATE_SPARE1,
-				    setmask & ~XNTHREAD_STATE_SPARE1);
+	old = xnpod_set_thread_mode(cur, clrmask, setmask);
 	if (mode_r)
 		*mode_r = old;
 

@@ -140,7 +140,7 @@ struct timespec;
 
 #define PTHREAD_WARNSW     XNTRAPSW
 #define PTHREAD_LOCK_SCHED XNLOCK
-#define PTHREAD_CONFORMING XNTHREAD_STATE_SPARE1
+#define PTHREAD_CONFORMING 0
 
 struct cobalt_mutexattr {
 	unsigned magic: 24;
