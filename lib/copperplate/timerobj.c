@@ -174,7 +174,7 @@ static void *timerobj_server(void *arg)
 	timersv_init_corespec("timer-internal");
 	threadobj_set_current(THREADOBJ_IRQCONTEXT);
 	/* Handshake with timerobj_spawn_server(). */
-	sem_post(&svsync);
+	__RT(sem_post(&svsync));
 
 	for (;;) {
 		ret = timersv_pend_corespec();
@@ -228,6 +228,8 @@ static int timerobj_spawn_server(void)
 					     PTHREAD_STACK_MIN * 16,
 					     PTHREAD_CREATE_DETACHED,
 					     &svthread));
+	if (ret)
+		return ret;
 
 	/* Wait for timer server to initialize. */
 	do
