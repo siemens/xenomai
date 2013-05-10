@@ -437,6 +437,7 @@ static inline int threadobj_setup_corespec(struct threadobj *thobj)
 	 * thread, and unlike with set_rr(), threadobj_current() ==
 	 * thobj is guaranteed in threadobj_setup_corespec().
 	 */
+	memset(&sev, 0, sizeof(sev));
 	sev.sigev_notify = SIGEV_SIGNAL|SIGEV_THREAD_ID;
 	sev.sigev_signo = SIGVTALRM;
 	sev.sigev_notify_thread_id = copperplate_get_tid();
@@ -915,6 +916,7 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 		assert(current->magic == 0);
 		sysgroup_remove(thread, &current->memspec);
 		finalize_thread(current);
+		threadobj_cleanup_corespec(current);
 		threadobj_free(current);
 	} else
 		pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
