@@ -98,6 +98,7 @@ pthread_cond_init(struct __shadow_cond *cnd, const pthread_condattr_t *attr)
 {
 	xnflags_t synch_flags = XNSYNCH_PRIO | XNSYNCH_NOPIP;
 	struct xnsys_ppd *sys_ppd;
+	struct xnholder *holder;
 	cobalt_cond_t *cond;
 	xnqueue_t *condq;
 	spl_t s;
@@ -129,17 +130,26 @@ pthread_cond_init(struct __shadow_cond *cnd, const pthread_condattr_t *attr)
 
 	condq = &cobalt_kqueues(attr->pshared)->condq;
 
+	/*
+	 * We allow reinitializing a shared condvar. Rationale: since
+	 * a condvar is inherently anonymous, if the process creating
+	 * such condvar exits, we may assume that other processes
+	 * sharing that condvar won't be able to keep on running.
+	 */
 	if (cnd->magic == COBALT_COND_MAGIC) {
-		xnholder_t *holder;
 		for (holder = getheadq(condq); holder;
 		     holder = nextq(condq, holder))
 			if (holder == &cnd->cond->link) {
-				/* cond is already in the queue. */
+				if (attr->pshared) {
+					cond_destroy_internal(cnd->cond,
+							      cobalt_kqueues(1));
+					goto do_init;
+				}
 				err = -EBUSY;
 				goto err_free_pending_signals;
 			}
 	}
-
+do_init:
 	cnd->attr = *attr;
 	cnd->pending_signals_offset =
 		xnheap_mapped_offset(&sys_ppd->sem_heap,

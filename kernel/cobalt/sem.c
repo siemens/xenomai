@@ -135,19 +135,33 @@ static int do_sem_init(struct __shadow_sem *sm, int flags, unsigned int value)
 
 	xnlock_get_irqsave(&nklock, s);
 
+	if (sm->magic != COBALT_SEM_MAGIC &&
+	    sm->magic != COBALT_NAMED_SEM_MAGIC &&
+	    sm->magic == ~COBALT_NAMED_SEM_MAGIC)
+		goto do_init;
+
 	semq = &cobalt_kqueues(!!(flags & SEM_PSHARED))->semq;
 
-	if (sm->magic == COBALT_SEM_MAGIC
-	    || sm->magic == COBALT_NAMED_SEM_MAGIC
-	    || sm->magic == ~COBALT_NAMED_SEM_MAGIC) {
-		for (holder = getheadq(semq); holder;
-		     holder = nextq(semq, holder))
-			if (holder == &sm->sem->link) {
-				ret = -EBUSY;
-				goto err_lock_put;
+	/*
+	 * Make sure we are not reinitializing a valid semaphore. As a
+	 * special exception, we allow reinitializing a shared
+	 * anonymous semaphore. Rationale: if the process creating
+	 * such semaphore exits, we may assume that other processes
+	 * sharing that semaphore won't be able to keep on running.
+	 */
+	for (holder = getheadq(semq); holder;
+	     holder = nextq(semq, holder))
+		if (holder == &sm->sem->link) {
+			if ((flags & SEM_PSHARED) &&
+			    sm->magic == COBALT_SEM_MAGIC) {
+				sem_destroy_inner(sm->sem, sem_kqueue(sm->sem));
+				goto do_init;
 			}
-	}
+			ret = -EBUSY;
+			goto err_lock_put;
+		}
 
+do_init:
 	ret = sem_init_inner(sem, flags, value);
 	if (ret)
 		goto err_lock_put;
@@ -158,7 +172,7 @@ static int do_sem_init(struct __shadow_sem *sm, int flags, unsigned int value)
 
 	return 0;
 
-  err_lock_put:
+err_lock_put:
 	xnlock_put_irqrestore(&nklock, s);
 	xnfree(sem);
 
