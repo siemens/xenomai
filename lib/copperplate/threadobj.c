@@ -247,7 +247,7 @@ int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock hel
 int threadobj_set_mode(int clrmask, int setmask, int *mode_r) /* current->lock held */
 {
 	struct threadobj *current = threadobj_current();
-	int ret, __clrmask = 0, __setmask = 0;
+	int __clrmask = 0, __setmask = 0;
 
 	__threadobj_check_locked(current);
 
@@ -266,11 +266,7 @@ int threadobj_set_mode(int clrmask, int setmask, int *mode_r) /* current->lock h
 	else if (clrmask & __THREAD_M_CONFORMING)
 		__clrmask |= PTHREAD_CONFORMING;
 
-	threadobj_unlock(current);
-	ret = pthread_set_mode_np(__clrmask, __setmask, mode_r);
-	threadobj_lock(current);
-
-	return ret;
+	return __bt(pthread_set_mode_np(__clrmask, __setmask, mode_r));
 }
 
 static int set_rr(struct threadobj *thobj, struct timespec *quantum)
