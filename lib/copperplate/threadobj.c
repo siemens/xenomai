@@ -748,6 +748,7 @@ void *__threadobj_alloc(size_t tcb_struct_size,
 		return NULL;
 
 	thobj = p + thobj_offset;
+	thobj->core_offset = thobj_offset;
 	thobj->wait_union = p + tcb_struct_size;
 	thobj->wait_size = wait_union_size;
 
@@ -912,8 +913,6 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 		assert(current->magic == 0);
 		sysgroup_remove(thread, &current->memspec);
 		finalize_thread(current);
-		threadobj_cleanup_corespec(current);
-		threadobj_free(current);
 	} else
 		pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
 
@@ -1059,6 +1058,13 @@ int threadobj_cancel(struct threadobj *thobj)
 	return 0;
 }
 
+static void destroy_thread(struct threadobj *thobj)
+{
+	__RT(pthread_cond_destroy(&thobj->barrier));
+	__RT(pthread_mutex_destroy(&thobj->lock));
+	threadobj_cleanup_corespec(thobj);
+}
+
 static void finalize_thread(void *p) /* thobj->lock free */
 {
 	struct threadobj *thobj = p;
@@ -1081,26 +1087,22 @@ static void finalize_thread(void *p) /* thobj->lock free */
 	backtrace_dump(&thobj->btd);
 	backtrace_destroy_context(&thobj->btd);
 
-	if (thobj->cancel_sem)
-		/* Release the killer from threadobj_cancel(). */
-		sem_post(thobj->cancel_sem);
-
-	/*
-	 * Careful: once the user-defined finalizer has run, thobj may
-	 * be laid on stale memory. Do not refer to its contents.
-	 */
-
 	if (thobj->finalizer)
 		thobj->finalizer(thobj);
 
+	if (thobj->cancel_sem)
+		/* Release the killer from threadobj_cancel(). */
+		__STD(sem_post)(thobj->cancel_sem);
+
+	destroy_thread(thobj);
+	threadobj_free(thobj);
 	threadobj_set_current(NULL);
 }
 
 void threadobj_destroy(struct threadobj *thobj) /* thobj->lock free */
 {
-	__RT(pthread_cond_destroy(&thobj->barrier));
-	__RT(pthread_mutex_destroy(&thobj->lock));
-	threadobj_cleanup_corespec(thobj);
+	assert((thobj->status & (__THREAD_S_STARTED|__THREAD_S_ACTIVE)) == 0);
+	destroy_thread(thobj);
 }
 
 int threadobj_unblock(struct threadobj *thobj) /* thobj->lock held */

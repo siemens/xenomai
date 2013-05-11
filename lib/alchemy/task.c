@@ -143,10 +143,6 @@ static void task_finalizer(struct threadobj *thobj)
 	 */
 	__bt(syncobj_lock(&tcb->sobj_msg, &syns));
 	syncobj_destroy(&tcb->sobj_msg, &syns);
-	threadobj_destroy(&tcb->thobj);
-	backtrace_dump(&thobj->btd);
-
-	threadobj_free(tcb);
 }
 
 static int task_prologue(struct alchemy_task *tcb)
@@ -192,9 +188,9 @@ out:
 
 static void delete_tcb(struct alchemy_task *tcb)
 {
-	threadobj_destroy(&tcb->thobj);
 	syncobj_uninit(&tcb->sobj_msg);
-	threadobj_free(tcb);
+	threadobj_destroy(&tcb->thobj);
+	threadobj_free(&tcb->thobj);
 }
 
 static int create_tcb(struct alchemy_task **tcbp, RT_TASK *task,

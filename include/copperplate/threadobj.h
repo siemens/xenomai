@@ -163,6 +163,7 @@ struct threadobj {
 	char name[32];
 
 	void (*finalizer)(struct threadobj *thobj);
+	int core_offset;
 	int *errno_pointer;
 	/* Those members belong exclusively to the syncobj code. */
 	struct syncobj *wait_sobj;
@@ -266,9 +267,9 @@ void *__threadobj_alloc(size_t tcb_struct_size,
 			size_t wait_union_size,
 			int thobj_offset);
 
-static inline void threadobj_free(void *p)
+static inline void threadobj_free(struct threadobj *thobj)
 {
-	xnfree(p);
+	xnfree((void *)thobj - thobj->core_offset);
 }
 
 void threadobj_init(struct threadobj *thobj,

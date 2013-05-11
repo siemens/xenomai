@@ -167,9 +167,6 @@ static void task_finalizer(struct threadobj *thobj)
 	/* We have to hold a lock on a syncobj to destroy it. */
 	syncobj_lock(&task->sobj, &syns);
 	syncobj_destroy(&task->sobj, &syns);
-	threadobj_destroy(&task->thobj);
-
-	threadobj_free(task);
 }
 
 static void *task_trampoline(void *arg)
@@ -278,7 +275,7 @@ u_long t_create(const char *name, u_long prio,
 	 * value based on the implementation default for such minimum.
 	 */
 	if (ustack > 0 && ustack < 8192) {
-		threadobj_free(task);
+		threadobj_free(&task->thobj);
 		ret = ERR_TINYSTK;
 		goto out;
 	}
@@ -321,7 +318,7 @@ u_long t_create(const char *name, u_long prio,
 	fail:
 		syncobj_lock(&task->sobj, &syns);
 		syncobj_destroy(&task->sobj, &syns);
-		threadobj_free(task);
+		threadobj_free(&task->thobj);
 	}
 out:
 	COPPERPLATE_UNPROTECT(svc);

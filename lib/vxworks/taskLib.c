@@ -159,9 +159,6 @@ static void task_finalizer(struct threadobj *thobj)
 	cluster_delobj(&wind_task_table, &task->cobj);
 	registry_destroy_file(&task->fsobj);
 	__RT(pthread_mutex_destroy(&task->safelock));
-	threadobj_destroy(&task->thobj);
-
-	threadobj_free(task);
 }
 
 #ifdef CONFIG_XENO_REGISTRY
