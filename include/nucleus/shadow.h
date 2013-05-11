@@ -99,10 +99,9 @@ void xnshadow_rpi_check(void);
 
 #ifdef RTHAL_HAVE_RETURN_EVENT
 #define XNARCH_HAVE_MAYDAY  1
-void xnshadow_call_mayday(struct xnthread *thread, int sigtype);
+void xnshadow_call_mayday(struct xnthread *thread);
 #else
-static inline void xnshadow_call_mayday(struct xnthread *thread,
-					int sigtype)
+static inline void xnshadow_call_mayday(struct xnthread *thread)
 {
 	/* no luck, I-pipe too old. Nobody hears you screaming... */
 }
