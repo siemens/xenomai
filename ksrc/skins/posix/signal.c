@@ -64,19 +64,14 @@ typedef void siginfo_handler_t(int, siginfo_t *, void *);
 #define SIGRTMAX 64
 static struct sigaction actions[SIGRTMAX];
 static pse51_siginfo_t pse51_infos_pool[PSE51_SIGQUEUE_MAX];
-DEFINE_XNLOCK(pse51_infos_lock);
 static xnpqueue_t pse51_infos_free_list;
 
 static pse51_siginfo_t *pse51_new_siginfo(int sig, int code, union sigval value)
 {
 	xnpholder_t *holder;
 	pse51_siginfo_t *si;
-	spl_t s;
 
-	xnlock_get_irqsave(&pse51_infos_lock, s);
 	holder = getpq(&pse51_infos_free_list);
-	xnlock_put_irqrestore(&pse51_infos_lock, s);
-
 	if (!holder)
 		return NULL;
 
@@ -90,14 +85,10 @@ static pse51_siginfo_t *pse51_new_siginfo(int sig, int code, union sigval value)
 
 static void pse51_delete_siginfo(pse51_siginfo_t * si)
 {
-	spl_t s;
-
 	initph(&si->link);
 	si->info.si_signo = 0;	/* Used for debugging. */
 
-	xnlock_get_irqsave(&pse51_infos_lock, s);
 	insertpqlr(&pse51_infos_free_list, &si->link, 0);
-	xnlock_put_irqrestore(&pse51_infos_lock, s);
 }
 
 static inline void emptyset(pse51_sigset_t *set)
@@ -624,31 +615,34 @@ unlock_and_exit:
 int pthread_sigqueue_np(pthread_t thread, int sig, union sigval value)
 {
 	pse51_siginfo_t *si = NULL;	/* Avoid spurious warning. */
+	int err = 0;
 	spl_t s;
 
 	if ((unsigned)sig > SIGRTMAX)
 		return EINVAL;
 
-	if (sig) {
-		si = pse51_new_siginfo(sig, SI_QUEUE, value);
-
-		if (!si)
-			return EAGAIN;
-	}
-
 	xnlock_get_irqsave(&nklock, s);
 
 	if (!pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread)) {
-		xnlock_put_irqrestore(&nklock, s);
-		return ESRCH;
+		err = ESRCH;
+		goto unlock_and_exit;
 	}
 
-	if (sig && pse51_sigqueue_inner(thread, si))
-		xnpod_schedule();
+	if (sig) {
+		si = pse51_new_siginfo(sig, SI_QUEUE, value);
+		if (!si) {
+			err = EAGAIN;
+			goto unlock_and_exit;
+		}
 
+		if (pse51_sigqueue_inner(thread, si))
+			xnpod_schedule();
+	}
+
+  unlock_and_exit:
 	xnlock_put_irqrestore(&nklock, s);
 
-	return 0;
+	return err;
 }
 
 /**
