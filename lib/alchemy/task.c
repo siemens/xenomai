@@ -44,8 +44,6 @@ static struct alchemy_namegen task_namegen = {
 	.length = sizeof ((struct alchemy_task *)0)->name,
 };
 
-static void delete_tcb(struct alchemy_task *tcb);
-
 static struct alchemy_task *find_alchemy_task(RT_TASK *task, int *err_r)
 {
 	struct alchemy_task *tcb;
@@ -179,10 +177,8 @@ static void *task_trampoline(void *arg)
 	int ret;
 
 	ret = task_prologue(tcb);
-	if (ret) {
-		delete_tcb(tcb);
+	if (ret)
 		goto out;
-	}
 
 	threadobj_notify_entry();
 	tcb->entry(tcb->arg);
@@ -192,6 +188,13 @@ out:
 	threadobj_unlock(&tcb->thobj);
 
 	pthread_exit((void *)(long)ret);
+}
+
+static void delete_tcb(struct alchemy_task *tcb)
+{
+	threadobj_destroy(&tcb->thobj);
+	syncobj_uninit(&tcb->sobj_msg);
+	threadobj_free(tcb);
 }
 
 static int create_tcb(struct alchemy_task **tcbp, RT_TASK *task,
@@ -247,13 +250,6 @@ static int create_tcb(struct alchemy_task **tcbp, RT_TASK *task,
 		task->handle = tcb->self.handle;
 
 	return 0;
-}
-
-static void delete_tcb(struct alchemy_task *tcb)
-{
-	threadobj_destroy(&tcb->thobj);
-	syncobj_uninit(&tcb->sobj_msg);
-	threadobj_free(tcb);
 }
 
 /**
