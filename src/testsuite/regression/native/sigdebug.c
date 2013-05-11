@@ -93,7 +93,7 @@ void rt_task_body(void *cookie)
 	setup_checkdebug(SIGDEBUG_MIGRATE_SIGNAL);
 	err = rt_sem_v(&send_signal);
 	check_no_error("rt_sem_v", err);
-	rt_task_sleep(10000000LL);
+	rt_task_sleep(rt_timer_ns2ticks(10000000LL));
 	check_sigdebug_received("SIGDEBUG_MIGRATE_SIGNAL");
 
 	rt_printf("relaxed mutex owner\n");
@@ -237,7 +237,7 @@ int main(int argc, char **argv)
 	check_no_error("rt_sem_signal", err);
 	pthread_kill(rt_task_thread, SIGUSR1);
 
-	rt_task_sleep(20000000LL);
+	rt_task_sleep(rt_timer_ns2ticks(20000000LL));
 
 	err = rt_mutex_release(&prio_invert);
 	check_no_error("rt_mutex_release", err);
