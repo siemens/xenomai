@@ -544,7 +544,7 @@ int rt_task_start(RT_TASK *task,
 {
 	struct alchemy_task *tcb;
 	struct service svc;
-	int ret = 0;
+	int ret;
 
 	COPPERPLATE_PROTECT(svc);
 
@@ -554,8 +554,15 @@ int rt_task_start(RT_TASK *task,
 
 	tcb->entry = entry;
 	tcb->arg = arg;
-	threadobj_start(&tcb->thobj);
-	put_alchemy_task(tcb);
+	ret = threadobj_start(&tcb->thobj);
+	if (ret == -EIDRM)
+		/*
+		 * The started thread has run then exited, tcb->thobj
+		 * is stale: don't touch it anymore.
+		 */
+		ret = 0;
+	else
+		put_alchemy_task(tcb);
 out:
 	COPPERPLATE_PROTECT(svc);
 

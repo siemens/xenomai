@@ -351,8 +351,9 @@ u_long t_start(u_long tid,
 		task->args.arg3 = 0;
 	}
 	task->mode = mode;
-	threadobj_start(&task->thobj);
-	put_psos_task(task);
+	ret = threadobj_start(&task->thobj);
+	if (ret != -EIDRM)
+		put_psos_task(task);
 
 	return SUCCESS;
 }

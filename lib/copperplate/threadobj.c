@@ -797,6 +797,19 @@ void threadobj_init(struct threadobj *thobj,
 	threadobj_init_corespec(thobj);
 }
 
+static void destroy_thread(struct threadobj *thobj)
+{
+	__RT(pthread_cond_destroy(&thobj->barrier));
+	__RT(pthread_mutex_destroy(&thobj->lock));
+	threadobj_cleanup_corespec(thobj);
+}
+
+void threadobj_destroy(struct threadobj *thobj) /* thobj->lock free */
+{
+	assert((thobj->status & (__THREAD_S_STARTED|__THREAD_S_ACTIVE)) == 0);
+	destroy_thread(thobj);
+}
+
 /*
  * NOTE: to spare us the need for passing the equivalent of a
  * syncstate argument to each thread locking operation, we hold the
@@ -815,7 +828,7 @@ void threadobj_init(struct threadobj *thobj,
  * call these services, and these have no threadobj descriptor.
  */
 
-static int start_sync(struct threadobj *thobj, int mask)
+static int wait_on_barrier(struct threadobj *thobj, int mask)
 {
 	int oldstate, status;
 
@@ -833,27 +846,51 @@ static int start_sync(struct threadobj *thobj, int mask)
 	return status;
 }
 
-void threadobj_start(struct threadobj *thobj)	/* thobj->lock held. */
+int threadobj_start(struct threadobj *thobj)	/* thobj->lock held. */
 {
 	struct threadobj *current = threadobj_current();
+	int ret = 0, oldstate;
 
 	__threadobj_check_locked(thobj);
 
 	if (thobj->status & __THREAD_S_STARTED)
-		return;
+		return 0;
 
-	thobj->status |= __THREAD_S_STARTED;
+	thobj->status |= __THREAD_S_STARTED|__THREAD_S_SAFE;
 	__RT(pthread_cond_signal(&thobj->barrier));
 
 	if (current && thobj->priority <= current->priority)
-		return;
+		return 0;
 	/*
 	 * Caller needs synchronization with the thread being started,
 	 * which has higher priority. We shall wait until that thread
 	 * enters the user code, or aborts prior to reaching that
 	 * point, whichever comes first.
+	 *
+	 * We must not exit until the synchronization has fully taken
+	 * place, disable cancellability until then.
 	 */
-	start_sync(thobj, __THREAD_S_ACTIVE);
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &oldstate);
+
+	wait_on_barrier(thobj, __THREAD_S_ACTIVE);
+	thobj->status &= ~__THREAD_S_SAFE;
+
+	/*
+	 * If the started thread has exited before we woke up from the
+	 * barrier, its TCB was not reclaimed, to prevent us from
+	 * treading on stale memory. Reclaim it now, and tell the
+	 * caller to forget about it as well.
+	 */
+	if (thobj->run_state == __THREAD_S_DORMANT) {
+		threadobj_unlock(thobj);
+		destroy_thread(thobj);
+		threadobj_free(thobj);
+		ret = -EIDRM;
+	}
+
+	pthread_setcancelstate(oldstate, NULL);
+
+	return ret;
 }
 
 void threadobj_shadow(struct threadobj *thobj)
@@ -870,7 +907,7 @@ void threadobj_wait_start(void) /* current->lock free. */
 	int status;
 
 	threadobj_lock(current);
-	status = start_sync(current, __THREAD_S_STARTED|__THREAD_S_ABORTED);
+	status = wait_on_barrier(current, __THREAD_S_STARTED|__THREAD_S_ABORTED);
 	threadobj_unlock(current);
 
 	/*
@@ -950,6 +987,23 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 	return 0;
 }
 
+int threadobj_sleep(struct timespec *ts)
+{
+	struct threadobj *current = threadobj_current();
+	int ret;
+
+	/*
+	 * clock_nanosleep() returns -EINTR upon threadobj_unblock()
+	 * with both Cobalt and Mercury cores.
+	 */
+	current->run_state = __THREAD_S_DELAYED;
+	threadobj_save_timeout(&current->core, ts);
+	ret = -__RT(clock_nanosleep(CLOCK_COPPERPLATE, TIMER_ABSTIME, ts, NULL));
+	current->run_state = __THREAD_S_RUNNING;
+
+	return ret;
+}
+
 static void cancel_sync(struct threadobj *thobj) /* thobj->lock held */
 {
 	pthread_t tid = thobj->tid;
@@ -1019,23 +1073,6 @@ static void cancel_sync(struct threadobj *thobj) /* thobj->lock held */
 	}
 }
 
-int threadobj_sleep(struct timespec *ts)
-{
-	struct threadobj *current = threadobj_current();
-	int ret;
-
-	/*
-	 * clock_nanosleep() returns -EINTR upon threadobj_unblock()
-	 * with both Cobalt and Mercury cores.
-	 */
-	current->run_state = __THREAD_S_DELAYED;
-	threadobj_save_timeout(&current->core, ts);
-	ret = -__RT(clock_nanosleep(CLOCK_COPPERPLATE, TIMER_ABSTIME, ts, NULL));
-	current->run_state = __THREAD_S_RUNNING;
-
-	return ret;
-}
-
 /* thobj->lock held on entry, released on return */
 int threadobj_cancel(struct threadobj *thobj)
 {
@@ -1056,13 +1093,6 @@ int threadobj_cancel(struct threadobj *thobj)
 	cancel_sync(thobj);
 
 	return 0;
-}
-
-static void destroy_thread(struct threadobj *thobj)
-{
-	__RT(pthread_cond_destroy(&thobj->barrier));
-	__RT(pthread_mutex_destroy(&thobj->lock));
-	threadobj_cleanup_corespec(thobj);
 }
 
 static void finalize_thread(void *p) /* thobj->lock free */
@@ -1094,15 +1124,22 @@ static void finalize_thread(void *p) /* thobj->lock free */
 		/* Release the killer from threadobj_cancel(). */
 		__STD(sem_post)(thobj->cancel_sem);
 
-	destroy_thread(thobj);
-	threadobj_free(thobj);
-	threadobj_set_current(NULL);
-}
+	thobj->run_state = __THREAD_S_DORMANT;
 
-void threadobj_destroy(struct threadobj *thobj) /* thobj->lock free */
-{
-	assert((thobj->status & (__THREAD_S_STARTED|__THREAD_S_ACTIVE)) == 0);
-	destroy_thread(thobj);
+	/*
+	 * Do not reclaim the TCB core resources if another thread is
+	 * waiting for us to start, pending on
+	 * wait_on_barrier(). Instead, hand it over to this thread.
+	 */
+	threadobj_lock(thobj);
+	if ((thobj->status & __THREAD_S_SAFE) == 0) {
+		threadobj_unlock(thobj);
+		destroy_thread(thobj);
+		threadobj_free(thobj);
+	} else
+		threadobj_unlock(thobj);
+
+	threadobj_set_current(NULL);
 }
 
 int threadobj_unblock(struct threadobj *thobj) /* thobj->lock held */

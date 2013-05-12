@@ -436,14 +436,16 @@ out:
 STATUS taskActivate(TASK_ID tid)
 {
 	struct wind_task *task;
+	int ret;
 
 	task = get_wind_task(tid);
 	if (task == NULL)
 		return ERROR;
 
 	task->tcb->status &= ~WIND_SUSPEND;
-	threadobj_start(&task->thobj);
-	put_wind_task(task);
+	ret = threadobj_start(&task->thobj);
+	if (ret != -EIDRM)
+		put_wind_task(task);
 
 	return OK;
 }

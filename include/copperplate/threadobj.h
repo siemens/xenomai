@@ -118,16 +118,17 @@ void threadobj_save_timeout(struct threadobj_corespec *corespec,
 #define __THREAD_S_LOCKED	(1 << 5)	/* threadobj_lock() granted (debug only). */
 #define __THREAD_S_ACTIVE	(1 << 6)	/* Running user code. */
 #define __THREAD_S_SUSPENDED	(1 << 7)	/* Suspended via threadobj_suspend(). */
-#define __THREAD_S_DEBUG	(1 << 15)	/* Debug mode enabled. */
+#define __THREAD_S_SAFE		(1 << 8)	/* TCB release deferred. */
+#define __THREAD_S_DEBUG	(1 << 31)	/* Debug mode enabled. */
 /*
  * threadobj->run_state, locklessly updated by "current", merged
  * with ->status bits by threadobj_get_status().
  */
 #define __THREAD_S_RUNNING	0
-#define __THREAD_S_DORMANT	(1 << 8)
-#define __THREAD_S_WAIT		(1 << 9)
-#define __THREAD_S_TIMEDWAIT	(1 << 10)
-#define __THREAD_S_DELAYED	(1 << 11)
+#define __THREAD_S_DORMANT	(1 << 16)
+#define __THREAD_S_WAIT		(1 << 17)
+#define __THREAD_S_TIMEDWAIT	(1 << 18)
+#define __THREAD_S_DELAYED	(1 << 19)
 
 /* threadobj mode bits */
 #define __THREAD_M_LOCK		(1 << 0) /* Toggle scheduler lock. */
@@ -275,7 +276,7 @@ static inline void threadobj_free(struct threadobj *thobj)
 void threadobj_init(struct threadobj *thobj,
 		    struct threadobj_init_data *idata);
 
-void threadobj_start(struct threadobj *thobj);
+int threadobj_start(struct threadobj *thobj);
 
 void threadobj_shadow(struct threadobj *thobj);
 
