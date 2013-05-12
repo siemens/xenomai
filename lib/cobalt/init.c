@@ -53,7 +53,7 @@ void cobalt_clock_init(int);
 
 static void sigill_handler(int sig)
 {
-	const char *m = "Xenomai disabled in kernel?\n";
+	const char m[] = "Xenomai disabled in kernel?\n";
 	write(2, m, sizeof(m) - 1);
 	exit(EXIT_FAILURE);
 }
