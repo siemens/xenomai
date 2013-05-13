@@ -38,6 +38,9 @@ OPTIONS
 *-h*::
 print histograms of min, avg, max latencies
 
+*-g <file>*::
+dump histogram to <file> in gnuplot format
+
 *-s*::
 print statistics of min, avg, max latencies
 
@@ -73,6 +76,9 @@ pin measuring task down to given CPU
 
 *-P <priority>*::
 task priority (test mode 0 and 1 only)
+
+*-b*::
+break upon mode switch
 
 AUTHOR
 -------
