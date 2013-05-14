@@ -208,6 +208,7 @@ static void *__pthread_trampoline(void *arg)
 		if (policy != SCHED_OTHER)
 			XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
 		status = start(cookie);
+		pthread_set_mode_np(PTHREAD_WARNSW, 0);
 	} else
 		status = (void *)-err;
 
