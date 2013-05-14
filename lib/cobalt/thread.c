@@ -207,9 +207,9 @@ static void *__pthread_trampoline(void *p)
 	 * trashing the syscall registers (see later comment).
 	 */
 	volatile pthread_t tid = pthread_self();
+	void *(*start)(void *), *arg, *retval;
 	struct pthread_iargs *iargs = p;
 	struct sched_param_ex param_ex;
-	void *(*start)(void *), *arg;
 	unsigned long mode_offset;
 	int parent_prio, policy;
 	long ret;
@@ -226,7 +226,7 @@ static void *__pthread_trampoline(void *p)
 	/* Set our scheduling parameters for the host kernel first. */
 	ret = libc_setschedparam(tid, policy, &param_ex);
 	if (ret)
-		goto out;
+		goto sync_with_creator;
 
 	/*
 	 * Do _not_ inline the call to pthread_self() in the syscall
@@ -245,7 +245,7 @@ static void *__pthread_trampoline(void *p)
 	 * unwind the stack space onto which the iargs struct is laid
 	 * on before we actually get the CPU back.
 	 */
-out:
+sync_with_creator:
 	iargs->ret = -ret;
 	__STD(sem_post(&iargs->sync));
 	if (ret)
@@ -262,7 +262,11 @@ out:
 	if (policy != SCHED_OTHER && policy != SCHED_WEAK)
 		XENOMAI_SYSCALL1(sc_nucleus_migrate, XENOMAI_XENO_DOMAIN);
 
-	return start(arg);
+	retval = start(arg);
+
+	pthread_set_mode_np(PTHREAD_WARNSW, 0, NULL);
+
+	return retval;
 }
 
 int pthread_create_ex(pthread_t *tid,
