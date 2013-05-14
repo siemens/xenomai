@@ -118,6 +118,12 @@ void registry_touch_file(struct fsobj *fsobj)
 }
 
 static inline
+int __registry_pkg_init(const char *arg0, char *mountpt)
+{
+	return 0;
+}
+
+static inline
 int registry_pkg_init(const char *arg0)
 {
 	return 0;
