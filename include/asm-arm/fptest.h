@@ -32,7 +32,7 @@ static inline void fp_linux_end(void)
 
 static int have_vfp;
 
-static void __attribute__((constructor)) fp_init(void)
+static void __attribute__((constructor, noclone)) fp_init(void)
 {
 	char buffer[1024];
 	FILE *f = fopen("/proc/cpuinfo", "r");

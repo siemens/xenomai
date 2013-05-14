@@ -28,7 +28,7 @@ xnsysinfo_t __psos_sysinfo;
 
 unsigned psos_long_names;
 
-static __attribute__ ((constructor))
+static __attribute__ ((constructor, noclone))
 void __init_xeno_interface(void)
 {
 	u_long err, tid;

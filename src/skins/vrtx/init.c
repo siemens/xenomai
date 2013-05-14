@@ -36,7 +36,7 @@ static void __flush_tsd(void *tsd)
 	free(tsd);
 }
 
-static __attribute__ ((constructor))
+static __attribute__ ((constructor, noclone))
 void __init_vrtx_tskey(void)
 {
 	/* Allocate a TSD key for indexing self task pointers. */
@@ -48,7 +48,7 @@ void __init_vrtx_tskey(void)
 }
 #endif /* !HAVE___THREAD */
 
-static __attribute__ ((constructor))
+static __attribute__ ((constructor, noclone))
 void __init_xeno_interface(void)
 {
 	__vrtx_muxid =
