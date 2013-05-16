@@ -874,31 +874,14 @@ void __xnpod_cleanup_thread(struct xnthread *thread)
 	wake_up(&nkjoinq);
 }
 
-/**
- * @fn void xnpod_testcancel_thread(void)
- *
- * @brief Introduce a thread cancellation point.
- *
- * Terminates the current thread if a cancellation request is pending
- * for it, i.e. if xnpod_cancel_thread() was called.
- *
- * Calling context: This service may be called from all runtime modes.
- *
- * Rescheduling: always in case of cancellation from primary mode.
- */
-void xnpod_testcancel_thread(void)
+void __xnpod_testcancel_thread(struct xnthread *curr)
 {
-	struct xnthread *curr = xnshadow_current();
-
-	if (curr == NULL || !xnthread_test_info(curr, XNCANCELD))
-		return;
-
 	if (!xnthread_test_state(curr, XNRELAX))
 		xnshadow_relax(0, 0);
 
 	do_exit(0);
 }
-EXPORT_SYMBOL_GPL(xnpod_testcancel_thread);
+EXPORT_SYMBOL_GPL(__xnpod_testcancel_thread);
 
 /**
  * @fn void xnpod_cancel_thread(struct xnthread *thread)

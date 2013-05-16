@@ -32,6 +32,7 @@
  *@{*/
 
 #include <nucleus/sched.h>
+#include <nucleus/shadow.h>
 
 /* Pod status flags */
 #define XNFATAL  0x00000001	/* Fatal error in progress */
@@ -194,8 +195,6 @@ int xnpod_start_thread(xnthread_t *thread,
 
 void xnpod_stop_thread(xnthread_t *thread);
 
-void xnpod_testcancel_thread(void);
-
 void xnpod_cancel_thread(xnthread_t *thread);
 
 void xnpod_join_thread(xnthread_t *thread);
@@ -306,6 +305,27 @@ static inline void xnpod_unlock_sched(void)
 	sched = xnpod_current_sched();
 	___xnpod_unlock_sched(sched);
 	xnlock_put_irqrestore(&nklock, s);
+}
+
+void __xnpod_testcancel_thread(struct xnthread *curr);
+
+/**
+ * @fn void xnpod_testcancel_thread(void)
+ *
+ * @brief Introduce a thread cancellation point.
+ *
+ * Terminates the current thread if a cancellation request is pending
+ * for it, i.e. if xnpod_cancel_thread() was called.
+ *
+ * Calling context: This service may be called from all runtime modes
+ * of kernel or user-space threads.
+ */
+static inline void xnpod_testcancel_thread(void)
+{
+	struct xnthread *curr = xnshadow_current();
+
+	if (curr && xnthread_test_info(curr, XNCANCELD))
+		__xnpod_testcancel_thread(curr);
 }
 
 int xnpod_handle_exception(struct ipipe_trap_data *d);
