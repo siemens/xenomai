@@ -334,8 +334,6 @@ static void __queue_post_release(struct xnheap *heap)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	removeq(q->rqueue, &q->rlink);
-
 	if (q->handle)
 		xnregistry_remove(q->handle);
 
@@ -404,6 +402,7 @@ int rt_queue_delete_inner(RT_QUEUE *q, void __user *mapaddr)
 	}
 
 	xeno_mark_deleted(q);
+	removeq(q->rqueue, &q->rlink);
 
 	/* Get out of the nklocked section before releasing the heap
 	   memory, since we are about to invoke Linux kernel services. */
