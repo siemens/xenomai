@@ -34,8 +34,8 @@ static pthread_attr_ex_t default_attr_ex;
 
 static int linuxthreads;
 
-int __wrap_pthread_setschedparam(pthread_t thread,
-				 int policy, const struct sched_param *param)
+COBALT_IMPL(int, pthread_setschedparam, (pthread_t thread,
+					 int policy, const struct sched_param *param))
 {
 	volatile pthread_t myself = pthread_self();
 	unsigned long mode_offset;
@@ -94,9 +94,9 @@ int pthread_setschedparam_ex(pthread_t thread,
 	return ret;
 }
 
-int __wrap_pthread_getschedparam(pthread_t thread,
-				 int *__restrict__ policy,
-				 struct sched_param *__restrict__ param)
+COBALT_IMPL(int, pthread_getschedparam, (pthread_t thread,
+					 int *__restrict__ policy,
+					 struct sched_param *__restrict__ param))
 {
 	int ret;
 
@@ -128,7 +128,7 @@ int pthread_getschedparam_ex(pthread_t thread,
 	return ret;
 }
 
-int __wrap_sched_yield(void)
+COBALT_IMPL(int, sched_yield, (void))
 {
 	int ret;
 
@@ -139,7 +139,7 @@ int __wrap_sched_yield(void)
 	return ret;
 }
 
-int __wrap_sched_get_priority_min(int policy)
+COBALT_IMPL(int, sched_get_priority_min, (int policy))
 {
 	int ret;
 
@@ -154,7 +154,7 @@ int __wrap_sched_get_priority_min(int policy)
 	return ret;
 }
 
-int __wrap_sched_get_priority_max(int policy)
+COBALT_IMPL(int, sched_get_priority_max, (int policy))
 {
 	int ret;
 
@@ -169,7 +169,7 @@ int __wrap_sched_get_priority_max(int policy)
 	return ret;
 }
 
-int __wrap_pthread_yield(void)
+COBALT_IMPL(int, pthread_yield, (void))
 {
 	return __wrap_sched_yield();
 }
@@ -315,9 +315,9 @@ fail:
 	return ret;
 }
 
-int __wrap_pthread_create(pthread_t *tid,
-			  const pthread_attr_t *attr,
-			  void *(*start) (void *), void *arg)
+COBALT_IMPL(int, pthread_create, (pthread_t *tid,
+				  const pthread_attr_t *attr,
+				  void *(*start) (void *), void *arg))
 {
 	pthread_attr_ex_t attr_ex;
 	struct sched_param param;
@@ -386,7 +386,7 @@ int sched_setconfig_np(int cpu, int policy,
 				  cpu, policy, config, len);
 }
 
-int __wrap_pthread_kill(pthread_t thread, int sig)
+COBALT_IMPL(int, pthread_kill, (pthread_t thread, int sig))
 {
 	int ret;
 

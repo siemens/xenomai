@@ -25,7 +25,7 @@
 #include <mqueue.h>
 #include "internal.h"
 
-mqd_t __wrap_mq_open(const char *name, int oflags, ...)
+COBALT_IMPL(mqd_t, mq_open, (const char *name, int oflags, ...))
 {
 	struct mq_attr *attr = NULL;
 	mode_t mode = 0;
@@ -54,7 +54,7 @@ mqd_t __wrap_mq_open(const char *name, int oflags, ...)
 	return (mqd_t) - 1;
 }
 
-int __wrap_mq_close(mqd_t q)
+COBALT_IMPL(int, mq_close, (mqd_t q))
 {
 	int err;
 
@@ -66,7 +66,7 @@ int __wrap_mq_close(mqd_t q)
 	return -1;
 }
 
-int __wrap_mq_unlink(const char *name)
+COBALT_IMPL(int, mq_unlink, (const char *name))
 {
 	int err;
 
@@ -78,7 +78,7 @@ int __wrap_mq_unlink(const char *name)
 	return -1;
 }
 
-int __wrap_mq_getattr(mqd_t q, struct mq_attr *attr)
+COBALT_IMPL(int, mq_getattr, (mqd_t q, struct mq_attr *attr))
 {
 	int err;
 
@@ -90,9 +90,9 @@ int __wrap_mq_getattr(mqd_t q, struct mq_attr *attr)
 	return -1;
 }
 
-int __wrap_mq_setattr(mqd_t q,
-		      const struct mq_attr *__restrict__ attr,
-		      struct mq_attr *__restrict__ oattr)
+COBALT_IMPL(int, mq_setattr, (mqd_t q,
+			      const struct mq_attr *__restrict__ attr,
+			      struct mq_attr *__restrict__ oattr))
 {
 	int err;
 
@@ -105,7 +105,7 @@ int __wrap_mq_setattr(mqd_t q,
 	return -1;
 }
 
-int __wrap_mq_send(mqd_t q, const char *buffer, size_t len, unsigned prio)
+COBALT_IMPL(int, mq_send, (mqd_t q, const char *buffer, size_t len, unsigned prio))
 {
 	int err, oldtype;
 
@@ -123,10 +123,10 @@ int __wrap_mq_send(mqd_t q, const char *buffer, size_t len, unsigned prio)
 	return -1;
 }
 
-int __wrap_mq_timedsend(mqd_t q,
-			const char *buffer,
-			size_t len,
-			unsigned prio, const struct timespec *timeout)
+COBALT_IMPL(int, mq_timedsend, (mqd_t q,
+				const char *buffer,
+				size_t len,
+				unsigned prio, const struct timespec *timeout))
 {
 	int err, oldtype;
 
@@ -145,7 +145,7 @@ int __wrap_mq_timedsend(mqd_t q,
 	return -1;
 }
 
-ssize_t __wrap_mq_receive(mqd_t q, char *buffer, size_t len, unsigned *prio)
+COBALT_IMPL(ssize_t, mq_receive, (mqd_t q, char *buffer, size_t len, unsigned *prio))
 {
 	ssize_t rlen = (ssize_t) len;
 	int err, oldtype;
@@ -164,11 +164,11 @@ ssize_t __wrap_mq_receive(mqd_t q, char *buffer, size_t len, unsigned *prio)
 	return -1;
 }
 
-ssize_t __wrap_mq_timedreceive(mqd_t q,
-			       char *__restrict__ buffer,
-			       size_t len,
-			       unsigned *__restrict__ prio,
-			       const struct timespec * __restrict__ timeout)
+COBALT_IMPL(ssize_t, mq_timedreceive, (mqd_t q,
+				       char *__restrict__ buffer,
+				       size_t len,
+				       unsigned *__restrict__ prio,
+				       const struct timespec * __restrict__ timeout))
 {
 	ssize_t rlen = (ssize_t) len;
 	int err, oldtype;
@@ -188,7 +188,7 @@ ssize_t __wrap_mq_timedreceive(mqd_t q,
 	return -1;
 }
 
-int __wrap_mq_notify(mqd_t q, const struct sigevent *evp)
+COBALT_IMPL(int, mq_notify, (mqd_t q, const struct sigevent *evp))
 {
 	int err;
 

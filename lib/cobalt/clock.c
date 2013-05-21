@@ -41,7 +41,7 @@ void cobalt_clock_init(int muxid)
 	}
 }
 
-int __wrap_clock_getres(clockid_t clock_id, struct timespec *tp)
+COBALT_IMPL(int, clock_getres, (clockid_t clock_id, struct timespec *tp))
 {
 	int err = -XENOMAI_SKINCALL2(__cobalt_muxid,
 				     sc_cobalt_clock_getres,
@@ -99,7 +99,7 @@ retry:
 	return 0;
 }
 
-int __wrap_clock_gettime(clockid_t clock_id, struct timespec *tp)
+COBALT_IMPL(int, clock_gettime, (clockid_t clock_id, struct timespec *tp))
 {
 	unsigned long long ns;
 	unsigned long rem;
@@ -130,7 +130,7 @@ int __wrap_clock_gettime(clockid_t clock_id, struct timespec *tp)
 	return 0;
 }
 
-int __wrap_clock_settime(clockid_t clock_id, const struct timespec *tp)
+COBALT_IMPL(int, clock_settime, (clockid_t clock_id, const struct timespec *tp))
 {
 	int err = -XENOMAI_SKINCALL2(__cobalt_muxid,
 				     sc_cobalt_clock_settime,
@@ -144,9 +144,9 @@ int __wrap_clock_settime(clockid_t clock_id, const struct timespec *tp)
 	return -1;
 }
 
-int __wrap_clock_nanosleep(clockid_t clock_id,
-			   int flags,
-			   const struct timespec *rqtp, struct timespec *rmtp)
+COBALT_IMPL(int, clock_nanosleep, (clockid_t clock_id,
+				   int flags,
+				   const struct timespec *rqtp, struct timespec *rmtp))
 {
 	int err, oldtype;
 
@@ -161,7 +161,7 @@ int __wrap_clock_nanosleep(clockid_t clock_id,
 	return err;
 }
 
-int __wrap_nanosleep(const struct timespec *rqtp, struct timespec *rmtp)
+COBALT_IMPL(int, nanosleep, (const struct timespec *rqtp, struct timespec *rmtp))
 {
 	int err = __wrap_clock_nanosleep(CLOCK_REALTIME, 0, rqtp, rmtp);
 

@@ -39,7 +39,7 @@ static inline int set_errno(int ret)
 	return -1;
 }
 
-int __wrap_open(const char *path, int oflag, ...)
+COBALT_IMPL(int, open, (const char *path, int oflag, ...))
 {
 	int ret, oldtype;
 	const char *rtdm_path = path;
@@ -78,7 +78,7 @@ int __wrap_open(const char *path, int oflag, ...)
 	return ret;
 }
 
-int __wrap_socket(int protocol_family, int socket_type, int protocol)
+COBALT_IMPL(int, socket, (int protocol_family, int socket_type, int protocol))
 {
 	int ret;
 
@@ -103,7 +103,7 @@ int __wrap_socket(int protocol_family, int socket_type, int protocol)
 	return ret;
 }
 
-int __wrap_close(int fd)
+COBALT_IMPL(int, close, (int fd))
 {
 	int ret;
 
@@ -125,7 +125,7 @@ int __wrap_close(int fd)
 	return ret;
 }
 
-int __wrap_ioctl(int fd, unsigned long int request, ...)
+COBALT_IMPL(int, ioctl, (int fd, unsigned long int request, ...))
 {
 	va_list ap;
 	void *arg;
@@ -143,7 +143,7 @@ int __wrap_ioctl(int fd, unsigned long int request, ...)
 		return __STD(ioctl(fd, request, arg));
 }
 
-ssize_t __wrap_read(int fd, void *buf, size_t nbyte)
+COBALT_IMPL(ssize_t, read, (int fd, void *buf, size_t nbyte))
 {
 	if (fd >= __rtdm_fd_start) {
 		int ret, oldtype;
@@ -162,7 +162,7 @@ ssize_t __wrap_read(int fd, void *buf, size_t nbyte)
 		return __STD(read(fd, buf, nbyte));
 }
 
-ssize_t __wrap_write(int fd, const void *buf, size_t nbyte)
+COBALT_IMPL(ssize_t, write, (int fd, const void *buf, size_t nbyte))
 {
 	if (fd >= __rtdm_fd_start) {
 		int ret, oldtype;
@@ -181,7 +181,7 @@ ssize_t __wrap_write(int fd, const void *buf, size_t nbyte)
 		return __STD(write(fd, buf, nbyte));
 }
 
-ssize_t __wrap_recvmsg(int fd, struct msghdr * msg, int flags)
+COBALT_IMPL(ssize_t, recvmsg, (int fd, struct msghdr * msg, int flags))
 {
 	if (fd >= __rtdm_fd_start) {
 		int ret, oldtype;
@@ -200,7 +200,7 @@ ssize_t __wrap_recvmsg(int fd, struct msghdr * msg, int flags)
 		return __STD(recvmsg(fd, msg, flags));
 }
 
-ssize_t __wrap_sendmsg(int fd, const struct msghdr * msg, int flags)
+COBALT_IMPL(ssize_t, sendmsg, (int fd, const struct msghdr * msg, int flags))
 {
 	if (fd >= __rtdm_fd_start) {
 		int ret, oldtype;
@@ -219,8 +219,8 @@ ssize_t __wrap_sendmsg(int fd, const struct msghdr * msg, int flags)
 		return __STD(sendmsg(fd, msg, flags));
 }
 
-ssize_t __wrap_recvfrom(int fd, void *buf, size_t len, int flags,
-			struct sockaddr * from, socklen_t * fromlen)
+COBALT_IMPL(ssize_t, recvfrom, (int fd, void *buf, size_t len, int flags,
+				struct sockaddr * from, socklen_t * fromlen))
 {
 	if (fd >= __rtdm_fd_start) {
 		struct iovec iov = { buf, len };
@@ -246,8 +246,8 @@ ssize_t __wrap_recvfrom(int fd, void *buf, size_t len, int flags,
 		return __STD(recvfrom(fd, buf, len, flags, from, fromlen));
 }
 
-ssize_t __wrap_sendto(int fd, const void *buf, size_t len, int flags,
-		      const struct sockaddr * to, socklen_t tolen)
+COBALT_IMPL(ssize_t, sendto, (int fd, const void *buf, size_t len, int flags,
+			      const struct sockaddr * to, socklen_t tolen))
 {
 	if (fd >= __rtdm_fd_start) {
 		struct iovec iov = { (void *)buf, len };
@@ -269,7 +269,7 @@ ssize_t __wrap_sendto(int fd, const void *buf, size_t len, int flags,
 		return __STD(sendto(fd, buf, len, flags, to, tolen));
 }
 
-ssize_t __wrap_recv(int fd, void *buf, size_t len, int flags)
+COBALT_IMPL(ssize_t, recv, (int fd, void *buf, size_t len, int flags))
 {
 	if (fd >= __rtdm_fd_start) {
 		struct iovec iov = { buf, len };
@@ -290,7 +290,7 @@ ssize_t __wrap_recv(int fd, void *buf, size_t len, int flags)
 		return __STD(recv(fd, buf, len, flags));
 }
 
-ssize_t __wrap_send(int fd, const void *buf, size_t len, int flags)
+COBALT_IMPL(ssize_t, send, (int fd, const void *buf, size_t len, int flags))
 {
 	if (fd >= __rtdm_fd_start) {
 		struct iovec iov = { (void *)buf, len };
@@ -311,8 +311,8 @@ ssize_t __wrap_send(int fd, const void *buf, size_t len, int flags)
 		return __STD(send(fd, buf, len, flags));
 }
 
-int __wrap_getsockopt(int fd, int level, int optname, void *optval,
-		      socklen_t * optlen)
+COBALT_IMPL(int, getsockopt, (int fd, int level, int optname, void *optval,
+			      socklen_t * optlen))
 {
 	if (fd >= __rtdm_fd_start) {
 		struct _rtdm_getsockopt_args args =
@@ -326,8 +326,8 @@ int __wrap_getsockopt(int fd, int level, int optname, void *optval,
 		return __STD(getsockopt(fd, level, optname, optval, optlen));
 }
 
-int __wrap_setsockopt(int fd, int level, int optname, const void *optval,
-		      socklen_t optlen)
+COBALT_IMPL(int, setsockopt, (int fd, int level, int optname, const void *optval,
+			      socklen_t optlen))
 {
 	if (fd >= __rtdm_fd_start) {
 		struct _rtdm_setsockopt_args args =
@@ -341,7 +341,7 @@ int __wrap_setsockopt(int fd, int level, int optname, const void *optval,
 		return __STD(setsockopt(fd, level, optname, optval, optlen));
 }
 
-int __wrap_bind(int fd, const struct sockaddr *my_addr, socklen_t addrlen)
+COBALT_IMPL(int, bind, (int fd, const struct sockaddr *my_addr, socklen_t addrlen))
 {
 	if (fd >= __rtdm_fd_start) {
 		struct _rtdm_setsockaddr_args args = { my_addr, addrlen };
@@ -354,7 +354,7 @@ int __wrap_bind(int fd, const struct sockaddr *my_addr, socklen_t addrlen)
 		return __STD(bind(fd, my_addr, addrlen));
 }
 
-int __wrap_connect(int fd, const struct sockaddr *serv_addr, socklen_t addrlen)
+COBALT_IMPL(int, connect, (int fd, const struct sockaddr *serv_addr, socklen_t addrlen))
 {
 	if (fd >= __rtdm_fd_start) {
 		struct _rtdm_setsockaddr_args args = { serv_addr, addrlen };
@@ -374,7 +374,7 @@ int __wrap_connect(int fd, const struct sockaddr *serv_addr, socklen_t addrlen)
 		return __STD(connect(fd, serv_addr, addrlen));
 }
 
-int __wrap_listen(int fd, int backlog)
+COBALT_IMPL(int, listen, (int fd, int backlog))
 {
 	if (fd >= __rtdm_fd_start) {
 		return set_errno(XENOMAI_SKINCALL3(__rtdm_muxid,
@@ -385,7 +385,7 @@ int __wrap_listen(int fd, int backlog)
 		return __STD(listen(fd, backlog));
 }
 
-int __wrap_accept(int fd, struct sockaddr *addr, socklen_t * addrlen)
+COBALT_IMPL(int, accept, (int fd, struct sockaddr *addr, socklen_t * addrlen))
 {
 	if (fd >= __rtdm_fd_start) {
 		struct _rtdm_getsockaddr_args args = { addr, addrlen };
@@ -417,7 +417,7 @@ int __wrap_accept(int fd, struct sockaddr *addr, socklen_t * addrlen)
 	}
 }
 
-int __wrap_getsockname(int fd, struct sockaddr *name, socklen_t * namelen)
+COBALT_IMPL(int, getsockname, (int fd, struct sockaddr *name, socklen_t *namelen))
 {
 	if (fd >= __rtdm_fd_start) {
 		struct _rtdm_getsockaddr_args args = { name, namelen };
@@ -430,7 +430,7 @@ int __wrap_getsockname(int fd, struct sockaddr *name, socklen_t * namelen)
 		return __STD(getsockname(fd, name, namelen));
 }
 
-int __wrap_getpeername(int fd, struct sockaddr *name, socklen_t * namelen)
+COBALT_IMPL(int, getpeername, (int fd, struct sockaddr *name, socklen_t *namelen))
 {
 	if (fd >= __rtdm_fd_start) {
 		struct _rtdm_getsockaddr_args args = { name, namelen };
@@ -443,7 +443,7 @@ int __wrap_getpeername(int fd, struct sockaddr *name, socklen_t * namelen)
 		return __STD(getpeername(fd, name, namelen));
 }
 
-int __wrap_shutdown(int fd, int how)
+COBALT_IMPL(int, shutdown, (int fd, int how))
 {
 	if (fd >= __rtdm_fd_start) {
 		return set_errno(XENOMAI_SKINCALL3(__rtdm_muxid,

@@ -3,6 +3,8 @@
 --wrap pthread_getschedparam
 --wrap pthread_yield
 --wrap sched_yield
+--wrap sched_get_priority_min
+--wrap sched_get_priority_max
 --wrap pthread_kill
 --wrap sem_init
 --wrap sem_destroy
@@ -54,6 +56,7 @@
 --wrap mq_timedsend
 --wrap mq_receive
 --wrap mq_timedreceive
+--wrap mq_notify
 --wrap open
 --wrap socket
 --wrap close

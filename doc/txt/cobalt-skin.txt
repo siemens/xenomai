@@ -91,7 +91,7 @@ overriden by Cobalt services, but can instead be used directly and
 seamlessly by the application.
 
 The list of shadowed POSIX services is available from the file
-lib/posix.wrappers.
+lib/cobalt.wrappers.
 
 --------------------------BEWARE------------------------------------
 Building an application which uses the real-time POSIX support
@@ -106,7 +106,7 @@ Original (i.e. un-shadowed) calls can still be invoked from the
 application, by prefixing their name with
 "__real_". E.g. __real_sem_init() calls the original initialization
 routine for semaphores as provided by the LinuxThreads/NPTL
-implementation. All services listed in lib/posix.wrappers are
+implementation. All services listed in lib/cobalt.wrappers are
 substituted with their Xenomai replacement when invoked through
 their vanilla names.
 

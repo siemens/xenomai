@@ -21,9 +21,9 @@
 #include <time.h>
 #include "internal.h"
 
-int __wrap_timer_create(clockid_t clockid,
-			const struct sigevent *__restrict__ evp,
-			timer_t * __restrict__ timerid)
+COBALT_IMPL(int, timer_create, (clockid_t clockid,
+				const struct sigevent *__restrict__ evp,
+				timer_t * __restrict__ timerid))
 {
 	int err = -XENOMAI_SKINCALL3(__cobalt_muxid,
 				     sc_cobalt_timer_create,
@@ -39,7 +39,7 @@ int __wrap_timer_create(clockid_t clockid,
 	return -1;
 }
 
-int __wrap_timer_delete(timer_t timerid)
+COBALT_IMPL(int, timer_delete, (timer_t timerid))
 {
 	int err = -XENOMAI_SKINCALL1(__cobalt_muxid,
 				     sc_cobalt_timer_delete,
@@ -53,10 +53,10 @@ int __wrap_timer_delete(timer_t timerid)
 	return -1;
 }
 
-int __wrap_timer_settime(timer_t timerid,
-			 int flags,
-			 const struct itimerspec *__restrict__ value,
-			 struct itimerspec *__restrict__ ovalue)
+COBALT_IMPL(int, timer_settime, (timer_t timerid,
+				 int flags,
+				 const struct itimerspec *__restrict__ value,
+				 struct itimerspec *__restrict__ ovalue))
 {
 	int err = -XENOMAI_SKINCALL4(__cobalt_muxid,
 				     sc_cobalt_timer_settime,
@@ -73,7 +73,7 @@ int __wrap_timer_settime(timer_t timerid,
 	return -1;
 }
 
-int __wrap_timer_gettime(timer_t timerid, struct itimerspec *value)
+COBALT_IMPL(int, timer_gettime, (timer_t timerid, struct itimerspec *value))
 {
 	int err = -XENOMAI_SKINCALL2(__cobalt_muxid,
 				     sc_cobalt_timer_gettime,
@@ -88,7 +88,7 @@ int __wrap_timer_gettime(timer_t timerid, struct itimerspec *value)
 	return -1;
 }
 
-int __wrap_timer_getoverrun(timer_t timerid)
+COBALT_IMPL(int, timer_getoverrun, (timer_t timerid))
 {
 	int overrun = XENOMAI_SKINCALL1(__cobalt_muxid,
 					sc_cobalt_timer_getoverrun,

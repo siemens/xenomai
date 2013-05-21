@@ -26,7 +26,7 @@
 #include <semaphore.h>
 #include "internal.h"
 
-int __wrap_sem_init(sem_t *sem, int pshared, unsigned value)
+COBALT_IMPL(int, sem_init, (sem_t *sem, int pshared, unsigned value))
 {
 	struct __shadow_sem *_sem = &((union __xeno_sem *)sem)->shadow_sem;
 	int err;
@@ -41,7 +41,7 @@ int __wrap_sem_init(sem_t *sem, int pshared, unsigned value)
 	return -1;
 }
 
-int __wrap_sem_destroy(sem_t *sem)
+COBALT_IMPL(int, sem_destroy, (sem_t *sem))
 {
 	struct __shadow_sem *_sem = &((union __xeno_sem *)sem)->shadow_sem;
 	int err;
@@ -60,7 +60,7 @@ int __wrap_sem_destroy(sem_t *sem)
 	return -1;
 }
 
-int __wrap_sem_post(sem_t *sem)
+COBALT_IMPL(int, sem_post, (sem_t *sem))
 {
 	struct __shadow_sem *_sem = &((union __xeno_sem *)sem)->shadow_sem;
 	int err;
@@ -79,7 +79,7 @@ int __wrap_sem_post(sem_t *sem)
 	return -1;
 }
 
-int __wrap_sem_wait(sem_t *sem)
+COBALT_IMPL(int, sem_wait, (sem_t *sem))
 {
 	struct __shadow_sem *_sem = &((union __xeno_sem *)sem)->shadow_sem;
 	int err, oldtype;
@@ -103,7 +103,7 @@ int __wrap_sem_wait(sem_t *sem)
 	return -1;
 }
 
-int __wrap_sem_timedwait(sem_t *sem, const struct timespec *ts)
+COBALT_IMPL(int, sem_timedwait, (sem_t *sem, const struct timespec *ts))
 {
 	struct __shadow_sem *_sem = &((union __xeno_sem *)sem)->shadow_sem;
 	int err, oldtype;
@@ -128,7 +128,7 @@ int __wrap_sem_timedwait(sem_t *sem, const struct timespec *ts)
 	return -1;
 }
 
-int __wrap_sem_trywait(sem_t *sem)
+COBALT_IMPL(int, sem_trywait, (sem_t *sem))
 {
 	struct __shadow_sem *_sem = &((union __xeno_sem *)sem)->shadow_sem;
 	int err;
@@ -147,7 +147,7 @@ int __wrap_sem_trywait(sem_t *sem)
 	return -1;
 }
 
-int __wrap_sem_getvalue(sem_t *sem, int *sval)
+COBALT_IMPL(int, sem_getvalue, (sem_t *sem, int *sval))
 {
 	struct __shadow_sem *_sem = &((union __xeno_sem *)sem)->shadow_sem;
 	int err;
@@ -167,7 +167,7 @@ int __wrap_sem_getvalue(sem_t *sem, int *sval)
 	return -1;
 }
 
-sem_t *__wrap_sem_open(const char *name, int oflags, ...)
+COBALT_IMPL(sem_t *, sem_open, (const char *name, int oflags, ...))
 {
 	union __xeno_sem *sem, *rsem;
 	unsigned value = 0;
@@ -205,7 +205,7 @@ sem_t *__wrap_sem_open(const char *name, int oflags, ...)
 	return SEM_FAILED;
 }
 
-int __wrap_sem_close(sem_t *sem)
+COBALT_IMPL(int, sem_close, (sem_t *sem))
 {
 	struct __shadow_sem *_sem = &((union __xeno_sem *)sem)->shadow_sem;
 	int err, closed;
@@ -228,7 +228,7 @@ int __wrap_sem_close(sem_t *sem)
 	return -1;
 }
 
-int __wrap_sem_unlink(const char *name)
+COBALT_IMPL(int, sem_unlink, (const char *name))
 {
 	int err;
 

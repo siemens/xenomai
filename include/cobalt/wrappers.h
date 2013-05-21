@@ -19,8 +19,33 @@
 #ifndef _COBALT_WRAPPERS_H
 #define _COBALT_WRAPPERS_H
 
-#define __RT(call)		__wrap_ ## call
+#define __stringify_1(x...)	#x
+#define __stringify(x...)	__stringify_1(x)
+
+#define __WRAP(call)		__wrap_ ## call
 #define __STD(call)		__real_ ## call
-#define COBALT_DECL(T, P)	typeof(T) __RT(P); typeof(T) __STD(P)
+#define __COBALT(call)		__cobalt_ ## call
+#define __RT(call)		__COBALT(call)
+#define COBALT_DECL(T, P)	typeof(T) __RT(P); typeof(T) __STD(P); typeof(T) __WRAP(P)
+
+/*
+ * 
+ * Each "foo" Cobalt routine shadowing a POSIX service may be
+ * overriden by an external library (see --with-cobalt-override
+ * option), in which case we generate the following symbols:
+ * 
+ * __real_foo() => Original POSIX implementation.
+ * __cobalt_foo() => Cobalt implementation.
+ * __wrap_foo() => Weak alias to __cobalt_foo(), may be
+ * overriden.
+ *
+ * In the latter case, the external library shall provide its own
+ * implementation of __wrap_foo(), overriding Cobalt's foo()
+ * version. The original Cobalt implementation can still be
+ * referenced as __COBALT(foo).
+ */
+#define COBALT_IMPL(T, I, A)								\
+typeof(T) __wrap_ ## I A __attribute__((alias("__cobalt_" __stringify(I)), weak));	\
+typeof(T) __cobalt_ ## I A
 
 #endif /* _COBALT_WRAPPERS_H */

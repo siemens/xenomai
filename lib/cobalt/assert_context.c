@@ -62,20 +62,20 @@ void assert_nrt_fast(void)
 }
 
 /* Memory allocation services */
-void *__wrap_malloc(size_t size)
+COBALT_IMPL(void *, malloc, (size_t size))
 {
 	assert_nrt();
 	return __STD(malloc(size));
 }
 
-void __wrap_free(void *ptr)
+COBALT_IMPL(void, free, (void *ptr))
 {
 	assert_nrt();
 	__STD(free(ptr));
 }
 
 /* vsyscall-based services */
-int __wrap_gettimeofday(struct timeval *tv, struct timezone *tz)
+COBALT_IMPL(int, gettimeofday, (struct timeval *tv, struct timezone *tz))
 {
 	assert_nrt();
 	return __STD(gettimeofday(tv, tz));

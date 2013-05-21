@@ -48,45 +48,45 @@ cond_get_mutex_datp(struct __shadow_cond *shadow)
 	return shadow->mutex_datp;
 }
 
-int __wrap_pthread_condattr_init(pthread_condattr_t *attr)
+COBALT_IMPL(int, pthread_condattr_init, (pthread_condattr_t *attr))
 {
 	return -XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_condattr_init, attr);
 }
 
-int __wrap_pthread_condattr_destroy(pthread_condattr_t *attr)
+COBALT_IMPL(int, pthread_condattr_destroy, (pthread_condattr_t *attr))
 {
 	return -XENOMAI_SKINCALL1(__cobalt_muxid,sc_cobalt_condattr_destroy,attr);
 }
 
-int __wrap_pthread_condattr_getclock(const pthread_condattr_t *attr,
-				     clockid_t *clk_id)
+COBALT_IMPL(int, pthread_condattr_getclock, (const pthread_condattr_t *attr,
+					     clockid_t *clk_id))
 {
 	return -XENOMAI_SKINCALL2(__cobalt_muxid,
 				  sc_cobalt_condattr_getclock, attr, clk_id);
 }
 
-int __wrap_pthread_condattr_setclock(pthread_condattr_t *attr,
-				     clockid_t clk_id)
+COBALT_IMPL(int, pthread_condattr_setclock, (pthread_condattr_t *attr,
+					     clockid_t clk_id))
 {
 	return -XENOMAI_SKINCALL2(__cobalt_muxid,
 				  sc_cobalt_condattr_setclock, attr, clk_id);
 }
 
-int __wrap_pthread_condattr_getpshared(const pthread_condattr_t *attr,
-				       int *pshared)
+COBALT_IMPL(int, pthread_condattr_getpshared, (const pthread_condattr_t *attr,
+					       int *pshared))
 {
 	return -XENOMAI_SKINCALL2(__cobalt_muxid,
 				  sc_cobalt_condattr_getpshared, attr, pshared);
 }
 
-int __wrap_pthread_condattr_setpshared(pthread_condattr_t *attr, int pshared)
+COBALT_IMPL(int, pthread_condattr_setpshared, (pthread_condattr_t *attr, int pshared))
 {
 	return -XENOMAI_SKINCALL2(__cobalt_muxid,
 				  sc_cobalt_condattr_setpshared, attr, pshared);
 }
 
-int __wrap_pthread_cond_init(pthread_cond_t *cond,
-			     const pthread_condattr_t * attr)
+COBALT_IMPL(int, pthread_cond_init, (pthread_cond_t *cond,
+				     const pthread_condattr_t * attr))
 {
 	struct __shadow_cond *_cnd = &((union __xeno_cond *)cond)->shadow_cond;
 	unsigned long *pending_signalsp;
@@ -105,7 +105,7 @@ int __wrap_pthread_cond_init(pthread_cond_t *cond,
 	return -err;
 }
 
-int __wrap_pthread_cond_destroy(pthread_cond_t *cond)
+COBALT_IMPL(int, pthread_cond_destroy, (pthread_cond_t *cond))
 {
 	struct __shadow_cond *_cond = &((union __xeno_cond *)cond)->shadow_cond;
 
@@ -133,7 +133,7 @@ static void __pthread_cond_cleanup(void *data)
 	c->mutex->lockcnt = c->count;
 }
 
-int __wrap_pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
+COBALT_IMPL(int, pthread_cond_wait, (pthread_cond_t *cond, pthread_mutex_t *mutex))
 {
 	struct __shadow_cond *_cnd = &((union __xeno_cond *)cond)->shadow_cond;
 	struct __shadow_mutex *_mx =
@@ -185,9 +185,9 @@ int __wrap_pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
 	return -err ?: -c.err;
 }
 
-int __wrap_pthread_cond_timedwait(pthread_cond_t *cond,
-				  pthread_mutex_t *mutex,
-				  const struct timespec *abstime)
+COBALT_IMPL(int, pthread_cond_timedwait, (pthread_cond_t *cond,
+					  pthread_mutex_t *mutex,
+					  const struct timespec *abstime))
 {
 	struct __shadow_cond *_cnd = &((union __xeno_cond *)cond)->shadow_cond;
 	struct __shadow_mutex *_mx =
@@ -237,7 +237,7 @@ int __wrap_pthread_cond_timedwait(pthread_cond_t *cond,
 	return -err ?: -c.err;
 }
 
-int __wrap_pthread_cond_signal(pthread_cond_t *cond)
+COBALT_IMPL(int, pthread_cond_signal, (pthread_cond_t *cond))
 {
 	struct __shadow_cond *_cnd = &((union __xeno_cond *)cond)->shadow_cond;
 	unsigned long pending_signals, *pending_signalsp;
@@ -269,7 +269,7 @@ int __wrap_pthread_cond_signal(pthread_cond_t *cond)
 	return 0;
 }
 
-int __wrap_pthread_cond_broadcast(pthread_cond_t *cond)
+COBALT_IMPL(int, pthread_cond_broadcast, (pthread_cond_t *cond))
 {
 	struct __shadow_cond *_cnd = &((union __xeno_cond *)cond)->shadow_cond;
 	struct mutex_dat *mutex_datp;

@@ -23,7 +23,7 @@ AC_ARG_WITH(core,
     [
 	case "$withval" in
 	"" | y | ye | yes | n | no)
-	    AC_MSG_ERROR([You must supply an argument to --with-core.])
+	    AC_MSG_ERROR([You must supply an argument to --with-core])
 	  ;;
 	cobalt|mercury)
 	   rtcore_type=$withval
@@ -62,7 +62,7 @@ AC_ARG_WITH(cc,
     [
 	case "$withval" in
 	"" | y | ye | yes | n | no)
-	    AC_MSG_ERROR([You must supply an argument to --with-cc.])
+	    AC_MSG_ERROR([You must supply an argument to --with-cc])
 	  ;;
 	esac
 	CC="$withval"
@@ -414,7 +414,7 @@ AC_ARG_ENABLE(dox-doc,
 if test \! -d $srcdir/doc ; then
     if test x$CONFIG_XENO_DOC_DOX = xy ;
     then
-	AC_MSG_ERROR([documentation tree is missing.])
+	AC_MSG_ERROR([documentation tree is missing])
     fi
     AC_MSG_RESULT([not present])
 else
@@ -424,7 +424,7 @@ fi
 AC_CHECK_PROG(DOXYGEN, doxygen, doxygen)
 
 if test x${CONFIG_XENO_DOC_DOX} = xy -a x"$DOXYGEN" = x ; then
-   AC_MSG_ERROR([Missing the Doxygen tools to generate the documentation.])
+   AC_MSG_ERROR([Missing the Doxygen tools to generate the documentation])
 fi
 
 AC_CHECK_PROG(DOXYGEN_HAVE_DOT, dot, YES, NO)
@@ -473,7 +473,7 @@ AC_ARG_ENABLE(asciidoc,
 if test \! -d $srcdir/doc ; then
     if test x$CONFIG_XENO_ASCIIDOC = xy ;
     then
-	AC_MSG_ERROR([documentation tree is missing.])
+	AC_MSG_ERROR([documentation tree is missing])
     fi
     AC_MSG_RESULT([not present])
 else
@@ -482,15 +482,15 @@ fi
 
 AC_CHECK_PROG(ASCIIDOC, asciidoc, asciidoc)
 if test x${CONFIG_XENO_ASCIIDOC} = xy -a x"$ASCIIDOC" = x ; then
-   AC_MSG_ERROR([Missing the asciidoc tool to generate the documentation.])
+   AC_MSG_ERROR([Missing the asciidoc tool to generate the documentation])
 fi
 AC_CHECK_PROG(A2X, a2x, a2x)
 if test x${CONFIG_XENO_ASCIIDOC} = xy -a x"$A2X" = x ; then
-   AC_MSG_ERROR([Missing the a2x tool to generate the documentation.])
+   AC_MSG_ERROR([Missing the a2x tool to generate the documentation])
 fi
 AC_CHECK_PROG(W3M, w3m, w3m)
 if test x${CONFIG_XENO_ASCIIDOC} = xy -a x"$W3M" = x ; then
-   AC_MSG_ERROR([Missing the w3m tool to generate the documentation.])
+   AC_MSG_ERROR([Missing the w3m tool to generate the documentation])
 fi
 
 
@@ -537,30 +537,6 @@ AM_CONDITIONAL(CONFIG_XENO_SHARED,[test "$enable_shared" = 'yes'])
 
 # Default sampling period (ns) used in various tests
 AC_DEFINE_UNQUOTED(CONFIG_XENO_DEFAULT_PERIOD,$CONFIG_XENO_DEFAULT_PERIOD,[config])
-
-dnl CAUTION: We need to have the CONFIG_XENO_XX symbols always
-dnl defined when the configuration header is read, but we want the
-dnl Autoconf-produced symbols to be defined only when compiling
-dnl Xenomai. This way, we won't pollute the namespace with the latter
-dnl when our configuration header is indirectly included by a client
-dnl application. To achieve this, we ask autoheader to produce the
-dnl following header structure:
-dnl #define CONFIG_XX
-dnl #define CONFIG_XX ...
-dnl #ifdef __IN_XENO__
-dnl <Autoconf-defined symbols>
-dnl #endif /* __IN_XENO__ */
-dnl This is quite a hack since we have to rely on the fact that
-dnl all Autoconf-generated symbols are lexicographically sorted
-dnl after CONFIG_XENO_XX ones, but, well...
-dnl Use a key which will cause the verbatim string to be put after
-dnl all CONFIG_XENO_XX symbols, but still before any Autoconf-generated
-dnl symbol, hence CONFIG_XENO___.
-AH_VERBATIM(CONFIG_XENO___,[#ifdef __IN_XENO__])
-
-dnl Now we can close the conditional section, right after all
-dnl Autoconf-generated symbols have been listed.
-AH_BOTTOM([#endif /* __IN_XENO__ */])
 
 dnl
 dnl Produce automake conditionals.
@@ -613,7 +589,7 @@ int atomic_add(int i) { return __sync_add_and_fetch(&i, 1); }
 ], [], ac_cv_atomic_builtins="yes")
 ])
 if test "$ac_cv_atomic_builtins" != "yes"; then
-   AC_MSG_ERROR([compiler does not support atomic builtins.])
+   AC_MSG_ERROR([compiler does not support atomic builtins])
 fi
 
 dnl Common CFLAGS and LDFLAGS
@@ -657,26 +633,6 @@ AC_CACHE_VAL(ac_cv_ld_file_option,
 AC_MSG_RESULT(${ac_cv_ld_file_option:-no})
 LD_FILE_OPTION=$ac_cv_ld_file_option
 AC_SUBST(LD_FILE_OPTION)
-
-if test x$rtcore_type = xcobalt; then
-   XENO_USER_CFLAGS="-I`cd $srcdir && pwd`/include/cobalt $XENO_USER_CFLAGS"
-   if [[ $ac_cv_ld_file_option = yes ]]; then
-	XENO_POSIX_WRAPPERS="-Wl,@`cd $srcdir && pwd`/lib/cobalt/posix.wrappers"
-   else
-	XENO_POSIX_WRAPPERS=`while read wrap_option symbol ; do \
-			echo -n "-Wl,$wrap_option,$symbol " ; \
-		done < $srcdir/lib/cobalt/posix.wrappers`
-   fi
-   AC_SUBST([CONFIG_STATUS_DEPENDENCIES],
-   	['$(top_srcdir)/lib/cobalt/posix.wrappers'])
-   AC_SUBST(XENO_POSIX_WRAPPERS)
-fi
-
-XENO_COBALT_CFLAGS="$XENO_USER_CFLAGS"
-
-case "$build_for" in
- i*86*-*) XENO_COBALT_CFLAGS="$XENO_COBALT_CFLAGS -fno-omit-frame-pointer";;
-esac
 
 AC_MSG_CHECKING(whether to enable dlopening of Xenomai libraries)
 AC_ARG_ENABLE(dlopen-libs,
@@ -725,7 +681,7 @@ AC_ARG_WITH(testdir,
     [
 	case "$withval" in
 	"" | y | ye | yes | n | no)
-	    AC_MSG_ERROR([You must supply an argument to --with-testdir.])
+	    AC_MSG_ERROR([You must supply an argument to --with-testdir])
 	  ;;
 	esac
 	XENO_TEST_DIR="$withval"
@@ -735,6 +691,59 @@ AC_MSG_RESULT($XENO_TEST_DIR)
 AC_MSG_CHECKING([for test source generation])
 AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
     [AC_MSG_RESULT(ok)], [AC_MSG_RESULT(failed)], [AC_MSG_RESULT(untestable)])
+
+dnl CAUTION: We need to have the CONFIG_XENO_XX symbols always
+dnl defined when the configuration header is read, but we want the
+dnl Autoconf-produced symbols to be defined only when compiling
+dnl Xenomai. This way, we won't pollute the namespace with the latter
+dnl when our configuration header is indirectly included by a client
+dnl application. To achieve this, we ask autoheader to produce the
+dnl following header structure:
+dnl #define CONFIG_XX
+dnl #define CONFIG_XX ...
+dnl #ifdef __IN_XENO__
+dnl <Autoconf-defined symbols>
+dnl #endif /* __IN_XENO__ */
+dnl This is quite a hack since we have to rely on the fact that
+dnl all Autoconf-generated symbols are lexicographically sorted
+dnl after CONFIG_XENO_XX ones, but, well...
+dnl Use a key which will cause the verbatim string to be put after
+dnl all CONFIG_XENO_XX symbols, but still before any Autoconf-generated
+dnl symbol, hence CONFIG_XENO___.
+AH_VERBATIM(CONFIG_XENO___,[#ifdef __IN_XENO__])
+
+dnl Now we can close the conditional section, right after all
+dnl Autoconf-generated symbols have been listed.
+AH_BOTTOM([#endif /* __IN_XENO__ */])
+
+if test x$rtcore_type = xcobalt; then
+   XENO_USER_CFLAGS="-I`cd $srcdir && pwd`/include/cobalt $XENO_USER_CFLAGS"
+   XENO_COBALT_CFLAGS="$XENO_USER_CFLAGS"
+   case "$build_for" in
+    i*86*-*) XENO_COBALT_CFLAGS="$XENO_COBALT_CFLAGS -fno-omit-frame-pointer";;
+    esac
+
+dnl Build wrapping information. XENO_POSIX_WRAPPERS lists all wrapping
+dnl directives in a format the linker understands, for building the
+dnl in-tree executables which require POSIX symbol wrapping.
+
+   cobalt_wrappers="`cd $srcdir && pwd`/lib/cobalt/cobalt.wrappers"
+   if [[ $ac_cv_ld_file_option = yes ]]; then
+	XENO_POSIX_WRAPPERS="-Wl,@$cobalt_wrappers"
+   else
+	XENO_POSIX_WRAPPERS=`while read wrap_option symbol ; do \
+			echo -n "-Wl,$wrap_option,$symbol " ; \
+		done < $cobalt_wrappers`
+   fi
+
+   AC_SUBST(XENO_POSIX_WRAPPERS)
+   AC_SUBST([CONFIG_STATUS_DEPENDENCIES], ["$cobalt_wrappers"])
+
+   base=asm-$XENO_TARGET_ARCH
+   AC_CONFIG_LINKS([lib/include/asm/xenomai:$srcdir/include/$base])
+   base=asm-generic
+   AC_CONFIG_LINKS([lib/include/$base/xenomai:$srcdir/include/$base])
+fi
 
 dnl
 dnl Build the Makefiles
@@ -761,13 +770,6 @@ AC_SUBST(XENO_USER_APP_CFLAGS)
 AC_SUBST(XENO_USER_APP_LDFLAGS)
 AC_SUBST(XENO_FUSE_CFLAGS)
 AC_SUBST(XENO_TEST_DIR)
-
-if test x$rtcore_type = xcobalt; then
-   base=asm-$XENO_TARGET_ARCH
-   AC_CONFIG_LINKS([lib/include/asm/xenomai:$srcdir/include/$base])
-   base=asm-generic
-   AC_CONFIG_LINKS([lib/include/$base/xenomai:$srcdir/include/$base])
-fi
 
 AC_CONFIG_FILES([ \
 	Makefile \

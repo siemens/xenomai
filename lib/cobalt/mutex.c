@@ -25,59 +25,59 @@
 #include <asm-generic/current.h>
 #include "internal.h"
 
-int __wrap_pthread_mutexattr_init(pthread_mutexattr_t *attr)
+COBALT_IMPL(int, pthread_mutexattr_init, (pthread_mutexattr_t *attr))
 {
 	return -XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_mutexattr_init, attr);
 }
 
-int __wrap_pthread_mutexattr_destroy(pthread_mutexattr_t *attr)
+COBALT_IMPL(int, pthread_mutexattr_destroy, (pthread_mutexattr_t *attr))
 {
 	return -XENOMAI_SKINCALL1(__cobalt_muxid,sc_cobalt_mutexattr_destroy,attr);
 }
 
-int __wrap_pthread_mutexattr_gettype(const pthread_mutexattr_t *attr,
-				     int *type)
+COBALT_IMPL(int, pthread_mutexattr_gettype, (const pthread_mutexattr_t *attr,
+					     int *type))
 {
 	return -XENOMAI_SKINCALL2(__cobalt_muxid,
 				  sc_cobalt_mutexattr_gettype, attr, type);
 }
 
-int __wrap_pthread_mutexattr_settype(pthread_mutexattr_t *attr,
-				     int type)
+COBALT_IMPL(int, pthread_mutexattr_settype, (pthread_mutexattr_t *attr,
+					     int type))
 {
 	return -XENOMAI_SKINCALL2(__cobalt_muxid,
 				  sc_cobalt_mutexattr_settype, attr, type);
 }
 
-int __wrap_pthread_mutexattr_getprotocol(const pthread_mutexattr_t *attr,
-					 int *proto)
+COBALT_IMPL(int, pthread_mutexattr_getprotocol, (const pthread_mutexattr_t *attr,
+						 int *proto))
 {
 	return -XENOMAI_SKINCALL2(__cobalt_muxid,
 				  sc_cobalt_mutexattr_getprotocol, attr, proto);
 }
 
-int __wrap_pthread_mutexattr_setprotocol(pthread_mutexattr_t *attr,
-					 int proto)
+COBALT_IMPL(int, pthread_mutexattr_setprotocol, (pthread_mutexattr_t *attr,
+						 int proto))
 {
 	return -XENOMAI_SKINCALL2(__cobalt_muxid,
 				  sc_cobalt_mutexattr_setprotocol, attr, proto);
 }
 
-int __wrap_pthread_mutexattr_getpshared(const pthread_mutexattr_t *attr,
-					int *pshared)
+COBALT_IMPL(int, pthread_mutexattr_getpshared, (const pthread_mutexattr_t *attr,
+						int *pshared))
 {
 	return -XENOMAI_SKINCALL2(__cobalt_muxid,
 				  sc_cobalt_mutexattr_getpshared, attr, pshared);
 }
 
-int __wrap_pthread_mutexattr_setpshared(pthread_mutexattr_t *attr, int pshared)
+COBALT_IMPL(int, pthread_mutexattr_setpshared, (pthread_mutexattr_t *attr, int pshared))
 {
 	return -XENOMAI_SKINCALL2(__cobalt_muxid,
 				  sc_cobalt_mutexattr_setpshared, attr, pshared);
 }
 
-int __wrap_pthread_mutex_init(pthread_mutex_t *mutex,
-			      const pthread_mutexattr_t *attr)
+COBALT_IMPL(int, pthread_mutex_init, (pthread_mutex_t *mutex,
+				      const pthread_mutexattr_t *attr))
 {
 	struct __shadow_mutex *_mutex =
 		&((union __xeno_mutex *)mutex)->shadow_mutex;
@@ -106,7 +106,7 @@ int __wrap_pthread_mutex_init(pthread_mutex_t *mutex,
 	return err;
 }
 
-int __wrap_pthread_mutex_destroy(pthread_mutex_t *mutex)
+COBALT_IMPL(int, pthread_mutex_destroy, (pthread_mutex_t *mutex))
 {
 	struct __shadow_mutex *_mutex =
 		&((union __xeno_mutex *)mutex)->shadow_mutex;
@@ -120,7 +120,7 @@ int __wrap_pthread_mutex_destroy(pthread_mutex_t *mutex)
 	return -err;
 }
 
-int __wrap_pthread_mutex_lock(pthread_mutex_t *mutex)
+COBALT_IMPL(int, pthread_mutex_lock, (pthread_mutex_t *mutex))
 {
 	struct __shadow_mutex *_mutex =
 		&((union __xeno_mutex *)mutex)->shadow_mutex;
@@ -178,8 +178,8 @@ int __wrap_pthread_mutex_lock(pthread_mutex_t *mutex)
 	return -err;
 }
 
-int __wrap_pthread_mutex_timedlock(pthread_mutex_t *mutex,
-				   const struct timespec *to)
+COBALT_IMPL(int, pthread_mutex_timedlock, (pthread_mutex_t *mutex,
+					   const struct timespec *to))
 {
 	struct __shadow_mutex *_mutex =
 		&((union __xeno_mutex *)mutex)->shadow_mutex;
@@ -234,7 +234,7 @@ int __wrap_pthread_mutex_timedlock(pthread_mutex_t *mutex,
 	return -err;
 }
 
-int __wrap_pthread_mutex_trylock(pthread_mutex_t *mutex)
+COBALT_IMPL(int, pthread_mutex_trylock, (pthread_mutex_t *mutex))
 {
 	struct __shadow_mutex *_mutex =
 		&((union __xeno_mutex *)mutex)->shadow_mutex;
@@ -287,7 +287,7 @@ do_syscall:
 	return -err;
 }
 
-int __wrap_pthread_mutex_unlock(pthread_mutex_t *mutex)
+COBALT_IMPL(int, pthread_mutex_unlock, (pthread_mutex_t *mutex))
 {
 	struct __shadow_mutex *_mutex =
 		&((union __xeno_mutex *)mutex)->shadow_mutex;

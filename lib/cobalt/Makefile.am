@@ -8,25 +8,25 @@ lib_LTLIBRARIES = libcobalt.la
 
 libcobalt_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 2:0:0 -lpthread -lrt
 
-libcobalt_la_SOURCES = \
-	assert_context.c \
-	attr.c \
-	current.c \
-	sem_heap.c \
-	sigshadow.c \
-	timeconv.c \
-	init.c \
-	internal.c \
-	thread.c \
-	timer.c \
-	semaphore.c \
-	clock.c \
-	cond.c \
-	mq.c \
-	mutex.c \
-	select.c \
-	rtdm.c \
-	printf.c \
+libcobalt_la_SOURCES =		\
+	assert_context.c	\
+	attr.c			\
+	current.c		\
+	sem_heap.c		\
+	sigshadow.c		\
+	timeconv.c		\
+	init.c			\
+	internal.c		\
+	thread.c		\
+	timer.c			\
+	semaphore.c		\
+	clock.c			\
+	cond.c			\
+	mq.c			\
+	mutex.c			\
+	select.c		\
+	rtdm.c			\
+	printf.c		\
 	wrappers.c
 
 libcobalt_la_CPPFLAGS =					\
@@ -37,9 +37,9 @@ libcobalt_la_CPPFLAGS =					\
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(libdir)
-	$(INSTALL_DATA) $(srcdir)/posix.wrappers $(DESTDIR)$(libdir)
+	$(INSTALL_DATA) $(srcdir)/cobalt.wrappers $(DESTDIR)$(libdir)
 
 uninstall-local:
-	$(RM) $(DESTDIR)$(libdir)/posix.wrappers
+	$(RM) $(DESTDIR)$(libdir)/cobalt.wrappers
 
-EXTRA_DIST = posix.wrappers
+EXTRA_DIST = cobalt.wrappers

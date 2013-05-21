@@ -18,9 +18,9 @@ Options:
 -n dry run (print all commands but don't run any)
 
 Example:
-$1 -v gcc -o foo foo.o -Wl,@/usr/xenomai/lib/posix.wrappers -L/usr/xenomai/lib -lcobalt -lpthread -lrt
+$1 -v gcc -o foo foo.o -Wl,@/usr/xenomai/lib/cobalt.wrappers -L/usr/xenomai/lib -lcobalt -lpthread -lrt
 will print and run:
-+ gcc -o foo.tmp -Wl,-Ur -nostdlib foo.o -Wl,@/usr/xenomai/lib/posix.wrappers -L/usr/xenomai/lib
++ gcc -o foo.tmp -Wl,-Ur -nostdlib foo.o -Wl,@/usr/xenomai/lib/cobalt.wrappers -L/usr/xenomai/lib
 + gcc -o foo foo.tmp -L/usr/xenomai/lib -lcobalt -lpthread -lrt
 + rm foo.tmp
 EOF
@@ -123,7 +123,7 @@ while test $# -gt 0; do
 		--wrap)
 		    next_is_wrapped_symbol=:
 		    ;;
-		@*posix.wrappers)
+		@*.wrappers)
 		    stage1_args="$stage1_args -Xlinker $arg"
 		    ;;
 
@@ -137,7 +137,7 @@ while test $# -gt 0; do
 	    next_is_wrapped_symbol=:
 	    ;;
 
-	-Wl,@*posix.wrappers|-Wl,--wrap,*)
+	-Wl,@*.wrappers|-Wl,--wrap,*)
 	    stage1_args="$stage1_args $arg"
 	    ;;
 

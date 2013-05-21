@@ -776,7 +776,7 @@ void cobalt_print_exit(void)
 	}
 }
 
-int __wrap_vfprintf(FILE *stream, const char *fmt, va_list args)
+COBALT_IMPL(int, vfprintf, (FILE *stream, const char *fmt, va_list args))
 {
 	if (xeno_get_current() != XN_NO_HANDLE &&
 		     !(xeno_get_current_mode() & XNRELAX))
@@ -787,12 +787,12 @@ int __wrap_vfprintf(FILE *stream, const char *fmt, va_list args)
 	}
 }
 
-int __wrap_vprintf(const char *fmt, va_list args)
+COBALT_IMPL(int, vprintf, (const char *fmt, va_list args))
 {
 	return __wrap_vfprintf(stdout, fmt, args);
 }
 
-int __wrap_fprintf(FILE *stream, const char *fmt, ...)
+COBALT_IMPL(int, fprintf, (FILE *stream, const char *fmt, ...))
 {
 	va_list args;
 	int rc;
@@ -804,7 +804,7 @@ int __wrap_fprintf(FILE *stream, const char *fmt, ...)
 	return rc;
 }
 
-int __wrap_printf(const char *fmt, ...)
+COBALT_IMPL(int, printf, (const char *fmt, ...))
 {
 	va_list args;
 	int rc;
@@ -816,7 +816,7 @@ int __wrap_printf(const char *fmt, ...)
 	return rc;
 }
 
-int __wrap_fputs(const char *s, FILE *stream)
+COBALT_IMPL(int, fputs, (const char *s, FILE *stream))
 {
 	if (xeno_get_current() != XN_NO_HANDLE &&
 		     !(xeno_get_current_mode() & XNRELAX))
@@ -827,7 +827,7 @@ int __wrap_fputs(const char *s, FILE *stream)
 	}
 }
 
-int __wrap_puts(const char *s)
+COBALT_IMPL(int, puts, (const char *s))
 {
 	if (xeno_get_current() != XN_NO_HANDLE &&
 		     !(xeno_get_current_mode() & XNRELAX))
@@ -840,7 +840,7 @@ int __wrap_puts(const char *s)
 
 #if !defined(__UCLIBC__) || !defined(__STDIO_PUTC_MACRO)
 
-int __wrap_fputc(int c, FILE *stream)
+COBALT_IMPL(int, fputc, (int c, FILE *stream))
 {
 	if (xeno_get_current() != XN_NO_HANDLE &&
 		     !(xeno_get_current_mode() & XNRELAX))
@@ -851,7 +851,7 @@ int __wrap_fputc(int c, FILE *stream)
 	}
 }
 
-int __wrap_putchar(int c)
+COBALT_IMPL(int, putchar, (int c))
 {
 	if (xeno_get_current() != XN_NO_HANDLE &&
 		     !(xeno_get_current_mode() & XNRELAX))
@@ -864,19 +864,19 @@ int __wrap_putchar(int c)
 
 #else
 
-int __wrap_fputc(int c, FILE *stream)
+COBALT_IMPL(int, fputc, (int c, FILE *stream))
 {
 	return fputc(c, stream);
 }
 
-int __wrap_putchar(int c)
+COBALT_IMPL(int, putchar, (int c))
 {
 	return putchar(c);
 }
 
 #endif /* !(__UCLIBC__ && __STDIO_PUTC_MACRO) */
 
-size_t __wrap_fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
+COBALT_IMPL(size_t, fwrite, (const void *ptr, size_t size, size_t nmemb, FILE *stream))
 {
 	if (xeno_get_current() != XN_NO_HANDLE &&
 		     !(xeno_get_current_mode() & XNRELAX))
@@ -888,7 +888,7 @@ size_t __wrap_fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 
 }
 
-void __wrap_vsyslog(int priority, const char *fmt, va_list ap)
+COBALT_IMPL(void, vsyslog, (int priority, const char *fmt, va_list ap))
 {
 	if (xeno_get_current() != XN_NO_HANDLE &&
 		     !(xeno_get_current_mode() & XNRELAX))
@@ -899,7 +899,7 @@ void __wrap_vsyslog(int priority, const char *fmt, va_list ap)
 	}
 }
 
-void __wrap_syslog(int priority, const char *fmt, ...)
+COBALT_IMPL(void, syslog, (int priority, const char *fmt, ...))
 {
 	va_list args;
 

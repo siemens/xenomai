@@ -652,8 +652,8 @@ ASCIIDODC
 LATEX_MODE
 LATEX_BATCHMODE
 DOXYGEN_SHOW_INCLUDE_FILES
-XENO_POSIX_WRAPPERS
 CONFIG_STATUS_DEPENDENCIES
+XENO_POSIX_WRAPPERS
 LD_FILE_OPTION
 XENO_TLSF_FALSE
 XENO_TLSF_TRUE
@@ -2368,7 +2368,7 @@ if test "${with_core+set}" = set; then :
   withval=$with_core;
 	case "$withval" in
 	"" | y | ye | yes | n | no)
-	    as_fn_error $? "You must supply an argument to --with-core." "$LINENO" 5
+	    as_fn_error $? "You must supply an argument to --with-core" "$LINENO" 5
 	  ;;
 	cobalt|mercury)
 	   rtcore_type=$withval
@@ -2619,7 +2619,7 @@ if test "${with_cc+set}" = set; then :
   withval=$with_cc;
 	case "$withval" in
 	"" | y | ye | yes | n | no)
-	    as_fn_error $? "You must supply an argument to --with-cc." "$LINENO" 5
+	    as_fn_error $? "You must supply an argument to --with-cc" "$LINENO" 5
 	  ;;
 	esac
 	CC="$withval"
@@ -13049,7 +13049,7 @@ fi
 if test \! -d $srcdir/doc ; then
     if test x$CONFIG_XENO_DOC_DOX = xy ;
     then
-	as_fn_error $? "documentation tree is missing." "$LINENO" 5
+	as_fn_error $? "documentation tree is missing" "$LINENO" 5
     fi
     { $as_echo "$as_me:${as_lineno-$LINENO}: result: not present" >&5
 $as_echo "not present" >&6; }
@@ -13097,7 +13097,7 @@ fi
 
 
 if test x${CONFIG_XENO_DOC_DOX} = xy -a x"$DOXYGEN" = x ; then
-   as_fn_error $? "Missing the Doxygen tools to generate the documentation." "$LINENO" 5
+   as_fn_error $? "Missing the Doxygen tools to generate the documentation" "$LINENO" 5
 fi
 
 # Extract the first word of "dot", so it can be a program name with args.
@@ -13471,7 +13471,7 @@ fi
 if test \! -d $srcdir/doc ; then
     if test x$CONFIG_XENO_ASCIIDOC = xy ;
     then
-	as_fn_error $? "documentation tree is missing." "$LINENO" 5
+	as_fn_error $? "documentation tree is missing" "$LINENO" 5
     fi
     { $as_echo "$as_me:${as_lineno-$LINENO}: result: not present" >&5
 $as_echo "not present" >&6; }
@@ -13518,7 +13518,7 @@ fi
 
 
 if test x${CONFIG_XENO_ASCIIDOC} = xy -a x"$ASCIIDOC" = x ; then
-   as_fn_error $? "Missing the asciidoc tool to generate the documentation." "$LINENO" 5
+   as_fn_error $? "Missing the asciidoc tool to generate the documentation" "$LINENO" 5
 fi
 # Extract the first word of "a2x", so it can be a program name with args.
 set dummy a2x; ac_word=$2
@@ -13558,7 +13558,7 @@ fi
 
 
 if test x${CONFIG_XENO_ASCIIDOC} = xy -a x"$A2X" = x ; then
-   as_fn_error $? "Missing the a2x tool to generate the documentation." "$LINENO" 5
+   as_fn_error $? "Missing the a2x tool to generate the documentation" "$LINENO" 5
 fi
 # Extract the first word of "w3m", so it can be a program name with args.
 set dummy w3m; ac_word=$2
@@ -13598,7 +13598,7 @@ fi
 
 
 if test x${CONFIG_XENO_ASCIIDOC} = xy -a x"$W3M" = x ; then
-   as_fn_error $? "Missing the w3m tool to generate the documentation." "$LINENO" 5
+   as_fn_error $? "Missing the w3m tool to generate the documentation" "$LINENO" 5
 fi
 
 
@@ -13696,10 +13696,6 @@ fi
 cat >>confdefs.h <<_ACEOF
 #define CONFIG_XENO_DEFAULT_PERIOD $CONFIG_XENO_DEFAULT_PERIOD
 _ACEOF
-
-
-
-
 
 
 
@@ -13829,7 +13825,7 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_atomic_builtins" >&5
 $as_echo "$ac_cv_atomic_builtins" >&6; }
 if test "$ac_cv_atomic_builtins" != "yes"; then
-   as_fn_error $? "compiler does not support atomic builtins." "$LINENO" 5
+   as_fn_error $? "compiler does not support atomic builtins" "$LINENO" 5
 fi
 
 XENO_USER_CFLAGS="-D_GNU_SOURCE -D_REENTRANT -fstrict-aliasing -Wall -pipe -Wstrict-prototypes -Wmissing-prototypes -Wno-long-long -Wno-unused-parameter -Werror"
@@ -13895,26 +13891,6 @@ fi
 $as_echo "${ac_cv_ld_file_option:-no}" >&6; }
 LD_FILE_OPTION=$ac_cv_ld_file_option
 
-
-if test x$rtcore_type = xcobalt; then
-   XENO_USER_CFLAGS="-I`cd $srcdir && pwd`/include/cobalt $XENO_USER_CFLAGS"
-   if [ $ac_cv_ld_file_option = yes ]; then
-	XENO_POSIX_WRAPPERS="-Wl,@`cd $srcdir && pwd`/lib/cobalt/posix.wrappers"
-   else
-	XENO_POSIX_WRAPPERS=`while read wrap_option symbol ; do \
-			echo -n "-Wl,$wrap_option,$symbol " ; \
-		done < $srcdir/lib/cobalt/posix.wrappers`
-   fi
-   CONFIG_STATUS_DEPENDENCIES='$(top_srcdir)/lib/cobalt/posix.wrappers'
-
-
-fi
-
-XENO_COBALT_CFLAGS="$XENO_USER_CFLAGS"
-
-case "$build_for" in
- i*86*-*) XENO_COBALT_CFLAGS="$XENO_COBALT_CFLAGS -fno-omit-frame-pointer";;
-esac
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable dlopening of Xenomai libraries" >&5
 $as_echo_n "checking whether to enable dlopening of Xenomai libraries... " >&6; }
@@ -13995,7 +13971,7 @@ if test "${with_testdir+set}" = set; then :
   withval=$with_testdir;
 	case "$withval" in
 	"" | y | ye | yes | n | no)
-	    as_fn_error $? "You must supply an argument to --with-testdir." "$LINENO" 5
+	    as_fn_error $? "You must supply an argument to --with-testdir" "$LINENO" 5
 	  ;;
 	esac
 	XENO_TEST_DIR="$withval"
@@ -14040,26 +14016,27 @@ fi
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 if test x$rtcore_type = xcobalt; then
+   XENO_USER_CFLAGS="-I`cd $srcdir && pwd`/include/cobalt $XENO_USER_CFLAGS"
+   XENO_COBALT_CFLAGS="$XENO_USER_CFLAGS"
+   case "$build_for" in
+    i*86*-*) XENO_COBALT_CFLAGS="$XENO_COBALT_CFLAGS -fno-omit-frame-pointer";;
+    esac
+
+
+   cobalt_wrappers="`cd $srcdir && pwd`/lib/cobalt/cobalt.wrappers"
+   if [ $ac_cv_ld_file_option = yes ]; then
+	XENO_POSIX_WRAPPERS="-Wl,@$cobalt_wrappers"
+   else
+	XENO_POSIX_WRAPPERS=`while read wrap_option symbol ; do \
+			echo -n "-Wl,$wrap_option,$symbol " ; \
+		done < $cobalt_wrappers`
+   fi
+
+
+   CONFIG_STATUS_DEPENDENCIES="$cobalt_wrappers"
+
+
    base=asm-$XENO_TARGET_ARCH
    ac_config_links="$ac_config_links lib/include/asm/xenomai:$srcdir/include/$base"
 
@@ -14067,6 +14044,29 @@ if test x$rtcore_type = xcobalt; then
    ac_config_links="$ac_config_links lib/include/$base/xenomai:$srcdir/include/$base"
 
 fi
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config:scripts/xeno-config-$rtcore_type.in scripts/xeno lib/Makefile lib/cobalt/Makefile lib/copperplate/Makefile lib/copperplate/regd/Makefile lib/alchemy/Makefile lib/vxworks/Makefile lib/psos/Makefile lib/analogy/Makefile lib/include/Makefile testsuite/Makefile testsuite/latency/Makefile testsuite/cyclic/Makefile testsuite/switchtest/Makefile testsuite/clocktest/Makefile testsuite/unit/Makefile testsuite/xeno-test/Makefile testsuite/regression/Makefile testsuite/regression/posix/Makefile utils/Makefile utils/can/Makefile utils/analogy/Makefile utils/ps/Makefile utils/slackspot/Makefile include/Makefile include/asm-generic/Makefile include/asm-generic/bits/Makefile include/asm-generic/ipipe/Makefile include/asm-blackfin/Makefile include/asm-blackfin/bits/Makefile include/asm-x86/Makefile include/asm-x86/bits/Makefile include/asm-powerpc/Makefile include/asm-powerpc/bits/Makefile include/asm-arm/Makefile include/asm-arm/bits/Makefile include/asm-nios2/Makefile include/asm-nios2/bits/Makefile include/asm-sh/Makefile include/asm-sh/bits/Makefile include/cobalt/Makefile include/cobalt/sys/Makefile include/cobalt/nucleus/Makefile include/rtdm/Makefile include/analogy/Makefile include/mercury/Makefile include/copperplate/Makefile include/alchemy/Makefile include/vxworks/Makefile include/psos/Makefile"
 

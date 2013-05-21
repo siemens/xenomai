@@ -310,24 +310,24 @@ noinst_HEADERS = \
 lib_LTLIBRARIES = libcobalt.la
 libcobalt_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 2:0:0 -lpthread -lrt
 libcobalt_la_SOURCES = \
-	assert_context.c \
-	attr.c \
-	current.c \
-	sem_heap.c \
-	sigshadow.c \
-	timeconv.c \
-	init.c \
-	internal.c \
-	thread.c \
-	timer.c \
-	semaphore.c \
-	clock.c \
-	cond.c \
-	mq.c \
-	mutex.c \
-	select.c \
-	rtdm.c \
-	printf.c \
+	assert_context.c	\
+	attr.c			\
+	current.c		\
+	sem_heap.c		\
+	sigshadow.c		\
+	timeconv.c		\
+	init.c			\
+	internal.c		\
+	thread.c		\
+	timer.c			\
+	semaphore.c		\
+	clock.c			\
+	cond.c			\
+	mq.c			\
+	mutex.c			\
+	select.c		\
+	rtdm.c			\
+	printf.c		\
 	wrappers.c
 
 libcobalt_la_CPPFLAGS = \
@@ -336,7 +336,7 @@ libcobalt_la_CPPFLAGS = \
 	-I$(top_srcdir)					\
 	-I$(top_srcdir)/include
 
-EXTRA_DIST = posix.wrappers
+EXTRA_DIST = cobalt.wrappers
 all: all-am
 
 .SUFFIXES:
@@ -818,10 +818,10 @@ uninstall-am: uninstall-libLTLIBRARIES uninstall-local
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(libdir)
-	$(INSTALL_DATA) $(srcdir)/posix.wrappers $(DESTDIR)$(libdir)
+	$(INSTALL_DATA) $(srcdir)/cobalt.wrappers $(DESTDIR)$(libdir)
 
 uninstall-local:
-	$(RM) $(DESTDIR)$(libdir)/posix.wrappers
+	$(RM) $(DESTDIR)$(libdir)/cobalt.wrappers
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
