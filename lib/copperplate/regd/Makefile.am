@@ -6,8 +6,6 @@ else
 coredep_lib =
 endif
 
-CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
-
 CPPFLAGS = \
 	@XENO_USER_CFLAGS@	\
 	@XENO_FUSE_CFLAGS@	\

@@ -93,6 +93,7 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 LTCOMPILE = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
@@ -276,7 +277,6 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 @XENO_COBALT_FALSE@coredep_lib = 
 @XENO_COBALT_TRUE@coredep_lib = ../../cobalt/libcobalt.la
-CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 LDADD = \
 	../libcopperplate.la	\
 	$(coredep_lib)		\
