@@ -1120,7 +1120,6 @@ void xnpod_delete_thread(xnthread_t *thread)
 	 */
 
 	if (xnthread_user_task(thread) != NULL &&
-	    !xnthread_test_state(thread, XNDORMANT) &&
 	    !xnthread_test_info(thread, XNABORT) &&
 	    !xnpod_current_p(thread)) {
 		if (!xnpod_userspace_p())
