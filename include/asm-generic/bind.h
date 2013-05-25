@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <nucleus/compiler.h>	/* For __constructor__ */
 
 int 
 xeno_bind_skin_opt(unsigned skin_magic, const char *skin, const char *module);

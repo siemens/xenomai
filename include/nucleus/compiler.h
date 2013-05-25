@@ -35,6 +35,14 @@
 #define __deprecated_in_kernel__
 #endif /* __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ > 0) */
 
+#ifdef __IN_XENO__
+#if __GNUC__ == 4 && __GNUC_MINOR__ == 6
+#define __constructor__ __attribute__((constructor, noclone))
+#else /* Gcc not 4.6 */
+#define __constructor__ __attribute__((constructor))
+#endif /* Gcc not 4.6 */
+#endif /* In xenomai */
+
 #ifndef likely
 #if !defined(__GNUC__) || __GNUC__ == 2 && __GNUC_MINOR__ < 96
 #define __builtin_expect(x, v)         (x)

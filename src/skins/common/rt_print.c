@@ -738,7 +738,7 @@ static void forked_child_init(void)
 		spawn_printer_thread();
 }
 
-static __attribute__((constructor, noclone)) void __rt_print_init(void)
+static __constructor__ void __rt_print_init(void)
 {
 	const char *value_str;
 	unsigned long long period;
