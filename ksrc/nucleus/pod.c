@@ -1085,38 +1085,20 @@ void xnpod_delete_thread(xnthread_t *thread)
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	/*
-	 * This block serves two purposes:
-	 *
-	 * 1) Make sure Linux counterparts of shadow threads do exit
-	 * upon deletion request from the nucleus through a call to
-	 * xnpod_delete_thread().
-	 *
-	 * 2) Make sure shadow threads are removed from the system on
-	 * behalf of their own context, by sending them a lethal
-	 * signal when it is not the case instead of wiping out their
-	 * TCB. We only do that whenever the caller is a kernel-based
-	 * Xenomai context. In such a case, the deletion is
-	 * asynchronous, and killed thread will later enter
-	 * xnpod_delete_thread() from the exit notification handler
-	 * (I-pipe).
+	 * We make sure to remove shadow threads from the system
+	 * solely on behalf of their own context, i.e. over the task
+	 * exit handler. This may incur sending a target thread a
+	 * lethal signal when the caller is a kernel-based Xenomai
+	 * thread.  Conversely, userland should have issued
+	 * pthread_cancel() to force the target thread to exit.
 	 *
 	 * Sidenote: xnpod_delete_thread() might be called for
-	 * cleaning up a just created shadow task which has not been
-	 * successfully mapped, so we need to make sure that we have
-	 * an associated Linux mate before trying to send it a signal
+	 * cleaning up a shadow task which has not been successfully
+	 * mapped, so we need to make sure that we have an associated
+	 * Linux mate before trying to send it a signal
 	 * (i.e. user_task extension != NULL). This will also prevent
 	 * any action on kernel-based Xenomai threads for which the
-	 * user TCB extension is always NULL.  We don't send any
-	 * signal to unstarted threads because GDB (6.x) has some
-	 * problems dealing with vanishing threads under some
-	 * circumstances, likely when asynchronous cancellation is in
-	 * effect. In most cases, this is a non-issue since
-	 * pthread_cancel() is requested from the skin interface
-	 * library in parallel on the target thread. In the rare case
-	 * of calling xnpod_delete_thread() from kernel space against
-	 * a created but unstarted user-space task, the Linux thread
-	 * mated to the Xenomai shadow might linger unexpectedly on
-	 * the startup barrier.
+	 * user TCB extension is always NULL.
 	 */
 
 	if (xnthread_user_task(thread) != NULL &&
@@ -1126,7 +1108,7 @@ void xnpod_delete_thread(xnthread_t *thread)
 			xnshadow_send_sig(thread, SIGKILL, 0, 1);
 		/*
 		 * Otherwise, assume the interface library has issued
-		 * pthread_cancel on the target thread, which should
+		 * pthread_cancel() on the target thread, which should
 		 * cause the current service to be called for
 		 * self-deletion of that thread.
 		 */
