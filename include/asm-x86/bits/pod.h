@@ -73,7 +73,7 @@ static inline void xnarch_switch_to(xnarchtcb_t *out_tcb, xnarchtcb_t *in_tcb)
 {
 	struct task_struct *prev = out_tcb->active_task;
 	struct task_struct *next = in_tcb->user_task;
-#ifdef CONFIG_X86_32
+#ifndef CONFIG_X86_64
 	unsigned long fs, gs;
 #endif
 
@@ -98,7 +98,7 @@ static inline void xnarch_switch_to(xnarchtcb_t *out_tcb, xnarchtcb_t *in_tcb)
 		struct mm_struct *oldmm = prev->active_mm;
 		wrap_switch_mm(oldmm, next->active_mm, next);
 		if (next->mm == NULL)
-			enter_lazy_tlb(oldmm, next);
+			wrap_enter_lazy_tlb(oldmm, next);
 	}
 
 #ifdef CONFIG_CC_STACKPROTECTOR
@@ -107,7 +107,7 @@ static inline void xnarch_switch_to(xnarchtcb_t *out_tcb, xnarchtcb_t *in_tcb)
 #define xnarch_switch_canary  0
 #endif
 
-#ifdef CONFIG_X86_32
+#ifndef CONFIG_X86_64
 	if (out_tcb->user_task) {
 		/* Make sure that __switch_to() will always reload the correct
 		   %fs and %gs registers, even if we happen to migrate the task
@@ -239,7 +239,7 @@ static inline void __save_i387(x86_fpustate *fpup)
 {
 #ifdef cpu_has_xsave
 	if (cpu_has_xsave) {
-#if defined(CONFIG_AS_AVX) || defined CONFIG_X86_32
+#if defined(CONFIG_AS_AVX) || !defined CONFIG_X86_64
 		asm volatile("xsave" XSAVE_SUFFIX " %0"
 			     : "=m" (fpup->xsave) : "a" (-1), "d" (-1)
 			     : "memory");
@@ -252,7 +252,7 @@ static inline void __save_i387(x86_fpustate *fpup)
 		return;
 	}
 #endif /* cpu_has_xsave */
-#ifdef CONFIG_X86_32
+#ifndef CONFIG_X86_64
 	if (cpu_has_fxsr)
 		__asm__ __volatile__("fxsave %0; fnclex":"=m"(*fpup));
 	else
@@ -299,7 +299,7 @@ static inline void __restore_i387(x86_fpustate *fpup)
 {
 #ifdef cpu_has_xsave
 	if (cpu_has_xsave) {
-#if defined(CONFIG_AS_AVX) || defined CONFIG_X86_32
+#if defined(CONFIG_AS_AVX) || !defined(CONFIG_X86_64)
 		asm volatile("xrstor" XSAVE_SUFFIX " %0"
 			     : : "m" (fpup->xsave), "a" (-1), "d" (-1)
 			     : "memory");
@@ -312,7 +312,7 @@ static inline void __restore_i387(x86_fpustate *fpup)
 		return;
 	}
 #endif /* cpu_has_xsave */
-#ifdef CONFIG_X86_32
+#ifndef CONFIG_X86_64
 	if (cpu_has_fxsr)
 		__asm__ __volatile__("fxrstor %0": /* no output */
 				     :"m"(*fpup));

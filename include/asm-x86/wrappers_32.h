@@ -29,6 +29,11 @@
 #include <linux/interrupt.h>
 #include <asm/processor.h>
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,11)
+#define tsk_used_math(task)			((task)->used_math)
+#define set_stopped_child_used_math(task)	((task)->used_math = 1)
+#endif
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
 
 #define CONFIG_MMU 1
