@@ -108,7 +108,6 @@ int __fnref_register(const char *libname,
 
 #define mutex_scope_attribute	PTHREAD_PROCESS_SHARED
 #define sem_scope_attribute	1
-#define thread_scope_attribute	PTHREAD_SCOPE_SYSTEM
 #define monitor_scope_attribute	COBALT_MONITOR_SHARED
 #define event_scope_attribute	COBALT_EVENT_SHARED
 
@@ -130,7 +129,6 @@ int __fnref_register(const char *libname,
 
 #define mutex_scope_attribute	PTHREAD_PROCESS_PRIVATE
 #define sem_scope_attribute	0
-#define thread_scope_attribute	PTHREAD_SCOPE_PROCESS
 #define monitor_scope_attribute	0
 #define event_scope_attribute	0
 

@@ -89,7 +89,6 @@ int copperplate_create_thread(int prio,
 	pthread_attr_setschedpolicy_ex(&attr_ex, policy);
 	pthread_attr_setschedparam_ex(&attr_ex, &param_ex);
 	pthread_attr_setstacksize_ex(&attr_ex, stacksize);
-	pthread_attr_setscope_ex(&attr_ex, thread_scope_attribute);
 	pthread_attr_setdetachstate_ex(&attr_ex, detachstate);
 	ret = __bt(-pthread_create_ex(tid, &attr_ex, start, arg));
 	pthread_attr_destroy_ex(&attr_ex);
@@ -135,7 +134,6 @@ int copperplate_create_thread(int prio,
 	pthread_attr_setschedpolicy(&attr, policy);
 	pthread_attr_setschedparam(&attr, &param);
 	pthread_attr_setstacksize(&attr, stacksize);
-	pthread_attr_setscope(&attr, thread_scope_attribute);
 	pthread_attr_setdetachstate(&attr, detachstate);
 	ret = __bt(-pthread_create(tid, &attr, start, arg));
 	pthread_attr_destroy(&attr);
