@@ -215,6 +215,7 @@ static void *timerobj_server(void *arg)
 
 static int timerobj_spawn_server(void)
 {
+	struct corethread_attributes cta;
 	int ret = 0;
 
 	push_cleanup_lock(&svlock);
@@ -223,11 +224,12 @@ static int timerobj_spawn_server(void)
 	if (svthread)
 		goto out;
 
-	ret = __bt(copperplate_create_thread(threadobj_irq_prio,
-					     timerobj_server, NULL,
-					     PTHREAD_STACK_MIN * 16,
-					     PTHREAD_CREATE_DETACHED,
-					     &svthread));
+	cta.prio = threadobj_irq_prio;
+	cta.start = timerobj_server;
+	cta.arg = NULL;
+	cta.stacksize = PTHREAD_STACK_MIN * 16;
+	cta.detachstate = PTHREAD_CREATE_DETACHED;
+	ret = __bt(copperplate_create_thread(&cta, &svthread));
 	if (ret)
 		return ret;
 

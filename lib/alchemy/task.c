@@ -333,9 +333,10 @@ static int create_tcb(struct alchemy_task **tcbp, RT_TASK *task,
 int rt_task_create(RT_TASK *task, const char *name,
 		   int stksize, int prio, int mode)
 {
+	struct corethread_attributes cta;
 	struct alchemy_task *tcb;
-	int detachstate, ret;
 	struct service svc;
+	int ret;
 
 	if (mode & ~(T_LOCK | T_WARNSW | T_JOINABLE))
 		return -EINVAL;
@@ -349,12 +350,14 @@ int rt_task_create(RT_TASK *task, const char *name,
 	/* We want this to be set prior to spawning the thread. */
 	tcb->self = *task;
 
-	detachstate = mode & T_JOINABLE ?
+	cta.detachstate = mode & T_JOINABLE ?
 		PTHREAD_CREATE_JOINABLE : PTHREAD_CREATE_DETACHED;
+	cta.prio = prio;
+	cta.start = task_trampoline;
+	cta.arg = tcb;
+	cta.stacksize = stksize;
 
-	ret = __bt(copperplate_create_thread(prio, task_trampoline, tcb,
-					     stksize, detachstate,
-					     &tcb->thobj.tid));
+	ret = __bt(copperplate_create_thread(&cta, &tcb->thobj.tid));
 	if (ret)
 		delete_tcb(tcb);
 	else

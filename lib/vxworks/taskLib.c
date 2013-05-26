@@ -318,6 +318,7 @@ static STATUS __taskInit(struct wind_task *task,
 			 struct WIND_TCB *tcb, const char *name,
 			 int prio, int flags, FUNCPTR entry, int stacksize)
 {
+	struct corethread_attributes cta;
 	struct threadobj_init_data idata;
 	pthread_mutexattr_t mattr;
 	int ret, cprio;
@@ -365,9 +366,13 @@ static STATUS __taskInit(struct wind_task *task,
 
 	registry_init_file(&task->fsobj, &registry_ops);
 
-	ret = __bt(copperplate_create_thread(cprio, task_trampoline, task,
-					     stacksize, PTHREAD_CREATE_DETACHED,
-					     &task->thobj.tid));
+	cta.prio = cprio;
+	cta.start = task_trampoline;
+	cta.arg = tcb;
+	cta.stacksize = stacksize;
+	cta.detachstate = PTHREAD_CREATE_DETACHED;
+	ret = __bt(copperplate_create_thread(&cta, &task->thobj.tid));
+
 	if (ret) {
 		registry_destroy_file(&task->fsobj);
 		cluster_delobj(&wind_task_table, &task->cobj);

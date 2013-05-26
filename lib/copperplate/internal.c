@@ -69,28 +69,27 @@ int copperplate_probe_node(unsigned int id)
 	return pthread_probe_np((pid_t)id) == 0;
 }
 
-int copperplate_create_thread(int prio,
-			      void *(*start)(void *arg), void *arg,
-			      size_t stacksize,
-			      int detachstate,
+int copperplate_create_thread(const struct corethread_attributes *cta,
 			      pthread_t *tid)
 {
 	struct sched_param_ex param_ex;
 	pthread_attr_ex_t attr_ex;
+	size_t stacksize;
 	int policy, ret;
 
+	stacksize = cta->stacksize;
 	if (stacksize < PTHREAD_STACK_MIN * 4)
 		stacksize = PTHREAD_STACK_MIN * 4;
 
-	param_ex.sched_priority = prio;
-	policy = prio ? SCHED_RT : SCHED_OTHER;
+	param_ex.sched_priority = cta->prio;
+	policy = cta->prio ? SCHED_RT : SCHED_OTHER;
 	pthread_attr_init_ex(&attr_ex);
 	pthread_attr_setinheritsched_ex(&attr_ex, PTHREAD_EXPLICIT_SCHED);
 	pthread_attr_setschedpolicy_ex(&attr_ex, policy);
 	pthread_attr_setschedparam_ex(&attr_ex, &param_ex);
 	pthread_attr_setstacksize_ex(&attr_ex, stacksize);
-	pthread_attr_setdetachstate_ex(&attr_ex, detachstate);
-	ret = __bt(-pthread_create_ex(tid, &attr_ex, start, arg));
+	pthread_attr_setdetachstate_ex(&attr_ex, cta->detachstate);
+	ret = __bt(-pthread_create_ex(tid, &attr_ex, cta->start, cta->arg));
 	pthread_attr_destroy_ex(&attr_ex);
 
 	return ret;
@@ -114,28 +113,27 @@ int copperplate_probe_node(unsigned int id)
 	return kill((pid_t)id, 0) == 0;
 }
 
-int copperplate_create_thread(int prio,
-			      void *(*start)(void *arg), void *arg,
-			      size_t stacksize,
-			      int detachstate,
+int copperplate_create_thread(const struct corethread_attributes *cta,
 			      pthread_t *tid)
 {
 	struct sched_param param;
 	pthread_attr_t attr;
+	size_t stacksize;
 	int policy, ret;
 
+	stacksize = cta->stacksize;
 	if (stacksize < PTHREAD_STACK_MIN * 4)
 		stacksize = PTHREAD_STACK_MIN * 4;
 
-	param.sched_priority = prio;
-	policy = prio ? SCHED_RT : SCHED_OTHER;
+	param.sched_priority = cta->prio;
+	policy = cta->prio ? SCHED_RT : SCHED_OTHER;
 	pthread_attr_init(&attr);
 	pthread_attr_setinheritsched(&attr, PTHREAD_EXPLICIT_SCHED);
 	pthread_attr_setschedpolicy(&attr, policy);
 	pthread_attr_setschedparam(&attr, &param);
 	pthread_attr_setstacksize(&attr, stacksize);
-	pthread_attr_setdetachstate(&attr, detachstate);
-	ret = __bt(-pthread_create(tid, &attr, start, arg));
+	pthread_attr_setdetachstate(&attr, cta->detachstate);
+	ret = __bt(-pthread_create(tid, &attr, cta->start, cta->arg));
 	pthread_attr_destroy(&attr);
 
 	return ret;

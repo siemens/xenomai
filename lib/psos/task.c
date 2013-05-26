@@ -247,6 +247,7 @@ static int check_task_priority(u_long psos_prio, int *core_prio)
 u_long t_create(const char *name, u_long prio,
 		u_long sstack, u_long ustack, u_long flags, u_long *tid_r)
 {
+	struct corethread_attributes cta;
 	struct threadobj_init_data idata;
 	struct psos_task *task;
 	struct syncstate syns;
@@ -308,9 +309,13 @@ u_long t_create(const char *name, u_long prio,
 	idata.priority = cprio;
 	threadobj_init(&task->thobj, &idata);
 
-	ret = __bt(copperplate_create_thread(cprio, task_trampoline, task,
-					     ustack, PTHREAD_CREATE_DETACHED,
-					     &task->thobj.tid));
+	cta.prio = cprio;
+	cta.start = task_trampoline;
+	cta.arg = task;
+	cta.stacksize = ustack;
+	cta.detachstate = PTHREAD_CREATE_DETACHED;
+
+	ret = __bt(copperplate_create_thread(&cta, &task->thobj.tid));
 	if (ret) {
 		cluster_delobj(&psos_task_table, &task->cobj);
 		threadobj_destroy(&task->thobj);

@@ -67,6 +67,14 @@ struct shared_heap {
 	} buckets[HOBJ_NBUCKETS];
 };
 
+struct corethread_attributes {
+	int prio;
+	void *(*start)(void *arg);
+	void *arg;
+	size_t stacksize;
+	int detachstate;
+};
+
 extern pid_t __node_id;
 
 extern struct coppernode __node_info;
@@ -100,10 +108,7 @@ pid_t copperplate_get_tid(void);
 
 int copperplate_probe_node(unsigned int id);
 
-int copperplate_create_thread(int prio,
-			      void *(*start)(void *arg), void *arg,
-			      size_t stacksize,
-			      int detachstate,
+int copperplate_create_thread(const struct corethread_attributes *cta,
 			      pthread_t *tid);
 
 int copperplate_renice_thread(pthread_t tid, int prio);
