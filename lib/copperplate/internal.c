@@ -274,3 +274,9 @@ const char *symerror(int errnum)
 
 	return __esym_map[v];
 }
+
+void __run_cleanup_block(struct cleanup_block *cb)
+{
+	__RT(pthread_mutex_unlock(cb->lock));
+	cb->handler(cb->arg);
+}

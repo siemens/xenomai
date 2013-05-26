@@ -62,10 +62,28 @@ struct service {
 
 #endif  /* !CONFIG_XENO_ASYNC_CANCEL */
 
-#define push_cleanup_lock(lock)		\
-	pthread_cleanup_push((void (*)(void *))__RT(pthread_mutex_unlock), (lock))
+struct cleanup_block {
+	pthread_mutex_t *lock;
+	void (*handler)(void *arg);
+	void *arg;
+};
 
-#define pop_cleanup_lock(lock)		\
+#define __push_cleanup_args(__cb, __lock, __fn, __arg)	\
+	((__cb)->lock = (__lock)),			\
+	((__cb)->handler = (void (*)(void *))(__fn)),	\
+	((__cb)->arg = (__arg))
+
+#define push_cleanup_handler(__cb, __lock, __fn, __arg)			\
+	pthread_cleanup_push((void (*)(void *))__run_cleanup_block,	\
+			     (__push_cleanup_args(__cb, __lock, __fn, __arg), (__cb)))
+
+#define pop_cleanup_handler(__cb)	\
+	pthread_cleanup_pop(0)
+
+#define push_cleanup_lock(__lock)	\
+	pthread_cleanup_push((void (*)(void *))__RT(pthread_mutex_unlock), (__lock))
+
+#define pop_cleanup_lock(__lock)	\
 	pthread_cleanup_pop(0)
 
 #ifdef __XENO_DEBUG__
@@ -196,5 +214,15 @@ int __check_cancel_type(const char *locktype);
 #define atomic_sub_fetch(v, n)	__sync_sub_and_fetch(&(v), n)
 #define atomic_add_fetch(v, n)	__sync_add_and_fetch(&(v), n)
 #define atomic_cmp_swap(ptr, old, new)  __sync_val_compare_and_swap(ptr, old, new)
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void __run_cleanup_block(struct cleanup_block *cb);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _COPPERPLATE_LOCK_H */
