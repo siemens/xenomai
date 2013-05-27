@@ -19,6 +19,7 @@
 #ifndef _COPPERPLATE_LOCK_H
 #define _COPPERPLATE_LOCK_H
 
+#include <pthread.h>
 #include <copperplate/wrappers.h>
 #include <copperplate/debug.h>
 

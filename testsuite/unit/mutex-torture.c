@@ -725,15 +725,15 @@ void nrt_lock(void *cookie)
 {
 	pthread_mutex_t *mutex = cookie;
 
-	/* Check that XNOTHER flag gets cleared and set back when
+	/* Check that XNWEAK flag gets cleared and set back when
 	   changing priority */
-	check_current_mode(XNRELAX | XNOTHER, XNRELAX | XNOTHER);
+	check_current_mode(XNRELAX | XNWEAK, XNRELAX | XNWEAK);
 	check_current_prio(0);
 	dispatch("auto_switchback renice 1", THREAD_RENICE, 1, 0, 1);
-	check_current_mode(XNOTHER, 0);
+	check_current_mode(XNWEAK, 0);
 	check_current_prio(1);
 	dispatch("auto_switchback renice 2", THREAD_RENICE, 1, 0, 0);
-	check_current_mode(XNRELAX | XNOTHER, XNRELAX | XNOTHER);
+	check_current_mode(XNRELAX | XNWEAK, XNRELAX | XNWEAK);
 	check_current_prio(0);
 
 	/* Check mode changes for auto-switchback threads while using
@@ -743,7 +743,7 @@ void nrt_lock(void *cookie)
 	ms_sleep(11);
 	check_current_prio(2);
 	dispatch("auto_switchback mutex_unlock 1", MUTEX_UNLOCK, 1, 0, mutex);
-	check_current_mode(XNRELAX | XNOTHER, XNRELAX | XNOTHER);
+	check_current_mode(XNRELAX | XNWEAK, XNRELAX | XNWEAK);
 }
 
 void auto_switchback(void)

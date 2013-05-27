@@ -27,20 +27,20 @@
 #error "please don't include nucleus/sched-rt.h directly"
 #endif
 
-/* Priority scale for the RT scheduling class. */
+/*
+ * Global priority scale for Xenomai's RT scheduling class, available
+ * to SCHED_COBALT members.
+ */
 #define XNSCHED_RT_MIN_PRIO	0
 #define XNSCHED_RT_MAX_PRIO	257
 #define XNSCHED_RT_NR_PRIO	(XNSCHED_RT_MAX_PRIO - XNSCHED_RT_MIN_PRIO + 1)
 
 /*
- * Builtin priorities shared by SCHED_FIFO over Cobalt and RTDM, only
- * use a sub-range of the available priority levels from the RT
- * scheduling class, in order to exhibit a 1:1 mapping with Linux's
- * SCHED_FIFO ascending priority scale [1..99].
+ * Common POSIX priority range for SCHED_FIFO, and all other classes
+ * except SCHED_COBALT.
  */
-#define XNSCHED_LOW_PRIO	0
-#define XNSCHED_HIGH_PRIO	99
-#define XNSCHED_IRQ_PRIO	XNSCHED_RT_MAX_PRIO /* For IRQ servers. */
+#define XNSCHED_FIFO_MIN_PRIO	1
+#define XNSCHED_FIFO_MAX_PRIO	99
 
 #ifdef __KERNEL__
 
@@ -51,10 +51,6 @@
 #endif
 
 extern struct xnsched_class xnsched_class_rt;
-
-extern struct xnsched_class xnsched_class_idle;
-
-#define xnsched_class_default xnsched_class_rt
 
 static inline void __xnsched_rt_requeue(struct xnthread *thread)
 {
@@ -84,10 +80,14 @@ static inline void __xnsched_rt_setparam(struct xnthread *thread,
 {
 	thread->cprio = p->rt.prio;
 	if (!xnthread_test_state(thread, XNBOOST)) {
+#ifdef CONFIG_XENO_OPT_SCHED_WEAK
+		xnthread_clear_state(thread, XNWEAK);
+#else
 		if (thread->cprio)
-			xnthread_clear_state(thread, XNOTHER);
+			xnthread_clear_state(thread, XNWEAK);
 		else
-			xnthread_set_state(thread, XNOTHER);
+			xnthread_set_state(thread, XNWEAK);
+#endif
 	}
 }
 

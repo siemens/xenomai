@@ -34,6 +34,7 @@
 
 #include <nucleus/schedqueue.h>
 #include <nucleus/sched-tp.h>
+#include <nucleus/sched-weak.h>
 #include <nucleus/sched-sporadic.h>
 #include <nucleus/vfile.h>
 
@@ -64,36 +65,33 @@ typedef struct xnsched {
 	int cpu;
 	struct xnthread *curr;		/*!< Current thread. */
 #ifdef CONFIG_SMP
-	cpumask_t resched;	/*!< Mask of CPUs needing rescheduling. */
+	cpumask_t resched;		/*!< Mask of CPUs needing rescheduling. */
 #endif
-
 	struct xnsched_rt rt;		/*!< Context of built-in real-time class. */
+#ifdef CONFIG_XENO_OPT_SCHED_WEAK
+	struct xnsched_weak weak;	/*!< Context of weak scheduling class. */
+#endif
 #ifdef CONFIG_XENO_OPT_SCHED_TP
 	struct xnsched_tp tp;		/*!< Context of TP class. */
 #endif
 #ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
 	struct xnsched_sporadic pss;	/*!< Context of sporadic scheduling class. */
 #endif
-
 	xntimerq_t timerqueue;		/* !< Core timer queue. */
 	volatile unsigned inesting;	/*!< Interrupt nesting level. */
 	struct xntimer htimer;		/*!< Host timer. */
 	struct xnthread *zombie;
 	struct xnthread rootcb;		/*!< Root thread control block. */
-
 #ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
 	struct xnthread *last;
 #endif
-
 #ifdef CONFIG_XENO_HW_FPU
 	struct xnthread *fpuholder;	/*!< Thread owning the current FPU context. */
 #endif
-
 #ifdef CONFIG_XENO_OPT_WATCHDOG
-	struct xntimer wdtimer;	/*!< Watchdog timer object. */
-	int wdcount;		/*!< Watchdog tick count. */
+	struct xntimer wdtimer;		/*!< Watchdog timer object. */
+	int wdcount;			/*!< Watchdog tick count. */
 #endif
-
 #ifdef CONFIG_XENO_OPT_STATS
 	xnticks_t last_account_switch;	/*!< Last account switch date (ticks). */
 	xnstat_exectime_t *current_account;	/*!< Currently active account */
@@ -134,7 +132,6 @@ struct xnsched_class {
 	const char *name;
 };
 
-#define XNSCHED_CLASS_MAX_PRIO		1024
 #define XNSCHED_CLASS_WEIGHT(n)		(n * XNSCHED_CLASS_MAX_PRIO)
 
 /* Placeholder for current thread priority */

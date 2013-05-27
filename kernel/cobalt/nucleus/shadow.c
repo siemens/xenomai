@@ -324,19 +324,8 @@ static inline void do_kthread_signal(struct task_struct *p,
 				     struct xnthread *thread,
 				     struct lostage_signal *rq)
 {
-	struct sched_param param;
-	int policy;
-
-	if (rq->signo == SIGSHADOW &&
-	    sigshadow_action(rq->sigval) == SIGSHADOW_ACTION_RENICE) {
-		param.sched_priority = sigshadow_arg(rq->sigval);
-		policy = param.sched_priority > 0 ? SCHED_FIFO: SCHED_NORMAL;
-		sched_setscheduler(p, policy, &param);
-		return;
-	}
-
 	printk(XENO_WARN
-	       "kernel shadow %s received unhandled signal %d (action=%x)\n",
+	       "kernel shadow %s received unhandled signal %d (action=0x%x)\n",
 	       thread->name, rq->signo, rq->sigval);
 }
 
@@ -510,7 +499,6 @@ void xnshadow_relax(int notify, int reason)
 	xnthread_t *thread = xnpod_current_thread();
 	struct task_struct *p = current;
 	siginfo_t si;
-	int prio;
 
 	XENO_BUGON(NUCLEUS, xnthread_test_state(thread, XNROOT));
 
@@ -566,13 +554,6 @@ void xnshadow_relax(int notify, int reason)
 			send_sig_info(SIGDEBUG, &si, p);
 		}
 		xnsynch_detect_claimed_relax(thread);
-	}
-
-	if (xnthread_test_info(thread, XNPRIOSET)) {
-		prio = normalize_priority(xnthread_current_priority(thread));
-		xnthread_clear_info(thread, XNPRIOSET);
-		xnshadow_send_sig(thread, SIGSHADOW,
-				  sigshadow_int(SIGSHADOW_ACTION_RENICE, prio));
 	}
 
 #ifdef CONFIG_SMP
@@ -698,21 +679,32 @@ EXPORT_SYMBOL_GPL(xnshadow_kick);
 
 void __xnshadow_demote(struct xnthread *thread) /* nklock locked, irqs off */
 {
+	struct xnsched_class *sched_class;
+	union xnsched_policy_param param;
+
 	/*
 	 * First we kick the thread out of primary mode, and have it
 	 * resume execution immediately over the regular linux
 	 * context.
 	 */
 	__xnshadow_kick(thread);
+
 	/*
-	 * Then we send it a renice action signal to demote it from
-	 * SCHED_FIFO to SCHED_OTHER, to turn that thread into a non
-	 * real-time Xenomai shadow, which still has access to Xenomai
-	 * resources, but won't compete anymore for real-time
-	 * scheduling.
+	 * Then we demote it, turning that thread into a non real-time
+	 * Xenomai shadow, which still has access to Xenomai
+	 * resources, but won't compete for real-time scheduling
+	 * anymore. In effect, moving the thread to a weak scheduling
+	 * class/priority will prevent it from sticking back to
+	 * primary mode.
 	 */
-	xnshadow_send_sig(thread, SIGSHADOW,
-			  sigshadow_int(SIGSHADOW_ACTION_RENICE, 0));
+#ifdef CONFIG_XENO_OPT_SCHED_WEAK
+	param.weak.prio = 0;
+	sched_class = &xnsched_class_weak;
+#else
+	param.rt.prio = 0;
+	sched_class = &xnsched_class_rt;
+#endif
+	xnpod_set_thread_schedparam(thread, sched_class, &param);
 }
 
 void xnshadow_demote(struct xnthread *thread)
@@ -857,11 +849,6 @@ int xnshadow_map_user(struct xnthread *thread,
 	xnarch_atomic_inc(&sys_ppd->refcnt);
 	ipipe_enable_notifier(current);
 
-	if (xnthread_base_priority(thread) == 0 &&
-	    current->policy == SCHED_NORMAL)
-		/* Non real-time shadow. */
-		xnthread_set_state(thread, XNOTHER);
-
 	attr.mode = 0;
 	attr.affinity = affinity;
 	attr.entry = NULL;
@@ -873,12 +860,6 @@ int xnshadow_map_user(struct xnthread *thread,
 	xnthread_sync_window(thread);
 
 	ret = xnshadow_harden();
-
-	/*
-	 * Ensure that user space will receive the proper Linux task policy
-	 * and prio on next switch to secondary mode.
-	 */
-	xnthread_set_info(thread, XNPRIOSET);
 
 	xntrace_pid(xnthread_host_pid(thread),
 		    xnthread_current_priority(thread));
@@ -988,10 +969,6 @@ int xnshadow_map_kernel(struct xnthread *thread, struct completion *done)
 	xndebug_shadow_init(thread);
 	ipipe_enable_notifier(p);
 
-	if (xnthread_base_priority(thread) == 0 &&
-	    p->policy == SCHED_NORMAL)
-		xnthread_set_state(thread, XNOTHER);
-
 	/*
 	 * CAUTION: Soon after xnpod_init_thread() has returned,
 	 * xnpod_start_thread() is commonly invoked from the root
@@ -1054,20 +1031,6 @@ void xnshadow_unmap(struct xnthread *thread)
 	xnarch_atomic_dec(&sys_ppd->refcnt);
 }
 EXPORT_SYMBOL_GPL(xnshadow_unmap);
-
-/* Called with nklock locked, Xenomai interrupts off. */
-void xnshadow_renice(struct xnthread *thread)
-{
-	/*
-	 * We need to bound the priority values in the
-	 * [1..MAX_RT_PRIO-1] range, since the Xenomai priority scale
-	 * is a superset of the Linux priority scale.
-	 */
-	int prio = normalize_priority(thread->cprio);
-
-	xnshadow_send_sig(thread, SIGSHADOW,
-			  sigshadow_int(SIGSHADOW_ACTION_RENICE, prio));
-}
 
 static int xnshadow_sys_migrate(int domain)
 {
@@ -1948,7 +1911,7 @@ done:
 		    xnthread_test_info(thread, XNKICKED)) {
 			sigs = 1;
 			request_syscall_restart(thread, regs, sysflags);
-		} else if (xnthread_test_state(thread, XNOTHER) &&
+		} else if (xnthread_test_state(thread, XNWEAK) &&
 			   xnthread_get_rescnt(thread) == 0) {
 			if (switched)
 				switched = 0;
@@ -2028,7 +1991,7 @@ static int handle_root_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 
 	/*
 	 * Catch cancellation requests pending for user shadows
-	 * running mostly in secondary mode, i.e. XNOTHER. In that
+	 * running mostly in secondary mode, i.e. XNWEAK. In that
 	 * case, we won't run request_syscall_restart() that
 	 * frequently, so check for cancellation here.
 	 */
@@ -2110,7 +2073,7 @@ restart:
 		if (signal_pending(current)) {
 			sigs = 1;
 			request_syscall_restart(thread, regs, sysflags);
-		} else if (xnthread_test_state(thread, XNOTHER) &&
+		} else if (xnthread_test_state(thread, XNWEAK) &&
 			   xnthread_get_rescnt(thread) == 0)
 			sysflags |= __xn_exec_switchback;
 	}

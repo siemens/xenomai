@@ -34,12 +34,10 @@
 
 extern struct xnsched_class xnsched_class_idle;
 
-#define xnsched_class_default xnsched_class_rt
-
 static inline void __xnsched_idle_setparam(struct xnthread *thread,
 					   const union xnsched_policy_param *p)
 {
-	xnthread_clear_state(thread, XNOTHER);
+	xnthread_clear_state(thread, XNWEAK);
 	thread->cprio = p->idle.prio;
 }
 

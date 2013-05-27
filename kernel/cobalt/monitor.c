@@ -125,7 +125,7 @@ static int cobalt_monitor_enter_inner(struct cobalt_monitor *mon)
 	ret = xnsynch_fast_acquire(mon->gate.fastlock, xnthread_handle(cur));
 	switch(ret) {
 	case 0:
-		if (xnthread_test_state(cur, XNOTHER))
+		if (xnthread_test_state(cur, XNWEAK))
 			xnthread_inc_rescnt(cur);
 		break;
 	default:

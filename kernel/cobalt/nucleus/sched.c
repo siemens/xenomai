@@ -53,6 +53,9 @@ static void xnsched_register_class(struct xnsched_class *sched_class)
 void xnsched_register_classes(void)
 {
 	xnsched_register_class(&xnsched_class_idle);
+#ifdef CONFIG_XENO_OPT_SCHED_WEAK
+	xnsched_register_class(&xnsched_class_weak);
+#endif
 #ifdef CONFIG_XENO_OPT_SCHED_TP
 	xnsched_register_class(&xnsched_class_tp);
 #endif

@@ -10,13 +10,59 @@ config XENO_OPT_SCHED_CLASSES
 	when and how to select a new thread to run.
 
 	The Xenomai core has a built-in real-time class, which
-	supports both preemptive fixed- priority FIFO scheduling, and
-	round-robin scheduling.
+	supports both preemptive fixed-priority FIFO, and round-robin
+	scheduling.
 
-	Enabling this option will allow you to select additional
-	scheduling classes to compile in.
+	When CONFIG_XENO_OPT_SCHED_WEAK is disabled, Xenomai's
+	real-time class also supports threads from the SCHED_OTHER
+	class at FIFO priority level 0. Such threads can access
+	Xenomai resources, wait on Xenomai synchronization objects,
+	without competing for the CPU with members of other scheduling
+	classes.
+
+	NOTE: Xenomai assumes no real-time requirement for SCHED_OTHER
+	threads. Therefore, they are automatically moved back to
+	secondary mode upon return from a Xenomai syscall, unless they
+	hold a mutex, which would defer the transition until the mutex
+	is released.
+
+	Enabling CONFIG_XENO_OPT_SCHED_CLASSES will allow you to
+	select additional scheduling classes to compile in.
 
 	If in doubt, say N.
+
+config XENO_OPT_SCHED_WEAK
+	bool "Weak scheduling class"
+	default n
+	depends on XENO_OPT_SCHED_CLASSES
+	help
+
+	This option enables support for binding threads from the Linux
+	SCHED_FIFO/RR scheduling classes to the Xenomai domain as
+	members of the SCHED_WEAK class, with up to 100 priority
+	levels from [0..99] included.  When enabled, SCHED_WEAK is the
+	low priority class of the Xenomai system, providing no
+	real-time guarantee.
+
+	Members from the SCHED_WEAK class are weakly scheduled by
+	Xenomai, only for the purpose of synchronizing with real-time
+	threads from other scheduling classes.  However, they cannot
+	compete for CPU resources with real-time threads, and leave
+	the primary domain upon return from Xenomai syscalls
+	automatically (*).
+
+	This feature is an extension of Xenomai's special handling of
+	SCHED_OTHER threads, to the SCHED_FIFO/RR POSIX classes from a
+	regular Linux kernel. If disabled, SCHED_WEAK is interpreted
+	as an alias to SCHED_OTHER by the Xenomai scheduler,
+	restricted to priority 0. Conversely, SCHED_OTHER threads are
+	eventually members of Xenomai's SCHED_WEAK class at priority
+	0, when this feature is enabled.
+
+	If in doubt, say N.
+
+	(*) With a special exception when a mutex is held. See NOTE
+	from CONFIG_XENO_OPT_SCHED_CLASSES.
 
 config XENO_OPT_SCHED_TP
 	bool "Temporal partitioning"

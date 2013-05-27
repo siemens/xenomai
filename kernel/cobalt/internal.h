@@ -58,9 +58,6 @@
 #define COBALT_EVENT_MAGIC       COBALT_MAGIC(0F)
 #define COBALT_MONITOR_MAGIC     COBALT_MAGIC(10)
 
-#define COBALT_MIN_PRIORITY      XNSCHED_LOW_PRIO
-#define COBALT_MAX_PRIORITY      XNSCHED_HIGH_PRIO
-
 #define ONE_BILLION             1000000000
 
 #define cobalt_obj_active(h,m,t)			\

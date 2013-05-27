@@ -29,22 +29,11 @@ int xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt)
 		return 0;
 
 	action = sigshadow_action(si->si_int);
-	switch(action) {
+
+	switch (action) {
 	case SIGSHADOW_ACTION_HARDEN:
 		XENOMAI_SYSCALL1(sc_nucleus_migrate, XENOMAI_XENO_DOMAIN);
 		break;
-
-	case SIGSHADOW_ACTION_RENICE: {
-		struct sched_param param;
-		int policy;
-
-		arg = sigshadow_arg(si->si_int);
-		param.sched_priority = arg;
-		policy = param.sched_priority > 0 ? SCHED_FIFO: SCHED_OTHER;
-		__STD(pthread_setschedparam(pthread_self(), policy, &param));
-		break;
-	}
-
 	case SIGSHADOW_ACTION_BACKTRACE:
 		arg = sigshadow_arg(si->si_int);
 		nr = backtrace(frames, sizeof(frames) / sizeof(frames[0]));
@@ -52,7 +41,6 @@ int xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt)
 		skip = nr > 3 ? 3 : 0;
 		XENOMAI_SYSCALL3(sc_nucleus_backtrace, nr - skip, frames + skip, arg);
 		break;
-
 	default:
 		return 0;
 	}
@@ -68,21 +56,22 @@ static void xeno_sigshadow_handler(int sig, siginfo_t *si, void *ctxt)
 	if (xeno_sigwinch_handler(sig, si, ctxt))
 		return;
 
-	/* Not a signal sent by Xenomai nucleus */
-	if ((!(sa->sa_flags & SA_SIGINFO) && !sa->sa_handler)
-	    || ((sa->sa_flags & SA_SIGINFO) && !sa->sa_sigaction))
+	/* Not a signal sent by the Xenomai nucleus */
+	if (((sa->sa_flags & SA_SIGINFO) == 0 && sa->sa_handler == NULL)
+	    || ((sa->sa_flags & SA_SIGINFO) && sa->sa_sigaction == NULL))
 		return;
 
 	pthread_sigmask(SIG_SETMASK, &sa->sa_mask, &saved_sigset);
+
 	if (!(sa->sa_flags & SA_SIGINFO))
 		sa->sa_handler(sig);
 	else
 		sa->sa_sigaction(sig, si, ctxt);
+
 	pthread_sigmask(SIG_SETMASK, &saved_sigset, NULL);
-	return;
 }
 
-static void xeno_sigshadow_install(void)
+static void install_sigshadow(void)
 {
 	struct sigaction new_sigshadow_action;
 	sigset_t saved_sigset;
@@ -94,17 +83,19 @@ static void xeno_sigshadow_install(void)
 	new_sigshadow_action.sa_flags = SA_SIGINFO | SA_RESTART;
 	new_sigshadow_action.sa_sigaction = xeno_sigshadow_handler;
 	sigemptyset(&new_sigshadow_action.sa_mask);
-
 	pthread_sigmask(SIG_BLOCK, &mask_sigset, &saved_sigset);
+
 	sigaction(SIGSHADOW,
 		  &new_sigshadow_action, &xeno_saved_sigshadow_action);
-	if (!(xeno_saved_sigshadow_action.sa_flags & SA_NODEFER))
+
+	if ((xeno_saved_sigshadow_action.sa_flags & SA_NODEFER) == 0)
 		sigaddset(&xeno_saved_sigshadow_action.sa_mask, SIGSHADOW);
+
 	pthread_sigmask(SIG_SETMASK, &saved_sigset, NULL);
 }
 
 void xeno_sigshadow_install_once(void)
 {
-	static pthread_once_t sigshadow_installed = PTHREAD_ONCE_INIT;
-	pthread_once(&sigshadow_installed, xeno_sigshadow_install);
+	static pthread_once_t once = PTHREAD_ONCE_INIT;
+	pthread_once(&once, install_sigshadow);
 }

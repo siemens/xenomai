@@ -22,6 +22,8 @@
 
 #include <nucleus/queue.h>
 
+#define XNSCHED_CLASS_MAX_PRIO		1024
+
 #ifdef CONFIG_XENO_OPT_SCALABLE_SCHED
 /*
  * Multi-level priority queue, suitable for handling the runnable

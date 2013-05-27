@@ -362,6 +362,14 @@ EXPORT_SYMBOL_GPL(xnsynch_wakeup_this_sleeper);
  * raise/lower a thread's priority. The thread's base priority value
  * is _not_ changed and if ready, the thread is always moved at the
  * end of its priority group.
+ *
+ * NOTE: there is no point in propagating Xenomai policy/priority
+ * changes to linux/libc, since doing so would be papering over a
+ * basic priority inversion issue in the application code. I.e. a
+ * Xenomai mutex owner shall NOT enter secondary mode until it
+ * eventually drops the resource - this is even triggering a debug
+ * signal-, so there is no point in boosting the scheduling
+ * policy/priority settings applicable to that mode anyway.
  */
 
 static void xnsynch_renice_thread(struct xnthread *thread,
@@ -372,11 +380,6 @@ static void xnsynch_renice_thread(struct xnthread *thread,
 
 	if (thread->wchan)
 		xnsynch_requeue_sleeper(thread);
-
-	if (xnthread_test_state(thread, XNRELAX))
-		xnshadow_renice(thread);
-	else
-		xnthread_set_info(thread, XNPRIOSET);
 }
 
 /*!
@@ -440,7 +443,7 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 	fastlock = xnarch_atomic_cmpxchg(lockp, XN_NO_HANDLE, threadh);
 
 	if (likely(fastlock == XN_NO_HANDLE)) {
-		if (xnthread_test_state(thread, XNOTHER))
+		if (xnthread_test_state(thread, XNWEAK))
 			xnthread_inc_rescnt(thread);
 		xnthread_clear_info(thread,
 				    XNRMID | XNTIMEO | XNBREAK);
@@ -541,7 +544,7 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 		xnthread_set_info(thread, XNTIMEO);
 	} else {
 	      grab_and_exit:
-		if (xnthread_test_state(thread, XNOTHER))
+		if (xnthread_test_state(thread, XNWEAK))
 			xnthread_inc_rescnt(thread);
 
 		/* We are the new owner, update the fastlock

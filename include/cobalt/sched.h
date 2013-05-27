@@ -48,6 +48,9 @@ int __sched_cpucount(size_t __setsize, const cpu_set_t *__setp);
 #ifndef __sched_extensions_defined
 #define __sched_extensions_defined
 
+#define SCHED_COBALT		42
+#define SCHED_WEAK		43
+
 #ifndef SCHED_SPORADIC
 #define SCHED_SPORADIC		10
 #define sched_ss_low_priority	sched_u.ss.__sched_low_priority
@@ -55,8 +58,6 @@ int __sched_cpucount(size_t __setsize, const cpu_set_t *__setp);
 #define sched_ss_init_budget	sched_u.ss.__sched_init_budget
 #define sched_ss_max_repl	sched_u.ss.__sched_max_repl
 #endif	/* !SCHED_SPORADIC */
-
-#define SCHED_COBALT		42
 
 #define sched_rr_quantum	sched_u.rr.__sched_rr_quantum
 

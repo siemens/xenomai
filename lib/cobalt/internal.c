@@ -43,7 +43,7 @@ void __cobalt_thread_harden(void)
 	unsigned long status = xeno_get_current_mode();
 
 	/* non-RT shadows are NOT allowed to force primary mode. */
-	if ((status & (XNRELAX|XNOTHER)) == XNRELAX)
+	if ((status & (XNRELAX|XNWEAK)) == XNRELAX)
 		XENOMAI_SYSCALL1(sc_nucleus_migrate, XENOMAI_XENO_DOMAIN);
 }
 
@@ -117,7 +117,7 @@ int cobalt_monitor_enter(cobalt_monitor_t *mon)
 	 */
 
 	status = xeno_get_current_mode();
-	if (status & (XNRELAX|XNOTHER))
+	if (status & (XNRELAX|XNWEAK))
 		goto syscall;
 
 	datp = get_monitor_data(mon);
@@ -155,7 +155,7 @@ int cobalt_monitor_exit(cobalt_monitor_t *mon)
 		goto syscall;
 
 	status = xeno_get_current_mode();
-	if (status & XNOTHER)
+	if (status & XNWEAK)
 		goto syscall;
 
 	cur = xeno_get_current();

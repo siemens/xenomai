@@ -113,7 +113,7 @@ static void xnsched_tp_setparam(struct xnthread *thread,
 {
 	struct xnsched *sched = thread->sched;
 
-	xnthread_clear_state(thread, XNOTHER);
+	xnthread_clear_state(thread, XNWEAK);
 	thread->tps = &sched->tp.partitions[p->tp.ptid];
 	thread->cprio = p->tp.prio;
 }
@@ -406,7 +406,7 @@ struct xnsched_class xnsched_class_tp = {
 	.sched_init_vfile	=	xnsched_tp_init_vfile,
 	.sched_cleanup_vfile	=	xnsched_tp_cleanup_vfile,
 #endif
-	.weight			=	XNSCHED_CLASS_WEIGHT(1),
+	.weight			=	XNSCHED_CLASS_WEIGHT(2),
 	.name			=	"tp"
 };
 EXPORT_SYMBOL_GPL(xnsched_class_tp);

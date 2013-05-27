@@ -317,7 +317,7 @@ int cobalt_mutex_trylock(struct __shadow_mutex __user *u_mx)
 				   xnthread_handle(cur));
 	switch(err) {
 	case 0:
-		if (xnthread_test_state(cur, XNOTHER))
+		if (xnthread_test_state(cur, XNWEAK))
 			xnthread_inc_rescnt(cur);
 		break;
 

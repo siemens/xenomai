@@ -61,8 +61,8 @@ struct cobalt_thread {
 	/* For timers. */
 	xnqueue_t timersq;
 
-	/* Cached value for current policy. */
-	int sched_policy;
+	/* Cached value for current policy (user side). */
+	int sched_u_policy;
 
 	/* Monitor wait object and link holder. */
 	struct xnsynch monitor_synch;
@@ -102,25 +102,15 @@ int cobalt_thread_kill(unsigned long tid, int sig);
 int cobalt_thread_stat(pid_t pid,
 		       struct cobalt_threadstat __user *u_stat);
 
-int cobalt_thread_setschedparam(unsigned long tid,
-				int policy,
-				struct sched_param __user *u_param,
-				unsigned long __user *u_window_offset,
-				int __user *u_promoted);
-
 int cobalt_thread_setschedparam_ex(unsigned long tid,
 				   int policy,
-				   struct sched_param __user *u_param,
+				   struct sched_param_ex __user *u_param,
 				   unsigned long __user *u_window_offset,
 				   int __user *u_promoted);
 
-int cobalt_thread_getschedparam(unsigned long tid,
-				int __user *u_policy,
-				struct sched_param __user *u_param);
-
 int cobalt_thread_getschedparam_ex(unsigned long tid,
 				   int __user *u_policy,
-				   struct sched_param __user *u_param);
+				   struct sched_param_ex __user *u_param);
 
 int cobalt_sched_yield(void);
 

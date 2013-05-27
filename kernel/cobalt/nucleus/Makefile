@@ -6,6 +6,7 @@ xeno_nucleus-y := \
 	 registry.o synch.o thread.o clock.o timer.o shadow.o \
 	sched.o sched-idle.o sched-rt.o select.o
 
+xeno_nucleus-$(CONFIG_XENO_OPT_SCHED_WEAK) += sched-weak.o
 xeno_nucleus-$(CONFIG_XENO_OPT_SCHED_SPORADIC) += sched-sporadic.o
 xeno_nucleus-$(CONFIG_XENO_OPT_SCHED_TP) += sched-tp.o
 

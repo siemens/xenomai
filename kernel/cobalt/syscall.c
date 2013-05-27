@@ -228,9 +228,7 @@ int __cobalt_call_not_available(void)
 
 static struct xnsysent __systab[] = {
 	SKINCALL_DEF(sc_cobalt_thread_create, cobalt_thread_create, init),
-	SKINCALL_DEF(sc_cobalt_thread_setschedparam, cobalt_thread_setschedparam, conforming),
 	SKINCALL_DEF(sc_cobalt_thread_setschedparam_ex, cobalt_thread_setschedparam_ex, conforming),
-	SKINCALL_DEF(sc_cobalt_thread_getschedparam, cobalt_thread_getschedparam, any),
 	SKINCALL_DEF(sc_cobalt_thread_getschedparam_ex, cobalt_thread_getschedparam_ex, any),
 	SKINCALL_DEF(sc_cobalt_sched_yield, cobalt_sched_yield, primary),
 	SKINCALL_DEF(sc_cobalt_thread_make_periodic, cobalt_thread_make_periodic_np, conforming),

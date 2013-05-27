@@ -24,7 +24,7 @@
 #define COBALT_SKIN_MAGIC           0x50534531
 
 #define sc_cobalt_thread_create         0
-#define sc_cobalt_thread_setschedparam  2
+/* 1-2 unimplemented */
 #define sc_cobalt_sched_yield           3
 #define sc_cobalt_thread_make_periodic  4
 #define sc_cobalt_thread_wait           5
@@ -51,6 +51,7 @@
 #define sc_cobalt_cond_destroy          26
 #define sc_cobalt_cond_wait_prologue    27
 #define sc_cobalt_cond_wait_epilogue    28
+/* 30-31 unimplemented */
 #define sc_cobalt_mq_open               31
 #define sc_cobalt_mq_close              32
 #define sc_cobalt_mq_unlink             33
@@ -73,6 +74,7 @@
 #define sc_cobalt_sem_unlink            50
 #define sc_cobalt_sem_timedwait         51
 #define sc_cobalt_mq_notify             52
+/* 53-60 unimplemented */
 #define sc_cobalt_mutexattr_init        61
 #define sc_cobalt_mutexattr_destroy     62
 #define sc_cobalt_mutexattr_gettype     63
@@ -87,7 +89,7 @@
 #define sc_cobalt_condattr_setclock     72
 #define sc_cobalt_condattr_getpshared   73
 #define sc_cobalt_condattr_setpshared   74
-#define sc_cobalt_thread_getschedparam  75
+/* 75 unimplemented */
 #define sc_cobalt_thread_kill           76
 #define sc_cobalt_select                77
 #define sc_cobalt_thread_setschedparam_ex	78

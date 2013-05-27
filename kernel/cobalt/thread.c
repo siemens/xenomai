@@ -207,71 +207,24 @@ static void thread_delete_hook(struct xnthread *thread)
 }
 
 /**
- * Get the scheduling policy and parameters of the specified thread.
- *
- * This service returns, at the addresses @a pol and @a par, the current
- * scheduling policy and scheduling parameters (i.e. priority) of the Xenomai
- * POSIX skin thread @a tid. If this service is called from user-space and @a
- * tid is not the identifier of a Xenomai POSIX skin thread, this service
- * fallback to Linux regular pthread_getschedparam service.
- *
- * @param tid target thread;
- *
- * @param pol address where the scheduling policy of @a tid is stored on
- * success;
- *
- * @param par address where the scheduling parameters of @a tid is stored on
- * success.
- *
- * @return 0 on success;
- * @return an error number if:
- * - ESRCH, @a tid is invalid.
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_getschedparam.html">
- * Specification.</a>
- *
- */
-static inline int
-pthread_getschedparam(pthread_t tid, int *pol, struct sched_param *par)
-{
-	int prio;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	if (!cobalt_obj_active(tid, COBALT_THREAD_MAGIC, struct cobalt_thread)) {
-		xnlock_put_irqrestore(&nklock, s);
-		return ESRCH;
-	}
-
-	prio = xnthread_base_priority(&tid->threadbase);
-	par->sched_priority = prio;
-	*pol = tid->sched_policy;
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	return 0;
-}
-
-/**
  * Get the extended scheduling policy and parameters of the specified
  * thread.
  *
- * This service is an extended version of pthread_getschedparam(),
- * that also supports Xenomai-specific or additional POSIX scheduling
- * policies, which are not available with the host Linux environment.
+ * This service is an extended version of the regular
+ * pthread_getschedparam() service, which also supports
+ * Xenomai-specific or additional POSIX scheduling policies, not
+ * available with the host Linux environment.
  *
- * Typically, SCHED_SPORADIC or SCHED_TP parameters can be retrieved
- * from this call.
+ * Typically, SCHED_WEAK, SCHED_SPORADIC or SCHED_TP parameters can be
+ * retrieved from this call.
  *
  * @param tid target thread;
  *
  * @param pol address where the scheduling policy of @a tid is stored on
  * success;
  *
- * @param par address where the scheduling parameters of @a tid is stored on
- * success.
+ * @param par address where the scheduling parameters of @a tid are
+ * stored on success.
  *
  * @return 0 on success;
  * @return an error number if:
@@ -299,9 +252,9 @@ pthread_getschedparam_ex(pthread_t tid, int *pol, struct sched_param_ex *par)
 
 	thread = &tid->threadbase;
 	base_class = xnthread_base_class(thread);
+	*pol = tid->sched_u_policy;
 	prio = xnthread_base_priority(thread);
 	par->sched_priority = prio;
-	*pol = tid->sched_policy;
 
 	if (base_class == &xnsched_class_rt) {
 		if (xnthread_test_state(thread, XNRRB))
@@ -309,6 +262,13 @@ pthread_getschedparam_ex(pthread_t tid, int *pol, struct sched_param_ex *par)
 		goto unlock_and_exit;
 	}
 
+#ifdef CONFIG_XENO_OPT_SCHED_WEAK
+	if (base_class == &xnsched_class_weak) {
+		if (*pol != SCHED_WEAK)
+			par->sched_priority = -par->sched_priority;
+		goto unlock_and_exit;
+	}
+#endif
 #ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
 	if (base_class == &xnsched_class_sporadic) {
 		par->sched_ss_low_priority = thread->pss->param.low_prio;
@@ -392,32 +352,31 @@ unlock_and_exit:
  */
 static inline int pthread_create(pthread_t *tid, const pthread_attr_t *attr)
 {
+	struct xnsched_class *sched_class;
 	union xnsched_policy_param param;
 	struct xnthread_init_attr iattr;
 	pthread_t thread, cur;
 	xnflags_t flags = 0;
 	const char *name;
-	int prio, ret;
+	int prio, ret, pol;
 	spl_t s;
 
 	if (attr && attr->magic != COBALT_THREAD_ATTR_MAGIC)
 		return -EINVAL;
 
 	thread = (pthread_t)xnmalloc(sizeof(*thread));
-
-	if (!thread)
+	if (thread == NULL)
 		return -EAGAIN;
 
-	thread->attr = attr ? *attr : default_thread_attr;
-
 	cur = cobalt_current_thread();
-
+	thread->attr = attr ? *attr : default_thread_attr;
 	if (thread->attr.inheritsched == PTHREAD_INHERIT_SCHED) {
-		/* cur may be NULL if pthread_create is not called by a cobalt
-		   thread, in which case trying to inherit scheduling
-		   parameters is treated as an error. */
-
-		if (!cur) {
+		/*
+		 * cur may be NULL if pthread_create is not called by
+		 * a cobalt thread, in which case trying to inherit
+		 * scheduling parameters is treated as an error.
+		 */
+		if (cur == NULL) {
 			xnfree(thread);
 			return -EINVAL;
 		}
@@ -426,21 +385,50 @@ static inline int pthread_create(pthread_t *tid, const pthread_attr_t *attr)
 					 &thread->attr.schedparam_ex);
 	}
 
+	/*
+	 * NOTE: The user-defined policy may be different than ours,
+	 * e.g. SCHED_FIFO,prio=-7 from userland would be interpreted
+	 * as SCHED_WEAK,prio=7 in kernel space.
+	 */
+	pol = thread->attr.policy;
 	prio = thread->attr.schedparam_ex.sched_priority;
+	if (prio < 0) {
+		prio = -prio;
+		pol = SCHED_WEAK;
+	}
 	name = thread->attr.name;
+	flags |= XNUSER;
 
 	if (thread->attr.fp)
 		flags |= XNFPU;
 
-	flags |= XNUSER;
-
 	iattr.name = name;
 	iattr.flags = flags;
 	iattr.ops = &cobalt_thread_ops;
-	param.rt.prio = prio;
+
+	/*
+	 * When the weak scheduling class is compiled in, SCHED_WEAK
+	 * and SCHED_OTHER threads are scheduled by
+	 * xnsched_class_weak, at their respective priority
+	 * levels. Otherwise, SCHED_OTHER is scheduled by
+	 * xnsched_class_rt at priority level #0.
+	 */
+	switch (pol) {
+#ifdef CONFIG_XENO_OPT_SCHED_WEAK
+	case SCHED_OTHER:
+	case SCHED_WEAK:
+		param.weak.prio = prio;
+		sched_class = &xnsched_class_weak;
+		break;
+#endif
+	default:
+		param.rt.prio = prio;
+		sched_class = &xnsched_class_rt;
+		break;
+	}
 
 	if (xnpod_init_thread(&thread->threadbase,
-			      &iattr, &xnsched_class_rt, &param) != 0) {
+			      &iattr, sched_class, &param) != 0) {
 		xnfree(thread);
 		return -EAGAIN;
 	}
@@ -453,7 +441,7 @@ static inline int pthread_create(pthread_t *tid, const pthread_attr_t *attr)
 	xnsynch_init(&thread->monitor_synch, XNSYNCH_FIFO, NULL);
 	inith(&thread->monitor_link);
 	thread->monitor_queued = 0;
-	thread->sched_policy = thread->attr.policy;
+	thread->sched_u_policy = thread->attr.policy;
 
 	cobalt_timer_init_thread(thread);
 
@@ -468,15 +456,17 @@ static inline int pthread_create(pthread_t *tid, const pthread_attr_t *attr)
 	thread->hkey.u_tid = 0;
 	thread->hkey.mm = NULL;
 
-	/* We need an anonymous registry entry to obtain a handle for fast
-	   mutex locking. */
+	/*
+	 * We need an anonymous registry entry to obtain a handle for
+	 * fast mutex locking.
+	 */
 	ret = xnthread_register(&thread->threadbase, "");
 	if (ret) {
 		thread_destroy(thread);
 		return ret;
 	}
 
-	*tid = thread;		/* Must be done before the thread is started. */
+	*tid = thread; /* Must be done before the thread is started. */
 
 	return 0;
 }
@@ -604,30 +594,42 @@ static inline int pthread_set_mode_np(int clrmask, int setmask, int *mode_r)
 }
 
 /**
- * Set the scheduling policy and parameters of the specified thread.
+ * Set the extended scheduling policy and parameters of the specified
+ * thread.
  *
- * This service set the scheduling policy of the Xenomai POSIX skin thread @a
- * tid to the value @a  pol, and its scheduling parameters (i.e. its priority)
- * to the value pointed to by @a par.
+ * This service is an extended version of the regular
+ * pthread_setschedparam() service, which supports Xenomai-specific or
+ * additional scheduling policies, not available with the host Linux
+ * environment.
  *
- * When used in user-space, passing the current thread ID as @a tid argument,
- * this service turns the current thread into a Xenomai POSIX skin thread. If @a
- * tid is neither the identifier of the current thread nor the identifier of a
- * Xenomai POSIX skin thread this service falls back to the regular
- * pthread_setschedparam() service, hereby causing the current thread to switch
- * to secondary mode if it is Xenomai thread.
+ * Typically, a Xenomai thread policy can be set to SCHED_WEAK,
+ * SCHED_SPORADIC or SCHED_TP using this call.
+ *
+ * This service set the scheduling policy of the Xenomai thread @a tid
+ * to the value @a u_pol, and its scheduling parameters (e.g. its
+ * priority) to the value pointed to by @a par.
+ *
+ * If @a tid does not match the identifier of a Xenomai thread, this
+ * action falls back to the regular pthread_setschedparam() service.
  *
  * @param tid target thread;
  *
- * @param pol scheduling policy, one of SCHED_FIFO, SCHED_COBALT,
- * SCHED_RR or SCHED_OTHER;
+ * @param u_pol scheduling policy, one of SCHED_WEAK, SCHED_FIFO,
+ * SCHED_COBALT, SCHED_RR, SCHED_SPORADIC, SCHED_TP or SCHED_OTHER;
  *
- * @param par scheduling parameters address.
+ * @param par scheduling parameters address. As a special exception, a
+ * negative sched_priority value is interpreted as if SCHED_WEAK was
+ * given in @a u_pol, using the absolute value of this parameter as
+ * the weak priority level.
+ *
+ * When CONFIG_XENO_OPT_SCHED_WEAK is enabled, SCHED_WEAK exhibits
+ * priority levels in the [0..99] range (inclusive). Otherwise,
+ * sched_priority must be zero for the SCHED_WEAK policy.
  *
  * @return 0 on success;
  * @return an error number if:
  * - ESRCH, @a tid is invalid;
- * - EINVAL, @a pol or @a par->sched_priority is invalid;
+ * - EINVAL, @a u_pol or @a par->sched_priority is invalid;
  * - EAGAIN, in user-space, insufficient memory exists in the system heap,
  *   increase CONFIG_XENO_OPT_SYS_HEAPSZ;
  * - EFAULT, in user-space, @a par is an invalid address;
@@ -658,14 +660,16 @@ static inline int pthread_set_mode_np(int clrmask, int setmask, int *mode_r)
  * SA_SIGINFO flag, and pass all the arguments you received to
  * xeno_sigwinch_handler.
  *
+ * pthread_setschedparam_ex() may switch the caller to secondary mode.
  */
 static inline int
-pthread_setschedparam(pthread_t tid, int pol, const struct sched_param *par)
+pthread_setschedparam_ex(pthread_t tid, int u_pol, const struct sched_param_ex *par)
 {
+	struct xnsched_class *sched_class;
 	union xnsched_policy_param param;
 	struct xnthread *thread;
 	xnticks_t tslice;
-	int prio;
+	int prio, pol;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -678,27 +682,62 @@ pthread_setschedparam(pthread_t tid, int pol, const struct sched_param *par)
 	thread = &tid->threadbase;
 	prio = par->sched_priority;
 	tslice = XN_INFINITE;
+	pol = u_pol;
+
+	if (prio < 0) {
+		prio = -prio;
+		pol = SCHED_WEAK;
+	}
+	sched_class = &xnsched_class_rt;
+	param.rt.prio = prio;
 
 	switch (pol) {
 	case SCHED_OTHER:
 		if (prio)
 			goto fail;
+		/* falldown wanted */
+	case SCHED_WEAK:
+#ifdef CONFIG_XENO_OPT_SCHED_WEAK
+		if (prio < XNSCHED_WEAK_MIN_PRIO || prio > XNSCHED_WEAK_MAX_PRIO)
+			goto fail;
+		param.weak.prio = prio;
+		sched_class = &xnsched_class_weak;
+#else
+		if (prio)
+			goto fail;
+#endif
 		break;
 	case SCHED_RR:
-		tslice = xnthread_time_slice(thread);
+		tslice = ts2ns(&par->sched_rr_quantum);
 		if (tslice == XN_INFINITE)
-			tslice = cobalt_time_slice;
+			tslice = xnthread_time_slice(thread);
 		/* falldown wanted */
 	case SCHED_FIFO:
-	case SCHED_SPORADIC:
-	case SCHED_TP:
-		if (prio < COBALT_MIN_PRIORITY || prio > COBALT_MAX_PRIORITY)
+		if (prio < XNSCHED_FIFO_MIN_PRIO || prio > XNSCHED_FIFO_MAX_PRIO)
 			goto fail;
 		break;
 	case SCHED_COBALT:
-		if (prio < COBALT_MIN_PRIORITY || prio > XNSCHED_RT_MAX_PRIO)
+		if (prio < XNSCHED_RT_MIN_PRIO || prio > XNSCHED_RT_MAX_PRIO)
 			goto fail;
 		break;
+#ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
+	case SCHED_SPORADIC:
+		param.pss.normal_prio = par->sched_priority;
+		param.pss.low_prio = par->sched_ss_low_priority;
+		param.pss.current_prio = param.pss.normal_prio;
+		param.pss.init_budget = ts2ns(&par->sched_ss_init_budget);
+		param.pss.repl_period = ts2ns(&par->sched_ss_repl_period);
+		param.pss.max_repl = par->sched_ss_max_repl;
+		sched_class = &xnsched_class_sporadic;
+		break;
+#endif
+#ifdef CONFIG_XENO_OPT_SCHED_TP
+	case SCHED_TP:
+		param.tp.prio = par->sched_priority;
+		param.tp.ptid = par->sched_tp_partition;
+		sched_class = &xnsched_class_tp;
+		break;
+#endif
 	default:
 	fail:
 		xnlock_put_irqrestore(&nklock, s);
@@ -706,10 +745,8 @@ pthread_setschedparam(pthread_t tid, int pol, const struct sched_param *par)
 	}
 
 	xnpod_set_thread_tslice(thread, tslice);
-
-	tid->sched_policy = pol;
-	param.rt.prio = prio;
-	xnpod_set_thread_schedparam(thread, &xnsched_class_rt, &param);
+	tid->sched_u_policy = u_pol;
+	xnpod_set_thread_schedparam(thread, sched_class, &param);
 
 	xnpod_schedule();
 
@@ -718,158 +755,14 @@ pthread_setschedparam(pthread_t tid, int pol, const struct sched_param *par)
 	return 0;
 }
 
-/**
- * Set the extended scheduling policy and parameters of the specified
- * thread.
- *
- * This service is an extended version of pthread_setschedparam(),
- * that supports Xenomai-specific or additional scheduling policies,
- * which are not available with the host Linux environment.
- *
- * Typically, a Xenomai thread policy can be set to SCHED_SPORADIC or
- * SCHED_TP using this call.
- *
- * @param tid target thread;
- *
- * @param pol address where the scheduling policy of @a tid is stored on
- * success;
- *
- * @param par address where the scheduling parameters of @a tid is stored on
- * success.
- *
- * @return 0 on success;
- * @return an error number if:
- * - ESRCH, @a tid is invalid.
- * - EINVAL, @a par contains invalid parameters.
- * - ENOMEM, lack of memory to perform the operation.
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_getschedparam.html">
- * Specification.</a>
- *
+/*
+ * NOTE: there is no cobalt_thread_setschedparam syscall defined by
+ * the Cobalt ABI. Useland changes scheduling parameters only via the
+ * extended cobalt_thread_setschedparam_ex syscall.
  */
-static inline int pthread_setschedparam_ex(pthread_t tid, int pol,
-					   const struct sched_param_ex *par)
-{
-	union xnsched_policy_param param __attribute__((unused));
-	struct sched_param short_param;
-	xnticks_t tslice;
-	int ret = 0;
-	spl_t s;
-
-	switch (pol) {
-	case SCHED_OTHER:
-	case SCHED_FIFO:
-	case SCHED_COBALT:
-		xnpod_set_thread_tslice(&tid->threadbase, XN_INFINITE);
-		short_param.sched_priority = par->sched_priority;
-		return pthread_setschedparam(tid, pol, &short_param);
-	default:
-		if (par->sched_priority < COBALT_MIN_PRIORITY ||
-		    par->sched_priority >  COBALT_MAX_PRIORITY) {
-			return EINVAL;
-		}
-	}
-
-	xnlock_get_irqsave(&nklock, s);
-
-	if (!cobalt_obj_active(tid, COBALT_THREAD_MAGIC, struct cobalt_thread)) {
-		xnlock_put_irqrestore(&nklock, s);
-		return -ESRCH;
-	}
-
-	switch (pol) {
-	case SCHED_RR:
-		tslice = ts2ns(&par->sched_rr_quantum);
-		ret = xnpod_set_thread_tslice(&tid->threadbase, tslice);
-		break;
-	default:
-
-		xnlock_put_irqrestore(&nklock, s);
-		return -EINVAL;
-
-#ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
-	case SCHED_SPORADIC:
-		xnpod_set_thread_tslice(&tid->threadbase, XN_INFINITE);
-		param.pss.normal_prio = par->sched_priority;
-		param.pss.low_prio = par->sched_ss_low_priority;
-		param.pss.current_prio = param.pss.normal_prio;
-		param.pss.init_budget = ts2ns(&par->sched_ss_init_budget);
-		param.pss.repl_period = ts2ns(&par->sched_ss_repl_period);
-		param.pss.max_repl = par->sched_ss_max_repl;
-		ret = xnpod_set_thread_schedparam(&tid->threadbase,
-						  &xnsched_class_sporadic, &param);
-		break;
-#endif
-#ifdef CONFIG_XENO_OPT_SCHED_TP
-	case SCHED_TP:
-		xnpod_set_thread_tslice(&tid->threadbase, XN_INFINITE);
-		param.tp.prio = par->sched_priority;
-		param.tp.ptid = par->sched_tp_partition;
-		ret = xnpod_set_thread_schedparam(&tid->threadbase,
-						  &xnsched_class_tp, &param);
-		break;
-#endif
-	}
-
-	tid->sched_policy = pol;
-
-	xnpod_schedule();
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	return -ret;
-}
-
-int cobalt_thread_setschedparam(unsigned long tid,
-				int policy,
-				struct sched_param __user *u_param,
-				unsigned long __user *u_window_offset,
-				int __user *u_promoted)
-{
-	struct sched_param param;
-	struct cobalt_hkey hkey;
-	int ret, promoted = 0;
-	pthread_t pthread;
-
-	if (__xn_safe_copy_from_user(&param, u_param, sizeof(param)))
-		return -EFAULT;
-
-	hkey.u_tid = tid;
-	hkey.mm = current->mm;
-	pthread = thread_find(&hkey);
-
-	if (pthread == NULL && u_window_offset) {
-		/*
-		 * If the syscall applies to "current", and the latter
-		 * is not a Xenomai thread already, then shadow it.
-		 */
-		pthread = cobalt_thread_shadow(current, &hkey, u_window_offset);
-		if (IS_ERR(pthread))
-			return PTR_ERR(pthread);
-
-		promoted = 1;
-	}
-	if (pthread)
-		ret = pthread_setschedparam(pthread, policy, &param);
-	else
-		/*
-		 * target thread is not a real-time thread, and is not current,
-		 * so can not be promoted, try again with the real
-		 * pthread_setschedparam service.
-		 */
-		ret = -EPERM;
-
-	if (ret == 0 &&
-	    __xn_safe_copy_to_user(u_promoted, &promoted, sizeof(promoted)))
-		ret = -EFAULT;
-
-	return ret;
-}
-
 int cobalt_thread_setschedparam_ex(unsigned long tid,
 				   int policy,
-				   struct sched_param __user *u_param,
+				   struct sched_param_ex __user *u_param,
 				   unsigned long __user *u_window_offset,
 				   int __user *u_promoted)
 {
@@ -1153,8 +1046,8 @@ int cobalt_thread_kill(unsigned long tid, int sig)
 	/*
 	 * Undocumented pseudo-signals to suspend/resume/unblock
 	 * threads, force them out of primary mode or even demote them
-	 * to the SCHED_OTHER class. Process them early, before anyone
-	 * can notice...
+	 * to the weak scheduling class/priority. Process them early,
+	 * before anyone can notice...
 	 */
 	case SIGSUSP:
 		/*
@@ -1234,35 +1127,14 @@ int cobalt_thread_stat(pid_t pid,
 	return __xn_safe_copy_to_user(u_stat, &stat, sizeof(stat));
 }
 
-int cobalt_thread_getschedparam(unsigned long tid,
-				int __user *u_policy,
-				struct sched_param __user *u_param)
-{
-	struct sched_param param;
-	struct cobalt_hkey hkey;
-	pthread_t pthread;
-	int policy, ret;
-
-	hkey.u_tid = tid;
-	hkey.mm = current->mm;
-	pthread = thread_find(&hkey);
-
-	if (!pthread)
-		return -ESRCH;
-
-	ret = pthread_getschedparam(pthread, &policy, &param);
-	if (ret)
-		return ret;
-
-	if (__xn_safe_copy_to_user(u_policy, &policy, sizeof(int)))
-		return -EFAULT;
-
-	return __xn_safe_copy_to_user(u_param, &param, sizeof(param));
-}
-
+/*
+ * NOTE: there is no cobalt_thread_getschedparam syscall defined by
+ * the Cobalt ABI. Useland retrieves scheduling parameters only via
+ * the extended cobalt_thread_getschedparam_ex syscall.
+ */
 int cobalt_thread_getschedparam_ex(unsigned long tid,
 				   int __user *u_policy,
-				   struct sched_param __user *u_param)
+				   struct sched_param_ex __user *u_param)
 {
 	struct sched_param_ex param;
 	struct cobalt_hkey hkey;
@@ -1292,12 +1164,12 @@ int cobalt_sched_min_prio(int policy)
 	case SCHED_RR:
 	case SCHED_SPORADIC:
 	case SCHED_TP:
+		return XNSCHED_FIFO_MIN_PRIO;
 	case SCHED_COBALT:
-		return COBALT_MIN_PRIORITY;
-
+		return XNSCHED_RT_MIN_PRIO;
 	case SCHED_OTHER:
+	case SCHED_WEAK:
 		return 0;
-
 	default:
 		return -EINVAL;
 	}
@@ -1310,14 +1182,17 @@ int cobalt_sched_max_prio(int policy)
 	case SCHED_RR:
 	case SCHED_SPORADIC:
 	case SCHED_TP:
-		return COBALT_MAX_PRIORITY;
-
+		return XNSCHED_FIFO_MAX_PRIO;
 	case SCHED_COBALT:
 		return XNSCHED_RT_MAX_PRIO;
-
 	case SCHED_OTHER:
 		return 0;
-
+	case SCHED_WEAK:
+#ifdef CONFIG_XENO_OPT_SCHED_WEAK
+		return XNSCHED_FIFO_MAX_PRIO;
+#else
+		return 0;
+#endif
 	default:
 		return -EINVAL;
 	}
@@ -1393,7 +1268,7 @@ int set_tp_config(int cpu, union sched_config *config, size_t len)
 cleanup_and_fail:
 	xnfree(gps);
 fail:
-	return EINVAL;
+	return -EINVAL;
 }
 
 #else /* !CONFIG_XENO_OPT_SCHED_TP */
@@ -1401,7 +1276,7 @@ fail:
 static inline
 int set_tp_config(int cpu, union sched_config *config, size_t len)
 {
-	return EINVAL;
+	return -EINVAL;
 }
 
 #endif /* !CONFIG_XENO_OPT_SCHED_TP */
@@ -1476,7 +1351,7 @@ int cobalt_sched_setconfig_np(int cpu, int policy,
 
 	switch (policy)	{
 	case SCHED_TP:
-		ret = -set_tp_config(cpu, buf, len);
+		ret = set_tp_config(cpu, buf, len);
 		break;
 	default:
 		ret = -EINVAL;

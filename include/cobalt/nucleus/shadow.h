@@ -93,8 +93,6 @@ int xnshadow_harden(void);
 
 void xnshadow_relax(int notify, int reason);
 
-void xnshadow_renice(struct xnthread *thread);
-
 int xnshadow_register_interface(struct xnskin_props *props);
 
 int xnshadow_unregister_interface(int muxid);

@@ -34,60 +34,75 @@ static pthread_attr_ex_t default_attr_ex;
 
 static int linuxthreads;
 
+static int libc_setschedparam(pthread_t thread,
+			      int policy_ex, const struct sched_param_ex *param_ex)
+{
+	struct sched_param param;
+	int policy, priority;
+
+	priority = param_ex->sched_priority;
+
+	switch (policy_ex) {
+	case SCHED_WEAK:
+		policy = priority ? SCHED_FIFO : SCHED_OTHER;
+		break;
+	case SCHED_COBALT:
+	case SCHED_TP:
+	case SCHED_SPORADIC:
+		policy = SCHED_FIFO;
+		break;
+	default:
+		policy = policy_ex;
+		if (priority < 0)
+			priority = -priority;
+	}
+
+	memset(&param, 0, sizeof(param));
+	param.sched_priority = priority;
+
+	return __STD(pthread_setschedparam(thread, policy, &param));
+}
+
 COBALT_IMPL(int, pthread_setschedparam, (pthread_t thread,
 					 int policy, const struct sched_param *param))
 {
-	volatile pthread_t myself = pthread_self();
-	unsigned long mode_offset;
-	int ret, promoted;
+	/*
+	 * XXX: We currently assume that all available policies
+	 * supported by the host kernel define a single scheduling
+	 * parameter only, i.e. a priority level.
+	 */
+	struct sched_param_ex param_ex = {
+		.sched_priority = param->sched_priority,
+	};
 
-	if (thread == myself)
-		xeno_fault_stack();
-
-	ret = -XENOMAI_SKINCALL5(__cobalt_muxid,
-				 sc_cobalt_thread_setschedparam,
-				 thread, policy, param,
-				 &mode_offset, &promoted);
-
-	if (ret == EPERM)
-		return __STD(pthread_setschedparam(thread, policy, param));
-
-	if (ret == 0 && promoted) {
-		xeno_sigshadow_install_once();
-		xeno_set_current();
-		xeno_set_current_window(mode_offset);
-		if (policy != SCHED_OTHER)
-			XENOMAI_SYSCALL1(sc_nucleus_migrate, XENOMAI_XENO_DOMAIN);
-	}
-
-	return ret;
+	return pthread_setschedparam_ex(thread, policy, &param_ex);
 }
 
 int pthread_setschedparam_ex(pthread_t thread,
 			     int policy, const struct sched_param_ex *param)
 {
-	volatile pthread_t myself = pthread_self();
-	struct sched_param short_param;
 	unsigned long mode_offset;
 	int ret, promoted;
 
-	if (thread == myself)
-		xeno_fault_stack();
+	/*
+	 * First we tell the libc and the regular kernel about the
+	 * policy/param change, then we tell Xenomai.
+	 */
+	ret = libc_setschedparam(thread, policy, param);
+	if (ret)
+		return ret;
 
 	ret = -XENOMAI_SKINCALL5(__cobalt_muxid,
 				 sc_cobalt_thread_setschedparam_ex,
 				 thread, policy, param,
 				 &mode_offset, &promoted);
-	if (ret == EPERM) {
-		short_param.sched_priority = param->sched_priority;
-		return __STD(pthread_setschedparam(thread, policy, &short_param));
-	}
 
 	if (ret == 0 && promoted) {
+		xeno_fault_stack();
 		xeno_sigshadow_install_once();
 		xeno_set_current();
 		xeno_set_current_window(mode_offset);
-		if (policy != SCHED_OTHER)
+		if (policy != SCHED_OTHER && policy != SCHED_WEAK)
 			XENOMAI_SYSCALL1(sc_nucleus_migrate, XENOMAI_XENO_DOMAIN);
 	}
 
@@ -98,15 +113,16 @@ COBALT_IMPL(int, pthread_getschedparam, (pthread_t thread,
 					 int *__restrict__ policy,
 					 struct sched_param *__restrict__ param))
 {
+	struct sched_param_ex param_ex;
 	int ret;
 
-	ret = -XENOMAI_SKINCALL3(__cobalt_muxid,
-				 sc_cobalt_thread_getschedparam,
-				 thread, policy, param);
-	if (ret == ESRCH)
-		return __STD(pthread_getschedparam(thread, policy, param));
+	ret = pthread_getschedparam_ex(thread, policy, &param_ex);
+	if (ret)
+		return ret;
 
-	return ret;
+	param->sched_priority = param_ex.sched_priority;
+
+	return 0;
 }
 
 int pthread_getschedparam_ex(pthread_t thread,
@@ -199,12 +215,18 @@ static void *__pthread_trampoline(void *p)
 	long ret;
 
 	xeno_sigshadow_install_once();
+	xeno_fault_stack();
 
 	param_ex = iargs->param_ex;
 	policy = iargs->policy;
 	parent_prio = iargs->parent_prio;
 	start = iargs->start;
 	arg = iargs->arg;
+
+	/* Set our scheduling parameters for the host kernel first. */
+	ret = libc_setschedparam(tid, policy, &param_ex);
+	if (ret)
+		goto out;
 
 	/*
 	 * Do _not_ inline the call to pthread_self() in the syscall
@@ -223,6 +245,7 @@ static void *__pthread_trampoline(void *p)
 	 * unwind the stack space onto which the iargs struct is laid
 	 * on before we actually get the CPU back.
 	 */
+out:
 	iargs->ret = -ret;
 	__STD(sem_post(&iargs->sync));
 	if (ret)
@@ -236,7 +259,7 @@ static void *__pthread_trampoline(void *p)
 	if (param_ex.sched_priority == parent_prio)
 		__wrap_sched_yield();
 
-	if (policy != SCHED_OTHER)
+	if (policy != SCHED_OTHER && policy != SCHED_WEAK)
 		XENOMAI_SYSCALL1(sc_nucleus_migrate, XENOMAI_XENO_DOMAIN);
 
 	return start(arg);

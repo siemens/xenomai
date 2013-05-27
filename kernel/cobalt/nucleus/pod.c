@@ -1488,7 +1488,8 @@ EXPORT_SYMBOL_GPL(xnpod_unblock_thread);
  * reflects the new sleeper's priority, unless the XNSYNCH_DREORD flag
  * has been set for the pended object.
  *
- * @param thread The descriptor address of the affected thread.
+ * @param thread The descriptor address of the affected thread. See
+ * note.
  *
  * @param sched_class The new scheduling class the thread should be
  * assigned to.
@@ -1517,9 +1518,6 @@ EXPORT_SYMBOL_GPL(xnpod_unblock_thread);
  * or ready thread moves it to the end of the runnable queue, thus
  * causing a manual round-robin.
  *
- * - If the thread is a user-space shadow, this call propagates the
- * request to the mated Linux task.
- *
  * Environments:
  *
  * This service can be called from:
@@ -1530,23 +1528,21 @@ EXPORT_SYMBOL_GPL(xnpod_unblock_thread);
  * - User-space task
  *
  * Rescheduling: never.
+ *
+ * @note The changes only apply to the Xenomai scheduling parameters
+ * for @a thread. There is no propagation/translation of such changes
+ * to the Linux scheduler for the task mated to the Xenomai target
+ * thread.
  */
 
 int xnpod_set_thread_schedparam(struct xnthread *thread,
 				struct xnsched_class *sched_class,
 				const union xnsched_policy_param *sched_param)
 {
-	return __xnpod_set_thread_schedparam(thread, sched_class, sched_param, 1);
-}
-EXPORT_SYMBOL_GPL(xnpod_set_thread_schedparam);
-
-int __xnpod_set_thread_schedparam(struct xnthread *thread,
-				  struct xnsched_class *sched_class,
-				  const union xnsched_policy_param *sched_param,
-				  int propagate)
-{
 	int old_wprio, new_wprio, ret;
 	spl_t s;
+
+	XENO_BUGON(NUCLEUS, xnpod_root_p());
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -1598,19 +1594,13 @@ int __xnpod_set_thread_schedparam(struct xnthread *thread,
 	if (!xnthread_test_state(thread, XNTHREAD_BLOCK_BITS|XNREADY|XNLOCK))
 		xnsched_putback(thread);
 
-	if (propagate) {
-		if (xnthread_test_state(thread, XNRELAX))
-			xnshadow_renice(thread);
-		else if (!xnthread_test_state(thread, XNROOT))
-			xnthread_set_info(thread, XNPRIOSET);
-	}
-
 unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
 	return ret;
 }
+EXPORT_SYMBOL_GPL(xnpod_set_thread_schedparam);
 
 /**
  * \fn int xnpod_migrate_thread(int cpu)

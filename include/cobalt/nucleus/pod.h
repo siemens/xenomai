@@ -116,11 +116,6 @@ static inline void xnpod_umount(void)
 	xnpod_cleanup_proc();
 }
 
-int __xnpod_set_thread_schedparam(struct xnthread *thread,
-				  struct xnsched_class *sched_class,
-				  const union xnsched_policy_param *sched_param,
-				  int propagate);
-
 void __xnpod_cleanup_thread(struct xnthread *thread);
 
 #ifdef CONFIG_XENO_HW_FPU

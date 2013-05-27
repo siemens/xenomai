@@ -52,7 +52,7 @@
 #define XNTRAPSW  0x00020000 /**< Trap execution mode switches */
 #define XNFPU     0x00040000 /**< Thread uses FPU */
 #define XNROOT    0x00080000 /**< Root thread (that is, Linux/IDLE) */
-#define XNOTHER   0x00100000 /**< Non real-time shadow (prio=0) */
+#define XNWEAK    0x00100000 /**< Non real-time shadow (from the WEAK class) */
 #define XNUSER    0x00200000 /**< Shadow thread running in userland */
 
 /*! @} */ /* Ends doxygen comment group: nucleus_state_flags */
@@ -100,9 +100,8 @@
 #define XNWAKEN   0x00000010 /**< Thread waken up upon resource availability */
 #define XNROBBED  0x00000020 /**< Robbed from resource ownership */
 #define XNAFFSET  0x00000040 /**< CPU affinity changed from primary mode */
-#define XNPRIOSET 0x00000080 /**< Priority changed from primary mode */
-#define XNCANCELD 0x00000100 /**< Cancellation request is pending */
-#define XNSWREP   0x00000200 /**< Mode switch already reported */
+#define XNCANCELD 0x00000080 /**< Cancellation request is pending */
+#define XNSWREP   0x00000100 /**< Mode switch already reported */
 
 /* These information flags are available to the real-time interfaces */
 #define XNTHREAD_INFO_SPARE0  0x10000000
@@ -401,7 +400,7 @@ xnsynch_release(struct xnsynch *synch, struct xnthread *thread)
 
 	trace_mark(xn_nucleus, synch_release, "synch %p", synch);
 
-	if (unlikely(xnthread_test_state(thread, XNOTHER)))
+	if (unlikely(xnthread_test_state(thread, XNWEAK)))
 		__xnsynch_fixup_rescnt(thread);
 
 	lockp = xnsynch_fastlock(synch);

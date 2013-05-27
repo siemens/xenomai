@@ -141,7 +141,7 @@ COBALT_IMPL(int, pthread_mutex_lock, (pthread_mutex_t *mutex))
 	 * obtain them via a syscall.
 	 */
 	status = xeno_get_current_mode();
-	if ((status & (XNRELAX|XNOTHER)) == 0) {
+	if ((status & (XNRELAX|XNWEAK)) == 0) {
 		err = xnsynch_fast_acquire(mutex_get_ownerp(_mutex), cur);
 		if (err == 0) {
 			_mutex->lockcnt = 1;
@@ -196,7 +196,7 @@ COBALT_IMPL(int, pthread_mutex_timedlock, (pthread_mutex_t *mutex,
 
 	/* See __wrap_pthread_mutex_lock() */
 	status = xeno_get_current_mode();
-	if ((status & (XNRELAX|XNOTHER)) == 0) {
+	if ((status & (XNRELAX|XNWEAK)) == 0) {
 		err = xnsynch_fast_acquire(mutex_get_ownerp(_mutex), cur);
 		if (err == 0) {
 			_mutex->lockcnt = 1;
@@ -250,7 +250,7 @@ COBALT_IMPL(int, pthread_mutex_trylock, (pthread_mutex_t *mutex))
 		return EINVAL;
 
 	status = xeno_get_current_mode();
-	if ((status & (XNRELAX|XNOTHER)) == 0) {
+	if ((status & (XNRELAX|XNWEAK)) == 0) {
 		err = xnsynch_fast_acquire(mutex_get_ownerp(_mutex), cur);
 		if (err == 0) {
 			_mutex->lockcnt = 1;
@@ -314,7 +314,7 @@ COBALT_IMPL(int, pthread_mutex_unlock, (pthread_mutex_t *mutex))
 	if ((datp->flags & COBALT_MUTEX_COND_SIGNAL))
 		goto do_syscall;
 
-	if (xeno_get_current_mode() & XNOTHER)
+	if (xeno_get_current_mode() & XNWEAK)
 		goto do_syscall;
 
 	if (xnsynch_fast_release(&datp->owner, cur))

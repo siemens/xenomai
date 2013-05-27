@@ -258,7 +258,7 @@ static void xnsched_sporadic_setparam(struct xnthread *thread,
 		}
 	}
 
-	xnthread_clear_state(thread, XNOTHER);
+	xnthread_clear_state(thread, XNWEAK);
 	thread->cprio = p->pss.current_prio;
 }
 
@@ -532,7 +532,7 @@ struct xnsched_class xnsched_class_sporadic = {
 	.sched_init_vfile	=	xnsched_sporadic_init_vfile,
 	.sched_cleanup_vfile	=	xnsched_sporadic_cleanup_vfile,
 #endif
-	.weight			=	XNSCHED_CLASS_WEIGHT(2),
+	.weight			=	XNSCHED_CLASS_WEIGHT(3),
 	.name			=	"pss"
 };
 EXPORT_SYMBOL_GPL(xnsched_class_sporadic);
