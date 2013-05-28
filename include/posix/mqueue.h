@@ -106,7 +106,8 @@ int mq_unlink(const char *name);
 
 #else /* !(__KERNEL__ || __XENO_SIM__ || !CONFIG_XENO_HAVE_MQUEUE_H) */
 
-__extension__
+#pragma GCC system_header
+
 #include_next <mqueue.h>
 
 #ifdef __cplusplus

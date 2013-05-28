@@ -1,8 +1,9 @@
 #ifndef SYSLOG_H
 #define SYSLOG_H
 
+#pragma GCC system_header
+
 #include <stdarg.h>
-__extension__
 #include_next <syslog.h>
 #include <xeno_config.h>
 

@@ -55,7 +55,8 @@ int sched_rr_get_interval(int pid, struct timespec *interval);
 
 #else /* !(__KERNEL__ || __XENO_SIM__) */
 
-__extension__
+#pragma GCC system_header
+
 #include_next <sched.h>
 
 int __real_sched_yield(void);

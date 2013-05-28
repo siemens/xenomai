@@ -1,6 +1,7 @@
 #ifndef __KERNEL__
 
-__extension__
+#pragma GCC system_header
+
 #include_next <stdio.h>
 
 #ifndef _XENO_POSIX_STDIO_H

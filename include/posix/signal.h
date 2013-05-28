@@ -107,11 +107,11 @@ int pthread_sigqueue_np (struct pse51_thread *thread, int sig, union sigval valu
 
 #else /* !(__KERNEL__ || __XENO_SIM__) */
 
-__extension__
+#pragma GCC system_header
+
 #include_next <signal.h>
 /* In case signal.h is included for a side effect of an __need* macro, include
    it a second time to get all definitions. */
-__extension__
 #include_next <signal.h>
 
 #endif /* !(__KERNEL__ || __XENO_SIM__) */

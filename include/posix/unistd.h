@@ -48,7 +48,8 @@ int ftruncate(int fildes, off_t length);
 
 #else /* !(__KERNEL__ || __XENO_SIM__) */
 
-__extension__
+#pragma GCC system_header
+
 #include_next <unistd.h>
 
 #ifdef __cplusplus

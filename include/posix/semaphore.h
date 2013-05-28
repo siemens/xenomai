@@ -53,8 +53,9 @@ typedef struct
 
 #else /* !(__KERNEL__ || __XENO_SIM__) */
 
+#pragma GCC system_header
+
 #include <fcntl.h>              /* For sem_open flags. */
-__extension__
 #include_next <semaphore.h>
 
 #endif /* !(__KERNEL__ || __XENO_SIM__) */
