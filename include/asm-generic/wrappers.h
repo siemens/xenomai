@@ -78,4 +78,8 @@ unsigned long vm_mmap(struct file *file, unsigned long addr,
 #define KGIDT_INIT(pid) (pid)
 #endif /* LINUX < 3.8.0 */
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,9,0)
+#include <linux/sched/rt.h>
+#endif /* LINUX >= 3.9.0 */
+
 #endif /* _XENO_ASM_GENERIC_WRAPPERS_H */
