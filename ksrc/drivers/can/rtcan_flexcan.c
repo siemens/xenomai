@@ -30,7 +30,9 @@
 #include <linux/list.h>
 #include <linux/module.h>
 #include <linux/version.h>
+#ifdef CONFIG_OF
 #include <linux/of.h>
+#endif
 #include <linux/platform_device.h>
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
 #include <linux/pinctrl/consumer.h>
@@ -57,6 +59,12 @@ MODULE_PARM_DESC(berr_int,
 
 #define DEV_NAME	"rtcan%d"
 #define DRV_NAME	"flexcan"
+
+enum flexcan_ip_version {
+	FLEXCAN_VER_3_0_0,
+	FLEXCAN_VER_3_0_4,
+	FLEXCAN_VER_10_0_12,
+};
 
 /* 8 for RX fifo and 2 error handling */
 #define FLEXCAN_NAPI_WEIGHT		(8 + 2)
@@ -184,7 +192,13 @@ struct flexcan_regs {
 	u32 imask1;		/* 0x28 */
 	u32 iflag2;		/* 0x2c */
 	u32 iflag1;		/* 0x30 */
-	u32 _reserved2[19];
+	u32 crl2;		/* 0x34 */
+	u32 esr2;		/* 0x38 */
+	u32 _reserved2[2];
+	u32 crcr;		/* 0x44 */
+	u32 rxfgmask;		/* 0x48 */
+	u32 rxfir;		/* 0x4c */
+	u32 _reserved3[12];
 	struct flexcan_mb cantxfg[64];
 };
 
@@ -199,6 +213,9 @@ struct flexcan_priv {
 	struct clk *clk;
 	struct flexcan_platform_data *pdata;
 	struct can_bittime bit_time;
+#ifndef CONFIG_OF
+	enum flexcan_ip_version version;
+#endif
 };
 
 static char *flexcan_ctrl_name = "FLEXCAN";
@@ -749,6 +766,11 @@ static int flexcan_chip_start(struct rtcan_device *dev)
 	flexcan_write(0x0, &regs->rx14mask);
 	flexcan_write(0x0, &regs->rx15mask);
 
+#ifndef CONFIG_OF
+	if (priv->version >= FLEXCAN_VER_10_0_12)
+		flexcan_write(0x0, &regs->rxfgmask);
+#endif
+
 	flexcan_transceiver_switch(priv, 1);
 
 	/* synchronize with the can bus */
@@ -981,10 +1003,12 @@ static int flexcan_probe(struct platform_device *pdev)
 		return PTR_ERR(pinctrl);
 #endif
 
+#ifdef CONFIG_OF
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,1,0)
 	if (pdev->dev.of_node)
 		of_property_read_u32(pdev->dev.of_node,
 						"clock-frequency", &clock_freq);
+#endif
 #endif
 
 	if (!clock_freq) {
@@ -1029,6 +1053,9 @@ static int flexcan_probe(struct platform_device *pdev)
 	priv->dev = dev;
 	priv->clk = clk;
 	priv->pdata = pdev->dev.platform_data;
+#ifndef CONFIG_OF
+	priv->version = pdev->id_entry->driver_data;
+#endif
 
 	dev_set_drvdata(&pdev->dev, dev);
 
@@ -1092,20 +1119,46 @@ static int flexcan_remove(struct platform_device *pdev)
 	return 0;
 }
 
+#ifdef CONFIG_OF
 static struct of_device_id flexcan_of_match[] = {
 	{
 		.compatible = "fsl,p1010-flexcan",
 	},
 	{},
 };
+#else
+static struct platform_device_id flexcan_devtype[] = {
+	{
+		.name = "imx25-flexcan",
+		.driver_data = FLEXCAN_VER_3_0_0,
+	}, {
+		.name = "imx28-flexcan",
+		.driver_data = FLEXCAN_VER_3_0_4,
+	}, {
+		.name = "imx35-flexcan",
+		.driver_data = FLEXCAN_VER_3_0_0,
+	}, {
+		.name = "imx53-flexcan",
+		.driver_data = FLEXCAN_VER_3_0_0,
+	}, {
+		.name = "imx6q-flexcan",
+		.driver_data = FLEXCAN_VER_10_0_12,
+	},
+};
+#endif
 
 static struct platform_driver flexcan_driver = {
+#ifdef CONFIG_OF
 	.driver = {
 		/* For legacy platform support */
 		.name = "flexcan",
 		.owner = THIS_MODULE,
 		.of_match_table = flexcan_of_match,
 	},
+#else
+	.driver.name = DRV_NAME,
+	.id_table = flexcan_devtype,
+#endif
 	.probe = flexcan_probe,
 	.remove = flexcan_remove,
 };

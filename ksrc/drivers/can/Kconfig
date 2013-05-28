@@ -80,7 +80,7 @@ config XENO_DRIVERS_CAN_VIRT
 	More ports can be enabled with the module parameter "devices".
 
 config XENO_DRIVERS_CAN_FLEXCAN
-	depends on XENO_DRIVERS_CAN && OF && !XENO_DRIVERS_CAN_CALC_BITTIME_OLD
+	depends on XENO_DRIVERS_CAN && !XENO_DRIVERS_CAN_CALC_BITTIME_OLD
 	tristate "Freescale FLEXCAN based chips"
 	help
 
