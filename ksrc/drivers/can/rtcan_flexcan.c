@@ -32,6 +32,7 @@
 #include <linux/version.h>
 #ifdef CONFIG_OF
 #include <linux/of.h>
+#include <linux/of_device.h>
 #endif
 #include <linux/platform_device.h>
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
@@ -45,17 +46,6 @@
 #include "rtcan_dev.h"
 #include "rtcan_raw.h"
 #include "rtcan_internal.h"
-
-/*
- * Due to a bug in most Flexcan cores, the bus error interrupt needs
- * to be enabled. Otherwise we don't get any bus warning or passive
- * interrupts. This is not necessay for the i.MX28, for example and
- * this modules parameter allows to overcome this limitation.
- */
-static int berr_int = 1;
-module_param(berr_int, int, S_IRUGO | S_IWUSR);
-MODULE_PARM_DESC(berr_int,
-	"Bus error interrupt [1 (enabled)]. Can be disabled for i.MX28.");
 
 #define DEV_NAME	"rtcan%d"
 #define DRV_NAME	"flexcan"
@@ -170,6 +160,23 @@ enum flexcan_ip_version {
 
 #define FLEXCAN_MB_CODE_MASK		(0xf0ffffff)
 
+/*
+ * FLEXCAN hardware feature flags
+ *
+ * Below is some version info we got:
+ *    SOC   Version   IP-Version  Glitch-  [TR]WRN_INT
+ *                                Filter?   connected?
+ *   MX25  FlexCAN2  03.00.00.00     no         no
+ *   MX28  FlexCAN2  03.00.04.00    yes        yes
+ *   MX35  FlexCAN2  03.00.00.00     no         no
+ *   MX53  FlexCAN2  03.00.00.00    yes         no
+ *   MX6s  FlexCAN3  10.00.12.00    yes        yes
+ *
+ * Some SOCs do not have the RX_WARN & TX_WARN interrupt line connected.
+ */
+#define FLEXCAN_HAS_V10_FEATURES	BIT(1) /* For core version >= 10 */
+#define FLEXCAN_HAS_BROKEN_ERR_STATE	BIT(2) /* [TR]WRN_INT not connected */
+
 /* Structure of the message buffer */
 struct flexcan_mb {
 	u32 can_ctrl;
@@ -202,6 +209,10 @@ struct flexcan_regs {
 	struct flexcan_mb cantxfg[64];
 };
 
+struct flexcan_devtype_data {
+	u32 features;	/* hardware controller features */
+};
+
 struct flexcan_priv {
 	struct rtcan_device *dev;
 
@@ -213,9 +224,15 @@ struct flexcan_priv {
 	struct clk *clk;
 	struct flexcan_platform_data *pdata;
 	struct can_bittime bit_time;
-#ifndef CONFIG_OF
-	enum flexcan_ip_version version;
-#endif
+	const struct flexcan_devtype_data *devtype_data;
+};
+
+static struct flexcan_devtype_data fsl_p1010_devtype_data = {
+	.features = FLEXCAN_HAS_BROKEN_ERR_STATE,
+};
+static struct flexcan_devtype_data fsl_imx28_devtype_data;
+static struct flexcan_devtype_data fsl_imx6q_devtype_data = {
+	.features = FLEXCAN_HAS_V10_FEATURES,
 };
 
 static char *flexcan_ctrl_name = "FLEXCAN";
@@ -730,19 +747,17 @@ static int flexcan_chip_start(struct rtcan_device *dev)
 	 * enable tx and rx warning interrupt
 	 * enable bus off interrupt
 	 * (== FLEXCAN_CTRL_ERR_STATE)
-	 *
-	 * _note_: by default we enable the "error interrupt"
-	 * (FLEXCAN_CTRL_ERR_MSK), too. Otherwise we don't get any
-	 * warning or bus passive interrupts on most Flexcan cores.
-	 * The Flexcan on the i.MX28 does not have this bug and it
-	 * can be disabled if no bus error reporting is necessary
-	 * by setting the module parameter "berr_int" to 0.
 	 */
 	reg_ctrl = flexcan_read(&regs->ctrl);
 	reg_ctrl &= ~FLEXCAN_CTRL_TSYN;
 	reg_ctrl |= FLEXCAN_CTRL_BOFF_REC | FLEXCAN_CTRL_LBUF |
 		FLEXCAN_CTRL_ERR_STATE;
-	if (berr_int)
+	/*
+	 * enable the "error interrupt" (FLEXCAN_CTRL_ERR_MSK),
+	 * on most Flexcan cores, too. Otherwise we don't get
+	 * any error warning or passive interrupts.
+	 */
+	if (priv->devtype_data->features & FLEXCAN_HAS_BROKEN_ERR_STATE)
 		reg_ctrl |= FLEXCAN_CTRL_ERR_MSK;
 
 	/* save for later use */
@@ -766,10 +781,8 @@ static int flexcan_chip_start(struct rtcan_device *dev)
 	flexcan_write(0x0, &regs->rx14mask);
 	flexcan_write(0x0, &regs->rx15mask);
 
-#ifndef CONFIG_OF
-	if (priv->version >= FLEXCAN_VER_10_0_12)
+	if (priv->devtype_data->features & FLEXCAN_HAS_V10_FEATURES)
 		flexcan_write(0x0, &regs->rxfgmask);
-#endif
 
 	flexcan_transceiver_switch(priv, 1);
 
@@ -983,8 +996,30 @@ static void unregister_flexcandev(struct rtcan_device *dev)
 	rtcan_dev_unregister(dev);
 }
 
+#ifdef CONFIG_OF
+static struct of_device_id flexcan_of_match[] = {
+	{ .compatible = "fsl,p1010-flexcan", .data = &fsl_p1010_devtype_data, },
+	{ .compatible = "fsl,imx28-flexcan", .data = &fsl_imx28_devtype_data, },
+	{ .compatible = "fsl,imx6q-flexcan", .data = &fsl_imx6q_devtype_data, },
+	{ /* sentinel */ },
+};
+#endif
+static struct platform_device_id flexcan_id_table[] = {
+	{ .name = "imx25-flexcan", .driver_data = (kernel_ulong_t)&fsl_p1010_devtype_data, },
+	{ .name = "imx28-flexcan", .driver_data = (kernel_ulong_t)&fsl_imx28_devtype_data, },
+	{ .name = "imx35-flexcan", .driver_data = (kernel_ulong_t)&fsl_p1010_devtype_data, },
+	{ .name = "imx53-flexcan", .driver_data = (kernel_ulong_t)&fsl_p1010_devtype_data, },
+	{ .name = "imx6q-flexcan", .driver_data = (kernel_ulong_t)&fsl_imx6q_devtype_data, },
+	{ .name = "flexcan",       .driver_data = (kernel_ulong_t)&fsl_p1010_devtype_data, },
+	{ /* sentinel */ },
+};
+
 static int flexcan_probe(struct platform_device *pdev)
 {
+#ifdef CONFIG_OF
+	const struct of_device_id *of_id;
+#endif
+	const struct flexcan_devtype_data *devtype_data = NULL;
 	struct rtcan_device *dev;
 	struct flexcan_priv *priv;
 	struct resource *mem;
@@ -996,6 +1031,7 @@ static int flexcan_probe(struct platform_device *pdev)
 	resource_size_t mem_size;
 	int err, irq;
 	u32 clock_freq = 0;
+
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
 	pinctrl = devm_pinctrl_get_select_default(&pdev->dev);
@@ -1009,14 +1045,26 @@ static int flexcan_probe(struct platform_device *pdev)
 		of_property_read_u32(pdev->dev.of_node,
 						"clock-frequency", &clock_freq);
 #endif
-#endif
+
+	of_id = of_match_device(flexcan_of_match, &pdev->dev);
+	if (of_id) {
+		devtype_data = of_id->data;
+	}
+#endif /* CONFIG_OF */
+	if (!devtype_data && pdev->id_entry->driver_data) {
+		devtype_data = (struct flexcan_devtype_data *)
+			pdev->id_entry->driver_data;
+	} else {
+		err = -ENODEV;
+		goto out_error;
+	}
 
 	if (!clock_freq) {
 		clk = clk_get(&pdev->dev, NULL);
 		if (IS_ERR(clk)) {
 			dev_err(&pdev->dev, "no clock defined\n");
 			err = PTR_ERR(clk);
-			goto out_clock;
+			goto out_error;
 		}
 		clock_freq = clk_get_rate(clk);
 	}
@@ -1053,9 +1101,7 @@ static int flexcan_probe(struct platform_device *pdev)
 	priv->dev = dev;
 	priv->clk = clk;
 	priv->pdata = pdev->dev.platform_data;
-#ifndef CONFIG_OF
-	priv->version = pdev->id_entry->driver_data;
-#endif
+	priv->devtype_data = devtype_data;
 
 	dev_set_drvdata(&pdev->dev, dev);
 
@@ -1094,7 +1140,7 @@ out_map:
 out_get:
 	if (clk)
 		clk_put(clk);
-out_clock:
+out_error:
 	return err;
 }
 
@@ -1119,46 +1165,16 @@ static int flexcan_remove(struct platform_device *pdev)
 	return 0;
 }
 
-#ifdef CONFIG_OF
-static struct of_device_id flexcan_of_match[] = {
-	{
-		.compatible = "fsl,p1010-flexcan",
-	},
-	{},
-};
-#else
-static struct platform_device_id flexcan_devtype[] = {
-	{
-		.name = "imx25-flexcan",
-		.driver_data = FLEXCAN_VER_3_0_0,
-	}, {
-		.name = "imx28-flexcan",
-		.driver_data = FLEXCAN_VER_3_0_4,
-	}, {
-		.name = "imx35-flexcan",
-		.driver_data = FLEXCAN_VER_3_0_0,
-	}, {
-		.name = "imx53-flexcan",
-		.driver_data = FLEXCAN_VER_3_0_0,
-	}, {
-		.name = "imx6q-flexcan",
-		.driver_data = FLEXCAN_VER_10_0_12,
-	},
-};
-#endif
-
 static struct platform_driver flexcan_driver = {
-#ifdef CONFIG_OF
 	.driver = {
 		/* For legacy platform support */
-		.name = "flexcan",
+		.name = DRV_NAME,
 		.owner = THIS_MODULE,
+#ifdef CONFIG_OF
 		.of_match_table = flexcan_of_match,
-	},
-#else
-	.driver.name = DRV_NAME,
-	.id_table = flexcan_devtype,
 #endif
+	},
+	.id_table = flexcan_id_table,
 	.probe = flexcan_probe,
 	.remove = flexcan_remove,
 };
