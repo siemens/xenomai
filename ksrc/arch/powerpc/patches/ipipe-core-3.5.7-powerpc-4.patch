@@ -262,10 +262,10 @@ index 0554ab0..ec312e0 100644
   * or should we not care like we do now ? --BenH.
 diff --git a/arch/powerpc/include/asm/ipipe.h b/arch/powerpc/include/asm/ipipe.h
 new file mode 100644
-index 0000000..4182870
+index 0000000..56b7a7d
 --- /dev/null
 +++ b/arch/powerpc/include/asm/ipipe.h
-@@ -0,0 +1,185 @@
+@@ -0,0 +1,164 @@
 +/*
 + *   include/asm-powerpc/ipipe.h
 + *
@@ -307,7 +307,7 @@ index 0000000..4182870
 +#include <linux/cache.h>
 +#include <linux/threads.h>
 +
-+#define IPIPE_CORE_RELEASE	3
++#define IPIPE_CORE_RELEASE	4
 +
 +struct ipipe_domain;
 +
@@ -317,20 +317,6 @@ index 0000000..4182870
 +#ifdef CONFIG_DEBUGGER
 +extern cpumask_t __ipipe_dbrk_pending;
 +#endif
-+
-+#define ipipe_mm_switch_protect(flags)					\
-+	do {								\
-+		__mmactivate_head();					\
-+		barrier();						\
-+		(void)(flags);						\
-+	} while(0)
-+
-+#define ipipe_mm_switch_unprotect(flags)				\
-+	do {								\
-+		barrier();						\
-+		__mmactivate_tail();					\
-+		(void)(flags);						\
-+	} while(0)
 +
 +extern unsigned long __ipipe_hrtimer_freq;
 +
@@ -440,13 +426,6 @@ index 0000000..4182870
 +static inline void ipipe_unmute_pic(void) { }
 +
 +static inline void ipipe_notify_root_preemption(void) { }
-+
-+#else /* !CONFIG_IPIPE */
-+
-+#include <linux/interrupt.h>
-+
-+#define ipipe_mm_switch_protect(flags)		do { (void)(flags); } while(0)
-+#define ipipe_mm_switch_unprotect(flags)	do { (void)(flags); } while(0)
 +
 +#endif /* !CONFIG_IPIPE */
 +
@@ -851,186 +830,135 @@ index 0000000..2bc8217
 +
 +#endif /* !_ASM_POWERPC_IPIPE_HWIRQ_H */
 diff --git a/arch/powerpc/include/asm/mmu_context.h b/arch/powerpc/include/asm/mmu_context.h
-index a73668a..c4254a3 100644
+index a73668a..c7f7f6c 100644
 --- a/arch/powerpc/include/asm/mmu_context.h
 +++ b/arch/powerpc/include/asm/mmu_context.h
-@@ -36,15 +36,99 @@ extern void switch_cop(struct mm_struct *next);
+@@ -36,15 +36,39 @@ extern void switch_cop(struct mm_struct *next);
  extern int use_cop(unsigned long acop, struct mm_struct *mm);
  extern void drop_cop(unsigned long acop, struct mm_struct *mm);
  
-+#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
++#if !defined(CONFIG_IPIPE) || defined(CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH)
 +
-+#if defined(CONFIG_PPC_MMU_NOHASH) && defined(CONFIG_SMP)
-+#define __IPIPE_ATOMIC_MM_UPDATE  1
-+#endif
++#define ipipe_mm_switch_protect(flags)		\
++  do { (void)(flags); } while (0)
 +
-+static inline void __mmactivate_head(void)
-+{
-+#ifdef __IPIPE_ATOMIC_MM_UPDATE
-+	hard_local_irq_disable();
-+#else
-+	preempt_disable();
-+#endif
-+	__this_cpu_write(ipipe_percpu.active_mm, NULL);
-+}
++#define ipipe_mm_switch_unprotect(flags)	\
++  do { (void)(flags); } while (0)
 +
-+static inline void __mmactivate_tail(void)
-+{
-+#ifdef __IPIPE_ATOMIC_MM_UPDATE
-+	hard_local_irq_enable();
-+#else
-+	preempt_enable();
-+#endif
-+}
++#else /* CONFIG_IPIPE && !CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH */
 +
-+#else  /* !CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH */
++#define ipipe_mm_switch_protect(flags)		\
++  do {						\
++    	(flags) = hard_cond_local_irq_save();	\
++	barrier();				\
++  } while (0)					\
 +
-+static inline void __mmactivate_head(void)
-+{
-+#ifdef CONFIG_IPIPE_DEBUG_INTERNAL
-+	WARN_ON_ONCE(hard_irqs_disabled());
-+#endif
-+	hard_cond_local_irq_disable();
-+}
++#define ipipe_mm_switch_unprotect(flags)	\
++  do {						\
++	barrier();				\
++    	hard_cond_local_irq_restore(flags);	\
++  } while (0)					\
 +
-+static inline void __mmactivate_tail(void)
-+{
-+	hard_cond_local_irq_enable();
-+}
-+
-+#endif  /* !CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH */
++#endif /* CONFIG_IPIPE && !CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH */
 +
  /*
-- * switch_mm is the entry point called from the architecture independent
-- * code in kernel/sched.c
-+ * mmu_context_nohash in SMP mode is tracking an activity
-+ * counter into the mm struct. Therefore, we make sure the
-+ * kernel always sees the ipipe_percpu.active_mm update and
-+ * the actual switch as a single atomic operation. Since the
-+ * related code already requires to hard disable irqs all
-+ * through the switch, there is no additional penalty anyway.
+  * switch_mm is the entry point called from the architecture independent
+  * code in kernel/sched.c
   */
 -static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
 -			     struct task_struct *tsk)
 +static inline void __do_switch_mm(struct mm_struct *prev, struct mm_struct *next,
-+				  struct task_struct *tsk)
++				  struct task_struct *tsk, bool irq_sync_p)
  {
-+#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
-+	unsigned long flags;
-+#ifdef __IPIPE_ATOMIC_MM_UPDATE
-+	flags = hard_local_irq_save();
-+#endif
-+	__this_cpu_write(ipipe_percpu.active_mm, NULL);
-+#else /* !CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH */
-+	WARN_ON_ONCE(!hard_irqs_disabled());
-+#endif /* !CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH */
-+	barrier();
-+
-+	/* The actual HW switching method differs between the various
-+	 * sub architectures.
-+	 */
-+#ifdef CONFIG_PPC_STD_MMU_64
-+	/* mm state is undefined. */
-+	if (mmu_has_feature(MMU_FTR_SLB))
-+		switch_slb(tsk, next);
-+	else
-+		switch_stab(tsk, next);
-+#else
-+	/* Out of line for now */
-+	switch_mmu_context(prev, next);
-+#endif
-+	barrier();
-+#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
-+#ifndef __IPIPE_ATOMIC_MM_UPDATE
-+	flags = hard_local_irq_save();
-+#endif
-+	__this_cpu_write(ipipe_percpu.active_mm, next);
-+#endif  /* !CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH */
-+}
-+
-+static inline void __switch_mm_prepare(struct mm_struct *prev, struct mm_struct *next,
-+				       struct task_struct *tsk)
-+{
-+	int cpu = ipipe_processor_id();
-+
  	/* Mark this context has been used on the new CPU */
 -	cpumask_set_cpu(smp_processor_id(), mm_cpumask(next));
-+	cpumask_set_cpu(cpu, mm_cpumask(next));
++	cpumask_set_cpu(ipipe_processor_id(), mm_cpumask(next));
  
  	/* 32-bit keeps track of the current PGDIR in the thread struct */
  #ifdef CONFIG_PPC32
-@@ -72,20 +156,58 @@ static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
- 	if (cpu_has_feature(CPU_FTR_ALTIVEC))
- 		asm volatile ("dssall");
- #endif /* CONFIG_ALTIVEC */
-+}
+@@ -59,6 +83,9 @@ static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
+ 	if (prev == next)
+ 		return;
  
--	/* The actual HW switching method differs between the various
--	 * sub architectures.
--	 */
--#ifdef CONFIG_PPC_STD_MMU_64
--	if (mmu_has_feature(MMU_FTR_SLB))
--		switch_slb(tsk, next);
--	else
--		switch_stab(tsk, next);
--#else
--	/* Out of line for now */
--	switch_mmu_context(prev, next);
--#endif
-+/*
-+ * __switch_mm is the low level mm switching code, assuming that hw
-+ * IRQs are off.
-+ */
++	if (irq_sync_p)
++		hard_local_irq_enable();
++	
+ #ifdef CONFIG_PPC_ICSWX
+ 	/* Switch coprocessor context only if prev or next uses a coprocessor */
+ 	if (prev->context.acop || next->context.acop)
+@@ -85,7 +112,71 @@ static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
+ 	/* Out of line for now */
+ 	switch_mmu_context(prev, next);
+ #endif
++	if (irq_sync_p)
++		hard_local_irq_disable();
++}
++
 +static inline void __switch_mm(struct mm_struct *prev, struct mm_struct *next,
 +			       struct task_struct *tsk)
 +{
-+	__switch_mm_prepare(prev, next, tsk);
 +#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
++#if defined(CONFIG_PPC_MMU_NOHASH) && defined(CONFIG_SMP)
++ /*
++  * mmu_context_nohash in SMP mode is tracking an activity counter
++  * into the mm struct. Therefore, we make sure the kernel always sees
++  * the ipipe_percpu.active_mm update and the actual switch as a
++  * single atomic operation. Since the related code already requires
++  * to hard disable irqs all through the switch, there is no
++  * additional penalty anyway.
++  */
++#define mmswitch_irq_sync false
++#else
++#define mmswitch_irq_sync true
++#endif
++	IPIPE_WARN_ONCE(hard_irqs_disabled());
 +	for (;;) {
-+		/* Returns with hw IRQs off. */
-+		__do_switch_mm(prev, next, tsk);
++		hard_local_irq_disable();
++		__this_cpu_write(ipipe_percpu.active_mm, NULL);
++		barrier();
++		__do_switch_mm(prev, next, tsk, mmswitch_irq_sync);
 +		if (!test_and_clear_thread_flag(TIF_MMSWITCH_INT)) {
++			__this_cpu_write(ipipe_percpu.active_mm, next);
 +			hard_local_irq_enable();
-+			break;
++			return;
 +		}
-+		hard_local_irq_enable();
 +	}
 +#else /* !CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH */
-+	__do_switch_mm(prev, next, tsk);
++	IPIPE_WARN_ONCE(!hard_irqs_disabled());
++	__do_switch_mm(prev, next, tsk, false);
 +#endif /* !CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH */
 +}
  
++#ifdef CONFIG_IPIPE
 +/*
-+ * switch_mm is the entry point called from the architecture independent
-+ * code in kernel/sched.c.
-+ */
-+static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
-+			     struct task_struct *tsk)
-+{
-+#ifndef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
-+	unsigned long flags;
-+	flags = hard_local_irq_save();
-+#endif /* !CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH */
-+	__switch_mm(prev, next, tsk);
-+#ifndef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
-+	hard_local_irq_restore(flags);
-+#endif /* !CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH */
-+}
-+
-+/*
-+ * ipipe_switch_mm_head is reserved to the head domain for switching
++ * ipipe_switch_mm_head() is reserved to the head domain for switching
 + * mmu context.
 + */
 +static inline
 +void ipipe_switch_mm_head(struct mm_struct *prev, struct mm_struct *next,
 +			  struct task_struct *tsk)
 +{
-+	__switch_mm_prepare(prev, next, tsk);
-+	__do_switch_mm(prev, next, tsk);
++	unsigned long flags;
++
++	flags = hard_local_irq_save();
++	__do_switch_mm(prev, next, tsk, false);
++	hard_local_irq_restore(flags);
++}
++
++#endif /* CONFIG_IPIPE */
++
++static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
++			     struct task_struct *tsk)
++{
++	unsigned long flags;
++
++	ipipe_mm_switch_protect(flags);
++	__switch_mm(prev, next, tsk);
++	ipipe_mm_switch_unprotect(flags);
  }
  
  #define deactivate_mm(tsk,mm)	do { } while (0)
-@@ -96,11 +218,15 @@ static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
+@@ -96,11 +187,15 @@ static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
   */
  static inline void activate_mm(struct mm_struct *prev, struct mm_struct *next)
  {
@@ -1038,9 +966,8 @@ index a73668a..c4254a3 100644
  	unsigned long flags;
  
  	local_irq_save(flags);
--	switch_mm(prev, next, current);
 +#endif
-+	__switch_mm(prev, next, current);
+ 	switch_mm(prev, next, current);
 +#ifndef CONFIG_IPIPE
  	local_irq_restore(flags);
 +#endif
@@ -3670,10 +3597,10 @@ index 558e30c..66e4d08 100644
  			unsigned long end)
  {
 diff --git a/arch/powerpc/platforms/52xx/mpc52xx_pic.c b/arch/powerpc/platforms/52xx/mpc52xx_pic.c
-index 8520b58..7ed93f8 100644
+index 8520b58..2c25c4b 100644
 --- a/arch/powerpc/platforms/52xx/mpc52xx_pic.c
 +++ b/arch/powerpc/platforms/52xx/mpc52xx_pic.c
-@@ -142,35 +142,63 @@ static unsigned char mpc52xx_map_senses[4] = {
+@@ -142,35 +142,72 @@ static unsigned char mpc52xx_map_senses[4] = {
  };
  
  /* Utility functions */
@@ -3732,17 +3659,34 @@ index 8520b58..7ed93f8 100644
 +	__io_be_setbit(&intr->ctrl, 11 - l2irq);
 +	ipipe_unlock_irq(d->irq);
 +	hard_local_irq_restore(flags);
++}
++
++static void mpc52xx_extirq_mask_ack(struct irq_data *d)
++{
++	int l2irq = irqd_to_hwirq(d) & MPC52xx_IRQ_L2_MASK;
++
++	__io_be_clrbit(&intr->ctrl, 11 - l2irq);
++	__io_be_setbit(&intr->ctrl, 27 - l2irq);
  }
  
  static void mpc52xx_extirq_ack(struct irq_data *d)
  {
  	int l2irq = irqd_to_hwirq(d) & MPC52xx_IRQ_L2_MASK;
 -	io_be_setbit(&intr->ctrl, 27-l2irq);
-+	__io_be_setbit(&intr->ctrl, 27-l2irq);
++
++	__io_be_setbit(&intr->ctrl, 27 - l2irq);
  }
  
  static int mpc52xx_extirq_set_type(struct irq_data *d, unsigned int flow_type)
-@@ -217,22 +245,38 @@ static int mpc52xx_null_set_type(struct irq_data *d, unsigned int flow_type)
+@@ -205,6 +242,7 @@ static struct irq_chip mpc52xx_extirq_irqchip = {
+ 	.name = "MPC52xx External",
+ 	.irq_mask = mpc52xx_extirq_mask,
+ 	.irq_unmask = mpc52xx_extirq_unmask,
++	.irq_mask_ack = mpc52xx_extirq_mask_ack,
+ 	.irq_ack = mpc52xx_extirq_ack,
+ 	.irq_set_type = mpc52xx_extirq_set_type,
+ };
+@@ -217,22 +255,38 @@ static int mpc52xx_null_set_type(struct irq_data *d, unsigned int flow_type)
  	return 0; /* Do nothing so that the sense mask will get updated */
  }
  
@@ -3784,7 +3728,7 @@ index 8520b58..7ed93f8 100644
  	.irq_unmask = mpc52xx_main_unmask,
  	.irq_set_type = mpc52xx_null_set_type,
  };
-@@ -240,22 +284,38 @@ static struct irq_chip mpc52xx_main_irqchip = {
+@@ -240,22 +294,38 @@ static struct irq_chip mpc52xx_main_irqchip = {
  /*
   * Peripherals interrupt irq_chip
   */
@@ -3826,7 +3770,7 @@ index 8520b58..7ed93f8 100644
  	.irq_unmask = mpc52xx_periph_unmask,
  	.irq_set_type = mpc52xx_null_set_type,
  };
-@@ -263,29 +323,40 @@ static struct irq_chip mpc52xx_periph_irqchip = {
+@@ -263,29 +333,40 @@ static struct irq_chip mpc52xx_periph_irqchip = {
  /*
   * SDMA interrupt irq_chip
   */
@@ -4700,6 +4644,268 @@ index 9203393..8b03381 100644
  }
  
  static struct uic * __init uic_init_one(struct device_node *node)
+ut], NULL, "enet_out");
+ 	clk_register_clkdevs(clks[hbus], hbus_lookups, ARRAY_SIZE(hbus_lookups));
+ 	clk_register_clkdevs(clks[xbus], xbus_lookups, ARRAY_SIZE(xbus_lookups));
+diff --git a/drivers/clocksource/Makefile b/drivers/clocksource/Makefile
+index dd3e661..585b983 100644
+--- a/drivers/clocksource/Makefile
++++ b/drivers/clocksource/Makefile
+@@ -8,6 +8,9 @@ obj-$(CONFIG_SH_TIMER_MTU2)	+= sh_mtu2.o
+ obj-$(CONFIG_SH_TIMER_TMU)	+= sh_tmu.o
+ obj-$(CONFIG_EM_TIMER_STI)	+= em_sti.o
+ obj-$(CONFIG_CLKBLD_I8253)	+= i8253.o
++ifdef CONFIG_X86_32
++obj-$(CONFIG_IPIPE_WANT_CLOCKSOURCE) += ipipe_i486_tsc_emu.o
++endif
+ obj-$(CONFIG_CLKSRC_MMIO)	+= mmio.o
+ obj-$(CONFIG_DW_APB_TIMER)	+= dw_apb_timer.o
+ obj-$(CONFIG_CLKSRC_DBX500_PRCMU)	+= clksrc-dbx500-prcmu.o
+\ No newline at end of file
+diff --git a/drivers/clocksource/i8253.c b/drivers/clocksource/i8253.c
+index e7cab2d..cd39ba2 100644
+--- a/drivers/clocksource/i8253.c
++++ b/drivers/clocksource/i8253.c
+@@ -9,6 +9,8 @@
+ #include <linux/module.h>
+ #include <linux/i8253.h>
+ #include <linux/smp.h>
++#include <linux/ipipe.h>
++#include <linux/ipipe_tickdev.h>
+ 
+ /*
+  * Protects access to I/O ports
+@@ -16,8 +18,9 @@
+  * 0040-0043 : timer0, i8253 / i8254
+  * 0061-0061 : NMI Control Register which contains two speaker control bits.
+  */
+-DEFINE_RAW_SPINLOCK(i8253_lock);
++IPIPE_DEFINE_RAW_SPINLOCK(i8253_lock);
+ EXPORT_SYMBOL(i8253_lock);
++static unsigned periodic_pit_ch0;
+ 
+ #ifdef CONFIG_CLKSRC_I8253
+ /*
+@@ -33,6 +36,10 @@ static cycle_t i8253_read(struct clocksource *cs)
+ 	int count;
+ 	u32 jifs;
+ 
++	if (periodic_pit_ch0 == 0)
++		/* The PIT is not running in periodic mode. */
++		return jiffies * PIT_LATCH + (PIT_LATCH - 1) - old_count;
++
+ 	raw_spin_lock_irqsave(&i8253_lock, flags);
+ 	/*
+ 	 * Although our caller may have the read side of xtime_lock,
+@@ -93,8 +100,37 @@ static struct clocksource i8253_cs = {
+ 	.mask		= CLOCKSOURCE_MASK(32),
+ };
+ 
++#ifdef CONFIG_IPIPE
++
++#define IPIPE_PIT_COUNT2LATCH 0xfffe
++
++extern cycle_t __ipipe_get_8253_tsc(struct clocksource *cs);
++
++int __ipipe_last_8253_counter2;
++
++void ipipe_setup_8253_tsc(void)
++{
++	unsigned long flags;
++
++	raw_spin_lock_irqsave(&i8253_lock, flags);
++	outb_p(0xb4, PIT_MODE);
++	outb_p(IPIPE_PIT_COUNT2LATCH & 0xff, PIT_CH2);
++	outb_p(IPIPE_PIT_COUNT2LATCH >> 8, PIT_CH2);
++	/* Gate high, disable speaker */
++	outb_p((inb_p(0x61) & ~0x2) | 1, 0x61);
++
++	raw_spin_unlock_irqrestore(&i8253_lock, flags);
++
++	i8253_cs.ipipe_read = __ipipe_get_8253_tsc;
++}
++#else /* !CONFIG_IPIPE */
++#define ipipe_setup_8253_tsc()	do { } while(0)
++#endif /* !CONFIG_IPIPE */
++
+ int __init clocksource_i8253_init(void)
+ {
++	if (cpu_has_tsc == 0)
++		ipipe_setup_8253_tsc();
+ 	return clocksource_register_hz(&i8253_cs, PIT_TICK_RATE);
+ }
+ #endif
+@@ -110,8 +146,10 @@ static void init_pit_timer(enum clock_event_mode mode,
+ {
+ 	raw_spin_lock(&i8253_lock);
+ 
++	periodic_pit_ch0 = 0;
+ 	switch (mode) {
+ 	case CLOCK_EVT_MODE_PERIODIC:
++		periodic_pit_ch0 = 1;
+ 		/* binary, mode 2, LSB/MSB, ch 0 */
+ 		outb_p(0x34, PIT_MODE);
+ 		outb_p(PIT_LATCH & 0xff , PIT_CH0);	/* LSB */
+@@ -148,13 +186,25 @@ static void init_pit_timer(enum clock_event_mode mode,
+ static int pit_next_event(unsigned long delta, struct clock_event_device *evt)
+ {
+ 	raw_spin_lock(&i8253_lock);
++#ifndef CONFIG_IPIPE
+ 	outb_p(delta & 0xff , PIT_CH0);	/* LSB */
+ 	outb_p(delta >> 8 , PIT_CH0);		/* MSB */
++#else /* CONFIG_IPIPE */
++	outb(delta & 0xff , PIT_CH0);	/* LSB */
++	outb(delta >> 8 , PIT_CH0);		/* MSB */
++#endif /* CONFIG_IPIPE */
+ 	raw_spin_unlock(&i8253_lock);
+ 
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_IPIPE
++static struct ipipe_timer i8253_itimer = {
++	.irq = 0,
++	.min_delay_ticks = 1,
++};
++#endif /* CONFIG_IPIPE */
++
+ /*
+  * On UP the PIT can serve all of the possible timer functions. On SMP systems
+  * it can be solely used for the global tick.
+@@ -164,6 +214,9 @@ struct clock_event_device i8253_clockevent = {
+ 	.features	= CLOCK_EVT_FEAT_PERIODIC,
+ 	.set_mode	= init_pit_timer,
+ 	.set_next_event = pit_next_event,
++#ifdef CONFIG_IPIPE
++	.ipipe_timer    = &i8253_itimer,
++#endif /* CONFIG_IPIPE */
+ };
+ 
+ /*
+diff --git a/drivers/clocksource/ipipe_i486_tsc_emu.S b/drivers/clocksource/ipipe_i486_tsc_emu.S
+new file mode 100644
+index 0000000..3fe423c
+--- /dev/null
++++ b/drivers/clocksource/ipipe_i486_tsc_emu.S
+@@ -0,0 +1,106 @@
++#include <linux/linkage.h>
++#include <asm/dwarf2.h>
++
++#define PIT_MODE	0x43
++#define PIT_CH2		0x42
++#define PIT_COUNT2LATCH 0xfffe
++
++.macro SAVE reg
++	pushl_cfi %\reg
++	CFI_REL_OFFSET \reg, 0
++.endm
++
++.macro RESTORE reg
++	popl_cfi %\reg
++	CFI_RESTORE \reg
++.endm
++
++ENTRY(__ipipe_get_8253_tsc)
++	CFI_STARTPROC
++
++	mov	$0xd8, %al
++	out	%al, $(PIT_MODE)
++	in	$(PIT_CH2), %al
++	xor	%ecx, %ecx
++	mov	%al, %cl
++	in	$(PIT_CH2), %al
++	mov	%al, %ch
++
++	mov	__ipipe_last_8253_counter2, %eax
++	mov	__ipipe_cs_last_tsc + 4, %edx
++	sub	%ecx, %eax
++	mov	%ecx, __ipipe_last_8253_counter2
++	test	%eax, %eax
++	mov	__ipipe_cs_last_tsc, %ecx
++	jg	1f
++	add	$(PIT_COUNT2LATCH), %eax
++1:	add	%ecx, %eax
++	adc	$0, %edx
++	mov	%eax, __ipipe_cs_last_tsc
++	mov	%edx, __ipipe_cs_last_tsc + 4
++
++	ret
++
++	CFI_ENDPROC
++ENDPROC(__ipipe_get_8253_tsc)
++
++ENTRY(__ipipe_get_cs_tsc)
++	CFI_STARTPROC
++
++	SAVE	ecx
++
++	pushfl_cfi
++	cli
++
++	mov	__ipipe_cs_mask + 4, %ecx
++	mov	__ipipe_cs_mask, %edx
++	cmp	$0xffffffff, %ecx
++	mov	__ipipe_cs, %eax
++	jne	1f
++
++	/* 64 bits clocksource */
++	call	*__ipipe_cs_read
++	jmp	4f
++
++1:	cmp	$0xffffffff, %edx
++	jne	2f
++
++	/* 32 bits clocksource */
++	call 	*__ipipe_cs_read
++
++	mov	__ipipe_cs_last_tsc + 4, %edx
++	cmp	__ipipe_cs_last_tsc, %eax
++	adc	$0, %edx
++
++	jmp	4f
++
++	/* n bits (< 32) clocksource */
++2:	SAVE	ebx
++
++	mov	%edx, %ebx
++	call 	*__ipipe_cs_read
++
++	mov	__ipipe_cs_last_tsc, %ecx
++	and	%ebx, %eax
++	mov	%ebx, %edx
++	and	%ecx, %ebx
++	not 	%edx
++	cmp	%ebx, %eax
++	jae	3f
++	sub	%edx, %eax
++3:	and	%edx, %ecx
++	mov	__ipipe_cs_last_tsc + 4, %edx
++	add	%ecx, %eax
++	adc	$0, %edx
++
++	RESTORE	ebx
++
++4:	mov	%eax, __ipipe_cs_last_tsc
++	mov	%edx, __ipipe_cs_last_tsc + 4
++	popfl_cfi
++	RESTORE	ecx
++	ret
++
++	/* n bits clocksource with 32 < n < 64, not supported. */
++	CFI_ENDPROC
++ENDPROC(__ipipe_get_cs_tsc)
+diff --git a/drivers/cpuidle/Kconfig b/drivers/cpuidle/Kconfig
+index 78a666d..20e9852 100644
+--- a/drivers/cpuidle/Kconfig
++++ b/drivers/cpuidle/Kconfig
+@@ -2,6 +2,7 @@
+ config CPU_IDLE
+ 	bool "CPU idle PM support"
+ 	default y if ACPI || PPC_PSERIES
++	depends on !(ARCH_OMAP4 && IPIPE)
+ 	help
+ 	  CPU idle is a generic framework for supporting software-controlled
+ 	  idle processor power management.  It includes modular cross-platform
 diff --git a/drivers/gpio/gpio-mpc8xxx.c b/drivers/gpio/gpio-mpc8xxx.c
 index 5a1817e..d11714d 100644
 --- a/drivers/gpio/gpio-mpc8xxx.c
@@ -4723,63 +4929,605 @@ index 5a1817e..d11714d 100644
  	if (chip->irq_eoi)
  		chip->irq_eoi(&desc->irq_data);
  }
-diff --git a/drivers/tty/serial/mpc52xx_uart.c b/drivers/tty/serial/mpc52xx_uart.c
-index bedac0d..a0e8b9b 100644
---- a/drivers/tty/serial/mpc52xx_uart.c
-+++ b/drivers/tty/serial/mpc52xx_uart.c
-@@ -1450,6 +1450,40 @@ mpc52xx_uart_of_enumerate(void)
+diff --git a/drivers/gpio/gpio-mxc.c b/drivers/gpio/gpio-mxc.c
+index c89c4c1..f5f54c7 100644
+--- a/drivers/gpio/gpio-mxc.c
++++ b/drivers/gpio/gpio-mxc.c
+@@ -30,8 +30,10 @@
+ #include <linux/of.h>
+ #include <linux/of_device.h>
+ #include <linux/module.h>
++#include <linux/ipipe.h>
+ #include <asm-generic/bug.h>
+ #include <asm/mach/irq.h>
++#include <mach/hardware.h>
+ 
+ #define irq_to_gpio(irq)	((irq) - MXC_GPIO_IRQ_START)
+ 
+@@ -64,6 +66,9 @@ struct mxc_gpio_port {
+ 	int virtual_irq_start;
+ 	struct bgpio_chip bgc;
+ 	u32 both_edges;
++#ifdef CONFIG_IPIPE
++	unsigned nonroot;
++#endif /* CONFIG_IPIPE */
+ };
+ 
+ static struct mxc_gpio_hwdata imx1_imx21_gpio_hwdata = {
+@@ -225,7 +230,7 @@ static void mxc_gpio_irq_handler(struct mxc_gpio_port *port, u32 irq_stat)
+ 		if (port->both_edges & (1 << irqoffset))
+ 			mxc_flip_edge(port, irqoffset);
+ 
+-		generic_handle_irq(gpio_irq_no_base + irqoffset);
++		ipipe_handle_demuxed_irq(gpio_irq_no_base + irqoffset);
+ 
+ 		irq_stat &= ~(1 << irqoffset);
  	}
+@@ -251,8 +256,11 @@ static void mx3_gpio_irq_handler(u32 irq, struct irq_desc *desc)
+ static void mx2_gpio_irq_handler(u32 irq, struct irq_desc *desc)
+ {
+ 	u32 irq_msk, irq_stat;
++	struct irq_chip *chip = irq_get_chip(irq);
+ 	struct mxc_gpio_port *port;
+ 
++	chained_irq_enter(chip, desc);
++
+ 	/* walk through all interrupt status registers */
+ 	list_for_each_entry(port, &mxc_gpio_ports, node) {
+ 		irq_msk = readl(port->base + GPIO_IMR);
+@@ -263,6 +271,8 @@ static void mx2_gpio_irq_handler(u32 irq, struct irq_desc *desc)
+ 		if (irq_stat)
+ 			mxc_gpio_irq_handler(port, irq_stat);
+ 	}
++
++	chained_irq_exit(chip, desc);
  }
  
-+#if defined(CONFIG_SERIAL_MPC52xx_CONSOLE) && defined(CONFIG_IPIPE_DEBUG)
+ /*
+@@ -468,6 +478,118 @@ static struct platform_driver mxc_gpio_driver = {
+ 	.id_table	= mxc_gpio_devtype,
+ };
+ 
++#if defined(CONFIG_IPIPE)
++#ifdef CONFIG_MXC_TZIC
++#include <mach/hardware.h>
++#endif /* CONFIG_MXC_TZIC */
++extern void tzic_set_irq_prio(int irq, int hi);
++extern void tzic_mute_pic(void);
++extern void tzic_unmute_pic(void);
++extern void gic_mute(void);
++extern void gic_unmute(void);
++extern void gic_set_irq_prio(int irq, int hi);
 +
-+#include <stdarg.h>
++#ifdef CONFIG_SOC_IMX6Q
++static unsigned is_mx6;
++#endif /* CONFIG_SOC_IMX6Q */
 +
-+void __ipipe_serial_debug(const char *fmt, ...)
++static void mxc_set_irq_prio(int irq, int hi)
 +{
-+	struct uart_port *port = &mpc52xx_uart_ports[0];
-+        unsigned int count, n;
-+        unsigned long flags;
-+        char buf[128], *s;
-+        va_list ap;
++	struct irq_desc *desc = irq_to_desc(irq);
++	struct irq_data *idata = irq_desc_get_irq_data(desc);
 +
-+	if (psc_ops == NULL)
-+		return;
++#ifdef CONFIG_SOC_IMX6Q
++	if (is_mx6)
++		gic_set_irq_prio(idata->hwirq, hi);
++#endif /* CONFIG_SOC_IMX6Q */
 +
-+        va_start(ap, fmt);
-+        vsprintf(buf, fmt, ap);
-+        va_end(ap);
-+        count = strlen(buf);
-+
-+        flags = hard_local_irq_save();
-+
-+	/* Write all the chars */
-+	for (n = 0, s = buf; n < count; n++, s++) {
-+		if (*s == '\n')
-+			psc_ops->write_char(port, '\r');
-+		psc_ops->write_char(port, *s);
-+	}
-+
-+        hard_local_irq_restore(flags);
++	if (cpu_is_mx50() || cpu_is_mx51() || cpu_is_mx53())
++		tzic_set_irq_prio(idata->hwirq, hi);
 +}
 +
-+#endif
++static void mxc_enable_irqdesc(struct ipipe_domain *ipd, unsigned irq)
++{
++	struct irq_desc *desc = irq_to_desc(irq);
++	struct irq_data *idata = irq_desc_get_irq_data(desc);
++	struct irq_chip *chip = irq_data_get_irq_chip(idata);
 +
- MODULE_DEVICE_TABLE(of, mpc52xx_uart_of_match);
++	if (chip->irq_set_type == gpio_set_irq_type) {
++		/* It is a gpio. */
++		struct irq_chip_generic *gc = irq_data_get_irq_chip_data(idata);
++		struct mxc_gpio_port *port = gc->private;
++
++		if (ipd == &ipipe_root) {
++			port->nonroot &= ~(1 << idata->hwirq);
++			if (port->nonroot == 0) {
++				mxc_set_irq_prio(port->irq, 0);
++				if (port->irq_high > 0)
++					mxc_set_irq_prio(port->irq_high, 0);
++			}
++		} else {
++			port->nonroot |= (1 << idata->hwirq);
++			if (port->nonroot == (1 << idata->hwirq)) {
++				mxc_set_irq_prio(port->irq, 1);
++				if (port->irq_high > 0)
++					mxc_set_irq_prio(port->irq_high, 1);
++			}
++		}
++	} else
++		mxc_set_irq_prio(irq, ipd != &ipipe_root);
++}
++
++static void mxc_disable_irqdesc(struct ipipe_domain *ipd, unsigned irq)
++{
++	struct irq_desc *desc = irq_to_desc(irq);
++	struct irq_data *idata = irq_desc_get_irq_data(desc);
++	struct irq_chip *chip = irq_data_get_irq_chip(idata);
++
++	if (chip->irq_set_type == gpio_set_irq_type) {
++		/* It is a gpio. */
++		struct irq_chip_generic *gc = irq_data_get_irq_chip_data(idata);
++		struct mxc_gpio_port *port = gc->private;
++
++		if (ipd != &ipipe_root) {
++			port->nonroot &= ~(1 << idata->hwirq);
++			if (port->nonroot == 0) {
++				mxc_set_irq_prio(port->irq, 0);
++				if (port->irq_high > 0)
++					mxc_set_irq_prio(port->irq_high, 0);
++			}
++		}
++	} else if (ipd != &ipipe_root)
++		mxc_set_irq_prio(irq, 0);
++}
++
++void __init mxc_pic_muter_register(void)
++{
++	struct ipipe_mach_pic_muter pic_muter = {
++		.enable_irqdesc = mxc_enable_irqdesc,
++		.disable_irqdesc = mxc_disable_irqdesc,
++		.mute = tzic_mute_pic,
++		.unmute = tzic_unmute_pic,
++	};
++	if (cpu_is_mx50() || cpu_is_mx51() || cpu_is_mx53())
++		ipipe_pic_muter_register(&pic_muter);
++	else
++		(void)pic_muter;
++}
++
++#ifdef CONFIG_SOC_IMX6Q
++void __init mx6_pic_muter_register(void)
++{
++	struct ipipe_mach_pic_muter pic_muter = {
++		.enable_irqdesc = mxc_enable_irqdesc,
++		.disable_irqdesc = mxc_disable_irqdesc,
++		.mute = gic_mute,
++		.unmute = gic_unmute,
++	};
++
++	is_mx6 = 1;
++	ipipe_pic_muter_register(&pic_muter);
++}
++#endif /* CONFIG_SOC_IMX6Q */
++#endif /* CONFIG_IPIPE */
++
+ static int __init gpio_mxc_init(void)
+ {
+ 	return platform_driver_register(&mxc_gpio_driver);
+diff --git a/drivers/gpio/gpio-omap.c b/drivers/gpio/gpio-omap.c
+index 4fbc208..cad85ef 100644
+--- a/drivers/gpio/gpio-omap.c
++++ b/drivers/gpio/gpio-omap.c
+@@ -25,6 +25,7 @@
+ #include <linux/of.h>
+ #include <linux/of_device.h>
+ #include <linux/irqdomain.h>
++#include <linux/ipipe.h>
  
- static struct platform_driver mpc52xx_uart_of_driver = {
-diff --git a/drivers/cpuidle/Kconfig b/drivers/cpuidle/Kconfig
-index 78a666d..20e9852 100644
---- a/drivers/cpuidle/Kconfig
-+++ b/drivers/cpuidle/Kconfig
-@@ -2,6 +2,7 @@
- config CPU_IDLE
- 	bool "CPU idle PM support"
- 	default y if ACPI || PPC_PSERIES
-+	depends on !(ARCH_OMAP4 && IPIPE)
+ #include <mach/hardware.h>
+ #include <asm/irq.h>
+@@ -63,7 +64,7 @@ struct gpio_bank {
+ 	u32 saved_datain;
+ 	u32 level_mask;
+ 	u32 toggle_mask;
+-	spinlock_t lock;
++	ipipe_spinlock_t lock;
+ 	struct gpio_chip chip;
+ 	struct clk *dbck;
+ 	u32 mod_usage;
+@@ -83,6 +84,10 @@ struct gpio_bank {
+ 	int (*get_context_loss_count)(struct device *dev);
+ 
+ 	struct omap_gpio_reg_offs *regs;
++#ifdef CONFIG_IPIPE
++	unsigned nonroot;
++	unsigned muted;
++#endif
+ };
+ 
+ #define GPIO_INDEX(bank, gpio) (gpio % bank->width)
+@@ -336,8 +341,8 @@ static void _toggle_gpio_edge_triggering(struct gpio_bank *bank, int gpio)
+ static void _toggle_gpio_edge_triggering(struct gpio_bank *bank, int gpio) {}
+ #endif
+ 
+-static int _set_gpio_triggering(struct gpio_bank *bank, int gpio,
+-							unsigned trigger)
++static inline int _set_gpio_triggering(struct gpio_bank *bank, int gpio,
++					      unsigned trigger)
+ {
+ 	void __iomem *reg = bank->base;
+ 	void __iomem *base = bank->base;
+@@ -413,7 +418,7 @@ static int gpio_irq_type(struct irq_data *d, unsigned type)
+ 	return retval;
+ }
+ 
+-static void _clear_gpio_irqbank(struct gpio_bank *bank, int gpio_mask)
++static inline void _clear_gpio_irqbank(struct gpio_bank *bank, int gpio_mask)
+ {
+ 	void __iomem *reg = bank->base;
+ 
+@@ -449,7 +454,7 @@ static u32 _get_gpio_irqbank_mask(struct gpio_bank *bank)
+ 	return l;
+ }
+ 
+-static void _enable_gpio_irqbank(struct gpio_bank *bank, int gpio_mask)
++static inline void _enable_gpio_irqbank(struct gpio_bank *bank, int gpio_mask)
+ {
+ 	void __iomem *reg = bank->base;
+ 	u32 l;
+@@ -471,7 +476,7 @@ static void _enable_gpio_irqbank(struct gpio_bank *bank, int gpio_mask)
+ 	__raw_writel(l, reg);
+ }
+ 
+-static void _disable_gpio_irqbank(struct gpio_bank *bank, int gpio_mask)
++static inline void _disable_gpio_irqbank(struct gpio_bank *bank, int gpio_mask)
+ {
+ 	void __iomem *reg = bank->base;
+ 	u32 l;
+@@ -532,7 +537,7 @@ static int _set_gpio_wakeup(struct gpio_bank *bank, int gpio, int enable)
+ 	return 0;
+ }
+ 
+-static void _reset_gpio(struct gpio_bank *bank, int gpio)
++static inline void _reset_gpio(struct gpio_bank *bank, int gpio)
+ {
+ 	_set_gpio_direction(bank, GPIO_INDEX(bank, gpio), 1);
+ 	_set_gpio_irqenable(bank, gpio, 0);
+@@ -653,7 +658,10 @@ static void gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
+ 
+ 	bank = irq_get_handler_data(irq);
+ 	isr_reg = bank->base + bank->regs->irqstatus;
++
++#ifndef CONFIG_IPIPE
+ 	pm_runtime_get_sync(bank->dev);
++#endif
+ 
+ 	if (WARN_ON(!isr_reg))
+ 		goto exit;
+@@ -704,7 +712,7 @@ static void gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
+ 			if (bank->toggle_mask & (1 << gpio_index))
+ 				_toggle_gpio_edge_triggering(bank, gpio_index);
+ 
+-			generic_handle_irq(gpio_irq);
++			ipipe_handle_demuxed_irq(gpio_irq);
+ 		}
+ 	}
+ 	/* if bank has any level sensitive GPIO pin interrupt
+@@ -714,7 +722,9 @@ static void gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
+ exit:
+ 	if (!unmasked)
+ 		chained_irq_exit(chip, desc);
++#ifndef CONFIG_IPIPE
+ 	pm_runtime_put(bank->dev);
++#endif
+ }
+ 
+ static void gpio_irq_shutdown(struct irq_data *d)
+@@ -748,6 +758,19 @@ static void gpio_mask_irq(struct irq_data *d)
+ 	spin_unlock_irqrestore(&bank->lock, flags);
+ }
+ 
++static void gpio_mask_ack_irq(struct irq_data *d)
++{
++	unsigned int gpio = d->irq - IH_GPIO_BASE;
++	struct gpio_bank *bank = irq_data_get_irq_chip_data(d);
++	unsigned long flags;
++
++	spin_lock_irqsave(&bank->lock, flags);
++	_set_gpio_irqenable(bank, gpio, 0);
++	_set_gpio_triggering(bank, GPIO_INDEX(bank, gpio), IRQ_TYPE_NONE);
++	spin_unlock_irqrestore(&bank->lock, flags);
++	_clear_gpio_irqstatus(bank, gpio);
++}
++
+ static void gpio_unmask_irq(struct irq_data *d)
+ {
+ 	struct gpio_bank *bank = irq_data_get_irq_chip_data(d);
+@@ -776,6 +799,7 @@ static struct irq_chip gpio_irq_chip = {
+ 	.irq_shutdown	= gpio_irq_shutdown,
+ 	.irq_ack	= gpio_ack_irq,
+ 	.irq_mask	= gpio_mask_irq,
++	.irq_mask_ack	= gpio_mask_ack_irq,
+ 	.irq_unmask	= gpio_unmask_irq,
+ 	.irq_set_type	= gpio_irq_type,
+ 	.irq_set_wake	= gpio_wake_enable,
+@@ -1049,6 +1073,7 @@ static void __devinit omap_gpio_chip_init(struct gpio_bank *bank)
+ 			set_irq_flags(j, IRQF_VALID);
+ 		}
+ 	}
++
+ 	irq_set_chained_handler(bank->irq, gpio_irq_handler);
+ 	irq_set_handler_data(bank->irq, bank);
+ }
+@@ -1156,6 +1181,149 @@ static int __devinit omap_gpio_probe(struct platform_device *pdev)
+ 
+ #ifdef CONFIG_ARCH_OMAP2PLUS
+ 
++#if defined(CONFIG_IPIPE)
++extern void omap3_intc_mute(void);
++extern void omap3_intc_unmute(void);
++extern void omap3_intc_set_irq_prio(int irq, int hi);
++extern void gic_mute(void);
++extern void gic_unmute(void);
++extern void gic_set_irq_prio(int irq, int hi);
++
++static inline void omap2plus_pic_set_irq_prio(int irq, int hi)
++{
++	struct irq_desc *desc = irq_to_desc(irq);
++	struct irq_data *idata = irq_desc_get_irq_data(desc);
++
++	if (cpu_is_omap34xx())
++		omap3_intc_set_irq_prio(idata->hwirq, hi);
++	if (cpu_is_omap44xx())
++		gic_set_irq_prio(idata->hwirq, hi);
++}
++
++static void omap2plus_enable_irqdesc(struct ipipe_domain *ipd, unsigned irq)
++{
++	struct irq_desc *desc = irq_to_desc(irq);
++	struct irq_data *idata = irq_desc_get_irq_data(desc);
++	struct irq_chip *chip = irq_data_get_irq_chip(idata);
++
++	if (chip == &gpio_irq_chip) {
++		/* It is a gpio. */
++		struct gpio_bank *bank = irq_data_get_irq_chip_data(idata);
++
++		if (ipd == &ipipe_root) {
++			bank->nonroot &= ~(1 << idata->hwirq);
++			if (bank->nonroot == 0)
++				omap2plus_pic_set_irq_prio(bank->irq, 0);
++		} else {
++			bank->nonroot |= (1 << idata->hwirq);
++			if (bank->nonroot == (1 << idata->hwirq))
++				omap2plus_pic_set_irq_prio(bank->irq, 1);
++		}
++	} else
++		omap2plus_pic_set_irq_prio(irq, ipd != &ipipe_root);
++}
++
++static void omap2plus_disable_irqdesc(struct ipipe_domain *ipd, unsigned irq)
++{
++	struct irq_desc *desc = irq_to_desc(irq);
++	struct irq_data *idata = irq_desc_get_irq_data(desc);
++	struct irq_chip *chip = irq_data_get_irq_chip(idata);
++
++	if (chip == &gpio_irq_chip) {
++		/* It is a gpio. */
++		struct gpio_bank *bank = irq_data_get_irq_chip_data(idata);
++
++		if (ipd != &ipipe_root) {
++			bank->nonroot &= ~(1 << idata->hwirq);
++			if (bank->nonroot == 0)
++				omap2plus_pic_set_irq_prio(bank->irq, 0);
++		}
++	} else if (ipd != &ipipe_root)
++		omap2plus_pic_set_irq_prio(irq, 0);
++}
++
++static inline void omap2plus_mute_gpio(void)
++{
++	struct gpio_bank *bank;
++	unsigned muted;
++
++	list_for_each_entry(bank, &omap_gpio_list, node) {
++		if (bank->nonroot == 0)
++			continue;
++
++		muted = ~bank->nonroot;
++		if (muted)
++			muted &= _get_gpio_irqbank_mask(bank);
++		bank->muted = muted;
++		if (muted)
++			_disable_gpio_irqbank(bank, muted);
++	}
++}
++
++static void omap3_mute_pic(void)
++{
++	omap3_intc_mute();
++
++	omap2plus_mute_gpio();
++}
++
++static void omap4_mute_pic(void)
++{
++	gic_mute();
++
++	omap2plus_mute_gpio();
++}
++
++static inline void omap2plus_unmute_gpio(void)
++{
++	struct gpio_bank *bank;
++	unsigned muted;
++
++	list_for_each_entry(bank, &omap_gpio_list, node) {
++		if (bank->nonroot == 0)
++			continue;
++
++		muted = bank->muted;
++		if (muted)
++			_enable_gpio_irqbank(bank, muted);
++	}
++}
++
++static void omap3_unmute_pic(void)
++{
++	omap2plus_unmute_gpio();
++
++	omap3_intc_unmute();
++}
++
++static void omap4_unmute_pic(void)
++{
++	omap2plus_unmute_gpio();
++
++	gic_unmute();
++}
++
++void __init omap2plus_pic_muter_register(void)
++{
++	struct ipipe_mach_pic_muter muter = {
++		.enable_irqdesc = omap2plus_enable_irqdesc,
++		.disable_irqdesc = omap2plus_disable_irqdesc,
++	};
++
++	if (cpu_is_omap34xx()) {
++		muter.mute = omap3_mute_pic;
++		muter.unmute = omap3_unmute_pic;
++		ipipe_pic_muter_register(&muter);
++	}
++	if (cpu_is_omap44xx()) {
++		muter.mute = omap4_mute_pic;
++		muter.unmute = omap4_unmute_pic;
++		ipipe_pic_muter_register(&muter);
++	}
++}
++
++#endif /* CONFIG_IPIPE */
++
+ #if defined(CONFIG_PM_RUNTIME)
+ static void omap_gpio_restore_context(struct gpio_bank *bank);
+ 
+diff --git a/drivers/gpio/gpio-pxa.c b/drivers/gpio/gpio-pxa.c
+index 58a6a63..7264cf0 100644
+--- a/drivers/gpio/gpio-pxa.c
++++ b/drivers/gpio/gpio-pxa.c
+@@ -25,6 +25,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/syscore_ops.h>
+ #include <linux/slab.h>
++#include <linux/ipipe.h>
+ 
+ #include <mach/irqs.h>
+ 
+@@ -91,7 +92,7 @@ enum {
+ 	MMP_GPIO = 0x10,
+ };
+ 
+-static DEFINE_SPINLOCK(gpio_lock);
++static IPIPE_DEFINE_SPINLOCK(gpio_lock);
+ static struct pxa_gpio_chip *pxa_gpio_chips;
+ static int gpio_type;
+ static void __iomem *gpio_reg_base;
+@@ -393,7 +394,7 @@ static void pxa_gpio_demux_handler(unsigned int irq, struct irq_desc *desc)
+ 			while (n < BITS_PER_LONG) {
+ 				loop = 1;
+ 
+-				generic_handle_irq(gpio_to_irq(gpio_base + n));
++				ipipe_handle_demuxed_irq(gpio_to_irq(gpio_base + n));
+ 				n = find_next_bit(&gedr, BITS_PER_LONG, n + 1);
+ 			}
+ 		}
+diff --git a/drivers/gpio/gpio-sa1100.c b/drivers/gpio/gpio-sa1100.c
+index 8ea3b33..1079825 100644
+--- a/drivers/gpio/gpio-sa1100.c
++++ b/drivers/gpio/gpio-sa1100.c
+@@ -31,9 +31,9 @@ static int sa1100_direction_input(struct gpio_chip *chip, unsigned offset)
+ {
+ 	unsigned long flags;
+ 
+-	local_irq_save(flags);
++	flags = hard_local_irq_save();
+ 	GPDR &= ~GPIO_GPIO(offset);
+-	local_irq_restore(flags);
++	hard_local_irq_restore(flags);
+ 	return 0;
+ }
+ 
+@@ -41,10 +41,10 @@ static int sa1100_direction_output(struct gpio_chip *chip, unsigned offset, int
+ {
+ 	unsigned long flags;
+ 
+-	local_irq_save(flags);
++	flags = hard_local_irq_save();
+ 	sa1100_gpio_set(chip, offset, value);
+ 	GPDR |= GPIO_GPIO(offset);
+-	local_irq_restore(flags);
++	hard_local_irq_restore(flags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/mfd/twl6030-irq.c b/drivers/mfd/twl6030-irq.c
+index b76902f..2dc21ce 100644
+--- a/drivers/mfd/twl6030-irq.c
++++ b/drivers/mfd/twl6030-irq.c
+@@ -182,7 +182,14 @@ static int twl6030_irq_thread(void *data)
+ 			if (sts.int_sts & 0x1) {
+ 				int module_irq = twl6030_irq_base +
+ 					twl6030_interrupt_mapping[i];
++#ifndef CONFIG_IPIPE
+ 				generic_handle_irq(module_irq);
++#else
++				{
++					struct irq_desc *d = irq_to_desc(module_irq);
++					d->ipipe_ack(module_irq, d);
++				}
++#endif
+ 
+ 			}
+ 		local_irq_enable();
+@@ -443,4 +450,3 @@ int twl6030_exit_irq(void)
+ 	}
+ 	return 0;
+ }
+-
+diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
+index 2661f6e..5a8d078 100644
+--- a/drivers/misc/Kconfig
++++ b/drivers/misc/Kconfig
+@@ -79,7 +79,7 @@ config ATMEL_TCLIB
+ 
+ config ATMEL_TCB_CLKSRC
+ 	bool "TC Block Clocksource"
+-	depends on ATMEL_TCLIB
++	depends on ATMEL_TCLIB && !IPIPE
+ 	default y
  	help
- 	  CPU idle is a generic framework for supporting software-controlled
- 	  idle processor power management.  It includes modular cross-platform
+ 	  Select this to get a high precision clocksource based on a
+@@ -355,14 +355,14 @@ config SENSORS_BH1780
+ 	  will be called bh1780gli.
+ 
+ config SENSORS_BH1770
+-         tristate "BH1770GLC / SFH7770 combined ALS - Proximity sensor"
+-         depends on I2C
+-         ---help---
+-           Say Y here if you want to build a driver for BH1770GLC (ROHM) or
++	 tristate "BH1770GLC / SFH7770 combined ALS - Proximity sensor"
++	 depends on I2C
++	 ---help---
++	   Say Y here if you want to build a driver for BH1770GLC (ROHM) or
+ 	   SFH7770 (Osram) combined ambient light and proximity sensor chip.
+ 
+-           To compile this driver as a module, choose M here: the
+-           module will be called bh1770glc. If unsure, say N here.
++	   To compile this driver as a module, choose M here: the
++	   module will be called bh1770glc. If unsure, say N here.
+ 
+ config SENSORS_APDS990X
+ 	 tristate "APDS990X combined als and proximity sensors"
+diff --git a/drivers/pci/htirq.c b/drivers/pci/htirq.c
+index 6e373ea..f32da7b 100644
+--- a/drivers/pci/htirq.c
++++ b/drivers/pci/htirq.c
+@@ -21,7 +21,7 @@
+  * With multiple simultaneous hypertransport irq devices it might pay
+  * to make this more fine grained.  But start with simple, stupid, and correct.
+  */
+-static DEFINE_SPINLOCK(ht_irq_lock);
++static IPIPE_DEFINE_SPINLOCK(ht_irq_lock);
+ 
+ struct ht_irq_cfg {
+ 	struct pci_dev *dev;
 diff --git a/drivers/tty/serial/8250/8250.c b/drivers/tty/serial/8250/8250.c
 index 6e1958a..88bc148 100644
 --- a/drivers/tty/serial/8250/8250.c
@@ -4869,6 +5617,110 @@ index 6e1958a..88bc148 100644
  static struct platform_driver serial8250_isa_driver = {
  	.probe		= serial8250_probe,
  	.remove		= __devexit_p(serial8250_remove),
+diff --git a/drivers/tty/serial/bfin_uart.c b/drivers/tty/serial/bfin_uart.c
+index bd97db2..b459781 100644
+--- a/drivers/tty/serial/bfin_uart.c
++++ b/drivers/tty/serial/bfin_uart.c
+@@ -1104,6 +1104,54 @@ static void bfin_serial_console_putchar(struct uart_port *port, int ch)
+ 	UART_PUT_CHAR(uart, ch);
+ }
+ 
++#ifdef CONFIG_IPIPE
++
++#include <stdarg.h>
++
++void __ipipe_serial_debug(const char *fmt, ...)
++{
++	struct bfin_serial_port *uart = bfin_serial_ports[0];
++	unsigned short status, tmp;
++	int flags, i, count;
++	char buf[128];
++	va_list ap;
++
++	if (uart == NULL || port_membase(uart) == NULL)
++		return;
++
++	va_start(ap, fmt);
++	vsprintf(buf, fmt, ap);
++	va_end(ap);
++	count = strlen(buf);
++
++	flags = hard_local_irq_save();
++
++	for (i = 0; i < count; i++) {
++		do {
++			status = UART_GET_LSR(uart);
++		} while (!(status & THRE));
++
++#ifndef CONFIG_BF54x
++		tmp = UART_GET_LCR(uart);
++		tmp &= ~DLAB;
++		UART_PUT_LCR(uart, tmp);
++#endif
++
++		UART_PUT_CHAR(uart, buf[i]);
++		if (buf[i] == '\n') {
++			do {
++				status = UART_GET_LSR(uart);
++			} while(!(status & THRE));
++			UART_PUT_CHAR(uart, '\r');
++		}
++	}
++
++	hard_local_irq_restore(flags);
++}
++EXPORT_SYMBOL_GPL(__ipipe_serial_debug);
++
++#endif /* CONFIG_IPIPE */
++
+ #endif /* defined (CONFIG_SERIAL_BFIN_CONSOLE) ||
+ 		 defined (CONFIG_EARLY_PRINTK) */
+ 
+diff --git a/drivers/tty/serial/mpc52xx_uart.c b/drivers/tty/serial/mpc52xx_uart.c
+index bedac0d..a0e8b9b 100644
+--- a/drivers/tty/serial/mpc52xx_uart.c
++++ b/drivers/tty/serial/mpc52xx_uart.c
+@@ -1450,6 +1450,40 @@ mpc52xx_uart_of_enumerate(void)
+ 	}
+ }
+ 
++#if defined(CONFIG_SERIAL_MPC52xx_CONSOLE) && defined(CONFIG_IPIPE_DEBUG)
++
++#include <stdarg.h>
++
++void __ipipe_serial_debug(const char *fmt, ...)
++{
++	struct uart_port *port = &mpc52xx_uart_ports[0];
++        unsigned int count, n;
++        unsigned long flags;
++        char buf[128], *s;
++        va_list ap;
++
++	if (psc_ops == NULL)
++		return;
++
++        va_start(ap, fmt);
++        vsprintf(buf, fmt, ap);
++        va_end(ap);
++        count = strlen(buf);
++
++        flags = hard_local_irq_save();
++
++	/* Write all the chars */
++	for (n = 0, s = buf; n < count; n++, s++) {
++		if (*s == '\n')
++			psc_ops->write_char(port, '\r');
++		psc_ops->write_char(port, *s);
++	}
++
++        hard_local_irq_restore(flags);
++}
++
++#endif
++
+ MODULE_DEVICE_TABLE(of, mpc52xx_uart_of_match);
+ 
+ static struct platform_driver mpc52xx_uart_of_driver = {
 diff --git a/fs/exec.c b/fs/exec.c
 index e95aeed..5dbf818 100644
 --- a/fs/exec.c
@@ -5199,10 +6051,10 @@ index e6bb36a..898a91a 100644
  
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..a04ec49
+index 0000000..376b830
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,431 @@
+@@ -0,0 +1,436 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -5313,6 +6165,11 @@ index 0000000..a04ec49
 +extern struct clocksource *__ipipe_cs;
 +
 +#endif /* CONFIG_IPIPE_WANT_CLOCKSOURCE */
++
++static inline bool __ipipe_hrclock_ok(void)
++{
++	return __ipipe_hrclock_freq != 0;
++}
 +
 +static inline void __ipipe_nmi_enter(void)
 +{
@@ -6291,7 +7148,7 @@ index 0000000..fab8f45
 +#endif	/* !__LINUX_IPIPE_COMPAT_H */
 diff --git a/include/linux/ipipe_debug.h b/include/linux/ipipe_debug.h
 new file mode 100644
-index 0000000..9b5a4a3
+index 0000000..b6bf8c6
 --- /dev/null
 +++ b/include/linux/ipipe_debug.h
 @@ -0,0 +1,98 @@
@@ -6370,6 +7227,20 @@ index 0000000..9b5a4a3
 +
 +#endif	/* !CONFIG_IPIPE_DEBUG_CONTEXT */
 +
++#ifdef CONFIG_IPIPE_DEBUG
++
++#define ipipe_check_irqoff()					\
++	do {							\
++		if (WARN_ON_ONCE(!hard_irqs_disabled()))	\
++			hard_local_irq_disable();		\
++	} while (0)
++
++#else /* !CONFIG_IPIPE_DEBUG */
++
++static inline void ipipe_check_irqoff(void) { }
++
++#endif /* !CONFIG_IPIPE_DEBUG */
++
 +#ifdef CONFIG_IPIPE_DEBUG_INTERNAL
 +#define IPIPE_WARN(c)		WARN_ON(c)
 +#define IPIPE_WARN_ONCE(c)	WARN_ON_ONCE(c)
@@ -6377,20 +7248,6 @@ index 0000000..9b5a4a3
 +#define IPIPE_WARN(c)		do { (void)(c); } while (0)
 +#define IPIPE_WARN_ONCE(c)	do { (void)(c); } while (0)
 +#endif
-+
-+#ifdef CONFIG_IPIPE_DEBUG
-+
-+static inline void ipipe_check_irqoff(void)
-+{
-+	if (WARN_ON_ONCE(!hard_irqs_disabled()))
-+		hard_local_irq_disable();
-+}
-+
-+#else /* !CONFIG_IPIPE_DEBUG */
-+
-+static inline void ipipe_check_irqoff(void) { }
-+
-+#endif /* !CONFIG_IPIPE_DEBUG */
 +
 +#endif /* !__LINUX_IPIPE_DEBUG_H */
 diff --git a/include/linux/ipipe_domain.h b/include/linux/ipipe_domain.h
@@ -7799,18 +8656,6 @@ index a26e2fb..71348f2 100644
  #define arch_spin_is_contended(lock)	(((void)(lock), 0))
  
  #define arch_read_can_lock(lock)	(((void)(lock), 1))
-diff --git a/include/linux/time.h b/include/linux/time.h
-index b51e664..c7d91b9 100644
---- a/include/linux/time.h
-+++ b/include/linux/time.h
-@@ -151,6 +151,7 @@ struct timespec get_monotonic_coarse(void);
- void get_xtime_and_monotonic_and_sleep_offset(struct timespec *xtim,
- 				struct timespec *wtom, struct timespec *sleep);
- void timekeeping_inject_sleeptime(struct timespec *delta);
-+struct timespec get_wall_to_monotonic(void);
- 
- #define CURRENT_TIME		(current_kernel_time())
- #define CURRENT_TIME_SEC	((struct timespec) { get_seconds(), 0 })
 diff --git a/init/Kconfig b/init/Kconfig
 index d07dcf9..ea3d94c 100644
 --- a/init/Kconfig
@@ -8373,10 +9218,10 @@ index 0000000..1147bf4
 +}
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..3bc6ef5
+index 0000000..c4598ad
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1733 @@
+@@ -0,0 +1,1735 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -8441,7 +9286,7 @@ index 0000000..3bc6ef5
 +	.context_check = 1,
 +#endif
 +};
-+EXPORT_PER_CPU_SYMBOL_GPL(ipipe_percpu);
++EXPORT_PER_CPU_SYMBOL(ipipe_percpu);
 +
 +/* Up to 2k of pending work data per CPU. */
 +#define WORKBUF_SIZE 2048
@@ -8780,7 +9625,7 @@ index 0000000..3bc6ef5
 +
 +	hard_local_irq_enable();
 +}
-+EXPORT_SYMBOL_GPL(ipipe_unstall_root);
++EXPORT_SYMBOL(ipipe_unstall_root);
 +
 +void ipipe_restore_root(unsigned long x)
 +{
@@ -8791,7 +9636,7 @@ index 0000000..3bc6ef5
 +	else
 +		ipipe_unstall_root();
 +}
-+EXPORT_SYMBOL_GPL(ipipe_restore_root);
++EXPORT_SYMBOL(ipipe_restore_root);
 +
 +void __ipipe_restore_root_nosync(unsigned long x)
 +{
@@ -9481,6 +10326,8 @@ index 0000000..3bc6ef5
 +	__set_bit(IPIPE_STALL_FLAG, &p->status);
 +	ipipe_migration_hook(t);
 +	__clear_bit(IPIPE_STALL_FLAG, &p->status);
++	if (__ipipe_ipending_p(p))
++		__ipipe_sync_pipeline(p->domain);
 +}
 +
 +#endif /* !CONFIG_IPIPE_LEGACY */
@@ -9972,7 +10819,7 @@ index 0000000..3bc6ef5
 +	dump_stack();
 +	ipipe_trace_panic_dump();
 +}
-+EXPORT_SYMBOL_GPL(ipipe_root_only);
++EXPORT_SYMBOL(ipipe_root_only);
 +
 +#endif /* CONFIG_IPIPE_DEBUG_CONTEXT */
 +
@@ -10039,7 +10886,7 @@ index 0000000..3bc6ef5
 +	 */
 +	IPIPE_WARN_ONCE(!raw_irqs_disabled_flags(flags) && hard_irqs_disabled());
 +}
-+EXPORT_SYMBOL_GPL(__ipipe_spin_unlock_debug);
++EXPORT_SYMBOL(__ipipe_spin_unlock_debug);
 +
 +#endif /* CONFIG_IPIPE_DEBUG_INTERNAL && CONFIG_SMP */
 +
@@ -10112,10 +10959,10 @@ index 0000000..3bc6ef5
 +EXPORT_SYMBOL_GPL(__ipipe_post_work_root);
 diff --git a/kernel/ipipe/timer.c b/kernel/ipipe/timer.c
 new file mode 100644
-index 0000000..4281cb1
+index 0000000..953c4e4
 --- /dev/null
 +++ b/kernel/ipipe/timer.c
-@@ -0,0 +1,483 @@
+@@ -0,0 +1,488 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/timer.c
 + *
@@ -10336,6 +11183,11 @@ index 0000000..4281cb1
 +	unsigned long flags;
 +	unsigned cpu;
 +	cpumask_t fixup;
++
++	if (!__ipipe_hrclock_ok()) {
++		printk("I-pipe: high-resolution clock not working\n");
++		return -ENODEV;
++	}
 +
 +	if (__ipipe_hrclock_freq > UINT_MAX) {
 +		tmp = __ipipe_hrclock_freq;
@@ -10601,10 +11453,10 @@ index 0000000..4281cb1
 +#endif /* CONFIG_IPIPE_HAVE_HOSTRT */
 diff --git a/kernel/ipipe/tracer.c b/kernel/ipipe/tracer.c
 new file mode 100644
-index 0000000..1d9997a
+index 0000000..d7ab338
 --- /dev/null
 +++ b/kernel/ipipe/tracer.c
-@@ -0,0 +1,1442 @@
+@@ -0,0 +1,1447 @@
 +/* -*- linux-c -*-
 + * kernel/ipipe/tracer.c
 + *
@@ -11972,7 +12824,12 @@ index 0000000..1d9997a
 +	int i;
 +#ifdef CONFIG_IPIPE_TRACE_VMALLOC
 +	int cpu, path;
++#endif /* CONFIG_IPIPE_TRACE_VMALLOC */
 +
++	if (!__ipipe_hrclock_ok())
++		return;
++
++#ifdef CONFIG_IPIPE_TRACE_VMALLOC
 +	for_each_possible_cpu(cpu) {
 +		struct ipipe_trace_path *tp_buf;
 +
@@ -13113,20 +13970,6 @@ index a057ed4..32138a1 100644
  		profile_tick(CPU_PROFILING);
  	}
  
-diff --git a/kernel/time/timekeeping.c b/kernel/time/timekeeping.c
-index 63c88c1..4779fb3 100644
---- a/kernel/time/timekeeping.c
-+++ b/kernel/time/timekeeping.c
-@@ -1362,3 +1362,9 @@ void xtime_update(unsigned long ticks)
- 	do_timer(ticks);
- 	write_sequnlock(&xtime_lock);
- }
-+
-+struct timespec get_wall_to_monotonic(void)
-+{
-+	/* xtime_lock must be held. */
-+	return timekeeper.wall_to_monotonic;
-+}
 diff --git a/kernel/timer.c b/kernel/timer.c
 index 6ec7e7e..c3ad7cf 100644
 --- a/kernel/timer.c
@@ -13601,3 +14444,150 @@ index 2aad499..52aaaf7 100644
  	return nr;
  }
  
+diff --git a/scripts/ipipe/genpatches.sh b/scripts/ipipe/genpatches.sh
+new file mode 100755
+index 0000000..d0e7c74
+--- /dev/null
++++ b/scripts/ipipe/genpatches.sh
+@@ -0,0 +1,141 @@
++#! /bin/sh
++
++me=`basename $0`
++usage='usage: $me [--split] [--help] [reference]'
++split=no
++
++while test $# -gt 0; do
++    case "$1" in
++    --split)
++	split=yes
++	;;
++    --help)
++	echo "$usage"
++	exit 0
++	;;
++    *)
++	if [ -n "$reference" ]; then
++	    echo "$me: unknown flag: $1" >&2
++	    echo "$usage" >&2
++	    exit 1
++	fi
++	reference="$1"
++	;;
++    esac
++    shift
++done
++
++VERSION=`sed 's/^VERSION = \(.*\)/\1/;t;d' Makefile`
++PATCHLEVEL=`sed 's/^PATCHLEVEL = \(.*\)/\1/;t;d' Makefile`
++SUBLEVEL=`sed 's/^SUBLEVEL = \(.*\)/\1/;t;d' Makefile`
++EXTRAVERSION=`sed 's/^EXTRAVERSION = \(.*\)/\1/;t;d' Makefile`
++
++if [ -z "$SUBLEVEL" -o "$SUBLEVEL" = "0" ]; then
++    kvers="$VERSION.$PATCHLEVEL"
++elif [ -z "$EXTRAVERSION" ]; then
++    kvers="$VERSION.$PATCHLEVEL.$SUBLEVEL"
++else
++    kvers="$VERSION.$PATCHLEVEL.$SUBLEVEL.$EXTRAVERSION"
++fi
++
++if [ -z "$reference" ]; then
++    reference="v$kvers"
++fi
++
++echo reference: $reference, kernel version: $kvers
++
++git diff "$reference" | awk -v kvers="$kvers" -v splitmode="$split" \
++'function set_current_arch(a)
++{
++    if (!outfiles[a]) {
++	mt = "mktemp /tmp/XXXXXX"
++	mt | getline outfiles[a]
++	close(mt)
++    }
++    current_arch=a
++    current_file=outfiles[a]
++}
++
++match($0, /^diff --git a\/arch\/([^[:blank:]\/]*)/, arch) {
++    a=arch[1]
++
++    set_current_arch(a)
++    print $0 >> current_file
++    next
++}
++
++match($0, /^diff --git a\/drivers\/([^[:blank:]]*)/, file) {
++    f=file[1]
++
++    switch(f) {
++    case /clocksource\/i8253.c|pci\/htirq.c|Makefile|ipipe_i486_tsc_emu.S/:
++	 a="x86"
++	 break
++
++    case /gpio\/gpio-mxc.c|gpio\/gpio-omap.c|gpio\/gpio-pxa.c|gpio\/gpio-sa1100.c|mfd\/twl6030-irq.c|misc\/Kconfig/:
++	 a="arm"
++	 break
++
++    case /tty\/serial\/8250\/8250.c|cpuidle/:
++	 a="noarch"
++	 break
++
++    case /tty\/serial\/bfin_uart.c/:
++	 a="blackfin"
++	 break
++
++    case /tty\/serial\/mpc52xx_uart.c|gpio\/gpio-mpc8xxx.c/:
++	 a="powerpc"
++	 break
++
++    default:
++	 print "Error unknown architecture for driver "f
++	 exit 1
++    }
++
++    set_current_arch(a)
++    print $0 >> current_file
++    next
++}
++
++/^diff --git a\/scripts\/ipipe\/genpatches.sh/ {
++    if (splitmode == "no") {
++	current_file="/dev/null"
++	current_arch="nullarch"
++	next
++    }
++}
++
++/^diff --git/ {
++    set_current_arch("noarch")
++    print $0 >> current_file
++    next
++}
++
++match ($0, /#define [I]PIPE_CORE_RELEASE[[:blank:]]*([^[:blank:]]*)/, vers) {
++    version[current_arch]=vers[1]
++}
++
++{
++    print $0 >> current_file
++}
++
++END {
++    close(outfiles["noarch"])
++    for (a in outfiles)
++	if (a != "noarch") {
++	    dest="ipipe-core-"kvers"-"a"-"version[a]".patch"
++	    close(outfiles[a])
++	    system("mv "outfiles[a]" "dest)
++	    if (splitmode == "no")
++		system("cat "outfiles["noarch"]" >> "dest)
++	    print dest
++	} else if (splitmode == "yes") {
++	    dest="ipipe-core-"kvers"-"a".patch"
++	    system("cat "outfiles["noarch"]" > "dest)
++	    print dest
++	}
++
++    system("rm "outfiles["noarch"])
++}
++'
