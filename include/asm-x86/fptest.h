@@ -43,10 +43,10 @@ static inline void fp_linux_end(void)
 #define printk printf
 #endif /* !__KERNEL__ */
 
-#define FP_FEATURE_SSE			0x01
+#define FP_FEATURE_SSE2			0x01
 #define FP_FEATURE_AVX			0x02
 
-#define FP_CPUID_SSE_MASK		(1 << 25)
+#define FP_CPUID_SSE2_MASK		(1 << 26)
 #define FP_CPUID_AVX_MASK		((1 << 27) | (1 << 28))
 
 static unsigned long fp_features;
@@ -64,8 +64,8 @@ static inline void fp_features_init(void)
 		: "0" (eax)
 		: "memory");
 
-	if (edx & FP_CPUID_SSE_MASK)
-		fp_features |= FP_FEATURE_SSE;
+	if (edx & FP_CPUID_SSE2_MASK)
+		fp_features |= FP_FEATURE_SSE2;
 	/* check for both xsave and avx */
 	if ((ecx & FP_CPUID_AVX_MASK) == FP_CPUID_AVX_MASK)
 		fp_features |= FP_FEATURE_AVX;
@@ -89,7 +89,7 @@ static inline void fp_regs_set(unsigned val)
 			"vmovupd %0,%%ymm6;"
 			"vmovupd %0,%%ymm7;"
 			: : "m" (vec[0]));
-	else if (fp_features & FP_FEATURE_SSE)
+	else if (fp_features & FP_FEATURE_SSE2)
 		__asm__ __volatile__(
 			"movupd %0,%%xmm0;"
 			"movupd %0,%%xmm1;"
@@ -124,7 +124,7 @@ static inline unsigned fp_regs_check(unsigned val)
 			  "=m" (vec[2][0]), "=m" (vec[3][0]),
 			  "=m" (vec[4][0]), "=m" (vec[5][0]),
 			  "=m" (vec[6][0]), "=m" (vec[7][0]));
-	} else if (fp_features & FP_FEATURE_SSE) {
+	} else if (fp_features & FP_FEATURE_SSE2) {
 		__asm__ __volatile__(
 			"movupd %%xmm0,%0;"
 			"movupd %%xmm1,%1;"
@@ -163,7 +163,7 @@ static inline unsigned fp_regs_check(unsigned val)
 				       (unsigned long long)vec[i][2],
 				       val, val);
 		}
-	} else if (fp_features & FP_FEATURE_SSE) {
+	} else if (fp_features & FP_FEATURE_SSE2) {
 		for (i = 0; i < 8; i++)
 			if (vec[i][0] != val) {
 				printk("xmm%d: %llu != %u\n",
