@@ -25,6 +25,10 @@ static inline void fp_linux_end(void)
 {
 }
 
+static inline void fp_features_init(void)
+{
+}
+
 #else /* !__KERNEL__ */
 #include <stdio.h>
 #include <string.h>
@@ -32,7 +36,7 @@ static inline void fp_linux_end(void)
 
 static int have_vfp;
 
-static void __constructor__ fp_init(void)
+static void fp_features_init(void)
 {
 	char buffer[1024];
 	FILE *f = fopen("/proc/cpuinfo", "r");
@@ -51,12 +55,7 @@ static void __constructor__ fp_init(void)
 
 	fclose(f);
 }
-
 #endif /* !__KERNEL__ */
-
-static inline void fp_features_init(void)
-{
-}
 
 static inline void fp_regs_set(unsigned val)
 {
