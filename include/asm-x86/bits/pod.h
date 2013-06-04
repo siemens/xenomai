@@ -209,13 +209,15 @@ static inline void xnarch_init_thread(xnarchtcb_t *tcb,
 static inline void xnarch_init_fpu(xnarchtcb_t * tcb)
 {
 	struct task_struct *task = tcb->user_task;
-	unsigned long __mxcsr;
 	/* Initialize the FPU for a task. This must be run on behalf of the
 	   task. */
 
 	__asm__ __volatile__("clts; fninit");
-	__mxcsr = 0x1f80UL & 0xffbfUL;
-	__asm__ __volatile__("ldmxcsr %0"::"m"(__mxcsr));
+	if (cpu_has_xmm) {
+		unsigned long __mxcsr;
+		__mxcsr = 0x1f80UL & 0xffbfUL;
+		__asm__ __volatile__("ldmxcsr %0"::"m"(__mxcsr));
+	}
 
 	if (task) {
 		/* Real-time shadow FPU initialization: tell Linux
