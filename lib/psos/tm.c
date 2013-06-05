@@ -62,6 +62,7 @@ objid_error:
 
 static void delete_timer(struct psos_tm *tm)
 {
+	tm->magic = ~tm_magic;	/* Prevent further reference. */
 	timerobj_destroy(&tm->tmobj);
 	pvlist_remove(&tm->link);
 	pvfree(tm);
