@@ -73,11 +73,12 @@ static void post_event_once(struct timerobj *tmobj)
 	struct service svc;
 	int ret;
 
-	ev_send(tm->tid, tm->events);
 	COPPERPLATE_PROTECT(svc);
 	ret = timerobj_lock(&tm->tmobj);
-	if (ret == 0)
+	if (ret == 0) {
+		ev_send(tm->tid, tm->events);
 		delete_timer(tm);
+	}
 	COPPERPLATE_UNPROTECT(svc);
 }
 
