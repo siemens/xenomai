@@ -643,24 +643,14 @@ out:
 	return ret;
 }
 
-u_long ev_send(u_long tid, u_long events)
+int __ev_send(struct psos_task *task, u_long events)
 {
-	struct psos_task *task;
 	struct syncstate syns;
-	struct service svc;
-	int ret = SUCCESS;
-
-	task = find_psos_task(tid, &ret);
-	if (task == NULL)
-		return ret;
-
-	COPPERPLATE_PROTECT(svc);
+	int ret;
 
 	ret = syncobj_lock(&task->sobj, &syns);
-	if (ret) {
-		ret = ERR_OBJDEL;
-		goto out;
-	}
+	if (ret)
+		return ERR_OBJDEL;
 
 	task->events |= events;
 	/*
@@ -672,7 +662,22 @@ u_long ev_send(u_long tid, u_long events)
 	syncobj_grant_one(&task->sobj);
 
 	syncobj_unlock(&task->sobj, &syns);
-out:
+
+	return 0;
+}
+
+u_long ev_send(u_long tid, u_long events)
+{
+	struct psos_task *task;
+	struct service svc;
+	int ret = SUCCESS;
+
+	task = find_psos_task(tid, &ret);
+	if (task == NULL)
+		return ret;
+
+	COPPERPLATE_PROTECT(svc);
+	ret = __ev_send(task, events);
 	COPPERPLATE_UNPROTECT(svc);
 
 	return ret;

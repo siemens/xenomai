@@ -69,6 +69,8 @@ struct psos_task *get_psos_task_or_self(u_long tid, int *err_r);
 
 void put_psos_task(struct psos_task *task);
 
+int __ev_send(struct psos_task *task, unsigned long events);
+
 extern struct cluster psos_task_table;
 
 #endif /* _PSOS_TASK_H */

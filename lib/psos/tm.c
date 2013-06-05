@@ -60,11 +60,24 @@ objid_error:
 	return NULL;
 }
 
-static void delete_timer(struct psos_tm *tm)
+static void delete_timer(struct psos_tm *tm, int signal_p)
 {
+	struct psos_task *task;
+	int ret;
+
 	tm->magic = ~tm_magic;	/* Prevent further reference. */
 	timerobj_destroy(&tm->tmobj);
-	pvlist_remove(&tm->link);
+	task = get_psos_task(tm->tid, &ret);
+	if (task) {
+		pvlist_remove(&tm->link);
+		/*
+		 * Send out the pending event set carried by the
+		 * deleted timer to the owner thread if requested.
+		 */
+		if (signal_p)
+			__ev_send(task, tm->events);
+		put_psos_task(task);
+	}
 	pvfree(tm);
 }
 
@@ -75,11 +88,11 @@ static void post_event_once(struct timerobj *tmobj)
 	int ret;
 
 	COPPERPLATE_PROTECT(svc);
+
 	ret = timerobj_lock(&tm->tmobj);
-	if (ret == 0) {
-		ev_send(tm->tid, tm->events);
-		delete_timer(tm);
-	}
+	if (ret == 0)
+		delete_timer(tm, 1);
+
 	COPPERPLATE_UNPROTECT(svc);
 }
 
@@ -253,7 +266,7 @@ u_long tm_cancel(u_long tmid)
 
 	tm = get_tm(tmid, &ret);
 	if (tm)
-		delete_timer(tm);
+		delete_timer(tm, 0);
 
 	COPPERPLATE_UNPROTECT(svc);
 
