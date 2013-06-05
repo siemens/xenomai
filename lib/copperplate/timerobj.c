@@ -185,8 +185,7 @@ static void *timerobj_server(void *arg)
 		 * We have a single server thread for now, so handlers
 		 * are fully serialized.
 		 */
-		push_cleanup_lock(&svlock);
-		write_lock(&svlock);
+		write_lock_nocancel(&svlock);
 
 		__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
 
@@ -203,11 +202,10 @@ static void *timerobj_server(void *arg)
 			}
 			write_unlock(&svlock);
 			tmobj->handler(tmobj);
-			write_lock(&svlock);
+			write_lock_nocancel(&svlock);
 		}
 
 		write_unlock(&svlock);
-		pop_cleanup_lock(&svlock);
 	}
 
 	return NULL;
