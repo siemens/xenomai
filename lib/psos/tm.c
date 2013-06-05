@@ -112,29 +112,34 @@ static u_long start_evtimer(u_long events,
 
 	tm->tid = mainheap_ref(current, u_long);
 	pvlist_append(&tm->link, &current->timer_list);
-	put_psos_task(current);
-
-	*tmid_r = (u_long)tm;
 
 	ret = timerobj_init(&tm->tmobj);
-	if (ret) {
-	fail:
-		pvlist_remove(&tm->link);
-		pvfree(tm);
-		return ERR_NOTIMERS;
-	}
+	/*
+	 * Make sure to queue fully built timers only, by holding the
+	 * task lock until we are back from timerobj_init(), so that
+	 * calling timerobj_destroy() from the finalizer will always
+	 * be a valid operation for all queue members.
+	 */
+	put_psos_task(current);
+	if (ret)
+		goto fail;
 
 	handler = post_event_periodic;
 	if (it->it_interval.tv_sec == 0 &&
 	    it->it_interval.tv_nsec == 0)
 		handler = post_event_once;
 
+	*tmid_r = (u_long)tm;
+
 	timerobj_lock(&tm->tmobj);
 
 	ret = timerobj_start(&tm->tmobj, handler, it);
 	if (ret) {
 		timerobj_destroy(&tm->tmobj);
-		goto fail;
+	fail:
+		pvlist_remove(&tm->link);
+		pvfree(tm);
+		return ERR_NOTIMERS;
 	}
 
 	return SUCCESS;
