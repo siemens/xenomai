@@ -24,11 +24,6 @@ config IPIPE_WANT_PREEMPTIBLE_SWITCH
 config IPIPE_WANT_ACTIVE_MM
        def_bool y
 
-config SELECT_HW_UNLOCKED_SWITCH_ON_SMP
-       bool
-       select XENO_HW_UNLOCKED_SWITCH
-       default y if SMP
-
 config XENO_HW_FPU
 	bool "Enable FPU support"
 	default y
@@ -51,9 +46,9 @@ config XENO_HW_UNLOCKED_SWITCH
 
 	This option reduces interrupt latency when costly cache and
 	TLB flushes are required to switch context, and is mandatory
-	on SMP/multi-core systems.
+	on SMP/multi-core systems prior to Linux 3.8.
 
-	You definitely want to enable that option on embedded ARM
+	You definitely want to enable that option on low-end ARM
 	platforms.
 
 endmenu
