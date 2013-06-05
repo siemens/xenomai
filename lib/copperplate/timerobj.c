@@ -299,13 +299,24 @@ int timerobj_start(struct timerobj *tmobj,
 {
 	tmobj->handler = handler;
 	tmobj->itspec = *it;
+
+	/*
+	 * We hold the queue lock long enough to prevent the timer
+	 * from being dequeued by the carrier thread before it has
+	 * been armed, e.g. the user handler might destroy it under
+	 * our feet if so, causing timer_settime() to fail, which
+	 * would in turn lead to a double-deletion if the caller
+	 * happens to check the return code then drop the timer
+	 * (again).
+	 */
 	write_lock_nocancel(&svlock);
-	timerobj_enqueue(tmobj);
-	write_unlock(&svlock);
-	timerobj_unlock(tmobj);
 
 	if (__RT(timer_settime(tmobj->timer, TIMER_ABSTIME, it, NULL)))
 		return __bt(-errno);
+
+	timerobj_enqueue(tmobj);
+	write_unlock(&svlock);
+	timerobj_unlock(tmobj);
 
 	return 0;
 }
