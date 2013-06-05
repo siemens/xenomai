@@ -40,6 +40,11 @@
 #define vfp_current_hw_state last_VFP_context
 #endif /* Linux < 3.1 */
 
+#if defined(CONFIG_SMP) && !defined(CONFIG_XENO_HW_UNLOCKED_SWITCH) && \
+	LINUX_VERSION_CODE < KERNEL_VERSION(3,8,0)
+#error "ARM/smp requires CONFIG_XENO_HW_UNLOCKED_SWITCH for kernel < 3.8.0"
+#endif
+
 static inline void fp_init(union fp_state *state)
 {
 	/* FIXME: This is insufficient. */
