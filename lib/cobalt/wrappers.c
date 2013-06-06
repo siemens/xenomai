@@ -37,6 +37,7 @@
 #include <limits.h>
 #include <fcntl.h>
 #include <sched.h>
+#include <memory.h>
 #include <unistd.h>
 #include <malloc.h>
 
@@ -398,6 +399,15 @@ int __sched_cpucount(size_t setsize, const cpu_set_t *setp)
 	}
 
 	return count;
+}
+
+#endif /* __PROVIDE_CPU_COUNT */
+
+#ifdef __PROVIDE_CPU_FILL
+
+void __sched_cpufill(size_t setsize, cpu_set_t *setp)
+{
+	memset(setp, 0xff, setsize);
 }
 
 #endif /* __PROVIDE_CPU_COUNT */

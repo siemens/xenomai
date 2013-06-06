@@ -43,6 +43,12 @@ COBALT_DECL(int, sched_get_priority_max(int policy));
 int __sched_cpucount(size_t __setsize, const cpu_set_t *__setp);
 #endif /* !CPU_COUNT */
 
+#ifndef CPU_FILL
+#define CPU_FILL(__setp)    __PROVIDE_CPU_FILL(__setp)
+#define __PROVIDE_CPU_FILL(__setp)  __sched_cpufill(sizeof(cpu_set_t), __setp)
+void __sched_cpufill(size_t __setsize, cpu_set_t *__setp);
+#endif /* !CPU_COUNT */
+
 #endif /* !__KERNEL__ */
 
 #ifndef __sched_extensions_defined
