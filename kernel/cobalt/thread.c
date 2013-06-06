@@ -1025,6 +1025,10 @@ int cobalt_thread_kill(unsigned long tid, int sig)
 	pthread = thread_find(&hkey);
 	if (pthread == NULL)
 		return -ESRCH;
+
+	if (sig == 0)	/* Check for existence only. */
+		return 0;
+
 	/*
 	 * We have to take care of self-suspension, when the
 	 * underlying shadow thread is currently relaxed. In that
