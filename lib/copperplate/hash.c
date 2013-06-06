@@ -51,12 +51,12 @@
 
 #define GOLDEN_HASH_RATIO  0x9e3779b9  /* Arbitrary value. */
 
-unsigned int __hash_key(const void *key, int length, unsigned int c)
+unsigned int __hash_key(const void *key, size_t length, unsigned int c)
 {
 	const unsigned char *k = key;
 	unsigned int a, b, len;
 
-	len = length;
+	len = (unsigned int)length;
 	a = b = GOLDEN_HASH_RATIO;
 
 	while (len >= 12) {
@@ -68,7 +68,7 @@ unsigned int __hash_key(const void *key, int length, unsigned int c)
 		len -= 12;
 	}
 
-	c += length;
+	c += (unsigned int)length;
 
 	switch (len) {
 	case 11: c += ((unsigned int)k[10]<<24);
@@ -89,7 +89,9 @@ unsigned int __hash_key(const void *key, int length, unsigned int c)
 	return c;
 }
 
-void __hash_init(void *heap, struct hash_table *t)
+void __hash_init(void *heap, struct hash_table *t,
+		 int (*compare)(const struct hashobj *l,
+				const struct hashobj *r))
 {
 	pthread_mutexattr_t mattr;
 	int n;
@@ -97,6 +99,7 @@ void __hash_init(void *heap, struct hash_table *t)
 	for (n = 0; n < HASHSLOTS; n++)
 		__list_init(heap, &t->table[n].obj_list);
 
+	t->compare = compare;
 	__RT(pthread_mutexattr_init(&mattr));
 	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
 	__RT(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute));
@@ -109,14 +112,16 @@ void hash_destroy(struct hash_table *t)
 	__RT(pthread_mutex_destroy(&t->lock));
 }
 
-static struct hash_bucket *do_hash(struct hash_table *t, const char *key)
+static struct hash_bucket *do_hash(struct hash_table *t,
+				   const void *key, size_t len)
 {
-	unsigned int hash = __hash_key(key, strlen(key), 0);
+	unsigned int hash = __hash_key(key, len, 0);
 	return &t->table[hash & (HASHSLOTS-1)];
 }
 
 int __hash_enter(struct hash_table *t,
-		 const char *key, struct hashobj *newobj,
+		 const void *key, size_t len,
+		 struct hashobj *newobj,
 		 int nodup)
 {
 	struct hash_bucket *bucket;
@@ -125,13 +130,14 @@ int __hash_enter(struct hash_table *t,
 
 	holder_init(&newobj->link);
 	newobj->key = key;
-	bucket = do_hash(t, key);
+	newobj->len = len;
+	bucket = do_hash(t, key, len);
 
 	write_lock_nocancel(&t->lock);
 
 	if (nodup && !list_empty(&bucket->obj_list)) {
 		list_for_each_entry(obj, &bucket->obj_list, link) {
-			if (strcmp(obj->key, key) == 0) {
+			if (t->compare(obj, newobj) == 0) {
 				ret = -EEXIST;
 				goto out;
 			}
@@ -151,7 +157,7 @@ int hash_remove(struct hash_table *t, struct hashobj *delobj)
 	struct hashobj *obj;
 	int ret = -ESRCH;
 
-	bucket = do_hash(t, delobj->key);
+	bucket = do_hash(t, delobj->key, delobj->len);
 
 	write_lock_nocancel(&t->lock);
 
@@ -170,18 +176,21 @@ out:
 	return __bt(ret);
 }
 
-struct hashobj *hash_search(struct hash_table *t, const char *key)
+struct hashobj *hash_search(struct hash_table *t, const void *key,
+			    size_t len)
 {
 	struct hash_bucket *bucket;
-	struct hashobj *obj;
+	struct hashobj *obj, _obj;
 
-	bucket = do_hash(t, key);
+	bucket = do_hash(t, key, len);
 
 	read_lock_nocancel(&t->lock);
 
 	if (!list_empty(&bucket->obj_list)) {
+		_obj.key = key;
+		_obj.len = len;
 		list_for_each_entry(obj, &bucket->obj_list, link) {
-			if (strcmp(obj->key, key) == 0)
+			if (t->compare(obj, &_obj) == 0)
 				goto out;
 		}
 	}
@@ -219,10 +228,17 @@ int hash_walk(struct hash_table *t,
 	return 0;
 }
 
+int hash_compare_strings(const struct hashobj *l,
+		         const struct hashobj *r)
+{
+	return strcmp(l->key, r->key);
+}
+
 #ifdef CONFIG_XENO_PSHARED
 
 int __hash_enter_probe(struct hash_table *t,
-		       const char *key, struct hashobj *newobj,
+		       const void *key, size_t len,
+		       struct hashobj *newobj,
 		       int (*probefn)(struct hashobj *oldobj),
 		       int nodup)
 {
@@ -232,14 +248,15 @@ int __hash_enter_probe(struct hash_table *t,
 
 	holder_init(&newobj->link);
 	newobj->key = key;
-	bucket = do_hash(t, key);
+	newobj->len = len;
+	bucket = do_hash(t, key, len);
 
 	push_cleanup_lock(&t->lock);
 	write_lock(&t->lock);
 
 	if (!list_empty(&bucket->obj_list)) {
 		list_for_each_entry_safe(obj, tmp, &bucket->obj_list, link) {
-			if (strcmp(obj->key, key) == 0) {
+			if (t->compare(obj, newobj) == 0) {
 				if (probefn(obj)) {
 					if (nodup) {
 						ret = -EEXIST;
@@ -260,20 +277,23 @@ out:
 	return ret;
 }
 
-struct hashobj *hash_search_probe(struct hash_table *t, const char *key,
+struct hashobj *hash_search_probe(struct hash_table *t,
+				  const void *key, size_t len,
 				  int (*probefn)(struct hashobj *obj))
 {
+	struct hashobj *obj, *tmp, _obj;
 	struct hash_bucket *bucket;
-	struct hashobj *obj, *tmp;
 
-	bucket = do_hash(t, key);
+	bucket = do_hash(t, key, len);
 
 	push_cleanup_lock(&t->lock);
 	write_lock(&t->lock);
 
 	if (!list_empty(&bucket->obj_list)) {
+		_obj.key = key;
+		_obj.len = len;
 		list_for_each_entry_safe(obj, tmp, &bucket->obj_list, link) {
-			if (strcmp(obj->key, key) == 0) {
+			if (t->compare(obj, &_obj) == 0) {
 				if (!probefn(obj)) {
 					list_remove_init(&obj->link);
 					continue;
@@ -290,7 +310,9 @@ out:
 	return obj;
 }
 
-void pvhash_init(struct pvhash_table *t)
+void pvhash_init(struct pvhash_table *t,
+		 int (*compare)(const struct pvhashobj *l,
+				const struct pvhashobj *r))
 {
 	pthread_mutexattr_t mattr;
 	int n;
@@ -298,6 +320,7 @@ void pvhash_init(struct pvhash_table *t)
 	for (n = 0; n < HASHSLOTS; n++)
 		pvlist_init(&t->table[n].obj_list);
 
+	t->compare = compare;
 	__RT(pthread_mutexattr_init(&mattr));
 	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
 	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
@@ -305,15 +328,16 @@ void pvhash_init(struct pvhash_table *t)
 	__RT(pthread_mutexattr_destroy(&mattr));
 }
 
-static struct pvhash_bucket *do_pvhash(struct pvhash_table *t, const char *key)
+static struct pvhash_bucket *do_pvhash(struct pvhash_table *t,
+				       const void *key, size_t len)
 {
-	unsigned int hash = __hash_key(key, strlen(key), 0);
+	unsigned int hash = __hash_key(key, len, 0);
 	return &t->table[hash & (HASHSLOTS-1)];
 }
 
 int __pvhash_enter(struct pvhash_table *t,
-		   const char *key, struct pvhashobj *newobj,
-		   int nodup)
+		   const void *key, size_t len,
+		   struct pvhashobj *newobj, int nodup)
 {
 	struct pvhash_bucket *bucket;
 	struct pvhashobj *obj;
@@ -321,13 +345,14 @@ int __pvhash_enter(struct pvhash_table *t,
 
 	pvholder_init(&newobj->link);
 	newobj->key = key;
-	bucket = do_pvhash(t, key);
+	newobj->len = len;
+	bucket = do_pvhash(t, key, len);
 
 	write_lock_nocancel(&t->lock);
 
 	if (nodup && !pvlist_empty(&bucket->obj_list)) {
 		pvlist_for_each_entry(obj, &bucket->obj_list, link) {
-			if (strcmp(obj->key, key) == 0) {
+			if (t->compare(obj, newobj) == 0) {
 				ret = -EEXIST;
 				goto out;
 			}
@@ -347,7 +372,7 @@ int pvhash_remove(struct pvhash_table *t, struct pvhashobj *delobj)
 	struct pvhashobj *obj;
 	int ret = -ESRCH;
 
-	bucket = do_pvhash(t, delobj->key);
+	bucket = do_pvhash(t, delobj->key, delobj->len);
 
 	write_lock_nocancel(&t->lock);
 
@@ -366,18 +391,21 @@ out:
 	return __bt(ret);
 }
 
-struct pvhashobj *pvhash_search(struct pvhash_table *t, const char *key)
+struct pvhashobj *pvhash_search(struct pvhash_table *t,
+				const void *key, size_t len)
 {
 	struct pvhash_bucket *bucket;
-	struct pvhashobj *obj;
+	struct pvhashobj *obj, _obj;
 
-	bucket = do_pvhash(t, key);
+	bucket = do_pvhash(t, key, len);
 
 	read_lock_nocancel(&t->lock);
 
 	if (!pvlist_empty(&bucket->obj_list)) {
+		_obj.key = key;
+		_obj.len = len;
 		pvlist_for_each_entry(obj, &bucket->obj_list, link) {
-			if (strcmp(obj->key, key) == 0)
+			if (t->compare(obj, &_obj) == 0)
 				goto out;
 		}
 	}
@@ -413,6 +441,12 @@ int pvhash_walk(struct pvhash_table *t,
 	read_unlock(&t->lock);
 
 	return 0;
+}
+
+int pvhash_compare_strings(const struct pvhashobj *l,
+			   const struct pvhashobj *r)
+{
+	return strcmp(l->key, r->key);
 }
 
 #endif /* CONFIG_XENO_PSHARED */

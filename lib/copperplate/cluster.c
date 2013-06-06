@@ -115,7 +115,7 @@ int cluster_init(struct cluster *c, const char *name)
 	 * clusters.
 	 */
 redo:
-	hobj = hash_search(&main_catalog, name);
+	hobj = hash_search(&main_catalog, name, strlen(name));
 	if (hobj) {
 		d = container_of(hobj, struct dictionary, hobj);
 		goto out;
@@ -127,8 +127,8 @@ redo:
 		goto out;
 	}
 
-	hash_init(&d->table);
-	ret = hash_enter(&main_catalog, name, &d->hobj);
+	hash_init(&d->table, hash_compare_strings);
+	ret = hash_enter(&main_catalog, name, strlen(name), &d->hobj);
 	if (ret == -EEXIST) {
 		/*
 		 * Someone seems to have slipped in, creating the
@@ -164,7 +164,7 @@ int cluster_addobj(struct cluster *c, const char *name,
 	 * owner node existence, overwriting dead instances on the
 	 * fly.
 	 */
-	return hash_enter_probe(&c->d->table, name,
+	return hash_enter_probe(&c->d->table, name, strlen(name),
 				&cobj->hobj, cluster_probe);
 }
 
@@ -176,7 +176,7 @@ int cluster_addobj_dup(struct cluster *c, const char *name,
 	 * Same as cluster_addobj(), but allows for duplicate keys in
 	 * live objects.
 	 */
-	return hash_enter_probe_dup(&c->d->table, name,
+	return hash_enter_probe_dup(&c->d->table, name, strlen(name),
 				    &cobj->hobj, cluster_probe);
 }
 
@@ -193,7 +193,8 @@ struct clusterobj *cluster_findobj(struct cluster *c, const char *name)
 	 * Search for object entry and probe for owner node existence,
 	 * discarding dead instances on the fly.
 	 */
-	hobj = hash_search_probe(&c->d->table, name, cluster_probe);
+	hobj = hash_search_probe(&c->d->table, name, strlen(name),
+				 cluster_probe);
 	if (hobj == NULL)
 		return NULL;
 
@@ -317,7 +318,7 @@ out:
 
 int pvcluster_init(struct pvcluster *c, const char *name)
 {
-	pvhash_init(&c->table);
+	pvhash_init(&c->table, pvhash_compare_strings);
 	return 0;
 }
 
@@ -329,13 +330,13 @@ void pvcluster_destroy(struct pvcluster *c)
 int pvcluster_addobj(struct pvcluster *c, const char *name,
 		     struct pvclusterobj *cobj)
 {
-	return pvhash_enter(&c->table, name, &cobj->hobj);
+	return pvhash_enter(&c->table, name, strlen(name), &cobj->hobj);
 }
 
 int pvcluster_addobj_dup(struct pvcluster *c, const char *name,
 			 struct pvclusterobj *cobj)
 {
-	return pvhash_enter_dup(&c->table, name, &cobj->hobj);
+	return pvhash_enter_dup(&c->table, name, strlen(name), &cobj->hobj);
 }
 
 int pvcluster_delobj(struct pvcluster *c, struct pvclusterobj *cobj)
@@ -347,7 +348,7 @@ struct pvclusterobj *pvcluster_findobj(struct pvcluster *c, const char *name)
 {
 	struct pvhashobj *hobj;
 
-	hobj = pvhash_search(&c->table, name);
+	hobj = pvhash_search(&c->table, name, strlen(name));
 	if (hobj == NULL)
 		return NULL;
 

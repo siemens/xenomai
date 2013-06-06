@@ -25,7 +25,8 @@
 #define HASHSLOTS  (1<<8)
 
 struct hashobj {
-	const char *key;
+	const void *key;
+	size_t len;
 	struct holder link;
 };
 
@@ -35,13 +36,16 @@ struct hash_bucket {
 
 struct hash_table {
 	struct hash_bucket table[HASHSLOTS];
+	int (*compare)(const struct hashobj *l,
+		       const struct hashobj *r);
 	pthread_mutex_t lock;
 };
 
 #ifdef CONFIG_XENO_PSHARED
 /* Private version - not shareable between processes. */
 struct pvhashobj {
-	const char *key;
+	const void *key;
+	size_t len;
 	struct pvholder link;
 };
 
@@ -51,6 +55,8 @@ struct pvhash_bucket {
 
 struct pvhash_table {
 	struct pvhash_bucket table[HASHSLOTS];
+	int (*compare)(const struct pvhashobj *l,
+		       const struct pvhashobj *r);
 	pthread_mutex_t lock;
 };
 #else /* !CONFIG_XENO_PSHARED */
@@ -64,92 +70,114 @@ extern "C" {
 #endif
 
 unsigned int __hash_key(const void *key,
-			int length, unsigned int c);
+			size_t length, unsigned int c);
 
-void __hash_init(void *heap, struct hash_table *t);
+void __hash_init(void *heap, struct hash_table *t,
+		 int (*compare)(const struct hashobj *l,
+				const struct hashobj *r));
 
 int __hash_enter(struct hash_table *t,
-		 const char *key, struct hashobj *newobj,
-		 int nodup);
+		 const void *key, size_t len,
+		 struct hashobj *newobj, int nodup);
 
-static inline void hash_init(struct hash_table *t)
+static inline void hash_init(struct hash_table *t,
+			     int (*compare)(const struct hashobj *l,
+					    const struct hashobj *r))
 {
-	__hash_init(__main_heap, t);
+	__hash_init(__main_heap, t, compare);
 }
 
 void hash_destroy(struct hash_table *t);
 
 static inline int hash_enter(struct hash_table *t,
-			     const char *key, struct hashobj *newobj)
+			     const void *key, size_t len,
+			     struct hashobj *newobj)
 {
-	return __hash_enter(t, key, newobj, 1);
+	return __hash_enter(t, key, len, newobj, 1);
 }
 
 static inline int hash_enter_dup(struct hash_table *t,
-				 const char *key, struct hashobj *newobj)
+				 const void *key, size_t len,
+				 struct hashobj *newobj)
 {
-	return __hash_enter(t, key, newobj, 0);
+	return __hash_enter(t, key, len, newobj, 0);
 }
 
 int hash_remove(struct hash_table *t, struct hashobj *delobj);
 
-struct hashobj *hash_search(struct hash_table *t, const char *key);
+struct hashobj *hash_search(struct hash_table *t,
+			    const void *key, size_t len);
 
 int hash_walk(struct hash_table *t,
 		int (*walk)(struct hash_table *t, struct hashobj *obj));
 
+int hash_compare_strings(const struct hashobj *l,
+		         const struct hashobj *r);
+
 #ifdef CONFIG_XENO_PSHARED
 
 int __hash_enter_probe(struct hash_table *t,
-		       const char *key, struct hashobj *newobj,
+		       const void *key, size_t len,
+		       struct hashobj *newobj,
 		       int (*probefn)(struct hashobj *oldobj),
 		       int nodup);
 
 int __pvhash_enter(struct pvhash_table *t,
-		   const char *key, struct pvhashobj *newobj,
-		   int nodup);
+		   const void *key, size_t len,
+		   struct pvhashobj *newobj, int nodup);
 
 static inline
 int hash_enter_probe(struct hash_table *t,
-		     const char *key, struct hashobj *newobj,
+		     const void *key, size_t len,
+		     struct hashobj *newobj,
 		     int (*probefn)(struct hashobj *oldobj))
 {
-	return __hash_enter_probe(t, key, newobj, probefn, 1);
+	return __hash_enter_probe(t, key, len, newobj, probefn, 1);
 }
 
 static inline
 int hash_enter_probe_dup(struct hash_table *t,
-			 const char *key, struct hashobj *newobj,
+			 const void *key, size_t len,
+			 struct hashobj *newobj,
 			 int (*probefn)(struct hashobj *oldobj))
 {
-	return __hash_enter_probe(t, key, newobj, probefn, 0);
+	return __hash_enter_probe(t, key, len, newobj, probefn, 0);
 }
 
-struct hashobj *hash_search_probe(struct hash_table *t, const char *key,
+struct hashobj *hash_search_probe(struct hash_table *t,
+				  const void *key, size_t len,
 				  int (*probefn)(struct hashobj *obj));
 
-void pvhash_init(struct pvhash_table *t);
+void pvhash_init(struct pvhash_table *t,
+		 int (*compare)(const struct pvhashobj *l,
+				const struct pvhashobj *r));
 
 static inline
 int pvhash_enter(struct pvhash_table *t,
-		 const char *key, struct pvhashobj *newobj)
+		 const void *key, size_t len,
+		 struct pvhashobj *newobj)
 {
-	return __pvhash_enter(t, key, newobj, 1);
+	return __pvhash_enter(t, key, len, newobj, 1);
 }
 
 static inline
 int pvhash_enter_dup(struct pvhash_table *t,
-		     const char *key, struct pvhashobj *newobj)
+		     const void *key, size_t len,
+		     struct pvhashobj *newobj)
 {
-	return __pvhash_enter(t, key, newobj, 0);
+	return __pvhash_enter(t, key, len, newobj, 0);
 }
 
 int pvhash_remove(struct pvhash_table *t, struct pvhashobj *delobj);
 
-struct pvhashobj *pvhash_search(struct pvhash_table *t, const char *key);
+struct pvhashobj *pvhash_search(struct pvhash_table *t,
+				const void *key, size_t len);
 
 int pvhash_walk(struct pvhash_table *t,
 		int (*walk)(struct pvhash_table *t, struct pvhashobj *obj));
+
+int pvhash_compare_strings(const struct pvhashobj *l,
+			   const struct pvhashobj *r);
 
 #else /* !CONFIG_XENO_PSHARED */
 #define pvhash_init		hash_init
@@ -158,6 +186,7 @@ int pvhash_walk(struct pvhash_table *t,
 #define pvhash_remove		hash_remove
 #define pvhash_search		hash_search
 #define pvhash_walk		hash_walk
+#define pvhash_compare_strings	hash_compare_strings
 #endif /* !CONFIG_XENO_PSHARED */
 
 #ifdef __cplusplus

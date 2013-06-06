@@ -198,7 +198,7 @@ static void init_main_heap(struct session_heap *m_heap, void *mem, size_t size)
 	__RT(pthread_mutex_init(&m_heap->sysgroup.lock, &mattr));
 	__RT(pthread_mutexattr_destroy(&mattr));
 
-	__hash_init(m_heap, &m_heap->catalog);
+	__hash_init(m_heap, &m_heap->catalog, hash_compare_strings);
 	m_heap->sysgroup.thread_count = 0;
 	__list_init(m_heap, &m_heap->sysgroup.thread_list);
 	m_heap->sysgroup.heap_count = 0;
