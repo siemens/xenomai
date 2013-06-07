@@ -46,7 +46,7 @@ struct cobalt_timer {
 
 	clockid_t clockid;
 	pthread_t owner;
-	cobalt_kqueues_t *owningq;
+	struct cobalt_kqueues *owningq;
 };
 
 static xnqueue_t timer_freeq;
@@ -191,7 +191,7 @@ static inline int timer_create(clockid_t clockid,
 }
 
 static inline int
-cobalt_timer_delete_inner(timer_t timerid, cobalt_kqueues_t *q, int force)
+cobalt_timer_delete_inner(timer_t timerid, struct cobalt_kqueues *q, int force)
 {
 	struct cobalt_timer *timer;
 	spl_t s;
@@ -585,7 +585,7 @@ void cobalt_timer_cleanup_thread(pthread_t zombie)
 	}
 }
 
-void cobalt_timerq_cleanup(cobalt_kqueues_t *q)
+void cobalt_timerq_cleanup(struct cobalt_kqueues *q)
 {
 	xnholder_t *holder;
 	spl_t s;

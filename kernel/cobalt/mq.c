@@ -961,16 +961,16 @@ static inline int mq_notify(mqd_t fd, const struct sigevent *evp)
 
 int cobalt_mq_notify(mqd_t fd, const struct sigevent *__user evp)
 {
+	struct cobalt_context *cc;
 	cobalt_assoc_t *assoc;
 	struct sigevent sev;
-	cobalt_queues_t *q;
 	cobalt_ufd_t *ufd;
 
-	q = cobalt_queues();
-	if (q == NULL)
+	cc = cobalt_process_context();
+	if (cc == NULL)
 		return -EPERM;
 
-	assoc = cobalt_assoc_lookup(&q->uqds, fd);
+	assoc = cobalt_assoc_lookup(&cc->uqds, fd);
 	if (assoc == NULL)
 		return -EBADF;
 
@@ -1048,9 +1048,9 @@ static void uqd_cleanup(cobalt_assoc_t *assoc)
 	xnfree(ufd);
 }
 
-void cobalt_mq_uqds_cleanup(cobalt_queues_t *q)
+void cobalt_mq_uqds_cleanup(struct cobalt_context *cc)
 {
-	cobalt_assocq_destroy(&q->uqds, &uqd_cleanup);
+	cobalt_assocq_destroy(&cc->uqds, &uqd_cleanup);
 }
 
 /* mq_open(name, oflags, mode, attr, ufd) */
@@ -1059,14 +1059,14 @@ int cobalt_mq_open(const char __user *u_name, int oflags,
 {
 	struct mq_attr locattr, *attr;
 	char name[COBALT_MAXNAME];
+	struct cobalt_context *cc;
 	cobalt_ufd_t *assoc;
-	cobalt_queues_t *q;
 	unsigned len;
 	mqd_t kqd;
 	int err;
 
-	q = cobalt_queues();
-	if (q == NULL)
+	cc = cobalt_process_context();
+	if (cc == NULL)
 		return -EPERM;
 
 	len = __xn_safe_strncpy_from_user(name, u_name, sizeof(name));
@@ -1075,6 +1075,7 @@ int cobalt_mq_open(const char __user *u_name, int oflags,
 
 	if (len >= sizeof(name))
 		return -ENAMETOOLONG;
+
 	if (len == 0)
 		return -EINVAL;
 
@@ -1098,7 +1099,7 @@ int cobalt_mq_open(const char __user *u_name, int oflags,
 
 	assoc->kfd = kqd;
 
-	err = cobalt_assoc_insert(&q->uqds, &assoc->assoc, (u_long)uqd);
+	err = cobalt_assoc_insert(&cc->uqds, &assoc->assoc, (u_long)uqd);
 	if (err) {
 		xnfree(assoc);
 		mq_close(kqd);
@@ -1109,15 +1110,15 @@ int cobalt_mq_open(const char __user *u_name, int oflags,
 
 int cobalt_mq_close(mqd_t uqd)
 {
+	struct cobalt_context *cc;
 	cobalt_assoc_t *assoc;
-	cobalt_queues_t *q;
 	int err;
 
-	q = cobalt_queues();
-	if (q == NULL)
+	cc = cobalt_process_context();
+	if (cc == NULL)
 		return -EPERM;
 
-	assoc = cobalt_assoc_remove(&q->uqds, (u_long)uqd);
+	assoc = cobalt_assoc_remove(&cc->uqds, (u_long)uqd);
 	if (assoc == NULL)
 		return -EBADF;
 
@@ -1143,17 +1144,17 @@ int cobalt_mq_unlink(const char __user *u_name)
 
 int cobalt_mq_getattr(mqd_t uqd, struct mq_attr __user *u_attr)
 {
+	struct cobalt_context *cc;
 	cobalt_assoc_t *assoc;
 	struct mq_attr attr;
-	cobalt_queues_t *q;
 	cobalt_ufd_t *ufd;
 	int err;
 
-	q = cobalt_queues();
-	if (q == NULL)
+	cc = cobalt_process_context();
+	if (cc == NULL)
 		return -EPERM;
 
-	assoc = cobalt_assoc_lookup(&q->uqds, (u_long)uqd);
+	assoc = cobalt_assoc_lookup(&cc->uqds, (u_long)uqd);
 	if (assoc == NULL)
 		return -EBADF;
 
@@ -1170,16 +1171,16 @@ int cobalt_mq_setattr(mqd_t uqd, const struct mq_attr __user *u_attr,
 		      struct mq_attr __user *u_oattr)
 {
 	struct mq_attr attr, oattr;
+	struct cobalt_context *cc;
 	cobalt_assoc_t *assoc;
-	cobalt_queues_t *q;
 	cobalt_ufd_t *ufd;
 	int err;
 
-	q = cobalt_queues();
-	if (q == NULL)
+	cc = cobalt_process_context();
+	if (cc == NULL)
 		return -EPERM;
 
-	assoc = cobalt_assoc_lookup(&q->uqds, (u_long)uqd);
+	assoc = cobalt_assoc_lookup(&cc->uqds, (u_long)uqd);
 	if (assoc == NULL)
 		return -EBADF;
 
@@ -1201,17 +1202,17 @@ int cobalt_mq_setattr(mqd_t uqd, const struct mq_attr __user *u_attr,
 int cobalt_mq_send(mqd_t uqd,
 		   const void __user *u_buf, size_t len, unsigned int prio)
 {
+	struct cobalt_context *cc;
 	cobalt_assoc_t *assoc;
-	cobalt_queues_t *q;
 	cobalt_msg_t *msg;
 	cobalt_ufd_t *ufd;
 	cobalt_mq_t *mq;
 
-	q = cobalt_queues();
-	if (q == NULL)
+	cc = cobalt_process_context();
+	if (cc == NULL)
 		return -EPERM;
 
-	assoc = cobalt_assoc_lookup(&q->uqds, (u_long)uqd);
+	assoc = cobalt_assoc_lookup(&cc->uqds, (u_long)uqd);
 	if (assoc == NULL)
 		return -EBADF;
 
@@ -1238,17 +1239,17 @@ int cobalt_mq_timedsend(mqd_t uqd, const void __user *u_buf, size_t len,
 			unsigned int prio, const struct timespec __user *u_ts)
 {
 	struct timespec timeout, *timeoutp;
+	struct cobalt_context *cc;
 	cobalt_assoc_t *assoc;
-	cobalt_queues_t *q;
 	cobalt_msg_t *msg;
 	cobalt_ufd_t *ufd;
 	cobalt_mq_t *mq;
 
-	q = cobalt_queues();
-	if (q == NULL)
+	cc = cobalt_process_context();
+	if (cc == NULL)
 		return -EPERM;
 
-	assoc = cobalt_assoc_lookup(&q->uqds, (u_long)uqd);
+	assoc = cobalt_assoc_lookup(&cc->uqds, (u_long)uqd);
 	if (assoc == NULL)
 		return -EBADF;
 
@@ -1281,8 +1282,8 @@ int cobalt_mq_timedsend(mqd_t uqd, const void __user *u_buf, size_t len,
 int cobalt_mq_receive(mqd_t uqd, void __user *u_buf,
 		      ssize_t __user *u_len, unsigned int __user *u_prio)
 {
+	struct cobalt_context *cc;
 	cobalt_assoc_t *assoc;
-	cobalt_queues_t *q;
 	cobalt_ufd_t *ufd;
 	cobalt_msg_t *msg;
 	cobalt_mq_t *mq;
@@ -1290,11 +1291,11 @@ int cobalt_mq_receive(mqd_t uqd, void __user *u_buf,
 	ssize_t len;
 	int err;
 
-	q = cobalt_queues();
-	if (q == NULL)
+	cc = cobalt_process_context();
+	if (cc == NULL)
 		return -EPERM;
 
-	assoc = cobalt_assoc_lookup(&q->uqds, (u_long)uqd);
+	assoc = cobalt_assoc_lookup(&cc->uqds, (u_long)uqd);
 	if (assoc == NULL)
 		return -EBADF;
 
@@ -1317,6 +1318,7 @@ int cobalt_mq_receive(mqd_t uqd, void __user *u_buf,
 		cobalt_mq_finish_rcv(ufd->kfd, mq, msg);
 		return -EFAULT;
 	}
+
 	len = msg->len;
 	prio = cobalt_msg_get_prio(msg);
 
@@ -1340,8 +1342,8 @@ int cobalt_mq_timedreceive(mqd_t uqd, void __user *u_buf,
 			   const struct timespec __user *u_ts)
 {
 	struct timespec timeout, *timeoutp;
+	struct cobalt_context *cc;
 	cobalt_assoc_t *assoc;
-	cobalt_queues_t *q;
 	unsigned int prio;
 	cobalt_ufd_t *ufd;
 	cobalt_msg_t *msg;
@@ -1349,11 +1351,11 @@ int cobalt_mq_timedreceive(mqd_t uqd, void __user *u_buf,
 	ssize_t len;
 	int err;
 
-	q = cobalt_queues();
-	if (q == NULL)
+	cc = cobalt_process_context();
+	if (cc == NULL)
 		return -EPERM;
 
-	assoc = cobalt_assoc_lookup(&q->uqds, (u_long)uqd);
+	assoc = cobalt_assoc_lookup(&cc->uqds, (u_long)uqd);
 	if (assoc == NULL)
 		return -EBADF;
 

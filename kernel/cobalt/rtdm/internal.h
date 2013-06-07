@@ -46,7 +46,7 @@ struct rtdm_process {
 	pid_t pid;
 #endif /* CONFIG_XENO_OPT_VFILE */
 
-	xnshadow_ppd_t ppd;
+	struct xnshadow_ppd ppd;
 };
 
 DECLARE_EXTERN_XNLOCK(rt_fildes_lock);

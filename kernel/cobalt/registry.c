@@ -379,7 +379,7 @@ void cobalt_assocq_destroy(cobalt_assocq_t * q, void (*destroy) (cobalt_assoc_t 
 	xnlock_put_irqrestore(&cobalt_assoc_lock, s);
 }
 
-cobalt_kqueues_t cobalt_global_kqueues;
+struct cobalt_kqueues cobalt_global_kqueues;
 
 int cobalt_reg_pkg_init(unsigned buckets_count, unsigned maxfds)
 {

@@ -48,7 +48,7 @@ void cobalt_timer_init_thread(pthread_t new);
 
 void cobalt_timer_cleanup_thread(pthread_t zombie);
 
-void cobalt_timerq_cleanup(cobalt_kqueues_t *q);
+void cobalt_timerq_cleanup(struct cobalt_kqueues *q);
 
 int cobalt_timer_pkg_init(void);
 

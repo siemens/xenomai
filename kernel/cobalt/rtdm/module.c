@@ -61,7 +61,7 @@ static int __init __rtdm_init(void)
 
 	rtdm_initialised = 1;
 
-	printk(KERN_INFO "starting RTDM services\n");
+	printk(XENO_INFO "starting RTDM services\n");
 
 	return 0;
 

@@ -65,7 +65,7 @@ typedef struct cobalt_cond {
 	unsigned long *pending_signals;
 	pthread_condattr_t attr;
 	struct cobalt_mutex *mutex;
-	cobalt_kqueues_t *owningq;
+	struct cobalt_kqueues *owningq;
 } cobalt_cond_t;
 
 extern const pthread_condattr_t cobalt_default_cond_attr;
@@ -126,7 +126,7 @@ int cobalt_cond_wait_prologue(struct __shadow_cond __user *u_cnd,
 int cobalt_cond_wait_epilogue(struct __shadow_cond __user *u_cnd,
 			      struct __shadow_mutex __user *u_mx);
 
-void cobalt_condq_cleanup(cobalt_kqueues_t *q);
+void cobalt_condq_cleanup(struct cobalt_kqueues *q);
 
 void cobalt_cond_pkg_init(void);
 

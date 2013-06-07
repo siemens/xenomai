@@ -41,24 +41,23 @@ int cobalt_muxid;
 
 static int fd_valid_p(int fd)
 {
-	cobalt_queues_t *q;
 	const int rtdm_fd_start = __FD_SETSIZE - RTDM_FD_MAX;
+	struct rtdm_dev_context *ctx;
+	struct cobalt_context *cc;
 
 	if (fd >= rtdm_fd_start) {
-		struct rtdm_dev_context *ctx;
 		ctx = rtdm_context_get(fd - rtdm_fd_start);
-		if (ctx) {
-			rtdm_context_unlock(ctx);
-			return 1;
-		}
-		return 0;
+		if (ctx == NULL)
+			return 0;
+		rtdm_context_unlock(ctx);
+		return 1;
 	}
 
-	q = cobalt_queues();
-	if (q == NULL)
+	cc = cobalt_process_context();
+	if (cc == NULL)
 		return 0;
 
-	return cobalt_assoc_lookup(&q->uqds, fd) != NULL;
+	return cobalt_assoc_lookup(&cc->uqds, fd) != NULL;
 }
 
 static int first_fd_valid_p(fd_set *fds[XNSELECT_MAX_TYPES], int nfds)
@@ -77,19 +76,19 @@ static int first_fd_valid_p(fd_set *fds[XNSELECT_MAX_TYPES], int nfds)
 
 static int select_bind_one(struct xnselector *selector, unsigned type, int fd)
 {
-	cobalt_assoc_t *assoc;
-	cobalt_queues_t *q;
 	const int rtdm_fd_start = __FD_SETSIZE - RTDM_FD_MAX;
+	struct cobalt_context *cc;
+	cobalt_assoc_t *assoc;
 
 	if (fd >= rtdm_fd_start)
 		return rtdm_select_bind(fd - rtdm_fd_start,
 					selector, type, fd);
 
-	q = cobalt_queues();
-	if (q == NULL)
+	cc = cobalt_process_context();
+	if (cc == NULL)
 		return -EPERM;
 
-	assoc = cobalt_assoc_lookup(&q->uqds, fd);
+	assoc = cobalt_assoc_lookup(&cc->uqds, fd);
 	if (assoc == NULL)
 		return -EBADF;
 
@@ -310,46 +309,43 @@ static struct xnsysent __systab[] = {
 	SKINCALL_DEF(sc_cobalt_sched_setconfig_np, cobalt_sched_setconfig_np, any),
 };
 
-static void *cobalt_eventcb(int event, void *data)
+static struct xnshadow_ppd *cobalt_process_attach(void)
 {
-	cobalt_queues_t *q;
+	struct cobalt_context *cc;
 
-	switch (event) {
-	case XNSHADOW_CLIENT_ATTACH:
-		q = kmalloc(sizeof(*q), GFP_KERNEL);
-		if (q == NULL)
-			return ERR_PTR(-ENOSPC);
+	cc = kmalloc(sizeof(*cc), GFP_KERNEL);
+	if (cc == NULL)
+		return ERR_PTR(-ENOSPC);
 
-		initq(&q->kqueues.condq);
-		initq(&q->kqueues.mutexq);
-		initq(&q->kqueues.semq);
-		initq(&q->kqueues.threadq);
-		initq(&q->kqueues.timerq);
-		initq(&q->kqueues.monitorq);
-		initq(&q->kqueues.eventq);
-		cobalt_assocq_init(&q->uqds);
-		cobalt_assocq_init(&q->usems);
+	initq(&cc->kqueues.condq);
+	initq(&cc->kqueues.mutexq);
+	initq(&cc->kqueues.semq);
+	initq(&cc->kqueues.threadq);
+	initq(&cc->kqueues.timerq);
+	initq(&cc->kqueues.monitorq);
+	initq(&cc->kqueues.eventq);
+	cobalt_assocq_init(&cc->uqds);
+	cobalt_assocq_init(&cc->usems);
 
-		return &q->ppd;
+	return &cc->ppd;
+}
 
-	case XNSHADOW_CLIENT_DETACH:
-		q = ppd2queues((xnshadow_ppd_t *) data);
+static void cobalt_process_detach(struct xnshadow_ppd *ppd)
+{
+	struct cobalt_context *cc;
 
-		cobalt_sem_usems_cleanup(q);
-		cobalt_mq_uqds_cleanup(q);
-		cobalt_monitorq_cleanup(&q->kqueues);
-		cobalt_timerq_cleanup(&q->kqueues);
-		cobalt_semq_cleanup(&q->kqueues);
-		cobalt_mutexq_cleanup(&q->kqueues);
-		cobalt_condq_cleanup(&q->kqueues);
-		cobalt_eventq_cleanup(&q->kqueues);
+	cc = container_of(ppd, struct cobalt_context, ppd);
 
-		kfree(q);
+	cobalt_sem_usems_cleanup(cc);
+	cobalt_mq_uqds_cleanup(cc);
+	cobalt_monitorq_cleanup(&cc->kqueues);
+	cobalt_timerq_cleanup(&cc->kqueues);
+	cobalt_semq_cleanup(&cc->kqueues);
+	cobalt_mutexq_cleanup(&cc->kqueues);
+	cobalt_condq_cleanup(&cc->kqueues);
+	cobalt_eventq_cleanup(&cc->kqueues);
 
-		return NULL;
-	}
-
-	return ERR_PTR(-EINVAL);
+	kfree(cc);
 }
 
 static struct xnskin_props __props = {
@@ -357,7 +353,10 @@ static struct xnskin_props __props = {
 	.magic = COBALT_SKIN_MAGIC,
 	.nrcalls = sizeof(__systab) / sizeof(__systab[0]),
 	.systab = __systab,
-	.eventcb = &cobalt_eventcb,
+	.ops = {
+		.attach = cobalt_process_attach,
+		.detach = cobalt_process_detach,
+	},
 };
 
 int cobalt_syscall_init(void)

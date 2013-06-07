@@ -64,7 +64,7 @@ typedef struct cobalt_mutex {
 	xnqueue_t conds;
 
 	pthread_mutexattr_t attr;
-	cobalt_kqueues_t *owningq;
+	struct cobalt_kqueues *owningq;
 } cobalt_mutex_t;
 
 extern pthread_mutexattr_t cobalt_default_mutex_attr;
@@ -162,7 +162,7 @@ int cobalt_mutex_timedlock(struct __shadow_mutex __user *u_mx,
 
 int cobalt_mutex_unlock(struct __shadow_mutex __user *u_mx);
 
-void cobalt_mutexq_cleanup(cobalt_kqueues_t *q);
+void cobalt_mutexq_cleanup(struct cobalt_kqueues *q);
 
 void cobalt_mutex_pkg_init(void);
 

@@ -33,14 +33,14 @@ typedef struct {
 #define assoc2usem(laddr) container_of(laddr, cobalt_usem_t, assoc)
 } cobalt_usem_t;
 
-void cobalt_sem_usems_cleanup(cobalt_queues_t *q);
+void cobalt_sem_usems_cleanup(struct cobalt_context *cc);
 
 struct cobalt_sem;
 
 int sem_getvalue(struct cobalt_sem *sem, int *value);
 
 int sem_post_inner(struct cobalt_sem *sem,
-		   cobalt_kqueues_t *ownq, int bcast);
+		   struct cobalt_kqueues *ownq, int bcast);
 
 int cobalt_sem_init(struct __shadow_sem __user *u_sem,
 		    int pshared, unsigned value);
@@ -71,7 +71,7 @@ int cobalt_sem_init_np(struct __shadow_sem __user *u_sem,
 
 int cobalt_sem_broadcast_np(struct __shadow_sem __user *u_sem);
 
-void cobalt_semq_cleanup(cobalt_kqueues_t *q);
+void cobalt_semq_cleanup(struct cobalt_kqueues *q);
 
 void cobalt_sem_pkg_init(void);
 

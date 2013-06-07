@@ -96,12 +96,12 @@ union xnshadow_ppd_hkey {
  * the same bucket, so that they can all be destroyed with only one
  * hash lookup by ppd_remove_mm.
  */
-static unsigned int ppd_lookup_inner(xnqueue_t **pq, xnshadow_ppd_t ** pholder,
-				     xnshadow_ppd_key_t * pkey)
+static unsigned int ppd_lookup_inner(xnqueue_t **pq, struct xnshadow_ppd ** pholder,
+				     struct xnshadow_ppd_key * pkey)
 {
 	union xnshadow_ppd_hkey key = { .mm = pkey->mm };
 	unsigned bucket = jhash2(&key.val, sizeof(key) / sizeof(uint32_t), 0);
-	xnshadow_ppd_t *ppd;
+	struct xnshadow_ppd *ppd;
 	xnholder_t *holder;
 
 	*pq = &ppd_hash[bucket % PPD_HASH_SIZE];
@@ -113,7 +113,7 @@ static unsigned int ppd_lookup_inner(xnqueue_t **pq, xnshadow_ppd_t ** pholder,
 	}
 
 	do {
-		ppd = link2ppd(holder);
+		ppd = container_of(holder, struct xnshadow_ppd, link);
 		holder = nextq(*pq, holder);
 	} while (holder &&
 		 (ppd->key.mm < pkey->mm ||
@@ -128,16 +128,18 @@ static unsigned int ppd_lookup_inner(xnqueue_t **pq, xnshadow_ppd_t ** pholder,
 	/* not found, return successor for insertion. */
 	if (ppd->key.mm < pkey->mm ||
 	    (ppd->key.mm == pkey->mm && ppd->key.muxid > pkey->muxid))
-		*pholder = holder ? link2ppd(holder) : NULL;
+		*pholder = holder ?
+			container_of(holder, struct xnshadow_ppd, link) :
+			NULL;
 	else
 		*pholder = ppd;
 
 	return 0;
 }
 
-static int ppd_insert(xnshadow_ppd_t *holder)
+static int ppd_insert(struct xnshadow_ppd *holder)
 {
-	xnshadow_ppd_t *next;
+	struct xnshadow_ppd *next;
 	unsigned int found;
 	xnqueue_t *q;
 	spl_t s;
@@ -163,10 +165,10 @@ static int ppd_insert(xnshadow_ppd_t *holder)
 }
 
 /* will be called by skin code, nklock locked irqs off. */
-static xnshadow_ppd_t *ppd_lookup(unsigned muxid, struct mm_struct *mm)
+static struct xnshadow_ppd *ppd_lookup(unsigned muxid, struct mm_struct *mm)
 {
-	xnshadow_ppd_t *holder;
-	xnshadow_ppd_key_t key;
+	struct xnshadow_ppd_key key;
+	struct xnshadow_ppd *holder;
 	unsigned int found;
 	xnqueue_t *q;
 
@@ -180,7 +182,7 @@ static xnshadow_ppd_t *ppd_lookup(unsigned muxid, struct mm_struct *mm)
 	return holder;
 }
 
-static void ppd_remove(xnshadow_ppd_t * holder)
+static void ppd_remove(struct xnshadow_ppd * holder)
 {
 	unsigned int found;
 	xnqueue_t *q;
@@ -196,10 +198,10 @@ static void ppd_remove(xnshadow_ppd_t * holder)
 }
 
 static inline void ppd_remove_mm(struct mm_struct *mm,
-				 void (*destructor) (xnshadow_ppd_t *))
+				 void (*destructor) (struct xnshadow_ppd *))
 {
-	xnshadow_ppd_key_t key;
-	xnshadow_ppd_t *ppd;
+	struct xnshadow_ppd_key key;
+	struct xnshadow_ppd *ppd;
 	xnholder_t *holder;
 	xnqueue_t *q;
 	spl_t s;
@@ -219,17 +221,19 @@ static inline void ppd_remove_mm(struct mm_struct *mm,
 		 * while we are running xnpod_remove_mm.
 		 */
 		destructor(ppd);
-		ppd = holder ? link2ppd(holder) : NULL;
+		ppd = holder ?
+			container_of(holder, struct xnshadow_ppd, link) :
+			NULL;
 		xnlock_get_irqsave(&nklock, s);
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
 }
 
-static void detach_ppd(xnshadow_ppd_t * ppd)
+static void detach_ppd(struct xnshadow_ppd *ppd)
 {
 	unsigned int muxid = xnshadow_ppd_muxid(ppd);
-	skins[muxid].props->eventcb(XNSHADOW_CLIENT_DETACH, ppd);
+	skins[muxid].props->ops.detach(ppd);
 }
 
 struct xnvdso *nkvdso;
@@ -1220,7 +1224,7 @@ static inline int raise_cap(int cap)
 static int xnshadow_sys_bind(unsigned int magic,
 			     struct xnsysinfo __user *u_breq)
 {
-	xnshadow_ppd_t *ppd = NULL, *sys_ppd = NULL;
+	struct xnshadow_ppd *ppd = NULL, *sys_ppd = NULL;
 	unsigned long featreq, featmis;
 	struct xnskin_slot *sslt;
 	int muxid, abirev, ret;
@@ -1298,7 +1302,7 @@ static int xnshadow_sys_bind(unsigned int magic,
 	if (sys_ppd)
 		goto muxid_eventcb;
 
-	sys_ppd = skins[0].props->eventcb(XNSHADOW_CLIENT_ATTACH, current);
+	sys_ppd = skins[0].props->ops.attach();
 	if (IS_ERR(sys_ppd)) {
 		ret = PTR_ERR(sys_ppd);
 		goto fail;
@@ -1312,14 +1316,11 @@ static int xnshadow_sys_bind(unsigned int magic,
 	if (ppd_insert(sys_ppd) == -EBUSY) {
 		/* In case of concurrent binding (which can not happen with
 		   Xenomai libraries), detach right away the second ppd. */
-		skins[0].props->eventcb(XNSHADOW_CLIENT_DETACH, sys_ppd);
+		skins[0].props->ops.detach(sys_ppd);
 		sys_ppd = NULL;
 	}
 
 muxid_eventcb:
-
-	if (sslt->props->eventcb == NULL)
-		goto eventcb_done;
 
 	xnlock_get_irqsave(&nklock, s);
 	ppd = ppd_lookup(muxid, current->mm);
@@ -1329,7 +1330,7 @@ muxid_eventcb:
 	if (ppd)
 		goto eventcb_done;
 
-	ppd = sslt->props->eventcb(XNSHADOW_CLIENT_ATTACH, current);
+	ppd = sslt->props->ops.attach();
 	if (IS_ERR(ppd)) {
 		ret = PTR_ERR(ppd);
 		goto fail_destroy_sys_ppd;
@@ -1347,7 +1348,7 @@ muxid_eventcb:
 		 * with Xenomai libraries), detach right away the
 		 * second ppd.
 		 */
-		sslt->props->eventcb(XNSHADOW_CLIENT_DETACH, ppd);
+		sslt->props->ops.detach(ppd);
 		ppd = NULL;
 	}
 
@@ -1359,9 +1360,9 @@ eventcb_done:
 		 * at some point if you want me to be of some help
 		 * here...
 		 */
-		if (sslt->props->eventcb && ppd) {
+		if (ppd) {
 			ppd_remove(ppd);
-			sslt->props->eventcb(XNSHADOW_CLIENT_DETACH, ppd);
+			sslt->props->ops.detach(ppd);
 		}
 
 		ret = -ENOSYS;
@@ -1369,7 +1370,7 @@ eventcb_done:
 	fail_destroy_sys_ppd:
 		if (sys_ppd) {
 			ppd_remove(sys_ppd);
-			skins[0].props->eventcb(XNSHADOW_CLIENT_DETACH, sys_ppd);
+			skins[0].props->ops.detach(sys_ppd);
 		}
 	      fail:
 		return ret;
@@ -1574,60 +1575,58 @@ out:
 	return pathname;
 }
 
-static void *xnshadow_sys_event(int event, void *data)
+static struct xnshadow_ppd *xnshadow_sys_attach(void)
 {
 	struct xnsys_ppd *p;
 	char *exe_path;
 	int ret;
 
-	switch (event) {
-	case XNSHADOW_CLIENT_ATTACH:
-		p = kmalloc(sizeof(*p), GFP_KERNEL);
-		if (p == NULL)
-			return ERR_PTR(-ENOMEM);
+	p = kmalloc(sizeof(*p), GFP_KERNEL);
+	if (p == NULL)
+		return ERR_PTR(-ENOMEM);
 
-		ret = xnheap_init_mapped(&p->sem_heap,
-					 CONFIG_XENO_OPT_SEM_HEAPSZ * 1024,
-					 XNARCH_SHARED_HEAP_FLAGS);
-		if (ret) {
-			kfree(p);
-			return ERR_PTR(ret);
-		}
-
-		xnheap_set_label(&p->sem_heap,
-				 "private sem heap [%d]", current->pid);
-
-		p->mayday_addr = map_mayday_page(current);
-		if (p->mayday_addr == 0) {
-			printk(KERN_WARNING
-			       "Xenomai: %s[%d] cannot map MAYDAY page\n",
-			       current->comm, current->pid);
-			kfree(p);
-			return ERR_PTR(-ENOMEM);
-		}
-
-		exe_path = get_exe_path(current);
-		if (IS_ERR(exe_path)) {
-			printk(KERN_WARNING
-			       "Xenomai: %s[%d] can't find exe path\n",
-			       current->comm, current->pid);
-			exe_path = NULL; /* Not lethal, but weird. */
-		}
-		p->exe_path = exe_path;
-		xnarch_atomic_set(&p->refcnt, 1);
-
-		return &p->ppd;
-
-	case XNSHADOW_CLIENT_DETACH:
-		p = ppd2sys(data);
-		xnheap_destroy_mapped(&p->sem_heap, post_ppd_release, NULL);
-		if (p->exe_path)
-			kfree(p->exe_path);
-
-		return NULL;
+	ret = xnheap_init_mapped(&p->sem_heap,
+				 CONFIG_XENO_OPT_SEM_HEAPSZ * 1024,
+				 XNARCH_SHARED_HEAP_FLAGS);
+	if (ret) {
+		kfree(p);
+		return ERR_PTR(ret);
 	}
 
-	return ERR_PTR(-EINVAL);
+	xnheap_set_label(&p->sem_heap,
+			 "private sem heap [%d]", current->pid);
+
+	p->mayday_addr = map_mayday_page(current);
+	if (p->mayday_addr == 0) {
+		printk(KERN_WARNING
+		       "Xenomai: %s[%d] cannot map MAYDAY page\n",
+		       current->comm, current->pid);
+		kfree(p);
+		return ERR_PTR(-ENOMEM);
+	}
+
+	exe_path = get_exe_path(current);
+	if (IS_ERR(exe_path)) {
+		printk(KERN_WARNING
+		       "Xenomai: %s[%d] can't find exe path\n",
+		       current->comm, current->pid);
+		exe_path = NULL; /* Not lethal, but weird. */
+	}
+	p->exe_path = exe_path;
+	xnarch_atomic_set(&p->refcnt, 1);
+
+	return &p->ppd;
+}
+
+static void xnshadow_sys_detach(struct xnshadow_ppd *ppd)
+{
+	struct xnsys_ppd *p;
+
+	p = container_of(ppd, struct xnsys_ppd, ppd);
+	xnheap_destroy_mapped(&p->sem_heap, post_ppd_release, NULL);
+
+	if (p->exe_path)
+		kfree(p->exe_path);
 }
 
 static struct xnskin_props __props = {
@@ -1635,7 +1634,10 @@ static struct xnskin_props __props = {
 	.magic = 0x434F5245,
 	.nrcalls = sizeof(__systab) / sizeof(__systab[0]),
 	.systab = __systab,
-	.eventcb = xnshadow_sys_event,
+	.ops = {
+		.attach = xnshadow_sys_attach,
+		.detach = xnshadow_sys_detach,
+	},
 };
 
 void xnshadow_send_sig(xnthread_t *thread, int sig, int arg)
@@ -1654,40 +1656,34 @@ void xnshadow_send_sig(xnthread_t *thread, int sig, int arg)
 }
 EXPORT_SYMBOL_GPL(xnshadow_send_sig);
 
-/*
- * xnshadow_register_interface() -- Register a new skin/interface.
- * NOTE: an interface can be registered without its pod being
- * necessarily active. In such a case, a lazy initialization scheme
- * can be implemented through the event callback fired upon the first
- * client binding.
+/**
+ * @fn int xnshadow_register_interface(struct xnskin_props *props)
+ * @internal
+ * @brief Register a new real-time interface.
  *
- * The event callback will be called with its first argument set to:
- * - XNSHADOW_CLIENT_ATTACH, when a user-space process binds the interface, the
- *   second argument being the task_struct pointer of the calling thread, the
- *   callback may then return:
- *   . a pointer to an xnshadow_ppd_t structure, meaning that this structure
- *   will be attached to the calling process for this interface;
- *   . a NULL pointer, meaning that no per-process structure should be attached
- *   to this process for this interface;
- *   . ERR_PTR(negative value) indicating an error, the binding process will
- *   then abort;
- * - XNSHADOW_DETACH, when a user-space process terminates, if a non-NULL
- *   per-process structure is attached to the dying process, the second argument
- *   being the pointer to the per-process data attached to the dying process.
+ * - ops->attach() is called when a user-space process binds to the
+ *   interface, on behalf of one of its threads. The attach() handler
+ *   may return:
+ *
+ *   . a pointer to a xnshadow_ppd structure, representing the context
+ *   of the calling process for this interface;
+ *
+ *   . a NULL pointer, meaning that no per-process structure should be
+ *   attached to this process for this interface;
+ *
+ *   . ERR_PTR(negative value) indicating an error, the binding
+ *   process will then abort.
+ *
+ * - ops->detach() is called on behalf of an exiting user-space
+ *   process which has previously attached to the interface. This
+ *   handler is passed a pointer to the per-process data received
+ *   earlier from the ops->attach() handler.
  */
-
 int xnshadow_register_interface(struct xnskin_props *props)
 {
 	struct xnskin_slot *sslt;
 	int muxid;
 	spl_t s;
-
-	/*
-	 * We can only handle up to MAX_SYSENT syscalls per skin,
-	 * check for over- and underflow (MKL).
-	 */
-	if (XENOMAI_MAX_SYSENT < props->nrcalls || 0 > props->nrcalls)
-		return -EINVAL;
 
 	down(&registration_mutex);
 
@@ -1760,7 +1756,7 @@ EXPORT_SYMBOL_GPL(xnshadow_unregister_interface);
  * process; @return NULL otherwise.
  *
  */
-xnshadow_ppd_t *xnshadow_ppd_get(unsigned int muxid)
+struct xnshadow_ppd *xnshadow_ppd_get(unsigned int muxid)
 {
 	struct xnthread *curr = xnpod_current_thread();
 

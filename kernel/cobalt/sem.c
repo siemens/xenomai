@@ -46,10 +46,10 @@ typedef struct cobalt_sem {
 	xnholder_t link;	/* Link in semq */
 	unsigned int value;
 	int flags;
-	cobalt_kqueues_t *owningq;
+	struct cobalt_kqueues *owningq;
 } cobalt_sem_t;
 
-static inline cobalt_kqueues_t *sem_kqueue(struct cobalt_sem *sem)
+static inline struct cobalt_kqueues *sem_kqueue(struct cobalt_sem *sem)
 {
 	int pshared = !!(sem->flags & SEM_PSHARED);
 	return cobalt_kqueues(pshared);
@@ -75,7 +75,7 @@ typedef struct cobalt_uptr {
 
 #define link2uptr(laddr) container_of(laddr, cobalt_uptr_t, link)
 
-static int sem_destroy_inner(cobalt_sem_t *sem, cobalt_kqueues_t *q)
+static int sem_destroy_inner(cobalt_sem_t *sem, struct cobalt_kqueues *q)
 {
 	int ret = 0;
 	spl_t s;
@@ -652,7 +652,7 @@ static int sem_timedwait(cobalt_sem_t *sem, const struct timespec *abs_timeout)
 	return err;
 }
 
-int sem_post_inner(cobalt_sem_t *sem, cobalt_kqueues_t *ownq, int bcast)
+int sem_post_inner(cobalt_sem_t *sem, struct cobalt_kqueues *ownq, int bcast)
 {
 	if (sem->magic != COBALT_SEM_MAGIC)
 		return -EINVAL;
@@ -860,18 +860,18 @@ int cobalt_sem_open(unsigned long __user *u_addr,
 		    const char __user *u_name,
 		    int oflags, mode_t mode, unsigned value)
 {
+	struct cobalt_context *cc;
 	char name[COBALT_MAXNAME];
 	struct __shadow_sem *sm;
 	cobalt_assoc_t *assoc;
 	unsigned long uaddr;
-	cobalt_queues_t *q;
 	cobalt_usem_t *usm;
 	long len;
 	int err;
 	spl_t s;
 
-	q = cobalt_queues();
-	if (q == NULL)
+	cc = cobalt_process_context();
+	if (cc == NULL)
 		return -EPERM;
 
 	if (__xn_safe_copy_from_user(&uaddr, u_addr, sizeof(uaddr)))
@@ -895,7 +895,7 @@ int cobalt_sem_open(unsigned long __user *u_addr,
 
 	xnlock_get_irqsave(&cobalt_assoc_lock, s);
 
-	assoc = cobalt_assoc_lookup(&q->usems, (u_long)sm->sem);
+	assoc = cobalt_assoc_lookup(&cc->usems, (u_long)sm->sem);
 	if (assoc) {
 		usm = assoc2usem(assoc);
 		++usm->refcnt;
@@ -916,7 +916,7 @@ int cobalt_sem_open(unsigned long __user *u_addr,
 
 	xnlock_get_irqsave(&cobalt_assoc_lock, s);
 
-	assoc = cobalt_assoc_lookup(&q->usems, (u_long)sm->sem);
+	assoc = cobalt_assoc_lookup(&cc->usems, (u_long)sm->sem);
 	if (assoc) {
 		assoc2usem(assoc)->refcnt++;
 		xnlock_put_irqrestore(&nklock, s);
@@ -925,7 +925,7 @@ int cobalt_sem_open(unsigned long __user *u_addr,
 		goto got_usm;
 	}
 
-	cobalt_assoc_insert(&q->usems, &usm->assoc, (u_long)sm->sem);
+	cobalt_assoc_insert(&cc->usems, &usm->assoc, (u_long)sm->sem);
 
 	xnlock_put_irqrestore(&cobalt_assoc_lock, s);
 
@@ -945,15 +945,15 @@ int cobalt_sem_open(unsigned long __user *u_addr,
 
 int cobalt_sem_close(unsigned long uaddr, int __user *u_closed)
 {
+	struct cobalt_context *cc;
 	struct __shadow_sem sm;
 	cobalt_assoc_t *assoc;
 	int closed = 0, err;
 	cobalt_usem_t *usm;
-	cobalt_queues_t *q;
 	spl_t s;
 
-	q = cobalt_queues();
-	if (q == NULL)
+	cc = cobalt_process_context();
+	if (cc == NULL)
 		return -EPERM;
 
 	if (__xn_safe_copy_from_user(&sm, (void __user *)uaddr, sizeof(sm)))
@@ -961,7 +961,7 @@ int cobalt_sem_close(unsigned long uaddr, int __user *u_closed)
 
 	xnlock_get_irqsave(&cobalt_assoc_lock, s);
 
-	assoc = cobalt_assoc_lookup(&q->usems, (u_long)sm.sem);
+	assoc = cobalt_assoc_lookup(&cc->usems, (u_long)sm.sem);
 	if (assoc == NULL) {
 		xnlock_put_irqrestore(&cobalt_assoc_lock, s);
 		return -EINVAL;
@@ -972,7 +972,7 @@ int cobalt_sem_close(unsigned long uaddr, int __user *u_closed)
 	err = sem_close(&sm);
 
 	if (!err && (closed = (--usm->refcnt == 0)))
-		cobalt_assoc_remove(&q->usems, (u_long)sm.sem);
+		cobalt_assoc_remove(&cc->usems, (u_long)sm.sem);
 
 	xnlock_put_irqrestore(&cobalt_assoc_lock, s);
 
@@ -1047,12 +1047,12 @@ static void usem_cleanup(cobalt_assoc_t *assoc)
 	xnfree(usem);
 }
 
-void cobalt_sem_usems_cleanup(cobalt_queues_t *q)
+void cobalt_sem_usems_cleanup(struct cobalt_context *cc)
 {
-	cobalt_assocq_destroy(&q->usems, &usem_cleanup);
+	cobalt_assocq_destroy(&cc->usems, &usem_cleanup);
 }
 
-void cobalt_semq_cleanup(cobalt_kqueues_t *q)
+void cobalt_semq_cleanup(struct cobalt_kqueues *q)
 {
 	xnholder_t *holder;
 	spl_t s;

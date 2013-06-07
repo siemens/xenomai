@@ -104,34 +104,29 @@ static int sys_rtdm_sendmsg(int fd, const struct msghdr __user *u_msg,
 	return __rt_dev_sendmsg(p, fd, &krnl_msg, flags);
 }
 
-static void *rtdm_skin_callback(int event, void *data)
+static struct xnshadow_ppd *rtdm_process_attach(void)
 {
 	struct rtdm_process *process;
 
-	switch (event) {
-	case XNSHADOW_CLIENT_ATTACH:
-		process = kmalloc(sizeof(*process), GFP_KERNEL);
-		if (process == NULL)
-			return ERR_PTR(-ENOSPC);
+	process = kmalloc(sizeof(*process), GFP_KERNEL);
+	if (process == NULL)
+		return ERR_PTR(-ENOSPC);
 
 #ifdef CONFIG_XENO_OPT_VFILE
-		memcpy(process->name, current->comm, sizeof(process->name));
-		process->pid = current->pid;
+	memcpy(process->name, current->comm, sizeof(process->name));
+	process->pid = current->pid;
 #endif /* CONFIG_XENO_OPT_VFILE */
 
-		return &process->ppd;
+	return &process->ppd;
+}
 
-	case XNSHADOW_CLIENT_DETACH:
-		process = container_of((xnshadow_ppd_t *) data,
-				       struct rtdm_process, ppd);
+static void rtdm_process_detach(struct xnshadow_ppd *ppd)
+{
+	struct rtdm_process *process;
 
-		cleanup_owned_contexts(process);
-
-		kfree(process);
-
-		break;
-	}
-	return NULL;
+	process = container_of(ppd, struct rtdm_process, ppd);
+	cleanup_owned_contexts(process);
+	kfree(process);
 }
 
 static struct xnsysent __systab[] = {
@@ -151,7 +146,10 @@ static struct xnskin_props __props = {
 	.magic = RTDM_SKIN_MAGIC,
 	.nrcalls = sizeof(__systab) / sizeof(__systab[0]),
 	.systab = __systab,
-	.eventcb = &rtdm_skin_callback,
+	.ops = {
+		.attach = rtdm_process_attach,
+		.detach = rtdm_process_detach,
+	},
 };
 
 int __init rtdm_syscall_init(void)

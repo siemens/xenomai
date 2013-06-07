@@ -58,7 +58,7 @@ static int cobalt_mutex_init_inner(struct __shadow_mutex *shadow,
 {
 	xnflags_t synch_flags = XNSYNCH_PRIO | XNSYNCH_OWNER;
 	struct xnsys_ppd *sys_ppd;
-	cobalt_kqueues_t *kq;
+	struct cobalt_kqueues *kq;
 	spl_t s;
 
 	if (!attr)
@@ -97,7 +97,7 @@ static int cobalt_mutex_init_inner(struct __shadow_mutex *shadow,
 }
 
 static void cobalt_mutex_destroy_inner(cobalt_mutex_t *mutex,
-				       cobalt_kqueues_t *q)
+				       struct cobalt_kqueues *q)
 {
 	spl_t s;
 
@@ -387,7 +387,7 @@ int cobalt_mutex_unlock(struct __shadow_mutex __user *u_mx)
 	return err;
 }
 
-void cobalt_mutexq_cleanup(cobalt_kqueues_t *q)
+void cobalt_mutexq_cleanup(struct cobalt_kqueues *q)
 {
 	xnholder_t *holder;
 	spl_t s;

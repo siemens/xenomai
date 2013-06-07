@@ -25,10 +25,6 @@
 
 #define XENOMAI_SKINS_NR  4
 
-/* Events sent to the interface callback */
-#define XNSHADOW_CLIENT_ATTACH  0
-#define XNSHADOW_CLIENT_DETACH  1
-
 struct xnthread;
 struct xnthread_user_window;
 struct xnmutex;
@@ -36,13 +32,19 @@ struct pt_regs;
 struct timespec;
 struct timeval;
 struct completion;
+struct xnshadow_ppd;
+
+struct xnskin_client_ops {
+	struct xnshadow_ppd *(*attach)(void);
+	void (*detach)(struct xnshadow_ppd *ppd);
+};
 
 struct xnskin_props {
 	const char *name;
-	unsigned magic;
+	unsigned int magic;
 	int nrcalls;
-	void *(*eventcb)(int, void *);
 	struct xnsysent *systab;
+	struct xnskin_client_ops ops;
 };
 
 static inline struct xnthread *xnshadow_current(void)

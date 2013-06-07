@@ -52,7 +52,7 @@
 #include "cond.h"
 
 static inline void
-cond_destroy_internal(cobalt_cond_t *cond, cobalt_kqueues_t *q)
+cond_destroy_internal(cobalt_cond_t *cond, struct cobalt_kqueues *q)
 {
 	spl_t s;
 
@@ -476,7 +476,7 @@ int cobalt_cond_wait_epilogue(struct __shadow_cond __user *u_cnd,
 	return err;
 }
 
-void cobalt_condq_cleanup(cobalt_kqueues_t *q)
+void cobalt_condq_cleanup(struct cobalt_kqueues *q)
 {
 	xnholder_t *holder;
 	spl_t s;

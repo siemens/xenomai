@@ -82,8 +82,6 @@ struct xnsysinfo {
 struct task_struct;
 struct pt_regs;
 
-#define XENOMAI_MAX_SYSENT 255
-
 struct xnsysent {
 
 	/*

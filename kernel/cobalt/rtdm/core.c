@@ -103,7 +103,7 @@ static int create_instance(struct rtdm_device *device,
 			   rtdm_user_info_t *user_info, int nrt_mem)
 {
 	struct rtdm_dev_context *context;
-	xnshadow_ppd_t *ppd;
+	struct xnshadow_ppd *ppd;
 	spl_t s;
 	int fd;
 

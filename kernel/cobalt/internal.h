@@ -68,58 +68,51 @@
 
 #define cobalt_mark_deleted(t) ((t)->magic = ~(t)->magic)
 
-typedef struct cobalt_kqueues {
-	xnqueue_t condq;
-	xnqueue_t intrq;
-	xnqueue_t mutexq;
-	xnqueue_t semq;
-	xnqueue_t threadq;
-	xnqueue_t timerq;
-	xnqueue_t monitorq;
-	xnqueue_t eventq;
-} cobalt_kqueues_t;
+struct cobalt_kqueues {
+	struct xnqueue condq;
+	struct xnqueue intrq;
+	struct xnqueue mutexq;
+	struct xnqueue semq;
+	struct xnqueue threadq;
+	struct xnqueue timerq;
+	struct xnqueue monitorq;
+	struct xnqueue eventq;
+};
 
-typedef struct {
-	cobalt_kqueues_t kqueues;
+struct cobalt_context {
+	struct cobalt_kqueues kqueues;
 	cobalt_assocq_t uqds;
 	cobalt_assocq_t usems;
-
-	xnshadow_ppd_t ppd;
-
-#define ppd2queues(addr)						\
-	((cobalt_queues_t *) ((char *) (addr) - offsetof(cobalt_queues_t, ppd)))
-
-} cobalt_queues_t;
+	struct xnshadow_ppd ppd;
+};
 
 extern int cobalt_muxid;
 
-extern cobalt_kqueues_t cobalt_global_kqueues;
+extern struct cobalt_kqueues cobalt_global_kqueues;
 
-static inline cobalt_queues_t *cobalt_queues(void)
+static inline struct cobalt_context *cobalt_process_context(void)
 {
-	xnshadow_ppd_t *ppd;
+	struct xnshadow_ppd *ppd;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-
 	ppd = xnshadow_ppd_get(cobalt_muxid);
-
 	xnlock_put_irqrestore(&nklock, s);
 
-	if (!ppd)
+	if (ppd == NULL)
 		return NULL;
 
-	return ppd2queues(ppd);
+	return container_of(ppd, struct cobalt_context, ppd);
 }
 
-static inline cobalt_kqueues_t *cobalt_kqueues(int pshared)
+static inline struct cobalt_kqueues *cobalt_kqueues(int pshared)
 {
-	xnshadow_ppd_t *ppd;
+	struct xnshadow_ppd *ppd;
 
-	if (pshared || !(ppd = xnshadow_ppd_get(cobalt_muxid)))
+	if (pshared || (ppd = xnshadow_ppd_get(cobalt_muxid)) == NULL)
 		return &cobalt_global_kqueues;
 
-	return &ppd2queues(ppd)->kqueues;
+	return &container_of(ppd, struct cobalt_context, ppd)->kqueues;
 }
 
 static inline void ns2ts(struct timespec *ts, xnticks_t nsecs)
