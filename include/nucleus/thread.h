@@ -397,7 +397,7 @@ typedef struct xnhook {
 #define xnthread_inc_rescnt(thread)        do { } while (0)
 #define xnthread_dec_rescnt(thread)        do { } while (0)
 #endif /* !CONFIG_XENO_OPT_PERVASIVE */
-#ifdef CONFIG_XENO_OPT_WATCHDOG
+#if defined(CONFIG_XENO_OPT_WATCHDOG) || defined(CONFIG_XENO_SKIN_POSIX)
 #define xnthread_amok_p(thread)            xnthread_test_info(thread, XNAMOK)
 #define xnthread_clear_amok(thread)        xnthread_clear_info(thread, XNAMOK)
 #else /* !CONFIG_XENO_OPT_WATCHDOG */
