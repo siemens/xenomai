@@ -1,0 +1,911 @@
+diff --git a/arch/arm/common/gic.c b/arch/arm/common/gic.c
+index 5fca103..8208b08 100644
+--- a/arch/arm/common/gic.c
++++ b/arch/arm/common/gic.c
+@@ -202,7 +202,6 @@ static int gic_set_affinity(struct irq_data *d, const struct cpumask *mask_val,
+ 	bit = 1 << (cpu + shift);
+ 
+ 	spin_lock_irqsave_cond(&irq_controller_lock, flags);
+-	d->node = cpu;
+ 	val = readl_relaxed(reg) & ~mask;
+ 	writel_relaxed(val | bit, reg);
+ 	spin_unlock_irqrestore_cond(&irq_controller_lock, flags);
+@@ -399,7 +398,7 @@ static void __cpuinit gic_cpu_init(struct gic_chip_data *gic)
+ 	writel_relaxed(1, base + GIC_CPU_CTRL);
+ }
+ 
+-void __init gic_init(unsigned int gic_nr, unsigned int irq_start,
++void gic_init(unsigned int gic_nr, unsigned int irq_start,
+ 	void __iomem *dist_base, void __iomem *cpu_base)
+ {
+ 	struct gic_chip_data *gic;
+@@ -434,6 +433,126 @@ void __cpuinit gic_enable_ppi(unsigned int irq)
+ 	gic_unmask_irq(irq_get_irq_data(irq));
+ 	local_irq_restore(flags);
+ }
++void __cpuinit gic_disable_ppi(unsigned int irq)
++{
++	unsigned long flags;
++
++	local_irq_save(flags);
++	irq_set_status_flags(irq, IRQ_NOPROBE);
++	gic_mask_irq(irq_get_irq_data(irq));
++	local_irq_restore(flags);
++}
++
++void save_gic_cpu_state(unsigned int gic_nr, struct gic_cpu_state *gcs)
++{
++	BUG_ON(gic_nr >= MAX_GIC_NR);
++
++	gcs->iccicr = __raw_readl(gic_data[gic_nr].cpu_base + GIC_CPU_CTRL);
++	gcs->iccpmr = __raw_readl(gic_data[gic_nr].cpu_base + GIC_CPU_PRIMASK);
++	gcs->iccbpr = __raw_readl(gic_data[gic_nr].cpu_base + GIC_CPU_BINPOINT);
++}
++
++void restore_gic_cpu_state(unsigned int gic_nr, struct gic_cpu_state *gcs)
++{
++	BUG_ON(gic_nr >= MAX_GIC_NR);
++
++	__raw_writel(gcs->iccpmr, gic_data[gic_nr].cpu_base + GIC_CPU_PRIMASK);
++	__raw_writel(gcs->iccbpr, gic_data[gic_nr].cpu_base + GIC_CPU_BINPOINT);
++
++	/* at last, restore ctrl register */
++	__raw_writel(gcs->iccicr, gic_data[gic_nr].cpu_base + GIC_CPU_CTRL);
++}
++
++void save_gic_dist_state(unsigned int gic_nr, struct gic_dist_state *gds)
++{
++	unsigned int gic_irqs, i;
++
++	BUG_ON(gic_nr >= MAX_GIC_NR);
++
++	gic_irqs = readl(gic_data[gic_nr].dist_base + GIC_DIST_CTR) & 0x1f;
++	gic_irqs = (gic_irqs + 1) * 32;
++	if (gic_irqs > 1020)
++		gic_irqs = 1020;
++
++	gds->icddcr = __raw_readl(gic_data[gic_nr].dist_base + GIC_DIST_CTRL);
++
++	/* save interrupt enable status */
++	for (i = 0; i < gic_irqs; i += 32)
++		gds->icdisern[i / 32] = __raw_readl(gic_data[gic_nr].dist_base
++					+ GIC_DIST_ENABLE_SET + i * 4 / 32);
++
++	/* save interrupt pending status */
++	for (i = 0; i < gic_irqs; i += 32)
++		gds->icdisprn[i / 32] = __raw_readl(gic_data[gic_nr].dist_base
++					+ GIC_DIST_PENDING_SET + i * 4 / 32);
++
++	/* save active bit status */
++	for (i = 0; i < gic_irqs; i += 32)
++		gds->icdabrn[i / 32] = __raw_readl(gic_data[gic_nr].dist_base
++					+ GIC_DIST_ACTIVE_BIT + i * 4 / 32);
++
++	/* interrupt priority registers */
++	for (i = 0; i < gic_irqs; i += 4)
++		gds->icdiprn[i / 4] = __raw_readl(gic_data[gic_nr].dist_base
++					+ GIC_DIST_PRI + i * 4 / 4);
++
++	/* interrupt processor targets registers */
++	for (i = 0; i < gic_irqs; i += 4)
++		gds->icdiptrn[i / 4] = __raw_readl(gic_data[gic_nr].dist_base
++					+ GIC_DIST_TARGET + i * 4 / 4);
++
++	/* interrupt configuration registers */
++	for (i = 0; i < gic_irqs; i += 16)
++		gds->icdicfrn[i / 16] = __raw_readl(gic_data[gic_nr].dist_base
++					+ GIC_DIST_CONFIG + i * 4 / 16);
++}
++
++void restore_gic_dist_state(unsigned int gic_nr, struct gic_dist_state *gds)
++{
++	unsigned int gic_irqs, i;
++
++	BUG_ON(gic_nr >= MAX_GIC_NR);
++
++	gic_irqs = readl(gic_data[gic_nr].dist_base + GIC_DIST_CTR) & 0x1f;
++	gic_irqs = (gic_irqs + 1) * 32;
++	if (gic_irqs > 1020)
++		gic_irqs = 1020;
++
++	__raw_writel(0, gic_data[gic_nr].dist_base + GIC_DIST_CTRL);
++
++	/* interrupt configuration registers */
++	for (i = 0; i < gic_irqs; i += 16)
++		 __raw_writel(gds->icdicfrn[i / 16], gic_data[gic_nr].dist_base
++					+ GIC_DIST_CONFIG + i * 4 / 16);
++
++	/* interrupt priority registers */
++	for (i = 0; i < gic_irqs; i += 4)
++		 __raw_writel(gds->icdiprn[i / 4], gic_data[gic_nr].dist_base
++					+ GIC_DIST_PRI + i * 4 / 4);
++
++	/* interrupt processor targets registers */
++	for (i = 0; i < gic_irqs; i += 4)
++		 __raw_writel(gds->icdiptrn[i / 4], gic_data[gic_nr].dist_base
++					+ GIC_DIST_TARGET + i * 4 / 4);
++
++	/* restore active bits */
++	for (i = 0; i < gic_irqs; i += 32)
++		__raw_writel(gds->icdabrn[i / 32], gic_data[gic_nr].dist_base
++					+ GIC_DIST_ACTIVE_BIT + i * 4 / 32);
++
++	/* restore pending bits */
++	for (i = 0; i < gic_irqs; i += 32)
++		__raw_writel(gds->icdisprn[i / 32], gic_data[gic_nr].dist_base
++					+ GIC_DIST_PENDING_SET + i * 4 / 32);
++
++	/* restore interrupt enable status */
++	for (i = 0; i < gic_irqs; i += 32)
++		__raw_writel(gds->icdisern[i / 32], gic_data[gic_nr].dist_base
++					+ GIC_DIST_ENABLE_SET + i * 4 / 32);
++
++	/* at last restore ctrl register */
++	__raw_writel(gds->icddcr, gic_data[gic_nr].dist_base + GIC_DIST_CTRL);
++}
+ 
+ #ifdef CONFIG_SMP
+ void gic_raise_softirq(const struct cpumask *mask, unsigned int irq)
+diff --git a/arch/arm/kernel/smp_twd.c b/arch/arm/kernel/smp_twd.c
+index 53c56aa..0ba2cb4 100644
+--- a/arch/arm/kernel/smp_twd.c
++++ b/arch/arm/kernel/smp_twd.c
+@@ -18,6 +18,7 @@
+ #include <linux/irq.h>
+ #include <linux/io.h>
+ #include <linux/clk.h>
++#include <linux/cpufreq.h>
+ #include <linux/err.h>
+ #include <linux/ipipe.h>
+ 
+@@ -30,6 +31,8 @@ static struct clk *twd_clk;
+ 
+ static unsigned long twd_timer_rate;
+ 
++static struct clock_event_device __percpu **twd_evt;
++
+ #if defined(CONFIG_IPIPE) && defined(CONFIG_SMP)
+ void __iomem *gt_base;
+ 
+@@ -185,15 +188,18 @@ static void twd_set_mode(enum clock_event_mode mode,
+ 		ctrl = TWD_TIMER_CONTROL_ENABLE | TWD_TIMER_CONTROL_IT_ENABLE
+ 			| TWD_TIMER_CONTROL_PERIODIC;
+ 		__raw_writel((twd_timer_rate + HZ / 2) / HZ, twd_base + TWD_TIMER_LOAD);
++		gic_enable_ppi(clk->irq);
+ 		break;
+ 	case CLOCK_EVT_MODE_ONESHOT:
+ 		/* period set, and timer enabled in 'next_event' hook */
+ 		ctrl = TWD_TIMER_CONTROL_IT_ENABLE | TWD_TIMER_CONTROL_ONESHOT;
++		gic_enable_ppi(clk->irq);
+ 		break;
+ 	case CLOCK_EVT_MODE_UNUSED:
+ 	case CLOCK_EVT_MODE_SHUTDOWN:
+ 	default:
+ 		ctrl = 0;
++		gic_disable_ppi(clk->irq);
+ 	}
+ 
+ 	__raw_writel(ctrl, twd_base + TWD_TIMER_CONTROL);
+@@ -215,6 +221,60 @@ static int twd_set_next_event(unsigned long evt,
+ 	return 0;
+ }
+ 
++static struct clk *twd_get_clock(void)
++{
++	return clk_get_sys("smp_twd", NULL);
++}
++
++#ifdef CONFIG_CPU_FREQ
++/*
++ * Updates clockevent frequency when the cpu frequency changes.
++ * Called on the cpu that is changing frequency with interrupts disabled.
++ */
++static void twd_update_frequency(void *data)
++{
++	twd_timer_rate = clk_get_rate(twd_clk);
++
++	clockevents_update_freq(*__this_cpu_ptr(twd_evt), twd_timer_rate);
++}
++
++static int twd_cpufreq_transition(struct notifier_block *nb,
++	unsigned long state, void *data)
++{
++	struct cpufreq_freqs *freqs = data;
++
++	/*
++	 * The twd clock events must be reprogrammed to account for the new
++	 * frequency.  The timer is local to a cpu, so cross-call to the
++	 * changing cpu.
++	 *
++	 * Only wait for it to finish, if the cpu is active to avoid
++	 * deadlock when cpu1 is spinning on while(!cpu_active(cpu1)) during
++	 * booting of that cpu.
++	 */
++	if (state == CPUFREQ_POSTCHANGE || state == CPUFREQ_RESUMECHANGE)
++		smp_call_function_single(freqs->cpu, twd_update_frequency,
++					 NULL, cpu_active(freqs->cpu));
++
++	return NOTIFY_OK;
++}
++
++static struct notifier_block twd_cpufreq_nb = {
++	.notifier_call = twd_cpufreq_transition,
++};
++
++static int twd_cpufreq_init(void)
++{
++	if (twd_evt && *__this_cpu_ptr(twd_evt) && !IS_ERR(twd_clk))
++		return cpufreq_register_notifier(&twd_cpufreq_nb,
++			CPUFREQ_TRANSITION_NOTIFIER);
++
++	return 0;
++}
++core_initcall(twd_cpufreq_init);
++
++#endif
++
+ static void __cpuinit twd_calibrate_rate(void)
+ {
+ 	unsigned long count;
+@@ -259,19 +319,21 @@ static void __cpuinit twd_calibrate_rate(void)
+  */
+ void __cpuinit twd_timer_setup(struct clock_event_device *clk)
+ {
+-	if (twd_clk == NULL) {
+-		twd_clk = clk_get(NULL, "smp_twd");
+-		if (IS_ERR(twd_clk))
+-			pr_warn("%s: no clock found\n", __func__);
+-		else
+-			clk_enable(twd_clk);
++	struct clock_event_device **this_cpu_clk;
++
++	if (!twd_evt) {
++		twd_evt = alloc_percpu(struct clock_event_device *);
++		if (!twd_evt) {
++			pr_err("twd: can't allocate memory\n");
++			return;
++		}
++
++		if (!twd_clk)
++			twd_clk = twd_get_clock();
+ 
+-		if (!IS_ERR(twd_clk)) {
++		if (!IS_ERR_OR_NULL(twd_clk))
+ 			twd_timer_rate = clk_get_rate(twd_clk);
+-			printk(KERN_INFO "local timer: %lu.%02luMHz.\n",
+-			       twd_timer_rate / 1000000,
+-			       (twd_timer_rate / 10000) % 100);
+-		} else
++		else
+ 			twd_calibrate_rate();
+ 
+ 		ipipe_twd_update_freq();
+@@ -283,13 +345,13 @@ void __cpuinit twd_timer_setup(struct clock_event_device *clk)
+ 	clk->rating = 350;
+ 	clk->set_mode = twd_set_mode;
+ 	clk->set_next_event = twd_set_next_event;
+-	clk->shift = 20;
+-	clk->mult = div_sc(twd_timer_rate, NSEC_PER_SEC, clk->shift);
+-	clk->max_delta_ns = clockevent_delta2ns(0xffffffff, clk);
+-	clk->min_delta_ns = clockevent_delta2ns(0xf, clk);
++
++	this_cpu_clk = __this_cpu_ptr(twd_evt);
++	*this_cpu_clk = clk;
++
++	clockevents_config_and_register(clk, twd_timer_rate,
++					0xf, 0xffffffff);
+ 
+ 	/* Make sure our local interrupt controller has this enabled */
+ 	gic_enable_ppi(clk->irq);
+-
+-	clockevents_register_device(clk);
+ }
+diff --git a/arch/arm/mach-mx5/clock.c b/arch/arm/mach-mx5/clock.c
+index bf60ffa..ac65994 100755
+--- a/arch/arm/mach-mx5/clock.c
++++ b/arch/arm/mach-mx5/clock.c
+@@ -4879,7 +4879,7 @@ int __init mx51_clocks_init(unsigned long ckil, unsigned long osc, unsigned long
+ 
+ 	/* System timer */
+ 	mxc_timer_init(&gpt_clk[0], MX51_IO_ADDRESS(MX51_GPT1_BASE_ADDR),
+-		MX51_MXC_INT_GPT);
++		       MX51_GPT1_BASE_ADDR, MX51_MXC_INT_GPT);
+ 
+ 	return 0;
+ }
+@@ -5133,7 +5133,7 @@ int __init mx53_clocks_init(unsigned long ckil, unsigned long osc, unsigned long
+ 
+ 	/* System timer */
+ 	mxc_timer_init(&gpt_clk[0], MX53_IO_ADDRESS(MX53_GPT1_BASE_ADDR),
+-		MX53_INT_GPT);
++		       MX53_GPT1_BASE_ADDR, MX53_INT_GPT);
+ 	return 0;
+ }
+ 
+diff --git a/arch/arm/mach-mx6/Kconfig b/arch/arm/mach-mx6/Kconfig
+index 45ae9ea..e11d8bf 100644
+--- a/arch/arm/mach-mx6/Kconfig
++++ b/arch/arm/mach-mx6/Kconfig
+@@ -173,6 +173,10 @@ config MACH_MX6Q_SABRELITE
+ 	select IMX_HAVE_PLATFORM_IMX_ASRC
+ 	select IMX_HAVE_PLATFORM_FLEXCAN
+ 	select IMX_HAVE_PLATFORM_IMX_CAAM
++	select IMX_HAVE_PLATFORM_IMX_MIPI_DSI
++	select IMX_HAVE_PLATFORM_IMX_MIPI_CSI2
++	select IMX_HAVE_PLATFORM_IMX_DVFS
++	select IMX_HAVE_PLATFORM_PERFMON
+ 	help
+ 	  Include support for i.MX 6Quad SABRE Lite platform. This includes specific
+ 	  configurations for the board and its peripherals.
+diff --git a/arch/arm/mach-mx6/clock.c b/arch/arm/mach-mx6/clock.c
+index a3dc7e4..fc0129c 100644
+--- a/arch/arm/mach-mx6/clock.c
++++ b/arch/arm/mach-mx6/clock.c
+@@ -1,4 +1,3 @@
+-
+ /*
+  * Copyright (C) 2012 Freescale Semiconductor, Inc. All Rights Reserved.
+  */
+@@ -5358,7 +5357,7 @@ int __init mx6_clocks_init(unsigned long ckil, unsigned long osc,
+ 		gpt_clk[0].secondary = NULL;
+ 	}
+ 
+-	mxc_timer_init(&gpt_clk[0], timer_base, MXC_INT_GPT);
++	mxc_timer_init(&gpt_clk[0], timer_base, GPT_BASE_ADDR, MXC_INT_GPT);
+ 
+ 	clk_tree_init();
+ 
+diff --git a/arch/arm/mach-mx6/clock_mx6sl.c b/arch/arm/mach-mx6/clock_mx6sl.c
+index 08212c3..3248174 100755
+--- a/arch/arm/mach-mx6/clock_mx6sl.c
++++ b/arch/arm/mach-mx6/clock_mx6sl.c
+@@ -4035,7 +4035,7 @@ int __init mx6sl_clocks_init(unsigned long ckil, unsigned long osc,
+ 	gpt_clk[0].parent = &ipg_perclk;
+ 	gpt_clk[0].get_rate = NULL;
+ 
+-	mxc_timer_init(&gpt_clk[0], timer_base, MXC_INT_GPT);
++	mxc_timer_init(&gpt_clk[0], timer_base, GPT_BASE_ADDR, MXC_INT_GPT);
+ 
+ 	/* keep correct count. */
+ 	clk_enable(&cpu_clk);
+diff --git a/arch/arm/mach-mx6/cpu.c b/arch/arm/mach-mx6/cpu.c
+index be5011a..608e80e 100644
+--- a/arch/arm/mach-mx6/cpu.c
++++ b/arch/arm/mach-mx6/cpu.c
+@@ -32,7 +32,11 @@
+ #include "cpu_op-mx6.h"
+ 
+ struct cpu_op *(*get_cpu_op)(int *op);
++#if !defined(CONFIG_IPIPE) || !defined(CONFIG_SMP)
+ bool enable_wait_mode = true;
++#else /* IPIPE && SMP */
++bool enable_wait_mode = false;
++#endif /* IPIPE && SMP */
+ u32 arm_max_freq = CPU_AT_1GHz;
+ bool mem_clk_on_in_wait;
+ int chip_rev;
+@@ -212,6 +216,10 @@ postcore_initcall(post_cpu_init);
+ static int __init enable_wait(char *p)
+ {
+ 	if (memcmp(p, "on", 2) == 0) {
++#ifdef CONFIG_IPIPE
++		if (num_possible_cpus() > 1)
++			return 0;
++#endif /* IPIPE && SMP */
+ 		enable_wait_mode = true;
+ 		p += 2;
+ 	} else if (memcmp(p, "off", 3) == 0) {
+@@ -247,6 +255,3 @@ static int __init enable_mem_clk_in_wait(char *p)
+ }
+ 
+ early_param("mem_clk_on", enable_mem_clk_in_wait);
+-
+-
+-
+diff --git a/arch/arm/mach-mx6/cpu_regulator-mx6.c b/arch/arm/mach-mx6/cpu_regulator-mx6.c
+index cb08cad..bc23392 100644
+--- a/arch/arm/mach-mx6/cpu_regulator-mx6.c
++++ b/arch/arm/mach-mx6/cpu_regulator-mx6.c
+@@ -108,5 +108,9 @@ void mx6_cpu_regulator_init(void)
+ 	pu_regulator = regulator_get(NULL, pu_reg_id);
+ 	if (IS_ERR(pu_regulator))
+ 		printk(KERN_ERR "%s: failed to get pu regulator\n", __func__);
++
++#if defined(CONFIG_IPIPE) && defined(CONFIG_SMP)
++	ipipe_twd_update_freq();
++#endif /* CONFIG_IPIPE && CONFIG_SMP */
+ }
+ 
+diff --git a/arch/arm/mach-mx6/headsmp.S b/arch/arm/mach-mx6/headsmp.S
+index 9492d8d..3b8bccf 100644
+--- a/arch/arm/mach-mx6/headsmp.S
++++ b/arch/arm/mach-mx6/headsmp.S
+@@ -61,12 +61,14 @@ ENTRY(mx6_secondary_startup)
+ 	/* Invalidate L1 D-cache */
+ 	bl      v7_invalidate_l1
+ 	/* Set ARM working mode */
+-	msr     cpsr_fsxc, #0xd3
++	mov	r1, #0xd3
++	msr     cpsr_fsxc, r1
+ 
+ 	mrc p15, 0, r0, c0, c0, 5
+ 	and r0, r0, #15
+ 	ldr r1, = 0x020d8020
+-	add r1, r0, LSL#3
++	lsl r0, #3
++	add r1, r0
+ 
+ 	/*Clear SRC_GPR register */
+ 	mov r0, #0
+diff --git a/arch/arm/mach-mx6/localtimer.c b/arch/arm/mach-mx6/localtimer.c
+index 402368b..dd8bd89 100644
+--- a/arch/arm/mach-mx6/localtimer.c
++++ b/arch/arm/mach-mx6/localtimer.c
+@@ -33,5 +33,8 @@ int __cpuinit local_timer_setup(struct clock_event_device *evt)
+ {
+ 	evt->irq = IRQ_LOCALTIMER;
+ 	twd_timer_setup(evt);
++#ifdef CONFIG_IPIPE
++	gt_setup(LOCAL_TWD_ADDR - 0x400, 32);
++#endif /* CONFIG_IPIPE */
+ 	return 0;
+ }
+diff --git a/arch/arm/mach-mx6/system.c b/arch/arm/mach-mx6/system.c
+index 800c7cc..aa89c1c 100644
+--- a/arch/arm/mach-mx6/system.c
++++ b/arch/arm/mach-mx6/system.c
+@@ -25,6 +25,7 @@
+ #include <linux/clockchips.h>
+ #include <linux/hrtimer.h>
+ #include <linux/tick.h>
++#include <linux/ipipe.h>
+ #include <asm/io.h>
+ #include <mach/hardware.h>
+ #include <mach/clock.h>
+@@ -230,17 +231,22 @@ void mxc_cpu_lp_set(enum mxc_cpu_pwr_mode mode)
+ 
+ extern int tick_broadcast_oneshot_active(void);
+ 
++#ifndef CONFIG_IPIPE
+ void ca9_do_idle(void)
+ {
+ 	do {
+ 		cpu_do_idle();
+ 	} while (__raw_readl(gic_cpu_base_addr + GIC_CPU_HIGHPRI) == 1023);
+ }
++#else /* CONFIG_IPIPE */
++#define ca9_do_idle() cpu_do_idle()
++#endif /* CONFIG_IPIPE */
+ 
+ void arch_idle_single_core(void)
+ {
+ 	u32 reg;
+ 
++	local_irq_disable_hw_cond();
+ 	if (cpu_is_mx6dl() && chip_rev > IMX_CHIP_REVISION_1_0) {
+ 		/*
+ 		  * MX6DLS TO1.1 has the HW fix for the WAIT mode issue.
+@@ -301,6 +307,7 @@ void arch_idle_single_core(void)
+ 			__raw_writel(cur_arm_podf - 1, MXC_CCM_CACRR);
+ 		}
+ 	}
++	local_irq_enable_hw_cond();
+ }
+ 
+ void arch_idle_with_workaround(cpu)
+@@ -329,11 +336,16 @@ void arch_idle_multi_core(void)
+ 
+ #ifdef CONFIG_LOCAL_TIMERS
+ 	if (!tick_broadcast_oneshot_active()
+-		|| !tick_oneshot_mode_active())
++	    || !tick_oneshot_mode_active())
+ 		return;
+ 
+ 	clockevents_notify(CLOCK_EVT_NOTIFY_BROADCAST_ENTER, &cpu);
+ #endif
++#ifdef CONFIG_IPIPE
++	/* Adeos I-pipe does not support suspending clock as it only
++	   relies on localtimer */
++	   BUG();
++#endif /* CONFIG_IPIPE */
+ 	/* iMX6Q and iMX6DL */
+ 	if ((cpu_is_mx6q() && chip_rev >= IMX_CHIP_REVISION_1_2) ||
+ 		(cpu_is_mx6dl() && chip_rev >= IMX_CHIP_REVISION_1_1)) {
+diff --git a/arch/arm/plat-mxc/Kconfig b/arch/arm/plat-mxc/Kconfig
+index a53fa2e..e647506 100755
+--- a/arch/arm/plat-mxc/Kconfig
++++ b/arch/arm/plat-mxc/Kconfig
+@@ -51,6 +51,7 @@ config ARCH_MX51
+ config ARCH_MX6
+ 	bool "MX6-based"
+ 	select CPU_V7
++	select LOCAL_TIMERS if IPIPE && SMP
+ 	help
+ 	  This enable support for systems based on the Freescale i.MX 6 Series family
+ 
+diff --git a/arch/arm/plat-mxc/clock.c b/arch/arm/plat-mxc/clock.c
+index 93347eb..b68869e 100755
+--- a/arch/arm/plat-mxc/clock.c
++++ b/arch/arm/plat-mxc/clock.c
+@@ -60,7 +60,11 @@ static void __clk_disable(struct clk *clk)
+ 		return;
+ 
+ 	if (!clk->usecount) {
++#ifdef CONFIG_CLK_DEBUG
+ 		WARN(1, "clock enable/disable mismatch! clk  %s\n", clk->name);
++#else /* !CONFIG_CLK_DEBUG */
++		WARN(1, "clock enable/disable mismatch! clk  %pS\n", clk);
++#endif /* !CONFIG_CLK_DEBUG */
+ 		return;
+ 	}
+ 
+diff --git a/arch/arm/plat-mxc/cpu.c b/arch/arm/plat-mxc/cpu.c
+index 5cafd19..ecbda88 100755
+--- a/arch/arm/plat-mxc/cpu.c
++++ b/arch/arm/plat-mxc/cpu.c
+@@ -1,15 +1,85 @@
++/*
++ * Copyright (C) 2011-2012 Freescale Semiconductor, Inc. All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++
++ * You should have received a copy of the GNU General Public License along
++ * with this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
++ */
++
+ #include <linux/module.h>
++#include <mach/clock.h>
+ #include <linux/io.h>
+ #include <mach/hardware.h>
+ 
+ unsigned int __mxc_cpu_type;
+ EXPORT_SYMBOL(__mxc_cpu_type);
++extern int mxc_early_serial_console_init(unsigned long base, struct clk *clk);
++void (*set_num_cpu_op)(int num);
+ 
+ void mxc_set_cpu_type(unsigned int type)
+ {
+ 	__mxc_cpu_type = type;
+ }
+ 
++void imx_print_silicon_rev(const char *cpu, int srev)
++{
++	if (srev == IMX_CHIP_REVISION_UNKNOWN)
++		pr_info("CPU identified as %s, unknown revision\n", cpu);
++	else
++		pr_info("CPU identified as %s, silicon rev %d.%d\n",
++				cpu, (srev >> 4) & 0xf, srev & 0xf);
++}
++
++int mxc_jtag_enabled;		/* OFF: 0 (default), ON: 1 */
++int uart_at_24; 			/* OFF: 0 (default); ON: 1 */
++/*
++ * Here are the JTAG options from the command line. By default JTAG
++ * is OFF which means JTAG is not connected and WFI is enabled
++ *
++ *       "on" --  JTAG is connected, so WFI is disabled
++ *       "off" -- JTAG is disconnected, so WFI is enabled
++ */
++
++static int __init jtag_wfi_setup(char *p)
++{
++	if (memcmp(p, "on", 2) == 0) {
++		mxc_jtag_enabled = 1;
++		p += 2;
++	} else if (memcmp(p, "off", 3) == 0) {
++		mxc_jtag_enabled = 0;
++		p += 3;
++	}
++	return 0;
++}
++early_param("jtag", jtag_wfi_setup);
++/**
++ * early_console_setup - setup debugging console
++ *
++ * Consoles started here require little enough setup that we can start using
++ * them very early in the boot process, either right after the machine
++ * vector initialization, or even before if the drivers can detect their hw.
++ *
++ * Returns non-zero if a console couldn't be setup.
++ * This function is developed based on
++ * early_console_setup function as defined in arch/ia64/kernel/setup.c
++ */
++void __init early_console_setup(unsigned long base, struct clk *clk)
++{
++#ifdef CONFIG_SERIAL_IMX_CONSOLE
++	mxc_early_serial_console_init(base, clk);
++#endif
++}
++
+ #ifdef CONFIG_IPIPE
+ void ipipe_mach_allow_hwtimer_uaccess(unsigned long aips1, unsigned long aips2)
+ {
+diff --git a/arch/arm/plat-mxc/gpio.c b/arch/arm/plat-mxc/gpio.c
+index 5d75fe2..500f499 100755
+--- a/arch/arm/plat-mxc/gpio.c
++++ b/arch/arm/plat-mxc/gpio.c
+@@ -376,6 +376,31 @@ int mxc_gpio_init(struct mxc_gpio_port *port, int cnt)
+ 
+ #if defined(CONFIG_IPIPE) && defined(__IPIPE_FEATURE_PIC_MUTE)
+ extern void tzic_set_irq_prio(int irq, int hi);
++extern void gic_mute(void);
++extern void gic_unmute(void);
++extern void gic_set_irq_prio(int irq, int hi);
++
++static void set_irq_prio(int irq, int hi)
++{
++#ifdef CONFIG_MXC_TZIC
++       tzic_set_irq_prio(irq, hi);
++#elif defined(CONFIG_ARM_GIC)
++       gic_set_irq_prio(irq, hi);
++#endif
++}
++
++#ifdef CONFIG_ARM_GIC
++void ipipe_mute_pic(void)
++{
++       gic_mute();
++}
++
++void ipipe_unmute_pic(void)
++{
++       gic_unmute();
++}
++#endif /* CONFIG_ARM_GIC */
++
+ 
+ void __ipipe_mach_enable_irqdesc(struct ipipe_domain *ipd, unsigned irq)
+ {
+@@ -393,11 +418,11 @@ void __ipipe_mach_enable_irqdesc(struct ipipe_domain *ipd, unsigned irq)
+ 			if (port->nonroot_gpios == (1 << (gpio % 32))) {
+ 				__ipipe_irqbits[(port->irq / 32)]
+ 					&= ~(1 << (port->irq % 32));
+-				tzic_set_irq_prio(port->irq, 1);
++				set_irq_prio(port->irq, 1);
+ 			}
+ 		}
+ 	} else
+-		tzic_set_irq_prio(irq, ipd != &ipipe_root);
++		set_irq_prio(irq, ipd != &ipipe_root);
+ }
+ 
+ void __ipipe_mach_disable_irqdesc(struct ipipe_domain *ipd, unsigned irq)
+@@ -414,12 +439,12 @@ void __ipipe_mach_disable_irqdesc(struct ipipe_domain *ipd, unsigned irq)
+ 		if (ipd != &ipipe_root) {
+ 			port->nonroot_gpios &= ~(1 << (gpio % 32));
+ 			if (!port->nonroot_gpios) {
+-				tzic_set_irq_prio(port->irq, 0);
++				set_irq_prio(port->irq, 0);
+ 				__ipipe_irqbits[(port->irq / 32)]
+ 					|= (1 << (port->irq % 32));
+ 			}
+ 		}
+ 	} else if (ipd != &ipipe_root)
+-		tzic_set_irq_prio(irq, 0);
++		set_irq_prio(irq, 0);
+ }
+ #endif /* CONFIG_IPIPE && __IPIPE_FEATURE_PIC_MUTE */
+diff --git a/arch/arm/plat-mxc/include/mach/common.h b/arch/arm/plat-mxc/include/mach/common.h
+index 4503ba0..fcc01e1 100755
+--- a/arch/arm/plat-mxc/include/mach/common.h
++++ b/arch/arm/plat-mxc/include/mach/common.h
+@@ -1,19 +1,29 @@
+ /*
+- * Copyright 2004-2007 Freescale Semiconductor, Inc. All Rights Reserved.
+- */
+-
+-/*
++ * Copyright (C) 2004-2012 Freescale Semiconductor, Inc. All Rights Reserved.
++ *
+  * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License version 2 as
+- * published by the Free Software Foundation.
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++
++ * You should have received a copy of the GNU General Public License along
++ * with this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+  */
+ 
+ #ifndef __ASM_ARCH_MXC_COMMON_H__
+ #define __ASM_ARCH_MXC_COMMON_H__
+ 
++struct fec_platform_data;
+ struct platform_device;
+ struct clk;
+ 
++extern char *gp_reg_id;
+ extern void mx1_map_io(void);
+ extern void mx21_map_io(void);
+ extern void mx25_map_io(void);
+@@ -23,6 +33,8 @@ extern void mx35_map_io(void);
+ extern void mx50_map_io(void);
+ extern void mx51_map_io(void);
+ extern void mx53_map_io(void);
++extern void mx6_map_io(void);
++extern void mxc91231_map_io(void);
+ extern void imx1_init_early(void);
+ extern void imx21_init_early(void);
+ extern void imx25_init_early(void);
+@@ -32,6 +44,7 @@ extern void imx35_init_early(void);
+ extern void imx50_init_early(void);
+ extern void imx51_init_early(void);
+ extern void imx53_init_early(void);
++extern void mxc91231_init_early(void);
+ extern void mxc_init_irq(void __iomem *);
+ extern void tzic_init_irq(void __iomem *);
+ extern void mx1_init_irq(void);
+@@ -43,6 +56,8 @@ extern void mx35_init_irq(void);
+ extern void mx50_init_irq(void);
+ extern void mx51_init_irq(void);
+ extern void mx53_init_irq(void);
++extern void mx6_init_irq(void);
++extern void mxc91231_init_irq(void);
+ extern void epit_timer_init(struct clk *timer_clk, void __iomem *base, int irq);
+ extern void mxc_timer_init(struct clk *timer_clk, void __iomem *, unsigned long, int);
+ extern int mx1_clocks_init(unsigned long fref);
+@@ -55,16 +70,33 @@ extern int mx51_clocks_init(unsigned long ckil, unsigned long osc,
+ 			unsigned long ckih1, unsigned long ckih2);
+ extern int mx53_clocks_init(unsigned long ckil, unsigned long osc,
+ 			unsigned long ckih1, unsigned long ckih2);
++extern int mx50_clocks_init(unsigned long ckil, unsigned long osc,
++			unsigned long ckih1);
++extern int mx6_clocks_init(unsigned long ckil, unsigned long osc,
++			unsigned long ckih1, unsigned long ckih2);
++extern int mx6sl_clocks_init(unsigned long ckil, unsigned long osc,
++			unsigned long ckih1, unsigned long ckih2);
++extern void imx6_init_fec(struct fec_platform_data fec_data);
++extern int mxc91231_clocks_init(unsigned long fref);
+ extern int mxc_register_gpios(void);
+ extern int mxc_register_device(struct platform_device *pdev, void *data);
+ extern void mxc_set_cpu_type(unsigned int type);
+ extern void mxc_arch_reset_init(void __iomem *);
++extern void mxc91231_power_off(void);
++extern void mxc91231_arch_reset(int, const char *);
++extern void mxc91231_prepare_idle(void);
+ extern void mx51_efikamx_reset(void);
+ extern int mx53_revision(void);
++extern int mx50_revision(void);
+ extern int mx53_display_revision(void);
++extern int mxs_reset_block(void __iomem *);
++extern void early_console_setup(unsigned long base, struct clk *clk);
++extern void mx6_cpu_regulator_init(void);
++extern int mx6q_sabreauto_init_pfuze100(u32 int_gpio);
++extern int mx6q_sabresd_init_pfuze100(u32 int_gpio);
++extern void imx_print_silicon_rev(const char *cpu, int srev);
+ 
+ #ifdef CONFIG_IPIPE
+ void ipipe_mach_allow_hwtimer_uaccess(unsigned long aips1, unsigned long aips2);
+ #endif
+-
+ #endif
+diff --git a/arch/arm/plat-mxc/include/mach/debug-macro.S b/arch/arm/plat-mxc/include/mach/debug-macro.S
+index e19086c..2ccaaef 100644
+--- a/arch/arm/plat-mxc/include/mach/debug-macro.S
++++ b/arch/arm/plat-mxc/include/mach/debug-macro.S
+@@ -48,7 +48,7 @@
+ #ifdef UART_PADDR
+ #error "CONFIG_DEBUG_LL is incompatible with multiple archs"
+ #endif
+-#define UART_PADDR	MX6Q_UART4_BASE_ADDR
++#define UART_PADDR	MX6Q_UART2_BASE_ADDR
+ #endif
+ 
+ #define UART_VADDR	IMX_IO_ADDRESS(UART_PADDR)
+diff --git a/arch/arm/plat-mxc/include/mach/irqs.h b/arch/arm/plat-mxc/include/mach/irqs.h
+index 0a2458a..9f83caf 100644
+--- a/arch/arm/plat-mxc/include/mach/irqs.h
++++ b/arch/arm/plat-mxc/include/mach/irqs.h
+@@ -81,8 +81,11 @@ extern int imx_irq_set_priority(unsigned char irq, unsigned char prio);
+ /* switch between IRQ and FIQ */
+ extern int mxc_set_irq_fiq(unsigned int irq, unsigned int type);
+ 
+-#ifdef CONFIG_MXC_TZIC
++#if defined(CONFIG_MXC_TZIC) || defined(CONFIG_ARM_GIC)
+ #define __IPIPE_FEATURE_PIC_MUTE
+-#endif /* CONFIG_MXC_TZIC */
++#endif /* CONFIG_MXC_TZIC || CONFIG_ARM_GIC */
+ 
++#if defined(CONFIG_SOC_IMX6Q) && defined(CONFIG_SMP)
++#include <asm/smp_twd.h>
++#endif /* CONFIG_ARCH_MX6 */
+ #endif /* __ASM_ARCH_MXC_IRQS_H__ */
+diff --git a/drivers/mxc/thermal/thermal.c b/drivers/mxc/thermal/thermal.c
+index 6f3c7a9..f9e0bba 100644
+--- a/drivers/mxc/thermal/thermal.c
++++ b/drivers/mxc/thermal/thermal.c
+@@ -834,7 +834,9 @@ static int anatop_thermal_counting_ratio(unsigned int fuse_data)
+ 		pr_info("%s: invalid calibration data, disable cooling!!!\n", __func__);
+ 		cooling_device_disable = true;
+ 		ratio = DEFAULT_RATIO;
++#ifndef CONFIG_IPIPE
+ 		disable_irq(thermal_irq);
++#endif
+ 		return ret;
+ 	}
+ 
+@@ -863,8 +865,12 @@ static irqreturn_t anatop_thermal_alarm_handler(int irq, void *dev_id)
+ 	char mode = 'r';
+ 	const char *cmd = "reboot";
+ 
+-	if (cooling_device_disable)
++	if (cooling_device_disable) {
++#ifdef CONFIG_IPIPE
++		BUG();
++#endif
+ 		return IRQ_HANDLED;
++	}
+ 	printk(KERN_WARNING "\nChip is too hot, reboot!!!\n");
+ 	/* reboot */
+ 	arch_reset(mode, cmd);
+diff --git a/drivers/net/fec.c b/drivers/net/fec.c
+index b1fa464..87e2a60 100755
+--- a/drivers/net/fec.c
++++ b/drivers/net/fec.c
+@@ -277,6 +277,14 @@ static void *swap_buffer(void *bufaddr, int len)
+ 	return bufaddr;
+ }
+ 
++static inline unsigned short bufdesc_read_status(struct bufdesc *bdp)
++{
++#ifdef CONFIG_ARCH_MX6
++	mb();
++#endif /* CONFIG_ARCH_MX6 */
++	return bdp->cbd_sc;
++}
++
+ static netdev_tx_t
+ fec_enet_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+ {
+@@ -300,7 +308,7 @@ fec_enet_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+ 	/* Fill in a Tx ring entry */
+ 	bdp = fep->cur_tx;
+ 
+-	status = bdp->cbd_sc;
++	status = bufdesc_read_status(bdp);
+ 
+ 	if (status & BD_ENET_TX_READY) {
+ 		/* Ooops.  All transmit buffers are full.  Bail out.
+@@ -439,7 +447,7 @@ fec_enet_tx(struct net_device *ndev)
+ 	spin_lock(&fep->hw_lock);
+ 	bdp = fep->dirty_tx;
+ 
+-	while (((status = bdp->cbd_sc) & BD_ENET_TX_READY) == 0) {
++	while (((status = bufdesc_read_status(bdp)) & BD_ENET_TX_READY) == 0) {
+ 		if (bdp == fep->cur_tx && fep->tx_full == 0)
+ 			break;
+ 
+@@ -542,7 +550,7 @@ static int fec_rx_poll(struct napi_struct *napi, int budget)
+ 	 */
+ 	bdp = fep->cur_rx;
+ 
+-	while (!((status = bdp->cbd_sc) & BD_ENET_RX_EMPTY)) {
++	while (!((status = bufdesc_read_status(bdp)) & BD_ENET_RX_EMPTY)) {
+ 		if (pkt_received >= budget)
+ 			break;
+ 		pkt_received++;
+@@ -680,7 +688,7 @@ fec_enet_rx(struct net_device *ndev)
+ 	 */
+ 	bdp = fep->cur_rx;
+ 
+-	while (!((status = bdp->cbd_sc) & BD_ENET_RX_EMPTY)) {
++	while (!((status = bufdesc_read_status(bdp)) & BD_ENET_RX_EMPTY)) {
+ 
+ 		/* Since we have allocated space to hold a complete frame,
+ 		 * the last indicator should be set.
