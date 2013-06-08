@@ -400,10 +400,10 @@ typedef struct xnhook {
 #if defined(CONFIG_XENO_OPT_WATCHDOG) || defined(CONFIG_XENO_SKIN_POSIX)
 #define xnthread_amok_p(thread)            xnthread_test_info(thread, XNAMOK)
 #define xnthread_clear_amok(thread)        xnthread_clear_info(thread, XNAMOK)
-#else /* !CONFIG_XENO_OPT_WATCHDOG */
+#else /* !CONFIG_XENO_OPT_WATCHDOG && !CONFIG_XENO_SKIN_POSIX */
 #define xnthread_amok_p(thread)            ({ (void)(thread); 0; })
 #define xnthread_clear_amok(thread)        do { (void)(thread); } while (0)
-#endif /* !CONFIG_XENO_OPT_WATCHDOG */
+#endif /* !CONFIG_XENO_OPT_WATCHDOG && !CONFIG_XENO_SKIN_POSIX */
 
 /* Class-level operations for threads. */
 static inline int xnthread_get_denormalized_prio(struct xnthread *t, int coreprio)
