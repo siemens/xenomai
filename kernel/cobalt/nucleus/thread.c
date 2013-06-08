@@ -179,13 +179,15 @@ int xnthread_init(struct xnthread *thread,
 	/* These will be filled by xnpod_start_thread() */
 	thread->imode = 0;
 	thread->entry = NULL;
-	thread->cookie = 0;
+	thread->cookie = NULL;
 
 	inith(&thread->glink);
 	initph(&thread->rlink);
 	initph(&thread->plink);
 	thread->selector = NULL;
 	initpq(&thread->claimq);
+
+	thread->privdata = NULL;
 
 	thread->sched = sched;
 	thread->init_class = sched_class;

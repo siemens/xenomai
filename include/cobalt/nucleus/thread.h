@@ -287,6 +287,9 @@ typedef struct xnthread {
 
 	struct pt_regs *regs;		/* Current register frame */
 	struct xnthread_user_window *u_window;	/* Data visible from userland. */
+
+	void *privdata;				/* Private data for extension */
+
 #ifdef CONFIG_XENO_OPT_DEBUG
 	const char *exe_path;	/* Executable path */
 	u32 proghash;		/* Hash value for exe_path */
@@ -341,6 +344,7 @@ typedef struct xnhook {
 #define xnthread_inc_rescnt(thread)        ({ (thread)->hrescnt++; })
 #define xnthread_dec_rescnt(thread)        ({ --(thread)->hrescnt; })
 #define xnthread_get_rescnt(thread)        ((thread)->hrescnt)
+#define xnthread_private(thread)           ((thread)->privdata)
 
 static inline unsigned xnthread_get_magic(struct xnthread *t)
 {
