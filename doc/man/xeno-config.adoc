@@ -29,7 +29,7 @@ SYNOPSIS
 
 *xeno-config --help*::
 
-*xeno-config* [*--version*] [*--cc*] [*--arch*] [*--prefix*] [*--xeno-cflags*] [*--xeno-ldflags*] [*--posix-cflags*] [*--posix-ldflags*] [*--lib*-dir*|*--library-dir*|*--libdir*|*--user-libdir*]
+*xeno-config* [*--version*] [*--cc*] [*--arch*] [*--prefix*] [*--skin native|posix|psos|rtdm|uitron|vrtx|vxworks*] [*--cflags*] [*--ldflags*] [*--lib***-dir*|*--library-dir*|*--libdir*|*--user-libdir*]
 
 DESCRIPTION
 ------------
@@ -65,24 +65,41 @@ May be different from the architecture of the currently running system, if cross
 *--prefix*::
 Outputs one line with the absolute path to the base Xenomai installation directory.
 
+*--skin*::
+Choose the skin for which xeno-config should print the compilation flags.
+
+*--cflags*::
+Outputs one line with the C compiler command-line options that are necessary to compile applications that use the Xenomai skin passed to the *--skin* option.
+
+*--ldflags*::
+Outputs one line with the C compiler command-line options that are necessary to link applications that use the Xenomai skin passed to the *--skin* option with the necessary libraries.
+
+
+*--lib***-dir, --library-dir, --libdir, --user-libdir*::
+Outputs one line with the absolute path to Xenomai's libraries.
+In the --lib*-dir option name, the *** is meant as a wildcard: *--lib-dir*, *--libfoo-dir* and *--libbar-dir* are all valid and synonymous options.
+
+DEPRECATED OPTIONS
+------------------
+
 *--xeno-cflags*::
-Outputs one line with the C compiler command-line options that are necessary to compile applications that use the Xenomai libraries.
+This option is deprecated, please use *--skin* and *--cflags* instead. 
+Outputs one line with the C compiler command-line options that are necessary to compile applications that use any Xenomai skin, except the posix skin.
 
 *--xeno-ldflags*::
-Outputs one line with the C compiler command-line options that are necessary to link applications against the Xenomai libraries.
+This option is deprecated, please use *--skin* and *--ldflags* instead. 
+Outputs one line with the C compiler command-line options that are necessary to link applications that use any Xenomai skin, except the posix skin, with the necessary libraries. Note that the particular *-llibskin* flag should be added to the flags returned by this option.
 
 *--posix-cflags*::
+This option is deprecated, please use *--skin posix --cflags* instead. 
 Outputs one line with the C compiler command-line options that are necessary to compile applications that use Xenomai's Posix-compatible layer library.
 
 *--posix-ldflags*::
+This option is deprecated, please use *--skin posix --ldflags* instead. 
 Outputs one line with the C compiler command-line options that are necessary to link applications against Xenomai's Posix-compatible layer library.
 
-*--lib*-dir, --library-dir, --libdir, --user-libdir*::
-Outputs one line with the absolute path to Xenomai's libraries.
-In the *--lib*-dir* option name, the *** is meant as a wildcard: *--lib-dir*, *--libfoo-dir* and *--libbar-dir* are all valid and synonymous options.
-
 ENVIRONMENT VARIABLES
-------------------------
+---------------------
 
 *DESTDIR*::
 If the *DESTDIR* variable is set, its content is prepended to the Xenomai installed directories and files names output by the
@@ -93,7 +110,7 @@ options.
 If *DESTDIR* was set when compiling and installing Xenomai, e.g. for cross-compilation, *DESTDIR* must be set to the same value before calling *xeno-config*, in order to output valid directory and file names.
 
 RETURN CODES
----------------
+------------
 
 *0*::
 Successful script execution.

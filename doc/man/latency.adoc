@@ -39,7 +39,9 @@ OPTIONS
 print histograms of min, avg, max latencies
 
 *-g <file>*::
-dump histogram to <file> in gnuplot format
+dump histogram to <file> in a format easily readable with gnuplot. An
+example script for gnuplot may be found in scripts/histo.gp in Xenomai
+sources distribution
 
 *-s*::
 print statistics of min, avg, max latencies

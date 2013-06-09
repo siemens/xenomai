@@ -37,7 +37,7 @@ OPTIONS
 --------
 Each threadspec specifies the characteristics of a thread to be created:
 
-threadspec = (rtk|rtup|rtus|rtuo)(_fp|_ufpp|_ufps)*[0-9]*
+threadspec = (rtk|rtup|rtus|rtuo)(_fp|_ufpp|_ufps)\*[0-9]*
 
 *rtk*::
 for a kernel-space real-time thread
@@ -60,7 +60,8 @@ means that the created thread will use the FPU when in primary mode\n(invalid fo
 *_ufps*::
 means that the created thread will use the FPU when in secondary mode (invalid for rtk and rtup)
 
-*"[0-9]\*" specifies the ID of the CPU where the created thread will run, 0 if unspecified*::
+*[0-9]*::
+specifies the ID of the CPU where the created thread will run, 0 if unspecified
 
 Passing no
 *threadspec*
