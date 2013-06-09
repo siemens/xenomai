@@ -246,12 +246,17 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
 /* Must be called with nklock locked, interrupts off. */
 void xnsched_zombie_hooks(struct xnthread *thread)
 {
+	struct xnpersonality *personality = thread->personality;
+
 	XENO_BUGON(NUCLEUS, thread->sched->zombie != NULL);
 	thread->sched->zombie = thread;
 
 	trace_mark(xn_nucleus, sched_finalize,
 		   "thread_out %p thread_out_name %s",
 		   thread, xnthread_name(thread));
+
+	if (personality->ops.unmap_thread)
+		personality->ops.unmap_thread(thread);
 
 	xnpod_run_hooks(&nkpod->tdeleteq, thread, "DELETE");
 

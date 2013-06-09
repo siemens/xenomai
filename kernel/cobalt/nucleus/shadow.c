@@ -238,7 +238,7 @@ static void detach_ppd(struct xnshadow_ppd *ppd)
 
 	muxid = xnshadow_ppd_muxid(ppd);
 	personality = personalities[muxid];
-	personality->ops.detach(ppd);
+	personality->ops.detach_process(ppd);
 	if (personality->module)
 		module_put(personality->module);
 }
@@ -884,6 +884,16 @@ int xnshadow_map_user(struct xnthread *thread,
 	xnthread_set_state(thread, XNMAPPED);
 	xndebug_shadow_init(thread);
 	xnarch_atomic_inc(&sys_ppd->refcnt);
+	/*
+	 * ->map_thread() handler is invoked after the TCB is fully
+	 * built, and when we know for sure that current will go
+	 * through our task-exit handler, because it has a shadow
+	 * extension and I-pipe notifications will soon be enabled for
+	 * it.
+	 */
+	if (personality->ops.map_thread)
+		personality->ops.map_thread(thread);
+
 	ipipe_enable_notifier(current);
 
 	attr.mode = 0;
@@ -1009,6 +1019,10 @@ int xnshadow_map_kernel(struct xnthread *thread, struct completion *done)
 	init_threadinfo(thread);
 	xnthread_set_state(thread, XNMAPPED);
 	xndebug_shadow_init(thread);
+
+	if (personality->ops.map_thread)
+		personality->ops.map_thread(thread);
+
 	ipipe_enable_notifier(p);
 
 	/*
@@ -1340,7 +1354,7 @@ do_bind:
 	if (sys_ppd)
 		goto muxid_eventcb;
 
-	sys_ppd = personalities[user_muxid]->ops.attach();
+	sys_ppd = personalities[user_muxid]->ops.attach_process();
 	if (IS_ERR(sys_ppd)) {
 		ret = PTR_ERR(sys_ppd);
 		goto fail;
@@ -1354,7 +1368,7 @@ do_bind:
 	if (ppd_insert(sys_ppd) == -EBUSY) {
 		/* In case of concurrent binding (which can not happen with
 		   Xenomai libraries), detach right away the second ppd. */
-		personalities[user_muxid]->ops.detach(sys_ppd);
+		personalities[user_muxid]->ops.detach_process(sys_ppd);
 		sys_ppd = NULL;
 	}
 
@@ -1373,7 +1387,7 @@ muxid_eventcb:
 	if (ppd)
 		goto eventcb_done;
 
-	ppd = personality->ops.attach();
+	ppd = personality->ops.attach_process();
 	if (IS_ERR(ppd)) {
 		ret = PTR_ERR(ppd);
 		goto fail_destroy_sys_ppd;
@@ -1391,7 +1405,7 @@ muxid_eventcb:
 		 * with Xenomai libraries), detach right away the
 		 * second ppd.
 		 */
-		personality->ops.detach(ppd);
+		personality->ops.detach_process(ppd);
 		ppd = NULL;
 	}
 
@@ -1405,7 +1419,7 @@ eventcb_done:
 		 */
 		if (ppd) {
 			ppd_remove(ppd);
-			personality->ops.detach(ppd);
+			personality->ops.detach_process(ppd);
 		}
 
 		if (personality->module)
@@ -1416,7 +1430,7 @@ eventcb_done:
 	fail_destroy_sys_ppd:
 		if (sys_ppd) {
 			ppd_remove(sys_ppd);
-			personalities[user_muxid]->ops.detach(sys_ppd);
+			personalities[user_muxid]->ops.detach_process(sys_ppd);
 		}
 	fail:
 		return ret;
@@ -1608,7 +1622,7 @@ out:
 	return pathname;
 }
 
-static struct xnshadow_ppd *xnshadow_user_attach(void)
+static struct xnshadow_ppd *user_process_attach(void)
 {
 	struct xnsys_ppd *p;
 	char *exe_path;
@@ -1652,7 +1666,7 @@ static struct xnshadow_ppd *xnshadow_user_attach(void)
 	return &p->ppd;
 }
 
-static void xnshadow_user_detach(struct xnshadow_ppd *ppd)
+static void user_process_detach(struct xnshadow_ppd *ppd)
 {
 	struct xnsys_ppd *p;
 
@@ -1683,8 +1697,8 @@ static struct xnpersonality user_personality = {
 	.nrcalls = ARRAY_SIZE(user_syscalls),
 	.syscalls = user_syscalls,
 	.ops = {
-		.attach = xnshadow_user_attach,
-		.detach = xnshadow_user_detach,
+		.attach_process = user_process_attach,
+		.detach_process = user_process_detach,
 	},
 };
 
@@ -1709,9 +1723,9 @@ EXPORT_SYMBOL_GPL(xnshadow_send_sig);
  * @internal
  * @brief Register a new interface personality.
  *
- * - ops->attach() is called when a user-space process binds to the
- *   personality, on behalf of one of its threads. The attach()
- *   handler may return:
+ * - ops->attach_process() is called when a user-space process binds
+ *   to the personality, on behalf of one of its threads. The
+ *   attach_process() handler may return:
  *
  *   . a pointer to a xnshadow_ppd structure, representing the context
  *   of the calling process for this personality;
@@ -1725,7 +1739,7 @@ EXPORT_SYMBOL_GPL(xnshadow_send_sig);
  * - ops->detach() is called on behalf of an exiting user-space
  *   process which has previously attached to the personality. This
  *   handler is passed a pointer to the per-process data received
- *   earlier from the ops->attach() handler.
+ *   earlier from the ops->attach_process() handler.
  */
 int xnshadow_register_personality(struct xnpersonality *personality)
 {
@@ -2149,6 +2163,7 @@ int ipipe_syscall_hook(struct ipipe_domain *ipd, struct pt_regs *regs)
 
 static int handle_taskexit_event(struct task_struct *p) /* p == current */
 {
+	struct xnpersonality *personality;
 	struct xnsys_ppd *sys_ppd;
 	struct xnthread *thread;
 	struct mm_struct *mm;
@@ -2169,6 +2184,10 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 	if (xnthread_test_state(thread, XNDEBUG))
 		unlock_timers();
 
+	personality = thread->personality;
+	if (personality->ops.exit_thread)
+		personality->ops.exit_thread(thread);
+
 	/* __xnpod_cleanup_thread() -> hook -> xnshadow_unmap() */
 	__xnpod_cleanup_thread(thread);
 
@@ -2181,7 +2200,7 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 			ppd_remove_mm(mm, detach_ppd);
 	}
 
-	leave_personality(thread->personality);
+	leave_personality(personality);
 	destroy_threadinfo();
 
 	return EVENT_PROPAGATE;

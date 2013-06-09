@@ -25,7 +25,6 @@
 
 struct xnthread;
 struct xnthread_user_window;
-struct xnmutex;
 struct pt_regs;
 struct timespec;
 struct timeval;
@@ -40,8 +39,11 @@ struct xnpersonality {
 	struct xnsyscall *syscalls;
 	atomic_t refcnt;
 	struct {
-		struct xnshadow_ppd *(*attach)(void);
-		void (*detach)(struct xnshadow_ppd *ppd);
+		struct xnshadow_ppd *(*attach_process)(void);
+		void (*detach_process)(struct xnshadow_ppd *ppd);
+		void (*map_thread)(struct xnthread *thread);
+		void (*exit_thread)(struct xnthread *thread);
+		void (*unmap_thread)(struct xnthread *thread);
 	} ops;
 	struct module *module;
 };

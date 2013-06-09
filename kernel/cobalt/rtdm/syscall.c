@@ -147,8 +147,8 @@ struct xnpersonality rtdm_personality = {
 	.nrcalls = ARRAY_SIZE(rtdm_syscalls),
 	.syscalls = rtdm_syscalls,
 	.ops = {
-		.attach = rtdm_process_attach,
-		.detach = rtdm_process_detach,
+		.attach_process = rtdm_process_attach,
+		.detach_process = rtdm_process_detach,
 	},
 };
 EXPORT_SYMBOL_GPL(rtdm_personality);

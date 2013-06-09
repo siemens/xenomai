@@ -354,8 +354,8 @@ struct xnpersonality cobalt_personality = {
 	.nrcalls = ARRAY_SIZE(cobalt_syscalls),
 	.syscalls = cobalt_syscalls,
 	.ops = {
-		.attach = cobalt_process_attach,
-		.detach = cobalt_process_detach,
+		.attach_process = cobalt_process_attach,
+		.detach_process = cobalt_process_detach,
 	},
 };
 EXPORT_SYMBOL_GPL(cobalt_personality);
