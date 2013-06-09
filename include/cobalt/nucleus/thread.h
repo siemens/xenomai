@@ -163,6 +163,7 @@ struct xnsched_class;
 struct xnsched_tpslot;
 union xnsched_policy_param;
 struct xnbufd;
+struct xnpersonality;
 
 struct xnthread_operations {
 	unsigned (*get_magic)(void);
@@ -170,6 +171,7 @@ struct xnthread_operations {
 
 struct xnthread_init_attr {
 	struct xnthread_operations *ops;
+	struct xnpersonality *personality;
 	xnflags_t flags;
 	const char *name;
 };
@@ -290,6 +292,8 @@ typedef struct xnthread {
 
 	void *privdata;				/* Private data for extension */
 
+	struct xnpersonality *personality;
+
 #ifdef CONFIG_XENO_OPT_DEBUG
 	const char *exe_path;	/* Executable path */
 	u32 proghash;		/* Hash value for exe_path */
@@ -345,6 +349,7 @@ typedef struct xnhook {
 #define xnthread_dec_rescnt(thread)        ({ --(thread)->hrescnt; })
 #define xnthread_get_rescnt(thread)        ((thread)->hrescnt)
 #define xnthread_private(thread)           ((thread)->privdata)
+#define xnthread_personality(thread)       ((thread)->personality)
 
 static inline unsigned xnthread_get_magic(struct xnthread *t)
 {
@@ -368,6 +373,17 @@ struct xnthread *xnthread_lookup(xnhandle_t threadh)
 {
 	struct xnthread *thread = (struct xnthread *)xnregistry_lookup(threadh);
 	return (thread && xnthread_handle(thread) == threadh) ? thread : NULL;
+}
+
+static inline struct xnpersonality *
+xnthread_set_personality(struct xnthread *thread,
+			 struct xnpersonality *personality)
+{
+	struct xnpersonality *prev = thread->personality;
+
+	thread->personality = personality;
+
+	return prev;
 }
 
 static inline void xnthread_sync_window(struct xnthread *thread)

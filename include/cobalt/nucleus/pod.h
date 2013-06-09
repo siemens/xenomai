@@ -94,7 +94,9 @@ extern u_long nktimerlat;
 
 extern cpumask_t nkaffinity;
 
-extern xnpod_t nkpod_struct;
+extern struct xnpod nkpod_struct;
+
+extern struct xnpersonality generic_personality;
 
 #ifdef CONFIG_XENO_OPT_VFILE
 int xnpod_init_proc(void);

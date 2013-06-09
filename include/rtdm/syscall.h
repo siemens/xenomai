@@ -22,7 +22,7 @@
 
 #include <asm/xenomai/syscall.h>
 
-#define RTDM_SKIN_MAGIC		0x5254444D
+#define RTDM_BINDING_MAGIC	0x5254444D
 
 #define sc_rtdm_fdcount		0
 #define sc_rtdm_open		1
@@ -44,7 +44,7 @@ int __init rtdm_syscall_init(void);
 
 static inline void rtdm_syscall_cleanup(void)
 {
-	xnshadow_unregister_interface(__rtdm_muxid);
+	xnshadow_unregister_personality(__rtdm_muxid);
 }
 
 #endif /* __KERNEL__ */

@@ -95,7 +95,6 @@ static inline int xnsynch_fast_release(xnarch_atomic_t *fastlock,
 
 struct xnthread;
 struct xnsynch;
-struct xnmutex;
 
 typedef struct xnsynch {
 

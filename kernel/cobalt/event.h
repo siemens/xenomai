@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _POSIX_EVENT_H
-#define _POSIX_EVENT_H
+#ifndef _COBALT_EVENT_H
+#define _COBALT_EVENT_H
 
 #define COBALT_EVENT_PENDED  0x1
 
@@ -65,4 +65,4 @@ void cobalt_event_pkg_cleanup(void);
 
 #endif /* __KERNEL__ */
 
-#endif /* !_POSIX_EVENT_H */
+#endif /* !_COBALT_EVENT_H */

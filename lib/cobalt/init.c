@@ -103,7 +103,7 @@ static int bind_interface(void)
 	f = &breq.feat_ret;
 	breq.feat_req = XENOMAI_FEAT_DEP;
 	breq.abi_rev = XENOMAI_ABI_REV;
-	muxid = XENOMAI_SYSBIND(COBALT_SKIN_MAGIC, &breq);
+	muxid = XENOMAI_SYSBIND(COBALT_BINDING_MAGIC, &breq);
 
 	signal(SIGILL, old_sigill_handler);
 
@@ -171,7 +171,7 @@ void __init_cobalt_interface(void)
 
 	breq.feat_req = XENOMAI_FEAT_DEP;
 	breq.abi_rev = XENOMAI_ABI_REV;
-	muxid = XENOMAI_SYSBIND(RTDM_SKIN_MAGIC, &breq);
+	muxid = XENOMAI_SYSBIND(RTDM_BINDING_MAGIC, &breq);
 	if (muxid > 0) {
 		__rtdm_muxid = __xn_mux_shifted_id(muxid);
 		__rtdm_fd_start = FD_SETSIZE - XENOMAI_SKINCALL0(__rtdm_muxid,

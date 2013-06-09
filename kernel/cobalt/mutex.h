@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _POSIX_MUTEX_H
-#define _POSIX_MUTEX_H
+#ifndef _COBALT_MUTEX_H
+#define _COBALT_MUTEX_H
 
 #include <pthread.h>
 #include <asm/xenomai/atomic.h>
@@ -103,10 +103,10 @@ static inline int cobalt_mutex_release(xnthread_t *cur, cobalt_mutex_t *mutex)
 	if (!cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, struct cobalt_mutex))
 		 return -EINVAL;
 
-#if XENO_DEBUG(POSIX)
+#if XENO_DEBUG(COBALT)
 	if (mutex->owningq != cobalt_kqueues(mutex->attr.pshared))
 		return -EPERM;
-#endif /* XENO_DEBUG(POSIX) */
+#endif /* XENO_DEBUG(COBALT) */
 
 	need_resched = 0;
 	datp = container_of(mutex->synchbase.fastlock, struct mutex_dat, owner);
@@ -187,4 +187,4 @@ static inline xnarch_atomic_t *mutex_get_ownerp(struct __shadow_mutex *shadow)
 
 #endif /* __KERNEL__ */
 
-#endif /* !_POSIX_MUTEX_H */
+#endif /* !_COBALT_MUTEX_H */

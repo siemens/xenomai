@@ -39,7 +39,7 @@
  * uses (see pthread_mutexattr_setprotocol()) and whether it may be shared
  * between several processes (see pthread_mutexattr_setpshared()).
  *
- * By default, Xenomai POSIX skin mutexes are of the normal type, use no
+ * By default, Cobalt mutexes are of the normal type, use no
  * priority protocol and may not be shared between several processes.
  *
  * Note that only pthread_mutex_init() may be used to initialize a mutex, using
@@ -124,10 +124,10 @@ static inline int cobalt_mutex_acquire(xnthread_t *cur,
 	if (xnsynch_owner_check(&mutex->synchbase, cur) == 0)
 		return -EBUSY;
 
-#if XENO_DEBUG(POSIX)
+#if XENO_DEBUG(COBALT)
 	if (mutex->owningq != cobalt_kqueues(mutex->attr.pshared))
 		return -EPERM;
-#endif /* XENO_DEBUG(POSIX) */
+#endif /* XENO_DEBUG(COBALT) */
 
 	return cobalt_mutex_acquire_unchecked(cur, mutex, timed, abs_to);
 }
@@ -151,10 +151,11 @@ static inline int cobalt_mutex_timedlock_break(cobalt_mutex_t *mutex,
 	switch(mutex->attr.type) {
 	case PTHREAD_MUTEX_NORMAL:
 		/* Attempting to relock a normal mutex, deadlock. */
-#if XENO_DEBUG(POSIX)
-		printk(KERN_WARNING
-		       "POSIX: thread %s deadlocks on non-recursive mutex\n", cur->name);
-#endif /* XENO_DEBUG(POSIX) */
+#if XENO_DEBUG(COBALT)
+		printk(XENO_WARN
+		       "thread %s deadlocks on non-recursive mutex\n",
+		       cur->name);
+#endif /* XENO_DEBUG(COBALT) */
 		xnlock_get_irqsave(&nklock, s);
 		for (;;) {
 			if (timed)
@@ -397,10 +398,10 @@ void cobalt_mutexq_cleanup(struct cobalt_kqueues *q)
 	while ((holder = getheadq(&q->mutexq)) != NULL) {
 		xnlock_put_irqrestore(&nklock, s);
 		cobalt_mutex_destroy_inner(link2mutex(holder), q);
-#if XENO_DEBUG(POSIX)
+#if XENO_DEBUG(COBALT)
 		printk(XENO_INFO "deleting Cobalt mutex %p\n",
 		       link2mutex(holder));
-#endif /* XENO_DEBUG(POSIX) */
+#endif /* XENO_DEBUG(COBALT) */
 		xnlock_get_irqsave(&nklock, s);
 	}
 

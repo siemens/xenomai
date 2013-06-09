@@ -156,6 +156,7 @@ void xnsched_init(struct xnsched *sched, int cpu)
 	attr.flags = XNROOT | XNSTARTED | XNFPU;
 	attr.name = root_name;
 	attr.ops = NULL;
+	attr.personality = &generic_personality;
 	param.idle.prio = XNSCHED_IDLE_PRIO;
 
 	xnthread_init(&sched->rootcb, &attr,

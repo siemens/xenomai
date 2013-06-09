@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _POSIX_MONITOR_H
-#define _POSIX_MONITOR_H
+#ifndef _COBALT_MONITOR_H
+#define _COBALT_MONITOR_H
 
 #include <asm/xenomai/atomic.h>
 
@@ -72,4 +72,4 @@ void cobalt_monitor_pkg_cleanup(void);
 
 #endif /* __KERNEL__ */
 
-#endif /* !_POSIX_MONITOR_H */
+#endif /* !_COBALT_MONITOR_H */

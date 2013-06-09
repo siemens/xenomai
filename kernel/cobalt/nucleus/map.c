@@ -26,13 +26,13 @@
  *
  * A map is a simple indexing structure which associates unique
  * integer keys with pointers to objects.  The current implementation
- * supports reservation, for naming/indexing the real-time objects
- * skins create, either on a fixed, user-provided integer (i.e. a
- * reserved key value), or by drawing the next available key
- * internally if the caller did not specify any fixed key. For
- * instance, in some given map, the key space ranging from 0 to 255
- * could be reserved for fixed keys, whilst the range from 256 to 511
- * could be available for drawing free keys dynamically.
+ * supports reservation, for naming/indexing objects, either on a
+ * fixed, user-provided integer (i.e. a reserved key value), or by
+ * drawing the next available key internally if the caller did not
+ * specify any fixed key. For instance, in some given map, the key
+ * space ranging from 0 to 255 could be reserved for fixed keys,
+ * whilst the range from 256 to 511 could be available for drawing
+ * free keys dynamically.
  *
  * A maximum of 1024 unique keys per map is supported on 32bit
  * machines.

@@ -431,12 +431,12 @@ void cobalt_reg_pkg_cleanup(void)
 
 	for (i = 0; i < cobalt_reg.maxfds; i++)
 		if (cobalt_reg.descs[i]) {
-#if XENO_DEBUG(POSIX)
+#if XENO_DEBUG(COBALT)
 			printk(XENO_INFO "releasing descriptor %d\n", i);
-#endif /* XENO_DEBUG(POSIX) */
+#endif /* XENO_DEBUG(COBALT) */
 			cobalt_desc_destroy(cobalt_reg.descs[i]);
 		}
-#if XENO_DEBUG(POSIX)
+#if XENO_DEBUG(COBALT)
 	for (i = 0; i < cobalt_reg.buckets_count; i++) {
 		cobalt_node_t *node;
 		for (node = cobalt_reg.node_buckets[i];
@@ -445,7 +445,7 @@ void cobalt_reg_pkg_cleanup(void)
 		  printk(XENO_WARN "node \"%s\" left aside\n",
 			 node->name);
 	}
-#endif /* XENO_DEBUG(POSIX) */
+#endif /* XENO_DEBUG(COBALT) */
 
 	kfree(cobalt_reg.node_buckets);
 }

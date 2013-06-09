@@ -483,10 +483,10 @@ static inline int sem_trywait_internal(cobalt_sem_t *sem)
 	if (sem->magic != COBALT_SEM_MAGIC)
 		return -EINVAL;
 
-#if XENO_DEBUG(POSIX)
+#if XENO_DEBUG(COBALT)
 	if (sem->owningq != sem_kqueue(sem))
 		return -EPERM;
-#endif /* XENO_DEBUG(POSIX) */
+#endif /* XENO_DEBUG(COBALT) */
 
 	if (sem->value == 0)
 		return -EAGAIN;
@@ -566,10 +566,10 @@ sem_timedwait_internal(cobalt_sem_t *sem, int timed, xnticks_t to)
  * zero, the calling thread is suspended until the semaphore is
  * posted, or a signal is delivered to the calling thread.
  *
- * This service is a cancellation point for Xenomai POSIX skin threads (created
- * with the pthread_create() service). When such a thread is cancelled while
- * blocked in a call to this service, the semaphore state is left unchanged
- * before the cancellation cleanup handlers are called.
+ * This service is a cancellation point for Cobalt threads (created
+ * with the pthread_create() service). When such a thread is cancelled
+ * while blocked in a call to this service, the semaphore state is
+ * left unchanged before the cancellation cleanup handlers are called.
  *
  * @param sem the semaphore to be decremented.
  *
@@ -657,10 +657,10 @@ int sem_post_inner(cobalt_sem_t *sem, struct cobalt_kqueues *ownq, int bcast)
 	if (sem->magic != COBALT_SEM_MAGIC)
 		return -EINVAL;
 
-#if XENO_DEBUG(POSIX)
+#if XENO_DEBUG(COBALT)
 	if (ownq && ownq != sem_kqueue(sem))
 		return -EPERM;
-#endif /* XENO_DEBUG(POSIX) */
+#endif /* XENO_DEBUG(COBALT) */
 
 	if (sem->value == SEM_VALUE_MAX)
 		return -EINVAL;
@@ -1040,9 +1040,10 @@ static void usem_cleanup(cobalt_assoc_t *assoc)
 	cobalt_usem_t *usem = assoc2usem(assoc);
 	nsem_t *nsem = sem2named_sem(sem);
 
-#if XENO_DEBUG(POSIX)
-	printk(KERN_INFO "closing Cobalt semaphore \"%s\"\n", nsem->nodebase.name);
-#endif /* XENO_DEBUG(POSIX) */
+#if XENO_DEBUG(COBALT)
+	printk(XENO_INFO "closing Cobalt semaphore \"%s\"\n",
+	       nsem->nodebase.name);
+#endif /* XENO_DEBUG(COBALT) */
 	sem_close(&nsem->descriptor.shadow_sem);
 	xnfree(usem);
 }
@@ -1063,13 +1064,13 @@ void cobalt_semq_cleanup(struct cobalt_kqueues *q)
 		cobalt_sem_t *sem = link2sem(holder);
 		cobalt_node_t *node;
 		xnlock_put_irqrestore(&nklock, s);
-#if XENO_DEBUG(POSIX)
+#if XENO_DEBUG(COBALT)
 		if (sem->flags & SEM_NAMED)
 			printk(XENO_INFO "unlinking Cobalt semaphore \"%s\"\n",
 			       sem2named_sem(sem)->nodebase.name);
 		else
 			printk(XENO_INFO "deleting Cobalt semaphore %p\n", sem);
-#endif /* XENO_DEBUG(POSIX) */
+#endif /* XENO_DEBUG(COBALT) */
 		xnlock_get_irqsave(&nklock, s);
 		if (sem->flags & SEM_NAMED)
 			cobalt_node_remove(&node,

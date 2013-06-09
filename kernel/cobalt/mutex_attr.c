@@ -156,8 +156,8 @@ pthread_mutexattr_gettype(const pthread_mutexattr_t * attr, int *type)
  * mutex.
  *
  * The @a PTHREAD_MUTEX_DEFAULT default @a type is the same as @a
- * PTHREAD_MUTEX_NORMAL. Note that using a Xenomai POSIX skin recursive mutex
- * with a Xenomai POSIX skin condition variable is safe (see pthread_cond_wait()
+ * PTHREAD_MUTEX_NORMAL. Note that using a Cobalt recursive mutex with
+ * a Cobalt condition variable is safe (see pthread_cond_wait()
  * documentation).
  *
  * @param attr an initialized mutex attributes object,

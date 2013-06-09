@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _POSIX_TIMER_H
-#define _POSIX_TIMER_H
+#ifndef _COBALT_TIMER_H
+#define _COBALT_TIMER_H
 
 #include "thread.h"        /* For struct itimerspec. */
 
@@ -54,4 +54,4 @@ int cobalt_timer_pkg_init(void);
 
 void cobalt_timer_pkg_cleanup(void);
 
-#endif /* !_POSIX_TIMER_H */
+#endif /* !_COBALT_TIMER_H */

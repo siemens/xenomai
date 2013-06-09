@@ -16,11 +16,11 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _POSIX_CANCEL_H
-#define _POSIX_CANCEL_H
+#ifndef _COBALT_CANCEL_H
+#define _COBALT_CANCEL_H
 
 void cobalt_cancel_init_thread(pthread_t thread);
 
 void cobalt_cancel_cleanup_thread(pthread_t thread);
 
-#endif /* !_POSIX_CANCEL_H */
+#endif /* !_COBALT_CANCEL_H */

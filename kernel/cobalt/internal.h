@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _POSIX_INTERNAL_H
-#define _POSIX_INTERNAL_H
+#ifndef _COBALT_INTERNAL_H
+#define _COBALT_INTERNAL_H
 
 #include <errno.h>
 #include <pthread.h>
@@ -39,8 +39,8 @@
 #include <asm/xenomai/arith.h>
 #include "registry.h"
 
-#ifndef CONFIG_XENO_OPT_DEBUG_POSIX
-#define CONFIG_XENO_OPT_DEBUG_POSIX 0
+#ifndef CONFIG_XENO_OPT_DEBUG_COBALT
+#define CONFIG_XENO_OPT_DEBUG_COBALT 0
 #endif
 
 #define COBALT_MAGIC(n) (0x8686##n##n)
@@ -177,4 +177,4 @@ static inline int clock_flag(int flag, clockid_t clock_id)
 int cobalt_mq_select_bind(mqd_t fd, struct xnselector *selector,
 			 unsigned type, unsigned index);
 
-#endif /* !_POSIX_INTERNAL_H */
+#endif /* !_COBALT_INTERNAL_H */

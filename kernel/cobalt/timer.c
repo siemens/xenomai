@@ -133,7 +133,7 @@ static inline int timer_create(clockid_t clockid,
 	 * behavior at all. Instead of sending a signal to a specific
 	 * thread upon expiry, it posts a semaphore whose address is
 	 * fetched from sigev_value.sival_ptr. SIGEV_THREAD_ID is not
-	 * officially supported by the POSIX skin.
+	 * officially supported by the Cobalt interface.
 	 */
 	signo = SIGALRM;
 	if (evp) {
@@ -258,12 +258,13 @@ cobalt_timer_gettime_inner(struct cobalt_timer *__restrict__ timer,
  * timerid. If @a ovalue is not @a NULL, the current expiration date and reload
  * value are stored at the address @a ovalue as with timer_gettime().
  *
- * If the member @a it_value of the @b itimerspec structure at @a value is zero,
- * the timer is stopped, otherwise the timer is started. If the member @a
- * it_interval is not zero, the timer is periodic. The current thread must be a
- * POSIX skin thread (created with pthread_create()) and will be notified via
- * signal of timer expirations. Note that these notifications will cause
- * user-space threads to switch to secondary mode.
+ * If the member @a it_value of the @b itimerspec structure at @a
+ * value is zero, the timer is stopped, otherwise the timer is
+ * started. If the member @a it_interval is not zero, the timer is
+ * periodic. The current thread must be a Cobalt thread (created with
+ * pthread_create()) and will be notified via signal of timer
+ * expirations. Note that these notifications will cause user-space
+ * threads to switch to secondary mode.
  *
  * When starting the timer, if @a flags is TIMER_ABSTIME, the expiration value
  * is interpreted as an absolute date of the clock passed to the timer_create()
@@ -290,9 +291,9 @@ cobalt_timer_gettime_inner(struct cobalt_timer *__restrict__ timer,
  * - EPERM, the timer @a timerid does not belong to the current process.
  *
  * @par Valid contexts:
- * - Xenomai kernel-space POSIX skin thread,
+ * - Cobalt kernel-space thread,
  * - kernel-space thread cancellation cleanup routine,
- * - Xenomai POSIX skin user-space thread (switches to primary mode),
+ * - Cobalt user-space thread (switches to primary mode),
  * - user-space thread cancellation cleanup routine.
  *
  * @see
@@ -336,12 +337,12 @@ timer_settime(timer_t timerid, int flags,
 		goto unlock_and_error;
 	}
 
-#if XENO_DEBUG(POSIX)
+#if XENO_DEBUG(COBALT)
 	if (timer->owningq != cobalt_kqueues(0)) {
 		err = -EPERM;
 		goto unlock_and_error;
 	}
-#endif /* XENO_DEBUG(POSIX) */
+#endif /* XENO_DEBUG(COBALT) */
 
 	if (ovalue)
 		cobalt_timer_gettime_inner(timer, ovalue);
@@ -434,12 +435,12 @@ static inline int timer_gettime(timer_t timerid, struct itimerspec *value)
 		goto unlock_and_error;
 	}
 
-#if XENO_DEBUG(POSIX)
+#if XENO_DEBUG(COBALT)
 	if (timer->owningq != cobalt_kqueues(0)) {
 		err = -EPERM;
 		goto unlock_and_error;
 	}
-#endif /* XENO_DEBUG(POSIX) */
+#endif /* XENO_DEBUG(COBALT) */
 
 	cobalt_timer_gettime_inner(timer, value);
 
@@ -550,12 +551,12 @@ int cobalt_timer_getoverrun(timer_t timerid)
 		goto unlock_and_error;
 	}
 
-#if XENO_DEBUG(POSIX)
+#if XENO_DEBUG(COBALT)
 	if (timer->owningq != cobalt_kqueues(0)) {
 		err = -EPERM;
 		goto unlock_and_error;
 	}
-#endif /* XENO_DEBUG(POSIX) */
+#endif /* XENO_DEBUG(COBALT) */
 
 	overruns = timer->overruns;
 
@@ -596,9 +597,9 @@ void cobalt_timerq_cleanup(struct cobalt_kqueues *q)
 		timer_t tm = (timer_t) (link2tm(holder, link) - timer_pool);
 		cobalt_timer_delete_inner(tm, q, 1);
 		xnlock_put_irqrestore(&nklock, s);
-#if XENO_DEBUG(POSIX)
+#if XENO_DEBUG(COBALT)
 		printk(XENO_INFO "deleting Cobalt timer %u\n", (unsigned)tm);
-#endif /* XENO_DEBUG(POSIX) */
+#endif /* XENO_DEBUG(COBALT) */
 		xnlock_get_irqsave(&nklock, s);
 	}
 

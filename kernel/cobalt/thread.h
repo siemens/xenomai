@@ -17,8 +17,8 @@
  */
 
 
-#ifndef _POSIX_THREAD_H
-#define _POSIX_THREAD_H
+#ifndef _COBALT_THREAD_H
+#define _COBALT_THREAD_H
 
 #include "internal.h"
 
@@ -44,12 +44,11 @@ struct cobalt_thread {
 	({								\
 		xnthread_t *_taddr = (taddr);				\
 		(_taddr							\
-		 ? ((xnthread_get_magic(_taddr) == COBALT_SKIN_MAGIC)	\
+		 ? ((xnthread_get_magic(_taddr) == COBALT_BINDING_MAGIC)	\
 		    ? (container_of(_taddr, struct cobalt_thread, threadbase)) \
 		    : NULL)						\
 		 : NULL);						\
 	})
-
 
 	xnholder_t link;	/* Link in cobalt_threadq */
 	xnqueue_t *container;
@@ -128,4 +127,6 @@ void cobalt_thread_pkg_init(u_long rrperiod);
 /* round-robin period. */
 extern xnticks_t cobalt_time_slice;
 
-#endif /* !_POSIX_THREAD_H */
+extern struct xnpersonality cobalt_personality;
+
+#endif /* !_COBALT_THREAD_H */

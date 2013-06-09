@@ -23,8 +23,8 @@
  * Thread cancellation.
  *
  * Cancellation is the mechanism by which a thread can terminate the execution
- * of a Xenomai POSIX skin thread (created with pthread_create()). More
- * precisely, a thread can send a cancellation request to a Xenomai POSIX skin
+ * of a Cobalt thread (created with pthread_create()). More
+ * precisely, a thread can send a cancellation request to a Cobalt
  * thread and depending on its cancelability type (see pthread_setcanceltype())
  * and state (see pthread_setcancelstate()), the target thread can then either
  * ignore the request, honor it immediately, or defer it till it reaches a
@@ -125,9 +125,9 @@ int pthread_cancel(pthread_t thread)
  * Register a cleanup handler to be executed at the time of cancellation.
  *
  * This service registers the given @a routine to be executed a the time of
- * cancellation of the calling thread, if this thread is a Xenomai POSIX skin
+ * cancellation of the calling thread, if this thread is a Cobalt
  * thread (i.e. created with the pthread_create() service). If the caller
- * context is invalid (not a Xenomai POSIX skin thread), this service has no
+ * context is invalid (not a Cobalt thread), this service has no
  * effect.
  *
  * If allocation from the system heap fails (because the system heap size is to
@@ -142,8 +142,8 @@ int pthread_cancel(pthread_t thread)
  * @param arg the argument associated with this routine.
  *
  * @par Valid contexts:
- * - Xenomai POSIX skin kernel-space thread,
- * - Xenomai POSIX skin user-space thread (switches to primary mode).
+ * - Cobalt kernel-space thread,
+ * - Cobalt user-space thread (switches to primary mode).
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cleanup_push.html">
@@ -185,11 +185,11 @@ void pthread_cleanup_push(cleanup_routine_t * routine, void *arg)
 /**
  * Unregister the last registered cleanup handler.
  *
- * If the calling thread is a Xenomai POSIX skin thread (i.e. created with
+ * If the calling thread is a Cobalt thread (i.e. created with
  * pthread_create()), this service unregisters the last routine which was
  * registered with pthread_cleanup_push() and call it if @a execute is not null.
  *
- * If the caller context is invalid (not a Xenomai POSIX skin thread), this
+ * If the caller context is invalid (not a Cobalt thread), this
  * service has no effect.
  *
  * This service may be called at any place, but for maximal portability, should
@@ -200,8 +200,8 @@ void pthread_cleanup_push(cleanup_routine_t * routine, void *arg)
  * executed before it is unregistered.
  *
  * @par Valid contexts:
- * - Xenomai POSIX skin kernel-space thread,
- * - Xenomai POSIX skin user-space thread (switches to primary mode).
+ * - Cobalt kernel-space thread,
+ * - Cobalt user-space thread (switches to primary mode).
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cleanup_pop.html">
@@ -248,7 +248,7 @@ void pthread_cleanup_pop(int execute)
  *
  * This service atomically sets the cancelability type of the calling thread,
  * and return its previous value at the address @a oldtype_ptr, if this thread
- * is a Xenomai POSIX skin thread (i.e. was created with the pthread_create()
+ * is a Cobalt thread (i.e. was created with the pthread_create()
  * service).
  *
  * The cancelability type of a POSIX thread may be:
@@ -268,8 +268,8 @@ void pthread_cleanup_pop(int execute)
  * - EPERM, the caller context is invalid.
  *
  * @par Valid contexts:
- * - Xenomai POSIX skin kernel-space thread,
- * - Xenomai POSIX skin user-space thread (switches to primary mode).
+ * - Cobalt kernel-space thread,
+ * - Cobalt user-space thread (switches to primary mode).
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setcanceltype.html">
@@ -317,7 +317,7 @@ int pthread_setcanceltype(int type, int *oldtype_ptr)
  *
  * This service atomically set the cancelability state of the calling thread and
  * returns its previous value at the address @a oldstate_ptr, if the calling
- * thread is a Xenomai POSIX skin thread (i.e. created with the pthread_create
+ * thread is a Cobalt thread (i.e. created with the pthread_create
  * service).
  *
  * The cancelability state of a POSIX thread may be:
@@ -337,8 +337,8 @@ int pthread_setcanceltype(int type, int *oldtype_ptr)
  * - EPERM, the caller context is invalid.
  *
  * @par Valid contexts:
- * - Xenomai POSIX skin kernel-space thread,
- * - Xenomai POSIX skin user-space thread (switches to primary mode).
+ * - Cobalt kernel-space thread,
+ * - Cobalt user-space thread (switches to primary mode).
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setcancelstate.html">

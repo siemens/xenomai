@@ -60,6 +60,7 @@ extern unsigned int devname_hashtab_size;
 extern unsigned int protocol_hashtab_size;
 extern struct list_head *rtdm_named_devices;
 extern struct list_head *rtdm_protocol_devices;
+extern struct xnpersonality rtdm_personality;
 
 extern int rtdm_initialised;
 

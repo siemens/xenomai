@@ -22,7 +22,7 @@
  *
  * Clocks and timers services.
  *
- * Xenomai POSIX skin supports two clocks:
+ * Cobalt supports three clocks:
  *
  * CLOCK_REALTIME maps to the nucleus system clock, keeping time as the amount
  * of time since the Epoch, with a resolution of one nanosecond.

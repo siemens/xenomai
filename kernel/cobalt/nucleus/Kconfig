@@ -312,8 +312,8 @@ config XENO_OPT_RTDM_FILDES
 	This option defines the maximum number of RTDM file
 	descriptors which can be opened at the same time. RTDM file
 	descriptors are a global resource all applications share,
-	either via the RTDM skin directly or via the embedded services
-	of the POSIX skin.
+	either via RTDM directly or via the embedded services of the
+	Cobalt API.
 
 endmenu
 
@@ -432,14 +432,13 @@ config XENO_OPT_WATCHDOG_TIMEOUT
 
 	Watchdog timeout value (in seconds).
 
-config XENO_OPT_DEBUG_POSIX
-	bool "POSIX cleanup checks"
+config XENO_OPT_DEBUG_COBALT
+	bool "Cobalt cleanup checks"
 	default n
 	help
 
-	When enabled, this option makes the skin warn about not
-	properly cleaned up POSIX objects it detects on process
-	termination.
+	When enabled, this option makes the Cobalt API warn about
+	auto-clean operations executed upon application termination.
 
 config XENO_OPT_DEBUG_RTDM
 	bool "RTDM debugging checks"

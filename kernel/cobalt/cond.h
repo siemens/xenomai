@@ -16,9 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
-#ifndef _POSIX_COND_H
-#define _POSIX_COND_H
+#ifndef _COBALT_COND_H
+#define _COBALT_COND_H
 
 #include <pthread.h>
 
@@ -134,4 +133,4 @@ void cobalt_cond_pkg_cleanup(void);
 
 #endif /* __KERNEL__ */
 
-#endif /* !_POSIX_COND_H */
+#endif /* !_COBALT_COND_H */

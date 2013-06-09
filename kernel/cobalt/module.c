@@ -17,10 +17,10 @@
  */
 
 /**
- * @defgroup posix COBALT/posix skin.
+ * @defgroup posix Cobalt/POSIX real-time API.
  *
- * Xenomai POSIX skin is an implementation of a small subset of the Single
- * Unix specification over Xenomai generic RTOS core.
+ * The Cobalt interface is an implementation of a small subset of the
+ * Single Unix specification over Xenomai generic RTOS core.
  *
  * The following table gives equivalence between Alchemy services and
  * Cobalt services.

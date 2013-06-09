@@ -38,6 +38,7 @@
 #include <linux/unistd.h>
 #include <linux/wait.h>
 #include <linux/init.h>
+#include <linux/module.h>
 #include <linux/sched.h>
 #include <linux/kthread.h>
 #include <linux/mman.h>
@@ -73,11 +74,11 @@ static int xn_gid_arg = -1;
 module_param_named(xenomai_gid, xn_gid_arg, int, 0644);
 MODULE_PARM_DESC(xenomai_gid, "GID of the group with access to Xenomai services");
 
-struct xnskin_slot {
-	struct xnskin_props *props;
-} skins[XENOMAI_SKINS_NR];
+#define PERSONALITIES_NR  4
 
-static int nucleus_muxid = -1;
+struct xnpersonality *personalities[PERSONALITIES_NR];
+
+static int user_muxid = -1;
 
 static DEFINE_SEMAPHORE(registration_mutex);
 
@@ -164,7 +165,7 @@ static int ppd_insert(struct xnshadow_ppd *holder)
 	return 0;
 }
 
-/* will be called by skin code, nklock locked irqs off. */
+/* nklock locked, irqs off. */
 static struct xnshadow_ppd *ppd_lookup(unsigned muxid, struct mm_struct *mm)
 {
 	struct xnshadow_ppd_key key;
@@ -232,8 +233,14 @@ static inline void ppd_remove_mm(struct mm_struct *mm,
 
 static void detach_ppd(struct xnshadow_ppd *ppd)
 {
-	unsigned int muxid = xnshadow_ppd_muxid(ppd);
-	skins[muxid].props->ops.detach(ppd);
+	struct xnpersonality *personality;
+	unsigned int muxid;
+
+	muxid = xnshadow_ppd_muxid(ppd);
+	personality = personalities[muxid];
+	personality->ops.detach(ppd);
+	if (personality->module)
+		module_put(personality->module);
 }
 
 struct xnvdso *nkvdso;
@@ -284,6 +291,23 @@ static inline void unlock_timers(void)
 {
 	if (xnarch_atomic_dec_and_test(&nkpod->timerlck))
 		clrbits(nkclock.status, XNTBLCK);
+}
+
+static int enter_personality(struct xnpersonality *personality)
+{
+	if (personality->module && !try_module_get(personality->module))
+		return -ENOSYS;
+
+	xnarch_atomic_inc(&personality->refcnt);
+
+	return 0;
+}
+
+static void leave_personality(struct xnpersonality *personality)
+{
+	xnarch_atomic_dec(&personality->refcnt);
+	if (personality->module)
+		module_put(personality->module);
 }
 
 struct lostage_wakeup {
@@ -784,6 +808,7 @@ static inline void destroy_threadinfo(void)
 int xnshadow_map_user(struct xnthread *thread,
 		      unsigned long __user *u_window_offset)
 {
+	struct xnpersonality *personality = thread->personality;
 	struct xnthread_user_window *u_window;
 	struct task_struct *p = current;
 	struct xnthread_start_attr attr;
@@ -802,6 +827,10 @@ int xnshadow_map_user(struct xnthread *thread,
 	if (!access_wok(u_window_offset, sizeof(*u_window_offset)))
 		return -EFAULT;
 
+	ret = enter_personality(personality);
+	if (ret)
+		return ret;
+
 #ifdef CONFIG_MMU
 	if ((p->mm->def_flags & VM_LOCKED) == 0) {
 		siginfo_t si;
@@ -813,8 +842,10 @@ int xnshadow_map_user(struct xnthread *thread,
 		send_sig_info(SIGDEBUG, &si, p);
 	} else {
 		ret = __ipipe_disable_ondemand_mappings(p);
-		if (ret)
+		if (ret) {
+			leave_personality(personality);
 			return ret;
+		}
 	}
 #endif /* CONFIG_MMU */
 
@@ -824,8 +855,10 @@ int xnshadow_map_user(struct xnthread *thread,
 
 	sem_heap = &sys_ppd->sem_heap;
 	u_window = xnheap_alloc(sem_heap, sizeof(*u_window));
-	if (u_window == NULL)
+	if (u_window == NULL) {
+		leave_personality(personality);
 		return -ENOMEM;
+	}
 	thread->u_window = u_window;
 	__xn_put_user(xnheap_mapped_offset(sem_heap, u_window), u_window_offset);
 
@@ -945,6 +978,7 @@ static inline void wakeup_parent(struct completion *done)
  */
 int xnshadow_map_kernel(struct xnthread *thread, struct completion *done)
 {
+	struct xnpersonality *personality = thread->personality;
 	struct task_struct *p = current;
 	cpumask_t affinity;
 	int ret;
@@ -955,6 +989,10 @@ int xnshadow_map_kernel(struct xnthread *thread, struct completion *done)
 
 	if (xnshadow_current() || xnthread_test_state(thread, XNMAPPED))
 		return -EBUSY;
+
+	ret = enter_personality(personality);
+	if (ret)
+		return ret;
 
 	thread->u_window = NULL;
 	cpus_and(affinity, p->cpus_allowed, nkaffinity);
@@ -1019,7 +1057,7 @@ void xnshadow_unmap(struct xnthread *thread)
 
 	trace_mark(xn_nucleus, shadow_unmap,
 		   "thread %p thread_name %s pid %d",
-		   thread, xnthread_name(thread), p ? p->pid : -1);
+		   thread, xnthread_name(thread), xnthread_host_pid(thread));
 
 	xnthread_clear_state(thread, XNMAPPED);
 
@@ -1225,8 +1263,8 @@ static int xnshadow_sys_bind(unsigned int magic,
 			     struct xnsysinfo __user *u_breq)
 {
 	struct xnshadow_ppd *ppd = NULL, *sys_ppd = NULL;
+	struct xnpersonality *personality;
 	unsigned long featreq, featmis;
-	struct xnskin_slot *sslt;
 	int muxid, abirev, ret;
 	struct xnbindreq breq;
 	struct xnfeatinfo *f;
@@ -1283,9 +1321,9 @@ static int xnshadow_sys_bind(unsigned int magic,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	for (muxid = 1; muxid < XENOMAI_SKINS_NR; muxid++) {
-		sslt = skins + muxid;
-		if (sslt->props && sslt->props->magic == magic)
+	for (muxid = 1; muxid < PERSONALITIES_NR; muxid++) {
+		personality = personalities[muxid];
+		if (personality && personality->magic == magic)
 			goto do_bind;
 	}
 
@@ -1293,7 +1331,7 @@ static int xnshadow_sys_bind(unsigned int magic,
 
 	return -ESRCH;
 
-      do_bind:
+do_bind:
 
 	sys_ppd = ppd_lookup(0, current->mm);
 
@@ -1302,7 +1340,7 @@ static int xnshadow_sys_bind(unsigned int magic,
 	if (sys_ppd)
 		goto muxid_eventcb;
 
-	sys_ppd = skins[0].props->ops.attach();
+	sys_ppd = personalities[user_muxid]->ops.attach();
 	if (IS_ERR(sys_ppd)) {
 		ret = PTR_ERR(sys_ppd);
 		goto fail;
@@ -1316,8 +1354,13 @@ static int xnshadow_sys_bind(unsigned int magic,
 	if (ppd_insert(sys_ppd) == -EBUSY) {
 		/* In case of concurrent binding (which can not happen with
 		   Xenomai libraries), detach right away the second ppd. */
-		skins[0].props->ops.detach(sys_ppd);
+		personalities[user_muxid]->ops.detach(sys_ppd);
 		sys_ppd = NULL;
+	}
+
+	if (personality->module && !try_module_get(personality->module)) {
+		ret = -ENOSYS;
+		goto fail_destroy_sys_ppd;
 	}
 
 muxid_eventcb:
@@ -1330,7 +1373,7 @@ muxid_eventcb:
 	if (ppd)
 		goto eventcb_done;
 
-	ppd = sslt->props->ops.attach();
+	ppd = personality->ops.attach();
 	if (IS_ERR(ppd)) {
 		ret = PTR_ERR(ppd);
 		goto fail_destroy_sys_ppd;
@@ -1348,7 +1391,7 @@ muxid_eventcb:
 		 * with Xenomai libraries), detach right away the
 		 * second ppd.
 		 */
-		sslt->props->ops.detach(ppd);
+		personality->ops.detach(ppd);
 		ppd = NULL;
 	}
 
@@ -1362,17 +1405,20 @@ eventcb_done:
 		 */
 		if (ppd) {
 			ppd_remove(ppd);
-			sslt->props->ops.detach(ppd);
+			personality->ops.detach(ppd);
 		}
+
+		if (personality->module)
+			module_put(personality->module);
 
 		ret = -ENOSYS;
 
 	fail_destroy_sys_ppd:
 		if (sys_ppd) {
 			ppd_remove(sys_ppd);
-			skins[0].props->ops.detach(sys_ppd);
+			personalities[user_muxid]->ops.detach(sys_ppd);
 		}
-	      fail:
+	fail:
 		return ret;
 	}
 
@@ -1383,8 +1429,8 @@ static int xnshadow_sys_info(int muxid, struct xnsysinfo __user *u_info)
 {
 	struct xnsysinfo info;
 
-	if (muxid < 0 || muxid > XENOMAI_SKINS_NR ||
-	    skins[muxid].props == NULL)
+	if (muxid < 0 || muxid > PERSONALITIES_NR ||
+	    personalities[muxid] == NULL)
 		return -EINVAL;
 
 	info.clockfreq = xnarch_machdata.clock_freq;
@@ -1510,19 +1556,6 @@ static int xnshadow_sys_backtrace(int nr, unsigned long *u_backtrace,
 	return 0;
 }
 
-static struct xnsysent __systab[] = {
-	SKINCALL_DEF(sc_nucleus_migrate, xnshadow_sys_migrate, current),
-	SKINCALL_DEF(sc_nucleus_arch, xnarch_local_syscall, any),
-	SKINCALL_DEF(sc_nucleus_bind, xnshadow_sys_bind, lostage),
-	SKINCALL_DEF(sc_nucleus_info, xnshadow_sys_info, lostage),
-	SKINCALL_DEF(sc_nucleus_trace, xnshadow_sys_trace, any),
-	SKINCALL_DEF(sc_nucleus_heap_info, xnshadow_sys_heap_info, lostage),
-	SKINCALL_DEF(sc_nucleus_current, xnshadow_sys_current, any),
-	SKINCALL_DEF(sc_nucleus_current_info, xnshadow_sys_current_info, shadow),
-	SKINCALL_DEF(sc_nucleus_mayday, xnshadow_sys_mayday, oneway),
-	SKINCALL_DEF(sc_nucleus_backtrace, xnshadow_sys_backtrace, current),
-};
-
 static void post_ppd_release(struct xnheap *h)
 {
 	struct xnsys_ppd *p = container_of(h, struct xnsys_ppd, sem_heap);
@@ -1575,7 +1608,7 @@ out:
 	return pathname;
 }
 
-static struct xnshadow_ppd *xnshadow_sys_attach(void)
+static struct xnshadow_ppd *xnshadow_user_attach(void)
 {
 	struct xnsys_ppd *p;
 	char *exe_path;
@@ -1614,29 +1647,44 @@ static struct xnshadow_ppd *xnshadow_sys_attach(void)
 	}
 	p->exe_path = exe_path;
 	xnarch_atomic_set(&p->refcnt, 1);
+	xnarch_atomic_inc(&personalities[user_muxid]->refcnt);
 
 	return &p->ppd;
 }
 
-static void xnshadow_sys_detach(struct xnshadow_ppd *ppd)
+static void xnshadow_user_detach(struct xnshadow_ppd *ppd)
 {
 	struct xnsys_ppd *p;
 
 	p = container_of(ppd, struct xnsys_ppd, ppd);
 	xnheap_destroy_mapped(&p->sem_heap, post_ppd_release, NULL);
+	xnarch_atomic_dec(&personalities[user_muxid]->refcnt);
 
 	if (p->exe_path)
 		kfree(p->exe_path);
 }
 
-static struct xnskin_props __props = {
-	.name = "sys",
-	.magic = 0x434F5245,
-	.nrcalls = sizeof(__systab) / sizeof(__systab[0]),
-	.systab = __systab,
+static struct xnsyscall user_syscalls[] = {
+	SKINCALL_DEF(sc_nucleus_migrate, xnshadow_sys_migrate, current),
+	SKINCALL_DEF(sc_nucleus_arch, xnarch_local_syscall, any),
+	SKINCALL_DEF(sc_nucleus_bind, xnshadow_sys_bind, lostage),
+	SKINCALL_DEF(sc_nucleus_info, xnshadow_sys_info, lostage),
+	SKINCALL_DEF(sc_nucleus_trace, xnshadow_sys_trace, any),
+	SKINCALL_DEF(sc_nucleus_heap_info, xnshadow_sys_heap_info, lostage),
+	SKINCALL_DEF(sc_nucleus_current, xnshadow_sys_current, any),
+	SKINCALL_DEF(sc_nucleus_current_info, xnshadow_sys_current_info, shadow),
+	SKINCALL_DEF(sc_nucleus_mayday, xnshadow_sys_mayday, oneway),
+	SKINCALL_DEF(sc_nucleus_backtrace, xnshadow_sys_backtrace, current),
+};
+
+static struct xnpersonality user_personality = {
+	.name = "user",
+	.magic = 0,
+	.nrcalls = ARRAY_SIZE(user_syscalls),
+	.syscalls = user_syscalls,
 	.ops = {
-		.attach = xnshadow_sys_attach,
-		.detach = xnshadow_sys_detach,
+		.attach = xnshadow_user_attach,
+		.detach = xnshadow_user_detach,
 	},
 };
 
@@ -1657,31 +1705,30 @@ void xnshadow_send_sig(xnthread_t *thread, int sig, int arg)
 EXPORT_SYMBOL_GPL(xnshadow_send_sig);
 
 /**
- * @fn int xnshadow_register_interface(struct xnskin_props *props)
+ * @fn int xnshadow_register_personality(struct xnpersonality *personality)
  * @internal
- * @brief Register a new real-time interface.
+ * @brief Register a new interface personality.
  *
  * - ops->attach() is called when a user-space process binds to the
- *   interface, on behalf of one of its threads. The attach() handler
- *   may return:
+ *   personality, on behalf of one of its threads. The attach()
+ *   handler may return:
  *
  *   . a pointer to a xnshadow_ppd structure, representing the context
- *   of the calling process for this interface;
+ *   of the calling process for this personality;
  *
  *   . a NULL pointer, meaning that no per-process structure should be
- *   attached to this process for this interface;
+ *   attached to this process for this personality;
  *
  *   . ERR_PTR(negative value) indicating an error, the binding
  *   process will then abort.
  *
  * - ops->detach() is called on behalf of an exiting user-space
- *   process which has previously attached to the interface. This
+ *   process which has previously attached to the personality. This
  *   handler is passed a pointer to the per-process data received
  *   earlier from the ops->attach() handler.
  */
-int xnshadow_register_interface(struct xnskin_props *props)
+int xnshadow_register_personality(struct xnpersonality *personality)
 {
-	struct xnskin_slot *sslt;
 	int muxid;
 	spl_t s;
 
@@ -1689,68 +1736,68 @@ int xnshadow_register_interface(struct xnskin_props *props)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	for (muxid = 0; muxid < XENOMAI_SKINS_NR; muxid++) {
-		sslt = skins + muxid;
-		if (sslt->props == NULL) {
-			sslt->props = props;
+	for (muxid = 0; muxid < PERSONALITIES_NR; muxid++) {
+		if (personalities[muxid] == NULL) {
+			xnarch_atomic_set(&personality->refcnt, 0);
+			personalities[muxid] = personality;
 			break;
 		}
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	if (muxid >= XENOMAI_SKINS_NR) {
-		up(&registration_mutex);
-		return -EAGAIN;
-	}
+	if (muxid >= PERSONALITIES_NR)
+		muxid = -EAGAIN;
 
 	up(&registration_mutex);
 
 	return muxid;
 
 }
-EXPORT_SYMBOL_GPL(xnshadow_register_interface);
+EXPORT_SYMBOL_GPL(xnshadow_register_personality);
 
 /*
- * xnshadow_unregister_interface() -- Unregister a skin/interface.
- * NOTE: an interface can be unregistered without its pod being
- * necessarily active.
+ * xnshadow_unregister_personality() -- Unregister an interface
+ * personality.
  */
-int xnshadow_unregister_interface(int muxid)
+int xnshadow_unregister_personality(int muxid)
 {
-	struct xnskin_slot *sslt;
+	struct xnpersonality *personality;
+	int ret = 0;
 	spl_t s;
 
-	if (muxid < 0 || muxid >= XENOMAI_SKINS_NR)
+	if (muxid < 0 || muxid >= PERSONALITIES_NR)
 		return -EINVAL;
-
-	sslt = skins + muxid;
 
 	down(&registration_mutex);
 
 	xnlock_get_irqsave(&nklock, s);
 
-	sslt->props = NULL;
+	personality = personalities[muxid];
+	if (xnarch_atomic_get(&personality->refcnt) > 0)
+		ret = -EBUSY;
+	else
+		personalities[muxid] = NULL;
 
 	xnlock_put_irqrestore(&nklock, s);
 
 	up(&registration_mutex);
 
-	return 0;
+	return ret;
 }
-EXPORT_SYMBOL_GPL(xnshadow_unregister_interface);
+EXPORT_SYMBOL_GPL(xnshadow_unregister_personality);
 
 /**
  * Return the per-process data attached to the calling process.
  *
  * This service returns the per-process data attached to the calling
- * process for the skin whose muxid is @a muxid. It must be called
- * with nklock locked, irqs off.
+ * process for the personality whose muxid is @a muxid. It must be
+ * called with nklock locked, irqs off.
  *
- * See xnshadow_register_interface() documentation for information on
- * the way to attach a per-process data to a process.
+ * See xnshadow_register_personality() documentation for information
+ * on the way to attach a per-process data to a process.
  *
- * @param muxid the skin muxid.
+ * @param muxid the personality muxid.
  *
  * @return the per-process data if the current context is a user-space
  * process; @return NULL otherwise.
@@ -1770,12 +1817,13 @@ EXPORT_SYMBOL_GPL(xnshadow_ppd_get);
 static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 {
 	int muxid, muxop, switched, ret, sigs;
+	struct xnpersonality *personality;
 	struct xnthread *thread;
 	unsigned long sysflags;
-	struct xnsysent *se;
+	struct xnsyscall *sc;
 
 	if (!xnpod_active_p())
-		goto no_skin;
+		goto no_personality;
 
 	xnarch_head_syscall_entry();
 
@@ -1802,14 +1850,15 @@ static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 		   thread, thread ? xnthread_name(thread) : NULL,
 		   muxid, muxop);
 
-	if (muxid < 0 || muxid > XENOMAI_SKINS_NR ||
-	    muxop < 0 || muxop >= skins[muxid].props->nrcalls) {
-		__xn_error_return(regs, -ENOSYS);
-		goto ret_handled;
-	}
+	if (muxid < 0 || muxid > PERSONALITIES_NR || muxop < 0)
+		goto bad_syscall;
 
-	se = &skins[muxid].props->systab[muxop];
-	sysflags = se->flags;
+	personality = personalities[muxid];
+	if (muxop >= personality->nrcalls)
+		goto bad_syscall;
+
+	sc = personality->syscalls + muxop;
+	sysflags = sc->flags;
 
 	if ((sysflags & __xn_exec_shadow) != 0 && thread == NULL) {
 	no_permission:
@@ -1822,10 +1871,12 @@ static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 	}
 
 	if ((sysflags & __xn_exec_conforming) != 0)
-		/* If the conforming exec bit has been set, turn the exec
-		   bitmask for the syscall into the most appropriate setup for
-		   the caller, i.e. Xenomai domain for shadow threads, Linux
-		   otherwise. */
+		/*
+		 * If the conforming exec bit is set, turn the exec
+		 * bitmask for the syscall into the most appropriate
+		 * setup for the caller, i.e. Xenomai domain for
+		 * shadow threads, Linux otherwise.
+		 */
 		sysflags |= (thread ? __xn_exec_histage : __xn_exec_lostage);
 
 	/*
@@ -1883,7 +1934,7 @@ restart:
 		 */
 	}
 
-	ret = se->svc(__xn_reg_arglist(regs));
+	ret = sc->svc(__xn_reg_arglist(regs));
 	if (ret == -ENOSYS && (sysflags & __xn_exec_adaptive) != 0) {
 		if (switched) {
 			switched = 0;
@@ -1916,7 +1967,7 @@ done:
 		}
 	}
 	if (!sigs && (sysflags & __xn_exec_switchback) != 0 && switched)
-		xnshadow_harden();	/* -EPERM will be trapped later if needed. */
+		xnshadow_harden(); /* -EPERM will be trapped later if needed. */
 
 ret_handled:
 	/* Update the stats and userland-visible state. */
@@ -1952,17 +2003,16 @@ linux_syscall:
 
 	goto propagate_syscall;
 
-no_skin:
+no_personality:
 	if (__xn_reg_mux_p(regs)) {
 		if (__xn_reg_mux(regs) == __xn_mux_code(0, sc_nucleus_bind))
 			/*
-			 * Valid exception case: we may be called to
-			 * bind to a skin which will create its own
-			 * pod through its callback routine before
-			 * returning to user-space.
+			 * Valid exception case for running a Xenomai
+			 * syscall with no attached context (yet): we
+			 * may be called to bind to a personality.
 			 */
 			goto propagate_syscall;
-
+bad_syscall:
 		printk(XENO_WARN "bad syscall %ld/%ld\n",
 		       __xn_mux_id(regs), __xn_mux_op(regs));
 
@@ -1971,8 +2021,7 @@ no_skin:
 	}
 
 	/*
-	 * Regular Linux syscall with no skin loaded -- propagate it
-	 * to the Linux kernel.
+	 * Regular Linux syscall: propagate it to the Linux kernel.
 	 */
 
 propagate_syscall:
@@ -1983,7 +2032,7 @@ static int handle_root_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 {
 	int muxid, muxop, sysflags, switched, ret, sigs;
 	struct xnthread *thread;
-	struct xnsysent *se;
+	struct xnsyscall *sc;
 
 	/*
 	 * Catch cancellation requests pending for user shadows
@@ -2014,10 +2063,10 @@ static int handle_root_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 		   xnpod_active_p() ? xnthread_name(xnpod_current_thread()) : NULL,
 		   muxid, muxop);
 
-	/* Processing a real-time skin syscall. */
+	/* Processing a Xenomai syscall. */
 
-	se = &skins[muxid].props->systab[muxop];
-	sysflags = se->flags;
+	sc = personalities[muxid]->syscalls + muxop;
+	sysflags = sc->flags;
 
 	if ((sysflags & __xn_exec_conforming) != 0)
 		sysflags |= (thread ? __xn_exec_histage : __xn_exec_lostage);
@@ -2044,7 +2093,7 @@ restart:
 		 */
 		switched = 0;
 
-	ret = se->svc(__xn_reg_arglist(regs));
+	ret = sc->svc(__xn_reg_arglist(regs));
 	if (ret == -ENOSYS && (sysflags & __xn_exec_adaptive) != 0) {
 		if (switched) {
 			switched = 0;
@@ -2132,6 +2181,7 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 			ppd_remove_mm(mm, detach_ppd);
 	}
 
+	leave_personality(thread->personality);
 	destroy_threadinfo();
 
 	return EVENT_PROPAGATE;
@@ -2442,17 +2492,17 @@ int xnshadow_mount(void)
 	for (i = 0; i < PPD_HASH_SIZE; i++)
 		initq(&ppd_hash[i]);
 
-	nucleus_muxid = xnshadow_register_interface(&__props);
-	XENO_BUGON(NUCLEUS, nucleus_muxid != 0);
+	user_muxid = xnshadow_register_personality(&user_personality);
+	XENO_BUGON(NUCLEUS, user_muxid != 0);
 
 	return 0;
 }
 
 void xnshadow_cleanup(void)
 {
-	if (nucleus_muxid >= 0) {
-		xnshadow_unregister_interface(nucleus_muxid);
-		nucleus_muxid = -1;
+	if (user_muxid >= 0) {
+		xnshadow_unregister_personality(user_muxid);
+		user_muxid = -1;
 	}
 
 	if (ppd_hash) {

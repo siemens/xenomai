@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _POSIX_SEM_H
-#define _POSIX_SEM_H
+#ifndef _COBALT_SEM_H
+#define _COBALT_SEM_H
 
 #include <nucleus/thread.h>       /* For cobalt_current_thread and
 				   cobalt_thread_t definition. */
@@ -82,4 +82,4 @@ void cobalt_sem_pkg_cleanup(void);
 #define COBALT_SEM_MAGIC (0x86860707)
 #define COBALT_NAMED_SEM_MAGIC (0x86860D0D)
 
-#endif /* !_POSIX_SEM_H */
+#endif /* !_COBALT_SEM_H */

@@ -225,7 +225,46 @@ int __cobalt_call_not_available(void)
 	return -ENOSYS;
 }
 
-static struct xnsysent __systab[] = {
+static struct xnshadow_ppd *cobalt_process_attach(void)
+{
+	struct cobalt_context *cc;
+
+	cc = kmalloc(sizeof(*cc), GFP_KERNEL);
+	if (cc == NULL)
+		return ERR_PTR(-ENOSPC);
+
+	initq(&cc->kqueues.condq);
+	initq(&cc->kqueues.mutexq);
+	initq(&cc->kqueues.semq);
+	initq(&cc->kqueues.threadq);
+	initq(&cc->kqueues.timerq);
+	initq(&cc->kqueues.monitorq);
+	initq(&cc->kqueues.eventq);
+	cobalt_assocq_init(&cc->uqds);
+	cobalt_assocq_init(&cc->usems);
+
+	return &cc->ppd;
+}
+
+static void cobalt_process_detach(struct xnshadow_ppd *ppd)
+{
+	struct cobalt_context *cc;
+
+	cc = container_of(ppd, struct cobalt_context, ppd);
+
+	cobalt_sem_usems_cleanup(cc);
+	cobalt_mq_uqds_cleanup(cc);
+	cobalt_monitorq_cleanup(&cc->kqueues);
+	cobalt_timerq_cleanup(&cc->kqueues);
+	cobalt_semq_cleanup(&cc->kqueues);
+	cobalt_mutexq_cleanup(&cc->kqueues);
+	cobalt_condq_cleanup(&cc->kqueues);
+	cobalt_eventq_cleanup(&cc->kqueues);
+
+	kfree(cc);
+}
+
+static struct xnsyscall cobalt_syscalls[] = {
 	SKINCALL_DEF(sc_cobalt_thread_create, cobalt_thread_create, init),
 	SKINCALL_DEF(sc_cobalt_thread_setschedparam_ex, cobalt_thread_setschedparam_ex, conforming),
 	SKINCALL_DEF(sc_cobalt_thread_getschedparam_ex, cobalt_thread_getschedparam_ex, any),
@@ -309,60 +348,21 @@ static struct xnsysent __systab[] = {
 	SKINCALL_DEF(sc_cobalt_sched_setconfig_np, cobalt_sched_setconfig_np, any),
 };
 
-static struct xnshadow_ppd *cobalt_process_attach(void)
-{
-	struct cobalt_context *cc;
-
-	cc = kmalloc(sizeof(*cc), GFP_KERNEL);
-	if (cc == NULL)
-		return ERR_PTR(-ENOSPC);
-
-	initq(&cc->kqueues.condq);
-	initq(&cc->kqueues.mutexq);
-	initq(&cc->kqueues.semq);
-	initq(&cc->kqueues.threadq);
-	initq(&cc->kqueues.timerq);
-	initq(&cc->kqueues.monitorq);
-	initq(&cc->kqueues.eventq);
-	cobalt_assocq_init(&cc->uqds);
-	cobalt_assocq_init(&cc->usems);
-
-	return &cc->ppd;
-}
-
-static void cobalt_process_detach(struct xnshadow_ppd *ppd)
-{
-	struct cobalt_context *cc;
-
-	cc = container_of(ppd, struct cobalt_context, ppd);
-
-	cobalt_sem_usems_cleanup(cc);
-	cobalt_mq_uqds_cleanup(cc);
-	cobalt_monitorq_cleanup(&cc->kqueues);
-	cobalt_timerq_cleanup(&cc->kqueues);
-	cobalt_semq_cleanup(&cc->kqueues);
-	cobalt_mutexq_cleanup(&cc->kqueues);
-	cobalt_condq_cleanup(&cc->kqueues);
-	cobalt_eventq_cleanup(&cc->kqueues);
-
-	kfree(cc);
-}
-
-static struct xnskin_props __props = {
-	.name = "posix",
-	.magic = COBALT_SKIN_MAGIC,
-	.nrcalls = sizeof(__systab) / sizeof(__systab[0]),
-	.systab = __systab,
+struct xnpersonality cobalt_personality = {
+	.name = "cobalt",
+	.magic = COBALT_BINDING_MAGIC,
+	.nrcalls = ARRAY_SIZE(cobalt_syscalls),
+	.syscalls = cobalt_syscalls,
 	.ops = {
 		.attach = cobalt_process_attach,
 		.detach = cobalt_process_detach,
 	},
 };
+EXPORT_SYMBOL_GPL(cobalt_personality);
 
 int cobalt_syscall_init(void)
 {
-	cobalt_muxid = xnshadow_register_interface(&__props);
-
+	cobalt_muxid = xnshadow_register_personality(&cobalt_personality);
 	if (cobalt_muxid < 0)
 		return -ENOSYS;
 
@@ -371,5 +371,5 @@ int cobalt_syscall_init(void)
 
 void cobalt_syscall_cleanup(void)
 {
-	xnshadow_unregister_interface(cobalt_muxid);
+	xnshadow_unregister_personality(cobalt_muxid);
 }

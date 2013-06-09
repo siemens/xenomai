@@ -238,8 +238,8 @@ static void xnpod_flush_heap(xnheap_t *heap,
  *
  * Initializes the core interface pod which can subsequently be used
  * to start real-time activities. Once the core pod is active,
- * real-time skins can be stacked over. There can only be a single
- * core pod active in the host environment.
+ * interface personalities can be stacked over. There can only be a
+ * single core pod active in the host environment.
  *
  * @return 0 is returned on success. Otherwise:
  *
@@ -270,10 +270,7 @@ int xnpod_init(void)
 
 	pod = &nkpod_struct;
 	if (pod->refcnt > 0) {
-		/*
-		 * Another skin has initialized the global pod
-		 * already; just increment the reference count.
-		 */
+		/* Init once, with refcounting. */
 		++nkpod->refcnt;
 		xnlock_put_irqrestore(&nklock, s);
 		return 0;
@@ -1204,7 +1201,7 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 	 * the Linux scheduler (i.e. it's relaxed).  To make this
 	 * possible, we force the target Linux task to migrate back to
 	 * the Xenomai domain by sending it a SIGSHADOW signal the
-	 * skin interface libraries trap for this specific internal
+	 * interface libraries trap for this specific internal
 	 * purpose, whose handler is expected to call back the
 	 * nucleus's migration service. By forcing this migration, we
 	 * make sure that the real-time nucleus controls, hence
@@ -1216,9 +1213,9 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 	 * are not current, and for XNSUSP, XNDELAY, XNDORMANT and
 	 * XNHELD conditions, because:
 	 *
-	 * - skins are supposed to ask for primary mode switch when
-	 * processing any syscall which may block the caller; IOW,
-	 * __xn_exec_primary must be set in the mode flags for
+	 * - personalities are supposed to ask for primary mode switch
+	 * when processing any syscall which may block the caller;
+	 * IOW, __xn_exec_primary must be set in the mode flags for
 	 * those. So there is no need to deal specifically with the
 	 * relax+suspend issue when the current thread is about to be
 	 * suspended thread, since it can't be relaxed anyway.
@@ -2924,5 +2921,10 @@ void xnpod_cleanup_proc(void)
 }
 
 #endif /* CONFIG_XENO_OPT_VFILE */
+
+struct xnpersonality generic_personality = {
+	.name = "xenomai",
+};
+EXPORT_SYMBOL_GPL(generic_personality);
 
 /*@}*/

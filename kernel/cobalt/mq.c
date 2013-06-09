@@ -22,9 +22,10 @@
  *
  * Message queues services.
  *
- * A message queue allow exchanging data between real-time threads. For a POSIX
- * message queue, maximum message length and maximum number of messages are
- * fixed when it is created with mq_open().
+ * A message queue allow exchanging data between real-time
+ * threads. For a POSIX message queue, maximum message length and
+ * maximum number of messages are fixed when it is created with
+ * mq_open().
  *
  *@{*/
 
@@ -886,10 +887,10 @@ static inline int mq_setattr(mqd_t fd,
  *
  * Only one thread may be registered at a time.
  *
- * If the current thread is not a Xenomai POSIX skin thread (created with
+ * If the current thread is not a Cobalt thread (created with
  * pthread_create()), this service fails.
  *
- * Note that signals sent to user-space Xenomai POSIX skin threads will cause
+ * Note that signals sent to user-space Cobalt threads will cause
  * them to switch to secondary mode.
  *
  * @param fd message queue descriptor;
@@ -904,8 +905,8 @@ static inline int mq_setattr(mqd_t fd,
  * - EBUSY, another thread is already registered.
  *
  * @par Valid contexts:
- * - Xenomai kernel-space POSIX skin thread,
- * - Xenomai user-space POSIX skin thread (switches to primary mode).
+ * - Xenomai kernel-space Cobalt thread,
+ * - Xenomai user-space Cobalt thread (switches to primary mode).
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_notify.html">
@@ -1040,10 +1041,10 @@ int cobalt_mq_select_bind(mqd_t fd, struct xnselector *selector,
 static void uqd_cleanup(cobalt_assoc_t *assoc)
 {
 	cobalt_ufd_t *ufd = assoc2ufd(assoc);
-#if XENO_DEBUG(POSIX)
+#if XENO_DEBUG(COBALT)
 	printk(XENO_INFO "closing Cobalt mq descriptor 0x%lu\n",
 	       cobalt_assoc_key(assoc));
-#endif /* XENO_DEBUG(POSIX) */
+#endif /* XENO_DEBUG(COBALT) */
 	mq_close(ufd->kfd);
 	xnfree(ufd);
 }
@@ -1418,10 +1419,10 @@ void cobalt_mq_pkg_cleanup(void)
 		cobalt_node_remove(&node, mq->nodebase.name, COBALT_MQ_MAGIC);
 		xnlock_put_irqrestore(&nklock, s);
 		cobalt_mq_destroy(mq);
-#if XENO_DEBUG(POSIX)
+#if XENO_DEBUG(COBALT)
 		printk(XENO_INFO "unlinking Cobalt mq \"%s\"\n",
 		       mq->nodebase.name);
-#endif /* XENO_DEBUG(POSIX) */
+#endif /* XENO_DEBUG(COBALT) */
 		xnfree(mq);
 		xnlock_get_irqsave(&nklock, s);
 	}

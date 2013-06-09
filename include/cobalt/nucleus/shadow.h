@@ -23,8 +23,6 @@
 #include <asm/xenomai/atomic.h>
 #include <asm/xenomai/syscall.h>
 
-#define XENOMAI_SKINS_NR  4
-
 struct xnthread;
 struct xnthread_user_window;
 struct xnmutex;
@@ -32,19 +30,20 @@ struct pt_regs;
 struct timespec;
 struct timeval;
 struct completion;
+struct module;
 struct xnshadow_ppd;
 
-struct xnskin_client_ops {
-	struct xnshadow_ppd *(*attach)(void);
-	void (*detach)(struct xnshadow_ppd *ppd);
-};
-
-struct xnskin_props {
+struct xnpersonality {
 	const char *name;
 	unsigned int magic;
 	int nrcalls;
-	struct xnsysent *systab;
-	struct xnskin_client_ops ops;
+	struct xnsyscall *syscalls;
+	atomic_t refcnt;
+	struct {
+		struct xnshadow_ppd *(*attach)(void);
+		void (*detach)(struct xnshadow_ppd *ppd);
+	} ops;
+	struct module *module;
 };
 
 static inline struct xnthread *xnshadow_current(void)
@@ -95,9 +94,9 @@ int xnshadow_harden(void);
 
 void xnshadow_relax(int notify, int reason);
 
-int xnshadow_register_interface(struct xnskin_props *props);
+int xnshadow_register_personality(struct xnpersonality *personality);
 
-int xnshadow_unregister_interface(int muxid);
+int xnshadow_unregister_personality(int muxid);
 
 void xnshadow_reset_shield(void);
 

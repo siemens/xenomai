@@ -51,7 +51,7 @@ static const pthread_attr_t default_thread_attr = {
 
 static unsigned cobalt_get_magic(void)
 {
-	return COBALT_SKIN_MAGIC;
+	return COBALT_BINDING_MAGIC;
 }
 
 static struct xnthread_operations cobalt_thread_ops = {
@@ -150,7 +150,7 @@ static inline void cobalt_thread_unhash(const struct cobalt_hkey *hkey)
 		pidslot = *pidtail;
 	}
 	/* pidslot must be found here. */
-	XENO_BUGON(POSIX, !(pidslot && pidtail));
+	XENO_BUGON(COBALT, !(pidslot && pidtail));
 	*pidtail = pidslot->next;
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -323,7 +323,7 @@ unlock_and_exit:
  * - EAGAIN, insufficient memory exists in the system heap to create a new
  *   thread, increase CONFIG_XENO_OPT_SYS_HEAPSZ;
  * - EINVAL, thread attribute @a inheritsched is set to PTHREAD_INHERIT_SCHED
- *   and the calling thread does not belong to the POSIX skin;
+ *   and the calling thread does not belong to the Cobalt interface;
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_create.html">
@@ -405,6 +405,7 @@ static inline int pthread_create(pthread_t *tid, const pthread_attr_t *attr)
 	iattr.name = name;
 	iattr.flags = flags;
 	iattr.ops = &cobalt_thread_ops;
+	iattr.personality = &cobalt_personality;
 
 	/*
 	 * When the weak scheduling class is compiled in, SCHED_WEAK
@@ -474,7 +475,7 @@ static inline int pthread_create(pthread_t *tid, const pthread_attr_t *attr)
 /**
  * Make a thread periodic.
  *
- * This service make the POSIX skin thread @a thread periodic.
+ * This service make the Cobalt interface @a thread periodic.
  *
  * This service is a non-portable extension of the POSIX interface.
  *
@@ -800,15 +801,16 @@ int cobalt_thread_setschedparam_ex(unsigned long tid,
 /*
  * We want to keep the native pthread_t token unmodified for Xenomai
  * mapped threads, and keep it pointing at a genuine NPTL/LinuxThreads
- * descriptor, so that portions of the POSIX interface which are not
- * overriden by Xenomai fall back to the original Linux services.
+ * descriptor, so that portions of the standard POSIX interface which
+ * are not overriden by Xenomai fall back to the original Linux
+ * services.
  *
  * If the latter invoke Linux system calls, the associated shadow
  * thread will simply switch to secondary exec mode to perform
  * them. For this reason, we need an external index to map regular
  * pthread_t values to Xenomai's internal thread ids used in
- * syscalling the POSIX skin, so that the outer interface can keep on
- * using the former transparently.
+ * syscalling the Cobalt interface, so that the outer interface can
+ * keep on using the former transparently.
  *
  * Semaphores and mutexes do not have this constraint, since we fully
  * override their respective interfaces with Xenomai-based
@@ -831,7 +833,7 @@ int cobalt_thread_create(unsigned long tid, int policy,
 		return -EFAULT;
 	/*
 	 * We have been passed the pthread_t identifier the user-space
-	 * POSIX library has assigned to our caller; we'll index our
+	 * Cobalt library has assigned to our caller; we'll index our
 	 * internal pthread_t descriptor in kernel space on it.
 	 */
 	hkey.u_tid = tid;

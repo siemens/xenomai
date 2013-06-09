@@ -129,7 +129,7 @@ static void rtdm_process_detach(struct xnshadow_ppd *ppd)
 	kfree(process);
 }
 
-static struct xnsysent __systab[] = {
+static struct xnsyscall rtdm_syscalls[] = {
 	SKINCALL_DEF(sc_rtdm_fdcount, sys_rtdm_fdcount, any),
 	SKINCALL_DEF(sc_rtdm_open, sys_rtdm_open, probing),
 	SKINCALL_DEF(sc_rtdm_socket, sys_rtdm_socket, probing),
@@ -141,21 +141,21 @@ static struct xnsysent __systab[] = {
 	SKINCALL_DEF(sc_rtdm_sendmsg, sys_rtdm_sendmsg, probing),
 };
 
-static struct xnskin_props __props = {
+struct xnpersonality rtdm_personality = {
 	.name = "rtdm",
-	.magic = RTDM_SKIN_MAGIC,
-	.nrcalls = sizeof(__systab) / sizeof(__systab[0]),
-	.systab = __systab,
+	.magic = RTDM_BINDING_MAGIC,
+	.nrcalls = ARRAY_SIZE(rtdm_syscalls),
+	.syscalls = rtdm_syscalls,
 	.ops = {
 		.attach = rtdm_process_attach,
 		.detach = rtdm_process_detach,
 	},
 };
+EXPORT_SYMBOL_GPL(rtdm_personality);
 
 int __init rtdm_syscall_init(void)
 {
-	__rtdm_muxid = xnshadow_register_interface(&__props);
-
+	__rtdm_muxid = xnshadow_register_personality(&rtdm_personality);
 	if (__rtdm_muxid < 0)
 		return -ENOSYS;
 

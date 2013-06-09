@@ -25,14 +25,13 @@
  * \ingroup nucleus
  * \defgroup registry Registry services.
  *
- * The registry provides a mean to index real-time object descriptors
- * created by Xenomai skins on unique alphanumeric keys. When labeled
- * this way, a real-time object is globally exported; it can be
- * searched for, and its descriptor returned to the caller for further
- * use; the latter operation is called a "binding". When no object has
- * been registered under the given name yet, the registry can be asked
- * to set up a rendez-vous, blocking the caller until the object is
- * eventually registered.
+ * The registry provides a mean to index object descriptors on unique
+ * alphanumeric keys. When labeled this way, an object is globally
+ * exported; it can be searched for, and its descriptor returned to
+ * the caller for further use; the latter operation is called a
+ * "binding". When no object has been registered under the given name
+ * yet, the registry can be asked to set up a rendez-vous, blocking
+ * the caller until the object is eventually registered.
  *
  *@{*/
 

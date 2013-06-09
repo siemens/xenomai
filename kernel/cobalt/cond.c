@@ -486,10 +486,10 @@ void cobalt_condq_cleanup(struct cobalt_kqueues *q)
 	while ((holder = getheadq(&q->condq)) != NULL) {
 		xnlock_put_irqrestore(&nklock, s);
 		cond_destroy_internal(link2cond(holder), q);
-#if XENO_DEBUG(POSIX)
+#if XENO_DEBUG(COBALT)
 		printk(XENO_INFO "deleting Cobalt condvar %p\n",
 			 link2cond(holder));
-#endif /* XENO_DEBUG(POSIX) */
+#endif /* XENO_DEBUG(COBALT) */
 		xnlock_get_irqsave(&nklock, s);
 	}
 

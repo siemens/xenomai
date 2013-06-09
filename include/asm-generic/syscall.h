@@ -82,8 +82,7 @@ struct xnsysinfo {
 struct task_struct;
 struct pt_regs;
 
-struct xnsysent {
-
+struct xnsyscall {
 	/*
 	 * CAUTION: no varargs, we want the calling convention for
 	 * regular functions to apply.

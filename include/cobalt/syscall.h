@@ -16,12 +16,12 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _POSIX_SYSCALL_H
-#define _POSIX_SYSCALL_H
+#ifndef _COBALT_SYSCALL_H
+#define _COBALT_SYSCALL_H
 
 #include <asm/xenomai/syscall.h>
 
-#define COBALT_SKIN_MAGIC           0x50534531
+#define COBALT_BINDING_MAGIC            0x50534531
 
 #define sc_cobalt_thread_create         0
 /* 1-2 unimplemented */
@@ -117,4 +117,4 @@ void cobalt_syscall_cleanup(void);
 
 #endif /* __KERNEL__ */
 
-#endif /* _POSIX_SYSCALL_H */
+#endif /* _COBALT_SYSCALL_H */
