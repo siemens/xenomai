@@ -470,7 +470,6 @@ static int rtswitch_create_ktask(rtswitch_context_t *ctx,
 
 	iattr.name = name;
 	iattr.flags = init_flags;
-	iattr.ops = NULL;
 	iattr.personality = &generic_personality;
 	param.rt.prio = 1;
 

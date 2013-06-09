@@ -143,7 +143,6 @@ int rtdm_task_init(rtdm_task_t *task, const char *name,
 
 	iattr.name = name;
 	iattr.flags = 0;
-	iattr.ops = NULL;
 	iattr.personality = &rtdm_personality;
 	param.rt.prio = priority;
 

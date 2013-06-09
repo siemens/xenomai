@@ -42,10 +42,10 @@ struct cobalt_thread {
 
 #define thread2pthread(taddr) \
 	({								\
-		xnthread_t *_taddr = (taddr);				\
-		(_taddr							\
-		 ? ((xnthread_get_magic(_taddr) == COBALT_BINDING_MAGIC)	\
-		    ? (container_of(_taddr, struct cobalt_thread, threadbase)) \
+		xnthread_t *__t = (taddr);				\
+		(__t							\
+		 ? ((__t->personality == &cobalt_personality)		\
+		    ? (container_of(__t, struct cobalt_thread, threadbase)) \
 		    : NULL)						\
 		 : NULL);						\
 	})

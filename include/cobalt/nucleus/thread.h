@@ -165,12 +165,7 @@ union xnsched_policy_param;
 struct xnbufd;
 struct xnpersonality;
 
-struct xnthread_operations {
-	unsigned (*get_magic)(void);
-};
-
 struct xnthread_init_attr {
-	struct xnthread_operations *ops;
 	struct xnpersonality *personality;
 	xnflags_t flags;
 	const char *name;
@@ -279,8 +274,6 @@ typedef struct xnthread {
 		const char *waitkey;	/* Pended key */
 	} registry;
 
-	struct xnthread_operations *ops; /* Thread class operations. */
-
 	char name[XNOBJECT_NAME_LEN]; /* Symbolic name of thread */
 
 	void (*entry)(void *cookie); /* Thread entry routine */
@@ -292,7 +285,7 @@ typedef struct xnthread {
 
 	void *privdata;				/* Private data for extension */
 
-	struct xnpersonality *personality;
+	struct xnpersonality *personality; /* Originating interface/personality */
 
 #ifdef CONFIG_XENO_OPT_DEBUG
 	const char *exe_path;	/* Executable path */
@@ -340,11 +333,6 @@ typedef struct xnthread {
 #define xnthread_get_rescnt(thread)        ((thread)->hrescnt)
 #define xnthread_private(thread)           ((thread)->privdata)
 #define xnthread_personality(thread)       ((thread)->personality)
-
-static inline unsigned xnthread_get_magic(struct xnthread *t)
-{
-	return t->ops ? t->ops->get_magic() : 0;
-}
 
 static inline
 struct xnthread_wait_context *xnthread_get_wait_context(struct xnthread *thread)

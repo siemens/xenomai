@@ -49,15 +49,6 @@ static const pthread_attr_t default_thread_attr = {
 	.affinity = XNPOD_ALL_CPUS,
 };
 
-static unsigned cobalt_get_magic(void)
-{
-	return COBALT_BINDING_MAGIC;
-}
-
-static struct xnthread_operations cobalt_thread_ops = {
-	.get_magic = &cobalt_get_magic,
-};
-
 #define PTHREAD_HSLOTS (1 << 8)	/* Must be a power of 2 */
 
 struct cobalt_hash {
@@ -401,7 +392,6 @@ static inline int pthread_create(pthread_t *tid, const pthread_attr_t *attr)
 
 	iattr.name = name;
 	iattr.flags = flags;
-	iattr.ops = &cobalt_thread_ops;
 	iattr.personality = &cobalt_personality;
 
 	/*

@@ -2720,6 +2720,7 @@ void xnpod_cleanup_proc(void)
 
 struct xnpersonality generic_personality = {
 	.name = "xenomai",
+	/* .magic = 0 */
 };
 EXPORT_SYMBOL_GPL(generic_personality);
 
