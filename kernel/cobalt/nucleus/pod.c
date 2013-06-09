@@ -279,9 +279,6 @@ int xnpod_init(void)
 	pod->status = 0;
 	pod->refcnt = 1;
 	initq(&pod->threadq);
-	initq(&pod->tstartq);
-	initq(&pod->tswitchq);
-	initq(&pod->tdeleteq);
 	xnarch_atomic_set(&pod->timerlck, 0);
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -397,27 +394,6 @@ void xnpod_shutdown(int xtype)
 	xnheap_destroy(&kheap, xnpod_flush_heap, NULL);
 }
 EXPORT_SYMBOL_GPL(xnpod_shutdown);
-
-void xnpod_fire_callouts(xnqueue_t *hookq, xnthread_t *thread)
-{
-	/* Must be called with nklock locked, interrupts off. */
-	xnsched_t *sched = xnpod_current_sched();
-	xnholder_t *holder, *nholder;
-
-	__setbits(sched->status, XNKCOUT);
-
-	/* The callee is allowed to alter the hook queue when running */
-
-	nholder = getheadq(hookq);
-
-	while ((holder = nholder) != NULL) {
-		xnhook_t *hook = link2hook(holder);
-		nholder = nextq(hookq, holder);
-		hook->routine(thread);
-	}
-
-	__clrbits(sched->status, XNKCOUT);
-}
 
 /*!
  * \fn void xnpod_init_thread(struct xnthread *thread,const struct xnthread_init_attr *attr,struct xnsched_class *sched_class,const union xnsched_policy_param *sched_param)
@@ -559,9 +535,6 @@ EXPORT_SYMBOL_GPL(xnpod_init_thread);
  * - cookie: A user-defined opaque cookie the nucleus will pass to the
  * emerging thread as the sole argument of its entry point.
  *
- * The START hooks are called on behalf of the calling context (if
- * any).
- *
  * @retval 0 if @a thread could be started ;
  *
  * @retval -EBUSY if @a thread was not dormant or stopped ;
@@ -627,8 +600,6 @@ int xnpod_start_thread(struct xnthread *thread,
 		   thread, xnthread_name(thread));
 
 	xnpod_resume_thread(thread, XNDORMANT);
-
-	xnpod_run_hooks(&nkpod->tstartq, thread, "START");
 schedule:
 	xnpod_schedule();
 unlock_and_exit:
@@ -847,11 +818,10 @@ static void cleanup_thread(struct xnthread *thread) /* nklock held, irqs off */
 
 	if (!moving_target(sched, thread)) {
 		xnshadow_unmap(thread);
-		xnpod_run_hooks(&nkpod->tdeleteq, thread, "DELETE");
 		xnsched_forget(thread);
 		/*
-		 * Note: the thread control block must remain
-		 * available until the user hooks have been called.
+		 * We may wipe the TCB out now that the unmap_thread()
+		 * handler has run (in xnshadow_unmap()).
 		 */
 		xnthread_cleanup(thread);
 
@@ -1791,8 +1761,6 @@ static inline void xnpod_switch_to(xnsched_t *sched,
  * - Interrupt service routine, although this leads to a no-op.
  * - Kernel-based task
  * - User-space task
- *
- * @note The switch hooks are called on behalf of the resuming thread.
  */
 
 static inline int test_resched(struct xnsched *sched)
@@ -1944,8 +1912,6 @@ reschedule:
 
 	__xnpod_switch_fpu(sched);
 
-	xnpod_run_hooks(&nkpod->tswitchq, curr, "SWITCH");
-
  signal_unlock_and_exit:
 	if (xnthread_signaled_p(curr))
 		xnpod_dispatch_signals();
@@ -2012,176 +1978,6 @@ void ___xnpod_unlock_sched(xnsched_t *sched)
 	}
 }
 EXPORT_SYMBOL_GPL(___xnpod_unlock_sched);
-
-/*!
- * \fn int xnpod_add_hook(int type,void (*routine)(xnthread_t *))
- * \brief Install a nucleus hook.
- *
- * The nucleus allows to register user-defined routines which get
- * called whenever a specific scheduling event occurs. Multiple hooks
- * can be chained for a single event type, and get called on a FIFO
- * basis.
- *
- * The scheduling is locked while a hook is executing.
- *
- * @param type Defines the kind of hook to install:
- *
- *        - XNHOOK_THREAD_START: The user-defined routine will be
- *        called on behalf of the starter thread whenever a new thread
- *        starts. The descriptor address of the started thread is
- *        passed to the routine.
- *
- *        - XNHOOK_THREAD_DELETE: The user-defined routine will be
- *        called on behalf of the deletor thread whenever a thread is
- *        deleted. The descriptor address of the deleted thread is
- *        passed to the routine.
- *
- *        - XNHOOK_THREAD_SWITCH: The user-defined routine will be
- *        called on behalf of the resuming thread whenever a context
- *        switch takes place. The descriptor address of the thread
- *        which has been switched out is passed to the routine.
- *
- * @param routine The address of the user-supplied routine to call.
- *
- * @return 0 is returned on success. Otherwise, one of the following
- * error codes indicates the cause of the failure:
- *
- *         - -EINVAL is returned if type is incorrect.
- *
- *         - -ENOMEM is returned if not enough memory is available
- *         from the system heap to add the new hook.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
- */
-
-int xnpod_add_hook(int type, void (*routine) (xnthread_t *))
-{
-	xnqueue_t *hookq;
-	xnhook_t *hook;
-	int err = 0;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	trace_mark(xn_nucleus, sched_addhook, "type %d routine %p",
-		   type, routine);
-
-	switch (type) {
-	case XNHOOK_THREAD_START:
-		hookq = &nkpod->tstartq;
-		break;
-	case XNHOOK_THREAD_SWITCH:
-		hookq = &nkpod->tswitchq;
-		break;
-	case XNHOOK_THREAD_DELETE:
-		hookq = &nkpod->tdeleteq;
-		break;
-	default:
-		err = -EINVAL;
-		goto unlock_and_exit;
-	}
-
-	hook = xnmalloc(sizeof(*hook));
-
-	if (hook) {
-		inith(&hook->link);
-		hook->routine = routine;
-		prependq(hookq, &hook->link);
-	} else
-		err = -ENOMEM;
-
-      unlock_and_exit:
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	return err;
-}
-EXPORT_SYMBOL_GPL(xnpod_add_hook);
-
-/*!
- * \fn int xnpod_remove_hook(int type,void (*routine)(xnthread_t *))
- * \brief Remove a nucleus hook.
- *
- * This service removes a nucleus hook previously registered using
- * xnpod_add_hook().
- *
- * @param type Defines the kind of hook to remove among
- * XNHOOK_THREAD_START, XNHOOK_THREAD_DELETE and XNHOOK_THREAD_SWITCH.
- *
- * @param routine The address of the user-supplied routine to remove.
- *
- * @return 0 is returned on success. Otherwise, -EINVAL is returned if
- * type is incorrect or if the routine has never been registered
- * before.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
- */
-
-int xnpod_remove_hook(int type, void (*routine) (xnthread_t *))
-{
-	xnhook_t *hook = NULL;
-	xnholder_t *holder;
-	xnqueue_t *hookq;
-	int err = 0;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	trace_mark(xn_nucleus, sched_removehook, "type %d routine %p",
-		   type, routine);
-
-	switch (type) {
-	case XNHOOK_THREAD_START:
-		hookq = &nkpod->tstartq;
-		break;
-	case XNHOOK_THREAD_SWITCH:
-		hookq = &nkpod->tswitchq;
-		break;
-	case XNHOOK_THREAD_DELETE:
-		hookq = &nkpod->tdeleteq;
-		break;
-	default:
-		goto bad_hook;
-	}
-
-	for (holder = getheadq(hookq);
-	     holder != NULL; holder = nextq(hookq, holder)) {
-		hook = link2hook(holder);
-
-		if (hook->routine == routine) {
-			removeq(hookq, holder);
-			xnfree(hook);
-			goto unlock_and_exit;
-		}
-	}
-
-      bad_hook:
-
-	err = -EINVAL;
-
-      unlock_and_exit:
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	return err;
-}
-EXPORT_SYMBOL_GPL(xnpod_remove_hook);
 
 /*!
  * \fn void xnpod_handle_exception(struct ipipe_trap_data *d);

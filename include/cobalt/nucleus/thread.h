@@ -300,16 +300,6 @@ typedef struct xnthread {
 #endif
 } xnthread_t;
 
-#define XNHOOK_THREAD_START  1
-#define XNHOOK_THREAD_SWITCH 2
-#define XNHOOK_THREAD_DELETE 3
-
-typedef struct xnhook {
-	xnholder_t link;
-#define link2hook(ln)		container_of(ln, xnhook_t, link)
-	void (*routine)(struct xnthread *thread);
-} xnhook_t;
-
 #define xnthread_name(thread)               ((thread)->name)
 #define xnthread_clear_name(thread)        do { *(thread)->name = 0; } while(0)
 #define xnthread_sched(thread)             ((thread)->sched)

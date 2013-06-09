@@ -247,6 +247,7 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
 void xnsched_zombie_hooks(struct xnthread *thread)
 {
 	XENO_BUGON(NUCLEUS, thread->sched->zombie != NULL);
+
 	thread->sched->zombie = thread;
 
 	trace_mark(xn_nucleus, sched_finalize,
@@ -254,9 +255,6 @@ void xnsched_zombie_hooks(struct xnthread *thread)
 		   thread, xnthread_name(thread));
 
 	xnshadow_unmap(thread);
-
-	xnpod_run_hooks(&nkpod->tdeleteq, thread, "DELETE");
-
 	xnsched_forget(thread);
 }
 
@@ -299,11 +297,11 @@ struct xnsched *xnsched_finish_unlocked_switch(struct xnsched *sched)
 		/*
 		 * There are two cases where sched->last has the zombie
 		 * bit:
-		 * - either it had it before the context switch, the hooks
-		 * have been executed and sched->zombie is last;
+		 * - either it had it before the context switch, the
+		 * cleanup has be done and sched->zombie is last;
 		 * - or it has been killed while the nklocked was unlocked
 		 * during the context switch, in which case we must run the
-		 * hooks, and we do it now.
+		 * cleanup code, and we do it now.
 		 */
 		if (sched->zombie != last)
 			xnsched_zombie_hooks(last);

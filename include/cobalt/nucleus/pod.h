@@ -75,10 +75,6 @@ struct xnpod {
 #ifdef CONFIG_XENO_OPT_VFILE
 	struct xnvfile_rev_tag threadlist_tag;
 #endif
-	xnqueue_t tstartq,	/*!< Thread start hook queue. */
-	 tswitchq,		/*!< Thread switch hook queue. */
-	 tdeleteq;		/*!< Thread delete hook queue. */
-
 	atomic_counter_t timerlck; /*!< Timer lock depth.  */
 
 	int refcnt;		/*!< Reference count.  */
@@ -327,20 +323,6 @@ static inline void xnpod_testcancel_thread(void)
 
 int xnpod_handle_exception(struct ipipe_trap_data *d);
 
-void xnpod_fire_callouts(xnqueue_t *hookq,
-			 xnthread_t *thread);
-
-static inline void xnpod_run_hooks(struct xnqueue *q,
-				   struct xnthread *thread, const char *type)
-{
-	if (!emptyq_p(q)) {
-		trace_mark(xn_nucleus, thread_callout,
-			   "thread %p thread_name %s hook %s",
-			   thread, xnthread_name(thread), type);
-		xnpod_fire_callouts(q, thread);
-	}
-}
-
 int xnpod_set_thread_periodic(xnthread_t *thread,
 			      xnticks_t idate,
 			      xntmode_t timeout_mode,
@@ -350,10 +332,6 @@ int xnpod_wait_thread_period(unsigned long *overruns_r);
 
 int xnpod_set_thread_tslice(struct xnthread *thread,
 			    xnticks_t quantum);
-
-int xnpod_add_hook(int type, void (*routine) (xnthread_t *));
-
-int xnpod_remove_hook(int type, void (*routine) (xnthread_t *));
 
 static inline void xnpod_yield(void)
 {
