@@ -356,6 +356,7 @@ struct xnpersonality cobalt_personality = {
 	.ops = {
 		.attach_process = cobalt_process_attach,
 		.detach_process = cobalt_process_detach,
+		.unmap_thread = cobalt_thread_unmap,
 	},
 };
 EXPORT_SYMBOL_GPL(cobalt_personality);

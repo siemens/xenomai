@@ -812,7 +812,6 @@ static inline int moving_target(struct xnsched *sched, struct xnthread *thread)
 
 static void cleanup_thread(struct xnthread *thread) /* nklock held, irqs off */
 {
-	struct xnpersonality *personality = thread->personality;
 	struct xnsched *sched = thread->sched;
 
 	trace_mark(xn_nucleus, thread_cleanup, "thread %p thread_name %s",
@@ -847,11 +846,8 @@ static void cleanup_thread(struct xnthread *thread) /* nklock held, irqs off */
 	__xnpod_giveup_fpu(sched, thread);
 
 	if (!moving_target(sched, thread)) {
-		if (personality->ops.unmap_thread)
-			personality->ops.unmap_thread(thread);
-
+		xnshadow_unmap(thread);
 		xnpod_run_hooks(&nkpod->tdeleteq, thread, "DELETE");
-
 		xnsched_forget(thread);
 		/*
 		 * Note: the thread control block must remain

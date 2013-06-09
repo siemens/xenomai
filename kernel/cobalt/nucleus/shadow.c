@@ -1062,31 +1062,24 @@ EXPORT_SYMBOL_GPL(xnshadow_map_kernel);
 
 void xnshadow_unmap(struct xnthread *thread)
 {
+	struct xnpersonality *personality;
 	struct xnsys_ppd *sys_ppd;
-	spl_t s;
-
-	if (XENO_DEBUG(NUCLEUS) &&
-	    !testbits(xnpod_current_sched()->status, XNKCOUT))
-		xnpod_fatal("xnshadow_unmap() called from invalid context");
 
 	trace_mark(xn_nucleus, shadow_unmap,
 		   "thread %p thread_name %s pid %d",
 		   thread, xnthread_name(thread), xnthread_host_pid(thread));
 
+	personality = thread->personality;
+	if (personality->ops.unmap_thread)
+		personality->ops.unmap_thread(thread);
+
 	xnthread_clear_state(thread, XNMAPPED);
 
-	if (!xnthread_test_state(thread, XNUSER))
-		return;
-
-	xnlock_get_irqsave(&nklock, s);
-	sys_ppd = xnsys_ppd_get(0);
-	xnlock_put_irqrestore(&nklock, s);
-
-	xnheap_free(&sys_ppd->sem_heap, thread->u_window);
-	thread->u_window = NULL;
-	xnarch_atomic_dec(&sys_ppd->refcnt);
+	if (xnthread_test_state(thread, XNUSER)) {
+		sys_ppd = xnsys_ppd_get(0);
+		xnarch_atomic_dec(&sys_ppd->refcnt);
+	}
 }
-EXPORT_SYMBOL_GPL(xnshadow_unmap);
 
 static int xnshadow_sys_migrate(int domain)
 {
@@ -2188,13 +2181,15 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 	if (personality->ops.exit_thread)
 		personality->ops.exit_thread(thread);
 
-	/* __xnpod_cleanup_thread() -> hook -> xnshadow_unmap() */
+	/* __xnpod_cleanup_thread() -> ... -> xnshadow_unmap() */
 	__xnpod_cleanup_thread(thread);
 
 	if (xnthread_test_state(thread, XNUSER)) {
 		xnlock_get_irqsave(&nklock, s);
 		sys_ppd = xnsys_ppd_get(0);
 		xnlock_put_irqrestore(&nklock, s);
+		xnheap_free(&sys_ppd->sem_heap, thread->u_window);
+		thread->u_window = NULL;
 		mm = xnshadow_current_mm();
 		if (!xnarch_atomic_get(&sys_ppd->refcnt))
 			ppd_remove_mm(mm, detach_ppd);

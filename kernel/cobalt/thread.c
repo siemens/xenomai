@@ -190,7 +190,7 @@ static void thread_destroy(pthread_t thread)
 	xnheap_schedule_free(&kheap, thread, &thread->link);
 }
 
-static void thread_delete_hook(struct xnthread *thread)
+void cobalt_thread_unmap(struct xnthread *thread)
 {
 	pthread_t tid = thread2pthread(thread);
 
@@ -200,10 +200,7 @@ static void thread_delete_hook(struct xnthread *thread)
 	cobalt_mark_deleted(tid);
 	cobalt_timer_cleanup_thread(tid);
 	thread_destroy(tid);
-
 	cobalt_thread_unhash(&tid->hkey);
-	if (xnthread_test_state(thread, XNMAPPED))
-		xnshadow_unmap(thread);
 }
 
 /**
@@ -1372,7 +1369,6 @@ void cobalt_thread_pkg_init(u_long rrperiod)
 {
 	initq(&cobalt_global_kqueues.threadq);
 	cobalt_time_slice = rrperiod;
-	xnpod_add_hook(XNHOOK_THREAD_DELETE, thread_delete_hook);
 }
 
 /*@}*/
