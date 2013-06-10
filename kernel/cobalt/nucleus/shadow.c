@@ -891,9 +891,7 @@ int xnshadow_map_user(struct xnthread *thread,
 	 * extension and I-pipe notifications will soon be enabled for
 	 * it.
 	 */
-	if (personality->ops.map_thread)
-		personality->ops.map_thread(thread);
-
+	xnthread_run_handler(thread, map_thread);
 	ipipe_enable_notifier(current);
 
 	attr.mode = 0;
@@ -1019,10 +1017,7 @@ int xnshadow_map_kernel(struct xnthread *thread, struct completion *done)
 	init_threadinfo(thread);
 	xnthread_set_state(thread, XNMAPPED);
 	xndebug_shadow_init(thread);
-
-	if (personality->ops.map_thread)
-		personality->ops.map_thread(thread);
-
+	xnthread_run_handler(thread, map_thread);
 	ipipe_enable_notifier(p);
 
 	/*
@@ -1062,16 +1057,13 @@ EXPORT_SYMBOL_GPL(xnshadow_map_kernel);
 
 void xnshadow_unmap(struct xnthread *thread)
 {
-	struct xnpersonality *personality;
 	struct xnsys_ppd *sys_ppd;
 
 	trace_mark(xn_nucleus, shadow_unmap,
 		   "thread %p thread_name %s pid %d",
 		   thread, xnthread_name(thread), xnthread_host_pid(thread));
 
-	personality = thread->personality;
-	if (personality->ops.unmap_thread)
-		personality->ops.unmap_thread(thread);
+	xnthread_run_handler(thread, unmap_thread);
 
 	xnthread_clear_state(thread, XNMAPPED);
 
@@ -1821,6 +1813,55 @@ struct xnshadow_ppd *xnshadow_ppd_get(unsigned int muxid)
 }
 EXPORT_SYMBOL_GPL(xnshadow_ppd_get);
 
+/**
+ * Stack a new personality over an existing thread.
+ *
+ * This service registers @a thread as a member of the additional
+ * personality @a next.
+ *
+ * @param thread the affected thread.
+ *
+ * @param next the additional personality to declare for @a thread.
+ *
+ * @return A pointer to the previous personality. The caller should
+ * save this pointer for unstacking @a next when applicable via a call
+ * to xnshadow_pop_personality().
+ */
+struct xnpersonality *
+xnshadow_push_personality(struct xnthread *thread,
+			  struct xnpersonality *next)
+{
+	struct xnpersonality *prev = thread->personality;
+
+	thread->personality = next;
+	enter_personality(next);
+
+	return prev;
+}
+EXPORT_SYMBOL_GPL(xnshadow_push_personality);
+
+/**
+ * Pop the topmost personality from a thread.
+ *
+ * This service unregisters @a thread from the topmost personality it
+ * is a member of.
+ *
+ * @param thread the affected thread.
+ *
+ * @param prev the previous personality in effect for @a thread prior
+ * to pushing the topmost one, as returned by the latest call to
+ * xnshadow_push_personality().
+ */
+void xnshadow_pop_personality(struct xnthread *thread,
+			      struct xnpersonality *prev)
+{
+	struct xnpersonality *old = thread->personality;
+
+	thread->personality = prev;
+	leave_personality(old);
+}
+EXPORT_SYMBOL_GPL(xnshadow_pop_personality);
+
 static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 {
 	int muxid, muxop, switched, ret, sigs;
@@ -2156,7 +2197,6 @@ int ipipe_syscall_hook(struct ipipe_domain *ipd, struct pt_regs *regs)
 
 static int handle_taskexit_event(struct task_struct *p) /* p == current */
 {
-	struct xnpersonality *personality;
 	struct xnsys_ppd *sys_ppd;
 	struct xnthread *thread;
 	struct mm_struct *mm;
@@ -2177,9 +2217,7 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 	if (xnthread_test_state(thread, XNDEBUG))
 		unlock_timers();
 
-	personality = thread->personality;
-	if (personality->ops.exit_thread)
-		personality->ops.exit_thread(thread);
+	xnthread_run_handler(thread, exit_thread);
 
 	/* __xnpod_cleanup_thread() -> ... -> xnshadow_unmap() */
 	__xnpod_cleanup_thread(thread);
@@ -2195,7 +2233,7 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 			ppd_remove_mm(mm, detach_ppd);
 	}
 
-	leave_personality(personality);
+	leave_personality(thread->personality);
 	destroy_threadinfo();
 
 	return EVENT_PROPAGATE;

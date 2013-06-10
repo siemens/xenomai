@@ -41,9 +41,9 @@ struct xnpersonality {
 	struct {
 		struct xnshadow_ppd *(*attach_process)(void);
 		void (*detach_process)(struct xnshadow_ppd *ppd);
-		void (*map_thread)(struct xnthread *thread);
-		void (*exit_thread)(struct xnthread *thread);
-		void (*unmap_thread)(struct xnthread *thread);
+		struct xnpersonality *(*map_thread)(struct xnthread *thread);
+		struct xnpersonality *(*exit_thread)(struct xnthread *thread);
+		struct xnpersonality *(*unmap_thread)(struct xnthread *thread);
 	} ops;
 	struct module *module;
 };
@@ -115,5 +115,12 @@ void xnshadow_kick(struct xnthread *thread);
 void __xnshadow_demote(struct xnthread *thread);
 
 void xnshadow_demote(struct xnthread *thread);
+
+struct xnpersonality *
+xnshadow_push_personality(struct xnthread *thread,
+			  struct xnpersonality *next);
+
+void xnshadow_pop_personality(struct xnthread *thread,
+			      struct xnpersonality *prev);
 
 #endif /* !_XENO_NUCLEUS_SHADOW_H */

@@ -122,7 +122,7 @@ int cobalt_sched_setconfig_np(int cpu,
 			      union sched_config __user *u_config,
 			      size_t len);
 
-void cobalt_thread_unmap(struct xnthread *thread);
+struct xnpersonality *cobalt_thread_unmap(struct xnthread *thread);
 
 void cobalt_thread_pkg_init(u_long rrperiod);
 

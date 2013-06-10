@@ -334,6 +334,16 @@ typedef struct xnthread {
 #define xnthread_private(thread)           ((thread)->privdata)
 #define xnthread_personality(thread)       ((thread)->personality)
 
+#define xnthread_run_handler(__t, __h)					\
+	do {								\
+		struct xnpersonality *__p__ = (__t)->personality;	\
+		do {							\
+			if ((__p__)->ops.__h == NULL)			\
+				break;					\
+			__p__ = (__p__)->ops.__h(__t);			\
+		} while (__p__);					\
+	} while (0)
+	
 static inline
 struct xnthread_wait_context *xnthread_get_wait_context(struct xnthread *thread)
 {
@@ -351,17 +361,6 @@ struct xnthread *xnthread_lookup(xnhandle_t threadh)
 {
 	struct xnthread *thread = (struct xnthread *)xnregistry_lookup(threadh);
 	return (thread && xnthread_handle(thread) == threadh) ? thread : NULL;
-}
-
-static inline struct xnpersonality *
-xnthread_set_personality(struct xnthread *thread,
-			 struct xnpersonality *personality)
-{
-	struct xnpersonality *prev = thread->personality;
-
-	thread->personality = personality;
-
-	return prev;
 }
 
 static inline void xnthread_sync_window(struct xnthread *thread)

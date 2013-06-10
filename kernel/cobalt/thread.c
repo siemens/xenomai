@@ -181,17 +181,19 @@ static void thread_destroy(pthread_t thread)
 	xnheap_schedule_free(&kheap, thread, &thread->link);
 }
 
-void cobalt_thread_unmap(struct xnthread *thread)
+struct xnpersonality *cobalt_thread_unmap(struct xnthread *thread)
 {
 	pthread_t tid = thread2pthread(thread);
 
-	if (tid == NULL)
-		return;
+	if (tid) {
+		cobalt_mark_deleted(tid);
+		cobalt_timer_cleanup_thread(tid);
+		thread_destroy(tid);
+		cobalt_thread_unhash(&tid->hkey);
+	}
 
-	cobalt_mark_deleted(tid);
-	cobalt_timer_cleanup_thread(tid);
-	thread_destroy(tid);
-	cobalt_thread_unhash(&tid->hkey);
+	/* We don't stack over any personality, no chaining. */
+	return NULL;
 }
 
 /**
