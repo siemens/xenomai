@@ -144,7 +144,14 @@ static int bind_interface(void)
 	return muxid;
 }
 
-static __attribute__ ((constructor))
+/*
+ * We give the Cobalt library constructor a high priority, so that
+ * extension libraries may assume the core services are available when
+ * their own constructor runs. Priorities 0-100 may be reserved by the
+ * implementation on some platforms, and we may want to keep some
+ * levels free for very high priority inits, so pick 200.
+ */
+static __attribute__ ((constructor(200)))
 void __init_cobalt_interface(void)
 {
 	pthread_t tid = pthread_self();
