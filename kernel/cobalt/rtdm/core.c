@@ -444,7 +444,7 @@ err_out:
 
 EXPORT_SYMBOL_GPL(__rt_dev_close);
 
-void cleanup_owned_contexts(void *owner)
+void cleanup_process_files(struct rtdm_process *owner)
 {
 	struct rtdm_dev_context *context;
 	unsigned int fd;

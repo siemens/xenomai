@@ -382,8 +382,10 @@ struct rtdm_operations {
 	/** @} Message-Oriented Device Operations */
 };
 
+struct rtdm_process;
+
 struct rtdm_devctx_reserved {
-	void *owner;
+	struct rtdm_process *owner;
 	struct list_head cleanup;
 };
 

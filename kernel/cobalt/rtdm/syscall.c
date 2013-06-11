@@ -125,7 +125,7 @@ static void rtdm_process_detach(struct xnshadow_ppd *ppd)
 	struct rtdm_process *process;
 
 	process = container_of(ppd, struct rtdm_process, ppd);
-	cleanup_owned_contexts(process);
+	cleanup_process_files(process);
 	kfree(process);
 }
 
