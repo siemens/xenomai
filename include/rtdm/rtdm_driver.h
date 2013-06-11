@@ -710,7 +710,10 @@ typedef unsigned long rtdm_lockctx_t;
  *
  * Rescheduling: never.
  */
-#define rtdm_lock_init(lock)	spin_lock_init(lock)
+static inline void rtdm_lock_init(rtdm_lock_t *lock)
+{
+	spin_lock_init(lock);
+}
 
 /**
  * Acquire lock from non-preemptible contexts
@@ -728,16 +731,12 @@ typedef unsigned long rtdm_lockctx_t;
  *
  * Rescheduling: never.
  */
-#ifdef DOXYGEN_CPP /* Beautify doxygen output */
-#define rtdm_lock_get(lock)	spin_lock(lock)
-#else /* This is how it really works */
-#define rtdm_lock_get(lock)					\
-	do {							\
-		XENO_BUGON(RTDM, !spltest());			\
-		spin_lock(lock);				\
-		__xnpod_lock_sched();				\
-	} while (0)
-#endif
+static inline void rtdm_lock_get(rtdm_lock_t *lock)
+{
+	XENO_BUGON(RTDM, !spltest());
+	spin_lock(lock);
+	__xnpod_lock_sched();
+}
 
 /**
  * Release lock without preemption restoration
@@ -755,14 +754,14 @@ typedef unsigned long rtdm_lockctx_t;
  *
  * Rescheduling: never.
  */
-#define rtdm_lock_put(lock)			\
-	do {					\
-		spin_unlock(lock);		\
-		__xnpod_unlock_sched();		\
-	} while (0)
+static inline void rtdm_lock_put(rtdm_lock_t *lock)
+{
+	spin_unlock(lock);
+	__xnpod_unlock_sched();
+}
 
 /**
- * Acquire lock and disable preemption
+ * Acquire lock and disable preemption, by stalling the head domain.
  *
  * @param lock Address of lock variable
  * @param context name of local variable to store the context in
@@ -778,11 +777,18 @@ typedef unsigned long rtdm_lockctx_t;
  *
  * Rescheduling: never.
  */
-#define rtdm_lock_get_irqsave(lock, context)		\
-	do {						\
-		spin_lock_irqsave(lock, context);	\
-		__xnpod_lock_sched();			\
-	} while (0)
+static inline rtdm_lockctx_t __rtdm_lock_get_irqsave(rtdm_lock_t *lock)
+{
+	rtdm_lockctx_t s;
+
+	s = ipipe_test_and_stall_head();
+	spin_lock(lock);
+	__xnpod_lock_sched();
+
+	return s;
+}
+#define rtdm_lock_get_irqsave(__lock, __s)	\
+	((__s) = __rtdm_lock_get_irqsave(__lock))
 
 /**
  * Release lock and restore preemption state
@@ -801,12 +807,13 @@ typedef unsigned long rtdm_lockctx_t;
  *
  * Rescheduling: possible.
  */
-#define rtdm_lock_put_irqrestore(lock, context)		\
-	do {						\
-		spin_unlock(lock);			\
-		__xnpod_unlock_sched();			\
-		ipipe_restore_head(context);		\
-	} while (0)
+static inline
+void rtdm_lock_put_irqrestore(rtdm_lock_t *lock, rtdm_lockctx_t s)
+{
+	spin_unlock(lock);
+	__xnpod_unlock_sched();
+	ipipe_restore_head(s);
+}
 
 /**
  * Disable preemption locally
