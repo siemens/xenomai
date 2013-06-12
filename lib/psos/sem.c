@@ -172,7 +172,7 @@ u_long sm_ident(const char *name, u_long node, u_long *smid_r)
 
 u_long sm_p(u_long smid, u_long flags, u_long timeout)
 {
-	struct timespec ts, *timespec;
+	struct timespec ts, *timespec = &ts;
 	struct psos_sem *sem;
 	struct service svc;
 	int ret;
@@ -183,10 +183,12 @@ u_long sm_p(u_long smid, u_long flags, u_long timeout)
 
 	COPPERPLATE_PROTECT(svc);
 
-	if (timeout != 0) {
-		timespec = &ts;
+	if (flags & SM_NOWAIT) {
+		timespec->tv_sec = 0;
+		timespec->tv_nsec = 0;
+	} else if (timeout != 0)
 		clockobj_ticks_to_timeout(&psos_clock, timeout, timespec);
-	} else
+	else
 		timespec = NULL;
 
 	ret = semobj_wait(&sem->smobj, timespec);
