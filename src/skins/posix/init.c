@@ -31,6 +31,7 @@
 #include <rtdk.h>
 
 #include <asm-generic/xenomai/bind.h>
+#include <asm-generic/xenomai/current.h>
 
 int __pse51_muxid = -1;
 int __pse51_rtdm_muxid = -1;
@@ -67,7 +68,7 @@ static __constructor__ void __init_posix_interface(void)
 	}
 
 	noshadow = getenv("XENO_NOSHADOW");
-	if (!noshadow || !*noshadow) {
+	if ((!noshadow || !*noshadow) && xeno_get_current() == XN_NO_HANDLE) {
 		err = __real_pthread_getschedparam(pthread_self(), &policy,
 						   &parm);
 		if (err) {
