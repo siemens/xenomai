@@ -75,7 +75,7 @@ struct xnpod {
 #ifdef CONFIG_XENO_OPT_VFILE
 	struct xnvfile_rev_tag threadlist_tag;
 #endif
-	atomic_counter_t timerlck; /*!< Timer lock depth.  */
+	atomic_t timerlck;	/*!< Timer lock depth.  */
 
 	int refcnt;		/*!< Reference count.  */
 };

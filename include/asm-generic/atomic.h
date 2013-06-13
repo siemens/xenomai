@@ -30,25 +30,9 @@ typedef unsigned long atomic_flags_t;
 #include <asm/atomic.h>
 #include <asm/xenomai/wrappers.h>
 
-typedef atomic_long_t atomic_counter_t;
-typedef atomic_long_t xnarch_atomic_t;
-
 #define xnarch_memory_barrier()		smp_mb()
 #define xnarch_read_memory_barrier()    rmb()
 #define xnarch_write_memory_barrier()   wmb()
-
-#define xnarch_atomic_set(pcounter,i)	atomic_long_set(pcounter,i)
-#define xnarch_atomic_get(pcounter)	atomic_long_read(pcounter)
-#define xnarch_atomic_inc(pcounter)	atomic_long_inc(pcounter)
-#define xnarch_atomic_dec(pcounter)	atomic_long_dec(pcounter)
-#define xnarch_atomic_inc_and_test(pcounter) \
-	atomic_long_inc_and_test(pcounter)
-#define xnarch_atomic_dec_and_test(pcounter) \
-	atomic_long_dec_and_test(pcounter)
-#define xnarch_atomic_cmpxchg(pcounter,old,new) \
-	atomic_long_cmpxchg((pcounter),(old),(new))
-
-#define xnarch_atomic_xchg(ptr,x)	xchg(ptr,x)
 
 /* atomic_set_mask, atomic_clear_mask are not standard among linux
    ports */
@@ -61,12 +45,12 @@ typedef atomic_long_t xnarch_atomic_t;
 #endif
 
 #else /* !__KERNEL__ */
+
 #include <xeno_config.h>
 
-#ifndef xnarch_atomic_t
-typedef struct { unsigned long counter; } __xnarch_atomic_t;
-#define xnarch_atomic_t __xnarch_atomic_t
-#endif
+typedef struct {
+	unsigned long v;
+} atomic_long_t;
 
 #ifndef xnarch_memory_barrier
 #define xnarch_memory_barrier() __sync_synchronize()
@@ -84,19 +68,19 @@ typedef struct { unsigned long counter; } __xnarch_atomic_t;
 #define cpu_relax() xnarch_memory_barrier()
 #endif
 
-#ifndef xnarch_atomic_get
-#define xnarch_atomic_get(v)		((v)->counter)
+#ifndef atomic_long_read
+#define atomic_long_read(p)		((p)->v)
 #endif
 
-#ifndef xnarch_atomic_set
-#define xnarch_atomic_set(v,i)		(((v)->counter) = (i))
+#ifndef atomic_long_set
+#define atomic_long_set(p, i)		((p)->v = i)
 #endif
 
-#ifndef xnarch_atomic_cmpxchg
-#define xnarch_atomic_cmpxchg(v, o, n)			\
-	__sync_val_compare_and_swap(&(v)->counter,	\
-				    (unsigned long)(o), \
-				    (unsigned long)(n))
+#ifndef atomic_long_cmpxchg
+#define atomic_long_cmpxchg(p, o, n)				\
+	__sync_val_compare_and_swap(&(p)->v,			\
+				    (typeof((p)->v))(o),	\
+				    (typeof((p)->v))(n))
 #endif
 
 #endif /* !__KERNEL__ */

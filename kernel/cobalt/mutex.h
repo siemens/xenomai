@@ -25,7 +25,7 @@
 struct cobalt_mutex;
 
 struct mutex_dat {
-	xnarch_atomic_t owner;
+	atomic_long_t owner;
 	unsigned long flags;
 
 #define COBALT_MUTEX_COND_SIGNAL 0x00000001
@@ -180,7 +180,7 @@ static inline struct mutex_dat *mutex_get_datp(struct __shadow_mutex *shadow)
 	return shadow->dat;
 }
 
-static inline xnarch_atomic_t *mutex_get_ownerp(struct __shadow_mutex *shadow)
+static inline atomic_long_t *mutex_get_ownerp(struct __shadow_mutex *shadow)
 {
 	return &mutex_get_datp(shadow)->owner;
 }

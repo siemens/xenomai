@@ -29,7 +29,7 @@
 
 #include <rtdk.h>
 #include <nucleus/types.h>	/* For BITS_PER_LONG */
-#include <asm/xenomai/atomic.h>	/* For atomic_cmpxchg */
+#include <asm/xenomai/atomic.h>	/* For atomic_long_cmpxchg */
 #include <asm-generic/stack.h>
 #include <asm-generic/current.h>
 #include "internal.h"
@@ -85,7 +85,7 @@ static pthread_mutex_t buffer_lock;
 static pthread_cond_t printer_wakeup;
 static pthread_key_t buffer_key;
 static pthread_t printer_thread;
-static xnarch_atomic_t *pool_bitmap;
+static atomic_long_t *pool_bitmap;
 static unsigned pool_bitmap_len;
 static unsigned pool_buf_size;
 static unsigned long pool_start, pool_len;
@@ -387,7 +387,7 @@ int rt_print_init(size_t buffer_size, const char *buffer_name)
 		unsigned i;
 
 		for (i = 0; i < pool_bitmap_len; i++) {
-			old_bitmap = xnarch_atomic_get(&pool_bitmap[i]);
+			old_bitmap = atomic_long_read(&pool_bitmap[i]);
 			if (old_bitmap)
 				goto acquire;
 		}
@@ -398,9 +398,9 @@ int rt_print_init(size_t buffer_size, const char *buffer_name)
 		do {
 			bitmap = old_bitmap;
 			j = __builtin_ffsl(bitmap) - 1;
-			old_bitmap = xnarch_atomic_cmpxchg(&pool_bitmap[i],
-							   bitmap,
-							   bitmap & ~(1UL << j));
+			old_bitmap = atomic_long_cmpxchg(&pool_bitmap[i],
+							 bitmap,
+							 bitmap & ~(1UL << j));
 		} while (old_bitmap != bitmap && old_bitmap);
 		j += i * BITS_PER_LONG;
 	} while (!old_bitmap);
@@ -509,12 +509,12 @@ static void cleanup_buffer(struct print_buffer *buffer)
 		i = j / BITS_PER_LONG;
 		j = j % BITS_PER_LONG;
 
-		old_bitmap = xnarch_atomic_get(&pool_bitmap[i]);
+		old_bitmap = atomic_long_read(&pool_bitmap[i]);
 		do {
 			bitmap = old_bitmap;
-			old_bitmap = xnarch_atomic_cmpxchg(&pool_bitmap[i],
-							   bitmap,
-							   bitmap | (1UL << j));
+			old_bitmap = atomic_long_cmpxchg(&pool_bitmap[i],
+							 bitmap,
+							 bitmap | (1UL << j));
 		} while (old_bitmap != bitmap);
 
 		return;
@@ -738,10 +738,10 @@ void cobalt_print_init(void)
 		}
 
 		for (i = 0; i < buffers_count / BITS_PER_LONG; i++)
-			xnarch_atomic_set(&pool_bitmap[i], ~0UL);
+			atomic_long_set(&pool_bitmap[i], ~0UL);
 		if (buffers_count % BITS_PER_LONG)
-			xnarch_atomic_set(&pool_bitmap[i],
-					  (1UL << (buffers_count % BITS_PER_LONG)) - 1);
+			atomic_long_set(&pool_bitmap[i],
+					(1UL << (buffers_count % BITS_PER_LONG)) - 1);
 
 		for (i = 0; i < buffers_count; i++) {
 			struct print_buffer *buffer =

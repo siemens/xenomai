@@ -40,19 +40,19 @@
 #define XNSYNCH_FLCLAIM XN_HANDLE_SPARE3 /* Corresponding bit in fast lock */
 
 /* Fast lock API */
-static inline int xnsynch_fast_owner_check(xnarch_atomic_t *fastlock,
+static inline int xnsynch_fast_owner_check(atomic_long_t *fastlock,
 					   xnhandle_t ownerh)
 {
-	return (xnhandle_mask_spare(xnarch_atomic_get(fastlock)) == ownerh) ?
+	return (xnhandle_mask_spare(atomic_long_read(fastlock)) == ownerh) ?
 		0 : -EPERM;
 }
 
-static inline int xnsynch_fast_acquire(xnarch_atomic_t *fastlock,
+static inline int xnsynch_fast_acquire(atomic_long_t *fastlock,
 				       xnhandle_t new_ownerh)
 {
 	xnhandle_t h;
 
-	h = xnarch_atomic_cmpxchg(fastlock, XN_NO_HANDLE, new_ownerh);
+	h = atomic_long_cmpxchg(fastlock, XN_NO_HANDLE, new_ownerh);
 	if (h != XN_NO_HANDLE) {
 		if (xnhandle_mask_spare(h) == new_ownerh)
 			return -EBUSY;
@@ -63,10 +63,10 @@ static inline int xnsynch_fast_acquire(xnarch_atomic_t *fastlock,
 	return 0;
 }
 
-static inline int xnsynch_fast_release(xnarch_atomic_t *fastlock,
+static inline int xnsynch_fast_release(atomic_long_t *fastlock,
 				       xnhandle_t cur_ownerh)
 {
-	return (xnarch_atomic_cmpxchg(fastlock, cur_ownerh, XN_NO_HANDLE) ==
+	return (atomic_long_cmpxchg(fastlock, cur_ownerh, XN_NO_HANDLE) ==
 		cur_ownerh);
 }
 
@@ -108,7 +108,7 @@ typedef struct xnsynch {
 
     struct xnthread *owner; /* Thread which owns the resource */
 
-    xnarch_atomic_t *fastlock; /* Pointer to fast lock word */
+    atomic_long_t *fastlock; /* Pointer to fast lock word */
 
     void (*cleanup)(struct xnsynch *synch); /* Cleanup handler */
 
@@ -158,7 +158,7 @@ static inline void xnsynch_detect_claimed_relax(struct xnthread *owner)
 #endif /* !XENO_DEBUG(SYNCH_RELAX) */
 
 void xnsynch_init(struct xnsynch *synch, xnflags_t flags,
-		  xnarch_atomic_t *fastlock);
+		  atomic_long_t *fastlock);
 
 #define xnsynch_destroy(synch)	xnsynch_flush(synch, XNRMID)
 

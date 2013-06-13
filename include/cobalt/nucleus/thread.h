@@ -390,7 +390,7 @@ void xnthread_set_sync_window(struct xnthread *thread, int bits)
 static inline struct xnthread *
 xnsynch_release(struct xnsynch *synch, struct xnthread *thread)
 {
-	xnarch_atomic_t *lockp;
+	atomic_long_t *lockp;
 	xnhandle_t threadh;
 
 	XENO_BUGON(NUCLEUS, !testbits(synch->status, XNSYNCH_OWNER));

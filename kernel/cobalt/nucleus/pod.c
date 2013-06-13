@@ -279,7 +279,7 @@ int xnpod_init(void)
 	pod->status = 0;
 	pod->refcnt = 1;
 	initq(&pod->threadq);
-	xnarch_atomic_set(&pod->timerlck, 0);
+	atomic_set(&pod->timerlck, 0);
 
 	xnlock_put_irqrestore(&nklock, s);
 

@@ -283,13 +283,13 @@ static void request_syscall_restart(struct xnthread *thread,
 
 static inline void lock_timers(void)
 {
-	xnarch_atomic_inc(&nkpod->timerlck);
+	atomic_inc(&nkpod->timerlck);
 	setbits(nkclock.status, XNTBLCK);
 }
 
 static inline void unlock_timers(void)
 {
-	if (xnarch_atomic_dec_and_test(&nkpod->timerlck))
+	if (atomic_dec_and_test(&nkpod->timerlck))
 		clrbits(nkclock.status, XNTBLCK);
 }
 
@@ -298,14 +298,14 @@ static int enter_personality(struct xnpersonality *personality)
 	if (personality->module && !try_module_get(personality->module))
 		return -ENOSYS;
 
-	xnarch_atomic_inc(&personality->refcnt);
+	atomic_inc(&personality->refcnt);
 
 	return 0;
 }
 
 static void leave_personality(struct xnpersonality *personality)
 {
-	xnarch_atomic_dec(&personality->refcnt);
+	atomic_dec(&personality->refcnt);
 	if (personality->module)
 		module_put(personality->module);
 }
@@ -883,7 +883,7 @@ int xnshadow_map_user(struct xnthread *thread,
 	init_threadinfo(thread);
 	xnthread_set_state(thread, XNMAPPED);
 	xndebug_shadow_init(thread);
-	xnarch_atomic_inc(&sys_ppd->refcnt);
+	atomic_inc(&sys_ppd->refcnt);
 	/*
 	 * ->map_thread() handler is invoked after the TCB is fully
 	 * built, and when we know for sure that current will go
@@ -1069,7 +1069,7 @@ void xnshadow_unmap(struct xnthread *thread)
 
 	if (xnthread_test_state(thread, XNUSER)) {
 		sys_ppd = xnsys_ppd_get(0);
-		xnarch_atomic_dec(&sys_ppd->refcnt);
+		atomic_dec(&sys_ppd->refcnt);
 	}
 }
 
@@ -1645,8 +1645,8 @@ static struct xnshadow_ppd *user_process_attach(void)
 		exe_path = NULL; /* Not lethal, but weird. */
 	}
 	p->exe_path = exe_path;
-	xnarch_atomic_set(&p->refcnt, 1);
-	xnarch_atomic_inc(&personalities[user_muxid]->refcnt);
+	atomic_set(&p->refcnt, 1);
+	atomic_inc(&personalities[user_muxid]->refcnt);
 
 	return &p->ppd;
 }
@@ -1657,7 +1657,7 @@ static void user_process_detach(struct xnshadow_ppd *ppd)
 
 	p = container_of(ppd, struct xnsys_ppd, ppd);
 	xnheap_destroy_mapped(&p->sem_heap, post_ppd_release, NULL);
-	xnarch_atomic_dec(&personalities[user_muxid]->refcnt);
+	atomic_dec(&personalities[user_muxid]->refcnt);
 
 	if (p->exe_path)
 		kfree(p->exe_path);
@@ -1737,7 +1737,7 @@ int xnshadow_register_personality(struct xnpersonality *personality)
 
 	for (muxid = 0; muxid < PERSONALITIES_NR; muxid++) {
 		if (personalities[muxid] == NULL) {
-			xnarch_atomic_set(&personality->refcnt, 0);
+			atomic_set(&personality->refcnt, 0);
 			personalities[muxid] = personality;
 			break;
 		}
@@ -1773,7 +1773,7 @@ int xnshadow_unregister_personality(int muxid)
 	xnlock_get_irqsave(&nklock, s);
 
 	personality = personalities[muxid];
-	if (xnarch_atomic_get(&personality->refcnt) > 0)
+	if (atomic_read(&personality->refcnt) > 0)
 		ret = -EBUSY;
 	else
 		personalities[muxid] = NULL;
@@ -2229,7 +2229,7 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 		xnheap_free(&sys_ppd->sem_heap, thread->u_window);
 		thread->u_window = NULL;
 		mm = xnshadow_current_mm();
-		if (!xnarch_atomic_get(&sys_ppd->refcnt))
+		if (atomic_read(&sys_ppd->refcnt) == 0)
 			ppd_remove_mm(mm, detach_ppd);
 	}
 
@@ -2392,7 +2392,7 @@ static int handle_cleanup_event(struct mm_struct *mm)
 			handle_taskexit_event(current);
 			ipipe_disable_notifier(current);
 		}
-		if (xnarch_atomic_dec_and_test(&sys_ppd->refcnt))
+		if (atomic_dec_and_test(&sys_ppd->refcnt))
 			ppd_remove_mm(mm, detach_ppd);
 	}
 

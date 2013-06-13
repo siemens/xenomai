@@ -28,7 +28,7 @@
 #define COBALT_MONITOR_PENDED     0x08
 
 struct cobalt_monitor_data {
-	xnarch_atomic_t owner;
+	atomic_long_t owner;
 	unsigned long flags;
 };
 

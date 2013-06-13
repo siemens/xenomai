@@ -53,7 +53,7 @@ do { \
 #define xnstat_exectime_set_current(sched, new_account) \
 ({ \
 	xnstat_exectime_t *__prev; \
-	__prev = xnarch_atomic_xchg(&(sched)->current_account, (new_account)); \
+	__prev = (xnstat_exectime_t *)atomic_long_xchg(&(sched)->current_account, (long)(new_account)); \
 	__prev; \
 })
 
