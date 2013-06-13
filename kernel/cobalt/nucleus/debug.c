@@ -240,8 +240,7 @@ void xndebug_trace_relax(int nr, unsigned long __user *u_backtrace,
 	 * executable mappings we find in the backtrace, which makes
 	 * it possible for the slackspot utility to match the
 	 * corresponding source code locations from unrelocated file
-	 * offsets. Note that we don't translate PC values within pure
-	 * executable vmas.
+	 * offsets.
 	 */
 
 	tmp = (char *)__get_free_page(GFP_TEMPORARY);
@@ -263,10 +262,7 @@ void xndebug_trace_relax(int nr, unsigned long __user *u_backtrace,
 		if (vma == NULL)
 			continue;
 
-		if (!(vma->vm_flags & VM_EXECUTABLE))
-			pc -= vma->vm_start;
-
-		spot.backtrace[depth].pc = pc;
+		spot.backtrace[depth].pc = pc - vma->vm_start;
 
 		/*
 		 * Even in case we can't fetch the map name, we still
