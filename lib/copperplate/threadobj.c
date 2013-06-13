@@ -547,6 +547,7 @@ int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock hel
 	if (thobj->status & __THREAD_S_NOPREEMPT) {
 		thobj->core.prio_unlocked = prio;
 		thobj->core.policy_unlocked = prio ? SCHED_RT : SCHED_OTHER;
+		threadobj_unlock(thobj);
 		return 0;
 	}
 
