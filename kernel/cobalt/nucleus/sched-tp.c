@@ -61,7 +61,7 @@ static void tp_schedule_next(struct xnsched_tp *tp)
 		 */
 		for (;;) {
 			t = tp->tf_start + tp->gps->tf_duration;
-			if (xnpod_get_cpu_time() > t) {
+			if (xnclock_read_monotonic() > t) {
 				tp->tf_start = t;
 				tp->wnext = 0;
 			} else
