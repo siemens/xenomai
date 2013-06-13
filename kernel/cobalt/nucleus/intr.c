@@ -207,7 +207,7 @@ static void xnintr_shirq_handler(unsigned irq, void *cookie)
 
 	if (unlikely(s == XN_ISR_NONE)) {
 		if (++shirq->unhandled == XNINTR_MAX_UNHANDLED) {
-			printk(XENO_ERR "%s: IRQ%d not handled. Disabling IRQ line\n"
+			printk(XENO_ERR "%s: IRQ%d not handled. Disabling IRQ line\n",
 			       __FUNCTION__, irq);
 			s |= XN_ISR_NOENABLE;
 		}
