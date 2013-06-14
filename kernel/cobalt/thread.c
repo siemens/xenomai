@@ -965,19 +965,22 @@ int cobalt_thread_set_name_np(unsigned long tid, const char __user *u_name)
 	hkey.mm = current->mm;
 
 	xnlock_get_irqsave(&nklock, s);
+
 	pthread = thread_find(&hkey);
 	if (pthread == NULL) {
 		xnlock_put_irqrestore(&nklock, s);
 		return -ESRCH;
 	}
 
-	p = xnthread_host_task(&pthread->threadbase);
-	get_task_struct(p);
-	xnlock_put_irqrestore(&nklock, s);
-	strncpy(p->comm, name, sizeof(p->comm));
-	p->comm[sizeof(p->comm) - 1] = '\0';
 	snprintf(xnthread_name(&pthread->threadbase),
 		 XNOBJECT_NAME_LEN - 1, "%s", name);
+	p = xnthread_host_task(&pthread->threadbase);
+	get_task_struct(p);
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	strncpy(p->comm, name, sizeof(p->comm));
+	p->comm[sizeof(p->comm) - 1] = '\0';
 	put_task_struct(p);
 
 	return 0;
