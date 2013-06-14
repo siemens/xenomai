@@ -862,6 +862,7 @@ enable_asciidoc
 enable_dlopen_libs
 enable_tls
 with_testdir
+enable_fortify
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1523,7 +1524,7 @@ Optional Features:
                           allows to select the machine for which a user-space
                           tsc emulation should be generated. Valid machines
                           are at91, kuser, imx, ixp4xx, omap, orion, pxa,
-                          s3c24x, sa1100.
+                          s3c24x, sa1100. [default=kuser]
   --enable-arm-quirks     Enable quirks for specific systems. Currently
                           supported quirks are for sa1100 and xscale3.
   --disable-doc-install   Do not install documentation
@@ -1536,6 +1537,8 @@ Optional Features:
   --enable-asciidoc       Build Asciidoc documentation
   --enable-dlopen-libs    Allow dynamic loading of Xenomai libraries
   --enable-tls            Enable thread local storage
+  --enable-fortify        Enable support for applications compiled with
+                          _FORTIFY_SOURCE
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -12966,7 +12969,7 @@ if test "${enable_arm_tsc+set}" = set; then :
 
 	imx*|mx*)   CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING;;
 
-	kuser)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_KUSER;;
+	generic|kuser)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_KUSER;;
 
 	omap*)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING;;
 
@@ -14042,6 +14045,33 @@ if test x$rtcore_type = xcobalt; then
 
    base=asm-generic
    ac_config_links="$ac_config_links lib/include/$base/xenomai:$srcdir/include/$base"
+
+fi
+
+unset want_fortify
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for fortify support" >&5
+$as_echo_n "checking for fortify support... " >&6; }
+# Check whether --enable-fortify was given.
+if test "${enable_fortify+set}" = set; then :
+  enableval=$enable_fortify; case "$enableval" in
+              y | yes) want_fortify=yes;;
+	      *) want_fortify=no;;
+	      esac
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: ${want_fortify:-autodetect}" >&5
+$as_echo "${want_fortify:-autodetect}" >&6; }
+if test x"$want_fortify" != xno; then
+   ac_fn_c_check_func "$LINENO" "__vfprintf_chk" "ac_cv_func___vfprintf_chk"
+if test "x$ac_cv_func___vfprintf_chk" = xyes; then :
+
+$as_echo "#define CONFIG_XENO_FORTIFY 1 " >>confdefs.h
+
+else
+  if test x"$want_fortify" = "xyes"; then
+	      as_fn_error $? "Fortify support enabled but not available in *libc" "$LINENO" 5
+	       fi
+fi
 
 fi
 
