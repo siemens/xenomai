@@ -22,19 +22,12 @@
 
 #include "internal.h"
 
-typedef unsigned long long cobalt_sigset_t;
-
 struct mm_struct;
 
 struct cobalt_hkey {
 	unsigned long u_tid;
 	struct mm_struct *mm;
 };
-
-typedef struct {
-	cobalt_sigset_t mask;
-	xnpqueue_t list;
-} cobalt_sigqueue_t;
 
 struct cobalt_thread {
 	unsigned magic;
