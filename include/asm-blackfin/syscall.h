@@ -21,17 +21,22 @@
 #define _XENO_ASM_BLACKFIN_SYSCALL_H
 
 #include <asm-generic/xenomai/syscall.h>
+#include <asm/xenomai/tsc.h>
 
-/* The way we mangle Xenomai syscalls with our multiplexer
-   marker. Note: watch out for the p0 sign convention used by Linux
-   (i.e. negative syscall number in orig_p0 meaning "non-syscall
-   entry"). */
+/*
+ * The way we mangle Xenomai syscalls with our multiplexer
+ * marker. Note: watch out for the p0 sign convention used by Linux
+ * (i.e. negative syscall number in orig_p0 meaning "non-syscall
+ * entry").
+ */
 #define __xn_mux_code(shifted_id,op) (shifted_id|((op << 16) & 0xff0000)|(sc_nucleus_mux & 0xffff))
 #define __xn_mux_shifted_id(id) (id << 24)
 
-/* Local syscalls -- the braindamage thing about this arch is the
-   absence of atomic ops usable from user-space; so we export what
-   we need as syscalls implementing those ops from kernel space. Sigh... */
+/*
+ * Local syscalls -- the braindamage thing about this arch is the
+ * absence of atomic ops usable from user-space; so we export what we
+ * need as syscalls implementing those ops from kernel space. Sigh...
+ */
 #define __xn_lsys_xchg        0
 
 #ifdef __KERNEL__
@@ -56,8 +61,10 @@
 
 #define __xn_linux_mux_p(regs, nr)  (__xn_reg_mux(regs) == (nr))
 
-/* Purposedly used inlines and not macros for the following routines
-   so that we don't risk spurious side-effects on the value arg. */
+/*
+ * Purposedly used inlines and not macros for the following routines
+ * so that we don't risk spurious side-effects on the value arg.
+ */
 
 static inline void __xn_success_return(struct pt_regs *regs, int v)
 {
@@ -132,29 +139,6 @@ int xnarch_local_syscall(unsigned long a1, unsigned long a2,
 #define XENOMAI_SKINCALL3(id,op,a1,a2,a3)       XENOMAI_DO_SYSCALL(3,id,op,a1,a2,a3)
 #define XENOMAI_SKINCALL4(id,op,a1,a2,a3,a4)    XENOMAI_DO_SYSCALL(4,id,op,a1,a2,a3,a4)
 #define XENOMAI_SKINCALL5(id,op,a1,a2,a3,a4,a5) XENOMAI_DO_SYSCALL(5,id,op,a1,a2,a3,a4,a5)
-
-static inline unsigned long long __xn_rdtsc (void)
-{
-    union {
-	struct {
-	    unsigned long l;
-	    unsigned long h;
-	} s;
-	unsigned long long t;
-    } u;
-    unsigned long cy2;
-
-    __asm__ __volatile__ (	"1: %0 = CYCLES2\n"
-				"%1 = CYCLES\n"
-				"%2 = CYCLES2\n"
-				"CC = %2 == %0\n"
-				"if !cc jump 1b\n"
-				:"=d" (u.s.h),
-				"=d" (u.s.l),
-				"=d" (cy2)
-				: /*no input*/ : "cc");
-    return u.t;
-}
 
 int shm_open(const char *name, int oflag, mode_t mode);
 inline __attribute__((weak))

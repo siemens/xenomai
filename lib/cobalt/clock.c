@@ -24,6 +24,7 @@
 #include <cobalt/syscall.h>
 #include <time.h>
 #include <asm/xenomai/arith.h>
+#include <asm/xenomai/tsc.h>
 #include <asm-generic/xenomai/timeconv.h>
 #include <sys/types.h>
 #include <nucleus/vdso.h>

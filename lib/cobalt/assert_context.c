@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <rtdk.h>
 #include <nucleus/thread.h>
-#include <asm-generic/syscall.h>
+#include <asm/xenomai/syscall.h>
 #include <asm-generic/current.h>
 #include <unistd.h>
 

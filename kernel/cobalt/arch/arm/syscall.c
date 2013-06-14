@@ -25,18 +25,13 @@ int xnarch_local_syscall(unsigned long a1, unsigned long a2,
 			 unsigned long a3, unsigned long a4,
 			 unsigned long a5)
 {
-	int ret = -EINVAL;
-	/*
-	 * If the pipeline supports user-space TSC emulation, provide
-	 * a syscall for retrieving the TSC information.
-	 */
-#ifdef IPIPE_TSC_TYPE_NONE
 	struct ipipe_sysinfo ipipe_info;
 	struct __ipipe_tscinfo *p = &ipipe_info.arch.tsc;
 	struct __xn_tscinfo info;
+	int ret;
 
 	if (a1 != XENOMAI_SYSARCH_TSCINFO)
-		return ret;
+		return  = -EINVAL;
 
 	ret = ipipe_get_sysinfo(&ipipe_info);
 	if (ret)
@@ -92,7 +87,6 @@ int xnarch_local_syscall(unsigned long a1, unsigned long a2,
 
 	if (__xn_copy_to_user((void *)a2, &info, sizeof(info)))
 		return -EFAULT;
-#endif /* IPIPE_TSC_TYPE_NONE */
 
-	return ret;
+	return 0;
 }

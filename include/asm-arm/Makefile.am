@@ -8,6 +8,7 @@ includesub_HEADERS =	\
 	fptest.h	\
 	machine.h	\
 	syscall.h	\
+	tsc.h		\
 	thread.h	\
 	wrappers.h
 

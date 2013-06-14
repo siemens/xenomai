@@ -31,6 +31,7 @@
 #include <asm/uaccess.h>
 #include <asm/ptrace.h>
 #include <asm/xenomai/wrappers.h>
+#include <asm/xenomai/tsc.h>
 
 /* Register mapping for accessing syscall args. */
 
@@ -318,22 +319,6 @@ static inline void __xn_get_ebp(void **dest)
 #define XENOMAI_SKINCALL3(id,op,a1,a2,a3)	XENOMAI_SKIN_MUX(3,id,op,a1,a2,a3)
 #define XENOMAI_SKINCALL4(id,op,a1,a2,a3,a4)	XENOMAI_SKIN_MUX(4,id,op,a1,a2,a3,a4)
 #define XENOMAI_SKINCALL5(id,op,a1,a2,a3,a4,a5)	XENOMAI_SKIN_MUX(5,id,op,a1,a2,a3,a4,a5)
-
-static inline unsigned long long __xn_rdtsc(void)
-{
-#ifdef __i386__
-	unsigned long long t;
-
-	asm volatile ("rdtsc" : "=A" (t));
-	return t;
-
-#else /* x86_64 */
-	unsigned int __a,__d;
-
-	asm volatile ("rdtsc" : "=a" (__a), "=d" (__d));
-	return ((unsigned long)__a) | (((unsigned long)__d) << 32);
-#endif /* x86_64 */
-}
 
 #endif /* !__KERNEL__ */
 

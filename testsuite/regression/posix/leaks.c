@@ -11,6 +11,7 @@
 #include <signal.h>
 
 #include <nucleus/heap.h>
+#include <asm/xenomai/syscall.h>
 
 #include "check.h"
 
