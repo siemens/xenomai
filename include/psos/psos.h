@@ -166,12 +166,6 @@
 extern "C" {
 #endif /* __cplusplus */
 
-void k_fatal(u_long err_code,
-	     u_long flags);
-
-u_long as_send(u_long tid,
-	       u_long signals);
-
 u_long ev_receive(u_long events,
 		  u_long flags,
 		  u_long timeout,
