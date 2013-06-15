@@ -37,11 +37,6 @@
 #error "CONFIG_IPIPE_LEGACY must be switched off"
 #endif
 
-static inline struct task_struct *wrap_find_task_by_pid(pid_t nr)
-{
-	return pid_task(find_pid_ns(nr, &init_pid_ns), PIDTYPE_PID);
-}
-
 #include <linux/mm.h>
 #ifndef pgprot_noncached
 #define pgprot_noncached(p) (p)
@@ -50,7 +45,6 @@ static inline struct task_struct *wrap_find_task_by_pid(pid_t nr)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,4,0)
 
 #include <linux/sched.h>
-#include <linux/mm.h>
 #include <linux/smp.h>
 
 #ifndef cpu_online_map
