@@ -82,9 +82,10 @@ static int __init mach_setup(void)
 
 #ifdef CONFIG_SMP
 	cpus_clear(xnarch_machdata.supported_cpus);
-	for (cpu = 0; cpu < num_online_cpus(); cpu++)
+	for_each_online_cpu(cpu) {
 		if (supported_cpus_arg & (1UL << cpu))
 			cpu_set(cpu, xnarch_machdata.supported_cpus);
+	}
 #endif /* CONFIG_SMP */
 
 	ret = ipipe_select_timers(&xnarch_supported_cpus);

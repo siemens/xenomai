@@ -908,8 +908,8 @@ int xnintr_query_init(xnintr_iterator_t *iterator)
 	 * xnintr_list_rev and old xnintr_count here. The other way
 	 * around is not a problem as xnintr_query() will notice this
 	 * fact later.  Should xnintr_list_rev change later,
-	 * xnintr_query() will trigger an appropriate error below. */
-
+	 * xnintr_query() will trigger an appropriate error below.
+	 */
 	iterator->list_rev = xnintr_list_rev;
 	xnarch_memory_barrier();
 
@@ -918,13 +918,16 @@ int xnintr_query_init(xnintr_iterator_t *iterator)
 
 int xnintr_query_next(int irq, xnintr_iterator_t *iterator, char *name_buf)
 {
-	int cpu = iterator->cpu + 1;
 	xnticks_t last_switch;
+	int ret = 0, cpu;
 	xnintr_t *intr;
-	int ret = 0;
 	spl_t s;
 
-	if (cpu == num_online_cpus())
+	for (cpu = iterator->cpu + 1; cpu < num_present_cpus(); ++cpu) {
+		if (cpu_online(cpu))
+			break;
+	}
+	if (cpu == num_present_cpus())
 		cpu = 0;
 	iterator->cpu = cpu;
 
@@ -943,7 +946,7 @@ int xnintr_query_next(int irq, xnintr_iterator_t *iterator, char *name_buf)
 	} else
 		intr = xnintr_shirq_next(iterator->prev);
 
-	if (!intr) {
+	if (intr == NULL) {
 		cpu = -1;
 		iterator->prev = NULL;
 		ret = -ENODEV;
@@ -965,9 +968,11 @@ int xnintr_query_next(int irq, xnintr_iterator_t *iterator, char *name_buf)
 	intr->stat[cpu].account.total = 0;
 	intr->stat[cpu].account.start = last_switch;
 
-	/* Proceed to next entry in shared IRQ chain when all CPUs
-	 * have been visited for this one. */
-	if (cpu + 1 == num_online_cpus())
+	/*
+	 * Proceed to next entry in shared IRQ chain when all CPUs
+	 * have been visited for this one.
+	 */
+	if (cpu + 1 == num_present_cpus())
 		iterator->prev = intr;
 
      unlock_and_exit:

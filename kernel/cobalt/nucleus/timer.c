@@ -196,12 +196,12 @@ enqueue:
 
 void xntimer_adjust_all(xnsticks_t delta)
 {
-	unsigned cpu, nr_cpus;
+	unsigned int cpu;
 	xnqueue_t adjq;
 
 	initq(&adjq);
 	delta = xnarch_ns_to_tsc(delta);
-	for (cpu = 0, nr_cpus = num_online_cpus(); cpu < nr_cpus; cpu++) {
+	for_each_online_cpu (cpu) {
 		xnsched_t *sched = xnpod_sched_slot(cpu);
 		xntimerq_t *q = &sched->timerqueue;
 		xnholder_t *adjholder;
@@ -783,18 +783,17 @@ EXPORT_SYMBOL_GPL(xntimer_get_overruns);
 
 void xntimer_freeze(void)
 {
-	int nr_cpus, cpu;
+	xntimerq_t *timerq;
+	xntimerh_t *holder;
+	int cpu;
 	spl_t s;
 
 	trace_mark(xn_nucleus, timer_freeze, MARK_NOARGS);
 
 	xnlock_get_irqsave(&nklock, s);
 
-	nr_cpus = num_online_cpus();
-
-	for (cpu = 0; cpu < nr_cpus; cpu++) {
-		xntimerq_t *timerq = &xnpod_sched_slot(cpu)->timerqueue;
-		xntimerh_t *holder;
+	for_each_online_cpu(cpu) {
+		timerq = &xnpod_sched_slot(cpu)->timerqueue;
 		while ((holder = xntimerq_head(timerq)) != NULL) {
 			__setbits(aplink2timer(holder)->status, XNTIMER_DEQUEUED);
 			xntimerq_remove(timerq, holder);

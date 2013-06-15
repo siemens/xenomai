@@ -254,9 +254,9 @@ static void init_extent(xnheap_t *heap, xnextent_t *extent)
 int xnheap_init(xnheap_t *heap,
 		void *heapaddr, u_long heapsize, u_long pagesize)
 {
-	unsigned cpu, nr_cpus = num_online_cpus();
 	u_long hdrsize, shiftsize, pageshift;
 	xnextent_t *extent;
+	unsigned int cpu;
 	spl_t s;
 
 	/*
@@ -311,7 +311,7 @@ int xnheap_init(xnheap_t *heap,
 
 	heap->ubytes = 0;
 	heap->maxcont = heap->npages * pagesize;
-	for (cpu = 0; cpu < nr_cpus; cpu++)
+	for_each_online_cpu(cpu)
 		heap->idleq[cpu] = NULL;
 	inith(&heap->link);
 	inith(&heap->stat_link);

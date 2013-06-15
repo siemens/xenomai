@@ -145,7 +145,6 @@ static inline void __xnpod_switch_fpu(struct xnsched *sched)
 void xnpod_fatal(const char *format, ...)
 {
 	static char msg_buf[1024];
-	const unsigned nr_cpus = num_online_cpus();
 	struct xnthread *thread;
 	xnholder_t *holder;
 	xnsched_t *sched;
@@ -175,7 +174,7 @@ void xnpod_fatal(const char *format, ...)
 	printk(KERN_ERR "\n %-3s  %-6s %-8s %-8s %-8s  %s\n",
 	       "CPU", "PID", "PRI", "TIMEOUT", "STAT", "NAME");
 
-	for (cpu = 0; cpu < nr_cpus; ++cpu) {
+	for_each_online_cpu(cpu) {
 		sched = xnpod_sched_slot(cpu);
 
 		holder = getheadq(&nkpod->threadq);
@@ -255,11 +254,10 @@ static void xnpod_flush_heap(xnheap_t *heap,
 int xnpod_init(void)
 {
 	extern int xeno_nucleus_status;
-	int cpu, nr_cpus = num_online_cpus();
 	struct xnsched *sched;
 	struct xnpod *pod;
 	void *heapaddr;
-	int ret;
+	int ret, cpu;
 	spl_t s;
 
 	if (xeno_nucleus_status < 0)
@@ -291,7 +289,7 @@ int xnpod_init(void)
 	}
 	xnheap_set_label(&kheap, "main heap");
 
-	for (cpu = 0; cpu < nr_cpus; ++cpu) {
+	for_each_online_cpu(cpu) {
 		sched = &pod->sched[cpu];
 		xnsched_init(sched, cpu);
 		if (xnarch_cpu_supported(cpu))
@@ -383,7 +381,7 @@ void xnpod_shutdown(int xtype)
 
 	__clrbits(nkpod->status, XNPEXEC);
 
-	for (cpu = 0; cpu < num_online_cpus(); cpu++) {
+	for_each_online_cpu(cpu) {
 		sched = xnpod_sched_slot(cpu);
 		xnsched_destroy(sched);
 	}
@@ -2116,7 +2114,7 @@ int xnpod_enable_timesource(void)
 	nkclock.wallclock_offset =
 		xnclock_get_host_time() - xnclock_read_monotonic();
 
-	for (cpu = 0; cpu < num_online_cpus(); cpu++) {
+	for_each_online_cpu(cpu) {
 
 		if (!xnarch_cpu_supported(cpu))
 			continue;
@@ -2200,9 +2198,10 @@ void xnpod_disable_timesource(void)
 	 * timer, since this could cause deadlock situations to arise
 	 * on SMP systems.
 	 */
-	for (cpu = 0; cpu < num_online_cpus(); cpu++)
+	for_each_online_cpu(cpu) {
 		if (xnarch_cpu_supported(cpu))
 			xntimer_release_hardware(cpu);
+	}
 
 	xntimer_freeze();
 
