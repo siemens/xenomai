@@ -28,12 +28,12 @@
 #include <signal.h>
 #include <errno.h>
 #include <pthread.h>
-#include <nucleus/synch.h>
-#include <nucleus/thread.h>
+#include <cobalt/kernel/synch.h>
+#include <cobalt/kernel/thread.h>
 #include <cobalt/syscall.h>
-#include <kernel/cobalt/monitor.h>
-#include <kernel/cobalt/event.h>
 #include <asm-generic/current.h>
+#include "kernel/cobalt/posix/monitor.h"
+#include "kernel/cobalt/posix/event.h"
 #include "internal.h"
 
 extern unsigned long xeno_sem_heap[2];

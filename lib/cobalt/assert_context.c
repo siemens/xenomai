@@ -20,7 +20,7 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <rtdk.h>
-#include <nucleus/thread.h>
+#include <cobalt/kernel/thread.h>
 #include <asm/xenomai/syscall.h>
 #include <asm-generic/current.h>
 #include <unistd.h>

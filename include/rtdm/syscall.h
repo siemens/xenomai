@@ -36,7 +36,7 @@
 
 #ifdef __KERNEL__
 
-#include <nucleus/shadow.h>
+#include <cobalt/kernel/shadow.h>
 
 extern int __rtdm_muxid;
 

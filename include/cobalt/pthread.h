@@ -121,7 +121,7 @@ typedef struct
 #include <sched.h>
 #include <errno.h>
 #include_next <pthread.h>
-#include <nucleus/thread.h>
+#include <cobalt/kernel/thread.h>
 #include <cobalt/wrappers.h>
 
 struct timespec;

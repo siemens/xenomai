@@ -25,15 +25,15 @@
 #include <signal.h>
 #include <limits.h>
 #include <unistd.h>
-#include <nucleus/heap.h>
-#include <rtdm/syscall.h>
+#include <cobalt/kernel/heap.h>
 #include <cobalt/syscall.h>
-#include <kernel/cobalt/mutex.h>
+#include <rtdm/syscall.h>
 #include <rtdk.h>
-#include <asm/xenomai/bits/bind.h>
-#include <asm-generic/xenomai/timeconv.h>
+#include <asm/xenomai/features.h>
 #include <asm-generic/xenomai/stack.h>
 #include <asm-generic/xenomai/sem_heap.h>
+#include "kernel/cobalt/posix/mutex.h"
+#include "kernel/cobalt/timeconv.h"
 #include "internal.h"
 
 int __cobalt_muxid = -1;
@@ -42,9 +42,7 @@ int __rtdm_fd_start = INT_MAX;
 struct sigaction __cobalt_orig_sigdebug;
 static int fork_handler_registered;
 static pthread_t xeno_main_tid;
-struct xnfeatinfo xeno_featinfo;
 
-int __RT(pthread_setschedparam)(pthread_t, int, const struct sched_param *);
 void cobalt_clock_init(int);
 
 #define report_error(fmt, args...) \
@@ -59,20 +57,6 @@ static void sigill_handler(int sig)
 	exit(EXIT_FAILURE);
 }
 
-#ifdef xeno_arch_features_check
-static void do_init_arch_features(void)
-{
-	xeno_arch_features_check(&xeno_featinfo);
-}
-static void init_arch_features(void)
-{
-	static pthread_once_t init_archfeat_once = PTHREAD_ONCE_INIT;
-	pthread_once(&init_archfeat_once, do_init_arch_features);
-}
-#else  /* !xeno_init_arch_features */
-#define init_arch_features()	do { } while (0)
-#endif /* !xeno_arch_features_check */
-
 void xeno_fault_stack(void)
 {
 	if (pthread_self() == xeno_main_tid) {
@@ -84,9 +68,10 @@ void xeno_fault_stack(void)
 static int bind_interface(void)
 {
 	sighandler_t old_sigill_handler;
+	struct xnsysinfo sysinfo;
 	struct xnbindreq breq;
 	struct xnfeatinfo *f;
-	int muxid;
+	int ret, muxid;
 
 	/* Some sanity checks first. */
 	if (access(XNHEAP_DEV_NAME, 0)) {
@@ -97,7 +82,7 @@ static int bind_interface(void)
 
 	old_sigill_handler = signal(SIGILL, sigill_handler);
 	if (old_sigill_handler == SIG_ERR) {
-		perror("signal(SIGILL)");
+		report_error("signal(SIGILL): %s", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 
@@ -131,8 +116,13 @@ static int bind_interface(void)
 		exit(EXIT_FAILURE);
 	}
 
-	xeno_featinfo = *f;
-	init_arch_features();
+	cobalt_check_features(f);
+
+	ret = XENOMAI_SYSCALL2(sc_nucleus_info, muxid, &sysinfo);
+	if (ret) {
+		report_error("sysinfo failed: %s", strerror(-ret));
+		exit(EXIT_FAILURE);
+	}
 
 	xeno_init_sem_heaps();
 
@@ -140,7 +130,7 @@ static int bind_interface(void)
 
 	xeno_main_tid = pthread_self();
 
-	xeno_init_timeconv(muxid);
+	xnarch_init_timeconv(sysinfo.clockfreq);
 
 	return muxid;
 }
@@ -157,8 +147,8 @@ void __init_cobalt_interface(void)
 {
 	pthread_t tid = pthread_self();
 	struct sched_param parm;
-	struct xnbindreq breq;
 	int policy, muxid, ret;
+	struct xnbindreq breq;
 	struct sigaction sa;
 	const char *p;
 
@@ -195,7 +185,7 @@ void __init_cobalt_interface(void)
 	 * dlopen.
 	 */
 	if (mlockall(MCL_CURRENT | MCL_FUTURE)) {
-		perror("Xenomai/cobalt: mlockall");
+		report_error("mlockall: %s", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 

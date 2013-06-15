@@ -1,254 +1,205 @@
-/*
- * Written by Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>.
+/**
+ * @file
+ * @note Copyright (C) 2006-2011 Philippe Gerum <rpm@xenomai.org>.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of the
- * License, or (at your option) any later version.
+ * Xenomai is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * Xenomai is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * along with Xenomai; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+ * 02111-1307, USA.
+ *
+ * \ingroup clock
  */
 
-/**
- * @ingroup cobalt
- * @defgroup cobalt_time Clocks and timers services.
- *
- * Clocks and timers services.
- *
- * Cobalt supports three clocks:
- *
- * CLOCK_REALTIME maps to the nucleus system clock, keeping time as the amount
- * of time since the Epoch, with a resolution of one nanosecond.
- *
- * CLOCK_MONOTONIC maps to an architecture-dependent high resolution
- * counter, so is suitable for measuring short time
- * intervals. However, when used for sleeping (with
- * clock_nanosleep()), the CLOCK_MONOTONIC clock has a resolution of
- * one nanosecond, like the CLOCK_REALTIME clock.
- *
- * CLOCK_MONOTONIC_RAW is Linux-specific, and provides monotonic time
- * values from a hardware timer which is not adjusted by NTP. This is
- * strictly equivalent to CLOCK_MONOTONIC with Xenomai, which is not
- * NTP adjusted either.
- *
- * Timer objects may be created with the timer_create() service using
- * either of the two clocks. The resolution of these timers is one
- * nanosecond, as is the case for clock_nanosleep().
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_08.html#tag_02_08_05">
- * Specification.</a>
+/*!
+ * \ingroup nucleus
+ * \defgroup clock System clock services.
  *
  *@{*/
 
-#include <nucleus/vdso.h>
-#include <asm/xenomai/arith.h>
-#include "thread.h"
-#include "internal.h"
+#include <cobalt/kernel/pod.h>
+#include <cobalt/kernel/timer.h>
+#include <cobalt/kernel/clock.h>
 
-/**
- * Read the host-synchronised realtime clock.
+/*!
+ * \fn void xnclock_adjust(xnsticks_t delta)
+ * \brief Adjust the clock time for the system.
  *
- * Obtain the current time with NTP corrections from the Linux domain
+ * Xenomai tracks the current time as a monotonously increasing count
+ * of ticks since the epoch. The epoch is initially the same as the
+ * underlying machine time.
  *
- * @param tp pointer to a struct timespec
+ * This service changes the epoch for the system by applying the
+ * specified tick delta on the wallclock offset.
  *
- * @retval 0 on success;
- * @retval -1 if no suitable NTP-corrected clocksource is availabel
+ * @param delta The adjustment of the system time expressed in ticks.
  *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/gettimeofday.html">
- * Specification.</a>
+ * @note This routine must be entered nklock locked, interrupts off.
  *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Any kernel context.
+ *
+ * Rescheduling: never.
  */
-static int do_clock_host_realtime(struct timespec *tp)
+
+void xnclock_adjust(xnsticks_t delta)
 {
-#ifdef CONFIG_XENO_OPT_HOSTRT
-	cycle_t now, base, mask, cycle_delta;
-	unsigned long mult, shift, nsec, rem;
-	struct xnvdso_hostrt_data *hostrt_data;
-	unsigned int seq;
-
-	hostrt_data = get_hostrt_data();
-	BUG_ON(!hostrt_data);
-
-	if (unlikely(!hostrt_data->live))
-		return -1;
-
-	/*
-	 * Note: Disabling HW interrupts around writes to hostrt_data ensures
-	 * that a reader (on the Xenomai side) cannot interrupt a writer (on
-	 * the Linux kernel side) on the same CPU.  The sequence counter is
-	 * required when a reader is interleaved by a writer on a different
-	 * CPU. This follows the approach from userland, where tasking the
-	 * spinlock is not possible.
-	 */
-retry:
-	seq = xnread_seqcount_begin(&hostrt_data->seqcount);
-
-	now = xnclock_read_raw();
-	base = hostrt_data->cycle_last;
-	mask = hostrt_data->mask;
-	mult = hostrt_data->mult;
-	shift = hostrt_data->shift;
-	tp->tv_sec = hostrt_data->wall_time_sec;
-	nsec = hostrt_data->wall_time_nsec;
-
-	if (xnread_seqcount_retry(&hostrt_data->seqcount, seq))
-		goto retry;
-
-	/*
-	 * At this point, we have a consistent copy of the fundamental
-	 * data structure - calculate the interval between the current
-	 * and base time stamp cycles, and convert the difference
-	 * to nanoseconds.
-	 */
-	cycle_delta = (now - base) & mask;
-	nsec += (cycle_delta * mult) >> shift;
-
-	/* Convert to the desired sec, usec representation */
-	tp->tv_sec += xnarch_divrem_billion(nsec, &rem);
-	tp->tv_nsec = rem;
-
-	return 0;
-#else /* CONFIG_XENO_OPT_HOSTRT */
-	return -EINVAL;
-#endif
-}
-
-int cobalt_clock_getres(clockid_t clock_id, struct timespec __user *u_ts)
-{
-	struct timespec ts;
-	int err;
-
-	switch (clock_id) {
-	case CLOCK_REALTIME:
-	case CLOCK_MONOTONIC:
-	case CLOCK_MONOTONIC_RAW:
-		err = 0;
-		ns2ts(&ts, 1);
-		break;
-	default:
-		err = -EINVAL;
-	}
-
-	if (err == 0 && __xn_safe_copy_to_user(u_ts, &ts, sizeof(ts)))
-		return -EFAULT;
-
-	return err;
-}
-
-int cobalt_clock_gettime(clockid_t clock_id, struct timespec __user *u_ts)
-{
-	xnticks_t cpu_time;
-	struct timespec ts;
-	int err = 0;
-
-	switch (clock_id) {
-	case CLOCK_REALTIME:
-		ns2ts(&ts, xnclock_read());
-		break;
-
-	case CLOCK_MONOTONIC:
-	case CLOCK_MONOTONIC_RAW:
-		cpu_time = xnclock_read_monotonic();
-		ts.tv_sec =
-			xnarch_uldivrem(cpu_time, ONE_BILLION, &ts.tv_nsec);
-		break;
-
-	case CLOCK_HOST_REALTIME:
-		if (do_clock_host_realtime(&ts) != 0)
-			err = -EINVAL;
-		break;
-
-	default:
-		err = -EINVAL;
-	}
-
-	if (err == 0 && __xn_safe_copy_to_user(u_ts, &ts, sizeof(*u_ts)))
-		return -EFAULT;
-
-	return err;
-}
-
-int cobalt_clock_settime(clockid_t clock_id, const struct timespec __user *u_ts)
-{
-	struct timespec ts;
 	xnticks_t now;
-	spl_t s;
 
-	if (__xn_safe_copy_from_user(&ts, u_ts, sizeof(ts)))
-		return -EFAULT;
+	nkclock.wallclock_offset += delta;
+	now = xnclock_read_monotonic() + nkclock.wallclock_offset;
+	xntimer_adjust_all(delta);
 
-	if (clock_id != CLOCK_REALTIME
-	    || (unsigned long)ts.tv_nsec >= ONE_BILLION)
-		return -EINVAL;
+	trace_mark(xn_nucleus, clock_adjust, "delta %Lu", delta);
+}
+EXPORT_SYMBOL_GPL(xnclock_adjust);
 
-	xnlock_get_irqsave(&nklock, s);
-	now = xnclock_read();
-	xnclock_adjust((xnsticks_t) (ts2ns(&ts) - now));
-	xnlock_put_irqrestore(&nklock, s);
+xnticks_t xnclock_get_host_time(void)
+{
+	struct timeval tv;
+	do_gettimeofday(&tv);
+	return tv.tv_sec * 1000000000ULL + tv.tv_usec * 1000;
+}
+EXPORT_SYMBOL_GPL(xnclock_get_host_time);
+
+xnticks_t xnclock_read_monotonic(void)
+{
+	return xnarch_tsc_to_ns(xnclock_read_raw());
+}
+EXPORT_SYMBOL_GPL(xnclock_read_monotonic);
+
+#ifdef CONFIG_XENO_OPT_VFILE
+
+#ifdef CONFIG_XENO_OPT_STATS
+
+static struct xnvfile_snapshot_ops tmstat_vfile_ops;
+
+struct tmstat_vfile_priv {
+	struct xnholder *curr;
+};
+
+struct tmstat_vfile_data {
+	int cpu;
+	unsigned int scheduled;
+	unsigned int fired;
+	xnticks_t timeout;
+	xnticks_t interval;
+	xnflags_t status;
+	char handler[12];
+	char name[XNOBJECT_NAME_LEN];
+};
+
+static int tmstat_vfile_rewind(struct xnvfile_snapshot_iterator *it)
+{
+	struct tmstat_vfile_priv *priv = xnvfile_iterator_priv(it);
+
+	priv->curr = getheadq(&nkclock.timerq);
+
+	return countq(&nkclock.timerq);
+}
+
+static int tmstat_vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct tmstat_vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct tmstat_vfile_data *p = data;
+	struct xntimer *timer;
+
+	if (priv->curr == NULL)
+		return 0;
+
+	timer = tblink2timer(priv->curr);
+	priv->curr = nextq(&nkclock.timerq, priv->curr);
+
+	if (xnstat_counter_get(&timer->scheduled) == 0)
+		return VFILE_SEQ_SKIP;
+
+	p->cpu = xnsched_cpu(xntimer_sched(timer));
+	p->scheduled = xnstat_counter_get(&timer->scheduled);
+	p->fired = xnstat_counter_get(&timer->fired);
+	p->timeout = xntimer_get_timeout(timer);
+	p->interval = xntimer_get_interval(timer);
+	p->status = timer->status;
+	memcpy(p->handler, timer->handler_name,
+	       sizeof(p->handler)-1);
+	p->handler[sizeof(p->handler)-1] = 0;
+	xnobject_copy_name(p->name, timer->name);
+
+	return 1;
+}
+
+static int tmstat_vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct tmstat_vfile_data *p = data;
+	char timeout_buf[]  = "-         ";
+	char interval_buf[] = "-         ";
+
+	if (p == NULL)
+		xnvfile_printf(it,
+			       "%-3s  %-10s  %-10s  %-10s  %-10s  %-11s  %-15s\n",
+			       "CPU", "SCHEDULED", "FIRED", "TIMEOUT",
+			       "INTERVAL", "HANDLER", "NAME");
+	else {
+		if (!testbits(p->status, XNTIMER_DEQUEUED))
+			snprintf(timeout_buf, sizeof(timeout_buf), "%-10llu",
+				 p->timeout);
+		if (testbits(p->status, XNTIMER_PERIODIC))
+			snprintf(interval_buf, sizeof(interval_buf), "%-10llu",
+				 p->interval);
+		xnvfile_printf(it,
+			       "%-3u  %-10u  %-10u  %s  %s  %-11s  %-15s\n",
+			       p->cpu, p->scheduled, p->fired, timeout_buf,
+			       interval_buf, p->handler, p->name);
+	}
 
 	return 0;
 }
 
-int cobalt_clock_nanosleep(clockid_t clock_id, int flags,
-			   const struct timespec __user *u_rqt,
-			   struct timespec __user *u_rmt)
+static struct xnvfile_snapshot_ops tmstat_vfile_ops = {
+	.rewind = tmstat_vfile_rewind,
+	.next = tmstat_vfile_next,
+	.show = tmstat_vfile_show,
+};
+
+void xnclock_init_proc(void)
 {
-	struct timespec rqt, rmt, *rmtp = NULL;
-	xnthread_t *cur;
-	xnsticks_t rem;
-	int err = 0;
-	spl_t s;
+	struct xnclock *p = &nkclock;
 
-	if (u_rmt)
-		rmtp = &rmt;
+	memset(&p->vfile, 0, sizeof(p->vfile));
+	p->vfile.privsz = sizeof(struct tmstat_vfile_priv);
+	p->vfile.datasz = sizeof(struct tmstat_vfile_data);
+	p->vfile.tag = &p->revtag;
+	p->vfile.ops = &tmstat_vfile_ops;
 
-	if (__xn_safe_copy_from_user(&rqt, u_rqt, sizeof(rqt)))
-		return -EFAULT;
-
-	if (clock_id != CLOCK_MONOTONIC &&
-	    clock_id != CLOCK_MONOTONIC_RAW &&
-	    clock_id != CLOCK_REALTIME)
-		return -ENOTSUP;
-
-	if ((unsigned long)rqt.tv_nsec >= ONE_BILLION)
-		return -EINVAL;
-
-	if (flags & ~TIMER_ABSTIME)
-		return -EINVAL;
-
-	cur = xnpod_current_thread();
-
-	xnlock_get_irqsave(&nklock, s);
-
-	xnpod_suspend_thread(cur, XNDELAY, ts2ns(&rqt) + 1,
-			     clock_flag(flags, clock_id), NULL);
-
-	if (xnthread_test_info(cur, XNBREAK)) {
-		if (flags == 0 && rmtp) {
-			rem = xntimer_get_timeout_stopped(&cur->rtimer);
-			xnlock_put_irqrestore(&nklock, s);
-			ns2ts(rmtp, rem > 1 ? rem : 0);
-			if (__xn_safe_copy_to_user(u_rmt, rmtp, sizeof(*u_rmt)))
-				return -EFAULT;
-		} else
-			xnlock_put_irqrestore(&nklock, s);
-
-		return -EINTR;
-	}
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	return err;
+	xnvfile_init_snapshot("timerstat", &p->vfile, &nkvfroot);
+	xnvfile_priv(&p->vfile) = p;
 }
+
+void xnclock_cleanup_proc(void)
+{
+	xnvfile_destroy_snapshot(&nkclock.vfile);
+}
+
+#endif /* CONFIG_XENO_OPT_STATS */
+
+#endif /* CONFIG_XENO_OPT_VFILE */
+
+struct xnclock nkclock = {
+#ifdef CONFIG_XENO_OPT_STATS
+	.timerq = XNQUEUE_INITIALIZER(nkclock.timerq),
+#endif /* CONFIG_XENO_OPT_STATS */
+};
+EXPORT_SYMBOL_GPL(nkclock);
 
 /*@}*/

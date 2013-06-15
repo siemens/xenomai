@@ -1,8 +1,12 @@
 
-obj-$(CONFIG_XENOMAI) += xeno_rtdm.o
+obj-$(CONFIG_XENOMAI) += rtdm.o
 
-xeno_rtdm-y := core.o device.o drvlib.o module.o syscall.o
+rtdm-y :=	core.o		\
+		device.o	\
+		drvlib.o	\
+		init.o		\
+		syscall.o
 
-xeno_rtdm-$(CONFIG_PROC_FS) += proc.o
+rtdm-$(CONFIG_PROC_FS) += proc.o
 
 ccflags-y := -D__IN_XENOMAI__ -Iinclude/xenomai/cobalt -Iinclude/xenomai -I$(src)/..

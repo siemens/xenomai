@@ -17,4 +17,13 @@ includesub_HEADERS = \
 	unistd.h \
 	wrappers.h
 
-SUBDIRS=sys nucleus
+SUBDIRS =		\
+	asm-arm 	\
+	asm-blackfin 	\
+	asm-generic 	\
+	asm-nios2 	\
+	asm-powerpc 	\
+	asm-sh		\
+	asm-x86		\
+	kernel		\
+	sys

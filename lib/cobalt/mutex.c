@@ -19,10 +19,10 @@
 #include <errno.h>
 #include <pthread.h>
 #include <limits.h>
-#include <nucleus/synch.h>
+#include <cobalt/kernel/synch.h>
 #include <cobalt/syscall.h>
-#include <kernel/cobalt/mutex.h>
 #include <asm-generic/current.h>
+#include "kernel/cobalt/posix/mutex.h"
 #include "internal.h"
 
 COBALT_IMPL(int, pthread_mutexattr_init, (pthread_mutexattr_t *attr))

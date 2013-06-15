@@ -13,13 +13,6 @@ if XENO_COBALT
 include_HEADERS += rtdk.h
 
 SUBDIRS += 		\
-	asm-generic 	\
-	asm-blackfin 	\
-	asm-x86 	\
-	asm-powerpc 	\
-	asm-arm 	\
-	asm-nios2 	\
-	asm-sh 		\
 	analogy 	\
 	cobalt 		\
 	rtdm

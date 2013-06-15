@@ -3,9 +3,9 @@
 #include <string.h>
 #include <pthread.h>
 
-#include <nucleus/types.h>
-#include <nucleus/thread.h>
-#include <nucleus/vdso.h>
+#include <cobalt/kernel/types.h>
+#include <cobalt/kernel/thread.h>
+#include <cobalt/kernel/vdso.h>
 #include <asm/xenomai/syscall.h>
 #include <asm-generic/current.h>
 #include "internal.h"

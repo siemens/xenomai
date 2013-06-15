@@ -10,7 +10,7 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 
-#include <nucleus/vdso.h>
+#include <cobalt/kernel/vdso.h>
 #include <asm/xenomai/syscall.h>
 #include <asm-generic/sem_heap.h>
 #include <asm-generic/current.h>

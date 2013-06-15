@@ -21,7 +21,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <cobalt/nucleus/thread.h>
+#include <cobalt/kernel/thread.h>
 #include "sysregfs.h"
 
 #ifdef CONFIG_XENO_PSHARED

@@ -18,7 +18,7 @@
  */
 
 #include "rtdm/internal.h"
-#include <nucleus/vfile.h>
+#include <cobalt/kernel/vfile.h>
 
 struct xnvfile_directory rtdm_vfroot;	/* /proc/xenomai/rtdm */
 

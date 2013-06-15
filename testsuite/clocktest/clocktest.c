@@ -28,7 +28,7 @@
 #include <sys/syscall.h>
 #include <sys/mman.h>
 #include <sys/time.h>
-#include <nucleus/vdso.h>
+#include <cobalt/kernel/vdso.h>
 
 #include <xeno_config.h>
 

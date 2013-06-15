@@ -16,5 +16,5 @@ config XENO_HW_FPU
 
 endmenu
 
-source "kernel/xenomai/nucleus/Kconfig"
+source "kernel/xenomai/Kconfig"
 source "drivers/xenomai/Kconfig"

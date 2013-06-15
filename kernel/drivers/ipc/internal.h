@@ -21,7 +21,7 @@
 #ifndef _RTIPC_INTERNAL_H
 #define _RTIPC_INTERNAL_H
 
-#include <nucleus/registry.h>
+#include <cobalt/kernel/registry.h>
 #include <asm/xenomai/arith.h>
 #include <rtdm/rtdm.h>
 #include <rtdm/rtdm_driver.h>

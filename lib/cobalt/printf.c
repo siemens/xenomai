@@ -28,7 +28,7 @@
 #include <syslog.h>
 
 #include <rtdk.h>
-#include <nucleus/types.h>	/* For BITS_PER_LONG */
+#include <cobalt/kernel/types.h>	/* For BITS_PER_LONG */
 #include <asm/xenomai/atomic.h>	/* For atomic_long_cmpxchg */
 #include <asm-generic/stack.h>
 #include <asm-generic/current.h>

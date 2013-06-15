@@ -17,11 +17,11 @@
  */
 
 #include <errno.h>
-#include <nucleus/synch.h>
+#include <cobalt/kernel/synch.h>
 #include <cobalt/syscall.h>
-#include <kernel/cobalt/mutex.h>
-#include <kernel/cobalt/cond.h>
 #include <asm-generic/current.h>
+#include "kernel/cobalt/posix/mutex.h"
+#include "kernel/cobalt/posix/cond.h"
 #include "internal.h"
 
 extern unsigned long xeno_sem_heap[2];

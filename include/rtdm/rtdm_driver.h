@@ -35,19 +35,19 @@
 #include <linux/list.h>
 
 #include <xenomai/version.h>
-#include <nucleus/heap.h>
-#include <nucleus/pod.h>
-#include <nucleus/intr.h>
-#include <nucleus/synch.h>
-#include <nucleus/select.h>
-#include <nucleus/vfile.h>
-#include <nucleus/clock.h>
-#include <nucleus/apc.h>
-#include <nucleus/shadow.h>
+#include <cobalt/kernel/heap.h>
+#include <cobalt/kernel/pod.h>
+#include <cobalt/kernel/intr.h>
+#include <cobalt/kernel/synch.h>
+#include <cobalt/kernel/select.h>
+#include <cobalt/kernel/vfile.h>
+#include <cobalt/kernel/clock.h>
+#include <cobalt/kernel/apc.h>
+#include <cobalt/kernel/shadow.h>
 #include <rtdm/rtdm.h>
 
 /* debug support */
-#include <nucleus/assert.h>
+#include <cobalt/kernel/assert.h>
 #ifdef CONFIG_PCI
 #include <asm-generic/xenomai/pci_ids.h>
 #endif /* CONFIG_PCI */

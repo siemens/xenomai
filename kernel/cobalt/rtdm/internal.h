@@ -20,8 +20,8 @@
 #ifndef _RTDM_INTERNAL_H
 #define _RTDM_INTERNAL_H
 
-#include <nucleus/pod.h>
-#include <nucleus/ppd.h>
+#include <cobalt/kernel/pod.h>
+#include <cobalt/kernel/ppd.h>
 #include <rtdm/rtdm_driver.h>
 
 #include <linux/list.h>
@@ -100,5 +100,9 @@ static void rtdm_proc_unregister_device(struct rtdm_device *device)
 #endif
 
 void rtdm_apc_handler(void *cookie);
+
+int rtdm_init(void);
+
+void rtdm_cleanup(void);
 
 #endif /* _RTDM_INTERNAL_H */

@@ -21,7 +21,7 @@
 
 #ifdef __KERNEL__
 
-#include <nucleus/sched.h>
+#include <cobalt/kernel/sched.h>
 #include <linux/sched.h>
 
 #define SCHED_OTHER 0

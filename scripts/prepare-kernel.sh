@@ -438,13 +438,13 @@ patch_architecture_specific="y"
 patch_link r m kernel/cobalt/arch/$linux_arch arch/$linux_arch/xenomai
 patch_architecture_specific="n"
 patch_link n m kernel/cobalt kernel/xenomai
-patch_link n m kernel/cobalt/nucleus kernel/xenomai/nucleus
+patch_link n m kernel/cobalt/posix kernel/xenomai/posix
 patch_link n m kernel/cobalt/rtdm kernel/xenomai/rtdm
 patch_link r m kernel/drivers drivers/xenomai
 patch_architecture_specific="y"
-patch_link r n include/asm-$linux_arch arch/$linux_arch/include/asm/xenomai
+patch_link r n include/cobalt/asm-$linux_arch arch/$linux_arch/include/asm/xenomai
 patch_architecture_specific="n"
-patch_link r n include/asm-generic include/asm-generic/xenomai
+patch_link r n include/cobalt/asm-generic include/asm-generic/xenomai
 patch_link n n include/cobalt include/xenomai
 patch_link n version.h include include/xenomai
 cd $xenomai_root
@@ -454,7 +454,7 @@ for d in include/* ; do
         patch_link r n $d $destdir
     fi
 done
-patch_link n n include/asm-generic/ipipe arch/$linux_arch/include/ipipe
+patch_link n n include/cobalt/asm-generic/ipipe arch/$linux_arch/include/ipipe
 
 if test "x$output_patch" != "x"; then
     if test x$verbose = x1; then

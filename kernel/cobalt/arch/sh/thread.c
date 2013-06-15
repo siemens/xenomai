@@ -21,7 +21,7 @@
 #include <linux/ipipe.h>
 #include <linux/mm.h>
 #include <asm/mmu_context.h>
-#include <nucleus/thread.h>
+#include <cobalt/kernel/thread.h>
 
 #define do_switch_threads(otcb, itcb, prev, next)		\
 	({							\

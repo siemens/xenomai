@@ -740,9 +740,9 @@ dnl in-tree executables which require POSIX symbol wrapping.
    AC_SUBST([CONFIG_STATUS_DEPENDENCIES], ["$cobalt_wrappers"])
 
    base=asm-$XENO_TARGET_ARCH
-   AC_CONFIG_LINKS([lib/include/asm/xenomai:$srcdir/include/$base])
+   AC_CONFIG_LINKS([lib/include/asm/xenomai:$srcdir/include/cobalt/$base])
    base=asm-generic
-   AC_CONFIG_LINKS([lib/include/$base/xenomai:$srcdir/include/$base])
+   AC_CONFIG_LINKS([lib/include/$base/xenomai:$srcdir/include/cobalt/$base])
 fi
 
 unset want_fortify
@@ -798,6 +798,13 @@ AC_CONFIG_FILES([ \
 	scripts/xeno \
 	lib/Makefile \
 	lib/cobalt/Makefile \
+	lib/cobalt/sysdeps/Makefile \
+	lib/cobalt/sysdeps/arm/Makefile \
+	lib/cobalt/sysdeps/powerpc/Makefile \
+	lib/cobalt/sysdeps/blackfin/Makefile \
+	lib/cobalt/sysdeps/x86/Makefile \
+	lib/cobalt/sysdeps/nios2/Makefile \
+	lib/cobalt/sysdeps/sh/Makefile \
 	lib/copperplate/Makefile \
 	lib/copperplate/regd/Makefile \
 	lib/alchemy/Makefile \
@@ -820,24 +827,17 @@ AC_CONFIG_FILES([ \
 	utils/ps/Makefile \
 	utils/slackspot/Makefile \
 	include/Makefile \
-	include/asm-generic/Makefile \
-	include/asm-generic/bits/Makefile \
-	include/asm-generic/ipipe/Makefile \
-	include/asm-blackfin/Makefile \
-	include/asm-blackfin/bits/Makefile \
-	include/asm-x86/Makefile \
-	include/asm-x86/bits/Makefile \
-	include/asm-powerpc/Makefile \
-	include/asm-powerpc/bits/Makefile \
-	include/asm-arm/Makefile \
-	include/asm-arm/bits/Makefile \
-	include/asm-nios2/Makefile \
-	include/asm-nios2/bits/Makefile \
-	include/asm-sh/Makefile \
-	include/asm-sh/bits/Makefile \
+	include/cobalt/asm-generic/Makefile \
+	include/cobalt/asm-generic/ipipe/Makefile \
+	include/cobalt/asm-blackfin/Makefile \
+	include/cobalt/asm-x86/Makefile \
+	include/cobalt/asm-powerpc/Makefile \
+	include/cobalt/asm-arm/Makefile \
+	include/cobalt/asm-nios2/Makefile \
+	include/cobalt/asm-sh/Makefile \
 	include/cobalt/Makefile \
 	include/cobalt/sys/Makefile \
-	include/cobalt/nucleus/Makefile \
+	include/cobalt/kernel/Makefile \
 	include/rtdm/Makefile \
 	include/analogy/Makefile \
 	include/mercury/Makefile \

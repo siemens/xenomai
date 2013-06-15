@@ -23,7 +23,7 @@
 #include <linux/ipipe.h>
 #include <linux/mm.h>
 #include <asm/mmu_context.h>
-#include <nucleus/thread.h>
+#include <cobalt/kernel/thread.h>
 
 #ifdef CONFIG_X86_32
 

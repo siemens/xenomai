@@ -16,31 +16,19 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
+#include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <pthread.h>		/* For pthread_setcanceltype. */
-#include <cobalt/syscall.h>
 #include <time.h>
+#include <cobalt/kernel/vdso.h>
+#include <cobalt/syscall.h>
 #include <asm/xenomai/arith.h>
 #include <asm/xenomai/tsc.h>
 #include <asm-generic/xenomai/timeconv.h>
-#include <sys/types.h>
-#include <nucleus/vdso.h>
 #include "internal.h"
-
-static struct xnsysinfo __cobalt_sysinfo;
-
-void cobalt_clock_init(int muxid)
-{
-	int err = -XENOMAI_SYSCALL2(sc_nucleus_info, muxid, &__cobalt_sysinfo);
-	if (err) {
-		fprintf(stderr, "Xenomai/cobalt: "
-			"sc_nucleus_info call failed: %s\n", strerror(err));
-		exit(EXIT_FAILURE);
-	}
-}
 
 COBALT_IMPL(int, clock_getres, (clockid_t clock_id, struct timespec *tp))
 {
@@ -48,7 +36,6 @@ COBALT_IMPL(int, clock_getres, (clockid_t clock_id, struct timespec *tp))
 				     sc_cobalt_clock_getres,
 				     clock_id,
 				     tp);
-
 	if (!err)
 		return 0;
 

@@ -53,13 +53,6 @@ host_triplet = @host@
 target_triplet = @target@
 @XENO_COBALT_TRUE@am__append_1 = rtdk.h
 @XENO_COBALT_TRUE@am__append_2 = \
-@XENO_COBALT_TRUE@	asm-generic 	\
-@XENO_COBALT_TRUE@	asm-blackfin 	\
-@XENO_COBALT_TRUE@	asm-x86 	\
-@XENO_COBALT_TRUE@	asm-powerpc 	\
-@XENO_COBALT_TRUE@	asm-arm 	\
-@XENO_COBALT_TRUE@	asm-nios2 	\
-@XENO_COBALT_TRUE@	asm-sh 		\
 @XENO_COBALT_TRUE@	analogy 	\
 @XENO_COBALT_TRUE@	cobalt 		\
 @XENO_COBALT_TRUE@	rtdm
@@ -134,9 +127,8 @@ AM_RECURSIVE_TARGETS = $(RECURSIVE_TARGETS:-recursive=) \
 	distdir
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = copperplate alchemy psos vxworks asm-generic \
-	asm-blackfin asm-x86 asm-powerpc asm-arm asm-nios2 asm-sh \
-	analogy cobalt rtdm mercury
+DIST_SUBDIRS = copperplate alchemy psos vxworks analogy cobalt rtdm \
+	mercury
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 am__relativize = \
   dir0=`pwd`; \

@@ -17,8 +17,8 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <nucleus/shadow.h>
-#include <nucleus/ppd.h>
+#include <cobalt/kernel/shadow.h>
+#include <cobalt/kernel/ppd.h>
 #include <rtdm/syscall.h>
 
 #include "rtdm/internal.h"

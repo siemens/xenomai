@@ -21,7 +21,7 @@
 #include <linux/ipipe.h>
 #include <linux/mm.h>
 #include <asm/mmu_context.h>
-#include <nucleus/thread.h>
+#include <cobalt/kernel/thread.h>
 
 asmlinkage void
 __asm_thread_switch(struct thread_struct *prev,

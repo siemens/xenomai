@@ -1,8 +1,8 @@
 #include <linux/vmalloc.h>
-#include <nucleus/pod.h>
-#include <nucleus/synch.h>
-#include <nucleus/thread.h>
-#include <nucleus/trace.h>
+#include <cobalt/kernel/pod.h>
+#include <cobalt/kernel/synch.h>
+#include <cobalt/kernel/thread.h>
+#include <cobalt/kernel/trace.h>
 #include <rtdm/rttesting.h>
 #include <rtdm/rtdm_driver.h>
 #include <asm/xenomai/fptest.h>

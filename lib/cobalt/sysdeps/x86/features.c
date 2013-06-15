@@ -1,0 +1,44 @@
+/*
+ * Copyright (C) 2008 Gilles Chanteperdrix <gch@xenomai.org>.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
+ */
+
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+#include <asm/xenomai/features.h>
+#include "internal.h"
+
+void cobalt_check_features(struct xnfeatinfo *finfo)
+{
+#if defined(__i386__) && defined(CONFIG_XENO_X86_SEP)
+	size_t n = confstr(_CS_GNU_LIBPTHREAD_VERSION, NULL, 0);
+	if (n > 0) {
+		char buf[n];
+
+		confstr (_CS_GNU_LIBPTHREAD_VERSION, buf, n);
+
+		if (strstr (buf, "NPTL"))
+			return;
+	}
+
+	report_error("--enable-x86-sep needs NPTL and Linux 2.6.x or higher,");
+	report_error_cont("which does not match your configuration. Please upgrade, or");
+	report_error_cont("rebuild the Xenomai libraries passing --disable-x86-sep");
+	exit(1);
+#endif /* __i386__ && CONFIG_XENO_X86_SEP */
+}

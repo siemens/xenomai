@@ -1,6 +1,7 @@
 #ifndef XENO_COBALT_INTERNAL_H
 #define XENO_COBALT_INTERNAL_H
 
+#include <signal.h>
 #include <pthread.h>
 #include <asm-generic/current.h>
 
@@ -74,5 +75,7 @@ int cobalt_event_destroy(cobalt_event_t *event);
 void cobalt_print_init(void);
 
 void cobalt_print_exit(void);
+
+void cobalt_handle_sigdebug(int sig, siginfo_t *si, void *context);
 
 #endif /* XENO_COBALT_INTERNAL_H */

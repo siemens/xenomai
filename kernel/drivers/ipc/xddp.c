@@ -20,9 +20,9 @@
 
 #include <linux/module.h>
 #include <linux/string.h>
-#include <nucleus/heap.h>
-#include <nucleus/bufd.h>
-#include <nucleus/pipe.h>
+#include <cobalt/kernel/heap.h>
+#include <cobalt/kernel/bufd.h>
+#include <cobalt/kernel/pipe.h>
 #include <rtdm/rtipc.h>
 #include "internal.h"
 

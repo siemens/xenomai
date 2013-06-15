@@ -22,9 +22,9 @@
 #include <linux/list.h>
 #include <linux/kernel.h>
 #include <linux/vmalloc.h>
-#include <nucleus/heap.h>
-#include <nucleus/map.h>
-#include <nucleus/bufd.h>
+#include <cobalt/kernel/heap.h>
+#include <cobalt/kernel/map.h>
+#include <cobalt/kernel/bufd.h>
 #include <rtdm/rtipc.h>
 #include "internal.h"
 

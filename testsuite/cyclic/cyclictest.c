@@ -35,7 +35,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/mman.h>
-#include <nucleus/trace.h>
+#include <cobalt/kernel/trace.h>
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 

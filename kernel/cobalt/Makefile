@@ -1,19 +1,30 @@
-obj-$(CONFIG_XENOMAI) += nucleus/ rtdm/ xeno_cobalt.o
+obj-$(CONFIG_XENOMAI) += xenomai.o rtdm/ posix/
 
-xeno_cobalt-y := \
-	clock.o \
-	cond.o \
-	cond_attr.o \
-	event.o \
-	module.o \
-	monitor.o \
-	mq.o \
-	mutex.o \
-	mutex_attr.o \
-	registry.o \
-	sem.o \
-	syscall.o \
-	thread.o \
-	timer.o
+xenomai-y :=	apc.o		\
+		arith.o 	\
+		bufd.o		\
+		clock.o		\
+		heap.o		\
+		init.o		\
+		intr.o		\
+		lock.o		\
+		pod.o		\
+		registry.o	\
+		sched-idle.o	\
+		sched-rt.o	\
+		sched.o		\
+		select.o	\
+		shadow.o	\
+		synch.o		\
+		thread.o	\
+		timer.o
+
+xenomai-$(CONFIG_XENO_OPT_SCHED_WEAK) += sched-weak.o
+xenomai-$(CONFIG_XENO_OPT_SCHED_SPORADIC) += sched-sporadic.o
+xenomai-$(CONFIG_XENO_OPT_SCHED_TP) += sched-tp.o
+xenomai-$(CONFIG_XENO_OPT_PIPE) += pipe.o
+xenomai-$(CONFIG_XENO_OPT_MAP) += map.o
+xenomai-$(CONFIG_XENO_OPT_DEBUG) += debug.o
+xenomai-$(CONFIG_PROC_FS) += vfile.o
 
 ccflags-y := -D__IN_XENOMAI__ -Iinclude/xenomai/cobalt -Iinclude/xenomai
