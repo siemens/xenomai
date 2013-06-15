@@ -1,5 +1,5 @@
 
-ccflags-y := -D__IN_XENOMAI__ -Iinclude/xenomai -Idrivers/xenomai/can -Idrivers/xenomai/can/mscan
+ccflags-y := -D__IN_XENOMAI__ -Iinclude/xenomai/cobalt -Iinclude/xenomai -Idrivers/xenomai/can -Idrivers/xenomai/can/mscan
 
 obj-$(CONFIG_XENO_DRIVERS_CAN_MSCAN) += xeno_can_mscan.o
 
