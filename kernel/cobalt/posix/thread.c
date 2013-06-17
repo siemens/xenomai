@@ -31,7 +31,6 @@
 #include <linux/types.h>
 #include <linux/jhash.h>
 #include "thread.h"
-#include "cancel.h"
 #include "timer.h"
 
 xnticks_t cobalt_time_slice;

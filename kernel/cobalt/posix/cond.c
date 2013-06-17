@@ -290,7 +290,7 @@ static inline int cobalt_cond_timedwait_prologue(xnthread_t *cur,
 	else
 		xnsynch_sleep_on(&cond->synchbase, XN_INFINITE, XN_RELATIVE);
 
-	/* There are four possible wakeup conditions :
+	/* There are three possible wakeup conditions :
 	   - cond_signal / cond_broadcast, no status bit is set, and the function
 	     should return 0 ;
 	   - timeout, the status XNTIMEO is set, and the function should return
@@ -300,10 +300,6 @@ static inline int cobalt_cond_timedwait_prologue(xnthread_t *cur,
 	     interface, replaced by 0 anywhere else), causing a wakeup, spurious
 	     or not whether pthread_cond_signal was called between pthread_kill
 	     and the moment when xnsynch_sleep_on returned ;
-	   - pthread_cancel, no status bit is set, but cancellation specific
-	     bits are set, and tested only once the mutex is reacquired in
-	     cobalt_cond_timedwait_epilogue, so that the cancellation handler can
-	     be called with the mutex locked, as required by the specification.
 	 */
 
 	err = 0;
