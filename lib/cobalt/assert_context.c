@@ -19,22 +19,22 @@
 #include <sys/time.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <rtdk.h>
 #include <cobalt/kernel/thread.h>
 #include <asm/xenomai/syscall.h>
 #include <asm-generic/current.h>
-#include <unistd.h>
+#include "internal.h"
 
 static void assert_nrt_inner(void)
 {
-	xnthread_info_t info;
-	int err;
+	struct xnthread_info info;
+	int ret;
 
-	err = XENOMAI_SYSCALL1(sc_nucleus_current_info, &info);
-
-	if (err) {
-		fprintf(stderr, "sc_nucleus_current_info failed: %s, window=%p, state=%lx, pid=%d\n",
-			strerror(-err), xeno_current_window, xeno_current_window->state, getpid());
+	ret = XENOMAI_SYSCALL1(sc_nucleus_current_info, &info);
+	if (ret) {
+		report_error("sc_nucleus_current_info failed: %s",
+			strerror(-ret));
 		return;
 	}
 

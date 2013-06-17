@@ -45,11 +45,6 @@ static pthread_t xeno_main_tid;
 
 void cobalt_clock_init(int);
 
-#define report_error(fmt, args...) \
-	__real_fprintf(stderr, "Xenomai/cobalt: " fmt "\n", ##args)
-#define report_error_cont(fmt, args...) \
-	__real_fprintf(stderr, "                " fmt "\n", ##args)
-
 static void sigill_handler(int sig)
 {
 	const char m[] = "Xenomai disabled in kernel?\n";

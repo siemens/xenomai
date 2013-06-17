@@ -5,6 +5,12 @@
 #include <pthread.h>
 #include <asm-generic/current.h>
 
+#define report_error(fmt, args...) \
+	__STD(fprintf(stderr, "Xenomai/cobalt: " fmt "\n", ##args))
+
+#define report_error_cont(fmt, args...) \
+	__STD(fprintf(stderr, "                " fmt "\n", ##args))
+
 void xeno_sigshadow_install_once(void);
 
 extern int __cobalt_muxid;
