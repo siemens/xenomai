@@ -274,7 +274,6 @@ bin_SCRIPTS = xeno-config xeno wrap-link.sh
 EXTRA_DIST = \
 	bootstrap \
 	prepare-kernel.sh \
-	prepare-patch.sh \
 	wrap-link.sh \
 	Kconfig.frag \
 	$(wildcard postinstall.sh) \
