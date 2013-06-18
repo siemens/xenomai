@@ -46,6 +46,7 @@ typedef struct cobalt_sem {
 	xnholder_t link;	/* Link in semq */
 	unsigned int value;
 	int flags;
+	int nwaiters;
 	struct cobalt_kqueues *owningq;
 } cobalt_sem_t;
 
@@ -113,6 +114,7 @@ static int sem_init_inner(cobalt_sem_t *sem, int flags, unsigned int value)
 	xnsynch_init(&sem->synchbase, sflags, NULL);
 	sem->value = value;
 	sem->flags = flags;
+	sem->nwaiters = 0;
 	sem->owningq = cobalt_kqueues(pshared);
 
 	return 0;
@@ -129,7 +131,7 @@ static int do_sem_init(struct __shadow_sem *sm, int flags, unsigned int value)
 	if ((flags & SEM_PULSE) != 0 && value > 0)
 		return -EINVAL;
 
-	sem = (cobalt_sem_t *)xnmalloc(sizeof(*sem));
+	sem = xnmalloc(sizeof(*sem));
 	if (sem == NULL)
 		return -ENOSPC;
 
@@ -540,6 +542,8 @@ sem_timedwait_internal(cobalt_sem_t *sem, int timed, xnticks_t to)
 	if (ret != -EAGAIN)
 		return ret;
 
+	sem->nwaiters++;
+
 	if (timed) {
 		tmode = sem->flags & SEM_RAWCLOCK ? XN_ABSOLUTE : XN_REALTIME;
 		info = xnsynch_sleep_on(&sem->synchbase, to, tmode);
@@ -549,11 +553,10 @@ sem_timedwait_internal(cobalt_sem_t *sem, int timed, xnticks_t to)
 	if (info & XNRMID)
 		return -EINVAL;
 
-	if (info & XNBREAK)
-		return -EINTR;
-
-	if (info & XNTIMEO)
-		return -ETIMEDOUT;
+	if (info & (XNBREAK|XNTIMEO)) {
+		sem->nwaiters--;
+		return (info & XNBREAK) ? -EINTR : -ETIMEDOUT;
+	}
 
 	return 0;
 }
@@ -666,14 +669,17 @@ int sem_post_inner(cobalt_sem_t *sem, struct cobalt_kqueues *ownq, int bcast)
 		return -EINVAL;
 
 	if (!bcast) {
-		if (xnsynch_wakeup_one_sleeper(&sem->synchbase) != NULL)
+		if (xnsynch_wakeup_one_sleeper(&sem->synchbase)) {
+			sem->nwaiters--;
 			xnpod_schedule();
-		else if ((sem->flags & SEM_PULSE) == 0)
+		} else if ((sem->flags & SEM_PULSE) == 0)
 			++sem->value;
 	} else {
 		sem->value = 0;
-		if (xnsynch_flush(&sem->synchbase, 0) == XNSYNCH_RESCHED)
+		if (xnsynch_flush(&sem->synchbase, 0) == XNSYNCH_RESCHED) {
+			sem->nwaiters = 0;
 			xnpod_schedule();
+		}
 	}
 
 	return 0;
@@ -751,18 +757,16 @@ int sem_getvalue(cobalt_sem_t *sem, int *value)
 
 	if (sem->magic != COBALT_SEM_MAGIC) {
 		xnlock_put_irqrestore(&nklock, s);
-
 		return -EINVAL;
 	}
 
 	if (sem->owningq != sem_kqueue(sem)) {
 		xnlock_put_irqrestore(&nklock, s);
-
 		return -EPERM;
 	}
 
 	if (sem->value == 0 && (sem->flags & SEM_REPORT) != 0)
-		*value = -xnsynch_nsleepers(&sem->synchbase);
+		*value = -sem->nwaiters;
 	else
 		*value = sem->value;
 

@@ -182,7 +182,6 @@ int xnthread_init(struct xnthread *thread,
 
 	inith(&thread->glink);
 	initph(&thread->rlink);
-	initph(&thread->plink);
 	thread->selector = NULL;
 	initpq(&thread->claimq);
 

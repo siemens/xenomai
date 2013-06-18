@@ -72,6 +72,7 @@ static inline int xnsynch_fast_release(atomic_long_t *fastlock,
 
 #ifdef __KERNEL__
 
+#include <cobalt/kernel/list.h>
 #include <cobalt/kernel/queue.h>
 
 #define XNSYNCH_CLAIMED 0x10	/* Claimed by other thread(s) w/ PIP */
@@ -100,11 +101,9 @@ typedef struct xnsynch {
 
     xnpholder_t link;	/* Link in claim queues */
 
-#define link2synch(ln)		container_of(ln, struct xnsynch, link)
-
     xnflags_t status;	/* Status word */
 
-    xnpqueue_t pendq;	/* Pending threads */
+    struct list_head pendq;	/* Pending threads */
 
     struct xnthread *owner; /* Thread which owns the resource */
 
@@ -117,10 +116,22 @@ typedef struct xnsynch {
 #define xnsynch_test_flags(synch,flags)	testbits((synch)->status,flags)
 #define xnsynch_set_flags(synch,flags)	setbits((synch)->status,flags)
 #define xnsynch_clear_flags(synch,flags)	clrbits((synch)->status,flags)
-#define xnsynch_wait_queue(synch)		(&((synch)->pendq))
-#define xnsynch_nsleepers(synch)		countpq(&((synch)->pendq))
-#define xnsynch_pended_p(synch)		(!emptypq_p(&((synch)->pendq)))
-#define xnsynch_owner(synch)		((synch)->owner)
+
+#define xnsynch_for_each_sleeper(__pos, __synch)		\
+	list_for_each_entry(__pos, &(__synch)->pendq, plink)
+
+#define xnsynch_for_each_sleeper_safe(__pos, __tmp, __synch)	\
+	list_for_each_entry_safe(__pos, __tmp, &(__synch)->pendq, plink)
+
+static inline int xnsynch_pended_p(struct xnsynch *synch)
+{
+	return !list_empty(&synch->pendq);
+}
+
+static inline struct xnthread *xnsynch_owner(struct xnsynch *synch)
+{
+	return synch->owner;
+}
 
 #define xnsynch_fastlock(synch)		((synch)->fastlock)
 #define xnsynch_fastlock_p(synch)	((synch)->fastlock != NULL)
@@ -182,8 +193,8 @@ struct xnthread *xnsynch_wakeup_one_sleeper(struct xnsynch *synch);
 
 int xnsynch_wakeup_many_sleepers(struct xnsynch *synch, int nr);
 
-xnpholder_t *xnsynch_wakeup_this_sleeper(struct xnsynch *synch,
-					 xnpholder_t *holder);
+void xnsynch_wakeup_this_sleeper(struct xnsynch *synch,
+				 struct xnthread *sleeper);
 
 xnflags_t xnsynch_acquire(struct xnsynch *synch,
 			  xnticks_t timeout,

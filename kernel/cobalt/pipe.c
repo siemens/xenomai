@@ -700,7 +700,7 @@ static int xnpipe_release(struct inode *inode, struct file *file)
 
 	if (testbits(state->status, XNPIPE_KERN_CONN)) {
 		/* Unblock waiters. */
-		if (xnsynch_nsleepers(&state->synchbase) > 0) {
+		if (xnsynch_pended_p(&state->synchbase)) {
 			xnsynch_flush(&state->synchbase, XNRMID);
 			xnpod_schedule();
 		}

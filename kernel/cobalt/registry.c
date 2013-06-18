@@ -569,34 +569,25 @@ static struct xnobject *registry_hash_find(const char *key)
 
 	for (ecurr = registry_hash_table[registry_hash_crunch(key)];
 	     ecurr != NULL; ecurr = ecurr->hnext) {
-		if (!strcmp(key, ecurr->key))
+		if (strcmp(key, ecurr->key) == 0)
 			return ecurr;
 	}
 
 	return NULL;
 }
 
-static inline unsigned registry_wakeup_sleepers(const char *key)
+static inline int registry_wakeup_sleepers(const char *key)
 {
-	xnpholder_t *holder, *nholder;
-	unsigned cnt = 0;
+	struct xnthread *sleeper, *tmp;
+	int cnt = 0;
 
-	nholder = getheadpq(xnsynch_wait_queue(&registry_hash_synch));
-
-	while ((holder = nholder) != NULL) {
-		xnthread_t *sleeper = link2thread(holder, plink);
-
+	xnsynch_for_each_sleeper_safe(sleeper, tmp, &registry_hash_synch) {
 		if (*key == *sleeper->registry.waitkey &&
-		    !strcmp(key, sleeper->registry.waitkey)) {
+		    strcmp(key, sleeper->registry.waitkey) == 0) {
 			sleeper->registry.waitkey = NULL;
-			nholder =
-			    xnsynch_wakeup_this_sleeper(&registry_hash_synch,
-							holder);
+			xnsynch_wakeup_this_sleeper(&registry_hash_synch, sleeper);
 			++cnt;
-		} else
-			nholder =
-			    nextpq(xnsynch_wait_queue(&registry_hash_synch),
-				   holder);
+		}
 	}
 
 	return cnt;
@@ -1159,7 +1150,7 @@ u_long xnregistry_put(xnhandle_t handle)
 
 	if ((newlock = object->safelock) > 0 &&
 	    (newlock = --object->safelock) == 0 &&
-	    xnsynch_nsleepers(&object->safesynch) > 0) {
+	    xnsynch_pended_p(&object->safesynch)) {
 		xnsynch_flush(&object->safesynch, 0);
 		xnpod_schedule();
 	}

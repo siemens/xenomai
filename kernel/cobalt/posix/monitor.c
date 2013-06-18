@@ -200,8 +200,7 @@ static void cobalt_monitor_wakeup(struct cobalt_monitor *mon)
 		 */
 		if (bcast ||
 		    (p->u_window->grant_value && p->wchan == &tid->monitor_synch)) {
-			xnsynch_wakeup_this_sleeper(&tid->monitor_synch,
-						    &p->plink);
+			xnsynch_wakeup_this_sleeper(&tid->monitor_synch, p);
 			removeq(&mon->waiters, &tid->monitor_link);
 			tid->monitor_queued = 0;
 		}

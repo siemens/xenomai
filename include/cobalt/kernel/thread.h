@@ -214,13 +214,20 @@ typedef struct xnthread {
 
 	int cprio;			/* Current priority */
 
-	int wprio;			/* Weighted priority (dep. scheduling class) */
+	/**
+	 * Weighted priority (cprio + scheduling class weight).
+	 */
+	int wprio;
 
 	u_long schedlck;		/*!< Scheduler lock count. */
 
 	xnpholder_t rlink;		/* Thread holder in ready queue */
 
-	xnpholder_t plink;		/* Thread holder in synchronization queue(s) */
+	/**
+	 * Thread holder in xnsynch pendq. Prioritized by
+	 * thread->cprio + scheduling class weight.
+	 */
+	struct list_head plink;
 
 	xnholder_t glink;		/* Thread holder in global queue */
 

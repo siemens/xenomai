@@ -107,15 +107,14 @@ void xnsynch_init(struct xnsynch *synch, xnflags_t flags, atomic_long_t *fastloc
 	synch->status = flags & ~XNSYNCH_CLAIMED;
 	synch->owner = NULL;
 	synch->cleanup = NULL;	/* Only works for PIP-enabled objects. */
-	if ((flags & XNSYNCH_OWNER)) {
-		if (fastlock) {
-			synch->fastlock = fastlock;
-			atomic_long_set(fastlock, XN_NO_HANDLE);
-		} else
-			BUG();
+	INIT_LIST_HEAD(&synch->pendq);
+
+	if (flags & XNSYNCH_OWNER) {
+		BUG_ON(fastlock == NULL);
+		synch->fastlock = fastlock;
+		atomic_long_set(fastlock, XN_NO_HANDLE);
 	} else
 		synch->fastlock = NULL;
-	initpq(&synch->pendq);
 }
 EXPORT_SYMBOL_GPL(xnsynch_init);
 
@@ -178,9 +177,9 @@ xnflags_t xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
 		   thread, xnthread_name(thread), synch);
 
 	if (!testbits(synch->status, XNSYNCH_PRIO)) /* i.e. FIFO */
-		appendpq(&synch->pendq, &thread->plink);
+		list_add_tail(&thread->plink, &synch->pendq);
 	else /* i.e. priority-sorted */
-		insertpqf(&synch->pendq, &thread->plink, thread->wprio);
+		list_add_priff(thread, &synch->pendq, wprio, plink);
 
 	xnpod_suspend_thread(thread, XNPEND, timeout, timeout_mode, synch);
 
@@ -192,7 +191,7 @@ EXPORT_SYMBOL_GPL(xnsynch_sleep_on);
 
 /*!
  * \fn struct xnthread *xnsynch_wakeup_one_sleeper(struct xnsynch *synch);
- * \brief Give the resource ownership to the next waiting thread.
+ * \brief Unblock the heading thread from wait.
  *
  * This service wakes up the thread which is currently leading the
  * synchronization object's pending list. The sleeping thread is
@@ -208,15 +207,6 @@ EXPORT_SYMBOL_GPL(xnsynch_sleep_on);
  *
  * @return The descriptor address of the unblocked thread.
  *
- * Side-effects:
- *
- * - The effective priority of the previous resource owner might be
- * lowered to its base priority value as a consequence of the priority
- * inheritance boost being cleared.
- *
- * - The synchronization object ownership is transfered to the
- * unblocked thread.
- *
  * Environments:
  *
  * This service can be called from:
@@ -231,24 +221,26 @@ EXPORT_SYMBOL_GPL(xnsynch_sleep_on);
 
 struct xnthread *xnsynch_wakeup_one_sleeper(struct xnsynch *synch)
 {
-	struct xnthread *thread = NULL;
-	struct xnpholder *holder;
+	struct xnthread *thread;
 	spl_t s;
 
 	XENO_BUGON(NUCLEUS, testbits(synch->status, XNSYNCH_OWNER));
 
 	xnlock_get_irqsave(&nklock, s);
 
-	holder = getpq(&synch->pendq);
-	if (holder) {
-		thread = link2thread(holder, plink);
-		thread->wchan = NULL;
-		trace_mark(xn_nucleus, synch_wakeup_one,
-			   "thread %p thread_name %s synch %p",
-			   thread, xnthread_name(thread), synch);
-		xnpod_resume_thread(thread, XNPEND);
+	if (list_empty(&synch->pendq)) {
+		thread = NULL;
+		goto out;
 	}
 
+	thread = list_first_entry(&synch->pendq, struct xnthread, plink);
+	list_del(&thread->plink);
+	thread->wchan = NULL;
+	trace_mark(xn_nucleus, synch_wakeup_one,
+		   "thread %p thread_name %s synch %p",
+		   thread, xnthread_name(thread), synch);
+	xnpod_resume_thread(thread, XNPEND);
+out:
 	xnlock_put_irqrestore(&nklock, s);
 
 	return thread;
@@ -257,38 +249,37 @@ EXPORT_SYMBOL_GPL(xnsynch_wakeup_one_sleeper);
 
 int xnsynch_wakeup_many_sleepers(struct xnsynch *synch, int nr)
 {
-	struct xnpholder *holder;
-	struct xnthread *thread;
-	int sleepers, i;
+	struct xnthread *thread, *tmp;
+	int nwakeups = 0;
 	spl_t s;
 
 	XENO_BUGON(NUCLEUS, testbits(synch->status, XNSYNCH_OWNER));
 
 	xnlock_get_irqsave(&nklock, s);
 
-	sleepers = xnsynch_nsleepers(synch);
-	if (nr > sleepers)
-		nr = sleepers;
-	for (i = 0; i < nr; i++) {
-		holder = getpq(&synch->pendq);
+	if (list_empty(&synch->pendq))
+		goto out;
 
-		thread = link2thread(holder, plink);
+	list_for_each_entry_safe(thread, tmp, &synch->pendq, plink) {
+		if (nwakeups++ >= nr)
+			break;
+		list_del(&thread->plink);
 		thread->wchan = NULL;
 		trace_mark(xn_nucleus, synch_wakeup_many,
 			   "thread %p thread_name %s synch %p",
 			   thread, xnthread_name(thread), synch);
 		xnpod_resume_thread(thread, XNPEND);
 	}
-
+out:
 	xnlock_put_irqrestore(&nklock, s);
 
-	return nr;
+	return nwakeups;
 }
 EXPORT_SYMBOL_GPL(xnsynch_wakeup_many_sleepers);
 
 /*!
  * \fn void xnsynch_wakeup_this_sleeper(struct xnsynch *synch, struct xnpholder *holder);
- * \brief Give the resource ownership to a given waiting thread.
+ * \brief Unblock a particular thread from wait.
  *
  * This service wakes up a specific thread which is currently pending on
  * the given synchronization object. The sleeping thread is unblocked
@@ -302,21 +293,8 @@ EXPORT_SYMBOL_GPL(xnsynch_wakeup_many_sleepers);
  * @param synch The descriptor address of the synchronization object
  * whose ownership is changed.
  *
- * @param holder The link holder address of the thread to unblock
- * (&thread->plink) which MUST be currently linked to the
- * synchronization object's pending queue (i.e. synch->pendq).
- *
- * @return The link address of the unblocked thread in the
- * synchronization object's pending queue.
- *
- * Side-effects:
- *
- * - The effective priority of the previous resource owner might be
- * lowered to its base priority value as a consequence of the priority
- * inheritance boost being cleared.
- *
- * - The synchronization object ownership is transfered to the
- * unblocked thread.
+ * @param sleeper The thread to unblock which MUST be currently linked
+ * to the synchronization object's pending queue (i.e. synch->pendq).
  *
  * Environments:
  *
@@ -330,27 +308,22 @@ EXPORT_SYMBOL_GPL(xnsynch_wakeup_many_sleepers);
  * Rescheduling: never.
  */
 
-struct xnpholder *xnsynch_wakeup_this_sleeper(struct xnsynch *synch, struct xnpholder *holder)
+void xnsynch_wakeup_this_sleeper(struct xnsynch *synch, struct xnthread *sleeper)
 {
-	struct xnthread *thread;
-	struct xnpholder *nholder;
 	spl_t s;
 
 	XENO_BUGON(NUCLEUS, testbits(synch->status, XNSYNCH_OWNER));
 
 	xnlock_get_irqsave(&nklock, s);
 
-	nholder = poppq(&synch->pendq, holder);
-	thread = link2thread(holder, plink);
-	thread->wchan = NULL;
+	list_del(&sleeper->plink);
+	sleeper->wchan = NULL;
 	trace_mark(xn_nucleus, synch_wakeup_this,
 		   "thread %p thread_name %s synch %p",
-		   thread, xnthread_name(thread), synch);
-	xnpod_resume_thread(thread, XNPEND);
+		   sleeper, xnthread_name(sleeper), synch);
+	xnpod_resume_thread(sleeper, XNPEND);
 
 	xnlock_put_irqrestore(&nklock, s);
-
-	return nholder;
 }
 EXPORT_SYMBOL_GPL(xnsynch_wakeup_this_sleeper);
 
@@ -488,7 +461,7 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 	xnsynch_detect_relaxed_owner(synch, thread);
 
 	if (!testbits(synch->status, XNSYNCH_PRIO)) /* i.e. FIFO */
-		appendpq(&synch->pendq, &thread->plink);
+		list_add_tail(&thread->plink, &synch->pendq);
 	else if (thread->wprio > owner->wprio) {
 		if (xnthread_test_info(owner, XNWAKEN) && owner->wwake == synch) {
 			/* Ownership is still pending, steal the resource. */
@@ -498,7 +471,7 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 			goto grab_and_exit;
 		}
 
-		insertpqf(&synch->pendq, &thread->plink, thread->wprio);
+		list_add_priff(thread, &synch->pendq, wprio, plink);
 
 		if (testbits(synch->status, XNSYNCH_PIP)) {
 			if (!xnthread_test_state(owner, XNBOOST)) {
@@ -515,7 +488,7 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 			xnsynch_renice_thread(owner, thread);
 		}
 	} else
-		insertpqf(&synch->pendq, &thread->plink, thread->wprio);
+		list_add_priff(thread, &synch->pendq, wprio, plink);
 
 	xnpod_suspend_thread(thread, XNPEND, timeout, timeout_mode, synch);
 
@@ -622,7 +595,6 @@ static void xnsynch_clear_boost(struct xnsynch *synch,
 {
 	struct xnthread *target;
 	struct xnsynch *hsynch;
-	struct xnpholder *h;
 	int wprio;
 
 	removepq(&owner->claimq, &synch->link);
@@ -634,10 +606,9 @@ static void xnsynch_clear_boost(struct xnsynch *synch,
 		target = owner;
 	} else {
 		/* Find the highest priority needed to enforce the PIP. */
-		hsynch = link2synch(getheadpq(&owner->claimq));
-		h = getheadpq(&hsynch->pendq);
-		XENO_BUGON(NUCLEUS, h == NULL);
-		target = link2thread(h, plink);
+		hsynch = container_of(getheadpq(&owner->claimq), struct xnsynch, link);
+		XENO_BUGON(NUCLEUS, list_empty(&hsynch->pendq));
+		target = list_first_entry(&hsynch->pendq, struct xnthread, plink);
 		if (target->wprio > wprio)
 			wprio = target->wprio;
 		else
@@ -670,8 +641,8 @@ void xnsynch_requeue_sleeper(struct xnthread *thread)
 	if (!testbits(synch->status, XNSYNCH_PRIO))
 		return;
 
-	removepq(&synch->pendq, &thread->plink);
-	insertpqf(&synch->pendq, &thread->plink, thread->wprio);
+	list_del(&thread->plink);
+	list_add_priff(thread, &synch->pendq, wprio, plink);
 	owner = synch->owner;
 
 	if (owner != NULL && thread->wprio > owner->wprio) {
@@ -723,41 +694,40 @@ EXPORT_SYMBOL_GPL(__xnsynch_fixup_rescnt);
 struct xnthread *__xnsynch_transfer_ownership(struct xnsynch *synch,
 					      struct xnthread *lastowner)
 {
-	struct xnthread *newowner;
-	struct xnpholder *holder;
+	struct xnthread *nextowner;
+	xnhandle_t nextownerh;
 	atomic_long_t *lockp;
-	xnhandle_t newownerh;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
 	lockp = xnsynch_fastlock(synch);
 
-	if (emptypq_p(&synch->pendq)) {
+	if (list_empty(&synch->pendq)) {
 		synch->owner = NULL;
 		atomic_long_set(lockp, XN_NO_HANDLE);
 		xnlock_put_irqrestore(&nklock, s);
 		return NULL;
 	}
 
-	holder = getpq(&synch->pendq);
-	newowner = link2thread(holder, plink);
-	newowner->wchan = NULL;
-	newowner->wwake = synch;
-	synch->owner = newowner;
-	xnthread_set_info(newowner, XNWAKEN);
-	xnpod_resume_thread(newowner, XNPEND);
+	nextowner = list_first_entry(&synch->pendq, struct xnthread, plink);
+	list_del(&nextowner->plink);
+	nextowner->wchan = NULL;
+	nextowner->wwake = synch;
+	synch->owner = nextowner;
+	xnthread_set_info(nextowner, XNWAKEN);
+	xnpod_resume_thread(nextowner, XNPEND);
 
 	if (testbits(synch->status, XNSYNCH_CLAIMED))
 		xnsynch_clear_boost(synch, lastowner);
 
-	newownerh = xnsynch_fast_set_claimed(xnthread_handle(newowner),
-					     xnsynch_pended_p(synch));
-	atomic_long_set(lockp, newownerh);
+	nextownerh = xnsynch_fast_set_claimed(xnthread_handle(nextowner),
+					      xnsynch_pended_p(synch));
+	atomic_long_set(lockp, nextownerh);
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return newowner;
+	return nextowner;
 }
 EXPORT_SYMBOL_GPL(__xnsynch_transfer_ownership);
 
@@ -785,16 +755,18 @@ EXPORT_SYMBOL_GPL(__xnsynch_transfer_ownership);
  */
 struct xnthread *xnsynch_peek_pendq(struct xnsynch *synch)
 {
-	struct xnthread *thread = NULL;
-	struct xnpholder *holder;
+	struct xnthread *thread;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	holder = getheadpq(&synch->pendq);
-	if (holder)
-		thread = link2thread(holder, plink);
+	if (list_empty(&synch->pendq)) {
+		thread = NULL;
+		goto out;
+	}
 
+	thread = list_first_entry(&synch->pendq, struct xnthread, plink);
+out:
 	xnlock_put_irqrestore(&nklock, s);
 
 	return thread;
@@ -852,8 +824,8 @@ EXPORT_SYMBOL_GPL(xnsynch_peek_pendq);
 
 int xnsynch_flush(struct xnsynch *synch, xnflags_t reason)
 {
-	struct xnpholder *holder;
-	int status;
+	struct xnthread *sleeper, *tmp;
+	int ret;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -861,23 +833,24 @@ int xnsynch_flush(struct xnsynch *synch, xnflags_t reason)
 	trace_mark(xn_nucleus, synch_flush, "synch %p reason %lu",
 		   synch, reason);
 
-	status = emptypq_p(&synch->pendq) ? XNSYNCH_DONE : XNSYNCH_RESCHED;
-
-	while ((holder = getpq(&synch->pendq)) != NULL) {
-		struct xnthread *sleeper = link2thread(holder, plink);
-		xnthread_set_info(sleeper, reason);
-		sleeper->wchan = NULL;
-		xnpod_resume_thread(sleeper, XNPEND);
-	}
-
-	if (testbits(synch->status, XNSYNCH_CLAIMED)) {
-		xnsynch_clear_boost(synch, synch->owner);
-		status = XNSYNCH_RESCHED;
+	if (list_empty(&synch->pendq)) {
+		XENO_BUGON(NUCLEUS, testbits(synch->status, XNSYNCH_CLAIMED));
+		ret = XNSYNCH_DONE;
+	} else {
+		ret = XNSYNCH_RESCHED;
+		list_for_each_entry_safe(sleeper, tmp, &synch->pendq, plink) {
+			list_del(&sleeper->plink);
+			xnthread_set_info(sleeper, reason);
+			sleeper->wchan = NULL;
+			xnpod_resume_thread(sleeper, XNPEND);
+		}
+		if (testbits(synch->status, XNSYNCH_CLAIMED))
+			xnsynch_clear_boost(synch, synch->owner);
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return status;
+	return ret;
 }
 EXPORT_SYMBOL_GPL(xnsynch_flush);
 
@@ -912,17 +885,16 @@ void xnsynch_forget_sleeper(struct xnthread *thread)
 
 	xnthread_clear_state(thread, XNPEND);
 	thread->wchan = NULL;
-	removepq(&synch->pendq, &thread->plink);
+	list_del(&thread->plink);
 
 	if (testbits(synch->status, XNSYNCH_CLAIMED)) {
 		/* Find the highest priority needed to enforce the PIP. */
 		owner = synch->owner;
-
-		if (emptypq_p(&synch->pendq))
+		if (list_empty(&synch->pendq))
 			/* No more sleepers: clear the boost. */
 			xnsynch_clear_boost(synch, owner);
 		else {
-			target = link2thread(getheadpq(&synch->pendq), plink);
+			target = list_first_entry(&synch->pendq, struct xnthread, plink);
 			h = getheadpq(&owner->claimq);
 			if (target->wprio != h->prio) {
 				/*
@@ -969,7 +941,7 @@ void xnsynch_release_all_ownerships(struct xnthread *thread)
 		 * Since xnsynch_release() alters the claim queue, we
 		 * need to be conservative while scanning it.
 		 */
-		synch = link2synch(holder);
+		synch = container_of(holder, struct xnsynch, link);
 		nholder = nextpq(&thread->claimq, holder);
 		xnsynch_release(synch, thread);
 		if (synch->cleanup)
@@ -1006,16 +978,14 @@ void xnsynch_detect_relaxed_owner(struct xnsynch *synch, struct xnthread *sleepe
  */
 void xnsynch_detect_claimed_relax(struct xnthread *owner)
 {
-	struct xnpholder *hs, *ht;
 	struct xnthread *sleeper;
 	struct xnsynch *synch;
+	struct xnpholder *hs;
 
 	for (hs = getheadpq(&owner->claimq); hs != NULL;
 	     hs = nextpq(&owner->claimq, hs)) {
-		synch = link2synch(hs);
-		for (ht = getheadpq(&synch->pendq); ht != NULL;
-		     ht = nextpq(&synch->pendq, ht)) {
-			sleeper = link2thread(ht, plink);
+		synch = container_of(hs, struct xnsynch, link);
+		list_for_each_entry(sleeper, &synch->pendq, plink) {
 			if (xnthread_test_state(sleeper, XNTRAPSW)) {
 				xnthread_set_info(sleeper, XNSWREP);
 				xnshadow_send_sig(sleeper, SIGDEBUG,

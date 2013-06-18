@@ -150,7 +150,6 @@ int cobalt_event_wait(struct cobalt_event_shadow __user *u_evtsh,
 		goto out;
 	}
 
-	datp->nwaiters = xnsynch_nsleepers(&event->synch) + 1;
 	setbits(datp->flags, COBALT_EVENT_PENDED);
 	rbits = datp->value & bits;
 	testval = mode & COBALT_EVENT_ANY ? rbits : datp->value;
@@ -165,21 +164,20 @@ int cobalt_event_wait(struct cobalt_event_shadow __user *u_evtsh,
 	ewc.value = bits;
 	ewc.mode = mode;
 	xnthread_prepare_wait(&ewc.wc);
-
+	datp->nwaiters++;
 	info = xnsynch_sleep_on(&event->synch, timeout, tmode);
 	xnthread_finish_wait(&ewc.wc, NULL);
+
 	if (info & XNRMID) {
 		ret = -EIDRM;
 		goto out;
 	}
-	if (info & XNBREAK)
-		ret = -EINTR;
-	else if (info & XNTIMEO)
-		ret = -ETIMEDOUT;
-	else
+	if (info & (XNBREAK|XNTIMEO)) {
+		datp->nwaiters--;
+		ret = (info & XNBREAK) ? -EINTR : -ETIMEDOUT;
+	} else
 		rbits = ewc.value;
 done:
-	datp->nwaiters = xnsynch_nsleepers(&event->synch);
 	if (!xnsynch_pended_p(&event->synch))
 		clrbits(datp->flags, COBALT_EVENT_PENDED);
 out:
@@ -199,9 +197,7 @@ int cobalt_event_sync(struct cobalt_event_shadow __user *u_evtsh)
 	struct xnthread_wait_context *wc;
 	struct cobalt_event_data *datp;
 	struct event_wait_context *ewc;
-	struct xnpholder *h, *nh;
-	struct xnpqueue *waitq;
-	struct xnthread *p;
+	struct xnthread *p, *tmp;
 	int ret = 0;
 	spl_t s;
 
@@ -222,19 +218,17 @@ int cobalt_event_sync(struct cobalt_event_shadow __user *u_evtsh)
 	 */
 	datp = event->data;
 	bits = datp->value;
-	waitq = xnsynch_wait_queue(&event->synch);
-	nh = getheadpq(waitq);
-	while ((h = nh) != NULL) {
-		p = link2thread(h, plink);
+
+	xnsynch_for_each_sleeper_safe(p, tmp, &event->synch) {
 		wc = xnthread_get_wait_context(p);
 		ewc = container_of(wc, struct event_wait_context, wc);
 		waitval = ewc->value & bits;
 		testval = ewc->mode & COBALT_EVENT_ANY ? waitval : ewc->value;
 		if (waitval && waitval == testval) {
+			datp->nwaiters--;
 			ewc->value = waitval;
-			nh = xnsynch_wakeup_this_sleeper(&event->synch, h);
-		} else
-			nh = nextpq(waitq, h);
+			xnsynch_wakeup_this_sleeper(&event->synch, p);
+		}
 	}
 
 	xnpod_schedule();

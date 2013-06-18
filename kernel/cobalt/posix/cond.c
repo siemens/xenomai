@@ -222,7 +222,7 @@ static inline int pthread_cond_destroy(struct __shadow_cond *cnd)
 		return -EPERM;
 	}
 
-	if (xnsynch_nsleepers(&cond->synchbase) || cond->mutex) {
+	if (xnsynch_pended_p(&cond->synchbase) || cond->mutex) {
 		xnlock_put_irqrestore(&nklock, s);
 		return -EBUSY;
 	}
@@ -330,7 +330,7 @@ static inline int cobalt_cond_timedwait_epilogue(xnthread_t *cur,
 
 	/* Unbind mutex and cond, if no other thread is waiting, if the job was
 	   not already done. */
-	if (!xnsynch_nsleepers(&cond->synchbase)
+	if (!xnsynch_pended_p(&cond->synchbase)
 	    && cond->mutex == mutex) {
 		cond->mutex = NULL;
 		removeq(&mutex->conds, &cond->mutex_link);

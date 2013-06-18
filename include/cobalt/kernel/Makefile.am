@@ -8,6 +8,7 @@ includesub_HEADERS = \
 	heap.h \
 	hostrt.h \
 	intr.h \
+	list.h \
 	lock.h \
 	map.h \
 	pipe.h \
