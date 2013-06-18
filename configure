@@ -848,7 +848,7 @@ enable_async_cancel
 enable_pshared
 enable_registry
 enable_smp
-enable_x86_sep
+enable_x86_vsyscall
 enable_arm_tsc
 enable_arm_quirks
 enable_doc_install
@@ -1515,7 +1515,7 @@ Optional Features:
   --enable-pshared        Enable shared multi-processing for capable skins
   --enable-registry       Export real-time objects to a registry
   --enable-smp            Enable SMP support
-  --enable-x86-sep        Enable x86 SEP instructions for issuing syscalls
+  --enable-x86-vsyscall   Assume VSYSCALL enabled for issuing syscalls
   --enable-arm-tsc        You only need this option if you get the following
                           message when starting an application: Xenomai:
                           incompatible feature set (userland requires
@@ -12932,21 +12932,21 @@ fi
 $as_echo "${CONFIG_SMP:-no}" >&6; }
 
 
-CONFIG_XENO_X86_SEP=y
+CONFIG_XENO_X86_VSYSCALL=y
 
 if test $XENO_TARGET_ARCH = x86; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for x86 SEP instructions in syscalls" >&5
-$as_echo_n "checking for x86 SEP instructions in syscalls... " >&6; }
-  # Check whether --enable-x86-sep was given.
-if test "${enable_x86_sep+set}" = set; then :
-  enableval=$enable_x86_sep; case "$enableval" in
-	y | yes) CONFIG_XENO_X86_SEP=y ;;
-	*) unset CONFIG_XENO_X86_SEP ;;
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for x86 VSYSCALL availability" >&5
+$as_echo_n "checking for x86 VSYSCALL availability... " >&6; }
+  # Check whether --enable-x86-vsyscall was given.
+if test "${enable_x86_vsyscall+set}" = set; then :
+  enableval=$enable_x86_vsyscall; case "$enableval" in
+	y | yes) CONFIG_XENO_X86_VSYSCALL=y ;;
+	*) unset CONFIG_XENO_X86_VSYSCALL ;;
 	esac
 fi
 
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${CONFIG_XENO_X86_SEP:-no}" >&5
-$as_echo "${CONFIG_XENO_X86_SEP:-no}" >&6; }
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${CONFIG_XENO_X86_VSYSCALL:-no}" >&5
+$as_echo "${CONFIG_XENO_X86_VSYSCALL:-no}" >&6; }
 fi
 
 
@@ -13663,8 +13663,8 @@ _ACEOF
 
 
 
-test x$CONFIG_XENO_X86_SEP = xy &&
-$as_echo "#define CONFIG_XENO_X86_SEP 1" >>confdefs.h
+test x$CONFIG_XENO_X86_VSYSCALL = xy &&
+$as_echo "#define CONFIG_XENO_X86_VSYSCALL 1" >>confdefs.h
 
 test x$CONFIG_SMP = xy &&
 $as_echo "#define CONFIG_SMP 1" >>confdefs.h

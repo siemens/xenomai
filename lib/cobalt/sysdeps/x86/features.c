@@ -25,7 +25,7 @@
 
 void cobalt_check_features(struct xnfeatinfo *finfo)
 {
-#if defined(__i386__) && defined(CONFIG_XENO_X86_SEP)
+#if defined(__i386__) && defined(CONFIG_XENO_X86_VSYSCALL)
 	size_t n = confstr(_CS_GNU_LIBPTHREAD_VERSION, NULL, 0);
 	if (n > 0) {
 		char buf[n];
@@ -36,9 +36,9 @@ void cobalt_check_features(struct xnfeatinfo *finfo)
 			return;
 	}
 
-	report_error("--enable-x86-sep needs NPTL and Linux 2.6.x or higher,");
+	report_error("--enable-x86-vsyscall needs NPTL and Linux 2.6.x or higher,");
 	report_error_cont("which does not match your configuration. Please upgrade, or");
-	report_error_cont("rebuild the Xenomai libraries passing --disable-x86-sep");
+	report_error_cont("rebuild the Xenomai libraries passing --disable-x86-vsyscall");
 	exit(1);
-#endif /* __i386__ && CONFIG_XENO_X86_SEP */
+#endif /* __i386__ && CONFIG_XENO_X86_VSYSCALL */
 }

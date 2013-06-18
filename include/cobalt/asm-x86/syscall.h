@@ -98,15 +98,18 @@ static inline int xnarch_local_syscall(void)
 
 #ifdef __i386__
 
-#ifdef CONFIG_XENO_X86_SEP
-/* This form relies on the kernel's vsyscall support in order to use
-   the SEP instructions which must be supported by the hardware. We
-   also depend on the NPTL providing us a pointer to the vsyscall DSO
-   entry point, to which we branch to instead of issuing a trap. */
+#ifdef CONFIG_XENO_X86_VSYSCALL
+/*
+ * This form relies on the kernel's vsyscall support in order to use
+ * the most appropriate syscall entry instruction the CPU supports. We
+ * also depend on the NPTL providing us a pointer to the vsyscall DSO
+ * entry point, to which we branch to instead of issuing a trap.
+ * We assume this pointer to be available at %gs:0x10.
+ */
 #define DOSYSCALL  "call *%%gs:0x10\n\t"
-#else /* CONFIG_XENO_X86_SEP */
+#else /* CONFIG_XENO_X86_VSYSCALL */
 #define DOSYSCALL  "int $0x80\n\t"
-#endif /* CONFIG_XENO_X86_SEP */
+#endif /* CONFIG_XENO_X86_VSYSCALL */
 
 /* The one that cannot fail. */
 #define DOSYSCALLSAFE  "int $0x80\n\t"
