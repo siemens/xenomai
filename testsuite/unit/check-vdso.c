@@ -8,7 +8,7 @@
 #include <asm/xenomai/syscall.h>
 #include <cobalt/kernel/vdso.h>
 
-extern unsigned long xeno_sem_heap[2];
+extern unsigned long cobalt_sem_heap[2];
 
 int main(int argc, char **argv)
 {
@@ -21,7 +21,7 @@ int main(int argc, char **argv)
 		test_features = strtoull(argv[1], NULL, 0);
 	}
 
-	if (!xeno_sem_heap[1]) {
+	if (!cobalt_sem_heap[1]) {
 		fprintf(stderr, "Could not determine position of the "
 			"global semaphore heap\n");
 		return 1;

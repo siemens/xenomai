@@ -146,7 +146,7 @@ static inline int timer_create(clockid_t clockid,
 		sem = evp->sigev_value.sival_ptr;
 		if (sem == NULL)
 			goto error;
-		shadow_sem = &((union __xeno_sem *)sem)->shadow_sem;
+		shadow_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
 		err = sem_getvalue(shadow_sem->sem, &semval);
 		if (err)
 			goto error;
@@ -463,7 +463,7 @@ int cobalt_timer_create(clockid_t clock,
 			const struct sigevent __user *u_sev,
 			timer_t __user *u_tm)
 {
-	union __xeno_sem sm, __user *u_sem;
+	union cobalt_sem_union sm, __user *u_sem;
 	struct sigevent sev, *evp = &sev;
 	timer_t tm = 0;
 	int ret;

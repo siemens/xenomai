@@ -88,12 +88,12 @@ int sem_broadcast_np(sem_t *sem);
 
 struct cobalt_sem;
 
-union __xeno_sem {
-    sem_t native_sem;
-    struct __shadow_sem {
-	unsigned magic;
-	struct cobalt_sem *sem;
-    } shadow_sem;
+union cobalt_sem_union {
+	sem_t native_sem;
+	struct __shadow_sem {
+		unsigned int magic;
+		struct cobalt_sem *sem;
+	} shadow_sem;
 };
 
 /* For Cobalt's sem_init_np() extension. */

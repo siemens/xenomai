@@ -22,14 +22,14 @@
 
 #ifndef __KERNEL__
 
-extern volatile void *xeno_nios2_hrclock;
+extern volatile void *__cobalt_nios2_hrclock;
 
 static inline unsigned long long __xn_rdtsc(void)
 {
 	volatile unsigned short *hrclock;
 	int64_t t0, t1;
 
-	hrclock = xeno_nios2_hrclock;
+	hrclock = __cobalt_nios2_hrclock;
 
 #define hrclock_wrsnap(reg, val)		\
 	(*(hrclock + (12 + ((reg) * 2)))) = (val)

@@ -14,13 +14,13 @@ static inline int backtrace(void **buffer, int size)
 #include <execinfo.h>
 #endif /* !__UCLIBC__ */
 
-static struct sigaction xeno_saved_sigshadow_action;
+static struct sigaction sigshadow_action_orig;
 
 /*
  * The following handler is part of the inner user-interface: should
  * remain extern.
  */
-int xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt)
+int cobalt_sigshadow_handler(int sig, siginfo_t *si, void *ctxt)
 {
 	void *frames[SIGSHADOW_BACKTRACE_DEPTH];
 	int action, arg, nr, skip;
@@ -48,12 +48,12 @@ int xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt)
 	return 1;
 }
 
-static void xeno_sigshadow_handler(int sig, siginfo_t *si, void *ctxt)
+static void sigshadow_handler(int sig, siginfo_t *si, void *ctxt)
 {
-	const struct sigaction *const sa = &xeno_saved_sigshadow_action;
+	const struct sigaction *const sa = &sigshadow_action_orig;
 	sigset_t saved_sigset;
 
-	if (xeno_sigwinch_handler(sig, si, ctxt))
+	if (cobalt_sigshadow_handler(sig, si, ctxt))
 		return;
 
 	/* Not a signal sent by the Xenomai nucleus */
@@ -81,20 +81,20 @@ static void install_sigshadow(void)
 	sigaddset(&mask_sigset, SIGSHADOW);
 
 	new_sigshadow_action.sa_flags = SA_SIGINFO | SA_RESTART;
-	new_sigshadow_action.sa_sigaction = xeno_sigshadow_handler;
+	new_sigshadow_action.sa_sigaction = sigshadow_handler;
 	sigemptyset(&new_sigshadow_action.sa_mask);
 	pthread_sigmask(SIG_BLOCK, &mask_sigset, &saved_sigset);
 
 	sigaction(SIGSHADOW,
-		  &new_sigshadow_action, &xeno_saved_sigshadow_action);
+		  &new_sigshadow_action, &sigshadow_action_orig);
 
-	if ((xeno_saved_sigshadow_action.sa_flags & SA_NODEFER) == 0)
-		sigaddset(&xeno_saved_sigshadow_action.sa_mask, SIGSHADOW);
+	if ((sigshadow_action_orig.sa_flags & SA_NODEFER) == 0)
+		sigaddset(&sigshadow_action_orig.sa_mask, SIGSHADOW);
 
 	pthread_sigmask(SIG_SETMASK, &saved_sigset, NULL);
 }
 
-void xeno_sigshadow_install_once(void)
+void cobalt_sigshadow_install_once(void)
 {
 	static pthread_once_t once = PTHREAD_ONCE_INIT;
 	pthread_once(&once, install_sigshadow);

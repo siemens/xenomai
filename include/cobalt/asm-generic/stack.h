@@ -10,7 +10,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-static inline unsigned xeno_stacksize(unsigned size)
+static inline unsigned cobalt_get_stacksize(unsigned size)
 {
 	static const unsigned default_size = __WORDSIZE * 1024;
 	static unsigned min_size;
@@ -25,7 +25,7 @@ static inline unsigned xeno_stacksize(unsigned size)
 	return size;
 }
 
-void xeno_fault_stack(void);
+void cobalt_prefault_stack(void);
 
 #ifdef __cplusplus
 }

@@ -24,12 +24,12 @@
 #include "kernel/cobalt/posix/cond.h"
 #include "internal.h"
 
-extern unsigned long xeno_sem_heap[2];
+extern unsigned long cobalt_sem_heap[2];
 
 static inline unsigned long *cond_get_signalsp(struct __shadow_cond *shadow)
 {
 	if (shadow->attr.pshared)
-		return (unsigned long *)(xeno_sem_heap[1]
+		return (unsigned long *)(cobalt_sem_heap[1]
 					 + shadow->pending_signals_offset);
 
 	return shadow->pending_signals;
@@ -42,7 +42,7 @@ cond_get_mutex_datp(struct __shadow_cond *shadow)
 		return NULL;
 
 	if (shadow->attr.pshared)
-		return (struct mutex_dat *)(xeno_sem_heap[1]
+		return (struct mutex_dat *)(cobalt_sem_heap[1]
 					    + shadow->mutex_datp_offset);
 
 	return shadow->mutex_datp;
@@ -88,14 +88,14 @@ COBALT_IMPL(int, pthread_condattr_setpshared, (pthread_condattr_t *attr, int psh
 COBALT_IMPL(int, pthread_cond_init, (pthread_cond_t *cond,
 				     const pthread_condattr_t * attr))
 {
-	struct __shadow_cond *_cnd = &((union __xeno_cond *)cond)->shadow_cond;
+	struct __shadow_cond *_cnd = &((union cobalt_cond_union *)cond)->shadow_cond;
 	unsigned long *pending_signalsp;
 	int err;
 
 	err = XENOMAI_SKINCALL2(__cobalt_muxid, sc_cobalt_cond_init, _cnd, attr);
 	if (!err && !_cnd->attr.pshared) {
 		pending_signalsp = (unsigned long *)
-			(xeno_sem_heap[0] + _cnd->pending_signals_offset);
+			(cobalt_sem_heap[0] + _cnd->pending_signals_offset);
 		_cnd->pending_signals = pending_signalsp;
 	} else
 		pending_signalsp = cond_get_signalsp(_cnd);
@@ -107,7 +107,7 @@ COBALT_IMPL(int, pthread_cond_init, (pthread_cond_t *cond,
 
 COBALT_IMPL(int, pthread_cond_destroy, (pthread_cond_t *cond))
 {
-	struct __shadow_cond *_cond = &((union __xeno_cond *)cond)->shadow_cond;
+	struct __shadow_cond *_cond = &((union cobalt_cond_union *)cond)->shadow_cond;
 
 	return -XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_cond_destroy, _cond);
 }
@@ -135,9 +135,9 @@ static void __pthread_cond_cleanup(void *data)
 
 COBALT_IMPL(int, pthread_cond_wait, (pthread_cond_t *cond, pthread_mutex_t *mutex))
 {
-	struct __shadow_cond *_cnd = &((union __xeno_cond *)cond)->shadow_cond;
+	struct __shadow_cond *_cnd = &((union cobalt_cond_union *)cond)->shadow_cond;
 	struct __shadow_mutex *_mx =
-		&((union __xeno_mutex *)mutex)->shadow_mutex;
+		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
 	struct cobalt_cond_cleanup_t c = {
 		.cond = _cnd,
 		.mutex = _mx,
@@ -151,7 +151,7 @@ COBALT_IMPL(int, pthread_cond_wait, (pthread_cond_t *cond, pthread_mutex_t *mute
 		return EINVAL;
 
 	if (_mx->attr.type == PTHREAD_MUTEX_ERRORCHECK) {
-		xnhandle_t cur = xeno_get_current();
+		xnhandle_t cur = cobalt_get_current();
 
 		if (cur == XN_NO_HANDLE)
 			return EPERM;
@@ -189,9 +189,9 @@ COBALT_IMPL(int, pthread_cond_timedwait, (pthread_cond_t *cond,
 					  pthread_mutex_t *mutex,
 					  const struct timespec *abstime))
 {
-	struct __shadow_cond *_cnd = &((union __xeno_cond *)cond)->shadow_cond;
+	struct __shadow_cond *_cnd = &((union cobalt_cond_union *)cond)->shadow_cond;
 	struct __shadow_mutex *_mx =
-		&((union __xeno_mutex *)mutex)->shadow_mutex;
+		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
 	struct cobalt_cond_cleanup_t c = {
 		.cond = _cnd,
 		.mutex = _mx,
@@ -204,7 +204,7 @@ COBALT_IMPL(int, pthread_cond_timedwait, (pthread_cond_t *cond,
 		return EINVAL;
 
 	if (_mx->attr.type == PTHREAD_MUTEX_ERRORCHECK) {
-		xnhandle_t cur = xeno_get_current();
+		xnhandle_t cur = cobalt_get_current();
 
 		if (cur == XN_NO_HANDLE)
 			return EPERM;
@@ -239,7 +239,7 @@ COBALT_IMPL(int, pthread_cond_timedwait, (pthread_cond_t *cond,
 
 COBALT_IMPL(int, pthread_cond_signal, (pthread_cond_t *cond))
 {
-	struct __shadow_cond *_cnd = &((union __xeno_cond *)cond)->shadow_cond;
+	struct __shadow_cond *_cnd = &((union cobalt_cond_union *)cond)->shadow_cond;
 	unsigned long pending_signals, *pending_signalsp;
 	struct mutex_dat *mutex_datp;
 	unsigned long flags;
@@ -252,7 +252,7 @@ COBALT_IMPL(int, pthread_cond_signal, (pthread_cond_t *cond))
 	if (mutex_datp) {
 		flags = mutex_datp->flags;
 		if (flags & COBALT_MUTEX_ERRORCHECK) {
-			cur = xeno_get_current();
+			cur = cobalt_get_current();
 			if (cur == XN_NO_HANDLE)
 				return EPERM;
 
@@ -271,7 +271,7 @@ COBALT_IMPL(int, pthread_cond_signal, (pthread_cond_t *cond))
 
 COBALT_IMPL(int, pthread_cond_broadcast, (pthread_cond_t *cond))
 {
-	struct __shadow_cond *_cnd = &((union __xeno_cond *)cond)->shadow_cond;
+	struct __shadow_cond *_cnd = &((union cobalt_cond_union *)cond)->shadow_cond;
 	struct mutex_dat *mutex_datp;
 	unsigned long flags;
 	xnhandle_t cur;
@@ -283,7 +283,7 @@ COBALT_IMPL(int, pthread_cond_broadcast, (pthread_cond_t *cond))
 	if (mutex_datp) {
 		flags = mutex_datp->flags ;
 		if (flags & COBALT_MUTEX_ERRORCHECK) {
-			cur = xeno_get_current();
+			cur = cobalt_get_current();
 			if (cur == XN_NO_HANDLE)
 				return EPERM;
 

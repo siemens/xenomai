@@ -80,7 +80,7 @@ COBALT_IMPL(int, pthread_mutex_init, (pthread_mutex_t *mutex,
 				      const pthread_mutexattr_t *attr))
 {
 	struct __shadow_mutex *_mutex =
-		&((union __xeno_mutex *)mutex)->shadow_mutex;
+		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
 	struct mutex_dat *datp;
 	int err;
 
@@ -96,7 +96,7 @@ COBALT_IMPL(int, pthread_mutex_init, (pthread_mutex_t *mutex,
 
 	if (!_mutex->attr.pshared) {
 		datp = (struct mutex_dat *)
-			(xeno_sem_heap[0] + _mutex->dat_offset);
+			(cobalt_sem_heap[0] + _mutex->dat_offset);
 		_mutex->dat = datp;
 	} else
 		datp = mutex_get_datp(_mutex);
@@ -109,7 +109,7 @@ COBALT_IMPL(int, pthread_mutex_init, (pthread_mutex_t *mutex,
 COBALT_IMPL(int, pthread_mutex_destroy, (pthread_mutex_t *mutex))
 {
 	struct __shadow_mutex *_mutex =
-		&((union __xeno_mutex *)mutex)->shadow_mutex;
+		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
 	int err;
 
 	if (_mutex->magic != COBALT_MUTEX_MAGIC)
@@ -123,12 +123,12 @@ COBALT_IMPL(int, pthread_mutex_destroy, (pthread_mutex_t *mutex))
 COBALT_IMPL(int, pthread_mutex_lock, (pthread_mutex_t *mutex))
 {
 	struct __shadow_mutex *_mutex =
-		&((union __xeno_mutex *)mutex)->shadow_mutex;
+		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
 	unsigned long status;
 	xnhandle_t cur;
 	int err;
 
-	cur = xeno_get_current();
+	cur = cobalt_get_current();
 	if (cur == XN_NO_HANDLE)
 		return EPERM;
 
@@ -140,7 +140,7 @@ COBALT_IMPL(int, pthread_mutex_lock, (pthread_mutex_t *mutex))
 	 * order to handle the auto-relax feature, so we must always
 	 * obtain them via a syscall.
 	 */
-	status = xeno_get_current_mode();
+	status = cobalt_get_current_mode();
 	if ((status & (XNRELAX|XNWEAK)) == 0) {
 		err = xnsynch_fast_acquire(mutex_get_ownerp(_mutex), cur);
 		if (err == 0) {
@@ -182,12 +182,12 @@ COBALT_IMPL(int, pthread_mutex_timedlock, (pthread_mutex_t *mutex,
 					   const struct timespec *to))
 {
 	struct __shadow_mutex *_mutex =
-		&((union __xeno_mutex *)mutex)->shadow_mutex;
+		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
 	unsigned long status;
 	xnhandle_t cur;
 	int err;
 
-	cur = xeno_get_current();
+	cur = cobalt_get_current();
 	if (cur == XN_NO_HANDLE)
 		return EPERM;
 
@@ -195,7 +195,7 @@ COBALT_IMPL(int, pthread_mutex_timedlock, (pthread_mutex_t *mutex,
 		return EINVAL;
 
 	/* See __wrap_pthread_mutex_lock() */
-	status = xeno_get_current_mode();
+	status = cobalt_get_current_mode();
 	if ((status & (XNRELAX|XNWEAK)) == 0) {
 		err = xnsynch_fast_acquire(mutex_get_ownerp(_mutex), cur);
 		if (err == 0) {
@@ -237,19 +237,19 @@ COBALT_IMPL(int, pthread_mutex_timedlock, (pthread_mutex_t *mutex,
 COBALT_IMPL(int, pthread_mutex_trylock, (pthread_mutex_t *mutex))
 {
 	struct __shadow_mutex *_mutex =
-		&((union __xeno_mutex *)mutex)->shadow_mutex;
+		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
 	unsigned long status;
 	xnhandle_t cur;
 	int err;
 
-	cur = xeno_get_current();
+	cur = cobalt_get_current();
 	if (cur == XN_NO_HANDLE)
 		return EPERM;
 
 	if (_mutex->magic != COBALT_MUTEX_MAGIC)
 		return EINVAL;
 
-	status = xeno_get_current_mode();
+	status = cobalt_get_current_mode();
 	if ((status & (XNRELAX|XNWEAK)) == 0) {
 		err = xnsynch_fast_acquire(mutex_get_ownerp(_mutex), cur);
 		if (err == 0) {
@@ -290,7 +290,7 @@ do_syscall:
 COBALT_IMPL(int, pthread_mutex_unlock, (pthread_mutex_t *mutex))
 {
 	struct __shadow_mutex *_mutex =
-		&((union __xeno_mutex *)mutex)->shadow_mutex;
+		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
 	struct mutex_dat *datp = NULL;
 	xnhandle_t cur = XN_NO_HANDLE;
 	int err;
@@ -298,7 +298,7 @@ COBALT_IMPL(int, pthread_mutex_unlock, (pthread_mutex_t *mutex))
 	if (_mutex->magic != COBALT_MUTEX_MAGIC)
 		return EINVAL;
 
-	cur = xeno_get_current();
+	cur = cobalt_get_current();
 	if (cur == XN_NO_HANDLE)
 		return EPERM;
 
@@ -314,7 +314,7 @@ COBALT_IMPL(int, pthread_mutex_unlock, (pthread_mutex_t *mutex))
 	if ((datp->flags & COBALT_MUTEX_COND_SIGNAL))
 		goto do_syscall;
 
-	if (xeno_get_current_mode() & XNWEAK)
+	if (cobalt_get_current_mode() & XNWEAK)
 		goto do_syscall;
 
 	if (xnsynch_fast_release(&datp->owner, cur))

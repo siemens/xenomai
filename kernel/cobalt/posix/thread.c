@@ -327,17 +327,17 @@ unlock_and_exit:
  *
  * If, however, you install a signal handler for SIGWINCH after
  * creating or shadowing the first Xenomai thread, you have to
- * explicitly call the function xeno_sigwinch_handler at the beginning
+ * explicitly call the function cobalt_sigshadow_handler at the beginning
  * of your signal handler, using its return to know if the signal was
  * in fact an internal signal of Xenomai (in which case it returns 1),
  * or if you should handle the signal (in which case it returns
- * 0). xeno_sigwinch_handler prototype is:
+ * 0). cobalt_sigshadow_handler prototype is:
  *
- * <b>int xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt);</b>
+ * <b>int cobalt_sigshadow_handler(int sig, siginfo_t *si, void *ctxt);</b>
  *
  * Which means that you should register your handler with sigaction,
  * using the SA_SIGINFO flag, and pass all the arguments you received
- * to xeno_sigwinch_handler.
+ * to cobalt_sigshadow_handler.
  */
 static inline int pthread_create(pthread_t *tid, const pthread_attr_t *attr)
 {
@@ -632,22 +632,23 @@ static inline int pthread_set_mode_np(int clrmask, int setmask, int *mode_r)
  * @note
  *
  * When creating or shadowing a Xenomai thread for the first time in
- * user-space, Xenomai installs a handler for the SIGWINCH signal. If you had
- * installed a handler before that, it will be automatically called by Xenomai
- * for SIGWINCH signals that it has not sent.
+ * user-space, Xenomai installs a handler for the SIGWINCH signal. If
+ * you had installed a handler before that, it will be automatically
+ * called by Xenomai for SIGWINCH signals that it has not sent.
  *
- * If, however, you install a signal handler for SIGWINCH after creating
- * or shadowing the first Xenomai thread, you have to explicitly call the
- * function xeno_sigwinch_handler at the beginning of your signal handler,
- * using its return to know if the signal was in fact an internal signal of
- * Xenomai (in which case it returns 1), or if you should handle the signal (in
- * which case it returns 0). xeno_sigwinch_handler prototype is:
+ * If, however, you install a signal handler for SIGWINCH after
+ * creating or shadowing the first Xenomai thread, you have to
+ * explicitly call the function cobalt_sigshadow_handler at the
+ * beginning of your signal handler, using its return to know if the
+ * signal was in fact an internal signal of Xenomai (in which case it
+ * returns 1), or if you should handle the signal (in which case it
+ * returns 0). cobalt_sigshadow_handler prototype is:
  *
- * <b>int xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt);</b>
+ * <b>int cobalt_sigshadow_handler(int sig, siginfo_t *si, void *ctxt);</b>
  *
- * Which means that you should register your handler with sigaction, using the
- * SA_SIGINFO flag, and pass all the arguments you received to
- * xeno_sigwinch_handler.
+ * Which means that you should register your handler with sigaction,
+ * using the SA_SIGINFO flag, and pass all the arguments you received
+ * to cobalt_sigshadow_handler.
  *
  * pthread_setschedparam_ex() may switch the caller to secondary mode.
  */

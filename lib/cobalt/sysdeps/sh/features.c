@@ -31,12 +31,12 @@
 struct xnarch_tsc_area;
 
 __attribute__((weak))
-volatile struct xnarch_tsc_area *xeno_sh_tsc = NULL;
+volatile struct xnarch_tsc_area *__cobalt_sh_tsc = NULL;
 
 __attribute__((weak))
-volatile unsigned long *xeno_sh_tcnt = NULL;
+volatile unsigned long *__cobalt_sh_tcnt = NULL;
 
-static volatile void *__xeno_kmem_map(unsigned long pa, unsigned int pagesz)
+static volatile void *map_kmem(unsigned long pa, unsigned int pagesz)
 {
 	void *p;
 	int fd;
@@ -62,6 +62,6 @@ void cobalt_chech_features(struct xnfeatinfo *finfo)
 {
 	unsigned int pagesz = sysconf(_SC_PAGESIZE);
 
-	xeno_sh_tsc = __xeno_kmem_map(finfo->feat_arch.hrclock_membase, pagesz);
-	xeno_sh_tcnt = __xeno_kmem_map(xeno_sh_tsc->counter_pa, pagesz);
+	__cobalt_sh_tsc = map_kmem(finfo->feat_arch.hrclock_membase, pagesz);
+	__cobalt_sh_tcnt = map_kmem(__cobalt_sh_tsc->counter_pa, pagesz);
 }

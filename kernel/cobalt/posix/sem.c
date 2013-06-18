@@ -60,7 +60,7 @@ static inline struct cobalt_kqueues *sem_kqueue(struct cobalt_sem *sem)
 typedef struct cobalt_named_sem {
 	cobalt_sem_t sembase;	/* Has to be the first member. */
 	cobalt_node_t nodebase;
-	union __xeno_sem descriptor;
+	union cobalt_sem_union descriptor;
 } nsem_t;
 
 #define sem2named_sem(saddr) ((nsem_t *)(saddr))
@@ -886,9 +886,9 @@ int cobalt_sem_open(unsigned long __user *u_addr,
 		return -EINVAL;
 
 	if (!(oflags & O_CREAT))
-		sm = &((union __xeno_sem *)sem_open(name, oflags))->shadow_sem;
+		sm = &((union cobalt_sem_union *)sem_open(name, oflags))->shadow_sem;
 	else
-		sm = &((union __xeno_sem *)sem_open(name, oflags, mode, value))->shadow_sem;
+		sm = &((union cobalt_sem_union *)sem_open(name, oflags, mode, value))->shadow_sem;
 
 	if (IS_ERR(sm))
 		return PTR_ERR(sm);

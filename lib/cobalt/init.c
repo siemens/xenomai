@@ -37,13 +37,16 @@
 #include "internal.h"
 
 int __cobalt_muxid = -1;
-int __rtdm_muxid = -1;
-int __rtdm_fd_start = INT_MAX;
-struct sigaction __cobalt_orig_sigdebug;
-static int fork_handler_registered;
-static pthread_t xeno_main_tid;
 
-void cobalt_clock_init(int);
+struct sigaction __cobalt_orig_sigdebug;
+
+int __rtdm_muxid = -1;
+
+int __rtdm_fd_start = INT_MAX;
+
+static int fork_handler_registered;
+
+static pthread_t main_tid;
 
 static void sigill_handler(int sig)
 {
@@ -52,10 +55,10 @@ static void sigill_handler(int sig)
 	exit(EXIT_FAILURE);
 }
 
-void xeno_fault_stack(void)
+void cobalt_prefault_stack(void)
 {
-	if (pthread_self() == xeno_main_tid) {
-		char stk[xeno_stacksize(1)];
+	if (pthread_self() == main_tid) {
+		char stk[cobalt_get_stacksize(1)];
 		stk[0] = stk[sizeof(stk) - 1] = 0xA5;
 	}
 }
@@ -119,11 +122,11 @@ static int bind_interface(void)
 		exit(EXIT_FAILURE);
 	}
 
-	xeno_init_sem_heaps();
+	cobalt_init_sem_heaps();
 
-	xeno_init_current_keys();
+	cobalt_init_current_keys();
 
-	xeno_main_tid = pthread_self();
+	main_tid = pthread_self();
 
 	xnarch_init_timeconv(sysinfo.clockfreq);
 
@@ -157,8 +160,6 @@ void __init_cobalt_interface(void)
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = SA_SIGINFO;
 	sigaction(SIGXCPU, &sa, &__cobalt_orig_sigdebug);
-
-	cobalt_clock_init(muxid);
 
 	__cobalt_muxid = __xn_mux_shifted_id(muxid);
 

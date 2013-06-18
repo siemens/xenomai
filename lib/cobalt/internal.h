@@ -11,7 +11,7 @@
 #define report_error_cont(fmt, args...) \
 	__STD(fprintf(stderr, "                " fmt "\n", ##args))
 
-void xeno_sigshadow_install_once(void);
+void cobalt_sigshadow_install_once(void);
 
 extern int __cobalt_muxid;
 

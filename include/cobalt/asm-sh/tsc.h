@@ -37,18 +37,18 @@ struct xnarch_tsc_area {
 	unsigned long counter_pa;
 };
 
-extern volatile struct xnarch_tsc_area *xeno_sh_tsc;
+extern volatile struct xnarch_tsc_area *__cobalt_sh_tsc;
 
-extern volatile unsigned long *xeno_sh_tcnt;
+extern volatile unsigned long *__cobalt_sh_tcnt;
 
 static inline unsigned long long __xn_rdtsc(void)
 {
 	unsigned long long tsc;
 	unsigned long low;
 
-	tsc = xeno_sh_tsc->tsc.high;
-	low = *xeno_sh_tcnt ^ 0xffffffffUL;
-	if (low < xeno_sh_tsc->tsc.low)
+	tsc = __cobalt_sh_tsc->tsc.high;
+	low = *__cobalt_sh_tcnt ^ 0xffffffffUL;
+	if (low < __cobalt_sh_tsc->tsc.low)
 		tsc++;
 	tsc = (tsc << 32)|low;
 

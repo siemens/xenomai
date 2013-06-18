@@ -3,6 +3,6 @@
 
 #include <xeno_config.h>
 
-void xeno_init_sem_heaps(void);
+void cobalt_init_sem_heaps(void);
 
 #endif /* XENO_SEM_HEAP_H */

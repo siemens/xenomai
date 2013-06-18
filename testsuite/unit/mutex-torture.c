@@ -102,9 +102,9 @@ void check_current_mode(int mask, int expected_value)
 	int current_mode;
 
 	/* This is a unit test, and in this circonstance, we are allowed to
-	   call xeno_get_current_mode. But please do not do that in your
+	   call cobalt_get_current_mode. But please do not do that in your
 	   own code. */
-	current_mode = xeno_get_current_mode() & mask;
+	current_mode = cobalt_get_current_mode() & mask;
 
 	if (current_mode != expected_value) {
 		fprintf(stderr,
@@ -207,7 +207,7 @@ int dispatch(const char *service_name,
 		pthread_attr_setschedparam(&threadattr, &param);
 		pthread_attr_setinheritsched(&threadattr,
 					     PTHREAD_EXPLICIT_SCHED);
-		pthread_attr_setstacksize(&threadattr, xeno_stacksize(0));
+		pthread_attr_setstacksize(&threadattr, cobalt_get_stacksize(0));
 		handler = va_arg(ap, void *);
 		status = pthread_create(thread, &threadattr, handler,
 					va_arg(ap, void *));

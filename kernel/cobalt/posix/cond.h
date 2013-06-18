@@ -24,7 +24,7 @@
 struct cobalt_cond;
 struct mutex_dat;
 
-union __xeno_cond {
+union cobalt_cond_union {
 	pthread_cond_t native_cond;
 	struct __shadow_cond {
 		unsigned magic;
@@ -48,7 +48,7 @@ union __xeno_cond {
 #include "internal.h"
 
 struct __shadow_mutex;
-union __xeno_mutex;
+union cobalt_mutex_union;
 
 typedef struct cobalt_cond {
 	unsigned magic;

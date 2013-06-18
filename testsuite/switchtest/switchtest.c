@@ -44,8 +44,8 @@ typedef unsigned long cpu_set_t;
 #define smp_sched_setaffinity(pid,len,mask) 0
 #endif /* !CONFIG_SMP */
 
-#define SMALL_STACK_MIN xeno_stacksize(32 * 1024)
-#define LARGE_STACK_MIN xeno_stacksize(64 * 1024)
+#define SMALL_STACK_MIN cobalt_get_stacksize(32 * 1024)
+#define LARGE_STACK_MIN cobalt_get_stacksize(64 * 1024)
 
 /* Thread type. */
 typedef enum {

@@ -129,7 +129,7 @@ int thread_spawn(pthread_t *thread, int prio,
 	param.sched_priority = prio;
 	pthread_attr_setschedparam(&tattr, &param);
 	pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_JOINABLE);
-	pthread_attr_setstacksize(&tattr, xeno_stacksize(0));
+	pthread_attr_setstacksize(&tattr, cobalt_get_stacksize(0));
 
 	err = pthread_create(thread, &tattr, handler, cookie);
 

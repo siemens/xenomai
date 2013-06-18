@@ -32,7 +32,7 @@ struct mutex_dat {
 #define COBALT_MUTEX_ERRORCHECK  0x00000002
 };
 
-union __xeno_mutex {
+union cobalt_mutex_union {
 	pthread_mutex_t native_mutex;
 	struct __shadow_mutex {
 		unsigned magic;
@@ -170,12 +170,12 @@ void cobalt_mutex_pkg_cleanup(void);
 
 #else /* ! __KERNEL__ */
 
-extern unsigned long xeno_sem_heap[2];
+extern unsigned long cobalt_sem_heap[2];
 
 static inline struct mutex_dat *mutex_get_datp(struct __shadow_mutex *shadow)
 {
 	if (shadow->attr.pshared)
-		return (struct mutex_dat *)(xeno_sem_heap[1] + shadow->dat_offset);
+		return (struct mutex_dat *)(cobalt_sem_heap[1] + shadow->dat_offset);
 
 	return shadow->dat;
 }

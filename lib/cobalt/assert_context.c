@@ -44,8 +44,8 @@ static void assert_nrt_inner(void)
 
 void assert_nrt(void)
 {
-	if (xeno_get_current() != XN_NO_HANDLE &&
-		     !(xeno_get_current_mode() & XNRELAX))
+	if (cobalt_get_current() != XN_NO_HANDLE &&
+		     !(cobalt_get_current_mode() & XNRELAX))
 		assert_nrt_inner();
 }
 
@@ -56,8 +56,8 @@ void assert_nrt(void)
  */
 void assert_nrt_fast(void)
 {
-	if (xeno_get_current_fast() != XN_NO_HANDLE &&
-		     !(xeno_get_current_mode() & XNRELAX))
+	if (cobalt_get_current_fast() != XN_NO_HANDLE &&
+		     !(cobalt_get_current_mode() & XNRELAX))
 		assert_nrt_inner();
 }
 

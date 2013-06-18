@@ -97,8 +97,8 @@ static inline void threadobj_init_corespec(struct threadobj *thobj)
 static inline int threadobj_setup_corespec(struct threadobj *thobj)
 {
 	pthread_set_name_np(pthread_self(), thobj->name);
-	thobj->core.handle = xeno_get_current();
-	thobj->core.u_window = xeno_get_current_window();
+	thobj->core.handle = cobalt_get_current();
+	thobj->core.u_window = cobalt_get_current_window();
 
 	return 0;
 }

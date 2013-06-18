@@ -21,12 +21,12 @@
 
 struct xnvdso *nkvdso;
 
-unsigned long xeno_sem_heap[2] = { 0, 0 };
+unsigned long cobalt_sem_heap[2] = { 0, 0 };
 
 static pthread_once_t init_private_heap = PTHREAD_ONCE_INIT;
 static struct xnheap_desc private_hdesc;
 
-void *xeno_map_heap(struct xnheap_desc *hd)
+void *cobalt_map_heap(struct xnheap_desc *hd)
 {
 	int fd, ret;
 	void *addr;
@@ -64,7 +64,7 @@ static void *map_sem_heap(unsigned int shared)
 		return MAP_FAILED;
 	}
 
-	return xeno_map_heap(hdesc);
+	return cobalt_map_heap(hdesc);
 }
 
 static void unmap_on_fork(void)
@@ -82,16 +82,16 @@ static void unmap_on_fork(void)
 	   that access to these addresses will cause a segmentation
 	   fault.
 	*/
-	void *addr = mmap((void *)xeno_sem_heap[PRIVATE],
+	void *addr = mmap((void *)cobalt_sem_heap[PRIVATE],
 			  private_hdesc.size, PROT_NONE,
 			  MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
-	if (addr != (void *)xeno_sem_heap[PRIVATE])
-		munmap((void *)xeno_sem_heap[PRIVATE], private_hdesc.size);
-	xeno_sem_heap[PRIVATE] = 0UL;
+	if (addr != (void *)cobalt_sem_heap[PRIVATE])
+		munmap((void *)cobalt_sem_heap[PRIVATE], private_hdesc.size);
+	cobalt_sem_heap[PRIVATE] = 0UL;
 	init_private_heap = PTHREAD_ONCE_INIT;
 }
 
-static void xeno_init_vdso(void)
+static void cobalt_init_vdso(void)
 {
 	struct xnsysinfo sysinfo;
 	int err;
@@ -103,38 +103,38 @@ static void xeno_init_vdso(void)
 		exit(EXIT_FAILURE);
 	}
 
-	nkvdso = (struct xnvdso *)(xeno_sem_heap[SHARED] + sysinfo.vdso);
+	nkvdso = (struct xnvdso *)(cobalt_sem_heap[SHARED] + sysinfo.vdso);
 }
 
 /* Will be called once at library loading time, and when re-binding
    after a fork */
-static void xeno_init_private_heap(void)
+static void cobalt_init_private_heap(void)
 {
-	xeno_sem_heap[PRIVATE] = (unsigned long)map_sem_heap(PRIVATE);
-	if (xeno_sem_heap[PRIVATE] == (unsigned long)MAP_FAILED) {
+	cobalt_sem_heap[PRIVATE] = (unsigned long)map_sem_heap(PRIVATE);
+	if (cobalt_sem_heap[PRIVATE] == (unsigned long)MAP_FAILED) {
 		perror("Xenomai: mmap local sem heap");
 		exit(EXIT_FAILURE);
 	}
 }
 
 /* Will be called only once, at library loading time. */
-static void xeno_init_rest_once(void)
+static void cobalt_init_rest_once(void)
 {
 	pthread_atfork(NULL, NULL, unmap_on_fork);
 
-	xeno_sem_heap[SHARED] = (unsigned long)map_sem_heap(SHARED);
-	if (xeno_sem_heap[SHARED] == (unsigned long)MAP_FAILED) {
+	cobalt_sem_heap[SHARED] = (unsigned long)map_sem_heap(SHARED);
+	if (cobalt_sem_heap[SHARED] == (unsigned long)MAP_FAILED) {
 		perror("Xenomai: mmap global sem heap");
 		exit(EXIT_FAILURE);
 	}
 
-	xeno_init_vdso();
+	cobalt_init_vdso();
 }
 
-void xeno_init_sem_heaps(void)
+void cobalt_init_sem_heaps(void)
 {
 	static pthread_once_t init_rest_once = PTHREAD_ONCE_INIT;
 
-	pthread_once(&init_private_heap, &xeno_init_private_heap);
-	pthread_once(&init_rest_once, &xeno_init_rest_once);
+	pthread_once(&init_private_heap, &cobalt_init_private_heap);
+	pthread_once(&init_rest_once, &cobalt_init_rest_once);
 }

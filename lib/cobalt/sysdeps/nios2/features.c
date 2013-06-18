@@ -27,7 +27,7 @@
 #include <asm/xenomai/syscall.h>
 #include "internal.h"
 
-__attribute__((weak)) volatile void *xeno_nios2_hrclock = NULL;
+__attribute__((weak)) volatile void *__cobalt_nios2_hrclock = NULL;
 
 static inline void cobalt_check_features(struct xnfeatinfo *finfo)
 {
@@ -51,5 +51,5 @@ static inline void cobalt_check_features(struct xnfeatinfo *finfo)
 	}
 	__STD(close(fd));
 
-	xeno_nios2_hrclock = (volatile void *)(p + (pa & (pagesz - 1)));
+	__cobalt_nios2_hrclock = (volatile void *)(p + (pa & (pagesz - 1)));
 }

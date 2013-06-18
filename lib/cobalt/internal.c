@@ -36,13 +36,13 @@
 #include "kernel/cobalt/posix/event.h"
 #include "internal.h"
 
-extern unsigned long xeno_sem_heap[2];
+extern unsigned long cobalt_sem_heap[2];
 
 extern struct sigaction __cobalt_orig_sigdebug;
 
 void __cobalt_thread_harden(void)
 {
-	unsigned long status = xeno_get_current_mode();
+	unsigned long status = cobalt_get_current_mode();
 
 	/* non-RT shadows are NOT allowed to force primary mode. */
 	if ((status & (XNRELAX|XNWEAK)) == XNRELAX)
@@ -71,7 +71,7 @@ static inline
 struct cobalt_monitor_data *get_monitor_data(cobalt_monitor_t *mon)
 {
 	return mon->flags & COBALT_MONITOR_SHARED ?
-		(void *)xeno_sem_heap[1] + mon->u.data_offset :
+		(void *)cobalt_sem_heap[1] + mon->u.data_offset :
 		mon->u.data;
 }
 
@@ -87,7 +87,7 @@ int cobalt_monitor_init(cobalt_monitor_t *mon, int flags)
 		return ret;
 
 	if ((flags & COBALT_MONITOR_SHARED) == 0) {
-		datp = (void *)xeno_sem_heap[0] + mon->u.data_offset;
+		datp = (void *)cobalt_sem_heap[0] + mon->u.data_offset;
 		mon->u.data = datp;
 	} else
 		datp = get_monitor_data(mon);
@@ -118,12 +118,12 @@ int cobalt_monitor_enter(cobalt_monitor_t *mon)
 	 * - no recursive entry/locking.
 	 */
 
-	status = xeno_get_current_mode();
+	status = cobalt_get_current_mode();
 	if (status & (XNRELAX|XNWEAK))
 		goto syscall;
 
 	datp = get_monitor_data(mon);
-	cur = xeno_get_current();
+	cur = cobalt_get_current();
 	ret = xnsynch_fast_acquire(&datp->owner, cur);
 	if (ret == 0) {
 		datp->flags &= ~(COBALT_MONITOR_SIGNALED|COBALT_MONITOR_BROADCAST);
@@ -156,11 +156,11 @@ int cobalt_monitor_exit(cobalt_monitor_t *mon)
 	    (datp->flags & COBALT_MONITOR_SIGNALED))
 		goto syscall;
 
-	status = xeno_get_current_mode();
+	status = cobalt_get_current_mode();
 	if (status & XNWEAK)
 		goto syscall;
 
-	cur = xeno_get_current();
+	cur = cobalt_get_current();
 	if (xnsynch_fast_release(&datp->owner, cur))
 		return 0;
 syscall:
@@ -343,7 +343,7 @@ static inline
 struct cobalt_event_data *get_event_data(cobalt_event_t *event)
 {
 	return event->flags & COBALT_EVENT_SHARED ?
-		(void *)xeno_sem_heap[1] + event->u.data_offset :
+		(void *)cobalt_sem_heap[1] + event->u.data_offset :
 		event->u.data;
 }
 
@@ -360,7 +360,7 @@ int cobalt_event_init(cobalt_event_t *event, unsigned long value,
 		return ret;
 
 	if ((flags & COBALT_EVENT_SHARED) == 0) {
-		datp = (void *)xeno_sem_heap[0] + event->u.data_offset;
+		datp = (void *)cobalt_sem_heap[0] + event->u.data_offset;
 		event->u.data = datp;
 	} else
 		datp = get_event_data(event);

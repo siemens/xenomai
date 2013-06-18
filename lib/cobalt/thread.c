@@ -81,7 +81,7 @@ COBALT_IMPL(int, pthread_setschedparam, (pthread_t thread,
 int pthread_setschedparam_ex(pthread_t thread,
 			     int policy, const struct sched_param_ex *param)
 {
-	unsigned long mode_offset;
+	unsigned long u_winoff;
 	int ret, promoted;
 
 	/*
@@ -95,13 +95,13 @@ int pthread_setschedparam_ex(pthread_t thread,
 	ret = -XENOMAI_SKINCALL5(__cobalt_muxid,
 				 sc_cobalt_thread_setschedparam_ex,
 				 thread, policy, param,
-				 &mode_offset, &promoted);
+				 &u_winoff, &promoted);
 
 	if (ret == 0 && promoted) {
-		xeno_fault_stack();
-		xeno_sigshadow_install_once();
-		xeno_set_current();
-		xeno_set_current_window(mode_offset);
+		cobalt_prefault_stack();
+		cobalt_sigshadow_install_once();
+		cobalt_set_current();
+		cobalt_set_current_window(u_winoff);
 		if (policy != SCHED_OTHER && policy != SCHED_WEAK)
 			XENOMAI_SYSCALL1(sc_nucleus_migrate, XENOMAI_XENO_DOMAIN);
 	}
@@ -210,12 +210,12 @@ static void *__pthread_trampoline(void *p)
 	void *(*start)(void *), *arg, *retval;
 	struct pthread_iargs *iargs = p;
 	struct sched_param_ex param_ex;
-	unsigned long mode_offset;
 	int parent_prio, policy;
+	unsigned long u_winoff;
 	long ret;
 
-	xeno_sigshadow_install_once();
-	xeno_fault_stack();
+	cobalt_sigshadow_install_once();
+	cobalt_prefault_stack();
 
 	param_ex = iargs->param_ex;
 	policy = iargs->policy;
@@ -233,10 +233,10 @@ static void *__pthread_trampoline(void *p)
 	 * macro: this trashes the syscall regs on some archs.
 	 */
 	ret = XENOMAI_SKINCALL4(__cobalt_muxid, sc_cobalt_thread_create, tid,
-				policy, &param_ex, &mode_offset);
+				policy, &param_ex, &u_winoff);
 	if (ret == 0) {
-		xeno_set_current();
-		xeno_set_current_window(mode_offset);
+		cobalt_set_current();
+		cobalt_set_current_window(u_winoff);
 	}
 
 	/*
@@ -313,7 +313,7 @@ int pthread_create_ex(pthread_t *tid,
 
 	pthread_attr_getdetachstate(&attr, &detachstate);
 	pthread_attr_getstacksize(&attr, &stksz);
-	pthread_attr_setstacksize(&attr, xeno_stacksize(stksz));
+	pthread_attr_setstacksize(&attr, cobalt_get_stacksize(stksz));
 
 	/*
 	 * First start a native POSIX thread, then mate a Xenomai
