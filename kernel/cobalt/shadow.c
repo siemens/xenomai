@@ -60,12 +60,12 @@
 #include <cobalt/kernel/stat.h>
 #include <cobalt/kernel/ppd.h>
 #include <cobalt/kernel/vdso.h>
-#include <cobalt/kernel/debug.h>
 #include <cobalt/kernel/shadow.h>
 #include <asm/xenomai/features.h>
 #include <asm/xenomai/syscall.h>
 #include <asm/xenomai/thread.h>
 #include <asm-generic/xenomai/mayday.h>
+#include "debug.h"
 
 #define EVENT_PROPAGATE   0
 #define EVENT_STOP        1

@@ -33,10 +33,10 @@
 #include <linux/jhash.h>
 #include <linux/mm.h>
 #include <cobalt/kernel/pod.h>
-#include <cobalt/kernel/debug.h>
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/clock.h>
 #include <cobalt/kernel/ppd.h>
+#include "debug.h"
 
 #ifdef CONFIG_XENO_OPT_DEBUG_TRACE_RELAX
 

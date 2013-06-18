@@ -17,8 +17,8 @@
  * 02111-1307, USA.
  */
 
-#ifndef _COBALT_KERNEL_DEBUG_H
-#define _COBALT_KERNEL_DEBUG_H
+#ifndef _KERNEL_COBALT_DEBUG_H
+#define _KERNEL_COBALT_DEBUG_H
 
 #include <cobalt/kernel/assert.h>
 
@@ -67,4 +67,4 @@ void xndebug_trace_relax(int nr, unsigned long __user *u_backtrace,
 }
 #endif
 
-#endif /* !_COBALT_KERNEL_DEBUG_H */
+#endif /* !_KERNEL_COBALT_DEBUG_H */

@@ -5,7 +5,6 @@ includesub_HEADERS = \
 	assert.h \
 	bheap.h \
 	bufd.h \
-	debug.h \
 	heap.h \
 	hostrt.h \
 	intr.h \
