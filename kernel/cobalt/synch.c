@@ -37,9 +37,6 @@
 #include <cobalt/kernel/clock.h>
 #include <cobalt/kernel/shadow.h>
 
-#define w_bprio(t)	xnsched_weighted_bprio(t)
-#define w_cprio(t)	xnsched_weighted_cprio(t)
-
 /*!
  * \fn void xnsynch_init(struct xnsynch *synch, xnflags_t flags,
  *                       atomic_long_t *fastlock)
@@ -183,7 +180,7 @@ xnflags_t xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
 	if (!testbits(synch->status, XNSYNCH_PRIO)) /* i.e. FIFO */
 		appendpq(&synch->pendq, &thread->plink);
 	else /* i.e. priority-sorted */
-		insertpqf(&synch->pendq, &thread->plink, w_cprio(thread));
+		insertpqf(&synch->pendq, &thread->plink, thread->wprio);
 
 	xnpod_suspend_thread(thread, XNPEND, timeout, timeout_mode, synch);
 
@@ -492,7 +489,7 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 
 	if (!testbits(synch->status, XNSYNCH_PRIO)) /* i.e. FIFO */
 		appendpq(&synch->pendq, &thread->plink);
-	else if (w_cprio(thread) > w_cprio(owner)) {
+	else if (thread->wprio > owner->wprio) {
 		if (xnthread_test_info(owner, XNWAKEN) && owner->wwake == synch) {
 			/* Ownership is still pending, steal the resource. */
 			synch->owner = thread;
@@ -501,7 +498,7 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 			goto grab_and_exit;
 		}
 
-		insertpqf(&synch->pendq, &thread->plink, w_cprio(thread));
+		insertpqf(&synch->pendq, &thread->plink, thread->wprio);
 
 		if (testbits(synch->status, XNSYNCH_PIP)) {
 			if (!xnthread_test_state(owner, XNBOOST)) {
@@ -514,11 +511,11 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 			else
 				__setbits(synch->status, XNSYNCH_CLAIMED);
 
-			insertpqf(&owner->claimq, &synch->link, w_cprio(thread));
+			insertpqf(&owner->claimq, &synch->link, thread->wprio);
 			xnsynch_renice_thread(owner, thread);
 		}
 	} else
-		insertpqf(&synch->pendq, &thread->plink, w_cprio(thread));
+		insertpqf(&synch->pendq, &thread->plink, thread->wprio);
 
 	xnpod_suspend_thread(thread, XNPEND, timeout, timeout_mode, synch);
 
@@ -630,7 +627,7 @@ static void xnsynch_clear_boost(struct xnsynch *synch,
 
 	removepq(&owner->claimq, &synch->link);
 	__clrbits(synch->status, XNSYNCH_CLAIMED);
-	wprio = w_bprio(owner);
+	wprio = owner->bprio + owner->sched_class->weight;
 
 	if (emptypq_p(&owner->claimq)) {
 		xnthread_clear_state(owner, XNBOOST);
@@ -641,13 +638,13 @@ static void xnsynch_clear_boost(struct xnsynch *synch,
 		h = getheadpq(&hsynch->pendq);
 		XENO_BUGON(NUCLEUS, h == NULL);
 		target = link2thread(h, plink);
-		if (w_cprio(target) > wprio)
-			wprio = w_cprio(target);
+		if (target->wprio > wprio)
+			wprio = target->wprio;
 		else
 			target = owner;
 	}
 
-	if (w_cprio(owner) != wprio &&
+	if (owner->wprio != wprio &&
 	    !xnthread_test_state(owner, XNZOMBIE))
 		xnsynch_renice_thread(owner, target);
 }
@@ -674,10 +671,10 @@ void xnsynch_requeue_sleeper(struct xnthread *thread)
 		return;
 
 	removepq(&synch->pendq, &thread->plink);
-	insertpqf(&synch->pendq, &thread->plink, w_cprio(thread));
+	insertpqf(&synch->pendq, &thread->plink, thread->wprio);
 	owner = synch->owner;
 
-	if (owner != NULL && w_cprio(thread) > w_cprio(owner)) {
+	if (owner != NULL && thread->wprio > owner->wprio) {
 		/*
 		 * The new (weighted) priority of the sleeping thread
 		 * is higher than the priority of the current owner of
@@ -690,7 +687,7 @@ void xnsynch_requeue_sleeper(struct xnthread *thread)
 			 */
 			removepq(&owner->claimq, &synch->link);
 			insertpqf(&owner->claimq, &synch->link,
-				  w_cprio(thread));
+				  thread->wprio);
 		} else {
 			/*
 			 * The resource was NOT claimed, claim it now
@@ -698,7 +695,7 @@ void xnsynch_requeue_sleeper(struct xnthread *thread)
 			 */
 			__setbits(synch->status, XNSYNCH_CLAIMED);
 			insertpqf(&owner->claimq, &synch->link,
-				  w_cprio(thread));
+				  thread->wprio);
 			if (!xnthread_test_state(owner, XNBOOST)) {
 				owner->bprio = owner->cprio;
 				xnthread_set_state(owner, XNBOOST);
@@ -927,7 +924,7 @@ void xnsynch_forget_sleeper(struct xnthread *thread)
 		else {
 			target = link2thread(getheadpq(&synch->pendq), plink);
 			h = getheadpq(&owner->claimq);
-			if (w_cprio(target) != h->prio) {
+			if (target->wprio != h->prio) {
 				/*
 				 * Reorder the claim queue, and lower
 				 * the priority to the required
@@ -936,10 +933,10 @@ void xnsynch_forget_sleeper(struct xnthread *thread)
 				 */
 				removepq(&owner->claimq, &synch->link);
 				insertpqf(&owner->claimq, &synch->link,
-					  w_cprio(target));
+					  target->wprio);
 
 				h = getheadpq(&owner->claimq);
-				if (h->prio < w_cprio(owner))
+				if (h->prio < owner->wprio)
 					xnsynch_renice_thread(owner, target);
 			}
 		}

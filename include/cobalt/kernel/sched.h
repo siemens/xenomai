@@ -361,20 +361,11 @@ static inline void xnsched_requeue(struct xnthread *thread)
 		sched_class->sched_requeue(thread);
 }
 
-static inline int xnsched_weighted_bprio(struct xnthread *thread)
-{
-	return thread->bprio + thread->sched_class->weight;
-}
-
-static inline int xnsched_weighted_cprio(struct xnthread *thread)
-{
-	return thread->cprio + thread->sched_class->weight;
-}
-
 static inline void xnsched_setparam(struct xnthread *thread,
 				    const union xnsched_policy_param *p)
 {
 	thread->sched_class->sched_setparam(thread, p);
+	thread->wprio = thread->cprio + thread->sched_class->weight;
 }
 
 static inline void xnsched_getparam(struct xnthread *thread,
@@ -387,6 +378,7 @@ static inline void xnsched_trackprio(struct xnthread *thread,
 				     const union xnsched_policy_param *p)
 {
 	thread->sched_class->sched_trackprio(thread, p);
+	thread->wprio = thread->cprio + thread->sched_class->weight;
 }
 
 static inline void xnsched_forget(struct xnthread *thread)
@@ -430,16 +422,6 @@ static inline void xnsched_requeue(struct xnthread *thread)
 		__xnsched_rt_requeue(thread);
 }
 
-static inline int xnsched_weighted_bprio(struct xnthread *thread)
-{
-	return thread->bprio;
-}
-
-static inline int xnsched_weighted_cprio(struct xnthread *thread)
-{
-	return thread->cprio;
-}
-
 static inline void xnsched_setparam(struct xnthread *thread,
 				    const union xnsched_policy_param *p)
 {
@@ -449,6 +431,8 @@ static inline void xnsched_setparam(struct xnthread *thread,
 		__xnsched_rt_setparam(thread, p);
 	else
 		__xnsched_idle_setparam(thread, p);
+
+	thread->wprio = thread->cprio + sched_class->weight;
 }
 
 static inline void xnsched_getparam(struct xnthread *thread,
@@ -471,6 +455,8 @@ static inline void xnsched_trackprio(struct xnthread *thread,
 		__xnsched_rt_trackprio(thread, p);
 	else
 		__xnsched_idle_trackprio(thread, p);
+
+	thread->wprio = thread->cprio + sched_class->weight;
 }
 
 static inline void xnsched_forget(struct xnthread *thread)

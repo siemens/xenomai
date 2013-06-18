@@ -1498,13 +1498,13 @@ int xnpod_set_thread_schedparam(struct xnthread *thread,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	old_wprio = xnsched_weighted_cprio(thread);
+	old_wprio = thread->wprio;
 
 	ret = xnsched_set_policy(thread, sched_class, sched_param);
 	if (ret)
 		goto unlock_and_exit;
 
-	new_wprio = xnsched_weighted_cprio(thread);
+	new_wprio = thread->wprio;
 
 	trace_mark(xn_nucleus, set_thread_schedparam,
 		   "thread %p thread_name %s class %s prio %d",

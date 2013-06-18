@@ -363,6 +363,7 @@ int xnsched_set_policy(struct xnthread *thread,
 	thread->base_class = sched_class;
 	xnsched_setparam(thread, p);
 	thread->bprio = thread->cprio;
+	thread->wprio = thread->cprio + sched_class->weight;
 
 	if (xnthread_test_state(thread, XNREADY))
 		xnsched_enqueue(thread);

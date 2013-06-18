@@ -214,6 +214,8 @@ typedef struct xnthread {
 
 	int cprio;			/* Current priority */
 
+	int wprio;			/* Weighted priority (dep. scheduling class) */
+
 	u_long schedlck;		/*!< Scheduler lock count. */
 
 	xnpholder_t rlink;		/* Thread holder in ready queue */
