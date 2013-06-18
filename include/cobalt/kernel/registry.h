@@ -30,6 +30,7 @@
 
 #ifdef __KERNEL__
 
+#include <cobalt/kernel/queue.h>
 #include <cobalt/kernel/synch.h>
 #include <cobalt/kernel/vfile.h>
 

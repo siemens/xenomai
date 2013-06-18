@@ -99,14 +99,13 @@
 
 void xnsynch_init(struct xnsynch *synch, xnflags_t flags, atomic_long_t *fastlock)
 {
-	initph(&synch->link);
-
 	if (flags & XNSYNCH_PIP)
 		flags |= XNSYNCH_PRIO | XNSYNCH_OWNER;	/* Obviously... */
 
 	synch->status = flags & ~XNSYNCH_CLAIMED;
 	synch->owner = NULL;
 	synch->cleanup = NULL;	/* Only works for PIP-enabled objects. */
+	synch->wprio = -1;
 	INIT_LIST_HEAD(&synch->pendq);
 
 	if (flags & XNSYNCH_OWNER) {
@@ -278,7 +277,7 @@ out:
 EXPORT_SYMBOL_GPL(xnsynch_wakeup_many_sleepers);
 
 /*!
- * \fn void xnsynch_wakeup_this_sleeper(struct xnsynch *synch, struct xnpholder *holder);
+ * \fn void xnsynch_wakeup_this_sleeper(struct xnsynch *synch, struct xnthread *sleeper);
  * \brief Unblock a particular thread from wait.
  *
  * This service wakes up a specific thread which is currently pending on
@@ -422,12 +421,13 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	/* Set claimed bit.
-	   In case it appears to be set already, re-read its state
-	   under nklock so that we don't miss any change between the
-	   lock-less read and here. But also try to avoid cmpxchg
-	   where possible. Only if it appears not to be set, start
-	   with cmpxchg directly. */
+	/*
+	 * Set claimed bit.  In case it appears to be set already,
+	 * re-read its state under nklock so that we don't miss any
+	 * change between the lock-less read and here. But also try to
+	 * avoid cmpxchg where possible. Only if it appears not to be
+	 * set, start with cmpxchg directly.
+	 */
 	if (xnsynch_fast_is_claimed(fastlock)) {
 		old = atomic_long_read(lockp);
 		goto test_no_owner;
@@ -480,11 +480,12 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 			}
 
 			if (testbits(synch->status, XNSYNCH_CLAIMED))
-				removepq(&owner->claimq, &synch->link);
+				list_del(&synch->link);
 			else
 				__setbits(synch->status, XNSYNCH_CLAIMED);
 
-			insertpqf(&owner->claimq, &synch->link, thread->wprio);
+			synch->wprio = thread->wprio;
+			list_add_priff(synch, &owner->claimq, wprio, link);
 			xnsynch_renice_thread(owner, thread);
 		}
 	} else
@@ -597,16 +598,16 @@ static void xnsynch_clear_boost(struct xnsynch *synch,
 	struct xnsynch *hsynch;
 	int wprio;
 
-	removepq(&owner->claimq, &synch->link);
+	list_del(&synch->link);
 	__clrbits(synch->status, XNSYNCH_CLAIMED);
 	wprio = owner->bprio + owner->sched_class->weight;
 
-	if (emptypq_p(&owner->claimq)) {
+	if (list_empty(&owner->claimq)) {
 		xnthread_clear_state(owner, XNBOOST);
 		target = owner;
 	} else {
 		/* Find the highest priority needed to enforce the PIP. */
-		hsynch = container_of(getheadpq(&owner->claimq), struct xnsynch, link);
+		hsynch = list_first_entry(&owner->claimq, struct xnsynch, link);
 		XENO_BUGON(NUCLEUS, list_empty(&hsynch->pendq));
 		target = list_first_entry(&hsynch->pendq, struct xnthread, plink);
 		if (target->wprio > wprio)
@@ -645,39 +646,39 @@ void xnsynch_requeue_sleeper(struct xnthread *thread)
 	list_add_priff(thread, &synch->pendq, wprio, plink);
 	owner = synch->owner;
 
-	if (owner != NULL && thread->wprio > owner->wprio) {
+	if (owner == NULL || thread->wprio <= owner->wprio)
+		return;
+
+	/*
+	 * The new (weighted) priority of the sleeping thread is
+	 * higher than the priority of the current owner of the
+	 * resource: we need to update the PI state.
+	 */
+	synch->wprio = thread->wprio;
+	if (testbits(synch->status, XNSYNCH_CLAIMED)) {
 		/*
-		 * The new (weighted) priority of the sleeping thread
-		 * is higher than the priority of the current owner of
-		 * the resource: we need to update the PI state.
+		 * The resource is already claimed, just reorder the
+		 * claim queue.
 		 */
-		if (testbits(synch->status, XNSYNCH_CLAIMED)) {
-			/*
-			 * The resource is already claimed, just
-			 * reorder the claim queue.
-			 */
-			removepq(&owner->claimq, &synch->link);
-			insertpqf(&owner->claimq, &synch->link,
-				  thread->wprio);
-		} else {
-			/*
-			 * The resource was NOT claimed, claim it now
-			 * and boost the owner.
-			 */
-			__setbits(synch->status, XNSYNCH_CLAIMED);
-			insertpqf(&owner->claimq, &synch->link,
-				  thread->wprio);
-			if (!xnthread_test_state(owner, XNBOOST)) {
-				owner->bprio = owner->cprio;
-				xnthread_set_state(owner, XNBOOST);
-			}
+		list_del(&synch->link);
+		list_add_priff(synch, &owner->claimq, wprio, link);
+	} else {
+		/*
+		 * The resource was NOT claimed, claim it now and
+		 * boost the owner.
+		 */
+		__setbits(synch->status, XNSYNCH_CLAIMED);
+		list_add_priff(synch, &owner->claimq, wprio, link);
+		if (!xnthread_test_state(owner, XNBOOST)) {
+			owner->bprio = owner->cprio;
+			xnthread_set_state(owner, XNBOOST);
 		}
-		/*
-		 * Renice the owner thread, progressing in the PI
-		 * chain as needed.
-		 */
-		xnsynch_renice_thread(owner, thread);
 	}
+	/*
+	 * Renice the owner thread, progressing in the PI chain as
+	 * needed.
+	 */
+	xnsynch_renice_thread(owner, thread);
 }
 EXPORT_SYMBOL_GPL(xnsynch_requeue_sleeper);
 
@@ -875,9 +876,8 @@ EXPORT_SYMBOL_GPL(xnsynch_flush);
 
 void xnsynch_forget_sleeper(struct xnthread *thread)
 {
-	struct xnsynch *synch = thread->wchan;
+	struct xnsynch *synch = thread->wchan, *nsynch;
 	struct xnthread *owner, *target;
-	struct xnpholder *h;
 
 	trace_mark(xn_nucleus, synch_forget,
 		   "thread %p thread_name %s synch %p",
@@ -887,32 +887,35 @@ void xnsynch_forget_sleeper(struct xnthread *thread)
 	thread->wchan = NULL;
 	list_del(&thread->plink);
 
-	if (testbits(synch->status, XNSYNCH_CLAIMED)) {
-		/* Find the highest priority needed to enforce the PIP. */
-		owner = synch->owner;
-		if (list_empty(&synch->pendq))
-			/* No more sleepers: clear the boost. */
-			xnsynch_clear_boost(synch, owner);
-		else {
-			target = list_first_entry(&synch->pendq, struct xnthread, plink);
-			h = getheadpq(&owner->claimq);
-			if (target->wprio != h->prio) {
-				/*
-				 * Reorder the claim queue, and lower
-				 * the priority to the required
-				 * minimum needed to prevent priority
-				 * inversion.
-				 */
-				removepq(&owner->claimq, &synch->link);
-				insertpqf(&owner->claimq, &synch->link,
-					  target->wprio);
+	if (!testbits(synch->status, XNSYNCH_CLAIMED))
+		return;
 
-				h = getheadpq(&owner->claimq);
-				if (h->prio < owner->wprio)
-					xnsynch_renice_thread(owner, target);
-			}
-		}
+	/* Find the highest priority needed to enforce the PIP. */
+	owner = synch->owner;
+
+	if (list_empty(&synch->pendq)) {
+		/* No more sleepers: clear the boost. */
+		xnsynch_clear_boost(synch, owner);
+		return;
 	}
+
+	target = list_first_entry(&synch->pendq, struct xnthread, plink);
+	nsynch = list_first_entry(&owner->claimq, struct xnsynch, link);
+
+	if (target->wprio == nsynch->wprio)
+		return;		/* No change. */
+
+	/*
+	 * Reorder the claim queue, and lower the priority to the
+	 * required minimum needed to prevent priority inversion.
+	 */
+	synch->wprio = target->wprio;
+	list_del(&synch->link);
+	list_add_priff(synch, &owner->claimq, wprio, link);
+
+	nsynch = list_first_entry(&owner->claimq, struct xnsynch, link);
+	if (nsynch->wprio < owner->wprio)
+		xnsynch_renice_thread(owner, target);
 }
 EXPORT_SYMBOL_GPL(xnsynch_forget_sleeper);
 
@@ -932,17 +935,9 @@ EXPORT_SYMBOL_GPL(xnsynch_forget_sleeper);
 
 void xnsynch_release_all_ownerships(struct xnthread *thread)
 {
-	struct xnpholder *holder, *nholder;
-	struct xnsynch *synch;
+	struct xnsynch *synch, *tmp;
 
-	for (holder = getheadpq(&thread->claimq); holder != NULL;
-	     holder = nholder) {
-		/*
-		 * Since xnsynch_release() alters the claim queue, we
-		 * need to be conservative while scanning it.
-		 */
-		synch = container_of(holder, struct xnsynch, link);
-		nholder = nextpq(&thread->claimq, holder);
+	xnthread_for_each_claimed_safe(synch, tmp, thread) {
 		xnsynch_release(synch, thread);
 		if (synch->cleanup)
 			synch->cleanup(synch);
@@ -980,12 +975,9 @@ void xnsynch_detect_claimed_relax(struct xnthread *owner)
 {
 	struct xnthread *sleeper;
 	struct xnsynch *synch;
-	struct xnpholder *hs;
 
-	for (hs = getheadpq(&owner->claimq); hs != NULL;
-	     hs = nextpq(&owner->claimq, hs)) {
-		synch = container_of(hs, struct xnsynch, link);
-		list_for_each_entry(sleeper, &synch->pendq, plink) {
+	xnthread_for_each_claimed(synch, owner) {
+		xnsynch_for_each_sleeper(sleeper, synch) {
 			if (xnthread_test_state(sleeper, XNTRAPSW)) {
 				xnthread_set_info(sleeper, XNSWREP);
 				xnshadow_send_sig(sleeper, SIGDEBUG,

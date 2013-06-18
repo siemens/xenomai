@@ -183,7 +183,7 @@ int xnthread_init(struct xnthread *thread,
 	inith(&thread->glink);
 	initph(&thread->rlink);
 	thread->selector = NULL;
-	initpq(&thread->claimq);
+	INIT_LIST_HEAD(&thread->claimq);
 
 	thread->privdata = NULL;
 	thread->personality = attr->personality;

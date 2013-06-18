@@ -73,7 +73,6 @@ static inline int xnsynch_fast_release(atomic_long_t *fastlock,
 #ifdef __KERNEL__
 
 #include <cobalt/kernel/list.h>
-#include <cobalt/kernel/queue.h>
 
 #define XNSYNCH_CLAIMED 0x10	/* Claimed by other thread(s) w/ PIP */
 
@@ -98,19 +97,13 @@ struct xnthread;
 struct xnsynch;
 
 typedef struct xnsynch {
-
-    xnpholder_t link;	/* Link in claim queues */
-
-    xnflags_t status;	/* Status word */
-
-    struct list_head pendq;	/* Pending threads */
-
-    struct xnthread *owner; /* Thread which owns the resource */
-
-    atomic_long_t *fastlock; /* Pointer to fast lock word */
-
-    void (*cleanup)(struct xnsynch *synch); /* Cleanup handler */
-
+	struct list_head link;	/** thread->claimq */
+	int wprio;		/** wait prio in claimq */
+	xnflags_t status;	 /** Status word */
+	struct list_head pendq;	 /** Pending threads */
+	struct xnthread *owner;	/** Thread which owns the resource */
+	atomic_long_t *fastlock; /** Pointer to fast lock word */
+	void (*cleanup)(struct xnsynch *synch); /* Cleanup handler */
 } xnsynch_t;
 
 #define xnsynch_test_flags(synch,flags)	testbits((synch)->status,flags)

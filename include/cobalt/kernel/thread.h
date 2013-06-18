@@ -233,7 +233,11 @@ typedef struct xnthread {
 
 #define link2thread(ln, fld)	container_of(ln, struct xnthread, fld)
 
-	xnpqueue_t claimq;		/* Owned resources claimed by others (PIP) */
+	/**
+	 * List of xnsynch owned by this thread _and_ claimed by
+	 * others (PIP).
+	 */
+	struct list_head claimq;
 
 	struct xnsynch *wchan;		/* Resource the thread pends on */
 
@@ -342,6 +346,12 @@ typedef struct xnthread {
 #define xnthread_get_rescnt(thread)        ((thread)->hrescnt)
 #define xnthread_private(thread)           ((thread)->privdata)
 #define xnthread_personality(thread)       ((thread)->personality)
+
+#define xnthread_for_each_claimed(__pos, __thread)		\
+	list_for_each_entry(__pos, &(__thread)->claimq, link)
+
+#define xnthread_for_each_claimed_safe(__pos, __tmp, __thread)	\
+	list_for_each_entry_safe(__pos, __tmp, &(__thread)->claimq, link)
 
 #define xnthread_run_handler(__t, __h)					\
 	do {								\
