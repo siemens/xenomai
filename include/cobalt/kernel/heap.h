@@ -46,6 +46,7 @@
 
 #include <linux/mm.h>
 #include <cobalt/kernel/queue.h>
+#include <cobalt/kernel/list.h>
 
 #define XNHEAP_PAGE_SIZE	512 /* A reasonable value for the xnheap page size */
 #define XNHEAP_PAGE_MASK	(~(XNHEAP_PAGE_SIZE-1))
@@ -69,19 +70,18 @@ struct xnpagemap {
 	unsigned int bcount : 24; /* Number of active blocks. */
 };
 
-typedef struct xnextent {
-
-	xnholder_t link;
-
-#define link2extent(ln)	container_of(ln, xnextent_t, link)
-
-	caddr_t membase,	/* Base address of the page array */
-		memlim,		/* Memory limit of page array */
-		freelist;	/* Head of the free page list */
-
-	struct xnpagemap pagemap[1];	/* Beginning of page map */
-
-} xnextent_t;
+struct xnextent {
+	/** xnheap->extents */
+	struct list_head link;
+	/** Base address of the page array */
+	caddr_t membase;
+	/** Memory limit of page array */
+	caddr_t memlim;
+	/** Head of the free page list */
+	caddr_t freelist;
+	/** Beginning of page map */
+	struct xnpagemap pagemap[1];
+};
 
 typedef struct xnheap {
 
@@ -97,7 +97,8 @@ typedef struct xnheap {
 		ubytes,
 		maxcont;
 
-	xnqueue_t extents;
+	struct list_head extents;
+	int nrextents;
 
 	DECLARE_XNLOCK(lock);
 
@@ -128,7 +129,7 @@ extern xnheap_t kheap;
 #define xnheap_extentsize(heap)		((heap)->extentsize)
 #define xnheap_page_size(heap)		((heap)->pagesize)
 #define xnheap_page_count(heap)		((heap)->npages)
-#define xnheap_usable_mem(heap)		((heap)->maxcont * countq(&(heap)->extents))
+#define xnheap_usable_mem(heap)		((heap)->maxcont * (heap)->nrextents)
 #define xnheap_used_mem(heap)		((heap)->ubytes)
 #define xnheap_max_contiguous(heap)	((heap)->maxcont)
 
@@ -141,7 +142,7 @@ static inline size_t xnheap_align(size_t size, size_t al)
 static inline size_t xnheap_external_overhead(size_t hsize, size_t psize)
 {
 	size_t pages = (hsize + psize - 1) / psize;
-	return xnheap_align(sizeof(xnextent_t)
+	return xnheap_align(sizeof(struct xnextent)
 			    + pages * sizeof(struct xnpagemap), psize);
 }
 
@@ -152,7 +153,7 @@ static inline size_t xnheap_internal_overhead(size_t hsize, size_t psize)
 	   o * (p + m) = h * m + e * p
 	   o = (h * m + e *p) / (p + m)
 	*/
-	return xnheap_align((sizeof(xnextent_t) * psize
+	return xnheap_align((sizeof(struct xnextent) * psize
 			     + sizeof(struct xnpagemap) * hsize)
 			    / (psize + sizeof(struct xnpagemap)), psize);
 }

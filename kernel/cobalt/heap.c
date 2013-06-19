@@ -166,12 +166,10 @@ void xnheap_cleanup_proc(void)
 
 #endif /* CONFIG_XENO_OPT_VFILE */
 
-static void init_extent(xnheap_t *heap, xnextent_t *extent)
+static void init_extent(xnheap_t *heap, struct xnextent *extent)
 {
 	caddr_t freepage;
 	int n, lastpgnum;
-
-	inith(&extent->link);
 
 	/* The page area starts right after the (aligned) header. */
 	extent->membase = (caddr_t) extent + heap->hdrsize;
@@ -220,7 +218,7 @@ static void init_extent(xnheap_t *heap, xnextent_t *extent)
  * dynamically-sized internal header. The following formula gives the
  * size of this header:\n
  *
- * H = heapsize, P=pagesize, M=sizeof(struct pagemap), E=sizeof(xnextent_t)\n
+ * H = heapsize, P=pagesize, M=sizeof(struct pagemap), E=sizeof(struct xnextent)\n
  * hdrsize = ((H - E) * M) / (M + 1)\n
  *
  * This value is then aligned on the next 16-byte boundary. The
@@ -255,7 +253,7 @@ int xnheap_init(xnheap_t *heap,
 		void *heapaddr, u_long heapsize, u_long pagesize)
 {
 	u_long hdrsize, shiftsize, pageshift;
-	xnextent_t *extent;
+	struct xnextent *extent;
 	unsigned int cpu;
 	spl_t s;
 
@@ -274,7 +272,7 @@ int xnheap_init(xnheap_t *heap,
 	if ((pagesize < (1 << XNHEAP_MINLOG2)) ||
 	    (pagesize > (1 << XNHEAP_MAXLOG2)) ||
 	    (pagesize & (pagesize - 1)) != 0 ||
-	    heapsize <= sizeof(xnextent_t) ||
+	    heapsize <= sizeof(struct xnextent) ||
 	    heapsize > XNHEAP_MAXEXTSZ || (heapsize & (pagesize - 1)) != 0)
 		return -EINVAL;
 
@@ -284,7 +282,7 @@ int xnheap_init(xnheap_t *heap,
 	 * page which is addressable into this extent. The page map is
 	 * itself stored in the extent space, right after the static
 	 * part of its header, and before the first allocatable page.
-	 * pmapsize = (heapsize - sizeof(xnextent_t)) / pagesize *
+	 * pmapsize = (heapsize - sizeof(struct xnextent)) / pagesize *
 	 * sizeof(struct xnpagemap). The overall header size is:
 	 * static_part + pmapsize rounded to the minimum alignment
 	 * size.
@@ -315,7 +313,8 @@ int xnheap_init(xnheap_t *heap,
 		heap->idleq[cpu] = NULL;
 	inith(&heap->link);
 	inith(&heap->stat_link);
-	initq(&heap->extents);
+	INIT_LIST_HEAD(&heap->extents);
+	heap->nrextents = 1;
 	xnlock_init(&heap->lock);
 	heap->numaps = 0;
 	heap->kmflags = 0;
@@ -324,8 +323,7 @@ int xnheap_init(xnheap_t *heap,
 	memset(heap->buckets, 0, sizeof(heap->buckets));
 	extent = heapaddr;
 	init_extent(heap, extent);
-
-	appendq(&heap->extents, &extent->link);
+	list_add_tail(&extent->link, &heap->extents);
 
 	snprintf(heap->label, sizeof(heap->label), "unlabeled @0x%p", heap);
 
@@ -408,7 +406,7 @@ void xnheap_destroy(xnheap_t *heap,
 				    u_long extsize, void *cookie),
 		    void *cookie)
 {
-	xnholder_t *holder;
+	struct xnextent *p, *tmp;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -416,17 +414,22 @@ void xnheap_destroy(xnheap_t *heap,
 	xnvfile_touch_tag(&vfile_tag);
 	xnlock_put_irqrestore(&nklock, s);
 
-	if (!flushfn)
+	if (flushfn == NULL)
 		return;
 
 	xnlock_get_irqsave(&heap->lock, s);
 
-	while ((holder = getq(&heap->extents)) != NULL) {
+	if (list_empty(&heap->extents))
+		goto done;
+
+	list_for_each_entry_safe(p, tmp, &heap->extents, link) {
+		list_del(&p->link);
+		heap->nrextents--;
 		xnlock_put_irqrestore(&heap->lock, s);
-		flushfn(heap, link2extent(holder), heap->extentsize, cookie);
+		flushfn(heap, p, heap->extentsize, cookie);
 		xnlock_get_irqsave(&heap->lock, s);
 	}
-
+done:
 	xnlock_put_irqrestore(&heap->lock, s);
 }
 EXPORT_SYMBOL_GPL(xnheap_destroy);
@@ -441,19 +444,16 @@ static caddr_t get_free_range(xnheap_t *heap, u_long bsize, int log2size)
 {
 	caddr_t block, eblock, freepage, lastpage, headpage, freehead = NULL;
 	u_long pagenum, pagecont, freecont;
-	xnholder_t *holder;
-	xnextent_t *extent;
+	struct xnextent *extent;
 
-	holder = getheadq(&heap->extents);
+	if (list_empty(&heap->extents))
+		return NULL;
 
-	while (holder != NULL) {
-		extent = link2extent(holder);
+	list_for_each_entry(extent, &heap->extents, link) {
 		freepage = extent->freelist;
-
-		while (freepage != NULL) {
+		while (freepage) {
 			headpage = freepage;
 			freecont = 0;
-
 			/*
 			 * Search for a range of contiguous pages in
 			 * the free page list of the current
@@ -482,25 +482,25 @@ static caddr_t get_free_range(xnheap_t *heap, u_long bsize, int log2size)
 
 				goto splitpage;
 			}
-
 			freehead = lastpage;
 		}
-		holder = nextq(&heap->extents, holder);
 	}
 
 	return NULL;
 
-      splitpage:
+splitpage:
 
-	/* At this point, headpage is valid and points to the first page
-	   of a range of contiguous free pages larger or equal than
-	   'bsize'. */
-
+	/*
+	 * At this point, headpage is valid and points to the first
+	 * page of a range of contiguous free pages larger or equal
+	 * than 'bsize'.
+	 */
 	if (bsize < heap->pagesize) {
-		/* If the allocation size is smaller than the standard page
-		   size, split the page in smaller blocks of this size,
-		   building a free list of free blocks. */
-
+		/*
+		 * If the allocation size is smaller than the standard
+		 * page size, split the page in smaller blocks of this
+		 * size, building a free list of free blocks.
+		 */
 		for (block = headpage, eblock =
 		     headpage + heap->pagesize - bsize; block < eblock;
 		     block += bsize)
@@ -522,7 +522,6 @@ static caddr_t get_free_range(xnheap_t *heap, u_long bsize, int log2size)
 	 * In any case, the following pages slots are marked as
 	 * 'continued' (PCONT).
 	 */
-
 	extent->pagemap[pagenum].type = log2size ? : XNHEAP_PLIST;
 	extent->pagemap[pagenum].bcount = 1;
 
@@ -568,8 +567,7 @@ static caddr_t get_free_range(xnheap_t *heap, u_long bsize, int log2size)
 
 void *xnheap_alloc(xnheap_t *heap, u_long size)
 {
-	xnholder_t *holder;
-	xnextent_t *extent;
+	struct xnextent *extent;
 	int log2size, ilog;
 	u_long pagenum;
 	caddr_t block;
@@ -628,23 +626,26 @@ void *xnheap_alloc(xnheap_t *heap, u_long size)
 		} else {
 			if (bsize <= heap->pagesize)
 				--heap->buckets[ilog].fcount;
-
-			for (holder = getheadq(&heap->extents), extent = NULL;
-			     holder != NULL; holder = nextq(&heap->extents, holder)) {
-				extent = link2extent(holder);
+			if (list_empty(&heap->extents))
+				goto oops;
+			list_for_each_entry(extent, &heap->extents, link) {
 				if ((caddr_t) block >= extent->membase &&
 				    (caddr_t) block < extent->memlim)
-					break;
+					goto found;
 			}
-			XENO_ASSERT(NUCLEUS, extent != NULL,
-				    xnpod_fatal("Cannot determine source extent for block %p (heap %p)?!",
+		oops:
+			XENO_ASSERT(NUCLEUS, 0,
+				    xnpod_fatal("cannot determine source extent for block %p (heap %p)?!",
 						block, heap);
 				);
+			block = NULL;
+			goto release_and_exit;
+		found:
 			pagenum = ((caddr_t) block - extent->membase) >> heap->pageshift;
 			++extent->pagemap[pagenum].bcount;
 		}
 
-		heap->buckets[ilog].freelist = *((caddr_t *) block);
+		heap->buckets[ilog].freelist = *((caddr_t *)block);
 		heap->ubytes += bsize;
 	} else {
 		if (size > heap->maxcont)
@@ -710,51 +711,46 @@ EXPORT_SYMBOL_GPL(xnheap_alloc);
 int xnheap_test_and_free(xnheap_t *heap, void *block, int (*ckfn) (void *block))
 {
 	caddr_t freepage, lastpage, nextpage, tailpage, freeptr, *tailptr;
-	int log2size, npages, err, nblocks, xpage, ilog;
+	int log2size, npages, ret, nblocks, xpage, ilog;
 	u_long pagenum, pagecont, boffset, bsize;
-	xnextent_t *extent = NULL;
-	xnholder_t *holder;
+	struct xnextent *extent;
 	spl_t s;
 
 	xnlock_get_irqsave(&heap->lock, s);
 
-	/* Find the extent from which the returned block is
-	   originating. */
-
-	for (holder = getheadq(&heap->extents);
-	     holder != NULL; holder = nextq(&heap->extents, holder)) {
-		extent = link2extent(holder);
-		if ((caddr_t) block >= extent->membase &&
-		    (caddr_t) block < extent->memlim)
-			break;
-	}
-
-	if (!holder) {
-		err = -EFAULT;
+	/*
+	 * Find the extent from which the returned block is
+	 * originating from.
+	 */
+	ret = -EFAULT;
+	if (list_empty(&heap->extents))
 		goto unlock_and_fail;
+
+	list_for_each_entry(extent, &heap->extents, link) {
+		if ((caddr_t)block >= extent->membase &&
+		    (caddr_t)block < extent->memlim)
+			goto found;
 	}
 
+	goto unlock_and_fail;
+found:
 	/* Compute the heading page number in the page map. */
-	pagenum = ((caddr_t) block - extent->membase) >> heap->pageshift;
-	boffset =
-	    ((caddr_t) block -
-	     (extent->membase + (pagenum << heap->pageshift)));
+	pagenum = ((caddr_t)block - extent->membase) >> heap->pageshift;
+	boffset = ((caddr_t) block -
+		   (extent->membase + (pagenum << heap->pageshift)));
 
 	switch (extent->pagemap[pagenum].type) {
 	case XNHEAP_PFREE:	/* Unallocated page? */
 	case XNHEAP_PCONT:	/* Not a range heading page? */
-
-	      bad_block:
-		err = -EINVAL;
-
-	      unlock_and_fail:
-
+	bad_block:
+		ret = -EINVAL;
+	unlock_and_fail:
 		xnlock_put_irqrestore(&heap->lock, s);
-		return err;
+		return ret;
 
 	case XNHEAP_PLIST:
 
-		if (ckfn && (err = ckfn(block)) != 0)
+		if (ckfn && (ret = ckfn(block)) != 0)
 			goto unlock_and_fail;
 
 		npages = 1;
@@ -805,7 +801,7 @@ int xnheap_test_and_free(xnheap_t *heap, void *block, int (*ckfn) (void *block))
 		if ((boffset & (bsize - 1)) != 0)	/* Not a block start? */
 			goto bad_block;
 
-		if (ckfn && (err = ckfn(block)) != 0)
+		if (ckfn && (ret = ckfn(block)) != 0)
 			goto unlock_and_fail;
 
 		/*
@@ -964,7 +960,7 @@ EXPORT_SYMBOL_GPL(xnheap_free);
 
 int xnheap_extend(xnheap_t *heap, void *extaddr, u_long extsize)
 {
-	xnextent_t *extent = (xnextent_t *)extaddr;
+	struct xnextent *extent = extaddr;
 	spl_t s;
 
 	if (extsize != heap->extentsize)
@@ -972,7 +968,8 @@ int xnheap_extend(xnheap_t *heap, void *extaddr, u_long extsize)
 
 	init_extent(heap, extent);
 	xnlock_get_irqsave(&heap->lock, s);
-	appendq(&heap->extents, &extent->link);
+	list_add_tail(&extent->link, &heap->extents);
+	heap->nrextents++;
 	xnlock_put_irqrestore(&heap->lock, s);
 
 	return 0;
@@ -1045,43 +1042,41 @@ EXPORT_SYMBOL_GPL(xnheap_finalize_free_inner);
 
 int xnheap_check_block(xnheap_t *heap, void *block)
 {
-	xnextent_t *extent = NULL;
+	int ptype, ret = -EINVAL;
+	struct xnextent *extent;
 	u_long pagenum, boffset;
-	xnholder_t *holder;
-	int ptype, err = 0;
 	spl_t s;
 
 	xnlock_get_irqsave(&heap->lock, s);
 
-	/* Find the extent from which the checked block is
-	   originating. */
+	/*
+	 * Find the extent from which the checked block is
+	 * originating from.
+	 */
+	if (list_empty(&heap->extents))
+		goto out;
 
-	for (holder = getheadq(&heap->extents);
-	     holder != NULL; holder = nextq(&heap->extents, holder)) {
-		extent = link2extent(holder);
-		if ((caddr_t) block >= extent->membase &&
-		    (caddr_t) block < extent->memlim)
-			break;
+	list_for_each_entry(extent, &heap->extents, link) {
+		if ((caddr_t)block >= extent->membase &&
+		    (caddr_t)block < extent->memlim)
+			goto found;
 	}
 
-	if (!holder)
-		goto bad_block;
-
+	goto out;
+found:
 	/* Compute the heading page number in the page map. */
-	pagenum = ((caddr_t) block - extent->membase) >> heap->pageshift;
-	boffset =
-	    ((caddr_t) block -
-	     (extent->membase + (pagenum << heap->pageshift)));
+	pagenum = ((caddr_t)block - extent->membase) >> heap->pageshift;
+	boffset = ((caddr_t)block -
+		   (extent->membase + (pagenum << heap->pageshift)));
 	ptype = extent->pagemap[pagenum].type;
 
-	if (ptype == XNHEAP_PFREE ||	/* Unallocated page? */
-	    ptype == XNHEAP_PCONT)	/* Not a range heading page? */
-  bad_block:
-		err = -EINVAL;
-
+	/* Raise error if page unallocated or not heading a range. */
+	if (ptype != XNHEAP_PFREE && ptype != XNHEAP_PCONT)
+		ret = 0;
+out:
 	xnlock_put_irqrestore(&heap->lock, s);
 
-	return err;
+	return ret;
 }
 EXPORT_SYMBOL_GPL(xnheap_check_block);
 
@@ -1256,7 +1251,7 @@ static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 	 * Cannot map multi-extent heaps, we need the memory area we
 	 * map from to be contiguous.
 	 */
-	if (countq(&heap->extents) > 1)
+	if (heap->nrextents > 1)
 		goto deref_out;
 
 	vaddr = vma->vm_pgoff << PAGE_SHIFT;
