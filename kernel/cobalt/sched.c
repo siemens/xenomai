@@ -463,7 +463,7 @@ void xnsched_migrate_passive(struct xnthread *thread, struct xnsched *sched)
 
 #ifdef CONFIG_XENO_OPT_SCALABLE_SCHED
 
-void initmlq(struct xnsched_mlq *q, int loprio, int hiprio)
+void sched_initq(struct xnsched_mlq *q, int loprio, int hiprio)
 {
 	int prio;
 
@@ -474,149 +474,144 @@ void initmlq(struct xnsched_mlq *q, int loprio, int hiprio)
 	memset(&q->lomap, 0, sizeof(q->lomap));
 
 	for (prio = 0; prio < XNSCHED_MLQ_LEVELS; prio++)
-		initq(&q->queue[prio]);
+		INIT_LIST_HEAD(q->heads + prio);
 
-	XENO_ASSERT(QUEUES,
+	XENO_ASSERT(NUCLEUS,
 		    hiprio - loprio + 1 < XNSCHED_MLQ_LEVELS,
 		    xnpod_fatal("priority range [%d..%d] is beyond multi-level "
 				"queue indexing capabilities",
 				loprio, hiprio));
 }
 
-void addmlq(struct xnsched_mlq *q,
-	    struct xnpholder *h, int idx, int lifo)
+static inline int indexmlq(struct xnsched_mlq *q, int prio)
 {
-	struct xnqueue *queue = &q->queue[idx];
-	int hi = idx / BITS_PER_LONG;
-	int lo = idx % BITS_PER_LONG;
+	XENO_ASSERT(NUCLEUS,
+		    prio >= q->loprio && prio <= q->hiprio,
+		    xnpod_fatal("priority level %d is out of range ", prio));
+	/*
+	 * BIG FAT WARNING: We need to rescale the priority level to a
+	 * 0-based range. We use ffnz() to scan the bitmap which MUST
+	 * be based on a bit scan forward op. Therefore, the lower the
+	 * index value, the higher the priority (since least
+	 * significant bits will be found first when scanning the
+	 * bitmaps).
+	 */
+	return q->hiprio - prio;
+}
 
-	if (lifo)
-		prependq(queue, &h->plink);
-	else
-		appendq(queue, &h->plink);
+static struct list_head *addmlq(struct xnsched_mlq *q, int prio)
+{
+	struct list_head *head;
+	int hi, lo, idx;
 
-	h->prio = idx;
+	idx = indexmlq(q, prio);
+	head = q->heads + idx;
 	q->elems++;
-	__setbits(q->himap, 1UL << hi);
-	__setbits(q->lomap[hi], 1UL << lo);
-}
 
-void removemlq(struct xnsched_mlq *q, struct xnpholder *h)
-{
-	int idx = h->prio;
-	struct xnqueue *queue = &q->queue[idx];
-
-	q->elems--;
-
-	removeq(queue, &h->plink);
-
-	if (emptyq_p(queue)) {
-		int hi = idx / BITS_PER_LONG;
-		int lo = idx % BITS_PER_LONG;
-		__clrbits(q->lomap[hi], 1UL << lo);
-		if (q->lomap[hi] == 0)
-			__clrbits(q->himap, 1UL << hi);
+	/* New item is not linked yet. */
+	if (list_empty(head)) {
+		hi = idx / BITS_PER_LONG;
+		lo = idx % BITS_PER_LONG;
+		__setbits(q->himap, 1UL << hi);
+		__setbits(q->lomap[hi], 1UL << lo);
 	}
+
+	return head;
 }
 
-struct xnpholder *findmlqh(struct xnsched_mlq *q, int prio)
+void sched_insertqlf(struct xnsched_mlq *q, struct xnthread *thread)
 {
-	struct xnqueue *queue = &q->queue[indexmlq(q, prio)];
-	return (struct xnpholder *)getheadq(queue);
+	struct list_head *head = addmlq(q, thread->cprio);
+	list_add(&thread->rlink, head);
 }
 
-struct xnpholder *getheadmlq(struct xnsched_mlq *q)
+void sched_insertqff(struct xnsched_mlq *q, struct xnthread *thread)
 {
-	struct xnqueue *queue;
-	struct xnpholder *h;
-
-	if (emptymlq_p(q))
-		return NULL;
-
-	queue = &q->queue[ffsmlq(q)];
-	h = (struct xnpholder *)getheadq(queue);
-
-	XENO_ASSERT(QUEUES, h,
-		    xnpod_fatal
-		    ("corrupted multi-level queue, qslot=%p at %s:%d", q,
-		     __FILE__, __LINE__);
-		);
-
-	return h;
+	struct list_head *head = addmlq(q, thread->cprio);
+	list_add_tail(&thread->rlink, head);
 }
 
-struct xnpholder *getmlq(struct xnsched_mlq *q)
+static void removemlq(struct xnsched_mlq *q,
+		      struct list_head *entry, int idx)
 {
-	struct xnqueue *queue;
-	struct xnholder *h;
-	int idx, hi, lo;
+	struct list_head *head;
+	int hi, lo;
 
-	if (emptymlq_p(q))
-		return NULL;
-
-	idx = ffsmlq(q);
-	queue = &q->queue[idx];
-	h = getq(queue);
-
-	XENO_ASSERT(QUEUES, h,
-		    xnpod_fatal
-		    ("corrupted multi-level queue, qslot=%p at %s:%d", q,
-		     __FILE__, __LINE__);
-	    );
-
+	head = q->heads + idx;
+	list_del(entry);
 	q->elems--;
 
-	if (emptyq_p(queue)) {
+	if (list_empty(head)) {
 		hi = idx / BITS_PER_LONG;
 		lo = idx % BITS_PER_LONG;
 		__clrbits(q->lomap[hi], 1UL << lo);
 		if (q->lomap[hi] == 0)
 			__clrbits(q->himap, 1UL << hi);
 	}
-
-	return (struct xnpholder *)h;
 }
 
-struct xnpholder *nextmlq(struct xnsched_mlq *q, struct xnpholder *h)
+void sched_removeq(struct xnsched_mlq *q, struct xnthread *thread)
 {
-	unsigned long hibits, lobits;
-	int idx = h->prio, hi, lo;
-	struct xnqueue *queue;
-	struct xnholder *nh;
+	removemlq(q, &thread->rlink, indexmlq(q, thread->cprio));
+}
 
-	hi = idx / BITS_PER_LONG;
-	lo = idx % BITS_PER_LONG;
-	lobits = q->lomap[hi] >> lo;
-	hibits = q->himap >> hi;
+static inline int ffsmlq(struct xnsched_mlq *q)
+{
+	int hi = ffnz(q->himap);
+	int lo = ffnz(q->lomap[hi]);
+	return hi * BITS_PER_LONG + lo;	/* Result is undefined if none set. */
+}
 
-	for (;;) {
-		queue = &q->queue[idx];
-		if (!emptyq_p(queue)) {
-			nh = h ? nextq(queue, &h->plink) : getheadq(queue);
-			if (nh)
-				return (struct xnpholder *)nh;
-		}
-		for (;;) {
-			lobits >>= 1;
-			if (lobits == 0) {
-				hibits >>= 1;
-				if (hibits == 0)
-					return NULL;
-				lobits = q->lomap[++hi];
-				idx = hi * BITS_PER_LONG;
-			} else
-				idx++;
-			if (lobits & 1) {
-				h = NULL;
-				break;
-			}
-		}
+struct xnthread *sched_getq(struct xnsched_mlq *q)
+{
+	struct xnthread *thread;
+	struct list_head *head;
+	int idx;
+
+	if (q->elems == 0)
+		return NULL;
+
+	idx = ffsmlq(q);
+	head = q->heads + idx;
+	XENO_BUGON(NUCLEUS, list_empty(head));
+	thread = list_first_entry(head, struct xnthread, rlink);
+	removemlq(q, &thread->rlink, idx);
+
+	return thread;
+}
+
+struct xnthread *sched_findq(struct xnsched_mlq *q, int prio)
+{
+	struct list_head *head;
+	int idx;
+
+	idx = indexmlq(q, prio);
+	head = q->heads + idx;
+	if (list_empty(head))
+		return NULL;
+
+	return list_first_entry(head, struct xnthread, rlink);
+}
+
+#else /* !CONFIG_XENO_OPT_SCALABLE_SCHED */
+
+struct xnthread *sched_findq(struct list_head *q, int prio)
+{
+	struct xnthread *thread;
+
+	if (list_empty(q))
+		return NULL;
+
+	/* Find thread leading a priority group. */
+	list_for_each_entry(thread, q, rlink) {
+		if (prio == thread->cprio)
+			return thread;
 	}
 
 	return NULL;
 }
 
-#endif /* CONFIG_XENO_OPT_SCALABLE_SCHED */
+#endif /* !CONFIG_XENO_OPT_SCALABLE_SCHED */
 
 #ifdef CONFIG_XENO_OPT_VFILE
 

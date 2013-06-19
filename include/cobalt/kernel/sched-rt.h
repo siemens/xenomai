@@ -54,25 +54,22 @@ extern struct xnsched_class xnsched_class_rt;
 
 static inline void __xnsched_rt_requeue(struct xnthread *thread)
 {
-	sched_insertpql(&thread->sched->rt.runnable,
-			&thread->rlink, thread->cprio);
+	sched_insertqlf(&thread->sched->rt.runnable, thread);
 }
 
 static inline void __xnsched_rt_enqueue(struct xnthread *thread)
 {
-	sched_insertpqf(&thread->sched->rt.runnable,
-			&thread->rlink, thread->cprio);
+	sched_insertqff(&thread->sched->rt.runnable, thread);
 }
 
 static inline void __xnsched_rt_dequeue(struct xnthread *thread)
 {
-	sched_removepq(&thread->sched->rt.runnable, &thread->rlink);
+	sched_removeq(&thread->sched->rt.runnable, thread);
 }
 
 static inline struct xnthread *__xnsched_rt_pick(struct xnsched *sched)
 {
-	struct xnpholder *h = sched_getpq(&sched->rt.runnable);
-	return h ? link2thread(h, rlink) : NULL;
+	return sched_getq(&sched->rt.runnable);
 }
 
 static inline void __xnsched_rt_setparam(struct xnthread *thread,

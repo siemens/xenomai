@@ -1,6 +1,6 @@
-/*!\file sched-tp.h
- * \brief Definitions for the TP scheduling class.
- * \author Philippe Gerum
+/** @file sched-tp.h
+ * @brief Definitions for the TP scheduling class.
+ * @author Philippe Gerum
  *
  * Copyright (C) 2008 Philippe Gerum <rpm@xenomai.org>.
  *
@@ -43,23 +43,28 @@ struct xnsched_tp_schedule {
 };
 
 struct xnsched_tp {
-
 	struct xnsched_tpslot {
-		xnsched_queue_t runnable; /*!< Runnable thread queue. */
+		/** Per-partition runqueue. */
+		xnsched_queue_t runnable;
 	} partitions[CONFIG_XENO_OPT_SCHED_TP_NRPART];
-
-	struct xnsched_tpslot idle;	/* !< Idle slot for passive windows. */
-	struct xnsched_tpslot *tps;	/* !< Active partition slot */
-	struct xntimer tf_timer;	/* !< Time frame timer */
-	struct xnsched_tp_schedule *gps; /* !< Global partition schedule */
-	int wnext;			 /* !< Next partition window */
-	xnticks_t tf_start;		 /* !< Start of next time frame */
-	struct xnqueue threads;		 /* !< Assigned thread queue */
+	/** Idle slot for passive windows. */
+	struct xnsched_tpslot idle;
+	/** Active partition slot */
+	struct xnsched_tpslot *tps;
+	/** Time frame timer */
+	struct xntimer tf_timer;
+	/** Global partition schedule */
+	struct xnsched_tp_schedule *gps;
+	/** Window index of next partition */
+	int wnext;
+	/** Start of next time frame */
+	xnticks_t tf_start;
+	/** Assigned thread queue */
+	struct list_head threads;
 };
 
 static inline int xnsched_tp_init_thread(struct xnthread *thread)
 {
-	inith(&thread->tp_link);
 	thread->tps = NULL;
 
 	return 0;

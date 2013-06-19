@@ -96,14 +96,14 @@ static void xnsched_tp_init(struct xnsched *sched)
 	 * are valid RT priorities. TP is actually a subset of RT.
 	 */
 	for (n = 0; n < CONFIG_XENO_OPT_SCHED_TP_NRPART; n++)
-		sched_initpq(&tp->partitions[n].runnable,
-			     XNSCHED_RT_MIN_PRIO, XNSCHED_RT_MAX_PRIO);
-	sched_initpq(&tp->idle.runnable,
-		     XNSCHED_RT_MIN_PRIO, XNSCHED_RT_MAX_PRIO);
+		sched_initq(&tp->partitions[n].runnable,
+			    XNSCHED_RT_MIN_PRIO, XNSCHED_RT_MAX_PRIO);
+	sched_initq(&tp->idle.runnable,
+		    XNSCHED_RT_MIN_PRIO, XNSCHED_RT_MAX_PRIO);
 
 	tp->tps = NULL;
 	tp->gps = NULL;
-	initq(&tp->threads);
+	INIT_LIST_HEAD(&tp->threads);
 	xntimer_init_noblock(&tp->tf_timer, tp_tick_handler);
 	xntimer_set_name(&tp->tf_timer, "tp-tick");
 }
@@ -165,45 +165,39 @@ static int xnsched_tp_declare(struct xnthread *thread,
 	    p->tp.prio > XNSCHED_RT_MAX_PRIO)
 		return -EINVAL;
 
-	appendq(&sched->tp.threads, &thread->tp_link);
+	list_add_tail(&thread->tp_link, &sched->tp.threads);
 
 	return 0;
 }
 
 static void xnsched_tp_forget(struct xnthread *thread)
 {
+	list_del(&thread->tp_link);
 	thread->tps = NULL;
-	removeq(&thread->sched->tp.threads, &thread->tp_link);
 }
 
 static void xnsched_tp_enqueue(struct xnthread *thread)
 {
-	sched_insertpqf(&thread->tps->runnable,
-			&thread->rlink, thread->cprio);
+	sched_insertqff(&thread->tps->runnable, thread);
 }
 
 static void xnsched_tp_dequeue(struct xnthread *thread)
 {
-	sched_removepq(&thread->tps->runnable, &thread->rlink);
+	sched_removeq(&thread->tps->runnable, thread);
 }
 
 static void xnsched_tp_requeue(struct xnthread *thread)
 {
-	sched_insertpql(&thread->tps->runnable,
-			&thread->rlink, thread->cprio);
+	sched_insertqlf(&thread->tps->runnable, thread);
 }
 
 static struct xnthread *xnsched_tp_pick(struct xnsched *sched)
 {
-	struct xnpholder *h;
-
 	/* Never pick a thread if we don't schedule partitions. */
 	if (!xntimer_running_p(&sched->tp.tf_timer))
 		return NULL;
 
-	h = sched_getpq(&sched->tp.tps->runnable);
-
-	return h ? link2thread(h, rlink) : NULL;
+	return sched_getq(&sched->tp.tps->runnable);
 }
 
 static void xnsched_tp_migrate(struct xnthread *thread, struct xnsched *sched)
@@ -246,8 +240,7 @@ xnsched_tp_set_schedule(struct xnsched *sched,
 	struct xnsched_tp_schedule *old_gps;
 	struct xnsched_tp *tp = &sched->tp;
 	union xnsched_policy_param param;
-	struct xnthread *thread;
-	struct xnholder *h;
+	struct xnthread *thread, *tmp;
 
 	XENO_BUGON(NUCLEUS, gps != NULL &&
 		    (gps->pwin_nr <= 0 || gps->pwins[0].w_offset != 0));
@@ -258,12 +251,15 @@ xnsched_tp_set_schedule(struct xnsched *sched,
 	 * Move all TP threads on this scheduler to the RT class,
 	 * until we call xnsched_set_policy() for them again.
 	 */
-	while ((h = getq(&tp->threads)) != NULL) {
-		thread = link2thread(h, tp_link);
+	if (list_empty(&tp->threads))
+		goto done;
+
+	list_for_each_entry_safe(thread, tmp, &tp->threads, tp_link) {
+		list_del(&thread->tp_link);
 		param.rt.prio = thread->cprio;
 		xnsched_set_policy(thread, &xnsched_class_rt, &param);
 	}
-
+done:
 	old_gps = tp->gps;
 	tp->gps = gps;
 

@@ -349,16 +349,16 @@ static void xnsched_sporadic_requeue(struct xnthread *thread)
 static struct xnthread *xnsched_sporadic_pick(struct xnsched *sched)
 {
 	struct xnthread *curr = sched->curr, *next;
-	struct xnpholder *h;
 
-	h = sched_getpq(&sched->rt.runnable);
-	next = h ? link2thread(h, rlink) : NULL;
+	next = sched_getq(&sched->rt.runnable);
+	if (next == NULL)
+		goto swap_budgets;
 
 	if (curr == next)
 		return next;
 
 	/* Arm the drop timer for an incoming sporadic thread. */
-	if (next && next->pss)
+	if (next->pss)
 		sporadic_resume_activity(next);
 
 	/*
@@ -368,6 +368,7 @@ static struct xnthread *xnsched_sporadic_pick(struct xnsched *sched)
 	 * sporadic thread wants, so there is no replenishment
 	 * operation involved.
 	 */
+swap_budgets:
 	if (curr->base_class != &xnsched_class_sporadic)
 		return next;
 

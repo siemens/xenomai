@@ -26,31 +26,28 @@
 
 static void xnsched_weak_init(struct xnsched *sched)
 {
-	sched_initpq(&sched->weak.runnable,
-		     XNSCHED_WEAK_MIN_PRIO, XNSCHED_WEAK_MAX_PRIO);
+	sched_initq(&sched->weak.runnable,
+		    XNSCHED_WEAK_MIN_PRIO, XNSCHED_WEAK_MAX_PRIO);
 }
 
 static void xnsched_weak_requeue(struct xnthread *thread)
 {
-	sched_insertpql(&thread->sched->weak.runnable,
-			&thread->rlink, thread->cprio);
+	sched_insertqlf(&thread->sched->weak.runnable, thread);
 }
 
 static void xnsched_weak_enqueue(struct xnthread *thread)
 {
-	sched_insertpqf(&thread->sched->weak.runnable,
-			&thread->rlink, thread->cprio);
+	sched_insertqff(&thread->sched->weak.runnable, thread);
 }
 
 static void xnsched_weak_dequeue(struct xnthread *thread)
 {
-	sched_removepq(&thread->sched->weak.runnable, &thread->rlink);
+	sched_removeq(&thread->sched->weak.runnable, thread);
 }
 
 static struct xnthread *xnsched_weak_pick(struct xnsched *sched)
 {
-	struct xnpholder *h = sched_getpq(&sched->weak.runnable);
-	return h ? link2thread(h, rlink) : NULL;
+	return sched_getq(&sched->weak.runnable);
 }
 
 void xnsched_weak_setparam(struct xnthread *thread,

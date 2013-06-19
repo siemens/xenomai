@@ -20,7 +20,7 @@
 #ifndef _COBALT_KERNEL_SCHEDQUEUE_H
 #define _COBALT_KERNEL_SCHEDQUEUE_H
 
-#include <cobalt/kernel/queue.h>
+#include <cobalt/kernel/list.h>
 
 #define XNSCHED_CLASS_MAX_PRIO		1024
 
@@ -34,122 +34,61 @@
 #define XNSCHED_MLQ_LEVELS  264
 
 #if BITS_PER_LONG * BITS_PER_LONG < XNSCHED_MLQ_LEVELS
-#error "Internal bitmap cannot hold so many priority levels"
+#error "internal bitmap cannot hold so many priority levels"
 #endif
 
 #define __MLQ_LONGS ((XNSCHED_MLQ_LEVELS+BITS_PER_LONG-1)/BITS_PER_LONG)
 
 struct xnsched_mlq {
-
 	int loprio, hiprio, elems;
 	unsigned long himap, lomap[__MLQ_LONGS];
-	struct xnqueue queue[XNSCHED_MLQ_LEVELS];
-
+	struct list_head heads[XNSCHED_MLQ_LEVELS];
 };
 
 #undef __MLQ_LONGS
 
-void initmlq(struct xnsched_mlq *q, int loprio, int hiprio);
+struct xnthread;
 
-void addmlq(struct xnsched_mlq *q,
-	    struct xnpholder *holder, int idx, int lifo);
+void sched_initq(struct xnsched_mlq *q,
+		 int loprio, int hiprio);
 
-void removemlq(struct xnsched_mlq *q, struct xnpholder *holder);
+void sched_insertqff(struct xnsched_mlq *q, 
+		     struct xnthread *thread);
 
-struct xnpholder *findmlqh(struct xnsched_mlq *q, int prio);
+void sched_insertqlf(struct xnsched_mlq *q,
+		     struct xnthread *thread);
 
-struct xnpholder *getheadmlq(struct xnsched_mlq *q);
+void sched_removeq(struct xnsched_mlq *q,
+		   struct xnthread *thread);
 
-struct xnpholder *getmlq(struct xnsched_mlq *q);
+struct xnthread *sched_getq(struct xnsched_mlq *q);
 
-struct xnpholder *nextmlq(struct xnsched_mlq *q,
-			  struct xnpholder *h);
-
-static inline int countmlq(struct xnsched_mlq *q)
-{
-	return q->elems;
-}
-
-static inline int emptymlq_p(struct xnsched_mlq *q)
+static inline int sched_emptyq_p(struct xnsched_mlq *q)
 {
 	return q->himap == 0;
 }
 
-static inline int indexmlq(struct xnsched_mlq *q, int prio)
-{
-	XENO_ASSERT(QUEUES,
-		    prio >= q->loprio && prio <= q->hiprio,
-		    xnpod_fatal("priority level %d is out of range ", prio));
-	/*
-	 * BIG FAT WARNING: We need to rescale the priority level to a
-	 * 0-based range. We use ffnz() to scan the bitmap which MUST
-	 * be based on a bit scan forward op. Therefore, the lower the
-	 * index value, the higher the priority (since least
-	 * significant bits will be found first when scanning the
-	 * bitmaps).
-	 */
-	return q->hiprio - prio;
-}
-
-static inline int ffsmlq(struct xnsched_mlq *q)
-{
-	int hi = ffnz(q->himap);
-	int lo = ffnz(q->lomap[hi]);
-	return hi * BITS_PER_LONG + lo;	/* Result is undefined if none set. */
-}
-
-static inline void insertmlql(struct xnsched_mlq *q,
-			      struct xnpholder *holder, int prio)
-{
-	addmlq(q, holder, indexmlq(q, prio), 1);
-}
-
-static inline void insertmlqf(struct xnsched_mlq *q,
-			      struct xnpholder *holder, int prio)
-{
-	addmlq(q, holder, indexmlq(q, prio), 0);
-}
-
-static inline void appendmlq(struct xnsched_mlq *q, struct xnpholder *holder)
-{
-	addmlq(q, holder, indexmlq(q, q->hiprio), 0);
-}
-
-static inline void prependmlq(struct xnsched_mlq *q, struct xnpholder *holder)
-{
-	addmlq(q, holder, indexmlq(q, q->loprio), 1);
-}
-
 typedef struct xnsched_mlq xnsched_queue_t;
-
-#define sched_initpq		initmlq
-#define sched_emptypq_p		emptymlq_p
-#define sched_insertpql		insertmlql
-#define sched_insertpqf		insertmlqf
-#define sched_appendpq		appendmlq
-#define sched_prependpq		prependmlq
-#define sched_removepq		removemlq
-#define sched_getheadpq		getheadmlq
-#define sched_nextpq		nextmlq
-#define sched_getpq		getmlq
-#define sched_findpqh		findmlqh
 
 #else /* ! CONFIG_XENO_OPT_SCALABLE_SCHED */
 
-typedef xnpqueue_t xnsched_queue_t;
+typedef struct list_head xnsched_queue_t;
 
-#define sched_initpq(q, minp, maxp)	initpq(q)
-#define sched_emptypq_p			emptypq_p
-#define sched_insertpql			insertpql
-#define sched_insertpqf			insertpqf
-#define sched_appendpq			appendpq
-#define sched_prependpq			prependpq
-#define sched_removepq			removepq
-#define sched_getheadpq			getheadpq
-#define sched_nextpq			nextpq
-#define sched_getpq			getpq
-#define sched_findpqh			findpqh
+#define sched_initq(__q, __minp, __maxp)	INIT_LIST_HEAD(__q)
+#define sched_emptyq_p(__q)			list_empty(__q)
+#define sched_insertqlf(__q, __t)		list_add_prilf(__t, __q, cprio, rlink)
+#define sched_insertqff(__q, __t)		list_add_priff(__t, __q, cprio, rlink)
+#define sched_removeq(__q, __t)			list_del(&(__t)->rlink)
+#define sched_getq(__q)								\
+	({									\
+		struct xnthread *__t = NULL;					\
+		if (!list_empty(__q))						\
+			__t = list_get_entry(__q, struct xnthread, rlink);	\
+		__t;								\
+	})
 
 #endif /* !CONFIG_XENO_OPT_SCALABLE_SCHED */
+
+struct xnthread *sched_findq(xnsched_queue_t *q, int prio);
 
 #endif /* !_COBALT_KERNEL_SCHEDQUEUE_H */

@@ -145,7 +145,7 @@ struct xnthread_user_window {
 
 #ifdef __KERNEL__
 
-#include <linux/sched.h>
+#include <cobalt/kernel/list.h>
 #include <cobalt/kernel/stat.h>
 #include <cobalt/kernel/timer.h>
 #include <cobalt/kernel/registry.h>
@@ -200,7 +200,7 @@ typedef struct xnthread {
 
 #ifdef CONFIG_XENO_OPT_SCHED_TP
 	struct xnsched_tpslot *tps;	/* Current partition slot for TP scheduling */
-	struct xnholder tp_link;	/* Link in per-sched TP thread queue */
+	struct list_head tp_link;	/* Link in per-sched TP thread queue */
 #endif
 #ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
 	struct xnsched_sporadic_data *pss; /* Sporadic scheduling data. */
@@ -210,18 +210,22 @@ typedef struct xnthread {
 
 	cpumask_t affinity;	/* Processor affinity. */
 
-	int bprio;			/* Base priority (before PIP boost) */
+	int bprio;		/* Base priority (before PIP boost) */
 
-	int cprio;			/* Current priority */
+	int cprio;		/* Current priority */
 
 	/**
 	 * Weighted priority (cprio + scheduling class weight).
 	 */
 	int wprio;
 
-	u_long schedlck;		/*!< Scheduler lock count. */
+	u_long schedlck;	/** Scheduler lock count. */
 
-	xnpholder_t rlink;		/* Thread holder in ready queue */
+	/**
+	 * Thread holder in xnsched runnable queue. Prioritized by
+	 * thread->cprio.
+	 */
+	struct list_head rlink;
 
 	/**
 	 * Thread holder in xnsynch pendq. Prioritized by

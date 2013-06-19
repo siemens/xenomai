@@ -26,7 +26,8 @@
 
 static void xnsched_rt_init(struct xnsched *sched)
 {
-	sched_initpq(&sched->rt.runnable, XNSCHED_RT_MIN_PRIO, XNSCHED_RT_MAX_PRIO);
+	sched_initq(&sched->rt.runnable,
+		    XNSCHED_RT_MIN_PRIO, XNSCHED_RT_MAX_PRIO);
 }
 
 static void xnsched_rt_requeue(struct xnthread *thread)
@@ -59,9 +60,8 @@ static void xnsched_rt_rotate(struct xnsched *sched,
 			      const union xnsched_policy_param *p)
 {
 	struct xnthread *thread, *curr;
-	struct xnpholder *h;
 
-	if (sched_emptypq_p(&sched->rt.runnable))
+	if (sched_emptyq_p(&sched->rt.runnable))
 		return;	/* No runnable thread in this class. */
 
 	curr = sched->curr;
@@ -69,10 +69,9 @@ static void xnsched_rt_rotate(struct xnsched *sched,
 	if (p->rt.prio == XNSCHED_RUNPRIO)
 		thread = curr;
 	else {
-		h = sched_findpqh(&sched->rt.runnable, p->rt.prio);
-		if (h == NULL)
+		thread = sched_findq(&sched->rt.runnable, p->rt.prio);
+		if (thread == NULL)
 			return;
-		thread = link2thread(h, rlink);
 	}
 
 	/*

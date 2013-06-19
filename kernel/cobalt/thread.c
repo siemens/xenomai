@@ -181,7 +181,6 @@ int xnthread_init(struct xnthread *thread,
 	thread->cookie = NULL;
 
 	inith(&thread->glink);
-	initph(&thread->rlink);
 	thread->selector = NULL;
 	INIT_LIST_HEAD(&thread->claimq);
 
