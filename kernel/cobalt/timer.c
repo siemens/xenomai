@@ -196,29 +196,33 @@ enqueue:
 
 void xntimer_adjust_all(xnsticks_t delta)
 {
+	struct xntimer *timer, *tmp;
+	struct list_head adjq;
+	struct xnsched *sched;
+	xntimerh_t *holder;
+	xntimerq_it_t it;
 	unsigned int cpu;
-	xnqueue_t adjq;
+	xntimerq_t *q;
 
-	initq(&adjq);
+	INIT_LIST_HEAD(&adjq);
 	delta = xnarch_ns_to_tsc(delta);
-	for_each_online_cpu (cpu) {
-		xnsched_t *sched = xnpod_sched_slot(cpu);
-		xntimerq_t *q = &sched->timerqueue;
-		xnholder_t *adjholder;
-		xntimerh_t *holder;
-		xntimerq_it_t it;
+
+	for_each_online_cpu(cpu) {
+		sched = xnpod_sched_slot(cpu);
+		q = &sched->timerqueue;
 
 		for (holder = xntimerq_it_begin(q, &it); holder;
 		     holder = xntimerq_it_next(q, &it, holder)) {
-			xntimer_t *timer = aplink2timer(holder);
-			if (testbits(timer->status, XNTIMER_REALTIME)) {
-				inith(&timer->adjlink);
-				appendq(&adjq, &timer->adjlink);
-			}
+			timer = aplink2timer(holder);
+			if (testbits(timer->status, XNTIMER_REALTIME))
+				list_add_tail(&timer->adjlink, &adjq);
 		}
 
-		while ((adjholder = getq(&adjq))) {
-			xntimer_t *timer = adjlink2timer(adjholder);
+		if (list_empty(&adjq))
+			continue;
+
+		list_for_each_entry_safe(timer, tmp, &adjq, adjlink) {
+			list_del(&timer->adjlink);
 			xntimer_dequeue(timer);
 			xntimer_adjust(timer, delta);
 		}

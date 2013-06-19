@@ -27,7 +27,7 @@
 
 #include <cobalt/kernel/clock.h>
 #include <cobalt/kernel/stat.h>
-#include <cobalt/kernel/queue.h>
+#include <cobalt/kernel/list.h>
 
 #ifndef CONFIG_XENO_OPT_DEBUG_TIMERS
 #define CONFIG_XENO_OPT_DEBUG_TIMERS  0
@@ -61,48 +61,57 @@
 
 #define XNTIMER_KEEPER_ID 0
 
-typedef struct {
-	xnholder_t link;
+struct xntlholder {
+	struct list_head link;
 	xnticks_t key;
 	int prio;
-
-#define link2tlholder(ln)	container_of(ln, xntlholder_t, link)
-
-} xntlholder_t;
+};
 
 #define xntlholder_date(h)	((h)->key)
 #define xntlholder_prio(h)	((h)->prio)
-#define xntlholder_init(h)	inith(&(h)->link)
-#define xntlist_init(q)	initq(q)
-#define xntlist_head(q)			\
-	({ xnholder_t *_h = getheadq(q);	\
-		!_h ? NULL : link2tlholder(_h);	\
+#define xntlist_init(q)		INIT_LIST_HEAD(q)
+#define xntlist_head(q)							\
+	({								\
+		struct xntlholder *h = list_empty(q) ? NULL :		\
+			list_first_entry(q, struct xntlholder, link);	\
+		h;							\
 	})
 
-#define xntlist_next(q, h) \
-	({ xnholder_t *_h = nextq(q, &(h)->link);	\
-		!_h ? NULL : link2tlholder(_h);		\
+#define xntlist_next(q, h)						\
+	({								\
+		struct xntlholder *_h = list_is_last(&h->link, q) ? NULL : \
+			list_entry(h->link.next, struct xntlholder, link); \
+		_h;							\
 	})
 
-static inline void xntlist_insert(xnqueue_t *q, xntlholder_t *holder)
+static inline void xntlist_insert(struct list_head *q, struct xntlholder *holder)
 {
-	xnholder_t *p;
+	struct xntlholder *p;
+
+	if (list_empty(q)) {
+		list_add(&holder->link, q);
+		return;
+	}
 
 	/*
 	 * Insert the new timer at the proper place in the single
 	 * queue. O(N) here, but this is the price for the increased
 	 * flexibility...
 	 */
-	for (p = q->head.last; p != &q->head; p = p->last)
-		if ((xnsticks_t) (holder->key - link2tlholder(p)->key) > 0 ||
-		    (holder->key == link2tlholder(p)->key &&
-		     holder->prio <= link2tlholder(p)->prio))
-			break;
+	list_for_each_entry_reverse(p, q, link) {
+		if ((xnsticks_t) (holder->key - p->key) > 0 ||
+		    (holder->key == p->key && holder->prio <= p->prio))
+		  break;
+	}
 
-	insertq(q,p->next,&holder->link);
+	list_add(&holder->link, &p->link);
 }
 
-#define xntlist_remove(q, h)  removeq((q),&(h)->link)
+#define xntlist_remove(q, h)			\
+	do {					\
+		(void)(q);			\
+		list_del(&(h)->link);		\
+	} while (0)
 
 #if defined(CONFIG_XENO_OPT_TIMER_HEAP)
 
@@ -129,43 +138,43 @@ typedef struct {} xntimerq_it_t;
 
 #elif defined(CONFIG_XENO_OPT_TIMER_WHEEL)
 
-typedef xntlholder_t xntimerh_t;
+typedef struct xntlholder xntimerh_t;
 
 #define xntimerh_date(h)       xntlholder_date(h)
 #define xntimerh_prio(h)       xntlholder_prio(h)
-#define xntimerh_init(h)       xntlholder_init(h)
+#define xntimerh_init(h)       do { } while (0)
 
 typedef struct xntimerq {
-	unsigned date_shift;
+	unsigned int date_shift;
 	unsigned long long next_shot;
 	unsigned long long shot_wrap;
-	xnqueue_t bucket[XNTIMER_WHEELSIZE];
+	struct list_head bucket[XNTIMER_WHEELSIZE];
 } xntimerq_t;
 
 typedef struct xntimerq_it {
-	unsigned bucket;
+	unsigned int bucket;
 } xntimerq_it_t;
 
 static inline void xntimerq_init(xntimerq_t *q)
 {
 	unsigned long long step_tsc;
-	unsigned i;
+	unsigned int i;
 
 	step_tsc = xnarch_ns_to_tsc(CONFIG_XENO_OPT_TIMER_WHEEL_STEP);
 	/* q->date_shift = fls(step_tsc); */
 	for (q->date_shift = 0; (1 << q->date_shift) < step_tsc; q->date_shift++)
 		;
 	q->next_shot = q->shot_wrap = ((~0ULL) >> q->date_shift) + 1;
-	for (i = 0; i < sizeof(q->bucket)/sizeof(xnqueue_t); i++)
+	for (i = 0; i < ARRAY_SIZE(q->bucket); i++)
 		xntlist_init(&q->bucket[i]);
 }
 
 #define xntimerq_destroy(q)    do { } while (0)
 
-static inline xntlholder_t *xntimerq_head(xntimerq_t *q)
+static inline struct xntlholder *xntimerq_head(xntimerq_t *q)
 {
 	unsigned bucket = ((unsigned) q->next_shot) & XNTIMER_WHEELMASK;
-	xntlholder_t *result;
+	struct xntlholder *result;
 	unsigned i;
 
 	if (q->next_shot == q->shot_wrap)
@@ -180,7 +189,7 @@ static inline xntlholder_t *xntimerq_head(xntimerq_t *q)
 	   the other buckets. */
 	for (i = (bucket + 1) & XNTIMER_WHEELMASK ;
 	     i != bucket; i = (i + 1) & XNTIMER_WHEELMASK) {
-		xntlholder_t *candidate = xntlist_head(&q->bucket[i]);
+		struct xntlholder *candidate = xntlist_head(&q->bucket[i]);
 
 		if(++q->next_shot == q->shot_wrap)
 			q->next_shot = 0;
@@ -206,10 +215,11 @@ static inline xntlholder_t *xntimerq_head(xntimerq_t *q)
 static inline void xntimerq_insert(xntimerq_t *q, xntimerh_t *h)
 {
 	unsigned long long shifted_date = xntlholder_date(h) >> q->date_shift;
-	unsigned bucket = ((unsigned) shifted_date) & XNTIMER_WHEELMASK;
+	unsigned int bucket = ((unsigned int)shifted_date) & XNTIMER_WHEELMASK;
 
 	if ((long long) (shifted_date - q->next_shot) < 0)
 		q->next_shot = shifted_date;
+
 	xntlist_insert(&q->bucket[bucket], h);
 }
 
@@ -248,13 +258,13 @@ xntimerq_it_next(xntimerq_t *q, xntimerq_it_t *it, xntimerh_t *holder)
 
 #else /* CONFIG_XENO_OPT_TIMER_LIST */
 
-typedef xntlholder_t xntimerh_t;
+typedef struct xntlholder xntimerh_t;
 
-#define xntimerh_date(h)        xntlholder_date(h)
-#define xntimerh_prio(h)        xntlholder_prio(h)
-#define xntimerh_init(h)        xntlholder_init(h)
+#define xntimerh_date(h)       xntlholder_date(h)
+#define xntimerh_prio(h)       xntlholder_prio(h)
+#define xntimerh_init(h)       do { } while (0)
 
-typedef xnqueue_t xntimerq_t;
+typedef struct list_head xntimerq_t;
 
 #define xntimerq_init(q)        xntlist_init(q)
 #define xntimerq_destroy(q)     do { } while (0)
@@ -262,7 +272,7 @@ typedef xnqueue_t xntimerq_t;
 #define xntimerq_insert(q,h)    xntlist_insert((q),(h))
 #define xntimerq_remove(q, h)   xntlist_remove((q),(h))
 
-typedef struct {} xntimerq_it_t;
+typedef struct { } xntimerq_it_t;
 
 #define xntimerq_it_begin(q,i)  ((void) (i), xntlist_head(q))
 #define xntimerq_it_next(q,i,h) ((void) (i), xntlist_next((q),(h)))
@@ -276,8 +286,7 @@ typedef struct xntimer {
 	xntimerh_t aplink;	/* Link in timers list. */
 #define aplink2timer(ln) container_of(ln, xntimer_t, aplink)
 
-	xnholder_t adjlink;
-#define adjlink2timer(ln) container_of(ln, xntimer_t, adjlink)
+	struct list_head adjlink;
 
 	xnflags_t status;	/* !< Timer status. */
 
