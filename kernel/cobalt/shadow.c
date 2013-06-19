@@ -813,8 +813,8 @@ int xnshadow_map_user(struct xnthread *thread,
 	struct task_struct *p = current;
 	struct xnthread_start_attr attr;
 	struct xnsys_ppd *sys_ppd;
+	struct xnheap *sem_heap;
 	cpumask_t affinity;
-	xnheap_t *sem_heap;
 	spl_t s;
 	int ret;
 

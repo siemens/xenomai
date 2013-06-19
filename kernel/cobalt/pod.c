@@ -225,7 +225,7 @@ void xnpod_schedule_deferred(void)
 		xnpod_schedule();
 }
 
-static void xnpod_flush_heap(xnheap_t *heap,
+static void xnpod_flush_heap(struct xnheap *heap,
 			     void *extaddr, u_long extsize, void *cookie)
 {
 	free_pages_exact(extaddr, extsize);

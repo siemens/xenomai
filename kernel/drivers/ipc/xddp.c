@@ -46,8 +46,8 @@ struct xddp_socket {
 
 	struct xddp_message *buffer;
 	int buffer_port;
-	xnheap_t *bufpool;
-	xnheap_t privpool;
+	struct xnheap *bufpool;
+	struct xnheap privpool;
 	size_t fillsz;
 	size_t curbufsz;	/* Current streaming buffer size */
 	u_long status;
@@ -110,7 +110,7 @@ static struct xnpnode_link __xddp_pnode = {
 
 #endif /* !CONFIG_XENO_OPT_VFILE */
 
-static void __xddp_flush_pool(xnheap_t *heap,
+static void __xddp_flush_pool(struct xnheap *heap,
 			      void *poolmem, u_long poolsz, void *cookie)
 {
 	free_pages_exact(poolmem, poolsz);

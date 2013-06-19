@@ -83,11 +83,9 @@ struct xnextent {
 	struct xnpagemap pagemap[1];
 };
 
-typedef struct xnheap {
+struct xnheap {
 
 	xnholder_t link;
-
-#define link2heap(ln)		container_of(ln, xnheap_t, link)
 
 	u_long extentsize,
 		pagesize,
@@ -118,13 +116,13 @@ typedef struct xnheap {
 	/* Callback upon last munmap. */
 	void (*release)(struct xnheap *heap);
 
-	xnholder_t stat_link;	/* Link in heapq */
+	/** Link in heapq */
+	struct list_head stat_link;
 
 	char label[XNOBJECT_NAME_LEN+16];
+};
 
-} xnheap_t;
-
-extern xnheap_t kheap;
+extern struct xnheap kheap;
 
 #define xnheap_extentsize(heap)		((heap)->extentsize)
 #define xnheap_page_size(heap)		((heap)->pagesize)
@@ -190,11 +188,11 @@ void xnheap_init_proc(void);
 
 void xnheap_cleanup_proc(void);
 
-int xnheap_init_mapped(xnheap_t *heap,
+int xnheap_init_mapped(struct xnheap *heap,
 		       u_long heapsize,
 		       int memflags);
 
-void xnheap_destroy_mapped(xnheap_t *heap,
+void xnheap_destroy_mapped(struct xnheap *heap,
 			   void (*release)(struct xnheap *heap),
 			   void __user *mapaddr);
 
@@ -214,42 +212,42 @@ void xnheap_destroy_mapped(xnheap_t *heap,
 
 /* Public interface. */
 
-int xnheap_init(xnheap_t *heap,
+int xnheap_init(struct xnheap *heap,
 		void *heapaddr,
 		u_long heapsize,
 		u_long pagesize);
 
-void xnheap_set_label(xnheap_t *heap, const char *name, ...);
+void xnheap_set_label(struct xnheap *heap, const char *name, ...);
 
-void xnheap_destroy(xnheap_t *heap,
-		    void (*flushfn)(xnheap_t *heap,
+void xnheap_destroy(struct xnheap *heap,
+		    void (*flushfn)(struct xnheap *heap,
 				    void *extaddr,
 				    u_long extsize,
 				    void *cookie),
 		    void *cookie);
 
-int xnheap_extend(xnheap_t *heap,
+int xnheap_extend(struct xnheap *heap,
 		  void *extaddr,
 		  u_long extsize);
 
-void *xnheap_alloc(xnheap_t *heap,
+void *xnheap_alloc(struct xnheap *heap,
 		   u_long size);
 
-int xnheap_test_and_free(xnheap_t *heap,
+int xnheap_test_and_free(struct xnheap *heap,
 			 void *block,
 			 int (*ckfn)(void *block));
 
-int xnheap_free(xnheap_t *heap,
+int xnheap_free(struct xnheap *heap,
 		void *block);
 
-void xnheap_schedule_free(xnheap_t *heap,
+void xnheap_schedule_free(struct xnheap *heap,
 			  void *block,
 			  xnholder_t *link);
 
-void xnheap_finalize_free_inner(xnheap_t *heap,
+void xnheap_finalize_free_inner(struct xnheap *heap,
 				int cpu);
 
-static inline void xnheap_finalize_free(xnheap_t *heap)
+static inline void xnheap_finalize_free(struct xnheap *heap)
 {
 	int cpu = ipipe_processor_id();
 
@@ -261,7 +259,7 @@ static inline void xnheap_finalize_free(xnheap_t *heap)
 		xnheap_finalize_free_inner(heap, cpu);
 }
 
-int xnheap_check_block(xnheap_t *heap,
+int xnheap_check_block(struct xnheap *heap,
 		       void *block);
 
 int xnheap_remap_vm_page(struct vm_area_struct *vma,
