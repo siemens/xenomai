@@ -44,8 +44,7 @@
 
 #ifdef __KERNEL__
 
-#include <linux/mm.h>
-#include <cobalt/kernel/queue.h>
+#include <cobalt/kernel/lock.h>
 #include <cobalt/kernel/list.h>
 
 #define XNHEAP_PAGE_SIZE	512 /* A reasonable value for the xnheap page size */
@@ -84,16 +83,14 @@ struct xnextent {
 };
 
 struct xnheap {
-
-	xnholder_t link;
-
-	u_long extentsize,
-		pagesize,
-		pageshift,
-		hdrsize,
-		npages,		/* Number of pages per extent */
-		ubytes,
-		maxcont;
+	unsigned long extentsize;
+	unsigned long pagesize;
+	unsigned long pageshift;
+	unsigned long hdrsize;
+	/** Number of pages per extent */
+	unsigned long npages;
+	unsigned long ubytes;
+	unsigned long maxcont;
 
 	struct list_head extents;
 	int nrextents;
@@ -105,7 +102,7 @@ struct xnheap {
 		int fcount;
 	} buckets[XNHEAP_NBUCKETS];
 
-	xnholder_t *idleq[NR_CPUS];
+	struct list_head *idleq[NR_CPUS];
 
 	/* # of active user-space mappings. */
 	unsigned long numaps;
@@ -116,10 +113,13 @@ struct xnheap {
 	/* Callback upon last munmap. */
 	void (*release)(struct xnheap *heap);
 
-	/** Link in heapq */
+	/** heapq */
 	struct list_head stat_link;
 
 	char label[XNOBJECT_NAME_LEN+16];
+
+	/** kheap */
+	struct list_head link;
 };
 
 extern struct xnheap kheap;
@@ -189,7 +189,7 @@ void xnheap_init_proc(void);
 void xnheap_cleanup_proc(void);
 
 int xnheap_init_mapped(struct xnheap *heap,
-		       u_long heapsize,
+		       unsigned long heapsize,
 		       int memflags);
 
 void xnheap_destroy_mapped(struct xnheap *heap,
@@ -214,24 +214,24 @@ void xnheap_destroy_mapped(struct xnheap *heap,
 
 int xnheap_init(struct xnheap *heap,
 		void *heapaddr,
-		u_long heapsize,
-		u_long pagesize);
+		unsigned long heapsize,
+		unsigned long pagesize);
 
 void xnheap_set_label(struct xnheap *heap, const char *name, ...);
 
 void xnheap_destroy(struct xnheap *heap,
 		    void (*flushfn)(struct xnheap *heap,
 				    void *extaddr,
-				    u_long extsize,
+				    unsigned long extsize,
 				    void *cookie),
 		    void *cookie);
 
 int xnheap_extend(struct xnheap *heap,
 		  void *extaddr,
-		  u_long extsize);
+		  unsigned long extsize);
 
 void *xnheap_alloc(struct xnheap *heap,
-		   u_long size);
+		   unsigned long size);
 
 int xnheap_test_and_free(struct xnheap *heap,
 			 void *block,
@@ -242,7 +242,7 @@ int xnheap_free(struct xnheap *heap,
 
 void xnheap_schedule_free(struct xnheap *heap,
 			  void *block,
-			  xnholder_t *link);
+			  struct list_head *link);
 
 void xnheap_finalize_free_inner(struct xnheap *heap,
 				int cpu);
@@ -264,6 +264,8 @@ int xnheap_check_block(struct xnheap *heap,
 
 int xnheap_remap_vm_page(struct vm_area_struct *vma,
 			 unsigned long from, unsigned long to);
+
+struct vm_area_struct;
 
 int xnheap_remap_io_page_range(struct file *filp,
 			       struct vm_area_struct *vma,

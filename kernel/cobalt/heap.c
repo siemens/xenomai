@@ -207,7 +207,7 @@ static void init_extent(struct xnheap *heap, struct xnextent *extent)
  */
 
 /*!
- * \fn xnheap_init(struct xnheap *heap,void *heapaddr,u_long heapsize,u_long pagesize)
+ * \fn xnheap_init(struct xnheap *heap,void *heapaddr,unsigned long heapsize,unsigned long pagesize)
  * \brief Initialize a memory heap.
  *
  * Initializes a memory heap suitable for time-bounded allocation
@@ -261,9 +261,9 @@ static void init_extent(struct xnheap *heap, struct xnextent *extent)
  */
 
 int xnheap_init(struct xnheap *heap,
-		void *heapaddr, u_long heapsize, u_long pagesize)
+		void *heapaddr, unsigned long heapsize, unsigned long pagesize)
 {
-	u_long hdrsize, shiftsize, pageshift;
+	unsigned long hdrsize, shiftsize, pageshift;
 	struct xnextent *extent;
 	unsigned int cpu;
 	spl_t s;
@@ -320,9 +320,10 @@ int xnheap_init(struct xnheap *heap,
 
 	heap->ubytes = 0;
 	heap->maxcont = heap->npages * pagesize;
+
 	for_each_online_cpu(cpu)
 		heap->idleq[cpu] = NULL;
-	inith(&heap->link);
+
 	INIT_LIST_HEAD(&heap->extents);
 	heap->nrextents = 1;
 	xnlock_init(&heap->lock);
@@ -386,7 +387,7 @@ void xnheap_set_label(struct xnheap *heap, const char *label, ...)
 EXPORT_SYMBOL_GPL(xnheap_set_label);
 
 /*!
- * \fn void xnheap_destroy(struct xnheap *heap, void (*flushfn)(struct xnheap *heap, void *extaddr, u_long extsize, void *cookie), void *cookie)
+ * \fn void xnheap_destroy(struct xnheap *heap, void (*flushfn)(struct xnheap *heap, void *extaddr, unsigned long extsize, void *cookie), void *cookie)
  * \brief Destroys a memory heap.
  *
  * Destroys a memory heap.
@@ -414,7 +415,7 @@ EXPORT_SYMBOL_GPL(xnheap_set_label);
 void xnheap_destroy(struct xnheap *heap,
 		    void (*flushfn)(struct xnheap *heap,
 				    void *extaddr,
-				    u_long extsize, void *cookie),
+				    unsigned long extsize, void *cookie),
 		    void *cookie)
 {
 	struct xnextent *p, *tmp;
@@ -452,10 +453,10 @@ EXPORT_SYMBOL_GPL(xnheap_destroy);
  * acquired the heap lock.
  */
 
-static caddr_t get_free_range(struct xnheap *heap, u_long bsize, int log2size)
+static caddr_t get_free_range(struct xnheap *heap, unsigned long bsize, int log2size)
 {
 	caddr_t block, eblock, freepage, lastpage, headpage, freehead = NULL;
-	u_long pagenum, pagecont, freecont;
+	unsigned long pagenum, pagecont, freecont;
 	struct xnextent *extent;
 
 	if (list_empty(&heap->extents))
@@ -546,7 +547,7 @@ splitpage:
 }
 
 /*!
- * \fn void *xnheap_alloc(struct xnheap *heap, u_long size)
+ * \fn void *xnheap_alloc(struct xnheap *heap, unsigned long size)
  * \brief Allocate a memory block from a memory heap.
  *
  * Allocates a contiguous region of memory from an active memory heap.
@@ -577,13 +578,12 @@ splitpage:
  * Rescheduling: never.
  */
 
-void *xnheap_alloc(struct xnheap *heap, u_long size)
+void *xnheap_alloc(struct xnheap *heap, unsigned long size)
 {
+	unsigned long pagenum, bsize;
 	struct xnextent *extent;
 	int log2size, ilog;
-	u_long pagenum;
 	caddr_t block;
-	u_long bsize;
 	spl_t s;
 
 	if (size == 0)
@@ -724,7 +724,7 @@ int xnheap_test_and_free(struct xnheap *heap, void *block, int (*ckfn) (void *bl
 {
 	caddr_t freepage, lastpage, nextpage, tailpage, freeptr, *tailptr;
 	int log2size, npages, ret, nblocks, xpage, ilog;
-	u_long pagenum, pagecont, boffset, bsize;
+	unsigned long pagenum, pagecont, boffset, bsize;
 	struct xnextent *extent;
 	spl_t s;
 
@@ -942,7 +942,7 @@ int xnheap_free(struct xnheap *heap, void *block)
 EXPORT_SYMBOL_GPL(xnheap_free);
 
 /*!
- * \fn int xnheap_extend(struct xnheap *heap, void *extaddr, u_long extsize)
+ * \fn int xnheap_extend(struct xnheap *heap, void *extaddr, unsigned long extsize)
  * \brief Extend a memory heap.
  *
  * Add a new extent to an existing memory heap.
@@ -970,7 +970,7 @@ EXPORT_SYMBOL_GPL(xnheap_free);
  * Rescheduling: never.
  */
 
-int xnheap_extend(struct xnheap *heap, void *extaddr, u_long extsize)
+int xnheap_extend(struct xnheap *heap, void *extaddr, unsigned long extsize)
 {
 	struct xnextent *extent = extaddr;
 	spl_t s;
@@ -989,10 +989,10 @@ int xnheap_extend(struct xnheap *heap, void *extaddr, u_long extsize)
 EXPORT_SYMBOL_GPL(xnheap_extend);
 
 /*!
- * \fn int xnheap_schedule_free(struct xnheap *heap, void *block, xnholder_t *link)
+ * \fn int xnheap_schedule_free(struct xnheap *heap, void *block, struct list_head *link)
  * \brief Schedule a memory block for release.
  *
- * This routine records a block for later release by
+ * This routine schedules a block for release by
  * xnheap_finalize_free(). This service is useful to lazily free
  * blocks of heap memory when immediate release is not an option,
  * e.g. when active references are still pending on the object for a
@@ -1021,9 +1021,9 @@ EXPORT_SYMBOL_GPL(xnheap_extend);
  * Rescheduling: never.
  */
 
-void xnheap_schedule_free(struct xnheap *heap, void *block, xnholder_t *link)
+void xnheap_schedule_free(struct xnheap *heap, void *block, struct list_head *link)
 {
-	unsigned cpu;
+	unsigned int cpu;
 	spl_t s;
 
 	xnlock_get_irqsave(&heap->lock, s);
@@ -1034,7 +1034,7 @@ void xnheap_schedule_free(struct xnheap *heap, void *block, xnholder_t *link)
 	 * freed memory.
 	 */
 	cpu = ipipe_processor_id();
-	link->last = (xnholder_t *)block;
+	link->prev = block;
 	link->next = heap->idleq[cpu];
 	heap->idleq[cpu] = link;
 	xnlock_put_irqrestore(&heap->lock, s);
@@ -1043,20 +1043,20 @@ EXPORT_SYMBOL_GPL(xnheap_schedule_free);
 
 void xnheap_finalize_free_inner(struct xnheap *heap, int cpu)
 {
-	xnholder_t *holder;
+	struct list_head *link;
 
-	while ((holder = heap->idleq[cpu]) != NULL) {
-		heap->idleq[cpu] = holder->next;
-		xnheap_free(heap, holder->last);
+	while ((link = heap->idleq[cpu]) != NULL) {
+		heap->idleq[cpu] = link->next;
+		xnheap_free(heap, link->prev);
 	}
 }
 EXPORT_SYMBOL_GPL(xnheap_finalize_free_inner);
 
 int xnheap_check_block(struct xnheap *heap, void *block)
 {
+	unsigned long pagenum, boffset;
 	int ptype, ret = -EINVAL;
 	struct xnextent *extent;
-	u_long pagenum, boffset;
 	spl_t s;
 
 	xnlock_get_irqsave(&heap->lock, s);
@@ -1100,7 +1100,7 @@ EXPORT_SYMBOL_GPL(xnheap_check_block);
 #include <linux/fs.h>
 #include <linux/spinlock.h>
 
-static DEFINE_XNQUEUE(kheapq);	/* Shared heap queue. */
+static LIST_HEAD(kheapq);	/* Shared heap queue. */
 static DEFINE_SPINLOCK(kheapq_lock);
 
 static inline void *__alloc_and_reserve_heap(size_t size, int kmflags)
@@ -1184,7 +1184,7 @@ static void xnheap_vmclose(struct vm_area_struct *vma)
 	spin_lock(&kheapq_lock);
 
 	if (--heap->numaps == 0 && heap->release) {
-		removeq(&kheapq, &heap->link);
+		list_del(&heap->link);
 		spin_unlock(&kheapq_lock);
 		__unreserve_and_free_heap(heap->heapbase,
 					  xnheap_extentsize(heap),
@@ -1210,10 +1210,11 @@ static int xnheap_open(struct inode *inode, struct file *file)
 static inline struct xnheap *__validate_heap_addr(void *addr)
 {
 	struct xnheap *heap;
-	struct xnholder *h;
 
-	for (h = getheadq(&kheapq); h; h = nextq(&kheapq, h)) {
-		heap = container_of(h, struct xnheap, link);
+	if (list_empty(&kheapq))
+		return NULL;
+
+	list_for_each_entry(heap, &kheapq, link) {
 		if (heap == addr && heap->release == NULL)
 			return heap;
 	}
@@ -1356,7 +1357,7 @@ fail:
 #define xnheap_get_unmapped_area  NULL
 #endif /* CONFIG_MMU */
 
-int xnheap_init_mapped(struct xnheap *heap, u_long heapsize, int memflags)
+int xnheap_init_mapped(struct xnheap *heap, unsigned long heapsize, int memflags)
 {
 	void *heapbase;
 	int err;
@@ -1382,7 +1383,7 @@ int xnheap_init_mapped(struct xnheap *heap, u_long heapsize, int memflags)
 	heap->heapbase = heapbase;
 
 	spin_lock(&kheapq_lock);
-	appendq(&kheapq, &heap->link);
+	list_add_tail(&heap->link, &kheapq);
 	spin_unlock(&kheapq_lock);
 
 	return 0;
@@ -1451,7 +1452,7 @@ void xnheap_destroy_mapped(struct xnheap *heap,
 	 * been removed, because __validate_heap_addr() will deny
 	 * access to heaps pending a release.
 	 */
-	removeq(&kheapq, &heap->link);
+	list_del(&heap->link);
 
 	spin_unlock(&kheapq_lock);
 
