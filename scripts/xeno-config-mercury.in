@@ -13,10 +13,10 @@ XENO_VERSION="@PACKAGE_VERSION@"
 XENO_PREFIX="${staging}${prefix}"
 XENO_CC="@CC@"
 XENO_TARGET_ARCH="@XENO_BUILD_STRING@"
-XENO_BASE_CFLAGS="-I${staging}${includedir} @XENO_USER_APP_CFLAGS@ -D__MERCURY__"
+XENO_INCLUDE_DIR="${staging}${includedir}"
+XENO_BASE_CFLAGS="-I$XENO_INCLUDE_DIR @XENO_USER_APP_CFLAGS@ -D__MERCURY__"
 XENO_BASE_LDFLAGS="-L${staging}${libdir} @XENO_USER_APP_LDFLAGS@ -lcopperplate -lpthread -lrt"
 XENO_LIBRARY_DIR="${staging}${libdir}"
-XENO_INCLUDE_DIR="${staging}${includedir}"
 
 unset prefix exec_prefix libdir datadir datarootdir pkgdatadir includedir skin_list
 
@@ -90,7 +90,7 @@ while test $# -gt 0; do
 		echo "no skin specified, missing --skin before --cflags" 1>&2
 		exit 1
 	    fi
-	    cflags="$XENO_BASE_CFLAGS -I$XENO_INCLUDE_DIR"
+	    cflags="$XENO_BASE_CFLAGS"
 	    for skin in $skin_list; do
 		case "$skin" in
 		    vxworks|psos|alchemy)
