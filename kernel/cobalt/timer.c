@@ -616,12 +616,12 @@ void __xntimer_init(xntimer_t *timer, void (*handler) (xntimer_t *timer))
 		xnobject_copy_name(timer->name,
 				   xnpod_current_thread()->name);
 
-	inith(&timer->tblink);
 	xnstat_counter_set(&timer->scheduled, 0);
 	xnstat_counter_set(&timer->fired, 0);
 
 	xnlock_get_irqsave(&nklock, s);
-	appendq(&nkclock.timerq, &timer->tblink);
+	list_add_tail(&timer->tblink, &nkclock.timerq);
+	nkclock.nrtimers++;
 	xnvfile_touch(&nkclock.vfile);
 	xnlock_put_irqrestore(&nklock, s);
 #else
@@ -662,7 +662,8 @@ void xntimer_destroy(xntimer_t *timer)
 	__setbits(timer->status, XNTIMER_KILLED);
 	timer->sched = NULL;
 #ifdef CONFIG_XENO_OPT_STATS
-	removeq(&nkclock.timerq, &timer->tblink);
+	list_del(&timer->tblink);
+	nkclock.nrtimers--;
 	xnvfile_touch(&nkclock.vfile);
 #endif /* CONFIG_XENO_OPT_STATS */
 	xnlock_put_irqrestore(&nklock, s);

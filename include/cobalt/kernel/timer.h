@@ -23,10 +23,11 @@
 #ifndef _COBALT_KERNEL_TIMER_H
 #define _COBALT_KERNEL_TIMER_H
 
+#ifdef __KERNEL__
+
 #include <cobalt/kernel/clock.h>
 #include <cobalt/kernel/stat.h>
-
-#ifdef __KERNEL__
+#include <cobalt/kernel/queue.h>
 
 #ifndef CONFIG_XENO_OPT_DEBUG_TIMERS
 #define CONFIG_XENO_OPT_DEBUG_TIMERS  0
@@ -291,12 +292,8 @@ typedef struct xntimer {
 
 #ifdef CONFIG_XENO_OPT_STATS
 	char name[XNOBJECT_NAME_LEN]; /* !< Timer name to be displayed. */
-
 	const char *handler_name; /* !< Handler name to be displayed. */
-
-	xnholder_t tblink;	/* !< Timer holder in timebase. */
-
-#define tblink2timer(ln)	container_of(ln, xntimer_t, tblink)
+	struct list_head tblink; /* !< Timer holder in timebase. */
 #endif /* CONFIG_XENO_OPT_STATS */
 
 	xnstat_counter_t scheduled; /* !< Number of timer schedules. */

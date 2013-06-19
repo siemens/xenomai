@@ -28,7 +28,7 @@
 
 #ifdef __KERNEL__
 
-#include <cobalt/kernel/queue.h>
+#include <cobalt/kernel/list.h>
 #include <cobalt/kernel/vfile.h>
 #include <asm-generic/xenomai/timeconv.h>
 
@@ -40,7 +40,8 @@ struct xnclock {
 #ifdef CONFIG_XENO_OPT_STATS
 	struct xnvfile_snapshot vfile;
 	struct xnvfile_rev_tag revtag;
-	struct xnqueue timerq;
+	struct list_head timerq;
+	int nrtimers;
 #endif /* CONFIG_XENO_OPT_STATS */
 };
 

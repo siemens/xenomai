@@ -87,7 +87,7 @@ EXPORT_SYMBOL_GPL(xnclock_read_monotonic);
 static struct xnvfile_snapshot_ops tmstat_vfile_ops;
 
 struct tmstat_vfile_priv {
-	struct xnholder *curr;
+	struct xntimer *curr;
 };
 
 struct tmstat_vfile_data {
@@ -105,9 +105,14 @@ static int tmstat_vfile_rewind(struct xnvfile_snapshot_iterator *it)
 {
 	struct tmstat_vfile_priv *priv = xnvfile_iterator_priv(it);
 
-	priv->curr = getheadq(&nkclock.timerq);
+	if (list_empty(&nkclock.timerq)) {
+		priv->curr = NULL;
+		return 0;
+	}
 
-	return countq(&nkclock.timerq);
+	priv->curr = list_first_entry(&nkclock.timerq, struct xntimer, tblink);
+
+	return nkclock.nrtimers;
 }
 
 static int tmstat_vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
@@ -119,8 +124,12 @@ static int tmstat_vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
 	if (priv->curr == NULL)
 		return 0;
 
-	timer = tblink2timer(priv->curr);
-	priv->curr = nextq(&nkclock.timerq, priv->curr);
+	timer = priv->curr;
+	if (list_is_last(&timer->tblink, &nkclock.timerq))
+		priv->curr = NULL;
+	else
+		priv->curr = list_entry(timer->tblink.next,
+					struct xntimer, tblink);
 
 	if (xnstat_counter_get(&timer->scheduled) == 0)
 		return VFILE_SEQ_SKIP;
@@ -197,7 +206,7 @@ void xnclock_cleanup_proc(void)
 
 struct xnclock nkclock = {
 #ifdef CONFIG_XENO_OPT_STATS
-	.timerq = XNQUEUE_INITIALIZER(nkclock.timerq),
+	.timerq = LIST_HEAD_INIT(nkclock.timerq),
 #endif /* CONFIG_XENO_OPT_STATS */
 };
 EXPORT_SYMBOL_GPL(nkclock);
