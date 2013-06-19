@@ -184,7 +184,7 @@ static void __xddp_free_handler(void *buf, void *skarg) /* nklock free */
 	rtdm_lock_put_irqrestore(&sk->lock, lockctx);
 }
 
-static void __xddp_output_handler(xnpipe_mh_t *mh, void *skarg) /* nklock held */
+static void __xddp_output_handler(struct xnpipe_mh *mh, void *skarg) /* nklock held */
 {
 	struct xddp_socket *sk = skarg;
 
@@ -192,7 +192,7 @@ static void __xddp_output_handler(xnpipe_mh_t *mh, void *skarg) /* nklock held *
 		sk->monitor(sk->fd, XDDP_EVTOUT, xnpipe_m_size(mh));
 }
 
-static int __xddp_input_handler(xnpipe_mh_t *mh, int retval, void *skarg) /* nklock held */
+static int __xddp_input_handler(struct xnpipe_mh *mh, int retval, void *skarg) /* nklock held */
 {
 	struct xddp_socket *sk = skarg;
 

@@ -50,4 +50,7 @@ do {										\
 	  __item;						\
   })
 
+#define list_next_entry(__item, __member)			\
+	list_entry((__item)->__member.next, typeof(*(__item)), __member)
+
 #endif /* !_COBALT_KERNEL_LIST_H_ */

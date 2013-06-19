@@ -40,7 +40,6 @@
 
 #ifdef __KERNEL__
 
-#include <cobalt/kernel/queue.h>
 #include <cobalt/kernel/synch.h>
 #include <cobalt/kernel/thread.h>
 #include <linux/types.h>
@@ -61,18 +60,11 @@
 #define XNPIPE_USER_ALL_READY \
 (XNPIPE_USER_WREAD_READY|XNPIPE_USER_WSYNC_READY)
 
-typedef struct xnpipe_mh {
-
-	struct xnholder link;
-	unsigned size;
-	unsigned rdoff;
-
-} xnpipe_mh_t;
-
-static inline xnpipe_mh_t *link2mh(struct xnholder *ln)
-{
-	return ln ? container_of(ln, xnpipe_mh_t, link) : NULL;
-}
+struct xnpipe_mh {
+	size_t size;
+	size_t rdoff;
+	struct list_head link;
+};
 
 struct xnpipe_state;
 
@@ -86,13 +78,13 @@ struct xnpipe_operations {
 };
 
 struct xnpipe_state {
+	struct list_head slink;	/* Link on sleep queue */
+	struct list_head alink;	/* Link on async queue */
 
-	struct xnholder slink;	/* Link on sleep queue */
-	struct xnholder alink;	/* Link on async queue */
-#define link2xnpipe(ln, fld)	container_of(ln, struct xnpipe_state, fld)
-
-	struct xnqueue inq;		/* From user-space to kernel */
-	struct xnqueue outq;		/* From kernel to user-space */
+	struct list_head inq;		/* From user-space to kernel */
+	int nrinq;
+	struct list_head outq;		/* From kernel to user-space */
+	int nroutq;
 	struct xnsynch synchbase;
 	struct xnpipe_operations ops;
 	void *xstate;		/* Extra state managed by caller */
@@ -104,7 +96,6 @@ struct xnpipe_state {
 	wait_queue_head_t syncq;	/* sync waiters */
 	int wcount;			/* number of waiters on this minor */
 	size_t ionrd;
-
 };
 
 extern struct xnpipe_state xnpipe_states[];
@@ -132,12 +123,7 @@ ssize_t xnpipe_recv(int minor,
 
 int xnpipe_flush(int minor, int mode);
 
-static inline struct xnholder *xnpipe_m_link(xnpipe_mh_t *mh)
-{
-	return &mh->link;
-}
-
-static inline char *xnpipe_m_data(xnpipe_mh_t *mh)
+static inline char *xnpipe_m_data(struct xnpipe_mh *mh)
 {
 	return (char *)(mh + 1);
 }
