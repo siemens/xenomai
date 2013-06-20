@@ -93,12 +93,12 @@ static void fail(const char *reason)
 	exit(EXIT_FAILURE);
 }
 
-void *realtime_thread1(void *arg)
+static void *realtime_thread1(void *arg)
 {
 	struct rtipc_port_label plabel;
 	struct sockaddr_ipc saddr;
-	int ret, s, len;
 	char buf[128];
+	int ret, s;
 
 	/*
 	 * Get a datagram socket to bind to the RT endpoint. Each
@@ -151,7 +151,7 @@ void *realtime_thread1(void *arg)
 	return NULL;
 }
 
-void *realtime_thread2(void *arg)
+static void *realtime_thread2(void *arg)
 {
 	struct rtipc_port_label plabel;
 	struct sockaddr_ipc saddr;
@@ -159,7 +159,6 @@ void *realtime_thread2(void *arg)
 	struct timespec ts;
 	struct timeval tv;
 	socklen_t addrlen;
-	char buf[128];
 
 	s = socket(AF_RTIPC, SOCK_DGRAM, IPCPROTO_XDDP);
 	if (s < 0) {
@@ -240,7 +239,7 @@ void *realtime_thread2(void *arg)
 	return NULL;
 }
 
-void *regular_thread(void *arg)
+static void *regular_thread(void *arg)
 {
 	char buf[128], *devname;
 	int fd, ret;
@@ -270,7 +269,7 @@ void *regular_thread(void *arg)
 	return NULL;
 }
 
-void cleanup_upon_sig(int sig)
+static void cleanup_upon_sig(int sig)
 {
 	pthread_cancel(rt1);
 	pthread_cancel(rt2);

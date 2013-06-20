@@ -48,7 +48,7 @@ static void fail(const char *reason)
 	exit(EXIT_FAILURE);
 }
 
-void *server(void *arg)
+static void *server(void *arg)
 {
 	struct rtipc_port_label plabel;
 	struct sockaddr_ipc saddr;
@@ -110,13 +110,12 @@ void *server(void *arg)
 	return NULL;
 }
 
-void *client(void *arg)
+static void *client(void *arg)
 {
 	struct rtipc_port_label plabel;
 	struct sockaddr_ipc svsaddr;
 	int ret, s, n = 0, len;
 	struct timespec ts;
-	char buf[128];
 
 	s = socket(AF_RTIPC, SOCK_DGRAM, IPCPROTO_BUFP);
 	if (s < 0)
@@ -165,7 +164,7 @@ void *client(void *arg)
 	return NULL;
 }
 
-void cleanup_upon_sig(int sig)
+static void cleanup_upon_sig(int sig)
 {
 	pthread_cancel(svtid);
 	pthread_cancel(cltid);

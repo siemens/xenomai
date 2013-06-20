@@ -89,7 +89,7 @@ static void fail(const char *reason)
 	exit(EXIT_FAILURE);
 }
 
-void *realtime_thread(void *arg)
+static void *realtime_thread(void *arg)
 {
 	struct sockaddr_ipc saddr;
 	int ret, s, n = 0, len, b;
@@ -174,7 +174,7 @@ void *realtime_thread(void *arg)
 	return NULL;
 }
 
-void *regular_thread(void *arg)
+static void *regular_thread(void *arg)
 {
 	char buf[128], *devname;
 	int fd, ret;
@@ -202,7 +202,7 @@ void *regular_thread(void *arg)
 	return NULL;
 }
 
-void cleanup_upon_sig(int sig)
+static void cleanup_upon_sig(int sig)
 {
 	pthread_cancel(rt);
 	pthread_cancel(nrt);
