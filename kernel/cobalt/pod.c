@@ -146,8 +146,7 @@ void xnpod_fatal(const char *format, ...)
 {
 	static char msg_buf[1024];
 	struct xnthread *thread;
-	xnholder_t *holder;
-	xnsched_t *sched;
+	struct xnsched *sched;
 	char pbuf[16];
 	xnticks_t now;
 	unsigned cpu;
@@ -174,19 +173,17 @@ void xnpod_fatal(const char *format, ...)
 	printk(KERN_ERR "\n %-3s  %-6s %-8s %-8s %-8s  %s\n",
 	       "CPU", "PID", "PRI", "TIMEOUT", "STAT", "NAME");
 
+	/*
+	 * NOTE: &nkpod->threadq can't be empty, we have the root
+	 * thread(s) linked there at least.
+	 */
 	for_each_online_cpu(cpu) {
 		sched = xnpod_sched_slot(cpu);
-
-		holder = getheadq(&nkpod->threadq);
-		while (holder) {
-			thread = link2thread(holder, glink);
-			holder = nextq(&nkpod->threadq, holder);
+		list_for_each_entry(thread, &nkpod->threadq, glink) {
 			if (thread->sched != sched)
 				continue;
-
 			cprio = xnthread_current_priority(thread);
 			snprintf(pbuf, sizeof(pbuf), "%3d", cprio);
-
 			printk(KERN_ERR "%c%3u  %-6d %-8s %-8Lu %.8lx  %s\n",
 			       thread == sched->curr ? '>' : ' ',
 			       cpu,
@@ -263,7 +260,8 @@ int xnpod_init(void)
 
 	pod = &nkpod_struct;
 	pod->status = 0;
-	initq(&pod->threadq);
+	INIT_LIST_HEAD(&pod->threadq);
+	pod->nrthreads = 0;
 	atomic_set(&pod->timerlck, 0);
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -279,8 +277,10 @@ int xnpod_init(void)
 	for_each_online_cpu(cpu) {
 		sched = &pod->sched[cpu];
 		xnsched_init(sched, cpu);
-		if (xnarch_cpu_supported(cpu))
-			appendq(&pod->threadq, &sched->rootcb.glink);
+		if (xnarch_cpu_supported(cpu)) {
+			list_add_tail(&sched->rootcb.glink, &pod->threadq);
+			pod->nrthreads++;
+		}
 	}
 
 #ifdef CONFIG_SMP
@@ -331,8 +331,7 @@ EXPORT_SYMBOL_GPL(xnpod_init);
 
 void xnpod_shutdown(int xtype)
 {
-	struct xnholder *h, *nh;
-	struct xnthread *thread;
+	struct xnthread *thread, *tmp;
 	struct xnsched *sched;
 	int cpu;
 	spl_t s;
@@ -354,12 +353,8 @@ void xnpod_shutdown(int xtype)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	nh = getheadq(&nkpod->threadq);
-	while ((h = nh) != NULL) {
-		nh = nextq(&nkpod->threadq, h);
-
-		thread = link2thread(h, glink);
-
+	/* NOTE: &nkpod->threadq can't be empty (root thread(s)). */
+	list_for_each_entry_safe(thread, tmp, &nkpod->threadq, glink) {
 		if (!xnthread_test_state(thread, XNROOT))
 			xnpod_cancel_thread(thread);
 	}
@@ -469,7 +464,8 @@ int xnpod_init_thread(struct xnthread *thread,
 		   sched_class->name, thread->cprio);
 
 	xnlock_get_irqsave(&nklock, s);
-	appendq(&nkpod->threadq, &thread->glink);
+	list_add_tail(&thread->glink, &nkpod->threadq);
+	nkpod->nrthreads++;
 	xnvfile_touch_tag(&nkpod->threadlist_tag);
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -773,7 +769,8 @@ static void cleanup_thread(struct xnthread *thread) /* nklock held, irqs off */
 	trace_mark(xn_nucleus, thread_cleanup, "thread %p thread_name %s",
 		   thread, xnthread_name(thread));
 
-	removeq(&nkpod->threadq, &thread->glink);
+	list_del(&thread->glink);
+	nkpod->nrthreads--;
 	xnvfile_touch_tag(&nkpod->threadlist_tag);
 
 	if (xnthread_test_state(thread, XNREADY)) {

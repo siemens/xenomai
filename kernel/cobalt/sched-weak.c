@@ -78,7 +78,7 @@ void xnsched_weak_trackprio(struct xnthread *thread,
 struct xnvfile_directory sched_weak_vfroot;
 
 struct vfile_sched_weak_priv {
-	struct xnholder *curr;
+	struct xnthread *curr;
 };
 
 struct vfile_sched_weak_data {
@@ -105,7 +105,7 @@ static int vfile_sched_weak_rewind(struct xnvfile_snapshot_iterator *it)
 	if (nrthreads == 0)
 		return -ESRCH;
 
-	priv->curr = getheadq(&nkpod->threadq);
+	priv->curr = list_first_entry(&nkpod->threadq, struct xnthread, glink);
 
 	return nrthreads;
 }
@@ -120,8 +120,11 @@ static int vfile_sched_weak_next(struct xnvfile_snapshot_iterator *it,
 	if (priv->curr == NULL)
 		return 0;	/* All done. */
 
-	thread = link2thread(priv->curr, glink);
-	priv->curr = nextq(&nkpod->threadq, priv->curr);
+	thread = priv->curr;
+	if (list_is_last(&thread->glink, &nkpod->threadq))
+		priv->curr = NULL;
+	else
+		priv->curr = list_next_entry(thread, glink);
 
 	if (thread->base_class != &xnsched_class_weak)
 		return VFILE_SEQ_SKIP;

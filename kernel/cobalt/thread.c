@@ -180,7 +180,6 @@ int xnthread_init(struct xnthread *thread,
 	thread->entry = NULL;
 	thread->cookie = NULL;
 
-	inith(&thread->glink);
 	thread->selector = NULL;
 	INIT_LIST_HEAD(&thread->claimq);
 

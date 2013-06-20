@@ -66,12 +66,10 @@ struct xnsynch;
  */
 
 struct xnpod {
-
 	xnflags_t status;	/*!< Status bitmask. */
-
 	xnsched_t sched[NR_CPUS];	/*!< Per-cpu scheduler slots. */
-
-	xnqueue_t threadq;	/*!< All existing threads. */
+	struct list_head threadq;	/*!< All existing threads. */
+	int nrthreads;
 #ifdef CONFIG_XENO_OPT_VFILE
 	struct xnvfile_rev_tag threadlist_tag;
 #endif

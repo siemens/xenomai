@@ -1,7 +1,6 @@
 #ifndef _COBALT_KERNEL_PPD_H
 #define _COBALT_KERNEL_PPD_H
 
-#include <cobalt/kernel/queue.h>
 #include <cobalt/kernel/shadow.h>
 #include <cobalt/kernel/heap.h>
 

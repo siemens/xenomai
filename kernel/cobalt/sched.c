@@ -618,7 +618,7 @@ struct xnthread *sched_findq(struct list_head *q, int prio)
 static struct xnvfile_directory sched_vfroot;
 
 struct vfile_schedlist_priv {
-	struct xnholder *curr;
+	struct xnthread *curr;
 	xnticks_t start_time;
 };
 
@@ -645,10 +645,11 @@ static int vfile_schedlist_rewind(struct xnvfile_snapshot_iterator *it)
 {
 	struct vfile_schedlist_priv *priv = xnvfile_iterator_priv(it);
 
-	priv->curr = getheadq(&nkpod->threadq);
+	/* &nkpod->threadq cannot be empty (root thread(s)). */
+	priv->curr = list_first_entry(&nkpod->threadq, struct xnthread, glink);
 	priv->start_time = xnclock_read_monotonic();
 
-	return countq(&nkpod->threadq);
+	return nkpod->nrthreads;
 }
 
 static int vfile_schedlist_next(struct xnvfile_snapshot_iterator *it,
@@ -662,8 +663,11 @@ static int vfile_schedlist_next(struct xnvfile_snapshot_iterator *it,
 	if (priv->curr == NULL)
 		return 0;	/* All done. */
 
-	thread = link2thread(priv->curr, glink);
-	priv->curr = nextq(&nkpod->threadq, priv->curr);
+	thread = priv->curr;
+	if (list_is_last(&thread->glink, &nkpod->threadq))
+		priv->curr = NULL;
+	else
+		priv->curr = list_next_entry(thread, glink);
 
 	p->cpu = xnsched_cpu(thread->sched);
 	p->pid = xnthread_host_pid(thread);
@@ -733,7 +737,7 @@ static struct xnvfile_snapshot_ops vfile_schedlist_ops = {
 
 struct vfile_schedstat_priv {
 	int irq;
-	struct xnholder *curr;
+	struct xnthread *curr;
 	struct xnintr_iterator intr_it;
 };
 
@@ -772,11 +776,11 @@ static int vfile_schedstat_rewind(struct xnvfile_snapshot_iterator *it)
 	 * The activity numbers on each valid interrupt descriptor are
 	 * grouped under a pseudo-thread.
 	 */
-	priv->curr = getheadq(&nkpod->threadq);
+	priv->curr = list_first_entry(&nkpod->threadq, struct xnthread, glink);
 	priv->irq = 0;
 	irqnr = xnintr_query_init(&priv->intr_it) * NR_CPUS;
 
-	return irqnr + countq(&nkpod->threadq);
+	return irqnr + nkpod->nrthreads;
 }
 
 static int vfile_schedstat_next(struct xnvfile_snapshot_iterator *it,
@@ -796,8 +800,11 @@ static int vfile_schedstat_next(struct xnvfile_snapshot_iterator *it,
 		 */
 		goto scan_irqs;
 
-	thread = link2thread(priv->curr, glink);
-	priv->curr = nextq(&nkpod->threadq, priv->curr);
+	thread = priv->curr;
+	if (list_is_last(&thread->glink, &nkpod->threadq))
+		priv->curr = NULL;
+	else
+		priv->curr = list_next_entry(thread, glink);
 
 	sched = thread->sched;
 	p->cpu = xnsched_cpu(sched);

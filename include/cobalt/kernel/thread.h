@@ -233,9 +233,8 @@ typedef struct xnthread {
 	 */
 	struct list_head plink;
 
-	xnholder_t glink;		/* Thread holder in global queue */
-
-#define link2thread(ln, fld)	container_of(ln, struct xnthread, fld)
+	/** Thread holder in global queue. */
+	struct list_head glink;
 
 	/**
 	 * List of xnsynch owned by this thread _and_ claimed by
