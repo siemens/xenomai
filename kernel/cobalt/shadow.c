@@ -84,7 +84,7 @@ static DEFINE_SEMAPHORE(registration_mutex);
 
 static void *mayday_page;
 
-static xnqueue_t *ppd_hash;
+static struct list_head *ppd_hash;
 #define PPD_HASH_SIZE 13
 
 union xnshadow_ppd_hkey {
@@ -97,43 +97,38 @@ union xnshadow_ppd_hkey {
  * the same bucket, so that they can all be destroyed with only one
  * hash lookup by ppd_remove_mm.
  */
-static unsigned int ppd_lookup_inner(xnqueue_t **pq, struct xnshadow_ppd ** pholder,
-				     struct xnshadow_ppd_key * pkey)
+static unsigned int ppd_lookup_inner(struct list_head **pq,
+				     struct xnshadow_ppd **pholder,
+				     struct xnshadow_ppd_key *pkey)
 {
 	union xnshadow_ppd_hkey key = { .mm = pkey->mm };
-	unsigned bucket = jhash2(&key.val, sizeof(key) / sizeof(uint32_t), 0);
-	struct xnshadow_ppd *ppd;
-	xnholder_t *holder;
+	struct xnshadow_ppd *ppd = NULL;
+	unsigned int bucket;
 
+	bucket = jhash2(&key.val, sizeof(key) / sizeof(uint32_t), 0);
 	*pq = &ppd_hash[bucket % PPD_HASH_SIZE];
-	holder = getheadq(*pq);
 
-	if (!holder) {
-		*pholder = NULL;
-		return 0;
+	if (list_empty(*pq))
+		goto out;
+
+	list_for_each_entry(ppd, *pq, link) {
+		if (ppd->key.mm == pkey->mm && ppd->key.muxid == pkey->muxid) {
+			*pholder = ppd;
+			return 1; /* Exact match. */
+		}
+		/*
+		 * Order by increasing mm address. Within the same mm,
+		 * order by decreasing muxid.
+		 */
+		if (ppd->key.mm > pkey->mm ||
+		    (ppd->key.mm == pkey->mm && ppd->key.muxid < pkey->muxid))
+			/* Not found, return successor for insertion. */
+			goto out;
 	}
 
-	do {
-		ppd = container_of(holder, struct xnshadow_ppd, link);
-		holder = nextq(*pq, holder);
-	} while (holder &&
-		 (ppd->key.mm < pkey->mm ||
-		  (ppd->key.mm == pkey->mm && ppd->key.muxid > pkey->muxid)));
-
-	if (ppd->key.mm == pkey->mm && ppd->key.muxid == pkey->muxid) {
-		/* found it, return it. */
-		*pholder = ppd;
-		return 1;
-	}
-
-	/* not found, return successor for insertion. */
-	if (ppd->key.mm < pkey->mm ||
-	    (ppd->key.mm == pkey->mm && ppd->key.muxid > pkey->muxid))
-		*pholder = holder ?
-			container_of(holder, struct xnshadow_ppd, link) :
-			NULL;
-	else
-		*pholder = ppd;
+	ppd = NULL;
+out:
+	*pholder = ppd;
 
 	return 0;
 }
@@ -141,8 +136,8 @@ static unsigned int ppd_lookup_inner(xnqueue_t **pq, struct xnshadow_ppd ** phol
 static int ppd_insert(struct xnshadow_ppd *holder)
 {
 	struct xnshadow_ppd *next;
+	struct list_head *q;
 	unsigned int found;
-	xnqueue_t *q;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -153,12 +148,10 @@ static int ppd_insert(struct xnshadow_ppd *holder)
 		return -EBUSY;
 	}
 
-	inith(&holder->link);
-	if (next) {
-		insertq(q, &next->link, &holder->link);
-	} else {
-		appendq(q, &holder->link);
-	}
+	if (next)
+		list_add_tail(&holder->link, &next->link);
+	else
+		list_add_tail(&holder->link, q);
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -166,12 +159,13 @@ static int ppd_insert(struct xnshadow_ppd *holder)
 }
 
 /* nklock locked, irqs off. */
-static struct xnshadow_ppd *ppd_lookup(unsigned muxid, struct mm_struct *mm)
+static struct xnshadow_ppd *ppd_lookup(unsigned int muxid,
+				       struct mm_struct *mm)
 {
 	struct xnshadow_ppd_key key;
 	struct xnshadow_ppd *holder;
+	struct list_head *q;
 	unsigned int found;
-	xnqueue_t *q;
 
 	key.muxid = muxid;
 	key.mm = mm;
@@ -183,17 +177,17 @@ static struct xnshadow_ppd *ppd_lookup(unsigned muxid, struct mm_struct *mm)
 	return holder;
 }
 
-static void ppd_remove(struct xnshadow_ppd * holder)
+static void ppd_remove(struct xnshadow_ppd *holder)
 {
+	struct list_head *q;
 	unsigned int found;
-	xnqueue_t *q;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
 	found = ppd_lookup_inner(&q, &holder, &holder->key);
 	if (found)
-		removeq(q, &holder->link);
+		list_del(&holder->link);
 
 	xnlock_put_irqrestore(&nklock, s);
 }
@@ -201,20 +195,22 @@ static void ppd_remove(struct xnshadow_ppd * holder)
 static inline void ppd_remove_mm(struct mm_struct *mm,
 				 void (*destructor) (struct xnshadow_ppd *))
 {
+	struct xnshadow_ppd *ppd, *next;
 	struct xnshadow_ppd_key key;
-	struct xnshadow_ppd *ppd;
-	xnholder_t *holder;
-	xnqueue_t *q;
+	struct list_head *q;
 	spl_t s;
 
-	key.muxid = ~0UL;
+	key.muxid = ~0UL; /* seek first muxid for 'mm'. */
 	key.mm = mm;
 	xnlock_get_irqsave(&nklock, s);
 	ppd_lookup_inner(&q, &ppd, &key);
 
 	while (ppd && ppd->key.mm == mm) {
-		holder = nextq(q, &ppd->link);
-		removeq(q, &ppd->link);
+		if (list_is_last(&ppd->link, q))
+			next = NULL;
+		else
+			next = list_next_entry(ppd, link);
+		list_del(&ppd->link);
 		xnlock_put_irqrestore(&nklock, s);
 		/*
 		 * Releasing the nklock is safe here, if we assume
@@ -222,9 +218,7 @@ static inline void ppd_remove_mm(struct mm_struct *mm,
 		 * while we are running xnpod_remove_mm.
 		 */
 		destructor(ppd);
-		ppd = holder ?
-			container_of(holder, struct xnshadow_ppd, link) :
-			NULL;
+		ppd = next;
 		xnlock_get_irqsave(&nklock, s);
 	}
 
@@ -252,10 +246,9 @@ EXPORT_SYMBOL_GPL(nkvdso);
  */
 void __init xnheap_init_vdso(void)
 {
-	nkvdso = (struct xnvdso *)
-		xnheap_alloc(&__xnsys_global_ppd.sem_heap, sizeof(*nkvdso));
+	nkvdso = xnheap_alloc(&__xnsys_global_ppd.sem_heap, sizeof(*nkvdso));
 	if (nkvdso == NULL)
-		xnpod_fatal("Xenomai: cannot allocate memory for xnvdso!\n");
+		xnpod_fatal("cannot allocate memory for xnvdso!\n");
 
 	nkvdso->features = XNVDSO_FEATURES;
 }
@@ -2532,17 +2525,16 @@ int xnshadow_mount(void)
 		return ret;
 	}
 
-	size = sizeof(xnqueue_t) * PPD_HASH_SIZE;
+	size = sizeof(struct list_head) * PPD_HASH_SIZE;
 	ppd_hash = kmalloc(size, GFP_KERNEL);
 	if (ppd_hash == NULL) {
 		xnshadow_cleanup();
-		printk(KERN_WARNING
-		       "Xenomai: cannot allocate PPD hash table.\n");
+		printk(XENO_ERR "cannot allocate PPD hash table\n");
 		return -ENOMEM;
 	}
 
 	for (i = 0; i < PPD_HASH_SIZE; i++)
-		initq(&ppd_hash[i]);
+		INIT_LIST_HEAD(ppd_hash + i);
 
 	user_muxid = xnshadow_register_personality(&user_personality);
 	XENO_BUGON(NUCLEUS, user_muxid != 0);

@@ -1,6 +1,7 @@
 #ifndef _COBALT_KERNEL_PPD_H
 #define _COBALT_KERNEL_PPD_H
 
+#include <cobalt/kernel/list.h>
 #include <cobalt/kernel/shadow.h>
 #include <cobalt/kernel/heap.h>
 
@@ -13,7 +14,7 @@ struct xnshadow_ppd_key {
 
 struct xnshadow_ppd {
 	struct xnshadow_ppd_key key;
-	struct xnholder link;
+	struct list_head link;
 };
 
 #define xnshadow_ppd_muxid(ppd) ((ppd)->key.muxid)
