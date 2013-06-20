@@ -92,7 +92,7 @@ int __init cobalt_init(void)
 	cobalt_monitor_pkg_init();
 	cobalt_timer_pkg_init();
 
-	initq(&cobalt_global_kqueues.threadq);
+	INIT_LIST_HEAD(&cobalt_global_kqueues.threadq);
 	cobalt_time_slice = CONFIG_XENO_OPT_RR_QUANTUM * 1000;
 
 	return 0;

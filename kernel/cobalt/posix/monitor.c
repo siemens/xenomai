@@ -86,13 +86,12 @@ int cobalt_monitor_init(struct cobalt_monitor_shadow __user *u_monsh,
 	xnsynch_init(&mon->drain, XNSYNCH_PRIO, NULL);
 	mon->flags = flags;
 	mon->magic = COBALT_MONITOR_MAGIC;
-	inith(&mon->link);
-	initq(&mon->waiters);
+	INIT_LIST_HEAD(&mon->waiters);
 	kq = cobalt_kqueues(pshared);
 	mon->owningq = kq;
 
 	xnlock_get_irqsave(&nklock, s);
-	appendq(&kq->monitorq, &mon->link);
+	list_add_tail(&mon->link, &kq->monitorq);
 	xnlock_put_irqrestore(&nklock, s);
 
 	datp->flags = 0;
@@ -163,8 +162,7 @@ static void cobalt_monitor_wakeup(struct cobalt_monitor *mon)
 {
 	struct cobalt_monitor_data *datp = mon->data;
 	struct xnthread *p;
-	struct xnholder *h;
-	pthread_t tid;
+	pthread_t tid, tmp;
 	int bcast;
 
 	/*
@@ -174,7 +172,7 @@ static void cobalt_monitor_wakeup(struct cobalt_monitor *mon)
 	 */
 	bcast = (datp->flags & COBALT_MONITOR_BROADCAST) != 0;
 	if ((datp->flags & COBALT_MONITOR_GRANTED) == 0 ||
-	    emptyq_p(&mon->waiters))
+	    list_empty(&mon->waiters))
 		goto drain;
 
 	/*
@@ -187,10 +185,7 @@ static void cobalt_monitor_wakeup(struct cobalt_monitor *mon)
 	 * syscall for exiting the monitor if nobody else is waiting
 	 * at the gate.
 	 */
-	h = getheadq(&mon->waiters);
-	while (h) {
-		tid = container_of(h, struct cobalt_thread, monitor_link);
-		h = nextq(&mon->waiters, h);
+	list_for_each_entry_safe(tid, tmp, &mon->waiters, monitor_link) {
 		p = &tid->threadbase;
 		/*
 		 * A thread might receive a grant signal albeit it
@@ -201,7 +196,7 @@ static void cobalt_monitor_wakeup(struct cobalt_monitor *mon)
 		if (bcast ||
 		    (p->u_window->grant_value && p->wchan == &tid->monitor_synch)) {
 			xnsynch_wakeup_this_sleeper(&tid->monitor_synch, p);
-			removeq(&mon->waiters, &tid->monitor_link);
+			list_del(&tid->monitor_link);
 			tid->monitor_queued = 0;
 		}
 	}
@@ -219,8 +214,7 @@ drain:
 			xnsynch_wakeup_one_sleeper(&mon->drain);
 	}
 
-	if (emptyq_p(&mon->waiters) &&
-	    !xnsynch_pended_p(&mon->drain))
+	if (list_empty(&mon->waiters) && !xnsynch_pended_p(&mon->drain))
 		datp->flags &= ~COBALT_MONITOR_PENDED;
 }
 
@@ -273,7 +267,7 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_monsh,
 		synch = &mon->drain;
 	else {
 		cur->threadbase.u_window->grant_value = 0;
-		appendq(&mon->waiters, &cur->monitor_link);
+		list_add_tail(&cur->monitor_link, &mon->waiters);
 		cur->monitor_queued = 1;
 	}
 	datp->flags |= COBALT_MONITOR_PENDED;
@@ -289,11 +283,11 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_monsh,
 
 		if ((event & COBALT_MONITOR_WAITDRAIN) == 0 &&
 		    cur->monitor_queued) {
-			removeq(&mon->waiters, &cur->monitor_link);
+			list_del(&cur->monitor_link);
 			cur->monitor_queued = 0;
 		}
 
-		if (emptyq_p(&mon->waiters) && !xnsynch_pended_p(&mon->drain))
+		if (list_empty(&mon->waiters) && !xnsynch_pended_p(&mon->drain))
 			datp->flags &= ~COBALT_MONITOR_PENDED;
 
 		if (info & XNBREAK)
@@ -374,7 +368,7 @@ static void cobalt_monitor_destroy_inner(struct cobalt_monitor *mon,
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	removeq(&q->monitorq, &mon->link);
+	list_del(&mon->link);
 	xnsynch_destroy(&mon->gate);
 	xnsynch_destroy(&mon->drain);
 	mon->magic = 0;
@@ -403,7 +397,7 @@ int cobalt_monitor_destroy(struct cobalt_monitor_shadow __user *u_monsh)
 		goto fail;
 	}
 
-	if (xnsynch_pended_p(&mon->drain) || !emptyq_p(&mon->waiters)) {
+	if (xnsynch_pended_p(&mon->drain) || !list_empty(&mon->waiters)) {
 		ret = -EBUSY;
 		goto fail;
 	}
@@ -432,25 +426,26 @@ int cobalt_monitor_destroy(struct cobalt_monitor_shadow __user *u_monsh)
 
 void cobalt_monitorq_cleanup(struct cobalt_kqueues *q)
 {
-	struct cobalt_monitor *mon;
-	struct xnholder *h;
+	struct cobalt_monitor *mon, *tmp;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	while ((h = getheadq(&q->monitorq))) {
+	if (list_empty(&q->monitorq))
+		goto out;
+
+	list_for_each_entry_safe(mon, tmp, &q->monitorq, link) {
 		xnlock_put_irqrestore(&nklock, s);
-		mon = container_of(h, struct cobalt_monitor, link);
 		cobalt_monitor_destroy_inner(mon, q);
 		xnlock_get_irqsave(&nklock, s);
 	}
-
+out:
 	xnlock_put_irqrestore(&nklock, s);
 }
 
 void cobalt_monitor_pkg_init(void)
 {
-	initq(&cobalt_global_kqueues.monitorq);
+	INIT_LIST_HEAD(&cobalt_global_kqueues.monitorq);
 }
 
 void cobalt_monitor_pkg_cleanup(void)

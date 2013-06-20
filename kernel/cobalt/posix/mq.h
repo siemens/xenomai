@@ -19,7 +19,6 @@
 #ifndef COBALT_MQ_H
 #define COBALT_MQ_H
 
-#include <cobalt/kernel/queue.h>
 #include "registry.h"     /* For associative lists. */
 
 struct cobalt_mq;

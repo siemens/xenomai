@@ -50,22 +50,17 @@ union cobalt_cond_union {
 struct __shadow_mutex;
 union cobalt_mutex_union;
 
-typedef struct cobalt_cond {
-	unsigned magic;
-	xnsynch_t synchbase;
-	xnholder_t link;	/* Link in cobalt_condq */
-
-#define link2cond(laddr) container_of(laddr, cobalt_cond_t, link)
-
-	xnholder_t mutex_link;
-
-#define mutex_link2cond(laddr) container_of(laddr, cobalt_cond_t, mutex_link)
-
+struct cobalt_cond {
+	unsigned int magic;
+	struct xnsynch synchbase;
+	/** cobalt_condq */
+	struct list_head link;
+	struct list_head mutex_link;
 	unsigned long *pending_signals;
 	pthread_condattr_t attr;
 	struct cobalt_mutex *mutex;
 	struct cobalt_kqueues *owningq;
-} cobalt_cond_t;
+};
 
 extern const pthread_condattr_t cobalt_default_cond_attr;
 

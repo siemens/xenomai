@@ -30,12 +30,12 @@ struct cobalt_hkey {
 };
 
 struct cobalt_thread {
-	unsigned magic;
-	xnthread_t threadbase;
+	unsigned int magic;
+	struct xnthread threadbase;
 
 #define thread2pthread(taddr) \
 	({								\
-		xnthread_t *__t = (taddr);				\
+		struct xnthread *__t = (taddr);				\
 		(__t							\
 		 ? ((__t->personality == &cobalt_personality)		\
 		    ? (container_of(__t, struct cobalt_thread, threadbase)) \
@@ -43,22 +43,21 @@ struct cobalt_thread {
 		 : NULL);						\
 	})
 
-	xnholder_t link;	/* Link in cobalt_threadq */
-	xnqueue_t *container;
-
-#define link2pthread(laddr) container_of(laddr, struct cobalt_thread, link)
+	/** cobalt_threadq */
+	struct list_head link;
+	struct list_head *container;
 
 	pthread_attr_t attr;        /* creation attributes */
 
 	/* For timers. */
-	xnqueue_t timersq;
+	struct list_head timersq;
 
 	/* Cached value for current policy (user side). */
 	int sched_u_policy;
 
 	/* Monitor wait object and link holder. */
 	struct xnsynch monitor_synch;
-	struct xnholder monitor_link;
+	struct list_head monitor_link;
 	int monitor_queued;
 
 	struct cobalt_hkey hkey;

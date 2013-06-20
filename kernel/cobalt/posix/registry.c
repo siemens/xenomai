@@ -273,42 +273,32 @@ int cobalt_desc_get(cobalt_desc_t ** descp, int fd, unsigned magic)
 DEFINE_XNLOCK(cobalt_assoc_lock);
 
 static int cobalt_assoc_lookup_inner(cobalt_assocq_t * q,
-				    cobalt_assoc_t ** passoc,
-				    u_long key)
+				     cobalt_assoc_t ** passoc,
+				     unsigned long key)
 {
-	cobalt_assoc_t *assoc;
-	xnholder_t *holder;
+	cobalt_assoc_t *assoc = NULL;
 
-	holder = getheadq(q);
+	if (list_empty(q))
+		goto out;
 
-	if (!holder) {
-		/* empty list. */
-		*passoc = NULL;
-		return 0;
+	list_for_each_entry(assoc, q, link) {
+		if (assoc->key == key) {
+			*passoc = assoc;
+			return 1;
+		}
+		if (assoc->key > key)
+			goto out;
 	}
 
-	do {
-		assoc = link2assoc(holder);
-		holder = nextq(q, holder);
-	}
-	while (holder && (assoc->key < key));
-
-	if (assoc->key == key) {
-		/* found */
-		*passoc = assoc;
-		return 1;
-	}
-
-	/* not found. */
-	if (assoc->key < key)
-		*passoc = holder ? link2assoc(holder) : NULL;
-	else
-		*passoc = assoc;
+	passoc = NULL;
+out:
+	*passoc = assoc;
 
 	return 0;
 }
 
-int cobalt_assoc_insert(cobalt_assocq_t * q, cobalt_assoc_t * assoc, u_long key)
+int cobalt_assoc_insert(cobalt_assocq_t * q,
+			cobalt_assoc_t * assoc, unsigned long key)
 {
 	cobalt_assoc_t *next;
 	spl_t s;
@@ -321,18 +311,18 @@ int cobalt_assoc_insert(cobalt_assocq_t * q, cobalt_assoc_t * assoc, u_long key)
 	}
 
 	assoc->key = key;
-	inith(&assoc->link);
 	if (next)
-		insertq(q, &next->link, &assoc->link);
+		list_add_tail(&assoc->link, &next->link);
 	else
-		appendq(q, &assoc->link);
+		list_add_tail(&assoc->link, q);
 
 	xnlock_put_irqrestore(&cobalt_assoc_lock, s);
 
 	return 0;
 }
 
-cobalt_assoc_t *cobalt_assoc_lookup(cobalt_assocq_t * q, u_long key)
+cobalt_assoc_t *cobalt_assoc_lookup(cobalt_assocq_t * q,
+				    unsigned long key)
 {
 	cobalt_assoc_t *assoc;
 	unsigned found;
@@ -345,7 +335,8 @@ cobalt_assoc_t *cobalt_assoc_lookup(cobalt_assocq_t * q, u_long key)
 	return found ? assoc : NULL;
 }
 
-cobalt_assoc_t *cobalt_assoc_remove(cobalt_assocq_t * q, u_long key)
+cobalt_assoc_t *cobalt_assoc_remove(cobalt_assocq_t * q,
+				    unsigned long key)
 {
 	cobalt_assoc_t *assoc;
 	spl_t s;
@@ -356,7 +347,7 @@ cobalt_assoc_t *cobalt_assoc_remove(cobalt_assocq_t * q, u_long key)
 		return NULL;
 	}
 
-	removeq(q, &assoc->link);
+	list_del(&assoc->link);
 	xnlock_put_irqrestore(&cobalt_assoc_lock, s);
 
 	return assoc;
@@ -364,18 +355,22 @@ cobalt_assoc_t *cobalt_assoc_remove(cobalt_assocq_t * q, u_long key)
 
 void cobalt_assocq_destroy(cobalt_assocq_t * q, void (*destroy) (cobalt_assoc_t *))
 {
-	cobalt_assoc_t *assoc;
-	xnholder_t *holder;
+	cobalt_assoc_t *assoc, *tmp;
 	spl_t s;
 
 	xnlock_get_irqsave(&cobalt_assoc_lock, s);
-	while ((holder = getq(q))) {
-		assoc = link2assoc(holder);
+
+	if (list_empty(q))
+		goto out;
+
+	list_for_each_entry_safe(assoc, tmp, q, link) {
+		list_del(&assoc->link);
 		xnlock_put_irqrestore(&cobalt_assoc_lock, s);
 		if (destroy)
 			destroy(assoc);
 		xnlock_get_irqsave(&cobalt_assoc_lock, s);
 	}
+out:
 	xnlock_put_irqrestore(&cobalt_assoc_lock, s);
 }
 

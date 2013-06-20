@@ -82,12 +82,11 @@ int cobalt_event_init(struct cobalt_event_shadow __user *u_evtsh,
 	synflags = (flags & COBALT_EVENT_PRIO) ? XNSYNCH_PRIO : XNSYNCH_FIFO;
 	xnsynch_init(&event->synch, synflags, NULL);
 	event->magic = COBALT_EVENT_MAGIC;
-	inith(&event->link);
 	kq = cobalt_kqueues(pshared);
 	event->owningq = kq;
 
 	xnlock_get_irqsave(&nklock, s);
-	appendq(&kq->eventq, &event->link);
+	list_add_tail(&event->link, &kq->eventq);
 	xnlock_put_irqrestore(&nklock, s);
 
 	datp->value = value;
@@ -245,7 +244,7 @@ static void cobalt_event_destroy_inner(struct cobalt_event *event,
 	struct xnheap *heap;
 	int pshared;
 
-	removeq(&q->eventq, &event->link);
+	list_del(&event->link);
 	xnsynch_destroy(&event->synch);
 	event->magic = 0;
 	pshared = (event->flags & COBALT_EVENT_SHARED) != 0;
@@ -284,23 +283,23 @@ out:
 
 void cobalt_eventq_cleanup(struct cobalt_kqueues *q)
 {
-	struct cobalt_event *event;
-	struct xnholder *h;
+	struct cobalt_event *event, *tmp;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	while ((h = getheadq(&q->eventq))) {
-		event = container_of(h, struct cobalt_event, link);
-		cobalt_event_destroy_inner(event, q, s);
-	}
+	if (list_empty(&q->eventq))
+		goto out;
 
+	list_for_each_entry_safe(event, tmp, &q->eventq, link)
+		cobalt_event_destroy_inner(event, q, s);
+out:
 	xnlock_put_irqrestore(&nklock, s);
 }
 
 void cobalt_event_pkg_init(void)
 {
-	initq(&cobalt_global_kqueues.eventq);
+	INIT_LIST_HEAD(&cobalt_global_kqueues.eventq);
 }
 
 void cobalt_event_pkg_cleanup(void)

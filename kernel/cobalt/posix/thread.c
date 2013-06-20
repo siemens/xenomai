@@ -175,7 +175,7 @@ static pthread_t thread_find(const struct cobalt_hkey *hkey)
 
 static void thread_destroy(pthread_t thread)
 {
-	removeq(thread->container, &thread->link);
+	list_del(&thread->link);
 	xnsynch_destroy(&thread->monitor_synch);
 	xnheap_schedule_free(&kheap, thread, &thread->link);
 }
@@ -424,11 +424,8 @@ static inline int pthread_create(pthread_t *tid, const pthread_attr_t *attr)
 
 	thread->attr.name = xnthread_name(&thread->threadbase);
 
-	inith(&thread->link);
-
 	thread->magic = COBALT_THREAD_MAGIC;
 	xnsynch_init(&thread->monitor_synch, XNSYNCH_FIFO, NULL);
-	inith(&thread->monitor_link);
 	thread->monitor_queued = 0;
 	thread->sched_u_policy = thread->attr.policy;
 
@@ -439,7 +436,7 @@ static inline int pthread_create(pthread_t *tid, const pthread_attr_t *attr)
 
 	xnlock_get_irqsave(&nklock, s);
 	thread->container = &cobalt_kqueues(0)->threadq;
-	appendq(thread->container, &thread->link);
+	list_add_tail(&thread->link, thread->container);
 	xnlock_put_irqrestore(&nklock, s);
 
 	thread->hkey.u_tid = 0;
@@ -561,7 +558,7 @@ static inline int pthread_make_periodic_np(pthread_t thread,
 static inline int pthread_set_mode_np(int clrmask, int setmask, int *mode_r)
 {
 	const xnflags_t valid_flags = XNLOCK|XNTRAPSW;
-	xnthread_t *cur = xnpod_current_thread();
+	struct xnthread *cur = xnpod_current_thread();
 	xnflags_t old;
 
 	/*

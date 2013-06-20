@@ -19,9 +19,11 @@
 #ifndef _COBALT_SEM_H
 #define _COBALT_SEM_H
 
-#include <cobalt/kernel/thread.h>       /* For cobalt_current_thread and
-				   cobalt_thread_t definition. */
-#include <cobalt/kernel/registry.h>     /* For assocq */
+#include <cobalt/kernel/thread.h>
+#include <cobalt/kernel/registry.h>
+
+#define COBALT_SEM_MAGIC (0x86860707)
+#define COBALT_NAMED_SEM_MAGIC (0x86860D0D)
 
 #ifdef __KERNEL__
 
@@ -54,7 +56,8 @@ int cobalt_sem_timedwait(struct __shadow_sem __user *u_sem,
 
 int cobalt_sem_trywait(struct __shadow_sem __user *u_sem);
 
-int cobalt_sem_getvalue(struct __shadow_sem __user *u_sem, int __user *u_sval);
+int cobalt_sem_getvalue(struct __shadow_sem __user *u_sem,
+			int __user *u_sval);
 
 int cobalt_sem_destroy(struct __shadow_sem __user *u_sem);
 
@@ -78,8 +81,5 @@ void cobalt_sem_pkg_init(void);
 void cobalt_sem_pkg_cleanup(void);
 
 #endif /* __KERNEL__ */
-
-#define COBALT_SEM_MAGIC (0x86860707)
-#define COBALT_NAMED_SEM_MAGIC (0x86860D0D)
 
 #endif /* !_COBALT_SEM_H */

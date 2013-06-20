@@ -52,7 +52,7 @@
 #include "cond.h"
 
 static int cobalt_mutex_init_inner(struct __shadow_mutex *shadow,
-				   cobalt_mutex_t *mutex,
+				   struct cobalt_mutex *mutex,
 				   struct mutex_dat *datp,
 				   const pthread_mutexattr_t *attr)
 {
@@ -84,27 +84,29 @@ static int cobalt_mutex_init_inner(struct __shadow_mutex *shadow,
 	xnsynch_init(&mutex->synchbase, synch_flags, &datp->owner);
 	datp->flags = (attr->type == PTHREAD_MUTEX_ERRORCHECK
 		       ? COBALT_MUTEX_ERRORCHECK : 0);
-	inith(&mutex->link);
 	mutex->attr = *attr;
 	mutex->owningq = kq;
-	initq(&mutex->conds);
+	INIT_LIST_HEAD(&mutex->conds);
 
 	xnlock_get_irqsave(&nklock, s);
-	appendq(&kq->mutexq, &mutex->link);
+	list_add_tail(&mutex->link, &kq->mutexq);
 	xnlock_put_irqrestore(&nklock, s);
 
 	return 0;
 }
 
-static void cobalt_mutex_destroy_inner(cobalt_mutex_t *mutex,
+static void cobalt_mutex_destroy_inner(struct cobalt_mutex *mutex,
 				       struct cobalt_kqueues *q)
 {
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	removeq(&q->mutexq, &mutex->link);
-	/* synchbase wait queue may not be empty only when this function is called
-	   from cobalt_mutex_pkg_cleanup, hence the absence of xnpod_schedule(). */
+	list_del(&mutex->link);
+	/*
+	 * synchbase wait queue may not be empty only when this
+	 * function is called from cobalt_mutex_pkg_cleanup, hence the
+	 * absence of xnpod_schedule().
+	 */
 	xnsynch_destroy(&mutex->synchbase);
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -114,7 +116,7 @@ static void cobalt_mutex_destroy_inner(cobalt_mutex_t *mutex,
 }
 
 static inline int cobalt_mutex_acquire(xnthread_t *cur,
-				cobalt_mutex_t *mutex,
+				struct cobalt_mutex *mutex,
 				int timed,
 				xnticks_t abs_to)
 {
@@ -132,7 +134,7 @@ static inline int cobalt_mutex_acquire(xnthread_t *cur,
 	return cobalt_mutex_acquire_unchecked(cur, mutex, timed, abs_to);
 }
 
-static inline int cobalt_mutex_timedlock_break(cobalt_mutex_t *mutex,
+static inline int cobalt_mutex_timedlock_break(struct cobalt_mutex *mutex,
 					       int timed, xnticks_t abs_to)
 {
 	xnthread_t *cur = xnpod_current_thread();
@@ -202,36 +204,29 @@ static inline int cobalt_mutex_timedlock_break(cobalt_mutex_t *mutex,
 
 int cobalt_mutex_check_init(struct __shadow_mutex __user *u_mx)
 {
-	cobalt_mutex_t *mutex;
-	xnholder_t *holder;
-	xnqueue_t *mutexq;
+	struct list_head *mutexq, *entry;
+	struct cobalt_mutex *mutex;
+	int qnr;
 	spl_t s;
 
 	__xn_get_user(mutex, &u_mx->mutex);
 
-	mutexq = &cobalt_kqueues(0)->mutexq;
-
-	xnlock_get_irqsave(&nklock, s);
-	for (holder = getheadq(mutexq);
-	     holder; holder = nextq(mutexq, holder))
-		if (holder == &mutex->link)
-			goto busy;
-	xnlock_put_irqrestore(&nklock, s);
-
-	mutexq = &cobalt_kqueues(1)->mutexq;
-
-	xnlock_get_irqsave(&nklock, s);
-	for (holder = getheadq(mutexq);
-	     holder; holder = nextq(mutexq, holder))
-		if (holder == &mutex->link)
-			goto busy;
-	xnlock_put_irqrestore(&nklock, s);
+	for (qnr = 0; qnr < 2; qnr++) {
+		mutexq = &cobalt_kqueues(qnr)->mutexq;
+		xnlock_get_irqsave(&nklock, s);
+		if (!list_empty(mutexq)) {
+			list_for_each(entry, mutexq) {
+				if (entry == &mutex->link)
+					goto busy;
+			}
+		}
+		xnlock_put_irqrestore(&nklock, s);
+	}
 
 	return 0;
-
-  busy:
+busy:
 	xnlock_put_irqrestore(&nklock, s);
-	/* mutex is already in the queue. */
+	/* mutex is already in a queue. */
 	return -EBUSY;
 }
 
@@ -239,9 +234,9 @@ int cobalt_mutex_init(struct __shadow_mutex __user *u_mx,
 		      const pthread_mutexattr_t __user *u_attr)
 {
 	pthread_mutexattr_t locattr, *attr;
+	struct cobalt_mutex *mutex;
 	struct __shadow_mutex mx;
 	struct mutex_dat *datp;
-	cobalt_mutex_t *mutex;
 	int err;
 
 	if (__xn_safe_copy_from_user(&mx, u_mx, sizeof(mx)))
@@ -279,8 +274,8 @@ int cobalt_mutex_init(struct __shadow_mutex __user *u_mx,
 
 int cobalt_mutex_destroy(struct __shadow_mutex __user *u_mx)
 {
+	struct cobalt_mutex *mutex;
 	struct __shadow_mutex mx;
-	cobalt_mutex_t *mutex;
 
 	if (__xn_safe_copy_from_user(&mx, u_mx, sizeof(mx)))
 		return -EFAULT;
@@ -293,7 +288,7 @@ int cobalt_mutex_destroy(struct __shadow_mutex __user *u_mx)
 				     XN_NO_HANDLE) != 0)
 		return -EBUSY;
 
-	if (countq(&mutex->conds))
+	if (!list_empty(&mutex->conds))
 		return -EBUSY;
 
 	cobalt_mark_deleted(&mx);
@@ -305,7 +300,7 @@ int cobalt_mutex_destroy(struct __shadow_mutex __user *u_mx)
 int cobalt_mutex_trylock(struct __shadow_mutex __user *u_mx)
 {
 	xnthread_t *cur = xnpod_current_thread();
-	cobalt_mutex_t *mutex;
+	struct cobalt_mutex *mutex;
 	int err;
 
 	__xn_get_user(mutex, &u_mx->mutex);
@@ -338,7 +333,7 @@ int cobalt_mutex_trylock(struct __shadow_mutex __user *u_mx)
 
 int cobalt_mutex_lock(struct __shadow_mutex __user *u_mx)
 {
-	cobalt_mutex_t *mutex;
+	struct cobalt_mutex *mutex;
 	int err;
 
 	__xn_get_user(mutex, &u_mx->mutex);
@@ -351,7 +346,7 @@ int cobalt_mutex_lock(struct __shadow_mutex __user *u_mx)
 int cobalt_mutex_timedlock(struct __shadow_mutex __user *u_mx,
 			   const struct timespec __user *u_ts)
 {
-	cobalt_mutex_t *mutex;
+	struct cobalt_mutex *mutex;
 	struct timespec ts;
 	int err;
 
@@ -367,7 +362,7 @@ int cobalt_mutex_timedlock(struct __shadow_mutex __user *u_mx,
 
 int cobalt_mutex_unlock(struct __shadow_mutex __user *u_mx)
 {
-	cobalt_mutex_t *mutex;
+	struct cobalt_mutex *mutex;
 	int err;
 	spl_t s;
 
@@ -390,27 +385,30 @@ int cobalt_mutex_unlock(struct __shadow_mutex __user *u_mx)
 
 void cobalt_mutexq_cleanup(struct cobalt_kqueues *q)
 {
-	xnholder_t *holder;
+	struct cobalt_mutex *mutex, *tmp;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	while ((holder = getheadq(&q->mutexq)) != NULL) {
+	if (list_empty(&q->mutexq))
+		goto out;
+
+	list_for_each_entry_safe(mutex, tmp, &q->mutexq, link) {
 		xnlock_put_irqrestore(&nklock, s);
-		cobalt_mutex_destroy_inner(link2mutex(holder), q);
+		cobalt_mutex_destroy_inner(mutex, q);
 #if XENO_DEBUG(COBALT)
 		printk(XENO_INFO "deleting Cobalt mutex %p\n",
-		       link2mutex(holder));
+		       mutex);
 #endif /* XENO_DEBUG(COBALT) */
 		xnlock_get_irqsave(&nklock, s);
 	}
-
+out:
 	xnlock_put_irqrestore(&nklock, s);
 }
 
 void cobalt_mutex_pkg_init(void)
 {
-	initq(&cobalt_global_kqueues.mutexq);
+	INIT_LIST_HEAD(&cobalt_global_kqueues.mutexq);
 }
 
 void cobalt_mutex_pkg_cleanup(void)

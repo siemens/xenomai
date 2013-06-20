@@ -35,6 +35,7 @@
 #include <cobalt/kernel/ppd.h>
 #include <cobalt/kernel/select.h>
 #include <cobalt/kernel/assert.h>
+#include <cobalt/kernel/list.h>
 #include <cobalt/syscall.h>
 #include <asm/xenomai/arith.h>
 #include "registry.h"
@@ -69,14 +70,13 @@
 #define cobalt_mark_deleted(t) ((t)->magic = ~(t)->magic)
 
 struct cobalt_kqueues {
-	struct xnqueue condq;
-	struct xnqueue intrq;
-	struct xnqueue mutexq;
-	struct xnqueue semq;
-	struct xnqueue threadq;
-	struct xnqueue timerq;
-	struct xnqueue monitorq;
-	struct xnqueue eventq;
+	struct list_head condq;
+	struct list_head mutexq;
+	struct list_head semq;
+	struct list_head threadq;
+	struct list_head timerq;
+	struct list_head monitorq;
+	struct list_head eventq;
 };
 
 struct cobalt_context {

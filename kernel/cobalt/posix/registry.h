@@ -2,7 +2,6 @@
 #define COBALT_REGISTRY_H
 
 #include <stdarg.h>
-#include <cobalt/kernel/queue.h>
 #include <cobalt/kernel/lock.h>
 
 #define COBALT_MAXNAME 64
@@ -13,8 +12,6 @@ typedef struct cobalt_node {
     unsigned magic;
     unsigned flags;             /* COBALT_NODE_PARTIAL_INIT. */
     unsigned refcount;
-    /* cobalt_unlink_t *dest_hook; */
-
     struct cobalt_node *next;
     struct cobalt_node **prev;
     char name[COBALT_MAXNAME];
@@ -81,15 +78,11 @@ struct mm_struct;
 
 DECLARE_EXTERN_XNLOCK(cobalt_assoc_lock);
 
-typedef xnqueue_t cobalt_assocq_t;
+typedef struct list_head cobalt_assocq_t;
 
 typedef struct {
-    u_long key;
-    xnholder_t link;
-
-#define link2assoc(laddr) \
-    ((cobalt_assoc_t *)((unsigned long)(laddr) - offsetof(cobalt_assoc_t, link)))
-
+    unsigned long key;
+    struct list_head link;
 } cobalt_assoc_t;
 
 typedef struct {
@@ -100,7 +93,7 @@ typedef struct {
     ((cobalt_ufd_t *)((unsigned long) (laddr) - offsetof(cobalt_ufd_t, assoc)))
 } cobalt_ufd_t;
 
-#define cobalt_assocq_init(q) (initq(q))
+#define cobalt_assocq_init(q) (INIT_LIST_HEAD(q))
 
 #define cobalt_assoc_key(assoc) ((assoc)->key)
 
@@ -108,12 +101,12 @@ void cobalt_assocq_destroy(cobalt_assocq_t *q, void (*destroy)(cobalt_assoc_t *)
 
 int cobalt_assoc_insert(cobalt_assocq_t *q,
 		       cobalt_assoc_t *assoc,
-		       u_long key);
+		       unsigned long key);
 
 cobalt_assoc_t *cobalt_assoc_lookup(cobalt_assocq_t *q,
-				  u_long key);
+				  unsigned long key);
 
 cobalt_assoc_t *cobalt_assoc_remove(cobalt_assocq_t *q,
-				  u_long key);
+				  unsigned long key);
 
 #endif /* COBALT_REGISTRY_H */

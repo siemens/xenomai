@@ -31,25 +31,18 @@
 #define COBALT_TIMER_MAX  128
 
 struct cobalt_timer {
-
-	xntimer_t timerbase;
-
-	unsigned overruns;
-
-	xnholder_t link; /* link in process or global timers queue. */
-
-#define link2tm(laddr, member) container_of(laddr, struct cobalt_timer, member)
-
-	xnholder_t tlink; /* link in thread timers queue. */
-
-	cobalt_siginfo_t si;
-
+	struct xntimer timerbase;
+	unsigned int overruns;
+	/** timerq */
+	struct list_head link;
+	struct list_head tlink;
+	siginfo_t si;
 	clockid_t clockid;
 	pthread_t owner;
 	struct cobalt_kqueues *owningq;
 };
 
-static xnqueue_t timer_freeq;
+static struct list_head timer_freeq;
 
 static struct cobalt_timer timer_pool[COBALT_TIMER_MAX];
 
@@ -61,13 +54,13 @@ static void cobalt_base_timer_handler(xntimer_t *xntimer)
 	timer = container_of(xntimer, struct cobalt_timer, timerbase);
 
 	/* post a semaphore. */
-	sem = timer->si.info.si_value.sival_ptr;
+	sem = timer->si.si_value.sival_ptr;
 	if (sem && sem_post_inner(sem, NULL, 0) < 0)
 		/*
 		 * On error, forget sema4 for next shots. In essence,
 		 * the timer stops notifying anyone at expiry.
 		 */
-		timer->si.info.si_value.sival_ptr = NULL;
+		timer->si.si_value.sival_ptr = NULL;
 }
 
 /**
@@ -118,7 +111,6 @@ static inline int timer_create(clockid_t clockid,
 	struct __shadow_sem *shadow_sem = NULL;
 	int err = -EINVAL, semval, signo;
 	struct cobalt_timer *timer;
-	xnholder_t *holder;
 	sem_t *sem;
 	spl_t s;
 
@@ -155,38 +147,35 @@ static inline int timer_create(clockid_t clockid,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	holder = getq(&timer_freeq);
-	if (holder == NULL) {
+	if (list_empty(&timer_freeq)) {
 		err = -EAGAIN;
 		goto unlock_and_error;
 	}
 
-	timer = link2tm(holder, link);
-	timer->si.info.si_code = SI_TIMER;
-	timer->si.info.si_signo = signo;
+	timer = list_get_entry(&timer_freeq, struct cobalt_timer, link);
+	timer->si.si_code = SI_TIMER;
+	timer->si.si_signo = signo;
 
-	if (evp) {
-		timer->si.info.si_value.sival_ptr = shadow_sem->sem;
-	} else
-		timer->si.info.si_value.sival_int = (timer - timer_pool);
+	if (evp)
+		timer->si.si_value.sival_ptr = shadow_sem->sem;
+	else
+		timer->si.si_value.sival_int = (timer - timer_pool);
 
 	xntimer_init(&timer->timerbase, cobalt_base_timer_handler);
-
 	timer->overruns = 0;
 	timer->owner = NULL;
 	timer->clockid = clockid;
 	timer->owningq = cobalt_kqueues(0);
-	inith(&timer->link);
-	appendq(&cobalt_kqueues(0)->timerq, &timer->link);
+	list_add_tail(&timer->link, &cobalt_kqueues(0)->timerq);
 	xnlock_put_irqrestore(&nklock, s);
 
 	*timerid = (timer_t)(timer - timer_pool);
 
 	return 0;
 
-      unlock_and_error:
+unlock_and_error:
 	xnlock_put_irqrestore(&nklock, s);
-      error:
+error:
 	return err;
 }
 
@@ -216,13 +205,15 @@ cobalt_timer_delete_inner(timer_t timerid, struct cobalt_kqueues *q, int force)
 		goto unlock_and_error;
 	}
 
-	removeq(&q->timerq, &timer->link);
+	list_del(&timer->link);
 
 	xntimer_destroy(&timer->timerbase);
+
 	if (timer->owner)
-		removeq(&timer->owner->timersq, &timer->tlink);
+		list_del(&timer->tlink);
+
 	timer->owner = NULL;	/* Used for debugging. */
-	prependq(&timer_freeq, &timer->link);	/* Favour earliest reuse. */
+	list_add(&timer->link, &timer_freeq); /* Favour earliest reuse. */
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -348,7 +339,7 @@ timer_settime(timer_t timerid, int flags,
 		cobalt_timer_gettime_inner(timer, ovalue);
 
 	if (timer->owner)
-		removeq(&timer->owner->timersq, &timer->tlink);
+		list_del(&timer->tlink);
 
 	if (value->it_value.tv_nsec == 0 && value->it_value.tv_sec == 0) {
 		xntimer_stop(&timer->timerbase);
@@ -374,8 +365,7 @@ timer_settime(timer_t timerid, int flags,
 		}
 
 		timer->owner = cur;
-		inith(&timer->tlink);
-		appendq(&timer->owner->timersq, &timer->tlink);
+		list_add_tail(&timer->tlink, &timer->owner->timersq);
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -572,15 +562,19 @@ int cobalt_timer_getoverrun(timer_t timerid)
 
 void cobalt_timer_init_thread(pthread_t new_thread)
 {
-	initq(&new_thread->timersq);
+	INIT_LIST_HEAD(&new_thread->timersq);
 }
 
 /* Called with nklock locked irq off. */
 void cobalt_timer_cleanup_thread(pthread_t zombie)
 {
-	xnholder_t *holder;
-	while ((holder = getq(&zombie->timersq)) != NULL) {
-		struct cobalt_timer *timer = link2tm(holder, tlink);
+	struct cobalt_timer *timer, *tmp;
+
+	if (list_empty(&zombie->timersq))
+		return;
+
+	list_for_each_entry_safe(timer, tmp, &zombie->timersq, tlink) {
+		list_del(&timer->tlink);
 		xntimer_stop(&timer->timerbase);
 		timer->owner = NULL;
 	}
@@ -588,13 +582,17 @@ void cobalt_timer_cleanup_thread(pthread_t zombie)
 
 void cobalt_timerq_cleanup(struct cobalt_kqueues *q)
 {
-	xnholder_t *holder;
+	struct cobalt_timer *timer, *tmp;
+	timer_t tm;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	while ((holder = getheadq(&q->timerq))) {
-		timer_t tm = (timer_t) (link2tm(holder, link) - timer_pool);
+	if (list_empty(&q->timerq))
+		goto out;
+
+	list_for_each_entry_safe(timer, tmp, &q->timerq, link) { 
+		tm = (timer_t)(timer - timer_pool);
 		cobalt_timer_delete_inner(tm, q, 1);
 		xnlock_put_irqrestore(&nklock, s);
 #if XENO_DEBUG(COBALT)
@@ -602,7 +600,7 @@ void cobalt_timerq_cleanup(struct cobalt_kqueues *q)
 #endif /* XENO_DEBUG(COBALT) */
 		xnlock_get_irqsave(&nklock, s);
 	}
-
+out:
 	xnlock_put_irqrestore(&nklock, s);
 }
 
@@ -610,13 +608,11 @@ int cobalt_timer_pkg_init(void)
 {
 	int n;
 
-	initq(&timer_freeq);
-	initq(&cobalt_global_kqueues.timerq);
+	INIT_LIST_HEAD(&timer_freeq);
+	INIT_LIST_HEAD(&cobalt_global_kqueues.timerq);
 
-	for (n = 0; n < COBALT_TIMER_MAX; n++) {
-		inith(&timer_pool[n].link);
-		appendq(&timer_freeq, &timer_pool[n].link);
-	}
+	for (n = 0; n < COBALT_TIMER_MAX; n++)
+		list_add_tail(&timer_pool[n].link, &timer_freeq);
 
 	return 0;
 }

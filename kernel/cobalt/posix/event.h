@@ -39,7 +39,7 @@ struct cobalt_event {
 	struct xnsynch synch;
 	struct cobalt_event_data *data;
 	struct cobalt_kqueues *owningq;
-	struct xnholder link;
+	struct list_head link;
 	int flags;
 };
 

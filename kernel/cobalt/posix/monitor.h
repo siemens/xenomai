@@ -44,8 +44,8 @@ struct cobalt_monitor {
 	struct xnsynch drain;
 	struct cobalt_monitor_data *data;
 	struct cobalt_kqueues *owningq;
-	struct xnholder link;
-	struct xnqueue waiters;
+	struct list_head link;
+	struct list_head waiters;
 	int flags;
 };
 

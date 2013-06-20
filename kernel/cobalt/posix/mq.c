@@ -31,7 +31,6 @@
 
 #include <stdarg.h>
 #include <linux/fs.h>		/* ERR_PTR */
-#include <cobalt/kernel/queue.h>
 #include "registry.h"
 #include "internal.h"		/* Magics, time conversion */
 #include "thread.h"		/* errno. */
@@ -42,64 +41,53 @@
 /* Temporary definitions. */
 struct cobalt_mq {
 	cobalt_node_t nodebase;
-
 #define node2mq(naddr) container_of(naddr,  cobalt_mq_t, nodebase)
 
-	xnpqueue_t queued;
-	xnsynch_t receivers;
-	xnsynch_t senders;
+	struct xnsynch receivers;
+	struct xnsynch senders;
 	size_t memsize;
 	char *mem;
-	xnqueue_t avail;
+	struct list_head queued;
+	struct list_head avail;
+	int nrqueued;
 
 	/* mq_notify */
-	cobalt_siginfo_t si;
+	siginfo_t si;
 	mqd_t target_qd;
 	pthread_t target;
 
 	struct mq_attr attr;
-
-	xnholder_t link;	/* link in mqq */
+	struct list_head link;	/* link in mqq */
 
 	DECLARE_XNSELECT(read_select);
 	DECLARE_XNSELECT(write_select);
-#define link2mq(laddr) container_of(laddr, cobalt_mq_t, link)
 };
 
-#define link2msg(addr) container_of(addr, cobalt_msg_t, link)
-
-typedef struct cobalt_msg {
-	xnpholder_t link;
+struct cobalt_msg {
+	struct list_head link;
+	unsigned int prio;
 	size_t len;
 	char data[0];
-} cobalt_msg_t;
+};
 
-#define cobalt_msg_get_prio(msg) (msg)->link.prio
-#define cobalt_msg_set_prio(msg, prio) (msg)->link.prio = (prio)
-
-static xnqueue_t cobalt_mqq;
+static struct list_head cobalt_mqq;
 
 static struct mq_attr default_attr = {
       mq_maxmsg:128,
       mq_msgsize:128,
 };
 
-static inline cobalt_msg_t *cobalt_mq_msg_alloc(cobalt_mq_t * mq)
+static inline struct cobalt_msg *cobalt_mq_msg_alloc(cobalt_mq_t *mq)
 {
-	xnpholder_t *holder = (xnpholder_t *)getq(&mq->avail);
-
-	if (!holder)
+	if (list_empty(&mq->avail))
 		return NULL;
 
-	initph(holder);
-	return link2msg(holder);
+	return list_get_entry(&mq->avail, struct cobalt_msg, link);
 }
 
-static inline void cobalt_mq_msg_free(cobalt_mq_t * mq, cobalt_msg_t * msg)
+static inline void cobalt_mq_msg_free(cobalt_mq_t * mq, struct cobalt_msg * msg)
 {
-	xnholder_t *holder = (xnholder_t *)(&msg->link);
-	inith(holder);
-	prependq(&mq->avail, holder);	/* For earliest re-use of the block. */
+	list_add(&msg->link, &mq->avail); /* For earliest re-use of the block. */
 }
 
 static inline int cobalt_mq_init(cobalt_mq_t * mq, const struct mq_attr *attr)
@@ -112,7 +100,7 @@ static inline int cobalt_mq_init(cobalt_mq_t * mq, const struct mq_attr *attr)
 	else if (attr->mq_maxmsg <= 0 || attr->mq_msgsize <= 0)
 		return EINVAL;
 
-	msgsize = attr->mq_msgsize + sizeof(cobalt_msg_t);
+	msgsize = attr->mq_msgsize + sizeof(struct cobalt_msg);
 
 	/* Align msgsize on natural boundary. */
 	if ((msgsize % sizeof(unsigned long)))
@@ -127,15 +115,16 @@ static inline int cobalt_mq_init(cobalt_mq_t * mq, const struct mq_attr *attr)
 		return ENOSPC;
 
 	mq->memsize = memsize;
-	initpq(&mq->queued);
+	INIT_LIST_HEAD(&mq->queued);
+	mq->nrqueued = 0;
 	xnsynch_init(&mq->receivers, XNSYNCH_PRIO | XNSYNCH_NOPIP, NULL);
 	xnsynch_init(&mq->senders, XNSYNCH_PRIO | XNSYNCH_NOPIP, NULL);
 	mq->mem = mem;
 
 	/* Fill the pool. */
-	initq(&mq->avail);
+	INIT_LIST_HEAD(&mq->avail);
 	for (i = 0; i < attr->mq_maxmsg; i++) {
-		cobalt_msg_t *msg = (cobalt_msg_t *) (mem + i * msgsize);
+		struct cobalt_msg *msg = (struct cobalt_msg *) (mem + i * msgsize);
 		cobalt_mq_msg_free(mq, msg);
 	}
 
@@ -177,7 +166,7 @@ static inline void cobalt_mq_destroy(cobalt_mq_t *mq)
 	xnlock_get_irqsave(&nklock, s);
 	resched = (xnsynch_destroy(&mq->receivers) == XNSYNCH_RESCHED);
 	resched = (xnsynch_destroy(&mq->senders) == XNSYNCH_RESCHED) || resched;
-	removeq(&cobalt_mqq, &mq->link);
+	list_del(&mq->link);
 	xnlock_put_irqrestore(&nklock, s);
 	xnselect_destroy(&mq->read_select);
 	xnselect_destroy(&mq->write_select);
@@ -291,11 +280,9 @@ static mqd_t mq_open(const char *name, int oflags, ...)
 	if (err)
 		goto err_free_mq;
 
-	inith(&mq->link);
-
 	xnlock_get_irqsave(&nklock, s);
 
-	appendq(&cobalt_mqq, &mq->link);
+	list_add_tail(&mq->link, &cobalt_mqq);
 
 	err = -cobalt_node_add(&mq->nodebase, name, COBALT_MQ_MAGIC);
 	if (err && err != -EEXIST)
@@ -459,10 +446,11 @@ static inline int mq_unlink(const char *name)
 	return err;
 }
 
-static inline cobalt_msg_t *cobalt_mq_trysend(cobalt_mq_t **mqp,
-					      cobalt_desc_t *desc, size_t len)
+static inline
+struct cobalt_msg *cobalt_mq_trysend(cobalt_mq_t **mqp,
+				     cobalt_desc_t *desc, size_t len)
 {
-	cobalt_msg_t *msg;
+	struct cobalt_msg *msg;
 	cobalt_mq_t *mq;
 	unsigned flags;
 
@@ -479,20 +467,21 @@ static inline cobalt_msg_t *cobalt_mq_trysend(cobalt_mq_t **mqp,
 	if (!msg)
 		return ERR_PTR(-EAGAIN);
 
-	if (countq(&mq->avail) == 0)
+	if (list_empty(&mq->avail))
 		xnselect_signal(&mq->write_select, 0);
 
 	*mqp = mq;
 	mq->nodebase.refcount++;
+
 	return msg;
 }
 
-static inline cobalt_msg_t *cobalt_mq_tryrcv(cobalt_mq_t **mqp,
-					     cobalt_desc_t *desc, size_t len)
+static inline struct cobalt_msg *cobalt_mq_tryrcv(cobalt_mq_t **mqp,
+						  cobalt_desc_t *desc, size_t len)
 {
-	xnpholder_t *holder;
+	struct cobalt_msg *msg;
+	unsigned int flags;
 	cobalt_mq_t *mq;
-	unsigned flags;
 
 	mq = node2mq(cobalt_desc_node(desc));
 	flags = cobalt_desc_getflags(desc) & COBALT_PERMS_MASK;
@@ -503,23 +492,27 @@ static inline cobalt_msg_t *cobalt_mq_tryrcv(cobalt_mq_t **mqp,
 	if (len < mq->attr.mq_msgsize)
 		return ERR_PTR(-EMSGSIZE);
 
-	if (!(holder = getpq(&mq->queued)))
+	if (list_empty(&mq->queued))
 		return ERR_PTR(-EAGAIN);
 
-	if (countpq(&mq->queued) == 0)
+	msg = list_get_entry(&mq->queued, struct cobalt_msg, link);
+	mq->nrqueued--;
+
+	if (list_empty(&mq->queued))
 		xnselect_signal(&mq->read_select, 0);
 
 	*mqp = mq;
 	mq->nodebase.refcount++;
-	return link2msg(holder);
+
+	return msg;
 }
 
-static cobalt_msg_t *
+static struct cobalt_msg *
 cobalt_mq_timedsend_inner(cobalt_mq_t **mqp, mqd_t fd,
 			  size_t len, const struct timespec *abs_timeoutp)
 {
 	xnthread_t *cur = xnpod_current_thread();
-	cobalt_msg_t *msg;
+	struct cobalt_msg *msg;
 	spl_t s;
 	int rc;
 
@@ -579,7 +572,7 @@ cobalt_mq_timedsend_inner(cobalt_mq_t **mqp, mqd_t fd,
 struct mq_signal {
 	struct ipipe_work_header work; /* Must be first. */
 	struct task_struct *task;
-	cobalt_siginfo_t si;	
+	siginfo_t si;	
 };
 
 static void mq_do_notify(struct ipipe_work_header *work)
@@ -588,7 +581,7 @@ static void mq_do_notify(struct ipipe_work_header *work)
 	siginfo_t *si;
 
 	rq = container_of(work, struct mq_signal, work);
-	si = &rq->si.info;
+	si = &rq->si;
 	send_sig_info(si->si_signo, si, rq->task);
 }
 
@@ -607,27 +600,31 @@ static void mq_send_signal(cobalt_mq_t *mq)
 }
 
 static int
-cobalt_mq_finish_send(mqd_t fd, cobalt_mq_t *mq, cobalt_msg_t *msg)
+cobalt_mq_finish_send(mqd_t fd, cobalt_mq_t *mq, struct cobalt_msg *msg)
 {
 	int err = 0, resched = 0, removed;
 	cobalt_desc_t *desc;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
+
 	if ((err = -cobalt_desc_get(&desc, fd, COBALT_MQ_MAGIC)))
 		goto bad_fd;
+
 	if ((node2mq(cobalt_desc_node(desc)) != mq)) {
 		err = -EBADF;
 		goto bad_fd;
 	}
 
-	insertpqf(&mq->queued, &msg->link, msg->link.prio);
-	if (countpq(&mq->queued) == 1)
+	list_add_priff(msg, &mq->queued, prio, link);
+	mq->nrqueued++;
+
+	if (list_is_singular(&mq->queued))
 		resched = xnselect_signal(&mq->read_select, 1);
 
 	if (xnsynch_wakeup_one_sleeper(&mq->receivers))
 		resched = 1;
-	else if (mq->target && countpq(&mq->queued) == 1) {
+	else if (mq->target && list_is_singular(&mq->queued)) {
 		/*
 		 * First message and no pending reader? send a signal
 		 * if mq_notify was called.
@@ -654,24 +651,27 @@ cobalt_mq_finish_send(mqd_t fd, cobalt_mq_t *mq, cobalt_msg_t *msg)
 	return err;
 
   bad_fd:
-	/* descriptor was destroyed, simply return the message to the
-	   pool and wakeup any waiting sender. */;
+	/*
+	 * descriptor was destroyed, simply return the message to the
+	 * pool and wakeup any waiting sender.
+	 */;
 	cobalt_mq_msg_free(mq, msg);
 
-	if (countq(&mq->avail) == 1)
+	if (list_is_singular(&mq->avail))
 		resched = xnselect_signal(&mq->write_select, 1);
 
 	if (xnsynch_wakeup_one_sleeper(&mq->senders))
 		resched = 1;
+
 	goto unref;
 }
 
-static cobalt_msg_t *
+static struct cobalt_msg *
 cobalt_mq_timedrcv_inner(cobalt_mq_t **mqp, mqd_t fd,
 			 size_t len, const struct timespec *abs_timeoutp)
 {
 	xnthread_t *cur = xnpod_current_thread();
-	cobalt_msg_t *msg;
+	struct cobalt_msg *msg;
 	spl_t s;
 	int rc;
 
@@ -728,7 +728,7 @@ cobalt_mq_timedrcv_inner(cobalt_mq_t **mqp, mqd_t fd,
 }
 
 static int
-cobalt_mq_finish_rcv(mqd_t fd, cobalt_mq_t *mq, cobalt_msg_t *msg)
+cobalt_mq_finish_rcv(mqd_t fd, cobalt_mq_t *mq, struct cobalt_msg *msg)
 {
 	int err = 0, resched = 0, removed;
 	cobalt_desc_t *desc;
@@ -741,7 +741,7 @@ cobalt_mq_finish_rcv(mqd_t fd, cobalt_mq_t *mq, cobalt_msg_t *msg)
 
 	cobalt_mq_msg_free(mq, msg);
 
-	if (countq(&mq->avail) == 1)
+	if (list_is_singular(&mq->avail))
 		resched = xnselect_signal(&mq->write_select, 1);
 
 	if (xnsynch_wakeup_one_sleeper(&mq->senders))
@@ -807,7 +807,7 @@ static inline int mq_getattr(mqd_t fd, struct mq_attr *attr)
 	mq = node2mq(cobalt_desc_node(desc));
 	*attr = mq->attr;
 	attr->mq_flags = cobalt_desc_getflags(desc);
-	attr->mq_curmsgs = countpq(&mq->queued);
+	attr->mq_curmsgs = mq->nrqueued;
 	xnlock_put_irqrestore(&nklock, s);
 
 	return 0;
@@ -862,7 +862,7 @@ static inline int mq_setattr(mqd_t fd,
 	if (oattr) {
 		*oattr = mq->attr;
 		oattr->mq_flags = cobalt_desc_getflags(desc);
-		oattr->mq_curmsgs = countpq(&mq->queued);
+		oattr->mq_curmsgs = mq->nrqueued;
 	}
 	flags = (cobalt_desc_getflags(desc) & COBALT_PERMS_MASK)
 	    | (attr->mq_flags & ~COBALT_PERMS_MASK);
@@ -947,9 +947,9 @@ static inline int mq_notify(mqd_t fd, const struct sigevent *evp)
 	else {
 		mq->target = thread;
 		mq->target_qd = fd;
-		mq->si.info.si_signo = evp->sigev_signo;
-		mq->si.info.si_code = SI_MESGQ;
-		mq->si.info.si_value = evp->sigev_value;
+		mq->si.si_signo = evp->sigev_signo;
+		mq->si.si_code = SI_MESGQ;
+		mq->si.si_value = evp->sigev_value;
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -984,7 +984,7 @@ int cobalt_mq_notify(mqd_t fd, const struct sigevent *__user evp)
 }
 
 int cobalt_mq_select_bind(mqd_t fd, struct xnselector *selector,
-			 unsigned type, unsigned index)
+			  unsigned type, unsigned index)
 {
 	struct xnselect_binding *binding;
 	cobalt_desc_t *desc;
@@ -1013,7 +1013,7 @@ int cobalt_mq_select_bind(mqd_t fd, struct xnselector *selector,
 			goto unlock_and_error;
 
 		err = xnselect_bind(&mq->read_select, binding,
-				    selector, type, index, countpq(&mq->queued));
+				    selector, type, index, !list_empty(&mq->queued));
 		if (err)
 			goto unlock_and_error;
 		break;
@@ -1024,7 +1024,7 @@ int cobalt_mq_select_bind(mqd_t fd, struct xnselector *selector,
 			goto unlock_and_error;
 
 		err = xnselect_bind(&mq->write_select, binding,
-				    selector, type, index, countq(&mq->avail));
+				    selector, type, index, !list_empty(&mq->avail));
 		if (err)
 			goto unlock_and_error;
 		break;
@@ -1200,12 +1200,12 @@ int cobalt_mq_setattr(mqd_t uqd, const struct mq_attr __user *u_attr,
 	return 0;
 }
 
-int cobalt_mq_send(mqd_t uqd,
-		   const void __user *u_buf, size_t len, unsigned int prio)
+int cobalt_mq_send(mqd_t uqd, const void __user *u_buf, size_t len,
+		   unsigned int prio)
 {
 	struct cobalt_context *cc;
+	struct cobalt_msg *msg;
 	cobalt_assoc_t *assoc;
-	cobalt_msg_t *msg;
 	cobalt_ufd_t *ufd;
 	cobalt_mq_t *mq;
 
@@ -1231,7 +1231,7 @@ int cobalt_mq_send(mqd_t uqd,
 		return -EFAULT;
 	}
 	msg->len = len;
-	cobalt_msg_set_prio(msg, prio);
+	msg->prio = prio;
 
 	return cobalt_mq_finish_send(ufd->kfd, mq, msg);
 }
@@ -1241,8 +1241,8 @@ int cobalt_mq_timedsend(mqd_t uqd, const void __user *u_buf, size_t len,
 {
 	struct timespec timeout, *timeoutp;
 	struct cobalt_context *cc;
+	struct cobalt_msg *msg;
 	cobalt_assoc_t *assoc;
-	cobalt_msg_t *msg;
 	cobalt_ufd_t *ufd;
 	cobalt_mq_t *mq;
 
@@ -1275,7 +1275,7 @@ int cobalt_mq_timedsend(mqd_t uqd, const void __user *u_buf, size_t len,
 		return -EFAULT;
 	}
 	msg->len = len;
-	cobalt_msg_set_prio(msg, prio);
+	msg->prio = prio;
 
 	return cobalt_mq_finish_send(ufd->kfd, mq, msg);
 }
@@ -1284,9 +1284,9 @@ int cobalt_mq_receive(mqd_t uqd, void __user *u_buf,
 		      ssize_t __user *u_len, unsigned int __user *u_prio)
 {
 	struct cobalt_context *cc;
+	struct cobalt_msg *msg;
 	cobalt_assoc_t *assoc;
 	cobalt_ufd_t *ufd;
-	cobalt_msg_t *msg;
 	cobalt_mq_t *mq;
 	unsigned prio;
 	ssize_t len;
@@ -1321,7 +1321,7 @@ int cobalt_mq_receive(mqd_t uqd, void __user *u_buf,
 	}
 
 	len = msg->len;
-	prio = cobalt_msg_get_prio(msg);
+	prio = msg->prio;
 
 	err = cobalt_mq_finish_rcv(ufd->kfd, mq, msg);
 	if (err)
@@ -1344,10 +1344,10 @@ int cobalt_mq_timedreceive(mqd_t uqd, void __user *u_buf,
 {
 	struct timespec timeout, *timeoutp;
 	struct cobalt_context *cc;
+	struct cobalt_msg *msg;
 	cobalt_assoc_t *assoc;
 	unsigned int prio;
 	cobalt_ufd_t *ufd;
-	cobalt_msg_t *msg;
 	cobalt_mq_t *mq;
 	ssize_t len;
 	int err;
@@ -1385,7 +1385,7 @@ int cobalt_mq_timedreceive(mqd_t uqd, void __user *u_buf,
 		return -EFAULT;
 	}
 	len = msg->len;
-	prio = cobalt_msg_get_prio(msg);
+	prio = msg->prio;
 
 	err = cobalt_mq_finish_rcv(ufd->kfd, mq, msg);
 	if (err)
@@ -1402,20 +1402,23 @@ int cobalt_mq_timedreceive(mqd_t uqd, void __user *u_buf,
 
 int cobalt_mq_pkg_init(void)
 {
-	initq(&cobalt_mqq);
+	INIT_LIST_HEAD(&cobalt_mqq);
 
 	return 0;
 }
 
 void cobalt_mq_pkg_cleanup(void)
 {
-	xnholder_t *holder;
+	struct cobalt_mq *mq, *tmp;
+	cobalt_node_t *node;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	while ((holder = getheadq(&cobalt_mqq))) {
-		cobalt_mq_t *mq = link2mq(holder);
-		cobalt_node_t *node;
+
+	if (list_empty(&cobalt_mqq))
+		goto out;
+
+	list_for_each_entry_safe(mq, tmp, &cobalt_mqq, link) {
 		cobalt_node_remove(&node, mq->nodebase.name, COBALT_MQ_MAGIC);
 		xnlock_put_irqrestore(&nklock, s);
 		cobalt_mq_destroy(mq);
@@ -1426,6 +1429,7 @@ void cobalt_mq_pkg_cleanup(void)
 		xnfree(mq);
 		xnlock_get_irqsave(&nklock, s);
 	}
+out:
 	xnlock_put_irqrestore(&nklock, s);
 }
 

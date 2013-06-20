@@ -233,13 +233,13 @@ static struct xnshadow_ppd *cobalt_process_attach(void)
 	if (cc == NULL)
 		return ERR_PTR(-ENOSPC);
 
-	initq(&cc->kqueues.condq);
-	initq(&cc->kqueues.mutexq);
-	initq(&cc->kqueues.semq);
-	initq(&cc->kqueues.threadq);
-	initq(&cc->kqueues.timerq);
-	initq(&cc->kqueues.monitorq);
-	initq(&cc->kqueues.eventq);
+	INIT_LIST_HEAD(&cc->kqueues.condq);
+	INIT_LIST_HEAD(&cc->kqueues.mutexq);
+	INIT_LIST_HEAD(&cc->kqueues.semq);
+	INIT_LIST_HEAD(&cc->kqueues.threadq);
+	INIT_LIST_HEAD(&cc->kqueues.timerq);
+	INIT_LIST_HEAD(&cc->kqueues.monitorq);
+	INIT_LIST_HEAD(&cc->kqueues.eventq);
 	cobalt_assocq_init(&cc->uqds);
 	cobalt_assocq_init(&cc->usems);
 

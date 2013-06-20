@@ -54,24 +54,21 @@ union cobalt_mutex_union {
 #include "thread.h"
 #include "cond.h"
 
-typedef struct cobalt_mutex {
-	unsigned magic;
+struct cobalt_mutex {
+	unsigned int magic;
 	xnsynch_t synchbase;
-	xnholder_t link;            /* Link in cobalt_mutexq */
-
-#define link2mutex(laddr) container_of(laddr, cobalt_mutex_t, link)
-
-	xnqueue_t conds;
-
+	/** cobalt_mutexq */
+	struct list_head link;
+	struct list_head conds;
 	pthread_mutexattr_t attr;
 	struct cobalt_kqueues *owningq;
-} cobalt_mutex_t;
+};
 
 extern pthread_mutexattr_t cobalt_default_mutex_attr;
 
 /* must be called with nklock locked, interrupts off. */
 static inline int cobalt_mutex_acquire_unchecked(xnthread_t *cur,
-						 cobalt_mutex_t *mutex,
+						 struct cobalt_mutex *mutex,
 						 int timed,
 						 xnticks_t abs_to)
 
@@ -93,11 +90,12 @@ static inline int cobalt_mutex_acquire_unchecked(xnthread_t *cur,
 	return 0;
 }
 
-static inline int cobalt_mutex_release(xnthread_t *cur, cobalt_mutex_t *mutex)
+static inline int cobalt_mutex_release(xnthread_t *cur,
+				       struct cobalt_mutex *mutex)
 {
+	struct cobalt_cond *cond;
 	struct mutex_dat *datp;
 	unsigned long flags;
-	xnholder_t *holder;
 	int need_resched;
 
 	if (!cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, struct cobalt_mutex))
@@ -108,15 +106,15 @@ static inline int cobalt_mutex_release(xnthread_t *cur, cobalt_mutex_t *mutex)
 		return -EPERM;
 #endif /* XENO_DEBUG(COBALT) */
 
-	need_resched = 0;
 	datp = container_of(mutex->synchbase.fastlock, struct mutex_dat, owner);
 	flags = datp->flags;
+	need_resched = 0;
 	if ((flags & COBALT_MUTEX_COND_SIGNAL)) {
 		datp->flags = flags & ~COBALT_MUTEX_COND_SIGNAL;
-		for (holder = getheadq(&mutex->conds);
-		     holder; holder = nextq(&mutex->conds, holder)) {
-			struct cobalt_cond *cond = mutex_link2cond(holder);
-			need_resched |= cobalt_cond_deferred_signals(cond);
+		if (!list_empty(&mutex->conds)) {
+			list_for_each_entry(cond, &mutex->conds, mutex_link)
+				need_resched |=
+				cobalt_cond_deferred_signals(cond);
 		}
 	}
 	need_resched |= xnsynch_release(&mutex->synchbase, cur) != NULL;
