@@ -30,13 +30,13 @@
 
 #ifdef __KERNEL__
 
-#include <cobalt/kernel/queue.h>
+#include <cobalt/kernel/list.h>
 #include <cobalt/kernel/synch.h>
 #include <cobalt/kernel/vfile.h>
 
 struct xnpnode;
 
-typedef struct xnobject {
+struct xnobject {
 	void *objaddr;
 	const char *key;	  /* !< Hash key. */
 	struct xnsynch safesynch; /* !< Safe synchronization object. */
@@ -55,10 +55,8 @@ typedef struct xnobject {
 	struct xnvfile *vfilp;
 #endif /* CONFIG_XENO_OPT_VFILE */
 	struct xnobject *hnext;	/* !< Next in h-table */
-	struct xnholder link;
-} xnobject_t;
-
-#define link2xnobj(ln)		container_of(ln, struct xnobject, link)
+	struct list_head link;
+};
 
 int xnregistry_init(void);
 
@@ -136,8 +134,6 @@ struct xnpnode_link {
 };
 
 #endif /* !CONFIG_XENO_OPT_VFILE */
-
-extern struct xnobject *registry_obj_slots;
 
 /* Public interface. */
 
