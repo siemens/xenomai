@@ -22,12 +22,13 @@
  * \ingroup select
  */
 
-#ifndef _COBALT_KERNEL_XNSELECT_H
-#define _COBALT_KERNEL_XNSELECT_H
+#ifndef _COBALT_KERNEL_SELECT_H
+#define _COBALT_KERNEL_SELECT_H
 
 /*! \addtogroup select
  *@{*/
 
+#include <cobalt/kernel/list.h>
 #include <cobalt/kernel/thread.h>
 
 #define XNSELECT_READ      0
@@ -41,8 +42,8 @@ struct xnselector {
 		fd_set expected;
 		fd_set pending;
 	} fds [XNSELECT_MAX_TYPES];
-	xnholder_t destroy_link;
-	xnqueue_t bindings; /* only used by xnselector_destroy */
+	struct list_head destroy_link;
+	struct list_head bindings; /* only used by xnselector_destroy */
 };
 
 #define __NFDBITS__	(8 * sizeof(unsigned long))
@@ -85,7 +86,7 @@ static inline void __FD_ZERO__(__kernel_fd_set *__p)
 }
 
 struct xnselect {
-	xnqueue_t bindings;
+	struct list_head bindings;
 };
 
 #define DECLARE_XNSELECT(name) struct xnselect name
@@ -93,10 +94,10 @@ struct xnselect {
 struct xnselect_binding {
 	struct xnselector *selector;
 	struct xnselect *fd;
-	unsigned type;
-	unsigned bit_index;
-	xnholder_t link;  /* link in selected fds list. */
-	xnholder_t slink; /* link in selector list */
+	unsigned int type;
+	unsigned int bit_index;
+	struct list_head link;  /* link in selected fds list. */
+	struct list_head slink; /* link in selector list */
 };
 
 void xnselect_init(struct xnselect *select_block);
@@ -104,11 +105,11 @@ void xnselect_init(struct xnselect *select_block);
 int xnselect_bind(struct xnselect *select_block,
 		  struct xnselect_binding *binding,
 		  struct xnselector *selector,
-		  unsigned type,
-		  unsigned bit_index,
-		  unsigned state);
+		  unsigned int type,
+		  unsigned int bit_index,
+		  unsigned int state);
 
-int __xnselect_signal(struct xnselect *select_block, unsigned state);
+int __xnselect_signal(struct xnselect *select_block, unsigned int state);
 
 /**
  * Signal a file descriptor state change.
@@ -121,10 +122,11 @@ int __xnselect_signal(struct xnselect *select_block, unsigned state);
  * @retval 0 otherwise.
  */
 static inline int
-xnselect_signal(struct xnselect *select_block, unsigned state)
+xnselect_signal(struct xnselect *select_block, unsigned int state)
 {
-	if (!emptyq_p(&select_block->bindings))
+	if (!list_empty(&select_block->bindings))
 		return __xnselect_signal(select_block, state);
+
 	return 0;
 }
 
@@ -146,4 +148,4 @@ int xnselect_umount(void);
 
 /*@}*/
 
-#endif /* _COBALT_KERNEL_XNSELECT_H */
+#endif /* _COBALT_KERNEL_SELECT_H */

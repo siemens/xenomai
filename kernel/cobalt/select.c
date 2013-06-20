@@ -46,19 +46,16 @@
  * housekeeping.
  *@{*/
 
+#include <linux/types.h>
+#include <linux/bitops.h>	/* For hweight_long */
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/pod.h>
 #include <cobalt/kernel/synch.h>
 #include <cobalt/kernel/select.h>
 #include <cobalt/kernel/apc.h>
-#include <linux/types.h>
-#include <linux/bitops.h>	/* For hweight_long */
 
-static xnqueue_t xnselectors;
-static int xnselect_apc;
-
-#define link2binding(baddr, memb)				\
-	container_of(baddr, struct xnselect_binding, memb)
+static LIST_HEAD(selector_list);
+static int deletion_apc;
 
 /**
  * Initialize a @a struct @a xnselect structure.
@@ -70,7 +67,7 @@ static int xnselect_apc;
  */
 void xnselect_init(struct xnselect *select_block)
 {
-	initq(&select_block->bindings);
+	INIT_LIST_HEAD(&select_block->bindings);
 }
 EXPORT_SYMBOL_GPL(xnselect_init);
 
@@ -122,11 +119,9 @@ int xnselect_bind(struct xnselect *select_block,
 	binding->fd = select_block;
 	binding->type = type;
 	binding->bit_index = index;
-	inith(&binding->link);
-	inith(&binding->slink);
 
-	appendq(&selector->bindings, &binding->slink);
-	appendq(&select_block->bindings, &binding->link);
+	list_add_tail(&binding->slink, &selector->bindings);
+	list_add_tail(&binding->link, &select_block->bindings);
 	__FD_SET__(index, &selector->fds[type].expected);
 	if (state) {
 		__FD_SET__(index, &selector->fds[type].pending);
@@ -142,16 +137,11 @@ EXPORT_SYMBOL_GPL(xnselect_bind);
 /* Must be called with nklock locked irqs off */
 int __xnselect_signal(struct xnselect *select_block, unsigned state)
 {
-	xnholder_t *holder;
-	int resched;
+	struct xnselect_binding *binding;
+	struct xnselector *selector;
+	int resched = 0;
 
-	for(resched = 0, holder = getheadq(&select_block->bindings);
-	    holder; holder = nextq(&select_block->bindings, holder)) {
-		struct xnselect_binding *binding;
-		struct xnselector *selector;
-
-		binding = link2binding(holder, link);
-
+	list_for_each_entry(binding, &select_block->bindings, link) {
 		selector = binding->selector;
 		if (state) {
 			if (!__FD_ISSET__(binding->bit_index,
@@ -179,18 +169,19 @@ EXPORT_SYMBOL_GPL(__xnselect_signal);
  */
 void xnselect_destroy(struct xnselect *select_block)
 {
-	xnholder_t *holder;
+	struct xnselect_binding *binding, *tmp;
+	struct xnselector *selector;
 	int resched = 0;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	while ((holder = getq(&select_block->bindings))) {
-		struct xnselect_binding *binding;
-		struct xnselector *selector;
 
-		binding = link2binding(holder, link);
+	if (list_empty(&select_block->bindings))
+		goto out;
+
+	list_for_each_entry_safe(binding, tmp, &select_block->bindings, link) {
+		list_del(&binding->link);
 		selector = binding->selector;
-
 		__FD_CLR__(binding->bit_index,
 			 &selector->fds[binding->type].expected);
 		if (!__FD_ISSET__(binding->bit_index,
@@ -200,15 +191,14 @@ void xnselect_destroy(struct xnselect *select_block)
 			if (xnselect_wakeup(selector))
 				resched = 1;
 		}
-		removeq(&selector->bindings, &binding->slink);
+		list_del(&binding->slink);
 		xnlock_put_irqrestore(&nklock, s);
-
 		xnfree(binding);
-
 		xnlock_get_irqsave(&nklock, s);
 	}
 	if (resched)
 		xnpod_schedule();
+out:
 	xnlock_put_irqrestore(&nklock, s);
 }
 EXPORT_SYMBOL_GPL(xnselect_destroy);
@@ -285,14 +275,15 @@ static unsigned fd_set_popcount(fd_set *set, unsigned n)
  */
 int xnselector_init(struct xnselector *selector)
 {
-	unsigned i;
+	unsigned int i;
 
 	xnsynch_init(&selector->synchbase, XNSYNCH_FIFO, NULL);
 	for (i = 0; i < XNSELECT_MAX_TYPES; i++) {
 		__FD_ZERO__(&selector->fds[i].expected);
 		__FD_ZERO__(&selector->fds[i].pending);
 	}
-	initq(&selector->bindings);
+	INIT_LIST_HEAD(&selector->bindings);
+
 	return 0;
 }
 EXPORT_SYMBOL_GPL(xnselector_init);
@@ -399,39 +390,40 @@ void xnselector_destroy(struct xnselector *selector)
 {
 	spl_t s;
 
-	inith(&selector->destroy_link);
 	xnlock_get_irqsave(&nklock, s);
-	appendq(&xnselectors, &selector->destroy_link);
-	__xnapc_schedule(xnselect_apc);
+	list_add_tail(&selector->destroy_link, &selector_list);
+	__xnapc_schedule(deletion_apc);
 	xnlock_put_irqrestore(&nklock, s);
 }
 EXPORT_SYMBOL_GPL(xnselector_destroy);
 
 static void xnselector_destroy_loop(void *cookie)
 {
-	struct xnselector *selector;
-	xnholder_t *holder;
+	struct xnselect_binding *binding, *tmpb;
+	struct xnselector *selector, *tmps;
+	struct xnselect *fd;
 	int resched;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	while ((holder = getq(&xnselectors))) {
-		selector = container_of(holder, struct xnselector, destroy_link);
-		while ((holder = getq(&selector->bindings))) {
-			struct xnselect_binding *binding;
-			struct xnselect *fd;
 
-			binding = link2binding(holder, slink);
+	if (list_empty(&selector_list))
+		goto out;
+
+	list_for_each_entry_safe(selector, tmps, &selector_list, destroy_link) {
+		list_del(&selector->destroy_link);
+		if (list_empty(&selector->bindings))
+			goto release;
+		list_for_each_entry_safe(binding, tmpb, &selector->bindings, slink) {
+			list_del(&binding->slink);
 			fd = binding->fd;
-			removeq(&fd->bindings, &binding->link);
+			list_del(&binding->link);
 			xnlock_put_irqrestore(&nklock, s);
-
 			xnfree(binding);
-
 			xnlock_get_irqsave(&nklock, s);
 		}
-		resched =
-			xnsynch_destroy(&selector->synchbase) == XNSYNCH_RESCHED;
+	release:
+		resched = xnsynch_destroy(&selector->synchbase) == XNSYNCH_RESCHED;
 		xnlock_put_irqrestore(&nklock, s);
 
 		xnfree(selector);
@@ -440,23 +432,23 @@ static void xnselector_destroy_loop(void *cookie)
 
 		xnlock_get_irqsave(&nklock, s);
 	}
+out:
 	xnlock_put_irqrestore(&nklock, s);
 }
 
 int xnselect_mount(void)
 {
-	initq(&xnselectors);
-	xnselect_apc = xnapc_alloc("xnselectors_destroy",
-				       xnselector_destroy_loop, NULL);
-	if (xnselect_apc < 0)
-		return xnselect_apc;
+	deletion_apc = xnapc_alloc("selector_list_destroy",
+				   xnselector_destroy_loop, NULL);
+	if (deletion_apc < 0)
+		return deletion_apc;
 
 	return 0;
 }
 
 int xnselect_umount(void)
 {
-	xnapc_free(xnselect_apc);
+	xnapc_free(deletion_apc);
 	return 0;
 }
 
