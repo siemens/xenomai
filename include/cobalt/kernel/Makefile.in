@@ -281,12 +281,12 @@ includesub_HEADERS = \
 	heap.h \
 	hostrt.h \
 	intr.h \
+	list.h \
 	lock.h \
 	map.h \
 	pipe.h \
 	pod.h \
 	ppd.h \
-	queue.h \
 	registry.h \
 	select.h \
 	sched.h \

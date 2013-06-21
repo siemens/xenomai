@@ -330,14 +330,6 @@ config XENO_OPT_DEBUG_XNLOCK
 	sections. Statistics about the longest masking section may be
 	found in /proc/xenomai/lock.
 
-config XENO_OPT_DEBUG_QUEUES
-	bool "Queue sanity checks"
-	help
-
-	This option turns on debugging checks in all linked-list
-	manipulation routines inside the Xenomai core. This adds HUGE
-	runtime OVERHEAD, use with CARE.
-
 config XENO_OPT_DEBUG_REGISTRY
 	bool "Registry monitoring"
 	help

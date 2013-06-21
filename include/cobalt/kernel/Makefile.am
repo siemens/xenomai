@@ -14,7 +14,6 @@ includesub_HEADERS = \
 	pipe.h \
 	pod.h \
 	ppd.h \
-	queue.h \
 	registry.h \
 	select.h \
 	sched.h \
