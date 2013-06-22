@@ -12690,7 +12690,7 @@ $as_echo "#define CONFIG_XENO_DEBUG_FULL 1" >>confdefs.h
 
 
 
-lores_clock=y
+unset lores_clock
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable the low resolution clock" >&5
 $as_echo_n "checking whether to enable the low resolution clock... " >&6; }
 # Check whether --enable-lores-clock was given.

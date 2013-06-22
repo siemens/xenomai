@@ -92,7 +92,7 @@ int __clockobj_set_resolution(struct clockobj *clkobj,
 			      unsigned int resolution_ns)
 {
 	if (resolution_ns > 1) {
-		warning("support for low resolution clock disabled");
+		warning("low resolution clock disabled [--enable-lores-clock]");
 		return __bt(-EINVAL);
 	}
 
