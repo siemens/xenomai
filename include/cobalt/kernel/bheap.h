@@ -64,7 +64,7 @@ static inline int bheap_ordered(bheap_t *heap)
 }
 
 #define BHEAP_CHECK(heap)						\
-	XENO_BUGON(QUEUES, ((heap)->sz == 0) || !bheap_ordered(heap))
+	XENO_BUGON(TIMERS, ((heap)->sz == 0) || !bheap_ordered(heap))
 
 #define bheap_gethead(heap)				\
 	({                                              \
