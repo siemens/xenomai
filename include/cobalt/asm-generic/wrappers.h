@@ -30,6 +30,7 @@
 #include <linux/slab.h>
 #include <linux/ipipe.h>
 #include <linux/ipipe_tickdev.h>
+#include <linux/sched.h>
 #include <asm/io.h>
 #include <linux/pid.h>
 
@@ -44,7 +45,6 @@
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,4,0)
 
-#include <linux/sched.h>
 #include <linux/smp.h>
 
 #ifndef cpu_online_map
