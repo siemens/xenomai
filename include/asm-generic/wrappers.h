@@ -29,6 +29,7 @@
 #include <linux/version.h>
 #include <linux/module.h>
 #include <linux/slab.h>
+#include <linux/sched.h>
 #if defined(CONFIG_XENO_OPT_HOSTRT) || defined(__IPIPE_FEATURE_REQUEST_TICKDEV)
 #include <linux/ipipe_tickdev.h>
 #endif /* CONFIG_XENO_OPT_HOSTRT || __IPIPE_FEATURE_REQUEST_TICKDEV */
@@ -46,7 +47,6 @@
 
 #include <linux/wrapper.h>
 #include <linux/wait.h>
-#include <linux/sched.h>
 #include <linux/bitops.h>
 #include <linux/delay.h>
 #include <linux/slab.h>
@@ -588,8 +588,6 @@ static inline struct task_struct *wrap_find_task_by_pid(pid_t nr)
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)
 
-#include <linux/sched.h>
-
 #ifndef current_cap
 #define current_cap()  ((current)->cap_effective)
 #endif
@@ -709,7 +707,6 @@ static inline void wrap_proc_dir_entry_owner(struct proc_dir_entry *entry)
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,4,0)
 
-#include <linux/sched.h>
 #include <linux/mm.h>
 #include <linux/smp.h>
 
