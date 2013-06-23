@@ -76,8 +76,10 @@ int cond_init(cond_t *cond, int absolute)
 	int err;
 
 	pthread_condattr_init(&cattr);
+#ifdef HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL
 	pthread_condattr_setclock(&cattr,
 				  absolute ? CLOCK_REALTIME : CLOCK_MONOTONIC);
+#endif
 	err = pthread_cond_init(cond, &cattr);
 	pthread_condattr_destroy(&cattr);
 

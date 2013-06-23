@@ -51,9 +51,10 @@ int main(void)
 	check_unix(mlockall(MCL_CURRENT | MCL_FUTURE));
 
 	check_pthread(pthread_mutexattr_init(&mattr));
+#ifdef HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL
 	check_pthread(pthread_mutexattr_setprotocol(&mattr,
 						    PTHREAD_PRIO_INHERIT));
-
+#endif
 	check_pthread(pthread_mutex_init(&mutex, &mattr));
 	check_pthread(pthread_mutexattr_destroy(&mattr));
 
