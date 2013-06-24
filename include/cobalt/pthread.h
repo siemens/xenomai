@@ -247,7 +247,10 @@ COBALT_DECL(int, pthread_getschedparam(pthread_t thread,
 COBALT_DECL(int, pthread_setschedparam(pthread_t thread,
 				       int policy,
 				       const struct sched_param *param));
+
+#ifndef pthread_yield	/* likely uClibc wrapping otherwise. */
 COBALT_DECL(int, pthread_yield(void));
+#endif
 
 COBALT_DECL(int, pthread_mutexattr_init(pthread_mutexattr_t *attr));
 
@@ -258,14 +261,6 @@ COBALT_DECL(int, pthread_mutexattr_gettype(const pthread_mutexattr_t *attr,
 
 COBALT_DECL(int, pthread_mutexattr_settype(pthread_mutexattr_t *attr,
 					   int type));
-
-#ifdef HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL
-COBALT_DECL(int, pthread_mutexattr_getprotocol(const pthread_mutexattr_t *attr,
-					       int *proto));
-
-COBALT_DECL(int, pthread_mutexattr_setprotocol(pthread_mutexattr_t *attr,
-					       int proto));
-#endif
 
 COBALT_DECL(int, pthread_mutexattr_getpshared(const pthread_mutexattr_t *attr,
 					      int *pshared));
@@ -321,21 +316,17 @@ COBALT_DECL(int, pthread_cond_broadcast(pthread_cond_t *cond));
 
 COBALT_DECL(int, pthread_kill(pthread_t tid, int sig));
 
-#ifndef HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL
 COBALT_DECL(int, pthread_mutexattr_getprotocol(const pthread_mutexattr_t *attr,
 					       int *proto));
 
 COBALT_DECL(int, pthread_mutexattr_setprotocol(pthread_mutexattr_t *attr,
 					       int proto));
-#endif
 
-#ifndef HAVE_PTHREAD_CONDATTR_SETCLOCK
 COBALT_DECL(int, pthread_condattr_getclock(const pthread_condattr_t *attr,
 					   clockid_t *clk_id));
 
 COBALT_DECL(int, pthread_condattr_setclock(pthread_condattr_t *attr,
 					   clockid_t clk_id));
-#endif
 
 int pthread_make_periodic_np(pthread_t thread,
 			     clockid_t clk_id,
