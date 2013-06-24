@@ -48,12 +48,11 @@
 #define XNDEBUG   0x00002000 /**< Hit a debugger breakpoint */
 #define XNLOCK    0x00004000 /**< Holds the scheduler lock (i.e. not preemptible) */
 #define XNRRB     0x00008000 /**< Undergoes a round-robin scheduling */
-#define XNASDI    0x00010000 /**< ASR are disabled */
-#define XNTRAPSW  0x00020000 /**< Trap execution mode switches */
-#define XNFPU     0x00040000 /**< Thread uses FPU */
-#define XNROOT    0x00080000 /**< Root thread (that is, Linux/IDLE) */
-#define XNWEAK    0x00100000 /**< Non real-time shadow (from the WEAK class) */
-#define XNUSER    0x00200000 /**< Shadow thread running in userland */
+#define XNTRAPSW  0x00010000 /**< Trap execution mode switches */
+#define XNFPU     0x00020000 /**< Thread uses FPU */
+#define XNROOT    0x00040000 /**< Root thread (that is, Linux/IDLE) */
+#define XNWEAK    0x00080000 /**< Non real-time shadow (from the WEAK class) */
+#define XNUSER    0x00100000 /**< Shadow thread running in userland */
 
 /*! @} */ /* Ends doxygen comment group: nucleus_state_flags */
 
@@ -73,10 +72,10 @@
   'r' -> Undergoes round-robin.
   't' -> Mode switches trapped.
 */
-#define XNTHREAD_STATE_LABELS  "SWDRU....X.HbTlr...t....."
+#define XNTHREAD_STATE_LABELS  "SWDRU...X.HbTlrt...."
 
 #define XNTHREAD_BLOCK_BITS   (XNSUSP|XNPEND|XNDELAY|XNDORMANT|XNRELAX|XNMIGRATE|XNHELD)
-#define XNTHREAD_MODE_BITS    (XNLOCK|XNRRB|XNASDI|XNTRAPSW)
+#define XNTHREAD_MODE_BITS    (XNLOCK|XNRRB|XNTRAPSW)
 
 /* These state flags are available to the real-time interfaces */
 #define XNTHREAD_STATE_SPARE0  0x10000000
@@ -153,8 +152,6 @@ struct xnthread_user_window {
 #include <asm/xenomai/machine.h>
 #include <asm/xenomai/thread.h>
 
-#define XNTHREAD_INVALID_ASR  ((void (*)(xnsigmask_t))0)
-
 struct xnthread;
 struct xnsynch;
 struct xnsched;
@@ -181,8 +178,6 @@ struct xnthread_start_attr {
 struct xnthread_wait_context {
 	/* anchor object */
 };
-
-typedef void (*xnasr_t)(xnsigmask_t sigs);
 
 typedef struct xnthread {
 
@@ -254,8 +249,6 @@ typedef struct xnthread {
 
 	xntimer_t rrbtimer;		/* Round-robin timer */
 
-	xnsigmask_t signals;		/* Pending core signals */
-
 	xnticks_t rrperiod;		/* Allotted round-robin period (ns) */
 
   	struct xnthread_wait_context *wcontext;	/* Active wait context. */
@@ -270,14 +263,6 @@ typedef struct xnthread {
 	} stat;
 
 	struct xnselector *selector;    /* For select. */
-
-	xnasr_t asr;			/* Asynchronous service routine */
-
-	xnflags_t asrmode;		/* Thread's mode for ASR */
-
-	int asrimask;			/* Thread's interrupt mask for ASR */
-
-	unsigned asrlevel;		/* ASR execution level (ASRs are reentrant) */
 
 	int imode;			/* Initial mode */
 
@@ -329,14 +314,11 @@ typedef struct xnthread {
 #define xnthread_sched_class(thread)       ((thread)->sched_class)
 #define xnthread_time_slice(thread)        ((thread)->rrperiod)
 #define xnthread_archtcb(thread)           (&((thread)->tcb))
-#define xnthread_asr_level(thread)         ((thread)->asrlevel)
-#define xnthread_pending_signals(thread)  ((thread)->signals)
 #define xnthread_timeout(thread)           xntimer_get_timeout(&(thread)->rtimer)
 #define xnthread_stack_size(thread)        xnarch_stack_size(xnthread_archtcb(thread))
 #define xnthread_stack_base(thread)        xnarch_stack_base(xnthread_archtcb(thread))
 #define xnthread_stack_end(thread)         xnarch_stack_end(xnthread_archtcb(thread))
 #define xnthread_handle(thread)            ((thread)->registry.handle)
-#define xnthread_signaled_p(thread)        ((thread)->signals != 0)
 #define xnthread_host_task(thread)         (xnthread_archtcb(thread)->core.host_task)
 #define xnthread_host_pid(thread)	   (xnthread_test_state((thread),XNROOT) ? 0 : \
 					    xnthread_archtcb(thread)->core.host_task->pid)

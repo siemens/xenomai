@@ -160,11 +160,6 @@ int xnthread_init(struct xnthread *thread,
 	thread->state = flags;
 	thread->info = 0;
 	thread->schedlck = 0;
-	thread->signals = 0;
-	thread->asrmode = 0;
-	thread->asrimask = 0;
-	thread->asr = XNTHREAD_INVALID_ASR;
-	thread->asrlevel = 0;
 
 	thread->rrperiod = XN_INFINITE;
 	thread->wchan = NULL;

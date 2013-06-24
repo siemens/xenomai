@@ -500,9 +500,6 @@ EXPORT_SYMBOL_GPL(xnpod_init_thread);
  * block, in which case, the lock is reasserted when the thread is
  * scheduled back in.
  *
- *   - XNASDI disables the asynchronous signal handling for this
- * thread.  See xnpod_schedule() for more on this.
- *
  *   - XNSUSP makes the thread start in a suspended state. In such a
  * case, the thread will have to be explicitly resumed using the
  * xnpod_resume_thread() service for its execution to actually begin.
@@ -618,9 +615,6 @@ static void __xnpod_reset_thread(struct xnthread *thread)
 	xnsched_set_policy(thread, thread->init_class,
 			   &thread->init_schedparam);
 
-	/* Clear pending signals. */
-	thread->signals = 0;
-
 	if (xnthread_test_state(thread, XNLOCK)) {
 		xnthread_clear_state(thread, XNLOCK);
 		xnthread_lock_count(thread) = 0;
@@ -687,9 +681,8 @@ EXPORT_SYMBOL_GPL(xnpod_stop_thread);
  * thread can be forcibly released by passing the XNLOCK bit in this
  * mask. In this case, the lock nesting count is also reset to zero.
  *
- * @param setmask The new thread mode. The following flags can be part
- * of this bitmask, each of them affecting the nucleus behaviour
- * regarding the thread:
+ * @param setmask The new thread mode. The following flags may be set
+ * in this bitmask:
  *
  * - XNLOCK causes the thread to lock the scheduler.  The target
  * thread will have to call the xnpod_unlock_sched() service to unlock
@@ -697,8 +690,9 @@ EXPORT_SYMBOL_GPL(xnpod_stop_thread);
  * service. A non-preemptible thread may still block, in which case,
  * the lock is reasserted when the thread is scheduled back in.
  *
- * - XNASDI disables the asynchronous signal handling for this thread.
- * See xnpod_schedule() for more on this.
+ * - XNTRAPSW causes the thread to receive a SIGDEBUG signal when it
+ * switches to secondary mode. This is a debugging aid for detecting
+ * spurious relaxes.
  *
  * Environments:
  *
@@ -1622,51 +1616,6 @@ int xnpod_migrate_thread(int cpu)
 }
 EXPORT_SYMBOL_GPL(xnpod_migrate_thread);
 
-/*!
- * @internal
- * \fn void xnpod_dispatch_signals(void)
- * \brief Deliver pending asynchronous signals to the running thread.
- *
- * This internal routine checks for the presence of asynchronous
- * signals directed to the running thread, and attempts to start the
- * asynchronous service routine (ASR) if any. Called with nklock
- * locked, interrupts off.
- */
-
-void xnpod_dispatch_signals(void)
-{
-	xnthread_t *thread = xnpod_current_thread();
-	xnflags_t oldmode;
-	xnsigmask_t sigs;
-	xnasr_t asr;
-
-	/* Process user-defined signals if the ASR is enabled for this
-	   thread. */
-
-	if (thread->signals == 0 || xnthread_test_state(thread, XNASDI)
-	    || thread->asr == XNTHREAD_INVALID_ASR)
-		return;
-
-	trace_mark(xn_nucleus, sched_sigdispatch, "signals %lu",
-		   thread->signals);
-
-	/* Start the asynchronous service routine */
-	oldmode = xnthread_test_state(thread, XNTHREAD_MODE_BITS);
-	sigs = thread->signals;
-	asr = thread->asr;
-
-	/* Clear pending signals mask since an ASR can be reentrant */
-	thread->signals = 0;
-
-	xnthread_clear_state(thread, XNTHREAD_MODE_BITS);
-	xnthread_set_state(thread, thread->asrmode);
-	thread->asrlevel++;
-	asr(sigs);
-	thread->asrlevel--;
-	xnthread_clear_state(thread, XNTHREAD_MODE_BITS);
-	xnthread_set_state(thread, oldmode);
-}
-
 static inline void xnpod_switch_to(xnsched_t *sched,
 				   xnthread_t *prev, xnthread_t *next)
 {
@@ -1894,9 +1843,7 @@ reschedule:
 
 	__xnpod_switch_fpu(sched);
 
- signal_unlock_and_exit:
-	if (xnthread_signaled_p(curr))
-		xnpod_dispatch_signals();
+signal_unlock_and_exit:
 
 	if (switched &&
 	    xnsched_maybe_resched_after_unlocked_switch(sched))

@@ -209,8 +209,6 @@ int xnpod_set_thread_schedparam(struct xnthread *thread,
 
 int xnpod_migrate_thread(int cpu);
 
-void xnpod_dispatch_signals(void);
-
 static inline void xnpod_schedule(void)
 {
 	struct xnsched *sched;

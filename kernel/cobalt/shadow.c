@@ -459,9 +459,6 @@ int xnshadow_harden(void)
 	xnpod_switch_fpu(sched);
 #endif /* CONFIG_XENO_HW_FPU */
 
-	if (xnthread_signaled_p(thread))
-		xnpod_dispatch_signals();
-
 	xnlock_clear_irqon(&nklock);
 
 	trace_mark(xn_nucleus, shadow_hardened, "thread %p name %s",
