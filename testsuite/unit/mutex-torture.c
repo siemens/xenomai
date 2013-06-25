@@ -19,9 +19,9 @@
 #include <sys/mman.h>
 #include <pthread.h>
 #include <alchemy/timer.h>
-#include <asm-generic/xenomai/current.h> /* For internal use, do not use
-					    in your code. */
 #include <asm-generic/xenomai/stack.h>
+#include <asm-generic/xenomai/syscall.h>
+#include "lib/cobalt/current.h"
 
 #define MUTEX_CREATE		1
 #define MUTEX_LOCK		2

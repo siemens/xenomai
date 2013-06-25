@@ -2,7 +2,7 @@
  * \brief Real-time pod interface header.
  * \author Philippe Gerum
  *
- * Copyright (C) 2001-2007 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2001-2013 Philippe Gerum <rpm@xenomai.org>.
  * Copyright (C) 2004 The RTAI project <http://www.rtai.org>
  * Copyright (C) 2004 The HYADES project <http://www.hyades-itea.org>
  * Copyright (C) 2004 The Xenomai project <http://www.xenomai.org>
@@ -38,16 +38,6 @@
 #define XNFATAL  0x00000001	/* Fatal error in progress */
 #define XNPEXEC  0x00000002	/* Pod is active (a skin is attached) */
 
-/* These flags are available to the real-time interfaces */
-#define XNPOD_SPARE0  0x01000000
-#define XNPOD_SPARE1  0x02000000
-#define XNPOD_SPARE2  0x04000000
-#define XNPOD_SPARE3  0x08000000
-#define XNPOD_SPARE4  0x10000000
-#define XNPOD_SPARE5  0x20000000
-#define XNPOD_SPARE6  0x40000000
-#define XNPOD_SPARE7  0x80000000
-
 #define XNPOD_NORMAL_EXIT  0x0
 #define XNPOD_FATAL_EXIT   0x1
 
@@ -80,9 +70,9 @@ typedef struct xnpod xnpod_t;
 
 DECLARE_EXTERN_XNLOCK(nklock);
 
-extern u_long nklatency;
+extern unsigned long nklatency;
 
-extern u_long nktimerlat;
+extern unsigned long nktimerlat;
 
 extern cpumask_t nkaffinity;
 
@@ -113,7 +103,9 @@ static inline void xnpod_umount(void)
 void __xnpod_cleanup_thread(struct xnthread *thread);
 
 #ifdef CONFIG_XENO_HW_FPU
-void xnpod_switch_fpu(xnsched_t *sched);
+void xnpod_switch_fpu(struct xnsched *sched);
+#else
+static inline void xnpod_switch_fpu(struct xnsched *sched) { }
 #endif /* CONFIG_XENO_HW_FPU */
 
 void __xnpod_schedule(struct xnsched *sched);
@@ -122,49 +114,55 @@ void __xnpod_schedule_handler(void);
 
 	/* -- Beginning of the exported interface */
 
-#define xnpod_sched_slot(cpu) \
-    (&nkpod->sched[cpu])
+static inline struct xnsched *xnpod_sched_slot(int cpu)
+{
+	return nkpod->sched + cpu;
+}
 
-#define xnpod_current_sched() \
-    xnpod_sched_slot(ipipe_processor_id())
+static inline struct xnsched *xnpod_current_sched(void)
+{
+	return xnpod_sched_slot(ipipe_processor_id());
+}
 
-#define xnpod_active_p() \
-    testbits(nkpod->status, XNPEXEC)
+static inline int xnpod_active_p(void)
+{
+	return nkpod->status & XNPEXEC;
+}
 
-#define xnpod_fatal_p() \
-    testbits(nkpod->status, XNFATAL)
+static inline int xnpod_fatal_p(void)
+{
+	return nkpod->status & XNFATAL;
+}
 
-#define xnpod_interrupt_p() \
-    testbits(xnpod_current_sched()->lflags, XNINIRQ)
+static inline int xnpod_interrupt_p(void)
+{
+	return xnpod_current_sched()->lflags & XNINIRQ;
+}
 
-#define xnpod_callout_p() \
-    testbits(xnpod_current_sched()->status, XNKCOUT)
+static inline struct xnthread *xnpod_current_thread(void)
+{
+	return xnpod_current_sched()->curr;
+}
 
-#define xnpod_asynch_p() \
-	({								\
-		xnsched_t *sched = xnpod_current_sched();		\
-		testbits(sched->status | sched->lflags, XNKCOUT|XNINIRQ); \
-	})
+static inline int xnpod_locked_p(void)
+{
+	return xnthread_test_state(xnpod_current_thread(), XNLOCK);
+}
 
-#define xnpod_current_thread()	(xnpod_current_sched()->curr)
+static inline int xnpod_root_p(void)
+{
+	return xnthread_test_state(xnpod_current_thread(), XNROOT);
+}
 
-#define xnpod_current_root()	(&xnpod_current_sched()->rootcb)
+static inline int xnpod_unblockable_p(void)
+{
+	return xnpod_interrupt_p() || xnpod_root_p();
+}
 
-#define xnpod_locked_p() \
-    xnthread_test_state(xnpod_current_thread(), XNLOCK)
-
-#define xnpod_unblockable_p() \
-    (xnpod_asynch_p() || xnthread_test_state(xnpod_current_thread(), XNROOT))
-
-#define xnpod_root_p() \
-    xnthread_test_state(xnpod_current_thread(), XNROOT)
-
-#define xnpod_primary_p() \
-    (!(xnpod_asynch_p() || xnpod_root_p()))
-
-#define xnpod_secondary_p()	xnpod_root_p()
-
-#define xnpod_idle_p()		xnpod_root_p()
+static inline int xnpod_primary_p(void)
+{
+	return !xnpod_unblockable_p();
+}
 
 int xnpod_init(void);
 
@@ -179,29 +177,29 @@ int xnpod_init_thread(struct xnthread *thread,
 		      struct xnsched_class *sched_class,
 		      const union xnsched_policy_param *sched_param);
 
-int xnpod_start_thread(xnthread_t *thread,
+int xnpod_start_thread(struct xnthread *thread,
 		       const struct xnthread_start_attr *attr);
 
-void xnpod_stop_thread(xnthread_t *thread);
+void xnpod_stop_thread(struct xnthread *thread);
 
-void xnpod_cancel_thread(xnthread_t *thread);
+void xnpod_cancel_thread(struct xnthread *thread);
 
-void xnpod_join_thread(xnthread_t *thread);
+void xnpod_join_thread(struct xnthread *thread);
 
-int xnpod_set_thread_mode(xnthread_t *thread,
+int xnpod_set_thread_mode(struct xnthread *thread,
 			  int clrmask,
 			  int setmask);
 
-void xnpod_suspend_thread(xnthread_t *thread,
+void xnpod_suspend_thread(struct xnthread *thread,
 			  int mask,
 			  xnticks_t timeout,
 			  xntmode_t timeout_mode,
 			  struct xnsynch *wchan);
 
-void xnpod_resume_thread(xnthread_t *thread,
+void xnpod_resume_thread(struct xnthread *thread,
 			 int mask);
 
-int xnpod_unblock_thread(xnthread_t *thread);
+int xnpod_unblock_thread(struct xnthread *thread);
 
 int xnpod_set_thread_schedparam(struct xnthread *thread,
 				struct xnsched_class *sched_class,
@@ -240,24 +238,24 @@ static inline void xnpod_schedule(void)
 	 */
 #if XENO_DEBUG(NUCLEUS)
 	if (testbits(sched->status | sched->lflags,
-		     XNKCOUT|XNINIRQ|XNINSW|XNINLOCK))
+		     XNINIRQ|XNINSW|XNINLOCK))
 		return;
 #else /* !XENO_DEBUG(NUCLEUS) */
 	if (testbits(sched->status | sched->lflags,
-		     XNKCOUT|XNINIRQ|XNINSW|XNRESCHED|XNINLOCK) != XNRESCHED)
+		     XNINIRQ|XNINSW|XNRESCHED|XNINLOCK) != XNRESCHED)
 		return;
 #endif /* !XENO_DEBUG(NUCLEUS) */
 
 	__xnpod_schedule(sched);
 }
 
-void ___xnpod_lock_sched(xnsched_t *sched);
+void ___xnpod_lock_sched(struct xnsched *sched);
 
-void ___xnpod_unlock_sched(xnsched_t *sched);
+void ___xnpod_unlock_sched(struct xnsched *sched);
 
 static inline void __xnpod_lock_sched(void)
 {
-	xnsched_t *sched;
+	struct xnsched *sched;
 
 	barrier();
 	sched = xnpod_current_sched();
@@ -266,7 +264,7 @@ static inline void __xnpod_lock_sched(void)
 
 static inline void __xnpod_unlock_sched(void)
 {
-	xnsched_t *sched;
+	struct xnsched *sched;
 
 	barrier();
 	sched = xnpod_current_sched();
@@ -275,7 +273,7 @@ static inline void __xnpod_unlock_sched(void)
 
 static inline void xnpod_lock_sched(void)
 {
-	xnsched_t *sched;
+	struct xnsched *sched;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -286,7 +284,7 @@ static inline void xnpod_lock_sched(void)
 
 static inline void xnpod_unlock_sched(void)
 {
-	xnsched_t *sched;
+	struct xnsched *sched;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -318,7 +316,7 @@ static inline void xnpod_testcancel_thread(void)
 
 int xnpod_handle_exception(struct ipipe_trap_data *d);
 
-int xnpod_set_thread_periodic(xnthread_t *thread,
+int xnpod_set_thread_periodic(struct xnthread *thread,
 			      xnticks_t idate,
 			      xntmode_t timeout_mode,
 			      xnticks_t period);

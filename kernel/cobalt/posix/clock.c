@@ -50,8 +50,9 @@
 
 #include <cobalt/kernel/vdso.h>
 #include <asm/xenomai/arith.h>
-#include "thread.h"
 #include "internal.h"
+#include "thread.h"
+#include "clock.h"
 
 /**
  * Read the host-synchronised realtime clock.

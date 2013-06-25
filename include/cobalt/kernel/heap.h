@@ -42,10 +42,12 @@
  * requests ranging from the maximum page size to twice this size.
  */
 
-#ifdef __KERNEL__
-
+#include <cobalt/kernel/assert.h>
 #include <cobalt/kernel/lock.h>
 #include <cobalt/kernel/list.h>
+#include <cobalt/kernel/trace.h>
+#include <cobalt/kernel/types.h>
+#include <cobalt/uapi/sys/heap.h>
 
 #define XNHEAP_PAGE_SIZE	512 /* A reasonable value for the xnheap page size */
 #define XNHEAP_PAGE_MASK	(~(XNHEAP_PAGE_SIZE-1))
@@ -178,8 +180,6 @@ static inline size_t xnheap_rounded_size(size_t hsize, size_t psize)
 
 /* Private interface. */
 
-#ifdef __KERNEL__
-
 int xnheap_mount(void);
 
 void xnheap_umount(void);
@@ -207,8 +207,6 @@ void xnheap_destroy_mapped(struct xnheap *heap,
 
 #define xnheap_mapped_p(heap) \
 	(xnheap_base_memory(heap) != 0)
-
-#endif /* __KERNEL__ */
 
 /* Public interface. */
 
@@ -275,22 +273,5 @@ int xnheap_remap_io_page_range(struct file *filp,
 int xnheap_remap_kmem_page_range(struct vm_area_struct *vma,
 				 unsigned long from, unsigned long to,
 				 unsigned long size, pgprot_t prot);
-
-#endif /* __KERNEL__ */
-
-#define XNHEAP_DEV_NAME  "/dev/rtheap"
-#define XNHEAP_DEV_MINOR 254
-
-/* Possible arguments to the sys_heap_info syscall */
-#define XNHEAP_PROC_PRIVATE_HEAP 0
-#define XNHEAP_PROC_SHARED_HEAP  1
-#define XNHEAP_SYS_HEAP          2
-
-struct xnheap_desc {
-	unsigned long handle;
-	unsigned int size;
-	unsigned long area;
-	unsigned long used;
-};
 
 #endif /* !_COBALT_KERNEL_HEAP_H */

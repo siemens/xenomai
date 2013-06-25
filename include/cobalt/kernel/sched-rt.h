@@ -42,8 +42,6 @@
 #define XNSCHED_FIFO_MIN_PRIO	1
 #define XNSCHED_FIFO_MAX_PRIO	99
 
-#ifdef __KERNEL__
-
 #if XNSCHED_RT_NR_PRIO > XNSCHED_CLASS_MAX_PRIO ||	\
   (defined(CONFIG_XENO_OPT_SCALABLE_SCHED) &&		\
    XNSCHED_RT_NR_PRIO > XNSCHED_MLQ_LEVELS)
@@ -113,7 +111,5 @@ static inline int xnsched_rt_init_thread(struct xnthread *thread)
 }
 
 void xnsched_rt_tick(struct xnthread *curr);
-
-#endif /* __KERNEL__ */
 
 #endif /* !_COBALT_KERNEL_SCHED_RT_H */

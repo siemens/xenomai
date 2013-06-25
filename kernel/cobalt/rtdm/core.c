@@ -30,8 +30,7 @@
 #include <cobalt/kernel/ppd.h>
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/apc.h>
-#include <rtdm/syscall.h>
-
+#include "rtdm/syscall.h"
 #include "rtdm/internal.h"
 
 #include <linux/workqueue.h>

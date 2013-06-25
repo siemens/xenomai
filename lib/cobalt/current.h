@@ -1,8 +1,8 @@
-#ifndef _COBALT_ASM_GENERIC_CURRENT_H
-#define _COBALT_ASM_GENERIC_CURRENT_H
+#ifndef _LIB_COBALT_CURRENT_H
+#define _LIB_COBALT_CURRENT_H
 
 #include <pthread.h>
-#include <cobalt/kernel/thread.h>
+#include <cobalt/uapi/thread.h>
 
 extern pthread_key_t cobalt_current_window_key;
 
@@ -76,4 +76,4 @@ void cobalt_set_current(void);
 
 void cobalt_set_current_window(unsigned long offset);
 
-#endif /* _COBALT_ASM_GENERIC_CURRENT_H */
+#endif /* _LIB_COBALT_CURRENT_H */

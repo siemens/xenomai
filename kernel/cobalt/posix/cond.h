@@ -15,37 +15,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+#ifndef _COBALT_POSIX_COND_H
+#define _COBALT_POSIX_COND_H
 
-#ifndef _COBALT_COND_H
-#define _COBALT_COND_H
-
-#include <pthread.h>
-
-struct cobalt_cond;
-struct mutex_dat;
-
-union cobalt_cond_union {
-	pthread_cond_t native_cond;
-	struct __shadow_cond {
-		unsigned magic;
-		struct cobalt_condattr attr;
-		struct cobalt_cond *cond;
-		union {
-			unsigned pending_signals_offset;
-			unsigned long *pending_signals;
-		};
-		union {
-			unsigned mutex_datp_offset;
-			struct mutex_dat *mutex_datp;
-		};
-	} shadow_cond;
-};
-
-#define COBALT_COND_MAGIC 0x86860505
-
-#ifdef __KERNEL__
-
-#include "internal.h"
+#include "thread.h"
+#include <cobalt/uapi/cond.h>
 
 struct __shadow_mutex;
 union cobalt_mutex_union;
@@ -64,33 +38,7 @@ struct cobalt_cond {
 
 extern const pthread_condattr_t cobalt_default_cond_attr;
 
-static inline int cobalt_cond_deferred_signals(struct cobalt_cond *cond)
-{
-	unsigned long pending_signals;
-	int need_resched;
-
-	pending_signals = *cond->pending_signals;
-
-	switch(pending_signals) {
-	default:
-		*cond->pending_signals = 0;
-		need_resched = xnsynch_wakeup_many_sleepers(&cond->synchbase,
-							    pending_signals);
-		break;
-
-	case ~0UL:
-		need_resched =
-			xnsynch_flush(&cond->synchbase, 0) == XNSYNCH_RESCHED;
-		*cond->pending_signals = 0;
-		break;
-
-	case 0:
-		need_resched = 0;
-		break;
-	}
-
-	return need_resched;
-}
+int cobalt_cond_deferred_signals(struct cobalt_cond *cond);
 
 int cobalt_condattr_init(pthread_condattr_t __user *u_attr);
 
@@ -126,6 +74,4 @@ void cobalt_cond_pkg_init(void);
 
 void cobalt_cond_pkg_cleanup(void);
 
-#endif /* __KERNEL__ */
-
-#endif /* !_COBALT_COND_H */
+#endif /* !_COBALT_POSIX_COND_H */

@@ -46,6 +46,7 @@
 #include <cobalt/kernel/registry.h>
 #include <cobalt/kernel/clock.h>
 #include <cobalt/kernel/stat.h>
+#include <cobalt/kernel/trace.h>
 #include <cobalt/kernel/assert.h>
 #include <cobalt/kernel/select.h>
 #include <cobalt/kernel/shadow.h>
@@ -55,11 +56,11 @@
 xnpod_t nkpod_struct;
 EXPORT_SYMBOL_GPL(nkpod_struct);
 
-u_long nklatency;
+unsigned long nklatency;
 EXPORT_SYMBOL_GPL(nklatency);
 
 /* Already accounted for in nklatency, kept separately for user information. */
-u_long nktimerlat;
+unsigned long nktimerlat;
 
 cpumask_t nkaffinity = XNPOD_ALL_CPUS;
 
@@ -222,7 +223,7 @@ void xnpod_schedule_deferred(void)
 }
 
 static void xnpod_flush_heap(struct xnheap *heap,
-			     void *extaddr, u_long extsize, void *cookie)
+			     void *extaddr, unsigned long extsize, void *cookie)
 {
 	free_pages_exact(extaddr, extsize);
 }
@@ -785,23 +786,29 @@ static void cleanup_thread(struct xnthread *thread) /* nklock held, irqs off */
 		xnsynch_forget_sleeper(thread);
 
 	xnthread_set_state(thread, XNZOMBIE);
-
+	/*
+	 * NOTE: we must be running over the root thread, or @thread
+	 * is dormant, which means that we don't risk sched->curr to
+	 * disappear due to voluntary rescheduling while holding the
+	 * nklock, despite @thread bears the zombie bit.
+	 */
 	xnsynch_release_all_ownerships(thread);
 
 	__xnpod_giveup_fpu(sched, thread);
 
-	if (!moving_target(sched, thread)) {
-		xnshadow_unmap(thread);
-		xnsched_forget(thread);
-		/*
-		 * We may wipe the TCB out now that the unmap_thread()
-		 * handler has run (in xnshadow_unmap()).
-		 */
-		xnthread_cleanup(thread);
+	if (moving_target(sched, thread))
+		return;
 
-		if (xnthread_test_state(sched->curr, XNROOT))
-			xnfreesync();
-	}
+	xnshadow_unmap(thread);
+	xnsched_forget(thread);
+	/*
+	 * We may wipe the TCB out now that the unmap_thread() handler
+	 * has run (in xnshadow_unmap()).
+	 */
+	xnthread_cleanup(thread);
+
+	if (xnthread_test_state(sched->curr, XNROOT))
+		xnfreesync();
 }
 
 void __xnpod_cleanup_thread(struct xnthread *thread)
@@ -1566,7 +1573,7 @@ int xnpod_migrate_thread(int cpu)
 	int ret = 0;
 	spl_t s;
 
-	if (xnpod_asynch_p())
+	if (xnpod_interrupt_p())
 		return -EPERM;
 
 	if (xnpod_locked_p())
@@ -1921,7 +1928,7 @@ int xnpod_handle_exception(struct ipipe_trap_data *d)
 	struct xnthread *thread;
 	struct xnarchtcb *tcb;
 
-	if (!xnpod_active_p() || (!xnpod_interrupt_p() && xnpod_idle_p()))
+	if (!xnpod_active_p() || (!xnpod_interrupt_p() && xnpod_root_p()))
 		return 0;
 
 	thread = xnpod_current_thread();

@@ -26,8 +26,6 @@
 /*! \addtogroup clock
  *@{*/
 
-#ifdef __KERNEL__
-
 #include <cobalt/kernel/list.h>
 #include <cobalt/kernel/vfile.h>
 #include <asm-generic/xenomai/timeconv.h>
@@ -77,8 +75,6 @@ void xnclock_adjust(xnsticks_t delta);
 void xnclock_init_proc(void);
 
 void xnclock_cleanup_proc(void);
-
-#endif /* __KERNEL__ */
 
 /*@}*/
 

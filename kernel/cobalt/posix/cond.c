@@ -469,6 +469,34 @@ int cobalt_cond_wait_epilogue(struct __shadow_cond __user *u_cnd,
 	return err;
 }
 
+int cobalt_cond_deferred_signals(struct cobalt_cond *cond)
+{
+	unsigned long pending_signals;
+	int need_resched;
+
+	pending_signals = *cond->pending_signals;
+
+	switch(pending_signals) {
+	default:
+		*cond->pending_signals = 0;
+		need_resched = xnsynch_wakeup_many_sleepers(&cond->synchbase,
+							    pending_signals);
+		break;
+
+	case ~0UL:
+		need_resched =
+			xnsynch_flush(&cond->synchbase, 0) == XNSYNCH_RESCHED;
+		*cond->pending_signals = 0;
+		break;
+
+	case 0:
+		need_resched = 0;
+		break;
+	}
+
+	return need_resched;
+}
+
 void cobalt_condq_cleanup(struct cobalt_kqueues *q)
 {
 	struct cobalt_cond *cond, *tmp;

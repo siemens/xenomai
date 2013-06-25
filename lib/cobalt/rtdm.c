@@ -25,7 +25,8 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <rtdm/rtdm.h>
-#include <rtdm/syscall.h>
+#include <asm/xenomai/syscall.h>
+#include <cobalt/uapi/rtdm/syscall.h>
 
 extern int __rtdm_muxid;
 extern int __rtdm_fd_start;

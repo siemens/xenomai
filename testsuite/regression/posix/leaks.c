@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <errno.h>
 #include <signal.h>
 #include <unistd.h>
 #include <pthread.h>
@@ -10,7 +10,7 @@
 #include <mqueue.h>
 #include <signal.h>
 
-#include <cobalt/kernel/heap.h>
+#include <cobalt/uapi/sys/heap.h>
 #include <asm/xenomai/syscall.h>
 
 #include "check.h"

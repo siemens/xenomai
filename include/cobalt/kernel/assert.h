@@ -20,7 +20,6 @@
 #ifndef _COBALT_KERNEL_ASSERT_H
 #define _COBALT_KERNEL_ASSERT_H
 
-#include <cobalt/kernel/types.h>
 #include <cobalt/kernel/trace.h>
 
 #define XENO_DEBUG(subsystem)			\
@@ -46,5 +45,7 @@
 #ifndef CONFIG_XENO_OPT_DEBUG_NUCLEUS
 #define CONFIG_XENO_OPT_DEBUG_NUCLEUS 0
 #endif /* CONFIG_XENO_OPT_DEBUG_NUCLEUS */
+
+void xnpod_fatal(const char *format, ...);
 
 #endif /* !_COBALT_KERNEL_ASSERT_H */

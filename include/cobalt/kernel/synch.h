@@ -22,57 +22,13 @@
 #ifndef _COBALT_KERNEL_SYNCH_H
 #define _COBALT_KERNEL_SYNCH_H
 
-#include <cobalt/kernel/types.h>
-#include <asm/xenomai/atomic.h>
-
-/* Creation flags */
-#define XNSYNCH_FIFO    0x0
-#define XNSYNCH_PRIO    0x1
-#define XNSYNCH_NOPIP   0x0
-#define XNSYNCH_PIP     0x2
-#define XNSYNCH_DREORD  0x4
-#define XNSYNCH_OWNER   0x8
+#include <cobalt/kernel/list.h>
+#include <cobalt/kernel/assert.h>
+#include <cobalt/kernel/timer.h>
 
 #ifndef CONFIG_XENO_OPT_DEBUG_SYNCH_RELAX
 #define CONFIG_XENO_OPT_DEBUG_SYNCH_RELAX 0
 #endif /* CONFIG_XENO_OPT_DEBUG_SYNCH_RELAX */
-
-#define XNSYNCH_FLCLAIM XN_HANDLE_SPARE3 /* Corresponding bit in fast lock */
-
-/* Fast lock API */
-static inline int xnsynch_fast_owner_check(atomic_long_t *fastlock,
-					   xnhandle_t ownerh)
-{
-	return (xnhandle_mask_spare(atomic_long_read(fastlock)) == ownerh) ?
-		0 : -EPERM;
-}
-
-static inline int xnsynch_fast_acquire(atomic_long_t *fastlock,
-				       xnhandle_t new_ownerh)
-{
-	xnhandle_t h;
-
-	h = atomic_long_cmpxchg(fastlock, XN_NO_HANDLE, new_ownerh);
-	if (h != XN_NO_HANDLE) {
-		if (xnhandle_mask_spare(h) == new_ownerh)
-			return -EBUSY;
-
-		return -EAGAIN;
-	}
-
-	return 0;
-}
-
-static inline int xnsynch_fast_release(atomic_long_t *fastlock,
-				       xnhandle_t cur_ownerh)
-{
-	return (atomic_long_cmpxchg(fastlock, cur_ownerh, XN_NO_HANDLE) ==
-		cur_ownerh);
-}
-
-#ifdef __KERNEL__
-
-#include <cobalt/kernel/list.h>
 
 #define XNSYNCH_CLAIMED 0x10	/* Claimed by other thread(s) w/ PIP */
 
@@ -202,7 +158,5 @@ void xnsynch_release_all_ownerships(struct xnthread *thread);
 void xnsynch_requeue_sleeper(struct xnthread *thread);
 
 void xnsynch_forget_sleeper(struct xnthread *thread);
-
-#endif /* __KERNEL__ */
 
 #endif /* !_COBALT_KERNEL_SYNCH_H_ */

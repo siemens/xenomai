@@ -24,15 +24,13 @@
 #ifndef _COBALT_KERNEL_REGISTRY_H
 #define _COBALT_KERNEL_REGISTRY_H
 
+#include <linux/string.h>
 #include <cobalt/kernel/types.h>
-
-#define XNOBJECT_SELF  XN_NO_HANDLE
-
-#ifdef __KERNEL__
-
 #include <cobalt/kernel/list.h>
 #include <cobalt/kernel/synch.h>
 #include <cobalt/kernel/vfile.h>
+
+#define XNOBJECT_SELF  XN_NO_HANDLE
 
 struct xnpnode;
 
@@ -40,8 +38,8 @@ struct xnobject {
 	void *objaddr;
 	const char *key;	  /* !< Hash key. */
 	struct xnsynch safesynch; /* !< Safe synchronization object. */
-	u_long safelock;	  /* !< Safe lock count. */
-	u_long cstamp;		  /* !< Creation stamp. */
+	unsigned long safelock;	  /* !< Safe lock count. */
+	unsigned long cstamp;		  /* !< Creation stamp. */
 #ifdef CONFIG_XENO_OPT_VFILE
 	struct xnpnode *pnode;	/* !< v-file information class. */
 	union {
@@ -57,6 +55,12 @@ struct xnobject {
 	struct xnobject *hnext;	/* !< Next in h-table */
 	struct list_head link;
 };
+
+static inline void xnobject_copy_name(char *dst, const char *src)
+{
+	strncpy(dst, src ?: "", XNOBJECT_NAME_LEN-1);
+	dst[XNOBJECT_NAME_LEN-1] = '\0';
+}
 
 int xnregistry_init(void);
 
@@ -180,12 +184,10 @@ void *xnregistry_get(xnhandle_t handle);
 
 void *xnregistry_fetch(xnhandle_t handle);
 
-u_long xnregistry_put(xnhandle_t handle);
+unsigned long xnregistry_put(xnhandle_t handle);
 
 extern struct xnpnode_ops xnregistry_vfsnap_ops;
 
 extern struct xnpnode_ops xnregistry_vlink_ops;
-
-#endif /* __KERNEL__ */
 
 #endif /* !_COBALT_KERNEL_REGISTRY_H */

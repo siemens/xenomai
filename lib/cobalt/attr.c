@@ -19,6 +19,8 @@
 #include <stddef.h>
 #include <errno.h>
 #include <pthread.h>
+#include <cobalt/uapi/thread.h>
+#include "internal.h"
 
 int pthread_attr_init_ex(pthread_attr_ex_t *attr_ex)
 {

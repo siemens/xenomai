@@ -22,6 +22,9 @@
 #ifndef _COBALT_KERNEL_INTR_H
 #define _COBALT_KERNEL_INTR_H
 
+#include <cobalt/kernel/types.h>
+#include <cobalt/kernel/stat.h>
+
 /* Possible return values of ISR. */
 #define XN_ISR_NONE	 0x1
 #define XN_ISR_HANDLED	 0x2
@@ -37,12 +40,12 @@
 /* Operational flags. */
 #define XN_ISR_ATTACHED	 0x10000
 
-#ifdef __KERNEL__
-
-#include <cobalt/kernel/types.h>
-#include <cobalt/kernel/stat.h>
-
+struct xnintr;
 struct xnsched;
+
+typedef int (*xnisr_t)(struct xnintr *intr);
+
+typedef void (*xniack_t)(unsigned irq, void *arg);
 
 typedef struct xnintr {
 
@@ -129,7 +132,5 @@ int xnintr_query_init(xnintr_iterator_t *iterator);
 
 int xnintr_query_next(int irq, xnintr_iterator_t *iterator,
 		      char *name_buf);
-
-#endif /* __KERNEL__ */
 
 #endif /* !_COBALT_KERNEL_INTR_H */

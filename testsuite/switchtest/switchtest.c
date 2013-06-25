@@ -18,7 +18,7 @@
 #include <xeno_config.h>
 #include <asm/xenomai/fptest.h>
 #include <asm-generic/stack.h>
-#include <cobalt/kernel/trace.h>
+#include <cobalt/trace.h>
 #include <rtdm/rttesting.h>
 
 #ifdef HAVE_RECENT_SETAFFINITY

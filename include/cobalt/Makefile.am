@@ -1,19 +1,19 @@
 includesubdir = $(includedir)/cobalt
 
-includesub_HEADERS = \
-	core.h \
-	fcntl.h \
-	mqueue.h \
-	pthread.h \
-	sched.h \
-	semaphore.h \
-	signal.h \
-	stdio.h \
-	stdlib.h \
-	syscall.h \
-	syslog.h \
-	time.h \
-	unistd.h \
+includesub_HEADERS =	\
+	core.h		\
+	fcntl.h		\
+	mqueue.h	\
+	pthread.h	\
+	sched.h		\
+	semaphore.h	\
+	signal.h	\
+	stdio.h		\
+	stdlib.h	\
+	syslog.h	\
+	time.h		\
+	trace.h		\
+	unistd.h	\
 	wrappers.h
 
 SUBDIRS =		\
@@ -25,4 +25,5 @@ SUBDIRS =		\
 	asm-sh		\
 	asm-x86		\
 	kernel		\
-	sys
+	sys		\
+	uapi

@@ -15,14 +15,14 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-
 #include <errno.h>
 #include <pthread.h>
 #include <limits.h>
-#include <cobalt/kernel/synch.h>
-#include <cobalt/syscall.h>
-#include <asm-generic/current.h>
-#include "kernel/cobalt/posix/mutex.h"
+#include <asm/xenomai/syscall.h>
+#include <cobalt/uapi/mutex.h>
+#include <cobalt/uapi/syscall.h>
+#include <cobalt/uapi/sys/synch.h>
+#include "current.h"
 #include "internal.h"
 
 COBALT_IMPL(int, pthread_mutexattr_init, (pthread_mutexattr_t *attr))

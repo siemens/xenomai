@@ -43,6 +43,7 @@
 #include <cobalt/kernel/timer.h>
 #include <cobalt/kernel/intr.h>
 #include <cobalt/kernel/clock.h>
+#include <cobalt/kernel/trace.h>
 #include <asm/xenomai/arith.h>
 
 static inline void xntimer_enqueue(xntimer_t *timer)

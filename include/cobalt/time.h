@@ -1,64 +1,29 @@
 /*
  * Copyright (C) 2005 Philippe Gerum <rpm@xenomai.org>.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of the
- * License, or (at your option) any later version.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-
 #ifndef _COBALT_TIME_H
 #define _COBALT_TIME_H
 
-#ifdef __KERNEL__
-
-#include <linux/time.h>
-
-#define DELAYTIMER_MAX UINT_MAX
-
-#ifndef TIMER_ABSTIME
-#define TIMER_ABSTIME 1
-#endif
-
-#else /* !__KERNEL__ */
-
+#pragma GCC system_header
 #include_next <time.h>
-/*
- * In case <time.h> is included as a side effect of an __need* macro,
- * include it a second time to get all definitions.
- */
+/* Re-read in case we came from selective __need* block. */
 #include_next <time.h>
 #include <cobalt/wrappers.h>
-
-#endif /* !__KERNEL__ */
-
-#ifndef CLOCK_MONOTONIC
-/* Some archs do not implement this, but Xenomai always does. */
-#define CLOCK_MONOTONIC 1
-#endif /* CLOCK_MONOTONIC */
-
-#ifndef CLOCK_MONOTONIC_RAW
-/* Linux implements this since 2.6.28. */
-#define CLOCK_MONOTONIC_RAW 4
-#endif /* CLOCK_MONOTONIC_RAW */
-
-/*
- * This number is supposed to not collide with any of the POSIX and
- * Linux kernel definitions so that no ambiguities arise when porting
- * applications in both directions.
- */
-#define CLOCK_HOST_REALTIME 42
-
-#ifndef __KERNEL__
+#include <cobalt/uapi/time.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -100,7 +65,5 @@ COBALT_DECL(int, timer_getoverrun(timer_t timerid));
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* !__KERNEL__ */
 
 #endif /* !_COBALT_TIME_H */

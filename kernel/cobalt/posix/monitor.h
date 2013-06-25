@@ -16,25 +16,11 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _COBALT_MONITOR_H
-#define _COBALT_MONITOR_H
-
-#include <asm/xenomai/atomic.h>
-
-#define COBALT_MONITOR_GRANTED    0x01
-#define COBALT_MONITOR_DRAINED    0x02
-#define COBALT_MONITOR_SIGNALED   0x03 /* i.e. GRANTED or DRAINED */
-#define COBALT_MONITOR_BROADCAST  0x04
-#define COBALT_MONITOR_PENDED     0x08
-
-struct cobalt_monitor_data {
-	atomic_long_t owner;
-	unsigned long flags;
-};
-
-#ifdef __KERNEL__
+#ifndef _COBALT_POSIX_MONITOR_H
+#define _COBALT_POSIX_MONITOR_H
 
 #include <cobalt/kernel/synch.h>
+#include <cobalt/uapi/monitor.h>
 
 struct cobalt_kqueues;
 
@@ -70,6 +56,4 @@ void cobalt_monitor_pkg_init(void);
 
 void cobalt_monitor_pkg_cleanup(void);
 
-#endif /* __KERNEL__ */
-
-#endif /* !_COBALT_MONITOR_H */
+#endif /* !_COBALT_POSIX_MONITOR_H */

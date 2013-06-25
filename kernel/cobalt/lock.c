@@ -30,6 +30,7 @@
  * SMP locking services.
  *@{*/
 
+#include <linux/module.h>
 #include <cobalt/kernel/lock.h>
 
 DEFINE_XNLOCK(nklock);

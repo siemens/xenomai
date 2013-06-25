@@ -15,17 +15,32 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+#ifndef _COBALT_POSIX_SEM_H
+#define _COBALT_POSIX_SEM_H
 
-#ifndef _COBALT_SEM_H
-#define _COBALT_SEM_H
-
+#include <linux/kernel.h>
+#include <linux/fcntl.h>
 #include <cobalt/kernel/thread.h>
 #include <cobalt/kernel/registry.h>
 
-#define COBALT_SEM_MAGIC (0x86860707)
-#define COBALT_NAMED_SEM_MAGIC (0x86860D0D)
+/* Copied from Linuxthreads semaphore.h. */
+struct _sem_fastlock
+{
+  long int __status;
+  int __spinlock;
+};
 
-#ifdef __KERNEL__
+typedef struct
+{
+  struct _sem_fastlock __sem_lock;
+  int __sem_value;
+  long __sem_waiting;
+} sem_t;
+
+#include <cobalt/uapi/sem.h>
+
+#define SEM_VALUE_MAX (INT_MAX)
+#define SEM_FAILED    NULL
 
 typedef struct {
     u_long uaddr;
@@ -80,6 +95,4 @@ void cobalt_sem_pkg_init(void);
 
 void cobalt_sem_pkg_cleanup(void);
 
-#endif /* __KERNEL__ */
-
-#endif /* !_COBALT_SEM_H */
+#endif /* !_COBALT_POSIX_SEM_H */

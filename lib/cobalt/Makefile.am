@@ -3,6 +3,7 @@ pkgconfigdir = $(libdir)/pkgconfig
 SUBDIRS = sysdeps
 
 noinst_HEADERS =	\
+	current.h	\
 	sem_heap.h	\
 	internal.h
 
@@ -30,6 +31,7 @@ libcobalt_la_SOURCES =		\
 	sigshadow.c		\
 	thread.c		\
 	timer.c			\
+	trace.c			\
 	wrappers.c
 
 libcobalt_la_CPPFLAGS =					\

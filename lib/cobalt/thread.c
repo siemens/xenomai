@@ -25,9 +25,10 @@
 #include <pthread.h>
 #include <sys/types.h>
 #include <semaphore.h>
-#include <cobalt/syscall.h>
-#include <asm-generic/current.h>
+#include <asm/xenomai/syscall.h>
 #include <asm-generic/stack.h>
+#include <cobalt/uapi/syscall.h>
+#include "current.h"
 #include "internal.h"
 
 static pthread_attr_ex_t default_attr_ex;

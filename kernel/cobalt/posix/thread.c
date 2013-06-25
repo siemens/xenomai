@@ -30,6 +30,7 @@
 
 #include <linux/types.h>
 #include <linux/jhash.h>
+#include <cobalt/uapi/signal.h>
 #include "thread.h"
 #include "timer.h"
 
@@ -39,7 +40,7 @@ static const pthread_attr_t default_thread_attr = {
 	.magic = COBALT_THREAD_ATTR_MAGIC,
 	.detachstate = PTHREAD_CREATE_JOINABLE,
 	.inheritsched = PTHREAD_EXPLICIT_SCHED,
-	.policy = SCHED_OTHER,
+	.policy = SCHED_NORMAL,
 	.schedparam_ex = {
 		.sched_priority = 0
 	},
@@ -396,14 +397,14 @@ static inline int pthread_create(pthread_t *tid, const pthread_attr_t *attr)
 
 	/*
 	 * When the weak scheduling class is compiled in, SCHED_WEAK
-	 * and SCHED_OTHER threads are scheduled by
+	 * and SCHED_NORMAL threads are scheduled by
 	 * xnsched_class_weak, at their respective priority
-	 * levels. Otherwise, SCHED_OTHER is scheduled by
+	 * levels. Otherwise, SCHED_NORMAL is scheduled by
 	 * xnsched_class_rt at priority level #0.
 	 */
 	switch (pol) {
 #ifdef CONFIG_XENO_OPT_SCHED_WEAK
-	case SCHED_OTHER:
+	case SCHED_NORMAL:
 	case SCHED_WEAK:
 		param.weak.prio = prio;
 		sched_class = &xnsched_class_weak;
@@ -600,7 +601,7 @@ static inline int pthread_set_mode_np(int clrmask, int setmask, int *mode_r)
  * @param tid target thread;
  *
  * @param u_pol scheduling policy, one of SCHED_WEAK, SCHED_FIFO,
- * SCHED_COBALT, SCHED_RR, SCHED_SPORADIC, SCHED_TP or SCHED_OTHER;
+ * SCHED_COBALT, SCHED_RR, SCHED_SPORADIC, SCHED_TP or SCHED_NORMAL;
  *
  * @param par scheduling parameters address. As a special exception, a
  * negative sched_priority value is interpreted as if SCHED_WEAK was
@@ -678,7 +679,7 @@ pthread_setschedparam_ex(pthread_t tid, int u_pol, const struct sched_param_ex *
 	param.rt.prio = prio;
 
 	switch (pol) {
-	case SCHED_OTHER:
+	case SCHED_NORMAL:
 		if (prio)
 			goto fail;
 		/* falldown wanted */
@@ -1161,7 +1162,7 @@ int cobalt_sched_min_prio(int policy)
 		return XNSCHED_FIFO_MIN_PRIO;
 	case SCHED_COBALT:
 		return XNSCHED_RT_MIN_PRIO;
-	case SCHED_OTHER:
+	case SCHED_NORMAL:
 	case SCHED_WEAK:
 		return 0;
 	default:
@@ -1179,7 +1180,7 @@ int cobalt_sched_max_prio(int policy)
 		return XNSCHED_FIFO_MAX_PRIO;
 	case SCHED_COBALT:
 		return XNSCHED_RT_MAX_PRIO;
-	case SCHED_OTHER:
+	case SCHED_NORMAL:
 		return 0;
 	case SCHED_WEAK:
 #ifdef CONFIG_XENO_OPT_SCHED_WEAK
@@ -1196,12 +1197,12 @@ int cobalt_sched_yield(void)
 {
 	pthread_t thread = thread2pthread(xnshadow_current());
 	struct sched_param_ex param;
-	int policy = SCHED_OTHER;
+	int policy = SCHED_NORMAL;
 
 	pthread_getschedparam_ex(thread, &policy, &param);
 	xnpod_yield();
 
-	return policy == SCHED_OTHER;
+	return policy == SCHED_NORMAL;
 }
 
 #ifdef CONFIG_XENO_OPT_SCHED_TP

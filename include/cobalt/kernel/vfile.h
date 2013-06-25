@@ -31,7 +31,6 @@
 
 #include <linux/proc_fs.h>
 #include <linux/seq_file.h>
-#include <cobalt/kernel/types.h>
 #include <cobalt/kernel/lock.h>
 
 struct xnvfile_directory;

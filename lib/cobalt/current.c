@@ -3,14 +3,12 @@
 #include <string.h>
 #include <pthread.h>
 
-#include <cobalt/kernel/types.h>
-#include <cobalt/kernel/thread.h>
-#include <cobalt/kernel/vdso.h>
 #include <asm/xenomai/syscall.h>
-#include <asm-generic/current.h>
+#include <cobalt/uapi/thread.h>
+#include <cobalt/uapi/syscall.h>
+#include <cobalt/uapi/sys/vdso.h>
+#include "current.h"
 #include "internal.h"
-
-extern unsigned long cobalt_sem_heap[2];
 
 static void child_fork_handler(void);
 

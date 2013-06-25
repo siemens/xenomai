@@ -51,7 +51,7 @@
 #include "mutex.h"
 #include "sem.h"
 #include "thread.h"
-#include "mq.h"
+#include "mqueue.h"
 #include "timer.h"
 #include "registry.h"
 #include "monitor.h"

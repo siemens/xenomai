@@ -16,13 +16,15 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef COBALT_MQ_H
-#define COBALT_MQ_H
+#ifndef _COBALT_POSIX_MQUEUE_H
+#define _COBALT_POSIX_MQUEUE_H
 
-#include "registry.h"     /* For associative lists. */
+#include <linux/types.h>
+#include <linux/signal.h>
+#include <linux/fcntl.h>
 
-struct cobalt_mq;
-typedef struct cobalt_mq cobalt_mq_t;
+struct cobalt_context;
+struct mq_attr;
 
 int cobalt_mq_select_bind(mqd_t fd, struct xnselector *selector,
 			  unsigned type, unsigned index);
@@ -61,4 +63,4 @@ int cobalt_mq_pkg_init(void);
 
 void cobalt_mq_pkg_cleanup(void);
 
-#endif /* COBALT_MQ_H */
+#endif /* !_COBALT_POSIX_MQUEUE_H */

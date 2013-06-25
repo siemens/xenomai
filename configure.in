@@ -827,6 +827,9 @@ AC_CONFIG_FILES([ \
 	utils/ps/Makefile \
 	utils/slackspot/Makefile \
 	include/Makefile \
+	include/cobalt/uapi/Makefile \
+	include/cobalt/uapi/sys/Makefile \
+	include/cobalt/uapi/rtdm/Makefile \
 	include/cobalt/asm-generic/Makefile \
 	include/cobalt/asm-generic/ipipe/Makefile \
 	include/cobalt/asm-blackfin/Makefile \

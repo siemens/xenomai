@@ -25,15 +25,17 @@
 #include <signal.h>
 #include <limits.h>
 #include <unistd.h>
-#include <cobalt/kernel/heap.h>
-#include <cobalt/syscall.h>
-#include <rtdm/syscall.h>
-#include <rtdk.h>
 #include <asm/xenomai/features.h>
+#include <asm/xenomai/syscall.h>
+#include <asm/xenomai/atomic.h>
 #include <asm-generic/xenomai/stack.h>
-#include <asm-generic/xenomai/sem_heap.h>
-#include "kernel/cobalt/posix/mutex.h"
+#include <cobalt/uapi/syscall.h>
+#include <cobalt/uapi/mutex.h>
+#include <cobalt/uapi/sys/heap.h>
+#include <cobalt/uapi/rtdm/syscall.h>
+#include <rtdk.h>
 #include "kernel/cobalt/timeconv.h"
+#include "sem_heap.h"
 #include "internal.h"
 
 int __cobalt_muxid = -1;

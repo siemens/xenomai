@@ -1,9 +1,13 @@
-#ifndef XENO_COBALT_INTERNAL_H
-#define XENO_COBALT_INTERNAL_H
+#ifndef _LIB_COBALT_INTERNAL_H
+#define _LIB_COBALT_INTERNAL_H
 
 #include <signal.h>
 #include <pthread.h>
-#include <asm-generic/current.h>
+#include <cobalt/uapi/mutex.h>
+#include <cobalt/uapi/event.h>
+#include <cobalt/uapi/monitor.h>
+#include <cobalt/uapi/thread.h>
+#include "current.h"
 
 #define report_error(fmt, args...) \
 	__STD(fprintf(stderr, "Xenomai/cobalt: " fmt "\n", ##args))
@@ -13,11 +17,20 @@
 
 void cobalt_sigshadow_install_once(void);
 
-extern int __cobalt_muxid;
+extern unsigned long cobalt_sem_heap[2];
 
-struct xnthread_user_window;
-struct cobalt_threadstat;
-struct cobalt_monitor_shadow;
+static inline struct mutex_dat *mutex_get_datp(struct __shadow_mutex *shadow)
+{
+	if (shadow->attr.pshared)
+		return (struct mutex_dat *)(cobalt_sem_heap[1] + shadow->dat_offset);
+
+	return shadow->dat;
+}
+
+static inline atomic_long_t *mutex_get_ownerp(struct __shadow_mutex *shadow)
+{
+	return &mutex_get_datp(shadow)->owner;
+}
 
 void ___cobalt_prefault(void *p, size_t len);
 
@@ -84,4 +97,6 @@ void cobalt_print_exit(void);
 
 void cobalt_handle_sigdebug(int sig, siginfo_t *si, void *context);
 
-#endif /* XENO_COBALT_INTERNAL_H */
+extern int __cobalt_muxid;
+
+#endif /* _LIB_COBALT_INTERNAL_H */

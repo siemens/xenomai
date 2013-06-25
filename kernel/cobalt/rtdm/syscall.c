@@ -19,8 +19,7 @@
 
 #include <cobalt/kernel/shadow.h>
 #include <cobalt/kernel/ppd.h>
-#include <rtdm/syscall.h>
-
+#include "rtdm/syscall.h"
 #include "rtdm/internal.h"
 
 int __rtdm_muxid;

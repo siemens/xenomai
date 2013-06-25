@@ -1,227 +1,35 @@
 /*
  * Copyright (C) 2005 Philippe Gerum <rpm@xenomai.org>.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of the
- * License, or (at your option) any later version.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-
 #ifndef _COBALT_PTHREAD_H
 #define _COBALT_PTHREAD_H
 
-#ifdef __KERNEL__
-
-#include <linux/types.h>
-#include <sched.h>
-
-#define PTHREAD_STACK_MIN   1024
-
-#define PTHREAD_CREATE_JOINABLE 0
-#define PTHREAD_CREATE_DETACHED 1
-
-#define PTHREAD_INHERIT_SCHED  0
-#define PTHREAD_EXPLICIT_SCHED 1
-
-#define PTHREAD_SCOPE_SYSTEM  0
-#define PTHREAD_SCOPE_PROCESS 1
-
-#define PTHREAD_MUTEX_NORMAL     0
-#define PTHREAD_MUTEX_RECURSIVE  1
-#define PTHREAD_MUTEX_ERRORCHECK 2
-#define PTHREAD_MUTEX_DEFAULT    0
-
-#define PTHREAD_PRIO_NONE    0
-#define PTHREAD_PRIO_INHERIT 1
-#define PTHREAD_PRIO_PROTECT 2
-
-#define PTHREAD_PROCESS_PRIVATE 0
-#define PTHREAD_PROCESS_SHARED  1
-
-#define PTHREAD_CANCEL_ENABLE  0
-#define PTHREAD_CANCEL_DISABLE 1
-
-#define PTHREAD_CANCEL_DEFERRED     2
-#define PTHREAD_CANCEL_ASYNCHRONOUS 3
-
-#define PTHREAD_CANCELED  ((void *)-2)
-
-#define PTHREAD_DESTRUCTOR_ITERATIONS 4
-#define PTHREAD_KEYS_MAX 128
-
-#define PTHREAD_ONCE_INIT { 0x86860808, 0 }
-
-struct timespec;
-
-struct cobalt_thread;
-
-typedef struct cobalt_thread *pthread_t;
-
-typedef struct cobalt_threadattr {
-
-	unsigned magic;
-	int detachstate;
-	int inheritsched;
-	int policy;
-
-	/* Non portable */
-	struct sched_param_ex schedparam_ex;
-	char *name;
-	int fp;
-	cpumask_t affinity;
-
-} pthread_attr_t;
-
-/* pthread_mutexattr_t and pthread_condattr_t fit on 32 bits, for compatibility
-   with libc. */
-struct cobalt_key;
-typedef struct cobalt_key *pthread_key_t;
-
-typedef struct cobalt_once {
-	unsigned magic;
-	int routine_called;
-} pthread_once_t;
-
-/* The following definitions are copied from linuxthread pthreadtypes.h. */
-struct _pthread_fastlock
-{
-  long int __status;
-  int __spinlock;
-};
-
-typedef struct
-{
-  struct _pthread_fastlock __c_lock;
-  long __c_waiting;
-  char __padding[48 - sizeof (struct _pthread_fastlock)
-		 - sizeof (long) - sizeof (long long)];
-  long long __align;
-} pthread_cond_t;
-
-typedef struct
-{
-  int __m_reserved;
-  int __m_count;
-  long __m_owner;
-  int __m_kind;
-  struct _pthread_fastlock __m_lock;
-} pthread_mutex_t;
-
-#else /* !__KERNEL__ */
-
-#include <sched.h>
-#include <errno.h>
+#pragma GCC system_header
 #include_next <pthread.h>
-#include <cobalt/kernel/thread.h>
 #include <cobalt/wrappers.h>
+#include <cobalt/uapi/thread.h>
 
-struct timespec;
-
-#endif /* __KERNEL__ */
-
-#ifndef PTHREAD_PRIO_NONE
-#define PTHREAD_PRIO_NONE    0
-#endif /* !PTHREAD_PRIO_NONE */
-#ifndef PTHREAD_PRIO_INHERIT
-#define PTHREAD_PRIO_INHERIT 1
-#endif /* !PTHREAD_PRIO_INHERIT */
-#ifndef PTHREAD_PRIO_PROTECT
-#define PTHREAD_PRIO_PROTECT 2
-#endif /* !PTHREAD_PRIO_PROTECT */
-
-#define PTHREAD_WARNSW     XNTRAPSW
-#define PTHREAD_LOCK_SCHED XNLOCK
-#define PTHREAD_CONFORMING 0
-
-struct cobalt_mutexattr {
-	unsigned magic: 24;
-	unsigned type: 2;
-	unsigned protocol: 2;
-	unsigned pshared: 1;
-};
-
-struct cobalt_condattr {
-	unsigned magic: 24;
-	unsigned clock: 2;
-	unsigned pshared: 1;
-};
-
-struct cobalt_cond;
-
-struct cobalt_threadstat {
-	int cpu;
-	unsigned long status;
-	unsigned long long xtime;
-	unsigned long msw;
-	unsigned long csw;
-	unsigned long xsc;
-	unsigned long pf;
-	unsigned long long timeout;
-};
-
-struct cobalt_monitor;
-struct cobalt_monitor_data;
-
-#define COBALT_MONITOR_SHARED     0x1
-#define COBALT_MONITOR_WAITGRANT  0x0
-#define COBALT_MONITOR_WAITDRAIN  0x1
-
-struct cobalt_monitor_shadow {
-	struct cobalt_monitor *monitor;
-	union {
-		struct cobalt_monitor_data *data;
-		unsigned int data_offset;
-	} u;
-	int flags;
-};
-
-struct cobalt_event;
-struct cobalt_event_data;
-
-/* Creation flags. */
-#define COBALT_EVENT_FIFO    0x0
-#define COBALT_EVENT_PRIO    0x1
-#define COBALT_EVENT_SHARED  0x2
-
-/* Wait mode. */
-#define COBALT_EVENT_ALL  0x0
-#define COBALT_EVENT_ANY  0x1
-
-struct cobalt_event_shadow {
-	struct cobalt_event *event;
-	union {
-		struct cobalt_event_data *data;
-		unsigned int data_offset;
-	} u;
-	int flags;
-};
-
-#ifdef __KERNEL__
-typedef struct cobalt_mutexattr pthread_mutexattr_t;
-
-typedef struct cobalt_condattr pthread_condattr_t;
-#else /* !__KERNEL__ */
-
-typedef struct {
+typedef struct pthread_attr_ex {
 	pthread_attr_t std;
 	struct {
 		int sched_policy;
 		struct sched_param_ex sched_param;
 	} nonstd;
 } pthread_attr_ex_t;
-
-typedef struct cobalt_monitor_shadow cobalt_monitor_t;
-
-typedef struct cobalt_event_shadow cobalt_event_t;
 
 #ifdef __cplusplus
 extern "C" {
@@ -400,6 +208,21 @@ int pthread_attr_setscope_ex(pthread_attr_ex_t *attr_ex,
 			     int scope);
 
 #ifdef __UCLIBC__
+
+#include <errno.h>
+
+/*
+ * Mutex PI and priority ceiling settings may not be available with
+ * uClibc. Define the protocol values in the same terms as the
+ * standard enum found in glibc to allow application code to enable
+ * them.
+ */
+enum {
+	PTHREAD_PRIO_NONE,
+	PTHREAD_PRIO_INHERIT,
+	PTHREAD_PRIO_PROTECT
+};
+
 /*
  * uClibc does not provide the following routines, so we define them
  * here. Note: let the compiler decides whether it wants to actually
@@ -423,7 +246,5 @@ int pthread_getattr_np(pthread_t th, pthread_attr_t *attr)
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* !__KERNEL__ */
 
 #endif /* !_COBALT_PTHREAD_H */

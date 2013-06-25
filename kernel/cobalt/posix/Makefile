@@ -7,7 +7,7 @@ posix-y :=		\
 	event.o		\
 	init.o		\
 	monitor.o	\
-	mq.o		\
+	mqueue.o	\
 	mutex.o		\
 	mutex_attr.o	\
 	registry.o	\
@@ -16,4 +16,4 @@ posix-y :=		\
 	thread.o	\
 	timer.o
 
-ccflags-y := -D__IN_XENOMAI__ -Iinclude/xenomai/cobalt -Iinclude/xenomai
+ccflags-y := -D__IN_XENOMAI__ -Iinclude/xenomai

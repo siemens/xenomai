@@ -1,25 +1,26 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <unistd.h>
-#include <pthread.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
-
-#include <cobalt/kernel/vdso.h>
+#include <stdio.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <pthread.h>
 #include <asm/xenomai/syscall.h>
-#include <asm-generic/sem_heap.h>
-#include <asm-generic/current.h>
+#include <cobalt/uapi/syscall.h>
+#include <cobalt/uapi/sys/vdso.h>
+#include <cobalt/uapi/sys/heap.h>
+#include "current.h"
+#include "sem_heap.h"
 #include "internal.h"
 
 #define PRIVATE 0
 #define SHARED 1
 
-struct xnvdso *nkvdso;
+struct xnvdso *vdso;
 
 unsigned long cobalt_sem_heap[2] = { 0, 0 };
 
@@ -103,7 +104,7 @@ static void cobalt_init_vdso(void)
 		exit(EXIT_FAILURE);
 	}
 
-	nkvdso = (struct xnvdso *)(cobalt_sem_heap[SHARED] + sysinfo.vdso);
+	vdso = (struct xnvdso *)(cobalt_sem_heap[SHARED] + sysinfo.vdso);
 }
 
 /* Will be called once at library loading time, and when re-binding

@@ -1237,7 +1237,7 @@ int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
 #ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
 static inline void rtdm_mutex_unlock(rtdm_mutex_t *mutex)
 {
-	XENO_ASSERT(RTDM, !xnpod_asynch_p(), return;);
+	XENO_ASSERT(RTDM, !xnpod_interrupt_p(), return;);
 
 	trace_mark(xn_rtdm, mutex_unlock, "mutex %p", mutex);
 
@@ -1365,7 +1365,7 @@ static inline int rtdm_strncpy_from_user(rtdm_user_info_t *user_info,
 
 static inline int rtdm_rt_capable(rtdm_user_info_t *user_info)
 {
-	XENO_ASSERT(RTDM, !xnpod_asynch_p(), return 0;);
+	XENO_ASSERT(RTDM, !xnpod_interrupt_p(), return 0;);
 
 	return (user_info ? xnshadow_thread(user_info) != NULL
 			  : !xnpod_root_p());

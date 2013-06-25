@@ -31,6 +31,8 @@
 
 #ifdef CONFIG_XENO_COBALT
 
+#include <cobalt/uapi/sys/types.h>
+
 struct xnthread_user_window;
 
 struct threadobj_corespec {

@@ -84,7 +84,7 @@ int cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex, unsigned long long n
 {
 	struct timespec ts;
 
-	if (ns == XN_INFINITE)
+	if (ns == 0)
 		return -pthread_cond_wait(cond, mutex);
 
 	clock_gettime(CLOCK_MONOTONIC, &ts);
@@ -216,7 +216,7 @@ void simple_condwait(void)
 	thread_msleep(11);
 
 	start = rt_timer_tsc();
-	check("cond_wait", cond_wait(&cond, &mutex, XN_INFINITE), 0);
+	check("cond_wait", cond_wait(&cond, &mutex, 0), 0);
 	check_sleep("cond_wait", start);
 	thread_msleep(10);
 	check("mutex_unlock", mutex_unlock(&mutex), 0);
@@ -322,7 +322,7 @@ void sig_norestart_condwait(void)
 
 	start = rt_timer_tsc();
 	sig_seen = 0;
-	check("cond_wait", cond_wait(&cond, &mutex, XN_INFINITE), 0);
+	check("cond_wait", cond_wait(&cond, &mutex, 0), 0);
 	check_sleep("cond_wait", start);
 	check("sig_seen", sig_seen, 1);
 	check("mutex_unlock", mutex_unlock(&mutex), 0);
@@ -360,7 +360,7 @@ void sig_restart_condwait(void)
 
 	start = rt_timer_tsc();
 	sig_seen = 0;
-	check("cond_wait", cond_wait(&cond, &mutex, XN_INFINITE), 0);
+	check("cond_wait", cond_wait(&cond, &mutex, 0), 0);
 	check_sleep("cond_wait", start);
 	check("sig_seen", sig_seen, 1);
 	check("mutex_unlock", mutex_unlock(&mutex), 0);
@@ -414,7 +414,7 @@ void sig_norestart_condwait_mutex(void)
 
 	sig_seen = 0;
 	start = rt_timer_tsc();
-	check("cond_wait", cond_wait(&cond, &mutex, XN_INFINITE), 0);
+	check("cond_wait", cond_wait(&cond, &mutex, 0), 0);
 	check_sleep("cond_wait", start);
 	check("sig_seen", sig_seen, 1);
 	thread_msleep(10);
@@ -455,7 +455,7 @@ void sig_restart_condwait_mutex(void)
 	sig_seen = 0;
 	start = rt_timer_tsc();
 
-	check("cond_wait", cond_wait(&cond, &mutex, XN_INFINITE), 0);
+	check("cond_wait", cond_wait(&cond, &mutex, 0), 0);
 	check_sleep("cond_wait", start);
 	thread_msleep(10);
 
@@ -510,7 +510,7 @@ void sig_norestart_double(void)
 
 	sig_seen = 0;
 	start = rt_timer_tsc();
-	check("cond_wait", cond_wait(&cond, &mutex, XN_INFINITE), 0);
+	check("cond_wait", cond_wait(&cond, &mutex, 0), 0);
 	check_sleep("cond_wait", start);
 	check("sig_seen", sig_seen, 2);
 	thread_msleep(10);
@@ -551,7 +551,7 @@ void sig_restart_double(void)
 	sig_seen = 0;
 	start = rt_timer_tsc();
 
-	check("cond_wait", cond_wait(&cond, &mutex, XN_INFINITE), 0);
+	check("cond_wait", cond_wait(&cond, &mutex, 0), 0);
 	check_sleep("cond_wait", start);
 	check("sig_seen", sig_seen, 2);
 	thread_msleep(10);

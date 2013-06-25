@@ -366,7 +366,7 @@ ssize_t xnbufd_copy_to_kmem(void *to, struct xnbufd *bufd, size_t len)
 	 * such a case.
 	 */
 	if (xnthread_test_state(xnpod_current_thread(), XNROOT|XNUSER) &&
-	    !xnpod_asynch_p() && current->mm == bufd->b_mm) {
+	    !xnpod_interrupt_p() && current->mm == bufd->b_mm) {
 		XENO_BUGON(NUCLEUS, xnlock_is_owner(&nklock) || spltest());
 		if (__xn_safe_copy_from_user(to, (void __user *)from, len))
 			return -EFAULT;
@@ -477,7 +477,7 @@ ssize_t xnbufd_copy_from_kmem(struct xnbufd *bufd, void *from, size_t len)
 	 * is wrong in the first place, so never mind.
 	 */
 	if (xnthread_test_state(xnpod_current_thread(), XNROOT|XNUSER) &&
-	    !xnpod_asynch_p() && current->mm == bufd->b_mm) {
+	    !xnpod_interrupt_p() && current->mm == bufd->b_mm) {
 		XENO_BUGON(NUCLEUS, xnlock_is_owner(&nklock) || spltest());
 		if (__xn_safe_copy_to_user((void __user *)to, from, len))
 			return -EFAULT;

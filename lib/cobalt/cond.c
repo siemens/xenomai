@@ -15,16 +15,15 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-
 #include <errno.h>
-#include <cobalt/kernel/synch.h>
-#include <cobalt/syscall.h>
-#include <asm-generic/current.h>
-#include "kernel/cobalt/posix/mutex.h"
-#include "kernel/cobalt/posix/cond.h"
+#include <pthread.h>
+#include <asm/xenomai/syscall.h>
+#include <cobalt/uapi/syscall.h>
+#include <cobalt/uapi/mutex.h>
+#include <cobalt/uapi/cond.h>
+#include <cobalt/uapi/sys/synch.h>
+#include "current.h"
 #include "internal.h"
-
-extern unsigned long cobalt_sem_heap[2];
 
 static inline unsigned long *cond_get_signalsp(struct __shadow_cond *shadow)
 {

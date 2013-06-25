@@ -19,11 +19,13 @@
 #include <sys/time.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <rtdk.h>
-#include <cobalt/kernel/thread.h>
 #include <asm/xenomai/syscall.h>
-#include <asm-generic/current.h>
+#include <cobalt/uapi/thread.h>
+#include <cobalt/uapi/syscall.h>
+#include "current.h"
 #include "internal.h"
 
 static void assert_nrt_inner(void)

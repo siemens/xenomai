@@ -34,9 +34,9 @@
 #include <stddef.h>
 #include <stdarg.h>
 #include "registry.h"	/* For named semaphores. */
+#include "internal.h"
 #include "thread.h"
 #include "sem.h"
-#include "internal.h"
 
 #define SEM_NAMED    0x80000000
 

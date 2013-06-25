@@ -22,6 +22,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
@@ -31,6 +32,8 @@
 #include <cobalt/kernel/vdso.h>
 
 #include <xeno_config.h>
+
+extern struct xnvdso *vdso;
 
 #ifndef HAVE_RECENT_SETAFFINITY
 #ifdef HAVE_OLD_SETAFFINITY
@@ -78,12 +81,12 @@ struct per_cpu_data {
 
 static void show_hostrt_diagnostics(void)
 {
-	if (!xnvdso_test_feature(XNVDSO_FEAT_HOST_REALTIME)) {
+	if (!xnvdso_test_feature(vdso, XNVDSO_FEAT_HOST_REALTIME)) {
 		printf("XNVDSO_FEAT_HOST_REALTIME not available\n");
 		return;
 	}
 
-	if (nkvdso->hostrt_data.live)
+	if (vdso->hostrt_data.live)
 		printf("hostrt data area is live\n");
 	else {
 		printf("hostrt data area is not live\n");
@@ -91,18 +94,18 @@ static void show_hostrt_diagnostics(void)
 	}
 
 	printf("Sequence counter : %u\n",
-	       nkvdso->hostrt_data.seqcount.sequence);
-	printf("wall_time_sec    : %ld\n", nkvdso->hostrt_data.wall_time_sec);
-	printf("wall_time_nsec   : %u\n", nkvdso->hostrt_data.wall_time_nsec);
+	       vdso->hostrt_data.seqcount.sequence);
+	printf("wall_time_sec    : %ld\n", vdso->hostrt_data.wall_time_sec);
+	printf("wall_time_nsec   : %u\n", vdso->hostrt_data.wall_time_nsec);
 	printf("wall_to_monotonic\n");
 	printf("          tv_sec : %jd\n",
-	       (intmax_t)nkvdso->hostrt_data.wall_to_monotonic.tv_sec);
+	       (intmax_t)vdso->hostrt_data.wall_to_monotonic.tv_sec);
 	printf("         tv_nsec : %ld\n",
-	       nkvdso->hostrt_data.wall_to_monotonic.tv_nsec);
-	printf("cycle_last       : %Lu\n", nkvdso->hostrt_data.cycle_last);
-	printf("mask             : 0x%Lx\n", nkvdso->hostrt_data.mask);
-	printf("mult             : %u\n", nkvdso->hostrt_data.mult);
-	printf("shift            : %u\n\n", nkvdso->hostrt_data.shift);
+	       vdso->hostrt_data.wall_to_monotonic.tv_nsec);
+	printf("cycle_last       : %Lu\n", vdso->hostrt_data.cycle_last);
+	printf("mask             : 0x%Lx\n", vdso->hostrt_data.mask);
+	printf("mult             : %u\n", vdso->hostrt_data.mult);
+	printf("shift            : %u\n\n", vdso->hostrt_data.shift);
 }
 
 static inline unsigned long long read_clock(clockid_t clock_id)

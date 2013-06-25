@@ -246,7 +246,7 @@ char *xnthread_format_status(unsigned long status, char *buf, int size)
 	int pos, c, mask;
 	char *wp;
 
-	for (mask = (int)status & ~XNTHREAD_STATE_SPARES, pos = 0, wp = buf;
+	for (mask = (int)status, pos = 0, wp = buf;
 	     mask != 0 && wp - buf < size - 2;	/* 1-letter label + \0 */
 	     mask >>= 1, pos++) {
 		if ((mask & 1) == 0)

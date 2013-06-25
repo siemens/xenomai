@@ -20,9 +20,10 @@
 #include <stdarg.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <cobalt/syscall.h>
 #include <pthread.h>
 #include <mqueue.h>
+#include <asm/xenomai/syscall.h>
+#include <cobalt/uapi/syscall.h>
 #include "internal.h"
 
 COBALT_IMPL(mqd_t, mq_open, (const char *name, int oflags, ...))

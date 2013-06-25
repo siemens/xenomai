@@ -530,7 +530,7 @@ ssize_t xnpipe_recv(int minor, struct xnpipe_mh **pmh, xnticks_t timeout)
 	if (minor < 0 || minor >= XNPIPE_NDEVS)
 		return -ENODEV;
 
-	if (xnpod_asynch_p())
+	if (xnpod_interrupt_p())
 		return -EPERM;
 
 	state = &xnpipe_states[minor];

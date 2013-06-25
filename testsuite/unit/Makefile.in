@@ -360,6 +360,7 @@ CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 @XENO_COBALT_TRUE@mutex_torture_CPPFLAGS = \
 @XENO_COBALT_TRUE@	@XENO_USER_CFLAGS@		\
 @XENO_COBALT_TRUE@	-DXENO_POSIX			\
+@XENO_COBALT_TRUE@	-I$(top_srcdir)			\
 @XENO_COBALT_TRUE@	-I$(top_srcdir)/include		\
 @XENO_COBALT_TRUE@	-Wno-missing-prototypes 
 

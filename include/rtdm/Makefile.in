@@ -52,8 +52,8 @@ build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
 subdir = include/rtdm
-DIST_COMMON = $(includesub_HEADERS) $(noinst_HEADERS) \
-	$(srcdir)/Makefile.am $(srcdir)/Makefile.in
+DIST_COMMON = $(includesub_HEADERS) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config/ac_prog_cc_for_build.m4 \
 	$(top_srcdir)/config/docbook.m4 \
@@ -104,7 +104,7 @@ am__uninstall_files_from_dir = { \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
 am__installdirs = "$(DESTDIR)$(includesubdir)"
-HEADERS = $(includesub_HEADERS) $(noinst_HEADERS)
+HEADERS = $(includesub_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -273,9 +273,6 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 includesubdir = $(includedir)/rtdm
-noinst_HEADERS = \
-	syscall.h
-
 includesub_HEADERS = \
 	rtdm.h \
 	rtdm_driver.h \

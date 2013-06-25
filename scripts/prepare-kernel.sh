@@ -436,25 +436,19 @@ esac
 patch_kernelversion_specific="n"
 patch_architecture_specific="y"
 patch_link r m kernel/cobalt/arch/$linux_arch arch/$linux_arch/xenomai
+patch_link r n include/cobalt/asm-$linux_arch arch/$linux_arch/include/asm/xenomai
+patch_link n n include/cobalt/asm-generic/ipipe arch/$linux_arch/include/ipipe
 patch_architecture_specific="n"
 patch_link n m kernel/cobalt kernel/xenomai
 patch_link n m kernel/cobalt/posix kernel/xenomai/posix
 patch_link n m kernel/cobalt/rtdm kernel/xenomai/rtdm
 patch_link r m kernel/drivers drivers/xenomai
-patch_architecture_specific="y"
-patch_link r n include/cobalt/asm-$linux_arch arch/$linux_arch/include/asm/xenomai
-patch_architecture_specific="n"
 patch_link r n include/cobalt/asm-generic include/asm-generic/xenomai
-patch_link n n include/cobalt include/xenomai
+patch_link r n include/cobalt/kernel include/xenomai/cobalt/kernel
+patch_link r n include/cobalt/uapi include/xenomai/cobalt/uapi
+patch_link r n include/rtdm include/xenomai/rtdm
+patch_link r n include/analogy include/xenomai/analogy
 patch_link n version.h include include/xenomai
-cd $xenomai_root
-for d in include/* ; do
-    if test -d $d -a -z "`echo $d | grep '^include/asm-'`"; then
-        destdir=`echo $d | sed -e 's,^\(include\)\(/.*\)$,\1/xenomai\2,'`
-        patch_link r n $d $destdir
-    fi
-done
-patch_link n n include/cobalt/asm-generic/ipipe arch/$linux_arch/include/ipipe
 
 if test "x$output_patch" != "x"; then
     if test x$verbose = x1; then

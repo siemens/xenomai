@@ -134,6 +134,62 @@ static inline int cobalt_mutex_acquire(xnthread_t *cur,
 	return cobalt_mutex_acquire_unchecked(cur, mutex, timed, abs_to);
 }
 
+/* must be called with nklock locked, interrupts off. */
+int cobalt_mutex_acquire_unchecked(struct xnthread *cur,
+				   struct cobalt_mutex *mutex,
+				   int timed,
+				   xnticks_t abs_to)
+
+{
+	if (timed)
+		xnsynch_acquire(&mutex->synchbase, abs_to, XN_REALTIME);
+	else
+		xnsynch_acquire(&mutex->synchbase, XN_INFINITE, XN_RELATIVE);
+
+	if (xnthread_test_info(cur, XNBREAK | XNRMID | XNTIMEO)) {
+		if (xnthread_test_info(cur, XNBREAK))
+			return -EINTR;
+		else if (xnthread_test_info(cur, XNTIMEO))
+			return -ETIMEDOUT;
+		else /* XNRMID */
+			return -EINVAL;
+	}
+
+	return 0;
+}
+
+int cobalt_mutex_release(struct xnthread *cur,
+			 struct cobalt_mutex *mutex)
+{
+	struct cobalt_cond *cond;
+	struct mutex_dat *datp;
+	unsigned long flags;
+	int need_resched;
+
+	if (!cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, struct cobalt_mutex))
+		 return -EINVAL;
+
+#if XENO_DEBUG(COBALT)
+	if (mutex->owningq != cobalt_kqueues(mutex->attr.pshared))
+		return -EPERM;
+#endif /* XENO_DEBUG(COBALT) */
+
+	datp = container_of(mutex->synchbase.fastlock, struct mutex_dat, owner);
+	flags = datp->flags;
+	need_resched = 0;
+	if ((flags & COBALT_MUTEX_COND_SIGNAL)) {
+		datp->flags = flags & ~COBALT_MUTEX_COND_SIGNAL;
+		if (!list_empty(&mutex->conds)) {
+			list_for_each_entry(cond, &mutex->conds, mutex_link)
+				need_resched |=
+				cobalt_cond_deferred_signals(cond);
+		}
+	}
+	need_resched |= xnsynch_release(&mutex->synchbase, cur) != NULL;
+
+	return need_resched;
+}
+
 static inline int cobalt_mutex_timedlock_break(struct cobalt_mutex *mutex,
 					       int timed, xnticks_t abs_to)
 {
@@ -233,7 +289,8 @@ busy:
 int cobalt_mutex_init(struct __shadow_mutex __user *u_mx,
 		      const pthread_mutexattr_t __user *u_attr)
 {
-	pthread_mutexattr_t locattr, *attr;
+	const pthread_mutexattr_t *attr;
+	pthread_mutexattr_t locattr;
 	struct cobalt_mutex *mutex;
 	struct __shadow_mutex mx;
 	struct mutex_dat *datp;

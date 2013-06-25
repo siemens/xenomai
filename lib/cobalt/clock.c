@@ -23,11 +23,14 @@
 #include <errno.h>
 #include <pthread.h>		/* For pthread_setcanceltype. */
 #include <time.h>
-#include <cobalt/kernel/vdso.h>
-#include <cobalt/syscall.h>
+#include <asm/xenomai/syscall.h>
 #include <asm/xenomai/arith.h>
 #include <asm/xenomai/tsc.h>
 #include <asm-generic/xenomai/timeconv.h>
+#include <cobalt/uapi/syscall.h>
+#include <cobalt/uapi/time.h>
+#include <cobalt/uapi/sys/vdso.h>
+#include "sem_heap.h"
 #include "internal.h"
 
 COBALT_IMPL(int, clock_getres, (clockid_t clock_id, struct timespec *tp))
@@ -50,10 +53,10 @@ static int __do_clock_host_realtime(struct timespec *ts, void *tzp)
 	unsigned long mult, shift, nsec, rem;
 	struct xnvdso_hostrt_data *hostrt_data;
 
-	if (!xnvdso_test_feature(XNVDSO_FEAT_HOST_REALTIME))
+	if (!xnvdso_test_feature(vdso, XNVDSO_FEAT_HOST_REALTIME))
 		return -1;
 
-	hostrt_data = &nkvdso->hostrt_data;
+	hostrt_data = &vdso->hostrt_data;
 
 	if (!hostrt_data->live)
 		return -1;

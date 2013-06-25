@@ -35,10 +35,16 @@
 #include "internal.h"		/* Magics, time conversion */
 #include "thread.h"		/* errno. */
 #include "timer.h"
-#include "mq.h"
+#include "mqueue.h"
 #include "internal.h"
 
-/* Temporary definitions. */
+struct mq_attr {
+	long mq_flags;
+	long mq_maxmsg;
+	long mq_msgsize;
+	long mq_curmsgs;
+};
+
 struct cobalt_mq {
 	cobalt_node_t nodebase;
 #define node2mq(naddr) container_of(naddr,  cobalt_mq_t, nodebase)
@@ -62,6 +68,8 @@ struct cobalt_mq {
 	DECLARE_XNSELECT(read_select);
 	DECLARE_XNSELECT(write_select);
 };
+
+typedef struct cobalt_mq cobalt_mq_t;
 
 struct cobalt_msg {
 	struct list_head link;
@@ -926,7 +934,7 @@ static inline int mq_notify(mqd_t fd, const struct sigevent *evp)
 		    (unsigned int)(evp->sigev_signo - 1) > SIGRTMAX - 1))
 		return -EINVAL;
 
-	if (xnpod_asynch_p() || thread == NULL)
+	if (xnpod_interrupt_p() || thread == NULL)
 		return -EPERM;
 
 	xnlock_get_irqsave(&nklock, s);

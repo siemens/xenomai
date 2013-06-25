@@ -23,8 +23,6 @@
 #ifndef _COBALT_KERNEL_TIMER_H
 #define _COBALT_KERNEL_TIMER_H
 
-#ifdef __KERNEL__
-
 #include <cobalt/kernel/clock.h>
 #include <cobalt/kernel/stat.h>
 #include <cobalt/kernel/list.h>
@@ -32,6 +30,16 @@
 #ifndef CONFIG_XENO_OPT_DEBUG_TIMERS
 #define CONFIG_XENO_OPT_DEBUG_TIMERS  0
 #endif
+
+#define XN_INFINITE   ((xnticks_t)0)
+#define XN_NONBLOCK   ((xnticks_t)-1)
+
+/* Timer modes */
+typedef enum xntmode {
+	XN_RELATIVE,
+	XN_ABSOLUTE,
+	XN_REALTIME
+} xntmode_t;
 
 #define XNTIMER_WHEELSIZE 64
 #define XNTIMER_WHEELMASK (XNTIMER_WHEELSIZE - 1)
@@ -311,7 +319,5 @@ char *xntimer_format_time(xnticks_t value,
 int xntimer_grab_hardware(int cpu);
 
 void xntimer_release_hardware(int cpu);
-
-#endif /* __KERNEL__ */
 
 #endif /* !_COBALT_KERNEL_TIMER_H */

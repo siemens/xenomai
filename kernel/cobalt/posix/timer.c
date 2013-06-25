@@ -21,8 +21,6 @@
  *
  *@{*/
 
-#include <cobalt/semaphore.h>
-#include "timer.h"
 #include "thread.h"
 #include "timer.h"
 #include "sem.h"

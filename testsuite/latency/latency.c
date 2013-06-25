@@ -471,6 +471,8 @@ void faulthand(int sig)
 
 #ifdef CONFIG_XENO_COBALT
 
+#include <asm-generic/xenomai/syscall.h>
+
 static const char *reason_str[] = {
 	[SIGDEBUG_UNDEFINED] = "latency: received SIGXCPU for unknown reason",
 	[SIGDEBUG_MIGRATE_SIGNAL] = "received signal",

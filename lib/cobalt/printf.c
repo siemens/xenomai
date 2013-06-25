@@ -26,12 +26,10 @@
 #include <string.h>
 #include <unistd.h>
 #include <syslog.h>
-
 #include <rtdk.h>
-#include <cobalt/kernel/types.h>	/* For BITS_PER_LONG */
 #include <asm/xenomai/atomic.h>	/* For atomic_long_cmpxchg */
 #include <asm-generic/stack.h>
-#include <asm-generic/current.h>
+#include "current.h"
 #include "internal.h"
 
 #define RT_PRINT_BUFFER_ENV		"RT_PRINT_BUFFER"
@@ -441,7 +439,7 @@ int rt_print_init(size_t buffer_size, const char *buffer_name)
 							 bitmap,
 							 bitmap & ~(1UL << j));
 		} while (old_bitmap != bitmap && old_bitmap);
-		j += i * BITS_PER_LONG;
+		j += i * __WORDSIZE;
 	} while (!old_bitmap);
 
 	buffer = (struct print_buffer *)(pool_start + j * pool_buf_size);
@@ -545,8 +543,8 @@ static void cleanup_buffer(struct print_buffer *buffer)
 			goto dofree;
 
 		j = ((unsigned long)buffer - pool_start) / pool_buf_size;
-		i = j / BITS_PER_LONG;
-		j = j % BITS_PER_LONG;
+		i = j / __WORDSIZE;
+		j = j % __WORDSIZE;
 
 		old_bitmap = atomic_long_read(&pool_bitmap[i]);
 		do {
@@ -755,8 +753,8 @@ void cobalt_print_init(void)
 			}
 		}
 
-		pool_bitmap_len = (buffers_count + BITS_PER_LONG - 1)
-			/ BITS_PER_LONG;
+		pool_bitmap_len = (buffers_count + __WORDSIZE - 1)
+			/ __WORDSIZE;
 		if (!pool_bitmap_len)
 			goto done;
 
@@ -776,11 +774,11 @@ void cobalt_print_init(void)
 			exit(1);
 		}
 
-		for (i = 0; i < buffers_count / BITS_PER_LONG; i++)
+		for (i = 0; i < buffers_count / __WORDSIZE; i++)
 			atomic_long_set(&pool_bitmap[i], ~0UL);
-		if (buffers_count % BITS_PER_LONG)
+		if (buffers_count % __WORDSIZE)
 			atomic_long_set(&pool_bitmap[i],
-					(1UL << (buffers_count % BITS_PER_LONG)) - 1);
+					(1UL << (buffers_count % __WORDSIZE)) - 1);
 
 		for (i = 0; i < buffers_count; i++) {
 			struct print_buffer *buffer =

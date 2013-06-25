@@ -23,7 +23,7 @@
 
 #ifdef CONFIG_XENO_COBALT
 
-#include <pthread.h>
+#include <cobalt/uapi/event.h>
 
 struct eventobj_corespec {
 	cobalt_event_t event;

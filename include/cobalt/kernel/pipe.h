@@ -20,6 +20,11 @@
 #ifndef _COBALT_KERNEL_PIPE_H
 #define _COBALT_KERNEL_PIPE_H
 
+#include <linux/types.h>
+#include <linux/poll.h>
+#include <cobalt/kernel/synch.h>
+#include <cobalt/kernel/thread.h>
+
 #define XNPIPE_NDEVS      CONFIG_XENO_OPT_PIPE_NRDEV
 #define XNPIPE_DEV_MAJOR  150
 
@@ -37,13 +42,6 @@
 #define XNPIPE_OFLUSH  0x2
 
 #define XNPIPE_MINOR_AUTO  -1
-
-#ifdef __KERNEL__
-
-#include <cobalt/kernel/synch.h>
-#include <cobalt/kernel/thread.h>
-#include <linux/types.h>
-#include <linux/poll.h>
 
 #define XNPIPE_KERN_CONN         0x1
 #define XNPIPE_KERN_LCLOSE       0x2
@@ -131,7 +129,5 @@ static inline char *xnpipe_m_data(struct xnpipe_mh *mh)
 #define xnpipe_m_size(mh) ((mh)->size)
 
 #define xnpipe_m_rdoff(mh) ((mh)->rdoff)
-
-#endif /* __KERNEL__ */
 
 #endif /* !_COBALT_KERNEL_PIPE_H */

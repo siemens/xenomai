@@ -22,18 +22,17 @@
 
 #include <linux/types.h>
 #include <linux/err.h>
+#include <cobalt/kernel/select.h>
+#include <rtdm/rtdm_driver.h>
 #include "thread.h"
 #include "mutex.h"
 #include "cond.h"
-#include "mq.h"
+#include "mqueue.h"
 #include "sem.h"
 #include "timer.h"
 #include "monitor.h"
-#include "sched.h"
 #include "clock.h"
 #include "event.h"
-#include <cobalt/kernel/select.h>
-#include <rtdm/rtdm_driver.h>
 
 #define RTDM_FD_MAX CONFIG_XENO_OPT_RTDM_FILDES
 

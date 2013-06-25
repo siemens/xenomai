@@ -29,9 +29,6 @@
  *@{*/
 
 #include <cobalt/kernel/thread.h>
-
-#ifdef __KERNEL__
-
 #include <cobalt/kernel/schedqueue.h>
 #include <cobalt/kernel/sched-tp.h>
 #include <cobalt/kernel/sched-weak.h>
@@ -39,10 +36,9 @@
 #include <cobalt/kernel/vfile.h>
 
 /* Sched status flags */
-#define XNKCOUT		0x80000000	/* Sched callout context */
-#define XNINTCK		0x40000000	/* In master tick handler context */
-#define XNINSW		0x20000000	/* In context switch */
 #define XNRESCHED	0x10000000	/* Needs rescheduling */
+#define XNINSW		0x20000000	/* In context switch */
+#define XNINTCK		0x40000000	/* In master tick handler context */
 
 /* Sched local flags */
 #define XNHTICK		0x00008000	/* Host tick pending  */
@@ -466,13 +462,6 @@ static inline void xnsched_forget(struct xnthread *thread)
 }
 
 #endif /* !CONFIG_XENO_OPT_SCHED_CLASSES */
-
-#else /* !__KERNEL__ */
-
-#include <cobalt/kernel/sched-idle.h>
-#include <cobalt/kernel/sched-rt.h>
-
-#endif /* !__KERNEL__ */
 
 /*@}*/
 

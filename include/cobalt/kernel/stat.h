@@ -21,7 +21,6 @@
 #ifndef _COBALT_KERNEL_STAT_H
 #define _COBALT_KERNEL_STAT_H
 
-#include <cobalt/kernel/types.h>  /* This pulls in linux/config.h with legacy kernels. */
 #include <cobalt/kernel/clock.h>
 
 #ifdef CONFIG_XENO_OPT_STATS

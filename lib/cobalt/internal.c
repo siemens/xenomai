@@ -28,15 +28,14 @@
 #include <signal.h>
 #include <errno.h>
 #include <pthread.h>
-#include <cobalt/kernel/synch.h>
-#include <cobalt/kernel/thread.h>
-#include <cobalt/syscall.h>
-#include <asm-generic/current.h>
-#include "kernel/cobalt/posix/monitor.h"
-#include "kernel/cobalt/posix/event.h"
+#include <asm/xenomai/syscall.h>
+#include <cobalt/uapi/thread.h>
+#include <cobalt/uapi/syscall.h>
+#include <cobalt/uapi/monitor.h>
+#include <cobalt/uapi/event.h>
+#include <cobalt/uapi/sys/synch.h>
+#include "current.h"
 #include "internal.h"
-
-extern unsigned long cobalt_sem_heap[2];
 
 extern struct sigaction __cobalt_orig_sigdebug;
 

@@ -109,7 +109,7 @@ am_libcobalt_la_OBJECTS = libcobalt_la-assert_context.lo \
 	libcobalt_la-select.lo libcobalt_la-sem_heap.lo \
 	libcobalt_la-semaphore.lo libcobalt_la-sigshadow.lo \
 	libcobalt_la-thread.lo libcobalt_la-timer.lo \
-	libcobalt_la-wrappers.lo
+	libcobalt_la-trace.lo libcobalt_la-wrappers.lo
 libcobalt_la_OBJECTS = $(am_libcobalt_la_OBJECTS)
 libcobalt_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -343,6 +343,7 @@ top_srcdir = @top_srcdir@
 pkgconfigdir = $(libdir)/pkgconfig
 SUBDIRS = sysdeps
 noinst_HEADERS = \
+	current.h	\
 	sem_heap.h	\
 	internal.h
 
@@ -367,6 +368,7 @@ libcobalt_la_SOURCES = \
 	sigshadow.c		\
 	thread.c		\
 	timer.c			\
+	trace.c			\
 	wrappers.c
 
 libcobalt_la_CPPFLAGS = \
@@ -470,6 +472,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcobalt_la-sigshadow.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcobalt_la-thread.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcobalt_la-timer.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcobalt_la-trace.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcobalt_la-wrappers.Plo@am__quote@
 
 .c.o:
@@ -611,6 +614,13 @@ libcobalt_la-timer.lo: timer.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='timer.c' object='libcobalt_la-timer.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcobalt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcobalt_la-timer.lo `test -f 'timer.c' || echo '$(srcdir)/'`timer.c
+
+libcobalt_la-trace.lo: trace.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcobalt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcobalt_la-trace.lo -MD -MP -MF $(DEPDIR)/libcobalt_la-trace.Tpo -c -o libcobalt_la-trace.lo `test -f 'trace.c' || echo '$(srcdir)/'`trace.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libcobalt_la-trace.Tpo $(DEPDIR)/libcobalt_la-trace.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='trace.c' object='libcobalt_la-trace.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcobalt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcobalt_la-trace.lo `test -f 'trace.c' || echo '$(srcdir)/'`trace.c
 
 libcobalt_la-wrappers.lo: wrappers.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcobalt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcobalt_la-wrappers.lo -MD -MP -MF $(DEPDIR)/libcobalt_la-wrappers.Tpo -c -o libcobalt_la-wrappers.lo `test -f 'wrappers.c' || echo '$(srcdir)/'`wrappers.c

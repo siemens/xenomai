@@ -16,11 +16,8 @@
  * along with Xenomai; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-
-#ifndef _RTDM_SYSCALL_H
-#define _RTDM_SYSCALL_H
-
-#include <asm/xenomai/syscall.h>
+#ifndef _COBALT_UAPI_RTDM_SYSCALL_H
+#define _COBALT_UAPI_RTDM_SYSCALL_H
 
 #define RTDM_BINDING_MAGIC	0x5254444D
 
@@ -34,19 +31,4 @@
 #define sc_rtdm_recvmsg		7
 #define sc_rtdm_sendmsg		8
 
-#ifdef __KERNEL__
-
-#include <cobalt/kernel/shadow.h>
-
-extern int __rtdm_muxid;
-
-int __init rtdm_syscall_init(void);
-
-static inline void rtdm_syscall_cleanup(void)
-{
-	xnshadow_unregister_personality(__rtdm_muxid);
-}
-
-#endif /* __KERNEL__ */
-
-#endif /* _RTDM_SYSCALL_H */
+#endif /* !_COBALT_UAPI_RTDM_SYSCALL_H */

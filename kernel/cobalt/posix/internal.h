@@ -16,26 +16,17 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _COBALT_INTERNAL_H
-#define _COBALT_INTERNAL_H
+#ifndef _COBALT_POSIX_INTERNAL_H
+#define _COBALT_POSIX_INTERNAL_H
 
-#include <pthread.h>
-#include <sched.h>
-#include <signal.h>
-#include <semaphore.h>
-#include <mqueue.h>
-#include <time.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
 #include <cobalt/kernel/pod.h>
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/ppd.h>
 #include <cobalt/kernel/select.h>
 #include <cobalt/kernel/assert.h>
 #include <cobalt/kernel/list.h>
-#include <cobalt/syscall.h>
+#include <cobalt/uapi/syscall.h>
+#include <asm/xenomai/syscall.h>
 #include <asm/xenomai/arith.h>
 #include "registry.h"
 
@@ -173,11 +164,15 @@ static inline int clock_flag(int flag, clockid_t clock_id)
 	return -EINVAL;
 }
 
-int cobalt_mq_select_bind(mqd_t fd, struct xnselector *selector,
+int cobalt_mq_elect_bind(mqd_t fd, struct xnselector *selector,
 			 unsigned type, unsigned index);
 
 int cobalt_init(void);
 
 void cobalt_cleanup(void);
 
-#endif /* !_COBALT_INTERNAL_H */
+int cobalt_syscall_init(void);
+
+void cobalt_syscall_cleanup(void);
+
+#endif /* !_COBALT_POSIX_INTERNAL_H */

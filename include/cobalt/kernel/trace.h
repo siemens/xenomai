@@ -15,26 +15,20 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- *
- * User-space interface to the arch-specific tracing support.
  */
-
 #ifndef _COBALT_KERNEL_TRACE_H
 #define _COBALT_KERNEL_TRACE_H
 
-#define __xntrace_op_max_begin		0
-#define __xntrace_op_max_end		1
-#define __xntrace_op_max_reset		2
-#define __xntrace_op_user_start		3
-#define __xntrace_op_user_stop		4
-#define __xntrace_op_user_freeze	5
-#define __xntrace_op_special		6
-#define __xntrace_op_special_u64	7
-
-#ifdef __KERNEL__
-
 #include <linux/types.h>
 #include <linux/ipipe_trace.h>
+#include <cobalt/uapi/sys/trace.h>
+
+#ifdef CONFIG_LTT
+#include <linux/marker.h>
+#else
+#undef trace_mark
+#define trace_mark(channel, ev, fmt, args...)	do { } while (0)
+#endif
 
 static inline int xntrace_max_begin(unsigned long v)
 {
@@ -84,7 +78,7 @@ static inline int xntrace_special(unsigned char id, unsigned long v)
 }
 
 static inline int xntrace_special_u64(unsigned char id,
-					  unsigned long long v)
+				      unsigned long long v)
 {
 	ipipe_trace_special(id, (unsigned long)(v >> 32));
 	ipipe_trace_special(id, (unsigned long)(v & 0xFFFFFFFF));
@@ -114,54 +108,5 @@ static inline int xntrace_panic_dump(void)
 	ipipe_trace_panic_dump();
 	return 0;
 }
-
-#else /* !__KERNEL__ */
-
-#include <asm/xenomai/syscall.h>
-
-static inline int xntrace_max_begin(unsigned long v)
-{
-	return XENOMAI_SYSCALL2(sc_nucleus_trace, __xntrace_op_max_begin, v);
-}
-
-static inline int xntrace_max_end(unsigned long v)
-{
-	return XENOMAI_SYSCALL2(sc_nucleus_trace, __xntrace_op_max_end, v);
-}
-
-static inline int xntrace_max_reset(void)
-{
-	return XENOMAI_SYSCALL1(sc_nucleus_trace, __xntrace_op_max_reset);
-}
-
-static inline int xntrace_user_start(void)
-{
-	return XENOMAI_SYSCALL1(sc_nucleus_trace, __xntrace_op_user_start);
-}
-
-static inline int xntrace_user_stop(unsigned long v)
-{
-	return XENOMAI_SYSCALL2(sc_nucleus_trace, __xntrace_op_user_stop, v);
-}
-
-static inline int xntrace_user_freeze(unsigned long v, int once)
-{
-	return XENOMAI_SYSCALL3(sc_nucleus_trace, __xntrace_op_user_freeze,
-				v, once);
-}
-
-static inline int xntrace_special(unsigned char id, unsigned long v)
-{
-	return XENOMAI_SYSCALL3(sc_nucleus_trace, __xntrace_op_special, id, v);
-}
-
-static inline int xntrace_special_u64(unsigned char id, unsigned long long v)
-{
-	return XENOMAI_SYSCALL4(sc_nucleus_trace, __xntrace_op_special_u64, id,
-				(unsigned long)(v >> 32),
-				(unsigned long)(v & 0xFFFFFFFF));
-}
-
-#endif /* !__KERNEL__ */
 
 #endif /* !_COBALT_KERNEL_TRACE_H */

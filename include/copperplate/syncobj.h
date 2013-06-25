@@ -43,6 +43,8 @@ struct syncstate {
 
 #ifdef CONFIG_XENO_COBALT
 
+#include <cobalt/uapi/monitor.h>
+
 struct syncobj_corespec {
 	cobalt_monitor_t monitor;
 };

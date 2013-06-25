@@ -23,14 +23,15 @@
 #include <limits.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <assert.h>
 #include <string.h>
-#include <stdlib.h>
 #include <memory.h>
 #include <signal.h>
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <malloc.h>
 #include <pthread.h>
 #include <semaphore.h>
 #include <fuse.h>

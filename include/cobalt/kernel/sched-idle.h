@@ -30,8 +30,6 @@
 /* Idle priority level - actually never used for indexing. */
 #define XNSCHED_IDLE_PRIO	-1
 
-#ifdef __KERNEL__
-
 extern struct xnsched_class xnsched_class_idle;
 
 static inline void __xnsched_idle_setparam(struct xnthread *thread,
@@ -60,7 +58,5 @@ static inline int xnsched_idle_init_thread(struct xnthread *thread)
 {
 	return 0;
 }
-
-#endif /* __KERNEL__ */
 
 #endif /* !_COBALT_KERNEL_SCHED_IDLE_H */

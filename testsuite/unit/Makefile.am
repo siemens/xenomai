@@ -37,6 +37,7 @@ mutex_torture_SOURCES = mutex-torture.c
 mutex_torture_CPPFLAGS =		\
 	@XENO_USER_CFLAGS@		\
 	-DXENO_POSIX			\
+	-I$(top_srcdir)			\
 	-I$(top_srcdir)/include		\
 	-Wno-missing-prototypes 
 

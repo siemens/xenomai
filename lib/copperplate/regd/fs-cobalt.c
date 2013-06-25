@@ -21,7 +21,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <cobalt/kernel/thread.h>
+#include <errno.h>
+#include <cobalt/uapi/thread.h>
 #include "sysregfs.h"
 
 #ifdef CONFIG_XENO_PSHARED
@@ -38,7 +39,7 @@ char *format_thread_status(const struct thread_data *p, char *buf, size_t len)
 	int pos, c;
 	char *wp;
 
-	for (mask = p->status & ~XNTHREAD_STATE_SPARES, pos = 0, wp = buf;
+	for (mask = p->status, pos = 0, wp = buf;
 	     mask != 0 && wp - buf < len - 2;	/* 1-letter label + \0 */
 	     mask >>= 1, pos++) {
 		if ((mask & 1) == 0)

@@ -23,134 +23,19 @@
 #define _COBALT_KERNEL_THREAD_H
 
 #include <cobalt/kernel/types.h>
-
-/*! @ingroup nucleus
-  @defgroup nucleus_state_flags Thread state flags.
-  @brief Bits reporting permanent or transient states of thread.
-  @{
-*/
-
-/* State flags */
-
-#define XNSUSP    0x00000001 /**< Suspended. */
-#define XNPEND    0x00000002 /**< Sleep-wait for a resource. */
-#define XNDELAY   0x00000004 /**< Delayed */
-#define XNREADY   0x00000008 /**< Linked to the ready queue. */
-#define XNDORMANT 0x00000010 /**< Not started yet or killed */
-#define XNZOMBIE  0x00000020 /**< Zombie thread in deletion process */
-#define XNSTARTED 0x00000080 /**< Thread has been started */
-#define XNMAPPED  0x00000100 /**< Thread is mapped to a linux task */
-#define XNRELAX   0x00000200 /**< Relaxed shadow thread (blocking bit) */
-#define XNMIGRATE 0x00000400 /**< Thread is currently migrating to another CPU. */
-#define XNHELD    0x00000800 /**< Thread is held to process emergency. */
-
-#define XNBOOST   0x00001000 /**< Undergoes a PIP boost */
-#define XNDEBUG   0x00002000 /**< Hit a debugger breakpoint */
-#define XNLOCK    0x00004000 /**< Holds the scheduler lock (i.e. not preemptible) */
-#define XNRRB     0x00008000 /**< Undergoes a round-robin scheduling */
-#define XNTRAPSW  0x00010000 /**< Trap execution mode switches */
-#define XNFPU     0x00020000 /**< Thread uses FPU */
-#define XNROOT    0x00040000 /**< Root thread (that is, Linux/IDLE) */
-#define XNWEAK    0x00080000 /**< Non real-time shadow (from the WEAK class) */
-#define XNUSER    0x00100000 /**< Shadow thread running in userland */
-
-/*! @} */ /* Ends doxygen comment group: nucleus_state_flags */
-
-/*
-  Must follow the declaration order of the above bits. Status symbols
-  are defined as follows:
-  'S' -> Forcibly suspended.
-  'w'/'W' -> Waiting for a resource, with or without timeout.
-  'D' -> Delayed (without any other wait condition).
-  'R' -> Runnable.
-  'U' -> Unstarted or dormant.
-  'X' -> Relaxed shadow.
-  'H' -> Held in emergency.
-  'b' -> Priority boost undergoing.
-  'T' -> Ptraced and stopped.
-  'l' -> Locks scheduler.
-  'r' -> Undergoes round-robin.
-  't' -> Mode switches trapped.
-*/
-#define XNTHREAD_STATE_LABELS  "SWDRU...X.HbTlrt...."
-
-#define XNTHREAD_BLOCK_BITS   (XNSUSP|XNPEND|XNDELAY|XNDORMANT|XNRELAX|XNMIGRATE|XNHELD)
-#define XNTHREAD_MODE_BITS    (XNLOCK|XNRRB|XNTRAPSW)
-
-/* These state flags are available to the real-time interfaces */
-#define XNTHREAD_STATE_SPARE0  0x10000000
-#define XNTHREAD_STATE_SPARE1  0x20000000
-#define XNTHREAD_STATE_SPARE2  0x40000000
-#define XNTHREAD_STATE_SPARE3  0x80000000
-#define XNTHREAD_STATE_SPARES  0xf0000000
-
-/*! @ingroup nucleus
-  @defgroup nucleus_info_flags Thread information flags.
-  @brief Bits reporting events notified to the thread.
-  @{
-*/
-
-/* Information flags */
-
-#define XNTIMEO   0x00000001 /**< Woken up due to a timeout condition */
-#define XNRMID    0x00000002 /**< Pending on a removed resource */
-#define XNBREAK   0x00000004 /**< Forcibly awaken from a wait state */
-#define XNKICKED  0x00000008 /**< Forced out of primary mode */
-#define XNWAKEN   0x00000010 /**< Thread waken up upon resource availability */
-#define XNROBBED  0x00000020 /**< Robbed from resource ownership */
-#define XNAFFSET  0x00000040 /**< CPU affinity changed from primary mode */
-#define XNCANCELD 0x00000080 /**< Cancellation request is pending */
-#define XNSWREP   0x00000100 /**< Mode switch already reported */
-
-/* These information flags are available to the real-time interfaces */
-#define XNTHREAD_INFO_SPARE0  0x10000000
-#define XNTHREAD_INFO_SPARE1  0x20000000
-#define XNTHREAD_INFO_SPARE2  0x40000000
-#define XNTHREAD_INFO_SPARE3  0x80000000
-#define XNTHREAD_INFO_SPARES  0xf0000000
-
-/*! @} */ /* Ends doxygen comment group: nucleus_info_flags */
-
-/*!
-  @brief Structure containing thread information.
-*/
-typedef struct xnthread_info {
-
-	unsigned long state; /**< Thread state, @see nucleus_state_flags */
-
-	int bprio;  /**< Base priority. */
-	int cprio; /**< Current priority. May change through Priority Inheritance.*/
-
-	int cpu; /**< CPU the thread currently runs on. */
-	unsigned long affinity; /**< Thread's CPU affinity. */
-
-	unsigned long long relpoint; /**< Time of next release.*/
-
-	unsigned long long exectime; /**< Execution time in primary mode in nanoseconds. */
-
-	unsigned long modeswitches; /**< Number of primary->secondary mode switches. */
-	unsigned long ctxswitches; /**< Number of context switches. */
-	unsigned long pagefaults; /**< Number of triggered page faults. */
-	unsigned long syscalls; /**< Number of Xenomai syscalls. */
-
-	char name[XNOBJECT_NAME_LEN];  /**< Symbolic name assigned at creation. */
-
-} xnthread_info_t;
-
-struct xnthread_user_window {
-	unsigned long state;
-	unsigned long grant_value;
-};
-
-#ifdef __KERNEL__
-
 #include <cobalt/kernel/list.h>
 #include <cobalt/kernel/stat.h>
 #include <cobalt/kernel/timer.h>
 #include <cobalt/kernel/registry.h>
 #include <cobalt/kernel/schedparam.h>
+#include <cobalt/kernel/trace.h>
+#include <cobalt/uapi/sys/thread.h>
+#include <cobalt/uapi/sys/synch.h>
 #include <asm/xenomai/machine.h>
 #include <asm/xenomai/thread.h>
+
+#define XNTHREAD_BLOCK_BITS   (XNSUSP|XNPEND|XNDELAY|XNDORMANT|XNRELAX|XNMIGRATE|XNHELD)
+#define XNTHREAD_MODE_BITS    (XNLOCK|XNRRB|XNTRAPSW)
 
 struct xnthread;
 struct xnsynch;
@@ -158,8 +43,6 @@ struct xnsched;
 struct xnselector;
 struct xnsched_class;
 struct xnsched_tpslot;
-union xnsched_policy_param;
-struct xnbufd;
 struct xnpersonality;
 
 struct xnthread_init_attr {
@@ -214,7 +97,7 @@ typedef struct xnthread {
 	 */
 	int wprio;
 
-	u_long schedlck;	/** Scheduler lock count. */
+	unsigned long schedlck;	/** Scheduler lock count. */
 
 	/**
 	 * Thread holder in xnsched runnable queue. Prioritized by
@@ -437,7 +320,5 @@ static inline int normalize_priority(int prio)
 {
 	return prio < MAX_RT_PRIO ? prio : MAX_RT_PRIO - 1;
 }
-
-#endif /* __KERNEL__ */
 
 #endif /* !_COBALT_KERNEL_THREAD_H */

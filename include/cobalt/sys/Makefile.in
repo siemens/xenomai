@@ -274,9 +274,9 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 includesubdir = $(includedir)/cobalt/sys
 includesub_HEADERS = \
-	ioctl.h \
-	select.h \
-	socket.h \
+	ioctl.h		\
+	select.h	\
+	socket.h	\
 	time.h
 
 all: all-am

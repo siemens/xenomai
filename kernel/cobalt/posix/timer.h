@@ -15,11 +15,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+#ifndef _COBALT_POSIX_TIMER_H
+#define _COBALT_POSIX_TIMER_H
 
-#ifndef _COBALT_TIMER_H
-#define _COBALT_TIMER_H
-
-#include "thread.h"        /* For struct itimerspec. */
+#include <linux/time.h>
 
 int cobalt_timer_create(clockid_t clock,
 			const struct sigevent __user *u_sev,
@@ -46,4 +45,4 @@ int cobalt_timer_pkg_init(void);
 
 void cobalt_timer_pkg_cleanup(void);
 
-#endif /* !_COBALT_TIMER_H */
+#endif /* !_COBALT_POSIX_TIMER_H */

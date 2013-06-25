@@ -22,8 +22,9 @@
 #include <fcntl.h>		/* For O_CREAT. */
 #include <pthread.h>		/* For pthread_setcanceltype. */
 #include <semaphore.h>
-#include <cobalt/syscall.h>
-#include "kernel/cobalt/posix/sem.h"
+#include <asm/xenomai/syscall.h>
+#include <cobalt/uapi/syscall.h>
+#include <cobalt/uapi/sem.h>
 #include "internal.h"
 
 COBALT_IMPL(int, sem_init, (sem_t *sem, int pshared, unsigned value))

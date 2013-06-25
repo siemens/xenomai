@@ -31,7 +31,7 @@
  */
 
 #include <linux/init.h>
-#include <rtdm/syscall.h>
+#include "rtdm/syscall.h"
 #include "rtdm/internal.h"
 
 MODULE_DESCRIPTION("Real-Time Driver Model");

@@ -26,7 +26,7 @@
 /*! \addtogroup map
  *@{*/
 
-#include <cobalt/kernel/types.h>
+#include <asm/bitsperlong.h>
 
 #define XNMAP_MAX_KEYS	(BITS_PER_LONG * BITS_PER_LONG)
 

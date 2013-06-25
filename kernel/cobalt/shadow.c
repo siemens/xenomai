@@ -455,9 +455,7 @@ int xnshadow_harden(void)
 	/* "current" is now running into the Xenomai domain. */
 	sched = xnsched_finish_unlocked_switch(thread->sched);
 	xnsched_finalize_zombie(sched);
-#ifdef CONFIG_XENO_HW_FPU
 	xnpod_switch_fpu(sched);
-#endif /* CONFIG_XENO_HW_FPU */
 
 	xnlock_clear_irqon(&nklock);
 
@@ -1095,7 +1093,7 @@ static int xnshadow_sys_migrate(int domain)
 	return 0;
 }
 
-static void stringify_feature_set(u_long fset, char *buf, int size)
+static void stringify_feature_set(unsigned long fset, char *buf, int size)
 {
 	unsigned long feature;
 	int nc, nfeat;
@@ -1508,11 +1506,11 @@ static int xnshadow_sys_current(xnhandle_t __user *u_handle)
 				      sizeof(*u_handle));
 }
 
-static int xnshadow_sys_current_info(xnthread_info_t __user *u_info)
+static int xnshadow_sys_current_info(struct xnthread_info __user *u_info)
 {
 	xnthread_t *cur = xnshadow_current();
+	struct xnthread_info info;
 	xnticks_t raw_exectime;
-	xnthread_info_t info;
 	int i;
 
 	if (cur == NULL)

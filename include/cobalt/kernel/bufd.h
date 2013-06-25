@@ -26,7 +26,7 @@
 /*! \addtogroup bufd
  *@{*/
 
-#include <cobalt/kernel/types.h>
+#include <linux/types.h>
 
 struct mm_struct;
 
