@@ -66,7 +66,7 @@ struct xnsynch;
  */
 
 struct xnpod {
-	xnflags_t status;	/*!< Status bitmask. */
+	unsigned long status;	  /*!< Status bitmask. */
 	xnsched_t sched[NR_CPUS];	/*!< Per-cpu scheduler slots. */
 	struct list_head threadq;	/*!< All existing threads. */
 	int nrthreads;
@@ -188,18 +188,18 @@ void xnpod_cancel_thread(xnthread_t *thread);
 
 void xnpod_join_thread(xnthread_t *thread);
 
-xnflags_t xnpod_set_thread_mode(xnthread_t *thread,
-				xnflags_t clrmask,
-				xnflags_t setmask);
+int xnpod_set_thread_mode(xnthread_t *thread,
+			  int clrmask,
+			  int setmask);
 
 void xnpod_suspend_thread(xnthread_t *thread,
-			  xnflags_t mask,
+			  int mask,
 			  xnticks_t timeout,
 			  xntmode_t timeout_mode,
 			  struct xnsynch *wchan);
 
 void xnpod_resume_thread(xnthread_t *thread,
-			 xnflags_t mask);
+			 int mask);
 
 int xnpod_unblock_thread(xnthread_t *thread);
 

@@ -629,7 +629,7 @@ struct vfile_schedlist_data {
 	char sched_class[XNOBJECT_NAME_LEN];
 	int cprio;
 	xnticks_t timeout;
-	xnflags_t state;
+	unsigned long state;
 };
 
 static struct xnvfile_snapshot_ops vfile_schedlist_ops;
@@ -744,7 +744,7 @@ struct vfile_schedstat_priv {
 struct vfile_schedstat_data {
 	int cpu;
 	pid_t pid;
-	xnflags_t state;
+	unsigned long state;
 	char name[XNOBJECT_NAME_LEN];
 	unsigned long ssw;
 	unsigned long csw;

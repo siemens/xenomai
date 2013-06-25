@@ -60,8 +60,8 @@ struct xnsched_rt {
 
 typedef struct xnsched {
 
-	xnflags_t status;		/*!< Scheduler specific status bitmask. */
-	xnflags_t lflags;		/*!< Scheduler specific local flags bitmask. */
+	unsigned long status;		/*!< Scheduler specific status bitmask. */
+	unsigned long lflags;		/*!< Scheduler specific local flags bitmask. */
 	int cpu;
 	struct xnthread *curr;		/*!< Current thread. */
 #ifdef CONFIG_SMP

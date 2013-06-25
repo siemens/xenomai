@@ -164,12 +164,12 @@ struct xnpersonality;
 
 struct xnthread_init_attr {
 	struct xnpersonality *personality;
-	xnflags_t flags;
+	int flags;
 	const char *name;
 };
 
 struct xnthread_start_attr {
-	xnflags_t mode;
+	int mode;
 	cpumask_t affinity;
 	void (*entry)(void *cookie);
 	void *cookie;
@@ -183,9 +183,9 @@ typedef struct xnthread {
 
 	struct xnarchtcb tcb;		/* Architecture-dependent block -- Must be first */
 
-	xnflags_t state;		/* Thread state flags */
+	unsigned long state;		/* Thread state flags */
 
-	xnflags_t info;			/* Thread information flags */
+	unsigned long info;		/* Thread information flags */
 
 	struct xnsched *sched;		/* Thread scheduler */
 
@@ -422,7 +422,7 @@ void xnthread_init_root_tcb(struct xnthread *thread);
 
 void xnthread_cleanup(struct xnthread *thread);
 
-char *xnthread_format_status(xnflags_t status, char *buf, int size);
+char *xnthread_format_status(unsigned long status, char *buf, int size);
 
 xnticks_t xnthread_get_timeout(struct xnthread *thread, xnticks_t tsc_ns);
 

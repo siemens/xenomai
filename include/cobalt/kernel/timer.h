@@ -168,7 +168,7 @@ typedef struct xntimer {
 
 	struct list_head adjlink;
 
-	xnflags_t status;	/* !< Timer status. */
+	unsigned long status;	/* !< Timer status. */
 
 	xnticks_t interval;	/* !< Periodic interval (in ticks, 0 == one shot). */
 

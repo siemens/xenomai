@@ -525,8 +525,7 @@ static inline int
 sem_timedwait_internal(struct cobalt_sem *sem, int timed, xnticks_t to)
 {
 	xntmode_t tmode;
-	xnflags_t info;
-	int ret;
+	int ret, info;
 
 	ret = sem_trywait_internal(sem);
 	if (ret != -EAGAIN)

@@ -522,9 +522,9 @@ ssize_t xnpipe_recv(int minor, struct xnpipe_mh **pmh, xnticks_t timeout)
 {
 	struct xnpipe_state *state;
 	struct xnpipe_mh *mh;
-	xnflags_t info;
 	xntmode_t mode;
 	ssize_t ret;
+	int info;
 	spl_t s;
 
 	if (minor < 0 || minor >= XNPIPE_NDEVS)

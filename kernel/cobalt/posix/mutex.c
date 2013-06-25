@@ -56,7 +56,7 @@ static int cobalt_mutex_init_inner(struct __shadow_mutex *shadow,
 				   struct mutex_dat *datp,
 				   const pthread_mutexattr_t *attr)
 {
-	xnflags_t synch_flags = XNSYNCH_PRIO | XNSYNCH_OWNER;
+	int synch_flags = XNSYNCH_PRIO | XNSYNCH_OWNER;
 	struct xnsys_ppd *sys_ppd;
 	struct cobalt_kqueues *kq;
 	spl_t s;

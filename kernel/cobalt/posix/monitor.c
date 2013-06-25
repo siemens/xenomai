@@ -107,8 +107,7 @@ int cobalt_monitor_init(struct cobalt_monitor_shadow __user *u_monsh,
 static int cobalt_monitor_enter_inner(struct cobalt_monitor *mon)
 {
 	struct xnthread *cur = xnpod_current_thread();
-	xnflags_t info;
-	int ret = 0;
+	int ret = 0, info;
 
 	if (!cobalt_obj_active(mon, COBALT_MONITOR_MAGIC,
 			       struct cobalt_monitor))
@@ -227,10 +226,9 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_monsh,
 	struct cobalt_monitor_data *datp;
 	xnticks_t timeout = XN_INFINITE;
 	xntmode_t tmode = XN_RELATIVE;
-	int ret = 0, opret = 0;
+	int ret = 0, opret = 0, info;
 	struct xnsynch *synch;
 	struct timespec ts;
-	xnflags_t info;
 	spl_t s;
 
 	__xn_get_user(mon, &u_monsh->monitor);

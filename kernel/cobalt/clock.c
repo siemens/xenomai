@@ -96,7 +96,7 @@ struct tmstat_vfile_data {
 	unsigned int fired;
 	xnticks_t timeout;
 	xnticks_t interval;
-	xnflags_t status;
+	unsigned long status;
 	char handler[12];
 	char name[XNOBJECT_NAME_LEN];
 };

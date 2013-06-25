@@ -38,7 +38,7 @@
 #include <cobalt/kernel/shadow.h>
 
 /*!
- * \fn void xnsynch_init(struct xnsynch *synch, xnflags_t flags,
+ * \fn void xnsynch_init(struct xnsynch *synch, int flags,
  *                       atomic_long_t *fastlock)
  *
  * \brief Initialize a synchronization object.
@@ -97,7 +97,7 @@
  * Rescheduling: never.
  */
 
-void xnsynch_init(struct xnsynch *synch, xnflags_t flags, atomic_long_t *fastlock)
+void xnsynch_init(struct xnsynch *synch, int flags, atomic_long_t *fastlock)
 {
 	if (flags & XNSYNCH_PIP)
 		flags |= XNSYNCH_PRIO | XNSYNCH_OWNER;	/* Obviously... */
@@ -118,8 +118,7 @@ void xnsynch_init(struct xnsynch *synch, xnflags_t flags, atomic_long_t *fastloc
 EXPORT_SYMBOL_GPL(xnsynch_init);
 
 /*!
- * \fn xnflags_t xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
- *                                xntmode_t timeout_mode);
+ * \fn int xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout, xntmode_t timeout_mode);
  * \brief Sleep on an ownerless synchronization object.
  *
  * Makes the calling thread sleep on the specified synchronization
@@ -161,8 +160,8 @@ EXPORT_SYMBOL_GPL(xnsynch_init);
  * Rescheduling: always.
  */
 
-xnflags_t xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
-			   xntmode_t timeout_mode)
+int xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
+		     xntmode_t timeout_mode)
 {
 	struct xnthread *thread = xnpod_current_thread();
 	spl_t s;
@@ -184,7 +183,7 @@ xnflags_t xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return xnthread_test_info(thread, XNRMID|XNTIMEO|XNBREAK);
+	return (int)xnthread_test_info(thread, XNRMID|XNTIMEO|XNBREAK);
 }
 EXPORT_SYMBOL_GPL(xnsynch_sleep_on);
 
@@ -352,8 +351,7 @@ static void xnsynch_renice_thread(struct xnthread *thread,
 }
 
 /*!
- * \fn xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
- *                               xntmode_t timeout_mode);
+ * \fn int xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout, xntmode_t timeout_mode);
  * \brief Acquire the ownership of a synchronization object.
  *
  * This service should be called by upper interfaces wanting the
@@ -395,8 +393,8 @@ static void xnsynch_renice_thread(struct xnthread *thread,
  * Rescheduling: possible.
  */
 
-xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
-			  xntmode_t timeout_mode)
+int xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
+		    xntmode_t timeout_mode)
 {
 	struct xnthread *thread = xnpod_current_thread(), *owner;
 	xnhandle_t threadh = xnthread_handle(thread), fastlock, old;
@@ -406,9 +404,7 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 	XENO_BUGON(NUCLEUS, !testbits(synch->status, XNSYNCH_OWNER));
 
 	trace_mark(xn_nucleus, synch_acquire, "synch %p", synch);
-
-      redo:
-
+redo:
 	fastlock = atomic_long_cmpxchg(lockp, XN_NO_HANDLE, threadh);
 
 	if (likely(fastlock == XN_NO_HANDLE)) {
@@ -438,7 +434,7 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 		if (likely(old == fastlock))
 			break;
 
-	  test_no_owner:
+	test_no_owner:
 		if (old == XN_NO_HANDLE) {
 			/* Owner called xnsynch_release
 			   (on another cpu) */
@@ -526,11 +522,10 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 		atomic_long_set(lockp, threadh);
 	}
 
-      unlock_and_exit:
-
+unlock_and_exit:
 	xnlock_put_irqrestore(&nklock, s);
 
-	return xnthread_test_info(thread, XNRMID|XNTIMEO|XNBREAK);
+	return (int)xnthread_test_info(thread, XNRMID|XNTIMEO|XNBREAK);
 }
 EXPORT_SYMBOL_GPL(xnsynch_acquire);
 
@@ -775,7 +770,7 @@ out:
 EXPORT_SYMBOL_GPL(xnsynch_peek_pendq);
 
 /*!
- * \fn void xnsynch_flush(struct xnsynch *synch, xnflags_t reason);
+ * \fn int xnsynch_flush(struct xnsynch *synch, int reason);
  * \brief Unblock all waiters pending on a resource.
  *
  * This service atomically releases all threads which currently sleep
@@ -823,7 +818,7 @@ EXPORT_SYMBOL_GPL(xnsynch_peek_pendq);
  * Rescheduling: never.
  */
 
-int xnsynch_flush(struct xnsynch *synch, xnflags_t reason)
+int xnsynch_flush(struct xnsynch *synch, int reason)
 {
 	struct xnthread *sleeper, *tmp;
 	int ret;

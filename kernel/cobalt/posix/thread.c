@@ -344,10 +344,9 @@ static inline int pthread_create(pthread_t *tid, const pthread_attr_t *attr)
 	struct xnsched_class *sched_class;
 	union xnsched_policy_param param;
 	struct xnthread_init_attr iattr;
+	int prio, ret, pol, flags = 0;
 	pthread_t thread, cur;
-	xnflags_t flags = 0;
 	const char *name;
-	int prio, ret, pol;
 	spl_t s;
 
 	if (attr && attr->magic != COBALT_THREAD_ATTR_MAGIC)
@@ -557,9 +556,9 @@ static inline int pthread_make_periodic_np(pthread_t thread,
  */
 static inline int pthread_set_mode_np(int clrmask, int setmask, int *mode_r)
 {
-	const xnflags_t valid_flags = XNLOCK|XNTRAPSW;
 	struct xnthread *cur = xnpod_current_thread();
-	xnflags_t old;
+	const int valid_flags = XNLOCK|XNTRAPSW;
+	int old;
 
 	/*
 	 * The conforming mode bit is actually zero, since jumping to

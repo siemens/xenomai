@@ -667,7 +667,7 @@ void xnpod_stop_thread(struct xnthread *thread)
 EXPORT_SYMBOL_GPL(xnpod_stop_thread);
 
 /*!
- * \fn void xnpod_set_thread_mode(xnthread_t *thread,xnflags_t clrmask,xnflags_t setmask)
+ * \fn void xnpod_set_thread_mode(xnthread_t *thread,int clrmask,int setmask)
  * \brief Change a thread's control mode.
  *
  * Change the control mode of a given thread. The control mode affects
@@ -707,17 +707,16 @@ EXPORT_SYMBOL_GPL(xnpod_stop_thread);
  * only returning the previous mode if @a mode_r is a valid address.
  */
 
-xnflags_t xnpod_set_thread_mode(xnthread_t *thread,
-				xnflags_t clrmask, xnflags_t setmask)
+int xnpod_set_thread_mode(xnthread_t *thread, int clrmask, int setmask)
 {
-	xnthread_t *curr = xnpod_current_thread();
-	xnflags_t oldmode;
+	struct xnthread *curr = xnpod_current_thread();
+	unsigned long oldmode;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
 	trace_mark(xn_nucleus, thread_setmode,
-		   "thread %p thread_name %s clrmask %lu setmask %lu",
+		   "thread %p thread_name %s clrmask 0x%x setmask 0x%x",
 		   thread, xnthread_name(thread), clrmask, setmask);
 
 	oldmode = xnthread_state_flags(thread) & XNTHREAD_MODE_BITS;
@@ -735,7 +734,7 @@ xnflags_t xnpod_set_thread_mode(xnthread_t *thread,
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return oldmode;
+	return (int)oldmode;
 }
 EXPORT_SYMBOL_GPL(xnpod_set_thread_mode);
 
@@ -934,7 +933,7 @@ void xnpod_join_thread(struct xnthread *thread)
 EXPORT_SYMBOL_GPL(xnpod_join_thread);
 
 /*!
- * \fn void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
+ * \fn void xnpod_suspend_thread(xnthread_t *thread, int mask,
  *                               xnticks_t timeout, xntmode_t timeout_mode,
  *                               xnsynch_t *wchan)
  *
@@ -1003,12 +1002,12 @@ EXPORT_SYMBOL_GPL(xnpod_join_thread);
  * Rescheduling: possible if the current thread suspends itself.
  */
 
-void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
+void xnpod_suspend_thread(xnthread_t *thread, int mask,
 			  xnticks_t timeout, xntmode_t timeout_mode,
 			  xnsynch_t *wchan)
 {
+	unsigned long oldstate;
 	struct xnsched *sched;
-	xnflags_t oldstate;
 	spl_t s;
 
 	XENO_ASSERT(NUCLEUS, !xnthread_test_state(thread, XNROOT),
@@ -1187,7 +1186,7 @@ unlock_and_exit:
 EXPORT_SYMBOL_GPL(xnpod_suspend_thread);
 
 /*!
- * \fn void xnpod_resume_thread(struct xnthread *thread,xnflags_t mask)
+ * \fn void xnpod_resume_thread(struct xnthread *thread,int mask)
  * \brief Resume a thread.
  *
  * Resumes the execution of a thread previously suspended by one or
@@ -1240,10 +1239,10 @@ EXPORT_SYMBOL_GPL(xnpod_suspend_thread);
  * Rescheduling: never.
  */
 
-void xnpod_resume_thread(struct xnthread *thread, xnflags_t mask)
+void xnpod_resume_thread(struct xnthread *thread, int mask)
 {
+	unsigned long oldstate;
 	struct xnsched *sched;
-	xnflags_t oldstate;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);

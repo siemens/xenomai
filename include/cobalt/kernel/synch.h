@@ -99,7 +99,7 @@ struct xnsynch;
 typedef struct xnsynch {
 	struct list_head link;	/** thread->claimq */
 	int wprio;		/** wait prio in claimq */
-	xnflags_t status;	 /** Status word */
+	unsigned long status;	 /** Status word */
 	struct list_head pendq;	 /** Pending threads */
 	struct xnthread *owner;	/** Thread which owns the resource */
 	atomic_long_t *fastlock; /** Pointer to fast lock word */
@@ -161,7 +161,7 @@ static inline void xnsynch_detect_claimed_relax(struct xnthread *owner)
 
 #endif /* !XENO_DEBUG(SYNCH_RELAX) */
 
-void xnsynch_init(struct xnsynch *synch, xnflags_t flags,
+void xnsynch_init(struct xnsynch *synch, int flags,
 		  atomic_long_t *fastlock);
 
 #define xnsynch_destroy(synch)	xnsynch_flush(synch, XNRMID)
@@ -178,9 +178,9 @@ static inline void xnsynch_register_cleanup(struct xnsynch *synch,
 	synch->cleanup = handler;
 }
 
-xnflags_t xnsynch_sleep_on(struct xnsynch *synch,
-			   xnticks_t timeout,
-			   xntmode_t timeout_mode);
+int xnsynch_sleep_on(struct xnsynch *synch,
+		     xnticks_t timeout,
+		     xntmode_t timeout_mode);
 
 struct xnthread *xnsynch_wakeup_one_sleeper(struct xnsynch *synch);
 
@@ -189,13 +189,13 @@ int xnsynch_wakeup_many_sleepers(struct xnsynch *synch, int nr);
 void xnsynch_wakeup_this_sleeper(struct xnsynch *synch,
 				 struct xnthread *sleeper);
 
-xnflags_t xnsynch_acquire(struct xnsynch *synch,
-			  xnticks_t timeout,
-			  xntmode_t timeout_mode);
+int xnsynch_acquire(struct xnsynch *synch,
+		    xnticks_t timeout,
+		    xntmode_t timeout_mode);
 
 struct xnthread *xnsynch_peek_pendq(struct xnsynch *synch);
 
-int xnsynch_flush(struct xnsynch *synch, xnflags_t reason);
+int xnsynch_flush(struct xnsynch *synch, int reason);
 
 void xnsynch_release_all_ownerships(struct xnthread *thread);
 

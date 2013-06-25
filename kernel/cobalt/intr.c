@@ -510,7 +510,7 @@ int __init xnintr_mount(void)
 }
 
 /*!
- * \fn int xnintr_init (xnintr_t *intr,const char *name,unsigned irq,xnisr_t isr,xniack_t iack,xnflags_t flags)
+ * \fn int xnintr_init (xnintr_t *intr,const char *name,unsigned irq,xnisr_t isr,xniack_t iack,int flags)
  * \brief Initialize an interrupt object.
  *
  * Associates an interrupt object with an IRQ line.
@@ -614,7 +614,7 @@ int __init xnintr_mount(void)
 
 int xnintr_init(xnintr_t *intr,
 		const char *name,
-		unsigned irq, xnisr_t isr, xniack_t iack, xnflags_t flags)
+		unsigned int irq, xnisr_t isr, xniack_t iack, int flags)
 {
 	if (irq >= IPIPE_NR_IRQS)
 		return -EINVAL;

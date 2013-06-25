@@ -125,9 +125,8 @@ int xnthread_init(struct xnthread *thread,
 		  const union xnsched_policy_param *sched_param)
 {
 	DECLARE_COMPLETION_ONSTACK(done);
-	xnflags_t flags = attr->flags;
+	int flags = attr->flags, ret;
 	spl_t s;
-	int ret;
 
 	flags &= ~XNSUSP;
 #ifndef CONFIG_XENO_HW_FPU
@@ -241,14 +240,13 @@ void xnthread_cleanup(struct xnthread *thread)
 	thread->registry.handle = XN_NO_HANDLE;
 }
 
-char *xnthread_format_status(xnflags_t status, char *buf, int size)
+char *xnthread_format_status(unsigned long status, char *buf, int size)
 {
 	static const char labels[] = XNTHREAD_STATE_LABELS;
-	xnflags_t mask;
-	int pos, c;
+	int pos, c, mask;
 	char *wp;
 
-	for (mask = status & ~XNTHREAD_STATE_SPARES, pos = 0, wp = buf;
+	for (mask = (int)status & ~XNTHREAD_STATE_SPARES, pos = 0, wp = buf;
 	     mask != 0 && wp - buf < size - 2;	/* 1-letter label + \0 */
 	     mask >>= 1, pos++) {
 		if ((mask & 1) == 0)

@@ -90,7 +90,7 @@ struct xnpipe_state {
 	void *xstate;		/* Extra state managed by caller */
 
 	/* Linux kernel part */
-	xnflags_t status;
+	unsigned long status;
 	struct fasync_struct *asyncq;
 	wait_queue_head_t readq;	/* open/read/poll waiters */
 	wait_queue_head_t syncq;	/* sync waiters */

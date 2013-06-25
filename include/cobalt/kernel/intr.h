@@ -56,7 +56,7 @@ typedef struct xnintr {
 
     void *cookie;	/* !< User-defined cookie value. */
 
-    xnflags_t flags;	/* !< Creation flags. */
+    int flags;		/* !< Creation flags. */
 
     unsigned irq;	/* !< IRQ number. */
 
@@ -109,7 +109,7 @@ int xnintr_init(xnintr_t *intr,
 		unsigned irq,
 		xnisr_t isr,
 		xniack_t iack,
-		xnflags_t flags);
+		int flags);
 
 int xnintr_destroy(xnintr_t *intr);
 

@@ -431,8 +431,8 @@ static int rtswitch_create_ktask(rtswitch_context_t *ctx,
 	struct xnthread_start_attr sattr;
 	struct xnthread_init_attr iattr;
 	rtswitch_task_t *task;
-	xnflags_t init_flags;
 	struct taskarg arg;
+	int init_flags;
 	char name[30];
 	int err;
 

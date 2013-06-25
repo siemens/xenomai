@@ -778,8 +778,7 @@ int xnregistry_bind(const char *key, xnticks_t timeout, int timeout_mode,
 {
 	struct xnobject *object;
 	xnthread_t *thread;
-	xnflags_t info;
-	int ret = 0;
+	int ret = 0, info;
 	spl_t s;
 
 	if (key == NULL)
@@ -960,8 +959,7 @@ int xnregistry_remove_safe(xnhandle_t handle, xnticks_t timeout)
 {
 	unsigned long long cstamp;
 	struct xnobject *object;
-	xnflags_t info;
-	int ret = 0;
+	int ret = 0, info;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);

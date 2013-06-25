@@ -96,12 +96,11 @@ cond_destroy_internal(struct cobalt_cond *cond, struct cobalt_kqueues *q)
 static inline int
 pthread_cond_init(struct __shadow_cond *cnd, const pthread_condattr_t *attr)
 {
-	xnflags_t synch_flags = XNSYNCH_PRIO | XNSYNCH_NOPIP;
+	int synch_flags = XNSYNCH_PRIO | XNSYNCH_NOPIP, err;
 	struct list_head *condq, *entry;
 	struct xnsys_ppd *sys_ppd;
 	struct cobalt_cond *cond;
 	spl_t s;
-	int err;
 
 	if (attr == NULL)
 		attr = &cobalt_default_cond_attr;

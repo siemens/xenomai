@@ -101,8 +101,6 @@ typedef enum xntmode {
 #define __setbits(flags,mask)  do { (flags) |= (mask); } while(0)
 #define __clrbits(flags,mask)  do { (flags) &= ~(mask); } while(0)
 
-typedef atomic_flags_t xnflags_t;
-
 #ifndef NULL
 #define NULL 0
 #endif

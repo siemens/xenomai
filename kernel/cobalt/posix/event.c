@@ -113,8 +113,7 @@ int cobalt_event_wait(struct cobalt_event_shadow __user *u_evtsh,
 	xntmode_t tmode = XN_RELATIVE;
 	struct event_wait_context ewc;
 	struct timespec ts;
-	xnflags_t info;
-	int ret = 0;
+	int ret = 0, info;
 	spl_t s;
 
 	__xn_get_user(event, &u_evtsh->event);
