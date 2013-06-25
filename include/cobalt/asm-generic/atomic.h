@@ -30,12 +30,10 @@ typedef unsigned long atomic_flags_t;
 #include <asm/atomic.h>
 #include <asm/xenomai/wrappers.h>
 
-#define xnarch_memory_barrier()		smp_mb()
-#define xnarch_read_memory_barrier()    rmb()
-#define xnarch_write_memory_barrier()   wmb()
-
-/* atomic_set_mask, atomic_clear_mask are not standard among linux
-   ports */
+/*
+ * atomic_set_mask, atomic_clear_mask may not be available from all
+ * linux ports.
+ */
 #ifndef xnarch_atomic_set_mask
 #define xnarch_atomic_set_mask(pflags,mask) atomic_set_mask((mask),(pflags))
 #endif
@@ -52,20 +50,8 @@ typedef struct {
 	unsigned long v;
 } atomic_long_t;
 
-#ifndef xnarch_memory_barrier
-#define xnarch_memory_barrier() __sync_synchronize()
-#endif
-
-#ifndef xnarch_read_memory_barrier
-#define xnarch_read_memory_barrier() xnarch_memory_barrier()
-#endif
-
-#ifndef xnarch_write_memory_barrier
-#define xnarch_write_memory_barrier() xnarch_memory_barrier()
-#endif
-
 #ifndef cpu_relax
-#define cpu_relax() xnarch_memory_barrier()
+#define cpu_relax() __sync_synchronize()
 #endif
 
 #ifndef atomic_long_read
@@ -81,6 +67,18 @@ typedef struct {
 	__sync_val_compare_and_swap(&(p)->v,			\
 				    (typeof((p)->v))(o),	\
 				    (typeof((p)->v))(n))
+#endif
+
+#ifndef smp_mb
+#define smp_mb() __sync_synchronize()
+#endif
+
+#ifndef smp_rmb
+#define smp_rmb() __sync_synchronize()
+#endif
+
+#ifndef smp_wmb
+#define smp_wmb() __sync_synchronize()
 #endif
 
 #endif /* !__KERNEL__ */

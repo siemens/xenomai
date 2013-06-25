@@ -52,14 +52,14 @@ static int xnintr_list_rev;  /* Modification counter of xnintr list */
 static inline void xnintr_stat_counter_inc(void)
 {
 	xnintr_count++;
-	xnarch_memory_barrier();
+	smp_mb();
 	xnintr_list_rev++;
 }
 
 static inline void xnintr_stat_counter_dec(void)
 {
 	xnintr_count--;
-	xnarch_memory_barrier();
+	smp_mb();
 	xnintr_list_rev++;
 }
 
@@ -911,7 +911,7 @@ int xnintr_query_init(xnintr_iterator_t *iterator)
 	 * xnintr_query() will trigger an appropriate error below.
 	 */
 	iterator->list_rev = xnintr_list_rev;
-	xnarch_memory_barrier();
+	smp_mb();
 
 	return xnintr_count;
 }

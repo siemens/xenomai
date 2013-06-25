@@ -19,7 +19,7 @@ static inline unsigned xnread_seqcount_begin(const xnseqcount_t *s)
 
 repeat:
 	ret = s->sequence;
-	xnarch_read_memory_barrier();
+	smp_rmb();
 	if (ret & 1) {
 		cpu_relax();
 		goto repeat;
@@ -32,7 +32,7 @@ repeat:
  */
 static inline int xnread_seqcount_retry(const xnseqcount_t *s, unsigned start)
 {
-	xnarch_read_memory_barrier();
+	smp_rmb();
 
 	return s->sequence != start;
 }
@@ -45,12 +45,12 @@ static inline int xnread_seqcount_retry(const xnseqcount_t *s, unsigned start)
 static inline void xnwrite_seqcount_begin(xnseqcount_t *s)
 {
 	s->sequence++;
-	xnarch_write_memory_barrier();
+	smp_wmb();
 }
 
 static inline void xnwrite_seqcount_end(xnseqcount_t *s)
 {
-	xnarch_write_memory_barrier();
+	smp_wmb();
 	s->sequence++;
 }
 

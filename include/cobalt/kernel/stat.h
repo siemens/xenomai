@@ -46,7 +46,7 @@ do { \
 	(sched)->last_account_switch = date; \
 	/* All changes must be committed before changing the current_account \
 	   reference in sched (required for xnintr_sync_stat_references) */ \
-	xnarch_memory_barrier(); \
+	smp_wmb(); \
 } while (0)
 
 /* Update the current account reference, returning the previous one. */

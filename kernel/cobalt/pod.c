@@ -212,7 +212,6 @@ EXPORT_SYMBOL_GPL(xnpod_fatal);
 void __xnpod_schedule_handler(void) /* hw interrupts off. */
 {
 	trace_mark(xn_nucleus, sched_remote, MARK_NOARGS);
-	xnarch_memory_barrier();
 	xnpod_schedule();
 }
 
@@ -292,7 +291,7 @@ int xnpod_init(void)
 	xnregistry_init();
 
 	__setbits(pod->status, XNPEXEC);
-	xnarch_memory_barrier();
+	smp_wmb();
 	xnshadow_grab_events();
 
 	ret = xnpod_enable_timesource();
@@ -1700,7 +1699,7 @@ static inline int test_resched(struct xnsched *sched)
 #ifdef CONFIG_SMP
 	/* Send resched IPI to remote CPU(s). */
 	if (unlikely(!cpus_empty(sched->resched))) {
-		xnarch_memory_barrier();
+		smp_mb();
 		ipipe_send_ipi(IPIPE_RESCHEDULE_IPI, sched->resched);
 		cpus_clear(sched->resched);
 	}

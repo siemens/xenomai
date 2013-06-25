@@ -232,10 +232,11 @@ static inline void xnpod_schedule(void)
 	 * be either valid, or unused.
 	 */
 	sched = xnpod_current_sched();
+	smp_rmb();
 	/*
-	 * No immediate rescheduling is possible if an ISR or callout
-	 * context is active, or if we are caught in the middle of a
-	 * unlocked context switch.
+	 * No immediate rescheduling is possible if an ISR context is
+	 * active, or if we are caught in the middle of a unlocked
+	 * context switch.
 	 */
 #if XENO_DEBUG(NUCLEUS)
 	if (testbits(sched->status | sched->lflags,

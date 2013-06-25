@@ -122,7 +122,7 @@ vprint_to_buffer(FILE *stream, int fortify_level, int priority,
 	/* Take a snapshot of the ring buffer state */
 	write_pos = buffer->write_pos;
 	read_pos = buffer->read_pos;
-	xnarch_read_memory_barrier();
+	smp_mb();
 
 	/* Is our write limit the end of the ring buffer? */
 	if (write_pos >= read_pos) {
@@ -231,7 +231,7 @@ vprint_to_buffer(FILE *stream, int fortify_level, int priority,
 	}
 
 	/* All entry data must be written before we can update write_pos */
-	xnarch_write_memory_barrier();
+	smp_wmb();
 
 	buffer->write_pos = write_pos;
 
@@ -640,11 +640,11 @@ static void print_buffers(void)
 
 		/* Make sure we have read the entry competely before
 		   forwarding read_pos */
-		xnarch_read_memory_barrier();
+		smp_rmb();
 		buffer->read_pos = read_pos;
 
 		/* Enforce the read_pos update before proceeding */
-		xnarch_write_memory_barrier();
+		smp_wmb();
 	}
 }
 
