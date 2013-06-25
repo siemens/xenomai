@@ -274,7 +274,7 @@ pthread_mutexattr_getprotocol(const pthread_mutexattr_t * attr, int *proto)
  * @return 0 on success,
  * @return an error number if:
  * - EINVAL, the mutex attributes object @a attr is invalid;
- * - ENOTSUP, the value of @a proto is unsupported;
+ * - EOPNOTSUPP, the value of @a proto is unsupported;
  * - EINVAL, the value of @a proto is invalid.
  *
  * @see
@@ -306,7 +306,7 @@ pthread_mutexattr_setprotocol(pthread_mutexattr_t * attr, int proto)
 	case PTHREAD_PRIO_PROTECT:
 
 		xnlock_put_irqrestore(&nklock, s);
-		return ENOTSUP;
+		return EOPNOTSUPP;
 
 	case PTHREAD_PRIO_NONE:
 	case PTHREAD_PRIO_INHERIT:

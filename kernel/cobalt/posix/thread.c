@@ -479,7 +479,7 @@ static inline int pthread_create(pthread_t *tid, const pthread_attr_t *attr)
  * @return an error number if:
  * - ESRCH, @a thread is invalid;
  * - ETIMEDOUT, the start time has already passed.
- * - ENOTSUP, the specified clock is unsupported;
+ * - EOPNOTSUPP, the specified clock is unsupported;
  *
  * Rescheduling: always, until the @a starttp start time has been reached.
  */
@@ -496,7 +496,7 @@ static inline int pthread_make_periodic_np(pthread_t thread,
 	if (clock_id != CLOCK_MONOTONIC &&
 	    clock_id != CLOCK_MONOTONIC_RAW &&
 	    clock_id != CLOCK_REALTIME)
-		return ENOTSUP;
+		return EOPNOTSUPP;
 
 	xnlock_get_irqsave(&nklock, s);
 

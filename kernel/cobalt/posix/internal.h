@@ -19,7 +19,6 @@
 #ifndef _COBALT_INTERNAL_H
 #define _COBALT_INTERNAL_H
 
-#include <errno.h>
 #include <pthread.h>
 #include <sched.h>
 #include <signal.h>

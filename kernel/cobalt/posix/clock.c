@@ -218,7 +218,7 @@ int cobalt_clock_nanosleep(clockid_t clock_id, int flags,
 	if (clock_id != CLOCK_MONOTONIC &&
 	    clock_id != CLOCK_MONOTONIC_RAW &&
 	    clock_id != CLOCK_REALTIME)
-		return -ENOTSUP;
+		return -EOPNOTSUPP;
 
 	if ((unsigned long)rqt.tv_nsec >= ONE_BILLION)
 		return -EINVAL;
