@@ -315,9 +315,6 @@ typedef struct xnthread {
 #define xnthread_time_slice(thread)        ((thread)->rrperiod)
 #define xnthread_archtcb(thread)           (&((thread)->tcb))
 #define xnthread_timeout(thread)           xntimer_get_timeout(&(thread)->rtimer)
-#define xnthread_stack_size(thread)        xnarch_stack_size(xnthread_archtcb(thread))
-#define xnthread_stack_base(thread)        xnarch_stack_base(xnthread_archtcb(thread))
-#define xnthread_stack_end(thread)         xnarch_stack_end(xnthread_archtcb(thread))
 #define xnthread_handle(thread)            ((thread)->registry.handle)
 #define xnthread_host_task(thread)         (xnthread_archtcb(thread)->core.host_task)
 #define xnthread_host_pid(thread)	   (xnthread_test_state((thread),XNROOT) ? 0 : \
