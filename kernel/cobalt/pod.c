@@ -168,7 +168,7 @@ void xnpod_fatal(const char *format, ...)
 	if (!xnpod_active_p() || xnpod_fatal_p())
 		goto out;
 
-	__setbits(nkpod->status, XNFATAL);
+	nkpod->status |= XNFATAL;
 	now = xnclock_read_monotonic();
 
 	printk(KERN_ERR "\n %-3s  %-6s %-8s %-8s %-8s  %s\n",
@@ -291,7 +291,7 @@ int xnpod_init(void)
 
 	xnregistry_init();
 
-	__setbits(pod->status, XNPEXEC);
+	pod->status |= XNPEXEC;
 	smp_wmb();
 	xnshadow_grab_events();
 
@@ -1626,7 +1626,7 @@ static inline void xnpod_switch_to(xnsched_t *sched,
 {
 #ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
 	sched->last = prev;
-	__setbits(sched->status, XNINSW);
+	sched->status |= XNINSW;
 	xnlock_clear_irqon(&nklock);
 #endif /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
 
@@ -1855,7 +1855,7 @@ signal_unlock_and_exit:
 		goto reschedule;
 
 	if (xnthread_lock_count(curr))
-		__setbits(sched->lflags, XNINLOCK);
+		sched->lflags |= XNINLOCK;
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -1892,7 +1892,7 @@ void ___xnpod_lock_sched(xnsched_t *sched)
 	struct xnthread *curr = sched->curr;
 
 	if (xnthread_lock_count(curr)++ == 0) {
-		__setbits(sched->lflags, XNINLOCK);
+		sched->lflags |= XNINLOCK;
 		xnthread_set_state(curr, XNLOCK);
 	}
 }

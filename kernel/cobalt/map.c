@@ -259,8 +259,8 @@ int xnmap_remove(xnmap_t *map, int key)
 	lo = ofkey % BITS_PER_LONG;
 	xnlock_get_irqsave(&nklock, s);
 	map->objarray[ofkey] = NULL;
-	__setbits(map->himap, 1UL << hi);
-	__setbits(map->lomap[hi], 1UL << lo);
+	map->himap |= (1UL << hi);
+	map->lomap[hi] |= (1UL << lo);
 	--map->ukeys;
 	xnlock_put_irqrestore(&nklock, s);
 

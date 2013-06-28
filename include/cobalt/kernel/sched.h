@@ -148,7 +148,7 @@ static inline int xnsched_resched_p(struct xnsched *sched)
 /* Set self resched flag for the given scheduler. */
 #define xnsched_set_self_resched(__sched__) do {		\
   XENO_BUGON(NUCLEUS, __sched__ != xnpod_current_sched());	\
-  __setbits((__sched__)->status, XNRESCHED);			\
+  (__sched__)->status |= XNRESCHED;				\
 } while (0)
 
 /* Set resched flag for the given scheduler. */
@@ -156,11 +156,11 @@ static inline int xnsched_resched_p(struct xnsched *sched)
 #define xnsched_set_resched(__sched__) do {				\
   xnsched_t *current_sched = xnpod_current_sched();			\
   if (current_sched == (__sched__))					\
-      __setbits(current_sched->status, XNRESCHED);			\
+      current_sched->status |= XNRESCHED;				\
   else if (!xnsched_resched_p(__sched__)) {				\
-      cpu_set(xnsched_cpu(__sched__), current_sched->resched);	\
-      __setbits((__sched__)->status, XNRESCHED);			\
-      __setbits(current_sched->status, XNRESCHED);			\
+      cpu_set(xnsched_cpu(__sched__), current_sched->resched);		\
+      (__sched__)->status |= XNRESCHED;					\
+      current_sched->status |= XNRESCHED;				\
   }									\
 } while (0)
 #else /* !CONFIG_SMP */

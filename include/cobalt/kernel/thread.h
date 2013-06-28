@@ -188,16 +188,31 @@ static inline int xnthread_test_state(struct xnthread *thread, int bits)
 	return thread->state & bits;
 }
 
-#define xnthread_set_state(thread,flags)   __setbits((thread)->state,flags)
-#define xnthread_clear_state(thread,flags) __clrbits((thread)->state,flags)
+static inline void xnthread_set_state(struct xnthread *thread, int bits)
+{
+	thread->state |= bits;
+}
+
+static inline void xnthread_clear_state(struct xnthread *thread, int bits)
+{
+	thread->state &= ~bits;
+}
 
 static inline int xnthread_test_info(struct xnthread *thread, int bits)
 {
 	return thread->info & bits;
 }
 
-#define xnthread_set_info(thread,flags)    __setbits((thread)->info,flags)
-#define xnthread_clear_info(thread,flags)  __clrbits((thread)->info,flags)
+static inline void xnthread_set_info(struct xnthread *thread, int bits)
+{
+	thread->info |= bits;
+}
+
+static inline void xnthread_clear_info(struct xnthread *thread, int bits)
+{
+	thread->info &= ~bits;
+}
+
 #define xnthread_lock_count(thread)        ((thread)->schedlck)
 #define xnthread_init_schedparam(thread)   ((thread)->init_schedparam)
 #define xnthread_base_priority(thread)     ((thread)->bprio)

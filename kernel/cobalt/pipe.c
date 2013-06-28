@@ -69,8 +69,8 @@ static inline int xnpipe_minor_alloc(int minor)
 	     (1UL << (minor % BITS_PER_LONG))))
 		minor = -EBUSY;
 	else
-		__setbits(xnpipe_bitmap[minor / BITS_PER_LONG],
-			  1UL << (minor % BITS_PER_LONG));
+		xnpipe_bitmap[minor / BITS_PER_LONG] |=
+			(1UL << (minor % BITS_PER_LONG));
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -88,7 +88,7 @@ static inline void xnpipe_enqueue_wait(struct xnpipe_state *state, int mask)
 	if (state->wcount != 0x7fffffff && state->wcount++ == 0)
 		list_add_tail(&state->slink, &xnpipe_sleepq);
 
-	__setbits(state->status, mask);
+	state->status |= mask;
 }
 
 static inline void xnpipe_dequeue_wait(struct xnpipe_state *state, int mask)
@@ -330,7 +330,7 @@ int xnpipe_connect(int minor, struct xnpipe_operations *ops, void *xstate)
 		return ret;
 	}
 
-	__setbits(state->status, XNPIPE_KERN_CONN);
+	state->status |= XNPIPE_KERN_CONN;
 	xnsynch_init(&state->synchbase, XNSYNCH_FIFO, NULL);
 	state->xstate = xstate;
 	state->ionrd = 0;
@@ -341,12 +341,12 @@ int xnpipe_connect(int minor, struct xnpipe_operations *ops, void *xstate)
 			 * Wake up the regular Linux task waiting for
 			 * the kernel side to connect (xnpipe_open).
 			 */
-			__setbits(state->status, XNPIPE_USER_WREAD_READY);
+			state->status |= XNPIPE_USER_WREAD_READY;
 			need_sched = 1;
 		}
 
 		if (state->asyncq) {	/* Schedule asynch sig. */
-			__setbits(state->status, XNPIPE_USER_SIGIO);
+			state->status |= XNPIPE_USER_SIGIO;
 			need_sched = 1;
 		}
 	}
@@ -396,12 +396,12 @@ int xnpipe_disconnect(int minor)
 		 * operation from the Xenomai side (read/write or
 		 * poll).
 		 */
-		__setbits(state->status, XNPIPE_USER_WREAD_READY);
+		state->status |= XNPIPE_USER_WREAD_READY;
 		need_sched = 1;
 	}
 
 	if (state->asyncq) {	/* Schedule asynch sig. */
-		__setbits(state->status, XNPIPE_USER_SIGIO);
+		state->status |= XNPIPE_USER_SIGIO;
 		need_sched = 1;
 	}
 
@@ -412,7 +412,7 @@ cleanup:
 	 * out until then.
 	 */
 	if (state->status & XNPIPE_USER_CONN)
-		__setbits(state->status, XNPIPE_KERN_LCLOSE);
+		state->status |= XNPIPE_KERN_LCLOSE;
 	else {
 		xnlock_put_irqrestore(&nklock, s);
 		state->ops.release(state->xstate);
@@ -471,12 +471,12 @@ ssize_t xnpipe_send(int minor, struct xnpipe_mh *mh, size_t size, int flags)
 		 * Wake up the regular Linux task waiting for input
 		 * from the Xenomai side.
 		 */
-		__setbits(state->status, XNPIPE_USER_WREAD_READY);
+		state->status |= XNPIPE_USER_WREAD_READY;
 		need_sched = 1;
 	}
 
 	if (state->asyncq) {	/* Schedule asynch sig. */
-		__setbits(state->status, XNPIPE_USER_SIGIO);
+		state->status |= XNPIPE_USER_SIGIO;
 		need_sched = 1;
 	}
 
@@ -582,7 +582,7 @@ ssize_t xnpipe_recv(int minor, struct xnpipe_mh **pmh, xnticks_t timeout)
 	ret = (ssize_t)xnpipe_m_size(mh);
 
 	if (state->status & XNPIPE_USER_WSYNC) {
-		__setbits(state->status, XNPIPE_USER_WSYNC_READY);
+		state->status |= XNPIPE_USER_WSYNC_READY;
 		xnpipe_schedule_request();
 	}
 
@@ -622,7 +622,7 @@ int xnpipe_flush(int minor, int mode)
 
 	if ((state->status & XNPIPE_USER_WSYNC) &&
 	    msgcount > state->nroutq + state->nrinq) {
-		__setbits(state->status, XNPIPE_USER_WSYNC_READY);
+		state->status |= XNPIPE_USER_WSYNC_READY;
 		xnpipe_schedule_request();
 	}
 
@@ -672,8 +672,7 @@ static int xnpipe_open(struct inode *inode, struct file *file)
 		return -EBUSY;
 	}
 
-	__setbits(state->status, XNPIPE_USER_CONN);
-
+	state->status |= XNPIPE_USER_CONN;
 	file->private_data = state;
 	init_waitqueue_head(&state->readq);
 	init_waitqueue_head(&state->syncq);
@@ -845,7 +844,7 @@ static ssize_t xnpipe_read(struct file *file,
 		state->ops.free_obuf(mh, state->xstate);
 		xnlock_get_irqsave(&nklock, s);
 		if (state->status & XNPIPE_USER_WSYNC) {
-			__setbits(state->status, XNPIPE_USER_WSYNC_READY);
+			state->status |= XNPIPE_USER_WSYNC_READY;
 			xnpipe_schedule_request();
 		}
 	}
@@ -975,7 +974,7 @@ static long xnpipe_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	kick_wsync:
 
 		if (n > 0 && (state->status & XNPIPE_USER_WSYNC)) {
-			__setbits(state->status, XNPIPE_USER_WSYNC_READY);
+			state->status |= XNPIPE_USER_WSYNC_READY;
 			xnpipe_schedule_request();
 		}
 

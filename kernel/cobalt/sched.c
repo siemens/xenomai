@@ -512,8 +512,8 @@ static struct list_head *addmlq(struct xnsched_mlq *q, int prio)
 	if (list_empty(head)) {
 		hi = idx / BITS_PER_LONG;
 		lo = idx % BITS_PER_LONG;
-		__setbits(q->himap, 1UL << hi);
-		__setbits(q->lomap[hi], 1UL << lo);
+		q->himap |= (1UL << hi);
+		q->lomap[hi] |= (1UL << lo);
 	}
 
 	return head;

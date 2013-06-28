@@ -57,7 +57,7 @@ static inline void xntimer_enqueue(xntimer_t *timer)
 static inline void xntimer_dequeue(xntimer_t *timer)
 {
 	xntimerq_remove(&timer->sched->timerqueue, &timer->aplink);
-	__setbits(timer->status, XNTIMER_DEQUEUED);
+	timer->status |= XNTIMER_DEQUEUED;
 }
 
 void xntimer_next_local_shot(xnsched_t *sched)
@@ -106,7 +106,7 @@ void xntimer_next_local_shot(xnsched_t *sched)
 		    !xnthread_test_state(sched->curr, XNROOT)) {
 			h = xntimerq_it_next(&sched->timerqueue, &it, h);
 			if (h) {
-				__setbits(sched->lflags, XNHDEFER);
+				sched->lflags |= XNHDEFER;
 				timer = aplink2timer(h);
 			}
 		}
@@ -299,7 +299,7 @@ int xntimer_start(xntimer_t *timer,
 		date = xnarch_ns_to_tsc(value) + now;
 		break;
 	case XN_REALTIME:
-		__setbits(timer->status, XNTIMER_REALTIME);
+		timer->status |= XNTIMER_REALTIME;
 		value -= xnclock_get_offset();
 		/* fall through */
 	default: /* XN_ABSOLUTE || XN_REALTIME */
@@ -315,7 +315,7 @@ int xntimer_start(xntimer_t *timer,
 	if (interval != XN_INFINITE) {
 		timer->interval = xnarch_ns_to_tsc(interval);
 		timer->pexpect = date;
-		__setbits(timer->status, XNTIMER_PERIODIC);
+		timer->status |= XNTIMER_PERIODIC;
 	}
 
 	xntimer_enqueue(timer);
@@ -496,7 +496,7 @@ void xntimer_tick(void)
 	 * invoked timer handlers can wait until we leave the tick
 	 * handler. Use this status flag as hint to xntimer_start().
 	 */
-	__setbits(sched->status, XNINTCK);
+	sched->status |= XNINTCK;
 
 	now = xnclock_read_raw();
 	while ((holder = xntimerq_head(timerq)) != NULL) {
@@ -529,7 +529,7 @@ void xntimer_tick(void)
 				 */
 				if (!xntimer_reload_p(timer))
 					continue;
-				__setbits(timer->status, XNTIMER_FIRED);
+				timer->status |= XNTIMER_FIRED;
 			} else if (likely((timer->status & XNTIMER_PERIODIC) == 0)) {
 				/*
 				 * Make the blocked timer elapse again
@@ -553,7 +553,7 @@ void xntimer_tick(void)
 			 * save some I-cache, which translates into
 			 * precious microsecs on low-end hw.
 			 */
-			__setbits(sched->lflags, XNHTICK);
+			sched->lflags |= XNHTICK;
 			__clrbits(sched->lflags, XNHDEFER);
 			if ((timer->status & XNTIMER_PERIODIC) == 0)
 				continue;
@@ -664,7 +664,7 @@ void xntimer_destroy(xntimer_t *timer)
 
 	xnlock_get_irqsave(&nklock, s);
 	xntimer_stop(timer);
-	__setbits(timer->status, XNTIMER_KILLED);
+	timer->status |= XNTIMER_KILLED;
 	timer->sched = NULL;
 #ifdef CONFIG_XENO_OPT_STATS
 	list_del(&timer->tblink);
@@ -800,7 +800,7 @@ void xntimer_freeze(void)
 	for_each_online_cpu(cpu) {
 		timerq = &xnpod_sched_slot(cpu)->timerqueue;
 		while ((holder = xntimerq_head(timerq)) != NULL) {
-			__setbits(aplink2timer(holder)->status, XNTIMER_DEQUEUED);
+			aplink2timer(holder)->status |= XNTIMER_DEQUEUED;
 			xntimerq_remove(timerq, holder);
 		}
 	}

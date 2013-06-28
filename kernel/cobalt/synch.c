@@ -478,7 +478,7 @@ redo:
 			if (synch->status & XNSYNCH_CLAIMED)
 				list_del(&synch->link);
 			else
-				__setbits(synch->status, XNSYNCH_CLAIMED);
+				synch->status |= XNSYNCH_CLAIMED;
 
 			synch->wprio = thread->wprio;
 			list_add_priff(synch, &owner->claimq, wprio, link);
@@ -662,7 +662,7 @@ void xnsynch_requeue_sleeper(struct xnthread *thread)
 		 * The resource was NOT claimed, claim it now and
 		 * boost the owner.
 		 */
-		__setbits(synch->status, XNSYNCH_CLAIMED);
+		synch->status |= XNSYNCH_CLAIMED;
 		list_add_priff(synch, &owner->claimq, wprio, link);
 		if (!xnthread_test_state(owner, XNBOOST)) {
 			owner->bprio = owner->cprio;

@@ -106,7 +106,7 @@ void xnintr_clock_handler(void)
 	trace_mark(xn_nucleus, clock_tick, MARK_NOARGS);
 
 	++sched->inesting;
-	__setbits(sched->lflags, XNINIRQ);
+	sched->lflags |= XNINIRQ;
 
 	xnlock_get(&nklock);
 	xntimer_tick();
@@ -178,7 +178,7 @@ static void xnintr_shirq_handler(unsigned irq, void *cookie)
 	trace_mark(xn_nucleus, irq_enter, "irq %u", irq);
 
 	++sched->inesting;
-	__setbits(sched->lflags, XNINIRQ);
+	sched->lflags |= XNINIRQ;
 
 	xnlock_get(&shirq->lock);
 	intr = shirq->handlers;
@@ -248,7 +248,7 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 	trace_mark(xn_nucleus, irq_enter, "irq %u", irq);
 
 	++sched->inesting;
-	__setbits(sched->lflags, XNINIRQ);
+	sched->lflags |= XNINIRQ;
 
 	xnlock_get(&shirq->lock);
 	intr = shirq->handlers;
@@ -445,7 +445,7 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 	trace_mark(xn_nucleus, irq_enter, "irq %u", irq);
 
 	++sched->inesting;
-	__setbits(sched->lflags, XNINIRQ);
+	sched->lflags |= XNINIRQ;
 
 	xnlock_get(&xnirqs[irq].lock);
 
@@ -732,7 +732,7 @@ int xnintr_attach(xnintr_t *intr, void *cookie)
 	if (ret)
 		goto out;
 
-	__setbits(intr->flags, XN_ISR_ATTACHED);
+	intr->flags |= XN_ISR_ATTACHED;
 	xnintr_stat_counter_inc();
 out:
 	xnlock_put_irqrestore(&intrlock, s);
