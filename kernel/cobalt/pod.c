@@ -361,7 +361,7 @@ void xnpod_shutdown(int xtype)
 
 	xnpod_schedule();
 
-	__clrbits(nkpod->status, XNPEXEC);
+	nkpod->status &= ~XNPEXEC;
 
 	for_each_online_cpu(cpu) {
 		sched = xnpod_sched_slot(cpu);
@@ -1105,7 +1105,7 @@ void xnpod_suspend_thread(xnthread_t *thread, int mask,
 		thread->wchan = wchan;
 
 	if (thread == sched->curr) {
-		__clrbits(sched->lflags, XNINLOCK);
+		sched->lflags &= ~XNINLOCK;
 		/*
 		 * If the current thread is being relaxed, we must
 		 * have been called from xnshadow_relax(), in which
@@ -1712,7 +1712,7 @@ static inline int test_resched(struct xnsched *sched)
 #else
 	resched = xnsched_resched_p(sched);
 #endif
-	__clrbits(sched->status, XNRESCHED);
+	sched->status &= ~XNRESCHED;
 
 	return resched;
 }
@@ -1907,7 +1907,7 @@ void ___xnpod_unlock_sched(xnsched_t *sched)
 
 	if (--xnthread_lock_count(curr) == 0) {
 		xnthread_clear_state(curr, XNLOCK);
-		__clrbits(sched->lflags, XNINLOCK);
+		sched->lflags &= ~XNINLOCK;
 		xnpod_schedule();
 	}
 }

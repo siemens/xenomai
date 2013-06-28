@@ -79,8 +79,8 @@ static inline int xnpipe_minor_alloc(int minor)
 
 static inline void xnpipe_minor_free(int minor)
 {
-	__clrbits(xnpipe_bitmap[minor / BITS_PER_LONG],
-		  1UL << (minor % BITS_PER_LONG));
+	xnpipe_bitmap[minor / BITS_PER_LONG] &=
+		~(1UL << (minor % BITS_PER_LONG));
 }
 
 static inline void xnpipe_enqueue_wait(struct xnpipe_state *state, int mask)
@@ -96,7 +96,7 @@ static inline void xnpipe_dequeue_wait(struct xnpipe_state *state, int mask)
 	if (state->status & mask)
 		if (--state->wcount == 0) {
 			list_del(&state->slink);
-			__clrbits(state->status, mask);
+			state->status &= ~mask;
 		}
 }
 
@@ -106,7 +106,7 @@ static inline void xnpipe_dequeue_all(struct xnpipe_state *state, int mask)
 		if (state->wcount) {
 			state->wcount = 0;
 			list_del(&state->slink);
-			__clrbits(state->status, mask);
+			state->status &= ~mask;
 		}
 	}
 }
@@ -171,7 +171,7 @@ static void xnpipe_wakeup_proc(void *cookie)
 			state = list_next_entry(state, slink);
 		}
 
-		__clrbits(state->status, rbits);
+		state->status &= ~rbits;
 
 		if ((rbits & XNPIPE_USER_WREAD_READY) != 0) {
 			if (waitqueue_active(&state->readq)) {
@@ -208,7 +208,7 @@ check_async:
 			state = list_next_entry(state, alink);
 		}
 
-		__clrbits(state->status, XNPIPE_USER_SIGIO);
+		state->status &= ~XNPIPE_USER_SIGIO;
 		xnlock_put_irqrestore(&nklock, s);
 		kill_fasync(&state->asyncq, xnpipe_asyncsig, POLL_IN);
 		xnlock_get_irqsave(&nklock, s);
@@ -378,7 +378,7 @@ int xnpipe_disconnect(int minor)
 		return -EBADF;
 	}
 
-	__clrbits(state->status, XNPIPE_KERN_CONN);
+	state->status &= ~XNPIPE_KERN_CONN;
 
 	state->ionrd -= xnpipe_flushq(state, outq, free_obuf, s);
 
@@ -637,7 +637,7 @@ EXPORT_SYMBOL_GPL(xnpipe_flush);
 	do {								\
 		xnpipe_flushq((__state), outq, free_obuf, (__s));	\
 		xnpipe_flushq((__state), inq, free_ibuf, (__s));	\
-		__clrbits((__state)->status, XNPIPE_USER_CONN);		\
+		(__state)->status &= ~XNPIPE_USER_CONN;			\
 		if ((__state)->status & XNPIPE_KERN_LCLOSE) {		\
 			clrbits((__state)->status, XNPIPE_KERN_LCLOSE);	\
 			xnlock_put_irqrestore(&nklock, (__s));		\
@@ -678,8 +678,8 @@ static int xnpipe_open(struct inode *inode, struct file *file)
 	init_waitqueue_head(&state->syncq);
 	state->wcount = 0;
 
-	__clrbits(state->status,
-		  XNPIPE_USER_ALL_WAIT | XNPIPE_USER_ALL_READY |
+	state->status &=
+		~(XNPIPE_USER_ALL_WAIT | XNPIPE_USER_ALL_READY |
 		  XNPIPE_USER_SIGIO);
 
 	if ((state->status & XNPIPE_KERN_CONN) == 0) {
@@ -729,7 +729,7 @@ static int xnpipe_release(struct inode *inode, struct file *file)
 
 	if (state->asyncq) {	/* Clear the async queue */
 		list_del(&state->alink);
-		__clrbits(state->status, XNPIPE_USER_SIGIO);
+		state->status &= ~XNPIPE_USER_SIGIO;
 		xnlock_put_irqrestore(&nklock, s);
 		fasync_helper(-1, file, 0, &state->asyncq);
 		xnlock_get_irqsave(&nklock, s);

@@ -24,7 +24,6 @@
 
 #define setbits(flags,mask)  xnarch_atomic_set_mask(&(flags),mask)
 #define clrbits(flags,mask)  xnarch_atomic_clear_mask(&(flags),mask)
-#define __clrbits(flags,mask)  do { (flags) &= ~(mask); } while(0)
 
 #define XENO_INFO KERN_INFO    "[Xenomai] "
 #define XENO_WARN KERN_WARNING "[Xenomai] "

@@ -594,7 +594,7 @@ static void xnsynch_clear_boost(struct xnsynch *synch,
 	int wprio;
 
 	list_del(&synch->link);
-	__clrbits(synch->status, XNSYNCH_CLAIMED);
+	synch->status &= ~XNSYNCH_CLAIMED;
 	wprio = owner->bprio + owner->sched_class->weight;
 
 	if (list_empty(&owner->claimq)) {

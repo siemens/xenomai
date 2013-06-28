@@ -203,10 +203,9 @@ int xnmap_enter(xnmap_t *map, int key, void *objaddr)
 		ofkey = hi * BITS_PER_LONG + lo;
 		++map->ukeys;
 
-		__clrbits(map->lomap[hi], 1UL << lo);
-
+		map->lomap[hi] &= ~(1UL << lo);
 		if (map->lomap[hi] == 0)
-			__clrbits(map->himap, 1UL << hi);
+			map->himap &= ~(1UL << hi);
 	}
 
 	map->objarray[ofkey] = objaddr;

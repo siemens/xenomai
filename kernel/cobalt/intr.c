@@ -84,7 +84,7 @@ static void xnintr_irq_handler(unsigned irq, void *cookie);
 
 void xnintr_host_tick(struct xnsched *sched) /* Interrupts off. */
 {
-	__clrbits(sched->lflags, XNHTICK);
+	sched->lflags &= ~XNHTICK;
 #ifdef XNARCH_HOST_TICK_IRQ
 	ipipe_post_irq_root(per_cpu(ipipe_percpu.hrtimer_irq, xnsched_cpu(sched)));
 #endif
@@ -115,7 +115,7 @@ void xnintr_clock_handler(void)
 	xnstat_exectime_switch(sched, prev);
 
 	if (--sched->inesting == 0) {
-		__clrbits(sched->lflags, XNINIRQ);
+		sched->lflags &= ~XNINIRQ;
 		xnpod_schedule();
 		sched = xnpod_current_sched();
 	}
@@ -222,7 +222,7 @@ static void xnintr_shirq_handler(unsigned irq, void *cookie)
 	xnstat_exectime_switch(sched, prev);
 
 	if (--sched->inesting == 0) {
-		__clrbits(sched->lflags, XNINIRQ);
+		sched->lflags &= ~XNINIRQ;
 		xnpod_schedule();
 	}
 
@@ -305,7 +305,7 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 	xnstat_exectime_switch(sched, prev);
 
 	if (--sched->inesting == 0) {
-		__clrbits(sched->lflags, XNINIRQ);
+		sched->lflags &= ~XNINIRQ;
 		xnpod_schedule();
 	}
 
@@ -494,7 +494,7 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 	xnstat_exectime_switch(sched, prev);
 
 	if (--sched->inesting == 0) {
-		__clrbits(sched->lflags, XNINIRQ);
+		sched->lflags &= ~XNINIRQ;
 		xnpod_schedule();
 	}
 
@@ -786,8 +786,7 @@ int xnintr_detach(xnintr_t *intr)
 		goto out;
 	}
 
-	__clrbits(intr->flags, XN_ISR_ATTACHED);
-
+	intr->flags &= ~XN_ISR_ATTACHED;
 	xnintr_irq_detach(intr);
 	xnintr_stat_counter_dec();
  out:

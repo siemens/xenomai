@@ -50,7 +50,7 @@ static inline void xntimer_enqueue(xntimer_t *timer)
 {
 	xntimerq_t *q = &timer->sched->timerqueue;
 	xntimerq_insert(q, &timer->aplink);
-	__clrbits(timer->status, XNTIMER_DEQUEUED);
+	timer->status &= ~XNTIMER_DEQUEUED;
 	xnstat_counter_inc(&timer->scheduled);
 }
 
@@ -99,7 +99,7 @@ void xntimer_next_local_shot(xnsched_t *sched)
 	 * __xnpod_schedule()), or a timer with an earlier timeout
 	 * date is scheduled, whichever comes first.
 	 */
-	__clrbits(sched->lflags, XNHDEFER);
+	sched->lflags &= ~XNHDEFER;
 	timer = aplink2timer(h);
 	if (unlikely(timer == &sched->htimer)) {
 		if (xnsched_resched_p(sched) ||
@@ -290,8 +290,7 @@ int xntimer_start(xntimer_t *timer,
 
 	now = xnclock_read_raw();
 
-	__clrbits(timer->status,
-		  XNTIMER_REALTIME | XNTIMER_FIRED | XNTIMER_PERIODIC);
+	timer->status &= ~(XNTIMER_REALTIME | XNTIMER_FIRED | XNTIMER_PERIODIC);
 	switch (mode) {
 	case XN_RELATIVE:
 		if ((xnsticks_t)value < 0)
@@ -554,7 +553,7 @@ void xntimer_tick(void)
 			 * precious microsecs on low-end hw.
 			 */
 			sched->lflags |= XNHTICK;
-			__clrbits(sched->lflags, XNHDEFER);
+			sched->lflags &= ~XNHDEFER;
 			if ((timer->status & XNTIMER_PERIODIC) == 0)
 				continue;
 		}
@@ -567,7 +566,7 @@ void xntimer_tick(void)
 		xntimer_enqueue(timer);
 	}
 
-	__clrbits(sched->status, XNINTCK);
+	sched->status &= ~XNINTCK;
 
 	xntimer_next_local_shot(sched);
 }

@@ -284,7 +284,7 @@ struct xnsched *xnsched_finish_unlocked_switch(struct xnsched *sched)
 #endif /* CONFIG_SMP */
 
 	last = sched->last;
-	__clrbits(sched->status, XNINSW);
+	sched->status &= ~XNINSW;
 
 	/* Detect a thread which called xnpod_migrate_thread */
 	if (last->sched != sched) {
@@ -544,9 +544,9 @@ static void removemlq(struct xnsched_mlq *q,
 	if (list_empty(head)) {
 		hi = idx / BITS_PER_LONG;
 		lo = idx % BITS_PER_LONG;
-		__clrbits(q->lomap[hi], 1UL << lo);
+		q->lomap[hi] &= ~(1UL << lo);
 		if (q->lomap[hi] == 0)
-			__clrbits(q->himap, 1UL << hi);
+			q->himap &= ~(1UL << hi);
 	}
 }
 
