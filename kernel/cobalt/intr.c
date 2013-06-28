@@ -126,7 +126,7 @@ void xnintr_clock_handler(void)
 	 * we only need to propagate the host tick in case the
 	 * interrupt preempted the root thread.
 	 */
-	if (testbits(sched->lflags, XNHTICK) &&
+	if ((sched->lflags & XNHTICK) &&
 	    xnthread_test_state(sched->curr, XNROOT))
 		xnintr_host_tick(sched);
 
@@ -723,7 +723,7 @@ int xnintr_attach(xnintr_t *intr, void *cookie)
 
 	xnlock_get_irqsave(&intrlock, s);
 
-	if (__testbits(intr->flags, XN_ISR_ATTACHED)) {
+	if (intr->flags & XN_ISR_ATTACHED) {
 		ret = -EBUSY;
 		goto out;
 	}
@@ -781,7 +781,7 @@ int xnintr_detach(xnintr_t *intr)
 
 	xnlock_get_irqsave(&intrlock, s);
 
-	if (!__testbits(intr->flags, XN_ISR_ATTACHED)) {
+	if ((intr->flags & XN_ISR_ATTACHED) == 0) {
 		ret = -EINVAL;
 		goto out;
 	}

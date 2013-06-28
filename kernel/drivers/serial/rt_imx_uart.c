@@ -438,7 +438,7 @@ static int rt_imx_uart_int(rtdm_irq_t *irq_context)
 #endif
 	}
 
-	if (testbits(events, ctx->config.event_mask)) {
+	if (events & ctx->config.event_mask) {
 		int old_events = ctx->ioc_events;
 
 		ctx->last_timestamp = timestamp;
@@ -448,7 +448,7 @@ static int rt_imx_uart_int(rtdm_irq_t *irq_context)
 			rtdm_event_signal(&ctx->ioc_event);
 	}
 
-	if (testbits(ctx->ier_status, IER_TX) && (ctx->out_npend == 0)) {
+	if ((ctx->ier_status & IER_TX) && (ctx->out_npend == 0)) {
 		rt_imx_uart_stop_tx(ctx);
 		ctx->ier_status &= ~IER_TX;
 		rtdm_event_signal(&ctx->out_event);
@@ -546,27 +546,26 @@ static int rt_imx_uart_set_config(struct rt_imx_uart_ctx *ctx,
 
 	rtdm_lock_get_irqsave(&ctx->lock, lock_ctx);
 
-	if (testbits(config->config_mask, RTSER_SET_BAUD))
+	if (config->config_mask & RTSER_SET_BAUD)
 		ctx->config.baud_rate = config->baud_rate;
-	if (testbits(config->config_mask, RTSER_SET_DATA_BITS))
+	if (config->config_mask & RTSER_SET_DATA_BITS)
 		ctx->config.data_bits = config->data_bits & DATA_BITS_MASK;
-	if (testbits(config->config_mask, RTSER_SET_PARITY))
+	if (config->config_mask & RTSER_SET_PARITY)
 		ctx->config.parity = config->parity & PARITY_MASK;
-	if (testbits(config->config_mask, RTSER_SET_STOP_BITS))
+	if (config->config_mask & RTSER_SET_STOP_BITS)
 		ctx->config.stop_bits = config->stop_bits & STOP_BITS_MASK;
 
 	/* Timeout manipulation is not atomic. The user is supposed to take
 	   care not to use and change timeouts at the same time. */
-	if (testbits(config->config_mask, RTSER_SET_TIMEOUT_RX))
+	if (config->config_mask & RTSER_SET_TIMEOUT_RX)
 		ctx->config.rx_timeout = config->rx_timeout;
-	if (testbits(config->config_mask, RTSER_SET_TIMEOUT_TX))
+	if (config->config_mask & RTSER_SET_TIMEOUT_TX)
 		ctx->config.tx_timeout = config->tx_timeout;
-	if (testbits(config->config_mask, RTSER_SET_TIMEOUT_EVENT))
+	if (config->config_mask & RTSER_SET_TIMEOUT_EVENT)
 		ctx->config.event_timeout = config->event_timeout;
 
-	if (testbits(config->config_mask, RTSER_SET_TIMESTAMP_HISTORY)) {
-		if (testbits
-		    (config->timestamp_history, RTSER_RX_TIMESTAMP_HISTORY)) {
+	if (config->config_mask & RTSER_SET_TIMESTAMP_HISTORY) {
+		if (config->timestamp_history & RTSER_RX_TIMESTAMP_HISTORY) {
 			if (!ctx->in_history) {
 				ctx->in_history = *in_history_ptr;
 				*in_history_ptr = NULL;
@@ -579,20 +578,20 @@ static int rt_imx_uart_set_config(struct rt_imx_uart_ctx *ctx,
 		}
 	}
 
-	if (testbits(config->config_mask, RTSER_SET_EVENT_MASK)) {
+	if (config->config_mask & RTSER_SET_EVENT_MASK) {
 		ctx->config.event_mask = config->event_mask & EVENT_MASK;
 		ctx->ioc_events = 0;
 
-		if (testbits(config->event_mask, RTSER_EVENT_RXPEND) &&
+		if ((config->event_mask & RTSER_EVENT_RXPEND) &&
 		    (ctx->in_npend > 0))
 			ctx->ioc_events |= RTSER_EVENT_RXPEND;
 
-		if (testbits(config->event_mask, RTSER_EVENT_ERRPEND)
+		if ((config->event_mask & RTSER_EVENT_ERRPEND)
 		    && ctx->status)
 			ctx->ioc_events |= RTSER_EVENT_ERRPEND;
 	}
 
-	if (testbits(config->config_mask, RTSER_SET_HANDSHAKE)) {
+	if (config->config_mask & RTSER_SET_HANDSHAKE) {
 		ctx->config.handshake = config->handshake;
 
 		switch (ctx->config.handshake) {
@@ -607,12 +606,12 @@ static int rt_imx_uart_set_config(struct rt_imx_uart_ctx *ctx,
 	}
 
 	/* configure hardware with new parameters */
-	if (testbits(config->config_mask, (RTSER_SET_BAUD |
-					   RTSER_SET_PARITY |
-					   RTSER_SET_DATA_BITS |
-					   RTSER_SET_STOP_BITS |
-					   RTSER_SET_EVENT_MASK |
-					   RTSER_SET_HANDSHAKE))) {
+	if (config->config_mask & (RTSER_SET_BAUD |
+				   RTSER_SET_PARITY |
+				   RTSER_SET_DATA_BITS |
+				   RTSER_SET_STOP_BITS |
+				   RTSER_SET_EVENT_MASK |
+				   RTSER_SET_HANDSHAKE)) {
 		struct rt_imx_uart_port *port = ctx->port;
 		unsigned int ucr2, old_ucr1, old_txrxen;
 		unsigned int baud = ctx->config.baud_rate;
@@ -690,8 +689,8 @@ static int rt_imx_uart_set_config(struct rt_imx_uart_ctx *ctx,
 		/* set the parity, stop bits and data size */
 		writel(ucr2 | old_txrxen, port->membase + UCR2);
 
-		if (testbits(config->event_mask,
-			     RTSER_EVENT_MODEMHI | RTSER_EVENT_MODEMLO))
+		if (config->event_mask &
+		    (RTSER_EVENT_MODEMHI | RTSER_EVENT_MODEMLO))
 			rt_imx_uart_enable_ms(ctx);
 
 		ctx->status = 0;
@@ -901,14 +900,13 @@ static int rt_imx_uart_ioctl(struct rtdm_dev_context *context,
 			config = &config_buf;
 		}
 
-		if (testbits(config->config_mask, RTSER_SET_BAUD) &&
+		if ((config->config_mask & RTSER_SET_BAUD) &&
 		    (config->baud_rate > clk_get_rate(ctx->port->clk) / 16 ||
 		     config->baud_rate <= 0))
 			/* invalid baudrate for this port */
 			return -EINVAL;
 
-		if (testbits(config->config_mask,
-			     RTSER_SET_TIMESTAMP_HISTORY)) {
+		if (config->config_mask & RTSER_SET_TIMESTAMP_HISTORY) {
 			/*
 			 * Reflect the call to non-RT as we will likely
 			 * allocate or free the buffer.
@@ -916,8 +914,7 @@ static int rt_imx_uart_ioctl(struct rtdm_dev_context *context,
 			if (rtdm_in_rt_context())
 				return -ENOSYS;
 
-			if (testbits(config->timestamp_history,
-				     RTSER_RX_TIMESTAMP_HISTORY))
+			if (config->timestamp_history & RTSER_RX_TIMESTAMP_HISTORY)
 				hist_buf = kmalloc(IN_BUFFER_SIZE *
 						   sizeof(nanosecs_abs_t),
 						   GFP_KERNEL);
@@ -1002,8 +999,7 @@ static int rt_imx_uart_ioctl(struct rtdm_dev_context *context,
 		while (!ctx->ioc_events) {
 			/* Only enable error interrupt
 			   when the user waits for it. */
-			if (testbits(ctx->config.event_mask,
-				     RTSER_EVENT_ERRPEND)) {
+			if (ctx->config.event_mask & RTSER_EVENT_ERRPEND) {
 				ctx->ier_status |= IER_STAT;
 #ifdef FIXME
 				rt_imx_uart_reg_out(mode, base, IER,
@@ -1131,7 +1127,7 @@ ssize_t rt_imx_uart_read(struct rtdm_dev_context *context,
 
 	while (1) {
 		if (ctx->status) {
-			if (testbits(ctx->status, RTSER_LSR_BREAK_IND))
+			if (ctx->status & RTSER_LSR_BREAK_IND)
 				ret = -EPIPE;
 			else
 				ret = -EIO;

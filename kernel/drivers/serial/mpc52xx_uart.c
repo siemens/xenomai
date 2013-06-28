@@ -283,7 +283,7 @@ static inline int rt_mpc52xx_uart_rx_interrupt(struct rt_mpc52xx_uart_ctx *ctx,
 	int psc_status;
 
 	psc_status = in_be16(&ctx->port->psc->mpc52xx_psc_status);
-	while (testbits(psc_status, MPC52xx_PSC_SR_RXRDY)) {
+	while (psc_status & MPC52xx_PSC_SR_RXRDY) {
 		/* read input character */
 		rt_mpc52xx_uart_put_char(ctx, timestamp, psc_read_char(ctx));
 		rbytes++;
@@ -324,7 +324,7 @@ static inline int rt_mpc52xx_uart_tx_interrupt(struct rt_mpc52xx_uart_ctx *ctx)
 {
 	while (psc_raw_tx_rdy(ctx) && (ctx->out_npend > 0)) {
 		if (ctx->config.rs485 &&
-		    !testbits(ctx->mcr_status, RTSER_MCR_RTS)) {
+		    (ctx->mcr_status & RTSER_MCR_RTS) == 0) {
 			/* switch RTS */
 			ctx->mcr_status |= RTSER_MCR_RTS;
 			dev_dbg(ctx->port->dev, "Set RTS, mcr_status=%#x\n",
@@ -332,8 +332,8 @@ static inline int rt_mpc52xx_uart_tx_interrupt(struct rt_mpc52xx_uart_ctx *ctx)
 			psc_set_mcr(ctx, ctx->mcr_status);
 		}
 		if ((ctx->config.rs485 ||
-		     testbits(ctx->config.event_mask, RTSER_EVENT_TXEMPTY)) &&
-		     !testbits(ctx->imr_status, MPC52xx_PSC_IMR_TXEMP)) {
+		     (ctx->config.event_mask & RTSER_EVENT_TXEMPTY) &&
+		     (ctx->imr_status & MPC52xx_PSC_IMR_TXEMP) == 0) {
 			/* enable tx-empty interrupt */
 			ctx->imr_status |= MPC52xx_PSC_IMR_TXEMP;
 			dev_dbg(ctx->port->dev, "Enable TXEMP interrupt, "
@@ -379,7 +379,7 @@ static int rt_mpc52xx_uart_interrupt(rtdm_irq_t *irq_context)
 
 		if (psc_tx_empty(ctx)) {
 			if (ctx->config.rs485 &&
-			    testbits(ctx->mcr_status, RTSER_MCR_RTS)) {
+			    (ctx->mcr_status & RTSER_MCR_RTS)) {
 				/* reset RTS */
 				ctx->mcr_status &= ~RTSER_MCR_RTS;
 				dev_dbg(ctx->port->dev, "Reset RTS, "
@@ -427,7 +427,7 @@ static int rt_mpc52xx_uart_interrupt(rtdm_irq_t *irq_context)
 	if (ctx->status)
 		events |= RTSER_EVENT_ERRPEND;
 
-	if (testbits(events, ctx->config.event_mask)) {
+	if (events & ctx->config.event_mask) {
 		int old_events = ctx->ioc_events;
 
 		ctx->last_timestamp = timestamp;
@@ -437,7 +437,7 @@ static int rt_mpc52xx_uart_interrupt(rtdm_irq_t *irq_context)
 			rtdm_event_signal(&ctx->ioc_event);
 	}
 
-	if (testbits(ctx->imr_status, MPC52xx_PSC_IMR_TXRDY) &&
+	if ((ctx->imr_status & MPC52xx_PSC_IMR_TXRDY) &&
 	    (ctx->out_npend == 0)) {
 		psc_stop_tx(ctx);
 		rtdm_event_signal(&ctx->out_event);
@@ -459,20 +459,20 @@ static int rt_mpc52xx_uart_set_config(struct rt_mpc52xx_uart_ctx *ctx,
 	/* make line configuration atomic and IRQ-safe */
 	rtdm_lock_get_irqsave(&ctx->lock, lock_ctx);
 
-	if (testbits(config->config_mask, RTSER_SET_BAUD))
+	if (config->config_mask & RTSER_SET_BAUD)
 		ctx->config.baud_rate = config->baud_rate;
-	if (testbits(config->config_mask, RTSER_SET_PARITY))
+	if (config->config_mask & RTSER_SET_PARITY)
 		ctx->config.parity = config->parity & PARITY_MASK;
-	if (testbits(config->config_mask, RTSER_SET_DATA_BITS))
+	if (config->config_mask & RTSER_SET_DATA_BITS)
 		ctx->config.data_bits = config->data_bits & DATA_BITS_MASK;
-	if (testbits(config->config_mask, RTSER_SET_STOP_BITS))
+	if (config->config_mask & RTSER_SET_STOP_BITS)
 		ctx->config.stop_bits = config->stop_bits & STOP_BITS_MASK;
-	if (testbits(config->config_mask, RTSER_SET_HANDSHAKE))
+	if (config->config_mask & RTSER_SET_HANDSHAKE)
 		ctx->config.handshake = config->handshake;
 
-	if (testbits(config->config_mask, RTSER_SET_PARITY |
-		     RTSER_SET_DATA_BITS | RTSER_SET_STOP_BITS |
-		     RTSER_SET_BAUD | RTSER_SET_HANDSHAKE)) {
+	if (config->config_mask & (RTSER_SET_PARITY |
+				   RTSER_SET_DATA_BITS | RTSER_SET_STOP_BITS |
+				   RTSER_SET_BAUD | RTSER_SET_HANDSHAKE)) {
 		struct mpc52xx_psc *psc = ctx->port->psc;
 		unsigned char mr1 = 0, mr2 = 0;
 		unsigned int divisor;
@@ -517,7 +517,7 @@ static int rt_mpc52xx_uart_set_config(struct rt_mpc52xx_uart_ctx *ctx,
 		if (ctx->config.handshake == RTSER_RTSCTS_HAND) {
 			mr1 |= MPC52xx_PSC_MODE_RXRTS;
 			mr2 |= MPC52xx_PSC_MODE_TXCTS;
-		} else if (testbits(config->config_mask, RTSER_SET_HANDSHAKE)) {
+		} else if (config->config_mask & RTSER_SET_HANDSHAKE) {
 			ctx->mcr_status =
 				RTSER_MCR_DTR | RTSER_MCR_RTS | RTSER_MCR_OUT2;
 			psc_set_mcr(ctx, ctx->mcr_status);
@@ -557,7 +557,7 @@ static int rt_mpc52xx_uart_set_config(struct rt_mpc52xx_uart_ctx *ctx,
 
 	}
 
-	if (testbits(config->config_mask, RTSER_SET_RS485)) {
+	if (config->config_mask & RTSER_SET_RS485) {
 		ctx->config.rs485 = config->rs485;
 		if (config->rs485) {
 			/* reset RTS */
@@ -572,19 +572,18 @@ static int rt_mpc52xx_uart_set_config(struct rt_mpc52xx_uart_ctx *ctx,
 
 	/* Timeout manipulation is not atomic. The user is supposed to take
 	   care not to use and change timeouts at the same time. */
-	if (testbits(config->config_mask, RTSER_SET_TIMEOUT_RX))
+	if (config->config_mask & RTSER_SET_TIMEOUT_RX)
 		ctx->config.rx_timeout = config->rx_timeout;
-	if (testbits(config->config_mask, RTSER_SET_TIMEOUT_TX))
+	if (config->config_mask & RTSER_SET_TIMEOUT_TX)
 		ctx->config.tx_timeout = config->tx_timeout;
-	if (testbits(config->config_mask, RTSER_SET_TIMEOUT_EVENT))
+	if (config->config_mask & RTSER_SET_TIMEOUT_EVENT)
 		ctx->config.event_timeout = config->event_timeout;
 
-	if (testbits(config->config_mask, RTSER_SET_TIMESTAMP_HISTORY)) {
+	if (config->config_mask & RTSER_SET_TIMESTAMP_HISTORY) {
 		/* change timestamp history atomically */
 		rtdm_lock_get_irqsave(&ctx->lock, lock_ctx);
 
-		if (testbits
-		    (config->timestamp_history, RTSER_RX_TIMESTAMP_HISTORY)) {
+		if (config->timestamp_history & RTSER_RX_TIMESTAMP_HISTORY) {
 			if (!ctx->in_history) {
 				ctx->in_history = *in_history_ptr;
 				*in_history_ptr = NULL;
@@ -599,27 +598,27 @@ static int rt_mpc52xx_uart_set_config(struct rt_mpc52xx_uart_ctx *ctx,
 		rtdm_lock_put_irqrestore(&ctx->lock, lock_ctx);
 	}
 
-	if (testbits(config->config_mask, RTSER_SET_EVENT_MASK)) {
+	if (config->config_mask & RTSER_SET_EVENT_MASK) {
 		/* change event mask atomically */
 		rtdm_lock_get_irqsave(&ctx->lock, lock_ctx);
 
 		ctx->config.event_mask = config->event_mask & EVENT_MASK;
 		ctx->ioc_events = 0;
 
-		if (testbits(config->event_mask, RTSER_EVENT_RXPEND) &&
+		if ((config->event_mask & RTSER_EVENT_RXPEND) &&
 		    (ctx->in_npend > 0))
 			ctx->ioc_events |= RTSER_EVENT_RXPEND;
 
-		if (testbits(config->event_mask, RTSER_EVENT_ERRPEND) &&
+		if ((config->event_mask & RTSER_EVENT_ERRPEND) &&
 		    ctx->status)
 			ctx->ioc_events |= RTSER_EVENT_ERRPEND;
 
-		if (testbits(config->event_mask, RTSER_EVENT_TXEMPTY) &&
+		if ((config->event_mask & RTSER_EVENT_TXEMPTY) &&
 		    !ctx->out_npend && ctx->tx_empty)
 			ctx->ioc_events |= RTSER_EVENT_TXEMPTY;
 
-		if (testbits(config->event_mask,
-			     RTSER_EVENT_MODEMHI | RTSER_EVENT_MODEMLO))
+		if (config->event_mask &
+		    (RTSER_EVENT_MODEMHI | RTSER_EVENT_MODEMLO))
 			psc_enable_ms(ctx);
 		else
 			psc_disable_ms(ctx);
@@ -773,13 +772,12 @@ static int rt_mpc52xx_uart_ioctl(struct rtdm_dev_context *context,
 			config = &config_buf;
 		}
 
-		if (testbits(config->config_mask, RTSER_SET_BAUD) &&
+		if (config->config_mask & RTSER_SET_BAUD) &&
 		    (config->baud_rate <= 0))
 			/* invalid baudrate for this port */
 			return -EINVAL;
 
-		if (testbits(config->config_mask,
-			     RTSER_SET_TIMESTAMP_HISTORY)) {
+		if (config->config_mask & RTSER_SET_TIMESTAMP_HISTORY) {
 			/*
 			 * Reflect the call to non-RT as we will likely
 			 * allocate or free the buffer.
@@ -787,8 +785,7 @@ static int rt_mpc52xx_uart_ioctl(struct rtdm_dev_context *context,
 			if (rtdm_in_rt_context())
 				return -ENOSYS;
 
-			if (testbits(config->timestamp_history,
-				     RTSER_RX_TIMESTAMP_HISTORY))
+			if (config->timestamp_history & RTSER_RX_TIMESTAMP_HISTORY)
 				hist_buf = kmalloc(IN_BUFFER_SIZE *
 						   sizeof(nanosecs_abs_t),
 						   GFP_KERNEL);
@@ -996,7 +993,7 @@ static ssize_t rt_mpc52xx_uart_read(struct rtdm_dev_context *context,
 
 	while (1) {
 		if (ctx->status) {
-			if (testbits(ctx->status, RTSER_LSR_BREAK_IND))
+			if (ctx->status & RTSER_LSR_BREAK_IND)
 				ret = -EPIPE;
 			else
 				ret = -EIO;

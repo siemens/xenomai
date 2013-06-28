@@ -930,11 +930,9 @@ int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (unlikely(xnsynch_test_flags(&event->synch_base,
-					RTDM_SYNCH_DELETED)))
+	if (unlikely(event->synch_base.status & RTDM_SYNCH_DELETED))
 		err = -EIDRM;
-	else if (likely(xnsynch_test_flags(&event->synch_base,
-					   RTDM_EVENT_PENDING))) {
+	else if (likely(event->synch_base.status & RTDM_EVENT_PENDING)) {
 		xnsynch_clear_flags(&event->synch_base, RTDM_EVENT_PENDING);
 		xnselect_signal(&event->select_block, 0);
 	} else {
@@ -1052,9 +1050,8 @@ int rtdm_event_select_bind(rtdm_event_t *event, rtdm_selector_t *selector,
 	xnlock_get_irqsave(&nklock, s);
 	err = xnselect_bind(&event->select_block,
 			    binding, selector, type, fd_index,
-			    xnsynch_test_flags(&event->synch_base,
-					       RTDM_SYNCH_DELETED |
-					       RTDM_EVENT_PENDING));
+			    event->synch_base.status & (RTDM_SYNCH_DELETED |
+						       RTDM_EVENT_PENDING));
 	xnlock_put_irqrestore(&nklock, s);
 
 	if (err)
@@ -1211,7 +1208,7 @@ int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (unlikely(xnsynch_test_flags(&sem->synch_base, RTDM_SYNCH_DELETED)))
+	if (unlikely(sem->synch_base.status & RTDM_SYNCH_DELETED))
 		err = -EIDRM;
 	else if (sem->value > 0) {
 		if(!--sem->value)
@@ -1330,8 +1327,7 @@ int rtdm_sem_select_bind(rtdm_sem_t *sem, rtdm_selector_t *selector,
 	err = xnselect_bind(&sem->select_block, binding, selector,
 			    type, fd_index,
 			    (sem->value > 0) ||
-			    xnsynch_test_flags(&sem->synch_base,
-					       RTDM_SYNCH_DELETED));
+			    sem->synch_base.status & RTDM_SYNCH_DELETED);
 	xnlock_put_irqrestore(&nklock, s);
 
 	if (err)
@@ -1500,8 +1496,7 @@ int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (unlikely(xnsynch_test_flags(&mutex->synch_base,
-					RTDM_SYNCH_DELETED)))
+	if (unlikely(mutex->synch_base.status & RTDM_SYNCH_DELETED))
 		err = -EIDRM;
 	else if (likely(xnsynch_owner(&mutex->synch_base) == NULL))
 		xnsynch_set_owner(&mutex->synch_base, curr_thread);

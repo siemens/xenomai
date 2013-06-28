@@ -218,13 +218,13 @@ static inline int xntimer_active_p (xntimer_t *timer)
 
 static inline int xntimer_running_p(xntimer_t *timer)
 {
-	return !testbits(timer->status,XNTIMER_DEQUEUED);
+	return (timer->status & XNTIMER_DEQUEUED) == 0;
 }
 
 static inline int xntimer_reload_p(xntimer_t *timer)
 {
-	return testbits(timer->status,
-			XNTIMER_PERIODIC|XNTIMER_DEQUEUED|XNTIMER_KILLED) ==
+	return (timer->status &
+		(XNTIMER_PERIODIC|XNTIMER_DEQUEUED|XNTIMER_KILLED)) ==
 		(XNTIMER_PERIODIC|XNTIMER_DEQUEUED);
 }
 
@@ -277,7 +277,7 @@ xnticks_t xntimer_get_interval(xntimer_t *timer);
 
 static inline void xntimer_stop(xntimer_t *timer)
 {
-	if (!testbits(timer->status,XNTIMER_DEQUEUED))
+	if ((timer->status & XNTIMER_DEQUEUED) == 0)
 		__xntimer_stop(timer);
 }
 

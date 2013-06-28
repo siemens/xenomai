@@ -237,12 +237,12 @@ static inline void xnpod_schedule(void)
 	 * context switch.
 	 */
 #if XENO_DEBUG(NUCLEUS)
-	if (testbits(sched->status | sched->lflags,
-		     XNINIRQ|XNINSW|XNINLOCK))
+	if ((sched->status|sched->lflags) &
+	    (XNINIRQ|XNINSW|XNINLOCK))
 		return;
 #else /* !XENO_DEBUG(NUCLEUS) */
-	if (testbits(sched->status | sched->lflags,
-		     XNINIRQ|XNINSW|XNRESCHED|XNINLOCK) != XNRESCHED)
+	if (((sched->status|sched->lflags) &
+	     (XNINIRQ|XNINSW|XNRESCHED|XNINLOCK)) != XNRESCHED)
 		return;
 #endif /* !XENO_DEBUG(NUCLEUS) */
 

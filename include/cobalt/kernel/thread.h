@@ -182,10 +182,20 @@ typedef struct xnthread {
 #define xnthread_sched(thread)             ((thread)->sched)
 #define xnthread_start_time(thread)        ((thread)->stime)
 #define xnthread_state_flags(thread)       ((thread)->state)
-#define xnthread_test_state(thread,flags)  testbits((thread)->state,flags)
+
+static inline int xnthread_test_state(struct xnthread *thread, int bits)
+{
+	return thread->state & bits;
+}
+
 #define xnthread_set_state(thread,flags)   __setbits((thread)->state,flags)
 #define xnthread_clear_state(thread,flags) __clrbits((thread)->state,flags)
-#define xnthread_test_info(thread,flags)   testbits((thread)->info,flags)
+
+static inline int xnthread_test_info(struct xnthread *thread, int bits)
+{
+	return thread->info & bits;
+}
+
 #define xnthread_set_info(thread,flags)    __setbits((thread)->info,flags)
 #define xnthread_clear_info(thread,flags)  __clrbits((thread)->info,flags)
 #define xnthread_lock_count(thread)        ((thread)->schedlck)
@@ -277,7 +287,7 @@ xnsynch_release(struct xnsynch *synch, struct xnthread *thread)
 	atomic_long_t *lockp;
 	xnhandle_t threadh;
 
-	XENO_BUGON(NUCLEUS, !testbits(synch->status, XNSYNCH_OWNER));
+	XENO_BUGON(NUCLEUS, (synch->status & XNSYNCH_OWNER) == 0);
 
 	trace_mark(xn_nucleus, synch_release, "synch %p", synch);
 

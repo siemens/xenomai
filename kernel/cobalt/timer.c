@@ -72,7 +72,7 @@ void xntimer_next_local_shot(xnsched_t *sched)
 	 * will be done on exit anyway. Also exit if there is no
 	 * pending timer.
 	 */
-	if (testbits(sched->status, XNINTCK))
+	if (sched->status & XNINTCK)
 		return;
 
 	h = xntimerq_it_begin(&sched->timerqueue, &it);
@@ -135,7 +135,7 @@ static inline int xntimer_heading_p(struct xntimer *timer)
 	if (h == &timer->aplink)
 		return 1;
 
-	if (testbits(sched->lflags, XNHDEFER)) {
+	if (sched->lflags & XNHDEFER) {
 		h = xntimerq_it_next(&sched->timerqueue, &it, h);
 		if (h == &timer->aplink)
 			return 1;
@@ -159,7 +159,7 @@ static void xntimer_adjust(xntimer_t *timer, xnsticks_t delta)
 
 	xntimerh_date(&timer->aplink) -= delta;
 
-	if (!testbits(timer->status, XNTIMER_PERIODIC))
+	if ((timer->status & XNTIMER_PERIODIC) == 0)
 		goto enqueue;
 
 	period = xntimer_interval(timer);
@@ -177,7 +177,7 @@ static void xntimer_adjust(xntimer_t *timer, xnsticks_t delta)
 		mod = xnarch_mod64(diff, period);
 		xntimerh_date(&timer->aplink) += diff - mod;
 	} else if (delta < 0
-		   && testbits(timer->status, XNTIMER_FIRED)
+		   && (timer->status & XNTIMER_FIRED)
 		   && (xnsticks_t) (diff + period) <= 0) {
 		/*
 		 * Timer is periodic and NOT waiting for its first
@@ -215,7 +215,7 @@ void xntimer_adjust_all(xnsticks_t delta)
 		for (holder = xntimerq_it_begin(q, &it); holder;
 		     holder = xntimerq_it_next(q, &it, holder)) {
 			timer = aplink2timer(holder);
-			if (testbits(timer->status, XNTIMER_REALTIME))
+			if (timer->status & XNTIMER_REALTIME)
 				list_add_tail(&timer->adjlink, &adjq);
 		}
 
@@ -285,7 +285,7 @@ int xntimer_start(xntimer_t *timer,
 		   "timer %p value %Lu interval %Lu mode %u",
 		   timer, value, interval, mode);
 
-	if (!testbits(timer->status, XNTIMER_DEQUEUED))
+	if ((timer->status & XNTIMER_DEQUEUED) == 0)
 		xntimer_dequeue(timer);
 
 	now = xnclock_read_raw();
@@ -517,8 +517,8 @@ void xntimer_tick(void)
 		xnstat_counter_inc(&timer->fired);
 
 		if (likely(timer != &sched->htimer)) {
-			if (likely(!testbits(nkclock.status, XNTBLCK)
-				   || testbits(timer->status, XNTIMER_NOBLCK))) {
+			if (likely((nkclock.status & XNTBLCK) == 0 ||
+				   (timer->status & XNTIMER_NOBLCK))) {
 				timer->handler(timer);
 				now = xnclock_read_raw();
 				/*
@@ -530,7 +530,7 @@ void xntimer_tick(void)
 				if (!xntimer_reload_p(timer))
 					continue;
 				__setbits(timer->status, XNTIMER_FIRED);
-			} else if (likely(!testbits(timer->status, XNTIMER_PERIODIC))) {
+			} else if (likely((timer->status & XNTIMER_PERIODIC) == 0)) {
 				/*
 				 * Make the blocked timer elapse again
 				 * at a reasonably close date in the
@@ -555,7 +555,7 @@ void xntimer_tick(void)
 			 */
 			__setbits(sched->lflags, XNHTICK);
 			__clrbits(sched->lflags, XNHDEFER);
-			if (!testbits(timer->status, XNTIMER_PERIODIC))
+			if ((timer->status & XNTIMER_PERIODIC) == 0)
 				continue;
 		}
 
@@ -714,8 +714,7 @@ int xntimer_migrate(xntimer_t *timer, xnsched_t *sched)
 	if (sched == timer->sched)
 		goto unlock_and_exit;
 
-	queued = !testbits(timer->status, XNTIMER_DEQUEUED);
-
+	queued = (timer->status & XNTIMER_DEQUEUED) == 0;
 	if (queued) {
 		if (timer->sched != xnpod_current_sched()) {
 			err = -EINVAL;
@@ -1062,7 +1061,7 @@ static int timer_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 	const char *tm_status, *wd_status = "";
 
 	if (xnpod_active_p()) {
-		tm_status = testbits(nkclock.status, XNTBLCK) ? "locked" : "on";
+		tm_status = (nkclock.status & XNTBLCK) ? "locked" : "on";
 #ifdef CONFIG_XENO_OPT_WATCHDOG
 		wd_status = "+watchdog";
 #endif /* CONFIG_XENO_OPT_WATCHDOG */

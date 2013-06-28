@@ -142,7 +142,7 @@ struct xnsched_class {
 /* Test resched flag of given sched. */
 static inline int xnsched_resched_p(struct xnsched *sched)
 {
-	return testbits(sched->status, XNRESCHED);
+	return sched->status & XNRESCHED;
 }
 
 /* Set self resched flag for the given scheduler. */
@@ -186,7 +186,7 @@ struct xnsched *xnsched_finish_unlocked_switch(struct xnsched *sched);
 static inline
 int xnsched_maybe_resched_after_unlocked_switch(struct xnsched *sched)
 {
-	return testbits(sched->status, XNRESCHED);
+	return sched->status & XNRESCHED;
 }
 
 #else /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */

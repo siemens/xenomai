@@ -749,7 +749,7 @@ static inline int moving_target(struct xnsched *sched, struct xnthread *thread)
 	 * CPU, do nothing, this case will be caught in
 	 * xnsched_finish_unlocked_switch.
 	 */
-	ret = testbits(sched->status, XNINSW) ||
+	ret = (sched->status & XNINSW) ||
 		xnthread_test_state(thread, XNMIGRATE);
 #endif
 	return ret;
@@ -1520,7 +1520,7 @@ int xnpod_set_thread_schedparam(struct xnthread *thread,
 	 * currently does.
 	 */
 	if (old_wprio != new_wprio && thread->wchan != NULL &&
-	    !testbits(thread->wchan->status, XNSYNCH_DREORD))
+	    (thread->wchan->status & XNSYNCH_DREORD) == 0)
 		/*
 		 * Update the pending order of the thread inside its
 		 * wait queue, unless this behaviour has been
@@ -1701,7 +1701,7 @@ static inline void xnpod_switch_to(xnsched_t *sched,
 
 static inline int test_resched(struct xnsched *sched)
 {
-	int resched = testbits(sched->status, XNRESCHED);
+	int resched = sched->status & XNRESCHED;
 #ifdef CONFIG_SMP
 	/* Send resched IPI to remote CPU(s). */
 	if (unlikely(!cpus_empty(sched->resched))) {
@@ -1772,9 +1772,9 @@ reschedule:
 	next = xnsched_pick_next(sched);
 	if (next == curr) {
 		if (unlikely(xnthread_test_state(next, XNROOT))) {
-			if (testbits(sched->lflags, XNHTICK))
+			if (sched->lflags & XNHTICK)
 				xnintr_host_tick(sched);
-			if (testbits(sched->lflags, XNHDEFER))
+			if (sched->lflags & XNHDEFER)
 				xntimer_next_local_shot(sched);
 		}
 		goto signal_unlock_and_exit;
@@ -1805,9 +1805,9 @@ reschedule:
 		leave_root(prev);
 		shadow = 0;
 	} else if (xnthread_test_state(next, XNROOT)) {
-		if (testbits(sched->lflags, XNHTICK))
+		if (sched->lflags & XNHTICK)
 			xnintr_host_tick(sched);
-		if (testbits(sched->lflags, XNHDEFER))
+		if (sched->lflags & XNHDEFER)
 			xntimer_next_local_shot(sched);
 		enter_root(next);
 	}

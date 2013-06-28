@@ -160,10 +160,10 @@ static int tmstat_vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
 			       "CPU", "SCHEDULED", "FIRED", "TIMEOUT",
 			       "INTERVAL", "HANDLER", "NAME");
 	else {
-		if (!testbits(p->status, XNTIMER_DEQUEUED))
+		if ((p->status & XNTIMER_DEQUEUED) == 0)
 			snprintf(timeout_buf, sizeof(timeout_buf), "%-10llu",
 				 p->timeout);
-		if (testbits(p->status, XNTIMER_PERIODIC))
+		if (p->status & XNTIMER_PERIODIC)
 			snprintf(interval_buf, sizeof(interval_buf), "%-10llu",
 				 p->interval);
 		xnvfile_printf(it,
