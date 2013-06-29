@@ -26,8 +26,7 @@
 #include <asm/mmu_context.h>
 #include <cobalt/kernel/thread.h>
 
-asmlinkage void __asm_thread_switch(struct task_struct *prev,
-				    struct thread_info *out,
+asmlinkage void __asm_thread_switch(struct thread_info *out,
 				    struct thread_info *in);
 
 asmlinkage void __asm_thread_trampoline(void);
@@ -289,7 +288,7 @@ void xnarch_switch_to(struct xnarchtcb *out_tcb, struct xnarchtcb *in_tcb)
 			enter_lazy_tlb(prev_mm, next);
 	}
 
-	__asm_thread_switch(prev, out_tcb->core.tip, in_tcb->core.tip);
+	__asm_thread_switch(out_tcb->core.tip, in_tcb->core.tip);
 }
 
 void xnarch_enable_fpu(struct xnarchtcb *tcb)

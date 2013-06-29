@@ -137,17 +137,17 @@ ENDPROC(__asm_vfp_load)
  *      CONFIG_IWMMXT
  *
  *  Calling args:
- * r0 = previous task_struct, r1 = previous thread_info, r2 = next thread_info
+ * r0 = previous thread_info, r1 = next thread_info
  */
 ENTRY(__asm_thread_switch)
-	add     ip, r1, #TI_CPU_SAVE
-	ldr     r3, [r2, #TI_TP_VALUE]
+	add     ip, r0, #TI_CPU_SAVE
+	ldr     r3, [r1, #TI_TP_VALUE]
  ARM(	stmia	ip!, {r4 - sl, fp, sp, lr} )	@ Store most regs on stack
  THUMB(	stmia	ip!, {r4 - sl, fp}	   )	@ Store most regs on stack
  THUMB(	str	sp, [ip], #4		   )
  THUMB(	str	lr, [ip], #4		   )
 #ifdef USE_DOMAINS
-	ldr     r6, [r2, #TI_CPU_DOMAIN]
+	ldr     r6, [r1, #TI_CPU_DOMAIN]
 #endif
 	clear_exclusive_monitor
 	set_tls r3, r4, r5
@@ -155,9 +155,9 @@ ENTRY(__asm_thread_switch)
 	mcr     p15, 0, r6, c3, c0, 0           @ Set domain register
 #endif
 	fpu_switch r4
- ARM(	add	r4, r2, #TI_CPU_SAVE	   )
+ ARM(	add	r4, r1, #TI_CPU_SAVE	   )
  ARM(	ldmia	r4, {r4 - sl, fp, sp, pc}  )	@ Load all regs saved previously
- THUMB(	add	ip, r2, #TI_CPU_SAVE	   )
+ THUMB(	add	ip, r1, #TI_CPU_SAVE	   )
  THUMB(	ldmia	ip!, {r4 - sl, fp}	   )	@ Load all regs saved previously
  THUMB(	ldr	sp, [ip], #4		   )
  THUMB(	ldr	pc, [ip]		   )
