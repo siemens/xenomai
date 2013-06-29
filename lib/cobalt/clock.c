@@ -29,7 +29,6 @@
 #include <asm-generic/xenomai/timeconv.h>
 #include <cobalt/uapi/syscall.h>
 #include <cobalt/uapi/time.h>
-#include <cobalt/uapi/sys/vdso.h>
 #include "sem_heap.h"
 #include "internal.h"
 

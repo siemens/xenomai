@@ -18,8 +18,6 @@
 #ifndef _COBALT_UAPI_MONITOR_H
 #define _COBALT_UAPI_MONITOR_H
 
-#include <asm/xenomai/atomic.h>
-
 struct cobalt_monitor_data {
 	atomic_long_t owner;
 	unsigned long flags;

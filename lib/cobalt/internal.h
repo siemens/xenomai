@@ -3,10 +3,14 @@
 
 #include <signal.h>
 #include <pthread.h>
+#include <asm-generic/xenomai/atomic.h>
+#include <cobalt/uapi/sys/synch.h>
+#include <cobalt/uapi/sys/vdso.h>
 #include <cobalt/uapi/mutex.h>
 #include <cobalt/uapi/event.h>
 #include <cobalt/uapi/monitor.h>
 #include <cobalt/uapi/thread.h>
+#include <cobalt/uapi/cond.h>
 #include "current.h"
 
 #define report_error(fmt, args...) \

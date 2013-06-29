@@ -79,7 +79,6 @@ static inline int xnarch_local_syscall(void)
 #else /* !__KERNEL__ */
 
 #include <errno.h>
-#include <asm/xenomai/atomic.h>
 
 /*
  * The following code defines an inline syscall mechanism used by

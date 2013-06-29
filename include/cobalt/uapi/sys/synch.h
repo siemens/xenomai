@@ -20,7 +20,6 @@
 #define _COBALT_UAPI_SYS_SYNCH_H
 
 #include <cobalt/uapi/sys/types.h>
-#include <asm/xenomai/atomic.h>
 
 /* Creation flags */
 #define XNSYNCH_FIFO    0x0

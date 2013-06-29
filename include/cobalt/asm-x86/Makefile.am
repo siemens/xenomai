@@ -2,7 +2,6 @@ includesubdir = $(includedir)/asm-x86
 
 includesub_HEADERS =	\
 	arith.h		\
-	atomic.h	\
 	calibration.h	\
 	features.h	\
 	fptest.h	\

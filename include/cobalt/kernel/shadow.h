@@ -20,7 +20,6 @@
 #ifndef _COBALT_KERNEL_SHADOW_H
 #define _COBALT_KERNEL_SHADOW_H
 
-#include <asm/xenomai/atomic.h>
 #include <asm/xenomai/syscall.h>
 
 struct xnthread;

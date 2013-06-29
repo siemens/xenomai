@@ -27,10 +27,8 @@
 #include <unistd.h>
 #include <asm/xenomai/features.h>
 #include <asm/xenomai/syscall.h>
-#include <asm/xenomai/atomic.h>
 #include <asm-generic/xenomai/stack.h>
 #include <cobalt/uapi/syscall.h>
-#include <cobalt/uapi/mutex.h>
 #include <cobalt/uapi/sys/heap.h>
 #include <cobalt/uapi/rtdm/syscall.h>
 #include <rtdk.h>

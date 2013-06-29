@@ -35,7 +35,6 @@
 
 #include <asm/system.h>
 #include <asm/timex.h>
-#include <asm/xenomai/atomic.h>
 #include <asm/processor.h>
 #include <asm/ipipe.h>
 #include <asm/mach/irq.h>

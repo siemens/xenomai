@@ -19,9 +19,7 @@
 #include <pthread.h>
 #include <limits.h>
 #include <asm/xenomai/syscall.h>
-#include <cobalt/uapi/mutex.h>
 #include <cobalt/uapi/syscall.h>
-#include <cobalt/uapi/sys/synch.h>
 #include "current.h"
 #include "internal.h"
 

@@ -18,8 +18,6 @@
 #ifndef _COBALT_UAPI_MUTEX_H
 #define _COBALT_UAPI_MUTEX_H
 
-#include <asm/xenomai/atomic.h>
-
 #define COBALT_MUTEX_MAGIC  0x86860303
 
 struct mutex_dat {

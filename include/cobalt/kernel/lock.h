@@ -26,7 +26,6 @@
 
 #include <linux/ipipe.h>
 #include <cobalt/kernel/assert.h>
-#include <asm/xenomai/atomic.h>
 
 /** \addtogroup lock
  *@{*/

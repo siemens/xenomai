@@ -19,9 +19,6 @@
 #include <pthread.h>
 #include <asm/xenomai/syscall.h>
 #include <cobalt/uapi/syscall.h>
-#include <cobalt/uapi/mutex.h>
-#include <cobalt/uapi/cond.h>
-#include <cobalt/uapi/sys/synch.h>
 #include "current.h"
 #include "internal.h"
 

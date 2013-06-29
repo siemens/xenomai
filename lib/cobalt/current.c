@@ -2,11 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <pthread.h>
-
 #include <asm/xenomai/syscall.h>
-#include <cobalt/uapi/thread.h>
 #include <cobalt/uapi/syscall.h>
-#include <cobalt/uapi/sys/vdso.h>
 #include "current.h"
 #include "internal.h"
 
