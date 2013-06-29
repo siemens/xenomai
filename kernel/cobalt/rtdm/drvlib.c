@@ -639,7 +639,7 @@ void __rtdm_synch_flush(xnsynch_t *synch, unsigned long reason)
 	xnlock_get_irqsave(&nklock, s);
 
 	if (reason == XNRMID)
-		xnsynch_set_flags(synch, RTDM_SYNCH_DELETED);
+		xnsynch_set_status(synch, RTDM_SYNCH_DELETED);
 
 	if (likely(xnsynch_flush(synch, reason) == XNSYNCH_RESCHED))
 		xnpod_schedule();
@@ -752,7 +752,7 @@ void rtdm_event_init(rtdm_event_t *event, unsigned long pending)
 
 	xnsynch_init(&event->synch_base, XNSYNCH_PRIO, NULL);
 	if (pending)
-		xnsynch_set_flags(&event->synch_base, RTDM_EVENT_PENDING);
+		xnsynch_set_status(&event->synch_base, RTDM_EVENT_PENDING);
 	xnselect_init(&event->select_block);
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -830,7 +830,7 @@ void rtdm_event_signal(rtdm_event_t *event)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	xnsynch_set_flags(&event->synch_base, RTDM_EVENT_PENDING);
+	xnsynch_set_status(&event->synch_base, RTDM_EVENT_PENDING);
 	if (xnsynch_flush(&event->synch_base, 0))
 		resched = 1;
 	if (xnselect_signal(&event->select_block, 1))
@@ -933,7 +933,7 @@ int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
 	if (unlikely(event->synch_base.status & RTDM_SYNCH_DELETED))
 		err = -EIDRM;
 	else if (likely(event->synch_base.status & RTDM_EVENT_PENDING)) {
-		xnsynch_clear_flags(&event->synch_base, RTDM_EVENT_PENDING);
+		xnsynch_clear_status(&event->synch_base, RTDM_EVENT_PENDING);
 		xnselect_signal(&event->select_block, 0);
 	} else {
 		/* non-blocking mode */
@@ -955,7 +955,7 @@ int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
 
 		if (likely
 		    (!xnthread_test_info(thread, XNTIMEO | XNRMID | XNBREAK))) {
-			xnsynch_clear_flags(&event->synch_base,
+			xnsynch_clear_status(&event->synch_base,
 					    RTDM_EVENT_PENDING);
 			xnselect_signal(&event->select_block, 0);
 		} else if (xnthread_test_info(thread, XNTIMEO))
@@ -998,7 +998,7 @@ void rtdm_event_clear(rtdm_event_t *event)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	xnsynch_clear_flags(&event->synch_base, RTDM_EVENT_PENDING);
+	xnsynch_clear_status(&event->synch_base, RTDM_EVENT_PENDING);
 	xnselect_signal(&event->select_block, 0);
 
 	xnlock_put_irqrestore(&nklock, s);

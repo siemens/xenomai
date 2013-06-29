@@ -276,14 +276,22 @@ static void request_syscall_restart(struct xnthread *thread,
 
 static inline void lock_timers(void)
 {
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
 	atomic_inc(&nkpod->timerlck);
-	setbits(nkclock.status, XNTBLCK);
+	nkclock.status |= XNTBLCK;
+	xnlock_put_irqrestore(&nklock, s);
 }
 
 static inline void unlock_timers(void)
 {
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
 	if (atomic_dec_and_test(&nkpod->timerlck))
-		clrbits(nkclock.status, XNTBLCK);
+		nkclock.status &= ~XNTBLCK;
+	xnlock_put_irqrestore(&nklock, s);
 }
 
 static int enter_personality(struct xnpersonality *personality)

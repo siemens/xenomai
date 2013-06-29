@@ -62,8 +62,15 @@ typedef struct xnsynch {
 	void (*cleanup)(struct xnsynch *synch); /* Cleanup handler */
 } xnsynch_t;
 
-#define xnsynch_set_flags(synch,flags)		setbits((synch)->status,flags)
-#define xnsynch_clear_flags(synch,flags)	clrbits((synch)->status,flags)
+static inline void xnsynch_set_status(struct xnsynch *synch, int bits)
+{
+	synch->status |= bits;
+}
+
+static inline void xnsynch_clear_status(struct xnsynch *synch, int bits)
+{
+	synch->status &= ~bits;
+}
 
 #define xnsynch_for_each_sleeper(__pos, __synch)		\
 	list_for_each_entry(__pos, &(__synch)->pendq, plink)

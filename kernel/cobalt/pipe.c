@@ -639,7 +639,7 @@ EXPORT_SYMBOL_GPL(xnpipe_flush);
 		xnpipe_flushq((__state), inq, free_ibuf, (__s));	\
 		(__state)->status &= ~XNPIPE_USER_CONN;			\
 		if ((__state)->status & XNPIPE_KERN_LCLOSE) {		\
-			clrbits((__state)->status, XNPIPE_KERN_LCLOSE);	\
+			(__state)->status &= ~XNPIPE_KERN_LCLOSE;	\
 			xnlock_put_irqrestore(&nklock, (__s));		\
 			(__state)->ops.release((__state)->xstate);	\
 			xnlock_get_irqsave(&nklock, (__s));		\

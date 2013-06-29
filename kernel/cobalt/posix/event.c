@@ -148,7 +148,7 @@ int cobalt_event_wait(struct cobalt_event_shadow __user *u_evtsh,
 		goto out;
 	}
 
-	setbits(datp->flags, COBALT_EVENT_PENDED);
+	datp->flags |= COBALT_EVENT_PENDED;
 	rbits = datp->value & bits;
 	testval = mode & COBALT_EVENT_ANY ? rbits : datp->value;
 	if (rbits && rbits == testval)
@@ -177,7 +177,7 @@ int cobalt_event_wait(struct cobalt_event_shadow __user *u_evtsh,
 		rbits = ewc.value;
 done:
 	if (!xnsynch_pended_p(&event->synch))
-		clrbits(datp->flags, COBALT_EVENT_PENDED);
+		datp->flags &= ~COBALT_EVENT_PENDED;
 out:
 	xnlock_put_irqrestore(&nklock, s);
 
