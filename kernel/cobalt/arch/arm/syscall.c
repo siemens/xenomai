@@ -31,7 +31,7 @@ int xnarch_local_syscall(unsigned long a1, unsigned long a2,
 	int ret;
 
 	if (a1 != XENOMAI_SYSARCH_TSCINFO)
-		return  = -EINVAL;
+		return -EINVAL;
 
 	ret = ipipe_get_sysinfo(&ipipe_info);
 	if (ret)
