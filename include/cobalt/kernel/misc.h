@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001-2013 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2013 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
@@ -17,13 +17,11 @@
  * 02111-1307, USA.
  */
 
-#ifndef _COBALT_KERNEL_TYPES_H
-#define _COBALT_KERNEL_TYPES_H
-
-#include <cobalt/uapi/sys/types.h>
+#ifndef _COBALT_KERNEL_MISC_H
+#define _COBALT_KERNEL_MISC_H
 
 #define XENO_INFO KERN_INFO    "[Xenomai] "
 #define XENO_WARN KERN_WARNING "[Xenomai] "
 #define XENO_ERR  KERN_ERR     "[Xenomai] "
 
-#endif /* !_COBALT_KERNEL_TYPES_H */
+#endif /* !_COBALT_KERNEL_MISC_H */

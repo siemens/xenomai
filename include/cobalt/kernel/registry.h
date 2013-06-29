@@ -24,8 +24,6 @@
 #ifndef _COBALT_KERNEL_REGISTRY_H
 #define _COBALT_KERNEL_REGISTRY_H
 
-#include <linux/string.h>
-#include <cobalt/kernel/types.h>
 #include <cobalt/kernel/list.h>
 #include <cobalt/kernel/synch.h>
 #include <cobalt/kernel/vfile.h>

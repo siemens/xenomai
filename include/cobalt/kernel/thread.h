@@ -22,7 +22,6 @@
 #ifndef _COBALT_KERNEL_THREAD_H
 #define _COBALT_KERNEL_THREAD_H
 
-#include <cobalt/kernel/types.h>
 #include <cobalt/kernel/list.h>
 #include <cobalt/kernel/stat.h>
 #include <cobalt/kernel/timer.h>

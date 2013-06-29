@@ -22,9 +22,15 @@
 #ifndef _COBALT_KERNEL_HEAP_H
 #define _COBALT_KERNEL_HEAP_H
 
+#include <cobalt/kernel/assert.h>
+#include <cobalt/kernel/lock.h>
+#include <cobalt/kernel/list.h>
+#include <cobalt/kernel/trace.h>
+#include <cobalt/kernel/misc.h>
+#include <cobalt/uapi/sys/types.h>
+#include <cobalt/uapi/sys/heap.h>
+
 /*
- * CONSTRAINTS:
- *
  * Minimum page size is 2 ** XNHEAP_MINLOG2 (must be large enough to
  * hold a pointer).
  *
@@ -41,14 +47,6 @@
  * XNHEAP_MINLOG2 and XNHEAP_MAXLOG2 inclusive, plus one to honor
  * requests ranging from the maximum page size to twice this size.
  */
-
-#include <cobalt/kernel/assert.h>
-#include <cobalt/kernel/lock.h>
-#include <cobalt/kernel/list.h>
-#include <cobalt/kernel/trace.h>
-#include <cobalt/kernel/types.h>
-#include <cobalt/uapi/sys/heap.h>
-
 #define XNHEAP_PAGE_SIZE	512 /* A reasonable value for the xnheap page size */
 #define XNHEAP_PAGE_MASK	(~(XNHEAP_PAGE_SIZE-1))
 #define XNHEAP_PAGE_ALIGN(addr)	(((addr)+XNHEAP_PAGE_SIZE-1)&XNHEAP_PAGE_MASK)

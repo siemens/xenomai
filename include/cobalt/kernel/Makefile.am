@@ -29,7 +29,6 @@ noinst_HEADERS =	\
 	thread.h	\
 	timer.h		\
 	trace.h		\
-	types.h		\
 	vdso.h		\
 	vfile.h
 

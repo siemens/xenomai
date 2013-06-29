@@ -22,7 +22,6 @@
 #ifndef _COBALT_KERNEL_INTR_H
 #define _COBALT_KERNEL_INTR_H
 
-#include <cobalt/kernel/types.h>
 #include <cobalt/kernel/stat.h>
 
 /* Possible return values of ISR. */

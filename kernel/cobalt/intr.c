@@ -35,6 +35,7 @@
 #include <cobalt/kernel/pod.h>
 #include <cobalt/kernel/intr.h>
 #include <cobalt/kernel/stat.h>
+#include <cobalt/kernel/misc.h>
 
 #define XNINTR_MAX_UNHANDLED	1000
 

@@ -28,6 +28,7 @@
 
 #include <cobalt/kernel/list.h>
 #include <cobalt/kernel/vfile.h>
+#include <cobalt/uapi/sys/types.h>
 #include <asm-generic/xenomai/timeconv.h>
 
 #define XNTBLCK  0x00000001	/* Time base is locked. */
