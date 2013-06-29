@@ -69,6 +69,3 @@ struct xnarch_machdesc xnarch_machdesc = {
 	.prefault = NULL,
 	.fault_labels = fault_labels,
 };
-
-EXPORT_SYMBOL_GPL(__asm_atomic_set_mask);
-EXPORT_SYMBOL_GPL(__asm_atomic_clear_mask);

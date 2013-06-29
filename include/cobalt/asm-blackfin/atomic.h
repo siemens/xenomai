@@ -20,18 +20,6 @@
 #ifndef _COBALT_ASM_BLACKFIN_ATOMIC_H
 #define _COBALT_ASM_BLACKFIN_ATOMIC_H
 
-#ifdef __KERNEL__
-
-#include <asm/xenomai/machine.h>
-
-#define xnarch_atomic_set_mask(pflags, mask)	\
-	__asm_atomic_set_mask((pflags), (mask))
-
-#define xnarch_atomic_clear_mask(pflags, mask)			\
-	__asm_atomic_clear_mask((pflags), (mask))
-
-#endif /* __KERNEL__ */
-
 #include <asm-generic/xenomai/atomic.h>
 
 #endif /* !_COBALT_ASM_BLACKFIN_ATOMIC_H */

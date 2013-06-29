@@ -23,46 +23,6 @@
 #ifndef _COBALT_ASM_POWERPC_ATOMIC_H
 #define _COBALT_ASM_POWERPC_ATOMIC_H
 
-#ifdef __KERNEL__
-
-#ifdef CONFIG_PPC64
-static __inline__ void atomic64_clear_mask(unsigned long mask,
-					   unsigned long *ptr)
-{
-    __asm__ __volatile__ ("\n\
-1:	ldarx	5,0,%0 \n\
-	andc	5,5,%1\n"
-"	stdcx.	5,0,%0 \n\
-	bne-	1b"
-	: /*no output*/
-	: "r" (ptr), "r" (mask)
-	: "r5", "cc", "memory");
-}
-#define xnarch_atomic_clear_mask(pflags,mask)  atomic64_clear_mask(mask,pflags)
-
-static __inline__ void atomic64_set_mask(unsigned long mask,
-					 unsigned long *ptr)
-{
-    __asm__ __volatile__ ("\n\
-1:	ldarx	5,0,%0 \n\
-	or	5,5,%1\n"
-"	stdcx.	5,0,%0 \n\
-	bne-	1b"
-	: /*no output*/
-	: "r" (ptr), "r" (mask)
-	: "r5", "cc", "memory");
-}
-#define xnarch_atomic_set_mask(pflags,mask)    atomic64_set_mask(mask,pflags)
-
-#else /* !CONFIG_PPC64 */
- /* These are defined in arch/{ppc,powerpc}/kernel/misc[_32].S on 32-bit PowerPC */
-void atomic_set_mask(unsigned long mask, unsigned long *ptr);
-void atomic_clear_mask(unsigned long mask, unsigned long *ptr);
-
-#endif /* !CONFIG_PPC64 */
-
-#endif /* __KERNEL__ */
-
 #include <asm-generic/xenomai/atomic.h>
 
 #endif /* !_COBALT_ASM_POWERPC_ATOMIC_H */

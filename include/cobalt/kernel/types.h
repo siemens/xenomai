@@ -22,9 +22,6 @@
 
 #include <cobalt/uapi/sys/types.h>
 
-#define setbits(flags,mask)  xnarch_atomic_set_mask(&(flags),mask)
-#define clrbits(flags,mask)  xnarch_atomic_clear_mask(&(flags),mask)
-
 #define XENO_INFO KERN_INFO    "[Xenomai] "
 #define XENO_WARN KERN_WARNING "[Xenomai] "
 #define XENO_ERR  KERN_ERR     "[Xenomai] "

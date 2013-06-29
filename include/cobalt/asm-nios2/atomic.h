@@ -20,21 +20,6 @@
 #ifndef _COBALT_ASM_NIOS2_ATOMIC_H
 #define _COBALT_ASM_NIOS2_ATOMIC_H
 
-#ifdef __KERNEL__
-
-#include <asm/irqflags.h>
-
-static inline void atomic_set_mask(unsigned long mask, unsigned long *addr)
-{
-	unsigned long flags;
-
-	flags = hard_local_irq_save();
-	*addr |= mask;
-	hard_local_irq_restore(flags);
-}
-
-#endif /* !__KERNEL__ */
-
 #include <asm-generic/xenomai/atomic.h>
 
 #endif /* !_COBALT_ASM_NIOS2_ATOMIC_H */

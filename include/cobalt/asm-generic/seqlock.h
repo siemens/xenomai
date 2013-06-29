@@ -21,7 +21,13 @@
 
 /* Originally from the linux kernel, adapted for userland and Xenomai */
 
-#include <asm/xenomai/atomic.h>
+#ifdef __KERNEL__
+#include <linux/bitops.h>
+#include <asm/atomic.h>
+#include <asm/xenomai/wrappers.h>
+#else
+#include <asm-generic/xenomai/atomic.h>
+#endif
 
 typedef struct xnseqcount {
 	unsigned int sequence;
@@ -54,7 +60,6 @@ static inline int xnread_seqcount_retry(const xnseqcount_t *s, unsigned start)
 
 	return s->sequence != start;
 }
-
 
 /*
  * The sequence counter only protects readers from concurrent writers.

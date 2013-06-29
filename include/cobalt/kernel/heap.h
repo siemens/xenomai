@@ -263,6 +263,7 @@ int xnheap_check_block(struct xnheap *heap,
 int xnheap_remap_vm_page(struct vm_area_struct *vma,
 			 unsigned long from, unsigned long to);
 
+struct file;
 struct vm_area_struct;
 
 int xnheap_remap_io_page_range(struct file *filp,

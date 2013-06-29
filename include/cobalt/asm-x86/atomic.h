@@ -20,45 +20,6 @@
 #ifndef _COBALT_ASM_X86_ATOMIC_H
 #define _COBALT_ASM_X86_ATOMIC_H
 
-#include <asm/xenomai/features.h>
-
-#ifdef __KERNEL__
-#include <asm/atomic.h>
-
-#define xnarch_atomic_set_mask(pflags,mask)		\
-	atomic_set_mask((mask),(unsigned *)(pflags))
-#define xnarch_atomic_clear_mask(pflags,mask)		\
-	atomic_clear_mask((mask),(unsigned *)(pflags))
-
-#else /* !__KERNEL */
-#include <xeno_config.h>
-
-#ifdef CONFIG_SMP
-#define LOCK_PREFIX "lock ; "
-#else
-#define LOCK_PREFIX ""
-#endif
-
-#define cpu_relax() asm volatile("rep; nop" ::: "memory")
-
-#ifdef __i386__
-
-#define xnarch_memory_barrier()		__asm__ __volatile__("": : :"memory")
-#define xnarch_read_memory_barrier() \
-	__asm__ __volatile__ (LOCK_PREFIX "addl $0,0(%%esp)": : :"memory")
-#define xnarch_write_memory_barrier() \
-	__asm__ __volatile__ (LOCK_PREFIX "addl $0,0(%%esp)": : :"memory")
-
-#else /* x86_64 */
-
-#define xnarch_memory_barrier()		asm volatile("mfence":::"memory")
-#define xnarch_read_memory_barrier()	asm volatile("lfence":::"memory")
-#define xnarch_write_memory_barrier()	asm volatile("sfence":::"memory")
-
-#endif /* x86_64 */
-
-#endif /* !__KERNEL__ */
-
 #include <asm-generic/xenomai/atomic.h>
 
 #endif /* !_COBALT_ASM_X86_ATOMIC_64_H */

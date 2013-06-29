@@ -21,28 +21,7 @@
 #ifndef _COBALT_ASM_GENERIC_ATOMIC_H
 #define _COBALT_ASM_GENERIC_ATOMIC_H
 
-#include <asm/xenomai/features.h>
-
-typedef unsigned long atomic_flags_t;
-
-#ifdef __KERNEL__
-#include <linux/bitops.h>
-#include <asm/atomic.h>
-#include <asm/xenomai/wrappers.h>
-
-/*
- * atomic_set_mask, atomic_clear_mask may not be available from all
- * linux ports.
- */
-#ifndef xnarch_atomic_set_mask
-#define xnarch_atomic_set_mask(pflags,mask) atomic_set_mask((mask),(pflags))
-#endif
-
-#ifndef xnarch_atomic_clear_mask
-#define xnarch_atomic_clear_mask(pflags,mask) atomic_clear_mask((mask),(pflags))
-#endif
-
-#else /* !__KERNEL__ */
+#ifndef __KERNEL__
 
 #include <xeno_config.h>
 

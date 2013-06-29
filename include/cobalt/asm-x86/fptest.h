@@ -58,6 +58,7 @@ static inline void fp_features_init(void)
 
 #else /* !__KERNEL__ */
 #include <stdio.h>
+#include <stdint.h>
 #define printk printf
 
 #define FP_FEATURE_SSE2			0x01

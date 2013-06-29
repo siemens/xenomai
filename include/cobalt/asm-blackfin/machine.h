@@ -32,12 +32,6 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 	return ffs(ul) - 1;
 }
 
-asmlinkage void __asm_atomic_set_mask(unsigned long *addr,
-				      unsigned long mask);
-
-asmlinkage void __asm_atomic_clear_mask(unsigned long *addr,
-					unsigned long mask);
-
 #include <asm-generic/xenomai/machine.h>
 
 #endif /* !_COBALT_ASM_BLACKFIN_MACHINE_H */
