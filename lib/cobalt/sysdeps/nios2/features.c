@@ -24,7 +24,7 @@
 #include <unistd.h>
 #include <limits.h>
 #include <cobalt/wrappers.h>
-#include <asm/xenomai/syscall.h>
+#include <asm/xenomai/uapi/features.h>
 #include "internal.h"
 
 __attribute__((weak)) volatile void *__cobalt_nios2_hrclock = NULL;

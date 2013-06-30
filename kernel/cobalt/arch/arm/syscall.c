@@ -20,6 +20,7 @@
 
 #include <linux/ipipe.h>
 #include <asm/xenomai/syscall.h>
+#include <asm/xenomai/uapi/tsc.h>
 
 int xnarch_local_syscall(unsigned long a1, unsigned long a2,
 			 unsigned long a3, unsigned long a4,

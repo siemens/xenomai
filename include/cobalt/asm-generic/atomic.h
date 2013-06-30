@@ -56,4 +56,6 @@ typedef struct {
 #define smp_wmb() __sync_synchronize()
 #endif
 
+#define ACCESS_ONCE(x) (*(volatile typeof(x) *)&(x))
+
 #endif /* _COBALT_ASM_GENERIC_ATOMIC_H */

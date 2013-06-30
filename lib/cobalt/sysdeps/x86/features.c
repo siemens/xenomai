@@ -20,7 +20,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include <asm/xenomai/features.h>
+#include <asm/xenomai/uapi/features.h>
 #include "internal.h"
 
 void cobalt_check_features(struct xnfeatinfo *finfo)

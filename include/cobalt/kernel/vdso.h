@@ -23,6 +23,10 @@
 #ifndef _COBALT_KERNEL_VDSO_H
 #define _COBALT_KERNEL_VDSO_H
 
+#include <linux/time.h>
+#include <asm/barrier.h>
+#include <asm/atomic.h>
+#include <asm/processor.h>
 #include <cobalt/uapi/sys/vdso.h>
 
 /*

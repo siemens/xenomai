@@ -6,4 +6,5 @@ includesub_HEADERS =	\
 	thread.h	\
 	trace.h		\
 	types.h		\
+	urw.h		\
 	vdso.h

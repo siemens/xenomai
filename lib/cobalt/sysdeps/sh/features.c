@@ -25,7 +25,7 @@
 #include <unistd.h>
 #include <limits.h>
 #include <cobalt/wrappers.h>
-#include <asm/xenomai/syscall.h>
+#include <asm/xenomai/uapi/features.h>
 #include "internal.h"
 
 struct xnarch_tsc_area;

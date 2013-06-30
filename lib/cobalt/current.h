@@ -3,6 +3,7 @@
 
 #include <pthread.h>
 #include <cobalt/uapi/thread.h>
+#include <xeno_config.h>
 
 extern pthread_key_t cobalt_current_window_key;
 

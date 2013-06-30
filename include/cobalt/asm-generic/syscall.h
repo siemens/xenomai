@@ -20,64 +20,12 @@
 #ifndef _COBALT_ASM_GENERIC_SYSCALL_H
 #define _COBALT_ASM_GENERIC_SYSCALL_H
 
-#include <asm/xenomai/features.h>
-
-/* Xenomai multiplexer syscall. */
-#define sc_nucleus_mux		555	/* Must fit within 15bit */
-/* Xenomai nucleus syscalls. */
-#define sc_nucleus_bind		 0	/* muxid = bind_to_interface(magic, &breq) */
-#define sc_nucleus_migrate	 1	/* switched = xnshadow_relax/harden() */
-#define sc_nucleus_info		 2	/* xnshadow_get_info(muxid,&info) */
-#define sc_nucleus_arch		 3	/* r = xnarch_local_syscall(args) */
-#define sc_nucleus_trace	 4	/* r = xntrace_xxx(...) */
-#define sc_nucleus_heap_info	 5
-#define sc_nucleus_current	 6	/* threadh = xnthread_handle(cur) */
-#define sc_nucleus_current_info  7	/* r = xnshadow_current_info(&info) */
-#define sc_nucleus_mayday        8	/* request mayday fixup */
-#define sc_nucleus_backtrace     9	/* collect backtrace (relax tracing) */
-
-struct xnbindreq {
-	int feat_req;		/* Features userland requires. */
-	int abi_rev;		/* ABI revision userland uses. */
-	struct xnfeatinfo feat_ret; /* Features kernel space provides. */
-};
-
-#define XENOMAI_LINUX_DOMAIN  0
-#define XENOMAI_XENO_DOMAIN   1
-
-struct xnsysinfo {
-	unsigned long long clockfreq;	/* Real-time clock frequency */
-	unsigned long vdso;		/* Offset of nkvdso in the sem heap */
-};
-
-#define SIGSHADOW  SIGWINCH
-#define SIGSHADOW_ACTION_HARDEN     1
-#define SIGSHADOW_ACTION_BACKTRACE  2
-#define sigshadow_action(code) ((code) & 0xff)
-#define sigshadow_arg(code) (((code) >> 8) & 0xff)
-#define sigshadow_int(action, arg) ((action) | ((arg) << 8))
-
-#define SIGSHADOW_BACKTRACE_DEPTH  16
-
-#define SIGDEBUG			SIGXCPU
-#define SIGDEBUG_UNDEFINED		0
-#define SIGDEBUG_MIGRATE_SIGNAL		1
-#define SIGDEBUG_MIGRATE_SYSCALL	2
-#define SIGDEBUG_MIGRATE_FAULT		3
-#define SIGDEBUG_MIGRATE_PRIOINV	4
-#define SIGDEBUG_NOMLOCK		5
-#define SIGDEBUG_WATCHDOG		6
-#define SIGDEBUG_RESCNT_IMBALANCE	7
-
-#define sigdebug_code(si)	((si)->si_value.sival_int)
-#define sigdebug_reason(si)	(sigdebug_code(si) & 0xff)
-
-#ifdef __KERNEL__
-
 #include <linux/types.h>
 #include <asm/uaccess.h>
+#include <asm/xenomai/features.h>
 #include <asm/xenomai/wrappers.h>
 #include <asm/xenomai/machine.h>
+#include <asm-generic/xenomai/uapi/syscall.h>
 
 struct task_struct;
 struct pt_regs;
@@ -87,8 +35,8 @@ struct xnsyscall {
 	 * CAUTION: no varargs, we want the calling convention for
 	 * regular functions to apply.
 	 */
-	int (*svc)(u_long arg1, u_long arg2, u_long arg3,
-		   u_long arg4, u_long arg5);
+	int (*svc)(unsigned long arg1, unsigned long arg2, unsigned long arg3,
+		   unsigned long arg4, unsigned long arg5);
 
 /* Syscall must run into the Linux domain. */
 #define __xn_exec_lostage    0x1
@@ -126,7 +74,8 @@ struct xnsyscall {
 	unsigned long flags;
 };
 
-#define __syscast__(fn)	((int (*)(u_long, u_long, u_long, u_long, u_long))(fn))
+#define __syscast__(fn)	((int (*)(unsigned long, unsigned long,	\
+				  unsigned long, unsigned long, unsigned long))(fn))
 
 #define SKINCALL_DEF(nr, fn, fl)	\
 	[nr] = { .svc = __syscast__(fn), .flags = __xn_exec_##fl }
@@ -172,16 +121,5 @@ static inline int __xn_safe_strncpy_from_user(char *dst,
 #ifndef xnarch_head_syscall_entry
 static inline void xnarch_head_syscall_entry(void) { }
 #endif
-
-#else /* !__KERNEL__ */
-
-#include <sys/types.h>
-
-#endif /* __KERNEL__ */
-
-typedef struct xncompletion {
-	long syncflag;		/* Semaphore variable. */
-	pid_t pid;		/* Single waiter ID. */
-} xncompletion_t;
 
 #endif /* !_COBALT_ASM_GENERIC_SYSCALL_H */

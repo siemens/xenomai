@@ -3,6 +3,7 @@
 
 #include <signal.h>
 #include <pthread.h>
+#include <errno.h>
 #include <asm-generic/xenomai/atomic.h>
 #include <cobalt/uapi/sys/synch.h>
 #include <cobalt/uapi/sys/vdso.h>
@@ -11,6 +12,7 @@
 #include <cobalt/uapi/monitor.h>
 #include <cobalt/uapi/thread.h>
 #include <cobalt/uapi/cond.h>
+#include <xeno_config.h>
 #include "current.h"
 
 #define report_error(fmt, args...) \
@@ -100,6 +102,10 @@ void cobalt_print_init(void);
 void cobalt_print_exit(void);
 
 void cobalt_handle_sigdebug(int sig, siginfo_t *si, void *context);
+
+struct xnfeatinfo;
+
+void cobalt_check_features(struct xnfeatinfo *finfo);
 
 extern int __cobalt_muxid;
 

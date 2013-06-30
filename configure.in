@@ -743,6 +743,8 @@ dnl in-tree executables which require POSIX symbol wrapping.
    AC_CONFIG_LINKS([lib/include/asm/xenomai:$srcdir/include/cobalt/$base])
    base=asm-generic
    AC_CONFIG_LINKS([lib/include/$base/xenomai:$srcdir/include/cobalt/$base])
+   base=sysdeps/$XENO_TARGET_ARCH
+   AC_CONFIG_LINKS([lib/include/asm/sysdeps:$srcdir/lib/cobalt/$base])
 fi
 
 unset want_fortify
@@ -831,13 +833,20 @@ AC_CONFIG_FILES([ \
 	include/cobalt/uapi/sys/Makefile \
 	include/cobalt/uapi/rtdm/Makefile \
 	include/cobalt/asm-generic/Makefile \
+	include/cobalt/asm-generic/uapi/Makefile \
 	include/cobalt/asm-generic/ipipe/Makefile \
 	include/cobalt/asm-blackfin/Makefile \
+	include/cobalt/asm-blackfin/uapi/Makefile \
 	include/cobalt/asm-x86/Makefile \
+	include/cobalt/asm-x86/uapi/Makefile \
 	include/cobalt/asm-powerpc/Makefile \
+	include/cobalt/asm-powerpc/uapi/Makefile \
 	include/cobalt/asm-arm/Makefile \
+	include/cobalt/asm-arm/uapi/Makefile \
 	include/cobalt/asm-nios2/Makefile \
+	include/cobalt/asm-nios2/uapi/Makefile \
 	include/cobalt/asm-sh/Makefile \
+	include/cobalt/asm-sh/uapi/Makefile \
 	include/cobalt/Makefile \
 	include/cobalt/sys/Makefile \
 	include/cobalt/kernel/Makefile \

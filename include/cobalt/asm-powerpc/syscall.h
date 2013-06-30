@@ -23,19 +23,9 @@
 #ifndef _COBALT_ASM_POWERPC_SYSCALL_H
 #define _COBALT_ASM_POWERPC_SYSCALL_H
 
-#include <asm-generic/xenomai/syscall.h>
-#include <asm/xenomai/tsc.h>
-
-#define __xn_mux_code(shifted_id,op) ((op << 24)|shifted_id|(sc_nucleus_mux & 0xffff))
-#define __xn_mux_shifted_id(id) ((id << 16) & 0xff0000)
-
-#ifdef __KERNEL__
-
 #include <linux/errno.h>
-#include <asm/uaccess.h>
 #include <asm/ptrace.h>
-
-/* Register mapping for accessing syscall args. */
+#include <asm-generic/xenomai/syscall.h>
 
 #define __xn_reg_mux(regs)    ((regs)->gpr[0])
 #define __xn_reg_rval(regs)   ((regs)->gpr[3])
@@ -53,9 +43,6 @@
 
 #define __xn_linux_mux_p(regs, nr)  (__xn_reg_mux(regs) == (nr))
 
-/* Purposedly used inlines and not macros for the following routines
-   so that we don't risk spurious side-effects on the value arg. */
-
 static inline void __xn_success_return(struct pt_regs *regs, int v)
 {
 	__xn_reg_rval(regs) = v;
@@ -63,8 +50,10 @@ static inline void __xn_success_return(struct pt_regs *regs, int v)
 
 static inline void __xn_error_return(struct pt_regs *regs, int v)
 {
-	/* We currently never set the SO bit for marking errors, even if
-	 * we always test it upon syscall return. */
+	/*
+	 * We currently never set the SO bit for marking errors, even
+	 * if we always test it upon syscall return.
+	 */
 	__xn_reg_rval(regs) = v;
 }
 
@@ -85,83 +74,5 @@ int xnarch_local_syscall(unsigned long a1, unsigned long a2,
 {
 	return -ENOSYS;
 }
-
-#else /* !__KERNEL__ */
-
-#include <errno.h>
-
-/*
- * Some of the following macros have been adapted from Linux's
- * implementation of the syscall mechanism in <asm-ppc[64]/unistd.h>:
- *
- * The following code defines an inline syscall mechanism used by
- * Xenomai's real-time interfaces to invoke the skin module
- * services in kernel space.
- */
-
-#define LOADARGS_0(muxcode, dummy...)			\
-	__sc_0 = (unsigned long)(muxcode)
-#define LOADARGS_1(muxcode, arg1)			\
-	LOADARGS_0(muxcode);				\
-	__sc_3 = (unsigned long) (arg1)
-#define LOADARGS_2(muxcode, arg1, arg2)			\
-	LOADARGS_1(muxcode, arg1);			\
-	__sc_4 = (unsigned long) (arg2)
-#define LOADARGS_3(muxcode, arg1, arg2, arg3)		\
-	LOADARGS_2(muxcode, arg1, arg2);		\
-	__sc_5 = (unsigned long) (arg3)
-#define LOADARGS_4(muxcode, arg1, arg2, arg3, arg4)	\
-	LOADARGS_3(muxcode, arg1, arg2, arg3);		\
-	__sc_6 = (unsigned long) (arg4)
-#define LOADARGS_5(muxcode, arg1, arg2, arg3, arg4, arg5) \
-	LOADARGS_4(muxcode, arg1, arg2, arg3, arg4);	\
-	__sc_7 = (unsigned long) (arg5)
-
-#define ASM_INPUT_0 "0" (__sc_0)
-#define ASM_INPUT_1 ASM_INPUT_0, "1" (__sc_3)
-#define ASM_INPUT_2 ASM_INPUT_1, "2" (__sc_4)
-#define ASM_INPUT_3 ASM_INPUT_2, "3" (__sc_5)
-#define ASM_INPUT_4 ASM_INPUT_3, "4" (__sc_6)
-#define ASM_INPUT_5 ASM_INPUT_4, "5" (__sc_7)
-
-#define XENOMAI_DO_SYSCALL(nr, shifted_id, op, args...)		\
-  ({								\
-	register unsigned long __sc_0  __asm__ ("r0");		\
-	register unsigned long __sc_3  __asm__ ("r3");		\
-	register unsigned long __sc_4  __asm__ ("r4");		\
-	register unsigned long __sc_5  __asm__ ("r5");		\
-	register unsigned long __sc_6  __asm__ ("r6");		\
-	register unsigned long __sc_7  __asm__ ("r7");		\
-								\
-	LOADARGS_##nr(__xn_mux_code(shifted_id,op), args);	\
-	__asm__ __volatile__					\
-		("sc           \n\t"				\
-		 "mfcr %0      "				\
-		: "=&r" (__sc_0),				\
-		  "=&r" (__sc_3),  "=&r" (__sc_4),		\
-		  "=&r" (__sc_5),  "=&r" (__sc_6),		\
-		  "=&r" (__sc_7)				\
-		: ASM_INPUT_##nr				\
-		: "cr0", "ctr", "memory",			\
-		  "r8", "r9", "r10","r11", "r12");		\
-	(int)((__sc_0 & (1 << 28)) ? -__sc_3 : __sc_3);		\
-  })
-
-#define XENOMAI_SYSCALL0(op)                XENOMAI_DO_SYSCALL(0,0,op)
-#define XENOMAI_SYSCALL1(op,a1)             XENOMAI_DO_SYSCALL(1,0,op,a1)
-#define XENOMAI_SYSCALL2(op,a1,a2)          XENOMAI_DO_SYSCALL(2,0,op,a1,a2)
-#define XENOMAI_SYSCALL3(op,a1,a2,a3)       XENOMAI_DO_SYSCALL(3,0,op,a1,a2,a3)
-#define XENOMAI_SYSCALL4(op,a1,a2,a3,a4)    XENOMAI_DO_SYSCALL(4,0,op,a1,a2,a3,a4)
-#define XENOMAI_SYSCALL5(op,a1,a2,a3,a4,a5) XENOMAI_DO_SYSCALL(5,0,op,a1,a2,a3,a4,a5)
-#define XENOMAI_SYSBIND(a1,a2)              XENOMAI_DO_SYSCALL(2,0,sc_nucleus_bind,a1,a2)
-
-#define XENOMAI_SKINCALL0(id,op)                XENOMAI_DO_SYSCALL(0,id,op)
-#define XENOMAI_SKINCALL1(id,op,a1)             XENOMAI_DO_SYSCALL(1,id,op,a1)
-#define XENOMAI_SKINCALL2(id,op,a1,a2)          XENOMAI_DO_SYSCALL(2,id,op,a1,a2)
-#define XENOMAI_SKINCALL3(id,op,a1,a2,a3)       XENOMAI_DO_SYSCALL(3,id,op,a1,a2,a3)
-#define XENOMAI_SKINCALL4(id,op,a1,a2,a3,a4)    XENOMAI_DO_SYSCALL(4,id,op,a1,a2,a3,a4)
-#define XENOMAI_SKINCALL5(id,op,a1,a2,a3,a4,a5) XENOMAI_DO_SYSCALL(5,id,op,a1,a2,a3,a4,a5)
-
-#endif /* __KERNEL__ */
 
 #endif /* !_COBALT_ASM_POWERPC_SYSCALL_H */

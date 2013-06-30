@@ -18,11 +18,11 @@
 #ifndef _COBALT_UAPI_SYS_VDSO_H
 #define _COBALT_UAPI_SYS_VDSO_H
 
-#include <asm-generic/xenomai/seqlock.h>
+#include <cobalt/uapi/sys/urw.h>
 
 struct xnvdso_hostrt_data {
 	short live;
-	xnseqcount_t seqcount;
+	urw_t lock;
 	time_t wall_time_sec;
 	unsigned int wall_time_nsec;
 	struct timespec wall_to_monotonic;

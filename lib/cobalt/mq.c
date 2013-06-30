@@ -22,8 +22,7 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <mqueue.h>
-#include <asm/xenomai/syscall.h>
-#include <cobalt/uapi/syscall.h>
+#include <asm/sysdeps/syscall.h>
 #include "internal.h"
 
 COBALT_IMPL(mqd_t, mq_open, (const char *name, int oflags, ...))

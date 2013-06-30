@@ -29,7 +29,8 @@
 #include <sys/syscall.h>
 #include <sys/mman.h>
 #include <sys/time.h>
-#include <cobalt/kernel/vdso.h>
+#include <asm-generic/xenomai/atomic.h>
+#include <cobalt/uapi/sys/vdso.h>
 
 #include <xeno_config.h>
 
@@ -94,7 +95,7 @@ static void show_hostrt_diagnostics(void)
 	}
 
 	printf("Sequence counter : %u\n",
-	       vdso->hostrt_data.seqcount.sequence);
+	       vdso->hostrt_data.lock.sequence);
 	printf("wall_time_sec    : %ld\n", vdso->hostrt_data.wall_time_sec);
 	printf("wall_time_nsec   : %u\n", vdso->hostrt_data.wall_time_nsec);
 	printf("wall_to_monotonic\n");

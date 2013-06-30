@@ -2404,28 +2404,26 @@ static IPIPE_DEFINE_SPINLOCK(__hostrtlock);
 static int handle_hostrt_event(struct ipipe_hostrt_data *hostrt)
 {
 	unsigned long flags;
+	urwstate_t tmp;
 
 	/*
 	 * The locking strategy is twofold:
 	 * - The spinlock protects against concurrent updates from within the
 	 *   Linux kernel and against preemption by Xenomai
-	 * - The sequence counter is for lockless read-only access.
+	 * - The unsynced R/W block is for lockless read-only access.
 	 */
-
 	spin_lock_irqsave(&__hostrtlock, flags);
 
-	xnwrite_seqcount_begin(&nkvdso->hostrt_data.seqcount);
-
-	nkvdso->hostrt_data.live = 1;
-	nkvdso->hostrt_data.cycle_last = hostrt->cycle_last;
-	nkvdso->hostrt_data.mask = hostrt->mask;
-	nkvdso->hostrt_data.mult = hostrt->mult;
-	nkvdso->hostrt_data.shift = hostrt->shift;
-	nkvdso->hostrt_data.wall_time_sec = hostrt->wall_time_sec;
-	nkvdso->hostrt_data.wall_time_nsec = hostrt->wall_time_nsec;
-	nkvdso->hostrt_data.wall_to_monotonic = hostrt->wall_to_monotonic;
-
-	xnwrite_seqcount_end(&nkvdso->hostrt_data.seqcount);
+	unsynced_write_block(&tmp, &nkvdso->hostrt_data.lock) {
+		nkvdso->hostrt_data.live = 1;
+		nkvdso->hostrt_data.cycle_last = hostrt->cycle_last;
+		nkvdso->hostrt_data.mask = hostrt->mask;
+		nkvdso->hostrt_data.mult = hostrt->mult;
+		nkvdso->hostrt_data.shift = hostrt->shift;
+		nkvdso->hostrt_data.wall_time_sec = hostrt->wall_time_sec;
+		nkvdso->hostrt_data.wall_time_nsec = hostrt->wall_time_nsec;
+		nkvdso->hostrt_data.wall_to_monotonic = hostrt->wall_to_monotonic;
+	}
 
 	spin_unlock_irqrestore(&__hostrtlock, flags);
 
@@ -2434,7 +2432,7 @@ static int handle_hostrt_event(struct ipipe_hostrt_data *hostrt)
 
 static inline void init_hostrt(void)
 {
-	xnseqcount_init(&nkvdso->hostrt_data.seqcount);
+	unsynced_rw_init(&nkvdso->hostrt_data.lock);
 	nkvdso->hostrt_data.live = 0;
 }
 

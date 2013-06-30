@@ -8,5 +8,4 @@ includesub_HEADERS =	\
 	machine.h	\
 	syscall.h	\
 	thread.h	\
-	tsc.h		\
 	wrappers.h

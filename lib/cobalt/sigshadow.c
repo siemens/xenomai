@@ -17,8 +17,7 @@
  */
 #include <pthread.h>
 #include <signal.h>
-#include <asm/xenomai/syscall.h>
-#include <cobalt/uapi/syscall.h>
+#include <asm/sysdeps/syscall.h>
 
 #ifdef __UCLIBC__
 static inline int backtrace(void **buffer, int size)

@@ -21,10 +21,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 #include <rtdk.h>
-#include <asm/xenomai/syscall.h>
 #include <cobalt/uapi/thread.h>
-#include <cobalt/uapi/syscall.h>
+#include <asm/sysdeps/syscall.h>
 #include "current.h"
 #include "internal.h"
 

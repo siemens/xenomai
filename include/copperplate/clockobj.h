@@ -159,8 +159,8 @@ int clockobj_destroy(struct clockobj *clkobj);
 #ifdef CONFIG_XENO_COBALT
 
 #include <asm/xenomai/arith.h>
-#include <asm/xenomai/tsc.h>
 #include <asm-generic/xenomai/timeconv.h>
+#include <asm/sysdeps/tsc.h>
 
 static inline ticks_t clockobj_get_tsc(void)
 {

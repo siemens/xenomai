@@ -8,36 +8,26 @@
  * Copyright (C) 2007 Sebastian Smolorz <sesmo@gmx.net>
  *	Support for TSC emulation in user space for decrementing counters
  *
- * Xenomai is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published
- * by the Free Software Foundation; either version 2 of the License,
- * or (at your option) any later version.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
  *
- * Xenomai is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Xenomai; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
- * 02111-1307, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
+#ifndef _LIB_COBALT_ARM_TSC_H
+#define _LIB_COBALT_ARM_TSC_H
 
-#ifndef _COBALT_ASM_ARM_TSC_H
-#define _COBALT_ASM_ARM_TSC_H
+#include <asm/xenomai/uapi/tsc.h>
+#include "features.h"
 
-#include <asm/xenomai/features.h>
-
-struct __xn_tscinfo {
-	int type;		/* Must remain first member */
-	unsigned mask;
-	volatile unsigned int *counter;
-	volatile unsigned int *last_cnt; /* Only used by decrementers */
-	volatile unsigned long long *tsc;
-};
-
-#ifndef __KERNEL__
 /*
  * Putting kuser_tsc_get and kinfo.counter in the same struct results
  * in less operations in PIC code, thus optimizes.
@@ -131,6 +121,4 @@ static inline unsigned long long __xn_rdtsc(void)
 }
 #endif /* CONFIG_XENO_ARM_TSC_TYPE */
 
-#endif /* !__KERNEL__ */
-
-#endif /* !_COBALT_ASM_ARM_TSC_H */
+#endif /* !_LIB_COBALT_ARM_TSC_H */

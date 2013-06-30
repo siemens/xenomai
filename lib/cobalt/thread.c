@@ -25,9 +25,8 @@
 #include <pthread.h>
 #include <sys/types.h>
 #include <semaphore.h>
-#include <asm/xenomai/syscall.h>
 #include <asm-generic/stack.h>
-#include <cobalt/uapi/syscall.h>
+#include <asm/sysdeps/syscall.h>
 #include "current.h"
 #include "internal.h"
 

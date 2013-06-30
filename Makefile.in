@@ -71,7 +71,7 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/lib/include/xeno_config.h
-CONFIG_CLEAN_FILES = lib/include/asm/xenomai
+CONFIG_CLEAN_FILES = lib/include/asm/xenomai lib/include/asm/sysdeps
 CONFIG_CLEAN_VPATH_FILES =
 SOURCES =
 DIST_SOURCES =

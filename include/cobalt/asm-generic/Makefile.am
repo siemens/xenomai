@@ -7,11 +7,10 @@ includesub_HEADERS = \
 	machine.h \
 	mayday.h \
 	pci_ids.h \
-	seqlock.h \
 	stack.h \
 	syscall.h \
 	thread.h \
 	timeconv.h \
 	wrappers.h
 
-SUBDIRS = ipipe
+SUBDIRS = uapi ipipe

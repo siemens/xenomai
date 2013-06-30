@@ -72,10 +72,10 @@
 static int do_clock_host_realtime(struct timespec *tp)
 {
 #ifdef CONFIG_XENO_OPT_HOSTRT
+	struct xnvdso_hostrt_data *hostrt_data;
 	cycle_t now, base, mask, cycle_delta;
 	unsigned long mult, shift, nsec, rem;
-	struct xnvdso_hostrt_data *hostrt_data;
-	unsigned int seq;
+	urwstate_t tmp;
 
 	hostrt_data = get_hostrt_data();
 	BUG_ON(!hostrt_data);
@@ -84,26 +84,23 @@ static int do_clock_host_realtime(struct timespec *tp)
 		return -1;
 
 	/*
-	 * Note: Disabling HW interrupts around writes to hostrt_data ensures
-	 * that a reader (on the Xenomai side) cannot interrupt a writer (on
-	 * the Linux kernel side) on the same CPU.  The sequence counter is
-	 * required when a reader is interleaved by a writer on a different
-	 * CPU. This follows the approach from userland, where tasking the
-	 * spinlock is not possible.
+	 * Note: Disabling HW interrupts around writes to hostrt_data
+	 * ensures that a reader (on the Xenomai side) cannot
+	 * interrupt a writer (on the Linux kernel side) on the same
+	 * CPU.  The urw block is required when a reader is
+	 * interleaved by a writer on a different CPU. This follows
+	 * the approach from userland, where taking the spinlock is
+	 * not possible.
 	 */
-retry:
-	seq = xnread_seqcount_begin(&hostrt_data->seqcount);
-
-	now = xnclock_read_raw();
-	base = hostrt_data->cycle_last;
-	mask = hostrt_data->mask;
-	mult = hostrt_data->mult;
-	shift = hostrt_data->shift;
-	tp->tv_sec = hostrt_data->wall_time_sec;
-	nsec = hostrt_data->wall_time_nsec;
-
-	if (xnread_seqcount_retry(&hostrt_data->seqcount, seq))
-		goto retry;
+	unsynced_read_block(&tmp, &hostrt_data->lock) {
+		now = xnclock_read_raw();
+		base = hostrt_data->cycle_last;
+		mask = hostrt_data->mask;
+		mult = hostrt_data->mult;
+		shift = hostrt_data->shift;
+		tp->tv_sec = hostrt_data->wall_time_sec;
+		nsec = hostrt_data->wall_time_nsec;
+	}
 
 	/*
 	 * At this point, we have a consistent copy of the fundamental

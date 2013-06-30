@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
-#include <asm/xenomai/features.h>
+#include <asm/sysdeps/syscall.h>
 
 void cobalt_check_features(struct xnfeatinfo *finfo)
 {

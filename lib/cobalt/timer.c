@@ -17,8 +17,7 @@
  */
 #include <errno.h>
 #include <time.h>
-#include <asm/xenomai/syscall.h>
-#include <cobalt/uapi/syscall.h>
+#include <asm/sysdeps/syscall.h>
 #include "internal.h"
 
 COBALT_IMPL(int, timer_create, (clockid_t clockid,

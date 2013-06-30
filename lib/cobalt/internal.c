@@ -28,8 +28,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <pthread.h>
-#include <asm/xenomai/syscall.h>
-#include <cobalt/uapi/syscall.h>
+#include <asm/sysdeps/syscall.h>
 #include "current.h"
 #include "internal.h"
 

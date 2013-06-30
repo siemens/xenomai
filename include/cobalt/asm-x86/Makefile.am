@@ -9,5 +9,6 @@ includesub_HEADERS =	\
 	smi.h		\
 	syscall.h	\
 	thread.h	\
-	tsc.h		\
 	wrappers.h
+
+SUBDIRS = uapi

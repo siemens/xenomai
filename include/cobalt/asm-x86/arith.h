@@ -25,7 +25,7 @@
 #define _COBALT_ASM_X86_ARITH_H
 #define _COBALT_ASM_X86_ARITH_H
 
-#include <asm/xenomai/features.h>
+#include <asm/xenomai/uapi/features.h>
 
 #ifdef __i386__
 

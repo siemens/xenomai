@@ -1,7 +1,7 @@
 #ifndef _COBALT_ASM_ARM_ARITH_H
 #define _COBALT_ASM_ARM_ARITH_H
 
-#include <asm/xenomai/features.h>
+#include <asm/xenomai/uapi/features.h>
 
 #if __LINUX_ARM_ARCH__ >= 4 && (!defined(CONFIG_THUMB2_KERNEL) || !defined(CONFIG_FTRACE))
 static inline __attribute__((__const__)) unsigned long long

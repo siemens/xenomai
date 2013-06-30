@@ -19,7 +19,7 @@
 #ifndef _COBALT_ASM_POWERPC_ARITH_H
 #define _COBALT_ASM_POWERPC_ARITH_H
 
-#include <asm/xenomai/features.h>
+#include <asm/xenomai/uapi/features.h>
 
 #ifdef __powerpc64__
 

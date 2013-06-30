@@ -20,7 +20,7 @@
 #ifndef _COBALT_ASM_BLACKFIN_ARITH_H
 #define _COBALT_ASM_BLACKFIN_ARITH_H
 
-#include <asm/xenomai/features.h>
+#include <asm/xenomai/uapi/features.h>
 
 #define xnarch_add96and64(l0, l1, l2, s0, s1)		\
 	do {						\

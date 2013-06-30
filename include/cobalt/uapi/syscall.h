@@ -18,6 +18,8 @@
 #ifndef _COBALT_UAPI_SYSCALL_H
 #define _COBALT_UAPI_SYSCALL_H
 
+#include <asm-generic/xenomai/uapi/syscall.h>
+
 #define COBALT_BINDING_MAGIC            0x50534531
 
 #define sc_cobalt_thread_create         0
