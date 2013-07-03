@@ -448,7 +448,7 @@ EXPORT_SYMBOL_GPL(rtdm_task_join_nrt);
  */
 void rtdm_task_busy_sleep(nanosecs_rel_t delay)
 {
-	xnticks_t wakeup = xnclock_read_raw() + xnarch_ns_to_tsc(delay);
+	xnticks_t wakeup = xnclock_read_raw() + xnclock_ns_to_ticks(delay);
 
 	while ((xnsticks_t)(xnclock_read_raw() - wakeup) < 0)
 		cpu_relax();

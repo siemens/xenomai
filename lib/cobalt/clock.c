@@ -23,9 +23,8 @@
 #include <errno.h>
 #include <pthread.h>		/* For pthread_setcanceltype. */
 #include <time.h>
-#include <asm/xenomai/arith.h>
-#include <asm-generic/xenomai/timeconv.h>
 #include <cobalt/uapi/time.h>
+#include <cobalt/ticks.h>
 #include <asm/sysdeps/syscall.h>
 #include <asm/sysdeps/tsc.h>
 #include "sem_heap.h"
@@ -76,7 +75,7 @@ static int __do_clock_host_realtime(struct timespec *ts, void *tzp)
 	cycle_delta = (now - base) & mask;
 	nsec += (cycle_delta * mult) >> shift;
 
-	ts->tv_sec += xnarch_divrem_billion(nsec, &rem);
+	ts->tv_sec += cobalt_divrem_billion(nsec, &rem);
 	ts->tv_nsec = rem;
 
 	return 0;
@@ -94,8 +93,8 @@ COBALT_IMPL(int, clock_gettime, (clockid_t clock_id, struct timespec *tp))
 		break;
 	case CLOCK_MONOTONIC:
 	case CLOCK_MONOTONIC_RAW:
-		ns = xnarch_tsc_to_ns(__xn_rdtsc());
-		tp->tv_sec = xnarch_divrem_billion(ns, &rem);
+		ns = cobalt_ticks_to_ns(__xn_rdtsc());
+		tp->tv_sec = cobalt_divrem_billion(ns, &rem);
 		tp->tv_nsec = rem;
 		return 0;
 	default:

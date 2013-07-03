@@ -101,11 +101,15 @@ void cobalt_print_init(void);
 
 void cobalt_print_exit(void);
 
+void cobalt_ticks_init(unsigned long long freq);
+
 void cobalt_handle_sigdebug(int sig, siginfo_t *si, void *context);
 
 struct xnfeatinfo;
 
 void cobalt_check_features(struct xnfeatinfo *finfo);
+
+extern struct sigaction __cobalt_orig_sigdebug;
 
 extern int __cobalt_muxid;
 

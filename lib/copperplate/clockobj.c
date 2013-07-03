@@ -300,7 +300,7 @@ void clockobj_get_time(struct clockobj *clkobj,
 	unsigned long long ns, tsc;
 
 	tsc = __xn_rdtsc();
-	ns = xnarch_tsc_to_ns(tsc);
+	ns = cobalt_ticks_to_ns(tsc);
 	if (clockobj_get_resolution(clkobj) > 1)
 		ns /= clockobj_get_resolution(clkobj);
 	*pticks = ns;
@@ -315,7 +315,7 @@ void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks)
 
 	read_lock_nocancel(&clkobj->lock);
 
-	ns = xnarch_tsc_to_ns(__xn_rdtsc());
+	ns = cobalt_ticks_to_ns(__xn_rdtsc());
 	/* Add offset to epoch. */
 	ns += (unsigned long long)clkobj->offset.tv_sec * 1000000000ULL;
 	ns += clkobj->offset.tv_nsec;

@@ -381,14 +381,11 @@ static inline void xnarch_init_llmulshft(const unsigned m_in,
 
 #define xnarch_ullmod(ull,uld,rem)   ({ xnarch_ulldiv(ull,uld,rem); (*rem); })
 #define xnarch_uldiv(ull, d)         xnarch_uldivrem(ull, d, NULL)
-#define xnarch_ulmod(ull, d)         ({ u_long _rem;                    \
+#define xnarch_ulmod(ull, d)         ({ unsigned long _rem;	\
 					xnarch_uldivrem(ull,d,&_rem); _rem; })
 
 #define xnarch_div64(a,b)            xnarch_divmod64((a),(b),NULL)
 #define xnarch_mod64(a,b)            ({ unsigned long long _rem; \
 					xnarch_divmod64((a),(b),&_rem); _rem; })
-
-unsigned long long xnarch_divrem_billion(unsigned long long value,
-					 unsigned long *rem);
 
 #endif /* _COBALT_ASM_GENERIC_ARITH_H */

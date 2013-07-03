@@ -28,9 +28,9 @@
 #include <asm-generic/xenomai/stack.h>
 #include <cobalt/uapi/sys/heap.h>
 #include <cobalt/uapi/rtdm/syscall.h>
+#include <cobalt/ticks.h>
 #include <asm/sysdeps/syscall.h>
 #include <rtdk.h>
-#include "kernel/cobalt/timeconv.h"
 #include "sem_heap.h"
 #include "internal.h"
 
@@ -126,7 +126,7 @@ static int bind_interface(void)
 
 	main_tid = pthread_self();
 
-	xnarch_init_timeconv(sysinfo.clockfreq);
+	cobalt_ticks_init(sysinfo.clockfreq);
 
 	return muxid;
 }

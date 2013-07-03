@@ -1109,7 +1109,7 @@ int cobalt_thread_stat(pid_t pid,
 	xtime = xnthread_get_exectime(thread);
 	if (xnthread_sched(thread)->curr == thread)
 		xtime += xnstat_exectime_now() - xnthread_get_lastswitch(thread);
-	stat.xtime = xnarch_tsc_to_ns(xtime);
+	stat.xtime = xnclock_ticks_to_ns(xtime);
 	stat.msw = xnstat_counter_get(&thread->stat.ssw);
 	stat.csw = xnstat_counter_get(&thread->stat.csw);
 	stat.xsc = xnstat_counter_get(&thread->stat.xsc);

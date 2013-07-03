@@ -11,6 +11,7 @@ includesub_HEADERS =	\
 	stdio.h		\
 	stdlib.h	\
 	syslog.h	\
+	ticks.h		\
 	time.h		\
 	trace.h		\
 	unistd.h	\

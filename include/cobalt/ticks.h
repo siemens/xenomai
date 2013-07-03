@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Jan Kiszka <jan.kiszka@siemens.com>.
+ * Copyright (C) 2013 Philippe Gerum <rpm@xenomai.org>.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -15,12 +15,25 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
+#ifndef _COBALT_TICKS_H
+#define _COBALT_TICKS_H
 
-#ifndef _COBALT_ASM_GENERIC_TIMECONV_H
-#define _COBALT_ASM_GENERIC_TIMECONV_H
+#include <cobalt/uapi/sys/types.h>
 
-long long xnarch_tsc_to_ns(long long ticks);
-long long xnarch_tsc_to_ns_rounded(long long ticks);
-long long xnarch_ns_to_tsc(long long ns);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#endif /* !_COBALT_ASM_GENERIC_TIMECONV_H */
+xnsticks_t cobalt_ticks_to_ns(xnsticks_t ticks);
+
+xnsticks_t cobalt_ticks_to_ns_rounded(xnsticks_t ticks);
+
+xnsticks_t cobalt_ns_to_ticks(xnsticks_t ns);
+
+unsigned long long cobalt_divrem_billion(unsigned long long value,
+					 unsigned long *rem);
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* !_COBALT_TICKS_H */

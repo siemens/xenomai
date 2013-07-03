@@ -73,10 +73,10 @@ static inline unsigned long long mach_x86_32_div96by32(const unsigned long long 
 						       const unsigned long d,
 						       unsigned long *const rp)
 {
-    u_long rh;
-    const u_long qh = xnarch_uldivrem(h, d, &rh);
+    unsigned long rh;
+    const unsigned long qh = xnarch_uldivrem(h, d, &rh);
     const unsigned long long t = xnarch_u64fromu32(rh, l);
-    const u_long ql = xnarch_uldivrem(t, d, rp);
+    const unsigned long ql = xnarch_uldivrem(t, d, rp);
 
     return xnarch_u64fromu32(qh, ql);
 }

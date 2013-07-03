@@ -206,7 +206,7 @@ void xntimer_adjust_all(xnsticks_t delta)
 	xntimerq_t *q;
 
 	INIT_LIST_HEAD(&adjq);
-	delta = xnarch_ns_to_tsc(delta);
+	delta = xnclock_ns_to_ticks(delta);
 
 	for_each_online_cpu(cpu) {
 		sched = xnpod_sched_slot(cpu);
@@ -295,14 +295,14 @@ int xntimer_start(xntimer_t *timer,
 	case XN_RELATIVE:
 		if ((xnsticks_t)value < 0)
 			return -ETIMEDOUT;
-		date = xnarch_ns_to_tsc(value) + now;
+		date = xnclock_ns_to_ticks(value) + now;
 		break;
 	case XN_REALTIME:
 		timer->status |= XNTIMER_REALTIME;
 		value -= xnclock_get_offset();
 		/* fall through */
 	default: /* XN_ABSOLUTE || XN_REALTIME */
-		date = xnarch_ns_to_tsc(value);
+		date = xnclock_ns_to_ticks(value);
 		if ((xnsticks_t)(date - now) <= 0)
 			return -ETIMEDOUT;
 		break;
@@ -312,7 +312,7 @@ int xntimer_start(xntimer_t *timer,
 
 	timer->interval = XN_INFINITE;
 	if (interval != XN_INFINITE) {
-		timer->interval = xnarch_ns_to_tsc(interval);
+		timer->interval = xnclock_ns_to_ticks(interval);
 		timer->pexpect = date;
 		timer->status |= XNTIMER_PERIODIC;
 	}
@@ -392,7 +392,7 @@ xnticks_t xntimer_get_date(xntimer_t *timer)
 	if (!xntimer_running_p(timer))
 		return XN_INFINITE;
 
-	return xnarch_tsc_to_ns(xntimerh_date(&timer->aplink));
+	return xnclock_ticks_to_ns(xntimerh_date(&timer->aplink));
 }
 EXPORT_SYMBOL_GPL(xntimer_get_date);
 
@@ -431,7 +431,7 @@ xnticks_t xntimer_get_timeout(xntimer_t *timer)
 	if (xntimerh_date(&timer->aplink) < tsc)
 		return 1;	/* Will elapse shortly. */
 
-	return xnarch_tsc_to_ns(xntimerh_date(&timer->aplink) - tsc);
+	return xnclock_ticks_to_ns(xntimerh_date(&timer->aplink) - tsc);
 }
 EXPORT_SYMBOL_GPL(xntimer_get_timeout);
 
@@ -458,7 +458,7 @@ EXPORT_SYMBOL_GPL(xntimer_get_timeout);
  */
 xnticks_t xntimer_get_interval(xntimer_t *timer)
 {
-	return xnarch_tsc_to_ns_rounded(timer->interval);
+	return xnclock_ticks_to_ns_rounded(timer->interval);
 }
 EXPORT_SYMBOL_GPL(xntimer_get_interval);
 
@@ -541,7 +541,7 @@ void xntimer_tick(void)
 				 * the user to continue program
 				 * execution.
 				 */
-				interval = xnarch_ns_to_tsc(250000000ULL);
+				interval = xnclock_ns_to_ticks(250000000ULL);
 				goto requeue;
 			}
 		} else {
@@ -819,7 +819,7 @@ char *xntimer_format_time(xnticks_t value, char *buf, size_t bufsz)
 		return buf;
 	}
 
-	s = xnarch_divrem_billion(value, &ns);
+	s = xnclock_divrem_billion(value, &ns);
 	us = ns / 1000;
 	ms = us / 1000;
 	us %= 1000;
@@ -1069,7 +1069,7 @@ static int timer_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 
 	xnvfile_printf(it,
 		       "status=%s%s:setup=%Lu:clock=%Lu:timerdev=%s:clockdev=%s\n",
-		       tm_status, wd_status, xnarch_tsc_to_ns(nktimerlat),
+		       tm_status, wd_status, xnclock_ticks_to_ns(nktimerlat),
 		       xnclock_read_raw(),
 		       ipipe_timer_name(), ipipe_clock_name());
 	return 0;

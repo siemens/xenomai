@@ -1534,7 +1534,7 @@ static int xnshadow_sys_current_info(struct xnthread_info __user *u_info)
 	info.relpoint = xntimer_get_date(&cur->ptimer);
 	raw_exectime = xnthread_get_exectime(cur) +
 		xnstat_exectime_now() - xnthread_get_lastswitch(cur);
-	info.exectime = xnarch_tsc_to_ns(raw_exectime);
+	info.exectime = xnclock_ticks_to_ns(raw_exectime);
 	info.modeswitches = xnstat_counter_get(&cur->stat.ssw);
 	info.ctxswitches = xnstat_counter_get(&cur->stat.csw);
 	info.pagefaults = xnstat_counter_get(&cur->stat.pf);

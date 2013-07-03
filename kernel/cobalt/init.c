@@ -69,8 +69,6 @@ EXPORT_SYMBOL_GPL(__xnsys_global_ppd);
 #define boot_notice ""
 #endif
 
-void xnarch_init_timeconv(unsigned long long freq);
-
 static int __init mach_setup(void)
 {
 	int ret, virq, __maybe_unused cpu;
@@ -135,7 +133,7 @@ static int __init mach_setup(void)
 			  (ipipe_irq_handler_t)__xnpod_schedule_handler,
 			  NULL, NULL);
 
-	xnarch_init_timeconv(xnarch_machdata.clock_freq);
+	xnclock_init(xnarch_machdata.clock_freq);
 
 	return 0;
 
@@ -170,7 +168,7 @@ static int __init xenomai_init(void)
 		goto cleanup_mach;
 
 	nktimerlat = xnarch_timer_calibrate();
-	nklatency = xnarch_ns_to_tsc(xnarch_get_sched_latency()) + nktimerlat;
+	nklatency = xnclock_ns_to_ticks(xnarch_get_sched_latency()) + nktimerlat;
 
 	ret = xnheap_init_mapped(&__xnsys_global_ppd.sem_heap,
 				 CONFIG_XENO_OPT_GLOBAL_SEM_HEAPSZ * 1024,

@@ -27,11 +27,10 @@
  *@{*/
 
 #include <linux/module.h>
-#include "timeconv.h"
 
 unsigned long long xnarch_generic_full_divmod64(unsigned long long a,
-						 unsigned long long b,
-						 unsigned long long *rem)
+						unsigned long long b,
+						unsigned long long *rem)
 {
 	unsigned long long q = 0, r = a;
 	int i;
@@ -49,9 +48,5 @@ unsigned long long xnarch_generic_full_divmod64(unsigned long long a,
 	return q;
 }
 EXPORT_SYMBOL_GPL(xnarch_generic_full_divmod64);
-
-EXPORT_SYMBOL_GPL(xnarch_tsc_to_ns);
-EXPORT_SYMBOL_GPL(xnarch_ns_to_tsc);
-EXPORT_SYMBOL_GPL(xnarch_divrem_billion);
 
 /*@}*/

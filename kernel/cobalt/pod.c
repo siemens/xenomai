@@ -2435,8 +2435,8 @@ static int lock_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 			     "  longest locked section: %llu ns\n"
 			     "  spinning time: %llu ns\n"
 			     "  section entry: %s:%d (%s)\n",
-			     xnarch_tsc_to_ns(lockinfo.lock_time),
-			     xnarch_tsc_to_ns(lockinfo.spin_time),
+			     xnclock_ticks_to_ns(lockinfo.lock_time),
+			     xnclock_ticks_to_ns(lockinfo.spin_time),
 			     lockinfo.file, lockinfo.line, lockinfo.function);
 	}
 
@@ -2480,7 +2480,7 @@ static struct xnvfile_regular lock_vfile = {
 
 static int latency_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 {
-	xnvfile_printf(it, "%Lu\n", xnarch_tsc_to_ns(nklatency - nktimerlat));
+	xnvfile_printf(it, "%Lu\n", xnclock_ticks_to_ns(nklatency - nktimerlat));
 
 	return 0;
 }
@@ -2494,7 +2494,7 @@ static ssize_t latency_vfile_store(struct xnvfile_input *input)
 	if (ret < 0)
 		return ret;
 
-	nklatency = xnarch_ns_to_tsc(val) + nktimerlat;
+	nklatency = xnclock_ns_to_ticks(val) + nktimerlat;
 
 	return ret;
 }

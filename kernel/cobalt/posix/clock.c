@@ -112,7 +112,7 @@ static int do_clock_host_realtime(struct timespec *tp)
 	nsec += (cycle_delta * mult) >> shift;
 
 	/* Convert to the desired sec, usec representation */
-	tp->tv_sec += xnarch_divrem_billion(nsec, &rem);
+	tp->tv_sec += xnclock_divrem_billion(nsec, &rem);
 	tp->tv_nsec = rem;
 
 	return 0;

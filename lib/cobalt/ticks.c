@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2013 Philippe Gerum <rpm@xenomai.org>.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -15,42 +15,26 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-
-#ifndef _KERNEL_COBALT_TIMECONV_H
-#define _KERNEL_COBALT_TIMECONV_H
-
-#include <asm-generic/xenomai/timeconv.h>
 #include <asm/xenomai/arith.h>
+#include <cobalt/ticks.h>
 
 static unsigned long long clockfreq;
 
 #ifdef XNARCH_HAVE_LLMULSHFT
+
 static unsigned int tsc_scale, tsc_shift;
+
 #ifdef XNARCH_HAVE_NODIV_LLIMD
+
 static struct xnarch_u32frac tsc_frac;
 static struct xnarch_u32frac bln_frac;
-#endif
-#endif
 
-#ifdef XNARCH_HAVE_LLMULSHFT
-long long xnarch_tsc_to_ns(long long ticks)
-{
-	return xnarch_llmulshft(ticks, tsc_scale, tsc_shift);
-}
-
-long long xnarch_tsc_to_ns_rounded(long long ticks)
-{
-	unsigned int shift = tsc_shift - 1;
-	return (xnarch_llmulshft(ticks, tsc_scale, shift) + 1) / 2;
-}
-
-#ifdef XNARCH_HAVE_NODIV_LLIMD
-long long xnarch_ns_to_tsc(long long ns)
+long long cobalt_ns_to_ticks(long long ns)
 {
 	return xnarch_nodiv_llimd(ns, tsc_frac.frac, tsc_frac.integ);
 }
 
-unsigned long long xnarch_divrem_billion(unsigned long long value,
+unsigned long long cobalt_divrem_billion(unsigned long long value,
 					 unsigned long *rem)
 {
 	unsigned long long q;
@@ -65,33 +49,47 @@ unsigned long long xnarch_divrem_billion(unsigned long long value,
 	*rem = r;
 	return q;
 }
+
 #else /* !XNARCH_HAVE_NODIV_LLIMD */
-long long xnarch_ns_to_tsc(long long ns)
+
+long long cobalt_ns_to_ticks(long long ns)
 {
 	return xnarch_llimd(ns, 1 << tsc_shift, tsc_scale);
 }
+
 #endif /* !XNARCH_HAVE_NODIV_LLIMD */
+
+xnsticks_t cobalt_ticks_to_ns(xnsticks_t ticks)
+{
+	return xnarch_llmulshft(ticks, tsc_scale, tsc_shift);
+}
+
+xnsticks_t cobalt_ticks_to_ns_rounded(xnsticks_t ticks)
+{
+	unsigned int shift = tsc_shift - 1;
+	return (xnarch_llmulshft(ticks, tsc_scale, shift) + 1) / 2;
+}
 
 #else  /* !XNARCH_HAVE_LLMULSHFT */
 
-long long xnarch_tsc_to_ns(long long ticks)
+xnsticks_t cobalt_ticks_to_ns(xnsticks_t ticks)
 {
 	return xnarch_llimd(ticks, 1000000000, clockfreq);
 }
 
-long long xnarch_tsc_to_ns_rounded(long long ticks)
+xnsticks_t cobalt_ticks_to_ns_rounded(xnsticks_t ticks)
 {
 	return (xnarch_llimd(ticks, 1000000000, clockfreq/2) + 1) / 2;
 }
 
-long long xnarch_ns_to_tsc(long long ns)
+xnsticks_t cobalt_ns_to_ticks(xnsticks_t ns)
 {
 	return xnarch_llimd(ns, clockfreq, 1000000000);
 }
 #endif /* !XNARCH_HAVE_LLMULSHFT */
 
 #ifndef XNARCH_HAVE_NODIV_LLIMD
-unsigned long long xnarch_divrem_billion(unsigned long long value,
+unsigned long long cobalt_divrem_billion(unsigned long long value,
 					 unsigned long *rem)
 {
 	return xnarch_ulldiv(value, 1000000000, rem);
@@ -99,7 +97,7 @@ unsigned long long xnarch_divrem_billion(unsigned long long value,
 }
 #endif /* !XNARCH_HAVE_NODIV_LLIMD */
 
-void xnarch_init_timeconv(unsigned long long freq)
+void cobalt_ticks_init(unsigned long long freq)
 {
 	clockfreq = freq;
 #ifdef XNARCH_HAVE_LLMULSHFT
@@ -110,5 +108,3 @@ void xnarch_init_timeconv(unsigned long long freq)
 #endif
 #endif
 }
-
-#endif /* !_KERNEL_COBALT_TIMECONV_H */

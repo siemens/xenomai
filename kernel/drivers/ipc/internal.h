@@ -93,7 +93,7 @@ static inline void rtipc_ns_to_timeval(struct timeval *tv, nanosecs_rel_t ns)
 {
 	unsigned long nsecs;
 
-	tv->tv_sec = xnarch_divrem_billion(ns, &nsecs);
+	tv->tv_sec = xnclock_divrem_billion(ns, &nsecs);
 	tv->tv_usec = nsecs / 1000;
 }
 

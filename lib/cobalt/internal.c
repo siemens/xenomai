@@ -32,8 +32,6 @@
 #include "current.h"
 #include "internal.h"
 
-extern struct sigaction __cobalt_orig_sigdebug;
-
 void __cobalt_thread_harden(void)
 {
 	unsigned long status = cobalt_get_current_mode();

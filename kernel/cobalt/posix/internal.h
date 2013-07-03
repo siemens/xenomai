@@ -107,7 +107,7 @@ static inline struct cobalt_kqueues *cobalt_kqueues(int pshared)
 
 static inline void ns2ts(struct timespec *ts, xnticks_t nsecs)
 {
-	ts->tv_sec = xnarch_divrem_billion(nsecs, &ts->tv_nsec);
+	ts->tv_sec = xnclock_divrem_billion(nsecs, &ts->tv_nsec);
 }
 
 static inline xnticks_t ts2ns(const struct timespec *ts)
@@ -134,7 +134,7 @@ static inline void ticks2tv(struct timeval *tv, xnticks_t ticks)
 {
 	unsigned long nsecs;
 
-	tv->tv_sec = xnarch_divrem_billion(ticks, &nsecs);
+	tv->tv_sec = xnclock_divrem_billion(ticks, &nsecs);
 	tv->tv_usec = nsecs / 1000;
 }
 

@@ -29,7 +29,6 @@
 #include <cobalt/kernel/list.h>
 #include <cobalt/kernel/vfile.h>
 #include <cobalt/uapi/sys/types.h>
-#include <asm-generic/xenomai/timeconv.h>
 
 #define XNTBLCK  0x00000001	/* Time base is locked. */
 
@@ -71,7 +70,18 @@ static inline xnticks_t xnclock_read_raw(void)
 	return t;
 }
 
+xnsticks_t xnclock_ticks_to_ns(xnsticks_t ticks);
+
+xnsticks_t xnclock_ticks_to_ns_rounded(xnsticks_t ticks);
+
+xnsticks_t xnclock_ns_to_ticks(xnsticks_t ns);
+
+unsigned long long xnclock_divrem_billion(unsigned long long value,
+					  unsigned long *rem);
+
 void xnclock_adjust(xnsticks_t delta);
+
+void xnclock_init(unsigned long long freq);
 
 void xnclock_init_proc(void);
 

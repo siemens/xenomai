@@ -1,5 +1,5 @@
 includesubdir = $(includedir)/asm-generic/uapi
 
 includesub_HEADERS =	\
-	syscall.h	\
-	features.h
+	features.h	\
+	syscall.h

@@ -274,8 +274,8 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 includesubdir = $(includedir)/asm-generic/uapi
 includesub_HEADERS = \
-	syscall.h	\
-	features.h
+	features.h	\
+	syscall.h
 
 all: all-am
 

@@ -158,8 +158,7 @@ int clockobj_destroy(struct clockobj *clkobj);
 
 #ifdef CONFIG_XENO_COBALT
 
-#include <asm/xenomai/arith.h>
-#include <asm-generic/xenomai/timeconv.h>
+#include <cobalt/ticks.h>
 #include <asm/sysdeps/tsc.h>
 
 static inline ticks_t clockobj_get_tsc(void)
@@ -170,12 +169,12 @@ static inline ticks_t clockobj_get_tsc(void)
 
 static inline sticks_t clockobj_ns_to_tsc(sticks_t ns)
 {
-	return xnarch_ns_to_tsc(ns);
+	return cobalt_ns_to_ticks(ns);
 }
 
 static inline sticks_t clockobj_tsc_to_ns(sticks_t tsc)
 {
-	return xnarch_tsc_to_ns(tsc);
+	return cobalt_ticks_to_ns(tsc);
 }
 
 static inline
@@ -183,7 +182,7 @@ void clockobj_ns_to_timespec(ticks_t ns, struct timespec *ts)
 {
 	unsigned long rem;
 
-	ts->tv_sec = xnarch_divrem_billion(ns, &rem);
+	ts->tv_sec = cobalt_divrem_billion(ns, &rem);
 	ts->tv_nsec = rem;
 }
 

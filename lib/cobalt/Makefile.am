@@ -30,6 +30,7 @@ libcobalt_la_SOURCES =		\
 	semaphore.c		\
 	sigshadow.c		\
 	thread.c		\
+	ticks.c			\
 	timer.c			\
 	trace.c			\
 	wrappers.c

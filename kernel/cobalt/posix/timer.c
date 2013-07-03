@@ -357,7 +357,7 @@ timer_settime(timer_t timerid, int flags,
 					start += period;
 				} while ((xnsticks_t) (start - now) <= 0);
 			} else
-				start = now + xnarch_tsc_to_ns(nklatency);
+				start = now + xnclock_ticks_to_ns(nklatency);
 			xntimer_start(&timer->timerbase, start, period,
 				      clock_flag(flags, timer->clockid));
 		}
