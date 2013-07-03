@@ -43,7 +43,7 @@ struct syncstate {
 
 #ifdef CONFIG_XENO_COBALT
 
-#include <asm-generic/xenomai/atomic.h>
+#include <nocore/atomic.h>
 #include <cobalt/uapi/monitor.h>
 
 struct syncobj_corespec {

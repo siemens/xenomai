@@ -29,7 +29,7 @@
 #include <sys/syscall.h>
 #include <sys/mman.h>
 #include <sys/time.h>
-#include <asm-generic/xenomai/atomic.h>
+#include <nocore/atomic.h>
 #include <cobalt/uapi/sys/vdso.h>
 
 #include <xeno_config.h>

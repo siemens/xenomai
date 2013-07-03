@@ -4,7 +4,7 @@
 #include <signal.h>
 #include <pthread.h>
 #include <errno.h>
-#include <asm-generic/xenomai/atomic.h>
+#include <nocore/atomic.h>
 #include <cobalt/uapi/sys/synch.h>
 #include <cobalt/uapi/sys/vdso.h>
 #include <cobalt/uapi/mutex.h>

@@ -5,7 +5,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <asm-generic/xenomai/atomic.h>
+#include <nocore/atomic.h>
 #include <cobalt/uapi/sys/vdso.h>
 
 extern unsigned long cobalt_sem_heap[2];

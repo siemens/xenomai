@@ -2,7 +2,6 @@ includesubdir = $(includedir)/asm-generic
 
 includesub_HEADERS =	\
 	arith.h		\
-	atomic.h	\
 	features.h	\
 	machine.h	\
 	mayday.h	\

@@ -27,7 +27,7 @@
 #include <unistd.h>
 #include <syslog.h>
 #include <rtdk.h>
-#include <asm-generic/xenomai/atomic.h>
+#include <nocore/atomic.h>
 #include <asm-generic/stack.h>
 #include "current.h"
 #include "internal.h"

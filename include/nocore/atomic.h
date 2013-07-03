@@ -16,8 +16,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-#ifndef _COBALT_ASM_GENERIC_ATOMIC_H
-#define _COBALT_ASM_GENERIC_ATOMIC_H
+#ifndef _NOCORE_ATOMIC_H
+#define _NOCORE_ATOMIC_H
 
 #include <xeno_config.h>
 
@@ -58,4 +58,4 @@ typedef struct {
 
 #define ACCESS_ONCE(x) (*(volatile typeof(x) *)&(x))
 
-#endif /* _COBALT_ASM_GENERIC_ATOMIC_H */
+#endif /* _NOCORE_ATOMIC_H */

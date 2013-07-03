@@ -829,6 +829,7 @@ AC_CONFIG_FILES([ \
 	utils/ps/Makefile \
 	utils/slackspot/Makefile \
 	include/Makefile \
+	include/nocore/Makefile \
 	include/cobalt/uapi/Makefile \
 	include/cobalt/uapi/sys/Makefile \
 	include/cobalt/uapi/rtdm/Makefile \
