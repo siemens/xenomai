@@ -25,7 +25,6 @@
 #include <signal.h>
 #include <limits.h>
 #include <unistd.h>
-#include <asm-generic/xenomai/stack.h>
 #include <cobalt/uapi/sys/heap.h>
 #include <cobalt/uapi/rtdm/syscall.h>
 #include <cobalt/ticks.h>
@@ -38,27 +37,19 @@ int __cobalt_muxid = -1;
 
 struct sigaction __cobalt_orig_sigdebug;
 
+pthread_t __cobalt_main_tid;
+
 int __rtdm_muxid = -1;
 
 int __rtdm_fd_start = INT_MAX;
 
 static int fork_handler_registered;
 
-static pthread_t main_tid;
-
 static void sigill_handler(int sig)
 {
 	const char m[] = "Xenomai disabled in kernel?\n";
 	write(2, m, sizeof(m) - 1);
 	exit(EXIT_FAILURE);
-}
-
-void cobalt_prefault_stack(void)
-{
-	if (pthread_self() == main_tid) {
-		char stk[cobalt_get_stacksize(1)];
-		stk[0] = stk[sizeof(stk) - 1] = 0xA5;
-	}
 }
 
 static int bind_interface(void)
@@ -124,7 +115,7 @@ static int bind_interface(void)
 
 	cobalt_init_current_keys();
 
-	main_tid = pthread_self();
+	__cobalt_main_tid = pthread_self();
 
 	cobalt_ticks_init(sysinfo.clockfreq);
 

@@ -512,7 +512,7 @@ int main(int argc, char **argv)
 		stat[i].max = -1000000;
 		stat[i].avg = 0.0;
 		pthread_attr_init(&thattr);
-		pthread_attr_setstacksize(&thattr, 131072);
+		pthread_attr_setstacksize(&thattr, PTHREAD_STACK_MIN * 4);
 		pthread_create(&stat[i].thread, &thattr, timerthread, &par[i]);
 		stat[i].threadstarted = 1;
 		stat[i].traced = (i == 0 && IPIPE_TRACE > 0);

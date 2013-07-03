@@ -38,8 +38,9 @@ static inline atomic_long_t *mutex_get_ownerp(struct __shadow_mutex *shadow)
 	return &mutex_get_datp(shadow)->owner;
 }
 
-void ___cobalt_prefault(void *p, size_t len);
+size_t cobalt_get_stacksize(size_t size);
 
+void ___cobalt_prefault(void *p, size_t len);
 #define __cobalt_prefault(p) ___cobalt_prefault(p, sizeof(*p))
 
 void __cobalt_thread_harden(void);
@@ -108,6 +109,8 @@ void cobalt_handle_sigdebug(int sig, siginfo_t *si, void *context);
 struct xnfeatinfo;
 
 void cobalt_check_features(struct xnfeatinfo *finfo);
+
+extern pthread_t __cobalt_main_tid;
 
 extern struct sigaction __cobalt_orig_sigdebug;
 

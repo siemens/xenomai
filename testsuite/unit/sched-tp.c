@@ -9,6 +9,7 @@
 #include <sys/mman.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 #include <malloc.h>
 #include <unistd.h>
 #include <signal.h>
@@ -76,7 +77,7 @@ static void __create_thread(pthread_t *tid, const char *name, int seq)
 	pthread_attr_setinheritsched(&attr, PTHREAD_EXPLICIT_SCHED);
 	pthread_attr_setschedpolicy(&attr, SCHED_FIFO);
 	pthread_attr_setschedparam(&attr, &param);
-	pthread_attr_setstacksize(&attr, 64*1024);
+	pthread_attr_setstacksize(&attr, PTHREAD_STACK_MIN * 2);
 	ret = pthread_create(tid, &attr, thread_body, (void *)(long)seq);
 	if (ret)
 		error(1, ret, "pthread_create");

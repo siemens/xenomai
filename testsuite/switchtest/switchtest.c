@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
-
 #include <sched.h>
 #include <signal.h>
 #include <unistd.h>
@@ -12,12 +11,9 @@
 #include <sys/mman.h>
 #include <semaphore.h>
 #include <setjmp.h>
-
 #include <getopt.h>
-
 #include <xeno_config.h>
 #include <asm/xenomai/fptest.h>
-#include <asm-generic/stack.h>
 #include <cobalt/trace.h>
 #include <rtdm/rttesting.h>
 
@@ -43,9 +39,6 @@ typedef unsigned long cpu_set_t;
 #else /* !CONFIG_SMP */
 #define smp_sched_setaffinity(pid,len,mask) 0
 #endif /* !CONFIG_SMP */
-
-#define SMALL_STACK_MIN cobalt_get_stacksize(32 * 1024)
-#define LARGE_STACK_MIN cobalt_get_stacksize(64 * 1024)
 
 /* Thread type. */
 typedef enum {
@@ -839,7 +832,7 @@ static int task_create(struct cpu_tasks *cpu,
 		pthread_attr_t attr;
 
 		pthread_attr_init(&attr);
-		pthread_attr_setstacksize(&attr, SMALL_STACK_MIN);
+		pthread_attr_setstacksize(&attr, PTHREAD_STACK_MIN);
 
 		err = __STD(pthread_create(&param->thread,
 					   &attr,
@@ -859,7 +852,7 @@ static int task_create(struct cpu_tasks *cpu,
 		pthread_attr_t attr;
 
 		pthread_attr_init(&attr);
-		pthread_attr_setstacksize(&attr, LARGE_STACK_MIN);
+		pthread_attr_setstacksize(&attr, PTHREAD_STACK_MIN * 2);
 
 		err = __STD(pthread_create(&param->thread,
 					   &attr,
@@ -1373,7 +1366,7 @@ int main(int argc, const char *argv[])
 	pthread_attr_setschedpolicy(&rt_attr, SCHED_FIFO);
 	sp.sched_priority = 1;
 	pthread_attr_setschedparam(&rt_attr, &sp);
-	pthread_attr_setstacksize(&rt_attr, SMALL_STACK_MIN);
+	pthread_attr_setstacksize(&rt_attr, PTHREAD_STACK_MIN);
 
 	printf("== Threads:");
 	/* Create and register all tasks. */

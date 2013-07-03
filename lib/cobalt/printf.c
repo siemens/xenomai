@@ -28,7 +28,6 @@
 #include <syslog.h>
 #include <rtdk.h>
 #include <nocore/atomic.h>
-#include <asm-generic/stack.h>
 #include "current.h"
 #include "internal.h"
 

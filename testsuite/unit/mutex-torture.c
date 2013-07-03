@@ -7,19 +7,17 @@
  *
  * Released under the terms of GPLv2.
  */
-
+#include <sys/mman.h>
 #include <stdio.h>
+#include <limits.h>
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <stdarg.h>
-
 #include <unistd.h>
 #include <signal.h>
-#include <sys/mman.h>
 #include <pthread.h>
 #include <alchemy/timer.h>
-#include <asm-generic/xenomai/stack.h>
 #include <cobalt/uapi/syscall.h>
 #include "lib/cobalt/current.h"
 
@@ -207,7 +205,7 @@ int dispatch(const char *service_name,
 		pthread_attr_setschedparam(&threadattr, &param);
 		pthread_attr_setinheritsched(&threadattr,
 					     PTHREAD_EXPLICIT_SCHED);
-		pthread_attr_setstacksize(&threadattr, cobalt_get_stacksize(0));
+		pthread_attr_setstacksize(&threadattr, PTHREAD_STACK_MIN * 2);
 		handler = va_arg(ap, void *);
 		status = pthread_create(thread, &threadattr, handler,
 					va_arg(ap, void *));

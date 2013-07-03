@@ -23,6 +23,7 @@
 #include <sys/types.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <limits.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <signal.h>
@@ -57,6 +58,23 @@ void ___cobalt_prefault(void *p, size_t len)
 		*_p = *_p;
 		_p += pagesz;
 	} while (_p < end);
+}
+
+size_t cobalt_get_stacksize(size_t size)
+{
+	static const size_t default_size = PTHREAD_STACK_MIN * 4;
+	static size_t min_size;
+
+	if (min_size == 0)
+		min_size = PTHREAD_STACK_MIN + getpagesize();
+
+	if (size == 0)
+		size = default_size;
+
+	if (size < min_size)
+		size = min_size;
+
+	return size;
 }
 
 static inline

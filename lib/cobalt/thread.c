@@ -25,7 +25,6 @@
 #include <pthread.h>
 #include <sys/types.h>
 #include <semaphore.h>
-#include <asm-generic/stack.h>
 #include <asm/sysdeps/syscall.h>
 #include "current.h"
 #include "internal.h"
@@ -33,6 +32,14 @@
 static pthread_attr_ex_t default_attr_ex;
 
 static int linuxthreads;
+
+static void prefault_stack(void)
+{
+	if (pthread_self() == __cobalt_main_tid) {
+		char stk[cobalt_get_stacksize(1)];
+		__cobalt_prefault(stk);
+	}
+}
 
 static int libc_setschedparam(pthread_t thread,
 			      int policy_ex, const struct sched_param_ex *param_ex)
@@ -98,7 +105,7 @@ int pthread_setschedparam_ex(pthread_t thread,
 				 &u_winoff, &promoted);
 
 	if (ret == 0 && promoted) {
-		cobalt_prefault_stack();
+		prefault_stack();
 		cobalt_sigshadow_install_once();
 		cobalt_set_current();
 		cobalt_set_current_window(u_winoff);
@@ -215,7 +222,7 @@ static void *__pthread_trampoline(void *p)
 	long ret;
 
 	cobalt_sigshadow_install_once();
-	cobalt_prefault_stack();
+	prefault_stack();
 
 	param_ex = iargs->param_ex;
 	policy = iargs->policy;

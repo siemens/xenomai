@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
@@ -16,7 +17,6 @@
 #include <sys/mman.h>
 #include <pthread.h>
 #include <alchemy/timer.h>
-#include <asm-generic/xenomai/stack.h>
 
 #define NS_PER_MS (1000000)
 #define NS_PER_S (1000000000)
@@ -129,7 +129,7 @@ int thread_spawn(pthread_t *thread, int prio,
 	param.sched_priority = prio;
 	pthread_attr_setschedparam(&tattr, &param);
 	pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_JOINABLE);
-	pthread_attr_setstacksize(&tattr, cobalt_get_stacksize(0));
+	pthread_attr_setstacksize(&tattr, PTHREAD_STACK_MIN * 2);
 
 	err = pthread_create(thread, &tattr, handler, cookie);
 

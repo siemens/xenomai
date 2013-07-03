@@ -6,7 +6,6 @@ includesub_HEADERS =	\
 	machine.h	\
 	mayday.h	\
 	pci_ids.h	\
-	stack.h		\
 	syscall.h	\
 	thread.h	\
 	wrappers.h
