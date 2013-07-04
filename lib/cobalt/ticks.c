@@ -17,6 +17,7 @@
  */
 #include <cobalt/arith.h>
 #include <cobalt/ticks.h>
+#include "internal.h"
 
 static unsigned long long clockfreq;
 

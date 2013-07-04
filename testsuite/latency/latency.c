@@ -75,7 +75,7 @@ static inline void add_histogram(long *histogram, long addval)
 	histogram[inabs < histogram_size ? inabs : histogram_size - 1]++;
 }
 
-void latency(void *cookie)
+static void latency(void *cookie)
 {
 	int err, count, nsamples, warmup = 1;
 	RTIME expected_tsc, period_tsc, start_ticks, fault_threshold;
@@ -180,7 +180,7 @@ void latency(void *cookie)
 	}
 }
 
-void display(void *cookie)
+static void display(void *cookie)
 {
 	int err, n = 0;
 	time_t start;
@@ -305,7 +305,7 @@ void display(void *cookie)
 	}
 }
 
-double dump_histogram(long *histogram, char *kind)
+static double dump_histogram(long *histogram, char *kind)
 {
 	int n, total_hits = 0;
 	double avg = 0;		/* used to sum hits 1st */
@@ -330,7 +330,7 @@ double dump_histogram(long *histogram, char *kind)
 	return avg;
 }
 
-void dump_histo_gnuplot(long *histogram)
+static void dump_histo_gnuplot(long *histogram)
 {
 	unsigned start, stop;
 	FILE *f;
@@ -357,7 +357,7 @@ void dump_histo_gnuplot(long *histogram)
 	fclose(f);
 }
 
-void dump_stats(long *histogram, char *kind, double avg)
+static void dump_stats(long *histogram, char *kind, double avg)
 {
 	int n, total_hits = 0;
 	double variance = 0;
@@ -382,7 +382,7 @@ void dump_stats(long *histogram, char *kind, double avg)
 	       kind, total_hits, avg, variance);
 }
 
-void dump_hist_stats(void)
+static void dump_hist_stats(void)
 {
 	double minavg, maxavg, avgavg;
 
@@ -401,7 +401,7 @@ void dump_hist_stats(void)
 		dump_histo_gnuplot(histogram_avg);
 }
 
-void cleanup(void)
+static void cleanup(void)
 {
 	time_t actual_duration;
 	long gmaxj, gminj, gavgj;
@@ -462,7 +462,7 @@ void cleanup(void)
 	exit(0);
 }
 
-void faulthand(int sig)
+static void faulthand(int sig)
 {
 	xntrace_user_freeze(0, 1);
 	signal(sig, SIG_DFL);

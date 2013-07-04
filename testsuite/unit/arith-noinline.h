@@ -1,7 +1,7 @@
 #ifndef OUTOFLINE_H
 #define OUTOFLINE_H
 
-unsigned long long dummy(void);
+long long dummy(void);
 
 long long
 do_llimd(long long ull, unsigned m, unsigned d);

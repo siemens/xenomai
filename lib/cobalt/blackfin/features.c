@@ -17,6 +17,7 @@
  */
 
 #include <asm/xenomai/uapi/features.h>
+#include "internal.h"
 
 void cobalt_check_features(struct xnfeatinfo *finfo)
 {

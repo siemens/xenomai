@@ -138,7 +138,7 @@ static inline unsigned long long read_reference_clock(void)
 	return tv.tv_usec * 1000ULL + tv.tv_sec * 1000000000ULL;
 }
 
-void check_reference(struct per_cpu_data *per_cpu_data)
+static void check_reference(struct per_cpu_data *per_cpu_data)
 {
 	unsigned long long clock_val[10], tod_val[10];
 	long long delta, min_delta;
@@ -173,7 +173,7 @@ void check_reference(struct per_cpu_data *per_cpu_data)
 	per_cpu_data->offset = clock_val[idx] - tod_val[idx];
 }
 
-void check_time_warps(struct per_cpu_data *per_cpu_data)
+static void check_time_warps(struct per_cpu_data *per_cpu_data)
 {
 	int i;
 	unsigned long long last, now;
@@ -197,7 +197,7 @@ void check_time_warps(struct per_cpu_data *per_cpu_data)
 	}
 }
 
-void *cpu_thread(void *arg)
+static void *cpu_thread(void *arg)
 {
 	int cpuid = (long)arg;
 	struct sched_param param = { .sched_priority = 1 };
@@ -219,9 +219,11 @@ void *cpu_thread(void *arg)
 		delay.tv_nsec = 1000000 + random() * (100000.0 / RAND_MAX);
 		nanosleep(&delay, NULL);
 	}
+
+	return NULL;
 }
 
-void sighand(int signal)
+static void sighand(int signal)
 {
 	exit(0);
 }

@@ -29,7 +29,7 @@
 
 __attribute__((weak)) volatile void *__cobalt_nios2_hrclock = NULL;
 
-static inline void cobalt_check_features(struct xnfeatinfo *finfo)
+void cobalt_check_features(struct xnfeatinfo *finfo)
 {
 	unsigned long pa = finfo->feat_arch.hrclock_membase;
 	unsigned int pagesz;

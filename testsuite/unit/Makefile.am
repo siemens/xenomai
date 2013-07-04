@@ -20,8 +20,7 @@ arith_SOURCES = arith.c arith-noinline.c arith-noinline.h
 
 arith_CPPFLAGS = \
 	@XENO_USER_CFLAGS@		\
-	-I$(top_srcdir)/include		\
-	-Wno-missing-prototypes 
+	-I$(top_srcdir)/include
 
 arith_LDFLAGS =
 
@@ -38,8 +37,7 @@ mutex_torture_CPPFLAGS =		\
 	@XENO_USER_CFLAGS@		\
 	-DXENO_POSIX			\
 	-I$(top_srcdir)			\
-	-I$(top_srcdir)/include		\
-	-Wno-missing-prototypes 
+	-I$(top_srcdir)/include
 
 mutex_torture_LDFLAGS = $(XENO_POSIX_WRAPPERS)
 
@@ -55,8 +53,7 @@ cond_torture_SOURCES = cond-torture.c
 cond_torture_CPPFLAGS =		\
 	@XENO_USER_CFLAGS@		\
 	-DXENO_POSIX			\
-	-I$(top_srcdir)/include		\
-	-Wno-missing-prototypes 
+	-I$(top_srcdir)/include
 
 cond_torture_LDFLAGS = $(XENO_POSIX_WRAPPERS)
 
@@ -85,8 +82,7 @@ check_vdso_SOURCES = check-vdso.c
 
 check_vdso_CPPFLAGS =			\
 	@XENO_USER_CFLAGS@		\
-	-I$(top_srcdir)/include		\
-	-Wno-missing-prototypes 
+	-I$(top_srcdir)/include
 
 check_vdso_LDFLAGS =
 
@@ -103,8 +99,7 @@ wakeup_time_SOURCES = wakeup-time.c
 
 wakeup_time_CPPFLAGS =			\
 	@XENO_USER_CFLAGS@		\
-	-I$(top_srcdir)/include		\
-	-Wno-missing-prototypes 
+	-I$(top_srcdir)/include
 
 wakeup_time_LDFLAGS =
 
@@ -120,8 +115,7 @@ rtdm_SOURCES = rtdm.c
 rtdm_CPPFLAGS =				\
 	@XENO_USER_CFLAGS@		\
 	-DXENO_POSIX			\
-	-I$(top_srcdir)/include		\
-	-Wno-missing-prototypes 
+	-I$(top_srcdir)/include
 
 rtdm_LDFLAGS = $(XENO_POSIX_WRAPPERS)
 

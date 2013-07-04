@@ -21,7 +21,7 @@
 #define NS_PER_MS (1000000)
 #define NS_PER_S (1000000000)
 
-unsigned long long timer_read(void)
+static unsigned long long timer_read(void)
 {
 	struct timespec ts;
 
@@ -29,7 +29,7 @@ unsigned long long timer_read(void)
 	return (unsigned long long)ts.tv_sec * NS_PER_S + ts.tv_nsec;
 }
 
-int mutex_init(pthread_mutex_t *mutex, int type, int pi)
+static int mutex_init(pthread_mutex_t *mutex, int type, int pi)
 {
 	pthread_mutexattr_t mattr;
 	int err;
@@ -58,7 +58,7 @@ int mutex_init(pthread_mutex_t *mutex, int type, int pi)
 #define mutex_unlock(mutex) (-pthread_mutex_unlock(mutex))
 #define mutex_destroy(mutex) (-pthread_mutex_destroy(mutex))
 
-int cond_init(pthread_cond_t *cond, int absolute)
+static int cond_init(pthread_cond_t *cond, int absolute)
 {
 	pthread_condattr_t cattr;
 	int err;
@@ -80,7 +80,7 @@ int cond_init(pthread_cond_t *cond, int absolute)
 }
 #define cond_signal(cond) (-pthread_cond_signal(cond))
 
-int cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex, unsigned long long ns)
+static int cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex, unsigned long long ns)
 {
 	struct timespec ts;
 
@@ -95,7 +95,7 @@ int cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex, unsigned long long n
 	return -pthread_cond_timedwait(cond, mutex, &ts);
 }
 
-int cond_wait_until(pthread_cond_t *cond, pthread_mutex_t *mutex, unsigned long long date)
+static int cond_wait_until(pthread_cond_t *cond, pthread_mutex_t *mutex, unsigned long long date)
 {
 	struct timespec ts = {
 		.tv_sec = date / NS_PER_S,
@@ -106,7 +106,7 @@ int cond_wait_until(pthread_cond_t *cond, pthread_mutex_t *mutex, unsigned long 
 }
 #define cond_destroy(cond) (-pthread_cond_destroy(cond))
 
-int thread_msleep(unsigned ms)
+static int thread_msleep(unsigned ms)
 {
 	struct timespec ts = {
 		.tv_sec = (ms * NS_PER_MS) / NS_PER_S,
@@ -116,8 +116,8 @@ int thread_msleep(unsigned ms)
 	return -nanosleep(&ts, NULL);
 }
 
-int thread_spawn(pthread_t *thread, int prio,
-		 void *(*handler)(void *cookie), void *cookie)
+static int thread_spawn(pthread_t *thread, int prio,
+			void *(*handler)(void *cookie), void *cookie)
 {
 	struct sched_param param;
 	pthread_attr_t tattr;
@@ -142,7 +142,7 @@ int thread_spawn(pthread_t *thread, int prio,
 #define thread_self() pthread_self()
 #define thread_join(thread) (-pthread_join(thread, NULL))
 
-void check_inner(const char *file, int line, const char *fn, const char *msg, int status, int expected)
+static void check_inner(const char *file, int line, const char *fn, const char *msg, int status, int expected)
 {
 	if (status == expected)
 		return;
@@ -160,7 +160,7 @@ void check_inner(const char *file, int line, const char *fn, const char *msg, in
 		check_inner(__FILE__, __LINE__, __FUNCTION__, msg, s < 0 ? -errno : s, expected); \
 	})
 
-void check_sleep_inner(const char *fn,
+static void check_sleep_inner(const char *fn,
 		       const char *prefix, unsigned long long start)
 {
 	unsigned long long diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
@@ -180,7 +180,7 @@ struct cond_mutex {
 	pthread_t tid;
 };
 
-void *cond_signaler(void *cookie)
+static void *cond_signaler(void *cookie)
 {
 	unsigned long long start;
 	struct cond_mutex *cm = cookie;
@@ -195,7 +195,7 @@ void *cond_signaler(void *cookie)
 	return NULL;
 }
 
-void simple_condwait(void)
+static void simple_condwait(void)
 {
 	unsigned long long start;
 	pthread_mutex_t mutex;
@@ -225,7 +225,7 @@ void simple_condwait(void)
 	check("cond_destroy", cond_destroy(&cond), 0);
 }
 
-void relative_condwait(void)
+static void relative_condwait(void)
 {
 	unsigned long long start;
 	pthread_mutex_t mutex;
@@ -248,7 +248,7 @@ void relative_condwait(void)
 	check("cond_destroy", cond_destroy(&cond), 0);
 }
 
-void absolute_condwait(void)
+static void absolute_condwait(void)
 {
 	unsigned long long start;
 	pthread_mutex_t mutex;
@@ -271,7 +271,7 @@ void absolute_condwait(void)
 	check("cond_destroy", cond_destroy(&cond), 0);
 }
 
-void *cond_killer(void *cookie)
+static void *cond_killer(void *cookie)
 {
 	unsigned long long start;
 	struct cond_mutex *cm = cookie;
@@ -286,14 +286,14 @@ void *cond_killer(void *cookie)
 	return NULL;
 }
 
-volatile int sig_seen;
+static volatile int sig_seen;
 
-void sighandler(int sig)
+static void sighandler(int sig)
 {
 	++sig_seen;
 }
 
-void sig_norestart_condwait(void)
+static void sig_norestart_condwait(void)
 {
 	unsigned long long start;
 	pthread_mutex_t mutex;
@@ -331,7 +331,7 @@ void sig_norestart_condwait(void)
 	check("cond_destroy", cond_destroy(&cond), 0);
 }
 
-void sig_restart_condwait(void)
+static void sig_restart_condwait(void)
 {
 	unsigned long long start;
 	pthread_mutex_t mutex;
@@ -369,7 +369,7 @@ void sig_restart_condwait(void)
 	check("cond_destroy", cond_destroy(&cond), 0);
 }
 
-void *mutex_killer(void *cookie)
+static void *mutex_killer(void *cookie)
 {
 	unsigned long long start;
 	struct cond_mutex *cm = cookie;
@@ -385,7 +385,7 @@ void *mutex_killer(void *cookie)
 	return NULL;
 }
 
-void sig_norestart_condwait_mutex(void)
+static void sig_norestart_condwait_mutex(void)
 {
 	unsigned long long start;
 	pthread_mutex_t mutex;
@@ -425,7 +425,7 @@ void sig_norestart_condwait_mutex(void)
 	check("cond_destroy", cond_destroy(&cond), 0);
 }
 
-void sig_restart_condwait_mutex(void)
+static void sig_restart_condwait_mutex(void)
 {
 	unsigned long long start;
 	pthread_mutex_t mutex;
@@ -465,7 +465,7 @@ void sig_restart_condwait_mutex(void)
 	check("cond_destroy", cond_destroy(&cond), 0);
 }
 
-void *double_killer(void *cookie)
+static void *double_killer(void *cookie)
 {
 	unsigned long long start;
 	struct cond_mutex *cm = cookie;
@@ -481,7 +481,7 @@ void *double_killer(void *cookie)
 	return NULL;
 }
 
-void sig_norestart_double(void)
+static void sig_norestart_double(void)
 {
 	unsigned long long start;
 	pthread_mutex_t mutex;
@@ -521,7 +521,7 @@ void sig_norestart_double(void)
 	check("cond_destroy", cond_destroy(&cond), 0);
 }
 
-void sig_restart_double(void)
+static void sig_restart_double(void)
 {
 	unsigned long long start;
 	pthread_mutex_t mutex;
@@ -562,7 +562,7 @@ void sig_restart_double(void)
 	check("cond_destroy", cond_destroy(&cond), 0);
 }
 
-void *cond_destroyer(void *cookie)
+static void *cond_destroyer(void *cookie)
 {
 	unsigned long long start;
 	struct cond_mutex *cm = cookie;
@@ -577,7 +577,7 @@ void *cond_destroyer(void *cookie)
 	return NULL;
 }
 
-void cond_destroy_whilewait(void)
+static void cond_destroy_whilewait(void)
 {
 	unsigned long long start;
 	pthread_mutex_t mutex;

@@ -48,7 +48,7 @@ static const char *reason_str[] = {
 	[SIGDEBUG_WATCHDOG] = "runaway thread",
 };
 
-void sigdebug(int sig, siginfo_t *si, void *context)
+static void sigdebug(int sig, siginfo_t *si, void *context)
 {
 	unsigned int reason = si->si_value.sival_int;
 
@@ -56,7 +56,7 @@ void sigdebug(int sig, siginfo_t *si, void *context)
 	       reason <= SIGDEBUG_WATCHDOG ? reason_str[reason] : "<unknown>");
 }
 
-void add_timespec(struct timespec *ts, unsigned long long value)
+static void add_timespec(struct timespec *ts, unsigned long long value)
 {
 	ts->tv_sec += value / 1000000000;
 	ts->tv_nsec += value % 1000000000;
@@ -66,7 +66,7 @@ void add_timespec(struct timespec *ts, unsigned long long value)
 	}
 }
 
-void ms_sleep(int time)
+static void ms_sleep(int time)
 {
 	struct timespec ts;
 
@@ -76,7 +76,7 @@ void ms_sleep(int time)
 	nanosleep(&ts, NULL);
 }
 
-void check_current_prio(int expected_prio)
+static void check_current_prio(int expected_prio)
 {
 	int current_prio;
 # ifdef __cobalt_get_current_prio
@@ -95,7 +95,7 @@ void check_current_prio(int expected_prio)
 	}
 }
 
-void check_current_mode(int mask, int expected_value)
+static void check_current_mode(int mask, int expected_value)
 {
 	int current_mode;
 
@@ -112,13 +112,8 @@ void check_current_mode(int mask, int expected_value)
 	}
 }
 
-void yield(void)
-{
-	sched_yield();
-}
-
-int dispatch(const char *service_name,
-	     int service_type, int check, int expected, ...)
+static int dispatch(const char *service_name,
+		      int service_type, int check, int expected, ...)
 {
 	unsigned long long timeout;
 	pthread_t *thread;
@@ -247,7 +242,7 @@ int dispatch(const char *service_name,
 	return status;
 }
 
-void *waiter(void *cookie)
+static void *waiter(void *cookie)
 {
 	pthread_mutex_t *mutex = (pthread_mutex_t *) cookie;
 	unsigned long long start, diff;
@@ -267,7 +262,7 @@ void *waiter(void *cookie)
 	return cookie;
 }
 
-void simple_wait(void)
+static void simple_wait(void)
 {
 	unsigned long long start, diff;
 	pthread_mutex_t mutex;
@@ -281,7 +276,7 @@ void simple_wait(void)
 		 waiter, &mutex);
 	ms_sleep(11);
 	dispatch("simple mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
-	yield();
+	sched_yield();
 
 	start = rt_timer_tsc();
 	dispatch("simple mutex_lock 2", MUTEX_LOCK, 1, 0, &mutex);
@@ -296,7 +291,7 @@ void simple_wait(void)
 	dispatch("simple mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
 }
 
-void recursive_wait(void)
+static void recursive_wait(void)
 {
 	unsigned long long start, diff;
 	pthread_mutex_t mutex;
@@ -315,7 +310,7 @@ void recursive_wait(void)
 	dispatch("rec mutex_unlock 2", MUTEX_UNLOCK, 1, 0, &mutex);
 	ms_sleep(11);
 	dispatch("rec mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
-	yield();
+	sched_yield();
 
 	start = rt_timer_tsc();
 	dispatch("rec mutex_lock 3", MUTEX_LOCK, 1, 0, &mutex);
@@ -330,7 +325,7 @@ void recursive_wait(void)
 	dispatch("rec mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
 }
 
-void errorcheck_wait(void)
+static void errorcheck_wait(void)
 {
 	unsigned long long start, diff;
 	pthread_mutex_t mutex;
@@ -354,7 +349,7 @@ void errorcheck_wait(void)
 		 waiter, &mutex);
 	ms_sleep(11);
 	dispatch("errorcheck mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
-	yield();
+	sched_yield();
 	err = pthread_mutex_unlock(&mutex);
 	if (err != EPERM) {
 		fprintf(stderr, "FAILURE: errorcheck mutex_unlock 2: %s\n",
@@ -374,7 +369,7 @@ void errorcheck_wait(void)
 	dispatch("errorcheck mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
 }
 
-void *timed_waiter(void *cookie)
+static void *timed_waiter(void *cookie)
 {
 	pthread_mutex_t *mutex = (pthread_mutex_t *) cookie;
 	unsigned long long start, diff;
@@ -394,7 +389,7 @@ void *timed_waiter(void *cookie)
 	return cookie;
 }
 
-void timed_mutex(void)
+static void timed_mutex(void)
 {
 	pthread_mutex_t mutex;
 	pthread_t waiter_tid;
@@ -412,7 +407,7 @@ void timed_mutex(void)
 
 }
 
-void mode_switch(void)
+static void mode_switch(void)
 {
 	pthread_mutex_t mutex;
 
@@ -434,7 +429,7 @@ void mode_switch(void)
 	dispatch("switch mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
 }
 
-void pi_wait(void)
+static void pi_wait(void)
 {
 	unsigned long long start, diff;
 	pthread_mutex_t mutex;
@@ -455,7 +450,7 @@ void pi_wait(void)
 	check_current_prio(3);
 
 	dispatch("pi mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
-	yield();
+	sched_yield();
 
 	check_current_prio(2);
 
@@ -471,7 +466,7 @@ void pi_wait(void)
 	dispatch("pi mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
 }
 
-void lock_stealing(void)
+static void lock_stealing(void)
 {
 	pthread_mutex_t mutex;
 	pthread_t lowprio_tid;
@@ -540,7 +535,7 @@ void lock_stealing(void)
 			"NOTE: lock_stealing mutex_trylock: not supported\n");
 }
 
-void *victim(void *cookie)
+static void *victim(void *cookie)
 {
 	pthread_mutex_t *mutex = (pthread_mutex_t *) cookie;
 	unsigned long long start;
@@ -556,7 +551,7 @@ void *victim(void *cookie)
 	return cookie;
 }
 
-void deny_stealing(void)
+static void deny_stealing(void)
 {
 	unsigned long long start, diff;
 	pthread_mutex_t mutex;
@@ -606,7 +601,7 @@ struct cond_mutex {
 	pthread_cond_t *cond;
 };
 
-void *cond_signaler(void *cookie)
+static void *cond_signaler(void *cookie)
 {
 	struct cond_mutex *cm = (struct cond_mutex *) cookie;
 	unsigned long long start, diff;
@@ -624,7 +619,7 @@ void *cond_signaler(void *cookie)
 	ms_sleep(11);
 	dispatch("cond_signaler cond_signal", COND_SIGNAL, 1, 0, cm->cond);
 	dispatch("cond_signaler mutex_unlock 2", MUTEX_UNLOCK, 1, 0, cm->mutex);
-	yield();
+	sched_yield();
 
 	start = rt_timer_tsc();
 	dispatch("cond_signaler mutex_lock 2", MUTEX_LOCK, 1, 0, cm->mutex);
@@ -640,7 +635,7 @@ void *cond_signaler(void *cookie)
 	return cookie;
 }
 
-void simple_condwait(void)
+static void simple_condwait(void)
 {
 	unsigned long long start, diff;
 	pthread_mutex_t mutex;
@@ -670,7 +665,7 @@ void simple_condwait(void)
 	}
 	ms_sleep(11);
 	dispatch("simple_condwait mutex_unlock", MUTEX_UNLOCK, 1, 0, &mutex);
-	yield();
+	sched_yield();
 
 	dispatch("simple_condwait mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
 	dispatch("simple_condwait cond_destroy", COND_DESTROY, 1, 0, &cond);
@@ -678,7 +673,7 @@ void simple_condwait(void)
 	dispatch("simple_condwait join", THREAD_JOIN, 1, 0, &cond_signaler_tid);
 }
 
-void recursive_condwait(void)
+static void recursive_condwait(void)
 {
 	unsigned long long start, diff;
 	pthread_mutex_t mutex;
@@ -711,7 +706,7 @@ void recursive_condwait(void)
 	dispatch("rec_condwait mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
 	ms_sleep(11);
 	dispatch("rec_condwait mutex_unlock 2", MUTEX_UNLOCK, 1, 0, &mutex);
-	yield();
+	sched_yield();
 
 	dispatch("rec_condwait mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
 	dispatch("rec_condwait cond_destroy", COND_DESTROY, 1, 0, &cond);
@@ -719,7 +714,7 @@ void recursive_condwait(void)
 	dispatch("rec_condwait join", THREAD_JOIN, 1, 0, &cond_signaler_tid);
 }
 
-void nrt_lock(void *cookie)
+static void nrt_lock(void *cookie)
 {
 	pthread_mutex_t *mutex = cookie;
 
@@ -744,7 +739,7 @@ void nrt_lock(void *cookie)
 	check_current_mode(XNRELAX | XNWEAK, XNRELAX | XNWEAK);
 }
 
-void auto_switchback(void)
+static void auto_switchback(void)
 {
 	pthread_t nrt_lock_tid;
 	pthread_mutex_t mutex;

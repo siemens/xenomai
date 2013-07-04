@@ -24,4 +24,6 @@
 #include_next <signal.h>
 #include <cobalt/uapi/signal.h>
 
+int cobalt_sigshadow_handler(int sig, siginfo_t *si, void *ctxt);
+
 #endif /* !_COBALT_SIGNAL_H */

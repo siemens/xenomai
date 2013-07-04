@@ -345,8 +345,7 @@ CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 @XENO_COBALT_TRUE@arith_SOURCES = arith.c arith-noinline.c arith-noinline.h
 @XENO_COBALT_TRUE@arith_CPPFLAGS = \
 @XENO_COBALT_TRUE@	@XENO_USER_CFLAGS@		\
-@XENO_COBALT_TRUE@	-I$(top_srcdir)/include		\
-@XENO_COBALT_TRUE@	-Wno-missing-prototypes 
+@XENO_COBALT_TRUE@	-I$(top_srcdir)/include
 
 @XENO_COBALT_TRUE@arith_LDFLAGS = 
 @XENO_COBALT_TRUE@arith_LDADD = \
@@ -361,8 +360,7 @@ CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 @XENO_COBALT_TRUE@	@XENO_USER_CFLAGS@		\
 @XENO_COBALT_TRUE@	-DXENO_POSIX			\
 @XENO_COBALT_TRUE@	-I$(top_srcdir)			\
-@XENO_COBALT_TRUE@	-I$(top_srcdir)/include		\
-@XENO_COBALT_TRUE@	-Wno-missing-prototypes 
+@XENO_COBALT_TRUE@	-I$(top_srcdir)/include
 
 @XENO_COBALT_TRUE@mutex_torture_LDFLAGS = $(XENO_POSIX_WRAPPERS)
 @XENO_COBALT_TRUE@mutex_torture_LDADD = \
@@ -376,8 +374,7 @@ CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 @XENO_COBALT_TRUE@cond_torture_CPPFLAGS = \
 @XENO_COBALT_TRUE@	@XENO_USER_CFLAGS@		\
 @XENO_COBALT_TRUE@	-DXENO_POSIX			\
-@XENO_COBALT_TRUE@	-I$(top_srcdir)/include		\
-@XENO_COBALT_TRUE@	-Wno-missing-prototypes 
+@XENO_COBALT_TRUE@	-I$(top_srcdir)/include
 
 @XENO_COBALT_TRUE@cond_torture_LDFLAGS = $(XENO_POSIX_WRAPPERS)
 @XENO_COBALT_TRUE@cond_torture_LDADD = \
@@ -402,8 +399,7 @@ CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 @XENO_COBALT_TRUE@check_vdso_SOURCES = check-vdso.c
 @XENO_COBALT_TRUE@check_vdso_CPPFLAGS = \
 @XENO_COBALT_TRUE@	@XENO_USER_CFLAGS@		\
-@XENO_COBALT_TRUE@	-I$(top_srcdir)/include		\
-@XENO_COBALT_TRUE@	-Wno-missing-prototypes 
+@XENO_COBALT_TRUE@	-I$(top_srcdir)/include
 
 @XENO_COBALT_TRUE@check_vdso_LDFLAGS = 
 @XENO_COBALT_TRUE@check_vdso_LDADD = \
@@ -414,8 +410,7 @@ CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 wakeup_time_SOURCES = wakeup-time.c
 wakeup_time_CPPFLAGS = \
 	@XENO_USER_CFLAGS@		\
-	-I$(top_srcdir)/include		\
-	-Wno-missing-prototypes 
+	-I$(top_srcdir)/include
 
 wakeup_time_LDFLAGS = 
 wakeup_time_LDADD = \
@@ -429,8 +424,7 @@ rtdm_SOURCES = rtdm.c
 rtdm_CPPFLAGS = \
 	@XENO_USER_CFLAGS@		\
 	-DXENO_POSIX			\
-	-I$(top_srcdir)/include		\
-	-Wno-missing-prototypes 
+	-I$(top_srcdir)/include
 
 rtdm_LDFLAGS = $(XENO_POSIX_WRAPPERS)
 rtdm_LDADD = \

@@ -8,8 +8,7 @@ clocktest_SOURCES = clocktest.c
 
 clocktest_CPPFLAGS =			\
 	$(XENO_USER_CFLAGS)		\
-	-I$(top_srcdir)/include		\
-	-Wno-missing-prototypes 
+	-I$(top_srcdir)/include
 
 clocktest_LDFLAGS = $(XENO_POSIX_WRAPPERS)
 

@@ -32,9 +32,18 @@ extern "C" {
 COBALT_DECL(int, vfprintf(FILE *stream, const char *fmt, va_list args));
 
 #ifdef CONFIG_XENO_FORTIFY
+
 COBALT_DECL(int, __vfprintf_chk(FILE *stream, int level,
 				const char *fmt, va_list ap));
-#endif
+
+COBALT_DECL(int, __vprintf_chk(int flag,
+			       const char *fmt, va_list ap));
+
+COBALT_DECL(int, __printf_chk(int flag, const char *fmt, ...));
+
+COBALT_DECL(int, __fprintf_chk(FILE *fp, int flag, const char *fmt, ...));
+
+#endif	/* CONFIG_XENO_FORTIFY */
 
 COBALT_DECL(int, vprintf(const char *fmt, va_list args));
 

@@ -4,10 +4,10 @@ libarch_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 0:0:0
 
 libarch_la_SOURCES = features.c
 
-libarch_la_CPPFLAGS =					\
-	@XENO_COBALT_CFLAGS@ -Wno-missing-prototypes	\
-	-I$(srcdir)/..					\
-	-I$(top_srcdir)/include/cobalt			\
+libarch_la_CPPFLAGS =			\
+	@XENO_COBALT_CFLAGS@ 		\
+	-I$(srcdir)/..			\
+	-I$(top_srcdir)/include/cobalt	\
 	-I$(top_srcdir)/include
 
 SUBDIRS = xenomai

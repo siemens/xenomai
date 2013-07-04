@@ -374,8 +374,8 @@ libcobalt_la_SOURCES = \
 	wrappers.c
 
 libcobalt_la_CPPFLAGS = \
-	@XENO_COBALT_CFLAGS@ -Wno-missing-prototypes	\
-	-I$(top_srcdir)					\
+	@XENO_COBALT_CFLAGS@	\
+	-I$(top_srcdir)		\
 	-I$(top_srcdir)/include
 
 EXTRA_DIST = cobalt.wrappers

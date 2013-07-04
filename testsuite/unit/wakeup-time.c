@@ -46,7 +46,7 @@ static inline void add_histogram(long addval)
 	histogram[inabs < HISTOGRAM_CELLS ? inabs : HISTOGRAM_CELLS - 1]++;
 }
 
-void dump_stats(double sum, int total_hits)
+static void dump_stats(double sum, int total_hits)
 {
 	int n;
 	double avg, variance = 0;
@@ -65,7 +65,7 @@ void dump_stats(double sum, int total_hits)
 	printf("HSS| %9d| %10.3f| %10.3f\n", total_hits, avg, variance);
 }
 
-void dump_histogram(void)
+static void dump_histogram(void)
 {
 	int n, total_hits = 0;
 	double sum = 0;
@@ -82,7 +82,7 @@ void dump_histogram(void)
 	dump_stats(sum, total_hits);
 }
 
-void event(void *cookie)
+static void event(void *cookie)
 {
 	int err;
 
@@ -115,7 +115,7 @@ void event(void *cookie)
 	}
 }
 
-void worker(void *cookie)
+static void worker(void *cookie)
 {
 	long long minj = 10000000, maxj = -10000000, dt, sumj = 0;
 	unsigned long long count = 0;

@@ -194,13 +194,13 @@ static void handle_bad_fpreg(struct cpu_tasks *cpu, unsigned fp_val)
 	clean_exit(EXIT_FAILURE);
 }
 
-void display_cleanup(void *cookie)
+static void display_cleanup(void *cookie)
 {
 	pthread_mutex_t *mutex = (pthread_mutex_t *) cookie;
 	__STD(pthread_mutex_unlock(mutex));
 }
 
-void display_switches_count(struct cpu_tasks *cpu, struct timespec *now)
+static void display_switches_count(struct cpu_tasks *cpu, struct timespec *now)
 {
 	unsigned long switches_count;
 	static unsigned nlines = 0;
@@ -962,7 +962,7 @@ const char *all_fp [] = {
 	"rtuo_ufpp_ufps"
 };
 
-unsigned long xatoul(const char *str)
+static unsigned long xatoul(const char *str)
 {
 	unsigned long result;
 	char *endptr;
@@ -982,7 +982,7 @@ unsigned long xatoul(const char *str)
 	return result;
 }
 
-void usage(FILE *fd, const char *progname)
+static void usage(FILE *fd, const char *progname)
 {
 	unsigned i, j, nr_cpus;
 
@@ -1047,9 +1047,9 @@ void usage(FILE *fd, const char *progname)
 	fprintf(fd, "\n\n");
 }
 
-sigjmp_buf jump;
+static sigjmp_buf jump;
 
-void illegal_instruction(int sig)
+static void illegal_instruction(int sig)
 {
 	signal(sig, SIG_DFL);
 	siglongjmp(jump, 1);
@@ -1059,7 +1059,7 @@ void illegal_instruction(int sig)
    backup area. This is important on x86, where this results on all RT threads
    FPU backup areas to be clobbered, and thus their FPU context being switched
    systematically (and the case where FPU has never been used not to be tested). */
-void *check_fpu_thread(void *cookie)
+static void *check_fpu_thread(void *cookie)
 {
 	int check;
 
@@ -1086,7 +1086,7 @@ void *check_fpu_thread(void *cookie)
 	return (void *) 1;
 }
 
-int check_fpu(void)
+static int check_fpu(void)
 {
 	pthread_t tid;
 	void *status;

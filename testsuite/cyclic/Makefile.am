@@ -9,7 +9,7 @@ cyclictest_SOURCES = cyclictest.c
 cyclictest_CPPFLAGS =			\
 	$(XENO_USER_CFLAGS)		\
 	-I$(top_srcdir)/include		\
-	-Wno-missing-prototypes -DIPIPE_TRACE=1
+	-DIPIPE_TRACE=1
 
 cyclictest_LDFLAGS = $(XENO_POSIX_WRAPPERS)
 

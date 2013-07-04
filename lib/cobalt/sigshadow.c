@@ -18,6 +18,7 @@
 #include <pthread.h>
 #include <signal.h>
 #include <xenomai/syscall.h>
+#include "internal.h"
 
 #ifdef __UCLIBC__
 static inline int backtrace(void **buffer, int size)

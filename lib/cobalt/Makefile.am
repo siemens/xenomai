@@ -35,9 +35,9 @@ libcobalt_la_SOURCES =		\
 	trace.c			\
 	wrappers.c
 
-libcobalt_la_CPPFLAGS =					\
-	@XENO_COBALT_CFLAGS@ -Wno-missing-prototypes	\
-	-I$(top_srcdir)					\
+libcobalt_la_CPPFLAGS =		\
+	@XENO_COBALT_CFLAGS@	\
+	-I$(top_srcdir)		\
 	-I$(top_srcdir)/include
 
 install-data-local:
