@@ -19,6 +19,10 @@
 #ifndef _COBALT_ASM_BLACKFIN_FEATURES_H
 #define _COBALT_ASM_BLACKFIN_FEATURES_H
 
+#ifndef __KERNEL__
+#error "Pure kernel header included from user-space!"
+#endif
+
 struct xnfeatinfo;
 static inline void collect_arch_features(struct xnfeatinfo *p) { }
 

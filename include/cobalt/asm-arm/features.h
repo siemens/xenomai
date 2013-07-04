@@ -22,6 +22,10 @@
 #ifndef _COBALT_ASM_ARM_FEATURES_H
 #define _COBALT_ASM_ARM_FEATURES_H
 
+#ifndef __KERNEL__
+#error "Pure kernel header included from user-space!"
+#endif
+
 #ifdef CONFIG_AEABI
 #define CONFIG_XENO_ARM_EABI 1
 #endif

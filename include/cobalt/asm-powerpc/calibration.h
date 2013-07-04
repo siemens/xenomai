@@ -19,9 +19,12 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  */
-
 #ifndef _COBALT_ASM_POWERPC_CALIBRATION_H
 #define _COBALT_ASM_POWERPC_CALIBRATION_H
+
+#ifndef __KERNEL__
+#error "Pure kernel header included from user-space!"
+#endif
 
 static inline unsigned long xnarch_get_sched_latency(void)
 {

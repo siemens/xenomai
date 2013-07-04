@@ -16,9 +16,12 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  */
-
 #ifndef _COBALT_ASM_SH_CALIBRATION_H
 #define _COBALT_ASM_SH_CALIBRATION_H
+
+#ifndef __KERNEL__
+#error "Pure kernel header included from user-space!"
+#endif
 
 static inline unsigned long xnarch_get_sched_latency (void)
 {
@@ -32,7 +35,7 @@ static inline unsigned long xnarch_get_sched_latency (void)
 #endif
 #endif /* CONFIG_XENO_OPT_TIMING_SCHEDLAT */
 
-    return __sched_latency;
+	return __sched_latency;
 }
 
 #undef __sched_latency

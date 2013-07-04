@@ -17,7 +17,6 @@
  *   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  *   02111-1307, USA.
  */
-
 #ifndef _COBALT_ASM_NIOS2_MACHINE_H
 #define _COBALT_ASM_NIOS2_MACHINE_H
 

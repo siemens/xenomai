@@ -19,6 +19,10 @@
 #ifndef _COBALT_ASM_SH_SYSCALL_H
 #define _COBALT_ASM_SH_SYSCALL_H
 
+#ifndef __KERNEL__
+#error "Pure kernel header included from user-space!"
+#endif
+
 #include <linux/errno.h>
 #include <asm/ptrace.h>
 #include <asm-generic/xenomai/syscall.h>

@@ -20,7 +20,6 @@
  *   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  *   02111-1307, USA.
  */
-
 #ifndef _COBALT_ASM_POWERPC_MACHINE_H
 #define _COBALT_ASM_POWERPC_MACHINE_H
 
@@ -35,11 +34,11 @@
 static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 {
 #ifdef CONFIG_PPC64
-    __asm__ ("cntlzd %0, %1" : "=r" (ul) : "r" (ul & (-ul)));
-    return 63 - ul;
+	__asm__ ("cntlzd %0, %1" : "=r" (ul) : "r" (ul & (-ul)));
+	return 63 - ul;
 #else
-    __asm__ ("cntlzw %0, %1":"=r"(ul):"r"(ul & (-ul)));
-    return 31 - ul;
+	__asm__ ("cntlzw %0, %1":"=r"(ul):"r"(ul & (-ul)));
+	return 31 - ul;
 #endif
 }
 

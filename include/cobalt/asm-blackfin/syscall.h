@@ -16,9 +16,12 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  */
-
 #ifndef _COBALT_ASM_BLACKFIN_SYSCALL_H
 #define _COBALT_ASM_BLACKFIN_SYSCALL_H
+
+#ifndef __KERNEL__
+#error "Pure kernel header included from user-space!"
+#endif
 
 #include <linux/errno.h>
 #include <asm/ptrace.h>
