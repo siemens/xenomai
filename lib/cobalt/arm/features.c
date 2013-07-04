@@ -21,11 +21,14 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <string.h>
+#include <string.h>
 #include <unistd.h>
 #include <limits.h>
 #include <cobalt/wrappers.h>
 #include <xenomai/syscall.h>
 #include <xenomai/tsc.h>
+#include <xenomai/features.h>
+#include <asm/xenomai/uapi/fptest.h>
 #include "internal.h"
 
 struct __xn_full_tscinfo __xn_tscinfo = {
@@ -118,4 +121,28 @@ void cobalt_check_features(struct xnfeatinfo *finfo)
 
 	__STD(close(fd));
 #endif /* CONFIG_XENO_ARM_TSC_TYPE */
+}
+
+int cobalt_fp_detect(void)
+{
+	char buffer[1024];
+	int features = 0;
+	FILE *fp;
+
+	fp = fopen("/proc/cpuinfo", "r");
+	if (fp == NULL)
+		return 0;
+
+	while (fgets(buffer, sizeof(buffer), fp)) {
+		if(strncmp(buffer, "Features", sizeof("Features") - 1))
+			continue;
+		if (strstr(buffer, "vfp")) {
+			features |= __COBALT_HAVE_VFP;
+			break;
+		}
+	}
+
+	fclose(fp);
+
+	return features;
 }

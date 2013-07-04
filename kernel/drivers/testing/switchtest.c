@@ -43,8 +43,22 @@ static unsigned int start_index;
 module_param(start_index, uint, 0400);
 MODULE_PARM_DESC(start_index, "First device instance number to be used");
 
+static int fp_features;
+
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Gilles.Chanteperdrix@laposte.net");
+
+static int report(const char *fmt, ...)
+{
+	va_list ap;
+	int ret;
+
+	va_start(ap, fmt);
+	ret = vprintk(fmt, ap);
+	va_end(ap);
+
+	return ret;
+}
 
 static void handle_ktask_error(rtswitch_context_t *ctx, unsigned fp_val)
 {
@@ -253,9 +267,9 @@ static int rtswitch_to_nrt(rtswitch_context_t *ctx,
 			expected = from_idx + 500 +
 				(ctx->switches_count % 4000000) * 1000;
 
-			fp_regs_set(expected);
+			fp_regs_set(fp_features, expected);
 			rtdm_event_signal(&to->rt_synch);
-			fp_val = fp_regs_check(expected);
+			fp_val = fp_regs_check(fp_features, expected, report);
 			fp_linux_end();
 
 			if(down_interruptible(&from->nrt_synch))
@@ -278,9 +292,9 @@ static int rtswitch_to_nrt(rtswitch_context_t *ctx,
 			barrier();
 
 			fp_linux_begin();
-			fp_regs_set(expected);
+			fp_regs_set(fp_features, expected);
 			rtdm_event_signal(&to->rt_synch);
-			fp_val = fp_regs_check(expected);
+			fp_val = fp_regs_check(fp_features, expected, report);
 			fp_linux_end();
 
 			if (down_interruptible(&from->nrt_synch))
@@ -386,7 +400,7 @@ static void rtswitch_ktask(void *cookie)
 
 	for(;;) {
 		if (task->base.flags & RTTST_SWTEST_USE_FPU)
-			fp_regs_set(task->base.index + i * 1000);
+			fp_regs_set(fp_features, task->base.index + i * 1000);
 
 		switch(i % 3) {
 		case 0:
@@ -410,7 +424,7 @@ static void rtswitch_ktask(void *cookie)
 			unsigned fp_val, expected;
 
 			expected = task->base.index + i * 1000;
-			fp_val = fp_regs_check(expected);
+			fp_val = fp_regs_check(fp_features, expected, report);
 
 			if (fp_val != expected) {
 				if (task->base.flags & RTTST_SWTEST_FREEZE)
@@ -750,7 +764,7 @@ int __init __switchtest_init(void)
 {
 	int err;
 
-	fp_features_init();
+	fp_features = fp_detect();
 
 	do {
 		snprintf(device.device_name, RTDM_MAX_DEVNAME_LEN,

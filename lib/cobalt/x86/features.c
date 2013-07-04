@@ -20,7 +20,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include <asm/xenomai/uapi/features.h>
+#include <xenomai/features.h>
+#include <asm/xenomai/uapi/fptest.h>
 #include "internal.h"
 
 void cobalt_check_features(struct xnfeatinfo *finfo)
@@ -41,4 +42,29 @@ void cobalt_check_features(struct xnfeatinfo *finfo)
 	report_error_cont("rebuild the Xenomai libraries passing --disable-x86-vsyscall");
 	exit(1);
 #endif /* __i386__ && CONFIG_XENO_X86_VSYSCALL */
+}
+
+int cobalt_fp_detect(void)
+{
+	char buffer[1024];
+	int features = 0;
+	FILE *fp;
+
+	fp = fopen("/proc/cpuinfo", "r");
+	if(fp == NULL)
+		return 0;
+
+	while (fgets(buffer, sizeof(buffer), fp)) {
+		if(strncmp(buffer, "flags", sizeof("flags") - 1))
+			continue;
+		if (strstr(buffer, "sse2"))
+			features |= __COBALT_HAVE_SSE2;
+		if (strstr(buffer, "avx"))
+			features |= __COBALT_HAVE_AVX;
+		break;
+	}
+
+	fclose(fp);
+
+	return features;
 }

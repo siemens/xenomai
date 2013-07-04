@@ -61,4 +61,6 @@
 
 #include <asm/xenomai/uapi/features.h>
 
+int cobalt_fp_detect(void);
+
 #endif /* !_LIB_COBALT_ARM_FEATURES_H */

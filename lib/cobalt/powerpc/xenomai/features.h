@@ -22,4 +22,9 @@
 #include <xeno_config.h>
 #include <asm/xenomai/uapi/features.h>
 
+static inline int cobalt_fp_detect(void)
+{
+	return 0;
+}
+
 #endif /* !_LIB_COBALT_POWERPC_FEATURES_H */

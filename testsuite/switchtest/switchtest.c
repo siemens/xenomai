@@ -12,8 +12,8 @@
 #include <semaphore.h>
 #include <setjmp.h>
 #include <getopt.h>
-#include <xeno_config.h>
-#include <asm/xenomai/fptest.h>
+#include <xenomai/features.h>
+#include <asm/xenomai/uapi/fptest.h>
 #include <cobalt/trace.h>
 #include <rtdm/rttesting.h>
 
@@ -83,6 +83,7 @@ static struct timespec start;
 static pthread_mutex_t headers_lock;
 static unsigned long data_lines = 21;
 static unsigned freeze_on_error;
+static int fp_features;
 
 static inline void clean_exit(int retval)
 {
@@ -333,7 +334,7 @@ static void *sleeper_switcher(void *cookie)
 
 		expected = rtsw.from + i * 1000;
 		if (param->fp & UFPS)
-			fp_regs_set(expected);
+			fp_regs_set(fp_features, expected);
 		err = ioctl(fd, RTTST_RTIOC_SWTEST_SWITCH_TO, &rtsw);
 		while (err == -1 && errno == EINTR)
 			err = ioctl(fd, RTTST_RTIOC_SWTEST_PEND, &param->swt);
@@ -347,7 +348,7 @@ static void *sleeper_switcher(void *cookie)
 			clean_exit(EXIT_FAILURE);
 		}
 		if (param->fp & UFPS) {
-			fp_val = fp_regs_check(expected);
+			fp_val = fp_regs_check(fp_features, expected, printf);
 			if (fp_val != expected)
 				handle_bad_fpreg(param->cpu, fp_val);
 		}
@@ -459,7 +460,7 @@ static void *rtup(void *cookie)
 
 		expected = rtsw.from + i * 1000;
 		if (param->fp & UFPP)
-			fp_regs_set(expected);
+			fp_regs_set(fp_features, expected);
 		err = ioctl(fd, RTTST_RTIOC_SWTEST_SWITCH_TO, &rtsw);
 		while (err == -1 && errno == EINTR)
 			err = ioctl(fd, RTTST_RTIOC_SWTEST_PEND, &param->swt);
@@ -473,7 +474,7 @@ static void *rtup(void *cookie)
 			clean_exit(EXIT_FAILURE);
 		}
 		if (param->fp & UFPP) {
-			fp_val = fp_regs_check(expected);
+			fp_val = fp_regs_check(fp_features, expected, printf);
 			if (fp_val != expected)
 				handle_bad_fpreg(param->cpu, fp_val);
 		}
@@ -545,7 +546,7 @@ static void *rtus(void *cookie)
 
 		expected = rtsw.from + i * 1000;
 		if (param->fp & UFPS)
-			fp_regs_set(expected);
+			fp_regs_set(fp_features, expected);
 		err = ioctl(fd, RTTST_RTIOC_SWTEST_SWITCH_TO, &rtsw);
 		while (err == -1 && errno == EINTR)
 			err = ioctl(fd, RTTST_RTIOC_SWTEST_PEND, &param->swt);
@@ -559,7 +560,7 @@ static void *rtus(void *cookie)
 			clean_exit(EXIT_FAILURE);
 		}
 		if (param->fp & UFPS) {
-			fp_val = fp_regs_check(expected);
+			fp_val = fp_regs_check(fp_features, expected, printf);
 			if (fp_val != expected)
 				handle_bad_fpreg(param->cpu, fp_val);
 		}
@@ -631,7 +632,7 @@ static void *rtuo(void *cookie)
 
 		expected = rtsw.from + i * 1000;
 		if ((mode && param->fp & UFPP) || (!mode && param->fp & UFPS))
-			fp_regs_set(expected);
+			fp_regs_set(fp_features, expected);
 		err = ioctl(fd, RTTST_RTIOC_SWTEST_SWITCH_TO, &rtsw);
 		while (err == -1 && errno == EINTR)
 			err = ioctl(fd, RTTST_RTIOC_SWTEST_PEND, &param->swt);
@@ -645,7 +646,7 @@ static void *rtuo(void *cookie)
 			clean_exit(EXIT_FAILURE);
 		}
 		if ((mode && param->fp & UFPP) || (!mode && param->fp & UFPS)) {
-			fp_val = fp_regs_check(expected);
+			fp_val = fp_regs_check(fp_features, expected, printf);
 			if (fp_val != expected)
 				handle_bad_fpreg(param->cpu, fp_val);
 		}
@@ -1072,8 +1073,8 @@ static void *check_fpu_thread(void *cookie)
 		return NULL;
 	}
 	signal(SIGILL, illegal_instruction);
-	fp_regs_set(1);
-	check = fp_regs_check(2);
+	fp_regs_set(fp_features, 1);
+	check = fp_regs_check(fp_features, 2, printf);
 	signal(SIGILL, SIG_DFL);
 	if (check != 1) {
 		fprintf(stderr,
@@ -1145,7 +1146,7 @@ int main(int argc, const char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	fp_features_init();
+	fp_features = cobalt_fp_detect();
 
 	/* Parse command line options. */
 	opterr = 0;
