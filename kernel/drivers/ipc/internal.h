@@ -22,7 +22,7 @@
 #define _RTIPC_INTERNAL_H
 
 #include <cobalt/kernel/registry.h>
-#include <asm/xenomai/arith.h>
+#include <cobalt/kernel/clock.h>
 #include <rtdm/rtdm.h>
 #include <rtdm/rtdm_driver.h>
 

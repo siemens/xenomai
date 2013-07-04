@@ -21,9 +21,9 @@
  *   02111-1307, USA.
  */
 
-#ifndef _COBALT_ASM_X86_ARITH_H
-#define _COBALT_ASM_X86_ARITH_H
-#define _COBALT_ASM_X86_ARITH_H
+#ifndef _COBALT_ASM_X86_UAPI_ARITH_H
+#define _COBALT_ASM_X86_UAPI_ARITH_H
+#define _COBALT_ASM_X86_UAPI_ARITH_H
 
 #include <asm/xenomai/uapi/features.h>
 
@@ -241,6 +241,6 @@ mach_x86_64_nodiv_ullimd(unsigned long long op,
 
 #endif /* x86_64 */
 
-#include <asm-generic/xenomai/arith.h>
+#include <asm-generic/xenomai/uapi/arith.h>
 
-#endif /* _COBALT_ASM_X86_ARITH_H */
+#endif /* _COBALT_ASM_X86_UAPI_ARITH_H */

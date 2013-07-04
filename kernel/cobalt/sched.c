@@ -27,7 +27,7 @@
 #include <cobalt/kernel/intr.h>
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/shadow.h>
-#include <asm/xenomai/arith.h>
+#include <cobalt/kernel/arith.h>
 #include <asm/xenomai/thread.h>
 
 static struct xnsched_class *xnsched_class_highest;

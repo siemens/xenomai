@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <asm/xenomai/arith.h>
+#include <cobalt/arith.h>
 
 long long dummy(void)
 {

@@ -19,9 +19,9 @@
  */
 
 #include <linux/mm.h>
+#include <cobalt/kernel/arith.h>
 #include <asm/cacheflush.h>
 #include <asm/xenomai/machine.h>
-#include <asm/xenomai/arith.h>
 
 struct xnarch_u32frac mach_arm_tsc_to_timer;
 

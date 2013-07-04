@@ -1,6 +1,7 @@
 includesubdir = $(includedir)/cobalt
 
 includesub_HEADERS =	\
+	arith.h		\
 	core.h		\
 	fcntl.h		\
 	mqueue.h	\

@@ -282,7 +282,7 @@ int clockobj_set_resolution(struct clockobj *clkobj, unsigned int resolution_ns)
 
 #ifdef CONFIG_XENO_COBALT
 
-#include <asm/xenomai/arith.h>
+#include <cobalt/arith.h>
 
 #ifndef CONFIG_XENO_LORES_CLOCK_DISABLED
 

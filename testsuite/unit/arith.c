@@ -3,7 +3,7 @@
 
 #include <alchemy/timer.h>
 
-#include <asm/xenomai/arith.h>
+#include <cobalt/arith.h>
 
 #include "arith-noinline.h"
 

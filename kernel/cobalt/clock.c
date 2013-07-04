@@ -29,7 +29,7 @@
 #include <cobalt/kernel/pod.h>
 #include <cobalt/kernel/timer.h>
 #include <cobalt/kernel/clock.h>
-#include <asm/xenomai/arith.h>
+#include <cobalt/kernel/arith.h>
 
 static unsigned long long clockfreq;
 

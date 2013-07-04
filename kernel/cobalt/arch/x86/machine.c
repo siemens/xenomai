@@ -18,8 +18,8 @@
  *   02111-1307, USA.
  */
 
+#include <cobalt/kernel/arith.h>
 #include <asm/xenomai/machine.h>
-#include <asm/xenomai/arith.h>
 #include <asm/xenomai/smi.h>
 
 #ifdef __i386__

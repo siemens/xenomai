@@ -44,7 +44,7 @@
 #include <cobalt/kernel/intr.h>
 #include <cobalt/kernel/clock.h>
 #include <cobalt/kernel/trace.h>
-#include <asm/xenomai/arith.h>
+#include <cobalt/kernel/arith.h>
 
 static inline void xntimer_enqueue(xntimer_t *timer)
 {

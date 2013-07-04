@@ -246,6 +246,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 noinst_HEADERS = \
 	apc.h		\
+	arith.h		\
 	assert.h	\
 	bheap.h		\
 	bufd.h		\

@@ -17,11 +17,8 @@
  */
 
 #include <linux/module.h>
-#ifdef CONFIG_IPIPE_TRACE
 #include <linux/ipipe_trace.h>
-#endif /* CONFIG_IPIPE_TRACE */
-
-#include <asm/xenomai/arith.h>
+#include <cobalt/kernel/arith.h>
 #include <rtdm/rttesting.h>
 #include <rtdm/rtdm_driver.h>
 

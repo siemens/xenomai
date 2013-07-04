@@ -312,7 +312,6 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 includesubdir = $(includedir)/asm-sh
 includesub_HEADERS = \
-	arith.h		\
 	calibration.h	\
 	features.h	\
 	fptest.h	\

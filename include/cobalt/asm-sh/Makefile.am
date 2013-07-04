@@ -1,7 +1,6 @@
 includesubdir = $(includedir)/asm-sh
 
 includesub_HEADERS =	\
-	arith.h		\
 	calibration.h	\
 	features.h	\
 	fptest.h	\

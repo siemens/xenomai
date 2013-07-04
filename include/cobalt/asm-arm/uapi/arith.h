@@ -1,5 +1,5 @@
-#ifndef _COBALT_ASM_ARM_ARITH_H
-#define _COBALT_ASM_ARM_ARITH_H
+#ifndef _COBALT_ASM_ARM_UAPI_ARITH_H
+#define _COBALT_ASM_ARM_UAPI_ARITH_H
 
 #include <asm/xenomai/uapi/features.h>
 
@@ -30,7 +30,7 @@ mach_arm_nodiv_llimd(const long long op,
 	} while (0)
 #endif /* arm <= v3 */
 
-#include <asm-generic/xenomai/arith.h>
+#include <asm-generic/xenomai/uapi/arith.h>
 
 #if __LINUX_ARM_ARCH__ >= 4 && (!defined(CONFIG_THUMB2_KERNEL) || !defined(CONFIG_FTRACE))
 #define mach_arm_nodiv_ullimd_str			\
@@ -124,4 +124,4 @@ mach_arm_nodiv_llimd(const long long op,
 
 extern struct xnarch_u32frac mach_arm_tsc_to_timer;
 
-#endif /* _COBALT_ASM_ARM_ARITH_H */
+#endif /* _COBALT_ASM_ARM_UAPI_ARITH_H */

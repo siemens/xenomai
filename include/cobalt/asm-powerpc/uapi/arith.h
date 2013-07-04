@@ -15,9 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-
-#ifndef _COBALT_ASM_POWERPC_ARITH_H
-#define _COBALT_ASM_POWERPC_ARITH_H
+#ifndef _COBALT_ASM_POWERPC_UAPI_ARITH_H
+#define _COBALT_ASM_POWERPC_UAPI_ARITH_H
 
 #include <asm/xenomai/uapi/features.h>
 
@@ -62,6 +61,6 @@ mach_powerpc_nodiv_ullimd(const unsigned long long op,
 
 #endif /* !__powerpc64__ */
 
-#include <asm-generic/xenomai/arith.h>
+#include <asm-generic/xenomai/uapi/arith.h>
 
-#endif /* _COBALT_ASM_POWERPC_ARITH_H */
+#endif /* _COBALT_ASM_POWERPC_UAPI_ARITH_H */

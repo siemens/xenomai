@@ -25,9 +25,9 @@
 #include <cobalt/kernel/select.h>
 #include <cobalt/kernel/assert.h>
 #include <cobalt/kernel/list.h>
+#include <cobalt/kernel/arith.h>
 #include <cobalt/uapi/syscall.h>
 #include <asm/xenomai/syscall.h>
-#include <asm/xenomai/arith.h>
 #include "registry.h"
 
 #ifndef CONFIG_XENO_OPT_DEBUG_COBALT
