@@ -1,6 +1,5 @@
-includesubdir = $(includedir)/asm-x86
 
-includesub_HEADERS =	\
+noinst_HEADERS =	\
 	calibration.h	\
 	features.h	\
 	fptest.h	\

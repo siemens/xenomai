@@ -1,6 +1,5 @@
-includesubdir = $(includedir)/asm-nios2
 
-includesub_HEADERS =	\
+noinst_HEADERS =	\
 	calibration.h	\
 	features.h	\
 	fptest.h	\

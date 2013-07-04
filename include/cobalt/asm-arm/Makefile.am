@@ -1,6 +1,5 @@
-includesubdir = $(includedir)/asm-arm
 
-includesub_HEADERS =	\
+noinst_HEADERS =	\
 	calibration.h	\
 	features.h	\
 	fptest.h	\

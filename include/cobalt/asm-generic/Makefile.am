@@ -1,6 +1,5 @@
-includesubdir = $(includedir)/asm-generic
 
-includesub_HEADERS =	\
+noinst_HEADERS =	\
 	machine.h	\
 	mayday.h	\
 	pci_ids.h	\

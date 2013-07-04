@@ -1,4 +1,3 @@
-includesubdir = $(includedir)/asm-generic/ipipe
 
-includesub_HEADERS = \
+noinst_HEADERS = \
 	thread_info.h
