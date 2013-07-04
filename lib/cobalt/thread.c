@@ -25,7 +25,7 @@
 #include <pthread.h>
 #include <sys/types.h>
 #include <semaphore.h>
-#include <asm/sysdeps/syscall.h>
+#include <xenomai/syscall.h>
 #include "current.h"
 #include "internal.h"
 

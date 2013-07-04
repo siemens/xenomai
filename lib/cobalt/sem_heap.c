@@ -10,7 +10,7 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <cobalt/kernel/uapi/heap.h>
-#include <asm/sysdeps/syscall.h>
+#include <xenomai/syscall.h>
 #include "current.h"
 #include "sem_heap.h"
 #include "internal.h"

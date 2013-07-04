@@ -19,7 +19,7 @@
 #include <errno.h>
 #include <pthread.h>
 #include <sys/select.h>
-#include <asm/sysdeps/syscall.h>
+#include <xenomai/syscall.h>
 #include "internal.h"
 
 COBALT_IMPL(int, select, (int __nfds, fd_set *__restrict __readfds,

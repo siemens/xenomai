@@ -99,7 +99,7 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libcobalt_la_DEPENDENCIES = sysdeps/@XENO_TARGET_ARCH@/libsysdeps.la
+libcobalt_la_DEPENDENCIES = @XENO_TARGET_ARCH@/libarch.la
 am_libcobalt_la_OBJECTS = libcobalt_la-assert_context.lo \
 	libcobalt_la-attr.lo libcobalt_la-clock.lo \
 	libcobalt_la-cond.lo libcobalt_la-current.lo \
@@ -342,7 +342,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 pkgconfigdir = $(libdir)/pkgconfig
-SUBDIRS = sysdeps
+SUBDIRS = @XENO_TARGET_ARCH@
 noinst_HEADERS = \
 	current.h	\
 	sem_heap.h	\
@@ -350,7 +350,7 @@ noinst_HEADERS = \
 
 lib_LTLIBRARIES = libcobalt.la
 libcobalt_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 2:0:0 -lpthread -lrt
-libcobalt_la_LIBADD = sysdeps/@XENO_TARGET_ARCH@/libsysdeps.la
+libcobalt_la_LIBADD = @XENO_TARGET_ARCH@/libarch.la
 libcobalt_la_SOURCES = \
 	assert_context.c	\
 	attr.c			\
@@ -375,7 +375,6 @@ libcobalt_la_SOURCES = \
 
 libcobalt_la_CPPFLAGS = \
 	@XENO_COBALT_CFLAGS@ -Wno-missing-prototypes	\
-	-I$(top_srcdir)/kernel				\
 	-I$(top_srcdir)					\
 	-I$(top_srcdir)/include
 

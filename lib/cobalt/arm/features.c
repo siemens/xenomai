@@ -24,8 +24,8 @@
 #include <unistd.h>
 #include <limits.h>
 #include <cobalt/wrappers.h>
-#include <asm/sysdeps/syscall.h>
-#include <asm/sysdeps/tsc.h>
+#include <xenomai/syscall.h>
+#include <xenomai/tsc.h>
 #include "internal.h"
 
 struct __xn_full_tscinfo __xn_tscinfo = {

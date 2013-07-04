@@ -22,7 +22,7 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <mqueue.h>
-#include <asm/sysdeps/syscall.h>
+#include <xenomai/syscall.h>
 #include "internal.h"
 
 COBALT_IMPL(mqd_t, mq_open, (const char *name, int oflags, ...))

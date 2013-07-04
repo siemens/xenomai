@@ -1,6 +1,6 @@
 pkgconfigdir = $(libdir)/pkgconfig
 
-SUBDIRS = sysdeps
+SUBDIRS = @XENO_TARGET_ARCH@
 
 noinst_HEADERS =	\
 	current.h	\
@@ -11,7 +11,7 @@ lib_LTLIBRARIES = libcobalt.la
 
 libcobalt_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 2:0:0 -lpthread -lrt
 
-libcobalt_la_LIBADD = sysdeps/@XENO_TARGET_ARCH@/libsysdeps.la
+libcobalt_la_LIBADD = @XENO_TARGET_ARCH@/libarch.la
 
 libcobalt_la_SOURCES =		\
 	assert_context.c	\
@@ -37,7 +37,6 @@ libcobalt_la_SOURCES =		\
 
 libcobalt_la_CPPFLAGS =					\
 	@XENO_COBALT_CFLAGS@ -Wno-missing-prototypes	\
-	-I$(top_srcdir)/kernel				\
 	-I$(top_srcdir)					\
 	-I$(top_srcdir)/include
 

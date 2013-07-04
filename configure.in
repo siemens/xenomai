@@ -717,7 +717,8 @@ dnl Autoconf-generated symbols have been listed.
 AH_BOTTOM([#endif /* __IN_XENO__ */])
 
 if test x$rtcore_type = xcobalt; then
-   XENO_USER_CFLAGS="-I`cd $srcdir && pwd`/include/cobalt $XENO_USER_CFLAGS"
+   topdir=`cd $srcdir && pwd`
+   XENO_USER_CFLAGS="-I$topdir/lib/cobalt/$XENO_TARGET_ARCH -I$topdir/include/cobalt $XENO_USER_CFLAGS"
    XENO_COBALT_CFLAGS="$XENO_USER_CFLAGS"
    case "$build_for" in
     i*86*-*) XENO_COBALT_CFLAGS="$XENO_COBALT_CFLAGS -fno-omit-frame-pointer";;
@@ -743,8 +744,6 @@ dnl in-tree executables which require POSIX symbol wrapping.
    AC_CONFIG_LINKS([lib/include/asm/xenomai:$srcdir/include/cobalt/$base])
    base=asm-generic
    AC_CONFIG_LINKS([lib/include/$base/xenomai:$srcdir/include/cobalt/$base])
-   base=sysdeps/$XENO_TARGET_ARCH
-   AC_CONFIG_LINKS([lib/include/asm/sysdeps:$srcdir/lib/cobalt/$base])
 fi
 
 unset want_fortify
@@ -800,13 +799,18 @@ AC_CONFIG_FILES([ \
 	scripts/xeno \
 	lib/Makefile \
 	lib/cobalt/Makefile \
-	lib/cobalt/sysdeps/Makefile \
-	lib/cobalt/sysdeps/arm/Makefile \
-	lib/cobalt/sysdeps/powerpc/Makefile \
-	lib/cobalt/sysdeps/blackfin/Makefile \
-	lib/cobalt/sysdeps/x86/Makefile \
-	lib/cobalt/sysdeps/nios2/Makefile \
-	lib/cobalt/sysdeps/sh/Makefile \
+	lib/cobalt/arm/Makefile \
+	lib/cobalt/arm/xenomai/Makefile \
+	lib/cobalt/powerpc/Makefile \
+	lib/cobalt/powerpc/xenomai/Makefile \
+	lib/cobalt/blackfin/Makefile \
+	lib/cobalt/blackfin/xenomai/Makefile \
+	lib/cobalt/x86/Makefile \
+	lib/cobalt/x86/xenomai/Makefile \
+	lib/cobalt/nios2/Makefile \
+	lib/cobalt/nios2/xenomai/Makefile \
+	lib/cobalt/sh/Makefile \
+	lib/cobalt/sh/xenomai/Makefile \
 	lib/copperplate/Makefile \
 	lib/copperplate/regd/Makefile \
 	lib/alchemy/Makefile \

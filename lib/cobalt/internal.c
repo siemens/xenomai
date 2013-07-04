@@ -29,7 +29,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <pthread.h>
-#include <asm/sysdeps/syscall.h>
+#include <xenomai/syscall.h>
 #include "current.h"
 #include "internal.h"
 

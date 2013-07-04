@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <pthread.h>
-#include <asm/sysdeps/syscall.h>
+#include <xenomai/syscall.h>
 #include "current.h"
 #include "internal.h"
 

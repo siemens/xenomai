@@ -25,8 +25,8 @@
 #include <time.h>
 #include <cobalt/uapi/time.h>
 #include <cobalt/ticks.h>
-#include <asm/sysdeps/syscall.h>
-#include <asm/sysdeps/tsc.h>
+#include <xenomai/syscall.h>
+#include <xenomai/tsc.h>
 #include "sem_heap.h"
 #include "internal.h"
 

@@ -23,7 +23,7 @@
 #include <pthread.h>		/* For pthread_setcanceltype. */
 #include <semaphore.h>
 #include <cobalt/uapi/sem.h>
-#include <asm/sysdeps/syscall.h>
+#include <xenomai/syscall.h>
 #include "internal.h"
 
 COBALT_IMPL(int, sem_init, (sem_t *sem, int pshared, unsigned value))

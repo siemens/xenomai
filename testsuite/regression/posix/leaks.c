@@ -10,7 +10,7 @@
 #include <mqueue.h>
 #include <signal.h>
 #include <cobalt/kernel/uapi/heap.h>
-#include <asm/sysdeps/syscall.h>
+#include <xenomai/syscall.h>
 
 #include "check.h"
 
