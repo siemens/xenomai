@@ -122,6 +122,4 @@ mach_arm_nodiv_llimd(const long long op,
 }
 #endif /* arm >= v4 */
 
-extern struct xnarch_u32frac mach_arm_tsc_to_timer;
-
 #endif /* _COBALT_ASM_ARM_UAPI_ARITH_H */

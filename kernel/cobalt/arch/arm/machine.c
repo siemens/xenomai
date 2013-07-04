@@ -23,8 +23,6 @@
 #include <asm/cacheflush.h>
 #include <asm/xenomai/machine.h>
 
-struct xnarch_u32frac mach_arm_tsc_to_timer;
-
 #define CALIBRATION_LOOPS 10
 
 static void mach_arm_prefault(struct vm_area_struct *vma)
@@ -94,14 +92,6 @@ static unsigned long mach_arm_calibrate(void)
 	return result;
 }
 
-static int mach_arm_init(void)
-{
-	xnarch_init_u32frac(&mach_arm_tsc_to_timer,
-			    xnarch_machdata.timer_freq,
-			    xnarch_machdata.clock_freq);
-	return 0;
-}
-
 static const char *const fault_labels[] = {
 	[IPIPE_TRAP_ACCESS] = "Data or instruction access",
 	[IPIPE_TRAP_SECTION] = "Section fault",
@@ -119,7 +109,7 @@ static const char *const fault_labels[] = {
 
 struct xnarch_machdesc xnarch_machdesc = {
 	.name = "arm",
-	.init = mach_arm_init,
+	.init = NULL,
 	.cleanup = NULL,
 	.calibrate = mach_arm_calibrate,
 	.prefault = mach_arm_prefault,
