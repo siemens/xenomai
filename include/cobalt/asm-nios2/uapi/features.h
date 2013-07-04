@@ -18,12 +18,6 @@
 #ifndef _COBALT_ASM_NIOS2_UAPI_FEATURES_H
 #define _COBALT_ASM_NIOS2_UAPI_FEATURES_H
 
-struct xnfeatinfo_nios2 {
-	unsigned long hrclock_membase;
-};
-
-#define xnfeatinfo_archdep  xnfeatinfo_nios2
-
 /* The ABI revision level we use on this arch. */
 #define XENOMAI_ABI_REV   3UL
 
@@ -33,6 +27,10 @@ struct xnfeatinfo_nios2 {
 
 #define XNARCH_HAVE_LLMULSHFT    1
 #define XNARCH_HAVE_NODIV_LLIMD  1
+
+struct xnfeatinfo_archdep {
+	unsigned long hrclock_membase;
+};
 
 #include <asm-generic/xenomai/uapi/features.h>
 

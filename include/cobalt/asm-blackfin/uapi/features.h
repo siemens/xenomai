@@ -28,7 +28,9 @@
 #define XNARCH_HAVE_LLMULSHFT    1
 #define XNARCH_HAVE_NODIV_LLIMD  1
 
-#include <asm-generic/xenomai/features.h>
+struct xnfeatinfo_archdep { /* no arch-specific feature */ };
+
+#include <asm-generic/xenomai/uapi/features.h>
 
 static inline const char *get_feature_label(unsigned int feature)
 {

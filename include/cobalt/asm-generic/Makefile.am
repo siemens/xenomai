@@ -1,7 +1,6 @@
 includesubdir = $(includedir)/asm-generic
 
 includesub_HEADERS =	\
-	features.h	\
 	machine.h	\
 	mayday.h	\
 	pci_ids.h	\

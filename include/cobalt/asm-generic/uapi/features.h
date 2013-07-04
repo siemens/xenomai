@@ -29,9 +29,7 @@ struct xnfeatinfo {
 	char feat_req_s[XNFEAT_STRING_LEN];
 	unsigned long feat_mis;	/* Missing features. */
 	char feat_mis_s[XNFEAT_STRING_LEN];
-#ifdef xnfeatinfo_archdep
 	struct xnfeatinfo_archdep feat_arch; /* Arch-dep extension. */
-#endif
 	unsigned long feat_abirev; /* ABI revision level. */
 };
 

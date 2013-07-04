@@ -21,11 +21,10 @@
 
 #include <linux/ipipe.h>
 #include <asm/xenomai/uapi/features.h>
-#include <asm-generic/xenomai/features.h>
 
-static inline void collect_arch_features(struct xnfeatinfo *finfo)
+static inline void collect_arch_features(struct xnfeatinfo *p)
 {
-	finfo->feat_arch.hrclock_membase = __ipipe_hrclock_membase;
+	p->feat_arch.hrclock_membase = __ipipe_hrclock_membase;
 }
 
 #endif /* !_COBALT_ASM_NIOS2_FEATURES_H */
