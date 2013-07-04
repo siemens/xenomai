@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <pthread.h>
-#include <cobalt/uapi/sys/heap.h>
+#include <cobalt/kernel/uapi/heap.h>
 #include <asm/sysdeps/syscall.h>
 #include "current.h"
 #include "sem_heap.h"

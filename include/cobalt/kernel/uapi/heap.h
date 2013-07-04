@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-#ifndef _COBALT_UAPI_SYS_HEAP_H
-#define _COBALT_UAPI_SYS_HEAP_H
+#ifndef _COBALT_KERNEL_UAPI_HEAP_H
+#define _COBALT_KERNEL_UAPI_HEAP_H
 
 #define XNHEAP_DEV_NAME  "/dev/rtheap"
 #define XNHEAP_DEV_MINOR 254
@@ -33,4 +33,4 @@ struct xnheap_desc {
 	unsigned long used;
 };
 
-#endif /* !_COBALT_UAPI_SYS_HEAP_H */
+#endif /* !_COBALT_KERNEL_UAPI_HEAP_H */

@@ -33,3 +33,4 @@ noinst_HEADERS =	\
 	vdso.h		\
 	vfile.h
 
+SUBDIRS = uapi

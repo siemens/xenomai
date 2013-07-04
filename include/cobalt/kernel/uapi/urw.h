@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-#ifndef _COBALT_UAPI_SYS_URW_H
-#define _COBALT_UAPI_SYS_URW_H
+#ifndef _COBALT_KERNEL_UAPI_URW_H
+#define _COBALT_KERNEL_UAPI_URW_H
 
 /*
  * A restricted version of the kernel seqlocks with a slightly
@@ -104,4 +104,4 @@ static inline void unsynced_rw_init(urw_t *urw)
 	for (__do_write_start(__urw, __tmp);		\
 	     (__tmp)->dirty; __do_write_end(__urw, __tmp))
 
-#endif /* !_COBALT_UAPI_SYS_URW_H */
+#endif /* !_COBALT_KERNEL_UAPI_URW_H */

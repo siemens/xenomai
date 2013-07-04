@@ -5,8 +5,8 @@
 #include <pthread.h>
 #include <errno.h>
 #include <nocore/atomic.h>
-#include <cobalt/uapi/sys/synch.h>
-#include <cobalt/uapi/sys/vdso.h>
+#include <cobalt/kernel/uapi/synch.h>
+#include <cobalt/kernel/uapi/vdso.h>
 #include <cobalt/uapi/mutex.h>
 #include <cobalt/uapi/event.h>
 #include <cobalt/uapi/monitor.h>

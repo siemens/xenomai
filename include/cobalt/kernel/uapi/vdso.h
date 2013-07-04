@@ -15,10 +15,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-#ifndef _COBALT_UAPI_SYS_VDSO_H
-#define _COBALT_UAPI_SYS_VDSO_H
+#ifndef _COBALT_KERNEL_UAPI_VDSO_H
+#define _COBALT_KERNEL_UAPI_VDSO_H
 
-#include <cobalt/uapi/sys/urw.h>
+#include <cobalt/kernel/uapi/urw.h>
 
 struct xnvdso_hostrt_data {
 	short live;
@@ -55,4 +55,4 @@ static inline int xnvdso_test_feature(struct xnvdso *vdso,
 	return (vdso->features & feature) != 0;
 }
 
-#endif /* !_COBALT_UAPI_SYS_VDSO_H */
+#endif /* !_COBALT_KERNEL_UAPI_VDSO_H */

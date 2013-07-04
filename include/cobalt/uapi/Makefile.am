@@ -12,4 +12,4 @@ includesub_HEADERS =	\
 	thread.h	\
 	time.h
 
-SUBDIRS = sys rtdm
+SUBDIRS = rtdm

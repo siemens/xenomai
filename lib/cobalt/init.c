@@ -25,7 +25,7 @@
 #include <signal.h>
 #include <limits.h>
 #include <unistd.h>
-#include <cobalt/uapi/sys/heap.h>
+#include <cobalt/kernel/uapi/heap.h>
 #include <cobalt/uapi/rtdm/syscall.h>
 #include <cobalt/ticks.h>
 #include <asm/sysdeps/syscall.h>

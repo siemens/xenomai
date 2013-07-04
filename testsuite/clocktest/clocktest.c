@@ -30,7 +30,7 @@
 #include <sys/mman.h>
 #include <sys/time.h>
 #include <nocore/atomic.h>
-#include <cobalt/uapi/sys/vdso.h>
+#include <cobalt/kernel/uapi/vdso.h>
 
 #include <xeno_config.h>
 

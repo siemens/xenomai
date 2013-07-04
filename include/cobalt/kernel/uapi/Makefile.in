@@ -51,7 +51,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-subdir = include/cobalt/uapi/sys
+subdir = include/cobalt/kernel/uapi
 DIST_COMMON = $(includesub_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -272,7 +272,7 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-includesubdir = $(includedir)/cobalt/uapi/sys
+includesubdir = $(includedir)/cobalt/kernel/uapi
 includesub_HEADERS = \
 	heap.h		\
 	synch.h		\
@@ -294,9 +294,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign include/cobalt/uapi/sys/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign include/cobalt/kernel/uapi/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign include/cobalt/uapi/sys/Makefile
+	  $(AUTOMAKE) --foreign include/cobalt/kernel/uapi/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \

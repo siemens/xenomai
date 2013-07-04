@@ -1,4 +1,4 @@
-includesubdir = $(includedir)/cobalt/uapi/sys
+includesubdir = $(includedir)/cobalt/kernel/uapi
 
 includesub_HEADERS =	\
 	heap.h		\

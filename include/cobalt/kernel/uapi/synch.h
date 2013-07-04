@@ -16,10 +16,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-#ifndef _COBALT_UAPI_SYS_SYNCH_H
-#define _COBALT_UAPI_SYS_SYNCH_H
+#ifndef _COBALT_KERNEL_UAPI_SYNCH_H
+#define _COBALT_KERNEL_UAPI_SYNCH_H
 
-#include <cobalt/uapi/sys/types.h>
+#include <cobalt/kernel/uapi/types.h>
 
 /* Creation flags */
 #define XNSYNCH_FIFO    0x0
@@ -69,4 +69,4 @@ static inline int xnsynch_fast_release(atomic_long_t *fastlock,
 		cur_ownerh);
 }
 
-#endif /* !_COBALT_UAPI_SYS_SYNCH_H */
+#endif /* !_COBALT_KERNEL_UAPI_SYNCH_H */

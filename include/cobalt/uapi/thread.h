@@ -18,7 +18,7 @@
 #ifndef _COBALT_UAPI_THREAD_H
 #define _COBALT_UAPI_THREAD_H
 
-#include <cobalt/uapi/sys/thread.h>
+#include <cobalt/kernel/uapi/thread.h>
 
 #define PTHREAD_WARNSW      XNTRAPSW
 #define PTHREAD_LOCK_SCHED  XNLOCK

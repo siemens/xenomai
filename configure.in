@@ -831,7 +831,6 @@ AC_CONFIG_FILES([ \
 	include/Makefile \
 	include/nocore/Makefile \
 	include/cobalt/uapi/Makefile \
-	include/cobalt/uapi/sys/Makefile \
 	include/cobalt/uapi/rtdm/Makefile \
 	include/cobalt/asm-generic/Makefile \
 	include/cobalt/asm-generic/uapi/Makefile \
@@ -851,6 +850,7 @@ AC_CONFIG_FILES([ \
 	include/cobalt/Makefile \
 	include/cobalt/sys/Makefile \
 	include/cobalt/kernel/Makefile \
+	include/cobalt/kernel/uapi/Makefile \
 	include/rtdm/Makefile \
 	include/analogy/Makefile \
 	include/mercury/Makefile \
