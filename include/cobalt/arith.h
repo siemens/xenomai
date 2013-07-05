@@ -39,7 +39,7 @@ static inline unsigned xnarch_do_div(unsigned long long *a, unsigned d)
 
 #define do_div(a, d) xnarch_do_div(&(a), (d))
 
-#include <xenomai/features.h>
+#include <asm/xenomai/features.h>
 #include <asm/xenomai/uapi/arith.h>
 
 #endif /* !_COBALT_ARITH_H */

@@ -25,10 +25,10 @@
 #include <signal.h>
 #include <limits.h>
 #include <unistd.h>
-#include <cobalt/kernel/uapi/heap.h>
+#include <cobalt/uapi/kernel/heap.h>
 #include <cobalt/uapi/rtdm/syscall.h>
 #include <cobalt/ticks.h>
-#include <xenomai/syscall.h>
+#include <asm/xenomai/syscall.h>
 #include <rtdk.h>
 #include "sem_heap.h"
 #include "internal.h"

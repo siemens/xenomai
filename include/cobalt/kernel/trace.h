@@ -21,7 +21,7 @@
 
 #include <linux/types.h>
 #include <linux/ipipe_trace.h>
-#include <cobalt/kernel/uapi/trace.h>
+#include <cobalt/uapi/kernel/trace.h>
 
 #ifdef CONFIG_LTT
 #include <linux/marker.h>

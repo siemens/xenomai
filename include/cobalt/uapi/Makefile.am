@@ -12,4 +12,4 @@ includesub_HEADERS =	\
 	thread.h	\
 	time.h
 
-SUBDIRS = rtdm
+SUBDIRS = asm-generic kernel rtdm

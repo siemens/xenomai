@@ -9,8 +9,8 @@
 #include <semaphore.h>
 #include <mqueue.h>
 #include <signal.h>
-#include <cobalt/kernel/uapi/heap.h>
-#include <xenomai/syscall.h>
+#include <cobalt/uapi/kernel/heap.h>
+#include <asm/xenomai/syscall.h>
 
 #include "check.h"
 

@@ -436,14 +436,13 @@ esac
 patch_kernelversion_specific="n"
 patch_architecture_specific="y"
 patch_link r m kernel/cobalt/arch/$linux_arch arch/$linux_arch/xenomai
-patch_link r n include/cobalt/asm-$linux_arch arch/$linux_arch/include/asm/xenomai
-patch_link n n include/cobalt/asm-generic/ipipe arch/$linux_arch/include/ipipe
+patch_link n n kernel/cobalt/include/ipipe arch/$linux_arch/include/ipipe
 patch_architecture_specific="n"
 patch_link n m kernel/cobalt kernel/xenomai
+patch_link r n kernel/cobalt/include/asm-generic/xenomai include/asm-generic/xenomai
 patch_link n m kernel/cobalt/posix kernel/xenomai/posix
 patch_link n m kernel/cobalt/rtdm kernel/xenomai/rtdm
 patch_link r m kernel/drivers drivers/xenomai
-patch_link r n include/cobalt/asm-generic include/asm-generic/xenomai
 patch_link r n include/cobalt/kernel include/xenomai/cobalt/kernel
 patch_link r n include/cobalt/uapi include/xenomai/cobalt/uapi
 patch_link r n include/rtdm include/xenomai/rtdm

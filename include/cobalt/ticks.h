@@ -18,7 +18,7 @@
 #ifndef _COBALT_TICKS_H
 #define _COBALT_TICKS_H
 
-#include <cobalt/kernel/uapi/types.h>
+#include <cobalt/uapi/kernel/types.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -67,7 +67,7 @@ am__aclocal_m4_deps = $(top_srcdir)/config/ac_prog_cc_for_build.m4 \
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
-CONFIG_HEADER = $(top_builddir)/lib/include/xeno_config.h
+CONFIG_HEADER = $(top_builddir)/include/xeno_config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(sbindir)"
@@ -75,7 +75,7 @@ PROGRAMS = $(sbin_PROGRAMS)
 am_rtps_OBJECTS = rtps.$(OBJEXT)
 rtps_OBJECTS = $(am_rtps_OBJECTS)
 rtps_LDADD = $(LDADD)
-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/lib/include
+DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
 am__mv = mv -f

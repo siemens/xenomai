@@ -9,4 +9,4 @@ rtdm-y :=	core.o		\
 
 rtdm-$(CONFIG_PROC_FS) += proc.o
 
-ccflags-y := -D__IN_XENOMAI__ -Iinclude/xenomai/cobalt -Iinclude/xenomai -I$(src)/..
+ccflags-y := -Iarch/$(SRCARCH)/xenomai/include -Iinclude/xenomai -I$(src)/..

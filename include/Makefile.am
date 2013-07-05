@@ -10,34 +10,13 @@ SUBDIRS = 		\
 	vxworks
 
 if XENO_COBALT
-
 include_HEADERS += rtdk.h
-
 SUBDIRS += 		\
 	analogy 	\
 	cobalt 		\
 	rtdm
-
-install-data-local:
-	rm -f $(DESTDIR)$(includedir)/asm
-	$(LN_S) asm-@XENO_TARGET_ARCH@ $(DESTDIR)$(includedir)/asm
-	rm -f $(DESTDIR)$(includedir)/xenomai
-	$(LN_S) . $(DESTDIR)$(includedir)/xenomai
-	rm -f $(DESTDIR)$(includedir)/asm-@XENO_TARGET_ARCH@/xenomai
-	$(LN_S) . $(DESTDIR)$(includedir)/asm-@XENO_TARGET_ARCH@/xenomai
-	rm -f $(DESTDIR)$(includedir)/asm-generic/xenomai
-	$(LN_S) . $(DESTDIR)$(includedir)/asm-generic/xenomai
-
-uninstall-local:
-	rm -f $(DESTDIR)$(includedir)/asm
-	rm -f $(DESTDIR)$(includedir)/xenomai
-	rm -f $(DESTDIR)$(includedir)/asm-@XENO_TARGET_ARCH@/xenomai
-	rm -f $(DESTDIR)$(includedir)/asm-generic/xenomai
-
 else
-
 SUBDIRS += mercury
-
 endif
 
 EXTRA_DIST = testing

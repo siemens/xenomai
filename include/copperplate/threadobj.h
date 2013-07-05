@@ -31,7 +31,7 @@
 
 #ifdef CONFIG_XENO_COBALT
 
-#include <cobalt/kernel/uapi/types.h>
+#include <cobalt/uapi/kernel/types.h>
 
 struct xnthread_user_window;
 

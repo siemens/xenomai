@@ -9,8 +9,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <pthread.h>
-#include <cobalt/kernel/uapi/heap.h>
-#include <xenomai/syscall.h>
+#include <cobalt/uapi/kernel/heap.h>
+#include <asm/xenomai/syscall.h>
 #include "current.h"
 #include "sem_heap.h"
 #include "internal.h"

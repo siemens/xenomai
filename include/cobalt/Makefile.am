@@ -19,13 +19,6 @@ includesub_HEADERS =	\
 	wrappers.h
 
 SUBDIRS =		\
-	asm-arm 	\
-	asm-blackfin 	\
-	asm-generic 	\
-	asm-nios2 	\
-	asm-powerpc 	\
-	asm-sh		\
-	asm-x86		\
 	kernel		\
 	sys		\
 	uapi

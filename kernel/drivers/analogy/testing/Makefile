@@ -1,5 +1,6 @@
 
-ccflags-y := -D__IN_XENOMAI__ -Iinclude/xenomai -Iinclude/xenomai/cobalt -Idrivers/xenomai/analogy
+ccflags-y := -Iarch/$(SRCARCH)/xenomai/include -Iinclude/xenomai \
+	-Idrivers/xenomai/analogy
 
 obj-$(CONFIG_XENO_DRIVERS_ANALOGY_FAKE) += analogy_fake.o
 

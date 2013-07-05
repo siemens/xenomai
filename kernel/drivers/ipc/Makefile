@@ -1,5 +1,5 @@
 
-ccflags-y := -D__IN_XENOMAI__ -Iinclude/xenomai/cobalt -Iinclude/xenomai -Idrivers/xenomai/ipc
+ccflags-y := -Iarch/$(SRCARCH)/xenomai/include -Iinclude/xenomai
 
 obj-$(CONFIG_XENO_DRIVERS_RTIPC) += xeno_rtipc.o
 

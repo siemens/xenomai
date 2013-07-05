@@ -35,4 +35,26 @@
 #define SIGKICK (SIGRTMAX + 4)
 #define SIGDEMT (SIGRTMAX + 5)
 
+/*
+ * Regular POSIX signals with specific handling by Xenomai.
+ */
+#define SIGSHADOW			SIGWINCH
+#define sigshadow_action(code)		((code) & 0xff)
+#define sigshadow_arg(code)		(((code) >> 8) & 0xff)
+#define sigshadow_int(action, arg)	((action) | ((arg) << 8))
+
+#define SIGDEBUG			SIGXCPU
+#define sigdebug_code(si)		((si)->si_value.sival_int)
+#define sigdebug_reason(si)		(sigdebug_code(si) & 0xff)
+
+/* Possible values of sigdebug_reason() */
+#define SIGDEBUG_UNDEFINED		0
+#define SIGDEBUG_MIGRATE_SIGNAL		1
+#define SIGDEBUG_MIGRATE_SYSCALL	2
+#define SIGDEBUG_MIGRATE_FAULT		3
+#define SIGDEBUG_MIGRATE_PRIOINV	4
+#define SIGDEBUG_NOMLOCK		5
+#define SIGDEBUG_WATCHDOG		6
+#define SIGDEBUG_RESCNT_IMBALANCE	7
+
 #endif /* !_COBALT_UAPI_SIGNAL_H */

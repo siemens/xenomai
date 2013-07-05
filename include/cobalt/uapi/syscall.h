@@ -18,7 +18,7 @@
 #ifndef _COBALT_UAPI_SYSCALL_H
 #define _COBALT_UAPI_SYSCALL_H
 
-#include <asm-generic/xenomai/uapi/syscall.h>
+#include <cobalt/uapi/asm-generic/syscall.h>
 
 #define COBALT_BINDING_MAGIC            0x50534531
 

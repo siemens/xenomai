@@ -16,4 +16,4 @@ posix-y :=		\
 	thread.o	\
 	timer.o
 
-ccflags-y := -D__IN_XENOMAI__ -Iinclude/xenomai
+ccflags-y := -Iarch/$(SRCARCH)/xenomai/include -Iinclude/xenomai

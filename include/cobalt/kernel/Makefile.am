@@ -32,5 +32,3 @@ noinst_HEADERS =	\
 	trace.h		\
 	vdso.h		\
 	vfile.h
-
-SUBDIRS = uapi

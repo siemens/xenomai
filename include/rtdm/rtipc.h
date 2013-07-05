@@ -401,7 +401,7 @@ int getpeername__AF_RTIPC(int sockfd, struct sockaddr_ipc *addr, socklen_t *addr
 #include <sys/types.h>
 #include <sys/socket.h>
 #endif /* !__KERNEL__ */
-#include <cobalt/kernel/uapi/types.h>
+#include <cobalt/uapi/kernel/types.h>
 #include <rtdm/rtdm.h>
 
 /* Address family */

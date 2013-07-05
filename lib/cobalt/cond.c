@@ -17,7 +17,7 @@
  */
 #include <errno.h>
 #include <pthread.h>
-#include <xenomai/syscall.h>
+#include <asm/xenomai/syscall.h>
 #include "current.h"
 #include "internal.h"
 

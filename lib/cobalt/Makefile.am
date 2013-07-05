@@ -1,7 +1,5 @@
 pkgconfigdir = $(libdir)/pkgconfig
 
-SUBDIRS = @XENO_TARGET_ARCH@
-
 noinst_HEADERS =	\
 	current.h	\
 	sem_heap.h	\
@@ -11,7 +9,7 @@ lib_LTLIBRARIES = libcobalt.la
 
 libcobalt_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 2:0:0 -lpthread -lrt
 
-libcobalt_la_LIBADD = @XENO_TARGET_ARCH@/libarch.la
+libcobalt_la_LIBADD = arch/@XENO_TARGET_ARCH@/libarch.la
 
 libcobalt_la_SOURCES =		\
 	assert_context.c	\
@@ -48,3 +46,5 @@ uninstall-local:
 	$(RM) $(DESTDIR)$(libdir)/cobalt.wrappers
 
 EXTRA_DIST = cobalt.wrappers
+
+SUBDIRS = arch

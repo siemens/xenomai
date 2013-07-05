@@ -27,8 +27,8 @@
 #include <cobalt/kernel/list.h>
 #include <cobalt/kernel/trace.h>
 #include <cobalt/kernel/misc.h>
-#include <cobalt/kernel/uapi/types.h>
-#include <cobalt/kernel/uapi/heap.h>
+#include <cobalt/uapi/kernel/types.h>
+#include <cobalt/uapi/kernel/heap.h>
 
 /*
  * Minimum page size is 2 ** XNHEAP_MINLOG2 (must be large enough to

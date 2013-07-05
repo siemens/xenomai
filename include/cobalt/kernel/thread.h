@@ -28,8 +28,8 @@
 #include <cobalt/kernel/registry.h>
 #include <cobalt/kernel/schedparam.h>
 #include <cobalt/kernel/trace.h>
-#include <cobalt/kernel/uapi/thread.h>
-#include <cobalt/kernel/uapi/synch.h>
+#include <cobalt/uapi/kernel/thread.h>
+#include <cobalt/uapi/kernel/synch.h>
 #include <asm/xenomai/machine.h>
 #include <asm/xenomai/thread.h>
 

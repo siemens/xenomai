@@ -7,7 +7,6 @@ SUBDIRS +=	\
 endif
 
 SUBDIRS +=	\
-	include	\
 	copperplate \
 	alchemy	\
 	vxworks \

@@ -27,7 +27,7 @@
 #include <asm/barrier.h>
 #include <asm/atomic.h>
 #include <asm/processor.h>
-#include <cobalt/kernel/uapi/vdso.h>
+#include <cobalt/uapi/kernel/vdso.h>
 
 /*
  * Define the available feature set here. We have a single feature

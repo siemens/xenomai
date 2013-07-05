@@ -9,4 +9,4 @@ xeno_switchtest-y := switchtest.o
 
 xeno_rtdmtest-y := rtdmtest.o
 
-ccflags-y := -D__IN_XENOMAI__ -Iinclude/xenomai/cobalt -Iinclude/xenomai
+ccflags-y := -Iarch/$(SRCARCH)/xenomai/include -Iinclude/xenomai

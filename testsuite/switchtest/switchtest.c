@@ -12,7 +12,7 @@
 #include <semaphore.h>
 #include <setjmp.h>
 #include <getopt.h>
-#include <xenomai/features.h>
+#include <asm/xenomai/features.h>
 #include <asm/xenomai/uapi/fptest.h>
 #include <cobalt/trace.h>
 #include <rtdm/rttesting.h>

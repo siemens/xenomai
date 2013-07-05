@@ -27,4 +27,4 @@ xenomai-$(CONFIG_XENO_OPT_MAP) += map.o
 xenomai-$(CONFIG_XENO_OPT_DEBUG) += debug.o
 xenomai-$(CONFIG_PROC_FS) += vfile.o
 
-ccflags-y := -D__IN_XENOMAI__ -Iinclude/xenomai
+ccflags-y := -Iarch/$(SRCARCH)/xenomai/include -Iinclude/xenomai

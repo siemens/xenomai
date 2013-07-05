@@ -17,7 +17,7 @@
  */
 #include <pthread.h>
 #include <signal.h>
-#include <xenomai/syscall.h>
+#include <asm/xenomai/syscall.h>
 #include "internal.h"
 
 #ifdef __UCLIBC__

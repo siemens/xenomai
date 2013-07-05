@@ -24,7 +24,7 @@
 #include <errno.h>
 #include <rtdk.h>
 #include <cobalt/uapi/thread.h>
-#include <xenomai/syscall.h>
+#include <asm/xenomai/syscall.h>
 #include "current.h"
 #include "internal.h"
 

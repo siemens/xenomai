@@ -28,7 +28,6 @@
 #include <linux/unistd.h>
 #include <copperplate/clockobj.h>
 #include <copperplate/threadobj.h>
-#include "cobalt/internal.h"
 #include "internal.h"
 
 struct coppernode __node_info = {

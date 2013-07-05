@@ -67,7 +67,7 @@ am__aclocal_m4_deps = $(top_srcdir)/config/ac_prog_cc_for_build.m4 \
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
-CONFIG_HEADER = $(top_builddir)/lib/include/xeno_config.h
+CONFIG_HEADER = $(top_builddir)/include/xeno_config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
@@ -99,7 +99,7 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libcobalt_la_DEPENDENCIES = @XENO_TARGET_ARCH@/libarch.la
+libcobalt_la_DEPENDENCIES = arch/@XENO_TARGET_ARCH@/libarch.la
 am_libcobalt_la_OBJECTS = libcobalt_la-assert_context.lo \
 	libcobalt_la-attr.lo libcobalt_la-clock.lo \
 	libcobalt_la-cond.lo libcobalt_la-current.lo \
@@ -115,7 +115,7 @@ libcobalt_la_OBJECTS = $(am_libcobalt_la_OBJECTS)
 libcobalt_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(libcobalt_la_LDFLAGS) $(LDFLAGS) -o $@
-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/lib/include
+DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
 am__mv = mv -f
@@ -342,7 +342,6 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 pkgconfigdir = $(libdir)/pkgconfig
-SUBDIRS = @XENO_TARGET_ARCH@
 noinst_HEADERS = \
 	current.h	\
 	sem_heap.h	\
@@ -350,7 +349,7 @@ noinst_HEADERS = \
 
 lib_LTLIBRARIES = libcobalt.la
 libcobalt_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 2:0:0 -lpthread -lrt
-libcobalt_la_LIBADD = @XENO_TARGET_ARCH@/libarch.la
+libcobalt_la_LIBADD = arch/@XENO_TARGET_ARCH@/libarch.la
 libcobalt_la_SOURCES = \
 	assert_context.c	\
 	attr.c			\
@@ -379,6 +378,7 @@ libcobalt_la_CPPFLAGS = \
 	-I$(top_srcdir)/include
 
 EXTRA_DIST = cobalt.wrappers
+SUBDIRS = arch
 all: all-recursive
 
 .SUFFIXES:
