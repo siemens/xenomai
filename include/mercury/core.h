@@ -25,6 +25,4 @@
 /* Private signal used for unblocking from syscalls. */
 #define SIGRELS	(SIGRTMIN + 9)
 
-#define cpu_relax()	__sync_synchronize()
-
 #endif /* _MERCURY_CORE_H */
