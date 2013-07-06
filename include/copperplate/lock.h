@@ -20,6 +20,7 @@
 #define _COPPERPLATE_LOCK_H
 
 #include <pthread.h>
+#include <nocore/atomic.h>
 #include <copperplate/wrappers.h>
 #include <copperplate/debug.h>
 
@@ -203,18 +204,6 @@ int __check_cancel_type(const char *locktype);
 
 #define read_unlock_safe(__lock, __state)	\
 	__do_unlock_safe(__lock, __state)
-
-#define barrier()	__asm__ __volatile__("": : :"memory")
-#define membar()	__sync_synchronize()
-#ifdef CONFIG_SMP
-#define smp_membar()	membar()
-#else
-#define smp_membar()	do { } while (0)
-#endif
-
-#define atomic_sub_fetch(v, n)	__sync_sub_and_fetch(&(v), n)
-#define atomic_add_fetch(v, n)	__sync_add_and_fetch(&(v), n)
-#define atomic_cmp_swap(ptr, old, new)  __sync_val_compare_and_swap(ptr, old, new)
 
 #ifdef __cplusplus
 extern "C" {

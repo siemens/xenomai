@@ -44,18 +44,36 @@ typedef struct {
 				    (typeof((p)->v))(n))
 #endif
 
+#ifndef atomic_sub_fetch
+#define atomic_sub_fetch(v, n)	_sync_sub_and_fetch(&(v), n)
+#endif
+
+#ifndef atomic_add_fetch
+#define atomic_add_fetch(v, n)	__sync_add_and_fetch(&(v), n)
+#endif
+
+#ifndef atomic_cmp_swap
+#define atomic_cmp_swap(ptr, old, new)  __sync_val_compare_and_swap(ptr, old, new)
+#endif
+
+#ifdef CONFIG_SMP
 #ifndef smp_mb
-#define smp_mb() __sync_synchronize()
+#define smp_mb()	__sync_synchronize()
 #endif
-
 #ifndef smp_rmb
-#define smp_rmb() __sync_synchronize()
+#define smp_rmb()	smp_mb()
 #endif
-
 #ifndef smp_wmb
-#define smp_wmb() __sync_synchronize()
+#define smp_wmb()	smp_mb()
 #endif
+#else  /* !CONFIG_SMP */
+#define smp_mb()	do { } while (0)
+#define smp_rmb()	do { } while (0)
+#define smp_wmb()	do { } while (0)
+#endif /* !CONFIG_SMP */
 
 #define ACCESS_ONCE(x) (*(volatile typeof(x) *)&(x))
+
+#define barrier()	__asm__ __volatile__("": : :"memory")
 
 #endif /* _NOCORE_ATOMIC_H */
