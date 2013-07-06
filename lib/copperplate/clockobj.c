@@ -283,6 +283,13 @@ int clockobj_set_resolution(struct clockobj *clkobj, unsigned int resolution_ns)
 #ifdef CONFIG_XENO_COBALT
 
 #include <cobalt/arith.h>
+#include <asm/xenomai/tsc.h>
+
+ticks_t clockobj_get_tsc(void)
+{
+	/* Guaranteed to be the source of CLOCK_COPPERPLATE. */
+	return __xn_rdtsc();
+}
 
 #ifndef CONFIG_XENO_LORES_CLOCK_DISABLED
 
@@ -327,6 +334,13 @@ void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks)
 }
 
 #else /* CONFIG_XENO_MERCURY */
+
+ticks_t clockobj_get_tsc(void)
+{
+	struct timespec now;
+	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
+	return (ticks_t)now.tv_sec * 1000000000ULL + now.tv_nsec;
+}
 
 #ifndef CONFIG_XENO_LORES_CLOCK_DISABLED
 

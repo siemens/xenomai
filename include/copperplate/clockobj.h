@@ -128,6 +128,8 @@ void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks);
 void clockobj_get_time(struct clockobj *clkobj,
 		       ticks_t *pticks, ticks_t *ptsc);
 
+ticks_t clockobj_get_tsc(void);
+
 void clockobj_caltime_to_timeout(struct clockobj *clkobj, const struct tm *tm,
 				 unsigned long rticks, struct timespec *ts);
 
@@ -159,13 +161,6 @@ int clockobj_destroy(struct clockobj *clkobj);
 #ifdef CONFIG_XENO_COBALT
 
 #include <cobalt/ticks.h>
-#include <asm/xenomai/tsc.h>
-
-static inline ticks_t clockobj_get_tsc(void)
-{
-	/* Guaranteed to be the source of CLOCK_COPPERPLATE. */
-	return __xn_rdtsc();
-}
 
 static inline sticks_t clockobj_ns_to_tsc(sticks_t ns)
 {
@@ -187,13 +182,6 @@ void clockobj_ns_to_timespec(ticks_t ns, struct timespec *ts)
 }
 
 #else /* CONFIG_XENO_MERCURY */
-
-static inline ticks_t clockobj_get_tsc(void)
-{
-	struct timespec now;
-	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
-	return (ticks_t)now.tv_sec * 1000000000ULL + now.tv_nsec;
-}
 
 static inline sticks_t clockobj_ns_to_tsc(sticks_t ns)
 {
