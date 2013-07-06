@@ -71,7 +71,7 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libarch_la_LIBADD =
-am_libarch_la_OBJECTS = libarch_la-features.lo libarch_la-tsc.lo
+am_libarch_la_OBJECTS = libarch_la-features.lo
 libarch_la_OBJECTS = $(am_libarch_la_OBJECTS)
 libarch_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -303,7 +303,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 noinst_LTLIBRARIES = libarch.la
 libarch_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 0:0:0
-libarch_la_SOURCES = features.c tsc.c
+libarch_la_SOURCES = features.c
 libarch_la_CPPFLAGS = \
 	@XENO_COBALT_CFLAGS@ 		\
 	-I$(srcdir)/../..		\
@@ -366,7 +366,6 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libarch_la-features.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libarch_la-tsc.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -395,13 +394,6 @@ libarch_la-features.lo: features.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='features.c' object='libarch_la-features.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libarch_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libarch_la-features.lo `test -f 'features.c' || echo '$(srcdir)/'`features.c
-
-libarch_la-tsc.lo: tsc.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libarch_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libarch_la-tsc.lo -MD -MP -MF $(DEPDIR)/libarch_la-tsc.Tpo -c -o libarch_la-tsc.lo `test -f 'tsc.c' || echo '$(srcdir)/'`tsc.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libarch_la-tsc.Tpo $(DEPDIR)/libarch_la-tsc.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='tsc.c' object='libarch_la-tsc.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libarch_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libarch_la-tsc.lo `test -f 'tsc.c' || echo '$(srcdir)/'`tsc.c
 
 mostlyclean-libtool:
 	-rm -f *.lo

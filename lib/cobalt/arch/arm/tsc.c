@@ -25,10 +25,6 @@
 #include <asm/xenomai/tsc.h>
 #include <asm/xenomai/features.h>
 
-#ifndef CONFIG_XENO_ARM_TSC_TYPE
-#error "no TSC type defined for ARM platform"
-#endif
-
 unsigned long long __xn_rdtsc(void)
 {
 #if CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_KUSER
