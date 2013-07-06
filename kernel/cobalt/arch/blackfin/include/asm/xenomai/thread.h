@@ -50,14 +50,6 @@ struct xnarchtcb {
 
 #define xnarch_fault_notify(d) (!xnarch_fault_bp_p(d))
 
-#define __xnarch_head_syscall_entry()				\
-	do	{						\
-		if (xnsched_resched_p(xnpod_current_sched()))	\
-			xnpod_schedule();			\
-	} while(0)
-
-#define xnarch_head_syscall_entry	__xnarch_head_syscall_entry
-
 void xnarch_switch_to(struct xnarchtcb *out_tcb, struct xnarchtcb *in_tcb);
 
 int xnarch_escalate(void);

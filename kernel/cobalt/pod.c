@@ -216,12 +216,6 @@ void __xnpod_schedule_handler(void) /* hw interrupts off. */
 	xnpod_schedule();
 }
 
-void xnpod_schedule_deferred(void)
-{
-	if (xnpod_active_p())
-		xnpod_schedule();
-}
-
 static void xnpod_flush_heap(struct xnheap *heap,
 			     void *extaddr, unsigned long extsize, void *cookie)
 {

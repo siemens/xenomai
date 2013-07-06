@@ -122,8 +122,4 @@ static inline int __xn_safe_strncpy_from_user(char *dst,
 	return __xn_strncpy_from_user(dst, src, count);
 }
 
-#ifndef xnarch_head_syscall_entry
-static inline void xnarch_head_syscall_entry(void) { }
-#endif
-
 #endif /* !_COBALT_ASM_GENERIC_SYSCALL_H */

@@ -1869,8 +1869,6 @@ static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 	if (!xnpod_active_p())
 		goto no_personality;
 
-	xnarch_head_syscall_entry();
-
 	thread = xnshadow_current();
 	if (thread)
 		thread->regs = regs;

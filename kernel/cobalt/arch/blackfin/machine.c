@@ -18,6 +18,7 @@
  *   02111-1307, USA.
  */
 #include <linux/stddef.h>
+#include <cobalt/kernel/pod.h>
 #include <asm/xenomai/machine.h>
 
 static unsigned long mach_blackfin_calibrate(void)
@@ -25,11 +26,15 @@ static unsigned long mach_blackfin_calibrate(void)
 	return 20;	/* 20 clock cycles */
 }
 
-void xnpod_schedule_deferred(void);
+static void schedule_deferred(void)
+{
+	if (xnpod_active_p())
+		xnpod_schedule();
+}
 
 static int mach_blackfin_init(void)
 {
-	__ipipe_irq_tail_hook = (unsigned long)xnpod_schedule_deferred;
+	__ipipe_irq_tail_hook = (unsigned long)schedule_deferred;
 
 	return 0;
 }
