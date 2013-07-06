@@ -45,7 +45,6 @@ static const pthread_attr_t default_thread_attr = {
 		.sched_priority = 0
 	},
 	.name = NULL,
-	.fp = 1,
 	.affinity = XNPOD_ALL_CPUS,
 };
 
@@ -345,9 +344,8 @@ static inline int pthread_create(pthread_t *tid, const pthread_attr_t *attr)
 	struct xnsched_class *sched_class;
 	union xnsched_policy_param param;
 	struct xnthread_init_attr iattr;
-	int prio, ret, pol, flags = 0;
 	pthread_t thread, cur;
-	const char *name;
+	int prio, ret, pol;
 	spl_t s;
 
 	if (attr && attr->magic != COBALT_THREAD_ATTR_MAGIC)
@@ -385,14 +383,9 @@ static inline int pthread_create(pthread_t *tid, const pthread_attr_t *attr)
 		prio = -prio;
 		pol = SCHED_WEAK;
 	}
-	name = thread->attr.name;
-	flags |= XNUSER;
 
-	if (thread->attr.fp)
-		flags |= XNFPU;
-
-	iattr.name = name;
-	iattr.flags = flags;
+	iattr.name = thread->attr.name;
+	iattr.flags = XNUSER|XNFPU;
 	iattr.personality = &cobalt_personality;
 
 	/*
@@ -834,7 +827,6 @@ int cobalt_thread_create(unsigned long tid, int policy,
 	attr.policy = policy;
 	attr.detachstate = PTHREAD_CREATE_DETACHED;
 	attr.schedparam_ex = param;
-	attr.fp = 1;
 	attr.name = p->comm;
 
 	ret = pthread_create(&pthread, &attr);

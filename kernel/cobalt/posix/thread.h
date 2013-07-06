@@ -55,7 +55,6 @@ typedef struct cobalt_threadattr {
 	/* Non portable */
 	struct sched_param_ex schedparam_ex;
 	char *name;
-	int fp;
 	cpumask_t affinity;
 
 } pthread_attr_t;
