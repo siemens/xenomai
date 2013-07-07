@@ -41,7 +41,7 @@ dump_wrappers()
 usage ()
 {
 cat <<EOF
-Usage xeno-config --skin=name OPTIONS
+Usage xeno-config OPTIONS
 Options :
         --help
         --v,--verbose
@@ -50,7 +50,7 @@ Options :
         --ccld
         --arch
         --prefix
-        --skin posix|cobalt|vxworks|psos|alchemy
+        --[skin=]posix/cobalt|vxworks|psos|alchemy
         --cflags
         --ldflags
         --lib*-dir,--libdir,--user-libdir
@@ -62,6 +62,7 @@ EOF
 verbose ()
 {
     echo xeno-config --verbose
+    echo "        --core=cobalt"
     echo "        --version=\"${XENO_VERSION}\""
     echo "        --cc=\"$XENO_CC\""
     echo "        --ccld=\"$XENO_PREFIX/bin/wrap-link.sh $XENO_CC\""
@@ -105,6 +106,9 @@ while test $# -gt 0; do
 	    ;;
 	--skin=*)
 	    skin_list="$skin_list `expr "$1" : '--skin=\(.*\)'`"
+	    ;;
+	--posix|--cobalt|--vxworks|--psos|--alchemy)
+	    skin_list="$skin_list `expr "$1" : '--\(.*\)'`"
 	    ;;
 	--cflags)
 	    if test -z "$skin_list"; then

@@ -23,7 +23,7 @@ unset prefix exec_prefix libdir datadir datarootdir pkgdatadir includedir skin_l
 usage ()
 {
 cat <<EOF
-Usage xeno-config --skin=skin OPTIONS
+Usage xeno-config OPTIONS
 Options :
         --help
         --v,--verbose
@@ -32,7 +32,7 @@ Options :
         --ccld
         --arch
         --prefix
-        --skin vxworks|psos|alchemy
+        --[skin=]vxworks|psos|alchemy
         --cflags
         --ldflags
         --lib*-dir,--libdir,--user-libdir
@@ -44,6 +44,7 @@ EOF
 verbose ()
 {
     echo xeno-config --verbose
+    echo "        --core=mercury"
     echo "        --version=\"${XENO_VERSION}\""
     echo "        --cc=\"$XENO_CC\""
     echo "        --ccld=\"$XENO_CC\""
@@ -84,6 +85,9 @@ while test $# -gt 0; do
 	    ;;
 	--skin=*)
 	    skin_list="$skin_list `expr "$1" : '--skin=\(.*\)'`"
+	    ;;
+	--vxworks|--psos|--alchemy)
+	    skin_list="$skin_list `expr "$1" : '--\(.*\)'`"
 	    ;;
 	--cflags)
 	    if test -z "$skin_list"; then
