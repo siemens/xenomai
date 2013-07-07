@@ -244,6 +244,7 @@ XENO_LIB_LDFLAGS = @XENO_LIB_LDFLAGS@
 XENO_MAYBE_DOCDIR = @XENO_MAYBE_DOCDIR@
 XENO_POSIX_WRAPPERS = @XENO_POSIX_WRAPPERS@
 XENO_TARGET_ARCH = @XENO_TARGET_ARCH@
+XENO_TARGET_CORE = @XENO_TARGET_CORE@
 XENO_TEST_DIR = @XENO_TEST_DIR@
 XENO_USER_APP_CFLAGS = @XENO_USER_APP_CFLAGS@
 XENO_USER_APP_LDFLAGS = @XENO_USER_APP_LDFLAGS@
@@ -313,8 +314,8 @@ libalchemy_la_SOURCES = init.c internal.c internal.h reference.h \
 	event.h heap.c heap.h mutex.c mutex.h queue.c queue.h task.c \
 	task.h sem.c sem.h timer.c timer.h $(am__append_1)
 libalchemy_la_CPPFLAGS = \
-	@XENO_USER_CFLAGS@ \
-	-I$(top_srcdir)/include \
+	@XENO_USER_CFLAGS@				\
+	-I$(top_srcdir)/include				\
 	-I$(top_srcdir)/lib
 
 EXTRA_DIST = testsuite

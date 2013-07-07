@@ -37,6 +37,7 @@
 #include "copperplate/clockobj.h"
 #include "copperplate/eventobj.h"
 #include "copperplate/heapobj.h"
+#include "copperplate/signal.h"
 #include "internal.h"
 
 union copperplate_wait_union {

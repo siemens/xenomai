@@ -6,9 +6,9 @@ test_PROGRAMS = cyclictest
 
 cyclictest_SOURCES = cyclictest.c
 
-cyclictest_CPPFLAGS =			\
-	$(XENO_USER_CFLAGS)		\
-	-I$(top_srcdir)/include		\
+cyclictest_CPPFLAGS =					\
+	$(XENO_USER_CFLAGS)				\
+	-I$(top_srcdir)/include				\
 	-DIPIPE_TRACE=1
 
 cyclictest_LDFLAGS = $(XENO_POSIX_WRAPPERS)

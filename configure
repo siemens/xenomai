@@ -648,6 +648,7 @@ XENO_COBALT_CFLAGS
 XENO_HOST_STRING
 XENO_BUILD_STRING
 XENO_TARGET_ARCH
+XENO_TARGET_CORE
 ASCIIDODC
 LATEX_MODE
 LATEX_BATCHMODE
@@ -2361,6 +2362,7 @@ CONFIG_XENO_VERSION_MAJOR=`expr $PACKAGE_VERSION : '\([0-9]*\)'`
 CONFIG_XENO_VERSION_MINOR=`expr $PACKAGE_VERSION : '[0-9]*\.\([0-9]*\)'`
 CONFIG_XENO_REVISION_LEVEL=`expr $PACKAGE_VERSION : '[0-9]*\.[0-9]*\.\([0-9]*\)'`
 CONFIG_XENO_UAPI_LEVEL=`cat $srcdir/config/apirev`
+topdir=`cd $srcdir && pwd`
 
 rtcore_type=cobalt
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether we build for Cobalt or Mercury core" >&5
@@ -2407,6 +2409,7 @@ fi
 test x$rtcore_type = xmercury &&
 $as_echo "#define CONFIG_XENO_MERCURY 1" >>confdefs.h
 
+XENO_TARGET_CORE=$rtcore_type
 
 if test "x$CFLAGS" = "x"; then
 	XENO_EMPTY_CFLAGS=true
@@ -13604,8 +13607,6 @@ if test x${CONFIG_XENO_ASCIIDOC} = xy -a x"$W3M" = x ; then
    as_fn_error $? "Missing the w3m tool to generate the documentation" "$LINENO" 5
 fi
 
-
-
 for ac_header in mqueue.h
 do :
   ac_fn_c_check_header_mongrel "$LINENO" "mqueue.h" "ac_cv_header_mqueue_h" "$ac_includes_default"
@@ -13831,7 +13832,8 @@ if test "$ac_cv_atomic_builtins" != "yes"; then
    as_fn_error $? "compiler does not support atomic builtins" "$LINENO" 5
 fi
 
-XENO_USER_CFLAGS="-D_GNU_SOURCE -D_REENTRANT -fstrict-aliasing -Wall -pipe -Wstrict-prototypes -Wmissing-prototypes -Wno-long-long -Wno-unused-parameter -Werror"
+XENO_USER_CFLAGS="-D_GNU_SOURCE -D_REENTRANT -pipe -fstrict-aliasing \
+-Wall -Wstrict-prototypes -Wmissing-prototypes -Wno-long-long -Wno-unused-parameter -Werror"
 XENO_USER_LDADD=
 
 if test x$use_registry = xy; then
@@ -13854,7 +13856,7 @@ if test x$use_assert = x; then
    XENO_USER_CFLAGS="-DNDEBUG $XENO_USER_CFLAGS"
 fi
 
-XENO_USER_CFLAGS="$XENO_USER_CFLAGS -D__XENO__ -D__IN_XENO__ -Wstrict-prototypes"
+XENO_USER_CFLAGS="$XENO_USER_CFLAGS -D__XENO__ -D__IN_XENO__ -I$topdir/include/$rtcore_type"
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether ld supports @file" >&5
 $as_echo_n "checking whether ld supports @file... " >&6; }
@@ -14020,15 +14022,14 @@ fi
 
 
 if test x$rtcore_type = xcobalt; then
-   topdir=`cd $srcdir && pwd`
-   XENO_USER_CFLAGS="-I$topdir/lib/cobalt/arch/$XENO_TARGET_ARCH/include -I$topdir/kernel/cobalt/arch/$XENO_TARGET_ARCH/include -I$topdir/include/cobalt -I$topdir/include $XENO_USER_CFLAGS"
+   XENO_USER_CFLAGS="-I$topdir/lib/cobalt/arch/$XENO_TARGET_ARCH/include -I$topdir/kernel/cobalt/arch/$XENO_TARGET_ARCH/include $XENO_USER_CFLAGS"
    XENO_COBALT_CFLAGS="$XENO_USER_CFLAGS"
    case "$build_for" in
     i*86*-*) XENO_COBALT_CFLAGS="$XENO_COBALT_CFLAGS -fno-omit-frame-pointer";;
     esac
 
 
-   cobalt_wrappers="`cd $srcdir && pwd`/lib/cobalt/cobalt.wrappers"
+   cobalt_wrappers="$topdir/lib/cobalt/cobalt.wrappers"
    if [ $ac_cv_ld_file_option = yes ]; then
 	XENO_POSIX_WRAPPERS="-Wl,@$cobalt_wrappers"
    else
@@ -14092,7 +14093,8 @@ fi
 
 
 
-ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config:scripts/xeno-config-$rtcore_type.in scripts/xeno lib/Makefile lib/cobalt/Makefile lib/cobalt/arch/Makefile lib/cobalt/arch/arm/Makefile lib/cobalt/arch/arm/include/Makefile lib/cobalt/arch/arm/include/asm/Makefile lib/cobalt/arch/arm/include/asm/xenomai/Makefile lib/cobalt/arch/powerpc/Makefile lib/cobalt/arch/powerpc/include/Makefile lib/cobalt/arch/powerpc/include/asm/Makefile lib/cobalt/arch/powerpc/include/asm/xenomai/Makefile lib/cobalt/arch/blackfin/Makefile lib/cobalt/arch/blackfin/include/Makefile lib/cobalt/arch/blackfin/include/asm/Makefile lib/cobalt/arch/blackfin/include/asm/xenomai/Makefile lib/cobalt/arch/x86/Makefile lib/cobalt/arch/x86/include/Makefile lib/cobalt/arch/x86/include/asm/Makefile lib/cobalt/arch/x86/include/asm/xenomai/Makefile lib/cobalt/arch/nios2/Makefile lib/cobalt/arch/nios2/include/Makefile lib/cobalt/arch/nios2/include/asm/Makefile lib/cobalt/arch/nios2/include/asm/xenomai/Makefile lib/cobalt/arch/sh/Makefile lib/cobalt/arch/sh/include/Makefile lib/cobalt/arch/sh/include/asm/Makefile lib/cobalt/arch/sh/include/asm/xenomai/Makefile lib/copperplate/Makefile lib/copperplate/regd/Makefile lib/alchemy/Makefile lib/vxworks/Makefile lib/psos/Makefile lib/analogy/Makefile testsuite/Makefile testsuite/latency/Makefile testsuite/cyclic/Makefile testsuite/switchtest/Makefile testsuite/clocktest/Makefile testsuite/unit/Makefile testsuite/xeno-test/Makefile testsuite/regression/Makefile testsuite/regression/posix/Makefile utils/Makefile utils/can/Makefile utils/analogy/Makefile utils/ps/Makefile utils/slackspot/Makefile include/Makefile include/nocore/Makefile include/cobalt/uapi/Makefile include/cobalt/uapi/asm-generic/Makefile include/cobalt/uapi/kernel/Makefile include/cobalt/uapi/rtdm/Makefile include/cobalt/Makefile include/cobalt/sys/Makefile include/cobalt/kernel/Makefile include/rtdm/Makefile include/analogy/Makefile include/mercury/Makefile include/copperplate/Makefile include/alchemy/Makefile include/vxworks/Makefile include/psos/Makefile"
+
+ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config:scripts/xeno-config-$rtcore_type.in scripts/xeno lib/Makefile lib/cobalt/Makefile lib/cobalt/arch/Makefile lib/cobalt/arch/arm/Makefile lib/cobalt/arch/arm/include/Makefile lib/cobalt/arch/arm/include/asm/Makefile lib/cobalt/arch/arm/include/asm/xenomai/Makefile lib/cobalt/arch/powerpc/Makefile lib/cobalt/arch/powerpc/include/Makefile lib/cobalt/arch/powerpc/include/asm/Makefile lib/cobalt/arch/powerpc/include/asm/xenomai/Makefile lib/cobalt/arch/blackfin/Makefile lib/cobalt/arch/blackfin/include/Makefile lib/cobalt/arch/blackfin/include/asm/Makefile lib/cobalt/arch/blackfin/include/asm/xenomai/Makefile lib/cobalt/arch/x86/Makefile lib/cobalt/arch/x86/include/Makefile lib/cobalt/arch/x86/include/asm/Makefile lib/cobalt/arch/x86/include/asm/xenomai/Makefile lib/cobalt/arch/nios2/Makefile lib/cobalt/arch/nios2/include/Makefile lib/cobalt/arch/nios2/include/asm/Makefile lib/cobalt/arch/nios2/include/asm/xenomai/Makefile lib/cobalt/arch/sh/Makefile lib/cobalt/arch/sh/include/Makefile lib/cobalt/arch/sh/include/asm/Makefile lib/cobalt/arch/sh/include/asm/xenomai/Makefile lib/copperplate/Makefile lib/copperplate/regd/Makefile lib/alchemy/Makefile lib/vxworks/Makefile lib/psos/Makefile lib/analogy/Makefile testsuite/Makefile testsuite/latency/Makefile testsuite/cyclic/Makefile testsuite/switchtest/Makefile testsuite/clocktest/Makefile testsuite/unit/Makefile testsuite/xeno-test/Makefile testsuite/regression/Makefile testsuite/regression/posix/Makefile utils/Makefile utils/can/Makefile utils/analogy/Makefile utils/ps/Makefile utils/slackspot/Makefile include/Makefile include/nocore/Makefile include/cobalt/uapi/Makefile include/cobalt/uapi/asm-generic/Makefile include/cobalt/uapi/kernel/Makefile include/cobalt/uapi/rtdm/Makefile include/cobalt/Makefile include/cobalt/sys/Makefile include/cobalt/kernel/Makefile include/cobalt/copperplate/Makefile include/rtdm/Makefile include/analogy/Makefile include/mercury/Makefile include/mercury/copperplate/Makefile include/copperplate/Makefile include/alchemy/Makefile include/vxworks/Makefile include/psos/Makefile"
 
 
 if test \! x$XENO_MAYBE_DOCDIR = x ; then
@@ -15226,9 +15228,11 @@ do
     "include/cobalt/Makefile") CONFIG_FILES="$CONFIG_FILES include/cobalt/Makefile" ;;
     "include/cobalt/sys/Makefile") CONFIG_FILES="$CONFIG_FILES include/cobalt/sys/Makefile" ;;
     "include/cobalt/kernel/Makefile") CONFIG_FILES="$CONFIG_FILES include/cobalt/kernel/Makefile" ;;
+    "include/cobalt/copperplate/Makefile") CONFIG_FILES="$CONFIG_FILES include/cobalt/copperplate/Makefile" ;;
     "include/rtdm/Makefile") CONFIG_FILES="$CONFIG_FILES include/rtdm/Makefile" ;;
     "include/analogy/Makefile") CONFIG_FILES="$CONFIG_FILES include/analogy/Makefile" ;;
     "include/mercury/Makefile") CONFIG_FILES="$CONFIG_FILES include/mercury/Makefile" ;;
+    "include/mercury/copperplate/Makefile") CONFIG_FILES="$CONFIG_FILES include/mercury/copperplate/Makefile" ;;
     "include/copperplate/Makefile") CONFIG_FILES="$CONFIG_FILES include/copperplate/Makefile" ;;
     "include/alchemy/Makefile") CONFIG_FILES="$CONFIG_FILES include/alchemy/Makefile" ;;
     "include/vxworks/Makefile") CONFIG_FILES="$CONFIG_FILES include/vxworks/Makefile" ;;

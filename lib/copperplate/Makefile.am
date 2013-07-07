@@ -17,9 +17,9 @@ libcopperplate_la_SOURCES =	\
 	timerobj.c	\
 	traceobj.c
 
-libcopperplate_la_CPPFLAGS =		\
-	@XENO_USER_CFLAGS@		\
-	-I$(top_srcdir)			\
+libcopperplate_la_CPPFLAGS =				\
+	@XENO_USER_CFLAGS@				\
+	-I$(top_srcdir)					\
 	-I$(top_srcdir)/include
 
 if XENO_COBALT
@@ -84,9 +84,9 @@ libtlsf_la_SOURCES =	\
 	tlsf/tlsf.h	\
 	tlsf/target.h
 
-libtlsf_la_CPPFLAGS =			\
-	-Itlsf @XENO_USER_CFLAGS@	\
-	-I$(top_srcdir)/include		\
+libtlsf_la_CPPFLAGS =					\
+	-Itlsf @XENO_USER_CFLAGS@			\
+	-I$(top_srcdir)/include				\
 	-DTLSF_USE_LOCKS=1 -DUSE_MMAP=1 -DTLSF_STATISTIC=1
 
 SUBDIRS = .

@@ -212,7 +212,6 @@ static int dispatch(const char *service_name,
 		break;
 
 	case THREAD_RENICE:
-#ifdef XENO_POSIX
 		param.sched_priority = va_arg(ap, int);
 		if (param.sched_priority)
 			status = pthread_setschedparam(pthread_self(),
@@ -220,12 +219,6 @@ static int dispatch(const char *service_name,
 		else
 			status = pthread_setschedparam(pthread_self(),
 						       SCHED_OTHER, &param);
-#else /* __NATIVE_SKIN__ */
-		prio = va_arg(ap, int);
-		status = -rt_task_set_priority(rt_task_self(), prio);
-		if (status < 0)
-			status = 0;
-#endif /* __NATIVE_SKIN__ */
 		break;
 
 	default:
@@ -412,9 +405,8 @@ static void mode_switch(void)
 	pthread_mutex_t mutex;
 
 	/* Cause a switch to secondary mode */
-#ifdef XENO_POSIX
 	__real_sched_yield();
-#endif
+
 	fprintf(stderr, "mode_switch\n");
 
 	dispatch("switch mutex_init", MUTEX_CREATE, 1, 0, &mutex, 1, 0);

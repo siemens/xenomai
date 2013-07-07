@@ -52,10 +52,10 @@ build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
 test_PROGRAMS = wakeup-time$(EXEEXT) rtdm$(EXEEXT) $(am__EXEEXT_1)
-@XENO_COBALT_TRUE@am__append_1 = arith \
-@XENO_COBALT_TRUE@	mutex-torture \
-@XENO_COBALT_TRUE@	cond-torture \
-@XENO_COBALT_TRUE@	sched-tp \
+@XENO_COBALT_TRUE@am__append_1 = arith	\
+@XENO_COBALT_TRUE@	mutex-torture 	\
+@XENO_COBALT_TRUE@	cond-torture 	\
+@XENO_COBALT_TRUE@	sched-tp 	\
 @XENO_COBALT_TRUE@	check-vdso
 
 subdir = testsuite/unit
@@ -276,6 +276,7 @@ XENO_LIB_LDFLAGS = @XENO_LIB_LDFLAGS@
 XENO_MAYBE_DOCDIR = @XENO_MAYBE_DOCDIR@
 XENO_POSIX_WRAPPERS = @XENO_POSIX_WRAPPERS@
 XENO_TARGET_ARCH = @XENO_TARGET_ARCH@
+XENO_TARGET_CORE = @XENO_TARGET_CORE@
 XENO_TEST_DIR = @XENO_TEST_DIR@
 XENO_USER_APP_CFLAGS = @XENO_USER_APP_CFLAGS@
 XENO_USER_APP_LDFLAGS = @XENO_USER_APP_LDFLAGS@
@@ -344,49 +345,47 @@ CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 @XENO_COBALT_TRUE@coredep_lib = ../../lib/cobalt/libcobalt.la
 @XENO_COBALT_TRUE@arith_SOURCES = arith.c arith-noinline.c arith-noinline.h
 @XENO_COBALT_TRUE@arith_CPPFLAGS = \
-@XENO_COBALT_TRUE@	@XENO_USER_CFLAGS@		\
+@XENO_COBALT_TRUE@	@XENO_USER_CFLAGS@				\
 @XENO_COBALT_TRUE@	-I$(top_srcdir)/include
 
 @XENO_COBALT_TRUE@arith_LDFLAGS = 
 @XENO_COBALT_TRUE@arith_LDADD = \
-@XENO_COBALT_TRUE@	../../lib/alchemy/libalchemy.la \
+@XENO_COBALT_TRUE@	../../lib/alchemy/libalchemy.la 	\
 @XENO_COBALT_TRUE@	../../lib/copperplate/libcopperplate.la \
-@XENO_COBALT_TRUE@	$(coredep_lib) \
-@XENO_COBALT_TRUE@	@XENO_USER_LDADD@		\
+@XENO_COBALT_TRUE@	$(coredep_lib) 				\
+@XENO_COBALT_TRUE@	@XENO_USER_LDADD@			\
 @XENO_COBALT_TRUE@	-lpthread -lrt -lm
 
 @XENO_COBALT_TRUE@mutex_torture_SOURCES = mutex-torture.c
 @XENO_COBALT_TRUE@mutex_torture_CPPFLAGS = \
-@XENO_COBALT_TRUE@	@XENO_USER_CFLAGS@		\
-@XENO_COBALT_TRUE@	-DXENO_POSIX			\
-@XENO_COBALT_TRUE@	-I$(top_srcdir)			\
-@XENO_COBALT_TRUE@	-I$(top_srcdir)/include
+@XENO_COBALT_TRUE@	@XENO_USER_CFLAGS@				\
+@XENO_COBALT_TRUE@	-I$(top_srcdir)/include				\
+@XENO_COBALT_TRUE@	-I$(top_srcdir)
 
 @XENO_COBALT_TRUE@mutex_torture_LDFLAGS = $(XENO_POSIX_WRAPPERS)
 @XENO_COBALT_TRUE@mutex_torture_LDADD = \
-@XENO_COBALT_TRUE@	../../lib/alchemy/libalchemy.la \
-@XENO_COBALT_TRUE@	../../lib/copperplate/libcopperplate.la \
-@XENO_COBALT_TRUE@	$(coredep_lib) \
-@XENO_COBALT_TRUE@	@XENO_USER_LDADD@		\
+@XENO_COBALT_TRUE@	../../lib/alchemy/libalchemy.la 		\
+@XENO_COBALT_TRUE@	../../lib/copperplate/libcopperplate.la 	\
+@XENO_COBALT_TRUE@	$(coredep_lib) 					\
+@XENO_COBALT_TRUE@	@XENO_USER_LDADD@				\
 @XENO_COBALT_TRUE@	-lpthread -lrt -lm
 
 @XENO_COBALT_TRUE@cond_torture_SOURCES = cond-torture.c
 @XENO_COBALT_TRUE@cond_torture_CPPFLAGS = \
-@XENO_COBALT_TRUE@	@XENO_USER_CFLAGS@		\
-@XENO_COBALT_TRUE@	-DXENO_POSIX			\
+@XENO_COBALT_TRUE@	@XENO_USER_CFLAGS@				\
 @XENO_COBALT_TRUE@	-I$(top_srcdir)/include
 
 @XENO_COBALT_TRUE@cond_torture_LDFLAGS = $(XENO_POSIX_WRAPPERS)
 @XENO_COBALT_TRUE@cond_torture_LDADD = \
-@XENO_COBALT_TRUE@	../../lib/alchemy/libalchemy.la \
+@XENO_COBALT_TRUE@	../../lib/alchemy/libalchemy.la 	\
 @XENO_COBALT_TRUE@	../../lib/copperplate/libcopperplate.la \
-@XENO_COBALT_TRUE@	$(coredep_lib) \
-@XENO_COBALT_TRUE@	@XENO_USER_LDADD@		\
+@XENO_COBALT_TRUE@	$(coredep_lib) 				\
+@XENO_COBALT_TRUE@	@XENO_USER_LDADD@			\
 @XENO_COBALT_TRUE@	-lpthread -lrt -lm
 
 @XENO_COBALT_TRUE@sched_tp_SOURCES = sched-tp.c
 @XENO_COBALT_TRUE@sched_tp_CPPFLAGS = \
-@XENO_COBALT_TRUE@	@XENO_USER_CFLAGS@		\
+@XENO_COBALT_TRUE@	@XENO_USER_CFLAGS@				\
 @XENO_COBALT_TRUE@	-I$(top_srcdir)/include
 
 @XENO_COBALT_TRUE@sched_tp_LDFLAGS = $(XENO_POSIX_WRAPPERS)
@@ -398,40 +397,39 @@ CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 
 @XENO_COBALT_TRUE@check_vdso_SOURCES = check-vdso.c
 @XENO_COBALT_TRUE@check_vdso_CPPFLAGS = \
-@XENO_COBALT_TRUE@	@XENO_USER_CFLAGS@		\
+@XENO_COBALT_TRUE@	@XENO_USER_CFLAGS@				\
 @XENO_COBALT_TRUE@	-I$(top_srcdir)/include
 
 @XENO_COBALT_TRUE@check_vdso_LDFLAGS = 
 @XENO_COBALT_TRUE@check_vdso_LDADD = \
-@XENO_COBALT_TRUE@	$(coredep_lib) \
+@XENO_COBALT_TRUE@	$(coredep_lib) 		\
 @XENO_COBALT_TRUE@	@XENO_USER_LDADD@	\
 @XENO_COBALT_TRUE@	-lpthread -lrt -lm
 
 wakeup_time_SOURCES = wakeup-time.c
 wakeup_time_CPPFLAGS = \
-	@XENO_USER_CFLAGS@		\
+	@XENO_USER_CFLAGS@				\
 	-I$(top_srcdir)/include
 
 wakeup_time_LDFLAGS = 
 wakeup_time_LDADD = \
-	../../lib/alchemy/libalchemy.la \
+	../../lib/alchemy/libalchemy.la 	\
 	../../lib/copperplate/libcopperplate.la \
-	$(coredep_lib) \
-	@XENO_USER_LDADD@		\
+	$(coredep_lib) 				\
+	@XENO_USER_LDADD@			\
 	-lpthread -lrt -lm
 
 rtdm_SOURCES = rtdm.c
 rtdm_CPPFLAGS = \
-	@XENO_USER_CFLAGS@		\
-	-DXENO_POSIX			\
+	@XENO_USER_CFLAGS@				\
 	-I$(top_srcdir)/include
 
 rtdm_LDFLAGS = $(XENO_POSIX_WRAPPERS)
 rtdm_LDADD = \
-	../../lib/alchemy/libalchemy.la \
+	../../lib/alchemy/libalchemy.la 	\
 	../../lib/copperplate/libcopperplate.la \
-	$(coredep_lib) \
-	@XENO_USER_LDADD@		\
+	$(coredep_lib) 				\
+	@XENO_USER_LDADD@			\
 	-lpthread -lrt -lm
 
 all: all-am

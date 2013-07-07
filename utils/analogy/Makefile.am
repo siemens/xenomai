@@ -9,8 +9,8 @@ bin_PROGRAMS = \
 	insn_bits \
 	wf_generate
 
-CPPFLAGS = \
-	@XENO_USER_CFLAGS@ \
+CPPFLAGS = 						\
+	@XENO_USER_CFLAGS@ 				\
 	-I$(top_srcdir)/include
 
 LDFLAGS =

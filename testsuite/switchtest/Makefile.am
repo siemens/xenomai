@@ -6,8 +6,8 @@ test_PROGRAMS = switchtest
 
 switchtest_SOURCES = switchtest.c
 
-switchtest_CPPFLAGS =		\
-	$(XENO_USER_CFLAGS)	\
+switchtest_CPPFLAGS =					\
+	$(XENO_USER_CFLAGS)				\
 	-I$(top_srcdir)/include
 
 switchtest_LDFLAGS =  $(XENO_POSIX_WRAPPERS)

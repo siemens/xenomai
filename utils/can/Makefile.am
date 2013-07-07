@@ -2,8 +2,8 @@ sbin_PROGRAMS = rtcanconfig
 
 bin_PROGRAMS = rtcanrecv rtcansend
 
-CPPFLAGS = \
-	@XENO_USER_CFLAGS@ \
+CPPFLAGS = 						\
+	@XENO_USER_CFLAGS@ 				\
 	-I$(top_srcdir)/include
 
 LDFLAGS =

@@ -248,6 +248,7 @@ XENO_LIB_LDFLAGS = @XENO_LIB_LDFLAGS@
 XENO_MAYBE_DOCDIR = @XENO_MAYBE_DOCDIR@
 XENO_POSIX_WRAPPERS = @XENO_POSIX_WRAPPERS@
 XENO_TARGET_ARCH = @XENO_TARGET_ARCH@
+XENO_TARGET_CORE = @XENO_TARGET_CORE@
 XENO_TEST_DIR = @XENO_TEST_DIR@
 XENO_USER_APP_CFLAGS = @XENO_USER_APP_CFLAGS@
 XENO_USER_APP_LDFLAGS = @XENO_USER_APP_LDFLAGS@
@@ -313,7 +314,6 @@ top_srcdir = @top_srcdir@
 includesubdir = $(includedir)/cobalt
 includesub_HEADERS = \
 	arith.h		\
-	core.h		\
 	fcntl.h		\
 	mqueue.h	\
 	pthread.h	\
@@ -330,6 +330,7 @@ includesub_HEADERS = \
 	wrappers.h
 
 SUBDIRS = \
+	copperplate	\
 	kernel		\
 	sys		\
 	uapi

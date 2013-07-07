@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2013 Philippe Gerum <rpm@xenomai.org>.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -15,14 +15,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-
-#ifndef _MERCURY_CORE_H
-#define _MERCURY_CORE_H
+#ifndef _MERCURY_COPPERPLATE_SIGNAL_H
+#define _MERCURY_COPPERPLATE_SIGNAL_H
 
 #include <signal.h>
-#include <mercury/trace.h>
 
 /* Private signal used for unblocking from syscalls. */
 #define SIGRELS	(SIGRTMIN + 9)
 
-#endif /* _MERCURY_CORE_H */
+#endif /* _MERCURY_COPPERPLATE_SIGNAL_H */

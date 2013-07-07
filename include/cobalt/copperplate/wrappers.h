@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2013 Philippe Gerum <rpm@xenomai.org>.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -15,10 +15,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
+#ifndef _COBALT_COPPERPLATE_WRAPPERS_H
+#define _COBALT_COPPERPLATE_WRAPPERS_H
 
-#ifndef _COBALT_CORE_H
-#define _COBALT_CORE_H
+#include <cobalt/wrappers.h>
 
-#include <cobalt/trace.h>
-
-#endif /* _COBALT_CORE_H */
+#endif /* !_COBALT_COPPERPLATE_WRAPPERS_H */

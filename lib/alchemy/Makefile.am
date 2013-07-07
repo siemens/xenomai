@@ -34,9 +34,9 @@ libalchemy_la_SOURCES +=	\
 	pipe.h
 endif
 
-libalchemy_la_CPPFLAGS = \
-	@XENO_USER_CFLAGS@ \
-	-I$(top_srcdir)/include \
+libalchemy_la_CPPFLAGS =				\
+	@XENO_USER_CFLAGS@				\
+	-I$(top_srcdir)/include				\
 	-I$(top_srcdir)/lib
 
 EXTRA_DIST = testsuite

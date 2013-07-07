@@ -13,6 +13,7 @@ CONFIG_XENO_VERSION_MAJOR=`expr $PACKAGE_VERSION : '\([[0-9]]*\)'`
 CONFIG_XENO_VERSION_MINOR=`expr $PACKAGE_VERSION : '[[0-9]]*\.\([[0-9]]*\)'`
 CONFIG_XENO_REVISION_LEVEL=`expr $PACKAGE_VERSION : '[[0-9]]*\.[[0-9]]*\.\([[0-9]]*\)'`
 CONFIG_XENO_UAPI_LEVEL=`cat $srcdir/config/apirev`
+topdir=`cd $srcdir && pwd`
 
 dnl Find out whether we build for Cobalt core, i.e. dual kernel mode,
 dnl or Mercury (single image kernel). Defaults to Cobalt.
@@ -38,6 +39,7 @@ AM_CONDITIONAL(XENO_COBALT,[test x$rtcore_type = xcobalt])
 test x$rtcore_type = xcobalt && AC_DEFINE(CONFIG_XENO_COBALT,1,[config])
 AM_CONDITIONAL(XENO_MERCURY,[test x$rtcore_type = xmercury])
 test x$rtcore_type = xmercury && AC_DEFINE(CONFIG_XENO_MERCURY,1,[config])
+XENO_TARGET_CORE=$rtcore_type
 
 if test "x$CFLAGS" = "x"; then
 	XENO_EMPTY_CFLAGS=true
@@ -493,8 +495,6 @@ if test x${CONFIG_XENO_ASCIIDOC} = xy -a x"$W3M" = x ; then
    AC_MSG_ERROR([Missing the w3m tool to generate the documentation])
 fi
 
-
-
 dnl Determine whether some specific headers are present on this system.
 AC_CHECK_HEADERS(mqueue.h)
 
@@ -593,7 +593,8 @@ if test "$ac_cv_atomic_builtins" != "yes"; then
 fi
 
 dnl Common CFLAGS and LDFLAGS
-XENO_USER_CFLAGS="-D_GNU_SOURCE -D_REENTRANT -fstrict-aliasing -Wall -pipe -Wstrict-prototypes -Wmissing-prototypes -Wno-long-long -Wno-unused-parameter -Werror"
+XENO_USER_CFLAGS="-D_GNU_SOURCE -D_REENTRANT -pipe -fstrict-aliasing \
+-Wall -Wstrict-prototypes -Wmissing-prototypes -Wno-long-long -Wno-unused-parameter -Werror"
 XENO_USER_LDADD=
 
 if test x$use_registry = xy; then
@@ -617,7 +618,7 @@ if test x$use_assert = x; then
    XENO_USER_CFLAGS="-DNDEBUG $XENO_USER_CFLAGS"
 fi
 
-XENO_USER_CFLAGS="$XENO_USER_CFLAGS -D__XENO__ -D__IN_XENO__ -Wstrict-prototypes"
+XENO_USER_CFLAGS="$XENO_USER_CFLAGS -D__XENO__ -D__IN_XENO__ -I$topdir/include/$rtcore_type"
 
 AC_MSG_CHECKING([whether ld supports @file])
 AC_CACHE_VAL(ac_cv_ld_file_option,
@@ -717,8 +718,7 @@ dnl Autoconf-generated symbols have been listed.
 AH_BOTTOM([#endif /* __IN_XENO__ */])
 
 if test x$rtcore_type = xcobalt; then
-   topdir=`cd $srcdir && pwd`
-   XENO_USER_CFLAGS="-I$topdir/lib/cobalt/arch/$XENO_TARGET_ARCH/include -I$topdir/kernel/cobalt/arch/$XENO_TARGET_ARCH/include -I$topdir/include/cobalt -I$topdir/include $XENO_USER_CFLAGS"
+   XENO_USER_CFLAGS="-I$topdir/lib/cobalt/arch/$XENO_TARGET_ARCH/include -I$topdir/kernel/cobalt/arch/$XENO_TARGET_ARCH/include $XENO_USER_CFLAGS"
    XENO_COBALT_CFLAGS="$XENO_USER_CFLAGS"
    case "$build_for" in
     i*86*-*) XENO_COBALT_CFLAGS="$XENO_COBALT_CFLAGS -fno-omit-frame-pointer";;
@@ -728,7 +728,7 @@ dnl Build wrapping information. XENO_POSIX_WRAPPERS lists all wrapping
 dnl directives in a format the linker understands, for building the
 dnl in-tree executables which require POSIX symbol wrapping.
 
-   cobalt_wrappers="`cd $srcdir && pwd`/lib/cobalt/cobalt.wrappers"
+   cobalt_wrappers="$topdir/lib/cobalt/cobalt.wrappers"
    if [[ $ac_cv_ld_file_option = yes ]]; then
 	XENO_POSIX_WRAPPERS="-Wl,@$cobalt_wrappers"
    else
@@ -774,6 +774,7 @@ AC_SUBST(ASCIIDODC)
 AC_SUBST(A2X)
 AC_SUBST(W3M)
 
+AC_SUBST(XENO_TARGET_CORE)
 AC_SUBST(XENO_TARGET_ARCH)
 AC_SUBST(XENO_BUILD_STRING)
 AC_SUBST(XENO_HOST_STRING)
@@ -848,9 +849,11 @@ AC_CONFIG_FILES([ \
 	include/cobalt/Makefile \
 	include/cobalt/sys/Makefile \
 	include/cobalt/kernel/Makefile \
+	include/cobalt/copperplate/Makefile \
 	include/rtdm/Makefile \
 	include/analogy/Makefile \
 	include/mercury/Makefile \
+	include/mercury/copperplate/Makefile \
 	include/copperplate/Makefile \
 	include/alchemy/Makefile \
 	include/vxworks/Makefile \

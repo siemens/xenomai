@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2013 Philippe Gerum <rpm@xenomai.org>.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -10,18 +10,14 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
-
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
+#ifndef _COBALT_COPPERPLATE_TRACE_H
+#define _COBALT_COPPERPLATE_TRACE_H
 
-#ifndef _MERCURY_WRAPPERS_H
-#define _MERCURY_WRAPPERS_H
+#include <cobalt/trace.h>
 
-#include <xeno_config.h>
-
-#define __RT(call)	call
-#define __STD(call)	call
-
-#endif /* _MERCURY_WRAPPERS_H */
+#endif /* _COBALT_COPPERPLATE_TRACE_H */

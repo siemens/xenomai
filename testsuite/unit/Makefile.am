@@ -2,77 +2,75 @@ testdir = @XENO_TEST_DIR@
 
 CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 
-test_PROGRAMS = \
-	wakeup-time \
+test_PROGRAMS = 	\
+	wakeup-time 	\
 	rtdm
 
 if XENO_COBALT
 
 coredep_lib = ../../lib/cobalt/libcobalt.la
 
-test_PROGRAMS += arith \
-	mutex-torture \
-	cond-torture \
-	sched-tp \
+test_PROGRAMS += arith	\
+	mutex-torture 	\
+	cond-torture 	\
+	sched-tp 	\
 	check-vdso
 
 arith_SOURCES = arith.c arith-noinline.c arith-noinline.h
 
-arith_CPPFLAGS = \
-	@XENO_USER_CFLAGS@		\
+arith_CPPFLAGS = 					\
+	@XENO_USER_CFLAGS@				\
 	-I$(top_srcdir)/include
 
 arith_LDFLAGS =
 
-arith_LDADD = \
-	../../lib/alchemy/libalchemy.la \
+arith_LDADD = 					\
+	../../lib/alchemy/libalchemy.la 	\
 	../../lib/copperplate/libcopperplate.la \
-	$(coredep_lib) \
-	@XENO_USER_LDADD@		\
+	$(coredep_lib) 				\
+	@XENO_USER_LDADD@			\
 	-lpthread -lrt -lm
 
 mutex_torture_SOURCES = mutex-torture.c
 
-mutex_torture_CPPFLAGS =		\
-	@XENO_USER_CFLAGS@		\
-	-DXENO_POSIX			\
-	-I$(top_srcdir)			\
-	-I$(top_srcdir)/include
+mutex_torture_CPPFLAGS =				\
+	@XENO_USER_CFLAGS@				\
+	-I$(top_srcdir)/include				\
+	-I$(top_srcdir)
 
 mutex_torture_LDFLAGS = $(XENO_POSIX_WRAPPERS)
 
 mutex_torture_LDADD = \
-	../../lib/alchemy/libalchemy.la \
-	../../lib/copperplate/libcopperplate.la \
-	$(coredep_lib) \
-	@XENO_USER_LDADD@		\
+	../../lib/alchemy/libalchemy.la 		\
+	../../lib/copperplate/libcopperplate.la 	\
+	$(coredep_lib) 					\
+	@XENO_USER_LDADD@				\
 	-lpthread -lrt -lm
 
 cond_torture_SOURCES = cond-torture.c
 
-cond_torture_CPPFLAGS =		\
-	@XENO_USER_CFLAGS@		\
-	-DXENO_POSIX			\
+cond_torture_CPPFLAGS =					\
+	@XENO_USER_CFLAGS@				\
 	-I$(top_srcdir)/include
 
 cond_torture_LDFLAGS = $(XENO_POSIX_WRAPPERS)
 
-cond_torture_LDADD = \
-	../../lib/alchemy/libalchemy.la \
+cond_torture_LDADD = 				\
+	../../lib/alchemy/libalchemy.la 	\
 	../../lib/copperplate/libcopperplate.la \
-	$(coredep_lib) \
-	@XENO_USER_LDADD@		\
+	$(coredep_lib) 				\
+	@XENO_USER_LDADD@			\
 	-lpthread -lrt -lm
 
 sched_tp_SOURCES = sched-tp.c
 
-sched_tp_CPPFLAGS =			\
-	@XENO_USER_CFLAGS@		\
+sched_tp_CPPFLAGS =					\
+	@XENO_USER_CFLAGS@				\
 	-I$(top_srcdir)/include
 
 sched_tp_LDFLAGS = $(XENO_POSIX_WRAPPERS)
 
-sched_tp_LDADD = \
+sched_tp_LDADD = 				\
 	../../lib/copperplate/libcopperplate.la	\
 	$(coredep_lib)				\
 	@XENO_USER_LDADD@			\
@@ -80,14 +78,14 @@ sched_tp_LDADD = \
 
 check_vdso_SOURCES = check-vdso.c
 
-check_vdso_CPPFLAGS =			\
-	@XENO_USER_CFLAGS@		\
+check_vdso_CPPFLAGS =					\
+	@XENO_USER_CFLAGS@				\
 	-I$(top_srcdir)/include
 
 check_vdso_LDFLAGS =
 
-check_vdso_LDADD = \
-	$(coredep_lib) \
+check_vdso_LDADD = 		\
+	$(coredep_lib) 		\
 	@XENO_USER_LDADD@	\
 	-lpthread -lrt -lm
 
@@ -97,31 +95,30 @@ endif
 
 wakeup_time_SOURCES = wakeup-time.c
 
-wakeup_time_CPPFLAGS =			\
-	@XENO_USER_CFLAGS@		\
+wakeup_time_CPPFLAGS =					\
+	@XENO_USER_CFLAGS@				\
 	-I$(top_srcdir)/include
 
 wakeup_time_LDFLAGS =
 
-wakeup_time_LDADD = \
-	../../lib/alchemy/libalchemy.la \
+wakeup_time_LDADD = 				\
+	../../lib/alchemy/libalchemy.la 	\
 	../../lib/copperplate/libcopperplate.la \
-	$(coredep_lib) \
-	@XENO_USER_LDADD@		\
+	$(coredep_lib) 				\
+	@XENO_USER_LDADD@			\
 	-lpthread -lrt -lm
 
 rtdm_SOURCES = rtdm.c
 
-rtdm_CPPFLAGS =				\
-	@XENO_USER_CFLAGS@		\
-	-DXENO_POSIX			\
+rtdm_CPPFLAGS =						\
+	@XENO_USER_CFLAGS@				\
 	-I$(top_srcdir)/include
 
 rtdm_LDFLAGS = $(XENO_POSIX_WRAPPERS)
 
-rtdm_LDADD = \
-	../../lib/alchemy/libalchemy.la \
+rtdm_LDADD = 					\
+	../../lib/alchemy/libalchemy.la 	\
 	../../lib/copperplate/libcopperplate.la \
-	$(coredep_lib) \
-	@XENO_USER_LDADD@		\
+	$(coredep_lib) 				\
+	@XENO_USER_LDADD@			\
 	-lpthread -lrt -lm

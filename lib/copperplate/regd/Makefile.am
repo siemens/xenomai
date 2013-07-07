@@ -6,14 +6,14 @@ else
 coredep_lib =
 endif
 
-CPPFLAGS = \
-	@XENO_USER_CFLAGS@	\
-	@XENO_FUSE_CFLAGS@	\
+CPPFLAGS = 						\
+	@XENO_USER_CFLAGS@				\
+	@XENO_FUSE_CFLAGS@				\
 	-I$(top_srcdir)/include
 
 LDFLAGS = $(XENO_POSIX_WRAPPERS)
 
-LDADD = \
+LDADD = 			\
 	../libcopperplate.la	\
 	$(coredep_lib)		\
 	@XENO_USER_LDADD@	\

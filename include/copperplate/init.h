@@ -20,7 +20,7 @@
 #define _COPPERPLATE_INIT_H
 
 #include <stdarg.h>
-#include <copperplate/core.h>
+#include <copperplate/trace.h>
 #include <copperplate/list.h>
 
 struct option;
