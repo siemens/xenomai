@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2006 Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>.
+ * Copyright (C) 2007 Jan Kiszka <jan.kiszka@web.de>.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -43,6 +44,12 @@ COBALT_DECL(int, __printf_chk(int flag, const char *fmt, ...));
 
 COBALT_DECL(int, __fprintf_chk(FILE *fp, int flag, const char *fmt, ...));
 
+int __rt_vfprintf_chk(FILE *stream, int level,
+		      const char *fmt, va_list args);
+
+void __rt_vsyslog_chk(int priority, int level,
+		      const char *fmt, va_list args);
+
 #endif	/* CONFIG_XENO_FORTIFY */
 
 COBALT_DECL(int, vprintf(const char *fmt, va_list args));
@@ -71,7 +78,44 @@ int __wrap_putchar(int c);
 
 #endif
 
-COBALT_DECL(size_t, fwrite(const void *ptr, size_t sz, size_t nmemb, FILE *stream));
+COBALT_DECL(size_t,
+	    fwrite(const void *ptr, size_t sz, size_t nmemb, FILE *stream));
+
+int rt_vfprintf(FILE *stream, const char *format, va_list args);
+
+int rt_vprintf(const char *format, va_list args);
+
+int rt_fprintf(FILE *stream, const char *format, ...);
+
+int rt_printf(const char *format, ...);
+
+int rt_puts(const char *s);
+
+int rt_fputs(const char *s, FILE *stream);
+
+int rt_fputc(int c, FILE *stream);
+
+int rt_putchar(int c);
+
+size_t rt_fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
+
+void rt_syslog(int priority, const char *format, ...);
+
+void rt_vsyslog(int priority, const char *format, va_list args);
+
+int rt_print_init(size_t buffer_size, const char *name);
+
+void rt_print_cleanup(void);
+
+void rt_print_auto_init(int enable);
+
+const char *rt_print_buffer_name(void);
+
+void rt_print_flush_buffers(void);
+
+void assert_nrt(void);
+
+void assert_nrt_fast(void);
 
 #ifdef __cplusplus
 }

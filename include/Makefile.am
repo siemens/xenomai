@@ -10,7 +10,6 @@ SUBDIRS = 		\
 	vxworks
 
 if XENO_COBALT
-include_HEADERS += rtdk.h
 SUBDIRS += 		\
 	analogy 	\
 	cobalt 		\

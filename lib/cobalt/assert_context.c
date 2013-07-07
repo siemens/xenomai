@@ -21,8 +21,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdio.h>
 #include <errno.h>
-#include <rtdk.h>
 #include <cobalt/uapi/thread.h>
 #include <asm/xenomai/syscall.h>
 #include "current.h"

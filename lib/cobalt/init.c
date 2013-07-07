@@ -29,7 +29,6 @@
 #include <cobalt/uapi/rtdm/syscall.h>
 #include <cobalt/ticks.h>
 #include <asm/xenomai/syscall.h>
-#include <rtdk.h>
 #include "sem_heap.h"
 #include "internal.h"
 

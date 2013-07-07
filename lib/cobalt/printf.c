@@ -26,7 +26,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <syslog.h>
-#include <rtdk.h>
 #include <nocore/atomic.h>
 #include "current.h"
 #include "internal.h"
