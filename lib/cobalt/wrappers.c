@@ -30,6 +30,7 @@
 #include <sys/time.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include <signal.h>
 #include <syslog.h>
 #include <pthread.h>
