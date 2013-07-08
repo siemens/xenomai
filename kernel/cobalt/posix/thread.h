@@ -101,16 +101,6 @@ struct cobalt_thread {
 	unsigned int magic;
 	struct xnthread threadbase;
 
-#define thread2pthread(taddr) \
-	({								\
-		struct xnthread *__t = (taddr);				\
-		(__t							\
-		 ? ((__t->personality == &cobalt_personality)		\
-		    ? (container_of(__t, struct cobalt_thread, threadbase)) \
-		    : NULL)						\
-		 : NULL);						\
-	})
-
 	/** cobalt_threadq */
 	struct list_head link;
 	struct list_head *container;
@@ -131,7 +121,11 @@ struct cobalt_thread {
 	struct cobalt_hkey hkey;
 };
 
-#define cobalt_current_thread() thread2pthread(xnpod_current_thread())
+static inline struct cobalt_thread *cobalt_current_thread(void)
+{
+	struct xnthread *curr = xnshadow_current();
+	return curr ? container_of(curr, struct cobalt_thread, threadbase) : NULL;
+}
 
 #define thread_name(thread) ((thread)->attr.name)
 

@@ -300,7 +300,7 @@ timer_settime(timer_t timerid, int flags,
 	spl_t s;
 	int err;
 
-	if (!cur) {
+	if (cur == NULL) {
 		err = -EPERM;
 		goto error;
 	}

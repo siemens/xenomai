@@ -182,14 +182,13 @@ static void thread_destroy(pthread_t thread)
 
 struct xnpersonality *cobalt_thread_unmap(struct xnthread *thread)
 {
-	pthread_t tid = thread2pthread(thread);
+	pthread_t tid;
 
-	if (tid) {
-		cobalt_mark_deleted(tid);
-		cobalt_timer_cleanup_thread(tid);
-		thread_destroy(tid);
-		cobalt_thread_unhash(&tid->hkey);
-	}
+	tid = container_of(thread, struct cobalt_thread, threadbase);
+	cobalt_mark_deleted(tid);
+	cobalt_timer_cleanup_thread(tid);
+	thread_destroy(tid);
+	cobalt_thread_unhash(&tid->hkey);
 
 	/* We don't stack over any personality, no chaining. */
 	return NULL;
@@ -1187,11 +1186,12 @@ int cobalt_sched_max_prio(int policy)
 
 int cobalt_sched_yield(void)
 {
-	pthread_t thread = thread2pthread(xnshadow_current());
 	struct sched_param_ex param;
 	int policy = SCHED_NORMAL;
+	pthread_t cur;
 
-	pthread_getschedparam_ex(thread, &policy, &param);
+	cur = cobalt_current_thread();
+	pthread_getschedparam_ex(cur, &policy, &param);
 	xnpod_yield();
 
 	return policy == SCHED_NORMAL;
