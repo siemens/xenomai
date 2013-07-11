@@ -33,6 +33,8 @@ static pthread_attr_ex_t default_attr_ex;
 
 static int linuxthreads;
 
+static int std_maxpri;
+
 static void prefault_stack(void)
 {
 	if (pthread_self() == __cobalt_main_tid) {
@@ -57,6 +59,12 @@ static int libc_setschedparam(pthread_t thread,
 	case SCHED_TP:
 	case SCHED_SPORADIC:
 		policy = SCHED_FIFO;
+		/*
+		 * Our priority range is larger than the regular
+		 * kernel's, limit the priority value accordingly.
+		 */
+		if (priority > std_maxpri)
+			priority = std_maxpri;
 		break;
 	default:
 		policy = policy_ex;
@@ -434,15 +442,14 @@ COBALT_IMPL(int, pthread_kill, (pthread_t thread, int sig))
 
 static __attribute__((constructor)) void cobalt_thread_init(void)
 {
-	pthread_attr_init_ex(&default_attr_ex);
 #ifdef _CS_GNU_LIBPTHREAD_VERSION
-	{
-		char vers[128];
-		linuxthreads =
-			!confstr(_CS_GNU_LIBPTHREAD_VERSION, vers, sizeof(vers))
-			|| strstr(vers, "linuxthreads");
-	}
+	char vers[128];
+	linuxthreads =
+		!confstr(_CS_GNU_LIBPTHREAD_VERSION, vers, sizeof(vers))
+		|| strstr(vers, "linuxthreads");
 #else /* !_CS_GNU_LIBPTHREAD_VERSION */
 	linuxthreads = 1;
 #endif /* !_CS_GNU_LIBPTHREAD_VERSION */
+	pthread_attr_init_ex(&default_attr_ex);
+	std_maxpri = __STD(sched_get_priority_max(SCHED_FIFO));
 }
