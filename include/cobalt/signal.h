@@ -22,8 +22,30 @@
 #include_next <signal.h>
 /* Re-read in case we came from selective __need* block. */
 #include_next <signal.h>
+#include <cobalt/wrappers.h>
 #include <cobalt/uapi/signal.h>
 
+#ifndef sigev_notify_thread_id
+#define sigev_notify_thread_id	 _sigev_un._tid
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int cobalt_sigshadow_handler(int sig, siginfo_t *si, void *ctxt);
+
+COBALT_DECL(int, sigpending(sigset_t *set));
+
+COBALT_DECL(int, sigwait(const sigset_t *set, int *sig));
+
+COBALT_DECL(int, sigwaitinfo(const sigset_t *set, siginfo_t *si));
+
+COBALT_DECL(int, sigtimedwait(const sigset_t *set, siginfo_t *si,
+			      const struct timespec *timeout));
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !_COBALT_SIGNAL_H */

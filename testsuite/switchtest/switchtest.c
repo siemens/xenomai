@@ -1412,7 +1412,7 @@ int main(int argc, const char *argv[])
 		__STD(sem_post(&sleeper_start));
 
 	/* Wait for interruption. */
-	sigwait(&mask, &sig);
+	__STD(sigwait(&mask, &sig));
 
 	/* Allow a second Ctrl-C in case of lockup. */
 	pthread_sigmask(SIG_UNBLOCK, &mask, NULL);

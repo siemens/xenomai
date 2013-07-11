@@ -755,7 +755,7 @@ int main(int argc, char *const *argv)
 		}
 	}
 
-	sigwait(&mask, &sig);
+	__STD(sigwait(&mask, &sig));
 	finished = 1;
 
 	cleanup();

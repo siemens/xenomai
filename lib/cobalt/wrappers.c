@@ -401,6 +401,31 @@ int __real_clock_gettime(clockid_t clk_id, struct timespec *tp)
 	return clock_gettime(clk_id, tp);
 }
 
+__attribute__ ((weak))
+int __real_sigwait(const sigset_t *set, int *sig)
+{
+	return sigwait(set, sig);
+}
+
+__attribute__ ((weak))
+int __real_sigwaitinfo(const sigset_t *set, siginfo_t *si)
+{
+	return sigwaitinfo(set, si);
+}
+
+__attribute__ ((weak))
+int __real_sigtimedwait(const sigset_t *set, siginfo_t *si,
+			const struct timespec *timeout)
+{
+	return sigtimedwait(set, si, timeout);
+}
+
+__attribute__ ((weak))
+int __real_sigpending(sigset_t *set)
+{
+	return sigpending(set);
+}
+
 #ifdef __PROVIDE_CPU_COUNT
 
 int __sched_cpucount(size_t setsize, const cpu_set_t *setp)

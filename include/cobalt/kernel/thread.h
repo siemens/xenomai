@@ -160,7 +160,6 @@ typedef struct xnthread {
 	char name[XNOBJECT_NAME_LEN]; /* Symbolic name of thread */
 
 	void (*entry)(void *cookie); /* Thread entry routine */
-
 	void *cookie;		/* Cookie to pass to the entry routine */
 
 	struct pt_regs *regs;		/* Current register frame */

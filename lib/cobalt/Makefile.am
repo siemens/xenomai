@@ -26,6 +26,7 @@ libcobalt_la_SOURCES =		\
 	select.c		\
 	sem_heap.c		\
 	semaphore.c		\
+	signal.c		\
 	sigshadow.c		\
 	thread.c		\
 	ticks.c			\

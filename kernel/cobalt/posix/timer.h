@@ -20,6 +20,8 @@
 
 #include <linux/time.h>
 
+struct cobalt_thread;
+
 int cobalt_timer_create(clockid_t clock,
 			const struct sigevent __user *u_sev,
 			timer_t __user *u_tm);
@@ -35,9 +37,9 @@ int cobalt_timer_gettime(timer_t tm, struct itimerspec __user *u_val);
 
 int cobalt_timer_getoverrun(timer_t tm);
 
-void cobalt_timer_init_thread(pthread_t new);
+void cobalt_timer_notified(timer_t timerid);
 
-void cobalt_timer_cleanup_thread(pthread_t zombie);
+void cobalt_timer_flush(struct cobalt_thread *zombie);
 
 void cobalt_timerq_cleanup(struct cobalt_kqueues *q);
 

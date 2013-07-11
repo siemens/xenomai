@@ -54,9 +54,6 @@
 #define cobalt_obj_active(h,m,t)			\
 	((h) && ((t *)(h))->magic == (m))
 
-#define cobalt_obj_deleted(h,m,t)		\
-	((h) && ((t *)(h))->magic == ~(m))
-
 #define cobalt_mark_deleted(t) ((t)->magic = ~(t)->magic)
 
 struct cobalt_kqueues {

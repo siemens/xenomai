@@ -29,6 +29,7 @@
  *@{*/
 
 #include <linux/types.h>
+#include <linux/cred.h>
 #include <linux/jhash.h>
 #include <cobalt/uapi/signal.h>
 #include "thread.h"
@@ -50,147 +51,179 @@ static const pthread_attr_t default_thread_attr = {
 
 #define PTHREAD_HSLOTS (1 << 8)	/* Must be a power of 2 */
 
-struct cobalt_hash {
-	pthread_t pthread;
+/* Process-local index, pthread_t x mm_struct (cobalt_local_hkey). */
+struct local_thread_hash {
 	pid_t pid;
-	struct cobalt_hkey hkey;
-	struct cobalt_hash *next;
+	struct cobalt_thread *thread;
+	struct cobalt_local_hkey hkey;
+	struct local_thread_hash *next;
 };
 
-struct pid_hash {
+/* System-wide index on task_struct->pid. */
+struct global_thread_hash {
 	pid_t pid;
-	pthread_t pthread;
-	struct pid_hash *next;
+	struct cobalt_thread *thread;
+	struct global_thread_hash *next;
 };
 
-static struct cobalt_hash *pthread_table[PTHREAD_HSLOTS];
+static struct local_thread_hash *local_index[PTHREAD_HSLOTS];
 
-static struct pid_hash *pid_table[PTHREAD_HSLOTS];
+static struct global_thread_hash *global_index[PTHREAD_HSLOTS];
 
-static inline struct cobalt_hash *
-cobalt_thread_hash(const struct cobalt_hkey *hkey, pthread_t pthread, pid_t pid)
+static inline struct local_thread_hash *
+thread_hash(const struct cobalt_local_hkey *hkey,
+	    struct cobalt_thread *thread, pid_t pid)
 {
-	struct cobalt_hash **pthead, *ptslot;
-	struct pid_hash **pidhead, *pidslot;
+	struct global_thread_hash **ghead, *gslot;
+	struct local_thread_hash **lhead, *lslot;
 	u32 hash;
 	void *p;
 	spl_t s;
 
-	p = xnmalloc(sizeof(*ptslot) + sizeof(*pidslot));
+	p = xnmalloc(sizeof(*lslot) + sizeof(*gslot));
 	if (p == NULL)
 		return NULL;
 
-	ptslot = p;
-	ptslot->hkey = *hkey;
-	ptslot->pthread = pthread;
-	ptslot->pid = pid;
-	hash = jhash2((u32 *)&ptslot->hkey,
-		      sizeof(ptslot->hkey) / sizeof(u32), 0);
-	pthead = &pthread_table[hash & (PTHREAD_HSLOTS - 1)];
+	lslot = p;
+	lslot->hkey = *hkey;
+	lslot->thread = thread;
+	lslot->pid = pid;
+	hash = jhash2((u32 *)&lslot->hkey,
+		      sizeof(lslot->hkey) / sizeof(u32), 0);
+	lhead = &local_index[hash & (PTHREAD_HSLOTS - 1)];
 
-	pidslot = p + sizeof(*ptslot);
-	pidslot->pid = pid;
-	pidslot->pthread = pthread;
+	gslot = p + sizeof(*lslot);
+	gslot->pid = pid;
+	gslot->thread = thread;
 	hash = jhash2((u32 *)&pid, sizeof(pid) / sizeof(u32), 0);
-	pidhead = &pid_table[hash & (PTHREAD_HSLOTS - 1)];
+	ghead = &global_index[hash & (PTHREAD_HSLOTS - 1)];
 
 	xnlock_get_irqsave(&nklock, s);
-	ptslot->next = *pthead;
-	*pthead = ptslot;
-	pidslot->next = *pidhead;
-	*pidhead = pidslot;
+	lslot->next = *lhead;
+	*lhead = lslot;
+	gslot->next = *ghead;
+	*ghead = gslot;
 	xnlock_put_irqrestore(&nklock, s);
 
-	return ptslot;
+	return lslot;
 }
 
-static inline void cobalt_thread_unhash(const struct cobalt_hkey *hkey)
+static inline void thread_unhash(const struct cobalt_local_hkey *hkey)
 {
-	struct cobalt_hash **pttail, *ptslot;
-	struct pid_hash **pidtail, *pidslot;
+	struct global_thread_hash **gtail, *gslot;
+	struct local_thread_hash **ltail, *lslot;
 	pid_t pid;
 	u32 hash;
 	spl_t s;
 
 	hash = jhash2((u32 *) hkey, sizeof(*hkey) / sizeof(u32), 0);
-	pttail = &pthread_table[hash & (PTHREAD_HSLOTS - 1)];
+	ltail = &local_index[hash & (PTHREAD_HSLOTS - 1)];
 
 	xnlock_get_irqsave(&nklock, s);
 
-	ptslot = *pttail;
-	while (ptslot &&
-	       (ptslot->hkey.u_tid != hkey->u_tid ||
-		ptslot->hkey.mm != hkey->mm)) {
-		pttail = &ptslot->next;
-		ptslot = *pttail;
+	lslot = *ltail;
+	while (lslot &&
+	       (lslot->hkey.u_tid != hkey->u_tid ||
+		lslot->hkey.mm != hkey->mm)) {
+		ltail = &lslot->next;
+		lslot = *ltail;
 	}
 
-	if (ptslot == NULL) {
+	if (lslot == NULL) {
 		xnlock_put_irqrestore(&nklock, s);
 		return;
 	}
 
-	*pttail = ptslot->next;
-	pid = ptslot->pid;
+	*ltail = lslot->next;
+	pid = lslot->pid;
 	hash = jhash2((u32 *)&pid, sizeof(pid) / sizeof(u32), 0);
-	pidtail = &pid_table[hash & (PTHREAD_HSLOTS - 1)];
-	pidslot = *pidtail;
-	while (pidslot && pidslot->pid != pid) {
-		pidtail = &pidslot->next;
-		pidslot = *pidtail;
+	gtail = &global_index[hash & (PTHREAD_HSLOTS - 1)];
+	gslot = *gtail;
+	while (gslot && gslot->pid != pid) {
+		gtail = &gslot->next;
+		gslot = *gtail;
 	}
-	/* pidslot must be found here. */
-	XENO_BUGON(COBALT, !(pidslot && pidtail));
-	*pidtail = pidslot->next;
+	/* gslot must be found here. */
+	XENO_BUGON(COBALT, !(gslot && gtail));
+	*gtail = gslot->next;
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	xnfree(ptslot);
-	xnfree(pidslot);
+	xnfree(lslot);
+	xnfree(gslot);
 }
 
-static pthread_t thread_find(const struct cobalt_hkey *hkey)
+static struct cobalt_thread *
+thread_find_local(const struct cobalt_local_hkey *hkey)
 {
-	struct cobalt_hash *ptslot;
-	pthread_t pthread;
+	struct local_thread_hash *lslot;
+	struct cobalt_thread *thread;
 	u32 hash;
 	spl_t s;
 
-	hash = jhash2((u32 *) hkey, sizeof(*hkey) / sizeof(u32), 0);
+	hash = jhash2((u32 *)hkey, sizeof(*hkey) / sizeof(u32), 0);
+	lslot = local_index[hash & (PTHREAD_HSLOTS - 1)];
 
 	xnlock_get_irqsave(&nklock, s);
 
-	ptslot = pthread_table[hash & (PTHREAD_HSLOTS - 1)];
+	while (lslot != NULL &&
+	       (lslot->hkey.u_tid != hkey->u_tid || lslot->hkey.mm != hkey->mm))
+		lslot = lslot->next;
 
-	while (ptslot != NULL &&
-	       (ptslot->hkey.u_tid != hkey->u_tid || ptslot->hkey.mm != hkey->mm))
-		ptslot = ptslot->next;
-
-	pthread = ptslot ? ptslot->pthread : NULL;
+	thread = lslot ? lslot->thread : NULL;
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return pthread;
+	return thread;
 }
 
-static void thread_destroy(pthread_t thread)
+static void thread_destroy(struct cobalt_thread *thread)
 {
 	list_del(&thread->link);
 	xnsynch_destroy(&thread->monitor_synch);
+	xnsynch_destroy(&thread->sigwait);
 	xnheap_schedule_free(&kheap, thread, &thread->link);
 }
 
-struct xnpersonality *cobalt_thread_unmap(struct xnthread *thread)
+struct cobalt_thread *cobalt_thread_find(pid_t pid) /* nklocked, IRQs off */
 {
-	pthread_t tid;
+	struct global_thread_hash *gslot;
+	u32 hash;
+
+	hash = jhash2((u32 *)&pid, sizeof(pid) / sizeof(u32), 0);
+
+	gslot = global_index[hash & (PTHREAD_HSLOTS - 1)];
+	while (gslot && gslot->pid != pid)
+		gslot = gslot->next;
+
+	return gslot ? gslot->thread : NULL;
+}
+
+struct xnpersonality *cobalt_thread_exit(struct xnthread *thread)
+{
+	struct cobalt_thread *tid;
 
 	tid = container_of(thread, struct cobalt_thread, threadbase);
+	/*
+	 * Unhash first, to prevent further access to the TCB from
+	 * userland.
+	 */
+	thread_unhash(&tid->hkey);
 	cobalt_mark_deleted(tid);
-	cobalt_timer_cleanup_thread(tid);
-	thread_destroy(tid);
-	cobalt_thread_unhash(&tid->hkey);
+	cobalt_signal_flush(tid);
+	cobalt_timer_flush(tid);
 
 	/* We don't stack over any personality, no chaining. */
+	return NULL;
+}
+
+struct xnpersonality *cobalt_thread_unmap(struct xnthread *thread) /* nklocked, IRQs off */
+{
+	struct cobalt_thread *tid;
+
+	tid = container_of(thread, struct cobalt_thread, threadbase);
+	thread_destroy(tid);
+
 	return NULL;
 }
 
@@ -224,7 +257,7 @@ struct xnpersonality *cobalt_thread_unmap(struct xnthread *thread)
  *
  */
 static inline int
-pthread_getschedparam_ex(pthread_t tid, int *pol, struct sched_param_ex *par)
+pthread_getschedparam_ex(struct cobalt_thread *tid, int *pol, struct sched_param_ex *par)
 {
 	struct xnsched_class *base_class;
 	struct xnthread *thread;
@@ -338,36 +371,36 @@ unlock_and_exit:
  * using the SA_SIGINFO flag, and pass all the arguments you received
  * to cobalt_sigshadow_handler.
  */
-static inline int pthread_create(pthread_t *tid, const pthread_attr_t *attr)
+static inline int pthread_create(struct cobalt_thread **tid, const pthread_attr_t *attr)
 {
+	struct cobalt_thread *thread, *curr;
 	struct xnsched_class *sched_class;
 	union xnsched_policy_param param;
 	struct xnthread_init_attr iattr;
-	pthread_t thread, cur;
-	int prio, ret, pol;
+	int prio, ret, pol, n;
 	spl_t s;
 
 	if (attr && attr->magic != COBALT_THREAD_ATTR_MAGIC)
 		return -EINVAL;
 
-	thread = (pthread_t)xnmalloc(sizeof(*thread));
+	thread = xnmalloc(sizeof(*thread));
 	if (thread == NULL)
 		return -EAGAIN;
 
-	cur = cobalt_current_thread();
+	curr = cobalt_current_thread();
 	thread->attr = attr ? *attr : default_thread_attr;
 	if (thread->attr.inheritsched == PTHREAD_INHERIT_SCHED) {
 		/*
-		 * cur may be NULL if pthread_create is not called by
+		 * curr may be NULL if pthread_create is not called by
 		 * a cobalt thread, in which case trying to inherit
 		 * scheduling parameters is treated as an error.
 		 */
-		if (cur == NULL) {
+		if (curr == NULL) {
 			xnfree(thread);
 			return -EINVAL;
 		}
 
-		pthread_getschedparam_ex(cur, &thread->attr.policy,
+		pthread_getschedparam_ex(curr, &thread->attr.policy,
 					 &thread->attr.schedparam_ex);
 	}
 
@@ -415,13 +448,17 @@ static inline int pthread_create(pthread_t *tid, const pthread_attr_t *attr)
 	}
 
 	thread->attr.name = xnthread_name(&thread->threadbase);
-
 	thread->magic = COBALT_THREAD_MAGIC;
 	xnsynch_init(&thread->monitor_synch, XNSYNCH_FIFO, NULL);
 	thread->monitor_queued = 0;
 	thread->sched_u_policy = thread->attr.policy;
 
-	cobalt_timer_init_thread(thread);
+	xnsynch_init(&thread->sigwait, XNSYNCH_FIFO, NULL);
+	sigemptyset(&thread->sigpending);
+	for (n = 0; n < _NSIG; n++)
+		INIT_LIST_HEAD(thread->sigqueues + n);
+
+	INIT_LIST_HEAD(&thread->timersq);
 
 	if (thread->attr.policy == SCHED_RR)
 		xnpod_set_thread_tslice(&thread->threadbase, cobalt_time_slice);
@@ -476,7 +513,7 @@ static inline int pthread_create(pthread_t *tid, const pthread_attr_t *attr)
  *
  * Rescheduling: always, until the @a starttp start time has been reached.
  */
-static inline int pthread_make_periodic_np(pthread_t thread,
+static inline int pthread_make_periodic_np(struct cobalt_thread *thread,
 					   clockid_t clock_id,
 					   struct timespec *starttp,
 					   struct timespec *periodtp)
@@ -642,7 +679,7 @@ static inline int pthread_set_mode_np(int clrmask, int setmask, int *mode_r)
  * pthread_setschedparam_ex() may switch the caller to secondary mode.
  */
 static inline int
-pthread_setschedparam_ex(pthread_t tid, int u_pol, const struct sched_param_ex *par)
+pthread_setschedparam_ex(struct cobalt_thread *tid, int u_pol, const struct sched_param_ex *par)
 {
 	struct xnsched_class *sched_class;
 	union xnsched_policy_param param;
@@ -745,27 +782,28 @@ int cobalt_thread_setschedparam_ex(unsigned long tid,
 				   unsigned long __user *u_window_offset,
 				   int __user *u_promoted)
 {
+	struct cobalt_local_hkey hkey;
+	struct cobalt_thread *thread;
 	struct sched_param_ex param;
-	struct cobalt_hkey hkey;
 	int ret, promoted = 0;
-	pthread_t pthread;
 
 	if (__xn_safe_copy_from_user(&param, u_param, sizeof(param)))
 		return -EFAULT;
 
 	hkey.u_tid = tid;
 	hkey.mm = current->mm;
-	pthread = thread_find(&hkey);
+	thread = thread_find_local(&hkey);
 
-	if (pthread == NULL && u_window_offset) {
-		pthread = cobalt_thread_shadow(current, &hkey, u_window_offset);
-		if (IS_ERR(pthread))
-			return PTR_ERR(pthread);
+	if (thread == NULL && u_window_offset) {
+		thread = cobalt_thread_shadow(current, &hkey, u_window_offset);
+		if (IS_ERR(thread))
+			return PTR_ERR(thread);
 
 		promoted = 1;
 	}
-	if (pthread)
-		ret = pthread_setschedparam_ex(pthread, policy, &param);
+
+	if (thread)
+		ret = pthread_setschedparam_ex(thread, policy, &param);
 	else
 		ret = -EPERM;
 
@@ -799,10 +837,10 @@ int cobalt_thread_create(unsigned long tid, int policy,
 			 struct sched_param_ex __user *u_param,
 			 unsigned long __user *u_window_offset)
 {
+	struct cobalt_thread *thread = NULL;
 	struct task_struct *p = current;
+	struct cobalt_local_hkey hkey;
 	struct sched_param_ex param;
-	struct cobalt_hkey hkey;
-	pthread_t pthread = NULL;
 	pthread_attr_t attr;
 	pid_t pid;
 	int ret;
@@ -828,35 +866,35 @@ int cobalt_thread_create(unsigned long tid, int policy,
 	attr.schedparam_ex = param;
 	attr.name = p->comm;
 
-	ret = pthread_create(&pthread, &attr);
+	ret = pthread_create(&thread, &attr);
 	if (ret)
 		return ret;
 
 	pid = task_pid_vnr(p);
-	ret = xnshadow_map_user(&pthread->threadbase, u_window_offset);
+	ret = xnshadow_map_user(&thread->threadbase, u_window_offset);
 	if (ret)
 		goto fail;
 
-	if (!cobalt_thread_hash(&hkey, pthread, pid)) {
+	if (!thread_hash(&hkey, thread, pid)) {
 		ret = -ENOMEM;
 		goto fail;
 	}
 
-	pthread->hkey = hkey;
+	thread->hkey = hkey;
 
 	return 0;
 
 fail:
-	xnpod_cancel_thread(&pthread->threadbase);
+	xnpod_cancel_thread(&thread->threadbase);
 
 	return ret;
 }
 
-pthread_t cobalt_thread_shadow(struct task_struct *p,
-			       struct cobalt_hkey *hkey,
+struct cobalt_thread *cobalt_thread_shadow(struct task_struct *p,
+			       struct cobalt_local_hkey *hkey,
 			       unsigned long __user *u_window_offset)
 {
-	pthread_t pthread = NULL;
+	struct cobalt_thread *thread = NULL;
 	pthread_attr_t attr;
 	pid_t pid;
 	int ret;
@@ -865,26 +903,26 @@ pthread_t cobalt_thread_shadow(struct task_struct *p,
 	attr.detachstate = PTHREAD_CREATE_DETACHED;
 	attr.name = p->comm;
 
-	ret = pthread_create(&pthread, &attr);
+	ret = pthread_create(&thread, &attr);
 	if (ret)
 		return ERR_PTR(-ret);
 
 	pid = task_pid_vnr(p);
-	ret = xnshadow_map_user(&pthread->threadbase, u_window_offset);
+	ret = xnshadow_map_user(&thread->threadbase, u_window_offset);
 	/*
 	 * From now on, we run in primary mode, so we refrain from
 	 * calling regular kernel services (e.g. like
 	 * task_pid_vnr()).
 	 */
-	if (ret == 0 && !cobalt_thread_hash(hkey, pthread, pid))
+	if (ret == 0 && !thread_hash(hkey, thread, pid))
 		ret = -EAGAIN;
 
 	if (ret)
-		xnpod_cancel_thread(&pthread->threadbase);
+		xnpod_cancel_thread(&thread->threadbase);
 	else
-		pthread->hkey = *hkey;
+		thread->hkey = *hkey;
 
-	return ret ? ERR_PTR(ret) : pthread;
+	return ret ? ERR_PTR(ret) : thread;
 }
 
 int cobalt_thread_make_periodic_np(unsigned long tid,
@@ -893,12 +931,12 @@ int cobalt_thread_make_periodic_np(unsigned long tid,
 				   struct timespec __user *u_periodt)
 {
 	struct timespec startt, periodt;
-	struct cobalt_hkey hkey;
-	pthread_t pthread;
+	struct cobalt_local_hkey hkey;
+	struct cobalt_thread *thread;
 
 	hkey.u_tid = tid;
 	hkey.mm = current->mm;
-	pthread = thread_find(&hkey);
+	thread = thread_find_local(&hkey);
 
 	if (__xn_safe_copy_from_user(&startt, u_startt, sizeof(startt)))
 		return -EFAULT;
@@ -906,7 +944,7 @@ int cobalt_thread_make_periodic_np(unsigned long tid,
 	if (__xn_safe_copy_from_user(&periodt, u_periodt, sizeof(periodt)))
 		return -EFAULT;
 
-	return pthread_make_periodic_np(pthread, clk_id, &startt, &periodt);
+	return pthread_make_periodic_np(thread, clk_id, &startt, &periodt);
 }
 
 int cobalt_thread_wait_np(unsigned long __user *u_overruns)
@@ -938,10 +976,10 @@ int cobalt_thread_set_mode_np(int clrmask, int setmask, int __user *u_mode_r)
 
 int cobalt_thread_set_name_np(unsigned long tid, const char __user *u_name)
 {
+	struct cobalt_local_hkey hkey;
+	struct cobalt_thread *thread;
 	char name[XNOBJECT_NAME_LEN];
-	struct cobalt_hkey hkey;
 	struct task_struct *p;
-	pthread_t pthread;
 	spl_t s;
 
 	if (__xn_safe_strncpy_from_user(name, u_name,
@@ -954,15 +992,15 @@ int cobalt_thread_set_name_np(unsigned long tid, const char __user *u_name)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	pthread = thread_find(&hkey);
-	if (pthread == NULL) {
+	thread = thread_find_local(&hkey);
+	if (thread == NULL) {
 		xnlock_put_irqrestore(&nklock, s);
 		return -ESRCH;
 	}
 
-	snprintf(xnthread_name(&pthread->threadbase),
+	snprintf(xnthread_name(&thread->threadbase),
 		 XNOBJECT_NAME_LEN - 1, "%s", name);
-	p = xnthread_host_task(&pthread->threadbase);
+	p = xnthread_host_task(&thread->threadbase);
 	get_task_struct(p);
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -976,7 +1014,7 @@ int cobalt_thread_set_name_np(unsigned long tid, const char __user *u_name)
 
 int cobalt_thread_probe_np(pid_t pid)
 {
-	struct pid_hash *pidslot;
+	struct global_thread_hash *gslot;
 	u32 hash;
 	int ret;
 	spl_t s;
@@ -985,11 +1023,11 @@ int cobalt_thread_probe_np(pid_t pid)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	pidslot = pid_table[hash & (PTHREAD_HSLOTS - 1)];
-	while (pidslot && pidslot->pid != pid)
-		pidslot = pidslot->next;
+	gslot = global_index[hash & (PTHREAD_HSLOTS - 1)];
+	while (gslot && gslot->pid != pid)
+		gslot = gslot->next;
 
-	ret = pidslot ? 0 : -ESRCH;
+	ret = gslot ? 0 : -ESRCH;
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -998,85 +1036,92 @@ int cobalt_thread_probe_np(pid_t pid)
 
 int cobalt_thread_kill(unsigned long tid, int sig)
 {
-	struct cobalt_hkey hkey;
-	pthread_t pthread;
-	int ret;
+	struct cobalt_local_hkey hkey;
+	struct cobalt_thread *thread;
+	siginfo_t si;
+	int ret = 0;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
 
 	hkey.u_tid = tid;
 	hkey.mm = current->mm;
-	pthread = thread_find(&hkey);
-	if (pthread == NULL)
-		return -ESRCH;
-
-	if (sig == 0)	/* Check for existence only. */
-		return 0;
-
-	/*
-	 * We have to take care of self-suspension, when the
-	 * underlying shadow thread is currently relaxed. In that
-	 * case, we must switch back to primary before issuing the
-	 * suspend call to the nucleus in pthread_kill(). Marking the
-	 * cobalt_thread_kill syscall as __xn_exec_primary would be
-	 * overkill, since no other signal would require this, so we
-	 * handle that case locally here.
-	 */
-	if (sig == SIGSUSP && xnshadow_current_p(&pthread->threadbase)) {
-		if (xnpod_root_p()) {
-			ret = xnshadow_harden();
-			if (ret)
-				return ret;
-		}
+	thread = thread_find_local(&hkey);
+	if (thread == NULL) {
+		ret = -ESRCH;
+		goto out;
 	}
 
-	switch(sig) {
 	/*
-	 * Undocumented pseudo-signals to suspend/resume/unblock
+	 * We have undocumented pseudo-signals to suspend/resume/unblock
 	 * threads, force them out of primary mode or even demote them
 	 * to the weak scheduling class/priority. Process them early,
 	 * before anyone can notice...
 	 */
+	switch(sig) {
+	case 0:
+		/* Check for existence only. */
+		break;
 	case SIGSUSP:
 		/*
-		 * The self-suspension case for shadows was handled at
-		 * call site: we must be in primary mode already.
+		 * Marking cobalt_thread_kill as __xn_exec_primary for
+		 * handling self-suspension would be overkill, since
+		 * no other signal would require this, so we handle
+		 * that case locally here.
 		 */
-		xnpod_suspend_thread(&pthread->threadbase, XNSUSP,
+		if (xnshadow_current_p(&thread->threadbase) && xnpod_root_p()) {
+			/*
+			 * We won't vanish, so we may drop the lock
+			 * while hardening.
+			 */
+			xnlock_put_irqrestore(&nklock, s);
+			ret = xnshadow_harden();
+			if (ret)
+				return ret;
+			xnlock_get_irqsave(&nklock, s);
+		}
+		xnpod_suspend_thread(&thread->threadbase, XNSUSP,
 				     XN_INFINITE, XN_RELATIVE, NULL);
-		if (&pthread->threadbase == xnpod_current_thread() &&
-		    xnthread_test_info(&pthread->threadbase, XNBREAK))
+		if (&thread->threadbase == xnpod_current_thread() &&
+		    xnthread_test_info(&thread->threadbase, XNBREAK))
 			ret = EINTR;
 		break;
-
 	case SIGRESM:
-		xnpod_resume_thread(&pthread->threadbase, XNSUSP);
+		xnpod_resume_thread(&thread->threadbase, XNSUSP);
 		goto resched;
-
 	case SIGRELS:
-		xnpod_unblock_thread(&pthread->threadbase);
+		xnpod_unblock_thread(&thread->threadbase);
 		goto resched;
-
 	case SIGKICK:
-		xnshadow_kick(&pthread->threadbase);
+		xnshadow_kick(&thread->threadbase);
 		goto resched;
-
 	case SIGDEMT:
-		xnshadow_demote(&pthread->threadbase);
-	  resched:
+		xnshadow_demote(&thread->threadbase);
+		goto resched;
+	case 1 ... _NSIG:
+		si.si_signo = sig;
+		si.si_code = SI_TKILL;
+		si.si_errno = 0;
+		si.si_pid = current->pid;
+		si.si_uid = current_uid();
+		cobalt_signal_send(thread, &si);
+	resched:
 		xnpod_schedule();
 		break;
-
 	default:
-		return -EINVAL;
+		ret = -EINVAL;
 	}
+out:
+	xnlock_put_irqrestore(&nklock, s);
 
-	return 0;
+	return ret;
 }
 
 int cobalt_thread_stat(pid_t pid,
 		       struct cobalt_threadstat __user *u_stat)
 {
+	struct global_thread_hash *gslot;
 	struct cobalt_threadstat stat;
-	struct pid_hash *pidslot;
 	struct xnthread *thread;
 	xnticks_t xtime;
 	u32 hash;
@@ -1086,16 +1131,16 @@ int cobalt_thread_stat(pid_t pid,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	pidslot = pid_table[hash & (PTHREAD_HSLOTS - 1)];
-	while (pidslot && pidslot->pid != pid)
-		pidslot = pidslot->next;
+	gslot = global_index[hash & (PTHREAD_HSLOTS - 1)];
+	while (gslot && gslot->pid != pid)
+		gslot = gslot->next;
 
-	if (pidslot == NULL) {
+	if (gslot == NULL) {
 		xnlock_put_irqrestore(&nklock, s);
 		return -ESRCH;
 	}
 
-	thread = &pidslot->pthread->threadbase;
+	thread = &gslot->thread->threadbase;
 	stat.cpu = xnsched_cpu(thread->sched);
 	xtime = xnthread_get_exectime(thread);
 	if (xnthread_sched(thread)->curr == thread)
@@ -1122,18 +1167,18 @@ int cobalt_thread_getschedparam_ex(unsigned long tid,
 				   int __user *u_policy,
 				   struct sched_param_ex __user *u_param)
 {
+	struct cobalt_local_hkey hkey;
+	struct cobalt_thread *thread;
 	struct sched_param_ex param;
-	struct cobalt_hkey hkey;
-	pthread_t pthread;
 	int policy, ret;
 
 	hkey.u_tid = tid;
 	hkey.mm = current->mm;
-	pthread = thread_find(&hkey);
-	if (pthread == NULL)
+	thread = thread_find_local(&hkey);
+	if (thread == NULL)
 		return -ESRCH;
 
-	ret = pthread_getschedparam_ex(pthread, &policy, &param);
+	ret = pthread_getschedparam_ex(thread, &policy, &param);
 	if (ret)
 		return ret;
 
@@ -1187,11 +1232,11 @@ int cobalt_sched_max_prio(int policy)
 int cobalt_sched_yield(void)
 {
 	struct sched_param_ex param;
+	struct cobalt_thread *curr;
 	int policy = SCHED_NORMAL;
-	pthread_t cur;
 
-	cur = cobalt_current_thread();
-	pthread_getschedparam_ex(cur, &policy, &param);
+	curr = cobalt_current_thread();
+	pthread_getschedparam_ex(curr, &policy, &param);
 	xnpod_yield();
 
 	return policy == SCHED_NORMAL;

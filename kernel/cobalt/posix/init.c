@@ -56,6 +56,7 @@
 #include "registry.h"
 #include "monitor.h"
 #include "event.h"
+#include "signal.h"
 #include "internal.h"
 
 MODULE_DESCRIPTION("Xenomai/cobalt POSIX interface");
@@ -68,6 +69,7 @@ void cobalt_cleanup(void)
 	cobalt_timer_pkg_cleanup();
 	cobalt_monitor_pkg_cleanup();
 	cobalt_event_pkg_cleanup();
+	cobalt_signal_pkg_cleanup();
 	cobalt_mq_pkg_cleanup();
 	cobalt_sem_pkg_cleanup();
 	cobalt_cond_pkg_cleanup();
@@ -87,6 +89,7 @@ int __init cobalt_init(void)
 	cobalt_mutex_pkg_init();
 	cobalt_sem_pkg_init();
 	cobalt_cond_pkg_init();
+	cobalt_signal_pkg_init();
 	cobalt_mq_pkg_init();
 	cobalt_event_pkg_init();
 	cobalt_monitor_pkg_init();

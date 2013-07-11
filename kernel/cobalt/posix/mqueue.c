@@ -36,6 +36,7 @@
 #include "thread.h"		/* errno. */
 #include "timer.h"
 #include "mqueue.h"
+#include "signal.h"
 #include "internal.h"
 
 struct mq_attr {
@@ -60,7 +61,7 @@ struct cobalt_mq {
 	/* mq_notify */
 	siginfo_t si;
 	mqd_t target_qd;
-	pthread_t target;
+	struct cobalt_thread *target;
 
 	struct mq_attr attr;
 	struct list_head link;	/* link in mqq */
@@ -519,7 +520,7 @@ static struct cobalt_msg *
 cobalt_mq_timedsend_inner(cobalt_mq_t **mqp, mqd_t fd,
 			  size_t len, const struct timespec *abs_timeoutp)
 {
-	xnthread_t *cur = xnpod_current_thread();
+	struct xnthread *cur = xnpod_current_thread();
 	struct cobalt_msg *msg;
 	spl_t s;
 	int rc;
@@ -577,36 +578,6 @@ cobalt_mq_timedsend_inner(cobalt_mq_t **mqp, mqd_t fd,
 	return msg;
 }
 
-struct mq_signal {
-	struct ipipe_work_header work; /* Must be first. */
-	struct task_struct *task;
-	siginfo_t si;	
-};
-
-static void mq_do_notify(struct ipipe_work_header *work)
-{
-	struct mq_signal *rq;
-	siginfo_t *si;
-
-	rq = container_of(work, struct mq_signal, work);
-	si = &rq->si;
-	send_sig_info(si->si_signo, si, rq->task);
-}
-
-static void mq_send_signal(cobalt_mq_t *mq)
-{
-	struct mq_signal sigwork = {
-		.work = {
-			.size = sizeof(sigwork),
-			.handler = mq_do_notify,
-		},
-		.task = xnthread_host_task(&mq->target->threadbase),
-		.si = mq->si,
-	};
-
-	ipipe_post_work_root(&sigwork, work);
-}
-
 static int
 cobalt_mq_finish_send(mqd_t fd, cobalt_mq_t *mq, struct cobalt_msg *msg)
 {
@@ -637,7 +608,7 @@ cobalt_mq_finish_send(mqd_t fd, cobalt_mq_t *mq, struct cobalt_msg *msg)
 		 * First message and no pending reader? send a signal
 		 * if mq_notify was called.
 		 */
-		mq_send_signal(mq);
+		cobalt_signal_send(mq->target, &mq->si);
 		resched = 1;
 		mq->target = NULL;
 	}
@@ -923,7 +894,7 @@ static inline int mq_setattr(mqd_t fd,
  */
 static inline int mq_notify(mqd_t fd, const struct sigevent *evp)
 {
-	pthread_t thread = cobalt_current_thread();
+	struct cobalt_thread *thread = cobalt_current_thread();
 	cobalt_desc_t *desc;
 	cobalt_mq_t *mq;
 	int err;
@@ -957,7 +928,16 @@ static inline int mq_notify(mqd_t fd, const struct sigevent *evp)
 		mq->target_qd = fd;
 		mq->si.si_signo = evp->sigev_signo;
 		mq->si.si_code = SI_MESGQ;
+		mq->si.si_errno = 0;
 		mq->si.si_value = evp->sigev_value;
+		/*
+		 * XXX: we differ from the regular kernel here, which
+		 * passes the sender's pid/uid data into the
+		 * receiver's namespaces. We pass the receiver's creds
+		 * into the init namespace instead.
+		 */
+		mq->si.si_pid = current->pid;
+		mq->si.si_uid = current_uid();
 	}
 
 	xnlock_put_irqrestore(&nklock, s);

@@ -107,10 +107,10 @@ am_libcobalt_la_OBJECTS = libcobalt_la-assert_context.lo \
 	libcobalt_la-mq.lo libcobalt_la-mutex.lo \
 	libcobalt_la-printf.lo libcobalt_la-rtdm.lo \
 	libcobalt_la-select.lo libcobalt_la-sem_heap.lo \
-	libcobalt_la-semaphore.lo libcobalt_la-sigshadow.lo \
-	libcobalt_la-thread.lo libcobalt_la-ticks.lo \
-	libcobalt_la-timer.lo libcobalt_la-trace.lo \
-	libcobalt_la-wrappers.lo
+	libcobalt_la-semaphore.lo libcobalt_la-signal.lo \
+	libcobalt_la-sigshadow.lo libcobalt_la-thread.lo \
+	libcobalt_la-ticks.lo libcobalt_la-timer.lo \
+	libcobalt_la-trace.lo libcobalt_la-wrappers.lo
 libcobalt_la_OBJECTS = $(am_libcobalt_la_OBJECTS)
 libcobalt_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -366,6 +366,7 @@ libcobalt_la_SOURCES = \
 	select.c		\
 	sem_heap.c		\
 	semaphore.c		\
+	signal.c		\
 	sigshadow.c		\
 	thread.c		\
 	ticks.c			\
@@ -471,6 +472,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcobalt_la-select.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcobalt_la-sem_heap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcobalt_la-semaphore.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcobalt_la-signal.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcobalt_la-sigshadow.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcobalt_la-thread.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcobalt_la-ticks.Plo@am__quote@
@@ -596,6 +598,13 @@ libcobalt_la-semaphore.lo: semaphore.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='semaphore.c' object='libcobalt_la-semaphore.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcobalt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcobalt_la-semaphore.lo `test -f 'semaphore.c' || echo '$(srcdir)/'`semaphore.c
+
+libcobalt_la-signal.lo: signal.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcobalt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcobalt_la-signal.lo -MD -MP -MF $(DEPDIR)/libcobalt_la-signal.Tpo -c -o libcobalt_la-signal.lo `test -f 'signal.c' || echo '$(srcdir)/'`signal.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libcobalt_la-signal.Tpo $(DEPDIR)/libcobalt_la-signal.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='signal.c' object='libcobalt_la-signal.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcobalt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcobalt_la-signal.lo `test -f 'signal.c' || echo '$(srcdir)/'`signal.c
 
 libcobalt_la-sigshadow.lo: sigshadow.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcobalt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcobalt_la-sigshadow.lo -MD -MP -MF $(DEPDIR)/libcobalt_la-sigshadow.Tpo -c -o libcobalt_la-sigshadow.lo `test -f 'sigshadow.c' || echo '$(srcdir)/'`sigshadow.c

@@ -20,7 +20,10 @@
 
 #include <linux/types.h>
 #include <linux/time.h>
+#include <linux/signal.h>
 #include "internal.h"
+#include "signal.h"
+#include <cobalt/kernel/synch.h>
 #include <cobalt/uapi/thread.h>
 #include <cobalt/uapi/sched.h>
 
@@ -40,10 +43,7 @@
 
 struct cobalt_thread;
 struct cobalt_threadstat;
-struct cobalt_key;
 
-typedef struct cobalt_thread *pthread_t;
-typedef struct cobalt_key *pthread_key_t;
 typedef struct cobalt_condattr pthread_condattr_t;
 
 typedef struct cobalt_threadattr {
@@ -92,7 +92,7 @@ typedef struct {
 	struct _pthread_fastlock __m_lock;
 } pthread_mutex_t;
 
-struct cobalt_hkey {
+struct cobalt_local_hkey {
 	unsigned long u_tid;
 	struct mm_struct *mm;
 };
@@ -105,10 +105,16 @@ struct cobalt_thread {
 	struct list_head link;
 	struct list_head *container;
 
-	pthread_attr_t attr;        /* creation attributes */
+        /** Creation attributes. */
+	pthread_attr_t attr;
 
-	/* For timers. */
+	/** Active timers. */
 	struct list_head timersq;
+
+	/** Signal management. */
+	sigset_t sigpending;
+	struct list_head sigqueues[_NSIG];
+	struct xnsynch sigwait;
 
 	/* Cached value for current policy (user side). */
 	int sched_u_policy;
@@ -118,7 +124,13 @@ struct cobalt_thread {
 	struct list_head monitor_link;
 	int monitor_queued;
 
-	struct cobalt_hkey hkey;
+	struct cobalt_local_hkey hkey;
+};
+
+struct cobalt_sigwait_context {
+	struct xnthread_wait_context wc;
+	sigset_t *set;
+	siginfo_t *si;
 };
 
 static inline struct cobalt_thread *cobalt_current_thread(void)
@@ -127,15 +139,16 @@ static inline struct cobalt_thread *cobalt_current_thread(void)
 	return curr ? container_of(curr, struct cobalt_thread, threadbase) : NULL;
 }
 
-#define thread_name(thread) ((thread)->attr.name)
+struct cobalt_thread *cobalt_thread_find(pid_t pid);
 
 int cobalt_thread_create(unsigned long tid, int policy,
 			 struct sched_param_ex __user *u_param,
 			 unsigned long __user *u_window_offset);
 
-pthread_t cobalt_thread_shadow(struct task_struct *p,
-			       struct cobalt_hkey *hkey,
-			       unsigned long __user *u_window_offset);
+struct cobalt_thread *
+cobalt_thread_shadow(struct task_struct *p,
+		     struct cobalt_local_hkey *lhkey,
+		     unsigned long __user *u_window_offset);
 
 int cobalt_thread_make_periodic_np(unsigned long tid,
 				   clockid_t clk_id,
@@ -175,6 +188,8 @@ int cobalt_sched_setconfig_np(int cpu,
 			      int policy,
 			      union sched_config __user *u_config,
 			      size_t len);
+
+struct xnpersonality *cobalt_thread_exit(struct xnthread *thread);
 
 struct xnpersonality *cobalt_thread_unmap(struct xnthread *thread);
 

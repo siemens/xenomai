@@ -228,7 +228,7 @@ static void *timerthread(void *param)
 #ifdef __UNSUPPORTED
 		case MODE_CYCLIC:
 		case MODE_SYS_ITIMER:
-			if (sigwait(&sigset, &sigs) < 0)
+			if (__STD(sigwait(&sigset, &sigs)) < 0)
 				goto out;
 			break;
 #endif

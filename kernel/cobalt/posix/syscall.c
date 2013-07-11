@@ -312,6 +312,10 @@ static struct xnsyscall cobalt_syscalls[] = {
 	SKINCALL_DEF(sc_cobalt_mq_receive, cobalt_mq_receive, primary),
 	SKINCALL_DEF(sc_cobalt_mq_timedreceive, cobalt_mq_timedreceive, primary),
 	SKINCALL_DEF(sc_cobalt_mq_notify, cobalt_mq_notify, primary),
+	SKINCALL_DEF(sc_cobalt_sigwait, cobalt_sigwait, primary),
+	SKINCALL_DEF(sc_cobalt_sigwaitinfo, cobalt_sigwaitinfo, primary),
+	SKINCALL_DEF(sc_cobalt_sigtimedwait, cobalt_sigtimedwait, primary),
+	SKINCALL_DEF(sc_cobalt_sigpending, cobalt_sigpending, primary),
 	SKINCALL_DEF(sc_cobalt_timer_create, cobalt_timer_create, any),
 	SKINCALL_DEF(sc_cobalt_timer_delete, cobalt_timer_delete, any),
 	SKINCALL_DEF(sc_cobalt_timer_settime, cobalt_timer_settime, primary),
@@ -355,6 +359,7 @@ struct xnpersonality cobalt_personality = {
 	.ops = {
 		.attach_process = cobalt_process_attach,
 		.detach_process = cobalt_process_detach,
+		.exit_thread = cobalt_thread_exit,
 		.unmap_thread = cobalt_thread_unmap,
 	},
 };

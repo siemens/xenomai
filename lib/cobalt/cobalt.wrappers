@@ -104,3 +104,7 @@
 --wrap __printf_chk
 --wrap __vsyslog_chk
 --wrap __syslog_chk
+--wrap sigwait
+--wrap sigwaitinfo
+--wrap sigtimedwait
+--wrap sigpending

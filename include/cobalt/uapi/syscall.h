@@ -73,7 +73,11 @@
 #define sc_cobalt_sem_unlink            50
 #define sc_cobalt_sem_timedwait         51
 #define sc_cobalt_mq_notify             52
-/* 53-60 unimplemented */
+#define sc_cobalt_sigwait		53
+#define sc_cobalt_sigwaitinfo		54
+#define sc_cobalt_sigtimedwait		55
+#define sc_cobalt_sigpending		56
+/* 57-60 unimplemented */
 #define sc_cobalt_mutexattr_init        61
 #define sc_cobalt_mutexattr_destroy     62
 #define sc_cobalt_mutexattr_gettype     63

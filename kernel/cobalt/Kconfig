@@ -284,6 +284,15 @@ config XENO_OPT_GLOBAL_SEM_HEAPSZ
 	architectures or 8 bytes on 64 bits architectures of memory,
 	so, the default of 32 Kb allows creating many semaphores.
 
+config XENO_OPT_NRTIMERS
+       int "Maximum number of POSIX timers"
+       default 128
+       help
+
+       This tunable controls how many POSIX timers can exist at any
+       given time in the Xenomai system (a timer is created by a call
+       to the timer_create() service of the Cobalt/POSIX API).
+
 config XENO_OPT_RTDM_FILDES
 	int "Maximum number of RTDM file descriptors"
 	default 128

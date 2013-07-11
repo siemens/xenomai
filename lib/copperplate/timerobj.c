@@ -40,101 +40,30 @@ static pthread_mutex_t svlock;
 
 static pthread_t svthread;
 
+static pid_t svpid;
+
 static DEFINE_PRIVATE_LIST(svtimers);
 
 #ifdef CONFIG_XENO_COBALT
-
-static sem_t svsem;
-
-static inline int pkg_init_corespec(void)
-{
-	int ret;
-
-	ret = __RT(sem_init(&svsem, 0, 0));
-	if (ret)
-		return __bt(-errno);
-
-	return 0;
-}
-
-static inline int timerobj_init_corespec(struct timerobj *tmobj)
-{
-	struct sigevent sev;
-	int ret;
-
-	sev.sigev_notify = SIGEV_THREAD_ID;
-	sev.sigev_value.sival_ptr = &svsem;
-
-	ret = __RT(timer_create(CLOCK_COPPERPLATE, &sev, &tmobj->timer));
-	if (ret)
-		return __bt(-errno);
-
-	return 0;
-}
 
 static inline void timersv_init_corespec(const char *name)
 {
 	pthread_set_name_np(pthread_self(), name);
 }
 
-static inline int timersv_pend_corespec(void)
-{
-	return -__RT(sem_wait(&svsem));
-}
-
 #else /* CONFIG_XENO_MERCURY */
 
 #include <sys/prctl.h>
 
-static pid_t svpid;
-
-static inline int pkg_init_corespec(void)
-{
-	return 0;
-}
-
-static inline int timerobj_init_corespec(struct timerobj *tmobj)
-{
-	struct sigevent sev;
-	int ret;
-
-	memset(&sev, 0, sizeof(sev));
-	sev.sigev_notify = SIGEV_THREAD_ID;
-	sev.sigev_signo = SIGALRM;
-	sev.sigev_notify_thread_id = svpid;
-
-	ret = timer_create(CLOCK_COPPERPLATE, &sev, &tmobj->timer);
-	if (ret)
-		return __bt(-errno);
-
-	return 0;
-}
-
 static inline void timersv_init_corespec(const char *name)
 {
 	sigset_t set;
-
-	svpid = copperplate_get_tid();
 
 	sigemptyset(&set);
 	sigaddset(&set, SIGALRM);
 	pthread_sigmask(SIG_BLOCK, &set, NULL);
 
 	prctl(PR_SET_NAME, (unsigned long)name, 0, 0, 0);
-}
-
-static inline int timersv_pend_corespec(void)
-{
-	sigset_t set;
-	int sig, ret;
-
-	sigemptyset(&set);
-	sigaddset(&set, SIGALRM);
-	ret = sigwait(&set, &sig);
-	if (ret)
-		return -ret;
-
-	return 0;
 }
 
 #endif /* CONFIG_XENO_MERCURY */
@@ -169,18 +98,22 @@ static void *timerobj_server(void *arg)
 {
 	struct timespec now, value, interval;
 	struct timerobj *tmobj, *tmp;
-	int ret;
+	sigset_t set;
+	int sig, ret;
 
+	svpid = copperplate_get_tid();
 	timersv_init_corespec("timer-internal");
 	threadobj_set_current(THREADOBJ_IRQCONTEXT);
+	sigemptyset(&set);
+	sigaddset(&set, SIGALRM);
+
 	/* Handshake with timerobj_spawn_server(). */
 	__RT(sem_post(&svsync));
 
 	for (;;) {
-		ret = timersv_pend_corespec();
+		ret = __RT(sigwait(&set, &sig));
 		if (ret && ret != -EINTR)
 			break;
-
 		/*
 		 * We have a single server thread for now, so handlers
 		 * are fully serialized.
@@ -245,6 +178,7 @@ out:
 int timerobj_init(struct timerobj *tmobj)
 {
 	pthread_mutexattr_t mattr;
+	struct sigevent sev;
 	int ret;
 
 	/*
@@ -265,9 +199,14 @@ int timerobj_init(struct timerobj *tmobj)
 	tmobj->handler = NULL;
 	pvholder_init(&tmobj->next); /* so we may use pvholder_linked() */
 
-	ret = timerobj_init_corespec(tmobj);
+	memset(&sev, 0, sizeof(sev));
+	sev.sigev_notify = SIGEV_THREAD_ID;
+	sev.sigev_signo = SIGALRM;
+	sev.sigev_notify_thread_id = svpid;
+
+	ret = __RT(timer_create(CLOCK_COPPERPLATE, &sev, &tmobj->timer));
 	if (ret)
-		return __bt(ret);
+		return __bt(-errno);
 
 	__RT(pthread_mutexattr_init(&mattr));
 	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
@@ -348,20 +287,16 @@ int timerobj_pkg_init(void)
 	if (ret)
 		return __bt(-errno);
 
-	ret = pkg_init_corespec();
-	if (ret) {
-		__RT(sem_destroy(&svsync));
-		return __bt(ret);
-	}
-
 	__RT(pthread_mutexattr_init(&mattr));
 	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
 	__RT(pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE));
 	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
 	ret = __RT(pthread_mutex_init(&svlock, &mattr));
 	__RT(pthread_mutexattr_destroy(&mattr));
-	if (ret)
+	if (ret) {
+		__RT(sem_destroy(&svsync));
 		return __bt(-ret);
+	}
 
 	return 0;
 }

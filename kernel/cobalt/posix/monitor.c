@@ -160,8 +160,8 @@ int cobalt_monitor_enter(struct cobalt_monitor_shadow __user *u_monsh)
 static void cobalt_monitor_wakeup(struct cobalt_monitor *mon)
 {
 	struct cobalt_monitor_data *datp = mon->data;
+	struct cobalt_thread *tid, *tmp;
 	struct xnthread *p;
-	pthread_t tid, tmp;
 	int bcast;
 
 	/*
@@ -221,7 +221,7 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_monsh,
 			int event, const struct timespec __user *u_ts,
 			int __user *u_ret)
 {
-	pthread_t cur = cobalt_current_thread();
+	struct cobalt_thread *curr = cobalt_current_thread();
 	struct cobalt_monitor *mon = NULL;
 	struct cobalt_monitor_data *datp;
 	xnticks_t timeout = XN_INFINITE;
@@ -258,15 +258,15 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_monsh,
 		cobalt_monitor_wakeup(mon);
 
 	/* Release the gate prior to waiting, all atomically. */
-	xnsynch_release(&mon->gate, &cur->threadbase);
+	xnsynch_release(&mon->gate, &curr->threadbase);
 
-	synch = &cur->monitor_synch;
+	synch = &curr->monitor_synch;
 	if (event & COBALT_MONITOR_WAITDRAIN)
 		synch = &mon->drain;
 	else {
-		cur->threadbase.u_window->grant_value = 0;
-		list_add_tail(&cur->monitor_link, &mon->waiters);
-		cur->monitor_queued = 1;
+		curr->threadbase.u_window->grant_value = 0;
+		list_add_tail(&curr->monitor_link, &mon->waiters);
+		curr->monitor_queued = 1;
 	}
 	datp->flags |= COBALT_MONITOR_PENDED;
 
@@ -280,9 +280,9 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_monsh,
 		}
 
 		if ((event & COBALT_MONITOR_WAITDRAIN) == 0 &&
-		    cur->monitor_queued) {
-			list_del(&cur->monitor_link);
-			cur->monitor_queued = 0;
+		    curr->monitor_queued) {
+			list_del(&curr->monitor_link);
+			curr->monitor_queued = 0;
 		}
 
 		if (list_empty(&mon->waiters) && !xnsynch_pended_p(&mon->drain))

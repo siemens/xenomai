@@ -24,30 +24,30 @@ COBALT_IMPL(int, timer_create, (clockid_t clockid,
 				const struct sigevent *__restrict__ evp,
 				timer_t * __restrict__ timerid))
 {
-	int err = -XENOMAI_SKINCALL3(__cobalt_muxid,
-				     sc_cobalt_timer_create,
-				     clockid,
-				     evp,
-				     timerid);
+	int ret;
 
-	if (!err)
+	ret = -XENOMAI_SKINCALL3(__cobalt_muxid,
+				 sc_cobalt_timer_create,
+				 clockid, evp, timerid);
+	if (ret == 0)
 		return 0;
 
-	errno = err;
+	errno = ret;
 
 	return -1;
 }
 
 COBALT_IMPL(int, timer_delete, (timer_t timerid))
 {
-	int err = -XENOMAI_SKINCALL1(__cobalt_muxid,
-				     sc_cobalt_timer_delete,
-				     timerid);
+	int ret;
 
-	if (!err)
+	ret = -XENOMAI_SKINCALL1(__cobalt_muxid,
+				 sc_cobalt_timer_delete,
+				 timerid);
+	if (ret == 0)
 		return 0;
 
-	errno = err;
+	errno = ret;
 
 	return -1;
 }
@@ -57,42 +57,41 @@ COBALT_IMPL(int, timer_settime, (timer_t timerid,
 				 const struct itimerspec *__restrict__ value,
 				 struct itimerspec *__restrict__ ovalue))
 {
-	int err = -XENOMAI_SKINCALL4(__cobalt_muxid,
-				     sc_cobalt_timer_settime,
-				     timerid,
-				     flags,
-				     value,
-				     ovalue);
+	int ret;
 
-	if (!err)
+	ret = -XENOMAI_SKINCALL4(__cobalt_muxid,
+				 sc_cobalt_timer_settime,
+				 timerid, flags, value, ovalue);
+	if (ret == 0)
 		return 0;
 
-	errno = err;
+	errno = ret;
 
 	return -1;
 }
 
 COBALT_IMPL(int, timer_gettime, (timer_t timerid, struct itimerspec *value))
 {
-	int err = -XENOMAI_SKINCALL2(__cobalt_muxid,
-				     sc_cobalt_timer_gettime,
-				     timerid,
-				     value);
+	int ret;
 
-	if (!err)
+	ret = -XENOMAI_SKINCALL2(__cobalt_muxid,
+				 sc_cobalt_timer_gettime,
+				 timerid, value);
+	if (ret == 0)
 		return 0;
 
-	errno = err;
+	errno = ret;
 
 	return -1;
 }
 
 COBALT_IMPL(int, timer_getoverrun, (timer_t timerid))
 {
-	int overrun = XENOMAI_SKINCALL1(__cobalt_muxid,
-					sc_cobalt_timer_getoverrun,
-					timerid);
+	int overrun;
 
+	overrun = XENOMAI_SKINCALL1(__cobalt_muxid,
+				    sc_cobalt_timer_getoverrun,
+				    timerid);
 	if (overrun >= 0)
 		return overrun;
 

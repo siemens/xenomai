@@ -21,44 +21,41 @@
  *
  *@{*/
 
+#include <linux/cred.h>
 #include "thread.h"
 #include "timer.h"
-#include "sem.h"
 #include "internal.h"
-
-#define COBALT_TIMER_MAX  128
 
 struct cobalt_timer {
 	struct xntimer timerbase;
-	unsigned int overruns;
-	/** timerq */
+	int overruns;
 	struct list_head link;
 	struct list_head tlink;
 	siginfo_t si;
 	clockid_t clockid;
-	pthread_t owner;
+	pid_t target;
+	struct cobalt_thread *owner;
 	struct cobalt_kqueues *owningq;
 };
 
 static struct list_head timer_freeq;
 
-static struct cobalt_timer timer_pool[COBALT_TIMER_MAX];
+static struct cobalt_timer timer_pool[CONFIG_XENO_OPT_NRTIMERS];
 
-static void cobalt_base_timer_handler(xntimer_t *xntimer)
+static void timer_handler(struct xntimer *xntimer)
 {
+	struct cobalt_thread *thread;
 	struct cobalt_timer *timer;
-	struct cobalt_sem *sem;
+	spl_t s;
 
 	timer = container_of(xntimer, struct cobalt_timer, timerbase);
+	xnlock_get_irqsave(&nklock, s);
 
-	/* post a semaphore. */
-	sem = timer->si.si_value.sival_ptr;
-	if (sem && sem_post_inner(sem, NULL, 0) < 0)
-		/*
-		 * On error, forget sema4 for next shots. In essence,
-		 * the timer stops notifying anyone at expiry.
-		 */
-		timer->si.si_value.sival_ptr = NULL;
+	thread = cobalt_thread_find(timer->target);
+	if (thread)
+		cobalt_signal_send(thread, &timer->si);
+
+	xnlock_put_irqrestore(&nklock, s);
 }
 
 /**
@@ -66,32 +63,33 @@ static void cobalt_base_timer_handler(xntimer_t *xntimer)
  *
  * This service creates a time object using the clock @a clockid.
  *
- * If @a evp is not @a NULL, it describes the notification mechanism used on
- * timer expiration. Only notification via signal delivery is supported (member
- * @a sigev_notify of @a evp set to @a SIGEV_SIGNAL).  The signal will be sent to
- * the thread starting the timer with the timer_settime() service. If @a evp is
- * @a NULL, the SIGALRM signal will be used.
+ * If @a evp is not @a NULL, it describes the notification mechanism
+ * used on timer expiration. Only thread-directed notification is
+ * supported (evp->sigev_notify set to @a SIGEV_THREAD_ID).
  *
- * Note that signals sent to user-space threads will cause them to switch to
- * secondary mode.
+ * If @a evp is NULL, the current Cobalt thread will receive the
+ * notifications with signal SIGALRM.
  *
- * If this service succeeds, an identifier for the created timer is returned at
- * the address @a timerid. The timer is unarmed until started with the
- * timer_settime() service.
+ * The recipient thread is delivered notifications when it calls any
+ * of the sigwait(), sigtimedwait() or sigwaitinfo() services.
+ *
+ * If this service succeeds, an identifier for the created timer is
+ * returned at the address @a timerid. The timer is unarmed until
+ * started with the timer_settime() service.
  *
  * @param clockid clock used as a timing base;
  *
- * @param evp description of the asynchronous notification to occur when the
- * timer expires;
+ * @param evp description of the asynchronous notification to occur
+ * when the timer expires;
  *
- * @param timerid address where the identifier of the created timer will be
- * stored on success.
+ * @param timerid address where the identifier of the created timer
+ * will be stored on success.
  *
  * @retval 0 on success;
  * @retval -1 with @a errno set if:
  * - EINVAL, the clock @a clockid is invalid;
  * - EINVAL, the member @a sigev_notify of the @b sigevent structure at the
- *   address @a evp is not SIGEV_SIGNAL;
+ *   address @a evp is not SIGEV_THREAD_ID;
  * - EINVAL, the  member @a sigev_signo of the @b sigevent structure is an
  *   invalid signal number;
  * - EAGAIN, the maximum number of timers was exceeded, recompile with a larger
@@ -106,10 +104,10 @@ static inline int timer_create(clockid_t clockid,
 			       const struct sigevent *__restrict__ evp,
 			       timer_t * __restrict__ timerid)
 {
-	struct __shadow_sem *shadow_sem = NULL;
-	int err = -EINVAL, semval, signo;
+	struct cobalt_thread *thread;
 	struct cobalt_timer *timer;
-	sem_t *sem;
+	int signo, ret = -EINVAL;
+	pid_t target;
 	spl_t s;
 
 	if (clockid != CLOCK_MONOTONIC &&
@@ -117,49 +115,47 @@ static inline int timer_create(clockid_t clockid,
 	    clockid != CLOCK_REALTIME)
 		goto error;
 
-	/*
-	 * XXX: We implement a tweaked form of SIGEV_THREAD_ID, purely
-	 * for internal purpose, which does not match the Linux
-	 * behavior at all. Instead of sending a signal to a specific
-	 * thread upon expiry, it posts a semaphore whose address is
-	 * fetched from sigev_value.sival_ptr. SIGEV_THREAD_ID is not
-	 * officially supported by the Cobalt interface.
-	 */
-	signo = SIGALRM;
-	if (evp) {
-		if (evp->sigev_notify != SIGEV_THREAD_ID) {
-			err = -ENOSYS;
-			goto error;
-		}
-
-		/* Quick check to detect trivial mistakes early. */
-		sem = evp->sigev_value.sival_ptr;
-		if (sem == NULL)
-			goto error;
-		shadow_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
-		err = sem_getvalue(shadow_sem->sem, &semval);
-		if (err)
-			goto error;
-		signo = 0;
-	}
-
 	xnlock_get_irqsave(&nklock, s);
 
+	if (evp == NULL) {
+		signo = SIGALRM;
+		target = current->pid;
+	} else {
+		/* We currently only support SIGEV_THREAD_ID. */
+		if (evp->sigev_notify != SIGEV_THREAD_ID)
+			goto unlock_and_error;
+
+		signo = evp->sigev_signo;
+		if (signo < 1 || signo > _NSIG)
+			goto unlock_and_error;
+
+		target = evp->sigev_notify_thread_id;
+		/*
+		 * Recipient thread must exist and live in the same
+		 * process than our caller.
+		 */
+		thread = cobalt_thread_find(target);
+		if (thread == NULL || thread->hkey.mm != current->mm)
+			goto unlock_and_error;
+	}
+
 	if (list_empty(&timer_freeq)) {
-		err = -EAGAIN;
+		ret = -EAGAIN;
 		goto unlock_and_error;
 	}
 
 	timer = list_get_entry(&timer_freeq, struct cobalt_timer, link);
-	timer->si.si_code = SI_TIMER;
 	timer->si.si_signo = signo;
-
+	timer->si.si_code = SI_TIMER;
+	timer->si.si_errno = 0;
+	timer->si.si_tid = timer - timer_pool;
 	if (evp)
-		timer->si.si_value.sival_ptr = shadow_sem->sem;
+		timer->si.si_value = evp->sigev_value;
 	else
-		timer->si.si_value.sival_int = (timer - timer_pool);
+		timer->si.si_int = timer->si.si_tid;
 
-	xntimer_init(&timer->timerbase, cobalt_base_timer_handler);
+	xntimer_init(&timer->timerbase, timer_handler);
+	timer->target = target;
 	timer->overruns = 0;
 	timer->owner = NULL;
 	timer->clockid = clockid;
@@ -174,32 +170,32 @@ static inline int timer_create(clockid_t clockid,
 unlock_and_error:
 	xnlock_put_irqrestore(&nklock, s);
 error:
-	return err;
+	return ret;
 }
 
 static inline int
-cobalt_timer_delete_inner(timer_t timerid, struct cobalt_kqueues *q, int force)
+timer_delete(timer_t timerid, struct cobalt_kqueues *q, int force)
 {
 	struct cobalt_timer *timer;
 	spl_t s;
-	int err;
+	int ret;
 
-	if ((unsigned)timerid >= COBALT_TIMER_MAX) {
-		err = -EINVAL;
+	if ((unsigned int)timerid >= CONFIG_XENO_OPT_NRTIMERS) {
+		ret = -EINVAL;
 		goto error;
 	}
 
 	xnlock_get_irqsave(&nklock, s);
 
-	timer = &timer_pool[(unsigned long)timerid];
+	timer = &timer_pool[(unsigned int)timerid];
 
 	if (!xntimer_active_p(&timer->timerbase)) {
-		err = -EINVAL;
+		ret = -EINVAL;
 		goto unlock_and_error;
 	}
 
 	if (!force && timer->owningq != cobalt_kqueues(0)) {
-		err = -EPERM;
+		ret = -EPERM;
 		goto unlock_and_error;
 	}
 
@@ -217,15 +213,15 @@ cobalt_timer_delete_inner(timer_t timerid, struct cobalt_kqueues *q, int force)
 
 	return 0;
 
-      unlock_and_error:
+unlock_and_error:
 	xnlock_put_irqrestore(&nklock, s);
-      error:
-	return err;
+error:
+	return ret;
 }
 
 static inline void
-cobalt_timer_gettime_inner(struct cobalt_timer *__restrict__ timer,
-			   struct itimerspec *__restrict__ value)
+timer_gettimeout(struct cobalt_timer *__restrict__ timer,
+		 struct itimerspec *__restrict__ value)
 {
 	if (xntimer_running_p(&timer->timerbase)) {
 		ns2ts(&value->it_value,
@@ -243,9 +239,10 @@ cobalt_timer_gettime_inner(struct cobalt_timer *__restrict__ timer,
 /**
  * Start or stop a timer.
  *
- * This service sets a timer expiration date and reload value of the timer @a
- * timerid. If @a ovalue is not @a NULL, the current expiration date and reload
- * value are stored at the address @a ovalue as with timer_gettime().
+ * This service sets a timer expiration date and reload value of the
+ * timer @a timerid. If @a ovalue is not @a NULL, the current
+ * expiration date and reload value are stored at the address @a
+ * ovalue as with timer_gettime().
  *
  * If the member @a it_value of the @b itimerspec structure at @a
  * value is zero, the timer is stopped, otherwise the timer is
@@ -295,46 +292,47 @@ timer_settime(timer_t timerid, int flags,
 	      const struct itimerspec *__restrict__ value,
 	      struct itimerspec *__restrict__ ovalue)
 {
-	pthread_t cur = cobalt_current_thread();
+	struct cobalt_thread *cur = cobalt_current_thread();
+	xnticks_t start, period, now;
 	struct cobalt_timer *timer;
 	spl_t s;
-	int err;
+	int ret;
 
 	if (cur == NULL) {
-		err = -EPERM;
+		ret = -EPERM;
 		goto error;
 	}
 
-	if ((unsigned)timerid >= COBALT_TIMER_MAX) {
-		err = -EINVAL;
+	if ((unsigned int)timerid >= CONFIG_XENO_OPT_NRTIMERS) {
+		ret = -EINVAL;
 		goto error;
 	}
 
 	if ((unsigned long)value->it_value.tv_nsec >= ONE_BILLION ||
 	    ((unsigned long)value->it_interval.tv_nsec >= ONE_BILLION &&
 	     (value->it_value.tv_sec != 0 || value->it_value.tv_nsec != 0))) {
-		err = -EINVAL;
+		ret = -EINVAL;
 		goto error;
 	}
 
 	xnlock_get_irqsave(&nklock, s);
 
-	timer = &timer_pool[(unsigned long)timerid];
+	timer = &timer_pool[(unsigned int)timerid];
 
 	if (!xntimer_active_p(&timer->timerbase)) {
-		err = -EINVAL;
+		ret = -EINVAL;
 		goto unlock_and_error;
 	}
 
 #if XENO_DEBUG(COBALT)
 	if (timer->owningq != cobalt_kqueues(0)) {
-		err = -EPERM;
+		ret = -EPERM;
 		goto unlock_and_error;
 	}
 #endif /* XENO_DEBUG(COBALT) */
 
 	if (ovalue)
-		cobalt_timer_gettime_inner(timer, ovalue);
+		timer_gettimeout(timer, ovalue);
 
 	if (timer->owner)
 		list_del(&timer->tlink);
@@ -343,19 +341,19 @@ timer_settime(timer_t timerid, int flags,
 		xntimer_stop(&timer->timerbase);
 		timer->owner = NULL;
 	} else {
-		xnticks_t start = ts2ns(&value->it_value) + 1;
-		xnticks_t period = ts2ns(&value->it_interval);
-
+		start = ts2ns(&value->it_value) + 1;
+		period = ts2ns(&value->it_interval);
 		xntimer_set_sched(&timer->timerbase, xnpod_current_sched());
+
 		if (xntimer_start(&timer->timerbase, start, period,
 				  clock_flag(flags, timer->clockid))) {
 			/* If the initial delay has already passed, the call
 			   shall suceed, so, let us tweak the start time. */
-			xnticks_t now = clock_get_ticks(timer->clockid);
+			now = clock_get_ticks(timer->clockid);
 			if (period) {
-				do {
+				do
 					start += period;
-				} while ((xnsticks_t) (start - now) <= 0);
+				while ((xnsticks_t) (start - now) <= 0);
 			} else
 				start = now + xnclock_ticks_to_ns(nklatency);
 			xntimer_start(&timer->timerbase, start, period,
@@ -370,10 +368,10 @@ timer_settime(timer_t timerid, int flags,
 
 	return 0;
 
-      unlock_and_error:
+unlock_and_error:
 	xnlock_put_irqrestore(&nklock, s);
-      error:
-	return err;
+error:
+	return ret;
 }
 
 /**
@@ -407,69 +405,59 @@ static inline int timer_gettime(timer_t timerid, struct itimerspec *value)
 {
 	struct cobalt_timer *timer;
 	spl_t s;
-	int err;
+	int ret;
 
-	if ((unsigned)timerid >= COBALT_TIMER_MAX) {
-		err = -EINVAL;
+	if ((unsigned int)timerid >= CONFIG_XENO_OPT_NRTIMERS) {
+		ret = -EINVAL;
 		goto error;
 	}
 
 	xnlock_get_irqsave(&nklock, s);
 
-	timer = &timer_pool[(unsigned long)timerid];
+	timer = &timer_pool[(unsigned int)timerid];
 
 	if (!xntimer_active_p(&timer->timerbase)) {
-		err = -EINVAL;
+		ret = -EINVAL;
 		goto unlock_and_error;
 	}
 
 #if XENO_DEBUG(COBALT)
 	if (timer->owningq != cobalt_kqueues(0)) {
-		err = -EPERM;
+		ret = -EPERM;
 		goto unlock_and_error;
 	}
 #endif /* XENO_DEBUG(COBALT) */
 
-	cobalt_timer_gettime_inner(timer, value);
+	timer_gettimeout(timer, value);
 
 	xnlock_put_irqrestore(&nklock, s);
 
 	return 0;
 
-      unlock_and_error:
+unlock_and_error:
 	xnlock_put_irqrestore(&nklock, s);
-      error:
-	return err;
+error:
+	return ret;
 }
 
 int cobalt_timer_delete(timer_t timerid)
 {
-       return cobalt_timer_delete_inner(timerid, cobalt_kqueues(0), 0);
+	return timer_delete(timerid, cobalt_kqueues(0), 0);
 }
 
 int cobalt_timer_create(clockid_t clock,
 			const struct sigevent __user *u_sev,
 			timer_t __user *u_tm)
 {
-	union cobalt_sem_union sm, __user *u_sem;
-	struct sigevent sev, *evp = &sev;
+	struct sigevent sev, *evp = NULL;
 	timer_t tm = 0;
 	int ret;
 
 	if (u_sev) {
+		evp = &sev;
 		if (__xn_safe_copy_from_user(&sev, u_sev, sizeof(sev)))
 			return -EFAULT;
-
-		if (sev.sigev_notify == SIGEV_THREAD_ID) {
-			u_sem = sev.sigev_value.sival_ptr;
-
-			if (__xn_safe_copy_from_user(&sm, u_sem, sizeof(sm)))
-				return -EFAULT;
-
-			sev.sigev_value.sival_ptr = &sm.native_sem;
-		}
-	} else
-		evp = NULL;
+	}
 
 	ret = timer_create(clock, evp, &tm);
 	if (ret)
@@ -522,26 +510,26 @@ int cobalt_timer_gettime(timer_t tm, struct itimerspec __user *u_val)
 int cobalt_timer_getoverrun(timer_t timerid)
 {
 	struct cobalt_timer *timer;
-	int overruns, err;
+	int overruns, ret;
 	spl_t s;
 
-	if ((unsigned)timerid >= COBALT_TIMER_MAX) {
-		err = -EINVAL;
+	if ((unsigned int)timerid >= CONFIG_XENO_OPT_NRTIMERS) {
+		ret = -EINVAL;
 		goto error;
 	}
 
 	xnlock_get_irqsave(&nklock, s);
 
-	timer = &timer_pool[(unsigned long)timerid];
+	timer = &timer_pool[(unsigned int)timerid];
 
 	if (!xntimer_active_p(&timer->timerbase)) {
-		err = -EINVAL;
+		ret = -EINVAL;
 		goto unlock_and_error;
 	}
 
 #if XENO_DEBUG(COBALT)
 	if (timer->owningq != cobalt_kqueues(0)) {
-		err = -EPERM;
+		ret = -EPERM;
 		goto unlock_and_error;
 	}
 #endif /* XENO_DEBUG(COBALT) */
@@ -552,26 +540,37 @@ int cobalt_timer_getoverrun(timer_t timerid)
 
 	return overruns;
 
-  unlock_and_error:
+unlock_and_error:
 	xnlock_put_irqrestore(&nklock, s);
-  error:
-	return err;
+error:
+	return ret;
 }
 
-void cobalt_timer_init_thread(pthread_t new_thread)
+void cobalt_timer_notified(timer_t timerid) /* nklocked, IRQs off. */
 {
-	INIT_LIST_HEAD(&new_thread->timersq);
+	struct cobalt_timer *timer;
+	xnticks_t now;
+
+	timer = &timer_pool[(unsigned int)timerid];
+
+	if (!xntimer_interval(&timer->timerbase))
+		timer->overruns = 0;
+	else {
+		now = xnclock_read_raw();
+		timer->overruns = xntimer_get_overruns(&timer->timerbase, now);
+		if ((unsigned int)timer->overruns > COBALT_DELAYMAX)
+			timer->overruns = COBALT_DELAYMAX;
+	}
 }
 
-/* Called with nklock locked irq off. */
-void cobalt_timer_cleanup_thread(pthread_t zombie)
+void cobalt_timer_flush(struct cobalt_thread *thread) /* nklocked, IRQs off. */
 {
 	struct cobalt_timer *timer, *tmp;
 
-	if (list_empty(&zombie->timersq))
+	if (list_empty(&thread->timersq))
 		return;
 
-	list_for_each_entry_safe(timer, tmp, &zombie->timersq, tlink) {
+	list_for_each_entry_safe(timer, tmp, &thread->timersq, tlink) {
 		list_del(&timer->tlink);
 		xntimer_stop(&timer->timerbase);
 		timer->owner = NULL;
@@ -591,10 +590,10 @@ void cobalt_timerq_cleanup(struct cobalt_kqueues *q)
 
 	list_for_each_entry_safe(timer, tmp, &q->timerq, link) { 
 		tm = (timer_t)(timer - timer_pool);
-		cobalt_timer_delete_inner(tm, q, 1);
+		timer_delete(tm, q, 1);
 		xnlock_put_irqrestore(&nklock, s);
 #if XENO_DEBUG(COBALT)
-		printk(XENO_INFO "deleting Cobalt timer %u\n", (unsigned)tm);
+		printk(XENO_INFO "deleting Cobalt timer %u\n", (unsigned int)tm);
 #endif /* XENO_DEBUG(COBALT) */
 		xnlock_get_irqsave(&nklock, s);
 	}
@@ -609,7 +608,7 @@ int cobalt_timer_pkg_init(void)
 	INIT_LIST_HEAD(&timer_freeq);
 	INIT_LIST_HEAD(&cobalt_global_kqueues.timerq);
 
-	for (n = 0; n < COBALT_TIMER_MAX; n++)
+	for (n = 0; n < CONFIG_XENO_OPT_NRTIMERS; n++)
 		list_add_tail(&timer_pool[n].link, &timer_freeq);
 
 	return 0;

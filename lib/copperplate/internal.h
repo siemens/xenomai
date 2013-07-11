@@ -28,8 +28,6 @@
 #include <copperplate/list.h>
 #include <copperplate/heapobj.h>
 
-#define sigev_notify_thread_id	 _sigev_un._tid
-
 struct coppernode {
 	unsigned int mem_pool;
 	const char *session_label;
