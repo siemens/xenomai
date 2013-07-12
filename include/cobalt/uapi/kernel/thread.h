@@ -35,21 +35,21 @@
 #define XNREADY   0x00000008 /**< Linked to the ready queue. */
 #define XNDORMANT 0x00000010 /**< Not started yet or killed */
 #define XNZOMBIE  0x00000020 /**< Zombie thread in deletion process */
-#define XNSTARTED 0x00000080 /**< Thread has been started */
-#define XNMAPPED  0x00000100 /**< Thread is mapped to a linux task */
-#define XNRELAX   0x00000200 /**< Relaxed shadow thread (blocking bit) */
-#define XNMIGRATE 0x00000400 /**< Thread is currently migrating to another CPU. */
-#define XNHELD    0x00000800 /**< Thread is held to process emergency. */
+#define XNSTARTED 0x00000040 /**< Thread has been started */
+#define XNMAPPED  0x00000080 /**< Thread is mapped to a linux task */
+#define XNRELAX   0x00000100 /**< Relaxed shadow thread (blocking bit) */
+#define XNMIGRATE 0x00000200 /**< Thread is currently migrating to another CPU. */
+#define XNHELD    0x00000400 /**< Thread is held to process emergency. */
 
-#define XNBOOST   0x00001000 /**< Undergoes a PIP boost */
-#define XNDEBUG   0x00002000 /**< Hit a debugger breakpoint */
-#define XNLOCK    0x00004000 /**< Holds the scheduler lock (i.e. not preemptible) */
-#define XNRRB     0x00008000 /**< Undergoes a round-robin scheduling */
-#define XNTRAPSW  0x00010000 /**< Trap execution mode switches */
-#define XNFPU     0x00020000 /**< Thread uses FPU */
-#define XNROOT    0x00040000 /**< Root thread (that is, Linux/IDLE) */
-#define XNWEAK    0x00080000 /**< Non real-time shadow (from the WEAK class) */
-#define XNUSER    0x00100000 /**< Shadow thread running in userland */
+#define XNBOOST   0x00000800 /**< Undergoes a PIP boost */
+#define XNDEBUG   0x00001000 /**< Hit a debugger breakpoint */
+#define XNLOCK    0x00002000 /**< Holds the scheduler lock (i.e. not preemptible) */
+#define XNRRB     0x00004000 /**< Undergoes a round-robin scheduling */
+#define XNTRAPSW  0x00008000 /**< Trap execution mode switches */
+#define XNFPU     0x00010000 /**< Thread uses FPU */
+#define XNROOT    0x00020000 /**< Root thread (that is, Linux/IDLE) */
+#define XNWEAK    0x00040000 /**< Non real-time shadow (from the WEAK class) */
+#define XNUSER    0x00080000 /**< Shadow thread running in userland */
 
 /** @} */
 
