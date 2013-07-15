@@ -31,6 +31,7 @@
 #include <linux/types.h>
 #include <linux/cred.h>
 #include <linux/jhash.h>
+#include <linux/signal.h>
 #include <cobalt/uapi/signal.h>
 #include "thread.h"
 #include "timer.h"

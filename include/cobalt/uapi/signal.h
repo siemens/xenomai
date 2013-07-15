@@ -59,4 +59,69 @@
 
 #define COBALT_DELAYMAX			2147483647U
 
+/*
+ * Internal accessors to extra siginfo/sigevent fields, extending some
+ * existing base field. The extra data should be grouped in a
+ * dedicated struct type. The extra space is taken from the padding
+ * area available from the original structure definitions.
+ *
+ * e.g. getting the address of the following extension to
+ * _sifields._rt from siginfo_t,
+ *
+ * struct bar {
+ *    int foo;
+ * };
+ *
+ * would be noted as:
+ *
+ * siginfo_t si;
+ * struct bar *p = __cobalt_si_extra(&si, _rt, struct bar);
+ *
+ * This code is shared between kernel and user space. Proper
+ * definitions of siginfo_t and sigevent_t should have been read prior
+ * to including this file.
+ *
+ * CAUTION: this macro does not handle alignment issues for the extra
+ * data. The extra type definition should take care of this.
+ */
+#ifdef __OPTIMIZE__
+extern void *__siginfo_overflow(void);
+static inline void *__check_si_overflow(size_t fldsz, size_t extrasz, void *p)
+{
+	siginfo_t *si __attribute__((unused));
+
+	if (fldsz + extrasz <= sizeof(si->_sifields))
+		return p;
+
+	return __siginfo_overflow();
+}
+#define __cobalt_si_extra(__si, __basefield, __type)				\
+	((__type *)__check_si_overflow(sizeof(__si->_sifields.__basefield),	\
+	       sizeof(__type), &(__si->_sifields.__basefield) + 1))
+#else
+#define __cobalt_si_extra(__si, __basefield, __type)				\
+	((__type *)((&__si->_sifields.__basefield) + 1))
+#endif
+
+/* Same approach, this time for extending sigevent_t. */
+
+#ifdef __OPTIMIZE__
+extern void *__sigevent_overflow(void);
+static inline void *__check_sev_overflow(size_t fldsz, size_t extrasz, void *p)
+{
+	sigevent_t *sev __attribute__((unused));
+
+	if (fldsz + extrasz <= sizeof(sev->_sigev_un))
+		return p;
+
+	return __sigevent_overflow();
+}
+#define __cobalt_sev_extra(__sev, __basefield, __type)				\
+	((__type *)__check_sev_overflow(sizeof(__sev->_sigev_un.__basefield),	\
+	       sizeof(__type), &(__sev->_sigev_un.__basefield) + 1))
+#else
+#define __cobalt_sev_extra(__sev, __basefield, __type)				\
+	((__type *)((&__sev->_sigev_un.__basefield) + 1))
+#endif
+
 #endif /* !_COBALT_UAPI_SIGNAL_H */
