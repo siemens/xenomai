@@ -40,7 +40,7 @@ struct cobalt_timer {
 
 static struct list_head timer_freeq;
 
-static struct cobalt_timer timer_pool[CONFIG_XENO_OPT_NRTIMERS];
+static struct cobalt_timer *timer_pool;
 
 static void timer_handler(struct xntimer *xntimer)
 {
@@ -596,9 +596,15 @@ out:
 	xnlock_put_irqrestore(&nklock, s);
 }
 
+#define __TMPOOL_SIZE  (sizeof(struct cobalt_timer) * CONFIG_XENO_OPT_NRTIMERS)
+
 int cobalt_timer_pkg_init(void)
 {
 	int n;
+
+	timer_pool = alloc_pages_exact(__TMPOOL_SIZE, GFP_KERNEL);
+	if (timer_pool == NULL)
+		return -ENOMEM;
 
 	INIT_LIST_HEAD(&timer_freeq);
 	INIT_LIST_HEAD(&cobalt_global_kqueues.timerq);
@@ -612,6 +618,7 @@ int cobalt_timer_pkg_init(void)
 void cobalt_timer_pkg_cleanup(void)
 {
 	cobalt_timerq_cleanup(&cobalt_global_kqueues);
+	free_pages_exact(timer_pool, __TMPOOL_SIZE);
 }
 
 /*@}*/
