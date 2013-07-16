@@ -46,16 +46,11 @@ static void timer_handler(struct xntimer *xntimer)
 {
 	struct cobalt_thread *thread;
 	struct cobalt_timer *timer;
-	spl_t s;
 
 	timer = container_of(xntimer, struct cobalt_timer, timerbase);
-	xnlock_get_irqsave(&nklock, s);
-
 	thread = cobalt_thread_find(timer->target);
 	if (thread)
 		cobalt_signal_send(thread, &timer->si);
-
-	xnlock_put_irqrestore(&nklock, s);
 }
 
 /**
