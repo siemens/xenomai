@@ -15,20 +15,18 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-
 #ifndef _COBALT_POSIX_INTERNAL_H
 #define _COBALT_POSIX_INTERNAL_H
 
 #include <cobalt/kernel/pod.h>
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/ppd.h>
-#include <cobalt/kernel/select.h>
 #include <cobalt/kernel/assert.h>
 #include <cobalt/kernel/list.h>
 #include <cobalt/kernel/arith.h>
-#include <cobalt/uapi/syscall.h>
-#include <asm/xenomai/syscall.h>
 #include "registry.h"
+#include "process.h"
+#include "extension.h"
 
 #ifndef CONFIG_XENO_OPT_DEBUG_COBALT
 #define CONFIG_XENO_OPT_DEBUG_COBALT 0
@@ -49,35 +47,14 @@
 #define COBALT_EVENT_MAGIC       COBALT_MAGIC(0F)
 #define COBALT_MONITOR_MAGIC     COBALT_MAGIC(10)
 
-#define ONE_BILLION             1000000000
-
 #define cobalt_obj_active(h,m,t)			\
 	((h) && ((t *)(h))->magic == (m))
 
 #define cobalt_mark_deleted(t) ((t)->magic = ~(t)->magic)
 
-struct cobalt_kqueues {
-	struct list_head condq;
-	struct list_head mutexq;
-	struct list_head semq;
-	struct list_head threadq;
-	struct list_head timerq;
-	struct list_head monitorq;
-	struct list_head eventq;
-};
-
-struct cobalt_context {
-	struct cobalt_kqueues kqueues;
-	cobalt_assocq_t uqds;
-	cobalt_assocq_t usems;
-	struct xnshadow_ppd ppd;
-};
-
 extern int cobalt_muxid;
 
-extern struct cobalt_kqueues cobalt_global_kqueues;
-
-static inline struct cobalt_context *cobalt_process_context(void)
+static inline struct cobalt_process *cobalt_process_context(void)
 {
 	struct xnshadow_ppd *ppd;
 	spl_t s;
@@ -89,7 +66,7 @@ static inline struct cobalt_context *cobalt_process_context(void)
 	if (ppd == NULL)
 		return NULL;
 
-	return container_of(ppd, struct cobalt_context, ppd);
+	return container_of(ppd, struct cobalt_process, ppd);
 }
 
 static inline struct cobalt_kqueues *cobalt_kqueues(int pshared)
@@ -99,70 +76,8 @@ static inline struct cobalt_kqueues *cobalt_kqueues(int pshared)
 	if (pshared || (ppd = xnshadow_ppd_get(cobalt_muxid)) == NULL)
 		return &cobalt_global_kqueues;
 
-	return &container_of(ppd, struct cobalt_context, ppd)->kqueues;
+	return &container_of(ppd, struct cobalt_process, ppd)->kqueues;
 }
-
-static inline void ns2ts(struct timespec *ts, xnticks_t nsecs)
-{
-	ts->tv_sec = xnclock_divrem_billion(nsecs, &ts->tv_nsec);
-}
-
-static inline xnticks_t ts2ns(const struct timespec *ts)
-{
-	xntime_t nsecs = ts->tv_nsec;
-
-	if (ts->tv_sec)
-		nsecs += (xntime_t)ts->tv_sec * ONE_BILLION;
-
-	return nsecs;
-}
-
-static inline xnticks_t tv2ns(const struct timeval *tv)
-{
-	xntime_t nsecs = tv->tv_usec * 1000;
-
-	if (tv->tv_sec)
-		nsecs += (xntime_t)tv->tv_sec * ONE_BILLION;
-
-	return nsecs;
-}
-
-static inline void ticks2tv(struct timeval *tv, xnticks_t ticks)
-{
-	unsigned long nsecs;
-
-	tv->tv_sec = xnclock_divrem_billion(ticks, &nsecs);
-	tv->tv_usec = nsecs / 1000;
-}
-
-static inline xnticks_t clock_get_ticks(clockid_t clock_id)
-{
-	return clock_id == CLOCK_REALTIME ?
-		xnclock_read() :
-		xnclock_read_monotonic();
-}
-
-static inline int clock_flag(int flag, clockid_t clock_id)
-{
-	switch(flag & TIMER_ABSTIME) {
-	case 0:
-		return XN_RELATIVE;
-
-	case TIMER_ABSTIME:
-		switch(clock_id) {
-		case CLOCK_MONOTONIC:
-		case CLOCK_MONOTONIC_RAW:
-			return XN_ABSOLUTE;
-
-		case CLOCK_REALTIME:
-			return XN_REALTIME;
-		}
-	}
-	return -EINVAL;
-}
-
-int cobalt_mq_elect_bind(mqd_t fd, struct xnselector *selector,
-			 unsigned type, unsigned index);
 
 int cobalt_init(void);
 

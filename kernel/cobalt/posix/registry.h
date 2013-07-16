@@ -19,6 +19,7 @@
 #define _COBALT_POSIX_REGISTRY_H
 
 #include <stdarg.h>
+#include <linux/list.h>
 #include <cobalt/kernel/lock.h>
 
 #define COBALT_MAXNAME 64
@@ -95,8 +96,6 @@ struct mm_struct;
 
 DECLARE_EXTERN_XNLOCK(cobalt_assoc_lock);
 
-typedef struct list_head cobalt_assocq_t;
-
 typedef struct {
     unsigned long key;
     struct list_head link;
@@ -110,20 +109,18 @@ typedef struct {
     ((cobalt_ufd_t *)((unsigned long) (laddr) - offsetof(cobalt_ufd_t, assoc)))
 } cobalt_ufd_t;
 
-#define cobalt_assocq_init(q) (INIT_LIST_HEAD(q))
-
 #define cobalt_assoc_key(assoc) ((assoc)->key)
 
-void cobalt_assocq_destroy(cobalt_assocq_t *q, void (*destroy)(cobalt_assoc_t *));
+void cobalt_assocq_destroy(struct list_head *q, void (*destroy)(cobalt_assoc_t *));
 
-int cobalt_assoc_insert(cobalt_assocq_t *q,
+int cobalt_assoc_insert(struct list_head *q,
 		       cobalt_assoc_t *assoc,
 		       unsigned long key);
 
-cobalt_assoc_t *cobalt_assoc_lookup(cobalt_assocq_t *q,
+cobalt_assoc_t *cobalt_assoc_lookup(struct list_head *q,
 				  unsigned long key);
 
-cobalt_assoc_t *cobalt_assoc_remove(cobalt_assocq_t *q,
+cobalt_assoc_t *cobalt_assoc_remove(struct list_head *q,
 				  unsigned long key);
 
 #endif /* _COBALT_POSIX_REGISTRY_H */

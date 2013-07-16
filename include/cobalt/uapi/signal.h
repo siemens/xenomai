@@ -86,7 +86,8 @@
  */
 #ifdef __OPTIMIZE__
 extern void *__siginfo_overflow(void);
-static inline void *__check_si_overflow(size_t fldsz, size_t extrasz, void *p)
+static inline
+const void *__check_si_overflow(size_t fldsz, size_t extrasz, const void *p)
 {
 	siginfo_t *si __attribute__((unused));
 
@@ -107,7 +108,8 @@ static inline void *__check_si_overflow(size_t fldsz, size_t extrasz, void *p)
 
 #ifdef __OPTIMIZE__
 extern void *__sigevent_overflow(void);
-static inline void *__check_sev_overflow(size_t fldsz, size_t extrasz, void *p)
+static inline
+const void *__check_sev_overflow(size_t fldsz, size_t extrasz, const void *p)
 {
 	sigevent_t *sev __attribute__((unused));
 

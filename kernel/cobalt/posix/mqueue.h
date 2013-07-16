@@ -20,10 +20,9 @@
 #define _COBALT_POSIX_MQUEUE_H
 
 #include <linux/types.h>
-#include <linux/signal.h>
 #include <linux/fcntl.h>
 
-struct cobalt_context;
+struct cobalt_process;
 struct mq_attr;
 
 int cobalt_mq_select_bind(mqd_t fd, struct xnselector *selector,
@@ -57,7 +56,7 @@ int cobalt_mq_timedreceive(mqd_t uqd, void __user *u_buf,
 
 int cobalt_mq_notify(mqd_t fd, const struct sigevent *__user evp);
 
-void cobalt_mq_uqds_cleanup(struct cobalt_context *cc);
+void cobalt_mq_uqds_cleanup(struct cobalt_process *cc);
 
 int cobalt_mq_pkg_init(void);
 

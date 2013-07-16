@@ -30,14 +30,14 @@
  *@{*/
 
 #include <stdarg.h>
-#include <linux/fs.h>		/* ERR_PTR */
-#include "registry.h"
-#include "internal.h"		/* Magics, time conversion */
-#include "thread.h"		/* errno. */
+#include <linux/fs.h>
+#include <cobalt/kernel/select.h>
+#include "internal.h"
+#include "thread.h"
+#include "signal.h"
 #include "timer.h"
 #include "mqueue.h"
-#include "signal.h"
-#include "internal.h"
+#include "clock.h"
 
 struct mq_attr {
 	long mq_flags;
@@ -59,7 +59,7 @@ struct cobalt_mq {
 	int nrqueued;
 
 	/* mq_notify */
-	siginfo_t si;
+	struct siginfo si;
 	mqd_t target_qd;
 	struct cobalt_thread *target;
 
@@ -274,8 +274,8 @@ static mqd_t mq_open(const char *name, int oflags, ...)
 	}
 
 	/* Here, we know that we must create a message queue. */
-	mq = (cobalt_mq_t *) xnmalloc(sizeof(*mq));
-	if (!mq) {
+	mq = xnmalloc(sizeof(*mq));
+	if (mq == NULL) {
 		err = -ENOSPC;
 		goto error;
 	}
@@ -582,6 +582,7 @@ static int
 cobalt_mq_finish_send(mqd_t fd, cobalt_mq_t *mq, struct cobalt_msg *msg)
 {
 	int err = 0, resched = 0, removed;
+	struct cobalt_sigpending *sigp;
 	cobalt_desc_t *desc;
 	spl_t s;
 
@@ -608,8 +609,12 @@ cobalt_mq_finish_send(mqd_t fd, cobalt_mq_t *mq, struct cobalt_msg *msg)
 		 * First message and no pending reader? send a signal
 		 * if mq_notify was called.
 		 */
-		cobalt_signal_send(mq->target, &mq->si);
-		resched = 1;
+		sigp = cobalt_signal_alloc();
+		if (sigp) {
+			cobalt_copy_siginfo(SI_MESGQ, &sigp->si, &mq->si);
+			cobalt_signal_send(mq->target, sigp);
+			resched = 1;
+		}
 		mq->target = NULL;
 	}
 
@@ -928,7 +933,6 @@ static inline int mq_notify(mqd_t fd, const struct sigevent *evp)
 		mq->target_qd = fd;
 		mq->si.si_signo = evp->sigev_signo;
 		mq->si.si_code = SI_MESGQ;
-		mq->si.si_errno = 0;
 		mq->si.si_value = evp->sigev_value;
 		/*
 		 * XXX: we differ from the regular kernel here, which
@@ -950,7 +954,7 @@ static inline int mq_notify(mqd_t fd, const struct sigevent *evp)
 
 int cobalt_mq_notify(mqd_t fd, const struct sigevent *__user evp)
 {
-	struct cobalt_context *cc;
+	struct cobalt_process *cc;
 	cobalt_assoc_t *assoc;
 	struct sigevent sev;
 	cobalt_ufd_t *ufd;
@@ -1037,7 +1041,7 @@ static void uqd_cleanup(cobalt_assoc_t *assoc)
 	xnfree(ufd);
 }
 
-void cobalt_mq_uqds_cleanup(struct cobalt_context *cc)
+void cobalt_mq_uqds_cleanup(struct cobalt_process *cc)
 {
 	cobalt_assocq_destroy(&cc->uqds, &uqd_cleanup);
 }
@@ -1048,7 +1052,7 @@ int cobalt_mq_open(const char __user *u_name, int oflags,
 {
 	struct mq_attr locattr, *attr;
 	char name[COBALT_MAXNAME];
-	struct cobalt_context *cc;
+	struct cobalt_process *cc;
 	cobalt_ufd_t *assoc;
 	unsigned len;
 	mqd_t kqd;
@@ -1099,7 +1103,7 @@ int cobalt_mq_open(const char __user *u_name, int oflags,
 
 int cobalt_mq_close(mqd_t uqd)
 {
-	struct cobalt_context *cc;
+	struct cobalt_process *cc;
 	cobalt_assoc_t *assoc;
 	int err;
 
@@ -1133,7 +1137,7 @@ int cobalt_mq_unlink(const char __user *u_name)
 
 int cobalt_mq_getattr(mqd_t uqd, struct mq_attr __user *u_attr)
 {
-	struct cobalt_context *cc;
+	struct cobalt_process *cc;
 	cobalt_assoc_t *assoc;
 	struct mq_attr attr;
 	cobalt_ufd_t *ufd;
@@ -1160,7 +1164,7 @@ int cobalt_mq_setattr(mqd_t uqd, const struct mq_attr __user *u_attr,
 		      struct mq_attr __user *u_oattr)
 {
 	struct mq_attr attr, oattr;
-	struct cobalt_context *cc;
+	struct cobalt_process *cc;
 	cobalt_assoc_t *assoc;
 	cobalt_ufd_t *ufd;
 	int err;
@@ -1191,7 +1195,7 @@ int cobalt_mq_setattr(mqd_t uqd, const struct mq_attr __user *u_attr,
 int cobalt_mq_send(mqd_t uqd, const void __user *u_buf, size_t len,
 		   unsigned int prio)
 {
-	struct cobalt_context *cc;
+	struct cobalt_process *cc;
 	struct cobalt_msg *msg;
 	cobalt_assoc_t *assoc;
 	cobalt_ufd_t *ufd;
@@ -1228,7 +1232,7 @@ int cobalt_mq_timedsend(mqd_t uqd, const void __user *u_buf, size_t len,
 			unsigned int prio, const struct timespec __user *u_ts)
 {
 	struct timespec timeout, *timeoutp;
-	struct cobalt_context *cc;
+	struct cobalt_process *cc;
 	struct cobalt_msg *msg;
 	cobalt_assoc_t *assoc;
 	cobalt_ufd_t *ufd;
@@ -1271,7 +1275,7 @@ int cobalt_mq_timedsend(mqd_t uqd, const void __user *u_buf, size_t len,
 int cobalt_mq_receive(mqd_t uqd, void __user *u_buf,
 		      ssize_t __user *u_len, unsigned int __user *u_prio)
 {
-	struct cobalt_context *cc;
+	struct cobalt_process *cc;
 	struct cobalt_msg *msg;
 	cobalt_assoc_t *assoc;
 	cobalt_ufd_t *ufd;
@@ -1331,7 +1335,7 @@ int cobalt_mq_timedreceive(mqd_t uqd, void __user *u_buf,
 			   const struct timespec __user *u_ts)
 {
 	struct timespec timeout, *timeoutp;
-	struct cobalt_context *cc;
+	struct cobalt_process *cc;
 	struct cobalt_msg *msg;
 	cobalt_assoc_t *assoc;
 	unsigned int prio;

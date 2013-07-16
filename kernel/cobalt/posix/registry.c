@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "registry.h"
+#include "internal.h"
 #include "thread.h"
 
 #define BITS_PER_INT 32
@@ -218,8 +218,8 @@ int cobalt_desc_create(cobalt_desc_t ** descp, cobalt_node_t * node, long flags)
 	spl_t s;
 	int fd;
 
-	desc = (cobalt_desc_t *) xnmalloc(sizeof(*desc));
-	if (!desc)
+	desc = xnmalloc(sizeof(*desc));
+	if (desc == NULL)
 		return ENOSPC;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -272,8 +272,8 @@ int cobalt_desc_get(cobalt_desc_t ** descp, int fd, unsigned magic)
 
 DEFINE_XNLOCK(cobalt_assoc_lock);
 
-static int cobalt_assoc_lookup_inner(cobalt_assocq_t * q,
-				     cobalt_assoc_t ** passoc,
+static int cobalt_assoc_lookup_inner(struct list_head *q,
+				     cobalt_assoc_t **passoc,
 				     unsigned long key)
 {
 	cobalt_assoc_t *assoc = NULL;
@@ -297,7 +297,7 @@ out:
 	return 0;
 }
 
-int cobalt_assoc_insert(cobalt_assocq_t * q,
+int cobalt_assoc_insert(struct list_head *q,
 			cobalt_assoc_t * assoc, unsigned long key)
 {
 	cobalt_assoc_t *next;
@@ -321,7 +321,7 @@ int cobalt_assoc_insert(cobalt_assocq_t * q,
 	return 0;
 }
 
-cobalt_assoc_t *cobalt_assoc_lookup(cobalt_assocq_t * q,
+cobalt_assoc_t *cobalt_assoc_lookup(struct list_head *q,
 				    unsigned long key)
 {
 	cobalt_assoc_t *assoc;
@@ -335,7 +335,7 @@ cobalt_assoc_t *cobalt_assoc_lookup(cobalt_assocq_t * q,
 	return found ? assoc : NULL;
 }
 
-cobalt_assoc_t *cobalt_assoc_remove(cobalt_assocq_t * q,
+cobalt_assoc_t *cobalt_assoc_remove(struct list_head *q,
 				    unsigned long key)
 {
 	cobalt_assoc_t *assoc;
@@ -353,7 +353,7 @@ cobalt_assoc_t *cobalt_assoc_remove(cobalt_assocq_t * q,
 	return assoc;
 }
 
-void cobalt_assocq_destroy(cobalt_assocq_t * q, void (*destroy) (cobalt_assoc_t *))
+void cobalt_assocq_destroy(struct list_head *q, void (*destroy)(cobalt_assoc_t *))
 {
 	cobalt_assoc_t *assoc, *tmp;
 	spl_t s;

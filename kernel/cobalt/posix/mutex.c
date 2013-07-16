@@ -47,9 +47,11 @@
  *
  *@{*/
 
-#include <cobalt/kernel/ppd.h>
+#include "internal.h"
+#include "thread.h"
 #include "mutex.h"
 #include "cond.h"
+#include "clock.h"
 
 static int cobalt_mutex_init_inner(struct __shadow_mutex *shadow,
 				   struct cobalt_mutex *mutex,

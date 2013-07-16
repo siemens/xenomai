@@ -177,7 +177,6 @@ int xnthread_init(struct xnthread *thread,
 	thread->selector = NULL;
 	INIT_LIST_HEAD(&thread->claimq);
 
-	thread->privdata = NULL;
 	thread->personality = attr->personality;
 
 	thread->sched = sched;

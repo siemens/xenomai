@@ -275,11 +275,12 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 includesubdir = $(includedir)/rtdm
 includesub_HEADERS = \
-	rtdm.h \
-	rtdm_driver.h \
-	rtserial.h \
-	rttesting.h \
-	rtcan.h \
+	cobalt.h	\
+	rtdm.h		\
+	rtdm_driver.h	\
+	rtserial.h	\
+	rttesting.h	\
+	rtcan.h		\
 	rtipc.h
 
 all: all-am

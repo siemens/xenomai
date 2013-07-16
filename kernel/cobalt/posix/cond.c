@@ -47,9 +47,11 @@
  *
  *@{*/
 
-#include <cobalt/kernel/ppd.h>
+#include "internal.h"
+#include "thread.h"
 #include "mutex.h"
 #include "cond.h"
+#include "clock.h"
 
 static inline void
 cond_destroy_internal(struct cobalt_cond *cond, struct cobalt_kqueues *q)

@@ -23,6 +23,7 @@
 
 #include "internal.h"
 #include "thread.h"
+#include "cond.h"
 
 const pthread_condattr_t cobalt_default_cond_attr = {
 

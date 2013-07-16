@@ -23,6 +23,9 @@
 #include <cobalt/kernel/thread.h>
 #include <cobalt/kernel/registry.h>
 
+struct cobalt_sem;
+struct cobalt_process;
+
 /* Copied from Linuxthreads semaphore.h. */
 struct _sem_fastlock
 {
@@ -42,17 +45,7 @@ typedef struct
 #define SEM_VALUE_MAX (INT_MAX)
 #define SEM_FAILED    NULL
 
-typedef struct {
-    u_long uaddr;
-    unsigned refcnt;
-    cobalt_assoc_t assoc;
-
-#define assoc2usem(laddr) container_of(laddr, cobalt_usem_t, assoc)
-} cobalt_usem_t;
-
-void cobalt_sem_usems_cleanup(struct cobalt_context *cc);
-
-struct cobalt_sem;
+void cobalt_sem_usems_cleanup(struct cobalt_process *cc);
 
 int sem_getvalue(struct cobalt_sem *sem, int *value);
 

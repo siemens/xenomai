@@ -19,29 +19,63 @@
 #define _COBALT_POSIX_SIGNAL_H
 
 #include <linux/signal.h>
+#include <cobalt/kernel/timer.h>
 #include <cobalt/kernel/list.h>
 
 struct cobalt_thread;
 
-struct cobalt_sigevent {
-	siginfo_t si;
+struct cobalt_sigpending {
+	struct siginfo si;
 	struct list_head next;
 };
 
-int cobalt_signal_send(struct cobalt_thread *thread, siginfo_t *si);
+static inline
+void cobalt_copy_siginfo(int code,
+			 struct siginfo *__restrict__ dst,
+			 const struct siginfo *__restrict__ src)
+{
+	dst->si_signo = src->si_signo;
+	dst->si_code = code;
+	dst->si_errno = 0;
 
-int cobalt_signal_wait(sigset_t *set, siginfo_t *si,
-		       xnticks_t timeout, xntmode_t tmode);
+	switch (code) {
+	case SI_TIMER:
+		dst->si_tid = src->si_tid;
+		dst->si_overrun = src->si_overrun;
+		dst->si_value = src->si_value;
+		break;
+	case SI_MESGQ:
+		dst->si_value = src->si_value;
+		/* falldown wanted. */
+	case SI_USER:
+	default:
+		dst->si_pid = src->si_pid;
+		dst->si_uid = src->si_uid;
+		break;
+	}
+}
+
+int cobalt_signal_send(struct cobalt_thread *thread,
+		       struct cobalt_sigpending *sigp);
+
+int cobalt_signal_send_pid(pid_t pid,
+			   struct cobalt_sigpending *sigp);
+
+struct cobalt_sigpending *cobalt_signal_alloc(void);
 
 void cobalt_signal_flush(struct cobalt_thread *thread);
 
+int cobalt_signal_wait(sigset_t *set, struct siginfo *si,
+		       xnticks_t timeout, xntmode_t tmode);
+
 int cobalt_sigwait(const sigset_t __user *u_set, int __user *u_sig);
 
-int cobalt_sigtimedwait(const sigset_t __user *u_set, siginfo_t __user *u_si,
+int cobalt_sigtimedwait(const sigset_t __user *u_set,
+			struct siginfo __user *u_si,
 			const struct timespec __user *u_timeout);
 
 int cobalt_sigwaitinfo(const sigset_t __user *u_set,
-		       siginfo_t __user *u_si);
+		       struct siginfo __user *u_si);
 
 int cobalt_sigpending(sigset_t __user *u_set);
 

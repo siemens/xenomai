@@ -23,12 +23,16 @@
 #include <linux/types.h>
 #include <linux/err.h>
 #include <cobalt/kernel/select.h>
+#include <cobalt/uapi/syscall.h>
+#include <asm/xenomai/syscall.h>
 #include <rtdm/rtdm_driver.h>
+#include "internal.h"
 #include "thread.h"
 #include "mutex.h"
 #include "cond.h"
 #include "mqueue.h"
 #include "sem.h"
+#include "signal.h"
 #include "timer.h"
 #include "monitor.h"
 #include "clock.h"
@@ -42,7 +46,7 @@ static int fd_valid_p(int fd)
 {
 	const int rtdm_fd_start = __FD_SETSIZE - RTDM_FD_MAX;
 	struct rtdm_dev_context *ctx;
-	struct cobalt_context *cc;
+	struct cobalt_process *cc;
 
 	if (fd >= rtdm_fd_start) {
 		ctx = rtdm_context_get(fd - rtdm_fd_start);
@@ -76,7 +80,7 @@ static int first_fd_valid_p(fd_set *fds[XNSELECT_MAX_TYPES], int nfds)
 static int select_bind_one(struct xnselector *selector, unsigned type, int fd)
 {
 	const int rtdm_fd_start = __FD_SETSIZE - RTDM_FD_MAX;
-	struct cobalt_context *cc;
+	struct cobalt_process *cc;
 	cobalt_assoc_t *assoc;
 
 	if (fd >= rtdm_fd_start)
@@ -178,7 +182,8 @@ static int __select(int nfds,
 		if (!first_fd_valid_p(in_fds, nfds))
 			return -EBADF;
 
-		if (!(selector = xnmalloc(sizeof(*thread->selector))))
+		selector = xnmalloc(sizeof(*thread->selector));
+		if (selector == NULL)
 			return -ENOMEM;
 		xnselector_init(selector);
 		thread->selector = selector;
@@ -226,7 +231,7 @@ int __cobalt_call_not_available(void)
 
 static struct xnshadow_ppd *cobalt_process_attach(void)
 {
-	struct cobalt_context *cc;
+	struct cobalt_process *cc;
 
 	cc = kmalloc(sizeof(*cc), GFP_KERNEL);
 	if (cc == NULL)
@@ -239,17 +244,17 @@ static struct xnshadow_ppd *cobalt_process_attach(void)
 	INIT_LIST_HEAD(&cc->kqueues.timerq);
 	INIT_LIST_HEAD(&cc->kqueues.monitorq);
 	INIT_LIST_HEAD(&cc->kqueues.eventq);
-	cobalt_assocq_init(&cc->uqds);
-	cobalt_assocq_init(&cc->usems);
+	INIT_LIST_HEAD(&cc->uqds);
+	INIT_LIST_HEAD(&cc->usems);
 
 	return &cc->ppd;
 }
 
 static void cobalt_process_detach(struct xnshadow_ppd *ppd)
 {
-	struct cobalt_context *cc;
+	struct cobalt_process *cc;
 
-	cc = container_of(ppd, struct cobalt_context, ppd);
+	cc = container_of(ppd, struct cobalt_process, ppd);
 
 	cobalt_sem_usems_cleanup(cc);
 	cobalt_mq_uqds_cleanup(cc);

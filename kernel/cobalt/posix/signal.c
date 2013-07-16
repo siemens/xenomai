@@ -16,83 +16,106 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 #include <cobalt/kernel/assert.h>
+#include "internal.h"
+#include "signal.h"
 #include "thread.h"
 #include "timer.h"
-#include "internal.h"
+#include "clock.h"
 
-static void *sigev_mem;
+static void *sigpending_mem;
 
-static LIST_HEAD(sigev_pool);
+static LIST_HEAD(sigpending_pool);
 
-int cobalt_signal_send(struct cobalt_thread *thread, siginfo_t *si)
+/*
+ * How many signal notifications which may be pending at any given
+ * time, except timers.  Cobalt signals are always thread directed,
+ * and we assume that in practice, each signal number is processed by
+ * a dedicated thread. We provide for up to three real-time signal
+ * events to pile up, and a single notification pending for other
+ * signals. Timers use a fast queuing logic maintaining a count of
+ * overruns, and therefore do not consume any memory from this pool.
+ */
+#define __SIGPOOL_SIZE  (sizeof(struct cobalt_sigpending) *	\
+			 (_NSIG + (SIGRTMAX - SIGRTMIN) * 2))
+
+int cobalt_signal_send(struct cobalt_thread *thread,
+		       struct cobalt_sigpending *sigp)
 {				/* nklocked, IRQs off */
 	struct cobalt_sigwait_context *swc;
 	struct xnthread_wait_context *wc;
-	struct cobalt_sigevent *se;
 	struct list_head *sigq;
-	int sig;
+	int sig, ret;
 
-	sig = si->si_signo;
+	sig = sigp->si.si_signo;
 	XENO_BUGON(COBALT, sig < 1 || sig > _NSIG);
-	sigq = thread->sigqueues + sig - 1;
-
-	/*
-	 * If the signal is already pending for the target thread, we
-	 * check whether it originates from the same source, in which
-	 * case we only bump the overrun count. For sources to match,
-	 * we need to have si_code and the originator's id
-	 * matching. Because si_pid and si_tid share the same memory
-	 * offset in siginfo_t, testing either of them will do.
-	 *
-	 * If no source was matched, we queue another notification for
-	 * real-time signals only.
-	 */
-	if (!list_empty(sigq)) {
-		list_for_each_entry(se, sigq, next) {
-			if (se->si.si_code == si->si_code &&
-			    se->si.si_pid == si->si_pid) {
-				if (se->si.si_overrun++ == COBALT_DELAYMAX)
-					se->si.si_overrun = COBALT_DELAYMAX;
-				return 0;
-			}
-		}
-		if (sig < SIGRTMIN)
-			return 0;
-	}
 
 	/* Can we deliver this signal immediately? */
 	if (xnsynch_pended_p(&thread->sigwait)) {
 		wc = xnthread_get_wait_context(&thread->threadbase);
 		swc = container_of(wc, struct cobalt_sigwait_context, wc);
 		if (sigismember(swc->set, sig)) {
-			*swc->si = *si;
+			*swc->si = sigp->si;
+			cobalt_call_extension(signal_deliver,
+					      &thread->extref, ret, sigp);
 			xnsynch_wakeup_one_sleeper(&thread->sigwait);
 			return 0;
 		}
 	}
 
 	/*
-	 * Ok, we definitely have to enqueue a signal notification. If
-	 * running out of queue space, notify caller via -EAGAIN.
+	 * Nope, attempt to queue it. We start by calling any Cobalt
+	 * extension for queuing the signal first.
 	 */
-	if (list_empty(&sigev_pool)) {
-		printk(XENO_ERR "sigev_pool empty, signal #%d to pid %d LOST!",
-		       sig, xnthread_host_pid(&thread->threadbase));
-		return -EAGAIN;
+	if (cobalt_call_extension(signal_queue, &thread->extref, ret, sigp)) {
+		if (ret < 0)
+			return ret; /* Error. */
+		if (ret > 0)
+			return 0; /* Queuing done. */
 	}
 
-	se = list_get_entry(&sigev_pool, struct cobalt_sigevent, next);
-	se->si = *si;
-	se->si.si_overrun = 0;
+	sigq = thread->sigqueues + sig - 1;
+	if (!list_empty(sigq)) {
+		/* Queue non-rt signals only once. */
+		if (sig < SIGRTMIN)
+			return 0;
+		/* Queue rt signal source only once (SI_TIMER). */
+		if (!list_empty(&sigp->next))
+			return 0;
+	}
+
 	sigaddset(&thread->sigpending, sig);
-	list_add_tail(&se->next, sigq);
+	list_add_tail(&sigp->next, sigq);
 
 	return 0;
 }
 
+int cobalt_signal_send_pid(pid_t pid, struct cobalt_sigpending *sigp)
+{				/* nklocked, IRQs off */
+	struct cobalt_thread *thread;
+
+	thread = cobalt_thread_find(pid);
+	if (thread)
+		return cobalt_signal_send(thread, sigp);
+
+	return -ESRCH;
+}
+
+struct cobalt_sigpending *cobalt_signal_alloc(void)
+{				/* nklocked, IRQs off */
+	struct cobalt_sigpending *sigp;
+
+	if (list_empty(&sigpending_pool))
+		return NULL;
+
+	sigp = list_get_entry(&sigpending_pool, struct cobalt_sigpending, next);
+	INIT_LIST_HEAD(&sigp->next);
+
+	return sigp;
+}
+
 void cobalt_signal_flush(struct cobalt_thread *thread)
 {
-	struct cobalt_sigevent *se, *tmp;
+	struct cobalt_sigpending *sigp, *tmp;
 	struct list_head *sigq;
 	int n;
 
@@ -107,19 +130,37 @@ void cobalt_signal_flush(struct cobalt_thread *thread)
 		sigq = thread->sigqueues + n;
 		if (list_empty(sigq))
 			continue;
-		list_for_each_entry_safe(tmp, se, sigq, next) {
-			list_del(&se->next);
-			list_add(&se->next, &sigev_pool);
-		}
+		/*
+		 * sigpending blocks must be unlinked so that we
+		 * detect this fact when deleting their respective
+		 * owners.
+		 */
+		list_for_each_entry_safe(tmp, sigp, sigq, next)
+			list_del_init(&sigp->next);
 	}
 
 	sigemptyset(&thread->sigpending);
 }
 
-static int signal_wait(sigset_t *set, siginfo_t *si, xnticks_t timeout)
+static inline struct cobalt_sigpending *next_sigp(struct list_head *sigq)
+{
+	struct cobalt_sigpending *sigp;
+
+	sigp = list_get_entry(sigq, struct cobalt_sigpending, next);
+
+	if ((void *)sigp >= sigpending_mem &&
+	    (void *)sigp < sigpending_mem + __SIGPOOL_SIZE)
+		list_add_tail(&sigp->next, &sigpending_pool);
+	else
+		INIT_LIST_HEAD(&sigp->next);
+
+	return sigp;
+}
+
+static int signal_wait(sigset_t *set, struct siginfo *si, xnticks_t timeout)
 {
 	struct cobalt_sigwait_context swc;
-	struct cobalt_sigevent *se;
+	struct cobalt_sigpending *sigp;
 	struct cobalt_thread *curr;
 	unsigned long *p, *t, m;
 	struct list_head *sigq;
@@ -149,30 +190,36 @@ static int signal_wait(sigset_t *set, siginfo_t *si, xnticks_t timeout)
 	if (sig) {
 		sigq = curr->sigqueues + sig - 1;
 		XENO_BUGON(COBALT, list_empty(sigq));
-		se = list_get_entry(sigq, struct cobalt_sigevent, next);
+		sigp = next_sigp(sigq);
 		if (list_empty(sigq))
 			sigdelset(&curr->sigpending, sig);
-		*si = se->si;
-		list_add(&se->next, &sigev_pool);
+		*si = sigp->si;
 		ret = 0;
 		goto done;
 	}
 
+	if (timeout == XN_NONBLOCK) {
+		ret = -EAGAIN;
+		goto out;
+	}
 wait:
 	swc.set = set;
 	swc.si = si;
 	xnthread_prepare_wait(&swc.wc);
 	ret = xnsynch_sleep_on(&curr->sigwait, timeout, XN_RELATIVE);
 	xnthread_finish_wait(&swc.wc, NULL);
-	if (ret)
+	if (ret) {
+		ret = ret & XNBREAK ? -EINTR : -EAGAIN;
 		goto out;
+	}
 done:
-	/*
-	 * We have to update the overrun count for each notified
-	 * timer.
-	 */
+	/* Compute the overrun count for timer-originated signals. */
 	if (si->si_code == SI_TIMER)
-		cobalt_timer_notified(si->si_tid);
+		si->si_overrun = cobalt_timer_deliver(si->si_tid);
+
+	/* Translate kernel codes for userland. */
+	if (si->si_code & __SI_MASK)
+		si->si_code |= __SI_MASK;
 out:
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -181,7 +228,7 @@ out:
 
 int cobalt_sigwait(const sigset_t __user *u_set, int __user *u_sig)
 {
-	siginfo_t si;
+	struct siginfo si;
 	sigset_t set;
 	int ret;
 
@@ -198,11 +245,12 @@ int cobalt_sigwait(const sigset_t __user *u_set, int __user *u_sig)
 	return 0;
 }
 
-int cobalt_sigtimedwait(const sigset_t __user *u_set, siginfo_t __user *u_si,
+int cobalt_sigtimedwait(const sigset_t __user *u_set, struct siginfo __user *u_si,
 			const struct timespec __user *u_timeout)
 {
 	struct timespec timeout;
-	siginfo_t si;
+	struct siginfo si;
+	xnticks_t ticks;
 	sigset_t set;
 	int ret;
 
@@ -215,9 +263,13 @@ int cobalt_sigtimedwait(const sigset_t __user *u_set, siginfo_t __user *u_si,
 	if ((unsigned long)timeout.tv_nsec >= ONE_BILLION)
 		return -EINVAL;
 
-	ret = signal_wait(&set, &si, ts2ns(&timeout) + 1);
+	ticks = ts2ns(&timeout);
+	if (ticks++ == 0)
+		ticks = XN_NONBLOCK;
+
+	ret = signal_wait(&set, &si, ticks);
 	if (ret)
-		return ret == -ETIMEDOUT ? -EAGAIN : ret;
+		return ret;
 
 	if (__xn_safe_copy_to_user(u_si, &si, sizeof(*u_si)))
 		return -EFAULT;
@@ -225,9 +277,9 @@ int cobalt_sigtimedwait(const sigset_t __user *u_set, siginfo_t __user *u_si,
 	return 0;
 }
 
-int cobalt_sigwaitinfo(const sigset_t __user *u_set, siginfo_t __user *u_si)
+int cobalt_sigwaitinfo(const sigset_t __user *u_set, struct siginfo __user *u_si)
 {
-	siginfo_t si;
+	struct siginfo si;
 	sigset_t set;
 	int ret;
 
@@ -257,32 +309,22 @@ int cobalt_sigpending(sigset_t __user *u_set)
 	return 0;
 }
 
-/*
- * How many signal notifications may be pending at any given time,
- * system-wide. Cobalt signals are always thread directed, and we
- * assume that in practice, each signal number is processed by a
- * dedicated thread. We provide for up to three real-time signal
- * events to pile up (coming from distinct sources), and a single
- * notification pending for other signals.
- */
-#define __SEVPOOL_SIZE  (sizeof(struct cobalt_sigevent) *	\
-			 (_NSIG + (SIGRTMAX - SIGRTMIN) * 2))
-
 int cobalt_signal_pkg_init(void)
 {
-	struct cobalt_sigevent *se;
+	struct cobalt_sigpending *sigp;
 
-	sigev_mem = alloc_pages_exact(__SEVPOOL_SIZE, GFP_KERNEL);
-	if (sigev_mem == NULL)
+	sigpending_mem = alloc_pages_exact(__SIGPOOL_SIZE, GFP_KERNEL);
+	if (sigpending_mem == NULL)
 		return -ENOMEM;
 
-	for (se = sigev_mem; (void *)se < sigev_mem + __SEVPOOL_SIZE; se++)
-		list_add_tail(&se->next, &sigev_pool);
+	for (sigp = sigpending_mem;
+	     (void *)sigp < sigpending_mem + __SIGPOOL_SIZE; sigp++)
+		list_add_tail(&sigp->next, &sigpending_pool);
 
 	return 0;
 }
 
 void cobalt_signal_pkg_cleanup(void)
 {
-	free_pages_exact(sigev_mem, __SEVPOOL_SIZE);
+	free_pages_exact(sigpending_mem, __SIGPOOL_SIZE);
 }

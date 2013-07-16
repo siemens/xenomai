@@ -165,8 +165,6 @@ typedef struct xnthread {
 	struct pt_regs *regs;		/* Current register frame */
 	struct xnthread_user_window *u_window;	/* Data visible from userland. */
 
-	void *privdata;				/* Private data for extension */
-
 	struct xnpersonality *personality; /* Originating interface/personality */
 
 #ifdef CONFIG_XENO_OPT_DEBUG
@@ -225,6 +223,7 @@ static inline void xnthread_clear_info(struct xnthread *thread, int bits)
 #define xnthread_host_task(thread)         (xnthread_archtcb(thread)->core.host_task)
 #define xnthread_host_pid(thread)	   (xnthread_test_state((thread),XNROOT) ? 0 : \
 					    xnthread_archtcb(thread)->core.host_task->pid)
+#define xnthread_host_mm(thread)           (xnthread_host_task(thread)->mm)
 #define xnthread_affinity(thread)          ((thread)->affinity)
 #define xnthread_affine_p(thread, cpu)     cpu_isset(cpu, (thread)->affinity)
 #define xnthread_get_exectime(thread)      xnstat_exectime_get_total(&(thread)->stat.account)
@@ -232,7 +231,6 @@ static inline void xnthread_clear_info(struct xnthread *thread, int bits)
 #define xnthread_inc_rescnt(thread)        ({ (thread)->hrescnt++; })
 #define xnthread_dec_rescnt(thread)        ({ --(thread)->hrescnt; })
 #define xnthread_get_rescnt(thread)        ((thread)->hrescnt)
-#define xnthread_private(thread)           ((thread)->privdata)
 #define xnthread_personality(thread)       ((thread)->personality)
 
 #define xnthread_for_each_claimed(__pos, __thread)		\

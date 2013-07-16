@@ -49,9 +49,9 @@
  * Implementation-wise, the monitor logic is shared with the Cobalt
  * thread object.
   */
-#include <cobalt/kernel/ppd.h>
 #include "internal.h"
 #include "thread.h"
+#include "clock.h"
 #include "monitor.h"
 
 int cobalt_monitor_init(struct cobalt_monitor_shadow __user *u_monsh,

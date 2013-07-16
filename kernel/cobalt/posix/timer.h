@@ -18,9 +18,26 @@
 #ifndef _COBALT_POSIX_TIMER_H
 #define _COBALT_POSIX_TIMER_H
 
+#include <linux/types.h>
 #include <linux/time.h>
+#include <linux/list.h>
+#include <cobalt/kernel/timer.h>
 
 struct cobalt_thread;
+struct cobalt_kqueues;
+
+struct cobalt_timer {
+	struct xntimer timerbase;
+	int overruns;
+	struct list_head link;
+	struct list_head tlink;
+	clockid_t clockid;
+	pid_t target;
+	struct cobalt_sigpending sigp;
+	struct cobalt_thread *owner;
+	struct cobalt_kqueues *owningq;
+	struct cobalt_extref extref;
+};
 
 int cobalt_timer_create(clockid_t clock,
 			const struct sigevent __user *u_sev,
@@ -37,7 +54,7 @@ int cobalt_timer_gettime(timer_t tm, struct itimerspec __user *u_val);
 
 int cobalt_timer_getoverrun(timer_t tm);
 
-void cobalt_timer_notified(timer_t timerid);
+int cobalt_timer_deliver(timer_t timerid);
 
 void cobalt_timer_flush(struct cobalt_thread *zombie);
 
@@ -46,5 +63,17 @@ void cobalt_timerq_cleanup(struct cobalt_kqueues *q);
 int cobalt_timer_pkg_init(void);
 
 void cobalt_timer_pkg_cleanup(void);
+
+extern struct cobalt_timer *cobalt_timer_pool;
+
+static inline timer_t cobalt_timer_id(const struct cobalt_timer *timer)
+{
+	return (timer_t)(timer - cobalt_timer_pool);
+}
+
+static inline struct cobalt_timer *cobalt_timer_by_id(timer_t timer_id)
+{
+	return &cobalt_timer_pool[(unsigned int)timer_id];
+}
 
 #endif /* !_COBALT_POSIX_TIMER_H */

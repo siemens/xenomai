@@ -22,6 +22,7 @@
  *@{*/
 
 #include "internal.h"
+#include "thread.h"
 #include "mutex.h"
 
 const pthread_mutexattr_t cobalt_default_mutex_attr = {

@@ -208,6 +208,9 @@ config XENO_OPT_PIPE
 config XENO_OPT_MAP
 	bool
 
+config XENO_OPT_COBALT_EXTENSION
+       bool
+
 config XENO_OPT_VFILE
        bool
        depends on PROC_FS

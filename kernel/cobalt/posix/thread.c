@@ -33,8 +33,11 @@
 #include <linux/jhash.h>
 #include <linux/signal.h>
 #include <cobalt/uapi/signal.h>
+#include "internal.h"
 #include "thread.h"
+#include "signal.h"
 #include "timer.h"
+#include "clock.h"
 
 xnticks_t cobalt_time_slice;
 
@@ -368,7 +371,7 @@ unlock_and_exit:
  * or if you should handle the signal (in which case it returns
  * 0). cobalt_sigshadow_handler prototype is:
  *
- * <b>int cobalt_sigshadow_handler(int sig, siginfo_t *si, void *ctxt);</b>
+ * <b>int cobalt_sigshadow_handler(int sig, struct siginfo *si, void *ctxt);</b>
  *
  * Which means that you should register your handler with sigaction,
  * using the SA_SIGINFO flag, and pass all the arguments you received
@@ -462,6 +465,8 @@ static inline int pthread_create(struct cobalt_thread **thread_p, const pthread_
 		INIT_LIST_HEAD(thread->sigqueues + n);
 
 	INIT_LIST_HEAD(&thread->timersq);
+
+	cobalt_set_extref(&thread->extref, NULL, NULL);
 
 	if (thread->attr.policy == SCHED_RR)
 		xnpod_set_thread_tslice(&thread->threadbase, cobalt_time_slice);
@@ -674,7 +679,7 @@ static inline int pthread_set_mode_np(int clrmask, int setmask, int *mode_r)
  * returns 1), or if you should handle the signal (in which case it
  * returns 0). cobalt_sigshadow_handler prototype is:
  *
- * <b>int cobalt_sigshadow_handler(int sig, siginfo_t *si, void *ctxt);</b>
+ * <b>int cobalt_sigshadow_handler(int sig, struct siginfo *si, void *ctxt);</b>
  *
  * Which means that you should register your handler with sigaction,
  * using the SA_SIGINFO flag, and pass all the arguments you received
@@ -1044,9 +1049,9 @@ int cobalt_thread_probe_np(pid_t pid)
 
 int cobalt_thread_kill(unsigned long pth, int sig)
 {
+	struct cobalt_sigpending *sigp;
 	struct cobalt_local_hkey hkey;
 	struct cobalt_thread *thread;
-	siginfo_t si;
 	int ret = 0;
 	spl_t s;
 
@@ -1107,12 +1112,14 @@ int cobalt_thread_kill(unsigned long pth, int sig)
 		xnshadow_demote(&thread->threadbase);
 		goto resched;
 	case 1 ... _NSIG:
-		si.si_signo = sig;
-		si.si_code = SI_TKILL;
-		si.si_errno = 0;
-		si.si_pid = current->pid;
-		si.si_uid = current_uid();
-		cobalt_signal_send(thread, &si);
+		sigp = cobalt_signal_alloc();
+		if (sigp) {
+			sigp->si.si_signo = sig;
+			sigp->si.si_code = SI_USER;
+			sigp->si.si_pid = current->pid;
+			sigp->si.si_uid = current_uid();
+			cobalt_signal_send(thread, sigp);
+		}
 	resched:
 		xnpod_schedule();
 		break;
@@ -1195,6 +1202,29 @@ int cobalt_thread_getschedparam_ex(unsigned long pth,
 
 	return __xn_safe_copy_to_user(u_param, &param, sizeof(param));
 }
+
+#ifdef CONFIG_XENO_OPT_COBALT_EXTENSION
+
+void cobalt_thread_extend(struct cobalt_thread *thread,
+			  struct cobalt_extension *ext,
+			  void *priv)
+{
+	struct xnpersonality *prev;
+
+	prev = xnshadow_push_personality(&thread->threadbase, &ext->core);
+	cobalt_set_extref(&thread->extref, ext, priv);
+	XENO_BUGON(NUCLEUS, prev != &cobalt_personality);
+}
+EXPORT_SYMBOL_GPL(cobalt_thread_extend);
+
+void cobalt_thread_restrict(struct cobalt_thread *thread)
+{
+	xnshadow_pop_personality(&thread->threadbase, &cobalt_personality);
+	cobalt_set_extref(&thread->extref, NULL, NULL);
+}
+EXPORT_SYMBOL_GPL(cobalt_thread_restrict);
+
+#endif /* !CONFIG_XENO_OPT_COBALT_EXTENSION */
 
 int cobalt_sched_min_prio(int policy)
 {

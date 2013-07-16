@@ -18,12 +18,12 @@
 #ifndef _COBALT_POSIX_THREAD_H
 #define _COBALT_POSIX_THREAD_H
 
+#include <stdarg.h>
 #include <linux/types.h>
 #include <linux/time.h>
 #include <linux/signal.h>
-#include "internal.h"
-#include "signal.h"
-#include <cobalt/kernel/synch.h>
+#include <cobalt/kernel/thread.h>
+#include <cobalt/kernel/shadow.h>
 #include <cobalt/uapi/thread.h>
 #include <cobalt/uapi/sched.h>
 
@@ -43,8 +43,6 @@
 
 struct cobalt_thread;
 struct cobalt_threadstat;
-
-typedef struct cobalt_condattr pthread_condattr_t;
 
 typedef struct cobalt_threadattr {
 	unsigned magic;
@@ -102,6 +100,7 @@ struct cobalt_local_hkey {
 struct cobalt_thread {
 	unsigned int magic;
 	struct xnthread threadbase;
+	struct cobalt_extref extref;
 
 	/** cobalt_threadq */
 	struct list_head link;
@@ -115,7 +114,7 @@ struct cobalt_thread {
 
 	/** Signal management. */
 	sigset_t sigpending;
-	struct list_head sigqueues[_NSIG];
+	struct list_head sigqueues[_NSIG]; /* cobalt_sigpending */
 	struct xnsynch sigwait;
 
 	/* Cached value for current policy (user side). */
@@ -132,7 +131,7 @@ struct cobalt_thread {
 struct cobalt_sigwait_context {
 	struct xnthread_wait_context wc;
 	sigset_t *set;
-	siginfo_t *si;
+	struct siginfo *si;
 };
 
 static inline struct cobalt_thread *cobalt_current_thread(void)
@@ -195,7 +194,16 @@ struct xnpersonality *cobalt_thread_exit(struct xnthread *curr);
 
 struct xnpersonality *cobalt_thread_unmap(struct xnthread *zombie);
 
-/* round-robin period. */
+#ifdef CONFIG_XENO_OPT_COBALT_EXTENSION
+
+void cobalt_thread_extend(struct cobalt_thread *thread,
+			  struct cobalt_extension *ext,
+			  void *priv);
+
+void cobalt_thread_restrict(struct cobalt_thread *thread);
+
+#endif /* !CONFIG_XENO_OPT_COBALT_EXTENSION */
+
 extern xnticks_t cobalt_time_slice;
 
 extern struct xnpersonality cobalt_personality;

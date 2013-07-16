@@ -38,9 +38,9 @@
  * We expose this non-POSIX feature through the internal API, as a
  * fast IPC mechanism available to the Copperplate interface.
  */
-#include <cobalt/kernel/ppd.h>
 #include "internal.h"
 #include "thread.h"
+#include "clock.h"
 #include "event.h"
 
 struct event_wait_context {

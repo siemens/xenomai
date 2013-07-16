@@ -18,11 +18,16 @@
 #ifndef _COBALT_POSIX_COND_H
 #define _COBALT_POSIX_COND_H
 
-#include "thread.h"
+#include <linux/time.h>
+#include <linux/list.h>
+#include <cobalt/kernel/synch.h>
+#include <cobalt/uapi/thread.h>
 #include <cobalt/uapi/cond.h>
 
-struct __shadow_mutex;
-union cobalt_mutex_union;
+struct cobalt_kqueues;
+struct cobalt_mutex;
+
+typedef struct cobalt_condattr pthread_condattr_t;
 
 struct cobalt_cond {
 	unsigned int magic;

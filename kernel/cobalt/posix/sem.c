@@ -33,9 +33,9 @@
 
 #include <stddef.h>
 #include <stdarg.h>
-#include "registry.h"	/* For named semaphores. */
 #include "internal.h"
 #include "thread.h"
+#include "clock.h"
 #include "sem.h"
 
 #define SEM_NAMED    0x80000000
@@ -51,20 +51,26 @@ struct cobalt_sem {
 	struct cobalt_kqueues *owningq;
 };
 
+struct cobalt_usem {
+	unsigned long uaddr;
+	unsigned refcnt;
+	cobalt_assoc_t assoc;
+};
+
 static inline struct cobalt_kqueues *sem_kqueue(struct cobalt_sem *sem)
 {
 	int pshared = !!(sem->flags & SEM_PSHARED);
 	return cobalt_kqueues(pshared);
 }
 
-typedef struct cobalt_named_sem {
+struct cobalt_named_sem {
 	struct cobalt_sem sembase;	/* Has to be the first member. */
 	cobalt_node_t nodebase;
 	union cobalt_sem_union descriptor;
-} nsem_t;
+};
 
-#define sem2named_sem(saddr) ((nsem_t *)(saddr))
-#define node2sem(naddr) container_of(naddr, nsem_t, nodebase)
+#define sem2named_sem(saddr) ((struct cobalt_named_sem *)(saddr))
+#define node2sem(naddr) container_of(naddr, struct cobalt_named_sem, nodebase)
 
 static int sem_destroy_inner(struct cobalt_sem *sem, struct cobalt_kqueues *q)
 {
@@ -279,8 +285,8 @@ static int sem_destroy(struct __shadow_sem *sm)
  */
 sem_t *sem_open(const char *name, int oflags, ...)
 {
+	struct cobalt_named_sem *named_sem;
 	cobalt_node_t *node;
-	nsem_t *named_sem;
 	unsigned value;
 	mode_t mode;
 	va_list ap;
@@ -299,8 +305,8 @@ sem_t *sem_open(const char *name, int oflags, ...)
 		goto got_sem;
 	}
 
-	named_sem = (nsem_t *)xnmalloc(sizeof(*named_sem));
-	if (!named_sem) {
+	named_sem = xnmalloc(sizeof(*named_sem));
+	if (named_sem == NULL) {
 		err = -ENOSPC;
 		goto error;
 	}
@@ -375,7 +381,7 @@ sem_t *sem_open(const char *name, int oflags, ...)
  */
 int sem_close(struct __shadow_sem *sm)
 {
-	nsem_t *named_sem;
+	struct cobalt_named_sem *named_sem;
 	spl_t s;
 	int err;
 
@@ -442,8 +448,8 @@ int sem_close(struct __shadow_sem *sm)
  */
 int sem_unlink(const char *name)
 {
+	struct cobalt_named_sem *named_sem;
 	cobalt_node_t *node;
-	nsem_t *named_sem;
 	spl_t s;
 	int err;
 
@@ -853,12 +859,12 @@ int cobalt_sem_open(unsigned long __user *u_addr,
 		    const char __user *u_name,
 		    int oflags, mode_t mode, unsigned value)
 {
-	struct cobalt_context *cc;
+	struct cobalt_process *cc;
 	char name[COBALT_MAXNAME];
 	struct __shadow_sem *sm;
+	struct cobalt_usem *usm;
 	cobalt_assoc_t *assoc;
 	unsigned long uaddr;
-	cobalt_usem_t *usm;
 	long len;
 	int err;
 	spl_t s;
@@ -890,7 +896,7 @@ int cobalt_sem_open(unsigned long __user *u_addr,
 
 	assoc = cobalt_assoc_lookup(&cc->usems, (u_long)sm->sem);
 	if (assoc) {
-		usm = assoc2usem(assoc);
+		usm = container_of(assoc, struct cobalt_usem, assoc);
 		++usm->refcnt;
 		xnlock_put_irqrestore(&nklock, s);
 		goto got_usm;
@@ -911,10 +917,10 @@ int cobalt_sem_open(unsigned long __user *u_addr,
 
 	assoc = cobalt_assoc_lookup(&cc->usems, (u_long)sm->sem);
 	if (assoc) {
-		assoc2usem(assoc)->refcnt++;
+		container_of(assoc, struct cobalt_usem, assoc)->refcnt++;
 		xnlock_put_irqrestore(&nklock, s);
 		xnfree(usm);
-		usm = assoc2usem(assoc);
+		usm = container_of(assoc, struct cobalt_usem, assoc);
 		goto got_usm;
 	}
 
@@ -938,11 +944,11 @@ int cobalt_sem_open(unsigned long __user *u_addr,
 
 int cobalt_sem_close(unsigned long uaddr, int __user *u_closed)
 {
-	struct cobalt_context *cc;
+	struct cobalt_process *cc;
+	struct cobalt_usem *usm;
 	struct __shadow_sem sm;
 	cobalt_assoc_t *assoc;
 	int closed = 0, err;
-	cobalt_usem_t *usm;
 	spl_t s;
 
 	cc = cobalt_process_context();
@@ -960,7 +966,7 @@ int cobalt_sem_close(unsigned long uaddr, int __user *u_closed)
 		return -EINVAL;
 	}
 
-	usm = assoc2usem(assoc);
+	usm = container_of(assoc, struct cobalt_usem, assoc);
 
 	err = sem_close(&sm);
 
@@ -1029,9 +1035,9 @@ int cobalt_sem_broadcast_np(struct __shadow_sem __user *u_sem)
 
 static void usem_cleanup(cobalt_assoc_t *assoc)
 {
-	struct cobalt_sem *sem = (struct cobalt_sem *) cobalt_assoc_key(assoc);
-	cobalt_usem_t *usem = assoc2usem(assoc);
-	nsem_t *nsem = sem2named_sem(sem);
+	struct cobalt_usem *usem = container_of(assoc, struct cobalt_usem, assoc);
+	struct cobalt_sem *sem = (struct cobalt_sem *)cobalt_assoc_key(assoc);
+	struct cobalt_named_sem *nsem = sem2named_sem(sem);
 
 #if XENO_DEBUG(COBALT)
 	printk(XENO_INFO "closing Cobalt semaphore \"%s\"\n",
@@ -1041,7 +1047,7 @@ static void usem_cleanup(cobalt_assoc_t *assoc)
 	xnfree(usem);
 }
 
-void cobalt_sem_usems_cleanup(struct cobalt_context *cc)
+void cobalt_sem_usems_cleanup(struct cobalt_process *cc)
 {
 	cobalt_assocq_destroy(&cc->usems, &usem_cleanup);
 }

@@ -47,17 +47,15 @@
 
 #include <linux/init.h>
 #include "internal.h"
+#include "thread.h"
 #include "cond.h"
 #include "mutex.h"
 #include "sem.h"
-#include "thread.h"
 #include "mqueue.h"
+#include "signal.h"
 #include "timer.h"
-#include "registry.h"
 #include "monitor.h"
 #include "event.h"
-#include "signal.h"
-#include "internal.h"
 
 MODULE_DESCRIPTION("Xenomai/cobalt POSIX interface");
 MODULE_AUTHOR("gilles.chanteperdrix@xenomai.org");
