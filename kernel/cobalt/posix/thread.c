@@ -124,7 +124,7 @@ static inline void thread_unhash(const struct cobalt_local_hkey *hkey)
 
 	lslot = *ltail;
 	while (lslot &&
-	       (lslot->hkey.u_tid != hkey->u_tid ||
+	       (lslot->hkey.u_pth != hkey->u_pth ||
 		lslot->hkey.mm != hkey->mm)) {
 		ltail = &lslot->next;
 		lslot = *ltail;
@@ -168,7 +168,7 @@ thread_find_local(const struct cobalt_local_hkey *hkey)
 	xnlock_get_irqsave(&nklock, s);
 
 	while (lslot != NULL &&
-	       (lslot->hkey.u_tid != hkey->u_tid || lslot->hkey.mm != hkey->mm))
+	       (lslot->hkey.u_pth != hkey->u_pth || lslot->hkey.mm != hkey->mm))
 		lslot = lslot->next;
 
 	thread = lslot ? lslot->thread : NULL;
@@ -200,30 +200,30 @@ struct cobalt_thread *cobalt_thread_find(pid_t pid) /* nklocked, IRQs off */
 	return gslot ? gslot->thread : NULL;
 }
 
-struct xnpersonality *cobalt_thread_exit(struct xnthread *thread)
+struct xnpersonality *cobalt_thread_exit(struct xnthread *curr)
 {
-	struct cobalt_thread *tid;
+	struct cobalt_thread *thread;
 
-	tid = container_of(thread, struct cobalt_thread, threadbase);
+	thread = container_of(curr, struct cobalt_thread, threadbase);
 	/*
 	 * Unhash first, to prevent further access to the TCB from
 	 * userland.
 	 */
-	thread_unhash(&tid->hkey);
-	cobalt_mark_deleted(tid);
-	cobalt_signal_flush(tid);
-	cobalt_timer_flush(tid);
+	thread_unhash(&thread->hkey);
+	cobalt_mark_deleted(thread);
+	cobalt_signal_flush(thread);
+	cobalt_timer_flush(thread);
 
 	/* We don't stack over any personality, no chaining. */
 	return NULL;
 }
 
-struct xnpersonality *cobalt_thread_unmap(struct xnthread *thread) /* nklocked, IRQs off */
+struct xnpersonality *cobalt_thread_unmap(struct xnthread *zombie) /* nklocked, IRQs off */
 {
-	struct cobalt_thread *tid;
+	struct cobalt_thread *thread;
 
-	tid = container_of(thread, struct cobalt_thread, threadbase);
-	thread_destroy(tid);
+	thread = container_of(zombie, struct cobalt_thread, threadbase);
+	thread_destroy(thread);
 
 	return NULL;
 }
@@ -240,17 +240,17 @@ struct xnpersonality *cobalt_thread_unmap(struct xnthread *thread) /* nklocked, 
  * Typically, SCHED_WEAK, SCHED_SPORADIC or SCHED_TP parameters can be
  * retrieved from this call.
  *
- * @param tid target thread;
+ * @param thread target thread;
  *
- * @param pol address where the scheduling policy of @a tid is stored on
+ * @param pol address where the scheduling policy of @a thread is stored on
  * success;
  *
- * @param par address where the scheduling parameters of @a tid are
+ * @param par address where the scheduling parameters of @a thread are
  * stored on success.
  *
  * @return 0 on success;
  * @return an error number if:
- * - ESRCH, @a tid is invalid.
+ * - ESRCH, @a thread is invalid.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_getschedparam.html">
@@ -258,29 +258,30 @@ struct xnpersonality *cobalt_thread_unmap(struct xnthread *thread) /* nklocked, 
  *
  */
 static inline int
-pthread_getschedparam_ex(struct cobalt_thread *tid, int *pol, struct sched_param_ex *par)
+pthread_getschedparam_ex(struct cobalt_thread *thread, int *pol, struct sched_param_ex *par)
 {
 	struct xnsched_class *base_class;
-	struct xnthread *thread;
+	struct xnthread *base_thread;
 	int prio;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!cobalt_obj_active(tid, COBALT_THREAD_MAGIC, struct cobalt_thread)) {
+	if (!cobalt_obj_active(thread, COBALT_THREAD_MAGIC,
+			       struct cobalt_thread)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return ESRCH;
 	}
 
-	thread = &tid->threadbase;
-	base_class = xnthread_base_class(thread);
-	*pol = tid->sched_u_policy;
-	prio = xnthread_base_priority(thread);
+	base_thread = &thread->threadbase;
+	base_class = xnthread_base_class(base_thread);
+	*pol = thread->sched_u_policy;
+	prio = xnthread_base_priority(base_thread);
 	par->sched_priority = prio;
 
 	if (base_class == &xnsched_class_rt) {
-		if (xnthread_test_state(thread, XNRRB))
-			ns2ts(&par->sched_rr_quantum, xnthread_time_slice(thread));
+		if (xnthread_test_state(base_thread, XNRRB))
+			ns2ts(&par->sched_rr_quantum, xnthread_time_slice(base_thread));
 		goto unlock_and_exit;
 	}
 
@@ -293,16 +294,17 @@ pthread_getschedparam_ex(struct cobalt_thread *tid, int *pol, struct sched_param
 #endif
 #ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
 	if (base_class == &xnsched_class_sporadic) {
-		par->sched_ss_low_priority = thread->pss->param.low_prio;
-		ns2ts(&par->sched_ss_repl_period, thread->pss->param.repl_period);
-		ns2ts(&par->sched_ss_init_budget, thread->pss->param.init_budget);
-		par->sched_ss_max_repl = thread->pss->param.max_repl;
+		par->sched_ss_low_priority = base_thread->pss->param.low_prio;
+		ns2ts(&par->sched_ss_repl_period, base_thread->pss->param.repl_period);
+		ns2ts(&par->sched_ss_init_budget, base_thread->pss->param.init_budget);
+		par->sched_ss_max_repl = base_thread->pss->param.max_repl;
 		goto unlock_and_exit;
 	}
 #endif
 #ifdef CONFIG_XENO_OPT_SCHED_TP
 	if (base_class == &xnsched_class_tp) {
-		par->sched_tp_partition = thread->tps - thread->sched->tp.partitions;
+		par->sched_tp_partition =
+			base_thread->tps - base_thread->sched->tp.partitions;
 		goto unlock_and_exit;
 	}
 #endif
@@ -334,7 +336,7 @@ unlock_and_exit:
  * Returning from the @a start routine has the same effect as calling
  * pthread_exit() with the return value.
  *
- * @param tid address where the identifier of the new thread will be stored on
+ * @param thread_p address where the identifier of the new thread will be stored on
  * success;
  *
  * @param attr thread attributes;
@@ -372,7 +374,7 @@ unlock_and_exit:
  * using the SA_SIGINFO flag, and pass all the arguments you received
  * to cobalt_sigshadow_handler.
  */
-static inline int pthread_create(struct cobalt_thread **tid, const pthread_attr_t *attr)
+static inline int pthread_create(struct cobalt_thread **thread_p, const pthread_attr_t *attr)
 {
 	struct cobalt_thread *thread, *curr;
 	struct xnsched_class *sched_class;
@@ -469,7 +471,7 @@ static inline int pthread_create(struct cobalt_thread **tid, const pthread_attr_
 	list_add_tail(&thread->link, thread->container);
 	xnlock_put_irqrestore(&nklock, s);
 
-	thread->hkey.u_tid = 0;
+	thread->hkey.u_pth = 0;
 	thread->hkey.mm = NULL;
 
 	/*
@@ -482,7 +484,7 @@ static inline int pthread_create(struct cobalt_thread **tid, const pthread_attr_
 		return ret;
 	}
 
-	*tid = thread; /* Must be done before the thread is started. */
+	*thread_p = thread; /* Must be done before the thread is started. */
 
 	return 0;
 }
@@ -531,7 +533,8 @@ static inline int pthread_make_periodic_np(struct cobalt_thread *thread,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!cobalt_obj_active(thread, COBALT_THREAD_MAGIC, struct cobalt_thread)) {
+	if (!cobalt_obj_active(thread, COBALT_THREAD_MAGIC,
+			       struct cobalt_thread)) {
 		ret = -ESRCH;
 		goto unlock_and_exit;
 	}
@@ -621,14 +624,14 @@ static inline int pthread_set_mode_np(int clrmask, int setmask, int *mode_r)
  * Typically, a Xenomai thread policy can be set to SCHED_WEAK,
  * SCHED_SPORADIC or SCHED_TP using this call.
  *
- * This service set the scheduling policy of the Xenomai thread @a tid
+ * This service set the scheduling policy of the Xenomai thread @a thread
  * to the value @a u_pol, and its scheduling parameters (e.g. its
  * priority) to the value pointed to by @a par.
  *
- * If @a tid does not match the identifier of a Xenomai thread, this
+ * If @a thread does not match the identifier of a Xenomai thread, this
  * action falls back to the regular pthread_setschedparam() service.
  *
- * @param tid target thread;
+ * @param thread target thread;
  *
  * @param u_pol scheduling policy, one of SCHED_WEAK, SCHED_FIFO,
  * SCHED_COBALT, SCHED_RR, SCHED_SPORADIC, SCHED_TP or SCHED_NORMAL;
@@ -644,7 +647,7 @@ static inline int pthread_set_mode_np(int clrmask, int setmask, int *mode_r)
  *
  * @return 0 on success;
  * @return an error number if:
- * - ESRCH, @a tid is invalid;
+ * - ESRCH, @a thread is invalid;
  * - EINVAL, @a u_pol or @a par->sched_priority is invalid;
  * - EAGAIN, in user-space, insufficient memory exists in the system heap,
  *   increase CONFIG_XENO_OPT_SYS_HEAPSZ;
@@ -680,23 +683,24 @@ static inline int pthread_set_mode_np(int clrmask, int setmask, int *mode_r)
  * pthread_setschedparam_ex() may switch the caller to secondary mode.
  */
 static inline int
-pthread_setschedparam_ex(struct cobalt_thread *tid, int u_pol, const struct sched_param_ex *par)
+pthread_setschedparam_ex(struct cobalt_thread *thread, int u_pol, const struct sched_param_ex *par)
 {
 	struct xnsched_class *sched_class;
 	union xnsched_policy_param param;
-	struct xnthread *thread;
+	struct xnthread *base_thread;
 	xnticks_t tslice;
 	int prio, pol;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!cobalt_obj_active(tid, COBALT_THREAD_MAGIC, struct cobalt_thread)) {
+	if (!cobalt_obj_active(thread, COBALT_THREAD_MAGIC,
+			       struct cobalt_thread)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return -ESRCH;
 	}
 
-	thread = &tid->threadbase;
+	base_thread = &thread->threadbase;
 	prio = par->sched_priority;
 	tslice = XN_INFINITE;
 	pol = u_pol;
@@ -715,7 +719,8 @@ pthread_setschedparam_ex(struct cobalt_thread *tid, int u_pol, const struct sche
 		/* falldown wanted */
 	case SCHED_WEAK:
 #ifdef CONFIG_XENO_OPT_SCHED_WEAK
-		if (prio < XNSCHED_WEAK_MIN_PRIO || prio > XNSCHED_WEAK_MAX_PRIO)
+		if (prio < XNSCHED_WEAK_MIN_PRIO ||
+		    prio > XNSCHED_WEAK_MAX_PRIO)
 			goto fail;
 		param.weak.prio = prio;
 		sched_class = &xnsched_class_weak;
@@ -727,14 +732,16 @@ pthread_setschedparam_ex(struct cobalt_thread *tid, int u_pol, const struct sche
 	case SCHED_RR:
 		tslice = ts2ns(&par->sched_rr_quantum);
 		if (tslice == XN_INFINITE)
-			tslice = xnthread_time_slice(thread);
+			tslice = xnthread_time_slice(base_thread);
 		/* falldown wanted */
 	case SCHED_FIFO:
-		if (prio < XNSCHED_FIFO_MIN_PRIO || prio > XNSCHED_FIFO_MAX_PRIO)
+		if (prio < XNSCHED_FIFO_MIN_PRIO ||
+		    prio > XNSCHED_FIFO_MAX_PRIO)
 			goto fail;
 		break;
 	case SCHED_COBALT:
-		if (prio < XNSCHED_RT_MIN_PRIO || prio > XNSCHED_RT_MAX_PRIO)
+		if (prio < XNSCHED_RT_MIN_PRIO ||
+		    prio > XNSCHED_RT_MAX_PRIO)
 			goto fail;
 		break;
 #ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
@@ -761,9 +768,9 @@ pthread_setschedparam_ex(struct cobalt_thread *tid, int u_pol, const struct sche
 		return -EINVAL;
 	}
 
-	xnpod_set_thread_tslice(thread, tslice);
-	tid->sched_u_policy = u_pol;
-	xnpod_set_thread_schedparam(thread, sched_class, &param);
+	xnpod_set_thread_tslice(base_thread, tslice);
+	thread->sched_u_policy = u_pol;
+	xnpod_set_thread_schedparam(base_thread, sched_class, &param);
 
 	xnpod_schedule();
 
@@ -777,7 +784,7 @@ pthread_setschedparam_ex(struct cobalt_thread *tid, int u_pol, const struct sche
  * the Cobalt ABI. Useland changes scheduling parameters only via the
  * extended cobalt_thread_setschedparam_ex syscall.
  */
-int cobalt_thread_setschedparam_ex(unsigned long tid,
+int cobalt_thread_setschedparam_ex(unsigned long pth,
 				   int policy,
 				   struct sched_param_ex __user *u_param,
 				   unsigned long __user *u_window_offset,
@@ -791,7 +798,7 @@ int cobalt_thread_setschedparam_ex(unsigned long tid,
 	if (__xn_safe_copy_from_user(&param, u_param, sizeof(param)))
 		return -EFAULT;
 
-	hkey.u_tid = tid;
+	hkey.u_pth = pth;
 	hkey.mm = current->mm;
 	thread = thread_find_local(&hkey);
 
@@ -834,7 +841,7 @@ int cobalt_thread_setschedparam_ex(unsigned long tid,
  * replacements.
  */
 
-int cobalt_thread_create(unsigned long tid, int policy,
+int cobalt_thread_create(unsigned long pth, int policy,
 			 struct sched_param_ex __user *u_param,
 			 unsigned long __user *u_window_offset)
 {
@@ -853,7 +860,7 @@ int cobalt_thread_create(unsigned long tid, int policy,
 	 * Cobalt library has assigned to our caller; we'll index our
 	 * internal pthread_t descriptor in kernel space on it.
 	 */
-	hkey.u_tid = tid;
+	hkey.u_pth = pth;
 	hkey.mm = p->mm;
 
 	/*
@@ -926,7 +933,7 @@ struct cobalt_thread *cobalt_thread_shadow(struct task_struct *p,
 	return ret ? ERR_PTR(ret) : thread;
 }
 
-int cobalt_thread_make_periodic_np(unsigned long tid,
+int cobalt_thread_make_periodic_np(unsigned long pth,
 				   clockid_t clk_id,
 				   struct timespec __user *u_startt,
 				   struct timespec __user *u_periodt)
@@ -935,7 +942,7 @@ int cobalt_thread_make_periodic_np(unsigned long tid,
 	struct cobalt_local_hkey hkey;
 	struct cobalt_thread *thread;
 
-	hkey.u_tid = tid;
+	hkey.u_pth = pth;
 	hkey.mm = current->mm;
 	thread = thread_find_local(&hkey);
 
@@ -975,7 +982,7 @@ int cobalt_thread_set_mode_np(int clrmask, int setmask, int __user *u_mode_r)
 	return 0;
 }
 
-int cobalt_thread_set_name_np(unsigned long tid, const char __user *u_name)
+int cobalt_thread_set_name_np(unsigned long pth, const char __user *u_name)
 {
 	struct cobalt_local_hkey hkey;
 	struct cobalt_thread *thread;
@@ -988,7 +995,7 @@ int cobalt_thread_set_name_np(unsigned long tid, const char __user *u_name)
 		return -EFAULT;
 
 	name[sizeof(name) - 1] = '\0';
-	hkey.u_tid = tid;
+	hkey.u_pth = pth;
 	hkey.mm = current->mm;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -1035,7 +1042,7 @@ int cobalt_thread_probe_np(pid_t pid)
 	return ret;
 }
 
-int cobalt_thread_kill(unsigned long tid, int sig)
+int cobalt_thread_kill(unsigned long pth, int sig)
 {
 	struct cobalt_local_hkey hkey;
 	struct cobalt_thread *thread;
@@ -1045,7 +1052,7 @@ int cobalt_thread_kill(unsigned long tid, int sig)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	hkey.u_tid = tid;
+	hkey.u_pth = pth;
 	hkey.mm = current->mm;
 	thread = thread_find_local(&hkey);
 	if (thread == NULL) {
@@ -1164,7 +1171,7 @@ int cobalt_thread_stat(pid_t pid,
  * the Cobalt ABI. Useland retrieves scheduling parameters only via
  * the extended cobalt_thread_getschedparam_ex syscall.
  */
-int cobalt_thread_getschedparam_ex(unsigned long tid,
+int cobalt_thread_getschedparam_ex(unsigned long pth,
 				   int __user *u_policy,
 				   struct sched_param_ex __user *u_param)
 {
@@ -1173,7 +1180,7 @@ int cobalt_thread_getschedparam_ex(unsigned long tid,
 	struct sched_param_ex param;
 	int policy, ret;
 
-	hkey.u_tid = tid;
+	hkey.u_pth = pth;
 	hkey.mm = current->mm;
 	thread = thread_find_local(&hkey);
 	if (thread == NULL)

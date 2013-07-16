@@ -160,7 +160,7 @@ int cobalt_monitor_enter(struct cobalt_monitor_shadow __user *u_monsh)
 static void cobalt_monitor_wakeup(struct cobalt_monitor *mon)
 {
 	struct cobalt_monitor_data *datp = mon->data;
-	struct cobalt_thread *tid, *tmp;
+	struct cobalt_thread *thread, *tmp;
 	struct xnthread *p;
 	int bcast;
 
@@ -184,8 +184,8 @@ static void cobalt_monitor_wakeup(struct cobalt_monitor *mon)
 	 * syscall for exiting the monitor if nobody else is waiting
 	 * at the gate.
 	 */
-	list_for_each_entry_safe(tid, tmp, &mon->waiters, monitor_link) {
-		p = &tid->threadbase;
+	list_for_each_entry_safe(thread, tmp, &mon->waiters, monitor_link) {
+		p = &thread->threadbase;
 		/*
 		 * A thread might receive a grant signal albeit it
 		 * does not wait on a monitor, or it might have timed
@@ -193,10 +193,10 @@ static void cobalt_monitor_wakeup(struct cobalt_monitor *mon)
 		 * that ->wchan does match our sleep queue.
 		 */
 		if (bcast ||
-		    (p->u_window->grant_value && p->wchan == &tid->monitor_synch)) {
-			xnsynch_wakeup_this_sleeper(&tid->monitor_synch, p);
-			list_del(&tid->monitor_link);
-			tid->monitor_queued = 0;
+		    (p->u_window->grant_value && p->wchan == &thread->monitor_synch)) {
+			xnsynch_wakeup_this_sleeper(&thread->monitor_synch, p);
+			list_del(&thread->monitor_link);
+			thread->monitor_queued = 0;
 		}
 	}
 drain:

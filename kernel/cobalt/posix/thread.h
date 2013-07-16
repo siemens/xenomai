@@ -93,7 +93,9 @@ typedef struct {
 } pthread_mutex_t;
 
 struct cobalt_local_hkey {
-	unsigned long u_tid;
+	/** pthread_t from userland. */
+	unsigned long u_pth;
+	/** kernel mm context. */
 	struct mm_struct *mm;
 };
 
@@ -189,9 +191,9 @@ int cobalt_sched_setconfig_np(int cpu,
 			      union sched_config __user *u_config,
 			      size_t len);
 
-struct xnpersonality *cobalt_thread_exit(struct xnthread *thread);
+struct xnpersonality *cobalt_thread_exit(struct xnthread *curr);
 
-struct xnpersonality *cobalt_thread_unmap(struct xnthread *thread);
+struct xnpersonality *cobalt_thread_unmap(struct xnthread *zombie);
 
 /* round-robin period. */
 extern xnticks_t cobalt_time_slice;
