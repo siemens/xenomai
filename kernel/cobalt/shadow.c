@@ -2191,6 +2191,7 @@ int ipipe_syscall_hook(struct ipipe_domain *ipd, struct pt_regs *regs)
 
 static int handle_taskexit_event(struct task_struct *p) /* p == current */
 {
+	struct xnpersonality *personality;
 	struct xnsys_ppd *sys_ppd;
 	struct xnthread *thread;
 	struct mm_struct *mm;
@@ -2204,6 +2205,7 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 
 	thread = xnshadow_current();
 	XENO_BUGON(NUCLEUS, thread == NULL);
+	personality = thread->personality;
 
 	trace_mark(xn_nucleus, shadow_exit, "thread %p thread_name %s",
 		   thread, xnthread_name(thread));
@@ -2212,9 +2214,6 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 		unlock_timers();
 
 	xnthread_run_handler(thread, exit_thread);
-
-	/* __xnpod_cleanup_thread() -> ... -> xnshadow_unmap() */
-	__xnpod_cleanup_thread(thread);
 
 	if (xnthread_test_state(thread, XNUSER)) {
 		xnlock_get_irqsave(&nklock, s);
@@ -2227,7 +2226,14 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 			ppd_remove_mm(mm, detach_ppd);
 	}
 
-	leave_personality(thread->personality);
+	/*
+	 * __xnpod_cleanup_thread() -> ... -> xnshadow_unmap(). From
+	 * that point, the TCB is dropped. Be careful of not treading
+	 * on stale memory within @thread.
+	 */
+	__xnpod_cleanup_thread(thread);
+
+	leave_personality(personality);
 	destroy_threadinfo();
 
 	return EVENT_PROPAGATE;

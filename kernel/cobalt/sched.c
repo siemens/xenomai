@@ -253,8 +253,8 @@ void xnsched_zombie_hooks(struct xnthread *thread)
 		   "thread_out %p thread_out_name %s",
 		   thread, xnthread_name(thread));
 
-	xnshadow_unmap(thread);
 	xnsched_forget(thread);
+	xnshadow_unmap(thread);
 }
 
 void __xnsched_finalize_zombie(struct xnsched *sched)

@@ -793,13 +793,10 @@ static void cleanup_thread(struct xnthread *thread) /* nklock held, irqs off */
 	if (moving_target(sched, thread))
 		return;
 
-	xnshadow_unmap(thread);
 	xnsched_forget(thread);
-	/*
-	 * We may wipe the TCB out now that the unmap_thread() handler
-	 * has run (in xnshadow_unmap()).
-	 */
 	xnthread_cleanup(thread);
+	/* Unmap last since this incurs releasing the TCB. */
+	xnshadow_unmap(thread);
 
 	if (xnthread_test_state(sched->curr, XNROOT))
 		xnfreesync();
