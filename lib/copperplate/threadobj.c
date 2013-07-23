@@ -961,6 +961,8 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 	} else
 		*thobj->name = '\0';
 
+	thobj->tid = pthread_self();
+	thobj->pid = copperplate_get_tid();
 	thobj->errno_pointer = &errno;
 	backtrace_init_context(&thobj->btd, name);
 	ret = threadobj_setup_corespec(thobj);
@@ -968,7 +970,6 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 		return __bt(ret);
 
 	threadobj_set_current(thobj);
-	thobj->pid = copperplate_get_tid();
 
 	/*
 	 * Link the thread to the shared queue, so that sysregd can
