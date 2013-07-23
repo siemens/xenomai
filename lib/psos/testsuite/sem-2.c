@@ -28,6 +28,9 @@ static void task_A(u_long a0, u_long a1, u_long a2, u_long a3)
 	ret = sm_p(sem_id, SM_NOWAIT, 0);
 	traceobj_assert(&trobj, ret == SUCCESS);
 
+	ret = sm_p(sem_id, SM_NOWAIT, 0);
+	traceobj_assert(&trobj, ret == ERR_NOSEM);
+
 	traceobj_mark(&trobj, 3);
 
 	ret = sm_p(sem_id, SM_WAIT, 0);

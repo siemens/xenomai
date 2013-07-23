@@ -197,6 +197,8 @@ u_long sm_p(u_long smid, u_long flags, u_long timeout)
 			ret = ERR_SKILLD;
 		else if (ret == -ETIMEDOUT)
 			ret = ERR_TIMEOUT;
+		else if (ret == -EWOULDBLOCK)
+			ret = ERR_NOSEM;
 		/*
 		 * There is no explicit flush operation on pSOS
 		 * semaphores, only an implicit one through deletion.
