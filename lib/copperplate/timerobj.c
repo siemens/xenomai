@@ -32,6 +32,7 @@
 #include "copperplate/timerobj.h"
 #include "copperplate/clockobj.h"
 #include "copperplate/debug.h"
+#include "copperplate/signal.h"
 #include "internal.h"
 
 static sem_t svsync;

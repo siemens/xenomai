@@ -20,6 +20,10 @@
 
 #include <signal.h>
 
+#ifndef sigev_notify_thread_id
+#define sigev_notify_thread_id	 _sigev_un._tid
+#endif
+
 /* Private signal used for unblocking from syscalls. */
 #define SIGRELS	(SIGRTMIN + 9)
 
