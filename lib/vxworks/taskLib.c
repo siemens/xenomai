@@ -368,7 +368,7 @@ static STATUS __taskInit(struct wind_task *task,
 
 	cta.prio = cprio;
 	cta.start = task_trampoline;
-	cta.arg = tcb;
+	cta.arg = task;
 	cta.stacksize = stacksize;
 	cta.detachstate = PTHREAD_CREATE_DETACHED;
 	ret = __bt(copperplate_create_thread(&cta, &task->thobj.tid));
