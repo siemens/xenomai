@@ -932,6 +932,7 @@ static inline int mq_notify(mqd_t fd, const struct sigevent *evp)
 		mq->target = thread;
 		mq->target_qd = fd;
 		mq->si.si_signo = evp->sigev_signo;
+		mq->si.si_errno = 0;
 		mq->si.si_code = SI_MESGQ;
 		mq->si.si_value = evp->sigev_value;
 		/*

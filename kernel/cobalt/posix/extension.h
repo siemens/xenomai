@@ -27,6 +27,7 @@ struct cobalt_thread;
 struct cobalt_timer;
 struct cobalt_sigpending;
 struct cobalt_extref;
+struct siginfo;
 
 struct cobalt_extension {
 	struct xnpersonality core;
@@ -36,9 +37,14 @@ struct cobalt_extension {
 			      const struct sigevent *__restrict__ evp);
 		int (*timer_cleanup)(struct cobalt_extref *reftimer);
 		int (*signal_deliver)(struct cobalt_extref *refthread,
+				      struct siginfo *si,
 				      struct cobalt_sigpending *sigp);
 		int (*signal_queue)(struct cobalt_extref *refthread,
 				    struct cobalt_sigpending *sigp);
+		int (*signal_copyinfo)(struct cobalt_extref *refthread,
+				       struct siginfo __user *u_si,
+				       const struct siginfo *si,
+				       int overrun);
 	} ops;
 };
 

@@ -38,29 +38,43 @@ static LIST_HEAD(sigpending_pool);
 #define __SIGPOOL_SIZE  (sizeof(struct cobalt_sigpending) *	\
 			 (_NSIG + (SIGRTMAX - SIGRTMIN) * 2))
 
-int cobalt_signal_send(struct cobalt_thread *thread,
-		       struct cobalt_sigpending *sigp)
-{				/* nklocked, IRQs off */
+int cobalt_signal_deliver(struct cobalt_thread *thread,
+			  struct cobalt_sigpending *sigp)
+{
 	struct cobalt_sigwait_context *swc;
 	struct xnthread_wait_context *wc;
-	struct list_head *sigq;
 	int sig, ret;
 
 	sig = sigp->si.si_signo;
 	XENO_BUGON(COBALT, sig < 1 || sig > _NSIG);
 
+	if (!xnsynch_pended_p(&thread->sigwait))
+		return 0;
+
+	wc = xnthread_get_wait_context(&thread->threadbase);
+	swc = container_of(wc, struct cobalt_sigwait_context, wc);
+	if (!sigismember(swc->set, sig))
+		return 0;
+
+	cobalt_copy_siginfo(sigp->si.si_code, swc->si, &sigp->si);
+	cobalt_call_extension(signal_deliver, &thread->extref,
+			      ret, swc->si, sigp);
+
+	xnsynch_wakeup_one_sleeper(&thread->sigwait);
+
+	return 1;
+}
+
+int cobalt_signal_send(struct cobalt_thread *thread,
+		       struct cobalt_sigpending *sigp)
+{				/* nklocked, IRQs off */
+	struct list_head *sigq;
+	int sig, ret;
+
 	/* Can we deliver this signal immediately? */
-	if (xnsynch_pended_p(&thread->sigwait)) {
-		wc = xnthread_get_wait_context(&thread->threadbase);
-		swc = container_of(wc, struct cobalt_sigwait_context, wc);
-		if (sigismember(swc->set, sig)) {
-			*swc->si = sigp->si;
-			cobalt_call_extension(signal_deliver,
-					      &thread->extref, ret, sigp);
-			xnsynch_wakeup_one_sleeper(&thread->sigwait);
-			return 0;
-		}
-	}
+	ret = cobalt_signal_deliver(thread, sigp);
+	if (ret)
+		return 0;	/* Yep, done. */
 
 	/*
 	 * Nope, attempt to queue it. We start by calling any Cobalt
@@ -73,6 +87,7 @@ int cobalt_signal_send(struct cobalt_thread *thread,
 			return 0; /* Queuing done. */
 	}
 
+	sig = sigp->si.si_signo;
 	sigq = thread->sigqueues + sig - 1;
 	if (!list_empty(sigq)) {
 		/* Queue non-rt signals only once. */
@@ -96,6 +111,17 @@ int cobalt_signal_send_pid(pid_t pid, struct cobalt_sigpending *sigp)
 	thread = cobalt_thread_find(pid);
 	if (thread)
 		return cobalt_signal_send(thread, sigp);
+
+	return -ESRCH;
+}
+
+int cobalt_signal_deliver_pid(pid_t pid, struct cobalt_sigpending *sigp)
+{				/* nklocked, IRQs off */
+	struct cobalt_thread *thread;
+
+	thread = cobalt_thread_find(pid);
+	if (thread)
+		return cobalt_signal_deliver(thread, sigp);
 
 	return -ESRCH;
 }
@@ -142,33 +168,23 @@ void cobalt_signal_flush(struct cobalt_thread *thread)
 	sigemptyset(&thread->sigpending);
 }
 
-static inline struct cobalt_sigpending *next_sigp(struct list_head *sigq)
+static int signal_wait(sigset_t *set, xnticks_t timeout,
+		       struct siginfo __user *u_si)
 {
-	struct cobalt_sigpending *sigp;
-
-	sigp = list_get_entry(sigq, struct cobalt_sigpending, next);
-
-	if ((void *)sigp >= sigpending_mem &&
-	    (void *)sigp < sigpending_mem + __SIGPOOL_SIZE)
-		list_add_tail(&sigp->next, &sigpending_pool);
-	else
-		INIT_LIST_HEAD(&sigp->next);
-
-	return sigp;
-}
-
-static int signal_wait(sigset_t *set, struct siginfo *si, xnticks_t timeout)
-{
+	struct cobalt_sigpending *sigp = NULL;
 	struct cobalt_sigwait_context swc;
-	struct cobalt_sigpending *sigp;
+	int ret, sig, n, code, overrun;
 	struct cobalt_thread *curr;
 	unsigned long *p, *t, m;
+	struct siginfo si, *sip;
 	struct list_head *sigq;
-	int ret, sig, n;
 	spl_t s;
 
 	curr = cobalt_current_thread();
 	XENO_BUGON(COBALT, curr == NULL);
+
+	if (u_si && !access_wok(u_si, sizeof(*u_si)))
+		return -EFAULT;
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -190,37 +206,111 @@ static int signal_wait(sigset_t *set, struct siginfo *si, xnticks_t timeout)
 	if (sig) {
 		sigq = curr->sigqueues + sig - 1;
 		XENO_BUGON(COBALT, list_empty(sigq));
-		sigp = next_sigp(sigq);
+		sigp = list_get_entry(sigq, struct cobalt_sigpending, next);
+		INIT_LIST_HEAD(&sigp->next); /* Mark sigp as unlinked. */
 		if (list_empty(sigq))
 			sigdelset(&curr->sigpending, sig);
-		*si = sigp->si;
+		sip = &sigp->si;
 		ret = 0;
 		goto done;
 	}
 
 	if (timeout == XN_NONBLOCK) {
 		ret = -EAGAIN;
-		goto out;
+		goto fail;
 	}
 wait:
 	swc.set = set;
-	swc.si = si;
+	swc.si = &si;
 	xnthread_prepare_wait(&swc.wc);
 	ret = xnsynch_sleep_on(&curr->sigwait, timeout, XN_RELATIVE);
 	xnthread_finish_wait(&swc.wc, NULL);
 	if (ret) {
 		ret = ret & XNBREAK ? -EINTR : -EAGAIN;
-		goto out;
+		goto fail;
 	}
+	sig = si.si_signo;
+	sip = &si;
 done:
-	/* Compute the overrun count for timer-originated signals. */
-	if (si->si_code == SI_TIMER)
-		si->si_overrun = cobalt_timer_deliver(si->si_tid);
+	 /*
+	  * si_overrun raises a nasty issue since we have to
+	  * collect+clear it atomically before we drop the lock,
+	  * although we don't know in advance if any extension would
+	  * use it along with the additional si_codes it may provide,
+	  * but we must drop the lock before running the
+	  * signal_copyinfo handler.
+	  *
+	  * Observing that si_overrun is likely the only "unstable"
+	  * data from the signal information which might change under
+	  * our feet while we copy the bits to userland, we collect it
+	  * here from the atomic section for all unknown si_codes,
+	  * then pass its value to the signal_copyinfo handler.
+	  */
+	switch (sip->si_code) {
+	case SI_TIMER:
+		overrun = cobalt_timer_deliver(sip->si_tid);
+		break;
+	case SI_USER:
+	case SI_MESGQ:
+		overrun = 0;
+		break;
+	default:
+		overrun = sip->si_overrun;
+		if (overrun)
+			sip->si_overrun = 0;
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	if (u_si == NULL)
+		goto out;	/* Return signo only. */
 
 	/* Translate kernel codes for userland. */
-	if (si->si_code & __SI_MASK)
-		si->si_code |= __SI_MASK;
+	code = sip->si_code;
+	if (code & __SI_MASK)
+		code |= __SI_MASK;
+
+	ret = __xn_put_user(sip->si_signo, &u_si->si_signo);
+	ret |= __xn_put_user(sip->si_errno, &u_si->si_errno);
+	ret |= __xn_put_user(code, &u_si->si_code);
+
+	/*
+	 * Copy the generic/standard siginfo bits to userland.
+	 */
+	switch (sip->si_code) {
+	case SI_TIMER:
+		ret |= __xn_put_user(sip->si_tid, &u_si->si_tid);
+		ret |= __xn_put_user(sip->si_value, &u_si->si_value);
+		ret |= __xn_put_user(overrun, &u_si->si_overrun);
+		break;
+	case SI_MESGQ:
+		ret |= __xn_put_user(sip->si_value, &u_si->si_value);
+		/* falldown wanted. */
+	case SI_USER:
+		ret |= __xn_put_user(sip->si_pid, &u_si->si_pid);
+		ret |= __xn_put_user(sip->si_uid, &u_si->si_uid);
+	}
+
+	/* Allow an extended target to receive more data. */
+	if (ret == 0)
+		cobalt_call_extension(signal_copyinfo, &curr->extref,
+				      ret, u_si, sip, overrun);
 out:
+	/*
+	 * If we pulled the signal information from a sigpending
+	 * block, release it to the free pool if applicable.
+	 */
+	if (sigp &&
+	    (void *)sigp >= sigpending_mem &&
+	    (void *)sigp < sigpending_mem + __SIGPOOL_SIZE) {
+		xnlock_get_irqsave(&nklock, s);
+		list_add_tail(&sigp->next, &sigpending_pool);
+		xnlock_put_irqrestore(&nklock, s);
+		/* no more ref. to sigp beyond this point. */
+	}
+
+	return ret ?: sig;
+fail:
 	xnlock_put_irqrestore(&nklock, s);
 
 	return ret;
@@ -228,18 +318,17 @@ out:
 
 int cobalt_sigwait(const sigset_t __user *u_set, int __user *u_sig)
 {
-	struct siginfo si;
 	sigset_t set;
-	int ret;
+	int sig;
 
 	if (__xn_safe_copy_from_user(&set, u_set, sizeof(set)))
 		return -EFAULT;
 
-	ret = signal_wait(&set, &si, XN_INFINITE);
-	if (ret)
-		return ret;
+	sig = signal_wait(&set, XN_INFINITE, NULL);
+	if (sig < 0)
+		return sig;
 
-	if (__xn_safe_copy_to_user(u_sig, &si.si_signo, sizeof(*u_sig)))
+	if (__xn_safe_copy_to_user(u_sig, &sig, sizeof(*u_sig)))
 		return -EFAULT;
 
 	return 0;
@@ -249,10 +338,8 @@ int cobalt_sigtimedwait(const sigset_t __user *u_set, struct siginfo __user *u_s
 			const struct timespec __user *u_timeout)
 {
 	struct timespec timeout;
-	struct siginfo si;
 	xnticks_t ticks;
 	sigset_t set;
-	int ret;
 
 	if (__xn_safe_copy_from_user(&set, u_set, sizeof(set)))
 		return -EFAULT;
@@ -267,33 +354,17 @@ int cobalt_sigtimedwait(const sigset_t __user *u_set, struct siginfo __user *u_s
 	if (ticks++ == 0)
 		ticks = XN_NONBLOCK;
 
-	ret = signal_wait(&set, &si, ticks);
-	if (ret)
-		return ret;
-
-	if (__xn_safe_copy_to_user(u_si, &si, sizeof(*u_si)))
-		return -EFAULT;
-
-	return 0;
+	return signal_wait(&set, ticks, u_si);
 }
 
 int cobalt_sigwaitinfo(const sigset_t __user *u_set, struct siginfo __user *u_si)
 {
-	struct siginfo si;
 	sigset_t set;
-	int ret;
 
 	if (__xn_safe_copy_from_user(&set, u_set, sizeof(set)))
 		return -EFAULT;
 
-	ret = signal_wait(&set, &si, XN_INFINITE);
-	if (ret)
-		return ret;
-
-	if (__xn_safe_copy_to_user(u_si, &si, sizeof(*u_si)))
-		return -EFAULT;
-
-	return 0;
+	return signal_wait(&set, XN_INFINITE, u_si);
 }
 
 int cobalt_sigpending(sigset_t __user *u_set)

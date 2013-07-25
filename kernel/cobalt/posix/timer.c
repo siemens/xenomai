@@ -157,6 +157,7 @@ static inline int timer_create(clockid_t clockid,
 	}
 
 	timer->sigp.si.si_signo = signo;
+	timer->sigp.si.si_errno = 0;
 	timer->sigp.si.si_code = SI_TIMER;
 	timer->sigp.si.si_tid = timer_id;
 	timer->sigp.si.si_overrun = 0;

@@ -35,8 +35,8 @@ void cobalt_copy_siginfo(int code,
 			 const struct siginfo *__restrict__ src)
 {
 	dst->si_signo = src->si_signo;
+	dst->si_errno = src->si_errno;
 	dst->si_code = code;
-	dst->si_errno = 0;
 
 	switch (code) {
 	case SI_TIMER:
@@ -48,12 +48,16 @@ void cobalt_copy_siginfo(int code,
 		dst->si_value = src->si_value;
 		/* falldown wanted. */
 	case SI_USER:
-	default:
 		dst->si_pid = src->si_pid;
 		dst->si_uid = src->si_uid;
-		break;
 	}
 }
+
+int cobalt_signal_deliver(struct cobalt_thread *thread,
+			  struct cobalt_sigpending *sigp);
+
+int cobalt_signal_deliver_pid(pid_t pid,
+			      struct cobalt_sigpending *sigp);
 
 int cobalt_signal_send(struct cobalt_thread *thread,
 		       struct cobalt_sigpending *sigp);

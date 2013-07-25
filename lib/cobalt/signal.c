@@ -37,12 +37,12 @@ COBALT_IMPL(int, sigwaitinfo, (const sigset_t *set, siginfo_t *si))
 
 	ret = XENOMAI_SKINCALL2(__cobalt_muxid,
 				sc_cobalt_sigwaitinfo, set, si);
-	if (ret) {
+	if (ret < 0) {
 		errno = -ret;
 		return -1;
 	}
 
-	return 0;
+	return ret;
 }
 
 COBALT_IMPL(int, sigtimedwait, (const sigset_t *set, siginfo_t *si,
@@ -52,12 +52,12 @@ COBALT_IMPL(int, sigtimedwait, (const sigset_t *set, siginfo_t *si,
 
 	ret = XENOMAI_SKINCALL3(__cobalt_muxid,
 				sc_cobalt_sigtimedwait, set, si, timeout);
-	if (ret) {
+	if (ret < 0) {
 		errno = -ret;
 		return -1;
 	}
 
-	return 0;
+	return ret;
 }
 
 COBALT_IMPL(int, sigpending, (sigset_t *set))

@@ -1115,6 +1115,7 @@ int cobalt_thread_kill(unsigned long pth, int sig)
 		sigp = cobalt_signal_alloc();
 		if (sigp) {
 			sigp->si.si_signo = sig;
+			sigp->si.si_errno = 0;
 			sigp->si.si_code = SI_USER;
 			sigp->si.si_pid = current->pid;
 			sigp->si.si_uid = current_uid();
