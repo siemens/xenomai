@@ -520,7 +520,7 @@ EXPORT_SYMBOL_GPL(xnshadow_harden);
  */
 void xnshadow_relax(int notify, int reason)
 {
-	xnthread_t *thread = xnpod_current_thread();
+	struct xnthread *thread = xnpod_current_thread();
 	struct task_struct *p = current;
 	siginfo_t si;
 
@@ -784,11 +784,6 @@ static inline void destroy_threadinfo(void)
  * (i.e. in order to process the signal in the Linux domain). This
  * error should not be considered as fatal.
  *
- * - -EPERM is returned if the shadow thread has been killed before
- * the current task had a chance to return to the caller. In such a
- * case, the real-time mapping operation has failed globally, and no
- * Xenomai resource remains attached to it.
- *
  * - -EINVAL is returned if the thread control block does not bear the
  * XNUSER bit.
  *
@@ -1037,7 +1032,7 @@ int xnshadow_map_kernel(struct xnthread *thread, struct completion *done)
 	xnlock_get_irqsave(&nklock, s);
 	/*
 	 * Make sure xnpod_start_thread() did not slip in from another
-	 * CPU while we were back from the wakeup_parent().
+	 * CPU while we were back from wakeup_parent().
 	 */
 	if (xnthread_test_state(thread, XNSTARTED) == 0)
 		xnpod_suspend_thread(thread, XNDORMANT,
@@ -1505,7 +1500,7 @@ static int xnshadow_sys_heap_info(struct xnheap_desc __user *u_hd,
 
 static int xnshadow_sys_current(xnhandle_t __user *u_handle)
 {
-	xnthread_t *cur = xnshadow_current();
+	struct xnthread *cur = xnshadow_current();
 
 	if (cur == NULL)
 		return -EPERM;
@@ -1516,7 +1511,7 @@ static int xnshadow_sys_current(xnhandle_t __user *u_handle)
 
 static int xnshadow_sys_current_info(struct xnthread_info __user *u_info)
 {
-	xnthread_t *cur = xnshadow_current();
+	struct xnthread *cur = xnshadow_current();
 	struct xnthread_info info;
 	xnticks_t raw_exectime;
 	int i;
@@ -1683,7 +1678,7 @@ static struct xnpersonality user_personality = {
 	},
 };
 
-void xnshadow_send_sig(xnthread_t *thread, int sig, int arg)
+void xnshadow_send_sig(struct xnthread *thread, int sig, int arg)
 {
 	struct lostage_signal sigwork = {
 		.work = {
@@ -1876,14 +1871,6 @@ static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 	if (!__xn_reg_mux_p(regs))
 		goto linux_syscall;
 
-	/*
-	 * Executing Xenomai services requires CAP_SYS_NICE, except for
-	 * sc_nucleus_bind which does its own checks.
-	 */
-	if (unlikely(!cap_raised(current_cap(), CAP_SYS_NICE)) &&
-	    __xn_reg_mux(regs) != __xn_mux_code(0, sc_nucleus_bind))
-		goto no_permission;
-
 	muxid = __xn_mux_id(regs);
 	muxop = __xn_mux_op(regs);
 
@@ -1892,7 +1879,7 @@ static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 		   thread, thread ? xnthread_name(thread) : NULL,
 		   muxid, muxop);
 
-	if (muxid < 0 || muxid > PERSONALITIES_NR || muxop < 0)
+	if (muxid < 0 || muxid >= PERSONALITIES_NR || muxop < 0)
 		goto bad_syscall;
 
 	personality = personalities[muxid];
@@ -1902,17 +1889,22 @@ static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 	sc = personality->syscalls + muxop;
 	sysflags = sc->flags;
 
-	if ((sysflags & __xn_exec_shadow) != 0 && thread == NULL) {
-	no_permission:
+	/*
+	 * Executing Xenomai services requires CAP_SYS_NICE, except
+	 * for sc_nucleus_bind which does its own checks.
+	 */
+	if (unlikely((thread == NULL && (sysflags & __xn_exec_shadow) != 0) ||
+		     (!cap_raised(current_cap(), CAP_SYS_NICE) &&
+		      muxid == 0 && muxop == sc_nucleus_bind))) {
 		if (XENO_DEBUG(NUCLEUS))
-			printk(KERN_WARNING
-			       "Xenomai: non-shadow %s[%d] was denied a real-time call\n",
-			       current->comm, current->pid);
+			printk(XENO_WARN
+			       "non-shadow %s[%d] was denied a real-time call (%s/%d)\n",
+			       current->comm, current->pid, personality->name, muxop);
 		__xn_error_return(regs, -EPERM);
 		goto ret_handled;
 	}
 
-	if ((sysflags & __xn_exec_conforming) != 0)
+	if (sysflags & __xn_exec_conforming)
 		/*
 		 * If the conforming exec bit is set, turn the exec
 		 * bitmask for the syscall into the most appropriate
