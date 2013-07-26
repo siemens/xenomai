@@ -22,14 +22,14 @@
 
 static pthread_t rt, nrt;
 static sem_t opened;
-
-#define XDDP_PORT 0	/* [0..CONFIG-XENO_OPT_PIPE_NRDEV - 1] */
+static int xddp_port = -1;	/* First pass uses auto-selection */
 
 static void *realtime_thread(void *arg)
 {
 	unsigned long count = (unsigned long)arg;
 	struct sockaddr_ipc saddr;
 	struct timespec ts;
+	socklen_t addrlen;
 	size_t poolsz;
 	int ret, s;
 
@@ -57,7 +57,7 @@ static void *realtime_thread(void *arg)
 	 */
 	memset(&saddr, 0, sizeof(saddr));
 	saddr.sipc_family = AF_RTIPC;
-	saddr.sipc_port = XDDP_PORT;
+	saddr.sipc_port = xddp_port;
 	ret = bind(s, (struct sockaddr *)&saddr, sizeof(saddr));
 	if (count == 1) {
 		if (ret < 0 && errno == EADDRINUSE) {
@@ -69,6 +69,10 @@ static void *realtime_thread(void *arg)
 			exit(EXIT_FAILURE);
 		}
 		fprintf(stderr, "FAILURE: bind returned %d\n", ret);
+	} else {
+		addrlen = sizeof(saddr);
+		check_unix(getsockname(s, (struct sockaddr *)&saddr, &addrlen));
+		xddp_port = saddr.sipc_port;
 	}
 	if (ret < 0) {
 		fprintf(stderr, "FAILURE bind: %m\n");
@@ -91,7 +95,7 @@ static void *regular_thread(void *arg)
 	char buf[128], *devname;
 	int fd;
 
-	check_unix(asprintf(&devname, "/dev/rtp%d", XDDP_PORT));
+	check_unix(asprintf(&devname, "/dev/rtp%d", xddp_port));
 
 	fd = check_unix(open(devname, O_RDWR));
 	free(devname);
