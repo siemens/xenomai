@@ -2255,6 +2255,9 @@ int do_hisyscall_event(unsigned event, rthal_pipeline_stage_t *stage,
 	if (!__xn_reg_mux_p(regs))
 		goto linux_syscall;
 
+	muxid = __xn_mux_id(regs);
+	muxop = __xn_mux_op(regs);
+
 	/*
 	 * Executing Xenomai services requires CAP_SYS_NICE, except for
 	 * __xn_sys_bind which does its own checks.
@@ -2262,9 +2265,6 @@ int do_hisyscall_event(unsigned event, rthal_pipeline_stage_t *stage,
 	if (unlikely(!cap_raised(current_cap(), CAP_SYS_NICE)) &&
 	    __xn_reg_mux(regs) != __xn_mux_code(0, __xn_sys_bind))
 		goto no_permission;
-
-	muxid = __xn_mux_id(regs);
-	muxop = __xn_mux_op(regs);
 
 	trace_mark(xn_nucleus, syscall_histage_entry,
 		   "thread %p thread_name %s muxid %d muxop %d",
@@ -2283,8 +2283,8 @@ int do_hisyscall_event(unsigned event, rthal_pipeline_stage_t *stage,
 	no_permission:
 		if (XENO_DEBUG(NUCLEUS))
 			printk(KERN_WARNING
-			       "Xenomai: non-shadow %s[%d] was denied a real-time call\n",
-			       current->comm, current->pid);
+			       "Xenomai: non-shadow %s[%d] was denied a real-time call (%s/%d)\n",
+			       current->comm, current->pid, muxtable[muxid].props->name, muxop);
 		__xn_error_return(regs, -EPERM);
 		goto ret_handled;
 	}
