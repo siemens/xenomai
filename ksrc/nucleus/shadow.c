@@ -94,7 +94,7 @@ static struct __lostagerq {
 		int type;
 		struct task_struct *task;
 		int arg;
-#define LO_MAX_REQUESTS 64	/* Must be a ^2 */
+#define LO_MAX_REQUESTS 128	/* Must be a ^2 */
 	} req[LO_MAX_REQUESTS];
 
 } lostagerq[XNARCH_NR_CPUS];
