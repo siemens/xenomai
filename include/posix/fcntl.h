@@ -50,6 +50,8 @@ extern "C" {
 
 int __real_open(const char *path, int oflag, ...);
 
+int __real_open64(const char *path, int oflag, ...);
+
 #ifdef __cplusplus
 }
 #endif

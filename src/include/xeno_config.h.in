@@ -86,6 +86,9 @@
 /* config */
 #undef HAVE_OLD_SETAFFINITY
 
+/* Define to 1 if you have the `open64' function. */
+#undef HAVE_OPEN64
+
 /* Define to 1 if you have the `pthread_condattr_setclock' function. */
 #undef HAVE_PTHREAD_CONDATTR_SETCLOCK
 

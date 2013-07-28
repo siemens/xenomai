@@ -118,6 +118,23 @@ int __real_open(const char *path, int oflag, ...)
 		return open(path, oflag);
 }
 
+#ifdef HAVE_OPEN64
+__attribute__ ((weak))
+int __real_open64(const char *path, int oflag, ...)
+{
+	va_list ap;
+	mode_t mode;
+
+	if (oflag & O_CREAT) {
+		va_start(ap, oflag);
+		mode = va_arg(ap, mode_t);
+		va_end(ap);
+		return open64(path, oflag, mode);
+	} else
+		return open64(path, oflag);
+}
+#endif
+
 __attribute__ ((weak))
 int __real_socket(int protocol_family, int socket_type, int protocol)
 {
