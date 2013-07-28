@@ -1192,8 +1192,7 @@ static int xnshadow_sys_mayday(void)
 		return __xn_reg_rval(cur->regs);
 	}
 
-	printk(KERN_WARNING
-	       "Xenomai: MAYDAY received from invalid context %s[%d]\n",
+	printk(XENO_WARN "MAYDAY received from invalid context %s[%d]\n",
 	       current->comm, current->pid);
 
 	return -EPERM;
@@ -1203,7 +1202,7 @@ static inline int mayday_init_page(void)
 {
 	mayday_page = vmalloc(PAGE_SIZE);
 	if (mayday_page == NULL) {
-		printk(KERN_ERR "Xenomai: can't alloc MAYDAY page\n");
+		printk(XENO_ERR "can't alloc MAYDAY page\n");
 		return -ENOMEM;
 	}
 
@@ -1621,8 +1620,8 @@ static struct xnshadow_ppd *user_process_attach(void)
 
 	p->mayday_addr = map_mayday_page(current);
 	if (p->mayday_addr == 0) {
-		printk(KERN_WARNING
-		       "Xenomai: %s[%d] cannot map MAYDAY page\n",
+		printk(XENO_WARN
+		       "%s[%d] cannot map MAYDAY page\n",
 		       current->comm, current->pid);
 		kfree(p);
 		return ERR_PTR(-ENOMEM);
@@ -1630,8 +1629,8 @@ static struct xnshadow_ppd *user_process_attach(void)
 
 	exe_path = get_exe_path(current);
 	if (IS_ERR(exe_path)) {
-		printk(KERN_WARNING
-		       "Xenomai: %s[%d] can't find exe path\n",
+		printk(XENO_WARN
+		       "%s[%d] can't find exe path\n",
 		       current->comm, current->pid);
 		exe_path = NULL; /* Not lethal, but weird. */
 	}

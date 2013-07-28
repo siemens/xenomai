@@ -548,9 +548,9 @@ void xnlock_dbg_spinning(struct xnlock *lock, int cpu,
 {
 	if (--*spin_limit == 0) {
 		ipipe_prepare_panic();
-		printk(KERN_ERR "Xenomai: stuck on lock %p\n"
-				"	  waiter = %s:%u (%s(), CPU #%d)\n"
-				"	  owner	 = %s:%u (%s(), CPU #%d)\n",
+		printk(XENO_ERR "stuck on lock %p\n"
+				"           waiter = %s:%u (%s(), CPU #%d)\n"
+				"           owner  = %s:%u (%s(), CPU #%d)\n",
 		       lock, file, line, function, cpu,
 		       lock->file, lock->line, lock->function, lock->cpu);
 		show_stack(NULL, NULL);
@@ -592,9 +592,8 @@ int xnlock_dbg_release(struct xnlock *lock,
 
 	if (unlikely(atomic_read(&lock->owner) != cpu)) {
 		ipipe_prepare_panic();
-		printk(KERN_ERR "Xenomai: lock %p already unlocked"
-				" on CPU #%d\n"
-				"         last owner = %s:%u (%s(), CPU #%d)\n",
+		printk(XENO_ERR "lock %p already unlocked on CPU #%d\n"
+				"          last owner = %s:%u (%s(), CPU #%d)\n",
 		       lock, cpu, lock->file, lock->line, lock->function,
 		       lock->cpu);
 		show_stack(NULL,NULL);

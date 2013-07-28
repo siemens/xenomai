@@ -162,7 +162,7 @@ void xnpod_fatal(const char *format, ...)
 
 	va_start(ap, format);
 	vsnprintf(msg_buf, sizeof(msg_buf), format, ap);
-	printk(KERN_ERR "%s", msg_buf);
+	printk(XENO_ERR "%s", msg_buf);
 	va_end(ap);
 
 	if (!xnpod_active_p() || xnpod_fatal_p())

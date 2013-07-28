@@ -1403,7 +1403,7 @@ void xnheap_destroy_mapped(struct xnheap *heap,
 	XENO_ASSERT(NUCLEUS, mapaddr == NULL || release, /* nop */);
 
 	if (XENO_DEBUG(NUCLEUS) && heap->ubytes != 0)
-		printk(KERN_ERR "xnheap: destroying shared heap '%s' "
+		printk(XENO_ERR "destroying shared heap '%s' "
 		       "with %lu bytes still in use.\n",
 		       heap->label, heap->ubytes);
 

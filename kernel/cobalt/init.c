@@ -100,7 +100,7 @@ static int __init mach_setup(void)
 		clockfreq_arg = sysinfo.sys_hrclock_freq;
 
 	if (clockfreq_arg == 0) {
-		printk(KERN_ERR "Xenomai: null clock frequency? Aborting.\n");
+		printk(XENO_ERR "null clock frequency? Aborting.\n");
 		return -ENODEV;
 	}
 
