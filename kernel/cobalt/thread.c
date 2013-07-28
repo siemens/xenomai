@@ -29,7 +29,7 @@
 
 static unsigned int idtags;
 
-static void timeout_handler(xntimer_t *timer)
+static void timeout_handler(struct xntimer *timer)
 {
 	struct xnthread *thread = container_of(timer, xnthread_t, rtimer);
 
@@ -37,7 +37,7 @@ static void timeout_handler(xntimer_t *timer)
 	xnpod_resume_thread(thread, XNDELAY);
 }
 
-static void periodic_handler(xntimer_t *timer)
+static void periodic_handler(struct xntimer *timer)
 {
 	struct xnthread *thread = container_of(timer, xnthread_t, ptimer);
 	/*
@@ -48,7 +48,7 @@ static void periodic_handler(xntimer_t *timer)
 		xnpod_resume_thread(thread, XNDELAY);
 }
 
-static void roundrobin_handler(xntimer_t *timer)
+static void roundrobin_handler(struct xntimer *timer)
 {
 	struct xnthread *thread = container_of(timer, struct xnthread, rrbtimer);
 	xnsched_tick(thread);
@@ -146,13 +146,13 @@ int xnthread_init(struct xnthread *thread,
 	else
 		snprintf(thread->name, sizeof(thread->name), "%p", thread);
 
-	xntimer_init(&thread->rtimer, timeout_handler);
+	xntimer_init(&thread->rtimer, &nkclock, timeout_handler);
 	xntimer_set_name(&thread->rtimer, thread->name);
 	xntimer_set_priority(&thread->rtimer, XNTIMER_HIPRIO);
-	xntimer_init(&thread->ptimer, periodic_handler);
+	xntimer_init(&thread->ptimer, &nkclock, periodic_handler);
 	xntimer_set_name(&thread->ptimer, thread->name);
 	xntimer_set_priority(&thread->ptimer, XNTIMER_HIPRIO);
-	xntimer_init(&thread->rrbtimer, roundrobin_handler);
+	xntimer_init(&thread->rrbtimer, &nkclock, roundrobin_handler);
 	xntimer_set_name(&thread->rrbtimer, thread->name);
 	xntimer_set_priority(&thread->rrbtimer, XNTIMER_LOPRIO);
 
@@ -286,10 +286,10 @@ char *xnthread_format_status(unsigned long status, char *buf, int size)
 	return buf;
 }
 
-xnticks_t xnthread_get_timeout(xnthread_t *thread, xnticks_t tsc_ns)
+xnticks_t xnthread_get_timeout(xnthread_t *thread, xnticks_t ns)
 {
+	struct xntimer *timer;
 	xnticks_t timeout;
-	xntimer_t *timer;
 
 	if (!xnthread_test_state(thread,XNDELAY))
 		return 0LL;
@@ -302,10 +302,10 @@ xnticks_t xnthread_get_timeout(xnthread_t *thread, xnticks_t tsc_ns)
 		return 0LL;
 
 	timeout = xntimer_get_date(timer);
-	if (timeout <= tsc_ns)
+	if (timeout <= ns)
 		return 1;
 
-	return timeout - tsc_ns;
+	return timeout - ns;
 }
 EXPORT_SYMBOL_GPL(xnthread_get_timeout);
 

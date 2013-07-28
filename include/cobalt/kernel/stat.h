@@ -35,7 +35,7 @@ typedef struct xnstat_exectime {
 
 /* Return current date which can be passed to other xnstat services for
    immediate or lazy accounting. */
-#define xnstat_exectime_now() xnclock_read_raw()
+#define xnstat_exectime_now() xnclock_core_read_raw()
 
 /* Accumulate exectime of the current account until the given date. */
 #define xnstat_exectime_update(sched, date) \
@@ -63,7 +63,7 @@ do { \
    switch date and set the new account). */
 #define xnstat_exectime_finalize(sched, new_account) \
 do { \
-	(sched)->last_account_switch = xnclock_read_raw(); \
+	(sched)->last_account_switch = xnclock_core_read_raw(); \
 	(sched)->current_account = (new_account); \
 } while (0)
 
@@ -79,7 +79,7 @@ do { \
 #define xnstat_exectime_reset_stats(stat) \
 do { \
 	(stat)->total = 0; \
-	(stat)->start = xnclock_read_raw(); \
+	(stat)->start = xnclock_core_read_raw(); \
 } while (0)
 
 

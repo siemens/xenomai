@@ -33,10 +33,12 @@
 
 #include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/shadow.h>
+#include <cobalt/kernel/lock.h>
 
 /* Pod status flags */
 #define XNFATAL  0x00000001	/* Fatal error in progress */
 #define XNPEXEC  0x00000002	/* Pod is active (a skin is attached) */
+#define XNCLKLK  0x00000004	/* All clocks locked */
 
 #define XNPOD_NORMAL_EXIT  0x0
 #define XNPOD_FATAL_EXIT   0x1
@@ -70,8 +72,6 @@ typedef struct xnpod xnpod_t;
 
 DECLARE_EXTERN_XNLOCK(nklock);
 
-extern unsigned long nklatency;
-
 extern unsigned long nktimerlat;
 
 extern cpumask_t nkaffinity;
@@ -79,26 +79,6 @@ extern cpumask_t nkaffinity;
 extern struct xnpod nkpod_struct;
 
 extern struct xnpersonality generic_personality;
-
-#ifdef CONFIG_XENO_OPT_VFILE
-int xnpod_init_proc(void);
-void xnpod_cleanup_proc(void);
-extern struct xnvfile_directory debug_vfroot;
-#else /* !CONFIG_XENO_OPT_VFILE */
-static inline int xnpod_init_proc(void) { return 0; }
-static inline void xnpod_cleanup_proc(void) {}
-#endif /* !CONFIG_XENO_OPT_VFILE */
-
-static inline int xnpod_mount(void)
-{
-	xnsched_register_classes();
-	return xnpod_init_proc();
-}
-
-static inline void xnpod_umount(void)
-{
-	xnpod_cleanup_proc();
-}
 
 void __xnpod_cleanup_thread(struct xnthread *thread);
 

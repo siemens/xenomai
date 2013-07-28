@@ -33,8 +33,14 @@ struct rtcan_sja1000 {
     char bus_err_on;
 };
 
+#ifdef CONFIG_FS_PROCFS
 int rtcan_sja_create_proc(struct rtcan_device* dev);
 void rtcan_sja_remove_proc(struct rtcan_device* dev);
+#else
+static inline int rtcan_sja_create_proc(struct rtcan_device* dev)
+{ return 0; }
+static inline void rtcan_sja_remove_proc(struct rtcan_device* dev) { }
+#endif
 int rtcan_sja1000_register(struct rtcan_device *dev);
 void rtcan_sja1000_unregister(struct rtcan_device *dev);
 

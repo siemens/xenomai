@@ -178,13 +178,17 @@ static inline size_t xnheap_rounded_size(size_t hsize, size_t psize)
 
 /* Private interface. */
 
+#ifdef CONFIG_XENO_OPT_VFILE
+void xnheap_init_proc(void);
+void xnheap_cleanup_proc(void);
+#else /* !CONFIG_XENO_OPT_VFILE */
+static inline void xnheap_init_proc(void) { }
+static inline void xnheap_cleanup_proc(void) { }
+#endif /* !CONFIG_XENO_OPT_VFILE */
+
 int xnheap_mount(void);
 
 void xnheap_umount(void);
-
-void xnheap_init_proc(void);
-
-void xnheap_cleanup_proc(void);
 
 int xnheap_init_mapped(struct xnheap *heap,
 		       unsigned long heapsize,
@@ -213,7 +217,8 @@ int xnheap_init(struct xnheap *heap,
 		unsigned long heapsize,
 		unsigned long pagesize);
 
-void xnheap_set_label(struct xnheap *heap, const char *name, ...);
+void xnheap_set_label(struct xnheap *heap,
+		      const char *name, ...);
 
 void xnheap_destroy(struct xnheap *heap,
 		    void (*flushfn)(struct xnheap *heap,

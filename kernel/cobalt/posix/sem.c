@@ -33,6 +33,7 @@
 
 #include <stddef.h>
 #include <stdarg.h>
+#include <linux/err.h>
 #include "internal.h"
 #include "thread.h"
 #include "clock.h"

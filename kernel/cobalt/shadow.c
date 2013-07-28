@@ -37,8 +37,10 @@
 #include <stdarg.h>
 #include <linux/unistd.h>
 #include <linux/wait.h>
+#include <linux/semaphore.h>
 #include <linux/init.h>
 #include <linux/module.h>
+#include <linux/fs.h>
 #include <linux/sched.h>
 #include <linux/kthread.h>
 #include <linux/mman.h>
@@ -237,22 +239,6 @@ static void detach_ppd(struct xnshadow_ppd *ppd)
 		module_put(personality->module);
 }
 
-struct xnvdso *nkvdso;
-EXPORT_SYMBOL_GPL(nkvdso);
-
-/*
- * We re-use the global semaphore heap to provide a multi-purpose shared
- * memory area between Xenomai and Linux - for both kernel and userland
- */
-void __init xnheap_init_vdso(void)
-{
-	nkvdso = xnheap_alloc(&__xnsys_global_ppd.sem_heap, sizeof(*nkvdso));
-	if (nkvdso == NULL)
-		xnpod_fatal("cannot allocate memory for xnvdso!\n");
-
-	nkvdso->features = XNVDSO_FEATURES;
-}
-
 static void request_syscall_restart(struct xnthread *thread,
 				    struct pt_regs *regs,
 				    int sysflags)
@@ -280,7 +266,7 @@ static inline void lock_timers(void)
 
 	xnlock_get_irqsave(&nklock, s);
 	atomic_inc(&nkpod->timerlck);
-	nkclock.status |= XNTBLCK;
+	nkpod->status |= XNCLKLK;
 	xnlock_put_irqrestore(&nklock, s);
 }
 
@@ -290,7 +276,7 @@ static inline void unlock_timers(void)
 
 	xnlock_get_irqsave(&nklock, s);
 	if (atomic_dec_and_test(&nkpod->timerlck))
-		nkclock.status &= ~XNTBLCK;
+		nkpod->status &= ~XNCLKLK;
 	xnlock_put_irqrestore(&nklock, s);
 }
 
@@ -1528,7 +1514,7 @@ static int xnshadow_sys_current_info(struct xnthread_info __user *u_info)
 	info.relpoint = xntimer_get_date(&cur->ptimer);
 	raw_exectime = xnthread_get_exectime(cur) +
 		xnstat_exectime_now() - xnthread_get_lastswitch(cur);
-	info.exectime = xnclock_ticks_to_ns(raw_exectime);
+	info.exectime = xnclock_ticks_to_ns(&nkclock, raw_exectime);
 	info.modeswitches = xnstat_counter_get(&cur->stat.ssw);
 	info.ctxswitches = xnstat_counter_get(&cur->stat.csw);
 	info.pagefaults = xnstat_counter_get(&cur->stat.pf);

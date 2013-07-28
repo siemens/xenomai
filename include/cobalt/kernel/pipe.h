@@ -100,9 +100,13 @@ extern struct xnpipe_state xnpipe_states[];
 
 #define xnminor_from_state(s) (s - xnpipe_states)
 
+#ifdef CONFIG_XENO_OPT_PIPE
 int xnpipe_mount(void);
-
 void xnpipe_umount(void);
+#else /* !CONFIG_XENO_OPT_PIPE */
+static inline int xnpipe_mount(void) { return 0; }
+static inline void xnpipe_umount(void) { }
+#endif /* !CONFIG_XENO_OPT_PIPE */
 
 /* Entry points of the kernel interface. */
 

@@ -83,20 +83,12 @@ void rtdm_proc_cleanup(void);
 int rtdm_proc_register_device(struct rtdm_device *device);
 void rtdm_proc_unregister_device(struct rtdm_device *device);
 #else
-static inline int rtdm_proc_init(void)
-{
-	return 0;
-}
-void rtdm_proc_cleanup(void)
-{
-}
-static int rtdm_proc_register_device(struct rtdm_device *device)
-{
-	return 0;
-}
-static void rtdm_proc_unregister_device(struct rtdm_device *device)
-{
-}
+static inline int rtdm_proc_init(void) { return 0; }
+static void inline rtdm_proc_cleanup(void) { }
+static inline int
+rtdm_proc_register_device(struct rtdm_device *device) { return 0; }
+static inline void
+rtdm_proc_unregister_device(struct rtdm_device *device) { }
 #endif
 
 void rtdm_apc_handler(void *cookie);

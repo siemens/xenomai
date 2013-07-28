@@ -25,13 +25,12 @@
  * \ingroup nucleus
  * \defgroup timer Timer services.
  *
- * The Xenomai timer facility always operate the timer hardware in
- * oneshot mode, regardless of the time base in effect. Periodic
- * timing is obtained through a software emulation, using cascading
- * timers.
+ * The Xenomai timer facility depends on a Xenomai clock source
+ * (xnclock) for scheduling the next activation times.
  *
- * The timer object stores time as a count of CPU ticks (e.g. TSC
- * values).
+ * The Xenomai core provides and depends on a monotonic clock source
+ * (nkclock) with nanosecond resolution, driving the platform timer
+ * hardware exposed by the interrupt pipeline.
  *
  *@{*/
 
@@ -46,97 +45,20 @@
 #include <cobalt/kernel/trace.h>
 #include <cobalt/kernel/arith.h>
 
-static inline void xntimer_enqueue(xntimer_t *timer)
-{
-	xntimerq_t *q = &timer->sched->timerqueue;
-	xntimerq_insert(q, &timer->aplink);
-	timer->status &= ~XNTIMER_DEQUEUED;
-	xnstat_counter_inc(&timer->scheduled);
-}
-
-static inline void xntimer_dequeue(xntimer_t *timer)
-{
-	xntimerq_remove(&timer->sched->timerqueue, &timer->aplink);
-	timer->status |= XNTIMER_DEQUEUED;
-}
-
-void xntimer_next_local_shot(xnsched_t *sched)
-{
-	struct xntimer *timer;
-	xnsticks_t delay;
-	xntimerq_it_t it;
-	xntimerh_t *h;
-
-	/*
-	 * Do not reprogram locally when inside the tick handler -
-	 * will be done on exit anyway. Also exit if there is no
-	 * pending timer.
-	 */
-	if (sched->status & XNINTCK)
-		return;
-
-	h = xntimerq_it_begin(&sched->timerqueue, &it);
-	if (h == NULL)
-		return;
-
-	/*
-	 * Here we try to defer the host tick heading the timer queue,
-	 * so that it does not preempt a real-time activity uselessly,
-	 * in two cases:
-	 *
-	 * 1) a rescheduling is pending for the current CPU. We may
-	 * assume that a real-time thread is about to resume, so we
-	 * want to move the host tick out of the way until the host
-	 * kernel resumes, unless there is no other outstanding
-	 * timers.
-	 *
-	 * 2) the current thread is running in primary mode, in which
-	 * case we may also defer the host tick until the host kernel
-	 * resumes.
-	 *
-	 * The host tick deferral is cleared whenever Xenomai is about
-	 * to yield control to the host kernel (see
-	 * __xnpod_schedule()), or a timer with an earlier timeout
-	 * date is scheduled, whichever comes first.
-	 */
-	sched->lflags &= ~XNHDEFER;
-	timer = aplink2timer(h);
-	if (unlikely(timer == &sched->htimer)) {
-		if (xnsched_resched_p(sched) ||
-		    !xnthread_test_state(sched->curr, XNROOT)) {
-			h = xntimerq_it_next(&sched->timerqueue, &it, h);
-			if (h) {
-				sched->lflags |= XNHDEFER;
-				timer = aplink2timer(h);
-			}
-		}
-	}
-
-	delay = xntimerh_date(&timer->aplink) -
-		(xnclock_read_raw() + nklatency);
-
-	if (delay < 0)
-		delay = 0;
-	else if (delay > ULONG_MAX)
-		delay = ULONG_MAX;
-
-	xntrace_tick((unsigned)delay);
-
-	ipipe_timer_set(delay);
-}
-
 static inline int xntimer_heading_p(struct xntimer *timer)
 {
 	struct xnsched *sched = timer->sched;
 	xntimerq_it_t it;
+	xntimerq_t *q;
 	xntimerh_t *h;
 
-	h = xntimerq_it_begin(&sched->timerqueue, &it);
+	q = xntimer_percpu_queue(timer);
+	h = xntimerq_it_begin(q, &it);
 	if (h == &timer->aplink)
 		return 1;
 
 	if (sched->lflags & XNHDEFER) {
-		h = xntimerq_it_next(&sched->timerqueue, &it, h);
+		h = xntimerq_it_next(q, &it, h);
 		if (h == &timer->aplink)
 			return 1;
 	}
@@ -144,99 +66,8 @@ static inline int xntimer_heading_p(struct xntimer *timer)
 	return 0;
 }
 
-static inline void xntimer_next_remote_shot(xnsched_t *sched)
-{
-#ifdef CONFIG_SMP
-	cpumask_t mask = cpumask_of_cpu(xnsched_cpu(sched));
-	ipipe_send_ipi(IPIPE_HRTIMER_IPI, mask);
-#endif
-}
-
-static void xntimer_adjust(xntimer_t *timer, xnsticks_t delta)
-{
-	xnticks_t period, mod;
-	xnsticks_t diff;
-
-	xntimerh_date(&timer->aplink) -= delta;
-
-	if ((timer->status & XNTIMER_PERIODIC) == 0)
-		goto enqueue;
-
-	period = xntimer_interval(timer);
-	timer->pexpect -= delta;
-	diff = xnclock_read_raw() - xntimerh_date(&timer->aplink);
-
-	if ((xnsticks_t) (diff - period) >= 0) {
-		/*
-		 * Timer should tick several times before now, instead
-		 * of calling timer->handler several times, we change
-		 * the timer date without changing its pexpect, so
-		 * that timer will tick only once and the lost ticks
-		 * will be counted as overruns.
-		 */
-		mod = xnarch_mod64(diff, period);
-		xntimerh_date(&timer->aplink) += diff - mod;
-	} else if (delta < 0
-		   && (timer->status & XNTIMER_FIRED)
-		   && (xnsticks_t) (diff + period) <= 0) {
-		/*
-		 * Timer is periodic and NOT waiting for its first
-		 * shot, so we make it tick sooner than its original
-		 * date in order to avoid the case where by adjusting
-		 * time to a sooner date, real-time periodic timers do
-		 * not tick until the original date has passed.
-		 */
-		mod = xnarch_mod64(-diff, period);
-		xntimerh_date(&timer->aplink) += diff + mod;
-		timer->pexpect += diff + mod;
-	}
-
-enqueue:
-	xntimer_enqueue(timer);
-}
-
-void xntimer_adjust_all(xnsticks_t delta)
-{
-	struct xntimer *timer, *tmp;
-	struct list_head adjq;
-	struct xnsched *sched;
-	xntimerh_t *holder;
-	xntimerq_it_t it;
-	unsigned int cpu;
-	xntimerq_t *q;
-
-	INIT_LIST_HEAD(&adjq);
-	delta = xnclock_ns_to_ticks(delta);
-
-	for_each_online_cpu(cpu) {
-		sched = xnpod_sched_slot(cpu);
-		q = &sched->timerqueue;
-
-		for (holder = xntimerq_it_begin(q, &it); holder;
-		     holder = xntimerq_it_next(q, &it, holder)) {
-			timer = aplink2timer(holder);
-			if (timer->status & XNTIMER_REALTIME)
-				list_add_tail(&timer->adjlink, &adjq);
-		}
-
-		if (list_empty(&adjq))
-			continue;
-
-		list_for_each_entry_safe(timer, tmp, &adjq, adjlink) {
-			list_del(&timer->adjlink);
-			xntimer_dequeue(timer);
-			xntimer_adjust(timer, delta);
-		}
-
-		if (sched != xnpod_current_sched())
-			xntimer_next_remote_shot(sched);
-		else
-			xntimer_next_local_shot(sched);
-	}
-}
-
 /*!
- * @fn void xntimer_start(xntimer_t *timer,xnticks_t value,xnticks_t interval,
+ * @fn void xntimer_start(struct xntimer *timer,xnticks_t value,xnticks_t interval,
  *                        xntmode_t mode)
  * @brief Arm a timer.
  *
@@ -244,6 +75,8 @@ void xntimer_adjust_all(xnsticks_t delta)
  * fired after each expiration time. A timer can be either periodic or
  * one-shot, depending on the reload value passed to this routine. The
  * given timer must have been previously initialized.
+ *
+ * A timer is attached to the clock specified in xntimer_init().
  *
  * @param timer The address of a valid timer descriptor.
  *
@@ -259,8 +92,8 @@ void xntimer_adjust_all(xnsticks_t delta)
  * be interpreted as a relative date, XN_ABSOLUTE for an absolute date
  * based on the monotonic clock of the related time base (as returned
  * my xnclock_read_monotonic()), or XN_REALTIME if the absolute date
- * is based on the adjustable real-time clock (obtained from
- * xnclock_read()).
+ * is based on the adjustable real-time date for the relevant clock
+ * (obtained from xnclock_read_realtime()).
  *
  * @return 0 is returned upon success, or -ETIMEDOUT if an absolute
  * date in the past has been given.
@@ -275,10 +108,13 @@ void xntimer_adjust_all(xnsticks_t delta)
  *
  * @note Must be called with nklock held, IRQs off.
  */
-int xntimer_start(xntimer_t *timer,
+int xntimer_start(struct xntimer *timer,
 		  xnticks_t value, xnticks_t interval,
 		  xntmode_t mode)
 {
+	struct xnclock *clock = xntimer_clock(timer);
+	xntimerq_t *q = xntimer_percpu_queue(timer);
+	struct xnsched *sched;
 	xnticks_t date, now;
 
 	trace_mark(xn_nucleus, timer_start,
@@ -286,23 +122,23 @@ int xntimer_start(xntimer_t *timer,
 		   timer, value, interval, mode);
 
 	if ((timer->status & XNTIMER_DEQUEUED) == 0)
-		xntimer_dequeue(timer);
+		xntimer_dequeue(timer, q);
 
-	now = xnclock_read_raw();
+	now = xnclock_read_raw(clock);
 
 	timer->status &= ~(XNTIMER_REALTIME | XNTIMER_FIRED | XNTIMER_PERIODIC);
 	switch (mode) {
 	case XN_RELATIVE:
 		if ((xnsticks_t)value < 0)
 			return -ETIMEDOUT;
-		date = xnclock_ns_to_ticks(value) + now;
+		date = xnclock_ns_to_ticks(clock, value) + now;
 		break;
 	case XN_REALTIME:
 		timer->status |= XNTIMER_REALTIME;
-		value -= xnclock_get_offset();
+		value -= xnclock_get_offset(clock);
 		/* fall through */
 	default: /* XN_ABSOLUTE || XN_REALTIME */
-		date = xnclock_ns_to_ticks(value);
+		date = xnclock_ns_to_ticks(clock, value);
 		if ((xnsticks_t)(date - now) <= 0)
 			return -ETIMEDOUT;
 		break;
@@ -312,17 +148,18 @@ int xntimer_start(xntimer_t *timer,
 
 	timer->interval = XN_INFINITE;
 	if (interval != XN_INFINITE) {
-		timer->interval = xnclock_ns_to_ticks(interval);
+		timer->interval = xnclock_ns_to_ticks(clock, interval);
 		timer->pexpect = date;
 		timer->status |= XNTIMER_PERIODIC;
 	}
 
-	xntimer_enqueue(timer);
+	xntimer_enqueue(timer, q);
 	if (xntimer_heading_p(timer)) {
-		if (xntimer_sched(timer) != xnpod_current_sched())
-			xntimer_next_remote_shot(xntimer_sched(timer));
+		sched = xntimer_sched(timer);
+		if (sched != xnpod_current_sched())
+			xnclock_remote_shot(clock, sched);
 		else
-			xntimer_next_local_shot(xntimer_sched(timer));
+			xnclock_program_shot(clock, sched);
 	}
 
 	return 0;
@@ -330,7 +167,7 @@ int xntimer_start(xntimer_t *timer,
 EXPORT_SYMBOL_GPL(xntimer_start);
 
 /*!
- * \fn int xntimer_stop(xntimer_t *timer)
+ * \fn int xntimer_stop(struct xntimer *timer)
  *
  * \brief Disarm a timer.
  *
@@ -350,24 +187,30 @@ EXPORT_SYMBOL_GPL(xntimer_start);
  *
  * @note Must be called with nklock held, IRQs off.
  */
-void __xntimer_stop(xntimer_t *timer)
+void __xntimer_stop(struct xntimer *timer)
 {
+	struct xnclock *clock = xntimer_clock(timer);
+	xntimerq_t *q = xntimer_percpu_queue(timer);
+	struct xnsched *sched;
 	int heading;
 
 	trace_mark(xn_nucleus, timer_stop, "timer %p", timer);
 
 	heading = xntimer_heading_p(timer);
-	xntimer_dequeue(timer);
+	xntimer_dequeue(timer, q);
+	sched = xntimer_sched(timer);
 
-	/* If we removed the heading timer, reprogram the next shot if
-	   any. If the timer was running on another CPU, let it tick. */
-	if (heading && xntimer_sched(timer) == xnpod_current_sched())
-		xntimer_next_local_shot(xntimer_sched(timer));
+	/*
+	 * If we removed the heading timer, reprogram the next shot if
+	 * any. If the timer was running on another CPU, let it tick.
+	 */
+	if (heading && sched == xnpod_current_sched())
+		xnclock_program_shot(clock, sched);
 }
 EXPORT_SYMBOL_GPL(__xntimer_stop);
 
 /*!
- * \fn xnticks_t xntimer_get_date(xntimer_t *timer)
+ * \fn xnticks_t xntimer_get_date(struct xntimer *timer)
  *
  * \brief Return the absolute expiration date.
  *
@@ -387,17 +230,18 @@ EXPORT_SYMBOL_GPL(__xntimer_stop);
  *
  * Rescheduling: never.
  */
-xnticks_t xntimer_get_date(xntimer_t *timer)
+xnticks_t xntimer_get_date(struct xntimer *timer)
 {
 	if (!xntimer_running_p(timer))
 		return XN_INFINITE;
 
-	return xnclock_ticks_to_ns(xntimerh_date(&timer->aplink));
+	return xnclock_ticks_to_ns(xntimer_clock(timer),
+				   xntimerh_date(&timer->aplink));
 }
 EXPORT_SYMBOL_GPL(xntimer_get_date);
 
 /*!
- * \fn xnticks_t xntimer_get_timeout(xntimer_t *timer)
+ * \fn xnticks_t xntimer_get_timeout(struct xntimer *timer)
  *
  * \brief Return the relative expiration date.
  *
@@ -420,23 +264,27 @@ EXPORT_SYMBOL_GPL(xntimer_get_date);
  *
  * Rescheduling: never.
  */
-xnticks_t xntimer_get_timeout(xntimer_t *timer)
+xnticks_t xntimer_get_timeout(struct xntimer *timer)
 {
-	xnticks_t tsc;
+	xnticks_t ticks, delta;
+	struct xnclock *clock;
 
 	if (!xntimer_running_p(timer))
 		return XN_INFINITE;
 
-	tsc = xnclock_read_raw();
-	if (xntimerh_date(&timer->aplink) < tsc)
+	clock = xntimer_clock(timer);
+	ticks = xnclock_read_raw(clock);
+	if (xntimerh_date(&timer->aplink) < ticks)
 		return 1;	/* Will elapse shortly. */
 
-	return xnclock_ticks_to_ns(xntimerh_date(&timer->aplink) - tsc);
+	delta = xntimerh_date(&timer->aplink) - ticks;
+
+	return xnclock_ticks_to_ns(clock, delta);
 }
 EXPORT_SYMBOL_GPL(xntimer_get_timeout);
 
 /*!
- * \fn xnticks_t xntimer_get_interval(xntimer_t *timer)
+ * \fn xnticks_t xntimer_get_interval(struct xntimer *timer)
  *
  * \brief Return the timer interval value.
  *
@@ -456,123 +304,16 @@ EXPORT_SYMBOL_GPL(xntimer_get_timeout);
  *
  * Rescheduling: never.
  */
-xnticks_t xntimer_get_interval(xntimer_t *timer)
+xnticks_t xntimer_get_interval(struct xntimer *timer)
 {
-	return xnclock_ticks_to_ns_rounded(timer->interval);
+	struct xnclock *clock = xntimer_clock(timer);
+
+	return xnclock_ticks_to_ns_rounded(clock, timer->interval);
 }
 EXPORT_SYMBOL_GPL(xntimer_get_interval);
 
 /*!
- * @internal
- * \fn void xntimer_tick(void)
- *
- * \brief Process a timer tick.
- *
- * This routine informs all active timers that the clock has been
- * updated by processing the outstanding timer list. Elapsed timer
- * actions will be fired.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Interrupt service routine, nklock locked, interrupts off
- *
- * Rescheduling: never.
- */
-
-void xntimer_tick(void)
-{
-	xnsched_t *sched = xnpod_current_sched();
-	xntimerq_t *timerq = &sched->timerqueue;
-	xnticks_t now, interval;
-	xntimerh_t *holder;
-	xntimer_t *timer;
-	xnsticks_t delta;
-
-	/*
-	 * Optimisation: any local timer reprogramming triggered by
-	 * invoked timer handlers can wait until we leave the tick
-	 * handler. Use this status flag as hint to xntimer_start().
-	 */
-	sched->status |= XNINTCK;
-
-	now = xnclock_read_raw();
-	while ((holder = xntimerq_head(timerq)) != NULL) {
-		timer = aplink2timer(holder);
-		/*
-		 * If the delay to the next shot is greater than the
-		 * intrinsic latency value, we may stop scanning the
-		 * timer queue there, since timeout dates are ordered
-		 * by increasing values.
-		 */
-		delta = (xnsticks_t)(xntimerh_date(&timer->aplink) - now);
-		if (delta > (xnsticks_t)(nklatency + nktimerlat))
-			break;
-
-		trace_mark(xn_nucleus, timer_expire, "timer %p", timer);
-
-		xntimer_dequeue(timer);
-		xnstat_counter_inc(&timer->fired);
-
-		if (likely(timer != &sched->htimer)) {
-			if (likely((nkclock.status & XNTBLCK) == 0 ||
-				   (timer->status & XNTIMER_NOBLCK))) {
-				timer->handler(timer);
-				now = xnclock_read_raw();
-				/*
-				 * If the elapsed timer has no reload
-				 * value, or was re-enqueued or killed
-				 * by the timeout handler: don't not
-				 * re-enqueue it for the next shot.
-				 */
-				if (!xntimer_reload_p(timer))
-					continue;
-				timer->status |= XNTIMER_FIRED;
-			} else if (likely((timer->status & XNTIMER_PERIODIC) == 0)) {
-				/*
-				 * Make the blocked timer elapse again
-				 * at a reasonably close date in the
-				 * future, waiting for the clock to be
-				 * unlocked at some point. Timers are
-				 * blocked when single-stepping into
-				 * an application using a debugger, so
-				 * it is fine to wait for 250 ms for
-				 * the user to continue program
-				 * execution.
-				 */
-				interval = xnclock_ns_to_ticks(250000000ULL);
-				goto requeue;
-			}
-		} else {
-			/*
-			 * By postponing the propagation of the
-			 * low-priority host tick to the interrupt
-			 * epilogue (see xnintr_irq_handler()), we
-			 * save some I-cache, which translates into
-			 * precious microsecs on low-end hw.
-			 */
-			sched->lflags |= XNHTICK;
-			sched->lflags &= ~XNHDEFER;
-			if ((timer->status & XNTIMER_PERIODIC) == 0)
-				continue;
-		}
-
-		interval = timer->interval;
-	requeue:
-		do {
-			xntimerh_date(&timer->aplink) += interval;
-		} while (xntimerh_date(&timer->aplink) < now + nklatency);
-		xntimer_enqueue(timer);
-	}
-
-	sched->status &= ~XNINTCK;
-
-	xntimer_next_local_shot(sched);
-}
-
-/*!
- * \fn void xntimer_init(xntimer_t *timer,void (*handler)(xntimer_t *timer))
+ * \fn void xntimer_init(struct xntimer *timer,struct xnclock *clock,void (*handler)(struct xntimer *timer))
  * \brief Initialize a timer object.
  *
  * Creates a timer. When created, a timer is left disarmed; it must be
@@ -582,6 +323,11 @@ void xntimer_tick(void)
  * to store the object-specific data.  This descriptor must always be
  * valid while the object is active therefore it must be allocated in
  * permanent memory.
+ *
+ * @param clock The clock the timer relates to. Xenomai defines a
+ * monotonic system clock, with nanosecond resolution, named
+ * nkclock. In addition, external clocks driven by other tick sources
+ * may be created dynamically if CONFIG_XENO_OPT_EXTCLOCK is defined.
  *
  * @param handler The routine to call upon expiration of the timer.
  *
@@ -597,13 +343,19 @@ void xntimer_tick(void)
  * Rescheduling: never.
  */
 #ifdef DOXYGEN_CPP
-void xntimer_init(xntimer_t *timer, void (*handler)(xntimer_t *timer));
+void xntimer_init(struct xntimer *timer, struct xnclock *clock,
+		  void (*handler)(struct xntimer *timer));
 #endif
 
-void __xntimer_init(xntimer_t *timer, void (*handler) (xntimer_t *timer))
+void __xntimer_init(struct xntimer *timer,
+		    struct xnclock *clock,
+		    void (*handler)(struct xntimer *timer))
 {
-	spl_t s;
+	spl_t s __maybe_unused;
 
+#ifdef CONFIG_XENO_OPT_EXTCLOCK
+	timer->clock = clock;
+#endif
 	xntimerh_init(&timer->aplink);
 	xntimerh_date(&timer->aplink) = XN_INFINITE;
 	xntimer_set_priority(timer, XNTIMER_STDPRIO);
@@ -624,18 +376,16 @@ void __xntimer_init(xntimer_t *timer, void (*handler) (xntimer_t *timer))
 	xnstat_counter_set(&timer->fired, 0);
 
 	xnlock_get_irqsave(&nklock, s);
-	list_add_tail(&timer->tblink, &nkclock.timerq);
-	nkclock.nrtimers++;
-	xnvfile_touch(&nkclock.vfile);
+	list_add_tail(&timer->next_stat, &clock->timerq);
+	clock->nrtimers++;
+	xnvfile_touch(&clock->vfile);
 	xnlock_put_irqrestore(&nklock, s);
-#else
-	(void)s;
 #endif /* CONFIG_XENO_OPT_STATS */
 }
 EXPORT_SYMBOL_GPL(__xntimer_init);
 
 /*!
- * \fn void xntimer_destroy(xntimer_t *timer)
+ * \fn void xntimer_destroy(struct xntimer *timer)
  *
  * \brief Release a timer object.
  *
@@ -657,8 +407,9 @@ EXPORT_SYMBOL_GPL(__xntimer_init);
  * Rescheduling: never.
  */
 
-void xntimer_destroy(xntimer_t *timer)
+void xntimer_destroy(struct xntimer *timer)
 {
+	struct xnclock *clock __maybe_unused = xntimer_clock(timer);
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -666,23 +417,15 @@ void xntimer_destroy(xntimer_t *timer)
 	timer->status |= XNTIMER_KILLED;
 	timer->sched = NULL;
 #ifdef CONFIG_XENO_OPT_STATS
-	list_del(&timer->tblink);
-	nkclock.nrtimers--;
-	xnvfile_touch(&nkclock.vfile);
+	list_del(&timer->next_stat);
+	clock->nrtimers--;
+	xnvfile_touch(&clock->vfile);
 #endif /* CONFIG_XENO_OPT_STATS */
 	xnlock_put_irqrestore(&nklock, s);
 }
 EXPORT_SYMBOL_GPL(xntimer_destroy);
 
 #ifdef CONFIG_SMP
-
-static void xntimer_move(xntimer_t *timer)
-{
-	xntimer_enqueue(timer);
-
-	if (xntimer_heading_p(timer))
-		xntimer_next_remote_shot(timer->sched);
-}
 
 /**
  * Migrate a timer.
@@ -693,15 +436,17 @@ static void xntimer_move(xntimer_t *timer)
  *
  * @param timer The address of the timer object to be migrated.
  *
- * @param sched The address of the destination CPU xnsched_t structure.
+ * @param sched The address of the destination per-CPU scheduler slot.
  *
- * @retval -EINVAL if @a timer is queued on another CPU than current ;
+ * @retval -EINVAL if @a timer is queued on another CPU than current.
  * @retval 0 otherwise.
  *
  */
-int xntimer_migrate(xntimer_t *timer, xnsched_t *sched)
+int xntimer_migrate(struct xntimer *timer, struct xnsched *sched)
 {
-	int err = 0;
+	struct xnclock *clock;
+	xntimerq_t *q;
+	int ret = 0;
 	int queued;
 	spl_t s;
 
@@ -716,7 +461,7 @@ int xntimer_migrate(xntimer_t *timer, xnsched_t *sched)
 	queued = (timer->status & XNTIMER_DEQUEUED) == 0;
 	if (queued) {
 		if (timer->sched != xnpod_current_sched()) {
-			err = -EINVAL;
+			ret = -EINVAL;
 			goto unlock_and_exit;
 		}
 		xntimer_stop(timer);
@@ -724,14 +469,19 @@ int xntimer_migrate(xntimer_t *timer, xnsched_t *sched)
 
 	timer->sched = sched;
 
-	if (queued)
-		xntimer_move(timer);
+	if (queued) {
+		clock = xntimer_clock(timer);
+		q = xntimer_percpu_queue(timer);
+		xntimer_enqueue(timer, q);
+		if (xntimer_heading_p(timer))
+			xnclock_remote_shot(clock, timer->sched);
+	}
 
-      unlock_and_exit:
+unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return err;
+	return ret;
 }
 EXPORT_SYMBOL_GPL(xntimer_migrate);
 
@@ -740,17 +490,19 @@ EXPORT_SYMBOL_GPL(xntimer_migrate);
 /**
  * Get the count of overruns for the last tick.
  *
- * This service returns the count of pending overruns for the last tick of a
- * given timer, as measured by the difference between the expected expiry date
- * of the timer and the date @a now passed as argument.
+ * This service returns the count of pending overruns for the last
+ * tick of a given timer, as measured by the difference between the
+ * expected expiry date of the timer and the date @a now passed as
+ * argument.
  *
  * @param timer The address of a valid timer descriptor.
  *
- * @param now current date (in the monotonic time base)
+ * @param now current date (as
+ * xnclock_read_monotonic(xntimer_clock(timer)))
  *
  * @return the number of overruns of @a timer at date @a now
  */
-unsigned long xntimer_get_overruns(xntimer_t *timer, xnticks_t now)
+unsigned long xntimer_get_overruns(struct xntimer *timer, xnticks_t now)
 {
 	xnticks_t period = xntimer_interval(timer);
 	xnsticks_t delta = now - timer->pexpect;
@@ -766,68 +518,26 @@ unsigned long xntimer_get_overruns(xntimer_t *timer, xnticks_t now)
 }
 EXPORT_SYMBOL_GPL(xntimer_get_overruns);
 
-/*!
- * @internal
- * \fn void xntimer_freeze(void)
- *
- * \brief Freeze all timers (from every time bases).
- *
- * This routine deactivates all active timers atomically.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
- */
-
-void xntimer_freeze(void)
+char *xntimer_format_time(xnticks_t ns, char *buf, size_t bufsz)
 {
-	xntimerq_t *timerq;
-	xntimerh_t *holder;
-	int cpu;
-	spl_t s;
-
-	trace_mark(xn_nucleus, timer_freeze, MARK_NOARGS);
-
-	xnlock_get_irqsave(&nklock, s);
-
-	for_each_online_cpu(cpu) {
-		timerq = &xnpod_sched_slot(cpu)->timerqueue;
-		while ((holder = xntimerq_head(timerq)) != NULL) {
-			aplink2timer(holder)->status |= XNTIMER_DEQUEUED;
-			xntimerq_remove(timerq, holder);
-		}
-	}
-
-	xnlock_put_irqrestore(&nklock, s);
-}
-EXPORT_SYMBOL_GPL(xntimer_freeze);
-
-char *xntimer_format_time(xnticks_t value, char *buf, size_t bufsz)
-{
-	unsigned long ms, us, ns;
+	unsigned long ms, us, rem;
 	char *p = buf;
-	xnticks_t s;
+	xnticks_t sec;
 
-	if (value == 0 && bufsz > 1) {
+	if (ns == 0 && bufsz > 1) {
 		strcpy(buf, "-");
 		return buf;
 	}
 
-	s = xnclock_divrem_billion(value, &ns);
-	us = ns / 1000;
+	sec = xnclock_divrem_billion(ns, &rem);
+	us = rem / 1000;
 	ms = us / 1000;
 	us %= 1000;
 
-	if (s)
-		p += snprintf(p, bufsz, "%Lus", s);
+	if (sec)
+		p += snprintf(p, bufsz, "%Lus", sec);
 
-	if (ms || (s && us))
+	if (ms || (sec && us))
 		p += snprintf(p, bufsz - (p - buf), "%lums", ms);
 
 	if (us)
@@ -864,7 +574,7 @@ EXPORT_SYMBOL_GPL(xntimer_format_time);
 static int program_htick_shot(unsigned long delay,
 			      struct clock_event_device *cdev)
 {
-	xnsched_t *sched;
+	struct xnsched *sched;
 	int ret;
 	spl_t s;
 
@@ -913,7 +623,7 @@ static int program_htick_shot(unsigned long delay,
 static void switch_htick_mode(enum clock_event_mode mode,
 			      struct clock_event_device *cdev)
 {
-	xnsched_t *sched;
+	struct xnsched *sched;
 	xnticks_t tickval;
 	spl_t s;
 
@@ -982,7 +692,7 @@ int xntimer_grab_hardware(int cpu)
 {
 	int tickval, ret;
 
-	ret = ipipe_timer_start(xnintr_clock_handler,
+	ret = ipipe_timer_start(xnintr_core_clock_handler,
 				switch_htick_mode, program_htick_shot, cpu);
 	switch (ret) {
 	case CLOCK_EVT_MODE_PERIODIC:
@@ -1013,7 +723,7 @@ int xntimer_grab_hardware(int cpu)
 	if (cpu == 0) {
 		ret = ipipe_request_irq(&xnarch_machdata.domain,
 					IPIPE_HRTIMER_IPI,
-					(ipipe_irq_handler_t)xnintr_clock_handler,
+					(ipipe_irq_handler_t)xnintr_core_clock_handler,
 					NULL, NULL);
 		if (ret) {
 			ipipe_timer_stop(cpu);
@@ -1060,7 +770,7 @@ static int timer_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 	const char *tm_status, *wd_status = "";
 
 	if (xnpod_active_p()) {
-		tm_status = (nkclock.status & XNTBLCK) ? "locked" : "on";
+		tm_status = (nkpod->status & XNCLKLK) ? "locked" : "on";
 #ifdef CONFIG_XENO_OPT_WATCHDOG
 		wd_status = "+watchdog";
 #endif /* CONFIG_XENO_OPT_WATCHDOG */
@@ -1069,8 +779,9 @@ static int timer_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 
 	xnvfile_printf(it,
 		       "status=%s%s:setup=%Lu:clock=%Lu:timerdev=%s:clockdev=%s\n",
-		       tm_status, wd_status, xnclock_ticks_to_ns(nktimerlat),
-		       xnclock_read_raw(),
+		       tm_status, wd_status,
+		       xnclock_ticks_to_ns(&nkclock, nktimerlat),
+		       xnclock_read_raw(&nkclock),
 		       ipipe_timer_name(), ipipe_clock_name());
 	return 0;
 }

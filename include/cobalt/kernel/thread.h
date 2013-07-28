@@ -125,11 +125,11 @@ typedef struct xnthread {
 
 	int hrescnt;			/* Held resources count */
 
-	xntimer_t rtimer;		/* Resource timer */
+	struct xntimer rtimer;		/* Resource timer */
 
-	xntimer_t ptimer;		/* Periodic timer */
+	struct xntimer ptimer;		/* Periodic timer */
 
-	xntimer_t rrbtimer;		/* Round-robin timer */
+	struct xntimer rrbtimer;	/* Round-robin timer */
 
 	xnticks_t rrperiod;		/* Allotted round-robin period (ns) */
 
@@ -328,7 +328,7 @@ void xnthread_cleanup(struct xnthread *thread);
 
 char *xnthread_format_status(unsigned long status, char *buf, int size);
 
-xnticks_t xnthread_get_timeout(struct xnthread *thread, xnticks_t tsc_ns);
+xnticks_t xnthread_get_timeout(struct xnthread *thread, xnticks_t ns);
 
 xnticks_t xnthread_get_period(struct xnthread *thread);
 

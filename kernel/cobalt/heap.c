@@ -71,10 +71,15 @@ HEAP {
 #include <cobalt/kernel/thread.h>
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/vfile.h>
+#include <cobalt/kernel/ppd.h>
+#include <cobalt/kernel/vdso.h>
 #include <cobalt/kernel/assert.h>
 
 struct xnheap kheap;		/* System heap */
 EXPORT_SYMBOL_GPL(kheap);
+
+struct xnvdso *nkvdso;
+EXPORT_SYMBOL_GPL(nkvdso);
 
 static LIST_HEAD(heapq);	/* Heap list for v-file dump */
 
@@ -1506,14 +1511,48 @@ static struct miscdevice xnheap_dev = {
 	XNHEAP_DEV_MINOR, "rtheap", &xnheap_fops
 };
 
-int xnheap_mount(void)
-{
-	return misc_register(&xnheap_dev);
-}
-
 void xnheap_umount(void)
 {
 	misc_deregister(&xnheap_dev);
+	xnheap_free(&__xnsys_global_ppd.sem_heap, nkvdso);
+	xnheap_destroy_mapped(&__xnsys_global_ppd.sem_heap, NULL, NULL);
+}
+
+static inline void init_vdso(void)
+{
+	nkvdso = xnheap_alloc(&__xnsys_global_ppd.sem_heap, sizeof(*nkvdso));
+	if (nkvdso == NULL)
+		xnpod_fatal("cannot allocate memory for VDSO!\n");
+
+	nkvdso->features = XNVDSO_FEATURES;
+}
+
+int __init xnheap_mount(void)
+{
+	int ret;
+
+	/*
+	 * No valid object for running requests can be found for this
+	 * device until the system has fully initialized, so we may
+	 * bind the chardev early.
+	 */
+	ret = misc_register(&xnheap_dev);
+	if (ret)
+		return ret;
+
+	ret = xnheap_init_mapped(&__xnsys_global_ppd.sem_heap,
+				 CONFIG_XENO_OPT_GLOBAL_SEM_HEAPSZ * 1024,
+				 XNARCH_SHARED_HEAP_FLAGS);
+	if (ret) {
+		misc_deregister(&xnheap_dev);
+		return ret;
+	}
+
+	xnheap_set_label(&__xnsys_global_ppd.sem_heap,
+			 "global sem heap");
+	init_vdso();
+
+	return 0;
 }
 
 EXPORT_SYMBOL_GPL(xnheap_init_mapped);

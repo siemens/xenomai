@@ -173,7 +173,7 @@ static inline int timer_create(clockid_t clockid,
 		goto unlock_and_error;
 	}
 
-	xntimer_init(&timer->timerbase, timer_handler);
+	xntimer_init(&timer->timerbase, &nkclock, timer_handler);
 	timer->target = xnthread_host_pid(&target->threadbase);
 	timer->owner = NULL;
 	timer->owningq = cobalt_kqueues(0);
@@ -359,21 +359,22 @@ timer_settime(timer_t timerid, int flags,
 		start = ts2ns(&value->it_value) + 1;
 		period = ts2ns(&value->it_interval);
 		xntimer_set_sched(&timer->timerbase, xnpod_current_sched());
-
+		/*
+		 * Now start the timer. If the initial delay has
+		 * already passed, the call shall succeed, so, let us
+		 * tweak the start time until it fits.
+		 */
 		if (xntimer_start(&timer->timerbase, start, period,
 				  clock_flag(flags, timer->clockid))) {
-			/*
-			 * If the initial delay has already passed,
-			 * the call shall succeed, so, let us tweak
-			 * the start time.
-			 */
 			now = clock_get_ticks(timer->clockid);
 			if (period) {
 				do
 					start += period;
 				while ((xnsticks_t) (start - now) <= 0);
 			} else
-				start = now + xnclock_ticks_to_ns(nklatency);
+				start = now +
+					xnclock_ticks_to_ns(&nkclock,
+							    nkclock.gravity);
 			xntimer_start(&timer->timerbase, start, period,
 				      clock_flag(flags, timer->clockid));
 		}
@@ -574,7 +575,7 @@ int cobalt_timer_deliver(timer_t timerid) /* nklocked, IRQs off. */
 	if (!xntimer_interval(&timer->timerbase))
 		timer->overruns = 0;
 	else {
-		now = xnclock_read_raw();
+		now = xnclock_read_raw(&nkclock);
 		timer->overruns = xntimer_get_overruns(&timer->timerbase, now);
 		if ((unsigned int)timer->overruns > COBALT_DELAYMAX)
 			timer->overruns = COBALT_DELAYMAX;

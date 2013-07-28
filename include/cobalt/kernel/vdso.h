@@ -46,6 +46,4 @@ static inline struct xnvdso_hostrt_data *get_hostrt_data(void)
 	return &nkvdso->hostrt_data;
 }
 
-void xnheap_init_vdso(void);
-
 #endif /* _COBALT_KERNEL_VDSO_H */

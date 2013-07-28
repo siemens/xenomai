@@ -38,6 +38,9 @@
 #include <cobalt/kernel/ppd.h>
 #include "debug.h"
 
+struct xnvfile_directory debug_vfroot;
+EXPORT_SYMBOL_GPL(debug_vfroot);
+
 #ifdef CONFIG_XENO_OPT_DEBUG_TRACE_RELAX
 
 #define SYMBOL_HSLOTS	(1 << 8)
@@ -526,13 +529,11 @@ static inline void init_thread_relax_trace(struct xnthread *thread)
 
 #if XENO_DEBUG(XNLOCK)
 
-extern struct xnlockinfo xnlock_stats[];
-
 #define XNLOCK_DBG_MAX_SPINS		10000000
 
 void xnlock_dbg_prepare_acquire(unsigned long long *start)
 {
-	*start = xnclock_read_raw();
+	*start = xnclock_read_raw(&nkclock);
 }
 EXPORT_SYMBOL_GPL(xnlock_dbg_prepare_acquire);
 
@@ -565,7 +566,7 @@ void xnlock_dbg_acquired(struct xnlock *lock, int cpu, unsigned long long *start
 			 const char *file, int line, const char *function)
 {
 	lock->lock_date = *start;
-	lock->spin_time = xnclock_read_raw() - *start;
+	lock->spin_time = xnclock_read_raw(&nkclock) - *start;
 	lock->file = file;
 	lock->function = function;
 	lock->line = line;
@@ -580,7 +581,7 @@ int xnlock_dbg_release(struct xnlock *lock,
 	struct xnlockinfo *stats;
 	int cpu;
 
-	lock_time = xnclock_read_raw() - lock->lock_date;
+	lock_time = xnclock_read_raw(&nkclock) - lock->lock_date;
 	cpu = ipipe_processor_id();
 	stats = &xnlock_stats[cpu];
 

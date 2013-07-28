@@ -96,7 +96,7 @@ extern xnintr_t nktimer;
 
 int xnintr_mount(void);
 
-void xnintr_clock_handler(void);
+void xnintr_core_clock_handler(void);
 
 void xnintr_host_tick(struct xnsched *sched);
 

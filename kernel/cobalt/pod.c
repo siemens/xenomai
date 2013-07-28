@@ -37,7 +37,6 @@
 #include <linux/ptrace.h>
 #include <linux/sched.h>
 #include <linux/wait.h>
-#include <xenomai/version.h>
 #include <cobalt/kernel/pod.h>
 #include <cobalt/kernel/timer.h>
 #include <cobalt/kernel/synch.h>
@@ -56,18 +55,9 @@
 xnpod_t nkpod_struct;
 EXPORT_SYMBOL_GPL(nkpod_struct);
 
-unsigned long nklatency;
-EXPORT_SYMBOL_GPL(nklatency);
-
-/* Already accounted for in nklatency, kept separately for user information. */
 unsigned long nktimerlat;
 
 cpumask_t nkaffinity = XNPOD_ALL_CPUS;
-
-#ifdef CONFIG_XENO_OPT_DEBUG
-struct xnvfile_directory debug_vfroot;
-EXPORT_SYMBOL_GPL(debug_vfroot);
-#endif
 
 static DECLARE_WAIT_QUEUE_HEAD(nkjoinq);
 
@@ -169,7 +159,7 @@ void xnpod_fatal(const char *format, ...)
 		goto out;
 
 	nkpod->status |= XNFATAL;
-	now = xnclock_read_monotonic();
+	now = xnclock_read_monotonic(&nkclock);
 
 	printk(KERN_ERR "\n %-3s  %-6s %-8s %-8s %-8s  %s\n",
 	       "CPU", "PID", "PRI", "TIMEOUT", "STAT", "NAME");
@@ -196,7 +186,8 @@ void xnpod_fatal(const char *format, ...)
 		}
 	}
 
-	printk(KERN_ERR "Master time base: clock=%Lu\n", xnclock_read_raw());
+	printk(KERN_ERR "Master time base: clock=%Lu\n",
+	       xnclock_read_raw(&nkclock));
 #ifdef CONFIG_SMP
 	printk(KERN_ERR "Current CPU: #%d\n", ipipe_processor_id());
 #endif
@@ -1766,7 +1757,7 @@ reschedule:
 			if (sched->lflags & XNHTICK)
 				xnintr_host_tick(sched);
 			if (sched->lflags & XNHDEFER)
-				xntimer_next_local_shot(sched);
+				xnclock_program_shot(&nkclock, sched);
 		}
 		goto signal_unlock_and_exit;
 	}
@@ -1799,7 +1790,7 @@ reschedule:
 		if (sched->lflags & XNHTICK)
 			xnintr_host_tick(sched);
 		if (sched->lflags & XNHDEFER)
-			xntimer_next_local_shot(sched);
+			xnclock_program_shot(&nkclock, sched);
 		enter_root(next);
 	}
 
@@ -2039,10 +2030,9 @@ int xnpod_enable_timesource(void)
 	xnlock_put_irqrestore(&nklock, s);
 
 	nkclock.wallclock_offset =
-		xnclock_get_host_time() - xnclock_read_monotonic();
+		xnclock_get_host_time() - xnclock_read_monotonic(&nkclock);
 
 	for_each_online_cpu(cpu) {
-
 		if (!xnarch_cpu_supported(cpu))
 			continue;
 
@@ -2100,7 +2090,7 @@ EXPORT_SYMBOL_GPL(xnpod_enable_timesource);
  * \fn void xnpod_disable_timesource(void)
  * \brief Stop the core time source.
  *
- * Releases the hardware timer, and deactivates the system clock.
+ * Releases the hardware timer, which deactivates the system clock.
  *
  * Environments:
  *
@@ -2130,14 +2120,9 @@ void xnpod_disable_timesource(void)
 			xntimer_release_hardware(cpu);
 	}
 
-	xntimer_freeze();
-
-	/*
-	 * NOTE: The nktimer interrupt object is not destroyed on
-	 * purpose since this would be mostly redundant after
-	 * xntimer_release_hardware() has been called. In any case, no
-	 * resource is associated with this object.
-	 */
+#ifdef CONFIG_XENO_OPT_STATS
+	xnintr_destroy(&nktimer);
+#endif /* CONFIG_XENO_OPT_STATS */
 }
 EXPORT_SYMBOL_GPL(xnpod_disable_timesource);
 
@@ -2213,10 +2198,11 @@ int xnpod_set_thread_periodic(xnthread_t *thread, xnticks_t idate,
 		goto unlock_and_exit;
 	}
 
-	if (period < nklatency) {
+	if (period < xnclock_ticks_to_ns(&nkclock, nkclock.gravity)) {
 		/*
 		 * LART: detect periods which are shorter than the
-		 * intrinsic latency figure; this must be a joke...
+		 * clock gravity. This can't work, caller must have
+		 * messed up with arguments.
 		 */
 		err = -EINVAL;
 		goto unlock_and_exit;
@@ -2228,7 +2214,7 @@ int xnpod_set_thread_periodic(xnthread_t *thread, xnticks_t idate,
 		xntimer_start(&thread->ptimer, period, period, XN_RELATIVE);
 	} else {
 		if (timeout_mode == XN_REALTIME)
-			idate -= xnclock_get_offset();
+			idate -= xnclock_get_offset(&nkclock);
 		else if (timeout_mode != XN_ABSOLUTE) {
 			err = -EINVAL;
 			goto unlock_and_exit;
@@ -2307,7 +2293,7 @@ int xnpod_wait_thread_period(unsigned long *overruns_r)
 	trace_mark(xn_nucleus, thread_waitperiod, "thread %p thread_name %s",
 		   thread, xnthread_name(thread));
 
-	now = xnclock_read_raw();
+	now = xnclock_read_raw(&nkclock);
 	if (likely((xnsticks_t)(now - xntimer_pexpect(&thread->ptimer)) < 0)) {
 		xnpod_suspend_thread(thread, XNDELAY, XN_INFINITE, XN_RELATIVE, NULL);
 
@@ -2316,7 +2302,7 @@ int xnpod_wait_thread_period(unsigned long *overruns_r)
 			goto unlock_and_exit;
 		}
 
-		now = xnclock_read_raw();
+		now = xnclock_read_raw(&nkclock);
 	}
 
 	overruns = xntimer_get_overruns(&thread->ptimer, now);
@@ -2397,252 +2383,6 @@ int xnpod_set_thread_tslice(struct xnthread *thread, xnticks_t quantum)
 	return 0;
 }
 EXPORT_SYMBOL_GPL(xnpod_set_thread_tslice);
-
-#ifdef CONFIG_XENO_OPT_VFILE
-
-#if XENO_DEBUG(XNLOCK)
-
-struct xnlockinfo xnlock_stats[NR_CPUS];
-EXPORT_SYMBOL_GPL(xnlock_stats);
-
-static int lock_vfile_show(struct xnvfile_regular_iterator *it, void *data)
-{
-	struct xnlockinfo lockinfo;
-	spl_t s;
-	int cpu;
-
-	for_each_online_cpu(cpu) {
-
-		xnlock_get_irqsave(&nklock, s);
-		lockinfo = xnlock_stats[cpu];
-		xnlock_put_irqrestore(&nklock, s);
-
-		if (cpu > 0)
-			xnvfile_printf(it, "\n");
-
-		xnvfile_printf(it, "CPU%d:\n", cpu);
-
-		xnvfile_printf(it,
-			     "  longest locked section: %llu ns\n"
-			     "  spinning time: %llu ns\n"
-			     "  section entry: %s:%d (%s)\n",
-			     xnclock_ticks_to_ns(lockinfo.lock_time),
-			     xnclock_ticks_to_ns(lockinfo.spin_time),
-			     lockinfo.file, lockinfo.line, lockinfo.function);
-	}
-
-	return 0;
-}
-
-static ssize_t lock_vfile_store(struct xnvfile_input *input)
-{
-	ssize_t ret;
-	spl_t s;
-	int cpu;
-
-	long val;
-
-	ret = xnvfile_get_integer(input, &val);
-	if (ret < 0)
-		return ret;
-
-	if (val != 0)
-		return -EINVAL;
-
-	for_each_online_cpu(cpu) {
-		xnlock_get_irqsave(&nklock, s);
-		memset(&xnlock_stats[cpu], '\0', sizeof(xnlock_stats[cpu]));
-		xnlock_put_irqrestore(&nklock, s);
-	}
-
-	return ret;
-}
-
-static struct xnvfile_regular_ops lock_vfile_ops = {
-	.show = lock_vfile_show,
-	.store = lock_vfile_store,
-};
-
-static struct xnvfile_regular lock_vfile = {
-	.ops = &lock_vfile_ops,
-};
-
-#endif /* XENO_DEBUG(XNLOCK) */
-
-static int latency_vfile_show(struct xnvfile_regular_iterator *it, void *data)
-{
-	xnvfile_printf(it, "%Lu\n", xnclock_ticks_to_ns(nklatency - nktimerlat));
-
-	return 0;
-}
-
-static ssize_t latency_vfile_store(struct xnvfile_input *input)
-{
-	ssize_t ret;
-	long val;
-
-	ret = xnvfile_get_integer(input, &val);
-	if (ret < 0)
-		return ret;
-
-	nklatency = xnclock_ns_to_ticks(val) + nktimerlat;
-
-	return ret;
-}
-
-static struct xnvfile_regular_ops latency_vfile_ops = {
-	.show = latency_vfile_show,
-	.store = latency_vfile_store,
-};
-
-static struct xnvfile_regular latency_vfile = {
-	.ops = &latency_vfile_ops,
-};
-
-static int version_vfile_show(struct xnvfile_regular_iterator *it, void *data)
-{
-	xnvfile_printf(it, "%s\n", XENO_VERSION_STRING);
-
-	return 0;
-}
-
-static struct xnvfile_regular_ops version_vfile_ops = {
-	.show = version_vfile_show,
-};
-
-static struct xnvfile_regular version_vfile = {
-	.ops = &version_vfile_ops,
-};
-
-static int faults_vfile_show(struct xnvfile_regular_iterator *it, void *data)
-{
-	int cpu, trap;
-
-	xnvfile_puts(it, "TRAP ");
-
-	for_each_online_cpu(cpu)
-		xnvfile_printf(it, "        CPU%d", cpu);
-
-	for (trap = 0; xnarch_machdesc.fault_labels[trap]; trap++) {
-		if (*xnarch_machdesc.fault_labels[trap] == '\0')
-			continue;
-
-		xnvfile_printf(it, "\n%3d: ", trap);
-
-		for_each_online_cpu(cpu)
-			xnvfile_printf(it, "%12u",
-				       xnarch_machdata.faults[cpu][trap]);
-
-		xnvfile_printf(it, "    (%s)",
-			       xnarch_machdesc.fault_labels[trap]);
-	}
-
-	xnvfile_putc(it, '\n');
-
-	return 0;
-}
-
-static struct xnvfile_regular_ops faults_vfile_ops = {
-	.show = faults_vfile_show,
-};
-
-static struct xnvfile_regular faults_vfile = {
-	.ops = &faults_vfile_ops,
-};
-
-static int apc_vfile_show(struct xnvfile_regular_iterator *it, void *data)
-{
-	int cpu, apc;
-
-	/* We assume the entire output fits in a single page. */
-
-	xnvfile_puts(it, "APC ");
-
-	for_each_online_cpu(cpu)
-		xnvfile_printf(it, "         CPU%d", cpu);
-
-	for (apc = 0; apc < BITS_PER_LONG; apc++) {
-		if (!test_bit(apc, &xnarch_machdata.apc_map))
-			continue; /* Not hooked. */
-
-		xnvfile_printf(it, "\n%3d: ", apc);
-
-		for_each_online_cpu(cpu)
-			xnvfile_printf(it, "%12lu",
-				       xnarch_machdata.apc_table[apc].hits[cpu]);
-
-		if (xnarch_machdata.apc_table[apc].name)
-			xnvfile_printf(it, "    (%s)",
-				       xnarch_machdata.apc_table[apc].name);
-	}
-
-	xnvfile_putc(it, '\n');
-
-	return 0;
-}
-
-static struct xnvfile_regular_ops apc_vfile_ops = {
-	.show = apc_vfile_show,
-};
-
-static struct xnvfile_regular apc_vfile = {
-	.ops = &apc_vfile_ops,
-};
-
-int __init xnpod_init_proc(void)
-{
-	int ret;
-
-	ret = xnvfile_init_root();
-	if (ret)
-		return ret;
-
-	ret = xnsched_init_proc();
-	if (ret)
-		return ret;
-
-	xnclock_init_proc();
-	xntimer_init_proc();
-	xnheap_init_proc();
-	xnintr_init_proc();
-
-	xnvfile_init_regular("latency", &latency_vfile, &nkvfroot);
-	xnvfile_init_regular("version", &version_vfile, &nkvfroot);
-	xnvfile_init_regular("faults", &faults_vfile, &nkvfroot);
-	xnvfile_init_regular("apc", &apc_vfile, &nkvfroot);
-#ifdef CONFIG_XENO_OPT_DEBUG
-	xnvfile_init_dir("debug", &debug_vfroot, &nkvfroot);
-#if XENO_DEBUG(XNLOCK)
-	xnvfile_init_regular("lock", &lock_vfile, &debug_vfroot);
-#endif
-#endif /* XENO_DEBUG(NUCLEUS) */
-
-	return 0;
-}
-
-void xnpod_cleanup_proc(void)
-{
-#if XENO_DEBUG(NUCLEUS)
-#if XENO_DEBUG(XNLOCK)
-	xnvfile_destroy_regular(&lock_vfile);
-#endif
-	xnvfile_destroy_dir(&debug_vfroot);
-#endif /* XENO_DEBUG(NUCLEUS) */
-	xnvfile_destroy_regular(&apc_vfile);
-	xnvfile_destroy_regular(&faults_vfile);
-	xnvfile_destroy_regular(&version_vfile);
-	xnvfile_destroy_regular(&latency_vfile);
-
-	xnintr_cleanup_proc();
-	xnheap_cleanup_proc();
-	xntimer_cleanup_proc();
-	xnclock_cleanup_proc();
-	xnsched_cleanup_proc();
-
-	xnvfile_destroy_root();
-}
-
-#endif /* CONFIG_XENO_OPT_VFILE */
 
 struct xnpersonality generic_personality = {
 	.name = "xenomai",

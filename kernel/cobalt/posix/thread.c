@@ -32,6 +32,7 @@
 #include <linux/cred.h>
 #include <linux/jhash.h>
 #include <linux/signal.h>
+#include <linux/err.h>
 #include <cobalt/uapi/signal.h>
 #include "internal.h"
 #include "thread.h"
@@ -1161,13 +1162,14 @@ int cobalt_thread_stat(pid_t pid,
 	xtime = xnthread_get_exectime(thread);
 	if (xnthread_sched(thread)->curr == thread)
 		xtime += xnstat_exectime_now() - xnthread_get_lastswitch(thread);
-	stat.xtime = xnclock_ticks_to_ns(xtime);
+	stat.xtime = xnclock_ticks_to_ns(&nkclock, xtime);
 	stat.msw = xnstat_counter_get(&thread->stat.ssw);
 	stat.csw = xnstat_counter_get(&thread->stat.csw);
 	stat.xsc = xnstat_counter_get(&thread->stat.xsc);
 	stat.pf = xnstat_counter_get(&thread->stat.pf);
 	stat.status = xnthread_state_flags(thread);
-	stat.timeout = xnthread_get_timeout(thread, xnclock_read_monotonic());
+	stat.timeout = xnthread_get_timeout(thread,
+					    xnclock_read_monotonic(&nkclock));
 
 	xnlock_put_irqrestore(&nklock, s);
 

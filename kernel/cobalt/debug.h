@@ -32,6 +32,8 @@ void xndebug_cleanup(void);
 
 void xndebug_shadow_init(struct xnthread *thread);
 
+extern struct xnvfile_directory debug_vfroot;
+
 #else  /* !XENO_OPT_DEBUG */
 
 static inline int xndebug_init(void)

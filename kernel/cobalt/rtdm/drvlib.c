@@ -448,9 +448,12 @@ EXPORT_SYMBOL_GPL(rtdm_task_join_nrt);
  */
 void rtdm_task_busy_sleep(nanosecs_rel_t delay)
 {
-	xnticks_t wakeup = xnclock_read_raw() + xnclock_ns_to_ticks(delay);
+	xnticks_t wakeup;
 
-	while ((xnsticks_t)(xnclock_read_raw() - wakeup) < 0)
+	wakeup = xnclock_read_raw(&nkclock) +
+		xnclock_ns_to_ticks(&nkclock, delay);
+
+	while ((xnsticks_t)(xnclock_read_raw(&nkclock) - wakeup) < 0)
 		cpu_relax();
 }
 
@@ -712,7 +715,7 @@ void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, nanosecs_rel_t timeout)
 {
 	XENO_ASSERT(RTDM, !xnpod_unblockable_p(), /* only warn here */;);
 
-	*timeout_seq = xnclock_read_monotonic() + timeout;
+	*timeout_seq = xnclock_read_monotonic(&nkclock) + timeout;
 }
 
 EXPORT_SYMBOL_GPL(rtdm_toseq_init);

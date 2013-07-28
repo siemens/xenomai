@@ -73,7 +73,6 @@ typedef struct xnsched {
 #ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
 	struct xnsched_sporadic pss;	/*!< Context of sporadic scheduling class. */
 #endif
-	xntimerq_t timerqueue;		/* !< Core timer queue. */
 	volatile unsigned inesting;	/*!< Interrupt nesting level. */
 	struct xntimer htimer;		/*!< Host timer. */
 	struct xnthread *zombie;

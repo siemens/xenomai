@@ -144,7 +144,7 @@ void xnsched_init(struct xnsched *sched, int cpu)
 	 * postponed to xnintr_irq_handler(), as part of the interrupt
 	 * exit code.
 	 */
-	xntimer_init(&sched->htimer, NULL);
+	xntimer_init(&sched->htimer, &nkclock, NULL);
 	xntimer_set_priority(&sched->htimer, XNTIMER_LOPRIO);
 	xntimer_set_name(&sched->htimer, htimer_name);
 	xntimer_set_sched(&sched->htimer, sched);
@@ -170,12 +170,12 @@ void xnsched_init(struct xnsched *sched, int cpu)
 	xnthread_init_root_tcb(&sched->rootcb);
 
 #ifdef CONFIG_XENO_OPT_WATCHDOG
-	xntimer_init_noblock(&sched->wdtimer, xnsched_watchdog_handler);
+	xntimer_init_noblock(&sched->wdtimer, &nkclock,
+			     xnsched_watchdog_handler);
 	xntimer_set_name(&sched->wdtimer, "[watchdog]");
 	xntimer_set_priority(&sched->wdtimer, XNTIMER_LOPRIO);
 	xntimer_set_sched(&sched->wdtimer, sched);
 #endif /* CONFIG_XENO_OPT_WATCHDOG */
-	xntimerq_init(&sched->timerqueue);
 }
 
 void xnsched_destroy(struct xnsched *sched)
@@ -187,7 +187,6 @@ void xnsched_destroy(struct xnsched *sched)
 #ifdef CONFIG_XENO_OPT_WATCHDOG
 	xntimer_destroy(&sched->wdtimer);
 #endif /* CONFIG_XENO_OPT_WATCHDOG */
-	xntimerq_destroy(&sched->timerqueue);
 }
 
 /* Must be called with nklock locked, interrupts off. */
@@ -647,7 +646,7 @@ static int vfile_schedlist_rewind(struct xnvfile_snapshot_iterator *it)
 
 	/* &nkpod->threadq cannot be empty (root thread(s)). */
 	priv->curr = list_first_entry(&nkpod->threadq, struct xnthread, glink);
-	priv->start_time = xnclock_read_monotonic();
+	priv->start_time = xnclock_read_monotonic(&nkclock);
 
 	return nkpod->nrthreads;
 }
@@ -908,9 +907,9 @@ static int vfile_schedacct_show(struct xnvfile_snapshot_iterator *it,
 
 	xnvfile_printf(it, "%u %d %lu %lu %lu %lu %.8lx %Lu %Lu %Lu %s %s %d %Lu\n",
 		       p->cpu, p->pid, p->ssw, p->csw, p->xsc, p->pf, p->state,
-		       xnclock_ticks_to_ns(p->account_period),
-		       xnclock_ticks_to_ns(p->exectime_period),
-		       xnclock_ticks_to_ns(p->exectime_total),
+		       xnclock_ticks_to_ns(&nkclock, p->account_period),
+		       xnclock_ticks_to_ns(&nkclock, p->exectime_period),
+		       xnclock_ticks_to_ns(&nkclock, p->exectime_total),
 		       p->name,
 		       p->sched_class->name,
 		       p->cprio,

@@ -17,6 +17,7 @@
  */
 
 #include <linux/module.h>
+#include <linux/semaphore.h>
 #include <linux/ipipe_trace.h>
 #include <cobalt/kernel/arith.h>
 #include <rtdm/rttesting.h>

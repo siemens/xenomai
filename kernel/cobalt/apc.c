@@ -41,7 +41,7 @@
 
 static IPIPE_DEFINE_SPINLOCK(apc_lock);
 
-static void apc_dispatch(unsigned int virq, void *arg)
+void apc_dispatch(unsigned int virq, void *arg)
 {
 	void (*handler)(void *), *cookie;
 	int apc, cpu;
@@ -164,19 +164,5 @@ void xnapc_free(int apc)
 	smp_mb__after_clear_bit();
 }
 EXPORT_SYMBOL_GPL(xnapc_free);
-
-int xnapc_init(void)
-{
-	return ipipe_request_irq(ipipe_root_domain,
-				 xnarch_machdata.apc_virq,
-				 apc_dispatch,
-				 NULL, NULL);
-}
-
-void xnapc_cleanup(void)
-{
-	ipipe_free_irq(ipipe_root_domain, xnarch_machdata.apc_virq);
-	ipipe_free_virq(xnarch_machdata.apc_virq);
-}
 
 /*@}*/

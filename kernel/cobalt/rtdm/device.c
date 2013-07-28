@@ -27,6 +27,7 @@
 
 #include <linux/module.h>
 #include <linux/delay.h>
+#include <linux/semaphore.h>
 #include <cobalt/kernel/apc.h>
 #include "rtdm/internal.h"
 

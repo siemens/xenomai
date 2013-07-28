@@ -26,15 +26,35 @@
 /*! \addtogroup clock
  *@{*/
 
+#include <linux/ipipe.h>
 #include <cobalt/kernel/list.h>
 #include <cobalt/kernel/vfile.h>
 #include <cobalt/uapi/kernel/types.h>
 
-#define XNTBLCK  0x00000001	/* Time base is locked. */
+struct xnsched;
+struct xntimerdata;
 
 struct xnclock {
 	xnticks_t wallclock_offset;
-	unsigned long status;
+	struct xntimerdata *timerdata;
+	unsigned long gravity;
+	const char *name;
+#ifdef CONFIG_XENO_OPT_EXTCLOCK
+	struct {
+		xnticks_t (*read_raw)(struct xnclock *clock);
+		xnticks_t (*read_monotonic)(struct xnclock *clock);
+		xnsticks_t (*ns_to_ticks)(struct xnclock *clock,
+					  xnsticks_t ns);
+		xnsticks_t (*ticks_to_ns)(struct xnclock *clock,
+					  xnsticks_t ticks);
+		xnsticks_t (*ticks_to_ns_rounded)(struct xnclock *clock,
+						  xnsticks_t ticks);
+		void (*program_local_shot)(struct xnclock *clock,
+					   struct xnsched *sched);
+		void (*program_remote_shot)(struct xnclock *clock,
+					    struct xnsched *sched);
+	} ops;
+#endif	
 #ifdef CONFIG_XENO_OPT_STATS
 	struct xnvfile_snapshot vfile;
 	struct xnvfile_rev_tag revtag;
@@ -45,47 +65,175 @@ struct xnclock {
 
 extern struct xnclock nkclock;
 
-static inline xnticks_t xnclock_get_offset(void)
-{
-	return nkclock.wallclock_offset;
-}
+int xnclock_register(struct xnclock *clock);
 
-xnticks_t xnclock_get_host_time(void);
+void xnclock_deregister(struct xnclock *clock);
 
-xnticks_t xnclock_read_monotonic(void);
+void xnclock_tick(struct xnclock *clock);
 
-static inline xnticks_t xnclock_read(void)
-{
-	/*
-	 * Return an adjusted value of the monotonic time with the
-	 * translated system wallclock offset.
-	 */
-	return xnclock_read_monotonic() + xnclock_get_offset();
-}
+void xnclock_adjust(struct xnclock *clock,
+		    xnsticks_t delta);
 
-static inline xnticks_t xnclock_read_raw(void)
+void xnclock_core_local_shot(struct xnsched *sched);
+
+void xnclock_core_remote_shot(struct xnsched *sched);
+
+xnsticks_t xnclock_core_ns_to_ticks(xnsticks_t ns);
+
+xnsticks_t xnclock_core_ticks_to_ns(xnsticks_t ticks);
+
+xnsticks_t xnclock_core_ticks_to_ns_rounded(xnsticks_t ticks);
+
+xnticks_t xnclock_core_read_monotonic(void);
+
+static inline xnticks_t xnclock_core_read_raw(void)
 {
 	unsigned long long t;
 	ipipe_read_tsc(t);
 	return t;
 }
 
-xnsticks_t xnclock_ticks_to_ns(xnsticks_t ticks);
+#ifdef CONFIG_XENO_OPT_EXTCLOCK
 
-xnsticks_t xnclock_ticks_to_ns_rounded(xnsticks_t ticks);
+static inline void xnclock_program_shot(struct xnclock *clock,
+					struct xnsched *sched)
+{
+	if (likely(clock == &nkclock))
+		xnclock_core_local_shot(clock, sched);
+	else if (clock->ops.program_local_shot)
+		clock->ops.program_local_shot(clock, sched);
+}
 
-xnsticks_t xnclock_ns_to_ticks(xnsticks_t ns);
+static inline void xnclock_remote_shot(struct xnclock *clock,
+				       struct xnsched *sched)
+{
+#ifdef CONFIG_SMP
+	if (likely(clock == &nkclock))
+		xnclock_core_remote_shot(clock, sched);
+	else if (clock->ops.program_remote_shot)
+		clock->ops.program_remote_shot(clock, sched);
+#endif
+}
+
+static inline xnticks_t xnclock_read_raw(struct xnclock *clock)
+{
+	if (likely(clock == &nkclock))
+		return xnclock_core_read_raw();
+
+	return clock->ops.read_raw(clock);
+}
+
+static inline xnsticks_t xnclock_ns_to_ticks(struct xnclock *clock,
+					     xnsticks_t ns)
+{
+	if (likely(clock == &nkclock))
+		return xnclock_core_ns_to_ticks(ns);
+
+	return clock->ops.ns_to_ticks(clock, ns);
+}
+
+static inline xnsticks_t xnclock_ticks_to_ns(struct xnclock *clock,
+					     xnsticks_t ticks)
+{
+	if (likely(clock == &nkclock))
+		return xnclock_core_ticks_to_ns(ticks);
+
+	return clock->ops.ticks_to_ns(clock, ticks);
+}
+
+static inline xnsticks_t xnclock_ticks_to_ns_rounded(struct xnclock *clock,
+						     xnsticks_t ticks)
+{
+	if (likely(clock == &nkclock))
+		return xnclock_core_ticks_to_ns_rounded(ticks);
+
+	return clock->ops.ticks_to_ns_rounded(clock, ticks);
+}
+
+static inline xnticks_t xnclock_read_monotonic(struct xnclock *clock)
+{
+	if (likely(clock == &nkclock))
+		return xnclock_core_read_monotonic();
+
+	return clock->ops.read_monotonic(clock);
+}
+
+#else /* !CONFIG_XENO_OPT_EXTCLOCK */
+
+static inline void xnclock_program_shot(struct xnclock *clock,
+					struct xnsched *sched)
+{
+	xnclock_core_local_shot(sched);
+}
+
+static inline void xnclock_remote_shot(struct xnclock *clock,
+				       struct xnsched *sched)
+{
+#ifdef CONFIG_SMP
+	xnclock_core_remote_shot(sched);
+#endif
+}
+
+static inline xnticks_t xnclock_read_raw(struct xnclock *clock)
+{
+	return xnclock_core_read_raw();
+}
+
+static inline xnsticks_t xnclock_ns_to_ticks(struct xnclock *clock,
+					     xnsticks_t ns)
+{
+	return xnclock_core_ns_to_ticks(ns);
+}
+
+static inline xnsticks_t xnclock_ticks_to_ns(struct xnclock *clock,
+					     xnsticks_t ticks)
+{
+	return xnclock_core_ticks_to_ns(ticks);
+}
+
+static inline xnsticks_t xnclock_ticks_to_ns_rounded(struct xnclock *clock,
+						     xnsticks_t ticks)
+{
+	return xnclock_core_ticks_to_ns_rounded(ticks);
+}
+
+static inline xnticks_t xnclock_read_monotonic(struct xnclock *clock)
+{
+	return xnclock_core_read_monotonic();
+}
+
+#endif /* !CONFIG_XENO_OPT_EXTCLOCK */
+
+static inline xnticks_t xnclock_get_offset(struct xnclock *clock)
+{
+	return clock->wallclock_offset;
+}
+
+static inline xnticks_t xnclock_read_realtime(struct xnclock *clock)
+{
+	/*
+	 * Return an adjusted value of the monotonic time with the
+	 * translated system wallclock offset.
+	 */
+	return xnclock_read_monotonic(clock) + xnclock_get_offset(clock);
+}
 
 unsigned long long xnclock_divrem_billion(unsigned long long value,
 					  unsigned long *rem);
 
-void xnclock_adjust(xnsticks_t delta);
+xnticks_t xnclock_get_host_time(void);
 
-void xnclock_init(unsigned long long freq);
-
+#ifdef CONFIG_XENO_OPT_STATS
 void xnclock_init_proc(void);
-
 void xnclock_cleanup_proc(void);
+#else
+static inline void xnclock_init_proc(void) { }
+static inline void xnclock_cleanup_proc(void) { }
+#endif
+
+int xnclock_init(unsigned long long freq);
+
+void xnclock_cleanup(void);
 
 /*@}*/
 

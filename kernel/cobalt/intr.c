@@ -35,6 +35,7 @@
 #include <cobalt/kernel/pod.h>
 #include <cobalt/kernel/intr.h>
 #include <cobalt/kernel/stat.h>
+#include <cobalt/kernel/clock.h>
 #include <cobalt/kernel/misc.h>
 
 #define XNINTR_MAX_UNHANDLED	1000
@@ -91,12 +92,14 @@ void xnintr_host_tick(struct xnsched *sched) /* Interrupts off. */
 #endif
 }
 
-/* Low-level clock irq handler. */
-
-void xnintr_clock_handler(void)
+/*
+ * Low-level core clock irq handler. This one forwards ticks from the
+ * Xenomai platform timer to nkclock exclusively.
+ */
+void xnintr_core_clock_handler(void)
 {
 	struct xnsched *sched = xnpod_current_sched();
-	int cpu = xnsched_cpu(sched);
+	int cpu  __maybe_unused = xnsched_cpu(sched);
 	xnstat_exectime_t *prev;
 
 	prev = xnstat_exectime_switch(sched, &nktimer.stat[cpu].account);
@@ -110,7 +113,7 @@ void xnintr_clock_handler(void)
 	sched->lflags |= XNINIRQ;
 
 	xnlock_get(&nklock);
-	xntimer_tick();
+	xnclock_tick(&nkclock);
 	xnlock_put(&nklock);
 
 	xnstat_exectime_switch(sched, prev);
@@ -121,10 +124,10 @@ void xnintr_clock_handler(void)
 		sched = xnpod_current_sched();
 	}
 	/*
-	 * If the clock interrupt preempted a real-time thread, any
-	 * transition to the root thread has already triggered a host
-	 * tick propagation from xnpod_schedule(), so at this point,
-	 * we only need to propagate the host tick in case the
+	 * If the core clock interrupt preempted a real-time thread,
+	 * any transition to the root thread has already triggered a
+	 * host tick propagation from xnpod_schedule(), so at this
+	 * point, we only need to propagate the host tick in case the
 	 * interrupt preempted the root thread.
 	 */
 	if ((sched->lflags & XNHTICK) &&

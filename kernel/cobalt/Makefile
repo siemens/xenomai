@@ -25,6 +25,6 @@ xenomai-$(CONFIG_XENO_OPT_SCHED_TP) += sched-tp.o
 xenomai-$(CONFIG_XENO_OPT_PIPE) += pipe.o
 xenomai-$(CONFIG_XENO_OPT_MAP) += map.o
 xenomai-$(CONFIG_XENO_OPT_DEBUG) += debug.o
-xenomai-$(CONFIG_PROC_FS) += vfile.o
+xenomai-$(CONFIG_PROC_FS) += vfile.o procfs.o
 
 ccflags-y := -Iarch/$(SRCARCH)/xenomai/include -Iinclude/xenomai

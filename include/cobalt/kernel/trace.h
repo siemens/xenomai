@@ -91,9 +91,9 @@ static inline int xntrace_pid(pid_t pid, short prio)
 	return 0;
 }
 
-static inline int xntrace_tick(unsigned long delay_tsc)
+static inline int xntrace_tick(unsigned long delay_ticks)
 {
-	ipipe_trace_event(0, delay_tsc);
+	ipipe_trace_event(0, delay_ticks);
 	return 0;
 }
 

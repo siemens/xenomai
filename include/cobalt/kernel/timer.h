@@ -41,9 +41,6 @@ typedef enum xntmode {
 	XN_REALTIME
 } xntmode_t;
 
-#define XNTIMER_WHEELSIZE 64
-#define XNTIMER_WHEELMASK (XNTIMER_WHEELSIZE - 1)
-
 /* Timer status */
 #define XNTIMER_DEQUEUED  0x00000001
 #define XNTIMER_KILLED    0x00000002
@@ -67,8 +64,6 @@ typedef enum xntmode {
 #define XNTIMER_STDPRIO 0
 #define XNTIMER_HIPRIO  999999999
 
-#define XNTIMER_KEEPER_ID 0
-
 struct xntlholder {
 	struct list_head link;
 	xnticks_t key;
@@ -78,6 +73,7 @@ struct xntlholder {
 #define xntlholder_date(h)	((h)->key)
 #define xntlholder_prio(h)	((h)->prio)
 #define xntlist_init(q)		INIT_LIST_HEAD(q)
+#define xntlist_empty(q)	list_empty(q)
 #define xntlist_head(q)							\
 	({								\
 		struct xntlholder *h = list_empty(q) ? NULL :		\
@@ -135,6 +131,7 @@ typedef DECLARE_BHEAP_CONTAINER(xntimerq_t, CONFIG_XENO_OPT_TIMER_HEAP_CAPACITY)
 
 #define xntimerq_init(q)          bheap_init((q), CONFIG_XENO_OPT_TIMER_HEAP_CAPACITY)
 #define xntimerq_destroy(q)       bheap_destroy(q)
+#define xntimerq_empty(q)         bheap_empty(q)
 #define xntimerq_head(q)          bheap_gethead(q)
 #define xntimerq_insert(q, h)     bheap_insert((q),(h))
 #define xntimerq_remove(q, h)     bheap_delete((q),(h))
@@ -156,6 +153,7 @@ typedef struct list_head xntimerq_t;
 
 #define xntimerq_init(q)        xntlist_init(q)
 #define xntimerq_destroy(q)     do { } while (0)
+#define xntimerq_empty(q)       xntlist_empty(q)
 #define xntimerq_head(q)        xntlist_head(q)
 #define xntimerq_insert(q,h)    xntlist_insert((q),(h))
 #define xntimerq_remove(q, h)   xntlist_remove((q),(h))
@@ -169,10 +167,29 @@ typedef struct { } xntimerq_it_t;
 
 struct xnsched;
 
-typedef struct xntimer {
+struct xntimerdata {
+	xntimerq_t q;
+};
+
+static inline struct xntimerdata *
+xnclock_percpu_timerdata(struct xnclock *clock, int cpu)
+{
+	return per_cpu_ptr(clock->timerdata, cpu);
+}
+
+static inline struct xntimerdata *
+xnclock_this_timerdata(struct xnclock *clock)
+{
+	return __this_cpu_ptr(clock->timerdata);
+}
+
+struct xntimer {
+
+#ifdef CONFIG_XENO_OPT_EXTCLOCK
+	struct xnclock *clock;
+#endif
 
 	xntimerh_t aplink;	/* Link in timers list. */
-#define aplink2timer(ln) container_of(ln, xntimer_t, aplink)
 
 	struct list_head adjlink;
 
@@ -190,38 +207,87 @@ typedef struct xntimer {
 #ifdef CONFIG_XENO_OPT_STATS
 	char name[XNOBJECT_NAME_LEN]; /* !< Timer name to be displayed. */
 	const char *handler_name; /* !< Handler name to be displayed. */
-	struct list_head tblink; /* !< Timer holder in timebase. */
-#endif /* CONFIG_XENO_OPT_STATS */
-
+	struct list_head next_stat; /* !< Timer holder in timebase. */
 	xnstat_counter_t scheduled; /* !< Number of timer schedules. */
-
 	xnstat_counter_t fired; /* !< Number of timer events. */
+#endif /* CONFIG_XENO_OPT_STATS */
+};
 
-} xntimer_t;
+#ifdef CONFIG_XENO_OPT_EXTCLOCK
+
+static inline struct xnclock *xntimer_clock(struct xntimer *timer)
+{
+	return timer->clock;
+}
+
+#else /* !CONFIG_XENO_OPT_EXTCLOCK */
+
+static inline struct xnclock *xntimer_clock(struct xntimer *timer)
+{
+	return &nkclock;
+}
+
+#endif /* !CONFIG_XENO_OPT_EXTCLOCK */
 
 #ifdef CONFIG_SMP
-#define xntimer_sched(t)	((t)->sched)
+static inline struct xnsched *xntimer_sched(struct xntimer *timer)
+{
+	return timer->sched;
+}
 #else /* !CONFIG_SMP */
 #define xntimer_sched(t)	xnpod_current_sched()
 #endif /* !CONFIG_SMP */
-#define xntimer_interval(t)	((t)->interval)
-#define xntimer_pexpect(t)      ((t)->pexpect)
-#define xntimer_pexpect_forward(t,delta) ((t)->pexpect += delta)
 
-#define xntimer_set_priority(t, p)			\
-	do { xntimerh_prio(&(t)->aplink) = (p); } while(0)
+#define xntimer_percpu_queue(__timer)					\
+	({								\
+		struct xntimerdata *tmd;				\
+		int cpu = xnsched_cpu((__timer)->sched);		\
+		tmd = xnclock_percpu_timerdata(xntimer_clock(__timer), cpu); \
+		&tmd->q;						\
+	})
 
-static inline int xntimer_active_p (xntimer_t *timer)
+static inline xntimerq_t *xntimer_this_queue(struct xntimer *timer)
+{
+	struct xntimerdata *tmd;
+
+	tmd = xnclock_this_timerdata(xntimer_clock(timer));
+
+	return &tmd->q;
+}
+
+static inline xnticks_t xntimer_interval(struct xntimer *timer)
+{
+	return timer->interval;
+}
+
+static inline xnticks_t xntimer_pexpect(struct xntimer *timer)
+{
+	return timer->pexpect;
+}
+
+static inline xnticks_t xntimer_pexpect_forward(struct xntimer *timer,
+						xnticks_t delta)
+{
+	return timer->pexpect += delta;
+}
+
+static inline void xntimer_set_priority(struct xntimer *timer,
+					int prio)
+{
+	xntimerh_prio(&timer->aplink) = prio;
+}
+
+static inline int xntimer_active_p(struct xntimer *timer)
 {
 	return timer->sched != NULL;
 }
 
-static inline int xntimer_running_p(xntimer_t *timer)
+static inline int xntimer_running_p(struct xntimer *timer)
 {
 	return (timer->status & XNTIMER_DEQUEUED) == 0;
 }
 
-static inline int xntimer_reload_p(xntimer_t *timer)
+static inline int xntimer_reload_p(struct xntimer *timer)
 {
 	return (timer->status &
 		(XNTIMER_PERIODIC|XNTIMER_DEQUEUED|XNTIMER_KILLED)) ==
@@ -229,66 +295,98 @@ static inline int xntimer_reload_p(xntimer_t *timer)
 }
 
 #ifdef CONFIG_XENO_OPT_STATS
-#define xntimer_init(timer, handler)			\
+
+#define xntimer_init(timer, clock, handler)		\
 	do {						\
-		__xntimer_init(timer, handler);		\
+		__xntimer_init(timer, clock, handler);	\
 		(timer)->handler_name = #handler;	\
 	} while (0)
+
+static inline void xntimer_account_scheduled(struct xntimer *timer)
+{
+	xnstat_counter_inc(&timer->scheduled);
+}
+
+static inline void xntimer_account_fired(struct xntimer *timer)
+{
+	xnstat_counter_inc(&timer->fired);
+}
+
+static inline void xntimer_set_name(struct xntimer *timer, const char *name)
+{
+	strncpy(timer->name, name, sizeof(timer->name));
+}
+
 #else /* !CONFIG_XENO_OPT_STATS */
+
 #define xntimer_init	__xntimer_init
+
+static inline void xntimer_account_scheduled(struct xntimer *timer) { }
+
+static inline void xntimer_account_fired(struct xntimer *timer) { }
+
+static inline void xntimer_set_name(struct xntimer *timer, const char *name) { }
+
 #endif /* !CONFIG_XENO_OPT_STATS */
 
-#define xntimer_init_noblock(timer, handler)		\
+#define xntimer_init_noblock(timer, clock, handler)	\
 	do {						\
-		xntimer_init(timer, handler);		\
+		xntimer_init(timer, clock, handler);	\
 		(timer)->status |= XNTIMER_NOBLCK;	\
 	} while(0)
 
 void __xntimer_init(struct xntimer *timer,
+		    struct xnclock *clock,
 		    void (*handler)(struct xntimer *timer));
 
-void xntimer_destroy(xntimer_t *timer);
-
-static inline void xntimer_set_name(xntimer_t *timer, const char *name)
-{
-#ifdef CONFIG_XENO_OPT_STATS
-	strncpy(timer->name, name, sizeof(timer->name));
-#endif /* CONFIG_XENO_OPT_STATS */
-}
-
-void xntimer_next_local_shot(struct xnsched *sched);
+void xntimer_destroy(struct xntimer *timer);
 
 /*!
  * \addtogroup timer
  *@{ */
 
-int xntimer_start(xntimer_t *timer,
+int xntimer_start(struct xntimer *timer,
 		  xnticks_t value,
 		  xnticks_t interval,
 		  xntmode_t mode);
 
-void __xntimer_stop(xntimer_t *timer);
+void __xntimer_stop(struct xntimer *timer);
 
-xnticks_t xntimer_get_date(xntimer_t *timer);
+xnticks_t xntimer_get_date(struct xntimer *timer);
 
-xnticks_t xntimer_get_timeout(xntimer_t *timer);
+xnticks_t xntimer_get_timeout(struct xntimer *timer);
 
-xnticks_t xntimer_get_interval(xntimer_t *timer);
+xnticks_t xntimer_get_interval(struct xntimer *timer);
 
-static inline void xntimer_stop(xntimer_t *timer)
+static inline void xntimer_stop(struct xntimer *timer)
 {
 	if ((timer->status & XNTIMER_DEQUEUED) == 0)
 		__xntimer_stop(timer);
 }
 
-static inline xnticks_t xntimer_get_timeout_stopped(xntimer_t *timer)
+static inline xnticks_t xntimer_get_timeout_stopped(struct xntimer *timer)
 {
 	return xntimer_get_timeout(timer);
 }
 
-static inline xnticks_t xntimer_get_expiry(xntimer_t *timer)
+static inline xnticks_t xntimer_get_expiry(struct xntimer *timer)
 {
 	return xntimerh_date(&timer->aplink);
+}
+
+static inline void xntimer_enqueue(struct xntimer *timer,
+				   xntimerq_t *q)
+{
+	xntimerq_insert(q, &timer->aplink);
+	timer->status &= ~XNTIMER_DEQUEUED;
+	xntimer_account_scheduled(timer);
+}
+
+static inline void xntimer_dequeue(struct xntimer *timer,
+				   xntimerq_t *q)
+{
+	xntimerq_remove(q, &timer->aplink);
+	timer->status |= XNTIMER_DEQUEUED;
 }
 
 /*@}*/
@@ -297,23 +395,17 @@ void xntimer_init_proc(void);
 
 void xntimer_cleanup_proc(void);
 
-unsigned long xntimer_get_overruns(xntimer_t *timer, xnticks_t now);
-
-void xntimer_freeze(void);
-
-void xntimer_tick(void);
-
-void xntimer_adjust_all(xnsticks_t delta);
+unsigned long xntimer_get_overruns(struct xntimer *timer, xnticks_t now);
 
 #ifdef CONFIG_SMP
-int xntimer_migrate(xntimer_t *timer, struct xnsched *sched);
+int xntimer_migrate(struct xntimer *timer, struct xnsched *sched);
 #else /* ! CONFIG_SMP */
 #define xntimer_migrate(timer, sched)	do { } while(0)
 #endif /* CONFIG_SMP */
 
 #define xntimer_set_sched(timer, sched)	xntimer_migrate(timer, sched)
 
-char *xntimer_format_time(xnticks_t value,
+char *xntimer_format_time(xnticks_t ns,
 			  char *buf, size_t bufsz);
 
 int xntimer_grab_hardware(int cpu);

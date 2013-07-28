@@ -237,4 +237,11 @@ static inline bheaph_t *__internal_bheap_get(bheap_t *heap)
 	return holder;
 }
 
+#define bheap_empty(heap)				\
+	({						\
+		bheap_t *_bheap = &(heap)->bheap;	\
+		BHEAP_CHECK(_bheap);			\
+		_bheap->last == 1;			\
+	})
+
 #endif /* _COBALT_KERNEL_BHEAP_H */

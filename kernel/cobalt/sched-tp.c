@@ -61,7 +61,7 @@ static void tp_schedule_next(struct xnsched_tp *tp)
 		 */
 		for (;;) {
 			t = tp->tf_start + tp->gps->tf_duration;
-			if (xnclock_read_monotonic() > t) {
+			if (xnclock_read_monotonic(&nkclock) > t) {
 				tp->tf_start = t;
 				tp->wnext = 0;
 			} else
@@ -104,7 +104,7 @@ static void xnsched_tp_init(struct xnsched *sched)
 	tp->tps = NULL;
 	tp->gps = NULL;
 	INIT_LIST_HEAD(&tp->threads);
-	xntimer_init_noblock(&tp->tf_timer, tp_tick_handler);
+	xntimer_init_noblock(&tp->tf_timer, &nkclock, tp_tick_handler);
 	xntimer_set_name(&tp->tf_timer, "tp-tick");
 }
 
@@ -221,7 +221,7 @@ void xnsched_tp_start_schedule(struct xnsched *sched)
 	struct xnsched_tp *tp = &sched->tp;
 
 	tp->wnext = 0;
-	tp->tf_start = xnclock_read_monotonic();
+	tp->tf_start = xnclock_read_monotonic(&nkclock);
 	tp_schedule_next(&sched->tp);
 }
 EXPORT_SYMBOL_GPL(xnsched_tp_start_schedule);

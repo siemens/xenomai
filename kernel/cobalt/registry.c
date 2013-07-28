@@ -111,7 +111,7 @@ int xnregistry_init(void)
 ((n) < sizeof(primes) / sizeof(int) ? \
  (n) : sizeof(primes) / sizeof(int) - 1)
 
-	int n, ret;
+	int n, ret __maybe_unused;
 
 	registry_obj_slots = kmalloc(CONFIG_XENO_OPT_REGISTRY_NRSLOTS *
 				     sizeof(struct xnobject), GFP_KERNEL);
@@ -791,7 +791,7 @@ int xnregistry_bind(const char *key, xnticks_t timeout, int timeout_mode,
 	if (timeout_mode == XN_RELATIVE &&
 	    timeout != XN_INFINITE && timeout != XN_NONBLOCK) {
 		timeout_mode = XN_REALTIME;
-		timeout += xnclock_read_monotonic();
+		timeout += xnclock_read_monotonic(&nkclock);
 	}
 
 	for (;;) {

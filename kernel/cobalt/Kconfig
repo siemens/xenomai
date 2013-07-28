@@ -110,7 +110,7 @@ config XENO_OPT_SCHED_SPORADIC_MAXREPL
 	sporadic scheduling (system minimum is 4).
 
 config XENO_OPT_STATS
-	bool "Statistics collection"
+	bool "Runtime statistics"
 	depends on XENO_OPT_VFILE
 	default y
 	help
@@ -207,6 +207,9 @@ config XENO_OPT_PIPE
 
 config XENO_OPT_MAP
 	bool
+
+config XENO_OPT_EXTCLOCK
+       bool
 
 config XENO_OPT_COBALT_EXTENSION
        bool

@@ -549,7 +549,7 @@ ssize_t xnpipe_recv(int minor, struct xnpipe_mh **pmh, xnticks_t timeout)
 	mode = XN_RELATIVE;
 	if (timeout != XN_NONBLOCK && timeout != XN_INFINITE) {
 		mode = XN_ABSOLUTE;
-		timeout += xnclock_read_monotonic();
+		timeout += xnclock_read_monotonic(&nkclock);
 	}
 
 	for (;;) {

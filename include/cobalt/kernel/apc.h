@@ -73,9 +73,7 @@ static inline void xnapc_schedule(int apc)
 	ipipe_restore_head(flags);
 }
 
-int xnapc_init(void);
-
-void xnapc_cleanup(void);
+void apc_dispatch(unsigned int virq, void *arg);
 
 /*@}*/
 

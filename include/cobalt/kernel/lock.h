@@ -95,6 +95,8 @@ int xnlock_dbg_release(struct xnlock *lock,
 			 const char *file, int line,
 			 const char *function);
 
+extern struct xnlockinfo xnlock_stats[];
+
 #else /* !XENO_DEBUG(XNLOCK) */
 
 struct xnlock {

@@ -59,8 +59,8 @@ static inline void ticks2tv(struct timeval *tv, xnticks_t ticks)
 static inline xnticks_t clock_get_ticks(clockid_t clock_id)
 {
 	return clock_id == CLOCK_REALTIME ?
-		xnclock_read() :
-		xnclock_read_monotonic();
+		xnclock_read_realtime(&nkclock) :
+		xnclock_read_monotonic(&nkclock);
 }
 
 static inline int clock_flag(int flag, clockid_t clock_id)

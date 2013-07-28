@@ -1,4 +1,5 @@
 #include <linux/vmalloc.h>
+#include <linux/semaphore.h>
 #include <cobalt/kernel/pod.h>
 #include <cobalt/kernel/synch.h>
 #include <cobalt/kernel/thread.h>

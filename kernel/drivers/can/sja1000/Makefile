@@ -12,7 +12,8 @@ obj-$(CONFIG_XENO_DRIVERS_CAN_SJA1000_ESD_PCI) += xeno_can_esd_pci.o
 obj-$(CONFIG_XENO_DRIVERS_CAN_SJA1000_ISA) += xeno_can_isa.o
 obj-$(CONFIG_XENO_DRIVERS_CAN_SJA1000_MEM) += xeno_can_mem.o
 
-xeno_can_sja1000-y := rtcan_sja1000.o rtcan_sja1000_proc.o
+xeno_can_sja1000-y := rtcan_sja1000.o
+xeno_can_sja1000-$(CONFIG_FS_PROCFS) += rtcan_sja1000_proc.o
 xeno_can_peak_pci-y := rtcan_peak_pci.o
 xeno_can_peak_dng-y := rtcan_peak_dng.o
 xeno_can_plx_pci-y := rtcan_plx_pci.o

@@ -603,12 +603,12 @@ static inline void rtdm_context_put(struct rtdm_dev_context *context)
 /* --- clock services --- */
 static inline nanosecs_abs_t rtdm_clock_read(void)
 {
-	return xnclock_read();
+	return xnclock_read_realtime(&nkclock);
 }
 
 static inline nanosecs_abs_t rtdm_clock_read_monotonic(void)
 {
-	return xnclock_read_monotonic();
+	return xnclock_read_monotonic(&nkclock);
 }
 #endif /* !DOXYGEN_CPP */
 
@@ -994,7 +994,7 @@ static inline void rtdm_nrtsig_pend(rtdm_nrtsig_t *nrt_sig)
  * @{
  */
 
-typedef xntimer_t rtdm_timer_t;
+typedef struct xntimer rtdm_timer_t;
 
 /**
  * Timer handler
@@ -1025,7 +1025,7 @@ enum rtdm_timer_mode {
 #ifndef DOXYGEN_CPP /* Avoid broken doxygen output */
 #define rtdm_timer_init(timer, handler, name)		\
 ({							\
-	xntimer_init((timer), &handler);		\
+	xntimer_init((timer), &nkclock, &handler);	\
 	xntimer_set_name((timer), (name));		\
 	0;						\
 })

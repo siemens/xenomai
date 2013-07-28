@@ -54,4 +54,9 @@ void __xnlock_spin(struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
 EXPORT_SYMBOL_GPL(__xnlock_spin);
 #endif /* CONFIG_SMP || XENO_DEBUG(XNLOCK) */
 
+#if XENO_DEBUG(XNLOCK)
+struct xnlockinfo xnlock_stats[NR_CPUS];
+EXPORT_SYMBOL_GPL(xnlock_stats);
+#endif
+
 /*@}*/

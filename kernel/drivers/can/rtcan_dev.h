@@ -31,6 +31,7 @@
 
 #include <asm/atomic.h>
 #include <linux/netdevice.h>
+#include <linux/semaphore.h>
 
 #include "rtcan_list.h"
 

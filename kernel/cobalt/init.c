@@ -33,9 +33,9 @@
 #include <cobalt/kernel/pipe.h>
 #include <cobalt/kernel/select.h>
 #include <cobalt/kernel/vdso.h>
-#include <asm/xenomai/calibration.h>
 #include "rtdm/internal.h"
 #include "posix/internal.h"
+#include "procfs.h"
 
 MODULE_DESCRIPTION("Xenomai nucleus");
 MODULE_AUTHOR("rpm@xenomai.org");
@@ -73,11 +73,6 @@ static int __init mach_setup(void)
 {
 	int ret, virq, __maybe_unused cpu;
 	struct ipipe_sysinfo sysinfo;
-
-	if (disable_arg) {
-		printk("Xenomai: disabled on kernel command line\n");
-		return -ENOSYS;
-	}
 
 #ifdef CONFIG_SMP
 	cpus_clear(xnarch_machdata.supported_cpus);
@@ -118,13 +113,18 @@ static int __init mach_setup(void)
 	ret = -EBUSY;
 	virq = ipipe_alloc_virq();
 	if (virq == 0)
-		goto cleanup;
+		goto fail_apc;
 
 	xnarch_machdata.apc_virq = virq;
 
+	ipipe_request_irq(ipipe_root_domain,
+			  xnarch_machdata.apc_virq,
+			  apc_dispatch,
+			  NULL, NULL);
+
 	virq = ipipe_alloc_virq();
 	if (virq == 0)
-		goto fail_virq;
+		goto fail_escalate;
 
 	xnarch_machdata.escalate_virq = virq;
 
@@ -133,14 +133,23 @@ static int __init mach_setup(void)
 			  (ipipe_irq_handler_t)__xnpod_schedule_handler,
 			  NULL, NULL);
 
-	xnclock_init(xnarch_machdata.clock_freq);
+	ret = xnclock_init(xnarch_machdata.clock_freq);
+	if (ret)
+		goto fail_clock;
 
 	return 0;
 
-fail_virq:
-	ipipe_free_virq(virq);
+fail_clock:
+	ipipe_free_irq(&xnarch_machdata.domain,
+		       xnarch_machdata.escalate_virq);
+	ipipe_free_virq(xnarch_machdata.escalate_virq);
+fail_escalate:
+	ipipe_free_irq(ipipe_root_domain,
+		       xnarch_machdata.apc_virq);
+	ipipe_free_virq(xnarch_machdata.apc_virq);
+fail_apc:
+	ipipe_unregister_head(&xnarch_machdata.domain);
 
-cleanup:
 	if (xnarch_machdesc.cleanup)
 		xnarch_machdesc.cleanup();
 
@@ -150,44 +159,41 @@ cleanup:
 static __init void mach_cleanup(void)
 {
 	ipipe_unregister_head(&xnarch_machdata.domain);
-	ipipe_free_irq(&xnarch_machdata.domain, xnarch_machdata.escalate_virq);
+	ipipe_free_irq(&xnarch_machdata.domain,
+		       xnarch_machdata.escalate_virq);
 	ipipe_free_virq(xnarch_machdata.escalate_virq);
 	ipipe_timers_release();
+	xnclock_cleanup();
 }
 
 static int __init xenomai_init(void)
 {
 	int ret;
 
-	ret = mach_setup();
+	if (disable_arg) {
+		printk(XENO_WARN "disabled on kernel command line\n");
+		return -ENOSYS;
+	}
+
+	xnsched_register_classes();
+
+	ret = xnprocfs_init_tree();
 	if (ret)
 		goto fail;
 
-	ret = xnapc_init();
+	ret = mach_setup();
+	if (ret)
+		goto cleanup_proc;
+
+	ret = xnheap_mount();
 	if (ret)
 		goto cleanup_mach;
 
-	nktimerlat = xnarch_timer_calibrate();
-	nklatency = xnclock_ns_to_ticks(xnarch_get_sched_latency()) + nktimerlat;
-
-	ret = xnheap_init_mapped(&__xnsys_global_ppd.sem_heap,
-				 CONFIG_XENO_OPT_GLOBAL_SEM_HEAPSZ * 1024,
-				 XNARCH_SHARED_HEAP_FLAGS);
-	if (ret)
-		goto cleanup_apc;
-
-	xnheap_set_label(&__xnsys_global_ppd.sem_heap, "global sem heap");
-
-	xnheap_init_vdso();
-
-	xnpod_mount();
 	xnintr_mount();
 
-#ifdef CONFIG_XENO_OPT_PIPE
 	ret = xnpipe_mount();
 	if (ret)
-		goto cleanup_proc;
-#endif /* CONFIG_XENO_OPT_PIPE */
+		goto cleanup_heap;
 
 	ret = xnselect_mount();
 	if (ret)
@@ -196,10 +202,6 @@ static int __init xenomai_init(void)
 	ret = xnshadow_mount();
 	if (ret)
 		goto cleanup_select;
-
-	ret = xnheap_mount();
-	if (ret)
-		goto cleanup_shadow;
 
 	ret = xnpod_init();
 	if (ret)
@@ -222,35 +224,22 @@ static int __init xenomai_init(void)
 
 cleanup_rtdm:
 	rtdm_cleanup();
-
 cleanup_pod:
 	xnpod_shutdown(XNPOD_FATAL_EXIT);
-
 cleanup_shadow:
 	xnshadow_cleanup();
-
 cleanup_select:
 	xnselect_umount();
-
 cleanup_pipe:
-
-#ifdef CONFIG_XENO_OPT_PIPE
 	xnpipe_umount();
-
-cleanup_proc:
-
-#endif /* CONFIG_XENO_OPT_PIPE */
-
-	xnpod_umount();
-
-cleanup_apc:
-	xnapc_cleanup();
-
+cleanup_heap:
+	xnheap_umount();
 cleanup_mach:
 	mach_cleanup();
+cleanup_proc:
+	xnprocfs_cleanup_tree();
 fail:
-
-	printk(XENO_ERR "Cobalt init failed, code %d\n", ret);
+	printk(XENO_ERR "init failed, code %d\n", ret);
 
 	return ret;
 }

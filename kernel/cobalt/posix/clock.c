@@ -92,7 +92,7 @@ static int do_clock_host_realtime(struct timespec *tp)
 	 * not possible.
 	 */
 	unsynced_read_block(&tmp, &hostrt_data->lock) {
-		now = xnclock_read_raw();
+		now = xnclock_read_raw(&nkclock);
 		base = hostrt_data->cycle_last;
 		mask = hostrt_data->mask;
 		mult = hostrt_data->mult;
@@ -150,12 +150,12 @@ int cobalt_clock_gettime(clockid_t clock_id, struct timespec __user *u_ts)
 
 	switch (clock_id) {
 	case CLOCK_REALTIME:
-		ns2ts(&ts, xnclock_read());
+		ns2ts(&ts, xnclock_read_realtime(&nkclock));
 		break;
 
 	case CLOCK_MONOTONIC:
 	case CLOCK_MONOTONIC_RAW:
-		cpu_time = xnclock_read_monotonic();
+		cpu_time = xnclock_read_monotonic(&nkclock);
 		ts.tv_sec =
 			xnarch_uldivrem(cpu_time, ONE_BILLION, &ts.tv_nsec);
 		break;
@@ -189,8 +189,8 @@ int cobalt_clock_settime(clockid_t clock_id, const struct timespec __user *u_ts)
 		return -EINVAL;
 
 	xnlock_get_irqsave(&nklock, s);
-	now = xnclock_read();
-	xnclock_adjust((xnsticks_t) (ts2ns(&ts) - now));
+	now = xnclock_read_realtime(&nkclock);
+	xnclock_adjust(&nkclock, (xnsticks_t) (ts2ns(&ts) - now));
 	xnlock_put_irqrestore(&nklock, s);
 
 	return 0;
