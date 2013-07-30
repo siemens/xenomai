@@ -2018,6 +2018,8 @@ int xnpod_enable_timesource(void)
 
 	trace_mark(xn_nucleus, enable_timesource, MARK_NOARGS);
 
+	xnlock_put_irqrestore(&nklock, s);
+
 #ifdef CONFIG_XENO_OPT_STATS
 	/*
 	 * Only for statistical purpose, the timer interrupt is
@@ -2026,8 +2028,6 @@ int xnpod_enable_timesource(void)
 	xnintr_init(&nktimer, "[timer]",
 		    per_cpu(ipipe_percpu.hrtimer_irq, 0), NULL, NULL, 0);
 #endif /* CONFIG_XENO_OPT_STATS */
-
-	xnlock_put_irqrestore(&nklock, s);
 
 	nkclock.wallclock_offset =
 		xnclock_get_host_time() - xnclock_read_monotonic(&nkclock);

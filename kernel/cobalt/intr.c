@@ -51,35 +51,38 @@ static int xnintr_list_rev;  /* Modification counter of xnintr list */
  * This guarantees that module.c::stat_seq_open() won't get
  * an up-to-date xnintr_list_rev and old xnintr_count. */
 
-static inline void xnintr_stat_counter_inc(void)
+static inline void stat_counter_inc(void)
 {
 	xnintr_count++;
 	smp_mb();
 	xnintr_list_rev++;
 }
 
-static inline void xnintr_stat_counter_dec(void)
+static inline void stat_counter_dec(void)
 {
 	xnintr_count--;
 	smp_mb();
 	xnintr_list_rev++;
 }
 
-static inline void xnintr_sync_stat_references(xnintr_t *intr)
+static inline void sync_stat_references(struct xnintr *intr)
 {
+	struct xnirqstat *statp;
+	struct xnsched *sched;
 	int cpu;
 
 	for_each_online_cpu(cpu) {
-		struct xnsched *sched = xnpod_sched_slot(cpu);
+		sched = xnpod_sched_slot(cpu);
+		statp = per_cpu_ptr(intr->stats, cpu);
 		/* Synchronize on all dangling references to go away. */
-		while (sched->current_account == &intr->stat[cpu].account)
+		while (sched->current_account == &statp->account)
 			cpu_relax();
 	}
 }
 #else
-static inline void xnintr_stat_counter_inc(void) {}
-static inline void xnintr_stat_counter_dec(void) {}
-static inline void xnintr_sync_stat_references(xnintr_t *intr) {}
+static inline void stat_counter_inc(void) {}
+static inline void stat_counter_dec(void) {}
+static inline void sync_stat_references(xnintr_t *intr) {}
 #endif /* CONFIG_XENO_OPT_STATS */
 
 static void xnintr_irq_handler(unsigned irq, void *cookie);
@@ -100,10 +103,12 @@ void xnintr_core_clock_handler(void)
 {
 	struct xnsched *sched = xnpod_current_sched();
 	int cpu  __maybe_unused = xnsched_cpu(sched);
+	struct xnirqstat *statp;
 	xnstat_exectime_t *prev;
 
-	prev = xnstat_exectime_switch(sched, &nktimer.stat[cpu].account);
-	xnstat_counter_inc(&nktimer.stat[cpu].hits);
+	statp = __this_cpu_ptr(nktimer.stats);
+	prev = xnstat_exectime_switch(sched, &statp->account);
+	xnstat_counter_inc(&statp->hits);
 
 	trace_mark(xn_nucleus, irq_enter, "irq %u",
 		   per_cpu(ipipe_percpu.hrtimer_irq, cpu));
@@ -172,6 +177,7 @@ static void xnintr_shirq_handler(unsigned irq, void *cookie)
 {
 	struct xnsched *sched = xnpod_current_sched();
 	xnintr_irq_t *shirq = &xnirqs[irq];
+	struct xnirqstat *statp;
 	xnstat_exectime_t *prev;
 	xnticks_t start;
 	xnintr_t *intr;
@@ -196,11 +202,9 @@ static void xnintr_shirq_handler(unsigned irq, void *cookie)
 		s |= ret;
 
 		if (ret & XN_ISR_HANDLED) {
-			xnstat_counter_inc(
-				&intr->stat[xnsched_cpu(sched)].hits);
-			xnstat_exectime_lazy_switch(sched,
-				&intr->stat[xnsched_cpu(sched)].account,
-				start);
+			statp = __this_cpu_ptr(intr->stats);
+			xnstat_counter_inc(&statp->hits);
+			xnstat_exectime_lazy_switch(sched, &statp->account, start);
 			start = xnstat_exectime_now();
 		}
 
@@ -244,6 +248,7 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 	xnintr_irq_t *shirq = &xnirqs[irq];
 	int s = 0, counter = 0, ret, code;
 	struct xnintr *intr, *end = NULL;
+	struct xnirqstat *statp;
 	xnstat_exectime_t *prev;
 	xnticks_t start;
 
@@ -258,8 +263,8 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 	intr = shirq->handlers;
 
 	while (intr != end) {
-		xnstat_exectime_switch(sched,
-			&intr->stat[xnsched_cpu(sched)].account);
+		statp = __this_cpu_ptr(intr->stats);
+		xnstat_exectime_switch(sched, &statp->account);
 		/*
 		 * NOTE: We assume that no CPU migration will occur
 		 * while running the interrupt service routine.
@@ -270,11 +275,8 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 
 		if (code == XN_ISR_HANDLED) {
 			end = NULL;
-			xnstat_counter_inc(
-				&intr->stat[xnsched_cpu(sched)].hits);
-			xnstat_exectime_lazy_switch(sched,
-				&intr->stat[xnsched_cpu(sched)].account,
-				start);
+			xnstat_counter_inc(&statp->hits);
+			xnstat_exectime_lazy_switch(sched, &statp->account, start);
 			start = xnstat_exectime_now();
 		} else if (end == NULL)
 			end = intr;
@@ -375,7 +377,7 @@ static inline void xnintr_irq_detach(xnintr_t *intr)
 			*p = e->next;
 			xnlock_put(&shirq->lock);
 
-			xnintr_sync_stat_references(intr);
+			sync_stat_references(intr);
 
 			/* Release the IRQ line if this was the last user */
 			if (shirq->handlers == NULL)
@@ -427,7 +429,7 @@ static inline void xnintr_irq_detach(xnintr_t *intr)
 	ipipe_free_irq(&xnarch_machdata.domain, irq);
 	xnlock_put(&xnirqs[irq].lock);
 
-	xnintr_sync_stat_references(intr);
+	sync_stat_references(intr);
 }
 
 #endif /* !CONFIG_XENO_OPT_SHIRQ */
@@ -439,6 +441,7 @@ static inline void xnintr_irq_detach(xnintr_t *intr)
 static void xnintr_irq_handler(unsigned irq, void *cookie)
 {
 	struct xnsched *sched = xnpod_current_sched();
+	struct xnirqstat *statp;
 	xnstat_exectime_t *prev;
 	struct xnintr *intr;
 	xnticks_t start;
@@ -478,10 +481,9 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 			s |= XN_ISR_NOENABLE;
 		}
 	} else {
-		xnstat_counter_inc(&intr->stat[xnsched_cpu(sched)].hits);
-		xnstat_exectime_lazy_switch(sched,
-			&intr->stat[xnsched_cpu(sched)].account,
-			start);
+		statp = __this_cpu_ptr(intr->stats);
+		xnstat_counter_inc(&statp->hits);
+		xnstat_exectime_lazy_switch(sched, &statp->account, start);
 		intr->unhandled = 0;
 	}
 
@@ -511,6 +513,17 @@ int __init xnintr_mount(void)
 	for (i = 0; i < IPIPE_NR_IRQS; ++i)
 		xnlock_init(&xnirqs[i].lock);
 	return 0;
+}
+
+static void clear_irqstats(struct xnintr *intr)
+{
+	struct xnirqstat *p;
+	int cpu;
+
+	for_each_online_cpu(cpu) {
+		p = per_cpu_ptr(intr->stats, cpu);
+		memset(p, 0, sizeof(*p));
+	}
 }
 
 /*!
@@ -616,10 +629,12 @@ int __init xnintr_mount(void)
  * Rescheduling: never.
  */
 
-int xnintr_init(xnintr_t *intr,
-		const char *name,
-		unsigned int irq, xnisr_t isr, xniack_t iack, int flags)
+int xnintr_init(xnintr_t *intr, const char *name,
+		unsigned int irq, xnisr_t isr, xniack_t iack,
+		int flags)
 {
+	XENO_BUGON(NUCLEUS, !ipipe_root_p);
+
 	if (irq >= IPIPE_NR_IRQS)
 		return -EINVAL;
 
@@ -630,10 +645,11 @@ int xnintr_init(xnintr_t *intr,
 	intr->name = name ? : "<unknown>";
 	intr->flags = flags;
 	intr->unhandled = 0;
-	memset(&intr->stat, 0, sizeof(intr->stat));
 #ifdef CONFIG_XENO_OPT_SHIRQ
 	intr->next = NULL;
 #endif
+	intr->stats = alloc_percpu(struct xnirqstat);
+	clear_irqstats(intr);
 
 	return 0;
 }
@@ -667,7 +683,17 @@ EXPORT_SYMBOL_GPL(xnintr_init);
 
 int xnintr_destroy(xnintr_t *intr)
 {
-	return xnintr_detach(intr);
+	int ret;
+
+	XENO_BUGON(NUCLEUS, !ipipe_root_p);
+
+	ret = xnintr_detach(intr);
+	if (ret)
+		return ret;
+
+	free_percpu(intr->stats);
+
+	return 0;
 }
 EXPORT_SYMBOL_GPL(xnintr_destroy);
 
@@ -719,7 +745,7 @@ int xnintr_attach(xnintr_t *intr, void *cookie)
 		   intr->irq, intr->name);
 
 	intr->cookie = cookie;
-	memset(&intr->stat, 0, sizeof(intr->stat));
+	clear_irqstats(intr);
 
 #ifdef CONFIG_SMP
 	ipipe_set_irq_affinity(intr->irq, nkaffinity);
@@ -737,7 +763,7 @@ int xnintr_attach(xnintr_t *intr, void *cookie)
 		goto out;
 
 	intr->flags |= XN_ISR_ATTACHED;
-	xnintr_stat_counter_inc();
+	stat_counter_inc();
 out:
 	xnlock_put_irqrestore(&intrlock, s);
 
@@ -792,7 +818,7 @@ int xnintr_detach(xnintr_t *intr)
 
 	intr->flags &= ~XN_ISR_ATTACHED;
 	xnintr_irq_detach(intr);
-	xnintr_stat_counter_dec();
+	stat_counter_dec();
  out:
 	xnlock_put_irqrestore(&intrlock, s);
 
@@ -921,6 +947,7 @@ int xnintr_query_init(xnintr_iterator_t *iterator)
 
 int xnintr_query_next(int irq, xnintr_iterator_t *iterator, char *name_buf)
 {
+	struct xnirqstat *statp;
 	xnticks_t last_switch;
 	int ret = 0, cpu;
 	xnintr_t *intr;
@@ -958,18 +985,15 @@ int xnintr_query_next(int irq, xnintr_iterator_t *iterator, char *name_buf)
 
 	snprintf(name_buf, XNOBJECT_NAME_LEN, "IRQ%d: %s", irq, intr->name);
 
-	iterator->hits = xnstat_counter_get(&intr->stat[cpu].hits);
-
+	statp = per_cpu_ptr(intr->stats, cpu);
+	iterator->hits = xnstat_counter_get(&statp->hits);
 	last_switch = xnpod_sched_slot(cpu)->last_account_switch;
-
-	iterator->exectime_period = intr->stat[cpu].account.total;
-	iterator->account_period =
-		last_switch - intr->stat[cpu].account.start;
-	intr->stat[cpu].sum.total += iterator->exectime_period;
-	iterator->exectime_total = intr->stat[cpu].sum.total;
-
-	intr->stat[cpu].account.total = 0;
-	intr->stat[cpu].account.start = last_switch;
+	iterator->exectime_period = statp->account.total;
+	iterator->account_period = last_switch - statp->account.start;
+	statp->sum.total += iterator->exectime_period;
+	iterator->exectime_total = statp->sum.total;
+	statp->account.total = 0;
+	statp->account.start = last_switch;
 
 	/*
 	 * Proceed to next entry in shared IRQ chain when all CPUs
@@ -1059,8 +1083,8 @@ static int irq_vfile_show(struct xnvfile_regular_iterator *it,
 
 		for_each_online_cpu(cpu) {
 			xnvfile_printf(it, "%12lu",
-				       __ipipe_cpudata_irq_hits(&xnarch_machdata.domain, cpu,
-							      irq));
+		       __ipipe_cpudata_irq_hits(&xnarch_machdata.domain, cpu,
+					      irq));
 		}
 
 		format_irq_proc(irq, it);

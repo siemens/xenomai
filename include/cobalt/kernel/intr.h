@@ -46,32 +46,36 @@ typedef int (*xnisr_t)(struct xnintr *intr);
 
 typedef void (*xniack_t)(unsigned irq, void *arg);
 
+struct xnirqstat {
+	/* !< Number of handled receipts since attachment. */
+	xnstat_counter_t hits;
+	/* !< Runtime accounting entity */
+	xnstat_exectime_t account;
+	/* !< Accumulated accounting entity */
+	xnstat_exectime_t sum;
+};
+
 typedef struct xnintr {
-
 #ifdef CONFIG_XENO_OPT_SHIRQ
-    struct xnintr *next; /* !< Next object in the IRQ-sharing chain. */
+	/* !< Next object in the IRQ-sharing chain. */
+	struct xnintr *next;
 #endif /* CONFIG_XENO_OPT_SHIRQ */
-
-    unsigned unhandled;	/* !< Number of consequent unhandled interrupts */
-
-    xnisr_t isr;	/* !< Interrupt service routine. */
-
-    void *cookie;	/* !< User-defined cookie value. */
-
-    int flags;		/* !< Creation flags. */
-
-    unsigned irq;	/* !< IRQ number. */
-
-    xniack_t iack;	/* !< Interrupt acknowledge routine. */
-
-    const char *name;	/* !< Symbolic name. */
-
-    struct {
-	xnstat_counter_t hits;	  /* !< Number of handled receipts since attachment. */
-	xnstat_exectime_t account; /* !< Runtime accounting entity */
-	xnstat_exectime_t sum; /* !< Accumulated accounting entity */
-    } stat[NR_CPUS];
-
+	/* !< Number of consequent unhandled interrupts */
+	unsigned int unhandled;
+	/* !< Interrupt service routine. */
+	xnisr_t isr;
+	/* !< User-defined cookie value. */
+	void *cookie;
+	/* !< Creation flags. */
+	int flags;
+	/* !< IRQ number. */
+	unsigned int irq;
+	/* !< Interrupt acknowledge routine. */
+	xniack_t iack;
+	/* !< Symbolic name. */
+	const char *name;
+	/* !< Statistics. */
+	struct xnirqstat *stats;
 } xnintr_t;
 
 typedef struct xnintr_iterator {
