@@ -59,8 +59,7 @@ struct xnsynch;
 
 struct xnpod {
 	unsigned long status;	  /*!< Status bitmask. */
-	xnsched_t sched[NR_CPUS];	/*!< Per-cpu scheduler slots. */
-	struct list_head threadq;	/*!< All existing threads. */
+	struct list_head threadq; /*!< All existing threads. */
 	int nrthreads;
 #ifdef CONFIG_XENO_OPT_VFILE
 	struct xnvfile_rev_tag threadlist_tag;
@@ -92,16 +91,15 @@ void __xnpod_schedule(struct xnsched *sched);
 
 void __xnpod_schedule_handler(void);
 
-	/* -- Beginning of the exported interface */
-
 static inline struct xnsched *xnpod_sched_slot(int cpu)
 {
-	return nkpod->sched + cpu;
+	return &per_cpu(nksched, cpu);
 }
 
 static inline struct xnsched *xnpod_current_sched(void)
 {
-	return xnpod_sched_slot(ipipe_processor_id());
+	/* IRQs off */
+	return __this_cpu_ptr(&nksched);
 }
 
 static inline int xnpod_active_p(void)

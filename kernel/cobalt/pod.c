@@ -260,7 +260,7 @@ int xnpod_init(void)
 	xnheap_set_label(&kheap, "main heap");
 
 	for_each_online_cpu(cpu) {
-		sched = &pod->sched[cpu];
+		sched = &per_cpu(nksched, cpu);
 		xnsched_init(sched, cpu);
 		if (xnarch_cpu_supported(cpu)) {
 			list_add_tail(&sched->rootcb.glink, &pod->threadq);

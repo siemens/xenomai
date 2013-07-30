@@ -28,6 +28,7 @@
 /*! \addtogroup sched
  *@{*/
 
+#include <linux/percpu.h>
 #include <cobalt/kernel/thread.h>
 #include <cobalt/kernel/schedqueue.h>
 #include <cobalt/kernel/sched-tp.h>
@@ -92,6 +93,8 @@ typedef struct xnsched {
 	xnstat_exectime_t *current_account;	/*!< Currently active account */
 #endif
 } xnsched_t;
+
+DECLARE_PER_CPU(struct xnsched, nksched);
 
 union xnsched_policy_param;
 

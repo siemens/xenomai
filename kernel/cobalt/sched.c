@@ -30,6 +30,9 @@
 #include <cobalt/kernel/arith.h>
 #include <asm/xenomai/thread.h>
 
+DEFINE_PER_CPU(struct xnsched, nksched);
+EXPORT_PER_CPU_SYMBOL(nksched);
+
 static struct xnsched_class *xnsched_class_highest;
 
 #define for_each_xnsched_class(p) \
