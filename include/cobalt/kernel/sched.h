@@ -58,9 +58,9 @@ typedef struct xnsched {
 
 	unsigned long status;		/*!< Scheduler specific status bitmask. */
 	unsigned long lflags;		/*!< Scheduler specific local flags bitmask. */
-	int cpu;
 	struct xnthread *curr;		/*!< Current thread. */
 #ifdef CONFIG_SMP
+	int cpu;
 	cpumask_t resched;		/*!< Mask of CPUs needing rescheduling. */
 #endif
 	struct xnsched_rt rt;		/*!< Context of built-in real-time class. */

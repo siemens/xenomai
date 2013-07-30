@@ -121,20 +121,20 @@ void xnsched_init(struct xnsched *sched, int cpu)
 	struct xnthread_init_attr attr;
 	struct xnsched_class *p;
 
+#ifdef CONFIG_SMP
 	sched->cpu = cpu;
-
+	sprintf(htimer_name, "[host-timer/%u]", cpu);
+	sprintf(root_name, "ROOT/%u", cpu);
+	cpus_clear(sched->resched);
+#else
+	strcpy(htimer_name, "[host-timer]");
+	strcpy(root_name, "ROOT");
+#endif
 	for_each_xnsched_class(p) {
 		if (p->sched_init)
 			p->sched_init(sched);
 	}
 
-#ifdef CONFIG_SMP
-	sprintf(htimer_name, "[host-timer/%u]", cpu);
-	sprintf(root_name, "ROOT/%u", cpu);
-#else
-	strcpy(htimer_name, "[host-timer]");
-	strcpy(root_name, "ROOT");
-#endif
 	sched->status = 0;
 	sched->lflags = 0;
 	sched->inesting = 0;
@@ -149,9 +149,6 @@ void xnsched_init(struct xnsched *sched, int cpu)
 	xntimer_set_name(&sched->htimer, htimer_name);
 	xntimer_set_sched(&sched->htimer, sched);
 	sched->zombie = NULL;
-#ifdef CONFIG_SMP
-	cpus_clear(sched->resched);
-#endif
 
 	attr.flags = XNROOT | XNSTARTED | XNFPU;
 	attr.name = root_name;
