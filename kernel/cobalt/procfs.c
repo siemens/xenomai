@@ -39,7 +39,7 @@ static int lock_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 	for_each_online_cpu(cpu) {
 
 		xnlock_get_irqsave(&nklock, s);
-		lockinfo = xnlock_stats[cpu];
+		lockinfo = per_cpu(xnlock_stats, cpu);
 		xnlock_put_irqrestore(&nklock, s);
 
 		if (cpu > 0)
@@ -76,7 +76,7 @@ static ssize_t lock_vfile_store(struct xnvfile_input *input)
 
 	for_each_online_cpu(cpu) {
 		xnlock_get_irqsave(&nklock, s);
-		memset(&xnlock_stats[cpu], '\0', sizeof(xnlock_stats[cpu]));
+		memset(&per_cpu(xnlock_stats, cpu), '\0', sizeof(struct xnlockinfo));
 		xnlock_put_irqrestore(&nklock, s);
 	}
 

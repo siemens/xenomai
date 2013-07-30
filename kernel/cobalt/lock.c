@@ -55,8 +55,8 @@ EXPORT_SYMBOL_GPL(__xnlock_spin);
 #endif /* CONFIG_SMP || XENO_DEBUG(XNLOCK) */
 
 #if XENO_DEBUG(XNLOCK)
-struct xnlockinfo xnlock_stats[NR_CPUS];
-EXPORT_SYMBOL_GPL(xnlock_stats);
+DEFINE_PER_CPU(struct xnlockinfo, xnlock_stats);
+EXPORT_PER_CPU_SYMBOL(xnlock_stats);
 #endif
 
 /*@}*/

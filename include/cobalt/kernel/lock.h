@@ -25,6 +25,7 @@
 #define _COBALT_KERNEL_LOCK_H
 
 #include <linux/ipipe.h>
+#include <linux/percpu.h>
 #include <cobalt/kernel/assert.h>
 
 /** \addtogroup lock
@@ -95,7 +96,7 @@ int xnlock_dbg_release(struct xnlock *lock,
 			 const char *file, int line,
 			 const char *function);
 
-extern struct xnlockinfo xnlock_stats[];
+DECLARE_PER_CPU(struct xnlockinfo, xnlock_stats);
 
 #else /* !XENO_DEBUG(XNLOCK) */
 
