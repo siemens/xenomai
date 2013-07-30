@@ -157,7 +157,7 @@ static int faults_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 
 		for_each_online_cpu(cpu)
 			xnvfile_printf(it, "%12u",
-				       xnarch_machdata.faults[cpu][trap]);
+				       per_cpu(xnarch_percpu_machdata, cpu).faults[trap]);
 
 		xnvfile_printf(it, "    (%s)",
 			       xnarch_machdesc.fault_labels[trap]);
@@ -195,7 +195,7 @@ static int apc_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 
 		for_each_online_cpu(cpu)
 			xnvfile_printf(it, "%12lu",
-				       xnarch_machdata.apc_table[apc].hits[cpu]);
+				       per_cpu(xnarch_percpu_machdata, cpu).apc_shots[apc]);
 
 		if (xnarch_machdata.apc_table[apc].name)
 			xnvfile_printf(it, "    (%s)",

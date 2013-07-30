@@ -24,6 +24,7 @@
 #endif
 
 #include <linux/ipipe.h>
+#include <linux/percpu.h>
 #include <asm/byteorder.h>
 #include <asm/xenomai/wrappers.h>
 
@@ -40,21 +41,26 @@ struct xnarch_machdesc {
 
 extern struct xnarch_machdesc xnarch_machdesc;
 
+struct xnarch_percpu_machdata {
+	unsigned long apc_pending;
+	unsigned long apc_shots[BITS_PER_LONG];
+	unsigned int faults[IPIPE_NR_FAULTS];
+};
+
+DECLARE_PER_CPU(struct xnarch_percpu_machdata, xnarch_percpu_machdata);
+
 struct xnarch_machdata {
 	struct ipipe_domain domain;
 	unsigned long timer_freq;
 	unsigned long clock_freq;
 	unsigned int apc_virq;
 	unsigned long apc_map;
-	unsigned long apc_pending[NR_CPUS];
 	unsigned int escalate_virq;
 	struct {
 		void (*handler)(void *cookie);
 		void *cookie;
 		const char *name;
-		unsigned long hits[NR_CPUS];
 	} apc_table[BITS_PER_LONG];
-	unsigned int faults[NR_CPUS][IPIPE_NR_FAULTS];
 #ifdef CONFIG_SMP
 	cpumask_t supported_cpus;
 #endif

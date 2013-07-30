@@ -58,6 +58,9 @@ module_param_named(disable, disable_arg, ulong, 0444);
 struct xnarch_machdata xnarch_machdata;
 EXPORT_SYMBOL_GPL(xnarch_machdata);
 
+struct xnarch_percpu_machdata xnarch_percpu_machdata;
+EXPORT_PER_CPU_SYMBOL_GPL(xnarch_percpu_machdata);
+
 struct xnsys_ppd __xnsys_global_ppd = {
 	.exe_path = "vmlinux",
 };

@@ -44,27 +44,28 @@ static IPIPE_DEFINE_SPINLOCK(apc_lock);
 void apc_dispatch(unsigned int virq, void *arg)
 {
 	void (*handler)(void *), *cookie;
-	int apc, cpu;
-
-	spin_lock(&apc_lock);
-
-	cpu = ipipe_processor_id();
+	unsigned long *p;
+	int apc;
 
 	/*
-	 * <!> This loop is not protected against a handler becoming
-	 * unavailable while processing the pending queue; the
-	 * software must make sure to uninstall all APCs before
-	 * eventually unloading any module that may contain APC
+	 * CAUTION: The APC dispatch loop is not protected against a
+	 * handler becoming unavailable while processing the pending
+	 * queue; the software must make sure to uninstall all APCs
+	 * before eventually unloading any module that may contain APC
 	 * handlers. We keep the handler affinity with the poster's
 	 * CPU, so that the handler is invoked on the same CPU than
 	 * the code which called xnapc_schedule().
 	 */
-	while (xnarch_machdata.apc_pending[cpu]) {
-		apc = ffnz(xnarch_machdata.apc_pending[cpu]);
-		clear_bit(apc, &xnarch_machdata.apc_pending[cpu]);
+	spin_lock(&apc_lock);
+
+	/* This is atomic linux context (non-threaded IRQ). */
+	p = &__this_cpu_ptr(&xnarch_percpu_machdata)->apc_pending;
+	while (*p) {
+		apc = ffnz(*p);
+		clear_bit(apc, p);
 		handler = xnarch_machdata.apc_table[apc].handler;
 		cookie = xnarch_machdata.apc_table[apc].cookie;
-		xnarch_machdata.apc_table[apc].hits[cpu]++;
+		__this_cpu_ptr(&xnarch_percpu_machdata)->apc_shots[apc]++;
 		spin_unlock(&apc_lock);
 		handler(cookie);
 		spin_lock(&apc_lock);

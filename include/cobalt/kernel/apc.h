@@ -37,8 +37,9 @@ void xnapc_free(int apc);
 
 static inline void __xnapc_schedule(int apc)
 {
-	int cpu = ipipe_processor_id();
-	if (!__test_and_set_bit(apc, &xnarch_machdata.apc_pending[cpu]))
+	unsigned long *p = &__this_cpu_ptr(&xnarch_percpu_machdata)->apc_pending;
+
+	if (!__test_and_set_bit(apc, p))
 		ipipe_post_irq_root(xnarch_machdata.apc_virq);
 }
 

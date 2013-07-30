@@ -2463,15 +2463,20 @@ int ipipe_trap_hook(struct ipipe_trap_data *data)
 		return handle_mayday_event(data->regs);
 
 	/*
-	 * CAUTION: access faults must be propagated downstream
-	 * whichever domain caused them, so that we don't spuriously
-	 * raise a fatal error when some Linux fixup code is available
-	 * to solve the error condition.
+	 * No migration is possible on behalf of the head domain, so
+	 * the following access is safe.
 	 */
-	xnarch_machdata.faults[ipipe_processor_id()][data->exception]++;
+	__this_cpu_ptr(&xnarch_percpu_machdata)->faults[data->exception]++;
+
 	if (xnpod_handle_exception(data))
 		return EVENT_STOP;
 
+	/*
+	 * CAUTION: access faults must be propagated downstream
+	 * whichever domain caused them, so that we don't spuriously
+	 * raise a fatal error when some Linux fixup code is available
+	 * to recover from the fault.
+	 */
 	return EVENT_PROPAGATE;
 }
 
