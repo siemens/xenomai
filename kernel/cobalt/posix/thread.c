@@ -203,6 +203,7 @@ struct cobalt_thread *cobalt_thread_find(pid_t pid) /* nklocked, IRQs off */
 
 	return gslot ? gslot->thread : NULL;
 }
+EXPORT_SYMBOL_GPL(cobalt_thread_find);
 
 struct xnpersonality *cobalt_thread_exit(struct xnthread *curr)
 {

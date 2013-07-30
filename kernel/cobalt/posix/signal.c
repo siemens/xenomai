@@ -64,6 +64,7 @@ int cobalt_signal_deliver(struct cobalt_thread *thread,
 
 	return 1;
 }
+EXPORT_SYMBOL_GPL(cobalt_signal_deliver);
 
 int cobalt_signal_send(struct cobalt_thread *thread,
 		       struct cobalt_sigpending *sigp)
@@ -103,6 +104,7 @@ int cobalt_signal_send(struct cobalt_thread *thread,
 
 	return 0;
 }
+EXPORT_SYMBOL_GPL(cobalt_signal_send);
 
 int cobalt_signal_send_pid(pid_t pid, struct cobalt_sigpending *sigp)
 {				/* nklocked, IRQs off */
@@ -114,6 +116,7 @@ int cobalt_signal_send_pid(pid_t pid, struct cobalt_sigpending *sigp)
 
 	return -ESRCH;
 }
+EXPORT_SYMBOL_GPL(cobalt_signal_send_pid);
 
 int cobalt_signal_deliver_pid(pid_t pid, struct cobalt_sigpending *sigp)
 {				/* nklocked, IRQs off */
@@ -125,6 +128,7 @@ int cobalt_signal_deliver_pid(pid_t pid, struct cobalt_sigpending *sigp)
 
 	return -ESRCH;
 }
+EXPORT_SYMBOL_GPL(cobalt_signal_deliver_pid);
 
 struct cobalt_sigpending *cobalt_signal_alloc(void)
 {				/* nklocked, IRQs off */
@@ -138,6 +142,7 @@ struct cobalt_sigpending *cobalt_signal_alloc(void)
 
 	return sigp;
 }
+EXPORT_SYMBOL_GPL(cobalt_signal_alloc);
 
 void cobalt_signal_flush(struct cobalt_thread *thread)
 {
