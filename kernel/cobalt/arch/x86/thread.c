@@ -1,7 +1,6 @@
 /*
- * Copyright (C) 2001-2007 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2001-2013 Philippe Gerum <rpm@xenomai.org>.
  * Copyright (C) 2004-2006 Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>.
- * Copyright (C) 2004 The HYADES Project (http://www.hyades-itea.org).
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by

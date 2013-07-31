@@ -1,7 +1,4 @@
-/*!\file sched-idle.c
- * \author Philippe Gerum
- * \brief Idle scheduling class implementation (i.e. Linux placeholder).
- *
+/*
  * Copyright (C) 2008 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
@@ -18,10 +15,7 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- *
- * \ingroup sched
  */
-
 #include <cobalt/kernel/sched.h>
 
 static struct xnthread *xnsched_idle_pick(struct xnsched *sched)

@@ -65,6 +65,10 @@ struct xnclock {
 
 extern struct xnclock nkclock;
 
+extern unsigned long nktimerlat;
+
+extern atomic_t nkclklk;
+
 int xnclock_register(struct xnclock *clock);
 
 void xnclock_deregister(struct xnclock *clock);

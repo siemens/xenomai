@@ -37,7 +37,7 @@
 #include <linux/ipipe.h>
 #include <linux/ipipe_tickdev.h>
 #include <linux/sched.h>
-#include <cobalt/kernel/pod.h>
+#include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/thread.h>
 #include <cobalt/kernel/timer.h>
 #include <cobalt/kernel/intr.h>
@@ -156,7 +156,7 @@ int xntimer_start(struct xntimer *timer,
 	xntimer_enqueue(timer, q);
 	if (xntimer_heading_p(timer)) {
 		sched = xntimer_sched(timer);
-		if (sched != xnpod_current_sched())
+		if (sched != xnsched_current())
 			xnclock_remote_shot(clock, sched);
 		else
 			xnclock_program_shot(clock, sched);
@@ -204,7 +204,7 @@ void __xntimer_stop(struct xntimer *timer)
 	 * If we removed the heading timer, reprogram the next shot if
 	 * any. If the timer was running on another CPU, let it tick.
 	 */
-	if (heading && sched == xnpod_current_sched())
+	if (heading && sched == xnsched_current())
 		xnclock_program_shot(clock, sched);
 }
 EXPORT_SYMBOL_GPL(__xntimer_stop);
@@ -362,15 +362,15 @@ void __xntimer_init(struct xntimer *timer,
 	timer->status = XNTIMER_DEQUEUED;
 	timer->handler = handler;
 	timer->interval = 0;
-	timer->sched = xnpod_current_sched();
+	timer->sched = xnsched_current();
 
 #ifdef CONFIG_XENO_OPT_STATS
-	if (!xnpod_current_thread() || !xnpod_root_p())
+	if (!xnsched_current_thread() || !xnsched_root_p())
 		snprintf(timer->name, XNOBJECT_NAME_LEN, "%d/%s",
 			 current->pid, current->comm);
 	else
 		xnobject_copy_name(timer->name,
-				   xnpod_current_thread()->name);
+				   xnsched_current_thread()->name);
 
 	xnstat_counter_set(&timer->scheduled, 0);
 	xnstat_counter_set(&timer->fired, 0);
@@ -460,7 +460,7 @@ int xntimer_migrate(struct xntimer *timer, struct xnsched *sched)
 
 	queued = (timer->status & XNTIMER_DEQUEUED) == 0;
 	if (queued) {
-		if (timer->sched != xnpod_current_sched()) {
+		if (timer->sched != xnsched_current()) {
 			ret = -EINVAL;
 			goto unlock_and_exit;
 		}
@@ -579,7 +579,7 @@ static int program_htick_shot(unsigned long delay,
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	sched = xnpod_current_sched();
+	sched = xnsched_current();
 	ret = xntimer_start(&sched->htimer, delay, XN_INFINITE, XN_RELATIVE);
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -632,7 +632,7 @@ static void switch_htick_mode(enum clock_event_mode mode,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	sched = xnpod_current_sched();
+	sched = xnsched_current();
 
 	switch (mode) {
 	case CLOCK_EVT_MODE_PERIODIC:
@@ -769,7 +769,7 @@ static int timer_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 {
 	const char *tm_status, *wd_status = "";
 
-	tm_status = (nkpod->status & XNCLKLK) ? "locked" : "on";
+	tm_status = atomic_read(&nkclklk) > 0 ? "locked" : "on";
 #ifdef CONFIG_XENO_OPT_WATCHDOG
 	wd_status = "+watchdog";
 #endif /* CONFIG_XENO_OPT_WATCHDOG */

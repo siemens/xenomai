@@ -20,7 +20,7 @@
 #ifndef _RTDM_INTERNAL_H
 #define _RTDM_INTERNAL_H
 
-#include <cobalt/kernel/pod.h>
+#include <cobalt/kernel/sys.h>
 #include <cobalt/kernel/ppd.h>
 #include <rtdm/rtdm_driver.h>
 

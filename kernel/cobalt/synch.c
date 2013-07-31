@@ -1,7 +1,4 @@
-/*!\file synch.c
- * \brief Thread synchronization services.
- * \author Philippe Gerum
- *
+/**
  * Copyright (C) 2001-2008 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
@@ -19,19 +16,12 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  *
- * \ingroup synch
+ * @ingroup nucleus
+ * @defgroup synch Thread synchronization services.
+ * @{
  */
-
-/*!
- * \ingroup nucleus
- * \defgroup synch Thread synchronization services.
- *
- * Thread synchronization services.
- *
- *@{*/
-
 #include <stdarg.h>
-#include <cobalt/kernel/pod.h>
+#include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/synch.h>
 #include <cobalt/kernel/thread.h>
 #include <cobalt/kernel/clock.h>
@@ -77,8 +67,8 @@
  * wait queue should not be reordered whenever the priority of a
  * blocked thread it holds is changed. If this flag is not specified,
  * changing the priority of a blocked thread using
- * xnpod_set_thread_schedparam() will cause this object's wait queue
- * to be reordered according to the new priority level, provided the
+ * xnthread_set_schedparam() will cause this object's wait queue to be
+ * reordered according to the new priority level, provided the
  * synchronization object makes the waiters wait by priority order on
  * the awaited resource (XNSYNCH_PRIO).
  *
@@ -163,7 +153,7 @@ EXPORT_SYMBOL_GPL(xnsynch_init);
 int xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
 		     xntmode_t timeout_mode)
 {
-	struct xnthread *thread = xnpod_current_thread();
+	struct xnthread *thread = xnsched_current_thread();
 	spl_t s;
 
 	XENO_BUGON(NUCLEUS, synch->status & XNSYNCH_OWNER);
@@ -179,7 +169,7 @@ int xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
 	else /* i.e. priority-sorted */
 		list_add_priff(thread, &synch->pendq, wprio, plink);
 
-	xnpod_suspend_thread(thread, XNPEND, timeout, timeout_mode, synch);
+	xnthread_suspend(thread, XNPEND, timeout, timeout_mode, synch);
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -237,7 +227,7 @@ struct xnthread *xnsynch_wakeup_one_sleeper(struct xnsynch *synch)
 	trace_mark(xn_nucleus, synch_wakeup_one,
 		   "thread %p thread_name %s synch %p",
 		   thread, xnthread_name(thread), synch);
-	xnpod_resume_thread(thread, XNPEND);
+	xnthread_resume(thread, XNPEND);
 out:
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -266,7 +256,7 @@ int xnsynch_wakeup_many_sleepers(struct xnsynch *synch, int nr)
 		trace_mark(xn_nucleus, synch_wakeup_many,
 			   "thread %p thread_name %s synch %p",
 			   thread, xnthread_name(thread), synch);
-		xnpod_resume_thread(thread, XNPEND);
+		xnthread_resume(thread, XNPEND);
 	}
 out:
 	xnlock_put_irqrestore(&nklock, s);
@@ -319,7 +309,7 @@ void xnsynch_wakeup_this_sleeper(struct xnsynch *synch, struct xnthread *sleeper
 	trace_mark(xn_nucleus, synch_wakeup_this,
 		   "thread %p thread_name %s synch %p",
 		   sleeper, xnthread_name(sleeper), synch);
-	xnpod_resume_thread(sleeper, XNPEND);
+	xnthread_resume(sleeper, XNPEND);
 
 	xnlock_put_irqrestore(&nklock, s);
 }
@@ -396,7 +386,7 @@ static void xnsynch_renice_thread(struct xnthread *thread,
 int xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 		    xntmode_t timeout_mode)
 {
-	struct xnthread *thread = xnpod_current_thread(), *owner;
+	struct xnthread *thread = xnsched_current_thread(), *owner;
 	xnhandle_t threadh = xnthread_handle(thread), fastlock, old;
 	atomic_long_t *lockp = xnsynch_fastlock(synch);
 	spl_t s;
@@ -487,7 +477,7 @@ redo:
 	} else
 		list_add_priff(thread, &synch->pendq, wprio, plink);
 
-	xnpod_suspend_thread(thread, XNPEND, timeout, timeout_mode, synch);
+	xnthread_suspend(thread, XNPEND, timeout, timeout_mode, synch);
 
 	thread->wwake = NULL;
 	xnthread_clear_info(thread, XNWAKEN);
@@ -712,7 +702,7 @@ struct xnthread *__xnsynch_transfer_ownership(struct xnsynch *synch,
 	nextowner->wwake = synch;
 	synch->owner = nextowner;
 	xnthread_set_info(nextowner, XNWAKEN);
-	xnpod_resume_thread(nextowner, XNPEND);
+	xnthread_resume(nextowner, XNPEND);
 
 	if (synch->status & XNSYNCH_CLAIMED)
 		xnsynch_clear_boost(synch, lastowner);
@@ -788,14 +778,14 @@ EXPORT_SYMBOL_GPL(xnsynch_peek_pendq);
  * are pre-defined by the nucleus:
  *
  * - XNRMID should be set to indicate that the synchronization object
- * is about to be destroyed (see xnpod_resume_thread()).
+ * is about to be destroyed (see xnthread_resume()).
  *
  * - XNBREAK should be set to indicate that the wait has been forcibly
- * interrupted (see xnpod_unblock_thread()).
+ * interrupted (see xnthread_unblock()).
  *
- * @return XNSYNCH_RESCHED is returned if at least one thread
- * is unblocked, which means the caller should invoke xnpod_schedule()
- * for applying the new scheduling state. Otherwise, XNSYNCH_DONE is
+ * @return XNSYNCH_RESCHED is returned if at least one thread is
+ * unblocked, which means the caller should invoke xnsched_run() for
+ * applying the new scheduling state. Otherwise, XNSYNCH_DONE is
  * returned.
  *
  * Side-effects:
@@ -838,7 +828,7 @@ int xnsynch_flush(struct xnsynch *synch, int reason)
 			list_del(&sleeper->plink);
 			xnthread_set_info(sleeper, reason);
 			sleeper->wchan = NULL;
-			xnpod_resume_thread(sleeper, XNPEND);
+			xnthread_resume(sleeper, XNPEND);
 		}
 		if (synch->status & XNSYNCH_CLAIMED)
 			xnsynch_clear_boost(synch, synch->owner);

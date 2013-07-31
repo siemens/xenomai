@@ -51,7 +51,7 @@ static const pthread_attr_t default_thread_attr = {
 		.sched_priority = 0
 	},
 	.name = NULL,
-	.affinity = XNPOD_ALL_CPUS,
+	.affinity = CPU_MASK_ALL,
 };
 
 #define PTHREAD_HSLOTS (1 << 8)	/* Must be a power of 2 */
@@ -444,8 +444,8 @@ static inline int pthread_create(struct cobalt_thread **thread_p, const pthread_
 		break;
 	}
 
-	if (xnpod_init_thread(&thread->threadbase,
-			      &iattr, sched_class, &param) != 0) {
+	if (xnthread_init(&thread->threadbase,
+			  &iattr, sched_class, &param) != 0) {
 		xnfree(thread);
 		return -EAGAIN;
 	}
@@ -466,7 +466,7 @@ static inline int pthread_create(struct cobalt_thread **thread_p, const pthread_
 	cobalt_set_extref(&thread->extref, NULL, NULL);
 
 	if (thread->attr.policy == SCHED_RR)
-		xnpod_set_thread_tslice(&thread->threadbase, cobalt_time_slice);
+		xnthread_set_slice(&thread->threadbase, cobalt_time_slice);
 
 	/*
 	 * We need an anonymous registry entry to obtain a handle for
@@ -545,9 +545,9 @@ static inline int pthread_make_periodic_np(struct cobalt_thread *thread,
 
 	start = ts2ns(starttp);
 	period = ts2ns(periodtp);
-	ret = xnpod_set_thread_periodic(&thread->threadbase, start,
-					clock_flag(TIMER_ABSTIME, clock_id),
-					period);
+	ret = xnthread_set_periodic(&thread->threadbase, start,
+				    clock_flag(TIMER_ABSTIME, clock_id),
+				    period);
       unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -594,7 +594,7 @@ static inline int pthread_make_periodic_np(struct cobalt_thread *thread,
  */
 static inline int pthread_set_mode_np(int clrmask, int setmask, int *mode_r)
 {
-	struct xnthread *cur = xnpod_current_thread();
+	struct xnthread *cur = xnsched_current_thread();
 	const int valid_flags = XNLOCK|XNTRAPSW;
 	int old;
 
@@ -605,13 +605,13 @@ static inline int pthread_set_mode_np(int clrmask, int setmask, int *mode_r)
 	if ((clrmask & ~valid_flags) != 0 || (setmask & ~valid_flags) != 0)
 		return -EINVAL;
 
-	old = xnpod_set_thread_mode(cur, clrmask, setmask);
+	old = xnthread_set_mode(cur, clrmask, setmask);
 	if (mode_r)
 		*mode_r = old;
 
 	if ((clrmask & ~setmask) & XNLOCK)
 		/* Reschedule if the scheduler has been unlocked. */
-		xnpod_schedule();
+		xnsched_run();
 
 	return 0;
 }
@@ -772,11 +772,11 @@ pthread_setschedparam_ex(struct cobalt_thread *thread, int u_pol, const struct s
 		return -EINVAL;
 	}
 
-	xnpod_set_thread_tslice(base_thread, tslice);
+	xnthread_set_slice(base_thread, tslice);
 	thread->sched_u_policy = u_pol;
-	xnpod_set_thread_schedparam(base_thread, sched_class, &param);
+	xnthread_set_schedparam(base_thread, sched_class, &param);
 
-	xnpod_schedule();
+	xnsched_run();
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -897,7 +897,7 @@ int cobalt_thread_create(unsigned long pth, int policy,
 	return 0;
 
 fail:
-	xnpod_cancel_thread(&thread->threadbase);
+	xnthread_cancel(&thread->threadbase);
 
 	return ret;
 }
@@ -930,7 +930,7 @@ struct cobalt_thread *cobalt_thread_shadow(struct task_struct *p,
 		ret = -EAGAIN;
 
 	if (ret)
-		xnpod_cancel_thread(&thread->threadbase);
+		xnthread_cancel(&thread->threadbase);
 	else
 		thread->hkey = *hkey;
 
@@ -964,8 +964,7 @@ int cobalt_thread_wait_np(unsigned long __user *u_overruns)
 	unsigned long overruns;
 	int ret;
 
-	ret = xnpod_wait_thread_period(&overruns);
-
+	ret = xnthread_wait_period(&overruns);
 	if (u_overruns && (ret == 0 || ret == -ETIMEDOUT))
 		__xn_put_user(overruns, u_overruns);
 
@@ -1081,7 +1080,7 @@ int cobalt_thread_kill(unsigned long pth, int sig)
 		 * no other signal would require this, so we handle
 		 * that case locally here.
 		 */
-		if (xnshadow_current_p(&thread->threadbase) && xnpod_root_p()) {
+		if (xnshadow_current_p(&thread->threadbase) && xnsched_root_p()) {
 			/*
 			 * We won't vanish, so we may drop the lock
 			 * while hardening.
@@ -1092,17 +1091,17 @@ int cobalt_thread_kill(unsigned long pth, int sig)
 				return ret;
 			xnlock_get_irqsave(&nklock, s);
 		}
-		xnpod_suspend_thread(&thread->threadbase, XNSUSP,
-				     XN_INFINITE, XN_RELATIVE, NULL);
-		if (&thread->threadbase == xnpod_current_thread() &&
+		xnthread_suspend(&thread->threadbase, XNSUSP,
+				 XN_INFINITE, XN_RELATIVE, NULL);
+		if (&thread->threadbase == xnsched_current_thread() &&
 		    xnthread_test_info(&thread->threadbase, XNBREAK))
 			ret = EINTR;
 		break;
 	case SIGRESM:
-		xnpod_resume_thread(&thread->threadbase, XNSUSP);
+		xnthread_resume(&thread->threadbase, XNSUSP);
 		goto resched;
 	case SIGRELS:
-		xnpod_unblock_thread(&thread->threadbase);
+		xnthread_unblock(&thread->threadbase);
 		goto resched;
 	case SIGKICK:
 		xnshadow_kick(&thread->threadbase);
@@ -1121,7 +1120,7 @@ int cobalt_thread_kill(unsigned long pth, int sig)
 			cobalt_signal_send(thread, sigp);
 		}
 	resched:
-		xnpod_schedule();
+		xnsched_run();
 		break;
 	default:
 		ret = -EINVAL;
@@ -1276,7 +1275,8 @@ int cobalt_sched_yield(void)
 
 	curr = cobalt_current_thread();
 	pthread_getschedparam_ex(curr, &policy, &param);
-	xnpod_yield();
+	xnthread_resume(&curr->threadbase, 0);
+	xnsched_run();
 
 	return policy == SCHED_NORMAL;
 }
@@ -1324,7 +1324,7 @@ int set_tp_config(int cpu, union sched_config *config, size_t len)
 
 	gps->pwin_nr = n;
 	gps->tf_duration = next_offset;
-	sched = xnpod_sched_slot(cpu);
+	sched = xnsched_struct(cpu);
 
 	xnlock_get_irqsave(&nklock, s);
 	ogps = xnsched_tp_set_schedule(sched, gps);
@@ -1432,5 +1432,14 @@ out:
 
 	return ret;
 }
+
+void __xnthread_test_cancel(struct xnthread *curr)
+{
+	if (!xnthread_test_state(curr, XNRELAX))
+		xnshadow_relax(0, 0);
+
+	do_exit(0);
+}
+EXPORT_SYMBOL_GPL(__xnthread_test_cancel);
 
 /*@}*/

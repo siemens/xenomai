@@ -20,6 +20,7 @@
 #ifndef _COBALT_KERNEL_SHADOW_H
 #define _COBALT_KERNEL_SHADOW_H
 
+#include <cobalt/kernel/sys.h>
 #include <asm/xenomai/syscall.h>
 
 struct xnthread;
@@ -30,22 +31,6 @@ struct timeval;
 struct completion;
 struct module;
 struct xnshadow_ppd;
-
-struct xnpersonality {
-	const char *name;
-	unsigned int magic;
-	int nrcalls;
-	struct xnsyscall *syscalls;
-	atomic_t refcnt;
-	struct {
-		struct xnshadow_ppd *(*attach_process)(void);
-		void (*detach_process)(struct xnshadow_ppd *ppd);
-		struct xnpersonality *(*map_thread)(struct xnthread *thread);
-		struct xnpersonality *(*exit_thread)(struct xnthread *thread);
-		struct xnpersonality *(*finalize_thread)(struct xnthread *thread);
-	} ops;
-	struct module *module;
-};
 
 static inline struct xnthread *xnshadow_current(void)
 {

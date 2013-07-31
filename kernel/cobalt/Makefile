@@ -8,7 +8,6 @@ xenomai-y :=	apc.o		\
 		init.o		\
 		intr.o		\
 		lock.o		\
-		pod.o		\
 		registry.o	\
 		sched-idle.o	\
 		sched-rt.o	\
@@ -16,6 +15,7 @@ xenomai-y :=	apc.o		\
 		select.o	\
 		shadow.o	\
 		synch.o		\
+		sys.o		\
 		thread.o	\
 		timer.o
 

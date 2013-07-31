@@ -18,7 +18,7 @@
  *   02111-1307, USA.
  */
 #include <linux/stddef.h>
-#include <cobalt/kernel/pod.h>
+#include <cobalt/kernel/sched.h>
 #include <asm/xenomai/machine.h>
 
 static unsigned long mach_blackfin_calibrate(void)
@@ -35,16 +35,16 @@ static void schedule_deferred(void)
 	 * mach_setup() ...
 	 *    IRQ/syscall
 	 *        => irq_tail_hook
-	 *           => xnpod_schedule()
+	 *           => xnsched_run()
 	 *    ...
-	 * xnpod_init()
+	 * xnsys_init()
 	 *
-	 * in which case, we would call xnpod_schedule() for a not yet
+	 * in which case, we would call xnsched_run() for a not yet
 	 * initialized system. However, we would be covered by the
-	 * check for XNSCHED in xnpod_schedule(), which basically
-	 * makes this call a nop.
+	 * check for XNSCHED in xnsched_run(), which basically makes
+	 * this call a nop.
 	 */
-	xnpod_schedule();
+	xnsched_run();
 }
 
 static int mach_blackfin_init(void)

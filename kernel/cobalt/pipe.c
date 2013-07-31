@@ -29,7 +29,7 @@
 #include <linux/device.h>
 #include <asm/io.h>
 #include <asm/uaccess.h>
-#include <cobalt/kernel/pod.h>
+#include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/pipe.h>
 #include <cobalt/kernel/apc.h>
@@ -388,7 +388,7 @@ int xnpipe_disconnect(int minor)
 	xnpipe_flushq(state, inq, free_ibuf, s);
 
 	if (xnsynch_destroy(&state->synchbase) == XNSYNCH_RESCHED)
-		xnpod_schedule();
+		xnsched_run();
 
 	if (state->status & XNPIPE_USER_WREAD) {
 		/*
@@ -530,7 +530,7 @@ ssize_t xnpipe_recv(int minor, struct xnpipe_mh **pmh, xnticks_t timeout)
 	if (minor < 0 || minor >= XNPIPE_NDEVS)
 		return -ENODEV;
 
-	if (xnpod_interrupt_p())
+	if (xnsched_interrupt_p())
 		return -EPERM;
 
 	state = &xnpipe_states[minor];
@@ -720,7 +720,7 @@ static int xnpipe_release(struct inode *inode, struct file *file)
 		/* Unblock waiters. */
 		if (xnsynch_pended_p(&state->synchbase)) {
 			xnsynch_flush(&state->synchbase, XNRMID);
-			xnpod_schedule();
+			xnsched_run();
 		}
 	}
 
@@ -911,7 +911,7 @@ retry:
 
 	/* Wake up a Xenomai sleeper if any. */
 	if (xnsynch_wakeup_one_sleeper(&state->synchbase))
-		xnpod_schedule();
+		xnsched_run();
 
 	if (state->ops.input) {
 		ret = state->ops.input(mh, 0, state->xstate);

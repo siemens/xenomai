@@ -26,7 +26,6 @@
  * @{
  */
 
-#include <cobalt/kernel/pod.h>
 #include <cobalt/kernel/ppd.h>
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/apc.h>

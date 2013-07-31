@@ -1,7 +1,4 @@
-/*!\file sched-sporadic.c
- * \author Philippe Gerum
- * \brief POSIX SCHED_SPORADIC scheduling class
- *
+/**
  * Copyright (C) 2009 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
@@ -18,11 +15,8 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- *
- * \ingroup sched
  */
-
-#include <cobalt/kernel/pod.h>
+#include <cobalt/kernel/sched.h>
 
 #define MAX_REPLENISH CONFIG_XENO_OPT_SCHED_SPORADIC_MAXREPL
 
@@ -86,13 +80,13 @@ static void sporadic_drop_handler(struct xntimer *timer)
 			 * thread to suspend until a replenishment
 			 * happens.
 			 */
-			xnpod_suspend_thread(thread, XNHELD,
-					     XN_INFINITE, XN_RELATIVE, NULL);
+			xnthread_suspend(thread, XNHELD,
+					 XN_INFINITE, XN_RELATIVE, NULL);
 		else {
 			p.pss.init_budget = 0;
 			p.pss.current_prio = pss->param.low_prio;
 			/* Move sporadic thread to the background. */
-			xnpod_set_thread_schedparam(thread, &xnsched_class_sporadic, &p);
+			xnthread_set_schedparam(thread, &xnsched_class_sporadic, &p);
 		}
 	}
 }
@@ -155,12 +149,12 @@ retry:
 	 * first place.
 	 */
 	if (xnthread_test_state(thread, XNHELD))
-		xnpod_resume_thread(thread, XNHELD);
+		xnthread_resume(thread, XNHELD);
 	else if (thread->cprio < pss->param.normal_prio) {
 		p.pss.init_budget = 0;
 		p.pss.current_prio = pss->param.normal_prio;
 		/* Move sporadic thread to the foreground. */
-		xnpod_set_thread_schedparam(thread, &xnsched_class_sporadic, &p);
+		xnthread_set_schedparam(thread, &xnsched_class_sporadic, &p);
 	}
 
 	/*
@@ -243,9 +237,9 @@ static void xnsched_sporadic_setparam(struct xnthread *thread,
 	/*
 	 * We use the budget information to determine whether we got
 	 * here from one of our internal calls to
-	 * xnpod_set_thread_schedparam(), in which case we don't want
-	 * to update the sporadic scheduling parameters, but only set
-	 * the dynamic priority of the thread.
+	 * xnthread_set_schedparam(), in which case we don't want to
+	 * update the sporadic scheduling parameters, but only set the
+	 * dynamic priority of the thread.
 	 */
 	if (p->pss.init_budget > 0) {
 		pss->param = p->pss;
@@ -408,7 +402,7 @@ static struct xnvfile_snapshot_ops vfile_sched_sporadic_ops;
 static struct xnvfile_snapshot vfile_sched_sporadic = {
 	.privsz = sizeof(struct vfile_sched_sporadic_priv),
 	.datasz = sizeof(struct vfile_sched_sporadic_data),
-	.tag = &nkpod_struct.threadlist_tag,
+	.tag = &nkthreadlist_tag,
 	.ops = &vfile_sched_sporadic_ops,
 };
 
@@ -420,7 +414,7 @@ static int vfile_sched_sporadic_rewind(struct xnvfile_snapshot_iterator *it)
 	if (nrthreads == 0)
 		return -ESRCH;
 
-	priv->curr = list_first_entry(&nkpod->threadq, struct xnthread, glink);
+	priv->curr = list_first_entry(&nkthreadq, struct xnthread, glink);
 
 	return nrthreads;
 }
@@ -436,7 +430,7 @@ static int vfile_sched_sporadic_next(struct xnvfile_snapshot_iterator *it,
 		return 0;	/* All done. */
 
 	thread = priv->curr;
-	if (list_is_last(&thread->glink, &nkpod->threadq))
+	if (list_is_last(&thread->glink, &nkthreadq))
 		priv->curr = NULL;
 	else
 		priv->curr = list_next_entry(thread, glink);

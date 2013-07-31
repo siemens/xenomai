@@ -1,7 +1,4 @@
-/*!\file
- * \brief Debug services.
- * \author Philippe Gerum
- *
+/**
  * Copyright (C) 2010 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
@@ -19,20 +16,16 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  *
- * \ingroup debug
- */
-/*!
- * \ingroup nucleus
- * \defgroup debug Debugging services.
- *
- *@{*/
-
+ * @ingroup nucleus
+ * @defgroup debug Debugging services.
+ *@{
+*/
 #include <linux/types.h>
 #include <linux/limits.h>
 #include <linux/ctype.h>
 #include <linux/jhash.h>
 #include <linux/mm.h>
-#include <cobalt/kernel/pod.h>
+#include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/clock.h>
 #include <cobalt/kernel/ppd.h>

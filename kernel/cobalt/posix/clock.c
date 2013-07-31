@@ -223,12 +223,12 @@ int cobalt_clock_nanosleep(clockid_t clock_id, int flags,
 	if (flags & ~TIMER_ABSTIME)
 		return -EINVAL;
 
-	cur = xnpod_current_thread();
+	cur = xnsched_current_thread();
 
 	xnlock_get_irqsave(&nklock, s);
 
-	xnpod_suspend_thread(cur, XNDELAY, ts2ns(&rqt) + 1,
-			     clock_flag(flags, clock_id), NULL);
+	xnthread_suspend(cur, XNDELAY, ts2ns(&rqt) + 1,
+			 clock_flag(flags, clock_id), NULL);
 
 	if (xnthread_test_info(cur, XNBREAK)) {
 		if (flags == 0 && rmtp) {

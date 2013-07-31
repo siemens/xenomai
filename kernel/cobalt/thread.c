@@ -1,5 +1,9 @@
 /*
- * Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2001-2013 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2006-2010 Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>
+ * Copyright (C) 2001-2013 The Xenomai project <http://www.xenomai.org>
+ *
+ * SMP support Copyright (C) 2004 The HYADES project <http://www.hyades-itea.org>
  *
  * Xenomai is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
@@ -16,25 +20,41 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  */
-
 #include <linux/kthread.h>
-#include <cobalt/kernel/pod.h>
+#include <linux/wait.h>
+#include <cobalt/kernel/sched.h>
+#include <cobalt/kernel/timer.h>
 #include <cobalt/kernel/synch.h>
 #include <cobalt/kernel/heap.h>
-#include <cobalt/kernel/thread.h>
-#include <cobalt/kernel/sched.h>
+#include <cobalt/kernel/intr.h>
+#include <cobalt/kernel/registry.h>
 #include <cobalt/kernel/clock.h>
+#include <cobalt/kernel/stat.h>
+#include <cobalt/kernel/trace.h>
+#include <cobalt/kernel/assert.h>
+#include <cobalt/kernel/select.h>
 #include <cobalt/kernel/shadow.h>
+#include <cobalt/kernel/lock.h>
+#include <cobalt/kernel/sys.h>
+#include <cobalt/kernel/thread.h>
 #include <asm/xenomai/thread.h>
 
+/**
+ * @ingroup nucleus
+ * @defgroup thread Thread services.
+ * @{
+*/
+
 static unsigned int idtags;
+
+static DECLARE_WAIT_QUEUE_HEAD(nkjoinq);
 
 static void timeout_handler(struct xntimer *timer)
 {
 	struct xnthread *thread = container_of(timer, xnthread_t, rtimer);
 
 	xnthread_set_info(thread, XNTIMEO);	/* Interrupts are off. */
-	xnpod_resume_thread(thread, XNDELAY);
+	xnthread_resume(thread, XNDELAY);
 }
 
 static void periodic_handler(struct xntimer *timer)
@@ -45,7 +65,7 @@ static void periodic_handler(struct xntimer *timer)
 	 * blocked on a resource.
 	 */
 	if (xnthread_test_state(thread, XNDELAY|XNPEND) == XNDELAY)
-		xnpod_resume_thread(thread, XNDELAY);
+		xnthread_resume(thread, XNDELAY);
 }
 
 static void roundrobin_handler(struct xntimer *timer)
@@ -95,7 +115,7 @@ static int kthread_trampoline(void *arg)
 
 	thread->entry(thread->cookie);
 
-	xnpod_cancel_thread(thread);
+	xnthread_cancel(thread);
 
 	return 0;
 }
@@ -118,11 +138,11 @@ static inline int spawn_kthread(struct xnthread *thread)
 	return 0;
 }
 
-int xnthread_init(struct xnthread *thread,
-		  const struct xnthread_init_attr *attr,
-		  struct xnsched *sched,
-		  struct xnsched_class *sched_class,
-		  const union xnsched_policy_param *sched_param)
+int __xnthread_init(struct xnthread *thread,
+		    const struct xnthread_init_attr *attr,
+		    struct xnsched *sched,
+		    struct xnsched_class *sched_class,
+		    const union xnsched_policy_param *sched_param)
 {
 	DECLARE_COMPLETION_ONSTACK(done);
 	int flags = attr->flags, ret;
@@ -169,7 +189,7 @@ int xnthread_init(struct xnthread *thread,
 	thread->registry.waitkey = NULL;
 	memset(&thread->stat, 0, sizeof(thread->stat));
 
-	/* These will be filled by xnpod_start_thread() */
+	/* These will be filled by xnthread_start() */
 	thread->imode = 0;
 	thread->entry = NULL;
 	thread->cookie = NULL;
@@ -328,7 +348,7 @@ EXPORT_SYMBOL_GPL(xnthread_get_period);
 /* NOTE: caller must provide for locking */
 void xnthread_prepare_wait(struct xnthread_wait_context *wc)
 {
-	struct xnthread *curr = xnpod_current_thread();
+	struct xnthread *curr = xnsched_current_thread();
 
 	curr->wcontext = wc;
 }
@@ -338,14 +358,1466 @@ EXPORT_SYMBOL_GPL(xnthread_prepare_wait);
 void xnthread_finish_wait(struct xnthread_wait_context *wc,
 			  void (*cleanup)(struct xnthread_wait_context *wc))
 {
-	struct xnthread *curr = xnpod_current_thread();
+	struct xnthread *curr = xnsched_current_thread();
 
 	curr->wcontext = NULL;
 
 	if (xnthread_test_info(curr, XNCANCELD)) {
 		if (cleanup)
 			cleanup(wc);
-		xnpod_cancel_thread(curr);
+		xnthread_cancel(curr);
 	}
 }
 EXPORT_SYMBOL_GPL(xnthread_finish_wait);
+
+static inline int moving_target(struct xnsched *sched, struct xnthread *thread)
+{
+	int ret = 0;
+#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
+	/*
+	 * When deleting a thread in the course of a context switch or
+	 * in flight to another CPU with nklock unlocked on a distant
+	 * CPU, do nothing, this case will be caught in
+	 * xnsched_finish_unlocked_switch.
+	 */
+	ret = (sched->status & XNINSW) ||
+		xnthread_test_state(thread, XNMIGRATE);
+#endif
+	return ret;
+}
+
+#ifdef CONFIG_XENO_HW_FPU
+
+static inline void giveup_fpu(struct xnsched *sched,
+			      struct xnthread *thread)
+{
+	if (thread == sched->fpuholder)
+		sched->fpuholder = NULL;
+}
+
+static inline void release_fpu(struct xnthread *thread)
+{
+	/*
+	 * Force the FPU save, and nullify the sched->fpuholder
+	 * pointer, to avoid leaving fpuholder pointing on the backup
+	 * area of the migrated thread.
+	 */
+	if (xnthread_test_state(thread, XNFPU)) {
+		xnarch_save_fpu(xnthread_archtcb(thread));
+		thread->sched->fpuholder = NULL;
+	}
+}
+
+void xnthread_switch_fpu(struct xnsched *sched)
+{
+	xnthread_t *curr = sched->curr;
+
+	if (!xnthread_test_state(curr, XNFPU))
+		return;
+
+	if (sched->fpuholder != curr) {
+		if (sched->fpuholder == NULL ||
+		    xnarch_fpu_ptr(xnthread_archtcb(sched->fpuholder)) !=
+		    xnarch_fpu_ptr(xnthread_archtcb(curr))) {
+			if (sched->fpuholder)
+				xnarch_save_fpu(xnthread_archtcb
+						(sched->fpuholder));
+
+			xnarch_restore_fpu(xnthread_archtcb(curr));
+		} else
+			xnarch_enable_fpu(xnthread_archtcb(curr));
+
+		sched->fpuholder = curr;
+	} else
+		xnarch_enable_fpu(xnthread_archtcb(curr));
+}
+
+#else /* !CONFIG_XENO_HW_FPU */
+
+static inline void giveup_fpu(struct xnsched *sched,
+				      struct xnthread *thread)
+{
+}
+
+static inline void release_fpu(struct xnthread *thread)
+{
+}
+
+#endif /* !CONFIG_XENO_HW_FPU */
+
+static inline void cleanup_tcb(struct xnthread *thread) /* nklock held, irqs off */
+{
+	struct xnsched *sched = thread->sched;
+
+	list_del(&thread->glink);
+	nknrthreads--;
+	xnvfile_touch_tag(&nkthreadlist_tag);
+
+	if (xnthread_test_state(thread, XNREADY)) {
+		XENO_BUGON(NUCLEUS, xnthread_test_state(thread, XNTHREAD_BLOCK_BITS));
+		xnsched_dequeue(thread);
+		xnthread_clear_state(thread, XNREADY);
+	}
+
+	thread->idtag = 0;
+
+	if (xnthread_test_state(thread, XNPEND))
+		xnsynch_forget_sleeper(thread);
+
+	xnthread_set_state(thread, XNZOMBIE);
+	/*
+	 * NOTE: we must be running over the root thread, or @thread
+	 * is dormant, which means that we don't risk sched->curr to
+	 * disappear due to voluntary rescheduling while holding the
+	 * nklock, despite @thread bears the zombie bit.
+	 */
+	xnsynch_release_all_ownerships(thread);
+
+	giveup_fpu(sched, thread);
+
+	if (moving_target(sched, thread))
+		return;
+
+	xnsched_forget(thread);
+	xnthread_deregister(thread);
+}
+
+void __xnthread_cleanup(struct xnthread *curr)
+{
+	spl_t s;
+
+	XENO_BUGON(NUCLEUS, !ipipe_root_p);
+
+	trace_mark(xn_nucleus, thread_cleanup, "thread %p thread_name %s",
+		   curr, xnthread_name(curr));
+
+	xntimer_destroy(&curr->rtimer);
+	xntimer_destroy(&curr->ptimer);
+	xntimer_destroy(&curr->rrbtimer);
+
+	if (curr->selector) {
+		xnselector_destroy(curr->selector);
+		curr->selector = NULL;
+	}
+
+	xnlock_get_irqsave(&nklock, s);
+	cleanup_tcb(curr);
+	xnlock_put_irqrestore(&nklock, s);
+
+	/* Finalize last since this incurs releasing the TCB. */
+	xnshadow_finalize(curr);
+
+	wake_up(&nkjoinq);
+}
+
+/**
+ * @fn void xnthread_init(struct xnthread *thread,const struct xnthread_init_attr *attr,struct xnsched_class *sched_class,const union xnsched_policy_param *sched_param)
+ * @brief Initialize a new thread.
+ *
+ * Initializes a new thread. The thread is left dormant until it is
+ * actually started by xnthread_start().
+ *
+ * @param thread The address of a thread descriptor the nucleus will
+ * use to store the thread-specific data.  This descriptor must always
+ * be valid while the thread is active therefore it must be allocated
+ * in permanent memory. @warning Some architectures may require the
+ * descriptor to be properly aligned in memory; this is an additional
+ * reason for descriptors not to be laid in the program stack where
+ * alignement constraints might not always be satisfied.
+ *
+ * @param attr A pointer to an attribute block describing the initial
+ * properties of the new thread. Members of this structure are defined
+ * as follows:
+ *
+ * - name: An ASCII string standing for the symbolic name of the
+ * thread. This name is copied to a safe place into the thread
+ * descriptor. This name might be used in various situations by the
+ * nucleus for issuing human-readable diagnostic messages, so it is
+ * usually a good idea to provide a sensible value here.  NULL is fine
+ * though and means "anonymous".
+ *
+ * - flags: A set of creation flags affecting the operation. The
+ * following flags can be part of this bitmask, each of them affecting
+ * the nucleus behaviour regarding the created thread:
+ *
+ *   - XNSUSP creates the thread in a suspended state. In such a case,
+ * the thread shall be explicitly resumed using the xnthread_resume()
+ * service for its execution to actually begin, additionally to
+ * issuing xnthread_start() for it. This flag can also be specified
+ * when invoking xnthread_start() as a starting mode.
+ *
+ * - XNUSER shall be set if @a thread will be mapped over an existing
+ * user-space task. Otherwise, a new kernel host task is created, then
+ * paired with the new Xenomai thread.
+ *
+ * - XNFPU (enable FPU) tells the nucleus that the new thread may use
+ * the floating-point unit. XNFPU is implicitly assumed for user-space
+ * threads even if not set in @a flags.
+ *
+ * - ops: A pointer to a structure defining the class-level operations
+ * available for this thread. Fields from this structure must have
+ * been set appropriately by the caller.
+ *
+ * @param sched_class The initial scheduling class the new thread
+ * should be assigned to.
+ *
+ * @param sched_param The initial scheduling parameters to set for the
+ * new thread; @a sched_param must be valid within the context of @a
+ * sched_class.
+ *
+ * @return 0 is returned on success. Otherwise, the following error
+ * code indicates the cause of the failure:
+ *
+ * - -EINVAL is returned if @a attr->flags has invalid bits set.
+ *
+ * Side-effect: This routine does not call the rescheduling procedure.
+ *
+ * Calling context: This service can be called from secondary mode only.
+ *
+ * Rescheduling: never.
+ */
+int xnthread_init(struct xnthread *thread,
+		  const struct xnthread_init_attr *attr,
+		  struct xnsched_class *sched_class,
+		  const union xnsched_policy_param *sched_param)
+{
+	struct xnsched *sched = xnsched_current();
+	spl_t s;
+	int ret;
+
+	if (attr->flags & ~(XNFPU | XNUSER | XNSUSP))
+		return -EINVAL;
+
+	ret = __xnthread_init(thread, attr, sched, sched_class, sched_param);
+	if (ret)
+		return ret;
+
+	trace_mark(xn_nucleus, thread_init,
+		   "thread %p thread_name %s flags %lu class %s prio %d",
+		   thread, xnthread_name(thread), attr->flags,
+		   sched_class->name, thread->cprio);
+
+	xnlock_get_irqsave(&nklock, s);
+	list_add_tail(&thread->glink, &nkthreadq);
+	nknrthreads++;
+	xnvfile_touch_tag(&nkthreadlist_tag);
+	xnlock_put_irqrestore(&nklock, s);
+
+	return 0;
+}
+EXPORT_SYMBOL_GPL(xnthread_init);
+
+/**
+ * @fn int xnthread_start(struct xnthread *thread,const struct xnthread_start_attr *attr)
+ * @brief Start a newly created thread.
+ *
+ * Starts a (newly) created thread, scheduling it for the first
+ * time. This call releases the target thread from the XNDORMANT
+ * state. This service also sets the initial mode for the new thread.
+ *
+ * @param thread The descriptor address of the started thread which
+ * must have been previously initialized by a call to xnthread_init().
+ *
+ * @param attr A pointer to an attribute block describing the
+ * execution properties of the new thread. Members of this structure
+ * are defined as follows:
+ *
+ * - mode: The initial thread mode. The following flags can
+ * be part of this bitmask, each of them affecting the nucleus
+ * behaviour regarding the started thread:
+ *
+ *   - XNLOCK causes the thread to lock the scheduler when it starts.
+ * The target thread will have to call the xnsched_unlock()
+ * service to unlock the scheduler. A non-preemptible thread may still
+ * block, in which case, the lock is reasserted when the thread is
+ * scheduled back in.
+ *
+ *   - XNSUSP makes the thread start in a suspended state. In such a
+ * case, the thread will have to be explicitly resumed using the
+ * xnthread_resume() service for its execution to actually begin.
+ *
+ * - affinity: The processor affinity of this thread. Passing
+ * CPU_MASK_ALL or an empty affinity set means "any cpu" from the
+ * allowed core affinity mask (nkaffinity).
+ *
+ * - entry: The address of the thread's body routine. In other words,
+ * it is the thread entry point.
+ *
+ * - cookie: A user-defined opaque cookie the nucleus will pass to the
+ * emerging thread as the sole argument of its entry point.
+ *
+ * @retval 0 if @a thread could be started ;
+ *
+ * @retval -EBUSY if @a thread was not dormant or stopped ;
+ *
+ * @retval -EINVAL if the value of @a attr->affinity is invalid.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Kernel-based task
+ * - User-space task
+ *
+ * Rescheduling: possible.
+ */
+int xnthread_start(struct xnthread *thread,
+		   const struct xnthread_start_attr *attr)
+{
+	struct xnsched *sched __maybe_unused;
+	cpumask_t affinity;
+	int ret = 0;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	if (!xnthread_test_state(thread, XNDORMANT)) {
+		ret = -EBUSY;
+		goto unlock_and_exit;
+	}
+
+	affinity = attr->affinity;
+	cpus_and(affinity, affinity, nkaffinity);
+	thread->affinity = *cpu_online_mask;
+	cpus_and(thread->affinity, affinity, thread->affinity);
+
+	if (cpus_empty(thread->affinity)) {
+		ret = -EINVAL;
+		goto unlock_and_exit;
+	}
+#ifdef CONFIG_SMP
+	if (!cpu_isset(xnsched_cpu(thread->sched), thread->affinity)) {
+		sched = xnsched_struct(first_cpu(thread->affinity));
+		xnsched_migrate_passive(thread, sched);
+	}
+#endif /* CONFIG_SMP */
+
+	xnthread_set_state(thread, attr->mode & (XNTHREAD_MODE_BITS | XNSUSP));
+	thread->imode = (attr->mode & XNTHREAD_MODE_BITS);
+	thread->entry = attr->entry;
+	thread->cookie = attr->cookie;
+
+	trace_mark(xn_nucleus, thread_start, "thread %p thread_name %s",
+		   thread, xnthread_name(thread));
+
+	xnthread_resume(thread, XNDORMANT);
+	xnsched_run();
+unlock_and_exit:
+	xnlock_put_irqrestore(&nklock, s);
+
+	return ret;
+}
+EXPORT_SYMBOL_GPL(xnthread_start);
+
+/**
+ * @fn void xnthread_set_mode(xnthread_t *thread,int clrmask,int setmask)
+ * @brief Change a thread's control mode.
+ *
+ * Change the control mode of a given thread. The control mode affects
+ * the behaviour of the nucleus regarding the specified thread.
+ *
+ * @param thread The descriptor address of the affected thread.
+ *
+ * @param clrmask Clears the corresponding bits from the control field
+ * before setmask is applied. The scheduler lock held by the current
+ * thread can be forcibly released by passing the XNLOCK bit in this
+ * mask. In this case, the lock nesting count is also reset to zero.
+ *
+ * @param setmask The new thread mode. The following flags may be set
+ * in this bitmask:
+ *
+ * - XNLOCK causes the thread to lock the scheduler.  The target
+ * thread will have to call the xnsched_unlock() service to unlock
+ * the scheduler or clear the XNLOCK bit forcibly using this
+ * service. A non-preemptible thread may still block, in which case,
+ * the lock is reasserted when the thread is scheduled back in.
+ *
+ * - XNTRAPSW causes the thread to receive a SIGDEBUG signal when it
+ * switches to secondary mode. This is a debugging aid for detecting
+ * spurious relaxes.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel-based task
+ * - User-space task in primary mode.
+ *
+ * Rescheduling: never, therefore, the caller should reschedule if
+ * XNLOCK has been passed into @a clrmask.
+ *
+ * @note Setting @a clrmask and @a setmask to zero leads to a nop,
+ * only returning the previous mode if @a mode_r is a valid address.
+ */
+int xnthread_set_mode(xnthread_t *thread, int clrmask, int setmask)
+{
+	struct xnthread *curr = xnsched_current_thread();
+	unsigned long oldmode;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	trace_mark(xn_nucleus, thread_setmode,
+		   "thread %p thread_name %s clrmask 0x%x setmask 0x%x",
+		   thread, xnthread_name(thread), clrmask, setmask);
+
+	oldmode = xnthread_state_flags(thread) & XNTHREAD_MODE_BITS;
+	xnthread_clear_state(thread, clrmask & XNTHREAD_MODE_BITS);
+	xnthread_set_state(thread, setmask & XNTHREAD_MODE_BITS);
+
+	if (curr == thread) {
+		if (!(oldmode & XNLOCK)) {
+			if (xnthread_test_state(thread, XNLOCK))
+				/* Actually grab the scheduler lock. */
+				xnsched_lock();
+		} else if (!xnthread_test_state(thread, XNLOCK))
+			xnthread_lock_count(thread) = 0;
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return (int)oldmode;
+}
+EXPORT_SYMBOL_GPL(xnthread_set_mode);
+
+/**
+ * @fn void xnthread_suspend(xnthread_t *thread, int mask,xnticks_t timeout, xntmode_t timeout_mode,xnsynch_t *wchan)
+ * @brief Suspend a thread.
+ *
+ * Suspends the execution of a thread according to a given suspensive
+ * condition. This thread will not be eligible for scheduling until it
+ * all the pending suspensive conditions set by this service are
+ * removed by one or more calls to xnthread_resume().
+ *
+ * @param thread The descriptor address of the suspended thread.
+ *
+ * @param mask The suspension mask specifying the suspensive condition
+ * to add to the thread's wait mask. Possible values usable by the
+ * caller are:
+ *
+ * - XNSUSP. This flag forcibly suspends a thread, regardless of any
+ * resource to wait for. A reverse call to xnthread_resume()
+ * specifying the XNSUSP bit must be issued to remove this condition,
+ * which is cumulative with other suspension bits.@a wchan should be
+ * NULL when using this suspending mode.
+ *
+ * - XNDELAY. This flags denotes a counted delay wait (in ticks) which
+ * duration is defined by the value of the timeout parameter.
+ *
+ * - XNPEND. This flag denotes a wait for a synchronization object to
+ * be signaled. The wchan argument must points to this object. A
+ * timeout value can be passed to bound the wait. This suspending mode
+ * should not be used directly by the client interface, but rather
+ * through the xnsynch_sleep_on() call.
+ *
+ * @param timeout The timeout which may be used to limit the time the
+ * thread pends on a resource. This value is a wait time given in
+ * nanoseconds. It can either be relative, absolute monotonic, or
+ * absolute adjustable depending on @a timeout_mode.
+ *
+ * Passing XN_INFINITE @b and setting @a timeout_mode to XN_RELATIVE
+ * specifies an unbounded wait. All other values are used to
+ * initialize a watchdog timer. If the current operation mode of the
+ * system timer is oneshot and @a timeout elapses before
+ * xnthread_suspend() has completed, then the target thread will not
+ * be suspended, and this routine leads to a null effect.
+ *
+ * @param timeout_mode The mode of the @a timeout parameter. It can
+ * either be set to XN_RELATIVE, XN_ABSOLUTE, or XN_REALTIME (see also
+ * xntimer_start()).
+ *
+ * @param wchan The address of a pended resource. This parameter is
+ * used internally by the synchronization object implementation code
+ * to specify on which object the suspended thread pends. NULL is a
+ * legitimate value when this parameter does not apply to the current
+ * suspending mode (e.g. XNSUSP).
+ *
+ * @note If the target thread is a shadow which has received a
+ * Linux-originated signal, then this service immediately exits
+ * without suspending the thread, but raises the XNBREAK condition in
+ * its information mask.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Interrupt service routine
+ * - Kernel-based task
+ * - User-space task
+ *
+ * Rescheduling: possible if the current thread suspends itself.
+ */
+void xnthread_suspend(xnthread_t *thread, int mask,
+		      xnticks_t timeout, xntmode_t timeout_mode,
+		      xnsynch_t *wchan)
+{
+	unsigned long oldstate;
+	struct xnsched *sched;
+	spl_t s;
+
+	XENO_ASSERT(NUCLEUS, !xnthread_test_state(thread, XNROOT),
+		    xnsys_fatal("attempt to suspend root thread %s",
+				thread->name);
+		);
+
+	XENO_ASSERT(NUCLEUS, wchan == NULL || thread->wchan == NULL,
+		    xnsys_fatal("thread %s attempts a conjunctive wait",
+				thread->name);
+		);
+
+	xnlock_get_irqsave(&nklock, s);
+
+	trace_mark(xn_nucleus, thread_suspend,
+		   "thread %p thread_name %s mask %lu timeout %Lu "
+		   "timeout_mode %d wchan %p",
+		   thread, xnthread_name(thread), mask, timeout,
+		   timeout_mode, wchan);
+
+	sched = thread->sched;
+	oldstate = thread->state;
+
+	if (thread == sched->curr)
+		xnsched_set_resched(sched);
+
+	/* Is the thread ready to run? */
+	if (!xnthread_test_state(thread, XNTHREAD_BLOCK_BITS)) {
+		/*
+		 * If attempting to suspend a runnable (shadow) thread
+		 * which is pending a forced switch to secondary mode,
+		 * just raise the break condition and return
+		 * immediately.  We may end up suspending a kicked
+		 * thread that has been preempted on its relaxing
+		 * path, which is a perfectly valid situation: we just
+		 * ignore the signal notification in primary mode, and
+		 * rely on the wakeup call pending for that task in
+		 * the root context, to collect and act upon the
+		 * pending Linux signal.
+		 */
+		if ((mask & XNRELAX) == 0 &&
+		    xnthread_test_info(thread, XNKICKED)) {
+			if (wchan) {
+				thread->wchan = wchan;
+				xnsynch_forget_sleeper(thread);
+			}
+			xnthread_clear_info(thread, XNRMID | XNTIMEO);
+			xnthread_set_info(thread, XNBREAK);
+			xnlock_put_irqrestore(&nklock, s);
+			xnthread_test_cancel();
+			return;
+		}
+		xnthread_clear_info(thread, XNRMID | XNTIMEO | XNBREAK | XNWAKEN | XNROBBED);
+	}
+
+	/*
+	 * Don't start the timer for a thread delayed indefinitely.
+	 */
+	if (timeout != XN_INFINITE || timeout_mode != XN_RELATIVE) {
+		xntimer_set_sched(&thread->rtimer, thread->sched);
+		if (xntimer_start(&thread->rtimer, timeout, XN_INFINITE,
+				  timeout_mode)) {
+			/* (absolute) timeout value in the past, bail out. */
+			if (wchan) {
+				thread->wchan = wchan;
+				xnsynch_forget_sleeper(thread);
+			}
+			xnthread_set_info(thread, XNTIMEO);
+			goto unlock_and_exit;
+		}
+		xnthread_set_state(thread, XNDELAY);
+	}
+
+	if (xnthread_test_state(thread, XNREADY)) {
+		xnsched_dequeue(thread);
+		xnthread_clear_state(thread, XNREADY);
+	}
+
+	xnthread_set_state(thread, mask);
+
+	/*
+	 * We must make sure that we don't clear the wait channel if a
+	 * thread is first blocked (wchan != NULL) then forcibly
+	 * suspended (wchan == NULL), since these are conjunctive
+	 * conditions.
+	 */
+	if (wchan)
+		thread->wchan = wchan;
+
+	/*
+	 * If the current thread is being relaxed, we must have been
+	 * called from xnshadow_relax(), in which case we introduce an
+	 * opportunity for interrupt delivery right before switching
+	 * context, which shortens the uninterruptible code path.
+	 *
+	 * We have to shut irqs off before xnsched_run() though: if an
+	 * interrupt could preempt us in __xnsched_run() right after
+	 * the call to xnarch_escalate() but before we grab the
+	 * nklock, we would enter the critical section in
+	 * xnsched_run() while running in secondary mode, which would
+	 * defeat the purpose of xnarch_escalate().
+	 */
+	if (likely(thread == sched->curr)) {
+		sched->lflags &= ~XNINLOCK;
+		if (unlikely(mask & XNRELAX)) {
+			xnlock_clear_irqon(&nklock);
+			splmax();
+			xnsched_run();
+			return;
+		}
+		/*
+		 * If the thread is runnning on another CPU,
+		 * xnsched_run will trigger the IPI as required.
+		 */
+		xnsched_run();
+
+		if (xnthread_test_info(thread, XNCANCELD)) {
+			xnlock_put_irqrestore(&nklock, s);
+			xnthread_test_cancel();
+			/* ... won't return ... */
+			XENO_BUGON(NUCLEUS, 1);
+		}
+		goto unlock_and_exit;
+	}
+
+	/*
+	 * Ok, this one is an interesting corner case, which requires
+	 * a bit of background first. Here, we handle the case of
+	 * suspending a _relaxed_ user shadow which is _not_ the
+	 * current thread.
+	 *
+	 *  The net effect is that we are attempting to stop the
+	 * shadow thread at the nucleus level, whilst this thread is
+	 * actually running some code under the control of the Linux
+	 * scheduler (i.e. it's relaxed).
+	 *
+	 *  To make this possible, we force the target Linux task to
+	 * migrate back to the Xenomai domain by sending it a
+	 * SIGSHADOW signal the interface libraries trap for this
+	 * specific internal purpose, whose handler is expected to
+	 * call back the nucleus's migration service.
+	 *
+	 * By forcing this migration, we make sure that the real-time
+	 * nucleus controls, hence properly stops, the target thread
+	 * according to the requested suspension condition. Otherwise,
+	 * the shadow thread in secondary mode would just keep running
+	 * into the Linux domain, thus breaking the most common
+	 * assumptions regarding suspended threads.
+	 *
+	 * We only care for threads that are not current, and for
+	 * XNSUSP, XNDELAY, XNDORMANT and XNHELD conditions, because:
+	 *
+	 * - There is no point in dealing with relaxed threads, since
+	 * personalities have to ask for primary mode switch when
+	 * processing any syscall which may block the caller
+	 * (i.e. __xn_exec_primary).
+	 *
+	 * - among all blocking bits (XNTHREAD_BLOCK_BITS), only
+	 * XNSUSP, XNDELAY and XNHELD may be applied by the current
+	 * thread to a non-current thread. XNPEND is always added by
+	 * the caller to its own state, XNMIGRATE and XNRELAX have
+	 * special semantics escaping this issue.
+	 *
+	 * We don't signal threads which are already in a dormant
+	 * state, since they are suspended by definition.
+	 */
+	if (((oldstate & (XNTHREAD_BLOCK_BITS|XNUSER)) == (XNRELAX|XNUSER)) &&
+	    (mask & (XNDELAY | XNSUSP | XNHELD)) != 0)
+		xnshadow_send_sig(thread, SIGSHADOW, SIGSHADOW_ACTION_HARDEN);
+
+unlock_and_exit:
+	xnlock_put_irqrestore(&nklock, s);
+}
+EXPORT_SYMBOL_GPL(xnthread_suspend);
+
+/**
+ * @fn void xnthread_resume(struct xnthread *thread,int mask)
+ * @brief Resume a thread.
+ *
+ * Resumes the execution of a thread previously suspended by one or
+ * more calls to xnthread_suspend(). This call removes a suspensive
+ * condition affecting the target thread. When all suspensive
+ * conditions are gone, the thread is left in a READY state at which
+ * point it becomes eligible anew for scheduling.
+ *
+ * @param thread The descriptor address of the resumed thread.
+ *
+ * @param mask The suspension mask specifying the suspensive condition
+ * to remove from the thread's wait mask. Possible values usable by
+ * the caller are:
+ *
+ * - XNSUSP. This flag removes the explicit suspension condition. This
+ * condition might be additive to the XNPEND condition.
+ *
+ * - XNDELAY. This flag removes the counted delay wait condition.
+ *
+ * - XNPEND. This flag removes the resource wait condition. If a
+ * watchdog is armed, it is automatically disarmed by this
+ * call. Unlike the two previous conditions, only the current thread
+ * can set this condition for itself, i.e. no thread can force another
+ * one to pend on a resource.
+ *
+ * When the thread is eventually resumed by one or more calls to
+ * xnthread_resume(), the caller of xnthread_suspend() in the awakened
+ * thread that suspended itself should check for the following bits in
+ * its own information mask to determine what caused its wake up:
+ *
+ * - XNRMID means that the caller must assume that the pended
+ * synchronization object has been destroyed (see xnsynch_flush()).
+ *
+ * - XNTIMEO means that the delay elapsed, or the watchdog went off
+ * before the corresponding synchronization object was signaled.
+ *
+ * - XNBREAK means that the wait has been forcibly broken by a call to
+ * xnthread_unblock().
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Interrupt service routine
+ * - Kernel-based task
+ * - User-space task
+ *
+ * Rescheduling: never.
+ */
+void xnthread_resume(struct xnthread *thread, int mask)
+{
+	unsigned long oldstate;
+	struct xnsched *sched;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	trace_mark(xn_nucleus, thread_resume,
+		   "thread %p thread_name %s mask %lu",
+		   thread, xnthread_name(thread), mask);
+
+	xntrace_pid(xnthread_host_pid(thread), xnthread_current_priority(thread));
+
+	sched = thread->sched;
+	oldstate = thread->state;
+
+	if ((oldstate & XNTHREAD_BLOCK_BITS) == 0) {
+		if (oldstate & XNREADY)
+			xnsched_dequeue(thread);
+		goto enqueue;
+	}
+
+	/* Clear the specified block bit(s) */
+	xnthread_clear_state(thread, mask);
+
+	/*
+	 * If XNDELAY was set in the clear mask, xnthread_unblock()
+	 * was called for the thread, or a timeout has elapsed. In the
+	 * latter case, stopping the timer is a no-op.
+	 */
+	if (mask & XNDELAY)
+		xntimer_stop(&thread->rtimer);
+
+	if (!xnthread_test_state(thread, XNTHREAD_BLOCK_BITS))
+		goto clear_wchan;
+
+	if (mask & XNDELAY) {
+		mask = xnthread_test_state(thread, XNPEND);
+		if (mask == 0)
+			goto unlock_and_exit;
+		if (thread->wchan)
+			xnsynch_forget_sleeper(thread);
+		goto recheck_state;
+	}
+
+	if (xnthread_test_state(thread, XNDELAY)) {
+		if (mask & XNPEND) {
+			/*
+			 * A resource became available to the thread.
+			 * Cancel the watchdog timer.
+			 */
+			xntimer_stop(&thread->rtimer);
+			xnthread_clear_state(thread, XNDELAY);
+		}
+		goto recheck_state;
+	}
+
+	/*
+	 * The thread is still suspended, but is no more pending on a
+	 * resource.
+	 */
+	if ((mask & XNPEND) != 0 && thread->wchan)
+		xnsynch_forget_sleeper(thread);
+
+	goto unlock_and_exit;
+
+recheck_state:
+	if (xnthread_test_state(thread, XNTHREAD_BLOCK_BITS))
+		goto unlock_and_exit;
+
+clear_wchan:
+	if ((mask & ~XNDELAY) != 0 && thread->wchan != NULL)
+		/*
+		 * If the thread was actually suspended, clear the
+		 * wait channel.  -- this allows requests like
+		 * xnthread_suspend(thread,XNDELAY,...)  not to run
+		 * the following code when the suspended thread is
+		 * woken up while undergoing a simple delay.
+		 */
+		xnsynch_forget_sleeper(thread);
+
+	if (unlikely((oldstate & mask) & XNHELD)) {
+		xnsched_requeue(thread);
+		goto ready;
+	}
+enqueue:
+	xnsched_enqueue(thread);
+ready:
+	xnthread_set_state(thread, XNREADY);
+	xnsched_set_resched(sched);
+unlock_and_exit:
+	xnlock_put_irqrestore(&nklock, s);
+}
+EXPORT_SYMBOL_GPL(xnthread_resume);
+
+/**
+ * @fn int xnthread_unblock(xnthread_t *thread)
+ * @brief Unblock a thread.
+ *
+ * Breaks the thread out of any wait it is currently in.  This call
+ * removes the XNDELAY and XNPEND suspensive conditions previously put
+ * by xnthread_suspend() on the target thread. If all suspensive
+ * conditions are gone, the thread is left in a READY state at which
+ * point it becomes eligible anew for scheduling.
+ *
+ * @param thread The descriptor address of the unblocked thread.
+ *
+ * This call neither releases the thread from the XNSUSP, XNRELAX,
+ * XNDORMANT or XNHELD suspensive conditions.
+ *
+ * When the thread resumes execution, the XNBREAK bit is set in the
+ * unblocked thread's information mask. Unblocking a non-blocked
+ * thread is perfectly harmless.
+ *
+ * @return non-zero is returned if the thread was actually unblocked
+ * from a pending wait state, 0 otherwise.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Interrupt service routine
+ * - Kernel-based task
+ * - User-space task
+ *
+ * Rescheduling: never.
+ */
+int xnthread_unblock(xnthread_t *thread)
+{
+	int ret = 1;
+	spl_t s;
+
+	/*
+	 * Attempt to abort an undergoing wait for the given thread.
+	 * If this state is due to an alarm that has been armed to
+	 * limit the sleeping thread's waiting time while it pends for
+	 * a resource, the corresponding XNPEND state will be cleared
+	 * by xnthread_resume() in the same move. Otherwise, this call
+	 * may abort an undergoing infinite wait for a resource (if
+	 * any).
+	 */
+	xnlock_get_irqsave(&nklock, s);
+
+	trace_mark(xn_nucleus, thread_unblock,
+		   "thread %p thread_name %s state %lu",
+		   thread, xnthread_name(thread),
+		   xnthread_state_flags(thread));
+
+	if (xnthread_test_state(thread, XNDELAY))
+		xnthread_resume(thread, XNDELAY);
+	else if (xnthread_test_state(thread, XNPEND))
+		xnthread_resume(thread, XNPEND);
+	else
+		ret = 0;
+
+	/*
+	 * We should not clear a previous break state if this service
+	 * is called more than once before the target thread actually
+	 * resumes, so we only set the bit here and never clear
+	 * it. However, we must not raise the XNBREAK bit if the
+	 * target thread was already awake at the time of this call,
+	 * so that downstream code does not get confused by some
+	 * "successful but interrupted syscall" condition. IOW, a
+	 * break state raised here must always trigger an error code
+	 * downstream, and an already successful syscall cannot be
+	 * marked as interrupted.
+	 */
+	if (ret)
+		xnthread_set_info(thread, XNBREAK);
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return ret;
+}
+EXPORT_SYMBOL_GPL(xnthread_unblock);
+
+/**
+ * @fn int xnthread_set_periodic(xnthread_t *thread,xnticks_t idate, xntmode_t timeout_mode, xnticks_t period)
+ * @brief Make a thread periodic.
+ *
+ * Make a thread periodic by programming its first release point and
+ * its period in the processor time line.  Subsequent calls to
+ * xnthread_wait_period() will delay the thread until the next
+ * periodic release point in the processor timeline is reached.
+ *
+ * @param thread The descriptor address of the affected thread. This
+ * thread is immediately delayed until the first periodic release
+ * point is reached.
+ *
+ * @param idate The initial (absolute) date of the first release
+ * point, expressed in nanoseconds. The affected thread will be
+ * delayed by the first call to xnthread_wait_period() until this
+ * point is reached. If @a idate is equal to XN_INFINITE, the current
+ * system date is used, and no initial delay takes place. In the
+ * latter case, @a timeout_mode is not considered and can have any
+ * valid value.
+ *
+ * @param timeout_mode The mode of the @a idate parameter. It can
+ * either be set to XN_ABSOLUTE or XN_REALTIME with @a idate different
+ * from XN_INFINITE (see also xntimer_start()).
+ *
+ * @param period The period of the thread, expressed in nanoseconds.
+ * As a side-effect, passing XN_INFINITE attempts to stop the thread's
+ * periodic timer; in the latter case, the routine always exits
+ * succesfully, regardless of the previous state of this timer.
+ *
+ * @return 0 is returned upon success. Otherwise:
+ *
+ * - -ETIMEDOUT is returned @a idate is different from XN_INFINITE and
+ * represents a date in the past.
+ *
+ * - -EINVAL is returned if @a period is different from XN_INFINITE
+ * but shorter than the scheduling latency value for the target
+ * system, as available from /proc/xenomai/latency. -EINVAL is also
+ * returned if @a timeout_mode is not compatible with @a idate, such
+ * as XN_RELATIVE with @a idate different from XN_INFINITE.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Kernel-based task
+ * - User-space task
+ *
+ * Rescheduling: none.
+ */
+int xnthread_set_periodic(xnthread_t *thread, xnticks_t idate,
+			  xntmode_t timeout_mode, xnticks_t period)
+{
+	int err = 0;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	trace_mark(xn_nucleus, thread_setperiodic,
+		   "thread %p thread_name %s idate %Lu mode %d period %Lu timer %p",
+		   thread, xnthread_name(thread), idate, timeout_mode, period,
+		   &thread->ptimer);
+
+	if (period == XN_INFINITE) {
+		if (xntimer_running_p(&thread->ptimer))
+			xntimer_stop(&thread->ptimer);
+
+		goto unlock_and_exit;
+	}
+
+	if (period < xnclock_ticks_to_ns(&nkclock, nkclock.gravity)) {
+		/*
+		 * LART: detect periods which are shorter than the
+		 * clock gravity. This can't work, caller must have
+		 * messed up with arguments.
+		 */
+		err = -EINVAL;
+		goto unlock_and_exit;
+	}
+
+	xntimer_set_sched(&thread->ptimer, thread->sched);
+
+	if (idate == XN_INFINITE) {
+		xntimer_start(&thread->ptimer, period, period, XN_RELATIVE);
+	} else {
+		if (timeout_mode == XN_REALTIME)
+			idate -= xnclock_get_offset(&nkclock);
+		else if (timeout_mode != XN_ABSOLUTE) {
+			err = -EINVAL;
+			goto unlock_and_exit;
+		}
+		err = xntimer_start(&thread->ptimer, idate + period, period,
+				    XN_ABSOLUTE);
+	}
+
+      unlock_and_exit:
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return err;
+}
+EXPORT_SYMBOL_GPL(xnthread_set_periodic);
+
+/**
+ * @fn int xnthread_wait_period(unsigned long *overruns_r)
+ * @brief Wait for the next periodic release point.
+ *
+ * Make the current thread wait for the next periodic release point in
+ * the processor time line.
+ *
+ * @param overruns_r If non-NULL, @a overruns_r must be a pointer to a
+ * memory location which will be written with the count of pending
+ * overruns. This value is copied only when xnthread_wait_period()
+ * returns -ETIMEDOUT or success; the memory location remains
+ * unmodified otherwise. If NULL, this count will never be copied
+ * back.
+ *
+ * @return 0 is returned upon success; if @a overruns_r is valid, zero
+ * is copied to the pointed memory location. Otherwise:
+ *
+ * - -EWOULDBLOCK is returned if xnthread_set_periodic() has not
+ * previously been called for the calling thread.
+ *
+ * - -EINTR is returned if xnthread_unblock() has been called for the
+ * waiting thread before the next periodic release point has been
+ * reached. In this case, the overrun counter is reset too.
+ *
+ * - -ETIMEDOUT is returned if the timer has overrun, which indicates
+ * that one or more previous release points have been missed by the
+ * calling thread. If @a overruns_r is valid, the count of pending
+ * overruns is copied to the pointed memory location.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Kernel-based task
+ * - User-space task
+ *
+ * Rescheduling: always, unless the current release point has already
+ * been reached.  In the latter case, the current thread immediately
+ * returns from this service without being delayed.
+ */
+int xnthread_wait_period(unsigned long *overruns_r)
+{
+	unsigned long overruns = 0;
+	xnthread_t *thread;
+	xnticks_t now;
+	int err = 0;
+	spl_t s;
+
+	thread = xnsched_current_thread();
+
+	xnlock_get_irqsave(&nklock, s);
+
+	if (unlikely(!xntimer_running_p(&thread->ptimer))) {
+		err = -EWOULDBLOCK;
+		goto unlock_and_exit;
+	}
+
+	trace_mark(xn_nucleus, thread_waitperiod, "thread %p thread_name %s",
+		   thread, xnthread_name(thread));
+
+	now = xnclock_read_raw(&nkclock);
+	if (likely((xnsticks_t)(now - xntimer_pexpect(&thread->ptimer)) < 0)) {
+		xnthread_suspend(thread, XNDELAY, XN_INFINITE, XN_RELATIVE, NULL);
+		if (unlikely(xnthread_test_info(thread, XNBREAK))) {
+			err = -EINTR;
+			goto unlock_and_exit;
+		}
+
+		now = xnclock_read_raw(&nkclock);
+	}
+
+	overruns = xntimer_get_overruns(&thread->ptimer, now);
+	if (overruns) {
+		err = -ETIMEDOUT;
+
+		trace_mark(xn_nucleus, thread_missedperiod,
+			   "thread %p thread_name %s overruns %lu",
+			   thread, xnthread_name(thread), overruns);
+	}
+
+	if (likely(overruns_r != NULL))
+		*overruns_r = overruns;
+
+      unlock_and_exit:
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return err;
+}
+EXPORT_SYMBOL_GPL(xnthread_wait_period);
+
+/**
+ * @fn int xnthread_set_slice(struct xnthread *thread, xnticks_t quantum)
+ * @brief Set thread time-slicing information.
+ *
+ * Update the time-slicing information for a given thread. This
+ * service enables or disables round-robin scheduling for the thread,
+ * depending on the value of @a quantum. By default, times-slicing is
+ * disabled for a new thread initialized by a call to xnthread_init().
+ *
+ * @param thread The descriptor address of the affected thread.
+ *
+ * @param quantum The time quantum assigned to the thread expressed in
+ * nanoseconds. If @a quantum is different from XN_INFINITE, the
+ * time-slice for the thread is set to that value and its current time
+ * credit is refilled (i.e. the thread is given a full time-slice to
+ * run next). Otherwise, if @a quantum equals XN_INFINITE,
+ * time-slicing is stopped for that thread.
+ *
+ * @return 0 is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a quantum is not XN_INFINITE, and the
+ * base scheduling class of the target thread does not support
+ * time-slicing.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Any kernel context.
+ *
+ * Rescheduling: never.
+ */
+int xnthread_set_slice(struct xnthread *thread, xnticks_t quantum)
+{
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	thread->rrperiod = quantum;
+	xntimer_stop(&thread->rrbtimer);
+
+	if (quantum != XN_INFINITE) {
+		if (thread->base_class->sched_tick == NULL) {
+			xnlock_put_irqrestore(&nklock, s);
+			return -EINVAL;
+		}
+		xnthread_set_state(thread, XNRRB);
+		xntimer_start(&thread->rrbtimer,
+			      quantum, quantum, XN_RELATIVE);
+	} else
+		xnthread_clear_state(thread, XNRRB);
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return 0;
+}
+EXPORT_SYMBOL_GPL(xnthread_set_slice);
+
+/**
+ * @fn void xnthread_cancel(struct xnthread *thread)
+ * @brief Cancel a thread.
+ *
+ * Request cancellation of a thread. This service forces @a thread to
+ * exit from any blocking call. @a thread will terminate as soon as it
+ * reaches a cancellation point. Cancellation points are defined for
+ * the following situations:
+ *
+ * - @a thread self-cancels by a call to xnthread_cancel().
+ * - @a thread calls any blocking Xenomai service that would otherwise
+ * lead to a suspension in xnthread_suspend().
+ * - @a thread resumes from xnthread_suspend().
+ * - @a thread invokes a Linux syscall (user-space shadow only).
+ * - @a thread receives a Linux signal (user-space shadow only).
+ *
+ * @param thread The descriptor address of the thread to terminate.
+ *
+ * Calling context: This service may be called from all runtime modes.
+ *
+ * Rescheduling: always in case of self-cancellation from primary mode.
+ */
+void xnthread_cancel(struct xnthread *thread)
+{
+	spl_t s;
+
+	XENO_ASSERT(NUCLEUS, !xnthread_test_state(thread, XNROOT),
+		    xnsys_fatal("attempt to cancel the root thread");
+		);
+
+	xnlock_get_irqsave(&nklock, s);
+
+	if (xnthread_test_info(thread, XNCANCELD))
+		goto check_self_cancel;
+
+	trace_mark(xn_nucleus, thread_cancel, "thread %p thread_name %s",
+		   thread, xnthread_name(thread));
+
+	xnthread_set_info(thread, XNCANCELD);
+
+	/*
+	 * If @thread is not started yet, fake a start request,
+	 * raising the kicked condition bit to make sure it will reach
+	 * xnthread_test_cancel() on its wakeup path.
+	 */
+	if (xnthread_test_state(thread, XNDORMANT)) {
+		xnthread_set_info(thread, XNKICKED);
+		xnthread_resume(thread, XNDORMANT);
+		xnsched_run();
+		goto unlock_and_exit;
+	}
+
+check_self_cancel:
+	if (xnshadow_current_p(thread)) {
+		xnlock_put_irqrestore(&nklock, s);
+		xnthread_test_cancel();
+		/* ... won't return ... */
+		XENO_BUGON(NUCLEUS, 1);
+	}
+
+	__xnshadow_kick(thread);
+
+unlock_and_exit:
+	xnlock_put_irqrestore(&nklock, s);
+}
+EXPORT_SYMBOL_GPL(xnthread_cancel);
+
+/**
+ * @fn void xnthread_join(struct xnthread *thread)
+ * @brief Join with a terminated thread.
+ *
+ * This service waits for @a thread to terminate after a call to
+ * xnthread_cancel().  If that thread has already terminated or is
+ * dormant at the time of the call, then xnthread_join() returns
+ * immediately.
+ *
+ * @param thread The descriptor address of the thread to join with.
+ *
+ * Calling context: This service may be called from secondary mode
+ * only.
+ *
+ * Rescheduling: always if @a thread did not terminate yet at the time
+ * of the call.
+ */
+void xnthread_join(struct xnthread *thread)
+{
+	unsigned int tag;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	tag = thread->idtag;
+	if (xnthread_test_info(thread, XNDORMANT) || tag == 0) {
+		xnlock_put_irqrestore(&nklock, s);
+		return;
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	trace_mark(xn_nucleus, thread_join, "thread %p thread_name %s",
+		   thread, xnthread_name(thread));
+
+	/*
+	 * Only a very few threads are likely to terminate within a
+	 * short time frame at any point in time, so experiencing a
+	 * thundering herd effect due to synchronizing on a single
+	 * wait queue is quite unlikely. In any case, we run in
+	 * secondary mode.
+	 */
+	wait_event(nkjoinq, thread->idtag != tag);
+}
+EXPORT_SYMBOL_GPL(xnthread_join);
+
+/**
+ * @fn int xnthread_migrate(int cpu)
+ * @brief Migrate the current thread.
+ *
+ * This call makes the current thread migrate to another CPU if its
+ * affinity allows it.
+ *
+ * @param cpu The destination CPU.
+ *
+ * @retval 0 if the thread could migrate ;
+ * @retval -EPERM if the calling context is asynchronous, or the
+ * current thread affinity forbids this migration ;
+ * @retval -EBUSY if the scheduler is locked.
+ */
+int xnthread_migrate(int cpu)
+{
+	struct xnthread *thread;
+	struct xnsched *sched;
+	int ret = 0;
+	spl_t s;
+
+	if (xnsched_interrupt_p())
+		return -EPERM;
+
+	if (xnsched_locked_p())
+		return -EBUSY;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	thread = xnsched_current_thread();
+
+	if (!cpu_isset(cpu, thread->affinity)) {
+		ret = -EPERM;
+		goto unlock_and_exit;
+	}
+
+	if (cpu == ipipe_processor_id())
+		goto unlock_and_exit;
+
+	sched = xnsched_struct(cpu);
+
+	trace_mark(xn_nucleus, thread_migrate,
+		   "thread %p thread_name %s cpu %d",
+		   thread, xnthread_name(thread), cpu);
+
+	release_fpu(thread);
+
+	/* Move to remote scheduler. */
+	xnsched_migrate(thread, sched);
+
+	/* Migrate the thread's periodic timer. */
+	xntimer_set_sched(&thread->ptimer, sched);
+
+	xnsched_run();
+
+	/*
+	 * Reset execution time measurement period so that we don't
+	 * mess up per-CPU statistics.
+	 */
+	xnstat_exectime_reset_stats(&thread->stat.lastperiod);
+
+      unlock_and_exit:
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return ret;
+}
+EXPORT_SYMBOL_GPL(xnthread_migrate);
+
+/**
+ * @fn int xnthread_set_schedparam(struct xnthread *thread,struct xnsched_class *sched_class,const union xnsched_policy_param *sched_param)
+ * @brief Change the base scheduling parameters of a thread.
+ *
+ * Changes the base scheduling policy and paramaters of a thread. If
+ * the thread is currently blocked, waiting in priority-pending mode
+ * (XNSYNCH_PRIO) for a synchronization object to be signaled, the
+ * nucleus will attempt to reorder the object's wait queue so that it
+ * reflects the new sleeper's priority, unless the XNSYNCH_DREORD flag
+ * has been set for the pended object.
+ *
+ * @param thread The descriptor address of the affected thread. See
+ * note.
+ *
+ * @param sched_class The new scheduling class the thread should be
+ * assigned to.
+ *
+ * @param sched_param The scheduling parameters to set for the thread;
+ * @a sched_param must be valid within the context of @a sched_class.
+ *
+ * It is absolutely required to use this service to change a thread
+ * priority, in order to have all the needed housekeeping chores
+ * correctly performed. i.e. Do *not* call xnsched_set_policy()
+ * directly or worse, change the thread.cprio field by hand in any
+ * case.
+ *
+ * @return 0 is returned on success. Otherwise, a negative error code
+ * indicates the cause of a failure that happened in the scheduling
+ * class implementation for @a sched_class. Invalid parameters passed
+ * into @a sched_param are common causes of error.
+ *
+ * Side-effects:
+ *
+ * - This service does not call the rescheduling procedure but may
+ * affect the state of the runnable queue for the previous and new
+ * scheduling classes.
+ *
+ * - Assigning the same scheduling class and parameters to a running
+ * or ready thread moves it to the end of the runnable queue, thus
+ * causing a manual round-robin.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Interrupt service routine
+ * - Kernel-based task
+ * - User-space task
+ *
+ * Rescheduling: never.
+ *
+ * @note The changes only apply to the Xenomai scheduling parameters
+ * for @a thread. There is no propagation/translation of such changes
+ * to the Linux scheduler for the task mated to the Xenomai target
+ * thread.
+ */
+int xnthread_set_schedparam(struct xnthread *thread,
+			    struct xnsched_class *sched_class,
+			    const union xnsched_policy_param *sched_param)
+{
+	int old_wprio, new_wprio, ret;
+	spl_t s;
+
+	XENO_BUGON(NUCLEUS, xnsched_root_p());
+
+	xnlock_get_irqsave(&nklock, s);
+
+	old_wprio = thread->wprio;
+
+	ret = xnsched_set_policy(thread, sched_class, sched_param);
+	if (ret)
+		goto unlock_and_exit;
+
+	new_wprio = thread->wprio;
+
+	trace_mark(xn_nucleus, set_thread_schedparam,
+		   "thread %p thread_name %s class %s prio %d",
+		   thread, xnthread_name(thread),
+		   thread->sched_class->name, thread->cprio);
+	/*
+	 * NOTE: The behaviour changed compared to v2.4.x: we do not
+	 * prevent the caller from altering the scheduling parameters
+	 * of a thread that currently undergoes a PIP boost
+	 * anymore. Rationale: Calling xnthread_set_schedparam()
+	 * carelessly with no consideration for resource management is
+	 * a bug in essence, and xnthread_set_schedparam() does not
+	 * have to paper over it, especially at the cost of more
+	 * complexity when dealing with multiple scheduling classes.
+	 * In short, callers have to make sure that lowering a thread
+	 * priority is safe with respect to what their application
+	 * currently does.
+	 */
+	if (old_wprio != new_wprio && thread->wchan != NULL &&
+	    (thread->wchan->status & XNSYNCH_DREORD) == 0)
+		/*
+		 * Update the pending order of the thread inside its
+		 * wait queue, unless this behaviour has been
+		 * explicitly disabled for the pended synchronization
+		 * object, or the requested (weighted) priority has
+		 * not changed, thus preventing spurious round-robin
+		 * effects.
+		 */
+		xnsynch_requeue_sleeper(thread);
+	/*
+	 * We don't need/want to move the thread at the end of its
+	 * priority group whenever:
+	 * - it is blocked and thus not runnable;
+	 * - it bears the ready bit in which case xnsched_set_policy()
+	 * already reordered the runnable queue;
+	 * - we currently hold the scheduler lock, so we don't want
+	 * any round-robin effect to take place.
+	 */
+	if (!xnthread_test_state(thread, XNTHREAD_BLOCK_BITS|XNREADY|XNLOCK))
+		xnsched_putback(thread);
+
+unlock_and_exit:
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return ret;
+}
+EXPORT_SYMBOL_GPL(xnthread_set_schedparam);
+
+/*@}*/

@@ -35,7 +35,7 @@
  *
  *@{*/
 
-#include <cobalt/kernel/pod.h>
+#include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/registry.h>
 #include <cobalt/kernel/thread.h>
@@ -690,7 +690,7 @@ int xnregistry_enter(const char *key, void *objaddr,
 #endif /* CONFIG_XENO_OPT_VFILE */
 
 	if (registry_wakeup_sleepers(key))
-		xnpod_schedule();
+		xnsched_run();
 
 unlock_and_exit:
 
@@ -744,8 +744,8 @@ EXPORT_SYMBOL_GPL(xnregistry_enter);
  *
  * - -EINVAL is returned if @a key is NULL.
  *
- * - -EINTR is returned if xnpod_unblock_thread() has been called for
- * the waiting thread before the retrieval has completed.
+ * - -EINTR is returned if xnthread_unblock() has been called for the
+ * waiting thread before the retrieval has completed.
  *
  * - -EWOULDBLOCK is returned if @a timeout is equal to XN_NONBLOCK
  * and the searched object is not registered on entry. As a special
@@ -781,7 +781,7 @@ int xnregistry_bind(const char *key, xnticks_t timeout, int timeout_mode,
 	if (key == NULL)
 		return -EINVAL;
 
-	thread = xnpod_current_thread();
+	thread = xnsched_current_thread();
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -799,7 +799,7 @@ int xnregistry_bind(const char *key, xnticks_t timeout, int timeout_mode,
 		}
 
 		if ((timeout_mode == XN_RELATIVE && timeout == XN_NONBLOCK) ||
-		    xnpod_unblockable_p()) {
+		    xnsched_unblockable_p()) {
 			ret = -EWOULDBLOCK;
 			goto unlock_and_exit;
 		}
@@ -935,8 +935,8 @@ EXPORT_SYMBOL_GPL(xnregistry_remove);
  * - -ETIMEDOUT is returned if the object cannot be removed within the
  * specified amount of time.
  *
- * - -EINTR is returned if xnpod_unblock_thread() has been called for
- * the calling thread waiting for the object to be unlocked.
+ * - -EINTR is returned if xnthread_unblock() has been called for the
+ * calling thread waiting for the object to be unlocked.
  *
  * Environments:
  *
@@ -975,7 +975,7 @@ int xnregistry_remove_safe(xnhandle_t handle, xnticks_t timeout)
 		goto unlock_and_exit;
 	}
 
-	if (xnpod_unblockable_p()) {
+	if (xnsched_unblockable_p()) {
 		ret = -EBUSY;
 		goto unlock_and_exit;
 	}
@@ -1064,9 +1064,9 @@ void *xnregistry_get(xnhandle_t handle)
 	spl_t s;
 
 	if (handle == XNOBJECT_SELF) {
-		if (!xnpod_primary_p())
+		if (!xnsched_primary_p())
 			return NULL;
-		handle = xnpod_current_thread()->registry.handle;
+		handle = xnsched_current_thread()->registry.handle;
 	}
 
 	xnlock_get_irqsave(&nklock, s);
@@ -1123,9 +1123,9 @@ unsigned long xnregistry_put(xnhandle_t handle)
 	spl_t s;
 
 	if (handle == XNOBJECT_SELF) {
-		if (!xnpod_primary_p())
+		if (!xnsched_primary_p())
 			return 0;
-		handle = xnpod_current_thread()->registry.handle;
+		handle = xnsched_current_thread()->registry.handle;
 	}
 
 	xnlock_get_irqsave(&nklock, s);
@@ -1140,7 +1140,7 @@ unsigned long xnregistry_put(xnhandle_t handle)
 	    (newlock = --object->safelock) == 0 &&
 	    xnsynch_pended_p(&object->safesynch)) {
 		xnsynch_flush(&object->safesynch, 0);
-		xnpod_schedule();
+		xnsched_run();
 	}
 
       unlock_and_exit:
@@ -1182,7 +1182,7 @@ EXPORT_SYMBOL_GPL(xnregistry_put);
 void *xnregistry_fetch(xnhandle_t handle)
 {
 	if (handle == XNOBJECT_SELF)
-		return xnpod_primary_p()? xnpod_current_thread() : NULL;
+		return xnsched_primary_p()? xnsched_current_thread() : NULL;
 
 	return xnregistry_lookup(handle);
 }

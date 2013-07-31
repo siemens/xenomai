@@ -1,7 +1,4 @@
-/*!@file sched-weak.c
- * @author Philippe Gerum
- * @brief WEAK class implementation (non-RT userland shadows)
- *
+/**
  * Copyright (C) 2013 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
@@ -18,11 +15,8 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- *
- * \ingroup sched
  */
-
-#include <cobalt/kernel/pod.h>
+#include <cobalt/kernel/sched.h>
 
 static void xnsched_weak_init(struct xnsched *sched)
 {
@@ -93,7 +87,7 @@ static struct xnvfile_snapshot_ops vfile_sched_weak_ops;
 static struct xnvfile_snapshot vfile_sched_weak = {
 	.privsz = sizeof(struct vfile_sched_weak_priv),
 	.datasz = sizeof(struct vfile_sched_weak_data),
-	.tag = &nkpod_struct.threadlist_tag,
+	.tag = &nkthreadlist_tag,
 	.ops = &vfile_sched_weak_ops,
 };
 
@@ -105,7 +99,7 @@ static int vfile_sched_weak_rewind(struct xnvfile_snapshot_iterator *it)
 	if (nrthreads == 0)
 		return -ESRCH;
 
-	priv->curr = list_first_entry(&nkpod->threadq, struct xnthread, glink);
+	priv->curr = list_first_entry(&nkthreadq, struct xnthread, glink);
 
 	return nrthreads;
 }
@@ -121,7 +115,7 @@ static int vfile_sched_weak_next(struct xnvfile_snapshot_iterator *it,
 		return 0;	/* All done. */
 
 	thread = priv->curr;
-	if (list_is_last(&thread->glink, &nkpod->threadq))
+	if (list_is_last(&thread->glink, &nkthreadq))
 		priv->curr = NULL;
 	else
 		priv->curr = list_next_entry(thread, glink);

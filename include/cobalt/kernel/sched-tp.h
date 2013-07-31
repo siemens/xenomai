@@ -1,7 +1,4 @@
-/** @file sched-tp.h
- * @brief Definitions for the TP scheduling class.
- * @author Philippe Gerum
- *
+/**
  * Copyright (C) 2008 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify

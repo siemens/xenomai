@@ -1,6 +1,7 @@
 #include <linux/vmalloc.h>
 #include <linux/semaphore.h>
-#include <cobalt/kernel/pod.h>
+#include <cobalt/kernel/sys.h>
+#include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/synch.h>
 #include <cobalt/kernel/thread.h>
 #include <cobalt/kernel/trace.h>
@@ -89,7 +90,8 @@ static void handle_ktask_error(rtswitch_context_t *ctx, unsigned fp_val)
 				break;
 			}
 
-			xnpod_suspend_self();
+			xnthread_suspend(&cur->ktask,
+					 XNSUSP, XN_INFINITE, XN_RELATIVE, NULL);
 		}
 }
 
@@ -164,18 +166,18 @@ static int rtswitch_to_rt(rtswitch_context_t *ctx,
 		rtdm_timer_start(&ctx->wake_up_delay,
 				 ctx->pause_us * 1000, 0,
 				 RTDM_TIMERMODE_RELATIVE);
-		xnpod_lock_sched();
+		xnsched_lock();
 	} else
 		switch (to->base.flags & RTSWITCH_RT) {
 		case RTSWITCH_NRT:
 			ctx->utask = to;
 			barrier();
 			rtdm_nrtsig_pend(&ctx->wake_utask);
-			xnpod_lock_sched();
+			xnsched_lock();
 			break;
 
 		case RTSWITCH_RT:
-			xnpod_lock_sched();
+			xnsched_lock();
 			rtdm_event_signal(&to->rt_synch);
 			break;
 
@@ -184,7 +186,7 @@ static int rtswitch_to_rt(rtswitch_context_t *ctx,
 		}
 
 	rc = rtdm_event_wait(&from->rt_synch);
-	xnpod_unlock_sched();
+	xnsched_unlock();
 
 	if (rc < 0)
 		return rc;
@@ -486,20 +488,20 @@ static int rtswitch_create_ktask(rtswitch_context_t *ctx,
 
 	iattr.name = name;
 	iattr.flags = init_flags;
-	iattr.personality = &generic_personality;
+	iattr.personality = &xenomai_personality;
 	param.rt.prio = 1;
 
-	err = xnpod_init_thread(&task->ktask,
-				&iattr, &xnsched_class_rt, &param);
+	err = xnthread_init(&task->ktask,
+			    &iattr, &xnsched_class_rt, &param);
 	if (!err) {
 		sattr.mode = 0;
 		sattr.affinity = cpumask_of_cpu(ctx->cpu);
 		sattr.entry = rtswitch_ktask;
 		sattr.cookie = &arg;
-		err = xnpod_start_thread(&task->ktask, &sattr);
+		err = xnthread_start(&task->ktask, &sattr);
 	} else
 		/*
-		 * In order to avoid calling xnpod_cancel_thread with
+		 * In order to avoid calling xnthread_cancel() for an
 		 * invalid thread.
 		 */
 		task->base.flags = 0;

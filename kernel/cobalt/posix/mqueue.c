@@ -182,7 +182,7 @@ static inline void cobalt_mq_destroy(cobalt_mq_t *mq)
 	ipipe_post_work_root(&freework, work);
 
 	if (resched)
-		xnpod_schedule();
+		xnsched_run();
 }
 
 /**
@@ -520,7 +520,7 @@ static struct cobalt_msg *
 cobalt_mq_timedsend_inner(cobalt_mq_t **mqp, mqd_t fd,
 			  size_t len, const struct timespec *abs_timeoutp)
 {
-	struct xnthread *cur = xnpod_current_thread();
+	struct xnthread *cur = xnsched_current_thread();
 	struct cobalt_msg *msg;
 	spl_t s;
 	int rc;
@@ -625,7 +625,7 @@ cobalt_mq_finish_send(mqd_t fd, cobalt_mq_t *mq, struct cobalt_msg *msg)
 	xnlock_put_irqrestore(&nklock, s);
 
 	if (resched)
-		xnpod_schedule();
+		xnsched_run();
 
 	if (removed) {
 		cobalt_mq_destroy(mq);
@@ -654,7 +654,7 @@ static struct cobalt_msg *
 cobalt_mq_timedrcv_inner(cobalt_mq_t **mqp, mqd_t fd,
 			 size_t len, const struct timespec *abs_timeoutp)
 {
-	xnthread_t *cur = xnpod_current_thread();
+	xnthread_t *cur = xnsched_current_thread();
 	struct cobalt_msg *msg;
 	spl_t s;
 	int rc;
@@ -737,7 +737,7 @@ cobalt_mq_finish_rcv(mqd_t fd, cobalt_mq_t *mq, struct cobalt_msg *msg)
 	xnlock_put_irqrestore(&nklock, s);
 
 	if (resched)
-		xnpod_schedule();
+		xnsched_run();
 
 	if (removed) {
 		cobalt_mq_destroy(mq);
@@ -910,7 +910,7 @@ static inline int mq_notify(mqd_t fd, const struct sigevent *evp)
 		    (unsigned int)(evp->sigev_signo - 1) > SIGRTMAX - 1))
 		return -EINVAL;
 
-	if (xnpod_interrupt_p() || thread == NULL)
+	if (xnsched_interrupt_p() || thread == NULL)
 		return -EPERM;
 
 	xnlock_get_irqsave(&nklock, s);

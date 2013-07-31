@@ -18,7 +18,6 @@
  *
  * \ingroup thread
  */
-
 #ifndef _COBALT_KERNEL_THREAD_H
 #define _COBALT_KERNEL_THREAD_H
 
@@ -28,6 +27,7 @@
 #include <cobalt/kernel/registry.h>
 #include <cobalt/kernel/schedparam.h>
 #include <cobalt/kernel/trace.h>
+#include <cobalt/kernel/shadow.h>
 #include <cobalt/uapi/kernel/thread.h>
 #include <cobalt/uapi/kernel/synch.h>
 #include <asm/xenomai/machine.h>
@@ -313,11 +313,44 @@ xnsynch_release(struct xnsynch *synch, struct xnthread *thread)
 	return __xnsynch_transfer_ownership(synch, thread);
 }
 
-int xnthread_init(struct xnthread *thread,
-		  const struct xnthread_init_attr *attr,
-		  struct xnsched *sched,
-		  struct xnsched_class *sched_class,
-		  const union xnsched_policy_param *sched_param);
+static inline int normalize_priority(int prio)
+{
+	return prio < MAX_RT_PRIO ? prio : MAX_RT_PRIO - 1;
+}
+
+int __xnthread_init(struct xnthread *thread,
+		    const struct xnthread_init_attr *attr,
+		    struct xnsched *sched,
+		    struct xnsched_class *sched_class,
+		    const union xnsched_policy_param *sched_param);
+
+void __xnthread_test_cancel(struct xnthread *curr);
+
+void __xnthread_cleanup(struct xnthread *curr);
+
+/**
+ * @fn void xnthread_test_cancel(void)
+ * @brief Introduce a thread cancellation point.
+ *
+ * Terminates the current thread if a cancellation request is pending
+ * for it, i.e. if xnthread_cancel() was called.
+ *
+ * Calling context: This service may be called from all runtime modes
+ * of kernel or user-space threads.
+ */
+static inline void xnthread_test_cancel(void)
+{
+	struct xnthread *curr = xnshadow_current();
+
+	if (curr && xnthread_test_info(curr, XNCANCELD))
+		__xnthread_test_cancel(curr);
+}
+
+#ifdef CONFIG_XENO_HW_FPU
+void xnthread_switch_fpu(struct xnsched *sched);
+#else
+static inline void xnthread_switch_fpu(struct xnsched *sched) { }
+#endif /* CONFIG_XENO_HW_FPU */
 
 void xnthread_init_shadow_tcb(struct xnthread *thread,
 			      struct task_struct *task);
@@ -337,9 +370,47 @@ void xnthread_prepare_wait(struct xnthread_wait_context *wc);
 void xnthread_finish_wait(struct xnthread_wait_context *wc,
 			  void (*cleanup)(struct xnthread_wait_context *wc));
 
-static inline int normalize_priority(int prio)
-{
-	return prio < MAX_RT_PRIO ? prio : MAX_RT_PRIO - 1;
-}
+int xnthread_init(struct xnthread *thread,
+		  const struct xnthread_init_attr *attr,
+		  struct xnsched_class *sched_class,
+		  const union xnsched_policy_param *sched_param);
+
+int xnthread_start(struct xnthread *thread,
+		   const struct xnthread_start_attr *attr);
+
+int xnthread_set_mode(struct xnthread *thread,
+		      int clrmask,
+		      int setmask);
+
+void xnthread_suspend(struct xnthread *thread,
+		      int mask,
+		      xnticks_t timeout,
+		      xntmode_t timeout_mode,
+		      struct xnsynch *wchan);
+
+void xnthread_resume(struct xnthread *thread,
+		     int mask);
+
+int xnthread_unblock(struct xnthread *thread);
+
+int xnthread_set_periodic(struct xnthread *thread,
+			  xnticks_t idate,
+			  xntmode_t timeout_mode,
+			  xnticks_t period);
+
+int xnthread_wait_period(unsigned long *overruns_r);
+
+int xnthread_set_slice(struct xnthread *thread,
+		       xnticks_t quantum);
+
+void xnthread_cancel(struct xnthread *thread);
+
+void xnthread_join(struct xnthread *thread);
+
+int xnthread_migrate(int cpu);
+
+int xnthread_set_schedparam(struct xnthread *thread,
+			    struct xnsched_class *sched_class,
+			    const union xnsched_policy_param *sched_param);
 
 #endif /* !_COBALT_KERNEL_THREAD_H */

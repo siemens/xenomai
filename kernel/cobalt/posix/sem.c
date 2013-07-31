@@ -82,7 +82,7 @@ static int sem_destroy_inner(struct cobalt_sem *sem, struct cobalt_kqueues *q)
 
 	list_del(&sem->link);
 	if (xnsynch_destroy(&sem->synchbase) == XNSYNCH_RESCHED) {
-		xnpod_schedule();
+		xnsched_run();
 		ret = 1;
 	}
 
@@ -667,14 +667,14 @@ int sem_post_inner(struct cobalt_sem *sem, struct cobalt_kqueues *ownq, int bcas
 	if (!bcast) {
 		if (xnsynch_wakeup_one_sleeper(&sem->synchbase)) {
 			sem->nwaiters--;
-			xnpod_schedule();
+			xnsched_run();
 		} else if ((sem->flags & SEM_PULSE) == 0)
 			++sem->value;
 	} else {
 		sem->value = 0;
 		if (xnsynch_flush(&sem->synchbase, 0) == XNSYNCH_RESCHED) {
 			sem->nwaiters = 0;
-			xnpod_schedule();
+			xnsched_run();
 		}
 	}
 

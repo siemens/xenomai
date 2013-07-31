@@ -1,5 +1,4 @@
 /**
- * @file vdso.h
  * @brief Definitions for global semaphore heap shared objects
  * @author Wolfgang Mauerer
  *

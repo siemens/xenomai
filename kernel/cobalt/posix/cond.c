@@ -62,7 +62,7 @@ cond_destroy_internal(struct cobalt_cond *cond, struct cobalt_kqueues *q)
 	list_del(&cond->link);
 	/* synchbase wait queue may not be empty only when this function is
 	   called from cobalt_cond_pkg_cleanup, hence the absence of
-	   xnpod_schedule(). */
+	   xnsched_run(). */
 	xnsynch_destroy(&cond->synchbase);
 	xnlock_put_irqrestore(&nklock, s);
 	xnheap_free(&xnsys_ppd_get(cond->attr.pshared)->sem_heap,

@@ -1,7 +1,5 @@
-/*!\file sched.c
- * \author Philippe Gerum
- *
- * Copyright (C) 2008 Philippe Gerum <rpm@xenomai.org>.
+/**
+ * Copyright (C) 2001-2013 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
@@ -18,20 +16,28 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  *
- * \ingroup sched
+ * @ingroup sched
  */
-
-#include <cobalt/kernel/pod.h>
+#include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/thread.h>
 #include <cobalt/kernel/timer.h>
 #include <cobalt/kernel/intr.h>
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/shadow.h>
 #include <cobalt/kernel/arith.h>
+#include <cobalt/kernel/sys.h>
 #include <asm/xenomai/thread.h>
 
 DEFINE_PER_CPU(struct xnsched, nksched);
 EXPORT_PER_CPU_SYMBOL_GPL(nksched);
+
+LIST_HEAD(nkthreadq);
+
+int nknrthreads;
+
+#ifdef CONFIG_XENO_OPT_VFILE
+struct xnvfile_rev_tag nkthreadlist_tag;
+#endif
 
 static struct xnsched_class *xnsched_class_highest;
 
@@ -86,7 +92,7 @@ MODULE_PARM_DESC(watchdog_timeout, "Watchdog timeout (s)");
 
 static void xnsched_watchdog_handler(struct xntimer *timer)
 {
-	struct xnsched *sched = xnpod_current_sched();
+	struct xnsched *sched = xnsched_current();
 	struct xnthread *curr = sched->curr;
 
 	if (likely(xnthread_test_state(curr, XNROOT))) {
@@ -108,7 +114,7 @@ static void xnsched_watchdog_handler(struct xntimer *timer)
 	} else {
 		printk(XENO_WARN "watchdog triggered -- runaway thread "
 		       "'%s' cancelled\n", xnthread_name(curr));
-		xnpod_cancel_thread(curr);
+		xnthread_cancel(curr);
 	}
 
 	xnsched_reset_watchdog(sched);
@@ -154,11 +160,11 @@ void xnsched_init(struct xnsched *sched, int cpu)
 
 	attr.flags = XNROOT | XNFPU;
 	attr.name = root_name;
-	attr.personality = &generic_personality;
+	attr.personality = &xenomai_personality;
 	param.idle.prio = XNSCHED_IDLE_PRIO;
 
-	xnthread_init(&sched->rootcb, &attr,
-		      sched, &xnsched_class_idle, &param);
+	__xnthread_init(&sched->rootcb, &attr,
+			sched, &xnsched_class_idle, &param);
 
 	sched->rootcb.affinity = cpumask_of_cpu(cpu);
 	xnstat_exectime_set_current(sched, &sched->rootcb.stat.account);
@@ -167,6 +173,8 @@ void xnsched_init(struct xnsched *sched, int cpu)
 #endif /* CONFIG_XENO_HW_FPU */
 
 	xnthread_init_root_tcb(&sched->rootcb);
+	list_add_tail(&sched->rootcb.glink, &nkthreadq);
+	nknrthreads++;
 
 #ifdef CONFIG_XENO_OPT_WATCHDOG
 	xntimer_init_noblock(&sched->wdtimer, &nkclock,
@@ -251,13 +259,13 @@ struct xnsched *xnsched_finish_unlocked_switch(struct xnsched *sched)
 
 #ifdef CONFIG_SMP
 	/* If current thread migrated while suspended */
-	sched = xnpod_current_sched();
+	sched = xnsched_current();
 #endif /* CONFIG_SMP */
 
 	last = sched->last;
 	sched->status &= ~XNINSW;
 
-	/* Detect a thread which called xnpod_migrate_thread */
+	/* Detect a thread which called xnthread_migrate() */
 	if (last->sched != sched) {
 		xnsched_putback(last);
 		xnthread_clear_state(last, XNMIGRATE);
@@ -267,6 +275,32 @@ struct xnsched *xnsched_finish_unlocked_switch(struct xnsched *sched)
 }
 
 #endif /* CONFIG_XENO_HW_UNLOCKED_SWITCH */
+
+void ___xnsched_lock(struct xnsched *sched)
+{
+	struct xnthread *curr = sched->curr;
+
+	if (xnthread_lock_count(curr)++ == 0) {
+		sched->lflags |= XNINLOCK;
+		xnthread_set_state(curr, XNLOCK);
+	}
+}
+EXPORT_SYMBOL_GPL(___xnsched_lock);
+
+void ___xnsched_unlock(struct xnsched *sched)
+{
+	struct xnthread *curr = sched->curr;
+	XENO_ASSERT(NUCLEUS, xnthread_lock_count(curr) > 0,
+		    xnsys_fatal("Unbalanced lock/unlock");
+		    );
+
+	if (--xnthread_lock_count(curr) == 0) {
+		xnthread_clear_state(curr, XNLOCK);
+		sched->lflags &= ~XNINLOCK;
+		xnsched_run();
+	}
+}
+EXPORT_SYMBOL_GPL(___xnsched_unlock);
 
 /* Must be called with nklock locked, interrupts off. */
 void xnsched_putback(struct xnthread *thread)
@@ -305,7 +339,7 @@ int xnsched_set_policy(struct xnthread *thread,
 	}
 
 	/*
-	 * As a special case, we may be called from xnthread_init()
+	 * As a special case, we may be called from __xnthread_init()
 	 * with no previous scheduling class at all.
 	 */
 	if (likely(thread->base_class != NULL)) {
@@ -360,8 +394,10 @@ void xnsched_track_policy(struct xnthread *thread,
 	xnsched_set_resched(thread->sched);
 }
 
-/* Must be called with nklock locked, interrupts off. thread must be
- * runnable. */
+/*
+ * Must be called with nklock locked, interrupts off. thread must be
+ * runnable.
+ */
 void xnsched_migrate(struct xnthread *thread, struct xnsched *sched)
 {
 	struct xnsched_class *sched_class = thread->sched_class;
@@ -435,7 +471,7 @@ void sched_initq(struct xnsched_mlq *q, int loprio, int hiprio)
 
 	XENO_ASSERT(NUCLEUS,
 		    hiprio - loprio + 1 < XNSCHED_MLQ_LEVELS,
-		    xnpod_fatal("priority range [%d..%d] is beyond multi-level "
+		    xnsys_fatal("priority range [%d..%d] is beyond multi-level "
 				"queue indexing capabilities",
 				loprio, hiprio));
 }
@@ -444,7 +480,7 @@ static inline int indexmlq(struct xnsched_mlq *q, int prio)
 {
 	XENO_ASSERT(NUCLEUS,
 		    prio >= q->loprio && prio <= q->hiprio,
-		    xnpod_fatal("priority level %d is out of range ", prio));
+		    xnsys_fatal("priority level %d is out of range ", prio));
 	/*
 	 * BIG FAT WARNING: We need to rescale the priority level to a
 	 * 0-based range. We use ffnz() to scan the bitmap which MUST
@@ -570,6 +606,249 @@ struct xnthread *sched_findq(struct list_head *q, int prio)
 
 #endif /* !CONFIG_XENO_OPT_SCALABLE_SCHED */
 
+static inline void switch_context(struct xnsched *sched,
+				  xnthread_t *prev, xnthread_t *next)
+{
+#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
+	sched->last = prev;
+	sched->status |= XNINSW;
+	xnlock_clear_irqon(&nklock);
+#endif /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
+
+	xnarch_switch_to(xnthread_archtcb(prev),
+			 xnthread_archtcb(next));
+}
+
+/**
+ * @fn void xnsched_run(void)
+ * @brief The rescheduling procedure.
+ *
+ * This is the central rescheduling routine which should be called to
+ * validate and apply changes which have previously been made to the
+ * nucleus scheduling state, such as suspending, resuming or changing
+ * the priority of threads.  This call first determines if a thread
+ * switch should take place, and performs it as needed. xnsched_run()
+ * schedules out the current thread if:
+ *
+ * - the current thread is about to block.
+ * - a runnable thread from a higher priority scheduling class is
+ * waiting for the CPU.
+ * - the current thread does not lead the runnable threads from its
+ * own scheduling class (i.e. round-robin).
+ *
+ * The Cobalt core implements a lazy rescheduling scheme so that most
+ * of the services affecting the threads state MUST be followed by a
+ * call to the rescheduling procedure for the new scheduling state to
+ * be applied.
+ *
+ * In other words, multiple changes on the scheduler state can be done
+ * in a row, waking threads up, blocking others, without being
+ * immediately translated into the corresponding context switches.
+ * When all changes have been applied, xnsched_run() should be called
+ * for considering those changes, and possibly switching context.
+ *
+ * As a notable exception to the previous principle however, every
+ * action which ends up suspending the current thread begets an
+ * implicit call to the rescheduling procedure on behalf of the
+ * blocking service.
+ *
+ * Typically, self-suspension or sleeping on a synchronization object
+ * automatically leads to a call to the rescheduling procedure,
+ * therefore the caller does not need to explicitly issue
+ * xnsched_run() after such operations.
+ *
+ * The rescheduling procedure always leads to a null-effect if it is
+ * called on behalf of an interrupt service routine. Any outstanding
+ * scheduler lock held by the outgoing thread will be restored when
+ * the thread is scheduled back in.
+ *
+ * Calling this procedure with no applicable context switch pending is
+ * harmless and simply leads to a null-effect.
+ *
+ * Environments:
+ *
+ * This service can be called from any context.
+ */
+static inline int test_resched(struct xnsched *sched)
+{
+	int resched = sched->status & XNRESCHED;
+#ifdef CONFIG_SMP
+	/* Send resched IPI to remote CPU(s). */
+	if (unlikely(!cpus_empty(sched->resched))) {
+		smp_mb();
+		ipipe_send_ipi(IPIPE_RESCHEDULE_IPI, sched->resched);
+		cpus_clear(sched->resched);
+	}
+#else
+	resched = xnsched_resched_p(sched);
+#endif
+	sched->status &= ~XNRESCHED;
+
+	return resched;
+}
+
+static inline void enter_root(struct xnthread *root)
+{
+	struct xnarchtcb *rootcb __maybe_unused = xnthread_archtcb(root);
+
+#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
+	if (rootcb->core.mm == NULL)
+		set_ti_thread_flag(rootcb->core.tip, TIF_MMSWITCH_INT);
+#endif
+	ipipe_unmute_pic();
+}
+
+static inline void leave_root(struct xnthread *root)
+{
+	struct xnarchtcb *rootcb = xnthread_archtcb(root);
+	struct task_struct *p = current;
+
+	ipipe_notify_root_preemption();
+	ipipe_mute_pic();
+	/* Remember the preempted Linux task pointer. */
+	rootcb->core.host_task = p;
+	rootcb->core.tsp = &p->thread;
+	rootcb->core.mm = rootcb->core.active_mm = ipipe_get_active_mm();
+#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
+	rootcb->core.tip = task_thread_info(p);
+#endif
+	xnarch_leave_root(rootcb);
+}
+
+void __xnsched_run_handler(void) /* hw interrupts off. */
+{
+	trace_mark(xn_nucleus, sched_remote, MARK_NOARGS);
+	xnsched_run();
+}
+
+void __xnsched_run(struct xnsched *sched)
+{
+	struct xnthread *prev, *next, *curr;
+	int switched, need_resched, shadow;
+	spl_t s;
+
+	if (xnarch_escalate())
+		return;
+
+	trace_mark(xn_nucleus, sched, MARK_NOARGS);
+
+	xnlock_get_irqsave(&nklock, s);
+
+	curr = sched->curr;
+	xntrace_pid(xnthread_host_pid(curr), xnthread_current_priority(curr));
+reschedule:
+	switched = 0;
+	need_resched = test_resched(sched);
+#if !XENO_DEBUG(NUCLEUS)
+	if (!need_resched)
+		goto signal_unlock_and_exit;
+#endif /* !XENO_DEBUG(NUCLEUS) */
+	next = xnsched_pick_next(sched);
+	if (next == curr) {
+		if (unlikely(xnthread_test_state(next, XNROOT))) {
+			if (sched->lflags & XNHTICK)
+				xnintr_host_tick(sched);
+			if (sched->lflags & XNHDEFER)
+				xnclock_program_shot(&nkclock, sched);
+		}
+		goto signal_unlock_and_exit;
+	}
+
+	XENO_BUGON(NUCLEUS, need_resched == 0);
+
+	prev = curr;
+
+	trace_mark(xn_nucleus, sched_switch,
+		   "prev %p prev_name %s "
+		   "next %p next_name %s",
+		   prev, xnthread_name(prev),
+		   next, xnthread_name(next));
+
+	if (xnthread_test_state(next, XNROOT))
+		xnsched_reset_watchdog(sched);
+
+	sched->curr = next;
+	shadow = 1;
+
+	if (xnthread_test_state(prev, XNROOT)) {
+		leave_root(prev);
+		shadow = 0;
+	} else if (xnthread_test_state(next, XNROOT)) {
+		if (sched->lflags & XNHTICK)
+			xnintr_host_tick(sched);
+		if (sched->lflags & XNHDEFER)
+			xnclock_program_shot(&nkclock, sched);
+		enter_root(next);
+	}
+
+	xnstat_exectime_switch(sched, &next->stat.account);
+	xnstat_counter_inc(&next->stat.csw);
+
+	switch_context(sched, prev, next);
+
+	/*
+	 * Test whether we transitioned from primary mode to secondary
+	 * over a shadow thread. This may happen in two cases:
+	 *
+	 * 1) the shadow thread just relaxed.
+	 * 2) the shadow TCB has just been deleted, in which case
+	 * we have to reap the mated Linux side as well.
+	 *
+	 * In both cases, we are running over the epilogue of Linux's
+	 * schedule, and should skip our epilogue code.
+	 */
+	if (shadow && ipipe_root_p)
+		goto shadow_epilogue;
+
+	switched = 1;
+	sched = xnsched_finish_unlocked_switch(sched);
+	/*
+	 * Re-read the currently running thread, this is needed
+	 * because of relaxed/hardened transitions.
+	 */
+	curr = sched->curr;
+	xnthread_switch_fpu(sched);
+	xntrace_pid(xnthread_host_pid(curr), xnthread_current_priority(curr));
+
+signal_unlock_and_exit:
+
+	if (switched &&
+	    xnsched_maybe_resched_after_unlocked_switch(sched))
+		goto reschedule;
+
+	if (xnthread_lock_count(curr))
+		sched->lflags |= XNINLOCK;
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return;
+
+shadow_epilogue:
+
+	__ipipe_complete_domain_migration();
+	/*
+	 * Shadow on entry and root without shadow extension on exit?
+	 * Mmmm... This must be the user-space mate of a deleted
+	 * real-time shadow we've just rescheduled in the Linux domain
+	 * to have it exit properly.  Reap it now.
+	 */
+	if (xnshadow_current() == NULL) {
+		splnone();
+		__ipipe_reenter_root();
+		do_exit(0);
+	}
+
+	/*
+	 * Interrupts must be disabled here (has to be done on entry
+	 * of the Linux [__]switch_to function), but it is what
+	 * callers expect, specifically the reschedule of an IRQ
+	 * handler that hit before we call xnsched_run in
+	 * xnthread_suspend() when relaxing a thread.
+	 */
+	XENO_BUGON(NUCLEUS, !hard_irqs_disabled());
+}
+EXPORT_SYMBOL_GPL(__xnsched_run);
+
 #ifdef CONFIG_XENO_OPT_VFILE
 
 static struct xnvfile_directory sched_vfroot;
@@ -594,7 +873,7 @@ static struct xnvfile_snapshot_ops vfile_schedlist_ops;
 static struct xnvfile_snapshot schedlist_vfile = {
 	.privsz = sizeof(struct vfile_schedlist_priv),
 	.datasz = sizeof(struct vfile_schedlist_data),
-	.tag = &nkpod_struct.threadlist_tag,
+	.tag = &nkthreadlist_tag,
 	.ops = &vfile_schedlist_ops,
 };
 
@@ -602,11 +881,11 @@ static int vfile_schedlist_rewind(struct xnvfile_snapshot_iterator *it)
 {
 	struct vfile_schedlist_priv *priv = xnvfile_iterator_priv(it);
 
-	/* &nkpod->threadq cannot be empty (root thread(s)). */
-	priv->curr = list_first_entry(&nkpod->threadq, struct xnthread, glink);
+	/* &nkthreadq cannot be empty (root thread(s)). */
+	priv->curr = list_first_entry(&nkthreadq, struct xnthread, glink);
 	priv->start_time = xnclock_read_monotonic(&nkclock);
 
-	return nkpod->nrthreads;
+	return nknrthreads;
 }
 
 static int vfile_schedlist_next(struct xnvfile_snapshot_iterator *it,
@@ -621,7 +900,7 @@ static int vfile_schedlist_next(struct xnvfile_snapshot_iterator *it,
 		return 0;	/* All done. */
 
 	thread = priv->curr;
-	if (list_is_last(&thread->glink, &nkpod->threadq))
+	if (list_is_last(&thread->glink, &nkthreadq))
 		priv->curr = NULL;
 	else
 		priv->curr = list_next_entry(thread, glink);
@@ -720,7 +999,7 @@ static struct xnvfile_snapshot_ops vfile_schedstat_ops;
 static struct xnvfile_snapshot schedstat_vfile = {
 	.privsz = sizeof(struct vfile_schedstat_priv),
 	.datasz = sizeof(struct vfile_schedstat_data),
-	.tag = &nkpod_struct.threadlist_tag,
+	.tag = &nkthreadlist_tag,
 	.ops = &vfile_schedstat_ops,
 };
 
@@ -733,11 +1012,11 @@ static int vfile_schedstat_rewind(struct xnvfile_snapshot_iterator *it)
 	 * The activity numbers on each valid interrupt descriptor are
 	 * grouped under a pseudo-thread.
 	 */
-	priv->curr = list_first_entry(&nkpod->threadq, struct xnthread, glink);
+	priv->curr = list_first_entry(&nkthreadq, struct xnthread, glink);
 	priv->irq = 0;
 	irqnr = xnintr_query_init(&priv->intr_it) * NR_CPUS;
 
-	return irqnr + nkpod->nrthreads;
+	return irqnr + nknrthreads;
 }
 
 static int vfile_schedstat_next(struct xnvfile_snapshot_iterator *it,
@@ -758,7 +1037,7 @@ static int vfile_schedstat_next(struct xnvfile_snapshot_iterator *it,
 		goto scan_irqs;
 
 	thread = priv->curr;
-	if (list_is_last(&thread->glink, &nkpod->threadq))
+	if (list_is_last(&thread->glink, &nkthreadq))
 		priv->curr = NULL;
 	else
 		priv->curr = list_next_entry(thread, glink);
@@ -803,7 +1082,7 @@ scan_irqs:
 		return VFILE_SEQ_SKIP;
 	}
 
-	if (!xnarch_cpu_supported(priv->intr_it.cpu))
+	if (!xnsys_supported_cpu(priv->intr_it.cpu))
 		return VFILE_SEQ_SKIP;
 
 	p->cpu = priv->intr_it.cpu;
@@ -891,7 +1170,7 @@ static struct xnvfile_snapshot_ops vfile_schedacct_ops;
 static struct xnvfile_snapshot schedacct_vfile = {
 	.privsz = sizeof(struct vfile_schedstat_priv),
 	.datasz = sizeof(struct vfile_schedstat_data),
-	.tag = &nkpod_struct.threadlist_tag,
+	.tag = &nkthreadlist_tag,
 	.ops = &vfile_schedacct_ops,
 };
 

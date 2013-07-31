@@ -142,7 +142,7 @@
   *@{*/
 
 #include <cobalt/kernel/heap.h>
-#include <cobalt/kernel/pod.h>
+#include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/bufd.h>
 #include <cobalt/kernel/assert.h>
 #include <asm/xenomai/syscall.h>
@@ -265,7 +265,7 @@ EXPORT_SYMBOL_GPL(xnbufd_map_kmem);
 
 void xnbufd_map_umem(struct xnbufd *bufd, void __user *ptr, size_t len)
 {
-	XENO_BUGON(NUCLEUS, !xnthread_test_state(xnpod_current_thread(),
+	XENO_BUGON(NUCLEUS, !xnthread_test_state(xnsched_current_thread(),
 						 XNROOT|XNUSER));
 	bufd->b_ptr = ptr;
 	bufd->b_len = len;
@@ -365,8 +365,8 @@ ssize_t xnbufd_copy_to_kmem(void *to, struct xnbufd *bufd, size_t len)
 	 * here, since the source buffer would lie in kernel space in
 	 * such a case.
 	 */
-	if (xnthread_test_state(xnpod_current_thread(), XNROOT|XNUSER) &&
-	    !xnpod_interrupt_p() && current->mm == bufd->b_mm) {
+	if (xnthread_test_state(xnsched_current_thread(), XNROOT|XNUSER) &&
+	    !xnsched_interrupt_p() && current->mm == bufd->b_mm) {
 		XENO_BUGON(NUCLEUS, xnlock_is_owner(&nklock) || spltest());
 		if (__xn_safe_copy_from_user(to, (void __user *)from, len))
 			return -EFAULT;
@@ -476,8 +476,8 @@ ssize_t xnbufd_copy_from_kmem(struct xnbufd *bufd, void *from, size_t len)
 	 * here: feeding a RT activity with data from a non-RT context
 	 * is wrong in the first place, so never mind.
 	 */
-	if (xnthread_test_state(xnpod_current_thread(), XNROOT|XNUSER) &&
-	    !xnpod_interrupt_p() && current->mm == bufd->b_mm) {
+	if (xnthread_test_state(xnsched_current_thread(), XNROOT|XNUSER) &&
+	    !xnsched_interrupt_p() && current->mm == bufd->b_mm) {
 		XENO_BUGON(NUCLEUS, xnlock_is_owner(&nklock) || spltest());
 		if (__xn_safe_copy_to_user((void __user *)to, from, len))
 			return -EFAULT;

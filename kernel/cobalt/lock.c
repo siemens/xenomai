@@ -1,8 +1,5 @@
-/**@file lock.c
- * @brief SMP locking services.
- * @author Philippe Gerum
- *
- * Copyright (C) 2001-2008,2012 Philippe Gerum <rpm@xenomai.org>.
+/**
+ * Copyright (C) 2001-2012 Philippe Gerum <rpm@xenomai.org>.
  * Copyright (C) 2004,2005 Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
@@ -20,16 +17,12 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  *
- * @ingroup lock
- */
-
-/**
  * @ingroup nucleus
  * @defgroup lock SMP locking services.
  *
  * SMP locking services.
- *@{*/
-
+ * @{
+ */
 #include <linux/module.h>
 #include <cobalt/kernel/lock.h>
 

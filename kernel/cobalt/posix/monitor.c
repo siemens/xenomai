@@ -106,7 +106,7 @@ int cobalt_monitor_init(struct cobalt_monitor_shadow __user *u_monsh,
 /* nklock held, irqs off */
 static int cobalt_monitor_enter_inner(struct cobalt_monitor *mon)
 {
-	struct xnthread *cur = xnpod_current_thread();
+	struct xnthread *cur = xnsched_current_thread();
 	int ret = 0, info;
 
 	if (!cobalt_obj_active(mon, COBALT_MONITOR_MAGIC,
@@ -321,8 +321,8 @@ int cobalt_monitor_sync(struct cobalt_monitor_shadow __user *u_monsh)
 
 	if (mon->data->flags & COBALT_MONITOR_SIGNALED) {
 		cobalt_monitor_wakeup(mon);
-		xnsynch_release(&mon->gate, xnpod_current_thread());
-		xnpod_schedule();
+		xnsynch_release(&mon->gate, xnsched_current_thread());
+		xnsched_run();
 		ret = cobalt_monitor_enter_inner(mon);
 	}
 out:
@@ -350,8 +350,8 @@ int cobalt_monitor_exit(struct cobalt_monitor_shadow __user *u_monsh)
 	if (mon->data->flags & COBALT_MONITOR_SIGNALED)
 		cobalt_monitor_wakeup(mon);
 
-	xnsynch_release(&mon->gate, xnpod_current_thread());
-	xnpod_schedule();
+	xnsynch_release(&mon->gate, xnsched_current_thread());
+	xnsched_run();
 out:
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -380,7 +380,7 @@ static void cobalt_monitor_destroy_inner(struct cobalt_monitor *mon,
 
 int cobalt_monitor_destroy(struct cobalt_monitor_shadow __user *u_monsh)
 {
-	struct xnthread *cur = xnpod_current_thread();
+	struct xnthread *cur = xnsched_current_thread();
 	struct cobalt_monitor *mon = NULL;
 	int ret = 0;
 	spl_t s;
@@ -413,7 +413,7 @@ int cobalt_monitor_destroy(struct cobalt_monitor_shadow __user *u_monsh)
 
 	cobalt_monitor_destroy_inner(mon, mon->owningq);
 
-	xnpod_schedule();
+	xnsched_run();
 
 	return 0;
  fail:

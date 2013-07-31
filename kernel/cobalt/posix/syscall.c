@@ -143,7 +143,7 @@ static int __select(int nfds,
 	size_t fds_size;
 	int i, err;
 
-	thread = xnpod_current_thread();
+	thread = xnsched_current_thread();
 	if (!thread)
 		return -EPERM;
 

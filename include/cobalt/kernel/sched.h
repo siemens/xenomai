@@ -111,6 +111,14 @@ struct xnsched {
 
 DECLARE_PER_CPU(struct xnsched, nksched);
 
+extern struct list_head nkthreadq;
+
+extern int nknrthreads;
+
+#ifdef CONFIG_XENO_OPT_VFILE
+extern struct xnvfile_rev_tag nkthreadlist_tag;
+#endif
+
 union xnsched_policy_param;
 
 struct xnsched_class {
@@ -152,8 +160,24 @@ struct xnsched_class {
 #ifdef CONFIG_SMP
 #define xnsched_cpu(__sched__)	((__sched__)->cpu)
 #else /* !CONFIG_SMP */
-#define xnsched_cpu(__sched__)	({ (void)__sched__; 0; })
+#define xnsched_cpu(__sched__)	({ (void)(__sched__); 0; })
 #endif /* CONFIG_SMP */
+
+static inline struct xnsched *xnsched_struct(int cpu)
+{
+	return &per_cpu(nksched, cpu);
+}
+
+static inline struct xnsched *xnsched_current(void)
+{
+	/* IRQs off */
+	return __this_cpu_ptr(&nksched);
+}
+
+static inline struct xnthread *xnsched_current_thread(void)
+{
+	return xnsched_current()->curr;
+}
 
 /* Test resched flag of given sched. */
 static inline int xnsched_resched_p(struct xnsched *sched)
@@ -161,33 +185,153 @@ static inline int xnsched_resched_p(struct xnsched *sched)
 	return sched->status & XNRESCHED;
 }
 
-/* Set self resched flag for the given scheduler. */
-#define xnsched_set_self_resched(__sched__) do {		\
-  XENO_BUGON(NUCLEUS, __sched__ != xnpod_current_sched());	\
-  (__sched__)->status |= XNRESCHED;				\
-} while (0)
+/* Set self resched flag for the current scheduler. */
+static inline void xnsched_set_self_resched(struct xnsched *sched)
+{
+	sched->status |= XNRESCHED;
+}
 
 /* Set resched flag for the given scheduler. */
 #ifdef CONFIG_SMP
-#define xnsched_set_resched(__sched__) do {				\
-  struct xnsched *current_sched = xnpod_current_sched();		\
-  if (current_sched == (__sched__))					\
-      current_sched->status |= XNRESCHED;				\
-  else if (!xnsched_resched_p(__sched__)) {				\
-      cpu_set(xnsched_cpu(__sched__), current_sched->resched);		\
-      (__sched__)->status |= XNRESCHED;					\
-      current_sched->status |= XNRESCHED;				\
-  }									\
-} while (0)
+static inline void xnsched_set_resched(struct xnsched *sched)
+{
+	struct xnsched *current_sched = xnsched_current();
+
+	if (current_sched == sched)
+		current_sched->status |= XNRESCHED;
+	else if (!xnsched_resched_p(sched)) {
+		cpu_set(xnsched_cpu(sched), current_sched->resched);
+		sched->status |= XNRESCHED;
+		current_sched->status |= XNRESCHED;
+	}
+}
 #else /* !CONFIG_SMP */
-#define xnsched_set_resched	xnsched_set_self_resched
+static inline void xnsched_set_resched(struct xnsched *sched)
+{
+	xnsched_set_self_resched(sched);
+}
 #endif /* !CONFIG_SMP */
+
+void __xnsched_run(struct xnsched *sched);
+
+void __xnsched_run_handler(void);
+
+static inline void xnsched_run(void)
+{
+	struct xnsched *sched;
+	/*
+	 * NOTE: Since __xnsched_run() won't run if an escalation to
+	 * primary domain is needed, we won't use critical scheduler
+	 * information before we actually run in primary mode;
+	 * therefore we can first test the scheduler status then
+	 * escalate.  Running in the primary domain means that no
+	 * Linux-triggered CPU migration may occur from that point
+	 * either. Finally, since migration is always a self-directed
+	 * operation for Xenomai threads, we can safely read the
+	 * scheduler state bits without holding the nklock.
+	 *
+	 * Said differently, if we race here because of a CPU
+	 * migration, it must have been Linux-triggered because we run
+	 * in secondary mode; in which case we will escalate to the
+	 * primary domain, then unwind the current call frame without
+	 * running the rescheduling procedure in
+	 * __xnsched_run(). Therefore, the scheduler pointer will
+	 * be either valid, or unused.
+	 */
+	sched = xnsched_current();
+	smp_rmb();
+	/*
+	 * No immediate rescheduling is possible if an ISR context is
+	 * active, or if we are caught in the middle of a unlocked
+	 * context switch.
+	 */
+#if XENO_DEBUG(NUCLEUS)
+	if ((sched->status|sched->lflags) &
+	    (XNINIRQ|XNINSW|XNINLOCK))
+		return;
+#else /* !XENO_DEBUG(NUCLEUS) */
+	if (((sched->status|sched->lflags) &
+	     (XNINIRQ|XNINSW|XNRESCHED|XNINLOCK)) != XNRESCHED)
+		return;
+#endif /* !XENO_DEBUG(NUCLEUS) */
+
+	__xnsched_run(sched);
+}
+
+void ___xnsched_lock(struct xnsched *sched);
+
+void ___xnsched_unlock(struct xnsched *sched);
+
+static inline void __xnsched_lock(void)
+{
+	struct xnsched *sched;
+
+	barrier();
+	sched = xnsched_current();
+	___xnsched_lock(sched);
+}
+
+static inline void __xnsched_unlock(void)
+{
+	struct xnsched *sched;
+
+	barrier();
+	sched = xnsched_current();
+	___xnsched_unlock(sched);
+}
+
+static inline void xnsched_lock(void)
+{
+	struct xnsched *sched;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+	sched = xnsched_current();
+	___xnsched_lock(sched);
+	xnlock_put_irqrestore(&nklock, s);
+}
+
+static inline void xnsched_unlock(void)
+{
+	struct xnsched *sched;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+	sched = xnsched_current();
+	___xnsched_unlock(sched);
+	xnlock_put_irqrestore(&nklock, s);
+}
+
+static inline int xnsched_interrupt_p(void)
+{
+	return xnsched_current()->lflags & XNINIRQ;
+}
+
+static inline int xnsched_locked_p(void)
+{
+	return xnthread_test_state(xnsched_current_thread(), XNLOCK);
+}
+
+static inline int xnsched_root_p(void)
+{
+	return xnthread_test_state(xnsched_current_thread(), XNROOT);
+}
+
+static inline int xnsched_unblockable_p(void)
+{
+	return xnsched_interrupt_p() || xnsched_root_p();
+}
+
+static inline int xnsched_primary_p(void)
+{
+	return !xnsched_unblockable_p();
+}
 
 #ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
 
 struct xnsched *xnsched_finish_unlocked_switch(struct xnsched *sched);
 
-#define xnsched_resched_after_unlocked_switch() xnpod_schedule()
+#define xnsched_resched_after_unlocked_switch() xnsched_run()
 
 static inline
 int xnsched_maybe_resched_after_unlocked_switch(struct xnsched *sched)
@@ -200,17 +344,20 @@ int xnsched_maybe_resched_after_unlocked_switch(struct xnsched *sched)
 #ifdef CONFIG_SMP
 #define xnsched_finish_unlocked_switch(__sched__)	\
 	({ XENO_BUGON(NUCLEUS, !hard_irqs_disabled());	\
-		xnpod_current_sched(); })
+		xnsched_current(); })
 #else /* !CONFIG_SMP */
 #define xnsched_finish_unlocked_switch(__sched__)	\
 	({ XENO_BUGON(NUCLEUS, !hard_irqs_disabled());	\
 		(__sched__); })
 #endif /* !CONFIG_SMP */
 
-#define xnsched_resched_after_unlocked_switch()		do { } while(0)
+static inline void xnsched_resched_after_unlocked_switch(void) { }
 
-#define xnsched_maybe_resched_after_unlocked_switch(sched)	\
-	({ (void)(sched); 0; })
+static inline int
+xnsched_maybe_resched_after_unlocked_switch(struct xnsched *sched)
+{
+	return 0;
+}
 
 #endif /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
 
@@ -255,9 +402,9 @@ void xnsched_migrate(struct xnthread *thread,
 void xnsched_migrate_passive(struct xnthread *thread,
 			     struct xnsched *sched);
 
-/*!
- * \fn void xnsched_rotate(struct xnsched *sched, struct xnsched_class *sched_class, const union xnsched_policy_param *sched_param)
- * \brief Rotate a scheduler runqueue.
+/**
+ * @fn void xnsched_rotate(struct xnsched *sched, struct xnsched_class *sched_class, const union xnsched_policy_param *sched_param)
+ * @brief Rotate a scheduler runqueue.
  *
  * The specified scheduling class is requested to rotate its runqueue
  * for the given scheduler. Rotation is performed according to the
@@ -285,7 +432,6 @@ void xnsched_migrate_passive(struct xnthread *thread,
  *
  * Rescheduling: never.
  */
-
 static inline void xnsched_rotate(struct xnsched *sched,
 				  struct xnsched_class *sched_class,
 				  const union xnsched_policy_param *sched_param)

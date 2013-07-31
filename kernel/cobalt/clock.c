@@ -1,5 +1,4 @@
 /**
- * @file
  * @note Copyright (C) 2006-2011 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify it
@@ -17,22 +16,23 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  *
- * \ingroup clock
- */
-
-/*!
- * \ingroup nucleus
- * \defgroup clock Clock services.
  *
- *@{*/
-
+ * @ingroup nucleus
+ * @defgroup clock Clock services.
+ *
+ * @{
+ */
 #include <linux/percpu.h>
 #include <linux/errno.h>
-#include <cobalt/kernel/pod.h>
+#include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/timer.h>
 #include <cobalt/kernel/clock.h>
 #include <cobalt/kernel/arith.h>
 #include <asm/xenomai/calibration.h>
+
+unsigned long nktimerlat;
+
+atomic_t nkclklk;
 
 static unsigned long long clockfreq;
 
@@ -156,9 +156,9 @@ void xnclock_core_local_shot(struct xnsched *sched)
 	 * resumes.
 	 *
 	 * The host tick deferral is cleared whenever Xenomai is about
-	 * to yield control to the host kernel (see
-	 * __xnpod_schedule()), or a timer with an earlier timeout
-	 * date is scheduled, whichever comes first.
+	 * to yield control to the host kernel (see __xnsched_run()),
+	 * or a timer with an earlier timeout date is scheduled,
+	 * whichever comes first.
 	 */
 	sched->lflags &= ~XNHDEFER;
 	timer = container_of(h, struct xntimer, aplink);
@@ -253,7 +253,7 @@ static void adjust_clock_timers(struct xnclock *clock, xnsticks_t delta)
 	delta = xnclock_ns_to_ticks(clock, delta);
 
 	for_each_online_cpu(cpu) {
-		sched = xnpod_sched_slot(cpu);
+		sched = xnsched_struct(cpu);
 		q = &xnclock_percpu_timerdata(clock, cpu)->q;
 
 		for (h = xntimerq_it_begin(q, &it); h;
@@ -272,7 +272,7 @@ static void adjust_clock_timers(struct xnclock *clock, xnsticks_t delta)
 			adjust_timer(timer, q, delta);
 		}
 
-		if (sched != xnpod_current_sched())
+		if (sched != xnsched_current())
 			xnclock_remote_shot(clock, sched);
 		else
 			xnclock_program_shot(clock, sched);
@@ -570,7 +570,7 @@ EXPORT_SYMBOL_GPL(xnclock_deregister);
 void xnclock_tick(struct xnclock *clock)
 {
 	xntimerq_t *timerq = &xnclock_this_timerdata(clock)->q;
-	struct xnsched *sched = xnpod_current_sched();
+	struct xnsched *sched = xnsched_current();
 	xnticks_t now, interval;
 	struct xntimer *timer;
 	xnsticks_t delta;
@@ -622,7 +622,7 @@ void xnclock_tick(struct xnclock *clock)
 		}
 
 		/* Check for a locked clock state (i.e. ptracing). */
-		if (unlikely(nkpod->status & XNCLKLK)) {
+		if (unlikely(atomic_read(&nkclklk) > 0)) {
 			if (timer->status & XNTIMER_NOBLCK)
 				goto fire;
 			if (timer->status & XNTIMER_PERIODIC)

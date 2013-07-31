@@ -146,7 +146,7 @@ int rtdm_task_init(rtdm_task_t *task, const char *name,
 	iattr.personality = &rtdm_personality;
 	param.rt.prio = priority;
 
-	err = xnpod_init_thread(task, &iattr, &xnsched_class_rt, &param);
+	err = xnthread_init(task, &iattr, &xnsched_class_rt, &param);
 	if (err)
 		return err;
 
@@ -157,24 +157,24 @@ int rtdm_task_init(rtdm_task_t *task, const char *name,
 		goto cleanup_out;
 
 	if (period > 0) {
-		err = xnpod_set_thread_periodic(task, XN_INFINITE,
-						XN_RELATIVE, period);
+		err = xnthread_set_periodic(task, XN_INFINITE,
+					    XN_RELATIVE, period);
 		if (err)
 			goto cleanup_out;
 	}
 
 	sattr.mode = 0;
-	sattr.affinity = XNPOD_ALL_CPUS;
+	sattr.affinity = CPU_MASK_ALL;
 	sattr.entry = task_proc;
 	sattr.cookie = arg;
-	err = xnpod_start_thread(task, &sattr);
+	err = xnthread_start(task, &sattr);
 	if (err)
 		goto cleanup_out;
 
 	return 0;
 
       cleanup_out:
-	xnpod_cancel_thread(task);
+	xnthread_cancel(task);
 	return err;
 }
 
@@ -379,11 +379,11 @@ int rtdm_task_sleep_abs(nanosecs_abs_t wakeup_time, enum rtdm_timer_mode mode);
 
 int __rtdm_task_sleep(xnticks_t timeout, xntmode_t mode)
 {
-	xnthread_t *thread = xnpod_current_thread();
+	xnthread_t *thread = xnsched_current_thread();
 
-	XENO_ASSERT(RTDM, !xnpod_unblockable_p(), return -EPERM;);
+	XENO_ASSERT(RTDM, !xnsched_unblockable_p(), return -EPERM;);
 
-	xnpod_suspend_thread(thread, XNDELAY, timeout, mode, NULL);
+	xnthread_suspend(thread, XNDELAY, timeout, mode, NULL);
 
 	return xnthread_test_info(thread, XNBREAK) ? -EINTR : 0;
 }
@@ -416,12 +416,12 @@ EXPORT_SYMBOL_GPL(__rtdm_task_sleep);
  */
 void rtdm_task_join_nrt(rtdm_task_t *task, unsigned int poll_delay)
 {
-	XENO_ASSERT(RTDM, xnpod_root_p(), return;);
+	XENO_ASSERT(RTDM, xnsched_root_p(), return;);
 
 	trace_mark(xn_rtdm, task_joinnrt, "thread %p poll_delay %u",
 		   task, poll_delay);
 
-	xnpod_join_thread(task);
+	xnthread_join(task);
 }
 
 EXPORT_SYMBOL_GPL(rtdm_task_join_nrt);
@@ -645,7 +645,7 @@ void __rtdm_synch_flush(xnsynch_t *synch, unsigned long reason)
 		xnsynch_set_status(synch, RTDM_SYNCH_DELETED);
 
 	if (likely(xnsynch_flush(synch, reason) == XNSYNCH_RESCHED))
-		xnpod_schedule();
+		xnsched_run();
 
 	xnlock_put_irqrestore(&nklock, s);
 }
@@ -713,7 +713,7 @@ int device_service_routine(...)
  */
 void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, nanosecs_rel_t timeout)
 {
-	XENO_ASSERT(RTDM, !xnpod_unblockable_p(), /* only warn here */;);
+	XENO_ASSERT(RTDM, !xnsched_unblockable_p(), /* only warn here */;);
 
 	*timeout_seq = xnclock_read_monotonic(&nkclock) + timeout;
 }
@@ -839,7 +839,7 @@ void rtdm_event_signal(rtdm_event_t *event)
 	if (xnselect_signal(&event->select_block, 1))
 		resched = 1;
 	if (resched)
-		xnpod_schedule();
+		xnsched_run();
 
 	xnlock_put_irqrestore(&nklock, s);
 }
@@ -925,7 +925,7 @@ int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
 	spl_t s;
 	int err = 0;
 
-	XENO_ASSERT(RTDM, !xnpod_unblockable_p(), return -EPERM;);
+	XENO_ASSERT(RTDM, !xnsched_unblockable_p(), return -EPERM;);
 
 	trace_mark(xn_rtdm, event_timedwait,
 		   "event %p timeout %Lu timeout_seq %p timeout_seq_value %Lu",
@@ -945,7 +945,7 @@ int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
 			goto unlock_out;
 		}
 
-		thread = xnpod_current_thread();
+		thread = xnsched_current_thread();
 
 		if (timeout_seq && (timeout > 0)) {
 			/* timeout sequence */
@@ -1203,7 +1203,7 @@ int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
 	spl_t s;
 	int err = 0;
 
-	XENO_ASSERT(RTDM, !xnpod_unblockable_p(), return -EPERM;);
+	XENO_ASSERT(RTDM, !xnsched_unblockable_p(), return -EPERM;);
 
 	trace_mark(xn_rtdm, sem_timedwait,
 		   "sem %p timeout %Lu timeout_seq %p timeout_seq_value %Lu",
@@ -1219,7 +1219,7 @@ int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
 	} else if (timeout < 0) /* non-blocking mode */
 		err = -EWOULDBLOCK;
 	else {
-		thread = xnpod_current_thread();
+		thread = xnsched_current_thread();
 
 		if (timeout_seq && (timeout > 0)) {
 			/* timeout sequence */
@@ -1274,11 +1274,11 @@ void rtdm_sem_up(rtdm_sem_t *sem)
 	xnlock_get_irqsave(&nklock, s);
 
 	if (xnsynch_wakeup_one_sleeper(&sem->synch_base))
-		xnpod_schedule();
+		xnsched_run();
 	else
 		if (sem->value++ == 0
 		    && xnselect_signal(&sem->select_block, 1))
-			xnpod_schedule();
+			xnsched_run();
 
 	xnlock_put_irqrestore(&nklock, s);
 }
@@ -1487,7 +1487,7 @@ EXPORT_SYMBOL_GPL(rtdm_mutex_lock);
 int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
 			 rtdm_toseq_t *timeout_seq)
 {
-	xnthread_t *curr_thread = xnpod_current_thread();
+	xnthread_t *curr_thread = xnsched_current_thread();
 	spl_t s;
 	int err = 0;
 
@@ -1495,7 +1495,7 @@ int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
 		   "mutex %p timeout %Lu timeout_seq %p timeout_seq_value %Lu",
 		   mutex, (long long)timeout, timeout_seq, (long long)(timeout_seq ? *timeout_seq : 0));
 
-	XENO_ASSERT(RTDM, !xnpod_unblockable_p(), return -EPERM;);
+	XENO_ASSERT(RTDM, !xnsched_unblockable_p(), return -EPERM;);
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -1586,7 +1586,7 @@ int rtdm_irq_request(rtdm_irq_t *irq_handle, unsigned int irq_no,
 {
 	int err;
 
-	XENO_ASSERT(RTDM, xnpod_root_p(), return -EPERM;);
+	XENO_ASSERT(RTDM, xnsched_root_p(), return -EPERM;);
 
 	xnintr_init(irq_handle, device_name, irq_no, handler, NULL, flags);
 
@@ -1861,7 +1861,7 @@ static int rtdm_do_mmap(rtdm_user_info_t *user_info,
 	void *old_priv_data;
 	struct file *filp;
 
-	XENO_ASSERT(RTDM, xnpod_root_p(), return -EPERM;);
+	XENO_ASSERT(RTDM, xnsched_root_p(), return -EPERM;);
 
 	filp = filp_open(XNHEAP_DEV_NAME, O_RDWR, 0);
 	if (IS_ERR(filp))
@@ -2057,7 +2057,7 @@ int rtdm_munmap(rtdm_user_info_t *user_info, void *ptr, size_t len)
 {
 	int err;
 
-	XENO_ASSERT(RTDM, xnpod_root_p(), return -EPERM;);
+	XENO_ASSERT(RTDM, xnsched_root_p(), return -EPERM;);
 
 	down_write(&user_info->mm->mmap_sem);
 	err = do_munmap(user_info->mm, (unsigned long)ptr, len);

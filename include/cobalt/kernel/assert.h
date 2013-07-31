@@ -38,7 +38,7 @@
 #define XENO_BUGON(subsystem,cond)					\
 	do {								\
 		if (unlikely(XENO_DEBUG(subsystem) && (cond)))		\
-			xnpod_fatal("bug at %s:%d (%s)",		\
+			xnsys_fatal("bug at %s:%d (%s)",		\
 				    __FILE__, __LINE__, (#cond));	\
 	} while(0)
 
@@ -48,6 +48,6 @@
 
 extern void (*nkpanic)(const char *format, ...);
 
-#define xnpod_fatal(__fmt, __args...) nkpanic(__fmt, ##__args)
+#define xnsys_fatal(__fmt, __args...) nkpanic(__fmt, ##__args)
 
 #endif /* !_COBALT_KERNEL_ASSERT_H */

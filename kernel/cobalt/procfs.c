@@ -1,6 +1,4 @@
-/**@file procfs.c
- * @author Philippe Gerum
- *
+/**
  * Copyright (C) 2001-2013 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
@@ -22,9 +20,10 @@
 #include <cobalt/kernel/clock.h>
 #include <cobalt/kernel/apc.h>
 #include <cobalt/kernel/vfile.h>
-#include <cobalt/kernel/pod.h>
 #include <cobalt/kernel/intr.h>
 #include <cobalt/kernel/heap.h>
+#include <cobalt/kernel/timer.h>
+#include <cobalt/kernel/sched.h>
 #include <xenomai/version.h>
 #include "debug.h"
 

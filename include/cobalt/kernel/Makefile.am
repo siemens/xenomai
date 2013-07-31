@@ -12,7 +12,6 @@ noinst_HEADERS =	\
 	lock.h		\
 	map.h		\
 	pipe.h		\
-	pod.h		\
 	ppd.h		\
 	registry.h	\
 	sched.h		\
@@ -27,6 +26,7 @@ noinst_HEADERS =	\
 	shadow.h	\
 	stat.h		\
 	synch.h		\
+	sys.h		\
 	thread.h	\
 	timer.h		\
 	trace.h		\

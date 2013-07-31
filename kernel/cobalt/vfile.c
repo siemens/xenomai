@@ -75,7 +75,8 @@
 #include <stdarg.h>
 #include <linux/ctype.h>
 #include <linux/uaccess.h>
-#include <cobalt/kernel/pod.h>
+#include <linux/module.h>
+#include <cobalt/kernel/lock.h>
 #include <cobalt/kernel/assert.h>
 #include <cobalt/kernel/vfile.h>
 

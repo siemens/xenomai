@@ -358,7 +358,7 @@ timer_settime(timer_t timerid, int flags,
 	} else {
 		start = ts2ns(&value->it_value) + 1;
 		period = ts2ns(&value->it_interval);
-		xntimer_set_sched(&timer->timerbase, xnpod_current_sched());
+		xntimer_set_sched(&timer->timerbase, xnsched_current());
 		/*
 		 * Now start the timer. If the initial delay has
 		 * already passed, the call shall succeed, so, let us

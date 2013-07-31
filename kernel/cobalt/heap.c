@@ -1,7 +1,4 @@
-/*!\file
- * \brief Dynamic memory allocation services.
- * \author Philippe Gerum
- *
+/**
  * Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
@@ -19,14 +16,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  *
- * \ingroup heap
- */
-
-/*!
- * \ingroup nucleus
- * \defgroup heap Dynamic memory allocation services.
- *
- * Dynamic memory allocation services.
+ * @ingroup nucleus
+ * @defgroup heap Dynamic memory allocation services.
  *
  * The implementation of the memory allocator follows the algorithm
  * described in a USENIX 1988 paper called "Design of a General
@@ -61,13 +52,12 @@ HEAP {
 		      }
 @endverbatim </tt>
  *
- *@{*/
-
+ *@{
+ */
 #include <stdarg.h>
 #include <linux/sched.h>
 #include <linux/mm.h>
 #include <linux/semaphore.h>
-#include <cobalt/kernel/pod.h>
 #include <cobalt/kernel/thread.h>
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/vfile.h>
@@ -648,7 +638,7 @@ void *xnheap_alloc(struct xnheap *heap, unsigned long size)
 			}
 		oops:
 			XENO_ASSERT(NUCLEUS, 0,
-				    xnpod_fatal("cannot determine source extent for block %p (heap %p)?!",
+				    xnsys_fatal("cannot determine source extent for block %p (heap %p)?!",
 						block, heap);
 				);
 			block = NULL;
@@ -854,7 +844,7 @@ found:
 		heap->buckets[ilog].fcount -= (nblocks - 1);
 
 		XENO_ASSERT(NUCLEUS, heap->buckets[ilog].fcount >= 0,
-			    xnpod_fatal("free block count became negative (heap %p, log2=%d, fcount=%d)?!",
+			    xnsys_fatal("free block count became negative (heap %p, log2=%d, fcount=%d)?!",
 					heap, log2size, heap->buckets[ilog].fcount);
 			);
 		/*
@@ -1454,7 +1444,7 @@ static inline void init_vdso(void)
 {
 	nkvdso = xnheap_alloc(&__xnsys_global_ppd.sem_heap, sizeof(*nkvdso));
 	if (nkvdso == NULL)
-		xnpod_fatal("cannot allocate memory for VDSO!\n");
+		xnsys_fatal("cannot allocate memory for VDSO!\n");
 
 	nkvdso->features = XNVDSO_FEATURES;
 }

@@ -1,8 +1,7 @@
-/*!\file cobalt/kernel/select.c
- * \brief file descriptors events multiplexing.
- * \author Gilles Chanteperdrix
+/**
+ * @author Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>
  *
- * Copyright (C) 2008 Efixo <gilles.chanteperdrix@xenomai.org>
+ * Copyright (C) 2008 Efixo
  *
  * Xenomai is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
@@ -49,7 +48,7 @@
 #include <linux/types.h>
 #include <linux/bitops.h>	/* For hweight_long */
 #include <cobalt/kernel/heap.h>
-#include <cobalt/kernel/pod.h>
+#include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/synch.h>
 #include <cobalt/kernel/select.h>
 #include <cobalt/kernel/apc.h>
@@ -126,7 +125,7 @@ int xnselect_bind(struct xnselect *select_block,
 	if (state) {
 		__FD_SET__(index, &selector->fds[type].pending);
 		if (xnselect_wakeup(selector))
-			xnpod_schedule();
+			xnsched_run();
 	} else
 		__FD_CLR__(index, &selector->fds[type].pending);
 
@@ -197,7 +196,7 @@ void xnselect_destroy(struct xnselect *select_block)
 		xnlock_get_irqsave(&nklock, s);
 	}
 	if (resched)
-		xnpod_schedule();
+		xnsched_run();
 out:
 	xnlock_put_irqrestore(&nklock, s);
 }
@@ -324,7 +323,7 @@ int xnselect(struct xnselector *selector,
 	if ((unsigned) nfds > __FD_SETSIZE)
 		return -EINVAL;
 
-	thread = xnpod_current_thread();
+	thread = xnsched_current_thread();
 
 	for (i = 0; i < XNSELECT_MAX_TYPES; i++)
 		if (out_fds[i])
@@ -428,7 +427,7 @@ static void xnselector_destroy_loop(void *cookie)
 
 		xnfree(selector);
 		if (resched)
-			xnpod_schedule();
+			xnsched_run();
 
 		xnlock_get_irqsave(&nklock, s);
 	}

@@ -229,7 +229,7 @@ int cobalt_event_sync(struct cobalt_event_shadow __user *u_evtsh)
 		}
 	}
 
-	xnpod_schedule();
+	xnsched_run();
 out:
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -273,7 +273,7 @@ int cobalt_event_destroy(struct cobalt_event_shadow __user *u_evtsh)
 
 	cobalt_event_destroy_inner(event, event->owningq, s);
 
-	xnpod_schedule();
+	xnsched_run();
 out:
 	xnlock_put_irqrestore(&nklock, s);
 	

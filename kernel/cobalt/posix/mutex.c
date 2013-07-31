@@ -107,7 +107,7 @@ static void cobalt_mutex_destroy_inner(struct cobalt_mutex *mutex,
 	/*
 	 * synchbase wait queue may not be empty only when this
 	 * function is called from cobalt_mutex_pkg_cleanup, hence the
-	 * absence of xnpod_schedule().
+	 * absence of xnsched_run().
 	 */
 	xnsynch_destroy(&mutex->synchbase);
 	xnlock_put_irqrestore(&nklock, s);
@@ -195,7 +195,7 @@ int cobalt_mutex_release(struct xnthread *cur,
 static inline int cobalt_mutex_timedlock_break(struct cobalt_mutex *mutex,
 					       int timed, xnticks_t abs_to)
 {
-	xnthread_t *cur = xnpod_current_thread();
+	xnthread_t *cur = xnsched_current_thread();
 	spl_t s;
 	int err;
 
@@ -358,7 +358,7 @@ int cobalt_mutex_destroy(struct __shadow_mutex __user *u_mx)
 
 int cobalt_mutex_trylock(struct __shadow_mutex __user *u_mx)
 {
-	xnthread_t *cur = xnpod_current_thread();
+	xnthread_t *cur = xnsched_current_thread();
 	struct cobalt_mutex *mutex;
 	int err;
 
@@ -428,12 +428,12 @@ int cobalt_mutex_unlock(struct __shadow_mutex __user *u_mx)
 	__xn_get_user(mutex, &u_mx->mutex);
 
 	xnlock_get_irqsave(&nklock, s);
-	err = cobalt_mutex_release(xnpod_current_thread(), mutex);
+	err = cobalt_mutex_release(xnsched_current_thread(), mutex);
 	if (err < 0)
 		goto out;
 
 	if (err) {
-		xnpod_schedule();
+		xnsched_run();
 		err = 0;
 	}
   out:

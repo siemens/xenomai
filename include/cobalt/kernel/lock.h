@@ -1,5 +1,4 @@
 /**
- * @file
  * Copyright (C) 2001-2008,2012 Philippe Gerum <rpm@xenomai.org>.
  * Copyright (C) 2004,2005 Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>.
  *
@@ -17,10 +16,7 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- *
- * \ingroup lock
  */
-
 #ifndef _COBALT_KERNEL_LOCK_H
 #define _COBALT_KERNEL_LOCK_H
 
@@ -28,9 +24,11 @@
 #include <linux/percpu.h>
 #include <cobalt/kernel/assert.h>
 
-/** \addtogroup lock
- *@{*/
-
+/**
+ * @addtogroup lock
+ *
+ * @{
+ */
 typedef unsigned long spl_t;
 
 #define splhigh(x)  ((x) = ipipe_test_and_stall_head() & 1)
@@ -237,6 +235,8 @@ static inline int xnlock_is_owner(struct xnlock *lock)
 #define DEFINE_PRIVATE_XNLOCK(lock)
 
 #endif /* !(CONFIG_SMP || XENO_DEBUG(XNLOCK)) */
+
+DECLARE_EXTERN_XNLOCK(nklock);
 
 /*@}*/
 

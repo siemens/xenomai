@@ -23,7 +23,7 @@
 #include <linux/init.h>
 #include <linux/ipipe.h>
 #include <xenomai/version.h>
-#include <cobalt/kernel/pod.h>
+#include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/clock.h>
 #include <cobalt/kernel/timer.h>
 #include <cobalt/kernel/heap.h>
@@ -85,7 +85,7 @@ static int __init mach_setup(void)
 	}
 #endif /* CONFIG_SMP */
 
-	ret = ipipe_select_timers(&xnarch_supported_cpus);
+	ret = ipipe_select_timers(&xnsys_cpus);
 	if (ret < 0)
 		return ret;
 
@@ -133,7 +133,7 @@ static int __init mach_setup(void)
 
 	ipipe_request_irq(&xnarch_machdata.domain,
 			  xnarch_machdata.escalate_virq,
-			  (ipipe_irq_handler_t)__xnpod_schedule_handler,
+			  (ipipe_irq_handler_t)__xnsched_run_handler,
 			  NULL, NULL);
 
 	ret = xnclock_init(xnarch_machdata.clock_freq);
@@ -206,19 +206,19 @@ static int __init xenomai_init(void)
 	if (ret)
 		goto cleanup_select;
 
-	ret = xnpod_init();
+	ret = xnsys_init();
 	if (ret)
 		goto cleanup_shadow;
 
 	ret = rtdm_init();
 	if (ret)
-		goto cleanup_pod;
+		goto cleanup_sys;
 
 	ret = cobalt_init();
 	if (ret)
 		goto cleanup_rtdm;
 
-	cpus_and(nkaffinity, nkaffinity, xnarch_supported_cpus);
+	cpus_and(nkaffinity, nkaffinity, xnsys_cpus);
 
 	printk(XENO_INFO "Cobalt v%s enabled%s\n",
 	       XENO_VERSION_STRING, boot_notice);
@@ -227,8 +227,8 @@ static int __init xenomai_init(void)
 
 cleanup_rtdm:
 	rtdm_cleanup();
-cleanup_pod:
-	xnpod_shutdown(XNPOD_FATAL_EXIT);
+cleanup_sys:
+	xnsys_shutdown();
 cleanup_shadow:
 	xnshadow_cleanup();
 cleanup_select:

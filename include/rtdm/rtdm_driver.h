@@ -36,7 +36,7 @@
 
 #include <xenomai/version.h>
 #include <cobalt/kernel/heap.h>
-#include <cobalt/kernel/pod.h>
+#include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/intr.h>
 #include <cobalt/kernel/synch.h>
 #include <cobalt/kernel/select.h>
@@ -671,9 +671,9 @@ int rtdm_select_bind(int fd, rtdm_selector_t *selector,
 	spl_t __rtdm_s;					\
 							\
 	xnlock_get_irqsave(&nklock, __rtdm_s);		\
-	__xnpod_lock_sched();				\
+	__xnsched_lock();				\
 	code_block;					\
-	__xnpod_unlock_sched();				\
+	__xnsched_unlock();				\
 	xnlock_put_irqrestore(&nklock, __rtdm_s);	\
 }
 #endif
@@ -735,7 +735,7 @@ static inline void rtdm_lock_get(rtdm_lock_t *lock)
 {
 	XENO_BUGON(RTDM, !spltest());
 	spin_lock(lock);
-	__xnpod_lock_sched();
+	__xnsched_lock();
 }
 
 /**
@@ -757,7 +757,7 @@ static inline void rtdm_lock_get(rtdm_lock_t *lock)
 static inline void rtdm_lock_put(rtdm_lock_t *lock)
 {
 	spin_unlock(lock);
-	__xnpod_unlock_sched();
+	__xnsched_unlock();
 }
 
 /**
@@ -783,7 +783,7 @@ static inline rtdm_lockctx_t __rtdm_lock_get_irqsave(rtdm_lock_t *lock)
 
 	s = ipipe_test_and_stall_head();
 	spin_lock(lock);
-	__xnpod_lock_sched();
+	__xnsched_lock();
 
 	return s;
 }
@@ -811,7 +811,7 @@ static inline
 void rtdm_lock_put_irqrestore(rtdm_lock_t *lock, rtdm_lockctx_t s)
 {
 	spin_unlock(lock);
-	__xnpod_unlock_sched();
+	__xnsched_unlock();
 	ipipe_restore_head(s);
 }
 
@@ -923,7 +923,7 @@ int rtdm_irq_request(rtdm_irq_t *irq_handle, unsigned int irq_no,
 #ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
 static inline int rtdm_irq_free(rtdm_irq_t *irq_handle)
 {
-	XENO_ASSERT(RTDM, xnpod_root_p(), return -EPERM;);
+	XENO_ASSERT(RTDM, xnsched_root_p(), return -EPERM;);
 	return xnintr_detach(irq_handle);
 }
 
@@ -1095,7 +1095,7 @@ void rtdm_task_busy_sleep(nanosecs_rel_t delay);
 #ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
 static inline void rtdm_task_destroy(rtdm_task_t *task)
 {
-	xnpod_cancel_thread(task);
+	xnthread_cancel(task);
 }
 
 void rtdm_task_join_nrt(rtdm_task_t *task, unsigned int poll_delay);
@@ -1103,8 +1103,8 @@ void rtdm_task_join_nrt(rtdm_task_t *task, unsigned int poll_delay);
 static inline void rtdm_task_set_priority(rtdm_task_t *task, int priority)
 {
 	union xnsched_policy_param param = { .rt = { .prio = priority } };
-	xnpod_set_thread_schedparam(task, &xnsched_class_rt, &param);
-	xnpod_schedule();
+	xnthread_set_schedparam(task, &xnsched_class_rt, &param);
+	xnsched_run();
 }
 
 static inline int rtdm_task_set_period(rtdm_task_t *task,
@@ -1113,14 +1113,14 @@ static inline int rtdm_task_set_period(rtdm_task_t *task,
 	if (period < 0)
 		period = 0;
 
-	return xnpod_set_thread_periodic(task, XN_INFINITE, XN_RELATIVE, period);
+	return xnthread_set_periodic(task, XN_INFINITE, XN_RELATIVE, period);
 }
 
 static inline int rtdm_task_unblock(rtdm_task_t *task)
 {
-	int res = xnpod_unblock_thread(task);
+	int res = xnthread_unblock(task);
 
-	xnpod_schedule();
+	xnsched_run();
 	return res;
 }
 
@@ -1131,8 +1131,8 @@ static inline rtdm_task_t *rtdm_task_current(void)
 
 static inline int rtdm_task_wait_period(void)
 {
-	XENO_ASSERT(RTDM, !xnpod_unblockable_p(), return -EPERM;);
-	return xnpod_wait_thread_period(NULL);
+	XENO_ASSERT(RTDM, !xnsched_unblockable_p(), return -EPERM;);
+	return xnthread_wait_period(NULL);
 }
 
 static inline int rtdm_task_sleep(nanosecs_rel_t delay)
@@ -1237,13 +1237,13 @@ int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
 #ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
 static inline void rtdm_mutex_unlock(rtdm_mutex_t *mutex)
 {
-	XENO_ASSERT(RTDM, !xnpod_interrupt_p(), return;);
+	XENO_ASSERT(RTDM, !xnsched_interrupt_p(), return;);
 
 	trace_mark(xn_rtdm, mutex_unlock, "mutex %p", mutex);
 
 	if (unlikely(xnsynch_release(&mutex->synch_base,
-				     xnpod_current_thread()) != NULL))
-		xnpod_schedule();
+				     xnsched_current_thread()) != NULL))
+		xnsched_run();
 }
 
 static inline void rtdm_mutex_destroy(rtdm_mutex_t *mutex)
@@ -1365,10 +1365,10 @@ static inline int rtdm_strncpy_from_user(rtdm_user_info_t *user_info,
 
 static inline int rtdm_rt_capable(rtdm_user_info_t *user_info)
 {
-	XENO_ASSERT(RTDM, !xnpod_interrupt_p(), return 0;);
+	XENO_ASSERT(RTDM, !xnsched_interrupt_p(), return 0;);
 
 	return (user_info ? xnshadow_thread(user_info) != NULL
-			  : !xnpod_root_p());
+			  : !xnsched_root_p());
 }
 
 static inline int rtdm_in_rt_context(void)

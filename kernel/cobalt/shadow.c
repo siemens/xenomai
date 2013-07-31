@@ -1,12 +1,10 @@
-/*!\file shadow.c
- * \brief Real-time shadow services.
- * \author Philippe Gerum
- *
- * Copyright (C) 2001-2012 Philippe Gerum <rpm@xenomai.org>.
- * Copyright (C) 2004 The RTAI project <http://www.rtai.org>
- * Copyright (C) 2004 The HYADES project <http://www.hyades-itea.org>
- * Copyright (C) 2005 The Xenomai project <http://www.xenomai.org>
+/**
+ * Copyright (C) 2001-2013 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2001-2013 The Xenomai project <http://www.xenomai.org>
  * Copyright (C) 2006 Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>
+ *
+ * SMP support Copyright (C) 2004 The HYADES project <http://www.hyades-itea.org>
+ * RTAI/fusion Copyright (C) 2004 The RTAI project <http://www.rtai.org>
  *
  * Xenomai is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
@@ -23,17 +21,13 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  *
- * \ingroup shadow
- */
-
-/*!
- * \ingroup nucleus
- * \defgroup shadow Real-time shadow services.
+ * @ingroup nucleus
+ * @defgroup shadow Real-time shadow services.
  *
  * Real-time shadow services.
  *
- *@{*/
-
+ *@{
+ */
 #include <stdarg.h>
 #include <linux/unistd.h>
 #include <linux/wait.h>
@@ -53,7 +47,7 @@
 #include <linux/completion.h>
 #include <linux/kallsyms.h>
 #include <asm/signal.h>
-#include <cobalt/kernel/pod.h>
+#include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/synch.h>
 #include <cobalt/kernel/clock.h>
@@ -63,7 +57,7 @@
 #include <cobalt/kernel/stat.h>
 #include <cobalt/kernel/ppd.h>
 #include <cobalt/kernel/vdso.h>
-#include <cobalt/kernel/shadow.h>
+#include <cobalt/kernel/sys.h>
 #include <asm/xenomai/features.h>
 #include <asm/xenomai/syscall.h>
 #include <asm/xenomai/thread.h>
@@ -218,7 +212,7 @@ static inline void ppd_remove_mm(struct mm_struct *mm,
 		/*
 		 * Releasing the nklock is safe here, if we assume
 		 * that no insertion for the same mm will take place
-		 * while we are running xnpod_remove_mm.
+		 * while we are running ppd_remove_mm().
 		 */
 		destructor(ppd);
 		ppd = next;
@@ -256,29 +250,24 @@ static void request_syscall_restart(struct xnthread *thread,
 		xnthread_clear_info(thread, XNKICKED);
 	}
 
-	xnpod_testcancel_thread();
+	xnthread_test_cancel();
 
 	xnshadow_relax(notify, SIGDEBUG_MIGRATE_SIGNAL);
 }
 
 static inline void lock_timers(void)
 {
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-	atomic_inc(&nkpod->timerlck);
-	nkpod->status |= XNCLKLK;
-	xnlock_put_irqrestore(&nklock, s);
+	smp_mb__before_atomic_inc();
+	atomic_inc(&nkclklk);
+	smp_mb__after_atomic_inc();
 }
 
 static inline void unlock_timers(void)
 {
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-	if (atomic_dec_and_test(&nkpod->timerlck))
-		nkpod->status &= ~XNCLKLK;
-	xnlock_put_irqrestore(&nklock, s);
+	XENO_BUGON(NUCLEUS, atomic_read(&nkclklk) == 0);
+	smp_mb__before_atomic_dec();
+	atomic_dec(&nkclklk);
+	smp_mb__after_atomic_dec();
 }
 
 static int enter_personality(struct xnpersonality *personality)
@@ -407,18 +396,18 @@ void ipipe_migration_hook(struct task_struct *p) /* hw IRQs off */
 	 * update the CPU of the underlying Xenomai shadow to reflect
 	 * the new situation. We do not migrate the thread timers
 	 * here, this would not work. For a "full" migration including
-	 * timers, using xnpod_migrate_thread() is required.
+	 * timers, using xnthread_migrate() is required.
 	 */
-	sched = xnpod_sched_slot(task_cpu(p));
+	sched = xnsched_struct(task_cpu(p));
 	if (sched != thread->sched)
 		xnsched_migrate_passive(thread, sched);
 #endif /* CONFIG_SMP */
 
-	xnpod_resume_thread(thread, XNRELAX);
+	xnthread_resume(thread, XNRELAX);
 
 	xnlock_put(&nklock);
 
-	xnpod_schedule();
+	xnsched_run();
 }
 
 int xnshadow_harden(void)
@@ -449,7 +438,7 @@ int xnshadow_harden(void)
 
 	/* "current" is now running into the Xenomai domain. */
 	sched = xnsched_finish_unlocked_switch(thread->sched);
-	xnpod_switch_fpu(sched);
+	xnthread_switch_fpu(sched);
 
 	xnlock_clear_irqon(&nklock);
 
@@ -483,8 +472,8 @@ EXPORT_SYMBOL_GPL(xnshadow_harden);
  * This service yields the control of the running shadow back to
  * Linux. This is obtained by suspending the shadow and scheduling a
  * wake up call for the mated user task inside the Linux domain. The
- * Linux task will resume on return from xnpod_suspend_thread() on
- * behalf of the root thread.
+ * Linux task will resume on return from xnthread_suspend() on behalf
+ * of the root thread.
  *
  * @param notify A boolean flag indicating whether threads monitored
  * from secondary mode switches should be sent a SIGDEBUG signal. For
@@ -506,7 +495,7 @@ EXPORT_SYMBOL_GPL(xnshadow_harden);
  */
 void xnshadow_relax(int notify, int reason)
 {
-	struct xnthread *thread = xnpod_current_thread();
+	struct xnthread *thread = xnsched_current_thread();
 	struct task_struct *p = current;
 	siginfo_t si;
 
@@ -527,26 +516,27 @@ void xnshadow_relax(int notify, int reason)
 	 * - read commit #d3242401b8
 	 *
 	 * - check the special handling of XNRELAX in
-	 * xnpod_suspend_thread() when switching out the current
-	 * thread, not to break basic assumptions we do there.
+	 * xnthread_suspend() when switching out the current thread,
+	 * not to break basic assumptions we do there.
 	 *
 	 * We disable interrupts during the migration sequence, but
-	 * xnpod_suspend_thread() has an interrupts-on section built in.
+	 * xnthread_suspend() has an interrupts-on section built in.
 	 */
 	splmax();
 	post_wakeup(p);
 
 	/*
-	 * Task nklock to synchronize the Linux task state manipulation with
-	 * do_sigwake_event. nklock will be released by xnpod_suspend_thread.
+	 * Task nklock to synchronize the Linux task state
+	 * manipulation with do_sigwake_event. nklock will be released
+	 * by xnthread_suspend().
 	 */
 	xnlock_get(&nklock);
 	set_task_state(p, p->state & ~TASK_NOWAKEUP);
-	xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
+	xnthread_suspend(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
 
 	splnone();
 	if (XENO_DEBUG(NUCLEUS) && !ipipe_root_p)
-		xnpod_fatal("xnshadow_relax() failed for thread %s[%d]",
+		xnsys_fatal("xnshadow_relax() failed for thread %s[%d]",
 			    thread->name, xnthread_host_pid(thread));
 
 	__ipipe_reenter_root();
@@ -603,8 +593,8 @@ static int force_wakeup(struct xnthread *thread) /* nklock locked, irqs off */
 	 * Tricky case: a ready thread does not actually run, but
 	 * nevertheless waits for the CPU in primary mode, so we have
 	 * to make sure that it will be notified of the pending break
-	 * condition as soon as it enters xnpod_suspend_thread() from
-	 * a blocking Xenomai syscall.
+	 * condition as soon as it enters xnthread_suspend() from a
+	 * blocking Xenomai syscall.
 	 */
 	if (xnthread_test_state(thread, XNREADY)) {
 		xnthread_set_info(thread, XNKICKED);
@@ -612,13 +602,13 @@ static int force_wakeup(struct xnthread *thread) /* nklock locked, irqs off */
 		return 0;
 	}
 
-	if (xnpod_unblock_thread(thread)) {
+	if (xnthread_unblock(thread)) {
 		xnthread_set_info(thread, XNKICKED);
 		ret = 1;
 	}
 
 	if (xnthread_test_state(thread, XNSUSP|XNHELD)) {
-		xnpod_resume_thread(thread, XNSUSP|XNHELD);
+		xnthread_resume(thread, XNSUSP|XNHELD);
 		xnthread_set_info(thread, XNKICKED|XNBREAK);
 	}
 
@@ -663,7 +653,7 @@ void __xnshadow_kick(struct xnthread *thread) /* nklock locked, irqs off */
 	 * want that thread to enter the mayday trap asap, to call us
 	 * back for relaxing.
 	 */
-	if (thread != xnpod_current_thread())
+	if (thread != xnsched_current_thread())
 		xnarch_call_mayday(p);
 }
 
@@ -704,7 +694,7 @@ void __xnshadow_demote(struct xnthread *thread) /* nklock locked, irqs off */
 	param.rt.prio = 0;
 	sched_class = &xnsched_class_rt;
 #endif
-	xnpod_set_thread_schedparam(thread, sched_class, &param);
+	xnthread_set_schedparam(thread, sched_class, &param);
 }
 
 void xnshadow_demote(struct xnthread *thread)
@@ -746,7 +736,7 @@ static inline void destroy_threadinfo(void)
  *
  * @param thread The descriptor address of the new shadow thread to be
  * mapped to "current". This descriptor must have been previously
- * initialized by a call to xnpod_init_thread().
+ * initialized by a call to xnthread_init().
  *
  * @param u_window_offset will receive the offset of the per-thread
  * "u_window" structure in the process shared heap associated to @a
@@ -846,7 +836,7 @@ int xnshadow_map_user(struct xnthread *thread,
 	 * friends.
 	 */
 	xnthread_init_shadow_tcb(thread, current);
-	xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
+	xnthread_suspend(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
 	init_threadinfo(thread);
 	xnthread_set_state(thread, XNMAPPED);
 	xndebug_shadow_init(thread);
@@ -865,7 +855,7 @@ int xnshadow_map_user(struct xnthread *thread,
 	attr.affinity = affinity;
 	attr.entry = NULL;
 	attr.cookie = NULL;
-	ret = xnpod_start_thread(thread, &attr);
+	ret = xnthread_start(thread, &attr);
 	if (ret)
 		return ret;
 
@@ -922,11 +912,11 @@ static inline void wakeup_parent(struct completion *done)
  *
  * @param thread The descriptor address of the new shadow thread to be
  * mapped to "current". This descriptor must have been previously
- * initialized by a call to xnpod_init_thread().
+ * initialized by a call to xnthread_init().
  *
  * @param done A completion object to be signaled when @a thread is
  * fully mapped over the current Linux context, waiting for
- * xnpod_start_thread().
+ * xnthread_start().
  *
  * @return 0 is returned on success. Otherwise:
  *
@@ -980,7 +970,7 @@ int xnshadow_map_kernel(struct xnthread *thread, struct completion *done)
 		   xnthread_base_priority(thread));
 
 	xnthread_init_shadow_tcb(thread, p);
-	xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
+	xnthread_suspend(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
 	init_threadinfo(thread);
 	xnthread_set_state(thread, XNMAPPED);
 	xndebug_shadow_init(thread);
@@ -988,31 +978,31 @@ int xnshadow_map_kernel(struct xnthread *thread, struct completion *done)
 	ipipe_enable_notifier(p);
 
 	/*
-	 * CAUTION: Soon after xnpod_init_thread() has returned,
-	 * xnpod_start_thread() is commonly invoked from the root
-	 * domain, therefore the call site may expect the started
-	 * kernel shadow to preempt immediately. As a result of such
+	 * CAUTION: Soon after xnthread_init() has returned,
+	 * xnthread_start() is commonly invoked from the root domain,
+	 * therefore the call site may expect the started kernel
+	 * shadow to preempt immediately. As a result of such
 	 * assumption, start attributes (struct xnthread_start_attr)
 	 * are often laid on the caller's stack.
 	 *
 	 * For this reason, we raise the completion signal to wake up
-	 * the xnpod_init_thread() caller only once the emerging
-	 * thread is hardened, and __never__ before that point. Since
-	 * we run over the Xenomai domain upon return from
-	 * xnshadow_harden(), we schedule a virtual interrupt handler
-	 * in the root domain to signal the completion object.
+	 * the xnthread_init() caller only once the emerging thread is
+	 * hardened, and __never__ before that point. Since we run
+	 * over the Xenomai domain upon return from xnshadow_harden(),
+	 * we schedule a virtual interrupt handler in the root domain
+	 * to signal the completion object.
 	 */
-	xnpod_resume_thread(thread, XNDORMANT);
+	xnthread_resume(thread, XNDORMANT);
 	ret = xnshadow_harden();
 	wakeup_parent(done);
 	xnlock_get_irqsave(&nklock, s);
 	/*
-	 * Make sure xnpod_start_thread() did not slip in from another
-	 * CPU while we were back from wakeup_parent().
+	 * Make sure xnthread_start() did not slip in from another CPU
+	 * while we were back from wakeup_parent().
 	 */
 	if (thread->entry == NULL)
-		xnpod_suspend_thread(thread, XNDORMANT,
-				     XN_INFINITE, XN_RELATIVE, NULL);
+		xnthread_suspend(thread, XNDORMANT,
+				 XN_INFINITE, XN_RELATIVE, NULL);
 	xnlock_put_irqrestore(&nklock, s);
 
 	xntrace_pid(xnthread_host_pid(thread),
@@ -1745,7 +1735,7 @@ EXPORT_SYMBOL_GPL(xnshadow_unregister_personality);
  */
 struct xnshadow_ppd *xnshadow_ppd_get(unsigned int muxid)
 {
-	struct xnthread *curr = xnpod_current_thread();
+	struct xnthread *curr = xnsched_current_thread();
 
 	if (xnthread_test_state(curr, XNROOT|XNUSER))
 		return ppd_lookup(muxid, xnshadow_current_mm() ?: current->mm);
@@ -1931,7 +1921,7 @@ restart:
 done:
 	__xn_status_return(regs, ret);
 	sigs = 0;
-	if (!xnpod_root_p()) {
+	if (!xnsched_root_p()) {
 		if (signal_pending(current) ||
 		    xnthread_test_info(thread, XNKICKED)) {
 			sigs = 1;
@@ -1959,7 +1949,7 @@ ret_handled:
 	return EVENT_STOP;
 
 linux_syscall:
-	if (xnpod_root_p())
+	if (xnsched_root_p())
 		/*
 		 * The call originates from the Linux domain, either
 		 * from a relaxed shadow or from a regular Linux task;
@@ -2002,7 +1992,7 @@ static int handle_root_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 	 * case, we won't run request_syscall_restart() that
 	 * frequently, so check for cancellation here.
 	 */
-	xnpod_testcancel_thread();
+	xnthread_test_cancel();
 
 	thread = xnshadow_current();
 	if (thread)
@@ -2021,8 +2011,8 @@ static int handle_root_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 
 	trace_mark(xn_nucleus, syscall_lostage_entry,
 		   "thread %p thread_name %s muxid %d muxop %d",
-		   xnpod_current_thread(),
-		   xnthread_name(xnpod_current_thread()),
+		   xnsched_current_thread(),
+		   xnthread_name(xnsched_current_thread()),
 		   muxid, muxop);
 
 	/* Processing a Xenomai syscall. */
@@ -2071,7 +2061,7 @@ restart:
 	__xn_status_return(regs, ret);
 
 	sigs = 0;
-	if (!xnpod_root_p()) {
+	if (!xnsched_root_p()) {
 		/*
 		 * We may have gained a shadow TCB from the syscall we
 		 * just invoked, so make sure to fetch it.
@@ -2085,7 +2075,7 @@ restart:
 			sysflags |= __xn_exec_switchback;
 	}
 	if (!sigs && (sysflags & __xn_exec_switchback) != 0
-	    && (switched || xnpod_primary_p()))
+	    && (switched || xnsched_primary_p()))
 		xnshadow_relax(0, 0);
 
 ret_handled:
@@ -2121,7 +2111,7 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 	 * We are called for both kernel and user shadows over the
 	 * root thread.
 	 */
-	XENO_BUGON(NUCLEUS, !xnpod_root_p());
+	XENO_BUGON(NUCLEUS, !xnsched_root_p());
 
 	thread = xnshadow_current();
 	XENO_BUGON(NUCLEUS, thread == NULL);
@@ -2147,11 +2137,11 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 	}
 
 	/*
-	 * __xnpod_cleanup_thread() -> ... -> xnshadow_finalize(). From
+	 * __xnthread_cleanup() -> ... -> xnshadow_finalize(). From
 	 * that point, the TCB is dropped. Be careful of not treading
 	 * on stale memory within @thread.
 	 */
-	__xnpod_cleanup_thread(thread);
+	__xnthread_cleanup(thread);
 
 	leave_personality(personality);
 	destroy_threadinfo();
@@ -2203,7 +2193,7 @@ no_ptrace:
 		if (!xnthread_test_state(next, XNRELAX)) {
 			xntrace_panic_freeze();
 			show_stack(xnthread_host_task(next), NULL);
-			xnpod_fatal
+			xnsys_fatal
 				("hardened thread %s[%d] running in Linux domain?! "
 				 "(status=0x%lx, sig=%d, prev=%s[%d])",
 				 next->name, next_task->pid, xnthread_state_flags(next),
@@ -2217,7 +2207,7 @@ no_ptrace:
 			   && xnthread_test_state(next, XNPEND)) {
 			xntrace_panic_freeze();
 			show_stack(xnthread_host_task(next), NULL);
-			xnpod_fatal
+			xnsys_fatal
 				("blocked thread %s[%d] rescheduled?! "
 				 "(status=0x%lx, sig=%d, prev=%s[%d])",
 				 next->name, next_task->pid, xnthread_state_flags(next),
@@ -2273,7 +2263,7 @@ static int handle_sigwake_event(struct task_struct *p)
 
 	force_wakeup(thread);
 
-	xnpod_schedule();
+	xnsched_run();
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -2402,10 +2392,10 @@ static inline int handle_exception(struct ipipe_trap_data *d)
 	struct xnthread *thread;
 	struct xnarchtcb *tcb;
 
-	if (xnpod_root_p())
+	if (xnsched_root_p())
 		return 0;
 
-	thread = xnpod_current_thread();
+	thread = xnsched_current_thread();
 
 	trace_mark(xn_nucleus, thread_fault,
 		   "thread %p thread_name %s ip %p type 0x%x",

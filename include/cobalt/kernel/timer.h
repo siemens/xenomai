@@ -235,7 +235,7 @@ static inline struct xnsched *xntimer_sched(struct xntimer *timer)
 	return timer->sched;
 }
 #else /* !CONFIG_SMP */
-#define xntimer_sched(t)	xnpod_current_sched()
+#define xntimer_sched(t)	xnsched_current()
 #endif /* !CONFIG_SMP */
 
 #define xntimer_percpu_queue(__timer)					\

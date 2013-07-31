@@ -1,7 +1,4 @@
-/*!\file
- * \brief Interrupt management.
- * \author Philippe Gerum
- *
+/*
  * Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
  * Copyright (C) 2005,2006 Dmitry Adamushko <dmitry.adamushko@gmail.com>.
  * Copyright (C) 2007 Jan Kiszka <jan.kiszka@web.de>.
@@ -21,18 +18,12 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  *
- * \ingroup intr
- */
+ * @ingroup nucleus
+ * @defgroup intr Interrupt management.
+ * @{
+*/
 
-/*!
- * \ingroup nucleus
- * \defgroup intr Interrupt management.
- *
- * Interrupt management.
- *
- *@{*/
-
-#include <cobalt/kernel/pod.h>
+#include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/intr.h>
 #include <cobalt/kernel/stat.h>
 #include <cobalt/kernel/clock.h>
@@ -72,7 +63,7 @@ static inline void sync_stat_references(struct xnintr *intr)
 	int cpu;
 
 	for_each_online_cpu(cpu) {
-		sched = xnpod_sched_slot(cpu);
+		sched = xnsched_struct(cpu);
 		statp = per_cpu_ptr(intr->stats, cpu);
 		/* Synchronize on all dangling references to go away. */
 		while (sched->current_account == &statp->account)
@@ -101,7 +92,7 @@ void xnintr_host_tick(struct xnsched *sched) /* Interrupts off. */
  */
 void xnintr_core_clock_handler(void)
 {
-	struct xnsched *sched = xnpod_current_sched();
+	struct xnsched *sched = xnsched_current();
 	int cpu  __maybe_unused = xnsched_cpu(sched);
 	struct xnirqstat *statp;
 	xnstat_exectime_t *prev;
@@ -125,14 +116,14 @@ void xnintr_core_clock_handler(void)
 
 	if (--sched->inesting == 0) {
 		sched->lflags &= ~XNINIRQ;
-		xnpod_schedule();
-		sched = xnpod_current_sched();
+		xnsched_run();
+		sched = xnsched_current();
 	}
 	/*
 	 * If the core clock interrupt preempted a real-time thread,
 	 * any transition to the root thread has already triggered a
-	 * host tick propagation from xnpod_schedule(), so at this
-	 * point, we only need to propagate the host tick in case the
+	 * host tick propagation from xnsched_run(), so at this point,
+	 * we only need to propagate the host tick in case the
 	 * interrupt preempted the root thread.
 	 */
 	if ((sched->lflags & XNHTICK) &&
@@ -175,7 +166,7 @@ static inline xnintr_t *xnintr_shirq_next(xnintr_t *prev)
  */
 static void xnintr_shirq_handler(unsigned irq, void *cookie)
 {
-	struct xnsched *sched = xnpod_current_sched();
+	struct xnsched *sched = xnsched_current();
 	xnintr_irq_t *shirq = &xnirqs[irq];
 	struct xnirqstat *statp;
 	xnstat_exectime_t *prev;
@@ -231,7 +222,7 @@ static void xnintr_shirq_handler(unsigned irq, void *cookie)
 
 	if (--sched->inesting == 0) {
 		sched->lflags &= ~XNINIRQ;
-		xnpod_schedule();
+		xnsched_run();
 	}
 
 	trace_mark(xn_nucleus, irq_exit, "irq %u", irq);
@@ -244,7 +235,7 @@ static void xnintr_shirq_handler(unsigned irq, void *cookie)
 static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 {
 	const int MAX_EDGEIRQ_COUNTER = 128;
-	struct xnsched *sched = xnpod_current_sched();
+	struct xnsched *sched = xnsched_current();
 	xnintr_irq_t *shirq = &xnirqs[irq];
 	int s = 0, counter = 0, ret, code;
 	struct xnintr *intr, *end = NULL;
@@ -312,7 +303,7 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 
 	if (--sched->inesting == 0) {
 		sched->lflags &= ~XNINIRQ;
-		xnpod_schedule();
+		xnsched_run();
 	}
 
 	trace_mark(xn_nucleus, irq_exit, "irq %u", irq);
@@ -440,7 +431,7 @@ static inline void xnintr_irq_detach(xnintr_t *intr)
  */
 static void xnintr_irq_handler(unsigned irq, void *cookie)
 {
-	struct xnsched *sched = xnpod_current_sched();
+	struct xnsched *sched = xnsched_current();
 	struct xnirqstat *statp;
 	xnstat_exectime_t *prev;
 	struct xnintr *intr;
@@ -488,7 +479,7 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 	}
 
 #ifdef CONFIG_SMP
- unlock_and_exit:
+unlock_and_exit:
 #endif
 	xnlock_put(&xnirqs[irq].lock);
 
@@ -501,7 +492,7 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 
 	if (--sched->inesting == 0) {
 		sched->lflags &= ~XNINIRQ;
-		xnpod_schedule();
+		xnsched_run();
 	}
 
 	trace_mark(xn_nucleus, irq_exit, "irq %u", irq);
@@ -819,7 +810,7 @@ int xnintr_detach(xnintr_t *intr)
 	intr->flags &= ~XN_ISR_ATTACHED;
 	xnintr_irq_detach(intr);
 	stat_counter_dec();
- out:
+out:
 	xnlock_put_irqrestore(&intrlock, s);
 
 	return ret;
@@ -987,7 +978,7 @@ int xnintr_query_next(int irq, xnintr_iterator_t *iterator, char *name_buf)
 
 	statp = per_cpu_ptr(intr->stats, cpu);
 	iterator->hits = xnstat_counter_get(&statp->hits);
-	last_switch = xnpod_sched_slot(cpu)->last_account_switch;
+	last_switch = xnsched_struct(cpu)->last_account_switch;
 	iterator->exectime_period = statp->account.total;
 	iterator->account_period = last_switch - statp->account.start;
 	statp->sum.total += iterator->exectime_period;
@@ -1002,7 +993,7 @@ int xnintr_query_next(int irq, xnintr_iterator_t *iterator, char *name_buf)
 	if (cpu + 1 == num_present_cpus())
 		iterator->prev = intr;
 
-     unlock_and_exit:
+unlock_and_exit:
 	xnlock_put_irqrestore(&intrlock, s);
 
 	return ret;
@@ -1083,8 +1074,8 @@ static int irq_vfile_show(struct xnvfile_regular_iterator *it,
 
 		for_each_online_cpu(cpu) {
 			xnvfile_printf(it, "%12lu",
-		       __ipipe_cpudata_irq_hits(&xnarch_machdata.domain, cpu,
-					      irq));
+				       __ipipe_cpudata_irq_hits(&xnarch_machdata.domain, cpu,
+								irq));
 		}
 
 		format_irq_proc(irq, it);
@@ -1137,7 +1128,7 @@ static ssize_t affinity_vfile_store(struct xnvfile_input *input)
 		if (val & 1)
 			cpu_set(cpu, new_affinity);
 
-	cpus_and(nkaffinity, new_affinity, xnarch_supported_cpus);
+	cpus_and(nkaffinity, new_affinity, xnsys_cpus);
 
 	return ret;
 }

@@ -1,7 +1,4 @@
-/*!@file sched-weak.h
- * @brief Definitions for the weak scheduling class.
- * @author Philippe Gerum
- *
+/**
  * Copyright (C) 2013 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
@@ -19,7 +16,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  */
-
 #ifndef _COBALT_KERNEL_SCHED_WEAK_H
 #define _COBALT_KERNEL_SCHED_WEAK_H
 

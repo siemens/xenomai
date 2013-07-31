@@ -43,9 +43,10 @@
  *
  *@{*/
 
+#include <linux/module.h>
 #include <cobalt/kernel/heap.h>
-#include <cobalt/kernel/pod.h>
 #include <cobalt/kernel/map.h>
+#include <asm/xenomai/machine.h>
 
 /*!
  * \fn void xnmap_create(int nkeys, int reserve, int offset)

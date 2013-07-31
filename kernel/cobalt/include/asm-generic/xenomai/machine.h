@@ -73,22 +73,6 @@ static inline unsigned long xnarch_timer_calibrate(void)
 	return xnarch_machdesc.calibrate();
 }
 
-#ifdef CONFIG_SMP
-#define xnarch_supported_cpus xnarch_machdata.supported_cpus
-
-static inline int xnarch_cpu_supported(int cpu)
-{
-	return cpu_isset(cpu, xnarch_supported_cpus);
-}
-#else  /* !CONFIG_SMP */
-#define xnarch_supported_cpus CPU_MASK_ALL
-
-static inline int xnarch_cpu_supported(int cpu)
-{
-	return 1;
-}
-#endif /* !CONFIG_SMP */
-
 #ifndef XNARCH_SHARED_HEAP_FLAGS
 #define XNARCH_SHARED_HEAP_FLAGS  0
 #endif
