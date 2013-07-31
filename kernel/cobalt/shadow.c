@@ -1303,10 +1303,8 @@ do_bind:
 		goto muxid_eventcb;
 
 	sys_ppd = personalities[user_muxid]->ops.attach_process();
-	if (IS_ERR(sys_ppd)) {
-		ret = PTR_ERR(sys_ppd);
-		goto fail;
-	}
+	if (IS_ERR(sys_ppd))
+		return PTR_ERR(sys_ppd);
 
 	if (sys_ppd == NULL)
 		goto muxid_eventcb;
@@ -1333,7 +1331,7 @@ muxid_eventcb:
 
 	/* protect from the same process binding several times. */
 	if (ppd)
-		goto eventcb_done;
+		return muxid;
 
 	ppd = personality->ops.attach_process();
 	if (IS_ERR(ppd)) {
@@ -1342,7 +1340,7 @@ muxid_eventcb:
 	}
 
 	if (ppd == NULL)
-		goto eventcb_done;
+		return muxid;
 
 	ppd->key.muxid = muxid;
 	ppd->key.mm = current->mm;
@@ -1357,34 +1355,15 @@ muxid_eventcb:
 		ppd = NULL;
 	}
 
-eventcb_done:
+	return muxid;
 
-	if (!xnpod_active_p()) {
-		/*
-		 * Ok mate, but you really ought to call xnpod_init()
-		 * at some point if you want me to be of some help
-		 * here...
-		 */
-		if (ppd) {
-			ppd_remove(ppd);
-			personality->ops.detach_process(ppd);
-		}
-
-		if (personality->module)
-			module_put(personality->module);
-
-		ret = -ENOSYS;
-
-	fail_destroy_sys_ppd:
-		if (sys_ppd) {
-			ppd_remove(sys_ppd);
-			personalities[user_muxid]->ops.detach_process(sys_ppd);
-		}
-	fail:
-		return ret;
+ fail_destroy_sys_ppd:
+	if (sys_ppd) {
+		ppd_remove(sys_ppd);
+		personalities[user_muxid]->ops.detach_process(sys_ppd);
 	}
 
-	return muxid;
+	return ret;
 }
 
 static int xnshadow_sys_info(int muxid, struct xnsysinfo __user *u_info)
@@ -1833,9 +1812,6 @@ static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 	unsigned long sysflags;
 	struct xnsyscall *sc;
 
-	if (!xnpod_active_p())
-		goto no_personality;
-
 	thread = xnshadow_current();
 	if (thread)
 		thread->regs = regs;
@@ -1903,7 +1879,6 @@ restart:
 	 */
 	if (sysflags & __xn_exec_lostage) {
 		/* Syscall must run into the Linux domain. */
-
 		if (ipd == &xnarch_machdata.domain) {
 			/*
 			 * Request originates from the Xenomai domain:
@@ -1919,8 +1894,8 @@ restart:
 			 * handler, so that the syscall is executed
 			 * from there.
 			 */
-			goto propagate_syscall;
-	} else if ((sysflags & (__xn_exec_histage | __xn_exec_current)) != 0) {
+			return EVENT_PROPAGATE;
+	} else if (sysflags & (__xn_exec_histage | __xn_exec_current)) {
 		/*
 		 * Syscall must be processed either by Xenomai, or by
 		 * the calling domain.
@@ -1933,7 +1908,7 @@ restart:
 			 * the syscall is eventually executed from
 			 * there.
 			 */
-			goto propagate_syscall;
+			return EVENT_PROPAGATE;
 		/*
 		 * Request originates from the Xenomai domain: run the
 		 * syscall immediately.
@@ -1954,10 +1929,8 @@ restart:
 		     __xn_exec_adaptive);
 		goto restart;
 	}
-
 done:
 	__xn_status_return(regs, ret);
-
 	sigs = 0;
 	if (!xnpod_root_p()) {
 		if (signal_pending(current) ||
@@ -1994,7 +1967,7 @@ linux_syscall:
 		 * just propagate the event so that we will fall back
 		 * to linux_sysentry().
 		 */
-		goto propagate_syscall;
+		return EVENT_PROPAGATE;
 
 	/*
 	 * From now on, we know that we have a valid shadow thread
@@ -2007,31 +1980,15 @@ linux_syscall:
 	 */
 	xnshadow_relax(1, SIGDEBUG_MIGRATE_SYSCALL);
 
-	goto propagate_syscall;
-
-no_personality:
-	if (__xn_reg_mux_p(regs)) {
-		if (__xn_reg_mux(regs) == __xn_mux_code(0, sc_nucleus_bind))
-			/*
-			 * Valid exception case for running a Xenomai
-			 * syscall with no attached context (yet): we
-			 * may be called to bind to a personality.
-			 */
-			goto propagate_syscall;
-bad_syscall:
-		printk(XENO_WARN "bad syscall %ld/%ld\n",
-		       __xn_mux_id(regs), __xn_mux_op(regs));
-
-		__xn_error_return(regs, -ENOSYS);
-		return EVENT_STOP;
-	}
-
-	/*
-	 * Regular Linux syscall: propagate it to the Linux kernel.
-	 */
-
-propagate_syscall:
 	return EVENT_PROPAGATE;
+
+bad_syscall:
+	printk(XENO_WARN "bad syscall %ld/%ld\n",
+	       __xn_mux_id(regs), __xn_mux_op(regs));
+	
+	__xn_error_return(regs, -ENOSYS);
+
+	return EVENT_STOP;
 }
 
 static int handle_root_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
@@ -2065,8 +2022,8 @@ static int handle_root_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 
 	trace_mark(xn_nucleus, syscall_lostage_entry,
 		   "thread %p thread_name %s muxid %d muxop %d",
-		   xnpod_active_p() ? xnpod_current_thread() : NULL,
-		   xnpod_active_p() ? xnthread_name(xnpod_current_thread()) : NULL,
+		   xnpod_current_thread(),
+		   xnthread_name(xnpod_current_thread()),
 		   muxid, muxop);
 
 	/* Processing a Xenomai syscall. */
@@ -2115,7 +2072,7 @@ restart:
 	__xn_status_return(regs, ret);
 
 	sigs = 0;
-	if (xnpod_active_p() && !xnpod_root_p()) {
+	if (!xnpod_root_p()) {
 		/*
 		 * We may have gained a shadow TCB from the syscall we
 		 * just invoked, so make sure to fetch it.
@@ -2208,9 +2165,6 @@ static int handle_schedule_event(struct task_struct *next_task)
 	struct task_struct *prev_task;
 	struct xnthread *prev, *next;
 	sigset_t pending;
-
-	if (!xnpod_active_p())
-		return EVENT_PROPAGATE;
 
 	prev_task = current;
 	prev = xnshadow_thread(prev_task);

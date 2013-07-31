@@ -81,9 +81,6 @@ static struct xnvfile_directory registry_vfroot;
 
 static int usage_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 {
-	if (!xnpod_active_p())
-		return -ESRCH;
-
 	xnvfile_printf(it, "%u/%u\n",
 		       nr_active_objects,
 		       CONFIG_XENO_OPT_REGISTRY_NRSLOTS);

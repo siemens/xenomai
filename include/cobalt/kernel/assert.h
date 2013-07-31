@@ -46,6 +46,8 @@
 #define CONFIG_XENO_OPT_DEBUG_NUCLEUS 0
 #endif /* CONFIG_XENO_OPT_DEBUG_NUCLEUS */
 
-void xnpod_fatal(const char *format, ...);
+extern void (*nkpanic)(const char *format, ...);
+
+#define xnpod_fatal(__fmt, __args...) nkpanic(__fmt, ##__args)
 
 #endif /* !_COBALT_KERNEL_ASSERT_H */

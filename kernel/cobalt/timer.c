@@ -769,13 +769,10 @@ static int timer_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 {
 	const char *tm_status, *wd_status = "";
 
-	if (xnpod_active_p()) {
-		tm_status = (nkpod->status & XNCLKLK) ? "locked" : "on";
+	tm_status = (nkpod->status & XNCLKLK) ? "locked" : "on";
 #ifdef CONFIG_XENO_OPT_WATCHDOG
-		wd_status = "+watchdog";
+	wd_status = "+watchdog";
 #endif /* CONFIG_XENO_OPT_WATCHDOG */
-	} else
-		tm_status = "off";
 
 	xnvfile_printf(it,
 		       "status=%s%s:setup=%Lu:clock=%Lu:timerdev=%s:clockdev=%s\n",

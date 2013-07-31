@@ -155,14 +155,6 @@ static int vfile_snapshot_open(struct inode *inode, struct file *file)
 	struct seq_file *seq;
 	caddr_t data;
 
-	/*
-	 * There is no point in reading/writing to v-files that must
-	 * be connected to Xenomai resources if the system has not
-	 * been initialized yet (i.e. xnpod_init() called).
-	 */
-	if (!xnpod_active_p())
-		return -ESRCH;
-
 	if ((file->f_mode & FMODE_WRITE) != 0 && ops->store == NULL)
 		return -EACCES;
 

@@ -28,8 +28,23 @@ static unsigned long mach_blackfin_calibrate(void)
 
 static void schedule_deferred(void)
 {
-	if (xnpod_active_p())
-		xnpod_schedule();
+	/*
+	 * We have a small race window which turns out to be
+	 * innocuous, i.e.:
+	 *
+	 * mach_setup() ...
+	 *    IRQ/syscall
+	 *        => irq_tail_hook
+	 *           => xnpod_schedule()
+	 *    ...
+	 * xnpod_init()
+	 *
+	 * in which case, we would call xnpod_schedule() for a not yet
+	 * initialized system. However, we would be covered by the
+	 * check for XNSCHED in xnpod_schedule(), which basically
+	 * makes this call a nop.
+	 */
+	xnpod_schedule();
 }
 
 static int mach_blackfin_init(void)

@@ -36,6 +36,7 @@
 #include <linux/kallsyms.h>
 #include <linux/ptrace.h>
 #include <linux/sched.h>
+#include <linux/kernel.h>
 #include <linux/wait.h>
 #include <cobalt/kernel/pod.h>
 #include <cobalt/kernel/timer.h>
@@ -54,6 +55,9 @@
 
 xnpod_t nkpod_struct;
 EXPORT_SYMBOL_GPL(nkpod_struct);
+
+void (*nkpanic)(const char *format, ...) = panic;
+EXPORT_SYMBOL_GPL(nkpanic);
 
 unsigned long nktimerlat;
 
@@ -133,11 +137,12 @@ static inline void __xnpod_switch_fpu(struct xnsched *sched)
 
 #endif /* !CONFIG_XENO_HW_FPU */
 
-void xnpod_fatal(const char *format, ...)
+static void fatal(const char *format, ...)
 {
 	static char msg_buf[1024];
 	struct xnthread *thread;
 	struct xnsched *sched;
+	static int oopsed;
 	char pbuf[16];
 	xnticks_t now;
 	unsigned cpu;
@@ -150,15 +155,15 @@ void xnpod_fatal(const char *format, ...)
 
 	xnlock_get_irqsave(&nklock, s);
 
+	if (oopsed)
+		goto out;
+
+	oopsed = 1;
 	va_start(ap, format);
 	vsnprintf(msg_buf, sizeof(msg_buf), format, ap);
 	printk(XENO_ERR "%s", msg_buf);
 	va_end(ap);
 
-	if (!xnpod_active_p() || xnpod_fatal_p())
-		goto out;
-
-	nkpod->status |= XNFATAL;
 	now = xnclock_read_monotonic(&nkclock);
 
 	printk(KERN_ERR "\n %-3s  %-6s %-8s %-8s %-8s  %s\n",
@@ -199,7 +204,6 @@ out:
 	for (;;)
 		cpu_relax();
 }
-EXPORT_SYMBOL_GPL(xnpod_fatal);
 
 void __xnpod_schedule_handler(void) /* hw interrupts off. */
 {
@@ -276,7 +280,7 @@ int xnpod_init(void)
 
 	xnregistry_init();
 
-	pod->status |= XNPEXEC;
+	nkpanic = fatal;
 	smp_wmb();
 	xnshadow_grab_events();
 
@@ -321,15 +325,6 @@ void xnpod_shutdown(int xtype)
 	int cpu;
 	spl_t s;
 
-	xnlock_get_irqsave(&nklock, s);
-
-	if (!xnpod_active_p()) {
-		xnlock_put_irqrestore(&nklock, s);
-		return;
-	}
-
-	xnlock_put_irqrestore(&nklock, s);
-
 	xnpod_disable_timesource();
 	xnshadow_release_events();
 #ifdef CONFIG_SMP
@@ -345,8 +340,6 @@ void xnpod_shutdown(int xtype)
 	}
 
 	xnpod_schedule();
-
-	nkpod->status &= ~XNPEXEC;
 
 	for_each_online_cpu(cpu) {
 		sched = xnpod_sched_slot(cpu);
@@ -1814,7 +1807,7 @@ int xnpod_handle_exception(struct ipipe_trap_data *d)
 	struct xnthread *thread;
 	struct xnarchtcb *tcb;
 
-	if (!xnpod_active_p() || (!xnpod_interrupt_p() && xnpod_root_p()))
+	if (xnpod_root_p())
 		return 0;
 
 	thread = xnpod_current_thread();
@@ -1908,21 +1901,11 @@ EXPORT_SYMBOL_GPL(xnpod_handle_exception);
  */
 int xnpod_enable_timesource(void)
 {
-	int err, htickval, cpu;
 	struct xnsched *sched;
+	int htickval, cpu;
 	spl_t s;
 
-	xnlock_get_irqsave(&nklock, s);
-
-	if (!xnpod_active_p()) {
-		err = -ENOSYS;
-		xnlock_put_irqrestore(&nklock, s);
-		return err;
-	}
-
 	trace_mark(xn_nucleus, enable_timesource, MARK_NOARGS);
-
-	xnlock_put_irqrestore(&nklock, s);
 
 #ifdef CONFIG_XENO_OPT_STATS
 	/*
@@ -2005,15 +1988,12 @@ EXPORT_SYMBOL_GPL(xnpod_enable_timesource);
  *
  * Rescheduling: never.
  */
-
 void xnpod_disable_timesource(void)
 {
 	int cpu;
 
 	trace_mark(xn_nucleus, disable_timesource, MARK_NOARGS);
 
-	if (!xnpod_active_p())
-		return;
 	/*
 	 * We must not hold the nklock while stopping the hardware
 	 * timer, since this could cause deadlock situations to arise

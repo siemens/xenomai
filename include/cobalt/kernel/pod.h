@@ -36,9 +36,7 @@
 #include <cobalt/kernel/lock.h>
 
 /* Pod status flags */
-#define XNFATAL  0x00000001	/* Fatal error in progress */
-#define XNPEXEC  0x00000002	/* Pod is active (a skin is attached) */
-#define XNCLKLK  0x00000004	/* All clocks locked */
+#define XNCLKLK  0x00000001	/* All clocks locked */
 
 #define XNPOD_NORMAL_EXIT  0x0
 #define XNPOD_FATAL_EXIT   0x1
@@ -100,16 +98,6 @@ static inline struct xnsched *xnpod_current_sched(void)
 {
 	/* IRQs off */
 	return __this_cpu_ptr(&nksched);
-}
-
-static inline int xnpod_active_p(void)
-{
-	return nkpod->status & XNPEXEC;
-}
-
-static inline int xnpod_fatal_p(void)
-{
-	return nkpod->status & XNFATAL;
 }
 
 static inline int xnpod_interrupt_p(void)
