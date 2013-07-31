@@ -650,7 +650,7 @@ static inline int moving_target(struct xnsched *sched, struct xnthread *thread)
 	return ret;
 }
 
-static void cleanup_thread(struct xnthread *thread) /* nklock held, irqs off */
+static inline void cleanup_thread(struct xnthread *thread) /* nklock held, irqs off */
 {
 	struct xnsched *sched = thread->sched;
 
@@ -764,8 +764,15 @@ void xnpod_cancel_thread(struct xnthread *thread)
 
 	xnthread_set_info(thread, XNCANCELD);
 
+	/*
+	 * If @thread is not started yet, fake a start request,
+	 * raising the kicked condition bit to make sure it will reach
+	 * xnpod_testcancel_thread() on its wakeup path.
+	 */
 	if (xnthread_test_state(thread, XNDORMANT)) {
-		cleanup_thread(thread);
+		xnthread_set_info(thread, XNKICKED);
+		xnpod_resume_thread(thread, XNDORMANT);
+		xnpod_schedule();
 		goto unlock_and_exit;
 	}
 
