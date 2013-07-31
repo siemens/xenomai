@@ -132,10 +132,6 @@ static inline int xnpod_primary_p(void)
 
 int xnpod_init(void);
 
-int xnpod_enable_timesource(void);
-
-void xnpod_disable_timesource(void);
-
 void xnpod_shutdown(int xtype);
 
 int xnpod_init_thread(struct xnthread *thread,
@@ -277,8 +273,6 @@ static inline void xnpod_testcancel_thread(void)
 	if (curr && xnthread_test_info(curr, XNCANCELD))
 		__xnpod_testcancel_thread(curr);
 }
-
-int xnpod_handle_exception(struct ipipe_trap_data *d);
 
 int xnpod_set_thread_periodic(struct xnthread *thread,
 			      xnticks_t idate,

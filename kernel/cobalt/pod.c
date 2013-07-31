@@ -33,7 +33,6 @@
  *@{*/
 
 #include <stdarg.h>
-#include <linux/kallsyms.h>
 #include <linux/ptrace.h>
 #include <linux/sched.h>
 #include <linux/kernel.h>
@@ -217,9 +216,82 @@ static void xnpod_flush_heap(struct xnheap *heap,
 	free_pages_exact(extaddr, extsize);
 }
 
-/*!
- * \fn int xnpod_init(void)
- * \brief Initialize the core pod.
+static int enable_timesource(void)
+{
+	struct xnsched *sched;
+	int htickval, cpu;
+	spl_t s;
+
+	trace_mark(xn_nucleus, enable_timesource, MARK_NOARGS);
+
+#ifdef CONFIG_XENO_OPT_STATS
+	/*
+	 * Only for statistical purpose, the timer interrupt is
+	 * attached by xntimer_grab_hardware().
+	 */
+	xnintr_init(&nktimer, "[timer]",
+		    per_cpu(ipipe_percpu.hrtimer_irq, 0), NULL, NULL, 0);
+#endif /* CONFIG_XENO_OPT_STATS */
+
+	nkclock.wallclock_offset =
+		xnclock_get_host_time() - xnclock_read_monotonic(&nkclock);
+
+	for_each_online_cpu(cpu) {
+		if (!xnarch_cpu_supported(cpu))
+			continue;
+
+		htickval = xntimer_grab_hardware(cpu);
+		if (htickval < 0) {
+			while (--cpu >= 0)
+				xntimer_release_hardware(cpu);
+
+			return htickval;
+		}
+
+		xnlock_get_irqsave(&nklock, s);
+
+		/* If the current tick device for the target CPU is
+		 * periodic, we won't be called back for host tick
+		 * emulation. Therefore, we need to start a periodic
+		 * nucleus timer which will emulate the ticking for
+		 * that CPU, since we are going to hijack the hw clock
+		 * chip for managing our own system timer.
+		 *
+		 * CAUTION:
+		 *
+		 * - nucleus timers may be started only _after_ the hw
+		 * timer has been set up for the target CPU through a
+		 * call to xntimer_grab_hardware().
+		 *
+		 * - we don't compensate for the elapsed portion of
+		 * the current host tick, since we cannot get this
+		 * information easily for all CPUs except the current
+		 * one, and also because of the declining relevance of
+		 * the jiffies clocksource anyway.
+		 *
+		 * - we must not hold the nklock across calls to
+		 * xntimer_grab_hardware().
+		 */
+
+		sched = xnpod_sched_slot(cpu);
+		if (htickval > 1)
+			xntimer_start(&sched->htimer, htickval, htickval, XN_RELATIVE);
+		else if (htickval == 1)
+			xntimer_start(&sched->htimer, 0, 0, XN_RELATIVE);
+
+#if defined(CONFIG_XENO_OPT_WATCHDOG)
+		xntimer_start(&sched->wdtimer, 1000000000UL, 1000000000UL, XN_RELATIVE);
+		xnsched_reset_watchdog(sched);
+#endif /* CONFIG_XENO_OPT_WATCHDOG */
+		xnlock_put_irqrestore(&nklock, s);
+	}
+
+	return 0;
+}
+
+/**
+ * @fn int xnpod_init(void)
+ * @brief Initialize the core pod.
  *
  * Initializes the core interface pod which can subsequently be used
  * to start real-time activities. Once the core pod is active,
@@ -230,13 +302,25 @@ static void xnpod_flush_heap(struct xnheap *heap,
  *
  * - -ENOMEM is returned if the memory manager fails to initialize.
  *
+ * - -ENODEV is returned if a failure occurred while configuring the
+ * hardware timer.
+ *
  * Environments:
  *
  * This service can be called from:
  *
  * - Kernel module initialization code
+ *
+ * @note On every architecture, Xenomai directly manages a hardware
+ * timer clocked in one-shot mode, to support any number of software
+ * timers internally. Timings are always specified as a count of
+ * nanoseconds.
+ *
+ * enable_timesource() configures the hardware timer chip. Because
+ * Xenomai often interposes on the system timer used by the Linux
+ * kernel, a software timer may be started to relay ticks to the host
+ * kernel if needed.
  */
-
 int xnpod_init(void)
 {
 	struct xnsched *sched;
@@ -284,7 +368,7 @@ int xnpod_init(void)
 	smp_wmb();
 	xnshadow_grab_events();
 
-	ret = xnpod_enable_timesource();
+	ret = enable_timesource();
 	if (ret) {
 		xnpod_shutdown(XNPOD_FATAL_EXIT);
 		return ret;
@@ -292,7 +376,27 @@ int xnpod_init(void)
 
 	return 0;
 }
-EXPORT_SYMBOL_GPL(xnpod_init);
+
+void disable_timesource(void)
+{
+	int cpu;
+
+	trace_mark(xn_nucleus, disable_timesource, MARK_NOARGS);
+
+	/*
+	 * We must not hold the nklock while stopping the hardware
+	 * timer, since this could cause deadlock situations to arise
+	 * on SMP systems.
+	 */
+	for_each_online_cpu(cpu) {
+		if (xnarch_cpu_supported(cpu))
+			xntimer_release_hardware(cpu);
+	}
+
+#ifdef CONFIG_XENO_OPT_STATS
+	xnintr_destroy(&nktimer);
+#endif /* CONFIG_XENO_OPT_STATS */
+}
 
 /*!
  * \fn void xnpod_shutdown(int xtype)
@@ -325,7 +429,7 @@ void xnpod_shutdown(int xtype)
 	int cpu;
 	spl_t s;
 
-	xnpod_disable_timesource();
+	disable_timesource();
 	xnshadow_release_events();
 #ifdef CONFIG_SMP
 	ipipe_free_irq(&xnarch_machdata.domain, IPIPE_RESCHEDULE_IPI);
@@ -1791,224 +1895,6 @@ void ___xnpod_unlock_sched(struct xnsched *sched)
 	}
 }
 EXPORT_SYMBOL_GPL(___xnpod_unlock_sched);
-
-/*!
- * \fn void xnpod_handle_exception(struct ipipe_trap_data *d);
- * \brief Exception handler.
- *
- * This is the handler which is called whenever an exception/fault is
- * caught over the primary domain.
- *
- * @param d A pointer to the trap information block received from the
- * pipeline core.
- */
-int xnpod_handle_exception(struct ipipe_trap_data *d)
-{
-	struct xnthread *thread;
-	struct xnarchtcb *tcb;
-
-	if (xnpod_root_p())
-		return 0;
-
-	thread = xnpod_current_thread();
-
-	trace_mark(xn_nucleus, thread_fault,
-		   "thread %p thread_name %s ip %p type 0x%x",
-		   thread, xnthread_name(thread),
-		   (void *)xnarch_fault_pc(d),
-		   xnarch_fault_trap(d));
-
-	if (xnarch_fault_fpu_p(d)) {
-		if (!xnthread_test_state(thread, XNROOT)) {
-			/* FPU exception received in primary mode. */
-			tcb = xnthread_archtcb(thread);
-			if (xnarch_handle_fpu_fault(tcb))
-				return 1;
-		}
-		print_symbol("invalid use of FPU in Xenomai context at %s\n",
-			     xnarch_fault_pc(d));
-	}
-
-	if (xnthread_test_state(thread, XNROOT))
-		return 0;
-	/*
-	 * If we experienced a trap on behalf of a shadow thread
-	 * running in primary mode, move it to the Linux domain,
-	 * leaving the kernel process the exception.
-	 */
-	thread->regs = xnarch_fault_regs(d);
-
-#if XENO_DEBUG(NUCLEUS)
-	if (!user_mode(d->regs)) {
-		xntrace_panic_freeze();
-		printk(XENO_WARN
-		       "switching %s to secondary mode after exception #%u in "
-		       "kernel-space at 0x%lx (pid %d)\n", thread->name,
-		       xnarch_fault_trap(d),
-		       xnarch_fault_pc(d),
-		       xnthread_host_pid(thread));
-		xntrace_panic_dump();
-	} else if (xnarch_fault_notify(d)) /* Don't report debug traps */
-		printk(XENO_WARN
-		       "switching %s to secondary mode after exception #%u from "
-		       "user-space at 0x%lx (pid %d)\n", thread->name,
-		       xnarch_fault_trap(d),
-		       xnarch_fault_pc(d),
-		       xnthread_host_pid(thread));
-#endif /* XENO_DEBUG(NUCLEUS) */
-
-	if (xnarch_fault_pf_p(d))
-		/*
-		 * The page fault counter is not SMP-safe, but it's a
-		 * simple indicator that something went wrong wrt
-		 * memory locking anyway.
-		 */
-		xnstat_counter_inc(&thread->stat.pf);
-
-	xnshadow_relax(xnarch_fault_notify(d), SIGDEBUG_MIGRATE_FAULT);
-
-	return 0;
-}
-EXPORT_SYMBOL_GPL(xnpod_handle_exception);
-
-/*!
- * \fn int xnpod_enable_timesource(void)
- * \brief Activate the core time source.
- *
- * On every architecture, Xenomai directly manages a hardware timer
- * clocked in one-shot mode, to support any number of software timers
- * internally. Timings are always specified as a count of nanoseconds.
- *
- * The xnpod_enable_timesource() service configures the hardware timer
- * chip. Because Xenomai most often interposes on the system timer
- * used by the Linux kernel, a software timer may be started to relay
- * periodic ticks to the host kernel if needed.
- *
- * @return 0 is returned on success. Otherwise:
- *
- * - -ENODEV is returned if a failure occurred while configuring the
- * hardware timer.
- *
- * - -ENOSYS is returned if no active pod exists.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Regular Linux kernel context.
- *
- * Rescheduling: never.
- */
-int xnpod_enable_timesource(void)
-{
-	struct xnsched *sched;
-	int htickval, cpu;
-	spl_t s;
-
-	trace_mark(xn_nucleus, enable_timesource, MARK_NOARGS);
-
-#ifdef CONFIG_XENO_OPT_STATS
-	/*
-	 * Only for statistical purpose, the timer interrupt is
-	 * attached by xntimer_grab_hardware().
-	 */
-	xnintr_init(&nktimer, "[timer]",
-		    per_cpu(ipipe_percpu.hrtimer_irq, 0), NULL, NULL, 0);
-#endif /* CONFIG_XENO_OPT_STATS */
-
-	nkclock.wallclock_offset =
-		xnclock_get_host_time() - xnclock_read_monotonic(&nkclock);
-
-	for_each_online_cpu(cpu) {
-		if (!xnarch_cpu_supported(cpu))
-			continue;
-
-		htickval = xntimer_grab_hardware(cpu);
-		if (htickval < 0) {
-			while (--cpu >= 0)
-				xntimer_release_hardware(cpu);
-
-			return htickval;
-		}
-
-		xnlock_get_irqsave(&nklock, s);
-
-		/* If the current tick device for the target CPU is
-		 * periodic, we won't be called back for host tick
-		 * emulation. Therefore, we need to start a periodic
-		 * nucleus timer which will emulate the ticking for
-		 * that CPU, since we are going to hijack the hw clock
-		 * chip for managing our own system timer.
-		 *
-		 * CAUTION:
-		 *
-		 * - nucleus timers may be started only _after_ the hw
-		 * timer has been set up for the target CPU through a
-		 * call to xntimer_grab_hardware().
-		 *
-		 * - we don't compensate for the elapsed portion of
-		 * the current host tick, since we cannot get this
-		 * information easily for all CPUs except the current
-		 * one, and also because of the declining relevance of
-		 * the jiffies clocksource anyway.
-		 *
-		 * - we must not hold the nklock across calls to
-		 * xntimer_grab_hardware().
-		 */
-
-		sched = xnpod_sched_slot(cpu);
-		if (htickval > 1)
-			xntimer_start(&sched->htimer, htickval, htickval, XN_RELATIVE);
-		else if (htickval == 1)
-			xntimer_start(&sched->htimer, 0, 0, XN_RELATIVE);
-
-#if defined(CONFIG_XENO_OPT_WATCHDOG)
-		xntimer_start(&sched->wdtimer, 1000000000UL, 1000000000UL, XN_RELATIVE);
-		xnsched_reset_watchdog(sched);
-#endif /* CONFIG_XENO_OPT_WATCHDOG */
-		xnlock_put_irqrestore(&nklock, s);
-	}
-
-	return 0;
-}
-EXPORT_SYMBOL_GPL(xnpod_enable_timesource);
-
-/*!
- * \fn void xnpod_disable_timesource(void)
- * \brief Stop the core time source.
- *
- * Releases the hardware timer, which deactivates the system clock.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - User-space task in secondary mode
- *
- * Rescheduling: never.
- */
-void xnpod_disable_timesource(void)
-{
-	int cpu;
-
-	trace_mark(xn_nucleus, disable_timesource, MARK_NOARGS);
-
-	/*
-	 * We must not hold the nklock while stopping the hardware
-	 * timer, since this could cause deadlock situations to arise
-	 * on SMP systems.
-	 */
-	for_each_online_cpu(cpu) {
-		if (xnarch_cpu_supported(cpu))
-			xntimer_release_hardware(cpu);
-	}
-
-#ifdef CONFIG_XENO_OPT_STATS
-	xnintr_destroy(&nktimer);
-#endif /* CONFIG_XENO_OPT_STATS */
-}
-EXPORT_SYMBOL_GPL(xnpod_disable_timesource);
 
 /*!
  * \fn int xnpod_set_thread_periodic(xnthread_t *thread,xnticks_t idate, xntmode_t timeout_mode, xnticks_t period)

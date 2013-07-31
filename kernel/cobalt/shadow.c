@@ -51,6 +51,7 @@
 #include <linux/ptrace.h>
 #include <linux/vmalloc.h>
 #include <linux/completion.h>
+#include <linux/kallsyms.h>
 #include <asm/signal.h>
 #include <cobalt/kernel/pod.h>
 #include <cobalt/kernel/heap.h>
@@ -2398,6 +2399,74 @@ int ipipe_kevent_hook(int kevent, void *data)
 	return ret;
 }
 
+static inline int handle_exception(struct ipipe_trap_data *d)
+{
+	struct xnthread *thread;
+	struct xnarchtcb *tcb;
+
+	if (xnpod_root_p())
+		return 0;
+
+	thread = xnpod_current_thread();
+
+	trace_mark(xn_nucleus, thread_fault,
+		   "thread %p thread_name %s ip %p type 0x%x",
+		   thread, xnthread_name(thread),
+		   (void *)xnarch_fault_pc(d),
+		   xnarch_fault_trap(d));
+
+	if (xnarch_fault_fpu_p(d)) {
+		if (!xnthread_test_state(thread, XNROOT)) {
+			/* FPU exception received in primary mode. */
+			tcb = xnthread_archtcb(thread);
+			if (xnarch_handle_fpu_fault(tcb))
+				return 1;
+		}
+		print_symbol("invalid use of FPU in Xenomai context at %s\n",
+			     xnarch_fault_pc(d));
+	}
+
+	if (xnthread_test_state(thread, XNROOT))
+		return 0;
+	/*
+	 * If we experienced a trap on behalf of a shadow thread
+	 * running in primary mode, move it to the Linux domain,
+	 * leaving the kernel process the exception.
+	 */
+	thread->regs = xnarch_fault_regs(d);
+
+#if XENO_DEBUG(NUCLEUS)
+	if (!user_mode(d->regs)) {
+		xntrace_panic_freeze();
+		printk(XENO_WARN
+		       "switching %s to secondary mode after exception #%u in "
+		       "kernel-space at 0x%lx (pid %d)\n", thread->name,
+		       xnarch_fault_trap(d),
+		       xnarch_fault_pc(d),
+		       xnthread_host_pid(thread));
+		xntrace_panic_dump();
+	} else if (xnarch_fault_notify(d)) /* Don't report debug traps */
+		printk(XENO_WARN
+		       "switching %s to secondary mode after exception #%u from "
+		       "user-space at 0x%lx (pid %d)\n", thread->name,
+		       xnarch_fault_trap(d),
+		       xnarch_fault_pc(d),
+		       xnthread_host_pid(thread));
+#endif /* XENO_DEBUG(NUCLEUS) */
+
+	if (xnarch_fault_pf_p(d))
+		/*
+		 * The page fault counter is not SMP-safe, but it's a
+		 * simple indicator that something went wrong wrt
+		 * memory locking anyway.
+		 */
+		xnstat_counter_inc(&thread->stat.pf);
+
+	xnshadow_relax(xnarch_fault_notify(d), SIGDEBUG_MIGRATE_FAULT);
+
+	return 0;
+}
+
 int ipipe_trap_hook(struct ipipe_trap_data *data)
 {
 	if (data->exception == IPIPE_TRAP_MAYDAY)
@@ -2409,7 +2478,7 @@ int ipipe_trap_hook(struct ipipe_trap_data *data)
 	 */
 	__this_cpu_ptr(&xnarch_percpu_machdata)->faults[data->exception]++;
 
-	if (xnpod_handle_exception(data))
+	if (handle_exception(data))
 		return EVENT_STOP;
 
 	/*
