@@ -153,7 +153,7 @@ void xnsched_init(struct xnsched *sched, int cpu)
 	xntimer_set_sched(&sched->htimer, sched);
 	sched->zombie = NULL;
 
-	attr.flags = XNROOT | XNSTARTED | XNFPU;
+	attr.flags = XNROOT | XNFPU;
 	attr.name = root_name;
 	attr.personality = &generic_personality;
 	param.idle.prio = XNSCHED_IDLE_PRIO;
@@ -367,7 +367,7 @@ int xnsched_set_policy(struct xnthread *thread,
 	if (xnthread_test_state(thread, XNREADY))
 		xnsched_enqueue(thread);
 
-	if (xnthread_test_state(thread, XNSTARTED))
+	if (!xnthread_test_state(thread, XNDORMANT))
 		xnsched_set_resched(thread->sched);
 
 	return 0;

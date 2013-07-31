@@ -545,7 +545,7 @@ int xnpod_start_thread(struct xnthread *thread,
 	}
 #endif /* CONFIG_SMP */
 
-	xnthread_set_state(thread, (attr->mode & (XNTHREAD_MODE_BITS | XNSUSP)) | XNSTARTED);
+	xnthread_set_state(thread, attr->mode & (XNTHREAD_MODE_BITS | XNSUSP));
 	thread->imode = (attr->mode & XNTHREAD_MODE_BITS);
 	thread->entry = attr->entry;
 	thread->cookie = attr->cookie;

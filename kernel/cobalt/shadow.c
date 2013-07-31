@@ -1010,7 +1010,7 @@ int xnshadow_map_kernel(struct xnthread *thread, struct completion *done)
 	 * Make sure xnpod_start_thread() did not slip in from another
 	 * CPU while we were back from wakeup_parent().
 	 */
-	if (xnthread_test_state(thread, XNSTARTED) == 0)
+	if (thread->entry == NULL)
 		xnpod_suspend_thread(thread, XNDORMANT,
 				     XN_INFINITE, XN_RELATIVE, NULL);
 	xnlock_put_irqrestore(&nklock, s);
@@ -2261,7 +2261,7 @@ no_ptrace:
 			    * Allow ptraced threads to run shortly in order to
 			    * properly recover from a stopped state.
 			    */
-			   xnthread_test_state(next, XNSTARTED)
+			   !xnthread_test_state(next, XNDORMANT)
 			   && xnthread_test_state(next, XNPEND)) {
 			xntrace_panic_freeze();
 			show_stack(xnthread_host_task(next), NULL);
