@@ -31,7 +31,7 @@
 #include <asm/xenomai/thread.h>
 
 DEFINE_PER_CPU(struct xnsched, nksched);
-EXPORT_PER_CPU_SYMBOL(nksched);
+EXPORT_PER_CPU_SYMBOL_GPL(nksched);
 
 static struct xnsched_class *xnsched_class_highest;
 
@@ -151,7 +151,6 @@ void xnsched_init(struct xnsched *sched, int cpu)
 	xntimer_set_priority(&sched->htimer, XNTIMER_LOPRIO);
 	xntimer_set_name(&sched->htimer, htimer_name);
 	xntimer_set_sched(&sched->htimer, sched);
-	sched->zombie = NULL;
 
 	attr.flags = XNROOT | XNFPU;
 	attr.name = root_name;
@@ -241,33 +240,6 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
 #endif /* CONFIG_XENO_OPT_SCHED_CLASSES */
 }
 
-/* Must be called with nklock locked, interrupts off. */
-void xnsched_zombie_hooks(struct xnthread *thread)
-{
-	XENO_BUGON(NUCLEUS, thread->sched->zombie != NULL);
-
-	thread->sched->zombie = thread;
-
-	trace_mark(xn_nucleus, sched_finalize,
-		   "thread_out %p thread_out_name %s",
-		   thread, xnthread_name(thread));
-
-	xnsched_forget(thread);
-	xnshadow_unmap(thread);
-}
-
-void __xnsched_finalize_zombie(struct xnsched *sched)
-{
-	struct xnthread *thread = sched->zombie;
-
-	xnthread_cleanup(thread);
-
-	if (xnthread_test_state(sched->curr, XNROOT))
-		xnfreesync();
-
-	sched->zombie = NULL;
-}
-
 #ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
 
 struct xnsched *xnsched_finish_unlocked_switch(struct xnsched *sched)
@@ -289,20 +261,6 @@ struct xnsched *xnsched_finish_unlocked_switch(struct xnsched *sched)
 	if (last->sched != sched) {
 		xnsched_putback(last);
 		xnthread_clear_state(last, XNMIGRATE);
-	}
-
-	if (xnthread_test_state(last, XNZOMBIE)) {
-		/*
-		 * There are two cases where sched->last has the zombie
-		 * bit:
-		 * - either it had it before the context switch, the
-		 * cleanup has be done and sched->zombie is last;
-		 * - or it has been killed while the nklocked was unlocked
-		 * during the context switch, in which case we must run the
-		 * cleanup code, and we do it now.
-		 */
-		if (sched->zombie != last)
-			xnsched_zombie_hooks(last);
 	}
 
 	return sched;

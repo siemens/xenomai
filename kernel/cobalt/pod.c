@@ -111,7 +111,7 @@ static inline void __xnpod_switch_fpu(struct xnsched *sched)
 /* xnpod_switch_fpu() -- Switches to the current thread's FPU context,
    saving the previous one as needed. */
 
-void xnpod_switch_fpu(xnsched_t *sched)
+void xnpod_switch_fpu(struct xnsched *sched)
 {
 	__xnpod_switch_fpu(sched);
 }
@@ -1511,7 +1511,7 @@ int xnpod_migrate_thread(int cpu)
 }
 EXPORT_SYMBOL_GPL(xnpod_migrate_thread);
 
-static inline void xnpod_switch_to(xnsched_t *sched,
+static inline void xnpod_switch_to(struct xnsched *sched,
 				   xnthread_t *prev, xnthread_t *next)
 {
 #ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
@@ -1637,8 +1637,8 @@ static inline void leave_root(struct xnthread *root)
 
 void __xnpod_schedule(struct xnsched *sched)
 {
-	int zombie, switched, need_resched, shadow;
 	struct xnthread *prev, *next, *curr;
+	int switched, need_resched, shadow;
 	spl_t s;
 
 	if (xnarch_escalate())
@@ -1657,8 +1657,6 @@ reschedule:
 	if (!need_resched)
 		goto signal_unlock_and_exit;
 #endif /* !XENO_DEBUG(NUCLEUS) */
-	zombie = xnthread_test_state(curr, XNZOMBIE);
-
 	next = xnsched_pick_next(sched);
 	if (next == curr) {
 		if (unlikely(xnthread_test_state(next, XNROOT))) {
@@ -1684,9 +1682,6 @@ reschedule:
 		xnsched_reset_watchdog(sched);
 		xnfreesync();
 	}
-
-	if (zombie)
-		xnsched_zombie_hooks(prev);
 
 	sched->curr = next;
 	shadow = 1;
@@ -1728,15 +1723,8 @@ reschedule:
 	 * because of relaxed/hardened transitions.
 	 */
 	curr = sched->curr;
-	xntrace_pid(xnthread_host_pid(curr), xnthread_current_priority(curr));
-
-	if (zombie)
-		xnpod_fatal("zombie thread %s (%p) would not die...",
-			    prev->name, prev);
-
-	xnsched_finalize_zombie(sched);
-
 	__xnpod_switch_fpu(sched);
+	xntrace_pid(xnthread_host_pid(curr), xnthread_current_priority(curr));
 
 signal_unlock_and_exit:
 
@@ -1777,7 +1765,7 @@ shadow_epilogue:
 }
 EXPORT_SYMBOL_GPL(__xnpod_schedule);
 
-void ___xnpod_lock_sched(xnsched_t *sched)
+void ___xnpod_lock_sched(struct xnsched *sched)
 {
 	struct xnthread *curr = sched->curr;
 
@@ -1788,7 +1776,7 @@ void ___xnpod_lock_sched(xnsched_t *sched)
 }
 EXPORT_SYMBOL_GPL(___xnpod_lock_sched);
 
-void ___xnpod_unlock_sched(xnsched_t *sched)
+void ___xnpod_unlock_sched(struct xnsched *sched)
 {
 	struct xnthread *curr = sched->curr;
 	XENO_ASSERT(NUCLEUS, xnthread_lock_count(curr) > 0,
@@ -1913,7 +1901,7 @@ EXPORT_SYMBOL_GPL(xnpod_handle_exception);
 int xnpod_enable_timesource(void)
 {
 	int err, htickval, cpu;
-	xnsched_t *sched;
+	struct xnsched *sched;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);

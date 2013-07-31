@@ -55,51 +55,65 @@ struct xnsched_rt {
  * \brief Scheduling information structure.
  */
 
-typedef struct xnsched {
-
-	unsigned long status;		/*!< Scheduler specific status bitmask. */
-	unsigned long lflags;		/*!< Scheduler specific local flags bitmask. */
-	struct xnthread *curr;		/*!< Current thread. */
+struct xnsched {
+	/*!< Scheduler specific status bitmask. */
+	unsigned long status;
+	/*!< Scheduler specific local flags bitmask. */
+	unsigned long lflags;
+	/*!< Current thread. */
+	struct xnthread *curr;
 #ifdef CONFIG_SMP
+	/*!< Owner CPU id. */
 	int cpu;
-	cpumask_t resched;		/*!< Mask of CPUs needing rescheduling. */
+	/*!< Mask of CPUs needing rescheduling. */
+	cpumask_t resched;
 #endif
-	struct xnsched_rt rt;		/*!< Context of built-in real-time class. */
+	/*!< Context of built-in real-time class. */
+	struct xnsched_rt rt;
 #ifdef CONFIG_XENO_OPT_SCHED_WEAK
-	struct xnsched_weak weak;	/*!< Context of weak scheduling class. */
+	/*!< Context of weak scheduling class. */
+	struct xnsched_weak weak;
 #endif
 #ifdef CONFIG_XENO_OPT_SCHED_TP
-	struct xnsched_tp tp;		/*!< Context of TP class. */
+	/*!< Context of TP class. */
+	struct xnsched_tp tp;
 #endif
 #ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
-	struct xnsched_sporadic pss;	/*!< Context of sporadic scheduling class. */
+	/*!< Context of sporadic scheduling class. */
+	struct xnsched_sporadic pss;
 #endif
-	volatile unsigned inesting;	/*!< Interrupt nesting level. */
-	struct xntimer htimer;		/*!< Host timer. */
-	struct xnthread *zombie;
-	struct xnthread rootcb;		/*!< Root thread control block. */
+	/*!< Interrupt nesting level. */
+	volatile unsigned inesting;
+	/*!< Host timer. */
+	struct xntimer htimer;
+	/*!< Root thread control block. */
+	struct xnthread rootcb;
 #ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
 	struct xnthread *last;
 #endif
 #ifdef CONFIG_XENO_HW_FPU
-	struct xnthread *fpuholder;	/*!< Thread owning the current FPU context. */
+	/*!< Thread owning the current FPU context. */
+	struct xnthread *fpuholder;
 #endif
 #ifdef CONFIG_XENO_OPT_WATCHDOG
-	struct xntimer wdtimer;		/*!< Watchdog timer object. */
-	int wdcount;			/*!< Watchdog tick count. */
+	/*!< Watchdog timer object. */
+	struct xntimer wdtimer;
+	/*!< Watchdog tick count. */
+	int wdcount;
 #endif
 #ifdef CONFIG_XENO_OPT_STATS
-	xnticks_t last_account_switch;	/*!< Last account switch date (ticks). */
-	xnstat_exectime_t *current_account;	/*!< Currently active account */
+	/*!< Last account switch date (ticks). */
+	xnticks_t last_account_switch;
+	/*!< Currently active account */
+	xnstat_exectime_t *current_account;
 #endif
-} xnsched_t;
+};
 
 DECLARE_PER_CPU(struct xnsched, nksched);
 
 union xnsched_policy_param;
 
 struct xnsched_class {
-
 	void (*sched_init)(struct xnsched *sched);
 	void (*sched_enqueue)(struct xnthread *thread);
 	void (*sched_dequeue)(struct xnthread *thread);
@@ -156,7 +170,7 @@ static inline int xnsched_resched_p(struct xnsched *sched)
 /* Set resched flag for the given scheduler. */
 #ifdef CONFIG_SMP
 #define xnsched_set_resched(__sched__) do {				\
-  xnsched_t *current_sched = xnpod_current_sched();			\
+  struct xnsched *current_sched = xnpod_current_sched();		\
   if (current_sched == (__sched__))					\
       current_sched->status |= XNRESCHED;				\
   else if (!xnsched_resched_p(__sched__)) {				\
@@ -168,16 +182,6 @@ static inline int xnsched_resched_p(struct xnsched *sched)
 #else /* !CONFIG_SMP */
 #define xnsched_set_resched	xnsched_set_self_resched
 #endif /* !CONFIG_SMP */
-
-void xnsched_zombie_hooks(struct xnthread *thread);
-
-void __xnsched_finalize_zombie(struct xnsched *sched);
-
-static inline void xnsched_finalize_zombie(struct xnsched *sched)
-{
-	if (sched->zombie)
-		__xnsched_finalize_zombie(sched);
-}
 
 #ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
 
