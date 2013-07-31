@@ -33,7 +33,7 @@
 #define XNPEND    0x00000002 /**< Sleep-wait for a resource. */
 #define XNDELAY   0x00000004 /**< Delayed */
 #define XNREADY   0x00000008 /**< Linked to the ready queue. */
-#define XNDORMANT 0x00000010 /**< Not started yet or killed */
+#define XNDORMANT 0x00000010 /**< Not started yet */
 #define XNZOMBIE  0x00000020 /**< Zombie thread in deletion process */
 #define XNSTARTED 0x00000040 /**< Thread has been started */
 #define XNMAPPED  0x00000080 /**< Thread is mapped to a linux task */

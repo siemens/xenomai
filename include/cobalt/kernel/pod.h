@@ -158,8 +158,6 @@ int xnpod_init_thread(struct xnthread *thread,
 int xnpod_start_thread(struct xnthread *thread,
 		       const struct xnthread_start_attr *attr);
 
-void xnpod_stop_thread(struct xnthread *thread);
-
 void xnpod_cancel_thread(struct xnthread *thread);
 
 void xnpod_join_thread(struct xnthread *thread);

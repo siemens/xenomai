@@ -622,16 +622,6 @@ static int force_wakeup(struct xnthread *thread) /* nklock locked, irqs off */
 		xnthread_set_info(thread, XNKICKED|XNBREAK);
 	}
 
-	/*
-	 * Check whether a thread was started and later stopped, in
-	 * which case it is blocked by the nucleus, and we have to
-	 * wake it up.
-	 */
-	if (xnthread_test_state(thread, XNDORMANT|XNSTARTED) == (XNDORMANT|XNSTARTED)) {
-		xnpod_resume_thread(thread, XNDORMANT);
-		xnthread_set_info(thread, XNKICKED|XNBREAK);
-	}
-
 	return ret;
 }
 
@@ -1059,11 +1049,9 @@ static int xnshadow_sys_migrate(int domain)
 			if (thread == NULL)
 				return -EPERM;
 			/*
-			 * Paranoid: a corner case where the
-			 * user-space side fiddles with SIGSHADOW
-			 * while the target thread is still waiting to
-			 * be started (whether it was never started or
-			 * it was stopped).
+			 * Paranoid: a corner case where userland
+			 * fiddles with SIGSHADOW while the target
+			 * thread is still waiting to be started.
 			 */
 			if (xnthread_test_state(thread, XNDORMANT))
 				return 0;
