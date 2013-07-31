@@ -102,8 +102,6 @@ struct xnheap {
 		int fcount;
 	} buckets[XNHEAP_NBUCKETS];
 
-	struct list_head *idleq[NR_CPUS];
-
 	/* # of active user-space mappings. */
 	unsigned long numaps;
 	/* Kernel memory flags (0 if vmalloc()). */
@@ -158,7 +156,6 @@ static inline size_t xnheap_internal_overhead(size_t hsize, size_t psize)
 
 #define xnmalloc(size)     xnheap_alloc(&kheap,size)
 #define xnfree(ptr)        xnheap_free(&kheap,ptr)
-#define xnfreesync()       xnheap_finalize_free(&kheap)
 
 static inline size_t xnheap_rounded_size(size_t hsize, size_t psize)
 {
@@ -240,25 +237,6 @@ int xnheap_test_and_free(struct xnheap *heap,
 
 int xnheap_free(struct xnheap *heap,
 		void *block);
-
-void xnheap_schedule_free(struct xnheap *heap,
-			  void *block,
-			  struct list_head *link);
-
-void xnheap_finalize_free_inner(struct xnheap *heap,
-				int cpu);
-
-static inline void xnheap_finalize_free(struct xnheap *heap)
-{
-	int cpu = ipipe_processor_id();
-
-	XENO_ASSERT(NUCLEUS,
-		    spltest() != 0,
-		    xnpod_fatal("%s called in unsafe context", __FUNCTION__));
-
-	if (heap->idleq[cpu])
-		xnheap_finalize_free_inner(heap, cpu);
-}
 
 int xnheap_check_block(struct xnheap *heap,
 		       void *block);

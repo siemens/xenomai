@@ -270,7 +270,6 @@ int xnheap_init(struct xnheap *heap,
 {
 	unsigned long hdrsize, shiftsize, pageshift;
 	struct xnextent *extent;
-	unsigned int cpu;
 	spl_t s;
 
 	/*
@@ -325,9 +324,6 @@ int xnheap_init(struct xnheap *heap,
 
 	heap->ubytes = 0;
 	heap->maxcont = heap->npages * pagesize;
-
-	for_each_online_cpu(cpu)
-		heap->idleq[cpu] = NULL;
 
 	INIT_LIST_HEAD(&heap->extents);
 	heap->nrextents = 1;
@@ -992,70 +988,6 @@ int xnheap_extend(struct xnheap *heap, void *extaddr, unsigned long extsize)
 	return 0;
 }
 EXPORT_SYMBOL_GPL(xnheap_extend);
-
-/*!
- * \fn int xnheap_schedule_free(struct xnheap *heap, void *block, struct list_head *link)
- * \brief Schedule a memory block for release.
- *
- * This routine schedules a block for release by
- * xnheap_finalize_free(). This service is useful to lazily free
- * blocks of heap memory when immediate release is not an option,
- * e.g. when active references are still pending on the object for a
- * short time after the call. xnheap_finalize_free() is expected to be
- * eventually called by the client code at some point in the future
- * when actually freeing the idle objects is deemed safe.
- *
- * @param heap The descriptor address of the heap to release memory
- * to.
- *
- * @param block The address of the region to be returned to the heap.
- *
- * @param link The address of a link member, likely but not
- * necessarily within the released object, which will be used by the
- * heap manager to hold the block in the queue of idle objects.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
- */
-
-void xnheap_schedule_free(struct xnheap *heap, void *block, struct list_head *link)
-{
-	unsigned int cpu;
-	spl_t s;
-
-	xnlock_get_irqsave(&heap->lock, s);
-	/*
-	 * NOTE: we only need a one-way linked list for remembering
-	 * the idle objects through the 'next' field, so the 'last'
-	 * field of the link is used to point at the beginning of the
-	 * freed memory.
-	 */
-	cpu = ipipe_processor_id();
-	link->prev = block;
-	link->next = heap->idleq[cpu];
-	heap->idleq[cpu] = link;
-	xnlock_put_irqrestore(&heap->lock, s);
-}
-EXPORT_SYMBOL_GPL(xnheap_schedule_free);
-
-void xnheap_finalize_free_inner(struct xnheap *heap, int cpu)
-{
-	struct list_head *link;
-
-	while ((link = heap->idleq[cpu]) != NULL) {
-		heap->idleq[cpu] = link->next;
-		xnheap_free(heap, link->prev);
-	}
-}
-EXPORT_SYMBOL_GPL(xnheap_finalize_free_inner);
 
 int xnheap_check_block(struct xnheap *heap, void *block)
 {

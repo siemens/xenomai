@@ -1783,10 +1783,8 @@ reschedule:
 		   prev, xnthread_name(prev),
 		   next, xnthread_name(next));
 
-	if (xnthread_test_state(next, XNROOT)) {
+	if (xnthread_test_state(next, XNROOT))
 		xnsched_reset_watchdog(sched);
-		xnfreesync();
-	}
 
 	sched->curr = next;
 	shadow = 1;
