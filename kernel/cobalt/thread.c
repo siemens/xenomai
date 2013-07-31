@@ -229,10 +229,8 @@ void xnthread_init_root_tcb(struct xnthread *thread)
 	xnarch_init_root_tcb(tcb);
 }
 
-void xnthread_cleanup(struct xnthread *thread)
+void xnthread_deregister(struct xnthread *thread)
 {
-	/* Does not wreck the TCB, only releases the held resources. */
-
 	if (thread->registry.handle != XN_NO_HANDLE)
 		xnregistry_remove(thread->registry.handle);
 

@@ -1025,7 +1025,7 @@ void xnshadow_finalize(struct xnthread *thread)
 {
 	struct xnsys_ppd *sys_ppd;
 
-	trace_mark(xn_nucleus, shadow_unmap,
+	trace_mark(xn_nucleus, shadow_finalize,
 		   "thread %p thread_name %s pid %d",
 		   thread, xnthread_name(thread), xnthread_host_pid(thread));
 

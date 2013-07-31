@@ -654,9 +654,6 @@ static inline void cleanup_thread(struct xnthread *thread) /* nklock held, irqs 
 {
 	struct xnsched *sched = thread->sched;
 
-	trace_mark(xn_nucleus, thread_cleanup, "thread %p thread_name %s",
-		   thread, xnthread_name(thread));
-
 	list_del(&thread->glink);
 	nkpod->nrthreads--;
 	xnvfile_touch_tag(&nkpod->threadlist_tag);
@@ -667,15 +664,7 @@ static inline void cleanup_thread(struct xnthread *thread) /* nklock held, irqs 
 		xnthread_clear_state(thread, XNREADY);
 	}
 
-	xntimer_destroy(&thread->rtimer);
-	xntimer_destroy(&thread->ptimer);
-	xntimer_destroy(&thread->rrbtimer);
 	thread->idtag = 0;
-
-	if (thread->selector) {
-		xnselector_destroy(thread->selector);
-		thread->selector = NULL;
-	}
 
 	if (xnthread_test_state(thread, XNPEND))
 		xnsynch_forget_sleeper(thread);
@@ -695,12 +684,9 @@ static inline void cleanup_thread(struct xnthread *thread) /* nklock held, irqs 
 		return;
 
 	xnsched_forget(thread);
-	xnthread_cleanup(thread);
+	xnthread_deregister(thread);
 	/* Finalize last since this incurs releasing the TCB. */
 	xnshadow_finalize(thread);
-
-	if (xnthread_test_state(sched->curr, XNROOT))
-		xnfreesync();
 }
 
 void __xnpod_cleanup_thread(struct xnthread *thread)
@@ -708,9 +694,24 @@ void __xnpod_cleanup_thread(struct xnthread *thread)
 	spl_t s;
 
 	XENO_BUGON(NUCLEUS, !ipipe_root_p);
+
+	trace_mark(xn_nucleus, thread_cleanup, "thread %p thread_name %s",
+		   thread, xnthread_name(thread));
+
+	xntimer_destroy(&thread->rtimer);
+	xntimer_destroy(&thread->ptimer);
+	xntimer_destroy(&thread->rrbtimer);
+
+	if (thread->selector) {
+		xnselector_destroy(thread->selector);
+		thread->selector = NULL;
+	}
+
 	xnlock_get_irqsave(&nklock, s);
 	cleanup_thread(thread);
+	xnfreesync();
 	xnlock_put_irqrestore(&nklock, s);
+
 	wake_up(&nkjoinq);
 }
 

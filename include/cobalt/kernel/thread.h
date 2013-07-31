@@ -324,7 +324,7 @@ void xnthread_init_shadow_tcb(struct xnthread *thread,
 
 void xnthread_init_root_tcb(struct xnthread *thread);
 
-void xnthread_cleanup(struct xnthread *thread);
+void xnthread_deregister(struct xnthread *thread);
 
 char *xnthread_format_status(unsigned long status, char *buf, int size);
 
