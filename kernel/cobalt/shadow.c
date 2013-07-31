@@ -1032,8 +1032,6 @@ void xnshadow_finalize(struct xnthread *thread)
 
 	xnthread_run_handler(thread, finalize_thread);
 
-	xnthread_clear_state(thread, XNMAPPED);
-
 	if (xnthread_test_state(thread, XNUSER)) {
 		sys_ppd = xnsys_ppd_get(0);
 		atomic_dec(&sys_ppd->refcnt);

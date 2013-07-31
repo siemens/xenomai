@@ -782,8 +782,6 @@ static inline void cleanup_thread(struct xnthread *thread) /* nklock held, irqs 
 
 	xnsched_forget(thread);
 	xnthread_deregister(thread);
-	/* Finalize last since this incurs releasing the TCB. */
-	xnshadow_finalize(thread);
 }
 
 void __xnpod_cleanup_thread(struct xnthread *thread)
@@ -806,8 +804,10 @@ void __xnpod_cleanup_thread(struct xnthread *thread)
 
 	xnlock_get_irqsave(&nklock, s);
 	cleanup_thread(thread);
-	xnfreesync();
 	xnlock_put_irqrestore(&nklock, s);
+
+	/* Finalize last since this incurs releasing the TCB. */
+	xnshadow_finalize(thread);
 
 	wake_up(&nkjoinq);
 }

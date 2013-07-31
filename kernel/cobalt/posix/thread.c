@@ -212,18 +212,18 @@ struct xnpersonality *cobalt_thread_exit(struct xnthread *curr)
 	cobalt_timer_flush(thread);
 	xnsynch_destroy(&thread->monitor_synch);
 	xnsynch_destroy(&thread->sigwait);
+	list_del(&thread->link);
 
 	/* We don't stack over any personality, no chaining. */
 	return NULL;
 }
 
-struct xnpersonality *cobalt_thread_finalize(struct xnthread *zombie) /* nklocked, IRQs off */
+struct xnpersonality *cobalt_thread_finalize(struct xnthread *zombie)
 {
 	struct cobalt_thread *thread;
 
 	thread = container_of(zombie, struct cobalt_thread, threadbase);
-	list_del(&thread->link);
-	xnheap_schedule_free(&kheap, thread, &thread->link);
+	xnfree(thread);
 
 	return NULL;
 }
