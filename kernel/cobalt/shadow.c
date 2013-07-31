@@ -1021,7 +1021,7 @@ int xnshadow_map_kernel(struct xnthread *thread, struct completion *done)
 }
 EXPORT_SYMBOL_GPL(xnshadow_map_kernel);
 
-void xnshadow_unmap(struct xnthread *thread)
+void xnshadow_finalize(struct xnthread *thread)
 {
 	struct xnsys_ppd *sys_ppd;
 
@@ -1029,7 +1029,7 @@ void xnshadow_unmap(struct xnthread *thread)
 		   "thread %p thread_name %s pid %d",
 		   thread, xnthread_name(thread), xnthread_host_pid(thread));
 
-	xnthread_run_handler(thread, unmap_thread);
+	xnthread_run_handler(thread, finalize_thread);
 
 	xnthread_clear_state(thread, XNMAPPED);
 
@@ -2191,7 +2191,7 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 	}
 
 	/*
-	 * __xnpod_cleanup_thread() -> ... -> xnshadow_unmap(). From
+	 * __xnpod_cleanup_thread() -> ... -> xnshadow_finalize(). From
 	 * that point, the TCB is dropped. Be careful of not treading
 	 * on stale memory within @thread.
 	 */

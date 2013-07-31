@@ -182,14 +182,6 @@ thread_find_local(const struct cobalt_local_hkey *hkey)
 	return thread;
 }
 
-static void thread_destroy(struct cobalt_thread *thread)
-{
-	list_del(&thread->link);
-	xnsynch_destroy(&thread->monitor_synch);
-	xnsynch_destroy(&thread->sigwait);
-	xnheap_schedule_free(&kheap, thread, &thread->link);
-}
-
 struct cobalt_thread *cobalt_thread_find(pid_t pid) /* nklocked, IRQs off */
 {
 	struct global_thread_hash *gslot;
@@ -218,17 +210,20 @@ struct xnpersonality *cobalt_thread_exit(struct xnthread *curr)
 	cobalt_mark_deleted(thread);
 	cobalt_signal_flush(thread);
 	cobalt_timer_flush(thread);
+	xnsynch_destroy(&thread->monitor_synch);
+	xnsynch_destroy(&thread->sigwait);
 
 	/* We don't stack over any personality, no chaining. */
 	return NULL;
 }
 
-struct xnpersonality *cobalt_thread_unmap(struct xnthread *zombie) /* nklocked, IRQs off */
+struct xnpersonality *cobalt_thread_finalize(struct xnthread *zombie) /* nklocked, IRQs off */
 {
 	struct cobalt_thread *thread;
 
 	thread = container_of(zombie, struct cobalt_thread, threadbase);
-	thread_destroy(thread);
+	list_del(&thread->link);
+	xnheap_schedule_free(&kheap, thread, &thread->link);
 
 	return NULL;
 }
@@ -473,6 +468,18 @@ static inline int pthread_create(struct cobalt_thread **thread_p, const pthread_
 	if (thread->attr.policy == SCHED_RR)
 		xnpod_set_thread_tslice(&thread->threadbase, cobalt_time_slice);
 
+	/*
+	 * We need an anonymous registry entry to obtain a handle for
+	 * fast mutex locking.
+	 */
+	ret = xnthread_register(&thread->threadbase, "");
+	if (ret) {
+		xnsynch_destroy(&thread->monitor_synch);
+		xnsynch_destroy(&thread->sigwait);
+		xnfree(thread);
+		return ret;
+	}
+
 	xnlock_get_irqsave(&nklock, s);
 	thread->container = &cobalt_kqueues(0)->threadq;
 	list_add_tail(&thread->link, thread->container);
@@ -480,16 +487,6 @@ static inline int pthread_create(struct cobalt_thread **thread_p, const pthread_
 
 	thread->hkey.u_pth = 0;
 	thread->hkey.mm = NULL;
-
-	/*
-	 * We need an anonymous registry entry to obtain a handle for
-	 * fast mutex locking.
-	 */
-	ret = xnthread_register(&thread->threadbase, "");
-	if (ret) {
-		thread_destroy(thread);
-		return ret;
-	}
 
 	*thread_p = thread; /* Must be done before the thread is started. */
 

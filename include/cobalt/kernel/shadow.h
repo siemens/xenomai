@@ -42,7 +42,7 @@ struct xnpersonality {
 		void (*detach_process)(struct xnshadow_ppd *ppd);
 		struct xnpersonality *(*map_thread)(struct xnthread *thread);
 		struct xnpersonality *(*exit_thread)(struct xnthread *thread);
-		struct xnpersonality *(*unmap_thread)(struct xnthread *thread);
+		struct xnpersonality *(*finalize_thread)(struct xnthread *thread);
 	} ops;
 	struct module *module;
 };
@@ -89,7 +89,7 @@ int xnshadow_map_user(struct xnthread *thread,
 int xnshadow_map_kernel(struct xnthread *thread,
 			struct completion *done);
 
-void xnshadow_unmap(struct xnthread *thread);
+void xnshadow_finalize(struct xnthread *thread);
 
 int xnshadow_harden(void);
 

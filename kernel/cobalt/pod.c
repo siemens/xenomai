@@ -696,8 +696,8 @@ static void cleanup_thread(struct xnthread *thread) /* nklock held, irqs off */
 
 	xnsched_forget(thread);
 	xnthread_cleanup(thread);
-	/* Unmap last since this incurs releasing the TCB. */
-	xnshadow_unmap(thread);
+	/* Finalize last since this incurs releasing the TCB. */
+	xnshadow_finalize(thread);
 
 	if (xnthread_test_state(sched->curr, XNROOT))
 		xnfreesync();

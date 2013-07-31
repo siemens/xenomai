@@ -192,7 +192,7 @@ int cobalt_sched_setconfig_np(int cpu,
 
 struct xnpersonality *cobalt_thread_exit(struct xnthread *curr);
 
-struct xnpersonality *cobalt_thread_unmap(struct xnthread *zombie);
+struct xnpersonality *cobalt_thread_finalize(struct xnthread *zombie);
 
 #ifdef CONFIG_XENO_OPT_COBALT_EXTENSION
 
