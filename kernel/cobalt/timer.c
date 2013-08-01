@@ -643,10 +643,7 @@ static void switch_htick_mode(enum clock_event_mode mode,
 		xntimer_stop(&sched->htimer);
 		break;
 	default:
-#if XENO_DEBUG(TIMERS)
-		printk(XENO_ERR "host tick: invalid mode `%d'?\n", mode);
-#endif
-		;
+		XENO_BUGON(NUCLEUS, 1);
 	}
 
 	xnlock_put_irqrestore(&nklock, s);

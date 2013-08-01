@@ -345,13 +345,6 @@ config XENO_OPT_DEBUG_XNLOCK
 	sections. Statistics about the longest masking section may be
 	found in /proc/xenomai/lock.
 
-config XENO_OPT_DEBUG_TIMERS
-	bool "Timer monitoring"
-	help
-
-	This option activates debugging output for critical
-	timer-related operations performed by the Xenomai core.
-
 config XENO_OPT_DEBUG_SYNCH_RELAX
 	bool "Detect mutexes held in relaxed sections"
 	default y

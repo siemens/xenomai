@@ -27,10 +27,6 @@
 #include <cobalt/kernel/stat.h>
 #include <cobalt/kernel/list.h>
 
-#ifndef CONFIG_XENO_OPT_DEBUG_TIMERS
-#define CONFIG_XENO_OPT_DEBUG_TIMERS  0
-#endif
-
 #define XN_INFINITE   ((xnticks_t)0)
 #define XN_NONBLOCK   ((xnticks_t)-1)
 
