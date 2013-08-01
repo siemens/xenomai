@@ -66,7 +66,7 @@ static inline int xnsys_supported_cpu(int cpu)
 
 #endif /* !CONFIG_SMP */
 
-#define for_each_xenomai_cpu(cpu)		\
+#define for_each_realtime_cpu(cpu)		\
 	for_each_online_cpu(cpu)		\
 		if (xnsys_supported_cpu(cpu))	\
 

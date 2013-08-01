@@ -35,8 +35,7 @@ static int lock_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 	spl_t s;
 	int cpu;
 
-	for_each_online_cpu(cpu) {
-
+	for_each_realtime_cpu(cpu) {
 		xnlock_get_irqsave(&nklock, s);
 		lockinfo = per_cpu(xnlock_stats, cpu);
 		xnlock_put_irqrestore(&nklock, s);
@@ -73,7 +72,7 @@ static ssize_t lock_vfile_store(struct xnvfile_input *input)
 	if (val != 0)
 		return -EINVAL;
 
-	for_each_online_cpu(cpu) {
+	for_each_realtime_cpu(cpu) {
 		xnlock_get_irqsave(&nklock, s);
 		memset(&per_cpu(xnlock_stats, cpu), '\0', sizeof(struct xnlockinfo));
 		xnlock_put_irqrestore(&nklock, s);
@@ -145,7 +144,7 @@ static int faults_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 
 	xnvfile_puts(it, "TRAP ");
 
-	for_each_online_cpu(cpu)
+	for_each_realtime_cpu(cpu)
 		xnvfile_printf(it, "        CPU%d", cpu);
 
 	for (trap = 0; xnarch_machdesc.fault_labels[trap]; trap++) {
@@ -154,7 +153,7 @@ static int faults_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 
 		xnvfile_printf(it, "\n%3d: ", trap);
 
-		for_each_online_cpu(cpu)
+		for_each_realtime_cpu(cpu)
 			xnvfile_printf(it, "%12u",
 				       per_cpu(xnarch_percpu_machdata, cpu).faults[trap]);
 
@@ -183,7 +182,7 @@ static int apc_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 
 	xnvfile_puts(it, "APC ");
 
-	for_each_online_cpu(cpu)
+	for_each_realtime_cpu(cpu)
 		xnvfile_printf(it, "         CPU%d", cpu);
 
 	for (apc = 0; apc < BITS_PER_LONG; apc++) {
@@ -192,7 +191,7 @@ static int apc_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 
 		xnvfile_printf(it, "\n%3d: ", apc);
 
-		for_each_online_cpu(cpu)
+		for_each_realtime_cpu(cpu)
 			xnvfile_printf(it, "%12lu",
 				       per_cpu(xnarch_percpu_machdata, cpu).apc_shots[apc]);
 

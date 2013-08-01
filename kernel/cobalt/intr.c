@@ -62,7 +62,7 @@ static inline void sync_stat_references(struct xnintr *intr)
 	struct xnsched *sched;
 	int cpu;
 
-	for_each_online_cpu(cpu) {
+	for_each_realtime_cpu(cpu) {
 		sched = xnsched_struct(cpu);
 		statp = per_cpu_ptr(intr->stats, cpu);
 		/* Synchronize on all dangling references to go away. */
@@ -511,7 +511,7 @@ static void clear_irqstats(struct xnintr *intr)
 	struct xnirqstat *p;
 	int cpu;
 
-	for_each_online_cpu(cpu) {
+	for_each_realtime_cpu(cpu) {
 		p = per_cpu_ptr(intr->stats, cpu);
 		memset(p, 0, sizeof(*p));
 	}
@@ -882,7 +882,7 @@ static inline int xnintr_is_timer_irq(int irq)
 {
 	int cpu;
 
-	for_each_online_cpu(cpu)
+	for_each_realtime_cpu(cpu)
 		if (irq == per_cpu(ipipe_percpu.hrtimer_irq, cpu))
 			return 1;
 
@@ -986,7 +986,7 @@ static inline int format_irq_proc(unsigned int irq,
 	spl_t s;
 	int cpu;
 
-	for_each_online_cpu(cpu)
+	for_each_realtime_cpu(cpu)
 		if (xnintr_is_timer_irq(irq)) {
 			xnvfile_printf(it, "         [timer/%d]", cpu);
 			return 0;
@@ -1038,7 +1038,7 @@ static int irq_vfile_show(struct xnvfile_regular_iterator *it,
 
 	xnvfile_puts(it, "  IRQ ");
 
-	for_each_online_cpu(cpu)
+	for_each_realtime_cpu(cpu)
 		xnvfile_printf(it, "        CPU%d", cpu);
 
 	for (irq = 0; irq < IPIPE_NR_IRQS; irq++) {
@@ -1047,7 +1047,7 @@ static int irq_vfile_show(struct xnvfile_regular_iterator *it,
 
 		xnvfile_printf(it, "\n%5d:", irq);
 
-		for_each_online_cpu(cpu) {
+		for_each_realtime_cpu(cpu) {
 			xnvfile_printf(it, "%12lu",
 				       __ipipe_cpudata_irq_hits(&xnarch_machdata.domain, cpu,
 								irq));

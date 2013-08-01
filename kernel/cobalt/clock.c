@@ -252,7 +252,7 @@ static void adjust_clock_timers(struct xnclock *clock, xnsticks_t delta)
 	INIT_LIST_HEAD(&adjq);
 	delta = xnclock_ns_to_ticks(clock, delta);
 
-	for_each_online_cpu(cpu) {
+	for_each_realtime_cpu(cpu) {
 		sched = xnsched_struct(cpu);
 		q = &xnclock_percpu_timerdata(clock, cpu)->q;
 
@@ -496,7 +496,7 @@ int xnclock_register(struct xnclock *clock)
 	if (clock->timerdata == NULL)
 		return -ENOMEM;
 
-	for_each_online_cpu(cpu) {
+	for_each_realtime_cpu(cpu) {
 		tmd = xnclock_percpu_timerdata(clock, cpu);
 		xntimerq_init(&tmd->q);
 	}
@@ -540,7 +540,7 @@ void xnclock_deregister(struct xnclock *clock)
 
 	cleanup_clock_proc(clock);
 
-	for_each_online_cpu(cpu) {
+	for_each_realtime_cpu(cpu) {
 		tmd = xnclock_percpu_timerdata(clock, cpu);
 		XENO_BUGON(NUCLEUS, !xntimerq_empty(&tmd->q));
 		xntimerq_destroy(&tmd->q);

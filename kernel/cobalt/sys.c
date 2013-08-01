@@ -54,7 +54,7 @@ static int enable_timesource(void)
 	nkclock.wallclock_offset =
 		xnclock_get_host_time() - xnclock_read_monotonic(&nkclock);
 
-	for_each_xenomai_cpu(cpu) {
+	for_each_realtime_cpu(cpu) {
 		htickval = xntimer_grab_hardware(cpu);
 		if (htickval < 0) {
 			while (--cpu >= 0)
@@ -149,7 +149,7 @@ int xnsys_init(void)
 	}
 	xnheap_set_label(&kheap, "main heap");
 
-	for_each_xenomai_cpu(cpu) {
+	for_each_realtime_cpu(cpu) {
 		sched = &per_cpu(nksched, cpu);
 		xnsched_init(sched, cpu);
 	}
@@ -185,7 +185,7 @@ static void disable_timesource(void)
 	 * timer, since this could cause deadlock situations to arise
 	 * on SMP systems.
 	 */
-	for_each_xenomai_cpu(cpu)
+	for_each_realtime_cpu(cpu)
 		xntimer_release_hardware(cpu);
 
 #ifdef CONFIG_XENO_OPT_STATS
@@ -235,7 +235,7 @@ void xnsys_shutdown(void)
 
 	xnsched_run();
 
-	for_each_online_cpu(cpu) {
+	for_each_realtime_cpu(cpu) {
 		sched = xnsched_struct(cpu);
 		xnsched_destroy(sched);
 	}

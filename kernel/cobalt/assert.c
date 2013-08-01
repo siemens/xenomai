@@ -62,7 +62,7 @@ void __xnsys_fatal(const char *format, ...)
 	 * NOTE: &nkthreadq can't be empty, we have the root thread(s)
 	 * linked there at least.
 	 */
-	for_each_online_cpu(cpu) {
+	for_each_realtime_cpu(cpu) {
 		sched = xnsched_struct(cpu);
 		list_for_each_entry(thread, &nkthreadq, glink) {
 			if (thread->sched != sched)
