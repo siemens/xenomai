@@ -20,10 +20,6 @@
  * @defgroup nucleus Xenomai core services.
  * @{
  */
-#include <stdarg.h>
-#include <linux/ptrace.h>
-#include <linux/sched.h>
-#include <linux/kernel.h>
 #include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/timer.h>
 #include <cobalt/kernel/intr.h>
@@ -37,83 +33,6 @@
 #include <cobalt/kernel/sys.h>
 
 cpumask_t nkaffinity = CPU_MASK_ALL;
-
-void (*nkpanic)(const char *format, ...) = panic;
-EXPORT_SYMBOL_GPL(nkpanic);
-
-static void fatal(const char *format, ...)
-{
-	static char msg_buf[1024];
-	struct xnthread *thread;
-	struct xnsched *sched;
-	static int oopsed;
-	char pbuf[16];
-	xnticks_t now;
-	unsigned cpu;
-	va_list ap;
-	int cprio;
-	spl_t s;
-
-	xntrace_panic_freeze();
-	ipipe_prepare_panic();
-
-	xnlock_get_irqsave(&nklock, s);
-
-	if (oopsed)
-		goto out;
-
-	oopsed = 1;
-	va_start(ap, format);
-	vsnprintf(msg_buf, sizeof(msg_buf), format, ap);
-	printk(XENO_ERR "%s", msg_buf);
-	va_end(ap);
-
-	now = xnclock_read_monotonic(&nkclock);
-
-	printk(KERN_ERR "\n %-3s  %-6s %-8s %-8s %-8s  %s\n",
-	       "CPU", "PID", "PRI", "TIMEOUT", "STAT", "NAME");
-
-	/*
-	 * NOTE: &nkthreadq can't be empty, we have the root thread(s)
-	 * linked there at least.
-	 */
-	for_each_online_cpu(cpu) {
-		sched = xnsched_struct(cpu);
-		list_for_each_entry(thread, &nkthreadq, glink) {
-			if (thread->sched != sched)
-				continue;
-			cprio = xnthread_current_priority(thread);
-			snprintf(pbuf, sizeof(pbuf), "%3d", cprio);
-			printk(KERN_ERR "%c%3u  %-6d %-8s %-8Lu %.8lx  %s\n",
-			       thread == sched->curr ? '>' : ' ',
-			       cpu,
-			       xnthread_host_pid(thread),
-			       pbuf,
-			       xnthread_get_timeout(thread, now),
-			       xnthread_state_flags(thread),
-			       xnthread_name(thread));
-		}
-	}
-
-	printk(KERN_ERR "Master time base: clock=%Lu\n",
-	       xnclock_read_raw(&nkclock));
-#ifdef CONFIG_SMP
-	printk(KERN_ERR "Current CPU: #%d\n", ipipe_processor_id());
-#endif
-out:
-	xnlock_put_irqrestore(&nklock, s);
-
-	show_stack(NULL,NULL);
-	xntrace_panic_dump();
-	for (;;)
-		cpu_relax();
-}
-
-static void flush_heap(struct xnheap *heap,
-		       void *extaddr, unsigned long extsize, void *cookie)
-{
-	free_pages_exact(extaddr, extsize);
-}
 
 static int enable_timesource(void)
 {
@@ -244,7 +163,7 @@ int xnsys_init(void)
 
 	xnregistry_init();
 
-	nkpanic = fatal;
+	nkpanic = __xnsys_fatal;
 	smp_wmb();
 	xnshadow_grab_events();
 
@@ -272,6 +191,12 @@ static void disable_timesource(void)
 #ifdef CONFIG_XENO_OPT_STATS
 	xnintr_destroy(&nktimer);
 #endif /* CONFIG_XENO_OPT_STATS */
+}
+
+static void flush_heap(struct xnheap *heap,
+		       void *extaddr, unsigned long extsize, void *cookie)
+{
+	free_pages_exact(extaddr, extsize);
 }
 
 /**

@@ -204,23 +204,26 @@ int rtdm_dev_register(struct rtdm_device *device)
 		return -ENOSYS;
 
 	/* Sanity check: structure version */
-	XENO_ASSERT(RTDM, device->struct_version == RTDM_DEVICE_STRUCT_VER,
-		    printk(XENO_ERR "invalid rtdm_device version (%d, "
-			   "required %d)\n", device->struct_version,
-			   RTDM_DEVICE_STRUCT_VER);
-		    return -EINVAL;);
+	if (!XENO_ASSERT(RTDM, device->struct_version == RTDM_DEVICE_STRUCT_VER)) {
+		printk(XENO_ERR "invalid rtdm_device version (%d, "
+		       "required %d)\n", device->struct_version,
+		       RTDM_DEVICE_STRUCT_VER);
+		return -EINVAL;
+	}
 
 	/* Sanity check: proc_name specified? */
-	XENO_ASSERT(RTDM, device->proc_name,
-		    printk(XENO_ERR "no vfile (/proc) name specified for RTDM device\n");
-		    return -EINVAL;);
+	if (!XENO_ASSERT(RTDM, device->proc_name)) {
+		printk(XENO_ERR "no vfile (/proc) name specified for RTDM device\n");
+		return -EINVAL;
+	}
 
 	switch (device->device_flags & RTDM_DEVICE_TYPE_MASK) {
 	case RTDM_NAMED_DEVICE:
 		/* Sanity check: any open handler? */
-		XENO_ASSERT(RTDM, ANY_HANDLER(*device, open),
-			    printk(XENO_ERR "missing open handler for RTDM device\n");
-			    return -EINVAL;);
+		if (!XENO_ASSERT(RTDM, ANY_HANDLER(*device, open))) {
+			printk(XENO_ERR "missing open handler for RTDM device\n");
+			return -EINVAL;
+		}
 		if (device->open_rt &&
 		    device->socket_rt != (void *)rtdm_no_support)
 			printk(XENO_ERR "RT open handler is deprecated, "
@@ -231,9 +234,10 @@ int rtdm_dev_register(struct rtdm_device *device)
 
 	case RTDM_PROTOCOL_DEVICE:
 		/* Sanity check: any socket handler? */
-		XENO_ASSERT(RTDM, ANY_HANDLER(*device, socket),
-			    printk(XENO_ERR "missing socket handler for RTDM device\n");
-			    return -EINVAL;);
+		if (!XENO_ASSERT(RTDM, ANY_HANDLER(*device, socket))) {
+			printk(XENO_ERR "missing socket handler for RTDM device\n");
+			return -EINVAL;
+		}
 		if (device->socket_rt &&
 		    device->socket_rt != (void *)rtdm_no_support)
 			printk(XENO_ERR "RT socket creation handler is "

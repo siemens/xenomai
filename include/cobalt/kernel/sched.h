@@ -35,6 +35,7 @@
 #include <cobalt/kernel/sched-weak.h>
 #include <cobalt/kernel/sched-sporadic.h>
 #include <cobalt/kernel/vfile.h>
+#include <cobalt/kernel/assert.h>
 
 /* Sched status flags */
 #define XNRESCHED	0x10000000	/* Needs rescheduling */
@@ -158,9 +159,15 @@ struct xnsched_class {
 #define XNSCHED_RUNPRIO   0x80000000
 
 #ifdef CONFIG_SMP
-#define xnsched_cpu(__sched__)	((__sched__)->cpu)
+static inline int xnsched_cpu(struct xnsched *sched)
+{
+	return sched->cpu;
+}
 #else /* !CONFIG_SMP */
-#define xnsched_cpu(__sched__)	({ (void)(__sched__); 0; })
+static inline int xnsched_cpu(struct xnsched *sched)
+{
+	return 0;
+}
 #endif /* CONFIG_SMP */
 
 static inline struct xnsched *xnsched_struct(int cpu)
@@ -341,15 +348,12 @@ int xnsched_maybe_resched_after_unlocked_switch(struct xnsched *sched)
 
 #else /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
 
-#ifdef CONFIG_SMP
-#define xnsched_finish_unlocked_switch(__sched__)	\
-	({ XENO_BUGON(NUCLEUS, !hard_irqs_disabled());	\
-		xnsched_current(); })
-#else /* !CONFIG_SMP */
-#define xnsched_finish_unlocked_switch(__sched__)	\
-	({ XENO_BUGON(NUCLEUS, !hard_irqs_disabled());	\
-		(__sched__); })
-#endif /* !CONFIG_SMP */
+static inline struct xnsched *
+xnsched_finish_unlocked_switch(struct xnsched *sched)
+{
+	XENO_BUGON(NUCLEUS, !hard_irqs_disabled());
+	return xnsched_current();
+}
 
 static inline void xnsched_resched_after_unlocked_switch(void) { }
 

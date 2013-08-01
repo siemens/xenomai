@@ -26,7 +26,6 @@
 #include <cobalt/kernel/lock.h>
 #include <cobalt/kernel/list.h>
 #include <cobalt/kernel/trace.h>
-#include <cobalt/kernel/misc.h>
 #include <cobalt/uapi/kernel/types.h>
 #include <cobalt/uapi/kernel/heap.h>
 

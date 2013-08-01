@@ -290,9 +290,9 @@ EXPORT_SYMBOL_GPL(___xnsched_lock);
 void ___xnsched_unlock(struct xnsched *sched)
 {
 	struct xnthread *curr = sched->curr;
-	XENO_ASSERT(NUCLEUS, xnthread_lock_count(curr) > 0,
-		    xnsys_fatal("Unbalanced lock/unlock");
-		    );
+
+	if (!XENO_ASSERT(NUCLEUS, xnthread_lock_count(curr) > 0))
+		return;
 
 	if (--xnthread_lock_count(curr) == 0) {
 		xnthread_clear_state(curr, XNLOCK);
@@ -460,6 +460,8 @@ void sched_initq(struct xnsched_mlq *q, int loprio, int hiprio)
 {
 	int prio;
 
+	XENO_BUGON(NUCLEUS, hiprio - loprio + 1 >= XNSCHED_MLQ_LEVELS);
+
 	q->elems = 0;
 	q->loprio = loprio;
 	q->hiprio = hiprio;
@@ -468,19 +470,11 @@ void sched_initq(struct xnsched_mlq *q, int loprio, int hiprio)
 
 	for (prio = 0; prio < XNSCHED_MLQ_LEVELS; prio++)
 		INIT_LIST_HEAD(q->heads + prio);
-
-	XENO_ASSERT(NUCLEUS,
-		    hiprio - loprio + 1 < XNSCHED_MLQ_LEVELS,
-		    xnsys_fatal("priority range [%d..%d] is beyond multi-level "
-				"queue indexing capabilities",
-				loprio, hiprio));
 }
 
 static inline int indexmlq(struct xnsched_mlq *q, int prio)
 {
-	XENO_ASSERT(NUCLEUS,
-		    prio >= q->loprio && prio <= q->hiprio,
-		    xnsys_fatal("priority level %d is out of range ", prio));
+	XENO_BUGON(NUCLEUS, prio < q->loprio || prio > q->hiprio);
 	/*
 	 * BIG FAT WARNING: We need to rescale the priority level to a
 	 * 0-based range. We use ffnz() to scan the bitmap which MUST

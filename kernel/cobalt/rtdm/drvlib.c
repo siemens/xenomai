@@ -381,7 +381,8 @@ int __rtdm_task_sleep(xnticks_t timeout, xntmode_t mode)
 {
 	xnthread_t *thread = xnsched_current_thread();
 
-	XENO_ASSERT(RTDM, !xnsched_unblockable_p(), return -EPERM;);
+	if (!XENO_ASSERT(RTDM, !xnsched_unblockable_p()))
+		return -EPERM;
 
 	xnthread_suspend(thread, XNDELAY, timeout, mode, NULL);
 
@@ -416,7 +417,8 @@ EXPORT_SYMBOL_GPL(__rtdm_task_sleep);
  */
 void rtdm_task_join_nrt(rtdm_task_t *task, unsigned int poll_delay)
 {
-	XENO_ASSERT(RTDM, xnsched_root_p(), return;);
+	if (!XENO_ASSERT(RTDM, xnsched_root_p()))
+		return;
 
 	trace_mark(xn_rtdm, task_joinnrt, "thread %p poll_delay %u",
 		   task, poll_delay);
@@ -713,7 +715,7 @@ int device_service_routine(...)
  */
 void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, nanosecs_rel_t timeout)
 {
-	XENO_ASSERT(RTDM, !xnsched_unblockable_p(), /* only warn here */;);
+	XENO_ASSERT(RTDM, !xnsched_unblockable_p()); /* only warn here */
 
 	*timeout_seq = xnclock_read_monotonic(&nkclock) + timeout;
 }
@@ -925,7 +927,8 @@ int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
 	spl_t s;
 	int err = 0;
 
-	XENO_ASSERT(RTDM, !xnsched_unblockable_p(), return -EPERM;);
+	if (!XENO_ASSERT(RTDM, !xnsched_unblockable_p()))
+		return -EPERM;
 
 	trace_mark(xn_rtdm, event_timedwait,
 		   "event %p timeout %Lu timeout_seq %p timeout_seq_value %Lu",
@@ -1203,7 +1206,8 @@ int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
 	spl_t s;
 	int err = 0;
 
-	XENO_ASSERT(RTDM, !xnsched_unblockable_p(), return -EPERM;);
+	if (!XENO_ASSERT(RTDM, !xnsched_unblockable_p()))
+		return -EPERM;
 
 	trace_mark(xn_rtdm, sem_timedwait,
 		   "sem %p timeout %Lu timeout_seq %p timeout_seq_value %Lu",
@@ -1495,7 +1499,8 @@ int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
 		   "mutex %p timeout %Lu timeout_seq %p timeout_seq_value %Lu",
 		   mutex, (long long)timeout, timeout_seq, (long long)(timeout_seq ? *timeout_seq : 0));
 
-	XENO_ASSERT(RTDM, !xnsched_unblockable_p(), return -EPERM;);
+	if (!XENO_ASSERT(RTDM, !xnsched_unblockable_p()))
+		return -EPERM;
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -1506,8 +1511,10 @@ int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
 	else {
 		/* Redefinition to clarify XENO_ASSERT output */
 		#define mutex_owner xnsynch_owner(&mutex->synch_base)
-		XENO_ASSERT(RTDM, mutex_owner != curr_thread,
-			    err = -EDEADLK; goto unlock_out;);
+		if (!XENO_ASSERT(RTDM, mutex_owner != curr_thread)) {
+			err = -EDEADLK;
+			goto unlock_out;
+		}
 
 		/* non-blocking mode */
 		if (timeout < 0) {
@@ -1586,7 +1593,8 @@ int rtdm_irq_request(rtdm_irq_t *irq_handle, unsigned int irq_no,
 {
 	int err;
 
-	XENO_ASSERT(RTDM, xnsched_root_p(), return -EPERM;);
+	if (!XENO_ASSERT(RTDM, xnsched_root_p()))
+		return -EPERM;
 
 	xnintr_init(irq_handle, device_name, irq_no, handler, NULL, flags);
 
@@ -1797,8 +1805,10 @@ static int rtdm_mmap_buffer(struct file *filp, struct vm_area_struct *vma)
 	if ((vaddr >= VMALLOC_START) && (vaddr < VMALLOC_END)) {
 		unsigned long mapped_size = 0;
 
-		XENO_ASSERT(RTDM, vaddr == PAGE_ALIGN(vaddr), return -EINVAL);
-		XENO_ASSERT(RTDM, (size % PAGE_SIZE) == 0, return -EINVAL);
+		if (!XENO_ASSERT(RTDM, vaddr == PAGE_ALIGN(vaddr)))
+			return -EINVAL;
+		if (!XENO_ASSERT(RTDM, (size % PAGE_SIZE) == 0))
+			return -EINVAL;
 
 		while (mapped_size < size) {
 			if (xnheap_remap_vm_page(vma, maddr, vaddr))
@@ -1861,7 +1871,8 @@ static int rtdm_do_mmap(rtdm_user_info_t *user_info,
 	void *old_priv_data;
 	struct file *filp;
 
-	XENO_ASSERT(RTDM, xnsched_root_p(), return -EPERM;);
+	if (!XENO_ASSERT(RTDM, xnsched_root_p()))
+		return -EPERM;
 
 	filp = filp_open(XNHEAP_DEV_NAME, O_RDWR, 0);
 	if (IS_ERR(filp))
@@ -2057,7 +2068,8 @@ int rtdm_munmap(rtdm_user_info_t *user_info, void *ptr, size_t len)
 {
 	int err;
 
-	XENO_ASSERT(RTDM, xnsched_root_p(), return -EPERM;);
+	if (!XENO_ASSERT(RTDM, xnsched_root_p()))
+		return -EPERM;
 
 	down_write(&user_info->mm->mmap_sem);
 	err = do_munmap(user_info->mm, (unsigned long)ptr, len);

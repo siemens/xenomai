@@ -16,38 +16,43 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  */
-
 #ifndef _COBALT_KERNEL_ASSERT_H
 #define _COBALT_KERNEL_ASSERT_H
 
 #include <cobalt/kernel/trace.h>
 
-#define XENO_DEBUG(subsystem)			\
-	(CONFIG_XENO_OPT_DEBUG_##subsystem > 0)
+#define XENO_INFO KERN_INFO    "[Xenomai] "
+#define XENO_WARN KERN_WARNING "[Xenomai] "
+#define XENO_ERR  KERN_ERR     "[Xenomai] "
 
-#define XENO_ASSERT(subsystem,cond,action)  do {			\
-		if (unlikely(XENO_DEBUG(subsystem) && !(cond))) {	\
-			xntrace_panic_freeze();				\
-			printk(XENO_ERR "assertion failed at %s:%d (%s)\n",	\
-				 __FILE__, __LINE__, (#cond));		\
-			xntrace_panic_dump();			\
-			action;						\
-		}							\
-	} while(0)
+#define XENO_DEBUG(__subsys)	\
+	(CONFIG_XENO_OPT_DEBUG_##__subsys > 0)
 
-#define XENO_BUGON(subsystem,cond)					\
+#define XENO_ASSERT(__subsys, __cond)						\
+	({									\
+		int __ret = !XENO_DEBUG(__subsys) || (__cond);			\
+		if (unlikely(!__ret))						\
+			__xnsys_assert_failed(__FILE__, __LINE__, (#__cond));	\
+		__ret;								\
+	})
+
+#define XENO_BUGON(__subsys, __cond)					\
 	do {								\
-		if (unlikely(XENO_DEBUG(subsystem) && (cond)))		\
+		if (unlikely(XENO_DEBUG(__subsys) && (__cond)))		\
 			xnsys_fatal("bug at %s:%d (%s)",		\
-				    __FILE__, __LINE__, (#cond));	\
-	} while(0)
+				    __FILE__, __LINE__, (#__cond));	\
+	} while (0)
 
 #ifndef CONFIG_XENO_OPT_DEBUG_NUCLEUS
 #define CONFIG_XENO_OPT_DEBUG_NUCLEUS 0
 #endif /* CONFIG_XENO_OPT_DEBUG_NUCLEUS */
 
-extern void (*nkpanic)(const char *format, ...);
+void __xnsys_assert_failed(const char *file, int line, const char *msg);
+
+void __xnsys_fatal(const char *format, ...);
 
 #define xnsys_fatal(__fmt, __args...) nkpanic(__fmt, ##__args)
+
+extern void (*nkpanic)(const char *format, ...);
 
 #endif /* !_COBALT_KERNEL_ASSERT_H */

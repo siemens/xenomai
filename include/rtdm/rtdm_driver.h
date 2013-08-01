@@ -579,8 +579,8 @@ struct rtdm_dev_context *rtdm_context_get(int fd);
 
 static inline void rtdm_context_lock(struct rtdm_dev_context *context)
 {
-	XENO_ASSERT(RTDM, CONTEXT_IS_LOCKED(context),
-		    /* just warn if context was a dangling pointer */);
+	/* just warn if context was a dangling pointer */
+	XENO_ASSERT(RTDM, CONTEXT_IS_LOCKED(context));
 	atomic_inc(&context->close_lock_count);
 }
 
@@ -588,8 +588,8 @@ extern int rtdm_apc;
 
 static inline void rtdm_context_unlock(struct rtdm_dev_context *context)
 {
-	XENO_ASSERT(RTDM, CONTEXT_IS_LOCKED(context),
-		    /* just warn if context was a dangling pointer */);
+	/* just warn if context was a dangling pointer */
+	XENO_ASSERT(RTDM, CONTEXT_IS_LOCKED(context));
 	smp_mb__before_atomic_dec();
 	if (unlikely(atomic_dec_and_test(&context->close_lock_count)))
 		xnapc_schedule(rtdm_apc);
@@ -923,7 +923,8 @@ int rtdm_irq_request(rtdm_irq_t *irq_handle, unsigned int irq_no,
 #ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
 static inline int rtdm_irq_free(rtdm_irq_t *irq_handle)
 {
-	XENO_ASSERT(RTDM, xnsched_root_p(), return -EPERM;);
+	if (!XENO_ASSERT(RTDM, xnsched_root_p()))
+		return -EPERM;
 	xnintr_detach(irq_handle);
 	return 0;
 }
@@ -1132,7 +1133,8 @@ static inline rtdm_task_t *rtdm_task_current(void)
 
 static inline int rtdm_task_wait_period(void)
 {
-	XENO_ASSERT(RTDM, !xnsched_unblockable_p(), return -EPERM;);
+	if (!XENO_ASSERT(RTDM, !xnsched_unblockable_p()))
+		return -EPERM;
 	return xnthread_wait_period(NULL);
 }
 
@@ -1238,7 +1240,8 @@ int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
 #ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
 static inline void rtdm_mutex_unlock(rtdm_mutex_t *mutex)
 {
-	XENO_ASSERT(RTDM, !xnsched_interrupt_p(), return;);
+	if (!XENO_ASSERT(RTDM, !xnsched_interrupt_p()))
+		return;
 
 	trace_mark(xn_rtdm, mutex_unlock, "mutex %p", mutex);
 
@@ -1366,7 +1369,8 @@ static inline int rtdm_strncpy_from_user(rtdm_user_info_t *user_info,
 
 static inline int rtdm_rt_capable(rtdm_user_info_t *user_info)
 {
-	XENO_ASSERT(RTDM, !xnsched_interrupt_p(), return 0;);
+	if (!XENO_ASSERT(RTDM, !xnsched_interrupt_p()))
+		return 0;
 
 	return (user_info ? xnshadow_thread(user_info) != NULL
 			  : !xnsched_root_p());

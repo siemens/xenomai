@@ -857,15 +857,10 @@ void xnthread_suspend(xnthread_t *thread, int mask,
 	struct xnsched *sched;
 	spl_t s;
 
-	XENO_ASSERT(NUCLEUS, !xnthread_test_state(thread, XNROOT),
-		    xnsys_fatal("attempt to suspend root thread %s",
-				thread->name);
-		);
-
-	XENO_ASSERT(NUCLEUS, wchan == NULL || thread->wchan == NULL,
-		    xnsys_fatal("thread %s attempts a conjunctive wait",
-				thread->name);
-		);
+	/* No, you certainly do not want to suspend the root thread. */
+	XENO_BUGON(NUCLEUS, xnthread_test_state(thread, XNROOT));
+	/* No built-in support for conjunctive wait. */
+	XENO_BUGON(NUCLEUS, wchan && thread->wchan);
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -1540,9 +1535,8 @@ void xnthread_cancel(struct xnthread *thread)
 {
 	spl_t s;
 
-	XENO_ASSERT(NUCLEUS, !xnthread_test_state(thread, XNROOT),
-		    xnsys_fatal("attempt to cancel the root thread");
-		);
+	/* Right, so you want to kill the kernel?! */
+	XENO_BUGON(NUCLEUS, xnthread_test_state(thread, XNROOT));
 
 	xnlock_get_irqsave(&nklock, s);
 

@@ -27,7 +27,7 @@
 #include <cobalt/kernel/intr.h>
 #include <cobalt/kernel/stat.h>
 #include <cobalt/kernel/clock.h>
-#include <cobalt/kernel/misc.h>
+#include <cobalt/kernel/assert.h>
 
 #define XNINTR_MAX_UNHANDLED	1000
 
