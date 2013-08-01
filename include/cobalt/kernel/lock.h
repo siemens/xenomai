@@ -41,10 +41,6 @@ typedef unsigned long spl_t;
 #define splnone()   ipipe_unstall_head()
 #define spltest()   ipipe_test_head()
 
-#ifndef CONFIG_XENO_OPT_DEBUG_XNLOCK
-#define CONFIG_XENO_OPT_DEBUG_XNLOCK 0
-#endif
-
 #if XENO_DEBUG(XNLOCK)
 
 struct xnlock {

@@ -26,10 +26,6 @@
 #include <cobalt/kernel/assert.h>
 #include <cobalt/kernel/timer.h>
 
-#ifndef CONFIG_XENO_OPT_DEBUG_SYNCH_RELAX
-#define CONFIG_XENO_OPT_DEBUG_SYNCH_RELAX 0
-#endif /* CONFIG_XENO_OPT_DEBUG_SYNCH_RELAX */
-
 #define XNSYNCH_CLAIMED 0x10	/* Claimed by other thread(s) w/ PIP */
 
 #define XNSYNCH_FLCLAIM XN_HANDLE_SPARE3 /* Corresponding bit in fast lock */

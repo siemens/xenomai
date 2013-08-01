@@ -27,10 +27,6 @@
 #include <linux/list.h>
 #include <linux/sem.h>
 
-#ifndef CONFIG_XENO_OPT_DEBUG_RTDM_APPL
-#define CONFIG_XENO_OPT_DEBUG_RTDM_APPL	0
-#endif
-
 #define RTDM_FD_MAX			CONFIG_XENO_OPT_RTDM_FILDES
 
 #define DEF_DEVNAME_HASHTAB_SIZE	256	/* entries in name hash table */

@@ -52,10 +52,6 @@
 #include <asm-generic/xenomai/pci_ids.h>
 #endif /* CONFIG_PCI */
 
-#ifndef CONFIG_XENO_OPT_DEBUG_RTDM
-#define CONFIG_XENO_OPT_DEBUG_RTDM	0
-#endif
-
 struct rtdm_dev_context;
 typedef struct xnselector rtdm_selector_t;
 enum rtdm_selecttype;

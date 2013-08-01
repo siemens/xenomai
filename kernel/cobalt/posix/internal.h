@@ -28,10 +28,6 @@
 #include "process.h"
 #include "extension.h"
 
-#ifndef CONFIG_XENO_OPT_DEBUG_COBALT
-#define CONFIG_XENO_OPT_DEBUG_COBALT 0
-#endif
-
 #define COBALT_MAGIC(n) (0x8686##n##n)
 #define COBALT_ANY_MAGIC         COBALT_MAGIC(00)
 #define COBALT_THREAD_MAGIC      COBALT_MAGIC(01)

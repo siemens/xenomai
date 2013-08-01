@@ -45,7 +45,27 @@
 
 #ifndef CONFIG_XENO_OPT_DEBUG_NUCLEUS
 #define CONFIG_XENO_OPT_DEBUG_NUCLEUS 0
-#endif /* CONFIG_XENO_OPT_DEBUG_NUCLEUS */
+#endif
+
+#ifndef CONFIG_XENO_OPT_DEBUG_XNLOCK
+#define CONFIG_XENO_OPT_DEBUG_XNLOCK 0
+#endif
+
+#ifndef CONFIG_XENO_OPT_DEBUG_SYNCH_RELAX
+#define CONFIG_XENO_OPT_DEBUG_SYNCH_RELAX 0
+#endif
+
+#ifndef CONFIG_XENO_OPT_DEBUG_RTDM
+#define CONFIG_XENO_OPT_DEBUG_RTDM	0
+#endif
+
+#ifndef CONFIG_XENO_OPT_DEBUG_RTDM_APPL
+#define CONFIG_XENO_OPT_DEBUG_RTDM_APPL	0
+#endif
+
+#ifndef CONFIG_XENO_OPT_DEBUG_COBALT
+#define CONFIG_XENO_OPT_DEBUG_COBALT 0
+#endif
 
 void __xnsys_assert_failed(const char *file, int line, const char *msg);
 
