@@ -325,14 +325,19 @@ menuconfig XENO_OPT_DEBUG
 if XENO_OPT_DEBUG
 
 config XENO_OPT_DEBUG_NUCLEUS
-	bool "Nucleus runtime checks"
+	bool "Nucleus runtime assertions"
 	help
 
-	This option activates various debugging checks inside the core
-	system. Doing so adds a significant runtime overhead,
-	worsening the latency figures especially on SMP kernels.  Do
-	not switch this option on unless you really know what you are
-	doing.
+	This option activates various assertions inside the core
+	system. This option has limited overhead.
+
+config XENO_OPT_DEBUG_CONTEXT
+       bool "Check for calling context"
+       help
+
+       This option enables checks for the calling context in the
+       Xenomai code, aimed at detecting when regular linux code is
+       entered from a real-time context, and conversely.
 
 config XENO_OPT_DEBUG_XNLOCK
 	bool "Spinlock latency measurement"

@@ -47,6 +47,10 @@
 #define CONFIG_XENO_OPT_DEBUG_NUCLEUS 0
 #endif
 
+#ifndef CONFIG_XENO_OPT_DEBUG_CONTEXT
+#define CONFIG_XENO_OPT_DEBUG_CONTEXT 0
+#endif
+
 #ifndef CONFIG_XENO_OPT_DEBUG_XNLOCK
 #define CONFIG_XENO_OPT_DEBUG_XNLOCK 0
 #endif
@@ -66,6 +70,9 @@
 #ifndef CONFIG_XENO_OPT_DEBUG_COBALT
 #define CONFIG_XENO_OPT_DEBUG_COBALT 0
 #endif
+
+#define primary_mode_only()	XENO_BUGON(CONTEXT, ipipe_root_p)
+#define secondary_mode_only()	XENO_BUGON(CONTEXT, !ipipe_root_p)
 
 void __xnsys_assert_failed(const char *file, int line, const char *msg);
 

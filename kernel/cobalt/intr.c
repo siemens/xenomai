@@ -624,7 +624,7 @@ int xnintr_init(xnintr_t *intr, const char *name,
 		unsigned int irq, xnisr_t isr, xniack_t iack,
 		int flags)
 {
-	XENO_BUGON(NUCLEUS, !ipipe_root_p);
+	secondary_mode_only();
 
 	if (irq >= IPIPE_NR_IRQS)
 		return -EINVAL;
@@ -669,7 +669,7 @@ EXPORT_SYMBOL_GPL(xnintr_init);
  */
 void xnintr_destroy(xnintr_t *intr)
 {
-	XENO_BUGON(NUCLEUS, !ipipe_root_p);
+	secondary_mode_only();
 	xnintr_detach(intr);
 	free_percpu(intr->stats);
 }
@@ -713,11 +713,12 @@ EXPORT_SYMBOL_GPL(xnintr_destroy);
  * @note Attaching an interrupt resets the tracked number of receipts
  * to zero.
  */
-
 int xnintr_attach(xnintr_t *intr, void *cookie)
 {
 	int ret;
 	spl_t s;
+
+	secondary_mode_only();
 
 	trace_mark(xn_nucleus, irq_attach, "irq %u name %s",
 		   intr->irq, intr->name);
@@ -778,6 +779,8 @@ void xnintr_detach(xnintr_t *intr)
 {
 	spl_t s;
 
+	secondary_mode_only();
+
 	trace_mark(xn_nucleus, irq_detach, "irq %u", intr->irq);
 
 	xnlock_get_irqsave(&intrlock, s);
@@ -816,8 +819,8 @@ EXPORT_SYMBOL_GPL(xnintr_detach);
 
 void xnintr_enable(xnintr_t *intr)
 {
+	secondary_mode_only();
 	trace_mark(xn_nucleus, irq_enable, "irq %u", intr->irq);
-
 	ipipe_enable_irq(intr->irq);
 }
 EXPORT_SYMBOL_GPL(xnintr_enable);
@@ -845,8 +848,8 @@ EXPORT_SYMBOL_GPL(xnintr_enable);
 
 void xnintr_disable(xnintr_t *intr)
 {
+	secondary_mode_only();
 	trace_mark(xn_nucleus, irq_disable, "irq %u", intr->irq);
-
 	ipipe_disable_irq(intr->irq);
 }
 EXPORT_SYMBOL_GPL(xnintr_disable);
@@ -869,6 +872,7 @@ EXPORT_SYMBOL_GPL(xnintr_disable);
 
 void xnintr_affinity(xnintr_t *intr, cpumask_t cpumask)
 {
+	secondary_mode_only();
 	trace_mark(xn_nucleus, irq_affinity, "irq %u %lu",
 		   intr->irq, *(unsigned long *)&cpumask);
 

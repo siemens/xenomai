@@ -489,6 +489,8 @@ int xnclock_register(struct xnclock *clock)
 	struct xntimerdata *tmd;
 	int cpu;
 
+	secondary_mode_only();
+
 	trace_mark(xn_nucleus, clock_register, "clock %s", clock->name);
 
 	/* Allocate the percpu timer queue slot. */
@@ -535,6 +537,8 @@ void xnclock_deregister(struct xnclock *clock)
 {
 	struct xntimerdata *tmd;
 	int cpu;
+
+	secondary_mode_only();
 
 	trace_mark(xn_nucleus, clock_deregister, "clock %s", clock->name);
 

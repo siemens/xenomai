@@ -631,7 +631,6 @@ static inline int registry_wakeup_sleepers(const char *key)
  *
  * Rescheduling: possible.
  */
-
 int xnregistry_enter(const char *key, void *objaddr,
 		     xnhandle_t *phandle, struct xnpnode *pnode)
 {
@@ -756,7 +755,6 @@ EXPORT_SYMBOL_GPL(xnregistry_enter);
  * Rescheduling: always unless the request is immediately satisfied or
  * @a timeout specifies a non-blocking operation.
  */
-
 int xnregistry_bind(const char *key, xnticks_t timeout, int timeout_mode,
 		    xnhandle_t *phandle)
 {

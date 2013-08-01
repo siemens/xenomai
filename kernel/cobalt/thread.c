@@ -486,7 +486,7 @@ void __xnthread_cleanup(struct xnthread *curr)
 {
 	spl_t s;
 
-	XENO_BUGON(NUCLEUS, !ipipe_root_p);
+	secondary_mode_only();
 
 	trace_mark(xn_nucleus, thread_cleanup, "thread %p thread_name %s",
 		   curr, xnthread_name(curr));
@@ -1735,10 +1735,7 @@ EXPORT_SYMBOL_GPL(xnthread_migrate);
  *
  * This service can be called from:
  *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
+ * - Primary mode only.
  *
  * Rescheduling: never.
  *
@@ -1754,7 +1751,7 @@ int xnthread_set_schedparam(struct xnthread *thread,
 	int old_wprio, new_wprio, ret;
 	spl_t s;
 
-	XENO_BUGON(NUCLEUS, xnsched_root_p());
+	primary_mode_only();
 
 	xnlock_get_irqsave(&nklock, s);
 

@@ -2111,8 +2111,7 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 	 * We are called for both kernel and user shadows over the
 	 * root thread.
 	 */
-	XENO_BUGON(NUCLEUS, !xnsched_root_p());
-
+	secondary_mode_only();
 	thread = xnshadow_current();
 	XENO_BUGON(NUCLEUS, thread == NULL);
 	personality = thread->personality;

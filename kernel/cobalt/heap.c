@@ -1283,6 +1283,8 @@ int xnheap_init_mapped(struct xnheap *heap, unsigned long heapsize, int memflags
 	void *heapbase;
 	int err;
 
+	secondary_mode_only();
+
 	/* Caller must have accounted for internal overhead. */
 	heapsize = xnheap_align(heapsize, PAGE_SIZE);
 
@@ -1317,6 +1319,7 @@ void xnheap_destroy_mapped(struct xnheap *heap,
 	unsigned long len;
 	spl_t s;
 
+	secondary_mode_only();
 	/*
 	 * Trying to unmap user memory without providing a release
 	 * handler for deferred cleanup is a bug.
