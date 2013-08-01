@@ -924,7 +924,8 @@ int rtdm_irq_request(rtdm_irq_t *irq_handle, unsigned int irq_no,
 static inline int rtdm_irq_free(rtdm_irq_t *irq_handle)
 {
 	XENO_ASSERT(RTDM, xnsched_root_p(), return -EPERM;);
-	return xnintr_detach(irq_handle);
+	xnintr_detach(irq_handle);
+	return 0;
 }
 
 static inline int rtdm_irq_enable(rtdm_irq_t *irq_handle)

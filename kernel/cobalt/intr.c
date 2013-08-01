@@ -646,9 +646,9 @@ int xnintr_init(xnintr_t *intr, const char *name,
 }
 EXPORT_SYMBOL_GPL(xnintr_init);
 
-/*!
- * \fn int xnintr_destroy (xnintr_t *intr)
- * \brief Destroy an interrupt object.
+/**
+ * @fn void xnintr_destroy(xnintr_t *intr)
+ * @brief Destroy an interrupt object.
  *
  * Destroys an interrupt object previously initialized by
  * xnintr_init(). The interrupt object is automatically detached by a
@@ -657,10 +657,6 @@ EXPORT_SYMBOL_GPL(xnintr_init);
  *
  * @param intr The descriptor address of the interrupt object to
  * destroy.
- *
- * @return 0 is returned on success. Otherwise, -EINVAL is returned if
- * an error occurred while detaching the interrupt (see
- * xnintr_detach()).
  *
  * Environments:
  *
@@ -671,20 +667,11 @@ EXPORT_SYMBOL_GPL(xnintr_init);
  *
  * Rescheduling: never.
  */
-
-int xnintr_destroy(xnintr_t *intr)
+void xnintr_destroy(xnintr_t *intr)
 {
-	int ret;
-
 	XENO_BUGON(NUCLEUS, !ipipe_root_p);
-
-	ret = xnintr_detach(intr);
-	if (ret)
-		return ret;
-
+	xnintr_detach(intr);
 	free_percpu(intr->stats);
-
-	return 0;
 }
 EXPORT_SYMBOL_GPL(xnintr_destroy);
 
@@ -762,9 +749,9 @@ out:
 }
 EXPORT_SYMBOL_GPL(xnintr_attach);
 
-/*!
- * \fn int xnintr_detach (xnintr_t *intr)
- * \brief Detach an interrupt object.
+/**
+ * @fn int xnintr_detach(xnintr_t *intr)
+ * @brief Detach an interrupt object.
  *
  * Detach an interrupt object previously attached by
  * xnintr_attach(). After this operation is completed, no more IRQs
@@ -775,14 +762,8 @@ EXPORT_SYMBOL_GPL(xnintr_attach);
  * @param intr The descriptor address of the interrupt object to
  * detach.
  *
- * @return 0 is returned on success. Otherwise:
- *
- * - -EINVAL is returned if a low-level error occurred while detaching
- * the interrupt, or if the interrupt object was not attached. In both
- * cases, no action is performed.
- *
- * @note The caller <b>must not</b> hold nklock when invoking this service,
- * this would cause deadlocks.
+ * @note The caller <b>must not</b> hold nklock when invoking this
+ * service, this would cause deadlocks.
  *
  * Environments:
  *
@@ -793,27 +774,21 @@ EXPORT_SYMBOL_GPL(xnintr_attach);
  *
  * Rescheduling: never.
  */
-int xnintr_detach(xnintr_t *intr)
+void xnintr_detach(xnintr_t *intr)
 {
-	int ret;
 	spl_t s;
 
 	trace_mark(xn_nucleus, irq_detach, "irq %u", intr->irq);
 
 	xnlock_get_irqsave(&intrlock, s);
 
-	if ((intr->flags & XN_ISR_ATTACHED) == 0) {
-		ret = -EINVAL;
-		goto out;
+	if (intr->flags & XN_ISR_ATTACHED) {
+		intr->flags &= ~XN_ISR_ATTACHED;
+		xnintr_irq_detach(intr);
+		stat_counter_dec();
 	}
 
-	intr->flags &= ~XN_ISR_ATTACHED;
-	xnintr_irq_detach(intr);
-	stat_counter_dec();
-out:
 	xnlock_put_irqrestore(&intrlock, s);
-
-	return ret;
 }
 EXPORT_SYMBOL_GPL(xnintr_detach);
 

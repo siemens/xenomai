@@ -117,12 +117,12 @@ int xnintr_init(xnintr_t *intr,
 		xniack_t iack,
 		int flags);
 
-int xnintr_destroy(xnintr_t *intr);
+void xnintr_destroy(xnintr_t *intr);
 
 int xnintr_attach(xnintr_t *intr,
 		  void *cookie);
 
-int xnintr_detach(xnintr_t *intr);
+void xnintr_detach(xnintr_t *intr);
 
 void xnintr_enable(xnintr_t *intr);
 
