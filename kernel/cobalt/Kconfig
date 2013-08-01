@@ -345,14 +345,6 @@ config XENO_OPT_DEBUG_XNLOCK
 	sections. Statistics about the longest masking section may be
 	found in /proc/xenomai/lock.
 
-config XENO_OPT_DEBUG_REGISTRY
-	bool "Registry monitoring"
-	help
-
-	This option activates debugging output for key registry
-	operations performed by the Xenomai core. This option is
-	useful to detect the source of object naming conflicts.
-
 config XENO_OPT_DEBUG_TIMERS
 	bool "Timer monitoring"
 	help

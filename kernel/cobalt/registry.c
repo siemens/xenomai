@@ -42,10 +42,6 @@
 #include <cobalt/kernel/apc.h>
 #include <cobalt/kernel/assert.h>
 
-#ifndef CONFIG_XENO_OPT_DEBUG_REGISTRY
-#define CONFIG_XENO_OPT_DEBUG_REGISTRY  0
-#endif
-
 struct xnobject *registry_obj_slots;
 EXPORT_SYMBOL_GPL(registry_obj_slots);
 
@@ -696,15 +692,6 @@ unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
-#if XENO_DEBUG(REGISTRY)
-	if (ret)
-		printk(XENO_ERR "FAILED to register object %s (%s), status %d\n",
-		       key, pnode ? pnode->dirname : "unknown type", ret);
-	else if (pnode)
-		printk(XENO_INFO "registered exported object %s (%s)\n",
-		       key, pnode->dirname);
-#endif
-
 	return ret;
 }
 EXPORT_SYMBOL_GPL(xnregistry_enter);
@@ -862,15 +849,6 @@ int xnregistry_remove(xnhandle_t handle)
 		ret = -ESRCH;
 		goto unlock_and_exit;
 	}
-
-#if XENO_DEBUG(REGISTRY)
-	/* We must keep the lock and report early, when the object
-	 * slot is still valid. Note: we only report about exported
-	 * objects. */
-	if (object->pnode)
-		printk(XENO_INFO "unregistered exported object %s (%s)\n",
-		       object->key, object->pnode->dirname);
-#endif
 
 	object->objaddr = NULL;
 	object->cstamp = 0;
