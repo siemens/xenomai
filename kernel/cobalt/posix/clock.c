@@ -22,7 +22,7 @@
  *
  * Clocks and timers services.
  *
- * Cobalt supports three clocks:
+ * Cobalt supports three built-in clocks:
  *
  * CLOCK_REALTIME maps to the nucleus system clock, keeping time as the amount
  * of time since the Epoch, with a resolution of one nanosecond.
@@ -38,20 +38,32 @@
  * strictly equivalent to CLOCK_MONOTONIC with Xenomai, which is not
  * NTP adjusted either.
  *
+ * In addition, external clocks can be dynamically registered using
+ * the cobalt_clock_register() service. These clocks are fully managed
+ * by Cobalt extension code, which should advertise each incoming tick
+ * by calling xnclock_tick() for the relevant clock, from an interrupt
+ * context.
+ *
  * Timer objects may be created with the timer_create() service using
- * either of the two clocks. The resolution of these timers is one
- * nanosecond, as is the case for clock_nanosleep().
+ * any of the built-in or external clocks. The resolution of these
+ * timers is clock-specific. However, built-in clocks all have
+ * nanosecond resolution, as specified for clock_nanosleep().
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_08.html#tag_02_08_05">
  * Specification.</a>
  *
  *@{*/
-
+#include <linux/bitmap.h>
 #include <cobalt/kernel/vdso.h>
+#include <cobalt/kernel/clock.h>
 #include "internal.h"
 #include "thread.h"
 #include "clock.h"
+
+static struct xnclock *external_clocks[COBALT_MAX_EXTCLOCKS];
+
+DECLARE_BITMAP(cobalt_clock_extids, COBALT_MAX_EXTCLOCKS);
 
 /**
  * Read the host-synchronised realtime clock.
@@ -120,80 +132,112 @@ static int do_clock_host_realtime(struct timespec *tp)
 #endif
 }
 
+#define do_ext_clock(__clock_id, __handler, __ret, __args...)	\
+({								\
+	struct xnclock *__clock;				\
+	int __val = 0, __nr;					\
+	spl_t __s;						\
+								\
+	if (!__COBALT_CLOCK_EXT_P(__clock_id))			\
+		__val = -EINVAL;				\
+	else {							\
+		__nr = __COBALT_CLOCK_INDEX(__clock_id);	\
+		xnlock_get_irqsave(&nklock, __s);		\
+		if (!test_bit(__nr, cobalt_clock_extids)) {	\
+			xnlock_put_irqrestore(&nklock, __s);	\
+			__val = -EINVAL;			\
+		} else {					\
+			__clock = external_clocks[__nr];	\
+			(__ret) = xnclock_ ## __handler(__clock, ##__args); \
+			xnlock_put_irqrestore(&nklock, __s);	\
+		}						\
+	}							\
+	__val;							\
+})
+
 int cobalt_clock_getres(clockid_t clock_id, struct timespec __user *u_ts)
 {
 	struct timespec ts;
-	int err;
+	xnticks_t ns;
+	int ret;
 
 	switch (clock_id) {
 	case CLOCK_REALTIME:
 	case CLOCK_MONOTONIC:
 	case CLOCK_MONOTONIC_RAW:
-		err = 0;
 		ns2ts(&ts, 1);
 		break;
 	default:
-		err = -EINVAL;
+		ret = do_ext_clock(clock_id, get_resolution, ns);
+		if (ret)
+			return ret;
+		ns2ts(&ts, ns);
 	}
 
-	if (err == 0 && __xn_safe_copy_to_user(u_ts, &ts, sizeof(ts)))
+	if (__xn_safe_copy_to_user(u_ts, &ts, sizeof(ts)))
 		return -EFAULT;
 
-	return err;
+	return 0;
 }
 
 int cobalt_clock_gettime(clockid_t clock_id, struct timespec __user *u_ts)
 {
-	xnticks_t cpu_time;
 	struct timespec ts;
-	int err = 0;
+	xnticks_t ns;
+	int ret;
 
 	switch (clock_id) {
 	case CLOCK_REALTIME:
 		ns2ts(&ts, xnclock_read_realtime(&nkclock));
 		break;
-
 	case CLOCK_MONOTONIC:
 	case CLOCK_MONOTONIC_RAW:
-		cpu_time = xnclock_read_monotonic(&nkclock);
-		ts.tv_sec =
-			xnarch_uldivrem(cpu_time, ONE_BILLION, &ts.tv_nsec);
+		ns2ts(&ts, xnclock_read_monotonic(&nkclock));
 		break;
-
 	case CLOCK_HOST_REALTIME:
 		if (do_clock_host_realtime(&ts) != 0)
-			err = -EINVAL;
+			return -EINVAL;
 		break;
-
 	default:
-		err = -EINVAL;
+		ret = do_ext_clock(clock_id, read_monotonic, ns);
+		if (ret)
+			return ret;
+		ns2ts(&ts, ns);
 	}
 
-	if (err == 0 && __xn_safe_copy_to_user(u_ts, &ts, sizeof(*u_ts)))
+	if (__xn_safe_copy_to_user(u_ts, &ts, sizeof(*u_ts)))
 		return -EFAULT;
 
-	return err;
+	return ret;
 }
 
 int cobalt_clock_settime(clockid_t clock_id, const struct timespec __user *u_ts)
 {
 	struct timespec ts;
+	int _ret, ret = 0;
 	xnticks_t now;
 	spl_t s;
 
 	if (__xn_safe_copy_from_user(&ts, u_ts, sizeof(ts)))
 		return -EFAULT;
 
-	if (clock_id != CLOCK_REALTIME
-	    || (unsigned long)ts.tv_nsec >= ONE_BILLION)
+	if ((unsigned long)ts.tv_nsec >= ONE_BILLION)
 		return -EINVAL;
 
-	xnlock_get_irqsave(&nklock, s);
-	now = xnclock_read_realtime(&nkclock);
-	xnclock_adjust(&nkclock, (xnsticks_t) (ts2ns(&ts) - now));
-	xnlock_put_irqrestore(&nklock, s);
+	switch (clock_id) {
+	case CLOCK_REALTIME:
+		xnlock_get_irqsave(&nklock, s);
+		now = xnclock_read_realtime(&nkclock);
+		xnclock_adjust(&nkclock, (xnsticks_t) (ts2ns(&ts) - now));
+		xnlock_put_irqrestore(&nklock, s);
+		break;
+	default:
+		_ret = do_ext_clock(clock_id, set_time, ret, &ts);
+		if (_ret)
+			ret = _ret;
+	}
 
-	return 0;
+	return ret;
 }
 
 int cobalt_clock_nanosleep(clockid_t clock_id, int flags,
@@ -246,6 +290,47 @@ int cobalt_clock_nanosleep(clockid_t clock_id, int flags,
 	xnlock_put_irqrestore(&nklock, s);
 
 	return err;
+}
+
+int cobalt_clock_register(struct xnclock *clock, clockid_t *clk_id)
+{
+	int ret, nr;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	nr = find_first_zero_bit(cobalt_clock_extids, COBALT_MAX_EXTCLOCKS);
+	if (nr >= COBALT_MAX_EXTCLOCKS) {
+		xnlock_put_irqrestore(&nklock, s);
+		return -EAGAIN;
+	}
+
+	/*
+	 * CAUTION: a bit raised in cobalt_clock_extids means that the
+	 * corresponding entry in external_clocks[] is valid. The
+	 * converse assumption is NOT true.
+	 */
+	__set_bit(nr, cobalt_clock_extids);
+	external_clocks[nr] = clock;
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	ret = xnclock_register(clock);
+	if (ret)
+		return ret;
+
+	clock->id = nr;
+	*clk_id = __COBALT_CLOCK_CODE(clock->id);
+
+	return 0;
+}
+
+void cobalt_clock_deregister(struct xnclock *clock)
+{
+	clear_bit(clock->id, cobalt_clock_extids);
+	smp_mb__after_clear_bit();
+	external_clocks[clock->id] = NULL;
+	xnclock_deregister(clock);
 }
 
 /*@}*/

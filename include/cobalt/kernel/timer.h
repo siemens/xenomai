@@ -180,32 +180,36 @@ xnclock_this_timerdata(struct xnclock *clock)
 }
 
 struct xntimer {
-
 #ifdef CONFIG_XENO_OPT_EXTCLOCK
 	struct xnclock *clock;
 #endif
-
-	xntimerh_t aplink;	/* Link in timers list. */
-
+	/** Link in timers list. */
+	xntimerh_t aplink;
 	struct list_head adjlink;
-
-	unsigned long status;	/* !< Timer status. */
-
-	xnticks_t interval;	/* !< Periodic interval (in ticks, 0 == one shot). */
-
-	xnticks_t pexpect;	/* !< Date of next periodic release point (raw ticks). */
-
-	struct xnsched *sched;	/* !< Sched structure to which the timer is
-				   attached. */
-
-	void (*handler)(struct xntimer *timer); /* !< Timeout handler. */
-
+	/** Timer status. */
+	unsigned long status;
+	/** Periodic interval (raw ticks, 0 == one shot). */
+	xnticks_t interval;
+	/** Date of next periodic release point (raw ticks). */
+	xnticks_t pexpect;
+	/** Sched structure to which the timer is attached. */
+	struct xnsched *sched;
+	/** Timeout handler. */
+	void (*handler)(struct xntimer *timer);
 #ifdef CONFIG_XENO_OPT_STATS
-	char name[XNOBJECT_NAME_LEN]; /* !< Timer name to be displayed. */
-	const char *handler_name; /* !< Handler name to be displayed. */
-	struct list_head next_stat; /* !< Timer holder in timebase. */
-	xnstat_counter_t scheduled; /* !< Number of timer schedules. */
-	xnstat_counter_t fired; /* !< Number of timer events. */
+#ifdef CONFIG_XENO_OPT_EXTCLOCK
+	struct xnclock *tracker;
+#endif
+	/** Timer name to be displayed. */
+	char name[XNOBJECT_NAME_LEN];
+	/** Handler name to be displayed. */
+	const char *handler_name;
+	/** Timer holder in timebase. */
+	struct list_head next_stat;
+	/** Number of timer schedules. */
+	xnstat_counter_t scheduled;
+	/** Number of timer events. */
+	xnstat_counter_t fired;
 #endif /* CONFIG_XENO_OPT_STATS */
 };
 
@@ -290,6 +294,10 @@ static inline int xntimer_reload_p(struct xntimer *timer)
 		(XNTIMER_PERIODIC|XNTIMER_DEQUEUED);
 }
 
+void __xntimer_init(struct xntimer *timer,
+		    struct xnclock *clock,
+		    void (*handler)(struct xntimer *timer));
+
 #ifdef CONFIG_XENO_OPT_STATS
 
 #define xntimer_init(timer, clock, handler)		\
@@ -297,6 +305,12 @@ static inline int xntimer_reload_p(struct xntimer *timer)
 		__xntimer_init(timer, clock, handler);	\
 		(timer)->handler_name = #handler;	\
 	} while (0)
+
+static inline void xntimer_reset_stats(struct xntimer *timer)
+{
+	xnstat_counter_set(&timer->scheduled, 0);
+	xnstat_counter_set(&timer->fired, 0);
+}
 
 static inline void xntimer_account_scheduled(struct xntimer *timer)
 {
@@ -317,6 +331,8 @@ static inline void xntimer_set_name(struct xntimer *timer, const char *name)
 
 #define xntimer_init	__xntimer_init
 
+static inline void xntimer_reset_stats(struct xntimer *timer) { }
+
 static inline void xntimer_account_scheduled(struct xntimer *timer) { }
 
 static inline void xntimer_account_fired(struct xntimer *timer) { }
@@ -325,15 +341,20 @@ static inline void xntimer_set_name(struct xntimer *timer, const char *name) { }
 
 #endif /* !CONFIG_XENO_OPT_STATS */
 
+#if defined(CONFIG_XENO_OPT_EXTCLOCK) && defined(CONFIG_XENO_OPT_STATS)
+void xntimer_switch_tracking(struct xntimer *timer,
+			     struct xnclock *newclock);
+#else
+static inline
+void xntimer_switch_tracking(struct xntimer *timer,
+			     struct xnclock *newclock) { }
+#endif
+
 #define xntimer_init_noblock(timer, clock, handler)	\
 	do {						\
 		xntimer_init(timer, clock, handler);	\
 		(timer)->status |= XNTIMER_NOBLCK;	\
-	} while(0)
-
-void __xntimer_init(struct xntimer *timer,
-		    struct xnclock *clock,
-		    void (*handler)(struct xntimer *timer));
+	} while (0)
 
 void xntimer_destroy(struct xntimer *timer);
 

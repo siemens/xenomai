@@ -159,7 +159,7 @@ static inline void thread_unhash(const struct cobalt_local_hkey *hkey)
 }
 
 static struct cobalt_thread *
-thread_find_local(const struct cobalt_local_hkey *hkey)
+thread_lookup(const struct cobalt_local_hkey *hkey)
 {
 	struct local_thread_hash *lslot;
 	struct cobalt_thread *thread;
@@ -197,6 +197,18 @@ struct cobalt_thread *cobalt_thread_find(pid_t pid) /* nklocked, IRQs off */
 }
 EXPORT_SYMBOL_GPL(cobalt_thread_find);
 
+struct cobalt_thread *cobalt_thread_find_local(pid_t pid) /* nklocked, IRQs off */
+{
+	struct cobalt_thread *thread;
+
+	thread = cobalt_thread_find(pid);
+	if (thread == NULL || thread->hkey.mm != current->mm)
+		return NULL;
+
+	return thread;
+}
+EXPORT_SYMBOL_GPL(cobalt_thread_find_local);
+
 struct xnpersonality *cobalt_thread_exit(struct xnthread *curr)
 {
 	struct cobalt_thread *thread;
@@ -209,7 +221,6 @@ struct xnpersonality *cobalt_thread_exit(struct xnthread *curr)
 	thread_unhash(&thread->hkey);
 	cobalt_mark_deleted(thread);
 	cobalt_signal_flush(thread);
-	cobalt_timer_flush(thread);
 	xnsynch_destroy(&thread->monitor_synch);
 	xnsynch_destroy(&thread->sigwait);
 	list_del(&thread->link);
@@ -460,8 +471,6 @@ static inline int pthread_create(struct cobalt_thread **thread_p, const pthread_
 	sigemptyset(&thread->sigpending);
 	for (n = 0; n < _NSIG; n++)
 		INIT_LIST_HEAD(thread->sigqueues + n);
-
-	INIT_LIST_HEAD(&thread->timersq);
 
 	cobalt_set_extref(&thread->extref, NULL, NULL);
 
@@ -804,7 +813,7 @@ int cobalt_thread_setschedparam_ex(unsigned long pth,
 
 	hkey.u_pth = pth;
 	hkey.mm = current->mm;
-	thread = thread_find_local(&hkey);
+	thread = thread_lookup(&hkey);
 
 	if (thread == NULL && u_window_offset) {
 		thread = cobalt_thread_shadow(current, &hkey, u_window_offset);
@@ -948,7 +957,7 @@ int cobalt_thread_make_periodic_np(unsigned long pth,
 
 	hkey.u_pth = pth;
 	hkey.mm = current->mm;
-	thread = thread_find_local(&hkey);
+	thread = thread_lookup(&hkey);
 
 	if (__xn_safe_copy_from_user(&startt, u_startt, sizeof(startt)))
 		return -EFAULT;
@@ -1003,7 +1012,7 @@ int cobalt_thread_set_name_np(unsigned long pth, const char __user *u_name)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	thread = thread_find_local(&hkey);
+	thread = thread_lookup(&hkey);
 	if (thread == NULL) {
 		xnlock_put_irqrestore(&nklock, s);
 		return -ESRCH;
@@ -1057,7 +1066,7 @@ int cobalt_thread_kill(unsigned long pth, int sig)
 
 	hkey.u_pth = pth;
 	hkey.mm = current->mm;
-	thread = thread_find_local(&hkey);
+	thread = thread_lookup(&hkey);
 	if (thread == NULL) {
 		ret = -ESRCH;
 		goto out;
@@ -1189,7 +1198,7 @@ int cobalt_thread_getschedparam_ex(unsigned long pth,
 
 	hkey.u_pth = pth;
 	hkey.mm = current->mm;
-	thread = thread_find_local(&hkey);
+	thread = thread_lookup(&hkey);
 	if (thread == NULL)
 		return -ESRCH;
 

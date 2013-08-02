@@ -365,6 +365,9 @@ void __xntimer_init(struct xntimer *timer,
 	timer->sched = xnsched_current();
 
 #ifdef CONFIG_XENO_OPT_STATS
+#ifdef CONFIG_XENO_OPT_EXTCLOCK
+	timer->tracker = clock;
+#endif
 	if (!xnsched_current_thread() || !xnsched_root_p())
 		snprintf(timer->name, XNOBJECT_NAME_LEN, "%d/%s",
 			 current->pid, current->comm);
@@ -372,17 +375,36 @@ void __xntimer_init(struct xntimer *timer,
 		xnobject_copy_name(timer->name,
 				   xnsched_current_thread()->name);
 
-	xnstat_counter_set(&timer->scheduled, 0);
-	xnstat_counter_set(&timer->fired, 0);
-
+	xntimer_reset_stats(timer);
 	xnlock_get_irqsave(&nklock, s);
-	list_add_tail(&timer->next_stat, &clock->timerq);
+	list_add_tail(&timer->next_stat, &clock->statq);
 	clock->nrtimers++;
 	xnvfile_touch(&clock->vfile);
 	xnlock_put_irqrestore(&nklock, s);
 #endif /* CONFIG_XENO_OPT_STATS */
 }
 EXPORT_SYMBOL_GPL(__xntimer_init);
+
+#if defined(CONFIG_XENO_OPT_EXTCLOCK) && defined(CONFIG_XENO_OPT_STATS)
+
+void xntimer_switch_tracking(struct xntimer *timer,
+			     struct xnclock *newclock)
+{
+	struct xnclock *oldclock = timer->tracker;
+	spl_t s;
+	
+	xnlock_get_irqsave(&nklock, s);
+	list_del(&timer->next_stat);
+	oldclock->nrtimers--;
+	xnvfile_touch(&oldclock->vfile);
+	list_add_tail(&timer->next_stat, &newclock->statq);
+	newclock->nrtimers++;
+	xnvfile_touch(&newclock->vfile);
+	timer->tracker = newclock;
+	xnlock_put_irqrestore(&nklock, s);
+}
+
+#endif /* CONFIG_XENO_OPT_EXTCLOCK && CONFIG_XENO_OPT_STATS */
 
 /*!
  * \fn void xntimer_destroy(struct xntimer *timer)
@@ -498,7 +520,7 @@ EXPORT_SYMBOL_GPL(xntimer_migrate);
  * @param timer The address of a valid timer descriptor.
  *
  * @param now current date (as
- * xnclock_read_monotonic(xntimer_clock(timer)))
+ * xnclock_read_raw(xntimer_clock(timer)))
  *
  * @return the number of overruns of @a timer at date @a now
  */

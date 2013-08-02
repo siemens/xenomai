@@ -18,6 +18,7 @@
 #ifndef _COBALT_POSIX_CLOCK_H
 #define _COBALT_POSIX_CLOCK_H
 
+#include <linux/types.h>
 #include <linux/time.h>
 #include <cobalt/uapi/time.h>
 
@@ -82,14 +83,24 @@ static inline int clock_flag(int flag, clockid_t clock_id)
 	return -EINVAL;
 }
 
-int cobalt_clock_getres(clockid_t clock_id, struct timespec __user *u_ts);
+int cobalt_clock_getres(clockid_t clock_id,
+			struct timespec __user *u_ts);
 
-int cobalt_clock_gettime(clockid_t clock_id, struct timespec __user *u_ts);
+int cobalt_clock_gettime(clockid_t clock_id,
+			 struct timespec __user *u_ts);
 
-int cobalt_clock_settime(clockid_t clock_id, const struct timespec __user *u_ts);
+int cobalt_clock_settime(clockid_t clock_id,
+			 const struct timespec __user *u_ts);
 
 int cobalt_clock_nanosleep(clockid_t clock_id, int flags,
 			   const struct timespec __user *u_rqt,
 			   struct timespec __user *u_rmt);
+
+int cobalt_clock_register(struct xnclock *clock,
+			  clockid_t *clk_id);
+
+void cobalt_clock_deregister(struct xnclock *clock);
+
+extern DECLARE_BITMAP(cobalt_clock_extids, COBALT_MAX_EXTCLOCKS);
 
 #endif /* !_COBALT_POSIX_CLOCK_H */

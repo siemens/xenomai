@@ -348,7 +348,7 @@ struct vfile_clock_data {
 	xnticks_t timeout;
 	xnticks_t interval;
 	unsigned long status;
-	char handler[12];
+	char handler[XNOBJECT_NAME_LEN];
 	char name[XNOBJECT_NAME_LEN];
 };
 
@@ -357,10 +357,10 @@ static int clock_vfile_rewind(struct xnvfile_snapshot_iterator *it)
 	struct vfile_clock_priv *priv = xnvfile_iterator_priv(it);
 	struct xnclock *clock = xnvfile_priv(it->vfile);
 
-	if (list_empty(&clock->timerq))
+	if (list_empty(&clock->statq))
 		return -ESRCH;
 
-	priv->curr = list_first_entry(&clock->timerq, struct xntimer, next_stat);
+	priv->curr = list_first_entry(&clock->statq, struct xntimer, next_stat);
 
 	return clock->nrtimers;
 }
@@ -376,7 +376,7 @@ static int clock_vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
 		return 0;
 
 	timer = priv->curr;
-	if (list_is_last(&timer->next_stat, &clock->timerq))
+	if (list_is_last(&timer->next_stat, &clock->statq))
 		priv->curr = NULL;
 	else
 		priv->curr = list_entry(timer->next_stat.next,
@@ -391,9 +391,7 @@ static int clock_vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
 	p->timeout = xntimer_get_timeout(timer);
 	p->interval = xntimer_get_interval(timer);
 	p->status = timer->status;
-	memcpy(p->handler, timer->handler_name,
-	       sizeof(p->handler)-1);
-	p->handler[sizeof(p->handler)-1] = 0;
+	strncpy(p->handler, timer->handler_name, 16)[17] = '\0';
 	xnobject_copy_name(p->name, timer->name);
 
 	return 1;
@@ -404,22 +402,25 @@ static int clock_vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
 	struct vfile_clock_data *p = data;
 	char timeout_buf[]  = "-         ";
 	char interval_buf[] = "-         ";
+	char hit_buf[32];
 
 	if (p == NULL)
 		xnvfile_printf(it,
-			       "%-3s  %-10s  %-10s  %-10s  %-10s  %-11s  %-15s\n",
-			       "CPU", "SCHEDULED", "FIRED", "TIMEOUT",
+			       "%-3s  %-20s  %-10s  %-10s  %-16s  %s\n",
+			       "CPU", "SCHED/SHOT", "TIMEOUT",
 			       "INTERVAL", "HANDLER", "NAME");
 	else {
 		if ((p->status & XNTIMER_DEQUEUED) == 0)
-			snprintf(timeout_buf, sizeof(timeout_buf), "%-10llu",
-				 p->timeout);
+			xntimer_format_time(p->timeout, timeout_buf,
+					    sizeof(timeout_buf));
 		if (p->status & XNTIMER_PERIODIC)
-			snprintf(interval_buf, sizeof(interval_buf), "%-10llu",
-				 p->interval);
+			xntimer_format_time(p->interval, interval_buf,
+					    sizeof(interval_buf));
+		snprintf(hit_buf, sizeof(hit_buf), "%u/%u",
+			 p->scheduled, p->fired);
 		xnvfile_printf(it,
-			       "%-3u  %-10u  %-10u  %s  %s  %-11s  %-15s\n",
-			       p->cpu, p->scheduled, p->fired, timeout_buf,
+			       "%-3u  %-20s  %-10s  %-10s  %-16s  %s\n",
+			       p->cpu, hit_buf, timeout_buf,
 			       interval_buf, p->handler, p->name);
 	}
 
@@ -504,7 +505,7 @@ int xnclock_register(struct xnclock *clock)
 	}
 
 #ifdef CONFIG_XENO_OPT_STATS
-	INIT_LIST_HEAD(&clock->timerq);
+	INIT_LIST_HEAD(&clock->statq);
 #endif /* CONFIG_XENO_OPT_STATS */
 
 	init_clock_proc(clock);
@@ -680,6 +681,8 @@ EXPORT_SYMBOL_GPL(xnclock_tick);
 
 struct xnclock nkclock = {
 	.name = "coreclk",
+	.resolution = 1,	/* nanosecond. */
+	.id = -1,
 };
 EXPORT_SYMBOL_GPL(nkclock);
 

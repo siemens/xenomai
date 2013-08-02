@@ -23,10 +23,20 @@
 #endif
 
 /*
- * This clock id. is supposed not to collide with any of the POSIX and
- * Linux kernel definitions so that no ambiguities arise when porting
- * applications in both directions.
+ * Additional clock ids we manage are supposed not to collide with any
+ * of the POSIX and Linux kernel definitions so that no ambiguities
+ * arise when porting applications in both directions.
+ *
+ * The Cobalt API reserves the first 32 extended clock codes. for
+ * dynamically registered clocks. Everything from
+ * __COBALT_CLOCK_CODE(32) onward can be reserved statically for
+ * whatever purpose.
  */
-#define CLOCK_HOST_REALTIME 42
+#define COBALT_MAX_EXTCLOCKS  32
+#define __COBALT_CLOCK_CODE(num)  ((clockid_t)((1 << 16)|num))
+#define __COBALT_CLOCK_INDEX(id)  ((int)(id) & ~(1 << 16))
+#define __COBALT_CLOCK_EXT_P(id)  ((int)(id) & (1 << 16))
+
+#define CLOCK_HOST_REALTIME  __COBALT_CLOCK_CODE(42)
 
 #endif /* !_COBALT_UAPI_TIME_H */

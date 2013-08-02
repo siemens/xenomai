@@ -109,9 +109,6 @@ struct cobalt_thread {
         /** Creation attributes. */
 	pthread_attr_t attr;
 
-	/** Active timers. */
-	struct list_head timersq;
-
 	/** Signal management. */
 	sigset_t sigpending;
 	struct list_head sigqueues[_NSIG]; /* cobalt_sigpending */
@@ -141,6 +138,8 @@ static inline struct cobalt_thread *cobalt_current_thread(void)
 }
 
 struct cobalt_thread *cobalt_thread_find(pid_t pid);
+
+struct cobalt_thread *cobalt_thread_find_local(pid_t pid);
 
 int cobalt_thread_create(unsigned long tid, int policy,
 			 struct sched_param_ex __user *u_param,
@@ -201,6 +200,22 @@ void cobalt_thread_extend(struct cobalt_thread *thread,
 			  void *priv);
 
 void cobalt_thread_restrict(struct cobalt_thread *thread);
+
+static inline
+int cobalt_thread_extended_p(const struct cobalt_thread *thread,
+			     const struct cobalt_extension *ext)
+{
+	return thread->extref.extension == ext;
+}
+
+#else /* !CONFIG_XENO_OPT_COBALT_EXTENSION */
+
+static inline
+int cobalt_thread_extended_p(const struct cobalt_thread *thread,
+			     const struct cobalt_extension *ext)
+{
+	return 0;
+}
 
 #endif /* !CONFIG_XENO_OPT_COBALT_EXTENSION */
 

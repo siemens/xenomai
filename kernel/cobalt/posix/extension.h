@@ -19,6 +19,7 @@
 #define _COBALT_POSIX_EXTENSION_H
 
 #include <linux/time.h>
+#include <linux/list.h>
 #include <cobalt/kernel/shadow.h>
 
 #ifdef CONFIG_XENO_OPT_COBALT_EXTENSION
@@ -33,9 +34,14 @@ struct cobalt_extension {
 	struct xnpersonality core;
 	struct {
 		struct cobalt_thread *
-		(*timer_init)(struct cobalt_extref *reftimer,
+		(*timer_init)(struct cobalt_extref *reftimer, /* nklocked, IRQs off. */
 			      const struct sigevent *__restrict__ evp);
-		int (*timer_cleanup)(struct cobalt_extref *reftimer);
+		int (*timer_settime)(struct cobalt_extref *reftimer, /* nklocked, IRQs off. */
+				     const struct itimerspec *__restrict__ value,
+				     int flags);
+		int (*timer_gettime)(struct cobalt_extref *reftimer, /* nklocked, IRQs off. */
+				     struct itimerspec *__restrict__ value);
+		int (*timer_cleanup)(struct cobalt_extref *reftimer); /* nklocked, IRQs off. */
 		int (*signal_deliver)(struct cobalt_extref *refthread,
 				      struct siginfo *si,
 				      struct cobalt_sigpending *sigp);
@@ -50,7 +56,7 @@ struct cobalt_extension {
 
 struct cobalt_extref {
 	struct cobalt_extension *extension;
-	struct cobalt_thread *owner;
+	struct list_head next;
 	void *private;
 };
 
@@ -60,11 +66,10 @@ static inline void cobalt_set_extref(struct cobalt_extref *ref,
 {
 	ref->extension = ext;
 	ref->private = priv;
-	ref->owner = NULL;
 }
 
 /**
- * Both macros return non-zero if some thread-level extension code was
+ * All macros return non-zero if some thread-level extension code was
  * called, leaving the output value into __ret. Otherwise, the __ret
  * value is undefined.
  */
@@ -73,16 +78,13 @@ static inline void cobalt_set_extref(struct cobalt_extref *ref,
 		int __val = 0;							\
 		if ((__owner) && (__owner)->extref.extension) {			\
 			(__extref)->extension = (__owner)->extref.extension;	\
-			(__extref)->owner = (__owner);				\
 			if ((__extref)->extension->ops.__extfn) {		\
 				(__ret) = (__extref)->extension->ops.		\
 					__extfn(__extref, ##__args );		\
 				__val = 1;					\
 			}							\
-		} else {							\
+		} else								\
 			(__extref)->extension = NULL;				\
-			(__extref)->owner = NULL;				\
-		}								\
 		__val;								\
 	})
 		
@@ -97,7 +99,7 @@ static inline void cobalt_set_extref(struct cobalt_extref *ref,
 		}							\
 		__val;							\
 	})
-		
+
 #else /* !CONFIG_XENO_OPT_COBALT_EXTENSION */
 
 struct cobalt_extension;
@@ -114,7 +116,7 @@ static inline void cobalt_set_extref(struct cobalt_extref *ref,
 #define cobalt_initcall_extension(__extfn, __extref, __owner, __ret, __args...)	\
 	({ (void)(__owner); (void)(__ret); 0; })
 
-#define cobalt_call_extension(__extfn, __extref, __ret, __args...)		\
+#define cobalt_call_extension(__extfn, __extref, __ret, __args...)	\
 	({ (void)(__ret); 0; })
 
 #endif /* !CONFIG_XENO_OPT_COBALT_EXTENSION */

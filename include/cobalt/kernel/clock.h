@@ -36,13 +36,17 @@ struct xntimerdata;
 
 struct xnclock {
 	xnticks_t wallclock_offset;
-	struct xntimerdata *timerdata;
+	/** ns */
+	xnticks_t resolution;
+	/** raw clock ticks. */
 	unsigned long gravity;
 	const char *name;
 #ifdef CONFIG_XENO_OPT_EXTCLOCK
 	struct {
 		xnticks_t (*read_raw)(struct xnclock *clock);
 		xnticks_t (*read_monotonic)(struct xnclock *clock);
+		int (*set_time)(struct xnclock *clock,
+				const struct timespec *ts);
 		xnsticks_t (*ns_to_ticks)(struct xnclock *clock,
 					  xnsticks_t ns);
 		xnsticks_t (*ticks_to_ns)(struct xnclock *clock,
@@ -55,10 +59,13 @@ struct xnclock {
 					    struct xnsched *sched);
 	} ops;
 #endif	
+	/* Private section. */
+	struct xntimerdata *timerdata;
+	int id;
 #ifdef CONFIG_XENO_OPT_STATS
 	struct xnvfile_snapshot vfile;
 	struct xnvfile_rev_tag revtag;
-	struct list_head timerq;
+	struct list_head statq;
 	int nrtimers;
 #endif /* CONFIG_XENO_OPT_STATS */
 };
@@ -103,7 +110,7 @@ static inline void xnclock_program_shot(struct xnclock *clock,
 					struct xnsched *sched)
 {
 	if (likely(clock == &nkclock))
-		xnclock_core_local_shot(clock, sched);
+		xnclock_core_local_shot(sched);
 	else if (clock->ops.program_local_shot)
 		clock->ops.program_local_shot(clock, sched);
 }
@@ -113,7 +120,7 @@ static inline void xnclock_remote_shot(struct xnclock *clock,
 {
 #ifdef CONFIG_SMP
 	if (likely(clock == &nkclock))
-		xnclock_core_remote_shot(clock, sched);
+		xnclock_core_remote_shot(sched);
 	else if (clock->ops.program_remote_shot)
 		clock->ops.program_remote_shot(clock, sched);
 #endif
@@ -162,6 +169,15 @@ static inline xnticks_t xnclock_read_monotonic(struct xnclock *clock)
 	return clock->ops.read_monotonic(clock);
 }
 
+static inline int xnclock_set_time(struct xnclock *clock,
+				   const struct timespec *ts)
+{
+	if (likely(clock == &nkclock))
+		return -EINVAL;
+
+	return clock->ops.set_time(clock, ts);
+}
+
 #else /* !CONFIG_XENO_OPT_EXTCLOCK */
 
 static inline void xnclock_program_shot(struct xnclock *clock,
@@ -206,11 +222,30 @@ static inline xnticks_t xnclock_read_monotonic(struct xnclock *clock)
 	return xnclock_core_read_monotonic();
 }
 
+static inline int xnclock_set_time(struct xnclock *clock,
+				   const struct timespec *ts)
+{
+	/*
+	 * There is no way to change the core clock's idea of time.
+	 */
+	return -EINVAL;
+}
+
 #endif /* !CONFIG_XENO_OPT_EXTCLOCK */
 
 static inline xnticks_t xnclock_get_offset(struct xnclock *clock)
 {
 	return clock->wallclock_offset;
+}
+
+static inline xnticks_t xnclock_get_resolution(struct xnclock *clock)
+{
+	return clock->resolution; /* ns */
+}
+
+static inline unsigned long xnclock_get_gravity(struct xnclock *clock)
+{
+	return (unsigned long)xnclock_ticks_to_ns(clock, clock->gravity);
 }
 
 static inline xnticks_t xnclock_read_realtime(struct xnclock *clock)

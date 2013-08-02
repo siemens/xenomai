@@ -30,11 +30,9 @@ struct cobalt_timer {
 	struct xntimer timerbase;
 	int overruns;
 	struct list_head link;
-	struct list_head tlink;
 	clockid_t clockid;
 	pid_t target;
 	struct cobalt_sigpending sigp;
-	struct cobalt_thread *owner;
 	struct cobalt_kqueues *owningq;
 	struct cobalt_extref extref;
 };
@@ -56,8 +54,6 @@ int cobalt_timer_getoverrun(timer_t tm);
 
 int cobalt_timer_deliver(timer_t timerid);
 
-void cobalt_timer_flush(struct cobalt_thread *zombie);
-
 void cobalt_timerq_cleanup(struct cobalt_kqueues *q);
 
 int cobalt_timer_pkg_init(void);
@@ -75,5 +71,7 @@ static inline struct cobalt_timer *cobalt_timer_by_id(timer_t timer_id)
 {
 	return &cobalt_timer_pool[(unsigned int)timer_id];
 }
+
+void cobalt_timer_handler(struct xntimer *xntimer);
 
 #endif /* !_COBALT_POSIX_TIMER_H */

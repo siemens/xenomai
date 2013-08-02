@@ -80,17 +80,16 @@ static unsigned long wd_timeout_arg = CONFIG_XENO_OPT_WATCHDOG_TIMEOUT;
 module_param_named(watchdog_timeout, wd_timeout_arg, ulong, 0644);
 MODULE_PARM_DESC(watchdog_timeout, "Watchdog timeout (s)");
 
-/*!
+/**
  * @internal
- * \fn void xnsched_watchdog_handler(struct xntimer *timer)
- * \brief Process watchdog ticks.
+ * @fn void watchdog_handler(struct xntimer *timer)
+ * @brief Process watchdog ticks.
  *
  * This internal routine handles incoming watchdog ticks to detect
  * software lockups. It kills any offending thread which is found to
  * monopolize the CPU so as to starve the Linux kernel for too long.
  */
-
-static void xnsched_watchdog_handler(struct xntimer *timer)
+static void watchdog_handler(struct xntimer *timer)
 {
 	struct xnsched *sched = xnsched_current();
 	struct xnthread *curr = sched->curr;
@@ -177,8 +176,7 @@ void xnsched_init(struct xnsched *sched, int cpu)
 	nknrthreads++;
 
 #ifdef CONFIG_XENO_OPT_WATCHDOG
-	xntimer_init_noblock(&sched->wdtimer, &nkclock,
-			     xnsched_watchdog_handler);
+	xntimer_init_noblock(&sched->wdtimer, &nkclock, watchdog_handler);
 	xntimer_set_name(&sched->wdtimer, "[watchdog]");
 	xntimer_set_priority(&sched->wdtimer, XNTIMER_LOPRIO);
 	xntimer_set_sched(&sched->wdtimer, sched);
