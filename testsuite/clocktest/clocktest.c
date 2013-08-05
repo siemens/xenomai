@@ -109,6 +109,16 @@ static void show_hostrt_diagnostics(void)
 	printf("shift            : %u\n\n", vdso->hostrt_data.shift);
 }
 
+static void show_realtime_offset(void)
+{
+	if (!xnvdso_test_feature(vdso, XNVDSO_FEAT_HOST_REALTIME)) {
+		printf("XNVDSO_FEAT_WALLCLOCK_OFFSET not available\n");
+		return;
+	}
+
+	printf("Wallclock offset : %llu\n", vdso->wallclock_offset);
+}
+
 static inline unsigned long long read_clock(clockid_t clock_id)
 {
 	struct timespec ts;
@@ -120,6 +130,8 @@ static inline unsigned long long read_clock(clockid_t clock_id)
 			clock_id);
 		if (clock_id == CLOCK_HOST_REALTIME)
 			show_hostrt_diagnostics();
+		else if (clock_id == CLOCK_REALTIME)
+			show_realtime_offset();
 
 		exit(-1);
 	}

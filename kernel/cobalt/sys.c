@@ -30,6 +30,7 @@
 #include <cobalt/kernel/select.h>
 #include <cobalt/kernel/shadow.h>
 #include <cobalt/kernel/lock.h>
+#include <cobalt/kernel/vdso.h>
 #include <cobalt/kernel/sys.h>
 
 cpumask_t nkaffinity = CPU_MASK_ALL;
@@ -53,6 +54,7 @@ static int enable_timesource(void)
 
 	nkclock.wallclock_offset =
 		xnclock_get_host_time() - xnclock_read_monotonic(&nkclock);
+	nkvdso->wallclock_offset = nkclock.wallclock_offset;
 
 	for_each_realtime_cpu(cpu) {
 		htickval = xntimer_grab_hardware(cpu);

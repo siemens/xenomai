@@ -43,11 +43,14 @@ struct xnvdso {
 
 	/* XNVDSO_FEAT_HOST_REALTIME */
 	struct xnvdso_hostrt_data hostrt_data;
+	/* XNVDSO_FEAT_WALLCLOCK_OFFSET */
+	unsigned long long wallclock_offset;
 };
 
 /* For each shared feature, add a flag below. */
 
 #define XNVDSO_FEAT_HOST_REALTIME	0x0000000000000001ULL
+#define XNVDSO_FEAT_WALLCLOCK_OFFSET	0x0000000000000002ULL
 
 static inline int xnvdso_test_feature(struct xnvdso *vdso,
 				      unsigned long long feature)

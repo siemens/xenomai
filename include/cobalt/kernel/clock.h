@@ -35,6 +35,7 @@ struct xnsched;
 struct xntimerdata;
 
 struct xnclock {
+	/** ns */
 	xnticks_t wallclock_offset;
 	/** ns */
 	xnticks_t resolution;

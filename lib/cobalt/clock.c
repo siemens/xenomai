@@ -43,7 +43,7 @@ COBALT_IMPL(int, clock_getres, (clockid_t clock_id, struct timespec *tp))
 	return -1;
 }
 
-static int __do_clock_host_realtime(struct timespec *ts, void *tzp)
+static int __do_clock_host_realtime(struct timespec *ts)
 {
 	unsigned long long now, base, mask, cycle_delta;
 	struct xnvdso_hostrt_data *hostrt_data;
@@ -89,11 +89,17 @@ COBALT_IMPL(int, clock_gettime, (clockid_t clock_id, struct timespec *tp))
 
 	switch (clock_id) {
 	case CLOCK_HOST_REALTIME:
-		ret = __do_clock_host_realtime(tp, NULL);
+		ret = __do_clock_host_realtime(tp);
 		break;
 	case CLOCK_MONOTONIC:
 	case CLOCK_MONOTONIC_RAW:
 		ns = cobalt_ticks_to_ns(__xn_rdtsc());
+		tp->tv_sec = cobalt_divrem_billion(ns, &rem);
+		tp->tv_nsec = rem;
+		return 0;
+	case CLOCK_REALTIME:
+		ns = cobalt_ticks_to_ns(__xn_rdtsc());
+		ns += vdso->wallclock_offset;
 		tp->tv_sec = cobalt_divrem_billion(ns, &rem);
 		tp->tv_nsec = rem;
 		return 0;

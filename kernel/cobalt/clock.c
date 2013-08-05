@@ -28,6 +28,7 @@
 #include <cobalt/kernel/timer.h>
 #include <cobalt/kernel/clock.h>
 #include <cobalt/kernel/arith.h>
+#include <cobalt/kernel/vdso.h>
 #include <asm/xenomai/calibration.h>
 
 unsigned long nktimerlat;
@@ -288,7 +289,7 @@ static void adjust_clock_timers(struct xnclock *clock, xnsticks_t delta)
  *
  * @param clock The clock to adjust.
  *
- * @param delta The adjustment value expressed in raw clock ticks.
+ * @param delta The adjustment value expressed in nanoseconds.
  *
  * @note This routine must be entered nklock locked, interrupts off.
  *
@@ -309,6 +310,7 @@ void xnclock_adjust(struct xnclock *clock, xnsticks_t delta)
 	xnticks_t now;
 
 	nkclock.wallclock_offset += delta;
+	nkvdso->wallclock_offset = nkclock.wallclock_offset;
 	now = xnclock_read_monotonic(clock) + nkclock.wallclock_offset;
 	adjust_clock_timers(clock, delta);
 
