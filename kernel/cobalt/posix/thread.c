@@ -1143,27 +1143,30 @@ out:
 int cobalt_thread_stat(pid_t pid,
 		       struct cobalt_threadstat __user *u_stat)
 {
-	struct global_thread_hash *gslot;
 	struct cobalt_threadstat stat;
+	struct cobalt_thread *p;
 	struct xnthread *thread;
 	xnticks_t xtime;
-	u32 hash;
 	spl_t s;
 
-	hash = jhash2((u32 *)&pid, sizeof(pid) / sizeof(u32), 0);
-
-	xnlock_get_irqsave(&nklock, s);
-
-	gslot = global_index[hash & (PTHREAD_HSLOTS - 1)];
-	while (gslot && gslot->pid != pid)
-		gslot = gslot->next;
-
-	if (gslot == NULL) {
-		xnlock_put_irqrestore(&nklock, s);
-		return -ESRCH;
+	if (pid == 0) {
+		thread = xnshadow_current();
+		if (thread == NULL)
+			return -EPERM;
+		xnlock_get_irqsave(&nklock, s);
+	} else {
+		xnlock_get_irqsave(&nklock, s);
+		p = cobalt_thread_find(pid);
+		if (p == NULL) {
+			xnlock_put_irqrestore(&nklock, s);
+			return -ESRCH;
+		}
+		thread = &p->threadbase;
 	}
 
-	thread = &gslot->thread->threadbase;
+	/*
+	 * We have to hold the nklock to keep most values consistent.
+	 */
 	stat.cpu = xnsched_cpu(thread->sched);
 	xtime = xnthread_get_exectime(thread);
 	if (xnthread_sched(thread)->curr == thread)
@@ -1176,7 +1179,6 @@ int cobalt_thread_stat(pid_t pid,
 	stat.status = xnthread_state_flags(thread);
 	stat.timeout = xnthread_get_timeout(thread,
 					    xnclock_read_monotonic(&nkclock));
-
 	xnlock_put_irqrestore(&nklock, s);
 
 	return __xn_safe_copy_to_user(u_stat, &stat, sizeof(stat));
