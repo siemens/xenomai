@@ -31,6 +31,13 @@
 #include <asm/xenomai/syscall.h>
 #include "sem_heap.h"
 #include "internal.h"
+#include "linkage.h"
+
+__attribute__ ((weak))
+int __cobalt_defer_init = 0;
+
+__attribute__ ((weak))
+int __cobalt_main_prio = -1;
 
 int __cobalt_muxid = -1;
 
@@ -42,11 +49,9 @@ int __rtdm_muxid = -1;
 
 int __rtdm_fd_start = INT_MAX;
 
-static int fork_handler_registered;
-
 static void sigill_handler(int sig)
 {
-	const char m[] = "Xenomai disabled in kernel?\n";
+	const char m[] = "no Xenomai support in kernel?\n";
 	write(2, m, sizeof(m) - 1);
 	exit(EXIT_FAILURE);
 }
@@ -114,29 +119,18 @@ static int bind_interface(void)
 
 	cobalt_init_current_keys();
 
-	__cobalt_main_tid = pthread_self();
-
 	cobalt_ticks_init(sysinfo.clockfreq);
 
 	return muxid;
 }
 
-/*
- * We give the Cobalt library constructor a high priority, so that
- * extension libraries may assume the core services are available when
- * their own constructor runs. Priorities 0-100 may be reserved by the
- * implementation on some platforms, and we may want to keep some
- * levels free for very high priority inits, so pick 200.
- */
-static __attribute__ ((constructor(200)))
-void __init_cobalt_interface(void)
+static void __init_cobalt(void);
+
+void __libcobalt_init(void)
 {
-	pthread_t tid = pthread_self();
-	struct sched_param parm;
-	int policy, muxid, ret;
 	struct xnbindreq breq;
 	struct sigaction sa;
-	const char *p;
+	int muxid, ret;
 
 	muxid = bind_interface();
 	if (muxid < 0) {
@@ -160,14 +154,46 @@ void __init_cobalt_interface(void)
 								 sc_rtdm_fdcount);
 	}
 
+	/*
+	 * Upon fork, in case the parent required init deferral, this
+	 * is the forkee's responsibility to call __libcobalt_init()
+	 * for bootstrapping the services the same way.
+	 */
+	ret = pthread_atfork(NULL, NULL, __init_cobalt);
+	if (ret) {
+		report_error("pthread_atfork: %s", strerror(ret));
+		exit(EXIT_FAILURE);
+	}
+
+	if (sizeof(struct __shadow_mutex) > sizeof(pthread_mutex_t)) {
+		report_error("sizeof(pthread_mutex_t): %d <"
+			     " sizeof(shadow_mutex): %d !",
+			     (int) sizeof(pthread_mutex_t),
+			     (int) sizeof(struct __shadow_mutex));
+		exit(EXIT_FAILURE);
+	}
+
+	cobalt_print_init();
+}
+
+static __libcobalt_ctor void __init_cobalt(void)
+{
+	pthread_t tid = pthread_self();
+	struct sched_param parm;
+	int policy, ret;
+	const char *p;
+
+	__cobalt_main_tid = tid;
+
+	if (__cobalt_defer_init)
+		return;
+
+	__libcobalt_init();
+
 	p = getenv("XENO_NOSHADOW");
 	if (p && *p)
-		goto no_shadow;
+		return;
 
-	/*
-	 * Auto-shadow the current context if we can't be invoked from
-	 * dlopen.
-	 */
 	if (mlockall(MCL_CURRENT | MCL_FUTURE)) {
 		report_error("mlockall: %s", strerror(errno));
 		exit(EXIT_FAILURE);
@@ -179,30 +205,27 @@ void __init_cobalt_interface(void)
 		exit(EXIT_FAILURE);
 	}
 
+	/*
+	 * Switch the main thread to a Xenomai shadow.
+	 * __cobalt_main_prio might have been overriden by
+	 * some compilation unit which has been linked in, to force
+	 * the scheduling parameters. Otherwise, the current policy
+	 * and priority are reused, for declaring the thread to the
+	 * Xenomai scheduler.
+	 *
+	 * SCHED_FIFO is assumed for __cobalt_main_prio > 0.
+	 */
+	if (__cobalt_main_prio > 0) {
+		policy = SCHED_FIFO;
+		parm.sched_priority = __cobalt_main_prio;
+	} else if (__cobalt_main_prio == 0) {
+		policy = SCHED_OTHER;
+		parm.sched_priority = 0;
+	}
+	
 	ret = __RT(pthread_setschedparam(tid, policy, &parm));
 	if (ret) {
 		report_error("pthread_setschedparam: %s", strerror(ret));
 		exit(EXIT_FAILURE);
 	}
-
-no_shadow:
-	if (fork_handler_registered)
-		return;
-
-	ret = pthread_atfork(NULL, NULL, &__init_cobalt_interface);
-	if (ret) {
-		report_error("pthread_atfork: %s", strerror(ret));
-		exit(EXIT_FAILURE);
-	}
-	fork_handler_registered = 1;
-
-	if (sizeof(struct __shadow_mutex) > sizeof(pthread_mutex_t)) {
-		report_error("sizeof(pthread_mutex_t): %d <"
-			     " sizeof(shadow_mutex): %d !",
-			     (int) sizeof(pthread_mutex_t),
-			     (int) sizeof(struct __shadow_mutex));
-		exit(EXIT_FAILURE);
-	}
-
-	cobalt_print_init();
 }
