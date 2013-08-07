@@ -35,7 +35,6 @@
 #include <cobalt/kernel/select.h>
 #include <cobalt/kernel/shadow.h>
 #include <cobalt/kernel/lock.h>
-#include <cobalt/kernel/sys.h>
 #include <cobalt/kernel/thread.h>
 #include <asm/xenomai/thread.h>
 

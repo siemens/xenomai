@@ -1,6 +1,5 @@
 #include <linux/vmalloc.h>
 #include <linux/semaphore.h>
-#include <cobalt/kernel/sys.h>
 #include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/synch.h>
 #include <cobalt/kernel/thread.h>

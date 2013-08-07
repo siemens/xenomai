@@ -16,7 +16,6 @@ xenomai-y :=	apc.o		\
 		select.o	\
 		shadow.o	\
 		synch.o		\
-		sys.o		\
 		thread.o	\
 		timer.o
 

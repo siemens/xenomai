@@ -72,6 +72,65 @@ EXPORT_SYMBOL_GPL(__xnsys_global_ppd);
 #define boot_notice ""
 #endif
 
+static void disable_timesource(void)
+{
+	int cpu;
+
+	trace_mark(xn_nucleus, disable_timesource, MARK_NOARGS);
+
+	/*
+	 * We must not hold the nklock while stopping the hardware
+	 * timer, since this could cause deadlock situations to arise
+	 * on SMP systems.
+	 */
+	for_each_realtime_cpu(cpu)
+		xntimer_release_hardware(cpu);
+
+#ifdef CONFIG_XENO_OPT_STATS
+	xnintr_destroy(&nktimer);
+#endif /* CONFIG_XENO_OPT_STATS */
+}
+
+static void flush_heap(struct xnheap *heap,
+		       void *extaddr, unsigned long extsize, void *cookie)
+{
+	free_pages_exact(extaddr, extsize);
+}
+
+static void sys_shutdown(void)
+{
+	struct xnthread *thread, *tmp;
+	struct xnsched *sched;
+	int cpu;
+	spl_t s;
+
+	disable_timesource();
+	xnshadow_release_events();
+#ifdef CONFIG_SMP
+	ipipe_free_irq(&xnarch_machdata.domain, IPIPE_RESCHEDULE_IPI);
+#endif
+
+	xnlock_get_irqsave(&nklock, s);
+
+	/* NOTE: &nkthreadq can't be empty (root thread(s)). */
+	list_for_each_entry_safe(thread, tmp, &nkthreadq, glink) {
+		if (!xnthread_test_state(thread, XNROOT))
+			xnthread_cancel(thread);
+	}
+
+	xnsched_run();
+
+	for_each_realtime_cpu(cpu) {
+		sched = xnsched_struct(cpu);
+		xnsched_destroy(sched);
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	xnregistry_cleanup();
+	xnheap_destroy(&kheap, flush_heap, NULL);
+}
+
 static int __init mach_setup(void)
 {
 	int ret, virq, __maybe_unused cpu;
@@ -85,7 +144,7 @@ static int __init mach_setup(void)
 	}
 #endif /* CONFIG_SMP */
 
-	ret = ipipe_select_timers(&xnsys_cpus);
+	ret = ipipe_select_timers(&xnsched_cpus);
 	if (ret < 0)
 		return ret;
 
@@ -169,6 +228,116 @@ static __init void mach_cleanup(void)
 	xnclock_cleanup();
 }
 
+static __init int enable_timesource(void)
+{
+	struct xnsched *sched;
+	int htickval, cpu;
+	spl_t s;
+
+	trace_mark(xn_nucleus, enable_timesource, MARK_NOARGS);
+
+#ifdef CONFIG_XENO_OPT_STATS
+	/*
+	 * Only for statistical purpose, the timer interrupt is
+	 * attached by xntimer_grab_hardware().
+	 */
+	xnintr_init(&nktimer, "[timer]",
+		    per_cpu(ipipe_percpu.hrtimer_irq, 0), NULL, NULL, 0);
+#endif /* CONFIG_XENO_OPT_STATS */
+
+	nkclock.wallclock_offset =
+		xnclock_get_host_time() - xnclock_read_monotonic(&nkclock);
+	nkvdso->wallclock_offset = nkclock.wallclock_offset;
+
+	for_each_realtime_cpu(cpu) {
+		htickval = xntimer_grab_hardware(cpu);
+		if (htickval < 0) {
+			while (--cpu >= 0)
+				xntimer_release_hardware(cpu);
+
+			return htickval;
+		}
+
+		xnlock_get_irqsave(&nklock, s);
+
+		/* If the current tick device for the target CPU is
+		 * periodic, we won't be called back for host tick
+		 * emulation. Therefore, we need to start a periodic
+		 * nucleus timer which will emulate the ticking for
+		 * that CPU, since we are going to hijack the hw clock
+		 * chip for managing our own system timer.
+		 *
+		 * CAUTION:
+		 *
+		 * - nucleus timers may be started only _after_ the hw
+		 * timer has been set up for the target CPU through a
+		 * call to xntimer_grab_hardware().
+		 *
+		 * - we don't compensate for the elapsed portion of
+		 * the current host tick, since we cannot get this
+		 * information easily for all CPUs except the current
+		 * one, and also because of the declining relevance of
+		 * the jiffies clocksource anyway.
+		 *
+		 * - we must not hold the nklock across calls to
+		 * xntimer_grab_hardware().
+		 */
+
+		sched = xnsched_struct(cpu);
+		if (htickval > 1)
+			xntimer_start(&sched->htimer, htickval, htickval, XN_RELATIVE);
+		else if (htickval == 1)
+			xntimer_start(&sched->htimer, 0, 0, XN_RELATIVE);
+
+#if defined(CONFIG_XENO_OPT_WATCHDOG)
+		xntimer_start(&sched->wdtimer, 1000000000UL, 1000000000UL, XN_RELATIVE);
+		xnsched_reset_watchdog(sched);
+#endif /* CONFIG_XENO_OPT_WATCHDOG */
+		xnlock_put_irqrestore(&nklock, s);
+	}
+
+	return 0;
+}
+
+static __init int sys_init(void)
+{
+	struct xnsched *sched;
+	void *heapaddr;
+	int ret, cpu;
+
+	heapaddr = alloc_pages_exact(CONFIG_XENO_OPT_SYS_HEAPSZ * 1024, GFP_KERNEL);
+	if (heapaddr == NULL ||
+	    xnheap_init(&kheap, heapaddr, CONFIG_XENO_OPT_SYS_HEAPSZ * 1024,
+			XNHEAP_PAGE_SIZE) != 0) {
+		return -ENOMEM;
+	}
+	xnheap_set_label(&kheap, "main heap");
+
+	for_each_realtime_cpu(cpu) {
+		sched = &per_cpu(nksched, cpu);
+		xnsched_init(sched, cpu);
+	}
+
+#ifdef CONFIG_SMP
+	ipipe_request_irq(&xnarch_machdata.domain,
+			  IPIPE_RESCHEDULE_IPI,
+			  (ipipe_irq_handler_t)__xnsched_run_handler,
+			  NULL, NULL);
+#endif
+
+	xnregistry_init();
+
+	nkpanic = __xnsys_fatal;
+	smp_wmb();
+	xnshadow_grab_events();
+
+	ret = enable_timesource();
+	if (ret)
+		sys_shutdown();
+
+	return ret;
+}
+
 static int __init xenomai_init(void)
 {
 	int ret;
@@ -206,7 +375,7 @@ static int __init xenomai_init(void)
 	if (ret)
 		goto cleanup_select;
 
-	ret = xnsys_init();
+	ret = sys_init();
 	if (ret)
 		goto cleanup_shadow;
 
@@ -218,7 +387,7 @@ static int __init xenomai_init(void)
 	if (ret)
 		goto cleanup_rtdm;
 
-	cpus_and(nkaffinity, nkaffinity, xnsys_cpus);
+	cpus_and(nkaffinity, nkaffinity, xnsched_cpus);
 
 	printk(XENO_INFO "Cobalt v%s enabled%s\n",
 	       XENO_VERSION_STRING, boot_notice);
@@ -228,7 +397,7 @@ static int __init xenomai_init(void)
 cleanup_rtdm:
 	rtdm_cleanup();
 cleanup_sys:
-	xnsys_shutdown();
+	sys_shutdown();
 cleanup_shadow:
 	xnshadow_cleanup();
 cleanup_select:

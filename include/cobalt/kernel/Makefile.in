@@ -272,7 +272,6 @@ noinst_HEADERS = \
 	shadow.h	\
 	stat.h		\
 	synch.h		\
-	sys.h		\
 	thread.h	\
 	timer.h		\
 	trace.h		\

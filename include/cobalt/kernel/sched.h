@@ -36,6 +36,7 @@
 #include <cobalt/kernel/sched-sporadic.h>
 #include <cobalt/kernel/vfile.h>
 #include <cobalt/kernel/assert.h>
+#include <asm/xenomai/machine.h>
 
 /* Sched status flags */
 #define XNRESCHED	0x10000000	/* Needs rescheduling */
@@ -111,6 +112,8 @@ struct xnsched {
 };
 
 DECLARE_PER_CPU(struct xnsched, nksched);
+
+extern cpumask_t nkaffinity;
 
 extern struct list_head nkthreadq;
 
@@ -200,6 +203,7 @@ static inline void xnsched_set_self_resched(struct xnsched *sched)
 
 /* Set resched flag for the given scheduler. */
 #ifdef CONFIG_SMP
+
 static inline void xnsched_set_resched(struct xnsched *sched)
 {
 	struct xnsched *current_sched = xnsched_current();
@@ -212,12 +216,33 @@ static inline void xnsched_set_resched(struct xnsched *sched)
 		current_sched->status |= XNRESCHED;
 	}
 }
+
+#define xnsched_cpus xnarch_machdata.supported_cpus
+
+static inline int xnsched_supported_cpu(int cpu)
+{
+	return cpu_isset(cpu, xnsched_cpus);
+}
+
 #else /* !CONFIG_SMP */
+
 static inline void xnsched_set_resched(struct xnsched *sched)
 {
 	xnsched_set_self_resched(sched);
 }
+
+#define xnsched_cpus CPU_MASK_ALL
+
+static inline int xnsched_supported_cpu(int cpu)
+{
+	return 1;
+}
+
 #endif /* !CONFIG_SMP */
+
+#define for_each_realtime_cpu(cpu)		\
+	for_each_online_cpu(cpu)		\
+		if (xnsched_supported_cpu(cpu))	\
 
 void __xnsched_run(struct xnsched *sched);
 

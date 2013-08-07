@@ -25,11 +25,13 @@
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/shadow.h>
 #include <cobalt/kernel/arith.h>
-#include <cobalt/kernel/sys.h>
 #include <asm/xenomai/thread.h>
 
 DEFINE_PER_CPU(struct xnsched, nksched);
 EXPORT_PER_CPU_SYMBOL_GPL(nksched);
+
+cpumask_t nkaffinity = CPU_MASK_ALL;
+EXPORT_SYMBOL_GPL(nkaffinity);
 
 LIST_HEAD(nkthreadq);
 
@@ -1074,7 +1076,7 @@ scan_irqs:
 		return VFILE_SEQ_SKIP;
 	}
 
-	if (!xnsys_supported_cpu(priv->intr_it.cpu))
+	if (!xnsched_supported_cpu(priv->intr_it.cpu))
 		return VFILE_SEQ_SKIP;
 
 	p->cpu = priv->intr_it.cpu;

@@ -1107,7 +1107,7 @@ static ssize_t affinity_vfile_store(struct xnvfile_input *input)
 		if (val & 1)
 			cpu_set(cpu, new_affinity);
 
-	cpus_and(nkaffinity, new_affinity, xnsys_cpus);
+	cpus_and(nkaffinity, new_affinity, xnsched_cpus);
 
 	return ret;
 }

@@ -57,7 +57,6 @@
 #include <cobalt/kernel/stat.h>
 #include <cobalt/kernel/ppd.h>
 #include <cobalt/kernel/vdso.h>
-#include <cobalt/kernel/sys.h>
 #include <asm/xenomai/features.h>
 #include <asm/xenomai/syscall.h>
 #include <asm/xenomai/thread.h>
@@ -2542,5 +2541,12 @@ void xnshadow_cleanup(void)
 
 	xndebug_cleanup();
 }
+
+/* Xenomai's generic personality. */
+struct xnpersonality xenomai_personality = {
+	.name = "xenomai",
+	/* .magic = 0 */
+};
+EXPORT_SYMBOL_GPL(xenomai_personality);
 
 /*@}*/
