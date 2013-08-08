@@ -28,19 +28,8 @@
 #include <linux/unistd.h>
 #include <copperplate/clockobj.h>
 #include <copperplate/threadobj.h>
+#include <copperplate/init.h>
 #include "internal.h"
-
-struct coppernode __node_info = {
-	.mem_pool = 1024 * 1024, /* Default, 1Mb. */
-	.session_label = "anon",
-	.registry_root = "/mnt/xenomai",
-	.no_mlock = 0,
-	.no_registry = 0,
-	.reset_session = 0,
-	.silent_mode = 0,
-};
-
-pid_t __node_id;
 
 pthread_mutex_t __printlock;
 

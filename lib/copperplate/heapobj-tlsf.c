@@ -21,6 +21,7 @@
 #include <stdint.h>
 #include "copperplate/heapobj.h"
 #include "copperplate/debug.h"
+#include "copperplate/init.h"
 #include "tlsf/tlsf.h"
 #include "internal.h"
 

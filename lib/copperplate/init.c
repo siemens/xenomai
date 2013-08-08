@@ -39,6 +39,18 @@
 #include "copperplate/debug.h"
 #include "internal.h"
 
+struct coppernode __node_info = {
+	.mem_pool = 1024 * 1024, /* Default, 1Mb. */
+	.session_label = "anon",
+	.registry_root = "/mnt/xenomai",
+	.no_mlock = 0,
+	.no_registry = 0,
+	.reset_session = 0,
+	.silent_mode = 0,
+};
+
+pid_t __node_id;
+
 struct timespec __init_date;
 
 static DEFINE_PRIVATE_LIST(skins);
@@ -182,8 +194,8 @@ static int collect_cpu_affinity(const char *cpu_list)
 	ret = sched_setaffinity(0, sizeof(__node_info.cpu_affinity),
 				&__node_info.cpu_affinity);
 	if (ret) {
-		warning("no valid CPU in affinity list '%s'", cpu_list);
-		return __bt(-ret);
+		warning("invalid CPU in affinity list '%s'", cpu_list);
+		return __bt(-errno);
 	}
 
 	return 0;

@@ -4,6 +4,7 @@
 #include "copperplate/traceobj.h"
 #include "copperplate/threadobj.h"
 #include "copperplate/heapobj.h"
+#include "copperplate/init.h"
 #include "internal.h"
 
 struct tracemark {

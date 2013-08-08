@@ -20,8 +20,20 @@
 #define _COPPERPLATE_INIT_H
 
 #include <stdarg.h>
+#include <sched.h>
 #include <copperplate/trace.h>
 #include <copperplate/list.h>
+
+struct coppernode {
+	unsigned int mem_pool;
+	const char *session_label;
+	const char *registry_root;
+	cpu_set_t cpu_affinity;
+	int no_mlock;
+	int no_registry;
+	int reset_session;
+	int silent_mode;
+};
 
 struct option;
 
@@ -55,5 +67,7 @@ const char *symerror(int errnum);
 #ifdef __cplusplus
 }
 #endif
+
+extern struct coppernode __node_info;
 
 #endif /* _COPPERPLATE_INIT_H */

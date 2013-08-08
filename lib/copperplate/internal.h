@@ -28,18 +28,6 @@
 #include <copperplate/list.h>
 #include <copperplate/heapobj.h>
 
-struct coppernode {
-	unsigned int mem_pool;
-	const char *session_label;
-	const char *registry_root;
-	cpu_set_t cpu_affinity;
-	/* No bitfield below, we have to take address of thoses. */
-	int no_mlock;
-	int no_registry;
-	int reset_session;
-	int silent_mode;
-};
-
 #define HOBJ_MINLOG2    3
 #define HOBJ_MAXLOG2    22     /* Must hold pagemap::bcount objects */
 #define HOBJ_NBUCKETS   (HOBJ_MAXLOG2 - HOBJ_MINLOG2 + 2)
@@ -74,8 +62,6 @@ struct corethread_attributes {
 };
 
 extern pid_t __node_id;
-
-extern struct coppernode __node_info;
 
 extern struct timespec __init_date;
 

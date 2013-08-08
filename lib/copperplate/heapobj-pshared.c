@@ -39,6 +39,7 @@
 #include "copperplate/hash.h"
 #include "copperplate/heapobj.h"
 #include "copperplate/debug.h"
+#include "copperplate/init.h"
 #include "internal.h"
 
 #define HOBJ_PAGE_SHIFT	9	/* 2^9 => 512 bytes */

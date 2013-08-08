@@ -42,6 +42,7 @@
 #include "copperplate/lock.h"
 #include "copperplate/hash.h"
 #include "copperplate/debug.h"
+#include "copperplate/init.h"
 #include "internal.h"
 
 /*
