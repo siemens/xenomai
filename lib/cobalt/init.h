@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-#ifndef _LIB_COBALT_LINKAGE_H
-#define _LIB_COBALT_LINKAGE_H
+#ifndef _LIB_COBALT_INIT_H
+#define _LIB_COBALT_INIT_H
 
 /*
  * We give the Cobalt library constructor a high priority, so that
@@ -33,4 +33,6 @@ void __libcobalt_init(void);
 
 extern int __cobalt_defer_init;
 
-#endif /* _LIB_COBALT_LINKAGE_H */
+extern int __cobalt_main_prio;
+
+#endif /* _LIB_COBALT_INIT_H */

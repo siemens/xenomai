@@ -2,8 +2,8 @@ pkgconfigdir = $(libdir)/pkgconfig
 
 noinst_HEADERS =	\
 	current.h	\
-	linkage.h	\
 	sem_heap.h	\
+	init.h		\
 	internal.h
 
 lib_LTLIBRARIES = libcobalt.la

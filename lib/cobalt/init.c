@@ -31,7 +31,7 @@
 #include <asm/xenomai/syscall.h>
 #include "sem_heap.h"
 #include "internal.h"
-#include "linkage.h"
+#include "init.h"
 
 __attribute__ ((weak))
 int __cobalt_defer_init = 0;
