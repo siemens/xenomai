@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <copperplate/init.h>
 #include <copperplate/traceobj.h>
 #include <psos/psos.h>
 
@@ -14,8 +13,6 @@ int main(int argc, char *const argv[])
 {
 	unsigned long date, time, ticks;
 	int ret, tries = 0;
-
-	copperplate_init(&argc, &argv);
 
 	traceobj_init(&trobj, argv[0], 0);
 

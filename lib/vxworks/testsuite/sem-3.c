@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <copperplate/init.h>
 #include <copperplate/traceobj.h>
 #include <vxworks/errnoLib.h>
 #include <vxworks/taskLib.h>
@@ -48,8 +47,6 @@ int main(int argc, char *const argv[])
 {
 	TASK_ID tid;
 	int ret;
-
-	copperplate_init(&argc, &argv);
 
 	traceobj_init(&trobj, argv[0], sizeof(tseq) / sizeof(int));
 

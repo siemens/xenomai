@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <copperplate/init.h>
 #include <copperplate/traceobj.h>
 #include <alchemy/task.h>
 
@@ -90,8 +89,6 @@ static void foreground_task_b(void *arg)
 int main(int argc, char *const argv[])
 {
 	int ret;
-
-	copperplate_init(&argc, &argv);
 
 	traceobj_init(&trobj, argv[0], 0);
 

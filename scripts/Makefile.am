@@ -6,10 +6,15 @@ install-exec-local:
 	   $(srcdir)/postinstall.sh ; \
 	fi
 
-EXTRA_DIST = \
-	bootstrap \
-	prepare-kernel.sh \
-	wrap-link.sh \
-	Kconfig.frag \
-	$(wildcard postinstall.sh) \
+install-data-local:
+	$(mkinstalldirs) $(DESTDIR)$(libdir)
+	$(INSTALL_DATA) $(srcdir)/dynlist.ld $(DESTDIR)$(libdir)
+
+EXTRA_DIST =				\
+	bootstrap			\
+	prepare-kernel.sh		\
+	wrap-link.sh			\
+	dynlist.ld			\
+	Kconfig.frag			\
+	$(wildcard postinstall.sh)	\
 	histo.gp

@@ -473,7 +473,14 @@ void copperplate_init(int *argcp, char *const **argvp)
 	int ret, largc, base_opt_start;
 	struct copperskin *skin;
 	struct option *options;
+	static int init_done;
 	char **uargv;
+
+	if (init_done) {
+		warning("duplicate call to %s() ignored", __func__);
+		warning("(xeno-config --no-auto-init disables implicit call)");
+		return;
+	}
 
 	__RT(clock_gettime(CLOCK_COPPERPLATE, &__init_date));
 
@@ -592,6 +599,7 @@ void copperplate_init(int *argcp, char *const **argvp)
 	 * bail out.
 	 */
 	*argvp = uargv;
+	init_done = 1;
 
 	return;
 fail:

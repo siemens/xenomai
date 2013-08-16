@@ -54,6 +54,8 @@ struct copperskin {
 extern "C" {
 #endif
 
+int copperplate_main(int argc, char *const argv[]);
+
 void copperplate_init(int *argcp, char *const **argvp);
 
 void copperplate_register_skin(struct copperskin *p);

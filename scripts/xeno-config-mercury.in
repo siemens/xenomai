@@ -17,6 +17,8 @@ XENO_INCLUDE_DIR="${staging}${includedir}"
 XENO_BASE_CFLAGS="-I$XENO_INCLUDE_DIR/mercury -I$XENO_INCLUDE_DIR @XENO_USER_APP_CFLAGS@ -D__MERCURY__"
 XENO_BASE_LDFLAGS="-L${staging}${libdir} @XENO_USER_APP_LDFLAGS@ -lcopperplate -lpthread -lrt"
 XENO_LIBRARY_DIR="${staging}${libdir}"
+WRAP_MAIN_OPT="-Wl,--wrap=main -Wl,--dynamic-list=${XENO_LIBRARY_DIR}/dynlist.ld"
+WRAP_MAIN="$WRAP_MAIN_OPT"
 
 unset prefix exec_prefix libdir datadir datarootdir pkgdatadir includedir skin_list
 
@@ -33,6 +35,7 @@ Options :
         --arch
         --prefix
         --[skin=]vxworks|psos|alchemy
+        --auto-init|no-auto-init
         --cflags
         --ldflags
         --lib*-dir,--libdir,--user-libdir
@@ -76,6 +79,12 @@ while test $# -gt 0; do
         --prefix)
             echo $XENO_PREFIX
             ;;
+	--no-auto-init)
+	    WRAP_MAIN=
+	    ;;
+	--auto-init)
+	    WRAP_MAIN="$WRAP_MAIN_OPT"
+	    ;;
         --lib*-dir|--libdir|--user-libdir)
             echo $XENO_LIBRARY_DIR
             ;;
@@ -113,7 +122,7 @@ while test $# -gt 0; do
 		echo "no skin specified, missing --skin before --ldflags" 1>&2
 		exit 1
 	    fi
-	    ldflags="$XENO_BASE_LDFLAGS"
+	    ldflags="$WRAP_MAIN $XENO_BASE_LDFLAGS"
 	    for skin in $skin_list; do
 		case "$skin" in
 		    vxworks|psos|alchemy)

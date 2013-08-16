@@ -117,9 +117,10 @@ LTLIBRARIES = $(lib_LTLIBRARIES) $(noinst_LTLIBRARIES)
 libcopperplate_la_DEPENDENCIES = libversion.la $(am__append_3) \
 	$(am__append_7)
 am__libcopperplate_la_SOURCES_DIST = clockobj.c cluster.c eventobj.c \
-	hash.c init.c internal.c internal.h syncobj.c semobj.c \
-	threadobj.c timerobj.c traceobj.c notifier.c debug.c \
-	heapobj-pshared.c reference.c heapobj-tlsf.c heapobj-malloc.c
+	hash.c init.c internal.c internal.h main.c syncobj.c semobj.c \
+	threadobj.c timerobj.c traceobj.c wrappers.c notifier.c \
+	debug.c heapobj-pshared.c reference.c heapobj-tlsf.c \
+	heapobj-malloc.c
 @XENO_COBALT_FALSE@am__objects_1 = libcopperplate_la-notifier.lo
 @XENO_DEBUG_TRUE@am__objects_2 = libcopperplate_la-debug.lo
 @XENO_PSHARED_TRUE@am__objects_3 =  \
@@ -130,9 +131,10 @@ am__libcopperplate_la_SOURCES_DIST = clockobj.c cluster.c eventobj.c \
 am_libcopperplate_la_OBJECTS = libcopperplate_la-clockobj.lo \
 	libcopperplate_la-cluster.lo libcopperplate_la-eventobj.lo \
 	libcopperplate_la-hash.lo libcopperplate_la-init.lo \
-	libcopperplate_la-internal.lo libcopperplate_la-syncobj.lo \
-	libcopperplate_la-semobj.lo libcopperplate_la-threadobj.lo \
-	libcopperplate_la-timerobj.lo libcopperplate_la-traceobj.lo \
+	libcopperplate_la-internal.lo libcopperplate_la-main.lo \
+	libcopperplate_la-syncobj.lo libcopperplate_la-semobj.lo \
+	libcopperplate_la-threadobj.lo libcopperplate_la-timerobj.lo \
+	libcopperplate_la-traceobj.lo libcopperplate_la-wrappers.lo \
 	$(am__objects_1) $(am__objects_2) $(am__objects_3) \
 	$(am__objects_4) $(am__objects_5)
 libcopperplate_la_OBJECTS = $(am_libcopperplate_la_OBJECTS)
@@ -387,9 +389,10 @@ top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libcopperplate.la
 libcopperplate_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 0:0:0
 libcopperplate_la_SOURCES = clockobj.c cluster.c eventobj.c hash.c \
-	init.c internal.c internal.h syncobj.c semobj.c threadobj.c \
-	timerobj.c traceobj.c $(am__append_2) $(am__append_5) \
-	$(am__append_6) $(am__append_9) $(am__append_10)
+	init.c internal.c internal.h main.c syncobj.c semobj.c \
+	threadobj.c timerobj.c traceobj.c wrappers.c $(am__append_2) \
+	$(am__append_5) $(am__append_6) $(am__append_9) \
+	$(am__append_10)
 libcopperplate_la_CPPFLAGS = @XENO_USER_CFLAGS@ -I$(top_srcdir) \
 	-I$(top_srcdir)/include $(am__append_1)
 libcopperplate_la_LIBADD = libversion.la $(am__append_3) \
@@ -519,6 +522,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-heapobj-tlsf.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-init.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-internal.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-main.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-notifier.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-reference.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-semobj.Plo@am__quote@
@@ -526,6 +530,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-threadobj.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-timerobj.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-traceobj.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-wrappers.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libregistry_la-registry.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libtlsf_la-tlsf.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libversion_la-version.Plo@am__quote@
@@ -593,6 +598,13 @@ libcopperplate_la-internal.lo: internal.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcopperplate_la-internal.lo `test -f 'internal.c' || echo '$(srcdir)/'`internal.c
 
+libcopperplate_la-main.lo: main.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcopperplate_la-main.lo -MD -MP -MF $(DEPDIR)/libcopperplate_la-main.Tpo -c -o libcopperplate_la-main.lo `test -f 'main.c' || echo '$(srcdir)/'`main.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libcopperplate_la-main.Tpo $(DEPDIR)/libcopperplate_la-main.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='main.c' object='libcopperplate_la-main.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcopperplate_la-main.lo `test -f 'main.c' || echo '$(srcdir)/'`main.c
+
 libcopperplate_la-syncobj.lo: syncobj.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcopperplate_la-syncobj.lo -MD -MP -MF $(DEPDIR)/libcopperplate_la-syncobj.Tpo -c -o libcopperplate_la-syncobj.lo `test -f 'syncobj.c' || echo '$(srcdir)/'`syncobj.c
 @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libcopperplate_la-syncobj.Tpo $(DEPDIR)/libcopperplate_la-syncobj.Plo
@@ -627,6 +639,13 @@ libcopperplate_la-traceobj.lo: traceobj.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='traceobj.c' object='libcopperplate_la-traceobj.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcopperplate_la-traceobj.lo `test -f 'traceobj.c' || echo '$(srcdir)/'`traceobj.c
+
+libcopperplate_la-wrappers.lo: wrappers.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcopperplate_la-wrappers.lo -MD -MP -MF $(DEPDIR)/libcopperplate_la-wrappers.Tpo -c -o libcopperplate_la-wrappers.lo `test -f 'wrappers.c' || echo '$(srcdir)/'`wrappers.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libcopperplate_la-wrappers.Tpo $(DEPDIR)/libcopperplate_la-wrappers.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='wrappers.c' object='libcopperplate_la-wrappers.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcopperplate_la-wrappers.lo `test -f 'wrappers.c' || echo '$(srcdir)/'`wrappers.c
 
 libcopperplate_la-notifier.lo: notifier.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcopperplate_la-notifier.lo -MD -MP -MF $(DEPDIR)/libcopperplate_la-notifier.Tpo -c -o libcopperplate_la-notifier.lo `test -f 'notifier.c' || echo '$(srcdir)/'`notifier.c

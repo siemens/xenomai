@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <xeno_config.h>
-#include <copperplate/init.h>
 #include <copperplate/traceobj.h>
 #include <psos/psos.h>
 
@@ -83,8 +82,6 @@ int main(int argc, char *const argv[])
 {
 	u_long args[] = { 1, 2, 3, 4 }, tid, delta, max;
 	int ret;
-
-	copperplate_init(&argc, &argv);
 
 	traceobj_init(&trobj, argv[0], sizeof(tseq) / sizeof(int));
 

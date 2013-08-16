@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <copperplate/init.h>
 #include <copperplate/traceobj.h>
 #include <vxworks/errnoLib.h>
 #include <vxworks/taskLib.h>
@@ -33,8 +32,6 @@ static void windTask(long a1, long a2, long a3, long a4, long a5,
 int main(int argc, char *const argv[])
 {
 	TASK_ID tid;
-
-	copperplate_init(&argc, &argv);
 
 	traceobj_init(&trobj, argv[0], sizeof(tseq) / sizeof(int));
 

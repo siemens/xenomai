@@ -18,6 +18,8 @@ XENO_BASE_CFLAGS="-I$XENO_INCLUDE_DIR/cobalt -I$XENO_INCLUDE_DIR @XENO_USER_APP_
 XENO_POSIX_LDFLAGS="-L${staging}${libdir} -lcobalt -lpthread -lrt @XENO_USER_APP_LDFLAGS@"
 XENO_LIBRARY_DIR="${staging}${libdir}"
 LD_FILE_OPTION="@LD_FILE_OPTION@"
+WRAP_MAIN_OPT="-Wl,--wrap=main -Wl,--dynamic-list=${XENO_LIBRARY_DIR}/dynlist.ld"
+WRAP_MAIN="$WRAP_MAIN_OPT"
 
 unset prefix exec_prefix libdir datadir datarootdir pkgdatadir includedir skin_list
 
@@ -32,7 +34,7 @@ dump_wrappers()
       echo -n "-Wl,@${XENO_LIBRARY_DIR}/${file}"
    else
       wrappers=`while read wrap_option symbol; do	\
-	      echo -n "-Wl,$wrap_option,$symbol " ; \
+	      echo -n "-Wl,$wrap_option=$symbol " ; \
       done < ${XENO_LIBRARY_DIR}/${file}`
       echo -n "$wrappers"
    fi
@@ -51,6 +53,7 @@ Options :
         --arch
         --prefix
         --[skin=]posix/cobalt|vxworks|psos|alchemy
+        --auto-init|no-auto-init
         --cflags
         --ldflags
         --lib*-dir,--libdir,--user-libdir
@@ -97,6 +100,12 @@ while test $# -gt 0; do
         --prefix)
             echo $XENO_PREFIX
             ;;
+	--no-auto-init)
+	    WRAP_MAIN=
+	    ;;
+	--auto-init)
+	    WRAP_MAIN="$WRAP_MAIN_OPT"
+	    ;;
         --lib*-dir|--libdir|--user-libdir)
             echo $XENO_LIBRARY_DIR
             ;;
@@ -143,7 +152,7 @@ while test $# -gt 0; do
 		    posix|cobalt)
 			;;
 		    vxworks|psos|alchemy)
-			copperplate=-lcopperplate
+			copperplate="$WRAP_MAIN -lcopperplate"
 			ldflags="$ldflags -l$skin"
 			if [ -r ${XENO_LIBRARY_DIR}/${skin}.wrappers ]; then
 			    ldflags=" `dump_wrappers ${skin}.wrappers` $ldflags"

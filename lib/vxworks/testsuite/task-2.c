@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <copperplate/init.h>
 #include <copperplate/traceobj.h>
 #include <vxworks/errnoLib.h>
 #include <vxworks/taskLib.h>
@@ -75,8 +74,6 @@ static void foregroundTask(long a1, long a2, long a3, long a4, long a5,
 int main(int argc, char *const argv[])
 {
 	int ret;
-
-	copperplate_init(&argc, &argv);
 
 	traceobj_init(&trobj, argv[0], sizeof(tseq) / sizeof(int));
 

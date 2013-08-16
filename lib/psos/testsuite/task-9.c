@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <copperplate/init.h>
 #include <copperplate/traceobj.h>
 #include <psos/psos.h>
 
@@ -37,8 +36,6 @@ static void root_task(u_long a0, u_long a1, u_long a2, u_long a3)
 int main(int argc, char *const argv[])
 {
 	u_long args[] = { 1, 2, 3, 4 }, ret, tid;
-
-	copperplate_init(&argc, &argv);
 
 	traceobj_init(&trobj, argv[0], 0);
 
