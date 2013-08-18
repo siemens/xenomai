@@ -149,25 +149,25 @@ void xnsched_init(struct xnsched *sched, int cpu)
 	sched->lflags = 0;
 	sched->inesting = 0;
 	sched->curr = &sched->rootcb;
-	/*
-	 * No direct handler here since the host timer processing is
-	 * postponed to xnintr_irq_handler(), as part of the interrupt
-	 * exit code.
-	 */
-	xntimer_init(&sched->htimer, &nkclock, NULL);
-	xntimer_set_priority(&sched->htimer, XNTIMER_LOPRIO);
-	xntimer_set_name(&sched->htimer, htimer_name);
-	xntimer_set_sched(&sched->htimer, sched);
 
 	attr.flags = XNROOT | XNFPU;
 	attr.name = root_name;
 	attr.personality = &xenomai_personality;
+	attr.affinity = cpumask_of_cpu(cpu);
 	param.idle.prio = XNSCHED_IDLE_PRIO;
 
 	__xnthread_init(&sched->rootcb, &attr,
 			sched, &xnsched_class_idle, &param);
 
-	sched->rootcb.affinity = cpumask_of_cpu(cpu);
+	/*
+	 * No direct handler here since the host timer processing is
+	 * postponed to xnintr_irq_handler(), as part of the interrupt
+	 * exit code.
+	 */
+	xntimer_init(&sched->htimer, &nkclock, NULL, &sched->rootcb);
+	xntimer_set_priority(&sched->htimer, XNTIMER_LOPRIO);
+	xntimer_set_name(&sched->htimer, htimer_name);
+
 	xnstat_exectime_set_current(sched, &sched->rootcb.stat.account);
 #ifdef CONFIG_XENO_HW_FPU
 	sched->fpuholder = &sched->rootcb;
@@ -178,10 +178,10 @@ void xnsched_init(struct xnsched *sched, int cpu)
 	nknrthreads++;
 
 #ifdef CONFIG_XENO_OPT_WATCHDOG
-	xntimer_init_noblock(&sched->wdtimer, &nkclock, watchdog_handler);
+	xntimer_init_noblock(&sched->wdtimer, &nkclock,
+			     watchdog_handler, &sched->rootcb);
 	xntimer_set_name(&sched->wdtimer, "[watchdog]");
 	xntimer_set_priority(&sched->wdtimer, XNTIMER_LOPRIO);
-	xntimer_set_sched(&sched->wdtimer, sched);
 #endif /* CONFIG_XENO_OPT_WATCHDOG */
 }
 
@@ -394,11 +394,7 @@ void xnsched_track_policy(struct xnthread *thread,
 	xnsched_set_resched(thread->sched);
 }
 
-/*
- * Must be called with nklock locked, interrupts off. thread must be
- * runnable.
- */
-void xnsched_migrate(struct xnthread *thread, struct xnsched *sched)
+static void migrate_thread(struct xnthread *thread, struct xnsched *sched)
 {
 	struct xnsched_class *sched_class = thread->sched_class;
 
@@ -415,6 +411,15 @@ void xnsched_migrate(struct xnthread *thread, struct xnsched *sched)
 	 */
 	xnsched_set_resched(thread->sched);
 	thread->sched = sched;
+}
+
+/*
+ * Must be called with nklock locked, interrupts off. thread must be
+ * runnable.
+ */
+void xnsched_migrate(struct xnthread *thread, struct xnsched *sched)
+{
+	migrate_thread(thread, sched);
 
 #ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
 	/*
@@ -428,25 +433,13 @@ void xnsched_migrate(struct xnthread *thread, struct xnsched *sched)
 #endif /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
 }
 
-/* Must be called with nklock locked, interrupts off. thread may be
- * blocked. */
+/*
+ * Must be called with nklock locked, interrupts off. Thread may be
+ * blocked.
+ */
 void xnsched_migrate_passive(struct xnthread *thread, struct xnsched *sched)
 {
-	struct xnsched_class *sched_class = thread->sched_class;
-
-	if (xnthread_test_state(thread, XNREADY)) {
-		xnsched_dequeue(thread);
-		xnthread_clear_state(thread, XNREADY);
-	}
-
-	if (sched_class->sched_migrate)
-		sched_class->sched_migrate(thread, sched);
-	/*
-	 * WARNING: the scheduling class may have just changed as a
-	 * result of calling the per-class migration hook.
-	 */
-	xnsched_set_resched(thread->sched);
-	thread->sched = sched;
+	migrate_thread(thread, sched);
 
 	if (!xnthread_test_state(thread, XNTHREAD_BLOCK_BITS)) {
 		xnsched_requeue(thread);
@@ -1176,6 +1169,75 @@ static struct xnvfile_snapshot_ops vfile_schedacct_ops = {
 
 #endif /* CONFIG_XENO_OPT_STATS */
 
+#ifdef CONFIG_SMP
+
+static int affinity_vfile_show(struct xnvfile_regular_iterator *it,
+			       void *data)
+{
+	unsigned long val = 0;
+	int cpu;
+
+	for (cpu = 0; cpu < BITS_PER_LONG; cpu++)
+		if (cpu_isset(cpu, nkaffinity))
+			val |= (1UL << cpu);
+
+	xnvfile_printf(it, "%08lx\n", val);
+
+	return 0;
+}
+
+static ssize_t affinity_vfile_store(struct xnvfile_input *input)
+{
+	cpumask_t affinity, set;
+	ssize_t ret;
+	long val;
+	int cpu;
+	spl_t s;
+
+	ret = xnvfile_get_integer(input, &val);
+	if (ret < 0)
+		return ret;
+
+	if (val == 0)
+		affinity = xnsched_realtime_cpus; /* Reset to default. */
+	else {
+		cpus_clear(affinity);
+		for (cpu = 0; cpu < BITS_PER_LONG; cpu++, val >>= 1) {
+			if (val & 1)
+				cpu_set(cpu, affinity);
+		}
+	}
+
+	cpus_and(set, affinity, *cpu_online_mask);
+	if (cpus_empty(set))
+		return -EINVAL;
+
+	/*
+	 * The new dynamic affinity must be a strict subset of the
+	 * static set of supported CPUs.
+	 */
+	cpus_or(set, affinity, xnsched_realtime_cpus);
+	if (!cpus_equal(set, xnsched_realtime_cpus))
+		return -EINVAL;
+
+	xnlock_get_irqsave(&nklock, s);
+	nkaffinity = affinity;
+	xnlock_put_irqrestore(&nklock, s);
+
+	return ret;
+}
+
+static struct xnvfile_regular_ops affinity_vfile_ops = {
+	.show = affinity_vfile_show,
+	.store = affinity_vfile_store,
+};
+
+static struct xnvfile_regular affinity_vfile = {
+	.ops = &affinity_vfile_ops,
+};
+
+#endif /* CONFIG_SMP */
+
 int xnsched_init_proc(void)
 {
 	struct xnsched_class *p;
@@ -1206,6 +1268,10 @@ int xnsched_init_proc(void)
 		return ret;
 #endif /* CONFIG_XENO_OPT_STATS */
 
+#ifdef CONFIG_SMP
+	xnvfile_init_regular("affinity", &affinity_vfile, &nkvfroot);
+#endif /* CONFIG_SMP */
+
 	return 0;
 }
 
@@ -1218,6 +1284,9 @@ void xnsched_cleanup_proc(void)
 			p->sched_cleanup_vfile(p);
 	}
 
+#ifdef CONFIG_SMP
+	xnvfile_destroy_regular(&affinity_vfile);
+#endif /* CONFIG_SMP */
 #ifdef CONFIG_XENO_OPT_STATS
 	xnvfile_destroy_snapshot(&schedacct_vfile);
 	xnvfile_destroy_snapshot(&schedstat_vfile);

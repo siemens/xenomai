@@ -393,7 +393,7 @@ static int clock_vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
 	p->timeout = xntimer_get_timeout(timer);
 	p->interval = xntimer_get_interval(timer);
 	p->status = timer->status;
-	strncpy(p->handler, timer->handler_name, 16)[17] = '\0';
+	strncpy(p->handler, timer->handler_name, 16)[16] = '\0';
 	xnobject_copy_name(p->name, timer->name);
 
 	return 1;
@@ -573,6 +573,9 @@ EXPORT_SYMBOL_GPL(xnclock_deregister);
  * - Interrupt service routine, nklock locked, interrupts off
  *
  * Rescheduling: never.
+ *
+ * @note The current CPU must be part of the real-time affinity set,
+ * otherwise weird things may happen.
  */
 void xnclock_tick(struct xnclock *clock)
 {
@@ -667,10 +670,18 @@ void xnclock_tick(struct xnclock *clock)
 #ifdef CONFIG_SMP
 		/*
 		 * Make sure to pick the right percpu queue, in case
-		 * the timer was migrated over its timeout handler.
+		 * the timer was migrated over its timeout
+		 * handler. Since this timer was dequeued,
+		 * xntimer_migrate() did not kick the remote CPU, so
+		 * we have to do this now if required.
 		 */
-		if (timer->sched != sched)
+		if (unlikely(timer->sched != sched)) {
 			timerq = xntimer_percpu_queue(timer);
+			xntimer_enqueue(timer, timerq);
+			if (xntimer_heading_p(timer))
+				xnclock_remote_shot(clock, timer->sched);
+			continue;
+		}
 #endif
 		xntimer_enqueue(timer, timerq);
 	}

@@ -365,6 +365,119 @@ static void lostage_task_signal(struct ipipe_work_header *work)
 		send_sig(signo, p, 1);
 }
 
+#ifdef CONFIG_SMP
+
+static int handle_setaffinity_event(struct ipipe_cpu_migration_data *d)
+{
+	struct task_struct *p = d->task;
+	struct xnthread *thread;
+	struct xnsched *sched;
+	spl_t s;
+
+	thread = xnshadow_thread(p);
+	if (thread == NULL)
+		return EVENT_PROPAGATE;
+
+	/*
+	 * The CPU affinity mask is always controlled from secondary
+	 * mode, therefore we progagate any change to the real-time
+	 * affinity mask accordingly.
+	 */
+	xnlock_get_irqsave(&nklock, s);
+	cpus_and(thread->affinity, p->cpus_allowed, nkaffinity);
+	xnlock_put_irqrestore(&nklock, s);
+
+	/*
+	 * If kernel and real-time CPU affinity sets are disjoints,
+	 * there might be problems ahead for this thread next time it
+	 * moves back to primary mode, if it ends up switching to an
+	 * unsupported CPU.
+	 *
+	 * Otherwise, check_affinity() will extend the CPU affinity if
+	 * possible, fixing up the thread's affinity mask. This means
+	 * that a thread might be allowed to run with a broken
+	 * (i.e. fully cleared) affinity mask until it leaves primary
+	 * mode then switches back to it, in SMP configurations.
+	 */
+	if (cpus_empty(thread->affinity))
+		printk(XENO_WARN "thread %s[%d] changed CPU affinity inconsistently\n",
+		       thread->name, xnthread_host_pid(thread));
+	else {
+		xnlock_get_irqsave(&nklock, s);
+		/*
+		 * Threads running in primary mode may NOT be forcibly
+		 * migrated by the regular kernel to another CPU. Such
+		 * migration would have to wait until the thread
+		 * switches back from secondary mode at some point
+		 * later, or issues a call to xnthread_migrate().
+		 */
+		if (!xnthread_test_state(thread, XNMIGRATE) &&
+		    xnthread_test_state(thread, XNTHREAD_BLOCK_BITS)) {
+			sched = xnsched_struct(d->dest_cpu);
+			xnthread_migrate_passive(thread, sched);
+		}
+		xnlock_put_irqrestore(&nklock, s);
+	}
+
+	return EVENT_PROPAGATE;
+}
+
+static inline void check_affinity(struct task_struct *p) /* nklocked, IRQs off */
+{
+	struct xnthread *thread = xnshadow_thread(p);
+	struct xnsched *sched;
+	int cpu = task_cpu(p);
+
+	/*
+	 * If the task moved to another CPU while in secondary mode,
+	 * migrate the companion Xenomai shadow to reflect the new
+	 * situation.
+	 *
+	 * In the weirdest case, the thread is about to switch to
+	 * primary mode on a CPU Xenomai shall not use. This is
+	 * hopeless, whine and kill that thread asap.
+	 */
+	if (!cpu_isset(cpu, xnsched_realtime_cpus)) {
+		printk(XENO_WARN "thread %s[%d] switched to non-rt CPU, aborted.\n",
+		       thread->name, xnthread_host_pid(thread));
+		/*
+		 * Can't call xnthread_cancel() from a migration
+		 * point, that would break. Since we are on the wakeup
+		 * path to hardening, just raise XNCANCELD to catch it
+		 * in xnshadow_harden().
+		 */
+		xnthread_set_info(thread, XNCANCELD);
+		return;
+	}
+
+	sched = xnsched_struct(cpu);
+	if (sched == thread->sched)
+		return;
+
+	/*
+	 * The current thread moved to a supported real-time CPU,
+	 * which is not part of its original affinity mask
+	 * though. Assume user wants to extend this mask.
+	 */
+	if (!cpu_isset(cpu, thread->affinity))
+		cpu_set(cpu, thread->affinity);
+
+	xnthread_migrate_passive(thread, sched);
+}
+
+#else /* !CONFIG_SMP */
+
+struct ipipe_cpu_migration_data;
+
+static int handle_setaffinity_event(struct ipipe_cpu_migration_data *d)
+{
+	return EVENT_PROPAGATE;
+}
+
+static inline void check_affinity(struct task_struct *p) { }
+
+#endif /* CONFIG_SMP */
+
 /*!
  * @internal
  * \fn int xnshadow_harden(void);
@@ -385,25 +498,10 @@ static void lostage_task_signal(struct ipipe_work_header *work)
 void ipipe_migration_hook(struct task_struct *p) /* hw IRQs off */
 {
 	struct xnthread *thread = xnshadow_thread(p);
-	struct xnsched *sched __maybe_unused;
 
 	xnlock_get(&nklock);
-
-#ifdef CONFIG_SMP
-	/*
-	 * If the task moved to another CPU while in secondary mode,
-	 * update the CPU of the underlying Xenomai shadow to reflect
-	 * the new situation. We do not migrate the thread timers
-	 * here, this would not work. For a "full" migration including
-	 * timers, using xnthread_migrate() is required.
-	 */
-	sched = xnsched_struct(task_cpu(p));
-	if (sched != thread->sched)
-		xnsched_migrate_passive(thread, sched);
-#endif /* CONFIG_SMP */
-
+	check_affinity(p);
 	xnthread_resume(thread, XNRELAX);
-
 	xnlock_put(&nklock);
 
 	xnsched_run();
@@ -440,6 +538,8 @@ int xnshadow_harden(void)
 	xnthread_switch_fpu(sched);
 
 	xnlock_clear_irqon(&nklock);
+	xnsched_resched_after_unlocked_switch();
+	xnthread_test_cancel();
 
 	trace_mark(xn_nucleus, shadow_hardened, "thread %p name %s",
 		   thread, xnthread_name(thread));
@@ -456,8 +556,6 @@ int xnshadow_harden(void)
 			       SIGDEBUG_MIGRATE_SIGNAL);
 		return -ERESTARTSYS;
 	}
-
-	xnsched_resched_after_unlocked_switch();
 
 	return 0;
 }
@@ -496,6 +594,7 @@ void xnshadow_relax(int notify, int reason)
 {
 	struct xnthread *thread = xnsched_current_thread();
 	struct task_struct *p = current;
+	int cpu __maybe_unused;
 	siginfo_t si;
 
 	XENO_BUGON(NUCLEUS, xnthread_test_state(thread, XNROOT));
@@ -555,25 +654,19 @@ void xnshadow_relax(int notify, int reason)
 		xnsynch_detect_claimed_relax(thread);
 	}
 
-#ifdef CONFIG_SMP
-	/*
-	 * If the shadow thread changed its CPU affinity while in
-	 * primary mode, reset the CPU affinity of its Linux
-	 * counter-part when returning to secondary mode. [Actually,
-	 * there is no service changing the CPU affinity from primary
-	 * mode available from the nucleus --rpm].
-	 */
-	if (xnthread_test_info(thread, XNAFFSET)) {
-		xnthread_clear_info(thread, XNAFFSET);
-		set_cpus_allowed(p, xnthread_affinity(thread));
-	}
-#endif /* CONFIG_SMP */
-
 	/*
 	 * "current" is now running into the Linux domain on behalf of
 	 * the root thread.
 	 */
 	xnthread_sync_window(thread);
+
+#ifdef CONFIG_SMP
+	if (xnthread_test_info(thread, XNMOVED)) {
+		xnthread_clear_info(thread, XNMOVED);
+		cpu = xnsched_cpu(thread->sched);
+		set_cpus_allowed(p, cpumask_of_cpu(cpu));
+	}
+#endif
 
 	trace_mark(xn_nucleus, shadow_relaxed,
 		  "thread %p thread_name %s comm %s",
@@ -722,6 +815,36 @@ static inline void destroy_threadinfo(void)
 	p->mm = NULL;
 }
 
+static void pin_to_initial_cpu(struct xnthread *thread)
+{
+	struct task_struct *p = current;
+	struct xnsched *sched;
+	int cpu;
+	spl_t s;
+
+	/*
+	 * @thread is the Xenomai extension of the current kernel
+	 * task. If the current CPU is part of the affinity mask of
+	 * this thread, pin the latter on this CPU. Otherwise pin it
+	 * to the first CPU of that mask.
+	 */
+	cpu = task_cpu(p);
+	if (!cpu_isset(cpu, thread->affinity))
+		cpu = first_cpu(thread->affinity);
+
+	set_cpus_allowed(p, cpumask_of_cpu(cpu));
+	/*
+	 * @thread is still unstarted Xenomai-wise, we are precisely
+	 * in the process of mapping the current kernel task to
+	 * it. Therefore xnthread_migrate_passive() is the right way
+	 * to pin it on a real-time CPU.
+	 */
+	xnlock_get_irqsave(&nklock, s);
+	sched = xnsched_struct(cpu);
+	xnthread_migrate_passive(thread, sched);
+	xnlock_put_irqrestore(&nklock, s);
+}
+
 /**
  * @fn int xnshadow_map_user(struct xnthread *thread, unsigned long __user *u_window_offset)
  * @internal
@@ -770,7 +893,6 @@ int xnshadow_map_user(struct xnthread *thread,
 	struct xnthread_start_attr attr;
 	struct xnsys_ppd *sys_ppd;
 	struct xnheap *sem_heap;
-	cpumask_t affinity;
 	spl_t s;
 	int ret;
 
@@ -817,11 +939,7 @@ int xnshadow_map_user(struct xnthread *thread,
 	}
 	thread->u_window = u_window;
 	__xn_put_user(xnheap_mapped_offset(sem_heap, u_window), u_window_offset);
-
-	/* Restrict affinity to a single CPU of nkaffinity & current set. */
-	cpus_and(affinity, p->cpus_allowed, nkaffinity);
-	affinity = cpumask_of_cpu(first_cpu(affinity));
-	set_cpus_allowed(p, affinity);
+	pin_to_initial_cpu(thread);
 
 	trace_mark(xn_nucleus, shadow_map_user,
 		   "thread %p thread_name %s pid %d priority %d",
@@ -851,7 +969,6 @@ int xnshadow_map_user(struct xnthread *thread,
 	ipipe_enable_notifier(current);
 
 	attr.mode = 0;
-	attr.affinity = affinity;
 	attr.entry = NULL;
 	attr.cookie = NULL;
 	ret = xnthread_start(thread, &attr);
@@ -944,7 +1061,6 @@ int xnshadow_map_kernel(struct xnthread *thread, struct completion *done)
 {
 	struct xnpersonality *personality = thread->personality;
 	struct task_struct *p = current;
-	cpumask_t affinity;
 	int ret;
 	spl_t s;
 
@@ -959,9 +1075,7 @@ int xnshadow_map_kernel(struct xnthread *thread, struct completion *done)
 		return ret;
 
 	thread->u_window = NULL;
-	cpus_and(affinity, p->cpus_allowed, nkaffinity);
-	affinity = cpumask_of_cpu(first_cpu(affinity));
-	set_cpus_allowed(p, affinity);
+	pin_to_initial_cpu(thread);
 
 	trace_mark(xn_nucleus, shadow_map_kernel,
 		   "thread %p thread_name %s pid %d priority %d",
@@ -2377,6 +2491,9 @@ int ipipe_kevent_hook(int kevent, void *data)
 		break;
 	case IPIPE_KEVT_HOSTRT:
 		ret = handle_hostrt_event(data);
+		break;
+	case IPIPE_KEVT_SETAFFINITY:
+		ret = handle_setaffinity_event(data);
 		break;
 	default:
 		ret = EVENT_PROPAGATE;

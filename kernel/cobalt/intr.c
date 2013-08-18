@@ -1073,69 +1073,13 @@ static struct xnvfile_regular irq_vfile = {
 	.ops = &irq_vfile_ops,
 };
 
-#ifdef CONFIG_SMP
-
-static int affinity_vfile_show(struct xnvfile_regular_iterator *it,
-			       void *data)
-{
-	unsigned long val = 0;
-	int cpu;
-
-	for (cpu = 0; cpu < BITS_PER_LONG; cpu++)
-		if (cpu_isset(cpu, nkaffinity))
-			val |= (1UL << cpu);
-
-	xnvfile_printf(it, "%08lx\n", val);
-
-	return 0;
-}
-
-static ssize_t affinity_vfile_store(struct xnvfile_input *input)
-{
-	cpumask_t new_affinity;
-	ssize_t ret;
-	long val;
-	int cpu;
-
-	ret = xnvfile_get_integer(input, &val);
-	if (ret < 0)
-		return ret;
-
-	cpus_clear(new_affinity);
-
-	for (cpu = 0; cpu < BITS_PER_LONG; cpu++, val >>= 1)
-		if (val & 1)
-			cpu_set(cpu, new_affinity);
-
-	cpus_and(nkaffinity, new_affinity, xnsched_cpus);
-
-	return ret;
-}
-
-static struct xnvfile_regular_ops affinity_vfile_ops = {
-	.show = affinity_vfile_show,
-	.store = affinity_vfile_store,
-};
-
-static struct xnvfile_regular affinity_vfile = {
-	.ops = &affinity_vfile_ops,
-};
-
-#endif /* CONFIG_SMP */
-
 void xnintr_init_proc(void)
 {
 	xnvfile_init_regular("irq", &irq_vfile, &nkvfroot);
-#ifdef CONFIG_SMP
-	xnvfile_init_regular("affinity", &affinity_vfile, &nkvfroot);
-#endif /* CONFIG_SMP */
 }
 
 void xnintr_cleanup_proc(void)
 {
-#ifdef CONFIG_SMP
-	xnvfile_destroy_regular(&affinity_vfile);
-#endif /* CONFIG_SMP */
 	xnvfile_destroy_regular(&irq_vfile);
 }
 

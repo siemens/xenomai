@@ -144,6 +144,7 @@ int rtdm_task_init(rtdm_task_t *task, const char *name,
 	iattr.name = name;
 	iattr.flags = 0;
 	iattr.personality = &rtdm_personality;
+	iattr.affinity = CPU_MASK_ALL;
 	param.rt.prio = priority;
 
 	err = xnthread_init(task, &iattr, &xnsched_class_rt, &param);
@@ -164,7 +165,6 @@ int rtdm_task_init(rtdm_task_t *task, const char *name,
 	}
 
 	sattr.mode = 0;
-	sattr.affinity = CPU_MASK_ALL;
 	sattr.entry = task_proc;
 	sattr.cookie = arg;
 	err = xnthread_start(task, &sattr);

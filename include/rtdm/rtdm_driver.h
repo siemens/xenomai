@@ -1023,7 +1023,7 @@ enum rtdm_timer_mode {
 #ifndef DOXYGEN_CPP /* Avoid broken doxygen output */
 #define rtdm_timer_init(timer, handler, name)		\
 ({							\
-	xntimer_init((timer), &nkclock, &handler);	\
+	xntimer_init((timer), &nkclock, handler, NULL);	\
 	xntimer_set_name((timer), (name));		\
 	0;						\
 })

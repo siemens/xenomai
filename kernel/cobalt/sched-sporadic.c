@@ -98,6 +98,12 @@ static void sporadic_schedule_drop(struct xnthread *thread)
 	int ret;
 
 	pss->resume_date = now;
+	/*
+	 * Assuming this timer should not fire that often unless the
+	 * monitored thread behaves badly, we don't pin it on the CPU
+	 * the thread is running, trading cycles at firing time
+	 * against cycles when arming the timer.
+	 */
 	ret = xntimer_start(&pss->drop_timer, now + pss->budget,
 			    XN_INFINITE, XN_ABSOLUTE);
 	if (ret == -ETIMEDOUT) {
@@ -133,6 +139,7 @@ retry:
 	} while(--pss->repl_pending > 0);
 
 	if (pss->repl_pending > 0) {
+		xntimer_set_sched(&pss->repl_timer, thread->sched);
 		ret = xntimer_start(&pss->repl_timer, pss->repl_data[r].date,
 				    XN_INFINITE, XN_ABSOLUTE);
 		if (ret == -ETIMEDOUT)
@@ -305,9 +312,11 @@ static int xnsched_sporadic_declare(struct xnthread *thread,
 	if (pss == NULL)
 		return -ENOMEM;
 
-	xntimer_init(&pss->repl_timer, &nkclock, sporadic_replenish_handler);
+	xntimer_init(&pss->repl_timer, &nkclock,
+		     sporadic_replenish_handler, thread);
 	xntimer_set_name(&pss->repl_timer, "pss-replenish");
-	xntimer_init(&pss->drop_timer, &nkclock, sporadic_drop_handler);
+	xntimer_init(&pss->drop_timer, &nkclock,
+		     sporadic_drop_handler, thread);
 	xntimer_set_name(&pss->drop_timer, "pss-drop");
 
 	thread->pss = pss;

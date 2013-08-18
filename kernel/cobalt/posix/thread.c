@@ -433,6 +433,7 @@ static inline int pthread_create(struct cobalt_thread **thread_p, const pthread_
 	iattr.name = thread->attr.name;
 	iattr.flags = XNUSER|XNFPU;
 	iattr.personality = &cobalt_personality;
+	iattr.affinity = CPU_MASK_ALL;
 
 	/*
 	 * When the weak scheduling class is compiled in, SCHED_WEAK
@@ -1443,14 +1444,5 @@ out:
 
 	return ret;
 }
-
-void __xnthread_test_cancel(struct xnthread *curr)
-{
-	if (!xnthread_test_state(curr, XNRELAX))
-		xnshadow_relax(0, 0);
-
-	do_exit(0);
-}
-EXPORT_SYMBOL_GPL(__xnthread_test_cancel);
 
 /*@}*/

@@ -45,7 +45,7 @@
 #include <cobalt/kernel/trace.h>
 #include <cobalt/kernel/arith.h>
 
-static inline int xntimer_heading_p(struct xntimer *timer)
+int xntimer_heading_p(struct xntimer *timer)
 {
 	struct xnsched *sched = timer->sched;
 	xntimerq_it_t it;
@@ -313,7 +313,7 @@ xnticks_t xntimer_get_interval(struct xntimer *timer)
 EXPORT_SYMBOL_GPL(xntimer_get_interval);
 
 /*!
- * \fn void xntimer_init(struct xntimer *timer,struct xnclock *clock,void (*handler)(struct xntimer *timer))
+ * \fn void xntimer_init(struct xntimer *timer,struct xnclock *clock,void (*handler)(struct xntimer *timer), struct xnthread *thread)
  * \brief Initialize a timer object.
  *
  * Creates a timer. When created, a timer is left disarmed; it must be
@@ -331,6 +331,11 @@ EXPORT_SYMBOL_GPL(xntimer_get_interval);
  *
  * @param handler The routine to call upon expiration of the timer.
  *
+ * @param thread The optional thread object the new timer is affine
+ * to. If non-NULL, the timer will fire on the same CPU @a thread
+ * currently runs on by default. A call to xntimer_set_sched() may
+ * change this setting.
+ *
  * There is no limitation on the number of timers which can be
  * created/active concurrently.
  *
@@ -344,14 +349,17 @@ EXPORT_SYMBOL_GPL(xntimer_get_interval);
  */
 #ifdef DOXYGEN_CPP
 void xntimer_init(struct xntimer *timer, struct xnclock *clock,
-		  void (*handler)(struct xntimer *timer));
+		  void (*handler)(struct xntimer *timer),
+		  struct xnthread *thread);
 #endif
 
 void __xntimer_init(struct xntimer *timer,
 		    struct xnclock *clock,
-		    void (*handler)(struct xntimer *timer))
+		    void (*handler)(struct xntimer *timer),
+		    struct xnthread *thread)
 {
 	spl_t s __maybe_unused;
+	int cpu;
 
 #ifdef CONFIG_XENO_OPT_EXTCLOCK
 	timer->clock = clock;
@@ -362,7 +370,18 @@ void __xntimer_init(struct xntimer *timer,
 	timer->status = XNTIMER_DEQUEUED;
 	timer->handler = handler;
 	timer->interval = 0;
-	timer->sched = xnsched_current();
+	/*
+	 * Timers have to run on a real-time CPU, i.e. a member of the
+	 * xnsched_realtime_cpus mask. If the new timer is affine to a
+	 * thread, we assign it the same CPU (which has to be correct),
+	 * otherwise pick the first valid real-time CPU by default.
+	 */
+	if (thread)
+		timer->sched = thread->sched;
+	else {
+		cpu = first_cpu(xnsched_realtime_cpus);
+		timer->sched = xnsched_struct(cpu);
+	}
 
 #ifdef CONFIG_XENO_OPT_STATS
 #ifdef CONFIG_XENO_OPT_EXTCLOCK
@@ -458,54 +477,37 @@ EXPORT_SYMBOL_GPL(xntimer_destroy);
  *
  * @param timer The address of the timer object to be migrated.
  *
- * @param sched The address of the destination per-CPU scheduler slot.
+ * @param sched The address of the destination per-CPU scheduler
+ * slot.
  *
- * @retval -EINVAL if @a timer is queued on another CPU than current.
- * @retval 0 otherwise.
- *
+ * @note Must be called with nklock held, IRQs off.
  */
-int xntimer_migrate(struct xntimer *timer, struct xnsched *sched)
-{
+void __xntimer_migrate(struct xntimer *timer, struct xnsched *sched)
+{				/* nklocked, IRQs off */
 	struct xnclock *clock;
 	xntimerq_t *q;
-	int ret = 0;
-	int queued;
-	spl_t s;
 
 	trace_mark(xn_nucleus, timer_migrate, "timer %p cpu %d",
 		   timer, (int)xnsched_cpu(sched));
 
-	xnlock_get_irqsave(&nklock, s);
+	XENO_BUGON(NUCLEUS, !cpu_isset(xnsched_cpu(sched), xnsched_realtime_cpus));
 
 	if (sched == timer->sched)
-		goto unlock_and_exit;
+		return;
 
-	queued = (timer->status & XNTIMER_DEQUEUED) == 0;
-	if (queued) {
-		if (timer->sched != xnsched_current()) {
-			ret = -EINVAL;
-			goto unlock_and_exit;
-		}
+	if (timer->status & XNTIMER_DEQUEUED)
+		timer->sched = sched;
+	else {
 		xntimer_stop(timer);
-	}
-
-	timer->sched = sched;
-
-	if (queued) {
+		timer->sched = sched;
 		clock = xntimer_clock(timer);
 		q = xntimer_percpu_queue(timer);
 		xntimer_enqueue(timer, q);
 		if (xntimer_heading_p(timer))
-			xnclock_remote_shot(clock, timer->sched);
+			xnclock_remote_shot(clock, sched);
 	}
-
-unlock_and_exit:
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	return ret;
 }
-EXPORT_SYMBOL_GPL(xntimer_migrate);
+EXPORT_SYMBOL_GPL(__xntimer_migrate);
 
 #endif /* CONFIG_SMP */
 

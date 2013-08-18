@@ -65,12 +65,18 @@ static void periodic_handler(struct xntimer *timer)
 	 */
 	if (xnthread_test_state(thread, XNDELAY|XNPEND) == XNDELAY)
 		xnthread_resume(thread, XNDELAY);
+	/*
+	 * The thread a periodic timer is affine to might have been
+	 * migrated to another CPU while passive. Fix this up.
+	 */
+	xntimer_set_sched(timer, thread->sched);
 }
 
 static void roundrobin_handler(struct xntimer *timer)
 {
 	struct xnthread *thread = container_of(timer, struct xnthread, rrbtimer);
 	xnsched_tick(thread);
+	xntimer_set_sched(timer, thread->sched);
 }
 
 struct kthread_arg {
@@ -165,20 +171,12 @@ int __xnthread_init(struct xnthread *thread,
 	else
 		snprintf(thread->name, sizeof(thread->name), "%p", thread);
 
-	xntimer_init(&thread->rtimer, &nkclock, timeout_handler);
-	xntimer_set_name(&thread->rtimer, thread->name);
-	xntimer_set_priority(&thread->rtimer, XNTIMER_HIPRIO);
-	xntimer_init(&thread->ptimer, &nkclock, periodic_handler);
-	xntimer_set_name(&thread->ptimer, thread->name);
-	xntimer_set_priority(&thread->ptimer, XNTIMER_HIPRIO);
-	xntimer_init(&thread->rrbtimer, &nkclock, roundrobin_handler);
-	xntimer_set_name(&thread->rrbtimer, thread->name);
-	xntimer_set_priority(&thread->rrbtimer, XNTIMER_LOPRIO);
-
+	thread->personality = attr->personality;
+	cpus_and(thread->affinity, attr->affinity, nkaffinity);
+	thread->sched = sched;
 	thread->state = flags;
 	thread->info = 0;
 	thread->schedlck = 0;
-
 	thread->rrperiod = XN_INFINITE;
 	thread->wchan = NULL;
 	thread->wwake = NULL;
@@ -187,18 +185,23 @@ int __xnthread_init(struct xnthread *thread,
 	thread->registry.handle = XN_NO_HANDLE;
 	thread->registry.waitkey = NULL;
 	memset(&thread->stat, 0, sizeof(thread->stat));
-
+	thread->selector = NULL;
+	INIT_LIST_HEAD(&thread->claimq);
 	/* These will be filled by xnthread_start() */
 	thread->imode = 0;
 	thread->entry = NULL;
 	thread->cookie = NULL;
 
-	thread->selector = NULL;
-	INIT_LIST_HEAD(&thread->claimq);
+	xntimer_init(&thread->rtimer, &nkclock, timeout_handler, thread);
+	xntimer_set_name(&thread->rtimer, thread->name);
+	xntimer_set_priority(&thread->rtimer, XNTIMER_HIPRIO);
+	xntimer_init(&thread->ptimer, &nkclock, periodic_handler, thread);
+	xntimer_set_name(&thread->ptimer, thread->name);
+	xntimer_set_priority(&thread->ptimer, XNTIMER_HIPRIO);
+	xntimer_init(&thread->rrbtimer, &nkclock, roundrobin_handler, thread);
+	xntimer_set_name(&thread->rrbtimer, thread->name);
+	xntimer_set_priority(&thread->rrbtimer, XNTIMER_LOPRIO);
 
-	thread->personality = attr->personality;
-
-	thread->sched = sched;
 	thread->init_class = sched_class;
 	thread->base_class = NULL; /* xnsched_set_policy() will set it. */
 	thread->init_schedparam = *sched_param;
@@ -553,9 +556,9 @@ void __xnthread_cleanup(struct xnthread *curr)
  * the floating-point unit. XNFPU is implicitly assumed for user-space
  * threads even if not set in @a flags.
  *
- * - ops: A pointer to a structure defining the class-level operations
- * available for this thread. Fields from this structure must have
- * been set appropriately by the caller.
+ * - affinity: The processor affinity of this thread. Passing
+ * CPU_MASK_ALL means "any cpu" from the allowed core affinity mask
+ * (nkaffinity). Passing an empty set is invalid.
  *
  * @param sched_class The initial scheduling class the new thread
  * should be assigned to.
@@ -567,7 +570,8 @@ void __xnthread_cleanup(struct xnthread *curr)
  * @return 0 is returned on success. Otherwise, the following error
  * code indicates the cause of the failure:
  *
- * - -EINVAL is returned if @a attr->flags has invalid bits set.
+ * - -EINVAL is returned if @a attr->flags has invalid bits set, or @a
+ *   attr->affinity is invalid (e.g. empty).
  *
  * Side-effect: This routine does not call the rescheduling procedure.
  *
@@ -580,12 +584,24 @@ int xnthread_init(struct xnthread *thread,
 		  struct xnsched_class *sched_class,
 		  const union xnsched_policy_param *sched_param)
 {
-	struct xnsched *sched = xnsched_current();
+	struct xnsched *sched;
+	cpumask_t affinity;
 	spl_t s;
 	int ret;
 
 	if (attr->flags & ~(XNFPU | XNUSER | XNSUSP))
 		return -EINVAL;
+
+	/*
+	 * Pick an initial CPU for the new thread which is part of its
+	 * affinity mask, and therefore also part of the supported
+	 * CPUs. This CPU may change in pin_to_initial_cpu().
+	 */
+	cpus_and(affinity, attr->affinity, nkaffinity);
+	if (cpus_empty(affinity))
+		return -EINVAL;
+
+	sched = xnsched_struct(first_cpu(affinity));
 
 	ret = __xnthread_init(thread, attr, sched, sched_class, sched_param);
 	if (ret)
@@ -635,10 +651,6 @@ EXPORT_SYMBOL_GPL(xnthread_init);
  * case, the thread will have to be explicitly resumed using the
  * xnthread_resume() service for its execution to actually begin.
  *
- * - affinity: The processor affinity of this thread. Passing
- * CPU_MASK_ALL or an empty affinity set means "any cpu" from the
- * allowed core affinity mask (nkaffinity).
- *
  * - entry: The address of the thread's body routine. In other words,
  * it is the thread entry point.
  *
@@ -648,8 +660,6 @@ EXPORT_SYMBOL_GPL(xnthread_init);
  * @retval 0 if @a thread could be started ;
  *
  * @retval -EBUSY if @a thread was not dormant or stopped ;
- *
- * @retval -EINVAL if the value of @a attr->affinity is invalid.
  *
  * Environments:
  *
@@ -664,33 +674,14 @@ EXPORT_SYMBOL_GPL(xnthread_init);
 int xnthread_start(struct xnthread *thread,
 		   const struct xnthread_start_attr *attr)
 {
-	struct xnsched *sched __maybe_unused;
-	cpumask_t affinity;
-	int ret = 0;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
 	if (!xnthread_test_state(thread, XNDORMANT)) {
-		ret = -EBUSY;
-		goto unlock_and_exit;
+		xnlock_put_irqrestore(&nklock, s);
+		return -EBUSY;
 	}
-
-	affinity = attr->affinity;
-	cpus_and(affinity, affinity, nkaffinity);
-	thread->affinity = *cpu_online_mask;
-	cpus_and(thread->affinity, affinity, thread->affinity);
-
-	if (cpus_empty(thread->affinity)) {
-		ret = -EINVAL;
-		goto unlock_and_exit;
-	}
-#ifdef CONFIG_SMP
-	if (!cpu_isset(xnsched_cpu(thread->sched), thread->affinity)) {
-		sched = xnsched_struct(first_cpu(thread->affinity));
-		xnsched_migrate_passive(thread, sched);
-	}
-#endif /* CONFIG_SMP */
 
 	xnthread_set_state(thread, attr->mode & (XNTHREAD_MODE_BITS | XNSUSP));
 	thread->imode = (attr->mode & XNTHREAD_MODE_BITS);
@@ -702,10 +693,10 @@ int xnthread_start(struct xnthread *thread,
 
 	xnthread_resume(thread, XNDORMANT);
 	xnsched_run();
-unlock_and_exit:
+
 	xnlock_put_irqrestore(&nklock, s);
 
-	return ret;
+	return 0;
 }
 EXPORT_SYMBOL_GPL(xnthread_start);
 
@@ -1308,7 +1299,7 @@ EXPORT_SYMBOL_GPL(xnthread_unblock);
 int xnthread_set_periodic(xnthread_t *thread, xnticks_t idate,
 			  xntmode_t timeout_mode, xnticks_t period)
 {
-	int err = 0;
+	int ret = 0;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -1331,30 +1322,29 @@ int xnthread_set_periodic(xnthread_t *thread, xnticks_t idate,
 		 * clock gravity. This can't work, caller must have
 		 * messed up with arguments.
 		 */
-		err = -EINVAL;
+		ret = -EINVAL;
 		goto unlock_and_exit;
 	}
 
 	xntimer_set_sched(&thread->ptimer, thread->sched);
 
-	if (idate == XN_INFINITE) {
+	if (idate == XN_INFINITE)
 		xntimer_start(&thread->ptimer, period, period, XN_RELATIVE);
-	} else {
+	else {
 		if (timeout_mode == XN_REALTIME)
 			idate -= xnclock_get_offset(&nkclock);
 		else if (timeout_mode != XN_ABSOLUTE) {
-			err = -EINVAL;
+			ret = -EINVAL;
 			goto unlock_and_exit;
 		}
-		err = xntimer_start(&thread->ptimer, idate + period, period,
+		ret = xntimer_start(&thread->ptimer, idate + period, period,
 				    XN_ABSOLUTE);
 	}
 
-      unlock_and_exit:
-
+unlock_and_exit:
 	xnlock_put_irqrestore(&nklock, s);
 
-	return err;
+	return ret;
 }
 EXPORT_SYMBOL_GPL(xnthread_set_periodic);
 
@@ -1497,6 +1487,7 @@ int xnthread_set_slice(struct xnthread *thread, xnticks_t quantum)
 			return -EINVAL;
 		}
 		xnthread_set_state(thread, XNRRB);
+		xntimer_set_sched(&thread->rrbtimer, thread->sched);
 		xntimer_start(&thread->rrbtimer,
 			      quantum, quantum, XN_RELATIVE);
 	} else
@@ -1624,16 +1615,21 @@ EXPORT_SYMBOL_GPL(xnthread_join);
  * @fn int xnthread_migrate(int cpu)
  * @brief Migrate the current thread.
  *
- * This call makes the current thread migrate to another CPU if its
- * affinity allows it.
+ * This call makes the current thread migrate to another (real-time)
+ * CPU if its affinity allows it. This call is available from
+ * primary mode only.
  *
  * @param cpu The destination CPU.
  *
  * @retval 0 if the thread could migrate ;
- * @retval -EPERM if the calling context is asynchronous, or the
- * current thread affinity forbids this migration ;
- * @retval -EBUSY if the scheduler is locked.
+ * @retval -EPERM if the calling context is invalid, or the
+ * scheduler is locked.
+ * @retval -EINVAL if the current thread affinity forbids this
+ * migration.
  */
+
+#ifdef CONFIG_SMP
+
 int xnthread_migrate(int cpu)
 {
 	struct xnthread *thread;
@@ -1641,39 +1637,39 @@ int xnthread_migrate(int cpu)
 	int ret = 0;
 	spl_t s;
 
-	if (xnsched_interrupt_p())
-		return -EPERM;
-
-	if (xnsched_locked_p())
-		return -EBUSY;
-
 	xnlock_get_irqsave(&nklock, s);
 
-	thread = xnsched_current_thread();
-
-	if (!cpu_isset(cpu, thread->affinity)) {
+	if (!xnsched_primary_p() || xnsched_locked_p()) {
 		ret = -EPERM;
 		goto unlock_and_exit;
 	}
 
-	if (cpu == ipipe_processor_id())
+	thread = xnsched_current_thread();
+	if (!cpu_isset(cpu, thread->affinity)) {
+		ret = -EINVAL;
 		goto unlock_and_exit;
+	}
 
 	sched = xnsched_struct(cpu);
+	if (sched == xnthread_sched(thread))
+		goto unlock_and_exit;
 
 	trace_mark(xn_nucleus, thread_migrate,
 		   "thread %p thread_name %s cpu %d",
 		   thread, xnthread_name(thread), cpu);
 
-	release_fpu(thread);
-
 	/* Move to remote scheduler. */
 	xnsched_migrate(thread, sched);
 
-	/* Migrate the thread's periodic timer. */
-	xntimer_set_sched(&thread->ptimer, sched);
-
-	xnsched_run();
+	/*
+	 * Migrate the thread's periodic and round-robin timers. We
+	 * don't have to care about the resource timer, since we can
+	 * only deal with the current thread, which is, well, running,
+	 * so it can't be sleeping on any timed wait at the moment.
+	 */
+	__xntimer_migrate(&thread->ptimer, sched);
+	if (xnthread_test_state(thread, XNRRB))
+		__xntimer_migrate(&thread->rrbtimer, sched);
 
 	/*
 	 * Reset execution time measurement period so that we don't
@@ -1681,13 +1677,43 @@ int xnthread_migrate(int cpu)
 	 */
 	xnstat_exectime_reset_stats(&thread->stat.lastperiod);
 
-      unlock_and_exit:
+	/*
+	 * So that xnshadow_relax() will pin the linux mate on the
+	 * same CPU next time the thread switches to secondary mode.
+	 */
+	xnthread_set_info(thread, XNMOVED);
 
+	xnsched_run();
+
+ unlock_and_exit:
 	xnlock_put_irqrestore(&nklock, s);
 
 	return ret;
 }
 EXPORT_SYMBOL_GPL(xnthread_migrate);
+
+void xnthread_migrate_passive(struct xnthread *thread, struct xnsched *sched)
+{				/* nklocked, IRQs off */
+	trace_mark(xn_nucleus, thread_migrate_passive,
+		   "thread %p thread_name %s cpu %d",
+		   thread, xnthread_name(thread), xnsched_cpu(sched));
+
+	XENO_BUGON(NUCLEUS, !cpu_isset(xnsched_cpu(sched), xnsched_realtime_cpus));
+
+	if (thread->sched == sched)
+		return;
+	/*
+	 * Timer migration is postponed until the next timeout happens
+	 * for the periodic and rrb timers. The resource timer will be
+	 * moved to the right CPU next time it is armed in
+	 * xnthread_suspend().
+	 */
+	xnsched_migrate_passive(thread, sched);
+
+	xnstat_exectime_reset_stats(&thread->stat.lastperiod);
+}
+
+#endif	/* CONFIG_SMP */
 
 /**
  * @fn int xnthread_set_schedparam(struct xnthread *thread,struct xnsched_class *sched_class,const union xnsched_policy_param *sched_param)
@@ -1809,5 +1835,14 @@ unlock_and_exit:
 	return ret;
 }
 EXPORT_SYMBOL_GPL(xnthread_set_schedparam);
+
+void __xnthread_test_cancel(struct xnthread *curr)
+{
+	if (!xnthread_test_state(curr, XNRELAX))
+		xnshadow_relax(0, 0);
+
+	do_exit(0);
+}
+EXPORT_SYMBOL_GPL(__xnthread_test_cancel);
 
 /*@}*/

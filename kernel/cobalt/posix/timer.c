@@ -92,7 +92,8 @@ timer_init(struct cobalt_timer *timer,
 	 * All standard clocks are based on the core clock, and we
 	 * want to deliver a signal when a timer elapses.
 	 */
-	xntimer_init(&timer->timerbase, &nkclock, cobalt_timer_handler);
+	xntimer_init(&timer->timerbase, &nkclock, cobalt_timer_handler,
+		     &target->threadbase);
 
 	return target;
 }
@@ -271,6 +272,7 @@ timer_gettimeout(struct cobalt_timer *__restrict__ timer,
 static inline int timer_set(struct cobalt_timer *timer, int flags,
 			    const struct itimerspec *__restrict__ value)
 {				/* nklocked, IRQs off. */
+	struct cobalt_thread *thread;
 	xnticks_t start, period;
 	int ret;
 
@@ -297,7 +299,20 @@ static inline int timer_set(struct cobalt_timer *timer, int flags,
 
 	start = ts2ns(&value->it_value) + 1;
 	period = ts2ns(&value->it_interval);
-	xntimer_set_sched(&timer->timerbase, xnsched_current());
+
+	/*
+	 * If the target thread vanished, simply don't start the
+	 * timer.
+	 */
+	thread = cobalt_thread_find(timer->target);
+	if (thread == NULL)
+		return 0;
+
+	/*
+	 * Make the timer affine to the CPU running the thread to be
+	 * signaled.
+	 */
+	xntimer_set_sched(&timer->timerbase, thread->threadbase.sched);
 	/*
 	 * Now start the timer. If the timeout data has already
 	 * passed, the caller will handle the case.

@@ -67,9 +67,9 @@
 #define XNKICKED  0x00000008 /**< Forced out of primary mode */
 #define XNWAKEN   0x00000010 /**< Thread waken up upon resource availability */
 #define XNROBBED  0x00000020 /**< Robbed from resource ownership */
-#define XNAFFSET  0x00000040 /**< CPU affinity changed from primary mode */
-#define XNCANCELD 0x00000080 /**< Cancellation request is pending */
-#define XNSWREP   0x00000100 /**< Mode switch already reported */
+#define XNCANCELD 0x00000040 /**< Cancellation request is pending */
+#define XNSWREP   0x00000080 /**< Mode switch already reported */
+#define XNMOVED   0x00000100 /**< CPU migration in primary mode occurred */
 
 /** @} */
 

@@ -120,7 +120,7 @@ static void sys_shutdown(void)
 
 	xnsched_run();
 
-	for_each_realtime_cpu(cpu) {
+	for_each_online_cpu(cpu) {
 		sched = xnsched_struct(cpu);
 		xnsched_destroy(sched);
 	}
@@ -144,7 +144,7 @@ static int __init mach_setup(void)
 	}
 #endif /* CONFIG_SMP */
 
-	ret = ipipe_select_timers(&xnsched_cpus);
+	ret = ipipe_select_timers(&xnsched_realtime_cpus);
 	if (ret < 0)
 		return ret;
 
@@ -313,7 +313,7 @@ static __init int sys_init(void)
 	}
 	xnheap_set_label(&kheap, "main heap");
 
-	for_each_realtime_cpu(cpu) {
+	for_each_online_cpu(cpu) {
 		sched = &per_cpu(nksched, cpu);
 		xnsched_init(sched, cpu);
 	}
@@ -357,6 +357,13 @@ static int __init xenomai_init(void)
 	if (ret)
 		goto cleanup_proc;
 
+	cpus_and(nkaffinity, nkaffinity, xnsched_realtime_cpus);
+	if (cpus_empty(nkaffinity)) {
+		printk(XENO_ERR "no real-time CPU in global affinity mask\n");
+		ret = -EINVAL;
+		goto cleanup_mach;
+	}
+
 	ret = xnheap_mount();
 	if (ret)
 		goto cleanup_mach;
@@ -386,8 +393,6 @@ static int __init xenomai_init(void)
 	ret = cobalt_init();
 	if (ret)
 		goto cleanup_rtdm;
-
-	cpus_and(nkaffinity, nkaffinity, xnsched_cpus);
 
 	printk(XENO_INFO "Cobalt v%s enabled%s\n",
 	       XENO_VERSION_STRING, boot_notice);

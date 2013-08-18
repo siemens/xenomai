@@ -296,14 +296,15 @@ static inline int xntimer_reload_p(struct xntimer *timer)
 
 void __xntimer_init(struct xntimer *timer,
 		    struct xnclock *clock,
-		    void (*handler)(struct xntimer *timer));
+		    void (*handler)(struct xntimer *timer),
+		    struct xnthread *thread);
 
 #ifdef CONFIG_XENO_OPT_STATS
 
-#define xntimer_init(timer, clock, handler)		\
-	do {						\
-		__xntimer_init(timer, clock, handler);	\
-		(timer)->handler_name = #handler;	\
+#define xntimer_init(timer, clock, handler, thread)		\
+	do {							\
+		__xntimer_init(timer, clock, handler, thread);	\
+		(timer)->handler_name = #handler;		\
 	} while (0)
 
 static inline void xntimer_reset_stats(struct xntimer *timer)
@@ -350,10 +351,10 @@ void xntimer_switch_tracking(struct xntimer *timer,
 			     struct xnclock *newclock) { }
 #endif
 
-#define xntimer_init_noblock(timer, clock, handler)	\
-	do {						\
-		xntimer_init(timer, clock, handler);	\
-		(timer)->status |= XNTIMER_NOBLCK;	\
+#define xntimer_init_noblock(timer, clock, handler, thread)	\
+	do {							\
+		xntimer_init(timer, clock, handler, thread);	\
+		(timer)->status |= XNTIMER_NOBLCK;		\
 	} while (0)
 
 void xntimer_destroy(struct xntimer *timer);
@@ -374,6 +375,8 @@ xnticks_t xntimer_get_date(struct xntimer *timer);
 xnticks_t xntimer_get_timeout(struct xntimer *timer);
 
 xnticks_t xntimer_get_interval(struct xntimer *timer);
+
+int xntimer_heading_p(struct xntimer *timer);
 
 static inline void xntimer_stop(struct xntimer *timer)
 {
@@ -415,12 +418,29 @@ void xntimer_cleanup_proc(void);
 unsigned long xntimer_get_overruns(struct xntimer *timer, xnticks_t now);
 
 #ifdef CONFIG_SMP
-int xntimer_migrate(struct xntimer *timer, struct xnsched *sched);
+
+void __xntimer_migrate(struct xntimer *timer, struct xnsched *sched);
+
+static inline
+void xntimer_migrate(struct xntimer *timer, struct xnsched *sched)
+{				/* nklocked, IRQs off */
+	if (timer->sched != sched)
+		__xntimer_migrate(timer, sched);
+}
+
 #else /* ! CONFIG_SMP */
-#define xntimer_migrate(timer, sched)	do { } while(0)
+
+static inline void xntimer_migrate(struct xntimer *timer,
+				   struct xnsched *sched)
+{ }
+
 #endif /* CONFIG_SMP */
 
-#define xntimer_set_sched(timer, sched)	xntimer_migrate(timer, sched)
+static inline void xntimer_set_sched(struct xntimer *timer,
+				     struct xnsched *sched)
+{
+	xntimer_migrate(timer, sched);
+}
 
 char *xntimer_format_time(xnticks_t ns,
 			  char *buf, size_t bufsz);

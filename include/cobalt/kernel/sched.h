@@ -217,11 +217,11 @@ static inline void xnsched_set_resched(struct xnsched *sched)
 	}
 }
 
-#define xnsched_cpus xnarch_machdata.supported_cpus
+#define xnsched_realtime_cpus xnarch_machdata.supported_cpus
 
 static inline int xnsched_supported_cpu(int cpu)
 {
-	return cpu_isset(cpu, xnsched_cpus);
+	return cpu_isset(cpu, xnsched_realtime_cpus);
 }
 
 #else /* !CONFIG_SMP */
@@ -231,7 +231,7 @@ static inline void xnsched_set_resched(struct xnsched *sched)
 	xnsched_set_self_resched(sched);
 }
 
-#define xnsched_cpus CPU_MASK_ALL
+#define xnsched_realtime_cpus CPU_MASK_ALL
 
 static inline int xnsched_supported_cpu(int cpu)
 {

@@ -476,25 +476,16 @@ static int rtswitch_create_ktask(rtswitch_context_t *ctx,
 
 	init_flags = (ptask->flags & RTTST_SWTEST_FPU) ? XNFPU : 0;
 
-	/*
-	 * Migrate the calling thread to the same CPU as the created
-	 * task, in order to be sure that the created task is
-	 * suspended when this function returns. This also allow us to
-	 * use the stack to pass the parameters to the created
-	 * task.
-	 */
-	set_cpus_allowed(current, cpumask_of_cpu(ctx->cpu));
-
 	iattr.name = name;
 	iattr.flags = init_flags;
 	iattr.personality = &xenomai_personality;
+	iattr.affinity = cpumask_of_cpu(ctx->cpu);
 	param.rt.prio = 1;
 
 	err = xnthread_init(&task->ktask,
 			    &iattr, &xnsched_class_rt, &param);
 	if (!err) {
 		sattr.mode = 0;
-		sattr.affinity = cpumask_of_cpu(ctx->cpu);
 		sattr.entry = rtswitch_ktask;
 		sattr.cookie = &arg;
 		err = xnthread_start(&task->ktask, &sattr);

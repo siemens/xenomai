@@ -46,13 +46,13 @@ struct xnpersonality;
 
 struct xnthread_init_attr {
 	struct xnpersonality *personality;
+	cpumask_t affinity;
 	int flags;
 	const char *name;
 };
 
 struct xnthread_start_attr {
 	int mode;
-	cpumask_t affinity;
 	void (*entry)(void *cookie);
 	void *cookie;
 };
@@ -407,7 +407,23 @@ void xnthread_cancel(struct xnthread *thread);
 
 void xnthread_join(struct xnthread *thread);
 
+#ifdef CONFIG_SMP
 int xnthread_migrate(int cpu);
+
+void xnthread_migrate_passive(struct xnthread *thread,
+			      struct xnsched *sched);
+#else
+
+static inline int xnthread_migrate(int cpu)
+{
+	return cpu ? -EINVAL : 0;
+}
+
+static inline void xnthread_migrate_passive(struct xnthread *thread,
+					    struct xnsched *sched)
+{ }
+
+#endif
 
 int xnthread_set_schedparam(struct xnthread *thread,
 			    struct xnsched_class *sched_class,

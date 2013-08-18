@@ -522,7 +522,7 @@ static void sigdebug(int sig, siginfo_t *si, void *context)
 int main(int argc, char *const *argv)
 {
 	struct sigaction sa __attribute__((unused));
-	int c, err, sig, cpu = 0;
+	int c, err, sig, cpu = -1;
 	char task_name[16];
 	cpu_set_t cpus;
 	sigset_t mask;
@@ -723,8 +723,6 @@ int main(int argc, char *const *argv)
 	}
 
 	if (test_mode == USER_TASK) {
-		CPU_ZERO(&cpus);
-		CPU_SET(cpu, &cpus);
 		snprintf(task_name, sizeof(task_name), "sampling-%d", getpid());
 		err =
 		    rt_task_create(&latency_task, task_name, 0, priority,
@@ -737,12 +735,16 @@ int main(int argc, char *const *argv)
 			return 0;
 		}
 
-		err = rt_task_set_affinity(&latency_task, &cpus);
-		if (err) {
-			fprintf(stderr,
-				"latency: failed to set CPU affinity, code %d\n",
-				err);
-			return 0;
+		if (cpu >= 0) {
+			CPU_ZERO(&cpus);
+			CPU_SET(cpu, &cpus);
+			err = rt_task_set_affinity(&latency_task, &cpus);
+			if (err) {
+				fprintf(stderr,
+					"latency: failed to set CPU affinity, code %d\n",
+					err);
+				return 0;
+			}
 		}
 
 		err = rt_task_start(&latency_task, &latency, NULL);
