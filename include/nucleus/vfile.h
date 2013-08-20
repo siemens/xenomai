@@ -574,21 +574,6 @@ static inline void xnvfile_touch(struct xnvfile_snapshot *vfile)
 	xnvfile_touch_tag(vfile->tag);
 }
 
-static inline int xnvfile_reg_p(struct xnvfile *entry)
-{
-	return S_ISREG(entry->pde->mode);
-}
-
-static inline int xnvfile_dir_p(struct xnvfile *entry)
-{
-	return S_ISDIR(entry->pde->mode);
-}
-
-static inline int xnvfile_link_p(struct xnvfile *entry)
-{
-	return S_ISLNK(entry->pde->mode);
-}
-
 #define xnvfile_noentry			\
 	{				\
 		.pde = NULL,		\
