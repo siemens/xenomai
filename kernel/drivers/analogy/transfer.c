@@ -213,16 +213,13 @@ unsigned int a4l_get_irq(a4l_dev_t * dev)
 
 #ifdef CONFIG_PROC_FS
 
-int a4l_rdproc_transfer(char *page,
-			char **start,
-			off_t off, int count, int *eof, void *data)
+int a4l_rdproc_transfer(struct seq_file *p, void *data)
 {
-	int i, len = 0;
-	char *p = page;
+	int i;
 	a4l_trf_t *transfer = (a4l_trf_t *) data;
 
-	p += sprintf(p, "--  Subdevices --\n\n");
-	p += sprintf(p, "| idx | type\n");
+	seq_printf(p, "--  Subdevices --\n\n");
+	seq_printf(p, "| idx | type\n");
 
 	/* Gives the subdevice type's name */
 	for (i = 0; i < transfer->nb_subd; i++) {
@@ -268,27 +265,10 @@ int a4l_rdproc_transfer(char *page,
 			type = "Unknown subdevice";
 		}
 
-		p += sprintf(p, "|  %02d | %s\n", i, type);
+		seq_printf(p, "|  %02d | %s\n", i, type);
 	}
 
-	/* Handles any proc-file reading way */
-	len = p - page - off;
-	/* If the requested size is greater than we provide,
-	   the read operation is over */
-	if (len <= off + count)
-		*eof = 1;
-	/* In case the read operation is performed in many steps,
-	   the start pointer must be redefined */
-	*start = page + off;
-	/* If the requested size is lower than we provide,
-	   the read operation will be done in more than one step */
-	if (len > count)
-		len = count;
-	/* In case the offset is not correct (too high) */
-	if (len < 0)
-		len = 0;
-
-	return len;
+	return 0;
 }
 
 #endif /* CONFIG_PROC_FS */

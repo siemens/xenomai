@@ -68,9 +68,7 @@ typedef struct a4l_transfer a4l_trf_t;
 
 /* --- Proc function --- */
 
-int a4l_rdproc_transfer(char *page,
-			char **start,
-			off_t off, int count, int *eof, void *data);
+int a4l_rdproc_transfer(struct seq_file *p, void *data);
 
 /* --- Upper layer functions --- */
 

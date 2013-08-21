@@ -68,9 +68,7 @@ int a4l_register_drv(a4l_drv_t * drv);
 int a4l_unregister_drv(a4l_drv_t * drv);
 int a4l_lct_drv(char *pin, a4l_drv_t ** pio);
 #ifdef CONFIG_PROC_FS
-int a4l_rdproc_drvs(char *page,
-		    char **start,
-		    off_t off, int count, int *eof, void *data);
+int a4l_rdproc_drvs(struct seq_file *p, void *data);
 #endif /* CONFIG_PROC_FS */
 
 #endif /* !DOXYGEN_CPP */

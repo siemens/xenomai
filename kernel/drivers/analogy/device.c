@@ -69,14 +69,12 @@ void a4l_set_dev(a4l_cxt_t *cxt)
 
 #ifdef CONFIG_PROC_FS
 
-int a4l_rdproc_devs(char *page,
-		    char **start, off_t off, int count, int *eof, void *data)
+int a4l_rdproc_devs(struct seq_file *p, void *data)
 {
-	int i, len = 0;
-	char *p = page;
+	int i;
 
-	p += sprintf(p, "--  Analogy devices --\n\n");
-	p += sprintf(p, "| idx | status | driver\n");
+	seq_printf(p, "--  Analogy devices --\n\n");
+	seq_printf(p, "| idx | status | driver\n");
 
 	for (i = 0; i < A4L_NB_DEVICES; i++) {
 		char *status, *name;
@@ -93,28 +91,22 @@ int a4l_rdproc_devs(char *page,
 			name = "Unknown";
 		}
 
-		p += sprintf(p, "|  %02d | %s | %s\n", i, status, name);
+		seq_printf(p, "|  %02d | %s | %s\n", i, status, name);
 	}
-
-	/* Handle any proc-file reading way */
-	len = p - page - off;
-	/* If the requested size is greater than we provide,
-	   the read operation is over */
-	if (len <= off + count)
-		*eof = 1;
-	/* In case the read operation is performed in many steps,
-	   the start pointer must be redefined */
-	*start = page + off;
-	/* If the requested size is lower than we provide,
-	   the read operation will be done in more than one step */
-	if (len > count)
-		len = count;
-	/* In case the offset is not correct (too high) */
-	if (len < 0)
-		len = 0;
-
-	return len;
+	return 0;
 }
+
+static int a4l_proc_transfer_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, a4l_rdproc_transfer, PDE_DATA(inode));
+}
+
+static const struct file_operations a4l_proc_transfer_ops = {
+	.open		= a4l_proc_transfer_open,
+	.read		= seq_read,
+	.llseek		= seq_lseek,
+	.release	= single_release,
+};
 
 int a4l_proc_attach(a4l_cxt_t * cxt)
 {
@@ -135,7 +127,8 @@ int a4l_proc_attach(a4l_cxt_t * cxt)
 	strncpy(p, dev->driver->board_name, A4L_NAMELEN);
 
 	/* Create the proc entry */
-	entry = create_proc_entry(entry_name, 0444, a4l_proc_root);
+	entry = proc_create_data(entry_name, 0444, a4l_proc_root,
+				 &a4l_proc_transfer_ops, &dev->transfer);
 	if (entry == NULL) {
 		__a4l_err("a4l_proc_attach: "
 			  "failed to create /proc/analogy/%s\n",
@@ -143,11 +136,6 @@ int a4l_proc_attach(a4l_cxt_t * cxt)
 		ret = -ENOMEM;
 		goto out_setup_proc_transfer;
 	}
-
-	entry->nlink = 1;
-	entry->data = &dev->transfer;
-	entry->write_proc = NULL;
-	entry->read_proc = a4l_rdproc_transfer;
 
       out_setup_proc_transfer:
 	/* Free the file name buffer */
