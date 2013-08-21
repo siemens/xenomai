@@ -119,13 +119,11 @@ static void rtcan_get_timeout_name(nanosecs_rel_t timeout,
 	snprintf(name, max_len, "%lld", (long long)timeout);
 }
 
-static int rtcan_read_proc_devices(char *buf, char **start, off_t offset,
-				   int count, int *eof, void *data)
+static int rtcan_read_proc_devices(struct seq_file *p, void *data)
 {
-    int i, ret;
+    int i;
     struct rtcan_device *dev;
     char state_name[20], baudrate_name[20];
-    RTCAN_PROC_PRINT_VARS(80);
 
     if (down_interruptible(&rtcan_devices_nrt_lock))
 	return -ERESTARTSYS;
@@ -135,9 +133,8 @@ static int rtcan_read_proc_devices(char *buf, char **start, off_t offset,
      * rtcan1          undefined warning  1234567890 1234567890 1234567890
      * rtcan2          undefined scanning 1234567890 1234567890 1234567890
      */
-    if (!RTCAN_PROC_PRINT("Name___________ _Baudrate State___ "
-			  "TX_Counter RX_Counter ____Errors\n"))
-	goto done;
+    seq_printf(p, "Name___________ _Baudrate State___ TX_Counter RX_Counter "
+		  "____Errors\n");
 
     for (i = 1; i <= RTCAN_MAX_DEVICES; i++) {
 	if ((dev = rtcan_dev_get_by_index(i)) != NULL) {
@@ -145,23 +142,31 @@ static int rtcan_read_proc_devices(char *buf, char **start, off_t offset,
 				     state_name, sizeof(state_name));
 	    rtcan_dev_get_baudrate_name(dev->baudrate,
 					baudrate_name, sizeof(baudrate_name));
-	    ret = RTCAN_PROC_PRINT("%-15s %9s %-8s %10d %10d %10d\n",
-				   dev->name, baudrate_name, state_name,
-				   dev->tx_count, dev->rx_count, dev->err_count);
+	    seq_printf(p, "%-15s %9s %-8s %10d %10d %10d\n",
+		       dev->name, baudrate_name, state_name, dev->tx_count,
+		       dev->rx_count, dev->err_count);
 	    rtcan_dev_dereference(dev);
-	    if (!ret)
-		break;
 	}
     }
 
-  done:
     up(&rtcan_devices_nrt_lock);
-    RTCAN_PROC_PRINT_DONE;
+
+    return 0;
 }
 
+static int rtcan_proc_devices_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, rtcan_read_proc_devices, NULL);
+}
 
-static int rtcan_read_proc_sockets(char *buf, char **start, off_t offset,
-				   int count, int *eof, void *data)
+static const struct file_operations rtcan_proc_devices_ops = {
+	.open		= rtcan_proc_devices_open,
+	.read		= seq_read,
+	.llseek		= seq_lseek,
+	.release	= single_release,
+};
+
+static int rtcan_read_proc_sockets(struct seq_file *p, void *data)
 {
     struct rtcan_socket *sock;
     struct rtdm_dev_context *context;
@@ -170,7 +175,6 @@ static int rtcan_read_proc_sockets(char *buf, char **start, off_t offset,
     char rx_timeout[20], tx_timeout[20];
     rtdm_lockctx_t lock_ctx;
     int ifindex;
-    RTCAN_PROC_PRINT_VARS(120);
 
     if (down_interruptible(&rtcan_devices_nrt_lock))
 	return -ERESTARTSYS;
@@ -178,9 +182,8 @@ static int rtcan_read_proc_sockets(char *buf, char **start, off_t offset,
     /* fd Name___________ Filter ErrMask RX_Timeout TX_Timeout RX_BufFull TX_Lo
      *  0 rtcan0               1 0x00010 1234567890 1234567890 1234567890 12345
      */
-    if (!RTCAN_PROC_PRINT("fd Name___________ Filter ErrMask RX_Timeout_ns "
-			  "TX_Timeout_ns RX_BufFull TX_Lo\n"))
-	goto done;
+    seq_printf(p, "fd Name___________ Filter ErrMask RX_Timeout_ns "
+		  "TX_Timeout_ns RX_BufFull TX_Lo\n");
 
     rtdm_lock_get_irqsave(&rtcan_recv_list_lock, lock_ctx);
 
@@ -201,29 +204,37 @@ static int rtcan_read_proc_sockets(char *buf, char **start, off_t offset,
 			       tx_timeout, sizeof(tx_timeout));
 	rtcan_get_timeout_name(sock->rx_timeout,
 			       rx_timeout, sizeof(rx_timeout));
-	if (!RTCAN_PROC_PRINT("%2d %-15s %6d 0x%05x %13s %13s %10d %5d\n",
-			      context->fd, name, sock->flistlen,
-			      sock->err_mask, rx_timeout, tx_timeout,
-			      sock->rx_buf_full,
-			      rtcan_loopback_enabled(sock)))
-	    break;
+	seq_printf(p, "%2d %-15s %6d 0x%05x %13s %13s %10d %5d\n",
+		   context->fd, name, sock->flistlen, sock->err_mask,
+		   rx_timeout, tx_timeout, sock->rx_buf_full,
+		   rtcan_loopback_enabled(sock));
     }
 
     rtdm_lock_put_irqrestore(&rtcan_recv_list_lock, lock_ctx);
 
-  done:
     up(&rtcan_devices_nrt_lock);
-    RTCAN_PROC_PRINT_DONE;
+
+    return 0;
 }
 
-
-static int rtcan_read_proc_info(char *buf, char **start, off_t offset,
-				int count, int *eof, void *data)
+static int rtcan_proc_sockets_open(struct inode *inode, struct file *file)
 {
-    struct rtcan_device *dev = (struct rtcan_device *)data;
+	return single_open(file, rtcan_read_proc_sockets, NULL);
+}
+
+static const struct file_operations rtcan_proc_sockets_ops = {
+	.open		= rtcan_proc_sockets_open,
+	.read		= seq_read,
+	.llseek		= seq_lseek,
+	.release	= single_release,
+};
+
+
+static int rtcan_read_proc_info(struct seq_file *p, void *data)
+{
+    struct rtcan_device *dev = p->private;
     char state_name[20], baudrate_name[20];
     char ctrlmode_name[80], bittime_name[80];
-    RTCAN_PROC_PRINT_VARS(80);
 
     if (down_interruptible(&rtcan_devices_nrt_lock))
 	return -ERESTARTSYS;
@@ -237,46 +248,52 @@ static int rtcan_read_proc_info(char *buf, char **start, off_t offset,
     rtcan_dev_get_bittime_name(&dev->bit_time,
 			       bittime_name, sizeof(bittime_name));
 
-    if (!RTCAN_PROC_PRINT("%s %s\n", "Device    ", dev->name) ||
-	!RTCAN_PROC_PRINT("%s %s\n", "Controller", dev->ctrl_name) ||
-	!RTCAN_PROC_PRINT("%s %s\n", "Board     ", dev->board_name) ||
-	!RTCAN_PROC_PRINT("%s %d\n", "Clock-Hz  ", dev->can_sys_clock) ||
-	!RTCAN_PROC_PRINT("%s %s\n", "Baudrate  ", baudrate_name) ||
-	!RTCAN_PROC_PRINT("%s %s\n", "Bit-time  ", bittime_name) ||
-	!RTCAN_PROC_PRINT("%s %s\n", "Ctrl-Mode ", ctrlmode_name) ||
-	!RTCAN_PROC_PRINT("%s %s\n", "State     ", state_name) ||
-	!RTCAN_PROC_PRINT("%s %d\n", "TX-Counter", dev->tx_count) ||
-	!RTCAN_PROC_PRINT("%s %d\n", "RX-Counter", dev->rx_count) ||
-	!RTCAN_PROC_PRINT("%s %d\n", "Errors    ", dev->err_count))
-	goto done;
-
+    seq_printf(p, "Device     %s\n", dev->name);
+    seq_printf(p, "Controller %s\n", dev->ctrl_name);
+    seq_printf(p, "Board      %s\n", dev->board_name);
+    seq_printf(p, "Clock-Hz   %d\n", dev->can_sys_clock);
+    seq_printf(p, "Baudrate   %s\n", baudrate_name);
+    seq_printf(p, "Bit-time   %s\n", bittime_name);
+    seq_printf(p, "Ctrl-Mode  %s\n", ctrlmode_name);
+    seq_printf(p, "State      %s\n", state_name);
+    seq_printf(p, "TX-Counter %d\n", dev->tx_count);
+    seq_printf(p, "RX-Counter %d\n", dev->rx_count);
+    seq_printf(p, "Errors     %d\n", dev->err_count);
 #ifdef RTCAN_USE_REFCOUNT
-    if (!RTCAN_PROC_PRINT("%s %d\n", "Refcount  ", atomic_read(&dev->refcount)))
-	goto done;
+    seq_printf(p, "Refcount   %d\n", atomic_read(&dev->refcount));
 #endif
 
-  done:
     up(&rtcan_devices_nrt_lock);
-    RTCAN_PROC_PRINT_DONE;
+
+    return 0;
 }
 
-
-
-static int rtcan_read_proc_filter(char *buf, char **start, off_t offset,
-				  int count, int *eof, void *data)
+static int rtcan_proc_info_open(struct inode *inode, struct file *file)
 {
-    struct rtcan_device *dev = (struct rtcan_device *)data;
+	return single_open(file, rtcan_read_proc_info, PDE_DATA(inode));
+}
+
+static const struct file_operations rtcan_proc_info_ops = {
+	.open		= rtcan_proc_info_open,
+	.read		= seq_read,
+	.llseek		= seq_lseek,
+	.release	= single_release,
+};
+
+
+
+static int rtcan_read_proc_filter(struct seq_file *p, void *data)
+{
+    struct rtcan_device *dev = p->private;
     struct rtcan_recv *recv_listener = dev->recv_list;
     struct rtdm_dev_context *context;
     rtdm_lockctx_t lock_ctx;
-    RTCAN_PROC_PRINT_VARS(80);
 
     /*  fd __CAN_ID__ _CAN_Mask_ Inv MatchCount
      *   3 0x12345678 0x12345678  no 1234567890
      */
 
-    if (!RTCAN_PROC_PRINT("fd __CAN_ID__ _CAN_Mask_ Inv MatchCount\n"))
-	goto done;
+    seq_printf(p, "fd __CAN_ID__ _CAN_Mask_ Inv MatchCount\n");
 
     rtdm_lock_get_irqsave(&rtcan_recv_list_lock, lock_ctx);
 
@@ -284,37 +301,56 @@ static int rtcan_read_proc_filter(char *buf, char **start, off_t offset,
     while (recv_listener != NULL) {
 	context = rtcan_socket_context(recv_listener->sock);
 
-	if (!RTCAN_PROC_PRINT("%2d 0x%08x 0x%08x %s %10d\n",
-			      context->fd,
-			      recv_listener->can_filter.can_id,
-			      recv_listener->can_filter.can_mask &
-			      ~CAN_INV_FILTER,
-			      (recv_listener->can_filter.can_mask &
-			       CAN_INV_FILTER) ? "yes" : " no",
-			      recv_listener->match_count))
-	    break;
+	seq_printf(p, "%2d 0x%08x 0x%08x %s %10d\n",
+		   context->fd,
+		   recv_listener->can_filter.can_id,
+		   recv_listener->can_filter.can_mask & ~CAN_INV_FILTER,
+		   (recv_listener->can_filter.can_mask & CAN_INV_FILTER) ?
+			"yes" : " no",
+		   recv_listener->match_count);
+
 	recv_listener = recv_listener->next;
     }
 
     rtdm_lock_put_irqrestore(&rtcan_recv_list_lock, lock_ctx);
 
-  done:
-    RTCAN_PROC_PRINT_DONE;
+    return 0;
 }
 
-
-
-static int rtcan_read_proc_version(char *buf, char **start, off_t offset,
-				   int count, int *eof, void *data)
+static int rtcan_proc_filter_open(struct inode *inode, struct file *file)
 {
-    RTCAN_PROC_PRINT_VARS(80);
-
-    RTCAN_PROC_PRINT("RT-Socket-CAN %d.%d.%d - built on %s %s\n",
-		     RTCAN_MAJOR_VER, RTCAN_MINOR_VER, RTCAN_BUGFIX_VER,
-		     __DATE__, __TIME__);
-
-    RTCAN_PROC_PRINT_DONE;
+	return single_open(file, rtcan_read_proc_filter, PDE_DATA(inode));
 }
+
+static const struct file_operations rtcan_proc_filter_ops = {
+	.open		= rtcan_proc_filter_open,
+	.read		= seq_read,
+	.llseek		= seq_lseek,
+	.release	= single_release,
+};
+
+
+
+static int rtcan_read_proc_version(struct seq_file *p, void *data)
+{
+	seq_printf(p, "RT-Socket-CAN %d.%d.%d - built on %s %s\n",
+		   RTCAN_MAJOR_VER, RTCAN_MINOR_VER, RTCAN_BUGFIX_VER,
+		   __DATE__, __TIME__);
+
+	return 0;
+}
+
+static int rtcan_proc_version_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, rtcan_read_proc_version, NULL);
+}
+
+static const struct file_operations rtcan_proc_version_ops = {
+	.open		= rtcan_proc_version_open,
+	.read		= seq_read,
+	.llseek		= seq_lseek,
+	.release	= single_release,
+};
 
 
 void rtcan_dev_remove_proc(struct rtcan_device* dev)
@@ -331,82 +367,39 @@ void rtcan_dev_remove_proc(struct rtcan_device* dev)
 
 int rtcan_dev_create_proc(struct rtcan_device* dev)
 {
-    struct proc_dir_entry *proc_entry;
-
     if (!rtcan_proc_root)
 	return -EINVAL;
 
-    dev->proc_root = create_proc_entry(dev->name, S_IFDIR, rtcan_proc_root);
-    if (!dev->proc_root)
-	goto error1;
+    dev->proc_root = proc_mkdir(dev->name, rtcan_proc_root);
+    if (!dev->proc_root) {
+	printk("%s: unable to create /proc device entries\n", dev->name);
+	return -1;
+    }
 
-    proc_entry = create_proc_entry("info", S_IFREG | S_IRUGO | S_IWUSR,
-				   dev->proc_root);
-    if (!proc_entry)
-	goto error2;
-    proc_entry->read_proc = rtcan_read_proc_info;
-    proc_entry->data = dev;
-
-    proc_entry = create_proc_entry("filters", S_IFREG | S_IRUGO | S_IWUSR,
-				   dev->proc_root);
-    if (!proc_entry)
-	goto error3;
-    proc_entry->read_proc = rtcan_read_proc_filter;
-    proc_entry->data = dev;
-
+    proc_create_data("info", S_IFREG | S_IRUGO | S_IWUSR, dev->proc_root,
+		     &rtcan_proc_info_ops, dev);
+    proc_create_data("filters", S_IFREG | S_IRUGO | S_IWUSR, dev->proc_root,
+		     &rtcan_proc_filter_ops, dev);
     return 0;
-
-  error3:
-    remove_proc_entry("info", dev->proc_root);
-  error2:
-    remove_proc_entry(dev->name, rtcan_proc_root);
-  error1:
-    printk("%s: unable to create /proc device entries\n", dev->name);
-    return -1;
 
 }
 
 
 static int rtcan_proc_register(void)
 {
-    struct proc_dir_entry *proc_entry;
+    rtcan_proc_root = proc_mkdir("rtcan", NULL);
+    if (!rtcan_proc_root) {
+	printk("rtcan: unable to initialize /proc entries\n");
+	return -1;
+    }
 
-    rtcan_proc_root = create_proc_entry("rtcan", S_IFDIR, 0);
-    if (!rtcan_proc_root)
-	goto error1;
-
-    proc_entry = create_proc_entry("devices", S_IFREG | S_IRUGO | S_IWUSR,
-				   rtcan_proc_root);
-    if (!proc_entry)
-	goto error2;
-    proc_entry->read_proc = rtcan_read_proc_devices;
-
-    proc_entry = create_proc_entry("version", S_IFREG | S_IRUGO | S_IWUSR,
-				   rtcan_proc_root);
-    if (!proc_entry)
-	goto error3;
-    proc_entry->read_proc = rtcan_read_proc_version;
-
-    proc_entry = create_proc_entry("sockets", S_IFREG | S_IRUGO | S_IWUSR,
-				   rtcan_proc_root);
-    if (!proc_entry)
-	goto error4;
-    proc_entry->read_proc = rtcan_read_proc_sockets;
-
+    proc_create("devices", S_IFREG | S_IRUGO | S_IWUSR, rtcan_proc_root,
+	        &rtcan_proc_devices_ops);
+    proc_create("version", S_IFREG | S_IRUGO | S_IWUSR, rtcan_proc_root,
+		&rtcan_proc_version_ops);
+    proc_create("sockets", S_IFREG | S_IRUGO | S_IWUSR, rtcan_proc_root,
+		&rtcan_proc_sockets_ops);
     return 0;
-
-  error4:
-    remove_proc_entry("version", rtcan_proc_root);
-
-  error3:
-    remove_proc_entry("devices", rtcan_proc_root);
-
-  error2:
-    remove_proc_entry("rtcan", 0);
-
-  error1:
-    printk("rtcan: unable to initialize /proc entries\n");
-    return -1;
 }
 
 
@@ -446,7 +439,6 @@ int __init rtcan_init(void)
 
 void __exit rtcan_exit(void)
 {
-
     rtcan_raw_proto_unregister();
 #ifdef CONFIG_PROC_FS
     rtcan_proc_unregister();
