@@ -41,7 +41,6 @@ struct xnvfile_lock_ops;
 struct xnvfile {
 	struct proc_dir_entry *pde;
 	struct file *file;
-	struct xnvfile_directory *parent;
 	struct xnvfile_lock_ops *lockops;
 	int refcnt;
 	void *private;
@@ -577,7 +576,6 @@ static inline void xnvfile_touch(struct xnvfile_snapshot *vfile)
 #define xnvfile_noentry			\
 	{				\
 		.pde = NULL,		\
-		.parent = NULL,		\
 		.private = NULL,	\
 		.file = NULL,		\
 		.refcnt = 0,		\
@@ -587,7 +585,6 @@ static inline void xnvfile_touch(struct xnvfile_snapshot *vfile)
 #define xnvfile_nolink	{ .entry = xnvfile_noentry }
 #define xnvfile_nofile	{ .entry = xnvfile_noentry }
 
-#define xnvfile_parent(e)		((e)->entry.parent)
 #define xnvfile_priv(e)			((e)->entry.private)
 #define xnvfile_nref(e)			((e)->entry.refcnt)
 #define xnvfile_file(e)			((e)->entry.file)
