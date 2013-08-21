@@ -33,8 +33,7 @@
 
 #ifdef CONFIG_XENO_DRIVERS_CAN_DEBUG
 
-static int rtcan_mscan_proc_regs(char *buf, char **start, off_t offset,
-				 int count, int *eof, void *data)
+static int rtcan_mscan_proc_regs(struct seq_file *p, void *data)
 {
 	struct rtcan_device *dev = (struct rtcan_device *)data;
 	struct mscan_regs *regs = (struct mscan_regs *)dev->base_addr;
@@ -43,98 +42,94 @@ static int rtcan_mscan_proc_regs(char *buf, char **start, off_t offset,
 	u32 port_config;
 #endif
 	u8 canctl0, canctl1;
-	RTCAN_PROC_PRINT_VARS(80);
 
-	if (!RTCAN_PROC_PRINT("MSCAN registers at %p\n", regs))
-		goto done;
+	seq_printf(p, "MSCAN registers at %p\n", regs);
+
 	canctl0 = in_8(&regs->canctl0);
-	if (!RTCAN_PROC_PRINT("canctl0  0x%02x%s%s%s%s%s%s%s%s\n",
-			      canctl0,
-			      (canctl0 & MSCAN_RXFRM) ? " rxfrm" :"",
-			      (canctl0 & MSCAN_RXACT) ? " rxact" :"",
-			      (canctl0 & MSCAN_CSWAI) ? " cswai" :"",
-			      (canctl0 & MSCAN_SYNCH) ? " synch" :"",
-			      (canctl0 & MSCAN_TIME)  ? " time"  :"",
-			      (canctl0 & MSCAN_WUPE)  ? " wupe"  :"",
-			      (canctl0 & MSCAN_SLPRQ) ? " slprq" :"",
-			      (canctl0 & MSCAN_INITRQ)? " initrq":"" ))
-		goto done;
+	seq_printf(p, "canctl0  0x%02x%s%s%s%s%s%s%s%s\n",
+		   canctl0,
+		   (canctl0 & MSCAN_RXFRM) ? " rxfrm" :"",
+		   (canctl0 & MSCAN_RXACT) ? " rxact" :"",
+		   (canctl0 & MSCAN_CSWAI) ? " cswai" :"",
+		   (canctl0 & MSCAN_SYNCH) ? " synch" :"",
+		   (canctl0 & MSCAN_TIME)  ? " time"  :"",
+		   (canctl0 & MSCAN_WUPE)  ? " wupe"  :"",
+		   (canctl0 & MSCAN_SLPRQ) ? " slprq" :"",
+		   (canctl0 & MSCAN_INITRQ)? " initrq":"" );
 	canctl1 = in_8(&regs->canctl1);
-	if (!RTCAN_PROC_PRINT("canctl1  0x%02x%s%s%s%s%s%s%s\n",
-			       canctl1,
-			      (canctl1 & MSCAN_CANE)  ? " cane"  :"",
-			      (canctl1 & MSCAN_CLKSRC)? " clksrc":"",
-			      (canctl1 & MSCAN_LOOPB) ? " loopb" :"",
-			      (canctl1 & MSCAN_LISTEN)? " listen":"",
-			      (canctl1 & MSCAN_WUPM)  ? " wump"  :"",
-			      (canctl1 & MSCAN_SLPAK) ? " slpak" :"",
-			      (canctl1 & MSCAN_INITAK)? " initak":""))
-		goto done;
-	if (!RTCAN_PROC_PRINT(MSCAN_REG_ARGS(canbtr0 )) |
-	    !RTCAN_PROC_PRINT(MSCAN_REG_ARGS(canbtr1 )) |
-	    !RTCAN_PROC_PRINT(MSCAN_REG_ARGS(canrflg )) |
-	    !RTCAN_PROC_PRINT(MSCAN_REG_ARGS(canrier )) |
-	    !RTCAN_PROC_PRINT(MSCAN_REG_ARGS(cantflg )) |
-	    !RTCAN_PROC_PRINT(MSCAN_REG_ARGS(cantier )) |
-	    !RTCAN_PROC_PRINT(MSCAN_REG_ARGS(cantarq )) |
-	    !RTCAN_PROC_PRINT(MSCAN_REG_ARGS(cantaak )) |
-	    !RTCAN_PROC_PRINT(MSCAN_REG_ARGS(cantbsel)) |
-	    !RTCAN_PROC_PRINT(MSCAN_REG_ARGS(canidac )) |
-	    !RTCAN_PROC_PRINT(MSCAN_REG_ARGS(canrxerr)) |
-	    !RTCAN_PROC_PRINT(MSCAN_REG_ARGS(cantxerr)) |
-	    !RTCAN_PROC_PRINT(MSCAN_REG_ARGS(canidar0)) |
-	    !RTCAN_PROC_PRINT(MSCAN_REG_ARGS(canidar1)) |
-	    !RTCAN_PROC_PRINT(MSCAN_REG_ARGS(canidar2)) |
-	    !RTCAN_PROC_PRINT(MSCAN_REG_ARGS(canidar3)) |
-	    !RTCAN_PROC_PRINT(MSCAN_REG_ARGS(canidmr0)) |
-	    !RTCAN_PROC_PRINT(MSCAN_REG_ARGS(canidmr1)) |
-	    !RTCAN_PROC_PRINT(MSCAN_REG_ARGS(canidmr2)) |
-	    !RTCAN_PROC_PRINT(MSCAN_REG_ARGS(canidmr3)) |
-	    !RTCAN_PROC_PRINT(MSCAN_REG_ARGS(canidar4)) |
-	    !RTCAN_PROC_PRINT(MSCAN_REG_ARGS(canidar5)) |
-	    !RTCAN_PROC_PRINT(MSCAN_REG_ARGS(canidar6)) |
-	    !RTCAN_PROC_PRINT(MSCAN_REG_ARGS(canidar7)) |
-	    !RTCAN_PROC_PRINT(MSCAN_REG_ARGS(canidmr4)) |
-	    !RTCAN_PROC_PRINT(MSCAN_REG_ARGS(canidmr5)) |
-	    !RTCAN_PROC_PRINT(MSCAN_REG_ARGS(canidmr6)) |
-	    !RTCAN_PROC_PRINT(MSCAN_REG_ARGS(canidmr7)))
-		goto done;
+	seq_printf(p, "canctl1  0x%02x%s%s%s%s%s%s%s\n",
+		   canctl1,
+		   (canctl1 & MSCAN_CANE)  ? " cane"  :"",
+		   (canctl1 & MSCAN_CLKSRC)? " clksrc":"",
+		   (canctl1 & MSCAN_LOOPB) ? " loopb" :"",
+		   (canctl1 & MSCAN_LISTEN)? " listen":"",
+		   (canctl1 & MSCAN_WUPM)  ? " wump"  :"",
+		   (canctl1 & MSCAN_SLPAK) ? " slpak" :"",
+		   (canctl1 & MSCAN_INITAK)? " initak":"");
+	seq_printf(p, MSCAN_REG_ARGS(canbtr0 ));
+	seq_printf(p, MSCAN_REG_ARGS(canbtr1 ));
+	seq_printf(p, MSCAN_REG_ARGS(canrflg ));
+	seq_printf(p, MSCAN_REG_ARGS(canrier ));
+	seq_printf(p, MSCAN_REG_ARGS(cantflg ));
+	seq_printf(p, MSCAN_REG_ARGS(cantier ));
+	seq_printf(p, MSCAN_REG_ARGS(cantarq ));
+	seq_printf(p, MSCAN_REG_ARGS(cantaak ));
+	seq_printf(p, MSCAN_REG_ARGS(cantbsel));
+	seq_printf(p, MSCAN_REG_ARGS(canidac ));
+	seq_printf(p, MSCAN_REG_ARGS(canrxerr));
+	seq_printf(p, MSCAN_REG_ARGS(cantxerr));
+	seq_printf(p, MSCAN_REG_ARGS(canidar0));
+	seq_printf(p, MSCAN_REG_ARGS(canidar1));
+	seq_printf(p, MSCAN_REG_ARGS(canidar2));
+	seq_printf(p, MSCAN_REG_ARGS(canidar3));
+	seq_printf(p, MSCAN_REG_ARGS(canidmr0));
+	seq_printf(p, MSCAN_REG_ARGS(canidmr1));
+	seq_printf(p, MSCAN_REG_ARGS(canidmr2));
+	seq_printf(p, MSCAN_REG_ARGS(canidmr3));
+	seq_printf(p, MSCAN_REG_ARGS(canidar4));
+	seq_printf(p, MSCAN_REG_ARGS(canidar5));
+	seq_printf(p, MSCAN_REG_ARGS(canidar6));
+	seq_printf(p, MSCAN_REG_ARGS(canidar7));
+	seq_printf(p, MSCAN_REG_ARGS(canidmr4));
+	seq_printf(p, MSCAN_REG_ARGS(canidmr5));
+	seq_printf(p, MSCAN_REG_ARGS(canidmr6));
+	seq_printf(p, MSCAN_REG_ARGS(canidmr7));
 
 #ifdef MPC5xxx_GPIO
-	if (!RTCAN_PROC_PRINT("GPIO registers\n"))
-		goto done;
+	seq_printf(p, "GPIO registers\n");
 	port_config = in_be32(&gpio->port_config);
-	if (!RTCAN_PROC_PRINT("port_config 0x%08x %s\n", port_config,
-			      (port_config & 0x10000000 ?
-			       "CAN1 on I2C1, CAN2 on TMR0/1 pins":
-			       (port_config & 0x70) == 0x10 ?
-			       "CAN1/2 on PSC2 pins": "MSCAN1/2 not routed")))
-		goto done;
+	seq_printf(p, "port_config 0x%08x %s\n", port_config,
+		   (port_config & 0x10000000 ?
+			"CAN1 on I2C1, CAN2 on TMR0/1 pins" :
+			(port_config & 0x70) == 0x10 ?
+				"CAN1/2 on PSC2 pins" :
+				"MSCAN1/2 not routed"));
 #endif
 
 done:
 	RTCAN_PROC_PRINT_DONE;
 }
 
+static int rtcan_mscan_proc_regs_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, rtcan_mscan_proc_regs, PDE_DATA(inode));
+}
+
+static const struct file_operations rtcan_mscan_proc_regs_ops = {
+	.open		= rtcan_mscan_proc_regs_open,
+	.read		= seq_read,
+	.llseek		= seq_lseek,
+	.release	= single_release,
+};
+
 int rtcan_mscan_create_proc(struct rtcan_device* dev)
 {
-	struct proc_dir_entry *proc_entry;
-
 	if (!dev->proc_root)
 		return -EINVAL;
 
-	proc_entry = create_proc_entry("registers", S_IFREG | S_IRUGO | S_IWUSR,
-				       dev->proc_root);
-	if (!proc_entry)
-		goto error;
-	proc_entry->read_proc = rtcan_mscan_proc_regs;
-	proc_entry->data = dev;
-
+	proc_create_data("registers", S_IFREG | S_IRUGO | S_IWUSR,
+			 dev->proc_root, &rtcan_mscan_proc_regs_ops, dev);
 	return 0;
-
-error:
-	printk("%s: unable to create /proc entries for MSCAN\n", dev->name);
-	return -1;
 }
 
 void rtcan_mscan_remove_proc(struct rtcan_device* dev)

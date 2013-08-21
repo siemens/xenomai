@@ -784,6 +784,19 @@ proc_create_data(const char *name, mode_t mode, struct proc_dir_entry *parent,
 	return pde;
 }
 #endif /* < 2.6.26 */
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,25)
+static inline struct proc_dir_entry *
+proc_create(const char *name, mode_t mode, struct proc_dir_entry *parent,
+	    const struct file_operations *proc_fops)
+{
+	struct proc_dir_entry *pde = create_proc_entry(name, mode, parent);
+
+	if (pde)
+		pde->proc_fops = proc_fops;
+	return pde;
+}
+#endif /* < 2.6.25 */
 #endif /* < 3.10 */
 
 #endif /* _XENO_ASM_GENERIC_WRAPPERS_H */

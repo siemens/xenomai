@@ -29,50 +29,42 @@
 
 #ifdef CONFIG_XENO_DRIVERS_CAN_DEBUG
 
-static int rtcan_sja_proc_regs(char *buf, char **start, off_t offset,
-				 int count, int *eof, void *data)
+static int rtcan_sja_proc_regs(struct seq_file *p, void *data)
 {
     struct rtcan_device *dev = (struct rtcan_device *)data;
     struct rtcan_sja1000 *chip = (struct rtcan_sja1000 *)dev->priv;
     int i;
-    RTCAN_PROC_PRINT_VARS(80);
 
-    if (!RTCAN_PROC_PRINT("SJA1000 registers"))
-	goto done;
+    seq_printf(p, "SJA1000 registers");
     for (i = 0; i < 0x20; i++) {
-	if ((i % 0x10) == 0) {
-	    if (!RTCAN_PROC_PRINT("\n%02x:", i))
-		goto done;
-	}
-	if (!RTCAN_PROC_PRINT(" %02x", chip->read_reg(dev, i)))
-	    goto done;
+	if ((i % 0x10) == 0)
+	    seq_printf(p, "\n%02x:", i);
+	seq_printf(p, " %02x", chip->read_reg(dev, i));
     }
-    if (!RTCAN_PROC_PRINT("\n"))
-	goto done;
-
- done:
-    RTCAN_PROC_PRINT_DONE;
+    seq_printf(p, "\n");
+    return 0;
 }
+
+static int rtcan_sja_proc_regs_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, rtcan_sja_proc_regs, PDE_DATA(inode));
+}
+
+static const struct file_operations rtcan_sja_proc_regs_ops = {
+	.open		= rtcan_sja_proc_regs_open,
+	.read		= seq_read,
+	.llseek		= seq_lseek,
+	.release	= single_release,
+};
 
 int rtcan_sja_create_proc(struct rtcan_device* dev)
 {
-    struct proc_dir_entry *proc_entry;
-
     if (!dev->proc_root)
 	return -EINVAL;
 
-    proc_entry = create_proc_entry("registers", S_IFREG | S_IRUGO | S_IWUSR,
-				   dev->proc_root);
-    if (!proc_entry)
-	goto error;
-    proc_entry->read_proc = rtcan_sja_proc_regs;
-    proc_entry->data = dev;
-
+    proc_create_data("registers", S_IFREG | S_IRUGO | S_IWUSR, dev->proc_root,
+		     &rtcan_sja_proc_regs_ops, dev);
     return 0;
-
-  error:
-    printk("%s: unable to create /proc entries for SJA\n", dev->name);
-    return -1;
 }
 
 void rtcan_sja_remove_proc(struct rtcan_device* dev)
