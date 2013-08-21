@@ -7,7 +7,7 @@ config XENO_DRIVERS_CAN
 	RT-Socket-CAN is a real-time socket interface for CAN controllers.
 
 config XENO_DRIVERS_CAN_DEBUG
-	depends on XENO_DRIVERS_CAN
+	depends on XENO_DRIVERS_CAN && PROC_FS
 	bool "Enable debug output"
 	default y
 	help
