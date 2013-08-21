@@ -760,4 +760,30 @@ unsigned long vm_mmap(struct file *file, unsigned long addr,
 #define wrap_select_timers(mask) ipipe_timers_request()
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,10,0)
+#include <linux/proc_fs.h>
+
+#define PDE_DATA(inode)	PROC_I(inode)->pde->data
+
+static inline void proc_remove(struct proc_dir_entry *pde)
+{
+	remove_proc_entry(pde->name, pde->parent);
+}
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
+static inline struct proc_dir_entry *
+proc_create_data(const char *name, mode_t mode, struct proc_dir_entry *parent,
+		 const struct file_operations *proc_fops, void *data)
+{
+	struct proc_dir_entry *pde = create_proc_entry(name, mode, parent);
+
+	if (pde) {
+		pde->proc_fops = proc_fops;
+		pde->data = data;
+	}
+	return pde;
+}
+#endif /* < 2.6.26 */
+#endif /* < 3.10 */
+
 #endif /* _XENO_ASM_GENERIC_WRAPPERS_H */
