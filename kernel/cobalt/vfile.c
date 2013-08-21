@@ -419,7 +419,6 @@ int xnvfile_init_snapshot(const char *name,
 	if (pde == NULL)
 		return -ENOMEM;
 
-	vfile->entry.parent = parent;
 	vfile->entry.pde = pde;
 
 	return 0;
@@ -652,7 +651,6 @@ int xnvfile_init_regular(const char *name,
 	if (pde == NULL)
 		return -ENOMEM;
 
-	vfile->entry.parent = parent;
 	vfile->entry.pde = pde;
 
 	return 0;
@@ -693,7 +691,6 @@ int xnvfile_init_dir(const char *name,
 	if (pde == NULL)
 		return -ENOMEM;
 
-	vdir->entry.parent = parent;
 	vdir->entry.pde = pde;
 	vdir->entry.lockops = NULL;
 	vdir->entry.private = NULL;
@@ -740,7 +737,6 @@ int xnvfile_init_link(const char *from,
 	if (pde == NULL)
 		return -ENOMEM;
 
-	vlink->entry.parent = parent;
 	vlink->entry.pde = pde;
 	vlink->entry.lockops = NULL;
 	vlink->entry.private = NULL;
@@ -958,7 +954,6 @@ int __init xnvfile_init_root(void)
 	if (pde == NULL)
 		return -ENOMEM;
 
-	vdir->entry.parent = NULL;
 	vdir->entry.pde = pde;
 	vdir->entry.lockops = NULL;
 	vdir->entry.private = NULL;
