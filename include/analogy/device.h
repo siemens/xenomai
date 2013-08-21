@@ -83,9 +83,7 @@ typedef struct a4l_dev_info a4l_dvinfo_t;
 /* --- Devices tab related functions --- */
 void a4l_init_devs(void);
 int a4l_check_cleanup_devs(void);
-int a4l_rdproc_devs(char *page,
-		    char **start,
-		    off_t off, int count, int *eof, void *data);
+int a4l_rdproc_devs(struct seq_file *p, void *data);
 
 /* --- Context related function / macro --- */
 void a4l_set_dev(a4l_cxt_t *cxt);

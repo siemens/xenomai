@@ -58,13 +58,37 @@ int (*a4l_ioctl_functions[NB_IOCTL_FUNCTIONS]) (a4l_cxt_t *, void *) = {
 #ifdef CONFIG_PROC_FS
 struct proc_dir_entry *a4l_proc_root;
 
+static int a4l_proc_devs_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, a4l_rdproc_devs, NULL);
+}
+
+static const struct file_operations a4l_proc_devs_ops = {
+	.open		= a4l_proc_devs_open,
+	.read		= seq_read,
+	.llseek		= seq_lseek,
+	.release	= single_release,
+};
+
+static int a4l_proc_drvs_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, a4l_rdproc_drvs, NULL);
+}
+
+static const struct file_operations a4l_proc_drvs_ops = {
+	.open		= a4l_proc_drvs_open,
+	.read		= seq_read,
+	.llseek		= seq_lseek,
+	.release	= single_release,
+};
+
 int a4l_init_proc(void)
 {
 	int ret = 0;
 	struct proc_dir_entry *entry;
 
 	/* Creates the global directory */
-	a4l_proc_root = create_proc_entry("analogy", S_IFDIR, 0);
+	a4l_proc_root = proc_mkdir("analogy", NULL);
 	if (a4l_proc_root == NULL) {
 		__a4l_err("a4l_proc_init: "
 			  "failed to create /proc/analogy\n");
@@ -72,33 +96,25 @@ int a4l_init_proc(void)
 	}
 
 	/* Creates the devices related file */
-	entry = create_proc_entry("devices", 0444, a4l_proc_root);
+	entry = proc_create("devices", 0444, a4l_proc_root,
+			    &a4l_proc_devs_ops);
 	if (entry == NULL) {
 		__a4l_err("a4l_proc_init: "
 			  "failed to create /proc/analogy/devices\n");
 		ret = -ENOMEM;
 		goto err_proc_init;
 	}
-
-	entry->nlink = 1;
-	entry->data = NULL;
-	entry->write_proc = NULL;
-	entry->read_proc = a4l_rdproc_devs;
 	wrap_proc_dir_entry_owner(entry);
 
 	/* Creates the drivers related file */
-	entry = create_proc_entry("drivers", 0444, a4l_proc_root);
+	entry = proc_create("drivers", 0444, a4l_proc_root,
+			    &a4l_proc_drvs_ops);
 	if (entry == NULL) {
 		__a4l_err("a4l_proc_init: "
 			  "failed to create /proc/analogy/drivers\n");
 		ret = -ENOMEM;
 		goto err_proc_init;
 	}
-
-	entry->nlink = 1;
-	entry->data = NULL;
-	entry->write_proc = NULL;
-	entry->read_proc = a4l_rdproc_drvs;
 	wrap_proc_dir_entry_owner(entry);
 
 	return 0;

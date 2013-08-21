@@ -89,40 +89,20 @@ int a4l_unregister_drv(a4l_drv_t * drv)
 
 /* --- Driver list proc section --- */
 
-int a4l_rdproc_drvs(char *page,
-		       char **start, off_t off, int count, int *eof, void *data)
+int a4l_rdproc_drvs(struct seq_file *p, void *data)
 {
-	int i = 0, len = 0;
-	char *p = page;
+	int i = 0;
 	struct list_head *this;
 
-	p += sprintf(p, "--  Analogy drivers --\n\n");
-	p += sprintf(p, "| idx | driver name\n");
+	seq_printf(p, "--  Analogy drivers --\n\n");
+	seq_printf(p, "| idx | driver name\n");
 
 	list_for_each(this, &a4l_drvs) {
 		a4l_drv_t *drv = list_entry(this, a4l_drv_t, list);
 
-		p += sprintf(p, "|  %02d | %s\n", i++, drv->board_name);
+		seq_printf(p, "|  %02d | %s\n", i++, drv->board_name);
 	}
-
-	/* Handles any proc-file reading way */
-	len = p - page - off;
-	/* If the requested size is greater than we provide,
-	   the read operation is over */
-	if (len <= off + count)
-		*eof = 1;
-	/* In case the read operation is performed in many steps,
-	   the start pointer must be redefined */
-	*start = page + off;
-	/* If the requested size is lower than we provide,
-	   the read operation will be done in more than one step */
-	if (len > count)
-		len = count;
-	/* In case the offset is not correct (too high) */
-	if (len < 0)
-		len = 0;
-
-	return len;
+	return 0;
 }
 
 #endif /* CONFIG_PROC_FS */
