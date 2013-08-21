@@ -72,5 +72,16 @@ unsigned long vm_mmap(struct file *file, unsigned long addr,
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,9,0)
 #include <linux/sched/rt.h>
 #endif /* LINUX >= 3.9.0 */
+ 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,10,0)
+#include <linux/proc_fs.h>
+
+#define PDE_DATA(inode)	PROC_I(inode)->pde->data
+
+static inline void proc_remove(struct proc_dir_entry *pde)
+{
+	remove_proc_entry(pde->name, pde->parent);
+}
+#endif /* < 3.10 */
 
 #endif /* _COBALT_ASM_GENERIC_WRAPPERS_H */

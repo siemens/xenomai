@@ -79,6 +79,7 @@
 #include <cobalt/kernel/lock.h>
 #include <cobalt/kernel/assert.h>
 #include <cobalt/kernel/vfile.h>
+#include <asm/xenomai/wrappers.h>
 
 /**
  * @var struct xnvfile_directory nkvfroot
@@ -148,8 +149,7 @@ static void vfile_snapshot_free(struct xnvfile_snapshot_iterator *it, void *buf)
 
 static int vfile_snapshot_open(struct inode *inode, struct file *file)
 {
-	struct proc_dir_entry *pde = PDE(inode);
-	struct xnvfile_snapshot *vfile = pde->data;
+	struct xnvfile_snapshot *vfile = PDE_DATA(inode);
 	struct xnvfile_snapshot_ops *ops = vfile->ops;
 	struct xnvfile_snapshot_iterator *it;
 	int revtag, ret, nrdata;
@@ -318,8 +318,8 @@ static int vfile_snapshot_release(struct inode *inode, struct file *file)
 ssize_t vfile_snapshot_write(struct file *file, const char __user *buf,
 			     size_t size, loff_t *ppos)
 {
-	struct proc_dir_entry *pde = PDE(file->f_path.dentry->d_inode);
-	struct xnvfile_snapshot *vfile = pde->data;
+	struct xnvfile_snapshot *vfile =
+		PDE_DATA(file->f_path.dentry->d_inode);
 	struct xnvfile_input input;
 	ssize_t ret;
 
@@ -414,12 +414,10 @@ int xnvfile_init_snapshot(const char *name,
 
 	mode = vfile->ops->store ? 0644 : 0444;
 	ppde = parent->entry.pde;
-	pde = create_proc_entry(name, mode, ppde);
+	pde = proc_create_data(name, mode, ppde, &vfile_snapshot_fops, vfile);
 	if (pde == NULL)
 		return -ENOMEM;
 
-	pde->proc_fops = &vfile_snapshot_fops;
-	pde->data = vfile;
 	vfile->entry.parent = parent;
 	vfile->entry.pde = pde;
 
@@ -505,8 +503,7 @@ static struct seq_operations vfile_regular_ops = {
 
 static int vfile_regular_open(struct inode *inode, struct file *file)
 {
-	struct proc_dir_entry *pde = PDE(inode);
-	struct xnvfile_regular *vfile = pde->data;
+	struct xnvfile_regular *vfile = PDE_DATA(inode);
 	struct xnvfile_regular_ops *ops = vfile->ops;
 	struct xnvfile_regular_iterator *it;
 	struct seq_file *seq;
@@ -574,8 +571,8 @@ static int vfile_regular_release(struct inode *inode, struct file *file)
 ssize_t vfile_regular_write(struct file *file, const char __user *buf,
 			    size_t size, loff_t *ppos)
 {
-	struct proc_dir_entry *pde = PDE(file->f_path.dentry->d_inode);
-	struct xnvfile_regular *vfile = pde->data;
+	struct xnvfile_regular *vfile =
+		PDE_DATA(file->f_path.dentry->d_inode);
 	struct xnvfile_input input;
 	ssize_t ret;
 
@@ -650,12 +647,10 @@ int xnvfile_init_regular(const char *name,
 
 	mode = vfile->ops->store ? 0644 : 0444;
 	ppde = parent->entry.pde;
-	pde = create_proc_entry(name, mode, ppde);
+	pde = proc_create_data(name, mode, ppde, &vfile_regular_fops, vfile);
 	if (pde == NULL)
 		return -ENOMEM;
 
-	pde->proc_fops = &vfile_regular_fops;
-	pde->data = vfile;
 	vfile->entry.parent = parent;
 	vfile->entry.pde = pde;
 
@@ -693,7 +688,7 @@ int xnvfile_init_dir(const char *name,
 		parent = &sysroot;
 
 	ppde = parent->entry.pde;
-	pde = create_proc_entry(name, S_IFDIR, ppde);
+	pde = proc_mkdir(name, ppde);
 	if (pde == NULL)
 		return -ENOMEM;
 
@@ -762,10 +757,7 @@ EXPORT_SYMBOL_GPL(xnvfile_init_link);
  */
 void xnvfile_destroy(struct xnvfile *vfile)
 {
-	struct proc_dir_entry *ppde;
-
-	ppde = vfile->parent ? vfile->parent->entry.pde : nkvfroot.entry.pde;
-	remove_proc_entry(vfile->pde->name, ppde);
+	proc_remove(vfile->pde);
 }
 EXPORT_SYMBOL_GPL(xnvfile_destroy);
 
@@ -961,7 +953,7 @@ int __init xnvfile_init_root(void)
 	struct xnvfile_directory *vdir = &nkvfroot;
 	struct proc_dir_entry *pde;
 
-	pde = create_proc_entry("xenomai", S_IFDIR, NULL);
+	pde = proc_mkdir("xenomai", NULL);
 	if (pde == NULL)
 		return -ENOMEM;
 
