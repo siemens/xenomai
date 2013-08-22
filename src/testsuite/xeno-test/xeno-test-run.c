@@ -46,6 +46,7 @@ static char default_loadcmd[] = "dohell 900";
 static char *loadcmd = default_loadcmd;
 static fd_set inputs;
 static struct child script, load;
+static int script_exit_status = EXIT_SUCCESS;
 
 void handle_checked_child(struct child *child, fd_set *fds);
 void handle_script_child(struct child *child, fd_set *fds);
@@ -417,7 +418,18 @@ void handle_script_child(struct child *child, fd_set *fds)
 	int rc;
 
 	if (child->dead) {
+		int status = child->exit_status;
 		child_cleanup(child);
+		if (WIFEXITED(status)) {
+			script_exit_status = WEXITSTATUS(status);
+			children_kill(CHILD_ANY, SIGTERM);
+			sigexit_start = termload_start = mono_time();
+		}
+		if (WIFSIGNALED(status)) {
+			children_kill(CHILD_ANY, SIGTERM);
+			sigexit_start = termload_start = mono_time();
+			sigexit = WTERMSIG(status);
+		}	
 		return;
 	}
 
@@ -664,5 +676,5 @@ int main(int argc, char *argv[])
 		signal(sigexit, SIG_DFL);
 		raise(sigexit);
 	}
-	exit(EXIT_SUCCESS);
+	exit(script_exit_status);
 }
