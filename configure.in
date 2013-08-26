@@ -20,6 +20,7 @@ fi
 
 AC_CONFIG_HEADERS(src/include/xeno_config.h)
 AC_CONFIG_AUX_DIR(config)
+AC_CONFIG_MACRO_DIR([config])
 AC_CONFIG_SRCDIR(src/skins/native/task.c)
 AC_PREFIX_DEFAULT(/usr/xenomai)
 AC_CANONICAL_BUILD
