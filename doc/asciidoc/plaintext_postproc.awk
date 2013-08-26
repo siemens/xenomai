@@ -8,14 +8,27 @@ BEGIN {
 	next
 }
 
-in_toc && /^([ \t]*[0-9]\.|$)/ {
-	print $0
+/List of Tables/ {
+	in_toc=0
+	in_lot=1
 	next
 }
 
-in_toc {
+(in_toc || in_lot) && /^([ \t]*[0-9]\.|$)/ {
+	if (in_toc)
+		print $0
+	next
+}
+
+(in_toc || in_lot) && /^[ \t]*$/ {
+	if (in_toc)
+		print $0
+	next
+}
+
+in_lot {
 	printf "-------------------------------------------------------------------------------\n\n"
-	in_toc=0
+	in_lot=0
 }
 
 $0 ~ link_re {
@@ -35,6 +48,12 @@ unfinished_url && /"/ {
 unfinished_url {
 	sub(/^[ \t]*/,"")
 	unfinished_url=unfinished_url$0
+	next
+}
+
+/^Chapter [0-9]\./ {
+	sub(/^Chapter /,"", $0)
+	title=$0
 	next
 }
 

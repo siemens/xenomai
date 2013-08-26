@@ -30,9 +30,9 @@ tmpdir=adoc_plaintext
 $(tmpdir)/%.txt: %.adoc Makefile $(top_srcdir)/doc/asciidoc/plaintext.conf $(top_srcdir)/doc/asciidoc/plaintext.xsl
 	@$(mkdir_p) $(tmpdir)
 	$(ASCIIDOC) --backend docbook -f $(top_srcdir)/doc/asciidoc/plaintext.conf \
-		--doctype article $(ASCIIDOC_TXT_OPTS) \
+		--doctype book $(ASCIIDOC_TXT_OPTS) \
 		--out-file $(tmpdir)/$*.xml $<
-	xsltproc --stringparam toc.section.depth 3 --nonet \
+	xsltproc --stringparam toc.section.depth 4 --nonet \
 		--output $(tmpdir)/$*.html $(top_srcdir)/doc/asciidoc/plaintext.xsl \
 		$(tmpdir)/$*.xml
 	w3m -cols 80 -dump -T text/html -no-graph $(tmpdir)/$*.html > $@

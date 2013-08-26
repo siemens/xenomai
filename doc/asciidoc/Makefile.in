@@ -492,19 +492,22 @@ uninstall-am: uninstall-local
 
 @CONFIG_XENO_ASCIIDOC_TRUE@all-local: $(HTML_DOCS) $(PDF_DOCS) $(TXT_DOCS)
 
-@CONFIG_XENO_ASCIIDOC_TRUE@asciidoc-icons asciidoc-icons/callouts:
+@CONFIG_XENO_ASCIIDOC_TRUE@asciidoc-icons asciidoc-icons/callouts: FORCE
 @CONFIG_XENO_ASCIIDOC_TRUE@	@$(RM) -R asciidoc-icons
 @CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/share/asciidoc/icons asciidoc-icons
 
-@CONFIG_XENO_ASCIIDOC_TRUE@asciidoc-css:
+@CONFIG_XENO_ASCIIDOC_TRUE@asciidoc-css: FORCE
 @CONFIG_XENO_ASCIIDOC_TRUE@	@$(mkdir_p) $@
+@CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/share/asciidoc/stylesheets/asciidoc.css $@
 @CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/share/asciidoc/stylesheets/xhtml11.css $@
 @CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/share/asciidoc/stylesheets/xhtml11-quirks.css $@
 
-@CONFIG_XENO_ASCIIDOC_TRUE@asciidoc-js:
+@CONFIG_XENO_ASCIIDOC_TRUE@asciidoc-js: FORCE
 @CONFIG_XENO_ASCIIDOC_TRUE@	@$(mkdir_p) $@
-@CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/share/asciidoc/javascripts/asciidoc-xhtml11.js $@
+@CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/share/asciidoc/javascripts/asciidoc.js $@
 @CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/share/asciidoc/javascripts/toc.js $@
+
+@CONFIG_XENO_ASCIIDOC_TRUE@.PHONY: FORCE
 @CONFIG_XENO_ASCIIDOC_FALSE@$(man1_MANS): %.1: $(MAN_DOCSDIR)/%.1
 @CONFIG_XENO_ASCIIDOC_FALSE@	@cp $< $@
 
@@ -521,9 +524,9 @@ uninstall-am: uninstall-local
 @CONFIG_XENO_ASCIIDOC_TRUE@$(tmpdir)/%.txt: %.adoc Makefile $(top_srcdir)/doc/asciidoc/plaintext.conf $(top_srcdir)/doc/asciidoc/plaintext.xsl
 @CONFIG_XENO_ASCIIDOC_TRUE@	@$(mkdir_p) $(tmpdir)
 @CONFIG_XENO_ASCIIDOC_TRUE@	$(ASCIIDOC) --backend docbook -f $(top_srcdir)/doc/asciidoc/plaintext.conf \
-@CONFIG_XENO_ASCIIDOC_TRUE@		--doctype article $(ASCIIDOC_TXT_OPTS) \
+@CONFIG_XENO_ASCIIDOC_TRUE@		--doctype book $(ASCIIDOC_TXT_OPTS) \
 @CONFIG_XENO_ASCIIDOC_TRUE@		--out-file $(tmpdir)/$*.xml $<
-@CONFIG_XENO_ASCIIDOC_TRUE@	xsltproc --stringparam toc.section.depth 3 --nonet \
+@CONFIG_XENO_ASCIIDOC_TRUE@	xsltproc --stringparam toc.section.depth 4 --nonet \
 @CONFIG_XENO_ASCIIDOC_TRUE@		--output $(tmpdir)/$*.html $(top_srcdir)/doc/asciidoc/plaintext.xsl \
 @CONFIG_XENO_ASCIIDOC_TRUE@		$(tmpdir)/$*.xml
 @CONFIG_XENO_ASCIIDOC_TRUE@	w3m -cols 80 -dump -T text/html -no-graph $(tmpdir)/$*.html > $@
