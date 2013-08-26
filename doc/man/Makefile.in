@@ -297,7 +297,9 @@ HTML_DOCS = \
 	switchbench \
 	switchtest \
 	xeno \
-	xeno-config
+	xeno-config \
+	xeno-test \
+	dohell
 
 EXTRA_DIST = \
 	clocktest.adoc \
@@ -312,7 +314,9 @@ EXTRA_DIST = \
 	switchbench.adoc \
 	switchtest.adoc \
 	xeno.adoc \
-	xeno-config.adoc
+	xeno-config.adoc \
+	xeno-test.adoc \
+	dohell
 
 man1_MANS = \
 	clocktest.1 \
@@ -327,7 +331,9 @@ man1_MANS = \
 	switchbench.1 \
 	switchtest.1 \
 	xeno.1 \
-	xeno-config.1
+	xeno-config.1 \
+	xeno-test.1 \
+	dohell.1
 
 @CONFIG_XENO_ASCIIDOC_FALSE@HTML_DOCSDIR = $(srcdir)/../generated/html/
 @CONFIG_XENO_ASCIIDOC_TRUE@HTML_DOCSDIR = ./
@@ -621,9 +627,9 @@ uninstall-man: uninstall-man1
 @CONFIG_XENO_ASCIIDOC_TRUE@$(tmpdir)/%.txt: %.adoc Makefile $(top_srcdir)/doc/asciidoc/plaintext.conf $(top_srcdir)/doc/asciidoc/plaintext.xsl
 @CONFIG_XENO_ASCIIDOC_TRUE@	@$(mkdir_p) $(tmpdir)
 @CONFIG_XENO_ASCIIDOC_TRUE@	$(ASCIIDOC) --backend docbook -f $(top_srcdir)/doc/asciidoc/plaintext.conf \
-@CONFIG_XENO_ASCIIDOC_TRUE@		--doctype article $(ASCIIDOC_TXT_OPTS) \
+@CONFIG_XENO_ASCIIDOC_TRUE@		--doctype book $(ASCIIDOC_TXT_OPTS) \
 @CONFIG_XENO_ASCIIDOC_TRUE@		--out-file $(tmpdir)/$*.xml $<
-@CONFIG_XENO_ASCIIDOC_TRUE@	xsltproc --stringparam toc.section.depth 3 --nonet \
+@CONFIG_XENO_ASCIIDOC_TRUE@	xsltproc --stringparam toc.section.depth 4 --nonet \
 @CONFIG_XENO_ASCIIDOC_TRUE@		--output $(tmpdir)/$*.html $(top_srcdir)/doc/asciidoc/plaintext.xsl \
 @CONFIG_XENO_ASCIIDOC_TRUE@		$(tmpdir)/$*.xml
 @CONFIG_XENO_ASCIIDOC_TRUE@	w3m -cols 80 -dump -T text/html -no-graph $(tmpdir)/$*.html > $@

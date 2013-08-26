@@ -11,7 +11,9 @@ HTML_DOCS = \
 	switchbench \
 	switchtest \
 	xeno \
-	xeno-config
+	xeno-config \
+	xeno-test \
+	dohell
 
 EXTRA_DIST = \
 	clocktest.adoc \
@@ -26,7 +28,9 @@ EXTRA_DIST = \
 	switchbench.adoc \
 	switchtest.adoc \
 	xeno.adoc \
-	xeno-config.adoc
+	xeno-config.adoc \
+	xeno-test.adoc \
+	dohell
 
 man1_MANS = \
 	clocktest.1 \
@@ -41,7 +45,9 @@ man1_MANS = \
 	switchbench.1 \
 	switchtest.1 \
 	xeno.1 \
-	xeno-config.1
+	xeno-config.1 \
+	xeno-test.1 \
+	dohell.1
 
 if !CONFIG_XENO_ASCIIDOC
 HTML_DOCSDIR = $(srcdir)/../generated/html/
