@@ -53,6 +53,7 @@ fi
 
 AC_CONFIG_HEADERS(include/xeno_config.h)
 AC_CONFIG_AUX_DIR(config)
+AC_CONFIG_MACRO_DIR([config])
 AC_CONFIG_SRCDIR(lib/cobalt/thread.c)
 AC_PREFIX_DEFAULT(/usr/xenomai)
 AC_CANONICAL_BUILD

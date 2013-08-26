@@ -1,4 +1,4 @@
-/* include/xeno_config.h.in.  Generated from configure.in by autoheader.  */
+/* include/xeno_config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* config */
 #undef CONFIG_MMU
