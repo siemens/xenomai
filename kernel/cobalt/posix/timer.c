@@ -620,7 +620,8 @@ void cobalt_timerq_cleanup(struct cobalt_kqueues *q)
 		timer_cleanup(timer);
 		xnlock_put_irqrestore(&nklock, s);
 #if XENO_DEBUG(COBALT)
-		printk(XENO_INFO "deleting Cobalt timer %u\n", (unsigned int)tm);
+		printk(XENO_INFO "deleting Cobalt timer %u\n",
+		       (unsigned int)(timer - cobalt_timer_pool));
 #endif /* XENO_DEBUG(COBALT) */
 		xnlock_get_irqsave(&nklock, s);
 	}
