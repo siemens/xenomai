@@ -59,11 +59,11 @@ o Texas Instrument OMAP3 and OMAP4
 
 ---- Beaglebone
 
-1- Checkout the "origin/linux-ti33x-psp-3.2.21-r13g+gitr720e07b4c1f687b61b147b31c698cb6816d72f01" branch in the Koen Kooi repository [3], or see [4] for an
-alternate repository,
-2- apply beaglebone/ipipe-core-3.2.21-beaglebone-pre.patch,
-3- apply ipipe-core-3.2.21-arm*.patch
-4- apply beaglebone/ipipe-core-3.2.21-beaglebone-post.patch,
+1- Checkout the "am33x-v3.8" branch in the Robert Nelson repository [3], 
+the patch has been tested with commit 3fc8a73d782231ab2750ff29793a760e8fa076bb
+2- apply beaglebone/ipipe-core-3.8.13-beaglebone-pre.patch
+3- apply ipipe-core-3.8.13-arm-1.patch
+4- apply beaglebone/ipipe-core-3.8.13-beaglebone-post.patch
 5- you can resume to generic installation instructions.
 
 
@@ -87,7 +87,7 @@ From [5]:
 
 [1] http://opensource.freescale.com/pub/scm/imx/linux-2.6-imx.git
 [2] git://git.denx.de/linux-denx.git
-[3] git://github.com/koenkooi/linux
+[3] https://github.com/RobertCNelson/linux-dev
 [4] http://www.xenomai.org/pipermail/xenomai/2013-February/027584.html
 [5] http://www.xenomai.org/pipermail/xenomai/2013-February/027752.html
 [6] git://github.com/Xilinx/linux-xlnx.git
