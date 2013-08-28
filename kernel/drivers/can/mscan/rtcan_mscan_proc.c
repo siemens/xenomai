@@ -106,8 +106,7 @@ static int rtcan_mscan_proc_regs(struct seq_file *p, void *data)
 				"MSCAN1/2 not routed"));
 #endif
 
-done:
-	RTCAN_PROC_PRINT_DONE;
+	return 0;
 }
 
 static int rtcan_mscan_proc_regs_open(struct inode *inode, struct file *file)
