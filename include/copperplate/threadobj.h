@@ -407,7 +407,7 @@ static inline int threadobj_lock_sched_once(void)
 	if (current->schedlock_depth == 0)
 		return threadobj_lock_sched();
 
-	return 0;
+	return -EBUSY;
 }
 
 static inline void threadobj_yield(void)

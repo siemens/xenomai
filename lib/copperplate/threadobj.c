@@ -252,11 +252,6 @@ int threadobj_set_mode(int clrmask, int setmask, int *mode_r) /* current->lock h
 
 	__threadobj_check_locked(current);
 
-	if (setmask & __THREAD_M_LOCK)
-		__setmask |= PTHREAD_LOCK_SCHED;
-	else if (clrmask & __THREAD_M_LOCK)
-		__clrmask |= PTHREAD_LOCK_SCHED;
-
 	if (setmask & __THREAD_M_WARNSW)
 		__setmask |= PTHREAD_WARNSW;
 	else if (clrmask & __THREAD_M_WARNSW)
@@ -267,7 +262,15 @@ int threadobj_set_mode(int clrmask, int setmask, int *mode_r) /* current->lock h
 	else if (clrmask & __THREAD_M_CONFORMING)
 		__clrmask |= PTHREAD_CONFORMING;
 
-	return __bt(pthread_set_mode_np(__clrmask, __setmask, mode_r));
+	if (setmask & __THREAD_M_LOCK)
+		threadobj_lock_sched_once();
+	else if (clrmask & __THREAD_M_LOCK)
+		threadobj_unlock_sched();
+
+	if (mode_r || __setmask || __clrmask)
+		return __bt(-pthread_set_mode_np(__clrmask, __setmask, mode_r));
+
+	return 0;
 }
 
 static int set_rr(struct threadobj *thobj, struct timespec *quantum)
@@ -581,15 +584,17 @@ int threadobj_set_mode(int clrmask, int setmask, int *mode_r) /* current->lock h
 	if (current->status & __THREAD_S_NOPREEMPT)
 		old |= __THREAD_M_LOCK;
 
-	if (setmask & __THREAD_M_LOCK)
-		ret = __bt(threadobj_lock_sched_once());
-	else if (clrmask & __THREAD_M_LOCK)
+	if (setmask & __THREAD_M_LOCK) {
+		ret = threadobj_lock_sched_once();
+		if (ret == -EBUSY)
+			ret = 0;
+	} else if (clrmask & __THREAD_M_LOCK)
 		threadobj_unlock_sched();
 
 	if (mode_r)
 		*mode_r = old;
 
-	return ret;
+	return __bt(ret);
 }
 
 static inline int set_rr(struct threadobj *thobj, struct timespec *quantum)
