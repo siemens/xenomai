@@ -1,10 +1,11 @@
-<map id="G" name="G">
-<area shape="rect" id="node5" href="$analogy__driver_8h.html" title="Analogy for Linux, driver facilities." alt="" coords="273,237,452,267"/>
-<area shape="rect" id="node15" href="$ni__stc_8h.html" title="Register descriptions for NI DAQ&#45;STC chip." alt="" coords="328,83,397,112"/>
-<area shape="rect" id="node20" href="$ni__mio_8h.html" title="Hardware driver for NI Mite PCI interface chip." alt="" coords="421,83,496,112"/>
-<area shape="rect" id="node22" href="$mite_8h.html" title="Hardware driver for NI Mite PCI interface chip." alt="" coords="520,83,581,112"/>
-<area shape="rect" id="node7" href="$os__facilities_8h.html" title="Analogy for Linux, Operation system facilities." alt="" coords="111,315,271,344"/>
-<area shape="rect" id="node9" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations." alt="" coords="295,315,431,344"/>
-<area shape="rect" id="node11" href="$device_8h.html" title="Analogy for Linux, device related features." alt="" coords="455,315,583,344"/>
-<area shape="rect" id="node17" href="$ni__tio_8h.html" title="Hardware driver for NI general purpose counter." alt="" coords="329,160,396,189"/>
+<map id="ksrc/drivers/analogy/national_instruments/pcimio.c" name="ksrc/drivers/analogy/national_instruments/pcimio.c">
+<area shape="rect" id="node5" href="$analogy__driver_8h.html" title="Analogy for Linux, driver facilities." alt="" coords="208,272,373,301"/>
+<area shape="rect" id="node13" href="$8255_8h.html" title="Hardware driver for 8255 chip." alt="" coords="187,195,288,224"/>
+<area shape="rect" id="node16" href="$ni__stc_8h.html" title="Register descriptions for NI DAQ&#45;STC chip." alt="" coords="256,117,323,147"/>
+<area shape="rect" id="node21" href="$ni__mio_8h.html" title="Hardware driver for NI Mite PCI interface chip." alt="" coords="347,117,416,147"/>
+<area shape="rect" id="node23" href="$mite_8h.html" title="Hardware driver for NI Mite PCI interface chip." alt="" coords="440,117,499,147"/>
+<area shape="rect" id="node7" href="$os__facilities_8h.html" title="Analogy for Linux, Operation system facilities." alt="" coords="55,349,204,379"/>
+<area shape="rect" id="node9" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations." alt="" coords="228,349,353,379"/>
+<area shape="rect" id="node11" href="$device_8h.html" title="Analogy for Linux, device related features." alt="" coords="377,349,497,379"/>
+<area shape="rect" id="node18" href="$ni__tio_8h.html" title="Hardware driver for NI general purpose counter." alt="" coords="312,195,376,224"/>
 </map>

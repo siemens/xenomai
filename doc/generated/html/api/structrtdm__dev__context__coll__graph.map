@@ -1,4 +1,4 @@
-<map id="G" name="G">
-<area shape="rect" id="node2" href="$structrtdm__operations.html" title="Device operations." alt="" coords="24,5,152,35"/>
-<area shape="rect" id="node4" href="$structrtdm__device.html" title="RTDM device." alt="" coords="101,101,203,131"/>
+<map id="rtdm_dev_context" name="rtdm_dev_context">
+<area shape="rect" id="node2" href="$structrtdm__operations.html" title="Device operations." alt="" coords="30,295,144,324"/>
+<area shape="rect" id="node5" href="$structrtdm__device.html" title="RTDM device." alt="" coords="146,411,239,440"/>
 </map>

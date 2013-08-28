@@ -4,6 +4,7 @@ Installing Xenomai 2.6.2.1
 
 Table of Contents
 
+ 
 1. Introduction
 2. Installation steps
 
@@ -524,7 +525,7 @@ $ make DESTDIR=$staging_dir install
             in previous revisions and which now need to be explicitely passed
             to configure, for the supported SOCs:
 
-Table 1. ARM configure options and compilation flags
+Table 3.1. ARM configure options and compilation flags
 
     SOC                    CFLAGS                      configure options
 

@@ -1,0 +1,131 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
+<meta name="generator" content="AsciiDoc 8.6.7" />
+<title>DOHELL(1)</title>
+<link rel="stylesheet" href="../asciidoc-css/asciidoc.css" type="text/css" />
+<script type="text/javascript" src="../asciidoc-js/asciidoc.js"></script>
+<script type="text/javascript">
+/*<![CDATA[*/
+asciidoc.install(3);
+/*]]>*/
+</script>
+</head>
+<body class="manpage" style="max-width:55em">
+<div id="header">
+<h1>
+DOHELL(1) Manual Page
+</h1>
+<div id="toc">
+  <div id="toctitle">Table of Contents</div>
+  <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
+</div>
+<h2>NAME</h2>
+<div class="sectionbody">
+<p>dohell -
+   Generate load, in parallel of the latency test
+</p>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_synopsis">1. SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="paragraph"><p><strong>dohell</strong> [ -b &lt;path&gt; ] [ -s &lt;server&gt; ] [ -p &lt;port&gt; ] [ -m &lt;path&gt; ] [ -l &lt;path&gt; | &lt;duration&gt; ]</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">2. DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph"><p><strong>dohell</strong> generates some load, using commonly available commands, in parallel
+of the <a href="../latency/index.html">latency(1)</a> test or as part of
+<a href="../xeno-test/index.html">xeno-test(1)</a>.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_options">3. OPTIONS</h2>
+<div class="sectionbody">
+<div class="paragraph"><p><strong>dohell</strong> accepts the following options:</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+<strong>-b</strong>
+</dt>
+<dd>
+<p>
+runs the hackbench test repetitively during the run-time of the
+<strong>dohell</strong> script;
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-s</strong>
+</dt>
+<dd>
+<p>
+run nc to continuously send data to a server through network;
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-p</strong>
+</dt>
+<dd>
+<p>
+if <strong>-s</strong> is used, specificy the port to which to send data, if
+  not specified, port 9 (aka discard) is used;
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-m &lt;path&gt;</strong>
+</dt>
+<dd>
+<p>
+run dd to write data to the <strong>&lt;path&gt;</strong> directory;
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-l &lt;path&gt;</strong>
+</dt>
+<dd>
+<p>
+mutually exclusive with <strong>&lt;duration&gt;</strong>; the dohell script runs
+during two runs of the LTP script <strong>runalltests.sh</strong> found in the <strong>&lt;path&gt;</strong>
+directory;
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>&lt;duration&gt;</strong>
+</dt>
+<dd>
+<p>
+mutually exclusive with <strong>-l</strong>; run dohell for the given duration
+in seconds.
+</p>
+</dd>
+</dl></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">4. SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph"><p><a href="../xeno-test/index.html">xeno-test(1)</a>, <a href="../latency/index.html">latency(1)</a>.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_example">5. EXAMPLE</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre><tt>dohell -s 192.168.0.5 -m /mnt -l /ltp</tt></pre>
+</div></div>
+</div>
+</div>
+</div>
+<div id="footnotes"><hr /></div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2013-08-28 19:32:19 CEST
+</div>
+</div>
+</body>
+</html>

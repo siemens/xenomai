@@ -1,0 +1,70 @@
+'\" t
+.\"     Title: xeno-test
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
+.\"      Date: 08/28/2013
+.\"    Manual: Xenomai Manual
+.\"    Source: Xenomai 2.6.2.1
+.\"  Language: English
+.\"
+.TH "XENO\-TEST" "1" "08/28/2013" "Xenomai 2\&.6\&.2\&.1" "Xenomai Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+xeno-test \- Run latency test under load
+.SH "SYNOPSIS"
+.sp
+\fBxeno\-test\fR [ \-l loadscript ] [ latency options ]
+.SH "DESCRIPTION"
+.sp
+\fBxeno\-test\fR runs a series of test finishing with the latency test run with a user script to generate load, in order to measure the best case and worst case latencies\&. The default command used to generate load is "dohell 900"\&.
+.SH "OPTIONS"
+.sp
+\fBxeno\-test\fR accepts the following options:
+.PP
+\fB\-l <loadscript>\fR
+.RS 4
+run <loadscript> while running latency, in order to measure latency under load, the
+dohell(1)
+script is provided for this purpose, see its
+manual page
+for more details\&.
+.RE
+.PP
+\fBother options\fR
+.RS 4
+are passed to the latency test, see
+latency(1)
+for the list of supported options\&.
+.RE
+.SH "SEE ALSO"
+.sp
+dohell(1), latency(1)\&.
+.SH "EXAMPLE"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+xeno\-test \-l "dohell \-s 192\&.168\&.0\&.5 \-m /mnt \-l /ltp" \-p 100 \-g histo
+.fi
+.if n \{\
+.RE
+.\}

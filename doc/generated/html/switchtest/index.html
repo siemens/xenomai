@@ -2,37 +2,42 @@
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.5.2" />
+<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
+<meta name="generator" content="AsciiDoc 8.6.7" />
 <title>SWITCHTEST(1)</title>
-<link rel="stylesheet" href="../asciidoc-css/xhtml11.css" type="text/css" />
-<link rel="stylesheet" href="../asciidoc-css/xhtml11-quirks.css" type="text/css" />
+<link rel="stylesheet" href="../asciidoc-css/asciidoc.css" type="text/css" />
+<script type="text/javascript" src="../asciidoc-js/asciidoc.js"></script>
 <script type="text/javascript">
 /*<![CDATA[*/
-window.onload = function(){asciidoc.footnotes(); asciidoc.toc(3);}
+asciidoc.install(3);
 /*]]>*/
 </script>
-<script type="text/javascript" src="../asciidoc-js/asciidoc-xhtml11.js"></script>
 </head>
-<body style="max-width:55em">
+<body class="manpage" style="max-width:55em">
 <div id="header">
-<h1>SWITCHTEST(1)</h1>
-<span id="revdate">2008/04/19</span>
+<h1>
+SWITCHTEST(1) Manual Page
+</h1>
 <div id="toc">
   <div id="toctitle">Table of Contents</div>
   <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
 </div>
+<h2>NAME</h2>
+<div class="sectionbody">
+<p>switchtest -
+   Xenomai context switch test
+</p>
+</div>
 </div>
 <div id="content">
-<h2 id="_name">1. NAME</h2>
-<div class="sectionbody">
-<div class="paragraph"><p>switchtest - Xenomai context switch test</p></div>
-</div>
-<h2 id="_synopsis">2. SYNOPSIS</h2>
+<div class="sect1">
+<h2 id="_synopsis">1. SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="paragraph"><p><strong>switchtest</strong> [options] threadspec threadspec&#8230;</p></div>
 </div>
-<h2 id="_description">3. DESCRIPTION</h2>
+</div>
+<div class="sect1">
+<h2 id="_description">2. DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph"><p><strong>switchtest</strong> is part of Xenomai. It can be used to test thread context
 switches. <strong>switchtest</strong> creates threads of various types and attempts to
@@ -40,10 +45,12 @@ switch context between these threads, printing the count of context switches
 every second. A suitable Xenomai enabled kernel with the respective module
 (xeno_posix) must be installed.</p></div>
 </div>
-<h2 id="_options">4. OPTIONS</h2>
+</div>
+<div class="sect1">
+<h2 id="_options">3. OPTIONS</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>Each threadspec specifies the characteristics of a thread to be created:</p></div>
-<div class="paragraph"><p>threadspec = (rtk|rtup|rtus|rtuo)(_fp|_ufpp|_ufps)<strong>[0-9]</strong></p></div>
+<div class="paragraph"><p>threadspec = (rtk|rtup|rtus|rtuo)(_fp|_ufpp|_ufps)*[0-9]*</p></div>
 <div class="dlist"><dl>
 <dt class="hdlist1">
 <strong>rtk</strong>
@@ -102,16 +109,17 @@ means that the created thread will use the FPU when in secondary mode (invalid f
 </p>
 </dd>
 <dt class="hdlist1">
-<strong>"[0-9]\</strong>" specifies the ID of the CPU where the created thread will run, 0 if unspecified*
+<strong>[0-9]</strong>
 </dt>
 <dd>
 <p>
-Passing no
-<strong>threadspec</strong>
-is equivalent to running:
+specifies the ID of the CPU where the created thread will run, 0 if unspecified
 </p>
 </dd>
 </dl></div>
+<div class="paragraph"><p>Passing no
+<strong>threadspec</strong>
+is equivalent to running:</p></div>
 <div class="paragraph"><p>switchtest rtkN rtkN rtk_fpN rtk_fpN rtk_fp_ufppN rtk_fp_ufppN rtupN rtupN rtup_ufppN
 rtup_ufppN rtusN rtusN rtus_ufpsN rtus_ufpsN rtuoN rtuoN rtuo_ufppN rtuo_ufppN rtuo_ufpsN
 rtuo_ufpsN rtuo_ufpp_ufpsN rtuo_ufpp_ufpsN</p></div>
@@ -163,17 +171,20 @@ disables any use of FPU instructions
 </dd>
 </dl></div>
 </div>
-<h2 id="_author">5. AUTHOR</h2>
+</div>
+<div class="sect1">
+<h2 id="_author">4. AUTHOR</h2>
 <div class="sectionbody">
 <div class="paragraph"><p><strong>switchtest</strong> was written by Philippe Gerum and Gilles
 Chanteperdrix. This man page was written by
 Roland Stigge.</p></div>
 </div>
 </div>
+</div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2012-12-18 22:17:25 CEST
+Last updated 2013-06-09 11:59:08 CEST
 </div>
 </div>
 </body>

@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: xeno-config
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 01/23/2013
+.\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
+.\"      Date: 2006/03/27
 .\"    Manual: Xenomai Manual
 .\"    Source: Xenomai 2.6.2.1
 .\"  Language: English
 .\"
-.TH "XENO\-CONFIG" "1" "01/23/2013" "Xenomai 2\&.6\&.2\&.1" "Xenomai Manual"
+.TH "XENO\-CONFIG" "1" "2006/03/27" "Xenomai 2\&.6\&.2\&.1" "Xenomai Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -39,7 +39,7 @@ xeno-config \- Display Xenomai libraries configuration
 .RS 4
 
 \fBxeno\-config\fR
-[\fB\-\-version\fR] [\fB\-\-cc\fR] [\fB\-\-arch\fR] [\fB\-\-prefix\fR] [\fB\-\-xeno\-cflags\fR] [\fB\-\-xeno\-ldflags\fR] [\fB\-\-posix\-cflags\fR] [\fB\-\-posix\-ldflags\fR] [\fB\-\-lib\fR\-dir*|\fB\-\-library\-dir\fR|\fB\-\-libdir\fR|\fB\-\-user\-libdir\fR]
+[\fB\-\-version\fR] [\fB\-\-cc\fR] [\fB\-\-arch\fR] [\fB\-\-prefix\fR] [\fB\-\-skin native|posix|psos|rtdm|uitron|vrtx|vxworks\fR] [\fB\-\-cflags\fR] [\fB\-\-ldflags\fR] [\fB\-\-lib\fR*\fB\-dir\fR|\fB\-\-library\-dir\fR|\fB\-\-libdir\fR|\fB\-\-user\-libdir\fR]
 .RE
 .SH "DESCRIPTION"
 .sp
@@ -80,30 +80,28 @@ Outputs one line with the architecture to compile to, e\&.g\&. i386\&. May be di
 Outputs one line with the absolute path to the base Xenomai installation directory\&.
 .RE
 .PP
-\fB\-\-xeno\-cflags\fR
+\fB\-\-skin\fR
 .RS 4
-Outputs one line with the C compiler command\-line options that are necessary to compile applications that use the Xenomai libraries\&.
+Choose the skin for which xeno\-config should print the compilation flags\&.
 .RE
 .PP
-\fB\-\-xeno\-ldflags\fR
+\fB\-\-cflags\fR
 .RS 4
-Outputs one line with the C compiler command\-line options that are necessary to link applications against the Xenomai libraries\&.
+Outputs one line with the C compiler command\-line options that are necessary to compile applications that use the Xenomai skin passed to the
+\fB\-\-skin\fR
+option\&.
 .RE
 .PP
-\fB\-\-posix\-cflags\fR
+\fB\-\-ldflags\fR
 .RS 4
-Outputs one line with the C compiler command\-line options that are necessary to compile applications that use Xenomai\(cqs Posix\-compatible layer library\&.
+Outputs one line with the C compiler command\-line options that are necessary to link applications that use the Xenomai skin passed to the
+\fB\-\-skin\fR
+option with the necessary libraries\&.
 .RE
 .PP
-\fB\-\-posix\-ldflags\fR
+\fB\-\-lib\fR*\fB\-dir, \-\-library\-dir, \-\-libdir, \-\-user\-libdir\fR
 .RS 4
-Outputs one line with the C compiler command\-line options that are necessary to link applications against Xenomai\(cqs Posix\-compatible layer library\&.
-.RE
-.PP
-\fB\-\-lib\fR\-dir, \-\-library\-dir, \-\-libdir, \-\-user\-libdir*
-.RS 4
-Outputs one line with the absolute path to Xenomai\(cqs libraries\&. In the
-\fB\-\-lib\fR\-dir* option name, the
+Outputs one line with the absolute path to Xenomai\(cqs libraries\&. In the \-\-lib*\-dir option name, the
 \fB*\fR
 is meant as a wildcard:
 \fB\-\-lib\-dir\fR,
@@ -112,26 +110,61 @@ and
 \fB\-\-libbar\-dir\fR
 are all valid and synonymous options\&.
 .RE
-.sp
-ENVIRONMENT VARIABLES
-.sp
-.if n \{\
+.SH "DEPRECATED OPTIONS"
+.PP
+\fB\-\-xeno\-cflags\fR
 .RS 4
-.\}
-.nf
-*DESTDIR*::
-If the *DESTDIR* variable is set, its content is prepended to the Xenomai installed directories and files names output by the
-*\-\-prefix* and *\-\-library\-dir* options, and to the Xenomai installation directories in the flags output by the
-*\-\-xeno\-cflags*, *\-\-xeno\-ldflags*, *\-\-posix\-cflags*, *\-\-posix\-ldflags*
-options\&.
-
-If *DESTDIR* was set when compiling and installing Xenomai, e\&.g\&. for cross\-compilation, *DESTDIR* must be set to the same value before calling *xeno\-config*, in order to output valid directory and file names\&.
-
-RETURN CODES
-.fi
-.if n \{\
+This option is deprecated, please use
+\fB\-\-skin\fR
+and
+\fB\-\-cflags\fR
+instead\&. Outputs one line with the C compiler command\-line options that are necessary to compile applications that use any Xenomai skin, except the posix skin\&.
 .RE
-.\}
+.PP
+\fB\-\-xeno\-ldflags\fR
+.RS 4
+This option is deprecated, please use
+\fB\-\-skin\fR
+and
+\fB\-\-ldflags\fR
+instead\&. Outputs one line with the C compiler command\-line options that are necessary to link applications that use any Xenomai skin, except the posix skin, with the necessary libraries\&. Note that the particular
+\fB\-llibskin\fR
+flag should be added to the flags returned by this option\&.
+.RE
+.PP
+\fB\-\-posix\-cflags\fR
+.RS 4
+This option is deprecated, please use
+\fB\-\-skin posix \-\-cflags\fR
+instead\&. Outputs one line with the C compiler command\-line options that are necessary to compile applications that use Xenomai\(cqs Posix\-compatible layer library\&.
+.RE
+.PP
+\fB\-\-posix\-ldflags\fR
+.RS 4
+This option is deprecated, please use
+\fB\-\-skin posix \-\-ldflags\fR
+instead\&. Outputs one line with the C compiler command\-line options that are necessary to link applications against Xenomai\(cqs Posix\-compatible layer library\&.
+.RE
+.SH "ENVIRONMENT VARIABLES"
+.PP
+\fBDESTDIR\fR
+.RS 4
+If the
+\fBDESTDIR\fR
+variable is set, its content is prepended to the Xenomai installed directories and files names output by the
+\fB\-\-prefix\fR
+and
+\fB\-\-library\-dir\fR
+options, and to the Xenomai installation directories in the flags output by the
+\fB\-\-xeno\-cflags\fR,
+\fB\-\-xeno\-ldflags\fR,
+\fB\-\-posix\-cflags\fR,
+\fB\-\-posix\-ldflags\fR
+options\&.
+.RE
+.sp
+If \fBDESTDIR\fR was set when compiling and installing Xenomai, e\&.g\&. for cross\-compilation, \fBDESTDIR\fR must be set to the same value before calling \fBxeno\-config\fR, in order to output valid directory and file names\&.
+.SH "RETURN CODES"
 .PP
 \fB0\fR
 .RS 4

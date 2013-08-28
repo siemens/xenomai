@@ -1,0 +1,98 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
+<meta name="generator" content="AsciiDoc 8.6.7" />
+<title>XENO-TEST(1)</title>
+<link rel="stylesheet" href="../asciidoc-css/asciidoc.css" type="text/css" />
+<script type="text/javascript" src="../asciidoc-js/asciidoc.js"></script>
+<script type="text/javascript">
+/*<![CDATA[*/
+asciidoc.install(3);
+/*]]>*/
+</script>
+</head>
+<body class="manpage" style="max-width:55em">
+<div id="header">
+<h1>
+XENO-TEST(1) Manual Page
+</h1>
+<div id="toc">
+  <div id="toctitle">Table of Contents</div>
+  <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
+</div>
+<h2>NAME</h2>
+<div class="sectionbody">
+<p>xeno-test -
+   Run latency test under load
+</p>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_synopsis">1. SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="paragraph"><p><strong>xeno-test</strong> [ -l loadscript ] [ latency options ]</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">2. DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph"><p><strong>xeno-test</strong> runs a series of test finishing with the latency test run
+with a user script to generate load, in order to measure the best case
+and worst case latencies. The default command used to generate load is
+"dohell 900".</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_options">3. OPTIONS</h2>
+<div class="sectionbody">
+<div class="paragraph"><p><strong>xeno-test</strong> accepts the following options:</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+<strong>-l &lt;loadscript&gt;</strong>
+</dt>
+<dd>
+<p>
+run &lt;loadscript&gt; while running latency, in order to measure latency
+under load, the <a href="../dohell/index.html">dohell(1)</a> script is provided for
+this purpose, see its <a href="../dohell/index.html">manual page</a> for more details.
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>other options</strong>
+</dt>
+<dd>
+<p>
+are passed to the latency test, see <a href="../latency/index.html">latency(1)</a>
+for the list of supported options.
+</p>
+</dd>
+</dl></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">4. SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph"><p><a href="../dohell/index.html">dohell(1)</a>, <a href="../latency/index.html">latency(1)</a>.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_example">5. EXAMPLE</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre><tt>xeno-test -l "dohell -s 192.168.0.5 -m /mnt -l /ltp" -p 100 -g histo</tt></pre>
+</div></div>
+</div>
+</div>
+</div>
+<div id="footnotes"><hr /></div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2013-08-28 19:32:19 CEST
+</div>
+</div>
+</body>
+</html>

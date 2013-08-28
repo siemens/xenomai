@@ -1,0 +1,27 @@
+var group__nucleus__state__flags =
+[
+    [ "XNASDI", "group__nucleus__state__flags.html#gadd8332af5954bcc409e8a1181005cd86", null ],
+    [ "XNBOOST", "group__nucleus__state__flags.html#gaca3bcd5615c7331c73c3eadddb3d1b89", null ],
+    [ "XNDEBUG", "group__nucleus__state__flags.html#ga7ef9d2163ec49bc03fb8cd9c75f31e84", null ],
+    [ "XNDEFCAN", "group__nucleus__state__flags.html#ga4a3196a5300e6ec862a18b272d859960", null ],
+    [ "XNDELAY", "group__nucleus__state__flags.html#gaa31d298d298eb696ccf840473b94912c", null ],
+    [ "XNDORMANT", "group__nucleus__state__flags.html#ga5fa9672a03ebd4beaf7ab3caa5699fa6", null ],
+    [ "XNFPU", "group__nucleus__state__flags.html#ga6b2ca9336a15f94f3a2e0665982ed081", null ],
+    [ "XNHELD", "group__nucleus__state__flags.html#ga9394cc02e730535e3dd8b0aabb08ea86", null ],
+    [ "XNLOCK", "group__nucleus__state__flags.html#ga2defcfb1f04f077baeac9881cbdda627", null ],
+    [ "XNMAPPED", "group__nucleus__state__flags.html#gaabc63b4b55fdf5db7469d4532ed35fd2", null ],
+    [ "XNMIGRATE", "group__nucleus__state__flags.html#gae9aeb1b75ad94bca4f56f57481ffc309", null ],
+    [ "XNOTHER", "group__nucleus__state__flags.html#ga77b8d73c05c6339c32471c777ff5288e", null ],
+    [ "XNPEND", "group__nucleus__state__flags.html#ga153b45ee5ddcc4da154ca8a018ac1871", null ],
+    [ "XNREADY", "group__nucleus__state__flags.html#ga93d516291e0645195b35d63fbf0e0433", null ],
+    [ "XNRELAX", "group__nucleus__state__flags.html#gadf5508cd88c2678ae01dfaf5570c661c", null ],
+    [ "XNRESTART", "group__nucleus__state__flags.html#gacc86813fad4e877dcc16b98cdb64ef60", null ],
+    [ "XNROOT", "group__nucleus__state__flags.html#ga73d7b1a4f5a25545ff21140a0598075a", null ],
+    [ "XNRPIOFF", "group__nucleus__state__flags.html#ga124e976e4647437c8aa8ddd5840b41f5", null ],
+    [ "XNRRB", "group__nucleus__state__flags.html#ga6f451131910f816dd01fe1ec1fb50fe9", null ],
+    [ "XNSHADOW", "group__nucleus__state__flags.html#gac664c3bae93da4141d2fc8e88a91afd8", null ],
+    [ "XNSTARTED", "group__nucleus__state__flags.html#ga0843357a4c7a592e9d5f9cb1ce84ea8e", null ],
+    [ "XNSUSP", "group__nucleus__state__flags.html#ga6b605ad2bb16ae2386821be8ce8d341b", null ],
+    [ "XNTRAPSW", "group__nucleus__state__flags.html#gade2e62645781aa1badafd97659cf3473", null ],
+    [ "XNZOMBIE", "group__nucleus__state__flags.html#gaa5b9ff889ab0bfbfb96a435cbea25d6a", null ]
+];

@@ -2,33 +2,36 @@
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.5.2" />
+<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
+<meta name="generator" content="AsciiDoc 8.6.7" />
 <title>XENO-CONFIG(1)</title>
-<link rel="stylesheet" href="../asciidoc-css/xhtml11.css" type="text/css" />
-<link rel="stylesheet" href="../asciidoc-css/xhtml11-quirks.css" type="text/css" />
+<link rel="stylesheet" href="../asciidoc-css/asciidoc.css" type="text/css" />
+<script type="text/javascript" src="../asciidoc-js/asciidoc.js"></script>
 <script type="text/javascript">
 /*<![CDATA[*/
-window.onload = function(){asciidoc.footnotes(); asciidoc.toc(3);}
+asciidoc.install(3);
 /*]]>*/
 </script>
-<script type="text/javascript" src="../asciidoc-js/asciidoc-xhtml11.js"></script>
 </head>
-<body style="max-width:55em">
+<body class="manpage" style="max-width:55em">
 <div id="header">
-<h1>XENO-CONFIG(1)</h1>
-<span id="revdate">2006/03/27</span>
+<h1>
+XENO-CONFIG(1) Manual Page
+</h1>
 <div id="toc">
   <div id="toctitle">Table of Contents</div>
   <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
 </div>
+<h2>NAME</h2>
+<div class="sectionbody">
+<p>xeno-config -
+   Display Xenomai libraries configuration
+</p>
+</div>
 </div>
 <div id="content">
-<h2 id="_name">1. NAME</h2>
-<div class="sectionbody">
-<div class="paragraph"><p>xeno-config - Display Xenomai libraries configuration</p></div>
-</div>
-<h2 id="_synopsis">2. SYNOPSIS</h2>
+<div class="sect1">
+<h2 id="_synopsis">1. SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="paragraph"><p><strong>xeno-config</strong></p></div>
 <div class="paragraph"><p><strong>xeno-config</strong> <strong>--v</strong> | <strong>--verbose</strong></p></div>
@@ -38,12 +41,14 @@ window.onload = function(){asciidoc.footnotes(); asciidoc.toc(3);}
 </dt>
 <dd>
 <p>
-<strong>xeno-config</strong> [<strong>--version</strong>] [<strong>--cc</strong>] [<strong>--arch</strong>] [<strong>--prefix</strong>] [<strong>--xeno-cflags</strong>] [<strong>--xeno-ldflags</strong>] [<strong>--posix-cflags</strong>] [<strong>--posix-ldflags</strong>] [<strong>--lib</strong>-dir*|<strong>--library-dir</strong>|<strong>--libdir</strong>|<strong>--user-libdir</strong>]
+<strong>xeno-config</strong> [<strong>--version</strong>] [<strong>--cc</strong>] [<strong>--arch</strong>] [<strong>--prefix</strong>] [<strong>--skin native|posix|psos|rtdm|uitron|vrtx|vxworks</strong>] [<strong>--cflags</strong>] [<strong>--ldflags</strong>] [<strong>--lib</strong>*<strong>-dir</strong>|<strong>--library-dir</strong>|<strong>--libdir</strong>|<strong>--user-libdir</strong>]
 </p>
 </dd>
 </dl></div>
 </div>
-<h2 id="_description">3. DESCRIPTION</h2>
+</div>
+<div class="sect1">
+<h2 id="_description">2. DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph"><p><strong>xeno-config</strong> is a script that is used to to display the compiler and linker flags that are required for building applications that use Xenomai.
 Any combination of options can be chosen (except <strong>--verbose</strong> and <strong>--help</strong>) to display configuration information, and options can be given in any order.
@@ -51,7 +56,9 @@ The command output one line for each option, in the same order as the options.</
 <div class="paragraph"><p>When <strong>xeno-config --verbose</strong> is executed, all configuration information is displayed in a different, more human-readable format.</p></div>
 <div class="paragraph"><p>When <strong>xeno-config</strong> is executed without any options, the output is equivalent to than when executing <strong>xeno-config --verbose</strong> then <strong>xeno-config --help</strong>.</p></div>
 </div>
-<h2 id="_options">4. OPTIONS</h2>
+</div>
+<div class="sect1">
+<h2 id="_options">3. OPTIONS</h2>
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
@@ -104,11 +111,52 @@ Outputs one line with the absolute path to the base Xenomai installation directo
 </p>
 </dd>
 <dt class="hdlist1">
+<strong>--skin</strong>
+</dt>
+<dd>
+<p>
+Choose the skin for which xeno-config should print the compilation flags.
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>--cflags</strong>
+</dt>
+<dd>
+<p>
+Outputs one line with the C compiler command-line options that are necessary to compile applications that use the Xenomai skin passed to the <strong>--skin</strong> option.
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>--ldflags</strong>
+</dt>
+<dd>
+<p>
+Outputs one line with the C compiler command-line options that are necessary to link applications that use the Xenomai skin passed to the <strong>--skin</strong> option with the necessary libraries.
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>--lib</strong>*<strong>-dir, --library-dir, --libdir, --user-libdir</strong>
+</dt>
+<dd>
+<p>
+Outputs one line with the absolute path to Xenomai&#8217;s libraries.
+In the --lib*-dir option name, the <strong>*</strong> is meant as a wildcard: <strong>--lib-dir</strong>, <strong>--libfoo-dir</strong> and <strong>--libbar-dir</strong> are all valid and synonymous options.
+</p>
+</dd>
+</dl></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_deprecated_options">4. DEPRECATED OPTIONS</h2>
+<div class="sectionbody">
+<div class="dlist"><dl>
+<dt class="hdlist1">
 <strong>--xeno-cflags</strong>
 </dt>
 <dd>
 <p>
-Outputs one line with the C compiler command-line options that are necessary to compile applications that use the Xenomai libraries.
+This option is deprecated, please use <strong>--skin</strong> and <strong>--cflags</strong> instead.
+Outputs one line with the C compiler command-line options that are necessary to compile applications that use any Xenomai skin, except the posix skin.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -116,7 +164,8 @@ Outputs one line with the C compiler command-line options that are necessary to 
 </dt>
 <dd>
 <p>
-Outputs one line with the C compiler command-line options that are necessary to link applications against the Xenomai libraries.
+This option is deprecated, please use <strong>--skin</strong> and <strong>--ldflags</strong> instead.
+Outputs one line with the C compiler command-line options that are necessary to link applications that use any Xenomai skin, except the posix skin, with the necessary libraries. Note that the particular <strong>-llibskin</strong> flag should be added to the flags returned by this option.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -124,6 +173,7 @@ Outputs one line with the C compiler command-line options that are necessary to 
 </dt>
 <dd>
 <p>
+This option is deprecated, please use <strong>--skin posix --cflags</strong> instead.
 Outputs one line with the C compiler command-line options that are necessary to compile applications that use Xenomai&#8217;s Posix-compatible layer library.
 </p>
 </dd>
@@ -132,32 +182,35 @@ Outputs one line with the C compiler command-line options that are necessary to 
 </dt>
 <dd>
 <p>
+This option is deprecated, please use <strong>--skin posix --ldflags</strong> instead.
 Outputs one line with the C compiler command-line options that are necessary to link applications against Xenomai&#8217;s Posix-compatible layer library.
 </p>
 </dd>
+</dl></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_environment_variables">5. ENVIRONMENT VARIABLES</h2>
+<div class="sectionbody">
+<div class="dlist"><dl>
 <dt class="hdlist1">
-<strong>--lib</strong>-dir, --library-dir, --libdir, --user-libdir*
+<strong>DESTDIR</strong>
 </dt>
 <dd>
 <p>
-Outputs one line with the absolute path to Xenomai&#8217;s libraries.
-In the <strong>--lib</strong>-dir* option name, the <strong>*</strong> is meant as a wildcard: <strong>--lib-dir</strong>, <strong>--libfoo-dir</strong> and <strong>--libbar-dir</strong> are all valid and synonymous options.
+If the <strong>DESTDIR</strong> variable is set, its content is prepended to the Xenomai installed directories and files names output by the
+<strong>--prefix</strong> and <strong>--library-dir</strong> options, and to the Xenomai installation directories in the flags output by the
+<strong>--xeno-cflags</strong>, <strong>--xeno-ldflags</strong>, <strong>--posix-cflags</strong>, <strong>--posix-ldflags</strong>
+options.
 </p>
 </dd>
 </dl></div>
-<div class="paragraph"><p>ENVIRONMENT VARIABLES</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>*DESTDIR*::
-If the *DESTDIR* variable is set, its content is prepended to the Xenomai installed directories and files names output by the
-*--prefix* and *--library-dir* options, and to the Xenomai installation directories in the flags output by the
-*--xeno-cflags*, *--xeno-ldflags*, *--posix-cflags*, *--posix-ldflags*
-options.
-
-If *DESTDIR* was set when compiling and installing Xenomai, e.g. for cross-compilation, *DESTDIR* must be set to the same value before calling *xeno-config*, in order to output valid directory and file names.
-
-RETURN CODES</tt></pre>
-</div></div>
+<div class="paragraph"><p>If <strong>DESTDIR</strong> was set when compiling and installing Xenomai, e.g. for cross-compilation, <strong>DESTDIR</strong> must be set to the same value before calling <strong>xeno-config</strong>, in order to output valid directory and file names.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_codes">6. RETURN CODES</h2>
+<div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
 <strong>0</strong>
@@ -181,10 +234,11 @@ or an invalid argument has been given on the command-line.
 </dl></div>
 </div>
 </div>
+</div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2012-12-18 22:17:25 CEST
+Last updated 2013-06-09 11:59:08 CEST
 </div>
 </div>
 </body>

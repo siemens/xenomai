@@ -1,9 +1,9 @@
-<map id="G" name="G">
-<area shape="rect" id="node3" href="$analogy_8h.html" title="Analogy for Linux, library facilities." alt="" coords="440,83,627,112"/>
-<area shape="rect" id="node7" href="$descriptor_8c.html" title="Analogy for Linux, descriptor related features." alt="" coords="5,160,216,189"/>
-<area shape="rect" id="node5" href="$async_8c.html" title="Analogy for Linux, command, transfer, etc." alt="" coords="240,160,424,189"/>
-<area shape="rect" id="node9" href="$info_8c.html" title="Analogy for Linux, device, subdevice, etc." alt="" coords="448,160,619,189"/>
-<area shape="rect" id="node11" href="$range_8c.html" title="Analogy for Linux, range related features." alt="" coords="643,160,827,189"/>
-<area shape="rect" id="node13" href="$sync_8c.html" title="Analogy for Linux, instruction related features." alt="" coords="851,160,1027,189"/>
-<area shape="rect" id="node15" href="$sys_8c.html" title="Analogy for Linux, descriptor related features." alt="" coords="1051,160,1219,189"/>
+<map id="include/analogy/descriptor.h" name="include/analogy/descriptor.h">
+<area shape="rect" id="node3" href="$analogy_8h.html" title="Analogy for Linux, library facilities." alt="" coords="275,83,445,112"/>
+<area shape="rect" id="node7" href="$descriptor_8c.html" title="Analogy for Linux, descriptor related features." alt="" coords="5,161,128,207"/>
+<area shape="rect" id="node5" href="$async_8c.html" title="Analogy for Linux, command, transfer, etc." alt="" coords="152,161,275,207"/>
+<area shape="rect" id="node9" href="$info_8c.html" title="Analogy for Linux, device, subdevice, etc." alt="" coords="299,161,421,207"/>
+<area shape="rect" id="node11" href="$range_8c.html" title="Analogy for Linux, range related features." alt="" coords="445,161,568,207"/>
+<area shape="rect" id="node13" href="$sync_8c.html" title="Analogy for Linux, instruction related features." alt="" coords="592,161,715,207"/>
+<area shape="rect" id="node15" href="$sys_8c.html" title="Analogy for Linux, descriptor related features." alt="" coords="739,161,861,207"/>
 </map>

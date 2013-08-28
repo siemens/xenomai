@@ -2,19 +2,18 @@
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.5.2" />
+<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
+<meta name="generator" content="AsciiDoc 8.6.7" />
 <title>Installing Xenomai 2.6.2.1</title>
-<link rel="stylesheet" href="../asciidoc-css/xhtml11.css" type="text/css" />
-<link rel="stylesheet" href="../asciidoc-css/xhtml11-quirks.css" type="text/css" />
+<link rel="stylesheet" href="../asciidoc-css/asciidoc.css" type="text/css" />
+<script type="text/javascript" src="../asciidoc-js/asciidoc.js"></script>
 <script type="text/javascript">
 /*<![CDATA[*/
-window.onload = function(){asciidoc.footnotes(); asciidoc.toc(3);}
+asciidoc.install(3);
 /*]]>*/
 </script>
-<script type="text/javascript" src="../asciidoc-js/asciidoc-xhtml11.js"></script>
 </head>
-<body style="max-width:55em">
+<body class="article" style="max-width:55em">
 <div id="header">
 <h1>Installing Xenomai 2.6.2.1</h1>
 <div id="toc">
@@ -31,6 +30,7 @@ window.onload = function(){asciidoc.footnotes(); asciidoc.toc(3);}
 <a href="mailto:xenomai@xenomai.org">the mailing list</a>.</p></div>
 </div>
 </div>
+<div class="sect1">
 <h2 id="_introduction">1. Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>Starting with version 2.1, Xenomai follows a split source model,
@@ -58,9 +58,12 @@ possible to install, and even build Xenomai as a set of Debian
 packages. For further details, see
 <a href="http://www.xenomai.org/index.php/Building_Debian_packages">this page</a>.</p></div>
 </div>
+</div>
+<div class="sect1">
 <h2 id="_installation_steps">2. Installation steps</h2>
 <div class="sectionbody">
-<h3 id="prepare-kernel">2.1. Preparing the target kernel</h3><div style="clear:left"></div>
+<div class="sect2">
+<h3 id="prepare-kernel">2.1. Preparing the target kernel</h3>
 <div class="paragraph"><p>Xenomai provides a real-time sub-system seamlessly integrated to
 Linux, therefore the first step is to build it as part of the target
 kernel. To this end, <tt>scripts/prepare-kernel.sh</tt> is a shell script which
@@ -118,7 +121,9 @@ from its own location within the Xenomai source tree. In other words,
 if <tt>/usr/src/xenomai-2.4/script/prepare-kernel.sh</tt> is executing, then
 Xenomai&#8217;s kernel support available from <tt>/usr/src/xenomai-2.4/ksrc</tt> will
 be bound to the target kernel.</p></div>
-<h3 id="compile-kernel">2.2. Configuring and building the target kernel</h3><div style="clear:left"></div>
+</div>
+<div class="sect2">
+<h3 id="compile-kernel">2.2. Configuring and building the target kernel</h3>
 <div class="paragraph"><p>Once the target kernel has been prepared, the kernel should be configured
 following its usual configuration procedure. All Xenomai configuration
 options are available from the "Real-time subsystem" toplevel menu.</p></div>
@@ -136,12 +141,15 @@ CROSS_COMPILE variable on make command line. See sections
 <a href="#powerpc">"Building for the PowerPC architecture"</a>,
 <a href="#blackfin">"Building for the Blackfin"</a>, <a href="#arm">"Building for ARM"</a>
 and <a href="#nios2">"Building for NIOS II"</a> for examples.</p></div>
-<h3 id="userspace">2.3. Building the user-space support</h3><div style="clear:left"></div>
+</div>
+<div class="sect2">
+<h3 id="userspace">2.3. Building the user-space support</h3>
 <div class="paragraph"><p>A regular autoconf script is provided in order to prepare for building
 the user-space support. The options listed below can be passed to this
 script. Those options only affect the libraries compiled as part of
 Xenomai&#8217;s user-space support, but in any case, they never impact the
 kernel-based support.</p></div>
+<div class="sect3">
 <h4 id="_feature_conflict_resolution">2.3.1. Feature conflict resolution</h4>
 <div class="paragraph"><p>Because of the strong decoupling between the kernel and user-space
 build procedures, Xenomai needs to make sure that all user-space
@@ -170,6 +178,8 @@ option&#8217;s binding is weak. On the other hand, x86-based applications
 linked against Xenomai libraries which have been compiled with the
 x86-tsc option on, must run on a kernel built with CONFIG_X86_TSC set,
 since the x86-tsc option&#8217;s binding is strong.</p></div>
+</div>
+<div class="sect3">
 <h4 id="_generic_configure_options">2.3.2. Generic configure options</h4>
 <div class="tableblock">
 <table rules="cols"
@@ -244,6 +254,8 @@ cellspacing="0" cellpadding="4">
 </tbody>
 </table>
 </div>
+</div>
+<div class="sect3">
 <h4 id="_arch_specific_configure_options">2.3.3. Arch-specific configure options</h4>
 <div class="tableblock">
 <table rules="cols"
@@ -298,6 +310,8 @@ cellspacing="0" cellpadding="4">
 </tbody>
 </table>
 </div>
+</div>
+<div class="sect3">
 <h4 id="_cross_compilation">2.3.4. Cross-compilation</h4>
 <div class="paragraph"><p>In order to cross-compile Xenomai user-space support, you will need to
 pass a <tt>--host</tt> and <tt>--build</tt> option to the configure script. The
@@ -344,6 +358,10 @@ Linaro toolchain (for the ARM architecture), available
 </li>
 </ul></div>
 </div>
+</div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="examples">3. Typical installation procedures</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>The examples in following sections use the following conventions:</p></div>
@@ -387,7 +405,8 @@ path to a directory that will hold the installed file
 </p>
 </dd>
 </dl></div>
-<h3 id="_building_for_x86_32_64bit">3.1. Building for x86_32/64bit</h3><div style="clear:left"></div>
+<div class="sect2">
+<h3 id="_building_for_x86_32_64bit">3.1. Building for x86_32/64bit</h3>
 <div class="paragraph"><p>Since Linux 2.6.24, x86_32 and x86_64 trees are merged. Therefore,
 building Xenomai for 2.6.24 or later is almost the same, regardless of
 the 32/64bit issue. You should note, however, that it is not possible
@@ -462,7 +481,9 @@ applications that call Xenomai&#8217;s real-time support in kernel space.</p></d
 various architectures. Of course, you will have to install the proper
 cross-compilation toolchain for the target system first, in order to
 build Xenomai.</p></div>
-<h3 id="powerpc">3.2. Building for the PowerPC architecture</h3><div style="clear:left"></div>
+</div>
+<div class="sect2">
+<h3 id="powerpc">3.2. Building for the PowerPC architecture</h3>
 <div class="paragraph"><p>PowerPC has a legacy <tt>arch/ppc</tt> branch, and a newer, current
 <tt>arch/powerpc</tt> tree. Xenomai supports both, but using <tt>arch/powerpc</tt> is
 definitely recommended. To help the preparation script to pick the
@@ -540,7 +561,9 @@ $ $xenomai_root/configure --build=i686-pc-linux-gnu --host=ppc-unknown-linux-gnu
   CC=ppc_4xx-gcc LD=ppc_4xx-ld
 $ make DESTDIR=$staging_dir install</tt></pre>
 </div></div>
-<h3 id="blackfin">3.3. Building for the Blackfin</h3><div style="clear:left"></div>
+</div>
+<div class="sect2">
+<h3 id="blackfin">3.3. Building for the Blackfin</h3>
 <div class="paragraph"><p>The Blackfin is an MMU-less, DSP-type architecture running uClinux.</p></div>
 <div class="listingblock">
 <div class="content">
@@ -584,7 +607,9 @@ the last two build steps, passing the <tt>--disable-shared</tt> option to the
 "configure" script.</td>
 </tr></table>
 </div>
-<h3 id="arm">3.4. Building for ARM</h3><div style="clear:left"></div>
+</div>
+<div class="sect2">
+<h3 id="arm">3.4. Building for ARM</h3>
 <div class="paragraph"><p>Using codesourcery toolchain named <tt>arm-none-linux-gnueabi-gcc</tt> and
 compiling for a CSB637 board (AT91RM9200 based), a typical compilation
 will look like:</p></div>
@@ -723,10 +748,13 @@ cellspacing="0" cellpadding="4">
 of v7, or v4 instead of v5), if your toolchain does not support the
 target architecture, the only restriction being that if SMP is
 enabled, the architecture should not be less than v6.</p></div>
-<h3 id="nios2">3.5. Building for NIOS II</h3><div style="clear:left"></div>
+</div>
+<div class="sect2">
+<h3 id="nios2">3.5. Building for NIOS II</h3>
 <div class="paragraph"><p>NIOS II is a softcore processor developped by Altera and is dedicated
 to the Altera&#8217;s FPGA circuits.</p></div>
 <div class="paragraph"><p>NIOS II with no MMU enabled is supported by the uClinux distribution.</p></div>
+<div class="sect3">
 <h4 id="_minimum_hardware_requirements">3.5.1. Minimum hardware requirements</h4>
 <div class="paragraph"><p>You have to start with a minimal system with at least:</p></div>
 <div class="ulist"><ul>
@@ -785,6 +813,8 @@ your target board.</p></div>
 <div class="paragraph"><p>For example, with an Altera&#8217;s board, you may use the <em>standard</em>
 design. <em>Standard</em> reference designs for Altera&#8217;s boards are available
 <a href="http://www.altera.com/support/examples/nios2/exm-nios2.html">here</a>.</p></div>
+</div>
+<div class="sect3">
 <h4 id="_xenomai_compilation_for_nios_ii">3.5.2. Xenomai compilation for NIOS II</h4>
 <div class="paragraph"><p>You should first verify that uClinux without Xenomai can run on the
 target board.</p></div>
@@ -813,9 +843,14 @@ $ cd $uClinux-dist
 $ make</tt></pre>
 </div></div>
 </div>
+</div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_testing_the_installation">4. Testing the installation</h2>
 <div class="sectionbody">
-<h3 id="_testing_the_kernel">4.1. Testing the kernel</h3><div style="clear:left"></div>
+<div class="sect2">
+<h3 id="_testing_the_kernel">4.1. Testing the kernel</h3>
 <div class="paragraph"><p>In order to test the Xenomai installation, you should first try to boot the
 patched kernel. The kernel boot logs should show messages like:</p></div>
 <div class="listingblock">
@@ -833,7 +868,9 @@ Xenomai: starting RTDM services.</tt></pre>
 <div class="paragraph"><p>Where &lt;arch&gt; is the architecture you are using. If the kernel fails
 to boot, or the log messages indicates an error status instead, see the
 <a href="../TROUBLESHOOTING/index.html#kerror">TROUBLESHOOTING</a> guide.</p></div>
-<h3 id="_testing_the_user_space_support">4.2. Testing the user-space support</h3><div style="clear:left"></div>
+</div>
+<div class="sect2">
+<h3 id="_testing_the_user_space_support">4.2. Testing the user-space support</h3>
 <div class="paragraph"><p>In order to test Xenomai user-space support, launch the latency test:</p></div>
 <div class="listingblock">
 <div class="content">
@@ -892,10 +929,12 @@ test under load to evaluate the latency test of your system, the
 </div></div>
 </div>
 </div>
+</div>
+</div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2013-01-15 06:25:25 CEST
+Last updated 2013-03-23 21:49:27 CET
 </div>
 </div>
 </body>

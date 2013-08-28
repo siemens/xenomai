@@ -4,6 +4,7 @@ Troubleshooting guide
 
 Table of Contents
 
+ 
 1. Kernel configuration
 2. Xenomai or I-pipe error in the kernel log
 
@@ -60,8 +61,6 @@ Table of Contents
     6.4. Any Xenomai service fails with code -38 (ENOSYS)
     6.5. My application reserves a lot of memory
 
--------------------------------------------------------------------------------
-
 This file is a troubleshooting guide about various known issues regarding
 Xenomai.
 
@@ -73,8 +72,6 @@ For questions, corrections and improvements, write to the mailing list:
 
 
 1. Kernel configuration
------------------------
-
 When configuring the Linux kernel, some options should be avoided.
 
 CONFIG_CPU_FREQ
@@ -98,8 +95,6 @@ For x86 specific options see also this page:
 
 
 2. Xenomai or I-pipe error in the kernel log
---------------------------------------------
-
 If the Xenomai and I-pipe messages do not appear in the kernel log as:
 
 I-pipe: head domain Xenomai registered.
@@ -115,9 +110,7 @@ Xenomai: starting RTDM services.
 Where <arch> is the architecture you use, check the following sections, they
 describe the usual error messages you may encounter.
 
-
 2.1. Kernel stops after "Uncompressing Linux… done, booting the kernel."
-------------------------------------------------------------------------
 
 This means that the kernel crashes before the console is enabled. You should
 enable the CONFIG_EARLY_PRINTK option. For some architectures (blackfin, x86,
@@ -128,35 +121,27 @@ values.
 For the ARM architecture, you have to enable CONFIG_DEBUG_KERNEL and
 CONFIG_DEBUG_LL in order to be able to enable CONFIG_EARLY_PRINTK.
 
-
 2.2. Kernel stops with an OOPS
-------------------------------
 
 Please make sure that you have followed the "Kernel configuration" section.
 Then, try capturing the oops text (using a serial console or netconsole) post
 the oops to the xenomai mailing list: "xenomai@xenomai.org", with the kernel
 configuration you used to compile the failing kernel.
 
-
 2.3. Kernel boots but does not print any message
-------------------------------------------------
 
 Your distribution may be configured to pass the quiet option on the kernel
 command line. In this case, the kernel does not print all the log messages,
 however, they are still available using the dmesg command.
 
-
 2.4. Xenomai: compiled for TSC, but CPU has no TSC
---------------------------------------------------
 
 You selected a CPU which as a TSC ("Pentium classic", and above), but the CPU
 on which you run the kernel has no TSC. This issue was resolved in the I-pipe
 core for Linux 3.4, but for prior versions, you need to select a CPU without a
 TSC when configuring the kernel, and recompile the kernel.
 
-
 2.5. Xenomai has detected a CPU frequency of 0
-----------------------------------------------
 
 This happens when running in emulators. In such a case, Xenomai can not run as
 it needs to know the clock frequency.
@@ -165,77 +150,73 @@ This may also happen when using I-pipe core patch for Linux 3.2, compiled for a
 CPU with a TSC, but running on a CPU without a TSC, as in the "Xenomai:
 compiled for TSC case.
 
-
 2.6. I-pipe: could not find timer for cpu #x
---------------------------------------------
 
 See code -19.
-
 
 2.7. Xenomai: Local APIC absent or disabled!
---------------------------------------------
 
 See code -19.
 
-
 2.8. Xenomai: SMI-enabled chipset found, but SMI workaround disabled
---------------------------------------------------------------------
 
 First you should run the latency test under some load and see if you experience
 any pathological latency ("pathological" meaning more than, say, 100
 micro-seconds). If you do not observe any such latency, then this warning is
-harmless, and if you find it annoying, you may disable "SMI detection" in
-Xenomai’s configuration menu. You can skip the rest of this section.
+harmless, and if you find it annoying, you may add the parameter "xeno_hal.smi=
+-1" on the kernel command line. You can skip the rest of this section.
 
 If you observe any high latency then you have a problem with SMI, and this
-warning was intended for you. But the Xenomai configuration menu allow you to
-enable two workarounds which may help you. These workarounds may be found in
-the Machine/SMI workaround sub-menu of Xenomai configuration menu.
+warning was intended for you. But the Xenomai patched kernel parameters allow
+you to enable two workarounds which may help you. These workarounds are enabled
+by adding the parameter "xeno_hal.smi=1" on the kernel command line.
 
 The first workaround which you should try is to disable all SMI sources. In
-order to do this, in the Xenomai configuration menu, select the options "Enable
-SMI workaround" and "Globally disable SMI". This option is the safest
-workaround, because when enabled, no SMI can interfere with hardware interrupt
-management behind your back and cause high latencies. Once this workaround
-enabled, you should run the latency test again, verify that your high latency
-disappeared but most importantly, verify that every peripheral you intend to
-use with Xenomai is working properly. If everything is working properly, then
-you are done with SMI.
+order to do this, simply boot with the parameter "xeno_hal.smi=1" on the kernel
+command line. This option is the most reliable workaround, because when
+enabled, no SMI can interfere with hardware interrupt management behind your
+back and cause high latencies. Once this workaround enabled, you should run the
+latency test again, verify that your high latency disappeared but most
+importantly, verify that every peripheral you intend to use with Xenomai is
+working properly.
+
+If everything is working properly, then try and stress-test the system, and
+check for overheating. If the motherboard sensors do not allow to check
+temperature, and you get an unexplained reboot in the middle of the
+stress-test, chances are that you have an overheating issue, otherwise, you are
+done with the SMI workaround.
+
+[Important] Important
+            if your system is over-heating you should not disable the SMI
+            globally as the SMI are probably needed for controlling the cooling
+            of your system, so disabling them globally may damage your system.
+            Try the next section. Otherwise, you are done with SMI.
 
 If some peripheral is not working properly, then it probably needs SMI, in
 which case you can not simply disable SMI globally, you will need to disable
-all SMI sources on your system except the SMI needed by your peripheral. This
-is a much less safe choice, since Xenomai has to know all SMI sources to
-disable them, one by one. In order to choose this second workaround, unselect
-the option "Globally disable SMI", and select the option corresponding to your
-peripheral. For example, if you need legacy USB emulation to get your USB mouse
-working, select the option "Enable legacy USB emulation". You should then run
-the latency test again and verify that you do not observe any high latency and
-that all your peripherals are functioning correctly. If you can not find your
-peripheral in the list proposed in the Xenomai configuration menu, drop a mail
-to the Xenomai mailing list: "xenomai@xenomai.org", we will try and possibly
-add the proper option if needed. If when running the latency test again, your
-peripheral is working properly and you still observe high latencies, then you
-are out of luck, the peripheral you want is likely to be the cause of such
-latencies.
+all SMI sources on your system except the SMI needed by your peripheral. The
+same goes if the system overheat, you have to find a waytto keep the SMI source
+which is controlling the thermal control enabled. This is a much less reliable
+choice, since you have to know all SMI sources to disable them, one by one. In
+order to choose this second workaround, check in the documentation for the
+Intel chipset you use, for the documentation of the SMI_EN register. Then set
+the "xeno_hal.smi_mask" parameter on the kernel command line with a value where
+all bits set to 0 will be disabled when Xenomai starts.
 
-[Important] Important
-            On some systems, SMI may be involved in thermal throttling of the
-            CPU. Thus, switching it off can cause hardware damage in overheat
-            situations. Do not disable SMIs if you are in this case.
-
+You should then run the latency test again and verify that you do not observe
+any high latency and that all your peripherals are functioning correctly. If
+when running the latency test again, your peripheral is working properly and
+you still observe high latencies, then you are out of luck, the peripheral you
+want is likely to be the cause of such latencies.
 
 2.9. Xenomai: system init failed, code -19
-------------------------------------------
 
 The most probable reason is that Xenomai could not find a timer.
 
 Check that you have not enabled one of the options in the "Kernel
 configuration" section.
 
-
 2.9.1. On x86
--------------
 
 You will most likely also see the following message:
 
@@ -256,9 +237,7 @@ support is available. There are two options for fixing this issue:
     You may want to look at the file Documentation/kernel-parameters.txt from
     the Linux source tree, for more information about this parameter.
 
-
 2.9.2. On AMD x86_64
---------------------
 
 You will most likely also see the following message:
 
@@ -273,9 +252,7 @@ located in the Advanced BIOS Features→ menu (AMD C1E Support).
             Disabling AMD K8 Cool&Quiet option in a BIOS does not solve the
             problem.
 
-
 2.9.3. On other supported platforms
------------------------------------
 
 As on x86, on other platforms where Xenomai shares the timer with Linux, the
 timer is only used if it was not shut down by Linux. So you should check the
@@ -289,9 +266,7 @@ post a message to the xenomai mailing list: "xenomai@xenomai.org", sending:
     issue
   * the complete kernel boot log.
 
-
 2.9.4. On a new I-pipe port
----------------------------
 
 You will most likely also see the following message:
 
@@ -305,9 +280,7 @@ with the ipipe_timer member of the struct clock_event_device structure.
 For an example on the ARM platform see this page: 
 "http://www.xenomai.org/index.php/I-pipe-core:ArmPorting#The_general_case".
 
-
 2.10. Xenomai: system init failed, code -22
--------------------------------------------
 
 On the ppc64 platform, check whether CONFIG_PPC_64K_PAGES is defined in your
 kernel configuration. If so, then you likely need to raise all Xenomai
@@ -319,15 +292,11 @@ assumption that PAGE_SIZE = 4k.
 
 
 3. Problems when running the latency test
------------------------------------------
-
 The first test to run to see if Xenomai is running correctly on your platform
 is the latency test. The following sections describe the usual reasons for this
 test not to run correctly.
 
-
 3.1. Xenomai: binding failed: Operation not permitted
------------------------------------------------------
 
 This error message means that you are trying to run the latency test as a
 non-root user. Using Xenomai services requires root privileges (more precisely
@@ -335,9 +304,7 @@ CAP_SYS_NICE). However, you can allow a specific group to access Xenomai
 services, by following the instructions on this page: 
 "http://xenomai.org/index.php/Non-root_RT".
 
-
 3.2. Xenomai: --enable-x86-sep needs NPTL and Linux 2.6.x or higher
--------------------------------------------------------------------
 
 On the x86 architecture, the configure script option --enable-x86-sep allows
 Xenomai to use the SYSENTER/SYSEXIT mechanism for issuing system calls.
@@ -346,22 +313,16 @@ However, this mechanism requires support from the libc. Currently, we know the
 glibc with NPTL has this support, other libraries will cause Xenomai
 applications to fail with this error message.
 
-
 3.3. latency: failed to open benchmark device
----------------------------------------------
 
 You have launched latency -t 1 or latency -t 2 which both require the kernel to
 have been compiled with the CONFIG_XENO_DRIVERS_TIMERBENCH option enabled.
 
-
 3.4. Hardware tsc is not a fast wrapping one
---------------------------------------------
 
 See the "ARM tsc emulation issues" section.
 
-
 3.5. Xenomai: incompatible ABI revision level
----------------------------------------------
 
 Each Xenomai branch (2.1, 2.2, 2.3, 2.4, 2.5, 2.6,…) defines a kernel/user ABI,
 so that it is possible to mix kernels and user-space supports of different
@@ -382,9 +343,7 @@ package.
 If you compiled and installed the correct Xenomai user-space support, there are
 probably files on your system remaining from a previous installation.
 
-
 3.6. Xenomai: incompatible feature set
---------------------------------------
 
 Since kernel-space support and user-space support are compiled separately, each
 Xenomai application checks, at startup, whether the kernel and user-space
@@ -392,24 +351,18 @@ supports have been configured with compatible options. If you see this message,
 it means they have not. See README.INSTALL for further details. The following
 sections detail the most frequent reasons for this message.
 
-
 3.6.1. missing="kuser_tsc"
---------------------------
 
 See the "ARM tsc emulation issues" section.
 
-
 3.6.2. missing="sep"
---------------------
 
 On the x86 architecture, the configure script option --enable-x86-sep allows
 Xenomai to use the SYSENTER/SYSEXIT mechanism for issuing system calls.
 
 However, this mechanism requires a recent kernel (2.6 or higher).
 
-
 3.6.3. missing="smp/nosmp"
---------------------------
 
 On some SMP-capable architectures, for kernel-space and user-space supports to
 be compatible, both should be compiled with the same setting for SMP.
@@ -424,9 +377,7 @@ Other SMP-capable architectures may run userland code built with --enable-smp
 or --disable-smp over the same kernel indifferently, at no noticeable
 performance cost. These architectures never receive such SMP-related error.
 
-
 3.6.4. missing="tsc"
---------------------
 
 This error is specific to the x86 architecture. You enabled tsc in user-space
 by passing the --enable-x86-tsc option, but you selected a processor when
@@ -440,15 +391,11 @@ and recompile it.
 If your processor does not have a tsc, you should not pass the --enable-x86-tsc
 option to the configure script.
 
-
 3.7. Xenomai: kernel/user tsc emulation mismatch
-------------------------------------------------
 
 See the "ARM tsc emulation issues" section.
 
-
 3.8. Xenomai: native skin or CONFIG_XENO_OPT_PERVASIVE disabled
----------------------------------------------------------------
 
 Possible reasons for this error are:
 
@@ -462,9 +409,7 @@ Possible reasons for this error are:
   * you are trying to run Xenomai user-space support compiled for x86_32 on an
     x86_64 kernel.
 
-
 3.9. latency: not found
------------------------
 
 On the ARM platform this message happens when there is a mismatch between
 kernel and user for the EABI setting: for instance you compiled the user-space
@@ -473,32 +418,24 @@ on a kernel with CONFIG_AEABI but without CONFIG_OABI_COMPAT. Or vice versa,
 when running user-space compiled with an EABI toolchain on a kernel without
 CONFIG_AEABI.
 
-
 3.10. Xenomai: watchdog triggered (period too short?)
------------------------------------------------------
 
 Xenomai watchdog has stopped the latency test because it was using all the CPU
 in primary mode. This is likely due to a too short period, re-run the latency
 test passing a longer period using the -p option.
 
-
 3.11. Xenomai: Your board/configuration does not allow tsc emulation
---------------------------------------------------------------------
 
 See the "ARM tsc emulation issues" section.
 
-
 3.12. the latency test hangs
-----------------------------
 
 The most common reason for this issues is a too short period passed with the -p
 option, try increasing the period. If you enable the watchdog (option
 CONFIG_XENO_OPT_WATCHDOG, in your kernel configuration), you should see the
 "Xenomai: watchdog triggered (period too short?)" message.
 
-
 3.13. the latency test shows high latencies
--------------------------------------------
 
 The latency test runs, but you are seeing high latencies.
 
@@ -528,9 +465,7 @@ in the boot logs, it may mean that your chipset is not detected.
 
         Option "NoAccel"
 
-
 3.14. ARM tsc emulation issues
-------------------------------
 
 In order to allow applications to measure short durations with as little
 overhead as possible, Xenomai uses a 64 bits high resolution counter. On x86,
@@ -591,9 +526,8 @@ means that the kernel-space support for the SOC you are using does not provide
 support for tsc emulation in user-space. In that case, you should recompile
 Xenomai user-space support passing the --disable-arm-tsc option.
 
-
-4. switchtest fails with "pthread_create: Resource temporarily unavailable"
----------------------------------------------------------------------------
+4. switchtest fails with "pthread_create: Resource temporarily
+unavailable"
 
 The switchtest test creates many kernel threads, this means that the options
 CONFIG_XENO_OPT_SYS_HEAPSZ and CONFIG_XENO_OPT_SYS_STACKPOOLSZ, in your kernel
@@ -601,14 +535,10 @@ configuration, should be configured to large enough values. Try increasing them
 and recompiling the kernel.
 
 
-5. Known Bugs and Limitations
------------------------------
-
-
 5.1. 2.6.2/x86
---------------
 
 2.6.2 (like any previous Xenomai release) does not handle the extended
+5. Known Bugs and Limitations
 processor state (xsave/xrstor) yet.
 
 2.6.2 automatically disables this CPU feature at boot when the host kernel
@@ -622,13 +552,9 @@ when the switchtest program runs in the background, due to incorrect FPU
 management in real-time mode.
 
 
-6. Problem with my code (not Xenomai code)
-------------------------------------------
-
-
 6.1. "Warning: <service> is deprecated" while compiling kernel code
--------------------------------------------------------------------
 
+6. Problem with my code (not Xenomai code)
 Where <service> is a thread creation service, one of:
 
   * cre_tsk
@@ -652,9 +578,7 @@ You may switch those warnings off by enabling the
 CONFIG_XENO_OPT_NOWARN_DEPRECATED option in your kernel configuration, but
 nevertheless, you have been WARNED.
 
-
 6.2. "Xenomai: process memory not locked (missing mlockall?)" at startup
-------------------------------------------------------------------------
 
 In order to avoid unwanted transitions to secondary domain, an application
 using Xenomai services should call, before any Xenomai service:
@@ -675,9 +599,7 @@ with the configure script.
 
 See configure --help.
 
-
 6.3. High latencies when transitioning from primary to secondary mode
----------------------------------------------------------------------
 
 Such transition requires to wake up the Linux task underlying your real-time
 thread when running in secondary mode, since the latter needs to leave the
@@ -716,9 +638,7 @@ granularity improves at each new release, there are still a few catches:
     in the Xenomai domain, and activities from such domain can preempt any
     activity from the Linux domain, including disk drivers.
 
-
 6.4. Any Xenomai service fails with code -38 (ENOSYS)
------------------------------------------------------
 
 Possible reasons for this error are:
 
@@ -732,9 +652,7 @@ Possible reasons for this error are:
   * you are trying to run Xenomai user-space support compiled for x86_32 on an
     x86_64 kernel.
 
-
 6.5. My application reserves a lot of memory
---------------------------------------------
 
 Your user-space application unexpectedly reserves a lot of virtual memory, as
 reported by "top" or /proc/<pid>/maps. Sometimes OOM situations even appear
@@ -743,8 +661,8 @@ during runtime on systems with limited memory.
 The Xenomai tasks are underlaid by native POSIX threads, for which a huge
 default amount of stack space memory is reserved by the native POSIX support,
 usually 8MiB per thread, so the overall allocated space is about
-8MiB * nr_threads, which are likely to be locked using the mlockall() service,
-which in turn even commits such space to RAM.
+8MiB * +nr_threads+, which are likely to be locked using the mlockall()
+service, which in turn even commits such space to RAM.
 
 Unfortunately, this behaviour cannot be controlled by the "stacksize" parameter
 passed to the various thread creation routines, i.e. the latter is about
