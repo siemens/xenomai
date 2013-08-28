@@ -30,7 +30,7 @@ EXTRA_DIST = \
 	xeno.adoc \
 	xeno-config.adoc \
 	xeno-test.adoc \
-	dohell
+	dohell.adoc
 
 man1_MANS = \
 	clocktest.1 \
