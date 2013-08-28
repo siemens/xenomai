@@ -763,7 +763,7 @@ unsigned long vm_mmap(struct file *file, unsigned long addr,
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,10,0)
 #include <linux/proc_fs.h>
 
-#define PDE_DATA(inode)	PROC_I(inode)->pde->data
+#define PDE_DATA(inode)	PDE(inode)->data
 
 static inline void proc_remove(struct proc_dir_entry *pde)
 {
@@ -778,7 +778,7 @@ proc_create_data(const char *name, mode_t mode, struct proc_dir_entry *parent,
 	struct proc_dir_entry *pde = create_proc_entry(name, mode, parent);
 
 	if (pde) {
-		pde->proc_fops = proc_fops;
+		pde->proc_fops = (struct file_operations *)proc_fops;
 		pde->data = data;
 	}
 	return pde;
@@ -793,7 +793,7 @@ proc_create(const char *name, mode_t mode, struct proc_dir_entry *parent,
 	struct proc_dir_entry *pde = create_proc_entry(name, mode, parent);
 
 	if (pde)
-		pde->proc_fops = proc_fops;
+		pde->proc_fops = (struct file_operations *)proc_fops;
 	return pde;
 }
 #endif /* < 2.6.25 */
