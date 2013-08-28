@@ -72,7 +72,7 @@ char *format_thread_status(const struct thread_data *p, char *buf, size_t len)
 	else
 		*wp++ = 'U';
 
-	if (p->status & __THREAD_S_NOPREEMPT)
+	if (p->schedlock > 0)
 		*wp++ = 'l';
 
 	if (p->status & __THREAD_S_RR)

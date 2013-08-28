@@ -183,7 +183,6 @@ int threadobj_lock_sched(void) /* current->lock held */
 	if (current->schedlock_depth++ > 0)
 		return 0;
 
-	current->status |= __THREAD_S_NOPREEMPT;
 	/*
 	 * In essence, we can't be scheduled out as a result of
 	 * locking the scheduler, so no need to drop the thread lock
@@ -209,8 +208,6 @@ int threadobj_unlock_sched(void) /* current->lock held */
 
 	if (--current->schedlock_depth > 0)
 		return 0;
-
-	current->status &= ~__THREAD_S_NOPREEMPT;
 
 	return __bt(-pthread_set_mode_np(PTHREAD_LOCK_SCHED, 0, NULL));
 }
@@ -331,6 +328,7 @@ int threadobj_stat(struct threadobj *thobj, struct threadobj_stat *p) /* thobj->
 	p->xsc = stat.xsc;
 	p->pf = stat.pf;
 	p->timeout = stat.timeout;
+	p->schedlock = thobj->schedlock_depth;
 
 	return 0;
 }
@@ -501,7 +499,6 @@ int threadobj_lock_sched(void) /* current->lock held */
 
 	current->core.prio_unlocked = current->priority;
 	current->core.policy_unlocked = current->policy;
-	current->status |= __THREAD_S_NOPREEMPT;
 	current->priority = threadobj_lock_prio;
 	current->policy = SCHED_RT;
 	param.sched_priority = threadobj_lock_prio;
@@ -524,7 +521,6 @@ int threadobj_unlock_sched(void) /* current->lock held */
 	if (--current->schedlock_depth > 0)
 		return 0;
 
-	current->status &= ~__THREAD_S_NOPREEMPT;
 	current->priority = current->core.prio_unlocked;
 	param.sched_priority = current->core.prio_unlocked;
 	policy = current->core.policy_unlocked;
@@ -548,7 +544,7 @@ int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock hel
 	 * the target thread holds the scheduler lock, but only record
 	 * the level to set when unlocking.
 	 */
-	if (thobj->status & __THREAD_S_NOPREEMPT) {
+	if (thobj->schedlock_depth > 0) {
 		thobj->core.prio_unlocked = prio;
 		thobj->core.policy_unlocked = prio ? SCHED_RT : SCHED_OTHER;
 		threadobj_unlock(thobj);
@@ -581,7 +577,7 @@ int threadobj_set_mode(int clrmask, int setmask, int *mode_r) /* current->lock h
 
 	__threadobj_check_locked(current);
 
-	if (current->status & __THREAD_S_NOPREEMPT)
+	if (current->schedlock_depth > 0)
 		old |= __THREAD_M_LOCK;
 
 	if (setmask & __THREAD_M_LOCK) {
@@ -733,6 +729,8 @@ int threadobj_stat(struct threadobj *thobj,
 			stat->timeout = 1;
 	} else
 		stat->timeout = 0;
+
+	stat->schedlock = thobj->schedlock_depth;
 
 	return 0;
 }
@@ -1188,7 +1186,7 @@ int threadobj_set_rr(struct threadobj *thobj, struct timespec *quantum)
 	 * logic simpler in the Mercury case with respect to tracking
 	 * the current scheduling parameters.
 	 */
-	if (thobj->status & __THREAD_S_NOPREEMPT)
+	if (thobj->schedlock_depth > 0)
 		return -EINVAL;
 
 	return __bt(set_rr(thobj, quantum));

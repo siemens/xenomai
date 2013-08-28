@@ -121,6 +121,7 @@ ssize_t read_threads(struct fsobj *fsobj, char *buf,
 		p->status = statbuf.status;
 		p->cpu = statbuf.cpu;
 		p->timeout = statbuf.timeout;
+		p->schedlock = statbuf.schedlock;
 		p++;
 	}
 

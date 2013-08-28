@@ -168,9 +168,9 @@ static inline char *task_decode_status(struct wind_task *task, char *buf)
 	int status;
 
 	*buf = '\0';
-	status = threadobj_get_status(&task->thobj);
-	if (status & __THREAD_S_NOPREEMPT)
+	if (threadobj_get_lockdepth(&task->thobj) > 0)
 		strcat(buf, "+sched_lock");
+	status = threadobj_get_status(&task->thobj);
 	if (status & __THREAD_S_RR)
 		strcat(buf, "+sched_rr");
 	if (status & __THREAD_S_SUSPENDED)

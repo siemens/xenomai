@@ -39,6 +39,7 @@ struct thread_data {
 	int priority;
 	int policy;
 	int cpu;
+	int schedlock;
 	ticks_t timeout;
 	unsigned long status;
 };

@@ -43,6 +43,8 @@ struct threadobj_corespec {
 struct threadobj_stat {
 	/** Current CPU for thread. */
 	int cpu;
+	/** Scheduler lock nesting count. */
+	int schedlock;
 	/** Cobalt thread status bits. */
 	unsigned long status;
 	/** Execution time in primary mode (ns). */
@@ -91,6 +93,8 @@ struct threadobj_corespec {
 struct threadobj_stat {
 	/** Current CPU for thread. */
 	int cpu;
+	/** Scheduler lock nesting count. */
+	int schedlock;
 	/** Mercury thread status bits. */
 	unsigned long status;
 	/** Current timeout value (ns). */
@@ -112,15 +116,14 @@ void threadobj_save_timeout(struct threadobj_corespec *corespec,
 /*
  * threadobj->status, updated with ->lock held.
  */
-#define __THREAD_S_NOPREEMPT	(1 << 0)	/* Holds the scheduler lock. */
-#define __THREAD_S_RR		(1 << 1)	/* Undergoes round-robin. */
-#define __THREAD_S_STARTED	(1 << 2)	/* threadobj_start() called. */
-#define __THREAD_S_WARMUP	(1 << 3)	/* threadobj_prologue() not called yet. */
-#define __THREAD_S_ABORTED	(1 << 4)	/* Cancelled before start. */
-#define __THREAD_S_LOCKED	(1 << 5)	/* threadobj_lock() granted (debug only). */
-#define __THREAD_S_ACTIVE	(1 << 6)	/* Running user code. */
-#define __THREAD_S_SUSPENDED	(1 << 7)	/* Suspended via threadobj_suspend(). */
-#define __THREAD_S_SAFE		(1 << 8)	/* TCB release deferred. */
+#define __THREAD_S_RR		(1 << 0)	/* Undergoes round-robin. */
+#define __THREAD_S_STARTED	(1 << 1)	/* threadobj_start() called. */
+#define __THREAD_S_WARMUP	(1 << 2)	/* threadobj_prologue() not called yet. */
+#define __THREAD_S_ABORTED	(1 << 3)	/* Cancelled before start. */
+#define __THREAD_S_LOCKED	(1 << 4)	/* threadobj_lock() granted (debug only). */
+#define __THREAD_S_ACTIVE	(1 << 5)	/* Running user code. */
+#define __THREAD_S_SUSPENDED	(1 << 6)	/* Suspended via threadobj_suspend(). */
+#define __THREAD_S_SAFE		(1 << 7)	/* TCB release deferred. */
 #define __THREAD_S_DEBUG	(1 << 31)	/* Debug mode enabled. */
 /*
  * threadobj->run_state, locklessly updated by "current", merged
