@@ -1700,11 +1700,10 @@ static void user_process_detach(struct xnshadow_ppd *ppd)
 	struct xnsys_ppd *p;
 
 	p = container_of(ppd, struct xnsys_ppd, ppd);
-	xnheap_destroy_mapped(&p->sem_heap, post_ppd_release, NULL);
-	atomic_dec(&personalities[user_muxid]->refcnt);
-
 	if (p->exe_path)
 		kfree(p->exe_path);
+	xnheap_destroy_mapped(&p->sem_heap, post_ppd_release, NULL);
+	atomic_dec(&personalities[user_muxid]->refcnt);
 }
 
 static struct xnsyscall user_syscalls[] = {
