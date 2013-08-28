@@ -174,11 +174,9 @@ int threadobj_resume(struct threadobj *thobj) /* thobj->lock held */
 	return __bt(-ret);
 }
 
-int threadobj_lock_sched(void) /* current->lock held */
+int __threadobj_lock_sched(struct threadobj *current)
 {
-	struct threadobj *current = threadobj_current();
-
-	__threadobj_check_locked(current);
+	smp_rmb();
 
 	if (current->schedlock_depth++ > 0)
 		return 0;
@@ -191,18 +189,24 @@ int threadobj_lock_sched(void) /* current->lock held */
 	return __bt(-pthread_set_mode_np(0, PTHREAD_LOCK_SCHED, NULL));
 }
 
-int threadobj_unlock_sched(void) /* current->lock held */
+int threadobj_lock_sched(void)
 {
 	struct threadobj *current = threadobj_current();
 
-	__threadobj_check_locked(current);
+	/* This call is lock-free over Cobalt. */
+	return __bt(__threadobj_lock_sched(current));
+}
 
+int __threadobj_unlock_sched(struct threadobj *current)
+{
 	/*
-	 * Higher layers may not know about the current locking level
-	 * and fully rely on us to track it, so we gracefully handle
-	 * unbalanced calls here, and let them decide of the outcome
-	 * in case of error.
+	 * Higher layers may not know about the current scheduler
+	 * locking level and fully rely on us to track it, so we
+	 * gracefully handle unbalanced calls here, and let them
+	 * decide of the outcome in case of error.
 	 */
+	smp_rmb();
+
 	if (current->schedlock_depth == 0)
 		return __bt(-EINVAL);
 
@@ -210,6 +214,14 @@ int threadobj_unlock_sched(void) /* current->lock held */
 		return 0;
 
 	return __bt(-pthread_set_mode_np(PTHREAD_LOCK_SCHED, 0, NULL));
+}
+
+int threadobj_unlock_sched(void)
+{
+	struct threadobj *current = threadobj_current();
+
+	/* This call is lock-free over Cobalt. */
+	return __bt(__threadobj_unlock_sched(current));
 }
 
 int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock held, dropped */
@@ -260,9 +272,9 @@ int threadobj_set_mode(int clrmask, int setmask, int *mode_r) /* current->lock h
 		__clrmask |= PTHREAD_CONFORMING;
 
 	if (setmask & __THREAD_M_LOCK)
-		threadobj_lock_sched_once();
+		__threadobj_lock_sched_once(current);
 	else if (clrmask & __THREAD_M_LOCK)
-		threadobj_unlock_sched();
+		__threadobj_unlock_sched(current);
 
 	if (mode_r || __setmask || __clrmask)
 		return __bt(-pthread_set_mode_np(__clrmask, __setmask, mode_r));
@@ -486,9 +498,8 @@ int threadobj_resume(struct threadobj *thobj) /* thobj->lock held */
 	return __bt(notifier_release(&thobj->core.notifier));
 }
 
-int threadobj_lock_sched(void) /* current->lock held */
+int __threadobj_lock_sched(struct threadobj *current) /* current->lock held */
 {
-	struct threadobj *current = threadobj_current();
 	pthread_t tid = current->tid;
 	struct sched_param param;
 
@@ -506,9 +517,20 @@ int threadobj_lock_sched(void) /* current->lock held */
 	return __bt(-pthread_setschedparam(tid, SCHED_RT, &param));
 }
 
-int threadobj_unlock_sched(void) /* current->lock held */
+int threadobj_lock_sched(void)
 {
 	struct threadobj *current = threadobj_current();
+	int ret;
+
+	threadobj_lock(current);
+	ret = __threadobj_lock_sched(current);
+	threadobj_unlock(current);
+
+	return __bt(ret);
+}
+
+int __threadobj_unlock_sched(struct threadobj *current) /* current->lock held */
+{
 	pthread_t tid = current->tid;
 	struct sched_param param;
 	int policy, ret;
@@ -529,6 +551,18 @@ int threadobj_unlock_sched(void) /* current->lock held */
 	threadobj_lock(current);
 
 	return __bt(-ret);
+}
+
+int threadobj_unlock_sched(void)
+{
+	struct threadobj *current = threadobj_current();
+	int ret;
+
+	threadobj_lock(current);
+	ret = __threadobj_unlock_sched(current);
+	threadobj_unlock(current);
+
+	return __bt(ret);
 }
 
 int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock held, dropped */
@@ -581,11 +615,11 @@ int threadobj_set_mode(int clrmask, int setmask, int *mode_r) /* current->lock h
 		old |= __THREAD_M_LOCK;
 
 	if (setmask & __THREAD_M_LOCK) {
-		ret = threadobj_lock_sched_once();
+		ret = __threadobj_lock_sched_once(current);
 		if (ret == -EBUSY)
 			ret = 0;
 	} else if (clrmask & __THREAD_M_LOCK)
-		threadobj_unlock_sched();
+		__threadobj_unlock_sched(current);
 
 	if (mode_r)
 		*mode_r = old;

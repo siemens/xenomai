@@ -779,7 +779,7 @@ STATUS taskLock(void)
 		return ERROR;
 	}
 
-	task = get_wind_task_or_self(0);
+	task = find_wind_task_or_self(0);
 	if (task == NULL) {
 		errno = S_objLib_OBJ_ID_ERROR;
 		return ERROR;
@@ -788,7 +788,6 @@ STATUS taskLock(void)
 	COPPERPLATE_PROTECT(svc);
 	threadobj_lock_sched();
 	COPPERPLATE_UNPROTECT(svc);
-	put_wind_task(task);
 
 	return OK;
 }
@@ -803,7 +802,7 @@ STATUS taskUnlock(void)
 		return ERROR;
 	}
 
-	task = get_wind_task_or_self(0);
+	task = find_wind_task_or_self(0);
 	if (task == NULL) {
 		errno = S_objLib_OBJ_ID_ERROR;
 		return ERROR;
@@ -812,7 +811,6 @@ STATUS taskUnlock(void)
 	COPPERPLATE_PROTECT(svc);
 	threadobj_unlock_sched();
 	COPPERPLATE_UNPROTECT(svc);
-	put_wind_task(task);
 
 	return OK;
 }
