@@ -385,6 +385,84 @@ int cobalt_sigpending(sigset_t __user *u_set)
 	return 0;
 }
 
+int __cobalt_kill(struct cobalt_thread *thread, int sig) /* nklocked, IRQs off */
+{
+	struct cobalt_sigpending *sigp;
+	int ret = 0;
+
+	/*
+	 * We have undocumented pseudo-signals to suspend/resume/unblock
+	 * threads, force them out of primary mode or even demote them
+	 * to the weak scheduling class/priority. Process them early,
+	 * before anyone can notice...
+	 */
+	switch(sig) {
+	case 0:
+		/* Check for existence only. */
+		break;
+	case SIGSUSP:
+		/*
+		 * All callers shall be tagged as conforming calls, so
+		 * self-directed suspension can only happen from
+		 * primary mode. Yummie.
+		 */
+		xnthread_suspend(&thread->threadbase, XNSUSP,
+				 XN_INFINITE, XN_RELATIVE, NULL);
+		if (&thread->threadbase == xnsched_current_thread() &&
+		    xnthread_test_info(&thread->threadbase, XNBREAK))
+			ret = EINTR;
+		break;
+	case SIGRESM:
+		xnthread_resume(&thread->threadbase, XNSUSP);
+		goto resched;
+	case SIGRELS:
+		xnthread_unblock(&thread->threadbase);
+		goto resched;
+	case SIGKICK:
+		xnshadow_kick(&thread->threadbase);
+		goto resched;
+	case SIGDEMT:
+		xnshadow_demote(&thread->threadbase);
+		goto resched;
+	case 1 ... _NSIG:
+		sigp = cobalt_signal_alloc();
+		if (sigp) {
+			sigp->si.si_signo = sig;
+			sigp->si.si_errno = 0;
+			sigp->si.si_code = SI_USER;
+			sigp->si.si_pid = current->pid;
+			sigp->si.si_uid = current_uid();
+			cobalt_signal_send(thread, sigp);
+		}
+	resched:
+		xnsched_run();
+		break;
+	default:
+		ret = -EINVAL;
+	}
+
+	return ret;
+}
+
+int cobalt_kill(pid_t pid, int sig)
+{
+	struct cobalt_thread *thread;
+	int ret;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	thread = cobalt_thread_find(pid);
+	if (thread == NULL)
+		ret = -ESRCH;
+	else
+		ret = __cobalt_kill(thread, sig);
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return ret;
+}
+
 int cobalt_signal_pkg_init(void)
 {
 	struct cobalt_sigpending *sigp;

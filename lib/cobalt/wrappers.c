@@ -426,6 +426,12 @@ int __real_sigpending(sigset_t *set)
 	return sigpending(set);
 }
 
+__attribute__ ((weak))
+int __real_kill(pid_t pid, int sig)
+{
+	return kill(pid, sig);
+}
+
 #ifdef __PROVIDE_CPU_COUNT
 
 int __sched_cpucount(size_t setsize, const cpu_set_t *setp)

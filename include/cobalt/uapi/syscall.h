@@ -77,7 +77,8 @@
 #define sc_cobalt_sigwaitinfo		54
 #define sc_cobalt_sigtimedwait		55
 #define sc_cobalt_sigpending		56
-/* 57-60 unimplemented */
+#define sc_cobalt_kill			57
+/* 58-60 unimplemented */
 #define sc_cobalt_mutexattr_init        61
 #define sc_cobalt_mutexattr_destroy     62
 #define sc_cobalt_mutexattr_gettype     63

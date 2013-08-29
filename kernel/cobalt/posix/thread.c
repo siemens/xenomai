@@ -1057,10 +1057,9 @@ int cobalt_thread_probe_np(pid_t pid)
 
 int cobalt_thread_kill(unsigned long pth, int sig)
 {
-	struct cobalt_sigpending *sigp;
 	struct cobalt_local_hkey hkey;
 	struct cobalt_thread *thread;
-	int ret = 0;
+	int ret;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -1068,74 +1067,11 @@ int cobalt_thread_kill(unsigned long pth, int sig)
 	hkey.u_pth = pth;
 	hkey.mm = current->mm;
 	thread = thread_lookup(&hkey);
-	if (thread == NULL) {
+	if (thread == NULL)
 		ret = -ESRCH;
-		goto out;
-	}
+	else
+		ret = __cobalt_kill(thread, sig);
 
-	/*
-	 * We have undocumented pseudo-signals to suspend/resume/unblock
-	 * threads, force them out of primary mode or even demote them
-	 * to the weak scheduling class/priority. Process them early,
-	 * before anyone can notice...
-	 */
-	switch(sig) {
-	case 0:
-		/* Check for existence only. */
-		break;
-	case SIGSUSP:
-		/*
-		 * Marking cobalt_thread_kill as __xn_exec_primary for
-		 * handling self-suspension would be overkill, since
-		 * no other signal would require this, so we handle
-		 * that case locally here.
-		 */
-		if (xnshadow_current_p(&thread->threadbase) && xnsched_root_p()) {
-			/*
-			 * We won't vanish, so we may drop the lock
-			 * while hardening.
-			 */
-			xnlock_put_irqrestore(&nklock, s);
-			ret = xnshadow_harden();
-			if (ret)
-				return ret;
-			xnlock_get_irqsave(&nklock, s);
-		}
-		xnthread_suspend(&thread->threadbase, XNSUSP,
-				 XN_INFINITE, XN_RELATIVE, NULL);
-		if (&thread->threadbase == xnsched_current_thread() &&
-		    xnthread_test_info(&thread->threadbase, XNBREAK))
-			ret = EINTR;
-		break;
-	case SIGRESM:
-		xnthread_resume(&thread->threadbase, XNSUSP);
-		goto resched;
-	case SIGRELS:
-		xnthread_unblock(&thread->threadbase);
-		goto resched;
-	case SIGKICK:
-		xnshadow_kick(&thread->threadbase);
-		goto resched;
-	case SIGDEMT:
-		xnshadow_demote(&thread->threadbase);
-		goto resched;
-	case 1 ... _NSIG:
-		sigp = cobalt_signal_alloc();
-		if (sigp) {
-			sigp->si.si_signo = sig;
-			sigp->si.si_errno = 0;
-			sigp->si.si_code = SI_USER;
-			sigp->si.si_pid = current->pid;
-			sigp->si.si_uid = current_uid();
-			cobalt_signal_send(thread, sigp);
-		}
-	resched:
-		xnsched_run();
-		break;
-	default:
-		ret = -EINVAL;
-	}
-out:
 	xnlock_put_irqrestore(&nklock, s);
 
 	return ret;

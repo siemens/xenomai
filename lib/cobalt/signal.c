@@ -73,3 +73,24 @@ COBALT_IMPL(int, sigpending, (sigset_t *set))
 
 	return 0;
 }
+
+COBALT_IMPL(int, kill, (pid_t pid, int sig))
+{
+	int ret;
+
+	/*
+	 * Delegate processing of special pids to the regular
+	 * kernel. We only deal with thread-directed signals.
+	 */
+	if (pid <= 0)
+		return __real_kill(pid, sig);
+
+	ret = XENOMAI_SKINCALL2(__cobalt_muxid,
+				sc_cobalt_kill, pid, sig);
+	if (ret) {
+		errno = -ret;
+		return -1;
+	}
+
+	return 0;
+}
