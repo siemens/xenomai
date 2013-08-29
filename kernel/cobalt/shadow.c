@@ -1127,18 +1127,11 @@ EXPORT_SYMBOL_GPL(xnshadow_map_kernel);
 
 void xnshadow_finalize(struct xnthread *thread)
 {
-	struct xnsys_ppd *sys_ppd;
-
 	trace_mark(xn_nucleus, shadow_finalize,
 		   "thread %p thread_name %s pid %d",
 		   thread, xnthread_name(thread), xnthread_host_pid(thread));
 
 	xnthread_run_handler(thread, finalize_thread);
-
-	if (xnthread_test_state(thread, XNUSER)) {
-		sys_ppd = xnsys_ppd_get(0);
-		atomic_dec(&sys_ppd->refcnt);
-	}
 }
 
 static int xnshadow_sys_migrate(int domain)
@@ -2243,7 +2236,7 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 		xnheap_free(&sys_ppd->sem_heap, thread->u_window);
 		thread->u_window = NULL;
 		mm = xnshadow_current_mm();
-		if (atomic_read(&sys_ppd->refcnt) == 0)
+		if (atomic_dec_and_test(&sys_ppd->refcnt))
 			ppd_remove_mm(mm, detach_ppd);
 	}
 
