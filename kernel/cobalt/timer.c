@@ -422,6 +422,7 @@ void xntimer_switch_tracking(struct xntimer *timer,
 	timer->tracker = newclock;
 	xnlock_put_irqrestore(&nklock, s);
 }
+EXPORT_SYMBOL_GPL(xntimer_switch_tracking);
 
 #endif /* CONFIG_XENO_OPT_EXTCLOCK && CONFIG_XENO_OPT_STATS */
 

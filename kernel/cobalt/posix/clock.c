@@ -324,6 +324,7 @@ int cobalt_clock_register(struct xnclock *clock, clockid_t *clk_id)
 
 	return 0;
 }
+EXPORT_SYMBOL_GPL(cobalt_clock_register);
 
 void cobalt_clock_deregister(struct xnclock *clock)
 {
@@ -332,5 +333,6 @@ void cobalt_clock_deregister(struct xnclock *clock)
 	external_clocks[clock->id] = NULL;
 	xnclock_deregister(clock);
 }
+EXPORT_SYMBOL_GPL(cobalt_clock_deregister);
 
 /*@}*/
