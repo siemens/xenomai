@@ -82,7 +82,7 @@ void xnintr_host_tick(struct xnsched *sched) /* Interrupts off. */
 {
 	sched->lflags &= ~XNHTICK;
 #ifdef XNARCH_HOST_TICK_IRQ
-	ipipe_post_irq_root(per_cpu(ipipe_percpu.hrtimer_irq, xnsched_cpu(sched)));
+	ipipe_post_irq_root(XNARCH_HOST_TICK_IRQ);
 #endif
 }
 
@@ -96,6 +96,13 @@ void xnintr_core_clock_handler(void)
 	int cpu  __maybe_unused = xnsched_cpu(sched);
 	struct xnirqstat *statp;
 	xnstat_exectime_t *prev;
+
+	if (!xnsched_supported_cpu(cpu)) {
+#ifdef XNARCH_HOST_TICK_IRQ
+		ipipe_post_irq_root(XNARCH_HOST_TICK_IRQ);
+#endif
+		return;
+	}
 
 	statp = __this_cpu_ptr(nktimer.stats);
 	prev = xnstat_exectime_switch(sched, &statp->account);
