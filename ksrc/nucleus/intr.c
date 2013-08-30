@@ -94,11 +94,16 @@ void xnintr_host_tick(struct xnsched *sched) /* Interrupts off. */
 void xnintr_clock_handler(void)
 {
 	struct xnsched *sched = xnpod_current_sched();
+	unsigned int cpu = xnsched_cpu(sched);
 	xnstat_exectime_t *prev;
 
-	prev = xnstat_exectime_switch(sched,
-		&nkclock.stat[xnsched_cpu(sched)].account);
-	xnstat_counter_inc(&nkclock.stat[xnsched_cpu(sched)].hits);
+	if (!cpu_isset(cpu, xnarch_supported_cpus)) {
+		xnarch_relay_tick();
+		return;
+	}
+
+	prev = xnstat_exectime_switch(sched, &nkclock.stat[cpu].account);
+	xnstat_counter_inc(&nkclock.stat[cpu].hits);
 
 	trace_mark(xn_nucleus, irq_enter, "irq %u", XNARCH_TIMER_IRQ);
 	trace_mark(xn_nucleus, tbase_tick, "base %s", nktbase.name);
