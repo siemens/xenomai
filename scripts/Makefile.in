@@ -81,7 +81,7 @@ host_triplet = @host@
 target_triplet = @target@
 subdir = scripts
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
-	$(srcdir)/xeno.in
+	$(srcdir)/audis-config.in $(srcdir)/xeno.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config/ac_prog_cc_for_build.m4 \
 	$(top_srcdir)/config/docbook.m4 \
@@ -95,7 +95,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/include/xeno_config.h
-CONFIG_CLEAN_FILES = xeno-config xeno
+CONFIG_CLEAN_FILES = xeno-config audis-config xeno
 CONFIG_CLEAN_VPATH_FILES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
@@ -313,7 +313,7 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-bin_SCRIPTS = xeno-config xeno wrap-link.sh
+bin_SCRIPTS = xeno-config audis-config xeno wrap-link.sh
 EXTRA_DIST = \
 	bootstrap			\
 	prepare-kernel.sh		\
@@ -357,6 +357,8 @@ $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
 xeno-config: $(top_builddir)/config.status 
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+audis-config: $(top_builddir)/config.status $(srcdir)/audis-config.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 xeno: $(top_builddir)/config.status $(srcdir)/xeno.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
