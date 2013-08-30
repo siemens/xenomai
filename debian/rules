@@ -6,6 +6,8 @@
 
 #export DH_VERBOSE=1
 
+export DEB_BUILD_HARDENING=1
+
 DEB_HOST_GNU_CPU ?= $(shell dpkg-architecture -qDEB_HOST_GNU_CPU)
 DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
 DEB_HOST_GNU_TYPE=$(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
@@ -25,7 +27,7 @@ endif
 build: build-arch build-indep
 
 build-arch: build-arch-stamp
-build-arch-stamp: config.status xenomai-patch-stamp
+build-arch-stamp: config.status
 	dh_testdir
 	$(MAKE)
 	touch build-arch-stamp
@@ -34,13 +36,6 @@ build-indep: build-indep-stamp
 build-indep-stamp: config.status
 	dh_testdir
 	touch build-indep-stamp
-
-xenomai-patch-stamp:
-	dh_testdir
-	for i in arm i386 powerpc x86_64 x86 ; do \
-		bash $(CURDIR)/scripts/prepare-patch.sh $$i ; \
-	done
-	touch xenomai-patch-stamp
 
 config.status: configure-stamp
 configure-stamp:
@@ -52,7 +47,7 @@ configure-stamp:
 clean:
 	dh_testdir
 	dh_testroot
-	rm -f configure-stamp xenomai-patch-stamp build-indep-stamp build-arch-stamp
+	rm -f configure-stamp build-indep-stamp build-arch-stamp
 	-if test -f Makefile ; then \
 	    $(MAKE) distclean ; \
 	fi
@@ -68,9 +63,6 @@ install: build
 	dh_installdirs
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp/
 	dh_install --sourcedir=$(CURDIR)/debian/tmp
-	# Patch collection:
-	mkdir -p $(CURDIR)/debian/linux-patch-xenomai/usr/src/kernel-patches/diffs/xenomai
-	cp *ipipe-*.patch $(CURDIR)/debian/linux-patch-xenomai/usr/src/kernel-patches/diffs/xenomai
 	# xeno-config should be only in libxenomai-dev
 	rm -f $(CURDIR)/debian/xenomai-runtime/usr/bin/xeno-config
 	rm -f $(CURDIR)/debian/xenomai-runtime/usr/share/man/man1/xeno-config.1
@@ -82,8 +74,8 @@ install: build
 	rm -rf $(CURDIR)/debian/xenomai-doc/usr/share/doc/xenomai-doc/ps
 	cp debian/libxenomai1.lintian $(CURDIR)/debian/libxenomai1/usr/share/lintian/overrides/libxenomai1
 	cp debian/libxenomai-dev.lintian $(CURDIR)/debian/libxenomai-dev/usr/share/lintian/overrides/libxenomai-dev
-	# remove *.la files
-	rm $(CURDIR)/debian/libxenomai-dev/usr/lib/*.la
+	mkdir -p $(CURDIR)/debian/xenomai-kernel-source/usr/src/xenomai-kernel-source $(CURDIR)/debian/xenomai-kernel-source/usr/share/doc/xenomai-kernel-source
+	cp -a ksrc include scripts $(CURDIR)/debian/xenomai-kernel-source/usr/src/xenomai-kernel-source
 
 # Build architecture-independent files here.
 binary-indep: build install
@@ -93,7 +85,7 @@ binary-indep: build install
 	dh_link -i
 	dh_installchangelogs -i
 	dh_strip -i
-	dh_compress -i -X.pdf $(CURDIR)/debian/linux-patch-xenomai/usr/src/kernel-patches/diffs/xenomai/*
+	dh_compress -i -X.pdf
 	dh_fixperms -i
 	dh_makeshlibs -i
 	dh_installdeb -i
