@@ -144,6 +144,11 @@ static int __init mach_setup(void)
 	}
 #endif /* CONFIG_SMP */
 
+	if (cpumask_empty(&xnsched_realtime_cpus)) {
+		printk(XENO_WARN "disabled via empty real-time CPU mask\n");
+		return -ENOSYS;
+	}
+
 	ret = ipipe_select_timers(&xnsched_realtime_cpus);
 	if (ret < 0)
 		return ret;
