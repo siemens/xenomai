@@ -244,11 +244,11 @@ static inline int xnsched_supported_cpu(int cpu)
 	for_each_online_cpu(cpu)		\
 		if (xnsched_supported_cpu(cpu))	\
 
-void __xnsched_run(struct xnsched *sched);
+int __xnsched_run(struct xnsched *sched);
 
 void __xnsched_run_handler(void);
 
-static inline void xnsched_run(void)
+static inline int xnsched_run(void)
 {
 	struct xnsched *sched;
 	/*
@@ -278,16 +278,15 @@ static inline void xnsched_run(void)
 	 * context switch.
 	 */
 #if XENO_DEBUG(NUCLEUS)
-	if ((sched->status|sched->lflags) &
-	    (XNINIRQ|XNINSW|XNINLOCK))
-		return;
+	if ((sched->status|sched->lflags) & (XNINIRQ|XNINSW|XNINLOCK))
+		return 0;
 #else /* !XENO_DEBUG(NUCLEUS) */
 	if (((sched->status|sched->lflags) &
 	     (XNINIRQ|XNINSW|XNRESCHED|XNINLOCK)) != XNRESCHED)
-		return;
+		return 0;
 #endif /* !XENO_DEBUG(NUCLEUS) */
 
-	__xnsched_run(sched);
+	return __xnsched_run(sched);
 }
 
 void ___xnsched_lock(struct xnsched *sched);

@@ -607,7 +607,7 @@ static inline void switch_context(struct xnsched *sched,
 }
 
 /**
- * @fn void xnsched_run(void)
+ * @fn int xnsched_run(void)
  * @brief The rescheduling procedure.
  *
  * This is the central rescheduling routine which should be called to
@@ -651,6 +651,9 @@ static inline void switch_context(struct xnsched *sched,
  *
  * Calling this procedure with no applicable context switch pending is
  * harmless and simply leads to a null-effect.
+ *
+ * @return Non-zero is returned if a context switch actually happened,
+ * otherwise zero if the current thread was left running.
  *
  * Environments:
  *
@@ -708,14 +711,14 @@ void __xnsched_run_handler(void) /* hw interrupts off. */
 	xnsched_run();
 }
 
-void __xnsched_run(struct xnsched *sched)
+int __xnsched_run(struct xnsched *sched)
 {
 	struct xnthread *prev, *next, *curr;
 	int switched, need_resched, shadow;
 	spl_t s;
 
 	if (xnarch_escalate())
-		return;
+		return 0;
 
 	trace_mark(xn_nucleus, sched, MARK_NOARGS);
 
@@ -808,7 +811,7 @@ signal_unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return;
+	return switched;
 
 shadow_epilogue:
 
@@ -833,6 +836,8 @@ shadow_epilogue:
 	 * xnthread_suspend() when relaxing a thread.
 	 */
 	XENO_BUGON(NUCLEUS, !hard_irqs_disabled());
+
+	return 1;
 }
 EXPORT_SYMBOL_GPL(__xnsched_run);
 
