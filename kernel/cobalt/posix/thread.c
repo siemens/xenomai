@@ -1217,16 +1217,31 @@ int cobalt_sched_max_prio(int policy)
 
 int cobalt_sched_yield(void)
 {
-	struct sched_param_ex param;
-	struct cobalt_thread *curr;
-	int policy = SCHED_NORMAL;
+	struct cobalt_thread *curr = cobalt_current_thread();
 
-	curr = cobalt_current_thread();
-	pthread_getschedparam_ex(curr, &policy, &param);
 	xnthread_resume(&curr->threadbase, 0);
-	xnsched_run();
+	if (xnsched_run())
+		return 0;
 
-	return policy == SCHED_NORMAL;
+	/*
+	 * If the round-robin move did not beget any context switch to
+	 * a thread running in primary mode, then force a domain
+	 * transition through secondary mode.
+	 *
+	 * Rationale: it is most probably unexpected that
+	 * sched_yield() does not cause any context switch, since this
+	 * service is commonly used for implementing a poor man's
+	 * cooperative scheduling. By forcing a migration through the
+	 * secondary mode then back, we guarantee that the CPU has
+	 * been relinquished for a while.
+	 *
+	 * Typically, this behavior allows a thread running in primary
+	 * mode to effectively yield the CPU to a thread of
+	 * same/higher priority stuck in secondary mode.
+	 */
+	xnshadow_relax(0, 0);
+
+	return xnshadow_harden();
 }
 
 #ifdef CONFIG_XENO_OPT_SCHED_TP

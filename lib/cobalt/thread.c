@@ -164,7 +164,7 @@ COBALT_IMPL(int, sched_yield, (void))
 	int ret;
 
 	ret = -XENOMAI_SKINCALL0(__cobalt_muxid, sc_cobalt_sched_yield);
-	if (ret == -1)
+	if (ret == EPERM)
 		ret = __STD(sched_yield());
 
 	return ret;
