@@ -293,6 +293,8 @@ void ___xnsched_lock(struct xnsched *sched);
 
 void ___xnsched_unlock(struct xnsched *sched);
 
+void ___xnsched_unlock_fully(struct xnsched *sched);
+
 static inline void __xnsched_lock(void)
 {
 	struct xnsched *sched;
@@ -309,6 +311,15 @@ static inline void __xnsched_unlock(void)
 	barrier();
 	sched = xnsched_current();
 	___xnsched_unlock(sched);
+}
+
+static inline void __xnsched_unlock_fully(void)
+{
+	struct xnsched *sched;
+
+	barrier();
+	sched = xnsched_current();
+	___xnsched_unlock_fully(sched);
 }
 
 static inline void xnsched_lock(void)

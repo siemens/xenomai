@@ -717,11 +717,12 @@ EXPORT_SYMBOL_GPL(xnthread_start);
  * @param setmask The new thread mode. The following flags may be set
  * in this bitmask:
  *
- * - XNLOCK causes the thread to lock the scheduler.  The target
- * thread will have to call the xnsched_unlock() service to unlock
- * the scheduler or clear the XNLOCK bit forcibly using this
- * service. A non-preemptible thread may still block, in which case,
- * the lock is reasserted when the thread is scheduled back in.
+ * - XNLOCK makes @a thread non-preemptible by other threads when
+ * running on a CPU.  A non-preemptible thread may still block, in
+ * which case, the lock is reasserted when the thread is scheduled
+ * back in. If @a thread is current, the scheduler is immediately
+ * locked, otherwise such lock will take effect next time @a thread
+ * resumes on a CPU.
  *
  * - XNTRAPSW causes the thread to receive a SIGDEBUG signal when it
  * switches to secondary mode. This is a debugging aid for detecting
@@ -734,8 +735,8 @@ EXPORT_SYMBOL_GPL(xnthread_start);
  * - Kernel-based task
  * - User-space task in primary mode.
  *
- * Rescheduling: never, therefore, the caller should reschedule if
- * XNLOCK has been passed into @a clrmask.
+ * Rescheduling: possible as a result of unlocking the scheduler
+ * (XNLOCK present in @a clrmask).
  *
  * @note Setting @a clrmask and @a setmask to zero leads to a nop,
  * only returning the previous mode if @a mode_r is a valid address.
@@ -756,13 +757,22 @@ int xnthread_set_mode(xnthread_t *thread, int clrmask, int setmask)
 	xnthread_clear_state(thread, clrmask & XNTHREAD_MODE_BITS);
 	xnthread_set_state(thread, setmask & XNTHREAD_MODE_BITS);
 
-	if (curr == thread) {
-		if (!(oldmode & XNLOCK)) {
-			if (xnthread_test_state(thread, XNLOCK))
-				/* Actually grab the scheduler lock. */
-				xnsched_lock();
-		} else if (!xnthread_test_state(thread, XNLOCK))
-			xnthread_lock_count(thread) = 0;
+	/*
+	 * Marking the thread as (non-)preemptible requires special
+	 * handling, depending on whether @thread is current.
+	 */
+	if (xnthread_test_state(thread, XNLOCK)) {
+		if ((oldmode & XNLOCK) == 0) {
+			if (thread == curr)
+				__xnsched_lock();
+			else
+				xnthread_lock_count(curr) = 1;
+		}
+	} else if (oldmode & XNLOCK) {
+		if (thread == curr)
+			__xnsched_unlock_fully(); /* Will resched. */
+		else
+			xnthread_lock_count(curr) = 0;
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
