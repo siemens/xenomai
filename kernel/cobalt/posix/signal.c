@@ -59,8 +59,16 @@ int cobalt_signal_deliver(struct cobalt_thread *thread,
 	cobalt_copy_siginfo(sigp->si.si_code, swc->si, &sigp->si);
 	cobalt_call_extension(signal_deliver, &thread->extref,
 			      ret, swc->si, sigp);
-
 	xnsynch_wakeup_one_sleeper(&thread->sigwait);
+
+	/*
+	 * This is an immediate delivery bypassing any queuing, so we
+	 * have to release the sigpending data right away before
+	 * leaving.
+	 */
+	if ((void *)sigp >= sigpending_mem &&
+	    (void *)sigp < sigpending_mem + __SIGPOOL_SIZE)
+		list_add_tail(&sigp->next, &sigpending_pool);
 
 	return 1;
 }
@@ -134,8 +142,11 @@ struct cobalt_sigpending *cobalt_signal_alloc(void)
 {				/* nklocked, IRQs off */
 	struct cobalt_sigpending *sigp;
 
-	if (list_empty(&sigpending_pool))
+	if (list_empty(&sigpending_pool)) {
+		if (printk_ratelimit())
+			printk(XENO_WARN "signal bucket pool underflows\n");
 		return NULL;
+	}
 
 	sigp = list_get_entry(&sigpending_pool, struct cobalt_sigpending, next);
 	INIT_LIST_HEAD(&sigp->next);
