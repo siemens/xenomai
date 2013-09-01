@@ -21,7 +21,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <pthread.h>		/* For pthread_setcanceltype. */
+#include <pthread.h>
+#include <unistd.h>
 #include <time.h>
 #include <cobalt/uapi/time.h>
 #include <cobalt/ticks.h>
@@ -32,15 +33,17 @@
 
 COBALT_IMPL(int, clock_getres, (clockid_t clock_id, struct timespec *tp))
 {
-	int err = -XENOMAI_SKINCALL2(__cobalt_muxid,
-				     sc_cobalt_clock_getres,
-				     clock_id,
-				     tp);
-	if (!err)
-		return 0;
+	int ret;
 
-	errno = err;
-	return -1;
+	ret = -XENOMAI_SKINCALL2(__cobalt_muxid,
+				 sc_cobalt_clock_getres,
+				 clock_id, tp);
+	if (ret) {
+		errno = ret;
+		return -1;
+	}
+
+	return 0;
 }
 
 static int __do_clock_host_realtime(struct timespec *ts)
@@ -120,42 +123,62 @@ COBALT_IMPL(int, clock_gettime, (clockid_t clock_id, struct timespec *tp))
 
 COBALT_IMPL(int, clock_settime, (clockid_t clock_id, const struct timespec *tp))
 {
-	int err = -XENOMAI_SKINCALL2(__cobalt_muxid,
-				     sc_cobalt_clock_settime,
-				     clock_id,
-				     tp);
+	int ret;
 
-	if (!err)
-		return 0;
+	ret = -XENOMAI_SKINCALL2(__cobalt_muxid,
+				 sc_cobalt_clock_settime,
+				 clock_id, tp);
+	if (ret) {
+		errno = ret;
+		return -1;
+	}
 
-	errno = err;
-	return -1;
+	return 0;
 }
 
 COBALT_IMPL(int, clock_nanosleep, (clockid_t clock_id,
 				   int flags,
 				   const struct timespec *rqtp, struct timespec *rmtp))
 {
-	int err, oldtype;
+	int ret, oldtype;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	err = -XENOMAI_SKINCALL4(__cobalt_muxid,
+	ret = -XENOMAI_SKINCALL4(__cobalt_muxid,
 				 sc_cobalt_clock_nanosleep,
 				 clock_id, flags, rqtp, rmtp);
 
 	pthread_setcanceltype(oldtype, NULL);
 
-	return err;
+	return ret;
 }
 
 COBALT_IMPL(int, nanosleep, (const struct timespec *rqtp, struct timespec *rmtp))
 {
-	int err = __wrap_clock_nanosleep(CLOCK_REALTIME, 0, rqtp, rmtp);
+	int ret;
 
-	if (!err)
-		return 0;
+	ret = __wrap_clock_nanosleep(CLOCK_REALTIME, 0, rqtp, rmtp);
+	if (ret) {
+		errno = ret;
+		return -1;
+	}
 
-	errno = err;
-	return -1;
+	return 0;
+}
+
+COBALT_IMPL(unsigned int, sleep, (unsigned int seconds))
+{
+	struct timespec rqt, rem;
+	int ret;
+
+	if (cobalt_get_current_fast() == XN_NO_HANDLE)
+		return __STD(sleep(seconds));
+
+	rqt.tv_sec = seconds;
+	rqt.tv_nsec = 0;
+	ret = __wrap_clock_nanosleep(CLOCK_MONOTONIC, 0, &rqt, &rem);
+	if (ret)
+		return rem.tv_sec;
+
+	return 0;
 }

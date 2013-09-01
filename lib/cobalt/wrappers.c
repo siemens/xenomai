@@ -432,6 +432,12 @@ int __real_kill(pid_t pid, int sig)
 	return kill(pid, sig);
 }
 
+__attribute__ ((weak))
+unsigned int __real_sleep(unsigned int seconds)
+{
+	return sleep(seconds);
+}
+
 #ifdef __PROVIDE_CPU_COUNT
 
 int __sched_cpucount(size_t setsize, const cpu_set_t *setp)

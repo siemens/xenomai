@@ -109,3 +109,4 @@
 --wrap sigtimedwait
 --wrap sigpending
 --wrap kill
+--wrap sleep

@@ -32,6 +32,8 @@ COBALT_DECL(ssize_t, write(int fd, const void *buf, size_t nbyte));
 
 COBALT_DECL(int, close(int fildes));
 
+COBALT_DECL(unsigned int, sleep(unsigned int seconds));
+
 #ifdef __cplusplus
 }
 #endif

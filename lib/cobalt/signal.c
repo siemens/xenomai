@@ -83,7 +83,7 @@ COBALT_IMPL(int, kill, (pid_t pid, int sig))
 	 * kernel. We only deal with thread-directed signals.
 	 */
 	if (pid <= 0)
-		return __real_kill(pid, sig);
+		return __STD(kill(pid, sig));
 
 	ret = XENOMAI_SKINCALL2(__cobalt_muxid,
 				sc_cobalt_kill, pid, sig);
