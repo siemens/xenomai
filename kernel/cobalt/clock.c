@@ -653,6 +653,7 @@ void xnclock_tick(struct xnclock *clock)
 	fire:
 		timer->handler(timer);
 		now = xnclock_read_raw(clock);
+		timer->status |= XNTIMER_FIRED;
 		/*
 		 * If the elapsed timer has no reload value, or was
 		 * re-queued or killed by the timeout handler: do not
@@ -660,7 +661,6 @@ void xnclock_tick(struct xnclock *clock)
 		 */
 		if (!xntimer_reload_p(timer))
 			continue;
-		timer->status |= XNTIMER_FIRED;
 	advance:
 		interval = timer->interval;
 	requeue:

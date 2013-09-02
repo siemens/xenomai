@@ -198,6 +198,7 @@ void __xntimer_stop(struct xntimer *timer)
 
 	heading = xntimer_heading_p(timer);
 	xntimer_dequeue(timer, q);
+	timer->status &= ~XNTIMER_FIRED;
 	sched = xntimer_sched(timer);
 
 	/*

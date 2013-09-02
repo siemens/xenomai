@@ -287,6 +287,11 @@ static inline int xntimer_running_p(struct xntimer *timer)
 	return (timer->status & XNTIMER_DEQUEUED) == 0;
 }
 
+static inline int xntimer_fired_p(struct xntimer *timer)
+{
+	return (timer->status & XNTIMER_FIRED) != 0;
+}
+
 static inline int xntimer_reload_p(struct xntimer *timer)
 {
 	return (timer->status &
