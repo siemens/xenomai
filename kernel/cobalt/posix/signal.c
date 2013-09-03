@@ -38,8 +38,8 @@ static LIST_HEAD(sigpending_pool);
 #define __SIGPOOL_SIZE  (sizeof(struct cobalt_sigpending) *	\
 			 (_NSIG + (SIGRTMAX - SIGRTMIN) * 2))
 
-int cobalt_signal_deliver(struct cobalt_thread *thread,
-			  struct cobalt_sigpending *sigp)
+static int cobalt_signal_deliver(struct cobalt_thread *thread,
+				 struct cobalt_sigpending *sigp)
 {
 	struct cobalt_sigwait_context *swc;
 	struct xnthread_wait_context *wc;
@@ -72,7 +72,6 @@ int cobalt_signal_deliver(struct cobalt_thread *thread,
 
 	return 1;
 }
-EXPORT_SYMBOL_GPL(cobalt_signal_deliver);
 
 int cobalt_signal_send(struct cobalt_thread *thread,
 		       struct cobalt_sigpending *sigp)
@@ -125,18 +124,6 @@ int cobalt_signal_send_pid(pid_t pid, struct cobalt_sigpending *sigp)
 	return -ESRCH;
 }
 EXPORT_SYMBOL_GPL(cobalt_signal_send_pid);
-
-int cobalt_signal_deliver_pid(pid_t pid, struct cobalt_sigpending *sigp)
-{				/* nklocked, IRQs off */
-	struct cobalt_thread *thread;
-
-	thread = cobalt_thread_find(pid);
-	if (thread)
-		return cobalt_signal_deliver(thread, sigp);
-
-	return -ESRCH;
-}
-EXPORT_SYMBOL_GPL(cobalt_signal_deliver_pid);
 
 struct cobalt_sigpending *cobalt_signal_alloc(void)
 {				/* nklocked, IRQs off */

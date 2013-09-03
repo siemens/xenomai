@@ -53,12 +53,6 @@ void cobalt_copy_siginfo(int code,
 	}
 }
 
-int cobalt_signal_deliver(struct cobalt_thread *thread,
-			  struct cobalt_sigpending *sigp);
-
-int cobalt_signal_deliver_pid(pid_t pid,
-			      struct cobalt_sigpending *sigp);
-
 int cobalt_signal_send(struct cobalt_thread *thread,
 		       struct cobalt_sigpending *sigp);
 
