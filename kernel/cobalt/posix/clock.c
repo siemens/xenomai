@@ -174,7 +174,7 @@ int cobalt_clock_getres(clockid_t clock_id, struct timespec __user *u_ts)
 		ns2ts(&ts, ns);
 	}
 
-	if (__xn_safe_copy_to_user(u_ts, &ts, sizeof(ts)))
+	if (u_ts && __xn_safe_copy_to_user(u_ts, &ts, sizeof(ts)))
 		return -EFAULT;
 
 	return 0;
