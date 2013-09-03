@@ -38,13 +38,15 @@ void cobalt_timer_handler(struct xntimer *xntimer)
 {
 	struct cobalt_timer *timer;
 	/*
-	 * Deliver the timer notification via a signal. If we can't do
-	 * this because the target thread disappeared, then stop the
-	 * timer. It will go away when timer_delete() is called, or
-	 * the owner's process exits, whichever comes first.
+	 * Deliver the timer notification via a signal (unless
+	 * SIGEV_NONE was given). If we can't do this because the
+	 * target thread disappeared, then stop the timer. It will go
+	 * away when timer_delete() is called, or the owner's process
+	 * exits, whichever comes first.
 	 */
 	timer = container_of(xntimer, struct cobalt_timer, timerbase);
-	if (cobalt_signal_send_pid(timer->target, &timer->sigp) == -ESRCH)
+	if (timer->sigp.si.si_signo &&
+	    cobalt_signal_send_pid(timer->target, &timer->sigp) == -ESRCH)
 		xntimer_stop(&timer->timerbase);
 }
 EXPORT_SYMBOL_GPL(cobalt_timer_handler);
@@ -74,7 +76,7 @@ timer_init(struct cobalt_timer *timer,
 	    timer->clockid != CLOCK_REALTIME)
 		return ERR_PTR(-EINVAL);
 
-	if (evp == NULL)
+	if (evp == NULL || evp->sigev_notify == SIGEV_NONE)
 		return owner;	/* Assume SIGEV_THREAD_ID. */
 
 	if (evp->sigev_notify != SIGEV_THREAD_ID)
@@ -165,11 +167,14 @@ static inline int timer_create(clockid_t clockid,
 		timer->sigp.si.si_int = timer_id;
 		signo = SIGALRM;
 	} else {
-		signo = evp->sigev_signo;
-		if (signo < 1 || signo > _NSIG)
-			goto unlock_and_error;
-
-		timer->sigp.si.si_value = evp->sigev_value;
+		if (evp->sigev_notify == SIGEV_NONE)
+			signo = 0; /* Don't notify. */
+		else {
+			signo = evp->sigev_signo;
+			if (signo < 1 || signo > _NSIG)
+				goto unlock_and_error;
+			timer->sigp.si.si_value = evp->sigev_value;
+		}
 	}
 
 	timer->sigp.si.si_signo = signo;
