@@ -32,6 +32,7 @@
 #include <linux/cred.h>
 #include <linux/jhash.h>
 #include <linux/signal.h>
+#include <linux/jiffies.h>
 #include <linux/err.h>
 #include <cobalt/uapi/signal.h>
 #include "internal.h"
@@ -1225,23 +1226,30 @@ int cobalt_sched_yield(void)
 
 	/*
 	 * If the round-robin move did not beget any context switch to
-	 * a thread running in primary mode, then force a domain
-	 * transition through secondary mode.
+	 * a thread running in primary mode, then wait for the next
+	 * linux context switch to happen.
 	 *
 	 * Rationale: it is most probably unexpected that
 	 * sched_yield() does not cause any context switch, since this
 	 * service is commonly used for implementing a poor man's
-	 * cooperative scheduling. By forcing a migration through the
-	 * secondary mode then back, we guarantee that the CPU has
+	 * cooperative scheduling. By waiting for a context switch to
+	 * happen in the regular kernel, we guarantee that the CPU has
 	 * been relinquished for a while.
 	 *
 	 * Typically, this behavior allows a thread running in primary
 	 * mode to effectively yield the CPU to a thread of
 	 * same/higher priority stuck in secondary mode.
+	 *
+	 * NOTE: calling xnshadow_yield() with no timeout
+	 * (i.e. XN_INFINITE) is probably never a good idea. This
+	 * means that a SCHED_FIFO non-rt thread stuck in a tight loop
+	 * would prevent the caller from waking up, since no
+	 * linux-originated schedule event would happen for unblocking
+	 * it on the current CPU. For this reason, we pass the
+	 * arbitrary TICK_NSEC value to limit the wait time to a
+	 * reasonable amount.
 	 */
-	xnshadow_relax(0, 0);
-
-	return xnshadow_harden();
+	return xnshadow_yield(TICK_NSEC);
 }
 
 #ifdef CONFIG_XENO_OPT_SCHED_TP
