@@ -255,8 +255,8 @@ static void *__pthread_trampoline(void *p)
 	 * Do _not_ inline the call to pthread_self() in the syscall
 	 * macro: this trashes the syscall regs on some archs.
 	 */
-	ret = XENOMAI_SKINCALL4(__cobalt_muxid, sc_cobalt_thread_create, tid,
-				policy, &param_ex, &u_winoff);
+	ret = -XENOMAI_SKINCALL4(__cobalt_muxid, sc_cobalt_thread_create, tid,
+				 policy, &param_ex, &u_winoff);
 	if (ret == 0) {
 		cobalt_set_current();
 		cobalt_set_current_window(u_winoff);
@@ -269,10 +269,10 @@ static void *__pthread_trampoline(void *p)
 	 * on before we actually get the CPU back.
 	 */
 sync_with_creator:
-	iargs->ret = -ret;
+	iargs->ret = ret;
 	__STD(sem_post(&iargs->sync));
 	if (ret)
-		return (void *)-ret;
+		return (void *)ret;
 
 	/*
 	 * If the parent thread runs with the same priority as we do,
