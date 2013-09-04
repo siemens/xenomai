@@ -71,10 +71,12 @@ struct print_buffer {
 	off_t read_pos;
 };
 
+__attribute__ ((weak))
+int __cobalt_print_bufsz = RT_PRINT_DEFAULT_BUFFER;
+
 static struct print_buffer *first_buffer;
 static int buffers;
 static uint32_t seq_no;
-static size_t default_buffer_size;
 static struct timespec print_period;
 static int auto_init;
 static pthread_mutex_t buffer_lock;
@@ -402,7 +404,7 @@ int rt_print_init(size_t buffer_size, const char *buffer_name)
 	unsigned j;
 
 	if (!size)
-		size = default_buffer_size;
+		size = __cobalt_print_bufsz;
 	else if (size < RT_PRINT_LINE_BREAK)
 		return EINVAL;
 
@@ -710,13 +712,12 @@ void cobalt_print_init(void)
 	first_buffer = NULL;
 	seq_no = 0;
 
-	default_buffer_size = RT_PRINT_DEFAULT_BUFFER;
 	value_str = getenv(RT_PRINT_BUFFER_ENV);
 	if (value_str) {
 		errno = 0;
-		default_buffer_size = strtol(value_str, NULL, 10);
-		if (errno || default_buffer_size < RT_PRINT_LINE_BREAK) {
-			__STD(fprintf(stderr, "Invalid %s\n", RT_PRINT_BUFFER_ENV));
+		__cobalt_print_bufsz = strtol(value_str, NULL, 10);
+		if (errno || __cobalt_print_bufsz < RT_PRINT_LINE_BREAK) {
+			report_error("invalid %s", RT_PRINT_BUFFER_ENV);
 			exit(1);
 		}
 	}
@@ -727,7 +728,7 @@ void cobalt_print_init(void)
 		errno = 0;
 		period = strtoll(value_str, NULL, 10);
 		if (errno) {
-			__STD(fprintf(stderr, "Invalid %s\n", RT_PRINT_PERIOD_ENV));
+			report_error("invalid %s", RT_PRINT_BUFFER_ENV);
 			exit(1);
 		}
 	}
@@ -745,8 +746,7 @@ void cobalt_print_init(void)
 			errno = 0;
 			buffers_count = strtoul(value_str, NULL, 0);
 			if (errno) {
-				__STD(fprintf(stderr, "Invalid %s\n",
-					      RT_PRINT_BUFFERS_COUNT_ENV));
+				report_error("invalid %s", RT_PRINT_BUFFERS_COUNT_ENV);
 				exit(1);
 			}
 		}
@@ -758,17 +758,15 @@ void cobalt_print_init(void)
 
 		pool_bitmap = malloc(pool_bitmap_len * sizeof(*pool_bitmap));
 		if (!pool_bitmap) {
-			__STD(fprintf(stderr, "Error allocating rt_printf "
-				      "buffers\n"));
+			report_error("error allocating rt_printf buffers");
 			exit(1);
 		}
 
-		pool_buf_size = sizeof(struct print_buffer) + default_buffer_size;
+		pool_buf_size = sizeof(struct print_buffer) + __cobalt_print_bufsz;
 		pool_len = buffers_count * pool_buf_size;
 		pool_start = (unsigned long)malloc(pool_len);
 		if (!pool_start) {
-			__STD(fprintf(stderr, "Error allocating rt_printf "
-				      "buffers\n"));
+			report_error("error allocating rt_printf buffers");
 			exit(1);
 		}
 
@@ -785,7 +783,7 @@ void cobalt_print_init(void)
 
 			buffer->ring = (char *)(buffer + 1);
 
-			rt_print_init_inner(buffer, default_buffer_size);
+			rt_print_init_inner(buffer, __cobalt_print_bufsz);
 		}
 	}
   done:
@@ -957,10 +955,8 @@ COBALT_IMPL(int, __vfprintf_chk, (FILE *f, int flag, const char *fmt, va_list ap
 		return __STD(__vfprintf_chk(f, flag, fmt, ap));
 	}
 #else
-	__STD(fprintf(stderr, 
-		      "Xenomai has to be compiled with --enable-fortify "
-		      "to support applications\ncompiled with "
-		      "-D_FORTIFY_SOURCE\n"));
+	report_error("must build with --enable-fortify to support");
+	report_error_cont("applications compiled with -D_FORTIFY_SOURCE");
 	exit(EXIT_FAILURE);
 #endif
 }
@@ -1005,10 +1001,8 @@ COBALT_IMPL(void, __vsyslog_chk, (int pri, int flag, const char *fmt, va_list ap
 		__STD(__vsyslog_chk(pri, flag, fmt, ap));
 	}
 #else
-	__STD(fprintf(stderr, 
-		      "Xenomai needs to be compiled with --enable-fortify "
-		      "to support applications\ncompiled with "
-		      "-D_FORTIFY_SOURCE\n"));
+	report_error("must build with --enable-fortify to support");
+	report_error_cont("applications compiled with -D_FORTIFY_SOURCE");
 	exit(EXIT_FAILURE);
 #endif
 }
