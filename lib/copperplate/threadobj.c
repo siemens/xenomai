@@ -224,6 +224,19 @@ int threadobj_unlock_sched(void)
 	return __bt(__threadobj_unlock_sched(current));
 }
 
+void __threadobj_set_scheduler(struct threadobj *thobj,
+			       int policy, int prio) /* thobj->lock held */
+{
+	__threadobj_check_locked(thobj);
+
+	/*
+	 * XXX: Internal call which bypasses the normal scheduling
+	 * policy tracking: use with care.
+	 */
+	thobj->priority = prio;
+	thobj->policy = policy;
+}
+
 int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock held, dropped */
 {
 	struct sched_param_ex xparam;
@@ -565,6 +578,24 @@ int threadobj_unlock_sched(void)
 	return __bt(ret);
 }
 
+void __threadobj_set_scheduler(struct threadobj *thobj,
+			       int policy, int prio) /* thobj->lock held */
+{
+	__threadobj_check_locked(thobj);
+
+	/*
+	 * XXX: Internal call which bypasses the normal scheduling
+	 * policy tracking: use with care.
+	 */
+	if (thobj->schedlock_depth > 0) {
+		thobj->core.prio_unlocked = prio;
+		thobj->core.policy_unlocked = policy;
+	} else {
+		thobj->priority = prio;
+		thobj->policy = policy;
+	}
+}
+
 int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock held, dropped */
 {
 	pthread_t tid = thobj->tid;
@@ -585,12 +616,12 @@ int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock hel
 		return 0;
 	}
 
-	thobj->priority = prio;
 	policy = SCHED_RT;
 	if (prio == 0) {
 		thobj->status &= ~__THREAD_S_RR;
 		policy = SCHED_OTHER;
-	}
+	} else if (thobj->status & __THREAD_S_RR)
+		policy = SCHED_RR;
 
 	thobj->priority = prio;
 	thobj->policy = policy;
@@ -900,6 +931,7 @@ int threadobj_start(struct threadobj *thobj)	/* thobj->lock held. */
 
 	if (current && thobj->priority <= current->priority)
 		return 0;
+
 	/*
 	 * Caller needs synchronization with the thread being started,
 	 * which has higher priority. We shall wait until that thread

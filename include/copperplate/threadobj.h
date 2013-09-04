@@ -310,6 +310,9 @@ int __threadobj_unlock_sched(struct threadobj *current);
 
 int threadobj_unlock_sched(void);
 
+void __threadobj_set_scheduler(struct threadobj *thobj,
+			       int policy, int prio);
+
 int threadobj_set_priority(struct threadobj *thobj, int prio);
 
 int threadobj_set_mode(int clrmask, int setmask, int *mode_r);
