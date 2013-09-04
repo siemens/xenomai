@@ -51,6 +51,10 @@ struct coppernode __node_info = {
 
 pid_t __node_id;
 
+#ifdef CONFIG_XENO_COBALT
+int __cobalt_print_bufsz = 32 * 1024;
+#endif
+
 struct timespec __init_date;
 
 static DEFINE_PRIVATE_LIST(skins);
