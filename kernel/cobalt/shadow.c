@@ -80,6 +80,8 @@ static DEFINE_SEMAPHORE(registration_mutex);
 
 static void *mayday_page;
 
+static struct xnsynch yield_sync;
+
 static struct list_head *ppd_hash;
 #define PPD_HASH_SIZE 13
 
@@ -2253,11 +2255,39 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 	return EVENT_PROPAGATE;
 }
 
+int xnshadow_yield(xnticks_t timeout)
+{
+	int ret;
+
+	ret = xnsynch_sleep_on(&yield_sync, timeout, XN_RELATIVE);
+	if (ret & XNBREAK)
+		return -EINTR;
+
+	return 0;
+}
+
+static inline void signal_yield(void)
+{
+	spl_t s;
+
+	if (!xnsynch_pended_p(&yield_sync))
+		return;
+
+	xnlock_get_irqsave(&nklock, s);
+	if (xnsynch_pended_p(&yield_sync)) {
+		xnsynch_flush(&yield_sync, 0);
+		xnsched_run();
+	}
+	xnlock_put_irqrestore(&nklock, s);
+}
+
 static int handle_schedule_event(struct task_struct *next_task)
 {
 	struct task_struct *prev_task;
 	struct xnthread *prev, *next;
 	sigset_t pending;
+
+	signal_yield();
 
 	prev_task = current;
 	prev = xnshadow_thread(prev_task);
@@ -2603,6 +2633,8 @@ int xnshadow_mount(void)
 	unsigned int i, size;
 	int ret;
 
+	xnsynch_init(&yield_sync, XNSYNCH_FIFO, NULL);
+
 	ret = xndebug_init();
 	if (ret)
 		return ret;
@@ -2649,6 +2681,8 @@ void xnshadow_cleanup(void)
 	mayday_cleanup_page();
 
 	xndebug_cleanup();
+
+	xnsynch_destroy(&yield_sync);
 }
 
 /* Xenomai's generic personality. */

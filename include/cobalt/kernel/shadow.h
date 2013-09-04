@@ -21,6 +21,7 @@
 #define _COBALT_KERNEL_SHADOW_H
 
 #include <asm/xenomai/syscall.h>
+#include <cobalt/uapi/kernel/types.h>
 
 struct xnthread;
 struct xnthread_user_window;
@@ -99,8 +100,6 @@ int xnshadow_register_personality(struct xnpersonality *personality);
 
 int xnshadow_unregister_personality(int muxid);
 
-void xnshadow_reset_shield(void);
-
 void xnshadow_send_sig(struct xnthread *thread,
 		       int sig,
 		       int arg);
@@ -121,6 +120,8 @@ xnshadow_push_personality(struct xnthread *thread,
 
 void xnshadow_pop_personality(struct xnthread *thread,
 			      struct xnpersonality *prev);
+
+int xnshadow_yield(xnticks_t timeout);
 
 extern struct xnpersonality xenomai_personality;
 
