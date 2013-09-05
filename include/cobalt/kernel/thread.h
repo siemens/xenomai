@@ -129,8 +129,6 @@ typedef struct xnthread {
 
 	struct xntimer ptimer;		/* Periodic timer */
 
-	struct xntimer rrbtimer;	/* Round-robin timer */
-
 	xnticks_t rrperiod;		/* Allotted round-robin period (ns) */
 
   	struct xnthread_wait_context *wcontext;	/* Active wait context. */

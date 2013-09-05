@@ -123,8 +123,15 @@ static void watchdog_handler(struct xntimer *timer)
 
 #endif /* CONFIG_XENO_OPT_WATCHDOG */
 
+static void roundrobin_handler(struct xntimer *timer)
+{
+	struct xnsched *sched = container_of(timer, struct xnsched, rrbtimer);
+	xnsched_tick(sched);
+}
+
 void xnsched_init(struct xnsched *sched, int cpu)
 {
+	char rrbtimer_name[XNOBJECT_NAME_LEN];
 	char htimer_name[XNOBJECT_NAME_LEN];
 	char root_name[XNOBJECT_NAME_LEN];
 	union xnsched_policy_param param;
@@ -134,10 +141,12 @@ void xnsched_init(struct xnsched *sched, int cpu)
 #ifdef CONFIG_SMP
 	sched->cpu = cpu;
 	sprintf(htimer_name, "[host-timer/%u]", cpu);
+	sprintf(rrbtimer_name, "[rrb-timer/%u]", cpu);
 	sprintf(root_name, "ROOT/%u", cpu);
 	cpus_clear(sched->resched);
 #else
 	strcpy(htimer_name, "[host-timer]");
+	strcpy(rrbtimer_name, "[rrb-timer]");
 	strcpy(root_name, "ROOT");
 #endif
 	for_each_xnsched_class(p) {
@@ -167,6 +176,10 @@ void xnsched_init(struct xnsched *sched, int cpu)
 	xntimer_init(&sched->htimer, &nkclock, NULL, &sched->rootcb);
 	xntimer_set_priority(&sched->htimer, XNTIMER_LOPRIO);
 	xntimer_set_name(&sched->htimer, htimer_name);
+	xntimer_init(&sched->rrbtimer, &nkclock,
+		     roundrobin_handler, &sched->rootcb);
+	xntimer_set_name(&sched->rrbtimer, rrbtimer_name);
+	xntimer_set_priority(&sched->rrbtimer, XNTIMER_LOPRIO);
 
 	xnstat_exectime_set_current(sched, &sched->rootcb.stat.account);
 #ifdef CONFIG_XENO_HW_FPU
@@ -188,12 +201,23 @@ void xnsched_init(struct xnsched *sched, int cpu)
 void xnsched_destroy(struct xnsched *sched)
 {
 	xntimer_destroy(&sched->htimer);
+	xntimer_destroy(&sched->rrbtimer);
 	xntimer_destroy(&sched->rootcb.ptimer);
 	xntimer_destroy(&sched->rootcb.rtimer);
-	xntimer_destroy(&sched->rootcb.rrbtimer);
 #ifdef CONFIG_XENO_OPT_WATCHDOG
 	xntimer_destroy(&sched->wdtimer);
 #endif /* CONFIG_XENO_OPT_WATCHDOG */
+}
+
+static inline void set_thread_running(struct xnsched *sched,
+				      struct xnthread *thread)
+{
+	xnthread_clear_state(thread, XNREADY);
+	if (xnthread_test_state(thread, XNRRB))
+		xntimer_start(&sched->rrbtimer,
+			      thread->rrperiod, XN_INFINITE, XN_RELATIVE);
+	else
+		xntimer_stop(&sched->rrbtimer);
 }
 
 /* Must be called with nklock locked, interrupts off. */
@@ -231,7 +255,7 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
 	for_each_xnsched_class(p) {
 		thread = p->sched_pick(sched);
 		if (thread) {
-			xnthread_clear_state(thread, XNREADY);
+			set_thread_running(sched, thread);
 			return thread;
 		}
 	}
@@ -242,7 +266,7 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
 	if (unlikely(thread == NULL))
 		thread = &sched->rootcb;
 
-	xnthread_clear_state(thread, XNREADY);
+	set_thread_running(sched, thread);
 
 	return thread;
 #endif /* CONFIG_XENO_OPT_SCHED_CLASSES */

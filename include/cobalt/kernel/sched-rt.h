@@ -110,6 +110,6 @@ static inline int xnsched_rt_init_thread(struct xnthread *thread)
 	return 0;
 }
 
-void xnsched_rt_tick(struct xnthread *curr);
+void xnsched_rt_tick(struct xnsched *sched);
 
 #endif /* !_COBALT_KERNEL_SCHED_RT_H */

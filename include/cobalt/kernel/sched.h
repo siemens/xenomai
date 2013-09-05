@@ -88,6 +88,8 @@ struct xnsched {
 	volatile unsigned inesting;
 	/*!< Host timer. */
 	struct xntimer htimer;
+	/*!< Round-robin timer. */
+	struct xntimer rrbtimer;
 	/*!< Root thread control block. */
 	struct xnthread rootcb;
 #ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
@@ -131,7 +133,7 @@ struct xnsched_class {
 	void (*sched_dequeue)(struct xnthread *thread);
 	void (*sched_requeue)(struct xnthread *thread);
 	struct xnthread *(*sched_pick)(struct xnsched *sched);
-	void (*sched_tick)(struct xnthread *thread);
+	void (*sched_tick)(struct xnsched *sched);
 	void (*sched_rotate)(struct xnsched *sched,
 			     const union xnsched_policy_param *p);
 	void (*sched_migrate)(struct xnthread *thread,
@@ -507,19 +509,20 @@ static inline struct xnsched_class *xnsched_root_class(struct xnsched *sched)
 	return sched->rootcb.sched_class;
 }
 
-static inline void xnsched_tick(struct xnthread *thread)
+static inline void xnsched_tick(struct xnsched *sched)
 {
-	struct xnsched_class *sched_class = thread->sched_class;
+	struct xnthread *curr = sched->curr;
+	struct xnsched_class *sched_class = curr->sched_class;
 	/*
 	 * A thread that undergoes round-robin scheduling only
 	 * consumes its time slice when it runs within its own
-	 * scheduling class, which excludes temporary PIP boosts.
+	 * scheduling class, which excludes temporary PIP boosts, and
+	 * does not hold the scheduler lock.
 	 */
-	if (sched_class != &xnsched_class_idle &&
-	    sched_class == thread->base_class &&
-	    thread->sched->curr == thread &&
-	    xnthread_test_state(thread, XNTHREAD_BLOCK_BITS|XNLOCK|XNRRB) == XNRRB)
-		sched_class->sched_tick(thread);
+	if (sched_class == curr->base_class &&
+	    sched_class->sched_tick &&
+	    xnthread_test_state(curr, XNTHREAD_BLOCK_BITS|XNLOCK|XNRRB) == XNRRB)
+		sched_class->sched_tick(sched);
 }
 
 #ifdef CONFIG_XENO_OPT_SCHED_CLASSES

@@ -72,13 +72,6 @@ static void periodic_handler(struct xntimer *timer)
 	xntimer_set_sched(timer, thread->sched);
 }
 
-static void roundrobin_handler(struct xntimer *timer)
-{
-	struct xnthread *thread = container_of(timer, struct xnthread, rrbtimer);
-	xnsched_tick(thread);
-	xntimer_set_sched(timer, thread->sched);
-}
-
 struct kthread_arg {
 	struct xnthread *thread;
 	struct completion *done;
@@ -198,9 +191,6 @@ int __xnthread_init(struct xnthread *thread,
 	xntimer_init(&thread->ptimer, &nkclock, periodic_handler, thread);
 	xntimer_set_name(&thread->ptimer, thread->name);
 	xntimer_set_priority(&thread->ptimer, XNTIMER_HIPRIO);
-	xntimer_init(&thread->rrbtimer, &nkclock, roundrobin_handler, thread);
-	xntimer_set_name(&thread->rrbtimer, thread->name);
-	xntimer_set_priority(&thread->rrbtimer, XNTIMER_LOPRIO);
 
 	thread->init_class = sched_class;
 	thread->base_class = NULL; /* xnsched_set_policy() will set it. */
@@ -495,7 +485,6 @@ void __xnthread_cleanup(struct xnthread *curr)
 
 	xntimer_destroy(&curr->rtimer);
 	xntimer_destroy(&curr->ptimer);
-	xntimer_destroy(&curr->rrbtimer);
 
 	if (curr->selector) {
 		xnselector_destroy(curr->selector);
@@ -1484,12 +1473,13 @@ EXPORT_SYMBOL_GPL(xnthread_wait_period);
  */
 int xnthread_set_slice(struct xnthread *thread, xnticks_t quantum)
 {
+	struct xnsched *sched;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
+	sched = thread->sched;
 	thread->rrperiod = quantum;
-	xntimer_stop(&thread->rrbtimer);
 
 	if (quantum != XN_INFINITE) {
 		if (thread->base_class->sched_tick == NULL) {
@@ -1497,11 +1487,14 @@ int xnthread_set_slice(struct xnthread *thread, xnticks_t quantum)
 			return -EINVAL;
 		}
 		xnthread_set_state(thread, XNRRB);
-		xntimer_set_sched(&thread->rrbtimer, thread->sched);
-		xntimer_start(&thread->rrbtimer,
-			      quantum, quantum, XN_RELATIVE);
-	} else
+		if (sched->curr == thread)
+			xntimer_start(&sched->rrbtimer,
+				      quantum, XN_INFINITE, XN_RELATIVE);
+	} else {
 		xnthread_clear_state(thread, XNRRB);
+		if (sched->curr == thread)
+			xntimer_stop(&sched->rrbtimer);
+	}
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -1672,14 +1665,12 @@ int xnthread_migrate(int cpu)
 	xnsched_migrate(thread, sched);
 
 	/*
-	 * Migrate the thread's periodic and round-robin timers. We
-	 * don't have to care about the resource timer, since we can
-	 * only deal with the current thread, which is, well, running,
-	 * so it can't be sleeping on any timed wait at the moment.
+	 * Migrate the thread's periodic timer. We don't have to care
+	 * about the resource timer, since we can only deal with the
+	 * current thread, which is, well, running, so it can't be
+	 * sleeping on any timed wait at the moment.
 	 */
 	__xntimer_migrate(&thread->ptimer, sched);
-	if (xnthread_test_state(thread, XNRRB))
-		__xntimer_migrate(&thread->rrbtimer, sched);
 
 	/*
 	 * Reset execution time measurement period so that we don't

@@ -89,7 +89,7 @@ static struct xnthread *xnsched_rt_pick(struct xnsched *sched)
 	return __xnsched_rt_pick(sched);
 }
 
-void xnsched_rt_tick(struct xnthread *curr)
+void xnsched_rt_tick(struct xnsched *sched)
 {
 	/*
 	 * The round-robin time credit is only consumed by a running
@@ -98,7 +98,7 @@ void xnsched_rt_tick(struct xnthread *curr)
 	 * exhausted for the running thread, move it back to the
 	 * runnable queue at the end of its priority group.
 	 */
-	xnsched_putback(curr);
+	xnsched_putback(sched->curr);
 }
 
 void xnsched_rt_setparam(struct xnthread *thread,
