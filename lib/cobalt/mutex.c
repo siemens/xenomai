@@ -191,7 +191,7 @@ COBALT_IMPL(int, pthread_mutex_timedlock, (pthread_mutex_t *mutex,
 	if (_mutex->magic != COBALT_MUTEX_MAGIC)
 		return EINVAL;
 
-	/* See __wrap_pthread_mutex_lock() */
+	/* See __cobalt_pthread_mutex_lock() */
 	status = cobalt_get_current_mode();
 	if ((status & (XNRELAX|XNWEAK)) == 0) {
 		err = xnsynch_fast_acquire(mutex_get_ownerp(_mutex), cur);

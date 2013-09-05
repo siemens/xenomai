@@ -117,8 +117,7 @@ int pthread_setschedparam_ex(pthread_t thread,
 		cobalt_sigshadow_install_once();
 		cobalt_set_current();
 		cobalt_set_current_window(u_winoff);
-		if (policy != SCHED_OTHER && policy != SCHED_WEAK)
-			XENOMAI_SYSCALL1(sc_nucleus_migrate, XENOMAI_XENO_DOMAIN);
+		__cobalt_thread_harden();
 	}
 
 	return ret;
@@ -210,7 +209,7 @@ COBALT_IMPL(int, sched_get_priority_max, (int policy))
 
 COBALT_IMPL(int, pthread_yield, (void))
 {
-	return __wrap_sched_yield();
+	return __WRAP(sched_yield());
 }
 
 struct pthread_iargs {
@@ -223,7 +222,7 @@ struct pthread_iargs {
 	int ret;
 };
 
-static void *__pthread_trampoline(void *p)
+static void *cobalt_thread_trampoline(void *p)
 {
 	/*
 	 * Volatile is to prevent (too) smart gcc releases from
@@ -280,10 +279,9 @@ sync_with_creator:
 	 * scheduling order.
 	 */
 	if (param_ex.sched_priority == parent_prio)
-		__wrap_sched_yield();
+		__cobalt_sched_yield();
 
-	if (policy != SCHED_OTHER && policy != SCHED_WEAK)
-		XENOMAI_SYSCALL1(sc_nucleus_migrate, XENOMAI_XENO_DOMAIN);
+	__cobalt_thread_harden();
 
 	retval = start(arg);
 
@@ -347,13 +345,14 @@ int pthread_create_ex(pthread_t *tid,
 	iargs.ret = EAGAIN;
 	__STD(sem_init(&iargs.sync, 0, 0));
 
-	ret = __STD(pthread_create(&ltid, &attr, &__pthread_trampoline, &iargs));
+	ret = __STD(pthread_create(&ltid, &attr, cobalt_thread_trampoline, &iargs));
 	if (ret)
 		goto fail;
 
 	while (__STD(sem_wait(&iargs.sync)) && errno == EINTR)
 		;
 
+	__cobalt_thread_harden(); /* May fail if regular thread. */
 	ret = iargs.ret;
 	if (ret == 0)
 		*tid = ltid;

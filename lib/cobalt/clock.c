@@ -157,7 +157,7 @@ COBALT_IMPL(int, nanosleep, (const struct timespec *rqtp, struct timespec *rmtp)
 {
 	int ret;
 
-	ret = __wrap_clock_nanosleep(CLOCK_REALTIME, 0, rqtp, rmtp);
+	ret = __WRAP(clock_nanosleep(CLOCK_REALTIME, 0, rqtp, rmtp));
 	if (ret) {
 		errno = ret;
 		return -1;
@@ -176,7 +176,7 @@ COBALT_IMPL(unsigned int, sleep, (unsigned int seconds))
 
 	rqt.tv_sec = seconds;
 	rqt.tv_nsec = 0;
-	ret = __wrap_clock_nanosleep(CLOCK_MONOTONIC, 0, &rqt, &rem);
+	ret = __WRAP(clock_nanosleep(CLOCK_MONOTONIC, 0, &rqt, &rem));
 	if (ret)
 		return rem.tv_sec;
 
