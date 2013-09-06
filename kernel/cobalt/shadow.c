@@ -1587,10 +1587,29 @@ static int xnshadow_sys_current_info(struct xnthread_info __user *u_info)
 	return __xn_safe_copy_to_user(u_info, &info, sizeof(*u_info));
 }
 
-static int xnshadow_sys_backtrace(int nr, unsigned long *u_backtrace,
+static int xnshadow_sys_backtrace(int nr, unsigned long __user *u_backtrace,
 				  int reason)
 {
 	xndebug_trace_relax(nr, u_backtrace, reason);
+	return 0;
+}
+
+static int xnshadow_sys_serialdbg(const char __user *u_msg, int len)
+{
+	char buf[128];
+	int n;
+
+	while (len > 0) {
+		n = len;
+		if (n > sizeof(buf))
+			n = sizeof(buf);
+		if (__xn_safe_copy_from_user(buf, u_msg, n))
+			return -EFAULT;
+		__ipipe_serial_debug("%.*s", n, buf);
+		u_msg += n;
+		len -= n;
+	}
+
 	return 0;
 }
 
@@ -1712,6 +1731,7 @@ static struct xnsyscall user_syscalls[] = {
 	SKINCALL_DEF(sc_nucleus_current_info, xnshadow_sys_current_info, shadow),
 	SKINCALL_DEF(sc_nucleus_mayday, xnshadow_sys_mayday, oneway),
 	SKINCALL_DEF(sc_nucleus_backtrace, xnshadow_sys_backtrace, current),
+	SKINCALL_DEF(sc_nucleus_serialdbg, xnshadow_sys_serialdbg, any),
 };
 
 static struct xnpersonality user_personality = {

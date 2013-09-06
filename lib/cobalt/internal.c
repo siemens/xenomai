@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <errno.h>
+#include <stdarg.h>
 #include <pthread.h>
 #include <asm/xenomai/syscall.h>
 #include "current.h"
@@ -58,6 +59,25 @@ void ___cobalt_prefault(void *p, size_t len)
 		*_p = *_p;
 		_p += pagesz;
 	} while (_p < end);
+}
+
+int __cobalt_serial_debug(const char *fmt, ...)
+{
+	char msg[128];
+	va_list ap;
+	int n, ret;
+
+	/*
+	 * The serial debug output handler disables hw IRQs while
+	 * writing to the UART console port, so the message ought to
+	 * be reasonably short.
+	 */
+	va_start(ap, fmt);
+	n = vsnprintf(msg, sizeof(msg), fmt, ap);
+	ret = XENOMAI_SYSCALL2(sc_nucleus_serialdbg, msg, n);
+	va_end(ap);
+
+	return ret;
 }
 
 size_t cobalt_get_stacksize(size_t size)

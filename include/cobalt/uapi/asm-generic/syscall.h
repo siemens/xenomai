@@ -34,6 +34,7 @@
 #define sc_nucleus_current_info  7	/* r = xnshadow_current_info(&info) */
 #define sc_nucleus_mayday        8	/* request mayday fixup */
 #define sc_nucleus_backtrace     9	/* collect backtrace (relax tracing) */
+#define sc_nucleus_serialdbg     10	/* output to serial console (__ipipe_serial_debug()) */
 
 struct xnbindreq {
 	int feat_req;		/* Features userland requires. */
