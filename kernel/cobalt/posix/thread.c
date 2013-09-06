@@ -213,6 +213,7 @@ EXPORT_SYMBOL_GPL(cobalt_thread_find_local);
 struct xnpersonality *cobalt_thread_exit(struct xnthread *curr)
 {
 	struct cobalt_thread *thread;
+	spl_t s;
 
 	thread = container_of(curr, struct cobalt_thread, threadbase);
 	/*
@@ -220,11 +221,13 @@ struct xnpersonality *cobalt_thread_exit(struct xnthread *curr)
 	 * userland.
 	 */
 	thread_unhash(&thread->hkey);
+	xnlock_get_irqsave(&nklock, s);
 	cobalt_mark_deleted(thread);
+	list_del(&thread->link);
+	xnlock_put_irqrestore(&nklock, s);
 	cobalt_signal_flush(thread);
 	xnsynch_destroy(&thread->monitor_synch);
 	xnsynch_destroy(&thread->sigwait);
-	list_del(&thread->link);
 
 	/* We don't stack over any personality, no chaining. */
 	return NULL;
