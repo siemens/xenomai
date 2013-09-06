@@ -52,6 +52,7 @@ struct cobalt_extension {
 				       struct siginfo __user *u_si,
 				       const struct siginfo *si,
 				       int overrun);
+		int (*sched_yield)(struct cobalt_extref *curref);
 	} ops;
 };
 

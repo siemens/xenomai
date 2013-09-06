@@ -1222,6 +1222,11 @@ int cobalt_sched_max_prio(int policy)
 int cobalt_sched_yield(void)
 {
 	struct cobalt_thread *curr = cobalt_current_thread();
+	int ret;
+
+	/* Maybe some extension wants to handle this. */
+  	if (cobalt_call_extension(sched_yield, &curr->extref, ret) && ret)
+		return ret > 0 ? 0 : ret;
 
 	xnthread_resume(&curr->threadbase, 0);
 	if (xnsched_run())
