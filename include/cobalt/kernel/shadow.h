@@ -42,6 +42,8 @@ struct xnpersonality {
 		struct xnshadow_ppd *(*attach_process)(void);
 		void (*detach_process)(struct xnshadow_ppd *ppd);
 		struct xnpersonality *(*map_thread)(struct xnthread *thread);
+		struct xnpersonality *(*relax_thread)(struct xnthread *thread);
+		struct xnpersonality *(*harden_thread)(struct xnthread *thread);
 		struct xnpersonality *(*exit_thread)(struct xnthread *thread);
 		struct xnpersonality *(*finalize_thread)(struct xnthread *thread);
 	} ops;

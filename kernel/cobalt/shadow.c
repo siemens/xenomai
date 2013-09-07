@@ -501,7 +501,13 @@ void ipipe_migration_hook(struct task_struct *p) /* hw IRQs off */
 {
 	struct xnthread *thread = xnshadow_thread(p);
 
+	/*
+	 * We fire the handler before the thread is migrated, so that
+	 * thread->sched does not change between paired invocations of
+	 * relax_thread/harden_thread handlers.
+	 */
 	xnlock_get(&nklock);
+	xnthread_run_handler(thread, harden_thread);
 	check_affinity(p);
 	xnthread_resume(thread, XNRELAX);
 	xnlock_put(&nklock);
@@ -611,37 +617,35 @@ void xnshadow_relax(int notify, int reason)
 
 	/*
 	 * If you intend to change the following interrupt-free
-	 * sequence, /first/ make sure to:
-	 *
-	 * - read commit #d3242401b8
-	 *
-	 * - check the special handling of XNRELAX in
-	 * xnthread_suspend() when switching out the current thread,
-	 * not to break basic assumptions we do there.
+	 * sequence, /first/ make sure to check the special handling
+	 * of XNRELAX in xnthread_suspend() when switching out the
+	 * current thread, not to break basic assumptions we make
+	 * there.
 	 *
 	 * We disable interrupts during the migration sequence, but
 	 * xnthread_suspend() has an interrupts-on section built in.
 	 */
 	splmax();
 	post_wakeup(p);
-
 	/*
-	 * Task nklock to synchronize the Linux task state
-	 * manipulation with do_sigwake_event. nklock will be released
-	 * by xnthread_suspend().
+	 * Grab the nklock to synchronize the Linux task state
+	 * manipulation with handle_sigwake_event. This lock will be
+	 * dropped by xnthread_suspend().
 	 */
 	xnlock_get(&nklock);
 	set_task_state(p, p->state & ~TASK_NOWAKEUP);
+	xnthread_run_handler(thread, relax_thread);
 	xnthread_suspend(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
-
 	splnone();
+
 	if (XENO_DEBUG(NUCLEUS) && !ipipe_root_p)
 		xnsys_fatal("xnshadow_relax() failed for thread %s[%d]",
 			    thread->name, xnthread_host_pid(thread));
 
 	__ipipe_reenter_root();
 
-	xnstat_counter_inc(&thread->stat.ssw);	/* Account for secondary mode switch. */
+	/* Account for secondary mode switch. */
+	xnstat_counter_inc(&thread->stat.ssw);
 
 	if (xnthread_test_state(thread, XNUSER) && notify) {
 		xndebug_notify_relax(thread, reason);
