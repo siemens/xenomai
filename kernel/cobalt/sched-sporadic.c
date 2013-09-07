@@ -354,7 +354,7 @@ static struct xnthread *xnsched_sporadic_pick(struct xnsched *sched)
 {
 	struct xnthread *curr = sched->curr, *next;
 
-	next = sched_getq(&sched->rt.runnable);
+	next = xnsched_getq(&sched->rt.runnable);
 	if (next == NULL)
 		goto swap_budgets;
 

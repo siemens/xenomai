@@ -49,21 +49,21 @@ struct xnsched_mlq {
 
 struct xnthread;
 
-void sched_initq(struct xnsched_mlq *q,
-		 int loprio, int hiprio);
+void xnsched_initq(struct xnsched_mlq *q,
+		   int loprio, int hiprio);
 
-void sched_insertqff(struct xnsched_mlq *q, 
-		     struct xnthread *thread);
+void xnsched_addq(struct xnsched_mlq *q,
+		  struct xnthread *thread);
 
-void sched_insertqlf(struct xnsched_mlq *q,
-		     struct xnthread *thread);
+void xnsched_addq_tail(struct xnsched_mlq *q, 
+		       struct xnthread *thread);
 
-void sched_removeq(struct xnsched_mlq *q,
-		   struct xnthread *thread);
+void xnsched_delq(struct xnsched_mlq *q,
+		  struct xnthread *thread);
 
-struct xnthread *sched_getq(struct xnsched_mlq *q);
+struct xnthread *xnsched_getq(struct xnsched_mlq *q);
 
-static inline int sched_emptyq_p(struct xnsched_mlq *q)
+static inline int xnsched_emptyq_p(struct xnsched_mlq *q)
 {
 	return q->himap == 0;
 }
@@ -74,12 +74,12 @@ typedef struct xnsched_mlq xnsched_queue_t;
 
 typedef struct list_head xnsched_queue_t;
 
-#define sched_initq(__q, __minp, __maxp)	INIT_LIST_HEAD(__q)
-#define sched_emptyq_p(__q)			list_empty(__q)
-#define sched_insertqlf(__q, __t)		list_add_prilf(__t, __q, cprio, rlink)
-#define sched_insertqff(__q, __t)		list_add_priff(__t, __q, cprio, rlink)
-#define sched_removeq(__q, __t)			list_del(&(__t)->rlink)
-#define sched_getq(__q)								\
+#define xnsched_initq(__q, __minp, __maxp)	INIT_LIST_HEAD(__q)
+#define xnsched_emptyq_p(__q)			list_empty(__q)
+#define xnsched_addq(__q, __t)			list_add_prilf(__t, __q, cprio, rlink)
+#define xnsched_addq_tail(__q, __t)		list_add_priff(__t, __q, cprio, rlink)
+#define xnsched_delq(__q, __t)			list_del(&(__t)->rlink)
+#define xnsched_getq(__q)							\
 	({									\
 		struct xnthread *__t = NULL;					\
 		if (!list_empty(__q))						\
@@ -89,6 +89,6 @@ typedef struct list_head xnsched_queue_t;
 
 #endif /* !CONFIG_XENO_OPT_SCALABLE_SCHED */
 
-struct xnthread *sched_findq(xnsched_queue_t *q, int prio);
+struct xnthread *xnsched_findq(xnsched_queue_t *q, int prio);
 
 #endif /* !_COBALT_KERNEL_SCHEDQUEUE_H */

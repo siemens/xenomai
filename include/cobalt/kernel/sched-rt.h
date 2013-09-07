@@ -52,22 +52,22 @@ extern struct xnsched_class xnsched_class_rt;
 
 static inline void __xnsched_rt_requeue(struct xnthread *thread)
 {
-	sched_insertqlf(&thread->sched->rt.runnable, thread);
+	xnsched_addq(&thread->sched->rt.runnable, thread);
 }
 
 static inline void __xnsched_rt_enqueue(struct xnthread *thread)
 {
-	sched_insertqff(&thread->sched->rt.runnable, thread);
+	xnsched_addq_tail(&thread->sched->rt.runnable, thread);
 }
 
 static inline void __xnsched_rt_dequeue(struct xnthread *thread)
 {
-	sched_removeq(&thread->sched->rt.runnable, thread);
+	xnsched_delq(&thread->sched->rt.runnable, thread);
 }
 
 static inline struct xnthread *__xnsched_rt_pick(struct xnsched *sched)
 {
-	return sched_getq(&sched->rt.runnable);
+	return xnsched_getq(&sched->rt.runnable);
 }
 
 static inline void __xnsched_rt_setparam(struct xnthread *thread,

@@ -484,7 +484,7 @@ void xnsched_migrate_passive(struct xnthread *thread, struct xnsched *sched)
 
 #ifdef CONFIG_XENO_OPT_SCALABLE_SCHED
 
-void sched_initq(struct xnsched_mlq *q, int loprio, int hiprio)
+void xnsched_initq(struct xnsched_mlq *q, int loprio, int hiprio)
 {
 	int prio;
 
@@ -500,7 +500,7 @@ void sched_initq(struct xnsched_mlq *q, int loprio, int hiprio)
 		INIT_LIST_HEAD(q->heads + prio);
 }
 
-static inline int indexmlq(struct xnsched_mlq *q, int prio)
+static inline int get_qindex(struct xnsched_mlq *q, int prio)
 {
 	XENO_BUGON(NUCLEUS, prio < q->loprio || prio > q->hiprio);
 	/*
@@ -514,12 +514,12 @@ static inline int indexmlq(struct xnsched_mlq *q, int prio)
 	return q->hiprio - prio;
 }
 
-static struct list_head *addmlq(struct xnsched_mlq *q, int prio)
+static struct list_head *add_q(struct xnsched_mlq *q, int prio)
 {
 	struct list_head *head;
 	int hi, lo, idx;
 
-	idx = indexmlq(q, prio);
+	idx = get_qindex(q, prio);
 	head = q->heads + idx;
 	q->elems++;
 
@@ -534,20 +534,20 @@ static struct list_head *addmlq(struct xnsched_mlq *q, int prio)
 	return head;
 }
 
-void sched_insertqlf(struct xnsched_mlq *q, struct xnthread *thread)
+void xnsched_addq(struct xnsched_mlq *q, struct xnthread *thread)
 {
-	struct list_head *head = addmlq(q, thread->cprio);
+	struct list_head *head = add_q(q, thread->cprio);
 	list_add(&thread->rlink, head);
 }
 
-void sched_insertqff(struct xnsched_mlq *q, struct xnthread *thread)
+void xnsched_addq_tail(struct xnsched_mlq *q, struct xnthread *thread)
 {
-	struct list_head *head = addmlq(q, thread->cprio);
+	struct list_head *head = add_q(q, thread->cprio);
 	list_add_tail(&thread->rlink, head);
 }
 
-static void removemlq(struct xnsched_mlq *q,
-		      struct list_head *entry, int idx)
+static void del_q(struct xnsched_mlq *q,
+		  struct list_head *entry, int idx)
 {
 	struct list_head *head;
 	int hi, lo;
@@ -565,19 +565,19 @@ static void removemlq(struct xnsched_mlq *q,
 	}
 }
 
-void sched_removeq(struct xnsched_mlq *q, struct xnthread *thread)
+void xnsched_delq(struct xnsched_mlq *q, struct xnthread *thread)
 {
-	removemlq(q, &thread->rlink, indexmlq(q, thread->cprio));
+	del_q(q, &thread->rlink, get_qindex(q, thread->cprio));
 }
 
-static inline int ffsmlq(struct xnsched_mlq *q)
+static inline int ffs_q(struct xnsched_mlq *q)
 {
 	int hi = ffnz(q->himap);
 	int lo = ffnz(q->lomap[hi]);
 	return hi * BITS_PER_LONG + lo;	/* Result is undefined if none set. */
 }
 
-struct xnthread *sched_getq(struct xnsched_mlq *q)
+struct xnthread *xnsched_getq(struct xnsched_mlq *q)
 {
 	struct xnthread *thread;
 	struct list_head *head;
@@ -586,21 +586,21 @@ struct xnthread *sched_getq(struct xnsched_mlq *q)
 	if (q->elems == 0)
 		return NULL;
 
-	idx = ffsmlq(q);
+	idx = ffs_q(q);
 	head = q->heads + idx;
 	XENO_BUGON(NUCLEUS, list_empty(head));
 	thread = list_first_entry(head, struct xnthread, rlink);
-	removemlq(q, &thread->rlink, idx);
+	del_q(q, &thread->rlink, idx);
 
 	return thread;
 }
 
-struct xnthread *sched_findq(struct xnsched_mlq *q, int prio)
+struct xnthread *xnsched_findq(struct xnsched_mlq *q, int prio)
 {
 	struct list_head *head;
 	int idx;
 
-	idx = indexmlq(q, prio);
+	idx = get_qindex(q, prio);
 	head = q->heads + idx;
 	if (list_empty(head))
 		return NULL;
@@ -610,7 +610,7 @@ struct xnthread *sched_findq(struct xnsched_mlq *q, int prio)
 
 #else /* !CONFIG_XENO_OPT_SCALABLE_SCHED */
 
-struct xnthread *sched_findq(struct list_head *q, int prio)
+struct xnthread *xnsched_findq(struct list_head *q, int prio)
 {
 	struct xnthread *thread;
 

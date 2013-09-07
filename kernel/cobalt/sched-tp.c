@@ -92,10 +92,10 @@ static void xnsched_tp_init(struct xnsched *sched)
 	 * are valid RT priorities. TP is actually a subset of RT.
 	 */
 	for (n = 0; n < CONFIG_XENO_OPT_SCHED_TP_NRPART; n++)
-		sched_initq(&tp->partitions[n].runnable,
-			    XNSCHED_RT_MIN_PRIO, XNSCHED_RT_MAX_PRIO);
-	sched_initq(&tp->idle.runnable,
-		    XNSCHED_RT_MIN_PRIO, XNSCHED_RT_MAX_PRIO);
+		xnsched_initq(&tp->partitions[n].runnable,
+			      XNSCHED_RT_MIN_PRIO, XNSCHED_RT_MAX_PRIO);
+	xnsched_initq(&tp->idle.runnable,
+		      XNSCHED_RT_MIN_PRIO, XNSCHED_RT_MAX_PRIO);
 
 	tp->tps = NULL;
 	tp->gps = NULL;
@@ -174,17 +174,17 @@ static void xnsched_tp_forget(struct xnthread *thread)
 
 static void xnsched_tp_enqueue(struct xnthread *thread)
 {
-	sched_insertqff(&thread->tps->runnable, thread);
+	xnsched_addq_tail(&thread->tps->runnable, thread);
 }
 
 static void xnsched_tp_dequeue(struct xnthread *thread)
 {
-	sched_removeq(&thread->tps->runnable, thread);
+	xnsched_delq(&thread->tps->runnable, thread);
 }
 
 static void xnsched_tp_requeue(struct xnthread *thread)
 {
-	sched_insertqlf(&thread->tps->runnable, thread);
+	xnsched_addq(&thread->tps->runnable, thread);
 }
 
 static struct xnthread *xnsched_tp_pick(struct xnsched *sched)
@@ -193,7 +193,7 @@ static struct xnthread *xnsched_tp_pick(struct xnsched *sched)
 	if (!xntimer_running_p(&sched->tp.tf_timer))
 		return NULL;
 
-	return sched_getq(&sched->tp.tps->runnable);
+	return xnsched_getq(&sched->tp.tps->runnable);
 }
 
 static void xnsched_tp_migrate(struct xnthread *thread, struct xnsched *sched)
