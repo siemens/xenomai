@@ -123,7 +123,7 @@ xnshadow_push_personality(struct xnthread *thread,
 void xnshadow_pop_personality(struct xnthread *thread,
 			      struct xnpersonality *prev);
 
-int xnshadow_yield(xnticks_t timeout);
+int xnshadow_yield(xnticks_t min, xnticks_t max);
 
 extern struct xnpersonality xenomai_personality;
 

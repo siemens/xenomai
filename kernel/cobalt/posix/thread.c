@@ -1257,7 +1257,7 @@ int cobalt_sched_yield(void)
 	 * arbitrary TICK_NSEC value to limit the wait time to a
 	 * reasonable amount.
 	 */
-	return xnshadow_yield(TICK_NSEC);
+	return xnshadow_yield(TICK_NSEC, TICK_NSEC);
 }
 
 #ifdef CONFIG_XENO_OPT_SCHED_TP

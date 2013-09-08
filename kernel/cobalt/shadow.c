@@ -2279,13 +2279,20 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 	return EVENT_PROPAGATE;
 }
 
-int xnshadow_yield(xnticks_t timeout)
+int xnshadow_yield(xnticks_t min, xnticks_t max)
 {
+	xnticks_t start;
 	int ret;
 
-	ret = xnsynch_sleep_on(&yield_sync, timeout, XN_RELATIVE);
-	if (ret & XNBREAK)
-		return -EINTR;
+	start = xnclock_read_monotonic(&nkclock);
+	max += start;
+	min += start;
+
+	do {
+		ret = xnsynch_sleep_on(&yield_sync, max, XN_ABSOLUTE);
+		if (ret & XNBREAK)
+			return -EINTR;
+	} while (ret == 0 && xnclock_read_monotonic(&nkclock) < min);
 
 	return 0;
 }
