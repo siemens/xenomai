@@ -85,8 +85,8 @@ struct cobalt_msg {
 static struct list_head cobalt_mqq;
 
 static struct mq_attr default_attr = {
-      mq_maxmsg:128,
-      mq_msgsize:128,
+      mq_maxmsg:10,
+      mq_msgsize:8192,
 };
 
 static inline struct cobalt_msg *mq_msg_alloc(cobalt_mq_t *mq)
