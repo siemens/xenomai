@@ -291,7 +291,7 @@ static int cobalt_assoc_lookup_inner(struct list_head *q,
 			goto out;
 	}
 
-	passoc = NULL;
+	assoc = NULL;
 out:
 	*passoc = assoc;
 
