@@ -39,6 +39,9 @@
 #include "mqueue.h"
 #include "clock.h"
 
+#define COBALT_MSGMAX		    65536
+#define COBALT_MSGSIZEMAX	    (16*1024*1024)
+
 struct mq_attr {
 	long mq_flags;
 	long mq_maxmsg;
@@ -86,7 +89,7 @@ static struct mq_attr default_attr = {
       mq_msgsize:128,
 };
 
-static inline struct cobalt_msg *cobalt_mq_msg_alloc(cobalt_mq_t *mq)
+static inline struct cobalt_msg *mq_msg_alloc(cobalt_mq_t *mq)
 {
 	if (list_empty(&mq->avail))
 		return NULL;
@@ -94,20 +97,26 @@ static inline struct cobalt_msg *cobalt_mq_msg_alloc(cobalt_mq_t *mq)
 	return list_get_entry(&mq->avail, struct cobalt_msg, link);
 }
 
-static inline void cobalt_mq_msg_free(cobalt_mq_t * mq, struct cobalt_msg * msg)
+static inline void mq_msg_free(cobalt_mq_t *mq, struct cobalt_msg * msg)
 {
 	list_add(&msg->link, &mq->avail); /* For earliest re-use of the block. */
 }
 
-static inline int cobalt_mq_init(cobalt_mq_t * mq, const struct mq_attr *attr)
+static inline int mq_init(cobalt_mq_t *mq, const struct mq_attr *attr)
 {
 	unsigned i, msgsize, memsize;
 	char *mem;
 
-	if (!attr)
+	if (attr == NULL)
 		attr = &default_attr;
-	else if (attr->mq_maxmsg <= 0 || attr->mq_msgsize <= 0)
-		return EINVAL;
+	else {
+		if (attr->mq_maxmsg <= 0 || attr->mq_msgsize <= 0)
+			return -EINVAL;
+		if (attr->mq_maxmsg > COBALT_MSGMAX)
+			return -EINVAL;
+		if (attr->mq_msgsize > COBALT_MSGSIZEMAX)
+			return -EINVAL;
+	}
 
 	msgsize = attr->mq_msgsize + sizeof(struct cobalt_msg);
 
@@ -118,10 +127,12 @@ static inline int cobalt_mq_init(cobalt_mq_t * mq, const struct mq_attr *attr)
 
 	memsize = msgsize * attr->mq_maxmsg;
 	memsize = PAGE_ALIGN(memsize);
+	if (get_order(memsize) > MAX_ORDER)
+		return -ENOSPC;
 
 	mem = alloc_pages_exact(memsize, GFP_KERNEL);
 	if (mem == NULL)
-		return ENOSPC;
+		return -ENOSPC;
 
 	mq->memsize = memsize;
 	INIT_LIST_HEAD(&mq->queued);
@@ -134,7 +145,7 @@ static inline int cobalt_mq_init(cobalt_mq_t * mq, const struct mq_attr *attr)
 	INIT_LIST_HEAD(&mq->avail);
 	for (i = 0; i < attr->mq_maxmsg; i++) {
 		struct cobalt_msg *msg = (struct cobalt_msg *) (mem + i * msgsize);
-		cobalt_mq_msg_free(mq, msg);
+		mq_msg_free(mq, msg);
 	}
 
 	mq->attr = *attr;
@@ -159,7 +170,7 @@ static void lostage_mq_memfree(struct ipipe_work_header *work)
 	free_pages_exact(rq->mem, rq->memsize);
 }
 
-static inline void cobalt_mq_destroy(cobalt_mq_t *mq)
+static inline void mq_destroy(cobalt_mq_t *mq)
 {
 	struct lostage_memfree freework = {
 		.work = {
@@ -285,7 +296,7 @@ static mqd_t mq_open(const char *name, int oflags, ...)
 	attr = va_arg(ap, struct mq_attr *);
 	va_end(ap);
 
-	err = cobalt_mq_init(mq, attr);
+	err = mq_init(mq, attr);
 	if (err)
 		goto err_free_mq;
 
@@ -304,7 +315,7 @@ static mqd_t mq_open(const char *name, int oflags, ...)
 
 		/* The same mq was created in the meantime, rollback. */
 		xnlock_put_irqrestore(&nklock, s);
-		cobalt_mq_destroy(mq);
+		mq_destroy(mq);
 		xnfree(mq);
 		mq = node2mq(node);
 		goto got_mq;
@@ -330,7 +341,7 @@ static mqd_t mq_open(const char *name, int oflags, ...)
 		/* mq is no longer referenced, we may destroy it. */
 
 		xnlock_put_irqrestore(&nklock, s);
-		cobalt_mq_destroy(mq);
+		mq_destroy(mq);
 	  err_free_mq:
 		xnfree(mq);
 	} else
@@ -388,7 +399,7 @@ static inline int mq_close(mqd_t fd)
 	if (cobalt_node_removed_p(&mq->nodebase)) {
 		xnlock_put_irqrestore(&nklock, s);
 
-		cobalt_mq_destroy(mq);
+		mq_destroy(mq);
 		xnfree(mq);
 	} else
 		xnlock_put_irqrestore(&nklock, s);
@@ -447,7 +458,7 @@ static inline int mq_unlink(const char *name)
 		xnlock_put_irqrestore(&nklock, s);
 
 		mq = node2mq(node);
-		cobalt_mq_destroy(mq);
+		mq_destroy(mq);
 		xnfree(mq);
 	} else
 		xnlock_put_irqrestore(&nklock, s);
@@ -472,8 +483,8 @@ struct cobalt_msg *cobalt_mq_trysend(cobalt_mq_t **mqp,
 	if (len > mq->attr.mq_msgsize)
 		return ERR_PTR(-EMSGSIZE);
 
-	msg = cobalt_mq_msg_alloc(mq);
-	if (!msg)
+	msg = mq_msg_alloc(mq);
+	if (msg == NULL)
 		return ERR_PTR(-EAGAIN);
 
 	if (list_empty(&mq->avail))
@@ -628,7 +639,7 @@ cobalt_mq_finish_send(mqd_t fd, cobalt_mq_t *mq, struct cobalt_msg *msg)
 		xnsched_run();
 
 	if (removed) {
-		cobalt_mq_destroy(mq);
+		mq_destroy(mq);
 		xnfree(mq);
 	}
 
@@ -639,7 +650,7 @@ cobalt_mq_finish_send(mqd_t fd, cobalt_mq_t *mq, struct cobalt_msg *msg)
 	 * descriptor was destroyed, simply return the message to the
 	 * pool and wakeup any waiting sender.
 	 */;
-	cobalt_mq_msg_free(mq, msg);
+	mq_msg_free(mq, msg);
 
 	if (list_is_singular(&mq->avail))
 		resched = xnselect_signal(&mq->write_select, 1);
@@ -723,7 +734,7 @@ cobalt_mq_finish_rcv(mqd_t fd, cobalt_mq_t *mq, struct cobalt_msg *msg)
 	if (!err && node2mq(cobalt_desc_node(desc)) != mq)
 		err = -EBADF;
 
-	cobalt_mq_msg_free(mq, msg);
+	mq_msg_free(mq, msg);
 
 	if (list_is_singular(&mq->avail))
 		resched = xnselect_signal(&mq->write_select, 1);
@@ -740,7 +751,7 @@ cobalt_mq_finish_rcv(mqd_t fd, cobalt_mq_t *mq, struct cobalt_msg *msg)
 		xnsched_run();
 
 	if (removed) {
-		cobalt_mq_destroy(mq);
+		mq_destroy(mq);
 		xnfree(mq);
 	}
 
@@ -1414,7 +1425,7 @@ void cobalt_mq_pkg_cleanup(void)
 	list_for_each_entry_safe(mq, tmp, &cobalt_mqq, link) {
 		cobalt_node_remove(&node, mq->nodebase.name, COBALT_MQ_MAGIC);
 		xnlock_put_irqrestore(&nklock, s);
-		cobalt_mq_destroy(mq);
+		mq_destroy(mq);
 #if XENO_DEBUG(COBALT)
 		printk(XENO_INFO "unlinking Cobalt mq \"%s\"\n",
 		       mq->nodebase.name);
