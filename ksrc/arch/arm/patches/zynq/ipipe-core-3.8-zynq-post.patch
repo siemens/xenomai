@@ -1,0 +1,113 @@
+diff --git a/arch/arm/common/gic.c b/arch/arm/common/gic.c
+index 6d6c9f0..0fa6c66 100644
+--- a/arch/arm/common/gic.c
++++ b/arch/arm/common/gic.c
+@@ -22,6 +22,7 @@
+  * As such, the enable set/clear, pending set/clear and active bit
+  * registers are banked per-cpu for these sources.
+  */
++#include <linux/module.h>
+ #include <linux/init.h>
+ #include <linux/kernel.h>
+ #include <linux/err.h>
+@@ -282,10 +283,15 @@ static int gic_set_affinity(struct irq_data *d, const struct cpumask *mask_val,
+ {
+ 	void __iomem *reg = gic_dist_base(d) + GIC_DIST_TARGET + (gic_irq(d) & ~3);
+ 	unsigned int shift = (gic_irq(d) % 4) * 8;
+-	unsigned int cpu = cpumask_any_and(mask_val, cpu_online_mask);
++	unsigned int cpu;
+ 	unsigned long flags;
+ 	u32 val, mask, bit;
+ 
++	if (force)
++		cpu = cpumask_any_and(mask_val, cpu_possible_mask);
++	else
++		cpu = cpumask_any_and(mask_val, cpu_online_mask);
++
+ 	if (cpu >= NR_GIC_CPU_IF || cpu >= nr_cpu_ids)
+ 		return -EINVAL;
+ 
+@@ -299,6 +305,17 @@ static int gic_set_affinity(struct irq_data *d, const struct cpumask *mask_val,
+ 
+ 	return IRQ_SET_MASK_OK;
+ }
++
++void gic_set_cpu(unsigned int cpu, unsigned int irq)
++{
++	struct irq_data *d = irq_get_irq_data(irq);
++	struct cpumask mask;
++
++	cpumask_clear(&mask);
++	cpumask_set_cpu(cpu, &mask);
++	gic_set_affinity(d, &mask, true);
++}
++EXPORT_SYMBOL(gic_set_cpu);
+ #endif
+ 
+ #ifdef CONFIG_PM
+@@ -875,6 +892,7 @@ void gic_raise_softirq(const struct cpumask *mask, unsigned int irq)
+ 	/* this always happens on GIC0 */
+ 	writel_relaxed(map << 16 | irq, gic_data_dist_base(&gic_data[0]) + GIC_DIST_SOFTINT);
+ }
++EXPORT_SYMBOL(gic_raise_softirq);
+ #endif
+ 
+ #ifdef CONFIG_OF
+diff --git a/arch/arm/mach-zynq/Kconfig b/arch/arm/mach-zynq/Kconfig
+index 96e1668..0ebcf90 100644
+--- a/arch/arm/mach-zynq/Kconfig
++++ b/arch/arm/mach-zynq/Kconfig
+@@ -15,6 +15,7 @@ config ARCH_ZYNQ
+ 	select COMMON_CLK
+ 	select ARCH_HAS_CPUFREQ
+ 	select ARCH_HAS_OPP
++	select IPIPE_ARM_KUSER_TSC if IPIPE
+ 	select MIGHT_HAVE_PCI
+ 	help
+ 	  Support for Xilinx Zynq ARM Cortex A9 Platform
+diff --git a/arch/arm/mach-zynq/timer.c b/arch/arm/mach-zynq/timer.c
+index 9bef11c..8aab5d1 100644
+--- a/arch/arm/mach-zynq/timer.c
++++ b/arch/arm/mach-zynq/timer.c
+@@ -419,7 +419,10 @@ static void __init xttcps_timer_init(struct device_node *timer)
+ 
+ 	zynq_ttc_setup_clocksource(clk, timer_baseaddr);
+ 	zynq_ttc_setup_clockevent(clk, timer_baseaddr + 4, irq);
+-
++#ifdef CONFIG_IPIPE
++	if (num_possible_cpus() == 1)
++		pr_err("I-pipe: not supported on Zynq without SMP\n");
++#endif
+ #ifdef CONFIG_HAVE_ARM_TWD
+ 	twd_local_timer_of_register();
+ #endif
+diff --git a/drivers/gpio/gpio-xilinxps.c b/drivers/gpio/gpio-xilinxps.c
+index 8c51700..b2f5871 100644
+--- a/drivers/gpio/gpio-xilinxps.c
++++ b/drivers/gpio/gpio-xilinxps.c
+@@ -21,6 +21,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/io.h>
+ #include <linux/irq.h>
++#include <linux/ipipe.h>
+ #include <linux/module.h>
+ #include <linux/platform_device.h>
+ #include <linux/pm_runtime.h>
+@@ -90,7 +91,7 @@ struct xgpiops {
+ 	unsigned int irq;
+ 	unsigned int irq_base;
+ 	struct clk *clk;
+-	spinlock_t gpio_lock;
++	ipipe_spinlock_t gpio_lock;
+ };
+ 
+ /**
+@@ -423,7 +424,7 @@ static void xgpiops_irqhandler(unsigned int irq, struct irq_desc *desc)
+ 			chip->irq_ack(&gpio_irq_desc->irq_data);
+ 
+ 			/* call the pin specific handler */
+-			generic_handle_irq(gpio_irq);
++			ipipe_handle_demuxed_irq(gpio_irq);
+ 		}
+ 		/* shift to first virtual irq of next bank */
+ 		gpio_irq = (int)irq_get_handler_data(irq) +
