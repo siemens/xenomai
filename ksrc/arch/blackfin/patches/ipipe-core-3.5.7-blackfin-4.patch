@@ -12,7 +12,7 @@ index fef96f4..65a7acd 100644
  
  comment "Processor and Board Settings"
 diff --git a/arch/blackfin/include/asm/ipipe.h b/arch/blackfin/include/asm/ipipe.h
-index 17b5e92..60375ca 100644
+index 17b5e92..a3aa223 100644
 --- a/arch/blackfin/include/asm/ipipe.h
 +++ b/arch/blackfin/include/asm/ipipe.h
 @@ -28,7 +28,7 @@
@@ -32,7 +32,7 @@ index 17b5e92..60375ca 100644
 -#define IPIPE_MAJOR_NUMBER    1
 -#define IPIPE_MINOR_NUMBER    16
 -#define IPIPE_PATCH_NUMBER    1
-+#define IPIPE_CORE_RELEASE	3
++#define IPIPE_CORE_RELEASE	4
  
  #ifdef CONFIG_SMP
  #error "I-pipe/blackfin: SMP not implemented"
@@ -1494,6 +1494,15 @@ index bd97db2..b459781 100644
  #endif /* defined (CONFIG_SERIAL_BFIN_CONSOLE) ||
  		 defined (CONFIG_EARLY_PRINTK) */
  
+diff --git a/.gitignore b/.gitignore
+index 57af07c..5bd5403 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -84,3 +84,4 @@ GTAGS
+ *.orig
+ *~
+ \#*#
++*.rej
 diff --git a/drivers/cpuidle/Kconfig b/drivers/cpuidle/Kconfig
 index 78a666d..20e9852 100644
 --- a/drivers/cpuidle/Kconfig
@@ -1925,10 +1934,10 @@ index e6bb36a..898a91a 100644
  
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..a04ec49
+index 0000000..376b830
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,431 @@
+@@ -0,0 +1,436 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -2039,6 +2048,11 @@ index 0000000..a04ec49
 +extern struct clocksource *__ipipe_cs;
 +
 +#endif /* CONFIG_IPIPE_WANT_CLOCKSOURCE */
++
++static inline bool __ipipe_hrclock_ok(void)
++{
++	return __ipipe_hrclock_freq != 0;
++}
 +
 +static inline void __ipipe_nmi_enter(void)
 +{
@@ -2362,10 +2376,10 @@ index 0000000..a04ec49
 +#endif	/* !__LINUX_IPIPE_H */
 diff --git a/include/linux/ipipe_base.h b/include/linux/ipipe_base.h
 new file mode 100644
-index 0000000..1ae32a1
+index 0000000..d92ca15
 --- /dev/null
 +++ b/include/linux/ipipe_base.h
-@@ -0,0 +1,359 @@
+@@ -0,0 +1,379 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe_base.h
 + *
@@ -2469,9 +2483,10 @@ index 0000000..1ae32a1
 +#define IPIPE_KEVT_SCHEDULE	0
 +#define IPIPE_KEVT_SIGWAKE	1
 +#define IPIPE_KEVT_SETSCHED	2
-+#define IPIPE_KEVT_EXIT		3
-+#define IPIPE_KEVT_CLEANUP	4
-+#define IPIPE_KEVT_HOSTRT	5
++#define IPIPE_KEVT_SETAFFINITY	3
++#define IPIPE_KEVT_EXIT		4
++#define IPIPE_KEVT_CLEANUP	5
++#define IPIPE_KEVT_HOSTRT	6
 +
 +struct ipipe_vm_notifier {
 +	void (*handler)(struct ipipe_vm_notifier *nfy);
@@ -2583,6 +2598,21 @@ index 0000000..1ae32a1
 +			__ipipe_notify_kevent(IPIPE_KEVT_SIGWAKE, p);	\
 +	} while (0)
 +
++struct ipipe_cpu_migration_data {
++	struct task_struct *task;
++	int dest_cpu;
++};
++
++#define __ipipe_report_setaffinity(__p, __dest_cpu)			\
++	do {								\
++		struct ipipe_cpu_migration_data d = {			\
++			.task = (__p),					\
++			.dest_cpu = (__dest_cpu),			\
++		};							\
++		if (ipipe_notifier_enabled_p(__p))			\
++			__ipipe_notify_kevent(IPIPE_KEVT_SETAFFINITY, &d); \
++	} while (0)
++
 +#define __ipipe_report_exit(p)						\
 +	do {								\
 +		if (ipipe_notifier_enabled_p(p))			\
@@ -2624,10 +2654,11 @@ index 0000000..1ae32a1
 +#define IPIPE_EVENT_SCHEDULE	IPIPE_FIRST_EVENT
 +#define IPIPE_EVENT_SIGWAKE	(IPIPE_FIRST_EVENT + 1)
 +#define IPIPE_EVENT_SETSCHED	(IPIPE_FIRST_EVENT + 2)
-+#define IPIPE_EVENT_EXIT	(IPIPE_FIRST_EVENT + 3)
-+#define IPIPE_EVENT_CLEANUP	(IPIPE_FIRST_EVENT + 4)
-+#define IPIPE_EVENT_HOSTRT	(IPIPE_FIRST_EVENT + 5)
-+#define IPIPE_EVENT_SYSCALL	(IPIPE_FIRST_EVENT + 6)
++#define IPIPE_EVENT_SETAFFINITY	(IPIPE_FIRST_EVENT + 3)
++#define IPIPE_EVENT_EXIT	(IPIPE_FIRST_EVENT + 4)
++#define IPIPE_EVENT_CLEANUP	(IPIPE_FIRST_EVENT + 5)
++#define IPIPE_EVENT_HOSTRT	(IPIPE_FIRST_EVENT + 6)
++#define IPIPE_EVENT_SYSCALL	(IPIPE_FIRST_EVENT + 7)
 +#define IPIPE_LAST_EVENT	IPIPE_EVENT_SYSCALL
 +#define IPIPE_NR_EVENTS		(IPIPE_LAST_EVENT + 1)
 +
@@ -2681,6 +2712,9 @@ index 0000000..1ae32a1
 +static inline void __ipipe_idle(void) { }
 +
 +static inline void __ipipe_report_sigwake(struct task_struct *p) { }
++
++static inline void __ipipe_report_setaffinity(struct task_struct *p,
++					      int dest_cpu) { }
 +
 +static inline void __ipipe_report_setsched(struct task_struct *p) { }
 +
@@ -3017,7 +3051,7 @@ index 0000000..fab8f45
 +#endif	/* !__LINUX_IPIPE_COMPAT_H */
 diff --git a/include/linux/ipipe_debug.h b/include/linux/ipipe_debug.h
 new file mode 100644
-index 0000000..9b5a4a3
+index 0000000..b6bf8c6
 --- /dev/null
 +++ b/include/linux/ipipe_debug.h
 @@ -0,0 +1,98 @@
@@ -3096,6 +3130,20 @@ index 0000000..9b5a4a3
 +
 +#endif	/* !CONFIG_IPIPE_DEBUG_CONTEXT */
 +
++#ifdef CONFIG_IPIPE_DEBUG
++
++#define ipipe_check_irqoff()					\
++	do {							\
++		if (WARN_ON_ONCE(!hard_irqs_disabled()))	\
++			hard_local_irq_disable();		\
++	} while (0)
++
++#else /* !CONFIG_IPIPE_DEBUG */
++
++static inline void ipipe_check_irqoff(void) { }
++
++#endif /* !CONFIG_IPIPE_DEBUG */
++
 +#ifdef CONFIG_IPIPE_DEBUG_INTERNAL
 +#define IPIPE_WARN(c)		WARN_ON(c)
 +#define IPIPE_WARN_ONCE(c)	WARN_ON_ONCE(c)
@@ -3103,20 +3151,6 @@ index 0000000..9b5a4a3
 +#define IPIPE_WARN(c)		do { (void)(c); } while (0)
 +#define IPIPE_WARN_ONCE(c)	do { (void)(c); } while (0)
 +#endif
-+
-+#ifdef CONFIG_IPIPE_DEBUG
-+
-+static inline void ipipe_check_irqoff(void)
-+{
-+	if (WARN_ON_ONCE(!hard_irqs_disabled()))
-+		hard_local_irq_disable();
-+}
-+
-+#else /* !CONFIG_IPIPE_DEBUG */
-+
-+static inline void ipipe_check_irqoff(void) { }
-+
-+#endif /* !CONFIG_IPIPE_DEBUG */
 +
 +#endif /* !__LINUX_IPIPE_DEBUG_H */
 diff --git a/include/linux/ipipe_domain.h b/include/linux/ipipe_domain.h
@@ -4525,18 +4559,6 @@ index a26e2fb..71348f2 100644
  #define arch_spin_is_contended(lock)	(((void)(lock), 0))
  
  #define arch_read_can_lock(lock)	(((void)(lock), 1))
-diff --git a/include/linux/time.h b/include/linux/time.h
-index b51e664..c7d91b9 100644
---- a/include/linux/time.h
-+++ b/include/linux/time.h
-@@ -151,6 +151,7 @@ struct timespec get_monotonic_coarse(void);
- void get_xtime_and_monotonic_and_sleep_offset(struct timespec *xtim,
- 				struct timespec *wtom, struct timespec *sleep);
- void timekeeping_inject_sleeptime(struct timespec *delta);
-+struct timespec get_wall_to_monotonic(void);
- 
- #define CURRENT_TIME		(current_kernel_time())
- #define CURRENT_TIME_SEC	((struct timespec) { get_seconds(), 0 })
 diff --git a/init/Kconfig b/init/Kconfig
 index d07dcf9..ea3d94c 100644
 --- a/init/Kconfig
@@ -5099,10 +5121,10 @@ index 0000000..1147bf4
 +}
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..3bc6ef5
+index 0000000..c4598ad
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1733 @@
+@@ -0,0 +1,1735 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -5167,7 +5189,7 @@ index 0000000..3bc6ef5
 +	.context_check = 1,
 +#endif
 +};
-+EXPORT_PER_CPU_SYMBOL_GPL(ipipe_percpu);
++EXPORT_PER_CPU_SYMBOL(ipipe_percpu);
 +
 +/* Up to 2k of pending work data per CPU. */
 +#define WORKBUF_SIZE 2048
@@ -5506,7 +5528,7 @@ index 0000000..3bc6ef5
 +
 +	hard_local_irq_enable();
 +}
-+EXPORT_SYMBOL_GPL(ipipe_unstall_root);
++EXPORT_SYMBOL(ipipe_unstall_root);
 +
 +void ipipe_restore_root(unsigned long x)
 +{
@@ -5517,7 +5539,7 @@ index 0000000..3bc6ef5
 +	else
 +		ipipe_unstall_root();
 +}
-+EXPORT_SYMBOL_GPL(ipipe_restore_root);
++EXPORT_SYMBOL(ipipe_restore_root);
 +
 +void __ipipe_restore_root_nosync(unsigned long x)
 +{
@@ -6207,6 +6229,8 @@ index 0000000..3bc6ef5
 +	__set_bit(IPIPE_STALL_FLAG, &p->status);
 +	ipipe_migration_hook(t);
 +	__clear_bit(IPIPE_STALL_FLAG, &p->status);
++	if (__ipipe_ipending_p(p))
++		__ipipe_sync_pipeline(p->domain);
 +}
 +
 +#endif /* !CONFIG_IPIPE_LEGACY */
@@ -6698,7 +6722,7 @@ index 0000000..3bc6ef5
 +	dump_stack();
 +	ipipe_trace_panic_dump();
 +}
-+EXPORT_SYMBOL_GPL(ipipe_root_only);
++EXPORT_SYMBOL(ipipe_root_only);
 +
 +#endif /* CONFIG_IPIPE_DEBUG_CONTEXT */
 +
@@ -6765,7 +6789,7 @@ index 0000000..3bc6ef5
 +	 */
 +	IPIPE_WARN_ONCE(!raw_irqs_disabled_flags(flags) && hard_irqs_disabled());
 +}
-+EXPORT_SYMBOL_GPL(__ipipe_spin_unlock_debug);
++EXPORT_SYMBOL(__ipipe_spin_unlock_debug);
 +
 +#endif /* CONFIG_IPIPE_DEBUG_INTERNAL && CONFIG_SMP */
 +
@@ -6838,10 +6862,10 @@ index 0000000..3bc6ef5
 +EXPORT_SYMBOL_GPL(__ipipe_post_work_root);
 diff --git a/kernel/ipipe/timer.c b/kernel/ipipe/timer.c
 new file mode 100644
-index 0000000..4281cb1
+index 0000000..953c4e4
 --- /dev/null
 +++ b/kernel/ipipe/timer.c
-@@ -0,0 +1,483 @@
+@@ -0,0 +1,488 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/timer.c
 + *
@@ -7062,6 +7086,11 @@ index 0000000..4281cb1
 +	unsigned long flags;
 +	unsigned cpu;
 +	cpumask_t fixup;
++
++	if (!__ipipe_hrclock_ok()) {
++		printk("I-pipe: high-resolution clock not working\n");
++		return -ENODEV;
++	}
 +
 +	if (__ipipe_hrclock_freq > UINT_MAX) {
 +		tmp = __ipipe_hrclock_freq;
@@ -7327,10 +7356,10 @@ index 0000000..4281cb1
 +#endif /* CONFIG_IPIPE_HAVE_HOSTRT */
 diff --git a/kernel/ipipe/tracer.c b/kernel/ipipe/tracer.c
 new file mode 100644
-index 0000000..1d9997a
+index 0000000..d93064f
 --- /dev/null
 +++ b/kernel/ipipe/tracer.c
-@@ -0,0 +1,1442 @@
+@@ -0,0 +1,1447 @@
 +/* -*- linux-c -*-
 + * kernel/ipipe/tracer.c
 + *
@@ -8024,7 +8053,7 @@ index 0000000..1d9997a
 +
 +			switch (point->type & IPIPE_TYPE_MASK) {
 +				case IPIPE_TRACE_FUNC:
-+					printk("	   ");
++					printk("           ");
 +					break;
 +
 +				case IPIPE_TRACE_PID:
@@ -8698,7 +8727,12 @@ index 0000000..1d9997a
 +	int i;
 +#ifdef CONFIG_IPIPE_TRACE_VMALLOC
 +	int cpu, path;
++#endif /* CONFIG_IPIPE_TRACE_VMALLOC */
 +
++	if (!__ipipe_hrclock_ok())
++		return;
++
++#ifdef CONFIG_IPIPE_TRACE_VMALLOC
 +	for_each_possible_cpu(cpu) {
 +		struct ipipe_trace_path *tp_buf;
 +
@@ -9425,7 +9459,7 @@ index 146827f..8927a03 100644
  
  #ifdef CONFIG_A11Y_BRAILLE_CONSOLE
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 9f81a3a..f8c95cf 100644
+index 9f81a3a..d596d24 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
 @@ -1499,7 +1499,9 @@ void scheduler_ipi(void)
@@ -9596,7 +9630,22 @@ index 9f81a3a..f8c95cf 100644
  
  	/*
  	 * The idle tasks have their own, simple scheduling class:
-@@ -8559,3 +8588,40 @@ struct cgroup_subsys cpuacct_subsys = {
+@@ -5201,10 +5230,13 @@ int set_cpus_allowed_ptr(struct task_struct *p, const struct cpumask *new_mask)
+ 	do_set_cpus_allowed(p, new_mask);
+ 
+ 	/* Can the task run on the task's current CPU? If so, we're done */
+-	if (cpumask_test_cpu(task_cpu(p), new_mask))
++	if (cpumask_test_cpu(task_cpu(p), new_mask)) {
++		__ipipe_report_setaffinity(p, task_cpu(p));
+ 		goto out;
++	}
+ 
+ 	dest_cpu = cpumask_any_and(cpu_active_mask, new_mask);
++	__ipipe_report_setaffinity(p, dest_cpu);
+ 	if (p->on_rq) {
+ 		struct migration_arg arg = { p, dest_cpu };
+ 		/* Need help from migration thread: drop lock and wait. */
+@@ -8559,3 +8591,40 @@ struct cgroup_subsys cpuacct_subsys = {
  	.base_cftypes = files,
  };
  #endif	/* CONFIG_CGROUP_CPUACCT */
@@ -9839,20 +9888,6 @@ index a057ed4..32138a1 100644
  		profile_tick(CPU_PROFILING);
  	}
  
-diff --git a/kernel/time/timekeeping.c b/kernel/time/timekeeping.c
-index 63c88c1..4779fb3 100644
---- a/kernel/time/timekeeping.c
-+++ b/kernel/time/timekeeping.c
-@@ -1362,3 +1362,9 @@ void xtime_update(unsigned long ticks)
- 	do_timer(ticks);
- 	write_sequnlock(&xtime_lock);
- }
-+
-+struct timespec get_wall_to_monotonic(void)
-+{
-+	/* xtime_lock must be held. */
-+	return timekeeper.wall_to_monotonic;
-+}
 diff --git a/kernel/timer.c b/kernel/timer.c
 index 6ec7e7e..c3ad7cf 100644
 --- a/kernel/timer.c
