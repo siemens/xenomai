@@ -322,7 +322,7 @@ static inline int cobalt_cond_timedwait_epilogue(xnthread_t *cur,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	err = cobalt_mutex_acquire_unchecked(cur, mutex, 0, XN_INFINITE);
+	err = cobalt_mutex_acquire_unchecked(cur, mutex, 0, NULL);
 	if (err == -EINTR)
 		goto unlock_and_return;
 

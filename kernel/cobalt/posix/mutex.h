@@ -77,7 +77,7 @@ int cobalt_mutex_unlock(struct __shadow_mutex __user *u_mx);
 int cobalt_mutex_acquire_unchecked(struct xnthread *cur,
 				   struct cobalt_mutex *mutex,
 				   int timed,
-				   xnticks_t abs_to);
+				   const struct timespec __user *u_ts);
 
 int cobalt_mutex_release(struct xnthread *cur,
 			 struct cobalt_mutex *mutex);
