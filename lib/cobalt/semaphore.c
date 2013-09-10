@@ -52,11 +52,11 @@ COBALT_IMPL(int, sem_destroy, (sem_t *sem))
 		return -1;
 	}
 
-	err = -XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_sem_destroy, _sem);
+	err = XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_sem_destroy, _sem);
 	if (err >= 0)
 		return err;
 
-	errno = err;
+	errno = -err;
 	return -1;
 }
 
