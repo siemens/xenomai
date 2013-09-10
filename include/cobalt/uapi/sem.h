@@ -32,11 +32,12 @@ union cobalt_sem_union {
 };
 
 /* For Cobalt's sem_init_np() extension. */
-#define SEM_FIFO     0x1
-#define SEM_PULSE    0x2
-#define SEM_PSHARED  0x4
-#define SEM_REPORT   0x8
-#define SEM_WARNDEL  0x10
-#define SEM_RAWCLOCK 0x20
+#define SEM_FIFO       0x1
+#define SEM_PULSE      0x2
+#define SEM_PSHARED    0x4
+#define SEM_REPORT     0x8
+#define SEM_WARNDEL    0x10
+#define SEM_RAWCLOCK   0x20
+#define SEM_NOBUSYDEL  0x40
 
 #endif /* !_COBALT_UAPI_SEM_H */

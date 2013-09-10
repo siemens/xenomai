@@ -191,15 +191,20 @@ err_lock_put:
  *
  * @param sm the semaphore to be destroyed.
  *
- * @retval always 0 on success if SEM_WARNDEL was not mentioned via
- * sem_init_np().  If SEM_WARNDEL was mentioned, then a strictly
+ * @retval always 0 on success.  If SEM_WARNDEL was mentioned in
+ * sem_init_np(), the semaphore is deleted as requested and a strictly
  * positive value is returned to warn the caller if threads were
- * pending on the semaphore, or zero otherwise.
+ * pending on it, otherwise zero is returned. If SEM_NOBUSYDEL was
+ * mentioned in sem_init_np(), sem_destroy() may succeed only if no
+ * thread is waiting on the semaphore to delete, otherwise -EBUSY is
+ * returned.
  *
  * @retval -1 with @a errno set if:
  * - EINVAL, the semaphore @a sm is invalid or a named semaphore;
  * - EPERM, the semaphore @a sm is not process-shared and does not belong to the
  *   current process.
+ * - EBUSY, a thread is currently waiting on the semaphore @a sm with
+ * SEM_NOBUSYDEL set.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_destroy.html">
@@ -222,6 +227,12 @@ static int sem_destroy(struct __shadow_sem *sm)
 	sem = sm->sem;
 	if (sem_kqueue(sem) != sem->owningq) {
 		ret = -EPERM;
+		goto error;
+	}
+
+	if ((sem->flags & SEM_NOBUSYDEL) != 0 &&
+	    xnsynch_pended_p(&sem->synchbase)) {
+		ret = -EBUSY;
 		goto error;
 	}
 
@@ -1008,8 +1019,8 @@ int cobalt_sem_init_np(struct __shadow_sem __user *u_sem,
 	if (__xn_safe_copy_from_user(&sm, u_sem, sizeof(sm)))
 		return -EFAULT;
 
-	if (flags & ~(SEM_FIFO|SEM_PULSE|SEM_PSHARED|\
-		      SEM_REPORT|SEM_WARNDEL|SEM_RAWCLOCK))
+	if (flags & ~(SEM_FIFO|SEM_PULSE|SEM_PSHARED|SEM_REPORT|\
+		      SEM_WARNDEL|SEM_RAWCLOCK|SEM_NOBUSYDEL))
 		return -EINVAL;
 
 	err = do_sem_init(&sm, flags, value);
