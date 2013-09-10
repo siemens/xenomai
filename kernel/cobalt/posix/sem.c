@@ -540,32 +540,58 @@ static int sem_trywait(struct cobalt_sem *sem)
 }
 
 static inline int
-sem_timedwait_internal(struct cobalt_sem *sem, int timed, xnticks_t to)
+sem_timedwait_internal(struct cobalt_sem *sem, int timed,
+		       const struct timespec __user *u_ts)
 {
+	struct timespec ts;
 	xntmode_t tmode;
 	int ret, info;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
 
 	ret = sem_trywait_internal(sem);
-	if (ret != -EAGAIN)
+	if (ret != -EAGAIN) {
+		xnlock_put_irqrestore(&nklock, s);
 		return ret;
-
-	sem->nwaiters++;
-
-	if (timed) {
-		tmode = sem->flags & SEM_RAWCLOCK ? XN_ABSOLUTE : XN_REALTIME;
-		info = xnsynch_sleep_on(&sem->synchbase, to, tmode);
-	} else
-		info = xnsynch_sleep_on(&sem->synchbase, XN_INFINITE, XN_RELATIVE);
-
-	if (info & XNRMID)
-		return -EINVAL;
-
-	if (info & (XNBREAK|XNTIMEO)) {
-		sem->nwaiters--;
-		return (info & XNBREAK) ? -EINTR : -ETIMEDOUT;
 	}
 
-	return 0;
+	if (timed) {
+		xnlock_put_irqrestore(&nklock, s);
+
+		if (u_ts == NULL ||
+		    __xn_safe_copy_from_user(&ts, u_ts, sizeof(ts)))
+			return -EFAULT;
+
+		if (ts.tv_nsec >= ONE_BILLION)
+			return -EINVAL;
+
+		xnlock_get_irqsave(&nklock, s);
+
+		if (sem->value > 0) {
+			ret = 0;
+			--sem->value;
+			goto out;
+		}
+		sem->nwaiters++;
+		tmode = sem->flags & SEM_RAWCLOCK ? XN_ABSOLUTE : XN_REALTIME;
+		info = xnsynch_sleep_on(&sem->synchbase, ts2ns(&ts) + 1, tmode);
+	} else {
+		sem->nwaiters++;
+		info = xnsynch_sleep_on(&sem->synchbase, XN_INFINITE, XN_RELATIVE);
+	}
+
+	ret = 0;
+	if (info & XNRMID)
+		ret = -EINVAL;
+	else if (info & (XNBREAK|XNTIMEO)) {
+		sem->nwaiters--;
+		ret = (info & XNBREAK) ? -EINTR : -ETIMEDOUT;
+	}
+out:
+	xnlock_put_irqrestore(&nklock, s);
+
+	return ret;
 }
 
 /**
@@ -603,14 +629,7 @@ sem_timedwait_internal(struct cobalt_sem *sem, int timed, xnticks_t to)
  */
 static int sem_wait(struct cobalt_sem *sem)
 {
-	spl_t s;
-	int err;
-
-	xnlock_get_irqsave(&nklock, s);
-	err = sem_timedwait_internal(sem, 0, XN_INFINITE);
-	xnlock_put_irqrestore(&nklock, s);
-
-	return err;
+	return sem_timedwait_internal(sem, 0, NULL);
 }
 
 /**
@@ -647,19 +666,10 @@ static int sem_wait(struct cobalt_sem *sem)
  * Specification.</a>
  *
  */
-static int sem_timedwait(struct cobalt_sem *sem, const struct timespec *abs_timeout)
+static int sem_timedwait(struct cobalt_sem *sem,
+			 const struct timespec __user *abs_timeout)
 {
-	spl_t s;
-	int err;
-
-	if (abs_timeout->tv_nsec > ONE_BILLION)
-		return -EINVAL;
-
-	xnlock_get_irqsave(&nklock, s);
-	err = sem_timedwait_internal(sem, 1, ts2ns(abs_timeout) + 1);
-	xnlock_put_irqrestore(&nklock, s);
-
-	return err;
+	return sem_timedwait_internal(sem, 1, abs_timeout);
 }
 
 int sem_post_inner(struct cobalt_sem *sem, struct cobalt_kqueues *ownq, int bcast)
@@ -818,15 +828,11 @@ int cobalt_sem_wait(struct __shadow_sem __user *u_sem)
 int cobalt_sem_timedwait(struct __shadow_sem __user *u_sem,
 			 struct timespec __user *u_ts)
 {
-	struct timespec ts;
 	struct cobalt_sem *sm;
 
 	__xn_get_user(sm, &u_sem->sem);
 
-	if (__xn_safe_copy_from_user(&ts, u_ts, sizeof(ts)))
-		return -EFAULT;
-
-	return sem_timedwait(sm, &ts);
+	return sem_timedwait(sm, u_ts);
 }
 
 int cobalt_sem_trywait(struct __shadow_sem __user *u_sem)
