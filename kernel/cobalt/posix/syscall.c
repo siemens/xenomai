@@ -58,6 +58,7 @@ static struct xnshadow_ppd *cobalt_process_attach(void)
 	INIT_LIST_HEAD(&cc->kqueues.eventq);
 	INIT_LIST_HEAD(&cc->uqds);
 	INIT_LIST_HEAD(&cc->usems);
+	INIT_LIST_HEAD(&cc->sigwaiters);
 
 	return &cc->ppd;
 }
@@ -177,6 +178,7 @@ struct xnpersonality cobalt_personality = {
 	.ops = {
 		.attach_process = cobalt_process_attach,
 		.detach_process = cobalt_process_detach,
+		.map_thread = cobalt_thread_map,
 		.exit_thread = cobalt_thread_exit,
 		.finalize_thread = cobalt_thread_finalize,
 	},

@@ -101,6 +101,7 @@ struct cobalt_thread {
 	unsigned int magic;
 	struct xnthread threadbase;
 	struct cobalt_extref extref;
+	struct cobalt_process *process;
 
 	/** cobalt_threadq */
 	struct list_head link;
@@ -113,6 +114,7 @@ struct cobalt_thread {
 	sigset_t sigpending;
 	struct list_head sigqueues[_NSIG]; /* cobalt_sigpending */
 	struct xnsynch sigwait;
+	struct list_head signext;
 
 	/* Cached value for current policy (user side). */
 	int sched_u_policy;
@@ -188,6 +190,8 @@ int cobalt_sched_setconfig_np(int cpu,
 			      int policy,
 			      union sched_config __user *u_config,
 			      size_t len);
+
+struct xnpersonality *cobalt_thread_map(struct xnthread *curr);
 
 struct xnpersonality *cobalt_thread_exit(struct xnthread *curr);
 

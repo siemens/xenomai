@@ -36,6 +36,7 @@ struct cobalt_process {
 	struct list_head uqds;
 	struct list_head usems;
 	struct xnshadow_ppd ppd;
+	struct list_head sigwaiters;
 };
 
 extern struct cobalt_kqueues cobalt_global_kqueues;

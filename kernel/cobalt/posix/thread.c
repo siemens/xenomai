@@ -210,6 +210,18 @@ struct cobalt_thread *cobalt_thread_find_local(pid_t pid) /* nklocked, IRQs off 
 }
 EXPORT_SYMBOL_GPL(cobalt_thread_find_local);
 
+struct xnpersonality *cobalt_thread_map(struct xnthread *curr)
+{
+	struct cobalt_thread *thread;
+
+	thread = container_of(curr, struct cobalt_thread, threadbase);
+	thread->process = cobalt_process_context();
+	XENO_BUGON(NUCLEUS, thread->process == NULL);
+
+	/* We don't stack over any personality, no chaining. */
+	return NULL;
+}
+
 struct xnpersonality *cobalt_thread_exit(struct xnthread *curr)
 {
 	struct cobalt_thread *thread;
@@ -229,7 +241,6 @@ struct xnpersonality *cobalt_thread_exit(struct xnthread *curr)
 	xnsynch_destroy(&thread->monitor_synch);
 	xnsynch_destroy(&thread->sigwait);
 
-	/* We don't stack over any personality, no chaining. */
 	return NULL;
 }
 
@@ -916,9 +927,10 @@ fail:
 	return ret;
 }
 
-struct cobalt_thread *cobalt_thread_shadow(struct task_struct *p,
-			       struct cobalt_local_hkey *hkey,
-			       unsigned long __user *u_window_offset)
+struct cobalt_thread *
+cobalt_thread_shadow(struct task_struct *p,
+		     struct cobalt_local_hkey *hkey,
+		     unsigned long __user *u_window_offset)
 {
 	struct cobalt_thread *thread = NULL;
 	pthread_attr_t attr;
@@ -1074,7 +1086,7 @@ int cobalt_thread_kill(unsigned long pth, int sig)
 	if (thread == NULL)
 		ret = -ESRCH;
 	else
-		ret = __cobalt_kill(thread, sig);
+		ret = __cobalt_kill(thread, sig, 0);
 
 	xnlock_put_irqrestore(&nklock, s);
 

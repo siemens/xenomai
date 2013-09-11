@@ -39,8 +39,9 @@ static LIST_HEAD(sigpending_pool);
 			 (_NSIG + (SIGRTMAX - SIGRTMIN) * 2))
 
 static int cobalt_signal_deliver(struct cobalt_thread *thread,
-				 struct cobalt_sigpending *sigp)
-{
+				 struct cobalt_sigpending *sigp,
+				 int group)
+{				/* nklocked, IRQs off */
 	struct cobalt_sigwait_context *swc;
 	struct xnthread_wait_context *wc;
 	int sig, ret;
@@ -48,18 +49,39 @@ static int cobalt_signal_deliver(struct cobalt_thread *thread,
 	sig = sigp->si.si_signo;
 	XENO_BUGON(COBALT, sig < 1 || sig > _NSIG);
 
-	if (!xnsynch_pended_p(&thread->sigwait))
+	/*
+	 * Attempt to deliver the signal immediately to the initial
+	 * target that waits for it.
+	 */
+	if (xnsynch_pended_p(&thread->sigwait)) {
+		wc = xnthread_get_wait_context(&thread->threadbase);
+		swc = container_of(wc, struct cobalt_sigwait_context, wc);
+		if (sigismember(swc->set, sig))
+			goto deliver;
+	}
+
+	/*
+	 * If that does not work out and we are sending to a thread
+	 * group, try to deliver to any thread from the same process
+	 * waiting for that signal.
+	 */
+	if (!group || list_empty(&thread->process->sigwaiters))
 		return 0;
 
-	wc = xnthread_get_wait_context(&thread->threadbase);
-	swc = container_of(wc, struct cobalt_sigwait_context, wc);
-	if (!sigismember(swc->set, sig))
-		return 0;
+	list_for_each_entry(thread, &thread->process->sigwaiters, signext) {
+		wc = xnthread_get_wait_context(&thread->threadbase);
+		swc = container_of(wc, struct cobalt_sigwait_context, wc);
+		if (sigismember(swc->set, sig))
+			goto deliver;
+	}
 
+	return 0;
+deliver:
 	cobalt_copy_siginfo(sigp->si.si_code, swc->si, &sigp->si);
 	cobalt_call_extension(signal_deliver, &thread->extref,
 			      ret, swc->si, sigp);
 	xnsynch_wakeup_one_sleeper(&thread->sigwait);
+	list_del(&thread->signext);
 
 	/*
 	 * This is an immediate delivery bypassing any queuing, so we
@@ -74,13 +96,14 @@ static int cobalt_signal_deliver(struct cobalt_thread *thread,
 }
 
 int cobalt_signal_send(struct cobalt_thread *thread,
-		       struct cobalt_sigpending *sigp)
+		       struct cobalt_sigpending *sigp,
+		       int group)
 {				/* nklocked, IRQs off */
 	struct list_head *sigq;
 	int sig, ret;
 
 	/* Can we deliver this signal immediately? */
-	ret = cobalt_signal_deliver(thread, sigp);
+	ret = cobalt_signal_deliver(thread, sigp, group);
 	if (ret)
 		return 0;	/* Yep, done. */
 
@@ -119,7 +142,7 @@ int cobalt_signal_send_pid(pid_t pid, struct cobalt_sigpending *sigp)
 
 	thread = cobalt_thread_find(pid);
 	if (thread)
-		return cobalt_signal_send(thread, sigp);
+		return cobalt_signal_send(thread, sigp, 0);
 
 	return -ESRCH;
 }
@@ -226,9 +249,11 @@ wait:
 	swc.set = set;
 	swc.si = &si;
 	xnthread_prepare_wait(&swc.wc);
+	list_add_tail(&curr->signext, &curr->process->sigwaiters);
 	ret = xnsynch_sleep_on(&curr->sigwait, timeout, XN_RELATIVE);
 	xnthread_finish_wait(&swc.wc, NULL);
 	if (ret) {
+		list_del(&curr->signext);
 		ret = ret & XNBREAK ? -EINTR : -EAGAIN;
 		goto fail;
 	}
@@ -383,7 +408,7 @@ int cobalt_sigpending(sigset_t __user *u_set)
 	return 0;
 }
 
-int __cobalt_kill(struct cobalt_thread *thread, int sig) /* nklocked, IRQs off */
+int __cobalt_kill(struct cobalt_thread *thread, int sig, int group) /* nklocked, IRQs off */
 {
 	struct cobalt_sigpending *sigp;
 	int ret = 0;
@@ -430,7 +455,7 @@ int __cobalt_kill(struct cobalt_thread *thread, int sig) /* nklocked, IRQs off *
 			sigp->si.si_code = SI_USER;
 			sigp->si.si_pid = current->pid;
 			sigp->si.si_uid = current_uid();
-			cobalt_signal_send(thread, sigp);
+			cobalt_signal_send(thread, sigp, group);
 		}
 	resched:
 		xnsched_run();
@@ -454,7 +479,7 @@ int cobalt_kill(pid_t pid, int sig)
 	if (thread == NULL)
 		ret = -ESRCH;
 	else
-		ret = __cobalt_kill(thread, sig);
+		ret = __cobalt_kill(thread, sig, 1);
 
 	xnlock_put_irqrestore(&nklock, s);
 

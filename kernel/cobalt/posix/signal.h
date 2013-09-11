@@ -54,7 +54,8 @@ void cobalt_copy_siginfo(int code,
 }
 
 int cobalt_signal_send(struct cobalt_thread *thread,
-		       struct cobalt_sigpending *sigp);
+		       struct cobalt_sigpending *sigp,
+		       int group);
 
 int cobalt_signal_send_pid(pid_t pid,
 			   struct cobalt_sigpending *sigp);
@@ -77,7 +78,8 @@ int cobalt_sigwaitinfo(const sigset_t __user *u_set,
 
 int cobalt_sigpending(sigset_t __user *u_set);
 
-int __cobalt_kill(struct cobalt_thread *thread, int sig);
+int __cobalt_kill(struct cobalt_thread *thread,
+		  int sig, int group);
 
 int cobalt_kill(pid_t pid, int sig);
 

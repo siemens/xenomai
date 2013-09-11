@@ -623,7 +623,7 @@ cobalt_mq_finish_send(mqd_t fd, cobalt_mq_t *mq, struct cobalt_msg *msg)
 		sigp = cobalt_signal_alloc();
 		if (sigp) {
 			cobalt_copy_siginfo(SI_MESGQ, &sigp->si, &mq->si);
-			cobalt_signal_send(mq->target, sigp);
+			cobalt_signal_send(mq->target, sigp, 0);
 			resched = 1;
 		}
 		mq->target = NULL;
