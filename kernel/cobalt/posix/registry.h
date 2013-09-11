@@ -76,7 +76,7 @@ int cobalt_desc_create(cobalt_desc_t **descp, cobalt_node_t *node, long flags);
 
 int cobalt_desc_get(cobalt_desc_t **descp, int fd, unsigned magic);
 
-int cobalt_desc_destroy(cobalt_desc_t *desc);
+void cobalt_desc_destroy(cobalt_desc_t *desc);
 
 #define cobalt_desc_setflags(desc, fl) ((desc)->flags = (fl))
 

@@ -241,7 +241,7 @@ int cobalt_desc_create(cobalt_desc_t ** descp, cobalt_node_t * node, long flags)
 	return 0;
 }
 
-int cobalt_desc_destroy(cobalt_desc_t * desc)
+void cobalt_desc_destroy(cobalt_desc_t *desc)
 {
 	spl_t s;
 
@@ -249,7 +249,6 @@ int cobalt_desc_destroy(cobalt_desc_t * desc)
 	cobalt_reg_fd_put(desc->fd);
 	xnlock_put_irqrestore(&nklock, s);
 	xnfree(desc);
-	return 0;
 }
 
 int cobalt_desc_get(cobalt_desc_t ** descp, int fd, unsigned magic)
