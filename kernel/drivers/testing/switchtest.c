@@ -392,9 +392,9 @@ struct taskarg {
 static void rtswitch_ktask(void *cookie)
 {
 	struct taskarg *arg = (struct taskarg *) cookie;
+	unsigned int fp_val, expected, to, i = 0;
 	rtswitch_context_t *ctx = arg->ctx;
 	rtswitch_task_t *task = arg->task;
-	unsigned to, i = 0;
 
 	to = task->base.index;
 
@@ -423,8 +423,6 @@ static void rtswitch_ktask(void *cookie)
 		}
 
 		if (task->base.flags & RTTST_SWTEST_USE_FPU) {
-			unsigned fp_val, expected;
-
 			expected = task->base.index + i * 1000;
 			fp_val = fp_regs_check(fp_features, expected, report);
 
@@ -434,6 +432,9 @@ static void rtswitch_ktask(void *cookie)
 				handle_ktask_error(ctx, fp_val);
 			}
 		}
+
+		if (rtdm_task_should_stop())
+			break;
 
 		if (++i == 4000000)
 			i = 0;

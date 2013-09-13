@@ -25,6 +25,7 @@
 #include <cobalt/kernel/list.h>
 #include <cobalt/kernel/assert.h>
 #include <cobalt/kernel/timer.h>
+#include <cobalt/uapi/kernel/synch.h>
 
 #define XNSYNCH_CLAIMED 0x10	/* Claimed by other thread(s) w/ PIP */
 

@@ -28,8 +28,8 @@
 #include <cobalt/kernel/schedparam.h>
 #include <cobalt/kernel/trace.h>
 #include <cobalt/kernel/shadow.h>
+#include <cobalt/kernel/synch.h>
 #include <cobalt/uapi/kernel/thread.h>
-#include <cobalt/uapi/kernel/synch.h>
 #include <asm/xenomai/machine.h>
 #include <asm/xenomai/thread.h>
 
@@ -37,7 +37,6 @@
 #define XNTHREAD_MODE_BITS    (XNLOCK|XNRRB|XNTRAPSW)
 
 struct xnthread;
-struct xnsynch;
 struct xnsched;
 struct xnselector;
 struct xnsched_class;
@@ -58,7 +57,7 @@ struct xnthread_start_attr {
 };
 
 struct xnthread_wait_context {
-	/* anchor object */
+	int posted;
 };
 
 typedef struct xnthread {
@@ -169,6 +168,8 @@ typedef struct xnthread {
 	const char *exe_path;	/* Executable path */
 	u32 proghash;		/* Hash value for exe_path */
 #endif
+	/** Exit event for joining the thread. */
+	struct xnsynch join_synch;
 } xnthread_t;
 
 #define xnthread_name(thread)               ((thread)->name)
@@ -344,6 +345,18 @@ static inline void xnthread_test_cancel(void)
 		__xnthread_test_cancel(curr);
 }
 
+static inline
+void xnthread_complete_wait(struct xnthread_wait_context *wc)
+{
+	wc->posted = 1;
+}
+
+static inline
+int xnthread_wait_complete_p(struct xnthread_wait_context *wc)
+{
+	return wc->posted;
+}
+
 #ifdef CONFIG_XENO_HW_FPU
 void xnthread_switch_fpu(struct xnsched *sched);
 #else
@@ -364,9 +377,6 @@ xnticks_t xnthread_get_timeout(struct xnthread *thread, xnticks_t ns);
 xnticks_t xnthread_get_period(struct xnthread *thread);
 
 void xnthread_prepare_wait(struct xnthread_wait_context *wc);
-
-void xnthread_finish_wait(struct xnthread_wait_context *wc,
-			  void (*cleanup)(struct xnthread_wait_context *wc));
 
 int xnthread_init(struct xnthread *thread,
 		  const struct xnthread_init_attr *attr,
@@ -403,7 +413,7 @@ int xnthread_set_slice(struct xnthread *thread,
 
 void xnthread_cancel(struct xnthread *thread);
 
-void xnthread_join(struct xnthread *thread);
+int xnthread_join(struct xnthread *thread);
 
 #ifdef CONFIG_SMP
 int xnthread_migrate(int cpu);

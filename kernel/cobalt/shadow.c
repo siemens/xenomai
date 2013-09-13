@@ -246,7 +246,7 @@ static void request_syscall_restart(struct xnthread *thread,
 			__xn_error_return(regs,
 					  (sysflags & __xn_exec_norestart) ?
 					  -EINTR : -ERESTARTSYS);
-			notify = !xnthread_test_state(thread, XNDEBUG|XNCANCELD);
+			notify = !xnthread_test_state(thread, XNDEBUG);
 		}
 		xnthread_clear_info(thread, XNKICKED);
 	}
@@ -705,9 +705,33 @@ static int force_wakeup(struct xnthread *thread) /* nklock locked, irqs off */
 		ret = 1;
 	}
 
+	/*
+	 * CAUTION: we must NOT raise XNBREAK when clearing a forcible
+	 * block state, such as XNSUSP, XNHELD. The caller of
+	 * xnthread_suspend() we unblock shall proceed as for a normal
+	 * return, until it traverses a cancellation point if
+	 * XNCANCELD was raised earlier, or calls xnthread_suspend()
+	 * which will detect XNKICKED and act accordingly.
+	 *
+	 * Rationale: callers of xnthread_suspend() may assume that
+	 * receiving XNBREAK means that the process that motivated the
+	 * blocking did not go to completion. E.g. the wait context
+	 * (see. xnthread_prepare_wait()) was NOT posted before
+	 * xnsynch_sleep_on() returned, leaving no useful data there.
+	 * Therefore, in case only XNSUSP remains set for the thread
+	 * on entry to force_wakeup(), after XNPEND was lifted earlier
+	 * when the wait went to successful completion (i.e. no
+	 * timeout), then we want the kicked thread to know that it
+	 * did receive the requested resource, not finding XNBREAK in
+	 * its state word.
+	 *
+	 * Callers of xnthread_suspend() may inquire for XNKICKED to
+	 * detect forcible unblocks from XNSUSP, XNHELD, if they
+	 * should act upon this case specifically.
+	 */
 	if (xnthread_test_state(thread, XNSUSP|XNHELD)) {
 		xnthread_resume(thread, XNSUSP|XNHELD);
-		xnthread_set_info(thread, XNKICKED|XNBREAK);
+		xnthread_set_info(thread, XNKICKED);
 	}
 
 	return ret;
@@ -745,13 +769,15 @@ void __xnshadow_kick(struct xnthread *thread) /* nklock locked, irqs off */
 	xnthread_set_info(thread, XNKICKED);
 
 	/*
-	 * No need to run a mayday trap if the current thread kicks
-	 * itself out of primary mode: it will relax on its way back
-	 * to userland via the current syscall epilogue. Otherwise, we
-	 * want that thread to enter the mayday trap asap, to call us
-	 * back for relaxing.
+	 * We may send mayday signals to userland threads only.
+	 * However, no need to run a mayday trap if the current thread
+	 * kicks itself out of primary mode: it will relax on its way
+	 * back to userland via the current syscall
+	 * epilogue. Otherwise, we want that thread to enter the
+	 * mayday trap asap, to call us back for relaxing.
 	 */
-	if (thread != xnsched_current_thread())
+	if (thread != xnsched_current_thread() &&
+	    xnthread_test_state(thread, XNUSER))
 		xnarch_call_mayday(p);
 }
 
@@ -1124,6 +1150,8 @@ int xnshadow_map_kernel(struct xnthread *thread, struct completion *done)
 				 XN_INFINITE, XN_RELATIVE, NULL);
 	xnlock_put_irqrestore(&nklock, s);
 
+	xnthread_test_cancel();
+
 	xntrace_pid(xnthread_host_pid(thread),
 		    xnthread_current_priority(thread));
 
@@ -1238,6 +1266,9 @@ static unsigned long map_mayday_page(struct task_struct *p)
 void xnshadow_call_mayday(struct xnthread *thread, int sigtype)
 {
 	struct task_struct *p = xnthread_host_task(thread);
+
+	/* Mayday traps are available to userland threads only. */
+	XENO_BUGON(NUCLEUS, !xnthread_test_state(thread, XNUSER));
 	xnthread_set_info(thread, XNKICKED);
 	xnshadow_send_sig(thread, SIGDEBUG, sigtype);
 	xnarch_call_mayday(p);
@@ -2254,6 +2285,9 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 		unlock_timers();
 
 	xnthread_run_handler(thread, exit_thread);
+	/* Waiters will receive EIDRM */
+	xnsynch_destroy(&thread->join_synch);
+	xnsched_run();
 
 	if (xnthread_test_state(thread, XNUSER)) {
 		xnlock_get_irqsave(&nklock, s);

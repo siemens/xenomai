@@ -80,6 +80,7 @@ deliver:
 	cobalt_copy_siginfo(sigp->si.si_code, swc->si, &sigp->si);
 	cobalt_call_extension(signal_deliver, &thread->extref,
 			      ret, swc->si, sigp);
+	xnthread_complete_wait(&swc->wc);
 	xnsynch_wakeup_one_sleeper(&thread->sigwait);
 	list_del(&thread->signext);
 
@@ -255,7 +256,6 @@ wait:
 	xnthread_prepare_wait(&swc.wc);
 	list_add_tail(&curr->signext, &curr->process->sigwaiters);
 	ret = xnsynch_sleep_on(&curr->sigwait, timeout, XN_RELATIVE);
-	xnthread_finish_wait(&swc.wc, NULL);
 	if (ret) {
 		list_del(&curr->signext);
 		ret = ret & XNBREAK ? -EINTR : -EAGAIN;

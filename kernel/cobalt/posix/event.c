@@ -164,8 +164,6 @@ int cobalt_event_wait(struct cobalt_event_shadow __user *u_evtsh,
 	xnthread_prepare_wait(&ewc.wc);
 	datp->nwaiters++;
 	info = xnsynch_sleep_on(&event->synch, timeout, tmode);
-	xnthread_finish_wait(&ewc.wc, NULL);
-
 	if (info & XNRMID) {
 		ret = -EIDRM;
 		goto out;

@@ -55,8 +55,6 @@ static inline struct xnthread *xnshadow_current(void)
 	return ipipe_current_threadinfo()->thread;
 }
 
-#define xnshadow_current_p(thread) (xnshadow_current() == (thread))
-
 static inline struct xnthread *xnshadow_thread(struct task_struct *p)
 {
 	return ipipe_task_threadinfo(p)->thread;

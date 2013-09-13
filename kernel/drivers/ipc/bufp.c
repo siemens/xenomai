@@ -112,21 +112,6 @@ static struct xnpnode_link __bufp_pnode = {
 
 #endif /* !CONFIG_XENO_OPT_VFILE */
 
-static void __bufp_cleanup_handler(struct rtipc_wait_context *wc)
-{
-	struct bufp_wait_context *bufwc;
-	/*
-	 * Cancellation request is pending - release the lock we hold,
-	 * we'll be vanishing away soon. Granted, we could avoid doing
-	 * that, since we know that this particular lock is Xenomai's
-	 * nklock, which may be held across rescheduling calls.
-	 * Anyway, this illustrates how to use the cleanup handler of
-	 * a wait context.
-	 */
-	bufwc = container_of(wc, struct bufp_wait_context, wc);
-	rtipc_leave_atomic(bufwc->lockctx);
-}
-
 static int bufp_socket(struct rtipc_private *priv,
 		       rtdm_user_info_t *user_info)
 {
@@ -295,12 +280,9 @@ redo:
 		 */
 		ret = rtdm_event_timedwait(&sk->i_event,
 					   sk->rx_timeout, &toseq);
-		rtipc_finish_wait(&wait.wc, __bufp_cleanup_handler);
-
 		if (unlikely(ret))
 			break;
 	}
-
 out:
 	rtipc_leave_atomic(wait.lockctx);
 
@@ -530,11 +512,9 @@ redo:
 		 */
 		ret = rtdm_event_timedwait(&rsk->o_event,
 					   sk->tx_timeout, &toseq);
-		rtipc_finish_wait(&wait.wc, __bufp_cleanup_handler);
 		if (unlikely(ret))
 			break;
 	}
-
 out:
 	rtipc_leave_atomic(wait.lockctx);
 

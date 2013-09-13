@@ -119,8 +119,6 @@ struct cobalt_thread {
 	int monitor_queued;
 
 	struct cobalt_local_hkey hkey;
-	/** Exit event for joining the thread. */
-	struct xnsynch join_synch;
 };
 
 struct cobalt_sigwait_context {

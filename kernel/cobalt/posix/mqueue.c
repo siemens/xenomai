@@ -620,6 +620,7 @@ cobalt_mq_finish_send(mqd_t fd, cobalt_mq_t *mq, struct cobalt_msg *msg)
 		wc = xnthread_get_wait_context(thread);
 		mwc = container_of(wc, struct cobalt_mqwait_context, wc);
 		mwc->msg = msg;
+		xnthread_complete_wait(wc);
 		mq->nodebase.refcount++;
 	} else {
 		/* Nope, have to go through the queue. */
@@ -714,17 +715,9 @@ cobalt_mq_timedrcv_inner(cobalt_mq_t **mqp, mqd_t fd,
 	mq = node2mq(cobalt_desc_node(desc));
 	xnthread_prepare_wait(&mwc.wc);
 	ret = xnsynch_sleep_on(&mq->receivers, to, tmode);
-	xnthread_finish_wait(&mwc.wc, NULL);
-
-	if (ret == 0) {
-		/* Revalidate the descriptor. */
-		ret = cobalt_desc_get(&desc, fd, COBALT_MQ_MAGIC);
-		if (ret) {
-			mq_msg_free(mq, msg);
-			msg = ERR_PTR(-ret);
-		}  else
-			msg = mwc.msg;
-	} else if (ret & XNRMID)
+	if (ret == 0)
+		msg = mwc.msg;
+	else if (ret & XNRMID)
 		msg = ERR_PTR(-EBADF);
 	else if (ret & XNTIMEO)
 		msg = ERR_PTR(-ETIMEDOUT);

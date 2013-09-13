@@ -180,6 +180,7 @@ int __xnthread_init(struct xnthread *thread,
 	memset(&thread->stat, 0, sizeof(thread->stat));
 	thread->selector = NULL;
 	INIT_LIST_HEAD(&thread->claimq);
+	xnsynch_init(&thread->join_synch, XNSYNCH_FIFO, NULL);
 	/* These will be filled by xnthread_start() */
 	thread->imode = 0;
 	thread->entry = NULL;
@@ -337,30 +338,14 @@ xnticks_t xnthread_get_period(xnthread_t *thread)
 }
 EXPORT_SYMBOL_GPL(xnthread_get_period);
 
-/* NOTE: caller must provide for locking */
 void xnthread_prepare_wait(struct xnthread_wait_context *wc)
 {
 	struct xnthread *curr = xnsched_current_thread();
 
+	wc->posted = 0;
 	curr->wcontext = wc;
 }
 EXPORT_SYMBOL_GPL(xnthread_prepare_wait);
-
-/* NOTE: caller must provide for locking */
-void xnthread_finish_wait(struct xnthread_wait_context *wc,
-			  void (*cleanup)(struct xnthread_wait_context *wc))
-{
-	struct xnthread *curr = xnsched_current_thread();
-
-	curr->wcontext = NULL;
-
-	if (xnthread_test_info(curr, XNCANCELD)) {
-		if (cleanup)
-			cleanup(wc);
-		xnthread_cancel(curr);
-	}
-}
-EXPORT_SYMBOL_GPL(xnthread_finish_wait);
 
 static inline int moving_target(struct xnsched *sched, struct xnthread *thread)
 {
@@ -865,20 +850,19 @@ void xnthread_suspend(xnthread_t *thread, int mask,
 	if (thread == sched->curr)
 		xnsched_set_resched(sched);
 
-	/* Is the thread ready to run? */
+	/*
+	 * If attempting to suspend a runnable thread which is pending
+	 * a forced switch to secondary mode, just raise the break
+	 * condition and return immediately.
+	 *
+	 * We may end up suspending a kicked thread that has been
+	 * preempted on its relaxing path, which is a perfectly valid
+	 * situation: we just ignore the signal notification in
+	 * primary mode, and rely on the wakeup call pending for that
+	 * task in the root context, to collect and act upon the
+	 * pending Linux signal (see handle_sigwake_event()).
+	 */
 	if (!xnthread_test_state(thread, XNTHREAD_BLOCK_BITS)) {
-		/*
-		 * If attempting to suspend a runnable (shadow) thread
-		 * which is pending a forced switch to secondary mode,
-		 * just raise the break condition and return
-		 * immediately.  We may end up suspending a kicked
-		 * thread that has been preempted on its relaxing
-		 * path, which is a perfectly valid situation: we just
-		 * ignore the signal notification in primary mode, and
-		 * rely on the wakeup call pending for that task in
-		 * the root context, to collect and act upon the
-		 * pending Linux signal.
-		 */
 		if ((mask & XNRELAX) == 0 &&
 		    xnthread_test_info(thread, XNKICKED)) {
 			if (wchan) {
@@ -888,7 +872,6 @@ void xnthread_suspend(xnthread_t *thread, int mask,
 			xnthread_clear_info(thread, XNRMID | XNTIMEO);
 			xnthread_set_info(thread, XNBREAK);
 			xnlock_put_irqrestore(&nklock, s);
-			xnthread_test_cancel();
 			return;
 		}
 		xnthread_clear_info(thread, XNRMID | XNTIMEO | XNBREAK | XNWAKEN | XNROBBED);
@@ -954,13 +937,6 @@ void xnthread_suspend(xnthread_t *thread, int mask,
 		 * xnsched_run will trigger the IPI as required.
 		 */
 		xnsched_run();
-
-		if (xnthread_test_info(thread, XNCANCELD)) {
-			xnlock_put_irqrestore(&nklock, s);
-			xnthread_test_cancel();
-			/* ... won't return ... */
-			XENO_BUGON(NUCLEUS, 1);
-		}
 		goto unlock_and_exit;
 	}
 
@@ -1512,17 +1488,15 @@ EXPORT_SYMBOL_GPL(xnthread_set_slice);
  * the following situations:
  *
  * - @a thread self-cancels by a call to xnthread_cancel().
- * - @a thread calls any blocking Xenomai service that would otherwise
- * lead to a suspension in xnthread_suspend().
- * - @a thread resumes from xnthread_suspend().
  * - @a thread invokes a Linux syscall (user-space shadow only).
  * - @a thread receives a Linux signal (user-space shadow only).
+ * - @a thread explicitly calls xnthread_test_cancel().
  *
  * @param thread The descriptor address of the thread to terminate.
  *
  * Calling context: This service may be called from all runtime modes.
  *
- * Rescheduling: always in case of self-cancellation from primary mode.
+ * Rescheduling: yes.
  */
 void xnthread_cancel(struct xnthread *thread)
 {
@@ -1554,14 +1528,18 @@ void xnthread_cancel(struct xnthread *thread)
 	}
 
 check_self_cancel:
-	if (xnshadow_current_p(thread)) {
+	if (xnshadow_current() == thread) {
 		xnlock_put_irqrestore(&nklock, s);
 		xnthread_test_cancel();
-		/* ... won't return ... */
-		XENO_BUGON(NUCLEUS, 1);
+		/*
+		 * May return if on behalf of an IRQ handler which has
+		 * preempted @thread.
+		 */
+		return;
 	}
 
 	__xnshadow_kick(thread);
+	xnsched_run();
 
 unlock_and_exit:
 	xnlock_put_irqrestore(&nklock, s);
@@ -1577,40 +1555,88 @@ EXPORT_SYMBOL_GPL(xnthread_cancel);
  * dormant at the time of the call, then xnthread_join() returns
  * immediately.
  *
+ * xnthread_join() adapts to the calling context (primary or
+ * secondary).
+ *
  * @param thread The descriptor address of the thread to join with.
  *
- * Calling context: This service may be called from secondary mode
- * only.
+ * @return 0 is returned on success. Otherwise, the following error
+ * codes indicate the cause of the failure:
+ *
+ * - -EDEADLK is returned if the current thread attempts to join
+ * itself.
+ *
+ * - -EINTR is returned if the current thread was unblocked while
+ *   waiting for @a thread to terminate.
+ *
+ * - -EBUSY indicates that another thread is already waiting for @a
+ *   thread to terminate.
+ *
+ * Calling context: any.
  *
  * Rescheduling: always if @a thread did not terminate yet at the time
  * of the call.
  */
-void xnthread_join(struct xnthread *thread)
+int xnthread_join(struct xnthread *thread)
 {
 	unsigned int tag;
 	spl_t s;
+	int ret;
+
+	XENO_BUGON(NUCLEUS, xnthread_test_state(thread, XNROOT));
 
 	xnlock_get_irqsave(&nklock, s);
 
 	tag = thread->idtag;
 	if (xnthread_test_info(thread, XNDORMANT) || tag == 0) {
 		xnlock_put_irqrestore(&nklock, s);
-		return;
+		return 0;
 	}
-
-	xnlock_put_irqrestore(&nklock, s);
 
 	trace_mark(xn_nucleus, thread_join, "thread %p thread_name %s",
 		   thread, xnthread_name(thread));
 
-	/*
-	 * Only a very few threads are likely to terminate within a
-	 * short time frame at any point in time, so experiencing a
-	 * thundering herd effect due to synchronizing on a single
-	 * wait queue is quite unlikely. In any case, we run in
-	 * secondary mode.
-	 */
-	wait_event(nkjoinq, thread->idtag != tag);
+	if (ipipe_root_p) {
+		if (xnthread_test_state(thread, XNJOINED)) {
+			ret = -EBUSY;
+			goto out;
+		}
+		xnthread_set_state(thread, XNJOINED);
+		xnlock_put_irqrestore(&nklock, s);
+		/*
+		 * Only a very few threads are likely to terminate within a
+		 * short time frame at any point in time, so experiencing a
+		 * thundering herd effect due to synchronizing on a single
+		 * wait queue is quite unlikely. In any case, we run in
+		 * secondary mode.
+		 */
+		if (wait_event_interruptible(nkjoinq, thread->idtag != tag)) {
+			xnlock_get_irqsave(&nklock, s);
+			if (thread->idtag == tag)
+				xnthread_clear_state(thread, XNJOINED);
+			ret = -EINTR;
+			goto out;
+		}
+
+		return 0;
+	}
+
+	if (thread == xnsched_current_thread())
+		ret = -EDEADLK;
+	else if (xnsynch_pended_p(&thread->join_synch))
+		ret = -EBUSY;
+	else {
+		xnthread_set_state(thread, XNJOINED);
+		ret = xnsynch_sleep_on(&thread->join_synch,
+				       XN_INFINITE, XN_RELATIVE);
+		if ((ret & XNRMID) == 0 && thread->idtag == tag)
+			xnthread_clear_state(thread, XNJOINED);
+		ret = ret & XNBREAK ? -EINTR : 0;
+	}
+out:
+	xnlock_put_irqrestore(&nklock, s);
+
+	return ret;
 }
 EXPORT_SYMBOL_GPL(xnthread_join);
 
@@ -1839,10 +1865,22 @@ EXPORT_SYMBOL_GPL(xnthread_set_schedparam);
 
 void __xnthread_test_cancel(struct xnthread *curr)
 {
+	/*
+	 * Just in case xnthread_test_cancel() is called from an IRQ
+	 * handler, in which case we may not take the exit path.
+	 *
+	 * NOTE: curr->sched is stable from our POV and can't change
+	 * under our feet.
+	 */
+	if (curr->sched->lflags & XNINIRQ)
+		return;
+
 	if (!xnthread_test_state(curr, XNRELAX))
 		xnshadow_relax(0, 0);
 
 	do_exit(0);
+	/* ... won't return ... */
+	XENO_BUGON(NUCLEUS, 1);
 }
 EXPORT_SYMBOL_GPL(__xnthread_test_cancel);
 

@@ -114,8 +114,17 @@ static void watchdog_handler(struct xntimer *timer)
 		xnshadow_call_mayday(curr, SIGDEBUG_WATCHDOG);
 	} else {
 		printk(XENO_WARN "watchdog triggered on CPU #%d -- runaway thread "
-		       "'%s' cancelled\n", xnsched_cpu(sched), xnthread_name(curr));
-		xnthread_cancel(curr);
+		       "'%s' canceled\n", xnsched_cpu(sched), xnthread_name(curr));
+		/*
+		 * On behalf on an IRQ handler, xnthread_cancel()
+		 * would go half way cancelling the preempted
+		 * thread. Therefore we manually raise XNKICKED to
+		 * cause the next call to xnthread_suspend() to return
+		 * early in XNBREAK condition, and XNCANCELD so that
+		 * @thread exits next time it invokes
+		 * xnthread_test_cancel().
+		 */
+		xnthread_set_info(curr, XNKICKED|XNCANCELD);
 	}
 
 	xnsched_reset_watchdog(sched);
