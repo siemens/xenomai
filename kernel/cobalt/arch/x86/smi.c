@@ -121,9 +121,9 @@ void mach_x86_smi_init(void)
 	}
 
 	if (smi_state == 0) {
-		printk("Xenomai: SMI-enabled chipset found, but SMI "
+		printk("[Xenomai] SMI-enabled chipset found, but SMI "
 		       "workaround disabled\n"
-		       "         (see xeno_hal.smi parameter). You may encounter\n"
+		       "         (see xeno_machine.smi parameter). You may encounter\n"
 		       "         high interrupt latencies!\n");
 		pci_dev_put(dev);
 		return;
