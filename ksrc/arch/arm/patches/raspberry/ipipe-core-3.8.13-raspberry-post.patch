@@ -1,0 +1,372 @@
+diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+index 65a0a82..56eed18 100644
+--- a/arch/arm/Kconfig
++++ b/arch/arm/Kconfig
+@@ -1189,7 +1189,7 @@ config IPIPE_ARM_KUSER_TSC
+        bool
+        select GENERIC_TIME_VSYSCALL
+        select IPIPE_HAVE_HOSTRT if IPIPE
+-       default y if ARCH_AT91 || ARM_TIMER_SP804 || ARCH_MXC || ARCH_OMAP || PLAT_PXA || PLAT_S3C24XX || ARCH_SA1100
++       default y if ARCH_AT91 || ARM_TIMER_SP804 || ARCH_MXC || ARCH_OMAP || PLAT_PXA || PLAT_S3C24XX || ARCH_SA1100 || ARCH_BCM2708
+ endif
+ 
+ source arch/arm/mm/Kconfig
+diff --git a/arch/arm/Makefile b/arch/arm/Makefile
+index ea2c324..f82970c 100644
+--- a/arch/arm/Makefile
++++ b/arch/arm/Makefile
+@@ -322,3 +322,5 @@ define archhelp
+   echo  '                  (distribution) /sbin/$(INSTALLKERNEL) or'
+   echo  '                  install to $$(INSTALL_PATH) and run lilo'
+ endef
++
++drivers-$(CONFIG_XENOMAI) += arch/arm/xenomai/
+diff --git a/arch/arm/include/asm/mmu.h b/arch/arm/include/asm/mmu.h
+index 4c37522..a3e55b8 100644
+--- a/arch/arm/include/asm/mmu.h
++++ b/arch/arm/include/asm/mmu.h
+@@ -5,7 +5,7 @@
+ 
+ typedef struct {
+ #ifdef CONFIG_CPU_HAS_ASID
+-	u64 id;
++	atomic64_t	id;
+ #endif
+ #ifdef CONFIG_ARM_FCSE
+ 	struct {
+diff --git a/arch/arm/include/asm/mmu_context.h b/arch/arm/include/asm/mmu_context.h
+index 0270ef7..8a10bb2 100644
+--- a/arch/arm/include/asm/mmu_context.h
++++ b/arch/arm/include/asm/mmu_context.h
+@@ -27,7 +27,7 @@ void __check_vmalloc_seq(struct mm_struct *mm);
+ 
+ int check_and_switch_context(struct mm_struct *mm, 
+ 			     struct task_struct *tsk, bool root_p);
+-#define init_new_context(tsk,mm)	({ mm->context.id = 0; })
++#define init_new_context(tsk,mm)	({ atomic64_set(&mm->context.id, 0); 0; })
+ 
+ #else	/* !CONFIG_CPU_HAS_ASID */
+ 
+diff --git a/arch/arm/mach-bcm2708/bcm2708.c b/arch/arm/mach-bcm2708/bcm2708.c
+index 4f15872..c4fd6c7 100644
+--- a/arch/arm/mach-bcm2708/bcm2708.c
++++ b/arch/arm/mach-bcm2708/bcm2708.c
+@@ -33,6 +33,8 @@
+ #include <linux/module.h>
+ #include <linux/spi/spi.h>
+ #include <linux/w1-gpio.h>
++#include <linux/ipipe.h>
++#include <linux/ipipe_tickdev.h>
+ 
+ #include <linux/version.h>
+ #include <linux/clkdev.h>
+@@ -154,6 +156,12 @@ void __init bcm2708_map_io(void)
+ /* The STC is a free running counter that increments at the rate of 1MHz */
+ #define STC_FREQ_HZ 1000000
+ 
++#define SYSTEM_CLOCK_FREQ_HZ		250000000
++
++// The ARM Timer is a free running counter that increments at the rate of
++// the system clock (without pre-scaling)
++#define ARM_TIMER_FREQ_HZ				SYSTEM_CLOCK_FREQ_HZ
++
+ static inline uint32_t timer_read(void)
+ {
+ 	/* STC: a free running counter that increments at the rate of 1MHz */
+@@ -792,12 +800,27 @@ static int timer_set_next_event(unsigned long cycles,
+ 	return 0;
+ }
+ 
++static inline void bcm2708_timer_ack(void)
++{
++	writel(1 << 3, __io_address(ST_BASE + 0x00));	/* stcs clear timer int */
++}
++
++#ifdef CONFIG_IPIPE
++static struct ipipe_timer bcm2708_itimer = {
++	.irq = IRQ_TIMER3,
++	.ack = bcm2708_timer_ack,
++};
++#endif /* CONFIG_IPIPE */
++
+ static struct clock_event_device timer0_clockevent = {
+ 	.name = "timer0",
+ 	.shift = 32,
+ 	.features = CLOCK_EVT_FEAT_ONESHOT,
+ 	.set_mode = timer_set_mode,
+ 	.set_next_event = timer_set_next_event,
++#ifdef CONFIG_IPIPE
++	.ipipe_timer    = &bcm2708_itimer,
++#endif /* CONFIG_IPIPE */
+ };
+ 
+ /*
+@@ -807,7 +830,10 @@ static irqreturn_t bcm2708_timer_interrupt(int irq, void *dev_id)
+ {
+ 	struct clock_event_device *evt = &timer0_clockevent;
+ 
+-	writel(1 << 3, __io_address(ST_BASE + 0x00));	/* stcs clear timer int */
++	if (!clockevent_ipipe_stolen(evt))
++		bcm2708_timer_ack();
++
++	__ipipe_tsc_update();
+ 
+ 	evt->event_handler(evt);
+ 
+@@ -820,6 +846,38 @@ static struct irqaction bcm2708_timer_irq = {
+ 	.handler = bcm2708_timer_interrupt,
+ };
+ 
++#ifdef CONFIG_IPIPE
++static struct __ipipe_tscinfo tsc_info = {
++	.type = IPIPE_TSC_TYPE_FREERUNNING,
++	.u = {
++		{
++			.mask = 0xffffffff,
++		},
++	},
++};
++
++static void bcm2708_xenomai_tsc_init(void)
++{
++#ifdef CONFIG_PM
++	tsc_info.freq = STC_FREQ_HZ;
++	tsc_info.counter_vaddr = (unsigned long)__io_address(ST_BASE + 4);
++	tsc_info.u.fr.counter = (unsigned *)(ST_BASE + 4);
++#else
++	/*
++	 * Start the ARM timer
++	 */
++	unsigned int control_reg = TIMER_CTRL_ENAFREE | TIMER_CTRL_DBGHALT |
++		TIMER_CTRL_32BIT;
++	writel(control_reg, __io_address(ARM_T_CONTROL));
++
++	tsc_info.freq = ARM_TIMER_FREQ_HZ;
++	tsc_info.counter_vaddr = (unsigned long)__io_address(ARM_T_FREECNT);
++	tsc_info.u.fr.counter = (unsigned *)(ARMCTRL_TIMER0_1_BASE + 0x20);
++#endif /* CONFIG_PM */
++	__ipipe_tsc_register(&tsc_info);
++}
++#endif /* CONFIG_IPIPE */
++
+ /*
+  * Set up timer interrupt, and return the current time in seconds.
+  */
+@@ -856,6 +914,10 @@ static void __init bcm2708_timer_init(void)
+ 	clockevents_register_device(&timer0_clockevent);
+ 
+ 	register_current_timer_delay(&bcm2708_delay_timer);
++
++#ifdef CONFIG_IPIPE
++	bcm2708_xenomai_tsc_init();
++#endif
+ }
+ 
+ struct sys_timer bcm2708_timer = {
+diff --git a/arch/arm/mach-bcm2708/bcm2708_gpio.c b/arch/arm/mach-bcm2708/bcm2708_gpio.c
+index d0339eb..a5a5eb5 100644
+--- a/arch/arm/mach-bcm2708/bcm2708_gpio.c
++++ b/arch/arm/mach-bcm2708/bcm2708_gpio.c
+@@ -18,6 +18,7 @@
+ #include <linux/slab.h>
+ #include <mach/gpio.h>
+ #include <linux/gpio.h>
++#include <linux/ipipe.h>
+ #include <linux/platform_device.h>
+ #include <mach/platform.h>
+ 
+@@ -50,7 +51,7 @@ enum { GPIO_FSEL_INPUT, GPIO_FSEL_OUTPUT,
+ 	 * the GPIO code. This also makes the case of a GPIO routine call from
+ 	 * the IRQ code simpler.
+ 	 */
+-static DEFINE_SPINLOCK(lock);	/* GPIO registers */
++static IPIPE_DEFINE_SPINLOCK(lock);	/* GPIO registers */
+ 
+ struct bcm2708_gpio {
+ 	struct list_head list;
+@@ -207,12 +208,16 @@ static struct irq_chip bcm2708_irqchip = {
+ 	.name = "GPIO",
+ 	.irq_enable = bcm2708_gpio_irq_unmask,
+ 	.irq_disable = bcm2708_gpio_irq_mask,
++#ifdef CONFIG_IPIPE
++	.irq_ack        = bcm2708_gpio_irq_mask,
++	.irq_mask_ack   = bcm2708_gpio_irq_mask,
++#endif /* CONFIG_IPIPE */
+ 	.irq_unmask = bcm2708_gpio_irq_unmask,
+ 	.irq_mask = bcm2708_gpio_irq_mask,
+ 	.irq_set_type = bcm2708_gpio_irq_set_type,
+ };
+ 
+-static irqreturn_t bcm2708_gpio_interrupt(int irq, void *dev_id)
++static void bcm2708_gpio_interrupt(unsigned int irq, struct irq_desc *desc)
+ {
+ 	unsigned long edsr;
+ 	unsigned bank;
+@@ -222,19 +227,13 @@ static irqreturn_t bcm2708_gpio_interrupt(int irq, void *dev_id)
+ 		edsr = readl(__io_address(GPIO_BASE) + GPIOEDS(bank));
+ 		for_each_set_bit(i, &edsr, 32) {
+ 			gpio = i + bank * 32;
+-			generic_handle_irq(gpio_to_irq(gpio));
++			ipipe_handle_demuxed_irq(gpio_to_irq(gpio));
+ 		}
+ 		writel(0xffffffff, __io_address(GPIO_BASE) + GPIOEDS(bank));
+ 	}
+-	return IRQ_HANDLED;
++	return;
+ }
+ 
+-static struct irqaction bcm2708_gpio_irq = {
+-	.name = "BCM2708 GPIO catchall handler",
+-	.flags = IRQF_DISABLED | IRQF_TIMER | IRQF_IRQPOLL,
+-	.handler = bcm2708_gpio_interrupt,
+-};
+-
+ static void bcm2708_gpio_irq_init(struct bcm2708_gpio *ucb)
+ {
+ 	unsigned irq;
+@@ -243,10 +242,10 @@ static void bcm2708_gpio_irq_init(struct bcm2708_gpio *ucb)
+ 
+ 	for (irq = GPIO_IRQ_START; irq < (GPIO_IRQ_START + GPIO_IRQS); irq++) {
+ 		irq_set_chip_data(irq, ucb);
+-		irq_set_chip(irq, &bcm2708_irqchip);
++		irq_set_chip_and_handler(irq, &bcm2708_irqchip, handle_level_irq);
+ 		set_irq_flags(irq, IRQF_VALID);
+ 	}
+-	setup_irq(IRQ_GPIO3, &bcm2708_gpio_irq);
++	irq_set_chained_handler(IRQ_GPIO3, bcm2708_gpio_interrupt);
+ }
+ 
+ #else
+diff --git a/arch/arm/mach-omap2/io.c b/arch/arm/mach-omap2/io.c
+index 3e7ab6f..643f7f7 100644
+--- a/arch/arm/mach-omap2/io.c
++++ b/arch/arm/mach-omap2/io.c
+@@ -469,7 +469,7 @@ void __init omap3_init_early(void)
+ 	omap3xxx_clockdomains_init();
+ 	omap3xxx_hwmod_init();
+ 	omap_hwmod_init_postsetup();
+-	omap3xxx_clk_init();
++	omap_clk_init = omap3xxx_clk_init;
+ #ifdef CONFIG_IPIPE
+ 	disable_hlt();
+ #endif
+@@ -510,7 +510,7 @@ void __init ti81xx_init_early(void)
+ 	omap3xxx_clockdomains_init();
+ 	omap3xxx_hwmod_init();
+ 	omap_hwmod_init_postsetup();
+-	omap3xxx_clk_init();
++	omap_clk_init = omap3xxx_clk_init;
+ #ifdef CONFIG_IPIPE
+ 	disable_hlt();
+ #endif
+diff --git a/arch/arm/mm/context.c b/arch/arm/mm/context.c
+index a7f2b2d..8971c09 100644
+--- a/arch/arm/mm/context.c
++++ b/arch/arm/mm/context.c
+@@ -178,13 +178,14 @@ static u64 new_context(struct mm_struct *mm, unsigned int cpu)
+ 		cpumask_clear(mm_cpumask(mm));
+ 	}
+ 
+-	mm->context.id = asid;
++	return asid;
+ }
+ 
+ int check_and_switch_context(struct mm_struct *mm, struct task_struct *tsk, bool root_p)
+ {
+ 	unsigned long flags;
+ 	unsigned int cpu = ipipe_processor_id();
++	u64 asid;
+ 
+ 	if (unlikely(mm->context.vmalloc_seq != init_mm.context.vmalloc_seq))
+ 		__check_vmalloc_seq(mm);
+@@ -218,6 +219,9 @@ int check_and_switch_context(struct mm_struct *mm, struct task_struct *tsk, bool
+ 	if (cpumask_test_and_clear_cpu(cpu, &tlb_flush_pending))
+ 		local_flush_tlb_all();
+ 
++	atomic64_set(&per_cpu(active_asids, cpu), asid);
++	cpumask_set_cpu(cpu, mm_cpumask(mm));
++
+ #ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
+ 	raw_spin_unlock(&cpu_asid_lock);
+ #else /* !CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH */
+diff --git a/drivers/spi/spi-bcm2708.c b/drivers/spi/spi-bcm2708.c
+index abaa5a6..72eb85f 100644
+--- a/drivers/spi/spi-bcm2708.c
++++ b/drivers/spi/spi-bcm2708.c
+@@ -583,7 +583,7 @@ static int bcm2708_spi_remove(struct platform_device *pdev)
+ 	bcm2708_wr(bs, SPI_CS, SPI_CS_CLEAR_RX | SPI_CS_CLEAR_TX);
+ 	spin_unlock_irq(&bs->lock);
+ 
+-	flush_work_sync(&bs->work);
++	flush_work(&bs->work);
+ 
+ 	clk_disable(bs->clk);
+ 	clk_put(bs->clk);
+diff --git a/fs/proc/array.c b/fs/proc/array.c
+index 8da78d6..961a6ec 100644
+--- a/fs/proc/array.c
++++ b/fs/proc/array.c
+@@ -143,9 +143,10 @@ static const char * const task_state_array[] = {
+ 	"x (dead)",		/*  64 */
+ 	"K (wakekill)",		/* 128 */
+ 	"W (waking)",		/* 256 */
++	"P (parked)",		/* 512 */
+ #ifdef CONFIG_IPIPE
+-	"H (hardening)",	/* 512 */
+-	"N (wakeup disabled)",	/* 1024 */
++	"H (hardening)",	/* 1024 */
++	"N (wakeup disabled)",	/* 2048 */
+ #endif
+ };
+ 
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index 637f5f5..5a56499 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -164,16 +164,17 @@ print_cfs_rq(struct seq_file *m, int cpu, struct cfs_rq *cfs_rq)
+ #define TASK_DEAD		64
+ #define TASK_WAKEKILL		128
+ #define TASK_WAKING		256
++#define TASK_PARKED		512
+ #ifdef CONFIG_IPIPE
+-#define TASK_HARDENING		512
+-#define TASK_NOWAKEUP		1024
+-#define TASK_STATE_MAX		2048
+-#define TASK_STATE_TO_CHAR_STR "RSDTtZXxKWHN"
++#define TASK_HARDENING		1024
++#define TASK_NOWAKEUP		2048
++#define TASK_STATE_MAX		4096
++#define TASK_STATE_TO_CHAR_STR "RSDTtZXxKWPHN"
+ #else  /* !CONFIG_IPIPE */
+ #define TASK_HARDENING		0
+ #define TASK_NOWAKEUP		0
+-#define TASK_STATE_MAX		512
+-#define TASK_STATE_TO_CHAR_STR "RSDTtZXxKW"
++#define TASK_STATE_MAX		1024
++#define TASK_STATE_TO_CHAR_STR "RSDTtZXxKWP"
+ #endif /* CONFIG_IPIPE */
+ 
+ extern char ___assert_task_state[1 - 2*!!(
+diff --git a/include/linux/spinlock_up.h b/include/linux/spinlock_up.h
+index 1a44e3a..b964bcb 100644
+--- a/include/linux/spinlock_up.h
++++ b/include/linux/spinlock_up.h
+@@ -67,12 +67,12 @@ static inline void arch_spin_unlock(arch_spinlock_t *lock)
+ # define arch_spin_trylock(lock)	({ barrier(); (void)(lock); 1; })
+ #endif /* DEBUG_SPINLOCK */
+ 
+-#define arch_read_lock(lock)		do { (void)(lock); } while (0)
+-#define arch_write_lock(lock)		do { (void)(lock); } while (0)
+-#define arch_read_trylock(lock)		({ (void)(lock); 1; })
+-#define arch_write_trylock(lock)	({ (void)(lock); 1; })
+-#define arch_read_unlock(lock)		do { (void)(lock); } while (0)
+-#define arch_write_unlock(lock)		do { (void)(lock); } while (0)
++#define arch_read_lock(lock)		do { barrier(); (void)(lock); } while (0)
++#define arch_write_lock(lock)		do { barrier(); (void)(lock); } while (0)
++#define arch_read_trylock(lock)	({ barrier(); (void)(lock); 1; })
++#define arch_write_trylock(lock)	({ barrier(); (void)(lock); 1; })
++#define arch_read_unlock(lock)		do { barrier(); (void)(lock); } while (0)
++#define arch_write_unlock(lock)	do { barrier(); (void)(lock); } while (0)
+ 
+ #define arch_spin_is_contended(lock)	(((void)(lock), 0))
+ 

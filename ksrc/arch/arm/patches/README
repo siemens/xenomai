@@ -70,8 +70,10 @@ the patch has been tested with commit 3fc8a73d782231ab2750ff29793a760e8fa076bb
 ---- Raspberry Pi
 
 From [5]:
-1- Apply the I-pipe core patch to a Linux version 3.5.7
-2- apply raspberry/ipipe-core-3.5.7-raspberry-post.patch
+1- Checkout the "rpi-3.8.y" branch in the repository [4]
+2- Apply raspberry/ipipe-core-3.8.13-raspberry-pre.patch
+3- Apply ipipe-core-3.8.13-arm patch
+2- apply raspberry/ipipe-core-3.8.13-raspberry-post.patch
 3- you can resume to generic installation instructions.
 
 ---- Zynq
@@ -88,6 +90,6 @@ From [5]:
 [1] http://opensource.freescale.com/pub/scm/imx/linux-2.6-imx.git
 [2] git://git.denx.de/linux-denx.git
 [3] https://github.com/RobertCNelson/linux-dev
-[4] http://www.xenomai.org/pipermail/xenomai/2013-February/027584.html
-[5] http://www.xenomai.org/pipermail/xenomai/2013-February/027752.html
+[4] git://github.com/raspberrypi/linux.git
+[5] http://www.xenomai.org/pipermail/xenomai/2013-September/029172.html
 [6] git://github.com/Xilinx/linux-xlnx.git

@@ -1,0 +1,152 @@
+diff --git a/arch/arm/include/asm/mmu.h b/arch/arm/include/asm/mmu.h
+index e3d5554..f7c877f 100644
+--- a/arch/arm/include/asm/mmu.h
++++ b/arch/arm/include/asm/mmu.h
+@@ -5,9 +5,9 @@
+ 
+ typedef struct {
+ #ifdef CONFIG_CPU_HAS_ASID
+-	atomic64_t	id;
++	u64 id;
+ #endif
+-	unsigned int	vmalloc_seq;
++	unsigned int vmalloc_seq;
+ } mm_context_t;
+ 
+ #ifdef CONFIG_CPU_HAS_ASID
+diff --git a/arch/arm/include/asm/mmu_context.h b/arch/arm/include/asm/mmu_context.h
+index 863a661..e1f644b 100644
+--- a/arch/arm/include/asm/mmu_context.h
++++ b/arch/arm/include/asm/mmu_context.h
+@@ -25,7 +25,7 @@ void __check_vmalloc_seq(struct mm_struct *mm);
+ #ifdef CONFIG_CPU_HAS_ASID
+ 
+ void check_and_switch_context(struct mm_struct *mm, struct task_struct *tsk);
+-#define init_new_context(tsk,mm)	({ atomic64_set(&mm->context.id, 0); 0; })
++#define init_new_context(tsk,mm)	({ mm->context.id = 0; })
+ 
+ #else	/* !CONFIG_CPU_HAS_ASID */
+ 
+diff --git a/arch/arm/mach-omap2/io.c b/arch/arm/mach-omap2/io.c
+index 5c445ca..8b4da7f 100644
+--- a/arch/arm/mach-omap2/io.c
++++ b/arch/arm/mach-omap2/io.c
+@@ -468,7 +468,7 @@ void __init omap3_init_early(void)
+ 	omap3xxx_clockdomains_init();
+ 	omap3xxx_hwmod_init();
+ 	omap_hwmod_init_postsetup();
+-	omap_clk_init = omap3xxx_clk_init;
++	omap3xxx_clk_init();
+ }
+ 
+ void __init omap3430_init_early(void)
+@@ -506,7 +506,7 @@ void __init ti81xx_init_early(void)
+ 	omap3xxx_clockdomains_init();
+ 	omap3xxx_hwmod_init();
+ 	omap_hwmod_init_postsetup();
+-	omap_clk_init = omap3xxx_clk_init;
++	omap3xxx_clk_init();
+ }
+ 
+ void __init omap3_init_late(void)
+diff --git a/arch/arm/mm/context.c b/arch/arm/mm/context.c
+index d07df17..a6b4b43 100644
+--- a/arch/arm/mm/context.c
++++ b/arch/arm/mm/context.c
+@@ -178,14 +178,13 @@ static u64 new_context(struct mm_struct *mm, unsigned int cpu)
+ 		cpumask_clear(mm_cpumask(mm));
+ 	}
+ 
+-	return asid;
++	mm->context.id = asid;
+ }
+ 
+ void check_and_switch_context(struct mm_struct *mm, struct task_struct *tsk)
+ {
+ 	unsigned long flags;
+ 	unsigned int cpu = smp_processor_id();
+-	u64 asid;
+ 
+ 	if (unlikely(mm->context.vmalloc_seq != init_mm.context.vmalloc_seq))
+ 		__check_vmalloc_seq(mm);
+@@ -211,9 +210,6 @@ void check_and_switch_context(struct mm_struct *mm, struct task_struct *tsk)
+ 
+ 	if (cpumask_test_and_clear_cpu(cpu, &tlb_flush_pending))
+ 		local_flush_tlb_all();
+-
+-	atomic64_set(&per_cpu(active_asids, cpu), asid);
+-	cpumask_set_cpu(cpu, mm_cpumask(mm));
+ 	raw_spin_unlock_irqrestore(&cpu_asid_lock, flags);
+ 
+ switch_mm_fastpath:
+diff --git a/fs/proc/array.c b/fs/proc/array.c
+index be3c22f..6a91e6f 100644
+--- a/fs/proc/array.c
++++ b/fs/proc/array.c
+@@ -143,7 +143,6 @@ static const char * const task_state_array[] = {
+ 	"x (dead)",		/*  64 */
+ 	"K (wakekill)",		/* 128 */
+ 	"W (waking)",		/* 256 */
+-	"P (parked)",		/* 512 */
+ };
+ 
+ static inline const char *get_task_state(struct task_struct *tsk)
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index f5ad26e..9e6c38d 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -163,10 +163,9 @@ print_cfs_rq(struct seq_file *m, int cpu, struct cfs_rq *cfs_rq)
+ #define TASK_DEAD		64
+ #define TASK_WAKEKILL		128
+ #define TASK_WAKING		256
+-#define TASK_PARKED		512
+-#define TASK_STATE_MAX		1024
++#define TASK_STATE_MAX		512
+ 
+-#define TASK_STATE_TO_CHAR_STR "RSDTtZXxKWP"
++#define TASK_STATE_TO_CHAR_STR "RSDTtZXxKW"
+ 
+ extern char ___assert_task_state[1 - 2*!!(
+ 		sizeof(TASK_STATE_TO_CHAR_STR)-1 != ilog2(TASK_STATE_MAX)+1)];
+diff --git a/include/linux/spinlock_up.h b/include/linux/spinlock_up.h
+index e2369c1..13713df 100644
+--- a/include/linux/spinlock_up.h
++++ b/include/linux/spinlock_up.h
+@@ -58,12 +58,12 @@ static inline void arch_spin_unlock(arch_spinlock_t *lock)
+ /*
+  * Read-write spinlocks. No debug version.
+  */
+-#define arch_read_lock(lock)		do { barrier(); (void)(lock); } while (0)
+-#define arch_write_lock(lock)		do { barrier(); (void)(lock); } while (0)
+-#define arch_read_trylock(lock)	({ barrier(); (void)(lock); 1; })
+-#define arch_write_trylock(lock)	({ barrier(); (void)(lock); 1; })
+-#define arch_read_unlock(lock)		do { barrier(); (void)(lock); } while (0)
+-#define arch_write_unlock(lock)	do { barrier(); (void)(lock); } while (0)
++#define arch_read_lock(lock)		do { (void)(lock); } while (0)
++#define arch_write_lock(lock)		do { (void)(lock); } while (0)
++#define arch_read_trylock(lock)	({ (void)(lock); 1; })
++#define arch_write_trylock(lock)	({ (void)(lock); 1; })
++#define arch_read_unlock(lock)		do { (void)(lock); } while (0)
++#define arch_write_unlock(lock)	do { (void)(lock); } while (0)
+ 
+ #else /* DEBUG_SPINLOCK */
+ #define arch_spin_is_locked(lock)	((void)(lock), 0)
+diff --git a/kernel/trace/ftrace.c b/kernel/trace/ftrace.c
+index 03dbc77..deb2bab 100644
+--- a/kernel/trace/ftrace.c
++++ b/kernel/trace/ftrace.c
+@@ -4537,8 +4537,12 @@ ftrace_enable_sysctl(struct ctl_table *table, int write,
+ 		ftrace_startup_sysctl();
+ 
+ 		/* we are starting ftrace again */
+-		if (ftrace_ops_list != &ftrace_list_end)
+-			update_ftrace_function();
++		if (ftrace_ops_list != &ftrace_list_end) {
++			if (ftrace_ops_list->next == &ftrace_list_end)
++				ftrace_trace_function = ftrace_ops_list->func;
++			else
++				ftrace_trace_function = ftrace_ops_list_func;
++		}
+ 
+ 	} else {
+ 		/* stopping ftrace calls (just send to ftrace_stub) */
