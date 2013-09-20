@@ -15,25 +15,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-
 #ifndef _COPPERPLATE_REFERENCE_H
 #define _COPPERPLATE_REFERENCE_H
 
-#include <sys/types.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <xeno_config.h>
+#include <boilerplate/scope.h>
 
 #define libcopperplate_tag  0	/* Library tag - unique and constant. */
 #define libcopperplate_cbi  1	/* Callback binary interface level. */
-
-#define container_of(ptr, type, member)					\
-	({								\
-		const typeof(((type *)0)->member) *__mptr = (ptr);	\
-		(type *)((char *)__mptr - offsetof(type, member));	\
-	})
-
-typedef uintptr_t memoff_t;
 
 #ifdef CONFIG_XENO_PSHARED
 /*
@@ -70,7 +58,6 @@ struct __fnref {
 		assert(__p != NULL);					\
 		__p;							\
 	})
-#define dref_type(t)		memoff_t
 #define fnref_type(t)		int
 #define fnref_null		-1
 static inline int __fnref_nofn(void *fnaddr)
@@ -89,10 +76,6 @@ static inline int __fnref_nofn(void *fnaddr)
 	}
 #define fnref_declare(l, s)	extern int __refvar(l, s)
 
-extern void *__main_heap;
-
-int pshared_check(void *heap, void *addr);
-
 #define MAX_FNLIBS  16		/* max=32 */
 #define MAX_FNREFS  16		/* max=32 */
 
@@ -102,35 +85,14 @@ int __fnref_register(const char *libname,
 		     int libtag, int cbirev,
 		     const char *symname, void (*fn)(void));
 
-#define __memoff(base, addr)	((caddr_t)(addr) - (caddr_t)(base))
-#define __memptr(base, off)	((caddr_t)(base) + (off))
-#define __memchk(base, addr)	pshared_check(base, addr)
-
-#define mutex_scope_attribute	PTHREAD_PROCESS_SHARED
-#define sem_scope_attribute	1
-#define monitor_scope_attribute	COBALT_MONITOR_SHARED
-#define event_scope_attribute	COBALT_EVENT_SHARED
-
 #else /* !CONFIG_XENO_PSHARED */
 
-#define dref_type(t)		typeof(t)
 #define fnref_type(t)		typeof(t)
 #define fnref_null		NULL
 #define fnref_put(l, s)		(s)
 #define fnref_get(v, r)		((v) = (r))
 #define fnref_register(l, s)
 #define fnref_declare(l, s)
-
-#define __main_heap	NULL
-
-#define __memoff(base, addr)	(addr)
-#define __memptr(base, off)	(off)
-#define __memchk(base, addr)	1
-
-#define mutex_scope_attribute	PTHREAD_PROCESS_PRIVATE
-#define sem_scope_attribute	0
-#define monitor_scope_attribute	0
-#define event_scope_attribute	0
 
 #endif /* !CONFIG_XENO_PSHARED */
 

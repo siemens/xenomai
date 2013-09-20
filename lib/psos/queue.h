@@ -20,7 +20,7 @@
 #define _PSOS_QUEUE_H
 
 #include <sys/types.h>
-#include <copperplate/hash.h>
+#include <boilerplate/hash.h>
 #include <copperplate/syncobj.h>
 #include <copperplate/cluster.h>
 

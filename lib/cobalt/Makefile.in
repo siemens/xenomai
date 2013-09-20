@@ -127,7 +127,8 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libcobalt_la_DEPENDENCIES = arch/@XENO_TARGET_ARCH@/libarch.la
+libcobalt_la_DEPENDENCIES = arch/@XENO_TARGET_ARCH@/libarch.la \
+	../boilerplate/libboilerplate.la
 am_libcobalt_la_OBJECTS = libcobalt_la-assert_context.lo \
 	libcobalt_la-attr.lo libcobalt_la-clock.lo \
 	libcobalt_la-cond.lo libcobalt_la-current.lo \
@@ -426,7 +427,10 @@ noinst_HEADERS = \
 
 lib_LTLIBRARIES = libcobalt.la
 libcobalt_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 2:0:0 -lpthread -lrt
-libcobalt_la_LIBADD = arch/@XENO_TARGET_ARCH@/libarch.la
+libcobalt_la_LIBADD = \
+	arch/@XENO_TARGET_ARCH@/libarch.la	\
+	../boilerplate/libboilerplate.la
+
 libcobalt_la_SOURCES = \
 	assert_context.c	\
 	attr.c			\

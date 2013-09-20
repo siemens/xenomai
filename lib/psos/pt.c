@@ -23,7 +23,7 @@
 #include <memory.h>
 #include <copperplate/init.h>
 #include <copperplate/cluster.h>
-#include <copperplate/lock.h>
+#include <boilerplate/lock.h>
 #include <psos/psos.h>
 #include "internal.h"
 #include "pt.h"
@@ -151,7 +151,7 @@ u_long pt_create(const char *name,
 		pt->name[sizeof(pt->name) - 1] = '\0';
 	}
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	if (pvcluster_addobj_dup(&psos_pt_table, pt->name, &pt->cobj)) {
 		warning("cannot register partition: %s", pt->name);
@@ -193,7 +193,7 @@ u_long pt_create(const char *name,
 	pt->magic = pt_magic;
 	*ptid_r = (u_long)pt;
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -213,9 +213,9 @@ u_long pt_delete(u_long ptid)
 		return ERR_BUFINUSE;
 	}
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 	pvcluster_delobj(&psos_pt_table, &pt->cobj);
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 	pt->magic = ~pt_magic; /* Prevent further reference. */
 	put_pt(pt);
 	__RT(pthread_mutex_destroy(&pt->lock));
@@ -298,9 +298,9 @@ u_long pt_ident(const char *name, u_long node, u_long *ptid_r)
 
 	name = __psos_maybe_short_name(short_name, name);
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 	cobj = pvcluster_findobj(&psos_pt_table, name);
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 	if (cobj == NULL)
 		return ERR_OBJNF;
 

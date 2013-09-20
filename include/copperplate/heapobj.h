@@ -26,10 +26,10 @@
 #include <errno.h>
 #include <pthread.h>
 #include <xeno_config.h>
+#include <boilerplate/wrappers.h>
+#include <boilerplate/list.h>
 #include <copperplate/reference.h>
-#include <copperplate/lock.h>
-#include <copperplate/list.h>
-#include <copperplate/wrappers.h>
+#include <boilerplate/lock.h>
 #include <copperplate/debug.h>
 
 struct heapobj {

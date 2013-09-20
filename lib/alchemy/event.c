@@ -116,7 +116,7 @@ int rt_event_create(RT_EVENT *event, const char *name,
 	if (threadobj_irq_p())
 		return -EPERM;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	evcb = xnmalloc(sizeof(*evcb));
 	if (evcb == NULL) {
@@ -143,7 +143,7 @@ int rt_event_create(RT_EVENT *event, const char *name,
 	} else
 		event->handle = mainheap_ref(evcb, uintptr_t);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -179,7 +179,7 @@ int rt_event_delete(RT_EVENT *event)
 	if (threadobj_irq_p())
 		return -EPERM;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	evcb = find_alchemy_event(event, &ret);
 	if (evcb == NULL)
@@ -195,7 +195,7 @@ int rt_event_delete(RT_EVENT *event)
 	 */
 	ret = eventobj_destroy(&evcb->evobj);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -284,7 +284,7 @@ int rt_event_wait_timed(RT_EVENT *event,
 	if (!threadobj_current_p() && !alchemy_poll_mode(abs_timeout))
 		return -EPERM;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	evcb = find_alchemy_event(event, &ret);
 	if (evcb == NULL)
@@ -296,7 +296,7 @@ int rt_event_wait_timed(RT_EVENT *event,
 	ret = eventobj_wait(&evcb->evobj, mask, mask_r,
 			    evobj_mode, abs_timeout);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -326,7 +326,7 @@ int rt_event_signal(RT_EVENT *event, unsigned long mask)
 	struct service svc;
 	int ret = 0;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	evcb = find_alchemy_event(event, &ret);
 	if (evcb == NULL)
@@ -334,7 +334,7 @@ int rt_event_signal(RT_EVENT *event, unsigned long mask)
 
 	ret = eventobj_post(&evcb->evobj, mask);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -367,7 +367,7 @@ int rt_event_clear(RT_EVENT *event,
 	struct service svc;
 	int ret = 0;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	evcb = find_alchemy_event(event, &ret);
 	if (evcb == NULL)
@@ -375,7 +375,7 @@ int rt_event_clear(RT_EVENT *event,
 
 	ret = eventobj_clear(&evcb->evobj, mask, mask_r);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -403,7 +403,7 @@ int rt_event_inquire(RT_EVENT *event, RT_EVENT_INFO *info)
 	struct service svc;
 	int ret = 0;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	evcb = find_alchemy_event(event, &ret);
 	if (evcb == NULL)
@@ -415,7 +415,7 @@ int rt_event_inquire(RT_EVENT *event, RT_EVENT_INFO *info)
 
 	strcpy(info->name, evcb->name);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }

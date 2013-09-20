@@ -87,7 +87,7 @@ static u_long __q_create(const char *name, u_long count,
 	int ret = SUCCESS;
 	char short_name[5];
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	q = xnmalloc(sizeof(*q));
 	if (q == NULL) {
@@ -123,7 +123,7 @@ static u_long __q_create(const char *name, u_long count,
 	q->magic = queue_magic;
 	*qid_r = mainheap_ref(q, u_long);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -152,14 +152,14 @@ static u_long __q_delete(u_long qid, u_long flags)
 	if (q == NULL)
 		return ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	if (syncobj_lock(&q->sobj, &syns))
 		return ERR_OBJDEL;
 
 	if (((flags ^ q->flags) & Q_VARIABLE)) {
 		syncobj_unlock(&q->sobj, &syns);
-		COPPERPLATE_UNPROTECT(svc);
+		CANCEL_RESTORE(svc);
 		return (flags & Q_VARIABLE) ? ERR_NOTVARQ: ERR_VARQ;
 
 	}
@@ -176,7 +176,7 @@ static u_long __q_delete(u_long qid, u_long flags)
 	cluster_delobj(&psos_queue_table, &q->cobj);
 	q->magic = ~queue_magic; /* Prevent further reference. */
 	ret = syncobj_destroy(&q->sobj, &syns);
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 	if (ret)
 		return ERR_TATQDEL;
 
@@ -206,9 +206,9 @@ static u_long __q_ident(const char *name,
 
 	name = __psos_maybe_short_name(short_name, name);
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 	cobj = cluster_findobj(&psos_queue_table, name);
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 	if (cobj == NULL)
 		return ERR_OBJNF;
 
@@ -298,7 +298,7 @@ static u_long __q_send(u_long qid, u_long flags, u_long *buffer, u_long bytes)
 	if (q == NULL)
 		return ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	if (syncobj_lock(&q->sobj, &syns)) {
 		ret = ERR_OBJDEL;
@@ -319,7 +319,7 @@ static u_long __q_send(u_long qid, u_long flags, u_long *buffer, u_long bytes)
 fail:
 	syncobj_unlock(&q->sobj, &syns);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -356,7 +356,7 @@ static u_long __q_broadcast(u_long qid, u_long flags,
 	if (q == NULL)
 		return ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	if (syncobj_lock(&q->sobj, &syns)) {
 		ret = ERR_OBJDEL;
@@ -384,7 +384,7 @@ static u_long __q_broadcast(u_long qid, u_long flags,
 fail:
 	syncobj_unlock(&q->sobj, &syns);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -415,7 +415,7 @@ static u_long __q_receive(u_long qid, u_long flags, u_long timeout,
 	if (q == NULL)
 		return ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	if (syncobj_lock(&q->sobj, &syns)) {
 		ret = ERR_OBJDEL;
@@ -476,7 +476,7 @@ out:
 	if (wait)
 		threadobj_finish_wait();
 
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }

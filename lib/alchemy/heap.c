@@ -130,7 +130,7 @@ int rt_heap_create(RT_HEAP *heap,
 	if (heapsz < 2048 || heapsz >= 1U << 31)
 		return -EINVAL;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	ret = -ENOMEM;
 	hcb = xnmalloc(sizeof(*hcb));
@@ -167,7 +167,7 @@ int rt_heap_create(RT_HEAP *heap,
 	} else
 		heap->handle = mainheap_ref(hcb, uintptr_t);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -203,7 +203,7 @@ int rt_heap_delete(RT_HEAP *heap)
 	if (threadobj_irq_p())
 		return -EPERM;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	hcb = get_alchemy_heap(heap, &syns, &ret);
 	if (hcb == NULL)
@@ -213,7 +213,7 @@ int rt_heap_delete(RT_HEAP *heap)
 	hcb->magic = ~heap_magic;
 	syncobj_destroy(&hcb->sobj, &syns);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -304,7 +304,7 @@ int rt_heap_alloc_timed(RT_HEAP *heap,
 	if (!threadobj_current_p() && !alchemy_poll_mode(abs_timeout))
 		return -EPERM;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	hcb = get_alchemy_heap(heap, &syns, &ret);
 	if (hcb == NULL)
@@ -354,7 +354,7 @@ done:
 
 	put_alchemy_heap(hcb, &syns);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -390,7 +390,7 @@ int rt_heap_free(RT_HEAP *heap, void *block)
 	struct service svc;
 	int ret = 0;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	hcb = get_alchemy_heap(heap, &syns, &ret);
 	if (hcb == NULL)
@@ -421,7 +421,7 @@ int rt_heap_free(RT_HEAP *heap, void *block)
 done:
 	put_alchemy_heap(hcb, &syns);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -449,7 +449,7 @@ int rt_heap_inquire(RT_HEAP *heap, RT_HEAP_INFO *info)
 	struct service svc;
 	int ret = 0;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	hcb = get_alchemy_heap(heap, &syns, &ret);
 	if (hcb == NULL)
@@ -463,7 +463,7 @@ int rt_heap_inquire(RT_HEAP *heap, RT_HEAP_INFO *info)
 
 	put_alchemy_heap(hcb, &syns);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }

@@ -130,7 +130,7 @@ int rt_queue_create(RT_QUEUE *queue, const char *name,
 	if (poolsize == 0 || (mode & ~Q_PRIO) != 0)
 		return -EINVAL;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	ret = -ENOMEM;
 	qcb = xnmalloc(sizeof(*qcb));
@@ -180,7 +180,7 @@ int rt_queue_create(RT_QUEUE *queue, const char *name,
 	} else
 		queue->handle = mainheap_ref(qcb, uintptr_t);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -217,7 +217,7 @@ int rt_queue_delete(RT_QUEUE *queue)
 	if (threadobj_irq_p())
 		return -EPERM;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	qcb = get_alchemy_queue(queue, &syns, &ret);
 	if (qcb == NULL)
@@ -227,7 +227,7 @@ int rt_queue_delete(RT_QUEUE *queue)
 	qcb->magic = ~queue_magic;
 	syncobj_destroy(&qcb->sobj, &syns);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -261,7 +261,7 @@ void *rt_queue_alloc(RT_QUEUE *queue, size_t size)
 	struct service svc;
 	int ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	qcb = get_alchemy_queue(queue, &syns, &ret);
 	if (qcb == NULL)
@@ -281,7 +281,7 @@ void *rt_queue_alloc(RT_QUEUE *queue, size_t size)
 done:
 	put_alchemy_queue(qcb, &syns);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return msg;
 }
@@ -321,7 +321,7 @@ int rt_queue_free(RT_QUEUE *queue, void *buf)
 
 	msg = (struct alchemy_queue_msg *)buf - 1;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	qcb = get_alchemy_queue(queue, &syns, &ret);
 	if (qcb == NULL)
@@ -347,7 +347,7 @@ int rt_queue_free(RT_QUEUE *queue, void *buf)
 done:
 	put_alchemy_queue(qcb, &syns);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -419,7 +419,7 @@ int rt_queue_send(RT_QUEUE *queue,
 
 	msg = (struct alchemy_queue_msg *)buf - 1;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	qcb = get_alchemy_queue(queue, &syns, &ret);
 	if (qcb == NULL)
@@ -468,7 +468,7 @@ int rt_queue_send(RT_QUEUE *queue,
 done:
 	put_alchemy_queue(qcb, &syns);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -533,7 +533,7 @@ int rt_queue_write(RT_QUEUE *queue,
 	if (size == 0)
 		return 0;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	qcb = get_alchemy_queue(queue, &syns, &ret);
 	if (qcb == NULL)
@@ -600,7 +600,7 @@ enqueue:
 done:
 	put_alchemy_queue(qcb, &syns);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -681,7 +681,7 @@ ssize_t rt_queue_receive_timed(RT_QUEUE *queue, void **bufp,
 	if (!threadobj_current_p() && !alchemy_poll_mode(abs_timeout))
 		return -EPERM;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	qcb = get_alchemy_queue(queue, &syns, &err);
 	if (qcb == NULL) {
@@ -723,7 +723,7 @@ wait:
 done:
 	put_alchemy_queue(qcb, &syns);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -809,7 +809,7 @@ ssize_t rt_queue_read_timed(RT_QUEUE *queue,
 	if (size == 0)
 		return 0;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	qcb = get_alchemy_queue(queue, &syns, &err);
 	if (qcb == NULL) {
@@ -854,7 +854,7 @@ wait:
 done:
 	put_alchemy_queue(qcb, &syns);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -882,7 +882,7 @@ int rt_queue_flush(RT_QUEUE *queue)
 	struct service svc;
 	int ret = 0;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	qcb = get_alchemy_queue(queue, &syns, &ret);
 	if (qcb == NULL)
@@ -906,7 +906,7 @@ int rt_queue_flush(RT_QUEUE *queue)
 
 	put_alchemy_queue(qcb, &syns);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -935,7 +935,7 @@ int rt_queue_inquire(RT_QUEUE *queue, RT_QUEUE_INFO *info)
 	struct service svc;
 	int ret = 0;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	qcb = get_alchemy_queue(queue, &syns, &ret);
 	if (qcb == NULL)
@@ -951,7 +951,7 @@ int rt_queue_inquire(RT_QUEUE *queue, RT_QUEUE_INFO *info)
 
 	put_alchemy_queue(qcb, &syns);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }

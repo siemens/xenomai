@@ -79,22 +79,17 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-@XENO_COBALT_TRUE@am__append_1 = -I$(top_srcdir)/lib
-@XENO_COBALT_FALSE@am__append_2 = notifier.c
+@XENO_MERCURY_TRUE@am__append_1 = notifier.c
+@XENO_MERCURY_TRUE@am__append_2 = ../boilerplate/libboilerplate.la
 @XENO_REGISTRY_TRUE@am__append_3 = libregistry.la
 @XENO_REGISTRY_TRUE@am__append_4 = libregistry.la
-@XENO_DEBUG_TRUE@am__append_5 = debug.c
 
 # The process shareable heap has real-time properties, therefore it
 # fits both the cobalt and mercury cores equally. Yummie.
-@XENO_PSHARED_TRUE@am__append_6 = heapobj-pshared.c reference.c
-# We always need to build tlsf/malloc support; in the pshared case, it
-# will provide for private memory allocation.
-@XENO_TLSF_TRUE@am__append_7 = libtlsf.la
-@XENO_TLSF_TRUE@am__append_8 = libtlsf.la
-@XENO_TLSF_TRUE@am__append_9 = heapobj-tlsf.c
-@XENO_TLSF_FALSE@am__append_10 = heapobj-malloc.c
-@XENO_REGISTRY_TRUE@am__append_11 = regd
+@XENO_PSHARED_TRUE@am__append_5 = heapobj-pshared.c reference.c
+@XENO_TLSF_TRUE@am__append_6 = heapobj-tlsf.c
+@XENO_TLSF_FALSE@am__append_7 = heapobj-malloc.c
+@XENO_REGISTRY_TRUE@am__append_8 = regd
 subdir = lib/copperplate
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/config/depcomp COPYING
@@ -142,29 +137,26 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES) $(noinst_LTLIBRARIES)
-libcopperplate_la_DEPENDENCIES = libversion.la $(am__append_3) \
-	$(am__append_7)
+libcopperplate_la_DEPENDENCIES = libversion.la $(am__append_2) \
+	$(am__append_3)
 am__libcopperplate_la_SOURCES_DIST = clockobj.c cluster.c eventobj.c \
-	hash.c init.c internal.c internal.h main.c syncobj.c semobj.c \
+	init.c internal.c internal.h main.c syncobj.c semobj.c \
 	threadobj.c timerobj.c traceobj.c wrappers.c notifier.c \
-	debug.c heapobj-pshared.c reference.c heapobj-tlsf.c \
-	heapobj-malloc.c
-@XENO_COBALT_FALSE@am__objects_1 = libcopperplate_la-notifier.lo
-@XENO_DEBUG_TRUE@am__objects_2 = libcopperplate_la-debug.lo
-@XENO_PSHARED_TRUE@am__objects_3 =  \
+	heapobj-pshared.c reference.c heapobj-tlsf.c heapobj-malloc.c
+@XENO_MERCURY_TRUE@am__objects_1 = libcopperplate_la-notifier.lo
+@XENO_PSHARED_TRUE@am__objects_2 =  \
 @XENO_PSHARED_TRUE@	libcopperplate_la-heapobj-pshared.lo \
 @XENO_PSHARED_TRUE@	libcopperplate_la-reference.lo
-@XENO_TLSF_TRUE@am__objects_4 = libcopperplate_la-heapobj-tlsf.lo
-@XENO_TLSF_FALSE@am__objects_5 = libcopperplate_la-heapobj-malloc.lo
+@XENO_TLSF_TRUE@am__objects_3 = libcopperplate_la-heapobj-tlsf.lo
+@XENO_TLSF_FALSE@am__objects_4 = libcopperplate_la-heapobj-malloc.lo
 am_libcopperplate_la_OBJECTS = libcopperplate_la-clockobj.lo \
 	libcopperplate_la-cluster.lo libcopperplate_la-eventobj.lo \
-	libcopperplate_la-hash.lo libcopperplate_la-init.lo \
-	libcopperplate_la-internal.lo libcopperplate_la-main.lo \
-	libcopperplate_la-syncobj.lo libcopperplate_la-semobj.lo \
-	libcopperplate_la-threadobj.lo libcopperplate_la-timerobj.lo \
-	libcopperplate_la-traceobj.lo libcopperplate_la-wrappers.lo \
-	$(am__objects_1) $(am__objects_2) $(am__objects_3) \
-	$(am__objects_4) $(am__objects_5)
+	libcopperplate_la-init.lo libcopperplate_la-internal.lo \
+	libcopperplate_la-main.lo libcopperplate_la-syncobj.lo \
+	libcopperplate_la-semobj.lo libcopperplate_la-threadobj.lo \
+	libcopperplate_la-timerobj.lo libcopperplate_la-traceobj.lo \
+	libcopperplate_la-wrappers.lo $(am__objects_1) \
+	$(am__objects_2) $(am__objects_3) $(am__objects_4)
 libcopperplate_la_OBJECTS = $(am_libcopperplate_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -180,10 +172,6 @@ am__libregistry_la_SOURCES_DIST = registry.c
 @XENO_REGISTRY_TRUE@	libregistry_la-registry.lo
 libregistry_la_OBJECTS = $(am_libregistry_la_OBJECTS)
 @XENO_REGISTRY_TRUE@am_libregistry_la_rpath =
-libtlsf_la_LIBADD =
-am_libtlsf_la_OBJECTS = libtlsf_la-tlsf.lo
-libtlsf_la_OBJECTS = $(am_libtlsf_la_OBJECTS)
-@XENO_TLSF_TRUE@am_libtlsf_la_rpath =
 libversion_la_LIBADD =
 am_libversion_la_OBJECTS = libversion_la-version.lo
 libversion_la_OBJECTS = $(am_libversion_la_OBJECTS)
@@ -225,10 +213,9 @@ am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(libcopperplate_la_SOURCES) $(libregistry_la_SOURCES) \
-	$(libtlsf_la_SOURCES) $(libversion_la_SOURCES)
-DIST_SOURCES = $(am__libcopperplate_la_SOURCES_DIST) \
-	$(am__libregistry_la_SOURCES_DIST) $(libtlsf_la_SOURCES) \
 	$(libversion_la_SOURCES)
+DIST_SOURCES = $(am__libcopperplate_la_SOURCES_DIST) \
+	$(am__libregistry_la_SOURCES_DIST) $(libversion_la_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -464,35 +451,27 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libcopperplate.la
 libcopperplate_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 0:0:0
-libcopperplate_la_SOURCES = clockobj.c cluster.c eventobj.c hash.c \
-	init.c internal.c internal.h main.c syncobj.c semobj.c \
-	threadobj.c timerobj.c traceobj.c wrappers.c $(am__append_2) \
-	$(am__append_5) $(am__append_6) $(am__append_9) \
-	$(am__append_10)
-libcopperplate_la_CPPFLAGS = @XENO_USER_CFLAGS@ -I$(top_srcdir) \
-	-I$(top_srcdir)/include $(am__append_1)
-libcopperplate_la_LIBADD = libversion.la $(am__append_3) \
-	$(am__append_7)
-noinst_LTLIBRARIES = libversion.la $(am__append_4) $(am__append_8)
+libcopperplate_la_SOURCES = clockobj.c cluster.c eventobj.c init.c \
+	internal.c internal.h main.c syncobj.c semobj.c threadobj.c \
+	timerobj.c traceobj.c wrappers.c $(am__append_1) \
+	$(am__append_5) $(am__append_6) $(am__append_7)
+libcopperplate_la_CPPFLAGS = \
+	@XENO_USER_CFLAGS@		\
+	-I$(top_srcdir)			\
+	-I$(top_srcdir)/include		\
+	-I$(top_srcdir)/lib
+
+noinst_LTLIBRARIES = libversion.la $(am__append_4)
 libversion_la_CFLAGS = @XENO_USER_CFLAGS@
 libversion_la_SOURCES = version.c
+libcopperplate_la_LIBADD = libversion.la $(am__append_2) \
+	$(am__append_3)
 @XENO_REGISTRY_TRUE@libregistry_la_SOURCES = registry.c
 @XENO_REGISTRY_TRUE@libregistry_la_CPPFLAGS = \
 @XENO_REGISTRY_TRUE@	$(libcopperplate_la_CPPFLAGS)	\
 @XENO_REGISTRY_TRUE@	@XENO_FUSE_CFLAGS@
 
-libtlsf_la_SOURCES = \
-	tlsf/tlsf.c	\
-	tlsf/tlsf.h	\
-	tlsf/target.h
-
-libtlsf_la_CPPFLAGS = \
-	-Itlsf @XENO_USER_CFLAGS@			\
-	-I$(top_srcdir)/include				\
-	-DTLSF_USE_LOCKS=1 -DUSE_MMAP=1 -DTLSF_STATISTIC=1
-
-SUBDIRS = . $(am__append_11)
-EXTRA_DIST = tlsf/README
+SUBDIRS = . $(am__append_8)
 SPARSE = sparse
 all: all-recursive
 
@@ -581,9 +560,6 @@ libcopperplate.la: $(libcopperplate_la_OBJECTS) $(libcopperplate_la_DEPENDENCIES
 libregistry.la: $(libregistry_la_OBJECTS) $(libregistry_la_DEPENDENCIES) $(EXTRA_libregistry_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(LINK) $(am_libregistry_la_rpath) $(libregistry_la_OBJECTS) $(libregistry_la_LIBADD) $(LIBS)
 
-libtlsf.la: $(libtlsf_la_OBJECTS) $(libtlsf_la_DEPENDENCIES) $(EXTRA_libtlsf_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(LINK) $(am_libtlsf_la_rpath) $(libtlsf_la_OBJECTS) $(libtlsf_la_LIBADD) $(LIBS)
-
 libversion.la: $(libversion_la_OBJECTS) $(libversion_la_DEPENDENCIES) $(EXTRA_libversion_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(libversion_la_LINK)  $(libversion_la_OBJECTS) $(libversion_la_LIBADD) $(LIBS)
 
@@ -595,9 +571,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-clockobj.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-cluster.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-debug.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-eventobj.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-hash.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-heapobj-malloc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-heapobj-pshared.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-heapobj-tlsf.Plo@am__quote@
@@ -613,7 +587,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-traceobj.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-wrappers.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libregistry_la-registry.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libtlsf_la-tlsf.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libversion_la-version.Plo@am__quote@
 
 .c.o:
@@ -657,13 +630,6 @@ libcopperplate_la-eventobj.lo: eventobj.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='eventobj.c' object='libcopperplate_la-eventobj.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcopperplate_la-eventobj.lo `test -f 'eventobj.c' || echo '$(srcdir)/'`eventobj.c
-
-libcopperplate_la-hash.lo: hash.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcopperplate_la-hash.lo -MD -MP -MF $(DEPDIR)/libcopperplate_la-hash.Tpo -c -o libcopperplate_la-hash.lo `test -f 'hash.c' || echo '$(srcdir)/'`hash.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcopperplate_la-hash.Tpo $(DEPDIR)/libcopperplate_la-hash.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='hash.c' object='libcopperplate_la-hash.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcopperplate_la-hash.lo `test -f 'hash.c' || echo '$(srcdir)/'`hash.c
 
 libcopperplate_la-init.lo: init.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcopperplate_la-init.lo -MD -MP -MF $(DEPDIR)/libcopperplate_la-init.Tpo -c -o libcopperplate_la-init.lo `test -f 'init.c' || echo '$(srcdir)/'`init.c
@@ -735,13 +701,6 @@ libcopperplate_la-notifier.lo: notifier.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcopperplate_la-notifier.lo `test -f 'notifier.c' || echo '$(srcdir)/'`notifier.c
 
-libcopperplate_la-debug.lo: debug.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcopperplate_la-debug.lo -MD -MP -MF $(DEPDIR)/libcopperplate_la-debug.Tpo -c -o libcopperplate_la-debug.lo `test -f 'debug.c' || echo '$(srcdir)/'`debug.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcopperplate_la-debug.Tpo $(DEPDIR)/libcopperplate_la-debug.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='debug.c' object='libcopperplate_la-debug.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcopperplate_la-debug.lo `test -f 'debug.c' || echo '$(srcdir)/'`debug.c
-
 libcopperplate_la-heapobj-pshared.lo: heapobj-pshared.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcopperplate_la-heapobj-pshared.lo -MD -MP -MF $(DEPDIR)/libcopperplate_la-heapobj-pshared.Tpo -c -o libcopperplate_la-heapobj-pshared.lo `test -f 'heapobj-pshared.c' || echo '$(srcdir)/'`heapobj-pshared.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcopperplate_la-heapobj-pshared.Tpo $(DEPDIR)/libcopperplate_la-heapobj-pshared.Plo
@@ -776,13 +735,6 @@ libregistry_la-registry.lo: registry.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='registry.c' object='libregistry_la-registry.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libregistry_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libregistry_la-registry.lo `test -f 'registry.c' || echo '$(srcdir)/'`registry.c
-
-libtlsf_la-tlsf.lo: tlsf/tlsf.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libtlsf_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libtlsf_la-tlsf.lo -MD -MP -MF $(DEPDIR)/libtlsf_la-tlsf.Tpo -c -o libtlsf_la-tlsf.lo `test -f 'tlsf/tlsf.c' || echo '$(srcdir)/'`tlsf/tlsf.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libtlsf_la-tlsf.Tpo $(DEPDIR)/libtlsf_la-tlsf.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='tlsf/tlsf.c' object='libtlsf_la-tlsf.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libtlsf_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libtlsf_la-tlsf.lo `test -f 'tlsf/tlsf.c' || echo '$(srcdir)/'`tlsf/tlsf.c
 
 libversion_la-version.lo: version.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libversion_la_CFLAGS) $(CFLAGS) -MT libversion_la-version.lo -MD -MP -MF $(DEPDIR)/libversion_la-version.Tpo -c -o libversion_la-version.lo `test -f 'version.c' || echo '$(srcdir)/'`version.c
@@ -1095,7 +1047,7 @@ clean-local:
 	$(RM) git-stamp.h
 
 sparse:
-	@for i in $(libcopperplate_la_SOURCES) $(libtlsf_la_SOURCES); do \
+	@for i in $(libcopperplate_la_SOURCES) ; do \
 		$(SPARSE) $(CHECKFLAGS) $(srcdir)/$$i; \
 	done
 

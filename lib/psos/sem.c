@@ -81,7 +81,7 @@ u_long sm_create(const char *name,
 	char short_name[5];
 	int ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	sem = xnmalloc(sizeof(*sem));
 	if (sem == NULL) {
@@ -118,7 +118,7 @@ u_long sm_create(const char *name,
 
 	*smid_r = mainheap_ref(sem, u_long);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -133,7 +133,7 @@ u_long sm_delete(u_long smid)
 	if (sem == NULL)
 		return ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	cluster_delobj(&psos_sem_table, &sem->cobj);
 	sem->magic = ~sem_magic; /* Prevent further reference. */
@@ -141,7 +141,7 @@ u_long sm_delete(u_long smid)
 	if (ret)
 		ret = ret > 0 ? ERR_TATSDEL : ERR_OBJDEL;
 
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -158,9 +158,9 @@ u_long sm_ident(const char *name, u_long node, u_long *smid_r)
 
 	name = __psos_maybe_short_name(short_name, name);
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 	cobj = cluster_findobj(&psos_sem_table, name);
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 	if (cobj == NULL)
 		return ERR_OBJNF;
 
@@ -181,7 +181,7 @@ u_long sm_p(u_long smid, u_long flags, u_long timeout)
 	if (sem == NULL)
 		return ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	if (flags & SM_NOWAIT) {
 		timespec->tv_sec = 0;
@@ -205,7 +205,7 @@ u_long sm_p(u_long smid, u_long flags, u_long timeout)
 		 */
 	}
 
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -220,13 +220,13 @@ u_long sm_v(u_long smid)
 	if (sem == NULL)
 		return ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	ret = semobj_post(&sem->smobj);
 	if (ret == -EIDRM)
 		ret = ERR_OBJDEL;
 
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }

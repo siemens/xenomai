@@ -24,66 +24,10 @@
 #include <limits.h>
 #include <time.h>
 #include <string.h>
-#include "copperplate/lock.h"
+#include "boilerplate/lock.h"
 #include "copperplate/clockobj.h"
 #include "copperplate/debug.h"
 #include "internal.h"
-
-void timespec_sub(struct timespec *__restrict r,
-		  const struct timespec *__restrict t1,
-		  const struct timespec *__restrict t2)
-{
-	r->tv_sec = t1->tv_sec - t2->tv_sec;
-	r->tv_nsec = t1->tv_nsec - t2->tv_nsec;
-	if (r->tv_nsec < 0) {
-		r->tv_sec--;
-		r->tv_nsec += 1000000000;
-	}
-}
-
-void timespec_subs(struct timespec *__restrict r,
-		   const struct timespec *__restrict t1,
-		   sticks_t t2)
-{
-	sticks_t s, rem;
-
-	s = t2 / 1000000000;
-	rem = t2 - s * 1000000000;
-	r->tv_sec = t1->tv_sec - s;
-	r->tv_nsec = t1->tv_nsec - rem;
-	if (r->tv_nsec < 0) {
-		r->tv_sec--;
-		r->tv_nsec += 1000000000;
-	}
-}
-
-void timespec_add(struct timespec *__restrict r,
-		  const struct timespec *__restrict t1,
-		  const struct timespec *__restrict t2)
-{
-	r->tv_sec = t1->tv_sec + t2->tv_sec;
-	r->tv_nsec = t1->tv_nsec + t2->tv_nsec;
-	if (r->tv_nsec >= 1000000000) {
-		r->tv_sec++;
-		r->tv_nsec -= 1000000000;
-	}
-}
-
-void timespec_adds(struct timespec *__restrict r,
-		   const struct timespec *__restrict t1,
-		   sticks_t t2)
-{
-	sticks_t s, rem;
-
-	s = t2 / 1000000000;
-	rem = t2 - s * 1000000000;
-	r->tv_sec = t1->tv_sec + s;
-	r->tv_nsec = t1->tv_nsec + rem;
-	if (r->tv_nsec >= 1000000000) {
-		r->tv_sec++;
-		r->tv_nsec -= 1000000000;
-	}
-}
 
 #ifdef CONFIG_XENO_LORES_CLOCK_DISABLED
 

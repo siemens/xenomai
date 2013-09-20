@@ -813,6 +813,7 @@ AC_CONFIG_FILES([ \
 	scripts/xeno-config:scripts/xeno-config-$rtcore_type.in \
 	scripts/xeno \
 	lib/Makefile \
+	lib/boilerplate/Makefile \
 	lib/cobalt/Makefile \
 	lib/cobalt/arch/Makefile \
 	lib/cobalt/arch/arm/Makefile \
@@ -868,11 +869,12 @@ AC_CONFIG_FILES([ \
 	include/cobalt/Makefile \
 	include/cobalt/sys/Makefile \
 	include/cobalt/kernel/Makefile \
-	include/cobalt/copperplate/Makefile \
+	include/cobalt/boilerplate/Makefile \
 	include/rtdm/Makefile \
 	include/analogy/Makefile \
 	include/mercury/Makefile \
-	include/mercury/copperplate/Makefile \
+	include/mercury/boilerplate/Makefile \
+	include/boilerplate/Makefile \
 	include/copperplate/Makefile \
 	include/alchemy/Makefile \
 	include/vxworks/Makefile \

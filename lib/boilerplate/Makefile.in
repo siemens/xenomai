@@ -79,9 +79,11 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-subdir = include/mercury/copperplate
+@XENO_DEBUG_TRUE@am__append_1 = debug.c
+@XENO_TLSF_TRUE@am__append_2 = libtlsf.la
+subdir = lib/boilerplate
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
-	$(includesub_HEADERS)
+	$(top_srcdir)/config/depcomp
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config/ac_prog_cc_for_build.m4 \
 	$(top_srcdir)/config/docbook.m4 \
@@ -97,6 +99,27 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/include/xeno_config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
+LTLIBRARIES = $(noinst_LTLIBRARIES)
+@XENO_TLSF_TRUE@libboilerplate_la_DEPENDENCIES = libtlsf.la
+am__libboilerplate_la_SOURCES_DIST = ancillaries.c hash.c time.c \
+	debug.c
+@XENO_DEBUG_TRUE@am__objects_1 = libboilerplate_la-debug.lo
+am_libboilerplate_la_OBJECTS = libboilerplate_la-ancillaries.lo \
+	libboilerplate_la-hash.lo libboilerplate_la-time.lo \
+	$(am__objects_1)
+libboilerplate_la_OBJECTS = $(am_libboilerplate_la_OBJECTS)
+AM_V_lt = $(am__v_lt_@AM_V@)
+am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
+am__v_lt_0 = --silent
+am__v_lt_1 = 
+libboilerplate_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(AM_CFLAGS) $(CFLAGS) $(libboilerplate_la_LDFLAGS) $(LDFLAGS) \
+	-o $@
+libtlsf_la_LIBADD =
+am_libtlsf_la_OBJECTS = libtlsf_la-tlsf.lo
+libtlsf_la_OBJECTS = $(am_libtlsf_la_OBJECTS)
+@XENO_TLSF_TRUE@am_libtlsf_la_rpath =
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -109,42 +132,36 @@ AM_V_at = $(am__v_at_@AM_V@)
 am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
 am__v_at_0 = @
 am__v_at_1 = 
-SOURCES =
-DIST_SOURCES =
+DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
+depcomp = $(SHELL) $(top_srcdir)/config/depcomp
+am__depfiles_maybe = depfiles
+am__mv = mv -f
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) \
+	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
+	$(AM_CFLAGS) $(CFLAGS)
+AM_V_CC = $(am__v_CC_@AM_V@)
+am__v_CC_ = $(am__v_CC_@AM_DEFAULT_V@)
+am__v_CC_0 = @echo "  CC      " $@;
+am__v_CC_1 = 
+CCLD = $(CC)
+LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
+AM_V_CCLD = $(am__v_CCLD_@AM_V@)
+am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
+am__v_CCLD_0 = @echo "  CCLD    " $@;
+am__v_CCLD_1 = 
+SOURCES = $(libboilerplate_la_SOURCES) $(libtlsf_la_SOURCES)
+DIST_SOURCES = $(am__libboilerplate_la_SOURCES_DIST) \
+	$(libtlsf_la_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
-am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
-am__vpath_adj = case $$p in \
-    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
-    *) f=$$p;; \
-  esac;
-am__strip_dir = f=`echo $$p | sed -e 's|^.*/||'`;
-am__install_max = 40
-am__nobase_strip_setup = \
-  srcdirstrip=`echo "$(srcdir)" | sed 's/[].[^$$\\*|]/\\\\&/g'`
-am__nobase_strip = \
-  for p in $$list; do echo "$$p"; done | sed -e "s|$$srcdirstrip/||"
-am__nobase_list = $(am__nobase_strip_setup); \
-  for p in $$list; do echo "$$p $$p"; done | \
-  sed "s| $$srcdirstrip/| |;"' / .*\//!s/ .*/ ./; s,\( .*\)/[^/]*$$,\1,' | \
-  $(AWK) 'BEGIN { files["."] = "" } { files[$$2] = files[$$2] " " $$1; \
-    if (++n[$$2] == $(am__install_max)) \
-      { print $$2, files[$$2]; n[$$2] = 0; files[$$2] = "" } } \
-    END { for (dir in files) print dir, files[dir] }'
-am__base_list = \
-  sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
-  sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
-am__uninstall_files_from_dir = { \
-  test -z "$$files" \
-    || { test ! -d "$$dir" && test ! -f "$$dir" && test ! -r "$$dir"; } \
-    || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
-         $(am__cd) "$$dir" && rm -f $$files; }; \
-  }
-am__installdirs = "$(DESTDIR)$(includesubdir)"
-HEADERS = $(includesub_HEADERS)
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP)
 # Read a list of newline-separated strings from the standard input,
 # and print each of them once, without duplicates.  Input order is
@@ -331,15 +348,35 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-includesubdir = $(includedir)/mercury/copperplate
-includesub_HEADERS = \
-	signal.h	\
-	trace.h		\
-	wrappers.h
+noinst_LTLIBRARIES = libboilerplate.la $(am__append_2)
+libboilerplate_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 0:0:0
+libboilerplate_la_SOURCES = ancillaries.c hash.c time.c \
+	$(am__append_1)
+libboilerplate_la_CPPFLAGS = \
+	@XENO_USER_CFLAGS@				\
+	-I$(top_srcdir)					\
+	-I$(top_srcdir)/include
 
+
+# We always build the tlsf/malloc support. In the pshared case, it
+# will provide for private memory allocation.
+@XENO_TLSF_TRUE@libboilerplate_la_LIBADD = libtlsf.la
+libtlsf_la_SOURCES = \
+	tlsf/tlsf.c	\
+	tlsf/tlsf.h	\
+	tlsf/target.h
+
+libtlsf_la_CPPFLAGS = \
+	-Itlsf @XENO_USER_CFLAGS@			\
+	-I$(top_srcdir)/include				\
+	-DTLSF_USE_LOCKS=1 -DUSE_MMAP=1 -DTLSF_STATISTIC=1
+
+EXTRA_DIST = tlsf/README
+SPARSE = sparse
 all: all-am
 
 .SUFFIXES:
+.SUFFIXES: .c .lo .o .obj
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -349,9 +386,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign include/mercury/copperplate/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign lib/boilerplate/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign include/mercury/copperplate/Makefile
+	  $(AUTOMAKE) --foreign lib/boilerplate/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -371,32 +408,96 @@ $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
 
+clean-noinstLTLIBRARIES:
+	-test -z "$(noinst_LTLIBRARIES)" || rm -f $(noinst_LTLIBRARIES)
+	@list='$(noinst_LTLIBRARIES)'; \
+	locs=`for p in $$list; do echo $$p; done | \
+	      sed 's|^[^/]*$$|.|; s|/[^/]*$$||; s|$$|/so_locations|' | \
+	      sort -u`; \
+	test -z "$$locs" || { \
+	  echo rm -f $${locs}; \
+	  rm -f $${locs}; \
+	}
+
+libboilerplate.la: $(libboilerplate_la_OBJECTS) $(libboilerplate_la_DEPENDENCIES) $(EXTRA_libboilerplate_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(libboilerplate_la_LINK)  $(libboilerplate_la_OBJECTS) $(libboilerplate_la_LIBADD) $(LIBS)
+
+libtlsf.la: $(libtlsf_la_OBJECTS) $(libtlsf_la_DEPENDENCIES) $(EXTRA_libtlsf_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(LINK) $(am_libtlsf_la_rpath) $(libtlsf_la_OBJECTS) $(libtlsf_la_LIBADD) $(LIBS)
+
+mostlyclean-compile:
+	-rm -f *.$(OBJEXT)
+
+distclean-compile:
+	-rm -f *.tab.c
+
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libboilerplate_la-ancillaries.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libboilerplate_la-debug.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libboilerplate_la-hash.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libboilerplate_la-time.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libtlsf_la-tlsf.Plo@am__quote@
+
+.c.o:
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c $<
+
+.c.obj:
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c `$(CYGPATH_W) '$<'`
+
+.c.lo:
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LTCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
+
+libboilerplate_la-ancillaries.lo: ancillaries.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libboilerplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libboilerplate_la-ancillaries.lo -MD -MP -MF $(DEPDIR)/libboilerplate_la-ancillaries.Tpo -c -o libboilerplate_la-ancillaries.lo `test -f 'ancillaries.c' || echo '$(srcdir)/'`ancillaries.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libboilerplate_la-ancillaries.Tpo $(DEPDIR)/libboilerplate_la-ancillaries.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ancillaries.c' object='libboilerplate_la-ancillaries.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libboilerplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libboilerplate_la-ancillaries.lo `test -f 'ancillaries.c' || echo '$(srcdir)/'`ancillaries.c
+
+libboilerplate_la-hash.lo: hash.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libboilerplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libboilerplate_la-hash.lo -MD -MP -MF $(DEPDIR)/libboilerplate_la-hash.Tpo -c -o libboilerplate_la-hash.lo `test -f 'hash.c' || echo '$(srcdir)/'`hash.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libboilerplate_la-hash.Tpo $(DEPDIR)/libboilerplate_la-hash.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='hash.c' object='libboilerplate_la-hash.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libboilerplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libboilerplate_la-hash.lo `test -f 'hash.c' || echo '$(srcdir)/'`hash.c
+
+libboilerplate_la-time.lo: time.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libboilerplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libboilerplate_la-time.lo -MD -MP -MF $(DEPDIR)/libboilerplate_la-time.Tpo -c -o libboilerplate_la-time.lo `test -f 'time.c' || echo '$(srcdir)/'`time.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libboilerplate_la-time.Tpo $(DEPDIR)/libboilerplate_la-time.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='time.c' object='libboilerplate_la-time.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libboilerplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libboilerplate_la-time.lo `test -f 'time.c' || echo '$(srcdir)/'`time.c
+
+libboilerplate_la-debug.lo: debug.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libboilerplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libboilerplate_la-debug.lo -MD -MP -MF $(DEPDIR)/libboilerplate_la-debug.Tpo -c -o libboilerplate_la-debug.lo `test -f 'debug.c' || echo '$(srcdir)/'`debug.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libboilerplate_la-debug.Tpo $(DEPDIR)/libboilerplate_la-debug.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='debug.c' object='libboilerplate_la-debug.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libboilerplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libboilerplate_la-debug.lo `test -f 'debug.c' || echo '$(srcdir)/'`debug.c
+
+libtlsf_la-tlsf.lo: tlsf/tlsf.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libtlsf_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libtlsf_la-tlsf.lo -MD -MP -MF $(DEPDIR)/libtlsf_la-tlsf.Tpo -c -o libtlsf_la-tlsf.lo `test -f 'tlsf/tlsf.c' || echo '$(srcdir)/'`tlsf/tlsf.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libtlsf_la-tlsf.Tpo $(DEPDIR)/libtlsf_la-tlsf.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='tlsf/tlsf.c' object='libtlsf_la-tlsf.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libtlsf_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libtlsf_la-tlsf.lo `test -f 'tlsf/tlsf.c' || echo '$(srcdir)/'`tlsf/tlsf.c
+
 mostlyclean-libtool:
 	-rm -f *.lo
 
 clean-libtool:
 	-rm -rf .libs _libs
-install-includesubHEADERS: $(includesub_HEADERS)
-	@$(NORMAL_INSTALL)
-	@list='$(includesub_HEADERS)'; test -n "$(includesubdir)" || list=; \
-	if test -n "$$list"; then \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(includesubdir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(includesubdir)" || exit 1; \
-	fi; \
-	for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  echo "$$d$$p"; \
-	done | $(am__base_list) | \
-	while read files; do \
-	  echo " $(INSTALL_HEADER) $$files '$(DESTDIR)$(includesubdir)'"; \
-	  $(INSTALL_HEADER) $$files "$(DESTDIR)$(includesubdir)" || exit $$?; \
-	done
-
-uninstall-includesubHEADERS:
-	@$(NORMAL_UNINSTALL)
-	@list='$(includesub_HEADERS)'; test -n "$(includesubdir)" || list=; \
-	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
-	dir='$(DESTDIR)$(includesubdir)'; $(am__uninstall_files_from_dir)
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
@@ -482,11 +583,8 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(HEADERS)
+all-am: Makefile $(LTLIBRARIES)
 installdirs:
-	for dir in "$(DESTDIR)$(includesubdir)"; do \
-	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
-	done
 install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
@@ -519,11 +617,14 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-libtool mostlyclean-am
+clean-am: clean-generic clean-libtool clean-noinstLTLIBRARIES \
+	mostlyclean-am
 
 distclean: distclean-am
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
-distclean-am: clean-am distclean-generic distclean-tags
+distclean-am: clean-am distclean-compile distclean-generic \
+	distclean-tags
 
 dvi: dvi-am
 
@@ -537,7 +638,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-includesubHEADERS
+install-data-am:
 
 install-dvi: install-dvi-am
 
@@ -566,12 +667,14 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
 mostlyclean: mostlyclean-am
 
-mostlyclean-am: mostlyclean-generic mostlyclean-libtool
+mostlyclean-am: mostlyclean-compile mostlyclean-generic \
+	mostlyclean-libtool
 
 pdf: pdf-am
 
@@ -581,24 +684,29 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-includesubHEADERS
+uninstall-am:
 
 .MAKE: install-am install-strip
 
 .PHONY: CTAGS GTAGS TAGS all all-am check check-am clean clean-generic \
-	clean-libtool cscopelist-am ctags ctags-am distclean \
-	distclean-generic distclean-libtool distclean-tags distdir dvi \
-	dvi-am html html-am info info-am install install-am \
-	install-data install-data-am install-dvi install-dvi-am \
-	install-exec install-exec-am install-html install-html-am \
-	install-includesubHEADERS install-info install-info-am \
-	install-man install-pdf install-pdf-am install-ps \
-	install-ps-am install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-generic mostlyclean-libtool pdf pdf-am \
-	ps ps-am tags tags-am uninstall uninstall-am \
-	uninstall-includesubHEADERS
+	clean-libtool clean-noinstLTLIBRARIES cscopelist-am ctags \
+	ctags-am distclean distclean-compile distclean-generic \
+	distclean-libtool distclean-tags distdir dvi dvi-am html \
+	html-am info info-am install install-am install-data \
+	install-data-am install-dvi install-dvi-am install-exec \
+	install-exec-am install-html install-html-am install-info \
+	install-info-am install-man install-pdf install-pdf-am \
+	install-ps install-ps-am install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	tags tags-am uninstall uninstall-am
 
+
+sparse:
+	@for i in $(libboilerplate_la_SOURCES) $(libtlsf_la_SOURCES); do \
+		$(SPARSE) $(CHECKFLAGS) $(srcdir)/$$i; \
+	done
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

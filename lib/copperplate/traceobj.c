@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "copperplate/lock.h"
+#include "boilerplate/lock.h"
 #include "copperplate/traceobj.h"
 #include "copperplate/threadobj.h"
 #include "copperplate/heapobj.h"

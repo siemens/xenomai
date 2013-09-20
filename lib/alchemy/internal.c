@@ -19,7 +19,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <errno.h>
-#include <copperplate/lock.h>
+#include <boilerplate/lock.h>
 #include <copperplate/cluster.h>
 #include <copperplate/heapobj.h>
 #include "internal.h"
@@ -51,11 +51,11 @@ int alchemy_bind_object(const char *name, struct syncluster *sc,
 	void *p;
 	int ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 	ret = syncluster_findobj(sc, name,
 				 alchemy_rel_timeout(timeout, &ts),
 				 &cobj);
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 	if (ret)
 		return ret;
 

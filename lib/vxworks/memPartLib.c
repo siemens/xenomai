@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <copperplate/lock.h>
+#include <boilerplate/lock.h>
 #include <copperplate/heapobj.h>
 #include <copperplate/init.h>
 #include <vxworks/errnoLib.h>
@@ -48,7 +48,7 @@ PART_ID memPartCreate(char *pPool, unsigned int poolSize)
 	struct wind_mempart *mp;
 	struct service svc;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	mp = xnmalloc(sizeof(*mp));
 	if (mp == NULL)
@@ -58,7 +58,7 @@ PART_ID memPartCreate(char *pPool, unsigned int poolSize)
 		xnfree(mp);
 	fail:
 		errno = S_memLib_NOT_ENOUGH_MEMORY;
-		COPPERPLATE_UNPROTECT(svc);
+		CANCEL_RESTORE(svc);
 		return (PART_ID)0;
 	}
 
@@ -69,7 +69,7 @@ PART_ID memPartCreate(char *pPool, unsigned int poolSize)
 	__RT(pthread_mutexattr_destroy(&mattr));
 	mp->magic = mempart_magic;
 
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return mainheap_ref(mp, PART_ID);
 }
@@ -92,7 +92,7 @@ STATUS memPartAddToPool(PART_ID partId,
 		return ERROR;
 	}
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	__RT(pthread_mutex_lock(&mp->lock));
 
@@ -103,7 +103,7 @@ STATUS memPartAddToPool(PART_ID partId,
 
 	__RT(pthread_mutex_unlock(&mp->lock));
 
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -165,13 +165,13 @@ STATUS memPartFree(PART_ID partId, char *pBlock)
 	if (mp == NULL)
 		return ERROR;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	__RT(pthread_mutex_lock(&mp->lock));
 	heapobj_free(&mp->hobj, pBlock);
 	__RT(pthread_mutex_unlock(&mp->lock));
 
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return OK;
 }

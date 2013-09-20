@@ -224,7 +224,7 @@ static void *task_trampoline(void *arg)
 	if (ret)
 		goto done;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	write_lock_nocancel(&wind_task_lock);
 	pvlist_append(&task->next, &wind_task_list);
@@ -248,7 +248,7 @@ static void *task_trampoline(void *arg)
 		threadobj_unlock(&task->thobj);
 	}
 
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	threadobj_notify_entry();
 	args->entry(args->arg0, args->arg1, args->arg2, args->arg3,
@@ -411,7 +411,7 @@ STATUS taskInit(WIND_TCB *pTcb,
 		return ERROR;
 	}
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	task = alloc_task();
 	if (task == NULL) {
@@ -433,7 +433,7 @@ STATUS taskInit(WIND_TCB *pTcb,
 	args->arg9 = arg9;
 	ret = __taskInit(task, pTcb, name, prio, flags, entry, stacksize);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -473,12 +473,12 @@ TASK_ID taskSpawn(const char *name,
 		return ERROR;
 	}
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	task = alloc_task();
 	if (task == NULL) {
 		errno = S_memLib_NOT_ENOUGH_MEMORY;
-		COPPERPLATE_UNPROTECT(svc);
+		CANCEL_RESTORE(svc);
 		return ERROR;
 	}
 
@@ -497,11 +497,11 @@ TASK_ID taskSpawn(const char *name,
 
 	if (__taskInit(task, &task->priv_tcb, name,
 		       prio, flags, entry, stacksize) == ERROR) {
-		COPPERPLATE_UNPROTECT(svc);
+		CANCEL_RESTORE(svc);
 		return ERROR;
 	}
 
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	tid = mainheap_ref(&task->priv_tcb, TASK_ID);
 
@@ -540,7 +540,7 @@ static STATUS __taskDelete(TASK_ID tid, int force)
 	 *
 	 * We traverse no cancellation point below until
 	 * threadobj_cancel() is invoked, so we don't need any
-	 * COPPERPLATE_PROTECT() section.
+	 * CANCEL_DEFER() section.
 	 */
 	if (force)	/* Best effort only. */
 		force = __RT(pthread_mutex_trylock(&task->safelock));
@@ -612,9 +612,9 @@ STATUS taskSuspend(TASK_ID tid)
 	if (task == NULL)
 		goto objid_error;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 	ret = threadobj_suspend(&task->thobj);
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 	put_wind_task(task);
 
 	if (ret) {
@@ -636,9 +636,9 @@ STATUS taskResume(TASK_ID tid)
 	if (task == NULL)
 		goto objid_error;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 	ret = threadobj_resume(&task->thobj);
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 	put_wind_task(task);
 
 	if (ret) {
@@ -667,7 +667,7 @@ STATUS taskSafe(void)
 
 	/*
 	 * Grabbing the safelock will lock out cancellation requests,
-	 * so we don't have to issue COPPERPLATE_PROTECT().
+	 * so we don't have to issue CANCEL_DEFER().
 	 */
 	__RT(pthread_mutex_lock(&current->safelock));
 	current->tcb->safeCnt++;
@@ -733,9 +733,9 @@ STATUS taskPrioritySet(TASK_ID tid, int prio)
 		return ERROR;
 	}
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 	ret = threadobj_set_priority(&task->thobj, cprio);
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	if (ret) {
 	objid_error:
@@ -785,9 +785,9 @@ STATUS taskLock(void)
 		return ERROR;
 	}
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 	threadobj_lock_sched();
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return OK;
 }
@@ -808,9 +808,9 @@ STATUS taskUnlock(void)
 		return ERROR;
 	}
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 	threadobj_unlock_sched();
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return OK;
 }
@@ -838,7 +838,7 @@ STATUS taskDelay(int ticks)
 		return OK;
 	}
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	clockobj_ticks_to_timeout(&wind_clock, ticks, &rqt);
 	ret = threadobj_sleep(&rqt);
@@ -847,7 +847,7 @@ STATUS taskDelay(int ticks)
 		ret = ERROR;
 	}
 
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }

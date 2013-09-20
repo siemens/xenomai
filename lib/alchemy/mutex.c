@@ -104,7 +104,7 @@ int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 	if (threadobj_irq_p())
 		return -EPERM;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	mcb = xnmalloc(sizeof(*mcb));
 	if (mcb == NULL) {
@@ -131,7 +131,7 @@ int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 	} else
 		mutex->handle = mainheap_ref(mcb, uintptr_t);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -166,7 +166,7 @@ int rt_mutex_delete(RT_MUTEX *mutex)
 	if (threadobj_irq_p())
 		return -EPERM;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	mcb = find_alchemy_mutex(mutex, &ret);
 	if (mcb == NULL)
@@ -180,7 +180,7 @@ int rt_mutex_delete(RT_MUTEX *mutex)
 	syncluster_delobj(&alchemy_mutex_table, &mcb->cobj);
 	xnfree(mcb);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -373,7 +373,7 @@ int rt_mutex_inquire(RT_MUTEX *mutex, RT_MUTEX_INFO *info)
 	if (threadobj_irq_p())
 		return -EPERM;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	mcb = find_alchemy_mutex(mutex, &ret);
 	if (mcb == NULL)
@@ -392,7 +392,7 @@ int rt_mutex_inquire(RT_MUTEX *mutex, RT_MUTEX_INFO *info)
 
 	strcpy(info->name, mcb->name);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }

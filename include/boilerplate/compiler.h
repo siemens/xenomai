@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2013 Philippe Gerum <rpm@xenomai.org>.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -15,22 +15,20 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
+#ifndef _BOILERPLATE_COMPILER_H
+#define _BOILERPLATE_COMPILER_H
 
-#ifndef _COPPERPLATE_LIST_H
-#define _COPPERPLATE_LIST_H
+#include <stddef.h>
 
-#include <assert.h>
-#include <copperplate/reference.h>
-#include <copperplate/shared-list.h>
-#include <copperplate/private-list.h>
+#define container_of(ptr, type, member)					\
+	({								\
+		const typeof(((type *)0)->member) *__mptr = (ptr);	\
+		(type *)((char *)__mptr - offsetof(type, member));	\
+	})
 
-/*
- * WARNING: ALL list services are assumed to be free from any POSIX
- * cancellation points by callers, allowing the *_nocancel() locking
- * forms to be used (see copperplate/lock.h).
- *
- * Please think of this when adding any debug instrumentation invoking
- * printf() and the like.
- */
+#ifndef likely
+#define likely(x)	__builtin_expect(!!(x), 1)
+#define unlikely(x)	__builtin_expect(!!(x), 0)
+#endif
 
-#endif /* !_COPPERPLATE_LIST_H */
+#endif /* _BOILERPLATE_COMPILER_H */

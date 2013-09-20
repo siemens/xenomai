@@ -101,7 +101,7 @@ int rt_cond_create(RT_COND *cond, const char *name)
 	if (threadobj_irq_p())
 		return -EPERM;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	ccb = xnmalloc(sizeof(*ccb));
 	if (ccb == NULL) {
@@ -124,7 +124,7 @@ int rt_cond_create(RT_COND *cond, const char *name)
 	} else
 		cond->handle = mainheap_ref(ccb, uintptr_t);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -160,7 +160,7 @@ int rt_cond_delete(RT_COND *cond)
 	if (threadobj_irq_p())
 		return -EPERM;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	ccb = find_alchemy_cond(cond, &ret);
 	if (ccb == NULL)
@@ -174,7 +174,7 @@ int rt_cond_delete(RT_COND *cond)
 	syncluster_delobj(&alchemy_cond_table, &ccb->cobj);
 	xnfree(ccb);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }

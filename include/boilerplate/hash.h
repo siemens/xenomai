@@ -16,11 +16,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
-#ifndef _COPPERPLATE_HASH_H
-#define _COPPERPLATE_HASH_H
+#ifndef _BOILERPLATE_HASH_H
+#define _BOILERPLATE_HASH_H
 
 #include <pthread.h>
-#include <copperplate/list.h>
+#include <boilerplate/list.h>
 
 #define HASHSLOTS  (1<<8)
 
@@ -193,4 +193,4 @@ int pvhash_compare_strings(const struct pvhashobj *l,
 }
 #endif
 
-#endif /* _COPPERPLATE_HASH_H */
+#endif /* _BOILERPLATE_HASH_H */

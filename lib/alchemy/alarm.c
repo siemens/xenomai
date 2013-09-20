@@ -126,7 +126,7 @@ int rt_alarm_create(RT_ALARM *alarm, const char *name,
 	struct service svc;
 	int ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	acb = pvmalloc(sizeof(*acb));
 	if (acb == NULL) {
@@ -151,13 +151,13 @@ int rt_alarm_create(RT_ALARM *alarm, const char *name,
 		goto fail;
 	}
 
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return 0;
 fail:
 	pvfree(acb);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -189,7 +189,7 @@ int rt_alarm_delete(RT_ALARM *alarm)
 	struct service svc;
 	int ret = 0;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	acb = get_alchemy_alarm(alarm, &ret);
 	if (acb == NULL)
@@ -200,7 +200,7 @@ int rt_alarm_delete(RT_ALARM *alarm)
 	acb->magic = ~alarm_magic;
 	pvfree(acb);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -249,7 +249,7 @@ int rt_alarm_start(RT_ALARM *alarm,
 	struct service svc;
 	int ret = 0;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	acb = get_alchemy_alarm(alarm, &ret);
 	if (acb == NULL)
@@ -259,7 +259,7 @@ int rt_alarm_start(RT_ALARM *alarm,
 	clockobj_ticks_to_timespec(&alchemy_clock, interval, &it.it_interval);
 	ret = timerobj_start(&acb->tmobj, alarm_handler, &it);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -285,7 +285,7 @@ int rt_alarm_stop(RT_ALARM *alarm)
 	struct service svc;
 	int ret = 0;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	acb = get_alchemy_alarm(alarm, &ret);
 	if (acb == NULL)
@@ -293,7 +293,7 @@ int rt_alarm_stop(RT_ALARM *alarm)
 
 	ret = timerobj_stop(&acb->tmobj);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -321,7 +321,7 @@ int rt_alarm_inquire(RT_ALARM *alarm, RT_ALARM_INFO *info)
 	struct service svc;
 	int ret = 0;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	acb = get_alchemy_alarm(alarm, &ret);
 	if (acb == NULL)
@@ -332,7 +332,7 @@ int rt_alarm_inquire(RT_ALARM *alarm, RT_ALARM_INFO *info)
 
 	put_alchemy_alarm(acb);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }

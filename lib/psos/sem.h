@@ -19,7 +19,7 @@
 #ifndef _PSOS_SEM_H
 #define _PSOS_SEM_H
 
-#include <copperplate/hash.h>
+#include <boilerplate/hash.h>
 #include <copperplate/semobj.h>
 #include <copperplate/cluster.h>
 

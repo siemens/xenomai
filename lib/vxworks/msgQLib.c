@@ -84,7 +84,7 @@ MSG_Q_ID msgQCreate(int maxMsgs, int maxMsgLength, int options)
 		return (MSG_Q_ID)0;
 	}
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	mq = xnmalloc(sizeof(*mq));
 	if (mq == NULL)
@@ -101,7 +101,7 @@ MSG_Q_ID msgQCreate(int maxMsgs, int maxMsgLength, int options)
 		xnfree(mq);
 	no_mem:
 		errno = S_memLib_NOT_ENOUGH_MEMORY;
-		COPPERPLATE_UNPROTECT(svc);
+		CANCEL_RESTORE(svc);
 		return (MSG_Q_ID)0;
 	}
 
@@ -118,7 +118,7 @@ MSG_Q_ID msgQCreate(int maxMsgs, int maxMsgLength, int options)
 
 	mq->magic = mq_magic;
 
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return mainheap_ref(mq, MSG_Q_ID);
 }
@@ -138,10 +138,10 @@ STATUS msgQDelete(MSG_Q_ID msgQId)
 	if (mq == NULL)
 		goto objid_error;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	if (syncobj_lock(&mq->sobj, &syns)) {
-		COPPERPLATE_UNPROTECT(svc);
+		CANCEL_RESTORE(svc);
 	objid_error:
 		errno = S_objLib_OBJ_ID_ERROR;
 		return ERROR;
@@ -150,7 +150,7 @@ STATUS msgQDelete(MSG_Q_ID msgQId)
 	mq->magic = ~mq_magic; /* Prevent further reference. */
 	syncobj_destroy(&mq->sobj, &syns);
 
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return OK;
 }
@@ -175,10 +175,10 @@ int msgQReceive(MSG_Q_ID msgQId, char *buffer, UINT maxNBytes, int timeout)
 	if (mq == NULL)
 		goto objid_error;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	if (syncobj_lock(&mq->sobj, &syns)) {
-		COPPERPLATE_UNPROTECT(svc);
+		CANCEL_RESTORE(svc);
 	objid_error:
 		errno = S_objLib_OBJ_ID_ERROR;
 		return ERROR;
@@ -232,7 +232,7 @@ out:
 	if (wait)
 		threadobj_finish_wait();
 
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return nbytes;
 }
@@ -250,14 +250,14 @@ STATUS msgQSend(MSG_Q_ID msgQId, const char *buffer, UINT bytes,
 	int ret = ERROR;
 	UINT maxbytes;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	mq = find_mq_from_id(msgQId);
 	if (mq == NULL)
 		goto objid_error;
 
 	if (syncobj_lock(&mq->sobj, &syns)) {
-		COPPERPLATE_UNPROTECT(svc);
+		CANCEL_RESTORE(svc);
 	objid_error:
 		errno = S_objLib_OBJ_ID_ERROR;
 		return ERROR;
@@ -352,7 +352,7 @@ done:
 fail:
 	syncobj_unlock(&mq->sobj, &syns);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -368,10 +368,10 @@ int msgQNumMsgs(MSG_Q_ID msgQId)
 	if (mq == NULL)
 		goto objid_error;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	if (syncobj_lock(&mq->sobj, &syns)) {
-		COPPERPLATE_UNPROTECT(svc);
+		CANCEL_RESTORE(svc);
 	objid_error:
 		errno = S_objLib_OBJ_ID_ERROR;
 		return ERROR;
@@ -380,7 +380,7 @@ int msgQNumMsgs(MSG_Q_ID msgQId)
 	msgcount = mq->msgcount;
 	syncobj_unlock(&mq->sobj, &syns);
 
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return msgcount;
 }

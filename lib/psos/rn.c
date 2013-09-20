@@ -109,7 +109,7 @@ u_long rn_create(const char *name, void *saddr, u_long length,
 	saddr += sizeof(*rn);
 	length -= sizeof(*rn);
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	if (name == NULL || *name == '\0')
 		sprintf(rn->name, "rn%lu", ++anon_rnids);
@@ -146,7 +146,7 @@ u_long rn_create(const char *name, void *saddr, u_long length,
 	*asize_r = rn->hobj.size;
 	*rnid_r = mainheap_ref(rn, u_long);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -162,7 +162,7 @@ u_long rn_delete(u_long rnid)
 	if (rn == NULL)
 		return ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	if (syncobj_lock(&rn->sobj, &syns)) {
 		ret = ERR_OBJDEL;
@@ -182,7 +182,7 @@ u_long rn_delete(u_long rnid)
 		ret = ERR_TATRNDEL;
 	xnfree(rn);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -196,9 +196,9 @@ u_long rn_ident(const char *name, u_long *rnid_r)
 
 	name = __psos_maybe_short_name(short_name, name);
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 	cobj = pvcluster_findobj(&psos_rn_table, name);
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 	if (cobj == NULL)
 		return ERR_OBJNF;
 
@@ -223,7 +223,7 @@ u_long rn_getseg(u_long rnid, u_long size, u_long flags,
 	if (rn == NULL)
 		return ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	if (syncobj_lock(&rn->sobj, &syns)) {
 		ret = ERR_OBJDEL;
@@ -280,7 +280,7 @@ out:
 	if (wait)
 		threadobj_finish_wait();
 
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -300,7 +300,7 @@ u_long rn_retseg(u_long rnid, void *segaddr)
 	if (rn == NULL)
 		return ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	if (syncobj_lock(&rn->sobj, &syns)) {
 		ret = ERR_OBJDEL;
@@ -330,7 +330,7 @@ u_long rn_retseg(u_long rnid, void *segaddr)
 done:
 	syncobj_unlock(&rn->sobj, &syns);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }

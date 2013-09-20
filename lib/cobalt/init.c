@@ -25,6 +25,7 @@
 #include <signal.h>
 #include <limits.h>
 #include <unistd.h>
+#include <boilerplate/ancillaries.h>
 #include <cobalt/uapi/kernel/heap.h>
 #include <cobalt/uapi/rtdm/syscall.h>
 #include <cobalt/ticks.h>
@@ -174,6 +175,7 @@ void __libcobalt_init(void)
 	}
 
 	cobalt_print_init();
+	boilerplate_init();
 }
 
 static __libcobalt_ctor void __init_cobalt(void)

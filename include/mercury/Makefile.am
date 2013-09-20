@@ -1,2 +1,2 @@
 
-SUBDIRS = copperplate
+SUBDIRS = boilerplate

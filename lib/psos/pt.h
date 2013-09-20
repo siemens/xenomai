@@ -21,7 +21,7 @@
 
 #include <sys/types.h>
 #include <pthread.h>
-#include <copperplate/hash.h>
+#include <boilerplate/hash.h>
 #include <copperplate/cluster.h>
 
 struct psos_pt {

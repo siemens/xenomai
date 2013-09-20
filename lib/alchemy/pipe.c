@@ -51,7 +51,7 @@ int rt_pipe_create(RT_PIPE *pipe,
 	if (threadobj_irq_p())
 		return -EPERM;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	pcb = xnmalloc(sizeof(*pcb));
 	if (pcb == NULL) {
@@ -107,7 +107,7 @@ int rt_pipe_create(RT_PIPE *pipe,
 
 	pipe->handle = mainheap_ref(pcb, uintptr_t);
 
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return 0;
 fail_sockopt:
@@ -116,7 +116,7 @@ fail_register:
 	__RT(close(sock));
 	xnfree(pcb);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;	
 }
@@ -130,7 +130,7 @@ int rt_pipe_delete(RT_PIPE *pipe)
 	if (threadobj_irq_p())
 		return -EPERM;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	pcb = find_alchemy_pipe(pipe, &ret);
 	if (pcb == NULL)
@@ -147,7 +147,7 @@ int rt_pipe_delete(RT_PIPE *pipe)
 	syncluster_delobj(&alchemy_pipe_table, &pcb->cobj);
 	pcb->magic = ~pipe_magic;
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -197,7 +197,7 @@ static ssize_t do_write_pipe(RT_PIPE *pipe,
 	ssize_t ret;
 	int err = 0;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	pcb = find_alchemy_pipe(pipe, &err);
 	if (pcb == NULL) {
@@ -209,7 +209,7 @@ static ssize_t do_write_pipe(RT_PIPE *pipe,
 	if (ret < 0)
 		ret = -errno;
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }

@@ -18,7 +18,7 @@
 
 #include <assert.h>
 #include <errno.h>
-#include "copperplate/lock.h"
+#include "boilerplate/lock.h"
 #include "copperplate/threadobj.h"
 #include "copperplate/syncobj.h"
 #include "copperplate/debug.h"

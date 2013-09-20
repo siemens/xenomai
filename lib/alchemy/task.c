@@ -154,7 +154,7 @@ static int task_prologue(struct alchemy_task *tcb)
 	if (ret)
 		return ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	threadobj_wait_start();
 
@@ -162,7 +162,7 @@ static int task_prologue(struct alchemy_task *tcb)
 	ret = threadobj_set_mode(0, tcb->mode, NULL);
 	threadobj_unlock(&tcb->thobj);
 
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -341,7 +341,7 @@ int rt_task_create(RT_TASK *task, const char *name,
 	if (mode & ~(T_LOCK | T_WARNSW | T_JOINABLE))
 		return -EINVAL;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	ret = create_tcb(&tcb, task, name, prio, mode);
 	if (ret)
@@ -363,7 +363,7 @@ int rt_task_create(RT_TASK *task, const char *name,
 	else
 		task->thread = tcb->thobj.tid;
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -409,11 +409,11 @@ int rt_task_delete(RT_TASK *task)
 	if (tcb == NULL)
 		return ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 	threadobj_lock(&tcb->thobj);
 	/* Self-deletion is handled by threadobj_cancel(). */
 	threadobj_cancel(&tcb->thobj);
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return 0;
 }
@@ -498,7 +498,7 @@ int rt_task_set_affinity(RT_TASK *task, const cpu_set_t *cpus)
 	struct service svc;
 	int ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	tcb = get_alchemy_task_or_self(task, &ret);
 	if (tcb == NULL)
@@ -513,7 +513,7 @@ int rt_task_set_affinity(RT_TASK *task, const cpu_set_t *cpus)
 
 	put_alchemy_task(tcb);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -549,7 +549,7 @@ int rt_task_start(RT_TASK *task,
 	struct service svc;
 	int ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	tcb = get_alchemy_task(task, &ret);
 	if (tcb == NULL)
@@ -567,7 +567,7 @@ int rt_task_start(RT_TASK *task,
 	else
 		put_alchemy_task(tcb);
 out:
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	return ret;
 }
@@ -658,7 +658,7 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 	if (mode & ~(T_LOCK | T_WARNSW))
 		return -EINVAL;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	/*
 	 * This is ok to overlay the default TCB for the main thread
@@ -687,7 +687,7 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 
 	ret = __bt(copperplate_renice_thread(self, prio));
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -743,7 +743,7 @@ int rt_task_set_periodic(RT_TASK *task, RTIME idate, RTIME period)
 	struct service svc;
 	int ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	tcb = find_alchemy_task_or_self(task, &ret);
 	if (tcb == NULL)
@@ -756,11 +756,11 @@ int rt_task_set_periodic(RT_TASK *task, RTIME idate, RTIME period)
 	 * can't grab the target thread lock. However, since
 	 * threadobj_set_periodic() has to be called lock-free, we
 	 * expect it to be robust and properly deal with cancellation
-	 * points (COPPERPLATE_PROTECT() put us in deferred mode).
+	 * points (CANCEL_DEFER() put us in deferred mode).
 	 */
 	ret = threadobj_set_periodic(&tcb->thobj, &its, &pts);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -895,9 +895,9 @@ int rt_task_sleep(RTIME delay)
 	if (delay == 0)
 		return 0;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 	clockobj_ticks_to_timeout(&alchemy_clock, delay, &ts);
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return threadobj_sleep(&ts);
 }
@@ -1020,7 +1020,7 @@ int rt_task_suspend(RT_TASK *task)
 	struct service svc;
 	int ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	tcb = get_alchemy_task_or_self(task, &ret);
 	if (tcb == NULL)
@@ -1031,7 +1031,7 @@ int rt_task_suspend(RT_TASK *task)
 
 	put_alchemy_task(tcb);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -1064,7 +1064,7 @@ int rt_task_resume(RT_TASK *task)
 	struct service svc;
 	int ret = 0;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	tcb = get_alchemy_task(task, &ret);
 	if (tcb == NULL)
@@ -1075,7 +1075,7 @@ int rt_task_resume(RT_TASK *task)
 
 	put_alchemy_task(tcb);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -1150,7 +1150,7 @@ int rt_task_set_priority(RT_TASK *task, int prio)
 	if (ret)
 		return ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	tcb = get_alchemy_task_or_self(task, &ret);
 	if (tcb == NULL)
@@ -1158,7 +1158,7 @@ int rt_task_set_priority(RT_TASK *task, int prio)
 
 	ret = threadobj_set_priority(&tcb->thobj, prio);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -1216,7 +1216,7 @@ int rt_task_unblock(RT_TASK *task)
 	struct service svc;
 	int ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	tcb = get_alchemy_task(task, &ret);
 	if (tcb == NULL)
@@ -1225,7 +1225,7 @@ int rt_task_unblock(RT_TASK *task)
 	ret = threadobj_unblock(&tcb->thobj);
 	put_alchemy_task(tcb);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -1271,7 +1271,7 @@ int rt_task_slice(RT_TASK *task, RTIME quantum)
 	struct service svc;
 	int ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	clockobj_ticks_to_timespec(&alchemy_clock, quantum, &slice);
 
@@ -1282,7 +1282,7 @@ int rt_task_slice(RT_TASK *task, RTIME quantum)
 	ret = threadobj_set_rr(&tcb->thobj, &slice);
 	put_alchemy_task(tcb);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -1364,7 +1364,7 @@ int rt_task_set_mode(int clrmask, int setmask, int *mode_r)
 	if (((clrmask | setmask) & ~(T_LOCK | T_WARNSW | T_CONFORMING)) != 0)
 		return -EINVAL;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	tcb = get_alchemy_task_or_self(NULL, &ret);
 	if (tcb == NULL)
@@ -1373,7 +1373,7 @@ int rt_task_set_mode(int clrmask, int setmask, int *mode_r)
 	ret = threadobj_set_mode(clrmask, setmask, mode_r);
 	put_alchemy_task(tcb);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -1412,7 +1412,7 @@ int rt_task_inquire(RT_TASK *task, RT_TASK_INFO *info)
 	struct service svc;
 	int ret = 0;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	tcb = get_alchemy_task_or_self(task, &ret);
 	if (tcb == NULL)
@@ -1427,7 +1427,7 @@ int rt_task_inquire(RT_TASK *task, RT_TASK_INFO *info)
 
 	put_alchemy_task(tcb);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -1573,7 +1573,7 @@ ssize_t rt_task_send_timed(RT_TASK *task,
 	if (current == NULL)
 		return -EPERM;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	tcb = find_alchemy_task(task, &err);
 	if (tcb == NULL) {
@@ -1629,7 +1629,7 @@ ssize_t rt_task_send_timed(RT_TASK *task,
 done:
 	syncobj_unlock(&tcb->sobj_msg, &syns);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -1738,7 +1738,7 @@ int rt_task_receive_timed(RT_TASK_MCB *mcb_r,
 	if (current == NULL)
 		return -EPERM;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	__bt(syncobj_lock(&current->sobj_msg, &syns));
 
@@ -1770,7 +1770,7 @@ fixup:
 done:
 	syncobj_unlock(&current->sobj_msg, &syns);
 
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -1854,7 +1854,7 @@ int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
 	if (flowid <= 0)
 		return -EINVAL;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	__bt(syncobj_lock(&current->sobj_msg, &syns));
 
@@ -1894,7 +1894,7 @@ int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
 done:
 	syncobj_unlock(&current->sobj_msg, &syns);
 
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }

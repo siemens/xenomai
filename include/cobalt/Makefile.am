@@ -18,7 +18,7 @@ includesub_HEADERS =	\
 	wrappers.h
 
 SUBDIRS =		\
-	copperplate	\
+	boilerplate	\
 	kernel		\
 	sys		\
 	uapi

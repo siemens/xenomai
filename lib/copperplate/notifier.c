@@ -23,7 +23,7 @@
 #include <assert.h>
 #include <errno.h>
 #include "copperplate/notifier.h"
-#include "copperplate/lock.h"
+#include "boilerplate/lock.h"
 #include "copperplate/debug.h"
 #include "internal.h"
 

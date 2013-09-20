@@ -22,7 +22,7 @@
 #include <sched.h>
 #include <semaphore.h>
 #include <errno.h>
-#include <copperplate/list.h>
+#include <boilerplate/list.h>
 #include <copperplate/syncobj.h>
 #include <copperplate/threadobj.h>
 #include <copperplate/cluster.h>

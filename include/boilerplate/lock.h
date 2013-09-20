@@ -16,25 +16,26 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
-#ifndef _COPPERPLATE_LOCK_H
-#define _COPPERPLATE_LOCK_H
+#ifndef _BOILERPLATE_LOCK_H
+#define _BOILERPLATE_LOCK_H
 
 #include <pthread.h>
 #include <nocore/atomic.h>
-#include <copperplate/wrappers.h>
-#include <copperplate/debug.h>
+#include <boilerplate/wrappers.h>
+#include <boilerplate/ancillaries.h>
+#include <boilerplate/debug.h>
 
 /*
- * COPPERPLATE_PROTECT/UNPROTECT() should enclose any emulator code
- * prior to holding a lock, or invoking copperplate services (which
- * usually do so), to change the system state. A proper cleanup
+ * CANCEL_DEFER/RESTORE() should enclose any emulator code prior to
+ * holding a lock, or invoking inner boilerplate/copperplate services
+ * (which usually do so), to change the system state. A proper cleanup
  * handler should be pushed prior to acquire such lock.
  *
  * Those macros ensure that cancellation type is switched to deferred
  * mode while the section is traversed, then restored to its original
  * value upon exit.
  *
- * WARNING: copperplate DOES ASSUME that cancellability is deferred
+ * WARNING: inner services MAY ASSUME that cancellability is deferred
  * for the caller, so you really want to define protected sections as
  * required in the higher interface layers.
  */
@@ -44,13 +45,13 @@ struct service {
 
 #ifdef CONFIG_XENO_ASYNC_CANCEL
 
-#define COPPERPLATE_PROTECT(__s)					\
+#define CANCEL_DEFER(__s)					\
 	do {								\
 		pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED,		\
 				      &(__s).cancel_type);		\
 	} while (0)
 
-#define COPPERPLATE_UNPROTECT(__s)					\
+#define CANCEL_RESTORE(__s)					\
 	do {								\
 		pthread_setcanceltype((__s).cancel_type, NULL);		\
 		backtrace_check();					\
@@ -58,9 +59,9 @@ struct service {
 
 #else  /* !CONFIG_XENO_ASYNC_CANCEL */
 
-#define COPPERPLATE_PROTECT(__s)	do { (void)(__s); } while (0)
+#define CANCEL_DEFER(__s)	do { (void)(__s); } while (0)
 
-#define COPPERPLATE_UNPROTECT(__s)	do { } while (0)
+#define CANCEL_RESTORE(__s)	do { } while (0)
 
 #endif  /* !CONFIG_XENO_ASYNC_CANCEL */
 
@@ -115,16 +116,16 @@ int __check_cancel_type(const char *locktype);
 		__ret;						\
 	})
 /*
- * Macros to enter/leave critical sections within
- * copperplate. Actually, they are mainly aimed at self-documenting
- * the code, by specifying basic assumption(s) about the code being
+ * Macros to enter/leave critical sections within inner
+ * routines. Actually, they are mainly aimed at self-documenting the
+ * code, by specifying basic assumption(s) about the code being
  * traversed. In effect, they are currently aliases to the standard
  * pthread_mutex_* API, except for the _safe form.
  *
  * The _nocancel suffix indicates that no cancellation point is
  * traversed by the protected code, therefore we don't need any
  * cleanup handler since we are guaranteed to run in deferred cancel
- * mode after COPPERPLATE_PROTECT(). A runtime check is inserted in
+ * mode after CANCEL_DEFER(). A runtime check is inserted in
  * debug mode, which triggers when cancellability is not in deferred
  * mode while an attempt is made to acquire a _nocancel lock.
  *
@@ -205,14 +206,4 @@ int __check_cancel_type(const char *locktype);
 #define read_unlock_safe(__lock, __state)	\
 	__do_unlock_safe(__lock, __state)
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void __run_cleanup_block(struct cleanup_block *cb);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* _COPPERPLATE_LOCK_H */
+#endif /* _BOILERPLATE_LOCK_H */

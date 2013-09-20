@@ -20,8 +20,9 @@
 #define _COPPERPLATE_SYNCOBJ_H
 
 #include <pthread.h>
-#include <copperplate/list.h>
-#include <copperplate/lock.h>
+#include <boilerplate/list.h>
+#include <boilerplate/lock.h>
+#include <copperplate/reference.h>
 
 /* syncobj->flags */
 #define SYNCOBJ_FIFO	0x0

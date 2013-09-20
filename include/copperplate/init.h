@@ -21,8 +21,9 @@
 
 #include <stdarg.h>
 #include <sched.h>
-#include <copperplate/trace.h>
-#include <copperplate/list.h>
+#include <boilerplate/trace.h>
+#include <boilerplate/list.h>
+#include <boilerplate/ancillaries.h>
 
 struct coppernode {
 	unsigned int mem_pool;
@@ -59,12 +60,6 @@ int copperplate_main(int argc, char *const argv[]);
 void copperplate_init(int *argcp, char *const **argvp);
 
 void copperplate_register_skin(struct copperskin *p);
-
-void panic(const char *fmt, ...);
-
-void warning(const char *fmt, ...);
-
-const char *symerror(int errnum);
 
 #ifdef __cplusplus
 }

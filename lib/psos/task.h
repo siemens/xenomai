@@ -19,9 +19,9 @@
 #ifndef _PSOS_TASK_H
 #define _PSOS_TASK_H
 
+#include <boilerplate/hash.h>
 #include <copperplate/threadobj.h>
 #include <copperplate/syncobj.h>
-#include <copperplate/hash.h>
 #include <copperplate/cluster.h>
 
 struct psos_task_args {

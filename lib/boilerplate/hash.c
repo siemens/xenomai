@@ -23,9 +23,9 @@
 
 #include <string.h>
 #include <errno.h>
-#include "copperplate/lock.h"
-#include "copperplate/hash.h"
-#include "copperplate/debug.h"
+#include "boilerplate/lock.h"
+#include "boilerplate/hash.h"
+#include "boilerplate/debug.h"
 
 /*
  * Crunching routine borrowed from:

@@ -19,10 +19,11 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdint.h>
+#include "boilerplate/tlsf/tlsf.h"
 #include "copperplate/heapobj.h"
 #include "copperplate/debug.h"
 #include "copperplate/init.h"
-#include "tlsf/tlsf.h"
+#include "copperplate/threadobj.h"
 #include "internal.h"
 
 #if __WORDSIZE == 32

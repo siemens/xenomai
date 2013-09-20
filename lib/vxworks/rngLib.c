@@ -17,7 +17,7 @@
 */
 
 #include <stdlib.h>
-#include <copperplate/lock.h>
+#include <boilerplate/lock.h>
 #include <copperplate/heapobj.h>
 #include <vxworks/errnoLib.h>
 #include "rngLib.h"
@@ -47,7 +47,7 @@ RING_ID rngCreate(int nbytes)
 		return 0;
 	}
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	ring_mem = xnmalloc(sizeof(*ring) + nbytes + 1);
 	if (ring_mem == NULL) {
@@ -63,7 +63,7 @@ RING_ID rngCreate(int nbytes)
 	ring->writePos = 0;
 	rid = mainheap_ref(ring, RING_ID);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return rid;
 }
@@ -75,9 +75,9 @@ void rngDelete(RING_ID rid)
 
 	if (ring) {
 		ring->magic = 0;
-		COPPERPLATE_PROTECT(svc);
+		CANCEL_DEFER(svc);
 		xnfree(ring);
-		COPPERPLATE_UNPROTECT(svc);
+		CANCEL_RESTORE(svc);
 	}
 }
 

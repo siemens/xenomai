@@ -65,7 +65,7 @@ WDOG_ID wdCreate(void)
 	struct service svc;
 	int ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	wd = pvmalloc(sizeof(*wd));
 	if (wd == NULL)
@@ -82,7 +82,7 @@ WDOG_ID wdCreate(void)
 
 	wd->magic = wd_magic;
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return (WDOG_ID)wd;
 }
@@ -93,7 +93,7 @@ STATUS wdDelete(WDOG_ID wdog_id)
 	struct service svc;
 	int ret = OK;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	wd = get_wd(wdog_id);
 	if (wd == NULL) {
@@ -106,7 +106,7 @@ STATUS wdDelete(WDOG_ID wdog_id)
 	wd->magic = ~wd_magic;
 	pvfree(wd);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -118,7 +118,7 @@ STATUS wdStart(WDOG_ID wdog_id, int delay, void (*handler)(long), long arg)
 	struct wind_wd *wd;
 	int ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	wd = get_wd(wdog_id);
 	if (wd == NULL)
@@ -133,12 +133,12 @@ STATUS wdStart(WDOG_ID wdog_id, int delay, void (*handler)(long), long arg)
 	ret = timerobj_start(&wd->tmobj, watchdog_handler, &it);
 	if (ret) {
 	objid_error:
-		COPPERPLATE_UNPROTECT(svc);
+		CANCEL_RESTORE(svc);
 		errno = S_objLib_OBJ_ID_ERROR;
 		return ERROR;
 	}
 
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return OK;
 }
@@ -149,7 +149,7 @@ STATUS wdCancel(WDOG_ID wdog_id)
 	struct service svc;
 	int ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	wd = get_wd(wdog_id);
 	if (wd == NULL)
@@ -158,12 +158,12 @@ STATUS wdCancel(WDOG_ID wdog_id)
 	ret = timerobj_stop(&wd->tmobj);
 	if (ret) {
 	objid_error:
-		COPPERPLATE_UNPROTECT(svc);
+		CANCEL_RESTORE(svc);
 		errno = S_objLib_OBJ_ID_ERROR;
 		return ERROR;
 	}
 
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return OK;
 }

@@ -16,11 +16,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
-#ifndef _COPPERPLATE_PRIVATE_LIST_H
-#define _COPPERPLATE_PRIVATE_LIST_H
+#ifndef _BOILERPLATE_PRIVATE_LIST_H
+#define _BOILERPLATE_PRIVATE_LIST_H
 
-#ifndef _COPPERPLATE_LIST_H
-#error "Do not include this file directly. Use <copperplate/list.h> instead."
+#ifndef _BOILERPLATE_LIST_H
+#error "Do not include this file directly. Use <boilerplate/list.h> instead."
 #endif
 
 struct pvholder {
@@ -187,4 +187,4 @@ static inline int pvlist_heading_p(const struct pvholder *holder,
 	     pos = pvlist_entry(pos->member.prev,			\
 			      typeof(*pos), member))
 
-#endif /* !_COPPERPLATE_PRIVATE_LIST_H */
+#endif /* !_BOILERPLATE_PRIVATE_LIST_H */

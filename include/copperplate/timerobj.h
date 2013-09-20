@@ -21,8 +21,8 @@
 
 #include <pthread.h>
 #include <time.h>
-#include <copperplate/lock.h>
-#include <copperplate/list.h>
+#include <boilerplate/list.h>
+#include <boilerplate/lock.h>
 
 struct timerobj {
 	struct itimerspec itspec;

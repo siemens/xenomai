@@ -1,4 +1,4 @@
-SUBDIRS =
+SUBDIRS = boilerplate
 
 if XENO_COBALT
 SUBDIRS +=	\

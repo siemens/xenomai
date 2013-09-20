@@ -180,7 +180,7 @@ static void *task_trampoline(void *arg)
 	if (ret)
 		goto done;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	threadobj_wait_start();
 
@@ -194,7 +194,7 @@ static void *task_trampoline(void *arg)
 
 	threadobj_unlock(&task->thobj);
 
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	threadobj_notify_entry();
 	args->entry(args->arg0, args->arg1, args->arg2, args->arg3);
@@ -259,7 +259,7 @@ u_long t_create(const char *name, u_long prio,
 	if (ret)
 		return ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	task = threadobj_alloc(struct psos_task,
 			       thobj, union psos_wait_union);
@@ -326,7 +326,7 @@ u_long t_create(const char *name, u_long prio,
 		threadobj_free(&task->thobj);
 	}
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -373,9 +373,9 @@ u_long t_suspend(u_long tid)
 	if (task == NULL)
 		return ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 	ret = threadobj_suspend(&task->thobj);
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 	put_psos_task(task);
 
 	if (ret)
@@ -394,9 +394,9 @@ u_long t_resume(u_long tid)
 	if (task == NULL)
 		return ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 	ret = threadobj_resume(&task->thobj);
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 	put_psos_task(task);
 
 	if (ret)
@@ -444,9 +444,9 @@ u_long t_delete(u_long tid)
 	if (task == NULL)
 		return ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 	ret = threadobj_cancel(&task->thobj);
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 	if (ret)
 		return ERR_OBJDEL;
 
@@ -464,7 +464,7 @@ u_long t_ident(const char *name, u_long node, u_long *tid_r)
 	if (node)
 		return ERR_NODENO;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	if (name == NULL) {
 		task = find_psos_task_or_self(0, &ret);
@@ -490,7 +490,7 @@ u_long t_ident(const char *name, u_long node, u_long *tid_r)
 
 	*tid_r = mainheap_ref(task, u_long);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -599,7 +599,7 @@ u_long ev_receive(u_long events, u_long flags,
 	if (current == NULL)
 		return ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	ret = syncobj_lock(&current->sobj, &syns);
 	if (ret) {
@@ -638,7 +638,7 @@ u_long ev_receive(u_long events, u_long flags,
 done:
 	syncobj_unlock(&current->sobj, &syns);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -676,9 +676,9 @@ u_long ev_send(u_long tid, u_long events)
 	if (task == NULL)
 		return ret;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 	ret = __ev_send(task, events);
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }

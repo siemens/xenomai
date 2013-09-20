@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <copperplate/init.h>
-#include <copperplate/lock.h>
+#include <boilerplate/lock.h>
 #include <vxworks/tickLib.h>
 #include "tickLib.h"
 
@@ -33,9 +33,9 @@ ULONG tickGet(void)
 	struct service svc;
 	ticks_t ticks;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 	clockobj_get_date(&wind_clock, &ticks);
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return (ULONG)ticks;
 }

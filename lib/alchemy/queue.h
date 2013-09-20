@@ -19,7 +19,7 @@
 #ifndef _ALCHEMY_QUEUE_H
 #define _ALCHEMY_QUEUE_H
 
-#include <copperplate/list.h>
+#include <boilerplate/list.h>
 #include <copperplate/syncobj.h>
 #include <copperplate/cluster.h>
 #include <copperplate/heapobj.h>

@@ -21,7 +21,7 @@
 
 #include <sys/types.h>
 #include <time.h>
-#include <copperplate/list.h>
+#include <boilerplate/list.h>
 #include <copperplate/timerobj.h>
 
 struct psos_tm {

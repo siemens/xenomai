@@ -1,4 +1,4 @@
-includesubdir = $(includedir)/mercury/copperplate
+includesubdir = $(includedir)/mercury/boilerplate
 
 includesub_HEADERS =	\
 	signal.h	\

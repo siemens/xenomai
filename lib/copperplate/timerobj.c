@@ -26,13 +26,13 @@
 #include <limits.h>
 #include <pthread.h>
 #include <semaphore.h>
-#include "copperplate/list.h"
-#include "copperplate/lock.h"
+#include "boilerplate/list.h"
+#include "boilerplate/signal.h"
+#include "boilerplate/lock.h"
 #include "copperplate/threadobj.h"
 #include "copperplate/timerobj.h"
 #include "copperplate/clockobj.h"
 #include "copperplate/debug.h"
-#include "copperplate/signal.h"
 #include "internal.h"
 
 static sem_t svsync;

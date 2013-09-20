@@ -131,7 +131,7 @@ int rt_sem_create(RT_SEM *sem, const char *name,
 		smobj_flags |= SEMOBJ_PULSE;
 	}
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	scb = xnmalloc(sizeof(*scb));
 	if (scb == NULL) {
@@ -159,7 +159,7 @@ int rt_sem_create(RT_SEM *sem, const char *name,
 	} else
 		sem->handle = mainheap_ref(scb, uintptr_t);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -195,7 +195,7 @@ int rt_sem_delete(RT_SEM *sem)
 	if (threadobj_irq_p())
 		return -EPERM;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	scb = find_alchemy_sem(sem, &ret);
 	if (scb == NULL)
@@ -213,7 +213,7 @@ int rt_sem_delete(RT_SEM *sem)
 	if (ret > 0)
 		ret = 0;
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -282,7 +282,7 @@ int rt_sem_p_timed(RT_SEM *sem, const struct timespec *abs_timeout)
 	struct service svc;
 	int ret = 0;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	scb = find_alchemy_sem(sem, &ret);
 	if (scb == NULL)
@@ -290,7 +290,7 @@ int rt_sem_p_timed(RT_SEM *sem, const struct timespec *abs_timeout)
 
 	ret = semobj_wait(&scb->smobj, abs_timeout);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -319,7 +319,7 @@ int rt_sem_v(RT_SEM *sem)
 	struct service svc;
 	int ret = 0;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	scb = find_alchemy_sem(sem, &ret);
 	if (scb == NULL)
@@ -327,7 +327,7 @@ int rt_sem_v(RT_SEM *sem)
 
 	ret = semobj_post(&scb->smobj);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -354,7 +354,7 @@ int rt_sem_broadcast(RT_SEM *sem)
 	struct service svc;
 	int ret = 0;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	scb = find_alchemy_sem(sem, &ret);
 	if (scb == NULL)
@@ -362,7 +362,7 @@ int rt_sem_broadcast(RT_SEM *sem)
 
 	ret = semobj_broadcast(&scb->smobj);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -391,7 +391,7 @@ int rt_sem_inquire(RT_SEM *sem, RT_SEM_INFO *info)
 	struct service svc;
 	int ret = 0, sval;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	scb = find_alchemy_sem(sem, &ret);
 	if (scb == NULL)
@@ -405,7 +405,7 @@ int rt_sem_inquire(RT_SEM *sem, RT_SEM_INFO *info)
 	info->nwaiters = -sval;
 	strcpy(info->name, scb->name); /* <= racy. */
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }

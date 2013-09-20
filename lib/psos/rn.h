@@ -19,7 +19,7 @@
 #ifndef _PSOS_RN_H
 #define _PSOS_RN_H
 
-#include <copperplate/hash.h>
+#include <boilerplate/hash.h>
 #include <copperplate/syncobj.h>
 #include <copperplate/heapobj.h>
 #include <copperplate/cluster.h>

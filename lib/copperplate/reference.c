@@ -19,8 +19,8 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include "boilerplate/hash.h"
 #include "copperplate/reference.h"
-#include "copperplate/hash.h"
 #include "internal.h"
 
 static int nrefs[MAX_FNLIBS];

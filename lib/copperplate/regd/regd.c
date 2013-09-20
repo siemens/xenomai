@@ -33,8 +33,8 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <copperplate/list.h>
-#include <copperplate/hash.h>
+#include <boilerplate/list.h>
+#include <boilerplate/hash.h>
 #include "../internal.h"
 #include "sysregfs.h"
 

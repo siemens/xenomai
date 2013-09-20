@@ -23,8 +23,8 @@
 #include <sched.h>
 #include <semaphore.h>
 #include <pthread.h>
-#include <copperplate/list.h>
-#include <copperplate/lock.h>
+#include <boilerplate/list.h>
+#include <boilerplate/lock.h>
 #include <copperplate/clockobj.h>
 #include <copperplate/heapobj.h>
 #include <copperplate/debug.h>

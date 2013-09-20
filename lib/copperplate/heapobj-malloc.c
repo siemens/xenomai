@@ -22,7 +22,7 @@
 #include <malloc.h>
 #include <assert.h>
 #include <pthread.h>
-#include "copperplate/lock.h"
+#include "boilerplate/lock.h"
 #include "copperplate/heapobj.h"
 #include "copperplate/debug.h"
 

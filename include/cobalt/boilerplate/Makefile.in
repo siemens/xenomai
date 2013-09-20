@@ -79,7 +79,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-subdir = include/cobalt/copperplate
+subdir = include/cobalt/boilerplate
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(includesub_HEADERS)
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -331,7 +331,7 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-includesubdir = $(includedir)/cobalt/copperplate
+includesubdir = $(includedir)/cobalt/boilerplate
 includesub_HEADERS = \
 	signal.h	\
 	trace.h		\
@@ -349,9 +349,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign include/cobalt/copperplate/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign include/cobalt/boilerplate/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign include/cobalt/copperplate/Makefile
+	  $(AUTOMAKE) --foreign include/cobalt/boilerplate/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \

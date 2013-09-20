@@ -20,7 +20,7 @@
 #define _COPPERPLATE_NOTIFIER_H
 
 #include <pthread.h>
-#include <copperplate/list.h>
+#include <boilerplate/list.h>
 
 struct notifier {
 	pthread_mutex_t lock;

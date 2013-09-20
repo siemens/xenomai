@@ -29,7 +29,8 @@
 #include <assert.h>
 #include <limits.h>
 #include <sched.h>
-#include "copperplate/lock.h"
+#include "boilerplate/signal.h"
+#include "boilerplate/lock.h"
 #include "copperplate/traceobj.h"
 #include "copperplate/threadobj.h"
 #include "copperplate/syncobj.h"
@@ -37,7 +38,6 @@
 #include "copperplate/clockobj.h"
 #include "copperplate/eventobj.h"
 #include "copperplate/heapobj.h"
-#include "copperplate/signal.h"
 #include "internal.h"
 
 union copperplate_wait_union {
@@ -1257,23 +1257,6 @@ int threadobj_set_rr(struct threadobj *thobj, struct timespec *quantum)
 
 	return __bt(set_rr(thobj, quantum));
 }
-
-#ifdef __XENO_DEBUG__
-
-int __check_cancel_type(const char *locktype)
-{
-	int oldtype;
-
-	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &oldtype);
-	if (oldtype != PTHREAD_CANCEL_DEFERRED) {
-		warning("%s_nocancel() section is NOT cancel-safe", locktype);
-		return __bt(-EINVAL);
-	}
-
-	return 0;
-}
-
-#endif
 
 static inline void main_overlay(void)
 {

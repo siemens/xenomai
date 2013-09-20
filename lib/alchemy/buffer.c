@@ -126,7 +126,7 @@ int rt_buffer_create(RT_BUFFER *bf, const char *name,
 	if (bufsz == 0)
 		return -EINVAL;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	bcb = xnmalloc(sizeof(*bcb));
 	if (bcb == NULL) {
@@ -160,7 +160,7 @@ int rt_buffer_create(RT_BUFFER *bf, const char *name,
 
 	bf->handle = mainheap_ref(bcb, uintptr_t);
 
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return 0;
 
@@ -170,7 +170,7 @@ fail_register:
 fail_bufalloc:
 	xnfree(bcb);
 fail:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -206,7 +206,7 @@ int rt_buffer_delete(RT_BUFFER *bf)
 	if (threadobj_irq_p())
 		return -EPERM;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	bcb = get_alchemy_buffer(bf, &syns, &ret);
 	if (bcb == NULL)
@@ -216,7 +216,7 @@ int rt_buffer_delete(RT_BUFFER *bf)
 	bcb->magic = ~buffer_magic;
 	syncobj_destroy(&bcb->sobj, &syns);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -331,7 +331,7 @@ ssize_t rt_buffer_read_timed(RT_BUFFER *bf,
 	if (!threadobj_current_p() && !alchemy_poll_mode(abs_timeout))
 		return -EPERM;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	bcb = get_alchemy_buffer(bf, &syns, &ret);
 	if (bcb == NULL)
@@ -425,7 +425,7 @@ out:
 	if (wait)
 		threadobj_finish_wait();
 
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -518,7 +518,7 @@ ssize_t rt_buffer_write_timed(RT_BUFFER *bf,
 	if (!threadobj_current_p() && !alchemy_poll_mode(abs_timeout))
 		return -EPERM;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	bcb = get_alchemy_buffer(bf, &syns, &ret);
 	if (bcb == NULL)
@@ -618,7 +618,7 @@ out:
 	if (wait)
 		threadobj_finish_wait();
 
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -644,7 +644,7 @@ int rt_buffer_clear(RT_BUFFER *bf)
 	struct service svc;
 	int ret = 0;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	bcb = get_alchemy_buffer(bf, &syns, &ret);
 	if (bcb == NULL)
@@ -657,7 +657,7 @@ int rt_buffer_clear(RT_BUFFER *bf)
 
 	put_alchemy_buffer(bcb, &syns);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -686,7 +686,7 @@ int rt_buffer_inquire(RT_BUFFER *bf, RT_BUFFER_INFO *info)
 	struct service svc;
 	int ret = 0;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	bcb = get_alchemy_buffer(bf, &syns, &ret);
 	if (bcb == NULL)
@@ -700,7 +700,7 @@ int rt_buffer_inquire(RT_BUFFER *bf, RT_BUFFER_INFO *info)
 
 	put_alchemy_buffer(bcb, &syns);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }

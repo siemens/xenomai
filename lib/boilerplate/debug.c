@@ -24,11 +24,9 @@
 #include <pthread.h>
 #include <malloc.h>
 #include <errno.h>
-#include "copperplate/lock.h"
-#include "copperplate/debug.h"
-#include "copperplate/threadobj.h"
-#include "copperplate/heapobj.h"
-#include "internal.h"
+#include "boilerplate/wrappers.h"
+#include "boilerplate/lock.h"
+#include "boilerplate/debug.h"
 
 static pthread_key_t btkey;
 
@@ -36,12 +34,12 @@ static struct backtrace_data main_btd = {
 	.name = "main",
 };
 
-void __debug(struct threadobj *thobj, const char *fmt, ...)
+void __debug(const char *name, const char *fmt, ...)
 {
 	va_list ap;
 
 	va_start(ap, fmt);
-	__printout(thobj, NULL, fmt, ap);
+	__printout(name, NULL, fmt, ap);
 	va_end(ap);
 }
 
@@ -118,6 +116,8 @@ void backtrace_destroy_context(struct backtrace_data *btd)
 	__RT(pthread_mutex_destroy(&btd->lock));
 }
 
+static const char *dashes = "------------------------------------------------------------------------------";
+
 void backtrace_dump(struct backtrace_data *btd)
 {
 	struct error_frame *ef;
@@ -177,7 +177,7 @@ char *__get_error_buf(size_t *sizep)
 	return btd->eundef;
 }
 
-int debug_pkg_init(void)
+int debug_init(void)
 {
 	__RT(pthread_mutex_init(&main_btd.lock, NULL));
 	return -pthread_key_create(&btkey, NULL);

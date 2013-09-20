@@ -10,7 +10,9 @@ lib_LTLIBRARIES = libcobalt.la
 
 libcobalt_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 2:0:0 -lpthread -lrt
 
-libcobalt_la_LIBADD = arch/@XENO_TARGET_ARCH@/libarch.la
+libcobalt_la_LIBADD = \
+	arch/@XENO_TARGET_ARCH@/libarch.la	\
+	../boilerplate/libboilerplate.la
 
 libcobalt_la_SOURCES =		\
 	assert_context.c	\

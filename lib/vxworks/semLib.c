@@ -64,7 +64,7 @@ static STATUS xsem_take(struct wind_sem *sem, int timeout)
 	if (threadobj_irq_p())
 		return S_intLib_NOT_ISR_CALLABLE;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	if (syncobj_lock(&sem->u.xsem.sobj, &syns)) {
 		ret = S_objLib_OBJ_ID_ERROR;
@@ -101,7 +101,7 @@ static STATUS xsem_take(struct wind_sem *sem, int timeout)
 done:
 	syncobj_unlock(&sem->u.xsem.sobj, &syns);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -112,7 +112,7 @@ static STATUS xsem_give(struct wind_sem *sem)
 	struct service svc;
 	STATUS ret = OK;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	if (syncobj_lock(&sem->u.xsem.sobj, &syns)) {
 		ret = S_objLib_OBJ_ID_ERROR;
@@ -128,7 +128,7 @@ static STATUS xsem_give(struct wind_sem *sem)
 
 	syncobj_unlock(&sem->u.xsem.sobj, &syns);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -139,7 +139,7 @@ static STATUS xsem_flush(struct wind_sem *sem)
 	struct service svc;
 	STATUS ret = OK;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	if (syncobj_lock(&sem->u.xsem.sobj, &syns)) {
 		ret = S_objLib_OBJ_ID_ERROR;
@@ -150,7 +150,7 @@ static STATUS xsem_flush(struct wind_sem *sem)
 
 	syncobj_unlock(&sem->u.xsem.sobj, &syns);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -171,7 +171,7 @@ static STATUS xsem_delete(struct wind_sem *sem)
 	if (threadobj_irq_p())
 		return S_intLib_NOT_ISR_CALLABLE;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	if (syncobj_lock(&sem->u.xsem.sobj, &syns)) {
 		ret = S_objLib_OBJ_ID_ERROR;
@@ -181,7 +181,7 @@ static STATUS xsem_delete(struct wind_sem *sem)
 	sem->magic = ~sem_magic; /* Prevent further reference. */
 	syncobj_destroy(&sem->u.xsem.sobj, &syns);
 out:
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret;
 }
@@ -337,9 +337,9 @@ SEM_ID semBCreate(int options, SEM_B_STATE state)
 	struct service svc;
 	SEM_ID sem_id;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 	sem_id = alloc_xsem(options, state, 1);
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return sem_id;
 }
@@ -349,9 +349,9 @@ SEM_ID semCCreate(int options, int count)
 	struct service svc;
 	SEM_ID sem_id;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 	sem_id = alloc_xsem(options, count, INT_MAX);
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return sem_id;
 }
@@ -374,12 +374,12 @@ SEM_ID semMCreate(int options)
 		}
 	}
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 
 	sem = alloc_sem(options, &msem_ops);
 	if (sem == NULL) {
 		errno = S_memLib_NOT_ENOUGH_MEMORY;
-		COPPERPLATE_UNPROTECT(svc);
+		CANCEL_RESTORE(svc);
 		return (SEM_ID)0;
 	}
 
@@ -416,7 +416,7 @@ SEM_ID semMCreate(int options)
 	__RT(pthread_mutex_init(&sem->u.msem.lock, &mattr));
 	__RT(pthread_mutexattr_destroy(&mattr));
 
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return mainheap_ref(sem, SEM_ID);
 }
@@ -444,9 +444,9 @@ do {							\
 		return ERROR;				\
 	}						\
 							\
-	COPPERPLATE_PROTECT(svc);			\
+	CANCEL_DEFER(svc);			\
 	ret = sem->semops->op(sem , ##args);		\
-	COPPERPLATE_UNPROTECT(svc);			\
+	CANCEL_RESTORE(svc);			\
 	if (ret) {					\
 		errno = ret;				\
 		ret = ERROR;				\

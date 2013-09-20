@@ -15,7 +15,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-
 #ifndef _COPPERPLATE_INTERNAL_H
 #define _COPPERPLATE_INTERNAL_H
 
@@ -25,7 +24,8 @@
 #include <pthread.h>
 #include <sched.h>
 #include <xeno_config.h>
-#include <copperplate/list.h>
+#include <boilerplate/list.h>
+#include <boilerplate/ancillaries.h>
 #include <copperplate/heapobj.h>
 
 #define HOBJ_MINLOG2    3
@@ -63,30 +63,9 @@ struct corethread_attributes {
 
 extern pid_t __node_id;
 
-extern struct timespec __init_date;
-
-extern const char *dashes;
-
-extern pthread_mutex_t __printlock;
-
-struct threadobj;
-struct error_frame;
-
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-void __printout(struct threadobj *thobj,
-		const char *header,
-		const char *fmt, va_list ap);
-
-void error_hook(struct error_frame *ef);
-
-const char *symerror(int errnum);
-
-void panic(const char *fmt, ...);
-
-void warning(const char *fmt, ...);
 
 pid_t copperplate_get_tid(void);
 

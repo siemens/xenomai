@@ -24,7 +24,7 @@
 #ifndef _XENOMAI_VXWORKS_LSTLIB_H
 #define _XENOMAI_VXWORKS_LSTLIB_H
 
-#include <copperplate/list.h>
+#include <boilerplate/list.h>
 #include <vxworks/types.h>
 
 typedef struct LIST {

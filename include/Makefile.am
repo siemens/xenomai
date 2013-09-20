@@ -4,6 +4,7 @@ include_HEADERS = version.h
 
 SUBDIRS = 		\
 	nocore		\
+	boilerplate	\
 	copperplate	\
 	alchemy		\
 	psos 		\

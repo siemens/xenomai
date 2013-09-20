@@ -34,9 +34,9 @@
 #include <signal.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "copperplate/lock.h"
-#include "copperplate/list.h"
-#include "copperplate/hash.h"
+#include "boilerplate/list.h"
+#include "boilerplate/hash.h"
+#include "boilerplate/lock.h"
 #include "copperplate/heapobj.h"
 #include "copperplate/debug.h"
 #include "copperplate/init.h"

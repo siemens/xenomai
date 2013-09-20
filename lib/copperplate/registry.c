@@ -36,11 +36,11 @@
 #include <semaphore.h>
 #include <fuse.h>
 #include <xeno_config.h>
+#include "boilerplate/hash.h"
 #include "copperplate/heapobj.h"
 #include "copperplate/registry.h"
 #include "copperplate/clockobj.h"
-#include "copperplate/lock.h"
-#include "copperplate/hash.h"
+#include "boilerplate/lock.h"
 #include "copperplate/debug.h"
 #include "copperplate/init.h"
 #include "internal.h"

@@ -5,14 +5,9 @@ includesub_HEADERS =	\
 	cluster.h	\
 	debug.h		\
 	eventobj.h	\
-	hash.h		\
 	heapobj.h	\
 	init.h		\
-	list.h		\
-	lock.h		\
 	semobj.h	\
-	shared-list.h	\
-	private-list.h	\
 	notifier.h	\
 	reference.h	\
 	registry.h	\

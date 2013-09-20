@@ -17,7 +17,7 @@
  */
 
 #include "tickLib.h"
-#include <copperplate/lock.h>
+#include <boilerplate/lock.h>
 #include <vxworks/errnoLib.h>
 #include <vxworks/sysLib.h>
 
@@ -26,9 +26,9 @@ int sysClkRateGet(void)
 	unsigned int resolution;
 	struct service svc;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 	resolution = clockobj_get_resolution(&wind_clock);
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return 1000000000 / resolution;
 }
@@ -45,9 +45,9 @@ STATUS sysClkRateSet(int hz)
 	if (hz <= 0)
 		return ERROR;
 
-	COPPERPLATE_PROTECT(svc);
+	CANCEL_DEFER(svc);
 	ret = clockobj_set_resolution(&wind_clock, 1000000000 / hz);
-	COPPERPLATE_UNPROTECT(svc);
+	CANCEL_RESTORE(svc);
 
 	return ret ? ERROR : OK;
 }

@@ -55,8 +55,6 @@ pid_t __node_id;
 int __cobalt_print_bufsz = 32 * 1024;
 #endif
 
-struct timespec __init_date;
-
 static DEFINE_PRIVATE_LIST(skins);
 
 static const struct option base_options[] = {
@@ -446,10 +444,11 @@ void copperplate_bootstrap_minimal(const char *arg0, char *mountpt)
 {
 	int ret;
 
-	__RT(clock_gettime(CLOCK_COPPERPLATE, &__init_date));
+	boilerplate_init();
+
 	__node_id = copperplate_get_tid();
 
-	ret = debug_pkg_init();
+	ret = debug_init();
 	if (ret) {
 		warning("failed to initialize debugging features");
 		goto fail;
@@ -486,7 +485,7 @@ void copperplate_init(int *argcp, char *const **argvp)
 		return;
 	}
 
-	__RT(clock_gettime(CLOCK_COPPERPLATE, &__init_date));
+	boilerplate_init();
 
 	/* Our node id. is the tid of the main thread. */
 	__node_id = copperplate_get_tid();
@@ -522,7 +521,7 @@ void copperplate_init(int *argcp, char *const **argvp)
 	if (ret)
 		goto fail;
 
-	ret = debug_pkg_init();
+	ret = debug_init();
 	if (ret) {
 		warning("failed to initialize debugging features");
 		goto fail;

@@ -15,12 +15,11 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
+#ifndef _BOILERPLATE_SHARED_LIST_H
+#define _BOILERPLATE_SHARED_LIST_H
 
-#ifndef _COPPERPLATE_SHARED_LIST_H
-#define _COPPERPLATE_SHARED_LIST_H
-
-#ifndef _COPPERPLATE_LIST_H
-#error "Do not include this file directly. Use <copperplate/list.h> instead."
+#ifndef _BOILERPLATE_LIST_H
+#error "Do not include this file directly. Use <boilerplate/list.h> instead."
 #endif
 
 #define __hoff(h, a)  __memoff(h, a)
@@ -308,4 +307,4 @@ static inline int list_heading_p(const struct holder *holder,
 #define list_for_each_entry_reverse(pos, list, member)			\
 	__list_for_each_entry_reverse(__main_heap, pos, list, member)
 
-#endif /* !_COPPERPLATE_SHARED_LIST_H */
+#endif /* !_BOILERPLATE_SHARED_LIST_H */
