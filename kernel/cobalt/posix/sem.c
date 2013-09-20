@@ -916,7 +916,7 @@ int cobalt_sem_open(unsigned long __user *u_addr,
 	if (assoc) {
 		usm = container_of(assoc, struct cobalt_usem, assoc);
 		++usm->refcnt;
-		xnlock_put_irqrestore(&nklock, s);
+		xnlock_put_irqrestore(&cobalt_assoc_lock, s);
 		goto got_usm;
 	}
 
@@ -936,7 +936,7 @@ int cobalt_sem_open(unsigned long __user *u_addr,
 	assoc = cobalt_assoc_lookup(&cc->usems, (u_long)sm->sem);
 	if (assoc) {
 		container_of(assoc, struct cobalt_usem, assoc)->refcnt++;
-		xnlock_put_irqrestore(&nklock, s);
+		xnlock_put_irqrestore(&cobalt_assoc_lock, s);
 		xnfree(usm);
 		usm = container_of(assoc, struct cobalt_usem, assoc);
 		goto got_usm;
