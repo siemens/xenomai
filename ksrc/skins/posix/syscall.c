@@ -647,7 +647,7 @@ static int __sem_open(struct pt_regs *regs)
 	if (assoc) {
 		usm = assoc2usem(assoc);
 		++usm->refcnt;
-		xnlock_put_irqrestore(&nklock, s);
+		xnlock_put_irqrestore(&pse51_assoc_lock, s);
 		goto got_usm;
 	}
 
@@ -667,7 +667,7 @@ static int __sem_open(struct pt_regs *regs)
 	assoc = pse51_assoc_lookup(&q->usems, (u_long)sm->shadow_sem.sem);
 	if (assoc) {
 		assoc2usem(assoc)->refcnt++;
-		xnlock_put_irqrestore(&nklock, s);
+		xnlock_put_irqrestore(&pse51_assoc_lock, s);
 		xnfree(usm);
 		usm = assoc2usem(assoc);
 		goto got_usm;
