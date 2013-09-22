@@ -9,7 +9,6 @@ install-exec-local:
 EXTRA_DIST = \
 	bootstrap \
 	prepare-kernel.sh \
-	prepare-patch.sh \
 	wrap-link.sh \
 	Kconfig.frag \
 	Modules.frag \
