@@ -104,6 +104,19 @@ index c46bb99..569f594 100644
 +#endif /* !__ASSEMBLY__ */
 +
  #endif /* _ASM_X86_APICDEF_H */
+diff --git a/arch/x86/include/asm/debugreg.h b/arch/x86/include/asm/debugreg.h
+index 4b528a9..0cf06c6 100644
+--- a/arch/x86/include/asm/debugreg.h
++++ b/arch/x86/include/asm/debugreg.h
+@@ -93,7 +93,7 @@ extern void aout_dump_debugregs(struct user *dump);
+ 
+ extern void hw_breakpoint_restore(void);
+ 
+-#ifdef CONFIG_X86_64
++#if defined(CONFIG_X86_64) && !defined(CONFIG_IPIPE)
+ DECLARE_PER_CPU(int, debug_stack_usage);
+ static inline void debug_stack_usage_inc(void)
+ {
 diff --git a/arch/x86/include/asm/desc.h b/arch/x86/include/asm/desc.h
 index 8bf1c06..449bf12 100644
 --- a/arch/x86/include/asm/desc.h
@@ -271,7 +284,7 @@ index 615fa90..e0a62ab 100644
  extern void default_send_IPI_mask_sequence_phys(const struct cpumask *mask,
 diff --git a/arch/x86/include/asm/ipipe.h b/arch/x86/include/asm/ipipe.h
 new file mode 100644
-index 0000000..17d2f46
+index 0000000..7bd1277
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe.h
 @@ -0,0 +1,104 @@
@@ -301,7 +314,7 @@ index 0000000..17d2f46
 +
 +#ifdef CONFIG_IPIPE
 +
-+#define IPIPE_CORE_RELEASE	1
++#define IPIPE_CORE_RELEASE	2
 +
 +struct ipipe_domain;
 +
@@ -2058,6 +2071,26 @@ index 562a76d..e8cc234 100644
  }
  
  static void x2apic_send_IPI_mask(const struct cpumask *mask, int vector)
+diff --git a/arch/x86/kernel/cpu/common.c b/arch/x86/kernel/cpu/common.c
+index 9c3ab43..b813d2d 100644
+--- a/arch/x86/kernel/cpu/common.c
++++ b/arch/x86/kernel/cpu/common.c
+@@ -1138,6 +1138,7 @@ void syscall_init(void)
+ DEFINE_PER_CPU(struct orig_ist, orig_ist);
+ 
+ static DEFINE_PER_CPU(unsigned long, debug_stack_addr);
++#ifndef CONFIG_IPIPE
+ DEFINE_PER_CPU(int, debug_stack_usage);
+ 
+ int is_debug_stack(unsigned long addr)
+@@ -1162,6 +1163,7 @@ void debug_stack_reset(void)
+ 	if (this_cpu_dec_return(debug_stack_use_ctr) == 0)
+ 		load_idt((const struct desc_ptr *)&idt_descr);
+ }
++#endif /* !CONFIG_IPIPE */
+ 
+ #else	/* CONFIG_X86_64 */
+ 
 diff --git a/arch/x86/kernel/cpu/mtrr/cyrix.c b/arch/x86/kernel/cpu/mtrr/cyrix.c
 index 68a3343..057710f 100644
 --- a/arch/x86/kernel/cpu/mtrr/cyrix.c
@@ -2595,7 +2628,7 @@ index 6ed91d9..732f111 100644
  	CFI_ENDPROC
  END(general_protection)
 diff --git a/arch/x86/kernel/entry_64.S b/arch/x86/kernel/entry_64.S
-index cb3c591..726eb1c 100644
+index cb3c591..41d6c97 100644
 --- a/arch/x86/kernel/entry_64.S
 +++ b/arch/x86/kernel/entry_64.S
 @@ -50,6 +50,7 @@
@@ -2893,7 +2926,7 @@ index cb3c591..726eb1c 100644
  ENTRY(\sym)
  	INTR_FRAME
  	ASM_CLAC
-@@ -1228,17 +1352,32 @@ ENTRY(\sym)
+@@ -1228,10 +1352,25 @@ ENTRY(\sym)
  	subq $ORIG_RAX-R15, %rsp
  	CFI_ADJUST_CFA_OFFSET ORIG_RAX-R15
  	call save_paranoid
@@ -2920,42 +2953,17 @@ index cb3c591..726eb1c 100644
  	jmp paranoid_exit	/* %ebx: no swapgs flag */
  	CFI_ENDPROC
  END(\sym)
- .endm
- 
- #define INIT_TSS_IST(x) PER_CPU_VAR(init_tss) + (TSS_ist + ((x) - 1) * 8)
--.macro paranoidzeroentry_ist sym do_sym ist
-+.macro paranoidzeroentry_ist sym do_sym ist ex_code=0
- ENTRY(\sym)
- 	INTR_FRAME
- 	ASM_CLAC
-@@ -1247,18 +1386,33 @@ ENTRY(\sym)
+@@ -1247,8 +1386,8 @@ ENTRY(\sym)
  	subq $ORIG_RAX-R15, %rsp
  	CFI_ADJUST_CFA_OFFSET ORIG_RAX-R15
  	call save_paranoid
 -	TRACE_IRQS_OFF_DEBUG
  	movq %rsp,%rdi		/* pt_regs pointer */
-+#ifdef CONFIG_IPIPE
-+	.if \ex_code
-+	movq $\ex_code,%rsi
-+	call __ipipe_divert_exception   /* handle(regs, ex_code) */
 +	TRACE_IRQS_OFF_DEBUG
-+	testl %eax,%eax
-+	jnz 1f
-+	movq %rsp,%rdi
-+	.endif
-+#else
-+	TRACE_IRQS_OFF_DEBUG
-+#endif
  	xorl %esi,%esi		/* no error code */
  	subq $EXCEPTION_STKSZ, INIT_TSS_IST(\ist)
  	call \do_sym
- 	addq $EXCEPTION_STKSZ, INIT_TSS_IST(\ist)
-+#ifdef CONFIG_IPIPE
-+	xorl %eax,%eax		/* tell paranoid_exit to propagate the exception */
-+1:
-+#endif
- 	jmp paranoid_exit	/* %ebx: no swapgs flag */
- 	CFI_ENDPROC
+@@ -1258,7 +1397,7 @@ ENTRY(\sym)
  END(\sym)
  .endm
  
@@ -2964,7 +2972,7 @@ index cb3c591..726eb1c 100644
  ENTRY(\sym)
  	XCPT_FRAME
  	ASM_CLAC
-@@ -1270,14 +1424,29 @@ ENTRY(\sym)
+@@ -1270,14 +1409,29 @@ ENTRY(\sym)
  	movq %rsp,%rdi			/* pt_regs pointer */
  	movq ORIG_RAX(%rsp),%rsi	/* get error code */
  	movq $-1,ORIG_RAX(%rsp)		/* no syscall to restart */
@@ -2995,7 +3003,7 @@ index cb3c591..726eb1c 100644
  ENTRY(\sym)
  	XCPT_FRAME
  	ASM_CLAC
-@@ -1286,29 +1455,44 @@ ENTRY(\sym)
+@@ -1286,29 +1440,44 @@ ENTRY(\sym)
  	CFI_ADJUST_CFA_OFFSET ORIG_RAX-R15
  	call save_paranoid
  	DEFAULT_FRAME 0
@@ -3053,7 +3061,7 @@ index cb3c591..726eb1c 100644
  
  
  	/* Reload gs selector with exception handling */
-@@ -1344,15 +1528,19 @@ ENTRY(call_softirq)
+@@ -1344,15 +1513,19 @@ ENTRY(call_softirq)
  	CFI_REL_OFFSET rbp,0
  	mov  %rsp,%rbp
  	CFI_DEF_CFA_REGISTER rbp
@@ -3073,14 +3081,19 @@ index cb3c591..726eb1c 100644
  	ret
  	CFI_ENDPROC
  END(call_softirq)
-@@ -1464,16 +1652,16 @@ apicinterrupt XEN_HVM_EVTCHN_CALLBACK \
+@@ -1464,16 +1637,21 @@ apicinterrupt XEN_HVM_EVTCHN_CALLBACK \
   */
  	.pushsection .kprobes.text, "ax"
  
 -paranoidzeroentry_ist debug do_debug DEBUG_STACK
 -paranoidzeroentry_ist int3 do_int3 DEBUG_STACK
++#ifdef CONFIG_IPIPE
++paranoidzeroentry debug do_debug ex_do_debug
++paranoidzeroentry int3 do_int3 ex_do_int3
++#else
 +paranoidzeroentry_ist debug do_debug DEBUG_STACK ex_do_debug
 +paranoidzeroentry_ist int3 do_int3 DEBUG_STACK ex_do_int3
++#endif
  paranoiderrorentry stack_segment do_stack_segment
  #ifdef CONFIG_XEN
  zeroentry xen_debug do_debug
@@ -3094,7 +3107,7 @@ index cb3c591..726eb1c 100644
  #ifdef CONFIG_KVM_GUEST
  errorentry async_page_fault do_async_page_fault
  #endif
-@@ -1499,8 +1687,13 @@ ENTRY(paranoid_exit)
+@@ -1499,8 +1677,13 @@ ENTRY(paranoid_exit)
  	DEFAULT_FRAME
  	DISABLE_INTERRUPTS(CLBR_NONE)
  	TRACE_IRQS_OFF_DEBUG
@@ -3108,7 +3121,7 @@ index cb3c591..726eb1c 100644
  	testl $3,CS(%rsp)
  	jnz   paranoid_userspace
  paranoid_swapgs:
-@@ -1571,7 +1764,6 @@ ENTRY(error_entry)
+@@ -1571,7 +1754,6 @@ ENTRY(error_entry)
  error_swapgs:
  	SWAPGS
  error_sti:
@@ -3287,7 +3300,7 @@ index 9a5c460..5d3c70b 100644
  handle_real_irq:
 diff --git a/arch/x86/kernel/ipipe.c b/arch/x86/kernel/ipipe.c
 new file mode 100644
-index 0000000..99e0615
+index 0000000..a662cfe
 --- /dev/null
 +++ b/arch/x86/kernel/ipipe.c
 @@ -0,0 +1,645 @@
@@ -3684,7 +3697,7 @@ index 0000000..99e0615
 +	if (vector == ex_do_page_fault)
 +		cr2 = native_read_cr2();
 +
-+	if (unlikely(__ipipe_report_trap(vector, regs))) {
++	if (unlikely(__ipipe_notify_trap(vector, regs))) {
 +		if (root_entry)
 +			ipipe_restore_root_nosync(flags);
 +		return 1;
@@ -3790,7 +3803,7 @@ index 0000000..99e0615
 +skip_kgdb:
 +#endif /* CONFIG_KGDB */
 +
-+	if (unlikely(__ipipe_report_trap(vector, regs))) {
++	if (unlikely(__ipipe_notify_trap(vector, regs))) {
 +		if (root_entry)
 +			ipipe_restore_root_nosync(flags);
 +		return 1;
@@ -4289,7 +4302,7 @@ index ed0fe38..4625071 100644
  	while (!cpu_online(cpu)) {
  		cpu_relax();
 diff --git a/arch/x86/kernel/traps.c b/arch/x86/kernel/traps.c
-index ecffca1..7225b9e 100644
+index ecffca1..8646cda 100644
 --- a/arch/x86/kernel/traps.c
 +++ b/arch/x86/kernel/traps.c
 @@ -605,6 +605,7 @@ asmlinkage void __attribute__((weak)) smp_threshold_interrupt(void)
@@ -4322,6 +4335,21 @@ index ecffca1..7225b9e 100644
  }
  EXPORT_SYMBOL_GPL(math_state_restore);
  
+@@ -685,9 +689,14 @@ dotraplinkage void do_iret_error(struct pt_regs *regs, long error_code)
+ /* Set of traps needed for early debugging. */
+ void __init early_trap_init(void)
+ {
++#ifdef CONFIG_IPIPE
++	set_intr_gate(X86_TRAP_DB, &debug);
++	set_system_intr_gate(X86_TRAP_BP, &int3);
++#else
+ 	set_intr_gate_ist(X86_TRAP_DB, &debug, DEBUG_STACK);
+ 	/* int3 can be called from all */
+ 	set_system_intr_gate_ist(X86_TRAP_BP, &int3, DEBUG_STACK);
++#endif
+ 	set_intr_gate(X86_TRAP_PF, &page_fault);
+ 	load_idt(&idt_descr);
+ }
 diff --git a/arch/x86/kernel/tsc.c b/arch/x86/kernel/tsc.c
 index 06ccb50..6edd4a3 100644
 --- a/arch/x86/kernel/tsc.c
