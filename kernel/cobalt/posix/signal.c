@@ -214,6 +214,7 @@ static int signal_wait(sigset_t *set, xnticks_t timeout,
 
 	xnlock_get_irqsave(&nklock, s);
 
+check:
 	if (sigisemptyset(&curr->sigpending))
 		/* Most common/fast path. */
 		goto wait;
@@ -231,7 +232,10 @@ static int signal_wait(sigset_t *set, xnticks_t timeout,
 
 	if (sig) {
 		sigq = curr->sigqueues + sig - 1;
-		XENO_BUGON(COBALT, list_empty(sigq));
+		if (list_empty(sigq)) {
+			sigdelset(&curr->sigpending, sig);
+			goto check;
+		}
 		sigp = list_get_entry(sigq, struct cobalt_sigpending, next);
 		INIT_LIST_HEAD(&sigp->next); /* Mark sigp as unlinked. */
 		if (list_empty(sigq))
