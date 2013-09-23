@@ -193,7 +193,7 @@ system. Try the next section. Otherwise, you are done with SMI.</td>
 SMI, in which case you can not simply disable SMI globally, you will
 need to disable all SMI sources on your system except the SMI needed
 by your peripheral. The same goes if the system overheat, you have to
-find a waytto keep the SMI source which is controlling the thermal
+find a way to keep the SMI source which is controlling the thermal
 control enabled. This is a much less reliable choice, since you have
 to know all SMI sources to disable them, one by one. In order to
 choose this second workaround, check in the documentation for the
@@ -496,17 +496,9 @@ make sure that you carefully followed the <a href="#kconf">"Kernel configuration
 </li>
 <li>
 <p>
-make sure that you do not have an issue with SMIs, see the <a href="#SMI">section about SMIs</a>. Note that if you have an Intel chipset and you
-do not see the message:
+make sure that you do not have an issue with SMIs, see the <a href="#SMI">section about SMIs</a>.
 </p>
 </li>
-</ul></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>Xenomai: SMI-enabled chipset found, but SMI workaround disabled</tt></pre>
-</div></div>
-<div class="paragraph"><p>in the boot logs, it may mean that your chipset is not detected.</p></div>
-<div class="ulist"><ul>
 <li>
 <p>
 if you have some legacy USB switch at BIOS configuration level, try
@@ -530,11 +522,23 @@ USB legacy mode if set in the same move.
 <li>
 <p>
 if you observe high latencies while running X-window, try disabling
-  hardware acceleration in the X-window server file; in the <tt>Device</tt>
-  section of <em>/etc/X11/XF86Config-4</em> add the following line:
+hardware acceleration in the X-window server file. With recent
+versions of X-window, try using the <em>fbdev</em> driver. Install it
+(Debian package named <em>xserver-xorg-video-fbdev</em> for instance), then
+modifiy the <tt>Device</tt> section to use this driver in
+<em>/etc/X11/xorg.conf</em>, as in:
 </p>
 </li>
 </ul></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>Section "Device"
+        Identifier  "Card0"
+        Driver      "fbdev"
+EndSection</tt></pre>
+</div></div>
+<div class="paragraph"><p>With olders versions of X-window, keep the existing driver, but
+add the following line to the <tt>Device</tt> section:</p></div>
 <div class="listingblock">
 <div class="content">
 <pre><tt>        Option "NoAccel"</tt></pre>
@@ -569,9 +573,7 @@ SOCs.</p></div>
 (userland requires "kuser_tsc...", kernel provides..., missing="kuser_tsc")</tt></pre>
 </div></div>
 <div class="paragraph"><p>It means that you are either using an old patch, or that the SOC you
-are using does not select the <tt>CONFIG_IPIPE_ARM_KUSER_TSC</tt> option (to
-this date the only in-tree SOC family not using this option is
-ixp4xx).</p></div>
+are using does not select the <tt>CONFIG_IPIPE_ARM_KUSER_TSC</tt> option.</p></div>
 <div class="paragraph"><p>So you should resort to what Xenomai did before branch 2.6: select the
 tsc emulation code when compiling Xenomai user-space support by using
 the <tt>--enable-arm-tsc</tt> option. The parameter passed to this option is
@@ -825,7 +827,7 @@ like calling:</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2013-05-25 15:42:30 CEST
+Last updated 2013-10-04 22:38:05 CEST
 </div>
 </div>
 </body>

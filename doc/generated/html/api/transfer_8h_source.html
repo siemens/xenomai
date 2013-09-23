@@ -31,7 +31,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Xenomai API
-   &#160;<span id="projectnumber">2.6.2.1</span>
+   &#160;<span id="projectnumber">2.6.3</span>
    </div>
   </td>
  </tr>
@@ -140,45 +140,43 @@ $(document).ready(function(){initNavTree('transfer_8h_source.html','');});
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;</div>
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;<span class="comment">/* --- Proc function --- */</span></div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;<span class="keywordtype">int</span> a4l_rdproc_transfer(<span class="keywordtype">char</span> *page,</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;                        <span class="keywordtype">char</span> **start,</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;                        off_t off, <span class="keywordtype">int</span> count, <span class="keywordtype">int</span> *eof, <span class="keywordtype">void</span> *data);</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;<span class="keywordtype">int</span> a4l_rdproc_transfer(<span class="keyword">struct</span> seq_file *p, <span class="keywordtype">void</span> *data);</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;<span class="comment">/* --- Upper layer functions --- */</span></div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="comment">/* --- Upper layer functions --- */</span></div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<span class="keywordtype">void</span> a4l_presetup_transfer(a4l_cxt_t * cxt);</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;<span class="keywordtype">int</span> a4l_setup_transfer(a4l_cxt_t * cxt);</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;<span class="keywordtype">int</span> a4l_precleanup_transfer(a4l_cxt_t * cxt);</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="keywordtype">int</span> a4l_cleanup_transfer(a4l_cxt_t * cxt);</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;<span class="keywordtype">int</span> a4l_reserve_transfer(a4l_cxt_t * cxt, <span class="keywordtype">int</span> idx_subd);</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="keywordtype">int</span> a4l_init_transfer(a4l_cxt_t * cxt, <a class="code" href="structa4l__cmd__desc.html" title="Structure describing the asynchronous instruction.">a4l_cmd_t</a> * cmd);</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;<span class="keywordtype">int</span> a4l_cancel_transfer(a4l_cxt_t * cxt, <span class="keywordtype">int</span> idx_subd);</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<span class="keywordtype">int</span> a4l_cancel_transfers(a4l_cxt_t * cxt);</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;ssize_t a4l_put(a4l_cxt_t * cxt, <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> nbytes);</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;ssize_t a4l_get(a4l_cxt_t * cxt, <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> nbytes);</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__analogy__interrupt.html#ga2a3eb695fa1f5f97c1d6829039979d54" title="Register an interrupt handler for a specific device.">a4l_request_irq</a>(<span class="keyword">struct</span> a4l_device *dev,</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;                    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> irq,</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;                    a4l_irq_hdlr_t handler,</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;                    <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> flags, <span class="keywordtype">void</span> *cookie);</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__analogy__interrupt.html#ga6377e1975bd391b58fbe3ddb2d2c2b8e" title="Release an interrupt handler for a specific device.">a4l_free_irq</a>(<span class="keyword">struct</span> a4l_device *dev, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> irq);</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> <a class="code" href="group__analogy__interrupt.html#ga482cc3464879c72b2359bd4b642f0a96" title="Get the interrupt number in use for a specific device.">a4l_get_irq</a>(<span class="keyword">struct</span> a4l_device *dev);</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="keywordtype">void</span> a4l_presetup_transfer(a4l_cxt_t * cxt);</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="keywordtype">int</span> a4l_setup_transfer(a4l_cxt_t * cxt);</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<span class="keywordtype">int</span> a4l_precleanup_transfer(a4l_cxt_t * cxt);</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;<span class="keywordtype">int</span> a4l_cleanup_transfer(a4l_cxt_t * cxt);</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;<span class="keywordtype">int</span> a4l_reserve_transfer(a4l_cxt_t * cxt, <span class="keywordtype">int</span> idx_subd);</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="keywordtype">int</span> a4l_init_transfer(a4l_cxt_t * cxt, <a class="code" href="structa4l__cmd__desc.html" title="Structure describing the asynchronous instruction.">a4l_cmd_t</a> * cmd);</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;<span class="keywordtype">int</span> a4l_cancel_transfer(a4l_cxt_t * cxt, <span class="keywordtype">int</span> idx_subd);</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="keywordtype">int</span> a4l_cancel_transfers(a4l_cxt_t * cxt);</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;ssize_t a4l_put(a4l_cxt_t * cxt, <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> nbytes);</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;ssize_t a4l_get(a4l_cxt_t * cxt, <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> nbytes);</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__analogy__interrupt.html#ga2a3eb695fa1f5f97c1d6829039979d54" title="Register an interrupt handler for a specific device.">a4l_request_irq</a>(<span class="keyword">struct</span> a4l_device *dev,</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;                    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> irq,</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;                    a4l_irq_hdlr_t handler,</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;                    <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> flags, <span class="keywordtype">void</span> *cookie);</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__analogy__interrupt.html#ga6377e1975bd391b58fbe3ddb2d2c2b8e" title="Release an interrupt handler for a specific device.">a4l_free_irq</a>(<span class="keyword">struct</span> a4l_device *dev, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> irq);</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> <a class="code" href="group__analogy__interrupt.html#ga482cc3464879c72b2359bd4b642f0a96" title="Get the interrupt number in use for a specific device.">a4l_get_irq</a>(<span class="keyword">struct</span> a4l_device *dev);</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;<span class="keywordtype">int</span> a4l_ioctl_cancel(a4l_cxt_t * cxt, <span class="keywordtype">void</span> *arg);</div>
 <div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;<span class="keywordtype">int</span> a4l_ioctl_cancel(a4l_cxt_t * cxt, <span class="keywordtype">void</span> *arg);</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span><span class="preprocessor"></span></div>
 <div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span><span class="preprocessor"></span></div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* __ANALOGY_TRANSFER__ */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* __ANALOGY_TRANSFER__ */</span><span class="preprocessor"></span></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_7aef7afbbd023211de7ae0a01bd6ade1.html">analogy</a></li><li class="navelem"><a class="el" href="transfer_8h.html">transfer.h</a></li>
-    <li class="footer">Generated on Wed Aug 28 2013 19:44:11 for Xenomai API by
+    <li class="footer">Generated on Fri Oct 4 2013 22:39:06 for Xenomai API by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.1.2 </li>
   </ul>
