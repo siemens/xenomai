@@ -245,11 +245,11 @@ check:
 		goto done;
 	}
 
+wait:
 	if (timeout == XN_NONBLOCK) {
 		ret = -EAGAIN;
 		goto fail;
 	}
-wait:
 	swc.set = set;
 	swc.si = &si;
 	xnthread_prepare_wait(&swc.wc);
