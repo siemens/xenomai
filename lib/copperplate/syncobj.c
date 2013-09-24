@@ -106,10 +106,11 @@ void monitor_drain_all(struct syncobj *sobj)
 	cobalt_monitor_drain_all(&sobj->core.monitor);
 }
 
-static inline void syncobj_init_corespec(struct syncobj *sobj)
+static inline void syncobj_init_corespec(struct syncobj *sobj,
+					 clockid_t clk_id)
 {
 	int flags = monitor_scope_attribute, ret;
-	ret = cobalt_monitor_init(&sobj->core.monitor, flags);
+	ret = cobalt_monitor_init(&sobj->core.monitor, clk_id, flags);
 	assert(ret == 0);
 	(void)ret;
 }
@@ -180,7 +181,8 @@ void monitor_drain_all(struct syncobj *sobj)
  * couple of condvars, one in the syncobj and the other owned by the
  * thread object.
  */
-static inline void syncobj_init_corespec(struct syncobj *sobj)
+static inline void syncobj_init_corespec(struct syncobj *sobj,
+					 clockid_t clk_id)
 {
 	pthread_mutexattr_t mattr;
 	pthread_condattr_t cattr;
@@ -195,7 +197,7 @@ static inline void syncobj_init_corespec(struct syncobj *sobj)
 
 	pthread_condattr_init(&cattr);
 	pthread_condattr_setpshared(&cattr, mutex_scope_attribute);
-	pthread_condattr_setclock(&cattr, CLOCK_COPPERPLATE);
+	pthread_condattr_setclock(&cattr, clk_id);
 	pthread_cond_init(&sobj->core.drain_sync, &cattr);
 	pthread_condattr_destroy(&cattr);
 }
@@ -209,7 +211,7 @@ static inline void syncobj_cleanup_corespec(struct syncobj *sobj)
 
 #endif	/* CONFIG_XENO_MERCURY */
 
-void syncobj_init(struct syncobj *sobj, int flags,
+void syncobj_init(struct syncobj *sobj, clockid_t clk_id, int flags,
 		  fnref_type(void (*)(struct syncobj *sobj)) finalizer)
 {
 	sobj->flags = flags;
@@ -220,7 +222,7 @@ void syncobj_init(struct syncobj *sobj, int flags,
 	sobj->wait_count = 0;
 	sobj->finalizer = finalizer;
 	sobj->magic = SYNCOBJ_MAGIC;
-	syncobj_init_corespec(sobj);
+	syncobj_init_corespec(sobj, clk_id);
 }
 
 int syncobj_lock(struct syncobj *sobj, struct syncstate *syns)

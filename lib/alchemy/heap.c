@@ -155,7 +155,7 @@ int rt_heap_create(RT_HEAP *heap,
 	if (mode & H_PRIO)
 		sobj_flags = SYNCOBJ_PRIO;
 
-	syncobj_init(&hcb->sobj, sobj_flags,
+	syncobj_init(&hcb->sobj, CLOCK_COPPERPLATE, sobj_flags,
 		     fnref_put(libalchemy, heap_finalize));
 
 	ret = 0;

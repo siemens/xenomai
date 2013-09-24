@@ -214,7 +214,7 @@ static SEM_ID alloc_xsem(int options, int initval, int maxval)
 
 	sem->u.xsem.value = initval;
 	sem->u.xsem.maxvalue = maxval;
-	syncobj_init(&sem->u.xsem.sobj, sobj_flags,
+	syncobj_init(&sem->u.xsem.sobj, CLOCK_COPPERPLATE, sobj_flags,
 		     fnref_put(libvxworks, sem_finalize));
 
 	return mainheap_ref(sem, SEM_ID);

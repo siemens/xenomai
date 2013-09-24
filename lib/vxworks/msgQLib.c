@@ -108,7 +108,7 @@ MSG_Q_ID msgQCreate(int maxMsgs, int maxMsgLength, int options)
 	if (options & MSG_Q_PRIORITY)
 		sobj_flags = SYNCOBJ_PRIO;
 
-	syncobj_init(&mq->sobj, sobj_flags,
+	syncobj_init(&mq->sobj, CLOCK_COPPERPLATE, sobj_flags,
 		     fnref_put(libvxworks, mq_finalize));
 	mq->options = options;
 	mq->maxmsg = maxMsgs;

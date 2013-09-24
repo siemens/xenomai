@@ -213,7 +213,7 @@ int syncluster_init(struct syncluster *sc, const char *name)
 	if (sc->sobj == NULL)
 		return -ENOMEM;
 
-	syncobj_init(sc->sobj, SYNCOBJ_FIFO, fnref_null);
+	syncobj_init(sc->sobj, CLOCK_COPPERPLATE, SYNCOBJ_FIFO, fnref_null);
 
 	return 0;
 }
@@ -367,7 +367,7 @@ int pvsyncluster_init(struct pvsyncluster *sc, const char *name)
 	 * Assuming pvcluster_destroy() is a nop, so we don't need to
 	 * run any finalizer.
 	 */
-	syncobj_init(&sc->sobj, SYNCOBJ_FIFO, fnref_null);
+	syncobj_init(&sc->sobj, CLOCK_COPPERPLATE, SYNCOBJ_FIFO, fnref_null);
 
 	return 0;
 }

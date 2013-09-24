@@ -120,7 +120,7 @@ int eventobj_init(struct eventobj *evobj, unsigned long value, int flags,
 	if (flags & EVOBJ_PRIO)
 		sobj_flags = SYNCOBJ_PRIO;
 
-	syncobj_init(&evobj->core.sobj, sobj_flags,
+	syncobj_init(&evobj->core.sobj, CLOCK_COPPERPLATE, sobj_flags,
 		     fnref_put(libcopperplate, eventobj_finalize));
 
 	evobj->core.flags = flags;

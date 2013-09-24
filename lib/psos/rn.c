@@ -141,7 +141,7 @@ u_long rn_create(const char *name, void *saddr, u_long length,
 	rn->flags = flags;
 	rn->busynr = 0;
 	rn->usedmem = 0;
-	syncobj_init(&rn->sobj, sobj_flags, fnref_null);
+	syncobj_init(&rn->sobj, CLOCK_COPPERPLATE, sobj_flags, fnref_null);
 	rn->magic = rn_magic;
 	*asize_r = rn->hobj.size;
 	*rnid_r = mainheap_ref(rn, u_long);

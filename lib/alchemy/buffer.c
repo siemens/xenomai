@@ -150,7 +150,7 @@ int rt_buffer_create(RT_BUFFER *bf, const char *name,
 	if (mode & B_PRIO)
 		sobj_flags = SYNCOBJ_PRIO;
 
-	syncobj_init(&bcb->sobj, sobj_flags,
+	syncobj_init(&bcb->sobj, CLOCK_COPPERPLATE, sobj_flags,
 		     fnref_put(libalchemy, buffer_finalize));
 
 	if (syncluster_addobj(&alchemy_buffer_table, bcb->name, &bcb->cobj)) {

@@ -168,7 +168,7 @@ int rt_queue_create(RT_QUEUE *queue, const char *name,
 	if (mode & Q_PRIO)
 		sobj_flags = SYNCOBJ_PRIO;
 
-	syncobj_init(&qcb->sobj, sobj_flags,
+	syncobj_init(&qcb->sobj, CLOCK_COPPERPLATE, sobj_flags,
 		     fnref_put(libalchemy, queue_finalize));
 
 	ret = 0;

@@ -144,7 +144,7 @@ int semobj_init(struct semobj *smobj, int flags, int value,
 	 * We need a trampoline for finalizing a semobj, to escalate
 	 * from a basic syncobj we receive to the semobj container.
 	 */
-	syncobj_init(&smobj->core.sobj, sobj_flags,
+	syncobj_init(&smobj->core.sobj, CLOCK_COPPERPLATE, sobj_flags,
 		     fnref_put(libcopperplate, semobj_finalize));
 	smobj->core.flags = flags;
 	smobj->core.value = value;

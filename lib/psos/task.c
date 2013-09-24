@@ -292,7 +292,7 @@ u_long t_create(const char *name, u_long prio,
 	task->flags = flags;	/* We don't do much with those. */
 	task->mode = 0;	/* Not yet known. */
 	task->events = 0;
-	syncobj_init(&task->sobj, 0, fnref_null);
+	syncobj_init(&task->sobj, CLOCK_COPPERPLATE, 0, fnref_null);
 	memset(task->notepad, 0, sizeof(task->notepad));
 	pvlist_init(&task->timer_list);
 	*tid_r = mainheap_ref(task, u_long);

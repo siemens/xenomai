@@ -218,7 +218,8 @@ static int create_tcb(struct alchemy_task **tcbp, RT_TASK *task,
 	CPU_ZERO(&tcb->affinity);
 
 	tcb->suspends = 0;
-	syncobj_init(&tcb->sobj_msg, SYNCOBJ_PRIO, fnref_null);
+	syncobj_init(&tcb->sobj_msg, CLOCK_COPPERPLATE,
+		     SYNCOBJ_PRIO, fnref_null);
 	tcb->flowgen = 0;
 
 	idata.magic = task_magic;

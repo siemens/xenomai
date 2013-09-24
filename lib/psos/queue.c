@@ -116,7 +116,7 @@ static u_long __q_create(const char *name, u_long count,
 	q->flags = flags;
 	q->maxmsg = (flags & Q_LIMIT) ? count : 0;
 	q->maxlen = maxlen;
-	syncobj_init(&q->sobj, sobj_flags,
+	syncobj_init(&q->sobj, CLOCK_COPPERPLATE, sobj_flags,
 		     fnref_put(libpsos, queue_finalize));
 	list_init(&q->msg_list);
 	q->msgcount = 0;
