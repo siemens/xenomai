@@ -132,10 +132,10 @@ static void dump_marks(struct traceobj *trobj) /* lock held */
 	int mark;
 
 	for (mark = 0; mark < trobj->cur_mark; mark++)
-		__RT(fprintf(stderr, "[%d] at %s:%d\n",
-			     trobj->marks[mark].mark,
-			     trobj->marks[mark].file,
-			     trobj->marks[mark].line));
+		fprintf(stderr, "[%d] at %s:%d\n",
+			trobj->marks[mark].mark,
+			trobj->marks[mark].file,
+			trobj->marks[mark].line);
 
 	fflush(stderr);
 }
