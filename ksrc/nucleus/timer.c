@@ -1074,6 +1074,7 @@ EXPORT_SYMBOL_GPL(xntimer_freeze);
 char *xntimer_format_time(xnticks_t value, int periodic, char *buf, size_t bufsz)
 {
 	unsigned long ms, us, ns;
+	int len = (int)bufsz;
 	char *p = buf;
 	xnticks_t s;
 
@@ -1092,13 +1093,17 @@ char *xntimer_format_time(xnticks_t value, int periodic, char *buf, size_t bufsz
 	ms = us / 1000;
 	us %= 1000;
 
-	if (s)
+	if (s) {
 		p += snprintf(p, bufsz, "%Lus", s);
+		len = bufsz - (p - buf);
+	}
 
-	if (ms || (s && us))
+	if (len > 1 && (ms || (s && us))) {
 		p += snprintf(p, bufsz - (p - buf), "%lums", ms);
+		len = bufsz - (p - buf);
+	}
 
-	if (us)
+	if (len > 1 && us)
 		p += snprintf(p, bufsz - (p - buf), "%luus", us);
 
 	return buf;
