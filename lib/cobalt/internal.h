@@ -21,6 +21,7 @@
 #include <signal.h>
 #include <pthread.h>
 #include <errno.h>
+#include <time.h>
 #include <nocore/atomic.h>
 #include <cobalt/uapi/kernel/synch.h>
 #include <cobalt/uapi/kernel/vdso.h>
@@ -67,7 +68,8 @@ int __cobalt_thread_stat(pid_t pid,
 
 int __cobalt_serial_debug(const char *fmt, ...);
 
-int cobalt_monitor_init(cobalt_monitor_t *mon, int flags);
+int cobalt_monitor_init(cobalt_monitor_t *mon,
+			clockid_t clk_id, int flags);
 
 int cobalt_monitor_destroy(cobalt_monitor_t *mon);
 

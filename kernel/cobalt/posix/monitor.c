@@ -55,7 +55,7 @@
 #include "monitor.h"
 
 int cobalt_monitor_init(struct cobalt_monitor_shadow __user *u_monsh,
-			int flags)
+			clockid_t clk_id, int flags)
 {
 	struct cobalt_monitor_shadow monsh;
 	struct cobalt_monitor_data *datp;
@@ -63,11 +63,15 @@ int cobalt_monitor_init(struct cobalt_monitor_shadow __user *u_monsh,
 	struct cobalt_kqueues *kq;
 	unsigned long datoff;
 	struct xnheap *heap;
-	int pshared;
+	int pshared, tmode;
 	spl_t s;
 
 	if (__xn_safe_copy_from_user(&monsh, u_monsh, sizeof(monsh)))
 		return -EFAULT;
+
+	tmode = clock_flag(TIMER_ABSTIME, clk_id);
+	if (tmode < 0)
+		return -EINVAL;
 
 	mon = xnmalloc(sizeof(*mon));
 	if (mon == NULL)
@@ -85,6 +89,7 @@ int cobalt_monitor_init(struct cobalt_monitor_shadow __user *u_monsh,
 	xnsynch_init(&mon->gate, XNSYNCH_PIP, &datp->owner);
 	xnsynch_init(&mon->drain, XNSYNCH_PRIO, NULL);
 	mon->flags = flags;
+	mon->tmode = tmode;
 	mon->magic = COBALT_MONITOR_MAGIC;
 	INIT_LIST_HEAD(&mon->waiters);
 	kq = cobalt_kqueues(pshared);
@@ -225,10 +230,10 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_monsh,
 	struct cobalt_monitor *mon = NULL;
 	struct cobalt_monitor_data *datp;
 	xnticks_t timeout = XN_INFINITE;
-	xntmode_t tmode = XN_RELATIVE;
 	int ret = 0, opret = 0, info;
 	struct xnsynch *synch;
 	struct timespec ts;
+	xntmode_t tmode;
 	spl_t s;
 
 	__xn_get_user(mon, &u_monsh->monitor);
@@ -237,7 +242,6 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_monsh,
 		if (__xn_safe_copy_from_user(&ts, u_ts, sizeof(ts)))
 			return -EFAULT;
 		timeout = ts2ns(&ts) + 1;
-		tmode = XN_ABSOLUTE;
 	}
 
 	xnlock_get_irqsave(&nklock, s);
@@ -270,6 +274,7 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_monsh,
 	}
 	datp->flags |= COBALT_MONITOR_PENDED;
 
+	tmode = u_ts ? mon->tmode : XN_RELATIVE;
 	info = xnsynch_sleep_on(synch, timeout, tmode);
 	if (info) {
 		if ((info & XNRMID) != 0 ||

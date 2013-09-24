@@ -105,14 +105,14 @@ struct cobalt_monitor_data *get_monitor_data(cobalt_monitor_t *mon)
 		mon->u.data;
 }
 
-int cobalt_monitor_init(cobalt_monitor_t *mon, int flags)
+int cobalt_monitor_init(cobalt_monitor_t *mon, clockid_t clk_id, int flags)
 {
 	struct cobalt_monitor_data *datp;
 	int ret;
 
-	ret = XENOMAI_SKINCALL2(__cobalt_muxid,
+	ret = XENOMAI_SKINCALL3(__cobalt_muxid,
 				sc_cobalt_monitor_init,
-				mon, flags);
+				mon, clk_id, flags);
 	if (ret)
 		return ret;
 

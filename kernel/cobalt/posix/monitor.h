@@ -33,9 +33,11 @@ struct cobalt_monitor {
 	struct list_head link;
 	struct list_head waiters;
 	int flags;
+	xntmode_t tmode;
 };
 
 int cobalt_monitor_init(struct cobalt_monitor_shadow __user *u_monsh,
+			clockid_t clk_id,
 			int flags);
 
 int cobalt_monitor_enter(struct cobalt_monitor_shadow __user *u_monsh);
