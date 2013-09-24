@@ -547,6 +547,7 @@ EXPORT_SYMBOL_GPL(xntimer_get_overruns);
 char *xntimer_format_time(xnticks_t ns, char *buf, size_t bufsz)
 {
 	unsigned long ms, us, rem;
+	int len = (int)bufsz;
 	char *p = buf;
 	xnticks_t sec;
 
@@ -560,13 +561,17 @@ char *xntimer_format_time(xnticks_t ns, char *buf, size_t bufsz)
 	ms = us / 1000;
 	us %= 1000;
 
-	if (sec)
+	if (sec) {
 		p += snprintf(p, bufsz, "%Lus", sec);
+		len = bufsz - (p - buf);
+	}
 
-	if (ms || (sec && us))
+	if (len > 0 && (ms || (sec && us))) {
 		p += snprintf(p, bufsz - (p - buf), "%lums", ms);
+		len = bufsz - (p - buf);
+	}
 
-	if (us)
+	if (len > 0 && us)
 		p += snprintf(p, bufsz - (p - buf), "%luus", us);
 
 	return buf;
