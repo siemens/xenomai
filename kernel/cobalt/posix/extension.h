@@ -29,6 +29,8 @@ struct cobalt_timer;
 struct cobalt_sigpending;
 struct cobalt_extref;
 struct siginfo;
+struct xnsched_class;
+union xnsched_policy_param;
 
 struct cobalt_extension {
 	struct xnpersonality core;
@@ -53,6 +55,9 @@ struct cobalt_extension {
 				       const struct siginfo *si,
 				       int overrun);
 		int (*sched_yield)(struct cobalt_extref *curref);
+		int (*thread_setsched)(struct cobalt_extref *refthread, /* nklocked, IRQs off. */
+				       struct xnsched_class *sched_class,
+				       union xnsched_policy_param *param);
 	} ops;
 };
 

@@ -717,8 +717,8 @@ pthread_setschedparam_ex(struct cobalt_thread *thread, int u_pol, const struct s
 	struct xnsched_class *sched_class;
 	union xnsched_policy_param param;
 	struct xnthread *base_thread;
+	int prio, pol, ret;
 	xnticks_t tslice;
-	int prio, pol;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -797,6 +797,12 @@ pthread_setschedparam_ex(struct cobalt_thread *thread, int u_pol, const struct s
 		return -EINVAL;
 	}
 
+	/*
+	 * Updating the scheduling parameter can't fail at this point,
+	 * let the extension know.
+	 */
+  	cobalt_call_extension(thread_setsched, &thread->extref, ret,
+			      sched_class, &param);
 	xnthread_set_slice(base_thread, tslice);
 	thread->sched_u_policy = u_pol;
 	xnthread_set_schedparam(base_thread, sched_class, &param);
