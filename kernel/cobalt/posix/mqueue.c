@@ -39,8 +39,9 @@
 #include "mqueue.h"
 #include "clock.h"
 
-#define COBALT_MSGMAX		    65536
-#define COBALT_MSGSIZEMAX	    (16*1024*1024)
+#define COBALT_MSGMAX		65536
+#define COBALT_MSGSIZEMAX	(16*1024*1024)
+#define COBALT_MSGPRIOMAX 	32768
 
 struct mq_attr {
 	long mq_flags;
@@ -1234,11 +1235,13 @@ int cobalt_mq_send(mqd_t uqd, const void __user *u_buf, size_t len,
 	if (assoc == NULL)
 		return -EBADF;
 
-	ufd = assoc2ufd(assoc);
+	if (prio >= COBALT_MSGPRIOMAX)
+		return -EINVAL;
 
 	if (len > 0 && !access_rok(u_buf, len))
 		return -EFAULT;
 
+	ufd = assoc2ufd(assoc);
 	msg = cobalt_mq_timedsend_inner(&mq, ufd->kfd, len, NULL);
 	if (IS_ERR(msg))
 		return PTR_ERR(msg);
@@ -1271,7 +1274,8 @@ int cobalt_mq_timedsend(mqd_t uqd, const void __user *u_buf, size_t len,
 	if (assoc == NULL)
 		return -EBADF;
 
-	ufd = assoc2ufd(assoc);
+	if (prio >= COBALT_MSGPRIOMAX)
+		return -EINVAL;
 
 	if (len > 0 && !access_rok(u_buf, len))
 		return -EFAULT;
@@ -1283,6 +1287,7 @@ int cobalt_mq_timedsend(mqd_t uqd, const void __user *u_buf, size_t len,
 	} else
 		timeoutp = NULL;
 
+	ufd = assoc2ufd(assoc);
 	msg = cobalt_mq_timedsend_inner(&mq, ufd->kfd, len, timeoutp);
 	if (IS_ERR(msg))
 		return PTR_ERR(msg);
@@ -1303,9 +1308,9 @@ int cobalt_mq_receive(mqd_t uqd, void __user *u_buf,
 	struct cobalt_process *cc;
 	struct cobalt_msg *msg;
 	cobalt_assoc_t *assoc;
+	unsigned int prio;
 	cobalt_ufd_t *ufd;
 	cobalt_mq_t *mq;
-	unsigned prio;
 	ssize_t len;
 	int err;
 
