@@ -6,6 +6,7 @@
 --wrap sched_get_priority_min
 --wrap sched_get_priority_max
 --wrap pthread_kill
+--wrap pthread_join
 --wrap sem_init
 --wrap sem_destroy
 --wrap sem_post

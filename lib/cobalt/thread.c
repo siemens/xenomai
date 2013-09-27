@@ -447,6 +447,19 @@ COBALT_IMPL(int, pthread_kill, (pthread_t thread, int sig))
 	return ret;
 }
 
+COBALT_IMPL(int, pthread_join, (pthread_t thread, void **retval))
+{
+	int ret;
+
+	ret = __STD(pthread_join(thread, retval));
+	if (ret)
+		return ret;
+
+	ret = __cobalt_thread_join(thread);
+
+	return ret == -EBUSY ? EINVAL : 0;
+}
+
 static __attribute__((constructor)) void cobalt_thread_init(void)
 {
 #ifdef _CS_GNU_LIBPTHREAD_VERSION

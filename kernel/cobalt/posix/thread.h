@@ -116,15 +116,17 @@ struct cobalt_thread {
 	struct xnsynch sigwait;
 	struct list_head signext;
 
-	/* Cached value for current policy (user side). */
+	/** Cached value for current policy (user side). */
 	int sched_u_policy;
 
-	/* Monitor wait object and link holder. */
+	/** Monitor wait object and link holder. */
 	struct xnsynch monitor_synch;
 	struct list_head monitor_link;
 	int monitor_queued;
 
 	struct cobalt_local_hkey hkey;
+	/** Exit event for joining the thread. */
+	struct xnsynch join_synch;
 };
 
 struct cobalt_sigwait_context {
@@ -142,6 +144,8 @@ static inline struct cobalt_thread *cobalt_current_thread(void)
 struct cobalt_thread *cobalt_thread_find(pid_t pid);
 
 struct cobalt_thread *cobalt_thread_find_local(pid_t pid);
+
+struct cobalt_thread *cobalt_thread_lookup(unsigned long pth);
 
 int cobalt_thread_create(unsigned long tid, int policy,
 			 struct sched_param_ex __user *u_param,
@@ -166,6 +170,8 @@ int cobalt_thread_set_name_np(unsigned long tid, const char __user *u_name);
 int cobalt_thread_probe_np(pid_t h_tid);
 
 int cobalt_thread_kill(unsigned long tid, int sig);
+
+int cobalt_thread_join(unsigned long tid);
 
 int cobalt_thread_stat(pid_t pid,
 		       struct cobalt_threadstat __user *u_stat);

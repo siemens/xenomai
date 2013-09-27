@@ -90,6 +90,12 @@ int __real_pthread_kill(pthread_t tid, int sig)
 	return pthread_kill(tid, sig);
 }
 
+__attribute__ ((weak))
+int __real_pthread_join(pthread_t tid, void **retval)
+{
+	return pthread_join(tid, retval);
+}
+
 /* semaphores */
 __attribute__ ((weak))
 int __real_sem_init(sem_t * sem, int pshared, unsigned value)

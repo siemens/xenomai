@@ -49,6 +49,42 @@ int __cobalt_thread_stat(pid_t pid, struct cobalt_threadstat *stat)
 				 sc_cobalt_thread_getstat, pid, stat);
 }
 
+int __cobalt_thread_join(pthread_t thread)
+{
+	int ret;
+
+	/*
+	 * Serialize with the regular task exit path, so that no call
+	 * for the joined pthread may succeed after this routine
+	 * returns. A successful call to sc_cobalt_thread_join
+	 * receives -EIDRM, meaning that we eventually joined the
+	 * exiting thread as seen by the Cobalt core.
+	 *
+	 * -ESRCH means that the joined thread has already exited
+	 * linux-wise, while we were about to wait for it from the
+	 * Cobalt side, in which case we are fine.
+	 *
+	 * -EBUSY denotes a multiple join for several threads in
+	 * parallel to the same target.
+	 *
+	 * -EPERM may be received because the current context is not a
+	 * Xenomai thread.
+	 *
+	 * Zero is unexpected.
+	 *
+	 * CAUTION: this service joins a thread Cobat-wise only, not
+	 * glibc-wise.  For a complete join comprising the libc
+	 * cleanups, __STD(pthread_join()) should be paired with this
+	 * call.
+	 */
+	do
+		ret = XENOMAI_SKINCALL1(__cobalt_muxid,
+					sc_cobalt_thread_join, thread);
+	while (ret == -EINTR);
+
+	return ret;
+}
+
 void ___cobalt_prefault(void *p, size_t len)
 {
 	volatile char *_p = (volatile char *)p, *end;

@@ -124,6 +124,8 @@ COBALT_DECL(int, pthread_cond_broadcast(pthread_cond_t *cond));
 
 COBALT_DECL(int, pthread_kill(pthread_t tid, int sig));
 
+COBALT_DECL(int, pthread_join(pthread_t tid, void **retval));
+
 COBALT_DECL(int, pthread_mutexattr_getprotocol(const pthread_mutexattr_t *attr,
 					       int *proto));
 

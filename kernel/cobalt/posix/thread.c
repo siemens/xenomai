@@ -210,6 +210,17 @@ struct cobalt_thread *cobalt_thread_find_local(pid_t pid) /* nklocked, IRQs off 
 }
 EXPORT_SYMBOL_GPL(cobalt_thread_find_local);
 
+struct cobalt_thread *cobalt_thread_lookup(unsigned long pth) /* nklocked, IRQs off */
+{
+	struct cobalt_thread *thread;
+	struct cobalt_local_hkey hkey;
+
+	hkey.u_pth = pth;
+	hkey.mm = current->mm;
+	return thread_lookup(&hkey);
+}
+EXPORT_SYMBOL_GPL(cobalt_thread_lookup);
+
 struct xnpersonality *cobalt_thread_map(struct xnthread *curr)
 {
 	struct cobalt_thread *thread;
@@ -240,6 +251,9 @@ struct xnpersonality *cobalt_thread_exit(struct xnthread *curr)
 	cobalt_signal_flush(thread);
 	xnsynch_destroy(&thread->monitor_synch);
 	xnsynch_destroy(&thread->sigwait);
+	/* Waiters will receive EIDRM */
+	xnsynch_destroy(&thread->join_synch);
+	xnsched_run();
 
 	return NULL;
 }
@@ -512,8 +526,9 @@ static inline int pthread_create(struct cobalt_thread **thread_p, const pthread_
 
 	thread->hkey.u_pth = 0;
 	thread->hkey.mm = NULL;
+	xnsynch_init(&thread->join_synch, XNSYNCH_FIFO, NULL);
 
-	*thread_p = thread; /* Must be done before the thread is started. */
+	*thread_p = thread;
 
 	return 0;
 }
@@ -1093,6 +1108,38 @@ int cobalt_thread_kill(unsigned long pth, int sig)
 		ret = -ESRCH;
 	else
 		ret = __cobalt_kill(thread, sig, 0);
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return ret;
+}
+
+int cobalt_thread_join(unsigned long pth)
+{
+	struct cobalt_local_hkey hkey;
+	struct cobalt_thread *thread;
+	int ret;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	hkey.u_pth = pth;
+	hkey.mm = current->mm;
+	thread = thread_lookup(&hkey);
+	if (thread == NULL)
+		ret = -ESRCH;
+	else if (thread == cobalt_current_thread())
+		ret = -EDEADLK;
+	else if (xnsynch_pended_p(&thread->join_synch))
+		ret = -EBUSY;
+	else {
+		xnthread_set_state(&thread->threadbase, XNJOINED);
+		ret = xnsynch_sleep_on(&thread->join_synch,
+				       XN_INFINITE, XN_RELATIVE);
+		ret = ret & XNBREAK ? -EINTR : 0;
+		if (ret != -EIDRM && thread_lookup(&hkey) == thread)
+			xnthread_clear_state(&thread->threadbase, XNJOINED);
+	}
 
 	xnlock_put_irqrestore(&nklock, s);
 

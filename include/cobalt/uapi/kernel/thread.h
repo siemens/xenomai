@@ -49,6 +49,7 @@
 #define XNROOT    0x00010000 /**< Root thread (that is, Linux/IDLE) */
 #define XNWEAK    0x00020000 /**< Non real-time shadow (from the WEAK class) */
 #define XNUSER    0x00040000 /**< Shadow thread running in userland */
+#define XNJOINED  0x00080000 /**< Another thread waits for joining this thread */
 
 /** @} */
 

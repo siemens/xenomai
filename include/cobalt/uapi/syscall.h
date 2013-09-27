@@ -93,7 +93,7 @@
 #define sc_cobalt_condattr_setclock     72
 #define sc_cobalt_condattr_getpshared   73
 #define sc_cobalt_condattr_setpshared   74
-/* 75 unimplemented */
+#define sc_cobalt_thread_join           75
 #define sc_cobalt_thread_kill           76
 #define sc_cobalt_select                77
 #define sc_cobalt_thread_setschedparam_ex	78

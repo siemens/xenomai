@@ -66,6 +66,8 @@ void __cobalt_thread_harden(void);
 int __cobalt_thread_stat(pid_t pid,
 			 struct cobalt_threadstat *stat);
 
+int __cobalt_thread_join(pthread_t thread);
+
 int __cobalt_serial_debug(const char *fmt, ...);
 
 int cobalt_monitor_init(cobalt_monitor_t *mon,
