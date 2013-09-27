@@ -521,8 +521,8 @@ Section "Device"
 	Driver      "fbdev"
 EndSection
 -------------------------------------------------------------------------------
-With olders versions of X-window, add the following line to the
-+Device+ section:
+With olders versions of X-window, keep the existing driver, but 
+add the following line to the +Device+ section:
 -------------------------------------------------------------------------------
 	Option "NoAccel"
 -------------------------------------------------------------------------------
