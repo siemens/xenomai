@@ -44,7 +44,6 @@ static inline int fp_linux_begin(void)
 	}
 	return -EBUSY;
 #endif /* 3DNow or RAID 456 */
-	return -EBUSY;
 	kernel_fpu_begin();
 	/* kernel_fpu_begin() does no re-initialize the fpu context, but
 	   fp_regs_set() implicitely expects an initialized fpu context, so

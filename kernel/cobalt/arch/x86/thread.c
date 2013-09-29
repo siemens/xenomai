@@ -83,17 +83,6 @@ static inline void do_switch_threads(struct xnarchtcb *out_tcb,
 
 #endif /* CONFIG_X86_64 */
 
-void xnarch_leave_root(struct xnarchtcb *rootcb)
-{
-	struct task_struct *p = current;
-
-#ifdef CONFIG_X86_64
-	rootcb->spp = &p->thread.sp;
-	rootcb->ipp = &p->thread.rip;
-#endif
-	rootcb->fpup = x86_fpustate_ptr(&p->thread);
-}
-
 void xnarch_switch_to(struct xnarchtcb *out_tcb, struct xnarchtcb *in_tcb)
 {
 	unsigned long __maybe_unused fs, gs;
@@ -255,6 +244,25 @@ int xnarch_handle_fpu_fault(struct xnarchtcb *tcb)
 	return 1;
 }
 
+void xnarch_leave_root(struct xnarchtcb *rootcb)
+{
+	struct task_struct *p = current;
+
+#ifdef CONFIG_X86_64
+	rootcb->spp = &p->thread.sp;
+	rootcb->ipp = &p->thread.rip;
+#endif
+	rootcb->fpup = x86_fpustate_ptr(&p->thread);
+	rootcb->root_kfpu = 
+		(read_cr0() & 8) == 0 && wrap_test_fpu_used(p) == 0;
+	if (rootcb->root_kfpu) {
+		rootcb->root_used_math = tsk_used_math(p) != 0;
+		x86_fpustate_ptr(&p->thread) = &rootcb->i387;
+		wrap_set_fpu_used(p);
+		set_stopped_child_used_math(p);
+	}
+}
+
 void xnarch_save_fpu(struct xnarchtcb *tcb)
 {
 	/* Already saved by __switch_to */
@@ -264,7 +272,7 @@ void xnarch_restore_fpu(struct xnarchtcb *tcb)
 {
 	struct task_struct *p = tcb->core.host_task;
 
-	if (tcb->is_root || tsk_used_math(p) == 0)
+	if (tcb->root_kfpu == 0 && (tsk_used_math(p) == 0 || tcb->is_root))
 		/* Restore lazy mode */
 		return;
 
@@ -274,8 +282,14 @@ void xnarch_restore_fpu(struct xnarchtcb *tcb)
 	 */
 	clts();
 
-	__do_restore_i387(tcb->fpup);
-	wrap_set_fpu_used(p);
+	__do_restore_i387(x86_fpustate_ptr(&p->thread));
+	if (tcb->root_kfpu) {
+		x86_fpustate_ptr(&p->thread) = tcb->fpup;
+		wrap_clear_fpu_used(p);
+		if (tcb->root_used_math == 0)
+			clear_stopped_child_used_math(p);
+	} else
+		wrap_set_fpu_used(p);
 }
 
 void xnarch_enable_fpu(struct xnarchtcb *tcb)
@@ -292,6 +306,7 @@ void xnarch_init_root_tcb(struct xnarchtcb *tcb)
 	tcb->ipp = &tcb->ip;
 	tcb->is_root = 1;
 	tcb->fpup = NULL;
+	tcb->root_kfpu = 0;
 }
 
 void xnarch_init_shadow_tcb(struct xnarchtcb *tcb)
@@ -306,6 +321,7 @@ void xnarch_init_shadow_tcb(struct xnarchtcb *tcb)
 	tcb->ipp = &p->thread.rip; /* <!> raw naming intended. */
 #endif
 	tcb->fpup = x86_fpustate_ptr(&p->thread);
+	tcb->root_kfpu = 0;
 }
 
 int xnarch_escalate(void)
