@@ -109,12 +109,12 @@ static void watchdog_handler(struct xntimer *timer)
 		   curr, xnthread_name(curr));
 
 	if (xnthread_test_state(curr, XNUSER)) {
-		printk(XENO_WARN "watchdog triggered -- runaway thread "
-		       "'%s' signaled\n", xnthread_name(curr));
+		printk(XENO_WARN "watchdog triggered on CPU #%d -- runaway thread "
+		       "'%s' signaled\n", xnsched_cpu(sched), xnthread_name(curr));
 		xnshadow_call_mayday(curr, SIGDEBUG_WATCHDOG);
 	} else {
-		printk(XENO_WARN "watchdog triggered -- runaway thread "
-		       "'%s' cancelled\n", xnthread_name(curr));
+		printk(XENO_WARN "watchdog triggered on CPU #%d -- runaway thread "
+		       "'%s' cancelled\n", xnsched_cpu(sched), xnthread_name(curr));
 		xnthread_cancel(curr);
 	}
 
