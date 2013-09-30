@@ -51,7 +51,7 @@ int __cobalt_thread_stat(pid_t pid, struct cobalt_threadstat *stat)
 
 int __cobalt_thread_join(pthread_t thread)
 {
-	int ret;
+	int ret, oldtype;
 
 	/*
 	 * Serialize with the regular task exit path, so that no call
@@ -70,6 +70,9 @@ int __cobalt_thread_join(pthread_t thread)
 	 * -EPERM may be received because the current context is not a
 	 * Xenomai thread.
 	 *
+	 * -EINVAL is received in case the target is not a joinable
+	 * thread (i.e. detached).
+	 *
 	 * Zero is unexpected.
 	 *
 	 * CAUTION: this service joins a thread Cobat-wise only, not
@@ -77,10 +80,14 @@ int __cobalt_thread_join(pthread_t thread)
 	 * cleanups, __STD(pthread_join()) should be paired with this
 	 * call.
 	 */
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+
 	do
 		ret = XENOMAI_SKINCALL1(__cobalt_muxid,
 					sc_cobalt_thread_join, thread);
 	while (ret == -EINTR);
+
+	pthread_setcanceltype(oldtype, NULL);
 
 	return ret;
 }
@@ -174,8 +181,8 @@ int cobalt_monitor_enter(cobalt_monitor_t *mon)
 {
 	struct cobalt_monitor_data *datp;
 	unsigned long status;
+	int ret, oldtype;
 	xnhandle_t cur;
-	int ret;
 
 	/*
 	 * Assumptions on entry:
@@ -196,6 +203,8 @@ int cobalt_monitor_enter(cobalt_monitor_t *mon)
 		return 0;
 	}
 syscall:
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+
 	/*
 	 * Jump to kernel to wait for entry. We redo in case of
 	 * interrupt.
@@ -205,6 +214,8 @@ syscall:
 					sc_cobalt_monitor_enter,
 					mon);
 	while (ret == -EINTR);
+
+	pthread_setcanceltype(oldtype, NULL);
 
 	return ret;
 }
