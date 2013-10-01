@@ -209,7 +209,6 @@ EXPORT_SYMBOL_GPL(cobalt_thread_find_local);
 
 struct cobalt_thread *cobalt_thread_lookup(unsigned long pth) /* nklocked, IRQs off */
 {
-	struct cobalt_thread *thread;
 	struct cobalt_local_hkey hkey;
 
 	hkey.u_pth = pth;
