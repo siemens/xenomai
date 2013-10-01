@@ -43,10 +43,7 @@
 
 xnticks_t cobalt_time_slice;
 
-static const pthread_attr_t default_thread_attr = {
-	.magic = COBALT_THREAD_ATTR_MAGIC,
-	.detachstate = PTHREAD_CREATE_JOINABLE,
-	.inheritsched = PTHREAD_EXPLICIT_SCHED,
+static const struct cobalt_threadattr default_thread_attr = {
 	.policy = SCHED_NORMAL,
 	.schedparam_ex = {
 		.sched_priority = 0
@@ -414,7 +411,8 @@ unlock_and_exit:
  * using the SA_SIGINFO flag, and pass all the arguments you received
  * to cobalt_sigshadow_handler.
  */
-static inline int pthread_create(struct cobalt_thread **thread_p, const pthread_attr_t *attr)
+static inline int pthread_create(struct cobalt_thread **thread_p,
+				 const struct cobalt_threadattr *attr)
 {
 	struct cobalt_thread *thread, *curr;
 	struct xnsched_class *sched_class;
@@ -423,29 +421,12 @@ static inline int pthread_create(struct cobalt_thread **thread_p, const pthread_
 	int prio, ret, pol, n;
 	spl_t s;
 
-	if (attr && attr->magic != COBALT_THREAD_ATTR_MAGIC)
-		return -EINVAL;
-
 	thread = xnmalloc(sizeof(*thread));
 	if (thread == NULL)
 		return -EAGAIN;
 
 	curr = cobalt_current_thread();
-	thread->attr = attr ? *attr : default_thread_attr;
-	if (thread->attr.inheritsched == PTHREAD_INHERIT_SCHED) {
-		/*
-		 * curr may be NULL if pthread_create is not called by
-		 * a cobalt thread, in which case trying to inherit
-		 * scheduling parameters is treated as an error.
-		 */
-		if (curr == NULL) {
-			xnfree(thread);
-			return -EINVAL;
-		}
-
-		pthread_getschedparam_ex(curr, &thread->attr.policy,
-					 &thread->attr.schedparam_ex);
-	}
+	thread->attr = *attr;
 
 	/*
 	 * NOTE: The user-defined policy may be different than ours,
@@ -897,9 +878,9 @@ int cobalt_thread_create(unsigned long pth, int policy,
 {
 	struct cobalt_thread *thread = NULL;
 	struct task_struct *p = current;
+	struct cobalt_threadattr attr;
 	struct cobalt_local_hkey hkey;
 	struct sched_param_ex param;
-	pthread_attr_t attr;
 	pid_t pid;
 	int ret;
 
@@ -920,7 +901,6 @@ int cobalt_thread_create(unsigned long pth, int policy,
 	 */
 	attr = default_thread_attr;
 	attr.policy = policy;
-	attr.detachstate = PTHREAD_CREATE_DETACHED;
 	attr.schedparam_ex = param;
 	attr.name = p->comm;
 
@@ -954,12 +934,11 @@ cobalt_thread_shadow(struct task_struct *p,
 		     unsigned long __user *u_window_offset)
 {
 	struct cobalt_thread *thread = NULL;
-	pthread_attr_t attr;
+	struct cobalt_threadattr attr;
 	pid_t pid;
 	int ret;
 
 	attr = default_thread_attr;
-	attr.detachstate = PTHREAD_CREATE_DETACHED;
 	attr.name = p->comm;
 
 	ret = pthread_create(&thread, &attr);

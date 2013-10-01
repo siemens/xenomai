@@ -44,18 +44,12 @@
 struct cobalt_thread;
 struct cobalt_threadstat;
 
-typedef struct cobalt_threadattr {
-	unsigned magic;
-	int detachstate;
-	int inheritsched;
+struct cobalt_threadattr {
 	int policy;
-
-	/* Non portable */
 	struct sched_param_ex schedparam_ex;
-	char *name;
+	const char *name;
 	cpumask_t affinity;
-
-} pthread_attr_t;
+};
 
 /*
  * pthread_mutexattr_t and pthread_condattr_t fit on 32 bits, for
@@ -108,7 +102,7 @@ struct cobalt_thread {
 	struct list_head *container;
 
         /** Creation attributes. */
-	pthread_attr_t attr;
+	struct cobalt_threadattr attr;
 
 	/** Signal management. */
 	sigset_t sigpending;
