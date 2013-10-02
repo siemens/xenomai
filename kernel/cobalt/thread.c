@@ -702,6 +702,11 @@ EXPORT_SYMBOL_GPL(xnthread_start);
  * switches to secondary mode. This is a debugging aid for detecting
  * spurious relaxes.
  *
+ * - XNTRAPLB disallows breaking the scheduler lock. In the default
+ * case, a thread which holds the scheduler lock is allowed to drop it
+ * temporarily for sleeping. If this mode bit is set, such thread
+ * would return immediately with XNBREAK set from xnthread_suspend().
+ *
  * Environments:
  *
  * This service can be called from:
@@ -862,19 +867,16 @@ void xnthread_suspend(xnthread_t *thread, int mask,
 	 * task in the root context, to collect and act upon the
 	 * pending Linux signal (see handle_sigwake_event()).
 	 */
-	if (!xnthread_test_state(thread, XNTHREAD_BLOCK_BITS)) {
-		if ((mask & XNRELAX) == 0 &&
-		    xnthread_test_info(thread, XNKICKED)) {
-			if (wchan) {
-				thread->wchan = wchan;
-				xnsynch_forget_sleeper(thread);
-			}
-			xnthread_clear_info(thread, XNRMID | XNTIMEO);
-			xnthread_set_info(thread, XNBREAK);
-			xnlock_put_irqrestore(&nklock, s);
-			return;
+	if ((oldstate & XNTHREAD_BLOCK_BITS) == 0) {
+		if ((mask & XNRELAX) == 0) {
+			if (xnthread_test_info(thread, XNKICKED))
+				goto abort;
+			if (thread == sched->curr &&
+			    (oldstate & (XNTRAPLB|XNLOCK)) == (XNTRAPLB|XNLOCK))
+				goto abort;
 		}
-		xnthread_clear_info(thread, XNRMID | XNTIMEO | XNBREAK | XNWAKEN | XNROBBED);
+		xnthread_clear_info(thread,
+				    XNRMID|XNTIMEO|XNBREAK|XNWAKEN|XNROBBED);
 	}
 
 	/*
@@ -890,12 +892,12 @@ void xnthread_suspend(xnthread_t *thread, int mask,
 				xnsynch_forget_sleeper(thread);
 			}
 			xnthread_set_info(thread, XNTIMEO);
-			goto unlock_and_exit;
+			goto out;
 		}
 		xnthread_set_state(thread, XNDELAY);
 	}
 
-	if (xnthread_test_state(thread, XNREADY)) {
+	if (oldstate & XNREADY) {
 		xnsched_dequeue(thread);
 		xnthread_clear_state(thread, XNREADY);
 	}
@@ -937,7 +939,7 @@ void xnthread_suspend(xnthread_t *thread, int mask,
 		 * xnsched_run will trigger the IPI as required.
 		 */
 		xnsched_run();
-		goto unlock_and_exit;
+		goto out;
 	}
 
 	/*
@@ -984,8 +986,17 @@ void xnthread_suspend(xnthread_t *thread, int mask,
 	if (((oldstate & (XNTHREAD_BLOCK_BITS|XNUSER)) == (XNRELAX|XNUSER)) &&
 	    (mask & (XNDELAY | XNSUSP | XNHELD)) != 0)
 		xnshadow_send_sig(thread, SIGSHADOW, SIGSHADOW_ACTION_HARDEN);
+out:
+	xnlock_put_irqrestore(&nklock, s);
+	return;
 
-unlock_and_exit:
+abort:
+	if (wchan) {
+		thread->wchan = wchan;
+		xnsynch_forget_sleeper(thread);
+	}
+	xnthread_clear_info(thread, XNRMID | XNTIMEO);
+	xnthread_set_info(thread, XNBREAK);
 	xnlock_put_irqrestore(&nklock, s);
 }
 EXPORT_SYMBOL_GPL(xnthread_suspend);

@@ -50,6 +50,7 @@
 #define XNWEAK    0x00020000 /**< Non real-time shadow (from the WEAK class) */
 #define XNUSER    0x00040000 /**< Shadow thread running in userland */
 #define XNJOINED  0x00080000 /**< Another thread waits for joining this thread */
+#define XNTRAPLB  0x00100000 /**< Trap lock break (i.e. may not sleep with XNLOCK) */
 
 /** @} */
 
@@ -91,7 +92,7 @@
  * 'r' -> Undergoes round-robin.
  * 't' -> Mode switches trapped.
  */
-#define XNTHREAD_STATE_LABELS  "SWDRU..X.HbTlrt...."
+#define XNTHREAD_STATE_LABELS  "SWDRU..X.HbTlrt.....L"
 
 /**
  * @brief Structure containing thread information.
