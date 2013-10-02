@@ -20,9 +20,10 @@
 
 #include <cobalt/uapi/kernel/thread.h>
 
-#define PTHREAD_WARNSW      XNTRAPSW
-#define PTHREAD_LOCK_SCHED  XNLOCK
-#define PTHREAD_CONFORMING  0
+#define PTHREAD_WARNSW             XNTRAPSW
+#define PTHREAD_LOCK_SCHED         XNLOCK
+#define PTHREAD_DISABLE_LOCKBREAK  XNTRAPLB
+#define PTHREAD_CONFORMING     0
 
 struct cobalt_mutexattr {
 	unsigned int magic: 24;

@@ -586,9 +586,14 @@ static inline int pthread_make_periodic_np(struct cobalt_thread *thread,
  * current user-space task to its preferred runtime mode. The only
  * meaningful use of this switch is to force a real-time shadow back
  * to primary mode. Any other use leads to a nop.
+ * - PTHREAD_DISABLE_LOCKBREAK disallows breaking the scheduler
+ * lock. In the default case, a thread which holds the scheduler lock
+ * is allowed to drop it temporarily for sleeping. If this mode bit is set,
+ * such thread would return with EINTR immediately from any blocking call.
  *
- * PTHREAD_LOCK_SCHED is valid for any Xenomai thread, the other bits are only
- * valid for Xenomai user-space threads.
+ * PTHREAD_LOCK_SCHED and PTHREAD_DISABLE_LOCKBREAK are valid for any
+ * Xenomai thread, other bits are valid for Xenomai user-space threads
+ * only.
  *
  * This service is a non-portable extension of the POSIX interface.
  *
@@ -610,8 +615,8 @@ static inline int pthread_make_periodic_np(struct cobalt_thread *thread,
  */
 static inline int pthread_set_mode_np(int clrmask, int setmask, int *mode_r)
 {
+	const int valid_flags = XNLOCK|XNTRAPSW|XNTRAPLB;
 	struct xnthread *cur = xnsched_current_thread();
-	const int valid_flags = XNLOCK|XNTRAPSW;
 	int old;
 
 	/*
