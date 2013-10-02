@@ -184,6 +184,13 @@ EXPORT_SYMBOL_GPL(rtdm_task_init);
 /**
  * @brief Destroy a real-time task
  *
+ * This call sends a termination request to @a task, then waits for it
+ * to exit. All RTDM task should check for pending termination
+ * requests by calling rtdm_task_should_stop() from their work loop.
+ *
+ * If @a task is current, rtdm_task_destroy() terminates the current
+ * context, and does not return to the caller.
+ *
  * @param[in,out] task Task handle as returned by rtdm_task_init()
  *
  * @note Passing the same task handle to RTDM services after the completion of
@@ -195,11 +202,26 @@ EXPORT_SYMBOL_GPL(rtdm_task_init);
  *
  * - Kernel module initialization/cleanup code
  * - Kernel-based task
- * - User-space task (RT, non-RT)
  *
- * Rescheduling: never.
+ * Rescheduling: yes.
  */
 void rtdm_task_destroy(rtdm_task_t *task);
+
+/**
+ * @brief Check for pending termination request
+ *
+ * Check whether a termination request was received by the current
+ * RTDM task. Termination requests are sent by calling
+ * rtdm_task_destroy().
+ *
+ * @return Non-zero indicates that a termination request is pending,
+ * in which case the caller should wrap up and exit.
+ *
+ * Calling context: kernel task
+ *
+ * Rescheduling: none.
+ */
+int rtdm_task_should_stop(void);
 
 /**
  * @brief Adjust real-time task priority
