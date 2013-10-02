@@ -18,8 +18,11 @@ PROJECT_NAME           = "Xenomai"
 # with spaces.
 
 INPUT                  = \
-	@top_srcdir@/include/cobalt/nucleus \
+	@top_srcdir@/include/cobalt/uapi \
+	@top_srcdir@/include/cobalt/kernel \
 	@top_srcdir@/kernel/cobalt \
+	@top_srcdir@/include/nocore \
+	@top_srcdir@/include/boilerplate \
 	@top_srcdir@/include/copperplate \
 	@top_srcdir@/include/alchemy \
 	@top_srcdir@/include/rtdm \

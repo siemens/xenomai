@@ -1,0 +1,177 @@
+Building and running applications with Xenomai {xenover}
+========================================================
+
+The latest version of this document is available at
+http://www.xenomai.org/documentation/xenomai-forge/html/README.APPLICATIONS/[this address].
+
+Make sure to read the
+http://www.xenomai.org/documentation/xenomai-forge/html/README.INSTALL/[installation
+document] before going through this one.
+
+For questions, corrections and improvements, write to
+mailto:xenomai@xenomai.org[the mailing list].
+
+Compiling a Xenomai application
+-------------------------------
+
+You should use the +xeno-config+ script to get the proper compilation
+and linker flags related to Xenomai, for building your application,
+for whichever _Cobalt_ or _Mercury_ core.
+
+Here is a trivial Makefile fragment retrieving the compiler and flags
+for building the single-file application +vxapp.c+, over the VxWorks
+emulation API:
+
+-----------------------------------------------------------
+XENO_CONFIG := /usr/xenomai/bin/xeno-config
+CFLAGS := $(shell $(XENO_CONFIG) --vxworks --cflags)
+LDFLAGS := $(shell $(XENO_CONFIG) --vxworks --ldflags)
+CC := $(shell $(XENO_CONFIG) --cc)
+
+EXECUTABLE := vxapp
+
+all: $(EXECUTABLE)
+
+%: %.c
+	$(CC) -o $@ $< $(CFLAGS) $(LDFLAGS)
+-----------------------------------------------------------
+
+Running a Xenomai application
+-----------------------------
+
+For _Cobalt_, you will need the real-time core built into the target
+Linux kernel as described in
+http://www.xenomai.org/documentation/xenomai-forge/html/README.INSTALL/[this
+document].
+
+For _Mercury_, you need no Xenomai-specific kernel support so far,
+beyond what your host Linux kernel already provides. Your kernel
+should at least provide high resolution timer support
+(+CONFIG_HIGH_RES_TIMERS+), and likely complete preemption
+(_PREEMPT_RT_) if your application requires short and bounded
+latencies.
+
+An application recognises a set of options that may be passed on the
+command line, namely:
+
+[horizontal]
+*--<api>-clock-resolution=<ns>*::
+
+	The clock resolution available with the real-time API, given
+	as a count of nano-seconds, i.e. HZ=(1000000000 / ns).
+
+[normal]
+	<api> is the name of one of the existing Xenomai APIs your
+	application can be linked against, e.g. _psos_, _vxworks_ or
+	_alchemy_. When your application combines multiple APIs, you
+	may pass several clock-resolution switches to set them all.
+
+[normal]
+	The default value depends on the API being considered. For
+	instance, the VxWorks (TM) and pSOS (TM) emulators default to
+	1 millisecond clock rates. The Alchemy API is tickless by
+	default, i.e. +--alchemy-clock-resolution=1+.
+
+CAUTION: Specifying a resolution greater than 1 nanosecond requires
+the low resolution clock support to be available from the Xenomai
+libraries (see the +--enable-lores-clock+
+http://www.xenomai.org/documentation/xenomai-forge/html/README.INSTALL/[configuration
+switch]).
+
+*--mem-pool-size=<kb>*::
+
+	The initial size in Kilobytes of the main memory pool. This
+	option only makes sense when the TLSF allocator is being used
+	(i.e. +--enable-debug+ is not specified when compiling the
+	Xenomai libraries). This is only a hint, since TLSF will
+	increase the main pool size dynamically as needed, if needed.
+
+[normal]
+	However, this option may be used to pre-allocate the specified
+	amount of memory to the application process, thus avoiding
+	costly system calls to extend the data segment of such process
+	while operating in time critical mode.
+
+*--no-mlock*::
+
+	Tells the Xenomai libraries not to lock the process memory
+	while initializing. The application will have to handle this
+	task when and how it sees fit, in order to avoid the extra
+	latency induced by virtual memory paging.  Otherwise,
+	`mlockall(MCL_CURRENT | MCL_FUTURE)` is automatically invoked
+	as part of the API initialization duties.
+
+[normal]
+	This flag only applies to the _Mercury_ core. Memory must be
+	locked when invoking dual kernel services, therefore this
+	switch is a nop over _Cobalt_.
+
+*--registry-root=<path>*::
+
+	Tells Xenomai to root the object registry at the given path,
+	instead of +/mnt/xenomai+ by default (see the
+	+--enable-registry+ switch from the configuration options).
+
+*--no-registry*::
+
+	This switch disables registry support at runtime. No real-time
+	objects will be exported to +/mnt/xenomai/<session>.<pid>+,
+	despite the registry code was compiled in.
+
+*--session=<label>*::
+
+	Name of the session the new process will be part of (or create
+	if not present). If +--enable-pshared+ was given when
+	configuring the Xenomai libraries, this label allows multiple
+	processes giving the same label at startup to operate on the
+	same set of objects.
+
+[normal]
+	For instance, a process can post a semaphore created by
+	another process from the same session. This is done using a
+	common heap area, shared by all processes within the same
+	session.
+
+[normal]
+	This label is also used to form the registry mount point for
+	each process, e.g. +/mnt/xenomai/<session>.<pid>+. See
+	+--enable-registry+ from the build options.
+
+[normal]
+	By default, _anon_ is used as the session label.
+
+*--reset*::
+
+	Forces removal of an older session. This only works if the
+	process which initiated the former session has exited,
+	otherwise an error is raised.
+
+*--cpu-affinity=<cpu[,cpu]...>*::
+
+	Sets the CPU affinity of threads created by the Xenomai
+	libraries within the new process.
+
+*--enable-async-cancel*::
+
+	Enables asynchronous cancellation of Xenomai threads, making
+	provision to protect the Xenomai APIs accordingly. When
+	disabled, Xenomai assumes that threads may exit due to
+	cancellation only when they reach cancellation points (like
+	system calls). Defaults to enabled.
+
+Available real-time APIs
+------------------------
+
+[horizontal]
+*Alchemy*::
+		This is a re-implementation from scratch of Xenomai's
+		2.x _native_ API, fully rebased on the new RTOS
+		abstraction interface.
+
+*pSOS*::
+		http://www.windriver.com[pSOS (TM)] is a registered
+		trademark of Wind River Systems, Inc.
+
+*VxWorks*::
+		http://www.windriver.com[VxWorks (TM)] is a registered
+		trademark of Wind River Systems, Inc.

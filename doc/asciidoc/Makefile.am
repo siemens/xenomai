@@ -1,7 +1,8 @@
-HTML_DOCS=README.INSTALL TROUBLESHOOTING \
+HTML_DOCS=README.INSTALL README.APPLICATIONS TROUBLESHOOTING \
 	asciidoc-icons asciidoc-icons/callouts asciidoc-css asciidoc-js
-PDF_DOCS=README.INSTALL.pdf TROUBLESHOOTING.pdf
-EXTRA_DIST=README.INSTALL.adoc TROUBLESHOOTING.adoc plaintext.conf plaintext_postproc.awk plaintext.xsl
+PDF_DOCS=README.INSTALL.pdf README.APPLICATIONS.pdf TROUBLESHOOTING.pdf
+EXTRA_DIST=README.INSTALL.adoc README.APPLICATIONS.adoc TROUBLESHOOTING.adoc \
+	plaintext.conf plaintext_postproc.awk plaintext.xsl
 
 if !CONFIG_XENO_ASCIIDOC
 HTML_DOCSDIR = $(srcdir)/../generated/html/
@@ -10,7 +11,7 @@ else
 HTML_DOCSDIR = ./
 PDF_DOCSDIR = ./
 
-TXT_DOCS=README.INSTALL.txt TROUBLESHOOTING.txt
+TXT_DOCS=README.INSTALL.txt README.APPLICATIONS.txt TROUBLESHOOTING.txt
 
 ASCIIDOC_HTML_OPTS=-a icons -a iconsdir=../asciidoc-icons \
 	-a linkcss -a stylesdir=../asciidoc-css -a scriptsdir=../asciidoc-js \
@@ -46,16 +47,20 @@ $(tmpdir)/%.txt: %.adoc Makefile plaintext.conf plaintext.xsl
 
 asciidoc-icons asciidoc-icons/callouts:
 	@$(RM) -R asciidoc-icons
-	@cp -a /usr/share/asciidoc/icons asciidoc-icons
+	@test -d /usr/share/asciidoc/images && \
+	cp -a /usr/share/asciidoc/images/icons asciidoc-icons || \
+	cp -a /usr/share/asciidoc/icons asciidoc-icons
 
 asciidoc-css:
 	@$(mkdir_p) $@
-	@cp -a /usr/share/asciidoc/stylesheets/xhtml11.css $@
+	@test -d /usr/share/asciidoc/stylesheets/xhtml11.css && \
+	@cp -a /usr/share/asciidoc/stylesheets/xhtml11.css $@ || \
+	true
 	@cp -a /usr/share/asciidoc/stylesheets/xhtml11-quirks.css $@
 
 asciidoc-js:
 	@$(mkdir_p) $@
-	@cp -a /usr/share/asciidoc/javascripts/asciidoc-xhtml11.js $@
+	@cp -a /usr/share/asciidoc/javascripts/asciidoc*.js $@
 	@cp -a /usr/share/asciidoc/javascripts/toc.js $@
 
 endif

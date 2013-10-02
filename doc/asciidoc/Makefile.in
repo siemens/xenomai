@@ -296,16 +296,18 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-HTML_DOCS = README.INSTALL TROUBLESHOOTING \
+HTML_DOCS = README.INSTALL README.APPLICATIONS TROUBLESHOOTING \
 	asciidoc-icons asciidoc-icons/callouts asciidoc-css asciidoc-js
 
-PDF_DOCS = README.INSTALL.pdf TROUBLESHOOTING.pdf
-EXTRA_DIST = README.INSTALL.adoc TROUBLESHOOTING.adoc plaintext.conf plaintext_postproc.awk plaintext.xsl
+PDF_DOCS = README.INSTALL.pdf README.APPLICATIONS.pdf TROUBLESHOOTING.pdf
+EXTRA_DIST = README.INSTALL.adoc README.APPLICATIONS.adoc TROUBLESHOOTING.adoc \
+	plaintext.conf plaintext_postproc.awk plaintext.xsl
+
 @CONFIG_XENO_ASCIIDOC_FALSE@HTML_DOCSDIR = $(srcdir)/../generated/html/
 @CONFIG_XENO_ASCIIDOC_TRUE@HTML_DOCSDIR = ./
 @CONFIG_XENO_ASCIIDOC_FALSE@PDF_DOCSDIR = $(srcdir)/../generated/pdf/
 @CONFIG_XENO_ASCIIDOC_TRUE@PDF_DOCSDIR = ./
-@CONFIG_XENO_ASCIIDOC_TRUE@TXT_DOCS = README.INSTALL.txt TROUBLESHOOTING.txt
+@CONFIG_XENO_ASCIIDOC_TRUE@TXT_DOCS = README.INSTALL.txt README.APPLICATIONS.txt TROUBLESHOOTING.txt
 @CONFIG_XENO_ASCIIDOC_TRUE@ASCIIDOC_HTML_OPTS = -a icons -a iconsdir=../asciidoc-icons \
 @CONFIG_XENO_ASCIIDOC_TRUE@	-a linkcss -a stylesdir=../asciidoc-css -a scriptsdir=../asciidoc-js \
 @CONFIG_XENO_ASCIIDOC_TRUE@	-a toc -a toclevels=3 -a max-width=55em -a xenover=$(PACKAGE_VERSION)
@@ -536,16 +538,20 @@ uninstall-am: uninstall-local
 
 @CONFIG_XENO_ASCIIDOC_TRUE@asciidoc-icons asciidoc-icons/callouts:
 @CONFIG_XENO_ASCIIDOC_TRUE@	@$(RM) -R asciidoc-icons
-@CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/share/asciidoc/icons asciidoc-icons
+@CONFIG_XENO_ASCIIDOC_TRUE@	@test -d /usr/share/asciidoc/images && \
+@CONFIG_XENO_ASCIIDOC_TRUE@	cp -a /usr/share/asciidoc/images/icons asciidoc-icons || \
+@CONFIG_XENO_ASCIIDOC_TRUE@	cp -a /usr/share/asciidoc/icons asciidoc-icons
 
 @CONFIG_XENO_ASCIIDOC_TRUE@asciidoc-css:
 @CONFIG_XENO_ASCIIDOC_TRUE@	@$(mkdir_p) $@
-@CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/share/asciidoc/stylesheets/xhtml11.css $@
+@CONFIG_XENO_ASCIIDOC_TRUE@	@test -d /usr/share/asciidoc/stylesheets/xhtml11.css && \
+@CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/share/asciidoc/stylesheets/xhtml11.css $@ || \
+@CONFIG_XENO_ASCIIDOC_TRUE@	true
 @CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/share/asciidoc/stylesheets/xhtml11-quirks.css $@
 
 @CONFIG_XENO_ASCIIDOC_TRUE@asciidoc-js:
 @CONFIG_XENO_ASCIIDOC_TRUE@	@$(mkdir_p) $@
-@CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/share/asciidoc/javascripts/asciidoc-xhtml11.js $@
+@CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/share/asciidoc/javascripts/asciidoc*.js $@
 @CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/share/asciidoc/javascripts/toc.js $@
 
 install-htmldocs: $(HTML_DOCS:%=$(HTML_DOCSDIR)%)
