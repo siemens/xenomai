@@ -70,10 +70,10 @@ the patch has been tested with commit 3fc8a73d782231ab2750ff29793a760e8fa076bb
 ---- Raspberry Pi
 
 From [5]:
-1- Checkout the "rpi-3.8.y" branch in the repository [4]
-2- Apply raspberry/ipipe-core-3.8.13-raspberry-pre.patch
+1- Checkout the "rpi-3.8.y" branch in the repository [4], commit d996a1b
+2- Apply raspberry/ipipe-core-3.8.13-raspberry-pre-2.patch
 3- Apply ipipe-core-3.8.13-arm patch
-2- apply raspberry/ipipe-core-3.8.13-raspberry-post.patch
+2- apply raspberry/ipipe-core-3.8.13-raspberry-post-2.patch
 3- you can resume to generic installation instructions.
 
 ---- Zynq
