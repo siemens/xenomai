@@ -284,7 +284,7 @@ index 615fa90..e0a62ab 100644
  extern void default_send_IPI_mask_sequence_phys(const struct cpumask *mask,
 diff --git a/arch/x86/include/asm/ipipe.h b/arch/x86/include/asm/ipipe.h
 new file mode 100644
-index 0000000..09f250e
+index 0000000..3681a1f
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe.h
 @@ -0,0 +1,104 @@
@@ -314,7 +314,7 @@ index 0000000..09f250e
 +
 +#ifdef CONFIG_IPIPE
 +
-+#define IPIPE_CORE_RELEASE	3
++#define IPIPE_CORE_RELEASE	4
 +
 +struct ipipe_domain;
 +
@@ -4100,25 +4100,10 @@ index a311ffc..482b42f 100644
  
  	return IS_ERR(pd) ? PTR_ERR(pd) : 0;
 diff --git a/arch/x86/kernel/process.c b/arch/x86/kernel/process.c
-index 2ed787f..a00bed1 100644
+index 2ed787f..4716eb2 100644
 --- a/arch/x86/kernel/process.c
 +++ b/arch/x86/kernel/process.c
-@@ -73,6 +73,14 @@ int arch_dup_task_struct(struct task_struct *dst, struct task_struct *src)
- 		if (ret)
- 			return ret;
- 		fpu_copy(dst, src);
-+	} else {
-+#ifdef CONFIG_IPIPE
-+		/* unconditionally allocate, RT domain may need it */
-+		memset(&dst->thread.fpu, 0, sizeof(dst->thread.fpu));
-+		ret = fpu_alloc(&dst->thread.fpu);
-+		if (ret)
-+			return ret;
-+#endif
- 	}
- 	return 0;
- }
-@@ -93,6 +101,10 @@ void arch_task_cache_init(void)
+@@ -93,6 +93,10 @@ void arch_task_cache_init(void)
          	kmem_cache_create("task_xstate", xstate_size,
  				  __alignof__(union thread_xstate),
  				  SLAB_PANIC | SLAB_NOTRACK, NULL);
@@ -4129,7 +4114,7 @@ index 2ed787f..a00bed1 100644
  }
  
  /*
-@@ -152,11 +164,13 @@ void flush_thread(void)
+@@ -152,12 +156,14 @@ void flush_thread(void)
  	flush_ptrace_hw_breakpoint(tsk);
  	memset(tsk->thread.tls_array, 0, sizeof(tsk->thread.tls_array));
  	drop_init_fpu(tsk);
@@ -4139,11 +4124,12 @@ index 2ed787f..a00bed1 100644
  	 * lazily at the first use.
  	 */
  	if (!use_eager_fpu())
-+#endif
  		free_thread_xstate(tsk);
++#endif
  }
  
-@@ -406,7 +420,7 @@ bool set_pm_idle_to_default(void)
+ static void hard_disable_TSC(void)
+@@ -406,7 +412,7 @@ bool set_pm_idle_to_default(void)
  }
  void stop_this_cpu(void *dummy)
  {
@@ -4152,7 +4138,7 @@ index 2ed787f..a00bed1 100644
  	/*
  	 * Remove this CPU:
  	 */
-@@ -534,6 +548,10 @@ static void amd_e400_idle(void)
+@@ -534,6 +540,10 @@ static void amd_e400_idle(void)
  			if (!boot_cpu_has(X86_FEATURE_NONSTOP_TSC))
  				mark_tsc_unstable("TSC halt in AMD C1E");
  			pr_info("System has AMD C1E enabled\n");
@@ -4163,7 +4149,7 @@ index 2ed787f..a00bed1 100644
  		}
  	}
  
-@@ -566,6 +584,11 @@ static void amd_e400_idle(void)
+@@ -566,6 +576,11 @@ static void amd_e400_idle(void)
  
  void __cpuinit select_idle_routine(const struct cpuinfo_x86 *c)
  {
@@ -4175,7 +4161,7 @@ index 2ed787f..a00bed1 100644
  #ifdef CONFIG_SMP
  	if (pm_idle == poll_idle && smp_num_siblings > 1) {
  		pr_warn_once("WARNING: polling idle and HT enabled, performance may degrade\n");
-@@ -574,7 +597,7 @@ void __cpuinit select_idle_routine(const struct cpuinfo_x86 *c)
+@@ -574,7 +589,7 @@ void __cpuinit select_idle_routine(const struct cpuinfo_x86 *c)
  	if (pm_idle)
  		return;
  
