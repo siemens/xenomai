@@ -562,9 +562,7 @@ Xenomai: incompatible feature set
 -------------------------------------------------------------------------------
 
 It means that you are either using an old patch, or that the SOC you
-are using does not select the +CONFIG_IPIPE_ARM_KUSER_TSC+ option (to
-this date the only in-tree SOC family not using this option is
-ixp4xx).
+are using does not select the +CONFIG_IPIPE_ARM_KUSER_TSC+ option.
 
 So you should resort to what Xenomai did before branch 2.6: select the
 tsc emulation code when compiling Xenomai user-space support by using
