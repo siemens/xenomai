@@ -97,11 +97,13 @@ int xnarch_escalate(void);
 
 static inline void xnarch_init_root_tcb(struct xnarchtcb *tcb)
 {
+	tcb->is_root = 1;
 	tcb->fpup = NULL;
 }
 
 static inline void xnarch_init_shadow_tcb(struct xnarchtcb *tcb)
 {
+	tcb->is_root = 0;
 	tcb->fpup = (struct arm_fpustate *)
 		&task_thread_info(tcb->core.host_task)->used_cp[0];
 }
