@@ -312,11 +312,11 @@ done:
 	switch (sip->si_code) {
 	case SI_TIMER:
 		ret |= __xn_put_user(sip->si_tid, &u_si->si_tid);
-		ret |= __xn_put_user(sip->si_value, &u_si->si_value);
+		ret |= __xn_put_user(sip->si_ptr, &u_si->si_ptr);
 		ret |= __xn_put_user(overrun, &u_si->si_overrun);
 		break;
 	case SI_MESGQ:
-		ret |= __xn_put_user(sip->si_value, &u_si->si_value);
+		ret |= __xn_put_user(sip->si_ptr, &u_si->si_ptr);
 		/* falldown wanted. */
 	case SI_USER:
 		ret |= __xn_put_user(sip->si_pid, &u_si->si_pid);
