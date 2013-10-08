@@ -1001,23 +1001,27 @@ static inline int format_irq_proc(unsigned int irq,
 			return 0;
 		}
 
-	switch (irq) {
 #ifdef CONFIG_SMP
-	case IPIPE_HRTIMER_IPI:
+	/*
+	 * IPI numbers on ARM are not compile time constants, so do
+	 * not use switch/case here.
+	 */
+	if (irq == IPIPE_HRTIMER_IPI) {
 		xnvfile_puts(it, "         [timer-ipi]");
 		return 0;
-	case IPIPE_RESCHEDULE_IPI:
+	}
+	if (irq == IPIPE_RESCHEDULE_IPI) {
 		xnvfile_puts(it, "         [reschedule]");
 		return 0;
-	case IPIPE_CRITICAL_IPI:
+	}
+	if (irq == IPIPE_CRITICAL_IPI) {
 		xnvfile_puts(it, "         [sync]");
 		return 0;
+	}
 #endif /* CONFIG_SMP */
-	default:
-		if (ipipe_virtual_irq_p(irq)) {
-			xnvfile_puts(it, "         [virtual]");
-			return 0;
-		}
+	if (ipipe_virtual_irq_p(irq)) {
+		xnvfile_puts(it, "         [virtual]");
+		return 0;
 	}
 
 	mutex_lock(&intrlock);
