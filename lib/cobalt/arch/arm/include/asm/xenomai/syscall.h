@@ -24,6 +24,7 @@
 #include <xeno_config.h>
 #include <errno.h>
 #include <cobalt/uapi/syscall.h>
+#include <asm/xenomai/features.h> /* for CONFIG_XENO_ARM_EABI */
 
 /*
  * Some of the following macros have been adapted from Linux's
