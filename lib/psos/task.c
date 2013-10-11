@@ -672,7 +672,7 @@ u_long ev_send(u_long tid, u_long events)
 	struct service svc;
 	int ret = SUCCESS;
 
-	task = find_psos_task(tid, &ret);
+	task = find_psos_task_or_self(tid, &ret);
 	if (task == NULL)
 		return ret;
 
