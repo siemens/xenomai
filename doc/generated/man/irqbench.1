@@ -34,7 +34,7 @@ irqbench \- Xenomai IRQ benchmark, host control
 \fBirqbench\fR [ options ]
 .SH "DESCRIPTION"
 .sp
-\fBirqbench\fR is part of the Xenomai test suite and benchmarks IRQs\&. It is the controlling part running on a plain Linux host, connected via RS232 or Laplink with the target which is running a suitable Xenomai enabled kernel with the respective module (xeno_posix)\&. The target must run \fBirqloop\fR (1)\&.
+\fBirqbench\fR is part of the Xenomai test suite and benchmarks IRQs\&. It is the controlling part running on a plain Linux host, connected via RS232 or Laplink with the target which is running a suitable Xenomai enabled kernel with the respective module (xeno_posix)\&. The target must run \fBirqloop(1)\fR\&.
 .SH "OPTIONS"
 .sp
 \fBirqbench\fR accepts the following options:
@@ -63,9 +63,9 @@ default=0x3f8/0x378
 .RS 4
 freeze trace for each new max latency
 .RE
-.SH ""SEE ALSO""
+.SH "SEE ALSO"
 .sp
-\fB/usr/share/doc/xenomai\-doc/txt/irqbench\&.txt,\fR \fBirqloop (1)\fR
+\fB/usr/share/doc/xenomai\-doc/txt/irqbench\&.txt, \fR\fBirqloop(1)\fR\&.
 .SH "AUTHOR"
 .sp
 \fBirqbench\fR was written by Jan Kiszka\&. This man page was written by Roland Stigge\&.

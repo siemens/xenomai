@@ -720,7 +720,5 @@ values, see the TROUBLESHOOTING guide.
 
 If the latency test succeeds, you should try next to run a latency test under
 load to evaluate the latency test of your system, the xeno-test script allows
-doing that. Try:
-
-$ xeno-test --help
+doing that. see xeno-test(1) manual page for more details.
 
