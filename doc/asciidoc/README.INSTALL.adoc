@@ -746,8 +746,6 @@ link:../TROUBLESHOOTING/index.html#latency[TROUBLESHOOTING] guide.
 
 If the latency test succeeds, you should try next to run a latency
 test under load to evaluate the latency test of your system, the
-+xeno-test+ script allows doing that. Try:
++xeno-test+ script allows doing that. see 
+link:../xeno-test/index.html[xeno-test(1)] manual page for more details.
 
-------------------------------------------------------------------------------
-$ xeno-test --help
-------------------------------------------------------------------------------

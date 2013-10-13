@@ -30,7 +30,7 @@ DESCRIPTION
 *irqloop* is part of the Xenomai test suite and benchmarks IRQs. It is the
 program running on the target machine which is running a suitable Xenomai
 enabled kernel with the respective module (xeno_posix). The additional tool
-*irqbench*(1) is running on a plain Linux host, connected via RS232 or
+*link:../irqbench/index.html[irqbench(1)]* is running on a plain Linux host, connected via RS232 or
 Laplink with the target.
 
 OPTIONS
@@ -59,10 +59,9 @@ OPTIONS
 	default=4/7
 
 
-"SEE ALSO"
------------
-*/usr/share/doc/xenomai-doc/txt/irqloop.txt,*
-*irqbench(1)*
+SEE ALSO
+--------
+*/usr/share/doc/xenomai-doc/txt/irqloop.txt, link:../irqbench/index.html[irqbench(1)]*.
 
 AUTHOR
 -------

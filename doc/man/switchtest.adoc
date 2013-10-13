@@ -55,7 +55,7 @@ for a user-space real-time thread oscillating between primary and secondary mode
 means that the created thread will have the XNFPU bit armed (only valid for rtk)
 
 *_ufpp*::
-means that the created thread will use the FPU when in primary mode\n(invalid for rtus)
+means that the created thread will use the FPU when in primary mode (invalid for rtus)
 
 *_ufps*::
 means that the created thread will use the FPU when in secondary mode (invalid for rtk and rtup)

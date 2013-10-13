@@ -30,7 +30,7 @@ DESCRIPTION
 *irqbench* is part of the Xenomai test suite and benchmarks IRQs. It is the
 controlling part running on a plain Linux host, connected via RS232 or Laplink
 with the target which is running a suitable Xenomai enabled kernel with the
-respective module (xeno_posix). The target must run *irqloop* (1).
+respective module (xeno_posix). The target must run *link:../irqloop/index.html[irqloop(1)]*.
 
 OPTIONS
 --------
@@ -51,10 +51,9 @@ default=0x3f8/0x378
 *-f*::
 freeze trace for each new max latency
 
-"SEE ALSO"
------------
-*/usr/share/doc/xenomai-doc/txt/irqbench.txt,*
-*irqloop (1)*
+SEE ALSO
+--------
+*/usr/share/doc/xenomai-doc/txt/irqbench.txt, link:../irqloop/index.html[irqloop(1)]*.
 
 AUTHOR
 -------

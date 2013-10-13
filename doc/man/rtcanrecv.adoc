@@ -61,10 +61,9 @@ print every MODULO message
 *-h, --help*::
 this help
 
-"SEE ALSO"
------------
-* rtcanconfig (1),*
-* rtcanrecv (1)*
+SEE ALSO
+--------
+*link:../rtcanconfig/index.html[rtcanconfig(1)], link:../rtcansend/index.html[rtcansend(1)]*.
 
 AUTHORS
 --------

@@ -52,6 +52,10 @@ BTR or standard bit-time
 
 *-B, --bittime=BRP:PROP_SEG:PHASE_SEG1:PHASE_SEG2:SJW:SAM*
 
+SEE ALSO
+--------
+*link:../rtcanrecv/index.html[rtcanrecv(1)], link:../rtcansend/index.html[rtcansend(1)]*.
+
 AUTHORS
 --------
 *rtcanconfig* was written by Wolfgang Grandegger and

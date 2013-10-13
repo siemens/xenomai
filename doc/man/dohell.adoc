@@ -46,7 +46,7 @@ in seconds.
 SEE ALSO
 --------
 
-link:../xeno-test/index.html[xeno-test(1)], link:../latency/index.html[latency(1)].
+*link:../xeno-test/index.html[xeno-test(1)], link:../latency/index.html[latency(1)]*.
 
 EXAMPLE
 --------
