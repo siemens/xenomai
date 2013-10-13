@@ -483,6 +483,8 @@ static int rtswitch_create_ktask(rtswitch_context_t *ctx,
 	iattr.affinity = cpumask_of_cpu(ctx->cpu);
 	param.rt.prio = 1;
 
+	set_cpus_allowed(current, cpumask_of_cpu(ctx->cpu));
+
 	err = xnthread_init(&task->ktask,
 			    &iattr, &xnsched_class_rt, &param);
 	if (!err) {
@@ -498,7 +500,8 @@ static int rtswitch_create_ktask(rtswitch_context_t *ctx,
 		task->base.flags = 0;
 	/*
 	 * Putting the argument on stack is safe, because the new
-	 * thread will preempt the current thread immediately, and
+	 * thread, thanks to the abovce call of set_cpus_allowed,
+	 * will preempt the current thread immediately, and
 	 * will suspend only once the arguments on stack are used.
 	 */
 
