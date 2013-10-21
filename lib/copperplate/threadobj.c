@@ -449,7 +449,8 @@ static inline int threadobj_setup_corespec(struct threadobj *thobj)
 	int ret;
 
 	prctl(PR_SET_NAME, (unsigned long)thobj->name, 0, 0, 0);
-	notifier_init(&thobj->core.notifier, notifier_callback, 1);
+	ret = notifier_init(&thobj->core.notifier, notifier_callback, 1);
+	assert(ret == 0);
 	thobj->core.period = 0;
 
 	/*

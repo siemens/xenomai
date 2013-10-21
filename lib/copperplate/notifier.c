@@ -143,10 +143,13 @@ int notifier_init(struct notifier *nf,
 	sigset_t oset;
 	int fd;
 
-	if (pipe(nf->psfd) < 0)
+	if (pipe(nf->psfd) < 0) {
+		warning("failed to create file descriptors");
 		return __bt(-errno);
+	}
 
 	if (pipe(nf->pwfd) < 0) {
+		warning("failed to create file descriptors");
 		__STD(close(nf->psfd[0]));
 		__STD(close(nf->psfd[1]));
 		return __bt(-errno);
