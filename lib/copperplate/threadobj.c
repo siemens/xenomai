@@ -926,7 +926,7 @@ int threadobj_start(struct threadobj *thobj)	/* thobj->lock held. */
 	if (thobj->status & __THREAD_S_STARTED)
 		return 0;
 
-	thobj->status |= __THREAD_S_STARTED|__THREAD_S_SAFE;
+	thobj->status |= __THREAD_S_STARTED;
 	__RT(pthread_cond_signal(&thobj->barrier));
 
 	if (current && thobj->priority <= current->priority)
@@ -943,6 +943,7 @@ int threadobj_start(struct threadobj *thobj)	/* thobj->lock held. */
 	 */
 	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &oldstate);
 
+	thobj->status |= __THREAD_S_SAFE;
 	wait_on_barrier(thobj, __THREAD_S_ACTIVE);
 	thobj->status &= ~__THREAD_S_SAFE;
 
