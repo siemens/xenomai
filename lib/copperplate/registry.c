@@ -371,6 +371,32 @@ static int regfs_open(const char *path, struct fuse_file_info *fi)
 	fsobj = container_of(hobj, struct fsobj, hobj);
 	if (((fi->flags + 1) & (fsobj->mode + 1)) == 0)
 		ret = -EACCES;
+	else if (fsobj->ops->open)
+		ret = __bt(fsobj->ops->open(fsobj));
+done:
+	read_unlock(&p->lock);
+
+	return __bt(ret);
+}
+
+static int regfs_release(const char *path, struct fuse_file_info *fi)
+{
+	struct regfs_data *p = regfs_get_context();
+	struct pvhashobj *hobj;
+	struct fsobj *fsobj;
+	int ret = 0;
+
+	read_lock_nocancel(&p->lock);
+
+	hobj = pvhash_search(&p->files, path, strlen(path));
+	if (hobj == NULL) {
+		ret = -ENOENT;
+		goto done;
+	}
+
+	fsobj = container_of(hobj, struct fsobj, hobj);
+	if (fsobj->ops->release)
+		ret = __bt(fsobj->ops->release(fsobj));
 done:
 	read_unlock(&p->lock);
 
@@ -484,6 +510,7 @@ static struct fuse_operations regfs_opts = {
 	.getattr	= regfs_getattr,
 	.readdir	= regfs_readdir,
 	.open		= regfs_open,
+	.release	= regfs_release,
 	.read		= regfs_read,
 	.write		= regfs_write,
 	/* Those must be defined for writing to files too. */

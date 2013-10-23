@@ -30,6 +30,8 @@ struct fsobj;
 #ifdef CONFIG_XENO_REGISTRY
 
 struct registry_operations {
+	int (*open)(struct fsobj *fsobj);
+	int (*release)(struct fsobj *fsobj);
 	ssize_t (*read)(struct fsobj *fsobj,
 			char *buf, size_t size, off_t offset);
 	ssize_t (*write)(struct fsobj *fsobj,
