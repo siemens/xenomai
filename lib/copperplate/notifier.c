@@ -141,18 +141,18 @@ int notifier_init(struct notifier *nf,
 {
 	pthread_mutexattr_t mattr;
 	sigset_t oset;
-	int fd;
+	int fd, ret;
 
 	if (pipe(nf->psfd) < 0) {
-		warning("failed to create file descriptors");
-		return __bt(-errno);
+		ret = -errno;
+		goto fail;
 	}
 
 	if (pipe(nf->pwfd) < 0) {
-		warning("failed to create file descriptors");
+		ret = -errno;
 		__STD(close(nf->psfd[0]));
 		__STD(close(nf->psfd[1]));
-		return __bt(-errno);
+		goto fail;
 	}
 
 	nf->callback = callback;
@@ -190,6 +190,10 @@ int notifier_init(struct notifier *nf,
 	fcntl(fd, F_SETFD, fcntl(fd, F_GETFD) | FD_CLOEXEC);
 
 	return 0;
+fail:
+	warning("failed to create notifier pipe");
+
+	return __bt(ret);
 }
 
 void notifier_destroy(struct notifier *nf)
