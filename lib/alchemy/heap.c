@@ -37,10 +37,8 @@
 
 struct syncluster alchemy_heap_table;
 
-static struct alchemy_namegen heap_namegen = {
-	.prefix = "heap",
-	.length = sizeof ((struct alchemy_heap *)0)->name,
-};
+static DEFINE_NAME_GENERATOR(heap_namegen, "heap",
+			     struct alchemy_heap, name);
 
 DEFINE_SYNC_LOOKUP(heap, RT_HEAP);
 
@@ -146,7 +144,7 @@ int rt_heap_create(RT_HEAP *heap,
 		goto out;
 	}
 
-	alchemy_build_name(hcb->name, name, &heap_namegen);
+	generate_name(hcb->name, name, &heap_namegen);
 	hcb->magic = heap_magic;
 	hcb->mode = mode;
 	hcb->size = heapsz;

@@ -39,10 +39,8 @@
 
 struct pvcluster alchemy_alarm_table;
 
-static struct alchemy_namegen alarm_namegen = {
-	.prefix = "alarm",
-	.length = sizeof ((struct alchemy_alarm *)0)->name,
-};
+static DEFINE_NAME_GENERATOR(alarm_namegen, "alarm",
+			     struct alchemy_alarm, name);
 
 static struct alchemy_alarm *get_alchemy_alarm(RT_ALARM *alarm, int *err_r)
 {
@@ -138,7 +136,7 @@ int rt_alarm_create(RT_ALARM *alarm, const char *name,
 	if (ret)
 		goto fail;
 
-	alchemy_build_name(acb->name, name, &alarm_namegen);
+	generate_name(acb->name, name, &alarm_namegen);
 	acb->handler = handler;
 	acb->arg = arg;
 	acb->expiries = 0;

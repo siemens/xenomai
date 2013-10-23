@@ -24,22 +24,6 @@
 #include <copperplate/heapobj.h>
 #include "internal.h"
 
-char *alchemy_build_name(char *buf, const char *name,
-			 struct alchemy_namegen *ngen)
-{
-	int len = ngen->length - 1, tag;
-
-	if (name && *name) {
-		strncpy(buf, name, len);
-		buf[len] = '\0';
-	} else {
-		tag = atomic_add_fetch(ngen->serial, 1);
-		snprintf(buf, len, "%s@%d", ngen->prefix, tag);
-	}
-
-	return buf;
-}
-
 int alchemy_bind_object(const char *name, struct syncluster *sc,
 			RTIME timeout,
 			int offset,

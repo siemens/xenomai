@@ -52,10 +52,8 @@
 
 struct syncluster alchemy_mutex_table;
 
-static struct alchemy_namegen mutex_namegen = {
-	.prefix = "mutex",
-	.length = sizeof ((struct alchemy_mutex *)0)->name,
-};
+static DEFINE_NAME_GENERATOR(mutex_namegen, "mutex",
+			     struct alchemy_mutex, name);
 
 DEFINE_LOOKUP(mutex, RT_MUTEX);
 
@@ -112,7 +110,7 @@ int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 		goto out;
 	}
 
-	alchemy_build_name(mcb->name, name, &mutex_namegen);
+	generate_name(mcb->name, name, &mutex_namegen);
 	mcb->owner = no_alchemy_task;
 	__RT(pthread_mutexattr_init(&mattr));
 	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));

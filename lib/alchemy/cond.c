@@ -49,10 +49,8 @@
 
 struct syncluster alchemy_cond_table;
 
-static struct alchemy_namegen cond_namegen = {
-	.prefix = "cond",
-	.length = sizeof ((struct alchemy_cond *)0)->name,
-};
+static DEFINE_NAME_GENERATOR(cond_namegen, "cond",
+			     struct alchemy_cond, name);
 
 DEFINE_LOOKUP_PRIVATE(cond, RT_COND);
 
@@ -109,7 +107,7 @@ int rt_cond_create(RT_COND *cond, const char *name)
 		goto out;
 	}
 
-	alchemy_build_name(ccb->name, name, &cond_namegen);
+	generate_name(ccb->name, name, &cond_namegen);
 	__RT(pthread_condattr_init(&cattr));
 	__RT(pthread_condattr_setpshared(&cattr, mutex_scope_attribute));
 	__RT(pthread_condattr_setclock(&cattr, CLOCK_COPPERPLATE));

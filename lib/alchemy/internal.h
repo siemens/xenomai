@@ -19,13 +19,8 @@
 #ifndef _ALCHEMY_INTERNAL_H
 #define _ALCHEMY_INTERNAL_H
 
+#include "boilerplate/ancillaries.h"
 #include "timer.h"
-
-struct alchemy_namegen {
-	const char *prefix;
-	int length;
-	int serial;
-};
 
 #define DEFINE_SYNC_LOOKUP(__name, __dsctype)				\
 static inline struct alchemy_ ## __name *				\
@@ -88,9 +83,6 @@ find_alchemy_ ## __name(__dsctype *desc, int *err_r)			\
 	__DEFINE_LOOKUP(, __name, __dsctype)
 
 struct syncluster;
-
-char *alchemy_build_name(char *buf, const char *name,
-			 struct alchemy_namegen *ngen);
 
 int alchemy_bind_object(const char *name, struct syncluster *sc,
 			RTIME timeout,

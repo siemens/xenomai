@@ -43,10 +43,8 @@
 
 struct syncluster alchemy_buffer_table;
 
-static struct alchemy_namegen buffer_namegen = {
-	.prefix = "buffer",
-	.length = sizeof ((struct alchemy_buffer *)0)->name,
-};
+static DEFINE_NAME_GENERATOR(buffer_namegen, "buffer",
+			     struct alchemy_buffer, name);
 
 DEFINE_SYNC_LOOKUP(buffer, RT_BUFFER);
 
@@ -140,7 +138,7 @@ int rt_buffer_create(RT_BUFFER *bf, const char *name,
 		goto fail_bufalloc;
 	}
 
-	alchemy_build_name(bcb->name, name, &buffer_namegen);
+	generate_name(bcb->name, name, &buffer_namegen);
 	bcb->magic = buffer_magic;
 	bcb->mode = mode;
 	bcb->bufsz = bufsz;

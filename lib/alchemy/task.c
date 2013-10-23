@@ -39,10 +39,8 @@ union alchemy_wait_union {
 
 struct syncluster alchemy_task_table;
 
-static struct alchemy_namegen task_namegen = {
-	.prefix = "task",
-	.length = sizeof ((struct alchemy_task *)0)->name,
-};
+static DEFINE_NAME_GENERATOR(task_namegen, "task",
+			     struct alchemy_task, name);
 
 static struct alchemy_task *find_alchemy_task(RT_TASK *task, int *err_r)
 {
@@ -211,7 +209,7 @@ static int create_tcb(struct alchemy_task **tcbp, RT_TASK *task,
 	if (tcb == NULL)
 		return -ENOMEM;
 
-	alchemy_build_name(tcb->name, name, &task_namegen);
+	generate_name(tcb->name, name, &task_namegen);
 
 	tcb->mode = mode;
 	tcb->entry = NULL;	/* Not yet known. */

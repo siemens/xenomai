@@ -31,10 +31,8 @@
 
 struct syncluster alchemy_pipe_table;
 
-static struct alchemy_namegen pipe_namegen = {
-	.prefix = "pipe",
-	.length = sizeof ((struct alchemy_pipe *)0)->name,
-};
+static DEFINE_NAME_GENERATOR(pipe_namegen, "pipe",
+			     struct alchemy_pipe, name);
 
 DEFINE_LOOKUP_PRIVATE(pipe, RT_PIPE);
 
@@ -96,7 +94,7 @@ int rt_pipe_create(RT_PIPE *pipe,
 	if (ret)
 		goto fail_sockopt;
 
-	alchemy_build_name(pcb->name, name, &pipe_namegen);
+	generate_name(pcb->name, name, &pipe_namegen);
 	pcb->sock = sock;
 	pcb->magic = pipe_magic;
 

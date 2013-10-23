@@ -49,10 +49,8 @@
 
 struct syncluster alchemy_sem_table;
 
-static struct alchemy_namegen sem_namegen = {
-	.prefix = "sem",
-	.length = sizeof ((struct alchemy_sem *)0)->name,
-};
+static DEFINE_NAME_GENERATOR(sem_namegen, "sem",
+			     struct alchemy_sem, name);
 
 DEFINE_LOOKUP_PRIVATE(sem, RT_SEM);
 
@@ -149,7 +147,7 @@ int rt_sem_create(RT_SEM *sem, const char *name,
 		goto out;
 	}
 
-	alchemy_build_name(scb->name, name, &sem_namegen);
+	generate_name(scb->name, name, &sem_namegen);
 	scb->magic = sem_magic;
 
 	if (syncluster_addobj(&alchemy_sem_table, scb->name, &scb->cobj)) {

@@ -39,10 +39,8 @@
 
 struct syncluster alchemy_queue_table;
 
-static struct alchemy_namegen queue_namegen = {
-	.prefix = "queue",
-	.length = sizeof ((struct alchemy_queue *)0)->name,
-};
+static DEFINE_NAME_GENERATOR(queue_namegen, "queue",
+			     struct alchemy_queue, name);
 
 DEFINE_SYNC_LOOKUP(queue, RT_QUEUE);
 
@@ -137,7 +135,7 @@ int rt_queue_create(RT_QUEUE *queue, const char *name,
 	if (qcb == NULL)
 		goto out;
 
-	alchemy_build_name(qcb->name, name, &queue_namegen);
+	generate_name(qcb->name, name, &queue_namegen);
 	/*
 	 * The message pool has to be part of the main heap for proper
 	 * sharing between processes.

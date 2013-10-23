@@ -44,10 +44,8 @@
 
 struct syncluster alchemy_event_table;
 
-static struct alchemy_namegen event_namegen = {
-	.prefix = "event",
-	.length = sizeof ((struct alchemy_event *)0)->name,
-};
+static DEFINE_NAME_GENERATOR(event_namegen, "event",
+			     struct alchemy_event, name);
 
 DEFINE_LOOKUP_PRIVATE(event, RT_EVENT);
 
@@ -124,7 +122,7 @@ int rt_event_create(RT_EVENT *event, const char *name,
 		goto out;
 	}
 
-	alchemy_build_name(evcb->name, name, &event_namegen);
+	generate_name(evcb->name, name, &event_namegen);
 	evcb->magic = event_magic;
 	if (mode & EV_PRIO)
 		evobj_flags = EVOBJ_PRIO;
