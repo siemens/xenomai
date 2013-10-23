@@ -450,7 +450,9 @@ static inline int threadobj_setup_corespec(struct threadobj *thobj)
 
 	prctl(PR_SET_NAME, (unsigned long)thobj->name, 0, 0, 0);
 	ret = notifier_init(&thobj->core.notifier, notifier_callback, 1);
-	assert(ret == 0);
+	if (ret)
+		return __bt(ret);
+
 	thobj->core.period = 0;
 
 	/*
@@ -1037,8 +1039,11 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 	thobj->errno_pointer = &errno;
 	backtrace_init_context(&thobj->btd, name);
 	ret = threadobj_setup_corespec(thobj);
-	if (ret)
+	if (ret) {
+		warning("prologue failed for thread %s, %s",
+			name ?: "<anonymous>", symerror(ret));
 		return __bt(ret);
+	}
 
 	threadobj_set_current(thobj);
 

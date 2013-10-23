@@ -177,8 +177,10 @@ static void *task_trampoline(void *arg)
 	int ret;
 
 	ret = __bt(threadobj_prologue(&task->thobj, task->name));
-	if (ret)
+	if (ret) {
+		backtrace_check();
 		goto done;
+	}
 
 	CANCEL_DEFER(svc);
 

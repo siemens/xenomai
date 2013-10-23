@@ -151,8 +151,10 @@ static int task_prologue(struct alchemy_task *tcb)
 	int ret;
 
 	ret = __bt(threadobj_prologue(&tcb->thobj, tcb->name));
-	if (ret)
+	if (ret) {
+		backtrace_check();
 		return ret;
+	}
 
 	CANCEL_DEFER(svc);
 
