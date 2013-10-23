@@ -29,6 +29,19 @@ extern pthread_mutex_t __printlock;
 struct error_frame;
 struct cleanup_block;
 
+struct name_generator {
+	const char *radix;
+	int length;
+	int serial;
+};
+
+#define DEFINE_NAME_GENERATOR(__name, __radix, __type, __member)	\
+	struct name_generator __name = {				\
+		.radix = __radix,					\
+		.length = sizeof ((__type *)0)->__member,		\
+		.serial = 1,						\
+	}
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -50,6 +63,9 @@ void __warning(const char *name,
 void warning(const char *fmt, ...);
 
 const char *symerror(int errnum);
+
+char *generate_name(char *buf, const char *radix,
+		    struct name_generator *ngen);
 
 void error_hook(struct error_frame *ef);
 

@@ -22,7 +22,9 @@
 #include <stdarg.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <string.h>
 #include <errno.h>
+#include "nocore/atomic.h"
 #include "boilerplate/lock.h"
 #include "boilerplate/time.h"
 #include "boilerplate/ancillaries.h"
@@ -165,6 +167,22 @@ void warning(const char *fmt, ...)
 	va_start(ap, fmt);
 	__warning(NULL, fmt, ap);
 	va_end(ap);
+}
+
+char *generate_name(char *buf, const char *radix,
+		    struct name_generator *ngen)
+{
+	int len = ngen->length - 1, tag;
+
+	if (radix && *radix) {
+		strncpy(buf, radix, len);
+		buf[len] = '\0';
+	} else {
+		tag = atomic_add_fetch(ngen->serial, 1);
+		snprintf(buf, len, "%s@%d", ngen->radix, tag);
+	}
+
+	return buf;
 }
 
 #ifdef __XENO_DEBUG__
