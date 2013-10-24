@@ -241,7 +241,7 @@ static inline void __save_i387(x86_fpustate *fpup)
 {
 #ifdef cpu_has_xsave
 	if (cpu_has_xsave) {
-#if defined(CONFIG_AS_AVX) || !defined CONFIG_X86_64
+#if defined(CONFIG_AS_AVX)
 		asm volatile("xsave" XSAVE_SUFFIX " %0"
 			     : "=m" (fpup->xsave) : "a" (-1), "d" (-1)
 			     : "memory");
@@ -301,7 +301,7 @@ static inline void __restore_i387(x86_fpustate *fpup)
 {
 #ifdef cpu_has_xsave
 	if (cpu_has_xsave) {
-#if defined(CONFIG_AS_AVX) || !defined(CONFIG_X86_64)
+#if defined(CONFIG_AS_AVX)
 		asm volatile("xrstor" XSAVE_SUFFIX " %0"
 			     : : "m" (fpup->xsave), "a" (-1), "d" (-1)
 			     : "memory");
