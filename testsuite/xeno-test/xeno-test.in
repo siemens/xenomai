@@ -42,11 +42,13 @@ set -ex
 
 echo 0 > /proc/xenomai/latency || :
 
-@testdir@/arith
-@testdir@/clocktest -D -T 30 -C 42 || @testdir@/clocktest -T 30
-@testdir@/switchtest -T 30
-@testdir@/cond-torture
-@testdir@/mutex-torture
+testdir=@testdir@
+
+$testdir/arith
+$testdir/clocktest -D -T 30 -C 65578 || $testdir/clocktest -T 30
+$testdir/switchtest -T 30
+$testdir/cond-torture
+# $testdir/mutex-torture
 
 start_load
 
