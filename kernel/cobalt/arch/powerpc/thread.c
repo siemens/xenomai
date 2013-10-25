@@ -115,15 +115,6 @@ asmlinkage void __asm_restore_fpu(struct thread_struct *ts);
 })
 #endif /* CONFIG_PPC64 */
 
-void xnarch_init_fpu(struct xnarchtcb *tcb)
-{
-	/*
-	 * This must run on behalf of the thread we initialize the FPU
-	 * for. All FPU regs are guaranteed zero.
-	 */
-	__asm_init_fpu(&tcb->core.ts);
-}
-
 void xnarch_enable_fpu(struct xnarchtcb *tcb)
 {
 	struct task_struct *task = tcb->core.host_task;

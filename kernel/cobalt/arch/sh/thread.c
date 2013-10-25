@@ -226,20 +226,6 @@ static inline void do_restore_fpu(struct thread_struct *ts)
 		      :"memory");
 }
 
-static inline void do_init_fpu(struct thread_struct *ts)
-{
-	do_restore_fpu(ts);
-}
-
-void xnarch_init_fpu(struct xnarchtcb *tcb)
-{
-	/*
-	 * This must run on behalf of the thread we initialize the FPU
-	 * for. All FPU regs are guaranteed zero.
-	 */
-	do_init_fpu(&tcb->core.ts);
-}
-
 inline void xnarch_enable_fpu(struct xnarchtcb *tcb)
 {
 	struct task_struct *task = tcb->core.host_task;

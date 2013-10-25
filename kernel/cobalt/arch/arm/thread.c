@@ -33,20 +33,6 @@ asmlinkage void __asm_thread_trampoline(void);
 
 #ifdef CONFIG_XENO_HW_FPU
 
-static inline void do_init_fpu(struct arm_fpustate *fpuenv)
-{
-	fp_init(&fpuenv->fpstate);
-#if defined(CONFIG_VFP)
-	/* vfpstate has already been zeroed by xnarch_init_fpu */
-	fpuenv->vfpstate.hard.fpexc = FPEXC_EN;
-	fpuenv->vfpstate.hard.fpscr = FPSCR_ROUND_NEAREST;
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0)			\
-     || defined(CONFIG_VFP_3_2_BACKPORT)) && defined(CONFIG_SMP)
-	fpuenv->vfpstate.hard.cpu = NR_CPUS;
-#endif /* linux >= 3.2.0 */
-#endif
-}
-
 #define task_fpenv(task)						\
 	((struct arm_fpustate *) &task_thread_info(task)->used_cp[0])
 
@@ -333,22 +319,6 @@ void xnarch_enable_fpu(struct xnarchtcb *tcb)
 	if (!tcb->core.host_task)
 		do_enable_fpu();
 #endif /* !CONFIG_VFP */
-#endif /* CONFIG_XENO_HW_FPU */
-}
-
-void xnarch_init_fpu(struct xnarchtcb *tcb)
-{
-	/*
-	 * This must run on behalf of the thread we initialize the FPU
-	 * for.
-	 */
-#ifdef CONFIG_XENO_HW_FPU
-	memset(&tcb->fpuenv, 0, sizeof(tcb->fpuenv));
-	do_init_fpu(&tcb->fpuenv);
-#ifdef CONFIG_VFP
-	do_enable_fpu();
-	do_restore_fpu(&tcb->fpuenv);
-#endif /* CONFIG_VFP */
 #endif /* CONFIG_XENO_HW_FPU */
 }
 
