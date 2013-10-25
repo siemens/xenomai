@@ -90,6 +90,8 @@ COBALT_IMPL(int, pthread_mutex_init, (pthread_mutex_t *mutex,
 	}
 
 	err = -XENOMAI_SKINCALL2(__cobalt_muxid,sc_cobalt_mutex_init,_mutex,attr);
+	if (err)
+		return err;
 
 	if (!_mutex->attr.pshared) {
 		datp = (struct mutex_dat *)

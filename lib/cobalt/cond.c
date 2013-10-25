@@ -87,8 +87,11 @@ COBALT_IMPL(int, pthread_cond_init, (pthread_cond_t *cond,
 	unsigned long *pending_signalsp;
 	int err;
 
-	err = XENOMAI_SKINCALL2(__cobalt_muxid, sc_cobalt_cond_init, _cnd, attr);
-	if (!err && !_cnd->attr.pshared) {
+	err = -XENOMAI_SKINCALL2(__cobalt_muxid, sc_cobalt_cond_init, _cnd, attr);
+	if (err)
+		return err;
+
+	if (!_cnd->attr.pshared) {
 		pending_signalsp = (unsigned long *)
 			(cobalt_sem_heap[0] + _cnd->pending_signals_offset);
 		_cnd->pending_signals = pending_signalsp;
@@ -97,7 +100,7 @@ COBALT_IMPL(int, pthread_cond_init, (pthread_cond_t *cond,
 
 	__cobalt_prefault(pending_signalsp);
 
-	return -err;
+	return 0;
 }
 
 COBALT_IMPL(int, pthread_cond_destroy, (pthread_cond_t *cond))
