@@ -51,9 +51,7 @@ struct arm_fpustate {
 struct xnarchtcb {
 	struct xntcb core;
 #ifdef CONFIG_XENO_HW_FPU
-	struct arm_fpustate fpuenv;
 	struct arm_fpustate *fpup;
-	unsigned int is_root;
 #define xnarch_fpu_ptr(tcb)     ((tcb)->fpup)
 #else
 #define xnarch_fpu_ptr(tcb)     NULL
@@ -98,14 +96,12 @@ int xnarch_escalate(void);
 static inline void xnarch_init_root_tcb(struct xnthread *thread)
 {
 	struct xnarchtcb *tcb = xnthread_archtcb(thread);
-	tcb->is_root = 1;
 	tcb->fpup = NULL;
 }
 
 static inline void xnarch_init_shadow_tcb(struct xnthread *thread)
 {
 	struct xnarchtcb *tcb = xnthread_archtcb(thread);
-	tcb->is_root = 0;
 	tcb->fpup = (struct arm_fpustate *)
 		&task_thread_info(tcb->core.host_task)->used_cp[0];
 }

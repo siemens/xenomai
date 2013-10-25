@@ -287,7 +287,8 @@ void xnarch_restore_fpu(struct xnthread *thread)
 	struct xnarchtcb *tcb = xnthread_archtcb(thread);
 	struct task_struct *p = tcb->core.host_task;
 
-	if (tcb->root_kfpu == 0 && (tsk_used_math(p) == 0 || tcb->is_root))
+	if (tcb->root_kfpu == 0 && 
+		(tsk_used_math(p) == 0 || xnthread_test_state(thread, XNROOT)))
 		/* Restore lazy mode */
 		return;
 
@@ -320,15 +321,14 @@ void xnarch_init_root_tcb(struct xnthread *thread)
 	tcb->sp = 0;
 	tcb->spp = &tcb->sp;
 	tcb->ipp = &tcb->ip;
-	tcb->is_root = 1;
 	tcb->fpup = NULL;
 	tcb->root_kfpu = 0;
 }
 
 void xnarch_init_shadow_tcb(struct xnthread *thread)
 {
-	struct task_struct *p = tcb->core.host_task;
 	struct xnarchtcb *tcb = xnthread_archtcb(thread);
+	struct task_struct *p = tcb->core.host_task;
 
 	tcb->sp = 0;
 	tcb->spp = &p->thread.sp;

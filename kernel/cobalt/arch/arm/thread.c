@@ -289,7 +289,7 @@ void xnarch_enable_fpu(struct xnthread *thread)
 	   newly switched thread uses the FPU, to allow the kernel handler to
 	   pick the correct FPU context.
 	*/
-	if (likely(!tcb->is_root)) {
+	if (likely(!xnthread_test_state(thread, XNROOT))) {
 		do_enable_fpu();
 		/* No exception should be pending, since it should have caused
 		   a trap earlier.
@@ -350,7 +350,7 @@ void xnarch_restore_fpu(struct xnthread *thread)
 	struct xnarchtcb *tcb = &thread->tcb;
 #ifdef CONFIG_XENO_HW_FPU
 #ifdef CONFIG_VFP
-	if (likely(!tcb->is_root)) {
+	if (likely(!xnthread_test_state(thread, XNROOT))) {
 		do_enable_fpu();
 		do_restore_fpu(tcb->fpup);
 	} else {
