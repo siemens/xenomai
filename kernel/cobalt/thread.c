@@ -391,20 +391,8 @@ void xnthread_switch_fpu(struct xnsched *sched)
 	if (!xnthread_test_state(curr, XNFPU))
 		return;
 
-	if (sched->fpuholder != curr) {
-		if (sched->fpuholder == NULL ||
-		    xnarch_fpu_ptr(xnthread_archtcb(sched->fpuholder)) !=
-		    xnarch_fpu_ptr(xnthread_archtcb(curr))) {
-			if (sched->fpuholder)
-				xnarch_save_fpu(sched->fpuholder);
-
-			xnarch_restore_fpu(curr);
-		} else
-			xnarch_enable_fpu(curr);
-
-		sched->fpuholder = curr;
-	} else
-		xnarch_enable_fpu(curr);
+	xnarch_switch_fpu(sched->fpuholder, curr);
+	sched->fpuholder = curr;
 }
 
 #else /* !CONFIG_XENO_HW_FPU */

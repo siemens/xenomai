@@ -388,6 +388,21 @@ void xnarch_restore_fpu(struct xnthread *thread)
 #endif /* CONFIG_XENO_HW_FPU */
 }
 
+void xnarch_switch_fpu(struct xnthread *from, struct xnthread *to)
+{
+	if (from == to || 
+		xnarch_fpu_ptr(xnthread_archtcb(from)) == 
+		xnarch_fpu_ptr(xnthread_archtcb(to))) {
+		xnarch_enable_fpu(to);
+		return;
+	}
+	
+	if (from)
+		xnarch_save_fpu(from);
+	
+	xnarch_restore_fpu(to);
+}
+
 int xnarch_escalate(void)
 {
 	if (ipipe_root_p) {

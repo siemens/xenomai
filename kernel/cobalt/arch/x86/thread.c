@@ -283,7 +283,7 @@ void xnarch_save_fpu(struct xnthread *thread)
 	wrap_clear_fpu_used(p);
 }
 
-void xnarch_restore_fpu(struct xnthread *thread)
+void xnarch_switch_fpu(struct xnthread *from, struct xnthread *thread)
 {
 	struct xnarchtcb *tcb = xnthread_archtcb(thread);
 	struct task_struct *p = tcb->core.host_task;
@@ -307,11 +307,6 @@ void xnarch_restore_fpu(struct xnthread *thread)
 			clear_stopped_child_used_math(p);
 	} else
 		wrap_set_fpu_used(p);
-}
-
-void xnarch_enable_fpu(struct xnthread *thread)
-{
-	xnarch_restore_fpu(thread);
 }
 
 #endif /* CONFIG_XENO_HW_FPU */

@@ -115,7 +115,7 @@ asmlinkage void __asm_restore_fpu(struct thread_struct *ts);
 })
 #endif /* CONFIG_PPC64 */
 
-void xnarch_enable_fpu(struct xnthread *thread)
+static void xnarch_enable_fpu(struct xnthread *thread)
 {
 	struct xnarchtcb *tcb = xnthread_archtcb(thread);
 	struct task_struct *task = tcb->core.host_task;
@@ -139,7 +139,7 @@ void xnarch_save_fpu(struct xnthread *thread)
 	}
 }
 
-void xnarch_restore_fpu(struct xnthread *thread)
+static void xnarch_restore_fpu(struct xnthread *thread)
 {
 	struct xnarchtcb *tcb = xnthread_archtcb(thread);
 	struct thread_struct *ts;
@@ -166,6 +166,21 @@ void xnarch_restore_fpu(struct xnthread *thread)
 	 */
 	if (tcb->core.host_task && tcb->core.host_task != tcb->core.user_fpu_owner)
 		do_disable_fpu();
+}
+
+void xnarch_switch_fpu(struct xnthread *from, struct xnthread *to)
+{
+	if (from == to || 
+		xnarch_fpu_ptr(xnthread_archtcb(from)) == 
+		xnarch_fpu_ptr(xnthread_archtcb(to))) {
+		xnarch_enable_fpu(to);
+		return;
+	}
+	
+	if (from)
+		xnarch_save_fpu(from);
+	
+	xnarch_restore_fpu(to);
 }
 
 void xnarch_leave_root(struct xnthread *root)
