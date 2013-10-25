@@ -276,7 +276,7 @@ void xnarch_switch_to(struct xnarchtcb *out_tcb, struct xnarchtcb *in_tcb)
 		in_tcb->core.active_mm = prev_mm;
 		enter_lazy_tlb(prev_mm, next);
 	} else {
-		switch_mm(prev_mm, next_mm, next);
+		ipipe_switch_mm_head(prev_mm, next_mm, next);
 		/*
 		 * We might be switching back to the root thread,
 		 * which we preempted earlier, shortly after "current"
