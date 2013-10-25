@@ -265,7 +265,17 @@ void xnarch_leave_root(struct xnarchtcb *rootcb)
 
 void xnarch_save_fpu(struct xnarchtcb *tcb)
 {
-	/* Already saved by __switch_to */
+	struct task_struct *p = tcb->core.host_task;
+
+	if (wrap_test_fpu_used(p) == 0)
+		/* Common case: already saved by __switch_to */
+		return;
+	
+	/* Exceptional case: a migrating thread */
+	clts();
+
+	__do_save_i387(x86_fpustate_ptr(&p->thread));
+	wrap_clear_fpu_used(p);
 }
 
 void xnarch_restore_fpu(struct xnarchtcb *tcb)
