@@ -28,6 +28,9 @@
 
 struct task_struct;
 
+struct xnthread;
+struct xnarchtcb;
+
 struct xntcb {
 	struct task_struct *host_task;
 	struct thread_struct *tsp;
@@ -41,5 +44,7 @@ struct xntcb {
 	struct task_struct *user_fpu_owner;
 #endif
 };
+
+static inline struct xnarchtcb *xnthread_archtcb(struct xnthread *thread);
 
 #endif /* !_COBALT_ASM_GENERIC_THREAD_H */

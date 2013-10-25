@@ -25,7 +25,6 @@
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/shadow.h>
 #include <cobalt/kernel/arith.h>
-#include <asm/xenomai/thread.h>
 
 DEFINE_PER_CPU(struct xnsched, nksched);
 EXPORT_PER_CPU_SYMBOL_GPL(nksched);
@@ -646,8 +645,7 @@ static inline void switch_context(struct xnsched *sched,
 	xnlock_clear_irqon(&nklock);
 #endif /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
 
-	xnarch_switch_to(xnthread_archtcb(prev),
-			 xnthread_archtcb(next));
+	xnarch_switch_to(prev, next);
 }
 
 /**
@@ -746,7 +744,7 @@ static inline void leave_root(struct xnthread *root)
 #ifdef CONFIG_XENO_HW_WANT_TIP
 	rootcb->core.tip = task_thread_info(p);
 #endif
-	xnarch_leave_root(rootcb);
+	xnarch_leave_root(root);
 }
 
 void __xnsched_run_handler(void) /* hw interrupts off. */

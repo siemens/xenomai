@@ -19,8 +19,8 @@
 
 #include <linux/types.h>
 #include <linux/ipipe.h>
+#include <cobalt/kernel/thread.h>
 #include <asm/ptrace.h>
-#include <asm/xenomai/thread.h>
 #include <asm/xenomai/syscall.h>
 
 #ifdef CONFIG_X86_32

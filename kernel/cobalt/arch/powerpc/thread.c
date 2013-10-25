@@ -30,9 +30,9 @@ asmlinkage struct task_struct *
 __asm_thread_switch(struct thread_struct *prev,
 		    struct thread_struct *next);
 
-void xnarch_switch_to(struct xnarchtcb *out_tcb,
-		      struct xnarchtcb *in_tcb)
+void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 {
+	struct xnarchtcb *out_tcb = &out->tcb, *in_tcb = &in->tcb;
 	struct mm_struct *prev_mm, *next_mm;
 	struct task_struct *next;
 
@@ -115,8 +115,9 @@ asmlinkage void __asm_restore_fpu(struct thread_struct *ts);
 })
 #endif /* CONFIG_PPC64 */
 
-void xnarch_enable_fpu(struct xnarchtcb *tcb)
+void xnarch_enable_fpu(struct xnthread *thread)
 {
+	struct xnarchtcb *tcb = xnthread_archtcb(thread);
 	struct task_struct *task = tcb->core.host_task;
 
 	if (task && task != tcb->core.user_fpu_owner)
@@ -125,8 +126,10 @@ void xnarch_enable_fpu(struct xnarchtcb *tcb)
 		do_enable_fpu();
 }
 
-void xnarch_save_fpu(struct xnarchtcb *tcb)
+void xnarch_save_fpu(struct xnthread *thread)
 {
+	struct xnarchtcb *tcb = xnthread_archtcb(thread);
+
 	if (tcb->fpup) {
 		__asm_save_fpu(tcb->fpup);
 
@@ -136,8 +139,9 @@ void xnarch_save_fpu(struct xnarchtcb *tcb)
 	}
 }
 
-void xnarch_restore_fpu(struct xnarchtcb *tcb)
+void xnarch_restore_fpu(struct xnthread *thread)
 {
+	struct xnarchtcb *tcb = xnthread_archtcb(thread);
 	struct thread_struct *ts;
 	struct pt_regs *regs;
 
@@ -164,8 +168,9 @@ void xnarch_restore_fpu(struct xnarchtcb *tcb)
 		do_disable_fpu();
 }
 
-void xnarch_leave_root(struct xnarchtcb *rootcb)
+void xnarch_leave_root(struct xnthread *root)
 {
+	struct xnarchtcb *rootcb = xnthread_archtcb(root);
 	rootcb->core.user_fpu_owner = get_fpu_owner(rootcb->core.host_task);
 	/* So that xnarch_save_fpu() will operate on the right FPU area. */
 	rootcb->fpup = rootcb->core.user_fpu_owner ?

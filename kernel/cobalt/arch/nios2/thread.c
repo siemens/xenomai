@@ -27,8 +27,9 @@ asmlinkage void
 __asm_thread_switch(struct thread_struct *prev,
 		    struct thread_struct *next);
 
-void xnarch_switch_to(struct xnarchtcb *out_tcb, struct xnarchtcb *in_tcb)
+void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 {
+	struct xnarchtcb *out_tcb = &out->tcb, *in_tcb = &in->tcb;
 	struct mm_struct *prev_mm, *next_mm;
 	struct task_struct *next;
 

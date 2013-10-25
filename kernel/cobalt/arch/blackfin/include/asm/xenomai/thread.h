@@ -50,19 +50,19 @@ struct xnarchtcb {
 
 #define xnarch_fault_notify(d) (!xnarch_fault_bp_p(d))
 
-void xnarch_switch_to(struct xnarchtcb *out_tcb, struct xnarchtcb *in_tcb);
+void xnarch_switch_to(struct xnthread *out, struct xnthread *in);
 
 int xnarch_escalate(void);
 
-static inline void xnarch_init_root_tcb(struct xnarchtcb *tcb) { }
-static inline void xnarch_init_shadow_tcb(struct xnarchtcb *tcb) { }
-static inline void xnarch_enter_root(struct xnarchtcb *rootcb) { }
-static inline void xnarch_leave_root(struct xnarchtcb *rootcb) { }
-static inline void xnarch_enable_fpu(struct xnarchtcb *current_tcb) { }
-static inline void xnarch_save_fpu(struct xnarchtcb *tcb) { }
-static inline void xnarch_restore_fpu(struct xnarchtcb *tcb) { }
+static inline void xnarch_init_root_tcb(struct xnthread *thread) { }
+static inline void xnarch_init_shadow_tcb(struct xnthread *thread) { }
+static inline void xnarch_enter_root(struct xnthread *root) { }
+static inline void xnarch_leave_root(struct xnthread *root) { }
+static inline void xnarch_enable_fpu(struct xnthread *current_thread) { }
+static inline void xnarch_save_fpu(struct xnthread *thread) { }
+static inline void xnarch_restore_fpu(struct xnthread *thread) { }
 
-static inline int xnarch_handle_fpu_fault(struct xnarchtcb *tcb)
+static inline int xnarch_handle_fpu_fault(struct xnthread *thread)
 {
 	return 0;
 }

@@ -83,8 +83,9 @@ static inline void do_switch_threads(struct xnarchtcb *out_tcb,
 
 #endif /* CONFIG_X86_64 */
 
-void xnarch_switch_to(struct xnarchtcb *out_tcb, struct xnarchtcb *in_tcb)
+void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 {
+	struct xnarchtcb *out_tcb = &out->tcb, *in_tcb = &in->tcb;
 	unsigned long __maybe_unused fs, gs;
 	struct mm_struct *prev_mm, *next_mm;
 	struct task_struct *prev, *next;
@@ -218,8 +219,9 @@ static inline void __do_restore_i387(x86_fpustate *fpup)
 #endif /* CONFIG_X86_64 */
 }
 
-int xnarch_handle_fpu_fault(struct xnarchtcb *tcb)
+int xnarch_handle_fpu_fault(struct xnthread *thread)
 {
+	struct xnarchtcb *tcb = xnthread_archtcb(to);
 	struct task_struct *p = tcb->core.host_task;
 
 	if (tsk_used_math(p))
@@ -244,8 +246,9 @@ int xnarch_handle_fpu_fault(struct xnarchtcb *tcb)
 	return 1;
 }
 
-void xnarch_leave_root(struct xnarchtcb *rootcb)
+void xnarch_leave_root(struct xnthread *root)
 {
+	struct xnarchtcb *rootcb = xnthread_archtcb(root);
 	struct task_struct *p = current;
 
 #ifdef CONFIG_X86_64
@@ -263,8 +266,9 @@ void xnarch_leave_root(struct xnarchtcb *rootcb)
 	}
 }
 
-void xnarch_save_fpu(struct xnarchtcb *tcb)
+void xnarch_save_fpu(struct xnthread *thread)
 {
+	struct xnarchtcb *tcb = xnthread_archtcb(thread);
 	struct task_struct *p = tcb->core.host_task;
 
 	if (wrap_test_fpu_used(p) == 0)
@@ -278,8 +282,9 @@ void xnarch_save_fpu(struct xnarchtcb *tcb)
 	wrap_clear_fpu_used(p);
 }
 
-void xnarch_restore_fpu(struct xnarchtcb *tcb)
+void xnarch_restore_fpu(struct xnthread *thread)
 {
+	struct xnarchtcb *tcb = xnthread_archtcb(thread);
 	struct task_struct *p = tcb->core.host_task;
 
 	if (tcb->root_kfpu == 0 && (tsk_used_math(p) == 0 || tcb->is_root))
@@ -302,15 +307,16 @@ void xnarch_restore_fpu(struct xnarchtcb *tcb)
 		wrap_set_fpu_used(p);
 }
 
-void xnarch_enable_fpu(struct xnarchtcb *tcb)
+void xnarch_enable_fpu(struct xnthread *thread)
 {
-	xnarch_restore_fpu(tcb);
+	xnarch_restore_fpu(thread);
 }
 
 #endif /* CONFIG_XENO_HW_FPU */
 
-void xnarch_init_root_tcb(struct xnarchtcb *tcb)
+void xnarch_init_root_tcb(struct xnthread *thread)
 {
+	struct xnarchtcb *tcb = xnthread_archtcb(thread);
 	tcb->sp = 0;
 	tcb->spp = &tcb->sp;
 	tcb->ipp = &tcb->ip;
@@ -319,9 +325,10 @@ void xnarch_init_root_tcb(struct xnarchtcb *tcb)
 	tcb->root_kfpu = 0;
 }
 
-void xnarch_init_shadow_tcb(struct xnarchtcb *tcb)
+void xnarch_init_shadow_tcb(struct xnthread *thread)
 {
 	struct task_struct *p = tcb->core.host_task;
+	struct xnarchtcb *tcb = xnthread_archtcb(thread);
 
 	tcb->sp = 0;
 	tcb->spp = &p->thread.sp;

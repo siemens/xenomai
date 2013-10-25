@@ -208,6 +208,11 @@ static inline void xnthread_clear_info(struct xnthread *thread, int bits)
 	thread->info &= ~bits;
 }
 
+static inline struct xnarchtcb *xnthread_archtcb(struct xnthread *thread)
+{
+	return &thread->tcb;
+}
+
 #define xnthread_lock_count(thread)        ((thread)->schedlck)
 #define xnthread_init_schedparam(thread)   ((thread)->init_schedparam)
 #define xnthread_base_priority(thread)     ((thread)->bprio)
@@ -216,7 +221,6 @@ static inline void xnthread_clear_info(struct xnthread *thread, int bits)
 #define xnthread_base_class(thread)        ((thread)->base_class)
 #define xnthread_sched_class(thread)       ((thread)->sched_class)
 #define xnthread_time_slice(thread)        ((thread)->rrperiod)
-#define xnthread_archtcb(thread)           (&((thread)->tcb))
 #define xnthread_timeout(thread)           xntimer_get_timeout(&(thread)->rtimer)
 #define xnthread_handle(thread)            ((thread)->registry.handle)
 #define xnthread_host_task(thread)         (xnthread_archtcb(thread)->core.host_task)

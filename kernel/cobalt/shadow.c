@@ -57,9 +57,9 @@
 #include <cobalt/kernel/stat.h>
 #include <cobalt/kernel/ppd.h>
 #include <cobalt/kernel/vdso.h>
+#include <cobalt/kernel/thread.h>
 #include <asm/xenomai/features.h>
 #include <asm/xenomai/syscall.h>
-#include <asm/xenomai/thread.h>
 #include <asm-generic/xenomai/mayday.h>
 #include "debug.h"
 
@@ -2592,7 +2592,6 @@ int ipipe_kevent_hook(int kevent, void *data)
 static inline int handle_exception(struct ipipe_trap_data *d)
 {
 	struct xnthread *thread;
-	struct xnarchtcb *tcb;
 
 	if (xnsched_root_p())
 		return 0;
@@ -2608,8 +2607,7 @@ static inline int handle_exception(struct ipipe_trap_data *d)
 	if (xnarch_fault_fpu_p(d)) {
 		if (!xnthread_test_state(thread, XNROOT)) {
 			/* FPU exception received in primary mode. */
-			tcb = xnthread_archtcb(thread);
-			if (xnarch_handle_fpu_fault(tcb))
+			if (xnarch_handle_fpu_fault(thread))
 				return 1;
 		}
 		print_symbol("invalid use of FPU in Xenomai context at %s\n",

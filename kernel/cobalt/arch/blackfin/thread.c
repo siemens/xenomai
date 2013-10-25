@@ -56,8 +56,9 @@ void mpu_switch(struct xnarchtcb *out_tcb, struct xnarchtcb *in_tcb)
 
 #endif /* CONFIG_MPU */
 
-void xnarch_switch_to(struct xnarchtcb *out_tcb, struct xnarchtcb *in_tcb)
+void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 {
+	struct xnarchtcb *out_tcb = &out->tcb, *in_tcb = &in->tcb;
 	mpu_switch(out_tcb, in_tcb);
 	__asm_switch_context(out_tcb->core.tsp, in_tcb->core.tsp);
 }

@@ -36,7 +36,6 @@
 #include <cobalt/kernel/shadow.h>
 #include <cobalt/kernel/lock.h>
 #include <cobalt/kernel/thread.h>
-#include <asm/xenomai/thread.h>
 
 /**
  * @ingroup nucleus
@@ -225,7 +224,7 @@ void xnthread_init_shadow_tcb(struct xnthread *thread, struct task_struct *task)
 #ifdef CONFIG_XENO_HW_FPU
 	tcb->core.user_fpu_owner = task;
 #endif /* CONFIG_XENO_HW_FPU */
-	xnarch_init_shadow_tcb(tcb);
+	xnarch_init_shadow_tcb(thread);
 }
 
 void xnthread_init_root_tcb(struct xnthread *thread)
@@ -239,7 +238,7 @@ void xnthread_init_root_tcb(struct xnthread *thread)
 #ifdef CONFIG_XENO_HW_WANT_TIP
 	tcb->core.tip = NULL;
 #endif
-	xnarch_init_root_tcb(tcb);
+	xnarch_init_root_tcb(thread);
 }
 
 void xnthread_deregister(struct xnthread *thread)
@@ -380,7 +379,7 @@ static inline void release_fpu(struct xnthread *thread)
 	 * area of the migrated thread.
 	 */
 	if (xnthread_test_state(thread, XNFPU)) {
-		xnarch_save_fpu(xnthread_archtcb(thread));
+		xnarch_save_fpu(thread);
 		thread->sched->fpuholder = NULL;
 	}
 }
@@ -397,16 +396,15 @@ void xnthread_switch_fpu(struct xnsched *sched)
 		    xnarch_fpu_ptr(xnthread_archtcb(sched->fpuholder)) !=
 		    xnarch_fpu_ptr(xnthread_archtcb(curr))) {
 			if (sched->fpuholder)
-				xnarch_save_fpu(xnthread_archtcb
-						(sched->fpuholder));
+				xnarch_save_fpu(sched->fpuholder);
 
-			xnarch_restore_fpu(xnthread_archtcb(curr));
+			xnarch_restore_fpu(curr);
 		} else
-			xnarch_enable_fpu(xnthread_archtcb(curr));
+			xnarch_enable_fpu(curr);
 
 		sched->fpuholder = curr;
 	} else
-		xnarch_enable_fpu(xnthread_archtcb(curr));
+		xnarch_enable_fpu(curr);
 }
 
 #else /* !CONFIG_XENO_HW_FPU */

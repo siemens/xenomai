@@ -18,11 +18,11 @@
  */
 #include <linux/types.h>
 #include <linux/ipipe.h>
+#include <cobalt/kernel/thread.h>
 #include <asm/cacheflush.h>
 #include <asm/ptrace.h>
 #include <asm/bug.h>
 #include <asm/xenomai/syscall.h>
-#include <asm/xenomai/thread.h>
 
 void xnarch_setup_mayday_page(void *page)
 {

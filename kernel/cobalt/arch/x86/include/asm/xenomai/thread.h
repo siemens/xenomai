@@ -67,33 +67,33 @@ static inline int xnarch_shadow_p(struct xnarchtcb *tcb, struct task_struct *tas
 
 #ifdef CONFIG_XENO_HW_FPU
 
-void xnarch_save_fpu(struct xnarchtcb *tcb);
-void xnarch_restore_fpu(struct xnarchtcb *tcb);
-void xnarch_enable_fpu(struct xnarchtcb *tcb);
-int xnarch_handle_fpu_fault(struct xnarchtcb *tcb);
+void xnarch_save_fpu(struct xnthread *thread);
+void xnarch_restore_fpu(struct xnthread *thread);
+void xnarch_enable_fpu(struct xnthread *thread);
+int xnarch_handle_fpu_fault(struct xnthread *thread);
 
 #else /* !CONFIG_XENO_HW_FPU */
 
-static inline void xnarch_save_fpu(struct xnarchtcb *tcb) { }
-static inline void xnarch_restore_fpu(struct xnarchtcb *tcb) { }
-static inline void xnarch_enable_fpu(struct xnarchtcb *tcb) { }
+static inline void xnarch_save_fpu(struct xnthread *thread) { }
+static inline void xnarch_restore_fpu(struct xnthread *thread) { }
+static inline void xnarch_enable_fpu(struct xnthread *thread) { }
 
-static inline int xnarch_handle_fpu_fault(struct xnarchtcb *tcb)
+static inline int xnarch_handle_fpu_fault(struct xnthread *thread)
 {
 	return 0;
 }
 
 #endif /* !CONFIG_XENO_HW_FPU */
 
-void xnarch_init_root_tcb(struct xnarchtcb *tcb);
+void xnarch_init_root_tcb(struct xnthread *thread);
 
-void xnarch_init_shadow_tcb(struct xnarchtcb *tcb);
+void xnarch_init_shadow_tcb(struct xnthread *thread);
 
-void xnarch_switch_to(struct xnarchtcb *out_tcb, struct xnarchtcb *in_tcb);
+void xnarch_switch_to(struct xnthread *out, struct xnthread *in);
 
-static inline void xnarch_enter_root(struct xnarchtcb *tcb) { }
+static inline void xnarch_enter_root(struct xnthread *root) { }
 
-void xnarch_leave_root(struct xnarchtcb *rootcb);
+void xnarch_leave_root(struct xnthread *root);
 
 int xnarch_escalate(void);
 
