@@ -2607,11 +2607,13 @@ static inline int handle_exception(struct ipipe_trap_data *d)
 		   xnarch_fault_trap(d));
 
 	if (xnarch_fault_fpu_p(d)) {
+#ifdef CONFIG_XENO_HW_FPU
 		/* FPU exception received in primary mode. */
-		if (xnarch_handle_fpu_fault(thread)) {
+		if (xnarch_handle_fpu_fault(sched->fpuholder, thread, d)) {
 			sched->fpuholder = thread;
 			return 1;
 		}
+#endif /* CONFIG_XENO_HW_FPU */
 		print_symbol("invalid use of FPU in Xenomai context at %s\n",
 			     xnarch_fault_pc(d));
 	}

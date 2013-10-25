@@ -62,7 +62,9 @@ static inline void xnarch_enable_fpu(struct xnthread *current_thread) { }
 static inline void xnarch_save_fpu(struct xnthread *thread) { }
 static inline void xnarch_restore_fpu(struct xnthread *thread) { }
 
-static inline int xnarch_handle_fpu_fault(struct xnthread *thread)
+static inline int 
+xnarch_handle_fpu_fault(struct xnthread *from, 
+			struct xnthread *to, struct ipipe_trap_data *d)
 {
 	return 0;
 }

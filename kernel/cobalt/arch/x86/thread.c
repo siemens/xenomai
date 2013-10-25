@@ -219,7 +219,8 @@ static inline void __do_restore_i387(x86_fpustate *fpup)
 #endif /* CONFIG_X86_64 */
 }
 
-int xnarch_handle_fpu_fault(struct xnthread *thread)
+int xnarch_handle_fpu_fault(struct xnthread *from, 
+			struct xnthread *to, struct ipipe_trap_data *d)
 {
 	struct xnarchtcb *tcb = xnthread_archtcb(to);
 	struct task_struct *p = tcb->core.host_task;

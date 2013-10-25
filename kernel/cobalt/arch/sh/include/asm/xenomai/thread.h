@@ -70,7 +70,9 @@ static inline void xnarch_init_shadow_tcb(struct xnthread *thread) { }
 
 #endif /* !CONFIG_XENO_HW_FPU */
 
-static inline int xnarch_handle_fpu_fault(struct xnthread *thread)
+static inline int 
+xnarch_handle_fpu_fault(struct xnthread *from, 
+			struct xnthread *to, struct ipipe_trap_data *d)
 {
 	return 0;
 }
