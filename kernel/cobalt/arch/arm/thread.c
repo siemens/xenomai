@@ -31,25 +31,10 @@ asmlinkage void __asm_thread_switch(struct thread_info *out,
 
 asmlinkage void __asm_thread_trampoline(void);
 
-#ifdef CONFIG_XENO_HW_FPU
-
-#define task_fpenv(task)						\
-	((struct arm_fpustate *) &task_thread_info(task)->used_cp[0])
-
-#ifdef CONFIG_VFP
+#if defined(CONFIG_XENO_HW_FPU) && defined(CONFIG_VFP)
 asmlinkage void __asm_vfp_save(union vfp_state *vfp, unsigned int fpexc);
 
 asmlinkage void __asm_vfp_load(union vfp_state *vfp, unsigned int cpu);
-
-static inline void do_save_fpu(struct arm_fpustate *fpuenv, unsigned int fpexc)
-{
-	__asm_vfp_save(&fpuenv->vfpstate, fpexc);
-}
-
-static inline void do_restore_fpu(struct arm_fpustate *fpuenv)
-{
-	__asm_vfp_load(&fpuenv->vfpstate, ipipe_processor_id());
-}
 
 #define do_vfp_fmrx(_vfp_)						\
 	({								\
@@ -67,7 +52,7 @@ static inline void do_restore_fpu(struct arm_fpustate *fpuenv)
 
 extern union vfp_state *vfp_current_hw_state[NR_CPUS];
 
-static inline struct arm_fpustate *get_fpu_owner(void)
+static inline union vfp_state *get_fpu_owner(void)
 {
 	union vfp_state *vfp_owner;
 	unsigned int cpu;
@@ -84,48 +69,26 @@ static inline struct arm_fpustate *get_fpu_owner(void)
 	if (!vfp_owner)
 		return NULL;
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0)			\
-     || defined(CONFIG_VFP_3_2_BACKPORT)) && defined(CONFIG_SMP)
+#ifdef CONFIG_SMP
 	if (vfp_owner->hard.cpu != cpu)
 		return NULL;
-#endif /* linux >= 3.2.0 */
+#endif /* SMP */
 
-	return container_of(vfp_owner, struct arm_fpustate, vfpstate);
+	return vfp_owner;
 }
 
-#define do_disable_fpu()					\
-	do_vfp_fmxr(FPEXC, do_vfp_fmrx(FPEXC) & ~FPEXC_EN)
+#define do_disable_vfp(fpexc)					\
+	do_vfp_fmxr(FPEXC, fpexc & ~FPEXC_EN)
 
 #define XNARCH_VFP_ANY_EXC						\
 	(FPEXC_EX|FPEXC_DEX|FPEXC_FP2V|FPEXC_VV|FPEXC_TRAP_MASK)
 
-#define do_enable_fpu()							\
+#define do_enable_vfp()							\
 	({								\
 		unsigned _fpexc = do_vfp_fmrx(FPEXC) | FPEXC_EN;	\
 		do_vfp_fmxr(FPEXC, _fpexc & ~XNARCH_VFP_ANY_EXC);	\
 		_fpexc;							\
 	})
-
-#else /* !CONFIG_VFP */
-
-static inline void do_save_fpu(struct arm_fpustate *fpuenv) { }
-
-static inline void do_restore_fpu(struct arm_fpustate *fpuenv) { }
-
-#define get_fpu_owner(cur)						\
-	({								\
-		struct task_struct * _cur = (cur);			\
-		((task_thread_info(_cur)->used_cp[1] | task_thread_info(_cur)->used_cp[2]) \
-		 ? _cur : NULL);					\
-	})
-
-#define do_disable_fpu()						\
-	task_thread_info(current)->used_cp[1] = task_thread_info(current)->used_cp[2] = 0;
-
-#define do_enable_fpu()							\
-	task_thread_info(current)->used_cp[1] = task_thread_info(current)->used_cp[2] = 1;
-
-#endif /* !CONFIG_VFP */
 
 int xnarch_fault_fpu_p(struct ipipe_trap_data *d)
 {
@@ -156,16 +119,10 @@ int xnarch_fault_fpu_p(struct ipipe_trap_data *d)
 	if (d->exception == IPIPE_TRAP_FPU)
 		return 1;
 
-#ifdef CONFIG_VFP
 	if (d->exception == IPIPE_TRAP_VFP)
 		goto trap_vfp;
-#endif
 
-	/*
-	 * When an FPU fault occurs in user-mode, it will be properly
-	 * resolved before __ipipe_report_trap() is called.
-	 */
-	if (d->exception != IPIPE_TRAP_UNDEFINSTR || user_mode(d->regs))
+	if (d->exception != IPIPE_TRAP_UNDEFINSTR)
 		return 0;
 
 	pc = (char *) xnarch_fault_pc(d);
@@ -217,7 +174,6 @@ int xnarch_fault_fpu_p(struct ipipe_trap_data *d)
 #endif
 
 	exc = copro_to_exc[cp];
-#ifdef CONFIG_VFP
 	if (exc == IPIPE_TRAP_VFP) {
 	  trap_vfp:
 		/* If an exception is pending, the VFP fault is not really an
@@ -230,7 +186,7 @@ int xnarch_fault_fpu_p(struct ipipe_trap_data *d)
 		else
 			exc = IPIPE_TRAP_VFP;
 	}
-#endif
+
 	d->exception = exc;
 	return exc != IPIPE_TRAP_UNDEFINSTR;
 }
@@ -238,17 +194,91 @@ int xnarch_fault_fpu_p(struct ipipe_trap_data *d)
 void xnarch_leave_root(struct xnthread *root)
 {
 	struct xnarchtcb *rootcb = xnthread_archtcb(root);
-#ifdef CONFIG_VFP
 	rootcb->fpup = get_fpu_owner();
-#else /* !CONFIG_VFP */
-	rootcb->core.user_fpu_owner = get_fpu_owner(rootcb->core.host_task);
-	/* So that xnarch_save_fpu() will operate on the right FPU area. */
-	rootcb->fpup = (rootcb->core.user_fpu_owner
-			? task_fpenv(rootcb->core.user_fpu_owner) : NULL);
-#endif /* !CONFIG_VFP */
 }
 
-#endif /* CONFIG_XENO_HW_FPU */
+void xnarch_save_fpu(struct xnthread *thread)
+{
+	struct xnarchtcb *tcb = &thread->tcb;
+	if (tcb->fpup)
+		__asm_vfp_save(tcb->fpup, do_enable_vfp());
+}
+
+void xnarch_switch_fpu(struct xnthread *from, struct xnthread *to)
+{
+	union vfp_state *const from_fpup = from ? from->tcb.fpup : NULL;
+	unsigned cpu = ipipe_processor_id();
+	
+	if (xnthread_test_state(to, XNROOT) == 0) {
+		union vfp_state *const to_fpup = to->tcb.fpup;
+		unsigned fpexc = do_enable_vfp();
+
+		if (from_fpup == to_fpup)
+			return;
+
+		if (from_fpup)
+			__asm_vfp_save(from_fpup, fpexc);
+
+		__asm_vfp_load(to_fpup, cpu);
+       } else {
+		/*
+		 * We are restoring the Linux current thread. The FPU
+		 * can be disabled, so that a fault will occur if the
+		 * newly switched thread uses the FPU, to allow the
+		 * kernel handler to pick the correct FPU context, and
+		 * save in the same move the last used RT context.
+		 */
+		vfp_current_hw_state[cpu] = from_fpup;
+#ifdef CONFIG_SMP
+		/*
+		 * On SMP, since returning to FPU disabled mode means
+		 * that we have to save fpu, avoid doing it if
+		 * current FPU context belongs to the task we are
+		 * switching to.
+		 */
+		if (from_fpup) {
+			union vfp_state *const current_task_fpup =
+				&to->tcb.core.tip->vfpstate;
+			const unsigned fpdis = do_vfp_fmrx(FPEXC);
+			const unsigned fpen = fpdis | FPEXC_EN;
+
+			do_vfp_fmxr(FPEXC, fpen & ~XNARCH_VFP_ANY_EXC);
+			if (from_fpup == current_task_fpup)
+				return;
+			
+			__asm_vfp_save(from_fpup, fpen);
+			do_vfp_fmxr(FPEXC, fpdis);
+		}
+#endif
+	}
+}
+
+int xnarch_handle_fpu_fault(struct xnthread *from, 
+			struct xnthread *to, struct ipipe_trap_data *d)
+{
+	unsigned fpexc;
+
+	if (xnthread_test_state(to, XNFPU))
+		/* FPU is already enabled, probably an exception */
+               return 0;
+
+	xnthread_set_state(to, XNFPU);
+	xnarch_switch_fpu(from, to);
+
+	/* Retry faulting instruction */
+	d->regs->ARM_pc = xnarch_fault_pc(d);
+	return 1;
+}
+
+void xnarch_init_shadow_tcb(struct xnthread *thread)
+{
+	struct xnarchtcb *tcb = xnthread_archtcb(thread);
+	tcb->fpup = &task_thread_info(tcb->core.host_task)->vfpstate;
+
+	/* XNFPU is set upon first FPU fault */
+	xnthread_clear_state(thread, XNFPU);
+}
+#endif /* CONFIG_XENO_HW_FPU && CONFIG_VFP*/
 
 void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 {
@@ -279,130 +309,6 @@ void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 	__asm_thread_switch(out_tcb->core.tip, in_tcb->core.tip);
 }
 
-void xnarch_enable_fpu(struct xnthread *thread)
-{
-	struct xnarchtcb *tcb = &thread->tcb;
-#ifdef CONFIG_XENO_HW_FPU
-#ifdef CONFIG_VFP
-	/* If we are restoring the Linux current thread which does not own the
-	   FPU context, we keep FPU disabled, so that a fault will occur if the
-	   newly switched thread uses the FPU, to allow the kernel handler to
-	   pick the correct FPU context.
-	*/
-	if (likely(!xnthread_test_state(thread, XNROOT))) {
-		do_enable_fpu();
-		/* No exception should be pending, since it should have caused
-		   a trap earlier.
-		*/
-	} else if (tcb->fpup && tcb->fpup == task_fpenv(tcb->core.host_task)) {
-		unsigned fpexc = do_enable_fpu();
-#ifndef CONFIG_SMP
-		if (likely(!(fpexc & XNARCH_VFP_ANY_EXC)
-			   && !(do_vfp_fmrx(FPSCR) & FPSCR_IXE)))
-			return;
-		/*
-		  If current process has pending exceptions it is
-		  illegal to restore the FPEXC register with them, we must
-		  save the fpu state and disable them, to get linux
-		  fpu fault handler take care of them correctly.
-		*/
-#endif
-		/*
-		  On SMP systems, if we are restoring the root
-		  thread, running the task holding the FPU context at
-		  the time when we switched to real-time domain,
-		  forcibly save the FPU context. It seems to fix SMP
-		  systems for still unknown reasons.
-		*/
-		do_save_fpu(tcb->fpup, fpexc);
-		vfp_current_hw_state[ipipe_processor_id()] = NULL;
-		do_disable_fpu();
-	}
-#else /* !CONFIG_VFP */
-	if (!tcb->core.host_task)
-		do_enable_fpu();
-#endif /* !CONFIG_VFP */
-#endif /* CONFIG_XENO_HW_FPU */
-}
-
-void xnarch_save_fpu(struct xnthread *thread)
-{
-	struct xnarchtcb *tcb = &thread->tcb;
-#ifdef CONFIG_XENO_HW_FPU
-#ifdef CONFIG_VFP
-	if (tcb->fpup)
-		do_save_fpu(tcb->fpup, do_enable_fpu());
-#else /* !CONFIG_VFP */
-	if (tcb->fpup) {
-		do_save_fpu(tcb->fpup);
-
-		if (tcb->core.user_fpu_owner && task_thread_info(tcb->core.user_fpu_owner)) {
-			task_thread_info(tcb->core.user_fpu_owner)->used_cp[1] = 0;
-			task_thread_info(tcb->core.user_fpu_owner)->used_cp[2] = 0;
-		}
-	}
-#endif /* !CONFIG_VFP */
-#endif /* CONFIG_XENO_HW_FPU */
-}
-
-void xnarch_restore_fpu(struct xnthread *thread)
-{
-	struct xnarchtcb *tcb = &thread->tcb;
-#ifdef CONFIG_XENO_HW_FPU
-#ifdef CONFIG_VFP
-	if (likely(!xnthread_test_state(thread, XNROOT))) {
-		do_enable_fpu();
-		do_restore_fpu(tcb->fpup);
-	} else {
-		/*
-		 * We are restoring the Linux current thread which
-		 * does not own the FPU context, so the FPU must be
-		 * disabled, so that a fault will occur if the newly
-		 * switched thread uses the FPU, to allow the kernel
-		 * handler to pick the correct FPU context.
-		 *
-		 * Further set vfp_current_hw_state to NULL to avoid
-		 * the Linux kernel to save, when the fault occur, the
-		 * current FPU context, the one of an RT task, into
-		 * the FPU area of the last non RT task which used the
-		 * FPU before the preemption by Xenomai.
-		*/
-		vfp_current_hw_state[ipipe_processor_id()] = NULL;
-		do_disable_fpu();
-	}
-#else /* !CONFIG_VFP */
-	if (tcb->fpup) {
-		do_restore_fpu(tcb->fpup);
-
-		if (tcb->core.user_fpu_owner && task_thread_info(tcb->core.user_fpu_owner)) {
-			task_thread_info(tcb->core.user_fpu_owner)->used_cp[1] = 1;
-			task_thread_info(tcb->core.user_fpu_owner)->used_cp[2] = 1;
-		}
-	}
-
-	/* FIXME: We restore FPU "as it was" when Xenomai preempted Linux,
-	   whereas we could be much lazier. */
-	if (tcb->core.host_task)
-		do_disable_fpu();
-#endif /* !CONFIG_VFP */
-#endif /* CONFIG_XENO_HW_FPU */
-}
-
-void xnarch_switch_fpu(struct xnthread *from, struct xnthread *to)
-{
-	if (from == to || 
-		xnarch_fpu_ptr(xnthread_archtcb(from)) == 
-		xnarch_fpu_ptr(xnthread_archtcb(to))) {
-		xnarch_enable_fpu(to);
-		return;
-	}
-	
-	if (from)
-		xnarch_save_fpu(from);
-	
-	xnarch_restore_fpu(to);
-}
-
 int xnarch_escalate(void)
 {
 	if (ipipe_root_p) {
@@ -411,11 +317,4 @@ int xnarch_escalate(void)
 	}
 
 	return 0;
-}
-
-void xnarch_init_shadow_tcb(struct xnthread *thread)
-{
-	struct xnarchtcb *tcb = xnthread_archtcb(thread);
-	tcb->fpup = (struct arm_fpustate *)
-		&task_thread_info(tcb->core.host_task)->used_cp[0];
 }

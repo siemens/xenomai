@@ -26,35 +26,20 @@
 #include <asm-generic/xenomai/thread.h>
 
 #ifdef CONFIG_XENO_HW_FPU
-
 #ifdef CONFIG_VFP
 #include <asm/vfp.h>
 #endif /* CONFIG_VFP */
-
-struct arm_fpustate {
-	/*
-	 * This layout must follow exactely the definition of the FPU
-	 * area in the ARM thread_info structure. 'tp_value' is also
-	 * saved even if it is not needed, but it shouldn't matter.
-	 */
-	__u8                    used_cp[16];    /* thread used copro */
-	unsigned long           tp_value;
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3,7,0) || defined(CONFIG_CRUNCH)
-	struct crunch_state     crunchstate;
-#endif
-	union fp_state          fpstate __attribute__((aligned(8)));
-	union vfp_state         vfpstate;
-};
-
 #endif /* !CONFIG_XENO_HW_FPU */
 
 struct xnarchtcb {
 	struct xntcb core;
 #ifdef CONFIG_XENO_HW_FPU
-	struct arm_fpustate *fpup;
+#ifdef CONFIG_VFP
+	union vfp_state *fpup;
 #define xnarch_fpu_ptr(tcb)     ((tcb)->fpup)
 #else
 #define xnarch_fpu_ptr(tcb)     NULL
+#endif
 #endif
 	struct {
 		unsigned long pc;
@@ -79,17 +64,13 @@ struct xnarchtcb {
 
 #define xnarch_fault_notify(d) (!xnarch_fault_bp_p(d))
 
-void xnarch_save_fpu(struct xnthread *thread);
-
-void xnarch_switch_fpu(struct xnthread *from, struct xnthread *thread);
-
 void xnarch_switch_to(struct xnthread *out, struct xnthread *in);
 
 static inline void xnarch_enter_root(struct xnthread *root) { }
 
 int xnarch_escalate(void);
 
-#ifdef CONFIG_XENO_HW_FPU
+#if defined(CONFIG_XENO_HW_FPU) && defined(CONFIG_VFP)
 
 static inline void xnarch_init_root_tcb(struct xnthread *thread)
 {
@@ -103,7 +84,14 @@ int xnarch_fault_fpu_p(struct ipipe_trap_data *d);
 
 void xnarch_leave_root(struct xnthread *root);
 
-#else /* !CONFIG_XENO_HW_FPU */
+void xnarch_save_fpu(struct xnthread *thread);
+
+void xnarch_switch_fpu(struct xnthread *from, struct xnthread *thread);
+
+int xnarch_handle_fpu_fault(struct xnthread *from, 
+			struct xnthread *to, struct ipipe_trap_data *d);
+
+#else /* !CONFIG_XENO_HW_FPU || !CONFIG_VFP */
 
 static inline void xnarch_init_root_tcb(struct xnthread *thread) { }
 static inline void xnarch_init_shadow_tcb(struct xnthread *thread) { }
@@ -120,13 +108,19 @@ static inline int xnarch_fault_fpu_p(struct ipipe_trap_data *d)
 
 static inline void xnarch_leave_root(struct xnthread *root) { }
 
-#endif /* !CONFIG_XENO_HW_FPU */
+static inline void xnarch_save_fpu(struct xnthread *thread) { }
 
-static inline int 
-xnarch_handle_fpu_fault(struct xnthread *from, 
-			struct xnthread *to, struct ipipe_trap_data *d)
+static inline void xnarch_switch_fpu(struct xnthread *f, struct xnthread *t) { }
+
+static inline int xnarch_handle_fpu_fault(struct xnthread *from, 
+					struct xnthread *to, struct ipipe_trap_data *d)
 {
 	return 0;
 }
+#endif /*  !CONFIG_XENO_HW_FPU || !CONFIG_VFP */
+
+static inline void xnarch_enable_kfpu(void) { }
+
+static inline void xnarch_disable_kfpu(void) { }
 
 #endif /* !_COBALT_ARM_ASM_THREAD_H */
