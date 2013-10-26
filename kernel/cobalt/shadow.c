@@ -2591,12 +2591,14 @@ int ipipe_kevent_hook(int kevent, void *data)
 
 static inline int handle_exception(struct ipipe_trap_data *d)
 {
+	struct xnsched *sched;
 	struct xnthread *thread;
 
-	if (xnsched_root_p())
-		return 0;
+	sched = xnsched_current();
+	thread = sched->curr;
 
-	thread = xnsched_current_thread();
+	if (xnthread_test_state(thread, XNROOT))
+		return 0;
 
 	trace_mark(xn_nucleus, thread_fault,
 		   "thread %p thread_name %s ip %p type 0x%x",
@@ -2605,17 +2607,15 @@ static inline int handle_exception(struct ipipe_trap_data *d)
 		   xnarch_fault_trap(d));
 
 	if (xnarch_fault_fpu_p(d)) {
-		if (!xnthread_test_state(thread, XNROOT)) {
-			/* FPU exception received in primary mode. */
-			if (xnarch_handle_fpu_fault(thread))
-				return 1;
+		/* FPU exception received in primary mode. */
+		if (xnarch_handle_fpu_fault(thread)) {
+			sched->fpuholder = thread;
+			return 1;
 		}
 		print_symbol("invalid use of FPU in Xenomai context at %s\n",
 			     xnarch_fault_pc(d));
 	}
 
-	if (xnthread_test_state(thread, XNROOT))
-		return 0;
 	/*
 	 * If we experienced a trap on behalf of a shadow thread
 	 * running in primary mode, move it to the Linux domain,

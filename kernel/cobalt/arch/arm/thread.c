@@ -397,3 +397,10 @@ int xnarch_escalate(void)
 
 	return 0;
 }
+
+void xnarch_init_shadow_tcb(struct xnthread *thread)
+{
+	struct xnarchtcb *tcb = xnthread_archtcb(thread);
+	tcb->fpup = (struct arm_fpustate *)
+		&task_thread_info(tcb->core.host_task)->used_cp[0];
+}

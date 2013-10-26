@@ -60,11 +60,7 @@ static inline void xnarch_init_root_tcb(struct xnthread *thread)
 	tcb->fpup = NULL;
 }
 
-static inline void xnarch_init_shadow_tcb(struct xnthread *thread)
-{
-	struct xnarchtcb *tcb = xnthread_archtcb(thread);
-	tcb->fpup = &tcb->core.host_task->thread;
-}
+void xnarch_init_shadow_tcb(struct xnthread *thread);
 
 #else /* !CONFIG_XENO_HW_FPU */
 

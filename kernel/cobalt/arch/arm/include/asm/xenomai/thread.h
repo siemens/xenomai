@@ -99,12 +99,7 @@ static inline void xnarch_init_root_tcb(struct xnthread *thread)
 	tcb->fpup = NULL;
 }
 
-static inline void xnarch_init_shadow_tcb(struct xnthread *thread)
-{
-	struct xnarchtcb *tcb = xnthread_archtcb(thread);
-	tcb->fpup = (struct arm_fpustate *)
-		&task_thread_info(tcb->core.host_task)->used_cp[0];
-}
+void xnarch_init_shadow_tcb(struct xnthread *thread);
 
 int xnarch_fault_fpu_p(struct ipipe_trap_data *d);
 
