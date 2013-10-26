@@ -30,44 +30,6 @@
 #define __get_user_inatomic __get_user
 #define __put_user_inatomic __put_user
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3,4,0)
-#ifdef TS_USEDFPU
-
-#define wrap_test_fpu_used(task)				\
-	(task_thread_info(task)->status & TS_USEDFPU)
-
-#define wrap_set_fpu_used(task)					\
-	do {							\
-		task_thread_info(task)->status |= TS_USEDFPU;	\
-	} while(0)
-
-#define wrap_clear_fpu_used(task)				\
-	do {							\
-		task_thread_info(task)->status &= ~TS_USEDFPU;	\
-	} while(0)
-
-#else /* !defined(TS_USEDFPU) */
-
-#define wrap_test_fpu_used(task) ((task)->thread.has_fpu)
-#define wrap_set_fpu_used(task)			\
-	do {					\
-		(task)->thread.has_fpu = 1;	\
-	} while(0)
-#define wrap_clear_fpu_used(task)		\
-	do {					\
-		(task)->thread.has_fpu = 0;	\
-	} while(0)
-
-#endif /* !defined(TS_USEDFPU) */
-#else /* Linux >= 3.4.0 */
-#include <asm/i387.h>
-#include <asm/fpu-internal.h>
-
-#define wrap_test_fpu_used(task) __thread_has_fpu(task)
-#define wrap_set_fpu_used(task) __thread_set_has_fpu(task)
-#define wrap_clear_fpu_used(task) __thread_clear_has_fpu(task)
-#endif /* Linux >= 3.4.0 */
-
 #define wrap_strncpy_from_user(dstP, srcP, n)		\
 	strncpy_from_user_nocheck(dstP, srcP, n)
 

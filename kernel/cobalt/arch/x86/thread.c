@@ -21,8 +21,10 @@
 #include <linux/sched.h>
 #include <linux/ipipe.h>
 #include <linux/mm.h>
-#include <asm/mmu_context.h>
 #include <cobalt/kernel/thread.h>
+#include <asm/mmu_context.h>
+#include <asm/i387.h>
+#include <asm/fpu-internal.h>
 
 #ifdef CONFIG_X86_32
 
@@ -91,7 +93,7 @@ void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 	struct task_struct *prev, *next;
 
 	prev = out_tcb->core.host_task;
-	if (wrap_test_fpu_used(prev))
+	if (__thread_has_fpu(prev))
 		/*
 		 * __switch_to will try and use __unlazy_fpu, so we
 		 * need to clear the ts bit.
@@ -225,7 +227,7 @@ int xnarch_handle_fpu_fault(struct xnthread *from,
 	struct xnarchtcb *tcb = xnthread_archtcb(to);
 	struct task_struct *p = tcb->core.host_task;
 
-	if (tsk_used_math(p))
+	if (__thread_has_fpu(p))
 		return 0;
 
 	/*
@@ -242,7 +244,7 @@ int xnarch_handle_fpu_fault(struct xnthread *from,
 	}
 
 	set_stopped_child_used_math(p);
-	wrap_set_fpu_used(p);
+	__thread_set_has_fpu(p);
 
 	return 1;
 }
@@ -258,11 +260,11 @@ void xnarch_leave_root(struct xnthread *root)
 #endif
 	rootcb->fpup = x86_fpustate_ptr(&p->thread);
 	rootcb->root_kfpu = 
-		(read_cr0() & 8) == 0 && wrap_test_fpu_used(p) == 0;
+		(read_cr0() & 8) == 0 && __thread_has_fpu(p) == 0;
 	if (rootcb->root_kfpu) {
 		rootcb->root_used_math = tsk_used_math(p) != 0;
 		x86_fpustate_ptr(&p->thread) = &rootcb->i387;
-		wrap_set_fpu_used(p);
+		__thread_set_has_fpu(p);
 		set_stopped_child_used_math(p);
 	}
 }
@@ -272,7 +274,7 @@ void xnarch_save_fpu(struct xnthread *thread)
 	struct xnarchtcb *tcb = xnthread_archtcb(thread);
 	struct task_struct *p = tcb->core.host_task;
 
-	if (wrap_test_fpu_used(p) == 0)
+	if (__thread_has_fpu(p) == 0)
 		/* Common case: already saved by __switch_to */
 		return;
 	
@@ -280,7 +282,7 @@ void xnarch_save_fpu(struct xnthread *thread)
 	clts();
 
 	__do_save_i387(x86_fpustate_ptr(&p->thread));
-	wrap_clear_fpu_used(p);
+	__thread_clear_has_fpu(p);
 }
 
 void xnarch_switch_fpu(struct xnthread *from, struct xnthread *thread)
@@ -302,11 +304,11 @@ void xnarch_switch_fpu(struct xnthread *from, struct xnthread *thread)
 	__do_restore_i387(x86_fpustate_ptr(&p->thread));
 	if (tcb->root_kfpu) {
 		x86_fpustate_ptr(&p->thread) = tcb->fpup;
-		wrap_clear_fpu_used(p);
+		__thread_clear_has_fpu(p);
 		if (tcb->root_used_math == 0)
 			clear_stopped_child_used_math(p);
 	} else
-		wrap_set_fpu_used(p);
+		__thread_set_has_fpu(p);
 }
 
 #endif /* CONFIG_XENO_HW_FPU */
