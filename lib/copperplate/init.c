@@ -477,7 +477,7 @@ void copperplate_init(int *argcp, char *const **argvp)
 	struct copperskin *skin;
 	struct option *options;
 	static int init_done;
-	char **uargv;
+	char **uargv = NULL;
 
 	if (init_done) {
 		warning("duplicate call to %s() ignored", __func__);
