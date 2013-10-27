@@ -743,7 +743,7 @@ static inline void leave_root(struct xnthread *root)
 	rootcb->core.host_task = p;
 	rootcb->core.tsp = &p->thread;
 	rootcb->core.mm = rootcb->core.active_mm = ipipe_get_active_mm();
-#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
+#ifdef CONFIG_XENO_HW_WANT_TIP
 	rootcb->core.tip = task_thread_info(p);
 #endif
 	xnarch_leave_root(rootcb);

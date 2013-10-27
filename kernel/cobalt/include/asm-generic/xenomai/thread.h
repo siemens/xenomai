@@ -34,9 +34,8 @@ struct xntcb {
 	struct mm_struct *mm;
 	struct mm_struct *active_mm;
 	struct thread_struct ts;
-#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
+#ifdef CONFIG_XENO_HW_WANT_TIP
 	struct thread_info *tip;
-	struct thread_info ti;
 #endif
 #ifdef CONFIG_XENO_HW_FPU
 	struct task_struct *user_fpu_owner;

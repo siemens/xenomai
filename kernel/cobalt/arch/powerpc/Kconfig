@@ -13,6 +13,9 @@ config IPIPE_WANT_PREEMPTIBLE_SWITCH
 	default y if XENO_HW_UNLOCKED_SWITCH
 	default n if !XENO_HW_UNLOCKED_SWITCH
 
+config XENO_HW_WANT_TIP
+	bool
+
 config XENO_HW_FPU
 	bool "FPU support"
 	depends on PPC_FPU
@@ -29,6 +32,7 @@ config XENO_HW_FPU
 config XENO_HW_UNLOCKED_SWITCH
 	bool "Unlocked context switch"
 	depends on IPIPE_HAVE_PREEMPTIBLE_SWITCH
+	select XENO_HW_WANT_TIP
 	default y
 	help
 

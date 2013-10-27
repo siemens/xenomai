@@ -219,7 +219,7 @@ void xnthread_init_shadow_tcb(struct xnthread *thread, struct task_struct *task)
 	tcb->core.tsp = &task->thread;
 	tcb->core.mm = task->mm;
 	tcb->core.active_mm = task->mm;
-#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
+#ifdef CONFIG_XENO_HW_WANT_TIP
 	tcb->core.tip = task_thread_info(task);
 #endif
 #ifdef CONFIG_XENO_HW_FPU
@@ -236,8 +236,8 @@ void xnthread_init_root_tcb(struct xnthread *thread)
 	tcb->core.host_task = current;
 	tcb->core.tsp = &tcb->core.ts;
 	tcb->core.mm = current->mm;
-#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
-	tcb->core.tip = &tcb->core.ti;
+#ifdef CONFIG_XENO_HW_WANT_TIP
+	tcb->core.tip = NULL;
 #endif
 	xnarch_init_root_tcb(tcb);
 }

@@ -8,6 +8,9 @@ config IPIPE_WANT_PREEMPTIBLE_SWITCH
 config IPIPE_WANT_ACTIVE_MM
        def_bool y
 
+config XENO_HW_WANT_TIP
+       def_bool y
+
 config XENO_HW_FPU
 	bool "FPU support"
 	default y
