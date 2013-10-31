@@ -752,7 +752,7 @@ int xnintr_attach(xnintr_t *intr, void *cookie)
 	intr->flags |= XN_ISR_ATTACHED;
 	stat_counter_inc();
 out:
-	mutex_lock(&intrlock);
+	mutex_unlock(&intrlock);
 
 	return ret;
 }
