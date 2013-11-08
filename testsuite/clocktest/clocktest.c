@@ -246,11 +246,16 @@ int main(int argc, char *argv[])
 	int i;
 	int c;
 	int d = 0;
+	int ext = 0;
 
-	while ((c = getopt(argc, argv, "C:T:D")) != EOF)
+	while ((c = getopt(argc, argv, "C:ET:D")) != EOF)
 		switch (c) {
 		case 'C':
 			clock_id = atoi(optarg);
+			break;
+
+		case 'E':
+			ext = 1;
 			break;
 
 		case 'T':
@@ -264,6 +269,7 @@ int main(int argc, char *argv[])
 		default:
 			fprintf(stderr, "usage: clocktest [options]\n"
 				"  [-C <clock_id>]              # tested clock, default=%d (CLOCK_REALTIME)\n"
+				"  [-E]                         # -C specifies extension clock\n"
 				"  [-T <test_duration_seconds>] # default=0, so ^C to end\n"
 				"  [-D]                         # print extra diagnostics for CLOCK_HOST_REALTIME\n",
 				CLOCK_REALTIME);
@@ -276,6 +282,8 @@ int main(int argc, char *argv[])
 
 	init_lock(&lock);
 
+	if (ext)
+		clock_id = __COBALT_CLOCK_CODE(clock_id);
 	if (d && clock_id == CLOCK_HOST_REALTIME)
 		show_hostrt_diagnostics();
 
@@ -292,7 +300,8 @@ int main(int argc, char *argv[])
 			       (void *)(long)i);
 	}
 
-	printf("== Tested clock: %d (", clock_id);
+	printf("== Tested %sclock: %d (", ext ? "extension " : "",
+	       __COBALT_CLOCK_INDEX(clock_id));
 	switch (clock_id) {
 	case CLOCK_REALTIME:
 		printf("CLOCK_REALTIME");
@@ -300,6 +309,10 @@ int main(int argc, char *argv[])
 
 	case CLOCK_MONOTONIC:
 		printf("CLOCK_MONOTONIC");
+		break;
+
+	case CLOCK_MONOTONIC_RAW:
+		printf("CLOCK_MONOTONIC_RAW");
 		break;
 
 	case CLOCK_HOST_REALTIME:
