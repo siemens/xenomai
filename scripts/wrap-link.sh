@@ -180,6 +180,10 @@ while test $# -gt 0; do
 	    stage1_args="$stage1_args $arg"
 	    ;;
 
+	-pie)
+	    stage2_args="$stage2_args $arg"
+	    ;;
+
 	*) 
 	    if test -e "$arg"; then
 		add_linker_obj $arg

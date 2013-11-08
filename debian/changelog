@@ -1,3 +1,21 @@
+xenomai (2.99.0) UNRELEASED; urgency=low
+
+  * Prepare Debian packaging for Xenomai-forge
+
+ -- Xenomai <xenomai@xenomai.org>  Wed, 20 Nov 2013 09:33:50 +0200
+
+xenomai (2.6.3) unstable; urgency=low
+
+  * New release
+
+ -- Xenomai <xenomai@xenomai.org>  Fri, 30 Aug 2013 22:34:50 +0200
+
+xenomai (2.6.1) unstable; urgency=low
+
+  * New release, integrated with debian/ subdir
+
+ -- Roland Stigge <stigge@antcom.de>  Fri, 03 Aug 2012 14:49:57 +0200
+
 xenomai (2.5.3) unstable; urgency=low
 
   * Switch to dpkg-source 3.0 (native) format
