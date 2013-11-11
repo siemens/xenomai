@@ -111,7 +111,7 @@ static struct xnsyscall cobalt_syscalls[] = {
 	SKINCALL_DEF(sc_cobalt_clock_settime, cobalt_clock_settime, any),
 	SKINCALL_DEF(sc_cobalt_clock_nanosleep, cobalt_clock_nanosleep, nonrestartable),
 	SKINCALL_DEF(sc_cobalt_mutex_init, cobalt_mutex_init, any),
-	SKINCALL_DEF(sc_cobalt_check_init, cobalt_mutex_check_init, any),
+	SKINCALL_DEF(sc_cobalt_mutex_check_init, cobalt_mutex_check_init, any),
 	SKINCALL_DEF(sc_cobalt_mutex_destroy, cobalt_mutex_destroy, any),
 	SKINCALL_DEF(sc_cobalt_mutex_lock, cobalt_mutex_lock, primary),
 	SKINCALL_DEF(sc_cobalt_mutex_timedlock, cobalt_mutex_timedlock, primary),

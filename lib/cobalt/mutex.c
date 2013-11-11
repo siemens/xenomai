@@ -83,7 +83,7 @@ COBALT_IMPL(int, pthread_mutex_init, (pthread_mutex_t *mutex,
 
 	if (_mutex->magic == COBALT_MUTEX_MAGIC) {
 		err = -XENOMAI_SKINCALL1(__cobalt_muxid,
-					 sc_cobalt_check_init,_mutex);
+					 sc_cobalt_mutex_check_init,_mutex);
 
 		if (err)
 			return err;

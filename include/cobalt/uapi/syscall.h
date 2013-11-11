@@ -40,7 +40,7 @@
 #define sc_cobalt_clock_settime         16
 #define sc_cobalt_clock_nanosleep       17
 #define sc_cobalt_mutex_init            18
-#define sc_cobalt_check_init            19
+#define sc_cobalt_mutex_check_init      19
 #define sc_cobalt_mutex_destroy         20
 #define sc_cobalt_mutex_lock            21
 #define sc_cobalt_mutex_timedlock       22
