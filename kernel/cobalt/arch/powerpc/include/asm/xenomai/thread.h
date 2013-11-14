@@ -74,6 +74,7 @@ void xnarch_leave_root(struct xnthread *root);
 
 static inline void xnarch_init_root_tcb(struct xnthread *thread) { }
 static inline void xnarch_init_shadow_tcb(struct xnthread *thread) { }
+static inline void xnarch_leave_root(struct xnthread *root) { }
 
 #endif  /* !CONFIG_XENO_HW_FPU */
 
