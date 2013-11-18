@@ -197,14 +197,23 @@ int __xnthread_init(struct xnthread *thread,
 	thread->init_schedparam = *sched_param;
 	ret = xnsched_init_thread(thread);
 	if (ret)
-		return ret;
+		goto err_out;
 
 	ret = xnsched_set_policy(thread, sched_class, sched_param);
 	if (ret)
-		return ret;
+		goto err_out;
 
-	if ((flags & (XNUSER|XNROOT)) == 0)
+	if ((flags & (XNUSER|XNROOT)) == 0) {
 		ret = spawn_kthread(thread);
+		if (ret)
+			goto err_out;
+	}
+
+	return 0;
+
+err_out:
+	xntimer_destroy(&thread->rtimer);
+	xntimer_destroy(&thread->ptimer);
 
 	return ret;
 }
