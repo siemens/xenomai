@@ -18,6 +18,8 @@
 #ifndef _COBALT_POWERPC_ASM_UAPI_FPTEST_H
 #define _COBALT_POWERPC_ASM_UAPI_FPTEST_H
 
+#ifndef __NO_FPRS__		/* i.e. has FPU, not SPE */
+
 static inline void fp_regs_set(int features, unsigned int val)
 {
 	unsigned long long fpval = val;
@@ -109,5 +111,17 @@ static inline unsigned int fp_regs_check(int features, unsigned int val,
 
 	return result;
 }
+
+#else	/* __NO_FPRS__ */
+
+static inline void fp_regs_set(int features, unsigned int val) { }
+
+static inline unsigned int fp_regs_check(int features, unsigned int val,
+					 int (*report)(const char *fmt, ...))
+{
+	return val;
+}
+
+#endif	/* __NO_FPRS__ */
 
 #endif /* !_COBALT_POWERPC_ASM_UAPI_FPTEST_H */

@@ -1,6 +1,6 @@
 config XENO_HW_MATH_EMU
         bool
-	default y if MATH_EMU || 8XX_MINIMAL_FPEMU
+	default y if MATH_EMU || MATH_EMULATION
 
 menu "Hardware options"
 
