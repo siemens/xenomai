@@ -40,7 +40,9 @@ static inline void fp_features_init(void)
 {
 }
 
-static inline void fp_regs_set(unsigned val)
+#ifndef __NO_FPRS__		/* i.e. has FPU, not SPE */
+
+static inline void fp_regs_set(unsigned int val)
 {
 	uint64_t fpval = val;
 	__asm__ __volatile__("lfd	0, %0\n"
@@ -80,12 +82,12 @@ static inline void fp_regs_set(unsigned val)
 #define FPTEST_REGVAL(n) {						\
 	uint64_t t;							\
 	__asm__ __volatile__("	stfd	" #n ", %0" : "=m" (t));	\
-	e[n] = (unsigned)t;						\
+	e[n] = (unsigned int)t;						\
 	}
 
-static inline unsigned fp_regs_check(unsigned val)
+static inline unsigned fp_regs_check(unsigned int val)
 {
-	unsigned i, result = val;
+	unsigned int i, result = val;
 	uint32_t e[32];
 
 	FPTEST_REGVAL(0);
@@ -129,5 +131,16 @@ static inline unsigned fp_regs_check(unsigned val)
 
 	return result;
 }
+
+#else	/* __NO_FPRS__ */
+
+static inline void fp_regs_set(unsigned int val) { }
+
+static inline unsigned fp_regs_check(unsigned int val)
+{
+	return val;
+}
+
+#endif	/* __NO_FPRS__ */
 
 #endif /* !_XENO_ASM_POWERPC_FPTEST_H */
