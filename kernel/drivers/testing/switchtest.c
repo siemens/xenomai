@@ -8,9 +8,9 @@
 #include <rtdm/driver.h>
 #include <asm/xenomai/fptest.h>
 
-#define RTSWITCH_RT      0x4
+#define RTSWITCH_RT      0x10000
 #define RTSWITCH_NRT     0
-#define RTSWITCH_KERNEL  0x8
+#define RTSWITCH_KERNEL  0x20000
 
 typedef struct {
 	struct rttst_swtest_task base;
