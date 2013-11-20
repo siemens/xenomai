@@ -445,7 +445,7 @@ void rtdm_task_join_nrt(rtdm_task_t *task, unsigned int poll_delay)
 	trace_mark(xn_rtdm, task_joinnrt, "thread %p poll_delay %u",
 		   task, poll_delay);
 
-	xnthread_join(task);
+	xnthread_join(task, true);
 }
 
 EXPORT_SYMBOL_GPL(rtdm_task_join_nrt);

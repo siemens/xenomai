@@ -1508,7 +1508,7 @@ EXPORT_SYMBOL_GPL(xnthread_cancel);
  *
  * @remark Tags: might-switch.
  */
-int xnthread_join(struct xnthread *thread)
+int xnthread_join(struct xnthread *thread, bool uninterruptible)
 {
 	unsigned int tag;
 	spl_t s;
@@ -1541,7 +1541,10 @@ int xnthread_join(struct xnthread *thread)
 		 * wait queue is quite unlikely. In any case, we run in
 		 * secondary mode.
 		 */
-		if (wait_event_interruptible(nkjoinq, thread->idtag != tag)) {
+		if (uninterruptible)
+			wait_event(nkjoinq, thread->idtag != tag);
+		else if (wait_event_interruptible(nkjoinq,
+						  thread->idtag != tag)) {
 			xnlock_get_irqsave(&nklock, s);
 			if (thread->idtag == tag)
 				xnthread_clear_state(thread, XNJOINED);

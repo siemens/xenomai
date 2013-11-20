@@ -421,7 +421,7 @@ int xnthread_set_slice(struct xnthread *thread,
 
 void xnthread_cancel(struct xnthread *thread);
 
-int xnthread_join(struct xnthread *thread);
+int xnthread_join(struct xnthread *thread, bool uninterruptible);
 
 #ifdef CONFIG_SMP
 int xnthread_migrate(int cpu);

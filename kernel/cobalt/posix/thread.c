@@ -1120,7 +1120,7 @@ int cobalt_thread_join(unsigned long pth)
 	if (thread == NULL)
 		return -ESRCH;
 
-	return xnthread_join(&thread->threadbase);
+	return xnthread_join(&thread->threadbase, false);
 }
 
 int cobalt_thread_stat(pid_t pid,

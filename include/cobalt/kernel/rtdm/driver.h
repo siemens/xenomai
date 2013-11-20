@@ -1088,7 +1088,7 @@ void rtdm_task_busy_sleep(nanosecs_rel_t delay);
 static inline void rtdm_task_destroy(rtdm_task_t *task)
 {
 	xnthread_cancel(task);
-	xnthread_join(task);
+	xnthread_join(task, true);
 }
 
 static inline int rtdm_task_should_stop(void)
