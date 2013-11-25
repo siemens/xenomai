@@ -236,6 +236,21 @@ int psos_task_normalize_priority(unsigned long psos_prio)
 	return psos_prio;
 }
 
+/*
+ * Although default pSOS priorities are mapped 1:1 to SCHED_RT,
+ * we do still have to use a denormalize function because these
+ * calls are weak and application code may be override the call
+ * and implement the mapping differently.
+ */
+
+__attribute__ ((weak))
+int psos_task_denormalize_priority(unsigned long core_prio)
+{
+	/* Map a SCHED_RT priority level to a pSOS one. */
+	return core_prio;
+}
+
+
 static int check_task_priority(u_long psos_prio, int *core_prio)
 {
 	if (psos_prio < 1 || psos_prio > 255) /* In theory. */
@@ -244,6 +259,12 @@ static int check_task_priority(u_long psos_prio, int *core_prio)
 	*core_prio = psos_task_normalize_priority(psos_prio);
 
 	return SUCCESS;
+}
+
+static int psos_task_get_priority(struct psos_task *task)
+{
+	int prio = threadobj_get_priority(&task->thobj);
+	return psos_task_denormalize_priority(prio);
 }
 
 u_long t_create(const char *name, u_long prio,
@@ -416,7 +437,7 @@ u_long t_setpri(u_long tid, u_long newprio, u_long *oldprio_r)
 	if (task == NULL)
 		return ret;
 
-	*oldprio_r = threadobj_get_priority(&task->thobj);
+	*oldprio_r = psos_task_get_priority(task);
 
 	if (newprio == 0) { /* Only inquires for the task priority. */
 		put_psos_task(task);

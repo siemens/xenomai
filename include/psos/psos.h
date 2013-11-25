@@ -366,6 +366,7 @@ u_long tm_wkwhen(u_long date,
 		 u_long ticks);
 
 int psos_task_normalize_priority(unsigned long psos_prio);
+int psos_task_denormalize_priority(unsigned long core_prio);
 
 extern unsigned int psos_long_names;
 
