@@ -1055,8 +1055,10 @@ static int flexcan_probe(struct platform_device *pdev)
 		devtype_data = (struct flexcan_devtype_data *)
 			pdev->id_entry->driver_data;
 	} else {
-		err = -ENODEV;
-		goto out_error;
+		if (!devtype_data){
+			err = -ENODEV;
+			goto out_error;
+		}
 	}
 
 	if (!clock_freq) {
