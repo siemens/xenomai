@@ -62,6 +62,7 @@ static int cobalt_mutex_init_inner(struct __shadow_mutex *shadow,
 	struct xnsys_ppd *sys_ppd;
 	struct cobalt_kqueues *kq;
 	spl_t s;
+	int err;
 
 	if (!attr)
 		attr = &cobalt_default_mutex_attr;
@@ -71,9 +72,12 @@ static int cobalt_mutex_init_inner(struct __shadow_mutex *shadow,
 
 	kq = cobalt_kqueues(attr->pshared);
 	sys_ppd = xnsys_ppd_get(attr->pshared);
+	err = xnregistry_enter("", mutex, &shadow->handle, NULL);
+	if (err < 0)
+		return err;
 
+	mutex->handle = shadow->handle;
 	shadow->magic = COBALT_MUTEX_MAGIC;
-	shadow->mutex = mutex;
 	shadow->lockcnt = 0;
 
 	shadow->attr = *attr;
@@ -97,12 +101,21 @@ static int cobalt_mutex_init_inner(struct __shadow_mutex *shadow,
 	return 0;
 }
 
-static void cobalt_mutex_destroy_inner(struct cobalt_mutex *mutex,
-				       struct cobalt_kqueues *q)
+static void 
+cobalt_mutex_destroy_inner(xnhandle_t handle, struct cobalt_kqueues *q)
 {
+	struct cobalt_mutex *mutex;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
+	mutex = xnregistry_fetch(handle);
+	if (!cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, typeof(*mutex))) {
+		xnlock_put_irqrestore(&nklock, s);
+		printk("mutex_destroy: invalid mutex %x\n", 
+			mutex ? mutex->magic : ~0);
+		return;
+	}
+	xnregistry_remove(handle);
 	list_del(&mutex->link);
 	/*
 	 * synchbase wait queue may not be empty only when this
@@ -110,6 +123,7 @@ static void cobalt_mutex_destroy_inner(struct cobalt_mutex *mutex,
 	 * absence of xnsched_run().
 	 */
 	xnsynch_destroy(&mutex->synchbase);
+	cobalt_mark_deleted(mutex);
 	xnlock_put_irqrestore(&nklock, s);
 
 	xnheap_free(&xnsys_ppd_get(mutex->attr.pshared)->sem_heap,
@@ -240,30 +254,23 @@ int cobalt_mutex_timedlock_break(struct cobalt_mutex *mutex,
 
 int cobalt_mutex_check_init(struct __shadow_mutex __user *u_mx)
 {
-	struct list_head *mutexq, *entry;
 	struct cobalt_mutex *mutex;
-	int qnr;
+	xnhandle_t handle;
+	int err;
 	spl_t s;
 
-	__xn_get_user(mutex, &u_mx->mutex);
+	__xn_get_user(handle, &u_mx->handle);
 
-	for (qnr = 0; qnr < 2; qnr++) {
-		mutexq = &cobalt_kqueues(qnr)->mutexq;
-		xnlock_get_irqsave(&nklock, s);
-		if (!list_empty(mutexq)) {
-			list_for_each(entry, mutexq) {
-				if (entry == &mutex->link)
-					goto busy;
-			}
-		}
-		xnlock_put_irqrestore(&nklock, s);
-	}
+	xnlock_get_irqsave(&nklock, s);
+	mutex = xnregistry_fetch(handle);
+	if (cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, typeof(*mutex)))
+		/* mutex is already in a queue. */
+		err = -EBUSY;
+	else
+		err = 0;
 
-	return 0;
-busy:
 	xnlock_put_irqrestore(&nklock, s);
-	/* mutex is already in a queue. */
-	return -EBUSY;
+	return err;
 }
 
 int cobalt_mutex_init(struct __shadow_mutex __user *u_mx,
@@ -313,23 +320,39 @@ int cobalt_mutex_destroy(struct __shadow_mutex __user *u_mx)
 {
 	struct cobalt_mutex *mutex;
 	struct __shadow_mutex mx;
+	spl_t s;
+	int err;
 
 	if (__xn_safe_copy_from_user(&mx, u_mx, sizeof(mx)))
 		return -EFAULT;
 
-	mutex = mx.mutex;
-	if (cobalt_kqueues(mutex->attr.pshared) != mutex->owningq)
-		return -EPERM;
+	xnlock_get_irqsave(&nklock, s);
+	mutex = xnregistry_fetch(mx.handle);
+	if (!cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, typeof(*mutex))) {
+		err = -EINVAL;
+		goto err_unlock;
+	}
+	if (cobalt_kqueues(mutex->attr.pshared) != mutex->owningq) {
+		err = -EPERM;
+		goto err_unlock;
+	}
 
 	if (xnsynch_fast_owner_check(mutex->synchbase.fastlock,
-				     XN_NO_HANDLE) != 0)
-		return -EBUSY;
+					XN_NO_HANDLE) != 0) {
+		err = -EBUSY;
+		goto err_unlock;
+	}
 
-	if (!list_empty(&mutex->conds))
-		return -EBUSY;
+	if (!list_empty(&mutex->conds)) {
+		err = -EBUSY;
+	  err_unlock:
+		xnlock_put_irqrestore(&nklock, s);
+		return err;
+	}
 
 	cobalt_mark_deleted(&mx);
-	cobalt_mutex_destroy_inner(mutex, mutex->owningq);
+	xnlock_put_irqrestore(&nklock, s);
+	cobalt_mutex_destroy_inner(mx.handle, mutex->owningq);
 
 	return __xn_safe_copy_to_user(u_mx, &mx, sizeof(*u_mx));
 }
@@ -338,13 +361,18 @@ int cobalt_mutex_trylock(struct __shadow_mutex __user *u_mx)
 {
 	xnthread_t *cur = xnsched_current_thread();
 	struct cobalt_mutex *mutex;
+	xnhandle_t handle;
+	spl_t s;
 	int err;
 
-	__xn_get_user(mutex, &u_mx->mutex);
+	__xn_get_user(handle, &u_mx->handle);
 
-	if (!cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC,
-			       struct cobalt_mutex))
-		return -EINVAL;
+	xnlock_get_irqsave(&nklock, s);
+	mutex = xnregistry_fetch(handle);
+	if (!cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, typeof(*mutex))) {
+		err = -EINVAL;
+		goto err_unlock;
+	}
 
 	err = xnsynch_fast_acquire(mutex->synchbase.fastlock,
 				   xnthread_handle(cur));
@@ -364,38 +392,55 @@ int cobalt_mutex_trylock(struct __shadow_mutex __user *u_mx)
 		err = -EBUSY;
 		break;
 	}
+  err_unlock:
+	xnlock_put_irqrestore(&nklock, s);
 
 	return err;
 }
 
 int cobalt_mutex_lock(struct __shadow_mutex __user *u_mx)
 {
-	struct cobalt_mutex *mutex;
+	xnhandle_t handle;
+	spl_t s;
+	int err;
 
-	__xn_get_user(mutex, &u_mx->mutex);
+	__xn_get_user(handle, &u_mx->handle);
 
-	return cobalt_mutex_timedlock_break(mutex, 0, NULL);
+	xnlock_get_irqsave(&nklock, s);
+	err = cobalt_mutex_timedlock_break(xnregistry_fetch(handle), 0, NULL);
+	xnlock_put_irqrestore(&nklock, s);
+	
+	return err;
 }
 
 int cobalt_mutex_timedlock(struct __shadow_mutex __user *u_mx,
 			   const struct timespec __user *u_ts)
 {
-	struct cobalt_mutex *mutex;
+	xnhandle_t handle;
+	spl_t s;
+	int err;
 
-	__xn_get_user(mutex, &u_mx->mutex);
+	__xn_get_user(handle, &u_mx->handle);
 
-	return cobalt_mutex_timedlock_break(mutex, 1, u_ts);
+	xnlock_get_irqsave(&nklock, s);
+	err = cobalt_mutex_timedlock_break(xnregistry_fetch(handle), 1, u_ts);
+	xnlock_put_irqrestore(&nklock, s);
+
+	return err;
 }
 
 int cobalt_mutex_unlock(struct __shadow_mutex __user *u_mx)
 {
 	struct cobalt_mutex *mutex;
+	xnhandle_t handle;
 	int err;
 	spl_t s;
 
-	__xn_get_user(mutex, &u_mx->mutex);
+
+	__xn_get_user(handle, &u_mx->handle);
 
 	xnlock_get_irqsave(&nklock, s);
+	mutex = xnregistry_fetch(handle);
 	err = cobalt_mutex_release(xnsched_current_thread(), mutex);
 	if (err < 0)
 		goto out;
@@ -422,7 +467,7 @@ void cobalt_mutexq_cleanup(struct cobalt_kqueues *q)
 
 	list_for_each_entry_safe(mutex, tmp, &q->mutexq, link) {
 		xnlock_put_irqrestore(&nklock, s);
-		cobalt_mutex_destroy_inner(mutex, q);
+		cobalt_mutex_destroy_inner(mutex->handle, q);
 #if XENO_DEBUG(COBALT)
 		printk(XENO_INFO "deleting Cobalt mutex %p\n",
 		       mutex);

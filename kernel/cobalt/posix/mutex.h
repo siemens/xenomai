@@ -32,6 +32,7 @@ struct cobalt_mutex {
 	struct list_head conds;
 	pthread_mutexattr_t attr;
 	struct cobalt_kqueues *owningq;
+	xnhandle_t handle;
 };
 
 extern const pthread_mutexattr_t cobalt_default_mutex_attr;

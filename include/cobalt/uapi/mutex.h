@@ -32,7 +32,7 @@ union cobalt_mutex_union {
 	struct __shadow_mutex {
 		unsigned int magic;
 		unsigned int lockcnt;
-		struct cobalt_mutex *mutex;
+		xnhandle_t handle;
 		union {
 			unsigned int dat_offset;
 			struct mutex_dat *dat;
