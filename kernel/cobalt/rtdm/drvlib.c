@@ -39,7 +39,7 @@
 #include <linux/highmem.h>
 #include <linux/err.h>
 
-#include <rtdm/rtdm_driver.h>
+#include <rtdm/driver.h>
 #include "internal.h"
 
 /*!

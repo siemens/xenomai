@@ -30,7 +30,7 @@
 #include <linux/version.h>
 #include <linux/mm.h>
 
-#include <rtdm/rtdm_driver.h>
+#include <rtdm/driver.h>
 
 #include <analogy/os_facilities.h>
 #include <analogy/context.h>

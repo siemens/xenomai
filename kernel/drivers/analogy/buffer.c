@@ -27,7 +27,7 @@
 #include <linux/mman.h>
 #include <linux/vmalloc.h>
 #include <asm/errno.h>
-#include <rtdm/rtdm_driver.h>
+#include <rtdm/driver.h>
 #include <analogy/context.h>
 #include <analogy/device.h>
 #include <analogy/buffer.h>

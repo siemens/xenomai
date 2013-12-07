@@ -37,9 +37,9 @@
 #include <linux/module.h>
 #include <linux/delay.h>
 
-#include <rtdm/rtdm_driver.h>
+#include <rtdm/driver.h>
 
-#include <rtdm/rtcan.h>
+#include <rtdm/can.h>
 #include "rtcan_version.h"
 #include "rtcan_socket.h"
 #include "rtcan_list.h"

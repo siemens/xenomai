@@ -25,7 +25,7 @@
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/map.h>
 #include <cobalt/kernel/bufd.h>
-#include <rtdm/rtipc.h>
+#include <rtdm/ipc.h>
 #include "internal.h"
 
 #define trace(m,a...) printk(KERN_WARNING "%s: " m "\n", __FUNCTION__, ##a)

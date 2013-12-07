@@ -25,7 +25,7 @@
 #include <cobalt/kernel/select.h>
 #include <cobalt/uapi/syscall.h>
 #include <asm/xenomai/syscall.h>
-#include <rtdm/rtdm_driver.h>
+#include <rtdm/driver.h>
 #include "internal.h"
 #include "thread.h"
 #include "mutex.h"

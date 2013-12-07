@@ -444,8 +444,9 @@ patch_link n m kernel/cobalt/posix kernel/xenomai/posix
 patch_link n m kernel/cobalt/rtdm kernel/xenomai/rtdm
 patch_link r m kernel/drivers drivers/xenomai
 patch_link r n include/cobalt/kernel include/xenomai/cobalt/kernel
+patch_link r n include/cobalt/kernel/rtdm include/xenomai/rtdm
 patch_link r n include/cobalt/uapi include/xenomai/cobalt/uapi
-patch_link r n include/rtdm include/xenomai/rtdm
+patch_link r n include/rtdm/uapi include/xenomai/rtdm/uapi
 patch_link r n include/analogy include/xenomai/analogy
 patch_link n version.h include include/xenomai
 

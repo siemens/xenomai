@@ -21,7 +21,7 @@
 #include <linux/ioport.h>
 #include <linux/delay.h>
 
-#include <rtdm/rtdm_driver.h>
+#include <rtdm/driver.h>
 
 /* CAN device profile */
 #include "rtcan_dev.h"

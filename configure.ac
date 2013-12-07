@@ -869,8 +869,10 @@ AC_CONFIG_FILES([ \
 	include/cobalt/Makefile \
 	include/cobalt/sys/Makefile \
 	include/cobalt/kernel/Makefile \
+	include/cobalt/kernel/rtdm/Makefile \
 	include/cobalt/boilerplate/Makefile \
 	include/rtdm/Makefile \
+	include/rtdm/uapi/Makefile \
 	include/analogy/Makefile \
 	include/mercury/Makefile \
 	include/mercury/boilerplate/Makefile \

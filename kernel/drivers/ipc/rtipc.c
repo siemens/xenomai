@@ -20,7 +20,7 @@
 
 #include <linux/module.h>
 #include <linux/init.h>
-#include <rtdm/rtipc.h>
+#include <rtdm/ipc.h>
 #include "internal.h"
 
 static struct rtipc_protocol *protocols[IPCPROTO_MAX] = {

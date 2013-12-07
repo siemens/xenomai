@@ -28,7 +28,7 @@
 #include <linux/proc_fs.h>
 #include <asm/uaccess.h>
 
-#include <rtdm/rtdm_driver.h>
+#include <rtdm/driver.h>
 
 #include <analogy/context.h>
 #include <analogy/ioctl.h>

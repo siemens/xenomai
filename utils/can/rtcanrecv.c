@@ -9,7 +9,7 @@
 
 #include <alchemy/task.h>
 
-#include <rtdm/rtcan.h>
+#include <rtdm/can.h>
 
 static void print_usage(char *prg)
 {

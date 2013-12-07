@@ -25,7 +25,7 @@
 
 #if defined(__KERNEL__) && !defined(DOXYGEN_CPP)
 
-#include <rtdm/rtdm_driver.h>
+#include <rtdm/driver.h>
 
 struct a4l_device;
 struct a4l_buffer;

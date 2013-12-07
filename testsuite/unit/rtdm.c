@@ -12,7 +12,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <alchemy/timer.h>
-#include <rtdm/rttesting.h>
+#include <rtdm/testing.h>
 
 #define NS_PER_MS (1000000)
 

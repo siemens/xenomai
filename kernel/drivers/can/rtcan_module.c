@@ -26,8 +26,8 @@
 #include <linux/kernel.h>
 #include <linux/init.h>
 
-#include <rtdm/rtdm_driver.h>
-#include <rtdm/rtcan.h>
+#include <rtdm/driver.h>
+#include <rtdm/can.h>
 #include <rtcan_version.h>
 #include <rtcan_internal.h>
 #include <rtcan_dev.h>

@@ -21,8 +21,8 @@
 #include <linux/ioport.h>
 #include <asm/io.h>
 
-#include <rtdm/rtserial.h>
-#include <rtdm/rtdm_driver.h>
+#include <rtdm/serial.h>
+#include <rtdm/driver.h>
 
 #define RT_16550_DRIVER_NAME	"xeno_16550A"
 

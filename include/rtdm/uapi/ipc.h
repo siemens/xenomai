@@ -4,24 +4,27 @@
  *
  * @note Copyright (C) 2009 Philippe Gerum <rpm@xenomai.org>
  *
- * Xenomai is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of the
- * License, or (at your option) any later version.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
- *
- * @ingroup rtipc
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
-/**
+#ifndef _RTDM_UAPI_IPC_H
+#define _RTDM_UAPI_IPC_H
+
+/*
+ *
+ * @ingroup rtipc
  * @ingroup profiles
  * @defgroup rtipc Real-time IPC protocols
  *
@@ -39,13 +42,11 @@
  * @ref rtdm_device.device_class "Device Class": @c RTDM_CLASS_RTIPC @n
  * @n
  * @{
- */
-
-/**
+ *
  * @anchor rtipc_operations @name Supported operations
  * Standard socket operations supported by the RTIPC protocols.
- * @{ */
-/**
+ * @{
+ *
  * Create an endpoint for communication in the AF_RTIPC domain.
  *
  * @param[in] domain The communication domain. Must be AF_RTIPC.
@@ -180,7 +181,7 @@ int close__AF_RTIPC(int sockfd);
  */
 #ifdef DOXYGEN_CPP
 int bind__AF_RTIPC(int sockfd, const struct sockaddr_ipc *addr,
-	       socklen_t addrlen);
+		   socklen_t addrlen);
 #endif
 
 /**
@@ -219,7 +220,7 @@ int bind__AF_RTIPC(int sockfd, const struct sockaddr_ipc *addr,
  */
 #ifdef DOXYGEN_CPP
 int connect__AF_RTIPC(int sockfd, const struct sockaddr_ipc *addr,
-		  socklen_t addrlen);
+		      socklen_t addrlen);
 #endif
 
 /**
@@ -244,7 +245,7 @@ int connect__AF_RTIPC(int sockfd, const struct sockaddr_ipc *addr,
  */
 #ifdef DOXYGEN_CPP
 int setsockopt__AF_RTIPC(int sockfd, int level, int optname,
-		     const void *optval, socklen_t optlen);
+			 const void *optval, socklen_t optlen);
 #endif
 /**
  * Get options on RTIPC sockets.
@@ -268,7 +269,7 @@ int setsockopt__AF_RTIPC(int sockfd, int level, int optname,
  */
 #ifdef DOXYGEN_CPP
 int getsockopt__AF_RTIPC(int sockfd, int level, int optname,
-		     void *optval, socklen_t *optlen);
+			 void *optval, socklen_t *optlen);
 #endif
 
 /**
@@ -391,16 +392,6 @@ int getpeername__AF_RTIPC(int sockfd, struct sockaddr_ipc *addr, socklen_t *addr
 
 /** @} */
 
-#ifndef _RTIPC_H
-
-#ifdef __KERNEL__
-#include <linux/net.h>
-#include <linux/socket.h>
-#include <linux/if.h>
-#else  /* !__KERNEL__ */
-#include <sys/types.h>
-#include <sys/socket.h>
-#endif /* !__KERNEL__ */
 #include <cobalt/uapi/kernel/types.h>
 #include <rtdm/rtdm.h>
 
@@ -871,18 +862,6 @@ struct sockaddr_ipc {
 #endif
 /** @} */
 
-/**
- * @anchor rtipc_examples @name RTIPC examples
- * @{ */
-/** @example bufp-readwrite.c */
-/** @example bufp-label.c */
-/** @example iddp-label.c */
-/** @example iddp-sendrecv.c */
-/** @example xddp-echo.c */
-/** @example xddp-label.c */
-/** @example xddp-stream.c */
 /** @} */
 
-/** @} */
-
-#endif /* !_RTIPC_H */
+#endif /* !_RTDM_UAPI_IPC_H */

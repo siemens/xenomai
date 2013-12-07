@@ -27,7 +27,7 @@
 
 #ifdef __KERNEL__
 
-#include <rtdm/rtdm_driver.h>
+#include <rtdm/driver.h>
 
 #define NB_IOCTL_FUNCTIONS 17
 

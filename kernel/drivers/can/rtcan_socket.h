@@ -31,9 +31,9 @@
 #ifndef __RTCAN_SOCKET_H_
 #define __RTCAN_SOCKET_H_
 
-#include <rtdm/rtdm_driver.h>
+#include <rtdm/driver.h>
 
-#include <rtdm/rtcan.h>
+#include <rtdm/can.h>
 
 
 

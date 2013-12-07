@@ -24,7 +24,7 @@
 #include <cobalt/kernel/registry.h>
 #include <cobalt/kernel/clock.h>
 #include <rtdm/rtdm.h>
-#include <rtdm/rtdm_driver.h>
+#include <rtdm/driver.h>
 
 #define RTIPC_IOV_MAX  64
 

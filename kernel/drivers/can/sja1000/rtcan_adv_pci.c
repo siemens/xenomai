@@ -24,12 +24,12 @@
 #include <linux/pci.h>
 #include <linux/io.h>
 
-#include <rtdm/rtdm_driver.h>
+#include <rtdm/driver.h>
 
 #define ADV_PCI_BASE_SIZE	0x80
 
 /* CAN device profile */
-#include <rtdm/rtcan.h>
+#include <rtdm/can.h>
 #include <rtcan_dev.h>
 #include <rtcan_raw.h>
 #include <rtcan_internal.h>

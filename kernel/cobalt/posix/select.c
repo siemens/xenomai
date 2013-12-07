@@ -21,7 +21,7 @@
  */
 #include <linux/types.h>
 #include <linux/err.h>
-#include <rtdm/rtdm_driver.h>
+#include <rtdm/driver.h>
 #include "internal.h"
 #include "clock.h"
 #include "mqueue.h"

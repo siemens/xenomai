@@ -15,7 +15,7 @@
 #include <asm/xenomai/features.h>
 #include <asm/xenomai/uapi/fptest.h>
 #include <cobalt/trace.h>
-#include <rtdm/rttesting.h>
+#include <rtdm/testing.h>
 
 #ifdef HAVE_RECENT_SETAFFINITY
 #define do_sched_setaffinity(pid,len,mask) sched_setaffinity(pid,len,mask)

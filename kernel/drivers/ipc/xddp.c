@@ -23,7 +23,7 @@
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/bufd.h>
 #include <cobalt/kernel/pipe.h>
-#include <rtdm/rtipc.h>
+#include <rtdm/ipc.h>
 #include "internal.h"
 
 #define XDDP_SOCKET_MAGIC 0xa21a21a2

@@ -23,7 +23,7 @@
 #include <linux/list.h>
 #include <linux/sem.h>
 #include <cobalt/kernel/ppd.h>
-#include <rtdm/rtdm_driver.h>
+#include <rtdm/driver.h>
 
 #define RTDM_FD_MAX			CONFIG_XENO_OPT_RTDM_FILDES
 

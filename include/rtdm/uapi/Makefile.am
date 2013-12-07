@@ -1,4 +1,4 @@
-includesubdir = $(includedir)/rtdm
+includesubdir = $(includedir)/rtdm/uapi
 
 includesub_HEADERS =	\
 	can.h		\
@@ -6,5 +6,3 @@ includesub_HEADERS =	\
 	rtdm.h		\
 	serial.h	\
 	testing.h
-
-SUBDIRS = uapi

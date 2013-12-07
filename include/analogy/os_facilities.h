@@ -32,7 +32,7 @@
 #include <linux/delay.h>
 #include <linux/interrupt.h>
 #include <asm/uaccess.h>
-#include <rtdm/rtdm_driver.h>
+#include <rtdm/driver.h>
 
 /* --- Kernel traces functions --- */
 

@@ -27,7 +27,7 @@
 #define __RTCAN_INTERNAL_H_
 
 #include <linux/module.h>
-#include <rtdm/rtdm_driver.h>
+#include <rtdm/driver.h>
 
 #ifndef LIST_POISON1
 /* 2.4 - 2.6 compatibility stuff */

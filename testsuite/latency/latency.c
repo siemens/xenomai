@@ -13,7 +13,7 @@
 #include <alchemy/task.h>
 #include <alchemy/timer.h>
 #include <alchemy/sem.h>
-#include <rtdm/rttesting.h>
+#include <rtdm/testing.h>
 
 RT_TASK latency_task, display_task;
 

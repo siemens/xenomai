@@ -22,14 +22,8 @@
  *
  * @ingroup driverapi
  */
-
-#ifndef _RTDM_DRIVER_H
-#define _RTDM_DRIVER_H
-
-#ifndef __KERNEL__
-#error This header is for kernel space usage only. \
-       You are likely looking for rtdm/rtdm.h...
-#endif /* !__KERNEL__ */
+#ifndef _COBALT_RTDM_DRIVER_H
+#define _COBALT_RTDM_DRIVER_H
 
 #include <asm/atomic.h>
 #include <linux/list.h>
@@ -1389,4 +1383,4 @@ int rtdm_exec_in_rt(struct rtdm_dev_context *context,
 		    rtdm_user_info_t *user_info, void *arg,
 		    rtdm_rt_handler_t handler);
 
-#endif /* _RTDM_DRIVER_H */
+#endif /* _COBALT_RTDM_DRIVER_H */

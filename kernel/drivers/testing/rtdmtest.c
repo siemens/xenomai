@@ -18,8 +18,8 @@
 
 #include <linux/module.h>
 
-#include <rtdm/rtdm_driver.h>
-#include <rtdm/rttesting.h>
+#include <rtdm/driver.h>
+#include <rtdm/testing.h>
 
 static unsigned int start_index;
 

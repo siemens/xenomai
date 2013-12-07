@@ -18,8 +18,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-#ifndef _RTDM_COBALT_H
-#define _RTDM_COBALT_H
+#ifndef _COBALT_RTDM_COBALT_H
+#define _COBALT_RTDM_COBALT_H
 
 #include <xenomai/posix/process.h>
 #include <xenomai/posix/extension.h>
@@ -30,4 +30,4 @@
 #include <xenomai/posix/event.h>
 #include <xenomai/posix/monitor.h>
 
-#endif /* !_RTDM_COBALT_H */
+#endif /* !_COBALT_RTDM_COBALT_H */

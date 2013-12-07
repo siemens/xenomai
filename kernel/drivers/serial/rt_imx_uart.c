@@ -39,8 +39,8 @@
 #include <mach/hardware.h>
 #include <mach/imx-uart.h>
 
-#include <rtdm/rtserial.h>
-#include <rtdm/rtdm_driver.h>
+#include <rtdm/serial.h>
+#include <rtdm/driver.h>
 
 #define DRIVER_NAME	"xeno_imx_uart"
 

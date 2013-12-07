@@ -4,8 +4,8 @@
 #include <cobalt/kernel/synch.h>
 #include <cobalt/kernel/thread.h>
 #include <cobalt/kernel/trace.h>
-#include <rtdm/rttesting.h>
-#include <rtdm/rtdm_driver.h>
+#include <rtdm/testing.h>
+#include <rtdm/driver.h>
 #include <asm/xenomai/fptest.h>
 
 #define RTSWITCH_RT      0x4

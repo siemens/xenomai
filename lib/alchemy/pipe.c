@@ -20,7 +20,7 @@
 #include <errno.h>
 #include <string.h>
 #include <fcntl.h>
-#include "rtdm/rtipc.h"
+#include "rtdm/ipc.h"
 #include "copperplate/threadobj.h"
 #include "copperplate/heapobj.h"
 #include "copperplate/cluster.h"

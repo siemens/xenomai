@@ -20,8 +20,8 @@
 #include <linux/semaphore.h>
 #include <linux/ipipe_trace.h>
 #include <cobalt/kernel/arith.h>
-#include <rtdm/rttesting.h>
-#include <rtdm/rtdm_driver.h>
+#include <rtdm/testing.h>
+#include <rtdm/driver.h>
 
 struct rt_tmbench_context {
 	int mode;

@@ -10,7 +10,7 @@
 #include <alchemy/task.h>
 #include <alchemy/timer.h>
 
-#include <rtdm/rtcan.h>
+#include <rtdm/can.h>
 
 extern int optind, opterr, optopt;
 
