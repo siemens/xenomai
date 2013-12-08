@@ -25,6 +25,7 @@
 #include <signal.h>
 #include <limits.h>
 #include <unistd.h>
+#include <semaphore.h>
 #include <boilerplate/ancillaries.h>
 #include <cobalt/uapi/kernel/heap.h>
 #include <cobalt/uapi/rtdm/syscall.h>
@@ -171,6 +172,20 @@ void __libcobalt_init(void)
 			     " sizeof(shadow_mutex): %d !",
 			     (int) sizeof(pthread_mutex_t),
 			     (int) sizeof(struct __shadow_mutex));
+		exit(EXIT_FAILURE);
+	}
+	if (sizeof(struct __shadow_cond) > sizeof(pthread_cond_t)) {
+		report_error("sizeof(pthread_cond_t): %d <"
+			     " sizeof(shadow_cond): %d !",
+			     (int) sizeof(pthread_cond_t),
+			     (int) sizeof(struct __shadow_cond));
+		exit(EXIT_FAILURE);
+	}
+	if (sizeof(struct __shadow_sem) > sizeof(sem_t)) {
+		report_error("sizeof(sem_t): %d <"
+			     " sizeof(shadow_sem): %d !",
+			     (int) sizeof(sem_t),
+			     (int) sizeof(struct __shadow_sem));
 		exit(EXIT_FAILURE);
 	}
 
