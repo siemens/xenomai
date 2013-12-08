@@ -23,11 +23,17 @@
 
 struct cobalt_sem;
 
+struct sem_dat {
+	atomic_long_t value;
+	unsigned long flags;
+};
+
 union cobalt_sem_union {
 	sem_t native_sem;
 	struct __shadow_sem {
 		unsigned int magic;
 		struct cobalt_sem *sem;
+		int datp_offset;
 	} shadow_sem;
 };
 

@@ -46,9 +46,8 @@ struct cobalt_sem {
 	struct xnsynch synchbase;
 	/** semq */
 	struct list_head link;
-	unsigned int value;
+	struct sem_dat *datp;
 	int flags;
-	int nwaiters;
 	struct cobalt_kqueues *owningq;
 };
 
@@ -88,6 +87,9 @@ static int sem_destroy_inner(struct cobalt_sem *sem, struct cobalt_kqueues *q)
 
 	xnlock_put_irqrestore(&nklock, s);
 
+	xnheap_free(&xnsys_ppd_get(!!(sem->flags & SEM_PSHARED))->sem_heap,
+		sem->datp);
+
 	if (sem->flags & SEM_NAMED)
 		xnfree(sem2named_sem(sem));
 	else
@@ -97,23 +99,30 @@ static int sem_destroy_inner(struct cobalt_sem *sem, struct cobalt_kqueues *q)
 }
 
 /* Called with nklock locked, irq off. */
-static int sem_init_inner(struct cobalt_sem *sem, int flags, unsigned int value)
+static int sem_init_inner(struct cobalt_sem *sem, int flags, 
+			struct sem_dat *datp, unsigned int value)
 {
+	struct cobalt_kqueues *kq;
 	int pshared, sflags;
 
 	if (value > (unsigned)SEM_VALUE_MAX)
 		return -EINVAL;
 
 	pshared = !!(flags & SEM_PSHARED);
+
 	sflags = flags & SEM_FIFO ? 0 : XNSYNCH_PRIO;
 
 	sem->magic = COBALT_SEM_MAGIC;
-	list_add_tail(&sem->link, &cobalt_kqueues(pshared)->semq);
+
+	kq = cobalt_kqueues(pshared);
+	list_add_tail(&sem->link, &kq->semq);
 	xnsynch_init(&sem->synchbase, sflags, NULL);
-	sem->value = value;
+
+	sem->datp = datp;
+	atomic_long_set(&datp->value, value);
+	datp->flags = flags;
 	sem->flags = flags;
-	sem->nwaiters = 0;
-	sem->owningq = cobalt_kqueues(pshared);
+	sem->owningq = kq;
 
 	return 0;
 }
@@ -121,7 +130,9 @@ static int sem_init_inner(struct cobalt_sem *sem, int flags, unsigned int value)
 static int do_sem_init(struct __shadow_sem *sm, int flags, unsigned int value)
 {
 	struct list_head *semq, *entry;
+	struct xnsys_ppd *sys_ppd;
 	struct cobalt_sem *sem;
+	struct sem_dat *datp;
 	int ret;
 	spl_t s;
 
@@ -131,6 +142,13 @@ static int do_sem_init(struct __shadow_sem *sm, int flags, unsigned int value)
 	sem = xnmalloc(sizeof(*sem));
 	if (sem == NULL)
 		return -ENOSPC;
+
+	sys_ppd = xnsys_ppd_get(!!(flags & SEM_PSHARED));
+	datp = xnheap_alloc(&sys_ppd->sem_heap, sizeof(*datp));
+	if (datp == NULL) {
+		ret = -EAGAIN;
+		goto err_free_sem;
+	}
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -161,19 +179,24 @@ static int do_sem_init(struct __shadow_sem *sm, int flags, unsigned int value)
 			goto err_lock_put;
 		}
 	}
-do_init:
-	ret = sem_init_inner(sem, flags, value);
+  do_init:
+	ret = sem_init_inner(sem, flags, datp, value);
 	if (ret)
 		goto err_lock_put;
 
 	sm->magic = COBALT_SEM_MAGIC;
 	sm->sem = sem;
+	sm->datp_offset = xnheap_mapped_offset(&sys_ppd->sem_heap, datp);
+	if (flags & SEM_PSHARED)
+		sm->datp_offset = -sm->datp_offset;
 	xnlock_put_irqrestore(&nklock, s);
 
 	return 0;
 
-err_lock_put:
+  err_lock_put:
 	xnlock_put_irqrestore(&nklock, s);
+	xnheap_free(&sys_ppd->sem_heap, sem->datp);
+  err_free_sem:
 	xnfree(sem);
 
 	return ret;
@@ -298,6 +321,7 @@ static int sem_destroy(struct __shadow_sem *sm)
 sem_t *sem_open(const char *name, int oflags, ...)
 {
 	struct cobalt_named_sem *named_sem;
+	struct sem_dat *datp;
 	cobalt_node_t *node;
 	unsigned value;
 	mode_t mode;
@@ -324,15 +348,25 @@ sem_t *sem_open(const char *name, int oflags, ...)
 	}
 	named_sem->descriptor.shadow_sem.sem = &named_sem->sembase;
 
+	datp = xnheap_alloc(&xnsys_ppd_get(1)->sem_heap, sizeof(*datp));
+	if (datp == NULL) {
+		err = -EAGAIN;
+		goto err_free_sem;
+	}
+	named_sem->descriptor.shadow_sem.datp_offset = 
+		-xnheap_mapped_offset(&xnsys_ppd_get(1)->sem_heap, datp);
+
 	va_start(ap, oflags);
 	mode = va_arg(ap, int);	/* unused */
 	value = va_arg(ap, unsigned);
 	va_end(ap);
 
 	xnlock_get_irqsave(&nklock, s);
-	err = sem_init_inner(&named_sem->sembase, SEM_PSHARED|SEM_NAMED, value);
+	err = sem_init_inner(&named_sem->sembase, 
+			SEM_PSHARED|SEM_NAMED, datp, value);
 	if (err) {
 		xnlock_put_irqrestore(&nklock, s);
+	  err_free_sem:
 		xnfree(named_sem);
 		goto error;
 	}
@@ -363,6 +397,7 @@ sem_t *sem_open(const char *name, int oflags, ...)
   err_put_lock:
 	xnlock_put_irqrestore(&nklock, s);
 	sem_destroy_inner(&named_sem->sembase, sem_kqueue(&named_sem->sembase));
+	xnheap_free(&xnsys_ppd_get(1)->sem_heap, datp);
   error:
 	return (sem_t *)ERR_PTR(err);
 }
@@ -498,10 +533,8 @@ static inline int sem_trywait_internal(struct cobalt_sem *sem)
 		return -EPERM;
 #endif /* XENO_DEBUG(COBALT) */
 
-	if (sem->value == 0)
+	if (atomic_long_sub_return(1, &sem->datp->value) < 0)
 		return -EAGAIN;
-
-	--sem->value;
 
 	return 0;
 }
@@ -557,37 +590,28 @@ sem_timedwait_internal(struct cobalt_sem *sem, int timed,
 	}
 
 	if (timed) {
-		xnlock_put_irqrestore(&nklock, s);
-
 		if (u_ts == NULL ||
-		    __xn_safe_copy_from_user(&ts, u_ts, sizeof(ts)))
-			return -EFAULT;
-
-		if (ts.tv_nsec >= ONE_BILLION)
-			return -EINVAL;
-
-		xnlock_get_irqsave(&nklock, s);
-
-		if (sem->value > 0) {
-			ret = 0;
-			--sem->value;
+			__xn_safe_copy_from_user(&ts, u_ts, sizeof(ts))) {
+			ret = -EFAULT;
 			goto out;
 		}
-		sem->nwaiters++;
+
+		if (ts.tv_nsec >= ONE_BILLION) {
+			ret = -EINVAL;
+			goto out;
+		}
+
 		tmode = sem->flags & SEM_RAWCLOCK ? XN_ABSOLUTE : XN_REALTIME;
 		info = xnsynch_sleep_on(&sem->synchbase, ts2ns(&ts) + 1, tmode);
-	} else {
-		sem->nwaiters++;
-		info = xnsynch_sleep_on(&sem->synchbase, XN_INFINITE, XN_RELATIVE);
-	}
+	} else
+		info = xnsynch_sleep_on(&sem->synchbase, 
+					XN_INFINITE, XN_RELATIVE);
 
 	ret = 0;
 	if (info & XNRMID)
 		ret = -EINVAL;
-	else if (info & (XNBREAK|XNTIMEO)) {
-		sem->nwaiters--;
+	else if (info & (XNBREAK|XNTIMEO))
 		ret = (info & XNBREAK) ? -EINTR : -ETIMEDOUT;
-	}
 out:
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -682,20 +706,21 @@ int sem_post_inner(struct cobalt_sem *sem, struct cobalt_kqueues *ownq, int bcas
 		return -EPERM;
 #endif /* XENO_DEBUG(COBALT) */
 
-	if (sem->value == SEM_VALUE_MAX)
+	if (atomic_long_read(&sem->datp->value) == SEM_VALUE_MAX)
 		return -EINVAL;
 
 	if (!bcast) {
-		if (xnsynch_wakeup_one_sleeper(&sem->synchbase)) {
-			sem->nwaiters--;
-			xnsched_run();
-		} else if ((sem->flags & SEM_PULSE) == 0)
-			++sem->value;
+		if (atomic_long_inc_return(&sem->datp->value) <= 0) {
+			if (xnsynch_wakeup_one_sleeper(&sem->synchbase))
+				xnsched_run();
+		} else if ((sem->flags & SEM_PULSE))
+				atomic_long_set(&sem->datp->value, 0);
 	} else {
-		sem->value = 0;
-		if (xnsynch_flush(&sem->synchbase, 0) == XNSYNCH_RESCHED) {
-			sem->nwaiters = 0;
-			xnsched_run();
+		if (atomic_long_read(&sem->datp->value) < 0) {
+			atomic_long_set(&sem->datp->value, 0);
+			if (xnsynch_flush(&sem->synchbase, 0) == 
+				XNSYNCH_RESCHED)
+				xnsched_run();
 		}
 	}
 
@@ -782,10 +807,9 @@ int sem_getvalue(struct cobalt_sem *sem, int *value)
 		return -EPERM;
 	}
 
-	if (sem->value == 0 && (sem->flags & SEM_REPORT) != 0)
-		*value = -sem->nwaiters;
-	else
-		*value = sem->value;
+	*value = atomic_long_read(&sem->datp->value);
+	if ((sem->flags & SEM_REPORT) == 0 && *value < 0)
+		*value = 0;
 
 	xnlock_put_irqrestore(&nklock, s);
 

@@ -20,6 +20,7 @@
 
 #pragma GCC system_header
 #include_next <semaphore.h>
+#include <nocore/atomic.h>
 #include <cobalt/wrappers.h>
 #include <cobalt/uapi/sem.h>
 
