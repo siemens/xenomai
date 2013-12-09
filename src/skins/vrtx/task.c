@@ -22,6 +22,7 @@
 #include <malloc.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <error.h>
 #include <pthread.h>
 #include <semaphore.h>
 #include <signal.h>
@@ -169,7 +170,16 @@ int sc_tecreate(void (*entry) (void *),
 		return -1;
 	}
 
-	while (__real_sem_wait(&iargs.sync) && errno == EINTR) ;
+	for (;;) {
+		err = __real_sem_wait(&iargs.sync);
+		if (err && errno == EINTR)
+			continue;
+		if (err == 0)
+			break;
+		/* We can't continue if we can't sync up. */
+		error(1, errno, "__real_sem_wait");
+	}
+
 	__real_sem_destroy(&iargs.sync);
 
 	return iargs.tid;

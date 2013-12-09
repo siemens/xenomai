@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <error.h>
 #include <signal.h>
 #include <unistd.h>
 #include <pthread.h>
@@ -264,16 +265,25 @@ int __wrap_pthread_create(pthread_t *tid,
 	__real_sem_init(&iargs.sync, 0, 0);
 
 	err = __real_pthread_create(&ltid, attr,
-				    &__pthread_trampoline, &iargs);
+				    __pthread_trampoline, &iargs);
+	if (err)
+		goto out;
 
-	if (!err)
-		while (__real_sem_wait(&iargs.sync) && errno == EINTR) ;
+	for (;;) {
+		err = __real_sem_wait(&iargs.sync);
+		if (err && errno == EINTR)
+			continue;
+		if (err == 0) {
+			err = iargs.ret;
+			if (err == 0)
+				*tid = ltid;
+			break;
+		}
+		/* We can't continue if we can't sync up. */
+		error(1, errno, "__real_sem_wait");
+	}
+out:
 	__real_sem_destroy(&iargs.sync);
-
-	err = err ?: iargs.ret;
-
-	if (!err)
-		*tid = ltid;
 
 	return err;
 }
