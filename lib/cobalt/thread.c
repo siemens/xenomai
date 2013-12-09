@@ -28,6 +28,7 @@
 #include <asm/xenomai/syscall.h>
 #include "current.h"
 #include "internal.h"
+#include <boilerplate/ancillaries.h>
 
 static pthread_attr_ex_t default_attr_ex;
 
@@ -349,15 +350,23 @@ int pthread_create_ex(pthread_t *tid,
 	if (ret)
 		goto fail;
 
-	while (__STD(sem_wait(&iargs.sync)) && errno == EINTR)
-		;
+	for (;;) {
+		ret = __STD(sem_wait(&iargs.sync));
+		if (ret && errno == EINTR)
+			continue;
+		if (ret == 0) {
+			ret = iargs.ret;
+			if (ret == 0)
+				*tid = ltid;
+			break;
+		}
+		ret = -errno;
+		if (detachstate == PTHREAD_CREATE_JOINABLE)
+			pthread_join(ltid, NULL);
+		panic("regular sem_wait() failed with %s", symerror(ret));
+	}
 
 	__cobalt_thread_harden(); /* May fail if regular thread. */
-	ret = iargs.ret;
-	if (ret == 0)
-		*tid = ltid;
-	else if (detachstate == PTHREAD_CREATE_JOINABLE)
-		pthread_join(ltid, NULL);
 fail:
 	__STD(sem_destroy(&iargs.sync));
 
