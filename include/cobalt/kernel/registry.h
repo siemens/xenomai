@@ -184,6 +184,8 @@ void *xnregistry_fetch(xnhandle_t handle);
 
 unsigned long xnregistry_put(xnhandle_t handle);
 
+int xnregistry_unlink(const char *key);
+
 extern struct xnpnode_ops xnregistry_vfsnap_ops;
 
 extern struct xnpnode_ops xnregistry_vlink_ops;

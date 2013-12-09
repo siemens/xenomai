@@ -881,6 +881,49 @@ unlock_and_exit:
 EXPORT_SYMBOL_GPL(xnregistry_remove);
 
 /**
+ * Turn a named object into an anonymous object
+ */
+int xnregistry_unlink(const char *key)
+{
+	struct xnobject *object;
+	int ret = 0;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	object = registry_hash_find(key);
+	if (object == NULL) {
+		ret = -ESRCH;
+		goto unlock_and_exit;
+	}
+		
+	ret = registry_hash_remove(object);
+	if (ret < 0)
+		goto unlock_and_exit;
+
+#ifdef CONFIG_XENO_OPT_VFILE
+	if (object->pnode) {
+		registry_unexport_pnode(object);
+		/*
+		 * Leave the update of the object queues to
+		 * the work callback if it has been kicked.
+		 */
+		if (object->pnode)
+			goto unlock_and_exit;
+	}
+#endif /* CONFIG_XENO_OPT_VFILE */
+
+	list_del(&object->link);
+		
+	object->key = NULL;
+
+unlock_and_exit:
+	xnlock_put_irqrestore(&nklock, s);
+
+	return ret;
+}
+
+/**
  * @fn int xnregistry_remove_safe(xnhandle_t handle,xnticks_t timeout)
  * @brief Unregister an idle real-time object.
  *
