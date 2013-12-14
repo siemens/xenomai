@@ -1535,7 +1535,7 @@ check_self_cancel:
 		return;
 	}
 
-	__xnshadow_kick(thread);
+	__xnshadow_demote(thread);
 	xnsched_run();
 
 unlock_and_exit:
