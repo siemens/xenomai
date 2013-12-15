@@ -53,7 +53,7 @@ static unsigned int nr_active_objects;
 
 static unsigned long next_object_stamp;
 
-static struct xnobject **object_index;
+static struct hlist_head *object_index;
 
 static int nr_object_entries;
 
@@ -145,7 +145,7 @@ int xnregistry_init(void)
 
 	nr_object_entries =
 	    primes[obj_hash_max(CONFIG_XENO_OPT_REGISTRY_NRSLOTS / 100)];
-	object_index = kmalloc(sizeof(struct xnobject *) *
+	object_index = kmalloc(sizeof(*object_index) *
 				      nr_object_entries, GFP_KERNEL);
 
 	if (object_index == NULL) {
@@ -158,7 +158,7 @@ int xnregistry_init(void)
 	}
 
 	for (n = 0; n < nr_object_entries; n++)
-		object_index[n] = NULL;
+		INIT_HLIST_HEAD(&object_index[n]);
 
 	xnsynch_init(&register_synch, XNSYNCH_FIFO, NULL);
 
@@ -168,15 +168,16 @@ int xnregistry_init(void)
 void xnregistry_cleanup(void)
 {
 #ifdef CONFIG_XENO_OPT_VFILE
-	struct xnobject *ecurr, *enext;
+	struct hlist_node *enext;
+	struct xnobject *ecurr;
 	struct xnpnode *pnode;
 	int n;
 
 	flush_scheduled_work();
 
 	for (n = 0; n < nr_object_entries; n++)
-		for (ecurr = object_index[n]; ecurr; ecurr = enext) {
-			enext = ecurr->hnext;
+		hlist_for_each_entry_safe(ecurr, enext, 
+					&object_index[n], hlink) {
 			pnode = ecurr->pnode;
 			if (pnode == NULL)
 				continue;
@@ -190,7 +191,7 @@ void xnregistry_cleanup(void)
 
 			if (--pnode->root->entries == 0)
 				xnvfile_destroy_dir(&pnode->root->vdir);
-	}
+		}
 #endif /* CONFIG_XENO_OPT_VFILE */
 
 	kfree(object_index);
@@ -522,13 +523,11 @@ static inline int registry_hash_enter(const char *key, struct xnobject *object)
 	object->key = key;
 	s = registry_hash_crunch(key);
 
-	for (ecurr = object_index[s]; ecurr != NULL; ecurr = ecurr->hnext) {
+	hlist_for_each_entry(ecurr, &object_index[s], hlink)
 		if (ecurr == object || strcmp(key, ecurr->key) == 0)
 			return -EEXIST;
-	}
 
-	object->hnext = object_index[s];
-	object_index[s] = object;
+	hlist_add_head(&object->hlink, &object_index[s]);
 
 	return 0;
 }
@@ -536,19 +535,13 @@ static inline int registry_hash_enter(const char *key, struct xnobject *object)
 static inline int registry_hash_remove(struct xnobject *object)
 {
 	unsigned int s = registry_hash_crunch(object->key);
-	struct xnobject *ecurr, *eprev;
+	struct xnobject *ecurr;
 
-	for (ecurr = object_index[s], eprev = NULL;
-	     ecurr != NULL; eprev = ecurr, ecurr = ecurr->hnext) {
+	hlist_for_each_entry(ecurr, &object_index[s], hlink)
 		if (ecurr == object) {
-			if (eprev)
-				eprev->hnext = ecurr->hnext;
-			else
-				object_index[s] = ecurr->hnext;
-
+			hlist_del(&ecurr->hlink);
 			return 0;
 		}
-	}
 
 	return -ESRCH;
 }
@@ -557,11 +550,10 @@ static struct xnobject *registry_hash_find(const char *key)
 {
 	struct xnobject *ecurr;
 
-	for (ecurr = object_index[registry_hash_crunch(key)];
-	     ecurr != NULL; ecurr = ecurr->hnext) {
+	hlist_for_each_entry(ecurr, 
+			&object_index[registry_hash_crunch(key)], hlink)
 		if (strcmp(key, ecurr->key) == 0)
 			return ecurr;
-	}
 
 	return NULL;
 }

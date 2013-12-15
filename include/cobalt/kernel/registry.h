@@ -50,7 +50,7 @@ struct xnobject {
 	} vfile_u;
 	struct xnvfile *vfilp;
 #endif /* CONFIG_XENO_OPT_VFILE */
-	struct xnobject *hnext;	/* !< Next in h-table */
+	struct hlist_node hlink; /* !< Link in h-table */
 	struct list_head link;
 };
 
