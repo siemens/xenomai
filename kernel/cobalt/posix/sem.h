@@ -23,8 +23,20 @@
 #include <cobalt/kernel/thread.h>
 #include <cobalt/kernel/registry.h>
 
-struct cobalt_sem;
 struct cobalt_process;
+
+struct cobalt_sem {
+	unsigned int magic;
+	struct xnsynch synchbase;
+	/** semq */
+	struct list_head link;
+	struct sem_dat *datp;
+	int flags;
+	struct cobalt_kqueues *owningq;
+	xnhandle_t handle;
+	unsigned refs;
+	char name[COBALT_MAXNAME];
+};
 
 /* Copied from Linuxthreads semaphore.h. */
 struct _sem_fastlock
@@ -45,12 +57,15 @@ typedef struct
 #define SEM_VALUE_MAX (INT_MAX)
 #define SEM_FAILED    NULL
 
+struct cobalt_sem * 
+cobalt_sem_init_inner(const char *name, struct __shadow_sem *sem, 
+		int flags, unsigned value);
+
+int cobalt_sem_destroy_inner(xnhandle_t handle);
+
+void cobalt_nsem_unlink_inner(xnhandle_t handle);
+
 void cobalt_sem_usems_cleanup(struct cobalt_process *cc);
-
-int sem_getvalue(struct cobalt_sem *sem, int *value);
-
-int sem_post_inner(struct cobalt_sem *sem,
-		   struct cobalt_kqueues *ownq, int bcast);
 
 int cobalt_sem_init(struct __shadow_sem __user *u_sem,
 		    int pshared, unsigned value);
@@ -69,11 +84,11 @@ int cobalt_sem_getvalue(struct __shadow_sem __user *u_sem,
 
 int cobalt_sem_destroy(struct __shadow_sem __user *u_sem);
 
-int cobalt_sem_open(unsigned long __user *u_addr,
+int cobalt_sem_open(struct __shadow_sem __user *__user *u_addr,
 		    const char __user *u_name,
 		    int oflags, mode_t mode, unsigned value);
 
-int cobalt_sem_close(unsigned long uaddr, int __user *u_closed);
+int cobalt_sem_close(struct __shadow_sem __user *usm);
 
 int cobalt_sem_unlink(const char __user *u_name);
 
@@ -87,5 +102,9 @@ void cobalt_semq_cleanup(struct cobalt_kqueues *q);
 void cobalt_sem_pkg_init(void);
 
 void cobalt_sem_pkg_cleanup(void);
+
+int cobalt_nsem_pkg_init(void);
+
+void cobalt_nsem_pkg_cleanup(void);
 
 #endif /* !_COBALT_POSIX_SEM_H */

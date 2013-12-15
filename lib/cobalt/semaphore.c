@@ -23,6 +23,7 @@
 #include <pthread.h>		/* For pthread_setcanceltype. */
 #include <semaphore.h>
 #include <asm/xenomai/syscall.h>
+#include <cobalt/uapi/sem.h>
 #include "internal.h"
 
 static inline struct sem_dat *sem_get_datp(struct __shadow_sem *shadow)
@@ -262,24 +263,22 @@ COBALT_IMPL(sem_t *, sem_open, (const char *name, int oflags, ...))
 COBALT_IMPL(int, sem_close, (sem_t *sem))
 {
 	struct __shadow_sem *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
-	int err, closed;
+	int err;
 
 	if (_sem->magic != COBALT_NAMED_SEM_MAGIC) {
 		errno = EINVAL;
 		return -1;
 	}
 
-	err = -XENOMAI_SKINCALL2(__cobalt_muxid,
-				 sc_cobalt_sem_close, _sem, &closed);
-
-	if (!err) {
-		if (closed)
-			free(sem);
-		return 0;
+	err = XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_sem_close, _sem);
+	if (err < 0) {
+		errno = -err;
+		return -1;
 	}
+	if (err)
+		free(sem);
 
-	errno = err;
-	return -1;
+	return 0;
 }
 
 COBALT_IMPL(int, sem_unlink, (const char *name))

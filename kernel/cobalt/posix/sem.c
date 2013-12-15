@@ -32,7 +32,6 @@
  *@{*/
 
 #include <stddef.h>
-#include <stdarg.h>
 #include <linux/err.h>
 #include "internal.h"
 #include "thread.h"
@@ -41,107 +40,69 @@
 
 #define SEM_NAMED    0x80000000
 
-struct cobalt_sem {
-	unsigned int magic;
-	struct xnsynch synchbase;
-	/** semq */
-	struct list_head link;
-	struct sem_dat *datp;
-	int flags;
-	struct cobalt_kqueues *owningq;
-};
-
-struct cobalt_usem {
-	unsigned long uaddr;
-	unsigned refcnt;
-	cobalt_assoc_t assoc;
-};
-
 static inline struct cobalt_kqueues *sem_kqueue(struct cobalt_sem *sem)
 {
 	int pshared = !!(sem->flags & SEM_PSHARED);
 	return cobalt_kqueues(pshared);
 }
 
-struct cobalt_named_sem {
-	struct cobalt_sem sembase;	/* Has to be the first member. */
-	cobalt_node_t nodebase;
-	union cobalt_sem_union descriptor;
-};
-
-#define sem2named_sem(saddr) ((struct cobalt_named_sem *)(saddr))
-#define node2sem(naddr) container_of(naddr, struct cobalt_named_sem, nodebase)
-
-static int sem_destroy_inner(struct cobalt_sem *sem, struct cobalt_kqueues *q)
+int cobalt_sem_destroy_inner(xnhandle_t handle)
 {
+	struct cobalt_sem *sem;
 	int ret = 0;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
+	sem = xnregistry_fetch(handle);
+	if (!cobalt_obj_active(sem, COBALT_SEM_MAGIC, typeof(*sem))) {
+		ret = -EINVAL;
+		goto unlock_error;
+	}
+	if (--sem->refs) {
+		ret = -EBUSY;
+	  unlock_error:
+		xnlock_put_irqrestore(&nklock, s);
+		return ret;
+	}
 
+	cobalt_mark_deleted(sem);
 	list_del(&sem->link);
 	if (xnsynch_destroy(&sem->synchbase) == XNSYNCH_RESCHED) {
 		xnsched_run();
 		ret = 1;
 	}
-
+	
 	xnlock_put_irqrestore(&nklock, s);
 
 	xnheap_free(&xnsys_ppd_get(!!(sem->flags & SEM_PSHARED))->sem_heap,
 		sem->datp);
-
-	if (sem->flags & SEM_NAMED)
-		xnfree(sem2named_sem(sem));
-	else
-		xnfree(sem);
+	xnregistry_remove(sem->handle);
+	
+	xnfree(sem);
 
 	return ret;
 }
 
-/* Called with nklock locked, irq off. */
-static int sem_init_inner(struct cobalt_sem *sem, int flags, 
-			struct sem_dat *datp, unsigned int value)
+struct cobalt_sem *
+cobalt_sem_init_inner(const char *name, struct __shadow_sem *sm, 
+		int flags, unsigned int value)
 {
+	struct list_head *semq;
+	struct cobalt_sem *sem, *osem;
 	struct cobalt_kqueues *kq;
-	int pshared, sflags;
-
-	if (value > (unsigned)SEM_VALUE_MAX)
-		return -EINVAL;
-
-	pshared = !!(flags & SEM_PSHARED);
-
-	sflags = flags & SEM_FIFO ? 0 : XNSYNCH_PRIO;
-
-	sem->magic = COBALT_SEM_MAGIC;
-
-	kq = cobalt_kqueues(pshared);
-	list_add_tail(&sem->link, &kq->semq);
-	xnsynch_init(&sem->synchbase, sflags, NULL);
-
-	sem->datp = datp;
-	atomic_long_set(&datp->value, value);
-	datp->flags = flags;
-	sem->flags = flags;
-	sem->owningq = kq;
-
-	return 0;
-}
-
-static int do_sem_init(struct __shadow_sem *sm, int flags, unsigned int value)
-{
-	struct list_head *semq, *entry;
 	struct xnsys_ppd *sys_ppd;
-	struct cobalt_sem *sem;
 	struct sem_dat *datp;
-	int ret;
+	int ret, sflags;
 	spl_t s;
 
 	if ((flags & SEM_PULSE) != 0 && value > 0)
-		return -EINVAL;
+		return ERR_PTR(-EINVAL);
 
 	sem = xnmalloc(sizeof(*sem));
 	if (sem == NULL)
-		return -ENOSPC;
+		return ERR_PTR(-ENOSPC);
+
+	snprintf(sem->name, sizeof(sem->name), "%s", name);
 
 	sys_ppd = xnsys_ppd_get(!!(flags & SEM_PSHARED));
 	datp = xnheap_alloc(&sys_ppd->sem_heap, sizeof(*datp));
@@ -153,8 +114,7 @@ static int do_sem_init(struct __shadow_sem *sm, int flags, unsigned int value)
 	xnlock_get_irqsave(&nklock, s);
 
 	if (sm->magic != COBALT_SEM_MAGIC &&
-	    sm->magic != COBALT_NAMED_SEM_MAGIC &&
-	    sm->magic == ~COBALT_NAMED_SEM_MAGIC)
+	    sm->magic != COBALT_NAMED_SEM_MAGIC)
 		goto do_init;
 
 	semq = &cobalt_kqueues(!!(flags & SEM_PSHARED))->semq;
@@ -168,30 +128,49 @@ static int do_sem_init(struct __shadow_sem *sm, int flags, unsigned int value)
 	 * such semaphore exits, we may assume that other processes
 	 * sharing that semaphore won't be able to keep on running.
 	 */
-	list_for_each(entry, semq) {
-		if (entry == &sm->sem->link) {
-			if ((flags & SEM_PSHARED) &&
-			    sm->magic == COBALT_SEM_MAGIC) {
-				sem_destroy_inner(sm->sem, sem_kqueue(sm->sem));
-				goto do_init;
-			}
-			ret = -EBUSY;
-			goto err_lock_put;
-		}
+	osem = xnregistry_fetch(sm->handle);
+	if (!cobalt_obj_active(osem, COBALT_SEM_MAGIC, typeof(*osem)))
+		goto do_init;
+
+	if ((flags & SEM_PSHARED) == 0 || sm->magic != COBALT_SEM_MAGIC) {
+		ret = -EBUSY;
+		goto err_lock_put;
 	}
+
+	xnlock_put_irqrestore(&nklock, s);
+	cobalt_sem_destroy_inner(sm->handle);
+	xnlock_get_irqsave(&nklock, s);
   do_init:
-	ret = sem_init_inner(sem, flags, datp, value);
-	if (ret)
+	if (value > (unsigned)SEM_VALUE_MAX) {
+		ret = -EINVAL;
+		goto err_lock_put;
+	}
+	
+	ret = xnregistry_enter(sem->name, sem, &sem->handle, NULL);
+	if (ret < 0)
 		goto err_lock_put;
 
-	sm->magic = COBALT_SEM_MAGIC;
-	sm->sem = sem;
+	sem->magic = COBALT_SEM_MAGIC;
+	kq = cobalt_kqueues(!!(flags & SEM_PSHARED));
+	list_add_tail(&sem->link, &kq->semq);
+	sflags = flags & SEM_FIFO ? 0 : XNSYNCH_PRIO;
+	xnsynch_init(&sem->synchbase, sflags, NULL);
+
+	sem->datp = datp;
+	atomic_long_set(&datp->value, value);
+	datp->flags = flags;
+	sem->flags = flags;
+	sem->owningq = kq;
+	sem->refs = name[0] ? 2 : 1;
+			
+	sm->magic = name[0] ? COBALT_NAMED_SEM_MAGIC : COBALT_SEM_MAGIC;
+	sm->handle = sem->handle;
 	sm->datp_offset = xnheap_mapped_offset(&sys_ppd->sem_heap, datp);
 	if (flags & SEM_PSHARED)
 		sm->datp_offset = -sm->datp_offset;
 	xnlock_put_irqrestore(&nklock, s);
 
-	return 0;
+	return sem;
 
   err_lock_put:
 	xnlock_put_irqrestore(&nklock, s);
@@ -199,7 +178,7 @@ static int do_sem_init(struct __shadow_sem *sm, int flags, unsigned int value)
   err_free_sem:
 	xnfree(sem);
 
-	return ret;
+	return ERR_PTR(ret);
 }
 
 /**
@@ -241,13 +220,17 @@ static int sem_destroy(struct __shadow_sem *sm)
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	if (sm->magic != COBALT_SEM_MAGIC
-	    || sm->sem->magic != COBALT_SEM_MAGIC) {
+	if (sm->magic != COBALT_SEM_MAGIC) {
 		ret = -EINVAL;
 		goto error;
 	}
 
-	sem = sm->sem;
+	sem = xnregistry_fetch(sm->handle);
+	if (!cobalt_obj_active(sem, COBALT_SEM_MAGIC, typeof(*sem))) {
+		ret = -EINVAL;
+		goto error;
+	}
+
 	if (sem_kqueue(sem) != sem->owningq) {
 		ret = -EPERM;
 		goto error;
@@ -261,10 +244,9 @@ static int sem_destroy(struct __shadow_sem *sm)
 
 	warn = sem->flags & SEM_WARNDEL;
 	cobalt_mark_deleted(sm);
-	cobalt_mark_deleted(sem);
 	xnlock_put_irqrestore(&nklock, s);
 
-	ret = sem_destroy_inner(sem, sem_kqueue(sem));
+	ret = cobalt_sem_destroy_inner(sem->handle);
 
 	return warn ? ret : 0;
 
@@ -318,89 +300,6 @@ static int sem_destroy(struct __shadow_sem *sm)
  * Specification.</a>
  *
  */
-sem_t *sem_open(const char *name, int oflags, ...)
-{
-	struct cobalt_named_sem *named_sem;
-	struct sem_dat *datp;
-	cobalt_node_t *node;
-	unsigned value;
-	mode_t mode;
-	va_list ap;
-	spl_t s;
-	int err;
-
-	xnlock_get_irqsave(&nklock, s);
-	err = -cobalt_node_get(&node, name, COBALT_NAMED_SEM_MAGIC, oflags);
-	xnlock_put_irqrestore(&nklock, s);
-
-	if (err)
-		goto error;
-
-	if (node) {
-		named_sem = node2sem(node);
-		goto got_sem;
-	}
-
-	named_sem = xnmalloc(sizeof(*named_sem));
-	if (named_sem == NULL) {
-		err = -ENOSPC;
-		goto error;
-	}
-	named_sem->descriptor.shadow_sem.sem = &named_sem->sembase;
-
-	datp = xnheap_alloc(&xnsys_ppd_get(1)->sem_heap, sizeof(*datp));
-	if (datp == NULL) {
-		err = -EAGAIN;
-		goto err_free_sem;
-	}
-	named_sem->descriptor.shadow_sem.datp_offset = 
-		-xnheap_mapped_offset(&xnsys_ppd_get(1)->sem_heap, datp);
-
-	va_start(ap, oflags);
-	mode = va_arg(ap, int);	/* unused */
-	value = va_arg(ap, unsigned);
-	va_end(ap);
-
-	xnlock_get_irqsave(&nklock, s);
-	err = sem_init_inner(&named_sem->sembase, 
-			SEM_PSHARED|SEM_NAMED, datp, value);
-	if (err) {
-		xnlock_put_irqrestore(&nklock, s);
-	  err_free_sem:
-		xnfree(named_sem);
-		goto error;
-	}
-
-	err = -cobalt_node_add(&named_sem->nodebase, name, COBALT_NAMED_SEM_MAGIC);
-	if (err && err != -EEXIST)
-		goto err_put_lock;
-
-	if (err == -EEXIST) {
-		err = -cobalt_node_get(&node, name, COBALT_NAMED_SEM_MAGIC, oflags);
-		if (err)
-			goto err_put_lock;
-
-		xnlock_put_irqrestore(&nklock, s);
-		sem_destroy_inner(&named_sem->sembase, sem_kqueue(&named_sem->sembase));
-		named_sem = node2sem(node);
-		goto got_sem;
-	}
-	xnlock_put_irqrestore(&nklock, s);
-
-  got_sem:
-	/* Set the magic, needed both at creation and when re-opening a semaphore
-	   that was closed but not unlinked. */
-	named_sem->descriptor.shadow_sem.magic = COBALT_NAMED_SEM_MAGIC;
-
-	return &named_sem->descriptor.native_sem;
-
-  err_put_lock:
-	xnlock_put_irqrestore(&nklock, s);
-	sem_destroy_inner(&named_sem->sembase, sem_kqueue(&named_sem->sembase));
-	xnheap_free(&xnsys_ppd_get(1)->sem_heap, datp);
-  error:
-	return (sem_t *)ERR_PTR(err);
-}
 
 /**
  * Close a named semaphore.
@@ -426,48 +325,6 @@ sem_t *sem_open(const char *name, int oflags, ...)
  * Specification.</a>
  *
  */
-int sem_close(struct __shadow_sem *sm)
-{
-	struct cobalt_named_sem *named_sem;
-	spl_t s;
-	int err;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	if (sm->magic != COBALT_NAMED_SEM_MAGIC
-	    || sm->sem->magic != COBALT_SEM_MAGIC) {
-		err = EINVAL;
-		goto error;
-	}
-
-	named_sem = sem2named_sem(sm->sem);
-
-	err = cobalt_node_put(&named_sem->nodebase);
-
-	if (err)
-		goto error;
-
-	if (cobalt_node_removed_p(&named_sem->nodebase)) {
-		/* unlink was called, and this semaphore is no longer referenced. */
-		cobalt_mark_deleted(sm);
-		cobalt_mark_deleted(&named_sem->sembase);
-		xnlock_put_irqrestore(&nklock, s);
-
-		sem_destroy_inner(&named_sem->sembase, cobalt_kqueues(1));
-	} else if (!cobalt_node_ref_p(&named_sem->nodebase)) {
-		/* this semaphore is no longer referenced, but not unlinked. */
-		cobalt_mark_deleted(sm);
-		xnlock_put_irqrestore(&nklock, s);
-	} else
-		xnlock_put_irqrestore(&nklock, s);
-
-	return 0;
-
-      error:
-	xnlock_put_irqrestore(&nklock, s);
-
-	return -err;
-}
 
 /**
  * Unlink a named semaphore.
@@ -493,39 +350,10 @@ int sem_close(struct __shadow_sem *sm)
  * Specification.</a>
  *
  */
-int sem_unlink(const char *name)
-{
-	struct cobalt_named_sem *named_sem;
-	cobalt_node_t *node;
-	spl_t s;
-	int err;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	err = cobalt_node_remove(&node, name, COBALT_NAMED_SEM_MAGIC);
-	if (err)
-		goto error;
-
-	named_sem = node2sem(node);
-
-	if (cobalt_node_removed_p(&named_sem->nodebase)) {
-		xnlock_put_irqrestore(&nklock, s);
-
-		sem_destroy_inner(&named_sem->sembase, cobalt_kqueues(1));
-	} else
-		xnlock_put_irqrestore(&nklock, s);
-
-	return 0;
-
-      error:
-	xnlock_put_irqrestore(&nklock, s);
-
-	return -err;
-}
 
 static inline int sem_trywait_internal(struct cobalt_sem *sem)
 {
-	if (sem->magic != COBALT_SEM_MAGIC)
+	if (sem == NULL || sem->magic != COBALT_SEM_MAGIC)
 		return -EINVAL;
 
 #if XENO_DEBUG(COBALT)
@@ -560,28 +388,31 @@ static inline int sem_trywait_internal(struct cobalt_sem *sem)
  * Specification.</a>
  *
  */
-static int sem_trywait(struct cobalt_sem *sem)
+static int sem_trywait(xnhandle_t handle)
 {
 	int err;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	err = sem_trywait_internal(sem);
+	err = sem_trywait_internal(xnregistry_fetch(handle));
 	xnlock_put_irqrestore(&nklock, s);
 
 	return err;
 }
 
 static inline int
-sem_timedwait_internal(struct cobalt_sem *sem, int timed,
+sem_timedwait_internal(xnhandle_t handle, int timed,
 		       const struct timespec __user *u_ts)
 {
+	struct cobalt_sem *sem;
 	struct timespec ts;
 	xntmode_t tmode;
 	int ret, info;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
+
+	sem = xnregistry_fetch(handle);
 
 	ret = sem_trywait_internal(sem);
 	if (ret != -EAGAIN) {
@@ -651,9 +482,9 @@ out:
  * Specification.</a>
  *
  */
-static int sem_wait(struct cobalt_sem *sem)
+static int sem_wait(xnhandle_t handle)
 {
-	return sem_timedwait_internal(sem, 0, NULL);
+	return sem_timedwait_internal(handle, 0, NULL);
 }
 
 /**
@@ -690,15 +521,15 @@ static int sem_wait(struct cobalt_sem *sem)
  * Specification.</a>
  *
  */
-static int sem_timedwait(struct cobalt_sem *sem,
+static int sem_timedwait(xnhandle_t handle,
 			 const struct timespec __user *abs_timeout)
 {
-	return sem_timedwait_internal(sem, 1, abs_timeout);
+	return sem_timedwait_internal(handle, 1, abs_timeout);
 }
 
 int sem_post_inner(struct cobalt_sem *sem, struct cobalt_kqueues *ownq, int bcast)
 {
-	if (sem->magic != COBALT_SEM_MAGIC)
+	if (!sem || sem->magic != COBALT_SEM_MAGIC)
 		return -EINVAL;
 
 #if XENO_DEBUG(COBALT)
@@ -751,12 +582,14 @@ int sem_post_inner(struct cobalt_sem *sem, struct cobalt_kqueues *ownq, int bcas
  * Specification.</a>
  *
  */
-static int sem_post(struct cobalt_sem *sm)
+static int sem_post(xnhandle_t handle)
 {
+	struct cobalt_sem *sm;
 	int ret;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
+	sm = xnregistry_fetch(handle);
 	ret = sem_post_inner(sm, sm->owningq, 0);
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -791,13 +624,16 @@ static int sem_post(struct cobalt_sem *sm)
  * Specification.</a>
  *
  */
-int sem_getvalue(struct cobalt_sem *sem, int *value)
+static int sem_getvalue(xnhandle_t handle, int *value)
 {
+	struct cobalt_sem *sem;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (sem->magic != COBALT_SEM_MAGIC) {
+	sem = xnregistry_fetch(handle);
+
+	if (sem == NULL || sem->magic != COBALT_SEM_MAGIC) {
 		xnlock_put_irqrestore(&nklock, s);
 		return -EINVAL;
 	}
@@ -819,63 +655,63 @@ int sem_getvalue(struct cobalt_sem *sem, int *value)
 int cobalt_sem_init(struct __shadow_sem __user *u_sem, int pshared, unsigned value)
 {
 	struct __shadow_sem sm;
-	int err;
+	struct cobalt_sem *sem;
 
 	if (__xn_safe_copy_from_user(&sm, u_sem, sizeof(sm)))
 		return -EFAULT;
 
-	err = do_sem_init(&sm, pshared ? SEM_PSHARED : 0, value);
-	if (err < 0)
-		return err;
+	sem = cobalt_sem_init_inner("", &sm, pshared ? SEM_PSHARED : 0, value);
+	if (IS_ERR(sem))
+		return PTR_ERR(sem);
 
 	return __xn_safe_copy_to_user(u_sem, &sm, sizeof(*u_sem));
 }
 
 int cobalt_sem_post(struct __shadow_sem __user *u_sem)
 {
-	struct cobalt_sem *sm;
+	xnhandle_t handle;
 
-	__xn_get_user(sm, &u_sem->sem);
+	__xn_get_user(handle, &u_sem->handle);
 
-	return sem_post(sm);
+	return sem_post(handle);
 }
 
 int cobalt_sem_wait(struct __shadow_sem __user *u_sem)
 {
-	struct cobalt_sem *sm;
+	xnhandle_t handle;
 
-	__xn_get_user(sm, &u_sem->sem);
+	__xn_get_user(handle, &u_sem->handle);
 
-	return sem_wait(sm);
+	return sem_wait(handle);
 }
 
 int cobalt_sem_timedwait(struct __shadow_sem __user *u_sem,
 			 struct timespec __user *u_ts)
 {
-	struct cobalt_sem *sm;
+	xnhandle_t handle;
 
-	__xn_get_user(sm, &u_sem->sem);
+	__xn_get_user(handle, &u_sem->handle);
 
-	return sem_timedwait(sm, u_ts);
+	return sem_timedwait(handle, u_ts);
 }
 
 int cobalt_sem_trywait(struct __shadow_sem __user *u_sem)
 {
-	struct cobalt_sem *sm;
+	xnhandle_t handle;
 
-	__xn_get_user(sm, &u_sem->sem);
+	__xn_get_user(handle, &u_sem->handle);
 
-	return sem_trywait(sm);
+	return sem_trywait(handle);
 }
 
 int cobalt_sem_getvalue(struct __shadow_sem __user *u_sem, int __user *u_sval)
 {
-	struct cobalt_sem *sm;
+	xnhandle_t handle;
 	int err, sval;
 
-	__xn_get_user(sm, &u_sem->sem);
+	__xn_get_user(handle, &u_sem->handle);
 
-	err = sem_getvalue(sm, &sval);
+	err = sem_getvalue(handle, &sval);
 	if (err < 0)
 		return err;
 
@@ -897,154 +733,11 @@ int cobalt_sem_destroy(struct __shadow_sem __user *u_sem)
 	return __xn_safe_copy_to_user(u_sem, &sm, sizeof(*u_sem)) ?: err;
 }
 
-int cobalt_sem_open(unsigned long __user *u_addr,
-		    const char __user *u_name,
-		    int oflags, mode_t mode, unsigned value)
-{
-	struct cobalt_process *cc;
-	char name[COBALT_MAXNAME];
-	struct __shadow_sem *sm;
-	struct cobalt_usem *usm;
-	cobalt_assoc_t *assoc;
-	unsigned long uaddr;
-	long len;
-	int err;
-	spl_t s;
-
-	cc = cobalt_process_context();
-	if (cc == NULL)
-		return -EPERM;
-
-	if (__xn_safe_copy_from_user(&uaddr, u_addr, sizeof(uaddr)))
-		return -EFAULT;
-
-	len = __xn_safe_strncpy_from_user(name, u_name, sizeof(name));
-	if (len < 0)
-		return len;
-	if (len >= sizeof(name))
-		return -ENAMETOOLONG;
-	if (len == 0)
-		return -EINVAL;
-
-	if (!(oflags & O_CREAT))
-		sm = &((union cobalt_sem_union *)sem_open(name, oflags))->shadow_sem;
-	else
-		sm = &((union cobalt_sem_union *)sem_open(name, oflags, mode, value))->shadow_sem;
-
-	if (IS_ERR(sm))
-		return PTR_ERR(sm);
-
-	xnlock_get_irqsave(&cobalt_assoc_lock, s);
-
-	assoc = cobalt_assoc_lookup(&cc->usems, (u_long)sm->sem);
-	if (assoc) {
-		usm = container_of(assoc, struct cobalt_usem, assoc);
-		++usm->refcnt;
-		xnlock_put_irqrestore(&cobalt_assoc_lock, s);
-		goto got_usm;
-	}
-
-	xnlock_put_irqrestore(&cobalt_assoc_lock, s);
-
-	usm = xnmalloc(sizeof(*usm));
-	if (usm == NULL) {
-		sem_close(sm);
-		return -ENOSPC;
-	}
-
-	usm->uaddr = uaddr;
-	usm->refcnt = 1;
-
-	xnlock_get_irqsave(&cobalt_assoc_lock, s);
-
-	assoc = cobalt_assoc_lookup(&cc->usems, (u_long)sm->sem);
-	if (assoc) {
-		container_of(assoc, struct cobalt_usem, assoc)->refcnt++;
-		xnlock_put_irqrestore(&cobalt_assoc_lock, s);
-		xnfree(usm);
-		usm = container_of(assoc, struct cobalt_usem, assoc);
-		goto got_usm;
-	}
-
-	cobalt_assoc_insert(&cc->usems, &usm->assoc, (u_long)sm->sem);
-
-	xnlock_put_irqrestore(&cobalt_assoc_lock, s);
-
-      got_usm:
-
-	if (usm->uaddr == uaddr)
-		/* First binding by this process. */
-		err = __xn_safe_copy_to_user((void __user *)usm->uaddr,
-					     sm, sizeof(*sm));
-	else
-		/* Semaphore already bound by this process in user-space. */
-		err = __xn_safe_copy_to_user(u_addr,
-					     &usm->uaddr, sizeof(*u_addr));
-
-	return err;
-}
-
-int cobalt_sem_close(unsigned long uaddr, int __user *u_closed)
-{
-	struct cobalt_process *cc;
-	struct cobalt_usem *usm;
-	struct __shadow_sem sm;
-	cobalt_assoc_t *assoc;
-	int closed = 0, err;
-	spl_t s;
-
-	cc = cobalt_process_context();
-	if (cc == NULL)
-		return -EPERM;
-
-	if (__xn_safe_copy_from_user(&sm, (void __user *)uaddr, sizeof(sm)))
-		return -EFAULT;
-
-	xnlock_get_irqsave(&cobalt_assoc_lock, s);
-
-	assoc = cobalt_assoc_lookup(&cc->usems, (u_long)sm.sem);
-	if (assoc == NULL) {
-		xnlock_put_irqrestore(&cobalt_assoc_lock, s);
-		return -EINVAL;
-	}
-
-	usm = container_of(assoc, struct cobalt_usem, assoc);
-
-	err = sem_close(&sm);
-
-	if (!err && (closed = (--usm->refcnt == 0)))
-		cobalt_assoc_remove(&cc->usems, (u_long)sm.sem);
-
-	xnlock_put_irqrestore(&cobalt_assoc_lock, s);
-
-	if (err < 0)
-		return err;
-
-	if (closed)
-		xnfree(usm);
-
-	return __xn_safe_copy_to_user(u_closed, &closed, sizeof(*u_closed));
-}
-
-int cobalt_sem_unlink(const char __user *u_name)
-{
-	char name[COBALT_MAXNAME];
-	long len;
-
-	len = __xn_safe_strncpy_from_user(name, u_name, sizeof(name));
-	if (len < 0)
-		return len;
-	if (len >= sizeof(name))
-		return -ENAMETOOLONG;
-
-	return sem_unlink(name);
-}
-
 int cobalt_sem_init_np(struct __shadow_sem __user *u_sem,
 		       int flags, unsigned value)
 {
 	struct __shadow_sem sm;
-	int err;
+	struct cobalt_sem *sem;
 
 	if (__xn_safe_copy_from_user(&sm, u_sem, sizeof(sm)))
 		return -EFAULT;
@@ -1053,9 +746,9 @@ int cobalt_sem_init_np(struct __shadow_sem __user *u_sem,
 		      SEM_WARNDEL|SEM_RAWCLOCK|SEM_NOBUSYDEL))
 		return -EINVAL;
 
-	err = do_sem_init(&sm, flags, value);
-	if (err < 0)
-		return err;
+	sem = cobalt_sem_init_inner("", &sm, flags, value);
+	if (IS_ERR(sem))
+		return PTR_ERR(sem);
 
 	return __xn_safe_copy_to_user(u_sem, &sm, sizeof(*u_sem));
 }
@@ -1063,41 +756,23 @@ int cobalt_sem_init_np(struct __shadow_sem __user *u_sem,
 int cobalt_sem_broadcast_np(struct __shadow_sem __user *u_sem)
 {
 	struct cobalt_sem *sm;
+	xnhandle_t handle;
 	spl_t s;
 	int err;
 
-	__xn_get_user(sm, &u_sem->sem);
+	__xn_get_user(handle, &u_sem->handle);
 
 	xnlock_get_irqsave(&nklock, s);
+	sm = xnregistry_fetch(handle);
 	err = sem_post_inner(sm, sm->owningq, 1);
 	xnlock_put_irqrestore(&nklock, s);
 
 	return err;
 }
 
-static void usem_cleanup(cobalt_assoc_t *assoc)
-{
-	struct cobalt_usem *usem = container_of(assoc, struct cobalt_usem, assoc);
-	struct cobalt_sem *sem = (struct cobalt_sem *)cobalt_assoc_key(assoc);
-	struct cobalt_named_sem *nsem = sem2named_sem(sem);
-
-#if XENO_DEBUG(COBALT)
-	printk(XENO_INFO "closing Cobalt semaphore \"%s\"\n",
-	       nsem->nodebase.name);
-#endif /* XENO_DEBUG(COBALT) */
-	sem_close(&nsem->descriptor.shadow_sem);
-	xnfree(usem);
-}
-
-void cobalt_sem_usems_cleanup(struct cobalt_process *cc)
-{
-	cobalt_assocq_destroy(&cc->usems, &usem_cleanup);
-}
-
 void cobalt_semq_cleanup(struct cobalt_kqueues *q)
 {
 	struct cobalt_sem *sem, *tmp;
-	cobalt_node_t *node;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -1110,22 +785,19 @@ void cobalt_semq_cleanup(struct cobalt_kqueues *q)
 #if XENO_DEBUG(COBALT)
 		if (sem->flags & SEM_NAMED)
 			printk(XENO_INFO "unlinking Cobalt semaphore \"%s\"\n",
-			       sem2named_sem(sem)->nodebase.name);
-		else
+				xnregistry_key(sem->handle));
+		 else
 			printk(XENO_INFO "deleting Cobalt semaphore %p\n", sem);
 #endif /* XENO_DEBUG(COBALT) */
-		xnlock_get_irqsave(&nklock, s);
 		if (sem->flags & SEM_NAMED)
-			cobalt_node_remove(&node,
-					  sem2named_sem(sem)->nodebase.name,
-					  COBALT_NAMED_SEM_MAGIC);
-		xnlock_put_irqrestore(&nklock, s);
-		sem_destroy_inner(sem, q);
+			cobalt_nsem_unlink_inner(sem->handle);
+		cobalt_sem_destroy_inner(sem->handle);
 		xnlock_get_irqsave(&nklock, s);
 	}
 out:
 	xnlock_put_irqrestore(&nklock, s);
 }
+
 
 void cobalt_sem_pkg_init(void)
 {

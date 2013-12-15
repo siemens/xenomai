@@ -18,6 +18,8 @@
 #ifndef _COBALT_UAPI_SEM_H
 #define _COBALT_UAPI_SEM_H
 
+#include <cobalt/uapi/kernel/types.h>
+
 #define COBALT_SEM_MAGIC (0x86860707)
 #define COBALT_NAMED_SEM_MAGIC (0x86860D0D)
 
@@ -32,8 +34,8 @@ union cobalt_sem_union {
 	sem_t native_sem;
 	struct __shadow_sem {
 		unsigned int magic;
-		struct cobalt_sem *sem;
 		int datp_offset;
+		xnhandle_t handle;
 	} shadow_sem;
 };
 

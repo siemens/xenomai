@@ -12,6 +12,7 @@ posix-y :=		\
 	mutex_attr.o	\
 	registry.o	\
 	sem.o		\
+	nsem.o		\
 	select.o	\
 	signal.o	\
 	syscall.o	\
