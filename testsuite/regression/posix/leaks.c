@@ -9,6 +9,9 @@
 #include <semaphore.h>
 #include <mqueue.h>
 #include <signal.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <linux/unistd.h>
 #include <cobalt/uapi/kernel/heap.h>
 #include <asm/xenomai/syscall.h>
 
@@ -50,6 +53,28 @@ static void *empty(void *cookie)
 	return cookie;
 }
 
+static void subprocess_leak(void)
+{
+	struct sigevent sevt;
+	pthread_mutex_t mutex;
+	pthread_cond_t cond;
+	pthread_t thread;
+	sem_t sem, *psem;
+	timer_t tm;
+	int fd;
+
+	check_pthread(pthread_create(&thread, NULL, empty, NULL));
+	check_pthread(pthread_mutex_init(&mutex, NULL));
+	check_pthread(pthread_cond_init(&cond, NULL));
+	check_unix(sem_init(&sem, 0, 0));
+	check_unix(-!(psem = sem_open(SEM_NAME, O_CREAT, 0644, 1)));
+	sevt.sigev_notify = SIGEV_THREAD_ID;
+	sevt.sigev_signo = SIGALRM;
+	sevt.sigev_notify_thread_id = syscall(__NR_gettid);
+	check_unix(timer_create(CLOCK_MONOTONIC, &sevt, &tm));
+	check_unix(fd = mq_open(MQ_NAME, O_RDWR | O_CREAT, 0644, NULL));
+}
+
 int main(void)
 {
 	unsigned long long before;
@@ -60,6 +85,7 @@ int main(void)
 	pthread_t thread;
 	sem_t sem, *psem;
 	timer_t tm;
+	pid_t child;
 
 	mlockall(MCL_CURRENT|MCL_FUTURE);
 
@@ -93,8 +119,9 @@ int main(void)
 	check_used("named sem", before, failed);
 
 	before = get_used();
-	sevt.sigev_notify = SIGEV_SIGNAL;
+	sevt.sigev_notify = SIGEV_THREAD_ID;
 	sevt.sigev_signo = SIGALRM;
+	sevt.sigev_notify_thread_id = syscall(__NR_gettid);
 	check_unix(timer_create(CLOCK_MONOTONIC, &sevt, &tm));
 	check_unix(timer_delete(tm));
 	check_used("timer", before, failed);
@@ -104,6 +131,19 @@ int main(void)
 	check_unix(mq_close(fd));
 	check_unix(mq_unlink(MQ_NAME));
 	check_used("mq", before, failed);
+
+	before = get_used();
+	check_unix(child = fork());
+	if (!child) {
+		subprocess_leak();
+		return EXIT_SUCCESS;
+	}
+	while (waitpid(child, NULL, 0) == -1 && errno == EINTR);
+	sleep(1);		/* Leave some time for xnheap
+				 * deferred free */
+	check_unix(sem_unlink(SEM_NAME));
+	check_unix(mq_unlink(MQ_NAME));
+	check_used("fork", before, failed);
 
 	return failed ? EXIT_FAILURE : EXIT_SUCCESS;
 }
