@@ -163,6 +163,12 @@ static inline void *xnregistry_lookup(xnhandle_t handle)
 	return object ? object->objaddr : NULL;
 }
 
+static inline const char *xnregistry_key(xnhandle_t handle)
+{
+	struct xnobject *object = xnregistry_validate(handle);
+	return object ? object->key : NULL;
+}
+
 int xnregistry_enter(const char *key,
 		     void *objaddr,
 		     xnhandle_t *phandle,
