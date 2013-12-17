@@ -188,6 +188,7 @@ struct xnsched_class xnsched_class_weak = {
 	.sched_tick		=	NULL,
 	.sched_rotate		=	NULL,
 	.sched_forget		=	NULL,
+	.sched_kick		=	NULL,
 	.sched_declare		=	NULL,
 	.sched_setparam		=	xnsched_weak_setparam,
 	.sched_trackprio	=	xnsched_weak_trackprio,

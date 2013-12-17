@@ -687,19 +687,6 @@ static int force_wakeup(struct xnthread *thread) /* nklock locked, irqs off */
 	if (xnthread_test_info(thread, XNKICKED))
 		return 1;
 
-	/*
-	 * Tricky case: a ready thread does not actually run, but
-	 * nevertheless waits for the CPU in primary mode, so we have
-	 * to make sure that it will be notified of the pending break
-	 * condition as soon as it enters xnthread_suspend() from a
-	 * blocking Xenomai syscall.
-	 */
-	if (xnthread_test_state(thread, XNREADY)) {
-		xnthread_set_info(thread, XNKICKED);
-		xnsched_set_resched(thread->sched);
-		return 0;
-	}
-
 	if (xnthread_unblock(thread)) {
 		xnthread_set_info(thread, XNKICKED);
 		ret = 1;
@@ -733,6 +720,27 @@ static int force_wakeup(struct xnthread *thread) /* nklock locked, irqs off */
 		xnthread_resume(thread, XNSUSP|XNHELD);
 		xnthread_set_info(thread, XNKICKED);
 	}
+
+	/*
+	 * Tricky cases:
+	 *
+	 * - a thread which was ready on entry wasn't actually
+	 * running, but nevertheless waits for the CPU in primary
+	 * mode, so we have to make sure that it will be notified of
+	 * the pending break condition as soon as it enters
+	 * xnthread_suspend() from a blocking Xenomai syscall.
+	 *
+	 * - a ready/readied thread on exit may be prevented from
+	 * running by the scheduling policy module it belongs
+	 * to. Typically, policies enforcing a runtime budget do not
+	 * block threads with no budget, but rather keep them out of
+	 * their runnable queue, so that ->sched_pick() won't elect
+	 * them. We tell the policy handler about the fact that we do
+	 * want such thread to run until it relaxes, whatever this
+	 * means internally for the implementation.
+	 */
+	if (xnthread_test_state(thread, XNREADY))
+		xnsched_kick(thread);
 
 	return ret;
 }

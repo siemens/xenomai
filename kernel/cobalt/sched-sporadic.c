@@ -536,6 +536,7 @@ struct xnsched_class xnsched_class_sporadic = {
 	.sched_trackprio	=	xnsched_sporadic_trackprio,
 	.sched_declare		=	xnsched_sporadic_declare,
 	.sched_forget		=	xnsched_sporadic_forget,
+	.sched_kick		=	NULL,
 #ifdef CONFIG_XENO_OPT_VFILE
 	.sched_init_vfile	=	xnsched_sporadic_init_vfile,
 	.sched_cleanup_vfile	=	xnsched_sporadic_cleanup_vfile,

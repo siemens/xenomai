@@ -49,6 +49,7 @@ struct xnsched_class xnsched_class_idle = {
 	.sched_tick		=	NULL,
 	.sched_rotate		=	NULL,
 	.sched_forget		=	NULL,
+	.sched_kick		=	NULL,
 	.sched_declare		=	NULL,
 	.sched_pick		=	xnsched_idle_pick,
 	.sched_setparam		=	xnsched_idle_setparam,

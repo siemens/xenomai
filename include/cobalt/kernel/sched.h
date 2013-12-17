@@ -147,6 +147,7 @@ struct xnsched_class {
 	int (*sched_declare)(struct xnthread *thread,
 			     const union xnsched_policy_param *p);
 	void (*sched_forget)(struct xnthread *thread);
+	void (*sched_kick)(struct xnthread *thread);
 #ifdef CONFIG_XENO_OPT_VFILE
 	int (*sched_init_vfile)(struct xnsched_class *schedclass,
 				struct xnvfile_directory *vfroot);
@@ -581,6 +582,18 @@ static inline void xnsched_forget(struct xnthread *thread)
 		sched_class->sched_forget(thread);
 }
 
+static inline void xnsched_kick(struct xnthread *thread)
+{
+	struct xnsched_class *sched_class = thread->base_class;
+
+	xnthread_set_info(thread, XNKICKED);
+
+	if (sched_class->sched_kick)
+		sched_class->sched_kick(thread);
+
+	xnsched_set_resched(thread->sched);
+}
+
 #else /* !CONFIG_XENO_OPT_SCHED_CLASSES */
 
 /*
@@ -653,6 +666,12 @@ static inline void xnsched_forget(struct xnthread *thread)
 {
 	--thread->base_class->nthreads;
 	__xnsched_rt_forget(thread);
+}
+
+static inline void xnsched_kick(struct xnthread *thread)
+{
+	xnthread_set_info(thread, XNKICKED);
+	xnsched_set_resched(thread->sched);
 }
 
 #endif /* !CONFIG_XENO_OPT_SCHED_CLASSES */

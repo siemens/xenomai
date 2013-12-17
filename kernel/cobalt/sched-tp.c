@@ -88,8 +88,9 @@ static void xnsched_tp_init(struct xnsched *sched)
 	int n;
 
 	/*
-	 * Build the runqueues. Thread priorities for the TP policy
-	 * are valid RT priorities. TP is actually a subset of RT.
+	 * Build the runqueues.
+	 * CAUTION: we may inherit RT priority during PIP boost, so we
+	 * need as many levels as SCHED_RT defines.
 	 */
 	for (n = 0; n < CONFIG_XENO_OPT_SCHED_TP_NRPART; n++)
 		xnsched_initq(&tp->partitions[n].runnable,
@@ -401,6 +402,7 @@ struct xnsched_class xnsched_class_tp = {
 	.sched_trackprio	=	xnsched_tp_trackprio,
 	.sched_declare		=	xnsched_tp_declare,
 	.sched_forget		=	xnsched_tp_forget,
+	.sched_kick		=	NULL,
 #ifdef CONFIG_XENO_OPT_VFILE
 	.sched_init_vfile	=	xnsched_tp_init_vfile,
 	.sched_cleanup_vfile	=	xnsched_tp_cleanup_vfile,

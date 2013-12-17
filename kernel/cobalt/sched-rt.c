@@ -244,6 +244,7 @@ struct xnsched_class xnsched_class_rt = {
 	.sched_tick		=	xnsched_rt_tick,
 	.sched_rotate		=	xnsched_rt_rotate,
 	.sched_forget		=	NULL,
+	.sched_kick		=	NULL,
 	.sched_declare		=	NULL,
 	.sched_setparam		=	xnsched_rt_setparam,
 	.sched_trackprio	=	xnsched_rt_trackprio,
