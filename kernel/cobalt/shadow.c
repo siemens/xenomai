@@ -2468,7 +2468,7 @@ static int handle_sigwake_event(struct task_struct *p)
 	if (p->state & (TASK_INTERRUPTIBLE|TASK_UNINTERRUPTIBLE))
 		set_task_state(p, p->state | TASK_NOWAKEUP);
 
-	force_wakeup(thread);
+	__xnshadow_kick(thread);
 
 	xnsched_run();
 
