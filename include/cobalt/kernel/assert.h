@@ -43,6 +43,15 @@
 				    __FILE__, __LINE__, (#__cond));	\
 	} while (0)
 
+#define XENO_BUG(__subsys)  XENO_BUGON(__subsys, 1)
+
+#define XENO_WARNON(__subsys, __cond)					\
+	do {								\
+		if (unlikely(XENO_DEBUG(__subsys) && (__cond)))		\
+			printk(XENO_WARN "assertion failed at %s:%d (%s)", \
+				    __FILE__, __LINE__, (#__cond));	\
+	} while (0)
+
 #ifndef CONFIG_XENO_OPT_DEBUG_NUCLEUS
 #define CONFIG_XENO_OPT_DEBUG_NUCLEUS 0
 #endif
