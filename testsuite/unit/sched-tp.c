@@ -68,7 +68,7 @@ static void cleanup(int sig)
 
 static void __create_thread(pthread_t *tid, const char *name, int seq)
 {
-	struct sched_param param;
+	struct sched_param param = { .sched_priority = 1 };
 	pthread_attr_t attr;
 	int ret;
 
