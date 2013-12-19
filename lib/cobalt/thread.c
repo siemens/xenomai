@@ -30,7 +30,7 @@
 #include "internal.h"
 #include <boilerplate/ancillaries.h>
 
-static pthread_attr_ex_t default_attr_ex;
+static pthread_attr_ex_t default_attr_ex; /* We want it zeroed at init. */
 
 static int linuxthreads;
 
@@ -59,6 +59,7 @@ static int libc_setschedparam(pthread_t thread,
 	case SCHED_COBALT:
 	case SCHED_TP:
 	case SCHED_SPORADIC:
+	case SCHED_QUOTA:
 		policy = SCHED_FIFO;
 		/*
 		 * Our priority range is larger than the regular

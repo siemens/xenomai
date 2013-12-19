@@ -44,6 +44,8 @@ void __sched_cpufill(size_t __setsize, cpu_set_t *__setp);
 #define sched_tp_confsz(nr_win) \
   (sizeof(struct __sched_config_tp) + nr_win * sizeof(struct sched_tp_window))
 
+#define sched_quota_confsz()  sizeof(struct __sched_config_quota)
+
 #ifdef __cplusplus
 extern "C" {
 #endif
