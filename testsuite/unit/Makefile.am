@@ -14,6 +14,7 @@ test_PROGRAMS += arith	\
 	mutex-torture 	\
 	cond-torture 	\
 	sched-tp 	\
+	sched-quota 	\
 	check-vdso
 
 arith_SOURCES = arith.c arith-noinline.c arith-noinline.h
@@ -71,6 +72,20 @@ sched_tp_CPPFLAGS =					\
 sched_tp_LDFLAGS = $(XENO_POSIX_WRAPPERS)
 
 sched_tp_LDADD = 				\
+	../../lib/copperplate/libcopperplate.la	\
+	$(coredep_lib)				\
+	@XENO_USER_LDADD@			\
+	-lpthread -lrt -lm
+
+sched_quota_SOURCES = sched-quota.c
+
+sched_quota_CPPFLAGS =				\
+	@XENO_USER_CFLAGS@			\
+	-I$(top_srcdir)/include
+
+sched_quota_LDFLAGS = $(XENO_POSIX_WRAPPERS)
+
+sched_quota_LDADD = 				\
 	../../lib/copperplate/libcopperplate.la	\
 	$(coredep_lib)				\
 	@XENO_USER_LDADD@			\

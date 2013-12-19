@@ -84,6 +84,7 @@ test_PROGRAMS = wakeup-time$(EXEEXT) rtdm$(EXEEXT) $(am__EXEEXT_1)
 @XENO_COBALT_TRUE@	mutex-torture 	\
 @XENO_COBALT_TRUE@	cond-torture 	\
 @XENO_COBALT_TRUE@	sched-tp 	\
+@XENO_COBALT_TRUE@	sched-quota 	\
 @XENO_COBALT_TRUE@	check-vdso
 
 subdir = testsuite/unit
@@ -106,7 +107,7 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 @XENO_COBALT_TRUE@am__EXEEXT_1 = arith$(EXEEXT) mutex-torture$(EXEEXT) \
 @XENO_COBALT_TRUE@	cond-torture$(EXEEXT) sched-tp$(EXEEXT) \
-@XENO_COBALT_TRUE@	check-vdso$(EXEEXT)
+@XENO_COBALT_TRUE@	sched-quota$(EXEEXT) check-vdso$(EXEEXT)
 am__installdirs = "$(DESTDIR)$(testdir)"
 PROGRAMS = $(test_PROGRAMS)
 am__arith_SOURCES_DIST = arith.c arith-noinline.c arith-noinline.h
@@ -162,6 +163,16 @@ rtdm_DEPENDENCIES = ../../lib/alchemy/libalchemy.la \
 rtdm_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(rtdm_LDFLAGS) $(LDFLAGS) -o $@
+am__sched_quota_SOURCES_DIST = sched-quota.c
+@XENO_COBALT_TRUE@am_sched_quota_OBJECTS =  \
+@XENO_COBALT_TRUE@	sched_quota-sched-quota.$(OBJEXT)
+sched_quota_OBJECTS = $(am_sched_quota_OBJECTS)
+@XENO_COBALT_TRUE@sched_quota_DEPENDENCIES =  \
+@XENO_COBALT_TRUE@	../../lib/copperplate/libcopperplate.la \
+@XENO_COBALT_TRUE@	$(am__DEPENDENCIES_1)
+sched_quota_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(sched_quota_LDFLAGS) $(LDFLAGS) -o $@
 am__sched_tp_SOURCES_DIST = sched-tp.c
 @XENO_COBALT_TRUE@am_sched_tp_OBJECTS = sched_tp-sched-tp.$(OBJEXT)
 sched_tp_OBJECTS = $(am_sched_tp_OBJECTS)
@@ -213,12 +224,14 @@ am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(arith_SOURCES) $(check_vdso_SOURCES) \
 	$(cond_torture_SOURCES) $(mutex_torture_SOURCES) \
-	$(rtdm_SOURCES) $(sched_tp_SOURCES) $(wakeup_time_SOURCES)
+	$(rtdm_SOURCES) $(sched_quota_SOURCES) $(sched_tp_SOURCES) \
+	$(wakeup_time_SOURCES)
 DIST_SOURCES = $(am__arith_SOURCES_DIST) \
 	$(am__check_vdso_SOURCES_DIST) \
 	$(am__cond_torture_SOURCES_DIST) \
 	$(am__mutex_torture_SOURCES_DIST) $(rtdm_SOURCES) \
-	$(am__sched_tp_SOURCES_DIST) $(wakeup_time_SOURCES)
+	$(am__sched_quota_SOURCES_DIST) $(am__sched_tp_SOURCES_DIST) \
+	$(wakeup_time_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -466,6 +479,18 @@ CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 @XENO_COBALT_TRUE@	@XENO_USER_LDADD@			\
 @XENO_COBALT_TRUE@	-lpthread -lrt -lm
 
+@XENO_COBALT_TRUE@sched_quota_SOURCES = sched-quota.c
+@XENO_COBALT_TRUE@sched_quota_CPPFLAGS = \
+@XENO_COBALT_TRUE@	@XENO_USER_CFLAGS@			\
+@XENO_COBALT_TRUE@	-I$(top_srcdir)/include
+
+@XENO_COBALT_TRUE@sched_quota_LDFLAGS = $(XENO_POSIX_WRAPPERS)
+@XENO_COBALT_TRUE@sched_quota_LDADD = \
+@XENO_COBALT_TRUE@	../../lib/copperplate/libcopperplate.la	\
+@XENO_COBALT_TRUE@	$(coredep_lib)				\
+@XENO_COBALT_TRUE@	@XENO_USER_LDADD@			\
+@XENO_COBALT_TRUE@	-lpthread -lrt -lm
+
 @XENO_COBALT_TRUE@check_vdso_SOURCES = check-vdso.c
 @XENO_COBALT_TRUE@check_vdso_CPPFLAGS = \
 @XENO_COBALT_TRUE@	@XENO_USER_CFLAGS@				\
@@ -607,6 +632,10 @@ rtdm$(EXEEXT): $(rtdm_OBJECTS) $(rtdm_DEPENDENCIES) $(EXTRA_rtdm_DEPENDENCIES)
 	@rm -f rtdm$(EXEEXT)
 	$(AM_V_CCLD)$(rtdm_LINK) $(rtdm_OBJECTS) $(rtdm_LDADD) $(LIBS)
 
+sched-quota$(EXEEXT): $(sched_quota_OBJECTS) $(sched_quota_DEPENDENCIES) $(EXTRA_sched_quota_DEPENDENCIES) 
+	@rm -f sched-quota$(EXEEXT)
+	$(AM_V_CCLD)$(sched_quota_LINK) $(sched_quota_OBJECTS) $(sched_quota_LDADD) $(LIBS)
+
 sched-tp$(EXEEXT): $(sched_tp_OBJECTS) $(sched_tp_DEPENDENCIES) $(EXTRA_sched_tp_DEPENDENCIES) 
 	@rm -f sched-tp$(EXEEXT)
 	$(AM_V_CCLD)$(sched_tp_LINK) $(sched_tp_OBJECTS) $(sched_tp_LDADD) $(LIBS)
@@ -627,6 +656,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cond_torture-cond-torture.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mutex_torture-mutex-torture.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtdm-rtdm.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sched_quota-sched-quota.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sched_tp-sched-tp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wakeup_time-wakeup-time.Po@am__quote@
 
@@ -734,6 +764,20 @@ rtdm-rtdm.obj: rtdm.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rtdm.c' object='rtdm-rtdm.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtdm_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtdm-rtdm.obj `if test -f 'rtdm.c'; then $(CYGPATH_W) 'rtdm.c'; else $(CYGPATH_W) '$(srcdir)/rtdm.c'; fi`
+
+sched_quota-sched-quota.o: sched-quota.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(sched_quota_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT sched_quota-sched-quota.o -MD -MP -MF $(DEPDIR)/sched_quota-sched-quota.Tpo -c -o sched_quota-sched-quota.o `test -f 'sched-quota.c' || echo '$(srcdir)/'`sched-quota.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sched_quota-sched-quota.Tpo $(DEPDIR)/sched_quota-sched-quota.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sched-quota.c' object='sched_quota-sched-quota.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(sched_quota_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o sched_quota-sched-quota.o `test -f 'sched-quota.c' || echo '$(srcdir)/'`sched-quota.c
+
+sched_quota-sched-quota.obj: sched-quota.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(sched_quota_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT sched_quota-sched-quota.obj -MD -MP -MF $(DEPDIR)/sched_quota-sched-quota.Tpo -c -o sched_quota-sched-quota.obj `if test -f 'sched-quota.c'; then $(CYGPATH_W) 'sched-quota.c'; else $(CYGPATH_W) '$(srcdir)/sched-quota.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sched_quota-sched-quota.Tpo $(DEPDIR)/sched_quota-sched-quota.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sched-quota.c' object='sched_quota-sched-quota.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(sched_quota_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o sched_quota-sched-quota.obj `if test -f 'sched-quota.c'; then $(CYGPATH_W) 'sched-quota.c'; else $(CYGPATH_W) '$(srcdir)/sched-quota.c'; fi`
 
 sched_tp-sched-tp.o: sched-tp.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(sched_tp_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT sched_tp-sched-tp.o -MD -MP -MF $(DEPDIR)/sched_tp-sched-tp.Tpo -c -o sched_tp-sched-tp.o `test -f 'sched-tp.c' || echo '$(srcdir)/'`sched-tp.c
