@@ -158,6 +158,11 @@ ssize_t read_threads(struct fsobj *fsobj, char *buf,
 			sched_class = "tp";
 			break;
 #endif
+#ifdef SCHED_QUOTA
+		case SCHED_QUOTA:
+			sched_class = "quota";
+			break;
+#endif
 		default:
 			sched_class = "other";
 			break;
