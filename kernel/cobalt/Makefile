@@ -19,6 +19,7 @@ xenomai-y :=	apc.o		\
 		thread.o	\
 		timer.o
 
+xenomai-$(CONFIG_XENO_OPT_SCHED_QUOTA) += sched-quota.o
 xenomai-$(CONFIG_XENO_OPT_SCHED_WEAK) += sched-weak.o
 xenomai-$(CONFIG_XENO_OPT_SCHED_SPORADIC) += sched-sporadic.o
 xenomai-$(CONFIG_XENO_OPT_SCHED_TP) += sched-tp.o

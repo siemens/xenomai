@@ -34,6 +34,7 @@
 #include <cobalt/kernel/sched-tp.h>
 #include <cobalt/kernel/sched-weak.h>
 #include <cobalt/kernel/sched-sporadic.h>
+#include <cobalt/kernel/sched-quota.h>
 #include <cobalt/kernel/vfile.h>
 #include <cobalt/kernel/assert.h>
 #include <asm/xenomai/machine.h>
@@ -83,6 +84,10 @@ struct xnsched {
 #ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
 	/*!< Context of sporadic scheduling class. */
 	struct xnsched_sporadic pss;
+#endif
+#ifdef CONFIG_XENO_OPT_SCHED_QUOTA
+	/*!< Context of runtime quota scheduling. */
+	struct xnsched_quota quota;
 #endif
 	/*!< Interrupt nesting level. */
 	volatile unsigned inesting;
@@ -487,6 +492,7 @@ static inline int xnsched_init_thread(struct xnthread *thread)
 
 	xnsched_idle_init_thread(thread);
 	xnsched_rt_init_thread(thread);
+
 #ifdef CONFIG_XENO_OPT_SCHED_TP
 	ret = xnsched_tp_init_thread(thread);
 	if (ret)
@@ -497,6 +503,12 @@ static inline int xnsched_init_thread(struct xnthread *thread)
 	if (ret)
 		return ret;
 #endif /* CONFIG_XENO_OPT_SCHED_SPORADIC */
+#ifdef CONFIG_XENO_OPT_SCHED_QUOTA
+	ret = xnsched_quota_init_thread(thread);
+	if (ret)
+		return ret;
+#endif /* CONFIG_XENO_OPT_SCHED_QUOTA */
+
 	return ret;
 }
 

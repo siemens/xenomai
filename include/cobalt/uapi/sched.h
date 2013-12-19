@@ -51,15 +51,6 @@ struct __sched_tp_param {
 	int __sched_partition;
 };
 
-struct sched_param_ex {
-	int sched_priority;
-	union {
-		struct __sched_ss_param ss;
-		struct __sched_rr_param rr;
-		struct __sched_tp_param tp;
-	} sched_u;
-};
-
 struct sched_tp_window {
 	struct timespec offset;
 	struct timespec duration;
@@ -71,8 +62,49 @@ struct __sched_config_tp {
 	struct sched_tp_window windows[0];
 };
 
+#ifndef SCHED_QUOTA
+#define SCHED_QUOTA		12
+#define sched_quota_group	sched_u.quota.__sched_group
+#endif	/* !SCHED_QUOTA */
+
+struct __sched_quota_param {
+	int __sched_group;
+};
+
+enum {
+	sched_quota_add,
+	sched_quota_remove,
+	sched_quota_set
+};
+
+struct __sched_config_quota {
+	int op;
+	struct {
+		int *tgid_r;
+	} add;
+	struct {
+		int tgid;
+	} remove;
+	struct {
+		int tgid;
+		int quota;
+		int quota_peak;
+	} set;
+};
+
+struct sched_param_ex {
+	int sched_priority;
+	union {
+		struct __sched_ss_param ss;
+		struct __sched_rr_param rr;
+		struct __sched_tp_param tp;
+		struct __sched_quota_param quota;
+	} sched_u;
+};
+
 union sched_config {
 	struct __sched_config_tp tp;
+	struct __sched_config_quota quota;
 };
 
 #endif /* !_COBALT_UAPI_SCHED_H */

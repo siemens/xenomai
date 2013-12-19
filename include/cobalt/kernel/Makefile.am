@@ -18,6 +18,7 @@ noinst_HEADERS =	\
 	sched-idle.h	\
 	schedparam.h	\
 	schedqueue.h	\
+	sched-quota.h	\
 	sched-rt.h	\
 	sched-sporadic.h	\
 	sched-tp.h	\

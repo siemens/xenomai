@@ -44,13 +44,6 @@
 struct cobalt_thread;
 struct cobalt_threadstat;
 
-struct cobalt_threadattr {
-	int policy;
-	struct sched_param_ex schedparam_ex;
-	const char *name;
-	cpumask_t affinity;
-};
-
 /*
  * pthread_mutexattr_t and pthread_condattr_t fit on 32 bits, for
  * compatibility with libc.
@@ -100,9 +93,6 @@ struct cobalt_thread {
 	/** cobalt_threadq */
 	struct list_head link;
 	struct list_head *container;
-
-        /** Creation attributes. */
-	struct cobalt_threadattr attr;
 
 	/** Signal management. */
 	sigset_t sigpending;

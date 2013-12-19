@@ -46,6 +46,11 @@ struct xnsched_sporadic_param {
 	int current_prio;
 };
 
+struct xnsched_quota_param {
+	int prio;
+	int tgid;	/* thread group id. */
+};
+
 union xnsched_policy_param {
 	struct xnsched_idle_param idle;
 	struct xnsched_rt_param rt;
@@ -57,6 +62,9 @@ union xnsched_policy_param {
 #endif
 #ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
 	struct xnsched_sporadic_param pss;
+#endif
+#ifdef CONFIG_XENO_OPT_SCHED_QUOTA
+	struct xnsched_quota_param quota;
 #endif
 };
 

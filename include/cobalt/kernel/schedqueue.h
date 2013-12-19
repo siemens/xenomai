@@ -68,6 +68,13 @@ static inline int xnsched_emptyq_p(struct xnsched_mlq *q)
 	return q->himap == 0;
 }
 
+static inline int xnsched_weightq(struct xnsched_mlq *q)
+{
+	int hi = ffnz(q->himap);
+	int lo = ffnz(q->lomap[hi]);
+	return hi * BITS_PER_LONG + lo;	/* Result is undefined if none set. */
+}
+
 typedef struct xnsched_mlq xnsched_queue_t;
 
 #else /* ! CONFIG_XENO_OPT_SCALABLE_SCHED */
@@ -86,6 +93,13 @@ typedef struct list_head xnsched_queue_t;
 			__t = list_get_entry(__q, struct xnthread, rlink);	\
 		__t;								\
 	})
+#define xnsched_weightq(__q)						\
+	({								\
+		struct xnthread *__t;					\
+		__t = list_first_entry(__q, struct xnthread, rlink);	\
+		__t->cprio;						\
+	})
+	
 
 #endif /* !CONFIG_XENO_OPT_SCALABLE_SCHED */
 

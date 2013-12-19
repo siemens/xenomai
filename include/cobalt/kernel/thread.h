@@ -62,7 +62,7 @@ struct xnthread_wait_context {
 
 typedef struct xnthread {
 
-	struct xnarchtcb tcb;		/* Architecture-dependent block -- Must be first */
+	struct xnarchtcb tcb;		/* Architecture-dependent block */
 
 	unsigned long state;		/* Thread state flags */
 
@@ -80,6 +80,10 @@ typedef struct xnthread {
 #endif
 #ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
 	struct xnsched_sporadic_data *pss; /* Sporadic scheduling data. */
+#endif
+#ifdef CONFIG_XENO_OPT_SCHED_QUOTA
+	struct xnsched_quota_group *quota; /* Quota scheduling group. */
+	struct list_head quota_expired;
 #endif
 
 	unsigned int idtag;	/* Unique ID tag */

@@ -72,6 +72,9 @@ void xnsched_register_classes(void)
 #ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
 	xnsched_register_class(&xnsched_class_sporadic);
 #endif
+#ifdef CONFIG_XENO_OPT_SCHED_QUOTA
+	xnsched_register_class(&xnsched_class_quota);
+#endif
 	xnsched_register_class(&xnsched_class_rt);
 }
 
@@ -579,13 +582,6 @@ void xnsched_delq(struct xnsched_mlq *q, struct xnthread *thread)
 	del_q(q, &thread->rlink, get_qindex(q, thread->cprio));
 }
 
-static inline int ffs_q(struct xnsched_mlq *q)
-{
-	int hi = ffnz(q->himap);
-	int lo = ffnz(q->lomap[hi]);
-	return hi * BITS_PER_LONG + lo;	/* Result is undefined if none set. */
-}
-
 struct xnthread *xnsched_getq(struct xnsched_mlq *q)
 {
 	struct xnthread *thread;
@@ -595,7 +591,7 @@ struct xnthread *xnsched_getq(struct xnsched_mlq *q)
 	if (q->elems == 0)
 		return NULL;
 
-	idx = ffs_q(q);
+	idx = xnsched_weightq(q);
 	head = q->heads + idx;
 	XENO_BUGON(NUCLEUS, list_empty(head));
 	thread = list_first_entry(head, struct xnthread, rlink);

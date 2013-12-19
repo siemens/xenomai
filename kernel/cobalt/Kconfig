@@ -90,9 +90,12 @@ config XENO_OPT_SCHED_SPORADIC
 	depends on XENO_OPT_SCHED_CLASSES
 	help
 
-	This option enables support for the sporadic scheduling.  It
-	can be used to enforce a capped limit on the execution time of
-	a thread within a given period of time.
+	This option enables support for the sporadic scheduling policy
+	in Xenomai (SCHED_SPORADIC), also known as POSIX sporadic
+	server.
+
+	It can be used to enforce a capped limit on the execution time
+	of a thread within a given period of time.
 
 	If in doubt, say N.
 
@@ -108,6 +111,48 @@ config XENO_OPT_SCHED_SPORADIC_MAXREPL
 	defines the maximum number of replenishment requests that can
 	be pending concurrently for any given thread that undergoes
 	sporadic scheduling (system minimum is 4).
+
+config XENO_OPT_SCHED_QUOTA
+	bool "Thread groups with runtime quota"
+	default n
+	depends on XENO_OPT_SCHED_CLASSES
+	help
+
+	This option enables the SCHED_QUOTA scheduling policy for
+	Xenomai.
+
+	This policy enforces a limitation on the CPU consumption of
+	threads over a globally defined period, known as the quota
+	interval. This is done by pooling threads with common
+	requirements in groups, and giving each group a share of the
+	global period (see CONFIG_XENO_OPT_SCHED_QUOTA_PERIOD).
+
+	When threads have entirely consumed the quota allotted to the
+	group they belong to, the latter is suspended as a whole,
+	until the next quota interval starts. At this point, a new
+	runtime budget is given to each group, in accordance with its
+	share.
+
+	If in doubt, say N.
+
+config XENO_OPT_SCHED_QUOTA_PERIOD
+	int "Quota interval (us)"
+	default 10000
+	range 100 1000000000
+	depends on XENO_OPT_SCHED_QUOTA
+	help
+
+	The global period thread groups can get a share of.
+
+config XENO_OPT_SCHED_QUOTA_NR_GROUPS
+	int "Number of thread groups"
+	default 32
+	range 1 1024
+	depends on XENO_OPT_SCHED_QUOTA
+	help
+
+	The overall number of thread groups which may be defined
+	across all CPUs.
 
 config XENO_OPT_STATS
 	bool "Runtime statistics"
