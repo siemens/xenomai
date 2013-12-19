@@ -93,7 +93,7 @@ static struct xnvfile_regular usage_vfile = {
 
 #endif /* CONFIG_XENO_OPT_VFILE */
 
-int xnregistry_init(void)
+unsigned xnregistry_hash_size(void)
 {
 	static const int primes[] = {
 		101, 211, 307, 401, 503, 601,
@@ -104,6 +104,11 @@ int xnregistry_init(void)
 ((n) < sizeof(primes) / sizeof(int) ? \
  (n) : sizeof(primes) / sizeof(int) - 1)
 
+	return primes[obj_hash_max(CONFIG_XENO_OPT_REGISTRY_NRSLOTS / 100)];
+}
+
+int xnregistry_init(void)
+{
 	int n, ret __maybe_unused;
 
 	registry_obj_slots = kmalloc(CONFIG_XENO_OPT_REGISTRY_NRSLOTS *
@@ -143,8 +148,7 @@ int xnregistry_init(void)
 	list_get_entry(&free_object_list, struct xnobject, link);
 	nr_active_objects = 1;
 
-	nr_object_entries =
-	    primes[obj_hash_max(CONFIG_XENO_OPT_REGISTRY_NRSLOTS / 100)];
+	nr_object_entries = xnregistry_hash_size();
 	object_index = kmalloc(sizeof(*object_index) *
 				      nr_object_entries, GFP_KERNEL);
 

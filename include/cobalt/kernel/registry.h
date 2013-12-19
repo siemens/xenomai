@@ -192,6 +192,8 @@ unsigned long xnregistry_put(xnhandle_t handle);
 
 int xnregistry_unlink(const char *key);
 
+unsigned xnregistry_hash_size(void);
+
 extern struct xnpnode_ops xnregistry_vfsnap_ops;
 
 extern struct xnpnode_ops xnregistry_vlink_ops;
