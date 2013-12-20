@@ -1780,11 +1780,7 @@ void xnthread_migrate_passive(struct xnthread *thread, struct xnsched *sched)
  * or ready thread moves it to the end of the runnable queue, thus
  * causing a manual round-robin.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Primary mode only.
+ * Calling context: any.
  *
  * Rescheduling: never.
  *
@@ -1797,18 +1793,43 @@ int xnthread_set_schedparam(struct xnthread *thread,
 			    struct xnsched_class *sched_class,
 			    const union xnsched_policy_param *sched_param)
 {
-	int old_wprio, new_wprio, ret;
 	spl_t s;
-
-	primary_mode_only();
+	int ret;
 
 	xnlock_get_irqsave(&nklock, s);
+	ret = __xnthread_set_schedparam(thread, sched_class, sched_param);
+	xnlock_put_irqrestore(&nklock, s);
 
+	return ret;
+}
+EXPORT_SYMBOL_GPL(xnthread_set_schedparam);
+
+int __xnthread_set_schedparam(struct xnthread *thread,
+			      struct xnsched_class *sched_class,
+			      const union xnsched_policy_param *sched_param)
+{
+	int old_wprio, new_wprio, ret;
+
+	/*
+	 * NOTE: we do not prevent the caller from altering the
+	 * scheduling parameters of a thread that currently undergoes
+	 * a PIP boost.
+	 *
+	 * Rationale: Calling xnthread_set_schedparam() carelessly
+	 * with no consideration for resource management is a bug in
+	 * essence, and xnthread_set_schedparam() does not have to
+	 * paper over it, especially at the cost of more complexity
+	 * when dealing with multiple scheduling classes.
+	 *
+	 * In short, callers have to make sure that lowering a thread
+	 * priority is safe with respect to what their application
+	 * currently does.
+	 */
 	old_wprio = thread->wprio;
 
 	ret = xnsched_set_policy(thread, sched_class, sched_param);
 	if (ret)
-		goto unlock_and_exit;
+		return ret;
 
 	new_wprio = thread->wprio;
 
@@ -1816,29 +1837,16 @@ int xnthread_set_schedparam(struct xnthread *thread,
 		   "thread %p thread_name %s class %s prio %d",
 		   thread, xnthread_name(thread),
 		   thread->sched_class->name, thread->cprio);
+
 	/*
-	 * NOTE: The behaviour changed compared to v2.4.x: we do not
-	 * prevent the caller from altering the scheduling parameters
-	 * of a thread that currently undergoes a PIP boost
-	 * anymore. Rationale: Calling xnthread_set_schedparam()
-	 * carelessly with no consideration for resource management is
-	 * a bug in essence, and xnthread_set_schedparam() does not
-	 * have to paper over it, especially at the cost of more
-	 * complexity when dealing with multiple scheduling classes.
-	 * In short, callers have to make sure that lowering a thread
-	 * priority is safe with respect to what their application
-	 * currently does.
+	 * Update the pending order of the thread inside its wait
+	 * queue, unless this behaviour has been explicitly disabled
+	 * for the pended synchronization object, or the requested
+	 * (weighted) priority has not changed, thus preventing
+	 * spurious round-robin effects.
 	 */
 	if (old_wprio != new_wprio && thread->wchan != NULL &&
 	    (thread->wchan->status & XNSYNCH_DREORD) == 0)
-		/*
-		 * Update the pending order of the thread inside its
-		 * wait queue, unless this behaviour has been
-		 * explicitly disabled for the pended synchronization
-		 * object, or the requested (weighted) priority has
-		 * not changed, thus preventing spurious round-robin
-		 * effects.
-		 */
 		xnsynch_requeue_sleeper(thread);
 	/*
 	 * We don't need/want to move the thread at the end of its
@@ -1852,13 +1860,8 @@ int xnthread_set_schedparam(struct xnthread *thread,
 	if (!xnthread_test_state(thread, XNTHREAD_BLOCK_BITS|XNREADY|XNLOCK))
 		xnsched_putback(thread);
 
-unlock_and_exit:
-
-	xnlock_put_irqrestore(&nklock, s);
-
 	return ret;
 }
-EXPORT_SYMBOL_GPL(xnthread_set_schedparam);
 
 void __xnthread_test_cancel(struct xnthread *curr)
 {

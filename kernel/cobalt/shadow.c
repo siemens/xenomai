@@ -818,7 +818,7 @@ void __xnshadow_demote(struct xnthread *thread) /* nklock locked, irqs off */
 	param.rt.prio = 0;
 	sched_class = &xnsched_class_rt;
 #endif
-	xnthread_set_schedparam(thread, sched_class, &param);
+	__xnthread_set_schedparam(thread, sched_class, &param);
 }
 
 void xnshadow_demote(struct xnthread *thread)

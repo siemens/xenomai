@@ -437,6 +437,10 @@ static inline void xnthread_migrate_passive(struct xnthread *thread,
 
 #endif
 
+int __xnthread_set_schedparam(struct xnthread *thread,
+			      struct xnsched_class *sched_class,
+			      const union xnsched_policy_param *sched_param);
+
 int xnthread_set_schedparam(struct xnthread *thread,
 			    struct xnsched_class *sched_class,
 			    const union xnsched_policy_param *sched_param);

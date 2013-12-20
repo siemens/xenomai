@@ -86,7 +86,7 @@ static void sporadic_drop_handler(struct xntimer *timer)
 			p.pss.init_budget = 0;
 			p.pss.current_prio = pss->param.low_prio;
 			/* Move sporadic thread to the background. */
-			xnthread_set_schedparam(thread, &xnsched_class_sporadic, &p);
+			__xnthread_set_schedparam(thread, &xnsched_class_sporadic, &p);
 		}
 	}
 }
@@ -161,7 +161,7 @@ retry:
 		p.pss.init_budget = 0;
 		p.pss.current_prio = pss->param.normal_prio;
 		/* Move sporadic thread to the foreground. */
-		xnthread_set_schedparam(thread, &xnsched_class_sporadic, &p);
+		__xnthread_set_schedparam(thread, &xnsched_class_sporadic, &p);
 	}
 
 	/*
