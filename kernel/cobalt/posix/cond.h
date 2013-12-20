@@ -39,6 +39,7 @@ struct cobalt_cond {
 	pthread_condattr_t attr;
 	struct cobalt_mutex *mutex;
 	struct cobalt_kqueues *owningq;
+	xnhandle_t handle;
 };
 
 extern const pthread_condattr_t cobalt_default_cond_attr;

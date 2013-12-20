@@ -27,7 +27,7 @@ union cobalt_cond_union {
 	struct __shadow_cond {
 		unsigned int magic;
 		struct cobalt_condattr attr;
-		struct cobalt_cond *cond;
+		xnhandle_t handle;
 		union {
 			unsigned int pending_signals_offset;
 			unsigned long *pending_signals;
