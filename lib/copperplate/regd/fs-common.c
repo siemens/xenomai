@@ -148,21 +148,18 @@ ssize_t read_threads(struct fsobj *fsobj, char *buf,
 		case SCHED_RR:
 			sched_class = "rr";
 			break;
-#ifdef SCHED_SPORADIC
 		case SCHED_SPORADIC:
 			sched_class = "pss";
 			break;
-#endif
-#ifdef SCHED_TP
 		case SCHED_TP:
 			sched_class = "tp";
 			break;
-#endif
-#ifdef SCHED_QUOTA
 		case SCHED_QUOTA:
 			sched_class = "quota";
 			break;
-#endif
+		case SCHED_WEAK:
+			sched_class = "weak";
+			break;
 		default:
 			sched_class = "other";
 			break;
