@@ -538,6 +538,23 @@ static inline void xnsched_tick(struct xnsched *sched)
 		sched_class->sched_tick(sched);
 }
 
+static inline int xnsched_declare(struct xnsched_class *sched_class,
+				  struct xnthread *thread,
+				  const union xnsched_policy_param *p)
+{
+	int ret;
+
+	if (sched_class->sched_declare) {
+		ret = sched_class->sched_declare(thread, p);
+		if (ret)
+			return ret;
+	}
+	if (sched_class != thread->base_class)
+		sched_class->nthreads++;
+
+	return 0;
+}
+
 #ifdef CONFIG_XENO_OPT_SCHED_CLASSES
 
 static inline void xnsched_enqueue(struct xnthread *thread)

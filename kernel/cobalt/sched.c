@@ -376,14 +376,9 @@ int xnsched_set_policy(struct xnthread *thread,
 	 * affect the previous class (such as touching thread->rlink
 	 * for instance).
 	 */
-	if (sched_class != thread->base_class) {
-		if (sched_class->sched_declare) {
-			ret = sched_class->sched_declare(thread, p);
-			if (ret)
-				return ret;
-		}
-		sched_class->nthreads++;
-	}
+	ret = xnsched_declare(sched_class, thread, p);
+	if (ret)
+		return ret;
 
 	/*
 	 * As a special case, we may be called from __xnthread_init()
