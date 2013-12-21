@@ -85,6 +85,7 @@ static void tp_tick_handler(struct xntimer *timer)
 static void xnsched_tp_init(struct xnsched *sched)
 {
 	struct xnsched_tp *tp = &sched->tp;
+	char timer_name[XNOBJECT_NAME_LEN];
 	int n;
 
 	/*
@@ -98,12 +99,17 @@ static void xnsched_tp_init(struct xnsched *sched)
 	xnsched_initq(&tp->idle.runnable,
 		      XNSCHED_RT_MIN_PRIO, XNSCHED_RT_MAX_PRIO);
 
+#ifdef CONFIG_SMP
+	sprintf(timer_name, "[tp-tick/%u]", sched->cpu);
+#else
+	strcpy(timer_name, "[tp-tick]");
+#endif
 	tp->tps = NULL;
 	tp->gps = NULL;
 	INIT_LIST_HEAD(&tp->threads);
 	xntimer_init_noblock(&tp->tf_timer, &nkclock, tp_tick_handler, NULL);
 	xntimer_set_sched(&tp->tf_timer, sched);
-	xntimer_set_name(&tp->tf_timer, "tp-tick");
+	xntimer_set_name(&tp->tf_timer, timer_name);
 }
 
 static void xnsched_tp_setparam(struct xnthread *thread,
