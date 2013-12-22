@@ -19,6 +19,7 @@
  * 02111-1307, USA.
  */
 #include <cobalt/kernel/sched.h>
+#include <cobalt/kernel/heap.h>
 
 static void tp_schedule_next(struct xnsched_tp *tp)
 {
@@ -270,6 +271,28 @@ done:
 	return old_gps;
 }
 EXPORT_SYMBOL_GPL(xnsched_tp_set_schedule);
+
+struct xnsched_tp_schedule *
+xnsched_tp_get_schedule(struct xnsched *sched)
+{
+	struct xnsched_tp_schedule *gps;
+
+	gps = sched->tp.gps;
+	if (gps == NULL)
+		return NULL;
+
+	atomic_inc(&gps->refcount);
+
+	return gps;
+}
+EXPORT_SYMBOL_GPL(xnsched_tp_get_schedule);
+
+void xnsched_tp_put_schedule(struct xnsched_tp_schedule *gps)
+{
+	if (atomic_dec_and_test(&gps->refcount))
+		xnfree(gps);
+}
+EXPORT_SYMBOL_GPL(xnsched_tp_put_schedule);
 
 int xnsched_tp_get_partition(struct xnsched *sched)
 {

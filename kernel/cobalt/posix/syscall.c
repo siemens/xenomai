@@ -169,6 +169,7 @@ static struct xnsyscall cobalt_syscalls[] = {
 	SKINCALL_DEF(sc_cobalt_event_wait, cobalt_event_wait, primary),
 	SKINCALL_DEF(sc_cobalt_event_sync, cobalt_event_sync, any),
 	SKINCALL_DEF(sc_cobalt_sched_setconfig_np, cobalt_sched_setconfig_np, any),
+	SKINCALL_DEF(sc_cobalt_sched_getconfig_np, cobalt_sched_getconfig_np, any),
 };
 
 struct xnpersonality cobalt_personality = {

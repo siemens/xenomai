@@ -488,6 +488,8 @@ int xnsched_quota_create_group(struct xnsched_quota_group *tg,
 	tg->sched = sched;
 	tg->run_budget_ns = qs->period_ns;
 	tg->run_credit_ns = 0;
+	tg->quota_percent = 100;
+	tg->quota_peak_percent = 100;
 	tg->quota_ns = qs->period_ns;
 	tg->quota_peak_ns = qs->period_ns;
 	tg->nr_active = 0;
@@ -531,6 +533,8 @@ void xnsched_quota_set_limit(struct xnsched_quota_group *tg,
 	atomic_only();
 
 	if (quota_percent < 0) { /* Quota off. */
+		tg->quota_percent = 100;
+		tg->quota_peak_percent = 100;
 		tg->quota_ns = qs->period_ns;
 		tg->quota_peak_ns = qs->period_ns;
 		tg->run_budget_ns = qs->period_ns;
@@ -544,6 +548,8 @@ void xnsched_quota_set_limit(struct xnsched_quota_group *tg,
 	if (quota_peak_percent < quota_percent)
 		quota_peak_percent = quota_percent;
 
+	tg->quota_percent = quota_percent;
+	tg->quota_peak_percent = quota_peak_percent;
 	tg->quota_ns = xnarch_div64(qs->period_ns * quota_percent, 100);
 	tg->quota_peak_ns = xnarch_div64(qs->period_ns * quota_peak_percent, 100);
 	tg->run_budget_ns = tg->quota_ns;

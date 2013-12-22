@@ -1288,6 +1288,11 @@ int set_tp_config(int cpu, union sched_config *config, size_t len)
 	spl_t s;
 	int n;
 
+	if (config->tp.nr_windows == 0) {
+		gps = NULL;
+		goto set_schedule;
+	}
+
 	gps = xnmalloc(sizeof(*gps) + config->tp.nr_windows * sizeof(*w));
 	if (gps == NULL)
 		goto fail;
@@ -1316,17 +1321,18 @@ int set_tp_config(int cpu, union sched_config *config, size_t len)
 		next_offset += duration;
 	}
 
+	atomic_set(&gps->refcount, 1);
 	gps->pwin_nr = n;
 	gps->tf_duration = next_offset;
+set_schedule:
 	sched = xnsched_struct(cpu);
-
 	xnlock_get_irqsave(&nklock, s);
 	ogps = xnsched_tp_set_schedule(sched, gps);
 	xnsched_tp_start_schedule(sched);
 	xnlock_put_irqrestore(&nklock, s);
 
 	if (ogps)
-		xnfree(ogps);
+		xnsched_tp_put_schedule(ogps);
 
 	return 0;
 
@@ -1336,10 +1342,68 @@ fail:
 	return -EINVAL;
 }
 
+static inline
+ssize_t get_tp_config(int cpu, union sched_config __user *u_config,
+		      size_t len)
+{
+	struct xnsched_tp_window *pw, *w;
+	struct xnsched_tp_schedule *gps;
+	struct sched_tp_window *pp, *p;
+	union sched_config *config;
+	struct xnsched *sched;
+	ssize_t ret = 0, elen;
+	spl_t s;
+	int n;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	sched = xnsched_struct(cpu);
+	gps = xnsched_tp_get_schedule(sched);
+	if (gps == NULL) {
+		xnlock_put_irqrestore(&nklock, s);
+		return 0;
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	elen = sched_tp_confsz(gps->pwin_nr);
+	if (elen > len) {
+		ret = -ENOSPC;
+		goto out;
+	}
+
+	config = xnmalloc(elen);
+	if (config == NULL) {
+		ret = -ENOMEM;
+		goto out;
+	}
+
+	config->tp.nr_windows = gps->pwin_nr;
+	for (n = 0, pp = p = config->tp.windows, pw = w = gps->pwins;
+	     n < gps->pwin_nr; pp = p, p++, pw = w, w++, n++) {
+		ns2ts(&p->offset, w->w_offset);
+		ns2ts(&pp->duration, w->w_offset - pw->w_offset);
+		p->ptid = w->w_part;
+	}
+	ns2ts(&pp->duration, gps->tf_duration - pw->w_offset);
+	ret = __xn_safe_copy_to_user(u_config, config, elen);
+out:
+	xnsched_tp_put_schedule(gps);
+
+	return ret ?: elen;
+}
+
 #else /* !CONFIG_XENO_OPT_SCHED_TP */
 
-static inline
-int set_tp_config(int cpu, union sched_config *config, size_t len)
+static inline int
+set_tp_config(int cpu, union sched_config *config, size_t len)
+{
+	return -EINVAL;
+}
+
+static inline ssize_t
+get_tp_config(int cpu, union sched_config __user *u_config,
+	      size_t len)
 {
 	return -EINVAL;
 }
@@ -1349,13 +1413,16 @@ int set_tp_config(int cpu, union sched_config *config, size_t len)
 #ifdef CONFIG_XENO_OPT_SCHED_QUOTA
 
 static inline
-int set_quota_config(int cpu, union sched_config *config, size_t len)
+int set_quota_config(int cpu, const union sched_config *config, size_t len)
 {
-	struct __sched_config_quota *p = &config->quota;
+	const struct __sched_config_quota *p = &config->quota;
+	int ret = -ESRCH, quota_percent, quota_peak_percent;
 	struct xnsched_quota_group *tg;
 	struct xnsched *sched;
-	int ret = -ESRCH;
 	spl_t s;
+
+	if (len < sizeof(*p))
+		return -EINVAL;
 
 	if (p->op == sched_quota_add) {
 		tg = xnmalloc(sizeof(*tg));
@@ -1402,13 +1469,56 @@ int set_quota_config(int cpu, union sched_config *config, size_t len)
 		return ret;
 	}
 
+	if (p->op == sched_quota_get) {
+		xnlock_get_irqsave(&nklock, s);
+		sched = xnsched_struct(cpu);
+		tg = xnsched_quota_find_group(sched, p->get.tgid);
+		if (tg) {
+			quota_percent = tg->quota_percent;
+			quota_peak_percent = tg->quota_peak_percent;
+			ret = 0;
+		}
+		xnlock_put_irqrestore(&nklock, s);
+		if (ret)
+			return ret;
+		ret = __xn_safe_copy_to_user(p->get.quota_r, &quota_percent,
+					     sizeof(quota_percent));
+		if (ret)
+			return ret;
+		ret = __xn_safe_copy_to_user(p->get.quota_peak_r,
+					     &quota_peak_percent,
+					     sizeof(quota_peak_percent));
+		return ret;
+	}
+
 	return -EINVAL;
+}
+
+static inline
+ssize_t get_quota_config(int cpu, union sched_config __user *u_config,
+			 size_t len)
+{
+	union sched_config buf;
+	
+	if (__xn_safe_copy_from_user(&buf, (const void __user *)u_config, len))
+		return -EFAULT;
+
+	buf.quota.op = sched_quota_get;
+
+	return set_quota_config(cpu, &buf, len);
 }
 
 #else /* !CONFIG_XENO_OPT_SCHED_QUOTA */
 
 static inline
-int set_quota_config(int cpu, union sched_config *config, size_t len)
+int set_quota_config(int cpu, const union sched_config *config, size_t len)
+{
+	return -EINVAL;
+}
+
+static inline
+ssize_t get_quota_config(int cpu, union sched_config __user *u_config,
+			 size_t len)
 {
 	return -EINVAL;
 }
@@ -1425,7 +1535,7 @@ int set_quota_config(int cpu, union sched_config *config, size_t len)
  * @param policy scheduling policy to which the configuration data
  * applies. Currently, SCHED_TP and SCHED_QUOTA are valid.
  *
- * @param p a pointer to the configuration data to load for @a
+ * @param u_config a pointer to the configuration data to load on @a
  * cpu, applicable to @a policy.
  *
  * @par Settings applicable to SCHED_TP
@@ -1473,14 +1583,22 @@ int set_quota_config(int cpu, union sched_config *config, size_t len)
  *      percentage of the quota interval (config.quota.set.quota), and
  *      the peak percentage allowed (config.quota.set.quota_peak).
  *
+ *    - sched_quota_get for retrieving the scheduling parameters of a
+ *      thread group defined on @a cpu. The group identifier should be
+ *      passed in config.quota.get.tgid. The allotted percentage of
+ *      the quota interval (config.quota.get.quota_r), and the peak
+ *      percentage (config.quota.get.quota_peak_r) will be written to
+ *      the given output variables. The result of this operation is
+ *      identical to calling sched_getconfig_np().
+ *
  * @param len overall length of the configuration data (in bytes).
  *
  * @return 0 on success;
  * @return an error number if:
  *
  * - EINVAL, @a cpu is invalid, or @a policy is unsupported by the
- * current kernel configuration, @a len is zero, or @a p contains
- * invalid parameters.
+ * current kernel configuration, @a len is invalid, or @a u_config
+ * contains invalid parameters.
  *
  * - ENOMEM, lack of memory to perform the operation.
  *
@@ -1491,7 +1609,8 @@ int set_quota_config(int cpu, union sched_config *config, size_t len)
  *   identifier required to perform the operation is not valid.
  */
 int cobalt_sched_setconfig_np(int cpu, int policy,
-			      union sched_config __user *u_config, size_t len)
+			      const union sched_config __user *u_config,
+			      size_t len)
 {
 	union sched_config *buf;
 	int ret;
@@ -1506,7 +1625,7 @@ int cobalt_sched_setconfig_np(int cpu, int policy,
 	if (buf == NULL)
 		return -ENOMEM;
 
-	if (__xn_safe_copy_from_user(buf, (void __user *)u_config, len)) {
+	if (__xn_safe_copy_from_user(buf, (const void __user *)u_config, len)) {
 		ret = -EFAULT;
 		goto out;
 	}
@@ -1523,6 +1642,56 @@ int cobalt_sched_setconfig_np(int cpu, int policy,
 	}
 out:
 	xnfree(buf);
+
+	return ret;
+}
+
+/**
+ * Retrieve CPU-specific scheduler settings for a given policy.  A
+ * configuration is strictly local to the target @a cpu, and may
+ * differ from other processors.
+ *
+ * @param cpu processor to retrieve the configuration of.
+ *
+ * @param policy scheduling policy to which the configuration data
+ * applies. Currently, SCHED_TP and SCHED_QUOTA are valid.
+ *
+ * @param u_config a pointer to a memory area where the configuration
+ * data will be copied back. This area must be at least @a len bytes
+ * long.
+ *
+ * @param len overall length of the configuration data (in bytes).
+ *
+ * @return the number of bytes copied to @a u_config on success;
+ * @return a negative error number if:
+ *
+ * - EINVAL, @a cpu is invalid, or @a policy is unsupported by the
+ * current kernel configuration, or @a len cannot hold the retrieved
+ * configuration data.
+ *
+ * - ESRCH, with @a policy equal to SCHED_QUOTA, if the group
+ *   identifier required to perform the operation is not valid.
+ *
+ * - ENOMEM, lack of memory to perform the operation.
+ *
+ * - ENOSPC, @a len is too short.
+ */
+ssize_t cobalt_sched_getconfig_np(int cpu, int policy,
+				  union sched_config __user *u_config,
+				  size_t len)
+{
+	ssize_t ret;
+
+	switch (policy)	{
+	case SCHED_TP:
+		ret = get_tp_config(cpu, u_config, len);
+		break;
+	case SCHED_QUOTA:
+		ret = get_quota_config(cpu, u_config, len);
+		break;
+	default:
+		ret = -EINVAL;
+	}
 
 	return ret;
 }

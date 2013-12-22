@@ -176,8 +176,13 @@ int cobalt_sched_max_prio(int policy);
 
 int cobalt_sched_setconfig_np(int cpu,
 			      int policy,
-			      union sched_config __user *u_config,
+			      const union sched_config __user *u_config,
 			      size_t len);
+
+ssize_t cobalt_sched_getconfig_np(int cpu,
+				  int policy,
+				  union sched_config __user *u_config,
+				  size_t len);
 
 struct xnpersonality *cobalt_thread_map(struct xnthread *curr);
 

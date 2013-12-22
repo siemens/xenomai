@@ -36,6 +36,7 @@ struct xnsched_tp_window {
 struct xnsched_tp_schedule {
 	int pwin_nr;
 	xnticks_t tf_duration;
+	atomic_t refcount;
 	struct xnsched_tp_window pwins[0];
 };
 
@@ -77,6 +78,11 @@ void xnsched_tp_stop_schedule(struct xnsched *sched);
 
 int xnsched_tp_get_partition(struct xnsched *sched);
 
-#endif /* !CONFIG_XENO_OPT_SCHED_TP */
+struct xnsched_tp_schedule *
+xnsched_tp_get_schedule(struct xnsched *sched);
+
+void xnsched_tp_put_schedule(struct xnsched_tp_schedule *gps);
+
+#endif /* CONFIG_XENO_OPT_SCHED_TP */
 
 #endif /* !_COBALT_KERNEL_SCHED_TP_H */

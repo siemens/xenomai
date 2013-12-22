@@ -40,6 +40,8 @@ struct xnsched_quota_group {
 	int nr_active;
 	int nr_threads;
 	int tgid;
+	int quota_percent;
+	int quota_peak_percent;
 };
 
 struct xnsched_quota {
