@@ -62,6 +62,9 @@ struct __sched_config_tp {
 	struct sched_tp_window windows[0];
 };
 
+#define sched_tp_confsz(nr_win) \
+  (sizeof(struct __sched_config_tp) + nr_win * sizeof(struct sched_tp_window))
+
 #ifndef SCHED_QUOTA
 #define SCHED_QUOTA		12
 #define sched_quota_group	sched_u.quota.__sched_group
@@ -74,7 +77,8 @@ struct __sched_quota_param {
 enum {
 	sched_quota_add,
 	sched_quota_remove,
-	sched_quota_set
+	sched_quota_set,
+	sched_quota_get,
 };
 
 struct __sched_config_quota {
@@ -90,7 +94,14 @@ struct __sched_config_quota {
 		int quota;
 		int quota_peak;
 	} set;
+	struct {
+		int tgid;
+		int *quota_r;
+		int *quota_peak_r;
+	} get;
 };
+
+#define sched_quota_confsz()  sizeof(struct __sched_config_quota)
 
 struct sched_param_ex {
 	int sched_priority;

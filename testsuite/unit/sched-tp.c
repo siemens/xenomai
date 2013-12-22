@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <memory.h>
 #include <malloc.h>
 #include <unistd.h>
 #include <signal.h>
@@ -94,7 +95,7 @@ int main(int argc, char **argv)
 	sigset_t mask, oldmask;
 	union sched_config *p;
 	size_t len;
-	int ret;
+	int ret, n;
 
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 
@@ -149,6 +150,22 @@ int main(int argc, char **argv)
 	ret = sched_setconfig_np(0, SCHED_TP, p, len);
 	if (ret)
 		error(1, ret, "sched_setconfig_np");
+
+	memset(p, 0xa5, len);
+
+	ret = sched_getconfig_np(0, SCHED_TP, p, &len);
+	if (ret)
+		error(1, ret, "sched_getconfig_np");
+
+	printf("check: %d windows\n", p->tp.nr_windows);
+	for (n = 0; n < 4; n++)
+		printf("[%d] offset = { %ld s, %ld ns }, duration = { %ld s, %ld ns }, ptid = %d\n",
+		       n,
+		       p->tp.windows[n].offset.tv_sec,
+		       p->tp.windows[n].offset.tv_nsec,
+		       p->tp.windows[n].duration.tv_sec,
+		       p->tp.windows[n].duration.tv_nsec,
+		       p->tp.windows[n].ptid);
 
 	sigemptyset(&mask);
 	sigaddset(&mask, SIGINT);

@@ -438,11 +438,27 @@ int pthread_probe_np(pid_t tid)
 }
 
 int sched_setconfig_np(int cpu, int policy,
-		       union sched_config *config, size_t len)
+		       const union sched_config *config, size_t len)
 {
 	return -XENOMAI_SKINCALL4(__cobalt_muxid,
 				  sc_cobalt_sched_setconfig_np,
 				  cpu, policy, config, len);
+}
+
+ssize_t sched_getconfig_np(int cpu, int policy,
+			   union sched_config *config, size_t *len_r)
+{
+	ssize_t ret;
+
+	ret = XENOMAI_SKINCALL4(__cobalt_muxid,
+				sc_cobalt_sched_getconfig_np,
+				cpu, policy, config, *len_r);
+	if (ret < 0)
+		return -ret;
+
+	*len_r = ret;
+
+	return 0;
 }
 
 COBALT_IMPL(int, pthread_kill, (pthread_t thread, int sig))

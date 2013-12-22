@@ -20,6 +20,7 @@
 
 #pragma GCC system_header
 #include_next <sched.h>
+#include <sys/types.h>
 #include <cobalt/wrappers.h>
 #include <cobalt/uapi/sched.h>
 
@@ -41,17 +42,15 @@ int __sched_cpucount(size_t __setsize, const cpu_set_t *__setp);
 void __sched_cpufill(size_t __setsize, cpu_set_t *__setp);
 #endif /* !CPU_COUNT */
 
-#define sched_tp_confsz(nr_win) \
-  (sizeof(struct __sched_config_tp) + nr_win * sizeof(struct sched_tp_window))
-
-#define sched_quota_confsz()  sizeof(struct __sched_config_quota)
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 int sched_setconfig_np(int cpu, int policy,
-		       union sched_config *config, size_t len);
+		       const union sched_config *config, size_t len);
+
+ssize_t sched_getconfig_np(int cpu, int policy,
+			   union sched_config *config, size_t *len_r);
 
 #ifdef __cplusplus
 }
