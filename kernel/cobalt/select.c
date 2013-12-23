@@ -18,12 +18,12 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  *
- * \ingroup select
+ * @ingroup select
  */
 
-/*!
- * \ingroup nucleus
- * \defgroup select File descriptors events multiplexing services.
+/**
+ * @ingroup nucleus
+ * @defgroup select File descriptors events multiplexing services.
  *
  * File descriptors events multiplexing services.
  *
@@ -63,6 +63,8 @@ static int deletion_apc;
  * before it is bound to a selector by the means of xnselect_bind().
  *
  * @param select_block pointer to the xnselect structure to be initialized
+ *
+ * @remark Tags: none.
  */
 void xnselect_init(struct xnselect *select_block)
 {
@@ -103,6 +105,8 @@ static inline int xnselect_wakeup(struct xnselector *selector)
  *
  * @retval -EINVAL if @a type or @a index is invalid;
  * @retval 0 otherwise.
+ *
+ * @remark Tags: might-switch, atomic-entry.
  */
 int xnselect_bind(struct xnselect *select_block,
 		  struct xnselect_binding *binding,
@@ -111,6 +115,8 @@ int xnselect_bind(struct xnselect *select_block,
 		  unsigned index,
 		  unsigned state)
 {
+	atomic_only();
+
 	if (type >= XNSELECT_MAX_TYPES || index > __FD_SETSIZE)
 		return -EINVAL;
 
@@ -164,7 +170,10 @@ EXPORT_SYMBOL_GPL(__xnselect_signal);
  *
  * Any binding with a @a xnselector block is destroyed.
  *
- * @param select_block pointer to the @a xnselect structure associated with a file descriptor
+ * @param select_block pointer to the @a xnselect structure associated
+ * with a file descriptor
+ *
+ * @remark Tags: might-switch.
  */
 void xnselect_destroy(struct xnselect *select_block)
 {
@@ -271,6 +280,8 @@ static unsigned fd_set_popcount(fd_set *set, unsigned n)
  * @param selector The selector structure to be initialized.
  *
  * @retval 0
+ *
+ * @remark Tags: none.
  */
 int xnselector_init(struct xnselector *selector)
 {
@@ -309,6 +320,8 @@ EXPORT_SYMBOL_GPL(xnselector_init);
  * @retval -EINTR if @a xnselect was interrupted while waiting;
  * @retval 0 in case of timeout.
  * @retval the number of file descriptors having received an event.
+ *
+ * @remark Tags: might-switch.
  */
 int xnselect(struct xnselector *selector,
 	     fd_set *out_fds[XNSELECT_MAX_TYPES],
@@ -384,6 +397,8 @@ EXPORT_SYMBOL_GPL(xnselect);
  * All bindings with file descriptor are destroyed.
  *
  * @param selector the selector block to be destroyed
+ *
+ * @remark Tags: none.
  */
 void xnselector_destroy(struct xnselector *selector)
 {

@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/*!
+/**
  * @ingroup nucleus
  * @defgroup vfile Virtual file services
  *
@@ -396,6 +396,8 @@ static struct file_operations vfile_snapshot_fops = {
  *
  * - -ENOMEM is returned if the virtual file entry cannot be created
  * in the /proc hierarchy.
+ *
+ * @remark Tags: secondary-only.
  */
 int xnvfile_init_snapshot(const char *name,
 			  struct xnvfile_snapshot *vfile,
@@ -634,6 +636,8 @@ static struct file_operations vfile_regular_fops = {
  *
  * - -ENOMEM is returned if the virtual file entry cannot be created
  * in the /proc hierarchy.
+ *
+ * @remark Tags: secondary-only.
  */
 int xnvfile_init_regular(const char *name,
 			 struct xnvfile_regular *vfile,
@@ -676,6 +680,8 @@ EXPORT_SYMBOL_GPL(xnvfile_init_regular);
  *
  * - -ENOMEM is returned if the virtual directory entry cannot be
  * created in the /proc hierarchy.
+ *
+ * @remark Tags: secondary-only.
  */
 int xnvfile_init_dir(const char *name,
 		     struct xnvfile_directory *vdir,
@@ -721,6 +727,8 @@ EXPORT_SYMBOL_GPL(xnvfile_init_dir);
  *
  * - -ENOMEM is returned if the virtual link entry cannot be created
  * in the /proc hierarchy.
+ *
+ * @remark Tags: secondary-only.
  */
 int xnvfile_init_link(const char *from,
 		      const char *to,
@@ -751,6 +759,8 @@ EXPORT_SYMBOL_GPL(xnvfile_init_link);
  *
  * @param vfile A pointer to the virtual file descriptor to
  * remove.
+ *
+ * @remark Tags: secondary-only.
  */
 void xnvfile_destroy(struct xnvfile *vfile)
 {
@@ -782,6 +792,8 @@ EXPORT_SYMBOL_GPL(xnvfile_destroy);
  * buffer upon success. Otherwise, a negative error code is returned:
  *
  * - -EFAULT indicates an invalid source buffer address.
+ *
+ * @remark Tags: secondary-only.
  */
 ssize_t xnvfile_get_blob(struct xnvfile_input *input,
 			 void *data, size_t size)
@@ -824,6 +836,8 @@ EXPORT_SYMBOL_GPL(xnvfile_get_blob);
  * buffer upon success. Otherwise, a negative error code is returned:
  *
  * - -EFAULT indicates an invalid source buffer address.
+ *
+ * @remark Tags: secondary-only.
  */
 ssize_t xnvfile_get_string(struct xnvfile_input *input,
 			   char *s, size_t maxlen)
@@ -874,6 +888,8 @@ EXPORT_SYMBOL_GPL(xnvfile_get_string);
  * text cannot be evaluated as a long integer.
  *
  * - -EFAULT indicates an invalid source buffer address.
+ *
+ * @remark Tags: secondary-only.
  */
 ssize_t xnvfile_get_integer(struct xnvfile_input *input, long *valp)
 {

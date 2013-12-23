@@ -141,8 +141,8 @@ DEFINE_PRIVATE_XNLOCK(relax_lock);
  * The motivation to centralize tracing information about relaxes
  * directly into kernel space is fourfold:
  *
- * - it allows to gather all the trace data into a single location and
- * keep it safe there, with no external log file involved.
+ * - this allows to gather all the trace data into a single location
+ * and keep it safe there, with no external log file involved.
  *
  * - enabling the tracing does not impose any requirement on the
  * application (aside of being compiled with debug symbols for best
@@ -181,9 +181,9 @@ DEFINE_PRIVATE_XNLOCK(relax_lock);
  * xnshadow_relax, which should then trigger a call back to
  * xndebug_trace_relax with the complete backtrace information, as
  * seen from userland (via the internal sc_nucleus_backtrace
- * syscall). All this is ran on behalf of the relaxing thread, so we
- * can make a number of convenient assumptions (such as being able to
- * scan the current vma list to get detailed information about the
+ * syscall). All this runs on behalf of the relaxing thread, so we can
+ * make a number of convenient assumptions (such as being able to scan
+ * the current vma list to get detailed information about the
  * executable mappings that could be involved).
  */
 

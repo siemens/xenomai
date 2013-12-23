@@ -526,15 +526,15 @@ static void clear_irqstats(struct xnintr *intr)
 	}
 }
 
-/*!
- * \fn int xnintr_init (xnintr_t *intr,const char *name,unsigned irq,xnisr_t isr,xniack_t iack,int flags)
- * \brief Initialize an interrupt object.
+/**
+ * @fn int xnintr_init(xnintr_t *intr,const char *name,unsigned irq,xnisr_t isr,xniack_t iack,int flags)
+ * @brief Initialize an interrupt object.
  *
  * Associates an interrupt object with an IRQ line.
  *
  * When an interrupt occurs on the given @a irq line, the ISR is fired
  * in order to deal with the hardware event. The interrupt service
- * code may call any non-suspensive service from the nucleus.
+ * code may call any non-blocking service from the nucleus.
  *
  * Upon receipt of an IRQ, the ISR is immediately called on behalf of
  * the interrupted stack context, the rescheduling procedure is
@@ -551,29 +551,20 @@ static void clear_irqstats(struct xnintr *intr)
  *
  * In addition, one of the following bits may be set by the ISR :
  *
- * NOTE: use these bits with care and only when you do understand their effect
- * on the system.
- * The ISR is not encouraged to use these bits in case it shares the IRQ line
- * with other ISRs in the real-time domain.
+ * @warning Use these bits with care and only when you do understand
+ * their effect on the system.  The ISR is not encouraged to use these
+ * bits in case it shares the IRQ line with other ISRs in the
+ * real-time domain.
  *
- * - XN_ISR_NOENABLE causes the nucleus to ask the real-time control
- * layer _not_ to re-enable the IRQ line (read the following section).
- * ipipe_end_irq() must be called to re-enable the IRQ line later.
+ * - XN_ISR_NOENABLE prevents the IRQ line from being re-enabled after
+ * the ISR has returned.
  *
- * - XN_ISR_PROPAGATE tells the nucleus to require the real-time
- * control layer to forward the IRQ. For instance, this would cause
- * the Adeos control layer to propagate the interrupt down the
- * interrupt pipeline to other Adeos domains, such as Linux. This is
- * the regular way to share interrupts between the nucleus and the
- * host system. In effect, XN_ISR_PROPAGATE implies XN_ISR_NOENABLE
- * since it would make no sense to re-enable the interrupt channel
- * before the next domain down the pipeline has had a chance to
- * process the propagated interrupt.
- *
- * The nucleus re-enables the IRQ line by default. Over some real-time
- * control layers which mask and acknowledge IRQs, this operation is
- * necessary to revalidate the interrupt channel so that more interrupts
- * can be notified.
+ * - XN_ISR_PROPAGATE causes the IRQ event to be propagated down the
+ * pipeline to Linux. This is the regular way to share interrupts
+ * between the nucleus and the regular Linux kernel. In effect,
+ * XN_ISR_PROPAGATE implies XN_ISR_NOENABLE since it would make no
+ * sense to re-enable the IRQ line before the Linux kernel had a
+ * chance to process the propagated interrupt.
  *
  * A count of interrupt receipts is tracked into the interrupt
  * descriptor, and reset to zero each time the interrupt object is
@@ -586,7 +577,7 @@ static void clear_irqstats(struct xnintr *intr)
  * therefore it must be allocated in permanent memory.
  *
  * @param name An ASCII string standing for the symbolic name of the
- * interrupt object or NULL ("<unknown>" will be applied then).
+ * interrupt object or NULL.
  *
  * @param irq The hardware interrupt channel associated with the
  * interrupt object. This value is architecture-dependent. An
@@ -613,20 +604,13 @@ static void clear_irqstats(struct xnintr *intr)
  *
  * - XN_ISR_SHARED enables IRQ-sharing with other interrupt objects.
  *
- * - XN_ISR_EDGE is an additional flag need to be set together with XN_ISR_SHARED
- * to enable IRQ-sharing of edge-triggered interrupts.
+ * - XN_ISR_EDGE is an additional flag need to be set together with
+ * XN_ISR_SHARED to enable IRQ-sharing of edge-triggered interrupts.
  *
  * @return 0 is returned on success. Otherwise, -EINVAL is returned if
  * @a irq is not a valid interrupt number.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- *
- * Rescheduling: never.
+ * @remark Tags: secondary-only.
  */
 
 int xnintr_init(xnintr_t *intr, const char *name,
@@ -667,14 +651,7 @@ EXPORT_SYMBOL_GPL(xnintr_init);
  * @param intr The descriptor address of the interrupt object to
  * destroy.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- *
- * Rescheduling: never.
+ * @remark Tags: secondary-only.
  */
 void xnintr_destroy(xnintr_t *intr)
 {
@@ -684,9 +661,9 @@ void xnintr_destroy(xnintr_t *intr)
 }
 EXPORT_SYMBOL_GPL(xnintr_destroy);
 
-/*!
- * \fn int xnintr_attach (xnintr_t *intr, void *cookie);
- * \brief Attach an interrupt object.
+/**
+ * @fn int xnintr_attach(xnintr_t *intr, void *cookie)
+ * @brief Attach an interrupt object.
  *
  * Attach an interrupt object previously initialized by
  * xnintr_init(). After this operation is completed, all IRQs received
@@ -710,14 +687,7 @@ EXPORT_SYMBOL_GPL(xnintr_destroy);
  * @note The caller <b>must not</b> hold nklock when invoking this service,
  * this would cause deadlocks.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- *
- * Rescheduling: never.
+ * @remark Tags: secondary-only.
  *
  * @note Attaching an interrupt resets the tracked number of receipts
  * to zero.
@@ -774,14 +744,7 @@ EXPORT_SYMBOL_GPL(xnintr_attach);
  * @note The caller <b>must not</b> hold nklock when invoking this
  * service, this would cause deadlocks.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- *
- * Rescheduling: never.
+ * @remark Tags: secondary-only.
  */
 void xnintr_detach(xnintr_t *intr)
 {
@@ -801,26 +764,17 @@ void xnintr_detach(xnintr_t *intr)
 }
 EXPORT_SYMBOL_GPL(xnintr_detach);
 
-/*!
- * \fn void xnintr_enable(xnintr_t *intr)
- * \brief Enable an interrupt object.
+/**
+ * @fn void xnintr_enable(xnintr_t *intr)
+ * @brief Enable an interrupt object.
  *
  * Enables the hardware interrupt line associated with an interrupt
- * object. Over real-time control layers which mask and acknowledge
- * IRQs, this operation is necessary to revalidate the interrupt
- * channel so that more interrupts can be notified.
-
+ * object.
+ *
  * @param intr The descriptor address of the interrupt object to
  * enable.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- *
- * Rescheduling: never.
+ * @remark Tags: secondary-only.
  */
 
 void xnintr_enable(xnintr_t *intr)
@@ -831,9 +785,9 @@ void xnintr_enable(xnintr_t *intr)
 }
 EXPORT_SYMBOL_GPL(xnintr_enable);
 
-/*!
- * \fn void xnintr_disable(xnintr_t *intr)
- * \brief Disable an interrupt object.
+/**
+ * @fn void xnintr_disable(xnintr_t *intr)
+ * @brief Disable an interrupt object.
  *
  * Disables the hardware interrupt line associated with an interrupt
  * object. This operation invalidates further interrupt requests from
@@ -842,14 +796,7 @@ EXPORT_SYMBOL_GPL(xnintr_enable);
  * @param intr The descriptor address of the interrupt object to
  * disable.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- *
- * Rescheduling: never.
+ * @remark Tags: secondary-only.
  */
 
 void xnintr_disable(xnintr_t *intr)
@@ -860,12 +807,12 @@ void xnintr_disable(xnintr_t *intr)
 }
 EXPORT_SYMBOL_GPL(xnintr_disable);
 
-/*!
- * \fn void xnintr_affinity(xnintr_t *intr, cpumask_t cpumask)
- * \brief Set interrupt's processor affinity.
+/**
+ * @fn void xnintr_affinity(xnintr_t *intr, cpumask_t cpumask)
+ * @brief Set interrupt's processor affinity.
  *
- * Causes the IRQ associated with the interrupt object @a intr to be
- * received only on processors which bits are set in @a cpumask.
+ * Restricts the IRQ associated with the interrupt object @a intr to
+ * be received only on processors which bits are set in @a cpumask.
  *
  * @param intr The descriptor address of the interrupt object which
  * affinity is to be changed.
@@ -874,6 +821,8 @@ EXPORT_SYMBOL_GPL(xnintr_disable);
  *
  * @note Depending on architectures, setting more than one bit in @a
  * cpumask could be meaningless.
+ *
+ * @remark Tags: secondary-only.
  */
 
 void xnintr_affinity(xnintr_t *intr, cpumask_t cpumask)

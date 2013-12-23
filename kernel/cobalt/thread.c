@@ -533,11 +533,7 @@ void __xnthread_cleanup(struct xnthread *curr)
  * - -EINVAL is returned if @a attr->flags has invalid bits set, or @a
  *   attr->affinity is invalid (e.g. empty).
  *
- * Side-effect: This routine does not call the rescheduling procedure.
- *
- * Calling context: This service can be called from secondary mode only.
- *
- * Rescheduling: never.
+ * @remark Tags: secondary-only.
  */
 int xnthread_init(struct xnthread *thread,
 		  const struct xnthread_init_attr *attr,
@@ -621,15 +617,7 @@ EXPORT_SYMBOL_GPL(xnthread_init);
  *
  * @retval -EBUSY if @a thread was not dormant or stopped ;
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: possible.
+ * @remark Tags: might-switch.
  */
 int xnthread_start(struct xnthread *thread,
 		   const struct xnthread_start_attr *attr)
@@ -693,15 +681,7 @@ EXPORT_SYMBOL_GPL(xnthread_start);
  * temporarily for sleeping. If this mode bit is set, such thread
  * would return immediately with XNBREAK set from xnthread_suspend().
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel-based task
- * - User-space task in primary mode.
- *
- * Rescheduling: possible as a result of unlocking the scheduler
- * (XNLOCK present in @a clrmask).
+ * @remark Tags: might-switch.
  *
  * @note Setting @a clrmask and @a setmask to zero leads to a nop,
  * only returning the previous mode if @a mode_r is a valid address.
@@ -798,21 +778,11 @@ EXPORT_SYMBOL_GPL(xnthread_set_mode);
  * legitimate value when this parameter does not apply to the current
  * suspending mode (e.g. XNSUSP).
  *
- * @note If the target thread is a shadow which has received a
- * Linux-originated signal, then this service immediately exits
- * without suspending the thread, but raises the XNBREAK condition in
- * its information mask.
+ * @note If the target thread has received a Linux-originated signal,
+ * then this service immediately exits without suspending the thread,
+ * but raises the XNBREAK condition in its information mask.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: possible if the current thread suspends itself.
+ * @remark Tags: isr-allowed, might-switch.
  */
 void xnthread_suspend(xnthread_t *thread, int mask,
 		      xnticks_t timeout, xntmode_t timeout_mode,
@@ -1028,16 +998,7 @@ EXPORT_SYMBOL_GPL(xnthread_suspend);
  * - XNBREAK means that the wait has been forcibly broken by a call to
  * xnthread_unblock().
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
+ * @remark Tags: isr-allowed.
  */
 void xnthread_resume(struct xnthread *thread, int mask)
 {
@@ -1157,16 +1118,7 @@ EXPORT_SYMBOL_GPL(xnthread_resume);
  * @return non-zero is returned if the thread was actually unblocked
  * from a pending wait state, 0 otherwise.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
+ * @remark Tags: isr-allowed.
  */
 int xnthread_unblock(xnthread_t *thread)
 {
@@ -1226,10 +1178,6 @@ EXPORT_SYMBOL_GPL(xnthread_unblock);
  * xnthread_wait_period() will delay the thread until the next
  * periodic release point in the processor timeline is reached.
  *
- * @param thread The descriptor address of the affected thread. This
- * thread is immediately delayed until the first periodic release
- * point is reached.
- *
  * @param idate The initial (absolute) date of the first release
  * point, expressed in nanoseconds. The affected thread will be
  * delayed by the first call to xnthread_wait_period() until this
@@ -1258,15 +1206,7 @@ EXPORT_SYMBOL_GPL(xnthread_unblock);
  * returned if @a timeout_mode is not compatible with @a idate, such
  * as XN_RELATIVE with @a idate different from XN_INFINITE.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: none.
+ * @remark Tags: none.
  */
 int xnthread_set_periodic(xnthread_t *thread, xnticks_t idate,
 			  xntmode_t timeout_mode, xnticks_t period)
@@ -1349,17 +1289,7 @@ EXPORT_SYMBOL_GPL(xnthread_set_periodic);
  * calling thread. If @a overruns_r is valid, the count of pending
  * overruns is copied to the pointed memory location.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: always, unless the current release point has already
- * been reached.  In the latter case, the current thread immediately
- * returns from this service without being delayed.
+ * @remark Tags: primary-only, might-sleep.
  */
 int xnthread_wait_period(unsigned long *overruns_r)
 {
@@ -1436,13 +1366,7 @@ EXPORT_SYMBOL_GPL(xnthread_wait_period);
  * base scheduling class of the target thread does not support
  * time-slicing.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Any kernel context.
- *
- * Rescheduling: never.
+ * @remark Tags: none.
  */
 int xnthread_set_slice(struct xnthread *thread, xnticks_t quantum)
 {
@@ -1491,9 +1415,7 @@ EXPORT_SYMBOL_GPL(xnthread_set_slice);
  *
  * @param thread The descriptor address of the thread to terminate.
  *
- * Calling context: This service may be called from all runtime modes.
- *
- * Rescheduling: yes.
+ * @remark Tags: might-switch.
  */
 void xnthread_cancel(struct xnthread *thread)
 {
@@ -1569,10 +1491,7 @@ EXPORT_SYMBOL_GPL(xnthread_cancel);
  * - -EBUSY indicates that another thread is already waiting for @a
  *   thread to terminate.
  *
- * Calling context: any.
- *
- * Rescheduling: always if @a thread did not terminate yet at the time
- * of the call.
+ * @remark Tags: might-switch.
  */
 int xnthread_join(struct xnthread *thread)
 {
@@ -1652,6 +1571,8 @@ EXPORT_SYMBOL_GPL(xnthread_join);
  * scheduler is locked.
  * @retval -EINVAL if the current thread affinity forbids this
  * migration.
+ *
+ * @remark Tags: might-switch.
  */
 
 #ifdef CONFIG_SMP
@@ -1780,9 +1701,7 @@ void xnthread_migrate_passive(struct xnthread *thread, struct xnsched *sched)
  * or ready thread moves it to the end of the runnable queue, thus
  * causing a manual round-robin.
  *
- * Calling context: any.
- *
- * Rescheduling: never.
+ * @remark Tags: none.
  *
  * @note The changes only apply to the Xenomai scheduling parameters
  * for @a thread. There is no propagation/translation of such changes

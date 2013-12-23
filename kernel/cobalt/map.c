@@ -17,12 +17,12 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  *
- * \ingroup map
+ * @ingroup map
  */
 
-/*!
- * \ingroup nucleus
- * \defgroup map Lightweight key-to-object mapping service
+/**
+ * @ingroup nucleus
+ * @defgroup map Lightweight key-to-object mapping service
  *
  * A map is a simple indexing structure which associates unique
  * integer keys with pointers to objects.  The current implementation
@@ -48,9 +48,9 @@
 #include <cobalt/kernel/map.h>
 #include <asm/xenomai/machine.h>
 
-/*!
- * \fn void xnmap_create(int nkeys, int reserve, int offset)
- * \brief Create a map.
+/**
+ * @fn void xnmap_create(int nkeys, int reserve, int offset)
+ * @brief Create a map.
  *
  * Allocates a new map with the specified addressing capabilities. The
  * memory is obtained from the Xenomai system heap.
@@ -78,15 +78,7 @@
  * @return the address of the new map is returned on success;
  * otherwise, NULL is returned if @a nkeys is invalid.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
+ * @remark Tags: none.
  */
 
 xnmap_t *xnmap_create(int nkeys, int reserve, int offset)
@@ -98,7 +90,7 @@ xnmap_t *xnmap_create(int nkeys, int reserve, int offset)
 		return NULL;
 
 	mapsize = sizeof(*map) + (nkeys - 1) * sizeof(map->objarray[0]);
-	map = (xnmap_t *) xnmalloc(mapsize);
+	map = xnmalloc(mapsize);
 
 	if (!map)
 		return NULL;
@@ -115,24 +107,16 @@ xnmap_t *xnmap_create(int nkeys, int reserve, int offset)
 }
 EXPORT_SYMBOL_GPL(xnmap_create);
 
-/*!
- * \fn void xnmap_delete(xnmap_t *map)
- * \brief Delete a map.
+/**
+ * @fn void xnmap_delete(xnmap_t *map)
+ * @brief Delete a map.
  *
  * Deletes a map, freeing any associated memory back to the Xenomai
  * system heap.
  *
  * @param map The address of the map to delete.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
+ * @remark Tags: none.
  */
 
 void xnmap_delete(xnmap_t *map)
@@ -141,9 +125,9 @@ void xnmap_delete(xnmap_t *map)
 }
 EXPORT_SYMBOL_GPL(xnmap_delete);
 
-/*!
- * \fn void xnmap_enter(xnmap_t *map, int key, void *objaddr)
- * \brief Index an object into a map.
+/**
+ * @fn void xnmap_enter(xnmap_t *map, int key, void *objaddr)
+ * @brief Index an object into a map.
  *
  * Insert a new object into the given map.
  *
@@ -166,16 +150,7 @@ EXPORT_SYMBOL_GPL(xnmap_delete);
  *
  * - -ENOSPC when no more free key is available.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
+ * @remark Tags: isr-allowed.
  */
 
 int xnmap_enter(xnmap_t *map, int key, void *objaddr)
@@ -219,9 +194,9 @@ int xnmap_enter(xnmap_t *map, int key, void *objaddr)
 }
 EXPORT_SYMBOL_GPL(xnmap_enter);
 
-/*!
- * \fn void xnmap_remove(xnmap_t *map, int key)
- * \brief Remove an object reference from a map.
+/**
+ * @fn void xnmap_remove(xnmap_t *map, int key)
+ * @brief Remove an object reference from a map.
  *
  * Removes an object reference from the given map, releasing the
  * associated key.
@@ -235,16 +210,7 @@ EXPORT_SYMBOL_GPL(xnmap_enter);
  *
  * - -ESRCH is returned if @a key is invalid.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
+ * @remark Tags: isr-allowed.
  */
 
 int xnmap_remove(xnmap_t *map, int key)
@@ -268,9 +234,9 @@ int xnmap_remove(xnmap_t *map, int key)
 }
 EXPORT_SYMBOL_GPL(xnmap_remove);
 
-/*!
- * \fn void xnmap_fetch(xnmap_t *map, int key)
- * \brief Search an object into a map.
+/**
+ * @fn void xnmap_fetch(xnmap_t *map, int key)
+ * @brief Search an object into a map.
  *
  * Retrieve an object reference from the given map by its index key.
  *
@@ -282,21 +248,12 @@ EXPORT_SYMBOL_GPL(xnmap_remove);
  * otherwise NULL is returned when @a key is invalid or no object is
  * currently indexed on it.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
+ * @remark Tags: isr-allowed.
  */
 
-/*!
- * \fn void xnmap_fetch_nocheck(xnmap_t *map, int key)
- * \brief Search an object into a map - unchecked form.
+/**
+ * @fn void xnmap_fetch_nocheck(xnmap_t *map, int key)
+ * @brief Search an object into a map - unchecked form.
  *
  * Retrieve an object reference from the given map by its index key,
  * but does not perform any sanity check on the provided key.
@@ -309,16 +266,7 @@ EXPORT_SYMBOL_GPL(xnmap_remove);
  * otherwise NULL is returned when no object is currently indexed on
  * @a key.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
+ * @remark Tags: isr-allowed.
  */
 
 /*@}*/

@@ -98,15 +98,7 @@ int xntimer_heading_p(struct xntimer *timer)
  * @return 0 is returned upon success, or -ETIMEDOUT if an absolute
  * date in the past has been given.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Any kernel context.
- *
- * Rescheduling: never.
- *
- * @note Must be called with nklock held, IRQs off.
+ * @remark Tags: atomic-entry.
  */
 int xntimer_start(struct xntimer *timer,
 		  xnticks_t value, xnticks_t interval,
@@ -600,7 +592,7 @@ EXPORT_SYMBOL_GPL(xntimer_format_time);
  *
  * @note GENERIC_CLOCKEVENTS is required from the host kernel.
  *
- * Rescheduling: never.
+ * @remark Tags: none.
  */
 static int program_htick_shot(unsigned long delay,
 			      struct clock_event_device *cdev)
@@ -642,14 +634,9 @@ static int program_htick_shot(unsigned long delay,
  *
  * @param cdev An opaque pointer to the clock device which notifies us.
  *
- * Environment:
- *
- * This routine is a callback invoked from the kernel's clock event
- * handlers.
+ * @remark Tags: none.
  *
  * @note GENERIC_CLOCKEVENTS is required from the host kernel.
- *
- * Rescheduling: never.
  */
 static void switch_htick_mode(enum clock_event_mode mode,
 			      struct clock_event_device *cdev)
@@ -681,8 +668,8 @@ static void switch_htick_mode(enum clock_event_mode mode,
 }
 
 /**
- * \fn int xntimer_grab_hardware(int cpu)
- * \brief Grab the hardware timer.
+ * @fn int xntimer_grab_hardware(int cpu)
+ * @brief Grab the hardware timer.
  *
  * xntimer_grab_hardware() grabs and tunes the hardware timer in oneshot
  * mode in order to clock the master time base. GENERIC_CLOCKEVENTS is
@@ -710,11 +697,7 @@ static void switch_htick_mode(enum clock_event_mode mode,
  * invalid calibration results; in such a case, such hardware is
  * unusable for any timing duties.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Linux domain context.
+ * @remark Tags: secondary-only.
  */
 int xntimer_grab_hardware(int cpu)
 {
@@ -764,8 +747,8 @@ int xntimer_grab_hardware(int cpu)
 }
 
 /**
- * \fn void xntimer_release_hardware(int cpu)
- * \brief Release the hardware timer.
+ * @fn void xntimer_release_hardware(int cpu)
+ * @brief Release the hardware timer.
  *
  * Releases the hardware timer, thus reverting the effect of a
  * previous call to xntimer_grab_hardware(). In case the timer
@@ -774,11 +757,7 @@ int xntimer_grab_hardware(int cpu)
  *
  * @param cpu The CPU number the timer was grabbed from.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Linux domain context.
+ * @remark Tags: secondary-only.
  */
 void xntimer_release_hardware(int cpu)
 {

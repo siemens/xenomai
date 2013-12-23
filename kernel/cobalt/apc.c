@@ -101,18 +101,14 @@ void apc_dispatch(unsigned int virq, void *arg)
  * @param cookie A user-defined opaque pointer the APC handler
  * receives as its sole argument.
  *
- * @return an valid APC id. is returned upon success, or a negative
- * error code otherwise:
+ * @return a valid APC identifier is returned upon success, or a
+ * negative error code otherwise:
  *
  * - -EINVAL is returned if @a handler is invalid.
  *
  * - -EBUSY is returned if no more APC slots are available.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Linux domain context.
+ * @remark Tags: none.
  */
 int xnapc_alloc(const char *name,
 		void (*handler)(void *cookie), void *cookie)
@@ -152,11 +148,7 @@ EXPORT_SYMBOL_GPL(xnapc_alloc);
  * @param apc The APC id. to release, as returned by a successful call
  * to the xnapc_alloc() service.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Any domain context.
+ * @remark Tags: none.
  */
 void xnapc_free(int apc)
 {

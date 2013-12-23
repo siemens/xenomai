@@ -17,12 +17,12 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  *
- * \ingroup bufd
+ * @ingroup bufd
  */
 
-/*!
- * \ingroup nucleus
- * \defgroup bufd Buffer descriptors.
+/**
+ * @ingroup nucleus
+ * @defgroup bufd Buffer descriptors.
  *
  * A buffer descriptor is a simple abstraction dealing with copy
  * operations to/from memory buffers which may belong to different
@@ -44,7 +44,7 @@
  *   caller, which may have to be copied back to either kernel or user
  *   space:
  *
- *   \code
+ *   @code
  *   [Syscall implementation]
  *   ssize_t rt_bulk_read_inner(struct xnbufd *bufd)
  *   {
@@ -93,13 +93,13 @@
  *
  *       return ret;
  *   }
- *   \endcode
+ *   @endcode
  *
  * - Implementing a Xenomai syscall receiving a bulk of data from the
  *   caller, which may have to be read from either kernel or user
  *   space:
  *
- *   \code
+ *   @code
  *   [Syscall implementation]
  *   ssize_t rt_bulk_write_inner(struct xnbufd *bufd)
  *   {
@@ -137,9 +137,9 @@
  *
  *       return ret;
  *   }
- *   \endcode
+ *   @endcode
  *
-  *@{*/
+ *@{*/
 
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/sched.h>
@@ -147,9 +147,9 @@
 #include <cobalt/kernel/assert.h>
 #include <asm/xenomai/syscall.h>
 
-/*!
- * \fn void xnbufd_map_kread(struct xnbufd *bufd, const void *ptr, size_t len)
- * \brief Initialize a buffer descriptor for reading from kernel memory.
+/**
+ * @fn void xnbufd_map_kread(struct xnbufd *bufd, const void *ptr, size_t len)
+ * @brief Initialize a buffer descriptor for reading from kernel memory.
  *
  * The new buffer descriptor may be used to copy data from kernel
  * memory. This routine should be used in pair with
@@ -162,20 +162,12 @@
  *
  * @param len The length of the kernel buffer starting at @a ptr.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel code (including from primary mode)
- * - Kernel-based task
- * - Interrupt service routine
- *
- * Rescheduling: never.
+ * @remark Tags: isr-allowed.
  */
 
-/*!
- * \fn void xnbufd_map_kwrite(struct xnbufd *bufd, void *ptr, size_t len)
- * \brief Initialize a buffer descriptor for writing to kernel memory.
+/**
+ * @fn void xnbufd_map_kwrite(struct xnbufd *bufd, void *ptr, size_t len)
+ * @brief Initialize a buffer descriptor for writing to kernel memory.
  *
  * The new buffer descriptor may be used to copy data to kernel
  * memory. This routine should be used in pair with
@@ -188,15 +180,7 @@
  *
  * @param len The length of the kernel buffer starting at @a ptr.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel code (including from primary mode)
- * - Kernel-based task
- * - Interrupt service routine
- *
- * Rescheduling: never.
+ * @remark Tags: isr-allowed.
  */
 
 void xnbufd_map_kmem(struct xnbufd *bufd, void *ptr, size_t len)
@@ -209,9 +193,9 @@ void xnbufd_map_kmem(struct xnbufd *bufd, void *ptr, size_t len)
 }
 EXPORT_SYMBOL_GPL(xnbufd_map_kmem);
 
-/*!
- * \fn void xnbufd_map_uread(struct xnbufd *bufd, const void __user *ptr, size_t len)
- * \brief Initialize a buffer descriptor for reading from user memory.
+/**
+ * @fn void xnbufd_map_uread(struct xnbufd *bufd, const void __user *ptr, size_t len)
+ * @brief Initialize a buffer descriptor for reading from user memory.
  *
  * The new buffer descriptor may be used to copy data from user
  * memory. This routine should be used in pair with
@@ -226,19 +210,12 @@ EXPORT_SYMBOL_GPL(xnbufd_map_kmem);
  *
  * @param len The length of the user buffer starting at @a ptr.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel code (including from primary mode) except Xenomai
- *   kernel-based task and interrupt service routines.
- *
- * Rescheduling: never.
+ * @remark Tags: none.
  */
 
-/*!
- * \fn void xnbufd_map_uwrite(struct xnbufd *bufd, void __user *ptr, size_t len)
- * \brief Initialize a buffer descriptor for writing to user memory.
+/**
+ * @fn void xnbufd_map_uwrite(struct xnbufd *bufd, void __user *ptr, size_t len)
+ * @brief Initialize a buffer descriptor for writing to user memory.
  *
  * The new buffer descriptor may be used to copy data to user
  * memory. This routine should be used in pair with
@@ -253,14 +230,7 @@ EXPORT_SYMBOL_GPL(xnbufd_map_kmem);
  *
  * @param len The length of the user buffer starting at @a ptr.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel code (including from primary mode) except Xenomai
- *   kernel-based task and interrupt service routines.
- *
- * Rescheduling: never.
+ * @remark Tags: none.
  */
 
 void xnbufd_map_umem(struct xnbufd *bufd, void __user *ptr, size_t len)
@@ -275,13 +245,13 @@ void xnbufd_map_umem(struct xnbufd *bufd, void __user *ptr, size_t len)
 }
 EXPORT_SYMBOL_GPL(xnbufd_map_umem);
 
-/*!
- * \fn ssize_t xnbufd_copy_to_kmem(void *to, struct xnbufd *bufd, size_t len)
- * \brief Copy memory covered by a buffer descriptor to kernel memory.
+/**
+ * @fn ssize_t xnbufd_copy_to_kmem(void *to, struct xnbufd *bufd, size_t len)
+ * @brief Copy memory covered by a buffer descriptor to kernel memory.
  *
  * This routine copies @a len bytes from the area referred to by the
- * buffer descriptor @a bufd to the kernel memory area @a
- * to. xnbufd_copy_to_kmem() tracks the read offset within the source
+ * buffer descriptor @a bufd to the kernel memory area @a to.
+ * xnbufd_copy_to_kmem() tracks the read offset within the source
  * memory internally, so that it may be called several times in a
  * loop, until the entire memory area is loaded.
  *
@@ -316,21 +286,16 @@ EXPORT_SYMBOL_GPL(xnbufd_map_umem);
  *   an invalid context. This error is only returned when the debug
  *   mode is disabled; otherwise a panic assertion is raised.
  *
- * Environments:
+ * @remark Tags: none.
  *
- * This service can be called from:
+ * @note Calling this routine while holding the nklock and/or running
+ * with interrupts disabled is invalid, and doing so will trigger a
+ * debug assertion.
  *
- * - Kernel code (including from primary mode) except Xenomai
- *   kernel-based task and interrupt service routines.
- *
- * Rescheduling: may switch the caller to secondary mode if a page
+ * This routine may switch the caller to secondary mode if a page
  * fault occurs while reading from the user area. For that reason,
  * xnbufd_copy_to_kmem() may only be called from a preemptible section
  * (Linux-wise).
- *
- * @note Holding the nklock or running real-time interrupts disabled
- * is invalid when calling this routine, and doing so would trigger a
- * debug assertion.
  */
 
 ssize_t xnbufd_copy_to_kmem(void *to, struct xnbufd *bufd, size_t len)
@@ -362,7 +327,7 @@ ssize_t xnbufd_copy_to_kmem(void *to, struct xnbufd *bufd, size_t len)
 	 * no way we could fetch the data to kernel space immediately.
 	 *
 	 * Note that we don't check for non-preemptible Linux context
-	 * here, since the source buffer would lie in kernel space in
+	 * here, since the source buffer would live in kernel space in
 	 * such a case.
 	 */
 	if (xnthread_test_state(xnsched_current_thread(), XNROOT|XNUSER) &&
@@ -385,9 +350,9 @@ out:
 }
 EXPORT_SYMBOL_GPL(xnbufd_copy_to_kmem);
 
-/*!
- * \fn ssize_t xnbufd_copy_from_kmem(struct xnbufd *bufd, void *from, size_t len)
- * \brief Copy kernel memory to the area covered by a buffer descriptor.
+/**
+ * @fn ssize_t xnbufd_copy_from_kmem(struct xnbufd *bufd, void *from, size_t len)
+ * @brief Copy kernel memory to the area covered by a buffer descriptor.
  *
  * This routine copies @a len bytes from the kernel memory starting at
  * @a from to the area referred to by the buffer descriptor @a
@@ -429,21 +394,16 @@ EXPORT_SYMBOL_GPL(xnbufd_copy_to_kmem);
  * - -ENOMEM is returned when no memory is available from the nucleus
  *    heap to allocate the carry over buffer.
  *
- * Environments:
+ * @remark Tags: none.
  *
- * This service can be called from:
- *
- * - Kernel code (including from primary mode) except Xenomai
- *   kernel-based task and interrupt service routines.
- *
- * Rescheduling: may switch the caller to secondary mode if a page
- * fault occurs while writing to the user area. For that reason,
- * xnbufd_copy_from_kmem() may only be called from a preemptible
- * section (Linux-wise).
- *
- * @note Holding the nklock or running real-time interrupts disabled
- * is invalid when calling this routine, and doing so would trigger a
+ * @note Calling this routine while holding the nklock and/or running
+ * with interrupts disabled is invalid, and doing so will trigger a
  * debug assertion.
+ *
+ * This routine may switch the caller to secondary mode if a page
+ * fault occurs while reading from the user area. For that reason,
+ * xnbufd_copy_to_kmem() may only be called from a preemptible section
+ * (Linux-wise).
  */
 
 ssize_t xnbufd_copy_from_kmem(struct xnbufd *bufd, void *from, size_t len)
@@ -518,9 +478,9 @@ out:
 }
 EXPORT_SYMBOL_GPL(xnbufd_copy_from_kmem);
 
-/*!
- * \fn void xnbufd_unmap_uread(struct xnbufd *bufd)
- * \brief Finalize a buffer descriptor obtained from xnbufd_map_uread().
+/**
+ * @fn void xnbufd_unmap_uread(struct xnbufd *bufd)
+ * @brief Finalize a buffer descriptor obtained from xnbufd_map_uread().
  *
  * This routine finalizes a buffer descriptor previously initialized
  * by a call to xnbufd_map_uread(), to read data from a user area.
@@ -530,17 +490,10 @@ EXPORT_SYMBOL_GPL(xnbufd_copy_from_kmem);
  * @return The number of bytes read so far from the memory area
  * covered by @a ubufd.
  *
- * Environments:
+ * @remark Tags: none.
  *
- * This service can be called from:
- *
- * - Kernel code (including from primary mode) except Xenomai
- *   kernel-based task and interrupt service routines.
- *
- * Rescheduling: never.
- *
- * @note Holding the nklock or running real-time interrupts disabled
- * is invalid when calling this routine, and doing so would trigger a
+ * @note Calling this routine while holding the nklock and/or running
+ * with interrupts disabled is invalid, and doing so will trigger a
  * debug assertion.
  */
 
@@ -555,9 +508,9 @@ ssize_t xnbufd_unmap_uread(struct xnbufd *bufd)
 }
 EXPORT_SYMBOL_GPL(xnbufd_unmap_uread);
 
-/*!
- * \fn void xnbufd_unmap_uwrite(struct xnbufd *bufd)
- * \brief Finalize a buffer descriptor obtained from xnbufd_map_uwrite().
+/**
+ * @fn void xnbufd_unmap_uwrite(struct xnbufd *bufd)
+ * @brief Finalize a buffer descriptor obtained from xnbufd_map_uwrite().
  *
  * This routine finalizes a buffer descriptor previously initialized
  * by a call to xnbufd_map_uwrite(), to write data to a user area.
@@ -574,17 +527,10 @@ EXPORT_SYMBOL_GPL(xnbufd_unmap_uread);
  * @return The number of bytes written so far to the memory area
  * covered by @a ubufd.
  *
- * Environments:
+ * @remark Tags: none.
  *
- * This service can be called from:
- *
- * - Kernel code (including from primary mode) except Xenomai
- *   kernel-based task and interrupt service routines.
- *
- * Rescheduling: never.
- *
- * @note Holding the nklock or running real-time interrupts disabled
- * is invalid when calling this routine, and doing so would trigger a
+ * @note Calling this routine while holding the nklock and/or running
+ * with interrupts disabled is invalid, and doing so will trigger a
  * debug assertion.
  */
 
@@ -621,29 +567,21 @@ done:
 }
 EXPORT_SYMBOL_GPL(xnbufd_unmap_uwrite);
 
-/*!
- * \fn void xnbufd_reset(struct xnbufd *bufd)
- * \brief Reset a buffer descriptor.
+/**
+ * @fn void xnbufd_reset(struct xnbufd *bufd)
+ * @brief Reset a buffer descriptor.
  *
  * The buffer descriptor is reset, so that all data already copied is
  * forgotten. Any carry over buffer allocated is kept, though.
  *
  * @param bufd The address of the buffer descriptor to reset.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel code (including from primary mode)
- * - Kernel-based task
- * - Interrupt service routine
- *
- * Rescheduling: never.
+ * @remark Tags: isr-allowed.
  */
 
-/*!
- * \fn void xnbufd_invalidate(struct xnbufd *bufd)
- * \brief Invalidate a buffer descriptor.
+/**
+ * @fn void xnbufd_invalidate(struct xnbufd *bufd)
+ * @brief Invalidate a buffer descriptor.
  *
  * The buffer descriptor is invalidated, making it unusable for
  * further copy operations. If an outstanding carry over buffer was
@@ -659,15 +597,7 @@ EXPORT_SYMBOL_GPL(xnbufd_unmap_uwrite);
  *
  * @param bufd The address of the buffer descriptor to invalidate.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel code (including from primary mode)
- * - Kernel-based task
- * - Interrupt service routine
- *
- * Rescheduling: never.
+ * @remark Tags: isr-allowed.
  */
 
 void xnbufd_invalidate(struct xnbufd *bufd)
@@ -684,9 +614,9 @@ void xnbufd_invalidate(struct xnbufd *bufd)
 }
 EXPORT_SYMBOL_GPL(xnbufd_invalidate);
 
-/*!
- * \fn void xnbufd_unmap_kread(struct xnbufd *bufd)
- * \brief Finalize a buffer descriptor obtained from xnbufd_map_kread().
+/**
+ * @fn void xnbufd_unmap_kread(struct xnbufd *bufd)
+ * @brief Finalize a buffer descriptor obtained from xnbufd_map_kread().
  *
  * This routine finalizes a buffer descriptor previously initialized
  * by a call to xnbufd_map_kread(), to read data from a kernel area.
@@ -696,15 +626,7 @@ EXPORT_SYMBOL_GPL(xnbufd_invalidate);
  * @return The number of bytes read so far from the memory area
  * covered by @a ubufd.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel code (including from primary mode)
- * - Kernel-based task
- * - Interrupt service routine
- *
- * Rescheduling: never.
+ * @remark Tags: isr-allowed.
  */
 
 ssize_t xnbufd_unmap_kread(struct xnbufd *bufd)
@@ -716,9 +638,9 @@ ssize_t xnbufd_unmap_kread(struct xnbufd *bufd)
 }
 EXPORT_SYMBOL_GPL(xnbufd_unmap_kread);
 
-/*!
- * \fn void xnbufd_unmap_kwrite(struct xnbufd *bufd)
- * \brief Finalize a buffer descriptor obtained from xnbufd_map_kwrite().
+/**
+ * @fn void xnbufd_unmap_kwrite(struct xnbufd *bufd)
+ * @brief Finalize a buffer descriptor obtained from xnbufd_map_kwrite().
  *
  * This routine finalizes a buffer descriptor previously initialized
  * by a call to xnbufd_map_kwrite(), to write data to a kernel area.
@@ -728,15 +650,7 @@ EXPORT_SYMBOL_GPL(xnbufd_unmap_kread);
  * @return The number of bytes written so far to the memory area
  * covered by @a ubufd.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel code (including from primary mode)
- * - Kernel-based task
- * - Interrupt service routine
- *
- * Rescheduling: never.
+ * @remark Tags: isr-allowed.
  */
 
 ssize_t xnbufd_unmap_kwrite(struct xnbufd *bufd)

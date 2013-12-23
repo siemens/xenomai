@@ -55,9 +55,16 @@ HEAP {
  *@{
  */
 #include <stdarg.h>
+#include <linux/miscdevice.h>
+#include <linux/device.h>
+#include <linux/vmalloc.h>
+#include <linux/mm.h>
+#include <linux/fs.h>
+#include <linux/spinlock.h>
 #include <linux/sched.h>
 #include <linux/mm.h>
 #include <linux/semaphore.h>
+#include <asm/io.h>
 #include <cobalt/kernel/thread.h>
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/vfile.h>
@@ -67,6 +74,9 @@ HEAP {
 
 struct xnheap kheap;		/* System heap */
 EXPORT_SYMBOL_GPL(kheap);
+
+static LIST_HEAD(kheapq);	/* Shared heap queue. */
+static DEFINE_SPINLOCK(kheapq_lock);
 
 struct xnvdso *nkvdso;
 EXPORT_SYMBOL_GPL(nkvdso);
@@ -201,9 +211,9 @@ static void init_extent(struct xnheap *heap, struct xnextent *extent)
 /*
  */
 
-/*!
- * \fn xnheap_init(struct xnheap *heap,void *heapaddr,unsigned long heapsize,unsigned long pagesize)
- * \brief Initialize a memory heap.
+/**
+ * @fn xnheap_init(struct xnheap *heap,void *heapaddr,unsigned long heapsize,unsigned long pagesize)
+ * @brief Initialize a memory heap.
  *
  * Initializes a memory heap suitable for time-bounded allocation
  * requests of dynamic memory.
@@ -244,15 +254,7 @@ static void init_extent(struct xnheap *heap, struct xnextent *extent)
  *
  * - -EINVAL is returned whenever a parameter is invalid.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
+ * @remark Tags: none.
  */
 
 int xnheap_init(struct xnheap *heap,
@@ -339,9 +341,9 @@ int xnheap_init(struct xnheap *heap,
 }
 EXPORT_SYMBOL_GPL(xnheap_init);
 
-/*!
- * \fn xnheap_set_label(struct xnheap *heap,const char *label,...)
- * \brief Set the heap's label string.
+/**
+ * @fn xnheap_set_label(struct xnheap *heap,const char *label,...)
+ * @brief Set the heap's label string.
  *
  * Set the heap label that will be used in statistic outputs.
  *
@@ -351,15 +353,7 @@ EXPORT_SYMBOL_GPL(xnheap_init);
  * can be a format string, in which case succeeding parameters will be used
  * to resolve the final label.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
+ * @remark Tags: none.
  */
 
 void xnheap_set_label(struct xnheap *heap, const char *label, ...)
@@ -377,9 +371,9 @@ void xnheap_set_label(struct xnheap *heap, const char *label, ...)
 }
 EXPORT_SYMBOL_GPL(xnheap_set_label);
 
-/*!
- * \fn void xnheap_destroy(struct xnheap *heap, void (*flushfn)(struct xnheap *heap, void *extaddr, unsigned long extsize, void *cookie), void *cookie)
- * \brief Destroys a memory heap.
+/**
+ * @fn void xnheap_destroy(struct xnheap *heap, void (*flushfn)(struct xnheap *heap, void *extaddr, unsigned long extsize, void *cookie), void *cookie)
+ * @brief Destroys a memory heap.
  *
  * Destroys a memory heap.
  *
@@ -392,15 +386,7 @@ EXPORT_SYMBOL_GPL(xnheap_set_label);
  * @param cookie If @a flushfn is non-NULL, @a cookie is an opaque
  * pointer which will be passed unmodified to @a flushfn.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
+ * @remark Tags: none.
  */
 
 void xnheap_destroy(struct xnheap *heap,
@@ -537,9 +523,9 @@ splitpage:
 	return headpage;
 }
 
-/*!
- * \fn void *xnheap_alloc(struct xnheap *heap, unsigned long size)
- * \brief Allocate a memory block from a memory heap.
+/**
+ * @fn void *xnheap_alloc(struct xnheap *heap, unsigned long size)
+ * @brief Allocate a memory block from a memory heap.
  *
  * Allocates a contiguous region of memory from an active memory heap.
  * Such allocation is guaranteed to be time-bounded.
@@ -557,16 +543,7 @@ splitpage:
  * @return The address of the allocated region upon success, or NULL
  * if no memory is available from the specified heap.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
+ * @remark Tags: isr-allowed.
  */
 
 void *xnheap_alloc(struct xnheap *heap, unsigned long size)
@@ -668,9 +645,9 @@ void *xnheap_alloc(struct xnheap *heap, unsigned long size)
 }
 EXPORT_SYMBOL_GPL(xnheap_alloc);
 
-/*!
- * \fn int xnheap_test_and_free(struct xnheap *heap,void *block,int (*ckfn)(void *block))
- * \brief Test and release a memory block to a memory heap.
+/**
+ * @fn int xnheap_test_and_free(struct xnheap *heap,void *block,int (*ckfn)(void *block))
+ * @brief Test and release a memory block to a memory heap.
  *
  * Releases a memory region to the memory heap it was previously
  * allocated from. Before the actual release is performed, an optional
@@ -688,24 +665,15 @@ EXPORT_SYMBOL_GPL(xnheap_alloc);
  * proceed to further consistency checks, and either return zero upon
  * success, or non-zero upon error. In the latter case, the release
  * process is aborted, and @a ckfn's return value is passed back to
- * the caller of this service as its error return code. @a ckfn must
- * not trigger the rescheduling procedure either directly or
- * indirectly.
+ * the caller of this service as its error return code.
+ *
+ * @warning @a ckfn must not reschedule either directly or indirectly.
  *
  * @return 0 is returned upon success, or -EINVAL is returned whenever
  * the block is not a valid region of the specified heap. Additional
  * return codes can also be defined locally by the @a ckfn routine.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
+ * @remark Tags: isr-allowed.
  */
 
 int xnheap_test_and_free(struct xnheap *heap, void *block, int (*ckfn) (void *block))
@@ -887,9 +855,9 @@ found:
 }
 EXPORT_SYMBOL_GPL(xnheap_test_and_free);
 
-/*!
- * \fn int xnheap_free(struct xnheap *heap, void *block)
- * \brief Release a memory block to a memory heap.
+/**
+ * @fn int xnheap_free(struct xnheap *heap, void *block)
+ * @brief Release a memory block to a memory heap.
  *
  * Releases a memory region to the memory heap it was previously
  * allocated from.
@@ -908,16 +876,7 @@ EXPORT_SYMBOL_GPL(xnheap_test_and_free);
  * - -EINVAL is returned whenever the memory address does not
  * represent a valid block.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
+ * @remark Tags: isr-allowed.
  */
 
 int xnheap_free(struct xnheap *heap, void *block)
@@ -926,9 +885,9 @@ int xnheap_free(struct xnheap *heap, void *block)
 }
 EXPORT_SYMBOL_GPL(xnheap_free);
 
-/*!
- * \fn int xnheap_extend(struct xnheap *heap, void *extaddr, unsigned long extsize)
- * \brief Extend a memory heap.
+/**
+ * @fn int xnheap_extend(struct xnheap *heap, void *extaddr, unsigned long extsize)
+ * @brief Extend a memory heap.
  *
  * Add a new extent to an existing memory heap.
  *
@@ -943,16 +902,7 @@ EXPORT_SYMBOL_GPL(xnheap_free);
  * @return 0 is returned upon success, or -EINVAL is returned if
  * @a extsize differs from the initial extent's size.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
+ * @remark Tags: isr-allowed.
  */
 
 int xnheap_extend(struct xnheap *heap, void *extaddr, unsigned long extsize)
@@ -1012,17 +962,6 @@ out:
 	return ret;
 }
 EXPORT_SYMBOL_GPL(xnheap_check_block);
-
-#include <asm/io.h>
-#include <linux/miscdevice.h>
-#include <linux/device.h>
-#include <linux/vmalloc.h>
-#include <linux/mm.h>
-#include <linux/fs.h>
-#include <linux/spinlock.h>
-
-static LIST_HEAD(kheapq);	/* Shared heap queue. */
-static DEFINE_SPINLOCK(kheapq_lock);
 
 static inline void *__alloc_and_reserve_heap(size_t size, int kmflags)
 {
@@ -1311,6 +1250,7 @@ int xnheap_init_mapped(struct xnheap *heap, unsigned long heapsize, int memflags
 
 	return 0;
 }
+EXPORT_SYMBOL_GPL(xnheap_init_mapped);
 
 void xnheap_destroy_mapped(struct xnheap *heap,
 			   void (*release)(struct xnheap *heap),
@@ -1385,6 +1325,7 @@ void xnheap_destroy_mapped(struct xnheap *heap,
 	if (release)
 		release(heap);
 }
+EXPORT_SYMBOL_GPL(xnheap_destroy_mapped);
 
 int xnheap_remap_vm_page(struct vm_area_struct *vma,
 			 unsigned long from, unsigned long to)
@@ -1473,8 +1414,5 @@ int __init xnheap_mount(void)
 
 	return 0;
 }
-
-EXPORT_SYMBOL_GPL(xnheap_init_mapped);
-EXPORT_SYMBOL_GPL(xnheap_destroy_mapped);
 
 /*@}*/

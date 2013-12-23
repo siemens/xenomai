@@ -27,17 +27,14 @@
 #include <cobalt/kernel/clock.h>
 #include <cobalt/kernel/shadow.h>
 
-/*!
- * \fn void xnsynch_init(struct xnsynch *synch, int flags,
+/**
+ * @fn void xnsynch_init(struct xnsynch *synch, int flags,
  *                       atomic_long_t *fastlock)
  *
- * \brief Initialize a synchronization object.
+ * @brief Initialize a synchronization object.
  *
- * Initializes a new specialized object which can subsequently be used
- * to synchronize real-time activities. The Xenomai nucleus
- * provides a basic synchronization object which can be used to build
- * higher resource objects. Nucleus threads can wait for and signal
- * such objects in order to synchronize their activities.
+ * Initializes a synchronization object. Xenomai threads can wait for
+ * and signal such objects for serializing.
  *
  * This object has built-in support for priority inheritance.
  *
@@ -76,15 +73,7 @@
  * the synchronization object. If NULL is passed or XNSYNCH_OWNER is not
  * set, fast-lock support is disabled.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
+ * @remark Tags: none.
  */
 
 void xnsynch_init(struct xnsynch *synch, int flags, atomic_long_t *fastlock)
@@ -107,9 +96,9 @@ void xnsynch_init(struct xnsynch *synch, int flags, atomic_long_t *fastlock)
 }
 EXPORT_SYMBOL_GPL(xnsynch_init);
 
-/*!
- * \fn int xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout, xntmode_t timeout_mode);
- * \brief Sleep on an ownerless synchronization object.
+/**
+ * @fn int xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout, xntmode_t timeout_mode);
+ * @brief Sleep on an ownerless synchronization object.
  *
  * Makes the calling thread sleep on the specified synchronization
  * object, waiting for it to be signaled.
@@ -139,15 +128,7 @@ EXPORT_SYMBOL_GPL(xnsynch_init);
  * caller, for detecting respectively: object deletion, timeout or
  * signal/unblock conditions which might have happened while waiting.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: always.
+ * @remark Tags: might-switch.
  */
 
 int xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
@@ -177,9 +158,9 @@ int xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
 }
 EXPORT_SYMBOL_GPL(xnsynch_sleep_on);
 
-/*!
- * \fn struct xnthread *xnsynch_wakeup_one_sleeper(struct xnsynch *synch);
- * \brief Unblock the heading thread from wait.
+/**
+ * @fn struct xnthread *xnsynch_wakeup_one_sleeper(struct xnsynch *synch);
+ * @brief Unblock the heading thread from wait.
  *
  * This service wakes up the thread which is currently leading the
  * synchronization object's pending list. The sleeping thread is
@@ -195,16 +176,7 @@ EXPORT_SYMBOL_GPL(xnsynch_sleep_on);
  *
  * @return The descriptor address of the unblocked thread.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
+ * @remark Tags: isr-allowed.
  */
 
 struct xnthread *xnsynch_wakeup_one_sleeper(struct xnsynch *synch)
@@ -265,9 +237,9 @@ out:
 }
 EXPORT_SYMBOL_GPL(xnsynch_wakeup_many_sleepers);
 
-/*!
- * \fn void xnsynch_wakeup_this_sleeper(struct xnsynch *synch, struct xnthread *sleeper);
- * \brief Unblock a particular thread from wait.
+/**
+ * @fn void xnsynch_wakeup_this_sleeper(struct xnsynch *synch, struct xnthread *sleeper);
+ * @brief Unblock a particular thread from wait.
  *
  * This service wakes up a specific thread which is currently pending on
  * the given synchronization object. The sleeping thread is unblocked
@@ -284,16 +256,7 @@ EXPORT_SYMBOL_GPL(xnsynch_wakeup_many_sleepers);
  * @param sleeper The thread to unblock which MUST be currently linked
  * to the synchronization object's pending queue (i.e. synch->pendq).
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
+ * @remark Tags: isr-allowed.
  */
 
 void xnsynch_wakeup_this_sleeper(struct xnsynch *synch, struct xnthread *sleeper)
@@ -316,12 +279,13 @@ void xnsynch_wakeup_this_sleeper(struct xnsynch *synch, struct xnthread *sleeper
 EXPORT_SYMBOL_GPL(xnsynch_wakeup_this_sleeper);
 
 /*
- * xnsynch_renice_thread() -- This service is used by the PIP code to
- * raise/lower a thread's priority. The thread's base priority value
- * is _not_ changed and if ready, the thread is always moved at the
- * end of its priority group.
+ * @internal
  *
- * NOTE: there is no point in propagating Xenomai policy/priority
+ * This service is used by the PIP code to raise/lower a thread's
+ * priority. The base priority value is _not_ changed and if ready,
+ * the thread is always moved at the end of its priority group.
+ *
+ * @note There is no point in propagating Xenomai policy/priority
  * changes to linux/libc, since doing so would be papering over a
  * basic priority inversion issue in the application code. I.e. a
  * Xenomai mutex owner shall NOT enter secondary mode until it
@@ -340,13 +304,13 @@ static void xnsynch_renice_thread(struct xnthread *thread,
 		xnsynch_requeue_sleeper(thread);
 }
 
-/*!
- * \fn int xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout, xntmode_t timeout_mode);
- * \brief Acquire the ownership of a synchronization object.
+/**
+ * @fn int xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout, xntmode_t timeout_mode);
+ * @brief Acquire the ownership of a synchronization object.
  *
  * This service should be called by upper interfaces wanting the
  * current thread to acquire the ownership of the given resource. If
- * the resource is already assigned to a thread, the caller is
+ * the resource is already assigned to another thread, the caller is
  * suspended.
  *
  * This service must be used only with synchronization objects that
@@ -372,15 +336,7 @@ static void xnsynch_renice_thread(struct xnthread *thread,
  * caller, for detecting respectively: object deletion, timeout or
  * signal/unblock conditions which might have happened while waiting.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: possible.
+ * @remark Tags: might-switch.
  */
 
 int xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
@@ -519,9 +475,9 @@ unlock_and_exit:
 }
 EXPORT_SYMBOL_GPL(xnsynch_acquire);
 
-/*!
- * \fn struct xnthread *xnsynch_release(struct xnsynch *synch, struct xnthread *owner);
- * \brief Give the resource ownership to the next waiting thread.
+/**
+ * @fn struct xnthread *xnsynch_release(struct xnsynch *synch, struct xnthread *owner);
+ * @brief Give the resource ownership to the next waiting thread.
  *
  * This service releases the ownership of the given synchronization
  * object. The thread which is currently leading the object's pending
@@ -547,22 +503,13 @@ EXPORT_SYMBOL_GPL(xnsynch_acquire);
  * - The synchronization object ownership is transfered to the
  * unblocked thread.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
+ * @remark Tags: none.
  */
 
-/*!
+/**
  * @internal
- * \fn void xnsynch_clear_boost(struct xnsynch *synch, struct xnthread *owner);
- * \brief Clear the priority boost.
+ * @fn void xnsynch_clear_boost(struct xnsynch *synch, struct xnthread *owner);
+ * @brief Clear the priority boost.
  *
  * This service is called internally whenever a synchronization object
  * is not claimed anymore by sleepers to reset the object owner's
@@ -573,7 +520,7 @@ EXPORT_SYMBOL_GPL(xnsynch_acquire);
  * @param owner The descriptor address of the thread which
  * currently owns the synchronization object.
  *
- * @note This routine must be entered nklock locked, interrupts off.
+ * @remark Tags: atomic-entry.
  */
 
 static void xnsynch_clear_boost(struct xnsynch *synch,
@@ -606,17 +553,17 @@ static void xnsynch_clear_boost(struct xnsynch *synch,
 		xnsynch_renice_thread(owner, target);
 }
 
-/*!
+/**
  * @internal
- * \fn void xnsynch_requeue_sleeper(struct xnthread *thread);
- * \brief Change a sleeper's priority.
+ * @fn void xnsynch_requeue_sleeper(struct xnthread *thread);
+ * @brief Change a sleeper's priority.
  *
  * This service is used by the PIP code to update the pending priority
  * of a sleeping thread.
  *
  * @param thread The descriptor address of the affected thread.
  *
- * @note This routine must be entered nklock locked, interrupts off.
+ * @remark Tags: atomic-entry.
  */
 
 void xnsynch_requeue_sleeper(struct xnthread *thread)
@@ -717,9 +664,9 @@ struct xnthread *__xnsynch_transfer_ownership(struct xnsynch *synch,
 }
 EXPORT_SYMBOL_GPL(__xnsynch_transfer_ownership);
 
-/*!
- * \fn struct xnthread *xnsynch_peek_pendq(struct xnsynch *synch);
- * \brief Access the thread leading a synch object wait queue.
+/**
+ * @fn struct xnthread *xnsynch_peek_pendq(struct xnsynch *synch);
+ * @brief Access the thread leading a synch object wait queue.
  *
  * This services returns the descriptor address of to the thread leading a
  * synchronization object wait queue.
@@ -728,16 +675,7 @@ EXPORT_SYMBOL_GPL(__xnsynch_transfer_ownership);
  *
  * @return The descriptor address of the unblocked thread.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
+ * @remark Tags: isr-allowed.
  */
 struct xnthread *xnsynch_peek_pendq(struct xnsynch *synch)
 {
@@ -759,9 +697,9 @@ out:
 }
 EXPORT_SYMBOL_GPL(xnsynch_peek_pendq);
 
-/*!
- * \fn int xnsynch_flush(struct xnsynch *synch, int reason);
- * \brief Unblock all waiters pending on a resource.
+/**
+ * @fn int xnsynch_flush(struct xnsynch *synch, int reason);
+ * @brief Unblock all waiters pending on a resource.
  *
  * This service atomically releases all threads which currently sleep
  * on a given resource.
@@ -796,16 +734,7 @@ EXPORT_SYMBOL_GPL(xnsynch_peek_pendq);
  *
  * - The synchronization object is no more owned by any thread.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
+ * @remark Tags: isr-allowed.
  */
 
 int xnsynch_flush(struct xnsynch *synch, int reason)
@@ -840,23 +769,17 @@ int xnsynch_flush(struct xnsynch *synch, int reason)
 }
 EXPORT_SYMBOL_GPL(xnsynch_flush);
 
-/*!
+/**
  * @internal
- * \fn void xnsynch_forget_sleeper(struct xnthread *thread);
- * \brief Abort a wait for a resource.
+ * @fn void xnsynch_forget_sleeper(struct xnthread *thread);
+ * @brief Abort a wait for a resource.
  *
  * Performs all the necessary housekeeping chores to stop a thread
  * from waiting on a given synchronization object.
  *
  * @param thread The descriptor address of the affected thread.
  *
- * When the trace support is enabled (i.e. MVM), the idle state is
- * posted to the synchronization object's state diagram (if any)
- * whenever no thread remains blocked on it. The real-time interfaces
- * must ensure that such condition (i.e. EMPTY/IDLE) is mapped to
- * state #0.
- *
- * @note This routine must be entered nklock locked, interrupts off.
+ * @remark Tags: atomic-entry.
  */
 
 void xnsynch_forget_sleeper(struct xnthread *thread)
@@ -904,10 +827,10 @@ void xnsynch_forget_sleeper(struct xnthread *thread)
 }
 EXPORT_SYMBOL_GPL(xnsynch_forget_sleeper);
 
-/*!
+/**
  * @internal
- * \fn void xnsynch_release_all_ownerships(struct xnthread *thread);
- * \brief Release all ownerships.
+ * @fn void xnsynch_release_all_ownerships(struct xnthread *thread);
+ * @brief Release all ownerships.
  *
  * This call is used internally to release all the ownerships obtained
  * by a thread on synchronization objects. This routine must be
@@ -915,7 +838,7 @@ EXPORT_SYMBOL_GPL(xnsynch_forget_sleeper);
  *
  * @param thread The descriptor address of the affected thread.
  *
- * @note This routine must be entered nklock locked, interrupts off.
+ * @remark Tags: atomic-entry.
  */
 
 void xnsynch_release_all_ownerships(struct xnthread *thread)

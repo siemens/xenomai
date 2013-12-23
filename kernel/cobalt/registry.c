@@ -618,14 +618,7 @@ static inline int registry_wakeup_sleepers(const char *key)
  *
  * - -EEXIST is returned if the @a key is already in use.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based thread
- *
- * Rescheduling: possible.
+ * @remark Tags: might-switch.
  */
 int xnregistry_enter(const char *key, void *objaddr,
 		     xnhandle_t *phandle, struct xnpnode *pnode)
@@ -738,18 +731,7 @@ EXPORT_SYMBOL_GPL(xnregistry_enter);
  * - -ETIMEDOUT is returned if the object cannot be retrieved within
  * the specified amount of time.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- *   only if @a timeout is equal to XN_NONBLOCK.
- *
- * - Kernel-based thread.
- *
- * Rescheduling: always unless the request is immediately satisfied or
- * @a timeout specifies a non-blocking operation.
+ * @remark Tags: primary-only, might-switch.
  */
 int xnregistry_bind(const char *key, xnticks_t timeout, int timeout_mode,
 		    xnhandle_t *phandle)
@@ -797,7 +779,7 @@ int xnregistry_bind(const char *key, xnticks_t timeout, int timeout_mode,
 		}
 	}
 
-      unlock_and_exit:
+unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -820,14 +802,7 @@ EXPORT_SYMBOL_GPL(xnregistry_bind);
  * - -ESRCH is returned if @a handle does not reference a registered
  * object.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based thread
- *
- * Rescheduling: never.
+ * @remark Tags: none.
  */
 
 int xnregistry_remove(xnhandle_t handle)
@@ -878,6 +853,8 @@ EXPORT_SYMBOL_GPL(xnregistry_remove);
 
 /**
  * Turn a named object into an anonymous object
+ *
+ * @remark Tags: none.
  */
 int xnregistry_unlink(const char *key)
 {
@@ -953,18 +930,7 @@ unlock_and_exit:
  * - -EINTR is returned if xnthread_unblock() has been called for the
  * calling thread waiting for the object to be unlocked.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- *   only if @a timeout is equal to XN_NONBLOCK.
- *
- * - Kernel-based thread.
- *
- * Rescheduling: possible if the object to remove is currently locked
- * and the calling context can sleep.
+ * @remark Tags: primary-only, might-switch.
  */
 
 int xnregistry_remove_safe(xnhandle_t handle, xnticks_t timeout)
@@ -1059,17 +1025,7 @@ EXPORT_SYMBOL_GPL(xnregistry_remove_safe);
  * reference a registered object, or if @a handle is equal to
  * XNOBJECT_SELF but the current context is not a real-time thread.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * only if @a handle is different from XNOBJECT_SELF.
- *
- * - Kernel-based thread.
- *
- * Rescheduling: never.
+ * @remark Tags: isr-allowed.
  */
 
 void *xnregistry_get(xnhandle_t handle)
@@ -1117,18 +1073,7 @@ EXPORT_SYMBOL_GPL(xnregistry_get);
  * object, or if @a handle is equal to XNOBJECT_SELF but the current
  * context is not a real-time thread.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * only if @a handle is different from XNOBJECT_SELF.
- *
- * - Kernel-based thread
- *
- * Rescheduling: possible if the lock count falls down to zero and
- * some thread is currently waiting for the object to be unlocked.
+ * @remark Tags: isr-allowed, might-switch.
  */
 
 unsigned long xnregistry_put(xnhandle_t handle)
@@ -1181,23 +1126,13 @@ EXPORT_SYMBOL_GPL(xnregistry_put);
  * reference a registered object, or if @a handle is equal to
  * XNOBJECT_SELF but the current context is not a real-time thread.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * only if @a handle is different from XNOBJECT_SELF.
- *
- * - Kernel-based thread
- *
- * Rescheduling: never.
+ * @remark Tags: isr-allowed.
  */
 
 void *xnregistry_fetch(xnhandle_t handle)
 {
 	if (handle == XNOBJECT_SELF)
-		return xnsched_primary_p()? xnsched_current_thread() : NULL;
+		return xnsched_primary_p() ? xnsched_current_thread() : NULL;
 
 	return xnregistry_lookup(handle);
 }

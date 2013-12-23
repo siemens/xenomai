@@ -92,6 +92,8 @@ MODULE_PARM_DESC(watchdog_timeout, "Watchdog timeout (s)");
  * This internal routine handles incoming watchdog ticks to detect
  * software lockups. It kills any offending thread which is found to
  * monopolize the CPU so as to starve the Linux kernel for too long.
+ *
+ * @remark Tags: primary-only, isr-only, atomic-entry.
  */
 static void watchdog_handler(struct xntimer *timer)
 {
@@ -647,9 +649,8 @@ static inline void switch_context(struct xnsched *sched,
  * This is the central rescheduling routine which should be called to
  * validate and apply changes which have previously been made to the
  * nucleus scheduling state, such as suspending, resuming or changing
- * the priority of threads.  This call first determines if a thread
- * switch should take place, and performs it as needed. xnsched_run()
- * schedules out the current thread if:
+ * the priority of threads.  This call performs context switches as
+ * needed. xnsched_run() schedules out the current thread if:
  *
  * - the current thread is about to block.
  * - a runnable thread from a higher priority scheduling class is
@@ -689,9 +690,7 @@ static inline void switch_context(struct xnsched *sched,
  * @return Non-zero is returned if a context switch actually happened,
  * otherwise zero if the current thread was left running.
  *
- * Environments:
- *
- * This service can be called from any context.
+ * @remark Tags: none.
  */
 static inline int test_resched(struct xnsched *sched)
 {

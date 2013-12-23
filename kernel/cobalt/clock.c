@@ -280,9 +280,9 @@ static void adjust_clock_timers(struct xnclock *clock, xnsticks_t delta)
 	}
 }
 
-/*!
- * \fn void xnclock_adjust(struct xnclock *clock, xnsticks_t delta)
- * \brief Adjust a clock time.
+/**
+ * @fn void xnclock_adjust(struct xnclock *clock, xnsticks_t delta)
+ * @brief Adjust a clock time.
  *
  * This service changes the epoch for the given clock by applying the
  * specified tick delta on its wallclock offset.
@@ -293,13 +293,7 @@ static void adjust_clock_timers(struct xnclock *clock, xnsticks_t delta)
  *
  * @note This routine must be entered nklock locked, interrupts off.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Any kernel context.
- *
- * Rescheduling: never.
+ * @remark Tags: none.
  *
  * @note Xenomai tracks the system time in @a nkclock, as a
  * monotonously increasing count of ticks since the epoch. The epoch
@@ -472,20 +466,14 @@ static inline void cleanup_clock_proc(struct xnclock *clock) { }
 
 /**
  * @fn void xnclock_register(struct xnclock *clock)
- * \brief Register a Xenomai clock.
+ * @brief Register a Xenomai clock.
  *
  * This service installs a new clock which may be used to drive
  * Xenomai timers.
  *
  * @param clock The new clock to register.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Linux context
- *
- * Rescheduling: never.
+ * @remark Tags: secondary-only.
  */
 int xnclock_register(struct xnclock *clock)
 {
@@ -518,7 +506,7 @@ EXPORT_SYMBOL_GPL(xnclock_register);
 
 /**
  * @fn void xnclock_deregister(struct xnclock *clock)
- * \brief Deregister a Xenomai clock.
+ * @brief Deregister a Xenomai clock.
  *
  * This service uninstalls a Xenomai clock previously registered with
  * xnclock_register().
@@ -528,13 +516,7 @@ EXPORT_SYMBOL_GPL(xnclock_register);
  *
  * @param clock The clock to deregister.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Linux context
- *
- * Rescheduling: never.
+ * @remark Tags: secondary-only.
  */
 void xnclock_deregister(struct xnclock *clock)
 {
@@ -566,13 +548,7 @@ EXPORT_SYMBOL_GPL(xnclock_deregister);
  *
  * @param clock The clock for which a new event was received.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Interrupt service routine, nklock locked, interrupts off
- *
- * Rescheduling: never.
+ * @remark Tags: primary-only, isr-only, atomic-entry.
  *
  * @note The current CPU must be part of the real-time affinity set,
  * otherwise weird things may happen.
