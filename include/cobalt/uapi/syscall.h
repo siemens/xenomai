@@ -56,9 +56,9 @@
 #define sc_cobalt_mq_unlink             33
 #define sc_cobalt_mq_getattr            34
 #define sc_cobalt_mq_setattr            35
-#define sc_cobalt_mq_send               36
+/* 36 unimplemented */
 #define sc_cobalt_mq_timedsend          37
-#define sc_cobalt_mq_receive            38
+/* 38 unimplemented */
 #define sc_cobalt_mq_timedreceive       39
 #define sc_cobalt_thread_probe          40
 #define sc_cobalt_sched_minprio         41

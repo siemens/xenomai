@@ -111,8 +111,9 @@ COBALT_IMPL(int, mq_send, (mqd_t q, const char *buffer, size_t len, unsigned pri
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	err = XENOMAI_SKINCALL4(__cobalt_muxid,
-				sc_cobalt_mq_send, q, buffer, len, prio);
+	err = XENOMAI_SKINCALL5(__cobalt_muxid,
+				sc_cobalt_mq_timedsend, 
+				q, buffer, len, prio, NULL);
 
 	pthread_setcanceltype(oldtype, NULL);
 
@@ -152,8 +153,9 @@ COBALT_IMPL(ssize_t, mq_receive, (mqd_t q, char *buffer, size_t len, unsigned *p
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
-	err = XENOMAI_SKINCALL4(__cobalt_muxid,
-				sc_cobalt_mq_receive, q, buffer, &rlen, prio);
+	err = XENOMAI_SKINCALL5(__cobalt_muxid,
+				sc_cobalt_mq_timedreceive, 
+				q, buffer, &rlen, prio, NULL);
 
 	pthread_setcanceltype(oldtype, NULL);
 

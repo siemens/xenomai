@@ -56,7 +56,6 @@ static void *cobalt_process_attach(void)
 	INIT_LIST_HEAD(&cc->kqueues.threadq);
 	INIT_LIST_HEAD(&cc->kqueues.monitorq);
 	INIT_LIST_HEAD(&cc->kqueues.eventq);
-	INIT_LIST_HEAD(&cc->uqds);
 	INIT_LIST_HEAD(&cc->sigwaiters);
 	xntree_init(&cc->usems);
 	bitmap_fill(cc->timers_map, CONFIG_XENO_OPT_NRTIMERS);
@@ -69,7 +68,6 @@ static void cobalt_process_detach(void *arg)
 	struct cobalt_process *cc = arg;
 
 	cobalt_sem_usems_cleanup(cc);
-	cobalt_mq_uqds_cleanup(cc);
 	cobalt_timers_cleanup(cc);
 	cobalt_monitorq_cleanup(&cc->kqueues);
 	cobalt_semq_cleanup(&cc->kqueues);
@@ -126,9 +124,7 @@ static struct xnsyscall cobalt_syscalls[] = {
 	SKINCALL_DEF(sc_cobalt_mq_unlink, cobalt_mq_unlink, lostage),
 	SKINCALL_DEF(sc_cobalt_mq_getattr, cobalt_mq_getattr, any),
 	SKINCALL_DEF(sc_cobalt_mq_setattr, cobalt_mq_setattr, any),
-	SKINCALL_DEF(sc_cobalt_mq_send, cobalt_mq_send, primary),
 	SKINCALL_DEF(sc_cobalt_mq_timedsend, cobalt_mq_timedsend, primary),
-	SKINCALL_DEF(sc_cobalt_mq_receive, cobalt_mq_receive, primary),
 	SKINCALL_DEF(sc_cobalt_mq_timedreceive, cobalt_mq_timedreceive, primary),
 	SKINCALL_DEF(sc_cobalt_mq_notify, cobalt_mq_notify, primary),
 	SKINCALL_DEF(sc_cobalt_sigwait, cobalt_sigwait, primary),

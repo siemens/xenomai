@@ -34,7 +34,6 @@ struct cobalt_kqueues {
 struct cobalt_timer;
 struct cobalt_process {
 	struct cobalt_kqueues kqueues;
-	struct list_head uqds;
 	struct rb_root usems;
 	struct list_head sigwaiters;
 	DECLARE_BITMAP(timers_map, CONFIG_XENO_OPT_NRTIMERS);
