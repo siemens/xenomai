@@ -61,6 +61,8 @@ MODULE_DESCRIPTION("Xenomai/cobalt POSIX interface");
 MODULE_AUTHOR("gilles.chanteperdrix@xenomai.org");
 MODULE_LICENSE("GPL");
 
+struct cobalt_kqueues cobalt_global_kqueues;
+
 void cobalt_cleanup(void)
 {
 	cobalt_syscall_cleanup();
@@ -71,7 +73,6 @@ void cobalt_cleanup(void)
 	cobalt_sem_pkg_cleanup();
 	cobalt_cond_pkg_cleanup();
 	cobalt_mutex_pkg_cleanup();
-	cobalt_reg_pkg_cleanup();
 }
 
 int __init cobalt_init(void)
@@ -82,7 +83,6 @@ int __init cobalt_init(void)
 	if (ret)
 		return ret;
 
-	cobalt_reg_pkg_init(64, 128);	/* FIXME: replace with compilation constants. */
 	cobalt_mutex_pkg_init();
 	cobalt_sem_pkg_init();
 	cobalt_cond_pkg_init();

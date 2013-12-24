@@ -10,9 +10,8 @@ posix-y :=		\
 	mqueue.o	\
 	mutex.o		\
 	mutex_attr.o	\
-	registry.o	\
-	sem.o		\
 	nsem.o		\
+	sem.o		\
 	select.o	\
 	signal.o	\
 	syscall.o	\

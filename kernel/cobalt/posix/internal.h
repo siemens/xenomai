@@ -24,9 +24,11 @@
 #include <cobalt/kernel/assert.h>
 #include <cobalt/kernel/list.h>
 #include <cobalt/kernel/arith.h>
-#include "registry.h"
 #include "process.h"
 #include "extension.h"
+
+#define COBALT_MAXNAME 64
+#define COBALT_PERMS_MASK (O_RDONLY | O_WRONLY | O_RDWR)
 
 #define COBALT_MAGIC(n) (0x8686##n##n)
 #define COBALT_ANY_MAGIC         COBALT_MAGIC(00)
