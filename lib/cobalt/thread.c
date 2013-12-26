@@ -429,6 +429,12 @@ int pthread_set_name_np(pthread_t thread, const char *name)
 				  sc_cobalt_thread_set_name, thread, name);
 }
 
+COBALT_IMPL(int, pthread_setname_np, (pthread_t thread, const char *name))
+{
+	return -XENOMAI_SKINCALL2(__cobalt_muxid,
+				  sc_cobalt_thread_set_name, thread, name);
+}
+
 int pthread_probe_np(pid_t tid)
 {
 	return XENOMAI_SKINCALL1(__cobalt_muxid,

@@ -151,6 +151,8 @@ int pthread_set_mode_np(int clrmask, int setmask,
 int pthread_set_name_np(pthread_t thread,
 			const char *name);
 
+COBALT_DECL(int, pthread_setname_np(pthread_t thread, const char *name));
+
 int pthread_probe_np(pid_t tid);
 
 int pthread_create_ex(pthread_t *tid,
