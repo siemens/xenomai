@@ -34,6 +34,7 @@ libcobalt_la_SOURCES =		\
 	thread.c		\
 	ticks.c			\
 	timer.c			\
+	timerfd.c		\
 	trace.c			\
 	wrappers.c
 

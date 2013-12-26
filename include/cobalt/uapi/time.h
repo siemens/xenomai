@@ -39,4 +39,12 @@
 
 #define CLOCK_HOST_REALTIME  __COBALT_CLOCK_CODE(42)
 
+/*
+ * Additional timerfd defines
+ *
+ * when passing TFD_WAKEUP to timer_settime, any timer expiration
+ * unblocks the thread having issued timer_settime.
+ */
+#define TFD_WAKEUP	(1 << 2)
+
 #endif /* !_COBALT_UAPI_TIME_H */

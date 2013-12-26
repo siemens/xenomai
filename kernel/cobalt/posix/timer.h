@@ -22,6 +22,7 @@
 #include <linux/time.h>
 #include <linux/list.h>
 #include <cobalt/kernel/timer.h>
+#include "signal.h"
 
 struct cobalt_thread;
 struct cobalt_kqueues;
@@ -62,6 +63,12 @@ static inline timer_t cobalt_timer_id(const struct cobalt_timer *timer)
 
 struct cobalt_timer *
 cobalt_timer_by_id(struct cobalt_process *p, timer_t timer_id);
+
+void cobalt_xntimer_gettime(struct xntimer *__restrict__ timer, 
+			struct itimerspec *__restrict__ value);
+
+int cobalt_xntimer_settime(struct xntimer *__restrict__ timer, int clock_flag, 
+			const struct itimerspec *__restrict__ value);
 
 void cobalt_timer_handler(struct xntimer *xntimer);
 

@@ -26,7 +26,6 @@
 #include <linux/err.h>
 #include "internal.h"
 #include "thread.h"
-#include "signal.h"
 #include "timer.h"
 #include "clock.h"
 
@@ -306,6 +305,21 @@ out:
 	return ret;
 }
 
+void cobalt_xntimer_gettime(struct xntimer *__restrict__ timer,
+			struct itimerspec *__restrict__ value)
+{
+	if (!xntimer_running_p(timer)) {
+		value->it_value.tv_sec = 0;
+		value->it_value.tv_nsec = 0;
+		value->it_interval.tv_sec = 0;
+		value->it_interval.tv_nsec = 0;
+		return;
+	}
+
+	ns2ts(&value->it_value, xntimer_get_timeout(timer));
+	ns2ts(&value->it_interval, xntimer_interval(timer));
+}
+
 static inline void
 timer_gettimeout(struct cobalt_timer *__restrict__ timer,
 		 struct itimerspec *__restrict__ value)
@@ -321,19 +335,39 @@ timer_gettimeout(struct cobalt_timer *__restrict__ timer,
 	}
 
 	if (!cobalt_call_extension(timer_gettime, &timer->extref,
-				   ret, value) || ret == 0) {
-		ns2ts(&value->it_value,
-		      xntimer_get_timeout(&timer->timerbase));
-		ns2ts(&value->it_interval,
-		      xntimer_interval(&timer->timerbase));
+				   ret, value) || ret == 0)
+		cobalt_xntimer_gettime(&timer->timerbase, value);
+}
+
+int cobalt_xntimer_settime(struct xntimer *__restrict__ timer, int clock_flag,
+			const struct itimerspec *__restrict__ value)
+{
+	xnticks_t start, period;
+
+	if (value->it_value.tv_nsec == 0 && value->it_value.tv_sec == 0) {
+		xntimer_stop(timer);
+		return 0;
 	}
+
+	if ((unsigned long)value->it_value.tv_nsec >= ONE_BILLION ||
+	    ((unsigned long)value->it_interval.tv_nsec >= ONE_BILLION &&
+	     (value->it_value.tv_sec != 0 || value->it_value.tv_nsec != 0)))
+		return -EINVAL;
+
+	start = ts2ns(&value->it_value) + 1;
+	period = ts2ns(&value->it_interval);
+
+	/*
+	 * Now start the timer. If the timeout data has already
+	 * passed, the caller will handle the case.
+	 */
+	return xntimer_start(timer, start, period, clock_flag);
 }
 
 static inline int timer_set(struct cobalt_timer *timer, int flags,
 			    const struct itimerspec *__restrict__ value)
 {				/* nklocked, IRQs off. */
 	struct cobalt_thread *thread;
-	xnticks_t start, period;
 	int ret = 0;
 
 	/* First, try offloading the work to an extension. */
@@ -346,19 +380,6 @@ static inline int timer_set(struct cobalt_timer *timer, int flags,
 	 * No extension, or operation not handled. Default to plain
 	 * POSIX behavior.
 	 */
-
-	if (value->it_value.tv_nsec == 0 && value->it_value.tv_sec == 0) {
-		xntimer_stop(&timer->timerbase);
-		return 0;
-	}
-
-	if ((unsigned long)value->it_value.tv_nsec >= ONE_BILLION ||
-	    ((unsigned long)value->it_interval.tv_nsec >= ONE_BILLION &&
-	     (value->it_value.tv_sec != 0 || value->it_value.tv_nsec != 0)))
-		return -EINVAL;
-
-	start = ts2ns(&value->it_value) + 1;
-	period = ts2ns(&value->it_interval);
 
 	/*
 	 * If the target thread vanished, simply don't start the
@@ -373,12 +394,9 @@ static inline int timer_set(struct cobalt_timer *timer, int flags,
 	 * signaled.
 	 */
 	xntimer_set_sched(&timer->timerbase, thread->threadbase.sched);
-	/*
-	 * Now start the timer. If the timeout data has already
-	 * passed, the caller will handle the case.
-	 */
-	return xntimer_start(&timer->timerbase, start, period,
-			     clock_flag(flags, timer->clockid));
+
+	return cobalt_xntimer_settime(&timer->timerbase,
+				clock_flag(flags, timer->clockid), value);
 }
 
 static inline void

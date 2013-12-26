@@ -6,9 +6,10 @@ noinst_HEADERS = check.h
 
 test_PROGRAMS = \
 	leaks \
-	mq_select
+	mq_select \
+	timerfd
 
-CPPFLAGS = $(XENO_USER_CFLAGS) 				\
+CPPFLAGS = $(XENO_USER_CFLAGS)			\
 	-I$(top_srcdir)/include
 
 LDFLAGS = $(XENO_POSIX_WRAPPERS)

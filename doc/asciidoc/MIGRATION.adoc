@@ -598,6 +598,13 @@ int pthread_make_periodic_np(pthread_t thread, clockid_t clk_id,
     struct timespec *starttp, struct timespec *periodtp);
 ---------------------------------------------------------------
 
+.Timerfd
+
+[normal] Cobalt replacements for +timerfd_create()+,
++timerfd_settime()+ and +timerfd_gettime()+ have been introduced. The
+implementation delivers I/O notifications to RTDM file descriptors
+upon Cobalt-originated real-time signals.
+
 .Message queues
 
 - +mq_open()+ default attributes align on the regular kernel values,

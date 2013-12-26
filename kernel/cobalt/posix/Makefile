@@ -16,6 +16,7 @@ posix-y :=		\
 	signal.o	\
 	syscall.o	\
 	thread.o	\
-	timer.o
+	timer.o		\
+	timerfd.o
 
 ccflags-y := -Iarch/$(SRCARCH)/xenomai/include -Iinclude/xenomai

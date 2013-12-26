@@ -115,5 +115,8 @@
 #define sc_cobalt_event_destroy         92
 #define sc_cobalt_sched_setconfig_np	93
 #define sc_cobalt_sched_getconfig_np	94
+#define sc_cobalt_timerfd_create	95
+#define sc_cobalt_timerfd_settime	96
+#define sc_cobalt_timerfd_gettime	97
 
 #endif /* !_COBALT_UAPI_SYSCALL_H */

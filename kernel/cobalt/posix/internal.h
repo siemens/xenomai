@@ -43,6 +43,7 @@
 #define COBALT_TIMER_MAGIC       COBALT_MAGIC(0E)
 #define COBALT_EVENT_MAGIC       COBALT_MAGIC(0F)
 #define COBALT_MONITOR_MAGIC     COBALT_MAGIC(10)
+#define COBALT_TIMERFD_MAGIC	 COBALT_MAGIC(11)
 
 #define cobalt_obj_active(h,m,t)			\
 	((h) && ((t *)(h))->magic == (m))

@@ -173,7 +173,7 @@ static void bind_socket(void)
 	socklen_t addrlen;
 	int ret;
 
-	sockfd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
+	sockfd = __STD(socket(AF_UNIX, SOCK_SEQPACKET, 0));
 	if (sockfd < 0)
 		error(1, errno, "bind_socket/socket");
 
@@ -183,14 +183,14 @@ static void bind_socket(void)
 	snprintf(sun.sun_path, sizeof(sun.sun_path), "X%X-xenomai", hash);
 	addrlen = offsetof(struct sockaddr_un, sun_path) + strlen(sun.sun_path);
 	sun.sun_path[0] = '\0';
-	ret = bind(sockfd, (struct sockaddr *)&sun, addrlen);
+	ret = __STD(bind(sockfd, (struct sockaddr *)&sun, addrlen));
 	if (ret) {
 		if (errno == EADDRINUSE)
 			exit(0);
 		error(1, errno, "bind_socket/bind");
 	}
 
-	ret = listen(sockfd, SOMAXCONN);
+	ret = __STD(listen(sockfd, SOMAXCONN));
 	if (ret)
 		error(1, errno, "bind_socket/listen");
 }
@@ -204,7 +204,7 @@ static int register_client(int s)
 	int ret;
 
 	optlen = sizeof(ucred);
-	ret = getsockopt(s, SOL_SOCKET, SO_PEERCRED, &ucred, &optlen);
+	ret = __STD(getsockopt(s, SOL_SOCKET, SO_PEERCRED, &ucred, &optlen));
 	if (ret)
 		return -errno;
 
@@ -231,7 +231,7 @@ static int register_client(int s)
 	note("created mount point %s", mountpt);
 
 	/* Send the mount point back to the client. */
-	ret = send(s, mountpt, strlen(mountpt) + 1, 0);
+	ret = __STD(send(s, mountpt, strlen(mountpt) + 1, 0));
 	if (ret < 0)
 		goto fail;
 
@@ -283,7 +283,7 @@ static void handle_requests(void)
 	FD_SET(sockfd, &refset);
 
 	if (!linger) {
-		tmfd = timerfd_create(CLOCK_MONOTONIC, 0);
+		tmfd = __STD(timerfd_create(CLOCK_MONOTONIC, 0));
 		if (tmfd < 0)
 			error(1, errno, "handle_requests/timerfd_create");
 		/* Silently exit after 30s being idle. */
@@ -291,30 +291,30 @@ static void handle_requests(void)
 		its.it_value.tv_nsec = 0;
 		its.it_interval.tv_sec = 30;
 		its.it_interval.tv_nsec = 0;
-		timerfd_settime(tmfd, 0, &its, NULL);
+		__STD(timerfd_settime(tmfd, 0, &its, NULL));
 		FD_SET(tmfd, &refset);
 	}
 
 	for (;;) {
 		set = refset;
-		ret = select(FD_SETSIZE, &set, NULL, NULL, NULL);
+		ret = __STD(select(FD_SETSIZE, &set, NULL, NULL, NULL));
 		if (ret < 0)
 			error(1, errno, "handle_requests/select");
 		if (FD_ISSET(sockfd, &set)) {
-			s = accept(sockfd, NULL, 0);
+			s = __STD(accept(sockfd, NULL, 0));
 			if (s < 0)
 				error(1, errno, "handle_requests/accept");
 			ret = register_client(s);
 			if (ret) {
-				close(s);
+				__STD(close(s));
 				continue;
 			}
 			FD_SET(s, &refset);
 			if (!linger)
-				timerfd_settime(tmfd, 0, &its, NULL);
+				__STD(timerfd_settime(tmfd, 0, &its, NULL));
 		}
 		if (!linger && FD_ISSET(tmfd, &set)) {
-			ret = read(tmfd, &exp, sizeof(exp));
+			ret = __STD(read(tmfd, &exp, sizeof(exp)));
 			(void)ret;
 			if (pvlist_empty(&client_list)) {
 				delete_system_fs();
@@ -324,10 +324,10 @@ static void handle_requests(void)
 		for (s = sockfd + 1; s < FD_SETSIZE; s++) {
 			if (!FD_ISSET(s, &set) || linger || s == tmfd)
 				continue;
-			ret = recv(s, &c, sizeof(c), 0);
+			ret = __STD(recv(s, &c, sizeof(c), 0));
 			if (ret <= 0) {
 				unregister_client(s);
-				close(s);
+				__STD(close(s));
 				FD_CLR(s, &refset);
 			}
 		}

@@ -85,6 +85,9 @@
 --wrap timer_settime
 --wrap timer_getoverrun
 --wrap timer_gettime
+--wrap timerfd_create
+--wrap timerfd_gettime
+--wrap timerfd_settime
 --wrap select
 --wrap vfprintf
 --wrap vprintf

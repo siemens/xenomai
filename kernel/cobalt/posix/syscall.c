@@ -27,6 +27,7 @@
 #include <cobalt/kernel/tree.h>
 #include <asm/xenomai/syscall.h>
 #include <rtdm/driver.h>
+#include <rtdm/fd.h>
 #include "internal.h"
 #include "thread.h"
 #include "mutex.h"
@@ -39,6 +40,7 @@
 #include "clock.h"
 #include "event.h"
 #include "select.h"
+#include "timerfd.h"
 
 int cobalt_muxid;
 
@@ -138,6 +140,9 @@ static struct xnsyscall cobalt_syscalls[] = {
 	SKINCALL_DEF(sc_cobalt_timer_settime, cobalt_timer_settime, primary),
 	SKINCALL_DEF(sc_cobalt_timer_gettime, cobalt_timer_gettime, any),
 	SKINCALL_DEF(sc_cobalt_timer_getoverrun, cobalt_timer_getoverrun, any),
+	SKINCALL_DEF(sc_cobalt_timerfd_create, cobalt_timerfd_create, lostage),
+	SKINCALL_DEF(sc_cobalt_timerfd_gettime, cobalt_timerfd_gettime, any),
+	SKINCALL_DEF(sc_cobalt_timerfd_settime, cobalt_timerfd_settime, any),
 	SKINCALL_DEF(sc_cobalt_mutexattr_init, cobalt_mutexattr_init, any),
 	SKINCALL_DEF(sc_cobalt_mutexattr_destroy, cobalt_mutexattr_destroy, any),
 	SKINCALL_DEF(sc_cobalt_mutexattr_gettype, cobalt_mutexattr_gettype, any),
