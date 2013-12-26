@@ -45,6 +45,7 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
+#include <boilerplate/wrappers.h>
 
 /*
  * Define RTDM_NO_DEFAULT_USER_API to switch off the default
