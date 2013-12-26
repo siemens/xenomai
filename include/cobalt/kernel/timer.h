@@ -420,7 +420,7 @@ void xntimer_init_proc(void);
 
 void xntimer_cleanup_proc(void);
 
-unsigned long xntimer_get_overruns(struct xntimer *timer, xnticks_t now);
+unsigned long long xntimer_get_overruns(struct xntimer *timer, xnticks_t now);
 
 #ifdef CONFIG_SMP
 

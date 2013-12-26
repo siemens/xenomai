@@ -520,11 +520,11 @@ EXPORT_SYMBOL_GPL(__xntimer_migrate);
  *
  * @return the number of overruns of @a timer at date @a now
  */
-unsigned long xntimer_get_overruns(struct xntimer *timer, xnticks_t now)
+unsigned long long xntimer_get_overruns(struct xntimer *timer, xnticks_t now)
 {
 	xnticks_t period = xntimer_interval(timer);
 	xnsticks_t delta = now - timer->pexpect;
-	unsigned long overruns = 0;
+	unsigned long long overruns = 0;
 
 	if (unlikely(delta >= (xnsticks_t) period)) {
 		overruns = xnarch_div64(delta, period);
