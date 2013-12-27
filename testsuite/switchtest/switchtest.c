@@ -85,6 +85,11 @@ static unsigned long data_lines = 21;
 static unsigned freeze_on_error;
 static int fp_features;
 
+static inline unsigned stack_size(unsigned size)
+{
+	return size > PTHREAD_STACK_MIN ? size : PTHREAD_STACK_MIN;
+}
+
 static inline void clean_exit(int retval)
 {
 	status = retval;
@@ -833,7 +838,7 @@ static int task_create(struct cpu_tasks *cpu,
 		pthread_attr_t attr;
 
 		pthread_attr_init(&attr);
-		pthread_attr_setstacksize(&attr, PTHREAD_STACK_MIN);
+		pthread_attr_setstacksize(&attr, stack_size(32768));
 
 		err = __STD(pthread_create(&param->thread,
 					   &attr,
@@ -853,7 +858,7 @@ static int task_create(struct cpu_tasks *cpu,
 		pthread_attr_t attr;
 
 		pthread_attr_init(&attr);
-		pthread_attr_setstacksize(&attr, PTHREAD_STACK_MIN * 2);
+		pthread_attr_setstacksize(&attr, stack_size(65536));
 
 		err = __STD(pthread_create(&param->thread,
 					   &attr,
