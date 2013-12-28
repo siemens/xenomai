@@ -65,7 +65,6 @@ void cobalt_cleanup(void)
 {
 	cobalt_syscall_cleanup();
 	cobalt_nsem_pkg_cleanup();
-	cobalt_timer_pkg_cleanup();
 	cobalt_monitor_pkg_cleanup();
 	cobalt_event_pkg_cleanup();
 	cobalt_signal_pkg_cleanup();
@@ -98,7 +97,6 @@ int __init cobalt_init(void)
 	cobalt_mq_pkg_init();
 	cobalt_event_pkg_init();
 	cobalt_monitor_pkg_init();
-	cobalt_timer_pkg_init();
 
 	INIT_LIST_HEAD(&cobalt_global_kqueues.threadq);
 	cobalt_time_slice = CONFIG_XENO_OPT_RR_QUANTUM * 1000;

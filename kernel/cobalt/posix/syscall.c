@@ -53,12 +53,13 @@ static struct xnshadow_ppd *cobalt_process_attach(void)
 	INIT_LIST_HEAD(&cc->kqueues.mutexq);
 	INIT_LIST_HEAD(&cc->kqueues.semq);
 	INIT_LIST_HEAD(&cc->kqueues.threadq);
-	INIT_LIST_HEAD(&cc->kqueues.timerq);
 	INIT_LIST_HEAD(&cc->kqueues.monitorq);
 	INIT_LIST_HEAD(&cc->kqueues.eventq);
 	INIT_LIST_HEAD(&cc->uqds);
 	INIT_LIST_HEAD(&cc->usems);
 	INIT_LIST_HEAD(&cc->sigwaiters);
+
+	bitmap_fill(cc->timers_map, CONFIG_XENO_OPT_NRTIMERS);
 
 	return &cc->ppd;
 }
@@ -71,8 +72,8 @@ static void cobalt_process_detach(struct xnshadow_ppd *ppd)
 
 	cobalt_sem_usems_cleanup(cc);
 	cobalt_mq_uqds_cleanup(cc);
+	cobalt_timers_cleanup(cc);
 	cobalt_monitorq_cleanup(&cc->kqueues);
-	cobalt_timerq_cleanup(&cc->kqueues);
 	cobalt_semq_cleanup(&cc->kqueues);
 	cobalt_mutexq_cleanup(&cc->kqueues);
 	cobalt_condq_cleanup(&cc->kqueues);
@@ -136,8 +137,8 @@ static struct xnsyscall cobalt_syscalls[] = {
 	SKINCALL_DEF(sc_cobalt_sigtimedwait, cobalt_sigtimedwait, primary),
 	SKINCALL_DEF(sc_cobalt_sigpending, cobalt_sigpending, primary),
 	SKINCALL_DEF(sc_cobalt_kill, cobalt_kill, conforming),
-	SKINCALL_DEF(sc_cobalt_timer_create, cobalt_timer_create, any),
-	SKINCALL_DEF(sc_cobalt_timer_delete, cobalt_timer_delete, any),
+	SKINCALL_DEF(sc_cobalt_timer_create, cobalt_timer_create, lostage),
+	SKINCALL_DEF(sc_cobalt_timer_delete, cobalt_timer_delete, lostage),
 	SKINCALL_DEF(sc_cobalt_timer_settime, cobalt_timer_settime, primary),
 	SKINCALL_DEF(sc_cobalt_timer_gettime, cobalt_timer_gettime, any),
 	SKINCALL_DEF(sc_cobalt_timer_getoverrun, cobalt_timer_getoverrun, any),

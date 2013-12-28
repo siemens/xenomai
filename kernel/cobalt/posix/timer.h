@@ -28,12 +28,11 @@ struct cobalt_kqueues;
 
 struct cobalt_timer {
 	struct xntimer timerbase;
+	timer_t id;
 	int overruns;
-	struct list_head link;
 	clockid_t clockid;
 	pid_t target;
 	struct cobalt_sigpending sigp;
-	struct cobalt_kqueues *owningq;
 	struct cobalt_extref extref;
 };
 
@@ -54,23 +53,15 @@ int cobalt_timer_getoverrun(timer_t tm);
 
 int cobalt_timer_deliver(timer_t timerid);
 
-void cobalt_timerq_cleanup(struct cobalt_kqueues *q);
-
-int cobalt_timer_pkg_init(void);
-
-void cobalt_timer_pkg_cleanup(void);
-
-extern struct cobalt_timer *cobalt_timer_pool;
+void cobalt_timers_cleanup(struct cobalt_process *p);
 
 static inline timer_t cobalt_timer_id(const struct cobalt_timer *timer)
 {
-	return (timer_t)(timer - cobalt_timer_pool);
+	return timer->id;
 }
 
-static inline struct cobalt_timer *cobalt_timer_by_id(timer_t timer_id)
-{
-	return &cobalt_timer_pool[(unsigned int)timer_id];
-}
+struct cobalt_timer *
+cobalt_timer_by_id(struct cobalt_process *p, timer_t timer_id);
 
 void cobalt_timer_handler(struct xntimer *xntimer);
 

@@ -19,6 +19,7 @@
 #define _COBALT_POSIX_PROCESS_H
 
 #include <linux/list.h>
+#include <linux/bitmap.h>
 #include <cobalt/kernel/ppd.h>
 
 struct cobalt_kqueues {
@@ -26,17 +27,21 @@ struct cobalt_kqueues {
 	struct list_head mutexq;
 	struct list_head semq;
 	struct list_head threadq;
-	struct list_head timerq;
 	struct list_head monitorq;
 	struct list_head eventq;
 };
 
+struct cobalt_timer;
 struct cobalt_process {
 	struct cobalt_kqueues kqueues;
 	struct list_head uqds;
 	struct list_head usems;
 	struct xnshadow_ppd ppd;
 	struct list_head sigwaiters;
+
+	/* timers */
+	DECLARE_BITMAP(timers_map, CONFIG_XENO_OPT_NRTIMERS);
+	struct cobalt_timer *timers[CONFIG_XENO_OPT_NRTIMERS];
 };
 
 extern struct cobalt_kqueues cobalt_global_kqueues;
