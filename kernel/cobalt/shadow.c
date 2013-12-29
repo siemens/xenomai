@@ -1568,6 +1568,9 @@ static int xnshadow_sys_heap_info(struct xnheap_desc __user *u_hd,
 {
 	struct xnheap_desc hd;
 	struct xnheap *heap;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
 
 	switch(heap_nr) {
 	case XNHEAP_PROC_PRIVATE_HEAP:
@@ -1578,6 +1581,7 @@ static int xnshadow_sys_heap_info(struct xnheap_desc __user *u_hd,
 		heap = &kheap;
 		break;
 	default:
+		xnlock_put_irqrestore(&nklock, s);
 		return -EINVAL;
 	}
 
@@ -1585,6 +1589,7 @@ static int xnshadow_sys_heap_info(struct xnheap_desc __user *u_hd,
 	hd.size = xnheap_extentsize(heap);
 	hd.area = xnheap_base_memory(heap);
 	hd.used = xnheap_used_mem(heap);
+	xnlock_put_irqrestore(&nklock, s);
 
 	return __xn_safe_copy_to_user(u_hd, &hd, sizeof(*u_hd));
 }
