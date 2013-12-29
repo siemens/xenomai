@@ -107,8 +107,9 @@ int __wrap_open64(const char *path, int oflag, ...)
 			errno = EMFILE;
 			ret = -1;
 		}
+	}
 #endif
-	} else {
+	else {
 		errno = -ret;
 		ret = -1;
 	}
