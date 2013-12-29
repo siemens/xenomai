@@ -264,35 +264,32 @@ static inline int xnsched_run(void)
 	 * primary domain is needed, we won't use critical scheduler
 	 * information before we actually run in primary mode;
 	 * therefore we can first test the scheduler status then
-	 * escalate.  Running in the primary domain means that no
-	 * Linux-triggered CPU migration may occur from that point
-	 * either. Finally, since migration is always a self-directed
-	 * operation for Xenomai threads, we can safely read the
-	 * scheduler state bits without holding the nklock.
+	 * escalate.
+	 *
+	 * Running in the primary domain means that no Linux-triggered
+	 * CPU migration may occur from that point either. Finally,
+	 * since migration is always a self-directed operation for
+	 * Xenomai threads, we can safely read the scheduler state
+	 * bits without holding the nklock.
 	 *
 	 * Said differently, if we race here because of a CPU
 	 * migration, it must have been Linux-triggered because we run
 	 * in secondary mode; in which case we will escalate to the
 	 * primary domain, then unwind the current call frame without
 	 * running the rescheduling procedure in
-	 * __xnsched_run(). Therefore, the scheduler pointer will
-	 * be either valid, or unused.
+	 * __xnsched_run(). Therefore, the scheduler slot
+	 * (i.e. "sched") will be either valid, or unused.
 	 */
 	sched = xnsched_current();
 	smp_rmb();
 	/*
 	 * No immediate rescheduling is possible if an ISR context is
-	 * active, or if we are caught in the middle of a unlocked
-	 * context switch.
+	 * active, the current thread holds the scheduler lock, or if
+	 * we are caught in the middle of an unlocked context switch.
 	 */
-#if XENO_DEBUG(NUCLEUS)
-	if ((sched->status|sched->lflags) & (XNINIRQ|XNINSW|XNINLOCK))
-		return 0;
-#else /* !XENO_DEBUG(NUCLEUS) */
 	if (((sched->status|sched->lflags) &
 	     (XNINIRQ|XNINSW|XNRESCHED|XNINLOCK)) != XNRESCHED)
 		return 0;
-#endif /* !XENO_DEBUG(NUCLEUS) */
 
 	return __xnsched_run(sched);
 }

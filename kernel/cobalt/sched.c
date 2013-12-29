@@ -257,7 +257,6 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
 		if (!xnthread_test_state(curr, XNREADY)) {
 			xnsched_requeue(curr);
 			xnthread_set_state(curr, XNREADY);
-			xnsched_set_self_resched(sched);
 		}
 	}
 
@@ -747,7 +746,7 @@ void __xnsched_run_handler(void) /* hw interrupts off. */
 int __xnsched_run(struct xnsched *sched)
 {
 	struct xnthread *prev, *next, *curr;
-	int switched, need_resched, shadow;
+	int switched, shadow;
 	spl_t s;
 
 	if (xnarch_escalate())
@@ -761,24 +760,10 @@ int __xnsched_run(struct xnsched *sched)
 	xntrace_pid(xnthread_host_pid(curr), xnthread_current_priority(curr));
 reschedule:
 	switched = 0;
-#if !XENO_DEBUG(NUCLEUS)
-	need_resched = test_resched(sched);
-	if (!need_resched)
-		goto signal_unlock_and_exit;
-#endif /* !XENO_DEBUG(NUCLEUS) */
+	if (!test_resched(sched))
+		goto out;
+
 	next = xnsched_pick_next(sched);
-#if XENO_DEBUG(NUCLEUS)
-	/*
-	 * CAUTION: in debug mode, we unconditionally pick the next
-	 * runnable thread in order to check for consistency with
-	 * XNRESCHED (i.e. XNRESCHED shall be raised if the scheduler
-	 * state has changed). Since xnsched_pick() may change the
-	 * scheduler state - either directly, or indirectly via the
-	 * policy plugin, we must collect need_resched _after_ the new
-	 * current thread was picked.
-	 */
-	need_resched = test_resched(sched);
-#endif
 	if (next == curr) {
 		if (unlikely(xnthread_test_state(next, XNROOT))) {
 			if (sched->lflags & XNHTICK)
@@ -786,10 +771,8 @@ reschedule:
 			if (sched->lflags & XNHDEFER)
 				xnclock_program_shot(&nkclock, sched);
 		}
-		goto signal_unlock_and_exit;
+		goto out;
 	}
-
-	XENO_BUGON(NUCLEUS, need_resched == 0);
 
 	prev = curr;
 
@@ -845,8 +828,7 @@ reschedule:
 	xnthread_switch_fpu(sched);
 	xntrace_pid(xnthread_host_pid(curr), xnthread_current_priority(curr));
 
-signal_unlock_and_exit:
-
+out:
 	if (switched &&
 	    xnsched_maybe_resched_after_unlocked_switch(sched))
 		goto reschedule;
