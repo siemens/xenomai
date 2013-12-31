@@ -144,6 +144,11 @@ out:
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
+ * - -EBUSY is returned upon an attempt to destroy the object
+ * referenced by @a cond while it is referenced (for example, while
+ * being used in a rt_cond_wait(), rt_cond_wait_timed() or
+ * rt_cond_wait_until() by another task).
+ *
  * Valid calling context:
  *
  * - Regular POSIX threads

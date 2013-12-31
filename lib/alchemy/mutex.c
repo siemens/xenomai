@@ -150,6 +150,11 @@ out:
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
+ * - -EBUSY is returned upon an attempt to destroy the object
+ * referenced by @a mutex while it is referenced (for example, while
+ * being used in a rt_mutex_acquite(), rt_mutex_acquire_timed() or
+ * rt_mutex_acquire_until() by another task).
+ *
  * Valid calling context:
  *
  * - Regular POSIX threads

@@ -15,8 +15,8 @@ Compiling a Xenomai application
 -------------------------------
 
 You should use the +xeno-config+ script to get the proper compilation
-and linker flags related to Xenomai, for building your application,
-for whichever _Cobalt_ or _Mercury_ core.
+and linker flags related to Xenomai, in order to build your
+application for whichever _Cobalt_ or _Mercury_ core.
 
 Here is a trivial Makefile fragment retrieving the compiler and flags
 for building the single-file application +vxapp.c+, over the VxWorks
