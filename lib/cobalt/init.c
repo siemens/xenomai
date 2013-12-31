@@ -140,7 +140,7 @@ void __libcobalt_init(void)
 		exit(EXIT_FAILURE);
 	}
 
-	sa.sa_sigaction = cobalt_handle_sigdebug;
+	sa.sa_sigaction = cobalt_sigdebug_handler;
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = SA_SIGINFO;
 	sigaction(SIGXCPU, &sa, &__cobalt_orig_sigdebug);

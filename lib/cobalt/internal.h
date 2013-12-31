@@ -127,7 +127,7 @@ void cobalt_print_exit(void);
 
 void cobalt_ticks_init(unsigned long long freq);
 
-void cobalt_handle_sigdebug(int sig, siginfo_t *si, void *context);
+void cobalt_sigdebug_handler(int sig, siginfo_t *si, void *context);
 
 struct xnfeatinfo;
 

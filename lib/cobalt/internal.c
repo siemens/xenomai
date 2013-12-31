@@ -397,7 +397,7 @@ int cobalt_monitor_drain_all_sync(cobalt_monitor_t *mon)
 	return ret;
 }
 
-void cobalt_handle_sigdebug(int sig, siginfo_t *si, void *context)
+void cobalt_sigdebug_handler(int sig, siginfo_t *si, void *context)
 {
 	if (si->si_value.sival_int == SIGDEBUG_NOMLOCK) {
 		fprintf(stderr, "Xenomai: process memory not locked "
