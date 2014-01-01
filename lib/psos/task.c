@@ -242,14 +242,12 @@ int psos_task_normalize_priority(unsigned long psos_prio)
  * calls are weak and application code may be override the call
  * and implement the mapping differently.
  */
-
 __attribute__ ((weak))
-int psos_task_denormalize_priority(unsigned long core_prio)
+unsigned long psos_task_denormalize_priority(int core_prio)
 {
 	/* Map a SCHED_RT priority level to a pSOS one. */
 	return core_prio;
 }
-
 
 static int check_task_priority(u_long psos_prio, int *core_prio)
 {
