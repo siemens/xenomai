@@ -220,8 +220,44 @@ out:
 }
 
 /**
- * @fn ssize_t rt_buffer_read_until(RT_BUFFER *bf, void *ptr, size_t len, RTIME timeout)
- * @brief Read from an IPC buffer (with absolute timeout date).
+ * @fn ssize_t rt_buffer_read(RT_BUFFER *bf, void *ptr, size_t len, RTIME timeout)
+ * @brief Read from an IPC buffer (with relative scalar timeout).
+ *
+ * This routine is a variant of rt_buffer_read_timed() accepting a
+ * relative timeout specification expressed as a scalar value.
+ *
+ * @param bf The descriptor address of the buffer to read from.
+ *
+ * @param ptr A pointer to a memory area which will be written upon
+ * success with the received data.
+ *
+ * @param len The length in bytes of the memory area pointed to by @a
+ * ptr.
+ *
+ * @param timeout A delay expressed in clock ticks.
+ */
+
+/**
+ * @fn ssize_t rt_buffer_read_until(RT_BUFFER *bf, void *ptr, size_t len, RTIME abs_timeout)
+ * @brief Read from an IPC buffer (with absolute scalar timeout).
+ *
+ * This routine is a variant of rt_buffer_read_timed() accepting an
+ * absolute timeout specification expressed as a scalar value.
+ *
+ * @param bf The descriptor address of the buffer to read from.
+ *
+ * @param ptr A pointer to a memory area which will be written upon
+ * success with the received data.
+ *
+ * @param len The length in bytes of the memory area pointed to by @a
+ * ptr.
+ *
+ * @param abs_timeout An absolute date expressed in clock ticks.
+ */
+
+/**
+ * @fn ssize_t rt_buffer_read_timed(RT_BUFFER *bf, void *ptr, size_t len, const struct timespec *abs_timeout)
+ * @brief Read from an IPC buffer.
  *
  * This routine reads the next message from the specified buffer. If
  * no message is available on entry, the caller is allowed to block
@@ -233,27 +269,27 @@ out:
  * success with the received data.
  *
  * @param len The length in bytes of the memory area pointed to by @a
- * ptr. Under normal circumstances, rt_buffer_read_until() only
+ * ptr. Under normal circumstances, rt_buffer_read_timed() only
  * returns entire messages as specified by the @a len argument, or an
  * error value. However, short reads are allowed when a potential
  * deadlock situation is detected (see note below).
  *
- * @param timeout An absolute date expressed in clock ticks,
+ * @param abs_timeout An absolute date expressed in clock ticks,
  * specifying a time limit to wait for a message to be available from
- * the buffer (see note). Passing TM_INFINITE causes the caller to
- * block indefinitely until enough data is available. Passing
- * TM_NONBLOCK causes the service to return immediately without
+ * the buffer (see note). Passing NULL causes the caller to block
+ * indefinitely until enough data is available. Passing { .tv_sec = 0,
+ * .tv_nsec = 0 } causes the service to return immediately without
  * blocking in case not enough data is available.
  *
  * @return The number of bytes read from the buffer is returned upon
  * success. Otherwise:
  *
- * - -ETIMEDOUT is returned if the absolute @a timeout date is reached
- * before a complete message arrives.
+ * - -ETIMEDOUT is returned if @a abs_timeout is reached before a
+ * complete message arrives.
  *
- * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
- * and not enough data is immediately available on entry to form a
- * complete message.
+ * - -EWOULDBLOCK is returned if @a abs_timeout is { .tv_sec = 0,
+ * .tv_nsec = 0 } and not enough data is immediately available on
+ * entry to form a complete message.
 
  * - -EINTR is returned if rt_task_unblock() was called for the
  * current task before enough data became available to form a complete
@@ -293,21 +329,13 @@ out:
  * Valid calling contexts:
  *
  * - Xenomai threads
- * - Any other context if @a timeout equals TM_NONBLOCK.
+ * - Any other context if @a abs_timeout is { .tv_sec = 0,
+ * .tv_nsec = 0 }.
  *
- * @note The @a timeout value is interpreted as a multiple of the
- * Alchemy clock resolution (see --alchemy-clock-resolution option,
- * defaults to 1 nanosecond).
+ * @note @a abs_timeout is interpreted as a multiple of the Alchemy
+ * clock resolution (see --alchemy-clock-resolution option, defaults
+ * to 1 nanosecond).
  */
-
-/**
- * @fn ssize_t rt_buffer_read(RT_BUFFER *bf, void *ptr, size_t len, RTIME timeout)
- * @brief Read from an IPC buffer (with relative timeout date).
- *
- * This routine is a variant of rt_buffer_read_until() accepting a
- * relative timeout specification.
- */
-
 ssize_t rt_buffer_read_timed(RT_BUFFER *bf,
 			     void *ptr, size_t size,
 			     const struct timespec *abs_timeout)
@@ -429,8 +457,42 @@ out:
 }
 
 /**
- * @fn ssize_t rt_buffer_write_until(RT_BUFFER *bf, const void *ptr, size_t len, RTIME timeout)
- * @brief Write to an IPC buffer (with absolute timeout date).
+ * @fn ssize_t rt_buffer_write(RT_BUFFER *bf, const void *ptr, size_t len, RTIME timeout)
+ * @brief Write to an IPC buffer (with relative scalar timeout).
+ *
+ * This routine is a variant of rt_buffer_write_timed() accepting a
+ * relative timeout specification expressed as a scalar value.
+ *
+ * @param bf The descriptor address of the buffer to write to.
+ *
+ * @param ptr The address of the message data to be written to the
+ * buffer.
+ *
+ * @param len The length in bytes of the message data.
+ *
+ * @param timeout A delay expressed in clock ticks.
+ */
+
+/**
+ * @fn ssize_t rt_buffer_write_until(RT_BUFFER *bf, const void *ptr, size_t len, RTIME abs_timeout)
+ * @brief Write to an IPC buffer (with absolute scalar timeout).
+ *
+ * This routine is a variant of rt_buffer_write_timed() accepting an
+ * absolute timeout specification expressed as a scalar value.
+ *
+ * @param bf The descriptor address of the buffer to write to.
+ *
+ * @param ptr The address of the message data to be written to the
+ * buffer.
+ *
+ * @param len The length in bytes of the message data.
+ *
+ * @param abs_timeout An absolute date expressed in clock ticks.
+ */
+
+/**
+ * @fn ssize_t rt_buffer_write_timed(RT_BUFFER *bf, const void *ptr, size_t len, const struct timespec *abs_timeout)
+ * @brief Write to an IPC buffer.
  *
  * This routine writes a message to the specified buffer. If not
  * enough buffer space is available on entry to hold the message, the
@@ -446,22 +508,24 @@ out:
  * value, in which case the buffer is left untouched, and zero is
  * returned to the caller.
  *
- * @param timeout An absolute date expressed in clock ticks,
+ * @param abs_timeout An absolute date expressed in clock ticks,
  * specifying a time limit to wait for enough buffer space to be
- * available to hold the message (see note). Passing TM_INFINITE
- * causes the caller to block indefinitely until enough buffer space
- * is available. Passing TM_NONBLOCK causes the service to return
- * immediately without blocking in case of buffer space shortage.
+ * available to hold the message (see note). Passing NULL causes the
+ * caller to block indefinitely until enough buffer space is
+ * available. Passing { .tv_sec = 0, .tv_nsec = 0 } causes the service
+ * to return immediately without blocking in case of buffer space
+ * shortage.
  *
  * @return The number of bytes written to the buffer is returned upon
  * success. Otherwise:
  *
- * - -ETIMEDOUT is returned if the absolute @a timeout date is reached
- * before enough buffer space is available to hold the message.
- *
- * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
- * and no buffer space is immediately available on entry to hold the
+ * - -ETIMEDOUT is returned if the absolute @a abs_timeout date is
+ * reached before enough buffer space is available to hold the
  * message.
+ *
+ * - -EWOULDBLOCK is returned if @a abs_timeout is { .tv_sec = 0,
+ * .tv_nsec = 0 } and no buffer space is immediately available on
+ * entry to hold the message.
 
  * - -EINTR is returned if rt_task_unblock() was called for the
  * current task before enough buffer space became available to hold
@@ -480,21 +544,12 @@ out:
  * Valid calling contexts:
  *
  * - Xenomai threads
- * - Any other context if @a timeout equals TM_NONBLOCK.
+ * - Any other context if @a abs_timeout is { .tv_sec = 0, .tv_nsec = 0 } .
  *
- * @note The @a timeout value is interpreted as a multiple of the
- * Alchemy clock resolution (see --alchemy-clock-resolution option,
- * defaults to 1 nanosecond).
+ * @note @a abs_timeout is interpreted as a multiple of the Alchemy
+ * clock resolution (see --alchemy-clock-resolution option, defaults
+ * to 1 nanosecond).
  */
-
-/**
- * @fn ssize_t rt_buffer_write(RT_BUFFER *bf, const void *ptr, size_t len, RTIME timeout)
- * @brief Write to an IPC buffer (with relative timeout date).
- *
- * This routine is a variant of rt_buffer_write_until() accepting a
- * relative timeout specification.
- */
-
 ssize_t rt_buffer_write_timed(RT_BUFFER *bf,
 			      const void *ptr, size_t size,
 			      const struct timespec *abs_timeout)

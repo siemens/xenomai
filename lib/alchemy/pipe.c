@@ -14,8 +14,33 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
+ *
+ * @defgroup alchemy_pipe Message pipe services.
+ * @ingroup alchemy_pipe
+ * @ingroup alchemy
+ *
+ * Message pipe services.
+ *
+ * A message pipe is a two-way communication channel between Xenomai
+ * threads and normal Linux threads using regular file I/O operations
+ * on a pseudo-device. Pipes can be operated in a message-oriented
+ * fashion so that message boundaries are preserved, and also in
+ * byte-oriented streaming mode from real-time to normal Linux
+ * threads for optimal throughput.
+ *
+ * Xenomai threads open their side of the pipe using the
+ * rt_pipe_create() service; regular Linux threads do the same by
+ * opening one of the /dev/rtpN special devices, where N is the minor
+ * number agreed upon between both ends of each pipe.
+ *
+ * In addition, named pipes are available through the registry
+ * support, which automatically creates a symbolic link from entries
+ * under /proc/xenomai/registry/rtipc/xddp/ to the corresponding
+ * special device file.
+ *
+ * @note Alchemy's message pipes are fully based on the @ref
+ * RTIPC_PROTO "XDDP protocol" available from the RTDM/ipc driver.
  */
-
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
@@ -36,6 +61,74 @@ static DEFINE_NAME_GENERATOR(pipe_namegen, "pipe",
 
 DEFINE_LOOKUP_PRIVATE(pipe, RT_PIPE);
 
+/**
+ * @fn int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
+ * @brief Create a message pipe.
+ *
+ * This service opens a bi-directional communication channel for
+ * exchanging messages between Xenomai threads and regular Linux
+ * threads. Pipes natively preserve message boundaries, but can also
+ * be used in byte-oriented streaming mode from Xenomai to Linux.
+ *
+ * rt_pipe_create() always returns immediately, even if no thread has
+ * opened the associated special device file yet. On the contrary, the
+ * non real-time side could block upon attempt to open the special
+ * device file until rt_pipe_create() is issued on the same pipe from
+ * a Xenomai thread, unless O_NONBLOCK was given to the open(2) system
+ * call.
+ *
+ * @param pipe The address of a pipe descriptor which can be later used
+ * to identify uniquely the created object, upon success of this call.
+ *
+ * @param name An ASCII string standing for the symbolic name of the
+ * pipe. When non-NULL and non-empty, a copy of this string is used
+ * for indexing the created pipe into the object registry.
+ *
+ * Named pipes are supported through the use of the registry. Passing
+ * a valid @a name parameter when creating a message pipe causes a
+ * symbolic link to be created from
+ * /proc/xenomai/registry/rtipc/xddp/@a name to the associated special
+ * device (i.e. /dev/rtp*), so that the specific @a minor information
+ * does not need to be known from those processes for opening the
+ * proper device file. In such a case, both sides of the pipe only
+ * need to agree upon a symbolic name to refer to the same data path,
+ * which is especially useful whenever the @a minor number is picked
+ * up dynamically using an adaptive algorithm, such as passing
+ * P_MINOR_AUTO as @a minor value.
+ *
+ * @param minor The minor number of the device associated with the
+ * pipe.  Passing P_MINOR_AUTO causes the minor number to be
+ * auto-allocated. In such a case, a symbolic link will be
+ * automatically created from
+ * /proc/xenomai/registry/rtipc/xddp/@a name to the allocated pipe
+ * device entry. Valid minor numbers range from 0 to
+ * CONFIG_XENO_OPT_PIPE_NRDEV-1.
+ *
+ * @param poolsize Specifies the size of a dedicated buffer pool for the
+ * pipe. Passing 0 means that all message allocations for this pipe are
+ * performed on the Cobalt core heap.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -ENOMEM is returned if the system fails to get memory from the
+ * main heap in order to create the pipe.
+ *
+ * - -ENODEV is returned if @a minor is different from P_MINOR_AUTO
+ * and is not a valid minor number.
+ *
+ * - -EEXIST is returned if the @a name is conflicting with an already
+ * registered pipe.
+ *
+ * - -EBUSY is returned if @a minor is already open.
+ *
+ * - -EPERM is returned if this service was called from an
+ * asynchronous context.
+ *
+ * Valid calling context:
+ *
+ * - Regular POSIX threads
+ * - Xenomai threads
+ */
 int rt_pipe_create(RT_PIPE *pipe,
 		   const char *name, int minor, size_t poolsize)
 {
@@ -110,6 +203,8 @@ int rt_pipe_create(RT_PIPE *pipe,
 	return 0;
 fail_sockopt:
 	ret = -errno;
+	if (ret == -EADDRINUSE)
+		ret = -EBUSY;
 fail_register:
 	__RT(close(sock));
 	xnfree(pcb);
@@ -119,6 +214,30 @@ out:
 	return ret;	
 }
 
+/**
+ * @fn int rt_pipe_delete(RT_PIPE *pipe)
+ * @brief Delete a message pipe.
+ *
+ * This routine deletes a pipe object previously created by a call to
+ * rt_pipe_create(). All resources attached to that pipe are
+ * automatically released, all pending data is flushed.
+ *
+ * @param pipe The descriptor address of the deleted pipe.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a pipe is not a valid pipe descriptor.
+ *
+ * - -EIDRM is returned if @a pipe is a closed pipe descriptor.
+ *
+ * - -EPERM is returned if this service was called from an
+ * asynchronous context.
+ *
+ * Valid calling context:
+ *
+ * - Regular POSIX threads
+ * - Xenomai threads
+ */
 int rt_pipe_delete(RT_PIPE *pipe)
 {
 	struct alchemy_pipe *pcb;
@@ -150,6 +269,88 @@ out:
 	return ret;
 }
 
+/**
+ * @fn ssize_t rt_pipe_read(RT_PIPE *pipe, void *buf, size_t size, RTIME timeout)
+ * @brief Read from a pipe (with relative scalar timeout).
+ *
+ * This routine is a variant of rt_queue_read_timed() accepting a
+ * relative timeout specification expressed as a scalar value.
+ *
+ * @param pipe The descriptor address of the message pipe to read
+ * from.
+ *
+ * @param buf A pointer to a memory area which will be written upon
+ * success with the message received.
+ *
+ * @param timeout A delay expressed in clock ticks.
+ */
+
+/**
+ * @fn ssize_t rt_pipe_read_until(RT_PIPE *pipe, void *buf, size_t size, RTIME abs_timeout)
+ * @brief Read from a pipe (with absolute scalar timeout).
+ *
+ * This routine is a variant of rt_queue_read_timed() accepting an
+ * absolute timeout specification expressed as a scalar value.
+ *
+ * @param pipe The descriptor address of the message pipe to read
+ * from.
+ *
+ * @param buf A pointer to a memory area which will be written upon
+ * success with the message received.
+ *
+ * @param abs_timeout An absolute date expressed in clock ticks.
+ */
+
+/**
+ * @fn ssize_t rt_pipe_read_timed(RT_PIPE *pipe, void *buf, size_t size, const struct timespec *abs_timeout)
+ * @brief Read a message from a pipe.
+ *
+ * This service reads the next available message from a given pipe.
+ *
+ * @param pipe The descriptor address of the message pipe to read
+ * from.
+ *
+ * @param buf A pointer to a memory area which will be written upon
+ * success with the message received.
+ *
+ * @param abs_timeout An absolute date expressed in clock ticks,
+ * specifying a time limit to wait for a message to be available from
+ * the pipe (see note). Passing NULL causes the caller to block
+ * indefinitely until a message is available. Passing { .tv_sec = 0,
+ * .tv_nsec = 0 } causes the service to return immediately without
+ * blocking in case no message is available.
+ *
+ * @return The number of bytes available from the received message is
+ * returned upon success. Otherwise:
+ *
+ * - -ETIMEDOUT is returned if @a abs_timeout is reached before a
+ * message arrives.
+ *
+ * - -EWOULDBLOCK is returned if @a abs_timeout is { .tv_sec = 0,
+ * .tv_nsec = 0 } and no message is immediately available on entry to
+ * the call.
+ *
+ * - -EINTR is returned if rt_task_unblock() was called for the
+ * current task before a message was available.
+ *
+ * - -EINVAL is returned if @a pipe is not a valid pipe descriptor.
+ *
+ * - -EIDRM is returned if @a pipe is deleted while the caller was
+ * waiting for a message. In such event, @a pipe is no more valid upon
+ * return of this service.
+ *
+ * - -EPERM is returned if this service should block, but was not
+ * called from a Xenomai thread.
+ *
+ * Valid calling contexts:
+ *
+ * - Xenomai threads
+ * - Any other context if @a abs_timeout is { .tv_sec = 0, .tv_nsec = 0 }.
+ *
+ * @note @a abs_timeout is interpreted as a multiple of the Alchemy
+ * clock resolution (see --alchemy-clock-resolution option, defaults
+ * to 1 nanosecond).
+ */
 ssize_t rt_pipe_read_timed(RT_PIPE *pipe,
 			   void *buf, size_t size,
 			   const struct timespec *abs_timeout)
@@ -204,14 +405,63 @@ static ssize_t do_write_pipe(RT_PIPE *pipe,
 	}
 
 	ret = __RT(sendto(pcb->sock, buf, size, flags, NULL, 0));
-	if (ret < 0)
+	if (ret < 0) {
 		ret = -errno;
+		if (ret == -EBADF)
+			ret = -EIDRM;
+	}
 out:
 	CANCEL_RESTORE(svc);
 
 	return ret;
 }
 
+ /**
+ * @fn ssize_t rt_pipe_write(RT_PIPE *pipe,const void *buf,size_t size,int mode)
+ * @brief Write a message to a pipe.
+ *
+ * This service writes a complete message to be received from the
+ * associated special device. rt_pipe_write() always preserves message
+ * boundaries, which means that all data sent through a single call of
+ * this service will be gathered in a single read(2) operation from
+ * the special device.
+ *
+ * This service differs from rt_pipe_send() in that it accepts a
+ * pointer to the raw data to be sent, instead of a canned message
+ * buffer.
+ *
+ * @param pipe The descriptor address of the pipe to write to.
+ *
+ * @param buf The address of the first data byte to send. The
+ * data will be copied to an internal buffer before transmission.
+ *
+ * @param size The size in bytes of the message (payload data
+ * only). Zero is a valid value, in which case the service returns
+ * immediately without sending any message.
+ *
+ * @param mode A set of flags affecting the operation:
+ *
+ * - P_URGENT causes the message to be prepended to the output
+ * queue, ensuring a LIFO ordering.
+ *
+ * - P_NORMAL causes the message to be appended to the output
+ * queue, ensuring a FIFO ordering.
+ *
+ * @return Upon success, this service returns @a size. Upon error, one
+ * of the following error codes is returned:
+ *
+ * - -EINVAL is returned if @a pipe is not a pipe descriptor.
+ *
+ * - -ENOMEM is returned if not enough buffer space is available to
+ * complete the operation.
+ *
+ * - -EIDRM is returned if @a pipe is a closed pipe descriptor.
+ *
+ * @note Writing data to a pipe before any peer has opened the
+ * associated special device is allowed. The output will be buffered
+ * until then, only restricted by the available memory in the
+ * associated buffer pool (see rt_pipe_create()).
+ */
 ssize_t rt_pipe_write(RT_PIPE *pipe,
 		      const void *buf, size_t size, int mode)
 {
@@ -229,6 +479,52 @@ ssize_t rt_pipe_stream(RT_PIPE *pipe,
 	return do_write_pipe(pipe, buf, size, MSG_MORE);
 }
 
+/**
+ * @fn int rt_pipe_bind(RT_PIPE *pipe, const char *name, RTIME timeout)
+ * @brief Bind to a message pipe.
+ *
+ * This routine creates a new descriptor to refer to an existing
+ * message pipe identified by its symbolic name. If the object does
+ * not exist on entry, the caller may block until a pipe of the given
+ * name is created.
+ *
+ * @param pipe The address of a pipe descriptor filled in by the
+ * operation. Contents of this memory is undefined upon failure.
+ *
+ * @param name A valid NULL-terminated name which identifies the
+ * pipe to bind to. This string should match the object name
+ * argument passed to rt_pipe_create().
+ *
+ * @param timeout The number of clock ticks to wait for the
+ * registration to occur (see note). Passing TM_INFINITE causes the
+ * caller to block indefinitely until the object is
+ * registered. Passing TM_NONBLOCK causes the service to return
+ * immediately without waiting if the object is not registered on
+ * entry.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINTR is returned if rt_task_unblock() was called for the
+ * current task before the retrieval has completed.
+ *
+ * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
+ * and the searched object is not registered on entry.
+ *
+ * - -ETIMEDOUT is returned if the object cannot be retrieved within
+ * the specified amount of time.
+ *
+ * - -EPERM is returned if this service should block, but was not
+ * called from a Xenomai thread.
+ *
+ * Valid calling contexts:
+ *
+ * - Xenomai threads
+ * - Any other context if @a timeout equals TM_NONBLOCK.
+ *
+ * @note The @a timeout value is interpreted as a multiple of the
+ * Alchemy clock resolution (see --alchemy-clock-resolution option,
+ * defaults to 1 nanosecond).
+ */
 int rt_pipe_bind(RT_PIPE *pipe,
 		 const char *name, RTIME timeout)
 {
@@ -239,6 +535,16 @@ int rt_pipe_bind(RT_PIPE *pipe,
 				   &pipe->handle);
 }
 
+/**
+ * @fn int rt_pipe_unbind(RT_PIPE *pipe)
+ * @brief Unbind from a message pipe.
+ *
+ * @param pipe The descriptor address of the pipe to unbind from.
+ *
+ * This routine releases a previous binding to a message pipe. After
+ * this call has returned, the descriptor is no more valid for
+ * referencing this object.
+ */
 int rt_pipe_unbind(RT_PIPE *pipe)
 {
 	pipe->handle = 0;

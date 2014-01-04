@@ -217,8 +217,24 @@ out:
 }
 
 /**
- * @fn int rt_heap_alloc_until(RT_HEAP *heap, size_t size, RTIME timeout, void **blockp)
- * @brief Allocate a block from a heap (with absolute timeout date).
+ * @fn int rt_heap_alloc(RT_HEAP *heap, size_t size, RTIME timeout, void **blockp)
+ * @brief Allocate a block from a heap (with relative scalar timeout).
+ *
+ * This routine is a variant of rt_heap_alloc_timed() accepting a
+ * relative timeout specification expressed as a scalar value.
+ */
+
+/**
+ * @fn int rt_heap_alloc_until(RT_HEAP *heap, size_t size, RTIME abs_timeout, void **blockp)
+ * @brief Allocate a block from a heap (with absolute scalar timeout).
+ *
+ * This routine is a variant of rt_heap_alloc_timed() accepting an
+ * absolute timeout specification expressed as a scalar value.
+ */
+
+/**
+ * @fn int rt_heap_alloc_timed(RT_HEAP *heap, size_t size, const struct timespec *abs_timeout, void **blockp)
+ * @brief Allocate a block from a heap.
  *
  * This service allocates a block from a given heap, or returns the
  * address of the single memory segment if H_SINGLE was mentioned in
@@ -234,11 +250,11 @@ out:
  * case, the same block covering the entire heap space is returned to
  * all callers of this service.
  *
- * @param timeout An absolute date expressed in clock ticks,
+ * @param abs_timeout An absolute date expressed in clock ticks,
  * specifying a time limit to wait for a block of the requested size
- * to be available from the heap (see note). Passing TM_INFINITE
- * causes the caller to block indefinitely until a block is
- * available. Passing TM_NONBLOCK causes the service to return
+ * to be available from the heap (see note). Passing NULL causes the
+ * caller to block indefinitely until a block is available. Passing {
+ * .tv_sec = 0, .tv_nsec = 0 } causes the service to return
  * immediately without blocking in case not block is available.
  *
  * @param blockp A pointer to a memory location which will be written
@@ -248,12 +264,12 @@ out:
  *
  * @return Zero is returned upon success. Otherwise:
  *
- * - -ETIMEDOUT is returned if the absolute @a timeout date is reached
- * before a block is available.
+ * - -ETIMEDOUT is returned if @a abs_timeout is reached before a
+ * block is available.
  *
- * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
- * and no block is immediately available on entry to fulfill the
- * allocation request.
+ * - -EWOULDBLOCK is returned if @a abs_timeout is equal to { .tv_sec
+ * = 0, .tv_nsec = 0 } and no block is immediately available on entry
+ * to fulfill the allocation request.
 
  * - -EINTR is returned if rt_task_unblock() was called for the
  * current task before a block became available.
@@ -273,21 +289,12 @@ out:
  * Valid calling contexts:
  *
  * - Xenomai threads
- * - Any other context if @a timeout equals TM_NONBLOCK.
+ * - Any other context if @a abs_timeout is { .tv_sec = 0, .tv_nsec = 0 }.
  *
- * @note The @a timeout value is interpreted as a multiple of the
- * Alchemy clock resolution (see --alchemy-clock-resolution option,
- * defaults to 1 nanosecond).
+ * @note @a abs_timeout is interpreted as a multiple of the Alchemy
+ * clock resolution (see --alchemy-clock-resolution option, defaults
+ * to 1 nanosecond).
  */
-
-/**
- * @fn int rt_heap_alloc(RT_HEAP *heap, size_t size, RTIME timeout, void **blockp)
- * @brief Allocate a block from a heap (with relative timeout date).
- *
- * This routine is a variant of rt_heap_alloc_until() accepting a
- * relative timeout specification.
- */
-
 int rt_heap_alloc_timed(RT_HEAP *heap,
 			size_t size, const struct timespec *abs_timeout,
 			void **blockp)

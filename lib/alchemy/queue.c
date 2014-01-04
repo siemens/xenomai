@@ -604,7 +604,39 @@ out:
 }
 
 /**
- * @fn ssize_t rt_queue_receive_until(RT_QUEUE *q, void **bufp, RTIME timeout)
+ * @fn ssize_t rt_queue_receive(RT_QUEUE *q, void **bufp, RTIME timeout)
+ * @brief Receive from a queue (with relative scalar timeout).
+ *
+ * This routine is a variant of rt_queue_receive_timed() accepting a
+ * relative timeout specification expressed as a scalar value.
+ *
+ * @param q The descriptor address of the message queue to receive
+ * from.
+ *
+ * @param bufp A pointer to a memory location which will be written
+ * with the address of the received message.
+ *
+ * @param timeout A delay expressed in clock ticks.
+ */
+
+/**
+ * @fn ssize_t rt_queue_receive_until(RT_QUEUE *q, void **bufp, RTIME abs_timeout)
+ * @brief Receive from a queue (with absolute scalar timeout).
+ *
+ * This routine is a variant of rt_queue_receive_timed() accepting an
+ * absolute timeout specification expressed as a scalar value.
+ *
+ * @param q The descriptor address of the message queue to receive
+ * from.
+ *
+ * @param bufp A pointer to a memory location which will be written
+ * with the address of the received message.
+ *
+ * @param abs_timeout An absolute date expressed in clock ticks.
+ */
+
+/**
+ * @fn ssize_t rt_queue_receive_timed(RT_QUEUE *q, void **bufp, const struct timespec *abs_timeout)
  * @brief Receive a message from a queue (with absolute timeout date).
  *
  * This service receives the next available message from a given
@@ -617,11 +649,11 @@ out:
  * with the address of the received message, upon success. Once
  * consumed, the message space should be freed using rt_queue_free().
  *
- * @param timeout An absolute date expressed in clock ticks,
+ * @param abs_timeout An absolute date expressed in clock ticks,
  * specifying a time limit to wait for a message to be available from
- * the queue (see note). Passing TM_INFINITE causes the caller to
- * block indefinitely until a message is available. Passing
- * TM_NONBLOCK causes the service to return immediately without
+ * the queue (see note). Passing NULL causes the caller to block
+ * indefinitely until a message is available. Passing { .tv_sec = 0,
+ * .tv_nsec = 0 } causes the service to return immediately without
  * blocking in case no message is available.
  *
  * @return The number of bytes available from the received message is
@@ -629,11 +661,12 @@ out:
  * zero-sized message passed to rt_queue_send() or
  * rt_queue_write(). Otherwise:
  *
- * - -ETIMEDOUT is returned if the absolute @a timeout date is reached
- * before a message arrives.
+ * - -ETIMEDOUT is returned if @a abs_timeout is reached before a
+ * message arrives.
  *
- * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
- * and no message is immediately available on entry to the call.
+ * - -EWOULDBLOCK is returned if @a abs_timeout is { .tv_sec = 0,
+ * .tv_nsec = 0 } and no message is immediately available on entry to
+ * the call.
 
  * - -EINTR is returned if rt_task_unblock() was called for the
  * current task before a message was available.
@@ -650,21 +683,12 @@ out:
  * Valid calling contexts:
  *
  * - Xenomai threads
- * - Any other context if @a timeout equals TM_NONBLOCK.
+ * - Any other context if @a abs_timeout is { .tv_sec = 0, .tv_nsec = 0 } .
  *
- * @note The @a timeout value is interpreted as a multiple of the
- * Alchemy clock resolution (see --alchemy-clock-resolution option,
- * defaults to 1 nanosecond).
+ * @note @a abs_timeout is interpreted as a multiple of the Alchemy
+ * clock resolution (see --alchemy-clock-resolution option, defaults
+ * to 1 nanosecond).
  */
-
-/**
- * @fn ssize_t rt_queue_receive(RT_QUEUE *q, void **bufp, RTIME timeout)
- * @brief Receive from a queue (with relative timeout date).
- *
- * This routine is a variant of rt_queue_receive_until() accepting a
- * relative timeout specification.
- */
-
 ssize_t rt_queue_receive_timed(RT_QUEUE *queue, void **bufp,
 			       const struct timespec *abs_timeout)
 {
@@ -727,8 +751,46 @@ out:
 }
 
 /**
- * @fn ssize_t rt_queue_read_until(RT_QUEUE *q, void *buf, size_t size, RTIME timeout)
- * @brief Read from a queue (with absolute timeout date).
+ * @fn ssize_t rt_queue_read(RT_QUEUE *q, void *buf, size_t size, RTIME timeout)
+ * @brief Read from a queue (with relative scalar timeout).
+ *
+ * This routine is a variant of rt_queue_read_timed() accepting a
+ * relative timeout specification expressed as a scalar value.
+ *
+ * @param q The descriptor address of the message queue to read
+ * from.
+ *
+ * @param buf A pointer to a memory area which will be written upon
+ * success with the received message payload.
+ *
+ * @param size The length in bytes of the memory area pointed to by @a
+ * buf.
+ *
+ * @param timeout A delay expressed in clock ticks.
+ */
+
+/**
+ * @fn ssize_t rt_queue_read_until(RT_QUEUE *q, void *buf, size_t size, RTIME abs_timeout)
+ * @brief Read from a queue (with absolute scalar timeout).
+ *
+ * This routine is a variant of rt_queue_read_timed() accepting an
+ * absolute timeout specification expressed as a scalar value.
+ *
+ * @param q The descriptor address of the message queue to read
+ * from.
+ *
+ * @param buf A pointer to a memory area which will be written upon
+ * success with the received message payload.
+ *
+ * @param size The length in bytes of the memory area pointed to by @a
+ * buf.
+ *
+ * @param abs_timeout An absolute date expressed in clock ticks.
+ */
+
+/**
+ * @fn ssize_t rt_queue_read_timed(RT_QUEUE *q, void *buf, size_t size, const struct timespec *abs_timeout)
+ * @brief Read from a queue.
  *
  * This service reads the next available message from a given
  * queue.
@@ -743,22 +805,23 @@ out:
  * @param size The length in bytes of the memory area pointed to by @a
  * buf. Messages larger than @a size are truncated appropriately.
  *
- * @param timeout An absolute date expressed in clock ticks,
+ * @param abs_timeout An absolute date expressed in clock ticks,
  * specifying a time limit to wait for a message to be available from
- * the queue (see note). Passing TM_INFINITE causes the caller to
- * block indefinitely until a message is available. Passing
- * TM_NONBLOCK causes the service to return immediately without
+ * the queue (see note). Passing NULL causes the caller to block
+ * indefinitely until a message is available. Passing { .tv_sec = 0,
+ * .tv_nsec = 0 } causes the service to return immediately without
  * blocking in case no message is available.
  *
  * @return The number of bytes copied to @a buf is returned upon
  * success. Zero is a possible value corresponding to a zero-sized
  * message passed to rt_queue_send() or rt_queue_write(). Otherwise:
  *
- * - -ETIMEDOUT is returned if the absolute @a timeout date is reached
- * before a message arrives.
+ * - -ETIMEDOUT is returned if @a abs_timeout is reached before a
+ * message arrives.
  *
- * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
- * and no message is immediately available on entry to the call.
+ * - -EWOULDBLOCK is returned if @a abs_timeout is { .tv_sec = 0,
+ * .tv_nsec = 0 } and no message is immediately available on entry to
+ * the call.
 
  * - -EINTR is returned if rt_task_unblock() was called for the
  * current task before a message was available.
@@ -775,19 +838,11 @@ out:
  * Valid calling contexts:
  *
  * - Xenomai threads
- * - Any other context if @a timeout equals TM_NONBLOCK.
+ * - Any other context if @a abs_timeout is { .tv_sec = 0, .tv_nsec = 0 }.
  *
- * @note The @a timeout value is interpreted as a multiple of the
- * Alchemy clock resolution (see --alchemy-clock-resolution option,
- * defaults to 1 nanosecond).
- */
-
-/**
- * @fn ssize_t rt_queue_read(RT_QUEUE *q, void *buf, size_t size, RTIME timeout)
- * @brief Read from a queue (with relative timeout date).
- *
- * This routine is a variant of rt_queue_read_until() accepting a
- * relative timeout specification.
+ * @note @a abs_timeout is interpreted as a multiple of the Alchemy
+ * clock resolution (see --alchemy-clock-resolution option, defaults
+ * to 1 nanosecond).
  */
 ssize_t rt_queue_read_timed(RT_QUEUE *queue,
 			    void *buf, size_t size,

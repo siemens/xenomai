@@ -199,8 +199,48 @@ out:
 }
 
 /**
- * @fn int rt_event_read_until(RT_EVENT *event, unsigned long mask, unsigned long *mask_r, int mode, RTIME timeout)
- * @brief Wait for an arbitrary set of events (with absolute timeout date).
+ * @fn int rt_event_read(RT_EVENT *event, unsigned long mask, unsigned long *mask_r, int mode, RTIME timeout)
+ * @brief Wait for an arbitrary set of events (with relative scalar timeout).
+ *
+ * This routine is a variant of rt_event_read_timed() accepting a
+ * relative timeout specification expressed as a scalar value.
+ *
+ * @param event The descriptor address of the event flag group to wait
+ * on.
+ *
+ * @param mask The set of bits to wait for.
+ *
+ * @param mask_r The value of the event mask at the time the task was
+ * readied.
+ *
+ * @param mode The pend mode.
+ *
+ * @param timeout A delay expressed in clock ticks,
+ */
+
+/**
+ * @fn int rt_event_read_until(RT_EVENT *event, unsigned long mask, unsigned long *mask_r, int mode, RTIME abs_timeout)
+ * @brief Wait for an arbitrary set of events (with absolute scalar timeout).
+ *
+ * This routine is a variant of rt_event_read_timed() accepting an
+ * absolute timeout specification expressed as a scalar value.
+ *
+ * @param event The descriptor address of the event flag group to wait
+ * on.
+ *
+ * @param mask The set of bits to wait for.
+ *
+ * @param mask_r The value of the event mask at the time the task was
+ * readied.
+ *
+ * @param mode The pend mode.
+ *
+ * @param abs_timeout An absolute date expressed in clock ticks.
+ */
+
+/**
+ * @fn int rt_event_read_timed(RT_EVENT *event, unsigned long mask, unsigned long *mask_r, int mode, const struct timespec *abs_timeout)
+ * @brief Wait for an arbitrary set of events.
  *
  * Waits for one or more events to be signaled in @a event, or until a
  * timeout elapses.
@@ -226,20 +266,21 @@ out:
  * means that the request is fulfilled when at all bits set into @a
  * mask are set in the current event mask.
  *
- * @param timeout An absolute date expressed in clock ticks,
+ * @param abs_timeout An absolute date expressed in clock ticks,
  * specifying a time limit to wait for the request to be satisfied
- * (see note). Passing TM_INFINITE causes the caller to block
- * indefinitely until the request is satisfied. Passing TM_NONBLOCK
- * causes the service to return without blocking in case the request
+ * (see note). Passing NULL causes the caller to block indefinitely
+ * until the request is satisfied. Passing { .tv_sec = 0, .tv_nsec = 0
+ * } causes the service to return without blocking in case the request
  * cannot be satisfied immediately.
  *
  * @return Zero is returned upon success. Otherwise:
  *
- * - -ETIMEDOUT is returned if the absolute @a timeout date is reached
- * before the request is satisfied.
+ * - -ETIMEDOUT is returned if @a abs_timeout is reached before the
+ * request is satisfied.
  *
- * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
- * and the requested flags are not set on entry to the call.
+ * - -EWOULDBLOCK is returned if @a abs_timeout is { .tv_sec = 0,
+ * .tv_nsec = 0 } and the requested flags are not set on entry to the
+ * call.
 
  * - -EINTR is returned if rt_task_unblock() was called for the
  * current task before the request is satisfied.
@@ -256,20 +297,13 @@ out:
  *
  * Valid calling contexts:
  *
- * - Xenomai threads
- * - Any other context if @a timeout equals TM_NONBLOCK.
+ * - Xenomai threads.
+ * - Any other context if @a abs_timeout is { .tv_sec = 0, .tv_nsec =
+ * 0 }.
  *
- * @note The @a timeout value is interpreted as a multiple of the
+ * @note @a abs_timeout value is interpreted as a multiple of the
  * Alchemy clock resolution (see --alchemy-clock-resolution option,
  * defaults to 1 nanosecond).
- */
-
-/**
- * @fn int rt_event_read(RT_EVENT *event, unsigned long mask, unsigned long *mask_r, int mode, RTIME timeout)
- * @brief Wait for an arbitrary set of events (with relative timeout date).
- *
- * This routine is a variant of rt_event_read_until() accepting a
- * relative timeout specification.
  */
 int rt_event_wait_timed(RT_EVENT *event,
 			unsigned long mask, unsigned long *mask_r,

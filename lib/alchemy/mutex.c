@@ -189,7 +189,31 @@ out:
 }
 
 /**
- * @fn int rt_mutex_acquire_until(RT_MUTEX *mutex, RTIME timeout)
+ * @fn int rt_mutex_acquire(RT_MUTEX *mutex, RTIME timeout)
+ * @brief Acquire/lock a mutex (with relative scalar timeout).
+ *
+ * This routine is a variant of rt_mutex_acquire_timed() accepting a
+ * relative timeout specification expressed as a scalar value.
+ *
+ * @param mutex The descriptor address of the mutex to acquire.
+ *
+ * @param timeout A delay expressed in clock ticks.
+ */
+
+/**
+ * @fn int rt_mutex_acquire_until(RT_MUTEX *mutex, RTIME abs_timeout)
+ * @brief Acquire/lock a mutex (with absolute scalar timeout).
+ *
+ * This routine is a variant of rt_mutex_acquire_timed() accepting an
+ * absolute timeout specification expressed as a scalar value.
+ *
+ * @param mutex The descriptor address of the mutex to acquire.
+ *
+ * @param abs_timeout An absolute date expressed in clock ticks.
+ */
+
+/**
+ * @fn int rt_mutex_acquire_timed(RT_MUTEX *mutex, const struct timespec *abs_timeout)
  * @brief Acquire/lock a mutex (with absolute timeout date).
  *
  * Attempt to lock a mutex. The calling task is blocked until the
@@ -199,17 +223,20 @@ out:
  *
  * @param mutex The descriptor address of the mutex to acquire.
  *
- * @param timeout An absolute date expressed in clock ticks,
+ * @param abs_timeout An absolute date expressed in clock ticks,
  * specifying a time limit to wait for the mutex to be available (see
- * note). Passing TM_INFINITE causes the caller to block indefinitely.
+ * note). Passing NULL the caller to block indefinitely. Passing {
+ * .tv_sec = 0, .tv_nsec = 0 } causes the service to return
+ * immediately without blocking in case @a mutex is already locked by
+ * another task.
  *
  * @return Zero is returned upon success. Otherwise:
  *
- * - -ETIMEDOUT is returned if the absolute @a timeout date is reached
- * before the mutex is available.
+ * - -ETIMEDOUT is returned if @a abs_timeout is reached before the
+ * mutex is available.
  *
- * - -EWOULDBLOCK is returned if @a timeout equals TM_NONBLOCK and the
- * mutex is not immediately available.
+ * - -EWOULDBLOCK is returned if @a timeout is { .tv_sec = 0, .tv_nsec
+ * = 0 } and the mutex is not immediately available.
  *
  * - -EINTR is returned if rt_task_unblock() was called for the
  * current task.
@@ -232,17 +259,9 @@ out:
  * Over the Cobalt core, a real-time task with effective priority zero
  * keeps running in primary mode until it releases the mutex.
  *
- * @note The @a timeout value is interpreted as a multiple of the
- * Alchemy clock resolution (see --alchemy-clock-resolution option,
- * defaults to 1 nanosecond).
- */
-
-/**
- * @fn int rt_mutex_acquire(RT_MUTEX *mutex, RTIME timeout)
- * @brief Acquire/lock a mutex (with relative timeout date).
- *
- * This routine is a variant of rt_mutex_acquire_until() accepting a
- * relative timeout specification.
+ * @note @a abs_timeout is interpreted as a multiple of the Alchemy
+ * clock resolution (see --alchemy-clock-resolution option, defaults
+ * to 1 nanosecond).
  */
 int rt_mutex_acquire_timed(RT_MUTEX *mutex,
 			   const struct timespec *abs_timeout)

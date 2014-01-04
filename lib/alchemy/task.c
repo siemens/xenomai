@@ -1433,9 +1433,46 @@ out:
 	return ret;
 }
 
+
 /**
- * @fn ssize_t rt_task_send_until(RT_TASK *task, RT_TASK_MCB *mcb_s, RT_TASK_MCB *mcb_r, RTIME timeout)
- * @brief Send a message to a real-time task (with absolute timeout date).
+ * @fn ssize_t rt_task_send(RT_TASK *task, RT_TASK_MCB *mcb_s, RT_TASK_MCB *mcb_r, RTIME timeout)
+ * @brief Send a message to a real-time task (with relative scalar timeout).
+ *
+ * This routine is a variant of rt_task_send_timed() accepting a
+ * relative timeout specification expressed as a scalar value.
+ *
+ * @param task The descriptor address of the recipient task.
+ *
+ * @param mcb_s The address of the message control block referring to
+ * the message to be sent.
+ *
+ * @param mcb_r The address of an optional message control block
+ * referring to the reply message area.
+ *
+ * @param timeout A delay expressed in clock ticks.
+ */
+
+/**
+ * @fn ssize_t rt_task_send_until(RT_TASK *task, RT_TASK_MCB *mcb_s, RT_TASK_MCB *mcb_r, RTIME abs_timeout)
+ * @brief Send a message to a real-time task (with absolute scalar timeout).
+ *
+ * This routine is a variant of rt_task_send_timed() accepting an
+ * absolute timeout specification expressed as a scalar value.
+ *
+ * @param task The descriptor address of the recipient task.
+ *
+ * @param mcb_s The address of the message control block referring to
+ * the message to be sent.
+ *
+ * @param mcb_r The address of an optional message control block
+ * referring to the reply message area.
+ *
+ * @param abs_timeout An absolute date expressed in clock ticks.
+ */
+
+/**
+ * @fn ssize_t rt_task_send_timed(RT_TASK *task, RT_TASK_MCB *mcb_s, RT_TASK_MCB *mcb_r, const struct timespec *abs_timeout)
+ * @brief Send a message to a real-time task.
  *
  * This service is part of the synchronous message passing support
  * available to Alchemy tasks. The caller sends a variable-sized
@@ -1484,13 +1521,13 @@ out:
  * Upon return, mcb_r->opcode will contain the status code sent back
  * from the remote task using rt_task_reply(), or zero if unspecified.
  *
- * @param timeout An absolute date expressed in clock ticks,
+ * @param abs_timeout An absolute date expressed in clock ticks,
  * specifying a time limit to wait for the recipient task to reply to
- * the initial message (see note). Passing TM_INFINITE causes the
- * caller to block indefinitely until a reply is received.  Passing
- * TM_NONBLOCK causes the service to return without blocking in case
- * the recipient task is not waiting for messages at the time of the
- * call.
+ * the initial message (see note). Passing NULL causes the caller to
+ * block indefinitely until a reply is received.  Passing { .tv_sec =
+ * 0, .tv_nsec = 0 } causes the service to return without blocking in
+ * case the recipient task is not waiting for messages at the time of
+ * the call.
  *
  * @return A positive value is returned upon success, representing the
  * length (in bytes) of the reply message returned by the remote
@@ -1508,9 +1545,9 @@ out:
  * case where @a mcb_r is NULL on entry, despite the remote task
  * attempts to send a reply message.
  *
- * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
- * and the recipient @a task is not currently waiting for a message on
- * the rt_task_receive() service.
+ * - -EWOULDBLOCK is returned if @a abs_timeout is { .tv_sec = 0,
+ * .tv_nsec = 0 } and the recipient @a task is not currently waiting
+ * for a message on the rt_task_receive() service.
  *
  * - -EIDRM is returned if @a task has been deleted while waiting for
  * a reply.
@@ -1523,40 +1560,9 @@ out:
  *
  * - Xenomai threads
  *
- * @note The @a timeout value is interpreted as a multiple of the
- * Alchemy clock resolution (see --alchemy-clock-resolution option,
- * defaults to 1 nanosecond).
- */
-
-/**
- * @fn ssize_t rt_task_send(RT_TASK *task, RT_TASK_MCB *mcb_s, RT_TASK_MCB *mcb_r, RTIME timeout)
- * @brief Send a message to a real-time task (with relative timeout date).
- *
- * This routine is a variant of rt_task_send_until() accepting a
- * relative timeout specification.
- *
- * @param task The descriptor address of the recipient task.
- *
- * @param mcb_s The address of the message control block referring to
- * the message to be sent. See rt_task_send_until().
- *
- * @param mcb_r The address of an optional message control block
- * referring to the reply message area. See rt_task_send_until().
- *
- * @param timeout A relative timeout expressed in clock ticks. See
- * rt_task_send_until().
- *
- * @return A positive value is returned upon success, representing the
- * length (in bytes) of the reply message returned by the remote
- * task. See rt_task_send_until().
- *
- * Valid calling context:
- *
- * - Xenomai threads
- *
- * @note The @a timeout value is interpreted as a multiple of the
- * Alchemy clock resolution (see --alchemy-clock-resolution option,
- * defaults to 1 nanosecond).
+ * @note @a abs_timeout is interpreted as a multiple of the Alchemy
+ * clock resolution (see --alchemy-clock-resolution option, defaults
+ * to 1 nanosecond).
  */
 ssize_t rt_task_send_timed(RT_TASK *task,
 			   RT_TASK_MCB *mcb_s, RT_TASK_MCB *mcb_r,
@@ -1636,8 +1642,34 @@ out:
 }
 
 /**
- * @fn ssize_t rt_task_receive_until(RT_TASK_MCB *mcb_r, RTIME timeout)
- * @brief Receive a message from a real-time task (with absolute timeout date).
+ * @fn ssize_t rt_task_receive(RT_TASK_MCB *mcb_r, RTIME timeout)
+ * @brief Receive a message from a real-time task (with relative scalar timeout).
+ *
+ * This routine is a variant of rt_task_receive_timed() accepting a
+ * relative timeout specification expressed as a scalar value.
+ *
+ * @param mcb_r The address of a message control block referring to
+ * the receive message area.
+ *
+ * @param timeout A delay expressed in clock ticks.
+ */
+
+/**
+ * @fn ssize_t rt_task_receive_until(RT_TASK_MCB *mcb_r, RTIME abs_timeout)
+ * @brief Receive a message from a real-time task (with absolute scalar timeout).
+ *
+ * This routine is a variant of rt_task_receive_timed() accepting an
+ * absolute timeout specification expressed as a scalar value.
+ *
+ * @param mcb_r The address of a message control block referring to
+ * the receive message area.
+ *
+ * @param abs_timeout An absolute date expressed in clock ticks.
+ */
+
+/**
+ * @fn ssize_t rt_task_receive_timed(RT_TASK_MCB *mcb_r, const struct timespec *abs_timeout)
+ * @brief Receive a message from a real-time task.
  *
  * This service is part of the synchronous message passing support
  * available to Alchemy tasks. The caller receives a variable-sized
@@ -1663,12 +1695,12 @@ out:
  * Upon return, mcb_r->opcode will contain the operation code sent
  * from the remote task using rt_task_send().
  *
- * @param timeout The number of clock ticks to wait for receiving a
- * message (see note). Passing TM_INFINITE causes the caller to block
+ * @param abs_timeout The number of clock ticks to wait for receiving
+ * a message (see note). Passing NULL causes the caller to block
  * indefinitely until a remote task eventually sends a message.
- * Passing TM_NONBLOCK causes the service to return immediately
- * without waiting if no remote task is currently waiting for sending
- * a message.
+ * Passing { .tv_sec = 0, .tv_nsec = 0 } causes the service to return
+ * immediately without waiting if no remote task is currently waiting
+ * for sending a message.
  *
  * @return A strictly positive value is returned upon success,
  * representing a flow identifier for the opening transaction; this
@@ -1684,9 +1716,9 @@ out:
  * - -ENOBUFS is returned if @a mcb_r does not point at a message area
  * large enough to collect the remote task's message.
  *
- * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
- * and no remote task is currently waiting for sending a message to
- * the caller.
+ * - -EWOULDBLOCK is returned if @a abs_timeout is { .tv_sec = 0,
+ * .tv_nsec = 0 } and no remote task is currently waiting for sending
+ * a message to the caller.
  *
  * - -ETIMEDOUT is returned if no message was received within the @a
  * timeout.
@@ -1695,34 +1727,9 @@ out:
  *
  * - Alchemy tasks
  *
- * @note The @a timeout value is interpreted as a multiple of the
- * Alchemy clock resolution (see --alchemy-clock-resolution option,
- * defaults to 1 nanosecond).
- */
-/**
- * @fn ssize_t rt_task_receive(RT_TASK_MCB *mcb_r, RTIME timeout)
- * @brief Receive a message from a real-time task (with relative timeout date).
- *
- * This routine is a variant of rt_task_receive_until() accepting a
- * relative timeout specification.
- *
- * @param mcb_r The address of a message control block referring to
- * the receive message area. See rt_task_receive_until().
- *
- * @param timeout A relative timeout expressed in clock ticks. See
- * rt_task_receive_until().
- *
- * @return A strictly positive value is returned upon success,
- * representing a flow identifier for the opening transaction. See
- * rt_task_receive_until().
-
- * Valid calling context:
- *
- * - Alchemy tasks
- *
- * @note The @a timeout value is interpreted as a multiple of the
- * Alchemy clock resolution (see --alchemy-clock-resolution option,
- * defaults to 1 nanosecond).
+ * @note @a abs_timeout is interpreted as a multiple of the Alchemy
+ * clock resolution (see --alchemy-clock-resolution option, defaults
+ * to 1 nanosecond).
  */
 int rt_task_receive_timed(RT_TASK_MCB *mcb_r,
 			  const struct timespec *abs_timeout)

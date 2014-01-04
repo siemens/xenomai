@@ -243,8 +243,34 @@ int rt_cond_broadcast(RT_COND *cond)
 }
 
 /**
- * @fn int rt_cond_wait_until(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
- * @brief Wait on a condition variable (with absolute timeout date).
+ * @fn int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
+ * @brief Wait on a condition variable (with relative scalar timeout).
+ *
+ * This routine is a variant of rt_cond_wait_timed() accepting a
+ * relative timeout specification expressed as a scalar value.
+ *
+ * @param cond The descriptor address of the condition variable to
+ * wait on.
+ *
+ * @param timeout A delay expressed in clock ticks.
+ */
+
+/**
+ * @fn int rt_cond_wait_until(RT_COND *cond, RT_MUTEX *mutex, RTIME abs_timeout)
+ * @brief Wait on a condition variable (with absolute scalar timeout).
+ *
+ * This routine is a variant of rt_cond_wait_timed() accepting an
+ * abs_timeout specification expressed as a scalar value.
+ *
+ * @param cond The descriptor address of the condition variable to
+ * wait on.
+ *
+ * @param abs_timeout An absolute date expressed in clock ticks.
+ */
+
+/**
+ * @fn int rt_cond_wait_timed(RT_COND *cond, RT_MUTEX *mutex, const struct timespec *abs_timeout)
+ * @brief Wait on a condition variable.
  *
  * This service atomically releases the mutex and blocks the calling
  * task, until the condition variable @a cond is signaled or a timeout
@@ -254,18 +280,19 @@ int rt_cond_broadcast(RT_COND *cond)
  * @param cond The descriptor address of the condition variable to
  * wait on.
  *
- * @param timeout An absolute date expressed in clock ticks,
+ * @param abs_timeout An absolute date expressed in clock ticks,
  * specifying a time limit to wait for the condition variable to be
- * signaled  (see note). Passing TM_INFINITE causes the caller to
+ * signaled  (see note). Passing NULL causes the caller to
  * block indefinitely.
  *
  * @return Zero is returned upon success. Otherwise:
  *
- * - -ETIMEDOUT is returned if the absolute @a timeout date is reached
- * before the condition variable is signaled.
+ * - -ETIMEDOUT is returned if @a abs_timeout is reached before the
+ * condition variable is signaled.
  *
- * - -EWOULDBLOCK is returned if @a timeout equals TM_NONBLOCK.
-
+ * - -EWOULDBLOCK is returned if @a abs_timeout is { .tv_sec = 0,
+ * .tv_nsec = 0 } .
+ *
  * - -EINTR is returned if rt_task_unblock() was called for the
  * current task.
  *
@@ -283,19 +310,10 @@ int rt_cond_broadcast(RT_COND *cond)
  *
  * - Xenomai threads
  *
- * @note The @a timeout value is interpreted as a multiple of the
- * Alchemy clock resolution (see --alchemy-clock-resolution option,
- * defaults to 1 nanosecond).
+ * @note @a abs_timeout is interpreted as a multiple of the Alchemy
+ * clock resolution (see --alchemy-clock-resolution option, defaults
+ * to 1 nanosecond).
  */
-
-/**
- * @fn int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
- * @brief Wait on a condition variable (with relative timeout date).
- *
- * This routine is a variant of rt_cond_wait_until() accepting a
- * relative timeout specification.
- */
-
 int rt_cond_wait_timed(RT_COND *cond, RT_MUTEX *mutex,
 		       const struct timespec *abs_timeout)
 {

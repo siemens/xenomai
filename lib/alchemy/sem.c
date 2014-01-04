@@ -217,8 +217,32 @@ out:
 }
 
 /**
- * @fn int rt_sem_p_until(RT_SEM *sem, RTIME timeout)
- * @brief Pend on a semaphore (with absolute timeout date).
+ * @fn int rt_sem_p(RT_SEM *sem, RTIME timeout)
+ * @brief Pend on a semaphore (with relative scalar timeout).
+ *
+ * This routine is a variant of rt_sem_p_timed() accepting a
+ * relative timeout specification expressed as a scalar value.
+ *
+ * @param sem The descriptor address of the semaphore to wait on.
+ *
+ * @param timeout A delay expressed in clock ticks.
+ */
+
+/**
+ * @fn int rt_sem_p_until(RT_SEM *sem, RTIME abs_timeout)
+ * @brief Pend on a semaphore (with absolute scalar timeout).
+ *
+ * This routine is a variant of rt_sem_p_timed() accepting an
+ * absolute timeout specification expressed as a scalar value.
+ *
+ * @param sem The descriptor address of the semaphore to wait on.
+ *
+ * @param abs_timeout An absolute date expressed in clock ticks.
+ */
+
+/**
+ * @fn int rt_sem_p_timed(RT_SEM *sem, const struct timespec *abs_timeout)
+ * @brief Pend on a semaphore.
  *
  * Test and decrement the semaphore count. If the semaphore value is
  * greater than zero, it is decremented by one and the service
@@ -228,20 +252,20 @@ out:
  *
  * @param sem The descriptor address of the semaphore to wait on.
  *
- * @param timeout An absolute date expressed in clock ticks,
+ * @param abs_timeout An absolute date expressed in clock ticks,
  * specifying a time limit to wait for the request to be satisfied
- * (see note). Passing TM_INFINITE causes the caller to block
- * indefinitely until the request is satisfied. Passing TM_NONBLOCK
- * causes the service to return without blocking in case the request
+ * (see note). Passing NULL causes the caller to block indefinitely
+ * until the request is satisfied. Passing { .tv_sec = 0, .tv_nsec = 0
+ * } causes the service to return without blocking in case the request
  * cannot be satisfied immediately.
  *
  * @return Zero is returned upon success. Otherwise:
  *
- * - -ETIMEDOUT is returned if the absolute @a timeout date is reached
- * before the request is satisfied.
+ * - -ETIMEDOUT is returned if @a abs_timeout is reached before the
+ * request is satisfied.
  *
- * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
- * and the semaphore count is null on entry to the call.
+ * - -EWOULDBLOCK is returned if @a abs_timeout is { .tv_sec = 0,
+ * .tv_nsec = 0 } and the semaphore count is zero on entry.
 
  * - -EINTR is returned if rt_task_unblock() was called for the
  * current task before the request is satisfied.
@@ -259,21 +283,12 @@ out:
  * Valid calling contexts:
  *
  * - Xenomai threads
- * - Any other context if @a timeout equals TM_NONBLOCK.
+ * - Any other context if @a abs_timeout is { .tv_sec = 0, .tv_nsec = 0 }.
  *
- * @note The @a timeout value is interpreted as a multiple of the
- * Alchemy clock resolution (see --alchemy-clock-resolution option,
- * defaults to 1 nanosecond).
+ * @note @a abs_timeout is interpreted as a multiple of the Alchemy
+ * clock resolution (see --alchemy-clock-resolution option, defaults
+ * to 1 nanosecond).
  */
-
-/**
- * @fn int rt_sem_p(RT_SEM *sem, RTIME timeout)
- * @brief Pend on a semaphore (with relative timeout date).
- *
- * This routine is a variant of rt_sem_p_until() accepting a
- * relative timeout specification.
- */
-
 int rt_sem_p_timed(RT_SEM *sem, const struct timespec *abs_timeout)
 {
 	struct alchemy_sem *scb;
