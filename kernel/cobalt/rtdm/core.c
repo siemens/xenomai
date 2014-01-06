@@ -101,7 +101,6 @@ static int create_instance(struct rtdm_device *device,
 			   rtdm_user_info_t *user_info, int nrt_mem)
 {
 	struct rtdm_dev_context *context;
-	struct xnshadow_ppd *ppd;
 	spl_t s;
 	int fd;
 
@@ -158,12 +157,7 @@ static int create_instance(struct rtdm_device *device,
 	context->ops = &device->ops;
 	atomic_set(&context->close_lock_count, 1);
 
-	xnlock_get_irqsave(&nklock, s);
-	ppd = xnshadow_ppd_get(__rtdm_muxid);
-	xnlock_put_irqrestore(&nklock, s);
-
-	context->reserved.owner =
-	    ppd ? container_of(ppd, struct rtdm_process, ppd) : NULL;
+	context->reserved.owner = xnshadow_private_get(__rtdm_muxid);
 	INIT_LIST_HEAD(&context->reserved.cleanup);
 
 	return 0;

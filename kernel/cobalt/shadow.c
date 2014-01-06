@@ -70,9 +70,7 @@ static int xn_gid_arg = -1;
 module_param_named(xenomai_gid, xn_gid_arg, int, 0644);
 MODULE_PARM_DESC(xenomai_gid, "GID of the group with access to Xenomai services");
 
-#define PERSONALITIES_NR  4
-
-struct xnpersonality *personalities[PERSONALITIES_NR];
+struct xnpersonality *personalities[NR_PERSONALITIES];
 
 static int user_muxid = -1;
 
@@ -82,157 +80,115 @@ static void *mayday_page;
 
 static struct xnsynch yield_sync;
 
-static struct list_head *ppd_hash;
-#define PPD_HASH_SIZE 13
+static struct hlist_head *process_hash;
+#define PROCESS_HASH_SIZE 13
 
-union xnshadow_ppd_hkey {
-	struct mm_struct *mm;
-	uint32_t val;
-};
-
-/*
- * ppd holder with the same mm collide and are stored contiguously in
- * the same bucket, so that they can all be destroyed with only one
- * hash lookup by ppd_remove_mm.
- */
-static unsigned int ppd_lookup_inner(struct list_head **pq,
-				     struct xnshadow_ppd **pholder,
-				     struct xnshadow_ppd_key *pkey)
+static unsigned __attribute__((pure)) process_hash_crunch(struct mm_struct *mm)
 {
-	union xnshadow_ppd_hkey key = { .mm = pkey->mm };
-	struct xnshadow_ppd *ppd = NULL;
-	unsigned int bucket;
-
-	bucket = jhash2(&key.val, sizeof(key) / sizeof(uint32_t), 0);
-	*pq = &ppd_hash[bucket % PPD_HASH_SIZE];
-
-	if (list_empty(*pq))
-		goto out;
-
-	list_for_each_entry(ppd, *pq, link) {
-		if (ppd->key.mm == pkey->mm && ppd->key.muxid == pkey->muxid) {
-			*pholder = ppd;
-			return 1; /* Exact match. */
-		}
-		/*
-		 * Order by increasing mm address. Within the same mm,
-		 * order by decreasing muxid.
-		 */
-		if (ppd->key.mm > pkey->mm ||
-		    (ppd->key.mm == pkey->mm && ppd->key.muxid < pkey->muxid))
-			/* Not found, return successor for insertion. */
-			goto out;
-	}
-
-	ppd = NULL;
-out:
-	*pholder = ppd;
-
-	return 0;
+	unsigned long hash = ((unsigned long)mm - PAGE_OFFSET) / sizeof(*mm);
+	return hash % PROCESS_HASH_SIZE;
 }
 
-static int ppd_insert(struct xnshadow_ppd *holder)
+static struct xnshadow_process *__process_hash_search(struct mm_struct *mm)
 {
-	struct xnshadow_ppd *next;
-	struct list_head *q;
-	unsigned int found;
+	unsigned bucket = process_hash_crunch(mm);
+	struct xnshadow_process *p;
+	
+	atomic_only();
+
+	hlist_for_each_entry(p, &process_hash[bucket], hlink)
+		if (p->mm == mm)
+			return p;
+	
+	return NULL;
+}
+
+static struct xnshadow_process *process_hash_search(struct mm_struct *mm)
+{
+	struct xnshadow_process *process;
+	spl_t s;
+	
+	xnlock_get_irqsave(&nklock, s);
+	process = __process_hash_search(mm);
+	xnlock_put_irqrestore(&nklock, s);
+	
+	return process;
+}
+
+static int process_hash_enter(struct xnshadow_process *p)
+{
+	struct mm_struct *mm = current->mm;
+	unsigned bucket = process_hash_crunch(mm);
+	int err;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-
-	found = ppd_lookup_inner(&q, &next, &holder->key);
-	if (found) {
-		xnlock_put_irqrestore(&nklock, s);
-		return -EBUSY;
+	if (__process_hash_search(mm)) {
+		err = -EBUSY;
+		goto out;
 	}
 
-	if (next)
-		list_add_tail(&holder->link, &next->link);
-	else
-		list_add_tail(&holder->link, q);
-
+	p->mm = mm;
+	hlist_add_head(&p->hlink, &process_hash[bucket]);
+	err = 0;
+  out:
 	xnlock_put_irqrestore(&nklock, s);
+	return err;
+}
 
-	return 0;
+static void process_hash_remove(struct xnshadow_process *p)
+{
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+	if (p->mm)
+		hlist_del(&p->hlink);
+	xnlock_put_irqrestore(&nklock, s);
 }
 
 /* nklock locked, irqs off. */
-static struct xnshadow_ppd *ppd_lookup(unsigned int muxid,
-				       struct mm_struct *mm)
+static void *private_lookup(unsigned int muxid)
 {
-	struct xnshadow_ppd_key key;
-	struct xnshadow_ppd *holder;
-	struct list_head *q;
-	unsigned int found;
+	struct xnshadow_process *p = xnshadow_current_process();
 
-	key.muxid = muxid;
-	key.mm = mm;
-
-	found = ppd_lookup_inner(&q, &holder, &key);
-	if (!found)
+	if (p == NULL)
+		p = process_hash_search(current->mm);
+	if (p == NULL)
 		return NULL;
 
-	return holder;
+	return p->priv[muxid];
 }
 
-static void ppd_remove(struct xnshadow_ppd *holder)
+static inline void process_remove(struct xnshadow_process *p)
 {
-	struct list_head *q;
-	unsigned int found;
+	unsigned muxid;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
+	for (muxid = 0; muxid < NR_PERSONALITIES; muxid++) {
+		struct xnpersonality *personality;
+		void *priv;
 
-	found = ppd_lookup_inner(&q, &holder, &holder->key);
-	if (found)
-		list_del(&holder->link);
+		if (muxid == user_muxid)
+			continue;
 
-	xnlock_put_irqrestore(&nklock, s);
-}
+		priv = p->priv[muxid];
+		if (priv == NULL)
+			continue;
 
-static inline void ppd_remove_mm(struct mm_struct *mm,
-				 void (*destructor) (struct xnshadow_ppd *))
-{
-	struct xnshadow_ppd *ppd, *next;
-	struct xnshadow_ppd_key key;
-	struct list_head *q;
-	spl_t s;
-
-	key.muxid = ~0UL; /* seek first muxid for 'mm'. */
-	key.mm = mm;
-	xnlock_get_irqsave(&nklock, s);
-	ppd_lookup_inner(&q, &ppd, &key);
-
-	while (ppd && ppd->key.mm == mm) {
-		if (list_is_last(&ppd->link, q))
-			next = NULL;
-		else
-			next = list_next_entry(ppd, link);
-		list_del(&ppd->link);
 		xnlock_put_irqrestore(&nklock, s);
-		/*
-		 * Releasing the nklock is safe here, if we assume
-		 * that no insertion for the same mm will take place
-		 * while we are running ppd_remove_mm().
-		 */
-		destructor(ppd);
-		ppd = next;
+		
+		personality = personalities[muxid];
+		personality->ops.detach_process(priv);
+		if (personality->module)
+			module_put(personality->module);
+		
 		xnlock_get_irqsave(&nklock, s);
+		p->priv[muxid] = NULL;
 	}
-
 	xnlock_put_irqrestore(&nklock, s);
-}
 
-static void detach_ppd(struct xnshadow_ppd *ppd)
-{
-	struct xnpersonality *personality;
-	unsigned int muxid;
-
-	muxid = xnshadow_ppd_muxid(ppd);
-	personality = personalities[muxid];
-	personality->ops.detach_process(ppd);
-	if (personality->module)
-		module_put(personality->module);
+	personalities[user_muxid]->ops.detach_process(p); /* Destroys p */
 }
 
 static void request_syscall_restart(struct xnthread *thread,
@@ -835,14 +791,14 @@ static inline void init_threadinfo(struct xnthread *thread)
 
 	p = ipipe_current_threadinfo();
 	p->thread = thread;
-	p->mm = current->mm;
+	p->process = process_hash_search(current->mm);
 }
 
 static inline void destroy_threadinfo(void)
 {
 	struct ipipe_threadinfo *p = ipipe_current_threadinfo();
 	p->thread = NULL;
-	p->mm = NULL;
+	p->process = NULL;
 }
 
 static void pin_to_initial_cpu(struct xnthread *thread)
@@ -1318,9 +1274,7 @@ static int handle_mayday_event(struct pt_regs *regs)
 	XENO_BUGON(NUCLEUS, !xnthread_test_state(thread, XNUSER));
 
 	/* We enter the mayday handler with hw IRQs off. */
-	xnlock_get(&nklock);
-	sys_ppd = __xnsys_ppd_get(0);
-	xnlock_put(&nklock);
+	sys_ppd = xnsys_ppd_get(0);
 
 	xnarch_handle_mayday(tcb, regs, sys_ppd->mayday_addr);
 
@@ -1343,12 +1297,13 @@ static inline int raise_cap(int cap)
 static int xnshadow_sys_bind(unsigned int magic,
 			     struct xnsysinfo __user *u_breq)
 {
-	struct xnshadow_ppd *ppd = NULL, *sys_ppd = NULL;
 	struct xnpersonality *personality;
+	struct xnshadow_process *process;
 	unsigned long featreq, featmis;
 	int muxid, abirev, ret;
 	struct xnbindreq breq;
 	struct xnfeatinfo *f;
+	void *priv = NULL;
 	spl_t s;
 
 	if (__xn_safe_copy_from_user(&breq, u_breq, sizeof(breq)))
@@ -1402,7 +1357,7 @@ static int xnshadow_sys_bind(unsigned int magic,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	for (muxid = 1; muxid < PERSONALITIES_NR; muxid++) {
+	for (muxid = 1; muxid < NR_PERSONALITIES; muxid++) {
 		personality = personalities[muxid];
 		if (personality && personality->magic == magic)
 			goto do_bind;
@@ -1413,74 +1368,55 @@ static int xnshadow_sys_bind(unsigned int magic,
 	return -ESRCH;
 
 do_bind:
-
-	sys_ppd = ppd_lookup(0, current->mm);
+	process = __process_hash_search(current->mm);
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	if (sys_ppd)
+	if (process)
 		goto muxid_eventcb;
 
-	sys_ppd = personalities[user_muxid]->ops.attach_process();
-	if (IS_ERR(sys_ppd))
-		return PTR_ERR(sys_ppd);
-
-	if (sys_ppd == NULL)
-		goto muxid_eventcb;
-
-	sys_ppd->key.muxid = 0;
-	sys_ppd->key.mm = current->mm;
-	if (ppd_insert(sys_ppd) == -EBUSY) {
-		/* In case of concurrent binding (which can not happen with
-		   Xenomai libraries), detach right away the second ppd. */
-		personalities[user_muxid]->ops.detach_process(sys_ppd);
-		sys_ppd = NULL;
-	}
+	process = personalities[user_muxid]->ops.attach_process();
+	if (IS_ERR(process))
+		return PTR_ERR(process);
 
 	if (personality->module && !try_module_get(personality->module)) {
 		ret = -ENOSYS;
-		goto fail_destroy_sys_ppd;
+		goto fail_destroy_process;
 	}
 
 muxid_eventcb:
-
-	xnlock_get_irqsave(&nklock, s);
-	ppd = ppd_lookup(muxid, current->mm);
-	xnlock_put_irqrestore(&nklock, s);
-
+	priv = private_lookup(muxid);
 	/* protect from the same process binding several times. */
-	if (ppd)
+	if (priv)
 		return muxid;
 
-	ppd = personality->ops.attach_process();
-	if (IS_ERR(ppd)) {
-		ret = PTR_ERR(ppd);
-		goto fail_destroy_sys_ppd;
+	priv = personality->ops.attach_process();
+	if (IS_ERR(priv)) {
+		ret = PTR_ERR(priv);
+		goto fail_destroy_process;
 	}
 
-	if (ppd == NULL)
+	if (priv == NULL)
 		return muxid;
 
-	ppd->key.muxid = muxid;
-	ppd->key.mm = current->mm;
-
-	if (ppd_insert(ppd) == -EBUSY) {
+	xnlock_get_irqsave(&nklock, s);
+	if (process->priv[muxid]) {
 		/*
 		 * In case of concurrent binding (which can not happen
 		 * with Xenomai libraries), detach right away the
-		 * second ppd.
+		 * second arg.
 		 */
-		personality->ops.detach_process(ppd);
-		ppd = NULL;
+		xnlock_put_irqrestore(&nklock, s);
+		personality->ops.detach_process(priv);
+	} else {
+		process->priv[muxid] = priv;
+		xnlock_put_irqrestore(&nklock, s);
 	}
 
 	return muxid;
 
- fail_destroy_sys_ppd:
-	if (sys_ppd) {
-		ppd_remove(sys_ppd);
-		personalities[user_muxid]->ops.detach_process(sys_ppd);
-	}
+ fail_destroy_process:
+	process_remove(process);
 
 	return ret;
 }
@@ -1489,7 +1425,7 @@ static int xnshadow_sys_info(int muxid, struct xnsysinfo __user *u_info)
 {
 	struct xnsysinfo info;
 
-	if (muxid < 0 || muxid > PERSONALITIES_NR ||
+	if (muxid < 0 || muxid > NR_PERSONALITIES ||
 	    personalities[muxid] == NULL)
 		return -EINVAL;
 
@@ -1637,7 +1573,8 @@ static int xnshadow_sys_serialdbg(const char __user *u_msg, int len)
 
 static void post_ppd_release(struct xnheap *h)
 {
-	struct xnsys_ppd *p = container_of(h, struct xnsys_ppd, sem_heap);
+	struct xnshadow_process *p;
+	p = container_of(h, struct xnshadow_process, sys_ppd.sem_heap);
 	kfree(p);
 }
 
@@ -1687,15 +1624,31 @@ out:
 	return pathname;
 }
 
-static struct xnshadow_ppd *user_process_attach(void)
+static void user_process_detach(void *arg)
 {
+	struct xnshadow_process *process = arg;
+	struct xnsys_ppd *p = &process->sys_ppd;
+
+	if (p->exe_path)
+		kfree(p->exe_path);
+	process_hash_remove(process);
+	xnheap_destroy_mapped(&p->sem_heap, post_ppd_release, NULL);
+	atomic_dec(&personalities[user_muxid]->refcnt);
+}
+
+static void *user_process_attach(void)
+{
+	struct xnshadow_process *process;
 	struct xnsys_ppd *p;
 	char *exe_path;
 	int ret;
 
-	p = kmalloc(sizeof(*p), GFP_KERNEL);
-	if (p == NULL)
+	process = kzalloc(sizeof(*process), GFP_KERNEL);
+	if (process == NULL)
 		return ERR_PTR(-ENOMEM);
+	
+	process->priv[user_muxid] = process;
+	p = &process->sys_ppd;
 
 	ret = xnheap_init_mapped(&p->sem_heap,
 				 CONFIG_XENO_OPT_SEM_HEAPSZ * 1024,
@@ -1728,18 +1681,12 @@ static struct xnshadow_ppd *user_process_attach(void)
 	atomic_set(&p->refcnt, 1);
 	atomic_inc(&personalities[user_muxid]->refcnt);
 
-	return &p->ppd;
-}
+	if (process_hash_enter(process) == -EBUSY) {
+		user_process_detach(process);
+		return ERR_PTR(-EBUSY);
+	}
 
-static void user_process_detach(struct xnshadow_ppd *ppd)
-{
-	struct xnsys_ppd *p;
-
-	p = container_of(ppd, struct xnsys_ppd, ppd);
-	if (p->exe_path)
-		kfree(p->exe_path);
-	xnheap_destroy_mapped(&p->sem_heap, post_ppd_release, NULL);
-	atomic_dec(&personalities[user_muxid]->refcnt);
+	return process;
 }
 
 static struct xnsyscall user_syscalls[] = {
@@ -1792,8 +1739,8 @@ EXPORT_SYMBOL_GPL(xnshadow_send_sig);
  *   to the personality, on behalf of one of its threads. The
  *   attach_process() handler may return:
  *
- *   . a pointer to a xnshadow_ppd structure, representing the context
- *   of the calling process for this personality;
+ *   . an opaque pointer, representing the context of the calling
+ *   process for this personality;
  *
  *   . a NULL pointer, meaning that no per-process structure should be
  *   attached to this process for this personality;
@@ -1819,7 +1766,7 @@ int xnshadow_register_personality(struct xnpersonality *personality)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	for (muxid = 0; muxid < PERSONALITIES_NR; muxid++) {
+	for (muxid = 0; muxid < NR_PERSONALITIES; muxid++) {
 		if (personalities[muxid] == NULL) {
 			atomic_set(&personality->refcnt, 0);
 			personalities[muxid] = personality;
@@ -1829,7 +1776,7 @@ int xnshadow_register_personality(struct xnpersonality *personality)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	if (muxid >= PERSONALITIES_NR)
+	if (muxid >= NR_PERSONALITIES)
 		muxid = -EAGAIN;
 
 	up(&registration_mutex);
@@ -1852,7 +1799,7 @@ int xnshadow_unregister_personality(int muxid)
 
 	secondary_mode_only();
 
-	if (muxid < 0 || muxid >= PERSONALITIES_NR)
+	if (muxid < 0 || muxid >= NR_PERSONALITIES)
 		return -EINVAL;
 
 	down(&registration_mutex);
@@ -1890,18 +1837,16 @@ EXPORT_SYMBOL_GPL(xnshadow_unregister_personality);
  *
  * @remark Tags: atomic-entry.
  */
-struct xnshadow_ppd *xnshadow_ppd_get(unsigned int muxid)
+void *xnshadow_private_get(unsigned int muxid)
 {
 	struct xnthread *curr = xnsched_current_thread();
 
-	atomic_only();
-
 	if (xnthread_test_state(curr, XNROOT|XNUSER))
-		return ppd_lookup(muxid, xnshadow_current_mm() ?: current->mm);
+		return private_lookup(muxid);
 
 	return NULL;
 }
-EXPORT_SYMBOL_GPL(xnshadow_ppd_get);
+EXPORT_SYMBOL_GPL(xnshadow_private_get);
 
 /**
  * Stack a new personality over an existing thread.
@@ -1981,7 +1926,7 @@ static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 		   thread, thread ? xnthread_name(thread) : NULL,
 		   muxid, muxop);
 
-	if (muxid < 0 || muxid >= PERSONALITIES_NR || muxop < 0)
+	if (muxid < 0 || muxid >= NR_PERSONALITIES || muxop < 0)
 		goto bad_syscall;
 
 	personality = personalities[muxid];
@@ -2269,7 +2214,6 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 	struct xnpersonality *personality;
 	struct xnsys_ppd *sys_ppd;
 	struct xnthread *thread;
-	struct mm_struct *mm;
 
 	/*
 	 * We are called for both kernel and user shadows over the
@@ -2295,9 +2239,8 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 		sys_ppd = xnsys_ppd_get(0);
 		xnheap_free(&sys_ppd->sem_heap, thread->u_window);
 		thread->u_window = NULL;
-		mm = xnshadow_current_mm();
 		if (atomic_dec_and_test(&sys_ppd->refcnt))
-			ppd_remove_mm(mm, detach_ppd);
+			process_remove(xnshadow_current_process());
 	}
 
 	/*
@@ -2471,14 +2414,14 @@ static int handle_sigwake_event(struct task_struct *p)
 
 static int handle_cleanup_event(struct mm_struct *mm)
 {
+	struct xnshadow_process *old, *process;
 	struct xnsys_ppd *sys_ppd;
 	struct xnthread *thread;
-	struct mm_struct *old;
 
 	/* We are NOT called for exiting kernel shadows. */
 
-	old = xnshadow_swap_mm(mm);
-
+	process = process_hash_search(mm);
+	old = xnshadow_swap_process(process);
 	sys_ppd = xnsys_ppd_get(0);
 	if (sys_ppd != &__xnsys_global_ppd) {
 		/*
@@ -2496,10 +2439,10 @@ static int handle_cleanup_event(struct mm_struct *mm)
 			ipipe_disable_notifier(current);
 		}
 		if (atomic_dec_and_test(&sys_ppd->refcnt))
-			ppd_remove_mm(mm, detach_ppd);
+			process_remove(process);
 	}
 
-	xnshadow_swap_mm(old);
+	xnshadow_swap_process(old);
 
 	return EVENT_PROPAGATE;
 }
@@ -2711,16 +2654,16 @@ int xnshadow_mount(void)
 		return ret;
 	}
 
-	size = sizeof(struct list_head) * PPD_HASH_SIZE;
-	ppd_hash = kmalloc(size, GFP_KERNEL);
-	if (ppd_hash == NULL) {
+	size = sizeof(*process_hash) * PROCESS_HASH_SIZE;
+	process_hash = kmalloc(size, GFP_KERNEL);
+	if (process_hash == NULL) {
 		xnshadow_cleanup();
-		printk(XENO_ERR "cannot allocate PPD hash table\n");
+		printk(XENO_ERR "cannot allocate processes hash table\n");
 		return -ENOMEM;
 	}
 
-	for (i = 0; i < PPD_HASH_SIZE; i++)
-		INIT_LIST_HEAD(ppd_hash + i);
+	for (i = 0; i < PROCESS_HASH_SIZE; i++)
+		INIT_HLIST_HEAD(&process_hash[i]);
 
 	user_muxid = xnshadow_register_personality(&user_personality);
 	XENO_BUGON(NUCLEUS, user_muxid != 0);
@@ -2735,9 +2678,9 @@ void xnshadow_cleanup(void)
 		user_muxid = -1;
 	}
 
-	if (ppd_hash) {
-		kfree(ppd_hash);
-		ppd_hash = NULL;
+	if (process_hash) {
+		kfree(process_hash);
+		process_hash = NULL;
 	}
 
 	mayday_cleanup_page();

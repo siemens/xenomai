@@ -51,34 +51,17 @@ extern int cobalt_muxid;
 
 static inline struct cobalt_process *cobalt_process_context(void)
 {
-	struct xnshadow_ppd *ppd;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-	ppd = xnshadow_ppd_get(cobalt_muxid);
-	xnlock_put_irqrestore(&nklock, s);
-
-	if (ppd == NULL)
-		return NULL;
-
-	return container_of(ppd, struct cobalt_process, ppd);
+	return xnshadow_private_get(cobalt_muxid);
 }
 
 static inline struct cobalt_kqueues *cobalt_kqueues(int pshared)
 {
-	struct xnshadow_ppd *ppd;
-	spl_t s;
+	struct cobalt_process *ppd;
 
-	xnlock_get_irqsave(&nklock, s);
-
-	if (pshared || (ppd = xnshadow_ppd_get(cobalt_muxid)) == NULL) {
-		xnlock_put_irqrestore(&nklock, s);
+	if (pshared || (ppd = xnshadow_private_get(cobalt_muxid)) == NULL)
 		return &cobalt_global_kqueues;
-	}
 
-	xnlock_put_irqrestore(&nklock, s);
-
-	return &container_of(ppd, struct cobalt_process, ppd)->kqueues;
+	return &ppd->kqueues;
 }
 
 int cobalt_init(void);

@@ -30,7 +30,8 @@ struct timespec;
 struct timeval;
 struct completion;
 struct module;
-struct xnshadow_ppd;
+
+struct xnshadow_process;
 
 struct xnpersonality {
 	const char *name;
@@ -39,8 +40,8 @@ struct xnpersonality {
 	struct xnsyscall *syscalls;
 	atomic_t refcnt;
 	struct {
-		struct xnshadow_ppd *(*attach_process)(void);
-		void (*detach_process)(struct xnshadow_ppd *ppd);
+		void *(*attach_process)(void);
+		void (*detach_process)(void *arg);
 		struct xnpersonality *(*map_thread)(struct xnthread *thread);
 		struct xnpersonality *(*relax_thread)(struct xnthread *thread);
 		struct xnpersonality *(*harden_thread)(struct xnthread *thread);
@@ -60,20 +61,21 @@ static inline struct xnthread *xnshadow_thread(struct task_struct *p)
 	return ipipe_task_threadinfo(p)->thread;
 }
 
-static inline struct mm_struct *xnshadow_current_mm(void)
+static inline struct xnshadow_process *xnshadow_current_process(void)
 {
-	return ipipe_current_threadinfo()->mm;
+	return ipipe_current_threadinfo()->process;
 }
 
-static inline struct mm_struct *xnshadow_swap_mm(struct mm_struct *mm)
+static inline struct xnshadow_process *
+xnshadow_swap_process(struct xnshadow_process *process)
 {
 	struct ipipe_threadinfo *p = ipipe_current_threadinfo();
-	struct mm_struct *oldmm;
+	struct xnshadow_process *old;
 
-	oldmm = p->mm;
-	p->mm = mm;
+	old = p->process;
+	p->process = process;
 
-	return oldmm;
+	return old;
 }
 
 int xnshadow_mount(void);

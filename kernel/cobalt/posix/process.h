@@ -36,7 +36,6 @@ struct cobalt_process {
 	struct cobalt_kqueues kqueues;
 	struct list_head uqds;
 	struct list_head usems;
-	struct xnshadow_ppd ppd;
 	struct list_head sigwaiters;
 
 	/* timers */

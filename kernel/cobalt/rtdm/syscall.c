@@ -103,7 +103,7 @@ static int sys_rtdm_sendmsg(int fd, const struct msghdr __user *u_msg,
 	return __rt_dev_sendmsg(p, fd, &krnl_msg, flags);
 }
 
-static struct xnshadow_ppd *rtdm_process_attach(void)
+static void *rtdm_process_attach(void)
 {
 	struct rtdm_process *process;
 
@@ -116,14 +116,13 @@ static struct xnshadow_ppd *rtdm_process_attach(void)
 	process->pid = current->pid;
 #endif /* CONFIG_XENO_OPT_VFILE */
 
-	return &process->ppd;
+	return process;
 }
 
-static void rtdm_process_detach(struct xnshadow_ppd *ppd)
+static void rtdm_process_detach(void *arg)
 {
-	struct rtdm_process *process;
+	struct rtdm_process *process = arg;
 
-	process = container_of(ppd, struct rtdm_process, ppd);
 	cleanup_process_files(process);
 	kfree(process);
 }

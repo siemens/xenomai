@@ -41,7 +41,7 @@
 
 int cobalt_muxid;
 
-static struct xnshadow_ppd *cobalt_process_attach(void)
+static void *cobalt_process_attach(void)
 {
 	struct cobalt_process *cc;
 
@@ -61,14 +61,12 @@ static struct xnshadow_ppd *cobalt_process_attach(void)
 
 	bitmap_fill(cc->timers_map, CONFIG_XENO_OPT_NRTIMERS);
 
-	return &cc->ppd;
+	return cc;
 }
 
-static void cobalt_process_detach(struct xnshadow_ppd *ppd)
+static void cobalt_process_detach(void *arg)
 {
-	struct cobalt_process *cc;
-
-	cc = container_of(ppd, struct cobalt_process, ppd);
+	struct cobalt_process *cc = arg;
 
 	cobalt_sem_usems_cleanup(cc);
 	cobalt_mq_uqds_cleanup(cc);

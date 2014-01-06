@@ -20,17 +20,17 @@
 #define _COBALT_IPIPE_THREAD_INFO_H
 
 struct xnthread;
-struct mm_struct;
+struct xnshadow_process;
 
 struct ipipe_threadinfo {
 	struct xnthread *thread;
-	struct mm_struct *mm;
+	struct xnshadow_process *process;
 };
 
 static inline void __ipipe_init_threadinfo(struct ipipe_threadinfo *p)
 {
 	p->thread = NULL;
-	p->mm = NULL;
+	p->process = NULL;
 }
 
 #endif /* !_COBALT_IPIPE_THREAD_INFO_H */

@@ -20,6 +20,7 @@
 #include <linux/err.h>
 #include <cobalt/kernel/lock.h>
 #include <cobalt/kernel/heap.h>
+#include <cobalt/kernel/shadow.h>
 #include "internal.h"
 #include "sem.h"
 
@@ -285,7 +286,7 @@ void cobalt_sem_usems_cleanup(struct cobalt_process *cc)
 	
 	list_for_each_entry_safe(u, next, &cc->usems, link) {
 		u->refs = 1;
-		nsem_close(u->sem->handle, cc->ppd.key.mm);
+		nsem_close(u->sem->handle, xnshadow_current_process()->mm);
 	}
 }
 
