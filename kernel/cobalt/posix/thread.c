@@ -254,16 +254,13 @@ struct xnpersonality *cobalt_thread_finalize(struct xnthread *zombie)
 
 static struct xnsched_class *
 get_policy_param(union xnsched_policy_param *param,
-		 struct cobalt_thread *thread,
 		 int u_policy, const struct sched_param_ex *param_ex,
 		 xnticks_t *tslice_r)
 {
 	struct xnsched_class *sched_class;
-	struct xnthread *base_thread;
 	int prio, policy;
 	xnticks_t tslice;
 
-	base_thread = &thread->threadbase;
 	prio = param_ex->sched_priority;
 	tslice = XN_INFINITE;
 	policy = u_policy;
@@ -348,7 +345,6 @@ get_policy_param(union xnsched_policy_param *param,
 		return NULL;
 	}
 
-	thread->sched_u_policy = u_policy;
 	*tslice_r = tslice;
 
 	return sched_class;
@@ -441,11 +437,12 @@ pthread_setschedparam_ex(struct cobalt_thread *thread,
 	}
 
 	tslice = xnthread_time_slice(&thread->threadbase);
-	sched_class = get_policy_param(&param, thread, policy, param_ex, &tslice);
+	sched_class = get_policy_param(&param, policy, param_ex, &tslice);
 	if (sched_class == NULL) {
 		ret = -EINVAL;
 		goto fail;
 	}
+	thread->sched_u_policy = policy;
 	xnthread_set_slice(&thread->threadbase, tslice);
 	xnthread_set_schedparam(&thread->threadbase, sched_class, &param);
 	cobalt_call_extension(thread_setsched, &thread->extref, ret,
@@ -625,7 +622,7 @@ static inline int pthread_create(struct cobalt_thread **thread_p,
 		return -EAGAIN;
 
 	tslice = cobalt_time_slice;
-	sched_class = get_policy_param(&param, thread, policy, param_ex, &tslice);
+	sched_class = get_policy_param(&param, policy, param_ex, &tslice);
 	if (sched_class == NULL) {
 		xnfree(thread);
 		return -EINVAL;
@@ -641,6 +638,7 @@ static inline int pthread_create(struct cobalt_thread **thread_p,
 		return -EAGAIN;
 	}
 
+	thread->sched_u_policy = policy;
 	thread->magic = COBALT_THREAD_MAGIC;
 	xnsynch_init(&thread->monitor_synch, XNSYNCH_FIFO, NULL);
 	thread->monitor_queued = 0;
