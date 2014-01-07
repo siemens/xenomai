@@ -362,8 +362,6 @@ int pthread_create_ex(pthread_t *tid,
 			break;
 		}
 		ret = -errno;
-		if (detachstate == PTHREAD_CREATE_JOINABLE)
-			pthread_join(ltid, NULL);
 		panic("regular sem_wait() failed with %s", symerror(ret));
 	}
 
