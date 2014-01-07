@@ -919,7 +919,6 @@ int xnshadow_map_user(struct xnthread *thread,
 	struct xnthread_start_attr attr;
 	struct xnsys_ppd *sys_ppd;
 	struct xnheap *sem_heap;
-	spl_t s;
 	int ret;
 
 	if (!xnthread_test_state(thread, XNUSER))
@@ -953,10 +952,7 @@ int xnshadow_map_user(struct xnthread *thread,
 	}
 #endif /* CONFIG_MMU */
 
-	xnlock_get_irqsave(&nklock, s);
 	sys_ppd = xnsys_ppd_get(0);
-	xnlock_put_irqrestore(&nklock, s);
-
 	sem_heap = &sys_ppd->sem_heap;
 	u_window = xnheap_alloc(sem_heap, sizeof(*u_window));
 	if (u_window == NULL) {
@@ -1323,7 +1319,7 @@ static int handle_mayday_event(struct pt_regs *regs)
 
 	/* We enter the mayday handler with hw IRQs off. */
 	xnlock_get(&nklock);
-	sys_ppd = xnsys_ppd_get(0);
+	sys_ppd = __xnsys_ppd_get(0);
 	xnlock_put(&nklock);
 
 	xnarch_handle_mayday(tcb, regs, sys_ppd->mayday_addr);
@@ -1551,9 +1547,6 @@ static int xnshadow_sys_heap_info(struct xnheap_desc __user *u_hd,
 {
 	struct xnheap_desc hd;
 	struct xnheap *heap;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
 
 	switch(heap_nr) {
 	case XNHEAP_PROC_PRIVATE_HEAP:
@@ -1564,7 +1557,6 @@ static int xnshadow_sys_heap_info(struct xnheap_desc __user *u_hd,
 		heap = &kheap;
 		break;
 	default:
-		xnlock_put_irqrestore(&nklock, s);
 		return -EINVAL;
 	}
 
@@ -1572,7 +1564,6 @@ static int xnshadow_sys_heap_info(struct xnheap_desc __user *u_hd,
 	hd.size = xnheap_extentsize(heap);
 	hd.area = xnheap_base_memory(heap);
 	hd.used = xnheap_used_mem(heap);
-	xnlock_put_irqrestore(&nklock, s);
 
 	return __xn_safe_copy_to_user(u_hd, &hd, sizeof(*u_hd));
 }
@@ -2279,7 +2270,6 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 	struct xnsys_ppd *sys_ppd;
 	struct xnthread *thread;
 	struct mm_struct *mm;
-	spl_t s;
 
 	/*
 	 * We are called for both kernel and user shadows over the
@@ -2302,9 +2292,7 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 	xnsched_run();
 
 	if (xnthread_test_state(thread, XNUSER)) {
-		xnlock_get_irqsave(&nklock, s);
 		sys_ppd = xnsys_ppd_get(0);
-		xnlock_put_irqrestore(&nklock, s);
 		xnheap_free(&sys_ppd->sem_heap, thread->u_window);
 		thread->u_window = NULL;
 		mm = xnshadow_current_mm();
@@ -2486,15 +2474,12 @@ static int handle_cleanup_event(struct mm_struct *mm)
 	struct xnsys_ppd *sys_ppd;
 	struct xnthread *thread;
 	struct mm_struct *old;
-	spl_t s;
 
 	/* We are NOT called for exiting kernel shadows. */
 
 	old = xnshadow_swap_mm(mm);
 
-	xnlock_get_irqsave(&nklock, s);
 	sys_ppd = xnsys_ppd_get(0);
-	xnlock_put_irqrestore(&nklock, s);
 	if (sys_ppd != &__xnsys_global_ppd) {
 		/*
 		 * Detect a userland shadow running exec(), i.e. still

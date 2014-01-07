@@ -83,7 +83,7 @@
 #define primary_mode_only()	XENO_BUGON(CONTEXT, ipipe_root_p)
 #define secondary_mode_only()	XENO_BUGON(CONTEXT, !ipipe_root_p)
 #define interrupt_only()	XENO_BUGON(CONTEXT, !xnsched_interrupt_p())
-#define atomic_only()		XENO_BUGON(CONTEXT, (xnlock_is_owner(&nklock) && spltest()) == 0)
+#define atomic_only()		XENO_BUGON(CONTEXT, (xnlock_is_owner(&nklock) && hard_irqs_disabled()) == 0)
 #define realtime_cpu_only()	XENO_BUGON(CONTEXT, !xnsched_supported_cpu(ipipe_processor_id()))
 
 void __xnsys_assert_failed(const char *file, int line, const char *msg);

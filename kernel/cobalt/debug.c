@@ -618,11 +618,8 @@ void xndebug_shadow_init(struct xnthread *thread)
 {
 	struct xnsys_ppd *sys_ppd;
 	size_t len;
-	spl_t s;
 
-	xnlock_get_irqsave(&nklock, s);
 	sys_ppd = xnsys_ppd_get(0);
-	xnlock_put_irqrestore(&nklock, s);
 	/*
 	 * The caller is current, so we know for sure that sys_ppd
 	 * will still be valid after we dropped the lock.

@@ -23,6 +23,7 @@
 
 #include <cobalt/kernel/list.h>
 #include <cobalt/kernel/shadow.h>
+#include <cobalt/kernel/lock.h>
 #include <cobalt/kernel/heap.h>
 
 struct mm_struct;
@@ -53,7 +54,7 @@ struct xnsys_ppd {
 
 extern struct xnsys_ppd __xnsys_global_ppd;
 
-static inline struct xnsys_ppd *xnsys_ppd_get(int global)
+static inline struct xnsys_ppd *__xnsys_ppd_get(int global)
 {
 	struct xnshadow_ppd *ppd;
 
@@ -61,6 +62,18 @@ static inline struct xnsys_ppd *xnsys_ppd_get(int global)
 		return &__xnsys_global_ppd;
 
 	return container_of(ppd, struct xnsys_ppd, ppd);
+}
+
+static inline struct xnsys_ppd *xnsys_ppd_get(int global)
+{
+	struct xnsys_ppd *ppd;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+	ppd = __xnsys_ppd_get(global);
+	xnlock_put_irqrestore(&nklock, s);
+
+	return ppd;
 }
 
 #endif /* _COBALT_KERNEL_PPD_H */

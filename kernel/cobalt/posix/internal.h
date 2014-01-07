@@ -67,9 +67,16 @@ static inline struct cobalt_process *cobalt_process_context(void)
 static inline struct cobalt_kqueues *cobalt_kqueues(int pshared)
 {
 	struct xnshadow_ppd *ppd;
+	spl_t s;
 
-	if (pshared || (ppd = xnshadow_ppd_get(cobalt_muxid)) == NULL)
+	xnlock_get_irqsave(&nklock, s);
+
+	if (pshared || (ppd = xnshadow_ppd_get(cobalt_muxid)) == NULL) {
+		xnlock_put_irqrestore(&nklock, s);
 		return &cobalt_global_kqueues;
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
 
 	return &container_of(ppd, struct cobalt_process, ppd)->kqueues;
 }
