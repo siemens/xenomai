@@ -87,7 +87,6 @@ struct cobalt_sem *
 cobalt_sem_init_inner(const char *name, struct __shadow_sem *sm, 
 		      int flags, unsigned int value)
 {
-	struct list_head *semq;
 	struct cobalt_sem *sem, *osem;
 	struct cobalt_kqueues *kq;
 	struct xnsys_ppd *sys_ppd;
@@ -113,12 +112,12 @@ cobalt_sem_init_inner(const char *name, struct __shadow_sem *sm,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (sm->magic != COBALT_SEM_MAGIC &&
-	    sm->magic != COBALT_NAMED_SEM_MAGIC)
+	kq = cobalt_kqueues(!!(flags & SEM_PSHARED));
+	if (list_empty(&kq->semq))
 		goto do_init;
 
-	semq = &cobalt_kqueues(!!(flags & SEM_PSHARED))->semq;
-	if (list_empty(semq))
+	if (sm->magic != COBALT_SEM_MAGIC &&
+	    sm->magic != COBALT_NAMED_SEM_MAGIC)
 		goto do_init;
 
 	/*
@@ -151,7 +150,6 @@ cobalt_sem_init_inner(const char *name, struct __shadow_sem *sm,
 		goto err_lock_put;
 
 	sem->magic = COBALT_SEM_MAGIC;
-	kq = cobalt_kqueues(!!(flags & SEM_PSHARED));
 	list_add_tail(&sem->link, &kq->semq);
 	sflags = flags & SEM_FIFO ? 0 : XNSYNCH_PRIO;
 	xnsynch_init(&sem->synchbase, sflags, NULL);

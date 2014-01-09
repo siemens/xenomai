@@ -121,6 +121,7 @@ nsem_open(struct __shadow_sem __user *ushadow, const char *name,
 		if ((oflags & O_CREAT) == 0)
 			return ERR_PTR(-ENOENT);
 
+		shadow.magic = 0;
 		sem = cobalt_sem_init_inner
 			(&name[1], &shadow, SEM_PSHARED, value);
 		if (IS_ERR(sem)) {
