@@ -19,6 +19,7 @@
 #include <stddef.h>
 #include <errno.h>
 #include <pthread.h>
+#include <memory.h>
 #include <cobalt/uapi/thread.h>
 #include "internal.h"
 
@@ -27,7 +28,9 @@ int pthread_attr_init_ex(pthread_attr_ex_t *attr_ex)
 	struct sched_param param;
 	int policy;
 
-	/* We start with the default standard attribute set. */
+	/* Start with defaulting all fields to null. */
+	memset(attr_ex, 0, sizeof(*attr_ex));
+	/* Merge in the default standard attribute set. */
 	pthread_attr_init(&attr_ex->std);
 	pthread_attr_getschedpolicy(&attr_ex->std, &policy);
 	attr_ex->nonstd.sched_policy = policy;
