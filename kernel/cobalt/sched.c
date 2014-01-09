@@ -693,7 +693,7 @@ static inline void switch_context(struct xnsched *sched,
  */
 static inline int test_resched(struct xnsched *sched)
 {
-	int resched = sched->status & XNRESCHED;
+	int resched = xnsched_resched_p(sched);
 #ifdef CONFIG_SMP
 	/* Send resched IPI to remote CPU(s). */
 	if (unlikely(!cpus_empty(sched->resched))) {
@@ -701,8 +701,6 @@ static inline int test_resched(struct xnsched *sched)
 		ipipe_send_ipi(IPIPE_RESCHEDULE_IPI, sched->resched);
 		cpus_clear(sched->resched);
 	}
-#else
-	resched = xnsched_resched_p(sched);
 #endif
 	sched->status &= ~XNRESCHED;
 
