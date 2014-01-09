@@ -433,22 +433,23 @@ pthread_setschedparam_ex(struct cobalt_thread *thread,
 	if (!cobalt_obj_active(thread, COBALT_THREAD_MAGIC,
 			       struct cobalt_thread)) {
 		ret = -ESRCH;
-		goto fail;
+		goto out;
 	}
 
 	tslice = xnthread_time_slice(&thread->threadbase);
 	sched_class = get_policy_param(&param, policy, param_ex, &tslice);
 	if (sched_class == NULL) {
 		ret = -EINVAL;
-		goto fail;
+		goto out;
 	}
 	thread->sched_u_policy = policy;
 	xnthread_set_slice(&thread->threadbase, tslice);
+	if (cobalt_call_extension(thread_setsched, &thread->extref, ret,
+				  sched_class, &param) && ret)
+		goto out;
 	xnthread_set_schedparam(&thread->threadbase, sched_class, &param);
-	cobalt_call_extension(thread_setsched, &thread->extref, ret,
-			      sched_class, &param);
 	xnsched_run();
-fail:
+out:
 	xnlock_put_irqrestore(&nklock, s);
 
 	return ret;
