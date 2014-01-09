@@ -1360,11 +1360,14 @@ EXPORT_SYMBOL_GPL(xnthread_wait_period);
  * run next). Otherwise, if @a quantum equals XN_INFINITE,
  * time-slicing is stopped for that thread.
  *
- * @return 0 is returned upon success. Otherwise:
+ * @return 0 is returned upon success. Otherwise, -EINVAL is returned
+ * if @a quantum is not XN_INFINITE and:
  *
- * - -EINVAL is returned if @a quantum is not XN_INFINITE, and the
- * base scheduling class of the target thread does not support
- * time-slicing.
+ *   - the base scheduling class of the target thread does not support
+ *   time-slicing,
+ *
+ *   - @a quantum is smaller than the master clock gravity, which
+ * denotes a spurious value.
  *
  * @remark Tags: none.
  */
@@ -1372,6 +1375,9 @@ int xnthread_set_slice(struct xnthread *thread, xnticks_t quantum)
 {
 	struct xnsched *sched;
 	spl_t s;
+
+	if (quantum <= xnclock_get_gravity(&nkclock))
+		return -EINVAL;
 
 	xnlock_get_irqsave(&nklock, s);
 
