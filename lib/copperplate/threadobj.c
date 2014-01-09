@@ -420,11 +420,13 @@ static void notifier_callback(const struct notifier *nf)
 	 * threadobj_suspend().
 	 */
 	threadobj_lock(current);
-	current->status |= __THREAD_S_SUSPENDED;
-	threadobj_unlock(current);
-	notifier_wait(nf); /* Wait for threadobj_resume(). */
-	threadobj_lock(current);
-	current->status &= ~__THREAD_S_SUSPENDED;
+	if ((current->status & __THREAD_S_ZOMBIE) == 0) {
+		current->status |= __THREAD_S_SUSPENDED;
+		threadobj_unlock(current);
+		notifier_wait(nf); /* Wait for threadobj_resume(). */
+		threadobj_lock(current);
+		current->status &= ~__THREAD_S_SUSPENDED;
+	}
 	threadobj_unlock(current);
 }
 
@@ -488,7 +490,7 @@ static inline void threadobj_run_corespec(struct threadobj *thobj)
 {
 }
 
-static inline void threadobj_cancel_corespec(struct threadobj *thobj)
+static inline void threadobj_cancel_corespec(struct threadobj *thobj) /* thobj->lock held */
 {
 }
 
@@ -872,9 +874,9 @@ void threadobj_init(struct threadobj *thobj,
 
 static void destroy_thread(struct threadobj *thobj)
 {
+	threadobj_cleanup_corespec(thobj);
 	__RT(pthread_cond_destroy(&thobj->barrier));
 	__RT(pthread_mutex_destroy(&thobj->lock));
-	threadobj_cleanup_corespec(thobj);
 }
 
 void threadobj_destroy(struct threadobj *thobj) /* thobj->lock free */
@@ -1089,8 +1091,6 @@ static void cancel_sync(struct threadobj *thobj) /* thobj->lock held */
 	int oldstate, ret = 0;
 	sem_t *sem;
 
-	__threadobj_check_locked(thobj);
-
 	/*
 	 * We have to allocate the cancel sync sema4 in the main heap
 	 * dynamically, so that it always live in valid memory when we
@@ -1106,6 +1106,7 @@ static void cancel_sync(struct threadobj *thobj) /* thobj->lock held */
 		__STD(sem_init(sem, sem_scope_attribute, 0));
 
 	thobj->cancel_sem = sem;
+	thobj->status |= __THREAD_S_ZOMBIE;
 
 	/*
 	 * If the thread to delete is warming up, wait until it
