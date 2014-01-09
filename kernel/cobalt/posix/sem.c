@@ -439,16 +439,18 @@ sem_wait_inner(xnhandle_t handle, int timed,
 		ret = -EINVAL;
 		goto out;
 	}
-
-	ret = 0;
-	if (info & (XNBREAK|XNTIMEO))
+ 	if (info & (XNBREAK|XNTIMEO)) {
 		ret = (info & XNBREAK) ? -EINTR : -ETIMEDOUT;
-fail:
-	atomic_long_inc(&sem->datp->value);
+		goto fail;
+	}
+	ret = 0;
 out:
 	xnlock_put_irqrestore(&nklock, s);
 
 	return ret;
+fail:
+	atomic_long_inc(&sem->datp->value);
+	goto out;
 }
 
 /**
