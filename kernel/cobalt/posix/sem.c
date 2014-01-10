@@ -172,7 +172,7 @@ cobalt_sem_init_inner(const char *name, struct __shadow_sem *sm,
 
   err_lock_put:
 	xnlock_put_irqrestore(&nklock, s);
-	xnheap_free(&sys_ppd->sem_heap, sem->datp);
+	xnheap_free(&sys_ppd->sem_heap, datp);
   err_free_sem:
 	xnfree(sem);
 
