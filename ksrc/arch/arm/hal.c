@@ -44,6 +44,7 @@
 #include <asm/unistd.h>
 #include <asm/xenomai/hal.h>
 #include <asm/cacheflush.h>
+#include <asm/system_info.h>
 #ifdef CONFIG_PROC_FS
 #include <linux/proc_fs.h>
 #endif /* CONFIG_PROC_FS */
@@ -538,7 +539,17 @@ RTHAL_DECLARE_DOMAIN(rthal_domain_entry);
 
 int rthal_arch_init(void)
 {
-	int ret = rthal_tickdev_select();
+	int ret;
+
+#if defined(CONFIG_XENO_HW_FPU) && defined(CONFIG_VFP)
+	if (cpu_architecture() < CPU_ARCH_ARMv6) {
+		printk(KERN_ERR "Xenomai: hal/arm: hardware FPU support enabled"
+			" but not available\n");
+		return -ENODEV;
+	}
+#endif /* CONFIG_VFP && CONFIG_XENO_OPT_HW_FPU */
+
+	ret = rthal_tickdev_select();
 	if (ret < 0)
 		return ret;
 

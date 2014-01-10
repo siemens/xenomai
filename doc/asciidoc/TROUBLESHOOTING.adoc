@@ -243,6 +243,21 @@ IMPORTANT: Disabling +AMD K8 Cool&Quiet+ option in a BIOS does not
 solve the problem.
 
 
+On ARM
+^^^^^^
+
+If you see the following message:
+
+----------------------------------------------------------------
+Xenomai: hal/arm: hardware FPU support enabled but not available
+----------------------------------------------------------------
+
+It means that you enabled CONFIG_VFP and CONFIG_XENO_HW_FPU in the
+kernel configuration, but the processor on which you are running the
+kernel has no support for VFP. In that case, you have to recompile the
+kernel with CONFIG_XENO_HW_FPU disabled.
+
+
 On other supported platforms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
