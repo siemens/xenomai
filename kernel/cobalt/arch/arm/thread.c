@@ -23,8 +23,13 @@
 #include <linux/sched.h>
 #include <linux/ipipe.h>
 #include <linux/mm.h>
+#include <linux/jump_label.h>
 #include <asm/mmu_context.h>
 #include <cobalt/kernel/thread.h>
+
+static unsigned vfp_checked;
+static DEFINE_MUTEX(vfp_check_lock);
+struct static_key __xeno_vfp_key = STATIC_KEY_INIT_TRUE;
 
 asmlinkage void __asm_thread_switch(struct thread_info *out,
 				    struct thread_info *in);
@@ -58,7 +63,14 @@ static inline union vfp_state *get_fpu_owner(void)
 	unsigned int cpu;
 #ifdef CONFIG_SMP
 	unsigned int fpexc;
+#endif
 
+#if __LINUX_ARM_ARCH__ <= 6
+	if (!static_key_true(&__xeno_vfp_key))
+		return NULL;
+#endif
+
+#ifdef CONFIG_SMP
 	fpexc = do_vfp_fmrx(FPEXC);
 	if (!(fpexc & FPEXC_EN))
 		return NULL;
@@ -260,6 +272,13 @@ int xnarch_handle_fpu_fault(struct xnthread *from,
 		/* FPU is already enabled, probably an exception */
                return 0;
 
+#if __LINUX_ARM_ARCH__ <= 6
+	if (!static_key_true(&__xeno_vfp_key))
+		/* VFP instruction emitted, on a cpu without VFP, this
+		   is an error */
+		return 0;
+#endif
+
 	xnthread_set_state(to, XNFPU);
 	xnarch_switch_fpu(from, to);
 
@@ -271,7 +290,18 @@ int xnarch_handle_fpu_fault(struct xnthread *from,
 void xnarch_init_shadow_tcb(struct xnthread *thread)
 {
 	struct xnarchtcb *tcb = xnthread_archtcb(thread);
+
 	tcb->fpup = &task_thread_info(tcb->core.host_task)->vfpstate;
+
+	if (vfp_checked == 0) {
+		mutex_lock(&vfp_check_lock);
+		if (vfp_checked == 0) {
+			if ((elf_hwcap & HWCAP_VFP) == 0)
+				static_key_slow_dec(&__xeno_vfp_key);
+			vfp_checked = 1;
+		}
+		mutex_unlock(&vfp_check_lock);
+	}
 
 	/* XNFPU is set upon first FPU fault */
 	xnthread_clear_state(thread, XNFPU);

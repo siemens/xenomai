@@ -49,6 +49,19 @@
 
 	.macro fpu_switch tmp
 #ifdef CONFIG_VFP
+#if __LINUX_ARM_ARCH__ <= 6
+#ifdef CONFIG_JUMP_LABEL
+9998:	nop
+	.pushsection __jump_table, "aw"
+	.word	9998b, 9999f, __xeno_vfp_key
+	.popsection
+#else
+	ldr	\tmp, =elf_hwcap
+	ldr	\tmp, [\tmp]
+	tst	\tmp, #HWCAP_VFP
+	beq	9999f
+#endif
+#endif
 	@ Always disable VFP so we can lazily save/restore the old
 	@ state. This occurs in the context of the previous thread.
 	VFPFMRX \tmp, FPEXC
@@ -58,6 +71,9 @@
 	bic     \tmp, \tmp, #FPEXC_EN
 #endif
 	VFPFMXR FPEXC, \tmp
+#if __LINUX_ARM_ARCH__ <= 6
+9999:
+#endif
 #endif
 	.endm
 
