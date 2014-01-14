@@ -54,7 +54,8 @@ int __rtdm_fd_start = INT_MAX;
 static void sigill_handler(int sig)
 {
 	const char m[] = "no Xenomai support in kernel?\n";
-	write(2, m, sizeof(m) - 1);
+	ssize_t rc __attribute__ ((unused));
+	rc = write(2, m, sizeof(m) - 1);
 	exit(EXIT_FAILURE);
 }
 

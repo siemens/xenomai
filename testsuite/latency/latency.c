@@ -507,7 +507,7 @@ static void sigdebug(int sig, siginfo_t *si, void *context)
 	case SIGDEBUG_WATCHDOG:
 		n = snprintf(buffer, sizeof(buffer), "%s\n",
 			     reason_str[reason]);
-		write(STDERR_FILENO, buffer, n);
+		n = write(STDERR_FILENO, buffer, n);
 		exit(EXIT_FAILURE);
 	}
 
