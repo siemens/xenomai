@@ -103,8 +103,4 @@ void cobalt_sem_pkg_init(void);
 
 void cobalt_sem_pkg_cleanup(void);
 
-int cobalt_nsem_pkg_init(void);
-
-void cobalt_nsem_pkg_cleanup(void);
-
 #endif /* !_COBALT_POSIX_SEM_H */

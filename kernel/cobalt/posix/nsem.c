@@ -21,58 +21,33 @@
 #include <cobalt/kernel/lock.h>
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/shadow.h>
+#include <cobalt/kernel/tree.h>
 #include "internal.h"
 #include "sem.h"
 
-static struct hlist_head *nsem_hash;
 DEFINE_XNLOCK(nsem_lock);
-static unsigned mm_mult, mm_shift, nsem_hash_size;
 
 struct nsem {
 	struct cobalt_sem *sem;
-	struct mm_struct *mm;
 	struct __shadow_sem __user *usem;
 	unsigned refs;
-	struct hlist_node hlink; /* Link in global hash */
-	struct list_head link;	 /* Link in per-process queue */
+	struct xnid id;
 };
 
-static unsigned __attribute__((pure)) 
-nsem_hash_crunch(xnhandle_t handle, struct mm_struct *mm)
+static struct nsem *nsem_search(struct cobalt_process *cc, xnhandle_t handle)
 {
-	unsigned long hash = (unsigned long)mm;
-	hash = handle + (((unsigned long long)hash * mm_mult) >> mm_shift);
-	return hash % nsem_hash_size;
-}
-
-static struct nsem *
-nsem_hash_search(xnhandle_t handle, struct mm_struct *mm)
-{
-	unsigned bucket = nsem_hash_crunch(handle, mm);
-	struct nsem *u;
-
-	hlist_for_each_entry(u, &nsem_hash[bucket], hlink)
-		if (u->sem->handle == handle && u->mm == mm)
-			return u;
-
-	return NULL;
-}
-
-static void nsem_hash_enter(xnhandle_t handle, struct nsem *nsem)
-{
-	unsigned bucket = nsem_hash_crunch(handle, current->mm);
-
-	hlist_add_head(&nsem->hlink, &nsem_hash[bucket]);
-}
-
-static void nsem_hash_remove(struct nsem *u)
-{
-	hlist_del(&u->hlink);
+	struct xnid *i;
+	
+	i = xnid_fetch(&cc->usems, handle);
+	if (i == NULL)
+		return NULL;
+	
+	return container_of(i, struct nsem, id);
 }
 
 static struct __shadow_sem __user *
-nsem_open(struct __shadow_sem __user *ushadow, const char *name, 
-	int oflags, mode_t mode, unsigned value)
+nsem_open(struct cobalt_process *cc, struct __shadow_sem __user *ushadow, 
+	const char *name, int oflags, mode_t mode, unsigned value)
 {
 	struct __shadow_sem shadow;
 	struct cobalt_sem *sem;
@@ -93,7 +68,7 @@ nsem_open(struct __shadow_sem __user *ushadow, const char *name,
 			return ERR_PTR(-EEXIST);
 
 		xnlock_get_irqsave(&nsem_lock, s);
-		u = nsem_hash_search(handle, current->mm);
+		u = nsem_search(cc, handle);
 		if (u) {
 			++u->refs;
 			xnlock_put_irqrestore(&nsem_lock, s);
@@ -148,12 +123,11 @@ nsem_open(struct __shadow_sem __user *ushadow, const char *name,
 		return ERR_PTR(-ENOMEM);
 
 	u->sem = sem;
-	u->mm = current->mm;
 	u->usem = ushadow;
 	u->refs = 1;
 
 	xnlock_get_irqsave(&nsem_lock, s);
-	v = nsem_hash_search(handle, current->mm);
+	v = nsem_search(cc, handle);
 	if (v) {
 		++v->refs;
 		xnlock_put_irqrestore(&nsem_lock, s);
@@ -164,22 +138,21 @@ nsem_open(struct __shadow_sem __user *ushadow, const char *name,
 		xnfree(u);
 		u = v;
 	} else {
-		nsem_hash_enter(handle, u);
-		list_add(&u->link, &cobalt_process_context()->usems);
+		xnid_enter(&cc->usems, &u->id, handle);
 		xnlock_put_irqrestore(&nsem_lock, s);
 	}
 
 	return u->usem;
 }
 
-static int nsem_close(xnhandle_t handle, struct mm_struct *mm)
+static int nsem_close(struct cobalt_process *cc, xnhandle_t handle)
 {
 	struct nsem *u;
 	spl_t s;
 	int err;
 
 	xnlock_get_irqsave(&nsem_lock, s);
-	u = nsem_hash_search(handle, mm);
+	u = nsem_search(cc, handle);
 	if (u == NULL) {
 		err = -ENOENT;
 		goto err_unlock;
@@ -190,8 +163,7 @@ static int nsem_close(xnhandle_t handle, struct mm_struct *mm)
 		goto err_unlock;
 	}
 	
-	nsem_hash_remove(u);
-	list_del(&u->link);
+	xnid_remove(&cc->usems, &u->id);
 	xnlock_put_irqrestore(&nsem_lock, s);
 			
 	cobalt_sem_destroy_inner(handle);
@@ -233,7 +205,7 @@ int cobalt_sem_open(struct __shadow_sem __user *__user *u_addr,
 	if (len == 0)
 		return -EINVAL;
 
-	usm = nsem_open(usm, name, oflags, mode, value);
+	usm = nsem_open(cc, usm, name, oflags, mode, value);
 	if (IS_ERR(usm))
 		return PTR_ERR(usm);
 
@@ -253,7 +225,7 @@ int cobalt_sem_close(struct __shadow_sem __user *usm)
 
 	__xn_get_user(handle, &usm->handle);
 
-	return nsem_close(handle, current->mm);
+	return nsem_close(cc, handle);
 }
 
 int cobalt_sem_unlink(const char __user *u_name)
@@ -280,36 +252,18 @@ int cobalt_sem_unlink(const char __user *u_name)
 	return 0;
 }
 
+static void cobalt_usem_close(void *cookie, struct xnid *i)
+{
+	struct cobalt_process *cc;
+	struct nsem *u;
+
+	cc = cookie;
+	u = container_of(i, struct nsem, id);
+	u->refs = 1;
+	nsem_close(cc, xnid_id(i));
+}
+
 void cobalt_sem_usems_cleanup(struct cobalt_process *cc)
 {
-	struct nsem *u, *next;
-	
-	list_for_each_entry_safe(u, next, &cc->usems, link) {
-		u->refs = 1;
-		nsem_close(u->sem->handle, xnshadow_current_process()->mm);
-	}
-}
-
-int cobalt_nsem_pkg_init(void)
-{
-	unsigned i;
-	
-	nsem_hash_size = xnregistry_hash_size();
-	nsem_hash = kmalloc(nsem_hash_size * sizeof(*nsem_hash), GFP_KERNEL);
-	if (nsem_hash == NULL)
-		return -ENOMEM;
-	
-	for (i = 0; i < nsem_hash_size; i++)
-		INIT_HLIST_HEAD(&nsem_hash[i]);
-
-	i = int_sqrt(nsem_hash_size);
-	mm_shift = 32 - fls(i);
-	mm_mult = (i << mm_shift) / sizeof(struct mm_struct);
-	
-	return 0;
-}
-
-void cobalt_nsem_pkg_cleanup(void)
-{
-	kfree(nsem_hash);
+	xntree_cleanup(&cc->usems, cc, cobalt_usem_close);
 }

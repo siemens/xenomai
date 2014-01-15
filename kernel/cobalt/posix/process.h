@@ -35,7 +35,7 @@ struct cobalt_timer;
 struct cobalt_process {
 	struct cobalt_kqueues kqueues;
 	struct list_head uqds;
-	struct list_head usems;
+	struct rb_root usems;
 	struct list_head sigwaiters;
 
 	/* timers */

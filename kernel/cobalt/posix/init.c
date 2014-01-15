@@ -64,7 +64,6 @@ MODULE_LICENSE("GPL");
 void cobalt_cleanup(void)
 {
 	cobalt_syscall_cleanup();
-	cobalt_nsem_pkg_cleanup();
 	cobalt_monitor_pkg_cleanup();
 	cobalt_event_pkg_cleanup();
 	cobalt_signal_pkg_cleanup();
@@ -82,12 +81,6 @@ int __init cobalt_init(void)
 	ret = cobalt_syscall_init();
 	if (ret)
 		return ret;
-
-	ret = cobalt_nsem_pkg_init();
-	if (ret) {
-		cobalt_syscall_cleanup();
-		return ret;
-	}
 
 	cobalt_reg_pkg_init(64, 128);	/* FIXME: replace with compilation constants. */
 	cobalt_mutex_pkg_init();

@@ -24,6 +24,7 @@
 #include <linux/err.h>
 #include <cobalt/kernel/select.h>
 #include <cobalt/uapi/syscall.h>
+#include <cobalt/kernel/tree.h>
 #include <asm/xenomai/syscall.h>
 #include <rtdm/driver.h>
 #include "internal.h"
@@ -56,7 +57,7 @@ static void *cobalt_process_attach(void)
 	INIT_LIST_HEAD(&cc->kqueues.monitorq);
 	INIT_LIST_HEAD(&cc->kqueues.eventq);
 	INIT_LIST_HEAD(&cc->uqds);
-	INIT_LIST_HEAD(&cc->usems);
+	xntree_init(&cc->usems);
 	INIT_LIST_HEAD(&cc->sigwaiters);
 
 	bitmap_fill(cc->timers_map, CONFIG_XENO_OPT_NRTIMERS);
