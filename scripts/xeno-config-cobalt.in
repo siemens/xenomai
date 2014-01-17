@@ -126,6 +126,9 @@ while test $# -gt 0; do
 	    fi
 	    cflags="$XENO_BASE_CFLAGS -I$XENO_INCLUDE_DIR/cobalt"
 	    for skin in $skin_list; do
+		if [ "$skin" == "native" ]; then
+			skin="alchemy"
+		fi
 		case "$skin" in
 		    posix|cobalt)
 			;;

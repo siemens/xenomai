@@ -105,6 +105,9 @@ while test $# -gt 0; do
 	    fi
 	    cflags="$XENO_BASE_CFLAGS"
 	    for skin in $skin_list; do
+		if [ "$skin" == "native" ]; then
+			skin="alchemy"
+		fi
 		case "$skin" in
 		    vxworks|psos|alchemy)
 			cflags="$cflags -I$XENO_INCLUDE_DIR/$skin"
