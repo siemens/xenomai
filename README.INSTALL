@@ -93,8 +93,8 @@ The kernel/ sub-tree which implements the in-kernel support code is seen as a
 built-in extension of the Linux kernel. Therefore, the standard Linux kernel
 configuration process should be used to define the various settings for the
 Xenomai kernel components. All of the kernel code Xenomai currently introduces
-is for supporting the Cobalt core (i.e. dual kernel configuration). As of
-today, the Mercury core needs no Xenomai-specific code in kernel space.
+implements the Cobalt core (i.e. dual kernel configuration). As of today, the 
+Mercury core needs no Xenomai-specific code in kernel space.
 
 The lib/ sub-tree contains the various user-space libraries exported by the
 Xenomai framework to the applications. This tree is built separately from the
