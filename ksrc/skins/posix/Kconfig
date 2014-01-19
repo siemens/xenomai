@@ -25,6 +25,33 @@ config XENO_OPT_POSIX_PERIOD
 
 	If in doubt, leave zero in this field.
 
+config XENO_OPT_POSIX_REGISTRY_NRSLOTS
+       int "Number of registry slots"
+       default 64
+       help
+
+       The POSIX skin registry is used for POSIX shared memories,
+       named semaphores, and message queues.
+
+       This option defines the maximum number of such objects.
+
+config XENO_OPT_POSIX_REGISTRY_NRDESCS
+       int "Number of file descriptors"
+       default 128
+       help
+
+       This option defines the maximum number of POSIX skin file
+       descriptors, used for shared memories and message queues.
+
+       of such objects.  
+
+config XENO_OPT_POSIX_NRTIMERS
+       int "Number of timers"
+       default 128
+       help
+
+       This option defines the maximum number of POSIX skin timers.
+
 config XENO_OPT_POSIX_SHM
 	bool "Shared memory"
 	help

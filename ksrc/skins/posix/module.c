@@ -143,7 +143,8 @@ int SKIN_INIT(posix)
 		return err;
 	}
 
-	pse51_reg_pkg_init(64, 128);	/* FIXME: replace with compilation constants. */
+	pse51_reg_pkg_init(CONFIG_XENO_OPT_POSIX_REGISTRY_NRSLOTS, 
+			CONFIG_XENO_OPT_POSIX_REGISTRY_NRDESCS);
 	pse51_signal_pkg_init();
 	pse51_mutex_pkg_init();
 	pse51_sem_pkg_init();

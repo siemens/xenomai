@@ -25,7 +25,7 @@
 #include <posix/thread.h>
 #include <posix/timer.h>
 
-#define PSE51_TIMER_MAX  128
+#define PSE51_TIMER_MAX CONFIG_XENO_OPT_POSIX_NRTIMERS
 
 struct pse51_timer {
 
