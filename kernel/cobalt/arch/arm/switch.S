@@ -21,31 +21,10 @@
 #include <linux/version.h>
 #include <asm/assembler.h>
 #include <asm/asm-offsets.h>
+#include <asm/tls.h>
 #ifdef CONFIG_VFP
 #include <asm/vfpmacros.h>
 #endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
-#include <asm/tls.h>
-#else
-	.macro set_tls tp, tmp1, tmp2
-#if defined(CONFIG_HAS_TLS_REG)
-	mcr     p15, 0, \tp, c13, c0, 3          @ set TLS register
-#elif !defined(CONFIG_TLS_REG_EMUL)
-	mov     \tmp1, #0xffff0fff
-	str 	\tp, [\tmp1, #-15]  		 @ TLS val at 0xffff0ff0
-#endif
-	.endm
-#endif
-
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 37)
-#ifdef CONFIG_MMU
-#define USE_DOMAINS
-#endif /* CONFIG_MMU */
-#else /* Linux >= 2.6.38 */
-#ifdef CONFIG_CPU_USE_DOMAINS
-#define USE_DOMAINS
-#endif /* CONFIG_CPU_USE_DOMAINS */
-#endif /* Linux >= 2.6.38 */
 
 	.macro fpu_switch tmp
 #ifdef CONFIG_VFP
@@ -65,24 +44,10 @@
 	@ Always disable VFP so we can lazily save/restore the old
 	@ state. This occurs in the context of the previous thread.
 	VFPFMRX \tmp, FPEXC
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 23)
-	bic     \tmp, \tmp, #FPEXC_ENABLE
-#else
 	bic     \tmp, \tmp, #FPEXC_EN
-#endif
 	VFPFMXR FPEXC, \tmp
 #if __LINUX_ARM_ARCH__ <= 6
 9999:
-#endif
-#endif
-	.endm
-
-	.macro clear_exclusive_monitor
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 32) && __LINUX_ARM_ARCH__ >= 6
-#ifdef CONFIG_CPU_MPCORE
-	clrex
-#else
-	strex   r5, r4, [ip]                    @ Clear exclusive monitor
 #endif
 #endif
 	.endm
@@ -162,12 +127,11 @@ ENTRY(__asm_thread_switch)
  THUMB(	stmia	ip!, {r4 - sl, fp}	   )	@ Store most regs on stack
  THUMB(	str	sp, [ip], #4		   )
  THUMB(	str	lr, [ip], #4		   )
-#ifdef USE_DOMAINS
+#ifdef CONFIG_CPU_USE_DOMAINS
 	ldr     r6, [r1, #TI_CPU_DOMAIN]
 #endif
-	clear_exclusive_monitor
 	set_tls r3, r4, r5
-#ifdef USE_DOMAINS
+#ifdef CONFIG_CPU_USE_DOMAINS
 	mcr     p15, 0, r6, c3, c0, 0           @ Set domain register
 #endif
 	fpu_switch r4
