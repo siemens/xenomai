@@ -37,8 +37,6 @@ struct cobalt_process {
 	struct list_head uqds;
 	struct rb_root usems;
 	struct list_head sigwaiters;
-
-	/* timers */
 	DECLARE_BITMAP(timers_map, CONFIG_XENO_OPT_NRTIMERS);
 	struct cobalt_timer *timers[CONFIG_XENO_OPT_NRTIMERS];
 };

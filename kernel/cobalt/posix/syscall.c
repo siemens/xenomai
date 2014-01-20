@@ -57,9 +57,8 @@ static void *cobalt_process_attach(void)
 	INIT_LIST_HEAD(&cc->kqueues.monitorq);
 	INIT_LIST_HEAD(&cc->kqueues.eventq);
 	INIT_LIST_HEAD(&cc->uqds);
-	xntree_init(&cc->usems);
 	INIT_LIST_HEAD(&cc->sigwaiters);
-
+	xntree_init(&cc->usems);
 	bitmap_fill(cc->timers_map, CONFIG_XENO_OPT_NRTIMERS);
 
 	return cc;

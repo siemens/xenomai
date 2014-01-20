@@ -184,23 +184,6 @@ static inline int timer_create(clockid_t clockid,
 	if (timer == NULL)
 		return -ENOMEM;
 	
-	/* We may bail out early, don't unlink yet. */
-	if (evp == NULL) {
-		signo = SIGALRM;
-	} else {
-		if (evp->sigev_notify == SIGEV_NONE)
-			signo = 0; /* Don't notify. */
-		else {
-			signo = evp->sigev_signo;
-			if (signo < 1 || signo > _NSIG) {
-				ret = -EINVAL;
-				goto err_free_timer;
-			}
-			timer->sigp.si.si_value = evp->sigev_value;
-		}
-	}
-
-	timer->sigp.si.si_signo = signo;
 	timer->sigp.si.si_errno = 0;
 	timer->sigp.si.si_code = SI_TIMER;
 	timer->sigp.si.si_overrun = 0;
@@ -208,39 +191,54 @@ static inline int timer_create(clockid_t clockid,
 	timer->clockid = clockid;
 	timer->overruns = 0;
 
-	target = timer_init(timer, evp);
-	if (target == NULL) {
-		ret = -EINVAL;
-		goto err_free_timer;
+	xnlock_get_irqsave(&nklock, s);
+
+	ret = timer_alloc_id(cc);
+	if (ret < 0)
+		goto out;
+
+	timer_id = ret;
+
+	if (evp == NULL) {
+		timer->sigp.si.si_int = timer_id;
+		signo = SIGALRM;
+	} else {
+		if (evp->sigev_notify == SIGEV_NONE)
+			signo = 0; /* Don't notify. */
+		else {
+			signo = evp->sigev_signo;
+			if (signo < 1 || signo > _NSIG)
+				goto fail;
+			timer->sigp.si.si_value = evp->sigev_value;
+		}
 	}
+
+	timer->sigp.si.si_signo = signo;
+	timer->sigp.si.si_tid = timer_id;
+	timer->id = timer_id;
+
+	target = timer_init(timer, evp);
+	if (target == NULL)
+		goto fail;
+
 	if (IS_ERR(target)) {
 		ret = PTR_ERR(target);
-		goto err_free_timer;
+		goto fail;
 	}
 
 	timer->target = xnthread_host_pid(&target->threadbase);
-
-	xnlock_get_irqsave(&nklock, s);
-	ret = timer_alloc_id(cc);
-	if (ret < 0)
-		goto unlock_and_error;
-
-	timer_id = ret;
-	if (evp == NULL)
-		timer->sigp.si.si_int = timer_id;
-	timer->sigp.si.si_tid = timer_id;
 	cc->timers[timer_id] = timer;
-	timer->id = timer_id;
+
 	xnlock_put_irqrestore(&nklock, s);
 
 	*timerid = timer_id;
 
 	return 0;
-
-unlock_and_error:
+fail:
+	timer_free_id(cc, timer_id);
+out:
 	xnlock_put_irqrestore(&nklock, s);
-	
-  err_free_timer:
+
 	kfree(timer);
 
 	return ret;
