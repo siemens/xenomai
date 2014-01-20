@@ -98,19 +98,20 @@ timer_init(struct cobalt_timer *timer,
 
 static inline int timer_alloc_id(struct cobalt_process *cc)
 {
-	unsigned id;
+	int id;
 
 	id = find_first_bit(cc->timers_map, CONFIG_XENO_OPT_NRTIMERS);
 	if (id == CONFIG_XENO_OPT_NRTIMERS)
 		return -EAGAIN;
 
-	clear_bit(id, cc->timers_map);
+	__clear_bit(id, cc->timers_map);
+
 	return id;
 }
 
 static inline void timer_free_id(struct cobalt_process *cc, int id)
 {
-	set_bit(id, cc->timers_map);
+	__set_bit(id, cc->timers_map);
 }
 
 struct cobalt_timer *
