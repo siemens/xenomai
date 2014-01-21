@@ -76,13 +76,22 @@ From [5]:
 2- apply raspberry/ipipe-core-3.8.13-raspberry-post-2.patch
 3- you can resume to generic installation instructions.
 
----- Zynq
+---- Zynq (v3.8)
 
 1- Checkout the xilinx-v14.5 tag (6a0bedad60e2bca8d9b50bf81b9895e29e31a6d7)
    from [6]
 2- apply ipipe-core-3.8-zynq-pre.patch
 3- apply ipipe-core-3.8.13-arm-1.patch
 4- apply ipipe-core-3.8-zynq-post.patch
+5- you can resume to generic installation instructions.
+
+---- Zynq (v3.5.7)
+
+1- Checkout the "xilinx-zynq-v3.5.7" branch from the DENX Linux git
+   repository [2]
+2- apply ipipe-core-3.5.7-zynq-pre.patch
+3- apply ipipe-core-3.5.7-arm-6.patch
+4- apply ipipe-core-3.5.7-zynq-post.patch
 5- you can resume to generic installation instructions.
 
 -- External links
