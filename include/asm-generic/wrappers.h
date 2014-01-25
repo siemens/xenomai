@@ -377,7 +377,7 @@ static inline void *kzalloc(size_t size, int flags)
 #define wrap_remap_io_page_range(vma,from,to,size,prot)  ({		\
     (vma)->vm_page_prot = pgprot_noncached((vma)->vm_page_prot);	\
     /* Sets VM_RESERVED | VM_IO | VM_PFNMAP on the vma. */		\
-    remap_pfn_range(vma,from,(to) >> PAGE_SHIFT,size,prot);		\
+    remap_pfn_range(vma,from,(to) >> PAGE_SHIFT,size,pgprot_noncached(prot)); \
     })
 #define wrap_remap_kmem_page_range(vma,from,to,size,prot)  ({		\
     /* Sets VM_RESERVED | VM_IO | VM_PFNMAP on the vma. */		\
