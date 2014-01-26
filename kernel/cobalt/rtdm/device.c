@@ -32,6 +32,8 @@
 #include "rtdm/internal.h"
 #include <trace/events/cobalt-rtdm.h>
 
+#define RTDM_DEVICE_MAGIC	0x82846877
+
 #define SET_DEFAULT_OP(device, operation)				\
 	(device).operation##_rt  = (void *)rtdm_no_support;		\
 	(device).operation##_nrt = (void *)rtdm_no_support
@@ -45,13 +47,7 @@
 #define ANY_HANDLER(device, operation)					\
 	((device).operation##_rt || (device).operation##_nrt)
 
-unsigned int devname_hashtab_size = DEF_DEVNAME_HASHTAB_SIZE;
-module_param(devname_hashtab_size, uint, 0400);
-MODULE_PARM_DESC(devname_hashtab_size,
-		 "Size of hash table for named devices (must be power of 2)");
-
-struct list_head *rtdm_named_devices;	/* hash table */
-static int name_hashkey_mask;
+struct list_head rtdm_named_devices;	/* hash table */
 struct rb_root rtdm_protocol_devices;
 
 int rtdm_apc;
@@ -75,18 +71,6 @@ int rtdm_select_bind_no_support(struct rtdm_dev_context *context,
 	return -EBADF;
 }
 
-static inline int get_name_hash(const char *str, int limit, int hashkey_mask)
-{
-	int hash = 0;
-
-	while (*str != 0) {
-		hash += *str++;
-		if (--limit == 0)
-			break;
-	}
-	return hash & hashkey_mask;
-}
-
 static inline unsigned long long get_proto_id(int pf, int type)
 {
 	unsigned long long llpf = (unsigned)pf;
@@ -100,30 +84,28 @@ static inline void rtdm_reference_device(struct rtdm_device *device)
 
 struct rtdm_device *get_named_device(const char *name)
 {
-	struct list_head *entry;
 	struct rtdm_device *device;
-	int hashkey;
+	xnhandle_t handle;
+	int err;
 	spl_t s;
 
-	hashkey = get_name_hash(name, RTDM_MAX_DEVNAME_LEN, name_hashkey_mask);
+	err = xnregistry_bind(name, XN_NONBLOCK, XN_RELATIVE, &handle);
+	if (err == -EWOULDBLOCK)
+		return NULL;
 
 	xnlock_get_irqsave(&rt_dev_lock, s);
 
-	list_for_each(entry, &rtdm_named_devices[hashkey]) {
-		device = list_entry(entry, struct rtdm_device, reserved.entry);
-
-		if (strcmp(name, device->device_name) == 0) {
+	device = xnregistry_lookup(handle, NULL);
+	if (device) {
+		if (device->reserved.magic != RTDM_DEVICE_MAGIC)
+			device = NULL;
+		else
 			rtdm_reference_device(device);
-
-			xnlock_put_irqrestore(&rt_dev_lock, s);
-
-			return device;
-		}
 	}
 
 	xnlock_put_irqrestore(&rt_dev_lock, s);
 
-	return NULL;
+	return device;
 }
 
 struct rtdm_device *get_protocol_device(int protocol_family, int socket_type)
@@ -185,10 +167,7 @@ struct rtdm_device *get_protocol_device(int protocol_family, int socket_type)
 int rtdm_dev_register(struct rtdm_device *device)
 {
 	unsigned long long id;
-	int hashkey;
 	spl_t s;
-	struct list_head *entry;
-	struct rtdm_device *existing_dev;
 	int ret;
 
 	/* Catch unsuccessful initialisation */
@@ -284,44 +263,29 @@ int rtdm_dev_register(struct rtdm_device *device)
 
 	trace_cobalt_device_register(device);
 
-	if ((device->device_flags & RTDM_DEVICE_TYPE_MASK) == RTDM_NAMED_DEVICE) {
-		hashkey =
-		    get_name_hash(device->device_name, RTDM_MAX_DEVNAME_LEN,
-				  name_hashkey_mask);
+	device->reserved.magic = RTDM_DEVICE_MAGIC;
 
-		list_for_each(entry, &rtdm_named_devices[hashkey]) {
-			existing_dev =
-			    list_entry(entry, struct rtdm_device,
-				       reserved.entry);
-			if (strcmp(device->device_name,
-				   existing_dev->device_name) == 0) {
-				ret = -EEXIST;
-				goto err;
-			}
-		}
-
+	if ((device->device_flags & RTDM_DEVICE_TYPE_MASK) ==
+		RTDM_NAMED_DEVICE) {
 		ret = rtdm_proc_register_device(device);
 		if (ret)
 			goto err;
 
+		ret = xnregistry_enter(device->device_name, device,
+				&device->reserved.handle, NULL);
+		if (ret) {
+			rtdm_proc_unregister_device(device);
+			goto err;
+		}
+
 		xnlock_get_irqsave(&rt_dev_lock, s);
-		list_add_tail(&device->reserved.entry,
-			      &rtdm_named_devices[hashkey]);
+		list_add_tail(&device->reserved.entry, &rtdm_named_devices);
 		xnlock_put_irqrestore(&rt_dev_lock, s);
 
 		up(&nrt_dev_lock);
 	} else {
 		id = get_proto_id(device->protocol_family,
 				device->socket_type);
-
-		trace_mark(xn_rtdm, protocol_register, "device %p "
-			"protocol_family %d socket_type %d flags %d "
-			"class %d sub_class %d profile_version %d "
-			"driver_version %d", device,
-			device->protocol_family, device->socket_type,
-			device->device_flags, device->device_class,
-			device->device_sub_class, device->profile_version,
-			device->driver_version);
 
 		xnlock_get_irqsave(&rt_dev_lock, s);
 		ret = xnid_enter(&rtdm_protocol_devices,
@@ -377,9 +341,10 @@ EXPORT_SYMBOL_GPL(rtdm_dev_register);
  */
 int rtdm_dev_unregister(struct rtdm_device *device, unsigned int poll_delay)
 {
-	spl_t s;
 	struct rtdm_device *reg_dev;
 	unsigned long warned = 0;
+	xnhandle_t handle = 0;
+	spl_t s;
 
 	if (!rtdm_initialised)
 		return -ENOSYS;
@@ -414,14 +379,19 @@ int rtdm_dev_unregister(struct rtdm_device *device, unsigned int poll_delay)
 		xnlock_get_irqsave(&rt_dev_lock, s);
 	}
 
-	if ((device->device_flags & RTDM_DEVICE_TYPE_MASK) == RTDM_NAMED_DEVICE)
+	if ((device->device_flags & RTDM_DEVICE_TYPE_MASK) ==
+		RTDM_NAMED_DEVICE) {
+		handle = reg_dev->reserved.handle;
 		list_del(&reg_dev->reserved.entry);
-	else
+	} else
 		xnid_remove(&rtdm_protocol_devices, &reg_dev->reserved.id);
 
 	xnlock_put_irqrestore(&rt_dev_lock, s);
 
 	rtdm_proc_unregister_device(device);
+
+	if (handle)
+		xnregistry_remove(handle);
 
 	up(&nrt_dev_lock);
 
@@ -436,8 +406,6 @@ EXPORT_SYMBOL_GPL(rtdm_dev_unregister);
 
 int __init rtdm_dev_init(void)
 {
-	int err, i;
-
 	sema_init(&nrt_dev_lock, 1);
 
 	rtdm_apc = xnapc_alloc("deferred RTDM close", rtdm_apc_handler,
@@ -445,31 +413,10 @@ int __init rtdm_dev_init(void)
 	if (rtdm_apc < 0)
 		return rtdm_apc;
 
-	name_hashkey_mask = devname_hashtab_size - 1;
-	if (((devname_hashtab_size & name_hashkey_mask) != 0)) {
-		err = -EINVAL;
-		goto err_out1;
-	}
-
-	rtdm_named_devices = (struct list_head *)
-	    kmalloc(devname_hashtab_size * sizeof(struct list_head),
-		    GFP_KERNEL);
-	if (!rtdm_named_devices) {
-		err = -ENOMEM;
-		goto err_out1;
-	}
-
-	for (i = 0; i < devname_hashtab_size; i++)
-		INIT_LIST_HEAD(&rtdm_named_devices[i]);
-
+	INIT_LIST_HEAD(&rtdm_named_devices);
 	xntree_init(&rtdm_protocol_devices);
 
 	return 0;
-
-err_out1:
-	xnapc_free(rtdm_apc);
-
-	return err;
 }
 
 void rtdm_dev_cleanup(void)
@@ -479,7 +426,6 @@ void rtdm_dev_cleanup(void)
 	 * to deregister as long as there are references.
 	 */
 	xnapc_free(rtdm_apc);
-	kfree(rtdm_named_devices);
 }
 
 /*@}*/

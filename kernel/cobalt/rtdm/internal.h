@@ -50,7 +50,7 @@ extern struct rtdm_fildes fildes_table[];
 extern int open_fildes;
 extern struct semaphore nrt_dev_lock;
 extern unsigned int devname_hashtab_size;
-extern struct list_head *rtdm_named_devices;
+extern struct list_head rtdm_named_devices;
 extern struct rb_root rtdm_protocol_devices;
 extern struct xnpersonality rtdm_personality;
 

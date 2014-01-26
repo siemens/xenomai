@@ -23,10 +23,7 @@
 struct xnvfile_directory rtdm_vfroot;	/* /proc/xenomai/rtdm */
 
 struct vfile_device_data {
-	int h;
-	int hmax;
-	struct list_head *devmap;
-	struct list_head *curr;
+	struct rtdm_device *curr;
 };
 
 static int get_nrt_lock(struct xnvfile *vfile)
@@ -44,95 +41,59 @@ static struct xnvfile_lock_ops lockops = {
 	.put = put_nrt_lock,
 };
 
-static struct list_head *next_devlist(struct vfile_device_data *priv)
-{
-	struct list_head *head;
-
-	while (priv->h < priv->hmax) {
-		head = priv->devmap + priv->h;
-		if (!list_empty(head))
-			return head;
-		priv->h++;
-	}
-
-	return NULL;
-}
-
-static void *next_dev(struct xnvfile_regular_iterator *it)
+static void *named_next(struct xnvfile_regular_iterator *it)
 {
 	struct vfile_device_data *priv = xnvfile_iterator_priv(it);
+	struct rtdm_device *device = priv->curr;
 	struct list_head *next;
 
-	next = priv->curr->next;
-seek:
-	if (next == priv->devmap + priv->h) {
-		/* Done with the current hash slot, let's progress. */
-		if (priv->h >= priv->hmax) {
-			next = NULL; /* all done. */
-			goto out;
-		}
-
-		priv->h++;
-		next = next_devlist(priv);
-		if (next) {
-			next = next->next; /* skip head. */
-			goto seek;
-		}
+	next = device->reserved.entry.next;
+	if (next == &rtdm_named_devices) {
+		priv->curr = NULL; /* all done. */
+		goto out;
 	}
-out:
-	priv->curr = next;
 
-	return next;
+	priv->curr = list_entry(next, struct rtdm_device, reserved.entry);
+
+  out:
+	return priv->curr;
 }
 
 static void *named_begin(struct xnvfile_regular_iterator *it)
 {
 	struct vfile_device_data *priv = xnvfile_iterator_priv(it);
-	struct list_head *devlist;
+	struct rtdm_device *device;
 	loff_t pos = 0;
 
-	priv->devmap = rtdm_named_devices;
-	priv->hmax = devname_hashtab_size;
-	priv->h = 0;
+	list_for_each_entry(device, &rtdm_named_devices, reserved.entry)
+		if (pos++ >= it->pos)
+			break;
 
-	devlist = next_devlist(priv);
-	if (devlist == NULL)
-		return NULL;	/* All devlists empty. */
+	if (&device->reserved.entry == &rtdm_named_devices)
+		return NULL;	/* End of list. */
 
-	priv->curr = devlist->next;	/* Skip head. */
-
-	/*
-	 * priv->curr now points to the first device; advance to the requested
-	 * position from there.
-	 */
-	while (priv->curr && pos++ < it->pos)
-		priv->curr = next_dev(it);
+	priv->curr = device;	/* Skip head. */
 
 	if (pos == 1)
 		/* Output the header once, only if some device follows. */
-		xnvfile_puts(it, "Hash\tName\t\t\t\tDriver\t\t/proc\n");
+		xnvfile_puts(it, "Name\t\t\t\tDriver\t\t/proc\n");
 
 	return priv->curr;
 }
 
 static int named_show(struct xnvfile_regular_iterator *it, void *data)
 {
-	struct vfile_device_data *priv = xnvfile_iterator_priv(it);
-	struct list_head *curr = data;
-	struct rtdm_device *device;
+	struct rtdm_device *device = data;
 
-	device = list_entry(curr, struct rtdm_device, reserved.entry);
-	xnvfile_printf(it, "%02X\t%-31s\t%-15s\t%s\n",
-		       priv->h, device->device_name,
-		       device->driver_name,
-		       device->proc_name);
+	xnvfile_printf(it, "%-31s\t%-15s\t%s\n", device->device_name,
+		device->driver_name, device->proc_name);
 
 	return 0;
 }
 
 static struct xnvfile_regular_ops named_vfile_ops = {
 	.begin = named_begin,
-	.next = next_dev,
+	.next = named_next,
 	.show = named_show,
 };
 
@@ -306,7 +267,6 @@ static struct xnvfile_regular allfd_vfile = {
 static int devinfo_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 {
 	struct rtdm_device *device;
-	int i;
 
 	if (down_interruptible(&nrt_dev_lock))
 		return -ERESTARTSYS;
@@ -315,11 +275,9 @@ static int devinfo_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 	 * As the device may have disappeared while the handler was called,
 	 * first match the pointer against registered devices.
 	 */
-	for (i = 0; i < devname_hashtab_size; i++)
-		list_for_each_entry(device, &rtdm_named_devices[i],
-				    reserved.entry)
-			if (device == xnvfile_priv(it->vfile))
-				goto found;
+	list_for_each_entry(device, &rtdm_named_devices, reserved.entry)
+		if (device == xnvfile_priv(it->vfile))
+			goto found;
 
 	xntree_for_each_entry(device, &rtdm_protocol_devices, reserved.id)
 		if (device == xnvfile_priv(it->vfile))

@@ -447,8 +447,12 @@ rtdm_private_to_context(void *dev_private)
 }
 
 struct rtdm_dev_reserved {
+	unsigned magic;
 	union {
-		struct list_head entry;
+		struct {
+			struct list_head entry;
+			xnhandle_t handle;
+		};
 		struct xnid id;
 	};
 	atomic_t refcount;
@@ -463,6 +467,9 @@ struct rtdm_dev_reserved {
  * not reside in write-protected memory.
  */
 struct rtdm_device {
+	/** Data stored by RTDM inside a registered device (internal use only) */
+	struct rtdm_dev_reserved reserved;
+
 	/** Revision number of this structure, see
 	 *  @ref drv_versioning "Driver Versioning" defines */
 	int struct_version;
@@ -531,9 +538,6 @@ struct rtdm_device {
 	int device_id;
 	/** Driver definable device data */
 	void *device_data;
-
-	/** Data stored by RTDM inside a registered device (internal use only) */
-	struct rtdm_dev_reserved reserved;
 };
 /** @} devregister */
 
