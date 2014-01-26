@@ -28,10 +28,23 @@ struct xnid {
 	struct rb_node link;
 };
 
+#define xnid_entry(ptr, type, member)					\
+	({								\
+		typeof(ptr) _ptr = (ptr);				\
+		(_ptr ? container_of(_ptr, type, member.link) : NULL);	\
+	})
+
+#define xnid_next_entry(ptr, member)				\
+	xnid_entry(rb_next(&ptr->member.link), typeof(*ptr), member)
+
 static inline void xntree_init(struct rb_root *t)
 {
 	*t = RB_ROOT;
 }
+
+#define xntree_for_each_entry(pos, root, member)			\
+	for (pos = xnid_entry(rb_first(root), typeof(*pos), member);	\
+	     pos; pos = xnid_next_entry(pos, member))
 
 void xntree_cleanup(struct rb_root *t, void *cookie,
 		void (*destroy)(void *cookie, struct xnid *id));

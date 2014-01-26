@@ -47,7 +47,7 @@ int xnid_enter(struct rb_root *t, struct xnid *xnid, unsigned long long id)
 		else if (id > i->id)
 			new = &((*new)->rb_right);
 		else
-			return -EBUSY;
+			return -EEXIST;
 	}
 
 	xnid->id = id;
