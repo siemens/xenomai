@@ -24,7 +24,7 @@
 #include <cobalt/kernel/assert.h>
 
 struct xnid {
-	unsigned long id;
+	unsigned long long id;
 	struct rb_node link;
 };
 
@@ -36,15 +36,15 @@ static inline void xntree_init(struct rb_root *t)
 void xntree_cleanup(struct rb_root *t, void *cookie,
 		void (*destroy)(void *cookie, struct xnid *id));
 
-int xnid_enter(struct rb_root *t, struct xnid *xnid, unsigned long id);
+int xnid_enter(struct rb_root *t, struct xnid *xnid, unsigned long long id);
 
-static inline unsigned long xnid_id(struct xnid *i)
+static inline unsigned long long xnid_id(struct xnid *i)
 {
 	return i->id;
 }
 
 static inline
-struct xnid *xnid_fetch(struct rb_root *t, unsigned long id)
+struct xnid *xnid_fetch(struct rb_root *t, unsigned long long id)
 {
 	struct rb_node *node = t->rb_node;
 

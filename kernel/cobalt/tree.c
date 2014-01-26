@@ -34,7 +34,7 @@ void xntree_cleanup(struct rb_root *t, void *cookie,
 	}
 }
 
-int xnid_enter(struct rb_root *t, struct xnid *xnid, unsigned long id)
+int xnid_enter(struct rb_root *t, struct xnid *xnid, unsigned long long id)
 {
 	struct rb_node **new = &t->rb_node, *parent = NULL;
 
