@@ -40,6 +40,7 @@
 #include <cobalt/kernel/shadow.h>
 #include <cobalt/kernel/init.h>
 #include <cobalt/kernel/ancillaries.h>
+#include <cobalt/kernel/tree.h>
 #include <rtdm/rtdm.h>
 
 /* debug support */
@@ -446,7 +447,10 @@ rtdm_private_to_context(void *dev_private)
 }
 
 struct rtdm_dev_reserved {
-	struct list_head entry;
+	union {
+		struct list_head entry;
+		struct xnid id;
+	};
 	atomic_t refcount;
 	struct rtdm_dev_context *exclusive_context;
 };

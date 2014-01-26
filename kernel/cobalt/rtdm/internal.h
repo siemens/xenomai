@@ -23,6 +23,7 @@
 #include <linux/list.h>
 #include <linux/sem.h>
 #include <cobalt/kernel/ppd.h>
+#include <cobalt/kernel/tree.h>
 #include <rtdm/driver.h>
 
 #define RTDM_FD_MAX			CONFIG_XENO_OPT_RTDM_FILDES
@@ -49,9 +50,8 @@ extern struct rtdm_fildes fildes_table[];
 extern int open_fildes;
 extern struct semaphore nrt_dev_lock;
 extern unsigned int devname_hashtab_size;
-extern unsigned int protocol_hashtab_size;
 extern struct list_head *rtdm_named_devices;
-extern struct list_head *rtdm_protocol_devices;
+extern struct rb_root rtdm_protocol_devices;
 extern struct xnpersonality rtdm_personality;
 
 extern int rtdm_initialised;

@@ -46,19 +46,13 @@
 	((device).operation##_rt || (device).operation##_nrt)
 
 unsigned int devname_hashtab_size = DEF_DEVNAME_HASHTAB_SIZE;
-unsigned int protocol_hashtab_size = DEF_PROTO_HASHTAB_SIZE;
 module_param(devname_hashtab_size, uint, 0400);
-module_param(protocol_hashtab_size, uint, 0400);
 MODULE_PARM_DESC(devname_hashtab_size,
 		 "Size of hash table for named devices (must be power of 2)");
-MODULE_PARM_DESC(protocol_hashtab_size,
-		 "Size of hash table for protocol devices "
-		 "(must be power of 2)");
 
 struct list_head *rtdm_named_devices;	/* hash table */
-struct list_head *rtdm_protocol_devices;	/* hash table */
 static int name_hashkey_mask;
-static int proto_hashkey_mask;
+struct rb_root rtdm_protocol_devices;
 
 int rtdm_apc;
 EXPORT_SYMBOL_GPL(rtdm_apc);
@@ -93,9 +87,10 @@ static inline int get_name_hash(const char *str, int limit, int hashkey_mask)
 	return hash & hashkey_mask;
 }
 
-static inline int get_proto_hash(int protocol_family, int socket_type)
+static inline unsigned long long get_proto_id(int pf, int type)
 {
-	return protocol_family & proto_hashkey_mask;
+	unsigned long long llpf = (unsigned)pf;
+	return (llpf << 32) | (unsigned)type;
 }
 
 static inline void rtdm_reference_device(struct rtdm_device *device)
@@ -133,31 +128,26 @@ struct rtdm_device *get_named_device(const char *name)
 
 struct rtdm_device *get_protocol_device(int protocol_family, int socket_type)
 {
-	struct list_head *entry;
 	struct rtdm_device *device;
-	int hashkey;
+	unsigned long long id;
+	struct xnid *xnid;
 	spl_t s;
 
-	hashkey = get_proto_hash(protocol_family, socket_type);
+	id = get_proto_id(protocol_family, socket_type);
 
 	xnlock_get_irqsave(&rt_dev_lock, s);
 
-	list_for_each(entry, &rtdm_protocol_devices[hashkey]) {
-		device = list_entry(entry, struct rtdm_device, reserved.entry);
+	xnid = xnid_fetch(&rtdm_protocol_devices, id);
+	if (xnid) {
+		device = container_of(xnid, struct rtdm_device, reserved.id);
 
-		if ((device->protocol_family == protocol_family) &&
-		    (device->socket_type == socket_type)) {
-			rtdm_reference_device(device);
-
-			xnlock_put_irqrestore(&rt_dev_lock, s);
-
-			return device;
-		}
-	}
+		rtdm_reference_device(device);
+	} else
+		device = NULL;
 
 	xnlock_put_irqrestore(&rt_dev_lock, s);
 
-	return NULL;
+	return device;
 }
 
 /*!
@@ -194,6 +184,7 @@ struct rtdm_device *get_protocol_device(int protocol_family, int socket_type)
  */
 int rtdm_dev_register(struct rtdm_device *device)
 {
+	unsigned long long id;
 	int hashkey;
 	spl_t s;
 	struct list_head *entry;
@@ -320,34 +311,33 @@ int rtdm_dev_register(struct rtdm_device *device)
 
 		up(&nrt_dev_lock);
 	} else {
-		hashkey = get_proto_hash(device->protocol_family,
-					 device->socket_type);
+		id = get_proto_id(device->protocol_family,
+				device->socket_type);
 
-		list_for_each(entry, &rtdm_protocol_devices[hashkey]) {
-			existing_dev =
-			    list_entry(entry, struct rtdm_device,
-				       reserved.entry);
-			if ((device->protocol_family ==
-			     existing_dev->protocol_family)
-			    && (device->socket_type ==
-				existing_dev->socket_type)) {
-				printk(XENO_ERR "protocol %u:%u already "
-				       "registered by RTDM device\n",
-				       device->protocol_family,
-				       device->socket_type);
-				ret = -EEXIST;
-				goto err;
-			}
-		}
-
-		ret = rtdm_proc_register_device(device);
-		if (ret)
-			goto err;
+		trace_mark(xn_rtdm, protocol_register, "device %p "
+			"protocol_family %d socket_type %d flags %d "
+			"class %d sub_class %d profile_version %d "
+			"driver_version %d", device,
+			device->protocol_family, device->socket_type,
+			device->device_flags, device->device_class,
+			device->device_sub_class, device->profile_version,
+			device->driver_version);
 
 		xnlock_get_irqsave(&rt_dev_lock, s);
-		list_add_tail(&device->reserved.entry,
-			      &rtdm_protocol_devices[hashkey]);
+		ret = xnid_enter(&rtdm_protocol_devices,
+				&device->reserved.id, id);
 		xnlock_put_irqrestore(&rt_dev_lock, s);
+		if (ret < 0)
+			goto err;
+
+		ret = rtdm_proc_register_device(device);
+		if (ret) {
+			xnlock_get_irqsave(&rt_dev_lock, s);
+			xnid_remove(&rtdm_protocol_devices,
+				&device->reserved.id);
+			xnlock_put_irqrestore(&rt_dev_lock, s);
+			goto err;
+		}
 
 		up(&nrt_dev_lock);
 	}
@@ -424,7 +414,10 @@ int rtdm_dev_unregister(struct rtdm_device *device, unsigned int poll_delay)
 		xnlock_get_irqsave(&rt_dev_lock, s);
 	}
 
-	list_del(&reg_dev->reserved.entry);
+	if ((device->device_flags & RTDM_DEVICE_TYPE_MASK) == RTDM_NAMED_DEVICE)
+		list_del(&reg_dev->reserved.entry);
+	else
+		xnid_remove(&rtdm_protocol_devices, &reg_dev->reserved.id);
 
 	xnlock_put_irqrestore(&rt_dev_lock, s);
 
@@ -453,9 +446,7 @@ int __init rtdm_dev_init(void)
 		return rtdm_apc;
 
 	name_hashkey_mask = devname_hashtab_size - 1;
-	proto_hashkey_mask = protocol_hashtab_size - 1;
-	if (((devname_hashtab_size & name_hashkey_mask) != 0) ||
-	    ((protocol_hashtab_size & proto_hashkey_mask) != 0)) {
+	if (((devname_hashtab_size & name_hashkey_mask) != 0)) {
 		err = -EINVAL;
 		goto err_out1;
 	}
@@ -471,21 +462,9 @@ int __init rtdm_dev_init(void)
 	for (i = 0; i < devname_hashtab_size; i++)
 		INIT_LIST_HEAD(&rtdm_named_devices[i]);
 
-	rtdm_protocol_devices = (struct list_head *)
-	    kmalloc(protocol_hashtab_size * sizeof(struct list_head),
-		    GFP_KERNEL);
-	if (!rtdm_protocol_devices) {
-		err = -ENOMEM;
-		goto err_out2;
-	}
-
-	for (i = 0; i < protocol_hashtab_size; i++)
-		INIT_LIST_HEAD(&rtdm_protocol_devices[i]);
+	xntree_init(&rtdm_protocol_devices);
 
 	return 0;
-
-err_out2:
-	kfree(rtdm_named_devices);
 
 err_out1:
 	xnapc_free(rtdm_apc);
@@ -501,7 +480,6 @@ void rtdm_dev_cleanup(void)
 	 */
 	xnapc_free(rtdm_apc);
 	kfree(rtdm_named_devices);
-	kfree(rtdm_protocol_devices);
 }
 
 /*@}*/

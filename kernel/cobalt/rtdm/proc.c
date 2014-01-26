@@ -142,51 +142,49 @@ static struct xnvfile_regular named_vfile = {
 	.entry = { .lockops = &lockops }
 };
 
+struct vfile_proto_data {
+	struct rtdm_device *curr;
+};
+
+static void *proto_next(struct xnvfile_regular_iterator *it)
+{
+	struct vfile_proto_data *priv = xnvfile_iterator_priv(it);
+
+	return priv->curr = xnid_next_entry(priv->curr, reserved.id);
+}
+
 static void *proto_begin(struct xnvfile_regular_iterator *it)
 {
 
-	struct vfile_device_data *priv = xnvfile_iterator_priv(it);
-	struct list_head *devlist;
+	struct vfile_proto_data *priv = xnvfile_iterator_priv(it);
+	struct rtdm_device *dev = NULL;
 	loff_t pos = 0;
 
-	priv->devmap = rtdm_protocol_devices;
-	priv->hmax = protocol_hashtab_size;
-	priv->h = 0;
+	xntree_for_each_entry(dev, &rtdm_protocol_devices, reserved.id)
+		if (pos++ >= it->pos)
+			break;
 
-	devlist = next_devlist(priv);
-	if (devlist == NULL)
-		return NULL;	/* All devlists empty. */
+	if (dev == NULL)
+		return NULL;	/* Empty */
 
-	priv->curr = devlist->next;	/* Skip head. */
-
-	/*
-	 * priv->curr now points to the first device; advance to the requested
-	 * position from there.
-	 */
-	while (priv->curr && pos++ < it->pos)
-		priv->curr = next_dev(it);
+	priv->curr = dev;
 
 	if (pos == 1)
 		/* Output the header once, only if some device follows. */
-		xnvfile_puts(it, "Hash\tName\t\t\t\tDriver\t\t/proc\n");
+		xnvfile_puts(it, "Name\t\t\t\tDriver\t\t/proc\n");
 
 	return priv->curr;
 }
 
 static int proto_show(struct xnvfile_regular_iterator *it, void *data)
 {
-	struct vfile_device_data *priv = xnvfile_iterator_priv(it);
-	struct list_head *curr = data;
-	struct rtdm_device *device;
+	struct rtdm_device *device = data;
 	char pnum[32];
-
-	device = list_entry(curr, struct rtdm_device, reserved.entry);
 
 	ksformat(pnum, sizeof(pnum), "%u:%u",
 		 device->protocol_family, device->socket_type);
 
-	xnvfile_printf(it, "%02X\t%-31s\t%-15s\t%s\n",
-		       priv->h,
+	xnvfile_printf(it, "%-31s\t%-15s\t%s\n",
 		       pnum, device->driver_name,
 		       device->proc_name);
 	return 0;
@@ -194,12 +192,12 @@ static int proto_show(struct xnvfile_regular_iterator *it, void *data)
 
 static struct xnvfile_regular_ops proto_vfile_ops = {
 	.begin = proto_begin,
-	.next = next_dev,
+	.next = proto_next,
 	.show = proto_show,
 };
 
 static struct xnvfile_regular proto_vfile = {
-	.privsz = sizeof(struct vfile_device_data),
+	.privsz = sizeof(struct vfile_proto_data),
 	.ops = &proto_vfile_ops,
 	.entry = { .lockops = &lockops }
 };
@@ -323,11 +321,9 @@ static int devinfo_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 			if (device == xnvfile_priv(it->vfile))
 				goto found;
 
-	for (i = 0; i < protocol_hashtab_size; i++)
-		list_for_each_entry(device, &rtdm_protocol_devices[i],
-				    reserved.entry)
-			if (device == xnvfile_priv(it->vfile))
-				goto found;
+	xntree_for_each_entry(device, &rtdm_protocol_devices, reserved.id)
+		if (device == xnvfile_priv(it->vfile))
+			goto found;
 
 	up(&nrt_dev_lock);
 	return -ENODEV;
