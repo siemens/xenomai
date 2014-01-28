@@ -114,7 +114,11 @@ while test $# -gt 0; do
 	    shift
 	    ;;
 	--skin=*)
-	    skin_list="$skin_list `expr "$1" : '--skin=\(.*\)'`"
+	    if [ "$1" = "--skin=native" ]; then
+		skin_list="$skin_list alchemy"
+            else
+		skin_list="$skin_list `expr "$1" : '--skin=\(.*\)'`"
+	    fi
 	    ;;
 	--posix|--cobalt|--vxworks|--psos|--alchemy)
 	    skin_list="$skin_list `expr "$1" : '--\(.*\)'`"
@@ -126,9 +130,6 @@ while test $# -gt 0; do
 	    fi
 	    cflags="$XENO_BASE_CFLAGS -I$XENO_INCLUDE_DIR/cobalt"
 	    for skin in $skin_list; do
-		if [ "$skin" == "native" ]; then
-			skin="alchemy"
-		fi
 		case "$skin" in
 		    posix|cobalt)
 			;;
