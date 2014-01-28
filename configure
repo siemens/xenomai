@@ -13947,17 +13947,17 @@ if test "$ac_cv_atomic_builtins" != "yes"; then
    as_fn_error $? "compiler does not support atomic builtins" "$LINENO" 5
 fi
 
-XENO_USER_CFLAGS="-D_GNU_SOURCE -D_REENTRANT -pipe -fstrict-aliasing \
--Wall -Wstrict-prototypes -Wmissing-prototypes -Wno-long-long -Wno-unused-parameter -Werror"
-XENO_USER_LDADD=
+XENO_USER_APP_CFLAGS="-D_GNU_SOURCE -D_REENTRANT"
+XENO_USER_APP_LDFLAGS=
 
 if test x$use_registry = xy; then
    XENO_FUSE_CFLAGS=$fuse_cflags
-   XENO_USER_LDADD="$XENO_USER_LDADD $fuse_ldflags"
+   XENO_USER_APP_LDFLAGS="$XENO_USER_APP_LDFLAGS $fuse_ldflags"
 fi
 
-XENO_USER_APP_CFLAGS=$XENO_USER_CFLAGS
-XENO_USER_APP_LDFLAGS=$XENO_USER_LDADD
+XENO_USER_CFLAGS="$XENO_USER_APP_CFLAGS -pipe -fstrict-aliasing \
+-Wall -Wstrict-prototypes -Wmissing-prototypes -Wno-long-long -Wno-unused-parameter -Werror"
+XENO_USER_LDADD="$XENO_USER_APP_LDFLAGS"
 
 if test x$debug_mode = xpartial; then
    XENO_USER_CFLAGS="-g -O2 -D__XENO_DEBUG__ $XENO_USER_CFLAGS"
