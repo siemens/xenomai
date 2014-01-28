@@ -44,7 +44,7 @@
 #include <asm/unistd.h>
 #include <asm/xenomai/hal.h>
 #include <asm/cacheflush.h>
-#include <asm/system_info.h>
+#include <asm/system.h>
 #ifdef CONFIG_PROC_FS
 #include <linux/proc_fs.h>
 #endif /* CONFIG_PROC_FS */

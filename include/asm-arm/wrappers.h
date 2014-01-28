@@ -106,6 +106,11 @@ static inline void fp_init(union fp_state *state)
 #define vfp_current_hw_state last_VFP_context
 #endif /* Linux < 3.1 */
 
+#if defined(CONFIG_SMP) && !defined(CONFIG_XENO_HW_UNLOCKED_SWITCH) && \
+	LINUX_VERSION_CODE < KERNEL_VERSION(3,8,0)
+#error "Xenomai: ARM SMP systems require unlocked context switch prior to Linux 3.8"
+#endif
+
 #if !defined(CONFIG_IPIPE_CORE) && !defined(__IPIPE_FEATURE_UNMASKED_CONTEXT_SWITCH) && defined(TIF_MMSWITCH_INT)
 /*
  * Legacy ARM patches might provide unmasked context switch support
@@ -113,11 +118,6 @@ static inline void fp_init(union fp_state *state)
  */
 #define CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH	1
 #define CONFIG_XENO_HW_UNLOCKED_SWITCH		1
-#endif
-
-#if defined(CONFIG_SMP) && !defined(CONFIG_XENO_HW_UNLOCKED_SWITCH) && \
-	LINUX_VERSION_CODE < KERNEL_VERSION(3,8,0)
-#error "Xenomai: ARM SMP systems require unlocked context switch prior to Linux 3.8"
 #endif
 
 #endif /* _XENO_ASM_ARM_WRAPPERS_H */
