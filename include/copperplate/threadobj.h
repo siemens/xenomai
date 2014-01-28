@@ -295,7 +295,7 @@ void threadobj_notify_entry(void);
 
 int threadobj_cancel(struct threadobj *thobj);
 
-void threadobj_destroy(struct threadobj *thobj);
+void threadobj_uninit(struct threadobj *thobj);
 
 int threadobj_suspend(struct threadobj *thobj);
 

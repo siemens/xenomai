@@ -95,6 +95,10 @@ static inline void threadobj_init_corespec(struct threadobj *thobj)
 {
 }
 
+static inline void threadobj_uninit_corespec(struct threadobj *thobj)
+{
+}
+
 static inline int threadobj_setup_corespec(struct threadobj *thobj)
 {
 	pthread_set_name_np(pthread_self(), thobj->name);
@@ -445,6 +449,11 @@ static inline void threadobj_init_corespec(struct threadobj *thobj)
 	thobj->core.rr_timer = NULL;
 }
 
+static inline void threadobj_uninit_corespec(struct threadobj *thobj)
+{
+	pthread_cond_destroy(&thobj->core.grant_sync);
+}
+
 static inline int threadobj_setup_corespec(struct threadobj *thobj)
 {
 	struct sigevent sev;
@@ -481,7 +490,6 @@ static inline int threadobj_setup_corespec(struct threadobj *thobj)
 static inline void threadobj_cleanup_corespec(struct threadobj *thobj)
 {
 	notifier_destroy(&thobj->core.notifier);
-	pthread_cond_destroy(&thobj->core.grant_sync);
 	if (thobj->core.rr_timer)
 		timer_delete(thobj->core.rr_timer);
 }
@@ -872,17 +880,23 @@ void threadobj_init(struct threadobj *thobj,
 	threadobj_init_corespec(thobj);
 }
 
-static void destroy_thread(struct threadobj *thobj)
+static void uninit_thread(struct threadobj *thobj)
 {
-	threadobj_cleanup_corespec(thobj);
+	threadobj_uninit_corespec(thobj);
 	__RT(pthread_cond_destroy(&thobj->barrier));
 	__RT(pthread_mutex_destroy(&thobj->lock));
 }
 
-void threadobj_destroy(struct threadobj *thobj) /* thobj->lock free */
+static void destroy_thread(struct threadobj *thobj)
+{
+	threadobj_cleanup_corespec(thobj);
+	uninit_thread(thobj);
+}
+
+void threadobj_uninit(struct threadobj *thobj) /* thobj->lock free */
 {
 	assert((thobj->status & (__THREAD_S_STARTED|__THREAD_S_ACTIVE)) == 0);
-	destroy_thread(thobj);
+	uninit_thread(thobj);
 }
 
 /*

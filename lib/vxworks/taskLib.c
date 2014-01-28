@@ -360,7 +360,7 @@ static STATUS __taskInit(struct wind_task *task,
 	ret = __bt(cluster_addobj(&wind_task_table, task->name, &task->cobj));
 	if (ret) {
 		warning("duplicate task name: %s", task->name);
-		threadobj_destroy(&task->thobj);
+		threadobj_uninit(&task->thobj);
 		__RT(pthread_mutex_destroy(&task->safelock));
 		errno = S_objLib_OBJ_ID_ERROR;
 		return ERROR;
@@ -374,11 +374,10 @@ static STATUS __taskInit(struct wind_task *task,
 	cta.stacksize = stacksize;
 	cta.detachstate = PTHREAD_CREATE_DETACHED;
 	ret = __bt(copperplate_create_thread(&cta, &task->thobj.tid));
-
 	if (ret) {
 		registry_destroy_file(&task->fsobj);
 		cluster_delobj(&wind_task_table, &task->cobj);
-		threadobj_destroy(&task->thobj);
+		threadobj_uninit(&task->thobj);
 		__RT(pthread_mutex_destroy(&task->safelock));
 		errno = ret == -EAGAIN ? S_memLib_NOT_ENOUGH_MEMORY : -ret;
 		return ERROR;

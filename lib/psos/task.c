@@ -271,7 +271,6 @@ u_long t_create(const char *name, u_long prio,
 	struct corethread_attributes cta;
 	struct threadobj_init_data idata;
 	struct psos_task *task;
-	struct syncstate syns;
 	struct service svc;
 	int ret, cprio = 1;
 	char short_name[5];
@@ -339,11 +338,10 @@ u_long t_create(const char *name, u_long prio,
 	ret = __bt(copperplate_create_thread(&cta, &task->thobj.tid));
 	if (ret) {
 		cluster_delobj(&psos_task_table, &task->cobj);
-		threadobj_destroy(&task->thobj);
+		threadobj_uninit(&task->thobj);
 		ret = ERR_NOTCB;
 	fail:
-		syncobj_lock(&task->sobj, &syns);
-		syncobj_destroy(&task->sobj, &syns);
+		syncobj_uninit(&task->sobj);
 		threadobj_free(&task->thobj);
 	}
 out:

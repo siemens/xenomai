@@ -189,7 +189,7 @@ out:
 static void delete_tcb(struct alchemy_task *tcb)
 {
 	syncobj_uninit(&tcb->sobj_msg);
-	threadobj_destroy(&tcb->thobj);
+	threadobj_uninit(&tcb->thobj);
 	threadobj_free(&tcb->thobj);
 }
 
