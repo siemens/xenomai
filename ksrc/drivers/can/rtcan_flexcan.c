@@ -38,6 +38,7 @@
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
 #include <linux/pinctrl/consumer.h>
 #endif
+#include <asm/unaligned.h>
 
 #include <rtdm/rtdm_driver.h>
 
@@ -497,11 +498,9 @@ static void flexcan_rx_interrupt(struct rtcan_device *dev,
 		cf->can_id |= CAN_RTR_FLAG;
 		skb->rb_frame_size = EMPTY_RB_FRAME_SIZE;
 	} else {
-		skb->rb_frame_size = EMPTY_RB_FRAME_SIZE + cf->can_dlc ;
-		*(__be32 *)(cf->data + 0) =
-			cpu_to_be32(flexcan_read(&mb->data[0]));
-		*(__be32 *)(cf->data + 4) =
-			cpu_to_be32(flexcan_read(&mb->data[1]));
+		skb->rb_frame_size = EMPTY_RB_FRAME_SIZE + cf->can_dlc;
+		put_unaligned_be32(flexcan_read(&mb->data[0]), cf->data + 0);
+		put_unaligned_be32(flexcan_read(&mb->data[1]), cf->data + 4);
 	}
 
 	/* Store the interface index */
