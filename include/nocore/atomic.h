@@ -45,7 +45,7 @@ typedef struct {
 #endif
 
 #ifndef atomic_sub_fetch
-#define atomic_sub_fetch(v, n)	_sync_sub_and_fetch(&(v), n)
+#define atomic_sub_fetch(v, n)	__sync_sub_and_fetch(&(v), n)
 #endif
 
 #ifndef atomic_add_fetch
