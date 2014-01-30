@@ -6,8 +6,6 @@ case "$1" in
         if ! getent group xenomai >/dev/null; then
             addgroup --quiet --system xenomai || true
         fi
-        rm -f /etc/udev/rules.d/xenomai.rules
-        ln -sf ../xenomai.rules /etc/udev/rules.d/xenomai.rules
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
