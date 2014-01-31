@@ -32,6 +32,7 @@
 #include <string.h>
 #include <copperplate/threadobj.h>
 #include <copperplate/heapobj.h>
+#include <copperplate/registry-obstack.h>
 #include "reference.h"
 #include "internal.h"
 #include "queue.h"
@@ -44,11 +45,94 @@ static DEFINE_NAME_GENERATOR(queue_namegen, "queue",
 
 DEFINE_SYNC_LOOKUP(queue, RT_QUEUE);
 
+#ifdef CONFIG_XENO_REGISTRY
+
+static int prepare_waiter_cache(struct fsobstack *o,
+				struct obstack *cache, int item_count)
+{
+	const struct alchemy_queue *qcb;
+
+	fsobstack_grow_format(o, "--\n[WAITER]\n");
+	obstack_blank(cache, item_count * sizeof(qcb->name));
+
+	return 0;
+}
+
+static size_t collect_waiter_data(void *p, struct threadobj *thobj)
+{
+	const char *name = threadobj_get_name(thobj);
+	int len = strlen(name);
+
+	strcpy(p, name);
+	*(char *)(p + len) = '\n';
+
+	return len + 1;
+}
+
+static struct fsobstack_syncops fill_ops = {
+	.prepare_cache = prepare_waiter_cache,
+	.collect_data = collect_waiter_data,
+};
+
+static int queue_registry_open(struct fsobj *fsobj, void *priv)
+{
+	size_t usable_mem, used_mem, limit;
+	struct fsobstack *o = priv;
+	struct alchemy_queue *qcb;
+	struct syncstate syns;
+	unsigned int mcount;
+	int mode, ret;
+
+	qcb = container_of(fsobj, struct alchemy_queue, fsobj);
+
+	ret = syncobj_lock(&qcb->sobj, &syns);
+	if (ret)
+		return -EIO;
+
+	usable_mem = heapobj_size(&qcb->hobj);
+	used_mem = heapobj_inquire(&qcb->hobj);
+	limit = qcb->limit;
+	mcount = qcb->mcount;
+	mode = qcb->mode;
+
+	syncobj_unlock(&qcb->sobj, &syns);
+
+	fsobstack_init(o);
+
+	fsobstack_grow_format(o, "%6s  %10s  %9s  %8s  %s\n",
+			      "[TYPE]", "[TOTALMEM]", "[USEDMEM]", "[QLIMIT]", "[MCOUNT]");
+	fsobstack_grow_format(o, " %s   %9Zu  %9Zu  %8Zu  %8u\n",
+			      mode & Q_PRIO ? "PRIO" : "FIFO",
+			      usable_mem,
+			      used_mem,
+			      limit,
+			      mcount);
+
+	fsobstack_grow_syncobj_grant(o, &qcb->sobj, &fill_ops);
+
+	fsobstack_finish(o);
+
+	return 0;
+}
+
+static struct registry_operations registry_ops = {
+	.open		= queue_registry_open,
+	.release	= fsobj_obstack_release,
+	.read		= fsobj_obstack_read
+};
+
+#else /* !CONFIG_XENO_REGISTRY */
+
+static struct registry_operations registry_ops;
+
+#endif /* CONFIG_XENO_REGISTRY */
+
 static void queue_finalize(struct syncobj *sobj)
 {
 	struct alchemy_queue *qcb;
 
 	qcb = container_of(sobj, struct alchemy_queue, sobj);
+	registry_destroy_file(&qcb->fsobj);
 	heapobj_destroy(&qcb->hobj);
 	xnfree(qcb);
 }
@@ -169,14 +253,23 @@ int rt_queue_create(RT_QUEUE *queue, const char *name,
 	syncobj_init(&qcb->sobj, CLOCK_COPPERPLATE, sobj_flags,
 		     fnref_put(libalchemy, queue_finalize));
 
-	ret = 0;
 	if (syncluster_addobj(&alchemy_queue_table, qcb->name, &qcb->cobj)) {
 		heapobj_destroy(&qcb->hobj);
 		syncobj_uninit(&qcb->sobj);
 		xnfree(qcb);
 		ret = -EEXIST;
-	} else
+	} else {
 		queue->handle = mainheap_ref(qcb, uintptr_t);
+		registry_init_file_obstack(&qcb->fsobj, &registry_ops);
+		ret = __bt(registry_add_file(&qcb->fsobj, O_RDONLY,
+					     "/alchemy/queues/%s",
+					     qcb->name));
+		if (ret) {
+			warning("failed to export queue %s to registry",
+				qcb->name);
+			ret = 0;
+		}
+	}
 out:
 	CANCEL_RESTORE(svc);
 

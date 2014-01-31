@@ -19,6 +19,7 @@
 #ifndef _ALCHEMY_BUFFER_H
 #define _ALCHEMY_BUFFER_H
 
+#include <copperplate/registry-obstack.h>
 #include <copperplate/syncobj.h>
 #include <copperplate/cluster.h>
 #include <alchemy/buffer.h>
@@ -34,6 +35,7 @@ struct alchemy_buffer {
 	size_t rdoff;
 	size_t wroff;
 	size_t fillsz;
+	struct fsobj fsobj;
 };
 
 struct alchemy_buffer_wait {

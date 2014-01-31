@@ -20,6 +20,7 @@
 #define _ALCHEMY_SEM_H
 
 #include <copperplate/semobj.h>
+#include <copperplate/registry.h>
 #include <copperplate/cluster.h>
 #include <alchemy/sem.h>
 
@@ -28,6 +29,7 @@ struct alchemy_sem {
 	char name[32];
 	struct semobj smobj;
 	struct clusterobj cobj;
+	struct fsobj fsobj;
 };
 
 #define sem_magic	0x8383ebeb

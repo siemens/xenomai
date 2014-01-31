@@ -91,6 +91,17 @@ static int alchemy_init(void)
 		return __bt(ret);
 	}
 
+	registry_add_dir("/alchemy");
+	registry_add_dir("/alchemy/tasks");
+	registry_add_dir("/alchemy/semaphores");
+	registry_add_dir("/alchemy/events");
+	registry_add_dir("/alchemy/condvars");
+	registry_add_dir("/alchemy/mutexes");
+	registry_add_dir("/alchemy/queues");
+	registry_add_dir("/alchemy/buffers");
+	registry_add_dir("/alchemy/heaps");
+	registry_add_dir("/alchemy/alarms");
+
 	return 0;
 }
 

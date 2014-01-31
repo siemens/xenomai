@@ -30,6 +30,7 @@
 #include <string.h>
 #include <copperplate/threadobj.h>
 #include <copperplate/heapobj.h>
+#include <copperplate/registry-obstack.h>
 #include "reference.h"
 #include "internal.h"
 #include "heap.h"
@@ -42,10 +43,106 @@ static DEFINE_NAME_GENERATOR(heap_namegen, "heap",
 
 DEFINE_SYNC_LOOKUP(heap, RT_HEAP);
 
+#ifdef CONFIG_XENO_REGISTRY
+
+struct heap_waiter_data {
+	char name[32];
+	size_t reqsz;
+};
+
+static int prepare_waiter_cache(struct fsobstack *o,
+				struct obstack *cache, int item_count)
+{
+	fsobstack_grow_format(o, "--\n%-10s  %s\n", "[REQ-SIZE]", "[WAITER]");
+	obstack_blank(cache, item_count * sizeof(struct heap_waiter_data));
+
+	return 0;
+}
+
+static size_t collect_waiter_data(void *p, struct threadobj *thobj)
+{
+	struct alchemy_heap_wait *wait;
+	struct heap_waiter_data data;
+
+	strcpy(data.name, threadobj_get_name(thobj));
+	wait = threadobj_get_wait(thobj);
+	data.reqsz = wait->size;
+	memcpy(p, &data, sizeof(data));
+
+	return sizeof(data);
+}
+
+static size_t format_waiter_data(struct fsobstack *o, void *p)
+{
+	struct heap_waiter_data *data = p;
+
+	fsobstack_grow_format(o, "%9Zu    %s\n",
+			      data->reqsz, data->name);
+
+	return sizeof(*data);
+}
+
+static struct fsobstack_syncops fill_ops = {
+	.prepare_cache = prepare_waiter_cache,
+	.collect_data = collect_waiter_data,
+	.format_data = format_waiter_data,
+};
+
+static int heap_registry_open(struct fsobj *fsobj, void *priv)
+{
+	size_t usable_mem, used_mem;
+	struct fsobstack *o = priv;
+	struct alchemy_heap *hcb;
+	struct syncstate syns;
+	int mode, ret;
+
+	hcb = container_of(fsobj, struct alchemy_heap, fsobj);
+
+	ret = syncobj_lock(&hcb->sobj, &syns);
+	if (ret)
+		return -EIO;
+
+	usable_mem = heapobj_size(&hcb->hobj);
+	used_mem = heapobj_inquire(&hcb->hobj);
+	mode = hcb->mode;
+
+	syncobj_unlock(&hcb->sobj, &syns);
+
+	fsobstack_init(o);
+
+	fsobstack_grow_format(o, "%6s  %10s  %9s\n",
+			      "[TYPE]", "[TOTALMEM]", "[USEDMEM]");
+
+	fsobstack_grow_format(o, " %s  %10Zu %10Zu\n",
+			      mode & H_PRIO ? "PRIO" : "FIFO",
+			      usable_mem,
+			      used_mem);
+
+	fsobstack_grow_syncobj_grant(o, &hcb->sobj, &fill_ops);
+
+	fsobstack_finish(o);
+
+	return 0;
+}
+
+static struct registry_operations registry_ops = {
+	.open		= heap_registry_open,
+	.release	= fsobj_obstack_release,
+	.read		= fsobj_obstack_read
+};
+
+#else /* !CONFIG_XENO_REGISTRY */
+
+static struct registry_operations registry_ops;
+
+#endif /* CONFIG_XENO_REGISTRY */
+
 static void heap_finalize(struct syncobj *sobj)
 {
 	struct alchemy_heap *hcb;
+
 	hcb = container_of(sobj, struct alchemy_heap, sobj);
+	registry_destroy_file(&hcb->fsobj);
 	heapobj_destroy(&hcb->hobj);
 	xnfree(hcb);
 }
@@ -156,14 +253,23 @@ int rt_heap_create(RT_HEAP *heap,
 	syncobj_init(&hcb->sobj, CLOCK_COPPERPLATE, sobj_flags,
 		     fnref_put(libalchemy, heap_finalize));
 
-	ret = 0;
 	if (syncluster_addobj(&alchemy_heap_table, hcb->name, &hcb->cobj)) {
 		syncobj_uninit(&hcb->sobj);
 		heapobj_destroy(&hcb->hobj);
 		xnfree(hcb);
 		ret = -EEXIST;
-	} else
+	} else {
 		heap->handle = mainheap_ref(hcb, uintptr_t);
+		registry_init_file_obstack(&hcb->fsobj, &registry_ops);
+		ret = __bt(registry_add_file(&hcb->fsobj, O_RDONLY,
+					     "/alchemy/heaps/%s",
+					     hcb->name));
+		if (ret) {
+			warning("failed to export heap %s to registry",
+				hcb->name);
+			ret = 0;
+		}
+	}
 out:
 	CANCEL_RESTORE(svc);
 

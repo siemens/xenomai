@@ -40,8 +40,10 @@
 
 #include <errno.h>
 #include <string.h>
+#include <stdlib.h>
 #include <copperplate/threadobj.h>
 #include <copperplate/heapobj.h>
+#include <copperplate/registry-obstack.h>
 #include "reference.h"
 #include "internal.h"
 #include "sem.h"
@@ -54,9 +56,67 @@ static DEFINE_NAME_GENERATOR(sem_namegen, "sem",
 
 DEFINE_LOOKUP_PRIVATE(sem, RT_SEM);
 
+#ifdef CONFIG_XENO_REGISTRY
+
+static int sem_registry_open(struct fsobj *fsobj, void *priv)
+{
+	struct semobj_waitentry *waitlist, *p;
+	struct fsobstack *o = priv;
+	struct alchemy_sem *scb;
+	size_t waitsz;
+	int ret, val;
+
+	scb = container_of(fsobj, struct alchemy_sem, fsobj);
+
+	waitsz = sizeof(*p) * 256;
+	waitlist = __STD(malloc(waitsz));
+	if (waitlist == NULL)
+		return -ENOMEM;
+
+	ret = semobj_inquire(&scb->smobj, waitsz, waitlist, &val);
+	if (ret < 0)
+		goto out;
+
+	fsobstack_init(o);
+
+	if (val < 0)
+		val = 0; /* Report depleted state as null. */
+
+	fsobstack_grow_format(o, "=%d\n", val);
+
+	if (ret) {
+		fsobstack_grow_format(o, "--\n[WAITER]\n");
+		p = waitlist;
+		do {
+			fsobstack_grow_format(o, "%s\n", p->name);
+			p++;
+		} while (--ret > 0);
+	}
+
+	fsobstack_finish(o);
+out:
+	__STD(free(waitlist));
+
+	return ret;
+}
+
+static struct registry_operations registry_ops = {
+	.open		= sem_registry_open,
+	.release	= fsobj_obstack_release,
+	.read		= fsobj_obstack_read
+};
+
+#else /* !CONFIG_XENO_REGISTRY */
+
+static struct registry_operations registry_ops;
+
+#endif /* CONFIG_XENO_REGISTRY */
+
 static void sem_finalize(struct semobj *smobj)
 {
 	struct alchemy_sem *scb = container_of(smobj, struct alchemy_sem, smobj);
+
+	registry_destroy_file(&scb->fsobj);
 	/* We should never fail here, so we backtrace. */
 	__bt(syncluster_delobj(&alchemy_sem_table, &scb->cobj));
 	scb->magic = ~sem_magic;
@@ -154,8 +214,18 @@ int rt_sem_create(RT_SEM *sem, const char *name,
 		semobj_destroy(&scb->smobj);
 		xnfree(scb);
 		ret = -EEXIST;
-	} else
+	} else {
 		sem->handle = mainheap_ref(scb, uintptr_t);
+		registry_init_file_obstack(&scb->fsobj, &registry_ops);
+		ret = __bt(registry_add_file(&scb->fsobj, O_RDONLY,
+					     "/alchemy/semaphores/%s",
+					     scb->name));
+		if (ret) {
+			warning("failed to export semaphore %s to registry",
+				scb->name);
+			ret = 0;
+		}
+	}
 out:
 	CANCEL_RESTORE(svc);
 

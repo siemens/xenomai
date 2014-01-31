@@ -19,6 +19,7 @@
 #ifndef _ALCHEMY_ALARM_H
 #define _ALCHEMY_ALARM_H
 
+#include <copperplate/registry-obstack.h>
 #include <copperplate/timerobj.h>
 #include <copperplate/cluster.h>
 #include <alchemy/alarm.h>
@@ -30,7 +31,9 @@ struct alchemy_alarm {
 	struct pvclusterobj cobj;
 	void (*handler)(void *arg);
 	void *arg;
+	struct itimerspec itmspec;
 	unsigned long expiries;
+	struct fsobj fsobj;
 };
 
 #define alarm_magic	0x8888ebeb

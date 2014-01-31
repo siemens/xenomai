@@ -35,8 +35,10 @@
 
 #include <errno.h>
 #include <string.h>
+#include <stdlib.h>
 #include <copperplate/threadobj.h>
 #include <copperplate/heapobj.h>
+#include <copperplate/registry-obstack.h>
 #include "reference.h"
 #include "internal.h"
 #include "event.h"
@@ -49,9 +51,65 @@ static DEFINE_NAME_GENERATOR(event_namegen, "event",
 
 DEFINE_LOOKUP_PRIVATE(event, RT_EVENT);
 
+#ifdef CONFIG_XENO_REGISTRY
+
+static int event_registry_open(struct fsobj *fsobj, void *priv)
+{
+	struct eventobj_waitentry *waitlist, *p;
+	struct fsobstack *o = priv;
+	struct alchemy_event *evcb;
+	unsigned long val;
+	size_t waitsz;
+	int ret;
+
+	evcb = container_of(fsobj, struct alchemy_event, fsobj);
+
+	waitsz = sizeof(*p) * 256;
+	waitlist = __STD(malloc(waitsz));
+	if (waitlist == NULL)
+		return -ENOMEM;
+
+	ret = eventobj_inquire(&evcb->evobj, waitsz, waitlist, &val);
+	if (ret < 0)
+		goto out;
+
+	fsobstack_init(o);
+
+	fsobstack_grow_format(o, "=%lx\n", val);
+
+	if (ret) {
+		fsobstack_grow_format(o, "--\n[WAITER]\n");
+		p = waitlist;
+		do {
+			fsobstack_grow_format(o, "%s\n", p->name);
+			p++;
+		} while (--ret > 0);
+	}
+
+	fsobstack_finish(o);
+out:
+	__STD(free(waitlist));
+
+	return ret;
+}
+
+static struct registry_operations registry_ops = {
+	.open		= event_registry_open,
+	.release	= fsobj_obstack_release,
+	.read		= fsobj_obstack_read
+};
+
+#else /* !CONFIG_XENO_REGISTRY */
+
+static struct registry_operations registry_ops;
+
+#endif /* CONFIG_XENO_REGISTRY */
+
 static void event_finalize(struct eventobj *evobj)
 {
 	struct alchemy_event *evcb = container_of(evobj, struct alchemy_event, evobj);
+
+	registry_destroy_file(&evcb->fsobj);
 	/* We should never fail here, so we backtrace. */
 	__bt(syncluster_delobj(&alchemy_event_table, &evcb->cobj));
 	evcb->magic = ~event_magic;
@@ -138,8 +196,18 @@ int rt_event_create(RT_EVENT *event, const char *name,
 		eventobj_destroy(&evcb->evobj);
 		xnfree(evcb);
 		ret = -EEXIST;
-	} else
+	} else {
 		event->handle = mainheap_ref(evcb, uintptr_t);
+		registry_init_file_obstack(&evcb->fsobj, &registry_ops);
+		ret = __bt(registry_add_file(&evcb->fsobj, O_RDONLY,
+					     "/alchemy/events/%s",
+					     evcb->name));
+		if (ret) {
+			warning("failed to export event %s to registry",
+				evcb->name);
+			ret = 0;
+		}
+	}
 out:
 	CANCEL_RESTORE(svc);
 
@@ -441,11 +509,13 @@ int rt_event_inquire(RT_EVENT *event, RT_EVENT_INFO *info)
 	if (evcb == NULL)
 		goto out;
 
-	ret = eventobj_inquire(&evcb->evobj, &info->value);
+	ret = eventobj_inquire(&evcb->evobj, 0, NULL, &info->value);
 	if (ret < 0)
 		goto out;
 
 	strcpy(info->name, evcb->name);
+	info->nwaiters = ret;
+	ret = 0;
 out:
 	CANCEL_RESTORE(svc);
 

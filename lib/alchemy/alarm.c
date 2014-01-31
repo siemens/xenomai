@@ -42,6 +42,54 @@ struct pvcluster alchemy_alarm_table;
 static DEFINE_NAME_GENERATOR(alarm_namegen, "alarm",
 			     struct alchemy_alarm, name);
 
+#ifdef CONFIG_XENO_REGISTRY
+
+static int alarm_registry_open(struct fsobj *fsobj, void *priv)
+{
+	struct fsobstack *o = priv;
+	struct alchemy_alarm *acb;
+	struct itimerspec itmspec;
+	unsigned long expiries;
+	struct timespec delta;
+	int ret;
+
+	acb = container_of(fsobj, struct alchemy_alarm, fsobj);
+	ret = timerobj_lock(&acb->tmobj);
+	if (ret)
+		return ret;
+	itmspec = acb->itmspec;
+	expiries = acb->expiries;
+	timerobj_unlock(&acb->tmobj);
+
+	fsobstack_init(o);
+
+	fsobstack_grow_format(o, "%-12s%-12s%-12s\n",
+			      "[EXPIRIES]", "[DISTANCE]", "[INTERVAL]");
+	clockobj_get_distance(&alchemy_clock, &itmspec, &delta);
+	fsobstack_grow_format(o, "%8lu%10ld\"%ld%10ld\"%ld\n",
+			      expiries,
+			      delta.tv_sec,
+			      delta.tv_nsec / 100000000,
+			      itmspec.it_interval.tv_sec,
+			      itmspec.it_interval.tv_nsec / 100000000);
+
+	fsobstack_finish(o);
+
+	return 0;
+}
+
+static struct registry_operations registry_ops = {
+	.open		= alarm_registry_open,
+	.release	= fsobj_obstack_release,
+	.read		= fsobj_obstack_read
+};
+
+#else /* !CONFIG_XENO_REGISTRY */
+
+static struct registry_operations registry_ops;
+
+#endif /* CONFIG_XENO_REGISTRY */
+
 static struct alchemy_alarm *get_alchemy_alarm(RT_ALARM *alarm, int *err_r)
 {
 	struct alchemy_alarm *acb;
@@ -140,6 +188,7 @@ int rt_alarm_create(RT_ALARM *alarm, const char *name,
 	acb->handler = handler;
 	acb->arg = arg;
 	acb->expiries = 0;
+	memset(&acb->itmspec, 0, sizeof(acb->itmspec));
 	acb->magic = alarm_magic;
 	alarm->handle = (uintptr_t)acb;
 
@@ -148,6 +197,14 @@ int rt_alarm_create(RT_ALARM *alarm, const char *name,
 		ret = -EEXIST;
 		goto fail;
 	}
+
+	registry_init_file_obstack(&acb->fsobj, &registry_ops);
+	ret = __bt(registry_add_file(&acb->fsobj, O_RDONLY,
+				     "/alchemy/alarms/%s",
+				     acb->name));
+	if (ret)
+		warning("failed to export alarm %s to registry",
+			acb->name);
 
 	CANCEL_RESTORE(svc);
 
@@ -196,6 +253,7 @@ int rt_alarm_delete(RT_ALARM *alarm)
 	timerobj_destroy(&acb->tmobj);
 	pvcluster_delobj(&alchemy_alarm_table, &acb->cobj);
 	acb->magic = ~alarm_magic;
+	registry_destroy_file(&acb->fsobj);
 	pvfree(acb);
 out:
 	CANCEL_RESTORE(svc);
@@ -255,6 +313,7 @@ int rt_alarm_start(RT_ALARM *alarm,
 
 	clockobj_ticks_to_timeout(&alchemy_clock, value, &it.it_value);
 	clockobj_ticks_to_timespec(&alchemy_clock, interval, &it.it_interval);
+	acb->itmspec = it;
 	ret = timerobj_start(&acb->tmobj, alarm_handler, &it);
 out:
 	CANCEL_RESTORE(svc);
@@ -289,6 +348,7 @@ int rt_alarm_stop(RT_ALARM *alarm)
 	if (acb == NULL)
 		goto out;
 
+	memset(&acb->itmspec, 0, sizeof(acb->itmspec));
 	ret = timerobj_stop(&acb->tmobj);
 out:
 	CANCEL_RESTORE(svc);

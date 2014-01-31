@@ -54,6 +54,25 @@ static DEFINE_NAME_GENERATOR(cond_namegen, "cond",
 
 DEFINE_LOOKUP_PRIVATE(cond, RT_COND);
 
+#ifdef CONFIG_XENO_REGISTRY
+
+static ssize_t cond_registry_read(struct fsobj *fsobj,
+				  char *buf, size_t size, off_t offset,
+				  void *priv)
+{
+	return 0;		/* FIXME */
+}
+
+static struct registry_operations registry_ops = {
+	.read	= cond_registry_read
+};
+
+#else /* !CONFIG_XENO_REGISTRY */
+
+static struct registry_operations registry_ops;
+
+#endif /* CONFIG_XENO_REGISTRY */
+
 /**
  * @fn int rt_cond_create(RT_COND *cond, const char *name)
  * @brief Create a condition variable.
@@ -119,8 +138,18 @@ int rt_cond_create(RT_COND *cond, const char *name)
 		__RT(pthread_cond_destroy(&ccb->cond));
 		xnfree(ccb);
 		ret = -EEXIST;
-	} else
+	} else {
 		cond->handle = mainheap_ref(ccb, uintptr_t);
+		registry_init_file(&ccb->fsobj, &registry_ops, 0);
+		ret = __bt(registry_add_file(&ccb->fsobj, O_RDONLY,
+					     "/alchemy/condvars/%s",
+					     ccb->name));
+		if (ret) {
+			warning("failed to export condvar %s to registry",
+				ccb->name);
+			ret = 0;
+		}
+	}
 out:
 	CANCEL_RESTORE(svc);
 
@@ -174,6 +203,7 @@ int rt_cond_delete(RT_COND *cond)
 		goto out;
 
 	ccb->magic = ~cond_magic;
+	registry_destroy_file(&ccb->fsobj);
 	syncluster_delobj(&alchemy_cond_table, &ccb->cobj);
 	xnfree(ccb);
 out:
@@ -209,8 +239,6 @@ int rt_cond_signal(RT_COND *cond)
 		return ret;
 
 	return -__RT(pthread_cond_signal(&ccb->cond));
-
-	return ret;
 }
 
 /**

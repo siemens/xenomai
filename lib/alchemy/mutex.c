@@ -57,6 +57,25 @@ static DEFINE_NAME_GENERATOR(mutex_namegen, "mutex",
 
 DEFINE_LOOKUP(mutex, RT_MUTEX);
 
+#ifdef CONFIG_XENO_REGISTRY
+
+static ssize_t mutex_registry_read(struct fsobj *fsobj,
+				   char *buf, size_t size, off_t offset,
+				   void *priv)
+{
+	return 0;		/* FIXME */
+}
+
+static struct registry_operations registry_ops = {
+	.read	= mutex_registry_read
+};
+
+#else /* !CONFIG_XENO_REGISTRY */
+
+static struct registry_operations registry_ops;
+
+#endif /* CONFIG_XENO_REGISTRY */
+
 /**
  * @fn int rt_mutex_create(RT_MUTEX *mutex, const char *name)
  * @brief Create a mutex.
@@ -126,8 +145,18 @@ int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 	if (syncluster_addobj(&alchemy_mutex_table, mcb->name, &mcb->cobj)) {
 		xnfree(mcb);
 		ret = -EEXIST;
-	} else
+	} else {
 		mutex->handle = mainheap_ref(mcb, uintptr_t);
+		registry_init_file(&mcb->fsobj, &registry_ops, 0);
+		ret = __bt(registry_add_file(&mcb->fsobj, O_RDONLY,
+					     "/alchemy/mutexes/%s",
+					     mcb->name));
+		if (ret) {
+			warning("failed to export mutex %s to registry",
+				mcb->name);
+			ret = 0;
+		}
+	}
 out:
 	CANCEL_RESTORE(svc);
 
@@ -181,6 +210,7 @@ int rt_mutex_delete(RT_MUTEX *mutex)
 
 	mcb->magic = ~mutex_magic;
 	syncluster_delobj(&alchemy_mutex_table, &mcb->cobj);
+	registry_destroy_file(&mcb->fsobj);
 	xnfree(mcb);
 out:
 	CANCEL_RESTORE(svc);

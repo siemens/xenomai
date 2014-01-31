@@ -21,6 +21,7 @@
 
 #include <boilerplate/list.h>
 #include <copperplate/syncobj.h>
+#include <copperplate/registry.h>
 #include <copperplate/cluster.h>
 #include <copperplate/heapobj.h>
 #include <alchemy/queue.h>
@@ -35,6 +36,7 @@ struct alchemy_queue {
 	struct clusterobj cobj;
 	struct list mq;
 	unsigned int mcount;
+	struct fsobj fsobj;
 };
 
 #define queue_magic	0x8787ebeb

@@ -19,6 +19,7 @@
 #ifndef _ALCHEMY_COND_H
 #define _ALCHEMY_COND_H
 
+#include <copperplate/registry.h>
 #include <copperplate/cluster.h>
 #include <alchemy/cond.h>
 
@@ -29,6 +30,7 @@ struct alchemy_cond {
 	char name[32];
 	pthread_cond_t cond;
 	struct clusterobj cobj;
+	struct fsobj fsobj;
 };
 
 #define cond_magic	0x8686ebeb

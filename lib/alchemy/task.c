@@ -42,6 +42,44 @@ struct syncluster alchemy_task_table;
 static DEFINE_NAME_GENERATOR(task_namegen, "task",
 			     struct alchemy_task, name);
 
+#ifdef CONFIG_XENO_REGISTRY
+
+static int task_registry_open(struct fsobj *fsobj, void *priv)
+{
+	struct fsobstack *o = priv;
+	struct threadobj_stat buf;
+	struct alchemy_task *tcb;
+	int ret;
+
+	tcb = container_of(fsobj, struct alchemy_task, fsobj);
+	ret = threadobj_lock(&tcb->thobj);
+	if (ret)
+		return -EIO;
+
+	ret = threadobj_stat(&tcb->thobj, &buf);
+	threadobj_unlock(&tcb->thobj);
+	if (ret)
+		return ret;
+
+	fsobstack_init(o);
+
+	fsobstack_finish(o);
+
+	return 0;
+}
+
+static struct registry_operations registry_ops = {
+	.open		= task_registry_open,
+	.release	= fsobj_obstack_release,
+	.read		= fsobj_obstack_read
+};
+
+#else /* !CONFIG_XENO_REGISTRY */
+
+static struct registry_operations registry_ops;
+
+#endif /* CONFIG_XENO_REGISTRY */
+
 static struct alchemy_task *find_alchemy_task(RT_TASK *task, int *err_r)
 {
 	struct alchemy_task *tcb;
@@ -134,6 +172,7 @@ static void task_finalizer(struct threadobj *thobj)
 	struct syncstate syns;
 
 	tcb = container_of(thobj, struct alchemy_task, thobj);
+	registry_destroy_file(&tcb->fsobj);
 	syncluster_delobj(&alchemy_task_table, &tcb->cobj);
 	/*
 	 * The msg sync may be pended by other threads, so we do have
@@ -242,6 +281,14 @@ static int create_tcb(struct alchemy_task **tcbp, RT_TASK *task,
 		delete_tcb(tcb);
 		return -EEXIST;
 	}
+
+	registry_init_file_obstack(&tcb->fsobj, &registry_ops);
+	ret = __bt(registry_add_file(&tcb->fsobj, O_RDONLY,
+				     "/alchemy/tasks/%s",
+				     tcb->name));
+	if (ret)
+		warning("failed to export task %s to registry",
+			tcb->name);
 
 	if (task)
 		task->handle = tcb->self.handle;

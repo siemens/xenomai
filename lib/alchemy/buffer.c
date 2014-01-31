@@ -48,10 +48,109 @@ static DEFINE_NAME_GENERATOR(buffer_namegen, "buffer",
 
 DEFINE_SYNC_LOOKUP(buffer, RT_BUFFER);
 
+#ifdef CONFIG_XENO_REGISTRY
+
+static inline
+void prepare_waiter_cache(struct obstack *cache, int item_count)
+{
+	const struct alchemy_buffer *bcb;
+	obstack_blank(cache, item_count * sizeof(bcb->name));
+}
+
+static int prepare_grant_cache(struct fsobstack *o,
+			       struct obstack *cache, int item_count)
+{
+	fsobstack_grow_format(o, "--\n[INPUT-WAIT]\n");
+	prepare_waiter_cache(cache, item_count);
+
+	return 0;
+}
+
+static int prepare_drain_cache(struct fsobstack *o,
+			       struct obstack *cache, int item_count)
+{
+	fsobstack_grow_format(o, "--\n[OUTPUT-WAIT]\n");
+	prepare_waiter_cache(cache, item_count);
+
+	return 0;
+}
+
+static size_t collect_waiter_data(void *p, struct threadobj *thobj)
+{
+	const char *name = threadobj_get_name(thobj);
+	int len = strlen(name);
+
+	strcpy(p, name);
+	*(char *)(p + len) = '\n';
+
+	return len + 1;
+}
+
+static struct fsobstack_syncops fill_grant_ops = {
+	.prepare_cache = prepare_grant_cache,
+	.collect_data = collect_waiter_data,
+};
+
+static struct fsobstack_syncops fill_drain_ops = {
+	.prepare_cache = prepare_drain_cache,
+	.collect_data = collect_waiter_data,
+};
+
+static int buffer_registry_open(struct fsobj *fsobj, void *priv)
+{
+	struct fsobstack *o = priv;
+	struct alchemy_buffer *bcb;
+	struct syncstate syns;
+	size_t bufsz, fillsz;
+	int ret, mode;
+
+	bcb = container_of(fsobj, struct alchemy_buffer, fsobj);
+
+	ret = syncobj_lock(&bcb->sobj, &syns);
+	if (ret)
+		return -EIO;
+
+	bufsz = bcb->bufsz;
+	fillsz = bcb->fillsz;
+	mode = bcb->mode;
+
+	syncobj_unlock(&bcb->sobj, &syns);
+
+	fsobstack_init(o);
+
+	fsobstack_grow_format(o, "%6s  %10s  %9s\n",
+			      "[TYPE]", "[TOTALMEM]", "[USEDMEM]");
+
+	fsobstack_grow_format(o, " %s   %9Zu  %9Zu\n",
+			      mode & B_PRIO ? "PRIO" : "FIFO",
+			      bufsz, fillsz);
+
+	fsobstack_grow_syncobj_grant(o, &bcb->sobj, &fill_grant_ops);
+	fsobstack_grow_syncobj_drain(o, &bcb->sobj, &fill_drain_ops);
+
+	fsobstack_finish(o);
+
+	return 0;
+}
+
+static struct registry_operations registry_ops = {
+	.open		= buffer_registry_open,
+	.release	= fsobj_obstack_release,
+	.read		= fsobj_obstack_read
+};
+
+#else /* !CONFIG_XENO_REGISTRY */
+
+static struct registry_operations registry_ops;
+
+#endif /* CONFIG_XENO_REGISTRY */
+
 static void buffer_finalize(struct syncobj *sobj)
 {
 	struct alchemy_buffer *bcb;
+
 	bcb = container_of(sobj, struct alchemy_buffer, sobj);
+	registry_destroy_file(&bcb->fsobj);
 	xnfree(bcb->buf);
 	xnfree(bcb);
 }
@@ -157,6 +256,14 @@ int rt_buffer_create(RT_BUFFER *bf, const char *name,
 	}
 
 	bf->handle = mainheap_ref(bcb, uintptr_t);
+
+	registry_init_file_obstack(&bcb->fsobj, &registry_ops);
+	ret = __bt(registry_add_file(&bcb->fsobj, O_RDONLY,
+				     "/alchemy/buffers/%s",
+				     bcb->name));
+	if (ret)
+		warning("failed to export buffer %s to registry",
+			bcb->name);
 
 	CANCEL_RESTORE(svc);
 

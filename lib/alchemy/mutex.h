@@ -20,6 +20,7 @@
 #define _ALCHEMY_MUTEX_H
 
 #include <copperplate/cluster.h>
+#include <copperplate/registry.h>
 #include <alchemy/mutex.h>
 #include <alchemy/task.h>
 
@@ -29,6 +30,7 @@ struct alchemy_mutex {
 	pthread_mutex_t lock;
 	struct clusterobj cobj;
 	RT_TASK owner;
+	struct fsobj fsobj;
 };
 
 #define mutex_magic	0x8585ebeb

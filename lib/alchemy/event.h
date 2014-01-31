@@ -20,6 +20,7 @@
 #define _ALCHEMY_EVENT_H
 
 #include <copperplate/eventobj.h>
+#include <copperplate/registry.h>
 #include <copperplate/cluster.h>
 #include <alchemy/event.h>
 
@@ -28,6 +29,7 @@ struct alchemy_event {
 	char name[32];
 	struct eventobj evobj;
 	struct clusterobj cobj;
+	struct fsobj fsobj;
 };
 
 #define event_magic	0x8484ebeb

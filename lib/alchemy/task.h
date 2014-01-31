@@ -25,6 +25,7 @@
 #include <boilerplate/list.h>
 #include <copperplate/syncobj.h>
 #include <copperplate/threadobj.h>
+#include <copperplate/registry.h>
 #include <copperplate/cluster.h>
 #include <alchemy/task.h>
 
@@ -40,6 +41,7 @@ struct alchemy_task {
 	void (*entry)(void *arg);
 	void *arg;
 	RT_TASK self;
+	struct fsobj fsobj;
 };
 
 struct alchemy_task_wait {

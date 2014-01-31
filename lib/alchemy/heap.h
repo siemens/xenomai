@@ -20,6 +20,7 @@
 #define _ALCHEMY_HEAP_H
 
 #include <copperplate/syncobj.h>
+#include <copperplate/registry.h>
 #include <copperplate/cluster.h>
 #include <copperplate/heapobj.h>
 #include <alchemy/heap.h>
@@ -33,6 +34,7 @@ struct alchemy_heap {
 	int mode;
 	size_t size;
 	void *sba;
+	struct fsobj fsobj;
 };
 
 struct alchemy_heap_wait {
