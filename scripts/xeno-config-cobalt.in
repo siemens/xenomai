@@ -128,7 +128,7 @@ while test $# -gt 0; do
 		echo "no skin specified, missing --skin before --cflags" 1>&2
 		exit 1
 	    fi
-	    cflags="$XENO_BASE_CFLAGS -I$XENO_INCLUDE_DIR/cobalt"
+	    cflags="$XENO_BASE_CFLAGS"
 	    for skin in $skin_list; do
 		case "$skin" in
 		    posix|cobalt)
