@@ -48,11 +48,9 @@ static void close_timer_proc(rtdm_timer_t *timer)
 	rtdm_context_unlock(rtdm_private_to_context(ctx));
 }
 
-static int rtdm_test_open(struct rtdm_dev_context *context,
-			  rtdm_user_info_t *user_info, int oflags)
+static int rtdm_test_open(struct rtdm_fd *context, int oflags)
 {
-	struct rtdm_test_context *ctx =
-		(struct rtdm_test_context *)context->dev_private;
+	struct rtdm_test_context *ctx = rtdm_context_to_private(context);
 
 	rtdm_timer_init(&ctx->close_timer, close_timer_proc,
 			"rtdm close test");
@@ -62,60 +60,42 @@ static int rtdm_test_open(struct rtdm_dev_context *context,
 	return 0;
 }
 
-static int rtdm_test_close(struct rtdm_dev_context *context,
-			   rtdm_user_info_t *user_info)
+static void rtdm_test_close(struct rtdm_fd *context)
 {
-	struct rtdm_test_context *ctx =
-		(struct rtdm_test_context *)context->dev_private;
+	struct rtdm_test_context *ctx = rtdm_context_to_private(context);
 
 	ctx->close_counter++;
 
 	switch (ctx->close_deferral) {
-	case RTTST_RTDM_DEFER_CLOSE_HANDLER:
-		if (ctx->close_counter <= 3)
-			return -EAGAIN;
-		if (ctx->close_counter > 4) {
-			printk(KERN_ERR
-			       "rtdmtest: %s: close_counter is %lu, "
-			       "should be 2!\n",
-			       __FUNCTION__, ctx->close_counter);
-			return 0;
-		}
-		break;
-
 	case RTTST_RTDM_DEFER_CLOSE_CONTEXT:
-		if (ctx->close_counter == 1) {
-			rtdm_context_lock(context);
-			rtdm_timer_start(&ctx->close_timer, 300000000ULL, 0,
-					 RTDM_TIMERMODE_RELATIVE);
-			return 0;
-		}
-		if (ctx->close_counter > 2) {
+		if (ctx->close_counter != 2) {
 			printk(KERN_ERR
 			       "rtdmtest: %s: close_counter is %lu, "
 			       "should be 2!\n",
 			       __FUNCTION__, ctx->close_counter);
-			return 0;
+			return;
 		}
 		break;
 	}
 
 	rtdm_timer_destroy(&ctx->close_timer);
-
-	return 0;
 }
 
-static int rtdm_test_ioctl(struct rtdm_dev_context *context,
-			   rtdm_user_info_t *user_info,
-			   unsigned int request, void __user *arg)
+static int
+rtdm_test_ioctl(struct rtdm_fd *context, unsigned int request, void __user *arg)
 {
-	struct rtdm_test_context *ctx =
-		(struct rtdm_test_context *)context->dev_private;
+	struct rtdm_test_context *ctx = rtdm_context_to_private(context);
 	int err = 0;
 
 	switch (request) {
 	case RTTST_RTIOC_RTDM_DEFER_CLOSE:
 		ctx->close_deferral = (unsigned long)arg;
+		if (ctx->close_deferral == RTTST_RTDM_DEFER_CLOSE_CONTEXT) {
+			++ctx->close_counter;
+			rtdm_context_lock(context);
+			rtdm_timer_start(&ctx->close_timer, 300000000ULL, 0,
+					RTDM_TIMERMODE_RELATIVE);
+		}
 		break;
 
 	default:
@@ -132,10 +112,10 @@ static struct rtdm_device device[2] = { [0 ... 1] = {
 	.context_size		= sizeof(struct rtdm_test_context),
 	.device_name		= "",
 
-	.open_nrt		= rtdm_test_open,
+	.open			= rtdm_test_open,
 
 	.ops = {
-		.close_nrt	= rtdm_test_close,
+		.close		= rtdm_test_close,
 
 		.ioctl_rt	= rtdm_test_ioctl,
 		.ioctl_nrt	= rtdm_test_ioctl,

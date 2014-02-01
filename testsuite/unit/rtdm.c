@@ -75,17 +75,6 @@ int main(int argc, const char *argv[])
 	dev2 = check("open", open(devname2, O_RDWR), dev + 1);
 	check("close", close(dev2), 0);
 
-	printf("Defer close by driver handler\n");
-	check("ioctl", ioctl(dev, RTTST_RTIOC_RTDM_DEFER_CLOSE,
-			     RTTST_RTDM_DEFER_CLOSE_HANDLER), 0);
-	start = rt_timer_tsc();
-	check("close", close(dev), 0);
-	check("open", open(devname, O_RDWR), -EBUSY);
-	dev2 = check("open", open(devname2, O_RDWR), dev);
-	check("close", close(dev2), 0);
-	usleep(300000);
-	dev = check("open", open(devname, O_RDWR), dev);
-
 	printf("Defer close by pending reference\n");
 	check("ioctl", ioctl(dev, RTTST_RTIOC_RTDM_DEFER_CLOSE,
 			     RTTST_RTDM_DEFER_CLOSE_CONTEXT), 0);
