@@ -101,12 +101,12 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 @XENO_TLSF_TRUE@libboilerplate_la_DEPENDENCIES = libtlsf.la
-am__libboilerplate_la_SOURCES_DIST = ancillaries.c hash.c time.c \
-	debug.c
+am__libboilerplate_la_SOURCES_DIST = ancillaries.c hash.c obstack.c \
+	time.c debug.c
 @XENO_DEBUG_TRUE@am__objects_1 = libboilerplate_la-debug.lo
 am_libboilerplate_la_OBJECTS = libboilerplate_la-ancillaries.lo \
-	libboilerplate_la-hash.lo libboilerplate_la-time.lo \
-	$(am__objects_1)
+	libboilerplate_la-hash.lo libboilerplate_la-obstack.lo \
+	libboilerplate_la-time.lo $(am__objects_1)
 libboilerplate_la_OBJECTS = $(am_libboilerplate_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -350,7 +350,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 noinst_LTLIBRARIES = libboilerplate.la $(am__append_2)
 libboilerplate_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 0:0:0
-libboilerplate_la_SOURCES = ancillaries.c hash.c time.c \
+libboilerplate_la_SOURCES = ancillaries.c hash.c obstack.c time.c \
 	$(am__append_1)
 libboilerplate_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@				\
@@ -434,6 +434,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libboilerplate_la-ancillaries.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libboilerplate_la-debug.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libboilerplate_la-hash.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libboilerplate_la-obstack.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libboilerplate_la-time.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libtlsf_la-tlsf.Plo@am__quote@
 
@@ -471,6 +472,13 @@ libboilerplate_la-hash.lo: hash.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='hash.c' object='libboilerplate_la-hash.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libboilerplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libboilerplate_la-hash.lo `test -f 'hash.c' || echo '$(srcdir)/'`hash.c
+
+libboilerplate_la-obstack.lo: obstack.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libboilerplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libboilerplate_la-obstack.lo -MD -MP -MF $(DEPDIR)/libboilerplate_la-obstack.Tpo -c -o libboilerplate_la-obstack.lo `test -f 'obstack.c' || echo '$(srcdir)/'`obstack.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libboilerplate_la-obstack.Tpo $(DEPDIR)/libboilerplate_la-obstack.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='obstack.c' object='libboilerplate_la-obstack.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libboilerplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libboilerplate_la-obstack.lo `test -f 'obstack.c' || echo '$(srcdir)/'`obstack.c
 
 libboilerplate_la-time.lo: time.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libboilerplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libboilerplate_la-time.lo -MD -MP -MF $(DEPDIR)/libboilerplate_la-time.Tpo -c -o libboilerplate_la-time.lo `test -f 'time.c' || echo '$(srcdir)/'`time.c

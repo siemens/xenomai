@@ -6,6 +6,7 @@ libboilerplate_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 0:0:0
 libboilerplate_la_SOURCES =	\
 	ancillaries.c		\
 	hash.c			\
+	obstack.c		\
 	time.c
 
 if XENO_DEBUG

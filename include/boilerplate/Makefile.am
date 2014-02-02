@@ -7,7 +7,8 @@ includesub_HEADERS =	\
 	hash.h		\
 	list.h		\
 	lock.h		\
+	obstack.h	\
+	private-list.h	\
 	scope.h		\
 	shared-list.h	\
-	private-list.h	\
 	time.h
