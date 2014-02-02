@@ -421,7 +421,7 @@ int rt_mutex_acquire_inner(RT_MUTEX *mutex, RTIME timeout,
  * Attempt to lock a mutex. The calling task is blocked until the
  * mutex is available, in which case it is locked again before this
  * service returns. Mutexes have an ownership property, which means
- * that their current owner is tracked. Xenomai mutexes are implicitely
+ * that their current owner is tracked. Xenomai mutexes are implicitly
  * recursive and implement the priority inheritance protocol.
  *
  * Since a nested locking count is maintained for the current owner,
@@ -490,7 +490,7 @@ int rt_mutex_acquire(RT_MUTEX *mutex, RTIME timeout)
  * Attempt to lock a mutex. The calling task is blocked until the
  * mutex is available, in which case it is locked again before this
  * service returns. Mutexes have an ownership property, which means
- * that their current owner is tracked. Xenomai mutexes are implicitely
+ * that their current owner is tracked. Xenomai mutexes are implicitly
  * recursive and implement the priority inheritance protocol.
  *
  * Since a nested locking count is maintained for the current owner,

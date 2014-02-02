@@ -225,7 +225,7 @@ static void __heap_flush_private(xnheap_t *heap,
  *
  * - H_MAPPABLE causes the heap to be sharable between kernel and
  * user-space contexts. Otherwise, the new heap is only available for
- * kernel-based usage. This flag is implicitely set when the caller is
+ * kernel-based usage. This flag is implicitly set when the caller is
  * running in user-space. This feature requires the real-time support
  * in user-space to be configured in (CONFIG_XENO_OPT_PERVASIVE).
  *
@@ -577,7 +577,7 @@ int rt_heap_alloc(RT_HEAP *heap, size_t size, RTIME timeout, void **blockp)
 
 		if (!block) {
 			/* It's ok to pass zero for size here, since the requested
-			   size is implicitely the whole heap space; but if
+			   size is implicitly the whole heap space; but if
 			   non-zero is given, it must match the original heap
 			   size. */
 

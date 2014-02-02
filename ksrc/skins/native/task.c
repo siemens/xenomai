@@ -979,7 +979,7 @@ int rt_task_sleep(RTIME delay)
 		return -EWOULDBLOCK;
 
 	/* Calling the suspension service on behalf of the current task
-	   implicitely calls the rescheduling procedure. */
+	   implicitly calls the rescheduling procedure. */
 
 	xnpod_suspend_thread(self, XNDELAY, delay, XN_RELATIVE, NULL);
 
@@ -1053,7 +1053,7 @@ int rt_task_sleep_until(RTIME date)
 
 	/*
 	 * Calling the suspension service on behalf of the current
-	 * task implicitely calls the rescheduling procedure.
+	 * task implicitly calls the rescheduling procedure.
 	 */
 	xnpod_suspend_thread(self, XNDELAY, date, mode, NULL);
 
@@ -1311,7 +1311,7 @@ int rt_task_remove_hook(int type, void (*routine) (void *cookie))
  * rt_task_notify(). A task can block the signal delivery by passing
  * the T_NOSIG bit to rt_task_set_mode().
  *
- * Calling this service implicitely unblocks the signal delivery for
+ * Calling this service implicitly unblocks the signal delivery for
  * the caller.
  *
  * @param handler The address of the user-supplied routine to fire

@@ -208,7 +208,7 @@ static void __queue_flush_private(xnheap_t *heap,
  *
  * - Q_SHARED causes the queue to be sharable between kernel and
  * user-space tasks. Otherwise, the new queue is only available for
- * kernel-based usage. This flag is implicitely set when the caller is
+ * kernel-based usage. This flag is implicitly set when the caller is
  * running in user-space. This feature requires the real-time support
  * in user-space to be configured in (CONFIG_XENO_OPT_PERVASIVE).
  *

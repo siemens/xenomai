@@ -70,7 +70,7 @@ static const struct rtser_config write_config = {
 	.config_mask       = RTSER_SET_BAUD | RTSER_SET_TIMESTAMP_HISTORY,
 	.baud_rate         = 115200,
 	.timestamp_history = RTSER_DEF_TIMESTAMP_HISTORY,
-	/* the rest implicitely remains default */
+	/* the rest implicitly remains default */
 };
 
 static int close_file( int fd, char *name)

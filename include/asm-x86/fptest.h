@@ -59,7 +59,7 @@ static inline int fp_linux_begin(void)
 #endif /* 3DNow or RAID 456 */
 	kernel_fpu_begin();
 	/* kernel_fpu_begin() does no re-initialize the fpu context, but
-	   fp_regs_set() implicitely expects an initialized fpu context, so
+	   fp_regs_set() implicitly expects an initialized fpu context, so
 	   initialize it here. */
 	__asm__ __volatile__("fninit");
 	return 0;
