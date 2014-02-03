@@ -73,11 +73,17 @@ struct syncobj {
 	fnref_type(void (*)(struct syncobj *sobj)) finalizer;
 };
 
-#define syncobj_for_each_waiter(sobj, pos)		\
+#define syncobj_for_each_grant_waiter(sobj, pos)		\
 	list_for_each_entry(pos, &(sobj)->grant_list, wait_link)
 
-#define syncobj_for_each_waiter_safe(sobj, pos, tmp)	\
+#define syncobj_for_each_grant_waiter_safe(sobj, pos, tmp)	\
 	list_for_each_entry_safe(pos, tmp, &(sobj)->grant_list, wait_link)
+
+#define syncobj_for_each_drain_waiter(sobj, pos)		\
+	list_for_each_entry(pos, &(sobj)->drain_list, wait_link)
+
+#define syncobj_for_each_drain_waiter_safe(sobj, pos, tmp)	\
+	list_for_each_entry_safe(pos, tmp, &(sobj)->drain_list, wait_link)
 
 void __syncobj_cleanup_wait(struct syncobj *sobj,
 			    struct threadobj *thobj);
@@ -174,6 +180,13 @@ static inline int syncobj_count_drain(struct syncobj *sobj)
 	__syncobj_check_locked(sobj);
 
 	return sobj->drain_count;
+}
+
+static inline int syncobj_drain_wait_p(struct syncobj *sobj)
+{
+	__syncobj_check_locked(sobj);
+
+	return !list_empty(&sobj->drain_list);
 }
 
 static inline int syncobj_drain(struct syncobj *sobj)

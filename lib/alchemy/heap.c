@@ -417,7 +417,7 @@ int rt_heap_free(RT_HEAP *heap, void *block)
 	 * We might be releasing a block large enough to satisfy
 	 * multiple requests, so we iterate over all waiters.
 	 */
-	syncobj_for_each_waiter_safe(&hcb->sobj, thobj, tmp) {
+	syncobj_for_each_grant_waiter_safe(&hcb->sobj, thobj, tmp) {
 		wait = threadobj_get_wait(thobj);
 		wait->ptr = heapobj_alloc(&hcb->hobj, wait->size);
 		if (wait->ptr)

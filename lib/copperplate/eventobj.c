@@ -215,7 +215,7 @@ int eventobj_post(struct eventobj *evobj, unsigned long bits)
 	if (!syncobj_grant_wait_p(&evobj->core.sobj))
 		goto done;
 
-	syncobj_for_each_waiter_safe(&evobj->core.sobj, thobj, tmp) {
+	syncobj_for_each_grant_waiter_safe(&evobj->core.sobj, thobj, tmp) {
 		wait = threadobj_get_wait(thobj);
 		waitval = wait->value & bits;
 		testval = wait->mode & EVOBJ_ANY ? waitval : wait->value;

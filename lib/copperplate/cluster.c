@@ -239,7 +239,7 @@ int syncluster_addobj(struct syncluster *sc, const char *name,
 	 * Wake up all threads waiting for this key to appear in the
 	 * dictionary.
 	 */
-	syncobj_for_each_waiter_safe(sc->sobj, thobj, tmp) {
+	syncobj_for_each_grant_waiter_safe(sc->sobj, thobj, tmp) {
 		wait = threadobj_get_wait(thobj);
 		if (*wait->name == *name && strcmp(wait->name, name) == 0)
 			syncobj_grant_to(sc->sobj, thobj);
@@ -404,7 +404,7 @@ int pvsyncluster_addobj(struct pvsyncluster *sc, const char *name,
 	 * Wake up all threads waiting for this key to appear in the
 	 * dictionary.
 	 */
-	syncobj_for_each_waiter_safe(&sc->sobj, thobj, tmp) {
+	syncobj_for_each_grant_waiter_safe(&sc->sobj, thobj, tmp) {
 		wait = threadobj_get_wait(thobj);
 		if (*wait->name == *name && strcmp(wait->name, name) == 0)
 			syncobj_grant_to(&sc->sobj, thobj);

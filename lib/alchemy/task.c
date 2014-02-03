@@ -1870,7 +1870,7 @@ int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
 	if (!syncobj_grant_wait_p(&current->sobj_msg))
 		goto done;
 
-	syncobj_for_each_waiter(&current->sobj_msg, thobj) {
+	syncobj_for_each_grant_waiter(&current->sobj_msg, thobj) {
 		wait = threadobj_get_wait(thobj);
 		if (wait->request.flowid == flowid)
 			goto reply;

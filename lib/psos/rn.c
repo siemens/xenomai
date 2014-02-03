@@ -314,7 +314,7 @@ u_long rn_retseg(u_long rnid, void *segaddr)
 	if (!syncobj_grant_wait_p(&rn->sobj))
 		goto done;
 
-	syncobj_for_each_waiter_safe(&rn->sobj, thobj, tmp) {
+	syncobj_for_each_grant_waiter_safe(&rn->sobj, thobj, tmp) {
 		wait = threadobj_get_wait(thobj);
 		size = wait->size;
 		if (rn->usedmem + size > rn->length)
