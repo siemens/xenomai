@@ -380,7 +380,7 @@ static void create_system_fs(const char *arg0, const char *rootdir)
 		registry_add_dir(d->path);
 
 	for (f = sysreg_files; f->path != NULL; f++) {
-		registry_init_file(&f->fsobj, &f->ops);
+		registry_init_file(&f->fsobj, &f->ops, 0);
 		ret = registry_add_file(&f->fsobj, f->mode, f->path);
 		if (ret)
 			error(1, -ret, "failed to register %s", f->path);

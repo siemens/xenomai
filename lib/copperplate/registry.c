@@ -151,7 +151,8 @@ done:
 }
 
 void registry_init_file(struct fsobj *fsobj, 
-			const struct registry_operations *ops)
+			const struct registry_operations *ops,
+			size_t privsz)
 {
 	pthread_mutexattr_t mattr;
 
@@ -160,6 +161,7 @@ void registry_init_file(struct fsobj *fsobj,
 
 	fsobj->path = NULL;
 	fsobj->ops = ops;
+	fsobj->privsz = privsz;
 	pvholder_init(&fsobj->link);
 
 	__RT(pthread_mutexattr_init(&mattr));
@@ -362,6 +364,7 @@ static int regfs_open(const char *path, struct fuse_file_info *fi)
 	struct pvhashobj *hobj;
 	struct fsobj *fsobj;
 	int ret = 0;
+	void *priv;
 
 	read_lock_nocancel(&p->lock);
 
@@ -372,10 +375,23 @@ static int regfs_open(const char *path, struct fuse_file_info *fi)
 	}
 
 	fsobj = container_of(hobj, struct fsobj, hobj);
-	if (((fi->flags + 1) & (fsobj->mode + 1)) == 0)
+	if (((fi->flags + 1) & (fsobj->mode + 1)) == 0) {
 		ret = -EACCES;
-	else if (fsobj->ops->open)
-		ret = __bt(fsobj->ops->open(fsobj));
+		goto done;
+	}
+
+	if (fsobj->privsz) {
+		priv = __STD(malloc(fsobj->privsz));
+		if (priv == NULL) {
+			ret = -ENOMEM;
+			goto done;
+		}
+	} else
+		priv = NULL;
+
+	fi->fh = (uintptr_t)priv;
+	if (fsobj->ops->open)
+		ret = __bt(fsobj->ops->open(fsobj, priv));
 done:
 	read_unlock(&p->lock);
 
@@ -388,6 +404,7 @@ static int regfs_release(const char *path, struct fuse_file_info *fi)
 	struct pvhashobj *hobj;
 	struct fsobj *fsobj;
 	int ret = 0;
+	void *priv;
 
 	read_lock_nocancel(&p->lock);
 
@@ -398,8 +415,11 @@ static int regfs_release(const char *path, struct fuse_file_info *fi)
 	}
 
 	fsobj = container_of(hobj, struct fsobj, hobj);
+	priv = (void *)(uintptr_t)fi->fh;
 	if (fsobj->ops->release)
-		ret = __bt(fsobj->ops->release(fsobj));
+		ret = __bt(fsobj->ops->release(fsobj, priv));
+	if (priv)
+		__STD(free(priv));
 done:
 	read_unlock(&p->lock);
 
@@ -412,6 +432,7 @@ static int regfs_read(const char *path, char *buf, size_t size, off_t offset,
 	struct regfs_data *p = regfs_get_context();
 	struct pvhashobj *hobj;
 	struct fsobj *fsobj;
+	void *priv;
 	int ret;
 
 	read_lock_nocancel(&p->lock);
@@ -431,7 +452,8 @@ static int regfs_read(const char *path, char *buf, size_t size, off_t offset,
 	push_cleanup_lock(&fsobj->lock);
 	read_lock(&fsobj->lock);
 	read_unlock(&p->lock);
-	ret = fsobj->ops->read(fsobj, buf, size, offset);
+	priv = (void *)(uintptr_t)fi->fh;
+	ret = fsobj->ops->read(fsobj, buf, size, offset, priv);
 	read_unlock(&fsobj->lock);
 	pop_cleanup_lock(&fsobj->lock);
 
@@ -444,6 +466,7 @@ static int regfs_write(const char *path, const char *buf, size_t size, off_t off
 	struct regfs_data *p = regfs_get_context();
 	struct pvhashobj *hobj;
 	struct fsobj *fsobj;
+	void *priv;
 	int ret;
 
 	read_lock_nocancel(&p->lock);
@@ -463,7 +486,8 @@ static int regfs_write(const char *path, const char *buf, size_t size, off_t off
 	push_cleanup_lock(&fsobj->lock);
 	read_lock(&fsobj->lock);
 	read_unlock(&p->lock);
-	ret = fsobj->ops->write(fsobj, buf, size, offset);
+	priv = (void *)(uintptr_t)fi->fh;
+	ret = fsobj->ops->write(fsobj, buf, size, offset, priv);
 	read_unlock(&fsobj->lock);
 	pop_cleanup_lock(&fsobj->lock);
 
@@ -485,7 +509,7 @@ static int regfs_chown(const char *path, uid_t uid, gid_t gid)
 	return 0;
 }
 
-static void *regfs_init(struct fuse_conn_info *conn)
+static void *regfs_init(void)
 {
 	struct regfs_data *p = regfs_get_context();
 	struct sigaction sa;
@@ -540,7 +564,7 @@ static void *registry_thread(void *arg)
 	 * Once connected to sysregd, we don't have to care for the
 	 * mount point, sysregd will umount(2) it when we go away.
 	 */
-	ret = fuse_main(6, av, &regfs_opts, NULL);
+	ret = fuse_main(6, av, &regfs_opts);
 	if (ret) {
 		warning("can't mount registry onto %s", p->mountpt);
 		/* Attempt to figure out why we failed. */
@@ -593,7 +617,7 @@ static int connect_regd(const char *sessdir, char **mountpt)
 	unsigned int hash;
 	socklen_t addrlen;
 
-	*mountpt = malloc(PATH_MAX);
+	*mountpt = __STD(malloc(PATH_MAX));
 	if (*mountpt == NULL)
 		return -ENOMEM;
 
@@ -748,13 +772,13 @@ int fsobstack_grow_format(struct fsobstack *o, const char *fmt, ...)
 		       obstack_grow(&o->obstack, p, n);
 
 	       if (p != buf)
-		       xnfree(p);
+		       pvfree(p);
 
                if (n < len)
 		       return n < 0 ? -EINVAL : n;
 
 	       len = n + 1;
-	       p = xnmalloc(len);
+	       p = pvmalloc(len);
 	       if (p == NULL)
 		       break;
            }

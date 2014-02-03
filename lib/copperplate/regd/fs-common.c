@@ -68,7 +68,8 @@ static char *format_time(ticks_t value, char *buf, size_t bufsz)
 }
 
 ssize_t read_threads(struct fsobj *fsobj, char *buf,
-		     size_t size, off_t offset)
+		     size_t size, off_t offset,
+		     void *priv)
 {
 	struct thread_data *thread_data, *p;
 	char sbuf[64], pbuf[16], tbuf[64];
@@ -148,18 +149,26 @@ ssize_t read_threads(struct fsobj *fsobj, char *buf,
 		case SCHED_RR:
 			sched_class = "rr";
 			break;
+#ifdef SCHED_SPORADIC
 		case SCHED_SPORADIC:
 			sched_class = "pss";
 			break;
+#endif
+#ifdef SCHED_TP
 		case SCHED_TP:
 			sched_class = "tp";
 			break;
+#endif
+#ifdef SCHED_QUOTA
 		case SCHED_QUOTA:
 			sched_class = "quota";
 			break;
+#endif
+#ifdef SCHED_QUOTA
 		case SCHED_WEAK:
 			sched_class = "weak";
 			break;
+#endif
 		default:
 			sched_class = "other";
 			break;
@@ -186,7 +195,8 @@ struct heap_data {
 };
 
 ssize_t read_heaps(struct fsobj *fsobj, char *buf,
-		   size_t size, off_t offset)
+		   size_t size, off_t offset,
+		   void *priv)
 {
 	struct heap_data *heap_data, *p;
 	struct sysgroup_memspec *obj;
@@ -254,7 +264,8 @@ out:
 #endif /* CONFIG_XENO_PSHARED */
 
 ssize_t read_version(struct fsobj *fsobj, char *buf,
-		     size_t size, off_t offset)
+		     size_t size, off_t offset,
+		     void *priv)
 {
 	return sprintf(buf, "%s\n", XENO_VERSION_STRING);
 }

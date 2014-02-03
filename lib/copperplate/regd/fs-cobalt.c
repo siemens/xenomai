@@ -89,7 +89,8 @@ char *format_thread_status(const struct thread_data *p, char *buf, size_t len)
 
 #define PROC_PULL_HANDLER(__name, __path)				\
 ssize_t read_ ## __name(struct fsobj *fsobj, char *buf,			\
-			size_t size, off_t offset)			\
+			size_t size, off_t offset,			\
+			void *priv)					\
 {									\
 	return pull_proc_data("/proc/xenomai/" __path, buf, size);	\
 }

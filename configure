@@ -12937,7 +12937,7 @@ fi
 $as_echo "${use_registry:-no}" >&6; }
 
 if test x$use_registry = xy; then
-	fuse_cflags="-D_FILE_OFFSET_BITS=64 -DFUSE_USE_VERSION=26"
+	fuse_cflags="-D_FILE_OFFSET_BITS=64 -DFUSE_USE_VERSION=25"
 	fuse_ldflags="-lfuse"
 
 	ac_ext=c
@@ -13019,7 +13019,7 @@ $as_echo "#define CONFIG_XENO_REGISTRY 1" >>confdefs.h
 $as_echo "#define _FILE_OFFSET_BITS 64" >>confdefs.h
 
 
-$as_echo "#define FUSE_USE_VERSION 26" >>confdefs.h
+$as_echo "#define FUSE_USE_VERSION 25" >>confdefs.h
 
 fi
  if test x$use_registry = xy; then

@@ -32,12 +32,14 @@ struct fsobj;
 #ifdef CONFIG_XENO_REGISTRY
 
 struct registry_operations {
-	int (*open)(struct fsobj *fsobj);
-	int (*release)(struct fsobj *fsobj);
+	int (*open)(struct fsobj *fsobj, void *priv);
+	int (*release)(struct fsobj *fsobj, void *priv);
 	ssize_t (*read)(struct fsobj *fsobj,
-			char *buf, size_t size, off_t offset);
+			char *buf, size_t size, off_t offset,
+			void *priv);
 	ssize_t (*write)(struct fsobj *fsobj,
-			 const char *buf, size_t size, off_t offset);
+			 const char *buf, size_t size, off_t offset,
+			 void *priv);
 };
 
 struct regfs_dir;
@@ -47,6 +49,7 @@ struct fsobj {
 	char *path;
 	const char *basename;
 	int mode;
+	size_t privsz;
 	struct regfs_dir *dir;
 	struct timespec ctime;
 	struct timespec mtime;
@@ -62,7 +65,8 @@ extern "C" {
 int registry_add_dir(const char *fmt, ...);
 
 void registry_init_file(struct fsobj *fsobj,
-			const struct registry_operations *ops);
+			const struct registry_operations *ops,
+			size_t privsz);
 
 int registry_add_file(struct fsobj *fsobj,
 		      int mode,
@@ -97,10 +101,10 @@ int registry_add_dir(const char *fmt, ...)
 }
 
 static inline
-int registry_init_file(struct fsobj *fsobj,
-		       const struct registry_operations *ops)
+void registry_init_file(struct fsobj *fsobj,
+			const struct registry_operations *ops,
+			size_t privsz)
 {
-	return 0;
 }
 
 static inline

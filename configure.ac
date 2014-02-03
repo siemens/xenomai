@@ -286,7 +286,7 @@ AC_ARG_ENABLE(registry,
 AC_MSG_RESULT(${use_registry:-no})
 
 if test x$use_registry = xy; then
-	fuse_cflags="-D_FILE_OFFSET_BITS=64 -DFUSE_USE_VERSION=26"
+	fuse_cflags="-D_FILE_OFFSET_BITS=64 -DFUSE_USE_VERSION=25"
 	fuse_ldflags="-lfuse"
 	AC_LANG_SAVE
 	AC_LANG_C
@@ -303,7 +303,7 @@ if test x$use_registry = xy; then
 	AC_LANG_RESTORE
 	AC_DEFINE(CONFIG_XENO_REGISTRY,1,[config])
 	AC_DEFINE(_FILE_OFFSET_BITS,64,[config])
-	AC_DEFINE(FUSE_USE_VERSION,26,[config])
+	AC_DEFINE(FUSE_USE_VERSION,25,[config])
 fi
 AM_CONDITIONAL(XENO_REGISTRY,[test x$use_registry = xy])
 
