@@ -151,9 +151,11 @@ static void task_finalizer(struct threadobj *thobj)
 {
 	struct wind_task *task = container_of(thobj, struct wind_task, thobj);
 
-	write_lock_nocancel(&wind_task_lock);
-	pvlist_remove(&task->next);
-	write_unlock(&wind_task_lock);
+	if (pvholder_linked(&task->next)) {
+		write_lock_nocancel(&wind_task_lock);
+		pvlist_remove(&task->next);
+		write_unlock(&wind_task_lock);
+	}
 
 	task->tcb->status |= WIND_DEAD;
 	cluster_delobj(&wind_task_table, &task->cobj);
@@ -356,6 +358,7 @@ static STATUS __taskInit(struct wind_task *task,
 	idata.finalizer = task_finalizer;
 	idata.priority = cprio;
 	threadobj_init(&task->thobj, &idata);
+	initpvh(&task->next);
 
 	ret = __bt(cluster_addobj(&wind_task_table, task->name, &task->cobj));
 	if (ret) {
