@@ -15,12 +15,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
+#pragma GCC system_header
+#include_next <syslog.h>
+
 #ifndef _COBALT_SYSLOG_H
 #define _COBALT_SYSLOG_H
 
-#pragma GCC system_header
-#include <stdarg.h>
-#include_next <syslog.h>
 #include <xeno_config.h>
 #include <cobalt/wrappers.h>
 

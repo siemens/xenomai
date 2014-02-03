@@ -16,11 +16,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
+#pragma GCC system_header
+#include_next <stdio.h>
+
 #ifndef _COBALT_STDIO_H
 #define _COBALT_STDIO_H
 
-#pragma GCC system_header
-#include_next <stdio.h>
 #include <stddef.h>
 #include <stdarg.h>
 #include <xeno_config.h>

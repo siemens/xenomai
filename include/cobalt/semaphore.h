@@ -15,11 +15,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
+#pragma GCC system_header
+#include_next <semaphore.h>
+
 #ifndef _COBALT_SEMAPHORE_H
 #define _COBALT_SEMAPHORE_H
 
-#pragma GCC system_header
-#include_next <semaphore.h>
 #include <nocore/atomic.h>
 #include <cobalt/wrappers.h>
 #include <cobalt/uapi/sem.h>

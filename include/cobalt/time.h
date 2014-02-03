@@ -15,11 +15,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
+#pragma GCC system_header
+#include_next <time.h>
+
 #ifndef _COBALT_TIME_H
 #define _COBALT_TIME_H
 
-#pragma GCC system_header
-#include_next <time.h>
 /* Re-read in case we came from selective __need* block. */
 #include_next <time.h>
 #include <cobalt/wrappers.h>
