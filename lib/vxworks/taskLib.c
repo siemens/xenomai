@@ -188,7 +188,8 @@ static inline char *task_decode_status(struct wind_task *task, char *buf)
 }
 
 static ssize_t task_registry_read(struct fsobj *fsobj,
-				 char *buf, size_t size, off_t offset)
+				  char *buf, size_t size, off_t offset,
+				  void *priv)
 {
 	struct wind_task *task;
 	char sbuf[64];
@@ -369,7 +370,7 @@ static STATUS __taskInit(struct wind_task *task,
 		return ERROR;
 	}
 
-	registry_init_file(&task->fsobj, &registry_ops);
+	registry_init_file(&task->fsobj, &registry_ops, 0);
 
 	cta.prio = cprio;
 	cta.start = task_trampoline;
