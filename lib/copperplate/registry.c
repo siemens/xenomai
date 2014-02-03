@@ -38,7 +38,10 @@
 #include <xeno_config.h>
 #include "boilerplate/hash.h"
 #include "copperplate/heapobj.h"
+#include "copperplate/threadobj.h"
+#include "copperplate/syncobj.h"
 #include "copperplate/registry.h"
+#include "copperplate/registry-obstack.h"
 #include "copperplate/clockobj.h"
 #include "boilerplate/lock.h"
 #include "copperplate/debug.h"
@@ -714,4 +717,147 @@ void registry_pkg_destroy(void)
 		pthread_join(regfs_thid, NULL);
 		regfs_thid = 0;
 	}
+}
+
+int fsobj_obstack_release(struct fsobj *fsobj, void *priv)
+{
+	fsobstack_destroy(priv);
+
+	return 0;
+}
+
+ssize_t fsobj_obstack_read(struct fsobj *fsobj,
+			   char *buf, size_t size, off_t offset,
+			   void *priv)
+{
+	return fsobstack_pull(priv, buf, size);
+}
+
+int fsobstack_grow_format(struct fsobstack *o, const char *fmt, ...)
+{
+	char buf[256], *p = buf;
+	int len = sizeof(buf), n;
+	va_list ap;
+
+	for (;;) {
+               va_start(ap, fmt);
+               n = vsnprintf(p, len, fmt, ap);
+               va_end(ap);
+
+	       if (n > 0 && n < len)
+		       obstack_grow(&o->obstack, p, n);
+
+	       if (p != buf)
+		       xnfree(p);
+
+               if (n < len)
+		       return n < 0 ? -EINVAL : n;
+
+	       len = n + 1;
+	       p = xnmalloc(len);
+	       if (p == NULL)
+		       break;
+           }
+
+	return -ENOMEM;
+}
+
+ssize_t fsobstack_pull(struct fsobstack *o, char *buf, size_t size)
+{
+	size_t len;
+
+	if (o->data == NULL)	/* Not finished. */
+		return -EIO;
+
+	len = o->len;
+	if (len > 0) {
+		if (len > size)
+			len = size;
+		o->len -= len;
+		memcpy(buf, o->data, len);
+		o->data += len;
+	}
+
+	return len;
+}
+
+static int collect_wait_list(struct fsobstack *o,
+			     struct syncobj *sobj,
+			     struct list *wait_list,
+			     int *wait_count,
+			     struct fsobstack_syncops *ops)
+{
+	struct threadobj *thobj;
+	struct syncstate syns;
+	struct obstack cache;
+	int count, ret;
+	void *p, *e;
+
+	obstack_init(&cache);
+redo:
+	smp_rmb();
+	count = *wait_count;
+	if (count == 0)
+		goto out;
+
+	/* Pre-allocate the obstack room without holding any lock. */
+	ret = ops->prepare_cache(o, &cache, count);
+	if (ret)
+		goto out;
+
+	ret = syncobj_lock(sobj, &syns);
+	if (ret) {
+		obstack_free(&cache, NULL);
+		return ret;
+	}
+
+	/* Re-validate the previous item count under lock. */
+	if (count != *wait_count) {
+		syncobj_unlock(sobj, &syns);
+		obstack_free(&cache, NULL);
+		goto redo;
+	}
+
+	p = obstack_base(&cache);
+	list_for_each_entry(thobj, wait_list, wait_link)
+		p += ops->collect_data(p, thobj);
+
+	syncobj_unlock(sobj, &syns);
+
+	/*
+	 * Some may want to format data directly from the collect
+	 * handler, when no gain is expected from splitting the
+	 * collect and format steps. In that case, we may have no
+	 * format handler.
+	 */
+	e = obstack_next_free(&cache);
+	p = obstack_finish(&cache);
+	if (ops->format_data == NULL) {
+		if (e != p)
+			obstack_grow(&o->obstack, p, e - p);
+		goto out;
+	}
+
+	/* Finally, format the output without holding any lock. */
+	do
+		p += ops->format_data(o, p);
+	while (p < e);
+out:
+	obstack_free(&cache, NULL);
+
+	return count;
+}
+
+int fsobstack_grow_syncobj_grant(struct fsobstack *o, struct syncobj *sobj,
+				 struct fsobstack_syncops *ops)
+{
+	return collect_wait_list(o, sobj, &sobj->grant_list,
+				 &sobj->grant_count, ops);
+}
+
+int fsobstack_grow_syncobj_drain(struct fsobstack *o, struct syncobj *sobj,
+				 struct fsobstack_syncops *ops)
+{
+	return collect_wait_list(o, sobj, &sobj->drain_list,
+				 &sobj->drain_count, ops);
 }

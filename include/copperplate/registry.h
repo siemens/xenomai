@@ -21,8 +21,10 @@
 
 #include <sys/types.h>
 #include <pthread.h>
+#include <fcntl.h>
 #include <boilerplate/list.h>
 #include <boilerplate/hash.h>
+#include <boilerplate/obstack.h>
 #include <copperplate/init.h>
 
 struct fsobj;
@@ -138,4 +140,4 @@ void registry_pkg_destroy(void)
 
 #endif /* !CONFIG_XENO_REGISTRY */
 
-#endif /* _COPPERPLATE_REGISTRY_H */
+#endif /* !_COPPERPLATE_REGISTRY_H */
