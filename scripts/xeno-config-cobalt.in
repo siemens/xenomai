@@ -154,6 +154,7 @@ while test $# -gt 0; do
 	    for skin in $skin_list; do
 		case "$skin" in
 		    posix|cobalt)
+			ldflags="`dump_wrappers cobalt.wrappers` $ldflags"
 			;;
 		    vxworks|psos|alchemy)
 			copperplate="$WRAP_MAIN -lcopperplate"
@@ -168,7 +169,6 @@ while test $# -gt 0; do
 			;;
 		esac
 	    done
-	    dump_wrappers cobalt.wrappers
 	    echo "$ldflags $copperplate $XENO_POSIX_LDFLAGS"
 	    ;;
 	--core)
