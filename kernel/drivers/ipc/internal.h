@@ -42,28 +42,28 @@ struct rtipc_protocol {
 	void (*proto_exit)(void);
 	struct {
 		int (*socket)(struct rtipc_private *priv,
-			      rtdm_user_info_t *user_info);
-		int (*close)(struct rtipc_private *priv,
-			     rtdm_user_info_t *user_info);
+			      struct rtdm_fd *context);
+		void (*close)(struct rtipc_private *priv,
+			struct rtdm_fd *context);
 		ssize_t (*recvmsg)(struct rtipc_private *priv,
-				   rtdm_user_info_t *user_info,
+				   struct rtdm_fd *context,
 				   struct msghdr *msg, int flags);
 		ssize_t (*sendmsg)(struct rtipc_private *priv,
-				   rtdm_user_info_t *user_info,
+				   struct rtdm_fd *context,
 				   const struct msghdr *msg, int flags);
 		ssize_t (*read)(struct rtipc_private *priv,
-				rtdm_user_info_t *user_info,
+				struct rtdm_fd *context,
 				void *buf, size_t len);
 		ssize_t (*write)(struct rtipc_private *priv,
-				 rtdm_user_info_t *user_info,
+				 struct rtdm_fd *context,
 				 const void *buf, size_t len);
 		int (*ioctl)(struct rtipc_private *priv,
-			     rtdm_user_info_t *user_info,
+			     struct rtdm_fd *context,
 			     unsigned int request, void *arg);
 	} proto_ops;
 };
 
-static inline void *rtipc_context_to_state(struct rtdm_dev_context *context)
+static inline void *rtipc_context_to_state(struct rtdm_fd *context)
 {
 	struct rtipc_private *p = rtdm_context_to_private(context);
 	return p->state;
@@ -97,16 +97,16 @@ static inline void rtipc_ns_to_timeval(struct timeval *tv, nanosecs_rel_t ns)
 	tv->tv_usec = nsecs / 1000;
 }
 
-int rtipc_get_arg(rtdm_user_info_t *user_info,
+int rtipc_get_arg(struct rtdm_fd *fd,
 		  void *dst, const void *src, size_t len);
 
-int rtipc_put_arg(rtdm_user_info_t *user_info,
+int rtipc_put_arg(struct rtdm_fd *fd,
 		  void *dst, const void *src, size_t len);
 
-int rtipc_get_sockaddr(rtdm_user_info_t *user_info,
+int rtipc_get_sockaddr(struct rtdm_fd *fd,
 		       const void *arg, struct sockaddr_ipc **saddrp);
 
-int rtipc_put_sockaddr(rtdm_user_info_t *user_info, void *arg,
+int rtipc_put_sockaddr(struct rtdm_fd *fd, void *arg,
 		       const struct sockaddr_ipc *saddr);
 
 ssize_t rtipc_get_iov_flatlen(struct iovec *iov, int iovlen);
