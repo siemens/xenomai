@@ -129,7 +129,7 @@ static inline char *pvstrdup(const char *ptr)
 {
 	char *str;
 
-	str = pvmalloc(strlen(ptr) + 1);
+	str = (char *)pvmalloc(strlen(ptr) + 1);
 	if (str == NULL)
 		return NULL;
 

@@ -282,7 +282,7 @@ void *__threadobj_alloc(size_t tcb_struct_size,
 
 static inline void threadobj_free(struct threadobj *thobj)
 {
-	xnfree((void *)thobj - thobj->core_offset);
+	xnfree((unsigned char *)thobj - thobj->core_offset);
 }
 
 void threadobj_init(struct threadobj *thobj,
