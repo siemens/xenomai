@@ -111,7 +111,7 @@ int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 	}
 
 	generate_name(mcb->name, name, &mutex_namegen);
-	mcb->owner = no_alchemy_task;
+	mcb->owner = NO_ALCHEMY_TASK;
 	__RT(pthread_mutexattr_init(&mattr));
 	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
 	__RT(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute));
@@ -409,7 +409,7 @@ int rt_mutex_inquire(RT_MUTEX *mutex, RT_MUTEX_INFO *info)
 		ret = 0;
 	} else {
 		__RT(pthread_mutex_unlock(&mcb->lock));
-		info->owner = no_alchemy_task;
+		info->owner = NO_ALCHEMY_TASK;
 	}
 
 	strcpy(info->name, mcb->name);

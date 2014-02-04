@@ -1981,6 +1981,6 @@ int rt_task_bind(RT_TASK *task,
  */
 int rt_task_unbind(RT_TASK *task)
 {
-	*task = no_alchemy_task;
+	*task = NO_ALCHEMY_TASK;
 	return 0;
 }
