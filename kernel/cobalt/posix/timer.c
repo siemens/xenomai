@@ -183,7 +183,7 @@ static inline int timer_create(clockid_t clockid,
 	if (cc == NULL)
 		return -EPERM;
 
-	timer = kmalloc(sizeof(*timer), GFP_KERNEL);
+	timer = xnmalloc(sizeof(*timer));
 	if (timer == NULL)
 		return -ENOMEM;
 	
@@ -242,7 +242,7 @@ fail:
 out:
 	xnlock_put_irqrestore(&nklock, s);
 
-	kfree(timer);
+	xnfree(timer);
 
 	return ret;
 }
@@ -296,7 +296,7 @@ timer_delete(timer_t timerid)
 
 	timer_cleanup(cc, timer);
 	xnlock_put_irqrestore(&nklock, s);
-	kfree(timer);
+	xnfree(timer);
 
 	return ret;
 
@@ -682,7 +682,7 @@ void cobalt_timers_cleanup(struct cobalt_process *p)
 		cobalt_call_extension(timer_cleanup, &timer->extref, ret);
 		timer_cleanup(p, timer);
 		xnlock_put_irqrestore(&nklock, s);
-		kfree(timer);
+		xnfree(timer);
 #if XENO_DEBUG(COBALT)
 		printk(XENO_INFO "deleting Cobalt timer %u\n", id);
 #endif /* XENO_DEBUG(COBALT) */
