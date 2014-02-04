@@ -47,7 +47,7 @@ int pshared_check(void *heap, void *addr);
 
 #define __main_heap	NULL
 
-#define dref_type(t)		typeof(t)
+#define dref_type(t)		__typeof__(t)
 #define __memoff(base, addr)	(addr)
 #define __memptr(base, off)	(off)
 #define __memchk(base, addr)	1

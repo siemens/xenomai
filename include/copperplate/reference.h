@@ -87,7 +87,7 @@ int __fnref_register(const char *libname,
 
 #else /* !CONFIG_XENO_PSHARED */
 
-#define fnref_type(t)		typeof(t)
+#define fnref_type(t)		__typeof__(t)
 #define fnref_null		NULL
 #define fnref_put(l, s)		(s)
 #define fnref_get(v, r)		((v) = (r))
