@@ -25,6 +25,7 @@
 #define _XENOMAI_VXWORKS_TASKINFO_H
 
 #include <vxworks/types.h>
+#include <vxworks/taskLib.h>
 
 typedef struct TASK_DESC {
 	TASK_ID td_tid;

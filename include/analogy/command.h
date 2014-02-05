@@ -24,6 +24,7 @@
 #define __ANALOGY_CMD__
 
 #include <analogy/context.h>
+#include <analogy/types.h>
 
 /*!
  * @addtogroup async1_lib

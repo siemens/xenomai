@@ -21,6 +21,7 @@
 #ifndef _COBALT_SYSLOG_H
 #define _COBALT_SYSLOG_H
 
+#include <stdarg.h>
 #include <xeno_config.h>
 #include <cobalt/wrappers.h>
 
