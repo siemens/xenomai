@@ -19,6 +19,7 @@
 #ifndef _COBALT_KERNEL_TREE_H
 #define _COBALT_KERNEL_TREE_H
 
+#include <linux/errno.h>
 #include <linux/rbtree.h>
 #include <cobalt/kernel/assert.h>
 
