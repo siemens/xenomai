@@ -388,7 +388,7 @@ static inline void *heapobj_alloc(struct heapobj *hobj,
 static inline void heapobj_free(struct heapobj *hobj,
 				void *ptr)
 {
-	return pvheapobj_free(hobj, ptr);
+	pvheapobj_free(hobj, ptr);
 }
 
 static inline size_t heapobj_validate(struct heapobj *hobj,
@@ -416,7 +416,7 @@ static inline void *xnmalloc(size_t size)
 
 static inline void xnfree(void *ptr)
 {
-	return pvfree(ptr);
+	pvfree(ptr);
 }
 
 static inline char *xnstrdup(const char *ptr)
