@@ -1,7 +1,6 @@
 includesubdir = $(includedir)/cobalt
 
 includesub_HEADERS =	\
-	arith.h		\
 	fcntl.h		\
 	mqueue.h	\
 	pthread.h	\
@@ -16,6 +15,9 @@ includesub_HEADERS =	\
 	trace.h		\
 	unistd.h	\
 	wrappers.h
+
+noinst_HEADERS =	\
+	arith.h
 
 SUBDIRS =		\
 	boilerplate	\
