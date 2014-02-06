@@ -372,7 +372,7 @@ u_long psos_task_denormalize_priority(int core_prio);
 extern unsigned int psos_long_names;
 
 #ifdef __cplusplus
-};
+}
 #endif /* __cplusplus */
 
 #endif /* !_XENOMAI_PSOS_PSOS_H */
