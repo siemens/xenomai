@@ -21,6 +21,7 @@
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <sys/select.h>
+#include <sys/timerfd.h>
 #include <sys/un.h>
 #include <signal.h>
 #include <stdio.h>
@@ -59,6 +60,8 @@ static char *sysroot;
 
 static int daemonize;
 
+static int linger;
+
 struct client {
 	char *mountpt;
 	int sockfd;
@@ -71,6 +74,7 @@ static void usage(void)
 {
 	fprintf(stderr, "usage: regd [--root=<dir>]   set registry root directory\n");
 	fprintf(stderr, "            [--daemonize]    run in the background\n");
+	fprintf(stderr, "            [--linger]       disable timed exit on idleness\n");
 }
 
 static const struct option options[] = {
@@ -92,6 +96,13 @@ static const struct option options[] = {
 		.name = "root",
 		.has_arg = 1,
 		.flag = NULL,
+	},
+	{
+#define linger_opt	3
+		.name = "linger",
+		.has_arg = 0,
+		.flag = NULL,
+		.val = 1,
 	},
 	{
 		.name = NULL,
@@ -254,14 +265,35 @@ static void unregister_client(int s)
 	}
 }
 
+static void delete_system_fs(void)
+{
+	umount2(sysroot, MNT_DETACH);
+	rmdir(sysroot);
+}
+
 static void handle_requests(void)
 {
+	struct itimerspec its;
 	fd_set refset, set;
-	int ret, s;
+	int ret, s, tmfd;
+	uint64_t exp;
 	char c;
 
 	FD_ZERO(&refset);
 	FD_SET(sockfd, &refset);
+
+	if (!linger) {
+		tmfd = timerfd_create(CLOCK_MONOTONIC, 0);
+		if (tmfd < 0)
+			error(1, errno, "handle_requests/timerfd_create");
+		/* Silently exit after 30s being idle. */
+		its.it_value.tv_sec = 30;
+		its.it_value.tv_nsec = 0;
+		its.it_interval.tv_sec = 30;
+		its.it_interval.tv_nsec = 0;
+		timerfd_settime(tmfd, 0, &its, NULL);
+		FD_SET(tmfd, &refset);
+	}
 
 	for (;;) {
 		set = refset;
@@ -278,9 +310,19 @@ static void handle_requests(void)
 				continue;
 			}
 			FD_SET(s, &refset);
+			if (!linger)
+				timerfd_settime(tmfd, 0, &its, NULL);
+		}
+		if (!linger && FD_ISSET(tmfd, &set)) {
+			ret = read(tmfd, &exp, sizeof(exp));
+			(void)ret;
+			if (pvlist_empty(&client_list)) {
+				delete_system_fs();
+				exit(0);
+			}
 		}
 		for (s = sockfd + 1; s < FD_SETSIZE; s++) {
-			if (!FD_ISSET(s, &set))
+			if (!FD_ISSET(s, &set) || linger || s == tmfd)
 				continue;
 			ret = recv(s, &c, sizeof(c), 0);
 			if (ret <= 0) {
@@ -290,12 +332,6 @@ static void handle_requests(void)
 			}
 		}
 	}
-}
-
-static void delete_system_fs(void)
-{
-	umount2(sysroot, MNT_DETACH);
-	rmdir(sysroot);
 }
 
 static void cleanup_handler(int sig)
@@ -366,6 +402,7 @@ int main(int argc, char *const *argv)
 			usage();
 			return 0;
 		case daemonize_opt:
+		case linger_opt:
 			break;
 		case root_opt:
 			rootdir = optarg;
