@@ -27,6 +27,7 @@
 #include "nocore/atomic.h"
 #include "boilerplate/lock.h"
 #include "boilerplate/time.h"
+#include "boilerplate/scope.h"
 #include "boilerplate/ancillaries.h"
 
 pthread_mutex_t __printlock;
@@ -184,6 +185,23 @@ char *generate_name(char *buf, const char *radix,
 
 	return buf;
 }
+
+#ifdef CONFIG_XENO_PSHARED
+
+/*
+ * Client libraries may override these symbols for implementing heap
+ * pointer validation in their own context (e.g. copperplate).
+ */
+
+__attribute__ ((weak))
+int pshared_check(void *heap, void *addr)
+{
+	return 1;
+}
+
+__attribute__ ((weak)) void *__main_heap = NULL;
+
+#endif /* !CONFIG_XENO_PSHARED */
 
 #ifdef __XENO_DEBUG__
 
