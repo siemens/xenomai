@@ -213,7 +213,7 @@ static inline void threadobj_set_current(struct threadobj *thobj)
 	pthread_setspecific(threadobj_tskey, thobj);
 }
 
-static inline struct threadobj *threadobj_current(void)
+static inline struct threadobj *__threadobj_get_current(void)
 {
 	return __threadobj_current;
 }
@@ -225,12 +225,18 @@ static inline void threadobj_set_current(struct threadobj *thobj)
 	pthread_setspecific(threadobj_tskey, thobj);
 }
 
-static inline struct threadobj *threadobj_current(void)
+static inline struct threadobj *__threadobj_get_current(void)
 {
-	return pthread_getspecific(threadobj_tskey);
+	return (struct threadobj *)pthread_getspecific(threadobj_tskey);
 }
 
 #endif /* !HAVE_TLS */
+
+static inline struct threadobj *threadobj_current(void)
+{
+	struct threadobj *thobj = __threadobj_get_current();
+	return thobj == NULL || thobj == THREADOBJ_IRQCONTEXT ? NULL : thobj;
+}
 
 #ifdef __XENO_DEBUG__
 
@@ -401,14 +407,13 @@ static inline int threadobj_unlock(struct threadobj *thobj)
 
 static inline int threadobj_irq_p(void)
 {
-	struct threadobj *current = threadobj_current();
+	struct threadobj *current = __threadobj_get_current();
 	return current == THREADOBJ_IRQCONTEXT;
 }
 
 static inline int threadobj_current_p(void)
 {
-	struct threadobj *current = threadobj_current();
-	return current && current != THREADOBJ_IRQCONTEXT;
+	return threadobj_current() != NULL;
 }
 
 static inline int __threadobj_lock_sched_once(struct threadobj *current)
