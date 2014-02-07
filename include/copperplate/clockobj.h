@@ -61,6 +61,10 @@ void clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks);
 void clockobj_get_time(struct clockobj *clkobj,
 		       ticks_t *pticks, ticks_t *ptsc);
 
+void clockobj_get_distance(struct clockobj *clkobj,
+			   const struct itimerspec *itm,
+			   struct timespec *delta);
+
 ticks_t clockobj_get_tsc(void);
 
 void clockobj_caltime_to_timeout(struct clockobj *clkobj, const struct tm *tm,

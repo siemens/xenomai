@@ -25,6 +25,7 @@
 #include <time.h>
 #include <string.h>
 #include "boilerplate/lock.h"
+#include "boilerplate/time.h"
 #include "copperplate/clockobj.h"
 #include "copperplate/debug.h"
 #include "internal.h"
@@ -205,11 +206,12 @@ void clockobj_set_date(struct clockobj *clkobj, ticks_t ticks)
 }
 
 /*
- * XXX: clockobj_set_resolution() should be called during the init
- * phase, not after. For performance reason, we want to run locklessly
- * for common time unit conversions, so the clockobj implementation
- * does assume that the clock resolution will not be updated
- * on-the-fly.
+ * CAUTION: clockobj_set_resolution() may be called during the init
+ * phase only, not after. IOW, the resolution is perceived as a
+ * constant when the application code executes. For performance
+ * reason, we want to run locklessly for common time unit conversions,
+ * so the clockobj implementation does assume that the clock
+ * resolution will NOT be updated after the init phase.
  */
 int clockobj_set_resolution(struct clockobj *clkobj, unsigned int resolution_ns)
 {
@@ -352,6 +354,27 @@ void clockobj_convert_clocks(struct clockobj *clkobj,
 	__RT(clock_gettime(clk_id, &now));
 	/* Absolute timeout again, clk_id-based this time. */
 	timespec_add(out, &delta, &now);
+}
+
+void clockobj_get_distance(struct clockobj *clkobj,
+			   const struct itimerspec *itm,
+			   struct timespec *delta)
+{
+	ticks_t now, start, interval, dist;
+
+	clockobj_get_time(clkobj, &now, NULL);
+	start = timespec_scalar(&itm->it_value);
+
+	if (start >= now)
+		/* Distance to first shot. */
+		dist = start - now;
+	else {
+		interval = timespec_scalar(&itm->it_interval);
+		/* Distance to next shot. */
+		dist = interval - ((now - start) % interval);
+	}
+
+	__clockobj_ticks_to_timespec(clkobj, dist, delta);
 }
 
 int clockobj_init(struct clockobj *clkobj,
