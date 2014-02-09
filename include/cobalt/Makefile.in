@@ -81,7 +81,7 @@ host_triplet = @host@
 target_triplet = @target@
 subdir = include/cobalt
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
-	$(includesub_HEADERS)
+	$(includesub_HEADERS) $(noinst_HEADERS)
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config/ac_prog_cc_for_build.m4 \
 	$(top_srcdir)/config/docbook.m4 \
@@ -152,7 +152,7 @@ am__uninstall_files_from_dir = { \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
 am__installdirs = "$(DESTDIR)$(includesubdir)"
-HEADERS = $(includesub_HEADERS)
+HEADERS = $(includesub_HEADERS) $(noinst_HEADERS)
 RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
   distclean-recursive maintainer-clean-recursive
 am__recursive_targets = \
@@ -375,7 +375,6 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 includesubdir = $(includedir)/cobalt
 includesub_HEADERS = \
-	arith.h		\
 	fcntl.h		\
 	mqueue.h	\
 	pthread.h	\
@@ -390,6 +389,9 @@ includesub_HEADERS = \
 	trace.h		\
 	unistd.h	\
 	wrappers.h
+
+noinst_HEADERS = \
+	arith.h
 
 SUBDIRS = \
 	boilerplate	\
