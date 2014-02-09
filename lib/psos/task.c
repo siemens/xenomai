@@ -169,18 +169,18 @@ static void task_finalizer(struct threadobj *thobj)
 	syncobj_destroy(&task->sobj, &syns);
 }
 
+static int task_prologue(void *arg)
+{
+	struct psos_task *task = arg;
+
+	return __bt(threadobj_prologue(&task->thobj, task->name));
+}
+
 static void *task_trampoline(void *arg)
 {
 	struct psos_task *task = arg;
 	struct psos_task_args *args = &task->args;
 	struct service svc;
-	int ret;
-
-	ret = __bt(threadobj_prologue(&task->thobj, task->name));
-	if (ret) {
-		backtrace_check();
-		goto done;
-	}
 
 	CANCEL_DEFER(svc);
 
@@ -200,12 +200,11 @@ static void *task_trampoline(void *arg)
 
 	threadobj_notify_entry();
 	args->entry(args->arg0, args->arg1, args->arg2, args->arg3);
-done:
 	threadobj_lock(&task->thobj);
 	threadobj_set_magic(&task->thobj, ~task_magic);
 	threadobj_unlock(&task->thobj);
 
-	pthread_exit((void *)(long)ret);
+	return NULL;
 }
 
 /*
@@ -330,7 +329,8 @@ u_long t_create(const char *name, u_long prio,
 	threadobj_init(&task->thobj, &idata);
 
 	cta.prio = cprio;
-	cta.start = task_trampoline;
+	cta.prologue = task_prologue;
+	cta.run = task_trampoline;
 	cta.arg = task;
 	cta.stacksize = ustack;
 	cta.detachstate = PTHREAD_CREATE_DETACHED;

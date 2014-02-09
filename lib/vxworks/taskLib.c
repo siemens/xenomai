@@ -215,6 +215,13 @@ static struct registry_operations registry_ops;
 
 #endif /* CONFIG_XENO_REGISTRY */
 
+static int task_prologue(void *arg)
+{
+	struct wind_task *task = arg;
+
+	return __bt(threadobj_prologue(&task->thobj, task->name));
+}
+
 static void *task_trampoline(void *arg)
 {
 	struct wind_task *task = arg;
@@ -222,12 +229,6 @@ static void *task_trampoline(void *arg)
 	struct timespec quantum;
 	struct service svc;
 	int ret;
-
-	ret = __bt(threadobj_prologue(&task->thobj, task->name));
-	if (ret) {
-		backtrace_check();
-		goto done;
-	}
 
 	CANCEL_DEFER(svc);
 
@@ -259,12 +260,12 @@ static void *task_trampoline(void *arg)
 	args->entry(args->arg0, args->arg1, args->arg2, args->arg3,
 		    args->arg4, args->arg5, args->arg6, args->arg7,
 		    args->arg8, args->arg9);
-done:
+
 	threadobj_lock(&task->thobj);
 	threadobj_set_magic(&task->thobj, ~task_magic);
 	threadobj_unlock(&task->thobj);
 
-	pthread_exit((void *)(long)ret);
+	return NULL;
 }
 
 /*
@@ -373,7 +374,8 @@ static STATUS __taskInit(struct wind_task *task,
 	registry_init_file(&task->fsobj, &registry_ops, 0);
 
 	cta.prio = cprio;
-	cta.start = task_trampoline;
+	cta.prologue = task_prologue;
+	cta.run = task_trampoline;
 	cta.arg = task;
 	cta.stacksize = stacksize;
 	cta.detachstate = PTHREAD_CREATE_DETACHED;

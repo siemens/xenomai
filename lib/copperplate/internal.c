@@ -26,10 +26,17 @@
 #include <errno.h>
 #include <limits.h>
 #include <linux/unistd.h>
+#include <boilerplate/ancillaries.h>
 #include <copperplate/clockobj.h>
 #include <copperplate/threadobj.h>
 #include <copperplate/init.h>
 #include "internal.h"
+
+static int thread_spawn_prologue(struct corethread_attributes *cta);
+
+static int thread_spawn_epilogue(struct corethread_attributes *cta);
+
+static void *thread_trampoline(void *arg);
 
 pid_t copperplate_get_tid(void)
 {
@@ -42,6 +49,8 @@ pid_t copperplate_get_tid(void)
 }
 
 #ifdef CONFIG_XENO_COBALT
+
+#include "cobalt/internal.h"
 
 int copperplate_probe_node(unsigned int id)
 {
@@ -56,13 +65,17 @@ int copperplate_probe_node(unsigned int id)
 	return pthread_probe_np((pid_t)id) == 0;
 }
 
-int copperplate_create_thread(const struct corethread_attributes *cta,
+int copperplate_create_thread(struct corethread_attributes *cta,
 			      pthread_t *tid)
 {
 	struct sched_param_ex param_ex;
 	pthread_attr_ex_t attr_ex;
 	size_t stacksize;
 	int policy, ret;
+
+	ret = thread_spawn_prologue(cta);
+	if (ret)
+		return __bt(ret);
 
 	stacksize = cta->stacksize;
 	if (stacksize < PTHREAD_STACK_MIN * 4)
@@ -76,10 +89,15 @@ int copperplate_create_thread(const struct corethread_attributes *cta,
 	pthread_attr_setschedparam_ex(&attr_ex, &param_ex);
 	pthread_attr_setstacksize_ex(&attr_ex, stacksize);
 	pthread_attr_setdetachstate_ex(&attr_ex, cta->detachstate);
-	ret = __bt(-pthread_create_ex(tid, &attr_ex, cta->start, cta->arg));
+	ret = __bt(-pthread_create_ex(tid, &attr_ex, thread_trampoline, cta));
 	pthread_attr_destroy_ex(&attr_ex);
 
-	return ret;
+	if (ret)
+		return __bt(ret);
+
+	thread_spawn_epilogue(cta);
+
+	return 0;
 }
 
 int copperplate_renice_thread(pthread_t tid, int prio)
@@ -93,6 +111,18 @@ int copperplate_renice_thread(pthread_t tid, int prio)
 	return __bt(-pthread_setschedparam_ex(tid, policy, &param_ex));
 }
 
+static inline void prepare_wait_corespec(void)
+{
+	/*
+	 * Switch back to primary mode eagerly, so that both the
+	 * parent and the child threads compete on the same priority
+	 * scale when handshaking. In addition, this ensures the child
+	 * thread enters the run() handler over the Xenomai domain,
+	 * which is a basic assumption for all clients.
+	 */
+	__cobalt_thread_harden();
+}
+
 #else /* CONFIG_XENO_MERCURY */
 
 int copperplate_probe_node(unsigned int id)
@@ -100,13 +130,17 @@ int copperplate_probe_node(unsigned int id)
 	return kill((pid_t)id, 0) == 0;
 }
 
-int copperplate_create_thread(const struct corethread_attributes *cta,
+int copperplate_create_thread(struct corethread_attributes *cta,
 			      pthread_t *tid)
 {
 	struct sched_param param;
 	pthread_attr_t attr;
 	size_t stacksize;
 	int policy, ret;
+
+	ret = thread_spawn_prologue(cta);
+	if (ret)
+		return __bt(ret);
 
 	stacksize = cta->stacksize;
 	if (stacksize < PTHREAD_STACK_MIN * 4)
@@ -120,10 +154,15 @@ int copperplate_create_thread(const struct corethread_attributes *cta,
 	pthread_attr_setschedparam(&attr, &param);
 	pthread_attr_setstacksize(&attr, stacksize);
 	pthread_attr_setdetachstate(&attr, cta->detachstate);
-	ret = __bt(-pthread_create(tid, &attr, cta->start, cta->arg));
+	ret = __bt(-pthread_create(tid, &attr, thread_trampoline, cta));
 	pthread_attr_destroy(&attr);
 
-	return ret;
+	if (ret)
+		return __bt(ret);
+
+	ret = thread_spawn_epilogue(cta);
+
+	return __bt(ret);
 }
 
 int copperplate_renice_thread(pthread_t tid, int prio)
@@ -137,7 +176,88 @@ int copperplate_renice_thread(pthread_t tid, int prio)
 	return __bt(-__RT(pthread_setschedparam(tid, policy, &param)));
 }
 
+static inline void prepare_wait_corespec(void)
+{
+	/* empty */
+}
+
 #endif  /* CONFIG_XENO_MERCURY */
+
+static int thread_spawn_prologue(struct corethread_attributes *cta)
+{
+	int ret;
+
+	ret = __RT(sem_init(&cta->__reserved.warm, 0, 0));
+	if (ret)
+		return __bt(ret);
+
+	cta->__reserved.status = -ENOSYS;
+
+	return 0;
+}
+
+static void thread_spawn_wait(sem_t *sem)
+{
+	int ret;
+
+	prepare_wait_corespec();
+
+	for (;;) {
+		ret = __RT(sem_wait(sem));
+		if (ret && errno == EINTR)
+			continue;
+		if (ret == 0)
+			return;
+		ret = -errno;
+		panic("sem_wait() failed with %s", symerror(ret));
+	}
+}
+
+static void *thread_trampoline(void *arg)
+{
+	struct corethread_attributes *cta = arg;
+	void *__arg, *(*__run)(void *arg);
+	sem_t released;
+	int ret;
+
+	/*
+	 * cta may be on the parent's stack, so it may be dandling
+	 * soon after the parent is posted: copy what we need from
+	 * this area early on.
+	 */
+	__run = cta->run;
+	__arg = cta->arg;
+	ret = cta->prologue(__arg);
+	cta->__reserved.status = ret;
+
+	if (ret) {
+		backtrace_check();
+		__RT(sem_post(&cta->__reserved.warm));
+		return (void *)(long)ret;
+	}
+
+	__RT(sem_init(&released, 0, 0));
+	cta->__reserved.released = &released;
+	__RT(sem_post(&cta->__reserved.warm));
+
+	thread_spawn_wait(&released);
+
+	__RT(sem_destroy(&released));
+
+	return __run(__arg);
+}
+
+static int thread_spawn_epilogue(struct corethread_attributes *cta)
+{
+	thread_spawn_wait(&cta->__reserved.warm);
+
+	if (cta->__reserved.status == 0)
+		__RT(sem_post(cta->__reserved.released));
+
+	__RT(sem_destroy(&cta->__reserved.warm));
+
+	return __bt(cta->__reserved.status);
+}
 
 void panic(const char *fmt, ...)
 {

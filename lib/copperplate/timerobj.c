@@ -35,8 +35,6 @@
 #include "copperplate/debug.h"
 #include "internal.h"
 
-static sem_t svsync;
-
 static pthread_mutex_t svlock;
 
 static pthread_t svthread;
@@ -95,6 +93,15 @@ static void timerobj_enqueue(struct timerobj *tmobj)
 	atpvh(&__tmobj->next, &tmobj->next);
 }
 
+static int server_prologue(void *arg)
+{
+	svpid = copperplate_get_tid();
+	timersv_init_corespec("timer-internal");
+	threadobj_set_current(THREADOBJ_IRQCONTEXT);
+
+	return 0;
+}
+
 static void *timerobj_server(void *arg)
 {
 	struct timespec now, value, interval;
@@ -102,14 +109,8 @@ static void *timerobj_server(void *arg)
 	sigset_t set;
 	int sig, ret;
 
-	svpid = copperplate_get_tid();
-	timersv_init_corespec("timer-internal");
-	threadobj_set_current(THREADOBJ_IRQCONTEXT);
 	sigemptyset(&set);
 	sigaddset(&set, SIGALRM);
-
-	/* Handshake with timerobj_spawn_server(). */
-	__RT(sem_post(&svsync));
 
 	for (;;) {
 		ret = __RT(sigwait(&set, &sig));
@@ -157,18 +158,12 @@ static int timerobj_spawn_server(void)
 		goto out;
 
 	cta.prio = threadobj_irq_prio;
-	cta.start = timerobj_server;
+	cta.prologue = server_prologue;
+	cta.run = timerobj_server;
 	cta.arg = NULL;
 	cta.stacksize = PTHREAD_STACK_MIN * 16;
 	cta.detachstate = PTHREAD_CREATE_DETACHED;
 	ret = __bt(copperplate_create_thread(&cta, &svthread));
-	if (ret)
-		return ret;
-
-	/* Wait for timer server to initialize. */
-	do
-		ret  = -__RT(sem_wait(&svsync));
-	while (ret == -EINTR);
 out:
 	write_unlock(&svlock);
 	pop_cleanup_lock(&svlock);
@@ -284,20 +279,12 @@ int timerobj_pkg_init(void)
 	pthread_mutexattr_t mattr;
 	int ret;
 
-	ret = __RT(sem_init(&svsync, 0, 0));
-	if (ret)
-		return __bt(-errno);
-
 	__RT(pthread_mutexattr_init(&mattr));
 	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
 	__RT(pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE));
 	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
 	ret = __RT(pthread_mutex_init(&svlock, &mattr));
 	__RT(pthread_mutexattr_destroy(&mattr));
-	if (ret) {
-		__RT(sem_destroy(&svsync));
-		return __bt(-ret);
-	}
 
-	return 0;
+	return __bt(-ret);
 }

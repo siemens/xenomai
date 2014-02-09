@@ -22,6 +22,7 @@
 #include <stdarg.h>
 #include <time.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include <sched.h>
 #include <xeno_config.h>
 #include <boilerplate/list.h>
@@ -55,10 +56,16 @@ struct shared_heap {
 
 struct corethread_attributes {
 	int prio;
-	void *(*start)(void *arg);
-	void *arg;
 	size_t stacksize;
 	int detachstate;
+	int (*prologue)(void *arg);
+	void *(*run)(void *arg);
+	void *arg;
+	struct {
+		int status;
+		sem_t warm;
+		sem_t *released;
+	} __reserved;
 };
 
 extern pid_t __node_id;
@@ -71,7 +78,7 @@ pid_t copperplate_get_tid(void);
 
 int copperplate_probe_node(unsigned int id);
 
-int copperplate_create_thread(const struct corethread_attributes *cta,
+int copperplate_create_thread(struct corethread_attributes *cta,
 			      pthread_t *tid);
 
 int copperplate_renice_thread(pthread_t tid, int prio);

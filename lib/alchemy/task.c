@@ -143,16 +143,17 @@ static void task_finalizer(struct threadobj *thobj)
 	syncobj_destroy(&tcb->sobj_msg, &syns);
 }
 
-static int task_prologue(struct alchemy_task *tcb)
+static int task_prologue_1(void *arg)
+{
+	struct alchemy_task *tcb = arg;
+
+	return __bt(threadobj_prologue(&tcb->thobj, tcb->name));
+}
+
+static int task_prologue_2(struct alchemy_task *tcb)
 {
 	struct service svc;
 	int ret;
-
-	ret = __bt(threadobj_prologue(&tcb->thobj, tcb->name));
-	if (ret) {
-		backtrace_check();
-		return ret;
-	}
 
 	CANCEL_DEFER(svc);
 
@@ -167,23 +168,22 @@ static int task_prologue(struct alchemy_task *tcb)
 	return ret;
 }
 
-static void *task_trampoline(void *arg)
+static void *task_entry(void *arg)
 {
 	struct alchemy_task *tcb = arg;
 	int ret;
 
-	ret = task_prologue(tcb);
+	ret = __bt(task_prologue_2(tcb));
 	if (ret)
-		goto out;
+		return (void *)(long)ret;
 
 	threadobj_notify_entry();
 	tcb->entry(tcb->arg);
-out:
 	threadobj_lock(&tcb->thobj);
 	threadobj_set_magic(&tcb->thobj, ~task_magic);
 	threadobj_unlock(&tcb->thobj);
 
-	pthread_exit((void *)(long)ret);
+	return NULL;
 }
 
 static void delete_tcb(struct alchemy_task *tcb)
@@ -354,7 +354,8 @@ int rt_task_create(RT_TASK *task, const char *name,
 	cta.detachstate = mode & T_JOINABLE ?
 		PTHREAD_CREATE_JOINABLE : PTHREAD_CREATE_DETACHED;
 	cta.prio = prio;
-	cta.start = task_trampoline;
+	cta.prologue = task_prologue_1;
+	cta.run = task_entry;
 	cta.arg = tcb;
 	cta.stacksize = stksize;
 
@@ -676,11 +677,13 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 
 	threadobj_shadow(&tcb->thobj);	/* We won't wait in prologue. */
 
-	ret = task_prologue(tcb);
-	if (ret) {
-		delete_tcb(tcb);
-		goto out;
-	}
+	ret = threadobj_prologue(&tcb->thobj, tcb->name);
+	if (ret)
+		goto undo;
+
+	ret = task_prologue_2(tcb);
+	if (ret)
+		goto undo;
 
 	self = pthread_self();
 	if (task)
@@ -691,6 +694,9 @@ out:
 	CANCEL_RESTORE(svc);
 
 	return ret;
+undo:
+	delete_tcb(tcb);
+	goto out;
 }
 
 /**
