@@ -563,6 +563,7 @@ int syncobj_destroy(struct syncobj *sobj, struct syncstate *syns)
 
 void syncobj_uninit(struct syncobj *sobj)
 {
+	monitor_enter(sobj);
 	assert(sobj->wait_count == 0);
 	syncobj_cleanup_corespec(sobj);
 }
