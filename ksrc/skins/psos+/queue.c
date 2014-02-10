@@ -161,11 +161,10 @@ static u_long feed_pool(xnqueue_t *chunkq,
 	if (mbufcount < PSOS_QUEUE_MIN_ALLOC)
 		mbufcount = PSOS_QUEUE_MIN_ALLOC;	/* Minimum allocation */
 
-	datalen = ((datalen + 3) & ~0x3);
-	bufsize = sizeof(*mbuf) + datalen - sizeof(mbuf->data);
-
-	if (bufsize < sizeof(*mbuf))
-		bufsize = sizeof(*mbuf);
+	if (datalen < sizeof(mbuf->data))
+		datalen = sizeof(mbuf->data);
+	datalen = (datalen - sizeof(mbuf->data) + 3) & ~0x3;
+	bufsize = sizeof(*mbuf) + datalen;
 
 	/* A chunk starts with a holder */
 	bstart = (char *)xnmalloc(sizeof(xnholder_t) + bufsize * mbufcount);
