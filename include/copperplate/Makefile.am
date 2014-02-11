@@ -11,8 +11,10 @@ includesub_HEADERS =		\
 	notifier.h		\
 	reference.h		\
 	registry.h		\
-	registry-obstack.h	\
 	syncobj.h		\
 	threadobj.h		\
 	traceobj.h		\
 	wrappers.h
+
+noinst_HEADERS =		\
+	registry-obstack.h
