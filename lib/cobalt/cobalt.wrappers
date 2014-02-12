@@ -95,6 +95,7 @@
 --wrap fputc
 --wrap putchar
 --wrap fwrite
+--wrap fclose
 --wrap syslog
 --wrap vsyslog
 --wrap malloc

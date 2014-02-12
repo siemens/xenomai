@@ -82,6 +82,8 @@ int __wrap_putchar(int c);
 COBALT_DECL(size_t,
 	    fwrite(const void *ptr, size_t sz, size_t nmemb, FILE *stream));
 
+COBALT_DECL(int, fclose(FILE *stream));
+
 int rt_vfprintf(FILE *stream, const char *format, va_list args);
 
 int rt_vprintf(const char *format, va_list args);

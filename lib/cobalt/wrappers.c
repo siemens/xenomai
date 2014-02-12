@@ -368,6 +368,12 @@ size_t __real_fwrite(const void *ptr, size_t sz, size_t nmemb, FILE *stream)
 }
 
 __attribute__ ((weak))
+int __real_fclose(FILE *stream)
+{
+	return fclose(stream);
+}
+
+__attribute__ ((weak))
 void __real_syslog(int priority, const char *fmt, ...)
 {
 	va_list args;

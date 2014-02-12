@@ -921,6 +921,12 @@ COBALT_IMPL(size_t, fwrite, (const void *ptr, size_t size, size_t nmemb, FILE *s
 
 }
 
+COBALT_IMPL(int, fclose, (FILE *stream))
+{
+	rt_print_flush_buffers();
+	return __STD(fclose(stream));
+}
+
 COBALT_IMPL(void, vsyslog, (int priority, const char *fmt, va_list ap))
 {
 	if (cobalt_get_current() != XN_NO_HANDLE &&
