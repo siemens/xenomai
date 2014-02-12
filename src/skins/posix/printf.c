@@ -118,6 +118,12 @@ size_t __wrap_fwrite(void *ptr, size_t size, size_t nmemb, FILE *stream)
 
 }
 
+int __wrap_fclose(FILE *stream)
+{
+	rt_print_flush_buffers();
+	return __real_fclose(stream);
+}
+
 void __wrap_vsyslog(int priority, const char *fmt, va_list ap)
 {
 	if (unlikely(xeno_get_current() != XN_NO_HANDLE &&
