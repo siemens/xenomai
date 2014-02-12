@@ -1661,8 +1661,6 @@ void xnthread_migrate_passive(struct xnthread *thread, struct xnsched *sched)
 		   "thread %p thread_name %s cpu %d",
 		   thread, xnthread_name(thread), xnsched_cpu(sched));
 
-	XENO_BUGON(NUCLEUS, !cpu_isset(xnsched_cpu(sched), xnsched_realtime_cpus));
-
 	if (thread->sched == sched)
 		return;
 	/*

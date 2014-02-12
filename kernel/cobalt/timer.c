@@ -484,8 +484,6 @@ void __xntimer_migrate(struct xntimer *timer, struct xnsched *sched)
 	trace_mark(xn_nucleus, timer_migrate, "timer %p cpu %d",
 		   timer, (int)xnsched_cpu(sched));
 
-	XENO_BUGON(NUCLEUS, !cpu_isset(xnsched_cpu(sched), xnsched_realtime_cpus));
-
 	if (sched == timer->sched)
 		return;
 
