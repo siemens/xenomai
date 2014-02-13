@@ -395,9 +395,9 @@ static inline void check_affinity(struct task_struct *p) /* nklocked, IRQs off *
 	 * primary mode on a CPU Xenomai shall not use. This is
 	 * hopeless, whine and kill that thread asap.
 	 */
-	if (!cpu_isset(cpu, xnsched_realtime_cpus)) {
-		printk(XENO_WARN "thread %s[%d] switched to non-rt CPU, aborted.\n",
-		       thread->name, xnthread_host_pid(thread));
+	if (!xnsched_supported_cpu(cpu)) {
+		printk(XENO_WARN "thread %s[%d] switched to non-rt CPU%d, aborted.\n",
+		       thread->name, xnthread_host_pid(thread), cpu);
 		/*
 		 * Can't call xnthread_cancel() from a migration
 		 * point, that would break. Since we are on the wakeup
