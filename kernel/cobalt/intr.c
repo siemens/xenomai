@@ -36,7 +36,7 @@
 static DEFINE_MUTEX(intrlock);
 
 #ifdef CONFIG_XENO_OPT_STATS
-xnintr_t nktimer;	     /* Only for statistics */
+struct xnintr nktimer;	     /* Only for statistics */
 static int xnintr_count = 1; /* Number of attached xnintr objects + nktimer */
 static int xnintr_list_rev;  /* Modification counter of xnintr list */
 
@@ -106,7 +106,7 @@ void xnintr_core_clock_handler(void)
 		return;
 	}
 
-	statp = __this_cpu_ptr(nktimer.stats);
+	statp = xnstat_percpu_data;
 	prev = xnstat_exectime_switch(sched, &statp->account);
 	xnstat_counter_inc(&statp->hits);
 
@@ -849,6 +849,7 @@ static inline int xnintr_is_timer_irq(int irq)
 }
 
 #ifdef CONFIG_XENO_OPT_STATS
+
 int xnintr_get_query_lock(void)
 {
 	return mutex_lock_interruptible(&intrlock) ? -ERESTARTSYS : 0;
@@ -932,6 +933,7 @@ int xnintr_query_next(int irq, xnintr_iterator_t *iterator, char *name_buf)
 
 	return 0;
 }
+
 #endif /* CONFIG_XENO_OPT_STATS */
 
 #ifdef CONFIG_XENO_OPT_VFILE
