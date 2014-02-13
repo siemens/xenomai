@@ -235,8 +235,8 @@ static __init void mach_cleanup(void)
 
 static __init int enable_timesource(void)
 {
+	int htickval, cpu, _cpu;
 	struct xnsched *sched;
-	int htickval, cpu;
 	spl_t s;
 
 	trace_mark(xn_nucleus, enable_timesource, MARK_NOARGS);
@@ -256,12 +256,8 @@ static __init int enable_timesource(void)
 
 	for_each_realtime_cpu(cpu) {
 		htickval = xntimer_grab_hardware(cpu);
-		if (htickval < 0) {
-			while (--cpu >= 0)
-				xntimer_release_hardware(cpu);
-
-			return htickval;
-		}
+		if (htickval < 0)
+			goto fail;
 
 		xnlock_get_irqsave(&nklock, s);
 
@@ -294,14 +290,29 @@ static __init int enable_timesource(void)
 		else if (htickval == 1)
 			xntimer_start(&sched->htimer, 0, 0, XN_RELATIVE);
 
-#if defined(CONFIG_XENO_OPT_WATCHDOG)
+#ifdef CONFIG_XENO_OPT_WATCHDOG
 		xntimer_start(&sched->wdtimer, 1000000000UL, 1000000000UL, XN_RELATIVE);
 		xnsched_reset_watchdog(sched);
-#endif /* CONFIG_XENO_OPT_WATCHDOG */
+#endif
 		xnlock_put_irqrestore(&nklock, s);
 	}
 
 	return 0;
+fail:
+	for_each_realtime_cpu(_cpu) {
+		if (_cpu == cpu)
+			break;
+		xnlock_get_irqsave(&nklock, s);
+		sched = xnsched_struct(cpu);
+		xntimer_stop(&sched->htimer);
+#ifdef CONFIG_XENO_OPT_WATCHDOG
+		xntimer_stop(&sched->wdtimer);
+#endif
+		xnlock_put_irqrestore(&nklock, s);
+		xntimer_release_hardware(_cpu);
+	}
+
+	return htickval;
 }
 
 static __init int sys_init(void)
