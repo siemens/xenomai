@@ -40,6 +40,41 @@ indifferently.
   misnomer. This option should be left enabled (default), unless
   *linuxthreads* are used instead of *NPTL*.
 
+.Kernel parameters (Cobalt)
+
+- System parameters have been renamed:
+
+[normal]
+xeno_hal.supported_cpus -> xenomai.supported_cpus
+[normal]
+xeno_hal.clockfreq -> xenomai.clockfreq
+[normal]
+xeno_hal.disable -> xenomai.disable
+[normal]
+xeno_hal.timerfreq -> xenomai.timerfreq
+[normal]
+xeno_hal.cpufreq -> xenomai.cpufreq
+[normal]
+xeno_nucleus.watchdog_timeout -> xenomai.watchdog_timeout
+[normal]
+xeno_nucleus.xenomai_gid -> xenomai.xenomai_gid
+[normal]
+xeno_nucleus.sysheap_size -> xenomai.sysheap_size
+[normal]
+xeno_hal.smi (x86 only) -> xeno_machine.smi
+[normal]
+xeno_hal.smi_mask (x86 only) -> xeno_machine.smi_mask
+[normal]
+xeno_rtdm.devname_hashtab_size -> rtdm.devname_hashtab_size
+[normal]
+xeno_rtdm.protocol_hashtab_size -> rtdm.protocol_hashtab_size
+
+- The following parameters have been dropped
+
+[normal]
+xeno_rtdm.tick_arg. Rationale: periodic timing is directly handled
+from the API layer in user-space. Cobalt kernel timing is tickless.
+
 == Getting the system state ==
 
 Querying the state of the real-time system should be done via the new
