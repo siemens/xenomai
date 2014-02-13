@@ -350,7 +350,7 @@ static inline int xnintr_irq_attach(xnintr_t *intr)
 		}
 		shirq->unhandled = 0;
 
-		ret = ipipe_request_irq(&xnarch_machdata.domain,
+		ret = ipipe_request_irq(&xnsched_realtime_domain,
 					intr->irq, handler, intr, (ipipe_irq_ackfn_t)intr->iack);
 		if (ret)
 			return ret;
@@ -381,7 +381,7 @@ static inline void xnintr_irq_detach(xnintr_t *intr)
 
 			/* Release the IRQ line if this was the last user */
 			if (shirq->handlers == NULL)
-				ipipe_free_irq(&xnarch_machdata.domain, intr->irq);
+				ipipe_free_irq(&xnsched_realtime_domain, intr->irq);
 
 			return;
 		}
@@ -406,7 +406,7 @@ static xnintr_irq_t xnirqs[IPIPE_NR_IRQS];
 
 static inline xnintr_t *xnintr_shirq_first(unsigned int irq)
 {
-	return __ipipe_irq_cookie(&xnarch_machdata.domain, irq);
+	return __ipipe_irq_cookie(&xnsched_realtime_domain, irq);
 }
 
 static inline xnintr_t *xnintr_shirq_next(xnintr_t *prev)
@@ -416,7 +416,7 @@ static inline xnintr_t *xnintr_shirq_next(xnintr_t *prev)
 
 static inline int xnintr_irq_attach(xnintr_t *intr)
 {
-	return ipipe_request_irq(&xnarch_machdata.domain,
+	return ipipe_request_irq(&xnsched_realtime_domain,
 				 intr->irq, xnintr_irq_handler, intr,
 				 (ipipe_irq_ackfn_t)intr->iack);
 }
@@ -426,7 +426,7 @@ static inline void xnintr_irq_detach(xnintr_t *intr)
 	int irq = intr->irq;
 
 	xnlock_get(&xnirqs[irq].lock);
-	ipipe_free_irq(&xnarch_machdata.domain, irq);
+	ipipe_free_irq(&xnsched_realtime_domain, irq);
 	xnlock_put(&xnirqs[irq].lock);
 
 	sync_stat_references(intr);
@@ -464,7 +464,7 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 	 * interrupt service routine, so the scheduler pointer will
 	 * remain valid throughout this function.
 	 */
-	intr = __ipipe_irq_cookie(&xnarch_machdata.domain, irq);
+	intr = __ipipe_irq_cookie(&xnsched_realtime_domain, irq);
 	if (unlikely(!intr)) {
 		s = 0;
 		goto unlock_and_exit;
@@ -1006,14 +1006,14 @@ static int irq_vfile_show(struct xnvfile_regular_iterator *it,
 		xnvfile_printf(it, "        CPU%d", cpu);
 
 	for (irq = 0; irq < IPIPE_NR_IRQS; irq++) {
-		if (__ipipe_irq_handler(&xnarch_machdata.domain, irq) == NULL)
+		if (__ipipe_irq_handler(&xnsched_realtime_domain, irq) == NULL)
 			continue;
 
 		xnvfile_printf(it, "\n%5d:", irq);
 
 		for_each_realtime_cpu(cpu) {
 			xnvfile_printf(it, "%12lu",
-				       __ipipe_cpudata_irq_hits(&xnarch_machdata.domain, cpu,
+				       __ipipe_cpudata_irq_hits(&xnsched_realtime_domain, cpu,
 								irq));
 		}
 

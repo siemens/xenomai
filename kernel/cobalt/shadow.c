@@ -1978,7 +1978,7 @@ restart:
 	 */
 	if (sysflags & __xn_exec_lostage) {
 		/* Syscall must run into the Linux domain. */
-		if (ipd == &xnarch_machdata.domain) {
+		if (ipd == &xnsched_realtime_domain) {
 			/*
 			 * Request originates from the Xenomai domain:
 			 * just relax the caller and execute the
@@ -1999,7 +1999,7 @@ restart:
 		 * Syscall must be processed either by Xenomai, or by
 		 * the calling domain.
 		 */
-		if (ipd != &xnarch_machdata.domain)
+		if (ipd != &xnsched_realtime_domain)
 			/*
 			 * Request originates from the Linux domain:
 			 * propagate the event to our Linux-based
@@ -2624,12 +2624,12 @@ void xnshadow_grab_events(void)
 {
 	init_hostrt();
 	ipipe_set_hooks(ipipe_root_domain, IPIPE_SYSCALL|IPIPE_KEVENT);
-	ipipe_set_hooks(&xnarch_machdata.domain, IPIPE_SYSCALL|IPIPE_TRAP);
+	ipipe_set_hooks(&xnsched_realtime_domain, IPIPE_SYSCALL|IPIPE_TRAP);
 }
 
 void xnshadow_release_events(void)
 {
-	ipipe_set_hooks(&xnarch_machdata.domain, 0);
+	ipipe_set_hooks(&xnsched_realtime_domain, 0);
 	ipipe_set_hooks(ipipe_root_domain, 0);
 }
 

@@ -225,7 +225,8 @@ static inline void xnsched_set_resched(struct xnsched *sched)
 	}
 }
 
-#define xnsched_realtime_cpus xnarch_machdata.supported_cpus
+#define xnsched_realtime_cpus    xnarch_machdata.supported_cpus
+#define xnsched_realtime_domain  xnarch_machdata.domain
 
 static inline int xnsched_supported_cpu(int cpu)
 {

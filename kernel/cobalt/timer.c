@@ -503,7 +503,7 @@ EXPORT_SYMBOL_GPL(__xntimer_migrate);
 
 int xntimer_setup_ipi(void)
 {
-	return ipipe_request_irq(&xnarch_machdata.domain,
+	return ipipe_request_irq(&xnsched_realtime_domain,
 				 IPIPE_HRTIMER_IPI,
 				 (ipipe_irq_handler_t)xnintr_core_clock_handler,
 				 NULL, NULL);
@@ -511,7 +511,7 @@ int xntimer_setup_ipi(void)
 
 void xntimer_release_ipi(void)
 {
-	ipipe_free_irq(&xnarch_machdata.domain, IPIPE_HRTIMER_IPI);
+	ipipe_free_irq(&xnsched_realtime_domain, IPIPE_HRTIMER_IPI);
 }
 
 #endif /* CONFIG_SMP */

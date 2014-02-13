@@ -109,7 +109,7 @@ static void sys_shutdown(void)
 	disable_timesource();
 	xnshadow_release_events();
 #ifdef CONFIG_SMP
-	ipipe_free_irq(&xnarch_machdata.domain, IPIPE_RESCHEDULE_IPI);
+	ipipe_free_irq(&xnsched_realtime_domain, IPIPE_RESCHEDULE_IPI);
 #endif
 
 	xnlock_get_irqsave(&nklock, s);
@@ -177,7 +177,7 @@ static int __init mach_setup(void)
 			return ret;
 	}
 
-	ipipe_register_head(&xnarch_machdata.domain, "Xenomai");
+	ipipe_register_head(&xnsched_realtime_domain, "Xenomai");
 
 	ret = -EBUSY;
 	virq = ipipe_alloc_virq();
@@ -197,7 +197,7 @@ static int __init mach_setup(void)
 
 	xnarch_machdata.escalate_virq = virq;
 
-	ipipe_request_irq(&xnarch_machdata.domain,
+	ipipe_request_irq(&xnsched_realtime_domain,
 			  xnarch_machdata.escalate_virq,
 			  (ipipe_irq_handler_t)__xnsched_run_handler,
 			  NULL, NULL);
@@ -209,7 +209,7 @@ static int __init mach_setup(void)
 	return 0;
 
 fail_clock:
-	ipipe_free_irq(&xnarch_machdata.domain,
+	ipipe_free_irq(&xnsched_realtime_domain,
 		       xnarch_machdata.escalate_virq);
 	ipipe_free_virq(xnarch_machdata.escalate_virq);
 fail_escalate:
@@ -217,7 +217,7 @@ fail_escalate:
 		       xnarch_machdata.apc_virq);
 	ipipe_free_virq(xnarch_machdata.apc_virq);
 fail_apc:
-	ipipe_unregister_head(&xnarch_machdata.domain);
+	ipipe_unregister_head(&xnsched_realtime_domain);
 
 	if (xnarch_machdesc.cleanup)
 		xnarch_machdesc.cleanup();
@@ -227,8 +227,8 @@ fail_apc:
 
 static __init void mach_cleanup(void)
 {
-	ipipe_unregister_head(&xnarch_machdata.domain);
-	ipipe_free_irq(&xnarch_machdata.domain,
+	ipipe_unregister_head(&xnsched_realtime_domain);
+	ipipe_free_irq(&xnsched_realtime_domain,
 		       xnarch_machdata.escalate_virq);
 	ipipe_free_virq(xnarch_machdata.escalate_virq);
 	ipipe_timers_release();
@@ -345,7 +345,7 @@ static __init int sys_init(void)
 	}
 
 #ifdef CONFIG_SMP
-	ipipe_request_irq(&xnarch_machdata.domain,
+	ipipe_request_irq(&xnsched_realtime_domain,
 			  IPIPE_RESCHEDULE_IPI,
 			  (ipipe_irq_handler_t)__xnsched_run_handler,
 			  NULL, NULL);
