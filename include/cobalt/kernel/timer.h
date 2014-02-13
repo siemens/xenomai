@@ -433,11 +433,22 @@ void xntimer_migrate(struct xntimer *timer, struct xnsched *sched)
 		__xntimer_migrate(timer, sched);
 }
 
+int xntimer_setup_ipi(void);
+
+void xntimer_release_ipi(void);
+
 #else /* ! CONFIG_SMP */
 
 static inline void xntimer_migrate(struct xntimer *timer,
 				   struct xnsched *sched)
 { }
+
+static inline int xntimer_setup_ipi(void)
+{
+	return 0;
+}
+
+static inline void xntimer_release_ipi(void) { }
 
 #endif /* CONFIG_SMP */
 

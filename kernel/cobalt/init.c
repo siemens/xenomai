@@ -86,6 +86,8 @@ static void disable_timesource(void)
 	for_each_realtime_cpu(cpu)
 		xntimer_release_hardware(cpu);
 
+	xntimer_release_ipi();
+
 #ifdef CONFIG_XENO_OPT_STATS
 	xnintr_destroy(&nktimer);
 #endif /* CONFIG_XENO_OPT_STATS */
@@ -235,8 +237,8 @@ static __init void mach_cleanup(void)
 
 static __init int enable_timesource(void)
 {
-	int htickval, cpu, _cpu;
 	struct xnsched *sched;
+	int ret, cpu, _cpu;
 	spl_t s;
 
 	trace_mark(xn_nucleus, enable_timesource, MARK_NOARGS);
@@ -254,14 +256,19 @@ static __init int enable_timesource(void)
 		xnclock_get_host_time() - xnclock_read_monotonic(&nkclock);
 	nkvdso->wallclock_offset = nkclock.wallclock_offset;
 
+	ret = xntimer_setup_ipi();
+	if (ret)
+		return ret;
+
 	for_each_realtime_cpu(cpu) {
-		htickval = xntimer_grab_hardware(cpu);
-		if (htickval < 0)
+		ret = xntimer_grab_hardware(cpu);
+		if (ret < 0)
 			goto fail;
 
 		xnlock_get_irqsave(&nklock, s);
 
-		/* If the current tick device for the target CPU is
+		/*
+		 * If the current tick device for the target CPU is
 		 * periodic, we won't be called back for host tick
 		 * emulation. Therefore, we need to start a periodic
 		 * nucleus timer which will emulate the ticking for
@@ -285,9 +292,10 @@ static __init int enable_timesource(void)
 		 */
 
 		sched = xnsched_struct(cpu);
-		if (htickval > 1)
-			xntimer_start(&sched->htimer, htickval, htickval, XN_RELATIVE);
-		else if (htickval == 1)
+		/* Set up timer with host tick period if valid. */
+		if (ret > 1)
+			xntimer_start(&sched->htimer, ret, ret, XN_RELATIVE);
+		else if (ret == 1)
 			xntimer_start(&sched->htimer, 0, 0, XN_RELATIVE);
 
 #ifdef CONFIG_XENO_OPT_WATCHDOG
@@ -312,7 +320,9 @@ fail:
 		xntimer_release_hardware(_cpu);
 	}
 
-	return htickval;
+	xntimer_release_ipi();
+
+	return ret;
 }
 
 static __init int sys_init(void)

@@ -501,6 +501,19 @@ void __xntimer_migrate(struct xntimer *timer, struct xnsched *sched)
 }
 EXPORT_SYMBOL_GPL(__xntimer_migrate);
 
+int xntimer_setup_ipi(void)
+{
+	return ipipe_request_irq(&xnarch_machdata.domain,
+				 IPIPE_HRTIMER_IPI,
+				 (ipipe_irq_handler_t)xnintr_core_clock_handler,
+				 NULL, NULL);
+}
+
+void xntimer_release_ipi(void)
+{
+	ipipe_free_irq(&xnarch_machdata.domain, IPIPE_HRTIMER_IPI);
+}
+
 #endif /* CONFIG_SMP */
 
 /**
@@ -728,19 +741,6 @@ int xntimer_grab_hardware(int cpu)
 		return ret;
 	}
 
-#ifdef CONFIG_SMP
-	if (cpu == 0) {
-		ret = ipipe_request_irq(&xnarch_machdata.domain,
-					IPIPE_HRTIMER_IPI,
-					(ipipe_irq_handler_t)xnintr_core_clock_handler,
-					NULL, NULL);
-		if (ret) {
-			ipipe_timer_stop(cpu);
-			return ret;
-		}
-	}
-#endif
-
 	return tickval;
 }
 
@@ -760,10 +760,6 @@ int xntimer_grab_hardware(int cpu)
 void xntimer_release_hardware(int cpu)
 {
 	ipipe_timer_stop(cpu);
-#ifdef CONFIG_SMP
-	if (cpu == 0)
-		ipipe_free_irq(&xnarch_machdata.domain, IPIPE_HRTIMER_IPI);
-#endif /* CONFIG_SMP */
 }
 
 #ifdef CONFIG_XENO_OPT_VFILE
