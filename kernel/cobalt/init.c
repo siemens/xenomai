@@ -55,6 +55,9 @@ module_param_named(supported_cpus, supported_cpus_arg, ulong, 0444);
 static unsigned long disable_arg;
 module_param_named(disable, disable_arg, ulong, 0444);
 
+static unsigned long sysheap_size_arg;
+module_param_named(sysheap_size, sysheap_size_arg, ulong, 0444);
+
 struct xnarch_machdata xnarch_machdata;
 EXPORT_SYMBOL_GPL(xnarch_machdata);
 
@@ -331,9 +334,12 @@ static __init int sys_init(void)
 	void *heapaddr;
 	int ret, cpu;
 
-	heapaddr = alloc_pages_exact(CONFIG_XENO_OPT_SYS_HEAPSZ * 1024, GFP_KERNEL);
+	if (sysheap_size_arg == 0)
+		sysheap_size_arg = CONFIG_XENO_OPT_SYS_HEAPSZ;
+
+	heapaddr = alloc_pages_exact(sysheap_size_arg * 1024, GFP_KERNEL);
 	if (heapaddr == NULL ||
-	    xnheap_init(&kheap, heapaddr, CONFIG_XENO_OPT_SYS_HEAPSZ * 1024,
+	    xnheap_init(&kheap, heapaddr, sysheap_size_arg * 1024,
 			XNHEAP_PAGE_SIZE) != 0) {
 		return -ENOMEM;
 	}
