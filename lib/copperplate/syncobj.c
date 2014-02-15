@@ -229,9 +229,6 @@ int syncobj_lock(struct syncobj *sobj, struct syncstate *syns)
 {
 	int ret, oldstate;
 
-	/* Allow entry from copperplate's regular or IRQ threads. */
-	assert(__threadobj_get_current() != NULL);
-
 	/*
 	 * This magic prevents concurrent locking while a deletion is
 	 * in progress, waiting for the release count to drop to zero.
