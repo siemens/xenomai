@@ -39,4 +39,7 @@ test: all
 		sudo LD_LIBRARY_PATH=$(solibs) ./$$t --cpu-affinity=0 --silent && echo ok || echo BAD; \
 	done
 
+test/%: %
+	sudo LD_LIBRARY_PATH=$(solibs) ./$(@F) --cpu-affinity=0 --silent && echo ok || echo BAD
+
 .PHONY: clean test
