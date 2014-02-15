@@ -560,15 +560,6 @@ int cobalt_xlate_schedparam(int policy,
 	return std_policy;
 }
 
-/*
- * Temporary compatibility aliases which should be phased out at next
- * API revision.
- */
-void assert_nrt(void)
-__attribute__((alias("cobalt_assert_nrt")));
-void assert_nrt_fast(void)
-__attribute__((alias("cobalt_assert_nrt")));
-
 void cobalt_assert_nrt(void)
 {
 	if (cobalt_should_warn())

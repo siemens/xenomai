@@ -134,10 +134,6 @@ void cobalt_register_tsd_hook(struct cobalt_tsd_hook *th);
 
 void cobalt_assert_nrt(void);
 
-/* Use cobalt_assert_nrt() instead of: */
-__deprecated void assert_nrt(void);
-__deprecated void assert_nrt_fast(void);
-
 extern int __cobalt_control_bind;
 
 #ifdef __cplusplus
