@@ -18,10 +18,11 @@
 #ifndef _COPPERPLATE_REGISTRY_OBSTACK_H
 #define _COPPERPLATE_REGISTRY_OBSTACK_H
 
+#include <copperplate/registry.h>
+
 #ifdef CONFIG_XENO_REGISTRY
 
 #include <boilerplate/obstack.h>
-#include <copperplate/registry.h>
 #include <copperplate/heapobj.h>
 
 /*
