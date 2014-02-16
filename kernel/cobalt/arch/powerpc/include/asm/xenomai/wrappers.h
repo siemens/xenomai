@@ -24,11 +24,6 @@
 #endif
 
 #include <linux/version.h>
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0)
-#error "Linux kernel 3.0 or above required for this architecture"
-#endif
-
 #include <asm/uaccess.h>
 
 #ifdef CONFIG_PPC64
@@ -71,10 +66,6 @@
 #define of_register_platform_driver platform_driver_register
 #define of_unregister_platform_driver platform_driver_unregister
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
 #define wrap_strncpy_from_user(dstP, srcP, n)	strncpy_from_user(dstP, srcP, n)
-#else
-#define wrap_strncpy_from_user(dstP, srcP, n)	__strncpy_from_user(dstP, srcP, n)
-#endif
 
 #endif /* _COBALT_POWERPC_ASM_WRAPPERS_H */
