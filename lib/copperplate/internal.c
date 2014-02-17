@@ -91,13 +91,10 @@ int copperplate_create_thread(struct corethread_attributes *cta,
 	pthread_attr_setdetachstate_ex(&attr_ex, cta->detachstate);
 	ret = __bt(-pthread_create_ex(tid, &attr_ex, thread_trampoline, cta));
 	pthread_attr_destroy_ex(&attr_ex);
-
 	if (ret)
 		return __bt(ret);
 
-	thread_spawn_epilogue(cta);
-
-	return 0;
+	return __bt(thread_spawn_epilogue(cta));
 }
 
 int copperplate_renice_thread(pthread_t tid, int prio)
@@ -160,9 +157,7 @@ int copperplate_create_thread(struct corethread_attributes *cta,
 	if (ret)
 		return __bt(ret);
 
-	ret = thread_spawn_epilogue(cta);
-
-	return __bt(ret);
+	return __bt(thread_spawn_epilogue(cta));
 }
 
 int copperplate_renice_thread(pthread_t tid, int prio)
@@ -200,8 +195,6 @@ static void thread_spawn_wait(sem_t *sem)
 {
 	int ret;
 
-	prepare_wait_corespec();
-
 	for (;;) {
 		ret = __RT(sem_wait(sem));
 		if (ret && errno == EINTR)
@@ -238,6 +231,12 @@ static void *thread_trampoline(void *arg)
 
 	__RT(sem_init(&released, 0, 0));
 	cta->__reserved.released = &released;
+	/*
+	 * CAUTION: over Cobalt, we have to switch back to primary
+	 * mode _before_ releasing the parent thread, so that proper
+	 * priority rules apply between the parent and child threads.
+	 */
+	prepare_wait_corespec();
 	__RT(sem_post(&cta->__reserved.warm));
 
 	thread_spawn_wait(&released);
@@ -249,6 +248,7 @@ static void *thread_trampoline(void *arg)
 
 static int thread_spawn_epilogue(struct corethread_attributes *cta)
 {
+	prepare_wait_corespec();
 	thread_spawn_wait(&cta->__reserved.warm);
 
 	if (cta->__reserved.status == 0)
