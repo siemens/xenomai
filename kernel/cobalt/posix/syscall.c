@@ -105,6 +105,7 @@ static struct xnsyscall cobalt_syscalls[] = {
 	SKINCALL_DEF(sc_cobalt_sem_unlink, cobalt_sem_unlink, any),
 	SKINCALL_DEF(sc_cobalt_sem_init_np, cobalt_sem_init_np, any),
 	SKINCALL_DEF(sc_cobalt_sem_broadcast_np, cobalt_sem_broadcast_np, any),
+	SKINCALL_DEF(sc_cobalt_sem_inquire, cobalt_sem_inquire, any),
 	SKINCALL_DEF(sc_cobalt_clock_getres, cobalt_clock_getres, any),
 	SKINCALL_DEF(sc_cobalt_clock_gettime, cobalt_clock_gettime, any),
 	SKINCALL_DEF(sc_cobalt_clock_settime, cobalt_clock_settime, any),

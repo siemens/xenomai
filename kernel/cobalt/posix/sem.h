@@ -97,6 +97,11 @@ int cobalt_sem_init_np(struct __shadow_sem __user *u_sem,
 
 int cobalt_sem_broadcast_np(struct __shadow_sem __user *u_sem);
 
+int cobalt_sem_inquire(struct __shadow_sem __user *u_sem,
+		       struct cobalt_sem_info __user *u_info,
+		       pid_t __user *u_waitlist,
+		       size_t waitsz);
+
 void cobalt_semq_cleanup(struct cobalt_kqueues *q);
 
 void cobalt_sem_pkg_init(void);

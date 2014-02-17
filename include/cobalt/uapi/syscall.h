@@ -50,7 +50,7 @@
 #define sc_cobalt_cond_destroy          26
 #define sc_cobalt_cond_wait_prologue    27
 #define sc_cobalt_cond_wait_epilogue    28
-/* 30-31 unimplemented */
+/* 29-30 unimplemented */
 #define sc_cobalt_mq_open               31
 #define sc_cobalt_mq_close              32
 #define sc_cobalt_mq_unlink             33
@@ -78,7 +78,8 @@
 #define sc_cobalt_sigtimedwait		55
 #define sc_cobalt_sigpending		56
 #define sc_cobalt_kill			57
-/* 58-60 unimplemented */
+#define sc_cobalt_sem_inquire           58
+/* 59-60 unimplemented */
 #define sc_cobalt_mutexattr_init        61
 #define sc_cobalt_mutexattr_destroy     62
 #define sc_cobalt_mutexattr_gettype     63

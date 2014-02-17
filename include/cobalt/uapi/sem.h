@@ -39,6 +39,12 @@ union cobalt_sem_union {
 	} shadow_sem;
 };
 
+struct cobalt_sem_info {
+	unsigned int value;
+	int flags;
+	int nrwait;
+};
+
 /* For Cobalt's sem_init_np() extension. */
 #define SEM_FIFO       0x1
 #define SEM_PULSE      0x2

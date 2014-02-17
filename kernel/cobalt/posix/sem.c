@@ -774,6 +774,87 @@ int cobalt_sem_broadcast_np(struct __shadow_sem __user *u_sem)
 	return err;
 }
 
+int cobalt_sem_inquire(struct __shadow_sem __user *u_sem,
+		       struct cobalt_sem_info __user *u_info,
+		       pid_t __user *u_waitlist,
+		       size_t waitsz)
+{
+	int val, nrwait = 0, nrpids, ret = 0;
+	unsigned long pstamp, nstamp = 0;
+	struct cobalt_sem_info info;
+	pid_t *t = NULL, fbuf[16];
+	struct xnthread *thread;
+	struct cobalt_sem *sem;
+	xnhandle_t handle;
+	spl_t s;
+
+	__xn_get_user(handle, &u_sem->handle);
+
+	nrpids = waitsz / sizeof(pid_t);
+
+	xnlock_get_irqsave(&nklock, s);
+
+	for (;;) {
+		pstamp = nstamp;
+		sem = xnregistry_lookup(handle, &nstamp);
+		if (sem == NULL || sem->magic != COBALT_SEM_MAGIC) {
+			xnlock_put_irqrestore(&nklock, s);
+			return -EINVAL;
+		}
+		/*
+		 * Allocate memory to return the wait list without
+		 * holding any lock, then revalidate the handle.
+		 */
+		if (t == NULL) {
+			val = atomic_long_read(&sem->datp->value);
+			if (val >= 0 || u_waitlist == NULL)
+				break;
+			xnlock_put_irqrestore(&nklock, s);
+			if (nrpids > -val)
+				nrpids = -val;
+			if (-val <= ARRAY_SIZE(fbuf))
+				t = fbuf; /* Use fast buffer. */
+			else {
+				t = xnmalloc(-val * sizeof(pid_t));
+				if (t == NULL)
+					return -ENOMEM;
+			}
+			xnlock_get_irqsave(&nklock, s);
+		} else if (pstamp == nstamp)
+			break;
+		else if (val != atomic_long_read(&sem->datp->value)) {
+			xnlock_put_irqrestore(&nklock, s);
+			if (t != fbuf)
+				xnfree(t);
+			t = NULL;
+			xnlock_get_irqsave(&nklock, s);
+		}
+	}
+
+	info.flags = sem->flags;
+	info.value = (sem->flags & SEM_REPORT) || val >= 0 ? val : 0;
+	info.nrwait = val < 0 ? -val : 0;
+
+	if (xnsynch_pended_p(&sem->synchbase) && u_waitlist != NULL) {
+		xnsynch_for_each_sleeper(thread, &sem->synchbase) {
+			if (nrwait >= nrpids)
+				break;
+			t[nrwait++] = xnthread_host_pid(thread);
+		}
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	ret = __xn_safe_copy_to_user(u_info, &info, sizeof(info));
+	if (ret == 0 && nrwait > 0)
+		ret = __xn_safe_copy_to_user(u_waitlist, t, nrwait * sizeof(pid_t));
+
+	if (t && t != fbuf)
+		xnfree(t);
+
+	return ret ?: nrwait;
+}
+
 void cobalt_semq_cleanup(struct cobalt_kqueues *q)
 {
 	struct cobalt_sem *sem, *tmp;
