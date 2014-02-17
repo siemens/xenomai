@@ -509,3 +509,13 @@ int cobalt_event_inquire(cobalt_event_t *event, unsigned long *bits_r)
 
 	return datp->nwaiters;
 }
+
+int cobalt_sem_inquire(sem_t *sem, struct cobalt_sem_info *info,
+		       pid_t *waitlist, size_t waitsz)
+{
+	struct __shadow_sem *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
+	
+	return XENOMAI_SKINCALL4(__cobalt_muxid,
+				 sc_cobalt_sem_inquire, _sem,
+				 info, waitlist, waitsz);
+}

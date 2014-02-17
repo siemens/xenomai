@@ -20,6 +20,7 @@
 
 #include <signal.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include <errno.h>
 #include <time.h>
 #include <nocore/atomic.h>
@@ -30,6 +31,7 @@
 #include <cobalt/uapi/monitor.h>
 #include <cobalt/uapi/thread.h>
 #include <cobalt/uapi/cond.h>
+#include <cobalt/uapi/sem.h>
 #include <xeno_config.h>
 #include "current.h"
 
@@ -120,6 +122,9 @@ int cobalt_event_inquire(cobalt_event_t *event,
 			 unsigned long *bits_r);
 
 int cobalt_event_destroy(cobalt_event_t *event);
+
+int cobalt_sem_inquire(sem_t *sem, struct cobalt_sem_info *info,
+		       pid_t *waitlist, size_t waitsz);
 
 void cobalt_print_init(void);
 
