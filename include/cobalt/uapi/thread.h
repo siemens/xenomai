@@ -47,6 +47,7 @@ struct cobalt_threadstat {
 	unsigned long xsc;
 	unsigned long pf;
 	unsigned long long timeout;
+	char name[XNOBJECT_NAME_LEN];
 };
 
 #endif /* !_COBALT_UAPI_THREAD_H */

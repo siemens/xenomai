@@ -1162,6 +1162,7 @@ int cobalt_thread_stat(pid_t pid,
 	stat.status = xnthread_state_flags(thread);
 	stat.timeout = xnthread_get_timeout(thread,
 					    xnclock_read_monotonic(&nkclock));
+	strcpy(stat.name, xnthread_name(thread));
 	xnlock_put_irqrestore(&nklock, s);
 
 	return __xn_safe_copy_to_user(u_stat, &stat, sizeof(stat));
