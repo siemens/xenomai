@@ -1111,6 +1111,21 @@ unsigned long xnregistry_put(xnhandle_t handle)
 }
 EXPORT_SYMBOL_GPL(xnregistry_put);
 
+void *xnregistry_lookup(xnhandle_t handle,
+			unsigned long *cstamp_r)
+{
+	struct xnobject *object = xnregistry_validate(handle);
+
+	if (object == NULL)
+		return NULL;
+
+	if (cstamp_r)
+		*cstamp_r = object->cstamp;
+
+	return object->objaddr;
+}
+EXPORT_SYMBOL_GPL(xnregistry_lookup);
+
 /**
  * @fn void *xnregistry_fetch(xnhandle_t handle)
  * @brief Find a real-time object into the registry.
@@ -1128,13 +1143,12 @@ EXPORT_SYMBOL_GPL(xnregistry_put);
  *
  * @remark Tags: isr-allowed.
  */
-
 void *xnregistry_fetch(xnhandle_t handle)
 {
 	if (handle == XNOBJECT_SELF)
 		return xnsched_primary_p() ? xnsched_current_thread() : NULL;
 
-	return xnregistry_lookup(handle);
+	return xnregistry_lookup(handle, NULL);
 }
 EXPORT_SYMBOL_GPL(xnregistry_fetch);
 

@@ -157,12 +157,6 @@ static inline struct xnobject *xnregistry_validate(xnhandle_t handle)
 	return NULL;
 }
 
-static inline void *xnregistry_lookup(xnhandle_t handle)
-{
-	struct xnobject *object = xnregistry_validate(handle);
-	return object ? object->objaddr : NULL;
-}
-
 static inline const char *xnregistry_key(xnhandle_t handle)
 {
 	struct xnobject *object = xnregistry_validate(handle);
@@ -187,6 +181,9 @@ int xnregistry_remove_safe(xnhandle_t handle,
 void *xnregistry_get(xnhandle_t handle);
 
 void *xnregistry_fetch(xnhandle_t handle);
+
+void *xnregistry_lookup(xnhandle_t handle,
+			unsigned long *cstamp_r);
 
 unsigned long xnregistry_put(xnhandle_t handle);
 
