@@ -21,6 +21,11 @@
 
 #include <copperplate/reference.h>
 
+struct semobj_waitentry {
+	pid_t pid;
+	char name[32];
+};
+
 #ifdef CONFIG_XENO_COBALT
 
 #include <semaphore.h>
@@ -68,6 +73,10 @@ int semobj_wait(struct semobj *smobj,
 		const struct timespec *timeout);
 
 int semobj_getvalue(struct semobj *smobj, int *sval);
+
+int semobj_inquire(struct semobj *smobj, size_t waitsz,
+		   struct semobj_waitentry *waitlist,
+		   int *val_r);
 
 #ifdef __cplusplus
 }

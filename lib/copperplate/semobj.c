@@ -20,9 +20,12 @@
 #include <errno.h>
 #include "copperplate/threadobj.h"
 #include "copperplate/semobj.h"
+#include "copperplate/heapobj.h"
 #include "copperplate/debug.h"
 
 #ifdef CONFIG_XENO_COBALT
+
+#include "cobalt/internal.h"
 
 int semobj_init(struct semobj *smobj, int flags, int value,
 		fnref_type(void (*)(struct semobj *smobj)) finalizer)
@@ -118,6 +121,49 @@ int semobj_getvalue(struct semobj *smobj, int *sval)
 		return errno == EINVAL ? -EIDRM : -errno;
 
 	return 0;
+}
+
+int semobj_inquire(struct semobj *smobj, size_t waitsz,
+		   struct semobj_waitentry *waitlist,
+		   int *val_r)
+{
+	struct cobalt_threadstat stat;
+	struct cobalt_sem_info info;
+	int nrwait, pidsz, n, ret;
+	pid_t *pidlist = NULL;
+
+	pidsz = sizeof(pid_t) * (waitsz / sizeof(*waitlist));
+	if (pidsz > 0) {
+		pidlist = pvmalloc(pidsz);
+		if (pidlist == NULL)
+			return -ENOMEM;
+	}
+
+	nrwait = cobalt_sem_inquire(&smobj->core.sem, &info, pidlist, pidsz);
+	if (nrwait < 0)
+		goto out;
+
+	*val_r = info.value;
+
+	if (pidlist == NULL)
+		return nrwait;
+
+	for (n = 0; n < nrwait; n++, waitlist++) {
+		ret = __cobalt_thread_stat(pidlist[n], &stat);
+		/* If waiter disappeared, fill in a dummy entry. */
+		if (ret) {
+			waitlist->pid = -1;
+			strcpy(waitlist->name, "???");
+		} else {
+			waitlist->pid = pidlist[n];
+			strcpy(waitlist->name, stat.name);
+		}
+	}
+out:
+	if (pidlist)
+		pvfree(pidlist);
+
+	return nrwait;
 }
 
 #else /* CONFIG_XENO_MERCURY */
@@ -255,6 +301,34 @@ int semobj_getvalue(struct semobj *smobj, int *sval)
 	syncobj_unlock(&smobj->core.sobj, &syns);
 
 	return 0;
+}
+
+int semobj_inquire(struct semobj *smobj, size_t waitsz,
+		   struct semobj_waitentry *waitlist,
+		   int *val_r)
+{
+	struct threadobj *thobj;
+	struct syncstate syns;
+	int ret, nrwait;
+
+	ret = syncobj_lock(&smobj->core.sobj, &syns);
+	if (ret)
+		return ret;
+
+	nrwait = syncobj_count_grant(&smobj->core.sobj);
+	if (nrwait > 0) {
+		syncobj_for_each_grant_waiter(&smobj->core.sobj, thobj) {
+			waitlist->pid = threadobj_get_pid(thobj);
+			strcpy(waitlist->name, threadobj_get_name(thobj));
+			waitlist++;
+		}
+	}
+
+	*val_r = smobj->core.value;
+
+	syncobj_unlock(&smobj->core.sobj, &syns);
+
+	return nrwait;
 }
 
 #endif /* CONFIG_XENO_MERCURY */
