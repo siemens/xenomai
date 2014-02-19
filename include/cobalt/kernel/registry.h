@@ -35,8 +35,6 @@ struct xnpnode;
 struct xnobject {
 	void *objaddr;
 	const char *key;	  /* !< Hash key. May be NULL if anonynous. */
-	struct xnsynch safesynch; /* !< Safe synchronization object. */
-	unsigned long safelock;	  /* !< Safe lock count. */
 	unsigned long cstamp;		  /* !< Creation stamp. */
 #ifdef CONFIG_XENO_OPT_VFILE
 	struct xnpnode *pnode;	/* !< v-file information class. */
@@ -181,17 +179,10 @@ int xnregistry_bind(const char *key,
 
 int xnregistry_remove(xnhandle_t handle);
 
-int xnregistry_remove_safe(xnhandle_t handle,
-			   xnticks_t timeout);
-
-void *xnregistry_get(xnhandle_t handle);
-
 void *xnregistry_fetch(xnhandle_t handle);
 
 void *xnregistry_lookup(xnhandle_t handle,
 			unsigned long *cstamp_r);
-
-unsigned long xnregistry_put(xnhandle_t handle);
 
 int xnregistry_unlink(const char *key);
 
