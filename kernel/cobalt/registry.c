@@ -919,21 +919,16 @@ EXPORT_SYMBOL_GPL(xnregistry_lookup);
  * This service retrieves an object from its handle into the registry
  * and returns the memory address of its descriptor.
  *
- * @param handle The generic handle of the object to fetch. If
- * XNOBJECT_SELF is passed, the object is the calling Xenomai thread.
+ * @param handle The generic handle of the object to fetch.
  *
  * @return The memory address of the object's descriptor is returned
  * on success. Otherwise, NULL is returned if @a handle does not
- * reference a registered object, or if @a handle is equal to
- * XNOBJECT_SELF but the current context is not a real-time thread.
+ * reference a registered object.
  *
  * @remark Tags: isr-allowed.
  */
 void *xnregistry_fetch(xnhandle_t handle)
 {
-	if (handle == XNOBJECT_SELF)
-		return xnsched_primary_p() ? xnsched_current_thread() : NULL;
-
 	return xnregistry_lookup(handle, NULL);
 }
 EXPORT_SYMBOL_GPL(xnregistry_fetch);

@@ -28,8 +28,6 @@
 #include <cobalt/kernel/synch.h>
 #include <cobalt/kernel/vfile.h>
 
-#define XNOBJECT_SELF  XN_NO_HANDLE
-
 struct xnpnode;
 
 struct xnobject {
