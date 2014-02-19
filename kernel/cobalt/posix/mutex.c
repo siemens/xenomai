@@ -108,7 +108,7 @@ cobalt_mutex_destroy_inner(xnhandle_t handle, struct cobalt_kqueues *q)
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	mutex = xnregistry_fetch(handle);
+	mutex = xnregistry_lookup(handle, NULL);
 	if (!cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, typeof(*mutex))) {
 		xnlock_put_irqrestore(&nklock, s);
 		printk("mutex_destroy: invalid mutex %x\n", 
@@ -262,7 +262,7 @@ int cobalt_mutex_check_init(struct cobalt_mutex_shadow __user *u_mx)
 	__xn_get_user(handle, &u_mx->handle);
 
 	xnlock_get_irqsave(&nklock, s);
-	mutex = xnregistry_fetch(handle);
+	mutex = xnregistry_lookup(handle, NULL);
 	if (cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, typeof(*mutex)))
 		/* mutex is already in a queue. */
 		err = -EBUSY;
@@ -327,7 +327,7 @@ int cobalt_mutex_destroy(struct cobalt_mutex_shadow __user *u_mx)
 		return -EFAULT;
 
 	xnlock_get_irqsave(&nklock, s);
-	mutex = xnregistry_fetch(mx.handle);
+	mutex = xnregistry_lookup(mx.handle, NULL);
 	if (!cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, typeof(*mutex))) {
 		err = -EINVAL;
 		goto err_unlock;
@@ -368,7 +368,7 @@ int cobalt_mutex_trylock(struct cobalt_mutex_shadow __user *u_mx)
 	__xn_get_user(handle, &u_mx->handle);
 
 	xnlock_get_irqsave(&nklock, s);
-	mutex = xnregistry_fetch(handle);
+	mutex = xnregistry_lookup(handle, NULL);
 	if (!cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, typeof(*mutex))) {
 		err = -EINVAL;
 		goto err_unlock;
@@ -407,7 +407,8 @@ int cobalt_mutex_lock(struct cobalt_mutex_shadow __user *u_mx)
 	__xn_get_user(handle, &u_mx->handle);
 
 	xnlock_get_irqsave(&nklock, s);
-	err = cobalt_mutex_timedlock_break(xnregistry_fetch(handle), 0, NULL);
+	err = cobalt_mutex_timedlock_break(xnregistry_lookup(handle, NULL),
+					   0, NULL);
 	xnlock_put_irqrestore(&nklock, s);
 	
 	return err;
@@ -423,7 +424,8 @@ int cobalt_mutex_timedlock(struct cobalt_mutex_shadow __user *u_mx,
 	__xn_get_user(handle, &u_mx->handle);
 
 	xnlock_get_irqsave(&nklock, s);
-	err = cobalt_mutex_timedlock_break(xnregistry_fetch(handle), 1, u_ts);
+	err = cobalt_mutex_timedlock_break(xnregistry_lookup(handle, NULL),
+					   1, u_ts);
 	xnlock_put_irqrestore(&nklock, s);
 
 	return err;
@@ -440,7 +442,7 @@ int cobalt_mutex_unlock(struct cobalt_mutex_shadow __user *u_mx)
 	__xn_get_user(handle, &u_mx->handle);
 
 	xnlock_get_irqsave(&nklock, s);
-	mutex = xnregistry_fetch(handle);
+	mutex = xnregistry_lookup(handle, NULL);
 	err = cobalt_mutex_release(xnsched_current_thread(), mutex);
 	if (err < 0)
 		goto out;

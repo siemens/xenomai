@@ -120,7 +120,7 @@ static int cobalt_monitor_enter_inner(xnhandle_t handle)
 	struct cobalt_monitor *mon;
 	int ret = 0, info;
 
-	mon = xnregistry_fetch(handle); /* (Re)validate. */
+	mon = xnregistry_lookup(handle, NULL); /* (Re)validate. */
 	if (mon == NULL || mon->magic != COBALT_MONITOR_MAGIC)
 		return -EINVAL;
 
@@ -253,7 +253,7 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_mon,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	mon = xnregistry_fetch(handle);
+	mon = xnregistry_lookup(handle, NULL);
 	if (mon == NULL || mon->magic != COBALT_MONITOR_MAGIC) {
 		ret = -EINVAL;
 		goto out;
@@ -285,7 +285,7 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_mon,
 	info = xnsynch_sleep_on(synch, timeout, tmode);
 	if (info) {
 		if ((info & XNRMID) != 0 ||
-		    xnregistry_fetch(handle) != mon /* XXX: why this? */) {
+		    xnregistry_lookup(handle, NULL) != mon /* XXX: why this? */) {
 			ret = -EINVAL;
 			goto out;
 		}
@@ -325,7 +325,7 @@ int cobalt_monitor_sync(struct cobalt_monitor_shadow __user *u_mon)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	mon = xnregistry_fetch(handle);
+	mon = xnregistry_lookup(handle, NULL);
 	if (mon == NULL || mon->magic != COBALT_MONITOR_MAGIC)
 		ret = -EINVAL;
 	else if (mon->data->flags & COBALT_MONITOR_SIGNALED) {
@@ -351,7 +351,7 @@ int cobalt_monitor_exit(struct cobalt_monitor_shadow __user *u_mon)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	mon = xnregistry_fetch(handle);
+	mon = xnregistry_lookup(handle, NULL);
 	if (mon == NULL || mon->magic != COBALT_MONITOR_MAGIC)
 		ret = -EINVAL;
 	else {
@@ -399,7 +399,7 @@ int cobalt_monitor_destroy(struct cobalt_monitor_shadow __user *u_mon)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	mon = xnregistry_fetch(handle);
+	mon = xnregistry_lookup(handle, NULL);
 	if (mon == NULL || mon->magic != COBALT_MONITOR_MAGIC) {
 		ret = -EINVAL;
 		goto fail;

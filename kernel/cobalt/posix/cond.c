@@ -60,7 +60,7 @@ cond_destroy_internal(xnhandle_t handle, struct cobalt_kqueues *q)
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	cond = xnregistry_fetch(handle);
+	cond = xnregistry_lookup(handle, NULL);
 	if (!cobalt_obj_active(cond, COBALT_COND_MAGIC, typeof(*cond))) {
 		xnlock_put_irqrestore(&nklock, s);
 		return;
@@ -147,7 +147,7 @@ pthread_cond_init(struct cobalt_cond_shadow *cnd, const pthread_condattr_t *attr
 	if (cnd->magic != COBALT_COND_MAGIC || list_empty(condq))
 		goto do_init;
 
-	old_cond = xnregistry_fetch(cnd->handle);
+	old_cond = xnregistry_lookup(cnd->handle, NULL);
 	if (!cobalt_obj_active(old_cond, COBALT_COND_MAGIC, typeof(*old_cond)))
 		goto do_init;
 
@@ -221,7 +221,7 @@ static inline int pthread_cond_destroy(struct cobalt_cond_shadow *cnd)
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	cond = xnregistry_fetch(cnd->handle);
+	cond = xnregistry_lookup(cnd->handle, NULL);
 	if (cond == NULL) {
 		xnlock_put_irqrestore(&nklock, s);
 		return -EINVAL;
@@ -420,10 +420,10 @@ int cobalt_cond_wait_prologue(struct cobalt_cond_shadow __user *u_cnd,
 	int err, perr = 0;
 
 	__xn_get_user(handle, &u_cnd->handle);
-	cnd = xnregistry_fetch(handle);
+	cnd = xnregistry_lookup(handle, NULL);
 
 	__xn_get_user(handle, &u_mx->handle);
-	mx = xnregistry_fetch(handle);
+	mx = xnregistry_lookup(handle, NULL);
 
 	if (!cnd->mutex) {
 		__xn_get_user(datp, &u_mx->dat);
@@ -480,10 +480,10 @@ int cobalt_cond_wait_epilogue(struct cobalt_cond_shadow __user *u_cnd,
 	int err;
 
 	__xn_get_user(handle, &u_cnd->handle);
-	cnd = xnregistry_fetch(handle);
+	cnd = xnregistry_lookup(handle, NULL);
 
 	__xn_get_user(handle, &u_mx->handle);
-	mx = xnregistry_fetch(handle);
+	mx = xnregistry_lookup(handle, NULL);
 
 	err = cobalt_cond_timedwait_epilogue(cur, cnd, mx);
 

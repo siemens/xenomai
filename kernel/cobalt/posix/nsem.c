@@ -77,7 +77,7 @@ nsem_open(struct cobalt_process *cc, struct cobalt_sem_shadow __user *ushadow,
 		xnlock_put_irqrestore(&nsem_lock, s);
 
 		xnlock_get_irqsave(&nklock, s);
-		sem = xnregistry_fetch(handle);
+		sem = xnregistry_lookup(handle, NULL);
 		if (sem && sem->magic != COBALT_SEM_MAGIC) {
 			xnlock_put_irqrestore(&nklock, s);
 			return ERR_PTR(-EINVAL);

@@ -177,10 +177,20 @@ int xnregistry_bind(const char *key,
 
 int xnregistry_remove(xnhandle_t handle);
 
-void *xnregistry_fetch(xnhandle_t handle);
-
+static inline
 void *xnregistry_lookup(xnhandle_t handle,
-			unsigned long *cstamp_r);
+			unsigned long *cstamp_r)
+{
+	struct xnobject *object = xnregistry_validate(handle);
+
+	if (object == NULL)
+		return NULL;
+
+	if (cstamp_r)
+		*cstamp_r = object->cstamp;
+
+	return object->objaddr;
+}
 
 int xnregistry_unlink(const char *key);
 

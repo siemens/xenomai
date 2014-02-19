@@ -803,7 +803,7 @@ static int __xddp_connect_socket(struct xddp_socket *sk,
 			return ret;
 
 		RTDM_EXECUTE_ATOMICALLY(
-			rsk = xnregistry_fetch(h);
+			rsk = xnregistry_lookup(h, NULL);
 			if (rsk == NULL || rsk->magic != XDDP_SOCKET_MAGIC)
 				ret = -EINVAL;
 			else

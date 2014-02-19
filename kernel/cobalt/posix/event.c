@@ -137,7 +137,7 @@ int cobalt_event_wait(struct cobalt_event_shadow __user *u_event,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	event = xnregistry_fetch(handle);
+	event = xnregistry_lookup(handle, NULL);
 	if (event == NULL || event->magic != COBALT_EVENT_MAGIC) {
 		ret = -EINVAL;
 		goto out;
@@ -208,7 +208,7 @@ int cobalt_event_sync(struct cobalt_event_shadow __user *u_event)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	event = xnregistry_fetch(handle);
+	event = xnregistry_lookup(handle, NULL);
 	if (event == NULL || event->magic != COBALT_EVENT_MAGIC) {
 		ret = -EINVAL;
 		goto out;
@@ -272,7 +272,7 @@ int cobalt_event_destroy(struct cobalt_event_shadow __user *u_event)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	event = xnregistry_fetch(handle);
+	event = xnregistry_lookup(handle, NULL);
 	if (event == NULL || event->magic != COBALT_EVENT_MAGIC) {
 		ret = -EINVAL;
 		goto out;

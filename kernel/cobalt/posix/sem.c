@@ -53,7 +53,7 @@ int cobalt_sem_destroy_inner(xnhandle_t handle)
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	sem = xnregistry_fetch(handle);
+	sem = xnregistry_lookup(handle, NULL);
 	if (!cobalt_obj_active(sem, COBALT_SEM_MAGIC, typeof(*sem))) {
 		ret = -EINVAL;
 		goto unlock_error;
@@ -127,7 +127,7 @@ cobalt_sem_init_inner(const char *name, struct cobalt_sem_shadow *sm,
 	 * such semaphore exits, we may assume that other processes
 	 * sharing that semaphore won't be able to keep on running.
 	 */
-	osem = xnregistry_fetch(sm->handle);
+	osem = xnregistry_lookup(sm->handle, NULL);
 	if (!cobalt_obj_active(osem, COBALT_SEM_MAGIC, typeof(*osem)))
 		goto do_init;
 
@@ -223,7 +223,7 @@ static int sem_destroy(struct cobalt_sem_shadow *sm)
 		goto error;
 	}
 
-	sem = xnregistry_fetch(sm->handle);
+	sem = xnregistry_lookup(sm->handle, NULL);
 	if (!cobalt_obj_active(sem, COBALT_SEM_MAGIC, typeof(*sem))) {
 		ret = -EINVAL;
 		goto error;
@@ -392,7 +392,7 @@ static int sem_trywait(xnhandle_t handle)
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	err = sem_trywait_inner(xnregistry_fetch(handle));
+	err = sem_trywait_inner(xnregistry_lookup(handle, NULL));
 	xnlock_put_irqrestore(&nklock, s);
 
 	return err;
@@ -410,7 +410,7 @@ sem_wait_inner(xnhandle_t handle, int timed,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	sem = xnregistry_fetch(handle);
+	sem = xnregistry_lookup(handle, NULL);
 
 	ret = sem_trywait_inner(sem);
 	if (ret != -EAGAIN) {
@@ -593,7 +593,7 @@ static int sem_post(xnhandle_t handle)
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	sm = xnregistry_fetch(handle);
+	sm = xnregistry_lookup(handle, NULL);
 	ret = sem_post_inner(sm, sm->owningq, 0);
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -635,7 +635,7 @@ static int sem_getvalue(xnhandle_t handle, int *value)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	sem = xnregistry_fetch(handle);
+	sem = xnregistry_lookup(handle, NULL);
 
 	if (sem == NULL || sem->magic != COBALT_SEM_MAGIC) {
 		xnlock_put_irqrestore(&nklock, s);
@@ -767,7 +767,7 @@ int cobalt_sem_broadcast_np(struct cobalt_sem_shadow __user *u_sem)
 	__xn_get_user(handle, &u_sem->handle);
 
 	xnlock_get_irqsave(&nklock, s);
-	sm = xnregistry_fetch(handle);
+	sm = xnregistry_lookup(handle, NULL);
 	err = sem_post_inner(sm, sm->owningq, 1);
 	xnlock_put_irqrestore(&nklock, s);
 

@@ -773,7 +773,7 @@ static int __bufp_connect_socket(struct bufp_socket *sk,
 			return ret;
 
 		RTDM_EXECUTE_ATOMICALLY(
-			rsk = xnregistry_fetch(h);
+			rsk = xnregistry_lookup(h, NULL);
 			if (rsk == NULL || rsk->magic != BUFP_SOCKET_MAGIC)
 				ret = -EINVAL;
 			else

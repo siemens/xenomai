@@ -897,29 +897,19 @@ unlock_and_exit:
 	return ret;
 }
 
-void *xnregistry_lookup(xnhandle_t handle,
-			unsigned long *cstamp_r)
-{
-	struct xnobject *object = xnregistry_validate(handle);
-
-	if (object == NULL)
-		return NULL;
-
-	if (cstamp_r)
-		*cstamp_r = object->cstamp;
-
-	return object->objaddr;
-}
-EXPORT_SYMBOL_GPL(xnregistry_lookup);
-
 /**
- * @fn void *xnregistry_fetch(xnhandle_t handle)
+ * @fn void *xnregistry_lookup(xnhandle_t handle, unsigned long *cstamp_r)
  * @brief Find a real-time object into the registry.
  *
  * This service retrieves an object from its handle into the registry
- * and returns the memory address of its descriptor.
+ * and returns the memory address of its descriptor. Optionally, it
+ * also copies back the object's creation stamp which is unique across
+ * object registration calls.
  *
  * @param handle The generic handle of the object to fetch.
+ *
+ * @param cstamp_r If not-NULL, the object's creation stamp will be
+ * copied to this memory area.
  *
  * @return The memory address of the object's descriptor is returned
  * on success. Otherwise, NULL is returned if @a handle does not
@@ -927,10 +917,5 @@ EXPORT_SYMBOL_GPL(xnregistry_lookup);
  *
  * @remark Tags: isr-allowed.
  */
-void *xnregistry_fetch(xnhandle_t handle)
-{
-	return xnregistry_lookup(handle, NULL);
-}
-EXPORT_SYMBOL_GPL(xnregistry_fetch);
 
 /*@}*/
