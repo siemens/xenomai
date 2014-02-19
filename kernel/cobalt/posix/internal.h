@@ -64,6 +64,12 @@ static inline struct cobalt_kqueues *cobalt_kqueues(int pshared)
 	return &ppd->kqueues;
 }
 
+static inline xnhandle_t cobalt_get_handle_from_user(xnhandle_t *u_h)
+{
+	xnhandle_t handle;
+	return __xn_get_user(handle, u_h) ? 0 : handle;
+}
+
 int cobalt_init(void);
 
 void cobalt_cleanup(void);

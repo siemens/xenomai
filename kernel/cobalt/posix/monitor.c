@@ -158,7 +158,7 @@ int cobalt_monitor_enter(struct cobalt_monitor_shadow __user *u_mon)
 	int ret;
 	spl_t s;
 
-	__xn_get_user(handle, &u_mon->handle);
+	handle = cobalt_get_handle_from_user(&u_mon->handle);
 
 	xnlock_get_irqsave(&nklock, s);
 	ret = cobalt_monitor_enter_inner(handle);
@@ -243,7 +243,7 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_mon,
 	xntmode_t tmode;
 	spl_t s;
 
-	__xn_get_user(handle, &u_mon->handle);
+	handle = cobalt_get_handle_from_user(&u_mon->handle);
 
 	if (u_ts) {
 		if (__xn_safe_copy_from_user(&ts, u_ts, sizeof(ts)))
@@ -321,7 +321,7 @@ int cobalt_monitor_sync(struct cobalt_monitor_shadow __user *u_mon)
 	int ret = 0;
 	spl_t s;
 
-	__xn_get_user(handle, &u_mon->handle);
+	handle = cobalt_get_handle_from_user(&u_mon->handle);
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -347,7 +347,7 @@ int cobalt_monitor_exit(struct cobalt_monitor_shadow __user *u_mon)
 	int ret = 0;
 	spl_t s;
 
-	__xn_get_user(handle, &u_mon->handle);
+	handle = cobalt_get_handle_from_user(&u_mon->handle);
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -395,7 +395,7 @@ int cobalt_monitor_destroy(struct cobalt_monitor_shadow __user *u_mon)
 	int ret = 0;
 	spl_t s;
 
-	__xn_get_user(handle, &u_mon->handle);
+	handle = cobalt_get_handle_from_user(&u_mon->handle);
 
 	xnlock_get_irqsave(&nklock, s);
 

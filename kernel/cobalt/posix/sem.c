@@ -675,7 +675,7 @@ int cobalt_sem_post(struct cobalt_sem_shadow __user *u_sem)
 {
 	xnhandle_t handle;
 
-	__xn_get_user(handle, &u_sem->handle);
+	handle = cobalt_get_handle_from_user(&u_sem->handle);
 
 	return sem_post(handle);
 }
@@ -684,7 +684,7 @@ int cobalt_sem_wait(struct cobalt_sem_shadow __user *u_sem)
 {
 	xnhandle_t handle;
 
-	__xn_get_user(handle, &u_sem->handle);
+	handle = cobalt_get_handle_from_user(&u_sem->handle);
 
 	return sem_wait(handle);
 }
@@ -694,7 +694,7 @@ int cobalt_sem_timedwait(struct cobalt_sem_shadow __user *u_sem,
 {
 	xnhandle_t handle;
 
-	__xn_get_user(handle, &u_sem->handle);
+	handle = cobalt_get_handle_from_user(&u_sem->handle);
 
 	return sem_timedwait(handle, u_ts);
 }
@@ -703,7 +703,7 @@ int cobalt_sem_trywait(struct cobalt_sem_shadow __user *u_sem)
 {
 	xnhandle_t handle;
 
-	__xn_get_user(handle, &u_sem->handle);
+	handle = cobalt_get_handle_from_user(&u_sem->handle);
 
 	return sem_trywait(handle);
 }
@@ -713,7 +713,7 @@ int cobalt_sem_getvalue(struct cobalt_sem_shadow __user *u_sem, int __user *u_sv
 	xnhandle_t handle;
 	int err, sval;
 
-	__xn_get_user(handle, &u_sem->handle);
+	handle = cobalt_get_handle_from_user(&u_sem->handle);
 
 	err = sem_getvalue(handle, &sval);
 	if (err < 0)
@@ -764,7 +764,7 @@ int cobalt_sem_broadcast_np(struct cobalt_sem_shadow __user *u_sem)
 	spl_t s;
 	int err;
 
-	__xn_get_user(handle, &u_sem->handle);
+	handle = cobalt_get_handle_from_user(&u_sem->handle);
 
 	xnlock_get_irqsave(&nklock, s);
 	sm = xnregistry_lookup(handle, NULL);
@@ -788,7 +788,7 @@ int cobalt_sem_inquire(struct cobalt_sem_shadow __user *u_sem,
 	xnhandle_t handle;
 	spl_t s;
 
-	__xn_get_user(handle, &u_sem->handle);
+	handle = cobalt_get_handle_from_user(&u_sem->handle);
 
 	nrpids = waitsz / sizeof(pid_t);
 

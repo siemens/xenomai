@@ -223,7 +223,7 @@ int cobalt_sem_close(struct cobalt_sem_shadow __user *usm)
 	if (cc == NULL)
 		return -EPERM;
 
-	__xn_get_user(handle, &usm->handle);
+	handle = cobalt_get_handle_from_user(&usm->handle);
 
 	return nsem_close(cc, handle);
 }

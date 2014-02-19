@@ -259,7 +259,7 @@ int cobalt_mutex_check_init(struct cobalt_mutex_shadow __user *u_mx)
 	int err;
 	spl_t s;
 
-	__xn_get_user(handle, &u_mx->handle);
+	handle = cobalt_get_handle_from_user(&u_mx->handle);
 
 	xnlock_get_irqsave(&nklock, s);
 	mutex = xnregistry_lookup(handle, NULL);
@@ -365,7 +365,7 @@ int cobalt_mutex_trylock(struct cobalt_mutex_shadow __user *u_mx)
 	spl_t s;
 	int err;
 
-	__xn_get_user(handle, &u_mx->handle);
+	handle = cobalt_get_handle_from_user(&u_mx->handle);
 
 	xnlock_get_irqsave(&nklock, s);
 	mutex = xnregistry_lookup(handle, NULL);
@@ -404,7 +404,7 @@ int cobalt_mutex_lock(struct cobalt_mutex_shadow __user *u_mx)
 	spl_t s;
 	int err;
 
-	__xn_get_user(handle, &u_mx->handle);
+	handle = cobalt_get_handle_from_user(&u_mx->handle);
 
 	xnlock_get_irqsave(&nklock, s);
 	err = cobalt_mutex_timedlock_break(xnregistry_lookup(handle, NULL),
@@ -421,7 +421,7 @@ int cobalt_mutex_timedlock(struct cobalt_mutex_shadow __user *u_mx,
 	spl_t s;
 	int err;
 
-	__xn_get_user(handle, &u_mx->handle);
+	handle = cobalt_get_handle_from_user(&u_mx->handle);
 
 	xnlock_get_irqsave(&nklock, s);
 	err = cobalt_mutex_timedlock_break(xnregistry_lookup(handle, NULL),
@@ -438,8 +438,7 @@ int cobalt_mutex_unlock(struct cobalt_mutex_shadow __user *u_mx)
 	int err;
 	spl_t s;
 
-
-	__xn_get_user(handle, &u_mx->handle);
+	handle = cobalt_get_handle_from_user(&u_mx->handle);
 
 	xnlock_get_irqsave(&nklock, s);
 	mutex = xnregistry_lookup(handle, NULL);

@@ -122,7 +122,7 @@ int cobalt_event_wait(struct cobalt_event_shadow __user *u_event,
 	int ret = 0, info;
 	spl_t s;
 
-	__xn_get_user(handle, &u_event->handle);
+	handle = cobalt_get_handle_from_user(&u_event->handle);
 
 	if (u_ts) {
 		if (__xn_safe_copy_from_user(&ts, u_ts, sizeof(ts)))
@@ -204,7 +204,7 @@ int cobalt_event_sync(struct cobalt_event_shadow __user *u_event)
 	int ret = 0;
 	spl_t s;
 
-	__xn_get_user(handle, &u_event->handle);
+	handle = cobalt_get_handle_from_user(&u_event->handle);
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -268,7 +268,7 @@ int cobalt_event_destroy(struct cobalt_event_shadow __user *u_event)
 	int ret = 0;
 	spl_t s;
 
-	__xn_get_user(handle, &u_event->handle);
+	handle = cobalt_get_handle_from_user(&u_event->handle);
 
 	xnlock_get_irqsave(&nklock, s);
 

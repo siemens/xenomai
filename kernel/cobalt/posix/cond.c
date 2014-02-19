@@ -419,10 +419,10 @@ int cobalt_cond_wait_prologue(struct cobalt_cond_shadow __user *u_cnd,
 	xnhandle_t handle;
 	int err, perr = 0;
 
-	__xn_get_user(handle, &u_cnd->handle);
+	handle = cobalt_get_handle_from_user(&u_cnd->handle);
 	cnd = xnregistry_lookup(handle, NULL);
 
-	__xn_get_user(handle, &u_mx->handle);
+	handle = cobalt_get_handle_from_user(&u_mx->handle);
 	mx = xnregistry_lookup(handle, NULL);
 
 	if (!cnd->mutex) {
@@ -479,10 +479,10 @@ int cobalt_cond_wait_epilogue(struct cobalt_cond_shadow __user *u_cnd,
 	xnhandle_t handle;
 	int err;
 
-	__xn_get_user(handle, &u_cnd->handle);
+	handle = cobalt_get_handle_from_user(&u_cnd->handle);
 	cnd = xnregistry_lookup(handle, NULL);
 
-	__xn_get_user(handle, &u_mx->handle);
+	handle = cobalt_get_handle_from_user(&u_mx->handle);
 	mx = xnregistry_lookup(handle, NULL);
 
 	err = cobalt_cond_timedwait_epilogue(cur, cnd, mx);
