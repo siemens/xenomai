@@ -45,6 +45,12 @@ struct cobalt_event_shadow {
 	int flags;
 };
 
+struct cobalt_event_info {
+	unsigned long value;
+	int flags;
+	int nrwait;
+};
+
 typedef struct cobalt_event_shadow cobalt_event_t;
 
 #endif /* !_COBALT_UAPI_EVENT_H */

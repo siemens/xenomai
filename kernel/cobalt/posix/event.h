@@ -49,6 +49,11 @@ int cobalt_event_sync(struct cobalt_event_shadow __user *u_evtsh);
 
 int cobalt_event_destroy(struct cobalt_event_shadow __user *u_evtsh);
 
+int cobalt_event_inquire(struct cobalt_event_shadow __user *u_event,
+			 struct cobalt_event_info __user *u_info,
+			 pid_t __user *u_waitlist,
+			 size_t waitsz);
+
 void cobalt_eventq_cleanup(struct cobalt_kqueues *q);
 
 void cobalt_event_pkg_init(void);

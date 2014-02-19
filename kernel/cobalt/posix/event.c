@@ -287,6 +287,91 @@ out:
 	return ret;
 }
 
+int cobalt_event_inquire(struct cobalt_event_shadow __user *u_event,
+			 struct cobalt_event_info __user *u_info,
+			 pid_t __user *u_waitlist,
+			 size_t waitsz)
+{
+	int nrpend, nrwait = 0, nrpids, ret = 0;
+	unsigned long pstamp, nstamp = 0;
+	struct cobalt_event_info info;
+	struct cobalt_event *event;
+	pid_t *t = NULL, fbuf[16];
+	struct xnthread *thread;
+	xnhandle_t handle;
+	spl_t s;
+
+	handle = cobalt_get_handle_from_user(&u_event->handle);
+
+	nrpids = waitsz / sizeof(pid_t);
+
+	xnlock_get_irqsave(&nklock, s);
+
+	for (;;) {
+		pstamp = nstamp;
+		event = xnregistry_lookup(handle, &nstamp);
+		if (event == NULL || event->magic != COBALT_EVENT_MAGIC) {
+			xnlock_put_irqrestore(&nklock, s);
+			return -EINVAL;
+		}
+		/*
+		 * Allocate memory to return the wait list without
+		 * holding any lock, then revalidate the handle.
+		 */
+		if (t == NULL) {
+			nrpend = 0;
+			if (!xnsynch_pended_p(&event->synch))
+				break;
+			xnsynch_for_each_sleeper(thread, &event->synch)
+				nrpend++;
+			if (u_waitlist == NULL)
+				break;
+			xnlock_put_irqrestore(&nklock, s);
+			if (nrpids > nrpend)
+				nrpids = nrpend;
+			if (nrpend <= ARRAY_SIZE(fbuf))
+				t = fbuf; /* Use fast buffer. */
+			else {
+				t = xnmalloc(nrpend * sizeof(pid_t));
+				if (t == NULL)
+					return -ENOMEM;
+			}
+			xnlock_get_irqsave(&nklock, s);
+		} else if (pstamp == nstamp)
+			break;
+		else {
+			xnlock_put_irqrestore(&nklock, s);
+			if (t != fbuf)
+				xnfree(t);
+			t = NULL;
+			xnlock_get_irqsave(&nklock, s);
+		}
+	}
+
+	info.flags = event->flags;
+	info.value = event->value;
+	info.nrwait = nrpend;
+
+	if (xnsynch_pended_p(&event->synch) && u_waitlist != NULL) {
+		xnsynch_for_each_sleeper(thread, &event->synch) {
+			if (nrwait >= nrpids)
+				break;
+			t[nrwait++] = xnthread_host_pid(thread);
+		}
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	ret = __xn_safe_copy_to_user(u_info, &info, sizeof(info));
+	if (ret == 0 && nrwait > 0)
+		ret = __xn_safe_copy_to_user(u_waitlist, t, nrwait * sizeof(pid_t));
+
+	if (t && t != fbuf)
+		xnfree(t);
+
+	return ret ?: nrwait;
+}
+
 void cobalt_eventq_cleanup(struct cobalt_kqueues *q)
 {
 	struct cobalt_event *event, *tmp;
