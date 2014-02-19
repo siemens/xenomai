@@ -168,6 +168,12 @@ int xnregistry_enter(const char *key,
 		     xnhandle_t *phandle,
 		     struct xnpnode *pnode);
 
+static inline int
+xnregistry_enter_anon(void *objaddr, xnhandle_t *phandle)
+{
+	return xnregistry_enter(NULL, objaddr, phandle, NULL);
+}
+
 int xnregistry_bind(const char *key,
 		    xnticks_t timeout,
 		    int timeout_mode,

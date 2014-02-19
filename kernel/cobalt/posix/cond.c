@@ -159,7 +159,7 @@ pthread_cond_init(struct __shadow_cond *cnd, const pthread_condattr_t *attr)
 	cond_destroy_internal(cnd->handle, cobalt_kqueues(1));
 	xnlock_get_irqsave(&nklock, s);
 do_init:
-	err = xnregistry_enter("", cond, &cond->handle, NULL);
+	err = xnregistry_enter_anon(cond, &cond->handle);
 	if (err < 0)
 		goto err_free_pending_signals;
 

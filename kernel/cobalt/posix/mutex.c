@@ -72,7 +72,7 @@ static int cobalt_mutex_init_inner(struct __shadow_mutex *shadow,
 
 	kq = cobalt_kqueues(attr->pshared);
 	sys_ppd = xnsys_ppd_get(attr->pshared);
-	err = xnregistry_enter("", mutex, &shadow->handle, NULL);
+	err = xnregistry_enter_anon(mutex, &shadow->handle);
 	if (err < 0)
 		return err;
 
