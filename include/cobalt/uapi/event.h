@@ -37,7 +37,7 @@ struct cobalt_event;
 #define COBALT_EVENT_ANY  0x1
 
 struct cobalt_event_shadow {
-	struct cobalt_event *event;
+	xnhandle_t handle;
 	union {
 		struct cobalt_event_data *data;
 		unsigned int data_offset;

@@ -49,21 +49,18 @@ struct event_wait_context {
 	int mode;
 };
 
-int cobalt_event_init(struct cobalt_event_shadow __user *u_evtsh,
+int cobalt_event_init(struct cobalt_event_shadow __user *u_event,
 		      unsigned long value,
 		      int flags)
 {
-	struct cobalt_event_shadow evtsh;
+	struct cobalt_event_shadow shadow;
 	struct cobalt_event_data *datp;
+	int pshared, synflags, ret;
 	struct cobalt_event *event;
 	struct cobalt_kqueues *kq;
-	int pshared, synflags;
 	unsigned long datoff;
 	struct xnheap *heap;
 	spl_t s;
-
-	if (__xn_safe_copy_from_user(&evtsh, u_evtsh, sizeof(evtsh)))
-		return -EFAULT;
 
 	event = xnmalloc(sizeof(*event));
 	if (event == NULL)
@@ -77,11 +74,17 @@ int cobalt_event_init(struct cobalt_event_shadow __user *u_evtsh,
 		return -EAGAIN;
 	}
 
+	ret = xnregistry_enter_anon(event, &event->handle);
+	if (ret) {
+		xnheap_free(heap, datp);
+		xnfree(event);
+		return ret;
+	}
+
 	event->data = datp;
 	event->flags = flags;
 	synflags = (flags & COBALT_EVENT_PRIO) ? XNSYNCH_PRIO : XNSYNCH_FIFO;
 	xnsynch_init(&event->synch, synflags, NULL);
-	event->magic = COBALT_EVENT_MAGIC;
 	kq = cobalt_kqueues(pshared);
 	event->owningq = kq;
 
@@ -89,34 +92,37 @@ int cobalt_event_init(struct cobalt_event_shadow __user *u_evtsh,
 	list_add_tail(&event->link, &kq->eventq);
 	xnlock_put_irqrestore(&nklock, s);
 
+	event->magic = COBALT_EVENT_MAGIC;
+
 	datp->value = value;
 	datp->flags = 0;
 	datp->nwaiters = 0;
 	datoff = xnheap_mapped_offset(heap, datp);
-	evtsh.flags = flags;
-	evtsh.event = event;
-	evtsh.u.data_offset = datoff;
+	shadow.flags = flags;
+	shadow.handle = event->handle;
+	shadow.u.data_offset = datoff;
 
-	return __xn_safe_copy_to_user(u_evtsh, &evtsh, sizeof(*u_evtsh));
+	return __xn_safe_copy_to_user(u_event, &shadow, sizeof(*u_event));
 }
 
-int cobalt_event_wait(struct cobalt_event_shadow __user *u_evtsh,
+int cobalt_event_wait(struct cobalt_event_shadow __user *u_event,
 		      unsigned long bits,
 		      unsigned long __user *u_bits_r,
 		      int mode,
 		      struct timespec __user *u_ts)
 {
-	struct cobalt_event *event = NULL;
 	unsigned long rbits = 0, testval;
 	xnticks_t timeout = XN_INFINITE;
 	struct cobalt_event_data *datp;
 	xntmode_t tmode = XN_RELATIVE;
 	struct event_wait_context ewc;
+	struct cobalt_event *event;
 	struct timespec ts;
+	xnhandle_t handle;
 	int ret = 0, info;
 	spl_t s;
 
-	__xn_get_user(event, &u_evtsh->event);
+	__xn_get_user(handle, &u_event->handle);
 
 	if (u_ts) {
 		if (__xn_safe_copy_from_user(&ts, u_ts, sizeof(ts)))
@@ -131,8 +137,8 @@ int cobalt_event_wait(struct cobalt_event_shadow __user *u_evtsh,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!cobalt_obj_active(event, COBALT_EVENT_MAGIC,
-			       struct cobalt_event)) {
+	event = xnregistry_fetch(handle);
+	if (event == NULL || event->magic != COBALT_EVENT_MAGIC) {
 		ret = -EINVAL;
 		goto out;
 	}
@@ -186,23 +192,24 @@ out:
 	return ret;
 }
 
-int cobalt_event_sync(struct cobalt_event_shadow __user *u_evtsh)
+int cobalt_event_sync(struct cobalt_event_shadow __user *u_event)
 {
 	unsigned long bits, waitval, testval;
-	struct cobalt_event *event = NULL;
 	struct xnthread_wait_context *wc;
 	struct cobalt_event_data *datp;
 	struct event_wait_context *ewc;
+	struct cobalt_event *event;
 	struct xnthread *p, *tmp;
+	xnhandle_t handle;
 	int ret = 0;
 	spl_t s;
 
-	__xn_get_user(event, &u_evtsh->event);
+	__xn_get_user(handle, &u_event->handle);
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!cobalt_obj_active(event, COBALT_EVENT_MAGIC,
-			       struct cobalt_event)) {
+	event = xnregistry_fetch(handle);
+	if (event == NULL || event->magic != COBALT_EVENT_MAGIC) {
 		ret = -EINVAL;
 		goto out;
 	}
@@ -243,6 +250,7 @@ static void cobalt_event_destroy_inner(struct cobalt_event *event,
 
 	list_del(&event->link);
 	xnsynch_destroy(&event->synch);
+	xnregistry_remove(event->handle);
 	event->magic = 0;
 	pshared = (event->flags & COBALT_EVENT_SHARED) != 0;
 
@@ -253,18 +261,19 @@ static void cobalt_event_destroy_inner(struct cobalt_event *event,
 	xnlock_get_irqsave(&nklock, s);
 }
 
-int cobalt_event_destroy(struct cobalt_event_shadow __user *u_evtsh)
+int cobalt_event_destroy(struct cobalt_event_shadow __user *u_event)
 {
-	struct cobalt_event *event = NULL;
+	struct cobalt_event *event;
+	xnhandle_t handle;
 	int ret = 0;
 	spl_t s;
 
-	__xn_get_user(event, &u_evtsh->event);
+	__xn_get_user(handle, &u_event->handle);
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!cobalt_obj_active(event, COBALT_EVENT_MAGIC,
-			       struct cobalt_event)) {
+	event = xnregistry_fetch(handle);
+	if (event == NULL || event->magic != COBALT_EVENT_MAGIC) {
 		ret = -EINVAL;
 		goto out;
 	}
@@ -285,12 +294,11 @@ void cobalt_eventq_cleanup(struct cobalt_kqueues *q)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (list_empty(&q->eventq))
-		goto out;
+	if (!list_empty(&q->eventq)) {
+		list_for_each_entry_safe(event, tmp, &q->eventq, link)
+			cobalt_event_destroy_inner(event, q, s);
+	}
 
-	list_for_each_entry_safe(event, tmp, &q->eventq, link)
-		cobalt_event_destroy_inner(event, q, s);
-out:
 	xnlock_put_irqrestore(&nklock, s);
 }
 

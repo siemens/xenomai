@@ -32,6 +32,7 @@ struct cobalt_event {
 	struct cobalt_kqueues *owningq;
 	struct list_head link;
 	int flags;
+	xnhandle_t handle;
 };
 
 int cobalt_event_init(struct cobalt_event_shadow __user *u_evtsh,
