@@ -94,36 +94,6 @@
  */
 #define XNTHREAD_STATE_LABELS  "SWDRU..X.HbTlrt.....L"
 
-/**
- * @brief Structure containing thread information.
- */
-struct xnthread_info {
-	/**< Thread state, @see nucleus_state_flags */
-	unsigned long state;
-	/**< Base priority. */
-	int bprio;
-	/**< Current priority. May be subject to PI boost.*/
-	int cprio;
-	/**< CPU the thread currently runs on. */
-	int cpu;
-	/**< CPU affinity. */
-	unsigned long affinity;
-	/**< Time of next release.*/
-	unsigned long long relpoint;
-	/**< Execution time in primary mode (ns). */
-	unsigned long long exectime;
-	/**< Number of relaxes (i.e. secondary mode switches). */
-	unsigned long modeswitches;
-	/**< Number of context switches. */
-	unsigned long ctxswitches;
-	/**< Number of page faults. */
-	unsigned long pagefaults;
-	/**< Number of Xenomai syscalls. */
-	unsigned long syscalls;
-	/**< Symbolic name. */
-	char name[XNOBJECT_NAME_LEN];
-};
-
 struct xnthread_user_window {
 	unsigned long state;
 	unsigned long grant_value;

@@ -1515,36 +1515,6 @@ static int xnshadow_sys_current(xnhandle_t __user *u_handle)
 				      sizeof(*u_handle));
 }
 
-static int xnshadow_sys_current_info(struct xnthread_info __user *u_info)
-{
-	struct xnthread *cur = xnshadow_current();
-	struct xnthread_info info;
-	xnticks_t raw_exectime;
-	int i;
-
-	if (cur == NULL)
-		return -EPERM;
-
-	info.state = xnthread_state_flags(cur);
-	info.bprio = xnthread_base_priority(cur);
-	info.cprio = xnthread_current_priority(cur);
-	info.cpu = xnsched_cpu(xnthread_sched(cur));
-	for (i = 0, info.affinity = 0; i < BITS_PER_LONG; i++)
-		if (xnthread_affine_p(cur, i))
-			info.affinity |= 1UL << i;
-	info.relpoint = xntimer_get_date(&cur->ptimer);
-	raw_exectime = xnthread_get_exectime(cur) +
-		xnstat_exectime_now() - xnthread_get_lastswitch(cur);
-	info.exectime = xnclock_ticks_to_ns(&nkclock, raw_exectime);
-	info.modeswitches = xnstat_counter_get(&cur->stat.ssw);
-	info.ctxswitches = xnstat_counter_get(&cur->stat.csw);
-	info.pagefaults = xnstat_counter_get(&cur->stat.pf);
-	info.syscalls = xnstat_counter_get(&cur->stat.xsc);
-	strcpy(info.name, xnthread_name(cur));
-
-	return __xn_safe_copy_to_user(u_info, &info, sizeof(*u_info));
-}
-
 static int xnshadow_sys_backtrace(int nr, unsigned long __user *u_backtrace,
 				  int reason)
 {
@@ -1697,7 +1667,6 @@ static struct xnsyscall user_syscalls[] = {
 	SKINCALL_DEF(sc_nucleus_trace, xnshadow_sys_trace, any),
 	SKINCALL_DEF(sc_nucleus_heap_info, xnshadow_sys_heap_info, lostage),
 	SKINCALL_DEF(sc_nucleus_current, xnshadow_sys_current, any),
-	SKINCALL_DEF(sc_nucleus_current_info, xnshadow_sys_current_info, shadow),
 	SKINCALL_DEF(sc_nucleus_mayday, xnshadow_sys_mayday, oneway),
 	SKINCALL_DEF(sc_nucleus_backtrace, xnshadow_sys_backtrace, current),
 	SKINCALL_DEF(sc_nucleus_serialdbg, xnshadow_sys_serialdbg, any),
