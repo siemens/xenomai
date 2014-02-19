@@ -34,6 +34,7 @@ struct cobalt_monitor {
 	struct list_head waiters;
 	int flags;
 	xntmode_t tmode;
+	xnhandle_t handle;
 };
 
 int cobalt_monitor_init(struct cobalt_monitor_shadow __user *u_monsh,

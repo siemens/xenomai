@@ -31,7 +31,7 @@ struct cobalt_monitor_data {
 struct cobalt_monitor;
 
 struct cobalt_monitor_shadow {
-	struct cobalt_monitor *monitor;
+	xnhandle_t handle;
 	union {
 		struct cobalt_monitor_data *data;
 		unsigned int data_offset;

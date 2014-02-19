@@ -54,20 +54,17 @@
 #include "clock.h"
 #include "monitor.h"
 
-int cobalt_monitor_init(struct cobalt_monitor_shadow __user *u_monsh,
+int cobalt_monitor_init(struct cobalt_monitor_shadow __user *u_mon,
 			clockid_t clk_id, int flags)
 {
-	struct cobalt_monitor_shadow monsh;
+	struct cobalt_monitor_shadow shadow;
 	struct cobalt_monitor_data *datp;
 	struct cobalt_monitor *mon;
 	struct cobalt_kqueues *kq;
+	int pshared, tmode, ret;
 	unsigned long datoff;
 	struct xnheap *heap;
-	int pshared, tmode;
 	spl_t s;
-
-	if (__xn_safe_copy_from_user(&monsh, u_monsh, sizeof(monsh)))
-		return -EFAULT;
 
 	tmode = clock_flag(TIMER_ABSTIME, clk_id);
 	if (tmode < 0)
@@ -85,12 +82,18 @@ int cobalt_monitor_init(struct cobalt_monitor_shadow __user *u_monsh,
 		return -EAGAIN;
 	}
 
+	ret = xnregistry_enter_anon(mon, &mon->handle);
+	if (ret) {
+		xnheap_free(heap, datp);
+		xnfree(mon);
+		return ret;
+	}
+
 	mon->data = datp;
 	xnsynch_init(&mon->gate, XNSYNCH_PIP, &datp->owner);
 	xnsynch_init(&mon->drain, XNSYNCH_PRIO, NULL);
 	mon->flags = flags;
 	mon->tmode = tmode;
-	mon->magic = COBALT_MONITOR_MAGIC;
 	INIT_LIST_HEAD(&mon->waiters);
 	kq = cobalt_kqueues(pshared);
 	mon->owningq = kq;
@@ -99,23 +102,26 @@ int cobalt_monitor_init(struct cobalt_monitor_shadow __user *u_monsh,
 	list_add_tail(&mon->link, &kq->monitorq);
 	xnlock_put_irqrestore(&nklock, s);
 
+	mon->magic = COBALT_MONITOR_MAGIC;
+
 	datp->flags = 0;
 	datoff = xnheap_mapped_offset(heap, datp);
-	monsh.flags = flags;
-	monsh.monitor = mon;
-	monsh.u.data_offset = datoff;
+	shadow.flags = flags;
+	shadow.handle = mon->handle;
+	shadow.u.data_offset = datoff;
 
-	return __xn_safe_copy_to_user(u_monsh, &monsh, sizeof(*u_monsh));
+	return __xn_safe_copy_to_user(u_mon, &shadow, sizeof(*u_mon));
 }
 
 /* nklock held, irqs off */
-static int cobalt_monitor_enter_inner(struct cobalt_monitor *mon)
+static int cobalt_monitor_enter_inner(xnhandle_t handle)
 {
 	struct xnthread *cur = xnsched_current_thread();
+	struct cobalt_monitor *mon;
 	int ret = 0, info;
 
-	if (!cobalt_obj_active(mon, COBALT_MONITOR_MAGIC,
-			       struct cobalt_monitor))
+	mon = xnregistry_fetch(handle); /* (Re)validate. */
+	if (mon == NULL || mon->magic != COBALT_MONITOR_MAGIC)
 		return -EINVAL;
 
 	/*
@@ -146,16 +152,16 @@ static int cobalt_monitor_enter_inner(struct cobalt_monitor *mon)
 	return 0;
 }
 
-int cobalt_monitor_enter(struct cobalt_monitor_shadow __user *u_monsh)
+int cobalt_monitor_enter(struct cobalt_monitor_shadow __user *u_mon)
 {
-	struct cobalt_monitor *mon = NULL;
+	xnhandle_t handle;
 	int ret;
 	spl_t s;
 
-	__xn_get_user(mon, &u_monsh->monitor);
+	__xn_get_user(handle, &u_mon->handle);
 
 	xnlock_get_irqsave(&nklock, s);
-	ret = cobalt_monitor_enter_inner(mon);
+	ret = cobalt_monitor_enter_inner(handle);
 	xnlock_put_irqrestore(&nklock, s);
 
 	return ret;
@@ -222,21 +228,22 @@ drain:
 		datp->flags &= ~COBALT_MONITOR_PENDED;
 }
 
-int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_monsh,
+int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_mon,
 			int event, const struct timespec __user *u_ts,
 			int __user *u_ret)
 {
 	struct cobalt_thread *curr = cobalt_current_thread();
-	struct cobalt_monitor *mon = NULL;
 	struct cobalt_monitor_data *datp;
 	xnticks_t timeout = XN_INFINITE;
 	int ret = 0, opret = 0, info;
+	struct cobalt_monitor *mon;
 	struct xnsynch *synch;
 	struct timespec ts;
+	xnhandle_t handle;
 	xntmode_t tmode;
 	spl_t s;
 
-	__xn_get_user(mon, &u_monsh->monitor);
+	__xn_get_user(handle, &u_mon->handle);
 
 	if (u_ts) {
 		if (__xn_safe_copy_from_user(&ts, u_ts, sizeof(ts)))
@@ -246,8 +253,8 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_monsh,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!cobalt_obj_active(mon, COBALT_MONITOR_MAGIC,
-			       struct cobalt_monitor)) {
+	mon = xnregistry_fetch(handle);
+	if (mon == NULL || mon->magic != COBALT_MONITOR_MAGIC) {
 		ret = -EINVAL;
 		goto out;
 	}
@@ -278,8 +285,7 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_monsh,
 	info = xnsynch_sleep_on(synch, timeout, tmode);
 	if (info) {
 		if ((info & XNRMID) != 0 ||
-		    !cobalt_obj_active(mon, COBALT_MONITOR_MAGIC,
-				       struct cobalt_monitor)) {
+		    xnregistry_fetch(handle) != mon /* XXX: why this? */) {
 			ret = -EINVAL;
 			goto out;
 		}
@@ -299,7 +305,7 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_monsh,
 			opret = -ETIMEDOUT;
 	}
 
-	ret = cobalt_monitor_enter_inner(mon);
+	ret = cobalt_monitor_enter_inner(handle);
 out:
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -308,56 +314,54 @@ out:
 	return ret;
 }
 
-int cobalt_monitor_sync(struct cobalt_monitor_shadow __user *u_monsh)
+int cobalt_monitor_sync(struct cobalt_monitor_shadow __user *u_mon)
 {
-	struct cobalt_monitor *mon = NULL;
+	struct cobalt_monitor *mon;
+	xnhandle_t handle;
 	int ret = 0;
 	spl_t s;
 
-	__xn_get_user(mon, &u_monsh->monitor);
+	__xn_get_user(handle, &u_mon->handle);
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!cobalt_obj_active(mon, COBALT_MONITOR_MAGIC,
-			       struct cobalt_monitor)) {
+	mon = xnregistry_fetch(handle);
+	if (mon == NULL || mon->magic != COBALT_MONITOR_MAGIC)
 		ret = -EINVAL;
-		goto out;
-	}
-
-	if (mon->data->flags & COBALT_MONITOR_SIGNALED) {
+	else if (mon->data->flags & COBALT_MONITOR_SIGNALED) {
 		cobalt_monitor_wakeup(mon);
 		xnsynch_release(&mon->gate, xnsched_current_thread());
 		xnsched_run();
-		ret = cobalt_monitor_enter_inner(mon);
+		ret = cobalt_monitor_enter_inner(handle);
 	}
-out:
+
 	xnlock_put_irqrestore(&nklock, s);
 
 	return ret;
 }
 
-int cobalt_monitor_exit(struct cobalt_monitor_shadow __user *u_monsh)
+int cobalt_monitor_exit(struct cobalt_monitor_shadow __user *u_mon)
 {
-	struct cobalt_monitor *mon = NULL;
+	struct cobalt_monitor *mon;
+	xnhandle_t handle;
 	int ret = 0;
 	spl_t s;
 
-	__xn_get_user(mon, &u_monsh->monitor);
+	__xn_get_user(handle, &u_mon->handle);
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!cobalt_obj_active(mon, COBALT_MONITOR_MAGIC,
-			       struct cobalt_monitor)) {
+	mon = xnregistry_fetch(handle);
+	if (mon == NULL || mon->magic != COBALT_MONITOR_MAGIC)
 		ret = -EINVAL;
-		goto out;
+	else {
+		if (mon->data->flags & COBALT_MONITOR_SIGNALED)
+			cobalt_monitor_wakeup(mon);
+
+		xnsynch_release(&mon->gate, xnsched_current_thread());
+		xnsched_run();
 	}
 
-	if (mon->data->flags & COBALT_MONITOR_SIGNALED)
-		cobalt_monitor_wakeup(mon);
-
-	xnsynch_release(&mon->gate, xnsched_current_thread());
-	xnsched_run();
-out:
 	xnlock_put_irqrestore(&nklock, s);
 
 	return ret;
@@ -374,7 +378,7 @@ static void cobalt_monitor_destroy_inner(struct cobalt_monitor *mon,
 	list_del(&mon->link);
 	xnsynch_destroy(&mon->gate);
 	xnsynch_destroy(&mon->drain);
-	mon->magic = 0;
+	xnregistry_remove(mon->handle);
 	xnlock_put_irqrestore(&nklock, s);
 
 	pshared = (mon->flags & COBALT_MONITOR_SHARED) != 0;
@@ -383,19 +387,20 @@ static void cobalt_monitor_destroy_inner(struct cobalt_monitor *mon,
 	xnfree(mon);
 }
 
-int cobalt_monitor_destroy(struct cobalt_monitor_shadow __user *u_monsh)
+int cobalt_monitor_destroy(struct cobalt_monitor_shadow __user *u_mon)
 {
 	struct xnthread *cur = xnsched_current_thread();
-	struct cobalt_monitor *mon = NULL;
+	struct cobalt_monitor *mon;
+	xnhandle_t handle;
 	int ret = 0;
 	spl_t s;
 
-	__xn_get_user(mon, &u_monsh->monitor);
+	__xn_get_user(handle, &u_mon->handle);
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!cobalt_obj_active(mon, COBALT_MONITOR_MAGIC,
-			       struct cobalt_monitor)) {
+	mon = xnregistry_fetch(handle);
+	if (mon == NULL || mon->magic != COBALT_MONITOR_MAGIC) {
 		ret = -EINVAL;
 		goto fail;
 	}
@@ -413,6 +418,8 @@ int cobalt_monitor_destroy(struct cobalt_monitor_shadow __user *u_monsh)
 		ret = -EPERM;
 		goto fail;
 	}
+
+	mon->magic = 0;	/* Hide it from userland before deletion. */
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -438,6 +445,7 @@ void cobalt_monitorq_cleanup(struct cobalt_kqueues *q)
 		goto out;
 
 	list_for_each_entry_safe(mon, tmp, &q->monitorq, link) {
+		mon->magic = 0;
 		xnlock_put_irqrestore(&nklock, s);
 		cobalt_monitor_destroy_inner(mon, q);
 		xnlock_get_irqsave(&nklock, s);
