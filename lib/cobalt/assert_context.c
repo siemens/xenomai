@@ -30,17 +30,17 @@
 
 static void assert_nrt_inner(void)
 {
-	struct xnthread_info info;
+	struct cobalt_threadstat stat;
 	int ret;
 
-	ret = XENOMAI_SYSCALL1(sc_nucleus_current_info, &info);
+	ret = __cobalt_thread_stat(0, &stat);
 	if (ret) {
-		report_error("sc_nucleus_current_info failed: %s",
+		report_error("__cobalt_thread_stat() failed: %s",
 			strerror(-ret));
 		return;
 	}
 
-	if (info.state & XNTRAPSW)
+	if (stat.status & XNTRAPSW)
 		pthread_kill(pthread_self(), SIGXCPU);
 }
 
