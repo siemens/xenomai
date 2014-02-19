@@ -34,7 +34,7 @@ struct xnpnode;
 
 struct xnobject {
 	void *objaddr;
-	const char *key;	  /* !< Hash key. */
+	const char *key;	  /* !< Hash key. May be NULL if anonynous. */
 	struct xnsynch safesynch; /* !< Safe synchronization object. */
 	unsigned long safelock;	  /* !< Safe lock count. */
 	unsigned long cstamp;		  /* !< Creation stamp. */

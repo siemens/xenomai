@@ -590,8 +590,8 @@ static inline int registry_wakeup_sleepers(const char *key)
  * be indexed and later retrieved in the registry. Since it is assumed
  * that such key is stored into the registered object, it will *not*
  * be copied but only kept by reference in the registry. Pass an empty
- * string if the object shall only occupy a registry slot
- * for handle-based lookups.
+ * or NULL string if the object shall only occupy a registry slot for
+ * handle-based lookups.
  *
  * @param objaddr An opaque pointer to the object to index by @a
  * key.
@@ -609,8 +609,8 @@ static inline int registry_wakeup_sleepers(const char *key)
  *
  * @return 0 is returned upon success. Otherwise:
  *
- * - -EINVAL is returned if @a objaddr are NULL, or if @a key constains
- * an invalid '/' character.
+ * - -EINVAL is returned if @a objaddr is NULL, or if @a key is
+ * non-NULL and contains an invalid '/' character.
  *
  * - -ENOMEM is returned if the system fails to get enough dynamic
  * memory from the global real-time heap in order to register the
@@ -627,7 +627,7 @@ int xnregistry_enter(const char *key, void *objaddr,
 	spl_t s;
 	int ret;
 
-	if (key == NULL || objaddr == NULL || strchr(key, '/'))
+	if (objaddr == NULL || (key != NULL && strchr(key, '/')))
 		return -EINVAL;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -646,7 +646,7 @@ int xnregistry_enter(const char *key, void *objaddr,
 #ifdef CONFIG_XENO_OPT_VFILE
 	object->pnode = NULL;
 #endif
-	if (*key == '\0') {
+	if (key == NULL || *key == '\0') {
 		object->key = NULL;
 		*phandle = object - registry_obj_slots;
 		ret = 0;
@@ -861,6 +861,9 @@ int xnregistry_unlink(const char *key)
 	struct xnobject *object;
 	int ret = 0;
 	spl_t s;
+
+	if (key == NULL)
+		return -EINVAL;
 
 	xnlock_get_irqsave(&nklock, s);
 
