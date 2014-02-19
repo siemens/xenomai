@@ -29,7 +29,7 @@ struct mutex_dat {
 
 union cobalt_mutex_union {
 	pthread_mutex_t native_mutex;
-	struct __shadow_mutex {
+	struct cobalt_mutex_shadow {
 		unsigned int magic;
 		unsigned int lockcnt;
 		xnhandle_t handle;

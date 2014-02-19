@@ -26,7 +26,7 @@
 #include <cobalt/uapi/sem.h>
 #include "internal.h"
 
-static inline struct sem_dat *sem_get_datp(struct __shadow_sem *shadow)
+static inline struct sem_dat *sem_get_datp(struct cobalt_sem_shadow *shadow)
 {
 	unsigned pshared = shadow->datp_offset < 0;
 	
@@ -40,7 +40,7 @@ static inline struct sem_dat *sem_get_datp(struct __shadow_sem *shadow)
 
 COBALT_IMPL(int, sem_init, (sem_t *sem, int pshared, unsigned value))
 {
-	struct __shadow_sem *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
+	struct cobalt_sem_shadow *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
 	int err;
 
 	err = -XENOMAI_SKINCALL3(__cobalt_muxid,
@@ -56,7 +56,7 @@ COBALT_IMPL(int, sem_init, (sem_t *sem, int pshared, unsigned value))
 
 COBALT_IMPL(int, sem_destroy, (sem_t *sem))
 {
-	struct __shadow_sem *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
+	struct cobalt_sem_shadow *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
 	int err;
 
 	if (_sem->magic != COBALT_SEM_MAGIC
@@ -75,7 +75,7 @@ COBALT_IMPL(int, sem_destroy, (sem_t *sem))
 
 COBALT_IMPL(int, sem_post, (sem_t *sem))
 {
-	struct __shadow_sem *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
+	struct cobalt_sem_shadow *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
 	struct sem_dat *datp;
 	long value;
 	int err;
@@ -119,7 +119,7 @@ COBALT_IMPL(int, sem_post, (sem_t *sem))
 
 COBALT_IMPL(int, sem_trywait, (sem_t *sem))
 {
-	struct __shadow_sem *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
+	struct cobalt_sem_shadow *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
 	struct sem_dat *datp;
 	long value;
 
@@ -155,7 +155,7 @@ COBALT_IMPL(int, sem_trywait, (sem_t *sem))
 
 COBALT_IMPL(int, sem_wait, (sem_t *sem))
 {
-	struct __shadow_sem *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
+	struct cobalt_sem_shadow *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
 	int err, oldtype;
 
 	err = __RT(sem_trywait(sem));
@@ -178,7 +178,7 @@ COBALT_IMPL(int, sem_wait, (sem_t *sem))
 
 COBALT_IMPL(int, sem_timedwait, (sem_t *sem, const struct timespec *ts))
 {
-	struct __shadow_sem *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
+	struct cobalt_sem_shadow *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
 	int err, oldtype;
 
 	err = __RT(sem_trywait(sem));
@@ -202,7 +202,7 @@ COBALT_IMPL(int, sem_timedwait, (sem_t *sem, const struct timespec *ts))
 
 COBALT_IMPL(int, sem_getvalue, (sem_t *sem, int *sval))
 {
-	struct __shadow_sem *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
+	struct cobalt_sem_shadow *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
 	struct sem_dat *datp;
 	long value;
 
@@ -262,7 +262,7 @@ COBALT_IMPL(sem_t *, sem_open, (const char *name, int oflags, ...))
 
 COBALT_IMPL(int, sem_close, (sem_t *sem))
 {
-	struct __shadow_sem *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
+	struct cobalt_sem_shadow *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
 	int err;
 
 	if (_sem->magic != COBALT_NAMED_SEM_MAGIC) {
@@ -296,7 +296,7 @@ COBALT_IMPL(int, sem_unlink, (const char *name))
 
 int sem_init_np(sem_t *sem, int flags, unsigned int value)
 {
-	struct __shadow_sem *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
+	struct cobalt_sem_shadow *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
 	int err;
 
 	err = -XENOMAI_SKINCALL3(__cobalt_muxid,
@@ -310,7 +310,7 @@ int sem_init_np(sem_t *sem, int flags, unsigned int value)
 
 int sem_broadcast_np(sem_t *sem)
 {
-	struct __shadow_sem *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
+	struct cobalt_sem_shadow *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
 	struct sem_dat *datp;
 	long value;
 	int err;

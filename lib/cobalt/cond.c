@@ -21,7 +21,7 @@
 #include "current.h"
 #include "internal.h"
 
-static inline unsigned long *cond_get_signalsp(struct __shadow_cond *shadow)
+static inline unsigned long *cond_get_signalsp(struct cobalt_cond_shadow *shadow)
 {
 	if (shadow->attr.pshared)
 		return (unsigned long *)(cobalt_sem_heap[1]
@@ -31,7 +31,7 @@ static inline unsigned long *cond_get_signalsp(struct __shadow_cond *shadow)
 }
 
 static inline struct mutex_dat *
-cond_get_mutex_datp(struct __shadow_cond *shadow)
+cond_get_mutex_datp(struct cobalt_cond_shadow *shadow)
 {
 	if (shadow->mutex_datp == (struct mutex_dat *)~0UL)
 		return NULL;
@@ -83,7 +83,7 @@ COBALT_IMPL(int, pthread_condattr_setpshared, (pthread_condattr_t *attr, int psh
 COBALT_IMPL(int, pthread_cond_init, (pthread_cond_t *cond,
 				     const pthread_condattr_t * attr))
 {
-	struct __shadow_cond *_cnd = &((union cobalt_cond_union *)cond)->shadow_cond;
+	struct cobalt_cond_shadow *_cnd = &((union cobalt_cond_union *)cond)->shadow_cond;
 	unsigned long *pending_signalsp;
 	int err;
 
@@ -105,14 +105,14 @@ COBALT_IMPL(int, pthread_cond_init, (pthread_cond_t *cond,
 
 COBALT_IMPL(int, pthread_cond_destroy, (pthread_cond_t *cond))
 {
-	struct __shadow_cond *_cond = &((union cobalt_cond_union *)cond)->shadow_cond;
+	struct cobalt_cond_shadow *_cond = &((union cobalt_cond_union *)cond)->shadow_cond;
 
 	return -XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_cond_destroy, _cond);
 }
 
 struct cobalt_cond_cleanup_t {
-	struct __shadow_cond *cond;
-	struct __shadow_mutex *mutex;
+	struct cobalt_cond_shadow *cond;
+	struct cobalt_mutex_shadow *mutex;
 	unsigned count;
 	int err;
 };
@@ -133,8 +133,8 @@ static void __pthread_cond_cleanup(void *data)
 
 COBALT_IMPL(int, pthread_cond_wait, (pthread_cond_t *cond, pthread_mutex_t *mutex))
 {
-	struct __shadow_cond *_cnd = &((union cobalt_cond_union *)cond)->shadow_cond;
-	struct __shadow_mutex *_mx =
+	struct cobalt_cond_shadow *_cnd = &((union cobalt_cond_union *)cond)->shadow_cond;
+	struct cobalt_mutex_shadow *_mx =
 		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
 	struct cobalt_cond_cleanup_t c = {
 		.cond = _cnd,
@@ -187,8 +187,8 @@ COBALT_IMPL(int, pthread_cond_timedwait, (pthread_cond_t *cond,
 					  pthread_mutex_t *mutex,
 					  const struct timespec *abstime))
 {
-	struct __shadow_cond *_cnd = &((union cobalt_cond_union *)cond)->shadow_cond;
-	struct __shadow_mutex *_mx =
+	struct cobalt_cond_shadow *_cnd = &((union cobalt_cond_union *)cond)->shadow_cond;
+	struct cobalt_mutex_shadow *_mx =
 		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
 	struct cobalt_cond_cleanup_t c = {
 		.cond = _cnd,
@@ -237,7 +237,7 @@ COBALT_IMPL(int, pthread_cond_timedwait, (pthread_cond_t *cond,
 
 COBALT_IMPL(int, pthread_cond_signal, (pthread_cond_t *cond))
 {
-	struct __shadow_cond *_cnd = &((union cobalt_cond_union *)cond)->shadow_cond;
+	struct cobalt_cond_shadow *_cnd = &((union cobalt_cond_union *)cond)->shadow_cond;
 	unsigned long pending_signals, *pending_signalsp;
 	struct mutex_dat *mutex_datp;
 	unsigned long flags;
@@ -269,7 +269,7 @@ COBALT_IMPL(int, pthread_cond_signal, (pthread_cond_t *cond))
 
 COBALT_IMPL(int, pthread_cond_broadcast, (pthread_cond_t *cond))
 {
-	struct __shadow_cond *_cnd = &((union cobalt_cond_union *)cond)->shadow_cond;
+	struct cobalt_cond_shadow *_cnd = &((union cobalt_cond_union *)cond)->shadow_cond;
 	struct mutex_dat *mutex_datp;
 	unsigned long flags;
 	xnhandle_t cur;

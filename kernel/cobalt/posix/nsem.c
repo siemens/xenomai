@@ -29,7 +29,7 @@ DEFINE_XNLOCK(nsem_lock);
 
 struct nsem {
 	struct cobalt_sem *sem;
-	struct __shadow_sem __user *usem;
+	struct cobalt_sem_shadow __user *usem;
 	unsigned refs;
 	struct xnid id;
 };
@@ -45,11 +45,11 @@ static struct nsem *nsem_search(struct cobalt_process *cc, xnhandle_t handle)
 	return container_of(i, struct nsem, id);
 }
 
-static struct __shadow_sem __user *
-nsem_open(struct cobalt_process *cc, struct __shadow_sem __user *ushadow, 
+static struct cobalt_sem_shadow __user *
+nsem_open(struct cobalt_process *cc, struct cobalt_sem_shadow __user *ushadow, 
 	const char *name, int oflags, mode_t mode, unsigned value)
 {
-	struct __shadow_sem shadow;
+	struct cobalt_sem_shadow shadow;
 	struct cobalt_sem *sem;
 	struct nsem *u, *v;
 	xnhandle_t handle;
@@ -182,11 +182,11 @@ void cobalt_nsem_unlink_inner(xnhandle_t handle)
 		xnregistry_unlink(xnregistry_key(handle));
 }
 
-int cobalt_sem_open(struct __shadow_sem __user *__user *u_addr,
+int cobalt_sem_open(struct cobalt_sem_shadow __user *__user *u_addr,
 		const char __user *u_name,
 		int oflags, mode_t mode, unsigned value)
 {
-	struct __shadow_sem __user *usm;
+	struct cobalt_sem_shadow __user *usm;
 	struct cobalt_process *cc;
 	char name[COBALT_MAXNAME + 1];
 	long len;
@@ -214,7 +214,7 @@ int cobalt_sem_open(struct __shadow_sem __user *__user *u_addr,
 	return 0;
 }
 
-int cobalt_sem_close(struct __shadow_sem __user *usm)
+int cobalt_sem_close(struct cobalt_sem_shadow __user *usm)
 {
 	struct cobalt_process *cc;
 	xnhandle_t handle;

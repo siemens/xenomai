@@ -58,7 +58,7 @@ typedef struct
 #define SEM_FAILED    NULL
 
 struct cobalt_sem * 
-cobalt_sem_init_inner(const char *name, struct __shadow_sem *sem, 
+cobalt_sem_init_inner(const char *name, struct cobalt_sem_shadow *sem, 
 		int flags, unsigned value);
 
 int cobalt_sem_destroy_inner(xnhandle_t handle);
@@ -67,37 +67,37 @@ void cobalt_nsem_unlink_inner(xnhandle_t handle);
 
 void cobalt_sem_usems_cleanup(struct cobalt_process *cc);
 
-int cobalt_sem_init(struct __shadow_sem __user *u_sem,
+int cobalt_sem_init(struct cobalt_sem_shadow __user *u_sem,
 		    int pshared, unsigned value);
 
-int cobalt_sem_post(struct __shadow_sem __user *u_sem);
+int cobalt_sem_post(struct cobalt_sem_shadow __user *u_sem);
 
-int cobalt_sem_wait(struct __shadow_sem __user *u_sem);
+int cobalt_sem_wait(struct cobalt_sem_shadow __user *u_sem);
 
-int cobalt_sem_timedwait(struct __shadow_sem __user *u_sem,
+int cobalt_sem_timedwait(struct cobalt_sem_shadow __user *u_sem,
 			 struct timespec __user *u_ts);
 
-int cobalt_sem_trywait(struct __shadow_sem __user *u_sem);
+int cobalt_sem_trywait(struct cobalt_sem_shadow __user *u_sem);
 
-int cobalt_sem_getvalue(struct __shadow_sem __user *u_sem,
+int cobalt_sem_getvalue(struct cobalt_sem_shadow __user *u_sem,
 			int __user *u_sval);
 
-int cobalt_sem_destroy(struct __shadow_sem __user *u_sem);
+int cobalt_sem_destroy(struct cobalt_sem_shadow __user *u_sem);
 
-int cobalt_sem_open(struct __shadow_sem __user *__user *u_addr,
+int cobalt_sem_open(struct cobalt_sem_shadow __user *__user *u_addr,
 		    const char __user *u_name,
 		    int oflags, mode_t mode, unsigned value);
 
-int cobalt_sem_close(struct __shadow_sem __user *usm);
+int cobalt_sem_close(struct cobalt_sem_shadow __user *usm);
 
 int cobalt_sem_unlink(const char __user *u_name);
 
-int cobalt_sem_init_np(struct __shadow_sem __user *u_sem,
+int cobalt_sem_init_np(struct cobalt_sem_shadow __user *u_sem,
 		       int flags, unsigned value);
 
-int cobalt_sem_broadcast_np(struct __shadow_sem __user *u_sem);
+int cobalt_sem_broadcast_np(struct cobalt_sem_shadow __user *u_sem);
 
-int cobalt_sem_inquire(struct __shadow_sem __user *u_sem,
+int cobalt_sem_inquire(struct cobalt_sem_shadow __user *u_sem,
 		       struct cobalt_sem_info __user *u_info,
 		       pid_t __user *u_waitlist,
 		       size_t waitsz);

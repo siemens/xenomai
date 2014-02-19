@@ -59,21 +59,21 @@ int cobalt_mutexattr_getpshared(const pthread_mutexattr_t __user *u_attr,
 int cobalt_mutexattr_setpshared(pthread_mutexattr_t __user *u_attr,
 				int pshared);
 
-int cobalt_mutex_check_init(struct __shadow_mutex __user *u_mx);
+int cobalt_mutex_check_init(struct cobalt_mutex_shadow __user *u_mx);
 
-int cobalt_mutex_init(struct __shadow_mutex __user *u_mx,
+int cobalt_mutex_init(struct cobalt_mutex_shadow __user *u_mx,
 		      const pthread_mutexattr_t __user *u_attr);
 
-int cobalt_mutex_destroy(struct __shadow_mutex __user *u_mx);
+int cobalt_mutex_destroy(struct cobalt_mutex_shadow __user *u_mx);
 
-int cobalt_mutex_trylock(struct __shadow_mutex __user *u_mx);
+int cobalt_mutex_trylock(struct cobalt_mutex_shadow __user *u_mx);
 
-int cobalt_mutex_lock(struct __shadow_mutex __user *u_mx);
+int cobalt_mutex_lock(struct cobalt_mutex_shadow __user *u_mx);
 
-int cobalt_mutex_timedlock(struct __shadow_mutex __user *u_mx,
+int cobalt_mutex_timedlock(struct cobalt_mutex_shadow __user *u_mx,
 			   const struct timespec __user *u_ts);
 
-int cobalt_mutex_unlock(struct __shadow_mutex __user *u_mx);
+int cobalt_mutex_unlock(struct cobalt_mutex_shadow __user *u_mx);
 
 int cobalt_mutex_acquire_unchecked(struct xnthread *cur,
 				   struct cobalt_mutex *mutex,

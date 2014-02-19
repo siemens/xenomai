@@ -32,7 +32,7 @@ struct sem_dat {
 
 union cobalt_sem_union {
 	sem_t native_sem;
-	struct __shadow_sem {
+	struct cobalt_sem_shadow {
 		unsigned int magic;
 		int datp_offset;
 		xnhandle_t handle;

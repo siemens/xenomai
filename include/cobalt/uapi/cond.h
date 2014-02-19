@@ -24,7 +24,7 @@
 
 union cobalt_cond_union {
 	pthread_cond_t native_cond;
-	struct __shadow_cond {
+	struct cobalt_cond_shadow {
 		unsigned int magic;
 		struct cobalt_condattr attr;
 		xnhandle_t handle;

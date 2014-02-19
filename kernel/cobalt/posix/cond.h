@@ -60,19 +60,19 @@ int cobalt_condattr_getpshared(const pthread_condattr_t __user *u_attr,
 
 int cobalt_condattr_setpshared(pthread_condattr_t __user *u_attr, int pshared);
 
-int cobalt_cond_init(struct __shadow_cond __user *u_cnd,
+int cobalt_cond_init(struct cobalt_cond_shadow __user *u_cnd,
 		     const pthread_condattr_t __user *u_attr);
 
-int cobalt_cond_destroy(struct __shadow_cond __user *u_cnd);
+int cobalt_cond_destroy(struct cobalt_cond_shadow __user *u_cnd);
 
-int cobalt_cond_wait_prologue(struct __shadow_cond __user *u_cnd,
-			      struct __shadow_mutex __user *u_mx,
+int cobalt_cond_wait_prologue(struct cobalt_cond_shadow __user *u_cnd,
+			      struct cobalt_mutex_shadow __user *u_mx,
 			      int *u_err,
 			      unsigned int timed,
 			      struct timespec __user *u_ts);
 
-int cobalt_cond_wait_epilogue(struct __shadow_cond __user *u_cnd,
-			      struct __shadow_mutex __user *u_mx);
+int cobalt_cond_wait_epilogue(struct cobalt_cond_shadow __user *u_cnd,
+			      struct cobalt_mutex_shadow __user *u_mx);
 
 void cobalt_condq_cleanup(struct cobalt_kqueues *q);
 

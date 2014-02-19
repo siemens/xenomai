@@ -45,7 +45,7 @@ void cobalt_sigshadow_install_once(void);
 
 extern unsigned long cobalt_sem_heap[2];
 
-static inline struct mutex_dat *mutex_get_datp(struct __shadow_mutex *shadow)
+static inline struct mutex_dat *mutex_get_datp(struct cobalt_mutex_shadow *shadow)
 {
 	if (shadow->attr.pshared)
 		return (struct mutex_dat *)(cobalt_sem_heap[1] + shadow->dat_offset);
@@ -53,7 +53,7 @@ static inline struct mutex_dat *mutex_get_datp(struct __shadow_mutex *shadow)
 	return shadow->dat;
 }
 
-static inline atomic_long_t *mutex_get_ownerp(struct __shadow_mutex *shadow)
+static inline atomic_long_t *mutex_get_ownerp(struct cobalt_mutex_shadow *shadow)
 {
 	return &mutex_get_datp(shadow)->owner;
 }

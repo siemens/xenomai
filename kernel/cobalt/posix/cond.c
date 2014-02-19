@@ -104,7 +104,7 @@ cond_destroy_internal(xnhandle_t handle, struct cobalt_kqueues *q)
  *
  */
 static inline int
-pthread_cond_init(struct __shadow_cond *cnd, const pthread_condattr_t *attr)
+pthread_cond_init(struct cobalt_cond_shadow *cnd, const pthread_condattr_t *attr)
 {
 	int synch_flags = XNSYNCH_PRIO | XNSYNCH_NOPIP, err;
 	struct cobalt_cond *cond, *old_cond;
@@ -214,7 +214,7 @@ do_init:
  * Specification.</a>
  *
  */
-static inline int pthread_cond_destroy(struct __shadow_cond *cnd)
+static inline int pthread_cond_destroy(struct cobalt_cond_shadow *cnd)
 {
 	struct cobalt_cond *cond;
 	int pshared;
@@ -227,7 +227,7 @@ static inline int pthread_cond_destroy(struct __shadow_cond *cnd)
 		return -EINVAL;
 	}
 	
-	if (!cobalt_obj_active(cnd, COBALT_COND_MAGIC, struct __shadow_cond)
+	if (!cobalt_obj_active(cnd, COBALT_COND_MAGIC, struct cobalt_cond_shadow)
 	    || !cobalt_obj_active(cond, COBALT_COND_MAGIC, struct cobalt_cond)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return -EINVAL;
@@ -357,11 +357,11 @@ unlock_and_return:
 	return err;
 }
 
-int cobalt_cond_init(struct __shadow_cond __user *u_cnd,
+int cobalt_cond_init(struct cobalt_cond_shadow __user *u_cnd,
 		     const pthread_condattr_t __user *u_attr)
 {
 	pthread_condattr_t locattr, *attr;
-	struct __shadow_cond cnd;
+	struct cobalt_cond_shadow cnd;
 	int err;
 
 	if (__xn_safe_copy_from_user(&cnd, u_cnd, sizeof(cnd)))
@@ -384,9 +384,9 @@ int cobalt_cond_init(struct __shadow_cond __user *u_cnd,
 	return __xn_safe_copy_to_user(u_cnd, &cnd, sizeof(*u_cnd));
 }
 
-int cobalt_cond_destroy(struct __shadow_cond __user *u_cnd)
+int cobalt_cond_destroy(struct cobalt_cond_shadow __user *u_cnd)
 {
-	struct __shadow_cond cnd;
+	struct cobalt_cond_shadow cnd;
 	int err;
 
 	if (__xn_safe_copy_from_user(&cnd, u_cnd, sizeof(cnd)))
@@ -404,8 +404,8 @@ struct us_cond_data {
 };
 
 /* pthread_cond_wait_prologue(cond, mutex, count_ptr, timed, timeout) */
-int cobalt_cond_wait_prologue(struct __shadow_cond __user *u_cnd,
-			      struct __shadow_mutex __user *u_mx,
+int cobalt_cond_wait_prologue(struct cobalt_cond_shadow __user *u_cnd,
+			      struct cobalt_mutex_shadow __user *u_mx,
 			      int *u_err,
 			      unsigned int timed,
 			      struct timespec __user *u_ts)
@@ -470,8 +470,8 @@ int cobalt_cond_wait_prologue(struct __shadow_cond __user *u_cnd,
 	return err == 0 ? perr : err;
 }
 
-int cobalt_cond_wait_epilogue(struct __shadow_cond __user *u_cnd,
-			      struct __shadow_mutex __user *u_mx)
+int cobalt_cond_wait_epilogue(struct cobalt_cond_shadow __user *u_cnd,
+			      struct cobalt_mutex_shadow __user *u_mx)
 {
 	xnthread_t *cur = xnshadow_current();
 	struct cobalt_cond *cnd;

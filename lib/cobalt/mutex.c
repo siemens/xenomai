@@ -76,7 +76,7 @@ COBALT_IMPL(int, pthread_mutexattr_setpshared, (pthread_mutexattr_t *attr, int p
 COBALT_IMPL(int, pthread_mutex_init, (pthread_mutex_t *mutex,
 				      const pthread_mutexattr_t *attr))
 {
-	struct __shadow_mutex *_mutex =
+	struct cobalt_mutex_shadow *_mutex =
 		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
 	struct mutex_dat *datp;
 	int err;
@@ -107,7 +107,7 @@ COBALT_IMPL(int, pthread_mutex_init, (pthread_mutex_t *mutex,
 
 COBALT_IMPL(int, pthread_mutex_destroy, (pthread_mutex_t *mutex))
 {
-	struct __shadow_mutex *_mutex =
+	struct cobalt_mutex_shadow *_mutex =
 		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
 	int err;
 
@@ -121,7 +121,7 @@ COBALT_IMPL(int, pthread_mutex_destroy, (pthread_mutex_t *mutex))
 
 COBALT_IMPL(int, pthread_mutex_lock, (pthread_mutex_t *mutex))
 {
-	struct __shadow_mutex *_mutex =
+	struct cobalt_mutex_shadow *_mutex =
 		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
 	unsigned long status;
 	xnhandle_t cur;
@@ -180,7 +180,7 @@ COBALT_IMPL(int, pthread_mutex_lock, (pthread_mutex_t *mutex))
 COBALT_IMPL(int, pthread_mutex_timedlock, (pthread_mutex_t *mutex,
 					   const struct timespec *to))
 {
-	struct __shadow_mutex *_mutex =
+	struct cobalt_mutex_shadow *_mutex =
 		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
 	unsigned long status;
 	xnhandle_t cur;
@@ -235,7 +235,7 @@ COBALT_IMPL(int, pthread_mutex_timedlock, (pthread_mutex_t *mutex,
 
 COBALT_IMPL(int, pthread_mutex_trylock, (pthread_mutex_t *mutex))
 {
-	struct __shadow_mutex *_mutex =
+	struct cobalt_mutex_shadow *_mutex =
 		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
 	unsigned long status;
 	xnhandle_t cur;
@@ -288,7 +288,7 @@ do_syscall:
 
 COBALT_IMPL(int, pthread_mutex_unlock, (pthread_mutex_t *mutex))
 {
-	struct __shadow_mutex *_mutex =
+	struct cobalt_mutex_shadow *_mutex =
 		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
 	struct mutex_dat *datp = NULL;
 	xnhandle_t cur = XN_NO_HANDLE;
