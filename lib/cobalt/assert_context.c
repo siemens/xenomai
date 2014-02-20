@@ -33,9 +33,9 @@ static void assert_nrt_inner(void)
 	struct cobalt_threadstat stat;
 	int ret;
 
-	ret = __cobalt_thread_stat(0, &stat);
+	ret = cobalt_thread_stat(0, &stat);
 	if (ret) {
-		report_error("__cobalt_thread_stat() failed: %s",
+		report_error("cobalt_thread_stat() failed: %s",
 			strerror(-ret));
 		return;
 	}

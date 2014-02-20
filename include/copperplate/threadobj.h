@@ -69,7 +69,7 @@ void threadobj_save_timeout(struct threadobj_corespec *corespec,
 {
 	/*
 	 * We retrieve this information from the nucleus directly via
-	 * __cobalt_thread_stat().
+	 * cobalt_thread_stat().
 	 */
 }
 

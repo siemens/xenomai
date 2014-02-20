@@ -34,7 +34,7 @@
 #include "current.h"
 #include "internal.h"
 
-void __cobalt_thread_harden(void)
+void cobalt_thread_harden(void)
 {
 	unsigned long status = cobalt_get_current_mode();
 
@@ -43,13 +43,13 @@ void __cobalt_thread_harden(void)
 		XENOMAI_SYSCALL1(sc_nucleus_migrate, XENOMAI_XENO_DOMAIN);
 }
 
-int __cobalt_thread_stat(pid_t pid, struct cobalt_threadstat *stat)
+int cobalt_thread_stat(pid_t pid, struct cobalt_threadstat *stat)
 {
 	return XENOMAI_SKINCALL2(__cobalt_muxid,
 				 sc_cobalt_thread_getstat, pid, stat);
 }
 
-int __cobalt_thread_join(pthread_t thread)
+int cobalt_thread_join(pthread_t thread)
 {
 	int ret, oldtype;
 
@@ -104,7 +104,7 @@ void ___cobalt_prefault(void *p, size_t len)
 	} while (_p < end);
 }
 
-int __cobalt_serial_debug(const char *fmt, ...)
+int cobalt_serial_debug(const char *fmt, ...)
 {
 	char msg[128];
 	va_list ap;

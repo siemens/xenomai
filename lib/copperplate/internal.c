@@ -117,7 +117,7 @@ static inline void prepare_wait_corespec(void)
 	 * thread enters the run() handler over the Xenomai domain,
 	 * which is a basic assumption for all clients.
 	 */
-	__cobalt_thread_harden();
+	cobalt_thread_harden();
 }
 
 #else /* CONFIG_XENO_MERCURY */

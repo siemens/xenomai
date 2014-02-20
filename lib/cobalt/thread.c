@@ -119,7 +119,7 @@ int pthread_setschedparam_ex(pthread_t thread,
 		cobalt_sigshadow_install_once();
 		cobalt_set_current();
 		cobalt_set_current_window(u_winoff);
-		__cobalt_thread_harden();
+		cobalt_thread_harden();
 	}
 
 	return ret;
@@ -283,7 +283,7 @@ sync_with_creator:
 	if (param_ex.sched_priority == parent_prio)
 		__cobalt_sched_yield();
 
-	__cobalt_thread_harden();
+	cobalt_thread_harden();
 
 	retval = start(arg);
 
@@ -365,7 +365,7 @@ int pthread_create_ex(pthread_t *tid,
 		panic("regular sem_wait() failed with %s", symerror(ret));
 	}
 
-	__cobalt_thread_harden(); /* May fail if regular thread. */
+	cobalt_thread_harden(); /* May fail if regular thread. */
 fail:
 	__STD(sem_destroy(&iargs.sync));
 
@@ -485,7 +485,7 @@ COBALT_IMPL(int, pthread_join, (pthread_t thread, void **retval))
 	if (ret)
 		return ret;
 
-	ret = __cobalt_thread_join(thread);
+	ret = cobalt_thread_join(thread);
 
 	return ret == -EBUSY ? EINVAL : 0;
 }

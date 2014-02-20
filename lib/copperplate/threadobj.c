@@ -114,7 +114,7 @@ static inline void threadobj_cleanup_corespec(struct threadobj *thobj)
 
 static inline void threadobj_run_corespec(struct threadobj *thobj)
 {
-	__cobalt_thread_harden();
+	cobalt_thread_harden();
 }
 
 static inline void threadobj_cancel_corespec(struct threadobj *thobj) /* thobj->lock held */
@@ -345,7 +345,7 @@ int threadobj_stat(struct threadobj *thobj, struct threadobj_stat *p) /* thobj->
 
 	__threadobj_check_locked(thobj);
 
-	ret = __cobalt_thread_stat(thobj->pid, &stat);
+	ret = cobalt_thread_stat(thobj->pid, &stat);
 	if (ret)
 		return __bt(ret);
 

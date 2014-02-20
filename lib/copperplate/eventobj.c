@@ -122,7 +122,7 @@ int eventobj_inquire(struct eventobj *evobj, size_t waitsz,
 		return nrwait;
 
 	for (n = 0; n < nrwait; n++, waitlist++) {
-		ret = __cobalt_thread_stat(pidlist[n], &stat);
+		ret = cobalt_thread_stat(pidlist[n], &stat);
 		/* If waiter disappeared, fill in a dummy entry. */
 		if (ret) {
 			waitlist->pid = -1;
