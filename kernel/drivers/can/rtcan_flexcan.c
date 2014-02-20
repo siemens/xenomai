@@ -975,6 +975,9 @@ static int flexcan_probe(struct platform_device *pdev)
 	int err, irq;
 	u32 clock_freq = 0;
 
+	if (!realtime_core_enabled())
+		return -ENODEV;
+
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
 	pinctrl = devm_pinctrl_get_select_default(&pdev->dev);
 	if (IS_ERR(pinctrl))
@@ -1113,14 +1116,18 @@ static struct platform_driver flexcan_driver = {
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,1,0)
 static int __init flexcan_init(void)
 {
+	if (!realtime_core_enabled())
+		return 0;
 	pr_info("%s netdevice driver\n", DRV_NAME);
 	return platform_driver_register(&flexcan_driver);
 }
 
 static void __exit flexcan_exit(void)
 {
-	platform_driver_unregister(&flexcan_driver);
-	pr_info("%s: driver removed\n", DRV_NAME);
+	if (realtime_core_enabled()) {
+		platform_driver_unregister(&flexcan_driver);
+		pr_info("%s: driver removed\n", DRV_NAME);
+	}
 }
 module_init(flexcan_init);
 module_exit(flexcan_exit);

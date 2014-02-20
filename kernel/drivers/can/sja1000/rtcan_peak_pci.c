@@ -351,13 +351,17 @@ static struct pci_driver rtcan_peak_pci_driver = {
 
 static int __init rtcan_peak_pci_init(void)
 {
-    return pci_register_driver(&rtcan_peak_pci_driver);
+	if (!realtime_core_enabled())
+		return 0;
+
+        return pci_register_driver(&rtcan_peak_pci_driver);
 }
 
 
 static void __exit rtcan_peak_pci_exit(void)
 {
-    pci_unregister_driver(&rtcan_peak_pci_driver);
+	if (realtime_core_enabled())
+		pci_unregister_driver(&rtcan_peak_pci_driver);
 }
 
 module_init(rtcan_peak_pci_init);

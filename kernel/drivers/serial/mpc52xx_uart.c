@@ -1435,6 +1435,9 @@ static int __init rt_mpc52xx_uart_init(void)
 {
 	int ret;
 
+	if (!realtime_core_enabled())
+		return 0;
+
 	printk(KERN_INFO "RTserial: MPC52xx PSC UART driver\n");
 
 	rt_mpc52xx_uart_of_enumerate();
@@ -1452,7 +1455,8 @@ static int __init rt_mpc52xx_uart_init(void)
 
 static void __exit rt_mpc52xx_uart_exit(void)
 {
-	of_unregister_platform_driver(&rt_mpc52xx_uart_of_driver);
+	if (realtime_core_enabled())
+		of_unregister_platform_driver(&rt_mpc52xx_uart_of_driver);
 }
 
 module_init(rt_mpc52xx_uart_init);

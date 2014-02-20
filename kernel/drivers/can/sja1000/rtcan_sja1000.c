@@ -822,14 +822,17 @@ void rtcan_sja1000_unregister(struct rtcan_device *dev)
 
 int __init rtcan_sja_init(void)
 {
-    printk("RTCAN SJA1000 driver initialized\n");
+	if (realtime_core_enabled())
+		printk("RTCAN SJA1000 driver initialized\n");
+
     return 0;
 }
 
 
 void __exit rtcan_sja_exit(void)
 {
-    printk("%s removed\n", sja_ctrl_name);
+	if (realtime_core_enabled())
+		printk("%s removed\n", sja_ctrl_name);
 }
 
 module_init(rtcan_sja_init);

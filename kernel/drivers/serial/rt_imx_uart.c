@@ -1540,12 +1540,16 @@ static struct platform_driver rt_imx_uart_driver = {
 
 static int __init rt_imx_uart_init(void)
 {
+	if (!realtime_core_enabled())
+		return 0;
+
 	return platform_driver_register(&rt_imx_uart_driver);
 }
 
 static void __exit rt_imx_uart_exit(void)
 {
-	platform_driver_unregister(&rt_imx_uart_driver);
+	if (realtime_core_enabled())
+		platform_driver_unregister(&rt_imx_uart_driver);
 }
 
 module_init(rt_imx_uart_init);

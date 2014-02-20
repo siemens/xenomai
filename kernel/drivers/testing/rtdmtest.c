@@ -155,6 +155,9 @@ static int __init __rtdm_test_init(void)
 	int dev = 0;
 	int err;
 
+	if (!realtime_core_enabled())
+		return -ENODEV;
+
 	while (1) {
 		device[dev].proc_name = device[dev].device_name;
 

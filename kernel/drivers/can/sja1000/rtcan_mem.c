@@ -173,6 +173,9 @@ static int __init rtcan_mem_init(void)
 	int i, err;
 	int devices = 0;
 
+	if (!realtime_core_enabled())
+		return 0;
+
 	for (i = 0; i < RTCAN_MEM_MAX_DEV && mem[i] != 0; i++) {
 		err = rtcan_mem_init_one(i);
 		if (err) {
@@ -196,6 +199,9 @@ static void rtcan_mem_exit(void)
 	int i;
 	struct rtcan_device *dev;
 	volatile void __iomem *vmem;
+
+	if (!realtime_core_enabled())
+		return;
 
 	for (i = 0; i < RTCAN_MEM_MAX_DEV; i++) {
 		dev = rtcan_mem_devs[i];

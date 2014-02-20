@@ -62,6 +62,9 @@ int a4l_lct_drv(char *pin, a4l_drv_t ** pio)
 
 int a4l_register_drv(a4l_drv_t * drv)
 {
+	if (!realtime_core_enabled())
+		return 0;
+
 	__a4l_dbg(1, core_dbg, "a4l_add_drv: name=%s\n", drv->board_name);
 
 	if (a4l_lct_drv(drv->board_name, NULL) != 0) {
@@ -73,6 +76,9 @@ int a4l_register_drv(a4l_drv_t * drv)
 
 int a4l_unregister_drv(a4l_drv_t * drv)
 {
+	if (!realtime_core_enabled())
+		return 0;
+
 	__a4l_dbg(1, core_dbg, "a4l_rm_drv: name=%s\n", drv->board_name);
 
 	if (a4l_lct_drv(drv->board_name, NULL) == 0) {

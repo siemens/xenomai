@@ -596,12 +596,16 @@ static struct pci_driver plx_pci_driver = {
 
 static int __init plx_pci_init(void)
 {
+	if (!realtime_core_enabled())
+		return 0;
+
 	return pci_register_driver(&plx_pci_driver);
 }
 
 static void __exit plx_pci_exit(void)
 {
-	pci_unregister_driver(&plx_pci_driver);
+	if (realtime_core_enabled())
+		pci_unregister_driver(&plx_pci_driver);
 }
 
 module_init(plx_pci_init);

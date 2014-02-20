@@ -345,6 +345,9 @@ static void rtcan_peak_dng_exit(void)
     int i;
     struct rtcan_device *dev;
 
+    if (!realtime_core_enabled())
+        return;
+
     for (i = 0, dev = rtcan_peak_dng_devs[i];
 	 i < RTCAN_PEAK_DNG_MAX_DEV && dev != NULL;
 	 i++)
@@ -358,6 +361,9 @@ static void rtcan_peak_dng_exit(void)
 static int __init rtcan_peak_dng_init(void)
 {
     int i, ret = -EINVAL, done = 0;
+
+    if (!realtime_core_enabled())
+        return 0;
 
     if (pnp_register_driver(&rtcan_peak_dng_pnp_driver) == 0)
 	pnp_registered = 1;

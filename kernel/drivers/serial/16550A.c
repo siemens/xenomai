@@ -1117,6 +1117,9 @@ int __init rt_16550_init(void)
 	int err;
 	int i;
 
+	if (!realtime_core_enabled())
+		return 0;
+
 	rt_16550_pnp_init();
 	rt_16550_pci_init();
 
@@ -1184,6 +1187,9 @@ int __init rt_16550_init(void)
 void rt_16550_exit(void)
 {
 	int i;
+
+	if (!realtime_core_enabled())
+		return;
 
 	for (i = 0; i < MAX_DEVICES; i++)
 		if (device[i]) {

@@ -342,12 +342,16 @@ static struct pci_driver rtcan_esd_pci_driver = {
 
 static int __init rtcan_esd_pci_init(void)
 {
+	if (!realtime_core_enabled())
+		return 0;
+
 	return pci_register_driver(&rtcan_esd_pci_driver);
 }
 
 static void __exit rtcan_esd_pci_exit(void)
 {
-	pci_unregister_driver(&rtcan_esd_pci_driver);
+	if (realtime_core_enabled())
+		pci_unregister_driver(&rtcan_esd_pci_driver);
 }
 
 module_init(rtcan_esd_pci_init);

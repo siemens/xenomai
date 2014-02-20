@@ -506,6 +506,9 @@ static int __init __timerbench_init(void)
 {
 	int err;
 
+	if (!realtime_core_enabled())
+		return 0;
+
 	do {
 		snprintf(device.device_name, RTDM_MAX_DEVNAME_LEN,
 			 "rttest-timerbench%d",
@@ -520,7 +523,8 @@ static int __init __timerbench_init(void)
 
 static void __timerbench_exit(void)
 {
-	rtdm_dev_unregister(&device, 1000);
+	if (realtime_core_enabled())
+		rtdm_dev_unregister(&device, 1000);
 }
 
 module_init(__timerbench_init);

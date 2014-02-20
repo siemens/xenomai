@@ -419,6 +419,8 @@ int __init rtcan_init(void)
 {
     int err = 0;
 
+    if (!realtime_core_enabled())
+	    return 0;
 
     printk("RT-Socket-CAN %d.%d.%d - %s\n",
 	   RTCAN_MAJOR_VER, RTCAN_MINOR_VER, RTCAN_BUGFIX_VER,
@@ -439,6 +441,9 @@ int __init rtcan_init(void)
 
 void __exit rtcan_exit(void)
 {
+    if (!realtime_core_enabled())
+	    return;
+
     rtcan_raw_proto_unregister();
 #ifdef CONFIG_PROC_FS
     rtcan_proc_unregister();

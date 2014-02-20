@@ -157,6 +157,9 @@ static int __init rtcan_virt_init(void)
 {
 	int i, err = 0;
 
+	if (!realtime_core_enabled())
+		return 0;
+
 	for (i = 0; i < devices; i++) {
 		err = rtcan_virt_init_one(i);
 		if (err) {
@@ -179,6 +182,9 @@ static void __exit rtcan_virt_exit(void)
 {
 	int i;
 	struct rtcan_device *dev;
+
+	if (!realtime_core_enabled())
+	    return;
 
 	for (i = 0; i < devices; i++) {
 		dev = rtcan_virt_devs[i];

@@ -758,6 +758,9 @@ int __init __switchtest_init(void)
 {
 	int err;
 
+	if (!realtime_core_enabled())
+		return 0;
+
 	fp_features = fp_detect();
 
 	do {
@@ -774,7 +777,8 @@ int __init __switchtest_init(void)
 
 void __switchtest_exit(void)
 {
-	rtdm_dev_unregister(&device, 1000);
+	if (realtime_core_enabled())
+		rtdm_dev_unregister(&device, 1000);
 }
 
 module_init(__switchtest_init);
