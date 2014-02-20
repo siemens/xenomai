@@ -495,19 +495,13 @@ unsigned long cobalt_event_clear(cobalt_event_t *event,
 	return __sync_fetch_and_and(&datp->value, ~bits);
 }
 
-int cobalt_event_inquire(cobalt_event_t *event, unsigned long *bits_r)
+int cobalt_event_inquire(cobalt_event_t *event,
+			 struct cobalt_event_info *info,
+			 pid_t *waitlist, size_t waitsz)
 {
-	struct cobalt_event_data *datp = get_event_data(event);
-
-	/*
-	 * We don't guarantee clean readings, this service is
-	 * primarily for debug purposes when the caller won't bet the
-	 * house on the values returned.
-	 */
-	__sync_synchronize();
-	*bits_r = datp->value;
-
-	return datp->nwaiters;
+	return XENOMAI_SKINCALL4(__cobalt_muxid,
+				 sc_cobalt_event_inquire, event,
+				 info, waitlist, waitsz);
 }
 
 int cobalt_sem_inquire(sem_t *sem, struct cobalt_sem_info *info,

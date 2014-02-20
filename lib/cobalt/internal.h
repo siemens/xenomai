@@ -119,7 +119,8 @@ unsigned long cobalt_event_clear(cobalt_event_t *event,
 				 unsigned long bits);
 
 int cobalt_event_inquire(cobalt_event_t *event,
-			 unsigned long *bits_r);
+			 struct cobalt_event_info *info,
+			 pid_t *waitlist, size_t waitsz);
 
 int cobalt_event_destroy(cobalt_event_t *event);
 
