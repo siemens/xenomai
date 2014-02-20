@@ -398,11 +398,11 @@ get_policy_param(union xnsched_policy_param *param,
  * @note
  *
  * When creating or shadowing a Xenomai thread for the first time in
- * user-space, Xenomai installs a handler for the SIGWINCH signal. If
+ * user-space, Xenomai installs a handler for the SIGSHADOW signal. If
  * you had installed a handler before that, it will be automatically
- * called by Xenomai for SIGWINCH signals that it has not sent.
+ * called by Xenomai for SIGSHADOW signals that it has not sent.
  *
- * If, however, you install a signal handler for SIGWINCH after
+ * If, however, you install a signal handler for SIGSHADOW after
  * creating or shadowing the first Xenomai thread, you have to
  * explicitly call the function cobalt_sigshadow_handler at the
  * beginning of your signal handler, using its return to know if the
@@ -587,11 +587,11 @@ unlock_and_exit:
  * @note
  *
  * When creating or shadowing a Xenomai thread for the first time in
- * user-space, Xenomai installs a handler for the SIGWINCH signal. If
+ * user-space, Xenomai installs a handler for the SIGSHADOW signal. If
  * you had installed a handler before that, it will be automatically
- * called by Xenomai for SIGWINCH signals that it has not sent.
+ * called by Xenomai for SIGSHADOW signals that it has not sent.
  *
- * If, however, you install a signal handler for SIGWINCH after
+ * If, however, you install a signal handler for SIGSHADOW after
  * creating or shadowing the first Xenomai thread, you have to
  * explicitly call the function cobalt_sigshadow_handler at the beginning
  * of your signal handler, using its return to know if the signal was
