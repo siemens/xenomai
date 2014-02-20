@@ -139,21 +139,8 @@ static void sys_shutdown(void)
 
 static int __init mach_setup(void)
 {
-	int ret, virq, __maybe_unused cpu;
 	struct ipipe_sysinfo sysinfo;
-
-#ifdef CONFIG_SMP
-	cpus_clear(xnarch_machdata.supported_cpus);
-	for_each_online_cpu(cpu) {
-		if (supported_cpus_arg & (1UL << cpu))
-			cpu_set(cpu, xnarch_machdata.supported_cpus);
-	}
-#endif /* CONFIG_SMP */
-
-	if (cpumask_empty(&xnsched_realtime_cpus)) {
-		printk(XENO_WARN "disabled via empty real-time CPU mask\n");
-		return -ENOSYS;
-	}
+	int ret, virq;
 
 	ret = ipipe_select_timers(&xnsched_realtime_cpus);
 	if (ret < 0)
@@ -373,12 +360,25 @@ static __init int sys_init(void)
 
 static int __init xenomai_init(void)
 {
-	int ret;
+	int ret, __maybe_unused cpu;
 
 	if (__xnsys_disabled) {
 		printk(XENO_WARN "disabled on kernel command line\n");
-		return -ENOSYS;
+		return 0;
 	}
+
+#ifdef CONFIG_SMP
+	cpus_clear(xnsched_realtime_cpus);
+	for_each_online_cpu(cpu) {
+		if (supported_cpus_arg & (1UL << cpu))
+			cpu_set(cpu, xnsched_realtime_cpus);
+	}
+	if (cpumask_empty(&xnsched_realtime_cpus)) {
+		printk(XENO_WARN "disabled via empty real-time CPU mask\n");
+		__xnsys_disabled = 1;
+		return 0;
+	}
+#endif /* CONFIG_SMP */
 
 	xnsched_register_classes();
 
@@ -389,13 +389,6 @@ static int __init xenomai_init(void)
 	ret = mach_setup();
 	if (ret)
 		goto cleanup_proc;
-
-	cpus_and(nkaffinity, nkaffinity, xnsched_realtime_cpus);
-	if (cpus_empty(nkaffinity)) {
-		printk(XENO_ERR "no real-time CPU in global affinity mask\n");
-		ret = -EINVAL;
-		goto cleanup_mach;
-	}
 
 	ret = xnheap_mount();
 	if (ret)
