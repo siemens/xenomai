@@ -230,7 +230,7 @@ static inline void unlock_timers(void)
 static int enter_personality(struct xnpersonality *personality)
 {
 	if (personality->module && !try_module_get(personality->module))
-		return -ENOSYS;
+		return -EAGAIN;
 
 	atomic_inc(&personality->refcnt);
 
@@ -1380,7 +1380,7 @@ do_bind:
 		return PTR_ERR(process);
 
 	if (personality->module && !try_module_get(personality->module)) {
-		ret = -ENOSYS;
+		ret = -EAGAIN;
 		goto fail_destroy_process;
 	}
 
@@ -1439,7 +1439,7 @@ static int xnshadow_sys_info(int muxid, struct xnsysinfo __user *u_info)
 static int xnshadow_sys_trace(int op, unsigned long a1,
 			      unsigned long a2, unsigned long a3)
 {
-	int ret = -ENOSYS;
+	int ret = -EINVAL;
 
 	switch (op) {
 	case __xntrace_op_max_begin:
