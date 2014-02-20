@@ -21,6 +21,11 @@
 
 #include <copperplate/reference.h>
 
+struct eventobj_waitentry {
+	pid_t pid;
+	char name[32];
+};
+
 #ifdef CONFIG_XENO_COBALT
 
 #include <cobalt/uapi/event.h>
@@ -89,7 +94,8 @@ int eventobj_clear(struct eventobj *evobj,
 		   unsigned long bits,
 		   unsigned long *bits_r);
 
-int eventobj_inquire(struct eventobj *evobj,
+int eventobj_inquire(struct eventobj *evobj, size_t waitsz,
+		     struct eventobj_waitentry *waitlist,
 		     unsigned long *bits_r);
 
 #ifdef __cplusplus
