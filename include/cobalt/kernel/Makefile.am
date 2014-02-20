@@ -7,6 +7,7 @@ noinst_HEADERS =	\
 	bufd.h		\
 	clock.h		\
 	heap.h		\
+	init.h		\
 	intr.h		\
 	list.h		\
 	lock.h		\

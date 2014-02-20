@@ -52,9 +52,6 @@ static unsigned long supported_cpus_arg = -1;
 module_param_named(supported_cpus, supported_cpus_arg, ulong, 0444);
 #endif /* CONFIG_SMP */
 
-static unsigned long disable_arg;
-module_param_named(disable, disable_arg, ulong, 0444);
-
 static unsigned long sysheap_size_arg;
 module_param_named(sysheap_size, sysheap_size_arg, ulong, 0444);
 
@@ -63,6 +60,10 @@ EXPORT_SYMBOL_GPL(xnarch_machdata);
 
 struct xnarch_percpu_machdata xnarch_percpu_machdata;
 EXPORT_PER_CPU_SYMBOL_GPL(xnarch_percpu_machdata);
+
+int __xnsys_disabled;
+module_param_named(disable, __xnsys_disabled, int, 0444);
+EXPORT_SYMBOL_GPL(__xnsys_disabled);
 
 struct xnsys_ppd __xnsys_global_ppd = {
 	.exe_path = "vmlinux",
@@ -374,7 +375,7 @@ static int __init xenomai_init(void)
 {
 	int ret;
 
-	if (disable_arg) {
+	if (__xnsys_disabled) {
 		printk(XENO_WARN "disabled on kernel command line\n");
 		return -ENOSYS;
 	}
