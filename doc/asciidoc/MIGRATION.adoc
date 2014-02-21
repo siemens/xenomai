@@ -86,7 +86,40 @@ The new registry support is common to the Cobalt and Mercury cores,
 with only marginal differences due to the presence (or lack of) co-
 kernel in the system.
 
-=== /proc/xenomai interface changes ===
+=== New FUSE-based registry interface ===
+
+The Xenomai system state is now fully exported via a FUSE-based
+filesystem.  The hierarchy of the Xenomai registry is organized as
+follows:
+
+----------------------------------------------------------------------------    
+    /mount-point            /* registry fs root, defaults to /mnt/xenomai */
+        /session            /* shared session name or "anon" */
+            /pid            /* application (main) pid */
+               /skin        /* API name: alchemy/vxworks/psos/... */
+                  /family   /* object class (task, semaphore, ...) */
+                     { exported objects... }
+            /system         /* session-wide information */
+----------------------------------------------------------------------------    
+    
+Each leaf entry under a session hierarchy is normally viewable, for
+retrieving the information attached to the corresponding object, such
+as its state, and/or value. There can be multiple sessions hosted
+under a single registry mount point. Session-less application
+processes are grouped under the special "anon" hierarchy.
+    
+The /system hierarchy provides information about the current state of
+the Xenomai core, aggregating data from all processes which belong to
+the parent session. Typically, the status of all threads and heaps
+created by the session can be retrieved.
+    
+The registry daemon is a companion tool managing exactly one registry
+mount point, which is specified by the --root option on the command
+line. This daemon is automatically spawned by the registry support
+code as required. There is normally no action required from users for
+managing it.
+    
+=== Legacy /proc/xenomai interface ===
 
 The legacy /proc/xenomai interface is still available when running
 over the Cobalt core. The following changes compared to Xenomai 2.x
