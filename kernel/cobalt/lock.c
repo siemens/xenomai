@@ -30,9 +30,8 @@ DEFINE_XNLOCK(nklock);
 #if defined(CONFIG_SMP) || XENO_DEBUG(XNLOCK)
 EXPORT_SYMBOL_GPL(nklock);
 
-void __xnlock_spin(struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
+void __xnlock_spin(int cpu, struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
 {
-	int cpu = ipipe_processor_id();
 	unsigned int spin_limit;
 
 	xnlock_dbg_prepare_spin(&spin_limit);
@@ -45,6 +44,20 @@ void __xnlock_spin(struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
 		} while(atomic_read(&lock->owner) != ~0);
 }
 EXPORT_SYMBOL_GPL(__xnlock_spin);
+
+#ifdef CONFIG_XENO_HW_OUTOFLINE_XNLOCK
+int ___xnlock_get(struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
+{
+	return ____xnlock_get(lock /* , */ XNLOCK_DBG_PASS_CONTEXT);
+}
+EXPORT_SYMBOL_GPL(___xnlock_get);
+
+void ___xnlock_put(struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
+{
+	____xnlock_put(lock /* , */ XNLOCK_DBG_PASS_CONTEXT);
+}
+EXPORT_SYMBOL_GPL(___xnlock_put);
+#endif /* out of line xnlock */
 #endif /* CONFIG_SMP || XENO_DEBUG(XNLOCK) */
 
 #if XENO_DEBUG(XNLOCK)
