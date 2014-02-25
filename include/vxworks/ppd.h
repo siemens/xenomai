@@ -94,15 +94,13 @@ static inline wind_rholder_t *wind_get_rholder(void)
 			obj = rlink2##__name(holder);			\
 			err = __name##Delete((__natural_word_type)obj);	\
 			__wind_trace_release(#__name, obj, err);	\
-			if (unlikely(err)) {				\
-				if ((__rq) != &__wind_global_rholder.__name##q) { \
-					xnlock_get_irqsave(&nklock, s);	\
-					nholder = popq((rq), holder);	\
-					appendq(&__wind_global_rholder.__name##q, holder); \
-					obj->rqueue = &__wind_global_rholder.__name##q; \
-				}					\
-			} else						\
-				xnlock_get_irqsave(&nklock, s);		\
+			xnlock_get_irqsave(&nklock, s);			\
+			if (unlikely(err) &&				\
+			    (obj->rqueue != &__wind_global_rholder.__name##q)) { \
+				removeq(obj->rqueue, holder);		\
+				appendq(&__wind_global_rholder.__name##q, holder); \
+				obj->rqueue = &__wind_global_rholder.__name##q; \
+			}						\
 		}							\
 		xnlock_put_irqrestore(&nklock, s);			\
 	} while(0)
