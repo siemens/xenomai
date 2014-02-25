@@ -27,8 +27,6 @@ static xnqueue_t psoschunkq;	/* Shared chunks */
 
 static xnqueue_t psosmbufq;	/* Shared msg buffers (in chunks) */
 
-static u_long q_destroy_internal(psosqueue_t *queue);
-
 #ifdef CONFIG_XENO_OPT_VFILE
 
 struct vfile_priv {
@@ -313,7 +311,7 @@ static u_long q_create_internal(const char *name,
 	return SUCCESS;
 }
 
-static u_long q_destroy_internal(psosqueue_t *queue)
+static u_long q_delete_internal(psosqueue_t *queue)
 {
 	xnholder_t *holder;
 	u_long err, flags;
@@ -366,45 +364,9 @@ static u_long q_destroy_internal(psosqueue_t *queue)
 
 	xnfree(queue);
 
-	return err;
-}
-
-static u_long q_delete_internal(u_long qid, u_long flags)
-{
-	psosqueue_t *queue;
-	u_long err;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	queue = psos_h2obj_active(qid, PSOS_QUEUE_MAGIC, psosqueue_t);
-
-	if (!queue) {
-		err = psos_handle_error(qid, PSOS_QUEUE_MAGIC, psosqueue_t);
-		goto unlock_and_exit;
-	}
-
-	if ((flags & Q_VARIABLE)
-	    && !testbits(queue->synchbase.status, Q_VARIABLE)) {
-		err = ERR_NOTVARQ;
-		goto unlock_and_exit;
-	}
-
-	if (!(flags & Q_VARIABLE)
-	    && testbits(queue->synchbase.status, Q_VARIABLE)) {
-		err = ERR_VARQ;
-		goto unlock_and_exit;
-	}
-
-	err = q_destroy_internal(queue);
-
 	if (err == ERR_TATQDEL)
 		/* Some task has been readied. */
 		xnpod_schedule();
-
-      unlock_and_exit:
-
-	xnlock_put_irqrestore(&nklock, s);
 
 	return err;
 }
@@ -704,12 +666,61 @@ u_long q_vcreate(const char *name,
 
 u_long q_delete(u_long qid)
 {
-	return q_delete_internal(qid, 0);
+	psosqueue_t *queue;
+	u_long ret;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	queue = psos_h2obj_active(qid, PSOS_QUEUE_MAGIC, psosqueue_t);
+	if (queue == NULL)
+		ret = psos_handle_error(qid, PSOS_QUEUE_MAGIC, psosqueue_t);
+	else if (testbits(queue->synchbase.status, Q_VARIABLE))
+		ret = ERR_VARQ;
+	else
+		ret = q_delete_internal(queue);
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return ret;
 }
 
 u_long q_vdelete(u_long qid)
 {
-	return q_delete_internal(qid, Q_VARIABLE);
+	psosqueue_t *queue;
+	u_long ret;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	queue = psos_h2obj_active(qid, PSOS_QUEUE_MAGIC, psosqueue_t);
+	if (queue == NULL)
+		ret = psos_handle_error(qid, PSOS_QUEUE_MAGIC, psosqueue_t);
+	else if (!testbits(queue->synchbase.status, Q_VARIABLE))
+		ret = ERR_NOTVARQ;
+	else
+		ret = q_delete_internal(queue);
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return ret;
+}
+
+u_long q_delete_any(u_long qid)
+{
+	u_long ret = SUCCESS;
+	psosqueue_t *queue;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	queue = psos_h2obj_active(qid, PSOS_QUEUE_MAGIC, psosqueue_t);
+	if (queue)
+		ret = q_delete_internal(queue);
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return ret;
 }
 
 u_long q_ident(const char *name, u_long node, u_long *qid)

@@ -90,7 +90,7 @@ void psosqueue_cleanup(void);
 
 static inline void psos_queue_flush_rq(xnqueue_t *rq)
 {
-	psos_flush_rq(psosqueue_t, rq, q);
+	psos_flush_rq(psosqueue_t, rq, q, q_delete_any);
 }
 
 #ifdef __cplusplus

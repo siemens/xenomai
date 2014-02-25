@@ -60,7 +60,7 @@ void psossem_cleanup(void);
 
 static inline void psos_sem_flush_rq(xnqueue_t *rq)
 {
-	psos_flush_rq(psossem_t, rq, sm);
+	psos_flush_rq(psossem_t, rq, sm, sm_delete);
 }
 
 #ifdef __cplusplus

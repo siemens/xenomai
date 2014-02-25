@@ -74,7 +74,7 @@ void psosrn_cleanup(void);
 
 static inline void psos_rn_flush_rq(xnqueue_t *rq)
 {
-	psos_flush_rq(psosrn_t, rq, rn);
+	psos_flush_rq(psosrn_t, rq, rn, rn_delete);
 }
 
 #ifdef __cplusplus

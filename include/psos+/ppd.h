@@ -75,9 +75,9 @@ static inline psos_rholder_t *psos_get_rholder(void)
 #define __psos_trace_release(__name, __obj, __err)
 #endif /* !XENO_DEBUG(NATIVE) */
 
-#define psos_flush_rq(__type, __rq, __name)				\
+#define psos_flush_rq(__type, __rq, __name, __dtor)			\
 	do {								\
-		u_long __name##_delete(u_long id);			\
+		u_long __dtor(u_long id);				\
 		xnholder_t *holder, *nholder;				\
 		__type *obj;						\
 		u_long err;						\
@@ -88,17 +88,15 @@ static inline psos_rholder_t *psos_get_rholder(void)
 			nholder = nextq((__rq), holder);		\
 			xnlock_put_irqrestore(&nklock, s);		\
 			obj = rlink2##__name(holder);			\
-			err = __name##_delete((u_long)obj);		\
+			err = __dtor((u_long)obj);			\
 			__psos_trace_release(#__name, obj, err);	\
-			if (unlikely(err)) {				\
-				if ((__rq) != &__psos_global_rholder.__name##q) { \
-					xnlock_get_irqsave(&nklock, s);	\
-					nholder = popq((rq), holder);	\
-					appendq(&__psos_global_rholder.__name##q, holder); \
-					obj->rqueue = &__psos_global_rholder.__name##q; \
-				}					\
-			} else						\
-				xnlock_get_irqsave(&nklock, s);		\
+			xnlock_get_irqsave(&nklock, s);			\
+			if (unlikely(err) &&				\
+			    (obj->rqueue != &__psos_global_rholder.__name##q)) { \
+				removeq(obj->rqueue, holder);		\
+				appendq(&__psos_global_rholder.__name##q, holder); \
+				obj->rqueue = &__psos_global_rholder.__name##q; \
+			    }						\
 		}							\
 		xnlock_put_irqrestore(&nklock, s);			\
 	} while(0)
