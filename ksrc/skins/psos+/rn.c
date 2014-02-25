@@ -27,8 +27,6 @@ static psosrn_t *psosrn0;
 
 static void *rn0addr;
 
-static int rn_destroy_internal(psosrn_t *rn);
-
 #ifdef CONFIG_XENO_OPT_VFILE
 
 struct vfile_priv {
@@ -163,28 +161,6 @@ void psosrn_cleanup(void)
 		xnfree(rn0addr);
 }
 
-static int rn_destroy_internal(psosrn_t *rn)
-{
-	int rc;
-
-	removeq(rn->rqueue, &rn->rlink);
-	removeq(&psosrnq, &rn->link);
-	rc = xnsynch_destroy(&rn->synchbase);
-	psos_mark_deleted(rn);
-	if (rn->handle)
-		xnregistry_remove(rn->handle);
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-	if (xnheap_mapped_p(&rn->heapbase))
-		xnheap_destroy_mapped(&rn->heapbase, NULL, NULL);
-	else
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
-		xnheap_destroy(&rn->heapbase, NULL, NULL);
-
-	xnfree(rn);
-
-	return rc;
-}
-
 u_long rn_create(const char *name,
 		 void *rnaddr,
 		 u_long rnsize,
@@ -281,6 +257,7 @@ u_long rn_delete(u_long rnid)
 	u_long err = SUCCESS;
 	psosrn_t *rn;
 	spl_t s;
+	int rc;
 
 	if (rnid == 0)		/* May not delete region #0 */
 		return ERR_OBJID;
@@ -288,20 +265,33 @@ u_long rn_delete(u_long rnid)
 	xnlock_get_irqsave(&nklock, s);
 
 	rn = psos_h2obj_active(rnid, PSOS_RN_MAGIC, psosrn_t);
-
-	if (!rn) {
+	if (rn == NULL) {
 		err = psos_handle_error(rnid, PSOS_RN_MAGIC, psosrn_t);
-		goto unlock_and_exit;
+		xnlock_put_irqrestore(&nklock, s);
+		return err;
 	}
 
-	if (rn_destroy_internal(rn) == XNSYNCH_RESCHED) {
+	removeq(rn->rqueue, &rn->rlink);
+	removeq(&psosrnq, &rn->link);
+	rc = xnsynch_destroy(&rn->synchbase);
+	psos_mark_deleted(rn);
+	if (rn->handle)
+		xnregistry_remove(rn->handle);
+
+	xnlock_put_irqrestore(&nklock, s);
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+	if (xnheap_mapped_p(&rn->heapbase))
+		xnheap_destroy_mapped(&rn->heapbase, NULL, NULL);
+	else
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
+		xnheap_destroy(&rn->heapbase, NULL, NULL);
+
+	xnfree(rn);
+
+	if (rc == XNSYNCH_RESCHED) {
 		err = ERR_TATRNDEL;
 		xnpod_schedule();
 	}
-
-      unlock_and_exit:
-
-	xnlock_put_irqrestore(&nklock, s);
 
 	return err;
 }
