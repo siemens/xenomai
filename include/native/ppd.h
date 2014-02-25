@@ -103,8 +103,8 @@ static inline xeno_rholder_t *xeno_get_rholder(void)
 			err = rt_##__name##_delete(obj);		\
 			__xeno_trace_release(#__name, obj, err);	\
 			if (unlikely(err)) {				\
+				xnlock_get_irqsave(&nklock, s);		\
 				if ((__rq) != &__native_global_rholder.__name##q) { \
-					xnlock_get_irqsave(&nklock, s);	\
 					nholder = popq((__rq), holder);	\
 					appendq(&__native_global_rholder.__name##q, holder); \
 					obj->rqueue = &__native_global_rholder.__name##q; \
