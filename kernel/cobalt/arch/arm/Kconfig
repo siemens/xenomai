@@ -38,6 +38,10 @@ config XENO_HW_UNLOCKED_SWITCH
 	You definitely want to enable that option on low-end ARM
 	platforms.
 
+config XENO_HW_OUTOFLINE_XNLOCK
+       bool
+       default y
+
 endmenu
 
 source "kernel/xenomai/Kconfig"
