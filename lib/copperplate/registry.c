@@ -577,29 +577,61 @@ static void *registry_thread(void *arg)
 	return NULL;
 }
 
+static pid_t regd_pid;
+
+static void sigchld_handler(int sig)
+{
+	smp_rmb();
+	if (regd_pid &&	waitpid(regd_pid, NULL, WNOHANG) == regd_pid)
+		regd_pid = 0;
+}
+
 static int spawn_daemon(const char *sessdir)
 {
 	struct sigaction sa;
 	char *exec_path;
+	pid_t pid;
 	int ret;
 
 	ret = asprintf(&exec_path, "%s/bin/sysregd", CONFIG_XENO_PREFIX);
 	if (ret < 0)
 		return -ENOMEM;
 
+	/*
+	 * We want to allow application code to wait for children
+	 * exits explicitly and selectively using wait*() calls, while
+	 * preventing a failing sysregd to move to the zombie
+	 * state. Therefore, bluntly leaving the SIGCHLD disposition
+	 * to SIG_IGN upon return from this routine is not an option.
+	 *
+	 * To solve this issue, first we ignore SIGCHLD to plug a
+	 * potential race while forking the daemon, then we trap it to
+	 * a valid handler afterwards, once we know the daemon
+	 * pid. This handler will selectively reap the registry
+	 * daemon, and only this process, leaving all options open to
+	 * the application code for reaping its own children as it
+	 * sees fit.
+	 */
 	memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = SIG_IGN;
 	sigaction(SIGCHLD, &sa, NULL);
 
-	switch (vfork()) {
+	pid = vfork();
+	switch (pid) {
 	case 0:
 		execlp(exec_path, "sysregd", "--daemon",
 		       "--root", sessdir, NULL);
 		_exit(1);
 	case -1:
+		sa.sa_handler = SIG_DFL;
+		sigaction(SIGCHLD, &sa, NULL);
 		ret = -errno;
 		break;
 	default:
+		regd_pid = pid;
+		barrier();
+		sa.sa_handler = sigchld_handler;
+		sigaction(SIGCHLD, &sa, NULL);
 		usleep(1000000);
 		ret = 0;
 		break;
