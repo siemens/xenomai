@@ -68,10 +68,9 @@ int copperplate_probe_node(unsigned int id)
 int copperplate_create_thread(struct corethread_attributes *cta,
 			      pthread_t *tid)
 {
-	struct sched_param_ex param_ex;
 	pthread_attr_ex_t attr_ex;
 	size_t stacksize;
-	int policy, ret;
+	int ret;
 
 	ret = thread_spawn_prologue(cta);
 	if (ret)
@@ -81,12 +80,8 @@ int copperplate_create_thread(struct corethread_attributes *cta,
 	if (stacksize < PTHREAD_STACK_MIN * 4)
 		stacksize = PTHREAD_STACK_MIN * 4;
 
-	param_ex.sched_priority = cta->prio;
-	policy = cta->prio ? SCHED_RT : SCHED_OTHER;
 	pthread_attr_init_ex(&attr_ex);
-	pthread_attr_setinheritsched_ex(&attr_ex, PTHREAD_EXPLICIT_SCHED);
-	pthread_attr_setschedpolicy_ex(&attr_ex, policy);
-	pthread_attr_setschedparam_ex(&attr_ex, &param_ex);
+	pthread_attr_setinheritsched_ex(&attr_ex, PTHREAD_INHERIT_SCHED);
 	pthread_attr_setstacksize_ex(&attr_ex, stacksize);
 	pthread_attr_setdetachstate_ex(&attr_ex, cta->detachstate);
 	ret = __bt(-pthread_create_ex(tid, &attr_ex, thread_trampoline, cta));
@@ -120,6 +115,11 @@ static inline void prepare_wait_corespec(void)
 	cobalt_thread_harden();
 }
 
+static inline int finish_wait_corespec(struct corethread_attributes *cta)
+{
+	return __bt(copperplate_renice_thread(pthread_self(), cta->prio));
+}
+
 #else /* CONFIG_XENO_MERCURY */
 
 int copperplate_probe_node(unsigned int id)
@@ -130,10 +130,9 @@ int copperplate_probe_node(unsigned int id)
 int copperplate_create_thread(struct corethread_attributes *cta,
 			      pthread_t *tid)
 {
-	struct sched_param param;
 	pthread_attr_t attr;
 	size_t stacksize;
-	int policy, ret;
+	int ret;
 
 	ret = thread_spawn_prologue(cta);
 	if (ret)
@@ -143,12 +142,8 @@ int copperplate_create_thread(struct corethread_attributes *cta,
 	if (stacksize < PTHREAD_STACK_MIN * 4)
 		stacksize = PTHREAD_STACK_MIN * 4;
 
-	param.sched_priority = cta->prio;
-	policy = cta->prio ? SCHED_RT : SCHED_OTHER;
 	pthread_attr_init(&attr);
-	pthread_attr_setinheritsched(&attr, PTHREAD_EXPLICIT_SCHED);
-	pthread_attr_setschedpolicy(&attr, policy);
-	pthread_attr_setschedparam(&attr, &param);
+	pthread_attr_setinheritsched(&attr, PTHREAD_INHERIT_SCHED);
 	pthread_attr_setstacksize(&attr, stacksize);
 	pthread_attr_setdetachstate(&attr, cta->detachstate);
 	ret = __bt(-pthread_create(tid, &attr, thread_trampoline, cta));
@@ -174,6 +169,11 @@ int copperplate_renice_thread(pthread_t tid, int prio)
 static inline void prepare_wait_corespec(void)
 {
 	/* empty */
+}
+
+static inline int finish_wait_corespec(struct corethread_attributes *cta)
+{
+	return __bt(copperplate_renice_thread(pthread_self(), cta->prio));
 }
 
 #endif  /* CONFIG_XENO_MERCURY */
@@ -208,19 +208,17 @@ static void thread_spawn_wait(sem_t *sem)
 
 static void *thread_trampoline(void *arg)
 {
-	struct corethread_attributes *cta = arg;
-	void *__arg, *(*__run)(void *arg);
+	struct corethread_attributes *cta = arg, _cta;
 	sem_t released;
 	int ret;
 
 	/*
 	 * cta may be on the parent's stack, so it may be dandling
-	 * soon after the parent is posted: copy what we need from
-	 * this area early on.
+	 * soon after the parent is posted: copy this argument
+	 * structure early on.
 	 */
-	__run = cta->run;
-	__arg = cta->arg;
-	ret = cta->prologue(__arg);
+	_cta = *cta;
+	ret = cta->prologue(cta->arg);
 	cta->__reserved.status = ret;
 
 	if (ret) {
@@ -238,12 +236,13 @@ static void *thread_trampoline(void *arg)
 	 */
 	prepare_wait_corespec();
 	__RT(sem_post(&cta->__reserved.warm));
-
 	thread_spawn_wait(&released);
-
 	__RT(sem_destroy(&released));
+	ret = finish_wait_corespec(&_cta);
+	if (ret)
+		warning("core thread prologue failed, %s", symerror(ret));
 
-	return __run(__arg);
+	return _cta.run(_cta.arg);
 }
 
 static int thread_spawn_epilogue(struct corethread_attributes *cta)
