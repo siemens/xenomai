@@ -117,6 +117,9 @@ static inline void timer_free_id(struct cobalt_process *cc, int id)
 struct cobalt_timer *
 cobalt_timer_by_id(struct cobalt_process *cc, timer_t timer_id)
 {
+	if (timer_id < 0 || timer_id >= CONFIG_XENO_OPT_NRTIMERS)
+		return NULL;
+
 	if (test_bit(timer_id, cc->timers_map))
 		return NULL;
 	
