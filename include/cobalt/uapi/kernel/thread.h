@@ -91,6 +91,7 @@
  * 'l' -> Locks scheduler.
  * 'r' -> Undergoes round-robin.
  * 't' -> Mode switches trapped.
+ * 'L' -> Lock breaks trapped.
  */
 #define XNTHREAD_STATE_LABELS  "SWDRU..X.HbTlrt.....L"
 
