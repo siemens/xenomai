@@ -45,6 +45,8 @@ struct xnpersonality {
 		struct xnpersonality *(*map_thread)(struct xnthread *thread);
 		struct xnpersonality *(*relax_thread)(struct xnthread *thread);
 		struct xnpersonality *(*harden_thread)(struct xnthread *thread);
+		struct xnpersonality *(*move_thread)(struct xnthread *thread,
+						     int dest_cpu);
 		struct xnpersonality *(*exit_thread)(struct xnthread *thread);
 		struct xnpersonality *(*finalize_thread)(struct xnthread *thread);
 	} ops;

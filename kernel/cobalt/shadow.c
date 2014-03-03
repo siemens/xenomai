@@ -343,6 +343,7 @@ static int handle_setaffinity_event(struct ipipe_cpu_migration_data *d)
 	 */
 	xnlock_get_irqsave(&nklock, s);
 	cpus_and(thread->affinity, p->cpus_allowed, nkaffinity);
+	xnthread_run_handler(thread, move_thread, d->dest_cpu);
 	xnlock_put_irqrestore(&nklock, s);
 
 	/*

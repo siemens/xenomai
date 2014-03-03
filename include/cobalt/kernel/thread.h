@@ -246,13 +246,13 @@ static inline struct xnarchtcb *xnthread_archtcb(struct xnthread *thread)
 #define xnthread_for_each_claimed_safe(__pos, __tmp, __thread)	\
 	list_for_each_entry_safe(__pos, __tmp, &(__thread)->claimq, link)
 
-#define xnthread_run_handler(__t, __h)					\
+#define xnthread_run_handler(__t, __h, __a...)				\
 	do {								\
 		struct xnpersonality *__p__ = (__t)->personality;	\
 		do {							\
 			if ((__p__)->ops.__h == NULL)			\
 				break;					\
-			__p__ = (__p__)->ops.__h(__t);			\
+			__p__ = (__p__)->ops.__h(__t, ##__a);		\
 		} while (__p__);					\
 	} while (0)
 	
