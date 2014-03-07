@@ -59,6 +59,7 @@
 #include <cobalt/kernel/vdso.h>
 #include <cobalt/kernel/thread.h>
 #include <trace/events/cobalt-core.h>
+#include <rtdm/fd.h>
 #include <asm/xenomai/features.h>
 #include <asm/xenomai/syscall.h>
 #include <asm-generic/xenomai/mayday.h>
@@ -1553,6 +1554,7 @@ static void user_process_detach(void *arg)
 	if (p->exe_path)
 		kfree(p->exe_path);
 
+	rtdm_fd_cleanup(p);
 	process_hash_remove(process);
 	xnheap_destroy_mapped(&p->sem_heap, post_ppd_release, NULL);
 	atomic_dec(&personalities[user_muxid]->refcnt);
@@ -1602,6 +1604,7 @@ static void *user_process_attach(void)
 		exe_path = NULL; /* Not lethal, but weird. */
 	}
 	p->exe_path = exe_path;
+	xntree_init(&p->fds);
 	atomic_set(&p->refcnt, 1);
 	atomic_inc(&personalities[user_muxid]->refcnt);
 	__set_bit(user_muxid, &process->permap);

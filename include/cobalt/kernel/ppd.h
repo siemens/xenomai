@@ -25,13 +25,13 @@
 #include <cobalt/kernel/shadow.h>
 #include <cobalt/kernel/lock.h>
 #include <cobalt/kernel/heap.h>
+#include <rtdm/fd.h>
 
 #define NR_PERSONALITIES  4
 #if BITS_PER_LONG < NR_PERSONALITIES
 #error "NR_PERSONALITIES overflows internal bitmap"
 #endif
 
-/* Called with nklock locked irqs off. */
 void *xnshadow_get_context(unsigned int muxid);
 
 struct xnsys_ppd {
@@ -39,6 +39,7 @@ struct xnsys_ppd {
 	unsigned long mayday_addr;
 	atomic_t refcnt;
 	char *exe_path;
+	struct rb_root fds;
 };
 
 struct xnshadow_process {

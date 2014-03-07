@@ -1877,7 +1877,7 @@ static struct file_operations rtdm_mmap_fops = {
 	.get_unmapped_area = rtdm_unmapped_area
 };
 
-static int rtdm_do_mmap(rtdm_user_info_t *user_info,
+static int rtdm_do_mmap(struct rtdm_fd *fd,
 			struct rtdm_mmap_data *mmap_data,
 			size_t len, int prot, void **pptr)
 {
@@ -1905,7 +1905,7 @@ static int rtdm_do_mmap(rtdm_user_info_t *user_info,
 	filp->f_op = (typeof(filp->f_op))old_fops;
 	filp->private_data = old_priv_data;
 
-	filp_close(filp, user_info->files);
+	filp_close(filp, current->files);
 
 	if (IS_ERR_VALUE(u_addr))
 		return (int)u_addr;
@@ -1969,7 +1969,7 @@ static int rtdm_do_mmap(rtdm_user_info_t *user_info,
  *
  * Rescheduling: possible.
  */
-int rtdm_mmap_to_user(rtdm_user_info_t *user_info,
+int rtdm_mmap_to_user(struct rtdm_fd *fd,
 		      void *src_addr, size_t len,
 		      int prot, void **pptr,
 		      struct vm_operations_struct *vm_ops,
@@ -1982,7 +1982,7 @@ int rtdm_mmap_to_user(rtdm_user_info_t *user_info,
 		.vm_private_data = vm_private_data
 	};
 
-	return rtdm_do_mmap(user_info, &mmap_data, len, prot, pptr);
+	return rtdm_do_mmap(fd, &mmap_data, len, prot, pptr);
 }
 
 EXPORT_SYMBOL_GPL(rtdm_mmap_to_user);
@@ -2037,7 +2037,7 @@ EXPORT_SYMBOL_GPL(rtdm_mmap_to_user);
  *
  * Rescheduling: possible.
  */
-int rtdm_iomap_to_user(rtdm_user_info_t *user_info,
+int rtdm_iomap_to_user(struct rtdm_fd *fd,
 		       phys_addr_t src_addr, size_t len,
 		       int prot, void **pptr,
 		       struct vm_operations_struct *vm_ops,
@@ -2050,7 +2050,7 @@ int rtdm_iomap_to_user(rtdm_user_info_t *user_info,
 		.vm_private_data = vm_private_data
 	};
 
-	return rtdm_do_mmap(user_info, &mmap_data, len, prot, pptr);
+	return rtdm_do_mmap(fd, &mmap_data, len, prot, pptr);
 }
 
 EXPORT_SYMBOL_GPL(rtdm_iomap_to_user);
@@ -2079,16 +2079,16 @@ EXPORT_SYMBOL_GPL(rtdm_iomap_to_user);
  *
  * Rescheduling: possible.
  */
-int rtdm_munmap(rtdm_user_info_t *user_info, void *ptr, size_t len)
+int rtdm_munmap(struct rtdm_fd *fd, void *ptr, size_t len)
 {
 	int err;
 
 	if (!XENO_ASSERT(RTDM, xnsched_root_p()))
 		return -EPERM;
 
-	down_write(&user_info->mm->mmap_sem);
-	err = do_munmap(user_info->mm, (unsigned long)ptr, len);
-	up_write(&user_info->mm->mmap_sem);
+	down_write(&current->mm->mmap_sem);
+	err = do_munmap(current->mm, (unsigned long)ptr, len);
+	up_write(&current->mm->mmap_sem);
 
 	return err;
 }
@@ -2256,7 +2256,7 @@ void rtdm_free(void *ptr);
  *
  * Rescheduling: never.
  */
-int rtdm_read_user_ok(rtdm_user_info_t *user_info, const void __user *ptr,
+int rtdm_read_user_ok(struct rtdm_fd *fd, const void __user *ptr,
 		      size_t size);
 
 /**
@@ -2280,7 +2280,7 @@ int rtdm_read_user_ok(rtdm_user_info_t *user_info, const void __user *ptr,
  *
  * Rescheduling: never.
  */
-int rtdm_rw_user_ok(rtdm_user_info_t *user_info, const void __user *ptr,
+int rtdm_rw_user_ok(struct rtdm_fd *fd, const void __user *ptr,
 		    size_t size);
 
 /**
@@ -2309,7 +2309,7 @@ int rtdm_rw_user_ok(rtdm_user_info_t *user_info, const void __user *ptr,
  *
  * Rescheduling: never.
  */
-int rtdm_copy_from_user(rtdm_user_info_t *user_info, void *dst,
+int rtdm_copy_from_user(struct rtdm_fd *fd, void *dst,
 			const void __user *src, size_t size);
 
 /**
@@ -2339,7 +2339,7 @@ int rtdm_copy_from_user(rtdm_user_info_t *user_info, void *dst,
  *
  * Rescheduling: never.
  */
-int rtdm_safe_copy_from_user(rtdm_user_info_t *user_info, void *dst,
+int rtdm_safe_copy_from_user(struct rtdm_fd *fd, void *dst,
 			     const void __user *src, size_t size);
 
 /**
@@ -2368,7 +2368,7 @@ int rtdm_safe_copy_from_user(rtdm_user_info_t *user_info, void *dst,
  *
  * Rescheduling: never.
  */
-int rtdm_copy_to_user(rtdm_user_info_t *user_info, void __user *dst,
+int rtdm_copy_to_user(struct rtdm_fd *fd, void __user *dst,
 		      const void *src, size_t size);
 
 /**
@@ -2398,7 +2398,7 @@ int rtdm_copy_to_user(rtdm_user_info_t *user_info, void __user *dst,
  *
  * Rescheduling: never.
  */
-int rtdm_safe_copy_to_user(rtdm_user_info_t *user_info, void __user *dst,
+int rtdm_safe_copy_to_user(struct rtdm_fd *fd, void __user *dst,
 			   const void *src, size_t size);
 
 /**
@@ -2429,7 +2429,7 @@ int rtdm_safe_copy_to_user(rtdm_user_info_t *user_info, void __user *dst,
  *
  * Rescheduling: never.
  */
-int rtdm_strncpy_from_user(rtdm_user_info_t *user_info, char *dst,
+int rtdm_strncpy_from_user(struct rtdm_fd *fd, char *dst,
 			   const char __user *src, size_t count);
 
 /**
@@ -2475,7 +2475,7 @@ int rtdm_in_rt_context(void);
  *
  * Rescheduling: never.
  */
-int rtdm_rt_capable(rtdm_user_info_t *user_info);
+int rtdm_rt_capable(struct rtdm_fd *fd);
 
 #endif /* DOXYGEN_CPP */
 

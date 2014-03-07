@@ -31,10 +31,6 @@
 #define DEF_DEVNAME_HASHTAB_SIZE	256	/* entries in name hash table */
 #define DEF_PROTO_HASHTAB_SIZE		256	/* entries in protocol hash table */
 
-struct rtdm_fildes {
-	struct rtdm_dev_context *context;
-};
-
 struct rtdm_process {
 #ifdef CONFIG_XENO_OPT_VFILE
 	char name[32];
@@ -46,10 +42,8 @@ DECLARE_EXTERN_XNLOCK(rt_fildes_lock);
 DECLARE_EXTERN_XNLOCK(rt_dev_lock);
 
 extern int __rtdm_muxid;
-extern struct rtdm_fildes fildes_table[];
 extern int open_fildes;
 extern struct semaphore nrt_dev_lock;
-extern unsigned int devname_hashtab_size;
 extern struct list_head rtdm_named_devices;
 extern struct rb_root rtdm_protocol_devices;
 extern struct xnpersonality rtdm_personality;

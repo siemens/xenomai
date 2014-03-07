@@ -50,23 +50,21 @@
 struct list_head rtdm_named_devices;	/* hash table */
 struct rb_root rtdm_protocol_devices;
 
-int rtdm_apc;
-EXPORT_SYMBOL_GPL(rtdm_apc);
-
 struct semaphore nrt_dev_lock;
 DEFINE_XNLOCK(rt_dev_lock);
 
 int rtdm_initialised = 0;
+
+extern void __rt_dev_close(struct rtdm_fd *fd);
 
 int rtdm_no_support(void)
 {
 	return -ENOSYS;
 }
 
-int rtdm_select_bind_no_support(struct rtdm_dev_context *context,
+int rtdm_select_bind_no_support(struct rtdm_fd *fd,
 				struct xnselector *selector,
-				unsigned type,
-				unsigned index)
+				unsigned type, unsigned index)
 {
 	return -EBADF;
 }
@@ -191,30 +189,20 @@ int rtdm_dev_register(struct rtdm_device *device)
 	switch (device->device_flags & RTDM_DEVICE_TYPE_MASK) {
 	case RTDM_NAMED_DEVICE:
 		/* Sanity check: any open handler? */
-		if (!XENO_ASSERT(RTDM, ANY_HANDLER(*device, open))) {
+		if (device->open == NULL) {
 			printk(XENO_ERR "missing open handler for RTDM device\n");
 			return -EINVAL;
 		}
-		if (device->open_rt &&
-		    device->socket_rt != (void *)rtdm_no_support)
-			printk(XENO_ERR "RT open handler is deprecated, "
-			       "RTDM driver requires update\n");
-		SET_DEFAULT_OP_IF_NULL(*device, open);
-		SET_DEFAULT_OP(*device, socket);
+		device->socket = (typeof(device->socket))rtdm_no_support;
 		break;
 
 	case RTDM_PROTOCOL_DEVICE:
 		/* Sanity check: any socket handler? */
-		if (!XENO_ASSERT(RTDM, ANY_HANDLER(*device, socket))) {
+		if (device->socket == NULL) {
 			printk(XENO_ERR "missing socket handler for RTDM device\n");
 			return -EINVAL;
 		}
-		if (device->socket_rt &&
-		    device->socket_rt != (void *)rtdm_no_support)
-			printk(XENO_ERR "RT socket creation handler is "
-			       "deprecated, RTDM driver requires update\n");
-		SET_DEFAULT_OP_IF_NULL(*device, socket);
-		SET_DEFAULT_OP(*device, open);
+		device->open = (typeof(device->open))rtdm_no_support;
 		break;
 
 	default:
@@ -223,16 +211,12 @@ int rtdm_dev_register(struct rtdm_device *device)
 
 	/* Sanity check: non-RT close handler?
 	 * (Always required for forced cleanup) */
-	if (!device->ops.close_nrt) {
-		printk(XENO_ERR "missing non-RT close handler for RTDM device\n");
+	if (!device->ops.close) {
+		printk(XENO_ERR "missing close handler for RTDM device\n");
 		return -EINVAL;
 	}
-	if (device->ops.close_rt &&
-	    device->ops.close_rt != (void *)rtdm_no_support)
-		printk(XENO_ERR "RT close handler is deprecated, RTDM driver "
-		       "requires update\n");
-	else
-		device->ops.close_rt = (void *)rtdm_no_support;
+	device->reserved.close = device->ops.close;
+	device->ops.close = __rt_dev_close;
 
 	SET_DEFAULT_OP_IF_NULL(device->ops, ioctl);
 	SET_DEFAULT_OP_IF_NULL(device->ops, read);
@@ -373,7 +357,7 @@ int rtdm_dev_unregister(struct rtdm_device *device, unsigned int poll_delay)
 
 		if (!__test_and_set_bit(0, &warned))
 			printk(XENO_WARN "RTDM device %s still in use - waiting for"
-			       "release...\n", reg_dev->device_name);
+			       " release...\n", reg_dev->device_name);
 		msleep(poll_delay);
 		down(&nrt_dev_lock);
 		xnlock_get_irqsave(&rt_dev_lock, s);
@@ -408,11 +392,6 @@ int __init rtdm_dev_init(void)
 {
 	sema_init(&nrt_dev_lock, 1);
 
-	rtdm_apc = xnapc_alloc("deferred RTDM close", rtdm_apc_handler,
-				   NULL);
-	if (rtdm_apc < 0)
-		return rtdm_apc;
-
 	INIT_LIST_HEAD(&rtdm_named_devices);
 	xntree_init(&rtdm_protocol_devices);
 
@@ -425,7 +404,6 @@ void rtdm_dev_cleanup(void)
 	 * Note: no need to flush the cleanup_queue as no device is allowed
 	 * to deregister as long as there are references.
 	 */
-	xnapc_free(rtdm_apc);
 }
 
 /*@}*/

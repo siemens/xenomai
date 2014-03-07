@@ -49,8 +49,6 @@ pthread_t __cobalt_main_tid;
 
 int __rtdm_muxid = -1;
 
-int __rtdm_fd_start = INT_MAX;
-
 static void sigill_handler(int sig)
 {
 	const char m[] = "no Xenomai support in kernel?\n";
@@ -151,11 +149,8 @@ void __libcobalt_init(void)
 	breq.feat_req = XENOMAI_FEAT_DEP;
 	breq.abi_rev = XENOMAI_ABI_REV;
 	muxid = XENOMAI_SYSBIND(RTDM_BINDING_MAGIC, &breq);
-	if (muxid > 0) {
+	if (muxid > 0)
 		__rtdm_muxid = __xn_mux_shifted_id(muxid);
-		__rtdm_fd_start = FD_SETSIZE - XENOMAI_SKINCALL0(__rtdm_muxid,
-								 sc_rtdm_fdcount);
-	}
 
 	/*
 	 * Upon fork, in case the parent required init deferral, this

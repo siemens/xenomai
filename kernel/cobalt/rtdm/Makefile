@@ -4,6 +4,7 @@ obj-$(CONFIG_XENOMAI) += rtdm.o
 rtdm-y :=	core.o		\
 		device.o	\
 		drvlib.o	\
+		fd.o		\
 		init.o		\
 		syscall.o
 

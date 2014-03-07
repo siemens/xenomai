@@ -24,83 +24,71 @@
 
 int __rtdm_muxid;
 
-static int sys_rtdm_fdcount(void)
-{
-	return RTDM_FD_MAX;
-}
-
-static int sys_rtdm_open(const char __user *u_path, int oflag)
+static int sys_rtdm_open(int fd, const char __user *u_path, int oflag)
 {
 	char krnl_path[RTDM_MAX_DEVNAME_LEN + 1];
-	struct task_struct *p = current;
 
 	if (unlikely(__xn_safe_strncpy_from_user(krnl_path, u_path,
 						 sizeof(krnl_path) - 1) < 0))
 		return -EFAULT;
 	krnl_path[sizeof(krnl_path) - 1] = '\0';
 
-	return __rt_dev_open(p, krnl_path, oflag);
+	return __rt_dev_open(xnsys_ppd_get(0), fd, krnl_path, oflag);
 }
 
-static int sys_rtdm_socket(int protocol_family, int socket_type, int protocol)
+static int
+sys_rtdm_socket(int fd, int protocol_family, int socket_type, int protocol)
 {
-	return __rt_dev_socket(current,
-			       protocol_family, socket_type, protocol);
+	return __rt_dev_socket(xnsys_ppd_get(0), fd,
+			protocol_family, socket_type, protocol);
 }
 
-static int sys_rtdm_close(int fd)
+int sys_rtdm_ioctl(int fd, unsigned int request, void __user *arg)
 {
-	return __rt_dev_close(current, fd);
+	return rtdm_fd_ioctl(xnsys_ppd_get(0), fd, request, arg);
 }
 
-static int sys_rtdm_ioctl(int fd, int request, void *arglist)
+ssize_t sys_rtdm_read(int fd, void __user *buf, size_t size)
 {
-	return __rt_dev_ioctl(current, fd, request, arglist);
+	return rtdm_fd_read(xnsys_ppd_get(0), fd, buf, size);
 }
 
-static int sys_rtdm_read(int fd, void __user *u_buf, size_t nbytes)
+ssize_t sys_rtdm_write(int fd, const void __user *buf, size_t size)
 {
-	return __rt_dev_read(current, fd, u_buf, nbytes);
+	return rtdm_fd_write(xnsys_ppd_get(0), fd, buf, size);
 }
 
-static int sys_rtdm_write(int fd, const void __user *u_buf, size_t nbytes)
+ssize_t sys_rtdm_recvmsg(int fd, struct msghdr __user *umsg, int flags)
 {
-	return __rt_dev_write(current, fd, u_buf, nbytes);
-}
-
-static int sys_rtdm_recvmsg(int fd, struct msghdr __user *u_msg, int flags)
-{
-	struct task_struct *p = current;
-	struct msghdr krnl_msg;
+	struct msghdr m;
 	int ret;
 
-	if (unlikely(!access_wok(u_msg, sizeof(krnl_msg)) ||
-		     __xn_copy_from_user(&krnl_msg, u_msg,
-					 sizeof(krnl_msg))))
+	if (__xn_copy_from_user(&m, umsg, sizeof(m)))
 		return -EFAULT;
 
-	ret = __rt_dev_recvmsg(p, fd, &krnl_msg, flags);
-	if (unlikely(ret < 0))
+	ret = rtdm_fd_recvmsg(xnsys_ppd_get(0), fd, &m, flags);
+	if (ret < 0)
 		return ret;
 
-	if (unlikely(__xn_copy_to_user(u_msg, &krnl_msg, sizeof(krnl_msg))))
+	if (__xn_copy_to_user(umsg, &m, sizeof(*umsg)))
 		return -EFAULT;
 
 	return ret;
 }
 
-static int sys_rtdm_sendmsg(int fd, const struct msghdr __user *u_msg,
-			    int flags)
+ssize_t sys_rtdm_sendmsg(int fd, struct msghdr __user *umsg, int flags)
 {
-	struct task_struct *p = current;
-	struct msghdr krnl_msg;
+	struct msghdr m;
 
-	if (unlikely(!access_rok(u_msg, sizeof(krnl_msg)) ||
-		     __xn_copy_from_user(&krnl_msg, u_msg,
-					 sizeof(krnl_msg))))
+	if (__xn_copy_from_user(&m, umsg, sizeof(m)))
 		return -EFAULT;
 
-	return __rt_dev_sendmsg(p, fd, &krnl_msg, flags);
+	return rtdm_fd_sendmsg(xnsys_ppd_get(0), fd, &m, flags);
+}
+
+int sys_rtdm_close(int fd)
+{
+	return rtdm_fd_close(xnsys_ppd_get(0), fd, XNFD_MAGIC_ANY);
 }
 
 static void *rtdm_process_attach(void)
@@ -123,12 +111,10 @@ static void rtdm_process_detach(void *arg)
 {
 	struct rtdm_process *process = arg;
 
-	cleanup_process_files(process);
 	kfree(process);
 }
 
 static struct xnsyscall rtdm_syscalls[] = {
-	SKINCALL_DEF(sc_rtdm_fdcount, sys_rtdm_fdcount, any),
 	SKINCALL_DEF(sc_rtdm_open, sys_rtdm_open, probing),
 	SKINCALL_DEF(sc_rtdm_socket, sys_rtdm_socket, probing),
 	SKINCALL_DEF(sc_rtdm_close, sys_rtdm_close, probing),

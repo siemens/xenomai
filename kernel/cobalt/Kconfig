@@ -313,7 +313,7 @@ config XENO_OPT_SEM_HEAPSZ
 	default 32
 	help
 
-	Xenomai implementation of user-space semaphores relies on heaps 
+	Xenomai implementation of user-space semaphores relies on heaps
 	shared between kernel and user-space. This configuration entry
 	allow to set the size of the heap used for private semaphores.
 
@@ -326,9 +326,9 @@ config XENO_OPT_GLOBAL_SEM_HEAPSZ
 	default 32
 	help
 
-	Xenomai implementation of user-space semaphores relies on heaps 
+	Xenomai implementation of user-space semaphores relies on heaps
 	shared between kernel and user-space. This configuration entry
-	allow to set the size of the heap used for semaphores shared 
+	allow to set the size of the heap used for semaphores shared
 	between several processes.
 
 	Note that each semaphore will allocate 4 bytes on 32 bits
@@ -349,16 +349,14 @@ config XENO_OPT_RTDM_FILDES
 	default 128
 	help
 
-	This option defines the maximum number of RTDM file
-	descriptors which can be opened at the same time. RTDM file
-	descriptors are a global resource all applications share,
-	either via RTDM directly or via the embedded services of the
-	Cobalt API.
+	This option defines the maximum number of kernel-space RTDM
+	file descriptors which can be opened at the same time. RTDM
+	kernel-space file descriptors are a global resource.
 
 endmenu
 
 menuconfig XENO_OPT_DEBUG
-        depends on XENO_OPT_VFILE
+	depends on XENO_OPT_VFILE
 	bool "Debug support"
 	help
 

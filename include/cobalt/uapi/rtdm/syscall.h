@@ -21,14 +21,13 @@
 
 #define RTDM_BINDING_MAGIC	0x5254444D
 
-#define sc_rtdm_fdcount		0
-#define sc_rtdm_open		1
-#define sc_rtdm_socket		2
-#define sc_rtdm_close		3
-#define sc_rtdm_ioctl		4
-#define sc_rtdm_read		5
-#define sc_rtdm_write		6
-#define sc_rtdm_recvmsg		7
-#define sc_rtdm_sendmsg		8
+#define sc_rtdm_open		0
+#define sc_rtdm_socket		1
+#define sc_rtdm_close		2
+#define sc_rtdm_ioctl		3
+#define sc_rtdm_read		4
+#define sc_rtdm_write		5
+#define sc_rtdm_recvmsg         6
+#define sc_rtdm_sendmsg         7
 
 #endif /* !_COBALT_UAPI_RTDM_SYSCALL_H */

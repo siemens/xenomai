@@ -21,34 +21,13 @@
  */
 #include <linux/types.h>
 #include <linux/err.h>
+#include <cobalt/kernel/select.h>
 #include <rtdm/driver.h>
+#include <rtdm/fd.h>
 #include "internal.h"
 #include "clock.h"
 #include "mqueue.h"
 #include "select.h"
-
-#define RTDM_FD_MAX CONFIG_XENO_OPT_RTDM_FILDES
-
-static int fd_valid_p(int fd)
-{
-	const int rtdm_fd_start = __FD_SETSIZE - RTDM_FD_MAX;
-	struct rtdm_dev_context *ctx;
-	struct cobalt_process *cc;
-
-	if (fd >= rtdm_fd_start) {
-		ctx = rtdm_context_get(fd - rtdm_fd_start);
-		if (ctx == NULL)
-			return 0;
-		rtdm_context_unlock(ctx);
-		return 1;
-	}
-
-	cc = cobalt_process_context();
-	if (cc == NULL)
-		return 0;
-
-	return cobalt_assoc_lookup(&cc->uqds, fd) != NULL;
-}
 
 static int first_fd_valid_p(fd_set *fds[XNSELECT_MAX_TYPES], int nfds)
 {
@@ -57,7 +36,7 @@ static int first_fd_valid_p(fd_set *fds[XNSELECT_MAX_TYPES], int nfds)
 	for (i = 0; i < XNSELECT_MAX_TYPES; i++)
 		if (fds[i]
 		    && (fd = find_first_bit(fds[i]->fds_bits, nfds)) < nfds)
-			return fd_valid_p(fd);
+			return rtdm_fd_valid_p(fd);
 
 	/* All empty is correct, used as a "sleep" mechanism by strange
 	   applications. */
@@ -66,23 +45,13 @@ static int first_fd_valid_p(fd_set *fds[XNSELECT_MAX_TYPES], int nfds)
 
 static int select_bind_one(struct xnselector *selector, unsigned type, int fd)
 {
-	const int rtdm_fd_start = __FD_SETSIZE - RTDM_FD_MAX;
-	struct cobalt_process *cc;
-	cobalt_assoc_t *assoc;
+	int rc;
 
-	if (fd >= rtdm_fd_start)
-		return rtdm_select_bind(fd - rtdm_fd_start,
-					selector, type, fd);
+	rc = rtdm_fd_select_bind(fd, selector, type);
+	if (rc != -ENOENT)
+		return rc;
 
-	cc = cobalt_process_context();
-	if (cc == NULL)
-		return -EPERM;
-
-	assoc = cobalt_assoc_lookup(&cc->uqds, fd);
-	if (assoc == NULL)
-		return -EBADF;
-
-	return cobalt_mq_select_bind(assoc2ufd(assoc)->kfd, selector, type, fd);
+	return -EBADF;
 }
 
 static int select_bind_all(struct xnselector *selector,

@@ -33,6 +33,7 @@
 #include <cobalt/kernel/pipe.h>
 #include <cobalt/kernel/select.h>
 #include <cobalt/kernel/vdso.h>
+#include <rtdm/fd.h>
 #include "rtdm/internal.h"
 #include "posix/internal.h"
 #include "procfs.h"
@@ -427,6 +428,8 @@ static int __init xenomai_init(void)
 	ret = cobalt_init();
 	if (ret)
 		goto cleanup_rtdm;
+
+	rtdm_fd_init();
 
 	printk(XENO_INFO "Cobalt v%s enabled %s%s%s\n",
 	       XENO_VERSION_STRING,

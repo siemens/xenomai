@@ -184,40 +184,35 @@ static int openfd_show(struct xnvfile_regular_iterator *it, void *data)
 	struct rtdm_dev_context *context;
 	struct rtdm_device *device;
 	struct rtdm_process owner;
-	int close_lock_count, fd;
-	spl_t s;
+	int close_lock_count, i;
+	struct rtdm_fd *fd;
 
 	if (data == NULL) {
 		xnvfile_puts(it, "Index\tLocked\tDevice\t\t\t\tOwner [PID]\n");
 		return 0;
 	}
 
-	fd = (int)it->pos - 1;
+	i = (int)it->pos - 1;
 
-	xnlock_get_irqsave(&rt_fildes_lock, s);
-
-	context = fildes_table[fd].context;
-	if (context == NULL) {
-		xnlock_put_irqrestore(&rt_fildes_lock, s);
+	fd = rtdm_fd_get(&__xnsys_global_ppd, i, RTDM_FD_MAGIC);
+	if (fd == NULL)
 		return VFILE_SEQ_SKIP;
-	}
 
-	close_lock_count = atomic_read(&context->close_lock_count);
+	context = rtdm_context(fd);
+	close_lock_count = fd->refs;
 	device = context->device;
-	if (context->reserved.owner)
-		memcpy(&owner, context->reserved.owner, sizeof(owner));
-	else {
-		strcpy(owner.name, "<kernel>");
-		owner.pid = -1;
-	}
 
-	xnlock_put_irqrestore(&rt_fildes_lock, s);
+	strcpy(owner.name, "<kernel>");
+	owner.pid = -1;
 
-	xnvfile_printf(it, "%d\t%d\t%-31s %s [%d]\n", fd,
+	xnvfile_printf(it, "%d\t%d\t%-31s %s [%d]\n", i,
 		       close_lock_count,
 		       (device->device_flags & RTDM_NAMED_DEVICE) ?
 		       device->device_name : device->proc_name,
 		       owner.name, owner.pid);
+
+	rtdm_fd_put(fd);
+
 	return 0;
 }
 
@@ -230,7 +225,7 @@ static ssize_t openfd_store(struct xnvfile_input *input)
 	if (ret < 0)
 		return ret;
 
-	cret = __rt_dev_close(current, (int)val);
+	cret = rtdm_fd_close(&__xnsys_global_ppd, (int)val, RTDM_FD_MAGIC);
 	if (cret < 0)
 		return cret;
 

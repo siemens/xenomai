@@ -38,95 +38,73 @@
 #define CLOSURE_RETRY_PERIOD_MS	100
 
 #define FD_BITMAP_SIZE  ((RTDM_FD_MAX + BITS_PER_LONG-1) / BITS_PER_LONG)
-
-struct rtdm_fildes fildes_table[RTDM_FD_MAX] =
-	{ [0 ... RTDM_FD_MAX-1] = { NULL } };
 static unsigned long used_fildes[FD_BITMAP_SIZE];
-int open_fildes;	/* number of used descriptors */
-
-static void close_callback(struct work_struct *work);
-static DECLARE_DELAYED_WORK(close_work, close_callback);
-static LIST_HEAD(cleanup_queue);
+int open_fildes;       /* number of used descriptors */
 
 DEFINE_XNLOCK(rt_fildes_lock);
 
-/**
- * @brief Retrieve and lock a device context
- *
- * @param[in] fd File descriptor
- *
- * @return Pointer to associated device context, or NULL on error
- *
- * @note The device context has to be unlocked using rtdm_context_put() when
- * it is no longer referenced.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
- */
-struct rtdm_dev_context *rtdm_context_get(int fd)
+static void cleanup_instance(struct rtdm_device *device,
+			     struct rtdm_dev_context *context)
 {
-	struct rtdm_dev_context *context;
-	spl_t s;
-
-	if ((unsigned int)fd >= RTDM_FD_MAX)
-		return NULL;
-
-	xnlock_get_irqsave(&rt_fildes_lock, s);
-
-	context = fildes_table[fd].context;
-	if (unlikely(!context)) {
-		xnlock_put_irqrestore(&rt_fildes_lock, s);
-		return NULL;
+	if (context) {
+		if (device->reserved.exclusive_context)
+			context->device = NULL;
+		else
+			kfree(context);
 	}
 
-	atomic_inc(&context->close_lock_count);
-
-	xnlock_put_irqrestore(&rt_fildes_lock, s);
-
-	return context;
+	rtdm_dereference_device(device);
 }
 
-EXPORT_SYMBOL_GPL(rtdm_context_get);
+void __rt_dev_close(struct rtdm_fd *fd)
+{
+	struct rtdm_dev_context *context = rtdm_context(fd);
+	context->reserved.close(fd);
+	trace_cobalt_fd_closed(context);
+	cleanup_instance(context->device, context);
+}
 
-static int create_instance(struct rtdm_device *device,
-			   struct rtdm_dev_context **context_ptr,
-			   struct rtdm_fildes **fildes_ptr,
-			   rtdm_user_info_t *user_info, int nrt_mem)
+void __rt_dev_unref(struct rtdm_fd *fd, unsigned idx)
+{
+	if (fd->magic != RTDM_FD_MAGIC)
+		return;
+
+	xnlock_get(&rt_fildes_lock);
+	if (rtdm_fd_owner(fd) == &__xnsys_global_ppd) {
+		clear_bit(idx, used_fildes);
+		--open_fildes;
+	}
+	xnlock_put(&rt_fildes_lock);
+}
+
+static int create_instance(struct xnsys_ppd *p, int fd,
+			struct rtdm_device *device,
+			struct rtdm_dev_context **context_ptr)
 {
 	struct rtdm_dev_context *context;
 	spl_t s;
-	int fd;
+	int err;
 
 	/*
 	 * Reset to NULL so that we can always use cleanup_files/instance to
 	 * revert also partially successful allocations.
 	 */
 	*context_ptr = NULL;
-	*fildes_ptr = NULL;
 
-	/* Reserve a file descriptor */
-	xnlock_get_irqsave(&rt_fildes_lock, s);
+	if (p == &__xnsys_global_ppd) {
+		xnlock_get_irqsave(&rt_fildes_lock, s);
 
-	if (unlikely(open_fildes >= RTDM_FD_MAX)) {
+		if (unlikely(open_fildes >= RTDM_FD_MAX)) {
+			xnlock_put_irqrestore(&rt_fildes_lock, s);
+			return -ENFILE;
+		}
+
+		fd = find_first_zero_bit(used_fildes, RTDM_FD_MAX);
+		__set_bit(fd, used_fildes);
+		open_fildes++;
+
 		xnlock_put_irqrestore(&rt_fildes_lock, s);
-		return -ENFILE;
 	}
-
-	fd = find_first_zero_bit(used_fildes, RTDM_FD_MAX);
-	__set_bit(fd, used_fildes);
-	open_fildes++;
-
-	xnlock_put_irqrestore(&rt_fildes_lock, s);
-
-	*fildes_ptr = &fildes_table[fd];
 
 	context = device->reserved.exclusive_context;
 	if (context) {
@@ -136,151 +114,53 @@ static int create_instance(struct rtdm_device *device,
 			xnlock_put_irqrestore(&rt_dev_lock, s);
 			return -EBUSY;
 		}
+
 		context->device = device;
 
 		xnlock_put_irqrestore(&rt_dev_lock, s);
 	} else {
-		if (nrt_mem)
-			context = kmalloc(sizeof(struct rtdm_dev_context) +
-					  device->context_size, GFP_KERNEL);
-		else
-			context = xnmalloc(sizeof(struct rtdm_dev_context) +
-					   device->context_size);
-		if (unlikely(!context))
+		context = kmalloc(sizeof(struct rtdm_dev_context) +
+				device->context_size, GFP_KERNEL);
+		if (unlikely(context == NULL))
 			return -ENOMEM;
 
 		context->device = device;
 	}
 
+	context->reserved.close = device->reserved.close;
+	if (p == &__xnsys_global_ppd)
+		context->reserved.owner = NULL;
+	else
+		context->reserved.owner = xnshadow_get_context(__rtdm_muxid);
+
+	err = rtdm_fd_enter(p, &context->fd, fd, RTDM_FD_MAGIC, &device->ops);
+	if (err < 0)
+		return err;
+
 	*context_ptr = context;
 
-	context->fd = fd;
-	context->ops = &device->ops;
-	atomic_set(&context->close_lock_count, 1);
-
-	context->reserved.owner = xnshadow_get_context(__rtdm_muxid);
-	INIT_LIST_HEAD(&context->reserved.cleanup);
-
-	return 0;
+	return fd;
 }
 
-static void __cleanup_fildes(struct rtdm_fildes *fildes)
-{
-	__clear_bit((fildes - fildes_table), used_fildes);
-	fildes->context = NULL;
-	open_fildes--;
-}
-
-static void cleanup_fildes(struct rtdm_fildes *fildes)
-{
-	spl_t s;
-
-	if (!fildes)
-		return;
-
-	xnlock_get_irqsave(&rt_fildes_lock, s);
-	__cleanup_fildes(fildes);
-	xnlock_put_irqrestore(&rt_fildes_lock, s);
-}
-
-static void cleanup_instance(struct rtdm_device *device,
-			     struct rtdm_dev_context *context,
-			     int nrt_mem)
-{
-	if (context) {
-		if (device->reserved.exclusive_context)
-			context->device = NULL;
-		else {
-			if (nrt_mem)
-				kfree(context);
-			else
-				xnfree(context);
-		}
-	}
-
-	rtdm_dereference_device(device);
-}
-
-static void close_callback(struct work_struct *work)
-{
-	struct rtdm_dev_context *context;
-	LIST_HEAD(deferred_list);
-	int reschedule = 0;
-	int err;
-	spl_t s;
-
-	xnlock_get_irqsave(&rt_fildes_lock, s);
-
-	while (!list_empty(&cleanup_queue)) {
-		context = list_first_entry(&cleanup_queue,
-					   struct rtdm_dev_context,
-					   reserved.cleanup);
-		list_del(&context->reserved.cleanup);
-		atomic_inc(&context->close_lock_count);
-
-		xnlock_put_irqrestore(&rt_fildes_lock, s);
-
-		err = context->ops->close_nrt(context, NULL);
-
-		if (err == -EAGAIN ||
-		    atomic_read(&context->close_lock_count) > 1) {
-			atomic_dec(&context->close_lock_count);
-			list_add_tail(&context->reserved.cleanup,
-				      &deferred_list);
-			if (err == -EAGAIN)
-				reschedule = 1;
-		} else {
-			trace_cobalt_fd_closed(context);
-
-			cleanup_instance(context->device, context,
-					 test_bit(RTDM_CREATED_IN_NRT,
-						  &context->context_flags));
-		}
-
-		xnlock_get_irqsave(&rt_fildes_lock, s);
-	}
-
-	list_splice(&deferred_list, &cleanup_queue);
-
-	xnlock_put_irqrestore(&rt_fildes_lock, s);
-
-	if (reschedule)
-		schedule_delayed_work(&close_work,
-				      (HZ * CLOSURE_RETRY_PERIOD_MS) / 1000);
-}
-
-void rtdm_apc_handler(void *cookie)
-{
-	schedule_delayed_work(&close_work, 0);
-}
-
-
-int __rt_dev_open(rtdm_user_info_t *user_info, const char *path, int oflag)
+int __rt_dev_open(struct xnsys_ppd *p, int ufd, const char *path, int oflag)
 {
 	struct rtdm_device *device;
-	struct rtdm_fildes *fildes;
 	struct rtdm_dev_context *context;
 	int ret;
-	int nrt_mode = !rtdm_in_rt_context();
 
 	device = get_named_device(path);
 	ret = -ENODEV;
 	if (!device)
 		goto err_out;
 
-	ret = create_instance(device, &context, &fildes, user_info, nrt_mode);
-	if (ret != 0)
+	ret = create_instance(p, ufd, device, &context);
+	if (ret < 0)
 		goto cleanup_out;
+	ufd = ret;
 
-	trace_cobalt_fd_open(user_info, context, oflag);
+	trace_cobalt_fd_open(current, context, oflag);
 
-	if (nrt_mode) {
-		context->context_flags = (1 << RTDM_CREATED_IN_NRT);
-		ret = device->open_nrt(context, user_info, oflag);
-	} else {
-		context->context_flags = 0;
-		ret = device->open_rt(context, user_info, oflag);
-	}
+	ret = device->open(&context->fd, oflag);
 
 	if (!XENO_ASSERT(RTDM, !spltest()))
 		splnone();
@@ -288,49 +168,38 @@ int __rt_dev_open(rtdm_user_info_t *user_info, const char *path, int oflag)
 	if (unlikely(ret < 0))
 		goto cleanup_out;
 
-	fildes->context = context;
-
 	trace_cobalt_fd_created(context);
 
-	return context->fd;
+	return ufd;
 
 cleanup_out:
-	cleanup_fildes(fildes);
-	cleanup_instance(device, context, nrt_mode);
+	cleanup_instance(device, context);
 
 err_out:
 	return ret;
 }
-
 EXPORT_SYMBOL_GPL(__rt_dev_open);
 
-int __rt_dev_socket(rtdm_user_info_t *user_info, int protocol_family,
+int __rt_dev_socket(struct xnsys_ppd *p, int ufd, int protocol_family,
 		    int socket_type, int protocol)
 {
 	struct rtdm_device *device;
-	struct rtdm_fildes *fildes;
 	struct rtdm_dev_context *context;
 	int ret;
-	int nrt_mode = !rtdm_in_rt_context();
 
 	device = get_protocol_device(protocol_family, socket_type);
 	ret = -EAFNOSUPPORT;
 	if (!device)
 		goto err_out;
 
-	ret = create_instance(device, &context, &fildes, user_info, nrt_mode);
-	if (ret != 0)
+	ret = create_instance(p, ufd, device, &context);
+	if (ret < 0)
 		goto cleanup_out;
+	ufd = ret;
 
-	trace_cobalt_fd_socket(user_info, context, protocol_family);
+	trace_cobalt_fd_socket(current, context, protocol_family);
 
-	if (nrt_mode) {
-		context->context_flags = (1 << RTDM_CREATED_IN_NRT);
-		ret = device->socket_nrt(context, user_info, protocol);
-	} else {
-		context->context_flags = 0;
-		ret = device->socket_rt(context, user_info, protocol);
-	}
+	ret = device->socket(&context->fd, protocol);
 
 	if (!XENO_ASSERT(RTDM, !spltest()))
 		splnone();
@@ -338,283 +207,34 @@ int __rt_dev_socket(rtdm_user_info_t *user_info, int protocol_family,
 	if (unlikely(ret < 0))
 		goto cleanup_out;
 
-	fildes->context = context;
-
 	trace_cobalt_fd_created(context);
 
-	return context->fd;
+	return ufd;
 
 cleanup_out:
-	cleanup_fildes(fildes);
-	cleanup_instance(device, context, nrt_mode);
+	cleanup_instance(device, context);
 
 err_out:
 	return ret;
 }
-
 EXPORT_SYMBOL_GPL(__rt_dev_socket);
 
-int __rt_dev_close(rtdm_user_info_t *user_info, int fd)
+int
+__rt_dev_ioctl_fallback(struct rtdm_fd *fd, unsigned request, void __user *arg)
 {
-	struct rtdm_dev_context *context;
-	spl_t s;
-	int ret;
-	int nrt_mode = !rtdm_in_rt_context();
+	struct rtdm_device *dev = rtdm_context(fd)->device;
+	struct rtdm_device_info dev_info;
 
-	ret = -EBADF;
-	if (unlikely((unsigned int)fd >= RTDM_FD_MAX))
-		goto err_out;
+	if (fd->magic != RTDM_FD_MAGIC || request != RTIOC_DEVICE_INFO)
+		return -ENOSYS;
 
-	xnlock_get_irqsave(&rt_fildes_lock, s);
+	dev_info.device_flags = dev->device_flags;
+	dev_info.device_class = dev->device_class;
+	dev_info.device_sub_class = dev->device_sub_class;
+	dev_info.profile_version = dev->profile_version;
 
-	context = fildes_table[fd].context;
-
-	if (unlikely(!context)) {
-		xnlock_put_irqrestore(&rt_fildes_lock, s);
-		goto err_out;	/* -EBADF */
-	}
-
-	/* Avoid asymmetric close context by switching to nrt. */
-	if (unlikely(test_bit(RTDM_CREATED_IN_NRT, &context->context_flags)) &&
-	    !nrt_mode) {
-		xnlock_put_irqrestore(&rt_fildes_lock, s);
-
-		ret = -ENOSYS;
-		goto err_out;
-	}
-
-	set_bit(RTDM_CLOSING, &context->context_flags);
-	atomic_inc(&context->close_lock_count);
-
-	trace_cobalt_fd_close(user_info, context,
-			      atomic_read(&context->close_lock_count));
-
-	__cleanup_fildes(&fildes_table[fd]);
-
-	xnlock_put_irqrestore(&rt_fildes_lock, s);
-
-	if (nrt_mode)
-		ret = context->ops->close_nrt(context, user_info);
-	else
-		ret = context->ops->close_rt(context, user_info);
-
-	if (!XENO_ASSERT(RTDM, !spltest()))
-		splnone();
-
-	xnlock_get_irqsave(&rt_fildes_lock, s);
-
-	if (ret == -EAGAIN || atomic_read(&context->close_lock_count) > 2) {
-		atomic_dec(&context->close_lock_count);
-		list_add(&context->reserved.cleanup, &cleanup_queue);
-
-		xnlock_put_irqrestore(&rt_fildes_lock, s);
-
-		if (ret == -EAGAIN) {
-			xnapc_schedule(rtdm_apc);
-			ret = 0;
-		}
-		goto unlock_out;
-	}
-
-	xnlock_put_irqrestore(&rt_fildes_lock, s);
-
-	trace_cobalt_fd_closed(context);
-
-	cleanup_instance(context->device, context,
-			 test_bit(RTDM_CREATED_IN_NRT,
-				  &context->context_flags));
-
-	return ret;
-
-unlock_out:
-	rtdm_context_unlock(context);
-
-err_out:
-	return ret;
+	return rtdm_safe_copy_to_user(fd, arg, &dev_info,  sizeof(dev_info));
 }
-
-EXPORT_SYMBOL_GPL(__rt_dev_close);
-
-void cleanup_process_files(struct rtdm_process *owner)
-{
-	struct rtdm_dev_context *context;
-	unsigned int fd;
-	int ret;
-	spl_t s;
-
-	for (fd = 0; fd < RTDM_FD_MAX; fd++) {
-		xnlock_get_irqsave(&rt_fildes_lock, s);
-
-		context = fildes_table[fd].context;
-		if (context && context->reserved.owner != owner)
-			context = NULL;
-
-		xnlock_put_irqrestore(&rt_fildes_lock, s);
-
-		if (context) {
-			if (XENO_DEBUG(RTDM_APPL))
-				printk(XENO_INFO "closing RTDM file descriptor %d\n",
-				       fd);
-
-			ret = __rt_dev_close(NULL, fd);
-			XENO_ASSERT(RTDM, ret == 0 || ret == -EBADF);
-		}
-	}
-}
-
-#define MAJOR_FUNCTION_WRAPPER_TH(operation, trace_arg, args...)	\
-do {									\
-	struct rtdm_dev_context *context;				\
-	struct rtdm_operations *ops;					\
-	int ret;							\
-									\
-	context = rtdm_context_get(fd);					\
-	ret = -EBADF;							\
-	if (unlikely(!context))						\
-		goto err_out;						\
-									\
-	trace_cobalt_fd_ ## operation(user_info, context, trace_arg);	\
-	ops = context->ops;						\
-									\
-	if (rtdm_in_rt_context())					\
-		ret = ops->operation##_rt(context, user_info, args);	\
-	else								\
-		ret = ops->operation##_nrt(context, user_info, args);	\
-									\
-	if (!XENO_ASSERT(RTDM, !spltest()))				\
-		    splnone();
-
-#define MAJOR_FUNCTION_WRAPPER_BH(operation)				\
-	rtdm_context_unlock(context);					\
-									\
-err_out:								\
-	trace_cobalt_fd_ ## operation ## _status(user_info, context, ret);\
-	return ret;							\
-} while (0)
-
-#define MAJOR_FUNCTION_WRAPPER(operation, trace_arg, args...)		\
-do {									\
-  	MAJOR_FUNCTION_WRAPPER_TH(operation, trace_arg, args);		\
-	MAJOR_FUNCTION_WRAPPER_BH(operation);				\
-} while (0)
-
-int __rt_dev_ioctl(rtdm_user_info_t *user_info, int fd, int request, ...)
-{
-	va_list args;
-	void __user *arg;
-
-	va_start(args, request);
-	arg = va_arg(args, void __user *);
-	va_end(args);
-
-	MAJOR_FUNCTION_WRAPPER_TH(ioctl, request, (unsigned int)request, arg);
-
-	if (unlikely(ret < 0) && (unsigned int)request == RTIOC_DEVICE_INFO) {
-		struct rtdm_device *dev = context->device;
-		struct rtdm_device_info dev_info;
-
-		dev_info.device_flags = dev->device_flags;
-		dev_info.device_class = dev->device_class;
-		dev_info.device_sub_class = dev->device_sub_class;
-		dev_info.profile_version = dev->profile_version;
-
-		ret = rtdm_safe_copy_to_user(user_info, arg, &dev_info,
-					     sizeof(dev_info));
-	}
-
-	MAJOR_FUNCTION_WRAPPER_BH(ioctl);
-}
-
-EXPORT_SYMBOL_GPL(__rt_dev_ioctl);
-
-ssize_t __rt_dev_read(rtdm_user_info_t *user_info, int fd, void *buf,
-		      size_t nbyte)
-{
-	MAJOR_FUNCTION_WRAPPER(read, nbyte, buf, nbyte);
-}
-
-EXPORT_SYMBOL_GPL(__rt_dev_read);
-
-ssize_t __rt_dev_write(rtdm_user_info_t *user_info, int fd, const void *buf,
-		       size_t nbyte)
-{
-	MAJOR_FUNCTION_WRAPPER(write, nbyte, buf, nbyte);
-}
-
-EXPORT_SYMBOL_GPL(__rt_dev_write);
-
-ssize_t __rt_dev_recvmsg(rtdm_user_info_t *user_info, int fd,
-			 struct msghdr *msg, int flags)
-{
-	MAJOR_FUNCTION_WRAPPER(recvmsg, flags, msg, flags);
-}
-
-EXPORT_SYMBOL_GPL(__rt_dev_recvmsg);
-
-ssize_t __rt_dev_sendmsg(rtdm_user_info_t *user_info, int fd,
-			 const struct msghdr *msg, int flags)
-{
-	MAJOR_FUNCTION_WRAPPER(sendmsg, flags, msg, flags);
-}
-
-EXPORT_SYMBOL_GPL(__rt_dev_sendmsg);
-
-/**
- * @brief Bind a selector to specified event types of a given file descriptor
- * @internal
- *
- * This function is invoked by higher RTOS layers implementing select-like
- * services. It shall not be called directly by RTDM drivers.
- *
- * @param[in] fd File descriptor to bind to
- * @param[in,out] selector Selector object that shall be bound to the given
- * event
- * @param[in] type Event type the caller is interested in
- * @param[in] fd_index Index in the file descriptor set of the caller
- *
- * @return 0 on success, otherwise:
- *
- * - -EBADF is returned if the file descriptor @a fd cannot be resolved.
- *
- * - -EINVAL is returned if @a type or @a fd_index are invalid.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
- */
-int rtdm_select_bind(int fd, rtdm_selector_t *selector,
-		     enum rtdm_selecttype type, unsigned fd_index)
-{
-	struct rtdm_dev_context *context;
-	struct rtdm_operations  *ops;
-	int ret;
-
-	context = rtdm_context_get(fd);
-
-	ret = -EBADF;
-	if (unlikely(!context))
-		goto err_out;
-
-	ops = context->ops;
-
-	ret = ops->select_bind(context, selector, type, fd_index);
-
-	if (!XENO_ASSERT(RTDM, !spltest()))
-		    splnone();
-
-	rtdm_context_unlock(context);
-
-  err_out:
-	return ret;
-}
-
-EXPORT_SYMBOL_GPL(rtdm_select_bind);
 
 #ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 
