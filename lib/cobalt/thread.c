@@ -30,7 +30,7 @@
 #include "internal.h"
 #include <boilerplate/ancillaries.h>
 
-static pthread_attr_ex_t default_attr_ex; /* We want it zeroed at init. */
+static pthread_attr_ex_t default_attr_ex;
 
 static int linuxthreads;
 
@@ -217,6 +217,7 @@ COBALT_IMPL(int, pthread_yield, (void))
 struct pthread_iargs {
 	struct sched_param_ex param_ex;
 	int policy;
+	int personality;
 	void *(*start)(void *);
 	void *arg;
 	int parent_prio;
@@ -232,15 +233,16 @@ static void *cobalt_thread_trampoline(void *p)
 	 */
 	volatile pthread_t tid = pthread_self();
 	void *(*start)(void *), *arg, *retval;
+	int personality, parent_prio, policy;
 	struct pthread_iargs *iargs = p;
 	struct sched_param_ex param_ex;
-	int parent_prio, policy;
 	unsigned long u_winoff;
 	long ret;
 
 	cobalt_sigshadow_install_once();
 	prefault_stack();
 
+	personality = iargs->personality;
 	param_ex = iargs->param_ex;
 	policy = iargs->policy;
 	parent_prio = iargs->parent_prio;
@@ -256,8 +258,8 @@ static void *cobalt_thread_trampoline(void *p)
 	 * Do _not_ inline the call to pthread_self() in the syscall
 	 * macro: this trashes the syscall regs on some archs.
 	 */
-	ret = -XENOMAI_SKINCALL4(__cobalt_muxid, sc_cobalt_thread_create, tid,
-				 policy, &param_ex, &u_winoff);
+	ret = -XENOMAI_SKINCALL5(__cobalt_muxid, sc_cobalt_thread_create, tid,
+				 policy, &param_ex, personality, &u_winoff);
 	if (ret == 0) {
 		cobalt_set_current();
 		cobalt_set_current_window(u_winoff);
@@ -337,6 +339,7 @@ int pthread_create_ex(pthread_t *tid,
 	pthread_attr_getdetachstate(&attr, &detachstate);
 	pthread_attr_getstacksize(&attr, &stksz);
 	pthread_attr_setstacksize(&attr, cobalt_get_stacksize(stksz));
+	pthread_attr_getpersonality_ex(attr_ex, &iargs.personality);
 
 	/*
 	 * First start a native POSIX thread, then mate a Xenomai
@@ -388,6 +391,7 @@ COBALT_IMPL(int, pthread_create, (pthread_t *tid,
 	attr_ex.nonstd.sched_policy = policy;
 	pthread_attr_getschedparam(attr, &param);
 	attr_ex.nonstd.sched_param.sched_priority = param.sched_priority;
+	attr_ex.nonstd.personality = 0; /* Default: use Cobalt. */
 
 	return pthread_create_ex(tid, &attr_ex, start, arg);
 }
@@ -490,7 +494,7 @@ COBALT_IMPL(int, pthread_join, (pthread_t thread, void **retval))
 	return ret == -EBUSY ? EINVAL : 0;
 }
 
-static __attribute__((constructor)) void cobalt_thread_init(void)
+void cobalt_thread_init(void)
 {
 #ifdef _CS_GNU_LIBPTHREAD_VERSION
 	char vers[128];

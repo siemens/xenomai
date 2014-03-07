@@ -124,3 +124,19 @@ int pthread_attr_setscope_ex(pthread_attr_ex_t *attr_ex,
 {
 	return pthread_attr_setscope(&attr_ex->std, scope);
 }
+
+int pthread_attr_getpersonality_ex(const pthread_attr_ex_t *attr_ex,
+				   int *personality)
+{
+	*personality = attr_ex->nonstd.personality;
+
+	return 0;
+}
+
+int pthread_attr_setpersonality_ex(pthread_attr_ex_t *attr_ex,
+				   int personality)
+{
+	attr_ex->nonstd.personality = personality;
+
+	return 0;
+}

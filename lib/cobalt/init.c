@@ -170,26 +170,27 @@ void __libcobalt_init(void)
 
 	if (sizeof(struct cobalt_mutex_shadow) > sizeof(pthread_mutex_t)) {
 		report_error("sizeof(pthread_mutex_t): %d <"
-			     " sizeof(shadow_mutex): %d !",
+			     " sizeof(cobalt_mutex_shadow): %d!",
 			     (int) sizeof(pthread_mutex_t),
 			     (int) sizeof(struct cobalt_mutex_shadow));
 		exit(EXIT_FAILURE);
 	}
 	if (sizeof(struct cobalt_cond_shadow) > sizeof(pthread_cond_t)) {
 		report_error("sizeof(pthread_cond_t): %d <"
-			     " sizeof(shadow_cond): %d !",
+			     " sizeof(cobalt_cond_shadow): %d!",
 			     (int) sizeof(pthread_cond_t),
 			     (int) sizeof(struct cobalt_cond_shadow));
 		exit(EXIT_FAILURE);
 	}
 	if (sizeof(struct cobalt_sem_shadow) > sizeof(sem_t)) {
 		report_error("sizeof(sem_t): %d <"
-			     " sizeof(shadow_sem): %d !",
+			     " sizeof(cobalt_sem_shadow): %d!",
 			     (int) sizeof(sem_t),
 			     (int) sizeof(struct cobalt_sem_shadow));
 		exit(EXIT_FAILURE);
 	}
 
+	cobalt_thread_init();
 	cobalt_print_init();
 	boilerplate_init();
 }

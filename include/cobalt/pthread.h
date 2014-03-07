@@ -27,6 +27,7 @@
 typedef struct pthread_attr_ex {
 	pthread_attr_t std;
 	struct {
+		int personality;
 		int sched_policy;
 		struct sched_param_ex sched_param;
 	} nonstd;
@@ -211,6 +212,12 @@ int pthread_attr_getscope_ex(const pthread_attr_ex_t *attr_ex,
 
 int pthread_attr_setscope_ex(pthread_attr_ex_t *attr_ex,
 			     int scope);
+
+int pthread_attr_getpersonality_ex(const pthread_attr_ex_t *attr_ex,
+				   int *personality);
+
+int pthread_attr_setpersonality_ex(pthread_attr_ex_t *attr_ex,
+				   int personality);
 
 #ifdef __UCLIBC__
 

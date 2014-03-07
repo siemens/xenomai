@@ -127,6 +127,8 @@ int cobalt_event_destroy(cobalt_event_t *event);
 int cobalt_sem_inquire(sem_t *sem, struct cobalt_sem_info *info,
 		       pid_t *waitlist, size_t waitsz);
 
+void cobalt_thread_init(void);
+
 void cobalt_print_init(void);
 
 void cobalt_print_exit(void);
