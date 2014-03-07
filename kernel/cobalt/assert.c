@@ -28,13 +28,12 @@ EXPORT_SYMBOL_GPL(nkpanic);
 
 void __xnsys_fatal(const char *format, ...)
 {
-	static char msg_buf[1024];
 	struct xnthread *thread;
 	struct xnsched *sched;
 	static int oopsed;
+	unsigned int cpu;
 	char pbuf[16];
 	xnticks_t now;
-	unsigned cpu;
 	va_list ap;
 	int cprio;
 	spl_t s;
@@ -49,8 +48,7 @@ void __xnsys_fatal(const char *format, ...)
 
 	oopsed = 1;
 	va_start(ap, format);
-	vsnprintf(msg_buf, sizeof(msg_buf), format, ap);
-	printk(XENO_ERR "%s", msg_buf);
+	vprintk(format, ap);
 	va_end(ap);
 
 	now = xnclock_read_monotonic(&nkclock);

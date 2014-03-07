@@ -90,7 +90,7 @@ void __xnsys_assert_failed(const char *file, int line, const char *msg);
 
 void __xnsys_fatal(const char *format, ...);
 
-#define xnsys_fatal(__fmt, __args...) nkpanic(__fmt, ##__args)
+#define xnsys_fatal(__fmt, __args...) nkpanic(KERN_ERR __fmt, ##__args)
 
 extern void (*nkpanic)(const char *format, ...);
 
