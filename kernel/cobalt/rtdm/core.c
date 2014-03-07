@@ -157,7 +157,7 @@ static int create_instance(struct rtdm_device *device,
 	context->ops = &device->ops;
 	atomic_set(&context->close_lock_count, 1);
 
-	context->reserved.owner = xnshadow_private_get(__rtdm_muxid);
+	context->reserved.owner = xnshadow_get_context(__rtdm_muxid);
 	INIT_LIST_HEAD(&context->reserved.cleanup);
 
 	return 0;

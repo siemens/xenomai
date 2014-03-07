@@ -18,7 +18,8 @@
 #ifndef _COBALT_X86_ASM_UAPI_SYSCALL_H
 #define _COBALT_X86_ASM_UAPI_SYSCALL_H
 
-#define __xn_mux_code(shifted_id,op) ((op << 24)|shifted_id|(sc_nucleus_mux & 0x7fff))
-#define __xn_mux_shifted_id(id) ((id << 16) & 0xff0000)
+#define __xn_mux_code(shifted_id,op)	((op << 24)|shifted_id|(sc_nucleus_mux & 0x7fff))
+#define __xn_mux_shifted_id(id)		((id << 16) & 0xff0000)
+#define __xn_mux_unshifted_id(id)	((id >> 16) & 0xff)
 
 #endif /* !_COBALT_X86_ASM_UAPI_SYSCALL_H */

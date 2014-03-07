@@ -66,15 +66,15 @@
 #define EVENT_PROPAGATE   0
 #define EVENT_STOP        1
 
-static int xn_gid_arg = -1;
-module_param_named(xenomai_gid, xn_gid_arg, int, 0644);
+static int gid_arg = -1;
+module_param_named(xenomai_gid, gid_arg, int, 0644);
 MODULE_PARM_DESC(xenomai_gid, "GID of the group with access to Xenomai services");
 
-struct xnpersonality *personalities[NR_PERSONALITIES];
+static struct xnpersonality *personalities[NR_PERSONALITIES];
 
-static int user_muxid = -1;
+static DEFINE_MUTEX(personality_lock);
 
-static DEFINE_SEMAPHORE(registration_mutex);
+static const int user_muxid = 0;
 
 static void *mayday_page;
 
@@ -82,6 +82,28 @@ static struct xnsynch yield_sync;
 
 static struct hlist_head *process_hash;
 #define PROCESS_HASH_SIZE 13
+
+static int enter_personality(struct xnshadow_process *process,
+			     struct xnpersonality *personality)
+{
+	if (personality->module && !try_module_get(personality->module))
+		return -EAGAIN;
+
+	__set_bit(personality->muxid, &process->permap);
+	atomic_inc(&personality->refcnt);
+
+	return 0;
+}
+
+static void leave_personality(struct xnshadow_process *process,
+			      struct xnpersonality *personality)
+{
+	__clear_bit(personality->muxid, &process->permap);
+	atomic_dec(&personality->refcnt);
+	XENO_ASSERT(NUCLEUS, atomic_read(&personality->refcnt) >= 0);
+	if (personality->module)
+		module_put(personality->module);
+}
 
 static unsigned __attribute__((pure)) process_hash_crunch(struct mm_struct *mm)
 {
@@ -161,34 +183,31 @@ static void *private_lookup(unsigned int muxid)
 
 static inline void process_remove(struct xnshadow_process *p)
 {
-	unsigned muxid;
-	spl_t s;
+	struct xnpersonality *personality;
+	unsigned int muxid;
+	void *priv;
 
-	xnlock_get_irqsave(&nklock, s);
+	mutex_lock(&personality_lock);
+
 	for (muxid = 0; muxid < NR_PERSONALITIES; muxid++) {
-		struct xnpersonality *personality;
-		void *priv;
-
-		if (muxid == user_muxid)
+		if (muxid == user_muxid ||
+		    !__test_and_clear_bit(muxid, &p->permap))
 			continue;
 
-		priv = p->priv[muxid];
-		if (priv == NULL)
-			continue;
-
-		xnlock_put_irqrestore(&nklock, s);
-		
 		personality = personalities[muxid];
-		personality->ops.detach_process(priv);
-		if (personality->module)
-			module_put(personality->module);
-		
-		xnlock_get_irqsave(&nklock, s);
-		p->priv[muxid] = NULL;
+		priv = p->priv[muxid];
+		if (priv) {
+			personality->ops.detach_process(priv);
+			p->priv[muxid] = NULL;
+		}
+		leave_personality(p, personality);
 	}
-	xnlock_put_irqrestore(&nklock, s);
 
 	personalities[user_muxid]->ops.detach_process(p); /* Destroys p */
+
+	mutex_unlock(&personality_lock);
+
+	xnshadow_set_process(NULL);
 }
 
 static void request_syscall_restart(struct xnthread *thread,
@@ -225,23 +244,6 @@ static inline void unlock_timers(void)
 	smp_mb__before_atomic_dec();
 	atomic_dec(&nkclklk);
 	smp_mb__after_atomic_dec();
-}
-
-static int enter_personality(struct xnpersonality *personality)
-{
-	if (personality->module && !try_module_get(personality->module))
-		return -EAGAIN;
-
-	atomic_inc(&personality->refcnt);
-
-	return 0;
-}
-
-static void leave_personality(struct xnpersonality *personality)
-{
-	atomic_dec(&personality->refcnt);
-	if (personality->module)
-		module_put(personality->module);
 }
 
 struct lostage_wakeup {
@@ -343,7 +345,7 @@ static int handle_setaffinity_event(struct ipipe_cpu_migration_data *d)
 	 */
 	xnlock_get_irqsave(&nklock, s);
 	cpus_and(thread->affinity, p->cpus_allowed, nkaffinity);
-	xnthread_run_handler(thread, move_thread, d->dest_cpu);
+	xnthread_run_handler_stack(thread, move_thread, d->dest_cpu);
 	xnlock_put_irqrestore(&nklock, s);
 
 	/*
@@ -447,7 +449,7 @@ void ipipe_migration_hook(struct task_struct *p) /* hw IRQs off */
 	 * relax_thread/harden_thread handlers.
 	 */
 	xnlock_get(&nklock);
-	xnthread_run_handler(thread, harden_thread);
+	xnthread_run_handler_stack(thread, harden_thread);
 	check_affinity(p);
 	xnthread_resume(thread, XNRELAX);
 	xnlock_put(&nklock);
@@ -581,7 +583,7 @@ void xnshadow_relax(int notify, int reason)
 	 */
 	xnlock_get(&nklock);
 	set_task_state(p, p->state & ~TASK_NOWAKEUP);
-	xnthread_run_handler(thread, relax_thread);
+	xnthread_run_handler_stack(thread, relax_thread);
 	xnthread_suspend(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
 	splnone();
 
@@ -854,23 +856,17 @@ static void pin_to_initial_cpu(struct xnthread *thread)
  *
  * @return 0 is returned on success. Otherwise:
  *
- * - -ERESTARTSYS is returned if the current Linux task has received a
- * signal, thus preventing the final migration to the Xenomai domain
- * (i.e. in order to process the signal in the Linux domain). This
- * error should not be considered as fatal.
- *
  * - -EINVAL is returned if the thread control block does not bear the
  * XNUSER bit.
  *
  * - -EBUSY is returned if either the current Linux task or the
  * associated shadow thread is already involved in a shadow mapping.
  *
- * @remark Tags: secondary-only, might-switch.
+ * @remark Tags: secondary-only.
  */
 int xnshadow_map_user(struct xnthread *thread,
 		      unsigned long __user *u_window_offset)
 {
-	struct xnpersonality *personality = thread->personality;
 	struct xnthread_user_window *u_window;
 	struct task_struct *p = current;
 	struct xnthread_start_attr attr;
@@ -887,10 +883,6 @@ int xnshadow_map_user(struct xnthread *thread,
 	if (!access_wok(u_window_offset, sizeof(*u_window_offset)))
 		return -EFAULT;
 
-	ret = enter_personality(personality);
-	if (ret)
-		return ret;
-
 #ifdef CONFIG_MMU
 	if ((p->mm->def_flags & VM_LOCKED) == 0) {
 		siginfo_t si;
@@ -902,20 +894,17 @@ int xnshadow_map_user(struct xnthread *thread,
 		send_sig_info(SIGDEBUG, &si, p);
 	} else {
 		ret = __ipipe_disable_ondemand_mappings(p);
-		if (ret) {
-			leave_personality(personality);
+		if (ret)
 			return ret;
-		}
 	}
 #endif /* CONFIG_MMU */
 
 	sys_ppd = xnsys_ppd_get(0);
 	sem_heap = &sys_ppd->sem_heap;
 	u_window = xnheap_alloc(sem_heap, sizeof(*u_window));
-	if (u_window == NULL) {
-		leave_personality(personality);
+	if (u_window == NULL)
 		return -ENOMEM;
-	}
+
 	thread->u_window = u_window;
 	__xn_put_user(xnheap_mapped_offset(sem_heap, u_window), u_window_offset);
 	pin_to_initial_cpu(thread);
@@ -956,12 +945,10 @@ int xnshadow_map_user(struct xnthread *thread,
 
 	xnthread_sync_window(thread);
 
-	ret = xnshadow_harden();
-
 	xntrace_pid(xnthread_host_pid(thread),
 		    xnthread_current_priority(thread));
 
-	return ret;
+	return 0;
 }
 EXPORT_SYMBOL_GPL(xnshadow_map_user);
 
@@ -1035,7 +1022,6 @@ static inline void wakeup_parent(struct completion *done)
  */
 int xnshadow_map_kernel(struct xnthread *thread, struct completion *done)
 {
-	struct xnpersonality *personality = thread->personality;
 	struct task_struct *p = current;
 	int ret;
 	spl_t s;
@@ -1045,10 +1031,6 @@ int xnshadow_map_kernel(struct xnthread *thread, struct completion *done)
 
 	if (xnshadow_current() || xnthread_test_state(thread, XNMAPPED))
 		return -EBUSY;
-
-	ret = enter_personality(personality);
-	if (ret)
-		return ret;
 
 	thread->u_window = NULL;
 	pin_to_initial_cpu(thread);
@@ -1109,7 +1091,7 @@ void xnshadow_finalize(struct xnthread *thread)
 		   "thread %p thread_name %s pid %d",
 		   thread, xnthread_name(thread), xnthread_host_pid(thread));
 
-	xnthread_run_handler(thread, finalize_thread);
+	xnthread_run_handler_stack(thread, finalize_thread);
 }
 
 static int xnshadow_sys_migrate(int domain)
@@ -1304,7 +1286,7 @@ static int xnshadow_sys_bind(unsigned int magic,
 	int muxid, abirev, ret;
 	struct xnbindreq breq;
 	struct xnfeatinfo *f;
-	void *priv = NULL;
+	void *priv;
 	spl_t s;
 
 	if (__xn_safe_copy_from_user(&breq, u_breq, sizeof(breq)))
@@ -1348,15 +1330,10 @@ static int xnshadow_sys_bind(unsigned int magic,
 		return -ENOEXEC;
 
 	if (!capable(CAP_SYS_NICE) &&
-	    (xn_gid_arg == -1 || !in_group_p(KGIDT_INIT(xn_gid_arg))))
+	    (gid_arg == -1 || !in_group_p(KGIDT_INIT(gid_arg))))
 		return -EPERM;
 
-	/* Raise capabilities for the caller in case they are lacking yet. */
-	raise_cap(CAP_SYS_NICE);
-	raise_cap(CAP_IPC_LOCK);
-	raise_cap(CAP_SYS_RAWIO);
-
-	xnlock_get_irqsave(&nklock, s);
+	mutex_lock(&personality_lock);
 
 	for (muxid = 1; muxid < NR_PERSONALITIES; muxid++) {
 		personality = personalities[muxid];
@@ -1364,60 +1341,57 @@ static int xnshadow_sys_bind(unsigned int magic,
 			goto do_bind;
 	}
 
-	xnlock_put_irqrestore(&nklock, s);
+	mutex_unlock(&personality_lock);
 
 	return -ESRCH;
-
 do_bind:
+	xnlock_get_irqsave(&nklock, s);
 	process = __process_hash_search(current->mm);
-
+	priv = private_lookup(muxid);
 	xnlock_put_irqrestore(&nklock, s);
 
-	if (process)
-		goto muxid_eventcb;
+	/*
+	 * Protect from the same process binding to the same interface
+	 * several times.
+	 */
+	if (priv)
+		goto done;
 
-	process = personalities[user_muxid]->ops.attach_process();
-	if (IS_ERR(process))
-		return PTR_ERR(process);
-
-	if (personality->module && !try_module_get(personality->module)) {
-		ret = -EAGAIN;
-		goto fail_destroy_process;
+	if (process == NULL) {
+		process = personalities[user_muxid]->ops.attach_process();
+		if (IS_ERR(process)) {
+			mutex_unlock(&personality_lock);
+			return PTR_ERR(process);
+		}
+		xnshadow_set_process(process);
 	}
 
-muxid_eventcb:
-	priv = private_lookup(muxid);
-	/* protect from the same process binding several times. */
-	if (priv)
-		return muxid;
+	ret = enter_personality(process, personality);
+	if (ret)
+		goto fail_destroy_process;
 
 	priv = personality->ops.attach_process();
 	if (IS_ERR(priv)) {
 		ret = PTR_ERR(priv);
-		goto fail_destroy_process;
+		goto fail_leave_personality;
 	}
 
-	if (priv == NULL)
-		return muxid;
+	process->priv[muxid] = priv;
 
-	xnlock_get_irqsave(&nklock, s);
-	if (process->priv[muxid]) {
-		/*
-		 * In case of concurrent binding (which can not happen
-		 * with Xenomai libraries), detach right away the
-		 * second arg.
-		 */
-		xnlock_put_irqrestore(&nklock, s);
-		personality->ops.detach_process(priv);
-	} else {
-		process->priv[muxid] = priv;
-		xnlock_put_irqrestore(&nklock, s);
-	}
+	/* Raise caller capabilities. */
+	raise_cap(CAP_SYS_NICE);
+	raise_cap(CAP_IPC_LOCK);
+	raise_cap(CAP_SYS_RAWIO);
+done:
+	mutex_unlock(&personality_lock);
 
 	return muxid;
 
- fail_destroy_process:
+fail_leave_personality:
+	leave_personality(process, personality);
+fail_destroy_process:
 	process_remove(process);
+	mutex_unlock(&personality_lock);
 
 	return ret;
 }
@@ -1602,9 +1576,12 @@ static void user_process_detach(void *arg)
 
 	if (p->exe_path)
 		kfree(p->exe_path);
+
 	process_hash_remove(process);
 	xnheap_destroy_mapped(&p->sem_heap, post_ppd_release, NULL);
 	atomic_dec(&personalities[user_muxid]->refcnt);
+	XENO_ASSERT(NUCLEUS, atomic_read(&personalities[user_muxid]->refcnt) >= 0);
+	__clear_bit(user_muxid, &process->permap);
 }
 
 static void *user_process_attach(void)
@@ -1651,6 +1628,7 @@ static void *user_process_attach(void)
 	p->exe_path = exe_path;
 	atomic_set(&p->refcnt, 1);
 	atomic_inc(&personalities[user_muxid]->refcnt);
+	__set_bit(user_muxid, &process->permap);
 
 	if (process_hash_enter(process) == -EBUSY) {
 		user_process_detach(process);
@@ -1676,6 +1654,7 @@ static struct xnsyscall user_syscalls[] = {
 static struct xnpersonality user_personality = {
 	.name = "user",
 	.magic = 0,
+	.muxid = 0,
 	.nrcalls = ARRAY_SIZE(user_syscalls),
 	.syscalls = user_syscalls,
 	.ops = {
@@ -1705,9 +1684,9 @@ EXPORT_SYMBOL_GPL(xnshadow_send_sig);
  * @internal
  * @brief Register a new interface personality.
  *
- * - ops->attach_process() is called when a user-space process binds
- *   to the personality, on behalf of one of its threads. The
- *   attach_process() handler may return:
+ * - personality->ops.attach_process() is called when a user-space
+ *   process binds to the personality, on behalf of one of its
+ *   threads. The attach_process() handler may return:
  *
  *   . an opaque pointer, representing the context of the calling
  *   process for this personality;
@@ -1718,63 +1697,50 @@ EXPORT_SYMBOL_GPL(xnshadow_send_sig);
  *   . ERR_PTR(negative value) indicating an error, the binding
  *   process will then abort.
  *
- * - ops->detach() is called on behalf of an exiting user-space
- *   process which has previously attached to the personality. This
- *   handler is passed a pointer to the per-process data received
- *   earlier from the ops->attach_process() handler.
+ * - personality->ops.detach() is called on behalf of an exiting
+ *   user-space process which has previously attached to the
+ *   personality. This handler is passed a pointer to the per-process
+ *   data received earlier from the ops->attach_process() handler.
  *
- * @remark Tags: secondary-only.
+ * @remark Tags: none.
  */
 int xnshadow_register_personality(struct xnpersonality *personality)
 {
 	int muxid;
-	spl_t s;
 
-	secondary_mode_only();
-
-	down(&registration_mutex);
-
-	xnlock_get_irqsave(&nklock, s);
+	mutex_lock(&personality_lock);
 
 	for (muxid = 0; muxid < NR_PERSONALITIES; muxid++) {
 		if (personalities[muxid] == NULL) {
+			personality->muxid = muxid;
 			atomic_set(&personality->refcnt, 0);
 			personalities[muxid] = personality;
-			break;
+			goto out;
 		}
 	}
 
-	xnlock_put_irqrestore(&nklock, s);
-
-	if (muxid >= NR_PERSONALITIES)
-		muxid = -EAGAIN;
-
-	up(&registration_mutex);
+	muxid = -EAGAIN;
+out:
+	mutex_unlock(&personality_lock);
 
 	return muxid;
-
 }
 EXPORT_SYMBOL_GPL(xnshadow_register_personality);
 
 /*
  * @brief Unregister an interface personality.
  *
- * @remark Tags: secondary-only.
+ * @remark Tags: none.
  */
 int xnshadow_unregister_personality(int muxid)
 {
 	struct xnpersonality *personality;
 	int ret = 0;
-	spl_t s;
-
-	secondary_mode_only();
 
 	if (muxid < 0 || muxid >= NR_PERSONALITIES)
 		return -EINVAL;
 
-	down(&registration_mutex);
-
-	xnlock_get_irqsave(&nklock, s);
+	mutex_lock(&personality_lock);
 
 	personality = personalities[muxid];
 	if (atomic_read(&personality->refcnt) > 0)
@@ -1782,9 +1748,7 @@ int xnshadow_unregister_personality(int muxid)
 	else
 		personalities[muxid] = NULL;
 
-	xnlock_put_irqrestore(&nklock, s);
-
-	up(&registration_mutex);
+	mutex_unlock(&personality_lock);
 
 	return ret;
 }
@@ -1807,7 +1771,7 @@ EXPORT_SYMBOL_GPL(xnshadow_unregister_personality);
  *
  * @remark Tags: atomic-entry.
  */
-void *xnshadow_private_get(unsigned int muxid)
+void *xnshadow_get_context(unsigned int muxid)
 {
 	struct xnthread *curr = xnsched_current_thread();
 
@@ -1816,60 +1780,73 @@ void *xnshadow_private_get(unsigned int muxid)
 
 	return NULL;
 }
-EXPORT_SYMBOL_GPL(xnshadow_private_get);
+EXPORT_SYMBOL_GPL(xnshadow_get_context);
 
 /**
- * Stack a new personality over an existing thread.
+ * Stack a new personality over the current thread.
  *
- * This service registers @a thread as a member of the additional
- * personality @a next.
+ * This service registers the current thread as a member of the
+ * additional personality identified by @a muxid. If the current
+ * thread is already assigned this personality, the call returns
+ * successfully with no effect.
  *
- * @param thread the affected thread.
+ * @param muxid the identifier of the additional personality.
  *
- * @param next the additional personality to declare for @a thread.
- *
- * @return A pointer to the previous personality. The caller should
- * save this pointer for unstacking @a next when applicable via a call
+ * @return A handle to the previous personality. The caller should
+ * save this handle for unstacking @a muxid when applicable via a call
  * to xnshadow_pop_personality().
  *
  * @remark Tags: secondary-only.
  */
 struct xnpersonality *
-xnshadow_push_personality(struct xnthread *thread,
-			  struct xnpersonality *next)
+xnshadow_push_personality(int muxid)
 {
-	struct xnpersonality *prev = thread->personality;
+	struct ipipe_threadinfo *p = ipipe_current_threadinfo();
+	struct xnthread *thread = p->thread;
+	struct xnpersonality *prev, *next;
 
 	secondary_mode_only();
+
+	mutex_lock(&personality_lock);
+
+	if (muxid < 0 || muxid >= NR_PERSONALITIES ||
+	    p->process == NULL || !test_bit(muxid, &p->process->permap)) {
+		mutex_unlock(&personality_lock);
+		return NULL;
+	}
+
+	next = personalities[muxid];
+	prev = thread->personality;
+	if (next == prev) {
+		mutex_unlock(&personality_lock);
+		return prev;
+	}
+
 	thread->personality = next;
-	enter_personality(next);
+	mutex_unlock(&personality_lock);
+	xnthread_run_handler(thread, map_thread);
 
 	return prev;
 }
 EXPORT_SYMBOL_GPL(xnshadow_push_personality);
 
 /**
- * Pop the topmost personality from a thread.
+ * Pop the topmost personality from the current thread.
  *
- * This service unregisters @a thread from the topmost personality it
- * is a member of.
+ * This service pops the topmost personality off the current thread.
  *
- * @param thread the affected thread.
- *
- * @param prev the previous personality in effect for @a thread prior
- * to pushing the topmost one, as returned by the latest call to
- * xnshadow_push_personality().
+ * @param prev the previous personality which was returned by the
+ * latest call to xnshadow_push_personality() for the current thread.
  *
  * @remark Tags: secondary-only.
  */
-void xnshadow_pop_personality(struct xnthread *thread,
-			      struct xnpersonality *prev)
+void xnshadow_pop_personality(struct xnpersonality *prev)
 {
-	struct xnpersonality *old = thread->personality;
+	struct ipipe_threadinfo *p = ipipe_current_threadinfo();
+	struct xnthread *thread = p->thread;
 
 	secondary_mode_only();
 	thread->personality = prev;
-	leave_personality(old);
 }
 EXPORT_SYMBOL_GPL(xnshadow_pop_personality);
 
@@ -1877,6 +1854,7 @@ static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 {
 	int muxid, muxop, switched, ret, sigs;
 	struct xnpersonality *personality;
+	struct xnshadow_process *process;
 	struct xnthread *thread;
 	unsigned long sysflags;
 	struct xnsyscall *sc;
@@ -1900,8 +1878,19 @@ static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 		goto bad_syscall;
 
 	personality = personalities[muxid];
-	if (muxop >= personality->nrcalls)
+	if (personality == NULL || muxop >= personality->nrcalls)
 		goto bad_syscall;
+
+	/* Check that current is bound to the called interface. */
+	process = xnshadow_current_process();
+	if (process == NULL) {
+		process = process_hash_search(current->mm);
+		xnshadow_set_process(process);
+	}
+
+	if ((muxid != user_muxid || muxop != sc_nucleus_bind) &&
+	    (process == NULL || !test_bit(muxid, &process->permap)))
+		goto no_perm;
 
 	sc = personality->syscalls + muxop;
 	sysflags = sc->flags;
@@ -1912,11 +1901,13 @@ static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 	 */
 	if (unlikely((thread == NULL && (sysflags & __xn_exec_shadow) != 0) ||
 		     (!cap_raised(current_cap(), CAP_SYS_NICE) &&
-		      muxid == 0 && muxop == sc_nucleus_bind))) {
+		      muxid == user_muxid && muxop == sc_nucleus_bind))) {
+	no_perm:
 		if (XENO_DEBUG(NUCLEUS))
 			printk(XENO_WARN
-			       "non-shadow %s[%d] was denied a real-time call (%s/%d)\n",
-			       current->comm, current->pid, personality->name, muxop);
+			       "syscall %s/%d denied to %s[%d]\n",
+			       personality->name, muxop,
+			       current->comm, current->pid);
 		__xn_error_return(regs, -EPERM);
 		goto ret_handled;
 	}
@@ -2026,6 +2017,7 @@ ret_handled:
 
 	trace_mark(xn_nucleus, syscall_histage_exit,
 		   "ret %ld", __xn_reg_rval(regs));
+
 	return EVENT_STOP;
 
 linux_syscall:
@@ -2200,7 +2192,7 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 	if (xnthread_test_state(thread, XNDEBUG))
 		unlock_timers();
 
-	xnthread_run_handler(thread, exit_thread);
+	xnthread_run_handler_stack(thread, exit_thread);
 	/* Waiters will receive EIDRM */
 	xnsynch_destroy(&thread->join_synch);
 	xnsched_run();
@@ -2220,7 +2212,6 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 	 */
 	__xnthread_cleanup(thread);
 
-	leave_personality(personality);
 	destroy_threadinfo();
 
 	return EVENT_PROPAGATE;
@@ -2391,7 +2382,7 @@ static int handle_cleanup_event(struct mm_struct *mm)
 	/* We are NOT called for exiting kernel shadows. */
 
 	process = process_hash_search(mm);
-	old = xnshadow_swap_process(process);
+	old = xnshadow_set_process(process);
 	sys_ppd = xnsys_ppd_get(0);
 	if (sys_ppd != &__xnsys_global_ppd) {
 		/*
@@ -2412,7 +2403,7 @@ static int handle_cleanup_event(struct mm_struct *mm)
 			process_remove(process);
 	}
 
-	xnshadow_swap_process(old);
+	xnshadow_set_process(old);
 
 	return EVENT_PROPAGATE;
 }
@@ -2619,34 +2610,37 @@ int xnshadow_mount(void)
 	 * real-time ops.
 	 */
 	ret = mayday_init_page();
-	if (ret) {
-		xnshadow_cleanup();
-		return ret;
-	}
+	if (ret)
+		goto fail_mayday;
 
 	size = sizeof(*process_hash) * PROCESS_HASH_SIZE;
 	process_hash = kmalloc(size, GFP_KERNEL);
 	if (process_hash == NULL) {
-		xnshadow_cleanup();
 		printk(XENO_ERR "cannot allocate processes hash table\n");
-		return -ENOMEM;
+		ret = -ENOMEM;
+		goto fail_hash;
 	}
 
 	for (i = 0; i < PROCESS_HASH_SIZE; i++)
 		INIT_HLIST_HEAD(&process_hash[i]);
 
-	user_muxid = xnshadow_register_personality(&user_personality);
-	XENO_BUGON(NUCLEUS, user_muxid != 0);
+	ret = xnshadow_register_personality(&user_personality);
+	XENO_BUGON(NUCLEUS, ret != 0);
 
-	return 0;
+	return ret;
+
+fail_hash:
+	mayday_cleanup_page();
+fail_mayday:
+	xndebug_cleanup();
+	xnsynch_destroy(&yield_sync);
+
+	return ret;
 }
 
 void xnshadow_cleanup(void)
 {
-	if (user_muxid >= 0) {
-		xnshadow_unregister_personality(user_muxid);
-		user_muxid = -1;
-	}
+	xnshadow_unregister_personality(user_muxid);
 
 	if (process_hash) {
 		kfree(process_hash);
@@ -2654,9 +2648,7 @@ void xnshadow_cleanup(void)
 	}
 
 	mayday_cleanup_page();
-
 	xndebug_cleanup();
-
 	xnsynch_destroy(&yield_sync);
 }
 

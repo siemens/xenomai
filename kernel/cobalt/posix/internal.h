@@ -51,14 +51,14 @@ extern int cobalt_muxid;
 
 static inline struct cobalt_process *cobalt_process_context(void)
 {
-	return xnshadow_private_get(cobalt_muxid);
+	return xnshadow_get_context(cobalt_muxid);
 }
 
 static inline struct cobalt_kqueues *cobalt_kqueues(int pshared)
 {
 	struct cobalt_process *ppd;
 
-	if (pshared || (ppd = xnshadow_private_get(cobalt_muxid)) == NULL)
+	if (pshared || (ppd = xnshadow_get_context(cobalt_muxid)) == NULL)
 		return &cobalt_global_kqueues;
 
 	return &ppd->kqueues;

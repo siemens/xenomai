@@ -249,6 +249,13 @@ static inline struct xnarchtcb *xnthread_archtcb(struct xnthread *thread)
 #define xnthread_run_handler(__t, __h, __a...)				\
 	do {								\
 		struct xnpersonality *__p__ = (__t)->personality;	\
+		if ((__p__)->ops.__h)					\
+			(__p__)->ops.__h(__t, ##__a);			\
+	} while (0)
+	
+#define xnthread_run_handler_stack(__t, __h, __a...)			\
+	do {								\
+		struct xnpersonality *__p__ = (__t)->personality;	\
 		do {							\
 			if ((__p__)->ops.__h == NULL)			\
 				break;					\

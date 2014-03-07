@@ -131,6 +131,7 @@ struct cobalt_thread *cobalt_thread_lookup(unsigned long pth);
 
 int cobalt_thread_create(unsigned long tid, int policy,
 			 struct sched_param_ex __user *u_param,
+			 int shifted_muxid,
 			 unsigned long __user *u_window_offset);
 
 struct cobalt_thread *
@@ -184,7 +185,7 @@ ssize_t cobalt_sched_getconfig_np(int cpu,
 				  union sched_config __user *u_config,
 				  size_t len);
 
-struct xnpersonality *cobalt_thread_map(struct xnthread *curr);
+void cobalt_thread_map(struct xnthread *curr);
 
 struct xnpersonality *cobalt_thread_exit(struct xnthread *curr);
 
@@ -192,11 +193,10 @@ struct xnpersonality *cobalt_thread_finalize(struct xnthread *zombie);
 
 #ifdef CONFIG_XENO_OPT_COBALT_EXTENSION
 
-void cobalt_thread_extend(struct cobalt_thread *thread,
-			  struct cobalt_extension *ext,
-			  void *priv);
+int cobalt_thread_extend(struct cobalt_extension *ext,
+			 void *priv);
 
-void cobalt_thread_restrict(struct cobalt_thread *thread);
+void cobalt_thread_restrict(void);
 
 static inline
 int cobalt_thread_extended_p(const struct cobalt_thread *thread,

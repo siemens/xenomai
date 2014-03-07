@@ -208,16 +208,13 @@ struct cobalt_thread *cobalt_thread_lookup(unsigned long pth) /* nklocked, IRQs 
 }
 EXPORT_SYMBOL_GPL(cobalt_thread_lookup);
 
-struct xnpersonality *cobalt_thread_map(struct xnthread *curr)
+void cobalt_thread_map(struct xnthread *curr)
 {
 	struct cobalt_thread *thread;
 
 	thread = container_of(curr, struct cobalt_thread, threadbase);
 	thread->process = cobalt_process_context();
 	XENO_BUGON(NUCLEUS, thread->process == NULL);
-
-	/* We don't stack over any personality, no chaining. */
-	return NULL;
 }
 
 struct xnpersonality *cobalt_thread_exit(struct xnthread *curr)
@@ -899,14 +896,14 @@ int cobalt_thread_getschedparam_ex(unsigned long pth,
 
 int cobalt_thread_create(unsigned long pth, int policy,
 			 struct sched_param_ex __user *u_param,
+			 int shifted_muxid,
 			 unsigned long __user *u_window_offset)
 {
 	struct cobalt_thread *thread = NULL;
 	struct task_struct *p = current;
 	struct sched_param_ex param_ex;
 	struct cobalt_local_hkey hkey;
-	pid_t pid;
-	int ret;
+	int ret, muxid;
 
 	if (__xn_safe_copy_from_user(&param_ex, u_param, sizeof(param_ex)))
 		return -EFAULT;
@@ -922,20 +919,24 @@ int cobalt_thread_create(unsigned long pth, int policy,
 	if (ret)
 		return ret;
 
-	pid = task_pid_vnr(p);
 	ret = xnshadow_map_user(&thread->threadbase, u_window_offset);
 	if (ret)
 		goto fail;
 
-	if (!thread_hash(&hkey, thread, pid)) {
-		ret = -ENOMEM;
+	if (!thread_hash(&hkey, thread, task_pid_vnr(p))) {
+		ret = -EAGAIN;
 		goto fail;
 	}
 
 	thread->hkey = hkey;
 
-	return 0;
+	muxid = __xn_mux_unshifted_id(shifted_muxid);
+	if (muxid > 0 && xnshadow_push_personality(muxid) == NULL) {
+		ret = -EINVAL;
+		goto fail;
+	}
 
+	return xnshadow_harden();
 fail:
 	xnthread_cancel(&thread->threadbase);
 
@@ -949,7 +950,6 @@ cobalt_thread_shadow(struct task_struct *p,
 {
 	struct cobalt_thread *thread = NULL;
 	struct sched_param_ex param_ex;
-	pid_t pid;
 	int ret;
 
 	param_ex.sched_priority = 0;
@@ -957,22 +957,24 @@ cobalt_thread_shadow(struct task_struct *p,
 	if (ret)
 		return ERR_PTR(-ret);
 
-	pid = task_pid_vnr(p);
 	ret = xnshadow_map_user(&thread->threadbase, u_window_offset);
-	/*
-	 * From now on, we run in primary mode, so we refrain from
-	 * calling regular kernel services (e.g. like
-	 * task_pid_vnr()).
-	 */
-	if (ret == 0 && !thread_hash(hkey, thread, pid))
-		ret = -EAGAIN;
-
 	if (ret)
-		xnthread_cancel(&thread->threadbase);
-	else
-		thread->hkey = *hkey;
+		goto fail;
 
-	return ret ? ERR_PTR(ret) : thread;
+	if (!thread_hash(hkey, thread, task_pid_vnr(p))) {
+		ret = -EAGAIN;
+		goto fail;
+	}
+
+	thread->hkey = *hkey;
+
+	xnshadow_harden();
+
+	return thread;
+fail:
+	xnthread_cancel(&thread->threadbase);
+
+	return ERR_PTR(ret);
 }
 
 int cobalt_thread_make_periodic_np(unsigned long pth,
@@ -1170,21 +1172,28 @@ int cobalt_thread_stat(pid_t pid,
 
 #ifdef CONFIG_XENO_OPT_COBALT_EXTENSION
 
-void cobalt_thread_extend(struct cobalt_thread *thread,
-			  struct cobalt_extension *ext,
-			  void *priv)
+int cobalt_thread_extend(struct cobalt_extension *ext,
+			 void *priv)
 {
+	struct cobalt_thread *thread = cobalt_current_thread();
 	struct xnpersonality *prev;
 
-	prev = xnshadow_push_personality(&thread->threadbase, &ext->core);
+	prev = xnshadow_push_personality(ext->core.muxid);
+	if (prev == NULL)
+		return -EINVAL;
+
 	cobalt_set_extref(&thread->extref, ext, priv);
 	XENO_BUGON(NUCLEUS, prev != &cobalt_personality);
+
+	return 0;
 }
 EXPORT_SYMBOL_GPL(cobalt_thread_extend);
 
-void cobalt_thread_restrict(struct cobalt_thread *thread)
+void cobalt_thread_restrict(void)
 {
-	xnshadow_pop_personality(&thread->threadbase, &cobalt_personality);
+	struct cobalt_thread *thread = cobalt_current_thread();
+
+	xnshadow_pop_personality(&cobalt_personality);
 	cobalt_set_extref(&thread->extref, NULL, NULL);
 }
 EXPORT_SYMBOL_GPL(cobalt_thread_restrict);

@@ -36,13 +36,14 @@ struct xnshadow_process;
 struct xnpersonality {
 	const char *name;
 	unsigned int magic;
+	int muxid;
 	int nrcalls;
 	struct xnsyscall *syscalls;
 	atomic_t refcnt;
 	struct {
 		void *(*attach_process)(void);
 		void (*detach_process)(void *arg);
-		struct xnpersonality *(*map_thread)(struct xnthread *thread);
+		void (*map_thread)(struct xnthread *thread);
 		struct xnpersonality *(*relax_thread)(struct xnthread *thread);
 		struct xnpersonality *(*harden_thread)(struct xnthread *thread);
 		struct xnpersonality *(*move_thread)(struct xnthread *thread,
@@ -69,7 +70,7 @@ static inline struct xnshadow_process *xnshadow_current_process(void)
 }
 
 static inline struct xnshadow_process *
-xnshadow_swap_process(struct xnshadow_process *process)
+xnshadow_set_process(struct xnshadow_process *process)
 {
 	struct ipipe_threadinfo *p = ipipe_current_threadinfo();
 	struct xnshadow_process *old;
@@ -119,11 +120,9 @@ void __xnshadow_demote(struct xnthread *thread);
 void xnshadow_demote(struct xnthread *thread);
 
 struct xnpersonality *
-xnshadow_push_personality(struct xnthread *thread,
-			  struct xnpersonality *next);
+xnshadow_push_personality(int muxid);
 
-void xnshadow_pop_personality(struct xnthread *thread,
-			      struct xnpersonality *prev);
+void xnshadow_pop_personality(struct xnpersonality *prev);
 
 int xnshadow_yield(xnticks_t min, xnticks_t max);
 

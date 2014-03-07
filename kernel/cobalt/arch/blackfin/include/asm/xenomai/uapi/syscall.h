@@ -23,8 +23,9 @@
  * (i.e. negative syscall number in orig_p0 meaning "non-syscall
  * entry").
  */
-#define __xn_mux_code(shifted_id,op) (shifted_id|((op << 16) & 0xff0000)|(sc_nucleus_mux & 0xffff))
-#define __xn_mux_shifted_id(id) (id << 24)
+#define __xn_mux_code(shifted_id,op)	(shifted_id|((op << 16) & 0xff0000)|(sc_nucleus_mux & 0xffff))
+#define __xn_mux_shifted_id(id)		(id << 24)
+#define __xn_mux_unshifted_id(id)	((id >> 24) & 0xff)
 
 /*
  * No atomic xchg available from user-space. We implement this as a

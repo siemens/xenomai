@@ -27,9 +27,12 @@
 #include <cobalt/kernel/heap.h>
 
 #define NR_PERSONALITIES  4
+#if BITS_PER_LONG < NR_PERSONALITIES
+#error "NR_PERSONALITIES overflows internal bitmap"
+#endif
 
 /* Called with nklock locked irqs off. */
-void *xnshadow_private_get(unsigned int muxid);
+void *xnshadow_get_context(unsigned int muxid);
 
 struct xnsys_ppd {
 	struct xnheap sem_heap;
@@ -43,6 +46,7 @@ struct xnshadow_process {
 	void *priv[NR_PERSONALITIES];
 	struct hlist_node hlink;
 	struct xnsys_ppd sys_ppd;
+	unsigned long permap;
 };
 
 extern struct xnsys_ppd __xnsys_global_ppd;
@@ -51,7 +55,7 @@ static inline struct xnsys_ppd *xnsys_ppd_get(int global)
 {
 	struct xnshadow_process *ppd;
 
-	if (global || (ppd = xnshadow_private_get(0)) == NULL)
+	if (global || (ppd = xnshadow_get_context(0)) == NULL)
 		return &__xnsys_global_ppd;
 
 	return &ppd->sys_ppd;
