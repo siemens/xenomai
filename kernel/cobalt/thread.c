@@ -141,7 +141,6 @@ int __xnthread_init(struct xnthread *thread,
 		    struct xnsched_class *sched_class,
 		    const union xnsched_policy_param *sched_param)
 {
-	DECLARE_COMPLETION_ONSTACK(done);
 	int flags = attr->flags, ret;
 	spl_t s;
 
