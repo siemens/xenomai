@@ -150,8 +150,7 @@ void __run_cleanup_block(struct cleanup_block *cb)
 	cb->handler(cb->arg);
 }
 
-__attribute__ ((weak))
-void panic(const char *fmt, ...)
+void early_panic(const char *fmt, ...)
 {
 	va_list ap;
 
@@ -160,8 +159,10 @@ void panic(const char *fmt, ...)
 	va_end(ap);
 }
 
-__attribute__ ((weak))
-void warning(const char *fmt, ...)
+void panic(const char *fmt, ...)
+__attribute__((alias("early_panic"), weak));
+
+void early_warning(const char *fmt, ...)
 {
 	va_list ap;
 
@@ -169,6 +170,9 @@ void warning(const char *fmt, ...)
 	__warning(NULL, fmt, ap);
 	va_end(ap);
 }
+
+void warning(const char *fmt, ...)
+__attribute__((alias("early_warning"), weak));
 
 char *generate_name(char *buf, const char *radix,
 		    struct name_generator *ngen)

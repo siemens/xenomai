@@ -55,10 +55,14 @@ void __printout(const char *name,
 void __panic(const char *name,
 	     const char *fmt, va_list ap);
 
+void early_panic(const char *fmt, ...);
+
 void panic(const char *fmt, ...);
 
 void __warning(const char *name,
 	       const char *fmt, va_list ap);
+
+void early_warning(const char *fmt, ...);
 
 void warning(const char *fmt, ...);
 
