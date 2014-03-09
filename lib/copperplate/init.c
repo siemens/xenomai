@@ -487,6 +487,8 @@ void copperplate_init(int *argcp, char *const **argvp)
 
 	boilerplate_init();
 
+	threadobj_init_key();
+
 	/* Our node id. is the tid of the main thread. */
 	__node_id = copperplate_get_tid();
 

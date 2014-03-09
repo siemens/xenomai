@@ -355,6 +355,8 @@ static inline int threadobj_local_p(struct threadobj *thobj)
 
 #endif	/* !CONFIG_XENO_PSHARED */
 
+void threadobj_init_key(void);
+
 void threadobj_pkg_init(void);
 
 #ifdef __cplusplus

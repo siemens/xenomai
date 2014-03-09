@@ -77,10 +77,10 @@ struct threadobj *__threadobj_current;
  */
 pthread_key_t threadobj_tskey;
 
-static inline void threadobj_init_key(void)
+void threadobj_init_key(void)
 {
 	if (pthread_key_create(&threadobj_tskey, finalize_thread))
-		panic("failed to allocate TSD key");
+		early_panic("failed to allocate TSD key");
 }
 
 #ifdef CONFIG_XENO_COBALT
@@ -1309,8 +1309,6 @@ void threadobj_pkg_init(void)
 {
 	threadobj_irq_prio = __RT(sched_get_priority_max(SCHED_RT));
 	threadobj_high_prio = threadobj_irq_prio - 1;
-
-	threadobj_init_key();
 
 	pkg_init_corespec();
 
