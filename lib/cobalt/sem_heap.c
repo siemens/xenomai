@@ -112,7 +112,7 @@ static void cobalt_init_vdso(void)
 	struct xnsysinfo sysinfo;
 	int err;
 
-	err = XENOMAI_SYSCALL2(sc_nucleus_info, 0, &sysinfo);
+	err = XENOMAI_SYSCALL1(sc_nucleus_info, &sysinfo);
 	if (err < 0) {
 		errno = -err;
 		perror("Xenomai: sys_info failed");

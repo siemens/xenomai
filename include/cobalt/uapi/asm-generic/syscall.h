@@ -24,9 +24,9 @@
 /* Xenomai multiplexer syscall. */
 #define sc_nucleus_mux		555	/* Must fit within 15bit */
 /* Xenomai nucleus syscalls. */
-#define sc_nucleus_bind		 0	/* muxid = bind_to_interface(magic, &breq) */
+#define sc_nucleus_bind		 0	/* muxid = xnshadow_sys_bind(magic, &breq) */
 #define sc_nucleus_migrate	 1	/* switched = xnshadow_relax/harden() */
-#define sc_nucleus_info		 2	/* xnshadow_get_info(muxid,&info) */
+#define sc_nucleus_info		 2	/* xnshadow_sys_info(&info) */
 #define sc_nucleus_arch		 3	/* r = xnarch_local_syscall(args) */
 #define sc_nucleus_trace	 4	/* r = xntrace_xxx(...) */
 #define sc_nucleus_heap_info	 5

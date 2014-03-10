@@ -112,7 +112,7 @@ static int bind_interface(void)
 
 	cobalt_check_features(f);
 
-	ret = XENOMAI_SYSCALL2(sc_nucleus_info, muxid, &sysinfo);
+	ret = XENOMAI_SYSCALL1(sc_nucleus_info, &sysinfo);
 	if (ret) {
 		report_error("sysinfo failed: %s", strerror(-ret));
 		exit(EXIT_FAILURE);

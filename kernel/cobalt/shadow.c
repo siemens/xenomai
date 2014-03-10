@@ -1396,13 +1396,9 @@ fail_destroy_process:
 	return ret;
 }
 
-static int xnshadow_sys_info(int muxid, struct xnsysinfo __user *u_info)
+static int xnshadow_sys_info(struct xnsysinfo __user *u_info)
 {
 	struct xnsysinfo info;
-
-	if (muxid < 0 || muxid > NR_PERSONALITIES ||
-	    personalities[muxid] == NULL)
-		return -EINVAL;
 
 	info.clockfreq = xnarch_machdata.clock_freq;
 	info.vdso = xnheap_mapped_offset(&xnsys_ppd_get(1)->sem_heap,
