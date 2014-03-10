@@ -286,21 +286,8 @@ AC_ARG_ENABLE(registry,
 AC_MSG_RESULT(${use_registry:-no})
 
 if test x$use_registry = xy; then
-	fuse_cflags="-D_FILE_OFFSET_BITS=64 -DFUSE_USE_VERSION=25"
-	fuse_ldflags="-lfuse"
-	AC_LANG_SAVE
-	AC_LANG_C
-	save_CPPFLAGS="$CPPFLAGS"
-	CPPFLAGS=$fuse_cflags
-	AC_CHECK_HEADER(fuse.h,,
-		AC_MSG_ERROR([Cannot find fuse.h (part of libfuse development package) on this system])
-	)
-	AC_CHECK_LIB(fuse, fuse_new,,
-		AC_MSG_ERROR([Cannot find libfuse (FUSE development package) on this system]),
-		[-lpthread -lrt -ldl]
-	)
-	CPPFLAGS="$save_CPPFLAGS"
-	AC_LANG_RESTORE
+        PKG_CHECK_MODULES(FUSE, fuse)
+
 	AC_DEFINE(CONFIG_XENO_REGISTRY,1,[config])
 	AC_DEFINE(_FILE_OFFSET_BITS,64,[config])
 	AC_DEFINE(FUSE_USE_VERSION,25,[config])
@@ -614,8 +601,8 @@ XENO_USER_APP_CFLAGS="-D_GNU_SOURCE -D_REENTRANT"
 XENO_USER_APP_LDFLAGS=
 
 if test x$use_registry = xy; then
-   XENO_FUSE_CFLAGS=$fuse_cflags
-   XENO_USER_APP_LDFLAGS="$XENO_USER_APP_LDFLAGS $fuse_ldflags"
+   XENO_FUSE_CFLAGS=$FUSE_CFLAGS
+   XENO_USER_APP_LDFLAGS="$XENO_USER_APP_LDFLAGS $FUSE_LIBS"
 fi
 
 dnl Internal CFLAGS and LDFLAGS, may be enhanced per-arch below
