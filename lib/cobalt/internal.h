@@ -36,7 +36,7 @@
 #include "current.h"
 
 #define report_error(fmt, args...) \
-	__STD(fprintf(stderr, "Xenomai/cobalt: " fmt "\n", ##args))
+	__STD(fprintf(stderr, "Xenomai/cobalt: %s(): " fmt "\n", __func__, ##args))
 
 #define report_error_cont(fmt, args...) \
 	__STD(fprintf(stderr, "                " fmt "\n", ##args))

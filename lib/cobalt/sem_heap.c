@@ -49,13 +49,15 @@ void *cobalt_map_heap(struct xnheap_desc *hd)
 
 	fd = open(XNHEAP_DEV_NAME, O_RDWR, 0);
 	if (fd < 0) {
-		perror("Xenomai: open");
+		report_error("cannot open %s: %s", XNHEAP_DEV_NAME,
+			     strerror(errno));
 		return MAP_FAILED;
 	}
 
 	ret = ioctl(fd, 0, hd->handle);
 	if (ret) {
-		perror("Xenomai: ioctl");
+		report_error("failed association with %s: %s",
+			     XNHEAP_DEV_NAME, strerror(errno));
 		return MAP_FAILED;
 	}
 
@@ -75,8 +77,9 @@ static void *map_sem_heap(unsigned int shared)
 	hdesc = shared ? &global_hdesc : &private_hdesc;
 	ret = XENOMAI_SYSCALL2(sc_nucleus_heap_info, hdesc, shared);
 	if (ret < 0) {
-		errno = -ret;
-		perror("Xenomai: sys_heap_info");
+		report_error("cannot locate %s heap: %s",
+			     shared ? "shared" : "private",
+			     strerror(-ret));
 		return MAP_FAILED;
 	}
 
@@ -110,12 +113,11 @@ static void unmap_on_fork(void)
 static void cobalt_init_vdso(void)
 {
 	struct xnsysinfo sysinfo;
-	int err;
+	int ret;
 
-	err = XENOMAI_SYSCALL1(sc_nucleus_info, &sysinfo);
-	if (err < 0) {
-		errno = -err;
-		perror("Xenomai: sys_info failed");
+	ret = XENOMAI_SYSCALL1(sc_nucleus_info, &sysinfo);
+	if (ret < 0) {
+		report_error("sysinfo failed: %s", strerror(-ret));
 		exit(EXIT_FAILURE);
 	}
 
@@ -128,7 +130,8 @@ static void cobalt_init_private_heap(void)
 {
 	cobalt_sem_heap[PRIVATE] = (unsigned long)map_sem_heap(PRIVATE);
 	if (cobalt_sem_heap[PRIVATE] == (unsigned long)MAP_FAILED) {
-		perror("Xenomai: mmap local sem heap");
+		report_error("cannot map private heap: %s",
+			     strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 }
@@ -140,7 +143,8 @@ static void cobalt_init_rest_once(void)
 
 	cobalt_sem_heap[SHARED] = (unsigned long)map_sem_heap(SHARED);
 	if (cobalt_sem_heap[SHARED] == (unsigned long)MAP_FAILED) {
-		perror("Xenomai: mmap global sem heap");
+		report_error("cannot map shared heap: %s",
+			     strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 
