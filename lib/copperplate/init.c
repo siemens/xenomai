@@ -466,7 +466,7 @@ void copperplate_bootstrap_minimal(const char *arg0, char *mountpt)
 
 	return;
 fail:
-	panic("initialization failed, %s", symerror(ret));
+	early_panic("initialization failed, %s", symerror(ret));
 }
 
 /* The application-level copperplate init call. */
@@ -608,7 +608,7 @@ void copperplate_init(int *argcp, char *const **argvp)
 
 	return;
 fail:
-	panic("initialization failed, %s", symerror(ret));
+	early_panic("initialization failed, %s", symerror(ret));
 }
 
 void copperplate_register_skin(struct copperskin *p)

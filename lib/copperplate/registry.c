@@ -566,7 +566,7 @@ static void *registry_thread(void *arg)
 	 */
 	ret = fuse_main(6, av, &regfs_opts);
 	if (ret) {
-		warning("can't mount registry onto %s", p->mountpt);
+		early_warning("can't mount registry onto %s", p->mountpt);
 		/* Attempt to figure out why we failed. */
 		ret = access(p->mountpt, F_OK);
 		p->status = ret ? -errno : -EPERM;
@@ -682,7 +682,7 @@ static int connect_regd(const char *sessdir, char **mountpt)
 
 	free(*mountpt);
 
-	warning("cannot connect to registry daemon");
+	early_warning("cannot connect to registry daemon");
 
 	return ret;
 }
