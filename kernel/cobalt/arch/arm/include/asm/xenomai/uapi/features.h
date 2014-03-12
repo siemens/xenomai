@@ -29,7 +29,7 @@
 #define __XN_TSC_TYPE_FREERUNNING_COUNTDOWN 5
 
 /* The ABI revision level we use on this arch. */
-#define XENOMAI_ABI_REV   6UL
+#define XENOMAI_ABI_REV   7UL
 
 #define XENOMAI_FEAT_DEP (__xn_feat_generic_mask)
 
