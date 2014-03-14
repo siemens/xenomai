@@ -27,8 +27,6 @@
 #include <asm/mmu_context.h>
 #include <cobalt/kernel/thread.h>
 
-static unsigned vfp_checked;
-static DEFINE_MUTEX(vfp_check_lock);
 struct static_key __xeno_vfp_key = STATIC_KEY_INIT_TRUE;
 
 asmlinkage void __asm_thread_switch(struct thread_info *out,
@@ -37,6 +35,10 @@ asmlinkage void __asm_thread_switch(struct thread_info *out,
 asmlinkage void __asm_thread_trampoline(void);
 
 #if defined(CONFIG_XENO_HW_FPU) && defined(CONFIG_VFP)
+
+static unsigned int vfp_checked;
+static DEFINE_MUTEX(vfp_check_lock);
+
 asmlinkage void __asm_vfp_save(union vfp_state *vfp, unsigned int fpexc);
 
 asmlinkage void __asm_vfp_load(union vfp_state *vfp, unsigned int cpu);
