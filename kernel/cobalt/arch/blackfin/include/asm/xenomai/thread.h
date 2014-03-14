@@ -62,7 +62,6 @@ static inline void xnarch_save_fpu(struct xnthread *thread) { }
 static inline void
 xnarch_switch_fpu(struct xnthread *from, struct xnthread *thread)
 { 
-	return 0;
 }
 
 static inline int 
