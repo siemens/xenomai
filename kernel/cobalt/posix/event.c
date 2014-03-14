@@ -292,7 +292,7 @@ int cobalt_event_inquire(struct cobalt_event_shadow __user *u_event,
 			 pid_t __user *u_waitlist,
 			 size_t waitsz)
 {
-	int nrpend, nrwait = 0, nrpids, ret = 0;
+	int nrpend = 0, nrwait = 0, nrpids, ret = 0;
 	unsigned long pstamp, nstamp = 0;
 	struct cobalt_event_info info;
 	struct cobalt_event *event;

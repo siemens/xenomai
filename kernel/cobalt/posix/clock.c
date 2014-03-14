@@ -184,7 +184,7 @@ int cobalt_clock_gettime(clockid_t clock_id, struct timespec __user *u_ts)
 {
 	struct timespec ts;
 	xnticks_t ns;
-	int ret;
+	int ret = 0;
 
 	switch (clock_id) {
 	case CLOCK_REALTIME:

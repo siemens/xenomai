@@ -779,7 +779,7 @@ int cobalt_sem_inquire(struct cobalt_sem_shadow __user *u_sem,
 		       pid_t __user *u_waitlist,
 		       size_t waitsz)
 {
-	int val, nrwait = 0, nrpids, ret = 0;
+	int val = 0, nrwait = 0, nrpids, ret = 0;
 	unsigned long pstamp, nstamp = 0;
 	struct cobalt_sem_info info;
 	pid_t *t = NULL, fbuf[16];

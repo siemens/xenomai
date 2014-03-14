@@ -51,7 +51,7 @@ static inline struct cobalt_thread *
 timer_init(struct cobalt_timer *timer,
 	   const struct sigevent *__restrict__ evp)
 {
-	struct cobalt_thread *owner = cobalt_current_thread(), *target;
+	struct cobalt_thread *owner = cobalt_current_thread(), *target = NULL;
 
 	/*
 	 * First, try to offload this operation to the extended
@@ -310,7 +310,7 @@ static inline void
 timer_gettimeout(struct cobalt_timer *__restrict__ timer,
 		 struct itimerspec *__restrict__ value)
 {
-	int ret;
+	int ret = 0;
 
 	if (!xntimer_running_p(&timer->timerbase)) {
 		value->it_value.tv_sec = 0;
@@ -334,7 +334,7 @@ static inline int timer_set(struct cobalt_timer *timer, int flags,
 {				/* nklocked, IRQs off. */
 	struct cobalt_thread *thread;
 	xnticks_t start, period;
-	int ret;
+	int ret = 0;
 
 	/* First, try offloading the work to an extension. */
 
