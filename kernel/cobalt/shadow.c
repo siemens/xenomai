@@ -834,6 +834,45 @@ static void pin_to_initial_cpu(struct xnthread *thread)
 	xnlock_put_irqrestore(&nklock, s);
 }
 
+#ifdef CONFIG_MMU
+
+static inline int disable_ondemand_memory(void)
+{
+	struct task_struct *p = current;
+	siginfo_t si;
+
+	if ((p->mm->def_flags & VM_LOCKED) == 0) {
+		memset(&si, 0, sizeof(si));
+		si.si_signo = SIGDEBUG;
+		si.si_code = SI_QUEUE;
+		si.si_int = SIGDEBUG_NOMLOCK;
+		send_sig_info(SIGDEBUG, &si, p);
+		return 0;
+	}
+
+	return __ipipe_disable_ondemand_mappings(p);
+}
+
+#define mayday_unmapped_area  NULL
+
+#else /* !CONFIG_MMU */
+
+static inline int disable_ondemand_memory(void)
+{
+	return 0;
+}
+
+static unsigned long mayday_unmapped_area(struct file *file,
+					  unsigned long addr,
+					  unsigned long len,
+					  unsigned long pgoff,
+					  unsigned long flags)
+{
+	return (unsigned long)mayday_page;
+}
+
+#endif /* !CONFIG_MMU */
+
 /**
  * @fn int xnshadow_map_user(struct xnthread *thread, unsigned long __user *u_window_offset)
  * @internal
@@ -868,7 +907,6 @@ int xnshadow_map_user(struct xnthread *thread,
 		      unsigned long __user *u_window_offset)
 {
 	struct xnthread_user_window *u_window;
-	struct task_struct *p = current;
 	struct xnthread_start_attr attr;
 	struct xnsys_ppd *sys_ppd;
 	struct xnheap *sem_heap;
@@ -883,21 +921,9 @@ int xnshadow_map_user(struct xnthread *thread,
 	if (!access_wok(u_window_offset, sizeof(*u_window_offset)))
 		return -EFAULT;
 
-#ifdef CONFIG_MMU
-	if ((p->mm->def_flags & VM_LOCKED) == 0) {
-		siginfo_t si;
-
-		memset(&si, 0, sizeof(si));
-		si.si_signo = SIGDEBUG;
-		si.si_code = SI_QUEUE;
-		si.si_int = SIGDEBUG_NOMLOCK;
-		send_sig_info(SIGDEBUG, &si, p);
-	} else {
-		ret = __ipipe_disable_ondemand_mappings(p);
-		if (ret)
-			return ret;
-	}
-#endif /* CONFIG_MMU */
+	ret = disable_ondemand_memory();
+	if (ret)
+		return ret;
 
 	sys_ppd = xnsys_ppd_get(0);
 	sem_heap = &sys_ppd->sem_heap;
@@ -1150,19 +1176,6 @@ static int mayday_map(struct file *filp, struct vm_area_struct *vma)
 	return xnheap_remap_vm_page(vma, vma->vm_start,
 				    (unsigned long)mayday_page);
 }
-
-#ifndef CONFIG_MMU
-static unsigned long mayday_unmapped_area(struct file *file,
-					  unsigned long addr,
-					  unsigned long len,
-					  unsigned long pgoff,
-					  unsigned long flags)
-{
-	return (unsigned long)mayday_page;
-}
-#else
-#define mayday_unmapped_area  NULL
-#endif
 
 static struct file_operations mayday_fops = {
 	.mmap = mayday_map,
