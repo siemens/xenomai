@@ -25,6 +25,9 @@
 #include <boilerplate/obstack.h>
 #include <copperplate/heapobj.h>
 
+struct threadobj;
+struct syncobj;
+
 /*
  * Assume we may want fast allocation of private memory from real-time
  * mode when growing the obstack.
