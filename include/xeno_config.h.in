@@ -86,9 +86,6 @@
 
 #ifdef __IN_XENO__
 
-/* config */
-#undef FUSE_USE_VERSION
-
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
@@ -177,8 +174,5 @@
 /* Define to 1 if `lex' declares `yytext' as a `char *' by default, not a
    `char[]'. */
 #undef YYTEXT_POINTER
-
-/* config */
-#undef _FILE_OFFSET_BITS
 
 #endif /* __IN_XENO__ */

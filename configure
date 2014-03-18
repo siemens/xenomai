@@ -13165,15 +13165,9 @@ else
 $as_echo "yes" >&6; }
 
 fi
-
+	FUSE_CFLAGS="$FUSE_CFLAGS -DFUSE_USE_VERSION=25"
 
 $as_echo "#define CONFIG_XENO_REGISTRY 1" >>confdefs.h
-
-
-$as_echo "#define _FILE_OFFSET_BITS 64" >>confdefs.h
-
-
-$as_echo "#define FUSE_USE_VERSION 25" >>confdefs.h
 
 fi
  if test x$use_registry = xy; then

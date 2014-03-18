@@ -287,10 +287,8 @@ AC_MSG_RESULT(${use_registry:-no})
 
 if test x$use_registry = xy; then
         PKG_CHECK_MODULES(FUSE, fuse)
-
+	FUSE_CFLAGS="$FUSE_CFLAGS -DFUSE_USE_VERSION=25"
 	AC_DEFINE(CONFIG_XENO_REGISTRY,1,[config])
-	AC_DEFINE(_FILE_OFFSET_BITS,64,[config])
-	AC_DEFINE(FUSE_USE_VERSION,25,[config])
 fi
 AM_CONDITIONAL(XENO_REGISTRY,[test x$use_registry = xy])
 
