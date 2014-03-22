@@ -42,7 +42,7 @@ default=21, 0 to suppress headers
 default=0, so ^C to end
 
 *-q*::
-supresses RTD, RTH lines if -T is used
+suppresses RTD, RTH lines if -T is used
 
 *-P <rt_pipe_no>*::
 number of testing pipe, default=auto

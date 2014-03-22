@@ -56,13 +56,13 @@ default = 1000ns, decrease for more resolution
 sampling period
 
 *-l <data-lines per header>*::
-default=21, 0 to supress headers
+default=21, 0 to suppress headers
 
 *-T <test_duration_seconds>*::
 default=0, so ^C to end
 
 *-q*::
-supresses RTD, RTH lines if -T is used
+suppresses RTD, RTH lines if -T is used
 
 *-D <testing_device_no>*::
 number of testing device, default=0

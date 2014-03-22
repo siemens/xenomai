@@ -182,9 +182,9 @@ int main(int argc, char **argv)
 		default:
 
 			fprintf(stderr, "usage: latency [options]\n"
-				"  [-l <data-lines per header>] # default=21, 0 to supress headers\n"
+				"  [-l <data-lines per header>] # default=21, 0 to suppress headers\n"
 				"  [-T <test_duration_seconds>] # default=0, so ^C to end\n"
-				"  [-q]                         # supresses RTD, RTH lines if -T is used\n"
+				"  [-q]                         # suppresses RTD, RTH lines if -T is used\n"
 				"  [-P <rt_pipe_no>]            # number of testing pipe, default=auto\n");
 			exit(2);
 		}
