@@ -216,14 +216,14 @@ unsigned int a4l_get_irq(a4l_dev_t * dev)
 int a4l_rdproc_transfer(struct seq_file *p, void *data)
 {
 	int i;
-	a4l_trf_t *transfer = (a4l_trf_t *) data;
-
+	char *type;
+	a4l_trf_t *transfer;
+	transfer = (a4l_trf_t *) p->private;
 	seq_printf(p, "--  Subdevices --\n\n");
 	seq_printf(p, "| idx | type\n");
 
 	/* Gives the subdevice type's name */
 	for (i = 0; i < transfer->nb_subd; i++) {
-		char *type;
 		switch (transfer->subds[i]->flags & A4L_SUBD_TYPES) {
 		case A4L_SUBD_UNUSED:
 			type = "Unused subdevice";
