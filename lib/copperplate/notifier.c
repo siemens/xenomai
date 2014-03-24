@@ -140,6 +140,7 @@ int notifier_init(struct notifier *nf,
 		  int owned)
 {
 	pthread_mutexattr_t mattr;
+	struct f_owner_ex owner;
 	sigset_t oset;
 	int fd, ret;
 
@@ -176,7 +177,9 @@ int notifier_init(struct notifier *nf,
 
 	fd = nf->psfd[0];
 	fcntl(fd, F_SETSIG, NOTIFYSIG);
-	fcntl(fd, F_SETOWN, nf->owner);
+	owner.type = F_OWNER_TID;
+	owner.pid = nf->owner;
+	fcntl(fd, F_SETOWN_EX, &owner);
 	fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_ASYNC | O_NONBLOCK);
 	fcntl(fd, F_SETFD, fcntl(fd, F_GETFD) | FD_CLOEXEC);
 	/*
