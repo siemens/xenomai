@@ -302,6 +302,22 @@ void xnthread_set_sync_window(struct xnthread *thread, int bits)
 		thread->u_window->state = thread->state | bits;
 }
 
+static inline int xnthread_try_grab(struct xnthread *thread,
+				    struct xnsynch *synch)
+{
+	XENO_BUGON(NUCLEUS, xnsynch_fastlock_p(synch));
+
+	if (xnsynch_owner(synch) != NULL)
+		return 0;
+
+	xnsynch_set_owner(synch, thread);
+
+	if (xnthread_test_state(thread, XNWEAK))
+		xnthread_inc_rescnt(thread);
+
+	return 1;
+}
+
 /*
  * XXX: Mutual dependency issue with synch.h, we have to define
  * xnsynch_release() here.
