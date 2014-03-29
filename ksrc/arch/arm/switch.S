@@ -37,6 +37,21 @@
 	.endm
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 11, 0)
+	.macro load_tls base, tp, tpuser
+	ldr     \tp, [\base, #TI_TP_VALUE]
+	.endm
+	
+	.macro switch_tls base, tp, tpuser, tmp1, tmp2
+	set_tls \tp, \tmp1, \tmp2
+	.endm
+#else
+	.macro load_tls base, tp, tpuser
+	ldr	\tp, [\base, #TI_TP_VALUE]
+	ldr	\tpuser, [\base, #TI_TP_VALUE + 4]
+	.endm
+#endif
+	
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 31)
 #define ARM(x...)	x
 #define THUMB(x...)
@@ -152,17 +167,17 @@ ENDPROC(rthal_vfp_load)
  */
 ENTRY(rthal_thread_switch)
 	add     ip, r1, #TI_CPU_SAVE
-	ldr     r3, [r2, #TI_TP_VALUE]
  ARM(	stmia	ip!, {r4 - sl, fp, sp, lr} )	@ Store most regs on stack
  THUMB(	stmia	ip!, {r4 - sl, fp}	   )	@ Store most regs on stack
  THUMB(	str	sp, [ip], #4		   )
  THUMB(	str	lr, [ip], #4		   )
+	load_tls r2, r4, r5
 #ifdef USE_DOMAINS
 	ldr     r6, [r2, #TI_CPU_DOMAIN]
 #endif
 
 	clear_exclusive_monitor
-	set_tls r3, r4, r5
+	switch_tls r1, r4, r5, r3, r7
 #ifdef USE_DOMAINS
 	mcr     p15, 0, r6, c3, c0, 0           @ Set domain register
 #endif

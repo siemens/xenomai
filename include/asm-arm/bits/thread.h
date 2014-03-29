@@ -42,7 +42,7 @@ static inline void xnarch_init_tcb(xnarchtcb_t * tcb)
 	tcb->mm = NULL;
 	tcb->active_mm = NULL;
 	tcb->tip = &tcb->ti;
-	tcb->ti.tp_value = 0;
+	memset(&tcb->ti.tp_value, '\0', sizeof(tcb->ti.tp_value));
 	tcb->ti.cpu_domain = xnarch_current_domain_access_control();
 #ifdef CONFIG_XENO_HW_FPU
 	tcb->user_fpu_owner = NULL;
