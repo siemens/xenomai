@@ -1538,9 +1538,7 @@ int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
 	if (unlikely(xnsynch_test_flags(&mutex->synch_base,
 					RTDM_SYNCH_DELETED)))
 		err = -EIDRM;
-	else if (likely(xnsynch_owner(&mutex->synch_base) == NULL))
-		xnsynch_set_owner(&mutex->synch_base, curr_thread);
-	else {
+	else if (!xnthread_try_grab(curr_thread, &mutex->synch_base)) {
 		/* Redefinition to clarify XENO_ASSERT output */
 		#define mutex_owner xnsynch_owner(&mutex->synch_base)
 		XENO_ASSERT(RTDM, mutex_owner != curr_thread,

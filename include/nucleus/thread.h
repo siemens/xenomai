@@ -436,6 +436,22 @@ struct xnthread *xnthread_lookup(xnhandle_t threadh)
 	return (thread && xnthread_handle(thread) == threadh) ? thread : NULL;
 }
 
+static inline int xnthread_try_grab(struct xnthread *thread,
+				    struct xnsynch *synch)
+{
+	XENO_BUGON(NUCLEUS, xnsynch_fastlock_p(synch));
+
+	if (xnsynch_owner(synch) != NULL)
+		return 0;
+
+	xnsynch_set_owner(synch, thread);
+
+	if (xnthread_test_state(thread, XNOTHER))
+		xnthread_inc_rescnt(thread);
+
+	return 1;
+}
+
 #ifdef __cplusplus
 extern "C" {
 #endif

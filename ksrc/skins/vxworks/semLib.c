@@ -385,10 +385,8 @@ static STATUS semm_take(wind_sem_t *sem, xnticks_t to)
 {
 	xnthread_t *cur = xnpod_current_thread();
 
-	if (xnsynch_owner(&sem->synchbase) == NULL) {
-		xnsynch_set_owner(&sem->synchbase, cur);
+	if (xnthread_try_grab(cur, &sem->synchbase))
 		goto grab_sem;
-	}
 
 	if (xnsynch_owner(&sem->synchbase) == cur) {
 		sem->count++;

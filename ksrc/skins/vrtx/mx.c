@@ -284,10 +284,8 @@ void sc_mpend(int mid, unsigned long timeout, int *errp)
 
 	*errp = RET_OK;
 
-	if (xnsynch_owner(&mx->synchbase) == NULL) {
-		xnsynch_set_owner(&mx->synchbase, cur);
+	if (xnthread_try_grab(cur, &mx->synchbase))
 		goto unlock_and_exit;
-	}
 
 	if (xnsynch_owner(&mx->synchbase) == cur)
 		goto unlock_and_exit;
@@ -330,10 +328,9 @@ void sc_maccept(int mid, int *errp)
 		goto unlock_and_exit;
 	}
 
-	if (xnsynch_owner(&mx->synchbase) == NULL) {
-		xnsynch_set_owner(&mx->synchbase, xnpod_current_thread());
+	if (xnthread_try_grab(xnpod_current_thread(), &mx->synchbase))
 		*errp = RET_OK;
-	} else
+	else
 		*errp = ER_PND;
 
 unlock_and_exit:
