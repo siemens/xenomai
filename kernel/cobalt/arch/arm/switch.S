@@ -95,6 +95,21 @@ ENTRY(__asm_vfp_load)
 ENDPROC(__asm_vfp_load)
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 11, 0)
+	.macro load_tls base, tp, tpuser
+	ldr     \tp, [\base, #TI_TP_VALUE]
+	.endm
+	
+	.macro switch_tls base, tp, tpuser, tmp1, tmp2
+	set_tls \tp, \tmp1, \tmp2
+	.endm
+#else
+	.macro load_tls base, tp, tpuser
+	ldr	\tp, [\base, #TI_TP_VALUE]
+	ldr	\tpuser, [\base, #TI_TP_VALUE + 4]
+	.endm
+#endif
+	
 /*
 /*
  * Switch context routine.
@@ -122,15 +137,15 @@ ENDPROC(__asm_vfp_load)
  */
 ENTRY(__asm_thread_switch)
 	add     ip, r0, #TI_CPU_SAVE
-	ldr     r3, [r1, #TI_TP_VALUE]
  ARM(	stmia	ip!, {r4 - sl, fp, sp, lr} )	@ Store most regs on stack
  THUMB(	stmia	ip!, {r4 - sl, fp}	   )	@ Store most regs on stack
  THUMB(	str	sp, [ip], #4		   )
  THUMB(	str	lr, [ip], #4		   )
+	load_tls r2, r4, r5
 #ifdef CONFIG_CPU_USE_DOMAINS
 	ldr     r6, [r1, #TI_CPU_DOMAIN]
 #endif
-	set_tls r3, r4, r5
+	switch_tls r1, r4, r5, r3, r7
 #ifdef CONFIG_CPU_USE_DOMAINS
 	mcr     p15, 0, r6, c3, c0, 0           @ Set domain register
 #endif
