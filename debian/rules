@@ -40,7 +40,6 @@ build-indep-stamp: config.status
 config.status: configure-stamp
 configure-stamp:
 	dh_testdir
-	autoreconf -fi
 	./configure $(CONFIG_OPTS)
 	touch configure-stamp
 
@@ -54,7 +53,6 @@ clean:
 	dh_clean
 	rm -fR $(CURDIR)/tmp
 	rm -f $(CURDIR)/*.patch
-	-rm -f configure
 
 install: build
 	dh_testdir
