@@ -50,11 +50,20 @@ END_FTR_SECTION_IFSET(CPU_FTR_601)
 #endif
 #endif /* !CONFIG_PPC64 */
 
+#ifdef THREAD_FPSTATE
+#define FIXUP_REG_FPSTATE(__reg) addi	__reg,__reg,THREAD_FPSTATE
+#else
+#define FIXUP_REG_FPSTATE(__reg)
+#ifndef THREAD_FPSCR
 /*
  * The following accessor has to work with ancient kernel versions,
  * for which THREAD_FPSCR is not usable for 64bit save/restore.
  */
-#define __FPSCR(base)	THREAD_FPR0+32*8(base)
+#define FPSTATE_FPSCR(base)	THREAD_FPR0+32*8(base)
+#else
+#define	FPSTATE_FPSCR(base)	THREAD_FPSCR(base)
+#endif
+#endif
 
 /* r3 = &thread_struct (tcb->fpup) */
 _GLOBAL(__asm_save_fpu)
@@ -63,9 +72,10 @@ _GLOBAL(__asm_save_fpu)
 	SYNC
 	MTMSRD(r5)
 	isync
+	FIXUP_REG_FPSTATE(r3)
 	SAVE_32FPRS(0,r3)
 	mffs	fr0
-	stfd	fr0,__FPSCR(r3)
+	stfd	fr0,FPSTATE_FPSCR(r3)
 	blr
 
 /* r3 = &thread_struct */
@@ -84,7 +94,8 @@ _GLOBAL(__asm_restore_fpu)
 	SYNC
 	MTMSRD(r5)
 	isync
-	lfd	fr0,__FPSCR(r3)
+	FIXUP_REG_FPSTATE(r3)
+	lfd	fr0,FPSTATE_FPSCR(r3)
 	MTFSF_L(fr0)
 	REST_32FPRS(0,r3)
 	blr
