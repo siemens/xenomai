@@ -10,7 +10,7 @@ typedef struct xnseqcount {
 } xnseqcount_t;
 
 #define XNSEQCNT_ZERO { 0 }
-#define xnseqcount_init(x) do { *(x) = (xnseqcount_t) SEQCNT_ZERO; } while (0)
+#define xnseqcount_init(x) do { *(x) = (xnseqcount_t) XNSEQCNT_ZERO; } while (0)
 
 /* Start of read using pointer to a sequence counter only.  */
 static inline unsigned xnread_seqcount_begin(const xnseqcount_t *s)
