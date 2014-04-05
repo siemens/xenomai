@@ -621,7 +621,7 @@ static int __rt_task_set_mode(struct pt_regs *regs)
 
 static int __rt_task_self(struct pt_regs *regs)
 {
-	RT_TASK_PLACEHOLDER ph;
+	RT_TASK_PLACEHOLDER ph = { .opaque2 = 0 };
 	RT_TASK *task;
 
 	task = __rt_task_current(current);
