@@ -86,7 +86,9 @@ static inline void xnarch_switch_to(xnarchtcb_t *out_tcb, xnarchtcb_t *in_tcb)
 			clts();
 		in_tcb->active_task = next;
 		rthal_clear_foreign_stack(&rthal_domain);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,20)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,6,13)
+		next->thread.fpu_counter = 0;
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,20)
 		next->fpu_counter = 0;
 #endif
 	} else {
