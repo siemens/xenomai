@@ -414,7 +414,7 @@ static ssize_t __iddp_sendmsg(struct rtipc_private *priv,
 		return -ECONNREFUSED;
 	}
 
-	mbuf = __iddp_alloc_mbuf(rsk, len, flags, sk->tx_timeout, &ret);
+	mbuf = __iddp_alloc_mbuf(rsk, len, sk->tx_timeout, flags, &ret);
 	if (unlikely(ret)) {
 		rtdm_context_unlock(rcontext);
 		return ret;
