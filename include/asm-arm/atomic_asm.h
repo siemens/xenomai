@@ -255,14 +255,22 @@ xnarch_atomic_set_mask(unsigned long *addr, unsigned long mask)
     local_irq_restore_hw(flags);
 }
 
+static inline void
+xnarch_atomic_clear_mask(unsigned long *addr, unsigned long mask)
+{
+    unsigned long flags;
+
+    local_irq_save_hw(flags);
+    *addr &= ~mask;
+    local_irq_restore_hw(flags);
+}
+
 #define xnarch_memory_barrier() smp_mb()
 #define xnarch_atomic_xchg(ptr,x) xchg(ptr,x)
 #define xnarch_atomic_inc(pcounter) \
 	atomic_inc((atomic_t *)pcounter)
 #define xnarch_atomic_dec(pcounter) \
 	atomic_dec((atomic_t *)pcounter)
-#define xnarch_atomic_clear_mask(addr, mask) \
-	atomic_clear_mask((mask), (addr))
 #define xnarch_atomic_cmpxchg(pcounter, oldval, newval) \
 	atomic_cmpxchg((atomic_t *)(pcounter), (oldval), (newval))
 #define xnarch_atomic_inc_and_test(pcounter) \
