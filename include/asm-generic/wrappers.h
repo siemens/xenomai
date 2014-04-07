@@ -670,7 +670,7 @@ static inline void wrap_proc_dir_entry_owner(struct proc_dir_entry *entry)
 #define DEFINE_BINARY_SEMAPHORE(sem) DEFINE_SEMAPHORE(sem)
 #endif
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,6,12)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,12,0)
 #define CONFIG_GENERIC_HARDIRQS 1
 #endif
 
