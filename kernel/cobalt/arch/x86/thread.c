@@ -101,7 +101,11 @@ void xnarch_switch_to(struct xnthread *out, struct xnthread *in)
 		clts();
 
 	next = in_tcb->core.host_task;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,13,0)
+	next->thread.fpu_counter = 0;
+#else
 	next->fpu_counter = 0;
+#endif
 
 	prev_mm = out_tcb->core.active_mm;
 	next_mm = in_tcb->core.mm;
