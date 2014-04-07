@@ -45,5 +45,11 @@
 #ifndef pgprot_noncached
 #define pgprot_noncached(p) (p)
 #endif /* !pgprot_noncached */
- 
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,14,0)
+#define get_current_uuid() current_uid()
+#else
+#define get_current_uuid() from_kuid_munged(current_user_ns(), current_uid())
+#endif
+
 #endif /* _COBALT_ASM_GENERIC_WRAPPERS_H */

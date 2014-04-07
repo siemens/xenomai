@@ -963,7 +963,7 @@ static inline int mq_notify(mqd_t fd, const struct sigevent *evp)
 		 * into the init namespace instead.
 		 */
 		mq->si.si_pid = current->pid;
-		mq->si.si_uid = current_uid();
+		mq->si.si_uid = get_current_uuid();
 	}
 
 	xnlock_put_irqrestore(&nklock, s);

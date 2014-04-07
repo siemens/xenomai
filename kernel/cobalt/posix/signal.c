@@ -458,7 +458,7 @@ int __cobalt_kill(struct cobalt_thread *thread, int sig, int group) /* nklocked,
 			sigp->si.si_errno = 0;
 			sigp->si.si_code = SI_USER;
 			sigp->si.si_pid = current->pid;
-			sigp->si.si_uid = current_uid();
+			sigp->si.si_uid = get_current_uuid();
 			cobalt_signal_send(thread, sigp, group);
 		}
 	resched:
