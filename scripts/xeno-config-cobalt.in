@@ -52,9 +52,10 @@ Options :
         --ccld
         --arch
         --prefix
-        --[skin=]posix/cobalt|vxworks|psos|alchemy
+        --[skin=]posix/cobalt|vxworks|psos|alchemy|rtdm
         --auto-init|no-auto-init
         --cflags
+        --kcflags
         --ldflags
         --lib*-dir,--libdir,--user-libdir
         --core
@@ -120,29 +121,47 @@ while test $# -gt 0; do
 		skin_list="$skin_list `expr "$1" : '--skin=\(.*\)'`"
 	    fi
 	    ;;
-	--posix|--cobalt|--vxworks|--psos|--alchemy)
+	--posix|--cobalt|--vxworks|--psos|--alchemy|--rtdm)
 	    skin_list="$skin_list `expr "$1" : '--\(.*\)'`"
 	    ;;
 	--cflags)
 	    if test -z "$skin_list"; then
-		echo "no skin specified, missing --skin before --cflags" 1>&2
+		echo "no RTOS skin specified, missing --skin before --cflags" 1>&2
 		exit 1
 	    fi
 	    cflags="$XENO_BASE_CFLAGS"
 	    for skin in $skin_list; do
 		case "$skin" in
-		    posix|cobalt)
+		    posix|cobalt|rtdm)
 			;;
 		    vxworks|psos|alchemy)
 			cflags="$cflags -I$XENO_INCLUDE_DIR/$skin"
 			;;
 		    *)
-			echo "unknown skin: $skin" 1>&2
+			echo "unknown RTOS skin: $skin" 1>&2
 			exit 1
 			;;
 		esac
 	    done
 	    echo $cflags
+	    ;;
+	--kcflags)
+	    if test -z "$skin_list"; then
+		echo "no kernel API specified, missing --skin before --kcflags" 1>&2
+		exit 1
+	    fi
+	    for skin in $skin_list; do
+		case "$skin" in
+		    rtdm)
+			kcflags='-Iarch/$(SRCARCH)/xenomai/include -Iinclude/xenomai'
+		    	;;
+		    *)
+			echo "unknown kernel API: $skin" 1>&2
+			exit 1
+			;;
+		esac
+	    done
+	    echo $kcflags
 	    ;;
 	--ldflags)
 	    if test -z "$skin_list"; then
