@@ -19,35 +19,9 @@
 #ifndef _COBALT_ARM_ASM_WRAPPERS_H
 #define _COBALT_ARM_ASM_WRAPPERS_H
 
-#ifndef __KERNEL__
-#error "Pure kernel header included from user-space!"
-#endif
-
-#include <linux/version.h>
 #include <asm-generic/xenomai/wrappers.h> /* Read the generic portion. */
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3,8,0)
-#define wrap_strncpy_from_user(dstP, srcP, n)	__strncpy_from_user(dstP, srcP, n)
-#else
-#define wrap_strncpy_from_user(dstP, srcP, n)	strncpy_from_user(dstP, srcP, n)
-#endif
 
 #define __put_user_inatomic __put_user
 #define __get_user_inatomic __get_user
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 1, 0) && !defined(CONFIG_VFP_3_2_BACKPORT)
-#define vfp_current_hw_state last_VFP_context
-#endif /* Linux < 3.1 */
-
-#if defined(CONFIG_SMP) && !defined(CONFIG_XENO_HW_UNLOCKED_SWITCH) && \
-	LINUX_VERSION_CODE < KERNEL_VERSION(3,8,0)
-#error "ARM/smp requires CONFIG_XENO_HW_UNLOCKED_SWITCH for kernel < 3.8.0"
-#endif
-
-static inline void fp_init(union fp_state *state)
-{
-	/* FIXME: This is insufficient. */
-	memset(state, 0, sizeof(*state));
-}
 
 #endif /* _COBALT_ARM_ASM_WRAPPERS_H */

@@ -41,11 +41,7 @@ static inline void __iomem *mpc5xxx_gpio_find_and_map(void)
 #define MPC5xxx_GPIO	mpc5xxx_gpio_find_and_map()
 #define mpc5xxx_gpio	mpc52xx_gpio
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35)
 #define mpc5xxx_get_of_node(ofdev) (ofdev)->dev.of_node
-#else
-#define mpc5xxx_get_of_node(ofdev) (ofdev)->node
-#endif
 
 #define MSCAN_CAN1_ADDR	(MSCAN_MBAR + 0x0900) /* MSCAN Module 1 */
 #define MSCAN_CAN2_ADDR	(MSCAN_MBAR + 0x0980) /* MSCAN Module 2 */

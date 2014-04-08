@@ -35,6 +35,11 @@
 #include "rtcan_mscan_regs.h"
 #include "rtcan_mscan.h"
 
+#define of_device platform_device
+#define of_platform_driver platform_driver
+#define of_register_platform_driver platform_driver_register
+#define of_unregister_platform_driver platform_driver_unregister
+
 static char mscan_ctrl_name_mpc5200[] = "MSCAN-MPC5200";
 static char mscan_ctrl_name_mpc512x[] = "MSCAN-MPC512x";
 static char mscan_board_name[] = "unkown";

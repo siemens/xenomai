@@ -1268,13 +1268,7 @@ static const struct rtdm_device device_tmpl = {
 	.provider_name		= "Wolfgang Grandegger",
 };
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,0,0)
-
 static int rt_mpc52xx_uart_of_probe(struct platform_device *op)
-#else
-static int rt_mpc52xx_uart_of_probe(struct platform_device *op,
-				    const struct of_device_id *match)
-#endif
 {
 	struct rt_mpc52xx_uart_port *port;
 	struct rtdm_device *dev;

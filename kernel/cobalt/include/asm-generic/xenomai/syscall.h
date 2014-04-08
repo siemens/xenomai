@@ -98,7 +98,7 @@ struct xnsyscall {
 #define __xn_copy_to_user(dstP, srcP, n)	__copy_to_user_inatomic(dstP, srcP, n)
 #define __xn_put_user(src, dstP)		__put_user_inatomic(src, dstP)
 #define __xn_get_user(dst, srcP)		__get_user_inatomic(dst, srcP)
-#define __xn_strncpy_from_user(dstP, srcP, n)	wrap_strncpy_from_user(dstP, srcP, n)
+#define __xn_strncpy_from_user(dstP, srcP, n)	strncpy_from_user(dstP, srcP, n)
 
 static inline int __xn_safe_copy_from_user(void *dst, const void __user *src,
 					   size_t size)

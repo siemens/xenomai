@@ -18,22 +18,10 @@
  */
 #ifndef _COBALT_X86_ASM_WRAPPERS_H
 #define _COBALT_X86_ASM_WRAPPERS_H
-#define _COBALT_X86_ASM_WRAPPERS_H
 
-#ifndef __KERNEL__
-#error "Pure kernel header included from user-space!"
-#endif
-
-#include <linux/version.h>
 #include <asm-generic/xenomai/wrappers.h> /* Read the generic portion. */
 
 #define __get_user_inatomic __get_user
 #define __put_user_inatomic __put_user
-
-#define wrap_strncpy_from_user(dstP, srcP, n)		\
-	strncpy_from_user_nocheck(dstP, srcP, n)
-
-typedef union thread_xstate x86_fpustate;
-#define x86_fpustate_ptr(t) ((t)->fpu.state)
 
 #endif /* _COBALT_X86_ASM_WRAPPERS_H */

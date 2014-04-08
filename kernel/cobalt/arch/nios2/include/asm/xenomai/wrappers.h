@@ -19,13 +19,7 @@
 #ifndef _COBALT_NIOS2_ASM_WRAPPERS_H
 #define _COBALT_NIOS2_ASM_WRAPPERS_H
 
-#ifndef __KERNEL__
-#error "Pure kernel header included from user-space!"
-#endif
-
 #include <asm-generic/xenomai/wrappers.h> /* Read the generic portion. */
-
-#define wrap_strncpy_from_user(dstP, srcP, n)	strncpy_from_user(dstP, srcP, n)
 
 #define PAGE_SHARED  __pgprot(0)
 

@@ -32,9 +32,7 @@
 #include <linux/version.h>
 #include <linux/of.h>
 #include <linux/platform_device.h>
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
 #include <linux/pinctrl/consumer.h>
-#endif
 
 #include <rtdm/driver.h>
 
@@ -216,7 +214,6 @@ static struct can_bittiming_const flexcan_bittiming_const = {
 };
 
 /* Compatibility functions to support old kernel versions */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,3,0)
 static inline void flexcan_clk_enable(struct flexcan_priv *priv)
 {
 	clk_prepare_enable(priv->clk);
@@ -225,16 +222,6 @@ static inline void flexcan_clk_disable(struct flexcan_priv *priv)
 {
 	clk_disable_unprepare(priv->clk);
 }
-#else
-static inline void flexcan_clk_enable(struct flexcan_priv *priv)
-{
-	clk_enable(priv->clk);
-}
-static inline void flexcan_clk_disable(struct flexcan_priv *priv)
-{
-	clk_disable(priv->clk);
-}
-#endif
 
 /*
  * Abstract off the read/write for arm versus ppc.
@@ -967,9 +954,7 @@ static int flexcan_probe(struct platform_device *pdev)
 	struct flexcan_priv *priv;
 	struct resource *mem;
 	struct clk *clk = NULL;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
 	struct pinctrl *pinctrl;
-#endif
 	void __iomem *base;
 	resource_size_t mem_size;
 	int err, irq;
@@ -978,18 +963,13 @@ static int flexcan_probe(struct platform_device *pdev)
 	if (!realtime_core_enabled())
 		return -ENODEV;
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
 	pinctrl = devm_pinctrl_get_select_default(&pdev->dev);
 	if (IS_ERR(pinctrl))
 		return PTR_ERR(pinctrl);
-#endif
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,1,0)
 	if (pdev->dev.of_node)
 		of_property_read_u32(pdev->dev.of_node,
 						"clock-frequency", &clock_freq);
-#endif
-
 	if (!clock_freq) {
 		clk = clk_get(&pdev->dev, NULL);
 		if (IS_ERR(clk)) {
@@ -1113,27 +1093,7 @@ static struct platform_driver flexcan_driver = {
 	.remove = flexcan_remove,
 };
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3,1,0)
-static int __init flexcan_init(void)
-{
-	if (!realtime_core_enabled())
-		return 0;
-	pr_info("%s netdevice driver\n", DRV_NAME);
-	return platform_driver_register(&flexcan_driver);
-}
-
-static void __exit flexcan_exit(void)
-{
-	if (realtime_core_enabled()) {
-		platform_driver_unregister(&flexcan_driver);
-		pr_info("%s: driver removed\n", DRV_NAME);
-	}
-}
-module_init(flexcan_init);
-module_exit(flexcan_exit);
-#else
 module_platform_driver(flexcan_driver);
-#endif
 
 MODULE_AUTHOR("Wolfgang Grandegger <wg@denx.de>, "
 	      "Sascha Hauer <kernel@pengutronix.de>, "

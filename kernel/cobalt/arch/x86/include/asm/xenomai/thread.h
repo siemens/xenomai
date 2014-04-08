@@ -27,6 +27,9 @@
 #include <asm-generic/xenomai/thread.h>
 #include <asm/xenomai/wrappers.h>
 
+typedef union thread_xstate x86_fpustate;
+#define x86_fpustate_ptr(t) ((t)->fpu.state)
+
 struct xnarchtcb {
 	x86_fpustate i387 __attribute__ ((aligned (16)));
 	struct xntcb core;

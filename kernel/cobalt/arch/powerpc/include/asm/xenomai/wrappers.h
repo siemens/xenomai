@@ -19,53 +19,6 @@
 #ifndef _COBALT_POWERPC_ASM_WRAPPERS_H
 #define _COBALT_POWERPC_ASM_WRAPPERS_H
 
-#ifndef __KERNEL__
-#error "Pure kernel header included from user-space!"
-#endif
-
-#include <linux/version.h>
-#include <asm/uaccess.h>
-
-#ifdef CONFIG_PPC64
-#define wrap_range_ok(task,addr,size) \
-    __access_ok(((__force unsigned long)(addr)),(size),(task->thread.fs))
-#else /* !CONFIG_PPC64 */
-#define wrap_range_ok(task,addr,size) \
-    ((unsigned long)(addr) <= (task)->thread.fs.seg			\
-     && ((size) == 0 || (size) - 1 <= (task)->thread.fs.seg - (unsigned long)(addr)))
-#endif /* !CONFIG_PPC64 */
-
 #include <asm-generic/xenomai/wrappers.h>	/* Read the generic portion. */
-
-/* from linux/include/asm-powerpc/uaccess.h */
-#define wrap_get_user(x, ptr)					\
-({								\
-	int __gu_size = sizeof(*(ptr));				\
-	long __gu_err;						\
-	unsigned long __gu_val;					\
-	const __typeof__(*(ptr)) __user *__gu_addr = (ptr);	\
-	__chk_user_ptr(ptr);					\
-	__get_user_size(__gu_val, __gu_addr, gu_size, __gu_err);\
-	(x) = (__typeof__(*(ptr)))__gu_val;			\
-	__gu_err;						\
-})
-
-#define wrap_put_user(x, ptr)					\
-({								\
-	int __pu_size = sizeof(*(ptr));				\
-	long __pu_err;						\
-	__typeof__(*(ptr)) __user *__pu_addr = (ptr);		\
-	__chk_user_ptr(ptr);					\
-	__put_user_size((__typeof__(*(ptr)))(x),		\
-			__pu_addr, __pu_size, __pu_err);	\
-	__pu_err;						\
-})
-
-#define of_device platform_device
-#define of_platform_driver platform_driver
-#define of_register_platform_driver platform_driver_register
-#define of_unregister_platform_driver platform_driver_unregister
-
-#define wrap_strncpy_from_user(dstP, srcP, n)	strncpy_from_user(dstP, srcP, n)
 
 #endif /* _COBALT_POWERPC_ASM_WRAPPERS_H */

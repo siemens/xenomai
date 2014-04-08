@@ -26,10 +26,8 @@
 #error "Pure kernel header included from user-space!"
 #endif
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,8,0)
 extern unsigned omap_rev(void);
 #define cpu_is_omap44xx() ((omap_rev() & 0xff) == 0x44)
-#endif
 
 static inline unsigned long xnarch_get_sched_latency (void)
 {
