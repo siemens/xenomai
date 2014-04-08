@@ -88,12 +88,14 @@ static void notifier_sighandler(int sig, siginfo_t *siginfo, void *uc)
 		if (nf->owner && nf->owner != tid)
 			continue;
 
-		do {
+		for (;;) {
 			ret = __STD(read(nf->psfd[0], &c, 1)); 
 			if (ret > 0)
 				/* Callee must run async-safe code only. */
 				nf->callback(nf);
-		} while (ret > 0 || (ret == -1 && errno == EINTR));
+			else if (ret == 0 || errno != EINTR)
+				break;
+		}
 
 		return;
 	}
