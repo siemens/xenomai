@@ -19,10 +19,6 @@
 #ifndef _COBALT_X86_ASM_MACHINE_H
 #define _COBALT_X86_ASM_MACHINE_H
 
-#ifndef __KERNEL__
-#error "Pure kernel header included from user-space!"
-#endif
-
 #include <linux/compiler.h>
 
 static inline __attribute_const__ unsigned long ffnz(unsigned long ul)

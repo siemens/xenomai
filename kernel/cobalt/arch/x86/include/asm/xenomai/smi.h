@@ -21,10 +21,6 @@
 #ifndef _COBALT_X86_ASM_SMI_H
 #define _COBALT_X86_ASM_SMI_H
 
-#ifndef __KERNEL__
-#error "Pure kernel header included from user-space!"
-#endif
-
 #ifndef _COBALT_X86_ASM_MACHINE_H
 #error "please don't include asm/smi.h directly"
 #endif

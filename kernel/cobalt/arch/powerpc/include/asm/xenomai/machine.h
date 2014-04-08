@@ -23,10 +23,6 @@
 #ifndef _COBALT_POWERPC_ASM_MACHINE_H
 #define _COBALT_POWERPC_ASM_MACHINE_H
 
-#ifndef __KERNEL__
-#error "Pure kernel header included from user-space!"
-#endif
-
 #include <linux/compiler.h>
 
 #define XNARCH_HOST_TICK_IRQ	__ipipe_hrtimer_irq

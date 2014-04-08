@@ -19,10 +19,6 @@
 #ifndef _COBALT_X86_ASM_CALIBRATION_H
 #define _COBALT_X86_ASM_CALIBRATION_H
 
-#ifndef __KERNEL__
-#error "Pure kernel header included from user-space!"
-#endif
-
 #include <asm/processor.h>
 
 static inline unsigned long xnarch_get_sched_latency (void)

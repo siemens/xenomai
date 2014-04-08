@@ -19,10 +19,6 @@
 #ifndef _COBALT_BLACKFIN_ASM_CALIBRATION_H
 #define _COBALT_BLACKFIN_ASM_CALIBRATION_H
 
-#ifndef __KERNEL__
-#error "Pure kernel header included from user-space!"
-#endif
-
 static inline unsigned long xnarch_get_sched_latency (void)
 
 {

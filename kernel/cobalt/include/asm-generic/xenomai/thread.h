@@ -19,10 +19,6 @@
 #ifndef _COBALT_ASM_GENERIC_THREAD_H
 #define _COBALT_ASM_GENERIC_THREAD_H
 
-#ifndef __KERNEL__
-#error "Pure kernel header included from user-space!"
-#endif
-
 #include <asm/ptrace.h>
 #include <asm/processor.h>
 

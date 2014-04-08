@@ -19,10 +19,6 @@
 #ifndef _COBALT_ASM_GENERIC_SYSCALL_H
 #define _COBALT_ASM_GENERIC_SYSCALL_H
 
-#ifndef __KERNEL__
-#error "Pure kernel header included from user-space!"
-#endif
-
 #include <linux/types.h>
 #include <asm/uaccess.h>
 #include <asm/xenomai/features.h>

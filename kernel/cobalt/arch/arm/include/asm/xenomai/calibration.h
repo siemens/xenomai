@@ -22,10 +22,6 @@
 #ifndef _COBALT_ARM_ASM_CALIBRATION_H
 #define _COBALT_ARM_ASM_CALIBRATION_H
 
-#ifndef __KERNEL__
-#error "Pure kernel header included from user-space!"
-#endif
-
 extern unsigned omap_rev(void);
 #define cpu_is_omap44xx() ((omap_rev() & 0xff) == 0x44)
 

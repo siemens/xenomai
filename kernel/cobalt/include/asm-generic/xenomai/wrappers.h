@@ -18,10 +18,6 @@
  */
 #ifndef _COBALT_ASM_GENERIC_WRAPPERS_H
 
-#ifndef __KERNEL__
-#error "Pure kernel header included from user-space!"
-#endif
-
 #include <linux/version.h>
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,10,0)

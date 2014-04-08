@@ -22,10 +22,6 @@
 #ifndef _COBALT_ARM_ASM_SYSCALL_H
 #define _COBALT_ARM_ASM_SYSCALL_H
 
-#ifndef __KERNEL__
-#error "Pure kernel header included from user-space!"
-#endif
-
 #include <linux/errno.h>
 #include <asm/uaccess.h>
 #include <asm/ptrace.h>

@@ -19,10 +19,6 @@
 #ifndef _COBALT_SH_ASM_THREAD_H
 #define _COBALT_SH_ASM_THREAD_H
 
-#ifndef __KERNEL__
-#error "Pure kernel header included from user-space!"
-#endif
-
 #include <asm-generic/xenomai/thread.h>
 
 struct xnarchtcb {

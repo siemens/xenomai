@@ -23,10 +23,6 @@
 #ifndef _COBALT_ARM_ASM_MACHINE_H
 #define _COBALT_ARM_ASM_MACHINE_H
 
-#ifndef __KERNEL__
-#error "Pure kernel header included from user-space!"
-#endif
-
 #include <linux/version.h>
 #include <asm/byteorder.h>
 
