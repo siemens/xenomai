@@ -60,7 +60,9 @@ static void notifier_sighandler(int sig, siginfo_t *siginfo, void *uc)
 		 * notified.
 		 */
 		rfds = notifier_rset;
-		ret = __STD(select(max_rfildes + 1, &rfds, NULL, NULL, &tv));
+		do
+			ret = __STD(select(max_rfildes + 1, &rfds, NULL, NULL, &tv));
+		while (ret == -1 && errno == EINTR);
 		if (ret <= 0)
 			goto hand_over;
 	}
@@ -86,9 +88,13 @@ static void notifier_sighandler(int sig, siginfo_t *siginfo, void *uc)
 		if (nf->owner && nf->owner != tid)
 			continue;
 
-		while (__STD(read(nf->psfd[0], &c, 1)) > 0)
-			/* Callee must run async-safe code only. */
-			nf->callback(nf);
+		do {
+			ret = __STD(read(nf->psfd[0], &c, 1)); 
+			if (ret > 0)
+				/* Callee must run async-safe code only. */
+				nf->callback(nf);
+		} while (ret > 0 || (ret == -1 && errno == EINTR));
+
 		return;
 	}
 
@@ -239,8 +245,11 @@ int notifier_signal(struct notifier *nf)
 	 * since we may be immediately preempted by the notification
 	 * signal in case we notify the current thread.
 	 */
-	if (kick)
-		ret = __STD(write(fd, &c, 1));
+	if (kick) {
+		do
+			ret = __STD(write(fd, &c, 1));
+		while (ret == -1 && errno == EINTR);
+	}
 
 	return 0;
 }
@@ -268,8 +277,11 @@ int notifier_release(struct notifier *nf)
 
 	read_unlock(&nf->lock);
 
-	if (kick)
-		ret = __STD(write(fd, &c, 1));
+	if (kick) {
+		do
+			ret = __STD(write(fd, &c, 1)); 
+		while (ret == -1 && errno == EINTR);
+	}
 
 	return 0;
 }
@@ -279,7 +291,10 @@ int notifier_wait(const struct notifier *nf) /* sighandler context */
 	int ret;
 	char c;
 
-	ret = __STD(read(nf->pwfd[0], &c, 1));
+	do
+		ret = __STD(read(nf->pwfd[0], &c, 1)); 
+	while (ret == -1 && errno == EINTR);
+
 	assert(ret == 1); (void)ret;
 
 	return 0;

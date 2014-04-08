@@ -1093,7 +1093,9 @@ int threadobj_sleep(struct timespec *ts)
 	 */
 	current->run_state = __THREAD_S_DELAYED;
 	threadobj_save_timeout(&current->core, ts);
-	ret = -__RT(clock_nanosleep(CLOCK_COPPERPLATE, TIMER_ABSTIME, ts, NULL));
+	do
+		ret = -__RT(clock_nanosleep(CLOCK_COPPERPLATE, TIMER_ABSTIME, ts, NULL));
+	while (ret == -EINTR);
 	current->run_state = __THREAD_S_RUNNING;
 
 	return ret;
@@ -1152,13 +1154,19 @@ static void cancel_sync(struct threadobj *thobj) /* thobj->lock held */
 
 	pthread_cancel(tid);
 
+	if (sem) {
+		do
+			ret = __STD(sem_wait(sem));
+		while (ret == -1 && errno == EINTR);
+	}
+
 	/*
 	 * Not being able to sync up with the cancelled thread is not
 	 * considered fatal, despite it's likely bad news for sure, so
 	 * that we can keep on cleaning up the mess, hoping for the
 	 * best.
 	 */
-	if (sem == NULL || __STD(sem_wait(sem)))
+	if (sem == NULL || ret)
 		warning("cannot sync with thread finalizer, %s",
 			symerror(sem ? -errno : ret));
 	if (sem) {
