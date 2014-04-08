@@ -209,7 +209,7 @@ static inline int list_empty(const struct list *list)
 static inline struct holder *__list_pop(void *heap, struct list *list)
 {
 	struct holder *holder = __hptr(heap, list->head.next);
-	__list_remove_init(heap, holder);
+	__list_remove(heap, holder);
 	return holder;
 }
 

@@ -127,7 +127,7 @@ static inline int pvlist_empty(const struct pvlist *list)
 static inline struct pvholder *pvlist_pop(struct pvlist *list)
 {
 	struct pvholder *holder = list->head.next;
-	pvlist_remove_init(holder);
+	pvlist_remove(holder);
 	return holder;
 }
 
