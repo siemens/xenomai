@@ -74,12 +74,11 @@ void rtcan_socket_cleanup(struct rtdm_dev_context *context)
 
     /* Wake up sleeping senders. This is re-entrant-safe. */
     do {
-	RTDM_EXECUTE_ATOMICALLY(
-	    /* Is someone there? */
-	    if (list_empty(&sock->tx_wait_head))
+	cobalt_atomic_enter(lock_ctx);
+	/* Is someone there? */
+	if (list_empty(&sock->tx_wait_head))
 		tx_list_empty = 1;
-
-	    else {
+	else {
 		tx_list_empty = 0;
 
 		/* Get next entry pointing to a waiting task */
@@ -91,8 +90,8 @@ void rtcan_socket_cleanup(struct rtdm_dev_context *context)
 
 		/* Wake task up (atomic section is left implicitly) */
 		rtdm_task_unblock(tx_waiting->rt_task);
-	    }
-	);
+	}
+	cobalt_atomic_leave(lock_ctx);
     } while (!tx_list_empty);
 
     rtdm_sem_destroy(&sock->recv_sem);

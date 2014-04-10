@@ -800,6 +800,7 @@ ssize_t rtcan_raw_sendmsg(struct rtdm_dev_context *context,
     struct rtcan_device *dev;
     int ifindex = 0;
     int ret  = 0;
+    spl_t s;
 
 
     if (flags & MSG_OOB)   /* Mirror BSD error message compatibility */
@@ -912,8 +913,9 @@ ssize_t rtcan_raw_sendmsg(struct rtdm_dev_context *context,
     /* If socket was not closed recently, register the task at the
      * socket's TX wait queue and decrement the TX semaphore. This must be
      * atomic. Finally, the task must be deregistered again (also atomic). */
-    RTDM_EXECUTE_ATOMICALLY(
-	if (likely(!test_bit(RTDM_CLOSING, &context->context_flags))) {
+    cobalt_atomic_enter(s);
+
+    if (likely(!test_bit(RTDM_CLOSING, &context->context_flags))) {
 
 	    list_add(&tx_wait.tx_wait_list, &sock->tx_wait_head);
 
@@ -929,10 +931,11 @@ ssize_t rtcan_raw_sendmsg(struct rtdm_dev_context *context,
 		/* The socket was closed. */
 		ret = -EBADF;
 
-	} else
+    } else
 	/* The socket was closed. */
-	ret = -EBADF;
-	);
+	    ret = -EBADF;
+
+    cobalt_atomic_leave(s);
 
     /* Error code returned? */
     if (ret != 0) {
