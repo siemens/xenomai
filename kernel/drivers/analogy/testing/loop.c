@@ -78,7 +78,7 @@ static void loop_task_proc(void *arg)
 
 		int running;
 
-		RTDM_EXECUTE_ATOMICALLY(running = priv->loop_running);
+		running = priv->loop_running;
 
 		if (running) {
 			uint16_t value;
@@ -128,7 +128,7 @@ int loop_trigger(a4l_subd_t *subd, lsampl_t trignum)
 
 	a4l_info(subd->dev, "loop_trigger: (subd=%d)\n", subd->idx);
 
-	RTDM_EXECUTE_ATOMICALLY(priv->loop_running = 1);
+	priv->loop_running = 1;
 
 	return 0;
 }
@@ -140,7 +140,7 @@ int loop_cancel(a4l_subd_t *subd)
 
 	a4l_info(subd->dev, "loop_cancel: (subd=%d)\n", subd->idx);
 
-	RTDM_EXECUTE_ATOMICALLY(priv->loop_running = 0);
+	priv->loop_running = 0;
 
 	return 0;
 }

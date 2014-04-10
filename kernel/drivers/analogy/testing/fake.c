@@ -241,15 +241,15 @@ static void task_proc(void *arg)
 
 		int running;
 
-		RTDM_EXECUTE_ATOMICALLY(running = priv->ai_running);
+		running = priv->ai_running;
 		if (running && ai_push_values(ai_subd) < 0)
 			break;
 
-		RTDM_EXECUTE_ATOMICALLY(running = priv->ao_running);
+		running = priv->ao_running;
 		if (running && ao_pull_values(ao_subd) < 0)
 			break;
 
-		RTDM_EXECUTE_ATOMICALLY(running = priv->ai2_running);
+		running = priv->ai2_running;
 		if (running && ai2_push_values(ai2_subd) < 0)
 			break;
 
@@ -277,7 +277,7 @@ static int ai_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 	ai_priv->current_ns = ((unsigned long)ai_priv->last_ns);
 	ai_priv->reminder_ns = 0;
 
-	RTDM_EXECUTE_ATOMICALLY(priv->ai_running = 1);
+	priv->ai_running = 1;
 
 	return 0;
 
@@ -302,7 +302,7 @@ static int ai_cancel(a4l_subd_t *subd)
 {
 	struct fake_priv *priv = (struct fake_priv *)subd->dev->priv;
 
-	RTDM_EXECUTE_ATOMICALLY(priv->ai_running = 0);
+	priv->ai_running = 0;
 
 	return 0;
 }
@@ -328,7 +328,7 @@ int ao_trigger(a4l_subd_t *subd, lsampl_t trignum)
 	struct fake_priv *priv = (struct fake_priv *)subd->dev->priv;
 
 	a4l_info(subd->dev, "ao_trigger: (subd=%d)\n", subd->idx);
-	RTDM_EXECUTE_ATOMICALLY(priv->ao_running = 1);
+	priv->ao_running = 1;
 	return 0;
 }
 
@@ -339,17 +339,17 @@ int ao_cancel(a4l_subd_t *subd)
 	int running;
 
 	a4l_info(subd->dev, "ao_cancel: (subd=%d)\n", subd->idx);
-	RTDM_EXECUTE_ATOMICALLY(priv->ao_running = 0);
+	priv->ao_running = 0;
 
-	RTDM_EXECUTE_ATOMICALLY(running = priv->ai2_running);
+	running = priv->ai2_running;
 	if (running) {
 		a4l_subd_t *ai2_subd =
 			(a4l_subd_t *)a4l_get_subd(subd->dev, AI2_SUBD);
 		/* Here, we have not saved the required amount of
 		   data; so, we cannot know whether or not, it is the
 		   end of the acquisition; that is why we force it */
-		RTDM_EXECUTE_ATOMICALLY(priv->ai2_running = 0);
-		RTDM_EXECUTE_ATOMICALLY(ao_priv->count = 0);
+		priv->ai2_running = 0;
+		ao_priv->count = 0;
 		a4l_buf_evt(ai2_subd, A4L_BUF_EOA);
 	}
 
@@ -363,7 +363,7 @@ int ai2_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 	struct fake_priv *priv = (struct fake_priv *)subd->dev->priv;
 
 	a4l_info(subd->dev, "ai2_cmd: (subd=%d)\n", subd->idx);
-	RTDM_EXECUTE_ATOMICALLY(priv->ai2_running = 1);
+	priv->ai2_running = 1;
 	return 0;
 }
 
@@ -375,17 +375,17 @@ int ai2_cancel(a4l_subd_t *subd)
 	int running;
 
 	a4l_info(subd->dev, "ai2_cancel: (subd=%d)\n", subd->idx);
-	RTDM_EXECUTE_ATOMICALLY(priv->ai2_running = 0);
+	priv->ai2_running = 0;
 
-	RTDM_EXECUTE_ATOMICALLY(running = priv->ao_running);
+	running = priv->ao_running;
 	if (running) {
 		a4l_subd_t *ao_subd =
 			(a4l_subd_t *)a4l_get_subd(subd->dev, AO_SUBD);
 		/* Here, we have not saved the required amount of
 		   data; so, we cannot know whether or not, it is the
 		   end of the acquisition; that is why we force it */
-		RTDM_EXECUTE_ATOMICALLY(priv->ao_running = 0);
-		RTDM_EXECUTE_ATOMICALLY(ai2_priv->count = 0);
+		priv->ao_running = 0;
+		ai2_priv->count = 0;
 		a4l_buf_evt(ao_subd, A4L_BUF_EOA);
 	}
 
