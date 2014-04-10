@@ -141,22 +141,19 @@ static void eval_outer_loop(struct rt_tmbench_context *ctx)
 static void timer_task_proc(void *arg)
 {
 	struct rt_tmbench_context *ctx = arg;
-	int count;
+	int count, err;
+	spl_t s;
 
 	/* first event: one millisecond from now. */
 	ctx->date = rtdm_clock_read_monotonic() + 1000000;
 
 	while (1) {
-		int err;
-
 		for (count = 0; count < ctx->samples_per_sec; count++) {
-			RTDM_EXECUTE_ATOMICALLY(
-				ctx->start_time = rtdm_clock_read_monotonic();
-				err =
-				    rtdm_task_sleep_abs(ctx->date,
-							RTDM_TIMERMODE_ABSOLUTE);
-			);
-
+			cobalt_atomic_enter(s);
+			ctx->start_time = rtdm_clock_read_monotonic();
+			err = rtdm_task_sleep_abs(ctx->date,
+						  RTDM_TIMERMODE_ABSOLUTE);
+			cobalt_atomic_leave(s);
 			if (err)
 				return;
 
@@ -237,6 +234,7 @@ static int rt_tmbench_start(struct rtdm_dev_context *context,
 			    struct rttst_tmbench_config __user *user_config)
 {
 	int err = 0;
+	spl_t s;
 
 	struct rttst_tmbench_config config_buf;
 	struct rttst_tmbench_config *config =
@@ -311,16 +309,15 @@ static int rt_tmbench_start(struct rtdm_dev_context *context,
 		if (!test_bit(RTDM_CLOSING, &context->context_flags)) {
 			ctx->mode = RTTST_TMBENCH_HANDLER;
 
-			RTDM_EXECUTE_ATOMICALLY(
-				ctx->start_time = rtdm_clock_read_monotonic();
+			cobalt_atomic_enter(s);
+			ctx->start_time = rtdm_clock_read_monotonic();
 
-				/* first event: one millisecond from now. */
-				ctx->date = ctx->start_time + 1000000;
+			/* first event: one millisecond from now. */
+			ctx->date = ctx->start_time + 1000000;
 
-				err =
-				    rtdm_timer_start(&ctx->timer, ctx->date, 0,
-						     RTDM_TIMERMODE_ABSOLUTE);
-			);
+			err = rtdm_timer_start(&ctx->timer, ctx->date, 0,
+					       RTDM_TIMERMODE_ABSOLUTE);
+			cobalt_atomic_leave(s);
 		}
 	}
 
