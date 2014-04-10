@@ -44,24 +44,19 @@ struct iddp_socket {
 	int magic;
 	struct sockaddr_ipc name;
 	struct sockaddr_ipc peer;
-
 	struct xnheap *bufpool;
 	struct xnheap privpool;
-	rtdm_event_t *poolevt;
-	rtdm_event_t privevt;
-	int *poolwait;
-	int privwait;
+	rtdm_waitqueue_t *poolwaitq;
+	rtdm_waitqueue_t privwaitq;
 	size_t poolsz;
 	rtdm_sem_t insem;
 	struct list_head inq;
 	u_long status;
 	xnhandle_t handle;
 	char label[XNOBJECT_NAME_LEN];
-
 	nanosecs_rel_t rx_timeout;
 	nanosecs_rel_t tx_timeout;
 	unsigned long stalls;	/* Buffer stall counter. */
-
 	struct rtipc_private *priv;
 };
 
@@ -72,9 +67,7 @@ static struct sockaddr_ipc nullsa = {
 
 static struct xnmap *portmap;
 
-static rtdm_event_t poolevt;
-
-static int poolwait;
+static rtdm_waitqueue_t poolwaitq;
 
 #define _IDDP_BINDING  0
 #define _IDDP_BOUND    1
@@ -123,6 +116,7 @@ __iddp_alloc_mbuf(struct iddp_socket *sk, size_t len,
 	struct iddp_message *mbuf = NULL;
 	rtdm_toseq_t timeout_seq;
 	int ret = 0;
+	spl_t s;
 
 	rtdm_toseq_init(&timeout_seq, timeout);
 
@@ -143,20 +137,12 @@ __iddp_alloc_mbuf(struct iddp_socket *sk, size_t len,
 		 * memory pressure on the pool, but in this case, the
 		 * pool size should be adjusted.
 		 */
-		RTDM_EXECUTE_ATOMICALLY(
-			/*
-			 * membars are implicitly issued when required
-			 * by this construct.
-			 */
-			++sk->stalls;
-			(*sk->poolwait)++;
-			ret = rtdm_event_timedwait(sk->poolevt,
-						   timeout,
-						   &timeout_seq);
-			(*sk->poolwait)--;
-			if (unlikely(ret == -EIDRM))
-				ret = -ECONNRESET;
-		);
+		rtdm_waitqueue_lock(sk->poolwaitq, s);
+		++sk->stalls;
+		ret = rtdm_timedwait_locked(sk->poolwaitq, timeout, &timeout_seq);
+		rtdm_waitqueue_unlock(sk->poolwaitq, s);
+		if (unlikely(ret == -EIDRM))
+			ret = -ECONNRESET;
 		if (ret)
 			break;
 	}
@@ -170,11 +156,7 @@ static void __iddp_free_mbuf(struct iddp_socket *sk,
 			     struct iddp_message *mbuf)
 {
 	xnheap_free(sk->bufpool, mbuf);
-	RTDM_EXECUTE_ATOMICALLY(
-		/* Wake up sleepers if any. */
-		if (*sk->poolwait > 0)
-			rtdm_event_pulse(sk->poolevt);
-	);
+	rtdm_waitqueue_broadcast(sk->poolwaitq);
 }
 
 static void __iddp_flush_pool(struct xnheap *heap,
@@ -192,8 +174,7 @@ static int iddp_socket(struct rtipc_private *priv,
 	sk->name = nullsa;	/* Unbound */
 	sk->peer = nullsa;
 	sk->bufpool = &kheap;
-	sk->poolevt = &poolevt;
-	sk->poolwait = &poolwait;
+	sk->poolwaitq = &poolwaitq;
 	sk->poolsz = 0;
 	sk->status = 0;
 	sk->handle = 0;
@@ -203,7 +184,7 @@ static int iddp_socket(struct rtipc_private *priv,
 	*sk->label = 0;
 	INIT_LIST_HEAD(&sk->inq);
 	rtdm_sem_init(&sk->insem, 0);
-	rtdm_event_init(&sk->privevt, 0);
+	rtdm_waitqueue_init(&sk->privwaitq);
 	sk->priv = priv;
 
 	return 0;
@@ -219,7 +200,7 @@ static int iddp_close(struct rtipc_private *priv,
 		xnmap_remove(portmap, sk->name.sipc_port);
 
 	rtdm_sem_destroy(&sk->insem);
-	rtdm_event_destroy(&sk->privevt);
+	rtdm_waitqueue_destroy(&sk->privwaitq);
 
 	if (sk->handle)
 		xnregistry_remove(sk->handle);
@@ -248,10 +229,12 @@ static ssize_t __iddp_recvmsg(struct rtipc_private *priv,
 {
 	struct iddp_socket *sk = priv->state;
 	ssize_t maxlen, len, wrlen, vlen;
+	rtdm_toseq_t timeout_seq, *toseq;
 	int nvec, rdoff, ret, dofree;
 	struct iddp_message *mbuf;
 	nanosecs_rel_t timeout;
 	struct xnbufd bufd;
+	spl_t s;
 
 	if (!test_bit(_IDDP_BOUND, &sk->status))
 		return -EAGAIN;
@@ -260,35 +243,51 @@ static ssize_t __iddp_recvmsg(struct rtipc_private *priv,
 	if (maxlen == 0)
 		return 0;
 
-	/* We want to pick one buffer from the queue. */
-	timeout = (flags & MSG_DONTWAIT) ? RTDM_TIMEOUT_NONE : sk->rx_timeout;
-	ret = rtdm_sem_timeddown(&sk->insem, timeout, NULL);
-	if (unlikely(ret)) {
-		if (ret == -EIDRM)
-			return -ECONNRESET;
-		return ret;
+	if (flags & MSG_DONTWAIT) {
+		timeout = RTDM_TIMEOUT_NONE;
+		toseq = NULL;
+	} else {
+		timeout = sk->rx_timeout;
+		toseq = &timeout_seq;
 	}
 
-	RTDM_EXECUTE_ATOMICALLY(
-		/* Pull heading message from input queue. */
-		mbuf = list_entry(sk->inq.next, struct iddp_message, next);
-		rdoff = mbuf->rdoff;
-		len = mbuf->len - rdoff;
-		if (saddr) {
-			saddr->sipc_family = AF_RTIPC;
-			saddr->sipc_port = mbuf->from;
+	/* We want to pick one buffer from the queue. */
+	
+	for (;;) {
+		ret = rtdm_sem_timeddown(&sk->insem, timeout, toseq);
+		if (unlikely(ret)) {
+			if (ret == -EIDRM)
+				return -ECONNRESET;
+			return ret;
 		}
-		if (maxlen >= len) {
-			list_del(&mbuf->next);
-			dofree = 1;
-		} else {
-			/* Buffer is only partially read: repost. */
-			mbuf->rdoff += maxlen;
-			len = maxlen;
-			dofree = 0;
-			rtdm_sem_up(&sk->insem);
-		}
-	);
+		/* We may have spurious wakeups. */
+		cobalt_atomic_enter(s);
+		if (!list_empty(&sk->inq))
+			break;
+		cobalt_atomic_leave(s);
+	}
+
+	/* Pull heading message from input queue. */
+	mbuf = list_entry(sk->inq.next, struct iddp_message, next);
+	rdoff = mbuf->rdoff;
+	len = mbuf->len - rdoff;
+	if (saddr) {
+		saddr->sipc_family = AF_RTIPC;
+		saddr->sipc_port = mbuf->from;
+	}
+	if (maxlen >= len) {
+		list_del(&mbuf->next);
+		dofree = 1;
+	} else {
+		/* Buffer is only partially read: repost. */
+		mbuf->rdoff += maxlen;
+		len = maxlen;
+		dofree = 0;
+	}
+	cobalt_atomic_leave(s);
+
+	if (!dofree)
+		rtdm_sem_up(&sk->insem);
 
 	/* Now, write "len" bytes from mbuf->data to the vector cells */
 	for (nvec = 0, wrlen = len; nvec < iovlen && wrlen > 0; nvec++) {
@@ -384,6 +383,7 @@ static ssize_t __iddp_sendmsg(struct rtipc_private *priv,
 	int nvec, wroff, ret;
 	struct xnbufd bufd;
 	void *p;
+	spl_t s;
 
 	len = rtipc_get_iov_flatlen(iov, iovlen);
 	if (len == 0)
@@ -432,14 +432,14 @@ static ssize_t __iddp_sendmsg(struct rtipc_private *priv,
 		wroff += vlen;
 	}
 
-	RTDM_EXECUTE_ATOMICALLY(
-		mbuf->from = sk->name.sipc_port;
-		if (flags & MSG_OOB)
-			list_add(&mbuf->next, &rsk->inq);
-		else
-			list_add_tail(&mbuf->next, &rsk->inq);
-		rtdm_sem_up(&rsk->insem);
-	);
+	cobalt_atomic_enter(s);
+	mbuf->from = sk->name.sipc_port;
+	if (flags & MSG_OOB)
+		list_add(&mbuf->next, &rsk->inq);
+	else
+		list_add_tail(&mbuf->next, &rsk->inq);
+	cobalt_atomic_leave(s);
+	rtdm_sem_up(&rsk->insem);
 
 	rtdm_context_unlock(rcontext);
 
@@ -526,6 +526,7 @@ static int __iddp_bind_socket(struct rtipc_private *priv,
 	int ret = 0, port, fd;
 	void *poolmem;
 	size_t poolsz;
+	spl_t s;
 
 	if (sa->sipc_family != AF_RTIPC)
 		return -EINVAL;
@@ -534,11 +535,11 @@ static int __iddp_bind_socket(struct rtipc_private *priv,
 	    sa->sipc_port >= CONFIG_XENO_OPT_IDDP_NRPORT)
 		return -EINVAL;
 
-	RTDM_EXECUTE_ATOMICALLY(
-		if (test_bit(_IDDP_BOUND, &sk->status) ||
-		    __test_and_set_bit(_IDDP_BINDING, &sk->status))
-			ret = -EADDRINUSE;
-	);
+	cobalt_atomic_enter(s);
+	if (test_bit(_IDDP_BOUND, &sk->status) ||
+	    __test_and_set_bit(_IDDP_BINDING, &sk->status))
+		ret = -EADDRINUSE;
+	cobalt_atomic_leave(s);
 	if (ret)
 		return ret;
 
@@ -572,8 +573,7 @@ static int __iddp_bind_socket(struct rtipc_private *priv,
 		}
 		xnheap_set_label(&sk->privpool, "ippd: %d", port);
 
-		sk->poolevt = &sk->privevt;
-		sk->poolwait = &sk->privwait;
+		sk->poolwaitq = &sk->privwaitq;
 		sk->bufpool = &sk->privpool;
 	}
 
@@ -593,10 +593,10 @@ static int __iddp_bind_socket(struct rtipc_private *priv,
 		}
 	}
 
-	RTDM_EXECUTE_ATOMICALLY(
-		__clear_bit(_IDDP_BINDING, &sk->status);
-		__set_bit(_IDDP_BOUND, &sk->status);
-	);
+	cobalt_atomic_enter(s);
+	__clear_bit(_IDDP_BINDING, &sk->status);
+	__set_bit(_IDDP_BOUND, &sk->status);
+	cobalt_atomic_leave(s);
 
 	return 0;
 fail:
@@ -612,6 +612,7 @@ static int __iddp_connect_socket(struct iddp_socket *sk,
 	struct iddp_socket *rsk;
 	xnhandle_t h;
 	int ret;
+	spl_t s;
 
 	if (sa == NULL) {
 		sa = &nullsa;
@@ -647,26 +648,26 @@ static int __iddp_connect_socket(struct iddp_socket *sk,
 		if (ret)
 			return ret;
 
-		RTDM_EXECUTE_ATOMICALLY(
-			rsk = xnregistry_lookup(h, NULL);
-			if (rsk == NULL || rsk->magic != IDDP_SOCKET_MAGIC)
-				ret = -EINVAL;
-			else
-				/* Fetch labeled port number. */
-				sa->sipc_port = rsk->name.sipc_port;
-		);
+		cobalt_atomic_enter(s);
+		rsk = xnregistry_lookup(h, NULL);
+		if (rsk == NULL || rsk->magic != IDDP_SOCKET_MAGIC)
+			ret = -EINVAL;
+		else
+			/* Fetch labeled port number. */
+			sa->sipc_port = rsk->name.sipc_port;
+		cobalt_atomic_leave(s);
 		if (ret)
 			return ret;
 	}
 
 set_assoc:
-	RTDM_EXECUTE_ATOMICALLY(
-		if (!test_bit(_IDDP_BOUND, &sk->status))
-			/* Set default name. */
-			sk->name = *sa;
-		/* Set default destination. */
-		sk->peer = *sa;
-	);
+	cobalt_atomic_enter(s);
+	if (!test_bit(_IDDP_BOUND, &sk->status))
+		/* Set default name. */
+		sk->name = *sa;
+	/* Set default destination. */
+	sk->peer = *sa;
+	cobalt_atomic_leave(s);
 
 	return 0;
 }
@@ -680,6 +681,7 @@ static int __iddp_setsockopt(struct iddp_socket *sk,
 	struct timeval tv;
 	int ret = 0;
 	size_t len;
+	spl_t s;
 
 	if (rtipc_get_arg(user_info, &sopt, arg, sizeof(sopt)))
 		return -EFAULT;
@@ -725,17 +727,17 @@ static int __iddp_setsockopt(struct iddp_socket *sk,
 			return -EFAULT;
 		if (len == 0)
 			return -EINVAL;
-		RTDM_EXECUTE_ATOMICALLY(
-			/*
-			 * We may not do this more than once, and we
-			 * have to do this before the first binding.
-			 */
-			if (test_bit(_IDDP_BOUND, &sk->status) ||
-			    test_bit(_IDDP_BINDING, &sk->status))
-				ret = -EALREADY;
-			else
-				sk->poolsz = len;
-		);
+		cobalt_atomic_enter(s);
+		/*
+		 * We may not do this more than once, and we have to
+		 * do this before the first binding.
+		 */
+		if (test_bit(_IDDP_BOUND, &sk->status) ||
+		    test_bit(_IDDP_BINDING, &sk->status))
+			ret = -EALREADY;
+		else
+			sk->poolsz = len;
+		cobalt_atomic_leave(s);
 		break;
 
 	case IDDP_LABEL:
@@ -744,18 +746,18 @@ static int __iddp_setsockopt(struct iddp_socket *sk,
 		if (rtipc_get_arg(user_info, &plabel,
 				  sopt.optval, sizeof(plabel)))
 			return -EFAULT;
-		RTDM_EXECUTE_ATOMICALLY(
-			/*
-			 * We may attach a label to a client socket
-			 * which was previously bound in IDDP.
-			 */
-			if (test_bit(_IDDP_BINDING, &sk->status))
-				ret = -EALREADY;
-			else {
-				strcpy(sk->label, plabel.label);
-				sk->label[XNOBJECT_NAME_LEN-1] = 0;
-			}
-		);
+		cobalt_atomic_enter(s);
+		/*
+		 * We may attach a label to a client socket which was
+		 * previously bound in IDDP.
+		 */
+		if (test_bit(_IDDP_BINDING, &sk->status))
+			ret = -EALREADY;
+		else {
+			strcpy(sk->label, plabel.label);
+			sk->label[XNOBJECT_NAME_LEN-1] = 0;
+		}
+		cobalt_atomic_leave(s);
 		break;
 
 	default:
@@ -774,6 +776,7 @@ static int __iddp_getsockopt(struct iddp_socket *sk,
 	struct timeval tv;
 	socklen_t len;
 	int ret = 0;
+	spl_t s;
 
 	if (rtipc_get_arg(user_info, &sopt, arg, sizeof(sopt)))
 		return -EFAULT;
@@ -817,9 +820,9 @@ static int __iddp_getsockopt(struct iddp_socket *sk,
 	case IDDP_LABEL:
 		if (len < sizeof(plabel))
 			return -EINVAL;
-		RTDM_EXECUTE_ATOMICALLY(
-			strcpy(plabel.label, sk->label);
-		);
+		cobalt_atomic_enter(s);
+		strcpy(plabel.label, sk->label);
+		cobalt_atomic_leave(s);
 		if (rtipc_put_arg(user_info, sopt.optval,
 				  &plabel, sizeof(plabel)))
 			return -EFAULT;
@@ -906,14 +909,14 @@ static int iddp_init(void)
 	if (portmap == NULL)
 		return -ENOMEM;
 
-	rtdm_event_init(&poolevt, 0);
+	rtdm_waitqueue_init(&poolwaitq);
 
 	return 0;
 }
 
 static void iddp_exit(void)
 {
-	rtdm_event_destroy(&poolevt);
+	rtdm_waitqueue_destroy(&poolwaitq);
 	xnmap_delete(portmap);
 }
 

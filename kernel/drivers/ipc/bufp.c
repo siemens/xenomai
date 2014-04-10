@@ -658,6 +658,7 @@ static int __bufp_bind_socket(struct rtipc_private *priv,
 {
 	struct bufp_socket *sk = priv->state;
 	int ret = 0, port, fd;
+	spl_t s;
 
 	if (sa->sipc_family != AF_RTIPC)
 		return -EINVAL;
@@ -666,11 +667,12 @@ static int __bufp_bind_socket(struct rtipc_private *priv,
 	    sa->sipc_port >= CONFIG_XENO_OPT_BUFP_NRPORT)
 		return -EINVAL;
 
-	RTDM_EXECUTE_ATOMICALLY(
-		if (test_bit(_BUFP_BOUND, &sk->status) ||
-		    __test_and_set_bit(_BUFP_BINDING, &sk->status))
-			ret = -EADDRINUSE;
-	);
+	cobalt_atomic_enter(s);
+	if (test_bit(_BUFP_BOUND, &sk->status) ||
+	    __test_and_set_bit(_BUFP_BINDING, &sk->status))
+		ret = -EADDRINUSE;
+	cobalt_atomic_leave(s);
+	
 	if (ret)
 		return ret;
 
@@ -710,10 +712,10 @@ static int __bufp_bind_socket(struct rtipc_private *priv,
 		}
 	}
 
-	RTDM_EXECUTE_ATOMICALLY(
-		__clear_bit(_BUFP_BINDING, &sk->status);
-		__set_bit(_BUFP_BOUND, &sk->status);
-	);
+	cobalt_atomic_enter(s);
+	__clear_bit(_BUFP_BINDING, &sk->status);
+	__set_bit(_BUFP_BOUND, &sk->status);
+	cobalt_atomic_leave(s);
 
 	return 0;
 fail:
@@ -729,6 +731,7 @@ static int __bufp_connect_socket(struct bufp_socket *sk,
 	struct bufp_socket *rsk;
 	xnhandle_t h;
 	int ret;
+	spl_t s;
 
 	if (sa == NULL) {
 		sa = &nullsa;
@@ -764,26 +767,26 @@ static int __bufp_connect_socket(struct bufp_socket *sk,
 		if (ret)
 			return ret;
 
-		RTDM_EXECUTE_ATOMICALLY(
-			rsk = xnregistry_lookup(h, NULL);
-			if (rsk == NULL || rsk->magic != BUFP_SOCKET_MAGIC)
-				ret = -EINVAL;
-			else
-				/* Fetch labeled port number. */
-				sa->sipc_port = rsk->name.sipc_port;
-		);
+		cobalt_atomic_enter(s);
+		rsk = xnregistry_lookup(h, NULL);
+		if (rsk == NULL || rsk->magic != BUFP_SOCKET_MAGIC)
+			ret = -EINVAL;
+		else
+			/* Fetch labeled port number. */
+			sa->sipc_port = rsk->name.sipc_port;
+		cobalt_atomic_leave(s);
 		if (ret)
 			return ret;
 	}
 
 set_assoc:
-	RTDM_EXECUTE_ATOMICALLY(
-		if (!test_bit(_BUFP_BOUND, &sk->status))
-			/* Set default name. */
-			sk->name = *sa;
-		/* Set default destination. */
-		sk->peer = *sa;
-	);
+	cobalt_atomic_enter(s);
+	if (!test_bit(_BUFP_BOUND, &sk->status))
+		/* Set default name. */
+		sk->name = *sa;
+	/* Set default destination. */
+	sk->peer = *sa;
+	cobalt_atomic_leave(s);
 
 	return 0;
 }
@@ -797,6 +800,7 @@ static int __bufp_setsockopt(struct bufp_socket *sk,
 	struct timeval tv;
 	int ret = 0;
 	size_t len;
+	spl_t s;
 
 	if (rtipc_get_arg(user_info, &sopt, arg, sizeof(sopt)))
 		return -EFAULT;
@@ -842,17 +846,17 @@ static int __bufp_setsockopt(struct bufp_socket *sk,
 			return -EFAULT;
 		if (len == 0)
 			return -EINVAL;
-		RTDM_EXECUTE_ATOMICALLY(
-			/*
-			 * We may not do this more than once, and we
-			 * have to do this before the first binding.
-			 */
-			if (test_bit(_BUFP_BOUND, &sk->status) ||
-			    test_bit(_BUFP_BINDING, &sk->status))
-				ret = -EALREADY;
-			else
-				sk->bufsz = len;
-		);
+		cobalt_atomic_enter(s);
+		/*
+		 * We may not do this more than once, and we have to
+		 * do this before the first binding.
+		 */
+		if (test_bit(_BUFP_BOUND, &sk->status) ||
+		    test_bit(_BUFP_BINDING, &sk->status))
+			ret = -EALREADY;
+		else
+			sk->bufsz = len;
+		cobalt_atomic_leave(s);
 		break;
 
 	case BUFP_LABEL:
@@ -861,18 +865,18 @@ static int __bufp_setsockopt(struct bufp_socket *sk,
 		if (rtipc_get_arg(user_info, &plabel,
 				  sopt.optval, sizeof(plabel)))
 			return -EFAULT;
-		RTDM_EXECUTE_ATOMICALLY(
-			/*
-			 * We may attach a label to a client socket
-			 * which was previously bound in BUFP.
-			 */
-			if (test_bit(_BUFP_BINDING, &sk->status))
-				ret = -EALREADY;
-			else {
-				strcpy(sk->label, plabel.label);
-				sk->label[XNOBJECT_NAME_LEN-1] = 0;
-			}
-		);
+		cobalt_atomic_enter(s);
+		/*
+		 * We may attach a label to a client socket which was
+		 * previously bound in BUFP.
+		 */
+		if (test_bit(_BUFP_BINDING, &sk->status))
+			ret = -EALREADY;
+		else {
+			strcpy(sk->label, plabel.label);
+			sk->label[XNOBJECT_NAME_LEN-1] = 0;
+		}
+		cobalt_atomic_leave(s);
 		break;
 
 	default:
@@ -891,6 +895,7 @@ static int __bufp_getsockopt(struct bufp_socket *sk,
 	struct timeval tv;
 	socklen_t len;
 	int ret = 0;
+	spl_t s;
 
 	if (rtipc_get_arg(user_info, &sopt, arg, sizeof(sopt)))
 		return -EFAULT;
@@ -934,9 +939,9 @@ static int __bufp_getsockopt(struct bufp_socket *sk,
 	case BUFP_LABEL:
 		if (len < sizeof(plabel))
 			return -EINVAL;
-		RTDM_EXECUTE_ATOMICALLY(
-			strcpy(plabel.label, sk->label);
-		);
+		cobalt_atomic_enter(s);
+		strcpy(plabel.label, sk->label);
+		cobalt_atomic_leave(s);
 		if (rtipc_put_arg(user_info, sopt.optval,
 				  &plabel, sizeof(plabel)))
 			return -EFAULT;
