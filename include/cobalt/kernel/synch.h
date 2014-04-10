@@ -59,6 +59,18 @@ struct xnsynch {
 	void (*cleanup)(struct xnsynch *synch); /* Cleanup handler */
 };
 
+#define XNSYNCH_WAITQUEUE_INITIALIZER(__name) {		\
+		.status = XNSYNCH_PRIO,			\
+		.wprio = -1,				\
+		.pendq = LIST_HEAD_INIT((__name).pendq),	\
+		.owner = NULL,				\
+		.cleanup = NULL,			\
+		.fastlock = NULL,			\
+	}
+
+#define DEFINE_XNWAITQ(__name)	\
+	struct xnsynch __name = XNSYNCH_WAITQUEUE_INITIALIZER(__name)
+
 static inline void xnsynch_set_status(struct xnsynch *synch, int bits)
 {
 	synch->status |= bits;
