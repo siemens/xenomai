@@ -177,9 +177,9 @@ int __check_cancel_type(const char *locktype);
 
 #define __do_unlock_safe(__lock, __state)				\
 	({								\
-		int __ret;						\
+		int __ret, __restored_state = __state;			\
 		__ret = -__RT(pthread_mutex_unlock(__lock));		\
-		pthread_setcancelstate(__state, NULL);			\
+		pthread_setcancelstate(__restored_state, NULL);		\
 		__ret;							\
 	})
 
