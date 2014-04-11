@@ -54,6 +54,9 @@ extern "C" {
 int fsobstack_grow_format(struct fsobstack *o,
 			  const char *fmt, ...);
 
+int fsobstack_grow_file(struct fsobstack *o,
+			const char *path);
+
 int fsobstack_grow_syncobj_grant(struct fsobstack *o,
 				 struct syncobj *sobj,
 				 struct fsobstack_syncops *ops);

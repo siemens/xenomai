@@ -822,6 +822,32 @@ int fsobstack_grow_format(struct fsobstack *o, const char *fmt, ...)
 	return -ENOMEM;
 }
 
+int fsobstack_grow_file(struct fsobstack *o, const char *path)
+{
+	int len = 0;
+	FILE *fp;
+	int c;
+	
+	fp = fopen(path, "r");
+	if (fp == NULL)
+		return -errno;
+
+	for (;;) {
+		c = fgetc(fp);
+		if (c == EOF) {
+			if (ferror(fp))
+				len = -errno;
+			break;
+		}
+		obstack_1grow(&o->obstack, c);
+		len++;
+	}
+
+	fclose(fp);
+
+	return len;
+}
+
 ssize_t fsobstack_pull(struct fsobstack *o, char *buf, size_t size)
 {
 	size_t len;
