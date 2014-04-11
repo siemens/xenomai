@@ -628,11 +628,15 @@ static int spawn_daemon(const char *sessdir)
 		ret = -errno;
 		break;
 	default:
+		/*
+		 * Make sure we sleep at least one second regardless
+		 * of signal receipts.
+		 */
+		while (__STD(sleep(1)) > 0) ;
 		regd_pid = pid;
 		barrier();
 		sa.sa_handler = sigchld_handler;
 		sigaction(SIGCHLD, &sa, NULL);
-		usleep(1000000);
 		ret = 0;
 		break;
 	}
