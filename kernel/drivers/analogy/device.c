@@ -278,17 +278,15 @@ int a4l_assign_driver(a4l_cxt_t * cxt,
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 
 	dev->driver = drv;
+	INIT_LIST_HEAD(&dev->subdvsq);
 
 	if (drv->privdata_size == 0)
 		__a4l_dbg(1, core_dbg,
 			  "a4l_assign_driver: warning! "
 			  "the field priv will not be usable\n");
 	else {
-
-		INIT_LIST_HEAD(&dev->subdvsq);
-
 		dev->priv = rtdm_malloc(drv->privdata_size);
-		if (dev->priv == NULL && drv->privdata_size != 0) {
+		if (dev->priv == NULL) {
 			__a4l_err("a4l_assign_driver: "
 				  "call(alloc) failed\n");
 			ret = -ENOMEM;
@@ -325,27 +323,26 @@ out_assign_driver:
 
 int a4l_release_driver(a4l_cxt_t * cxt)
 {
-	int ret = 0;
 	a4l_dev_t *dev = a4l_get_dev(cxt);
+	a4l_subd_t *subd, *tmp;
+	int ret = 0;
 
 	if ((ret = dev->driver->detach(dev)) != 0)
 		goto out_release_driver;
 
-	/* Decrease module's count
-	   so as to allow module unloading */
 	module_put(dev->driver->owner);
 
 	/* In case, the driver developer did not free the subdevices */
-	while (&dev->subdvsq != dev->subdvsq.next) {
-		struct list_head *this = dev->subdvsq.next;
-		a4l_subd_t *tmp = list_entry(this, a4l_subd_t, list);
-
-		list_del(this);
-		rtdm_free(tmp);
-	}
+	if (!list_empty(&dev->subdvsq))
+		list_for_each_entry_safe(subd, tmp, &dev->subdvsq, list) {
+			list_del(&subd->list);
+			rtdm_free(subd);
+		}
 
 	/* Free the private field */
-	rtdm_free(dev->priv);
+	if (dev->priv)
+		rtdm_free(dev->priv);
+
 	dev->driver = NULL;
 
 out_release_driver:
