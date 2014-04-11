@@ -32,6 +32,8 @@
 #define obstack_chunk_alloc	pvmalloc
 #define obstack_chunk_free	pvfree
 
+struct threadobj;
+
 struct fsobstack {
 	struct obstack obstack;
 	void *data;

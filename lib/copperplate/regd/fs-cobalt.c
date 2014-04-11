@@ -88,43 +88,24 @@ char *format_thread_status(const struct thread_data *p, char *buf, size_t len)
  */
 
 #define PROC_PULL_HANDLER(__name, __path)				\
-ssize_t read_ ## __name(struct fsobj *fsobj, char *buf,			\
-			size_t size, off_t offset,			\
-			void *priv)					\
+int open_ ## __name(struct fsobj *fsobj, void *priv)			\
 {									\
-	return pull_proc_data("/proc/xenomai/" __path, buf, size);	\
+	return pull_proc_data("/proc/xenomai/" __path, priv);		\
 }
 
 /*
  * Cobalt-specific helper to pull the /proc vfile data provided by the
  * nucleus over a fuse-managed vfile.
  */
-static ssize_t pull_proc_data(const char *procpath, char *buf, size_t size)
+static int pull_proc_data(const char *path, struct fsobstack *o)
 {
-	size_t len = 0;
-	FILE *fp;
-	int c;
+	int len;
 
-	if (size == 0)
-		return 0;
+	fsobstack_init(o);
+	len = fsobstack_grow_file(o, path);
+	fsobstack_finish(o);
 
-	fp = fopen(procpath, "r");
-	if (fp == NULL)
-		return -errno;
-
-	while (len < size) {
-		c = fgetc(fp);
-		if (c == EOF) {
-			if (ferror(fp))
-				len = -errno;
-			break;
-		}
-		buf[len++] = c;
-	}
-
-	fclose(fp);
-
-	return (ssize_t)len;
+	return len < 0 ? len : 0;
 }
 
 PROC_PULL_HANDLER(threads, "/sched/threads");
@@ -143,21 +124,27 @@ struct sysreg_fsfile sysreg_files[] = {
 		.path = "/threads",
 		.mode = O_RDONLY,
 		.ops = {
-			.read = read_threads,
+			.open = open_threads,
+			.release = fsobj_obstack_release,
+			.read = fsobj_obstack_read
 		},
 	},
 	{
 		.path = "/heaps",
 		.mode = O_RDONLY,
 		.ops = {
-			.read = read_heaps,
+			.open = open_heaps,
+			.release = fsobj_obstack_release,
+			.read = fsobj_obstack_read
 		},
 	},
 	{
 		.path = "/version",
 		.mode = O_RDONLY,
 		.ops = {
-			.read = read_version,
+			.open = open_version,
+			.release = fsobj_obstack_release,
+			.read = fsobj_obstack_read
 		},
 	},
 	{

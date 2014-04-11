@@ -97,14 +97,18 @@ struct sysreg_fsfile sysreg_files[] = {
 		.path = "/threads",
 		.mode = O_RDONLY,
 		.ops = {
-			.read = read_threads,
+			.open = open_threads,
+			.release = fsobj_obstack_release,
+			.read = fsobj_obstack_read
 		},
 	},
 	{
 		.path = "/heaps",
 		.mode = O_RDONLY,
 		.ops = {
-			.read = read_heaps,
+			.open = open_heaps,
+			.release = fsobj_obstack_release,
+			.read = fsobj_obstack_read
 		},
 	},
 #endif /* CONFIG_XENO_PSHARED */
@@ -112,7 +116,9 @@ struct sysreg_fsfile sysreg_files[] = {
 		.path = "/version",
 		.mode = O_RDONLY,
 		.ops = {
-			.read = read_version,
+			.open = open_version,
+			.release = fsobj_obstack_release,
+			.read = fsobj_obstack_read
 		},
 	},
 	{

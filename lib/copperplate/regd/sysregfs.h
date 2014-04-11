@@ -20,7 +20,7 @@
 #define _REGD_SYSREGFS_H
 
 #include <copperplate/clockobj.h>
-#include <copperplate/registry.h>
+#include <copperplate/registry-obstack.h>
 
 struct sysreg_fsdir {
 	const char *path;
@@ -48,17 +48,11 @@ extern struct sysreg_fsdir sysreg_dirs[];
 
 extern struct sysreg_fsfile sysreg_files[];
 
-ssize_t read_threads(struct fsobj *fsobj, char *buf,
-		     size_t size, off_t offset,
-		     void *priv);
+int open_threads(struct fsobj *fsobj, void *priv);
 
-ssize_t read_heaps(struct fsobj *fsobj, char *buf,
-		   size_t size, off_t offset,
-		   void *priv);
+int open_heaps(struct fsobj *fsobj, void *priv);
 
-ssize_t read_version(struct fsobj *fsobj, char *buf,
-		     size_t size, off_t offset,
-		     void *priv);
+int open_version(struct fsobj *fsobj, void *priv);
 
 char *format_thread_status(const struct thread_data *p,
 			   char *buf, size_t len);

@@ -67,22 +67,22 @@ static char *format_time(ticks_t value, char *buf, size_t bufsz)
 	return buf;
 }
 
-ssize_t read_threads(struct fsobj *fsobj, char *buf,
-		     size_t size, off_t offset,
-		     void *priv)
+int open_threads(struct fsobj *fsobj, void *priv)
 {
 	struct thread_data *thread_data, *p;
 	char sbuf[64], pbuf[16], tbuf[64];
 	struct threadobj_stat statbuf;
 	struct sysgroup_memspec *obj;
+	struct fsobstack *o = priv;
 	struct threadobj *thobj;
 	const char *sched_class;
-	ssize_t len = 0;
-	int ret, count;
+	int ret, count, len = 0;
 
 	ret = heapobj_bind_session(__node_info.session_label);
 	if (ret)
 		return ret;
+
+	fsobstack_init(o);
 
 	sysgroup_lock();
 	count = sysgroup_count(thread);
@@ -132,9 +132,9 @@ ssize_t read_threads(struct fsobj *fsobj, char *buf,
 	if (count == 0)
 		goto out_free;
 
-	len = sprintf(buf, "%-3s  %-6s %-5s  %-8s %-8s  %-10s %s\n",
-			"CPU", "PID", "CLASS", "PRI", "TIMEOUT",
-			"STAT", "NAME");
+	len = fsobstack_grow_format(o, "%-3s  %-6s %-5s  %-8s %-8s  %-10s %s\n",
+				    "CPU", "PID", "CLASS", "PRI", "TIMEOUT",
+				    "STAT", "NAME");
 
 	for (p = thread_data; count > 0; count--) {
 		if (kill(p->pid, 0))
@@ -173,10 +173,10 @@ ssize_t read_threads(struct fsobj *fsobj, char *buf,
 			sched_class = "other";
 			break;
 		}
-		len += sprintf(buf + len,
-			       "%3u  %-6d %-5s  %-8s %-8s  %-10s %s\n",
-			       p->cpu, p->pid, sched_class, pbuf,
-			       tbuf, sbuf, p->name);
+		len += fsobstack_grow_format(o,
+					     "%3u  %-6d %-5s  %-8s %-8s  %-10s %s\n",
+					     p->cpu, p->pid, sched_class, pbuf,
+					     tbuf, sbuf, p->name);
 		p++;
 	}
 
@@ -185,7 +185,9 @@ out_free:
 out:
 	heapobj_unbind_session();
 
-	return len;
+	fsobstack_finish(o);
+
+	return len < 0 ? len : 0;
 }
 
 struct heap_data {
@@ -194,19 +196,19 @@ struct heap_data {
 	size_t used;
 };
 
-ssize_t read_heaps(struct fsobj *fsobj, char *buf,
-		   size_t size, off_t offset,
-		   void *priv)
+int open_heaps(struct fsobj *fsobj, void *priv)
 {
 	struct heap_data *heap_data, *p;
 	struct sysgroup_memspec *obj;
+	struct fsobstack *o = priv;
 	struct shared_heap *heap;
-	ssize_t len = 0;
-	int ret, count;
+	int ret, count, len = 0;
 
 	ret = heapobj_bind_session(__node_info.session_label);
 	if (ret)
 		return ret;
+
+	fsobstack_init(o);
 
 	sysgroup_lock();
 	count = sysgroup_count(heap);
@@ -245,11 +247,12 @@ ssize_t read_heaps(struct fsobj *fsobj, char *buf,
 	if (count == 0)
 		goto out_free;
 
-	len = sprintf(buf, "%9s %9s  %s\n", "TOTAL", "USED", "NAME");
+	len = fsobstack_grow_format(o, "%9s %9s  %s\n",
+				    "TOTAL", "USED", "NAME");
 
 	for (p = heap_data; count > 0; count--) {
-		len += sprintf(buf + len, "%9Zu %9Zu  %s\n",
-			       p->total, p->used, p->name);
+		len += fsobstack_grow_format(o, "%9Zu %9Zu  %s\n",
+					     p->total, p->used, p->name);
 		p++;
 	}
 
@@ -258,14 +261,20 @@ out_free:
 out:
 	heapobj_unbind_session();
 
-	return len;
+	fsobstack_finish(o);
+
+	return len < 0 ? len : 0;
 }
 
 #endif /* CONFIG_XENO_PSHARED */
 
-ssize_t read_version(struct fsobj *fsobj, char *buf,
-		     size_t size, off_t offset,
-		     void *priv)
+int open_version(struct fsobj *fsobj, void *priv)
 {
-	return sprintf(buf, "%s\n", XENO_VERSION_STRING);
+	struct fsobstack *o = priv;
+
+	fsobstack_init(o);
+	fsobstack_grow_format(o, "%s\n", XENO_VERSION_STRING);
+	fsobstack_finish(o);
+
+	return 0;
 }
