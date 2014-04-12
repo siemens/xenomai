@@ -34,7 +34,7 @@
 
 
 static struct rtcan_device *rtcan_devices[RTCAN_MAX_DEVICES];
-static rtdm_lock_t rtcan_devices_rt_lock = RTDM_LOCK_UNLOCKED;
+static DEFINE_RTDM_LOCK(rtcan_devices_rt_lock);
 
 static int rtcan_global_init_done;
 

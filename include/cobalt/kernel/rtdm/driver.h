@@ -694,7 +694,10 @@ rtdm_execute_atomically(void) { }
 /**
  * Static lock initialisation
  */
-#define RTDM_LOCK_UNLOCKED	IPIPE_SPIN_LOCK_UNLOCKED
+#define RTDM_LOCK_UNLOCKED(__name)	IPIPE_SPIN_LOCK_UNLOCKED
+
+#define DEFINE_RTDM_LOCK(__name)		\
+	rtdm_lock_t __name = RTDM_LOCK_UNLOCKED(__name)
 
 /** Lock variable */
 typedef ipipe_spinlock_t rtdm_lock_t;
@@ -1777,7 +1780,7 @@ int rtdm_ratelimit(struct rtdm_ratelimit_state *rs, const char *func);
 
 #define DEFINE_RTDM_RATELIMIT_STATE(name, interval_init, burst_init)	\
 	struct rtdm_ratelimit_state name = {				\
-		.lock		= RTDM_LOCK_UNLOCKED,			\
+		.lock		= RTDM_LOCK_UNLOCKED((name).lock),	\
 		.interval	= interval_init,			\
 		.burst		= burst_init,				\
 	}

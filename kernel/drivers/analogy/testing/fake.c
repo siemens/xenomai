@@ -116,7 +116,7 @@ static inline uint16_t ai_value_output(struct ai_priv *priv)
 		0x8000, 0xa000, 0xc000, 0xffff
 	};
 	static unsigned int output_idx;
-	static a4l_lock_t output_lock = A4L_LOCK_UNLOCKED;
+	static DEFINE_A4L_LOCK(output_lock);
 
 	unsigned long flags;
 	unsigned int idx;

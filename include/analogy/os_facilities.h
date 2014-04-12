@@ -85,7 +85,10 @@
 
 typedef rtdm_lock_t a4l_lock_t;
 
-#define A4L_LOCK_UNLOCKED RTDM_LOCK_UNLOCKED
+#define A4L_LOCK_UNLOCKED(__name) RTDM_LOCK_UNLOCKED(__name)
+
+#define DEFINE_A4L_LOCK(__name)		\
+	a4l_lock_t __name = A4L_LOCK_UNLOCKED(__name)
 
 #define a4l_lock_init(lock) rtdm_lock_init(lock)
 #define a4l_lock(lock) rtdm_lock_get(lock)
