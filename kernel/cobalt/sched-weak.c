@@ -20,8 +20,7 @@
 
 static void xnsched_weak_init(struct xnsched *sched)
 {
-	xnsched_initq(&sched->weak.runnable,
-		      XNSCHED_WEAK_MIN_PRIO, XNSCHED_WEAK_MAX_PRIO);
+	xnsched_initq(&sched->weak.runnable);
 }
 
 static void xnsched_weak_requeue(struct xnthread *thread)

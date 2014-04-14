@@ -95,10 +95,9 @@ static void xnsched_tp_init(struct xnsched *sched)
 	 * need as many levels as SCHED_RT defines.
 	 */
 	for (n = 0; n < CONFIG_XENO_OPT_SCHED_TP_NRPART; n++)
-		xnsched_initq(&tp->partitions[n].runnable,
-			      XNSCHED_RT_MIN_PRIO, XNSCHED_RT_MAX_PRIO);
-	xnsched_initq(&tp->idle.runnable,
-		      XNSCHED_RT_MIN_PRIO, XNSCHED_RT_MAX_PRIO);
+		xnsched_initq(&tp->partitions[n].runnable);
+
+	xnsched_initq(&tp->idle.runnable);
 
 #ifdef CONFIG_SMP
 	sprintf(timer_name, "[tp-tick/%u]", sched->cpu);

@@ -492,15 +492,11 @@ void xnsched_migrate_passive(struct xnthread *thread, struct xnsched *sched)
 
 #ifdef CONFIG_XENO_OPT_SCALABLE_SCHED
 
-void xnsched_initq(struct xnsched_mlq *q, int loprio, int hiprio)
+void xnsched_initq(struct xnsched_mlq *q)
 {
 	int prio;
 
-	XENO_BUGON(NUCLEUS, hiprio - loprio + 1 >= XNSCHED_MLQ_LEVELS);
-
 	q->elems = 0;
-	q->loprio = loprio;
-	q->hiprio = hiprio;
 	q->himap = 0;
 	memset(&q->lomap, 0, sizeof(q->lomap));
 
@@ -510,7 +506,8 @@ void xnsched_initq(struct xnsched_mlq *q, int loprio, int hiprio)
 
 static inline int get_qindex(struct xnsched_mlq *q, int prio)
 {
-	XENO_BUGON(NUCLEUS, prio < q->loprio || prio > q->hiprio);
+	XENO_BUGON(NUCLEUS, prio < XNSCHED_RT_MIN_PRIO ||
+		   prio > XNSCHED_RT_MAX_PRIO);
 	/*
 	 * BIG FAT WARNING: We need to rescale the priority level to a
 	 * 0-based range. We use ffnz() to scan the bitmap which MUST
@@ -519,7 +516,7 @@ static inline int get_qindex(struct xnsched_mlq *q, int prio)
 	 * significant bits will be found first when scanning the
 	 * bitmaps).
 	 */
-	return q->hiprio - prio;
+	return XNSCHED_RT_MAX_PRIO - prio;
 }
 
 static struct list_head *add_q(struct xnsched_mlq *q, int prio)

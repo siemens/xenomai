@@ -164,7 +164,7 @@ struct xnsched_class {
 	const char *name;
 };
 
-#define XNSCHED_CLASS_WEIGHT(n)		(n * XNSCHED_CLASS_MAX_PRIO)
+#define XNSCHED_CLASS_WEIGHT(n)		(n * XNSCHED_CLASS_WEIGHT_FACTOR)
 
 /* Placeholder for current thread priority */
 #define XNSCHED_RUNPRIO   0x80000000

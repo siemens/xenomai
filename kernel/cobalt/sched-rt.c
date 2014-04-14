@@ -23,8 +23,7 @@
 
 static void xnsched_rt_init(struct xnsched *sched)
 {
-	xnsched_initq(&sched->rt.runnable,
-		    XNSCHED_RT_MIN_PRIO, XNSCHED_RT_MAX_PRIO);
+	xnsched_initq(&sched->rt.runnable);
 }
 
 static void xnsched_rt_requeue(struct xnthread *thread)

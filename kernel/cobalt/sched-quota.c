@@ -224,8 +224,7 @@ static void xnsched_quota_init(struct xnsched *sched)
 	 * CAUTION: we may inherit RT priority during PIP boost, so we
 	 * need as many levels as SCHED_RT defines.
 	 */
-	xnsched_initq(&qs->runnable,
-		      XNSCHED_RT_MIN_PRIO, XNSCHED_RT_MAX_PRIO);
+	xnsched_initq(&qs->runnable);
 	qs->period_ns = CONFIG_XENO_OPT_SCHED_QUOTA_PERIOD * 1000ULL;
 	INIT_LIST_HEAD(&qs->groups);
 
