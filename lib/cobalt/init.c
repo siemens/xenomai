@@ -195,12 +195,26 @@ void __libcobalt_init(void)
 	boilerplate_init();
 }
 
+static inline void dump_configuration(void)
+{
+	int n;
+
+	for (n = 0; config_strings[n]; n++)
+		puts(config_strings[n]);
+}
+
 static __libcobalt_ctor void __init_cobalt(void)
 {
 	pthread_t tid = pthread_self();
 	struct sched_param parm;
 	int policy, ret;
 	const char *p;
+
+	p = getenv("XENO_CONFIG_OUTPUT");
+	if (p && *p) {
+		dump_configuration();
+		_exit(0);
+	}
 
 	__cobalt_main_tid = tid;
 
