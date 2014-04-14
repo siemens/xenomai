@@ -13,6 +13,19 @@ if XENO_DEBUG
 libboilerplate_la_SOURCES += debug.c
 endif
 
+nodist_libboilerplate_la_SOURCES = config-dump.h
+BUILT_SOURCES = config-dump.h
+CLEANFILES = config-dump.h
+
+config-dump.h: Makefile $(CONFIG_HEADER)
+	( sed -e '/^#define CONFIG_/!d' \
+	-e 's/^#[\t ]*define \(CONFIG_[^ ]*\) \(.*\)/\1=\2/' \
+	-e 's,\",\\&,g' \
+	-e 's/^.*$$/\"&\",/' $(CONFIG_HEADER); echo '"---",'; \
+	sed -e '/#undef CONFIG_/!d' \
+	-e 's/.*\(CONFIG_[^ ]*\).*/\1/' \
+	-e 's/^.*$$/\"& is OFF\",/' $(CONFIG_HEADER) ) > $@
+
 libboilerplate_la_CPPFLAGS =				\
 	@XENO_USER_CFLAGS@				\
 	-I$(top_srcdir)					\

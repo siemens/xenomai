@@ -14325,7 +14325,7 @@ if test x"$want_fortify" != xno; then
    ac_fn_c_check_func "$LINENO" "__vfprintf_chk" "ac_cv_func___vfprintf_chk"
 if test "x$ac_cv_func___vfprintf_chk" = xyes; then :
 
-$as_echo "#define CONFIG_XENO_FORTIFY 1 " >>confdefs.h
+$as_echo "#define CONFIG_XENO_FORTIFY 1" >>confdefs.h
 
 else
   if test x"$want_fortify" = "xyes"; then

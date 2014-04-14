@@ -79,4 +79,6 @@ void boilerplate_init(void);
 }
 #endif
 
+extern const char *config_strings[];
+
 #endif /* _BOILERPLATE_ANCILLARIES_H */

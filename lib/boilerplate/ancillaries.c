@@ -235,3 +235,8 @@ void boilerplate_init(void)
 	static pthread_once_t once = PTHREAD_ONCE_INIT;
 	pthread_once(&once, __boilerplate_init);
 }
+
+const char *config_strings[] = {
+#include "config-dump.h"
+	NULL,
+};

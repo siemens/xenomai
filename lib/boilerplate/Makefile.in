@@ -107,7 +107,9 @@ am__libboilerplate_la_SOURCES_DIST = ancillaries.c hash.c obstack.c \
 am_libboilerplate_la_OBJECTS = libboilerplate_la-ancillaries.lo \
 	libboilerplate_la-hash.lo libboilerplate_la-obstack.lo \
 	libboilerplate_la-time.lo $(am__objects_1)
-libboilerplate_la_OBJECTS = $(am_libboilerplate_la_OBJECTS)
+nodist_libboilerplate_la_OBJECTS =
+libboilerplate_la_OBJECTS = $(am_libboilerplate_la_OBJECTS) \
+	$(nodist_libboilerplate_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -154,7 +156,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(libboilerplate_la_SOURCES) $(libtlsf_la_SOURCES)
+SOURCES = $(libboilerplate_la_SOURCES) \
+	$(nodist_libboilerplate_la_SOURCES) $(libtlsf_la_SOURCES)
 DIST_SOURCES = $(am__libboilerplate_la_SOURCES_DIST) \
 	$(libtlsf_la_SOURCES)
 am__can_run_installinfo = \
@@ -357,6 +360,9 @@ noinst_LTLIBRARIES = libboilerplate.la $(am__append_2)
 libboilerplate_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 0:0:0
 libboilerplate_la_SOURCES = ancillaries.c hash.c obstack.c time.c \
 	$(am__append_1)
+nodist_libboilerplate_la_SOURCES = config-dump.h
+BUILT_SOURCES = config-dump.h
+CLEANFILES = config-dump.h
 libboilerplate_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@				\
 	-I$(top_srcdir)					\
@@ -378,7 +384,8 @@ libtlsf_la_CPPFLAGS = \
 
 EXTRA_DIST = tlsf/README
 SPARSE = sparse
-all: all-am
+all: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
@@ -595,10 +602,12 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
-check: check-am
+check: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) check-am
 all-am: Makefile $(LTLIBRARIES)
 installdirs:
-install: install-am
+install: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) install-am
 install-exec: install-exec-am
 install-data: install-data-am
 uninstall: uninstall-am
@@ -620,6 +629,7 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -628,6 +638,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-am
 
 clean-am: clean-generic clean-libtool clean-noinstLTLIBRARIES \
@@ -699,7 +710,7 @@ ps-am:
 
 uninstall-am:
 
-.MAKE: install-am install-strip
+.MAKE: all check install install-am install-strip
 
 .PHONY: CTAGS GTAGS TAGS all all-am check check-am clean clean-generic \
 	clean-libtool clean-noinstLTLIBRARIES cscopelist-am ctags \
@@ -715,6 +726,15 @@ uninstall-am:
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags tags-am uninstall uninstall-am
 
+
+config-dump.h: Makefile $(CONFIG_HEADER)
+	( sed -e '/^#define CONFIG_/!d' \
+	-e 's/^#[\t ]*define \(CONFIG_[^ ]*\) \(.*\)/\1=\2/' \
+	-e 's,\",\\&,g' \
+	-e 's/^.*$$/\"&\",/' $(CONFIG_HEADER); echo '"---",'; \
+	sed -e '/#undef CONFIG_/!d' \
+	-e 's/.*\(CONFIG_[^ ]*\).*/\1/' \
+	-e 's/^.*$$/\"& is OFF\",/' $(CONFIG_HEADER) ) > $@
 
 sparse:
 	@for i in $(libboilerplate_la_SOURCES) $(libtlsf_la_SOURCES); do \

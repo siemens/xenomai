@@ -758,7 +758,7 @@ AC_ARG_ENABLE([fortify],
 AC_MSG_RESULT(${want_fortify:-autodetect})
 if test x"$want_fortify" != xno; then
    AC_CHECK_FUNC(__vfprintf_chk,
-	      [AC_DEFINE(CONFIG_XENO_FORTIFY, 1 ,[config])],
+	      [AC_DEFINE(CONFIG_XENO_FORTIFY, 1,[config])],
 	      [if test x"$want_fortify" = "xyes"; then
 	      AC_MSG_ERROR([Fortify support enabled but not available in *libc])
 	       fi])
