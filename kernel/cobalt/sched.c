@@ -497,8 +497,7 @@ void xnsched_initq(struct xnsched_mlq *q)
 	int prio;
 
 	q->elems = 0;
-	q->himap = 0;
-	memset(&q->lomap, 0, sizeof(q->lomap));
+	bitmap_zero(q->prio_map, XNSCHED_MLQ_LEVELS);
 
 	for (prio = 0; prio < XNSCHED_MLQ_LEVELS; prio++)
 		INIT_LIST_HEAD(q->heads + prio);
@@ -506,35 +505,30 @@ void xnsched_initq(struct xnsched_mlq *q)
 
 static inline int get_qindex(struct xnsched_mlq *q, int prio)
 {
-	XENO_BUGON(NUCLEUS, prio < XNSCHED_RT_MIN_PRIO ||
-		   prio > XNSCHED_RT_MAX_PRIO);
+	XENO_BUGON(NUCLEUS, prio < 0 || prio >= XNSCHED_MLQ_LEVELS);
 	/*
 	 * BIG FAT WARNING: We need to rescale the priority level to a
-	 * 0-based range. We use ffnz() to scan the bitmap which MUST
-	 * be based on a bit scan forward op. Therefore, the lower the
-	 * index value, the higher the priority (since least
+	 * 0-based range. We use find_first_bit() to scan the bitmap
+	 * which is a bit scan forward operation. Therefore, the lower
+	 * the index value, the higher the priority (since least
 	 * significant bits will be found first when scanning the
-	 * bitmaps).
+	 * bitmap).
 	 */
-	return XNSCHED_RT_MAX_PRIO - prio;
+	return XNSCHED_MLQ_LEVELS - prio - 1;
 }
 
 static struct list_head *add_q(struct xnsched_mlq *q, int prio)
 {
 	struct list_head *head;
-	int hi, lo, idx;
+	int idx;
 
 	idx = get_qindex(q, prio);
 	head = q->heads + idx;
 	q->elems++;
 
 	/* New item is not linked yet. */
-	if (list_empty(head)) {
-		hi = idx / BITS_PER_LONG;
-		lo = idx % BITS_PER_LONG;
-		q->himap |= (1UL << hi);
-		q->lomap[hi] |= (1UL << lo);
-	}
+	if (list_empty(head))
+		__set_bit(idx, q->prio_map);
 
 	return head;
 }
@@ -554,20 +548,13 @@ void xnsched_addq_tail(struct xnsched_mlq *q, struct xnthread *thread)
 static void del_q(struct xnsched_mlq *q,
 		  struct list_head *entry, int idx)
 {
-	struct list_head *head;
-	int hi, lo;
+	struct list_head *head = q->heads + idx;
 
-	head = q->heads + idx;
 	list_del(entry);
 	q->elems--;
 
-	if (list_empty(head)) {
-		hi = idx / BITS_PER_LONG;
-		lo = idx % BITS_PER_LONG;
-		q->lomap[hi] &= ~(1UL << lo);
-		if (q->lomap[hi] == 0)
-			q->himap &= ~(1UL << hi);
-	}
+	if (list_empty(head))
+		__clear_bit(idx, q->prio_map);
 }
 
 void xnsched_delq(struct xnsched_mlq *q, struct xnthread *thread)

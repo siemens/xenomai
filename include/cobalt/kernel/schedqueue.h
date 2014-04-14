@@ -25,27 +25,22 @@
 #define XNSCHED_CLASS_WEIGHT_FACTOR	1024
 
 #ifdef CONFIG_XENO_OPT_SCALABLE_SCHED
+
+#include <linux/bitmap.h>
+
 /*
  * Multi-level priority queue, suitable for handling the runnable
  * thread queue of a scheduling class with O(1) property. We only
  * manage a descending queuing order, i.e. highest numbered priorities
  * come first.
  */
-#define XNSCHED_MLQ_LEVELS  264
-
-#if BITS_PER_LONG * BITS_PER_LONG < XNSCHED_MLQ_LEVELS
-#error "internal bitmap cannot hold so many priority levels"
-#endif
-
-#define __MLQ_LONGS ((XNSCHED_MLQ_LEVELS+BITS_PER_LONG-1)/BITS_PER_LONG)
+#define XNSCHED_MLQ_LEVELS  258	/* i.e. XNSCHED_RT_NR_PRIO */
 
 struct xnsched_mlq {
 	int elems;
-	unsigned long himap, lomap[__MLQ_LONGS];
+	DECLARE_BITMAP(prio_map, XNSCHED_MLQ_LEVELS);
 	struct list_head heads[XNSCHED_MLQ_LEVELS];
 };
-
-#undef __MLQ_LONGS
 
 struct xnthread;
 
@@ -64,14 +59,12 @@ struct xnthread *xnsched_getq(struct xnsched_mlq *q);
 
 static inline int xnsched_emptyq_p(struct xnsched_mlq *q)
 {
-	return q->himap == 0;
+	return q->elems == 0;
 }
 
 static inline int xnsched_weightq(struct xnsched_mlq *q)
 {
-	int hi = ffnz(q->himap);
-	int lo = ffnz(q->lomap[hi]);
-	return hi * BITS_PER_LONG + lo;	/* Result is undefined if none set. */
+	return find_first_bit(q->prio_map, XNSCHED_MLQ_LEVELS);
 }
 
 typedef struct xnsched_mlq xnsched_queue_t;
