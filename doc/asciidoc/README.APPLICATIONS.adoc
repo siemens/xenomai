@@ -151,13 +151,16 @@ switch]).
 	Sets the CPU affinity of threads created by the Xenomai
 	libraries within the new process.
 
-*--enable-async-cancel*::
+*--version*::
 
-	Enables asynchronous cancellation of Xenomai threads, making
-	provision to protect the Xenomai APIs accordingly. When
-	disabled, Xenomai assumes that threads may exit due to
-	cancellation only when they reach cancellation points (like
-	system calls). Defaults to enabled.
+	Writes the Xenomai version information to stdout. The program
+	immediately exits with a success code afterwards.
+
+*--dump-config*::
+
+	Dumps the configuration settings to stdout. Those settings are
+	defined as a result of running the configure script. The
+	program immediately exits with a success code afterwards.
 
 Available real-time APIs
 ------------------------

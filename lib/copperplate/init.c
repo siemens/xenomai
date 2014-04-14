@@ -129,6 +129,13 @@ static const struct option base_options[] = {
 		.val = 0
 	},
 	{
+#define dumpconfig_opt	10
+		.name = "dump-config",
+		.has_arg = 0,
+		.flag = NULL,
+		.val = 0
+	},
+	{
 		.name = NULL,
 		.has_arg = 0,
 		.flag = NULL,
@@ -140,6 +147,14 @@ static inline void print_version(void)
 {
 	extern const char *xenomai_version_string;
 	fprintf(stderr, "%s\n", xenomai_version_string);
+}
+
+static inline void dump_configuration(void)
+{
+	int n;
+
+	for (n = 0; config_strings[n]; n++)
+		puts(config_strings[n]);
 }
 
 static void usage(void)
@@ -157,6 +172,7 @@ static void usage(void)
         fprintf(stderr, "--cpu-affinity=<cpu[,cpu]...>    set CPU affinity of threads\n");
         fprintf(stderr, "--silent                         tame down verbosity\n");
         fprintf(stderr, "--version                        get version information\n");
+        fprintf(stderr, "--dump-config                    dump configuration settings\n");
 	
 	pvlist_for_each_entry(skin, &skins, __reserved.next) {
 		if (skin->help)
@@ -359,6 +375,9 @@ static int parse_base_options(int *argcp, char *const **argvp,
 			break;
 		case version_opt:
 			print_version();
+			exit(0);
+		case dumpconfig_opt:
+			dump_configuration();
 			exit(0);
 		case help_opt:
 			usage();
