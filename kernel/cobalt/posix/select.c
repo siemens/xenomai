@@ -125,8 +125,8 @@ int cobalt_select(int nfds,
 	xnticks_t timeout = XN_INFINITE;
 	xntmode_t mode = XN_RELATIVE;
 	struct xnselector *selector;
+	struct xnthread *thread;
 	struct timeval tv;
-	xnthread_t *thread;
 	size_t fds_size;
 	int i, err;
 

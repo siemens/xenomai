@@ -401,7 +401,7 @@ int rtdm_task_sleep_abs(nanosecs_abs_t wakeup_time, enum rtdm_timer_mode mode);
 
 int __rtdm_task_sleep(xnticks_t timeout, xntmode_t mode)
 {
-	xnthread_t *thread = xnsched_current_thread();
+	struct xnthread *thread = xnsched_current_thread();
 
 	if (!XENO_ASSERT(RTDM, !xnsched_unblockable_p()))
 		return -EPERM;
@@ -945,7 +945,7 @@ EXPORT_SYMBOL_GPL(rtdm_event_wait);
 int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
 			 rtdm_toseq_t *timeout_seq)
 {
-	xnthread_t *thread;
+	struct xnthread *thread;
 	spl_t s;
 	int err = 0;
 
@@ -1224,7 +1224,7 @@ EXPORT_SYMBOL_GPL(rtdm_sem_down);
 int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
 		       rtdm_toseq_t *timeout_seq)
 {
-	xnthread_t *thread;
+	struct xnthread *thread;
 	spl_t s;
 	int err = 0;
 
@@ -1513,7 +1513,7 @@ EXPORT_SYMBOL_GPL(rtdm_mutex_lock);
 int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
 			 rtdm_toseq_t *timeout_seq)
 {
-	xnthread_t *curr_thread = xnsched_current_thread();
+	struct xnthread *curr_thread = xnsched_current_thread();
 	spl_t s;
 	int err = 0;
 

@@ -131,7 +131,7 @@ cobalt_mutex_destroy_inner(xnhandle_t handle, struct cobalt_kqueues *q)
 	xnfree(mutex);
 }
 
-static inline int cobalt_mutex_acquire(xnthread_t *cur,
+static inline int cobalt_mutex_acquire(struct xnthread *cur,
 				       struct cobalt_mutex *mutex,
 				       int timed,
 				       const struct timespec __user *u_ts)
@@ -216,7 +216,7 @@ static inline
 int cobalt_mutex_timedlock_break(struct cobalt_mutex *mutex,
 				 int timed, const struct timespec __user *u_ts)
 {
-	xnthread_t *cur = xnsched_current_thread();
+	struct xnthread *cur = xnsched_current_thread();
 	int ret;
 
 	/* We need a valid thread handle for the fast lock. */
@@ -359,7 +359,7 @@ int cobalt_mutex_destroy(struct cobalt_mutex_shadow __user *u_mx)
 
 int cobalt_mutex_trylock(struct cobalt_mutex_shadow __user *u_mx)
 {
-	xnthread_t *cur = xnsched_current_thread();
+	struct xnthread *cur = xnsched_current_thread();
 	struct cobalt_mutex *mutex;
 	xnhandle_t handle;
 	spl_t s;

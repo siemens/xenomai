@@ -330,7 +330,7 @@ int xnselect(struct xnselector *selector,
 	     xnticks_t timeout, xntmode_t timeout_mode)
 {
 	unsigned i, not_empty = 0;
-	xnthread_t *thread;
+	struct xnthread *thread;
 	spl_t s;
 
 	if ((unsigned) nfds > __FD_SETSIZE)

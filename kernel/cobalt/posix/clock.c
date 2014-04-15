@@ -245,7 +245,7 @@ int cobalt_clock_nanosleep(clockid_t clock_id, int flags,
 			   struct timespec __user *u_rmt)
 {
 	struct timespec rqt, rmt, *rmtp = NULL;
-	xnthread_t *cur;
+	struct xnthread *cur;
 	xnsticks_t rem;
 	int err = 0;
 	spl_t s;

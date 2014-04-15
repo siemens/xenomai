@@ -1052,7 +1052,7 @@ static inline void rtdm_timer_stop_in_handler(rtdm_timer_t *timer)
  * @{
  */
 
-typedef xnthread_t rtdm_task_t;
+typedef struct xnthread rtdm_task_t;
 
 /**
  * Real-time task procedure

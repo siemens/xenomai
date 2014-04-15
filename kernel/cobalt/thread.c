@@ -49,7 +49,7 @@ static DECLARE_WAIT_QUEUE_HEAD(nkjoinq);
 
 static void timeout_handler(struct xntimer *timer)
 {
-	struct xnthread *thread = container_of(timer, xnthread_t, rtimer);
+	struct xnthread *thread = container_of(timer, struct xnthread, rtimer);
 
 	xnthread_set_info(thread, XNTIMEO);	/* Interrupts are off. */
 	xnthread_resume(thread, XNDELAY);
@@ -57,7 +57,7 @@ static void timeout_handler(struct xntimer *timer)
 
 static void periodic_handler(struct xntimer *timer)
 {
-	struct xnthread *thread = container_of(timer, xnthread_t, ptimer);
+	struct xnthread *thread = container_of(timer, struct xnthread, ptimer);
 	/*
 	 * Prevent unwanted round-robin, and do not wake up threads
 	 * blocked on a resource.
@@ -304,7 +304,7 @@ char *xnthread_format_status(unsigned long status, char *buf, int size)
 	return buf;
 }
 
-xnticks_t xnthread_get_timeout(xnthread_t *thread, xnticks_t ns)
+xnticks_t xnthread_get_timeout(struct xnthread *thread, xnticks_t ns)
 {
 	struct xntimer *timer;
 	xnticks_t timeout;
@@ -327,7 +327,7 @@ xnticks_t xnthread_get_timeout(xnthread_t *thread, xnticks_t ns)
 }
 EXPORT_SYMBOL_GPL(xnthread_get_timeout);
 
-xnticks_t xnthread_get_period(xnthread_t *thread)
+xnticks_t xnthread_get_period(struct xnthread *thread)
 {
 	xnticks_t period = 0;
 	/*
@@ -394,7 +394,7 @@ static inline void release_fpu(struct xnthread *thread)
 
 void xnthread_switch_fpu(struct xnsched *sched)
 {
-	xnthread_t *curr = sched->curr;
+	struct xnthread *curr = sched->curr;
 
 	if (!xnthread_test_state(curr, XNFPU))
 		return;
@@ -657,7 +657,7 @@ int xnthread_start(struct xnthread *thread,
 EXPORT_SYMBOL_GPL(xnthread_start);
 
 /**
- * @fn void xnthread_set_mode(xnthread_t *thread,int clrmask,int setmask)
+ * @fn void xnthread_set_mode(struct xnthread *thread,int clrmask,int setmask)
  * @brief Change a thread's control mode.
  *
  * Change the control mode of a given thread. The control mode affects
@@ -694,7 +694,7 @@ EXPORT_SYMBOL_GPL(xnthread_start);
  * @note Setting @a clrmask and @a setmask to zero leads to a nop,
  * only returning the previous mode if @a mode_r is a valid address.
  */
-int xnthread_set_mode(xnthread_t *thread, int clrmask, int setmask)
+int xnthread_set_mode(struct xnthread *thread, int clrmask, int setmask)
 {
 	struct xnthread *curr = xnsched_current_thread();
 	unsigned long oldmode;
@@ -735,7 +735,7 @@ int xnthread_set_mode(xnthread_t *thread, int clrmask, int setmask)
 EXPORT_SYMBOL_GPL(xnthread_set_mode);
 
 /**
- * @fn void xnthread_suspend(xnthread_t *thread, int mask,xnticks_t timeout, xntmode_t timeout_mode,struct xnsynch *wchan)
+ * @fn void xnthread_suspend(struct xnthread *thread, int mask,xnticks_t timeout, xntmode_t timeout_mode,struct xnsynch *wchan)
  * @brief Suspend a thread.
  *
  * Suspends the execution of a thread according to a given suspensive
@@ -792,7 +792,7 @@ EXPORT_SYMBOL_GPL(xnthread_set_mode);
  *
  * @remark Tags: isr-allowed, might-switch.
  */
-void xnthread_suspend(xnthread_t *thread, int mask,
+void xnthread_suspend(struct xnthread *thread, int mask,
 		      xnticks_t timeout, xntmode_t timeout_mode,
 		      struct xnsynch *wchan)
 {
@@ -1105,7 +1105,7 @@ unlock_and_exit:
 EXPORT_SYMBOL_GPL(xnthread_resume);
 
 /**
- * @fn int xnthread_unblock(xnthread_t *thread)
+ * @fn int xnthread_unblock(struct xnthread *thread)
  * @brief Unblock a thread.
  *
  * Breaks the thread out of any wait it is currently in.  This call
@@ -1128,7 +1128,7 @@ EXPORT_SYMBOL_GPL(xnthread_resume);
  *
  * @remark Tags: isr-allowed.
  */
-int xnthread_unblock(xnthread_t *thread)
+int xnthread_unblock(struct xnthread *thread)
 {
 	int ret = 1;
 	spl_t s;
@@ -1178,7 +1178,7 @@ int xnthread_unblock(xnthread_t *thread)
 EXPORT_SYMBOL_GPL(xnthread_unblock);
 
 /**
- * @fn int xnthread_set_periodic(xnthread_t *thread,xnticks_t idate, xntmode_t timeout_mode, xnticks_t period)
+ * @fn int xnthread_set_periodic(struct xnthread *thread,xnticks_t idate, xntmode_t timeout_mode, xnticks_t period)
  * @brief Make a thread periodic.
  *
  * Make a thread periodic by programming its first release point and
@@ -1216,7 +1216,7 @@ EXPORT_SYMBOL_GPL(xnthread_unblock);
  *
  * @remark Tags: none.
  */
-int xnthread_set_periodic(xnthread_t *thread, xnticks_t idate,
+int xnthread_set_periodic(struct xnthread *thread, xnticks_t idate,
 			  xntmode_t timeout_mode, xnticks_t period)
 {
 	int ret = 0;
@@ -1302,7 +1302,7 @@ EXPORT_SYMBOL_GPL(xnthread_set_periodic);
 int xnthread_wait_period(unsigned long *overruns_r)
 {
 	unsigned long overruns = 0;
-	xnthread_t *thread;
+	struct xnthread *thread;
 	xnticks_t now;
 	int err = 0;
 	spl_t s;

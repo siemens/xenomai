@@ -614,7 +614,7 @@ struct xnthread *xnsched_findq(struct list_head *q, int prio)
 #endif /* !CONFIG_XENO_OPT_SCALABLE_SCHED */
 
 static inline void switch_context(struct xnsched *sched,
-				  xnthread_t *prev, xnthread_t *next)
+				  struct xnthread *prev, struct xnthread *next)
 {
 #ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
 	sched->last = prev;

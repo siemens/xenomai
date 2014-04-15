@@ -16,7 +16,7 @@ typedef struct {
 	struct rttst_swtest_task base;
 	rtdm_event_t rt_synch;
 	struct semaphore nrt_synch;
-	xnthread_t ktask;          /* For kernel-space real-time tasks. */
+	struct xnthread ktask;          /* For kernel-space real-time tasks. */
 	unsigned last_switch;
 } rtswitch_task_t;
 

@@ -60,8 +60,7 @@ struct xnthread_wait_context {
 	int posted;
 };
 
-typedef struct xnthread {
-
+struct xnthread {
 	struct xnarchtcb tcb;		/* Architecture-dependent block */
 
 	unsigned long state;		/* Thread state flags */
@@ -174,7 +173,7 @@ typedef struct xnthread {
 #endif
 	/** Exit event for joining the thread. */
 	struct xnsynch join_synch;
-} xnthread_t;
+};
 
 #define xnthread_name(thread)               ((thread)->name)
 #define xnthread_clear_name(thread)        do { *(thread)->name = 0; } while(0)

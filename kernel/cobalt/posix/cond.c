@@ -252,7 +252,7 @@ static inline int pthread_cond_destroy(struct cobalt_cond_shadow *cnd)
 	return 0;
 }
 
-static inline int cobalt_cond_timedwait_prologue(xnthread_t *cur,
+static inline int cobalt_cond_timedwait_prologue(struct xnthread *cur,
 						 struct cobalt_cond *cond,
 						 struct cobalt_mutex *mutex,
 						 int timed,
@@ -329,7 +329,7 @@ static inline int cobalt_cond_timedwait_prologue(xnthread_t *cur,
 	return err;
 }
 
-static inline int cobalt_cond_timedwait_epilogue(xnthread_t *cur,
+static inline int cobalt_cond_timedwait_epilogue(struct xnthread *cur,
 						 struct cobalt_cond *cond,
 						 struct cobalt_mutex *mutex)
 {
@@ -410,7 +410,7 @@ int cobalt_cond_wait_prologue(struct cobalt_cond_shadow __user *u_cnd,
 			      unsigned int timed,
 			      struct timespec __user *u_ts)
 {
-	xnthread_t *cur = xnshadow_current();
+	struct xnthread *cur = xnshadow_current();
 	struct cobalt_cond *cnd;
 	struct cobalt_mutex *mx;
 	struct mutex_dat *datp;
@@ -473,7 +473,7 @@ int cobalt_cond_wait_prologue(struct cobalt_cond_shadow __user *u_cnd,
 int cobalt_cond_wait_epilogue(struct cobalt_cond_shadow __user *u_cnd,
 			      struct cobalt_mutex_shadow __user *u_mx)
 {
-	xnthread_t *cur = xnshadow_current();
+	struct xnthread *cur = xnshadow_current();
 	struct cobalt_cond *cnd;
 	struct cobalt_mutex *mx;
 	xnhandle_t handle;

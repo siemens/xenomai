@@ -735,7 +735,7 @@ int xnregistry_bind(const char *key, xnticks_t timeout, int timeout_mode,
 		    xnhandle_t *phandle)
 {
 	struct xnobject *object;
-	xnthread_t *thread;
+	struct xnthread *thread;
 	int ret = 0, info;
 	spl_t s;
 
