@@ -55,7 +55,7 @@ struct xnirqstat {
 	xnstat_exectime_t sum;
 };
 
-typedef struct xnintr {
+struct xnintr {
 #ifdef CONFIG_XENO_OPT_SHIRQ
 	/* !< Next object in the IRQ-sharing chain. */
 	struct xnintr *next;
@@ -76,27 +76,19 @@ typedef struct xnintr {
 	const char *name;
 	/* !< Statistics. */
 	struct xnirqstat *stats;
-} xnintr_t;
+};
 
-typedef struct xnintr_iterator {
-
+struct xnintr_iterator {
     int cpu;		/* !< Current CPU in iteration. */
-
     unsigned long hits;	/* !< Current hit counter. */
-
     xnticks_t exectime_period;	/* !< Used CPU time in current accounting period. */
-
     xnticks_t account_period; /* !< Length of accounting period. */
-
     xnticks_t exectime_total;	/* !< Overall CPU time consumed. */
-
     int list_rev;	/* !< System-wide xnintr list revision (internal use). */
+    struct xnintr *prev;	/* !< Previously visited xnintr object (internal use). */
+};
 
-    xnintr_t *prev;	/* !< Previously visited xnintr object (internal use). */
-
-} xnintr_iterator_t;
-
-extern xnintr_t nktimer;
+extern struct xnintr nktimer;
 
 int xnintr_mount(void);
 
@@ -110,34 +102,34 @@ void xnintr_cleanup_proc(void);
 
     /* Public interface. */
 
-int xnintr_init(xnintr_t *intr,
+int xnintr_init(struct xnintr *intr,
 		const char *name,
 		unsigned irq,
 		xnisr_t isr,
 		xniack_t iack,
 		int flags);
 
-void xnintr_destroy(xnintr_t *intr);
+void xnintr_destroy(struct xnintr *intr);
 
-int xnintr_attach(xnintr_t *intr,
+int xnintr_attach(struct xnintr *intr,
 		  void *cookie);
 
-void xnintr_detach(xnintr_t *intr);
+void xnintr_detach(struct xnintr *intr);
 
-void xnintr_enable(xnintr_t *intr);
+void xnintr_enable(struct xnintr *intr);
 
-void xnintr_disable(xnintr_t *intr);
+void xnintr_disable(struct xnintr *intr);
 
-void xnintr_affinity(xnintr_t *intr,
+void xnintr_affinity(struct xnintr *intr,
 		     cpumask_t cpumask);
 
-int xnintr_query_init(xnintr_iterator_t *iterator);
+int xnintr_query_init(struct xnintr_iterator *iterator);
 
 int xnintr_get_query_lock(void);
 
 void xnintr_put_query_lock(void);
 
-int xnintr_query_next(int irq, xnintr_iterator_t *iterator,
+int xnintr_query_next(int irq, struct xnintr_iterator *iterator,
 		      char *name_buf);
 
 #endif /* !_COBALT_KERNEL_INTR_H */

@@ -853,7 +853,7 @@ void rtdm_lock_put_irqrestore(rtdm_lock_t *lock, rtdm_lockctx_t s)
  * @{
  */
 
-typedef xnintr_t rtdm_irq_t;
+typedef struct xnintr rtdm_irq_t;
 
 /*!
  * @anchor RTDM_IRQTYPE_xxx   @name RTDM_IRQTYPE_xxx

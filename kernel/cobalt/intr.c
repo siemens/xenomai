@@ -75,7 +75,7 @@ static inline void sync_stat_references(struct xnintr *intr)
 #else
 static inline void stat_counter_inc(void) {}
 static inline void stat_counter_dec(void) {}
-static inline void sync_stat_references(xnintr_t *intr) {}
+static inline void sync_stat_references(struct xnintr *intr) {}
 #endif /* CONFIG_XENO_OPT_STATS */
 
 static void xnintr_irq_handler(unsigned irq, void *cookie);
@@ -148,23 +148,20 @@ void xnintr_core_clock_handler(void)
 
 #ifdef CONFIG_XENO_OPT_SHIRQ
 
-typedef struct xnintr_irq {
-
+struct xnintr_irq {
 	DECLARE_XNLOCK(lock);
-
-	xnintr_t *handlers;
+	struct xnintr *handlers;
 	int unhandled;
+} ____cacheline_aligned_in_smp;
 
-} ____cacheline_aligned_in_smp xnintr_irq_t;
+static struct xnintr_irq xnirqs[IPIPE_NR_IRQS];
 
-static xnintr_irq_t xnirqs[IPIPE_NR_IRQS];
-
-static inline xnintr_t *xnintr_shirq_first(unsigned irq)
+static inline struct xnintr *xnintr_shirq_first(unsigned irq)
 {
 	return xnirqs[irq].handlers;
 }
 
-static inline xnintr_t *xnintr_shirq_next(xnintr_t *prev)
+static inline struct xnintr *xnintr_shirq_next(struct xnintr *prev)
 {
 	return prev->next;
 }
@@ -176,11 +173,11 @@ static inline xnintr_t *xnintr_shirq_next(xnintr_t *prev)
 static void xnintr_shirq_handler(unsigned irq, void *cookie)
 {
 	struct xnsched *sched = xnsched_current();
-	xnintr_irq_t *shirq = &xnirqs[irq];
+	struct xnintr_irq *shirq = &xnirqs[irq];
 	struct xnirqstat *statp;
 	xnstat_exectime_t *prev;
+	struct xnintr *intr;
 	xnticks_t start;
-	xnintr_t *intr;
 	int s = 0, ret;
 
 	prev  = xnstat_exectime_get_current(sched);
@@ -245,7 +242,7 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 {
 	const int MAX_EDGEIRQ_COUNTER = 128;
 	struct xnsched *sched = xnsched_current();
-	xnintr_irq_t *shirq = &xnirqs[irq];
+	struct xnintr_irq *shirq = &xnirqs[irq];
 	int s = 0, counter = 0, ret, code;
 	struct xnintr *intr, *end = NULL;
 	struct xnirqstat *statp;
@@ -318,10 +315,10 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 	trace_mark(xn_nucleus, irq_exit, "irq %u", irq);
 }
 
-static inline int xnintr_irq_attach(xnintr_t *intr)
+static inline int xnintr_irq_attach(struct xnintr *intr)
 {
-	xnintr_irq_t *shirq = &xnirqs[intr->irq];
-	xnintr_t *prev, **p = &shirq->handlers;
+	struct xnintr_irq *shirq = &xnirqs[intr->irq];
+	struct xnintr *prev, **p = &shirq->handlers;
 	int ret;
 
 	if ((prev = *p) != NULL) {
@@ -365,10 +362,10 @@ static inline int xnintr_irq_attach(xnintr_t *intr)
 	return 0;
 }
 
-static inline void xnintr_irq_detach(xnintr_t *intr)
+static inline void xnintr_irq_detach(struct xnintr *intr)
 {
-	xnintr_irq_t *shirq = &xnirqs[intr->irq];
-	xnintr_t *e, **p = &shirq->handlers;
+	struct xnintr_irq *shirq = &xnirqs[intr->irq];
+	struct xnintr *e, **p = &shirq->handlers;
 
 	while ((e = *p) != NULL) {
 		if (e == intr) {
@@ -395,33 +392,31 @@ static inline void xnintr_irq_detach(xnintr_t *intr)
 #else /* !CONFIG_XENO_OPT_SHIRQ */
 
 #if defined(CONFIG_SMP) || XENO_DEBUG(XNLOCK)
-typedef struct xnintr_irq {
-
+struct xnintr_irq {
 	DECLARE_XNLOCK(lock);
+} ____cacheline_aligned_in_smp;
 
-} ____cacheline_aligned_in_smp xnintr_irq_t;
-
-static xnintr_irq_t xnirqs[IPIPE_NR_IRQS];
+static struct xnintr_irq xnirqs[IPIPE_NR_IRQS];
 #endif /* CONFIG_SMP || XENO_DEBUG(XNLOCK) */
 
-static inline xnintr_t *xnintr_shirq_first(unsigned int irq)
+static inline struct xnintr *xnintr_shirq_first(unsigned int irq)
 {
 	return __ipipe_irq_cookie(&xnsched_realtime_domain, irq);
 }
 
-static inline xnintr_t *xnintr_shirq_next(xnintr_t *prev)
+static inline struct xnintr *xnintr_shirq_next(struct xnintr *prev)
 {
 	return NULL;
 }
 
-static inline int xnintr_irq_attach(xnintr_t *intr)
+static inline int xnintr_irq_attach(struct xnintr *intr)
 {
 	return ipipe_request_irq(&xnsched_realtime_domain,
 				 intr->irq, xnintr_irq_handler, intr,
 				 (ipipe_irq_ackfn_t)intr->iack);
 }
 
-static inline void xnintr_irq_detach(xnintr_t *intr)
+static inline void xnintr_irq_detach(struct xnintr *intr)
 {
 	int irq = intr->irq;
 
@@ -527,7 +522,7 @@ static void clear_irqstats(struct xnintr *intr)
 }
 
 /**
- * @fn int xnintr_init(xnintr_t *intr,const char *name,unsigned irq,xnisr_t isr,xniack_t iack,int flags)
+ * @fn int xnintr_init(struct xnintr *intr,const char *name,unsigned irq,xnisr_t isr,xniack_t iack,int flags)
  * @brief Initialize an interrupt object.
  *
  * Associates an interrupt object with an IRQ line.
@@ -613,7 +608,7 @@ static void clear_irqstats(struct xnintr *intr)
  * @remark Tags: secondary-only.
  */
 
-int xnintr_init(xnintr_t *intr, const char *name,
+int xnintr_init(struct xnintr *intr, const char *name,
 		unsigned int irq, xnisr_t isr, xniack_t iack,
 		int flags)
 {
@@ -640,7 +635,7 @@ int xnintr_init(xnintr_t *intr, const char *name,
 EXPORT_SYMBOL_GPL(xnintr_init);
 
 /**
- * @fn void xnintr_destroy(xnintr_t *intr)
+ * @fn void xnintr_destroy(struct xnintr *intr)
  * @brief Destroy an interrupt object.
  *
  * Destroys an interrupt object previously initialized by
@@ -653,7 +648,7 @@ EXPORT_SYMBOL_GPL(xnintr_init);
  *
  * @remark Tags: secondary-only.
  */
-void xnintr_destroy(xnintr_t *intr)
+void xnintr_destroy(struct xnintr *intr)
 {
 	secondary_mode_only();
 	xnintr_detach(intr);
@@ -662,7 +657,7 @@ void xnintr_destroy(xnintr_t *intr)
 EXPORT_SYMBOL_GPL(xnintr_destroy);
 
 /**
- * @fn int xnintr_attach(xnintr_t *intr, void *cookie)
+ * @fn int xnintr_attach(struct xnintr *intr, void *cookie)
  * @brief Attach an interrupt object.
  *
  * Attach an interrupt object previously initialized by
@@ -692,7 +687,7 @@ EXPORT_SYMBOL_GPL(xnintr_destroy);
  * @note Attaching an interrupt resets the tracked number of receipts
  * to zero.
  */
-int xnintr_attach(xnintr_t *intr, void *cookie)
+int xnintr_attach(struct xnintr *intr, void *cookie)
 {
 	int ret;
 
@@ -729,7 +724,7 @@ out:
 EXPORT_SYMBOL_GPL(xnintr_attach);
 
 /**
- * @fn int xnintr_detach(xnintr_t *intr)
+ * @fn int xnintr_detach(struct xnintr *intr)
  * @brief Detach an interrupt object.
  *
  * Detach an interrupt object previously attached by
@@ -746,7 +741,7 @@ EXPORT_SYMBOL_GPL(xnintr_attach);
  *
  * @remark Tags: secondary-only.
  */
-void xnintr_detach(xnintr_t *intr)
+void xnintr_detach(struct xnintr *intr)
 {
 	secondary_mode_only();
 
@@ -765,7 +760,7 @@ void xnintr_detach(xnintr_t *intr)
 EXPORT_SYMBOL_GPL(xnintr_detach);
 
 /**
- * @fn void xnintr_enable(xnintr_t *intr)
+ * @fn void xnintr_enable(struct xnintr *intr)
  * @brief Enable an interrupt object.
  *
  * Enables the hardware interrupt line associated with an interrupt
@@ -777,7 +772,7 @@ EXPORT_SYMBOL_GPL(xnintr_detach);
  * @remark Tags: secondary-only.
  */
 
-void xnintr_enable(xnintr_t *intr)
+void xnintr_enable(struct xnintr *intr)
 {
 	secondary_mode_only();
 	trace_mark(xn_nucleus, irq_enable, "irq %u", intr->irq);
@@ -786,7 +781,7 @@ void xnintr_enable(xnintr_t *intr)
 EXPORT_SYMBOL_GPL(xnintr_enable);
 
 /**
- * @fn void xnintr_disable(xnintr_t *intr)
+ * @fn void xnintr_disable(struct xnintr *intr)
  * @brief Disable an interrupt object.
  *
  * Disables the hardware interrupt line associated with an interrupt
@@ -799,7 +794,7 @@ EXPORT_SYMBOL_GPL(xnintr_enable);
  * @remark Tags: secondary-only.
  */
 
-void xnintr_disable(xnintr_t *intr)
+void xnintr_disable(struct xnintr *intr)
 {
 	secondary_mode_only();
 	trace_mark(xn_nucleus, irq_disable, "irq %u", intr->irq);
@@ -808,7 +803,7 @@ void xnintr_disable(xnintr_t *intr)
 EXPORT_SYMBOL_GPL(xnintr_disable);
 
 /**
- * @fn void xnintr_affinity(xnintr_t *intr, cpumask_t cpumask)
+ * @fn void xnintr_affinity(struct xnintr *intr, cpumask_t cpumask)
  * @brief Set interrupt's processor affinity.
  *
  * Restricts the IRQ associated with the interrupt object @a intr to
@@ -825,7 +820,7 @@ EXPORT_SYMBOL_GPL(xnintr_disable);
  * @remark Tags: secondary-only.
  */
 
-void xnintr_affinity(xnintr_t *intr, cpumask_t cpumask)
+void xnintr_affinity(struct xnintr *intr, cpumask_t cpumask)
 {
 	secondary_mode_only();
 	trace_mark(xn_nucleus, irq_affinity, "irq %u %lu",
@@ -860,7 +855,7 @@ void xnintr_put_query_lock(void)
 	mutex_unlock(&intrlock);
 }
 
-int xnintr_query_init(xnintr_iterator_t *iterator)
+int xnintr_query_init(struct xnintr_iterator *iterator)
 {
 	iterator->cpu = -1;
 	iterator->prev = NULL;
@@ -880,11 +875,12 @@ int xnintr_query_init(xnintr_iterator_t *iterator)
 	return xnintr_count;
 }
 
-int xnintr_query_next(int irq, xnintr_iterator_t *iterator, char *name_buf)
+int xnintr_query_next(int irq, struct xnintr_iterator *iterator,
+		      char *name_buf)
 {
 	struct xnirqstat *statp;
 	xnticks_t last_switch;
-	xnintr_t *intr;
+	struct xnintr *intr;
 	int cpu;
 
 	for (cpu = iterator->cpu + 1; cpu < num_present_cpus(); ++cpu) {
