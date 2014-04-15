@@ -4,6 +4,7 @@ libvxworks_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 0:0:0
 
 libvxworks_la_SOURCES = \
 	init.c		\
+	init.h		\
 	errnoLib.c	\
 	intLib.c	\
 	kernLib.c	\

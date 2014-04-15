@@ -23,6 +23,7 @@
 #include <getopt.h>
 #include <copperplate/init.h>
 #include <vxworks/errnoLib.h>
+#include "init.h"
 #include "tickLib.h"
 #include "taskLib.h"
 
@@ -95,7 +96,7 @@ static struct copperskin vxworks_skin = {
 	.help = vxworks_help,
 };
 
-static __attribute__ ((constructor)) void register_vxworks(void)
+static __libvxworks_ctor void register_vxworks(void)
 {
 	copperplate_register_skin(&vxworks_skin);
 }
