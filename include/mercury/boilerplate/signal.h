@@ -24,7 +24,7 @@
 #define sigev_notify_thread_id	 _sigev_un._tid
 #endif
 
-/* Private signal used for unblocking from syscalls. */
-#define SIGRELS	(SIGRTMIN + 9)
+#define SIGNOTIFY	(SIGRTMIN + 8) /* Internal notification */
+#define SIGRELS		(SIGRTMIN + 9) /* Syscall abort */
 
 #endif /* _MERCURY_COPPERPLATE_SIGNAL_H */

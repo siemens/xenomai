@@ -24,11 +24,9 @@
 #include <errno.h>
 #include "copperplate/notifier.h"
 #include "boilerplate/lock.h"
+#include "boilerplate/signal.h"
 #include "copperplate/debug.h"
 #include "internal.h"
-
-/* Private signal used for notification. */
-#define NOTIFYSIG	(SIGRTMIN + 8)
 
 static DEFINE_PRIVATE_LIST(notifier_list);
 
@@ -112,7 +110,7 @@ hand_over:
 	if (notifier_old_sa.sa_sigaction) {
 		/*
 		 * This is our best effort to relay any unprocessed
-		 * event to the user-defined handler for NOTIFYSIG we
+		 * event to the user-defined handler for SIGNOTIFY we
 		 * might have overriden in notifier_pkg_init(). The
 		 * application code should set this handler prior to
 		 * calling copperplate_init(), so that we know about it. The
@@ -133,7 +131,7 @@ static void lock_notifier_list(sigset_t *oset)
 
 	read_lock(&notifier_lock);
 	pthread_sigmask(SIG_BLOCK, NULL, &set);
-	sigaddset(&set, NOTIFYSIG);
+	sigaddset(&set, SIGNOTIFY);
 	pthread_sigmask(SIG_BLOCK, &set, oset);
 }
 
@@ -184,7 +182,7 @@ int notifier_init(struct notifier *nf,
 	pop_cleanup_lock(&notifier_lock);
 
 	fd = nf->psfd[0];
-	fcntl(fd, F_SETSIG, NOTIFYSIG);
+	fcntl(fd, F_SETSIG, SIGNOTIFY);
 	owner.type = F_OWNER_TID;
 	owner.pid = nf->owner;
 	fcntl(fd, F_SETOWN_EX, &owner);
@@ -339,5 +337,5 @@ void notifier_pkg_init(void)
 	memset(&sa, 0, sizeof(sa));
 	sa.sa_sigaction = &notifier_sighandler;
 	sa.sa_flags = SA_SIGINFO|SA_RESTART;
-	sigaction(NOTIFYSIG, &sa, &notifier_old_sa);
+	sigaction(SIGNOTIFY, &sa, &notifier_old_sa);
 }
