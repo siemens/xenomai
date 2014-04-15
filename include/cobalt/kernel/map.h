@@ -30,8 +30,7 @@
 
 #define XNMAP_MAX_KEYS	(BITS_PER_LONG * BITS_PER_LONG)
 
-typedef struct xnmap {
-
+struct xnmap {
     int nkeys;
     int ukeys;
     int offset;
@@ -41,29 +40,28 @@ typedef struct xnmap {
     unsigned long lomap[__IDMAP_LONGS];
 #undef __IDMAP_LONGS
     void *objarray[1];
+};
 
-} xnmap_t;
+struct xnmap *xnmap_create(int nkeys,
+			   int reserve,
+			   int offset);
 
-xnmap_t *xnmap_create(int nkeys,
-		      int reserve,
-		      int offset);
+void xnmap_delete(struct xnmap *map);
 
-void xnmap_delete(xnmap_t *map);
-
-int xnmap_enter(xnmap_t *map,
+int xnmap_enter(struct xnmap *map,
 		int key,
 		void *objaddr);
 
-int xnmap_remove(xnmap_t *map,
+int xnmap_remove(struct xnmap *map,
 		 int key);
 
-static inline void *xnmap_fetch_nocheck(xnmap_t *map, int key)
+static inline void *xnmap_fetch_nocheck(struct xnmap *map, int key)
 {
 	int ofkey = key - map->offset;
 	return map->objarray[ofkey];
 }
 
-static inline void *xnmap_fetch(xnmap_t *map, int key)
+static inline void *xnmap_fetch(struct xnmap *map, int key)
 {
 	int ofkey = key - map->offset;
 

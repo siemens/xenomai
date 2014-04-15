@@ -81,9 +81,9 @@
  * @remark Tags: none.
  */
 
-xnmap_t *xnmap_create(int nkeys, int reserve, int offset)
+struct xnmap *xnmap_create(int nkeys, int reserve, int offset)
 {
-	xnmap_t *map;
+	struct xnmap *map;
 	int mapsize;
 
 	if (nkeys <= 0 || (nkeys & (nkeys - 1)) != 0)
@@ -108,7 +108,7 @@ xnmap_t *xnmap_create(int nkeys, int reserve, int offset)
 EXPORT_SYMBOL_GPL(xnmap_create);
 
 /**
- * @fn void xnmap_delete(xnmap_t *map)
+ * @fn void xnmap_delete(struct xnmap *map)
  * @brief Delete a map.
  *
  * Deletes a map, freeing any associated memory back to the Xenomai
@@ -119,14 +119,14 @@ EXPORT_SYMBOL_GPL(xnmap_create);
  * @remark Tags: none.
  */
 
-void xnmap_delete(xnmap_t *map)
+void xnmap_delete(struct xnmap *map)
 {
 	xnfree(map);
 }
 EXPORT_SYMBOL_GPL(xnmap_delete);
 
 /**
- * @fn void xnmap_enter(xnmap_t *map, int key, void *objaddr)
+ * @fn void xnmap_enter(struct xnmap *map, int key, void *objaddr)
  * @brief Index an object into a map.
  *
  * Insert a new object into the given map.
@@ -153,7 +153,7 @@ EXPORT_SYMBOL_GPL(xnmap_delete);
  * @remark Tags: isr-allowed.
  */
 
-int xnmap_enter(xnmap_t *map, int key, void *objaddr)
+int xnmap_enter(struct xnmap *map, int key, void *objaddr)
 {
 	int hi, lo, ofkey = key - map->offset;
 	spl_t s;
@@ -195,7 +195,7 @@ int xnmap_enter(xnmap_t *map, int key, void *objaddr)
 EXPORT_SYMBOL_GPL(xnmap_enter);
 
 /**
- * @fn void xnmap_remove(xnmap_t *map, int key)
+ * @fn void xnmap_remove(struct xnmap *map, int key)
  * @brief Remove an object reference from a map.
  *
  * Removes an object reference from the given map, releasing the
@@ -213,7 +213,7 @@ EXPORT_SYMBOL_GPL(xnmap_enter);
  * @remark Tags: isr-allowed.
  */
 
-int xnmap_remove(xnmap_t *map, int key)
+int xnmap_remove(struct xnmap *map, int key)
 {
 	int ofkey = key - map->offset, hi, lo;
 	spl_t s;
@@ -235,7 +235,7 @@ int xnmap_remove(xnmap_t *map, int key)
 EXPORT_SYMBOL_GPL(xnmap_remove);
 
 /**
- * @fn void xnmap_fetch(xnmap_t *map, int key)
+ * @fn void xnmap_fetch(struct xnmap *map, int key)
  * @brief Search an object into a map.
  *
  * Retrieve an object reference from the given map by its index key.
@@ -252,7 +252,7 @@ EXPORT_SYMBOL_GPL(xnmap_remove);
  */
 
 /**
- * @fn void xnmap_fetch_nocheck(xnmap_t *map, int key)
+ * @fn void xnmap_fetch_nocheck(struct xnmap *map, int key)
  * @brief Search an object into a map - unchecked form.
  *
  * Retrieve an object reference from the given map by its index key,
