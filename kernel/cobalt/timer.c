@@ -158,10 +158,10 @@ int xntimer_start(struct xntimer *timer,
 }
 EXPORT_SYMBOL_GPL(xntimer_start);
 
-/*!
- * \fn int xntimer_stop(struct xntimer *timer)
+/**
+ * @fn int xntimer_stop(struct xntimer *timer)
  *
- * \brief Disarm a timer.
+ * @brief Disarm a timer.
  *
  * This service deactivates a timer previously armed using
  * xntimer_start(). Once disarmed, the timer can be subsequently
@@ -169,15 +169,7 @@ EXPORT_SYMBOL_GPL(xntimer_start);
  *
  * @param timer The address of a valid timer descriptor.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Any kernel context.
- *
- * Rescheduling: never.
- *
- * @note Must be called with nklock held, IRQs off.
+ * @remark Tags: atomic-entry, isr-allowed.
  */
 void __xntimer_stop(struct xntimer *timer)
 {
@@ -202,10 +194,10 @@ void __xntimer_stop(struct xntimer *timer)
 }
 EXPORT_SYMBOL_GPL(__xntimer_stop);
 
-/*!
- * \fn xnticks_t xntimer_get_date(struct xntimer *timer)
+/**
+ * @fn xnticks_t xntimer_get_date(struct xntimer *timer)
  *
- * \brief Return the absolute expiration date.
+ * @brief Return the absolute expiration date.
  *
  * Return the next expiration date of a timer as an absolute count of
  * nanoseconds.
@@ -215,13 +207,7 @@ EXPORT_SYMBOL_GPL(__xntimer_stop);
  * @return The expiration date in nanoseconds. The special value
  * XN_INFINITE is returned if @a timer is currently disabled.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Any kernel context.
- *
- * Rescheduling: never.
+ * @remark Tags: isr-allowed.
  */
 xnticks_t xntimer_get_date(struct xntimer *timer)
 {
@@ -233,10 +219,10 @@ xnticks_t xntimer_get_date(struct xntimer *timer)
 }
 EXPORT_SYMBOL_GPL(xntimer_get_date);
 
-/*!
- * \fn xnticks_t xntimer_get_timeout(struct xntimer *timer)
+/**
+ * @fn xnticks_t xntimer_get_timeout(struct xntimer *timer)
  *
- * \brief Return the relative expiration date.
+ * @brief Return the relative expiration date.
  *
  * This call returns the count of nanoseconds remaining until the
  * timer expires.
@@ -249,13 +235,7 @@ EXPORT_SYMBOL_GPL(xntimer_get_date);
  * the associated handler has not been fired yet); in such a case, 1
  * is returned.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Any kernel context.
- *
- * Rescheduling: never.
+ * @remark Tags: irqs-off, isr-allowed.
  */
 xnticks_t xntimer_get_timeout(struct xntimer *timer)
 {
@@ -276,10 +256,10 @@ xnticks_t xntimer_get_timeout(struct xntimer *timer)
 }
 EXPORT_SYMBOL_GPL(xntimer_get_timeout);
 
-/*!
- * \fn xnticks_t xntimer_get_interval(struct xntimer *timer)
+/**
+ * @fn xnticks_t xntimer_get_interval(struct xntimer *timer)
  *
- * \brief Return the timer interval value.
+ * @brief Return the timer interval value.
  *
  * Return the timer interval value in nanoseconds.
  *
@@ -289,13 +269,7 @@ EXPORT_SYMBOL_GPL(xntimer_get_timeout);
  * XN_INFINITE is returned if @a timer is currently disabled or
  * one shot.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Any kernel context.
- *
- * Rescheduling: never.
+ * @remark Tags: isr-allowed.
  */
 xnticks_t xntimer_get_interval(struct xntimer *timer)
 {
@@ -305,9 +279,9 @@ xnticks_t xntimer_get_interval(struct xntimer *timer)
 }
 EXPORT_SYMBOL_GPL(xntimer_get_interval);
 
-/*!
- * \fn void xntimer_init(struct xntimer *timer,struct xnclock *clock,void (*handler)(struct xntimer *timer), struct xnthread *thread)
- * \brief Initialize a timer object.
+/**
+ * @fn void xntimer_init(struct xntimer *timer,struct xnclock *clock,void (*handler)(struct xntimer *timer), struct xnthread *thread)
+ * @brief Initialize a timer object.
  *
  * Creates a timer. When created, a timer is left disarmed; it must be
  * started using xntimer_start() in order to be activated.
@@ -332,13 +306,7 @@ EXPORT_SYMBOL_GPL(xntimer_get_interval);
  * There is no limitation on the number of timers which can be
  * created/active concurrently.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Any kernel context.
- *
- * Rescheduling: never.
+ * @remark Tags: none.
  */
 #ifdef DOXYGEN_CPP
 void xntimer_init(struct xntimer *timer, struct xnclock *clock,
@@ -419,10 +387,10 @@ EXPORT_SYMBOL_GPL(xntimer_switch_tracking);
 
 #endif /* CONFIG_XENO_OPT_EXTCLOCK && CONFIG_XENO_OPT_STATS */
 
-/*!
- * \fn void xntimer_destroy(struct xntimer *timer)
+/**
+ * @fn void xntimer_destroy(struct xntimer *timer)
  *
- * \brief Release a timer object.
+ * @brief Release a timer object.
  *
  * Destroys a timer. After it has been destroyed, all resources
  * associated with the timer have been released. The timer is
@@ -430,18 +398,8 @@ EXPORT_SYMBOL_GPL(xntimer_switch_tracking);
  *
  * @param timer The address of a valid timer descriptor.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
+ * @remark Tags: none.
  */
-
 void xntimer_destroy(struct xntimer *timer)
 {
 	struct xnclock *clock __maybe_unused = xntimer_clock(timer);
@@ -474,7 +432,7 @@ EXPORT_SYMBOL_GPL(xntimer_destroy);
  * @param sched The address of the destination per-CPU scheduler
  * slot.
  *
- * @note Must be called with nklock held, IRQs off.
+ * @remark Tags: atomic-entry.
  */
 void __xntimer_migrate(struct xntimer *timer, struct xnsched *sched)
 {				/* nklocked, IRQs off */
@@ -530,6 +488,8 @@ void xntimer_release_ipi(void)
  * xnclock_read_raw(xntimer_clock(timer)))
  *
  * @return the number of overruns of @a timer at date @a now
+ *
+ * @remark Tags: irqs-off, isr-allowed.
  */
 unsigned long long xntimer_get_overruns(struct xntimer *timer, xnticks_t now)
 {
