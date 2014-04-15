@@ -735,7 +735,7 @@ int xnthread_set_mode(xnthread_t *thread, int clrmask, int setmask)
 EXPORT_SYMBOL_GPL(xnthread_set_mode);
 
 /**
- * @fn void xnthread_suspend(xnthread_t *thread, int mask,xnticks_t timeout, xntmode_t timeout_mode,xnsynch_t *wchan)
+ * @fn void xnthread_suspend(xnthread_t *thread, int mask,xnticks_t timeout, xntmode_t timeout_mode,struct xnsynch *wchan)
  * @brief Suspend a thread.
  *
  * Suspends the execution of a thread according to a given suspensive
@@ -794,7 +794,7 @@ EXPORT_SYMBOL_GPL(xnthread_set_mode);
  */
 void xnthread_suspend(xnthread_t *thread, int mask,
 		      xnticks_t timeout, xntmode_t timeout_mode,
-		      xnsynch_t *wchan)
+		      struct xnsynch *wchan)
 {
 	unsigned long oldstate;
 	struct xnsched *sched;

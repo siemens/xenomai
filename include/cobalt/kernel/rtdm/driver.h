@@ -1165,7 +1165,7 @@ void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, nanosecs_rel_t timeout);
 /* --- event services --- */
 
 typedef struct {
-	xnsynch_t synch_base;
+	struct xnsynch synch_base;
 	DECLARE_XNSELECT(select_block);
 } rtdm_event_t;
 
@@ -1182,7 +1182,7 @@ void rtdm_event_signal(rtdm_event_t *event);
 void rtdm_event_clear(rtdm_event_t *event);
 
 #ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
-void __rtdm_synch_flush(xnsynch_t *synch, unsigned long reason);
+void __rtdm_synch_flush(struct xnsynch *synch, unsigned long reason);
 
 static inline void rtdm_event_pulse(rtdm_event_t *event)
 {
@@ -1202,7 +1202,7 @@ static inline void rtdm_event_destroy(rtdm_event_t *event)
 
 typedef struct {
 	unsigned long value;
-	xnsynch_t synch_base;
+	struct xnsynch synch_base;
 	DECLARE_XNSELECT(select_block);
 } rtdm_sem_t;
 
@@ -1226,7 +1226,7 @@ static inline void rtdm_sem_destroy(rtdm_sem_t *sem)
 /* --- mutex services --- */
 
 typedef struct {
-	xnsynch_t synch_base;
+	struct xnsynch synch_base;
 } rtdm_mutex_t;
 
 void rtdm_mutex_init(rtdm_mutex_t *mutex);

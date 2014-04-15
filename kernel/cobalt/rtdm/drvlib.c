@@ -659,7 +659,7 @@ void rtdm_timer_stop_in_handler(rtdm_timer_t *timer);
 
 #define RTDM_SYNCH_DELETED          XNSYNCH_SPARE0
 
-void __rtdm_synch_flush(xnsynch_t *synch, unsigned long reason)
+void __rtdm_synch_flush(struct xnsynch *synch, unsigned long reason)
 {
 	spl_t s;
 

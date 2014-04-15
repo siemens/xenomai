@@ -26,7 +26,7 @@ typedef struct cobalt_mutexattr pthread_mutexattr_t;
 
 struct cobalt_mutex {
 	unsigned int magic;
-	xnsynch_t synchbase;
+	struct xnsynch synchbase;
 	/** cobalt_mutexq */
 	struct list_head link;
 	struct list_head conds;

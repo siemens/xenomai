@@ -49,7 +49,7 @@
 struct xnthread;
 struct xnsynch;
 
-typedef struct xnsynch {
+struct xnsynch {
 	struct list_head link;	/** thread->claimq */
 	int wprio;		/** wait prio in claimq */
 	unsigned long status;	 /** Status word */
@@ -57,7 +57,7 @@ typedef struct xnsynch {
 	struct xnthread *owner;	/** Thread which owns the resource */
 	atomic_long_t *fastlock; /** Pointer to fast lock word */
 	void (*cleanup)(struct xnsynch *synch); /* Cleanup handler */
-} xnsynch_t;
+};
 
 static inline void xnsynch_set_status(struct xnsynch *synch, int bits)
 {
