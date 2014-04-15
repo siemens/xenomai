@@ -4,6 +4,7 @@ libalchemy_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 0:0:0
 
 libalchemy_la_SOURCES =	\
 	init.c		\
+	init.h		\
 	internal.c	\
 	internal.h	\
 	reference.h	\

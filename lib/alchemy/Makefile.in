@@ -131,7 +131,7 @@ am__uninstall_files_from_dir = { \
 am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libalchemy_la_LIBADD =
-am__libalchemy_la_SOURCES_DIST = init.c internal.c internal.h \
+am__libalchemy_la_SOURCES_DIST = init.c init.h internal.c internal.h \
 	reference.h alarm.c alarm.h buffer.c buffer.h cond.c cond.h \
 	event.c event.h heap.c heap.h mutex.c mutex.h queue.c queue.h \
 	task.c task.h sem.c sem.h timer.c timer.h pipe.c pipe.h
@@ -385,10 +385,10 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libalchemy.la
 libalchemy_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 0:0:0
-libalchemy_la_SOURCES = init.c internal.c internal.h reference.h \
-	alarm.c alarm.h buffer.c buffer.h cond.c cond.h event.c \
-	event.h heap.c heap.h mutex.c mutex.h queue.c queue.h task.c \
-	task.h sem.c sem.h timer.c timer.h $(am__append_1)
+libalchemy_la_SOURCES = init.c init.h internal.c internal.h \
+	reference.h alarm.c alarm.h buffer.c buffer.h cond.c cond.h \
+	event.c event.h heap.c heap.h mutex.c mutex.h queue.c queue.h \
+	task.c task.h sem.c sem.h timer.c timer.h $(am__append_1)
 libalchemy_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@				\
 	-I$(top_srcdir)/include				\

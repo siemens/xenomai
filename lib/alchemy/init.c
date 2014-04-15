@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <copperplate/init.h>
+#include "init.h"
 #include "timer.h"
 #include "task.h"
 #include "sem.h"
@@ -113,7 +114,7 @@ static struct copperskin alchemy_skin = {
 	.help = alchemy_help,
 };
 
-static __attribute__ ((constructor)) void register_alchemy(void)
+static __libalchemy_ctor void register_alchemy(void)
 {
 	copperplate_register_skin(&alchemy_skin);
 }
