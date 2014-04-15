@@ -27,6 +27,7 @@
 #include <copperplate/clockobj.h>
 #include <copperplate/debug.h>
 #include <psos/psos.h>
+#include "init.h"
 #include "internal.h"
 #include "tm.h"
 #include "task.h"
@@ -126,7 +127,7 @@ static struct copperskin psos_skin = {
 	.help = psos_help,
 };
 
-static __attribute__ ((constructor)) void register_psos(void)
+static __libpsos_ctor void register_psos(void)
 {
 	copperplate_register_skin(&psos_skin);
 }

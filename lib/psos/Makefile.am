@@ -4,6 +4,7 @@ libpsos_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 0:0:0
 
 libpsos_la_SOURCES =	\
 	init.c		\
+	init.h		\
 	internal.h	\
 	pt.c		\
 	pt.h		\
