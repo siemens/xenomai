@@ -360,7 +360,7 @@ partial]           available, with varying overhead:
                        running the application at nominal speed.
                      * partial includes symbols, and also turns on internal
                        consistency checks within the Xenomai code (mostly
-                       present in the Copperplate layer). The __XENO_DEBUG__
+                       present in the Copperplate layer). The CONFIG_XENO_DEBUG
                        macro is defined, for both the Xenomai libraries and the
                        applications getting their C compilation flags from the
                        xeno-config script (i.e. xeno-config --cflags). The
@@ -370,8 +370,8 @@ partial]           available, with varying overhead:
                        with no level specification.
                      * full includes partial settings, but the optimizer is
                        disabled (-O0), and even more consistency checks may be
-                       performed. In addition to __XENO_DEBUG__, the macro
-                       __XENO_DEBUG_FULL__ is defined. This level introduces
+                       performed. In addition to CONFIG_XENO_DEBUG, the macro
+                       CONFIG_XENO_DEBUG_FULL is defined. This level introduces
                        the most overhead, which may triple the worst-case
                        latency, or even more.
 

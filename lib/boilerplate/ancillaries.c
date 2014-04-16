@@ -207,7 +207,7 @@ __attribute__ ((weak)) void *__main_heap = NULL;
 
 #endif /* !CONFIG_XENO_PSHARED */
 
-#ifdef __XENO_DEBUG__
+#ifdef CONFIG_XENO_DEBUG
 
 int __check_cancel_type(const char *locktype)
 {
@@ -222,7 +222,7 @@ int __check_cancel_type(const char *locktype)
 	return 0;
 }
 
-#endif /* !__XENO_DEBUG__ */
+#endif /* CONFIG_XENO_DEBUG */
 
 static void __boilerplate_init(void)
 {

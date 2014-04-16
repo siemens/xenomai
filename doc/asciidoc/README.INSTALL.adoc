@@ -360,10 +360,10 @@ Generic configuration options (both cores)
 
 	- _partial_ includes _symbols_, and also turns on internal
 	consistency checks within the Xenomai code (mostly present in
-	the Copperplate layer). The `__XENO_DEBUG__` macro is defined,
-	for both the Xenomai libraries and the applications getting
-	their C compilation flags from the +xeno-config+ script
-	(i.e. +xeno-config --cflags+). The partial debug mode
+	the Copperplate layer). The `CONFIG_XENO_DEBUG` macro is
+	defined, for both the Xenomai libraries and the applications
+	getting their C compilation flags from the +xeno-config+
+	script (i.e. +xeno-config --cflags+). The partial debug mode
 	implicitly turns on +--enable-assert+. A measurable overhead
 	is introduced by this level.  This is the default level when
 	+--enable-debug+ is mentioned with no level specification.
@@ -371,8 +371,8 @@ Generic configuration options (both cores)
 	- _full_ includes _partial_ settings, but the optimizer is
 	disabled (-O0), and even more consistency checks may be
 	performed.  In addition to `__XENO_DEBUG__`, the macro
-	`__XENO_DEBUG_FULL__` is defined. This level introduces
-	the most overhead, which may triple the worst-case latency, or
+	`CONFIG_XENO_DEBUG_FULL` is defined. This level introduces the
+	most overhead, which may triple the worst-case latency, or
 	even more.
 
 [normal]

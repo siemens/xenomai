@@ -603,12 +603,12 @@ void copperplate_init(int *argcp, char *const **argvp)
 		}
 	}
 
-#ifdef __XENO_DEBUG__
+#ifdef CONFIG_XENO_DEBUG
 	if (__node_info.silent_mode == 0) {
 		warning("Xenomai compiled with %s debug enabled,\n"
 			"                              "
 			"%shigh latencies expected [--enable-debug=%s]",
-#ifdef __XENO_DEBUG_FULL__
+#ifdef CONFIG_XENO_DEBUG_FULL
 			"full", "very ", "full"
 #else
 			"partial", "", "partial"

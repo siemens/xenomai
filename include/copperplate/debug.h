@@ -21,7 +21,7 @@
 
 #include <boilerplate/debug.h>
 
-#ifdef __XENO_DEBUG__
+#ifdef CONFIG_XENO_DEBUG
 
 struct threadobj;
 
@@ -33,10 +33,10 @@ struct threadobj;
 			__debug(__thobj->name, __fmt, ##__args);	\
 	} while (0)
 
-#else /* !__XENO_DEBUG__ */
+#else /* !CONFIG_XENO_DEBUG */
 
 #define debug(fmt, args...)  do { } while (0)
 
-#endif /* !__XENO_DEBUG__ */
+#endif /* !CONFIG_XENO_DEBUG */
 
 #endif /* _COPPERPLATE_DEBUG_H */

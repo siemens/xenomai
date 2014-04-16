@@ -609,9 +609,9 @@ XENO_USER_CFLAGS="$XENO_USER_APP_CFLAGS -pipe -fstrict-aliasing \
 XENO_USER_LDADD="$XENO_USER_APP_LDFLAGS"
 
 if test x$debug_mode = xpartial; then
-   XENO_USER_CFLAGS="-g -O2 -D__XENO_DEBUG__ $XENO_USER_CFLAGS"
+   XENO_USER_CFLAGS="-g -O2 $XENO_USER_CFLAGS"
 elif test x$debug_mode = xfull; then
-   XENO_USER_CFLAGS="-g -O0 -D__XENO_DEBUG__ -D__XENO_DEBUG_FULL__ $XENO_USER_CFLAGS"
+   XENO_USER_CFLAGS="-g -O0 $XENO_USER_CFLAGS"
 elif test x$debug_symbols = xy; then
    XENO_USER_CFLAGS="-g -O2 $XENO_USER_CFLAGS"
 else

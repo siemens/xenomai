@@ -89,7 +89,7 @@ struct cleanup_block {
 #define pop_cleanup_lock(__lock)	\
 	pthread_cleanup_pop(0)
 
-#ifdef __XENO_DEBUG__
+#ifdef CONFIG_XENO_DEBUG
 int __check_cancel_type(const char *locktype);
 #else
 #define __check_cancel_type(__locktype)				\

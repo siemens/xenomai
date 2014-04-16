@@ -238,7 +238,7 @@ static inline struct threadobj *threadobj_current(void)
 	return thobj == NULL || thobj == THREADOBJ_IRQCONTEXT ? NULL : thobj;
 }
 
-#ifdef __XENO_DEBUG__
+#ifdef CONFIG_XENO_DEBUG
 
 static inline void __threadobj_tag_locked(struct threadobj *thobj)
 {
@@ -256,7 +256,7 @@ static inline void __threadobj_check_locked(struct threadobj *thobj)
 	assert(thobj->status & __THREAD_S_LOCKED);
 }
 
-#else /* !__XENO_DEBUG__ */
+#else /* !CONFIG_XENO_DEBUG */
 
 static inline void __threadobj_tag_locked(struct threadobj *thobj)
 {
@@ -270,7 +270,7 @@ static inline void __threadobj_check_locked(struct threadobj *thobj)
 {
 }
 
-#endif /* !__XENO_DEBUG__ */
+#endif /* !CONFIG_XENO_DEBUG */
 
 #ifdef __cplusplus
 extern "C" {

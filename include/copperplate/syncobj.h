@@ -88,7 +88,7 @@ struct syncobj {
 void __syncobj_cleanup_wait(struct syncobj *sobj,
 			    struct threadobj *thobj);
 
-#ifdef __XENO_DEBUG__
+#ifdef CONFIG_XENO_DEBUG
 
 static inline void __syncobj_tag_locked(struct syncobj *sobj)
 {
@@ -106,7 +106,7 @@ static inline void __syncobj_check_locked(struct syncobj *sobj)
 	assert(sobj->flags & SYNCOBJ_LOCKED);
 }
 
-#else /* !__XENO_DEBUG__ */
+#else /* !CONFIG_XENO_DEBUG */
 
 static inline void __syncobj_tag_locked(struct syncobj *sobj)
 {
@@ -120,7 +120,7 @@ static inline void __syncobj_check_locked(struct syncobj *sobj)
 {
 }
 
-#endif /* !__XENO_DEBUG__ */
+#endif /* !CONFIG_XENO_DEBUG */
 
 #ifdef __cplusplus
 extern "C" {

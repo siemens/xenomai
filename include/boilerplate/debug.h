@@ -20,8 +20,9 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <xeno_config.h>
 
-#ifdef __XENO_DEBUG__
+#ifdef CONFIG_XENO_DEBUG
 
 #include <pthread.h>
 #include <boilerplate/compiler.h>
@@ -81,7 +82,7 @@ int debug_init(void);
 		__ret;						\
 	})
 
-#else /* !__XENO_DEBUG__ */
+#else /* !CONFIG_XENO_DEBUG */
 
 static inline int must_check(void)
 {
@@ -119,7 +120,7 @@ struct backtrace_data {
 
 #define debug_init()	({ 0; })
 
-#endif /* !__XENO_DEBUG__ */
+#endif /* !CONFIG_XENO_DEBUG */
 
 static inline int bad_pointer(const void *ptr)
 {
