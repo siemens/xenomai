@@ -27,7 +27,7 @@ struct threadobj;
 
 struct alchemy_cond {
 	unsigned int magic;	/* Must be first. */
-	char name[32];
+	char name[XNOBJECT_NAME_LEN];
 	pthread_cond_t cond;
 	struct clusterobj cobj;
 	struct fsobj fsobj;

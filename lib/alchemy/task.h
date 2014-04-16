@@ -30,7 +30,7 @@
 #include <alchemy/task.h>
 
 struct alchemy_task {
-	char name[32];
+	char name[XNOBJECT_NAME_LEN];
 	int mode;
 	cpu_set_t affinity;
 	int suspends;

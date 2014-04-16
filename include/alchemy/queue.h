@@ -81,7 +81,7 @@ struct RT_QUEUE_INFO {
 	/**
 	 * Name of message queue.
 	 */
-	char name[32];
+	char name[XNOBJECT_NAME_LEN];
 };
 
 typedef struct RT_QUEUE_INFO RT_QUEUE_INFO;

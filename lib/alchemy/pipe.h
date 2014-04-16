@@ -27,7 +27,7 @@
 
 struct alchemy_pipe {
 	unsigned int magic;	/* Must be first. */
-	char name[32];
+	char name[XNOBJECT_NAME_LEN];
 	int sock;
 	struct clusterobj cobj;
 };

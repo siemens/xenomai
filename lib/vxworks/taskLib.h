@@ -46,7 +46,7 @@ struct wind_task {
 	struct WIND_TCB *tcb;
 	struct WIND_TCB priv_tcb;
 
-	char name[32];
+	char name[XNOBJECT_NAME_LEN];
 	struct wind_task_args args;
 
 	struct threadobj thobj;

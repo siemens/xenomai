@@ -27,7 +27,7 @@
 
 struct alchemy_heap {
 	unsigned int magic;	/* Must be first. */
-	char name[32];
+	char name[XNOBJECT_NAME_LEN];
 	struct heapobj hobj;
 	struct syncobj sobj;
 	struct clusterobj cobj;

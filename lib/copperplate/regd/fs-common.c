@@ -191,7 +191,7 @@ out:
 }
 
 struct heap_data {
-	char name[32];
+	char name[XNOBJECT_NAME_LEN];
 	size_t total;
 	size_t used;
 };

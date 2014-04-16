@@ -25,7 +25,7 @@
 
 struct psos_sem {
 	unsigned int magic;		/* Must be first. */
-	char name[32];
+	char name[XNOBJECT_NAME_LEN];
 	struct semobj smobj;
 	struct clusterobj cobj;
 };

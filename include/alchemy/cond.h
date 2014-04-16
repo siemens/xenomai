@@ -40,7 +40,7 @@ struct RT_COND_INFO {
 	/**
 	 * Name of condition variable.
 	 */
-	char name[32];
+	char name[XNOBJECT_NAME_LEN];
 };
 
 typedef struct RT_COND_INFO RT_COND_INFO;

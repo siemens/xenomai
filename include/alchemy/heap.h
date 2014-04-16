@@ -71,7 +71,7 @@ struct RT_HEAP_INFO {
 	/**
 	 * Name of heap.
 	 */
-	char name[32];
+	char name[XNOBJECT_NAME_LEN];
 };
 
 typedef struct RT_HEAP_INFO RT_HEAP_INFO;

@@ -75,7 +75,7 @@ struct RT_TASK_INFO {
 	/**
 	 * Name of task.
 	 */
-	char name[32];
+	char name[XNOBJECT_NAME_LEN];
 };
 
 typedef struct RT_TASK_INFO RT_TASK_INFO;

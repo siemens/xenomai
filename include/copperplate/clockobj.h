@@ -24,6 +24,7 @@
 #include <boilerplate/time.h>
 #include <boilerplate/list.h>
 #include <boilerplate/lock.h>
+#include <boilerplate/limits.h>
 #include <copperplate/debug.h>
 
 /*

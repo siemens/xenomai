@@ -34,7 +34,7 @@ struct sysreg_fsfile {
 };
 
 struct thread_data {
-	char name[32];
+	char name[XNOBJECT_NAME_LEN];
 	pid_t pid;
 	int priority;
 	int policy;

@@ -26,7 +26,7 @@
 
 struct alchemy_event {
 	unsigned int magic;	/* Must be first. */
-	char name[32];
+	char name[XNOBJECT_NAME_LEN];
 	struct eventobj evobj;
 	struct clusterobj cobj;
 	struct fsobj fsobj;

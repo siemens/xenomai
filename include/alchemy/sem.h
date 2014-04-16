@@ -52,7 +52,7 @@ struct RT_SEM_INFO {
 	/**
 	 * Name of semaphore.
 	 */
-	char name[32];
+	char name[XNOBJECT_NAME_LEN];
 };
 
 typedef struct RT_SEM_INFO RT_SEM_INFO;

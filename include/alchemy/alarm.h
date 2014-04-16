@@ -43,7 +43,7 @@ struct RT_ALARM_INFO {
 	/**
 	 * Name of alarm object.
 	 */
-	char name[32];
+	char name[XNOBJECT_NAME_LEN];
 };
 
 typedef struct RT_ALARM_INFO RT_ALARM_INFO;

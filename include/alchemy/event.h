@@ -55,7 +55,7 @@ struct RT_EVENT_INFO {
 	/**
 	 * Name of event flag group.
 	 */
-	char name[32];
+	char name[XNOBJECT_NAME_LEN];
 };
 
 typedef struct RT_EVENT_INFO RT_EVENT_INFO;

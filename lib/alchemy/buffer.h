@@ -26,7 +26,7 @@
 
 struct alchemy_buffer {
 	unsigned int magic;	/* Must be first. */
-	char name[32];
+	char name[XNOBJECT_NAME_LEN];
 	struct syncobj sobj;
 	struct clusterobj cobj;
 	size_t bufsz;

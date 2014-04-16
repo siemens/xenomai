@@ -26,7 +26,7 @@
 struct wind_mq {
 	unsigned int magic;
 	int options;
-	char name[32];
+	char name[XNOBJECT_NAME_LEN];
 
 	int maxmsg;
 	UINT msgsize;

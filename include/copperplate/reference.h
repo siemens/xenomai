@@ -18,6 +18,7 @@
 #ifndef _COPPERPLATE_REFERENCE_H
 #define _COPPERPLATE_REFERENCE_H
 
+#include <boilerplate/limits.h>
 #include <boilerplate/scope.h>
 
 #define libcopperplate_tag  0	/* Library tag - unique and constant. */

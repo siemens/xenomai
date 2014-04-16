@@ -42,7 +42,7 @@ struct psos_task {
 	u_long notepad[PSOSTASK_NR_REGS];
 	struct pvlist timer_list; /* Private. Never accessed remotely. */
 
-	char name[32];
+	char name[XNOBJECT_NAME_LEN];
 	struct psos_task_args args;
 
 	struct threadobj thobj;

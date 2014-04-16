@@ -27,6 +27,7 @@
 #include <xeno_config.h>
 #include <boilerplate/list.h>
 #include <boilerplate/ancillaries.h>
+#include <boilerplate/limits.h>
 #include <copperplate/heapobj.h>
 
 #define HOBJ_MINLOG2    3
@@ -38,7 +39,7 @@
  * to process local memory in there.
  */
 struct shared_heap {
-	char name[32];
+	char name[XNOBJECT_NAME_LEN];
 	pthread_mutex_t lock;
 	struct list extents;
 	size_t extentsize;

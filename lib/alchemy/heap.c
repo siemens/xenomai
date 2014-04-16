@@ -46,7 +46,7 @@ DEFINE_SYNC_LOOKUP(heap, RT_HEAP);
 #ifdef CONFIG_XENO_REGISTRY
 
 struct heap_waiter_data {
-	char name[32];
+	char name[XNOBJECT_NAME_LEN];
 	size_t reqsz;
 };
 

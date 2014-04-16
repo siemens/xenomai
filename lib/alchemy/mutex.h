@@ -26,7 +26,7 @@
 
 struct alchemy_mutex {
 	unsigned int magic;	/* Must be first. */
-	char name[32];
+	char name[XNOBJECT_NAME_LEN];
 	pthread_mutex_t lock;
 	struct clusterobj cobj;
 	RT_TASK owner;

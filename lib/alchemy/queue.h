@@ -28,7 +28,7 @@
 
 struct alchemy_queue {
 	unsigned int magic;	/* Must be first. */
-	char name[32];
+	char name[XNOBJECT_NAME_LEN];
 	int mode;
 	size_t limit;
 	struct heapobj hobj;

@@ -61,7 +61,7 @@ struct RT_BUFFER_INFO {
 	/**
 	 * Name of the buffer.
 	 */
-	char name[32];
+	char name[XNOBJECT_NAME_LEN];
 };
 
 typedef struct RT_BUFFER_INFO RT_BUFFER_INFO;

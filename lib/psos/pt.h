@@ -26,7 +26,7 @@
 
 struct psos_pt {
 	unsigned int magic;		/* Must be first. */
-	char name[32];
+	char name[XNOBJECT_NAME_LEN];
 	struct pvclusterobj cobj;
 	pthread_mutex_t lock;
 

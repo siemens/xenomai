@@ -29,7 +29,7 @@
 
 struct psos_queue {
 	unsigned int magic;		/* Must be first. */
-	char name[32];
+	char name[XNOBJECT_NAME_LEN];
 
 	u_long flags;
 	u_long maxmsg;
