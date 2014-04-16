@@ -63,6 +63,7 @@ PART_ID memPartCreate(char *pPool, unsigned int poolSize)
 	}
 
 	__RT(pthread_mutexattr_init(&mattr));
+	__RT(pthread_mutexattr_settype(&mattr, mutex_type_attribute));
 	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
 	__RT(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute));
 	__RT(pthread_mutex_init(&mp->lock, &mattr));
