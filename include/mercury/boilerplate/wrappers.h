@@ -15,10 +15,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-#ifndef _MERCURY_COPPERPLATE_WRAPPERS_H
-#define _MERCURY_COPPERPLATE_WRAPPERS_H
+#ifndef _MERCURY_BOILERPLATE_WRAPPERS_H
+#define _MERCURY_BOILERPLATE_WRAPPERS_H
 
 #define __RT(call)	call
 #define __STD(call)	call
 
-#endif /* _MERCURY_COPPERPLATE_WRAPPERS_H */
+#endif /* _MERCURY_BOILERPLATE_WRAPPERS_H */

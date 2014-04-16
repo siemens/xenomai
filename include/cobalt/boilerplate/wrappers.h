@@ -15,9 +15,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-#ifndef _COBALT_COPPERPLATE_WRAPPERS_H
-#define _COBALT_COPPERPLATE_WRAPPERS_H
+#ifndef _COBALT_BOILERPLATE_WRAPPERS_H
+#define _COBALT_BOILERPLATE_WRAPPERS_H
 
 #include <cobalt/wrappers.h>
 
-#endif /* !_COBALT_COPPERPLATE_WRAPPERS_H */
+#endif /* !_COBALT_BOILERPLATE_WRAPPERS_H */

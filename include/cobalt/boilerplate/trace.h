@@ -15,9 +15,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-#ifndef _COBALT_COPPERPLATE_TRACE_H
-#define _COBALT_COPPERPLATE_TRACE_H
+#ifndef _COBALT_BOILERPLATE_TRACE_H
+#define _COBALT_BOILERPLATE_TRACE_H
 
 #include <cobalt/trace.h>
 
-#endif /* _COBALT_COPPERPLATE_TRACE_H */
+#endif /* _COBALT_BOILERPLATE_TRACE_H */

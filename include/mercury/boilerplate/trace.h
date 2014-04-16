@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-#ifndef _MERCURY_COPPERPLATE_TRACE_H
-#define _MERCURY_COPPERPLATE_TRACE_H
+#ifndef _MERCURY_BOILERPLATE_TRACE_H
+#define _MERCURY_BOILERPLATE_TRACE_H
 
 #include <errno.h>
 
@@ -60,4 +60,4 @@ static inline int xntrace_special_u64(unsigned char id, unsigned long long v)
 	return -ENOSYS;
 }
 
-#endif /* _MERCURY_COPPERPLATE_TRACE_H */
+#endif /* _MERCURY_BOILERPLATE_TRACE_H */

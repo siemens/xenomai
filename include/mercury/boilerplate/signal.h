@@ -15,8 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-#ifndef _MERCURY_COPPERPLATE_SIGNAL_H
-#define _MERCURY_COPPERPLATE_SIGNAL_H
+#ifndef _MERCURY_BOILERPLATE_SIGNAL_H
+#define _MERCURY_BOILERPLATE_SIGNAL_H
 
 #include <signal.h>
 
@@ -27,4 +27,4 @@
 #define SIGNOTIFY	(SIGRTMIN + 8) /* Internal notification */
 #define SIGRELS		(SIGRTMIN + 9) /* Syscall abort */
 
-#endif /* _MERCURY_COPPERPLATE_SIGNAL_H */
+#endif /* _MERCURY_BOILERPLATE_SIGNAL_H */
