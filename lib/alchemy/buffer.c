@@ -192,6 +192,8 @@ fnref_register(libalchemy, buffer_finalize);
  *
  * @return Zero is returned upon success. Otherwise:
  *
+ * - -EINVAL is returned if @a mode is invalid or @a bufsz is zero.
+ *
  * - -ENOMEM is returned if the system fails to get memory from the
  * main heap in order to create the buffer.
  *
@@ -220,7 +222,7 @@ int rt_buffer_create(RT_BUFFER *bf, const char *name,
 	if (threadobj_irq_p())
 		return -EPERM;
 
-	if (bufsz == 0)
+	if (bufsz == 0 || (mode & ~B_PRIO) != 0)
 		return -EINVAL;
 
 	CANCEL_DEFER(svc);

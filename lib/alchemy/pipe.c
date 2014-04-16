@@ -450,7 +450,8 @@ out:
  * @return Upon success, this service returns @a size. Upon error, one
  * of the following error codes is returned:
  *
- * - -EINVAL is returned if @a pipe is not a pipe descriptor.
+ * - -EINVAL is returned if @a mode is invalid or @a pipe is not a
+ * pipe descriptor.
  *
  * - -ENOMEM is returned if not enough buffer space is available to
  * complete the operation.
@@ -466,6 +467,9 @@ ssize_t rt_pipe_write(RT_PIPE *pipe,
 		      const void *buf, size_t size, int mode)
 {
 	int flags = 0;
+
+	if (mode & ~P_URGENT)
+		return -EINVAL;
 
 	if (mode & P_URGENT)
 		flags |= MSG_OOB;

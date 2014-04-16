@@ -171,6 +171,8 @@ fnref_register(libalchemy, queue_finalize);
  *
  * @return Zero is returned upon success. Otherwise:
  *
+ * - -EINVAL is returned if @a mode is invalid or @a poolsize is zero.
+ *
  * - -ENOMEM is returned if the system fails to get memory from the
  * main heap in order to create the queue.
  *
@@ -485,9 +487,8 @@ out:
  * message has been enqueued. Upon error, one of the following error
  * codes is returned:
  *
- * - -EINVAL is returned if @a q is not a message queue descriptor, or
- * @a buf is not a valid message buffer obtained from a previous call
- * to rt_queue_alloc().
+ * - -EINVAL is returned if @a q is not a message queue descriptor, @a
+ * mode is invalid, or @a buf is NULL.
  *
  * - -ENOMEM is returned if queuing the message would exceed the limit
  * defined for the queue at creation.
@@ -505,7 +506,7 @@ int rt_queue_send(RT_QUEUE *queue,
 	struct service svc;
 	int ret = 0;
 
-	if (buf == NULL)
+	if (buf == NULL || (mode & ~(Q_URGENT|Q_BROADCAST)) != 0)
 		return -EINVAL;
 
 	msg = (struct alchemy_queue_msg *)buf - 1;
@@ -601,7 +602,8 @@ out:
  * message has been enqueued. Upon error, one of the following error
  * codes is returned:
  *
- * - -EINVAL is returned if @a q is not a message queue descriptor.
+ * - -EINVAL is returned if @a mode is invalid, or @a q is not a
+ * essage queue descriptor.
  *
  * - -ENOMEM is returned if queuing the message would exceed the limit
  * defined for the queue at creation, or if no memory can be obtained
@@ -620,6 +622,9 @@ int rt_queue_write(RT_QUEUE *queue,
 	int ret = 0, nwaiters;
 	struct service svc;
 	size_t usersz;
+
+	if (mode & ~(Q_URGENT|Q_BROADCAST))
+		return -EINVAL;
 
 	if (size == 0)
 		return 0;

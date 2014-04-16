@@ -145,6 +145,8 @@ fnref_register(libalchemy, event_finalize);
  *
  * @return Zero is returned upon success. Otherwise:
  *
+ * - -EINVAL is returned if @a mode is invalid.
+ *
  * - -ENOMEM is returned if the system fails to get memory from the
  * main heap in order to create the event flag group.
  *
@@ -171,6 +173,9 @@ int rt_event_create(RT_EVENT *event, const char *name,
 
 	if (threadobj_irq_p())
 		return -EPERM;
+
+	if (mode & ~EV_PRIO)
+		return -EINVAL;
 
 	CANCEL_DEFER(svc);
 
@@ -353,8 +358,8 @@ out:
  * - -EINTR is returned if rt_task_unblock() was called for the
  * current task before the request is satisfied.
  *
- * - -EINVAL is returned if @a event is not a valid event flag group
- * descriptor.
+ * - -EINVAL is returned if @a mode is invalid, or @a event is not a
+ * valid event flag group descriptor.
  *
  * - -EIDRM is returned if @a event is deleted while the caller was
  * sleeping on it. In such a case, @a event is no more valid upon
@@ -383,6 +388,9 @@ int rt_event_wait_timed(RT_EVENT *event,
 
 	if (!threadobj_current_p() && !alchemy_poll_mode(abs_timeout))
 		return -EPERM;
+
+	if (mode & ~EVOBJ_ANY)
+		return -EINVAL;
 
 	CANCEL_DEFER(svc);
 
@@ -415,7 +423,7 @@ out:
  *
  * @return Zero is returned upon success. Otherwise:
  *
- * - -EINVAL is returned if @a event is not a valid event flag group
+ * - -EINVAL is returned if @a event is not an event flag group
  * descriptor.
  *
  * Valid calling context: any.

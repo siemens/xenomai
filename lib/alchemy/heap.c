@@ -192,8 +192,8 @@ fnref_register(libalchemy, heap_finalize);
  *
  * @return Zero is returned upon success. Otherwise:
  *
- * - -EINVAL is returned if @a heapsz is not in the valid range
- * [2k..2Gb].
+ * - -EINVAL is returned if @a mode is invalid, or @a heapsz is not in
+ * the range [2k..2Gb].
  *
  * - -ENOMEM is returned if the system fails to get memory from the
  * main heap in order to create the heap.
@@ -223,6 +223,9 @@ int rt_heap_create(RT_HEAP *heap,
 		return -EPERM;
 
 	if (heapsz < 2048 || heapsz >= 1U << 31)
+		return -EINVAL;
+
+	if (mode & ~(H_PRIO|H_SINGLE))
 		return -EINVAL;
 
 	CANCEL_DEFER(svc);

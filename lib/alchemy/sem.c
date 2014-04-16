@@ -153,8 +153,8 @@ fnref_register(libalchemy, sem_finalize);
  *
  * @return Zero is returned upon success. Otherwise:
  *
- * - -EINVAL is returned if the @a icount is non-zero and S_PULSE is
- * set in @a mode.
+ * - -EINVAL is returned if @a icount is non-zero and S_PULSE is set
+ * in @a mode, or @a mode is otherwise invalid.
  *
  * - -ENOMEM is returned if the system fails to get memory from the
  * main heap in order to create the semaphore.
@@ -182,6 +182,9 @@ int rt_sem_create(RT_SEM *sem, const char *name,
 
 	if (threadobj_irq_p())
 		return -EPERM;
+
+	if (mode & ~(S_PRIO|S_PULSE))
+		return -EINVAL;
 
 	if (mode & S_PULSE) {
 		if (icount > 0)
