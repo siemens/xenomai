@@ -387,6 +387,8 @@ int rt_alarm_inquire(RT_ALARM *alarm, RT_ALARM_INFO *info)
 
 	strcpy(info->name, acb->name);
 	info->expiries = acb->expiries;
+	info->active = !(alchemy_poll_mode(&acb->itmspec.it_value) &&
+			 alchemy_poll_mode(&acb->itmspec.it_interval));
 
 	put_alchemy_alarm(acb);
 out:

@@ -786,6 +786,10 @@ instead.
    * field +expiration+ has been removed, since the corresponding
      information is too short-lived to be valuable to the caller.
 
+   * field +active+ has been added, to reflect the current state of
+     the alarm object. If non-zero, the alarm is enabled
+     (i.e. started).
+
 .Message pipes
 
 - Writing to a message pipe is allowed from all contexts, including

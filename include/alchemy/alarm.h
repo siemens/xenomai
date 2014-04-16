@@ -44,6 +44,10 @@ struct RT_ALARM_INFO {
 	 * Name of alarm object.
 	 */
 	char name[XNOBJECT_NAME_LEN];
+	/**
+	 * Active flag.
+	 */
+	int active;
 };
 
 typedef struct RT_ALARM_INFO RT_ALARM_INFO;
