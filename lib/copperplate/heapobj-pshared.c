@@ -175,6 +175,7 @@ static void init_heap(struct shared_heap *heap, const char *name,
 	__list_init_nocheck(heap, &heap->extents);
 
 	__RT(pthread_mutexattr_init(&mattr));
+	__RT(pthread_mutexattr_settype(&mattr, mutex_type_attribute));
 	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
 	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_SHARED));
 	__RT(pthread_mutex_init(&heap->lock, &mattr));
@@ -194,6 +195,7 @@ static void init_main_heap(struct session_heap *m_heap, void *mem, size_t size)
 	m_heap->cpid = copperplate_get_tid();
 
 	__RT(pthread_mutexattr_init(&mattr));
+	__RT(pthread_mutexattr_settype(&mattr, mutex_type_attribute));
 	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
 	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_SHARED));
 	__RT(pthread_mutex_init(&m_heap->sysgroup.lock, &mattr));

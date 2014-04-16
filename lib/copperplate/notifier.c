@@ -167,6 +167,7 @@ int notifier_init(struct notifier *nf,
 	nf->notified = 0;
 	nf->owner = owned ? copperplate_get_tid() : 0;
 	__STD(pthread_mutexattr_init(&mattr));
+	__RT(pthread_mutexattr_settype(&mattr, mutex_type_attribute));
 	__STD(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
 	__STD(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
 	__STD(pthread_mutex_init(&nf->lock, &mattr));
@@ -306,6 +307,7 @@ void notifier_pkg_init(void)
 	struct sigaction sa;
 
 	__STD(pthread_mutexattr_init(&mattr));
+	__RT(pthread_mutexattr_settype(&mattr, mutex_type_attribute));
 	__STD(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
 	__STD(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
 	__STD(pthread_mutex_init(&notifier_lock, &mattr));
