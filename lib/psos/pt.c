@@ -185,6 +185,7 @@ u_long pt_create(const char *name,
 	*nbuf = pt->nblks;
 
 	__RT(pthread_mutexattr_init(&mattr));
+	__RT(pthread_mutexattr_settype(&mattr, mutex_type_attribute));
 	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
 	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
 	__RT(pthread_mutex_init(&pt->lock, &mattr));
