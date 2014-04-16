@@ -206,4 +206,10 @@ int __check_cancel_type(const char *locktype);
 #define read_unlock_safe(__lock, __state)	\
 	__do_unlock_safe(__lock, __state)
 
+#ifdef CONFIG_XENO_DEBUG
+#define mutex_type_attribute PTHREAD_MUTEX_ERRORCHECK
+#else
+#define mutex_type_attribute PTHREAD_MUTEX_NORMAL
+#endif
+
 #endif /* _BOILERPLATE_LOCK_H */
