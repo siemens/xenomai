@@ -158,9 +158,12 @@ int __xnthread_init(struct xnthread *thread,
 	}
 
 	if (attr->name)
-		xnobject_copy_name(thread->name, attr->name);
+		snprintf(thread->name,
+			 sizeof(thread->name), flags & XNUSER ?
+			 "%s" : "[%s]", attr->name);
 	else
-		snprintf(thread->name, sizeof(thread->name), "%p", thread);
+		snprintf(thread->name,
+			 sizeof(thread->name), "[%p]", thread);
 
 	thread->personality = attr->personality;
 	cpus_and(thread->affinity, attr->affinity, nkaffinity);
