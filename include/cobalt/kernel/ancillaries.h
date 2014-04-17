@@ -30,6 +30,11 @@
 		__ret;							\
 	})
 
+#define kasformat(__fmt, __args...)					\
+	({								\
+		kasprintf(GFP_KERNEL, __fmt, ##__args);			\
+	})
+
 #define kvsformat(__dst, __len, __fmt, __ap)				\
 	({								\
 		size_t __ret;						\
@@ -37,6 +42,11 @@
 		if (__ret >= __len)					\
 			__dst[__len-1] = '\0';				\
 		__ret;							\
+	})
+
+#define kvasformat(__fmt, __ap)						\
+	({								\
+		kvasprintf(GFP_KERNEL, __fmt, __ap);			\
 	})
 
 #endif /* !_COBALT_KERNEL_ANCILLARIES_H */
