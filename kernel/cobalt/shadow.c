@@ -2663,7 +2663,7 @@ void xnshadow_cleanup(void)
 
 /* Xenomai's generic personality. */
 struct xnpersonality xenomai_personality = {
-	.name = "xenomai",
+	.name = "core",
 	/* .magic = 0 */
 };
 EXPORT_SYMBOL_GPL(xenomai_personality);

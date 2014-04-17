@@ -864,6 +864,7 @@ struct vfile_schedlist_data {
 	pid_t pid;
 	char name[XNOBJECT_NAME_LEN];
 	char sched_class[XNOBJECT_NAME_LEN];
+	char personality[XNOBJECT_NAME_LEN];
 	int cprio;
 	xnticks_t timeout;
 	unsigned long state;
@@ -912,6 +913,7 @@ static int vfile_schedlist_next(struct xnvfile_snapshot_iterator *it,
 	p->cprio = thread->cprio;
 	p->state = xnthread_state_flags(thread);
 	xnobject_copy_name(p->sched_class, thread->sched_class->name);
+	xnobject_copy_name(p->personality, thread->personality->name);
 	period = xnthread_get_period(thread);
 	timeout = xnthread_get_timeout(thread, priv->start_time);
 	/*
@@ -942,8 +944,8 @@ static int vfile_schedlist_show(struct xnvfile_snapshot_iterator *it,
 
 	if (p == NULL)
 		xnvfile_printf(it,
-			       "%-3s  %-6s %-5s  %-8s %-8s  %-10s %s\n",
-			       "CPU", "PID", "CLASS", "PRI", "TIMEOUT",
+			       "%-3s  %-6s %-5s  %-8s  %-5s %-8s  %-10s %s\n",
+			       "CPU", "PID", "CLASS", "PERS", "PRI", "TIMEOUT",
 			       "STAT", "NAME");
 	else {
 		ksformat(pbuf, sizeof(pbuf), "%3d", p->cprio);
@@ -951,10 +953,11 @@ static int vfile_schedlist_show(struct xnvfile_snapshot_iterator *it,
 		xnthread_format_status(p->state, sbuf, sizeof(sbuf));
 
 		xnvfile_printf(it,
-			       "%3u  %-6d %-5s  %-8s %-8s  %-10s %s\n",
+			       "%3u  %-6d %-5s  %-8s  %-5s %-8s  %-10s %s\n",
 			       p->cpu,
 			       p->pid,
 			       p->sched_class,
+			       p->personality,
 			       pbuf,
 			       tbuf,
 			       sbuf,
