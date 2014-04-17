@@ -36,6 +36,7 @@
 #include <cobalt/kernel/shadow.h>
 #include <cobalt/kernel/lock.h>
 #include <cobalt/kernel/thread.h>
+#include <trace/events/cobalt-core.h>
 
 /**
  * @ingroup nucleus
@@ -107,8 +108,7 @@ static int kthread_trampoline(void *arg)
 		return ret;
 	}
 
-	trace_mark(xn_nucleus, thread_boot, "thread %p thread_name %s",
-		   thread, xnthread_name(thread));
+	trace_cobalt_shadow_entry(thread);
 
 	thread->entry(thread->cookie);
 
@@ -462,9 +462,6 @@ void __xnthread_cleanup(struct xnthread *curr)
 
 	secondary_mode_only();
 
-	trace_mark(xn_nucleus, thread_cleanup, "thread %p thread_name %s",
-		   curr, xnthread_name(curr));
-
 	xntimer_destroy(&curr->rtimer);
 	xntimer_destroy(&curr->ptimer);
 
@@ -574,10 +571,7 @@ int xnthread_init(struct xnthread *thread,
 	if (ret)
 		return ret;
 
-	trace_mark(xn_nucleus, thread_init,
-		   "thread %p thread_name %s flags %lu class %s prio %d",
-		   thread, xnthread_name(thread), attr->flags,
-		   sched_class->name, thread->cprio);
+	trace_cobalt_thread_init(thread, attr, sched_class);
 
 	xnlock_get_irqsave(&nklock, s);
 	list_add_tail(&thread->glink, &nkthreadq);
@@ -647,8 +641,7 @@ int xnthread_start(struct xnthread *thread,
 	thread->entry = attr->entry;
 	thread->cookie = attr->cookie;
 
-	trace_mark(xn_nucleus, thread_start, "thread %p thread_name %s",
-		   thread, xnthread_name(thread));
+	trace_cobalt_thread_start(thread);
 
 	xnthread_resume(thread, XNDORMANT);
 	xnsched_run();
@@ -705,13 +698,10 @@ int xnthread_set_mode(struct xnthread *thread, int clrmask, int setmask)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	trace_mark(xn_nucleus, thread_setmode,
-		   "thread %p thread_name %s clrmask 0x%x setmask 0x%x",
-		   thread, xnthread_name(thread), clrmask, setmask);
-
 	oldmode = xnthread_state_flags(thread) & XNTHREAD_MODE_BITS;
 	xnthread_clear_state(thread, clrmask & XNTHREAD_MODE_BITS);
 	xnthread_set_state(thread, setmask & XNTHREAD_MODE_BITS);
+	trace_cobalt_thread_set_mode(thread);
 
 	/*
 	 * Marking the thread as (non-)preemptible requires special
@@ -810,11 +800,7 @@ void xnthread_suspend(struct xnthread *thread, int mask,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	trace_mark(xn_nucleus, thread_suspend,
-		   "thread %p thread_name %s mask %lu timeout %Lu "
-		   "timeout_mode %d wchan %p",
-		   thread, xnthread_name(thread), mask, timeout,
-		   timeout_mode, wchan);
+	trace_cobalt_thread_suspend(thread, mask, timeout, timeout_mode, wchan);
 
 	sched = thread->sched;
 	oldstate = thread->state;
@@ -1019,9 +1005,7 @@ void xnthread_resume(struct xnthread *thread, int mask)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	trace_mark(xn_nucleus, thread_resume,
-		   "thread %p thread_name %s mask %lu",
-		   thread, xnthread_name(thread), mask);
+	trace_cobalt_thread_resume(thread, mask);
 
 	xntrace_pid(xnthread_host_pid(thread), xnthread_current_priority(thread));
 
@@ -1147,10 +1131,7 @@ int xnthread_unblock(struct xnthread *thread)
 	 */
 	xnlock_get_irqsave(&nklock, s);
 
-	trace_mark(xn_nucleus, thread_unblock,
-		   "thread %p thread_name %s state %lu",
-		   thread, xnthread_name(thread),
-		   xnthread_state_flags(thread));
+	trace_cobalt_thread_unblock(thread);
 
 	if (xnthread_test_state(thread, XNDELAY))
 		xnthread_resume(thread, XNDELAY);
@@ -1227,11 +1208,6 @@ int xnthread_set_periodic(struct xnthread *thread, xnticks_t idate,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	trace_mark(xn_nucleus, thread_setperiodic,
-		   "thread %p thread_name %s idate %Lu mode %d period %Lu timer %p",
-		   thread, xnthread_name(thread), idate, timeout_mode, period,
-		   &thread->ptimer);
-
 	if (period == XN_INFINITE) {
 		if (xntimer_running_p(&thread->ptimer))
 			xntimer_stop(&thread->ptimer);
@@ -1307,7 +1283,7 @@ int xnthread_wait_period(unsigned long *overruns_r)
 	unsigned long overruns = 0;
 	struct xnthread *thread;
 	xnticks_t now;
-	int err = 0;
+	int ret = 0;
 	spl_t s;
 
 	thread = xnsched_current_thread();
@@ -1315,19 +1291,18 @@ int xnthread_wait_period(unsigned long *overruns_r)
 	xnlock_get_irqsave(&nklock, s);
 
 	if (unlikely(!xntimer_running_p(&thread->ptimer))) {
-		err = -EWOULDBLOCK;
-		goto unlock_and_exit;
+		ret = -EWOULDBLOCK;
+		goto out;
 	}
 
-	trace_mark(xn_nucleus, thread_waitperiod, "thread %p thread_name %s",
-		   thread, xnthread_name(thread));
+	trace_cobalt_thread_wait_period(thread);
 
 	now = xnclock_read_raw(&nkclock);
 	if (likely((xnsticks_t)(now - xntimer_pexpect(&thread->ptimer)) < 0)) {
 		xnthread_suspend(thread, XNDELAY, XN_INFINITE, XN_RELATIVE, NULL);
 		if (unlikely(xnthread_test_info(thread, XNBREAK))) {
-			err = -EINTR;
-			goto unlock_and_exit;
+			ret = -EINTR;
+			goto out;
 		}
 
 		now = xnclock_read_raw(&nkclock);
@@ -1335,21 +1310,16 @@ int xnthread_wait_period(unsigned long *overruns_r)
 
 	overruns = xntimer_get_overruns(&thread->ptimer, now);
 	if (overruns) {
-		err = -ETIMEDOUT;
-
-		trace_mark(xn_nucleus, thread_missedperiod,
-			   "thread %p thread_name %s overruns %lu",
-			   thread, xnthread_name(thread), overruns);
+		ret = -ETIMEDOUT;
+		trace_cobalt_thread_missed_period(thread);
 	}
 
 	if (likely(overruns_r != NULL))
 		*overruns_r = overruns;
-
-      unlock_and_exit:
-
+ out:
 	xnlock_put_irqrestore(&nklock, s);
 
-	return err;
+	return ret;
 }
 EXPORT_SYMBOL_GPL(xnthread_wait_period);
 
@@ -1446,8 +1416,7 @@ void xnthread_cancel(struct xnthread *thread)
 	if (xnthread_test_info(thread, XNCANCELD))
 		goto check_self_cancel;
 
-	trace_mark(xn_nucleus, thread_cancel, "thread %p thread_name %s",
-		   thread, xnthread_name(thread));
+	trace_cobalt_thread_cancel(thread);
 
 	xnthread_set_info(thread, XNCANCELD);
 
@@ -1526,8 +1495,7 @@ int xnthread_join(struct xnthread *thread, bool uninterruptible)
 		return 0;
 	}
 
-	trace_mark(xn_nucleus, thread_join, "thread %p thread_name %s",
-		   thread, xnthread_name(thread));
+	trace_cobalt_thread_join(thread);
 
 	if (ipipe_root_p) {
 		if (xnthread_test_state(thread, XNJOINED)) {
@@ -1621,9 +1589,7 @@ int xnthread_migrate(int cpu)
 	if (sched == xnthread_sched(thread))
 		goto unlock_and_exit;
 
-	trace_mark(xn_nucleus, thread_migrate,
-		   "thread %p thread_name %s cpu %d",
-		   thread, xnthread_name(thread), cpu);
+	trace_cobalt_thread_migrate(thread, cpu);
 
 	/* Move to remote scheduler. */
 	xnsched_migrate(thread, sched);
@@ -1659,12 +1625,10 @@ EXPORT_SYMBOL_GPL(xnthread_migrate);
 
 void xnthread_migrate_passive(struct xnthread *thread, struct xnsched *sched)
 {				/* nklocked, IRQs off */
-	trace_mark(xn_nucleus, thread_migrate_passive,
-		   "thread %p thread_name %s cpu %d",
-		   thread, xnthread_name(thread), xnsched_cpu(sched));
-
 	if (thread->sched == sched)
 		return;
+
+	trace_cobalt_thread_migrate_passive(thread, xnsched_cpu(sched));
 	/*
 	 * Timer migration is postponed until the next timeout happens
 	 * for the periodic and rrb timers. The resource timer will be
@@ -1769,11 +1733,6 @@ int __xnthread_set_schedparam(struct xnthread *thread,
 		return ret;
 
 	new_wprio = thread->wprio;
-
-	trace_mark(xn_nucleus, set_thread_schedparam,
-		   "thread %p thread_name %s class %s prio %d",
-		   thread, xnthread_name(thread),
-		   thread->sched_class->name, thread->cprio);
 
 	/*
 	 * Update the pending order of the thread inside its wait

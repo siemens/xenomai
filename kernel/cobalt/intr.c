@@ -24,12 +24,12 @@
 */
 
 #include <linux/mutex.h>
-
 #include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/intr.h>
 #include <cobalt/kernel/stat.h>
 #include <cobalt/kernel/clock.h>
 #include <cobalt/kernel/assert.h>
+#include <trace/events/cobalt-core.h>
 
 #define XNINTR_MAX_UNHANDLED	1000
 
@@ -78,7 +78,7 @@ static inline void stat_counter_dec(void) {}
 static inline void sync_stat_references(struct xnintr *intr) {}
 #endif /* CONFIG_XENO_OPT_STATS */
 
-static void xnintr_irq_handler(unsigned irq, void *cookie);
+static void xnintr_irq_handler(unsigned int irq, void *cookie);
 
 void xnintr_host_tick(struct xnsched *sched) /* Interrupts off. */
 {
@@ -110,9 +110,7 @@ void xnintr_core_clock_handler(void)
 	prev = xnstat_exectime_switch(sched, &statp->account);
 	xnstat_counter_inc(&statp->hits);
 
-	trace_mark(xn_nucleus, irq_enter, "irq %u",
-		   per_cpu(ipipe_percpu.hrtimer_irq, cpu));
-	trace_mark(xn_nucleus, clock_tick, MARK_NOARGS);
+	trace_cobalt_clock_entry(per_cpu(ipipe_percpu.hrtimer_irq, cpu));
 
 	++sched->inesting;
 	sched->lflags |= XNINIRQ;
@@ -121,6 +119,7 @@ void xnintr_core_clock_handler(void)
 	xnclock_tick(&nkclock);
 	xnlock_put(&nklock);
 
+	trace_cobalt_clock_exit(per_cpu(ipipe_percpu.hrtimer_irq, cpu));
 	xnstat_exectime_switch(sched, prev);
 
 	if (--sched->inesting == 0) {
@@ -138,10 +137,6 @@ void xnintr_core_clock_handler(void)
 	if ((sched->lflags & XNHTICK) &&
 	    xnthread_test_state(sched->curr, XNROOT))
 		xnintr_host_tick(sched);
-
-	/* We keep tracing the entry CPU, regardless of migration. */
-	trace_mark(xn_nucleus, irq_exit, "irq %u",
-		   per_cpu(ipipe_percpu.hrtimer_irq, cpu));
 }
 
 /* Optional support for shared interrupts. */
@@ -156,7 +151,7 @@ struct xnintr_irq {
 
 static struct xnintr_irq xnirqs[IPIPE_NR_IRQS];
 
-static inline struct xnintr *xnintr_shirq_first(unsigned irq)
+static inline struct xnintr *xnintr_shirq_first(unsigned int irq)
 {
 	return xnirqs[irq].handlers;
 }
@@ -170,7 +165,7 @@ static inline struct xnintr *xnintr_shirq_next(struct xnintr *prev)
  * Low-level interrupt handler dispatching the user-defined ISRs for
  * shared interrupts -- Called with interrupts off.
  */
-static void xnintr_shirq_handler(unsigned irq, void *cookie)
+static void xnintr_shirq_handler(unsigned int irq, void *cookie)
 {
 	struct xnsched *sched = xnsched_current();
 	struct xnintr_irq *shirq = &xnirqs[irq];
@@ -182,7 +177,7 @@ static void xnintr_shirq_handler(unsigned irq, void *cookie)
 
 	prev  = xnstat_exectime_get_current(sched);
 	start = xnstat_exectime_now();
-	trace_mark(xn_nucleus, irq_enter, "irq %u", irq);
+	trace_cobalt_irq_entry(irq);
 
 	++sched->inesting;
 	sched->lflags |= XNINIRQ;
@@ -231,14 +226,14 @@ static void xnintr_shirq_handler(unsigned irq, void *cookie)
 		xnsched_run();
 	}
 
-	trace_mark(xn_nucleus, irq_exit, "irq %u", irq);
+	trace_cobalt_irq_exit(irq);
 }
 
 /*
  * Low-level interrupt handler dispatching the user-defined ISRs for
  * shared edge-triggered interrupts -- Called with interrupts off.
  */
-static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
+static void xnintr_edge_shirq_handler(unsigned int irq, void *cookie)
 {
 	const int MAX_EDGEIRQ_COUNTER = 128;
 	struct xnsched *sched = xnsched_current();
@@ -251,7 +246,7 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 
 	prev  = xnstat_exectime_get_current(sched);
 	start = xnstat_exectime_now();
-	trace_mark(xn_nucleus, irq_enter, "irq %u", irq);
+	trace_cobalt_irq_entry(irq);
 
 	++sched->inesting;
 	sched->lflags |= XNINIRQ;
@@ -312,7 +307,7 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 		xnsched_run();
 	}
 
-	trace_mark(xn_nucleus, irq_exit, "irq %u", irq);
+	trace_cobalt_irq_exit(irq);
 }
 
 static inline int xnintr_irq_attach(struct xnintr *intr)
@@ -433,7 +428,7 @@ static inline void xnintr_irq_detach(struct xnintr *intr)
  * Low-level interrupt handler dispatching non-shared ISRs -- Called
  * with interrupts off.
  */
-static void xnintr_irq_handler(unsigned irq, void *cookie)
+static void xnintr_irq_handler(unsigned int irq, void *cookie)
 {
 	struct xnsched *sched = xnsched_current();
 	struct xnirqstat *statp;
@@ -444,7 +439,7 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 
 	prev  = xnstat_exectime_get_current(sched);
 	start = xnstat_exectime_now();
-	trace_mark(xn_nucleus, irq_enter, "irq %u", irq);
+	trace_cobalt_irq_entry(irq);
 
 	++sched->inesting;
 	sched->lflags |= XNINIRQ;
@@ -499,7 +494,7 @@ unlock_and_exit:
 		xnsched_run();
 	}
 
-	trace_mark(xn_nucleus, irq_exit, "irq %u", irq);
+	trace_cobalt_irq_exit(irq);
 }
 
 int __init xnintr_mount(void)
@@ -522,7 +517,7 @@ static void clear_irqstats(struct xnintr *intr)
 }
 
 /**
- * @fn int xnintr_init(struct xnintr *intr,const char *name,unsigned irq,xnisr_t isr,xniack_t iack,int flags)
+ * @fn int xnintr_init(struct xnintr *intr,const char *name,unsigned int irq,xnisr_t isr,xniack_t iack,int flags)
  * @brief Initialize an interrupt object.
  *
  * Associates an interrupt object with an IRQ line.
@@ -693,9 +688,6 @@ int xnintr_attach(struct xnintr *intr, void *cookie)
 
 	secondary_mode_only();
 
-	trace_mark(xn_nucleus, irq_attach, "irq %u name %s",
-		   intr->irq, intr->name);
-
 	intr->cookie = cookie;
 	clear_irqstats(intr);
 
@@ -745,8 +737,6 @@ void xnintr_detach(struct xnintr *intr)
 {
 	secondary_mode_only();
 
-	trace_mark(xn_nucleus, irq_detach, "irq %u", intr->irq);
-
 	mutex_lock(&intrlock);
 
 	if (intr->flags & XN_ISR_ATTACHED) {
@@ -775,7 +765,7 @@ EXPORT_SYMBOL_GPL(xnintr_detach);
 void xnintr_enable(struct xnintr *intr)
 {
 	secondary_mode_only();
-	trace_mark(xn_nucleus, irq_enable, "irq %u", intr->irq);
+	trace_cobalt_irq_enable(intr->irq);
 	ipipe_enable_irq(intr->irq);
 }
 EXPORT_SYMBOL_GPL(xnintr_enable);
@@ -797,7 +787,7 @@ EXPORT_SYMBOL_GPL(xnintr_enable);
 void xnintr_disable(struct xnintr *intr)
 {
 	secondary_mode_only();
-	trace_mark(xn_nucleus, irq_disable, "irq %u", intr->irq);
+	trace_cobalt_irq_disable(intr->irq);
 	ipipe_disable_irq(intr->irq);
 }
 EXPORT_SYMBOL_GPL(xnintr_disable);
@@ -823,9 +813,6 @@ EXPORT_SYMBOL_GPL(xnintr_disable);
 void xnintr_affinity(struct xnintr *intr, cpumask_t cpumask)
 {
 	secondary_mode_only();
-	trace_mark(xn_nucleus, irq_affinity, "irq %u %lu",
-		   intr->irq, *(unsigned long *)&cpumask);
-
 #ifdef CONFIG_SMP
 	ipipe_set_irq_affinity(intr->irq, cpumask);
 #endif

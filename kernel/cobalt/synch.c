@@ -26,6 +26,7 @@
 #include <cobalt/kernel/thread.h>
 #include <cobalt/kernel/clock.h>
 #include <cobalt/kernel/shadow.h>
+#include <trace/events/cobalt-core.h>
 
 /**
  * @fn void xnsynch_init(struct xnsynch *synch, int flags,
@@ -141,9 +142,7 @@ int xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	trace_mark(xn_nucleus, synch_sleepon,
-		   "thread %p thread_name %s synch %p",
-		   thread, xnthread_name(thread), synch);
+	trace_cobalt_synch_sleepon(synch, thread);
 
 	if ((synch->status & XNSYNCH_PRIO) == 0) /* i.e. FIFO */
 		list_add_tail(&thread->plink, &synch->pendq);
@@ -193,12 +192,10 @@ struct xnthread *xnsynch_wakeup_one_sleeper(struct xnsynch *synch)
 		goto out;
 	}
 
+	trace_cobalt_synch_wakeup(synch);
 	thread = list_first_entry(&synch->pendq, struct xnthread, plink);
 	list_del(&thread->plink);
 	thread->wchan = NULL;
-	trace_mark(xn_nucleus, synch_wakeup_one,
-		   "thread %p thread_name %s synch %p",
-		   thread, xnthread_name(thread), synch);
 	xnthread_resume(thread, XNPEND);
 out:
 	xnlock_put_irqrestore(&nklock, s);
@@ -220,14 +217,13 @@ int xnsynch_wakeup_many_sleepers(struct xnsynch *synch, int nr)
 	if (list_empty(&synch->pendq))
 		goto out;
 
+	trace_cobalt_synch_wakeup_many(synch);
+
 	list_for_each_entry_safe(thread, tmp, &synch->pendq, plink) {
 		if (nwakeups++ >= nr)
 			break;
 		list_del(&thread->plink);
 		thread->wchan = NULL;
-		trace_mark(xn_nucleus, synch_wakeup_many,
-			   "thread %p thread_name %s synch %p",
-			   thread, xnthread_name(thread), synch);
 		xnthread_resume(thread, XNPEND);
 	}
 out:
@@ -267,11 +263,9 @@ void xnsynch_wakeup_this_sleeper(struct xnsynch *synch, struct xnthread *sleeper
 
 	xnlock_get_irqsave(&nklock, s);
 
+	trace_cobalt_synch_wakeup(synch);
 	list_del(&sleeper->plink);
 	sleeper->wchan = NULL;
-	trace_mark(xn_nucleus, synch_wakeup_this,
-		   "thread %p thread_name %s synch %p",
-		   sleeper, xnthread_name(sleeper), synch);
 	xnthread_resume(sleeper, XNPEND);
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -349,7 +343,7 @@ int xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 
 	XENO_BUGON(NUCLEUS, (synch->status & XNSYNCH_OWNER) == 0);
 
-	trace_mark(xn_nucleus, synch_acquire, "synch %p", synch);
+	trace_cobalt_synch_acquire(synch, thread);
 redo:
 	fastlock = atomic_long_cmpxchg(lockp, XN_NO_HANDLE, threadh);
 
@@ -505,6 +499,27 @@ EXPORT_SYMBOL_GPL(xnsynch_acquire);
  *
  * @remark Tags: none.
  */
+struct xnthread *xnsynch_release(struct xnsynch *synch,
+				 struct xnthread *thread)
+{
+	atomic_long_t *lockp;
+	xnhandle_t threadh;
+
+	XENO_BUGON(NUCLEUS, (synch->status & XNSYNCH_OWNER) == 0);
+
+	trace_cobalt_synch_release(synch);
+
+	if (unlikely(xnthread_test_state(thread, XNWEAK)))
+		__xnsynch_fixup_rescnt(thread);
+
+	lockp = xnsynch_fastlock(synch);
+	threadh = xnthread_handle(thread);
+	if (likely(xnsynch_fast_release(lockp, threadh)))
+		return NULL;
+
+	return __xnsynch_transfer_ownership(synch, thread);
+}
+EXPORT_SYMBOL_GPL(xnsynch_release);
 
 /**
  * @internal
@@ -745,8 +760,7 @@ int xnsynch_flush(struct xnsynch *synch, int reason)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	trace_mark(xn_nucleus, synch_flush, "synch %p reason %lu",
-		   synch, reason);
+	trace_cobalt_synch_flush(synch);
 
 	if (list_empty(&synch->pendq)) {
 		XENO_BUGON(NUCLEUS, synch->status & XNSYNCH_CLAIMED);
@@ -787,9 +801,7 @@ void xnsynch_forget_sleeper(struct xnthread *thread)
 	struct xnsynch *synch = thread->wchan, *nsynch;
 	struct xnthread *owner, *target;
 
-	trace_mark(xn_nucleus, synch_forget,
-		   "thread %p thread_name %s synch %p",
-		   thread, xnthread_name(thread), synch);
+	trace_cobalt_synch_forget(synch);
 
 	xnthread_clear_state(thread, XNPEND);
 	thread->wchan = NULL;

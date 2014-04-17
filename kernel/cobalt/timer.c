@@ -44,6 +44,7 @@
 #include <cobalt/kernel/clock.h>
 #include <cobalt/kernel/trace.h>
 #include <cobalt/kernel/arith.h>
+#include <trace/events/cobalt-core.h>
 
 int xntimer_heading_p(struct xntimer *timer)
 {
@@ -109,9 +110,7 @@ int xntimer_start(struct xntimer *timer,
 	struct xnsched *sched;
 	xnticks_t date, now;
 
-	trace_mark(xn_nucleus, timer_start,
-		   "timer %p value %Lu interval %Lu mode %u",
-		   timer, value, interval, mode);
+	trace_cobalt_timer_start(timer, value, interval, mode);
 
 	if ((timer->status & XNTIMER_DEQUEUED) == 0)
 		xntimer_dequeue(timer, q);
@@ -178,7 +177,7 @@ void __xntimer_stop(struct xntimer *timer)
 	struct xnsched *sched;
 	int heading;
 
-	trace_mark(xn_nucleus, timer_stop, "timer %p", timer);
+	trace_cobalt_timer_stop(timer);
 
 	heading = xntimer_heading_p(timer);
 	xntimer_dequeue(timer, q);
@@ -439,11 +438,10 @@ void __xntimer_migrate(struct xntimer *timer, struct xnsched *sched)
 	struct xnclock *clock;
 	xntimerq_t *q;
 
-	trace_mark(xn_nucleus, timer_migrate, "timer %p cpu %d",
-		   timer, (int)xnsched_cpu(sched));
-
 	if (sched == timer->sched)
 		return;
+
+	trace_cobalt_timer_migrate(timer, xnsched_cpu(sched));
 
 	if (timer->status & XNTIMER_DEQUEUED)
 		timer->sched = sched;

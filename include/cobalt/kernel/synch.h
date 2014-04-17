@@ -152,6 +152,9 @@ int xnsynch_acquire(struct xnsynch *synch,
 		    xnticks_t timeout,
 		    xntmode_t timeout_mode);
 
+struct xnthread *xnsynch_release(struct xnsynch *synch,
+				 struct xnthread *thread);
+
 struct xnthread *xnsynch_peek_pendq(struct xnsynch *synch);
 
 int xnsynch_flush(struct xnsynch *synch, int reason);

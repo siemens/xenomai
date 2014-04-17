@@ -58,6 +58,7 @@
 #include <cobalt/kernel/ppd.h>
 #include <cobalt/kernel/vdso.h>
 #include <cobalt/kernel/thread.h>
+#include <trace/events/cobalt-core.h>
 #include <asm/xenomai/features.h>
 #include <asm/xenomai/syscall.h>
 #include <asm-generic/xenomai/mayday.h>
@@ -259,8 +260,7 @@ static void lostage_task_wakeup(struct ipipe_work_header *work)
 	rq = container_of(work, struct lostage_wakeup, work);
 	p = rq->task;
 
-	trace_mark(xn_nucleus, lostage_wakeup, "comm %s pid %d",
-		   p->comm, p->pid);
+	trace_cobalt_lostage_wakeup(p);
 
 	wake_up_process(p);
 }
@@ -274,6 +274,8 @@ static void post_wakeup(struct task_struct *p)
 		},
 		.task = p,
 	};
+
+	trace_cobalt_lostage_request("wakeup", wakework.task);
 
 	ipipe_post_work_root(&wakework, work);
 }
@@ -312,8 +314,7 @@ static void lostage_task_signal(struct ipipe_work_header *work)
 
 	signo = rq->signo;
 
-	trace_mark(xn_nucleus, lostage_signal, "comm %s pid %d sig %d",
-		   p->comm, p->pid, signo);
+	trace_cobalt_lostage_signal(p, signo);
 
 	if (signo == SIGSHADOW || signo == SIGDEBUG) {
 		memset(&si, '\0', sizeof(si));
@@ -484,9 +485,7 @@ int xnshadow_harden(void)
 	if (signal_pending(p))
 		return -ERESTARTSYS;
 
-	trace_mark(xn_nucleus, shadow_gohard,
-		   "thread %p name %s comm %s",
-		   thread, xnthread_name(thread), p->comm);
+	trace_cobalt_shadow_gohard(thread);
 
 	xnthread_clear_sync_window(thread, XNRELAX);
 
@@ -504,8 +503,7 @@ int xnshadow_harden(void)
 	xnsched_resched_after_unlocked_switch();
 	xnthread_test_cancel();
 
-	trace_mark(xn_nucleus, shadow_hardened, "thread %p name %s",
-		   thread, xnthread_name(thread));
+	trace_cobalt_shadow_hardened(thread);
 
 	/*
 	 * Recheck pending signals once again. As we block task
@@ -561,8 +559,7 @@ void xnshadow_relax(int notify, int reason)
 	 * domain to the Linux domain.  This will cause the Linux task
 	 * to resume using the register state of the shadow thread.
 	 */
-	trace_mark(xn_nucleus, shadow_gorelax, "thread %p thread_name %s",
-		  thread, xnthread_name(thread));
+	trace_cobalt_shadow_gorelax(thread);
 
 	/*
 	 * If you intend to change the following interrupt-free
@@ -623,9 +620,7 @@ void xnshadow_relax(int notify, int reason)
 	}
 #endif
 
-	trace_mark(xn_nucleus, shadow_relaxed,
-		  "thread %p thread_name %s comm %s",
-		  thread, xnthread_name(thread), p->comm);
+	trace_cobalt_shadow_relaxed(thread);
 }
 EXPORT_SYMBOL_GPL(xnshadow_relax);
 
@@ -935,10 +930,7 @@ int xnshadow_map_user(struct xnthread *thread,
 	__xn_put_user(xnheap_mapped_offset(sem_heap, u_window), u_window_offset);
 	pin_to_initial_cpu(thread);
 
-	trace_mark(xn_nucleus, shadow_map_user,
-		   "thread %p thread_name %s pid %d priority %d",
-		   thread, xnthread_name(thread), current->pid,
-		   xnthread_base_priority(thread));
+	trace_cobalt_shadow_map(thread);
 
 	/*
 	 * CAUTION: we enable the pipeline notifier only when our
@@ -1001,6 +993,8 @@ static inline void wakeup_parent(struct completion *done)
 		.done = done,
 	};
 
+	trace_cobalt_lostage_request("wakeup", current);
+
 	ipipe_post_work_root(&wakework, work);
 }
 
@@ -1061,10 +1055,7 @@ int xnshadow_map_kernel(struct xnthread *thread, struct completion *done)
 	thread->u_window = NULL;
 	pin_to_initial_cpu(thread);
 
-	trace_mark(xn_nucleus, shadow_map_kernel,
-		   "thread %p thread_name %s pid %d priority %d",
-		   thread, xnthread_name(thread), p->pid,
-		   xnthread_base_priority(thread));
+	trace_cobalt_shadow_map(thread);
 
 	xnthread_init_shadow_tcb(thread, p);
 	xnthread_suspend(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
@@ -1113,9 +1104,7 @@ EXPORT_SYMBOL_GPL(xnshadow_map_kernel);
 
 void xnshadow_finalize(struct xnthread *thread)
 {
-	trace_mark(xn_nucleus, shadow_finalize,
-		   "thread %p thread_name %s pid %d",
-		   thread, xnthread_name(thread), xnthread_host_pid(thread));
+	trace_cobalt_shadow_finalize(thread);
 
 	xnthread_run_handler_stack(thread, finalize_thread);
 }
@@ -1684,6 +1673,8 @@ void xnshadow_send_sig(struct xnthread *thread, int sig, int arg)
 		.sigval = arg,
 	};
 
+	trace_cobalt_lostage_request("signal", sigwork.task);
+
 	ipipe_post_work_root(&sigwork, work);
 }
 EXPORT_SYMBOL_GPL(xnshadow_send_sig);
@@ -1878,10 +1869,7 @@ static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 	muxid = __xn_mux_id(regs);
 	muxop = __xn_mux_op(regs);
 
-	trace_mark(xn_nucleus, syscall_histage_entry,
-		   "thread %p thread_name %s muxid %d muxop %d",
-		   thread, thread ? xnthread_name(thread) : NULL,
-		   muxid, muxop);
+	trace_cobalt_head_sysentry(thread, muxid, muxop);
 
 	if (muxid < 0 || muxid >= NR_PERSONALITIES || muxop < 0)
 		goto bad_syscall;
@@ -2024,8 +2012,7 @@ ret_handled:
 		xnthread_sync_window(thread);
 	}
 
-	trace_mark(xn_nucleus, syscall_histage_exit,
-		   "ret %ld", __xn_reg_rval(regs));
+	trace_cobalt_head_sysexit(thread, __xn_reg_rval(regs));
 
 	return EVENT_STOP;
 
@@ -2090,11 +2077,7 @@ static int handle_root_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 	muxid = __xn_mux_id(regs);
 	muxop = __xn_mux_op(regs);
 
-	trace_mark(xn_nucleus, syscall_lostage_entry,
-		   "thread %p thread_name %s muxid %d muxop %d",
-		   xnsched_current_thread(),
-		   xnthread_name(xnsched_current_thread()),
-		   muxid, muxop);
+	trace_cobalt_root_sysentry(thread, muxid, muxop);
 
 	/* Processing a Xenomai syscall. */
 
@@ -2166,8 +2149,7 @@ ret_handled:
 		xnthread_sync_window(thread);
 	}
 
-	trace_mark(xn_nucleus, syscall_lostage_exit,
-		   "ret %ld", __xn_reg_rval(regs));
+	trace_cobalt_root_sysexit(thread, __xn_reg_rval(regs));
 
 	return EVENT_STOP;
 }
@@ -2193,10 +2175,8 @@ static int handle_taskexit_event(struct task_struct *p) /* p == current */
 	secondary_mode_only();
 	thread = xnshadow_current();
 	XENO_BUGON(NUCLEUS, thread == NULL);
+	trace_cobalt_shadow_unmap(thread);
 	personality = thread->personality;
-
-	trace_mark(xn_nucleus, shadow_exit, "thread %p thread_name %s",
-		   thread, xnthread_name(thread));
 
 	if (xnthread_test_state(thread, XNDEBUG))
 		unlock_timers();
@@ -2501,8 +2481,8 @@ int ipipe_kevent_hook(int kevent, void *data)
 
 static inline int handle_exception(struct ipipe_trap_data *d)
 {
-	struct xnsched *sched;
 	struct xnthread *thread;
+	struct xnsched *sched;
 
 	sched = xnsched_current();
 	thread = sched->curr;
@@ -2510,11 +2490,7 @@ static inline int handle_exception(struct ipipe_trap_data *d)
 	if (xnthread_test_state(thread, XNROOT))
 		return 0;
 
-	trace_mark(xn_nucleus, thread_fault,
-		   "thread %p thread_name %s ip %p type 0x%x",
-		   thread, xnthread_name(thread),
-		   (void *)xnarch_fault_pc(d),
-		   xnarch_fault_trap(d));
+	trace_cobalt_thread_fault(thread, d);
 
 	if (xnarch_fault_fpu_p(d)) {
 #ifdef CONFIG_XENO_HW_FPU

@@ -25,6 +25,8 @@
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/shadow.h>
 #include <cobalt/kernel/arith.h>
+#define CREATE_TRACE_POINTS
+#include <trace/events/cobalt-core.h>
 
 DEFINE_PER_CPU(struct xnsched, nksched);
 EXPORT_PER_CPU_SYMBOL_GPL(nksched);
@@ -108,9 +110,7 @@ static void watchdog_handler(struct xntimer *timer)
 	if (likely(++sched->wdcount < wd_timeout_arg))
 		return;
 
-	trace_mark(xn_nucleus, watchdog_signal,
-		   "thread %p thread_name %s",
-		   curr, xnthread_name(curr));
+	trace_cobalt_watchdog_signal(curr);
 
 	if (xnthread_test_state(curr, XNUSER)) {
 		printk(XENO_WARN "watchdog triggered on CPU #%d -- runaway thread "
@@ -721,7 +721,7 @@ static inline void leave_root(struct xnthread *root)
 
 void __xnsched_run_handler(void) /* hw interrupts off. */
 {
-	trace_mark(xn_nucleus, sched_remote, MARK_NOARGS);
+	trace_cobalt_schedule_remote(xnsched_current());
 	xnsched_run();
 }
 
@@ -734,7 +734,7 @@ int __xnsched_run(struct xnsched *sched)
 	if (xnarch_escalate())
 		return 0;
 
-	trace_mark(xn_nucleus, sched, MARK_NOARGS);
+	trace_cobalt_schedule(sched);
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -758,11 +758,7 @@ reschedule:
 
 	prev = curr;
 
-	trace_mark(xn_nucleus, sched_switch,
-		   "prev %p prev_name %s "
-		   "next %p next_name %s",
-		   prev, xnthread_name(prev),
-		   next, xnthread_name(next));
+	trace_cobalt_switch_context(prev, next);
 
 	if (xnthread_test_state(next, XNROOT))
 		xnsched_reset_watchdog(sched);

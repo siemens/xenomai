@@ -30,6 +30,7 @@
 #include <cobalt/kernel/arith.h>
 #include <cobalt/kernel/vdso.h>
 #include <asm/xenomai/calibration.h>
+#include <trace/events/cobalt-core.h>
 
 unsigned long nktimerlat;
 
@@ -307,9 +308,6 @@ void xnclock_adjust(struct xnclock *clock, xnsticks_t delta)
 	nkvdso->wallclock_offset = nkclock.wallclock_offset;
 	now = xnclock_read_monotonic(clock) + nkclock.wallclock_offset;
 	adjust_clock_timers(clock, delta);
-
-	trace_mark(xn_nucleus, clock_adjust, "clock %s, delta %Lu",
-		   clock->name, delta);
 }
 EXPORT_SYMBOL_GPL(xnclock_adjust);
 
@@ -482,8 +480,6 @@ int xnclock_register(struct xnclock *clock)
 
 	secondary_mode_only();
 
-	trace_mark(xn_nucleus, clock_register, "clock %s", clock->name);
-
 	/* Allocate the percpu timer queue slot. */
 	clock->timerdata = alloc_percpu(struct xntimerdata);
 	if (clock->timerdata == NULL)
@@ -524,8 +520,6 @@ void xnclock_deregister(struct xnclock *clock)
 	int cpu;
 
 	secondary_mode_only();
-
-	trace_mark(xn_nucleus, clock_deregister, "clock %s", clock->name);
 
 	cleanup_clock_proc(clock);
 
@@ -588,7 +582,7 @@ void xnclock_tick(struct xnclock *clock)
 		if (delta > (xnsticks_t)clock->gravity)
 			break;
 
-		trace_mark(xn_nucleus, timer_expire, "timer %p", timer);
+		trace_cobalt_timer_expire(timer);
 
 		xntimer_dequeue(timer, timerq);
 		xntimer_account_fired(timer);

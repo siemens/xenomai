@@ -86,8 +86,6 @@ static void disable_timesource(void)
 {
 	int cpu;
 
-	trace_mark(xn_nucleus, disable_timesource, MARK_NOARGS);
-
 	/*
 	 * We must not hold the nklock while stopping the hardware
 	 * timer, since this could cause deadlock situations to arise
@@ -237,8 +235,6 @@ static __init int enable_timesource(void)
 	struct xnsched *sched;
 	int ret, cpu, _cpu;
 	spl_t s;
-
-	trace_mark(xn_nucleus, enable_timesource, MARK_NOARGS);
 
 #ifdef CONFIG_XENO_OPT_STATS
 	/*
