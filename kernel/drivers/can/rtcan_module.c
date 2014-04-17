@@ -80,7 +80,7 @@ static void rtcan_dev_get_baudrate_name(can_baudrate_t baudrate,
 	strncpy(name, "unknown", max_len);
 	break;
     default:
-	snprintf(name, max_len, "%d", baudrate);
+	ksformat(name, max_len, "%d", baudrate);
 	break;
     }
 }
@@ -90,7 +90,7 @@ static void rtcan_dev_get_bittime_name(struct can_bittime *bit_time,
 {
     switch (bit_time->type) {
     case CAN_BITTIME_STD:
-	snprintf(name, max_len,
+	ksformat(name, max_len,
 		 "brp=%d prop_seg=%d phase_seg1=%d "
 		 "phase_seg2=%d sjw=%d sam=%d",
 		 bit_time->std.brp,
@@ -101,7 +101,7 @@ static void rtcan_dev_get_bittime_name(struct can_bittime *bit_time,
 		 bit_time->std.sam);
 	break;
     case CAN_BITTIME_BTR:
-	snprintf(name, max_len, "btr0=0x%02x btr1=0x%02x",
+	ksformat(name, max_len, "btr0=0x%02x btr1=0x%02x",
 		 bit_time->btr.btr0, bit_time->btr.btr1);
 	break;
     default:
@@ -116,7 +116,7 @@ static void rtcan_get_timeout_name(nanosecs_rel_t timeout,
     if (timeout == RTDM_TIMEOUT_INFINITE)
 	strncpy(name, "infinite", max_len);
     else
-	snprintf(name, max_len, "%lld", (long long)timeout);
+	ksformat(name, max_len, "%lld", (long long)timeout);
 }
 
 static int rtcan_read_proc_devices(struct seq_file *p, void *data)
@@ -198,7 +198,7 @@ static int rtcan_read_proc_sockets(struct seq_file *p, void *data)
 		    rtcan_dev_dereference(dev);
 		}
 	    } else
-		sprintf(name, "%d", ifindex);
+		ksformat(name, sizeof(name), "%d", ifindex);
 	}
 	rtcan_get_timeout_name(sock->tx_timeout,
 			       tx_timeout, sizeof(tx_timeout));

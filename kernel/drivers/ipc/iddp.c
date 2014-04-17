@@ -91,7 +91,7 @@ static char *__iddp_link_target(void *obj)
 	if (buf == NULL)
 		return buf;
 
-	snprintf(buf, 32, "%d", sk->name.sipc_port);
+	ksformat(buf, 32, "%d", sk->name.sipc_port);
 
 	return buf;
 }

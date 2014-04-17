@@ -412,7 +412,7 @@ static int clock_vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
 		if (p->status & XNTIMER_PERIODIC)
 			xntimer_format_time(p->interval, interval_buf,
 					    sizeof(interval_buf));
-		snprintf(hit_buf, sizeof(hit_buf), "%u/%u",
+		ksformat(hit_buf, sizeof(hit_buf), "%u/%u",
 			 p->scheduled, p->fired);
 		xnvfile_printf(it,
 			       "%-3u  %-20s  %-10s  %-10s  %-16s  %s\n",

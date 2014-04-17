@@ -84,7 +84,7 @@ static char *__xddp_link_target(void *obj)
 	if (buf == NULL)
 		return buf;
 
-	snprintf(buf, 32, "/dev/rtp%d", sk->minor);
+	ksformat(buf, 32, "/dev/rtp%d", sk->minor);
 
 	return buf;
 }

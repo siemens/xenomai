@@ -20,6 +20,7 @@
 #define _COBALT_KERNEL_ASSERT_H
 
 #include <cobalt/kernel/trace.h>
+#include <cobalt/kernel/ancillaries.h>
 
 #define XENO_INFO KERN_INFO    "[Xenomai] "
 #define XENO_WARN KERN_WARNING "[Xenomai] "

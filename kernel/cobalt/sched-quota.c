@@ -229,8 +229,10 @@ static void xnsched_quota_init(struct xnsched *sched)
 	INIT_LIST_HEAD(&qs->groups);
 
 #ifdef CONFIG_SMP
-	sprintf(refiller_name, "[quota-refill/%u]", sched->cpu);
-	sprintf(limiter_name, "[quota-limit/%u]", sched->cpu);
+	ksformat(refiller_name, sizeof(refiller_name),
+		 "[quota-refill/%u]", sched->cpu);
+	ksformat(limiter_name, sizeof(limiter_name),
+		 "[quota-limit/%u]", sched->cpu);
 #else
 	strcpy(refiller_name, "[quota-refill]");
 	strcpy(limiter_name, "[quota-limit]");

@@ -1,5 +1,6 @@
 
 noinst_HEADERS =	\
+	ancillaries.h	\
 	apc.h		\
 	arith.h		\
 	assert.h	\

@@ -276,7 +276,7 @@ int a4l_register(void)
 
 		/* Sets the device name through which
 		   user process can access the Analogy layer */
-		snprintf(rtdm_devs[i].device_name,
+		ksformat(rtdm_devs[i].device_name,
 			 RTDM_MAX_DEVNAME_LEN, "analogy%d", i);
 		rtdm_devs[i].proc_name = rtdm_devs[i].device_name;
 

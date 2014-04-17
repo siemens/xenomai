@@ -140,7 +140,7 @@ void rtcan_dev_alloc_name(struct rtcan_device *dev, const char *mask)
 
 
     for (i = 0; i < RTCAN_MAX_DEVICES; i++) {
-	snprintf(buf, IFNAMSIZ, mask, i);
+	ksformat(buf, IFNAMSIZ, mask, i);
 	if ((tmp = rtcan_dev_get_by_name(buf)) == NULL) {
 	    strncpy(dev->name, buf, IFNAMSIZ);
 	    break;

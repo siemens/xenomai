@@ -113,18 +113,18 @@ int a4l_proc_attach(a4l_cxt_t * cxt)
 	int ret = 0;
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 	struct proc_dir_entry *entry;
-	char *entry_name, *p;
+	char *entry_name;
 
 	/* Allocate the buffer for the file name */
 	entry_name = rtdm_malloc(A4L_NAMELEN + 4);
-	if ((p = entry_name) == NULL) {
+	if (entry_name == NULL) {
 		__a4l_err("a4l_proc_attach: failed to allocate buffer\n");
 		return -ENOMEM;
 	}
 
 	/* Create the proc file name */
-	p += sprintf(p, "%02d-", a4l_get_minor(cxt));
-	strncpy(p, dev->driver->board_name, A4L_NAMELEN);
+	ksformat(entry_name, A4L_NAMELEN + 4, "%02d-%s",
+		 a4l_get_minor(cxt), dev->driver->board_name);
 
 	/* Create the proc entry */
 	entry = proc_create_data(entry_name, 0444, a4l_proc_root,
@@ -134,11 +134,8 @@ int a4l_proc_attach(a4l_cxt_t * cxt)
 			  "failed to create /proc/analogy/%s\n",
 			  entry_name);
 		ret = -ENOMEM;
-		goto out_setup_proc_transfer;
 	}
 
-      out_setup_proc_transfer:
-	/* Free the file name buffer */
 	rtdm_free(entry_name);
 
 	return ret;
@@ -146,25 +143,21 @@ int a4l_proc_attach(a4l_cxt_t * cxt)
 
 void a4l_proc_detach(a4l_cxt_t * cxt)
 {
-	char *entry_name, *p;
 	a4l_dev_t *dev = a4l_get_dev(cxt);
+	char *entry_name;
 
-	/* Allocate the buffer for the file name */
 	entry_name = rtdm_malloc(A4L_NAMELEN + 4);
-	if ((p = entry_name) == NULL) {
+	if (entry_name == NULL) {
 		__a4l_err("a4l_proc_detach: "
 			  "failed to allocate filename buffer\n");
 		return;
 	}
 
-	/* Build the name */
-	p += sprintf(p, "%02d-", a4l_get_minor(cxt));
-	strncpy(p, dev->driver->board_name, A4L_NAMELEN);
+	ksformat(entry_name, A4L_NAMELEN + 4, "%02d-%s",
+		 a4l_get_minor(cxt), dev->driver->board_name);
 
-	/* Remove the proc file */
 	remove_proc_entry(entry_name, a4l_proc_root);
 
-	/* Free the temporary buffer */
 	rtdm_free(entry_name);
 }
 

@@ -39,6 +39,7 @@
 #include <cobalt/kernel/apc.h>
 #include <cobalt/kernel/shadow.h>
 #include <cobalt/kernel/init.h>
+#include <cobalt/kernel/ancillaries.h>
 #include <rtdm/rtdm.h>
 
 /* debug support */

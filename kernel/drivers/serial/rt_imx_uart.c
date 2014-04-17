@@ -1435,7 +1435,7 @@ static int rt_imx_uart_probe(struct platform_device *pdev)
 
 	dev = &port->rtdm_dev;
 	memcpy(dev, &device_tmpl, sizeof(struct rtdm_device));
-	snprintf(dev->device_name, RTDM_MAX_DEVNAME_LEN, "rtser%d",
+	ksformat(dev->device_name, RTDM_MAX_DEVNAME_LEN, "rtser%d",
 		 start_index + pdev->id);
 	dev->device_id = pdev->id;
 	dev->device_data = port;

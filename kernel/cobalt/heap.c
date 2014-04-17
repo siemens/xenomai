@@ -329,7 +329,7 @@ int xnheap_init(struct xnheap *heap,
 	init_extent(heap, extent);
 	list_add_tail(&extent->link, &heap->extents);
 
-	snprintf(heap->label, sizeof(heap->label), "unlabeled @0x%p", heap);
+	ksformat(heap->label, sizeof(heap->label), "unlabeled @0x%p", heap);
 
 	xnlock_get_irqsave(&nklock, s);
 	list_add_tail(&heap->stat_link, &heapq);
@@ -364,7 +364,7 @@ void xnheap_set_label(struct xnheap *heap, const char *label, ...)
 	va_start(args, label);
 
 	xnlock_get_irqsave(&nklock, s);
-	vsnprintf(heap->label, sizeof(heap->label), label, args);
+	kvsformat(heap->label, sizeof(heap->label), label, args);
 	xnlock_put_irqrestore(&nklock, s);
 
 	va_end(args);

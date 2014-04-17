@@ -101,7 +101,7 @@ cobalt_sem_init_inner(const char *name, struct cobalt_sem_shadow *sm,
 	if (sem == NULL)
 		return ERR_PTR(-ENOSPC);
 
-	snprintf(sem->name, sizeof(sem->name), "%s", name);
+	ksformat(sem->name, sizeof(sem->name), "%s", name);
 
 	sys_ppd = xnsys_ppd_get(!!(flags & SEM_PSHARED));
 	datp = xnheap_alloc(&sys_ppd->sem_heap, sizeof(*datp));

@@ -471,10 +471,10 @@ static int vfile_sched_sporadic_show(struct xnvfile_snapshot_iterator *it,
 			       "CPU", "PID", "LPRI", "NPRI", "BUDGET",
 			       "PERIOD", "NAME");
 	else {
-		snprintf(lpbuf, sizeof(lpbuf), "%3d%c",
+		ksformat(lpbuf, sizeof(lpbuf), "%3d%c",
 			 p->low_prio, p->current_prio == p->low_prio ? '*' : ' ');
 
-		snprintf(npbuf, sizeof(npbuf), "%3d%c",
+		ksformat(npbuf, sizeof(npbuf), "%3d%c",
 			 p->normal_prio, p->current_prio == p->normal_prio ? '*' : ' ');
 
 		xntimer_format_time(p->period, ptbuf, sizeof(ptbuf));

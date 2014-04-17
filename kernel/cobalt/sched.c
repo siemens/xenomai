@@ -153,9 +153,9 @@ void xnsched_init(struct xnsched *sched, int cpu)
 
 #ifdef CONFIG_SMP
 	sched->cpu = cpu;
-	sprintf(htimer_name, "[host-timer/%u]", cpu);
-	sprintf(rrbtimer_name, "[rrb-timer/%u]", cpu);
-	sprintf(root_name, "ROOT/%u", cpu);
+	ksformat(htimer_name, sizeof(htimer_name), "[host-timer/%u]", cpu);
+	ksformat(rrbtimer_name, sizeof(rrbtimer_name), "[rrb-timer/%u]", cpu);
+	ksformat(root_name, sizeof(root_name), "ROOT/%u", cpu);
 	cpus_clear(sched->resched);
 #else
 	strcpy(htimer_name, "[host-timer]");
@@ -946,7 +946,7 @@ static int vfile_schedlist_show(struct xnvfile_snapshot_iterator *it,
 			       "CPU", "PID", "CLASS", "PRI", "TIMEOUT",
 			       "STAT", "NAME");
 	else {
-		snprintf(pbuf, sizeof(pbuf), "%3d", p->cprio);
+		ksformat(pbuf, sizeof(pbuf), "%3d", p->cprio);
 		xntimer_format_time(p->timeout, tbuf, sizeof(tbuf));
 		xnthread_format_status(p->state, sbuf, sizeof(sbuf));
 

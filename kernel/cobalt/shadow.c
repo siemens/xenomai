@@ -1159,7 +1159,7 @@ static void stringify_feature_set(unsigned long fset, char *buf, int size)
 
 	for (feature = 1, nc = nfeat = 0; fset != 0 && size > 0; feature <<= 1) {
 		if (fset & feature) {
-			nc = snprintf(buf, size, "%s%s",
+			nc = ksformat(buf, size, "%s%s",
 				      nfeat > 0 ? " " : "",
 				      get_feature_label(feature));
 			nfeat++;

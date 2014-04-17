@@ -194,7 +194,7 @@ static int vfile_sched_rt_show(struct xnvfile_snapshot_iterator *it,
 		xnvfile_printf(it, "%-3s  %-6s %-8s %-10s %s\n",
 			       "CPU", "PID", "PRI", "PERIOD", "NAME");
 	else {
-		snprintf(pribuf, sizeof(pribuf), "%3d", p->cprio);
+		ksformat(pribuf, sizeof(pribuf), "%3d", p->cprio);
 		xntimer_format_time(p->period, ptbuf, sizeof(ptbuf));
 		xnvfile_printf(it, "%3u  %-6d %-8s %-10s %s\n",
 			       p->cpu,

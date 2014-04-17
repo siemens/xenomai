@@ -1342,7 +1342,7 @@ static int rt_mpc52xx_uart_of_probe(struct platform_device *op)
 	}
 
 	memcpy(dev, &device_tmpl, sizeof(struct rtdm_device));
-	snprintf(dev->device_name, RTDM_MAX_DEVNAME_LEN, "rtserPSC%d",
+	ksformat(dev->device_name, RTDM_MAX_DEVNAME_LEN, "rtserPSC%d",
 		 idx);
 	dev->device_id = idx;
 	dev->proc_name = dev->device_name;

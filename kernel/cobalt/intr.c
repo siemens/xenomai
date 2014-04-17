@@ -908,7 +908,7 @@ int xnintr_query_next(int irq, struct xnintr_iterator *iterator,
 		return -ENODEV;
 	}
 
-	snprintf(name_buf, XNOBJECT_NAME_LEN, "IRQ%d: %s", irq, intr->name);
+	ksformat(name_buf, XNOBJECT_NAME_LEN, "IRQ%d: %s", irq, intr->name);
 
 	statp = per_cpu_ptr(intr->stats, cpu);
 	iterator->hits = xnstat_counter_get(&statp->hits);

@@ -1049,7 +1049,7 @@ int cobalt_thread_set_name_np(unsigned long pth, const char __user *u_name)
 		return -ESRCH;
 	}
 
-	snprintf(xnthread_name(&thread->threadbase),
+	ksformat(xnthread_name(&thread->threadbase),
 		 XNOBJECT_NAME_LEN - 1, "%s", name);
 	p = xnthread_host_task(&thread->threadbase);
 	get_task_struct(p);

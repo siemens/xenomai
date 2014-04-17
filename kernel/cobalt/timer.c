@@ -349,7 +349,7 @@ void __xntimer_init(struct xntimer *timer,
 	timer->tracker = clock;
 #endif
 	if (!xnsched_current_thread() || !xnsched_root_p())
-		snprintf(timer->name, XNOBJECT_NAME_LEN, "%d/%s",
+		ksformat(timer->name, XNOBJECT_NAME_LEN, "%d/%s",
 			 current->pid, current->comm);
 	else
 		xnobject_copy_name(timer->name,
@@ -525,17 +525,17 @@ char *xntimer_format_time(xnticks_t ns, char *buf, size_t bufsz)
 	us %= 1000;
 
 	if (sec) {
-		p += snprintf(p, bufsz, "%Lus", sec);
+		p += ksformat(p, bufsz, "%Lus", sec);
 		len = bufsz - (p - buf);
 	}
 
 	if (len > 0 && (ms || (sec && us))) {
-		p += snprintf(p, bufsz - (p - buf), "%lums", ms);
+		p += ksformat(p, bufsz - (p - buf), "%lums", ms);
 		len = bufsz - (p - buf);
 	}
 
 	if (len > 0 && us)
-		p += snprintf(p, bufsz - (p - buf), "%luus", us);
+		p += ksformat(p, bufsz - (p - buf), "%luus", us);
 
 	return buf;
 }

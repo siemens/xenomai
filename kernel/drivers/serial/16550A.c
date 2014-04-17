@@ -1137,7 +1137,7 @@ int __init rt_16550_init(void)
 			goto cleanup_out;
 
 		memcpy(dev, &device_tmpl, sizeof(struct rtdm_device));
-		snprintf(dev->device_name, RTDM_MAX_DEVNAME_LEN, "rtser%d",
+		ksformat(dev->device_name, RTDM_MAX_DEVNAME_LEN, "rtser%d",
 			 start_index + i);
 		dev->device_id = i;
 

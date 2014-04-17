@@ -161,7 +161,7 @@ static int __init __rtdm_test_init(void)
 	while (1) {
 		device[dev].proc_name = device[dev].device_name;
 
-		snprintf(device[dev].device_name, RTDM_MAX_DEVNAME_LEN,
+		ksformat(device[dev].device_name, RTDM_MAX_DEVNAME_LEN,
 			 "rttest-rtdm%d",
 			 start_index);
 		err = rtdm_dev_register(&device[dev]);

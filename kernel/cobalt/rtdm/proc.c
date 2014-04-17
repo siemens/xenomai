@@ -182,7 +182,7 @@ static int proto_show(struct xnvfile_regular_iterator *it, void *data)
 
 	device = list_entry(curr, struct rtdm_device, reserved.entry);
 
-	snprintf(pnum, sizeof(pnum), "%u:%u",
+	ksformat(pnum, sizeof(pnum), "%u:%u",
 		 device->protocol_family, device->socket_type);
 
 	xnvfile_printf(it, "%02X\t%-31s\t%-15s\t%s\n",

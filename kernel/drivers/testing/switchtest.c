@@ -465,7 +465,7 @@ static int rtswitch_create_ktask(rtswitch_context_t *ctx,
 	if (err)
 		return err;
 
-	snprintf(name, sizeof(name), "rtk%d/%u", ptask->index, ctx->cpu);
+	ksformat(name, sizeof(name), "rtk%d/%u", ptask->index, ctx->cpu);
 
 	task = &ctx->tasks[ptask->index];
 
@@ -764,7 +764,7 @@ int __init __switchtest_init(void)
 	fp_features = fp_detect();
 
 	do {
-		snprintf(device.device_name, RTDM_MAX_DEVNAME_LEN,
+		ksformat(device.device_name, RTDM_MAX_DEVNAME_LEN,
 			 "rttest-switchtest%d",
 			 start_index);
 		err = rtdm_dev_register(&device);

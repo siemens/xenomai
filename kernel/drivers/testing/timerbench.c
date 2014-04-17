@@ -510,7 +510,7 @@ static int __init __timerbench_init(void)
 		return 0;
 
 	do {
-		snprintf(device.device_name, RTDM_MAX_DEVNAME_LEN,
+		ksformat(device.device_name, RTDM_MAX_DEVNAME_LEN,
 			 "rttest-timerbench%d",
 			 start_index);
 		err = rtdm_dev_register(&device);

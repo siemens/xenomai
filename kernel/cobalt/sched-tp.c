@@ -100,7 +100,7 @@ static void xnsched_tp_init(struct xnsched *sched)
 	xnsched_initq(&tp->idle.runnable);
 
 #ifdef CONFIG_SMP
-	sprintf(timer_name, "[tp-tick/%u]", sched->cpu);
+	ksformat(timer_name, sizeof(timer_name), "[tp-tick/%u]", sched->cpu);
 #else
 	strcpy(timer_name, "[tp-tick]");
 #endif

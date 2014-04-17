@@ -140,7 +140,7 @@ static int vfile_sched_weak_show(struct xnvfile_snapshot_iterator *it,
 		xnvfile_printf(it, "%-3s  %-6s %-4s %s\n",
 			       "CPU", "PID", "PRI", "NAME");
 	else {
-		snprintf(pribuf, sizeof(pribuf), "%3d", p->cprio);
+		ksformat(pribuf, sizeof(pribuf), "%3d", p->cprio);
 		xnvfile_printf(it, "%3u  %-6d %-4s %s\n",
 			       p->cpu,
 			       p->pid,
