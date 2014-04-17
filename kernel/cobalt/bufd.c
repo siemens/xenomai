@@ -332,7 +332,7 @@ ssize_t xnbufd_copy_to_kmem(void *to, struct xnbufd *bufd, size_t len)
 	 */
 	if (xnthread_test_state(xnsched_current_thread(), XNROOT|XNUSER) &&
 	    !xnsched_interrupt_p() && current->mm == bufd->b_mm) {
-		XENO_BUGON(NUCLEUS, xnlock_is_owner(&nklock) || spltest());
+		preemptible_only();
 		if (__xn_safe_copy_from_user(to, (void __user *)from, len))
 			return -EFAULT;
 		goto advance_offset;
@@ -438,7 +438,7 @@ ssize_t xnbufd_copy_from_kmem(struct xnbufd *bufd, void *from, size_t len)
 	 */
 	if (xnthread_test_state(xnsched_current_thread(), XNROOT|XNUSER) &&
 	    !xnsched_interrupt_p() && current->mm == bufd->b_mm) {
-		XENO_BUGON(NUCLEUS, xnlock_is_owner(&nklock) || spltest());
+		preemptible_only();
 		if (__xn_safe_copy_to_user((void __user *)to, from, len))
 			return -EFAULT;
 		goto advance_offset;
@@ -499,7 +499,7 @@ EXPORT_SYMBOL_GPL(xnbufd_copy_from_kmem);
 
 ssize_t xnbufd_unmap_uread(struct xnbufd *bufd)
 {
-	XENO_BUGON(NUCLEUS, xnlock_is_owner(&nklock) || spltest());
+	preemptible_only();
 
 #if XENO_DEBUG(NUCLEUS)
 	bufd->b_ptr = (caddr_t)-1;
@@ -541,7 +541,7 @@ ssize_t xnbufd_unmap_uwrite(struct xnbufd *bufd)
 	void *from;
 	size_t len;
 
-	XENO_BUGON(NUCLEUS, xnlock_is_owner(&nklock) || spltest());
+	preemptible_only();
 
 	len = bufd->b_off;
 
