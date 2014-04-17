@@ -77,16 +77,8 @@ static int portmap[CONFIG_XENO_OPT_PIPE_NRDEV]; /* indexes RTDM fildes */
 static char *__xddp_link_target(void *obj)
 {
 	struct xddp_socket *sk = obj;
-	char *buf;
 
-	/* XXX: older kernels don't have kasprintf(). */
-	buf = kmalloc(32, GFP_KERNEL);
-	if (buf == NULL)
-		return buf;
-
-	ksformat(buf, 32, "/dev/rtp%d", sk->minor);
-
-	return buf;
+	return kasformat("%d", sk->minor);
 }
 
 extern struct xnptree rtipc_ptree;

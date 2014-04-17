@@ -79,16 +79,8 @@ static struct xnmap *portmap;
 static char *__bufp_link_target(void *obj)
 {
 	struct bufp_socket *sk = obj;
-	char *buf;
 
-	/* XXX: older kernels don't have kasprintf(). */
-	buf = kmalloc(32, GFP_KERNEL);
-	if (buf == NULL)
-		return buf;
-
-	ksformat(buf, 32, "%d", sk->name.sipc_port);
-
-	return buf;
+	return kasformat("%d", sk->name.sipc_port);
 }
 
 extern struct xnptree rtipc_ptree;

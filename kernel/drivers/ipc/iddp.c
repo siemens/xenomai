@@ -84,16 +84,8 @@ static int poolwait;
 static char *__iddp_link_target(void *obj)
 {
 	struct iddp_socket *sk = obj;
-	char *buf;
 
-	/* XXX: older kernels don't have kasprintf(). */
-	buf = kmalloc(32, GFP_KERNEL);
-	if (buf == NULL)
-		return buf;
-
-	ksformat(buf, 32, "%d", sk->name.sipc_port);
-
-	return buf;
+	return kasformat("%d", sk->name.sipc_port);
 }
 
 extern struct xnptree rtipc_ptree;
