@@ -44,6 +44,7 @@
 
 /* debug support */
 #include <cobalt/kernel/assert.h>
+#include <trace/events/cobalt-rtdm.h>
 #ifdef CONFIG_PCI
 #include <asm-generic/xenomai/pci_ids.h>
 #endif /* CONFIG_PCI */
@@ -1165,7 +1166,7 @@ void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, nanosecs_rel_t timeout);
 
 /* --- event services --- */
 
-typedef struct {
+typedef struct rtdm_event {
 	struct xnsynch synch_base;
 	DECLARE_XNSELECT(select_block);
 } rtdm_event_t;
@@ -1187,13 +1188,13 @@ void __rtdm_synch_flush(struct xnsynch *synch, unsigned long reason);
 
 static inline void rtdm_event_pulse(rtdm_event_t *event)
 {
-	trace_mark(xn_rtdm, event_pulse, "event %p", event);
+	trace_cobalt_driver_event_pulse(event);
 	__rtdm_synch_flush(&event->synch_base, 0);
 }
 
 static inline void rtdm_event_destroy(rtdm_event_t *event)
 {
-	trace_mark(xn_rtdm, event_destroy, "event %p", event);
+	trace_cobalt_driver_event_destroy(event);
 	__rtdm_synch_flush(&event->synch_base, XNRMID);
 	xnselect_destroy(&event->select_block);
 }
@@ -1201,7 +1202,7 @@ static inline void rtdm_event_destroy(rtdm_event_t *event)
 
 /* --- semaphore services --- */
 
-typedef struct {
+typedef struct rtdm_sem {
 	unsigned long value;
 	struct xnsynch synch_base;
 	DECLARE_XNSELECT(select_block);
@@ -1218,7 +1219,7 @@ void rtdm_sem_up(rtdm_sem_t *sem);
 #ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
 static inline void rtdm_sem_destroy(rtdm_sem_t *sem)
 {
-	trace_mark(xn_rtdm, sem_destroy, "sem %p", sem);
+	trace_cobalt_driver_sem_destroy(sem);
 	__rtdm_synch_flush(&sem->synch_base, XNRMID);
 	xnselect_destroy(&sem->select_block);
 }
@@ -1226,7 +1227,7 @@ static inline void rtdm_sem_destroy(rtdm_sem_t *sem)
 
 /* --- mutex services --- */
 
-typedef struct {
+typedef struct rtdm_mutex {
 	struct xnsynch synch_base;
 } rtdm_mutex_t;
 
@@ -1241,7 +1242,7 @@ static inline void rtdm_mutex_unlock(rtdm_mutex_t *mutex)
 	if (!XENO_ASSERT(RTDM, !xnsched_interrupt_p()))
 		return;
 
-	trace_mark(xn_rtdm, mutex_unlock, "mutex %p", mutex);
+	trace_cobalt_driver_mutex_release(mutex);
 
 	if (unlikely(xnsynch_release(&mutex->synch_base,
 				     xnsched_current_thread()) != NULL))
@@ -1250,7 +1251,7 @@ static inline void rtdm_mutex_unlock(rtdm_mutex_t *mutex)
 
 static inline void rtdm_mutex_destroy(rtdm_mutex_t *mutex)
 {
-	trace_mark(xn_rtdm, mutex_destroy, "mutex %p", mutex);
+	trace_cobalt_driver_mutex_destroy(mutex);
 
 	__rtdm_synch_flush(&mutex->synch_base, XNRMID);
 }

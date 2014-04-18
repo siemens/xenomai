@@ -23,10 +23,6 @@
 #include <linux/ipipe_trace.h>
 #include <cobalt/uapi/kernel/trace.h>
 
-/* TEMP */
-#undef trace_mark
-#define trace_mark(channel, ev, fmt, args...)	do { } while (0)
-
 static inline int xntrace_max_begin(unsigned long v)
 {
 	ipipe_trace_begin(v);

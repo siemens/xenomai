@@ -26,13 +26,14 @@
  * @{
  */
 
+#include <linux/workqueue.h>
 #include <cobalt/kernel/ppd.h>
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/apc.h>
 #include "rtdm/syscall.h"
 #include "rtdm/internal.h"
-
-#include <linux/workqueue.h>
+#define CREATE_TRACE_POINTS
+#include <trace/events/cobalt-rtdm.h>
 
 #define CLOSURE_RETRY_PERIOD_MS	100
 
@@ -229,7 +230,7 @@ static void close_callback(struct work_struct *work)
 			if (err == -EAGAIN)
 				reschedule = 1;
 		} else {
-			trace_mark(xn_rtdm, fd_closed, "fd %d", context->fd);
+			trace_cobalt_fd_closed(context);
 
 			cleanup_instance(context->device, context,
 					 test_bit(RTDM_CREATED_IN_NRT,
@@ -263,8 +264,6 @@ int __rt_dev_open(rtdm_user_info_t *user_info, const char *path, int oflag)
 	int nrt_mode = !rtdm_in_rt_context();
 
 	device = get_named_device(path);
-	trace_mark(xn_rtdm, open, "user_info %p path %s oflag %d device %p",
-		   user_info, path, oflag, device);
 	ret = -ENODEV;
 	if (!device)
 		goto err_out;
@@ -272,6 +271,8 @@ int __rt_dev_open(rtdm_user_info_t *user_info, const char *path, int oflag)
 	ret = create_instance(device, &context, &fildes, user_info, nrt_mode);
 	if (ret != 0)
 		goto cleanup_out;
+
+	trace_cobalt_fd_open(user_info, context, oflag);
 
 	if (nrt_mode) {
 		context->context_flags = (1 << RTDM_CREATED_IN_NRT);
@@ -289,8 +290,7 @@ int __rt_dev_open(rtdm_user_info_t *user_info, const char *path, int oflag)
 
 	fildes->context = context;
 
-	trace_mark(xn_rtdm, fd_created,
-		   "device %p fd %d", device, context->fd);
+	trace_cobalt_fd_created(context);
 
 	return context->fd;
 
@@ -314,9 +314,6 @@ int __rt_dev_socket(rtdm_user_info_t *user_info, int protocol_family,
 	int nrt_mode = !rtdm_in_rt_context();
 
 	device = get_protocol_device(protocol_family, socket_type);
-	trace_mark(xn_rtdm, socket, "user_info %p protocol_family %d "
-		   "socket_type %d protocol %d device %p",
-		   user_info, protocol_family, socket_type, protocol, device);
 	ret = -EAFNOSUPPORT;
 	if (!device)
 		goto err_out;
@@ -324,6 +321,8 @@ int __rt_dev_socket(rtdm_user_info_t *user_info, int protocol_family,
 	ret = create_instance(device, &context, &fildes, user_info, nrt_mode);
 	if (ret != 0)
 		goto cleanup_out;
+
+	trace_cobalt_fd_socket(user_info, context, protocol_family);
 
 	if (nrt_mode) {
 		context->context_flags = (1 << RTDM_CREATED_IN_NRT);
@@ -341,8 +340,7 @@ int __rt_dev_socket(rtdm_user_info_t *user_info, int protocol_family,
 
 	fildes->context = context;
 
-	trace_mark(xn_rtdm, fd_created,
-		   "device %p fd %d", device, context->fd);
+	trace_cobalt_fd_created(context);
 
 	return context->fd;
 
@@ -362,8 +360,6 @@ int __rt_dev_close(rtdm_user_info_t *user_info, int fd)
 	spl_t s;
 	int ret;
 	int nrt_mode = !rtdm_in_rt_context();
-
-	trace_mark(xn_rtdm, close, "user_info %p fd %d", user_info, fd);
 
 	ret = -EBADF;
 	if (unlikely((unsigned int)fd >= RTDM_FD_MAX))
@@ -389,6 +385,9 @@ int __rt_dev_close(rtdm_user_info_t *user_info, int fd)
 
 	set_bit(RTDM_CLOSING, &context->context_flags);
 	atomic_inc(&context->close_lock_count);
+
+	trace_cobalt_fd_close(user_info, context,
+			      atomic_read(&context->close_lock_count));
 
 	__cleanup_fildes(&fildes_table[fd]);
 
@@ -419,7 +418,7 @@ int __rt_dev_close(rtdm_user_info_t *user_info, int fd)
 
 	xnlock_put_irqrestore(&rt_fildes_lock, s);
 
-	trace_mark(xn_rtdm, fd_closed, "fd %d", context->fd);
+	trace_cobalt_fd_closed(context);
 
 	cleanup_instance(context->device, context,
 			 test_bit(RTDM_CREATED_IN_NRT,
@@ -463,7 +462,7 @@ void cleanup_process_files(struct rtdm_process *owner)
 	}
 }
 
-#define MAJOR_FUNCTION_WRAPPER_TH(operation, args...)			\
+#define MAJOR_FUNCTION_WRAPPER_TH(operation, trace_arg, args...)	\
 do {									\
 	struct rtdm_dev_context *context;				\
 	struct rtdm_operations *ops;					\
@@ -474,6 +473,7 @@ do {									\
 	if (unlikely(!context))						\
 		goto err_out;						\
 									\
+	trace_cobalt_fd_ ## operation(user_info, context, trace_arg);	\
 	ops = context->ops;						\
 									\
 	if (rtdm_in_rt_context())					\
@@ -484,18 +484,18 @@ do {									\
 	if (!XENO_ASSERT(RTDM, !spltest()))				\
 		    splnone();
 
-#define MAJOR_FUNCTION_WRAPPER_BH()					\
+#define MAJOR_FUNCTION_WRAPPER_BH(operation)				\
 	rtdm_context_unlock(context);					\
 									\
 err_out:								\
-	trace_mark(xn_rtdm, operation##_done, "result %d", ret);	\
+	trace_cobalt_fd_ ## operation ## _status(user_info, context, ret);\
 	return ret;							\
 } while (0)
 
-#define MAJOR_FUNCTION_WRAPPER(operation, args...)			\
+#define MAJOR_FUNCTION_WRAPPER(operation, trace_arg, args...)		\
 do {									\
-	MAJOR_FUNCTION_WRAPPER_TH(operation, args);			\
-	MAJOR_FUNCTION_WRAPPER_BH();					\
+  	MAJOR_FUNCTION_WRAPPER_TH(operation, trace_arg, args);		\
+	MAJOR_FUNCTION_WRAPPER_BH(operation);				\
 } while (0)
 
 int __rt_dev_ioctl(rtdm_user_info_t *user_info, int fd, int request, ...)
@@ -507,10 +507,7 @@ int __rt_dev_ioctl(rtdm_user_info_t *user_info, int fd, int request, ...)
 	arg = va_arg(args, void __user *);
 	va_end(args);
 
-	trace_mark(xn_rtdm, ioctl, "user_info %p fd %d request %d arg %p",
-		   user_info, fd, request, arg);
-
-	MAJOR_FUNCTION_WRAPPER_TH(ioctl, (unsigned int)request, arg);
+	MAJOR_FUNCTION_WRAPPER_TH(ioctl, request, (unsigned int)request, arg);
 
 	if (unlikely(ret < 0) && (unsigned int)request == RTIOC_DEVICE_INFO) {
 		struct rtdm_device *dev = context->device;
@@ -525,7 +522,7 @@ int __rt_dev_ioctl(rtdm_user_info_t *user_info, int fd, int request, ...)
 					     sizeof(dev_info));
 	}
 
-	MAJOR_FUNCTION_WRAPPER_BH();
+	MAJOR_FUNCTION_WRAPPER_BH(ioctl);
 }
 
 EXPORT_SYMBOL_GPL(__rt_dev_ioctl);
@@ -533,9 +530,7 @@ EXPORT_SYMBOL_GPL(__rt_dev_ioctl);
 ssize_t __rt_dev_read(rtdm_user_info_t *user_info, int fd, void *buf,
 		      size_t nbyte)
 {
-	trace_mark(xn_rtdm, read, "user_info %p fd %d buf %p nbyte %zu",
-		   user_info, fd, buf, nbyte);
-	MAJOR_FUNCTION_WRAPPER(read, buf, nbyte);
+	MAJOR_FUNCTION_WRAPPER(read, nbyte, buf, nbyte);
 }
 
 EXPORT_SYMBOL_GPL(__rt_dev_read);
@@ -543,9 +538,7 @@ EXPORT_SYMBOL_GPL(__rt_dev_read);
 ssize_t __rt_dev_write(rtdm_user_info_t *user_info, int fd, const void *buf,
 		       size_t nbyte)
 {
-	trace_mark(xn_rtdm, write, "user_info %p fd %d buf %p nbyte %zu",
-		   user_info, fd, buf, nbyte);
-	MAJOR_FUNCTION_WRAPPER(write, buf, nbyte);
+	MAJOR_FUNCTION_WRAPPER(write, nbyte, buf, nbyte);
 }
 
 EXPORT_SYMBOL_GPL(__rt_dev_write);
@@ -553,13 +546,7 @@ EXPORT_SYMBOL_GPL(__rt_dev_write);
 ssize_t __rt_dev_recvmsg(rtdm_user_info_t *user_info, int fd,
 			 struct msghdr *msg, int flags)
 {
-	trace_mark(xn_rtdm, recvmsg, "user_info %p fd %d msg_name %p "
-		   "msg_namelen %u msg_iov %p msg_iovlen %zu "
-		   "msg_control %p msg_controllen %zu msg_flags %d",
-		   user_info, fd, msg->msg_name, msg->msg_namelen,
-		   msg->msg_iov, msg->msg_iovlen, msg->msg_control,
-		   msg->msg_controllen, msg->msg_flags);
-	MAJOR_FUNCTION_WRAPPER(recvmsg, msg, flags);
+	MAJOR_FUNCTION_WRAPPER(recvmsg, flags, msg, flags);
 }
 
 EXPORT_SYMBOL_GPL(__rt_dev_recvmsg);
@@ -567,13 +554,7 @@ EXPORT_SYMBOL_GPL(__rt_dev_recvmsg);
 ssize_t __rt_dev_sendmsg(rtdm_user_info_t *user_info, int fd,
 			 const struct msghdr *msg, int flags)
 {
-	trace_mark(xn_rtdm, sendmsg, "user_info %p fd %d msg_name %p "
-		   "msg_namelen %u msg_iov %p msg_iovlen %zu "
-		   "msg_control %p msg_controllen %zu msg_flags %d",
-		   user_info, fd, msg->msg_name, msg->msg_namelen,
-		   msg->msg_iov, msg->msg_iovlen, msg->msg_control,
-		   msg->msg_controllen, msg->msg_flags);
-	MAJOR_FUNCTION_WRAPPER(sendmsg, msg, flags);
+	MAJOR_FUNCTION_WRAPPER(sendmsg, flags, msg, flags);
 }
 
 EXPORT_SYMBOL_GPL(__rt_dev_sendmsg);
