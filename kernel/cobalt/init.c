@@ -71,15 +71,21 @@ struct xnsys_ppd __xnsys_global_ppd = {
 EXPORT_SYMBOL_GPL(__xnsys_global_ppd);
 
 #ifdef CONFIG_XENO_OPT_DEBUG
-#define boot_debug_notice " [DEBUG]"
+#define boot_debug_notice "[DEBUG]"
 #else
 #define boot_debug_notice ""
 #endif
 
 #ifdef CONFIG_IPIPE_TRACE
-#define boot_trace_notice " [TRACE]"
+#define boot_lat_trace_notice "[LTRACE]"
 #else
-#define boot_trace_notice ""
+#define boot_lat_trace_notice ""
+#endif
+
+#ifdef CONFIG_ENABLE_DEFAULT_TRACERS
+#define boot_evt_trace_notice "[ETRACE]"
+#else
+#define boot_evt_trace_notice ""
 #endif
 
 static void disable_timesource(void)
@@ -422,10 +428,11 @@ static int __init xenomai_init(void)
 	if (ret)
 		goto cleanup_rtdm;
 
-	printk(XENO_INFO "Cobalt v%s enabled%s%s\n",
+	printk(XENO_INFO "Cobalt v%s enabled %s%s%s\n",
 	       XENO_VERSION_STRING,
 	       boot_debug_notice,
-	       boot_trace_notice);
+	       boot_lat_trace_notice,
+	       boot_evt_trace_notice);
 
 	return 0;
 
