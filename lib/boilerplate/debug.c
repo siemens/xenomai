@@ -106,7 +106,7 @@ void backtrace_init_context(struct backtrace_data *btd,
 {
 	__RT(pthread_mutex_init(&btd->lock, NULL));
 	btd->inner = NULL;
-	btd->name = name;
+	btd->name = name ?: "<anonymous>";
 	pthread_setspecific(btkey, btd);
 }
 
