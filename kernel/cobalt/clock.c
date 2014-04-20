@@ -385,8 +385,8 @@ static int clock_vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
 	p->timeout = xntimer_get_timeout(timer);
 	p->interval = xntimer_get_interval(timer);
 	p->status = timer->status;
-	strncpy(p->handler, timer->handler_name, 16)[16] = '\0';
-	xnobject_copy_name(p->name, timer->name);
+	knamecpy(p->handler, timer->handler_name);
+	knamecpy(p->name, timer->name);
 
 	return 1;
 }

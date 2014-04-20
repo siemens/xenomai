@@ -1056,8 +1056,7 @@ int cobalt_thread_set_name_np(unsigned long pth, const char __user *u_name)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	strncpy(p->comm, name, sizeof(p->comm));
-	p->comm[sizeof(p->comm) - 1] = '\0';
+	knamecpy(p->comm, name);
 	put_task_struct(p);
 
 	return 0;

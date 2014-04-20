@@ -908,8 +908,8 @@ static int vfile_schedlist_next(struct xnvfile_snapshot_iterator *it,
 	memcpy(p->name, thread->name, sizeof(p->name));
 	p->cprio = thread->cprio;
 	p->state = xnthread_state_flags(thread);
-	xnobject_copy_name(p->sched_class, thread->sched_class->name);
-	xnobject_copy_name(p->personality, thread->personality->name);
+	knamecpy(p->sched_class, thread->sched_class->name);
+	knamecpy(p->personality, thread->personality->name);
 	period = xnthread_get_period(thread);
 	timeout = xnthread_get_timeout(thread, priv->start_time);
 	/*

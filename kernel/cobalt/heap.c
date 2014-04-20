@@ -142,7 +142,7 @@ static int vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
 	p->usable_mem = xnheap_usable_mem(heap);
 	p->used_mem = xnheap_used_mem(heap);
 	p->page_size = xnheap_page_size(heap);
-	strncpy(p->label, heap->label, sizeof(p->label));
+	knamecpy(p->label, heap->label);
 
 	return 1;
 }

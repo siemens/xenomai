@@ -20,6 +20,8 @@
 #define _COBALT_KERNEL_ANCILLARIES_H
 
 #include <linux/kernel.h>
+#include <linux/string.h>
+#include <cobalt/uapi/kernel/limits.h>
 
 #define ksformat(__dst, __len, __fmt, __args...)			\
 	({								\
@@ -49,4 +51,15 @@
 		kvasprintf(GFP_KERNEL, __fmt, __ap);			\
 	})
 
+void __knamecpy_requires_character_array_as_destination(void);
+
+#define knamecpy(__dst, __src)						\
+	({								\
+		if (!__builtin_types_compatible_p(typeof(__dst), char[])) \
+			__knamecpy_requires_character_array_as_destination();	\
+		strncpy((__dst), __src, sizeof(__dst) - 1);		\
+		__dst[sizeof(__dst) - 1] = '\0';			\
+		__dst;							\
+	 })
+	
 #endif /* !_COBALT_KERNEL_ANCILLARIES_H */

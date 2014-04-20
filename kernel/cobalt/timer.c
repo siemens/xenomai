@@ -347,13 +347,8 @@ void __xntimer_init(struct xntimer *timer,
 #ifdef CONFIG_XENO_OPT_EXTCLOCK
 	timer->tracker = clock;
 #endif
-	if (!xnsched_current_thread() || !xnsched_root_p())
-		ksformat(timer->name, XNOBJECT_NAME_LEN, "%d/%s",
-			 current->pid, current->comm);
-	else
-		xnobject_copy_name(timer->name,
-				   xnsched_current_thread()->name);
-
+	ksformat(timer->name, XNOBJECT_NAME_LEN, "%d/%s",
+		 current->pid, current->comm);
 	xntimer_reset_stats(timer);
 	xnlock_get_irqsave(&nklock, s);
 	list_add_tail(&timer->next_stat, &clock->statq);

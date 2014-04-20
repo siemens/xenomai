@@ -50,12 +50,6 @@ struct xnobject {
 	struct list_head link;
 };
 
-static inline void xnobject_copy_name(char *dst, const char *src)
-{
-	strncpy(dst, src ?: "", XNOBJECT_NAME_LEN-1);
-	dst[XNOBJECT_NAME_LEN-1] = '\0';
-}
-
 int xnregistry_init(void);
 
 void xnregistry_cleanup(void);
