@@ -36,8 +36,6 @@ static struct sigaction notifier_old_sa;
 
 static fd_set notifier_rset;
 
-static int max_rfildes;		/* Increases, never decreases. */
-
 static void notifier_sighandler(int sig, siginfo_t *siginfo, void *uc)
 {
 	static struct timeval tv = { .tv_sec = 0, .tv_usec = 0 };
@@ -59,7 +57,7 @@ static void notifier_sighandler(int sig, siginfo_t *siginfo, void *uc)
 		 */
 		rfds = notifier_rset;
 		do
-			ret = __STD(select(max_rfildes + 1, &rfds, NULL, NULL, &tv));
+			ret = __STD(select(FD_SETSIZE, &rfds, NULL, NULL, &tv));
 		while (ret == -1 && errno == EINTR);
 		if (ret <= 0)
 			goto hand_over;
@@ -129,16 +127,16 @@ static void lock_notifier_list(sigset_t *oset)
 {
 	sigset_t set;
 
-	read_lock(&notifier_lock);
-	pthread_sigmask(SIG_BLOCK, NULL, &set);
+	sigemptyset(&set);
 	sigaddset(&set, SIGNOTIFY);
 	pthread_sigmask(SIG_BLOCK, &set, oset);
+	write_lock(&notifier_lock);
 }
 
 static void unlock_notifier_list(sigset_t *oset)
 {
 	pthread_sigmask(SIG_SETMASK, oset, NULL);
-	read_unlock(&notifier_lock);
+	write_unlock(&notifier_lock);
 }
 
 int notifier_init(struct notifier *nf,
@@ -163,7 +161,6 @@ int notifier_init(struct notifier *nf,
 	}
 
 	nf->callback = callback;
-	pvholder_init(&nf->link);
 	nf->notified = 0;
 	nf->owner = owned ? copperplate_get_tid() : 0;
 	__STD(pthread_mutexattr_init(&mattr));
@@ -176,8 +173,6 @@ int notifier_init(struct notifier *nf,
 	push_cleanup_lock(&notifier_lock);
 	lock_notifier_list(&oset);
 	pvlist_append(&nf->link, &notifier_list);
-	if (nf->psfd[0] > max_rfildes)
-		max_rfildes = nf->psfd[0];
 	FD_SET(nf->psfd[0], &notifier_rset);
 	unlock_notifier_list(&oset);
 	pop_cleanup_lock(&notifier_lock);
@@ -212,7 +207,7 @@ void notifier_destroy(struct notifier *nf)
 
 	push_cleanup_lock(&notifier_lock);
 	lock_notifier_list(&oset);
-	pvlist_remove_init(&nf->link);
+	pvlist_remove(&nf->link);
 	FD_CLR(nf->psfd[0], &notifier_rset);
 	unlock_notifier_list(&oset);
 	pop_cleanup_lock(&notifier_lock);
@@ -228,7 +223,7 @@ int notifier_signal(struct notifier *nf)
 	int fd, ret, kick = 1;
 	char c = 0;
 
-	ret = read_lock_nocancel(&nf->lock);
+	ret = write_lock_nocancel(&nf->lock);
 	if (ret)
 		return __bt(ret);
 
@@ -239,7 +234,7 @@ int notifier_signal(struct notifier *nf)
 	else
 		kick = 0;
 
-	read_unlock(&nf->lock);
+	write_unlock(&nf->lock);
 
 	/*
 	 * XXX: we must release the lock before we write to the pipe,
@@ -265,7 +260,7 @@ int notifier_release(struct notifier *nf)
 	 * if the caller is cancelled, the notification struct becomes
 	 * useless. We may only take a read lock here.
 	 */
-	ret = read_lock_nocancel(&nf->lock);
+	ret = write_lock_nocancel(&nf->lock);
 	if (ret)
 		return __bt(ret);
 
@@ -276,7 +271,7 @@ int notifier_release(struct notifier *nf)
 	else
 		kick = 0;
 
-	read_unlock(&nf->lock);
+	write_unlock(&nf->lock);
 
 	if (kick) {
 		do
