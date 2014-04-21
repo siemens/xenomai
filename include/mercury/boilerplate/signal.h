@@ -27,4 +27,19 @@
 #define SIGNOTIFY	(SIGRTMIN + 8) /* Internal notification */
 #define SIGRELS		(SIGRTMIN + 9) /* Syscall abort */
 
+#define SIGSAFE_LOCK_ENTRY(__safelock)					\
+  	do {								\
+		sigset_t __safeset, __oldsafeset;			\
+		sigemptyset(&__safeset);				\
+		sigaddset(&__safeset, SIGNOTIFY);			\
+		pthread_sigmask(SIG_BLOCK, &__safeset, &__oldsafeset);	\
+		push_cleanup_lock(__safelock);				\
+		write_lock(__safelock);
+
+#define SIGSAFE_LOCK_EXIT(__safelock)					\
+		write_unlock(__safelock);				\
+		pop_cleanup_lock(&__safelock);				\
+		pthread_sigmask(SIG_SETMASK, &__oldsafeset, NULL);	\
+	} while (0)
+
 #endif /* _MERCURY_BOILERPLATE_SIGNAL_H */

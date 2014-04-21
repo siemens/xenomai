@@ -48,8 +48,7 @@ void __printout(const char *name, const char *header,
 	ms = ns / 1000000ULL;
 	us = (ns % 1000000ULL) / 1000ULL;
 
-	push_cleanup_lock(&__printlock);
-	write_lock(&__printlock);
+	SIGSAFE_LOCK_ENTRY(&__printlock);
 
 	fprintf(fp, "%4d\"%.3d.%.3d| ",
 		(int)ms / 1000, (int)ms % 1000, (int)us);
@@ -62,8 +61,7 @@ void __printout(const char *name, const char *header,
 	fputc('\n', fp);
 	fflush(fp);
 
-	write_unlock(&__printlock);
-	pop_cleanup_lock(&__printlock);
+	SIGSAFE_LOCK_EXIT(&__printlock);
 }
 
 void __warning(const char *name, const char *fmt, va_list ap)

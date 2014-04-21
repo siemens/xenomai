@@ -127,8 +127,7 @@ void backtrace_dump(struct backtrace_data *btd)
 	if (btd == NULL)
 		btd = &main_btd;
 
-	push_cleanup_lock(&__printlock);
-	read_lock(&__printlock);
+	SIGSAFE_LOCK_ENTRY(&__printlock);
 
 	if (btd->inner == NULL)
 		goto no_error;
@@ -149,8 +148,7 @@ void backtrace_dump(struct backtrace_data *btd)
 	flush_backtrace(btd);
 
 no_error:
-	read_unlock(&__printlock);
-	pop_cleanup_lock(&__printlock);
+	SIGSAFE_LOCK_EXIT(&__printlock);
 }
 
 void backtrace_check(void)

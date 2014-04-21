@@ -20,4 +20,14 @@
 
 #include <cobalt/signal.h>
 
+#define SIGSAFE_LOCK_ENTRY(__safelock)					\
+  	do {								\
+		push_cleanup_lock(__safelock);				\
+		write_lock(__safelock);
+
+#define SIGSAFE_LOCK_EXIT(__safelock)					\
+		write_unlock(__safelock);				\
+		pop_cleanup_lock(&__safelock);				\
+	} while (0)
+
 #endif /* _COBALT_BOILERPLATE_SIGNAL_H */

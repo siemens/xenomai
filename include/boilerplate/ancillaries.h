@@ -21,6 +21,7 @@
 #include <stdarg.h>
 #include <time.h>
 #include <pthread.h>
+#include <boilerplate/signal.h>
 
 extern struct timespec __init_date;
 
