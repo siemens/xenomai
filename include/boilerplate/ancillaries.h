@@ -75,6 +75,8 @@ void error_hook(struct error_frame *ef);
 
 void boilerplate_init(void);
 
+int get_static_cpu_count(void);
+
 #ifdef __cplusplus
 }
 #endif

@@ -224,6 +224,29 @@ int __check_cancel_type(const char *locktype)
 
 #endif /* CONFIG_XENO_DEBUG */
 
+int get_static_cpu_count(void)
+{
+	char buf[BUFSIZ];
+	int count = 0;
+	FILE *fp;
+
+	/*
+	 * We want the maximum # of CPU the running kernel was
+	 * configured for, not the current online/present/possible
+	 * count of CPU devices.
+	 */
+	fp = fopen("/sys/devices/system/cpu/kernel_max", "r");
+	if (fp == NULL)
+		return -1;
+
+	if (fgets(buf, sizeof(buf), fp))
+		count = atoi(buf);
+
+	fclose(fp);
+
+	return count;
+}
+
 static void __boilerplate_init(void)
 {
 	__RT(clock_gettime(CLOCK_MONOTONIC, &__init_date));
