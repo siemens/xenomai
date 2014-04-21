@@ -367,7 +367,8 @@ static int regfs_open(const char *path, struct fuse_file_info *fi)
 	int ret = 0;
 	void *priv;
 
-	read_lock_nocancel(&p->lock);
+	push_cleanup_lock(&p->lock);
+	read_lock(&p->lock);
 
 	hobj = pvhash_search(&p->files, path, strlen(path));
 	if (hobj == NULL) {
@@ -395,6 +396,7 @@ static int regfs_open(const char *path, struct fuse_file_info *fi)
 		ret = __bt(fsobj->ops->open(fsobj, priv));
 done:
 	read_unlock(&p->lock);
+	pop_cleanup_lock(&p->lock);
 
 	return __bt(ret);
 }
@@ -407,7 +409,8 @@ static int regfs_release(const char *path, struct fuse_file_info *fi)
 	int ret = 0;
 	void *priv;
 
-	read_lock_nocancel(&p->lock);
+	push_cleanup_lock(&p->lock);
+	read_lock(&p->lock);
 
 	hobj = pvhash_search(&p->files, path, strlen(path));
 	if (hobj == NULL) {
@@ -423,6 +426,7 @@ static int regfs_release(const char *path, struct fuse_file_info *fi)
 		__STD(free(priv));
 done:
 	read_unlock(&p->lock);
+	pop_cleanup_lock(&p->lock);
 
 	return __bt(ret);
 }
