@@ -216,6 +216,12 @@ static __libcobalt_ctor void __init_cobalt(void)
 		_exit(0);
 	}
 
+#ifndef CONFIG_SMP
+	ret = get_static_cpu_count();
+	if (ret > 0)
+		report_error("running non-SMP libraries on SMP kernel?");
+#endif
+
 	__cobalt_main_tid = tid;
 
 	if (__cobalt_defer_init)

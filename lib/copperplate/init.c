@@ -504,6 +504,11 @@ void copperplate_init(int *argcp, char *const **argvp)
 		return;
 	}
 
+#if defined(CONFIG_MERCURY) && !defined(CONFIG_SMP)
+	ret = get_static_cpu_count();
+	if (ret > 0)
+		early_panic("running non-SMP libraries on SMP kernel?");
+#endif
 	boilerplate_init();
 
 	threadobj_init_key();
