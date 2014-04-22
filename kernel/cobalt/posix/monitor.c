@@ -206,8 +206,7 @@ static void cobalt_monitor_wakeup(struct cobalt_monitor *mon)
 		if (bcast ||
 		    (p->u_window->grant_value && p->wchan == &thread->monitor_synch)) {
 			xnsynch_wakeup_this_sleeper(&thread->monitor_synch, p);
-			list_del(&thread->monitor_link);
-			thread->monitor_queued = 0;
+			list_del_init(&thread->monitor_link);
 		}
 	}
 drain:
@@ -277,7 +276,6 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_mon,
 	else {
 		curr->threadbase.u_window->grant_value = 0;
 		list_add_tail(&curr->monitor_link, &mon->waiters);
-		curr->monitor_queued = 1;
 	}
 	datp->flags |= COBALT_MONITOR_PENDED;
 
@@ -291,10 +289,8 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_mon,
 		}
 
 		if ((event & COBALT_MONITOR_WAITDRAIN) == 0 &&
-		    curr->monitor_queued) {
-			list_del(&curr->monitor_link);
-			curr->monitor_queued = 0;
-		}
+		    !list_empty(&curr->monitor_link))
+			list_del_init(&curr->monitor_link);
 
 		if (list_empty(&mon->waiters) && !xnsynch_pended_p(&mon->drain))
 			datp->flags &= ~COBALT_MONITOR_PENDED;

@@ -106,7 +106,6 @@ struct cobalt_thread {
 	/** Monitor wait object and link holder. */
 	struct xnsynch monitor_synch;
 	struct list_head monitor_link;
-	int monitor_queued;
 
 	struct cobalt_local_hkey hkey;
 };

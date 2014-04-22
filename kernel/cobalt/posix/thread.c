@@ -639,7 +639,6 @@ static inline int pthread_create(struct cobalt_thread **thread_p,
 	thread->sched_u_policy = policy;
 	thread->magic = COBALT_THREAD_MAGIC;
 	xnsynch_init(&thread->monitor_synch, XNSYNCH_FIFO, NULL);
-	thread->monitor_queued = 0;
 
 	xnsynch_init(&thread->sigwait, XNSYNCH_FIFO, NULL);
 	sigemptyset(&thread->sigpending);
