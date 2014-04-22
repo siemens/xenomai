@@ -97,6 +97,7 @@
 
 struct xnthread_user_window {
 	unsigned long state;
+	unsigned long info;
 	unsigned long grant_value;
 };
 

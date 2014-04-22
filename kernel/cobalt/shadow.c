@@ -223,6 +223,7 @@ static void request_syscall_restart(struct xnthread *thread,
 					  (sysflags & __xn_exec_norestart) ?
 					  -EINTR : -ERESTARTSYS);
 			notify = !xnthread_test_state(thread, XNDEBUG);
+			xnthread_clear_info(thread, XNBREAK);
 		}
 		xnthread_clear_info(thread, XNKICKED);
 	}

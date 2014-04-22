@@ -283,22 +283,28 @@ struct xnthread *xnthread_lookup(xnhandle_t threadh)
 
 static inline void xnthread_sync_window(struct xnthread *thread)
 {
-	if (thread->u_window)
+	if (thread->u_window) {
 		thread->u_window->state = thread->state;
+		thread->u_window->info = thread->info;
+	}
 }
 
 static inline
-void xnthread_clear_sync_window(struct xnthread *thread, int bits)
+void xnthread_clear_sync_window(struct xnthread *thread, int state_bits)
 {
-	if (thread->u_window)
-		thread->u_window->state = thread->state & ~bits;
+	if (thread->u_window) {
+		thread->u_window->state = thread->state & ~state_bits;
+		thread->u_window->info = thread->info;
+	}
 }
 
 static inline
-void xnthread_set_sync_window(struct xnthread *thread, int bits)
+void xnthread_set_sync_window(struct xnthread *thread, int state_bits)
 {
-	if (thread->u_window)
-		thread->u_window->state = thread->state | bits;
+	if (thread->u_window) {
+		thread->u_window->state = thread->state | state_bits;
+		thread->u_window->info = thread->info;
+	}
 }
 
 static inline int xnthread_try_grab(struct xnthread *thread,
