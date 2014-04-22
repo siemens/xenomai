@@ -178,6 +178,43 @@ int threadobj_resume(struct threadobj *thobj) /* thobj->lock held */
 	return __bt(-ret);
 }
 
+int threadobj_sleep(struct timespec *ts)
+{
+	struct threadobj *current = threadobj_current();
+	sigset_t set;
+	int sig, ret;
+
+	/*
+	 * threadobj_sleep() shall return -EINTR immediately upon
+	 * threadobj_unblock(), to honor forced wakeup semantics for
+	 * RTOS personalities.
+	 *
+	 * Otherwise, the sleep should be silently restarted until
+	 * completion after a Linux signal is handled.
+	 */
+	current->run_state = __THREAD_S_DELAYED;
+	threadobj_save_timeout(&current->core, ts);
+
+	do {
+		/*
+		 * Waiting on a null signal set causes an infinite
+		 * delay, so that only threadobj_unblock() or a linux
+		 * signal can unblock us.
+		 */
+		if (ts->tv_sec == 0 && ts->tv_nsec == 0) {
+			sigemptyset(&set);
+			ret = -__RT(sigwait(&set, &sig));
+		} else
+			ret = -__RT(clock_nanosleep(CLOCK_COPPERPLATE,
+						    TIMER_ABSTIME, ts, NULL));
+	} while (ret == -EINTR &&
+		 (current->core.u_window->info & XNBREAK) == 0);
+
+	current->run_state = __THREAD_S_RUNNING;
+
+	return ret;
+}
+
 int __threadobj_lock_sched(struct threadobj *current)
 {
 	smp_rmb();
@@ -405,6 +442,7 @@ static inline void pkg_init_corespec(void)
 	memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = unblock_sighandler;
 	sigaction(SIGRELS, &sa, NULL);
+	sigaction(SIGWAKEUP, &sa, NULL);
 	sa.sa_handler = roundrobin_handler;
 	sigaction(SIGVTALRM, &sa, NULL);
 
@@ -467,22 +505,25 @@ static inline int threadobj_setup_corespec(struct threadobj *thobj)
 	thobj->core.period = 0;
 
 	/*
-	 * Create the per-thread round-robin timer.
-	 *
-	 * XXX: It is a bit overkill doing this here instead of on
-	 * demand, but we must get the internal ID from the running
-	 * thread, and unlike with set_rr(), threadobj_current() ==
-	 * thobj is guaranteed in threadobj_setup_corespec().
+	 * Setup the per-thread data used in threadobj_sleep().
 	 */
 	memset(&sev, 0, sizeof(sev));
 	sev.sigev_notify = SIGEV_SIGNAL|SIGEV_THREAD_ID;
-	sev.sigev_signo = SIGVTALRM;
-	sev.sigev_notify_thread_id = copperplate_get_tid();
+	sev.sigev_signo = SIGWAKEUP;
+	sev.sigev_notify_thread_id = threadobj_get_pid(thobj);
+	thobj->core.sleep_sev = sev;
+	thobj->core.sleep_timer = NULL;
 
+	/*
+	 * Create the per-thread round-robin timer.
+	 */
+	sev.sigev_signo = SIGVTALRM;
 	ret = timer_create(CLOCK_THREAD_CPUTIME_ID, &sev,
 			   &thobj->core.rr_timer);
-	if (ret)
-		return __bt(-errno);
+	if (ret) {
+		ret = __bt(-errno);
+		notifier_destroy(&thobj->core.notifier);
+	}
 
 	return 0;
 }
@@ -490,8 +531,12 @@ static inline int threadobj_setup_corespec(struct threadobj *thobj)
 static inline void threadobj_cleanup_corespec(struct threadobj *thobj)
 {
 	notifier_destroy(&thobj->core.notifier);
+
 	if (thobj->core.rr_timer)
 		timer_delete(thobj->core.rr_timer);
+
+	if (thobj->core.sleep_timer)
+		timer_delete(thobj->core.sleep_timer);
 }
 
 static inline void threadobj_run_corespec(struct threadobj *thobj)
@@ -522,6 +567,69 @@ int threadobj_resume(struct threadobj *thobj) /* thobj->lock held */
 		return 0;
 
 	return __bt(notifier_release(&thobj->core.notifier));
+}
+
+int threadobj_sleep(struct timespec *ts)
+{
+	struct threadobj *current = threadobj_current();
+	struct itimerspec it;
+	sigset_t set, oset;
+	timer_t timer;
+	int ret, sig;
+
+	/*
+	 * threadobj_sleep() shall return -EINTR immediately upon
+	 * threadobj_unblock(), to honor forced wakeup semantics for
+	 * RTOS personalities.
+	 *
+	 * Otherwise, the sleep should be silently restarted until
+	 * completion after a signal is handled, except SIGRELS in the
+	 * Mercury case.
+	 */
+	it.it_value = *ts;
+	it.it_interval = zero_time;
+
+	sigemptyset(&set);
+	sigaddset(&set, SIGRELS);
+
+	timer = current->core.sleep_timer;
+	if (ts->tv_sec == 0 && ts->tv_nsec == 0) {
+		/* Infinite wait. */
+		pthread_sigmask(SIG_BLOCK, &set, &oset);
+		goto sleep;
+	}
+
+	if (timer == NULL) {
+		ret = timer_create(CLOCK_COPPERPLATE,
+				   &current->core.sleep_sev,
+				   &current->core.sleep_timer);
+		if (ret)
+			return __bt(-errno);
+		timer = current->core.sleep_timer;
+	}
+
+	sigaddset(&set, SIGWAKEUP);
+
+	pthread_sigmask(SIG_BLOCK, &set, &oset);
+
+	if (timer_settime(timer, TIMER_ABSTIME, &it, NULL)) {
+		ret = __bt(-errno);
+		goto out;
+	}
+sleep:
+	current->run_state = __THREAD_S_DELAYED;
+	threadobj_save_timeout(&current->core, ts);
+	ret = -sigwait(&set, &sig);
+	current->run_state = __THREAD_S_RUNNING;
+	if (sig == SIGRELS) {
+		it.it_value = zero_time;
+		timer_settime(timer, 0, &it, NULL);
+		ret = -EINTR;
+	}
+out:
+	pthread_sigmask(SIG_SETMASK, &oset, NULL);
+
+	return ret;
 }
 
 int __threadobj_lock_sched(struct threadobj *current) /* current->lock held */
@@ -1082,25 +1190,6 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 	return 0;
 }
 
-int threadobj_sleep(struct timespec *ts)
-{
-	struct threadobj *current = threadobj_current();
-	int ret;
-
-	/*
-	 * clock_nanosleep() returns -EINTR upon threadobj_unblock()
-	 * with both Cobalt and Mercury cores.
-	 */
-	current->run_state = __THREAD_S_DELAYED;
-	threadobj_save_timeout(&current->core, ts);
-	do
-		ret = -__RT(clock_nanosleep(CLOCK_COPPERPLATE, TIMER_ABSTIME, ts, NULL));
-	while (ret == -EINTR);
-	current->run_state = __THREAD_S_RUNNING;
-
-	return ret;
-}
-
 static void cancel_sync(struct threadobj *thobj) /* thobj->lock held */
 {
 	pthread_t tid = thobj->tid;
@@ -1246,21 +1335,25 @@ static void finalize_thread(void *p) /* thobj->lock free */
 
 int threadobj_unblock(struct threadobj *thobj) /* thobj->lock held */
 {
-	pthread_t tid = thobj->tid;
-	int ret = 0;
+	struct syncstate syns;
+	struct syncobj *sobj;
+	int ret;
 
 	__threadobj_check_locked(thobj);
 
-	/*
-	 * FIXME: racy. We can't assume thobj->wait_sobj is stable.
-	 */
-	if (thobj->wait_sobj)	/* Remove PEND (+DELAY timeout) */
-		syncobj_flush(thobj->wait_sobj);
-	else
-		/* Remove standalone DELAY */
-		ret = -__RT(pthread_kill(tid, SIGRELS));
+	sobj = thobj->wait_sobj;
+	if (sobj) {
+		ret = syncobj_lock(sobj, &syns);
+		if (ret == 0) {
+			/* Remove PEND (+DELAY timeout) */
+			syncobj_flush(thobj->wait_sobj);
+			syncobj_unlock(thobj->wait_sobj, &syns);
+			return 0;
+		}
+	}
 
-	return __bt(ret);
+	/* Remove standalone DELAY condition. */
+	return __bt(-__RT(pthread_kill(thobj->tid, SIGRELS)));
 }
 
 void threadobj_spin(ticks_t ns)

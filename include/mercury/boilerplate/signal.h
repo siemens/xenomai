@@ -26,6 +26,7 @@
 
 #define SIGNOTIFY	(SIGRTMIN + 8) /* Internal notification */
 #define SIGRELS		(SIGRTMIN + 9) /* Syscall abort */
+#define SIGWAKEUP	(SIGRTMIN + 10) /* Sleep abort */
 
 #define SIGSAFE_LOCK_ENTRY(__safelock)					\
   	do {								\

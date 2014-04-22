@@ -51,6 +51,8 @@ struct clockobj {
 	const char *name;	/* __ref FIXME */
 };
 
+#define zero_time	((struct timespec){ .tv_sec = 0, .tv_nsec = 0 })
+
 #ifdef __cplusplus
 extern "C" {
 #endif

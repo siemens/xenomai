@@ -50,9 +50,9 @@
  * emulated via a mutex and two condition variables over Mercury (one
  * of which being hosted by the thread object implementation).
  *
- * NOTE: we do no do error backtracing in this file, since error
- * returns when locking, pending or deleting sync objects express
- * normal runtime conditions.
+ * NOTE: we don't do error backtracing in this file, since error
+ * returns when locking, pending or deleting sync objects usually
+ * express normal runtime conditions.
  */
 
 #ifdef CONFIG_XENO_COBALT

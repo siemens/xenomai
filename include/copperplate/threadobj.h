@@ -22,6 +22,7 @@
 #include <time.h>
 #include <sched.h>
 #include <semaphore.h>
+#include <signal.h>
 #include <pthread.h>
 #include <boilerplate/list.h>
 #include <boilerplate/lock.h>
@@ -88,6 +89,9 @@ struct threadobj_corespec {
 	ticks_t period;
 	/** Timeout reported by sysregd. */
 	struct timespec timeout;
+	/** Timer data for threadobj_sleep() */
+	struct sigevent sleep_sev;
+	timer_t sleep_timer;
 };
 
 struct threadobj_stat {
