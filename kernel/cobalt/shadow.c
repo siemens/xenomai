@@ -211,28 +211,6 @@ static inline void process_remove(struct xnshadow_process *p)
 	xnshadow_set_process(NULL);
 }
 
-static void request_syscall_restart(struct xnthread *thread,
-				    struct pt_regs *regs,
-				    int sysflags)
-{
-	int notify = 0;
-
-	if (xnthread_test_info(thread, XNKICKED)) {
-		if (__xn_interrupted_p(regs)) {
-			__xn_error_return(regs,
-					  (sysflags & __xn_exec_norestart) ?
-					  -EINTR : -ERESTARTSYS);
-			notify = !xnthread_test_state(thread, XNDEBUG);
-			xnthread_clear_info(thread, XNBREAK);
-		}
-		xnthread_clear_info(thread, XNKICKED);
-	}
-
-	xnthread_test_cancel();
-
-	xnshadow_relax(notify, SIGDEBUG_MIGRATE_SIGNAL);
-}
-
 static inline void lock_timers(void)
 {
 	smp_mb__before_atomic_inc();
@@ -1851,6 +1829,29 @@ void xnshadow_pop_personality(struct xnpersonality *prev)
 }
 EXPORT_SYMBOL_GPL(xnshadow_pop_personality);
 
+static void prepare_for_signal(struct task_struct *p,
+			       struct xnthread *thread,
+			       struct pt_regs *regs,
+			       int sysflags)
+{
+	int notify = 0;
+
+	if (xnthread_test_info(thread, XNKICKED)) {
+		if (signal_pending(p)) {
+			__xn_error_return(regs,
+					  (sysflags & __xn_exec_norestart) ?
+					  -EINTR : -ERESTARTSYS);
+			notify = !xnthread_test_state(thread, XNDEBUG);
+			xnthread_clear_info(thread, XNBREAK);
+		}
+		xnthread_clear_info(thread, XNKICKED);
+	}
+
+	xnthread_test_cancel();
+
+	xnshadow_relax(notify, SIGDEBUG_MIGRATE_SIGNAL);
+}
+
 static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 {
 	int muxid, muxop, switched, ret, sigs;
@@ -1858,6 +1859,7 @@ static int handle_head_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 	struct xnshadow_process *process;
 	struct xnthread *thread;
 	unsigned long sysflags;
+	struct task_struct *p;
 	struct xnsyscall *sc;
 
 	thread = xnshadow_current();
@@ -1991,10 +1993,11 @@ done:
 	__xn_status_return(regs, ret);
 	sigs = 0;
 	if (!xnsched_root_p()) {
-		if (signal_pending(current) ||
+		p = current;
+		if (signal_pending(p) ||
 		    xnthread_test_info(thread, XNKICKED)) {
 			sigs = 1;
-			request_syscall_restart(thread, regs, sysflags);
+			prepare_for_signal(p, thread, regs, sysflags);
 		} else if (xnthread_test_state(thread, XNWEAK) &&
 			   xnthread_get_rescnt(thread) == 0) {
 			if (switched)
@@ -2053,13 +2056,14 @@ static int handle_root_syscall(struct ipipe_domain *ipd, struct pt_regs *regs)
 {
 	int muxid, muxop, sysflags, switched, ret, sigs;
 	struct xnthread *thread;
+	struct task_struct *p;
 	struct xnsyscall *sc;
 
 	/*
 	 * Catch cancellation requests pending for user shadows
 	 * running mostly in secondary mode, i.e. XNWEAK. In that
-	 * case, we won't run request_syscall_restart() that
-	 * frequently, so check for cancellation here.
+	 * case, we won't run prepare_for_signal() that frequently, so
+	 * check for cancellation here.
 	 */
 	xnthread_test_cancel();
 
@@ -2132,9 +2136,10 @@ restart:
 		 * just invoked, so make sure to fetch it.
 		 */
 		thread = xnshadow_current();
-		if (signal_pending(current)) {
+		p = current;
+		if (signal_pending(p)) {
 			sigs = 1;
-			request_syscall_restart(thread, regs, sysflags);
+			prepare_for_signal(p, thread, regs, sysflags);
 		} else if (xnthread_test_state(thread, XNWEAK) &&
 			   xnthread_get_rescnt(thread) == 0)
 			sysflags |= __xn_exec_switchback;
