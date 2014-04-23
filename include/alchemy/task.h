@@ -76,6 +76,10 @@ struct RT_TASK_INFO {
 	 * Name of task.
 	 */
 	char name[XNOBJECT_NAME_LEN];
+	/**
+	 * Host pid.
+	 */
+	pid_t pid;
 };
 
 typedef struct RT_TASK_INFO RT_TASK_INFO;

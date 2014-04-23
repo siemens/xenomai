@@ -724,6 +724,8 @@ Rationale: This behavior can be achieved by not calling
      corresponding information is too short-lived to be valuable to
      the caller. The task's base priority is still available from
      the +prio+ field.
+   * new field +pid+ represents the Linux kernel task identifier for
+     the Alchemy task, as obtained from syscall(__NR_gettid).
    * other fields which represent runtime statistics are now avail
      from a core-specific +stat+ field sub-structure.
 

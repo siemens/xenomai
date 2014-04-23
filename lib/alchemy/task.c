@@ -1480,6 +1480,7 @@ int rt_task_inquire(RT_TASK *task, RT_TASK_INFO *info)
 
 	strcpy(info->name, tcb->name);
 	info->prio = threadobj_get_priority(&tcb->thobj);
+	info->pid = threadobj_get_pid(&tcb->thobj);
 
 	put_alchemy_task(tcb);
 out:
