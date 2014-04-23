@@ -209,15 +209,21 @@ __attribute__ ((weak)) void *__main_heap = NULL;
 
 int __check_cancel_type(const char *locktype)
 {
-	int oldtype;
+	int oldtype, oldstate;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &oldtype);
-	if (oldtype != PTHREAD_CANCEL_DEFERRED) {
-		warning("%s_nocancel() section is NOT cancel-safe", locktype);
-		return __bt(-EINVAL);
-	}
+	if (oldtype == PTHREAD_CANCEL_DEFERRED)
+		return 0;
 
-	return 0;
+	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &oldstate);
+	if (oldstate == PTHREAD_CANCEL_DISABLE)
+		return 0;
+
+	abort();
+	warning("%s_nocancel() section is NOT cancel-safe", locktype);
+	pthread_setcancelstate(oldstate, NULL);
+
+	return __bt(-EINVAL);
 }
 
 #endif /* CONFIG_XENO_DEBUG */
