@@ -880,7 +880,10 @@ int rt_task_wait_period(unsigned long *overruns_r)
  * time in such a state.
  *
  * @param date An absolute date expressed in clock ticks, specifying a
- * wakeup date (see note).
+ * wakeup date (see note). As a special case, TM_INFINITE is an
+ * acceptable value that causes the caller to block indefinitely,
+ * until rt_task_unblock() is called against it. Otherwise, any wake
+ * up date in the past causes the task to return immediately.
  *
  * @return Zero is returned upon success. Otherwise:
  *
@@ -908,10 +911,9 @@ int rt_task_sleep_until(RTIME date)
 	if (!threadobj_current_p())
 		return -EPERM;
 
-	if (date == TM_INFINITE) {
-		ts.tv_sec = (time_t)-1 >> 1;
-		ts.tv_nsec = 999999999;
-	} else {
+	if (date == TM_INFINITE)
+		ts = zero_time;
+	else {
 		clockobj_get_time(&alchemy_clock, &now, NULL);
 		if (date <= now)
 			return -ETIMEDOUT;
