@@ -441,6 +441,7 @@ static inline void pkg_init_corespec(void)
 
 	memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = unblock_sighandler;
+	sa.sa_flags = SA_RESTART;
 	sigaction(SIGRELS, &sa, NULL);
 	sigaction(SIGWAKEUP, &sa, NULL);
 	sa.sa_handler = roundrobin_handler;

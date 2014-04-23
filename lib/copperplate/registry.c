@@ -641,6 +641,7 @@ static int spawn_daemon(const char *sessdir)
 		regd_pid = pid;
 		barrier();
 		sa.sa_handler = sigchld_handler;
+		sa.sa_flags = SA_RESTART;
 		sigaction(SIGCHLD, &sa, NULL);
 		ret = 0;
 		break;
