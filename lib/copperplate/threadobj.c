@@ -1082,6 +1082,8 @@ int threadobj_start(struct threadobj *thobj)	/* thobj->lock held. */
 	 * caller to forget about it as well.
 	 */
 	if (thobj->run_state == __THREAD_S_DORMANT) {
+		/* Keep cancel-safe after unlock. */
+		thobj->cancel_state = PTHREAD_CANCEL_DISABLE;
 		threadobj_unlock(thobj);
 		destroy_thread(thobj);
 		threadobj_free(thobj);
