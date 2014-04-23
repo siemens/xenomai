@@ -34,41 +34,21 @@ static pthread_mutex_t notifier_lock;
 
 static struct sigaction notifier_old_sa;
 
-static fd_set notifier_rset;
-
 static void notifier_sighandler(int sig, siginfo_t *siginfo, void *uc)
 {
-	static struct timeval tv = { .tv_sec = 0, .tv_usec = 0 };
 	int ret, matched = 0;
 	struct notifier *nf;
-	fd_set rfds;
 	pid_t tid;
 	char c;
 
 	tid = copperplate_get_tid();
-
-	if (siginfo->si_code == SI_SIGIO) {
-		FD_ZERO(&rfds);
-		FD_SET(siginfo->si_fd, &rfds);
-	} else {
-		/*
-		 * We will have to find out by ourselves which fd was
-		 * notified.
-		 */
-		rfds = notifier_rset;
-		do
-			ret = __STD(select(FD_SETSIZE, &rfds, NULL, NULL, &tv));
-		while (ret == -1 && errno == EINTR);
-		if (ret <= 0)
-			goto hand_over;
-	}
 
 	if (pvlist_empty(&notifier_list))
 		goto hand_over;
 
 	/* We may NOT alter the notifier list, but only scan it. */
 	pvlist_for_each_entry(nf, &notifier_list, link) {
-		if (!FD_ISSET(nf->psfd[0], &rfds))
+		if (nf->psfd[0] != siginfo->si_fd)
 			continue;
 		/*
 		 * Ignore misdirected notifications. We want those to
@@ -173,7 +153,6 @@ int notifier_init(struct notifier *nf,
 	push_cleanup_lock(&notifier_lock);
 	lock_notifier_list(&oset);
 	pvlist_append(&nf->link, &notifier_list);
-	FD_SET(nf->psfd[0], &notifier_rset);
 	unlock_notifier_list(&oset);
 	pop_cleanup_lock(&notifier_lock);
 
@@ -208,7 +187,6 @@ void notifier_destroy(struct notifier *nf)
 	push_cleanup_lock(&notifier_lock);
 	lock_notifier_list(&oset);
 	pvlist_remove(&nf->link);
-	FD_CLR(nf->psfd[0], &notifier_rset);
 	unlock_notifier_list(&oset);
 	pop_cleanup_lock(&notifier_lock);
 	__STD(close(nf->psfd[0]));
