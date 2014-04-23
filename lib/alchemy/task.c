@@ -906,6 +906,7 @@ int rt_task_wait_period(unsigned long *overruns_r)
 int rt_task_sleep_until(RTIME date)
 {
 	struct timespec ts;
+	struct service svc;
 	ticks_t now;
 
 	if (!threadobj_current_p())
@@ -917,7 +918,9 @@ int rt_task_sleep_until(RTIME date)
 		clockobj_get_time(&alchemy_clock, &now, NULL);
 		if (date <= now)
 			return -ETIMEDOUT;
+		CANCEL_DEFER(svc);
 		clockobj_ticks_to_timespec(&alchemy_clock, date, &ts);
+		CANCEL_RESTORE(svc);
 	}
 
 	return threadobj_sleep(&ts);
