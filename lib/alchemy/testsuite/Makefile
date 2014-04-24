@@ -21,6 +21,7 @@ TESTS :=	\
 	task-7	\
 	task-8	\
 	task-9	\
+	task-10	\
 	mq-1	\
 	mq-2	\
 	mq-3	\
