@@ -41,6 +41,7 @@
 #include <fcntl.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <errno.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
@@ -51,15 +52,22 @@
  */
 #ifndef RTDM_NO_DEFAULT_USER_API
 
-#define rt_dev_open	__RT(open)
-#define rt_dev_socket	__RT(socket)
-#define rt_dev_close	__RT(close)
-#define rt_dev_ioctl	__RT(ioctl)
-#define rt_dev_read	__RT(read)
-#define rt_dev_write	__RT(write)
-#define rt_dev_recvmsg	__RT(recvmsg)
-#define rt_dev_sendmsg	__RT(sendmsg)
-#define rt_dev_recvfrom __RT(recvfrom)
+#define rt_dev_call(__call, __args...)	\
+({					\
+	int __ret;			\
+	__ret = __RT(__call(__args));	\
+	__ret < 0 ? -errno : __ret;	\
+})
+
+#define rt_dev_open(__args...)		rt_dev_call(open, __args)
+#define rt_dev_socket(__args...)	rt_dev_call(socket, __args)
+#define rt_dev_close(__args...)		rt_dev_call(close, __args)
+#define rt_dev_ioctl(__args...)		rt_dev_call(ioctl, __args)
+#define rt_dev_read(__args...)		rt_dev_call(read, __args)
+#define rt_dev_write(__args...)		rt_dev_call(write, __args)
+#define rt_dev_recvmsg(__args...)	rt_dev_call(recvmsg, __args)
+#define rt_dev_sendmsg(__args...)	rt_dev_call(sendmsg, __args)
+#define rt_dev_recvfrom(__args...)	rt_dev_call(recvfrom, __args)
 
 #endif /* !RTDM_NO_DEFAULT_USER_API */
 
