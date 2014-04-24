@@ -445,7 +445,7 @@ static inline void pkg_init_corespec(void)
 	sigaction(SIGRELS, &sa, NULL);
 	sigaction(SIGWAKEUP, &sa, NULL);
 	sa.sa_handler = roundrobin_handler;
-	sigaction(SIGVTALRM, &sa, NULL);
+	sigaction(SIGRRB, &sa, NULL);
 
 	notifier_pkg_init();
 }
@@ -518,7 +518,7 @@ static inline int threadobj_setup_corespec(struct threadobj *thobj)
 	/*
 	 * Create the per-thread round-robin timer.
 	 */
-	sev.sigev_signo = SIGVTALRM;
+	sev.sigev_signo = SIGRRB;
 	ret = timer_create(CLOCK_THREAD_CPUTIME_ID, &sev,
 			   &thobj->core.rr_timer);
 	if (ret) {
