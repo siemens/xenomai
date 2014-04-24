@@ -435,7 +435,7 @@ int __cobalt_kill(struct cobalt_thread *thread, int sig, int group) /* nklocked,
 		 */
 		xnthread_suspend(&thread->threadbase, XNSUSP,
 				 XN_INFINITE, XN_RELATIVE, NULL);
-		if (&thread->threadbase == xnsched_current_thread() &&
+		if (&thread->threadbase == xnshadow_current() &&
 		    xnthread_test_info(&thread->threadbase, XNBREAK))
 			ret = EINTR;
 		break;

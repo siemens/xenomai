@@ -742,8 +742,6 @@ int xnregistry_bind(const char *key, xnticks_t timeout, int timeout_mode,
 	if (key == NULL)
 		return -EINVAL;
 
-	thread = xnsched_current_thread();
-
 	xnlock_get_irqsave(&nklock, s);
 
 	if (timeout_mode == XN_RELATIVE &&
@@ -765,6 +763,7 @@ int xnregistry_bind(const char *key, xnticks_t timeout, int timeout_mode,
 			goto unlock_and_exit;
 		}
 
+		thread = xnshadow_current();
 		thread->registry.waitkey = key;
 		info = xnsynch_sleep_on(&register_synch, timeout, timeout_mode);
 		if (info & XNTIMEO) {

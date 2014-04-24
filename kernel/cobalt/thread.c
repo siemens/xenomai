@@ -350,7 +350,7 @@ EXPORT_SYMBOL_GPL(xnthread_get_period);
 
 void xnthread_prepare_wait(struct xnthread_wait_context *wc)
 {
-	struct xnthread *curr = xnsched_current_thread();
+	struct xnthread *curr = xnshadow_current();
 
 	wc->posted = 0;
 	curr->wcontext = wc;
@@ -1286,7 +1286,7 @@ int xnthread_wait_period(unsigned long *overruns_r)
 	int ret = 0;
 	spl_t s;
 
-	thread = xnsched_current_thread();
+	thread = xnshadow_current();
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -1525,7 +1525,7 @@ int xnthread_join(struct xnthread *thread, bool uninterruptible)
 		return 0;
 	}
 
-	if (thread == xnsched_current_thread())
+	if (thread == xnshadow_current())
 		ret = -EDEADLK;
 	else if (xnsynch_pended_p(&thread->join_synch))
 		ret = -EBUSY;
@@ -1579,7 +1579,7 @@ int xnthread_migrate(int cpu)
 		goto unlock_and_exit;
 	}
 
-	thread = xnsched_current_thread();
+	thread = xnshadow_current();
 	if (!cpu_isset(cpu, thread->affinity)) {
 		ret = -EINVAL;
 		goto unlock_and_exit;

@@ -174,10 +174,11 @@ static void *private_lookup(unsigned int muxid)
 {
 	struct xnshadow_process *p = xnshadow_current_process();
 
-	if (p == NULL)
-		p = process_hash_search(current->mm);
-	if (p == NULL)
-		return NULL;
+	if (p == NULL) {
+		p = __process_hash_search(current->mm);
+		if (p == NULL)
+			return NULL;
+	}
 
 	return p->priv[muxid];
 }
@@ -526,7 +527,7 @@ EXPORT_SYMBOL_GPL(xnshadow_harden);
  */
 void xnshadow_relax(int notify, int reason)
 {
-	struct xnthread *thread = xnsched_current_thread();
+	struct xnthread *thread = xnshadow_current();
 	struct task_struct *p = current;
 	int cpu __maybe_unused;
 	siginfo_t si;
@@ -1752,12 +1753,19 @@ EXPORT_SYMBOL_GPL(xnshadow_unregister_personality);
  */
 void *xnshadow_get_context(unsigned int muxid)
 {
-	struct xnthread *curr = xnsched_current_thread();
+	struct xnthread *curr;
+	void *context = NULL;
+	spl_t s;
 
-	if (xnthread_test_state(curr, XNROOT|XNUSER))
-		return private_lookup(muxid);
+	xnlock_get_irqsave(&nklock, s);
 
-	return NULL;
+	curr = xnsched_current_thread();
+	if (likely(xnthread_test_state(curr, XNROOT|XNUSER)))
+		context = private_lookup(muxid);
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return context;
 }
 EXPORT_SYMBOL_GPL(xnshadow_get_context);
 

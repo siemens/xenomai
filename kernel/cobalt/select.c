@@ -329,14 +329,12 @@ int xnselect(struct xnselector *selector,
 	     int nfds,
 	     xnticks_t timeout, xntmode_t timeout_mode)
 {
-	unsigned i, not_empty = 0;
-	struct xnthread *thread;
+	unsigned int i, not_empty = 0, count;
+	int info = 0;
 	spl_t s;
 
 	if ((unsigned) nfds > __FD_SETSIZE)
 		return -EINVAL;
-
-	thread = xnsched_current_thread();
 
 	for (i = 0; i < XNSELECT_MAX_TYPES; i++)
 		if (out_fds[i])
@@ -361,7 +359,8 @@ int xnselect(struct xnselector *selector,
 			not_empty = 1;
 
 	while (!not_empty) {
-		xnsynch_sleep_on(&selector->synchbase, timeout, timeout_mode);
+		info = xnsynch_sleep_on(&selector->synchbase,
+					timeout, timeout_mode);
 
 		for (i = 0; i < XNSELECT_MAX_TYPES; i++)
 			if (out_fds[i]
@@ -369,14 +368,12 @@ int xnselect(struct xnselector *selector,
 					  &selector->fds[i].pending, nfds))
 				not_empty = 1;
 
-		if (xnthread_test_info(thread, XNBREAK | XNTIMEO))
+		if (info & (XNBREAK | XNTIMEO))
 			break;
 	}
 	xnlock_put_irqrestore(&nklock, s);
 
 	if (not_empty) {
-		unsigned count;
-
 		for (count = 0, i = 0; i < XNSELECT_MAX_TYPES; i++)
 			if (out_fds[i])
 				count += fd_set_popcount(out_fds[i], nfds);
@@ -384,7 +381,7 @@ int xnselect(struct xnselector *selector,
 		return count;
 	}
 
-	if (xnthread_test_info(thread, XNBREAK))
+	if (info & XNBREAK)
 		return -EINTR;
 
 	return 0; /* Timeout */

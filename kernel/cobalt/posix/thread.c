@@ -780,7 +780,7 @@ static inline int pthread_make_periodic_np(struct cobalt_thread *thread,
 static inline int pthread_set_mode_np(int clrmask, int setmask, int *mode_r)
 {
 	const int valid_flags = XNLOCK|XNTRAPSW|XNTRAPLB;
-	struct xnthread *cur = xnsched_current_thread();
+	struct xnthread *curr = xnshadow_current();
 	int old;
 
 	/*
@@ -790,7 +790,7 @@ static inline int pthread_set_mode_np(int clrmask, int setmask, int *mode_r)
 	if ((clrmask & ~valid_flags) != 0 || (setmask & ~valid_flags) != 0)
 		return -EINVAL;
 
-	old = xnthread_set_mode(cur, clrmask, setmask);
+	old = xnthread_set_mode(curr, clrmask, setmask);
 	if (mode_r)
 		*mode_r = old;
 

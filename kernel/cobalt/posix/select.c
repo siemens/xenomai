@@ -125,14 +125,12 @@ int cobalt_select(int nfds,
 	xnticks_t timeout = XN_INFINITE;
 	xntmode_t mode = XN_RELATIVE;
 	struct xnselector *selector;
-	struct xnthread *thread;
+	struct xnthread *curr;
 	struct timeval tv;
 	size_t fds_size;
 	int i, err;
 
-	thread = xnsched_current_thread();
-	if (!thread)
-		return -EPERM;
+	curr = xnshadow_current();
 
 	if (u_tv) {
 		if (!access_wok(u_tv, sizeof(tv))
@@ -160,7 +158,7 @@ int cobalt_select(int nfds,
 				return -EFAULT;
 		}
 
-	selector = thread->selector;
+	selector = curr->selector;
 	if (!selector) {
 		/* This function may be called from pure Linux fd_sets, we want
 		   to avoid the xnselector allocation in this case, so, we do a
@@ -169,11 +167,11 @@ int cobalt_select(int nfds,
 		if (!first_fd_valid_p(in_fds, nfds))
 			return -EBADF;
 
-		selector = xnmalloc(sizeof(*thread->selector));
+		selector = xnmalloc(sizeof(*curr->selector));
 		if (selector == NULL)
 			return -ENOMEM;
 		xnselector_init(selector);
-		thread->selector = selector;
+		curr->selector = selector;
 
 		/* Bind directly the file descriptors, we do not need to go
 		   through xnselect returning -ECHRNG */

@@ -135,10 +135,14 @@ EXPORT_SYMBOL_GPL(xnsynch_init);
 int xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
 		     xntmode_t timeout_mode)
 {
-	struct xnthread *thread = xnsched_current_thread();
+	struct xnthread *thread;
 	spl_t s;
 
+	primary_mode_only();
+
 	XENO_BUGON(NUCLEUS, synch->status & XNSYNCH_OWNER);
+
+	thread = xnshadow_current();
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -336,12 +340,18 @@ static void xnsynch_renice_thread(struct xnthread *thread,
 int xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 		    xntmode_t timeout_mode)
 {
-	struct xnthread *thread = xnsched_current_thread(), *owner;
-	xnhandle_t threadh = xnthread_handle(thread), fastlock, old;
-	atomic_long_t *lockp = xnsynch_fastlock(synch);
+	xnhandle_t threadh, fastlock, old;
+	struct xnthread *thread, *owner;
+	atomic_long_t *lockp;
 	spl_t s;
 
+	primary_mode_only();
+
 	XENO_BUGON(NUCLEUS, (synch->status & XNSYNCH_OWNER) == 0);
+
+	thread = xnshadow_current();
+	threadh = xnthread_handle(thread);
+	lockp = xnsynch_fastlock(synch);
 
 	trace_cobalt_synch_acquire(synch, thread);
 redo:

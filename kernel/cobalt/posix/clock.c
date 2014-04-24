@@ -270,7 +270,7 @@ int cobalt_clock_nanosleep(clockid_t clock_id, int flags,
 	if (flags & ~TIMER_ABSTIME)
 		return -EINVAL;
 
-	cur = xnsched_current_thread();
+	cur = xnshadow_current();
 
 	xnlock_get_irqsave(&nklock, s);
 

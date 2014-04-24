@@ -402,11 +402,12 @@ int rtdm_task_sleep_abs(nanosecs_abs_t wakeup_time, enum rtdm_timer_mode mode);
 
 int __rtdm_task_sleep(xnticks_t timeout, xntmode_t mode)
 {
-	struct xnthread *thread = xnsched_current_thread();
+	struct xnthread *thread;
 
 	if (!XENO_ASSERT(RTDM, !xnsched_unblockable_p()))
 		return -EPERM;
 
+	thread = xnshadow_current();
 	xnthread_suspend(thread, XNDELAY, timeout, mode, NULL);
 
 	return xnthread_test_info(thread, XNBREAK) ? -EINTR : 0;
@@ -951,7 +952,7 @@ int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
 	if (!XENO_ASSERT(RTDM, !xnsched_unblockable_p()))
 		return -EPERM;
 
-	trace_cobalt_driver_event_wait(event, xnsched_current_thread());
+	trace_cobalt_driver_event_wait(event, xnshadow_current());
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -967,7 +968,7 @@ int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
 			goto unlock_out;
 		}
 
-		thread = xnsched_current_thread();
+		thread = xnshadow_current();
 
 		if (timeout_seq && (timeout > 0)) {
 			/* timeout sequence */
@@ -1228,7 +1229,7 @@ int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
 	if (!XENO_ASSERT(RTDM, !xnsched_unblockable_p()))
 		return -EPERM;
 
-	trace_cobalt_driver_sem_wait(sem, xnsched_current_thread());
+	trace_cobalt_driver_sem_wait(sem, xnshadow_current());
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -1240,7 +1241,7 @@ int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
 	} else if (timeout < 0) /* non-blocking mode */
 		err = -EWOULDBLOCK;
 	else {
-		thread = xnsched_current_thread();
+		thread = xnshadow_current();
 
 		if (timeout_seq && (timeout > 0)) {
 			/* timeout sequence */
@@ -1508,14 +1509,15 @@ EXPORT_SYMBOL_GPL(rtdm_mutex_lock);
 int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
 			 rtdm_toseq_t *timeout_seq)
 {
-	struct xnthread *curr_thread = xnsched_current_thread();
-	spl_t s;
+	struct xnthread *curr_thread;
 	int err = 0;
-
-	trace_cobalt_driver_mutex_wait(mutex, curr_thread);
+	spl_t s;
 
 	if (!XENO_ASSERT(RTDM, !xnsched_unblockable_p()))
 		return -EPERM;
+
+	curr_thread = xnshadow_current();
+	trace_cobalt_driver_mutex_wait(mutex, curr_thread);
 
 	xnlock_get_irqsave(&nklock, s);
 

@@ -216,14 +216,14 @@ static inline
 int cobalt_mutex_timedlock_break(struct cobalt_mutex *mutex,
 				 int timed, const struct timespec __user *u_ts)
 {
-	struct xnthread *cur = xnsched_current_thread();
+	struct xnthread *curr = xnshadow_current();
 	int ret;
 
 	/* We need a valid thread handle for the fast lock. */
-	if (xnthread_handle(cur) == XN_NO_HANDLE)
+	if (xnthread_handle(curr) == XN_NO_HANDLE)
 		return -EPERM;
 
-	ret = cobalt_mutex_acquire(cur, mutex, timed, u_ts);
+	ret = cobalt_mutex_acquire(curr, mutex, timed, u_ts);
 	if (ret != -EBUSY)
 		return ret;
 
@@ -233,9 +233,9 @@ int cobalt_mutex_timedlock_break(struct cobalt_mutex *mutex,
 #if XENO_DEBUG(COBALT)
 		printk(XENO_WARN
 		       "thread %s deadlocks on non-recursive mutex\n",
-		       cur->name);
+		       curr->name);
 #endif /* XENO_DEBUG(COBALT) */
-		cobalt_mutex_acquire_unchecked(cur, mutex, timed, u_ts);
+		cobalt_mutex_acquire_unchecked(curr, mutex, timed, u_ts);
 		break;
 
 		/* Recursive mutexes are handled in user-space, so
@@ -359,7 +359,7 @@ int cobalt_mutex_destroy(struct cobalt_mutex_shadow __user *u_mx)
 
 int cobalt_mutex_trylock(struct cobalt_mutex_shadow __user *u_mx)
 {
-	struct xnthread *cur = xnsched_current_thread();
+	struct xnthread *curr = xnshadow_current();
 	struct cobalt_mutex *mutex;
 	xnhandle_t handle;
 	spl_t s;
@@ -375,11 +375,11 @@ int cobalt_mutex_trylock(struct cobalt_mutex_shadow __user *u_mx)
 	}
 
 	err = xnsynch_fast_acquire(mutex->synchbase.fastlock,
-				   xnthread_handle(cur));
+				   xnthread_handle(curr));
 	switch(err) {
 	case 0:
-		if (xnthread_test_state(cur, XNWEAK))
-			xnthread_inc_rescnt(cur);
+		if (xnthread_test_state(curr, XNWEAK))
+			xnthread_inc_rescnt(curr);
 		break;
 
 /* This should not happen, as recursive mutexes are handled in
@@ -434,15 +434,17 @@ int cobalt_mutex_timedlock(struct cobalt_mutex_shadow __user *u_mx,
 int cobalt_mutex_unlock(struct cobalt_mutex_shadow __user *u_mx)
 {
 	struct cobalt_mutex *mutex;
+	struct xnthread *curr;
 	xnhandle_t handle;
 	int err;
 	spl_t s;
 
 	handle = cobalt_get_handle_from_user(&u_mx->handle);
+	curr = xnshadow_current();
 
 	xnlock_get_irqsave(&nklock, s);
 	mutex = xnregistry_lookup(handle, NULL);
-	err = cobalt_mutex_release(xnsched_current_thread(), mutex);
+	err = cobalt_mutex_release(curr, mutex);
 	if (err < 0)
 		goto out;
 
@@ -450,7 +452,7 @@ int cobalt_mutex_unlock(struct cobalt_mutex_shadow __user *u_mx)
 		xnsched_run();
 		err = 0;
 	}
-  out:
+ out:
 	xnlock_put_irqrestore(&nklock, s);
 
 	return err;

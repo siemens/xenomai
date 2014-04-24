@@ -114,9 +114,8 @@ int cobalt_monitor_init(struct cobalt_monitor_shadow __user *u_mon,
 }
 
 /* nklock held, irqs off */
-static int cobalt_monitor_enter_inner(xnhandle_t handle)
+static int cobalt_monitor_enter_inner(xnhandle_t handle, struct xnthread *curr)
 {
-	struct xnthread *cur = xnsched_current_thread();
 	struct cobalt_monitor *mon;
 	int ret = 0, info;
 
@@ -131,11 +130,11 @@ static int cobalt_monitor_enter_inner(xnhandle_t handle)
 	 *
 	 * NOTE: monitors do not support recursive entries.
 	 */
-	ret = xnsynch_fast_acquire(mon->gate.fastlock, xnthread_handle(cur));
+	ret = xnsynch_fast_acquire(mon->gate.fastlock, xnthread_handle(curr));
 	switch(ret) {
 	case 0:
-		if (xnthread_test_state(cur, XNWEAK))
-			xnthread_inc_rescnt(cur);
+		if (xnthread_test_state(curr, XNWEAK))
+			xnthread_inc_rescnt(curr);
 		break;
 	default:
 		/* Nah, we really have to wait. */
@@ -154,6 +153,7 @@ static int cobalt_monitor_enter_inner(xnhandle_t handle)
 
 int cobalt_monitor_enter(struct cobalt_monitor_shadow __user *u_mon)
 {
+	struct xnthread *curr = xnshadow_current();
 	xnhandle_t handle;
 	int ret;
 	spl_t s;
@@ -161,7 +161,7 @@ int cobalt_monitor_enter(struct cobalt_monitor_shadow __user *u_mon)
 	handle = cobalt_get_handle_from_user(&u_mon->handle);
 
 	xnlock_get_irqsave(&nklock, s);
-	ret = cobalt_monitor_enter_inner(handle);
+	ret = cobalt_monitor_enter_inner(handle, curr);
 	xnlock_put_irqrestore(&nklock, s);
 
 	return ret;
@@ -301,7 +301,7 @@ int cobalt_monitor_wait(struct cobalt_monitor_shadow __user *u_mon,
 			opret = -ETIMEDOUT;
 	}
 
-	ret = cobalt_monitor_enter_inner(handle);
+	ret = cobalt_monitor_enter_inner(handle, &curr->threadbase);
 out:
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -313,11 +313,13 @@ out:
 int cobalt_monitor_sync(struct cobalt_monitor_shadow __user *u_mon)
 {
 	struct cobalt_monitor *mon;
+	struct xnthread *curr;
 	xnhandle_t handle;
 	int ret = 0;
 	spl_t s;
 
 	handle = cobalt_get_handle_from_user(&u_mon->handle);
+	curr = xnshadow_current();
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -326,9 +328,9 @@ int cobalt_monitor_sync(struct cobalt_monitor_shadow __user *u_mon)
 		ret = -EINVAL;
 	else if (mon->data->flags & COBALT_MONITOR_SIGNALED) {
 		cobalt_monitor_wakeup(mon);
-		xnsynch_release(&mon->gate, xnsched_current_thread());
+		xnsynch_release(&mon->gate, curr);
 		xnsched_run();
-		ret = cobalt_monitor_enter_inner(handle);
+		ret = cobalt_monitor_enter_inner(handle, curr);
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -339,11 +341,13 @@ int cobalt_monitor_sync(struct cobalt_monitor_shadow __user *u_mon)
 int cobalt_monitor_exit(struct cobalt_monitor_shadow __user *u_mon)
 {
 	struct cobalt_monitor *mon;
+	struct xnthread *curr;
 	xnhandle_t handle;
 	int ret = 0;
 	spl_t s;
 
 	handle = cobalt_get_handle_from_user(&u_mon->handle);
+	curr = xnshadow_current();
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -354,7 +358,7 @@ int cobalt_monitor_exit(struct cobalt_monitor_shadow __user *u_mon)
 		if (mon->data->flags & COBALT_MONITOR_SIGNALED)
 			cobalt_monitor_wakeup(mon);
 
-		xnsynch_release(&mon->gate, xnsched_current_thread());
+		xnsynch_release(&mon->gate, curr);
 		xnsched_run();
 	}
 
@@ -385,13 +389,14 @@ static void cobalt_monitor_destroy_inner(struct cobalt_monitor *mon,
 
 int cobalt_monitor_destroy(struct cobalt_monitor_shadow __user *u_mon)
 {
-	struct xnthread *cur = xnsched_current_thread();
 	struct cobalt_monitor *mon;
+	struct xnthread *curr;
 	xnhandle_t handle;
 	int ret = 0;
 	spl_t s;
 
 	handle = cobalt_get_handle_from_user(&u_mon->handle);
+	curr = xnshadow_current();
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -410,7 +415,7 @@ int cobalt_monitor_destroy(struct cobalt_monitor_shadow __user *u_mon)
 	 * A monitor must be destroyed by the thread currently holding
 	 * its gate lock.
 	 */
-	if (xnsynch_owner_check(&mon->gate, cur)) {
+	if (xnsynch_owner_check(&mon->gate, curr)) {
 		ret = -EPERM;
 		goto fail;
 	}
