@@ -19,7 +19,6 @@ RT_TASK latency_task, display_task;
 
 RT_SEM display_sem;
 
-#define ONE_BILLION  1000000000
 #define TEN_MILLION    10000000
 
 unsigned max_relaxed;

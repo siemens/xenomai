@@ -43,6 +43,8 @@ struct name_generator {
 		.serial = 1,						\
 	}
 
+#define ONE_BILLION  1000000000
+
 #ifdef __cplusplus
 extern "C" {
 #endif

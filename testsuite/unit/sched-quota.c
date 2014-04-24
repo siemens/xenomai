@@ -36,10 +36,10 @@
 #include <errno.h>
 #include <error.h>
 #include <boilerplate/time.h>
+#include <boilerplate/ancillaries.h>
 
 #define MAX_THREADS 8
 #define TEST_SECS   1
-#define ONE_BILLION 1000000000UL
 
 static unsigned long long crunch_per_sec, loops_per_sec;
 
