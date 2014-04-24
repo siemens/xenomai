@@ -206,9 +206,7 @@ static inline
 void clockobj_ticks_to_timespec(struct clockobj *clkobj,
 				ticks_t ticks, struct timespec *ts)
 {
-	read_lock_nocancel(&clkobj->lock);
 	__clockobj_ticks_to_timespec(clkobj, ticks, ts);
-	read_unlock(&clkobj->lock);
 }
 
 static inline
