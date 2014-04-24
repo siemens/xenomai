@@ -152,7 +152,7 @@ static void xnsched_tp_trackprio(struct xnthread *thread,
 	 */
 	if (p) {
 		/* We should never cross partition boundaries. */
-		XENO_BUGON(NUCLEUS,
+		XENO_WARNON(NUCLEUS,
 			   thread->base_class == &xnsched_class_tp &&
 			   thread->tps - thread->sched->tp.partitions != p->tp.ptid);
 		thread->cprio = p->tp.prio;
