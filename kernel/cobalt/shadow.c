@@ -82,6 +82,7 @@ static void *mayday_page;
 static struct xnsynch yield_sync;
 
 static struct hlist_head *process_hash;
+DEFINE_PRIVATE_XNLOCK(process_hash_lock);
 #define PROCESS_HASH_SIZE 13
 
 static int enter_personality(struct xnshadow_process *process,
@@ -116,7 +117,7 @@ static struct xnshadow_process *__process_hash_search(struct mm_struct *mm)
 {
 	unsigned bucket = process_hash_crunch(mm);
 	struct xnshadow_process *p;
-	
+
 	atomic_only();
 
 	hlist_for_each_entry(p, &process_hash[bucket], hlink)
@@ -131,9 +132,9 @@ static struct xnshadow_process *process_hash_search(struct mm_struct *mm)
 	struct xnshadow_process *process;
 	spl_t s;
 	
-	xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&process_hash_lock, s);
 	process = __process_hash_search(mm);
-	xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&process_hash_lock, s);
 	
 	return process;
 }
@@ -145,7 +146,7 @@ static int process_hash_enter(struct xnshadow_process *p)
 	int err;
 	spl_t s;
 
-	xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&process_hash_lock, s);
 	if (__process_hash_search(mm)) {
 		err = -EBUSY;
 		goto out;
@@ -155,7 +156,7 @@ static int process_hash_enter(struct xnshadow_process *p)
 	hlist_add_head(&p->hlink, &process_hash[bucket]);
 	err = 0;
   out:
-	xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&process_hash_lock, s);
 	return err;
 }
 
@@ -163,10 +164,10 @@ static void process_hash_remove(struct xnshadow_process *p)
 {
 	spl_t s;
 
-	xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&process_hash_lock, s);
 	if (p->mm)
 		hlist_del(&p->hlink);
-	xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&process_hash_lock, s);
 }
 
 /* nklock locked, irqs off. */
@@ -174,11 +175,10 @@ static void *private_lookup(unsigned int muxid)
 {
 	struct xnshadow_process *p = xnshadow_current_process();
 
-	if (p == NULL) {
-		p = __process_hash_search(current->mm);
-		if (p == NULL)
-			return NULL;
-	}
+	if (p == NULL && current->mm)
+		p = process_hash_search(current->mm);
+	if (p == NULL)
+		return NULL;
 
 	return p->priv[muxid];
 }
@@ -1327,10 +1327,10 @@ static int xnshadow_sys_bind(unsigned int magic,
 
 	return -ESRCH;
 do_bind:
-	xnlock_get_irqsave(&nklock, s);
+	xnlock_get_irqsave(&process_hash_lock, s);
 	process = __process_hash_search(current->mm);
 	priv = private_lookup(muxid);
-	xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&process_hash_lock, s);
 
 	/*
 	 * Protect from the same process binding to the same interface
@@ -1753,19 +1753,7 @@ EXPORT_SYMBOL_GPL(xnshadow_unregister_personality);
  */
 void *xnshadow_get_context(unsigned int muxid)
 {
-	struct xnthread *curr;
-	void *context = NULL;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	curr = xnsched_current_thread();
-	if (likely(xnthread_test_state(curr, XNROOT|XNUSER)))
-		context = private_lookup(muxid);
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	return context;
+	return private_lookup(muxid);
 }
 EXPORT_SYMBOL_GPL(xnshadow_get_context);
 
