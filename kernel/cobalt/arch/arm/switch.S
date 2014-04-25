@@ -141,11 +141,11 @@ ENTRY(__asm_thread_switch)
  THUMB(	stmia	ip!, {r4 - sl, fp}	   )	@ Store most regs on stack
  THUMB(	str	sp, [ip], #4		   )
  THUMB(	str	lr, [ip], #4		   )
-	load_tls r2, r4, r5
+	load_tls r1, r4, r5
 #ifdef CONFIG_CPU_USE_DOMAINS
 	ldr     r6, [r1, #TI_CPU_DOMAIN]
 #endif
-	switch_tls r1, r4, r5, r3, r7
+	switch_tls r0, r4, r5, r3, r7
 #ifdef CONFIG_CPU_USE_DOMAINS
 	mcr     p15, 0, r6, c3, c0, 0           @ Set domain register
 #endif
