@@ -24,13 +24,15 @@
 #include <cobalt/kernel/tree.h>
 #include "internal.h"
 #include "sem.h"
+#include "thread.h"
+#include <trace/events/cobalt-posix.h>
 
 DEFINE_XNLOCK(nsem_lock);
 
 struct nsem {
 	struct cobalt_sem *sem;
 	struct cobalt_sem_shadow __user *usem;
-	unsigned refs;
+	unsigned int refs;
 	struct xnid id;
 };
 
@@ -47,7 +49,7 @@ static struct nsem *nsem_search(struct cobalt_process *cc, xnhandle_t handle)
 
 static struct cobalt_sem_shadow __user *
 nsem_open(struct cobalt_process *cc, struct cobalt_sem_shadow __user *ushadow, 
-	const char *name, int oflags, mode_t mode, unsigned value)
+	const char *name, int oflags, mode_t mode, unsigned int value)
 {
 	struct cobalt_sem_shadow shadow;
 	struct cobalt_sem *sem;
@@ -142,6 +144,8 @@ nsem_open(struct cobalt_process *cc, struct cobalt_sem_shadow __user *ushadow,
 		xnlock_put_irqrestore(&nsem_lock, s);
 	}
 
+	trace_cobalt_psem_open(name, handle, oflags, mode, value);
+
 	return u->usem;
 }
 
@@ -206,8 +210,11 @@ int cobalt_sem_open(struct cobalt_sem_shadow __user *__user *u_addr,
 		return -EINVAL;
 
 	usm = nsem_open(cc, usm, name, oflags, mode, value);
-	if (IS_ERR(usm))
+	if (IS_ERR(usm)) {
+		trace_cobalt_psem_open_failed(name, oflags, mode,
+					      value, PTR_ERR(usm));
 		return PTR_ERR(usm);
+	}
 
 	__xn_put_user(usm, u_addr);
 
@@ -224,6 +231,7 @@ int cobalt_sem_close(struct cobalt_sem_shadow __user *usm)
 		return -EPERM;
 
 	handle = cobalt_get_handle_from_user(&usm->handle);
+	trace_cobalt_psem_close(handle);
 
 	return nsem_close(cc, handle);
 }
@@ -240,6 +248,8 @@ int cobalt_sem_unlink(const char __user *u_name)
 		return len;
 	if (len >= sizeof(name))
 		return -ENAMETOOLONG;
+
+	trace_cobalt_psem_unlink(name);
 
 	if (name[0] != '/')
 		return -EINVAL;

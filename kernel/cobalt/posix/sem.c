@@ -37,6 +37,7 @@
 #include "thread.h"
 #include "clock.h"
 #include "sem.h"
+#include <trace/events/cobalt-posix.h>
 
 #define SEM_NAMED    0x80000000
 
@@ -94,12 +95,16 @@ cobalt_sem_init_inner(const char *name, struct cobalt_sem_shadow *sm,
 	int ret, sflags;
 	spl_t s;
 
-	if ((flags & SEM_PULSE) != 0 && value > 0)
-		return ERR_PTR(-EINVAL);
+	if ((flags & SEM_PULSE) != 0 && value > 0) {
+		ret = -EINVAL;
+		goto out;
+	}
 
 	sem = xnmalloc(sizeof(*sem));
-	if (sem == NULL)
-		return ERR_PTR(-ENOSPC);
+	if (sem == NULL) {
+		ret = -ENOSPC;
+		goto out;
+	}
 
 	ksformat(sem->name, sizeof(sem->name), "%s", name);
 
@@ -168,13 +173,17 @@ cobalt_sem_init_inner(const char *name, struct cobalt_sem_shadow *sm,
 		sm->datp_offset = -sm->datp_offset;
 	xnlock_put_irqrestore(&nklock, s);
 
+	trace_cobalt_psem_init(sem->name, sem->handle, flags, value);
+
 	return sem;
 
-  err_lock_put:
+err_lock_put:
 	xnlock_put_irqrestore(&nklock, s);
 	xnheap_free(&sys_ppd->sem_heap, datp);
-  err_free_sem:
+err_free_sem:
 	xnfree(sem);
+out:
+	trace_cobalt_psem_init_failed(name, flags, value, ret);
 
 	return ERR_PTR(ret);
 }
@@ -689,6 +698,7 @@ int cobalt_sem_post(struct cobalt_sem_shadow __user *u_sem)
 	xnhandle_t handle;
 
 	handle = cobalt_get_handle_from_user(&u_sem->handle);
+	trace_cobalt_psem_post(handle);
 
 	return sem_post(handle);
 }
@@ -698,6 +708,7 @@ int cobalt_sem_wait(struct cobalt_sem_shadow __user *u_sem)
 	xnhandle_t handle;
 
 	handle = cobalt_get_handle_from_user(&u_sem->handle);
+	trace_cobalt_psem_wait(handle);
 
 	return sem_wait(handle);
 }
@@ -708,6 +719,7 @@ int cobalt_sem_timedwait(struct cobalt_sem_shadow __user *u_sem,
 	xnhandle_t handle;
 
 	handle = cobalt_get_handle_from_user(&u_sem->handle);
+	trace_cobalt_psem_timedwait(handle);
 
 	return sem_timedwait(handle, u_ts);
 }
@@ -717,6 +729,7 @@ int cobalt_sem_trywait(struct cobalt_sem_shadow __user *u_sem)
 	xnhandle_t handle;
 
 	handle = cobalt_get_handle_from_user(&u_sem->handle);
+	trace_cobalt_psem_trywait(handle);
 
 	return sem_trywait(handle);
 }
@@ -724,13 +737,14 @@ int cobalt_sem_trywait(struct cobalt_sem_shadow __user *u_sem)
 int cobalt_sem_getvalue(struct cobalt_sem_shadow __user *u_sem, int __user *u_sval)
 {
 	xnhandle_t handle;
-	int err, sval;
+	int ret, sval;
 
 	handle = cobalt_get_handle_from_user(&u_sem->handle);
 
-	err = sem_getvalue(handle, &sval);
-	if (err < 0)
-		return err;
+	ret = sem_getvalue(handle, &sval);
+	trace_cobalt_psem_getvalue(handle, ret ? -1 : sval);
+	if (ret)
+		return ret;
 
 	return __xn_safe_copy_to_user(u_sval, &sval, sizeof(sval));
 }
@@ -742,6 +756,8 @@ int cobalt_sem_destroy(struct cobalt_sem_shadow __user *u_sem)
 
 	if (__xn_safe_copy_from_user(&sm, u_sem, sizeof(sm)))
 		return -EFAULT;
+
+	trace_cobalt_psem_destroy(sm.handle);
 
 	err = sem_destroy(&sm);
 	if (err < 0)
@@ -778,6 +794,7 @@ int cobalt_sem_broadcast_np(struct cobalt_sem_shadow __user *u_sem)
 	int err;
 
 	handle = cobalt_get_handle_from_user(&u_sem->handle);
+	trace_cobalt_psem_broadcast(u_sem->handle);
 
 	xnlock_get_irqsave(&nklock, s);
 	sm = xnregistry_lookup(handle, NULL);
@@ -802,6 +819,7 @@ int cobalt_sem_inquire(struct cobalt_sem_shadow __user *u_sem,
 	spl_t s;
 
 	handle = cobalt_get_handle_from_user(&u_sem->handle);
+	trace_cobalt_psem_inquire(handle);
 
 	nrpids = waitsz / sizeof(pid_t);
 

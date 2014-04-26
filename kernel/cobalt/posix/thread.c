@@ -40,6 +40,9 @@
 #include "signal.h"
 #include "timer.h"
 #include "clock.h"
+#include "sem.h"
+#define CREATE_TRACE_POINTS
+#include <trace/events/cobalt-posix.h>
 
 xnticks_t cobalt_time_slice;
 
@@ -812,18 +815,19 @@ int cobalt_thread_setschedparam_ex(unsigned long pth,
 				   unsigned long __user *u_window_offset,
 				   int __user *u_promoted)
 {
+	struct sched_param_ex param_ex;
 	struct cobalt_local_hkey hkey;
 	struct cobalt_thread *thread;
-	struct sched_param_ex param;
 	int ret, promoted = 0;
 
-	if (__xn_safe_copy_from_user(&param, u_param, sizeof(param)))
+	if (__xn_safe_copy_from_user(&param_ex, u_param, sizeof(param_ex)))
 		return -EFAULT;
 
 	hkey.u_pth = pth;
 	hkey.mm = current->mm;
-	thread = thread_lookup(&hkey);
+	trace_cobalt_pthread_setschedparam(pth, policy, &param_ex);
 
+	thread = thread_lookup(&hkey);
 	if (thread == NULL && u_window_offset) {
 		thread = cobalt_thread_shadow(current, &hkey, u_window_offset);
 		if (IS_ERR(thread))
@@ -833,7 +837,7 @@ int cobalt_thread_setschedparam_ex(unsigned long pth,
 	}
 
 	if (thread)
-		ret = pthread_setschedparam_ex(thread, policy, &param);
+		ret = pthread_setschedparam_ex(thread, policy, &param_ex);
 	else
 		ret = -EPERM;
 
@@ -853,9 +857,9 @@ int cobalt_thread_getschedparam_ex(unsigned long pth,
 				   int __user *u_policy,
 				   struct sched_param_ex __user *u_param)
 {
+	struct sched_param_ex param_ex;
 	struct cobalt_local_hkey hkey;
 	struct cobalt_thread *thread;
-	struct sched_param_ex param;
 	int policy, ret;
 
 	hkey.u_pth = pth;
@@ -864,14 +868,16 @@ int cobalt_thread_getschedparam_ex(unsigned long pth,
 	if (thread == NULL)
 		return -ESRCH;
 
-	ret = pthread_getschedparam_ex(thread, &policy, &param);
+	ret = pthread_getschedparam_ex(thread, &policy, &param_ex);
 	if (ret)
 		return ret;
+
+	trace_cobalt_pthread_getschedparam(pth, policy, &param_ex);
 
 	if (__xn_safe_copy_to_user(u_policy, &policy, sizeof(int)))
 		return -EFAULT;
 
-	return __xn_safe_copy_to_user(u_param, &param, sizeof(param));
+	return __xn_safe_copy_to_user(u_param, &param_ex, sizeof(param_ex));
 }
 
 /*
@@ -906,6 +912,9 @@ int cobalt_thread_create(unsigned long pth, int policy,
 
 	if (__xn_safe_copy_from_user(&param_ex, u_param, sizeof(param_ex)))
 		return -EFAULT;
+
+	trace_cobalt_pthread_create(pth, policy, &param_ex);
+
 	/*
 	 * We have been passed the pthread_t identifier the user-space
 	 * Cobalt library has assigned to our caller; we'll index our
@@ -952,6 +961,7 @@ cobalt_thread_shadow(struct task_struct *p,
 	int ret;
 
 	param_ex.sched_priority = 0;
+	trace_cobalt_pthread_create(hkey->u_pth, SCHED_NORMAL, &param_ex);
 	ret = pthread_create(&thread, SCHED_NORMAL, &param_ex, p);
 	if (ret)
 		return ERR_PTR(-ret);
@@ -995,17 +1005,23 @@ int cobalt_thread_make_periodic_np(unsigned long pth,
 	if (__xn_safe_copy_from_user(&periodt, u_periodt, sizeof(periodt)))
 		return -EFAULT;
 
+	trace_cobalt_pthread_make_periodic(pth, clk_id, &startt, &periodt);
+
 	return pthread_make_periodic_np(thread, clk_id, &startt, &periodt);
 }
 
 int cobalt_thread_wait_np(unsigned long __user *u_overruns)
 {
-	unsigned long overruns;
+	unsigned long overruns = 0;
 	int ret;
+
+	trace_cobalt_pthread_wait_entry(0);
 
 	ret = xnthread_wait_period(&overruns);
 	if (u_overruns && (ret == 0 || ret == -ETIMEDOUT))
 		__xn_put_user(overruns, u_overruns);
+
+	trace_cobalt_pthread_wait_exit(ret, overruns);
 
 	return ret;
 }
@@ -1013,6 +1029,8 @@ int cobalt_thread_wait_np(unsigned long __user *u_overruns)
 int cobalt_thread_set_mode_np(int clrmask, int setmask, int __user *u_mode_r)
 {
 	int ret, old;
+
+	trace_cobalt_pthread_set_mode(clrmask, setmask);
 
 	ret = pthread_set_mode_np(clrmask, setmask, &old);
 	if (ret)
@@ -1039,6 +1057,8 @@ int cobalt_thread_set_name_np(unsigned long pth, const char __user *u_name)
 	name[sizeof(name) - 1] = '\0';
 	hkey.u_pth = pth;
 	hkey.mm = current->mm;
+
+	trace_cobalt_pthread_set_name(pth, name);
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -1070,6 +1090,8 @@ int cobalt_thread_probe_np(pid_t pid)
 
 	hash = jhash2((u32 *)&pid, sizeof(pid) / sizeof(u32), 0);
 
+	trace_cobalt_pthread_probe(pid);
+
 	xnlock_get_irqsave(&nklock, s);
 
 	gslot = global_index[hash & (PTHREAD_HSLOTS - 1)];
@@ -1089,6 +1111,8 @@ int cobalt_thread_kill(unsigned long pth, int sig)
 	struct cobalt_thread *thread;
 	int ret;
 	spl_t s;
+
+	trace_cobalt_pthread_kill(pth, sig);
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -1111,10 +1135,14 @@ int cobalt_thread_join(unsigned long pth)
 	struct cobalt_thread *thread;
 	spl_t s;
 
+	trace_cobalt_pthread_join(pth);
+
 	xnlock_get_irqsave(&nklock, s);
+
 	hkey.u_pth = pth;
 	hkey.mm = current->mm;
 	thread = thread_lookup(&hkey);
+
 	xnlock_put_irqrestore(&nklock, s);
 
 	if (thread == NULL)
@@ -1131,6 +1159,8 @@ int cobalt_thread_stat(pid_t pid,
 	struct xnthread *thread;
 	xnticks_t xtime;
 	spl_t s;
+
+	trace_cobalt_pthread_stat(pid);
 
 	if (pid == 0) {
 		thread = xnshadow_current();
@@ -1177,6 +1207,8 @@ int cobalt_thread_extend(struct cobalt_extension *ext,
 	struct cobalt_thread *thread = cobalt_current_thread();
 	struct xnpersonality *prev;
 
+	trace_cobalt_pthread_extend(thread->hkey.u_pth, ext->core.name);
+
 	prev = xnshadow_push_personality(ext->core.muxid);
 	if (prev == NULL)
 		return -EINVAL;
@@ -1192,6 +1224,8 @@ void cobalt_thread_restrict(void)
 {
 	struct cobalt_thread *thread = cobalt_current_thread();
 
+	trace_cobalt_pthread_restrict(thread->hkey.u_pth,
+		      xnthread_personality(&thread->threadbase)->name);
 	xnshadow_pop_personality(&cobalt_personality);
 	cobalt_set_extref(&thread->extref, NULL, NULL);
 }
@@ -1201,51 +1235,72 @@ EXPORT_SYMBOL_GPL(cobalt_thread_restrict);
 
 int cobalt_sched_min_prio(int policy)
 {
+	int ret;
+
 	switch (policy) {
 	case SCHED_FIFO:
 	case SCHED_RR:
 	case SCHED_SPORADIC:
 	case SCHED_TP:
 	case SCHED_QUOTA:
-		return XNSCHED_FIFO_MIN_PRIO;
+		ret = XNSCHED_FIFO_MIN_PRIO;
+		break;
 	case SCHED_COBALT:
-		return XNSCHED_RT_MIN_PRIO;
+		ret = XNSCHED_RT_MIN_PRIO;
+		break;
 	case SCHED_NORMAL:
 	case SCHED_WEAK:
-		return 0;
+		ret = 0;
+		break;
 	default:
-		return -EINVAL;
+		ret = -EINVAL;
 	}
+
+	trace_cobalt_sched_min_prio(policy, ret);
+
+	return ret;
 }
 
 int cobalt_sched_max_prio(int policy)
 {
+	int ret;
+
 	switch (policy) {
 	case SCHED_FIFO:
 	case SCHED_RR:
 	case SCHED_SPORADIC:
 	case SCHED_TP:
 	case SCHED_QUOTA:
-		return XNSCHED_FIFO_MAX_PRIO;
+		ret = XNSCHED_FIFO_MAX_PRIO;
+		break;
 	case SCHED_COBALT:
-		return XNSCHED_RT_MAX_PRIO;
+		ret = XNSCHED_RT_MAX_PRIO;
+		break;
 	case SCHED_NORMAL:
-		return 0;
+		ret = 0;
+		break;
 	case SCHED_WEAK:
 #ifdef CONFIG_XENO_OPT_SCHED_WEAK
-		return XNSCHED_FIFO_MAX_PRIO;
+		ret = XNSCHED_FIFO_MAX_PRIO;
 #else
-		return 0;
+		ret 0;
 #endif
+		break;
 	default:
-		return -EINVAL;
+		ret = -EINVAL;
 	}
+
+	trace_cobalt_sched_max_prio(policy, ret);
+
+	return ret;
 }
 
 int cobalt_sched_yield(void)
 {
 	struct cobalt_thread *curr = cobalt_current_thread();
 	int ret = 0;
+
+	trace_cobalt_pthread_yield(0);
 
 	/* Maybe some extension wants to handle this. */
   	if (cobalt_call_extension(sched_yield, &curr->extref, ret) && ret)
@@ -1623,6 +1678,8 @@ int cobalt_sched_setconfig_np(int cpu, int policy,
 	union sched_config *buf;
 	int ret;
 
+	trace_cobalt_sched_set_config(cpu, policy, len);
+
 	if (cpu < 0 || cpu >= NR_CPUS || !cpu_online(cpu))
 		return -EINVAL;
 
@@ -1700,6 +1757,8 @@ ssize_t cobalt_sched_getconfig_np(int cpu, int policy,
 	default:
 		ret = -EINVAL;
 	}
+
+	trace_cobalt_sched_get_config(cpu, policy, ret);
 
 	return ret;
 }
