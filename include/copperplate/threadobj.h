@@ -128,7 +128,6 @@ void threadobj_save_timeout(struct threadobj_corespec *corespec,
 #define __THREAD_S_ACTIVE	(1 << 5)	/* Running user code. */
 #define __THREAD_S_SUSPENDED	(1 << 6)	/* Suspended via threadobj_suspend(). */
 #define __THREAD_S_SAFE		(1 << 7)	/* TCB release deferred. */
-#define __THREAD_S_ZOMBIE	(1 << 8)	/* Deletion process ongoing. */
 #define __THREAD_S_DEBUG	(1 << 31)	/* Debug mode enabled. */
 /*
  * threadobj->run_state, locklessly updated by "current", merged

@@ -450,29 +450,6 @@ static inline void pkg_init_corespec(void)
 	notifier_pkg_init();
 }
 
-static void notifier_callback(const struct notifier *nf)
-{
-	struct threadobj *current;
-
-	current = container_of(nf, struct threadobj, core.notifier);
-	assert(current == threadobj_current());
-
-	/*
-	 * In the Mercury case, we mark the thread as suspended only
-	 * when the notifier handler is entered, not from
-	 * threadobj_suspend().
-	 */
-	threadobj_lock(current);
-	if ((current->status & __THREAD_S_ZOMBIE) == 0) {
-		current->status |= __THREAD_S_SUSPENDED;
-		threadobj_unlock(current);
-		notifier_wait(nf); /* Wait for threadobj_resume(). */
-		threadobj_lock(current);
-		current->status &= ~__THREAD_S_SUSPENDED;
-	}
-	threadobj_unlock(current);
-}
-
 static inline void threadobj_init_corespec(struct threadobj *thobj)
 {
 	pthread_condattr_t cattr;
@@ -499,7 +476,7 @@ static inline int threadobj_setup_corespec(struct threadobj *thobj)
 	int ret;
 
 	prctl(PR_SET_NAME, (unsigned long)thobj->name, 0, 0, 0);
-	ret = notifier_init(&thobj->core.notifier, notifier_callback, 1);
+	ret = notifier_init(&thobj->core.notifier, threadobj_get_pid(thobj));
 	if (ret)
 		return __bt(ret);
 
@@ -546,28 +523,45 @@ static inline void threadobj_run_corespec(struct threadobj *thobj)
 
 static inline void threadobj_cancel_corespec(struct threadobj *thobj) /* thobj->lock held */
 {
+	struct notifier *nf = &thobj->core.notifier;
+
+	/*
+	 * Any ongoing or future notify_wait() will return immediately
+	 * on error with EBADF.
+	 */
+	notifier_disable(nf);
 }
 
 int threadobj_suspend(struct threadobj *thobj) /* thobj->lock held */
 {
 	struct notifier *nf = &thobj->core.notifier;
-	int ret;
 
-	threadobj_unlock(thobj); /* FIXME: racy */
-	ret = notifier_signal(nf);
-	threadobj_lock(thobj);
+	__threadobj_check_locked(thobj);
 
-	return __bt(ret);
+	if (thobj == threadobj_current()) {
+		thobj->status |= __THREAD_S_SUSPENDED;
+		threadobj_unlock(thobj);
+		notifier_wait(nf);
+		threadobj_lock(thobj);
+	} else if ((thobj->status & __THREAD_S_SUSPENDED) == 0) {
+		thobj->status |= __THREAD_S_SUSPENDED;
+		notifier_signal(nf);
+	}
+
+	return 0;
 }
 
 int threadobj_resume(struct threadobj *thobj) /* thobj->lock held */
 {
 	__threadobj_check_locked(thobj);
 
-	if (thobj == threadobj_current())
-		return 0;
+	if (thobj != threadobj_current() &&
+	    (thobj->status & __THREAD_S_SUSPENDED) != 0) {
+		thobj->status &= ~__THREAD_S_SUSPENDED;
+		notifier_release(&thobj->core.notifier);
+	}
 
-	return __bt(notifier_release(&thobj->core.notifier));
+	return 0;
 }
 
 int threadobj_sleep(struct timespec *ts)
@@ -1201,11 +1195,11 @@ static void cancel_sync(struct threadobj *thobj) /* thobj->lock held */
 
 	/*
 	 * We have to allocate the cancel sync sema4 in the main heap
-	 * dynamically, so that it always live in valid memory when we
-	 * wait on it and the cancelled thread posts it. This has to
-	 * be true regardless of whether --enable-pshared is in
-	 * effect, or thobj becomes stale after the finalizer has run
-	 * (we cannot host this sema4 in thobj for this reason).
+	 * dynamically, so that it always lives in valid memory when
+	 * we wait on it. This has to be true regardless of whether
+	 * --enable-pshared is in effect, or thobj becomes stale after
+	 * the finalizer has run (we cannot host this sema4 in thobj
+	 * for this reason).
 	 */
 	sem = xnmalloc(sizeof(*sem));
 	if (sem == NULL)
@@ -1214,7 +1208,6 @@ static void cancel_sync(struct threadobj *thobj) /* thobj->lock held */
 		__STD(sem_init(sem, sem_scope_attribute, 0));
 
 	thobj->cancel_sem = sem;
-	thobj->status |= __THREAD_S_ZOMBIE;
 
 	/*
 	 * If the thread to delete is warming up, wait until it

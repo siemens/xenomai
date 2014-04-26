@@ -19,16 +19,12 @@
 #ifndef _COPPERPLATE_NOTIFIER_H
 #define _COPPERPLATE_NOTIFIER_H
 
-#include <pthread.h>
 #include <boilerplate/list.h>
 
 struct notifier {
-	pthread_mutex_t lock;
-	int notified;
 	pid_t owner;
 	int psfd[2];
 	int pwfd[2];
-	void (*callback)(const struct notifier *nf);
 	struct pvholder link;
 };
 
@@ -36,17 +32,17 @@ struct notifier {
 extern "C" {
 #endif
 
-int notifier_init(struct notifier *nf,
-		  void (*callback)(const struct notifier *nf),
-		  int owned);
+int notifier_init(struct notifier *nf, pid_t pid);
 
 void notifier_destroy(struct notifier *nf);
 
-int notifier_signal(struct notifier *nf);
+void notifier_signal(struct notifier *nf);
 
-int notifier_wait(const struct notifier *nf);
+void notifier_wait(const struct notifier *nf);
 
-int notifier_release(struct notifier *nf);
+void notifier_disable(struct notifier *nf);
+
+void notifier_release(struct notifier *nf);
 
 void notifier_pkg_init(void);
 

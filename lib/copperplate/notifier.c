@@ -50,25 +50,20 @@ static void notifier_sighandler(int sig, siginfo_t *siginfo, void *uc)
 	pvlist_for_each_entry(nf, &notifier_list, link) {
 		if (nf->psfd[0] != siginfo->si_fd)
 			continue;
-		/*
-		 * Ignore misdirected notifications. We want those to
-		 * hit the thread owning the notification object, but
-		 * it may happen that the kernel picks another thread
-		 * for receiving a subsequent signal while we are
-		 * blocked in the callback code. In such a case, we
-		 * just dismiss the notification, and expect the
-		 * actual owner to detect the pending notification
-		 * once the callback returns to the read() loop.
-		 */
+
 		matched = 1;
-		if (nf->owner && nf->owner != tid)
+		/*
+		 * Paranoid: misdirected notifications should never
+		 * happen with F_SETOWN_EX invoked for the
+		 * notification fildes.
+		 */
+		if (nf->owner != tid)
 			continue;
 
 		for (;;) {
-			ret = __STD(read(nf->psfd[0], &c, 1)); 
+			ret = read(nf->psfd[0], &c, 1); 
 			if (ret > 0)
-				/* Callee must run async-safe code only. */
-				nf->callback(nf);
+				notifier_wait(nf);
 			else if (ret == 0 || errno != EINTR)
 				break;
 		}
@@ -77,9 +72,9 @@ static void notifier_sighandler(int sig, siginfo_t *siginfo, void *uc)
 	}
 
 	/*
-	 * We may have received a valid notification on the wrong
-	 * thread: bail out silently, assuming the recipient will find
-	 * out eventually.
+	 * Paranoid: we may have received a valid notification on the
+	 * wrong thread: bail out silently, assuming the recipient
+	 * will find out eventually.
 	 */
 	if (matched)
 		return;
@@ -119,11 +114,8 @@ static void unlock_notifier_list(sigset_t *oset)
 	write_unlock(&notifier_lock);
 }
 
-int notifier_init(struct notifier *nf,
-		  void (*callback)(const struct notifier *nf),
-		  int owned)
+int notifier_init(struct notifier *nf, pid_t pid)
 {
-	pthread_mutexattr_t mattr;
 	struct f_owner_ex owner;
 	sigset_t oset;
 	int fd, ret;
@@ -135,20 +127,12 @@ int notifier_init(struct notifier *nf,
 
 	if (pipe(nf->pwfd) < 0) {
 		ret = -errno;
-		__STD(close(nf->psfd[0]));
-		__STD(close(nf->psfd[1]));
+		close(nf->psfd[0]);
+		close(nf->psfd[1]);
 		goto fail;
 	}
 
-	nf->callback = callback;
-	nf->notified = 0;
-	nf->owner = owned ? copperplate_get_tid() : 0;
-	__STD(pthread_mutexattr_init(&mattr));
-	__RT(pthread_mutexattr_settype(&mattr, mutex_type_attribute));
-	__STD(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
-	__STD(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
-	__STD(pthread_mutex_init(&nf->lock, &mattr));
-	__STD(pthread_mutexattr_destroy(&mattr));
+	nf->owner = pid;
 
 	push_cleanup_lock(&notifier_lock);
 	lock_notifier_list(&oset);
@@ -189,89 +173,45 @@ void notifier_destroy(struct notifier *nf)
 	pvlist_remove(&nf->link);
 	unlock_notifier_list(&oset);
 	pop_cleanup_lock(&notifier_lock);
-	__STD(close(nf->psfd[0]));
-	__STD(close(nf->psfd[1]));
-	__STD(close(nf->pwfd[0]));
-	__STD(close(nf->pwfd[1]));
-	__STD(pthread_mutex_destroy(&nf->lock));
+	close(nf->psfd[0]);
+	close(nf->psfd[1]);
+	close(nf->pwfd[0]); /* May fail if disabled. */
+	close(nf->pwfd[1]);
 }
 
-int notifier_signal(struct notifier *nf)
+void notifier_signal(struct notifier *nf)
 {
-	int fd, ret, kick = 1;
 	char c = 0;
+	int ret;
 
-	ret = write_lock_nocancel(&nf->lock);
-	if (ret)
-		return __bt(ret);
-
-	fd = nf->psfd[1];
-
-	if (!nf->notified)
-		nf->notified = 1;
-	else
-		kick = 0;
-
-	write_unlock(&nf->lock);
-
-	/*
-	 * XXX: we must release the lock before we write to the pipe,
-	 * since we may be immediately preempted by the notification
-	 * signal in case we notify the current thread.
-	 */
-	if (kick) {
-		do
-			ret = __STD(write(fd, &c, 1));
-		while (ret == -1 && errno == EINTR);
-	}
-
-	return 0;
+	do
+		ret = write(nf->psfd[1], &c, 1);
+	while (ret == -1 && errno == EINTR);
 }
 
-int notifier_release(struct notifier *nf)
+void notifier_disable(struct notifier *nf)
 {
-	int fd, ret, kick = 1;
-	char c = 1;
-
-	/*
-	 * The notifier struct is associated to the caller thread, so
-	 * if the caller is cancelled, the notification struct becomes
-	 * useless. We may only take a read lock here.
-	 */
-	ret = write_lock_nocancel(&nf->lock);
-	if (ret)
-		return __bt(ret);
-
-	fd = nf->pwfd[1];
-
-	if (nf->notified)
-		nf->notified = 0;
-	else
-		kick = 0;
-
-	write_unlock(&nf->lock);
-
-	if (kick) {
-		do
-			ret = __STD(write(fd, &c, 1)); 
-		while (ret == -1 && errno == EINTR);
-	}
-
-	return 0;
+	close(nf->pwfd[0]);
 }
 
-int notifier_wait(const struct notifier *nf) /* sighandler context */
+void notifier_release(struct notifier *nf)
+{
+	char c = 1;
+	int ret;
+
+	do
+		ret = write(nf->pwfd[1], &c, 1);
+	while (ret == -1 && errno == EINTR);
+}
+
+void notifier_wait(const struct notifier *nf) /* sighandler context */
 {
 	int ret;
 	char c;
 
 	do
-		ret = __STD(read(nf->pwfd[0], &c, 1)); 
+		ret = read(nf->pwfd[0], &c, 1);
 	while (ret == -1 && errno == EINTR);
-
-	assert(ret == 1); (void)ret;
-
-	return 0;
 }
 
 void notifier_pkg_init(void)
@@ -279,35 +219,24 @@ void notifier_pkg_init(void)
 	pthread_mutexattr_t mattr;
 	struct sigaction sa;
 
-	__STD(pthread_mutexattr_init(&mattr));
-	__RT(pthread_mutexattr_settype(&mattr, mutex_type_attribute));
-	__STD(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
-	__STD(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
-	__STD(pthread_mutex_init(&notifier_lock, &mattr));
-	__STD(pthread_mutexattr_destroy(&mattr));
+	pthread_mutexattr_init(&mattr);
+	pthread_mutexattr_settype(&mattr, mutex_type_attribute);
+	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
+	pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
+	pthread_mutex_init(&notifier_lock, &mattr);
+	pthread_mutexattr_destroy(&mattr);
 	/*
-	 * XXX: We have four requirements here:
+	 * We have two basic requirements for the notification
+	 * scheme implementing the suspend/resume mechanism:
 	 *
 	 * - we have to rely on Linux signals for notification, which
-	 * guarantees that the target thread will get the message as
-	 * soon as possible, regardless of what it was doing when
-	 * notified (syscall wait, pure runtime etc.).
+	 * guarantees that the target thread will receive the suspend
+	 * request asap, regardless of what it was doing when notified
+	 * (syscall wait, pure runtime etc.).
 	 *
-	 * - we must process the notifier callback fully on behalf of
-	 * the target thread, since client code may rely on this
-	 * assumption.  E.g. offloading the callback code to some
-	 * server thread kicked from the signal handler would be a bad
-	 * idea in that sense.
-	 *
-	 * - a notifier callback should be allowed to block using a
-	 * dedicated service, until a release notification is
-	 * sent. Since the callback runs over a signal handler, we
-	 * have to implement this feature only using async-safe
-	 * services.
-	 *
-	 * - we must allow a single thread to listen to multiple
-	 * notification events, and the destination of each event
-	 * should be easily identified.
+	 * - we must process the suspension signal on behalf of the
+	 * target thread, as we want that thread to block upon
+	 * receipt.
 	 */
 	memset(&sa, 0, sizeof(sa));
 	sa.sa_sigaction = &notifier_sighandler;
