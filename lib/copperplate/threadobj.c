@@ -178,41 +178,9 @@ int threadobj_resume(struct threadobj *thobj) /* thobj->lock held */
 	return __bt(-ret);
 }
 
-int threadobj_sleep(struct timespec *ts)
+static inline int threadobj_unblocked_corespec(struct threadobj *current)
 {
-	struct threadobj *current = threadobj_current();
-	sigset_t set;
-	int sig, ret;
-
-	/*
-	 * threadobj_sleep() shall return -EINTR immediately upon
-	 * threadobj_unblock(), to honor forced wakeup semantics for
-	 * RTOS personalities.
-	 *
-	 * Otherwise, the sleep should be silently restarted until
-	 * completion after a Linux signal is handled.
-	 */
-	current->run_state = __THREAD_S_DELAYED;
-	threadobj_save_timeout(&current->core, ts);
-
-	do {
-		/*
-		 * Waiting on a null signal set causes an infinite
-		 * delay, so that only threadobj_unblock() or a linux
-		 * signal can unblock us.
-		 */
-		if (ts->tv_sec == 0 && ts->tv_nsec == 0) {
-			sigemptyset(&set);
-			ret = -__RT(sigwait(&set, &sig));
-		} else
-			ret = -__RT(clock_nanosleep(CLOCK_COPPERPLATE,
-						    TIMER_ABSTIME, ts, NULL));
-	} while (ret == -EINTR &&
-		 (current->core.u_window->info & XNBREAK) == 0);
-
-	current->run_state = __THREAD_S_RUNNING;
-
-	return ret;
+	return (current->core.u_window->info & XNBREAK) != 0;
 }
 
 int __threadobj_lock_sched(struct threadobj *current)
@@ -408,10 +376,15 @@ static int threadobj_lock_prio;
 
 static void unblock_sighandler(int sig)
 {
+	struct threadobj *current = threadobj_current();
+
 	/*
-	 * nop -- we just want the receiving thread to unblock with
-	 * EINTR if applicable.
+	 * SIGRELS is thread-directed, so referring to
+	 * current->run_state locklessly is safe as we are
+	 * basically introspecting.
 	 */
+	if (current->run_state == __THREAD_S_DELAYED)
+		current->run_state = __THREAD_S_BREAK;
 }
 
 static void roundrobin_handler(int sig)
@@ -443,7 +416,6 @@ static inline void pkg_init_corespec(void)
 	sa.sa_handler = unblock_sighandler;
 	sa.sa_flags = SA_RESTART;
 	sigaction(SIGRELS, &sa, NULL);
-	sigaction(SIGWAKEUP, &sa, NULL);
 	sa.sa_handler = roundrobin_handler;
 	sigaction(SIGRRB, &sa, NULL);
 
@@ -483,19 +455,12 @@ static inline int threadobj_setup_corespec(struct threadobj *thobj)
 	thobj->core.period = 0;
 
 	/*
-	 * Setup the per-thread data used in threadobj_sleep().
-	 */
-	memset(&sev, 0, sizeof(sev));
-	sev.sigev_notify = SIGEV_SIGNAL|SIGEV_THREAD_ID;
-	sev.sigev_signo = SIGWAKEUP;
-	sev.sigev_notify_thread_id = threadobj_get_pid(thobj);
-	thobj->core.sleep_sev = sev;
-	thobj->core.sleep_timer = NULL;
-
-	/*
 	 * Create the per-thread round-robin timer.
 	 */
+	memset(&sev, 0, sizeof(sev));
 	sev.sigev_signo = SIGRRB;
+	sev.sigev_notify = SIGEV_SIGNAL|SIGEV_THREAD_ID;
+	sev.sigev_notify_thread_id = threadobj_get_pid(thobj);
 	ret = timer_create(CLOCK_THREAD_CPUTIME_ID, &sev,
 			   &thobj->core.rr_timer);
 	if (ret) {
@@ -512,9 +477,6 @@ static inline void threadobj_cleanup_corespec(struct threadobj *thobj)
 
 	if (thobj->core.rr_timer)
 		timer_delete(thobj->core.rr_timer);
-
-	if (thobj->core.sleep_timer)
-		timer_delete(thobj->core.sleep_timer);
 }
 
 static inline void threadobj_run_corespec(struct threadobj *thobj)
@@ -564,67 +526,9 @@ int threadobj_resume(struct threadobj *thobj) /* thobj->lock held */
 	return 0;
 }
 
-int threadobj_sleep(struct timespec *ts)
+static inline int threadobj_unblocked_corespec(struct threadobj *current)
 {
-	struct threadobj *current = threadobj_current();
-	struct itimerspec it;
-	sigset_t set, oset;
-	timer_t timer;
-	int ret, sig;
-
-	/*
-	 * threadobj_sleep() shall return -EINTR immediately upon
-	 * threadobj_unblock(), to honor forced wakeup semantics for
-	 * RTOS personalities.
-	 *
-	 * Otherwise, the sleep should be silently restarted until
-	 * completion after a signal is handled, except SIGRELS in the
-	 * Mercury case.
-	 */
-	it.it_value = *ts;
-	it.it_interval = zero_time;
-
-	sigemptyset(&set);
-	sigaddset(&set, SIGRELS);
-
-	timer = current->core.sleep_timer;
-	if (ts->tv_sec == 0 && ts->tv_nsec == 0) {
-		/* Infinite wait. */
-		pthread_sigmask(SIG_BLOCK, &set, &oset);
-		goto sleep;
-	}
-
-	if (timer == NULL) {
-		ret = timer_create(CLOCK_COPPERPLATE,
-				   &current->core.sleep_sev,
-				   &current->core.sleep_timer);
-		if (ret)
-			return __bt(-errno);
-		timer = current->core.sleep_timer;
-	}
-
-	sigaddset(&set, SIGWAKEUP);
-
-	pthread_sigmask(SIG_BLOCK, &set, &oset);
-
-	if (timer_settime(timer, TIMER_ABSTIME, &it, NULL)) {
-		ret = __bt(-errno);
-		goto out;
-	}
-sleep:
-	current->run_state = __THREAD_S_DELAYED;
-	threadobj_save_timeout(&current->core, ts);
-	ret = -sigwait(&set, &sig);
-	current->run_state = __THREAD_S_RUNNING;
-	if (sig == SIGRELS) {
-		it.it_value = zero_time;
-		timer_settime(timer, 0, &it, NULL);
-		ret = -EINTR;
-	}
-out:
-	pthread_sigmask(SIG_SETMASK, &oset, NULL);
-
-	return ret;
+	return current->run_state != __THREAD_S_DELAYED;
 }
 
 int __threadobj_lock_sched(struct threadobj *current) /* current->lock held */
@@ -1350,6 +1254,42 @@ int threadobj_unblock(struct threadobj *thobj) /* thobj->lock held */
 
 	/* Remove standalone DELAY condition. */
 	return __bt(-__RT(pthread_kill(thobj->tid, SIGRELS)));
+}
+
+int threadobj_sleep(struct timespec *ts)
+{
+	struct threadobj *current = threadobj_current();
+	sigset_t set;
+	int ret;
+
+	/*
+	 * threadobj_sleep() shall return -EINTR immediately upon
+	 * threadobj_unblock(), to honor forced wakeup semantics for
+	 * RTOS personalities.
+	 *
+	 * Otherwise, the sleep should be silently restarted until
+	 * completion after a Linux signal is handled.
+	 */
+	current->run_state = __THREAD_S_DELAYED;
+	threadobj_save_timeout(&current->core, ts);
+
+	do {
+		/*
+		 * Waiting on a null signal set causes an infinite
+		 * delay, so that only threadobj_unblock() or a linux
+		 * signal can unblock us.
+		 */
+		if (ts->tv_sec == 0 && ts->tv_nsec == 0) {
+			sigemptyset(&set);
+			ret = __RT(sigwaitinfo(&set, NULL)) ? errno : 0;
+		} else
+			ret = __RT(clock_nanosleep(CLOCK_COPPERPLATE,
+						   TIMER_ABSTIME, ts, NULL));
+	} while (ret == EINTR && !threadobj_unblocked_corespec(current));
+
+	current->run_state = __THREAD_S_RUNNING;
+
+	return -ret;
 }
 
 void threadobj_spin(ticks_t ns)

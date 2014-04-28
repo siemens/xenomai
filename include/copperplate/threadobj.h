@@ -89,9 +89,6 @@ struct threadobj_corespec {
 	ticks_t period;
 	/** Timeout reported by sysregd. */
 	struct timespec timeout;
-	/** Timer data for threadobj_sleep() */
-	struct sigevent sleep_sev;
-	timer_t sleep_timer;
 };
 
 struct threadobj_stat {
@@ -138,6 +135,7 @@ void threadobj_save_timeout(struct threadobj_corespec *corespec,
 #define __THREAD_S_WAIT		(1 << 17)
 #define __THREAD_S_TIMEDWAIT	(1 << 18)
 #define __THREAD_S_DELAYED	(1 << 19)
+#define __THREAD_S_BREAK	(__THREAD_S_DELAYED|(1 << 20))
 
 /* threadobj mode bits */
 #define __THREAD_M_LOCK		(1 << 0) /* Toggle scheduler lock. */
@@ -462,7 +460,7 @@ static inline int threadobj_get_lockdepth(struct threadobj *thobj)
 
 static inline int threadobj_get_status(struct threadobj *thobj)
 {
-	return thobj->status|thobj->run_state;
+	return thobj->status | thobj->run_state;
 }
 
 static inline int threadobj_get_errno(struct threadobj *thobj)
