@@ -325,10 +325,12 @@ int threadobj_set_priority(struct threadobj *thobj, int prio);
 
 int threadobj_set_mode(int clrmask, int setmask, int *mode_r);
 
-int threadobj_set_rr(struct threadobj *thobj, struct timespec *quantum);
+int threadobj_set_rr(struct threadobj *thobj,
+		     const struct timespec *quantum);
 
 int threadobj_set_periodic(struct threadobj *thobj,
-			   struct timespec *idate, struct timespec *period);
+			   const struct timespec *__restrict__ idate,
+			   const struct timespec *__restrict__ period);
 
 int threadobj_wait_period(unsigned long *overruns_r);
 
@@ -337,7 +339,7 @@ void threadobj_spin(ticks_t ns);
 int threadobj_stat(struct threadobj *thobj,
 		   struct threadobj_stat *stat);
 
-int threadobj_sleep(struct timespec *ts);
+int threadobj_sleep(const struct timespec *ts);
 
 #ifdef CONFIG_XENO_PSHARED
 

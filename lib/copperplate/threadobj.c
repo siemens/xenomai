@@ -304,7 +304,7 @@ int threadobj_set_mode(int clrmask, int setmask, int *mode_r) /* current->lock h
 	return 0;
 }
 
-static int set_rr(struct threadobj *thobj, struct timespec *quantum)
+static int set_rr(struct threadobj *thobj, const struct timespec *quantum)
 {
 	struct sched_param_ex xparam;
 	pthread_t tid = thobj->tid;
@@ -332,7 +332,8 @@ static int set_rr(struct threadobj *thobj, struct timespec *quantum)
 }
 
 int threadobj_set_periodic(struct threadobj *thobj,
-			   struct timespec *idate, struct timespec *period)
+			   const struct timespec *__restrict__ idate,
+			   const struct timespec *__restrict__ period)
 {
 	return -pthread_make_periodic_np(thobj->tid,
 					 CLOCK_COPPERPLATE, idate, period);
@@ -678,7 +679,7 @@ int threadobj_set_mode(int clrmask, int setmask, int *mode_r) /* current->lock h
 	return __bt(ret);
 }
 
-static inline int set_rr(struct threadobj *thobj, struct timespec *quantum)
+static int set_rr(struct threadobj *thobj, const struct timespec *quantum)
 {
 	pthread_t tid = thobj->tid;
 	struct sched_param param;
@@ -731,7 +732,8 @@ static inline int set_rr(struct threadobj *thobj, struct timespec *quantum)
 }
 
 int threadobj_set_periodic(struct threadobj *thobj,
-			   struct timespec *idate, struct timespec *period)
+			   const struct timespec *__restrict__ idate,
+			   const struct timespec *__restrict__ period)
 {
 	struct timespec now, wakeup;
 
@@ -1256,7 +1258,7 @@ int threadobj_unblock(struct threadobj *thobj) /* thobj->lock held */
 	return __bt(-__RT(pthread_kill(thobj->tid, SIGRELS)));
 }
 
-int threadobj_sleep(struct timespec *ts)
+int threadobj_sleep(const struct timespec *ts)
 {
 	struct threadobj *current = threadobj_current();
 	sigset_t set;
@@ -1301,7 +1303,7 @@ void threadobj_spin(ticks_t ns)
 		cpu_relax();
 }
 
-int threadobj_set_rr(struct threadobj *thobj, struct timespec *quantum)
+int threadobj_set_rr(struct threadobj *thobj, const struct timespec *quantum)
 {				/* thobj->lock held */
 	__threadobj_check_locked(thobj);
 
