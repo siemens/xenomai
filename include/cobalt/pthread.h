@@ -142,8 +142,8 @@ COBALT_DECL(int, pthread_condattr_setclock(pthread_condattr_t *attr,
 
 int pthread_make_periodic_np(pthread_t thread,
 			     clockid_t clk_id,
-			     struct timespec *starttp,
-			     struct timespec *periodtp);
+			     const struct timespec *__restrict__ starttp,
+			     const struct timespec *__restrict__ periodtp);
 
 int pthread_wait_np(unsigned long *overruns_r);
 

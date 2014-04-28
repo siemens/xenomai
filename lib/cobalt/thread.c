@@ -398,8 +398,8 @@ COBALT_IMPL(int, pthread_create, (pthread_t *tid,
 
 int pthread_make_periodic_np(pthread_t thread,
 			     clockid_t clk_id,
-			     struct timespec *starttp,
-			     struct timespec *periodtp)
+			     const struct timespec *__restrict__ starttp,
+			     const struct timespec *__restrict__ periodtp)
 {
 	return -XENOMAI_SKINCALL4(__cobalt_muxid,
 				  sc_cobalt_thread_make_periodic,
