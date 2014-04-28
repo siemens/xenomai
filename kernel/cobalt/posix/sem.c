@@ -402,32 +402,41 @@ static inline int
 sem_wait_inner(xnhandle_t handle, int timed,
 	       const struct timespec __user *u_ts)
 {
+	int pull_ts = 1, ret, info;
 	struct cobalt_sem *sem;
 	struct timespec ts;
 	xntmode_t tmode;
-	int ret, info;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-
+redo:
 	sem = xnregistry_lookup(handle, NULL);
 
 	ret = sem_trywait_inner(sem);
-	if (ret != -EAGAIN) {
-		xnlock_put_irqrestore(&nklock, s);
-		return ret;
-	}
+	if (ret != -EAGAIN)
+		goto out;
 
 	if (timed) {
-		if (u_ts == NULL ||
-			__xn_safe_copy_from_user(&ts, u_ts, sizeof(ts))) {
-			ret = -EFAULT;
-			goto fail;
-		}
-
-		if (ts.tv_nsec >= ONE_BILLION) {
-			ret = -EINVAL;
-			goto fail;
+		/*
+		 * POSIX states that the validity of the timeout spec
+		 * _need_ not be checked if the semaphore can be
+		 * locked immediately, we show this behavior despite
+		 * it's actually more complex, to keep some
+		 * applications ported to Linux happy.
+		 */
+		if (pull_ts) {
+			atomic_long_inc(&sem->datp->value);
+			if (u_ts == NULL)
+				goto efault;
+			xnlock_put_irqrestore(&nklock, s);
+			ret =__xn_safe_copy_from_user(&ts, u_ts, sizeof(ts));
+			xnlock_get_irqsave(&nklock, s);
+			if (ret)
+				goto efault;
+			if (ts.tv_nsec >= ONE_BILLION)
+				goto einval;
+			pull_ts = 0;
+			goto redo;
 		}
 
 		tmode = sem->flags & SEM_RAWCLOCK ? XN_ABSOLUTE : XN_REALTIME;
@@ -435,10 +444,8 @@ sem_wait_inner(xnhandle_t handle, int timed,
 	} else
 		info = xnsynch_sleep_on(&sem->synchbase, 
 					XN_INFINITE, XN_RELATIVE);
-	if (info & XNRMID) {
-		ret = -EINVAL;
-		goto out;
-	}
+	if (info & XNRMID)
+		goto einval;
  	if (info & (XNBREAK|XNTIMEO)) {
 		ret = (info & XNBREAK) ? -EINTR : -ETIMEDOUT;
 		goto fail;
@@ -450,6 +457,12 @@ out:
 	return ret;
 fail:
 	atomic_long_inc(&sem->datp->value);
+	goto out;
+efault:
+	ret = -EFAULT;
+	goto out;
+einval:
+	ret = -EINVAL;
 	goto out;
 }
 
