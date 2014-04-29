@@ -245,7 +245,6 @@ int rt_heap_create(RT_HEAP *heap,
 	}
 
 	generate_name(hcb->name, name, &heap_namegen);
-	hcb->magic = heap_magic;
 	hcb->mode = mode;
 	hcb->size = heapsz;
 	hcb->sba = NULL;
@@ -253,23 +252,26 @@ int rt_heap_create(RT_HEAP *heap,
 	if (mode & H_PRIO)
 		sobj_flags = SYNCOBJ_PRIO;
 
+	registry_init_file_obstack(&hcb->fsobj, &registry_ops);
+
 	syncobj_init(&hcb->sobj, CLOCK_COPPERPLATE, sobj_flags,
 		     fnref_put(libalchemy, heap_finalize));
 
+	hcb->magic = heap_magic;
+
 	if (syncluster_addobj(&alchemy_heap_table, hcb->name, &hcb->cobj)) {
+		registry_destroy_file(&hcb->fsobj);
 		syncobj_uninit(&hcb->sobj);
 		heapobj_destroy(&hcb->hobj);
 		xnfree(hcb);
 		ret = -EEXIST;
 	} else {
 		heap->handle = mainheap_ref(hcb, uintptr_t);
-		registry_init_file_obstack(&hcb->fsobj, &registry_ops);
 		ret = __bt(registry_add_file(&hcb->fsobj, O_RDONLY,
-					     "/alchemy/heaps/%s",
-					     hcb->name));
+					     "/alchemy/heaps/%s", hcb->name));
 		if (ret) {
-			warning("failed to export heap %s to registry",
-				hcb->name);
+			warning("failed to export heap %s to registry, %s",
+				hcb->name, symerror(ret));
 			ret = 0;
 		}
 	}

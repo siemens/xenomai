@@ -211,21 +211,23 @@ int rt_sem_create(RT_SEM *sem, const char *name,
 	}
 
 	generate_name(scb->name, name, &sem_namegen);
+
+	registry_init_file_obstack(&scb->fsobj, &registry_ops);
+
 	scb->magic = sem_magic;
 
 	if (syncluster_addobj(&alchemy_sem_table, scb->name, &scb->cobj)) {
+		registry_destroy_file(&scb->fsobj);
 		semobj_destroy(&scb->smobj);
 		xnfree(scb);
 		ret = -EEXIST;
 	} else {
 		sem->handle = mainheap_ref(scb, uintptr_t);
-		registry_init_file_obstack(&scb->fsobj, &registry_ops);
 		ret = __bt(registry_add_file(&scb->fsobj, O_RDONLY,
-					     "/alchemy/semaphores/%s",
-					     scb->name));
+					     "/alchemy/semaphores/%s", scb->name));
 		if (ret) {
-			warning("failed to export semaphore %s to registry",
-				scb->name);
+			warning("failed to export semaphore %s to registry, %s",
+				scb->name, symerror(ret));
 			ret = 0;
 		}
 	}

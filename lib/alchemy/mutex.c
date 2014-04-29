@@ -140,20 +140,22 @@ int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 #endif
 	__RT(pthread_mutex_init(&mcb->lock, &mattr));
 	__RT(pthread_mutexattr_destroy(&mattr));
+
+	registry_init_file(&mcb->fsobj, &registry_ops, 0);
+
 	mcb->magic = mutex_magic;
 
 	if (syncluster_addobj(&alchemy_mutex_table, mcb->name, &mcb->cobj)) {
+		registry_destroy_file(&mcb->fsobj);
 		xnfree(mcb);
 		ret = -EEXIST;
 	} else {
 		mutex->handle = mainheap_ref(mcb, uintptr_t);
-		registry_init_file(&mcb->fsobj, &registry_ops, 0);
 		ret = __bt(registry_add_file(&mcb->fsobj, O_RDONLY,
-					     "/alchemy/mutexes/%s",
-					     mcb->name));
+					     "/alchemy/mutexes/%s", mcb->name));
 		if (ret) {
-			warning("failed to export mutex %s to registry",
-				mcb->name);
+			warning("failed to export mutex %s to registry, %s",
+				mcb->name, symerror(ret));
 			ret = 0;
 		}
 	}

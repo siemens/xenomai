@@ -186,7 +186,6 @@ int rt_event_create(RT_EVENT *event, const char *name,
 	}
 
 	generate_name(evcb->name, name, &event_namegen);
-	evcb->magic = event_magic;
 	if (mode & EV_PRIO)
 		evobj_flags = EVOBJ_PRIO;
 
@@ -197,19 +196,22 @@ int rt_event_create(RT_EVENT *event, const char *name,
 		goto out;
 	}
 
+	registry_init_file_obstack(&evcb->fsobj, &registry_ops);
+
+	evcb->magic = event_magic;
+
 	if (syncluster_addobj(&alchemy_event_table, evcb->name, &evcb->cobj)) {
+		registry_destroy_file(&evcb->fsobj);
 		eventobj_destroy(&evcb->evobj);
 		xnfree(evcb);
 		ret = -EEXIST;
 	} else {
 		event->handle = mainheap_ref(evcb, uintptr_t);
-		registry_init_file_obstack(&evcb->fsobj, &registry_ops);
 		ret = __bt(registry_add_file(&evcb->fsobj, O_RDONLY,
-					     "/alchemy/events/%s",
-					     evcb->name));
+					     "/alchemy/events/%s", evcb->name));
 		if (ret) {
-			warning("failed to export event %s to registry",
-				evcb->name);
+			warning("failed to export event %s to registry, %s",
+				evcb->name, symerror(ret));
 			ret = 0;
 		}
 	}

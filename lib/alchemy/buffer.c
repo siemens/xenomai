@@ -240,7 +240,6 @@ int rt_buffer_create(RT_BUFFER *bf, const char *name,
 	}
 
 	generate_name(bcb->name, name, &buffer_namegen);
-	bcb->magic = buffer_magic;
 	bcb->mode = mode;
 	bcb->bufsz = bufsz;
 	bcb->rdoff = 0;
@@ -249,8 +248,12 @@ int rt_buffer_create(RT_BUFFER *bf, const char *name,
 	if (mode & B_PRIO)
 		sobj_flags = SYNCOBJ_PRIO;
 
+	registry_init_file_obstack(&bcb->fsobj, &registry_ops);
+
 	syncobj_init(&bcb->sobj, CLOCK_COPPERPLATE, sobj_flags,
 		     fnref_put(libalchemy, buffer_finalize));
+
+	bcb->magic = buffer_magic;
 
 	if (syncluster_addobj(&alchemy_buffer_table, bcb->name, &bcb->cobj)) {
 		ret = -EEXIST;
@@ -259,19 +262,18 @@ int rt_buffer_create(RT_BUFFER *bf, const char *name,
 
 	bf->handle = mainheap_ref(bcb, uintptr_t);
 
-	registry_init_file_obstack(&bcb->fsobj, &registry_ops);
 	ret = __bt(registry_add_file(&bcb->fsobj, O_RDONLY,
-				     "/alchemy/buffers/%s",
-				     bcb->name));
+				     "/alchemy/buffers/%s", bcb->name));
 	if (ret)
-		warning("failed to export buffer %s to registry",
-			bcb->name);
+		warning("failed to export buffer %s to registry, %s",
+			bcb->name, symerror(ret));
 
 	CANCEL_RESTORE(svc);
 
 	return 0;
 
 fail_register:
+	registry_destroy_file(&bcb->fsobj);
 	syncobj_uninit(&bcb->sobj);
 	xnfree(bcb->buf);
 fail_bufalloc:

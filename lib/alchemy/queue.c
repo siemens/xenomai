@@ -243,7 +243,6 @@ int rt_queue_create(RT_QUEUE *queue, const char *name,
 		goto out;
 	}
 
-	qcb->magic = queue_magic;
 	qcb->mode = mode;
 	qcb->limit = qlimit;
 	list_init(&qcb->mq);
@@ -255,20 +254,23 @@ int rt_queue_create(RT_QUEUE *queue, const char *name,
 	syncobj_init(&qcb->sobj, CLOCK_COPPERPLATE, sobj_flags,
 		     fnref_put(libalchemy, queue_finalize));
 
+	registry_init_file_obstack(&qcb->fsobj, &registry_ops);
+
+	qcb->magic = queue_magic;
+
 	if (syncluster_addobj(&alchemy_queue_table, qcb->name, &qcb->cobj)) {
+		registry_destroy_file(&qcb->fsobj);
 		heapobj_destroy(&qcb->hobj);
 		syncobj_uninit(&qcb->sobj);
 		xnfree(qcb);
 		ret = -EEXIST;
 	} else {
 		queue->handle = mainheap_ref(qcb, uintptr_t);
-		registry_init_file_obstack(&qcb->fsobj, &registry_ops);
 		ret = __bt(registry_add_file(&qcb->fsobj, O_RDONLY,
-					     "/alchemy/queues/%s",
-					     qcb->name));
+					     "/alchemy/queues/%s", qcb->name));
 		if (ret) {
-			warning("failed to export queue %s to registry",
-				qcb->name);
+			warning("failed to export queue %s to registry, %s",
+				qcb->name, symerror(ret));
 			ret = 0;
 		}
 	}

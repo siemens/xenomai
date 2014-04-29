@@ -189,22 +189,23 @@ int rt_alarm_create(RT_ALARM *alarm, const char *name,
 	acb->arg = arg;
 	acb->expiries = 0;
 	memset(&acb->itmspec, 0, sizeof(acb->itmspec));
-	acb->magic = alarm_magic;
+	registry_init_file_obstack(&acb->fsobj, &registry_ops);
+
 	alarm->handle = (uintptr_t)acb;
+	acb->magic = alarm_magic;
 
 	if (pvcluster_addobj(&alchemy_alarm_table, acb->name, &acb->cobj)) {
+		registry_destroy_file(&acb->fsobj);
 		timerobj_destroy(&acb->tmobj);
 		ret = -EEXIST;
 		goto fail;
 	}
 
-	registry_init_file_obstack(&acb->fsobj, &registry_ops);
 	ret = __bt(registry_add_file(&acb->fsobj, O_RDONLY,
-				     "/alchemy/alarms/%s",
-				     acb->name));
+				     "/alchemy/alarms/%s", acb->name));
 	if (ret)
-		warning("failed to export alarm %s to registry",
-			acb->name);
+		warning("failed to export alarm %s to registry, %s",
+			acb->name, symerror(ret));
 
 	CANCEL_RESTORE(svc);
 
