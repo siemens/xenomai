@@ -30,10 +30,10 @@ clean:
 test: all
 	@for t in $(TESTS); do \
 		echo -n $$t...; \
-		sudo LD_LIBRARY_PATH=$(solibs) ./$$t --cpu-affinity=0 --silent && echo ok || echo BAD; \
+		sudo LD_LIBRARY_PATH=$(solibs) $(VALGRIND) ./$$t --cpu-affinity=0 --silent && echo ok || echo BAD; \
 	done
 
 test/%: %
-	sudo LD_LIBRARY_PATH=$(solibs) ./$(@F) --cpu-affinity=0 --silent && echo ok || echo BAD
+	sudo LD_LIBRARY_PATH=$(solibs) $(VALGRIND) ./$(@F) --cpu-affinity=0 --silent && echo ok || echo BAD
 
 .PHONY: clean test
