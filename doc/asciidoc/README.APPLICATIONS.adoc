@@ -162,6 +162,26 @@ switch]).
 	defined as a result of running the configure script. The
 	program immediately exits with a success code afterwards.
 
+Valgrind support
+----------------
+
+Running Xenomai applications over _Valgrind_ is currently available to
+the _Mercury_ core only.
+
+When the Valgrind API is available to the application process, the
+configuration symbol CONFIG_XENO_VALGRIND_API is defined at build
+time, and may be tested for existence by the application code. See the
+tool documentation at
+http://valgrind.org/docs/manual/manual-core-adv.html#manual-core-adv.clientreq/[this address].
+
+The Xenomai autoconf script will detect the Valgrind core header on
+the build system automatically, and define this symbol accordingly
+(i.e. /usr/include/valgrind/valgrind.h).
+
+NOTE: You may need to install the Valgrind development package on your
+build system to provide for the core header files. For instance, such
+package is called _valgrind-devel_ on Fedora.
+
 Available real-time APIs
 ------------------------
 

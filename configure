@@ -13882,6 +13882,15 @@ fi
 
 done
 
+ac_fn_c_check_header_mongrel "$LINENO" "valgrind/valgrind.h" "ac_cv_header_valgrind_valgrind_h" "$ac_includes_default"
+if test "x$ac_cv_header_valgrind_valgrind_h" = xyes; then :
+  CONFIG_XENO_VALGRIND_API=y
+fi
+
+
+test x$CONFIG_XENO_VALGRIND_API = xy &&
+$as_echo "#define CONFIG_XENO_VALGRIND_API 1" >>confdefs.h
+
 
 save_LIBS="$LIBS"
 LIBS="$LIBS -lrt -lpthread"

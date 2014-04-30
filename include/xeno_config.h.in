@@ -76,6 +76,9 @@
 #undef CONFIG_XENO_UAPI_LEVEL
 
 /* config */
+#undef CONFIG_XENO_VALGRIND_API
+
+/* config */
 #undef CONFIG_XENO_VERSION_MAJOR
 
 /* config */

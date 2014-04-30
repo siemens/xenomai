@@ -499,6 +499,8 @@ fi
 
 dnl Determine whether some specific headers are present on this system.
 AC_CHECK_HEADERS(mqueue.h)
+AC_CHECK_HEADER(valgrind/valgrind.h,CONFIG_XENO_VALGRIND_API=y)
+test x$CONFIG_XENO_VALGRIND_API = xy && AC_DEFINE(CONFIG_XENO_VALGRIND_API,1,[config])
 
 dnl Check for presence of some routines we need
 save_LIBS="$LIBS"
