@@ -23,6 +23,18 @@
 #include "copperplate/heapobj.h"
 #include "copperplate/init.h"
 #include "internal.h"
+#ifdef CONFIG_XENO_VALGRIND_API
+#include <valgrind/valgrind.h>
+static inline int valgrind_detected(void)
+{
+	return RUNNING_ON_VALGRIND;
+}
+#else
+static inline int valgrind_detected(void)
+{
+	return 0;
+}
+#endif
 
 struct tracemark {
 	const char *file;
@@ -110,11 +122,16 @@ void traceobj_verify(struct traceobj *trobj, int tseq[], int nr_seq)
 		if (trobj->marks[mark].mark != tseq[mark])
 			goto fail;
 	}
-
+out:
 	read_unlock_safe(&trobj->lock, state);
 	return;
 
 fail:
+	if (valgrind_detected()) {
+		warning("valgrind detected: ignoring sequence mismatch");
+		goto out;
+	}
+		
 	warning("mismatching execution sequence detected");
 	compare_marks(trobj, tseq, nr_seq);
 	read_unlock_safe(&trobj->lock, state);
