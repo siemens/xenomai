@@ -1083,22 +1083,16 @@ int cobalt_thread_set_name_np(unsigned long pth, const char __user *u_name)
 
 int cobalt_thread_probe_np(pid_t pid)
 {
-	struct global_thread_hash *gslot;
-	u32 hash;
-	int ret;
+	struct cobalt_thread *thread;
+	int ret = 0;
 	spl_t s;
-
-	hash = jhash2((u32 *)&pid, sizeof(pid) / sizeof(u32), 0);
 
 	trace_cobalt_pthread_probe(pid);
 
 	xnlock_get_irqsave(&nklock, s);
 
-	gslot = global_index[hash & (PTHREAD_HSLOTS - 1)];
-	while (gslot && gslot->pid != pid)
-		gslot = gslot->next;
-
-	ret = gslot ? 0 : -ESRCH;
+	if (cobalt_thread_find(pid) == NULL)
+		ret = -ESRCH;
 
 	xnlock_put_irqrestore(&nklock, s);
 
