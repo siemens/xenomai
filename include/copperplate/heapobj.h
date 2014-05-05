@@ -324,21 +324,30 @@ static inline int pshared_check(void *heap, void *addr)
 	return 0;
 }
 
+#ifdef __cplusplus
+#define __check_ref_width(__dst, __src)			\
+	({						\
+		assert(sizeof(__dst) >= sizeof(__src));	\
+		(typeof(__dst))__src;			\
+	})
+#else
+#define __check_ref_width(__dst, __src)					\
+	__builtin_choose_expr(						\
+		sizeof(__dst) >= sizeof(__src), (typeof(__dst))__src,	\
+		((void)0))
+#endif
+
 #define mainheap_ref(ptr, type)						\
 	({								\
 		type handle;						\
-		assert(__builtin_types_compatible_p(typeof(type), unsigned long) || \
-		       __builtin_types_compatible_p(typeof(type), uintptr_t)); \
+		handle = __check_ref_width(handle, ptr);		\
 		assert(ptr == NULL || __memchk(__main_heap, ptr));	\
-		handle = (type)ptr;					\
 		handle;							\
 	})
 #define mainheap_deref(handle, type)					\
 	({								\
 		type *ptr;						\
-		assert(__builtin_types_compatible_p(typeof(handle), unsigned long) || \
-		       __builtin_types_compatible_p(typeof(handle), uintptr_t)); \
-		ptr = (type *)handle;					\
+		ptr = __check_ref_width(ptr, handle);			\
 		ptr;							\
 	})
 
