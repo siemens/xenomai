@@ -136,6 +136,7 @@ static struct xnsyscall cobalt_syscalls[] = {
 	SKINCALL_DEF(sc_cobalt_sigtimedwait, cobalt_sigtimedwait, nonrestartable),
 	SKINCALL_DEF(sc_cobalt_sigpending, cobalt_sigpending, primary),
 	SKINCALL_DEF(sc_cobalt_kill, cobalt_kill, conforming),
+	SKINCALL_DEF(sc_cobalt_sigqueue, cobalt_sigqueue, conforming),
 	SKINCALL_DEF(sc_cobalt_timer_create, cobalt_timer_create, any),
 	SKINCALL_DEF(sc_cobalt_timer_delete, cobalt_timer_delete, any),
 	SKINCALL_DEF(sc_cobalt_timer_settime, cobalt_timer_settime, primary),

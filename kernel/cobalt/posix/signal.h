@@ -44,6 +44,7 @@ void cobalt_copy_siginfo(int code,
 		dst->si_overrun = src->si_overrun;
 		dst->si_value = src->si_value;
 		break;
+	case SI_QUEUE:
 	case SI_MESGQ:
 		dst->si_value = src->si_value;
 		/* falldown wanted. */
@@ -82,6 +83,9 @@ int __cobalt_kill(struct cobalt_thread *thread,
 		  int sig, int group);
 
 int cobalt_kill(pid_t pid, int sig);
+
+int cobalt_sigqueue(pid_t pid, int sig,
+		    const union sigval __user *u_value);
 
 int cobalt_signal_pkg_init(void);
 

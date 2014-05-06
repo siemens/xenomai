@@ -284,6 +284,7 @@ done:
 		break;
 	case SI_USER:
 	case SI_MESGQ:
+	case SI_QUEUE:
 		overrun = 0;
 		break;
 	default:
@@ -315,6 +316,7 @@ done:
 		ret |= __xn_put_user(sip->si_ptr, &u_si->si_ptr);
 		ret |= __xn_put_user(overrun, &u_si->si_overrun);
 		break;
+	case SI_QUEUE:
 	case SI_MESGQ:
 		ret |= __xn_put_user(sip->si_ptr, &u_si->si_ptr);
 		/* falldown wanted. */
@@ -485,6 +487,53 @@ int cobalt_kill(pid_t pid, int sig)
 	else
 		ret = __cobalt_kill(thread, sig, 1);
 
+	xnlock_put_irqrestore(&nklock, s);
+
+	return ret;
+}
+
+int cobalt_sigqueue(pid_t pid, int sig,
+		    const union sigval __user *u_value)
+{
+	struct cobalt_sigpending *sigp;
+	struct cobalt_thread *thread;
+	union sigval val;
+	int ret = 0;
+	spl_t s;
+
+	if (__xn_safe_copy_from_user(&val, u_value, sizeof(val)))
+		return -EFAULT;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	thread = cobalt_thread_find(pid);
+	if (thread == NULL) {
+		ret = -ESRCH;
+		goto out;
+	}
+
+	switch(sig) {
+	case 0:
+		/* Check for existence only. */
+		break;
+	case 1 ... _NSIG:
+		sigp = cobalt_signal_alloc();
+		if (sigp) {
+			sigp->si.si_signo = sig;
+			sigp->si.si_errno = 0;
+			sigp->si.si_code = SI_QUEUE;
+			sigp->si.si_pid = current->pid;
+			sigp->si.si_uid = get_current_uuid();
+			sigp->si.si_value = val;
+			cobalt_signal_send(thread, sigp, 1);
+			xnsched_run();
+		}
+		break;
+	default:
+		/* Cobalt pseudo-signals are never process-directed. */
+		ret = __cobalt_kill(thread, sig, 0);
+	}
+out:
 	xnlock_put_irqrestore(&nklock, s);
 
 	return ret;

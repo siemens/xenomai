@@ -80,7 +80,7 @@
 #define sc_cobalt_kill			57
 #define sc_cobalt_sem_inquire           58
 #define sc_cobalt_event_inquire         59
-/* 60 unimplemented */
+#define sc_cobalt_sigqueue		60
 #define sc_cobalt_mutexattr_init        61
 #define sc_cobalt_mutexattr_destroy     62
 #define sc_cobalt_mutexattr_gettype     63
