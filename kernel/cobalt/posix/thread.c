@@ -1083,7 +1083,6 @@ int cobalt_thread_set_name_np(unsigned long pth, const char __user *u_name)
 
 int cobalt_thread_probe_np(pid_t pid)
 {
-	struct cobalt_thread *thread;
 	int ret = 0;
 	spl_t s;
 
