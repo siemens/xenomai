@@ -501,16 +501,20 @@ condition variable).
 - Support for Xenomai real-time signals is available.
 
 [normal]
-Cobalt replacements for +sigwait()+, +sigwaitinfo()+, +sigtimedwait()+
-and +kill()+ are available. +pthread_kill()+ was changed to send
-thread-directed Xenomai signals (instead of regular Linux signals).
+Cobalt replacements for +sigwait()+, +sigwaitinfo()+,
++sigtimedwait()+, +sigqueue()+ and +kill()+ are
+available. +pthread_kill()+ was changed to send thread-directed
+Xenomai signals (instead of regular Linux signals).
 
 [normal]
 Cobalt-based signals are stricly real-time. Both the sender and
 receiver sides work exclusively from the primary domain. However, only
 synchronous handling is available, with a thread waiting explicitly
 for a set of signals, using one of the +sigwait+ calls. There is no
-support for asynchronous delivery of signals to handlers.
+support for asynchronous delivery of signals to handlers. For this
+reason, there is no provision in the Cobalt API for masking signals,
+as Cobalt signals are implicitly blocked for a thread until the latter
+invokes one of the +sigwait+ calls.
 
 [normal]
 Signals from SIGRTMIN..SIGRTMAX are queued.

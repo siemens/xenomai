@@ -47,6 +47,9 @@ COBALT_DECL(int, sigtimedwait(const sigset_t *set, siginfo_t *si,
 
 COBALT_DECL(int, kill(pid_t pid, int sig));
 
+COBALT_DECL(int, sigqueue(pid_t pid, int sig,
+			  const union sigval value));
+
 #ifdef __cplusplus
 }
 #endif

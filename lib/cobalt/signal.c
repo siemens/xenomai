@@ -94,3 +94,17 @@ COBALT_IMPL(int, kill, (pid_t pid, int sig))
 
 	return 0;
 }
+
+COBALT_IMPL(int, sigqueue, (pid_t pid, int sig, const union sigval value))
+{
+	int ret;
+
+	ret = XENOMAI_SKINCALL3(__cobalt_muxid,
+				sc_cobalt_sigqueue, pid, sig, &value);
+	if (ret) {
+		errno = -ret;
+		return -1;
+	}
+
+	return 0;
+}

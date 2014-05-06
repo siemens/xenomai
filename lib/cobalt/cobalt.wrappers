@@ -111,5 +111,6 @@
 --wrap sigwaitinfo
 --wrap sigtimedwait
 --wrap sigpending
+--wrap sigqueue
 --wrap kill
 --wrap sleep
