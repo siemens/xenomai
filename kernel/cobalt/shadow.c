@@ -2324,6 +2324,11 @@ static int handle_sigwake_event(struct task_struct *p)
 
 	xnlock_get_irqsave(&nklock, s);
 
+	/*
+	 * CAUTION: __TASK_TRACED is not set in p->state yet. This
+	 * state bit will be set right after we return, when the task
+	 * is woken up.
+	 */
 	if ((p->ptrace & PT_PTRACED) && !xnthread_test_state(thread, XNDEBUG)) {
 		/* We already own the siglock. */
 		sigorsets(&pending,
