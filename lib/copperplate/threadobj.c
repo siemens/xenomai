@@ -142,27 +142,29 @@ static inline void threadobj_cancel_corespec(struct threadobj *thobj) /* thobj->
 	 * than the caller of threadobj_cancel()), but will receive
 	 * the following cancellation request asap.
 	 */
-	__RT(pthread_kill(thobj->tid, SIGDEMT));
+	__RT(kill(thobj->pid, SIGDEMT));
 }
 
 int threadobj_suspend(struct threadobj *thobj) /* thobj->lock held */
 {
-	pthread_t tid = thobj->tid;
+	pid_t pid = thobj->pid;
 	int ret;
 
 	__threadobj_check_locked(thobj);
 
 	thobj->status |= __THREAD_S_SUSPENDED;
-	threadobj_unlock(thobj);
-	ret = __RT(pthread_kill(tid, SIGSUSP));
-	threadobj_lock(thobj);
+	if (thobj == threadobj_current()) {
+		threadobj_unlock(thobj);
+		ret = __RT(kill(pid, SIGSUSP));
+		threadobj_lock(thobj);
+	} else
+		ret = __RT(kill(pid, SIGSUSP));
 
 	return __bt(-ret);
 }
 
 int threadobj_resume(struct threadobj *thobj) /* thobj->lock held */
 {
-	pthread_t tid = thobj->tid;
 	int ret;
 
 	__threadobj_check_locked(thobj);
@@ -171,9 +173,7 @@ int threadobj_resume(struct threadobj *thobj) /* thobj->lock held */
 		return 0;
 
 	thobj->status &= ~__THREAD_S_SUSPENDED;
-	threadobj_unlock(thobj);
-	ret = __RT(pthread_kill(tid, SIGRESM));
-	threadobj_lock(thobj);
+	ret = __RT(kill(thobj->pid, SIGRESM));
 
 	return __bt(-ret);
 }
@@ -1255,6 +1255,10 @@ int threadobj_unblock(struct threadobj *thobj) /* thobj->lock held */
 	}
 
 	/* Remove standalone DELAY condition. */
+
+	if (!threadobj_local_p(thobj))
+		return __bt(-copperplate_kill_tid(thobj->pid, SIGRELS));
+
 	return __bt(-__RT(pthread_kill(thobj->tid, SIGRELS)));
 }
 

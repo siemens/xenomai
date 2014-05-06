@@ -17,6 +17,7 @@
  */
 
 #include <sys/types.h>
+#include <sys/syscall.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -25,7 +26,6 @@
 #include <signal.h>
 #include <errno.h>
 #include <limits.h>
-#include <linux/unistd.h>
 #include <boilerplate/ancillaries.h>
 #include <copperplate/clockobj.h>
 #include <copperplate/threadobj.h>
@@ -41,7 +41,7 @@ static void *thread_trampoline(void *arg);
 pid_t copperplate_get_tid(void)
 {
 	/*
-	 * XXX: The nucleus maintains a hash table indexed on
+	 * The nucleus maintains a hash table indexed on
 	 * task_pid_vnr() values for mapped shadows. This is what
 	 * __NR_gettid retrieves as well in Cobalt mode.
 	 */
@@ -120,11 +120,21 @@ static inline int finish_wait_corespec(struct corethread_attributes *cta)
 	return __bt(copperplate_renice_thread(pthread_self(), cta->prio));
 }
 
+int copperplate_kill_tid(pid_t tid, int sig)
+{
+	return __RT(kill(tid, sig)) ? -errno : 0;
+}
+
 #else /* CONFIG_XENO_MERCURY */
 
 int copperplate_probe_node(unsigned int id)
 {
 	return kill((pid_t)id, 0) == 0;
+}
+
+int copperplate_kill_tid(pid_t tid, int sig)
+{
+	return syscall(__NR_tkill, tid, sig) ? -errno : 0;
 }
 
 int copperplate_create_thread(struct corethread_attributes *cta,
