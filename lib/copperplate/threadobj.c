@@ -334,7 +334,9 @@ static int set_rr(struct threadobj *thobj, const struct timespec *quantum)
 int threadobj_set_periodic(struct threadobj *thobj,
 			   const struct timespec *__restrict__ idate,
 			   const struct timespec *__restrict__ period)
-{
+{				/* thobj->lock held */
+	__threadobj_check_locked(thobj);
+
 	return -pthread_make_periodic_np(thobj->tid,
 					 CLOCK_COPPERPLATE, idate, period);
 }
@@ -734,8 +736,10 @@ static int set_rr(struct threadobj *thobj, const struct timespec *quantum)
 int threadobj_set_periodic(struct threadobj *thobj,
 			   const struct timespec *__restrict__ idate,
 			   const struct timespec *__restrict__ period)
-{
+{				/* thobj->lock held */
 	struct timespec now, wakeup;
+
+	__threadobj_check_locked(thobj);
 
 	clock_gettime(CLOCK_COPPERPLATE, &now);
 
