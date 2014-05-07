@@ -748,7 +748,8 @@ Instead, the application decides about the server priority instead of
 the real-time core applying implicit dynamic boosts.
 
 - +rt_task_slice()+ now returns -EINVAL if the caller currently holds
-  the scheduler lock.
+  the scheduler lock, or attempts to change the round-robin settings
+  of a thread which does not belong to the current process.
 
 - T_CPU disappears from the +rt_task_create()+ mode flags. The new
   +rt_task_set_affinity()+ service is available for setting the CPU

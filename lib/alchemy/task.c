@@ -1309,7 +1309,8 @@ out:
  * round-robin scheduling for an Alchemy task.
  *
  * @param task The descriptor address of the task to update. If @a
- * task is NULL, the time credit of the current task is changed.
+ * task is NULL, the time credit of the current task is changed. @a
+ * task must belong to the current process.
  *
  * @param quantum The round-robin quantum for the task expressed in
  * clock ticks (see note).
