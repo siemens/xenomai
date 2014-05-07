@@ -52,19 +52,6 @@ pid_t copperplate_get_tid(void)
 
 #include "cobalt/internal.h"
 
-int copperplate_probe_node(unsigned int id)
-{
-	/*
-	 * XXX: this call does NOT migrate to secondary mode therefore
-	 * may be used in time-critical contexts. However, since the
-	 * nucleus has to know about a probed thread to find out
-	 * whether it exists, copperplate_init() must always be
-	 * invoked from a real-time shadow, so that __node_id can be
-	 * matched.
-	 */
-	return pthread_probe_np((pid_t)id) == 0;
-}
-
 int copperplate_create_thread(struct corethread_attributes *cta,
 			      pthread_t *tid)
 {
@@ -126,11 +113,6 @@ int copperplate_kill_tid(pid_t tid, int sig)
 }
 
 #else /* CONFIG_XENO_MERCURY */
-
-int copperplate_probe_node(unsigned int id)
-{
-	return kill((pid_t)id, 0) == 0;
-}
 
 int copperplate_kill_tid(pid_t tid, int sig)
 {

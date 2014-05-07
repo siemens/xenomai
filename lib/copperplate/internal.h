@@ -79,8 +79,6 @@ pid_t copperplate_get_tid(void);
 
 int copperplate_kill_tid(pid_t tid, int sig);
 
-int copperplate_probe_node(unsigned int id);
-
 int copperplate_create_thread(struct corethread_attributes *cta,
 			      pthread_t *tid);
 

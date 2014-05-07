@@ -152,7 +152,13 @@ static int cluster_probe(struct hashobj *hobj)
 	if (cobj->cnode == __node_id)
 		return 1; /* Trivial check: is it ours? */
 
-	return copperplate_probe_node(cobj->cnode);
+	/*
+	 * The node identifier is actually the main thread pid, so if
+	 * we can send the latter a signal, the node is deemed active.
+	 * Over Cobalt, the main thread is always shadowed, therefore
+	 * we may use Cobalt's kill() service to probe for it.
+	 */
+	return __RT(kill(cobj->cnode, 0));
 }
 
 int cluster_addobj(struct cluster *c, const char *name,
