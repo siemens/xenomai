@@ -1316,6 +1316,16 @@ int threadobj_set_rr(struct threadobj *thobj, const struct timespec *quantum)
 	__threadobj_check_locked(thobj);
 
 	/*
+	 * XXX: we enforce locality since both Cobalt and Mercury need
+	 * this for set_rr(). This seems an acceptable limitation
+	 * compared to introducing a significantly more complex
+	 * implementation only for supporting a somewhat weird feature
+	 * (i.e. controlling the round-robin state of remote threads).
+	 */
+	if (!threadobj_local_p(thobj))
+		return -EINVAL;
+
+	/*
 	 * It makes no sense to enable/disable round-robin while
 	 * holding the scheduler lock. Prevent this, which makes our
 	 * logic simpler in the Mercury case with respect to tracking
