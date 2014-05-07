@@ -23,8 +23,7 @@
 
 struct notifier {
 	pid_t owner;
-	int psfd[2];
-	int pwfd[2];
+	int waitfd[2];
 	struct pvholder link;
 };
 

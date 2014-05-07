@@ -36,65 +36,24 @@ static struct sigaction notifier_old_sa;
 
 static void notifier_sighandler(int sig, siginfo_t *siginfo, void *uc)
 {
-	int ret, matched = 0;
 	struct notifier *nf;
 	pid_t tid;
-	char c;
 
 	tid = copperplate_get_tid();
 
 	if (pvlist_empty(&notifier_list))
-		goto hand_over;
+		goto ouch;
 
 	/* We may NOT alter the notifier list, but only scan it. */
 	pvlist_for_each_entry(nf, &notifier_list, link) {
-		if (nf->psfd[0] != siginfo->si_fd)
-			continue;
-
-		matched = 1;
-		/*
-		 * Paranoid: misdirected notifications should never
-		 * happen with F_SETOWN_EX invoked for the
-		 * notification fildes.
-		 */
-		if (nf->owner != tid)
-			continue;
-
-		for (;;) {
-			ret = read(nf->psfd[0], &c, 1); 
-			if (ret > 0)
-				notifier_wait(nf);
-			else if (ret == 0 || errno != EINTR)
-				break;
+		if (nf->owner == tid) {
+			notifier_wait(nf);
+			return;
 		}
-
-		return;
 	}
-
-	/*
-	 * Paranoid: we may have received a valid notification on the
-	 * wrong thread: bail out silently, assuming the recipient
-	 * will find out eventually.
-	 */
-	if (matched)
-		return;
-
-hand_over:
-	if (notifier_old_sa.sa_sigaction) {
-		/*
-		 * This is our best effort to relay any unprocessed
-		 * event to the user-defined handler for SIGNOTIFY we
-		 * might have overriden in notifier_pkg_init(). The
-		 * application code should set this handler prior to
-		 * calling copperplate_init(), so that we know about it. The
-		 * signal setup flags will be ours however
-		 * (i.e. SA_SIGINFO + BSD semantics).
-		 */
-		notifier_old_sa.sa_sigaction(sig, siginfo, uc);
-		return;
-	}
-
-	panic("received spurious notification on thread[%d] [sig=%d, code=%d, fd=%d]",
+ouch:
+	panic("received spurious notification on thread[%d] "
+	      "(sig=%d, code=%d, fd=%d)",
 	      tid, sig, siginfo->si_code, siginfo->si_fd);
 }
 
@@ -116,19 +75,11 @@ static void unlock_notifier_list(sigset_t *oset)
 
 int notifier_init(struct notifier *nf, pid_t pid)
 {
-	struct f_owner_ex owner;
 	sigset_t oset;
-	int fd, ret;
+	int ret;
 
-	if (pipe(nf->psfd) < 0) {
+	if (pipe(nf->waitfd) < 0) {
 		ret = -errno;
-		goto fail;
-	}
-
-	if (pipe(nf->pwfd) < 0) {
-		ret = -errno;
-		close(nf->psfd[0]);
-		close(nf->psfd[1]);
 		goto fail;
 	}
 
@@ -139,23 +90,6 @@ int notifier_init(struct notifier *nf, pid_t pid)
 	pvlist_append(&nf->link, &notifier_list);
 	unlock_notifier_list(&oset);
 	pop_cleanup_lock(&notifier_lock);
-
-	fd = nf->psfd[0];
-	fcntl(fd, F_SETSIG, SIGNOTIFY);
-	owner.type = F_OWNER_TID;
-	owner.pid = nf->owner;
-	fcntl(fd, F_SETOWN_EX, &owner);
-	fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_ASYNC | O_NONBLOCK);
-	fcntl(fd, F_SETFD, fcntl(fd, F_GETFD) | FD_CLOEXEC);
-	/*
-	 * Somewhat paranoid, but makes sure no flow control will ever
-	 * block us when signaling a notifier object.
-	 */
-	fd = nf->psfd[1];
-	fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK);
-	fcntl(fd, F_SETFD, fcntl(fd, F_GETFD) | FD_CLOEXEC);
-	fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK);
-	fcntl(fd, F_SETFD, fcntl(fd, F_GETFD) | FD_CLOEXEC);
 
 	return 0;
 fail:
@@ -173,25 +107,18 @@ void notifier_destroy(struct notifier *nf)
 	pvlist_remove(&nf->link);
 	unlock_notifier_list(&oset);
 	pop_cleanup_lock(&notifier_lock);
-	close(nf->psfd[0]);
-	close(nf->psfd[1]);
-	close(nf->pwfd[0]); /* May fail if disabled. */
-	close(nf->pwfd[1]);
+	close(nf->waitfd[0]); /* May fail if disabled. */
+	close(nf->waitfd[1]);
 }
 
 void notifier_signal(struct notifier *nf)
 {
-	char c = 0;
-	int ret;
-
-	do
-		ret = write(nf->psfd[1], &c, 1);
-	while (ret == -1 && errno == EINTR);
+	copperplate_kill_tid(nf->owner, SIGNOTIFY);
 }
 
 void notifier_disable(struct notifier *nf)
 {
-	close(nf->pwfd[0]);
+	close(nf->waitfd[0]);
 }
 
 void notifier_release(struct notifier *nf)
@@ -200,17 +127,17 @@ void notifier_release(struct notifier *nf)
 	int ret;
 
 	do
-		ret = write(nf->pwfd[1], &c, 1);
+		ret = write(nf->waitfd[1], &c, 1);
 	while (ret == -1 && errno == EINTR);
 }
 
-void notifier_wait(const struct notifier *nf) /* sighandler context */
+void notifier_wait(const struct notifier *nf)
 {
 	int ret;
 	char c;
 
 	do
-		ret = read(nf->pwfd[0], &c, 1);
+		ret = read(nf->waitfd[0], &c, 1);
 	while (ret == -1 && errno == EINTR);
 }
 
