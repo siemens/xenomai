@@ -63,6 +63,8 @@ int cobalt_signal_send_pid(pid_t pid,
 
 struct cobalt_sigpending *cobalt_signal_alloc(void);
 
+void cobalt_signal_free(struct cobalt_sigpending *sigp);
+
 void cobalt_signal_flush(struct cobalt_thread *thread);
 
 int cobalt_signal_wait(sigset_t *set, struct siginfo *si,

@@ -89,9 +89,7 @@ deliver:
 	 * have to release the sigpending data right away before
 	 * leaving.
 	 */
-	if ((void *)sigp >= sigpending_mem &&
-	    (void *)sigp < sigpending_mem + __SIGPOOL_SIZE)
-		list_add_tail(&sigp->next, &sigpending_pool);
+	cobalt_signal_free(sigp);
 
 	return 1;
 }
@@ -106,17 +104,16 @@ int cobalt_signal_send(struct cobalt_thread *thread,
 	/* Can we deliver this signal immediately? */
 	ret = cobalt_signal_deliver(thread, sigp, group);
 	if (ret)
-		return 0;	/* Yep, done. */
+		return ret;	/* Yep, done. */
 
 	/*
 	 * Nope, attempt to queue it. We start by calling any Cobalt
 	 * extension for queuing the signal first.
 	 */
 	if (cobalt_call_extension(signal_queue, &thread->extref, ret, sigp)) {
-		if (ret < 0)
-			return ret; /* Error. */
-		if (ret > 0)
-			return 0; /* Queuing done. */
+		if (ret)
+			/* Queuing done remotely or error. */
+			return ret;
 	}
 
 	sig = sigp->si.si_signo;
@@ -133,7 +130,7 @@ int cobalt_signal_send(struct cobalt_thread *thread,
 	sigaddset(&thread->sigpending, sig);
 	list_add_tail(&sigp->next, sigq);
 
-	return 0;
+	return 1;
 }
 EXPORT_SYMBOL_GPL(cobalt_signal_send);
 
@@ -165,6 +162,14 @@ struct cobalt_sigpending *cobalt_signal_alloc(void)
 	return sigp;
 }
 EXPORT_SYMBOL_GPL(cobalt_signal_alloc);
+
+void cobalt_signal_free(struct cobalt_sigpending *sigp)
+{				/* nklocked, IRQs off */
+	if ((void *)sigp >= sigpending_mem &&
+	    (void *)sigp < sigpending_mem + __SIGPOOL_SIZE)
+		list_add_tail(&sigp->next, &sigpending_pool);
+}
+EXPORT_SYMBOL_GPL(cobalt_signal_free);
 
 void cobalt_signal_flush(struct cobalt_thread *thread)
 {
@@ -461,7 +466,8 @@ int __cobalt_kill(struct cobalt_thread *thread, int sig, int group) /* nklocked,
 			sigp->si.si_code = SI_USER;
 			sigp->si.si_pid = current->pid;
 			sigp->si.si_uid = get_current_uuid();
-			cobalt_signal_send(thread, sigp, group);
+			if (cobalt_signal_send(thread, sigp, group) <= 0)
+				cobalt_signal_free(sigp);
 		}
 	resched:
 		xnsched_run();
@@ -525,8 +531,10 @@ int cobalt_sigqueue(pid_t pid, int sig,
 			sigp->si.si_pid = current->pid;
 			sigp->si.si_uid = get_current_uuid();
 			sigp->si.si_value = val;
-			cobalt_signal_send(thread, sigp, 1);
-			xnsched_run();
+			if (cobalt_signal_send(thread, sigp, 1) <= 0)
+				cobalt_signal_free(sigp);
+			else
+				xnsched_run();
 		}
 		break;
 	default:
