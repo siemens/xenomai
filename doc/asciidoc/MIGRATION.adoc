@@ -676,6 +676,9 @@ Cobalt. However, it does not return -EWOULDBLOCK anymore.
 [TIP]
 A tickless clock has a period of one nanosecond.
 
+- Unlike with Xenomai 2.x, the target task to +rt_task_set_periodic()+
+  must be local to the current process.
+
 .Mutexes
 
 - For consistency with the standard glibc implementation, deleting a

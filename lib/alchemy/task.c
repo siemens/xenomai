@@ -755,13 +755,13 @@ undo:
  * rt_task_wait_period() to sleep until the next periodic release
  * point in the processor timeline is reached.
  *
- * @param task The descriptor address of the periodic task.
- * If @a task is NULL, the current task is made periodic.
+ * @param task The descriptor address of the periodic task.  If @a
+ * task is NULL, the current task is made periodic. @a task must
+ * belong the current process.
  *
  * @param idate The initial (absolute) date of the first release
- * point, expressed in clock ticks (see note). @a task will be delayed
- * until this point is reached. If @a idate is equal to TM_NOW, the
- * current system date is used.
+ * point, expressed in clock ticks (see note).  If @a idate is equal
+ * to TM_NOW, the current system date is used.
  *
  * @param period The period of the task, expressed in clock ticks (see
  * note). Passing TM_INFINITE stops the task's periodic timer if
@@ -799,20 +799,27 @@ int rt_task_set_periodic(RT_TASK *task, RTIME idate, RTIME period)
 
 	CANCEL_DEFER(svc);
 
-	tcb = find_alchemy_task_or_self(task, &ret);
+	clockobj_ticks_to_timespec(&alchemy_clock, idate, &its);
+	clockobj_ticks_to_timespec(&alchemy_clock, period, &pts);
+
+	tcb = get_alchemy_task_or_self(task, &ret);
 	if (tcb == NULL)
 		goto out;
 
-	clockobj_ticks_to_timespec(&alchemy_clock, idate, &its);
-	clockobj_ticks_to_timespec(&alchemy_clock, period, &pts);
 	/*
-	 * We may be scheduled out as a result of this call, so we
-	 * can't grab the target thread lock. However, since
-	 * threadobj_set_periodic() has to be called lock-free, we
-	 * expect it to be robust and properly deal with cancellation
-	 * points (CANCEL_DEFER() put us in deferred mode).
+	 * XXX: we enforce locality since Cobalt wants this for
+	 * pthread_make_periodic_np(), although Mercury would accept
+	 * remote threads. This seems an acceptable limitation
+	 * compared to introducing a new Cobalt API for supporting a
+	 * somewhat weird feature.
 	 */
+	if (!threadobj_local_p(&tcb->thobj)) {
+		ret = -EINVAL;
+		goto out;
+	}
+
 	ret = threadobj_set_periodic(&tcb->thobj, &its, &pts);
+	put_alchemy_task(tcb);
 out:
 	CANCEL_RESTORE(svc);
 
