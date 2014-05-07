@@ -23,7 +23,6 @@
 
 struct notifier {
 	pid_t owner;
-	int waitfd[2];
 	struct pvholder link;
 };
 
@@ -33,11 +32,15 @@ extern "C" {
 
 int notifier_init(struct notifier *nf, pid_t pid);
 
+static inline void notifier_destroy(struct notifier *nf)
+{
+}
+
 void notifier_destroy(struct notifier *nf);
 
 void notifier_signal(struct notifier *nf);
 
-void notifier_wait(const struct notifier *nf);
+void notifier_wait(void);
 
 void notifier_disable(struct notifier *nf);
 

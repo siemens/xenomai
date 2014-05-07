@@ -117,7 +117,11 @@ static inline void threadobj_run_corespec(struct threadobj *thobj)
 	cobalt_thread_harden();
 }
 
-static inline void threadobj_cancel_corespec(struct threadobj *thobj) /* thobj->lock held */
+static inline void threadobj_cancel_1_corespec(struct threadobj *thobj) /* thobj->lock held */
+{
+}
+
+static inline void threadobj_cancel_2_corespec(struct threadobj *thobj) /* thobj->lock held */
 {
 	/*
 	 * Send a SIGDEMT signal to demote the target thread, to make
@@ -486,15 +490,20 @@ static inline void threadobj_run_corespec(struct threadobj *thobj)
 {
 }
 
-static inline void threadobj_cancel_corespec(struct threadobj *thobj) /* thobj->lock held */
+static inline void threadobj_cancel_1_corespec(struct threadobj *thobj) /* thobj->lock held */
 {
-	struct notifier *nf = &thobj->core.notifier;
-
 	/*
-	 * Any ongoing or future notify_wait() will return immediately
-	 * on error with EBADF.
+	 * If the target thread we are about to cancel gets suspended
+	 * while it is currently warming up, we have to unblock it
+	 * from notifier_wait(), so that we don't get stuck in
+	 * cancel_sync(), waiting for a warmed up state which will
+	 * never come.
 	 */
-	notifier_disable(nf);
+	notifier_disable(&thobj->core.notifier);
+}
+
+static inline void threadobj_cancel_2_corespec(struct threadobj *thobj) /* thobj->lock held */
+{
 }
 
 int threadobj_suspend(struct threadobj *thobj) /* thobj->lock held */
@@ -506,7 +515,7 @@ int threadobj_suspend(struct threadobj *thobj) /* thobj->lock held */
 	if (thobj == threadobj_current()) {
 		thobj->status |= __THREAD_S_SUSPENDED;
 		threadobj_unlock(thobj);
-		notifier_wait(nf);
+		notifier_wait();
 		threadobj_lock(thobj);
 	} else if ((thobj->status & __THREAD_S_SUSPENDED) == 0) {
 		thobj->status |= __THREAD_S_SUSPENDED;
@@ -1118,6 +1127,7 @@ static void cancel_sync(struct threadobj *thobj) /* thobj->lock held */
 		__STD(sem_init(sem, sem_scope_attribute, 0));
 
 	thobj->cancel_sem = sem;
+	threadobj_cancel_1_corespec(thobj);
 
 	/*
 	 * If the thread to delete is warming up, wait until it
@@ -1143,7 +1153,7 @@ static void cancel_sync(struct threadobj *thobj) /* thobj->lock held */
 		__RT(pthread_cond_signal(&thobj->barrier));
 	}
 
-	threadobj_cancel_corespec(thobj);
+	threadobj_cancel_2_corespec(thobj);
 
 	threadobj_unlock(thobj);
 

@@ -24,15 +24,16 @@
 #define sigev_notify_thread_id	 _sigev_un._tid
 #endif
 
-#define SIGNOTIFY	(SIGRTMIN + 8) /* Internal notification */
-#define SIGRELS		(SIGRTMIN + 9) /* Syscall abort */
-#define SIGRRB		(SIGRTMIN + 10) /* Round-robin event */
+#define SIGSUSP		(SIGRTMIN + 8)
+#define SIGRESM		(SIGRTMIN + 9)
+#define SIGRELS		(SIGRTMIN + 10) /* Syscall abort */
+#define SIGRRB		(SIGRTMIN + 11) /* Round-robin event */
 
 #define SIGSAFE_LOCK_ENTRY(__safelock)					\
   	do {								\
 		sigset_t __safeset, __oldsafeset;			\
 		sigemptyset(&__safeset);				\
-		sigaddset(&__safeset, SIGNOTIFY);			\
+		sigaddset(&__safeset, SIGSUSP);				\
 		pthread_sigmask(SIG_BLOCK, &__safeset, &__oldsafeset);	\
 		push_cleanup_lock(__safelock);				\
 		write_lock(__safelock);

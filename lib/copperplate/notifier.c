@@ -18,140 +18,69 @@
 
 #include <signal.h>
 #include <memory.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <assert.h>
 #include <errno.h>
 #include "copperplate/notifier.h"
-#include "boilerplate/lock.h"
 #include "boilerplate/signal.h"
-#include "copperplate/debug.h"
 #include "internal.h"
 
-static DEFINE_PRIVATE_LIST(notifier_list);
-
-static pthread_mutex_t notifier_lock;
-
-static struct sigaction notifier_old_sa;
-
-static void notifier_sighandler(int sig, siginfo_t *siginfo, void *uc)
+static void suspend_sighandler(int sig)
 {
-	struct notifier *nf;
-	pid_t tid;
-
-	tid = copperplate_get_tid();
-
-	if (pvlist_empty(&notifier_list))
-		goto ouch;
-
-	/* We may NOT alter the notifier list, but only scan it. */
-	pvlist_for_each_entry(nf, &notifier_list, link) {
-		if (nf->owner == tid) {
-			notifier_wait(nf);
-			return;
-		}
-	}
-ouch:
-	panic("received spurious notification on thread[%d] "
-	      "(sig=%d, code=%d, fd=%d)",
-	      tid, sig, siginfo->si_code, siginfo->si_fd);
+	notifier_wait();
 }
 
-static void lock_notifier_list(sigset_t *oset)
+static void resume_sighandler(int sig)
 {
-	sigset_t set;
-
-	sigemptyset(&set);
-	sigaddset(&set, SIGNOTIFY);
-	pthread_sigmask(SIG_BLOCK, &set, oset);
-	write_lock(&notifier_lock);
-}
-
-static void unlock_notifier_list(sigset_t *oset)
-{
-	pthread_sigmask(SIG_SETMASK, oset, NULL);
-	write_unlock(&notifier_lock);
+	/* nop */
 }
 
 int notifier_init(struct notifier *nf, pid_t pid)
 {
-	sigset_t oset;
-	int ret;
-
-	if (pipe(nf->waitfd) < 0) {
-		ret = -errno;
-		goto fail;
-	}
+	sigset_t set;
 
 	nf->owner = pid;
-
-	push_cleanup_lock(&notifier_lock);
-	lock_notifier_list(&oset);
-	pvlist_append(&nf->link, &notifier_list);
-	unlock_notifier_list(&oset);
-	pop_cleanup_lock(&notifier_lock);
+	sigemptyset(&set);
+	sigaddset(&set, SIGRESM);
+	pthread_sigmask(SIG_BLOCK, &set, NULL);
 
 	return 0;
-fail:
-	warning("failed to create notifier pipe");
-
-	return __bt(ret);
-}
-
-void notifier_destroy(struct notifier *nf)
-{
-	sigset_t oset;
-
-	push_cleanup_lock(&notifier_lock);
-	lock_notifier_list(&oset);
-	pvlist_remove(&nf->link);
-	unlock_notifier_list(&oset);
-	pop_cleanup_lock(&notifier_lock);
-	close(nf->waitfd[0]); /* May fail if disabled. */
-	close(nf->waitfd[1]);
 }
 
 void notifier_signal(struct notifier *nf)
 {
-	copperplate_kill_tid(nf->owner, SIGNOTIFY);
-}
-
-void notifier_disable(struct notifier *nf)
-{
-	close(nf->waitfd[0]);
+	copperplate_kill_tid(nf->owner, SIGSUSP);
 }
 
 void notifier_release(struct notifier *nf)
 {
-	char c = 1;
-	int ret;
-
-	do
-		ret = write(nf->waitfd[1], &c, 1);
-	while (ret == -1 && errno == EINTR);
+	copperplate_kill_tid(nf->owner, SIGRESM);
 }
 
-void notifier_wait(const struct notifier *nf)
+void notifier_wait(void)
 {
-	int ret;
-	char c;
+	sigset_t set;
 
-	do
-		ret = read(nf->waitfd[0], &c, 1);
-	while (ret == -1 && errno == EINTR);
+	/*
+	 * A suspended thread is supposed to do nothing but wait for
+	 * the wake up signal, so we may happily block all signals but
+	 * SIGRESM. Note that SIGRRB won't be accumulated during the
+	 * sleep time anyhow, as the round-robin timer is based on
+	 * CLOCK_THREAD_CPUTIME_ID, and we'll obviously don't consume
+	 * any CPU time while blocked.
+	 */
+	sigfillset(&set);
+	sigdelset(&set, SIGRESM);
+	sigsuspend(&set);
+}
+
+void notifier_disable(struct notifier *nf)
+{
+	/* Unblock any ongoing wait. */
+	copperplate_kill_tid(nf->owner, SIGRESM);
 }
 
 void notifier_pkg_init(void)
 {
-	pthread_mutexattr_t mattr;
 	struct sigaction sa;
-
-	pthread_mutexattr_init(&mattr);
-	pthread_mutexattr_settype(&mattr, mutex_type_attribute);
-	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
-	pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
-	pthread_mutex_init(&notifier_lock, &mattr);
-	pthread_mutexattr_destroy(&mattr);
 	/*
 	 * We have two basic requirements for the notification
 	 * scheme implementing the suspend/resume mechanism:
@@ -166,7 +95,9 @@ void notifier_pkg_init(void)
 	 * receipt.
 	 */
 	memset(&sa, 0, sizeof(sa));
-	sa.sa_sigaction = &notifier_sighandler;
-	sa.sa_flags = SA_SIGINFO|SA_RESTART;
-	sigaction(SIGNOTIFY, &sa, &notifier_old_sa);
+	sa.sa_flags = SA_RESTART;
+	sa.sa_handler = suspend_sighandler;
+	sigaction(SIGSUSP, &sa, NULL);
+	sa.sa_handler = resume_sighandler;
+	sigaction(SIGRESM, &sa, NULL);
 }
