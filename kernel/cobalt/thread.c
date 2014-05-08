@@ -810,18 +810,16 @@ void xnthread_suspend(struct xnthread *thread, int mask,
 
 	/*
 	 * If attempting to suspend a runnable thread which is pending
-	 * a forced switch to secondary mode, just raise the break
-	 * condition and return immediately.
+	 * a forced switch to secondary mode (XNKICKED), just raise
+	 * the XNBREAK status and return immediately, except if we
+	 * are precisely doing such switch by applying XNRELAX.
 	 *
-	 * We may end up suspending a kicked thread that has been
-	 * preempted on its relaxing path, which is a perfectly valid
-	 * situation: we just ignore the signal notification in
-	 * primary mode, and rely on the wakeup call pending for that
-	 * task in the root context, to collect and act upon the
-	 * pending Linux signal (see handle_sigwake_event()).
+	 * In the latter case, we also make sure to clear XNKICKED,
+	 * since we won't go through prepare_for_signal() once
+	 * relaxed.
 	 */
-	if ((oldstate & XNTHREAD_BLOCK_BITS) == 0) {
-		if ((mask & XNRELAX) == 0) {
+	if (likely((oldstate & XNTHREAD_BLOCK_BITS) == 0)) {
+		if (likely((mask & XNRELAX) == 0)) {
 			if (xnthread_test_info(thread, XNKICKED))
 				goto abort;
 			if (thread == sched->curr &&
@@ -829,7 +827,7 @@ void xnthread_suspend(struct xnthread *thread, int mask,
 				goto abort;
 		}
 		xnthread_clear_info(thread,
-				    XNRMID|XNTIMEO|XNBREAK|XNWAKEN|XNROBBED);
+				    XNRMID|XNTIMEO|XNBREAK|XNWAKEN|XNROBBED|XNKICKED);
 	}
 
 	/*
