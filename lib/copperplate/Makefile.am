@@ -46,7 +46,6 @@ clean-local:
 libcopperplate_la_LIBADD = libversion.la
 
 if XENO_MERCURY
-libcopperplate_la_SOURCES += notifier.c
 libcopperplate_la_LIBADD += ../boilerplate/libboilerplate.la
 endif
 

@@ -79,17 +79,16 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-@XENO_MERCURY_TRUE@am__append_1 = notifier.c
-@XENO_MERCURY_TRUE@am__append_2 = ../boilerplate/libboilerplate.la
+@XENO_MERCURY_TRUE@am__append_1 = ../boilerplate/libboilerplate.la
+@XENO_REGISTRY_TRUE@am__append_2 = libregistry.la
 @XENO_REGISTRY_TRUE@am__append_3 = libregistry.la
-@XENO_REGISTRY_TRUE@am__append_4 = libregistry.la
 
 # The process shareable heap has real-time properties, therefore it
 # fits both the cobalt and mercury cores equally. Yummie.
-@XENO_PSHARED_TRUE@am__append_5 = heapobj-pshared.c reference.c
-@XENO_TLSF_TRUE@am__append_6 = heapobj-tlsf.c
-@XENO_TLSF_FALSE@am__append_7 = heapobj-malloc.c
-@XENO_REGISTRY_TRUE@am__append_8 = regd
+@XENO_PSHARED_TRUE@am__append_4 = heapobj-pshared.c reference.c
+@XENO_TLSF_TRUE@am__append_5 = heapobj-tlsf.c
+@XENO_TLSF_FALSE@am__append_6 = heapobj-malloc.c
+@XENO_REGISTRY_TRUE@am__append_7 = regd
 subdir = lib/copperplate
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/config/depcomp COPYING
@@ -137,18 +136,17 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES) $(noinst_LTLIBRARIES)
-libcopperplate_la_DEPENDENCIES = libversion.la $(am__append_2) \
-	$(am__append_3)
+libcopperplate_la_DEPENDENCIES = libversion.la $(am__append_1) \
+	$(am__append_2)
 am__libcopperplate_la_SOURCES_DIST = clockobj.c cluster.c eventobj.c \
 	init.c internal.c internal.h main.c syncobj.c semobj.c \
-	threadobj.c timerobj.c traceobj.c wrappers.c notifier.c \
-	heapobj-pshared.c reference.c heapobj-tlsf.c heapobj-malloc.c
-@XENO_MERCURY_TRUE@am__objects_1 = libcopperplate_la-notifier.lo
-@XENO_PSHARED_TRUE@am__objects_2 =  \
+	threadobj.c timerobj.c traceobj.c wrappers.c heapobj-pshared.c \
+	reference.c heapobj-tlsf.c heapobj-malloc.c
+@XENO_PSHARED_TRUE@am__objects_1 =  \
 @XENO_PSHARED_TRUE@	libcopperplate_la-heapobj-pshared.lo \
 @XENO_PSHARED_TRUE@	libcopperplate_la-reference.lo
-@XENO_TLSF_TRUE@am__objects_3 = libcopperplate_la-heapobj-tlsf.lo
-@XENO_TLSF_FALSE@am__objects_4 = libcopperplate_la-heapobj-malloc.lo
+@XENO_TLSF_TRUE@am__objects_2 = libcopperplate_la-heapobj-tlsf.lo
+@XENO_TLSF_FALSE@am__objects_3 = libcopperplate_la-heapobj-malloc.lo
 am_libcopperplate_la_OBJECTS = libcopperplate_la-clockobj.lo \
 	libcopperplate_la-cluster.lo libcopperplate_la-eventobj.lo \
 	libcopperplate_la-init.lo libcopperplate_la-internal.lo \
@@ -156,7 +154,7 @@ am_libcopperplate_la_OBJECTS = libcopperplate_la-clockobj.lo \
 	libcopperplate_la-semobj.lo libcopperplate_la-threadobj.lo \
 	libcopperplate_la-timerobj.lo libcopperplate_la-traceobj.lo \
 	libcopperplate_la-wrappers.lo $(am__objects_1) \
-	$(am__objects_2) $(am__objects_3) $(am__objects_4)
+	$(am__objects_2) $(am__objects_3)
 libcopperplate_la_OBJECTS = $(am_libcopperplate_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -458,25 +456,25 @@ lib_LTLIBRARIES = libcopperplate.la
 libcopperplate_la_LDFLAGS = @XENO_LIB_LDFLAGS@ -version-info 0:0:0
 libcopperplate_la_SOURCES = clockobj.c cluster.c eventobj.c init.c \
 	internal.c internal.h main.c syncobj.c semobj.c threadobj.c \
-	timerobj.c traceobj.c wrappers.c $(am__append_1) \
-	$(am__append_5) $(am__append_6) $(am__append_7)
+	timerobj.c traceobj.c wrappers.c $(am__append_4) \
+	$(am__append_5) $(am__append_6)
 libcopperplate_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@		\
 	-I$(top_srcdir)			\
 	-I$(top_srcdir)/include		\
 	-I$(top_srcdir)/lib
 
-noinst_LTLIBRARIES = libversion.la $(am__append_4)
+noinst_LTLIBRARIES = libversion.la $(am__append_3)
 libversion_la_CFLAGS = @XENO_USER_CFLAGS@
 libversion_la_SOURCES = version.c
-libcopperplate_la_LIBADD = libversion.la $(am__append_2) \
-	$(am__append_3)
+libcopperplate_la_LIBADD = libversion.la $(am__append_1) \
+	$(am__append_2)
 @XENO_REGISTRY_TRUE@libregistry_la_SOURCES = registry.c
 @XENO_REGISTRY_TRUE@libregistry_la_CPPFLAGS = \
 @XENO_REGISTRY_TRUE@	$(libcopperplate_la_CPPFLAGS)	\
 @XENO_REGISTRY_TRUE@	@XENO_FUSE_CFLAGS@
 
-SUBDIRS = . $(am__append_8)
+SUBDIRS = . $(am__append_7)
 SPARSE = sparse
 all: all-recursive
 
@@ -583,7 +581,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-init.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-internal.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-main.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-notifier.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-reference.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-semobj.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-syncobj.Plo@am__quote@
@@ -698,13 +695,6 @@ libcopperplate_la-wrappers.lo: wrappers.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wrappers.c' object='libcopperplate_la-wrappers.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcopperplate_la-wrappers.lo `test -f 'wrappers.c' || echo '$(srcdir)/'`wrappers.c
-
-libcopperplate_la-notifier.lo: notifier.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcopperplate_la-notifier.lo -MD -MP -MF $(DEPDIR)/libcopperplate_la-notifier.Tpo -c -o libcopperplate_la-notifier.lo `test -f 'notifier.c' || echo '$(srcdir)/'`notifier.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libcopperplate_la-notifier.Tpo $(DEPDIR)/libcopperplate_la-notifier.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='notifier.c' object='libcopperplate_la-notifier.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcopperplate_la-notifier.lo `test -f 'notifier.c' || echo '$(srcdir)/'`notifier.c
 
 libcopperplate_la-heapobj-pshared.lo: heapobj-pshared.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcopperplate_la-heapobj-pshared.lo -MD -MP -MF $(DEPDIR)/libcopperplate_la-heapobj-pshared.Tpo -c -o libcopperplate_la-heapobj-pshared.lo `test -f 'heapobj-pshared.c' || echo '$(srcdir)/'`heapobj-pshared.c

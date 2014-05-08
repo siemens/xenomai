@@ -8,7 +8,6 @@ includesub_HEADERS =		\
 	heapobj.h		\
 	init.h			\
 	semobj.h		\
-	notifier.h		\
 	reference.h		\
 	registry.h		\
 	syncobj.h		\

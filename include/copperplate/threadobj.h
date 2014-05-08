@@ -77,14 +77,12 @@ void threadobj_save_timeout(struct threadobj_corespec *corespec,
 #else  /* CONFIG_XENO_MERCURY */
 
 #include <sys/time.h>
-#include <copperplate/notifier.h>
 
 struct threadobj_corespec {
 	pthread_cond_t grant_sync;
 	int policy_unlocked;
 	int prio_unlocked;
 	timer_t rr_timer;
-	struct notifier notifier;
 	struct timespec wakeup;
 	ticks_t period;
 	/** Timeout reported by sysregd. */

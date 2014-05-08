@@ -377,7 +377,6 @@ int threadobj_stat(struct threadobj *thobj, struct threadobj_stat *p) /* thobj->
 #else /* CONFIG_XENO_MERCURY */
 
 #include <sys/prctl.h>
-#include "copperplate/notifier.h"
 
 static int threadobj_lock_prio;
 
@@ -404,6 +403,33 @@ static void roundrobin_handler(int sig)
 	sched_yield();
 }
 
+static void sleep_suspended(void)
+{
+	sigset_t set;
+
+	/*
+	 * A suspended thread is supposed to do nothing but wait for
+	 * the wake up signal, so we may happily block all signals but
+	 * SIGRESM. Note that SIGRRB won't be accumulated during the
+	 * sleep time anyhow, as the round-robin timer is based on
+	 * CLOCK_THREAD_CPUTIME_ID, and we'll obviously don't consume
+	 * any CPU time while blocked.
+	 */
+	sigfillset(&set);
+	sigdelset(&set, SIGRESM);
+	sigsuspend(&set);
+}
+
+static void suspend_sighandler(int sig)
+{
+	sleep_suspended();
+}
+
+static void resume_sighandler(int sig)
+{
+	/* nop */
+}
+
 static inline void pkg_init_corespec(void)
 {
 	struct sigaction sa;
@@ -422,8 +448,10 @@ static inline void pkg_init_corespec(void)
 	sigaction(SIGRELS, &sa, NULL);
 	sa.sa_handler = roundrobin_handler;
 	sigaction(SIGRRB, &sa, NULL);
-
-	notifier_pkg_init();
+	sa.sa_handler = suspend_sighandler;
+	sigaction(SIGSUSP, &sa, NULL);
+	sa.sa_handler = resume_sighandler;
+	sigaction(SIGRESM, &sa, NULL);
 }
 
 static inline void threadobj_init_corespec(struct threadobj *thobj)
@@ -449,12 +477,27 @@ static inline void threadobj_uninit_corespec(struct threadobj *thobj)
 static inline int threadobj_setup_corespec(struct threadobj *thobj)
 {
 	struct sigevent sev;
+	sigset_t set;
 	int ret;
 
 	prctl(PR_SET_NAME, (unsigned long)thobj->name, 0, 0, 0);
-	ret = notifier_init(&thobj->core.notifier, threadobj_get_pid(thobj));
-	if (ret)
-		return __bt(ret);
+
+	/*
+	 * Do the per-thread setup for supporting the suspend/resume
+	 * actions over Mercury. We have two basic requirements for
+	 * this mechanism:
+	 *
+	 * - suspended requests must be handled asap, regardless of
+	 * what the target thread is doing when notified (syscall
+	 * wait, pure runtime etc.), hence the use of signals.
+	 *
+	 * - we must process the suspension signal on behalf of the
+	 * target thread, as we want that thread to block upon
+	 * receipt.
+	 */
+	sigemptyset(&set);
+	sigaddset(&set, SIGRESM);
+	pthread_sigmask(SIG_BLOCK, &set, NULL);
 
 	thobj->core.period = 0;
 
@@ -467,18 +510,14 @@ static inline int threadobj_setup_corespec(struct threadobj *thobj)
 	sev.sigev_notify_thread_id = threadobj_get_pid(thobj);
 	ret = timer_create(CLOCK_THREAD_CPUTIME_ID, &sev,
 			   &thobj->core.rr_timer);
-	if (ret) {
-		ret = __bt(-errno);
-		notifier_destroy(&thobj->core.notifier);
-	}
+	if (ret)
+		return __bt(-errno);
 
 	return 0;
 }
 
 static inline void threadobj_cleanup_corespec(struct threadobj *thobj)
 {
-	notifier_destroy(&thobj->core.notifier);
-
 	if (thobj->core.rr_timer)
 		timer_delete(thobj->core.rr_timer);
 }
@@ -492,11 +531,15 @@ static inline void threadobj_cancel_1_corespec(struct threadobj *thobj) /* thobj
 	/*
 	 * If the target thread we are about to cancel gets suspended
 	 * while it is currently warming up, we have to unblock it
-	 * from notifier_wait(), so that we don't get stuck in
+	 * from sleep_suspended(), so that we don't get stuck in
 	 * cancel_sync(), waiting for a warmed up state which will
 	 * never come.
+	 *
+	 * Just send it SIGRESM unconditionally, this will either
+	 * unblock it if the thread waits in sleep_suspended(), or
+	 * lead to a nop since that signal is blocked otherwise.
 	 */
-	notifier_disable(&thobj->core.notifier);
+	copperplate_kill_tid(thobj->pid, SIGRESM);
 }
 
 static inline void threadobj_cancel_2_corespec(struct threadobj *thobj) /* thobj->lock held */
@@ -505,18 +548,22 @@ static inline void threadobj_cancel_2_corespec(struct threadobj *thobj) /* thobj
 
 int threadobj_suspend(struct threadobj *thobj) /* thobj->lock held */
 {
-	struct notifier *nf = &thobj->core.notifier;
-
 	__threadobj_check_locked(thobj);
 
 	if (thobj == threadobj_current()) {
 		thobj->status |= __THREAD_S_SUSPENDED;
 		threadobj_unlock(thobj);
-		notifier_wait();
+		sleep_suspended();
 		threadobj_lock(thobj);
 	} else if ((thobj->status & __THREAD_S_SUSPENDED) == 0) {
+		/*
+		 * We prevent suspension requests from cumulating, so
+		 * that we always have a flat, consistent sequence of
+		 * alternate suspend/resume events. It's up to the
+		 * client code to handle nested requests if need be.
+		 */
 		thobj->status |= __THREAD_S_SUSPENDED;
-		notifier_signal(nf);
+		copperplate_kill_tid(thobj->pid, SIGSUSP);
 	}
 
 	return 0;
@@ -529,7 +576,11 @@ int threadobj_resume(struct threadobj *thobj) /* thobj->lock held */
 	if (thobj != threadobj_current() &&
 	    (thobj->status & __THREAD_S_SUSPENDED) != 0) {
 		thobj->status &= ~__THREAD_S_SUSPENDED;
-		notifier_release(&thobj->core.notifier);
+		/*
+		 * We prevent resumption requests from cumulating. See
+		 * threadobj_suspend().
+		 */
+		copperplate_kill_tid(thobj->pid, SIGRESM);
 	}
 
 	return 0;
