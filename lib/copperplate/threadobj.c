@@ -396,15 +396,12 @@ static void unblock_sighandler(int sig)
 
 static void roundrobin_handler(int sig)
 {
-	struct threadobj *current = threadobj_current();
-
 	/*
 	 * We do manual round-robin over SCHED_FIFO(RT) to allow for
 	 * multiple arbitrary time slices (i.e. vs the kernel
 	 * pre-defined and fixed one).
 	 */
-	if (current && (current->status & __THREAD_S_RR) != 0)
-		sched_yield();
+	sched_yield();
 }
 
 static inline void pkg_init_corespec(void)
