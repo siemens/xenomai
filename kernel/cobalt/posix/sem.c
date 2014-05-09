@@ -411,9 +411,9 @@ static inline int
 sem_wait_inner(xnhandle_t handle, int timed,
 	       const struct timespec __user *u_ts)
 {
+	struct timespec ts = { .tv_sec = 0, .tv_nsec = 0 };
 	int pull_ts = 1, ret, info;
 	struct cobalt_sem *sem;
-	struct timespec ts;
 	xntmode_t tmode;
 	spl_t s;
 
