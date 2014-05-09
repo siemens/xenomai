@@ -1276,7 +1276,7 @@ int cobalt_sched_max_prio(int policy)
 #ifdef CONFIG_XENO_OPT_SCHED_WEAK
 		ret = XNSCHED_FIFO_MAX_PRIO;
 #else
-		ret 0;
+		ret = 0;
 #endif
 		break;
 	default:
