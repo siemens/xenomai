@@ -141,7 +141,7 @@ enum rtdm_selecttype {
 /**
  * Named device open handler
  *
- * @param[in] context File descriptor structure associated with opened device instance
+ * @param[in] fd File descriptor structure associated with opened device instance
  * @param[in] oflag Open flags as passed by the user
  *
  * @return 0 on success. On failure return either -ENOSYS, to request that
@@ -150,12 +150,12 @@ enum rtdm_selecttype {
  *
  * @see @c open() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399 */
-typedef int (*rtdm_open_handler_t)(struct rtdm_fd *context, int oflag);
+typedef int (*rtdm_open_handler_t)(struct rtdm_fd *fd, int oflag);
 
 /**
  * Socket creation handler for protocol devices
  *
- * @param[in] context File descriptor structure associated with opened device instance
+ * @param[in] fd File descriptor structure associated with opened device instance
  * @param[in] protocol Protocol number as passed by the user
  *
  * @return 0 on success. On failure return either -ENOSYS, to request that
@@ -164,7 +164,7 @@ typedef int (*rtdm_open_handler_t)(struct rtdm_fd *context, int oflag);
  *
  * @see @c socket() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399 */
-typedef int (*rtdm_socket_handler_t)(struct rtdm_fd *context, int protocol);
+typedef int (*rtdm_socket_handler_t)(struct rtdm_fd *fd, int protocol);
 
 /** @} Operation Handler Prototypes */
 
@@ -200,7 +200,7 @@ struct rtdm_dev_context {
 	char dev_private[0];
 };
 
-static inline struct rtdm_dev_context *rtdm_context(struct rtdm_fd *fd)
+static inline struct rtdm_dev_context *rtdm_fd_to_context(struct rtdm_fd *fd)
 {
 	return container_of(fd, struct rtdm_dev_context, fd);
 }
@@ -208,41 +208,40 @@ static inline struct rtdm_dev_context *rtdm_context(struct rtdm_fd *fd)
 /**
  * Locate the driver private area associated to a device context structure
  *
- * @param[in] context Context structure associated with opened device instance
+ * @param[in] fd File descriptor structure associated with opened
+ * device instance
  *
  * @return The address of the private driver area associated to @a
  * context.
  */
-static inline void *
-rtdm_context_to_private(struct rtdm_fd *context)
+static inline void *rtdm_fd_to_private(struct rtdm_fd *fd)
 {
-	return (void *)rtdm_context(context)->dev_private;
+	return (void *)rtdm_fd_to_context(fd)->dev_private;
 }
 
 /**
- * Locate a device context structure from its driver private area
+ * Locate a device file descriptor structure from its driver private area
  *
  * @param[in] dev_private Address of a private context area
  *
- * @return The address of the device context structure defining @a
+ * @return The address of the file descriptor structure defining @a
  * dev_private.
  */
-static inline struct rtdm_fd *
-rtdm_private_to_context(void *dev_private)
+static inline struct rtdm_fd *rtdm_private_to_fd(void *dev_private)
 {
 	struct rtdm_dev_context *ctx;
 	ctx = container_of(dev_private, struct rtdm_dev_context, dev_private);
 	return &ctx->fd;
 }
 
-static inline bool rtdm_context_user_p(struct rtdm_fd *context)
+static inline bool rtdm_fd_is_user(struct rtdm_fd *fd)
 {
-	return rtdm_fd_owner(context) != &__xnsys_global_ppd;
+	return rtdm_fd_owner(fd) != &__xnsys_global_ppd;
 }
 
-static inline struct rtdm_device *rtdm_context_device(struct rtdm_fd *context)
+static inline struct rtdm_device *rtdm_fd_device(struct rtdm_fd *fd)
 {
-	return rtdm_context(context)->device;
+	return rtdm_fd_to_context(fd)->device;
 }
 
 struct rtdm_dev_reserved {
@@ -364,16 +363,6 @@ int rtdm_dev_unregister(struct rtdm_device *device, unsigned int poll_delay);
 #define rtdm_shutdown		rt_dev_shutdown
 
 #ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
-
-static inline int rtdm_context_lock(struct rtdm_fd *context)
-{
-	return rtdm_fd_lock(context);
-}
-
-static inline void rtdm_context_unlock(struct rtdm_fd *context)
-{
-	rtdm_fd_unlock(context);
-}
 
 /* --- clock services --- */
 static inline nanosecs_abs_t rtdm_clock_read(void)
@@ -1588,38 +1577,38 @@ static inline void rtdm_free(void *ptr)
 	xnfree(ptr);
 }
 
-int rtdm_mmap_to_user(struct rtdm_fd *context,
+int rtdm_mmap_to_user(struct rtdm_fd *fd,
 		      void *src_addr, size_t len,
 		      int prot, void **pptr,
 		      struct vm_operations_struct *vm_ops,
 		      void *vm_private_data);
-int rtdm_iomap_to_user(struct rtdm_fd *context,
+int rtdm_iomap_to_user(struct rtdm_fd *fd,
 		       phys_addr_t src_addr, size_t len,
 		       int prot, void **pptr,
 		       struct vm_operations_struct *vm_ops,
 		       void *vm_private_data);
-int rtdm_munmap(struct rtdm_fd *context, void *ptr, size_t len);
+int rtdm_munmap(struct rtdm_fd *fd, void *ptr, size_t len);
 
-static inline int rtdm_read_user_ok(struct rtdm_fd *context,
+static inline int rtdm_read_user_ok(struct rtdm_fd *fd,
 				    const void __user *ptr, size_t size)
 {
 	return access_rok(ptr, size);
 }
 
-static inline int rtdm_rw_user_ok(struct rtdm_fd *context,
+static inline int rtdm_rw_user_ok(struct rtdm_fd *fd,
 				  const void __user *ptr, size_t size)
 {
 	return access_wok(ptr, size);
 }
 
-static inline int rtdm_copy_from_user(struct rtdm_fd *context,
+static inline int rtdm_copy_from_user(struct rtdm_fd *fd,
 				      void *dst, const void __user *src,
 				      size_t size)
 {
 	return __xn_copy_from_user(dst, src, size) ? -EFAULT : 0;
 }
 
-static inline int rtdm_safe_copy_from_user(struct rtdm_fd *context,
+static inline int rtdm_safe_copy_from_user(struct rtdm_fd *fd,
 					   void *dst, const void __user *src,
 					   size_t size)
 {
@@ -1627,14 +1616,14 @@ static inline int rtdm_safe_copy_from_user(struct rtdm_fd *context,
 		__xn_copy_from_user(dst, src, size)) ? -EFAULT : 0;
 }
 
-static inline int rtdm_copy_to_user(struct rtdm_fd *context,
+static inline int rtdm_copy_to_user(struct rtdm_fd *fd,
 				    void __user *dst, const void *src,
 				    size_t size)
 {
 	return __xn_copy_to_user(dst, src, size) ? -EFAULT : 0;
 }
 
-static inline int rtdm_safe_copy_to_user(struct rtdm_fd *context,
+static inline int rtdm_safe_copy_to_user(struct rtdm_fd *fd,
 					 void __user *dst, const void *src,
 					 size_t size)
 {
@@ -1642,7 +1631,7 @@ static inline int rtdm_safe_copy_to_user(struct rtdm_fd *context,
 		__xn_copy_to_user(dst, src, size)) ? -EFAULT : 0;
 }
 
-static inline int rtdm_strncpy_from_user(struct rtdm_fd *context,
+static inline int rtdm_strncpy_from_user(struct rtdm_fd *fd,
 					 char *dst,
 					 const char __user *src, size_t count)
 {
@@ -1651,12 +1640,12 @@ static inline int rtdm_strncpy_from_user(struct rtdm_fd *context,
 	return __xn_strncpy_from_user(dst, src, count);
 }
 
-static inline int rtdm_rt_capable(struct rtdm_fd *context)
+static inline int rtdm_rt_capable(struct rtdm_fd *fd)
 {
 	if (!XENO_ASSERT(RTDM, !xnsched_interrupt_p()))
 		return 0;
 
-	if (rtdm_fd_owner(context) == &__xnsys_global_ppd)
+	if (!rtdm_fd_is_user(fd))
 		return !xnsched_root_p();
 
 	return xnshadow_thread(current) != NULL;

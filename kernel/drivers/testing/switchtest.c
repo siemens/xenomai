@@ -511,9 +511,9 @@ static void rtswitch_utask_waker(rtdm_nrtsig_t sig, void *arg)
 	up(&ctx->utask->nrt_synch);
 }
 
-static int rtswitch_open(struct rtdm_fd *context, int oflags)
+static int rtswitch_open(struct rtdm_fd *fd, int oflags)
 {
-	rtswitch_context_t *ctx = rtdm_context_to_private(context);
+	rtswitch_context_t *ctx = rtdm_fd_to_private(fd);
 	int err;
 
 	ctx->tasks = NULL;
@@ -532,9 +532,9 @@ static int rtswitch_open(struct rtdm_fd *context, int oflags)
 	return 0;
 }
 
-static void rtswitch_close(struct rtdm_fd *context)
+static void rtswitch_close(struct rtdm_fd *fd)
 {
-	rtswitch_context_t *ctx = rtdm_context_to_private(context);
+	rtswitch_context_t *ctx = rtdm_fd_to_private(fd);
 	unsigned i;
 
 	if (ctx->tasks) {
@@ -555,11 +555,11 @@ static void rtswitch_close(struct rtdm_fd *context)
 	rtdm_nrtsig_destroy(&ctx->wake_utask);
 }
 
-static int rtswitch_ioctl_nrt(struct rtdm_fd *context,
+static int rtswitch_ioctl_nrt(struct rtdm_fd *fd,
 			      unsigned int request,
 			      void *arg)
 {
-	rtswitch_context_t *ctx = rtdm_context_to_private(context);
+	rtswitch_context_t *ctx = rtdm_fd_to_private(fd);
 	struct rttst_swtest_task task;
 	struct rttst_swtest_dir fromto;
 	unsigned long count;
@@ -582,15 +582,15 @@ static int rtswitch_ioctl_nrt(struct rtdm_fd *context,
 		return 0;
 
 	case RTTST_RTIOC_SWTEST_REGISTER_UTASK:
-		if (!rtdm_rw_user_ok(context, arg, sizeof(task)))
+		if (!rtdm_rw_user_ok(fd, arg, sizeof(task)))
 			return -EFAULT;
 
-		rtdm_copy_from_user(context, &task, arg, sizeof(task));
+		rtdm_copy_from_user(fd, &task, arg, sizeof(task));
 
 		err = rtswitch_register_task(ctx, &task);
 
 		if (!err)
-			rtdm_copy_to_user(context,
+			rtdm_copy_to_user(fd,
 					  arg,
 					  &task,
 					  sizeof(task));
@@ -598,15 +598,15 @@ static int rtswitch_ioctl_nrt(struct rtdm_fd *context,
 		return err;
 
 	case RTTST_RTIOC_SWTEST_CREATE_KTASK:
-		if (!rtdm_rw_user_ok(context, arg, sizeof(task)))
+		if (!rtdm_rw_user_ok(fd, arg, sizeof(task)))
 			return -EFAULT;
 
-		rtdm_copy_from_user(context, &task, arg, sizeof(task));
+		rtdm_copy_from_user(fd, &task, arg, sizeof(task));
 
 		err = rtswitch_create_ktask(ctx, &task);
 
 		if (!err)
-			rtdm_copy_to_user(context,
+			rtdm_copy_to_user(fd,
 					  arg,
 					  &task,
 					  sizeof(task));
@@ -614,18 +614,18 @@ static int rtswitch_ioctl_nrt(struct rtdm_fd *context,
 		return err;
 
 	case RTTST_RTIOC_SWTEST_PEND:
-		if (!rtdm_read_user_ok(context, arg, sizeof(task)))
+		if (!rtdm_read_user_ok(fd, arg, sizeof(task)))
 			return -EFAULT;
 
-		rtdm_copy_from_user(context, &task, arg, sizeof(task));
+		rtdm_copy_from_user(fd, &task, arg, sizeof(task));
 
 		return rtswitch_pend_nrt(ctx, task.index);
 
 	case RTTST_RTIOC_SWTEST_SWITCH_TO:
-		if (!rtdm_read_user_ok(context, arg, sizeof(fromto)))
+		if (!rtdm_read_user_ok(fd, arg, sizeof(fromto)))
 			return -EFAULT;
 
-		rtdm_copy_from_user(context,
+		rtdm_copy_from_user(fd,
 				    &fromto,
 				    arg,
 				    sizeof(fromto));
@@ -633,20 +633,20 @@ static int rtswitch_ioctl_nrt(struct rtdm_fd *context,
 		return rtswitch_to_nrt(ctx, fromto.from, fromto.to);
 
 	case RTTST_RTIOC_SWTEST_GET_SWITCHES_COUNT:
-		if (!rtdm_rw_user_ok(context, arg, sizeof(count)))
+		if (!rtdm_rw_user_ok(fd, arg, sizeof(count)))
 			return -EFAULT;
 
 		count = ctx->switches_count;
 
-		rtdm_copy_to_user(context, arg, &count, sizeof(count));
+		rtdm_copy_to_user(fd, arg, &count, sizeof(count));
 
 		return 0;
 
 	case RTTST_RTIOC_SWTEST_GET_LAST_ERROR:
-		if (!rtdm_rw_user_ok(context, arg, sizeof(ctx->error)))
+		if (!rtdm_rw_user_ok(fd, arg, sizeof(ctx->error)))
 			return -EFAULT;
 
-		rtdm_copy_to_user(context,
+		rtdm_copy_to_user(fd,
 				  arg,
 				  &ctx->error,
 				  sizeof(ctx->error));
@@ -658,11 +658,11 @@ static int rtswitch_ioctl_nrt(struct rtdm_fd *context,
 	}
 }
 
-static int rtswitch_ioctl_rt(struct rtdm_fd *context,
+static int rtswitch_ioctl_rt(struct rtdm_fd *fd,
 			     unsigned int request,
 			     void *arg)
 {
-	rtswitch_context_t *ctx = rtdm_context_to_private(context);
+	rtswitch_context_t *ctx = rtdm_fd_to_private(fd);
 	struct rttst_swtest_task task;
 	struct rttst_swtest_dir fromto;
 
@@ -673,18 +673,18 @@ static int rtswitch_ioctl_rt(struct rtdm_fd *context,
 		return -ENOSYS;
 
 	case RTTST_RTIOC_SWTEST_PEND:
-		if (!rtdm_read_user_ok(context, arg, sizeof(task)))
+		if (!rtdm_read_user_ok(fd, arg, sizeof(task)))
 			return -EFAULT;
 
-		rtdm_copy_from_user(context, &task, arg, sizeof(task));
+		rtdm_copy_from_user(fd, &task, arg, sizeof(task));
 
 		return rtswitch_pend_rt(ctx, task.index);
 
 	case RTTST_RTIOC_SWTEST_SWITCH_TO:
-		if (!rtdm_read_user_ok(context, arg, sizeof(fromto)))
+		if (!rtdm_read_user_ok(fd, arg, sizeof(fromto)))
 			return -EFAULT;
 
-		rtdm_copy_from_user(context,
+		rtdm_copy_from_user(fd,
 				    &fromto,
 				    arg,
 				    sizeof(fromto));
@@ -692,10 +692,10 @@ static int rtswitch_ioctl_rt(struct rtdm_fd *context,
 		return rtswitch_to_rt(ctx, fromto.from, fromto.to);
 
 	case RTTST_RTIOC_SWTEST_GET_LAST_ERROR:
-		if (!rtdm_rw_user_ok(context, arg, sizeof(ctx->error)))
+		if (!rtdm_rw_user_ok(fd, arg, sizeof(ctx->error)))
 			return -EFAULT;
 
-		rtdm_copy_to_user(context,
+		rtdm_copy_to_user(fd,
 				  arg,
 				  &ctx->error,
 				  sizeof(ctx->error));

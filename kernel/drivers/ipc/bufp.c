@@ -105,7 +105,7 @@ static struct xnpnode_link __bufp_pnode = {
 #endif /* !CONFIG_XENO_OPT_VFILE */
 
 static int bufp_socket(struct rtipc_private *priv,
-		       struct rtdm_fd *context)
+		       struct rtdm_fd *fd)
 {
 	struct bufp_socket *sk = priv->state;
 
@@ -132,7 +132,7 @@ static int bufp_socket(struct rtipc_private *priv,
 }
 
 static void bufp_close(struct rtipc_private *priv,
-		struct rtdm_fd *context)
+		struct rtdm_fd *fd)
 {
 	struct bufp_socket *sk = priv->state;
 
@@ -285,7 +285,7 @@ out:
 }
 
 static ssize_t __bufp_recvmsg(struct rtipc_private *priv,
-			      struct rtdm_fd *context,
+			      struct rtdm_fd *fd,
 			      struct iovec *iov, int iovlen, int flags,
 			      struct sockaddr_ipc *saddr)
 {
@@ -316,7 +316,7 @@ static ssize_t __bufp_recvmsg(struct rtipc_private *priv,
 		if (iov[nvec].iov_len == 0)
 			continue;
 		vlen = wrlen >= iov[nvec].iov_len ? iov[nvec].iov_len : wrlen;
-		if (rtdm_context_user_p(context)) {
+		if (rtdm_fd_is_user(fd)) {
 			xnbufd_map_uread(&bufd, iov[nvec].iov_base, vlen);
 			ret = __bufp_readbuf(sk, &bufd, flags);
 			xnbufd_unmap_uread(&bufd);
@@ -347,7 +347,7 @@ static ssize_t __bufp_recvmsg(struct rtipc_private *priv,
 }
 
 static ssize_t bufp_recvmsg(struct rtipc_private *priv,
-			    struct rtdm_fd *context,
+			    struct rtdm_fd *fd,
 			    struct msghdr *msg, int flags)
 {
 	struct iovec iov[RTIPC_IOV_MAX];
@@ -367,23 +367,23 @@ static ssize_t bufp_recvmsg(struct rtipc_private *priv,
 		return -EINVAL;
 
 	/* Copy I/O vector in */
-	if (rtipc_get_arg(context, iov, msg->msg_iov,
+	if (rtipc_get_arg(fd, iov, msg->msg_iov,
 			  sizeof(iov[0]) * msg->msg_iovlen))
 		return -EFAULT;
 
-	ret = __bufp_recvmsg(priv, context,
+	ret = __bufp_recvmsg(priv, fd,
 			     iov, msg->msg_iovlen, flags, &saddr);
 	if (ret <= 0)
 		return ret;
 
 	/* Copy the updated I/O vector back */
-	if (rtipc_put_arg(context, msg->msg_iov, iov,
+	if (rtipc_put_arg(fd, msg->msg_iov, iov,
 			  sizeof(iov[0]) * msg->msg_iovlen))
 		return -EFAULT;
 
 	/* Copy the source address if required. */
 	if (msg->msg_name) {
-		if (rtipc_put_arg(context, msg->msg_name,
+		if (rtipc_put_arg(fd, msg->msg_name,
 				  &saddr, sizeof(saddr)))
 			return -EFAULT;
 		msg->msg_namelen = sizeof(struct sockaddr_ipc);
@@ -393,11 +393,11 @@ static ssize_t bufp_recvmsg(struct rtipc_private *priv,
 }
 
 static ssize_t bufp_read(struct rtipc_private *priv,
-			 struct rtdm_fd *context,
+			 struct rtdm_fd *fd,
 			 void *buf, size_t len)
 {
 	struct iovec iov = { .iov_base = buf, .iov_len = len };
-	return __bufp_recvmsg(priv, context, &iov, 1, 0, NULL);
+	return __bufp_recvmsg(priv, fd, &iov, 1, 0, NULL);
 }
 
 static ssize_t __bufp_writebuf(struct bufp_socket *rsk,
@@ -517,13 +517,13 @@ out:
 }
 
 static ssize_t __bufp_sendmsg(struct rtipc_private *priv,
-			      struct rtdm_fd *context,
+			      struct rtdm_fd *fd,
 			      struct iovec *iov, int iovlen, int flags,
 			      const struct sockaddr_ipc *daddr)
 {
 	struct bufp_socket *sk = priv->state, *rsk;
 	ssize_t len, rdlen, vlen, ret = 0;
-	struct rtdm_fd *rcontext;
+	struct rtdm_fd *rfd;
 	struct xnbufd bufd;
 	int nvec;
 	spl_t s;
@@ -533,16 +533,16 @@ static ssize_t __bufp_sendmsg(struct rtipc_private *priv,
 		return 0;
 
 	cobalt_atomic_enter(s);
-	rcontext = xnmap_fetch_nocheck(portmap, daddr->sipc_port);
-	if (rcontext && rtdm_context_lock(rcontext) < 0)
-		rcontext = NULL;
+	rfd = xnmap_fetch_nocheck(portmap, daddr->sipc_port);
+	if (rfd && rtdm_fd_lock(rfd) < 0)
+		rfd = NULL;
 	cobalt_atomic_leave(s);
-	if (rcontext == NULL)
+	if (rfd == NULL)
 		return -ECONNRESET;
 
-	rsk = rtipc_context_to_state(rcontext);
+	rsk = rtipc_fd_to_state(rfd);
 	if (!test_bit(_BUFP_BOUND, &rsk->status)) {
-		rtdm_context_unlock(rcontext);
+		rtdm_fd_unlock(rfd);
 		return -ECONNREFUSED;
 	}
 
@@ -564,7 +564,7 @@ static ssize_t __bufp_sendmsg(struct rtipc_private *priv,
 		if (iov[nvec].iov_len == 0)
 			continue;
 		vlen = rdlen >= iov[nvec].iov_len ? iov[nvec].iov_len : rdlen;
-		if (rtdm_context_user_p(context)) {
+		if (rtdm_fd_is_user(fd)) {
 			xnbufd_map_uread(&bufd, iov[nvec].iov_base, vlen);
 			ret = __bufp_writebuf(rsk, sk, &bufd, flags);
 			xnbufd_unmap_uread(&bufd);
@@ -580,18 +580,18 @@ static ssize_t __bufp_sendmsg(struct rtipc_private *priv,
 		rdlen -= vlen;
 	}
 
-	rtdm_context_unlock(rcontext);
+	rtdm_fd_unlock(rfd);
 
 	return len - rdlen;
 
 fail:
-	rtdm_context_unlock(rcontext);
+	rtdm_fd_unlock(rfd);
 
 	return ret;
 }
 
 static ssize_t bufp_sendmsg(struct rtipc_private *priv,
-			    struct rtdm_fd *context,
+			    struct rtdm_fd *fd,
 			    const struct msghdr *msg, int flags)
 {
 	struct bufp_socket *sk = priv->state;
@@ -607,7 +607,7 @@ static ssize_t bufp_sendmsg(struct rtipc_private *priv,
 			return -EINVAL;
 
 		/* Fetch the destination address to send to. */
-		if (rtipc_get_arg(context, &daddr,
+		if (rtipc_get_arg(fd, &daddr,
 				  msg->msg_name, sizeof(daddr)))
 			return -EFAULT;
 
@@ -626,17 +626,17 @@ static ssize_t bufp_sendmsg(struct rtipc_private *priv,
 		return -EINVAL;
 
 	/* Copy I/O vector in */
-	if (rtipc_get_arg(context, iov, msg->msg_iov,
+	if (rtipc_get_arg(fd, iov, msg->msg_iov,
 			  sizeof(iov[0]) * msg->msg_iovlen))
 		return -EFAULT;
 
-	ret = __bufp_sendmsg(priv, context, iov,
+	ret = __bufp_sendmsg(priv, fd, iov,
 			     msg->msg_iovlen, flags, &daddr);
 	if (ret <= 0)
 		return ret;
 
 	/* Copy updated I/O vector back */
-	if (rtipc_put_arg(context, msg->msg_iov, iov,
+	if (rtipc_put_arg(fd, msg->msg_iov, iov,
 			  sizeof(iov[0]) * msg->msg_iovlen))
 		return -EFAULT;
 
@@ -644,7 +644,7 @@ static ssize_t bufp_sendmsg(struct rtipc_private *priv,
 }
 
 static ssize_t bufp_write(struct rtipc_private *priv,
-			  struct rtdm_fd *context,
+			  struct rtdm_fd *fd,
 			  const void *buf, size_t len)
 {
 	struct iovec iov = { .iov_base = (void *)buf, .iov_len = len };
@@ -653,7 +653,7 @@ static ssize_t bufp_write(struct rtipc_private *priv,
 	if (sk->peer.sipc_port < 0)
 		return -EDESTADDRREQ;
 
-	return __bufp_sendmsg(priv, context, &iov, 1, 0, &sk->peer);
+	return __bufp_sendmsg(priv, fd, &iov, 1, 0, &sk->peer);
 }
 
 static int __bufp_bind_socket(struct rtipc_private *priv,
@@ -682,7 +682,7 @@ static int __bufp_bind_socket(struct rtipc_private *priv,
 
 	/* Will auto-select a free port number if unspec (-1). */
 	port = sa->sipc_port;
-	fd = rtdm_private_to_context(priv);
+	fd = rtdm_private_to_fd(priv);
 	cobalt_atomic_enter(s);
 	port = xnmap_enter(portmap, port, fd);
 	cobalt_atomic_leave(s);
@@ -798,7 +798,7 @@ set_assoc:
 }
 
 static int __bufp_setsockopt(struct bufp_socket *sk,
-			     struct rtdm_fd *context,
+			     struct rtdm_fd *fd,
 			     void *arg)
 {
 	struct _rtdm_setsockopt_args sopt;
@@ -808,7 +808,7 @@ static int __bufp_setsockopt(struct bufp_socket *sk,
 	size_t len;
 	spl_t s;
 
-	if (rtipc_get_arg(context, &sopt, arg, sizeof(sopt)))
+	if (rtipc_get_arg(fd, &sopt, arg, sizeof(sopt)))
 		return -EFAULT;
 
 	if (sopt.level == SOL_SOCKET) {
@@ -817,7 +817,7 @@ static int __bufp_setsockopt(struct bufp_socket *sk,
 		case SO_RCVTIMEO:
 			if (sopt.optlen != sizeof(tv))
 				return -EINVAL;
-			if (rtipc_get_arg(context, &tv,
+			if (rtipc_get_arg(fd, &tv,
 					  sopt.optval, sizeof(tv)))
 				return -EFAULT;
 			sk->rx_timeout = rtipc_timeval_to_ns(&tv);
@@ -826,7 +826,7 @@ static int __bufp_setsockopt(struct bufp_socket *sk,
 		case SO_SNDTIMEO:
 			if (sopt.optlen != sizeof(tv))
 				return -EINVAL;
-			if (rtipc_get_arg(context, &tv,
+			if (rtipc_get_arg(fd, &tv,
 					  sopt.optval, sizeof(tv)))
 				return -EFAULT;
 			sk->tx_timeout = rtipc_timeval_to_ns(&tv);
@@ -847,7 +847,7 @@ static int __bufp_setsockopt(struct bufp_socket *sk,
 	case BUFP_BUFSZ:
 		if (sopt.optlen != sizeof(len))
 			return -EINVAL;
-		if (rtipc_get_arg(context, &len,
+		if (rtipc_get_arg(fd, &len,
 				  sopt.optval, sizeof(len)))
 			return -EFAULT;
 		if (len == 0)
@@ -868,7 +868,7 @@ static int __bufp_setsockopt(struct bufp_socket *sk,
 	case BUFP_LABEL:
 		if (sopt.optlen < sizeof(plabel))
 			return -EINVAL;
-		if (rtipc_get_arg(context, &plabel,
+		if (rtipc_get_arg(fd, &plabel,
 				  sopt.optval, sizeof(plabel)))
 			return -EFAULT;
 		cobalt_atomic_enter(s);
@@ -893,7 +893,7 @@ static int __bufp_setsockopt(struct bufp_socket *sk,
 }
 
 static int __bufp_getsockopt(struct bufp_socket *sk,
-			     struct rtdm_fd *context,
+			     struct rtdm_fd *fd,
 			     void *arg)
 {
 	struct _rtdm_getsockopt_args sopt;
@@ -903,10 +903,10 @@ static int __bufp_getsockopt(struct bufp_socket *sk,
 	int ret = 0;
 	spl_t s;
 
-	if (rtipc_get_arg(context, &sopt, arg, sizeof(sopt)))
+	if (rtipc_get_arg(fd, &sopt, arg, sizeof(sopt)))
 		return -EFAULT;
 
-	if (rtipc_get_arg(context, &len, sopt.optlen, sizeof(len)))
+	if (rtipc_get_arg(fd, &len, sopt.optlen, sizeof(len)))
 		return -EFAULT;
 
 	if (sopt.level == SOL_SOCKET) {
@@ -916,7 +916,7 @@ static int __bufp_getsockopt(struct bufp_socket *sk,
 			if (len != sizeof(tv))
 				return -EINVAL;
 			rtipc_ns_to_timeval(&tv, sk->rx_timeout);
-			if (rtipc_put_arg(context, sopt.optval,
+			if (rtipc_put_arg(fd, sopt.optval,
 					  &tv, sizeof(tv)))
 				return -EFAULT;
 			break;
@@ -925,7 +925,7 @@ static int __bufp_getsockopt(struct bufp_socket *sk,
 			if (len != sizeof(tv))
 				return -EINVAL;
 			rtipc_ns_to_timeval(&tv, sk->tx_timeout);
-			if (rtipc_put_arg(context, sopt.optval,
+			if (rtipc_put_arg(fd, sopt.optval,
 					  &tv, sizeof(tv)))
 				return -EFAULT;
 			break;
@@ -948,7 +948,7 @@ static int __bufp_getsockopt(struct bufp_socket *sk,
 		cobalt_atomic_enter(s);
 		strcpy(plabel.label, sk->label);
 		cobalt_atomic_leave(s);
-		if (rtipc_put_arg(context, sopt.optval,
+		if (rtipc_put_arg(fd, sopt.optval,
 				  &plabel, sizeof(plabel)))
 			return -EFAULT;
 		break;
@@ -961,7 +961,7 @@ static int __bufp_getsockopt(struct bufp_socket *sk,
 }
 
 static int __bufp_ioctl(struct rtipc_private *priv,
-			struct rtdm_fd *context,
+			struct rtdm_fd *fd,
 			unsigned int request, void *arg)
 {
 	struct sockaddr_ipc saddr, *saddrp = &saddr;
@@ -971,14 +971,14 @@ static int __bufp_ioctl(struct rtipc_private *priv,
 	switch (request) {
 
 	case _RTIOC_CONNECT:
-		ret = rtipc_get_sockaddr(context, arg, &saddrp);
+		ret = rtipc_get_sockaddr(fd, arg, &saddrp);
 		if (ret)
 		  return ret;
 		ret = __bufp_connect_socket(sk, saddrp);
 		break;
 
 	case _RTIOC_BIND:
-		ret = rtipc_get_sockaddr(context, arg, &saddrp);
+		ret = rtipc_get_sockaddr(fd, arg, &saddrp);
 		if (ret)
 			return ret;
 		if (saddrp == NULL)
@@ -987,19 +987,19 @@ static int __bufp_ioctl(struct rtipc_private *priv,
 		break;
 
 	case _RTIOC_GETSOCKNAME:
-		ret = rtipc_put_sockaddr(context, arg, &sk->name);
+		ret = rtipc_put_sockaddr(fd, arg, &sk->name);
 		break;
 
 	case _RTIOC_GETPEERNAME:
-		ret = rtipc_put_sockaddr(context, arg, &sk->peer);
+		ret = rtipc_put_sockaddr(fd, arg, &sk->peer);
 		break;
 
 	case _RTIOC_SETSOCKOPT:
-		ret = __bufp_setsockopt(sk, context, arg);
+		ret = __bufp_setsockopt(sk, fd, arg);
 		break;
 
 	case _RTIOC_GETSOCKOPT:
-		ret = __bufp_getsockopt(sk, context, arg);
+		ret = __bufp_getsockopt(sk, fd, arg);
 		break;
 
 	case _RTIOC_LISTEN:
@@ -1019,13 +1019,13 @@ static int __bufp_ioctl(struct rtipc_private *priv,
 }
 
 static int bufp_ioctl(struct rtipc_private *priv,
-		      struct rtdm_fd *context,
+		      struct rtdm_fd *fd,
 		      unsigned int request, void *arg)
 {
 	if (rtdm_in_rt_context() && request == _RTIOC_BIND)
 		return -ENOSYS;	/* Try downgrading to NRT */
 
-	return __bufp_ioctl(priv, context, request, arg);
+	return __bufp_ioctl(priv, fd, request, arg);
 }
 
 static int bufp_init(void)

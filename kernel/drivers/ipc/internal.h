@@ -42,30 +42,30 @@ struct rtipc_protocol {
 	void (*proto_exit)(void);
 	struct {
 		int (*socket)(struct rtipc_private *priv,
-			      struct rtdm_fd *context);
+			      struct rtdm_fd *fd);
 		void (*close)(struct rtipc_private *priv,
-			struct rtdm_fd *context);
+			struct rtdm_fd *fd);
 		ssize_t (*recvmsg)(struct rtipc_private *priv,
-				   struct rtdm_fd *context,
+				   struct rtdm_fd *fd,
 				   struct msghdr *msg, int flags);
 		ssize_t (*sendmsg)(struct rtipc_private *priv,
-				   struct rtdm_fd *context,
+				   struct rtdm_fd *fd,
 				   const struct msghdr *msg, int flags);
 		ssize_t (*read)(struct rtipc_private *priv,
-				struct rtdm_fd *context,
+				struct rtdm_fd *fd,
 				void *buf, size_t len);
 		ssize_t (*write)(struct rtipc_private *priv,
-				 struct rtdm_fd *context,
+				 struct rtdm_fd *fd,
 				 const void *buf, size_t len);
 		int (*ioctl)(struct rtipc_private *priv,
-			     struct rtdm_fd *context,
+			     struct rtdm_fd *fd,
 			     unsigned int request, void *arg);
 	} proto_ops;
 };
 
-static inline void *rtipc_context_to_state(struct rtdm_fd *context)
+static inline void *rtipc_fd_to_state(struct rtdm_fd *fd)
 {
-	struct rtipc_private *p = rtdm_context_to_private(context);
+	struct rtipc_private *p = rtdm_fd_to_private(fd);
 	return p->state;
 }
 

@@ -58,7 +58,7 @@ static void cleanup_instance(struct rtdm_device *device,
 
 void __rt_dev_close(struct rtdm_fd *fd)
 {
-	struct rtdm_dev_context *context = rtdm_context(fd);
+	struct rtdm_dev_context *context = rtdm_fd_to_context(fd);
 	context->reserved.close(fd);
 	trace_cobalt_fd_closed(context);
 	cleanup_instance(context->device, context);
@@ -222,7 +222,7 @@ EXPORT_SYMBOL_GPL(__rt_dev_socket);
 int
 __rt_dev_ioctl_fallback(struct rtdm_fd *fd, unsigned request, void __user *arg)
 {
-	struct rtdm_device *dev = rtdm_context(fd)->device;
+	struct rtdm_device *dev = rtdm_fd_device(fd);
 	struct rtdm_device_info dev_info;
 
 	if (fd->magic != RTDM_FD_MAGIC || request != RTIOC_DEVICE_INFO)

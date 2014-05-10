@@ -45,12 +45,12 @@ static void close_timer_proc(rtdm_timer_t *timer)
 		       "rtdmtest: %s: close_counter is %lu, should be 1!\n",
 		       __FUNCTION__, ctx->close_counter);
 
-	rtdm_context_unlock(rtdm_private_to_context(ctx));
+	rtdm_fd_unlock(rtdm_private_to_fd(ctx));
 }
 
-static int rtdm_test_open(struct rtdm_fd *context, int oflags)
+static int rtdm_test_open(struct rtdm_fd *fd, int oflags)
 {
-	struct rtdm_test_context *ctx = rtdm_context_to_private(context);
+	struct rtdm_test_context *ctx = rtdm_fd_to_private(fd);
 
 	rtdm_timer_init(&ctx->close_timer, close_timer_proc,
 			"rtdm close test");
@@ -60,9 +60,9 @@ static int rtdm_test_open(struct rtdm_fd *context, int oflags)
 	return 0;
 }
 
-static void rtdm_test_close(struct rtdm_fd *context)
+static void rtdm_test_close(struct rtdm_fd *fd)
 {
-	struct rtdm_test_context *ctx = rtdm_context_to_private(context);
+	struct rtdm_test_context *ctx = rtdm_fd_to_private(fd);
 
 	ctx->close_counter++;
 
@@ -82,9 +82,9 @@ static void rtdm_test_close(struct rtdm_fd *context)
 }
 
 static int
-rtdm_test_ioctl(struct rtdm_fd *context, unsigned int request, void __user *arg)
+rtdm_test_ioctl(struct rtdm_fd *fd, unsigned int request, void __user *arg)
 {
-	struct rtdm_test_context *ctx = rtdm_context_to_private(context);
+	struct rtdm_test_context *ctx = rtdm_fd_to_private(fd);
 	int err = 0;
 
 	switch (request) {
@@ -92,7 +92,7 @@ rtdm_test_ioctl(struct rtdm_fd *context, unsigned int request, void __user *arg)
 		ctx->close_deferral = (unsigned long)arg;
 		if (ctx->close_deferral == RTTST_RTDM_DEFER_CLOSE_CONTEXT) {
 			++ctx->close_counter;
-			rtdm_context_lock(context);
+			rtdm_fd_lock(fd);
 			rtdm_timer_start(&ctx->close_timer, 300000000ULL, 0,
 					RTDM_TIMERMODE_RELATIVE);
 		}

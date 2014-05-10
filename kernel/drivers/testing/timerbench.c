@@ -186,11 +186,11 @@ static void timer_proc(rtdm_timer_t *timer)
 	} while (err);
 }
 
-static int rt_tmbench_open(struct rtdm_fd *context, int oflags)
+static int rt_tmbench_open(struct rtdm_fd *fd, int oflags)
 {
 	struct rt_tmbench_context *ctx;
 
-	ctx = rtdm_context_to_private(context);
+	ctx = rtdm_fd_to_private(fd);
 
 	ctx->mode = RTTST_TMBENCH_INVALID;
 	sema_init(&ctx->nrt_mutex, 1);
@@ -198,11 +198,11 @@ static int rt_tmbench_open(struct rtdm_fd *context, int oflags)
 	return 0;
 }
 
-static void rt_tmbench_close(struct rtdm_fd *context)
+static void rt_tmbench_close(struct rtdm_fd *fd)
 {
 	struct rt_tmbench_context *ctx;
 
-	ctx = rtdm_context_to_private(context);
+	ctx = rtdm_fd_to_private(fd);
 
 	down(&ctx->nrt_mutex);
 
@@ -224,7 +224,7 @@ static void rt_tmbench_close(struct rtdm_fd *context)
 	up(&ctx->nrt_mutex);
 }
 
-static int rt_tmbench_start(struct rtdm_fd *context,
+static int rt_tmbench_start(struct rtdm_fd *fd,
 			    struct rt_tmbench_context *ctx,
 			    struct rttst_tmbench_config __user *user_config)
 {
@@ -235,9 +235,9 @@ static int rt_tmbench_start(struct rtdm_fd *context,
 	struct rttst_tmbench_config *config =
 		(struct rttst_tmbench_config *)user_config;
 
-	if (rtdm_context_user_p(context)) {
+	if (rtdm_fd_is_user(fd)) {
 		if (rtdm_safe_copy_from_user
-		    (context, &config_buf,user_config,
+		    (fd, &config_buf,user_config,
 		     sizeof(struct rttst_tmbench_config)) < 0)
 			return -EFAULT;
 
@@ -295,7 +295,7 @@ static int rt_tmbench_start(struct rtdm_fd *context,
 			ctx->mode = RTTST_TMBENCH_TASK;
 	} else {
 		rtdm_timer_init(&ctx->timer, timer_proc,
-				rtdm_context_device(context)->device_name);
+				rtdm_fd_device(fd)->device_name);
 
 		ctx->curr.test_loops = 0;
 
@@ -320,7 +320,7 @@ static int rt_tmbench_start(struct rtdm_fd *context,
 static int rt_tmbench_stop(struct rt_tmbench_context *ctx,
 			   struct rttst_overall_bench_res __user *user_res)
 {
-	struct rtdm_fd *context = rtdm_private_to_context(ctx);
+	struct rtdm_fd *fd = rtdm_private_to_fd(ctx);
 	int err = 0;
 
 	down(&ctx->nrt_mutex);
@@ -344,8 +344,8 @@ static int rt_tmbench_stop(struct rt_tmbench_context *ctx,
 		   ((ctx->result.overall.test_loops) > 1 ?
 		    ctx->result.overall.test_loops : 2) - 1);
 
-	if (rtdm_context_user_p(context))
-		err = rtdm_safe_copy_to_user(context, &user_res->result,
+	if (rtdm_fd_is_user(fd))
+		err = rtdm_safe_copy_to_user(fd, &user_res->result,
 					     &ctx->result.overall,
 					     sizeof(struct rttst_bench_res));
 		/* Do not break on error here - we may have to free a
@@ -361,19 +361,19 @@ static int rt_tmbench_stop(struct rt_tmbench_context *ctx,
 	if (ctx->histogram_size > 0) {
 		int size = ctx->histogram_size * sizeof(long);
 
-		if (rtdm_context_user_p(context)) {
+		if (rtdm_fd_is_user(fd)) {
 			struct rttst_overall_bench_res res_buf;
 
-			if (rtdm_safe_copy_from_user(context,
+			if (rtdm_safe_copy_from_user(fd,
 						     &res_buf, user_res,
 						     sizeof(res_buf)) < 0 ||
-			    rtdm_safe_copy_to_user(context,
+			    rtdm_safe_copy_to_user(fd,
 				    (void __user *)res_buf.histogram_min,
 				    ctx->histogram_min, size) < 0 ||
-			    rtdm_safe_copy_to_user(context,
+			    rtdm_safe_copy_to_user(fd,
 				    (void __user *)res_buf.histogram_max,
 				    ctx->histogram_max, size) < 0 ||
-			    rtdm_safe_copy_to_user(context,
+			    rtdm_safe_copy_to_user(fd,
 				    (void __user *)res_buf.histogram_avg,
 				    ctx->histogram_avg, size) < 0)
 				err = -EFAULT;
@@ -394,17 +394,17 @@ static int rt_tmbench_stop(struct rt_tmbench_context *ctx,
 	return err;
 }
 
-static int rt_tmbench_ioctl_nrt(struct rtdm_fd *context,
+static int rt_tmbench_ioctl_nrt(struct rtdm_fd *fd,
 				unsigned int request, void __user *arg)
 {
 	struct rt_tmbench_context *ctx;
 	int err = 0;
 
-	ctx = rtdm_context_to_private(context);
+	ctx = rtdm_fd_to_private(fd);
 
 	switch (request) {
 	case RTTST_RTIOC_TMBENCH_START:
-		err = rt_tmbench_start(context, ctx, arg);
+		err = rt_tmbench_start(fd, ctx, arg);
 		break;
 
 	case RTTST_RTIOC_TMBENCH_STOP:
@@ -422,13 +422,13 @@ static int rt_tmbench_ioctl_nrt(struct rtdm_fd *context,
 	return err;
 }
 
-static int rt_tmbench_ioctl_rt(struct rtdm_fd *context,
+static int rt_tmbench_ioctl_rt(struct rtdm_fd *fd,
 			       unsigned int request, void __user *arg)
 {
 	struct rt_tmbench_context *ctx;
 	int err = 0;
 
-	ctx = rtdm_context_to_private(context);
+	ctx = rtdm_fd_to_private(fd);
 
 	switch (request) {
 	case RTTST_RTIOC_INTERM_BENCH_RES:
@@ -436,10 +436,10 @@ static int rt_tmbench_ioctl_rt(struct rtdm_fd *context,
 		if (err)
 			return err;
 
-		if (rtdm_context_user_p(context)) {
+		if (rtdm_fd_is_user(fd)) {
 			struct rttst_interm_bench_res __user *user_res = arg;
 
-			err = rtdm_safe_copy_to_user(context, user_res,
+			err = rtdm_safe_copy_to_user(fd, user_res,
 						     &ctx->result,
 						     sizeof(*user_res));
 		} else {

@@ -198,7 +198,7 @@ static int openfd_show(struct xnvfile_regular_iterator *it, void *data)
 	if (fd == NULL)
 		return VFILE_SEQ_SKIP;
 
-	context = rtdm_context(fd);
+	context = rtdm_fd_to_context(fd);
 	close_lock_count = fd->refs;
 	device = context->device;
 
