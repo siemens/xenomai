@@ -32,7 +32,7 @@ struct xnsys_ppd;
 /**
  * IOCTL handler
  *
- * @param[in] fd File descriptor structure associated with opened device instance
+ * @param[in] fd File descriptor structure
  * @param[in] request Request number as passed by the user
  * @param[in,out] arg Request argument as passed by the user
  *
@@ -48,7 +48,7 @@ typedef int rtdm_fd_ioctl_t(struct rtdm_fd *fd, unsigned int request, void __use
 /**
  * Read handler
  *
- * @param[in] fd File descriptor structure associated with opened device instance
+ * @param[in] fd File descriptor structure
  * @param[out] buf Input buffer as passed by the user
  * @param[in] size Number of bytes the user requests to read
  *
@@ -64,7 +64,7 @@ typedef ssize_t rtdm_fd_read_t(struct rtdm_fd *fd, void __user *buf, size_t size
 /**
  * Write handler
  *
- * @param[in] fd File descriptor structure associated with opened device instance
+ * @param[in] fd File descriptor structure
  * @param[in] buf Output buffer as passed by the user
  * @param[in] size Number of bytes the user requests to write
  *
@@ -80,7 +80,7 @@ typedef ssize_t rtdm_fd_write_t(struct rtdm_fd *fd, const void __user *buf, size
 /**
  * Receive message handler
  *
- * @param[in] fd File descriptor structure associated with opened device instance
+ * @param[in] fd File descriptor structure
  * @param[in,out] msg Message descriptor as passed by the user, automatically
  * mirrored to safe kernel memory in case of user mode call
  * @param[in] flags Message flags as passed by the user
@@ -97,7 +97,7 @@ typedef ssize_t rtdm_fd_recvmsg_t(struct rtdm_fd *fd, struct msghdr *msg, int fl
 /**
  * Transmit message handler
  *
- * @param[in] fd File descriptor structure associated with opened device instance
+ * @param[in] fd File descriptor structure
  * @param[in] user_info Opaque pointer to information about user mode caller,
  * NULL if kernel mode call
  * @param[in] msg Message descriptor as passed by the user, automatically

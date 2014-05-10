@@ -212,7 +212,7 @@ static inline struct rtdm_dev_context *rtdm_fd_to_context(struct rtdm_fd *fd)
  * device instance
  *
  * @return The address of the private driver area associated to @a
- * context.
+ * file descriptor.
  */
 static inline void *rtdm_fd_to_private(struct rtdm_fd *fd)
 {
@@ -234,11 +234,27 @@ static inline struct rtdm_fd *rtdm_private_to_fd(void *dev_private)
 	return &ctx->fd;
 }
 
+/**
+ * Tell whether the passed file descriptor belongs to an application.
+ *
+ * @param[in] fd File descriptor
+ *
+ * @return true if passed file descriptor belongs to an application,
+ * false otherwise.
+ */
 static inline bool rtdm_fd_is_user(struct rtdm_fd *fd)
 {
 	return rtdm_fd_owner(fd) != &__xnsys_global_ppd;
 }
 
+/**
+ * Locate a device structure from a file descriptor.
+ *
+ * @param[in] fd File descriptor
+ *
+ * @return The address of the device structure to which this file
+ * descriptor is attached.
+ */
 static inline struct rtdm_device *rtdm_fd_device(struct rtdm_fd *fd)
 {
 	return rtdm_fd_to_context(fd)->device;
@@ -286,17 +302,10 @@ struct rtdm_device {
 	/** Protocol device identification: socket type (SOCK_xxx) */
 	int socket_type;
 
-	/** Named device instance creation for real-time contexts,
-	 *  optional (but deprecated) if open_nrt is non-NULL, ignored for
-	 *  protocol devices
-	 *  @deprecated Only use non-real-time open handler in new drivers. */
+	/** Named device instance creation for real-time contexts. */
 	rtdm_open_handler_t open;
 
-	/** Protocol socket creation for real-time contexts,
-	 *  optional (but deprecated) if socket_nrt is non-NULL, ignored for
-	 *  named devices
-	 *  @deprecated Only use non-real-time socket creation handler in new
-	 *  drivers. */
+	/** Protocol socket creation for real-time contexts. */
 	rtdm_socket_handler_t socket;
 
 	/** Default operations on newly opened device instance */
