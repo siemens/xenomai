@@ -87,10 +87,10 @@ enum rtdm_selecttype;
  * @{
  */
 /** Version of struct rtdm_device */
-#define RTDM_DEVICE_STRUCT_VER		5
+#define RTDM_DEVICE_STRUCT_VER		6
 
 /** Version of struct rtdm_dev_context */
-#define RTDM_CONTEXT_STRUCT_VER		3
+#define RTDM_CONTEXT_STRUCT_VER		4
 
 /** Flag indicating a secure variant of RTDM (not supported here) */
 #define RTDM_SECURE_DEVICE		0x80000000

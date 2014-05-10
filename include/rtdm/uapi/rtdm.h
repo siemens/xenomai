@@ -33,10 +33,10 @@
  * @anchor api_versioning @name API Versioning
  * @{ */
 /** Common user and driver API version */
-#define RTDM_API_VER			8
+#define RTDM_API_VER			9
 
 /** Minimum API revision compatible with the current release */
-#define RTDM_API_MIN_COMPAT_VER		6
+#define RTDM_API_MIN_COMPAT_VER		9
 /** @} API Versioning */
 
 /** RTDM type for representing absolute dates. Its base type is a 64 bit
