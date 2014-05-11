@@ -34,7 +34,7 @@ int a4l_fill_cmddesc(a4l_cxt_t * cxt, a4l_cmd_t * desc, void *arg)
 	int ret = 0;
 	unsigned int *tmpchans = NULL;
 
-	ret = rtdm_safe_copy_from_user(cxt->user_info,
+	ret = rtdm_safe_copy_from_user(rtdm_private_to_fd(cxt),
 				       desc, arg, sizeof(a4l_cmd_t));
 	if (ret != 0)
 		goto out_cmddesc;
@@ -50,7 +50,7 @@ int a4l_fill_cmddesc(a4l_cxt_t * cxt, a4l_cmd_t * desc, void *arg)
 		goto out_cmddesc;
 	}
 
-	ret = rtdm_safe_copy_from_user(cxt->user_info,
+	ret = rtdm_safe_copy_from_user(rtdm_private_to_fd(cxt),
 				       tmpchans,
 				       desc->chan_descs,
 				       desc->nb_chan * sizeof(unsigned long));

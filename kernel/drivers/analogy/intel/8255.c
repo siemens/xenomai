@@ -123,10 +123,9 @@ int subd_8255_cmdtest(a4l_subd_t *subd, a4l_cmd_t *cmd)
 	return 0;
 }
 
-int subd_8255_cancel(a4l_subd_t *subd)
+void subd_8255_cancel(a4l_subd_t *subd)
 {
 	/* FIXME */
-	return 0;
 }
 
 int subd_8255_insn_bits(a4l_subd_t *subd, a4l_kinsn_t *insn)

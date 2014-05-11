@@ -167,24 +167,21 @@ int a4l_setup_buffer(a4l_cxt_t *cxt, a4l_cmd_t *cmd)
 	return 0;
 }
 
-int a4l_cancel_buffer(a4l_cxt_t *cxt)
+void a4l_cancel_buffer(a4l_cxt_t *cxt)
 {
 	a4l_buf_t *buf_desc = cxt->buffer;
 	a4l_subd_t *subd = buf_desc->subd;
 
-	int err = 0;
-
 	if (!subd || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
-		return 0;
+		return;
 
 	/* If a "cancel" function is registered, call it
 	   (Note: this function is called before having checked
 	   if a command is under progress; we consider that
 	   the "cancel" function can be used as as to (re)initialize
 	   some component) */
-	if (subd->cancel != NULL && (err = subd->cancel(subd)) < 0) {
-		__a4l_err("a4l_cancel: cancel handler failed (err=%d)\n", err);
-	}
+	if (subd->cancel != NULL)
+		subd->cancel(subd);
 
 	if (buf_desc->cur_cmd != NULL) {
 		a4l_free_cmddesc(buf_desc->cur_cmd);
@@ -196,8 +193,6 @@ int a4l_cancel_buffer(a4l_cxt_t *cxt)
 
 	clear_bit(A4L_SUBD_BUSY_NR, &subd->status);
 	subd->buf = NULL;
-
-	return err;
 }
 
 /* --- Munge related function --- */
@@ -484,6 +479,7 @@ static struct vm_operations_struct a4l_vm_ops = {
 
 int a4l_ioctl_mmap(a4l_cxt_t *cxt, void *arg)
 {
+	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	a4l_mmap_t map_cfg;
 	a4l_dev_t *dev;
 	a4l_buf_t *buf;
@@ -511,7 +507,7 @@ int a4l_ioctl_mmap(a4l_cxt_t *cxt, void *arg)
 		return -EBUSY;
 	}
 
-	if (rtdm_safe_copy_from_user(cxt->user_info,
+	if (rtdm_safe_copy_from_user(fd,
 				     &map_cfg, arg, sizeof(a4l_mmap_t)) != 0)
 		return -EFAULT;
 
@@ -520,7 +516,7 @@ int a4l_ioctl_mmap(a4l_cxt_t *cxt, void *arg)
 		return -EFAULT;
 
 	/* All the magic is here */
-	ret = rtdm_mmap_to_user(cxt->user_info,
+	ret = rtdm_mmap_to_user(fd,
 				buf->buf,
 				map_cfg.size,
 				PROT_READ | PROT_WRITE,
@@ -532,7 +528,7 @@ int a4l_ioctl_mmap(a4l_cxt_t *cxt, void *arg)
 		return ret;
 	}
 
-	return rtdm_safe_copy_to_user(cxt->user_info,
+	return rtdm_safe_copy_to_user(fd,
 				      arg, &map_cfg, sizeof(a4l_mmap_t));
 }
 
@@ -571,7 +567,8 @@ int a4l_ioctl_cancel(a4l_cxt_t * cxt, void *arg)
 		return -EINVAL;
 	}
 
-	return a4l_cancel_buffer(cxt);
+	a4l_cancel_buffer(cxt);
+	return 0;
 }
 
 /* The ioctl BUFCFG is only useful for changing the size of the
@@ -580,6 +577,7 @@ int a4l_ioctl_cancel(a4l_cxt_t * cxt, void *arg)
 
 int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg)
 {
+	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 	a4l_buf_t *buf = cxt->buffer;
 	a4l_subd_t *subd = buf->subd;
@@ -597,7 +595,7 @@ int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg)
 		return -EINVAL;
 	}
 
-	if (rtdm_safe_copy_from_user(cxt->user_info,
+	if (rtdm_safe_copy_from_user(fd,
 				     &buf_cfg,
 				     arg, sizeof(a4l_bufcfg_t)) != 0)
 		return -EFAULT;
@@ -637,6 +635,7 @@ int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg)
 
 int a4l_ioctl_bufcfg2(a4l_cxt_t * cxt, void *arg)
 {
+	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 	a4l_buf_t *buf = cxt->buffer;
 	a4l_bufcfg2_t buf_cfg;
@@ -647,7 +646,7 @@ int a4l_ioctl_bufcfg2(a4l_cxt_t * cxt, void *arg)
 		return -EINVAL;
 	}
 
-	if (rtdm_safe_copy_from_user(cxt->user_info,
+	if (rtdm_safe_copy_from_user(fd,
 				     &buf_cfg,
 				     arg, sizeof(a4l_bufcfg2_t)) != 0)
 		return -EFAULT;
@@ -670,6 +669,7 @@ int a4l_ioctl_bufcfg2(a4l_cxt_t * cxt, void *arg)
 
 int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg)
 {
+	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 	a4l_buf_t *buf = cxt->buffer;
 	a4l_subd_t *subd = buf->subd;
@@ -678,7 +678,7 @@ int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg)
 	unsigned long tmp_cnt;
 	int ret;
 
-	if (!rtdm_in_rt_context() && rtdm_rt_capable(cxt->user_info))
+	if (!rtdm_in_rt_context() && rtdm_rt_capable(fd))
 		return -ENOSYS;
 
 	/* Basic checking */
@@ -687,7 +687,7 @@ int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg)
 		return -EINVAL;
 	}
 
-	if (rtdm_safe_copy_from_user(cxt->user_info,
+	if (rtdm_safe_copy_from_user(fd,
 				     &info, arg, sizeof(a4l_bufinfo_t)) != 0)
 		return -EFAULT;
 
@@ -766,7 +766,7 @@ a4l_ioctl_bufinfo_out:
 	info.buf_size = buf->size;
 
 	/* Sends the structure back to user space */
-	if (rtdm_safe_copy_to_user(cxt->user_info,
+	if (rtdm_safe_copy_to_user(fd,
 				   arg, &info, sizeof(a4l_bufinfo_t)) != 0)
 		return -EFAULT;
 
@@ -780,6 +780,7 @@ major release, this ioctl will vanish. */
 
 int a4l_ioctl_bufinfo2(a4l_cxt_t * cxt, void *arg)
 {
+	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 	a4l_buf_t *buf = cxt->buffer;
 	a4l_bufcfg2_t buf_cfg;
@@ -792,7 +793,7 @@ int a4l_ioctl_bufinfo2(a4l_cxt_t * cxt, void *arg)
 
 	buf_cfg.wake_count = buf->wake_count;
 
-	if (rtdm_safe_copy_to_user(cxt->user_info,
+	if (rtdm_safe_copy_to_user(fd,
 				   arg, &buf_cfg, sizeof(a4l_bufcfg2_t)) != 0)
 		return -EFAULT;
 
@@ -1040,6 +1041,7 @@ int a4l_select(a4l_cxt_t *cxt,
 
 int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg)
 {
+	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	int ret = 0;
 	unsigned long tmp_cnt = 0;
 	a4l_dev_t *dev = a4l_get_dev(cxt);
@@ -1047,7 +1049,7 @@ int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg)
 	a4l_subd_t *subd = buf->subd;
 	a4l_poll_t poll;
 
-	if (!rtdm_in_rt_context() && rtdm_rt_capable(cxt->user_info))
+	if (!rtdm_in_rt_context() && rtdm_rt_capable(fd))
 		return -ENOSYS;
 
 	/* Basic checking */
@@ -1062,7 +1064,7 @@ int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg)
 		return -ENOENT;
 	}
 
-	if (rtdm_safe_copy_from_user(cxt->user_info,
+	if (rtdm_safe_copy_from_user(fd,
 				     &poll, arg, sizeof(a4l_poll_t)) != 0)
 		return -EFAULT;
 
@@ -1122,7 +1124,7 @@ out_poll:
 
 	poll.arg = tmp_cnt;
 
-	ret = rtdm_safe_copy_to_user(cxt->user_info,
+	ret = rtdm_safe_copy_to_user(fd,
 				     arg, &poll, sizeof(a4l_poll_t));
 
 	return ret;

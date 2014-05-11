@@ -298,13 +298,11 @@ static int ai_cmdtest(a4l_subd_t *subd, a4l_cmd_t *cmd)
 	return 0;
 }
 
-static int ai_cancel(a4l_subd_t *subd)
+static void ai_cancel(a4l_subd_t *subd)
 {
 	struct fake_priv *priv = (struct fake_priv *)subd->dev->priv;
 
 	priv->ai_running = 0;
-
-	return 0;
 }
 
 static void ai_munge(a4l_subd_t *subd, void *buf, unsigned long size)
@@ -332,7 +330,7 @@ int ao_trigger(a4l_subd_t *subd, lsampl_t trignum)
 	return 0;
 }
 
-int ao_cancel(a4l_subd_t *subd)
+void ao_cancel(a4l_subd_t *subd)
 {
 	struct fake_priv *priv = (struct fake_priv *)subd->dev->priv;
 	struct ao_ai2_priv *ao_priv = (struct ao_ai2_priv *)subd->priv;
@@ -352,8 +350,6 @@ int ao_cancel(a4l_subd_t *subd)
 		ao_priv->count = 0;
 		a4l_buf_evt(ai2_subd, A4L_BUF_EOA);
 	}
-
-	return 0;
 }
 
 /* --- Asynchronous 2nd AI functions --- */
@@ -367,7 +363,7 @@ int ai2_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 	return 0;
 }
 
-int ai2_cancel(a4l_subd_t *subd)
+void ai2_cancel(a4l_subd_t *subd)
 {
 	struct fake_priv *priv = (struct fake_priv *)subd->dev->priv;
 	struct ao_ai2_priv *ai2_priv = *((struct ao_ai2_priv **)subd->priv);
@@ -388,8 +384,6 @@ int ai2_cancel(a4l_subd_t *subd)
 		ai2_priv->count = 0;
 		a4l_buf_evt(ao_subd, A4L_BUF_EOA);
 	}
-
-	return 0;
 }
 
 

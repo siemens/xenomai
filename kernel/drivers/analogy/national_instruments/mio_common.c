@@ -1531,7 +1531,7 @@ static int ni_cdo_setup_MITE_dma(a4l_subd_t *subd)
 
 #endif /* CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE */
 
-static int ni_ai_reset(a4l_subd_t *subd)
+static void ni_ai_reset(a4l_subd_t *subd)
 {
 	a4l_dev_t *dev = subd->dev;
 
@@ -1617,8 +1617,6 @@ static int ni_ai_reset(a4l_subd_t *subd)
 			    AI_STOP_Interrupt_Ack, Interrupt_A_Ack_Register);
 
 	devpriv->stc_writew(dev, AI_Configuration_End, Joint_Reset_Register);
-
-	return 0;
 }
 
 static int ni_ai_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
@@ -3189,7 +3187,7 @@ int ni_ao_cmdtest(a4l_subd_t *subd, a4l_cmd_t *cmd)
 	return 0;
 }
 
-int ni_ao_reset(a4l_subd_t *subd)
+void ni_ao_reset(a4l_subd_t *subd)
 {
 	a4l_dev_t *dev = subd->dev;
 
@@ -3225,8 +3223,6 @@ int ni_ao_reset(a4l_subd_t *subd)
 		ao_win_out(CLEAR_WG, AO_Misc_611x);
 	}
 	devpriv->stc_writew(dev, AO_Configuration_End, Joint_Reset_Register);
-
-	return 0;
 }
 
 /* digital io */
@@ -3471,7 +3467,7 @@ int ni_cdio_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 	return 0;
 }
 
-int ni_cdio_cancel(a4l_subd_t *subd)
+void ni_cdio_cancel(a4l_subd_t *subd)
 {
 	a4l_dev_t *dev = subd->dev;
 	ni_writel(CDO_Disarm_Bit | CDO_Error_Interrupt_Enable_Clear_Bit |
@@ -3481,7 +3477,6 @@ int ni_cdio_cancel(a4l_subd_t *subd)
 
 	ni_writel(0, M_Offset_CDO_Mask_Enable);
 	ni_release_cdo_mite_channel(dev);
-	return 0;
 }
 
 int ni_cdo_inttrig(a4l_subd_t *subd, lsampl_t trignum)
@@ -4521,16 +4516,15 @@ static int ni_gpct_cmdtest(a4l_subd_t *subd, a4l_cmd_t *cmd)
 	return a4l_ni_tio_cmdtest(counter, cmd);
 }
 
-static int ni_gpct_cancel(a4l_subd_t *subd)
+static void ni_gpct_cancel(a4l_subd_t *subd)
 {
 	a4l_dev_t *dev = subd->dev;
 	struct ni_gpct *counter = (struct ni_gpct *)subd->priv;
 	int retval;
 
-	retval = a4l_ni_tio_cancel(counter);
+	a4l_ni_tio_cancel(counter);
 	ni_e_series_enable_second_irq(dev, counter->counter_index, 0);
 	ni_release_gpct_mite_channel(dev, counter->counter_index);
-	return retval;
 }
 
 #endif /* CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE */

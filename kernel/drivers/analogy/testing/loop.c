@@ -134,15 +134,13 @@ int loop_trigger(a4l_subd_t *subd, lsampl_t trignum)
 }
 
 /* Cancel callback */
-int loop_cancel(a4l_subd_t *subd)
+void loop_cancel(a4l_subd_t *subd)
 {
 	lpprv_t *priv = (lpprv_t *)subd->dev->priv;
 
 	a4l_info(subd->dev, "loop_cancel: (subd=%d)\n", subd->idx);
 
 	priv->loop_running = 0;
-
-	return 0;
 }
 
 /* Read instruction callback */

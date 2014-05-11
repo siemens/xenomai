@@ -178,6 +178,7 @@ a4l_subd_t *a4l_get_subd(a4l_dev_t *dev, int idx)
 
 int a4l_ioctl_subdinfo(a4l_cxt_t * cxt, void *arg)
 {
+	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 	int i, ret = 0;
 	a4l_sbinfo_t *subd_info;
@@ -201,7 +202,7 @@ int a4l_ioctl_subdinfo(a4l_cxt_t * cxt, void *arg)
 			dev->transfer.subds[i]->chan_desc->length : 0;
 	}
 
-	if (rtdm_safe_copy_to_user(cxt->user_info,
+	if (rtdm_safe_copy_to_user(fd,
 				   arg,
 				   subd_info, dev->transfer.nb_subd *
 				   sizeof(a4l_sbinfo_t)) != 0)
@@ -215,6 +216,7 @@ int a4l_ioctl_subdinfo(a4l_cxt_t * cxt, void *arg)
 
 int a4l_ioctl_nbchaninfo(a4l_cxt_t * cxt, void *arg)
 {
+	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 	a4l_chinfo_arg_t inarg;
 
@@ -224,7 +226,7 @@ int a4l_ioctl_nbchaninfo(a4l_cxt_t * cxt, void *arg)
 		return -EINVAL;
 	}
 
-	if (rtdm_safe_copy_from_user(cxt->user_info,
+	if (rtdm_safe_copy_from_user(fd,
 				     &inarg, arg,
 				     sizeof(a4l_chinfo_arg_t)) != 0)
 		return -EFAULT;
@@ -241,7 +243,7 @@ int a4l_ioctl_nbchaninfo(a4l_cxt_t * cxt, void *arg)
 		inarg.info = (void *)(unsigned long)
 			dev->transfer.subds[inarg.idx_subd]->chan_desc->length;
 
-	if (rtdm_safe_copy_to_user(cxt->user_info,
+	if (rtdm_safe_copy_to_user(fd,
 				   arg,
 				   &inarg, sizeof(a4l_chinfo_arg_t)) != 0)
 		return -EFAULT;
@@ -251,6 +253,7 @@ int a4l_ioctl_nbchaninfo(a4l_cxt_t * cxt, void *arg)
 
 int a4l_ioctl_chaninfo(a4l_cxt_t * cxt, void *arg)
 {
+	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	int i, ret = 0;
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 	a4l_chinfo_t *chan_info;
@@ -264,7 +267,7 @@ int a4l_ioctl_chaninfo(a4l_cxt_t * cxt, void *arg)
 		return -EINVAL;
 	}
 
-	if (rtdm_safe_copy_from_user(cxt->user_info,
+	if (rtdm_safe_copy_from_user(fd,
 				     &inarg, arg,
 				     sizeof(a4l_chinfo_arg_t)) != 0)
 		return -EFAULT;
@@ -305,7 +308,7 @@ int a4l_ioctl_chaninfo(a4l_cxt_t * cxt, void *arg)
 			chan_info[i].chan_flags |= A4L_CHAN_GLOBAL;
 	}
 
-	if (rtdm_safe_copy_to_user(cxt->user_info,
+	if (rtdm_safe_copy_to_user(fd,
 				   inarg.info,
 				   chan_info,
 				   chan_desc->length *
@@ -320,6 +323,7 @@ int a4l_ioctl_chaninfo(a4l_cxt_t * cxt, void *arg)
 int a4l_ioctl_nbrnginfo(a4l_cxt_t * cxt, void *arg)
 {
 	int i;
+	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 	a4l_rnginfo_arg_t inarg;
 	a4l_rngdesc_t *rng_desc;
@@ -330,7 +334,7 @@ int a4l_ioctl_nbrnginfo(a4l_cxt_t * cxt, void *arg)
 		return -EINVAL;
 	}
 
-	if (rtdm_safe_copy_from_user(cxt->user_info,
+	if (rtdm_safe_copy_from_user(fd,
 				     &inarg,
 				     arg, sizeof(a4l_rnginfo_arg_t)) != 0)
 		return -EFAULT;
@@ -362,7 +366,7 @@ int a4l_ioctl_nbrnginfo(a4l_cxt_t * cxt, void *arg)
 		inarg.info = (void *)0;
 
 
-	if (rtdm_safe_copy_to_user(cxt->user_info,
+	if (rtdm_safe_copy_to_user(fd,
 				   arg,
 				   &inarg, sizeof(a4l_rnginfo_arg_t)) != 0)
 		return -EFAULT;
@@ -372,6 +376,7 @@ int a4l_ioctl_nbrnginfo(a4l_cxt_t * cxt, void *arg)
 
 int a4l_ioctl_rnginfo(a4l_cxt_t * cxt, void *arg)
 {
+	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	int i, ret = 0;
 	unsigned int tmp;
 	a4l_dev_t *dev = a4l_get_dev(cxt);
@@ -385,7 +390,7 @@ int a4l_ioctl_rnginfo(a4l_cxt_t * cxt, void *arg)
 		return -EINVAL;
 	}
 
-	if (rtdm_safe_copy_from_user(cxt->user_info,
+	if (rtdm_safe_copy_from_user(fd,
 				     &inarg,
 				     arg, sizeof(a4l_rnginfo_arg_t)) != 0)
 		return -EFAULT;
@@ -433,7 +438,7 @@ int a4l_ioctl_rnginfo(a4l_cxt_t * cxt, void *arg)
 			rng_info[i].flags |= A4L_RNG_GLOBAL;
 	}
 
-	if (rtdm_safe_copy_to_user(cxt->user_info,
+	if (rtdm_safe_copy_to_user(fd,
 				   inarg.info,
 				   rng_info,
 				   rng_desc->rngtabs[tmp]->length *

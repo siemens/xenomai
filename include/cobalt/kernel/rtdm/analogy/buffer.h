@@ -98,6 +98,7 @@ static inline int __produce(a4l_cxt_t *cxt,
 			    a4l_buf_t *buf, void *pin, unsigned long count)
 {
 	unsigned long start_ptr = (buf->prd_count % buf->size);
+	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	unsigned long tmp_cnt = count;
 	int ret = 0;
 
@@ -107,10 +108,10 @@ static inline int __produce(a4l_cxt_t *cxt,
 			buf->size - start_ptr : tmp_cnt;
 
 		/* Perform the copy */
-		if (cxt == NULL)
+		if (rtdm_fd_is_user(fd) == 0)
 			memcpy(buf->buf + start_ptr, pin, blk_size);
 		else
-			ret = rtdm_safe_copy_from_user(cxt->user_info,
+			ret = rtdm_safe_copy_from_user(fd,
 						       buf->buf + start_ptr,
 						       pin, blk_size);
 
@@ -130,6 +131,7 @@ static inline int __consume(a4l_cxt_t *cxt,
 			    a4l_buf_t *buf, void *pout, unsigned long count)
 {
 	unsigned long start_ptr = (buf->cns_count % buf->size);
+	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	unsigned long tmp_cnt = count;
 	int ret = 0;
 
@@ -139,10 +141,10 @@ static inline int __consume(a4l_cxt_t *cxt,
 			buf->size - start_ptr : tmp_cnt;
 
 		/* Perform the copy */
-		if (cxt == NULL)
+		if (rtdm_fd_is_user(fd) == 0)
 			memcpy(pout, buf->buf + start_ptr, blk_size);
 		else
-			ret = rtdm_safe_copy_to_user(cxt->user_info,
+			ret = rtdm_safe_copy_to_user(fd,
 						     pout,
 						     buf->buf + start_ptr,
 						     blk_size);
@@ -391,7 +393,7 @@ void a4l_cleanup_buffer(a4l_buf_t * buf_desc);
 
 int a4l_setup_buffer(a4l_cxt_t *cxt, a4l_cmd_t *cmd);
 
-int a4l_cancel_buffer(a4l_cxt_t *cxt);
+void a4l_cancel_buffer(a4l_cxt_t *cxt);
 
 int a4l_buf_prepare_absput(struct a4l_subdevice *subd,
 			   unsigned long count);

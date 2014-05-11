@@ -119,10 +119,11 @@ int a4l_do_insn_trig(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
 
 int a4l_fill_insndsc(a4l_cxt_t * cxt, a4l_kinsn_t * dsc, void *arg)
 {
+	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	int ret = 0;
 	void *tmp_data = NULL;
 
-	ret = rtdm_safe_copy_from_user(cxt->user_info,
+	ret = rtdm_safe_copy_from_user(fd,
 				       dsc, arg, sizeof(a4l_insn_t));
 	if (ret != 0)
 		goto out_insndsc;
@@ -141,7 +142,7 @@ int a4l_fill_insndsc(a4l_cxt_t * cxt, a4l_kinsn_t * dsc, void *arg)
 		}
 
 		if ((dsc->type & A4L_INSN_MASK_WRITE) != 0) {
-			ret = rtdm_safe_copy_from_user(cxt->user_info,
+			ret = rtdm_safe_copy_from_user(fd,
 						       tmp_data, dsc->data,
 						       dsc->data_size);
 			if (ret < 0)
@@ -162,10 +163,11 @@ out_insndsc:
 
 int a4l_free_insndsc(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
 {
+	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	int ret = 0;
 
 	if ((dsc->type & A4L_INSN_MASK_READ) != 0)
-		ret = rtdm_safe_copy_to_user(cxt->user_info,
+		ret = rtdm_safe_copy_to_user(fd,
 					     dsc->__udata,
 					     dsc->data, dsc->data_size);
 
@@ -285,11 +287,12 @@ out_do_insn:
 
 int a4l_ioctl_insn(a4l_cxt_t * cxt, void *arg)
 {
+	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	int ret = 0;
 	a4l_kinsn_t insn;
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 
-	if (!rtdm_in_rt_context() && rtdm_rt_capable(cxt->user_info))
+	if (!rtdm_in_rt_context() && rtdm_rt_capable(fd))
 		return -ENOSYS;
 
 	/* Basic checking */
@@ -325,12 +328,13 @@ err_ioctl_insn:
 
 int a4l_fill_ilstdsc(a4l_cxt_t * cxt, a4l_kilst_t * dsc, void *arg)
 {
+	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	int i, ret = 0;
 
 	dsc->insns = NULL;
 
 	/* Recovers the structure from user space */
-	ret = rtdm_safe_copy_from_user(cxt->user_info,
+	ret = rtdm_safe_copy_from_user(fd,
 				       dsc, arg, sizeof(a4l_insnlst_t));
 	if (ret < 0)
 		return ret;
@@ -387,11 +391,12 @@ int a4l_free_ilstdsc(a4l_cxt_t * cxt, a4l_kilst_t * dsc)
    designed for performance issues */
 int a4l_ioctl_insnlist(a4l_cxt_t * cxt, void *arg)
 {
+	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	int i, ret = 0;
 	a4l_kilst_t ilst;
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 
-	if (!rtdm_in_rt_context() && rtdm_rt_capable(cxt->user_info))
+	if (!rtdm_in_rt_context() && rtdm_rt_capable(fd))
 		return -ENOSYS;
 
 	/* Basic checking */

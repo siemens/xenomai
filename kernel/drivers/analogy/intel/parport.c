@@ -235,7 +235,7 @@ static int parport_intr_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 	return 0;
 }
 
-static int parport_intr_cancel(a4l_subd_t *subd)
+static void parport_intr_cancel(a4l_subd_t *subd)
 {
 	a4l_dev_t *dev = subd->dev;
 
@@ -245,8 +245,6 @@ static int parport_intr_cancel(a4l_subd_t *subd)
 	outb(devpriv->c_data, devpriv->io_base + PARPORT_C);
 
 	devpriv->enable_irq = 0;
-
-	return 0;
 }
 
 static int parport_interrupt(unsigned int irq, void *d)

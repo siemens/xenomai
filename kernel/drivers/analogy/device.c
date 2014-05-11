@@ -175,11 +175,12 @@ void a4l_proc_detach(a4l_cxt_t * cxt)
 int a4l_fill_lnkdesc(a4l_cxt_t * cxt,
 		     a4l_lnkdesc_t * link_arg, void *arg)
 {
+	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	int ret;
 	char *tmpname = NULL;
 	void *tmpopts = NULL;
 
-	ret = rtdm_safe_copy_from_user(cxt->user_info,
+	ret = rtdm_safe_copy_from_user(fd,
 				       link_arg, arg, sizeof(a4l_lnkdesc_t));
 	if (ret != 0) {
 		__a4l_err("a4l_fill_lnkdesc: "
@@ -197,7 +198,7 @@ int a4l_fill_lnkdesc(a4l_cxt_t * cxt,
 		}
 		tmpname[link_arg->bname_size] = 0;
 
-		ret = rtdm_safe_copy_from_user(cxt->user_info,
+		ret = rtdm_safe_copy_from_user(fd,
 					       tmpname,
 					       link_arg->bname,
 					       link_arg->bname_size);
@@ -222,7 +223,7 @@ int a4l_fill_lnkdesc(a4l_cxt_t * cxt,
 			goto out_get_lnkdesc;
 		}
 
-		ret = rtdm_safe_copy_from_user(cxt->user_info,
+		ret = rtdm_safe_copy_from_user(fd,
 					       tmpopts,
 					       link_arg->opts,
 					       link_arg->opts_size);
@@ -431,6 +432,7 @@ int a4l_ioctl_devcfg(a4l_cxt_t * cxt, void *arg)
 
 int a4l_ioctl_devinfo(a4l_cxt_t * cxt, void *arg)
 {
+	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	a4l_dvinfo_t info;
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 
@@ -446,7 +448,7 @@ int a4l_ioctl_devinfo(a4l_cxt_t * cxt, void *arg)
 		   read subdevice and write subdevice */
 	}
 
-	if (rtdm_safe_copy_to_user(cxt->user_info,
+	if (rtdm_safe_copy_to_user(fd,
 				   arg, &info, sizeof(a4l_dvinfo_t)) != 0)
 		return -EFAULT;
 

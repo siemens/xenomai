@@ -28,10 +28,6 @@ struct a4l_device;
 struct a4l_buffer;
 
 struct a4l_device_context {
-
-	/* Needed to call rtdm_*_copy_from/to_user functions */
-	rtdm_user_info_t *user_info;
-
 	/* The adequate device pointer
 	   (retrieved thanks to minor at open time) */
 	struct a4l_device *dev;
@@ -46,9 +42,9 @@ typedef struct a4l_device_context a4l_cxt_t;
 static inline int a4l_get_minor(a4l_cxt_t *cxt)
 {
 	/* Get a pointer on the container structure */
-	struct rtdm_dev_context * rtdm_cxt = rtdm_private_to_context(cxt);
+	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	/* Get the minor index */
-	return rtdm_cxt->device->device_id;
+	return rtdm_fd_device(fd)->device_id;
 }
 
 #endif /* !_COBALT_RTDM_ANALOGY_CONTEXT_H */

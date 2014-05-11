@@ -78,7 +78,7 @@ struct a4l_subdevice {
 					/**< Callback for command handling */
 	int (*do_cmdtest) (struct a4l_subdevice *, a4l_cmd_t *);
 						       /**< Callback for command checking */
-	int (*cancel) (struct a4l_subdevice *);
+	void (*cancel) (struct a4l_subdevice *);
 					 /**< Callback for asynchronous transfer cancellation */
 	void (*munge) (struct a4l_subdevice *, void *, unsigned long);
 								/**< Callback for munge operation */
