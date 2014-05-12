@@ -185,7 +185,13 @@ extern struct hash_table *__main_catalog;
 extern struct sysgroup *__main_sysgroup;
 
 struct sysgroup_memspec {
+	/** next member in sysgroup list. */
 	struct holder next;
+};
+
+struct agent_memspec {
+	/** Agent pid in owner process. */
+	pid_t pid;
 };
 
 static inline void *mainheap_ptr(memoff_t off)
@@ -313,6 +319,9 @@ char *xnstrdup(const char *ptr);
 #else /* !CONFIG_XENO_PSHARED */
 
 struct sysgroup_memspec {
+};
+
+struct agent_memspec {
 };
 
 /*

@@ -185,6 +185,7 @@ struct threadobj {
 	struct traceobj *tracer;
 	sem_t *cancel_sem;
 	struct sysgroup_memspec memspec;
+	struct agent_memspec agent;
 	struct backtrace_data btd;
 };
 

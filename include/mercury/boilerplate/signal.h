@@ -24,10 +24,11 @@
 #define sigev_notify_thread_id	 _sigev_un._tid
 #endif
 
-#define SIGSUSP		(SIGRTMIN + 8)
-#define SIGRESM		(SIGRTMIN + 9)
+#define SIGSUSP		(SIGRTMIN + 8)	/* Suspend request */
+#define SIGRESM		(SIGRTMIN + 9)	/* Resume request */
 #define SIGRELS		(SIGRTMIN + 10) /* Syscall abort */
 #define SIGRRB		(SIGRTMIN + 11) /* Round-robin event */
+#define SIGAGENT	(SIGRTMIN + 12) /* Request to remote agent */
 
 #define SIGSAFE_LOCK_ENTRY(__safelock)					\
   	do {								\

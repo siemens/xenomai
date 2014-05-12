@@ -20,6 +20,8 @@
 
 #include <cobalt/signal.h>
 
+#define SIGAGENT	(SIGRTMIN + 12) /* Request to remote agent */
+
 #define SIGSAFE_LOCK_ENTRY(__safelock)					\
   	do {								\
 		push_cleanup_lock(__safelock);				\

@@ -22,6 +22,7 @@
 #include <time.h>
 #include <pthread.h>
 #include <boilerplate/signal.h>
+#include <boilerplate/compiler.h>
 
 extern struct timespec __init_date;
 
@@ -55,12 +56,12 @@ void __printout(const char *name,
 		const char *header,
 		const char *fmt, va_list ap);
 
-void __panic(const char *name,
-	     const char *fmt, va_list ap);
+void __noreturn __panic(const char *name,
+			const char *fmt, va_list ap);
 
 void early_panic(const char *fmt, ...);
 
-void panic(const char *fmt, ...);
+void __noreturn panic(const char *fmt, ...);
 
 void __warning(const char *name,
 	       const char *fmt, va_list ap);

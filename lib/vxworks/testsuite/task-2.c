@@ -6,6 +6,12 @@
 #include <vxworks/taskLib.h>
 #include <vxworks/semLib.h>
 
+static inline void safe_pause(void)
+{
+	for (;;)
+		pause();
+}
+
 static struct traceobj trobj;
 
 static int tseq[] = {
@@ -35,12 +41,10 @@ static void backgroundTask(long a1, long a2, long a3, long a4, long a5,
 		count++;
 
 	/*
-	 * Force a pause so that any pending cancellation is taken
-	 * regardless of whether async-cancel is enabled or not.
+	 * Enter infinite pause so that any pending cancellation is
+	 * taken regardless of whether async-cancel is enabled or not.
 	 */
-	pause();
-
-	traceobj_mark(&trobj, 3);
+	safe_pause();
 
 	traceobj_exit(&trobj);
 }

@@ -18,6 +18,7 @@
  * Thread object abstraction.
  */
 
+#include <sys/prctl.h>
 #include <signal.h>
 #include <memory.h>
 #include <errno.h>
@@ -47,28 +48,20 @@ union copperplate_wait_union {
 
 static void finalize_thread(void *p);
 
-/*
- * NOTE on cancellation handling: Most traditional RTOSes guarantee
- * that the task/thread delete operation is strictly synchronous,
- * i.e. the deletion service returns to the caller only __after__ the
- * deleted thread entered an innocuous state, i.e. dormant/dead.
- *
- * For this reason, we always wait for the cancelled threads
- * internally (see threadobj_cancel()), which might lead to a priority
- * inversion. This is the price for guaranteeing that
- * threadobj_cancel() returns only after the cancelled thread
- * finalizer has run.
- */
+static int request_setschedparam(struct threadobj *thobj,
+				 const struct coresched_attributes *csa);
+
+static int request_cancel(struct threadobj *thobj);
+
+static int threadobj_agent_prio;
 
 int threadobj_high_prio;
 
 int threadobj_irq_prio;
 
 #ifdef HAVE_TLS
-
 __thread __attribute__ ((tls_model (CONFIG_XENO_TLS_MODEL)))
 struct threadobj *__threadobj_current;
-
 #endif
 
 /*
@@ -82,6 +75,159 @@ void threadobj_init_key(void)
 	if (pthread_key_create(&threadobj_tskey, finalize_thread))
 		early_panic("failed to allocate TSD key");
 }
+
+#ifdef CONFIG_XENO_PSHARED
+
+static pid_t agent_pid;
+
+#define RMT_SETSCHED	0
+#define RMT_CANCEL	1
+
+struct remote_cancel {
+	pthread_t tid;
+};
+
+struct remote_setsched {
+	pthread_t tid;
+	struct coresched_attributes attr;
+};
+
+struct remote_request {
+	int req;	/* RMT_xx */
+	union {
+		struct remote_cancel cancel;
+		struct remote_setsched setsched;
+	} u;
+};
+
+#ifdef CONFIG_XENO_COBALT
+
+static inline void agent_init_corespec(const char *name)
+{
+	pthread_set_name_np(pthread_self(), name);
+}
+
+#else /* CONFIG_XENO_MERCURY */
+
+static inline void agent_init_corespec(const char *name)
+{
+	prctl(PR_SET_NAME, (unsigned long)name, 0, 0, 0);
+}
+
+#endif /* CONFIG_XENO_MERCURY */
+
+static int agent_prologue(void *arg)
+{
+	agent_pid = copperplate_get_tid();
+	agent_init_corespec("remote-agent");
+	threadobj_set_current(THREADOBJ_IRQCONTEXT);
+
+	return 0;
+}
+
+static void *agent_loop(void *arg)
+{
+	struct remote_request *rq;
+	siginfo_t si;
+	sigset_t set;
+	int sig, ret;
+
+	sigemptyset(&set);
+	sigaddset(&set, SIGAGENT);
+
+	for (;;) {
+		sig = __RT(sigwaitinfo(&set, &si));
+		if (sig < 0) {
+			if (errno == EINTR)
+				continue;
+			panic("agent thread cannot wait for request, %s",
+			      symerror(-errno));
+		}
+		rq = si.si_ptr;
+		switch (rq->req) {
+		case RMT_SETSCHED:
+			ret = copperplate_renice_local_thread(rq->u.setsched.tid,
+							      &rq->u.setsched.attr);
+			break;
+		case RMT_CANCEL:
+			ret = pthread_cancel(rq->u.cancel.tid);
+			break;
+		default:
+			panic("invalid remote request #%d", rq->req);
+		}
+		if (ret)
+			warning("remote request #%d failed, %s",
+				rq->req, symerror(ret));
+		xnfree(rq);
+	}
+
+	return NULL;
+}
+
+static inline int send_agent(struct threadobj *thobj,
+			     struct remote_request *rq)
+{
+	union sigval val = { .sival_ptr = rq };
+	/*
+	 * XXX: No backtracing, may legitimately fail if the remote
+	 * process goes away (hopefully cleanly). However, the request
+	 * blocks attached to unprocessed pending signals may leak, as
+	 * requests are fully asynchronous. Fortunately, processes
+	 * creating user threads are unlikely to ungracefully leave
+	 * the session they belong to intentionally.
+	 */
+	return __RT(sigqueue(thobj->agent.pid, SIGAGENT, val));
+}
+
+static void start_agent(void)
+{
+	struct corethread_attributes cta;
+	pthread_t tid;
+	sigset_t set;
+	int ret;
+
+	/*
+	 * CAUTION: we expect all internal/user threads created by
+	 * Copperplate to inherit this signal mask, otherwise
+	 * sigqueue(SIGAGENT) might be delivered to the wrong
+	 * thread. So make sure the agent support is set up early
+	 * enough.
+	 */
+	sigemptyset(&set);
+	sigaddset(&set, SIGAGENT);
+	pthread_sigmask(SIG_BLOCK, &set, NULL);
+
+	cta.sched.policy = SCHED_RT;
+	cta.sched.param.sched_priority = threadobj_agent_prio;
+	cta.prologue = agent_prologue;
+	cta.run = agent_loop;
+	cta.arg = NULL;
+	cta.stacksize = PTHREAD_STACK_MIN * 4;
+	cta.detachstate = PTHREAD_CREATE_DETACHED;
+
+	ret = copperplate_create_thread(&cta, &tid);
+	if (ret)
+		panic("failed to start agent thread, %s", symerror(ret));
+}
+
+static void threadobj_set_agent(struct threadobj *thobj)
+{
+	thobj->agent.pid = agent_pid;
+}
+
+#else  /* !CONFIG_XENO_PSHARED */
+
+static inline void start_agent(void)
+{
+	/* No agent in private (process-local) session. */
+}
+
+static inline void threadobj_set_agent(struct threadobj *thobj)
+{
+	/* nop */
+}
+
+#endif /* !CONFIG_XENO_PSHARED */
 
 #ifdef CONFIG_XENO_COBALT
 
@@ -156,6 +302,9 @@ int threadobj_suspend(struct threadobj *thobj) /* thobj->lock held */
 
 	__threadobj_check_locked(thobj);
 
+	if (thobj->status & __THREAD_S_SUSPENDED)
+		return 0;
+
 	thobj->status |= __THREAD_S_SUSPENDED;
 	if (thobj == threadobj_current()) {
 		threadobj_unlock(thobj);
@@ -173,7 +322,7 @@ int threadobj_resume(struct threadobj *thobj) /* thobj->lock held */
 
 	__threadobj_check_locked(thobj);
 
-	if (thobj == threadobj_current())
+	if ((thobj->status & __THREAD_S_SUSPENDED) == 0)
 		return 0;
 
 	thobj->status &= ~__THREAD_S_SUSPENDED;
@@ -252,32 +401,37 @@ void __threadobj_set_scheduler(struct threadobj *thobj,
 
 int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock held, dropped */
 {
-	struct sched_param_ex xparam;
-	pthread_t tid = thobj->tid;
-	int policy;
+	struct coresched_attributes csa;
+	int ret;
 
 	__threadobj_check_locked(thobj);
 
-	policy = SCHED_RT;
+	csa.policy = SCHED_RT;
 	if (prio == 0) {
 		thobj->status &= ~__THREAD_S_RR;
-		policy = SCHED_OTHER;
+		csa.policy = SCHED_OTHER;
 	} else if (thobj->status & __THREAD_S_RR) {
-		xparam.sched_rr_quantum = thobj->tslice;
-		policy = SCHED_RR;
+		csa.param.sched_rr_quantum = thobj->tslice;
+		csa.policy = SCHED_RR;
 	}
 
-	thobj->priority = prio;
-	thobj->policy = policy;
-	threadobj_unlock(thobj);
 	/*
-	 * XXX: as a side effect, resetting SCHED_RR will refill the
-	 * time credit for the target thread with the last quantum
-	 * set.
+	 * As a side effect, resetting SCHED_RR will refill the time
+	 * credit for the target thread with the last quantum set.
 	 */
-	xparam.sched_priority = prio;
+	csa.param.sched_priority = prio;
+	thobj->priority = prio;
+	thobj->policy = csa.policy;
 
-	return pthread_setschedparam_ex(tid, policy, &xparam);
+	if (thobj == threadobj_current()) {
+		threadobj_unlock(thobj);
+		ret = request_setschedparam(thobj, &csa);
+	} else {
+		ret = request_setschedparam(thobj, &csa);
+		threadobj_unlock(thobj);
+	}
+
+	return __bt(ret);
 }
 
 int threadobj_set_mode(int clrmask, int setmask, int *mode_r) /* current->lock held */
@@ -376,8 +530,6 @@ int threadobj_stat(struct threadobj *thobj, struct threadobj_stat *p) /* thobj->
 
 #else /* CONFIG_XENO_MERCURY */
 
-#include <sys/prctl.h>
-
 static int threadobj_lock_prio;
 
 static void unblock_sighandler(int sig)
@@ -436,8 +588,15 @@ static inline void pkg_init_corespec(void)
 
 	/*
 	 * We don't have builtin scheduler-lock feature over Mercury,
-	 * so we emulate it by reserving the highest priority level of
-	 * the SCHED_RT class to disable involuntary preemption.
+	 * so we emulate it by reserving the highest thread priority
+	 * level from the SCHED_RT class to disable involuntary
+	 * preemption.
+	 *
+	 * NOTE: The remote agent thread will also run with the
+	 * highest thread priority level (threadobj_agent_prio) in
+	 * shared multi-processing mode, which won't affect any thread
+	 * holding the scheduler lock, unless the latter has to block
+	 * for some reason, defeating the purpose of such lock anyway.
 	 */
 	threadobj_lock_prio = threadobj_high_prio;
 	threadobj_high_prio = threadobj_lock_prio - 1;
@@ -678,9 +837,8 @@ void __threadobj_set_scheduler(struct threadobj *thobj,
 
 int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock held, dropped */
 {
-	pthread_t tid = thobj->tid;
-	struct sched_param param;
-	int policy;
+	struct coresched_attributes csa;
+	int ret;
 
 	__threadobj_check_locked(thobj);
 
@@ -696,23 +854,26 @@ int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock hel
 		return 0;
 	}
 
-	policy = SCHED_RT;
+	csa.policy = SCHED_RT;
 	if (prio == 0) {
 		thobj->status &= ~__THREAD_S_RR;
-		policy = SCHED_OTHER;
+		csa.policy = SCHED_OTHER;
 	} else if (thobj->status & __THREAD_S_RR)
-		policy = SCHED_RR;
+		csa.policy = SCHED_RR;
 
+	csa.param.sched_priority = prio;
 	thobj->priority = prio;
-	thobj->policy = policy;
-	threadobj_unlock(thobj);
-	/*
-	 * Since we released the thread container lock, we now rely on
-	 * the pthread interface to recheck the tid for existence.
-	 */
-	param.sched_priority = prio;
+	thobj->policy = csa.policy;
 
-	return pthread_setschedparam(tid, policy, &param);
+	if (thobj == threadobj_current()) {
+		threadobj_unlock(thobj);
+		ret = request_setschedparam(thobj, &csa);
+	} else {
+		ret = request_setschedparam(thobj, &csa);
+		threadobj_unlock(thobj);
+	}
+
+	return __bt(ret);
 }
 
 int threadobj_set_mode(int clrmask, int setmask, int *mode_r) /* current->lock held */
@@ -884,6 +1045,62 @@ int threadobj_stat(struct threadobj *thobj,
 }
 
 #endif /* CONFIG_XENO_MERCURY */
+
+static int request_setschedparam(struct threadobj *thobj,
+				 const struct coresched_attributes *csa)
+{
+#ifdef CONFIG_XENO_PSHARED
+	struct remote_request *rq;
+	int ret;
+
+	if (unlikely(!threadobj_local_p(thobj))) {
+		rq = xnmalloc(sizeof(*rq));
+		if (rq == NULL)
+			return -ENOMEM;
+
+		rq->req = RMT_SETSCHED;
+		rq->u.setsched.tid = thobj->tid;
+		rq->u.setsched.attr = *csa;
+
+		ret = __bt(send_agent(thobj, rq));
+		if (ret)
+			xnfree(rq);
+		return ret;
+	}
+#endif
+	return __bt(copperplate_renice_local_thread(thobj->tid, csa));
+}
+
+static int request_cancel(struct threadobj *thobj) /* thobj->lock held, dropped. */
+{
+	pthread_t tid = thobj->tid;
+#ifdef CONFIG_XENO_PSHARED
+	struct remote_request *rq;
+	int ret;
+
+	if (unlikely(!threadobj_local_p(thobj))) {
+		threadobj_unlock(thobj);
+		rq = xnmalloc(sizeof(*rq));
+		if (rq == NULL)
+			return -ENOMEM;
+
+		rq->req = RMT_CANCEL;
+		rq->u.cancel.tid = tid;
+
+		ret = __bt(send_agent(thobj, rq));
+		if (ret)
+			xnfree(rq);
+		return ret;
+	}
+#endif
+	threadobj_unlock(thobj);
+
+	/* We might race, glibc will check. */
+
+	pthread_cancel(tid);
+
+	return 0;
+}
 
 void *__threadobj_alloc(size_t tcb_struct_size,
 			size_t wait_union_size,
@@ -1125,6 +1342,7 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 	thobj->tid = pthread_self();
 	thobj->pid = copperplate_get_tid();
 	thobj->errno_pointer = &errno;
+	threadobj_set_agent(thobj);
 	backtrace_init_context(&thobj->btd, name);
 	ret = threadobj_setup_corespec(thobj);
 	if (ret) {
@@ -1154,9 +1372,18 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 	return 0;
 }
 
+/*
+ * Most traditional RTOSes guarantee that the task/thread delete
+ * operation is strictly synchronous, i.e. the deletion service
+ * returns to the caller only __after__ the deleted thread entered an
+ * innocuous state, i.e. dormant/dead.
+ *
+ * For this reason, we always wait until the canceled thread has
+ * finalized (see cancel_sync()), at the expense of a potential
+ * priority inversion affecting the caller of threadobj_cancel().
+ */
 static void cancel_sync(struct threadobj *thobj) /* thobj->lock held */
 {
-	pthread_t tid = thobj->tid;
 	int oldstate, ret = 0;
 	sem_t *sem;
 
@@ -1203,9 +1430,7 @@ static void cancel_sync(struct threadobj *thobj) /* thobj->lock held */
 
 	threadobj_cancel_2_corespec(thobj);
 
-	threadobj_unlock(thobj);
-
-	pthread_cancel(tid);
+	request_cancel(thobj);
 
 	if (sem) {
 		do
@@ -1424,8 +1649,9 @@ void threadobj_pkg_init(void)
 {
 	threadobj_irq_prio = __RT(sched_get_priority_max(SCHED_RT));
 	threadobj_high_prio = threadobj_irq_prio - 1;
+	threadobj_agent_prio = threadobj_high_prio;
 
 	pkg_init_corespec();
-
+	start_agent();
 	main_overlay();
 }

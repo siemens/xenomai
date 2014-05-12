@@ -79,15 +79,10 @@ int copperplate_create_thread(struct corethread_attributes *cta,
 	return __bt(thread_spawn_epilogue(cta));
 }
 
-int copperplate_renice_thread(pthread_t tid, int prio)
+int copperplate_renice_local_thread(pthread_t tid,
+				    const struct coresched_attributes *csa)
 {
-	struct sched_param_ex param_ex;
-	int policy;
-
-	param_ex.sched_priority = prio;
-	policy = prio ? SCHED_RT : SCHED_OTHER;
-
-	return __bt(-pthread_setschedparam_ex(tid, policy, &param_ex));
+	return __bt(-pthread_setschedparam_ex(tid, csa->policy, &csa->param));
 }
 
 static inline void prepare_wait_corespec(void)
@@ -100,11 +95,6 @@ static inline void prepare_wait_corespec(void)
 	 * which is a basic assumption for all clients.
 	 */
 	cobalt_thread_harden();
-}
-
-static inline int finish_wait_corespec(struct corethread_attributes *cta)
-{
-	return __bt(copperplate_renice_thread(pthread_self(), cta->prio));
 }
 
 int copperplate_kill_tid(pid_t tid, int sig)
@@ -147,25 +137,15 @@ int copperplate_create_thread(struct corethread_attributes *cta,
 	return __bt(thread_spawn_epilogue(cta));
 }
 
-int copperplate_renice_thread(pthread_t tid, int prio)
+int copperplate_renice_local_thread(pthread_t tid,
+				    const struct coresched_attributes *csa)
 {
-	struct sched_param param;
-	int policy;
-
-	param.sched_priority = prio;
-	policy = prio ? SCHED_RT : SCHED_OTHER;
-
-	return __bt(-__RT(pthread_setschedparam(tid, policy, &param)));
+	return __bt(-__RT(pthread_setschedparam(tid, csa->policy, &csa->param)));
 }
 
 static inline void prepare_wait_corespec(void)
 {
 	/* empty */
-}
-
-static inline int finish_wait_corespec(struct corethread_attributes *cta)
-{
-	return __bt(copperplate_renice_thread(pthread_self(), cta->prio));
 }
 
 #endif  /* CONFIG_XENO_MERCURY */
@@ -230,9 +210,9 @@ static void *thread_trampoline(void *arg)
 	__RT(sem_post(&cta->__reserved.warm));
 	thread_spawn_wait(&released);
 	__RT(sem_destroy(&released));
-	ret = finish_wait_corespec(&_cta);
+	ret = __bt(copperplate_renice_local_thread(pthread_self(), &_cta.sched));
 	if (ret)
-		warning("core thread prologue failed, %s", symerror(ret));
+		warning("cannot renice core thread, %s", symerror(ret));
 
 	return _cta.run(_cta.arg);
 }
@@ -257,7 +237,6 @@ void panic(const char *fmt, ...)
 
 	va_start(ap, fmt);
 	__panic(thobj ? threadobj_get_name(thobj) : NULL, fmt, ap);
-	va_end(ap);
 }
 
 void warning(const char *fmt, ...)

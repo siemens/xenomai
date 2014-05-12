@@ -55,10 +55,19 @@ struct shared_heap {
 	} buckets[HOBJ_NBUCKETS];
 };
 
+struct coresched_attributes {
+	int policy;
+#ifdef CONFIG_XENO_COBALT
+	struct sched_param_ex param;
+#else
+	struct sched_param param;
+#endif
+};
+
 struct corethread_attributes {
-	int prio;
 	size_t stacksize;
 	int detachstate;
+	struct coresched_attributes sched;
 	int (*prologue)(void *arg);
 	void *(*run)(void *arg);
 	void *arg;
@@ -82,7 +91,8 @@ int copperplate_kill_tid(pid_t tid, int sig);
 int copperplate_create_thread(struct corethread_attributes *cta,
 			      pthread_t *tid);
 
-int copperplate_renice_thread(pthread_t tid, int prio);
+int copperplate_renice_local_thread(pthread_t tid,
+				    const struct coresched_attributes *csa);
 
 void copperplate_bootstrap_minimal(const char *arg0,
 				   char *mountpt);

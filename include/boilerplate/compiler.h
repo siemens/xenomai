@@ -31,4 +31,8 @@
 #define unlikely(x)	__builtin_expect(!!(x), 0)
 #endif
 
+#ifndef __noreturn
+#define __noreturn	__attribute__((__noreturn__))
+#endif
+
 #endif /* _BOILERPLATE_COMPILER_H */

@@ -373,7 +373,8 @@ static STATUS __taskInit(struct wind_task *task,
 
 	registry_init_file(&task->fsobj, &registry_ops, 0);
 
-	cta.prio = cprio;
+	cta.sched.policy = SCHED_RT;
+	cta.sched.param.sched_priority = cprio;
 	cta.prologue = task_prologue;
 	cta.run = task_trampoline;
 	cta.arg = task;
