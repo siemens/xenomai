@@ -18,14 +18,65 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
+#ifndef _RTDM_ANALOGY_H
+#define _RTDM_ANALOGY_H
 
-#ifndef __ANALOGY_ANALOGY__
-#define __ANALOGY_ANALOGY__
+#include <sys/types.h>
+#include <rtdm/uapi/analogy.h>
 
-#include <unistd.h>
+/*!
+  @addtogroup descriptor_sys
+  @{
+ */
 
-#include <analogy/types.h>
-#include <analogy/descriptor.h>
+/*!
+ * @anchor ANALOGY_xxx_DESC   @name ANALOGY_xxx_DESC
+ * @brief Constants used as argument so as to define the description
+ * depth to recover
+ * @{
+ */
+
+/**
+ * BSC stands for basic descriptor (device data)
+ */
+#define A4L_BSC_DESC 0x0
+
+/**
+ * CPLX stands for complex descriptor (subdevice + channel + range
+ * data)
+ */
+#define A4L_CPLX_DESC 0x1
+
+	  /*! @} ANALOGY_xxx_DESC */
+
+/* --- Descriptor structure --- */
+
+/*!
+ * @brief Structure containing device-information useful to users
+ * @see a4l_get_desc()
+ */
+
+struct a4l_descriptor {
+	char board_name[A4L_NAMELEN];
+				     /**< Board name. */
+	int nb_subd;
+		 /**< Subdevices count. */
+	int idx_read_subd;
+		       /**< Input subdevice index. */
+	int idx_write_subd;
+			/**< Output subdevice index. */
+	int fd;
+	    /**< File descriptor. */
+	unsigned int magic;
+			/**< Opaque field. */
+	int sbsize;
+		/**< Data buffer size. */
+	void *sbdata;
+		 /**< Data buffer pointer. */
+};
+typedef struct a4l_descriptor a4l_desc_t;
+
+/*! @} descriptor_sys */
 
 #ifdef __cplusplus
 extern "C" {
@@ -179,4 +230,5 @@ int a4l_dtoraw(a4l_chinfo_t *chan,
 #ifdef __cplusplus
 }
 #endif
-#endif /* __ANALOGY_ANALOGY__ */
+
+#endif /* !_RTDM_ANALOGY_H */

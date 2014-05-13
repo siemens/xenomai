@@ -450,7 +450,6 @@ patch_link r n include/cobalt/kernel include/xenomai/cobalt/kernel
 patch_link r n include/cobalt/kernel/rtdm include/xenomai/rtdm
 patch_link r n include/cobalt/uapi include/xenomai/cobalt/uapi
 patch_link r n include/rtdm/uapi include/xenomai/rtdm/uapi
-patch_link r n include/analogy include/xenomai/analogy
 patch_link n version.h include include/xenomai
 
 if test "x$output_patch" != "x"; then

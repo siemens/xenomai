@@ -19,21 +19,17 @@
  * along with Xenomai; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-
-#ifndef __ANALOGY_BUFFER_H__
-#define __ANALOGY_BUFFER_H__
-
-#ifndef DOXYGEN_CPP
-
-#ifdef __KERNEL__
+#ifndef _COBALT_RTDM_ANALOGY_BUFFER_H
+#define _COBALT_RTDM_ANALOGY_BUFFER_H
 
 #include <linux/version.h>
 #include <linux/mm.h>
-
 #include <rtdm/driver.h>
-
-#include <analogy/os_facilities.h>
-#include <analogy/context.h>
+#include <rtdm/uapi/analogy.h>
+#include <rtdm/analogy/os_facilities.h>
+#include <rtdm/analogy/context.h>
+#include <rtdm/analogy/command.h>
+#include <rtdm/analogy/subdevice.h>
 
 /* --- Events bits / flags --- */
 
@@ -53,8 +49,6 @@
 
 #define A4L_BUF_MAP_NR 9
 #define A4L_BUF_MAP (1 << A4L_BUF_MAP_NR)
-
-struct a4l_subdevice;
 
 /* Buffer descriptor structure */
 struct a4l_buffer {
@@ -458,58 +452,4 @@ int a4l_select(a4l_cxt_t *cxt,
 	       rtdm_selector_t *selector,
 	       enum rtdm_selecttype type, unsigned fd_index);
 
-#endif /* __KERNEL__ */
-
-/* MMAP ioctl argument structure */
-struct a4l_mmap_arg {
-	unsigned int idx_subd;
-	unsigned long size;
-	void *ptr;
-};
-typedef struct a4l_mmap_arg a4l_mmap_t;
-
-/* Constants related with buffer size
-   (might be used with BUFCFG ioctl) */
-#define A4L_BUF_MAXSIZE 0x1000000
-#define A4L_BUF_DEFSIZE 0x10000
-#define A4L_BUF_DEFMAGIC 0xffaaff55
-
-/* BUFCFG ioctl argument structure */
-struct a4l_buffer_config {
-	/* NOTE: with the last buffer implementation, the field
-	   idx_subd became useless; the buffer are now
-	   per-context. So, the buffer size configuration is specific
-	   to an opened device. There is a little exception: we can
-	   define a default buffer size for a device.
-	   So far, a hack is used to implement the configuration of
-	   the default buffer size */
-	unsigned int idx_subd;
-	unsigned long buf_size;
-};
-typedef struct a4l_buffer_config a4l_bufcfg_t;
-
-/* BUFINFO ioctl argument structure */
-struct a4l_buffer_info {
-	unsigned int idx_subd;
-	unsigned long buf_size;
-	unsigned long rw_count;
-};
-typedef struct a4l_buffer_info a4l_bufinfo_t;
-
-/* BUFCFG2 / BUFINFO2 ioctl argument structure */
-struct a4l_buffer_config2 {
-	unsigned long wake_count;
-	unsigned long reserved[3];
-};
-typedef struct a4l_buffer_config2 a4l_bufcfg2_t;
-
-/* POLL ioctl argument structure */
-struct a4l_poll {
-	unsigned int idx_subd;
-	unsigned long arg;
-};
-typedef struct a4l_poll a4l_poll_t;
-
-#endif /* !DOXYGEN_CPP */
-
-#endif /* __ANALOGY_BUFFER_H__ */
+#endif /* !_COBALT_RTDM_ANALOGY_BUFFER_H */

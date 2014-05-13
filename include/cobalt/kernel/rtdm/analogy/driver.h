@@ -1,9 +1,9 @@
 /**
  * @file
- * Analogy for Linux, driver related features
+ * Analogy for Linux, driver facilities
  *
- * @note Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
- * @note Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
+ * Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
+ * Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -19,14 +19,15 @@
  * along with Xenomai; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-
-#ifndef __ANALOGY_DRIVER__
-#define __ANALOGY_DRIVER__
-
-#ifdef __KERNEL__
+#ifndef _COBALT_RTDM_ANALOGY_DRIVER_H
+#define _COBALT_RTDM_ANALOGY_DRIVER_H
 
 #include <linux/list.h>
+#include <rtdm/analogy/os_facilities.h>
+#include <rtdm/analogy/context.h>
+#include <rtdm/analogy/buffer.h>
 
+struct seq_file;
 struct a4l_link_desc;
 struct a4l_device;
 
@@ -60,8 +61,6 @@ struct a4l_driver {
 };
 typedef struct a4l_driver a4l_drv_t;
 
-#ifndef DOXYGEN_CPP
-
 /* Driver list related functions */
 
 int a4l_register_drv(a4l_drv_t * drv);
@@ -71,8 +70,4 @@ int a4l_lct_drv(char *pin, a4l_drv_t ** pio);
 int a4l_rdproc_drvs(struct seq_file *p, void *data);
 #endif /* CONFIG_PROC_FS */
 
-#endif /* !DOXYGEN_CPP */
-
-#endif /* __KERNEL__ */
-
-#endif /* __ANALOGY_DRIVER__ */
+#endif /* !_COBALT_RTDM_ANALOGY_DRIVER_H */

@@ -1,5 +1,5 @@
 #include <linux/module.h>
-#include <analogy/analogy_driver.h>
+#include <rtdm/analogy/device.h>
 
 #define TASK_PERIOD 1000000
 

@@ -20,8 +20,6 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef DOXYGEN_CPP
-
 #include <linux/module.h>
 #include <linux/version.h>
 #include <linux/ioport.h>
@@ -29,9 +27,7 @@
 #include <asm/div64.h>
 #include <asm/io.h>
 #include <asm/errno.h>
-
-#include <analogy/context.h>
-#include <analogy/device.h>
+#include <rtdm/analogy/device.h>
 
 int a4l_do_insn_gettime(a4l_kinsn_t * dsc)
 {
@@ -424,5 +420,3 @@ err_ioctl_ilst:
 	a4l_free_ilstdsc(cxt, &ilst);
 	return ret;
 }
-
-#endif /* !DOXYGEN_CPP */

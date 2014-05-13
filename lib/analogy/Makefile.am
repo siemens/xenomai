@@ -6,12 +6,12 @@ libanalogy_la_SOURCES =	\
 	async.c		\
 	descriptor.c	\
 	info.c		\
+	internal.h	\
 	range.c		\
 	root_leaf.h	\
 	sync.c		\
-	sys.c		\
-	syscall.h
+	sys.c
 
-libanalogy_la_CPPFLAGS =				\
-	@XENO_USER_CFLAGS@				\
+libanalogy_la_CPPFLAGS =	\
+	@XENO_USER_CFLAGS@	\
 	-I$(top_srcdir)/include

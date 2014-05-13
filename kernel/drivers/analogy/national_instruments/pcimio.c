@@ -82,7 +82,7 @@
  */
 
 #include <linux/module.h>
-#include <analogy/analogy_driver.h>
+#include <rtdm/analogy/device.h>
 
 #include "../intel/8255.h"
 #include "ni_stc.h"

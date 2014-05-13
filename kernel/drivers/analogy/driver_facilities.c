@@ -38,10 +38,7 @@
 
 #include <linux/module.h>
 #include <linux/fs.h>
-
-#include <analogy/context.h>
-#include <analogy/device.h>
-#include <analogy/analogy_driver.h>
+#include <rtdm/analogy/device.h>
 
 /* --- Driver section --- */
 

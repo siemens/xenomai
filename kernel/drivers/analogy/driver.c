@@ -20,14 +20,9 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef DOXYGEN_CPP
-
 #include <linux/module.h>
 #include <linux/fs.h>
-
-#include <analogy/context.h>
-#include <analogy/device.h>
-#include <analogy/driver.h>
+#include <rtdm/analogy/device.h>
 
 #include "proc.h"
 
@@ -112,5 +107,3 @@ int a4l_rdproc_drvs(struct seq_file *p, void *data)
 }
 
 #endif /* CONFIG_PROC_FS */
-
-#endif /* !DOXYGEN_CPP */

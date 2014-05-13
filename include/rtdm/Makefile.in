@@ -380,6 +380,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 includesubdir = $(includedir)/rtdm
 includesub_HEADERS = \
+	analogy.h	\
 	can.h		\
 	ipc.h		\
 	rtdm.h		\

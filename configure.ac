@@ -857,10 +857,10 @@ AC_CONFIG_FILES([ \
 	include/cobalt/sys/Makefile \
 	include/cobalt/kernel/Makefile \
 	include/cobalt/kernel/rtdm/Makefile \
+	include/cobalt/kernel/rtdm/analogy/Makefile \
 	include/cobalt/boilerplate/Makefile \
 	include/rtdm/Makefile \
 	include/rtdm/uapi/Makefile \
-	include/analogy/Makefile \
 	include/mercury/Makefile \
 	include/mercury/boilerplate/Makefile \
 	include/boilerplate/Makefile \

@@ -21,7 +21,7 @@
 #ifndef __ANALOGY_8255_H__
 #define __ANALOGY_8255_H__
 
-#include <analogy/analogy_driver.h>
+#include <rtdm/analogy/device.h>
 
 typedef int (*a4l_8255_cb_t)(int, int, int, unsigned long);
 

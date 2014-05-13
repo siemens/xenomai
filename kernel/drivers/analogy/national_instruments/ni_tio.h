@@ -21,7 +21,7 @@
 #ifndef __ANALOGY_NI_TIO_H__
 #define __ANALOGY_NI_TIO_H__
 
-#include <analogy/analogy_driver.h>
+#include <rtdm/analogy/device.h>
 
 #ifdef CONFIG_PCI
 #include "mite.h"

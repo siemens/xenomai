@@ -20,15 +20,11 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef DOXYGEN_CPP
-
 #include <linux/module.h>
 #include <linux/fs.h>
 #include <linux/proc_fs.h>
 #include <linux/string.h>
-
-#include <analogy/context.h>
-#include <analogy/device.h>
+#include <rtdm/analogy/device.h>
 
 #include "proc.h"
 
@@ -456,5 +452,3 @@ int a4l_ioctl_devinfo(a4l_cxt_t * cxt, void *arg)
 
 	return 0;
 }
-
-#endif /* !DOXYGEN_CPP */

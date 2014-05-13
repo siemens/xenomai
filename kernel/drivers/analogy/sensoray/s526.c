@@ -37,7 +37,7 @@
 #include <linux/module.h>
 #include <linux/ioport.h>
 #include <asm/byteorder.h>
-#include <analogy/analogy_driver.h>
+#include <rtdm/analogy/device.h>
 
 /* Board description */
 #define S526_GPCT_CHANS	4

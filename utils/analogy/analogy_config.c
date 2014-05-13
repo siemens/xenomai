@@ -26,10 +26,8 @@
 #include <getopt.h>
 #include <string.h>
 #include <errno.h>
-
 #include <xeno_config.h>
-
-#include <analogy/analogy.h>
+#include <rtdm/analogy.h>
 
 #define __OPTS_DELIMITER ","
 

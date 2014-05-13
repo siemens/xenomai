@@ -12,7 +12,6 @@ SUBDIRS = 		\
 
 if XENO_COBALT
 SUBDIRS += 		\
-	analogy 	\
 	cobalt 		\
 	rtdm
 else

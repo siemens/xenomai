@@ -19,15 +19,10 @@
  * along with Xenomai; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+#ifndef _COBALT_RTDM_ANALOGY_CHANNEL_RANGE_H
+#define _COBALT_RTDM_ANALOGY_CHANNEL_RANGE_H
 
-#ifndef __ANALOGY_CHANNEL_RANGE__
-#define __ANALOGY_CHANNEL_RANGE__
-
-#if __GNUC__ >= 3
-#define GCC_ZERO_LENGTH_ARRAY
-#else
-#define GCC_ZERO_LENGTH_ARRAY 0
-#endif
+#include <rtdm/uapi/analogy.h>
 
 /*!
  * @ingroup driverfacilities
@@ -193,39 +188,9 @@ typedef struct a4l_channel a4l_chan_t;
 struct a4l_channels_desc {
 	unsigned long mode; /*!< Declaration mode (global or per channel) */
 	unsigned long length; /*!< Channels count */
-	a4l_chan_t chans[GCC_ZERO_LENGTH_ARRAY]; /*!< Channels tab */
+	a4l_chan_t chans[]; /*!< Channels tab */
 };
 typedef struct a4l_channels_desc a4l_chdesc_t;
-
-/* --- Range section --- */
-
-/** Constant for internal use only (must not be used by driver
-    developer).  */
-#define A4L_RNG_FACTOR 1000000
-
-/**
- * Volt unit range flag
- */
-#define A4L_RNG_VOLT_UNIT 0x0
-/**
- * MilliAmpere unit range flag
- */
-#define A4L_RNG_MAMP_UNIT 0x1
-/**
- * No unit range flag
- */
-#define A4L_RNG_NO_UNIT 0x2
-/**
- * External unit range flag
- */
-#define A4L_RNG_EXT_UNIT 0x4
-/**
- * Macro to retrieve the range unit from the range flags
- */
-#define A4L_RNG_UNIT(x) (x & (A4L_RNG_VOLT_UNIT |	\
-			      A4L_RNG_MAMP_UNIT |	\
-			      A4L_RNG_NO_UNIT |		\
-			      A4L_RNG_EXT_UNIT))
 
 /**
  * Internal use flag (must not be used by driver developer)
@@ -266,12 +231,11 @@ typedef struct a4l_range a4l_rng_t;
 
 
 /* Ranges tab descriptor */
-#define A4L_RNGTAB(x)				\
-	struct {				\
-		unsigned char length;		\
-		a4l_rng_t rngs[x];		\
-	}
-typedef A4L_RNGTAB(GCC_ZERO_LENGTH_ARRAY) a4l_rngtab_t;
+struct a4l_rngtab {
+	unsigned char length;
+	a4l_rng_t rngs[];
+};
+typedef struct a4l_rngtab a4l_rngtab_t;
 
 /**
  * Constant to define a ranges descriptor as global (inter-channel)
@@ -283,21 +247,21 @@ typedef A4L_RNGTAB(GCC_ZERO_LENGTH_ARRAY) a4l_rngtab_t;
 #define A4L_RNG_PERCHAN_RNGDESC 1
 
 /* Global ranges descriptor */
-#define A4L_RNGDESC(x)				\
-	struct {				\
-		unsigned char mode;		\
-		unsigned char length;		\
-		a4l_rngtab_t *rngtabs[x];	\
-	}
-typedef A4L_RNGDESC(GCC_ZERO_LENGTH_ARRAY) a4l_rngdesc_t;
+struct a4l_rngdesc {
+	unsigned char mode;
+	unsigned char length;
+	a4l_rngtab_t *rngtabs[];
+};
+typedef struct a4l_rngdesc a4l_rngdesc_t;
 
 /**
  * Macro to declare a ranges global descriptor in one line
  */
-#define RNG_GLOBAL(x) {				\
+#define RNG_GLOBAL(x) {			\
 	.mode = A4L_RNG_GLOBAL_RNGDESC,	\
-	.length =  1,				\
-	.rngtabs = {&(x)}, }
+	.length =  1,			\
+	.rngtabs = {&(x)},		\
+}
 
 extern a4l_rngdesc_t a4l_range_bipolar10;
 extern a4l_rngdesc_t a4l_range_bipolar5;
@@ -308,6 +272,6 @@ extern a4l_rngdesc_t a4l_range_fake;
 
 #define range_digital a4l_range_unipolar5
 
-	  /*! @} channelrange */
+/*! @} channelrange */
 
-#endif /* __ANALOGY_CHANNEL_RANGE__ */
+#endif /* !_COBALT_RTDM_ANALOGY_CHANNEL_RANGE_H */

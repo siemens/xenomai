@@ -20,14 +20,12 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef DOXYGEN_CPP
-
 #include <linux/module.h>
 #include <linux/version.h>
 #include <linux/fs.h>
 #include <asm/atomic.h>
 
-#include <analogy/os_facilities.h>
+#include <rtdm/analogy/os_facilities.h>
 
 /* --- Time section --- */
 
@@ -219,5 +217,3 @@ void a4l_signal_sync(a4l_sync_t * snc)
 		rtdm_nrtsig_pend(&snc->nrt_sig);
 	}
 }
-
-#endif /* !DOXYGEN_CPP */

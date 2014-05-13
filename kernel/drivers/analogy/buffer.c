@@ -20,18 +20,12 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef DOXYGEN_CPP
-
 #include <linux/module.h>
 #include <linux/fs.h>
 #include <linux/mman.h>
 #include <linux/vmalloc.h>
 #include <asm/errno.h>
-#include <rtdm/driver.h>
-#include <analogy/context.h>
-#include <analogy/device.h>
-#include <analogy/buffer.h>
-#include <analogy/transfer.h>
+#include <rtdm/analogy/device.h>
 
 /* --- Initialization functions (init, alloc, free) --- */
 
@@ -1133,5 +1127,3 @@ out_poll:
 
 	return ret;
 }
-
-#endif /* !DOXYGEN_CPP */

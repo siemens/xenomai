@@ -48,7 +48,7 @@ Commands are not supported.
 
 #include <linux/interrupt.h>
 #include <linux/slab.h>
-#include <analogy/analogy_driver.h>
+#include <rtdm/analogy/device.h>
 
 #include "../intel/8255.h"
 #include "ni_mio.h"

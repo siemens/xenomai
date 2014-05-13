@@ -20,22 +20,15 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef DOXYGEN_CPP
-
 #include <linux/module.h>
 #include <linux/ioport.h>
 #include <linux/fs.h>
 #include <linux/proc_fs.h>
 #include <asm/uaccess.h>
-
 #include <rtdm/driver.h>
+#include <rtdm/analogy/device.h>
 
-#include <analogy/context.h>
-#include <analogy/ioctl.h>
-#include <analogy/device.h>
-#include <analogy/transfer.h>
-
-int (*a4l_ioctl_functions[NB_IOCTL_FUNCTIONS]) (a4l_cxt_t *, void *) = {
+int (*a4l_ioctl_functions[]) (a4l_cxt_t *, void *) = {
 	a4l_ioctl_devcfg,
 	a4l_ioctl_devinfo,
 	a4l_ioctl_subdinfo,
@@ -341,5 +334,3 @@ static void __exit a4l_cleanup(void)
 
 module_init(a4l_init);
 module_exit(a4l_cleanup);
-
-#endif /* !DOXYGEN_CPP */

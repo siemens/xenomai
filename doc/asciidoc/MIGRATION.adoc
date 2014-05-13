@@ -304,6 +304,28 @@ rtdm/rtipc.h -> rtdm/ipc.h
 
 - rtdm_task_init() shall be called from secondary mode.
 
+== Analogy interface changes ==
+
+.File renames
+
+- DAQ drivers in kernel space now pull all Analogy core header files
+  from <rtdm/analogy/*.h>. In addition:
+
+[normal]
+analogy/analogy_driver.h -> rtdm/analogy/driver.h
+[normal]
+analogy/driver.h -> rtdm/analogy/driver.h
+
+- DAQ drivers in kernel space should include <rtdm/analogy/device.h>
+  instead of <rtdm/analogy/driver.h>.
+
+- Applications need to include only a single file for pulling all
+  routine declarations and constant definitions required for invoking
+  the Analogy services from user-space, namely <rtdm/analogy.h>.
+
+As a consequence of these changes, the former include/analogy/ file
+tree has been entirely removed.
+
 == POSIX interface changes ==
 
 As mentioned earlier, the former *POSIX skin* is known as the *Cobalt

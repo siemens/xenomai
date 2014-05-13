@@ -22,8 +22,8 @@
 
 #include <errno.h>
 #include <math.h>
-
-#include <analogy/analogy.h>
+#include "internal.h"
+#include <rtdm/analogy.h>
 
 #ifndef DOXYGEN_CPP
 

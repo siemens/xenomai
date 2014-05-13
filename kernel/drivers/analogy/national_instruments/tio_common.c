@@ -40,7 +40,7 @@
  *
  */
 
-#include <analogy/analogy_driver.h>
+#include <rtdm/analogy/device.h>
 
 #include "ni_tio.h"
 #include "ni_mio.h"

@@ -1,8 +1,4 @@
 /**
- * @file
- * Analogy for Linux, misc declarations
- *
- * Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
  * Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
  *
  * Xenomai is free software; you can redistribute it and/or modify it
@@ -19,20 +15,21 @@
  * along with Xenomai; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+#ifndef _COBALT_RTDM_ANALOGY_COMMAND_H
+#define _COBALT_RTDM_ANALOGY_COMMAND_H
 
-#ifndef __ANALOGY_TYPES__
-#define __ANALOGY_TYPES__
+#include <rtdm/uapi/analogy.h>
+#include <rtdm/analogy/context.h>
 
-#ifndef DOXYGEN_CPP
+#define CR_CHAN(a) CHAN(a)
+#define CR_RNG(a) (((a)>>16)&0xff)
+#define CR_AREF(a) (((a)>>24)&0xf)
 
-/* --- Misc precompilation constant --- */
-#define A4L_NAMELEN 20
+/* --- Command related function --- */
+void a4l_free_cmddesc(a4l_cmd_t * desc);
 
-/* --- Common Analogy types --- */
+/* --- Upper layer functions --- */
+int a4l_check_cmddesc(a4l_cxt_t * cxt, a4l_cmd_t * desc);
+int a4l_ioctl_cmd(a4l_cxt_t * cxt, void *arg);
 
-typedef unsigned short sampl_t;
-typedef unsigned long lsampl_t;
-
-#endif /* !DOXYGEN_CPP */
-
-#endif /* __ANALOGY_TYPES__ */
+#endif /* !_COBALT_RTDM_ANALOGY_COMMAND_H */

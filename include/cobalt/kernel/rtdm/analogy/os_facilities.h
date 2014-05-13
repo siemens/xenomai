@@ -19,11 +19,8 @@
  * along with Xenomai; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-
-#ifndef __ANALOGY_OS_FACILITIES__
-#define __ANALOGY_OS_FACILITIES__
-
-#if defined(__KERNEL__) && !defined(DOXYGEN_CPP)
+#ifndef _COBALT_RTDM_ANALOGY_OS_FACILITIES_H
+#define _COBALT_RTDM_ANALOGY_OS_FACILITIES_H
 
 #include <linux/fs.h>
 #include <linux/spinlock.h>
@@ -184,6 +181,4 @@ void a4l_signal_sync(a4l_sync_t * snc);
 
 #define a4l_test_rt() rtdm_in_rt_context()
 
-#endif /* __KERNEL__ && !DOXYGEN_CPP */
-
-#endif /* __ANALOGY_OS_FACILITIES__ */
+#endif /* !_COBALT_RTDM_ANALOGY_OS_FACILITIES_H */

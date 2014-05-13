@@ -19,11 +19,8 @@
  * along with Xenomai; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-
-#ifndef __ANALOGY_CONTEXT__
-#define __ANALOGY_CONTEXT__
-
-#if defined(__KERNEL__) && !defined(DOXYGEN_CPP)
+#ifndef _COBALT_RTDM_ANALOGY_CONTEXT_H
+#define _COBALT_RTDM_ANALOGY_CONTEXT_H
 
 #include <rtdm/driver.h>
 
@@ -54,6 +51,4 @@ static inline int a4l_get_minor(a4l_cxt_t *cxt)
 	return rtdm_cxt->device->device_id;
 }
 
-#endif /* __KERNEL__ && !DOXYGEN_CPP */
-
-#endif /* __ANALOGY_CONTEXT__ */
+#endif /* !_COBALT_RTDM_ANALOGY_CONTEXT_H */

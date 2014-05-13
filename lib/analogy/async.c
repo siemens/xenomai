@@ -21,11 +21,8 @@
  */
 
 #include <errno.h>
-
-#include <analogy/ioctl.h>
-#include <analogy/analogy.h>
-
-#include "syscall.h"
+#include <rtdm/analogy.h>
+#include "internal.h"
 
 /*!
  * @ingroup level1_lib

@@ -26,8 +26,7 @@
 #include <sys/mman.h>
 #include <errno.h>
 #include <getopt.h>
-
-#include <analogy/analogy.h>
+#include <rtdm/analogy.h>
 
 #define FILENAME "analogy0"
 #define BUF_SIZE 10000

@@ -27,10 +27,8 @@
 #include <errno.h>
 #include <getopt.h>
 #include <string.h>
-
 #include <alchemy/task.h>
-
-#include <analogy/analogy.h>
+#include <rtdm/analogy.h>
 
 /* Default command's parameters */
 

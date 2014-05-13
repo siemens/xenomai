@@ -19,35 +19,21 @@
  * along with Xenomai; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+#ifndef _COBALT_RTDM_ANALOGY_TRANSFER_H
+#define _COBALT_RTDM_ANALOGY_TRANSFER_H
 
-#ifndef __ANALOGY_TRANSFER__
-#define __ANALOGY_TRANSFER__
-
-#ifndef DOXYGEN_CPP
-
-#include <analogy/context.h>
-#include <analogy/subdevice.h>
-#include <analogy/buffer.h>
-
-/* Status flags / bits */
-#define A4L_TSF_CLEAN 0
-
-/* Fields init values */
-#define A4L_IRQ_UNUSED (unsigned int)((unsigned short)(~0))
-#define A4L_IDX_UNUSED (unsigned int)(~0)
-
-/* TODO: IRQ handling must leave transfer for os_facilities */
+#include <rtdm/analogy/buffer.h>
 
 /* IRQ types */
 #define A4L_IRQ_SHARED RTDM_IRQTYPE_SHARED
 #define A4L_IRQ_EDGE RTDM_IRQTYPE_EDGE
 #define A4L_IRQ_DISABLED 0
 
-/* Poll timeout values */
-#define A4L_INFINITE 0
-#define A4L_NONBLOCK (-1)
+/* Fields init values */
+#define A4L_IRQ_UNUSED (unsigned int)((unsigned short)(~0))
+#define A4L_IDX_UNUSED (unsigned int)(~0)
 
-#ifdef __KERNEL__
+/* TODO: IRQ handling must leave transfer for os_facilities */
 
 struct a4l_device;
 /* Analogy transfer descriptor */
@@ -93,8 +79,4 @@ unsigned int a4l_get_irq(struct a4l_device *dev);
 
 int a4l_ioctl_cancel(a4l_cxt_t * cxt, void *arg);
 
-#endif /* __KERNEL__ */
-
-#endif /* !DOXYGEN_CPP */
-
-#endif /* __ANALOGY_TRANSFER__ */
+#endif /* !_COBALT_RTDM_ANALOGY_TRANSFER_H */

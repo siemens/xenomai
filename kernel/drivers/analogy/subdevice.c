@@ -20,18 +20,12 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef DOXYGEN_CPP
-
 #include <linux/module.h>
 #include <linux/ioport.h>
 #include <linux/mman.h>
 #include <asm/io.h>
 #include <asm/errno.h>
-
-#include <analogy/context.h>
-#include <analogy/subdevice.h>
-#include <analogy/device.h>
-#include <analogy/channel_range.h>
+#include <rtdm/analogy/device.h>
 
 /* --- Common ranges declarations --- */
 
@@ -450,5 +444,3 @@ int a4l_ioctl_rnginfo(a4l_cxt_t * cxt, void *arg)
 
 	return ret;
 }
-
-#endif /* !DOXYGEN_CPP */

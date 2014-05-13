@@ -73,7 +73,7 @@
 
 #include <linux/module.h>
 #include <linux/ioport.h>
-#include <analogy/analogy_driver.h>
+#include <rtdm/analogy/device.h>
 
 #define PARPORT_SIZE 3
 

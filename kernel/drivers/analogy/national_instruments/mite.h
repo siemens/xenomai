@@ -23,7 +23,7 @@
 
 #include <linux/pci.h>
 
-#include <analogy/analogy_driver.h>
+#include <rtdm/analogy/device.h>
 
 #define PCI_VENDOR_ID_NATINST 0x1093
 #define PCI_MITE_SIZE 4096

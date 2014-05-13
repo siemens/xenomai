@@ -37,10 +37,8 @@
  * Warning: this API level should not be used
  */
 
-#include <analogy/ioctl.h>
-#include <analogy/analogy.h>
-
-#include "syscall.h"
+#include <rtdm/analogy.h>
+#include "internal.h"
 
 /*!
  * @ingroup syscall

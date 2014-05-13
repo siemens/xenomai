@@ -25,8 +25,7 @@
 #include <sys/mman.h>
 #include <errno.h>
 #include <getopt.h>
-
-#include <analogy/analogy.h>
+#include <rtdm/analogy.h>
 
 /* Ten triggered scans by default */
 #define SCAN_CNT 10

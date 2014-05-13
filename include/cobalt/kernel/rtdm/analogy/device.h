@@ -19,17 +19,12 @@
  * along with Xenomai; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+#ifndef _COBALT_RTDM_ANALOGY_DEVICE_H
+#define _COBALT_RTDM_ANALOGY_DEVICE_H
 
-#ifndef __ANALOGY_DEVICE__
-#define __ANALOGY_DEVICE__
-
-#ifndef DOXYGEN_CPP
-
-#include <analogy/context.h>
-#include <analogy/driver.h>
-#include <analogy/transfer.h>
-
-#ifdef __KERNEL__
+#include <rtdm/analogy/os_facilities.h>
+#include <rtdm/analogy/transfer.h>
+#include <rtdm/analogy/driver.h>
 
 #define A4L_NB_DEVICES 10
 
@@ -58,28 +53,6 @@ struct a4l_device {
 };
 typedef struct a4l_device a4l_dev_t;
 
-#endif /* __KERNEL__ */
-
-/* DEVCFG ioctl argument structure */
-struct a4l_link_desc {
-	unsigned char bname_size;
-	char *bname;
-	unsigned int opts_size;
-	void *opts;
-};
-typedef struct a4l_link_desc a4l_lnkdesc_t;
-
-/* DEVINFO ioctl argument structure */
-struct a4l_dev_info {
-	char board_name[A4L_NAMELEN];
-	int nb_subd;
-	int idx_read_subd;
-	int idx_write_subd;
-};
-typedef struct a4l_dev_info a4l_dvinfo_t;
-
-#ifdef __KERNEL__
-
 /* --- Devices tab related functions --- */
 void a4l_init_devs(void);
 int a4l_check_cleanup_devs(void);
@@ -93,8 +66,4 @@ void a4l_set_dev(a4l_cxt_t *cxt);
 int a4l_ioctl_devcfg(a4l_cxt_t * cxt, void *arg);
 int a4l_ioctl_devinfo(a4l_cxt_t * cxt, void *arg);
 
-#endif /* __KERNEL__ */
-
-#endif /* !DOXYGEN_CPP */
-
-#endif /* __ANALOGY_DEVICE__ */
+#endif /* !_COBALT_RTDM_ANALOGY_DEVICE_H */

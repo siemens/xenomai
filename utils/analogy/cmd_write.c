@@ -27,8 +27,7 @@
 #include <errno.h>
 #include <getopt.h>
 #include <string.h>
-
-#include <analogy/analogy.h>
+#include <rtdm/analogy.h>
 
 #define BUFFER_DEPTH 1024
 

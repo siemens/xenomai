@@ -2,7 +2,6 @@
  * @file
  * Analogy for Linux, internal declarations
  *
- * @note Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
  * @note Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
  *
  * This library is free software; you can redistribute it and/or
@@ -19,9 +18,11 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-
 #ifndef __ANALOGY_LIB_INTERNAL__
 #define __ANALOGY_LIB_INTERNAL__
+
+#define MAGIC_BSC_DESC 0x1234abcd
+#define MAGIC_CPLX_DESC 0xabcd1234
 
 #include <rtdm/rtdm.h>
 

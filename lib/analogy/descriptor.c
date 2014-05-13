@@ -22,11 +22,8 @@
 
 #include <stdio.h>
 #include <string.h>
-
-#include <analogy/descriptor.h>
-#include <analogy/analogy.h>
-
-#include "syscall.h"
+#include <rtdm/analogy.h>
+#include "internal.h"
 #include "root_leaf.h"
 
 #ifndef DOXYGEN_CPP

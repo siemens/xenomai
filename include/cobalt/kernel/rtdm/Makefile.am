@@ -7,3 +7,5 @@ noinst_HEADERS =	\
 	rtdm.h		\
 	serial.h	\
 	testing.h
+
+SUBDIRS = analogy
