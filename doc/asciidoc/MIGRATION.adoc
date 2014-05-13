@@ -606,9 +606,14 @@ int pthread_make_periodic_np(pthread_t thread, clockid_t clk_id,
 - +mq_send()+ now enforces a maximum priority value for messages
   (32768).
 
-.Real-time suitable STDIO
+.POSIX I/O services
 
-The former +include/rtdk.h+ header is gone in Xenomai
+- Cobalt's select(2) service is not automatically restarted anymore
+  upon Linux signal receipt, conforming to the POSIX standard (see man
+  signal(7)). In such an event, -1 is returned and errno is set to
+  EINTR.
+
+- The former +include/rtdk.h+ header is gone in Xenomai
 3.x. Applications should include +include/stdio.h+ instead.
 Similarly, the real-time suitable STDIO routines are now part of
 +libcobalt+.
