@@ -572,6 +572,92 @@ TRACE_EVENT(cobalt_psem_unlink,
 	TP_printk("name=%s", __get_str(name))
 );
 
+DECLARE_EVENT_CLASS(cobalt_clock_timespec,
+	TP_PROTO(clockid_t clk_id, const struct timespec *val),
+	TP_ARGS(clk_id, val),
+
+	TP_STRUCT__entry(
+		__field(clockid_t, clk_id)
+		__timespec_fields(val)
+	),
+
+	TP_fast_assign(
+		__entry->clk_id = clk_id;
+		__assign_timespec(val, val);
+	),
+
+	TP_printk("clock_id=%d timeval=(%ld.%09ld)",
+		  __entry->clk_id,
+		  __timespec_args(val)
+	)
+);
+
+DEFINE_EVENT(cobalt_clock_timespec, cobalt_clock_getres,
+	TP_PROTO(clockid_t clk_id, const struct timespec *res),
+	TP_ARGS(clk_id, res)
+);
+
+DEFINE_EVENT(cobalt_clock_timespec, cobalt_clock_gettime,
+	TP_PROTO(clockid_t clk_id, const struct timespec *time),
+	TP_ARGS(clk_id, time)
+);
+
+DEFINE_EVENT(cobalt_clock_timespec, cobalt_clock_settime,
+	TP_PROTO(clockid_t clk_id, const struct timespec *time),
+	TP_ARGS(clk_id, time)
+);
+
+#define cobalt_print_timer_flags(__flags)			\
+	__print_flags(__flags, "|",				\
+		      {TIMER_ABSTIME, "TIMER_ABSTIME"})
+
+TRACE_EVENT(cobalt_clock_nanosleep,
+	TP_PROTO(clockid_t clk_id, int flags, const struct timespec *time),
+	TP_ARGS(clk_id, flags, time),
+
+	TP_STRUCT__entry(
+		__field(clockid_t, clk_id)
+		__field(int, flags)
+		__timespec_fields(time)
+	),
+
+	TP_fast_assign(
+		__entry->clk_id = clk_id;
+		__entry->flags = flags;
+		__assign_timespec(time, time);
+	),
+
+	TP_printk("clock_id=%d flags=%#x(%s) rqt=(%ld.%09ld)",
+		  __entry->clk_id,
+		  __entry->flags, cobalt_print_timer_flags(__entry->flags),
+		  __timespec_args(time)
+	)
+);
+
+DECLARE_EVENT_CLASS(cobalt_clock_ident,
+	TP_PROTO(const char *name, clockid_t clk_id),
+	TP_ARGS(name, clk_id),
+	TP_STRUCT__entry(
+		__string(name, name)
+		__field(clockid_t, clk_id)
+	),
+	TP_fast_assign(
+		__assign_str(name, name);
+		__entry->clk_id = clk_id;
+	),
+	TP_printk("name=%s, id=%#x", __get_str(name), __entry->clk_id)
+);
+
+DEFINE_EVENT(cobalt_clock_ident, cobalt_clock_register,
+	TP_PROTO(const char *name, clockid_t clk_id),
+	TP_ARGS(name, clk_id)
+);
+
+DEFINE_EVENT(cobalt_clock_ident, cobalt_clock_deregister,
+	TP_PROTO(const char *name, clockid_t clk_id),
+	TP_ARGS(name, clk_id)
+);
+
 #endif /* _TRACE_COBALT_POSIX_H */
 
 /* This part must be outside protection */

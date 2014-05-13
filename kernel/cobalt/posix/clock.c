@@ -60,6 +60,7 @@
 #include "internal.h"
 #include "thread.h"
 #include "clock.h"
+#include <trace/events/cobalt-posix.h>
 
 static struct xnclock *external_clocks[COBALT_MAX_EXTCLOCKS];
 
@@ -177,6 +178,8 @@ int cobalt_clock_getres(clockid_t clock_id, struct timespec __user *u_ts)
 	if (u_ts && __xn_safe_copy_to_user(u_ts, &ts, sizeof(ts)))
 		return -EFAULT;
 
+	trace_cobalt_clock_getres(clock_id, &ts);
+
 	return 0;
 }
 
@@ -184,7 +187,7 @@ int cobalt_clock_gettime(clockid_t clock_id, struct timespec __user *u_ts)
 {
 	struct timespec ts;
 	xnticks_t ns;
-	int ret = 0;
+	int ret;
 
 	switch (clock_id) {
 	case CLOCK_REALTIME:
@@ -208,13 +211,15 @@ int cobalt_clock_gettime(clockid_t clock_id, struct timespec __user *u_ts)
 	if (__xn_safe_copy_to_user(u_ts, &ts, sizeof(*u_ts)))
 		return -EFAULT;
 
-	return ret;
+	trace_cobalt_clock_gettime(clock_id, &ts);
+
+	return 0;
 }
 
 int cobalt_clock_settime(clockid_t clock_id, const struct timespec __user *u_ts)
 {
 	struct timespec ts;
-	int _ret, ret = 0;
+	int _ret, ret;
 	xnticks_t now;
 	spl_t s;
 
@@ -233,11 +238,13 @@ int cobalt_clock_settime(clockid_t clock_id, const struct timespec __user *u_ts)
 		break;
 	default:
 		_ret = do_ext_clock(clock_id, set_time, ret, &ts);
-		if (_ret)
-			ret = _ret;
+		if (_ret || ret)
+			return _ret ?: ret;
 	}
 
-	return ret;
+	trace_cobalt_clock_settime(clock_id, &ts);
+
+	return 0;
 }
 
 int cobalt_clock_nanosleep(clockid_t clock_id, int flags,
@@ -255,6 +262,8 @@ int cobalt_clock_nanosleep(clockid_t clock_id, int flags,
 
 	if (__xn_safe_copy_from_user(&rqt, u_rqt, sizeof(rqt)))
 		return -EFAULT;
+
+	trace_cobalt_clock_nanosleep(clock_id, flags, &rqt);
 
 	if (clock_id != CLOCK_MONOTONIC &&
 	    clock_id != CLOCK_MONOTONIC_RAW &&
@@ -325,12 +334,15 @@ int cobalt_clock_register(struct xnclock *clock, clockid_t *clk_id)
 	clock->id = nr;
 	*clk_id = __COBALT_CLOCK_CODE(clock->id);
 
+	trace_cobalt_clock_register(clock->name, *clk_id);
+
 	return 0;
 }
 EXPORT_SYMBOL_GPL(cobalt_clock_register);
 
 void cobalt_clock_deregister(struct xnclock *clock)
 {
+	trace_cobalt_clock_deregister(clock->name, clock->id);
 	clear_bit(clock->id, cobalt_clock_extids);
 	smp_mb__after_clear_bit();
 	external_clocks[clock->id] = NULL;
