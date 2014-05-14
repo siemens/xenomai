@@ -65,8 +65,8 @@ fnref_register(libvxworks, mq_finalize);
 
 MSG_Q_ID msgQCreate(int maxMsgs, int maxMsgLength, int options)
 {
+	int sobj_flags = 0, ret;
 	struct wind_mq *mq;
-	int sobj_flags = 0;
 	struct service svc;
 
 	if (threadobj_irq_p()) {
@@ -88,7 +88,7 @@ MSG_Q_ID msgQCreate(int maxMsgs, int maxMsgLength, int options)
 
 	mq = xnmalloc(sizeof(*mq));
 	if (mq == NULL)
-		goto no_mem;
+		goto fail_cballoc;
 
 	/*
 	 * The message pool must come from the main heap because of
@@ -97,19 +97,17 @@ MSG_Q_ID msgQCreate(int maxMsgs, int maxMsgLength, int options)
 	 * object accordingly.
 	 */
 	if (heapobj_init_array(&mq->pool, NULL, maxMsgLength +
-			       sizeof(struct msgholder), maxMsgs)) {
-		xnfree(mq);
-	no_mem:
-		errno = S_memLib_NOT_ENOUGH_MEMORY;
-		CANCEL_RESTORE(svc);
-		return (MSG_Q_ID)0;
-	}
+			       sizeof(struct msgholder), maxMsgs))
+		goto fail_bufalloc;
 
 	if (options & MSG_Q_PRIORITY)
 		sobj_flags = SYNCOBJ_PRIO;
 
-	syncobj_init(&mq->sobj, CLOCK_COPPERPLATE, sobj_flags,
-		     fnref_put(libvxworks, mq_finalize));
+	ret = syncobj_init(&mq->sobj, CLOCK_COPPERPLATE, sobj_flags,
+			   fnref_put(libvxworks, mq_finalize));
+	if (ret)
+		goto fail_syncinit;
+		
 	mq->options = options;
 	mq->maxmsg = maxMsgs;
 	mq->msgsize = maxMsgLength;
@@ -121,6 +119,17 @@ MSG_Q_ID msgQCreate(int maxMsgs, int maxMsgLength, int options)
 	CANCEL_RESTORE(svc);
 
 	return mainheap_ref(mq, MSG_Q_ID);
+
+fail_syncinit:
+	heapobj_destroy(&mq->pool);
+fail_bufalloc:
+	xnfree(mq);
+fail_cballoc:
+	errno = S_memLib_NOT_ENOUGH_MEMORY;
+
+	CANCEL_RESTORE(svc);
+
+	return (MSG_Q_ID)0;
 }
 
 STATUS msgQDelete(MSG_Q_ID msgQId)

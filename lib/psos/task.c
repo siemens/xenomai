@@ -311,22 +311,26 @@ u_long t_create(const char *name, u_long prio,
 	task->flags = flags;	/* We don't do much with those. */
 	task->mode = 0;	/* Not yet known. */
 	task->events = 0;
-	syncobj_init(&task->sobj, CLOCK_COPPERPLATE, 0, fnref_null);
+	ret = syncobj_init(&task->sobj, CLOCK_COPPERPLATE, 0, fnref_null);
+	if (ret)
+		goto fail_syncinit;
+
 	memset(task->notepad, 0, sizeof(task->notepad));
 	pvlist_init(&task->timer_list);
 	*tid_r = mainheap_ref(task, u_long);
 
-	ret = __bt(cluster_addobj_dup(&psos_task_table, task->name, &task->cobj));
-	if (ret) {
-		warning("cannot register task: %s", task->name);
-		ret = ERR_OBJID;
-		goto fail;
-	}
-
 	idata.magic = task_magic;
 	idata.finalizer = task_finalizer;
 	idata.priority = cprio;
-	threadobj_init(&task->thobj, &idata);
+	ret = threadobj_init(&task->thobj, &idata);
+	if (ret)
+		goto fail_threadinit;
+
+	ret = __bt(cluster_addobj_dup(&psos_task_table, task->name, &task->cobj));
+	if (ret) {
+		warning("cannot register task: %s", task->name);
+		goto fail_register;
+	}
 
 	cta.sched.policy = SCHED_RT;
 	cta.sched.param.sched_priority = cprio;
@@ -339,10 +343,12 @@ u_long t_create(const char *name, u_long prio,
 	ret = __bt(copperplate_create_thread(&cta, &task->thobj.tid));
 	if (ret) {
 		cluster_delobj(&psos_task_table, &task->cobj);
+	fail_register:
 		threadobj_uninit(&task->thobj);
-		ret = ERR_NOTCB;
-	fail:
+	fail_threadinit:
 		syncobj_uninit(&task->sobj);
+	fail_syncinit:
+		ret = ERR_NOTCB;
 		threadobj_free(&task->thobj);
 	}
 out:

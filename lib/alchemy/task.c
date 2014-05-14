@@ -256,15 +256,20 @@ static int create_tcb(struct alchemy_task **tcbp, RT_TASK *task,
 
 	CPU_ZERO(&tcb->affinity);
 
+	ret = syncobj_init(&tcb->sobj_msg, CLOCK_COPPERPLATE,
+			   SYNCOBJ_PRIO, fnref_null);
+	if (ret)
+		goto fail_syncinit;
+
 	tcb->suspends = 0;
-	syncobj_init(&tcb->sobj_msg, CLOCK_COPPERPLATE,
-		     SYNCOBJ_PRIO, fnref_null);
 	tcb->flowgen = 0;
 
 	idata.magic = task_magic;
 	idata.finalizer = task_finalizer;
 	idata.priority = prio;
-	threadobj_init(&tcb->thobj, &idata);
+	ret = threadobj_init(&tcb->thobj, &idata);
+	if (ret)
+		goto fail_threadinit;
 
 	*tcbp = tcb;
 
@@ -280,9 +285,8 @@ static int create_tcb(struct alchemy_task **tcbp, RT_TASK *task,
 	registry_init_file_obstack(&tcb->fsobj, &registry_ops);
 
 	if (syncluster_addobj(&alchemy_task_table, tcb->name, &tcb->cobj)) {
-		registry_destroy_file(&tcb->fsobj);
-		delete_tcb(tcb);
-		return -EEXIST;
+		ret = -EEXIST;
+		goto fail_register;
 	}
 
 	if (task)
@@ -294,6 +298,16 @@ static int create_tcb(struct alchemy_task **tcbp, RT_TASK *task,
 		warning("failed to export task %s to registry, %s",
 			tcb->name, symerror(ret));
 	return 0;
+
+fail_register:
+	threadobj_uninit(&tcb->thobj);
+	registry_destroy_file(&tcb->fsobj);
+fail_threadinit:
+	syncobj_uninit(&tcb->sobj_msg);
+fail_syncinit:
+	delete_tcb(tcb);
+
+	return ret;
 }
 
 /**

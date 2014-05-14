@@ -237,8 +237,9 @@ static inline void pkg_init_corespec(void)
 {
 }
 
-static inline void threadobj_init_corespec(struct threadobj *thobj)
+static inline int threadobj_init_corespec(struct threadobj *thobj)
 {
+	return 0;
 }
 
 static inline void threadobj_uninit_corespec(struct threadobj *thobj)
@@ -613,9 +614,12 @@ static inline void pkg_init_corespec(void)
 	sigaction(SIGRESM, &sa, NULL);
 }
 
-static inline void threadobj_init_corespec(struct threadobj *thobj)
+static inline int threadobj_init_corespec(struct threadobj *thobj)
 {
 	pthread_condattr_t cattr;
+	int ret;
+
+	thobj->core.rr_timer = NULL;
 	/*
 	 * Over Mercury, we need an additional per-thread condvar to
 	 * implement the complex monitor for the syncobj abstraction.
@@ -623,9 +627,10 @@ static inline void threadobj_init_corespec(struct threadobj *thobj)
 	pthread_condattr_init(&cattr);
 	pthread_condattr_setpshared(&cattr, mutex_scope_attribute);
 	pthread_condattr_setclock(&cattr, CLOCK_COPPERPLATE);
-	pthread_cond_init(&thobj->core.grant_sync, &cattr);
+	ret = __bt(-pthread_cond_init(&thobj->core.grant_sync, &cattr));
 	pthread_condattr_destroy(&cattr);
-	thobj->core.rr_timer = NULL;
+
+	return ret;
 }
 
 static inline void threadobj_uninit_corespec(struct threadobj *thobj)
@@ -1125,11 +1130,12 @@ void *__threadobj_alloc(size_t tcb_struct_size,
 	return p;
 }
 
-void threadobj_init(struct threadobj *thobj,
-		    struct threadobj_init_data *idata)
+int threadobj_init(struct threadobj *thobj,
+		   struct threadobj_init_data *idata)
 {
 	pthread_mutexattr_t mattr;
 	pthread_condattr_t cattr;
+	int ret;
 
 	thobj->magic = idata->magic;
 	thobj->tid = 0;
@@ -1155,16 +1161,22 @@ void threadobj_init(struct threadobj *thobj,
 	__RT(pthread_mutexattr_settype(&mattr, mutex_type_attribute));
 	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
 	__RT(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute));
-	__RT(pthread_mutex_init(&thobj->lock, &mattr));
+	ret = __bt(-__RT(pthread_mutex_init(&thobj->lock, &mattr)));
 	__RT(pthread_mutexattr_destroy(&mattr));
+	if (ret)
+		return ret;
 
 	__RT(pthread_condattr_init(&cattr));
 	__RT(pthread_condattr_setpshared(&cattr, mutex_scope_attribute));
 	__RT(pthread_condattr_setclock(&cattr, CLOCK_COPPERPLATE));
-	__RT(pthread_cond_init(&thobj->barrier, &cattr));
+	ret = __bt(-__RT(pthread_cond_init(&thobj->barrier, &cattr)));
 	__RT(pthread_condattr_destroy(&cattr));
+	if (ret) {
+		__RT(pthread_mutex_destroy(&thobj->lock));
+		return ret;
+	}
 
-	threadobj_init_corespec(thobj);
+	return threadobj_init_corespec(thobj);
 }
 
 static void uninit_thread(struct threadobj *thobj)
@@ -1620,10 +1632,11 @@ int threadobj_set_rr(struct threadobj *thobj, const struct timespec *quantum)
 	return __bt(set_rr(thobj, quantum));
 }
 
-static inline void main_overlay(void)
+static inline int main_overlay(void)
 {
 	struct threadobj_init_data idata;
 	struct threadobj *tcb;
+	int ret;
 
 	/*
 	 * Make the main() context a basic yet complete thread object,
@@ -1639,13 +1652,20 @@ static inline void main_overlay(void)
 	idata.magic = 0x0;
 	idata.finalizer = NULL;
 	idata.priority = 0;
-	threadobj_init(tcb, &idata);
+	ret = threadobj_init(tcb, &idata);
+	if (ret) {
+		__threadobj_free(tcb);
+		return __bt(ret);
+	}
+
 	tcb->status = __THREAD_S_STARTED|__THREAD_S_ACTIVE;
 	threadobj_prologue(tcb, "main");
 	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+
+	return 0;
 }
 
-void threadobj_pkg_init(void)
+int threadobj_pkg_init(void)
 {
 	threadobj_irq_prio = __RT(sched_get_priority_max(SCHED_RT));
 	threadobj_high_prio = threadobj_irq_prio - 1;
@@ -1653,5 +1673,6 @@ void threadobj_pkg_init(void)
 
 	pkg_init_corespec();
 	start_agent();
-	main_overlay();
+
+	return main_overlay();
 }

@@ -154,13 +154,15 @@ fnref_register(libcopperplate, eventobj_finalize);
 int eventobj_init(struct eventobj *evobj, unsigned long value, int flags,
 		  fnref_type(void (*)(struct eventobj *evobj)) finalizer)
 {
-	int sobj_flags = 0;
+	int sobj_flags = 0, ret;
 
 	if (flags & EVOBJ_PRIO)
 		sobj_flags = SYNCOBJ_PRIO;
 
-	syncobj_init(&evobj->core.sobj, CLOCK_COPPERPLATE, sobj_flags,
-		     fnref_put(libcopperplate, eventobj_finalize));
+	ret = syncobj_init(&evobj->core.sobj, CLOCK_COPPERPLATE, sobj_flags,
+			   fnref_put(libcopperplate, eventobj_finalize));
+	if (ret)
+		return __bt(ret);
 
 	evobj->core.flags = flags;
 	evobj->core.value = value;

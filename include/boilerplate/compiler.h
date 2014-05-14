@@ -35,4 +35,8 @@
 #define __noreturn	__attribute__((__noreturn__))
 #endif
 
+#ifndef __must_check
+#define __must_check	__attribute__((__warn_unused_result__))
+#endif
+
 #endif /* _BOILERPLATE_COMPILER_H */

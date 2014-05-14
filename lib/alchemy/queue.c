@@ -219,7 +219,7 @@ int rt_queue_create(RT_QUEUE *queue, const char *name,
 	ret = -ENOMEM;
 	qcb = xnmalloc(sizeof(*qcb));
 	if (qcb == NULL)
-		goto out;
+		goto fail_cballoc;
 
 	generate_name(qcb->name, name, &queue_namegen);
 	/*
@@ -238,10 +238,8 @@ int rt_queue_create(RT_QUEUE *queue, const char *name,
 					 (poolsize / qlimit) *
 					 sizeof(struct alchemy_queue_msg),
 					 qlimit);
-	if (ret) {
-		xnfree(qcb);
-		goto out;
-	}
+	if (ret)
+		goto fail_bufalloc;
 
 	qcb->mode = mode;
 	qcb->limit = qlimit;
@@ -251,30 +249,39 @@ int rt_queue_create(RT_QUEUE *queue, const char *name,
 	if (mode & Q_PRIO)
 		sobj_flags = SYNCOBJ_PRIO;
 
-	syncobj_init(&qcb->sobj, CLOCK_COPPERPLATE, sobj_flags,
-		     fnref_put(libalchemy, queue_finalize));
+	ret = syncobj_init(&qcb->sobj, CLOCK_COPPERPLATE, sobj_flags,
+			   fnref_put(libalchemy, queue_finalize));
+	if (ret)
+		goto fail_syncinit;
 
 	registry_init_file_obstack(&qcb->fsobj, &registry_ops);
 
 	qcb->magic = queue_magic;
 
 	if (syncluster_addobj(&alchemy_queue_table, qcb->name, &qcb->cobj)) {
-		registry_destroy_file(&qcb->fsobj);
-		heapobj_destroy(&qcb->hobj);
-		syncobj_uninit(&qcb->sobj);
-		xnfree(qcb);
 		ret = -EEXIST;
-	} else {
-		queue->handle = mainheap_ref(qcb, uintptr_t);
-		ret = __bt(registry_add_file(&qcb->fsobj, O_RDONLY,
-					     "/alchemy/queues/%s", qcb->name));
-		if (ret) {
-			warning("failed to export queue %s to registry, %s",
-				qcb->name, symerror(ret));
-			ret = 0;
-		}
+		goto fail_register;
 	}
-out:
+
+	queue->handle = mainheap_ref(qcb, uintptr_t);
+	ret = __bt(registry_add_file(&qcb->fsobj, O_RDONLY,
+				     "/alchemy/queues/%s", qcb->name));
+	if (ret)
+		warning("failed to export queue %s to registry, %s",
+			qcb->name, symerror(ret));
+
+	CANCEL_RESTORE(svc);
+
+	return 0;
+
+fail_register:
+	registry_destroy_file(&qcb->fsobj);
+	syncobj_uninit(&qcb->sobj);
+fail_syncinit:
+	heapobj_destroy(&qcb->hobj);
+fail_bufalloc:
+	xnfree(qcb);
+fail_cballoc:
 	CANCEL_RESTORE(svc);
 
 	return ret;

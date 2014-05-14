@@ -150,11 +150,12 @@ static void init_extent(struct shared_heap *heap, struct shared_extent *extent)
 	extent->freelist = extent->membase;
 }
 
-static void init_heap(struct shared_heap *heap, const char *name,
-		      void *mem, size_t size)
+static int init_heap(struct shared_heap *heap, const char *name,
+		     void *mem, size_t size)
 {
 	struct shared_extent *extent;
 	pthread_mutexattr_t mattr;
+	int ret;
 
 	strncpy(heap->name, name, sizeof(heap->name) - 1);
 	heap->name[sizeof(heap->name) - 1] = '\0';
@@ -178,34 +179,46 @@ static void init_heap(struct shared_heap *heap, const char *name,
 	__RT(pthread_mutexattr_settype(&mattr, mutex_type_attribute));
 	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
 	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_SHARED));
-	__RT(pthread_mutex_init(&heap->lock, &mattr));
+	ret = __bt(-__RT(pthread_mutex_init(&heap->lock, &mattr)));
 	__RT(pthread_mutexattr_destroy(&mattr));
+	if (ret)
+		return ret;
 
 	memset(heap->buckets, 0, sizeof(heap->buckets));
 	extent = mem;
 	init_extent(heap, extent);
 	__list_append(heap, &extent->link, &heap->extents);
+
+	return 0;
 }
 
-static void init_main_heap(struct session_heap *m_heap, void *mem, size_t size)
+static int init_main_heap(struct session_heap *m_heap, void *mem, size_t size)
 {
 	pthread_mutexattr_t mattr;
+	int ret;
 
-	init_heap(&m_heap->base, "main", mem, size);
+	ret = init_heap(&m_heap->base, "main", mem, size);
+	if (ret)
+		return __bt(ret);
+
 	m_heap->cpid = copperplate_get_tid();
 
 	__RT(pthread_mutexattr_init(&mattr));
 	__RT(pthread_mutexattr_settype(&mattr, mutex_type_attribute));
 	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
 	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_SHARED));
-	__RT(pthread_mutex_init(&m_heap->sysgroup.lock, &mattr));
+	ret = __bt(-__RT(pthread_mutex_init(&m_heap->sysgroup.lock, &mattr)));
 	__RT(pthread_mutexattr_destroy(&mattr));
+	if (ret)
+		return ret;
 
 	__hash_init(m_heap, &m_heap->catalog, hash_compare_strings);
 	m_heap->sysgroup.thread_count = 0;
 	__list_init(m_heap, &m_heap->sysgroup.thread_list);
 	m_heap->sysgroup.heap_count = 0;
 	__list_init(m_heap, &m_heap->sysgroup.heap_list);
+
+	return 0;
 }
 
 static caddr_t get_free_range(struct shared_heap *heap, size_t bsize, int log2size)
@@ -645,7 +658,12 @@ static int create_main_heap(void)
 
 	m_heap->maplen = len;
 	hobj->pool = &m_heap->base; /* Must be set prior to calling init_main_heap() */
-	init_main_heap(m_heap, (caddr_t)m_heap + sizeof(*m_heap), size);
+	ret = init_main_heap(m_heap, (caddr_t)m_heap + sizeof(*m_heap), size);
+	if (ret) {
+		errno = -ret;
+		goto unmap_fail;
+	}
+
 	/* We need these globals set up before updating a sysgroup. */
 	__main_heap = m_heap;
 	__main_sysgroup = &m_heap->sysgroup;
@@ -657,6 +675,8 @@ done:
 	__main_catalog = &m_heap->catalog;
 
 	return 0;
+unmap_fail:
+	munmap(m_heap, len);
 unlink_fail:
 	ret = __bt(-errno);
 	shm_unlink(hobj->fsname);

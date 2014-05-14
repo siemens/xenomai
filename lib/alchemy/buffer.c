@@ -248,10 +248,12 @@ int rt_buffer_create(RT_BUFFER *bf, const char *name,
 	if (mode & B_PRIO)
 		sobj_flags = SYNCOBJ_PRIO;
 
-	registry_init_file_obstack(&bcb->fsobj, &registry_ops);
+	ret = syncobj_init(&bcb->sobj, CLOCK_COPPERPLATE, sobj_flags,
+			   fnref_put(libalchemy, buffer_finalize));
+	if (ret)
+		goto fail_syncinit;
 
-	syncobj_init(&bcb->sobj, CLOCK_COPPERPLATE, sobj_flags,
-		     fnref_put(libalchemy, buffer_finalize));
+	registry_init_file_obstack(&bcb->fsobj, &registry_ops);
 
 	bcb->magic = buffer_magic;
 
@@ -275,6 +277,7 @@ int rt_buffer_create(RT_BUFFER *bf, const char *name,
 fail_register:
 	registry_destroy_file(&bcb->fsobj);
 	syncobj_uninit(&bcb->sobj);
+fail_syncinit:
 	xnfree(bcb->buf);
 fail_bufalloc:
 	xnfree(bcb);

@@ -103,25 +103,38 @@ static u_long __q_create(const char *name, u_long count,
 		q->name[sizeof(q->name) - 1] = '\0';
 	}
 
-	if (cluster_addobj_dup(&psos_queue_table, q->name, &q->cobj)) {
-		warning("cannot register queue: %s", q->name);
-		xnfree(q);
-		ret = ERR_OBJID;
-		goto out;
-	}
-
 	if (flags & Q_PRIOR)
 		sobj_flags = SYNCOBJ_PRIO;
 
 	q->flags = flags;
 	q->maxmsg = (flags & Q_LIMIT) ? count : 0;
 	q->maxlen = maxlen;
-	syncobj_init(&q->sobj, CLOCK_COPPERPLATE, sobj_flags,
-		     fnref_put(libpsos, queue_finalize));
+	ret = syncobj_init(&q->sobj, CLOCK_COPPERPLATE, sobj_flags,
+			   fnref_put(libpsos, queue_finalize));
+	if (ret) {
+		ret = ERR_NOQCB;
+		goto fail_syncinit;
+	}
+
 	list_init(&q->msg_list);
 	q->msgcount = 0;
 	q->magic = queue_magic;
 	*qid_r = mainheap_ref(q, u_long);
+
+	if (cluster_addobj_dup(&psos_queue_table, q->name, &q->cobj)) {
+		warning("cannot register queue: %s", q->name);
+		ret = ERR_OBJID;
+		goto fail_register;
+	}
+
+	CANCEL_RESTORE(svc);
+
+	return 0;
+
+fail_register:
+	syncobj_uninit(&q->sobj);
+fail_syncinit:
+	xnfree(q);
 out:
 	CANCEL_RESTORE(svc);
 

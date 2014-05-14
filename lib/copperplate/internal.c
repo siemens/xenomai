@@ -156,7 +156,7 @@ static int thread_spawn_prologue(struct corethread_attributes *cta)
 
 	ret = __RT(sem_init(&cta->__reserved.warm, 0, 0));
 	if (ret)
-		return __bt(ret);
+		return __bt(-errno);
 
 	cta->__reserved.status = -ENOSYS;
 
@@ -192,14 +192,16 @@ static void *thread_trampoline(void *arg)
 	_cta = *cta;
 	ret = cta->prologue(cta->arg);
 	cta->__reserved.status = ret;
+	if (ret)
+		goto fail;
 
+	ret = __bt(-__RT(sem_init(&released, 0, 0)));
 	if (ret) {
-		backtrace_check();
-		__RT(sem_post(&cta->__reserved.warm));
-		return (void *)(long)ret;
+		ret = -errno;
+		cta->__reserved.status = ret;
+		goto fail;
 	}
 
-	__RT(sem_init(&released, 0, 0));
 	cta->__reserved.released = &released;
 	/*
 	 * CAUTION: over Cobalt, we have to switch back to primary
@@ -215,6 +217,11 @@ static void *thread_trampoline(void *arg)
 		warning("cannot renice core thread, %s", symerror(ret));
 
 	return _cta.run(_cta.arg);
+fail:
+	backtrace_check();
+	__RT(sem_post(&cta->__reserved.warm));
+
+	return (void *)(long)ret;
 }
 
 static int thread_spawn_epilogue(struct corethread_attributes *cta)

@@ -280,13 +280,18 @@ void *__threadobj_alloc(size_t tcb_struct_size,
 			size_t wait_union_size,
 			int thobj_offset);
 
-static inline void threadobj_free(struct threadobj *thobj)
+static inline void __threadobj_free(void *p)
 {
-	xnfree((unsigned char *)thobj - thobj->core_offset);
+	xnfree(p);
 }
 
-void threadobj_init(struct threadobj *thobj,
-		    struct threadobj_init_data *idata);
+static inline void threadobj_free(struct threadobj *thobj)
+{
+	__threadobj_free((unsigned char *)thobj - thobj->core_offset);
+}
+
+int __must_check threadobj_init(struct threadobj *thobj,
+				struct threadobj_init_data *idata);
 
 int threadobj_start(struct threadobj *thobj);
 
@@ -359,7 +364,7 @@ static inline int threadobj_local_p(struct threadobj *thobj)
 
 void threadobj_init_key(void);
 
-void threadobj_pkg_init(void);
+int threadobj_pkg_init(void);
 
 #ifdef __cplusplus
 }

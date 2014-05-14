@@ -42,22 +42,31 @@ struct tracemark {
 	int mark;
 };
 
-void traceobj_init(struct traceobj *trobj, const char *label, int nr_marks)
+int traceobj_init(struct traceobj *trobj, const char *label, int nr_marks)
 {
 	pthread_mutexattr_t mattr;
 	pthread_condattr_t cattr;
+	int ret;
 
 	__RT(pthread_mutexattr_init(&mattr));
 	__RT(pthread_mutexattr_settype(&mattr, mutex_type_attribute));
 	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
 	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
-	__RT(pthread_mutex_init(&trobj->lock, &mattr));
+	ret = __bt(-__RT(pthread_mutex_init(&trobj->lock, &mattr)));
 	__RT(pthread_mutexattr_destroy(&mattr));
+	if (ret)
+		return ret;
+
 	__RT(pthread_condattr_init(&cattr));
 	__RT(pthread_condattr_setpshared(&cattr, PTHREAD_PROCESS_PRIVATE));
 	__RT(pthread_condattr_setclock(&cattr, CLOCK_COPPERPLATE));
-	__RT(pthread_cond_init(&trobj->join, &cattr));
+	ret = __bt(-__RT(pthread_cond_init(&trobj->join, &cattr)));
 	__RT(pthread_condattr_destroy(&cattr));
+	if (ret) {
+		__RT(pthread_mutex_destroy(&trobj->lock));
+		return ret;
+	}
+
 	/*
 	 * We make sure not to unblock from threadobj_join() until at
 	 * least one thread has called trace_enter() for this trace
@@ -74,6 +83,8 @@ void traceobj_init(struct traceobj *trobj, const char *label, int nr_marks)
 		if (trobj->marks == NULL)
 			panic("cannot allocate mark table for tracing");
 	}
+
+	return 0;
 }
 
 static void compare_marks(struct traceobj *trobj, int tseq[], int nr_seq) /* lock held */

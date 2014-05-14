@@ -233,16 +233,14 @@ int rt_heap_create(RT_HEAP *heap,
 	ret = -ENOMEM;
 	hcb = xnmalloc(sizeof(*hcb));
 	if (hcb == NULL)
-		goto out;
+		goto fail_cballoc;
 
 	/*
 	 * The memory pool has to be part of the main heap for proper
 	 * sharing between processes.
 	 */
-	if (heapobj_init(&hcb->hobj, NULL, heapsz)) {
-		xnfree(hcb);
-		goto out;
-	}
+	if (heapobj_init(&hcb->hobj, NULL, heapsz))
+		goto fail_bufalloc;
 
 	generate_name(hcb->name, name, &heap_namegen);
 	hcb->mode = mode;
@@ -252,30 +250,39 @@ int rt_heap_create(RT_HEAP *heap,
 	if (mode & H_PRIO)
 		sobj_flags = SYNCOBJ_PRIO;
 
-	registry_init_file_obstack(&hcb->fsobj, &registry_ops);
+	ret = syncobj_init(&hcb->sobj, CLOCK_COPPERPLATE, sobj_flags,
+			   fnref_put(libalchemy, heap_finalize));
+	if (ret)
+		goto fail_syncinit;
 
-	syncobj_init(&hcb->sobj, CLOCK_COPPERPLATE, sobj_flags,
-		     fnref_put(libalchemy, heap_finalize));
+	registry_init_file_obstack(&hcb->fsobj, &registry_ops);
 
 	hcb->magic = heap_magic;
 
 	if (syncluster_addobj(&alchemy_heap_table, hcb->name, &hcb->cobj)) {
-		registry_destroy_file(&hcb->fsobj);
-		syncobj_uninit(&hcb->sobj);
-		heapobj_destroy(&hcb->hobj);
-		xnfree(hcb);
 		ret = -EEXIST;
-	} else {
-		heap->handle = mainheap_ref(hcb, uintptr_t);
-		ret = __bt(registry_add_file(&hcb->fsobj, O_RDONLY,
-					     "/alchemy/heaps/%s", hcb->name));
-		if (ret) {
-			warning("failed to export heap %s to registry, %s",
-				hcb->name, symerror(ret));
-			ret = 0;
-		}
+		goto fail_register;
 	}
-out:
+
+	heap->handle = mainheap_ref(hcb, uintptr_t);
+	ret = __bt(registry_add_file(&hcb->fsobj, O_RDONLY,
+				     "/alchemy/heaps/%s", hcb->name));
+	if (ret)
+		warning("failed to export heap %s to registry, %s",
+			hcb->name, symerror(ret));
+
+	CANCEL_RESTORE(svc);
+
+	return 0;
+
+fail_register:
+	registry_destroy_file(&hcb->fsobj);
+	syncobj_uninit(&hcb->sobj);
+fail_syncinit:
+	heapobj_destroy(&hcb->hobj);
+fail_bufalloc:
+	xnfree(hcb);
+fail_cballoc:
 	CANCEL_RESTORE(svc);
 
 	return ret;

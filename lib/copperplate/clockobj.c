@@ -401,8 +401,11 @@ int clockobj_init(struct clockobj *clkobj,
 	__RT(pthread_mutexattr_settype(&mattr, mutex_type_attribute));
 	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
 	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
-	__RT(pthread_mutex_init(&clkobj->lock, &mattr));
+	ret = __bt(-__RT(pthread_mutex_init(&clkobj->lock, &mattr)));
 	__RT(pthread_mutexattr_destroy(&mattr));
+	if (ret)
+		return ret;
+
 	__RT(clock_gettime(CLOCK_COPPERPLATE, &now));
 	timespec_sub(&clkobj->offset, &clkobj->epoch, &now);
 	clkobj->name = name;

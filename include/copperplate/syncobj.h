@@ -130,8 +130,9 @@ int __syncobj_broadcast_drain(struct syncobj *sobj, int reason);
 
 int __syncobj_broadcast_grant(struct syncobj *sobj, int reason);
 
-void syncobj_init(struct syncobj *sobj, clockid_t clk_id, int flags,
-		  fnref_type(void (*)(struct syncobj *sobj)) finalizer);
+int __must_check
+syncobj_init(struct syncobj *sobj, clockid_t clk_id, int flags,
+	     fnref_type(void (*)(struct syncobj *sobj)) finalizer);
 
 int syncobj_wait_grant(struct syncobj *sobj,
 		 const struct timespec *timeout,

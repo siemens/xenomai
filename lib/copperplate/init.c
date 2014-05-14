@@ -571,7 +571,12 @@ void copperplate_init(int *argcp, char *const **argvp)
 			goto fail;
 	}
 
-	threadobj_pkg_init();
+	ret = threadobj_pkg_init();
+	if (ret) {
+		warning("failed to initialize multi-threading package");
+		goto fail;
+	}
+
 	ret = timerobj_pkg_init();
 	if (ret) {
 		warning("failed to initialize timer support");

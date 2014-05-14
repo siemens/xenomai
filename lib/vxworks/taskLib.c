@@ -335,11 +335,28 @@ static STATUS __taskInit(struct wind_task *task,
 		return ERROR;
 	}
 
+	task->tcb = tcb;
+	initpvh(&task->next);
+	tcb->opaque = task;
+	tcb->status = WIND_SUSPEND;
+	tcb->safeCnt = 0;
+	tcb->flags = flags;
+	tcb->entry = entry;
+
 	if (name == NULL || *name == '\0')
 		sprintf(task->name, "t%lu", ++anon_tids);
 	else {
 		strncpy(task->name, name, sizeof(task->name));
 		task->name[sizeof(task->name) - 1] = '\0';
+	}
+
+	idata.magic = task_magic;
+	idata.finalizer = task_finalizer;
+	idata.priority = cprio;
+	ret = threadobj_init(&task->thobj, &idata);
+	if (ret) {
+		errno = S_memLib_NOT_ENOUGH_MEMORY;
+		return ERROR;
 	}
 
 	__RT(pthread_mutexattr_init(&mattr));
@@ -348,19 +365,6 @@ static STATUS __taskInit(struct wind_task *task,
 	__RT(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute));
 	__RT(pthread_mutex_init(&task->safelock, &mattr));
 	__RT(pthread_mutexattr_destroy(&mattr));
-
-	task->tcb = tcb;
-	tcb->opaque = task;
-	tcb->status = WIND_SUSPEND;
-	tcb->safeCnt = 0;
-	tcb->flags = flags;
-	tcb->entry = entry;
-
-	idata.magic = task_magic;
-	idata.finalizer = task_finalizer;
-	idata.priority = cprio;
-	threadobj_init(&task->thobj, &idata);
-	initpvh(&task->next);
 
 	ret = __bt(cluster_addobj(&wind_task_table, task->name, &task->cobj));
 	if (ret) {

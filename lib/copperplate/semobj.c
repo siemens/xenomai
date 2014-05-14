@@ -181,7 +181,7 @@ fnref_register(libcopperplate, semobj_finalize);
 int semobj_init(struct semobj *smobj, int flags, int value,
 		fnref_type(void (*)(struct semobj *smobj)) finalizer)
 {
-	int sobj_flags = 0;
+	int sobj_flags = 0, ret;
 
 	if (flags & SEMOBJ_PRIO)
 		sobj_flags = SYNCOBJ_PRIO;
@@ -190,8 +190,11 @@ int semobj_init(struct semobj *smobj, int flags, int value,
 	 * We need a trampoline for finalizing a semobj, to escalate
 	 * from a basic syncobj we receive to the semobj container.
 	 */
-	syncobj_init(&smobj->core.sobj, CLOCK_COPPERPLATE, sobj_flags,
-		     fnref_put(libcopperplate, semobj_finalize));
+	ret = syncobj_init(&smobj->core.sobj, CLOCK_COPPERPLATE, sobj_flags,
+			   fnref_put(libcopperplate, semobj_finalize));
+	if (ret)
+		return __bt(ret);
+
 	smobj->core.flags = flags;
 	smobj->core.value = value;
 	smobj->finalizer = finalizer;

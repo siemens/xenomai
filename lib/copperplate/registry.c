@@ -150,14 +150,15 @@ done:
 	return __bt(ret);
 }
 
-void registry_init_file(struct fsobj *fsobj, 
-			const struct registry_operations *ops,
-			size_t privsz)
+int registry_init_file(struct fsobj *fsobj, 
+		       const struct registry_operations *ops,
+		       size_t privsz)
 {
 	pthread_mutexattr_t mattr;
+	int ret;
 
 	if (__node_info.no_registry)
-		return;
+		return 0;
 
 	fsobj->path = NULL;
 	fsobj->ops = ops;
@@ -168,8 +169,10 @@ void registry_init_file(struct fsobj *fsobj,
 	__RT(pthread_mutexattr_settype(&mattr, mutex_type_attribute));
 	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
 	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
-	__RT(pthread_mutex_init(&fsobj->lock, &mattr));
+	ret = __bt(-__RT(pthread_mutex_init(&fsobj->lock, &mattr)));
 	__RT(pthread_mutexattr_destroy(&mattr));
+
+	return ret;
 }
 
 int registry_add_file(struct fsobj *fsobj, int mode, const char *fmt, ...)
@@ -713,8 +716,10 @@ int __registry_pkg_init(const char *arg0, char *mountpt)
 	__RT(pthread_mutexattr_settype(&mattr, mutex_type_attribute));
 	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
 	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
-	__RT(pthread_mutex_init(&p->lock, &mattr));
+	ret = __bt(-__RT(pthread_mutex_init(&p->lock, &mattr)));
 	__RT(pthread_mutexattr_destroy(&mattr));
+	if (ret)
+		return ret;
 
 	pvhash_init(&p->files, pvhash_compare_strings);
 	pvhash_init(&p->dirs, pvhash_compare_strings);

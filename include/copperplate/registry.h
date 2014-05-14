@@ -64,9 +64,9 @@ extern "C" {
 
 int registry_add_dir(const char *fmt, ...);
 
-void registry_init_file(struct fsobj *fsobj,
-			const struct registry_operations *ops,
-			size_t privsz);
+int registry_init_file(struct fsobj *fsobj,
+		       const struct registry_operations *ops,
+		       size_t privsz);
 
 int registry_add_file(struct fsobj *fsobj,
 		      int mode,

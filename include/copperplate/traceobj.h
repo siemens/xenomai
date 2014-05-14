@@ -47,8 +47,8 @@ do {									\
 extern "C" {
 #endif
 
-void traceobj_init(struct traceobj *trobj,
-		   const char *label, int nr_marks);
+int traceobj_init(struct traceobj *trobj,
+		  const char *label, int nr_marks);
 
 void traceobj_verify(struct traceobj *trobj, int tseq[], int nr_seq);
 

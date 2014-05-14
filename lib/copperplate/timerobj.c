@@ -210,10 +210,10 @@ int timerobj_init(struct timerobj *tmobj)
 	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
 	ret = __RT(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute));
 	assert(ret == 0);
-	__RT(pthread_mutex_init(&tmobj->lock, &mattr));
+	ret = __bt(-__RT(pthread_mutex_init(&tmobj->lock, &mattr)));
 	__RT(pthread_mutexattr_destroy(&mattr));
 
-	return 0;
+	return ret;
 }
 
 void timerobj_destroy(struct timerobj *tmobj) /* lock held, dropped */
@@ -285,8 +285,8 @@ int timerobj_pkg_init(void)
 	__RT(pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE));
 	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
 	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
-	ret = __RT(pthread_mutex_init(&svlock, &mattr));
+	ret = __bt(-__RT(pthread_mutex_init(&svlock, &mattr)));
 	__RT(pthread_mutexattr_destroy(&mattr));
 
-	return __bt(-ret);
+	return ret;
 }

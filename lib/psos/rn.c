@@ -128,6 +128,7 @@ u_long rn_create(const char *name, void *saddr, u_long length,
 
 	ret = __heapobj_init(&rn->hobj, name, length, saddr);
 	if (ret) {
+		pvcluster_delobj(&psos_rn_table, &rn->cobj);
 		ret = ERR_TINYRN;
 		xnfree(rn);
 		goto out;
@@ -141,7 +142,14 @@ u_long rn_create(const char *name, void *saddr, u_long length,
 	rn->flags = flags;
 	rn->busynr = 0;
 	rn->usedmem = 0;
-	syncobj_init(&rn->sobj, CLOCK_COPPERPLATE, sobj_flags, fnref_null);
+	ret = syncobj_init(&rn->sobj, CLOCK_COPPERPLATE, sobj_flags, fnref_null);
+	if (ret) {
+		heapobj_destroy(&rn->hobj);
+		pvcluster_delobj(&psos_rn_table, &rn->cobj);
+		xnfree(rn);
+		goto out;
+	}
+
 	rn->magic = rn_magic;
 	*asize_r = rn->hobj.size;
 	*rnid_r = mainheap_ref(rn, u_long);

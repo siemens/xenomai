@@ -195,8 +195,8 @@ static const struct wind_sem_ops xsem_ops = {
 
 static SEM_ID alloc_xsem(int options, int initval, int maxval)
 {
+	int sobj_flags = 0, ret;
 	struct wind_sem *sem;
-	int sobj_flags = 0;
 
 	if (options & ~SEM_Q_PRIORITY) {
 		errno = S_semLib_INVALID_OPTION;
@@ -214,8 +214,13 @@ static SEM_ID alloc_xsem(int options, int initval, int maxval)
 
 	sem->u.xsem.value = initval;
 	sem->u.xsem.maxvalue = maxval;
-	syncobj_init(&sem->u.xsem.sobj, CLOCK_COPPERPLATE, sobj_flags,
-		     fnref_put(libvxworks, sem_finalize));
+	ret = syncobj_init(&sem->u.xsem.sobj, CLOCK_COPPERPLATE, sobj_flags,
+			   fnref_put(libvxworks, sem_finalize));
+	if (ret) {
+		xnfree(sem);
+		errno = S_memLib_NOT_ENOUGH_MEMORY;
+		return (SEM_ID)0;
+	}
 
 	return mainheap_ref(sem, SEM_ID);
 }
