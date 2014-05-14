@@ -870,6 +870,7 @@ with_dbx_root
 with_docbook_xsl_root
 enable_verbose_latex
 enable_asciidoc
+enable_valgrind_client
 enable_dlopen_libs
 enable_tls
 with_testdir
@@ -1553,6 +1554,8 @@ Optional Features:
                           installation can not be found by configure).
   --enable-verbose-latex  Uses LaTeX non-stop mode
   --enable-asciidoc       Build Asciidoc documentation
+  --enable-valgrind-client
+                          Enable Valgrind client API
   --enable-dlopen-libs    Allow dynamic loading of Xenomai libraries
   --enable-tls            Enable thread local storage
   --enable-fortify        Enable support for applications compiled with
@@ -13870,6 +13873,78 @@ if test x${CONFIG_XENO_ASCIIDOC} = xy -a x"$W3M" = x ; then
    as_fn_error $? "Missing the w3m tool to generate the documentation" "$LINENO" 5
 fi
 
+
+ac_fn_c_check_header_mongrel "$LINENO" "valgrind/valgrind.h" "ac_cv_header_valgrind_valgrind_h" "$ac_includes_default"
+if test "x$ac_cv_header_valgrind_valgrind_h" = xyes; then :
+  CONFIG_XENO_VALGRIND_API=y
+fi
+
+
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for Valgrind client API" >&5
+$as_echo_n "checking for Valgrind client API... " >&6; }
+# Check whether --enable-valgrind-client was given.
+if test "${enable_valgrind_client+set}" = set; then :
+  enableval=$enable_valgrind_client; case "$enableval" in
+	n | no) unset CONFIG_XENO_VALGRIND_API ;;
+	esac
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: ${CONFIG_XENO_VALGRIND_API:-no}" >&5
+$as_echo "${CONFIG_XENO_VALGRIND_API:-no}" >&6; }
+
+if test \! x$CONFIG_XENO_VALGRIND_API = x ; then
+   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether GCC emits sane code for Valgrind calls" >&5
+$as_echo_n "checking whether GCC emits sane code for Valgrind calls... " >&6; }
+   if ${ac_cv_valgrind_client+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+   ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+   save_CFLAGS="$CFLAGS"
+   CFLAGS="-O0"
+   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <valgrind/valgrind.h>
+int
+main ()
+{
+return RUNNING_ON_VALGRIND;
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  ac_cv_valgrind_client=yes
+else
+  ac_cv_valgrind_client="no (DISABLING)"
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+   CFLAGS="$save_CFLAGS"
+   ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+fi
+
+   if [ \! "$ac_cv_valgrind_client" = yes ]; then
+      unset CONFIG_XENO_VALGRIND_API
+   fi
+   { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_valgrind_client" >&5
+$as_echo "$ac_cv_valgrind_client" >&6; }
+fi
+
+test x$CONFIG_XENO_VALGRIND_API = xy &&
+$as_echo "#define CONFIG_XENO_VALGRIND_API 1" >>confdefs.h
+
+
 for ac_header in mqueue.h
 do :
   ac_fn_c_check_header_mongrel "$LINENO" "mqueue.h" "ac_cv_header_mqueue_h" "$ac_includes_default"
@@ -13881,15 +13956,6 @@ _ACEOF
 fi
 
 done
-
-ac_fn_c_check_header_mongrel "$LINENO" "valgrind/valgrind.h" "ac_cv_header_valgrind_valgrind_h" "$ac_includes_default"
-if test "x$ac_cv_header_valgrind_valgrind_h" = xyes; then :
-  CONFIG_XENO_VALGRIND_API=y
-fi
-
-
-test x$CONFIG_XENO_VALGRIND_API = xy &&
-$as_echo "#define CONFIG_XENO_VALGRIND_API 1" >>confdefs.h
 
 
 save_LIBS="$LIBS"

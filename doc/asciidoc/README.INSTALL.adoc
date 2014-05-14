@@ -528,6 +528,12 @@ client applications are running over a SMP-capable kernel.
 	Enables support for applications compiled in
 	`_FORTIFY_SOURCE` mode.
 
+*--disable-valgrind-client*::
+
+	Turns off the Valgrind client support, forcing
+	`CONFIG_XENO_VALGRIND_API` off in the Xenomai configuration
+	header.
+
 _Cobalt_-specific configuration options
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

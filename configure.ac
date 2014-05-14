@@ -497,10 +497,44 @@ if test x${CONFIG_XENO_ASCIIDOC} = xy -a x"$W3M" = x ; then
    AC_MSG_ERROR([Missing the w3m tool to generate the documentation])
 fi
 
-dnl Determine whether some specific headers are present on this system.
-AC_CHECK_HEADERS(mqueue.h)
+dnl Check for Valgrind client API support.
+dnl Some GCC releases produce broken assembly code for Valgrind
+dnl client calls, so we check this too. --disable-valgrind-client
+dnl may be used to forcibly turn this API off.
+
 AC_CHECK_HEADER(valgrind/valgrind.h,CONFIG_XENO_VALGRIND_API=y)
+
+AC_MSG_CHECKING(for Valgrind client API)
+AC_ARG_ENABLE(valgrind-client,
+	AS_HELP_STRING([--enable-valgrind-client], [Enable Valgrind client API]),
+	[case "$enableval" in
+	n | no) unset CONFIG_XENO_VALGRIND_API ;;
+	esac])
+AC_MSG_RESULT(${CONFIG_XENO_VALGRIND_API:-no})
+
+if test \! x$CONFIG_XENO_VALGRIND_API = x ; then
+   AC_MSG_CHECKING([whether GCC emits sane code for Valgrind calls])
+   AC_CACHE_VAL(ac_cv_valgrind_client,
+   AC_LANG_SAVE
+   AC_LANG_C
+   save_CFLAGS="$CFLAGS"
+   CFLAGS="-O0"
+   [AC_TRY_COMPILE([#include <valgrind/valgrind.h>],
+   [return RUNNING_ON_VALGRIND;],
+   [ac_cv_valgrind_client=yes],
+   [ac_cv_valgrind_client="no (DISABLING)"])]
+   CFLAGS="$save_CFLAGS"
+   AC_LANG_RESTORE)
+   if [[ \! "$ac_cv_valgrind_client" = yes ]]; then
+      unset CONFIG_XENO_VALGRIND_API
+   fi
+   AC_MSG_RESULT([$ac_cv_valgrind_client])
+fi
+
 test x$CONFIG_XENO_VALGRIND_API = xy && AC_DEFINE(CONFIG_XENO_VALGRIND_API,1,[config])
+
+dnl Check for presence of some headers
+AC_CHECK_HEADERS(mqueue.h)
 
 dnl Check for presence of some routines we need
 save_LIBS="$LIBS"
