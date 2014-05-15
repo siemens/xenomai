@@ -115,7 +115,7 @@ int pvsyncluster_delobj(struct pvsyncluster *sc,
 int pvsyncluster_findobj(struct pvsyncluster *sc,
 			 const char *name,
 			 const struct timespec *timeout,
-			 struct pvclusterobj **cobjp);
+			 struct pvclusterobj **cobjp) __must_check;
 
 #ifdef CONFIG_XENO_PSHARED
 
@@ -144,7 +144,7 @@ int syncluster_delobj(struct syncluster *sc,
 int syncluster_findobj(struct syncluster *sc,
 		       const char *name,
 		       const struct timespec *timeout,
-		       struct clusterobj **cobjp);
+		       struct clusterobj **cobjp) __must_check;
 
 #else /* !CONFIG_XENO_PSHARED */
 
@@ -196,10 +196,11 @@ static inline int syncluster_delobj(struct syncluster *sc,
 	return pvsyncluster_delobj(sc, cobj);
 }
 
-static inline int syncluster_findobj(struct syncluster *sc,
-				     const char *name,
-				     const struct timespec *timeout,
-				     struct clusterobj **cobjp)
+static inline  __must_check
+int syncluster_findobj(struct syncluster *sc,
+		       const char *name,
+		       const struct timespec *timeout,
+		       struct clusterobj **cobjp)
 {
 	return pvsyncluster_findobj(sc, name, timeout, cobjp);
 }

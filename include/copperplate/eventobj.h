@@ -19,6 +19,7 @@
 #ifndef _COPPERPLATE_EVENTOBJ_H
 #define _COPPERPLATE_EVENTOBJ_H
 
+#include <boilerplate/compiler.h>
 #include <copperplate/reference.h>
 
 struct eventobj_waitentry {
@@ -77,7 +78,7 @@ extern "C" {
 
 int eventobj_init(struct eventobj *evobj,
 		  unsigned long value, int flags,
-		  fnref_type(void (*)(struct eventobj *evobj)) finalizer);
+		  fnref_type(void (*)(struct eventobj *evobj)) finalizer) __must_check;
 
 int eventobj_destroy(struct eventobj *evobj);
 
@@ -88,7 +89,7 @@ int eventobj_wait(struct eventobj *evobj,
 		  unsigned long bits,
 		  unsigned long *bits_r,
 		  int mode,
-		  const struct timespec *timeout);
+		  const struct timespec *timeout) __must_check;
 
 int eventobj_clear(struct eventobj *evobj,
 		   unsigned long bits,

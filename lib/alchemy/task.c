@@ -170,6 +170,7 @@ static void task_finalizer(struct threadobj *thobj)
 {
 	struct alchemy_task *tcb;
 	struct syncstate syns;
+	int ret;
 
 	tcb = container_of(thobj, struct alchemy_task, thobj);
 	registry_destroy_file(&tcb->fsobj);
@@ -178,8 +179,9 @@ static void task_finalizer(struct threadobj *thobj)
 	 * The msg sync may be pended by other threads, so we do have
 	 * to use syncobj_destroy() on it (i.e. NOT syncobj_uninit()).
 	 */
-	__bt(syncobj_lock(&tcb->sobj_msg, &syns));
-	syncobj_destroy(&tcb->sobj_msg, &syns);
+	ret = __bt(syncobj_lock(&tcb->sobj_msg, &syns));
+	if (ret == 0)
+		syncobj_destroy(&tcb->sobj_msg, &syns);
 }
 
 static int task_prologue_1(void *arg)
@@ -1833,14 +1835,18 @@ int rt_task_receive_timed(RT_TASK_MCB *mcb_r,
 
 	CANCEL_DEFER(svc);
 
-	__bt(syncobj_lock(&current->sobj_msg, &syns));
+	ret = syncobj_lock(&current->sobj_msg, &syns);
+	if (ret)
+		goto out;
 
 	while (!syncobj_grant_wait_p(&current->sobj_msg)) {
 		if (alchemy_poll_mode(abs_timeout)) {
 			ret = -EWOULDBLOCK;
 			goto done;
 		}
-		syncobj_wait_drain(&current->sobj_msg, abs_timeout, &syns);
+		ret = syncobj_wait_drain(&current->sobj_msg, abs_timeout, &syns);
+		if (ret)
+			goto done;
 	}
 
 	thobj = syncobj_peek_grant(&current->sobj_msg);
@@ -1862,7 +1868,7 @@ fixup:
 	mcb_r->size = mcb_s->size;
 done:
 	syncobj_unlock(&current->sobj_msg, &syns);
-
+out:
 	CANCEL_RESTORE(svc);
 
 	return ret;
@@ -1949,7 +1955,9 @@ int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
 
 	CANCEL_DEFER(svc);
 
-	__bt(syncobj_lock(&current->sobj_msg, &syns));
+	ret = __bt(syncobj_lock(&current->sobj_msg, &syns));
+	if (ret)
+		goto out;
 
 	ret = -ENXIO;
 	if (!syncobj_grant_wait_p(&current->sobj_msg))
@@ -1986,7 +1994,7 @@ int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
 	mcb_r->opcode = mcb_s ? mcb_s->opcode : 0;
 done:
 	syncobj_unlock(&current->sobj_msg, &syns);
-
+out:
 	CANCEL_RESTORE(svc);
 
 	return ret;

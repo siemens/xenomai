@@ -290,10 +290,10 @@ static inline void threadobj_free(struct threadobj *thobj)
 	__threadobj_free((unsigned char *)thobj - thobj->core_offset);
 }
 
-int __must_check threadobj_init(struct threadobj *thobj,
-				struct threadobj_init_data *idata);
+int threadobj_init(struct threadobj *thobj,
+		   struct threadobj_init_data *idata) __must_check;
 
-int threadobj_start(struct threadobj *thobj);
+int threadobj_start(struct threadobj *thobj) __must_check;
 
 void threadobj_shadow(struct threadobj *thobj);
 
@@ -336,7 +336,7 @@ int threadobj_set_periodic(struct threadobj *thobj,
 			   const struct timespec *__restrict__ idate,
 			   const struct timespec *__restrict__ period);
 
-int threadobj_wait_period(unsigned long *overruns_r);
+int threadobj_wait_period(unsigned long *overruns_r) __must_check;
 
 void threadobj_spin(ticks_t ns);
 

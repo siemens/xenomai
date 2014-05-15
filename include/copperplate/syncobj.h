@@ -130,13 +130,12 @@ int __syncobj_broadcast_drain(struct syncobj *sobj, int reason);
 
 int __syncobj_broadcast_grant(struct syncobj *sobj, int reason);
 
-int __must_check
-syncobj_init(struct syncobj *sobj, clockid_t clk_id, int flags,
-	     fnref_type(void (*)(struct syncobj *sobj)) finalizer);
+int syncobj_init(struct syncobj *sobj, clockid_t clk_id, int flags,
+		 fnref_type(void (*)(struct syncobj *sobj)) finalizer) __must_check;
 
 int syncobj_wait_grant(struct syncobj *sobj,
 		 const struct timespec *timeout,
-		 struct syncstate *syns);
+		 struct syncstate *syns) __must_check;
 
 struct threadobj *syncobj_grant_one(struct syncobj *sobj);
 
@@ -148,14 +147,14 @@ struct threadobj *syncobj_peek_grant(struct syncobj *sobj);
 struct threadobj *syncobj_peek_drain(struct syncobj *sobj);
 
 int syncobj_lock(struct syncobj *sobj,
-		 struct syncstate *syns);
+		 struct syncstate *syns) __must_check;
 
 void syncobj_unlock(struct syncobj *sobj,
 		    struct syncstate *syns);
 
 int syncobj_wait_drain(struct syncobj *sobj,
 		       const struct timespec *timeout,
-		       struct syncstate *syns);
+		       struct syncstate *syns) __must_check;
 
 int syncobj_destroy(struct syncobj *sobj,
 		    struct syncstate *syns);

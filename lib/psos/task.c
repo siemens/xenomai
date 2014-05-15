@@ -156,6 +156,7 @@ static void task_finalizer(struct threadobj *thobj)
 	struct psos_task *task = container_of(thobj, struct psos_task, thobj);
 	struct psos_tm *tm, *tmp;
 	struct syncstate syns;
+	int ret;
 
 	cluster_delobj(&psos_task_table, &task->cobj);
 
@@ -165,8 +166,9 @@ static void task_finalizer(struct threadobj *thobj)
 	}
 
 	/* We have to hold a lock on a syncobj to destroy it. */
-	syncobj_lock(&task->sobj, &syns);
-	syncobj_destroy(&task->sobj, &syns);
+	ret = __bt(syncobj_lock(&task->sobj, &syns));
+	if (ret == 0)
+		syncobj_destroy(&task->sobj, &syns);
 }
 
 static int task_prologue(void *arg)

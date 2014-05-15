@@ -19,6 +19,7 @@
 #ifndef _COPPERPLATE_SEMOBJ_H
 #define _COPPERPLATE_SEMOBJ_H
 
+#include <boilerplate/compiler.h>
 #include <copperplate/reference.h>
 
 struct semobj_waitentry {
@@ -70,7 +71,7 @@ int semobj_post(struct semobj *smobj);
 int semobj_broadcast(struct semobj *smobj);
 
 int semobj_wait(struct semobj *smobj,
-		const struct timespec *timeout);
+		const struct timespec *timeout) __must_check;
 
 int semobj_getvalue(struct semobj *smobj, int *sval);
 
