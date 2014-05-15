@@ -28,6 +28,26 @@
 
 #ifdef CONFIG_X86_32
 
+#ifdef CONFIG_CC_STACKPROTECTOR
+
+#define __CANARY_OUTPUT							\
+	, [stack_canary] "=m" (stack_canary.canary)
+
+#define __CANARY_INPUT							\
+	, [task_canary] "i" (offsetof(struct task_struct, stack_canary))
+
+#define __CANARY_SWITCH							\
+	"movl %P[task_canary](%%edx), %%ebx\n\t"			\
+	"movl %%ebx, "__percpu_arg([stack_canary])"\n\t"
+
+#else /* !CONFIG_CC_STACKPROTECTOR */
+
+#define __CANARY_OUPUT
+#define __CANARY_INPUT
+#define __CANARY_SWITCH
+
+#endif /* !CONFIG_CC_STACKPROTECTOR */
+
 static inline void do_switch_threads(struct xnarchtcb *out_tcb,
 				     struct xnarchtcb *in_tcb,
 				     struct task_struct *outproc,
@@ -45,15 +65,23 @@ static inline void do_switch_threads(struct xnarchtcb *out_tcb,
 			     "movl %9,%%edi\n\t"
 			     "movl (%%ecx),%%esp\n\t"
 			     "pushl (%%edi)\n\t"
+			     __CANARY_SWITCH
 			     "jmp  __switch_to\n\t"
 			     "1: popl %%ebp\n\t"
-			     "popfl\n\t":"=b"(ebx_out),
-			     "=&c"(ecx_out),
-			     "=S"(esi_out),
-			     "=D"(edi_out), "+a"(outproc), "+d"(inproc)
-			     :"m"(out_tcb->spp),
-			      "m"(out_tcb->ipp),
-			      "m"(in_tcb->spp), "m"(in_tcb->ipp));
+			     "popfl\n\t"
+			     : "=b"(ebx_out),
+			       "=&c"(ecx_out),
+			       "=S"(esi_out),
+			       "=D"(edi_out),
+			       "+a"(outproc),
+			       "+d"(inproc)
+			       __CANARY_OUTPUT
+			     : "m"(out_tcb->spp),
+			       "m"(out_tcb->ipp),
+			       "m"(in_tcb->spp),
+			       "m"(in_tcb->ipp)
+			       __CANARY_INPUT
+			     : "memory");
 }
 
 #else /* CONFIG_X86_64 */
@@ -66,12 +94,12 @@ static inline void do_switch_threads(struct xnarchtcb *out_tcb,
 	, [gs_canary] "=m" (irq_stack_union.stack_canary)
 
 #define __CANARY_INPUT							\
-	, [user_canary] "i" (offsetof(struct task_struct, stack_canary)) \
+	, [task_canary] "i" (offsetof(struct task_struct, stack_canary)) \
 	, [current_task] "m" (current_task)
 
 #define __CANARY_SWITCH							\
   	"movq "__percpu_arg([current_task])",%%rsi\n\t"			\
-	"movq %P[user_canary](%%rsi),%%r8\n\t"				\
+	"movq %P[task_canary](%%rsi),%%r8\n\t"				\
 	"movq %%r8,"__percpu_arg([gs_canary])"\n\t"
 
 #else /* !CONFIG_CC_STACKPROTECTOR */
