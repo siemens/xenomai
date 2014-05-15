@@ -60,7 +60,29 @@ static inline void do_switch_threads(struct xnarchtcb *out_tcb,
 
 #define __SWITCH_CLOBBER_LIST  , "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15"
 
-#define do_switch_threads(prev,next,p_rsp,n_rsp,p_rip,n_rip)		\
+#ifdef CONFIG_CC_STACKPROTECTOR
+
+#define __CANARY_OUPUT							\
+	, [gs_canary] "=m" (irq_stack_union.stack_canary)
+
+#define __CANARY_INPUT							\
+	, [user_canary] "i" (offsetof(struct task_struct, stack_canary)) \
+	, [current_task] "m" (current_task)
+
+#define __CANARY_SWITCH							\
+  	"movq "__percpu_arg([current_task])",%%rsi\n\t"			\
+	"movq %P[user_canary](%%rsi),%%r8\n\t"				\
+	"movq %%r8,"__percpu_arg([gs_canary])"\n\t"
+
+#else /* !CONFIG_CC_STACKPROTECTOR */
+
+#define __CANARY_OUPUT
+#define __CANARY_INPUT
+#define __CANARY_SWITCH
+
+#endif /* !CONFIG_CC_STACKPROTECTOR */
+
+#define do_switch_threads(prev, next, p_rsp, n_rsp, p_rip, n_rip)	\
 	({								\
 		long __rdi, __rsi, __rax, __rbx, __rcx, __rdx;		\
 									\
@@ -73,13 +95,16 @@ static inline void do_switch_threads(struct xnarchtcb *out_tcb,
 			     "pushq	(%%rbx)\n\t"			\
 			     "jmp	__switch_to\n\t"		\
 			     "1:\n\t"					\
+			     __CANARY_SWITCH				\
 			     "movq	%%rbp, %%rsi\n\t"		\
 			     "popq	%%rbp\n\t"			\
 			     "popfq\n\t"				\
 			     : "=S" (__rsi), "=D" (__rdi), "=a"	(__rax), \
 			       "=b" (__rbx), "=c" (__rcx), "=d" (__rdx)	\
+			       __CANARY_OUPUT				\
 			     : "0" (next), "1" (prev), "5" (p_rsp), "4" (n_rsp), \
 			       "2" (p_rip), "3" (n_rip)			\
+			       __CANARY_INPUT				\
 			     : "memory", "cc" __SWITCH_CLOBBER_LIST);	\
 	})
 
