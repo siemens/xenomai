@@ -219,7 +219,7 @@ int cobalt_clock_gettime(clockid_t clock_id, struct timespec __user *u_ts)
 int cobalt_clock_settime(clockid_t clock_id, const struct timespec __user *u_ts)
 {
 	struct timespec ts;
-	int _ret, ret;
+	int _ret, ret = 0;
 	xnticks_t now;
 	spl_t s;
 

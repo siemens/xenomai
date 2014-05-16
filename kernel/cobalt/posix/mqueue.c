@@ -1186,18 +1186,18 @@ int cobalt_mq_timedreceive(mqd_t uqd, void __user *u_buf,
 
 	if (__xn_get_user(len, u_len)) {
 		err = -EFAULT;
-		goto out;
+		goto fail;
 	}
 
 	if (len > 0 && !access_wok(u_buf, len)) {
 		err = -EFAULT;
-		goto out;
+		goto fail;
 	}
 
 	if (u_ts) {
 		if (__xn_safe_copy_from_user(&timeout, u_ts, sizeof(timeout))) {
 			err = -EFAULT;
-			goto out;
+			goto fail;
 		}
 
 		timeoutp = &timeout;
@@ -1207,23 +1207,22 @@ int cobalt_mq_timedreceive(mqd_t uqd, void __user *u_buf,
 	msg = cobalt_mq_timedrcv_inner(mqd, len, timeoutp);
 	if (IS_ERR(msg)) {
 		err = PTR_ERR(msg);
-		goto out;
+		goto fail;
 	}
 
 	if (__xn_copy_to_user(u_buf, msg->data, msg->len)) {
 		cobalt_mq_finish_rcv(mqd, msg);
 		err = -EFAULT;
-		goto out;
+		goto fail;
 	}
+
 	len = msg->len;
 	prio = msg->prio;
-
 	err = cobalt_mq_finish_rcv(mqd, msg);
-
-  out:
-	cobalt_mqd_put(mqd);
 	if (err)
-		return err;
+		goto fail;
+
+	cobalt_mqd_put(mqd);
 
 	if (__xn_put_user(len, u_len))
 		return -EFAULT;
@@ -1232,6 +1231,11 @@ int cobalt_mq_timedreceive(mqd_t uqd, void __user *u_buf,
 		return -EFAULT;
 
 	return 0;
+
+fail:
+	cobalt_mqd_put(mqd);
+
+	return err;
 }
 
 int cobalt_mq_pkg_init(void)

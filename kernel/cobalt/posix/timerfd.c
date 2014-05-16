@@ -43,7 +43,7 @@ struct cobalt_tfd {
 static ssize_t timerfd_read(struct rtdm_fd *fd, void __user *buf, size_t size)
 {
 	unsigned long long __user *u_ticks;
-	unsigned long long ticks;
+	unsigned long long ticks = 0;
 	struct cobalt_tfd *tfd;
 	bool aligned;
 	spl_t s;
