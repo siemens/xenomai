@@ -118,8 +118,6 @@ static struct xnshadow_process *__process_hash_search(struct mm_struct *mm)
 	unsigned bucket = process_hash_crunch(mm);
 	struct xnshadow_process *p;
 
-	atomic_only();
-
 	hlist_for_each_entry(p, &process_hash[bucket], hlink)
 		if (p->mm == mm)
 			return p;
