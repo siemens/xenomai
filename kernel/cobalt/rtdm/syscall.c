@@ -115,9 +115,9 @@ static void rtdm_process_detach(void *arg)
 }
 
 static struct xnsyscall rtdm_syscalls[] = {
-	SKINCALL_DEF(sc_rtdm_open, sys_rtdm_open, probing),
-	SKINCALL_DEF(sc_rtdm_socket, sys_rtdm_socket, probing),
-	SKINCALL_DEF(sc_rtdm_close, sys_rtdm_close, probing),
+	SKINCALL_DEF(sc_rtdm_open, sys_rtdm_open, lostage),
+	SKINCALL_DEF(sc_rtdm_socket, sys_rtdm_socket, lostage),
+	SKINCALL_DEF(sc_rtdm_close, sys_rtdm_close, lostage),
 	SKINCALL_DEF(sc_rtdm_ioctl, sys_rtdm_ioctl, probing),
 	SKINCALL_DEF(sc_rtdm_read, sys_rtdm_read, probing),
 	SKINCALL_DEF(sc_rtdm_write, sys_rtdm_write, probing),
