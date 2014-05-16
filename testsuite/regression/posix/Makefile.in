@@ -80,7 +80,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-test_PROGRAMS = leaks$(EXEEXT) mq_select$(EXEEXT)
+test_PROGRAMS = leaks$(EXEEXT) mq_select$(EXEEXT) timerfd$(EXEEXT)
 subdir = testsuite/regression/posix
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/config/depcomp $(noinst_HEADERS)
@@ -113,6 +113,10 @@ mq_select_SOURCES = mq_select.c
 mq_select_OBJECTS = mq_select.$(OBJEXT)
 mq_select_LDADD = $(LDADD)
 mq_select_DEPENDENCIES = ../../../lib/cobalt/libcobalt.la
+timerfd_SOURCES = timerfd.c
+timerfd_OBJECTS = timerfd.$(OBJEXT)
+timerfd_LDADD = $(LDADD)
+timerfd_DEPENDENCIES = ../../../lib/cobalt/libcobalt.la
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -146,8 +150,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = leaks.c mq_select.c
-DIST_SOURCES = leaks.c mq_select.c
+SOURCES = leaks.c mq_select.c timerfd.c
+DIST_SOURCES = leaks.c mq_select.c timerfd.c
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -198,7 +202,7 @@ CFLAGS_FOR_BUILD = @CFLAGS_FOR_BUILD@
 CHECKFLAGS = @CHECKFLAGS@
 CONFIG_STATUS_DEPENDENCIES = @CONFIG_STATUS_DEPENDENCIES@
 CPP = @CPP@
-CPPFLAGS = $(XENO_USER_CFLAGS) 				\
+CPPFLAGS = $(XENO_USER_CFLAGS)			\
 	-I$(top_srcdir)/include
 
 CPPFLAGS_FOR_BUILD = @CPPFLAGS_FOR_BUILD@
@@ -447,6 +451,10 @@ mq_select$(EXEEXT): $(mq_select_OBJECTS) $(mq_select_DEPENDENCIES) $(EXTRA_mq_se
 	@rm -f mq_select$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(mq_select_OBJECTS) $(mq_select_LDADD) $(LIBS)
 
+timerfd$(EXEEXT): $(timerfd_OBJECTS) $(timerfd_DEPENDENCIES) $(EXTRA_timerfd_DEPENDENCIES) 
+	@rm -f timerfd$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(timerfd_OBJECTS) $(timerfd_LDADD) $(LIBS)
+
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 
@@ -455,6 +463,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/leaks.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mq_select.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/timerfd.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
