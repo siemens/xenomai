@@ -119,4 +119,6 @@
 #define sc_cobalt_timerfd_settime	96
 #define sc_cobalt_timerfd_gettime	97
 
+#define __NR_COBALT_SYSCALLS		98
+
 #endif /* !_COBALT_UAPI_SYSCALL_H */
