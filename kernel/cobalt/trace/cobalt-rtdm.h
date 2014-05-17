@@ -14,74 +14,70 @@ struct rtdm_device;
 struct rtdm_dev_context;
 
 DECLARE_EVENT_CLASS(fd_event,
-	TP_PROTO(struct rtdm_dev_context *context),
-	TP_ARGS(context),
+	TP_PROTO(struct rtdm_fd *fd, int ufd),
+	TP_ARGS(fd, ufd),
 
 	TP_STRUCT__entry(
 		__field(struct rtdm_device *, device)
-		__field(int, fd)
+		__field(int, ufd)
 	),
 
 	TP_fast_assign(
-		__entry->device = context->device;
-		__entry->fd = context->fd;
+		__entry->device = rtdm_fd_to_context(fd)->device;
+		__entry->ufd = ufd;
 	),
 
 	TP_printk("device=%p fd=%d",
-		  __entry->device, __entry->fd)
+		  __entry->device, __entry->ufd)
 );
 
 DECLARE_EVENT_CLASS(fd_request,
 	TP_PROTO(struct task_struct *task,
-		 struct rtdm_dev_context *context, unsigned long arg),
-	TP_ARGS(task, context, arg),
+		 struct rtdm_fd *fd, int ufd, unsigned long arg),
+	TP_ARGS(task, fd, ufd, arg),
 
 	TP_STRUCT__entry(
-		__field(struct task_struct *, task)
 		__array(char, comm, TASK_COMM_LEN)
 		__field(pid_t, pid)
 		__field(struct rtdm_device *, device)
-		__field(int, fd)
+		__field(int, ufd)
 		__field(unsigned long, arg)
 	),
 
 	TP_fast_assign(
-		__entry->task = task;
 		memcpy(__entry->comm, task->comm, TASK_COMM_LEN);
 		__entry->pid = task->pid;
-		__entry->device = context->device;
-		__entry->fd = context->fd;
+		__entry->device = rtdm_fd_to_context(fd)->device;
+		__entry->ufd = ufd;
 		__entry->arg = arg;
 	),
 
 	TP_printk("device=%p fd=%d arg=%#lx pid=%d comm=%s",
-		  __entry->device, __entry->fd, __entry->arg,
+		  __entry->device, __entry->ufd, __entry->arg,
 		  __entry->pid, __entry->comm)
 );
 
 DECLARE_EVENT_CLASS(fd_request_status,
 	TP_PROTO(struct task_struct *task,
-		 struct rtdm_dev_context *context, int status),
-	TP_ARGS(task, context, status),
+		 struct rtdm_fd *fd, int ufd, int status),
+	TP_ARGS(task, fd, ufd, status),
 
 	TP_STRUCT__entry(
-		__field(struct task_struct *, task)
 		__array(char, comm, TASK_COMM_LEN)
 		__field(pid_t, pid)
 		__field(struct rtdm_device *, device)
-		__field(int, fd)
+		__field(int, ufd)
 	),
 
 	TP_fast_assign(
-		__entry->task = task;
 		memcpy(__entry->comm, task->comm, TASK_COMM_LEN);
 		__entry->pid = task->pid;
-		__entry->device	= context->device;
-		__entry->fd = context->fd;
+		__entry->device	= rtdm_fd_to_context(fd)->device;
+		__entry->ufd = ufd;
 	),
 
 	TP_printk("device=%p fd=%d pid=%d comm=%s",
-		  __entry->device, __entry->fd, __entry->pid, __entry->comm)
+		  __entry->device, __entry->ufd, __entry->pid, __entry->comm)
 );
 
 DECLARE_EVENT_CLASS(task_op,
@@ -199,104 +195,99 @@ TRACE_EVENT(cobalt_device_unregister,
 );
 
 DEFINE_EVENT(fd_event, cobalt_fd_created,
-	TP_PROTO(struct rtdm_dev_context *context),
-	TP_ARGS(context)
-);
-
-DEFINE_EVENT(fd_event, cobalt_fd_closed,
-	TP_PROTO(struct rtdm_dev_context *context),
-	TP_ARGS(context)
+	TP_PROTO(struct rtdm_fd *fd, int ufd),
+	TP_ARGS(fd, ufd)
 );
 
 DEFINE_EVENT(fd_request, cobalt_fd_open,
 	TP_PROTO(struct task_struct *task,
-		 struct rtdm_dev_context *context,
+		 struct rtdm_fd *fd, int ufd,
 		 unsigned long oflags),
-	TP_ARGS(task, context, oflags)
+	TP_ARGS(task, fd, ufd, oflags)
 );
 
 DEFINE_EVENT(fd_request, cobalt_fd_close,
 	TP_PROTO(struct task_struct *task,
-		 struct rtdm_dev_context *context,
+		 struct rtdm_fd *fd, int ufd,
 		 unsigned long lock_count),
-	TP_ARGS(task, context, lock_count)
+	TP_ARGS(task, fd, ufd, lock_count)
 );
 
 DEFINE_EVENT(fd_request, cobalt_fd_socket,
 	TP_PROTO(struct task_struct *task,
-		 struct rtdm_dev_context *context,
+		 struct rtdm_fd *fd, int ufd,
 		 unsigned long protocol_family),
-	TP_ARGS(task, context, protocol_family)
+	TP_ARGS(task, fd, ufd, protocol_family)
 );
 
 DEFINE_EVENT(fd_request, cobalt_fd_read,
 	TP_PROTO(struct task_struct *task,
-		 struct rtdm_dev_context *context,
+		 struct rtdm_fd *fd, int ufd,
 		 unsigned long len),
-	TP_ARGS(task, context, len)
+	TP_ARGS(task, fd, ufd, len)
 );
 
 DEFINE_EVENT(fd_request, cobalt_fd_write,
 	TP_PROTO(struct task_struct *task,
-		 struct rtdm_dev_context *context,
+		 struct rtdm_fd *fd, int ufd,
 		 unsigned long len),
-	TP_ARGS(task, context, len)
+	TP_ARGS(task, fd, ufd, len)
 );
 
 DEFINE_EVENT(fd_request, cobalt_fd_ioctl,
 	TP_PROTO(struct task_struct *task,
-		 struct rtdm_dev_context *context,
+		 struct rtdm_fd *fd, int ufd,
 		 unsigned long request),
-	TP_ARGS(task, context, request)
+	TP_ARGS(task, fd, ufd, request)
 );
 
 DEFINE_EVENT(fd_request, cobalt_fd_sendmsg,
 	TP_PROTO(struct task_struct *task,
-		 struct rtdm_dev_context *context,
+		 struct rtdm_fd *fd, int ufd,
 		 unsigned long flags),
-	TP_ARGS(task, context, flags)
+	TP_ARGS(task, fd, ufd, flags)
 );
 
 DEFINE_EVENT(fd_request, cobalt_fd_recvmsg,
 	TP_PROTO(struct task_struct *task,
-		 struct rtdm_dev_context *context,
+		 struct rtdm_fd *fd, int ufd,
 		 unsigned long flags),
-	TP_ARGS(task, context, flags)
+	TP_ARGS(task, fd, ufd, flags)
 );
 
 DEFINE_EVENT(fd_request_status, cobalt_fd_ioctl_status,
 	TP_PROTO(struct task_struct *task,
-		 struct rtdm_dev_context *context,
+		 struct rtdm_fd *fd, int ufd,
 		 int status),
-	TP_ARGS(task, context, status)
+	TP_ARGS(task, fd, ufd, status)
 );
 
 DEFINE_EVENT(fd_request_status, cobalt_fd_read_status,
 	TP_PROTO(struct task_struct *task,
-		 struct rtdm_dev_context *context,
+		 struct rtdm_fd *fd, int ufd,
 		 int status),
-	TP_ARGS(task, context, status)
+	TP_ARGS(task, fd, ufd, status)
 );
 
 DEFINE_EVENT(fd_request_status, cobalt_fd_write_status,
 	TP_PROTO(struct task_struct *task,
-		 struct rtdm_dev_context *context,
+		 struct rtdm_fd *fd, int ufd,
 		 int status),
-	TP_ARGS(task, context, status)
+	TP_ARGS(task, fd, ufd, status)
 );
 
 DEFINE_EVENT(fd_request_status, cobalt_fd_recvmsg_status,
 	TP_PROTO(struct task_struct *task,
-		 struct rtdm_dev_context *context,
+		 struct rtdm_fd *fd, int ufd,
 		 int status),
-	TP_ARGS(task, context, status)
+	TP_ARGS(task, fd, ufd, status)
 );
 
 DEFINE_EVENT(fd_request_status, cobalt_fd_sendmsg_status,
 	TP_PROTO(struct task_struct *task,
-		 struct rtdm_dev_context *context,
+		 struct rtdm_fd *fd, int ufd,
 		 int status),
-	TP_ARGS(task, context, status)
+	TP_ARGS(task, fd, ufd, status)
 );
 
 DEFINE_EVENT(task_op, cobalt_driver_task_join,

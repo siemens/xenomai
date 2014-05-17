@@ -125,15 +125,15 @@ struct rtdm_fd_ops {
 	rtdm_fd_sendmsg_t *sendmsg_rt;
 	rtdm_fd_sendmsg_t *sendmsg_nrt;
 	int (*select_bind)(struct rtdm_fd *fd, struct xnselector *selector,
-			unsigned type, unsigned index);
+			unsigned int type, unsigned int index);
 	void (*close)(struct rtdm_fd *fd);
 };
 
 struct rtdm_fd {
-	unsigned magic;
+	unsigned int magic;
 	struct rtdm_fd_ops *ops;
 	struct xnsys_ppd *cont;
-	unsigned refs;
+	unsigned int refs;
 	struct list_head cleanup;
 };
 
@@ -150,9 +150,10 @@ static inline struct xnsys_ppd *rtdm_fd_owner(struct rtdm_fd *fd)
 }
 
 int rtdm_fd_enter(struct xnsys_ppd *p, struct rtdm_fd *rtdm_fd, int ufd,
-	unsigned magic, struct rtdm_fd_ops *ops);
+		  unsigned int magic, struct rtdm_fd_ops *ops);
 
-struct rtdm_fd *rtdm_fd_get(struct xnsys_ppd *p, int ufd, unsigned magic);
+struct rtdm_fd *rtdm_fd_get(struct xnsys_ppd *p,
+			    int ufd, unsigned int magic);
 
 int rtdm_fd_lock(struct rtdm_fd *fd);
 
@@ -160,24 +161,26 @@ void rtdm_fd_put(struct rtdm_fd *fd);
 
 void rtdm_fd_unlock(struct rtdm_fd *fd);
 
-int rtdm_fd_ioctl(struct xnsys_ppd *p, int fd, unsigned request, ...);
+int rtdm_fd_ioctl(struct xnsys_ppd *p, int fd, unsigned int request, ...);
 
-ssize_t rtdm_fd_read(struct xnsys_ppd *p, int fd, void __user *buf, size_t size);
+ssize_t rtdm_fd_read(struct xnsys_ppd *p, int fd,
+		     void __user *buf, size_t size);
 
-ssize_t
-rtdm_fd_write(struct xnsys_ppd *p, int fd, const void __user *buf, size_t size);
+ssize_t rtdm_fd_write(struct xnsys_ppd *p, int fd,
+		      const void __user *buf, size_t size);
 
-int rtdm_fd_close(struct xnsys_ppd *p, int fd, unsigned magic);
+int rtdm_fd_close(struct xnsys_ppd *p, int fd, unsigned int magic);
 
-ssize_t
-rtdm_fd_recvmsg(struct xnsys_ppd *p, int fd, struct msghdr *msg, int flags);
+ssize_t rtdm_fd_recvmsg(struct xnsys_ppd *p, int fd,
+			struct msghdr *msg, int flags);
 
-ssize_t
-rtdm_fd_sendmsg(struct xnsys_ppd *p, int fd, const struct msghdr *msg, int flags);
+ssize_t rtdm_fd_sendmsg(struct xnsys_ppd *p, int fd,
+			const struct msghdr *msg, int flags);
 
 int rtdm_fd_valid_p(int ufd);
 
-int rtdm_fd_select_bind(int ufd, struct xnselector *selector, unsigned type);
+int rtdm_fd_select_bind(int ufd, struct xnselector *selector,
+			unsigned int type);
 
 void rtdm_fd_cleanup(struct xnsys_ppd *p);
 

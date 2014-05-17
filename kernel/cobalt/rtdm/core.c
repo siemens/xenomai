@@ -60,11 +60,10 @@ void __rt_dev_close(struct rtdm_fd *fd)
 {
 	struct rtdm_dev_context *context = rtdm_fd_to_context(fd);
 	context->reserved.close(fd);
-	trace_cobalt_fd_closed(context);
 	cleanup_instance(context->device, context);
 }
 
-void __rt_dev_unref(struct rtdm_fd *fd, unsigned idx)
+void __rt_dev_unref(struct rtdm_fd *fd, unsigned int idx)
 {
 	if (fd->magic != RTDM_FD_MAGIC)
 		return;
@@ -158,7 +157,7 @@ int __rt_dev_open(struct xnsys_ppd *p, int ufd, const char *path, int oflag)
 		goto cleanup_out;
 	ufd = ret;
 
-	trace_cobalt_fd_open(current, context, oflag);
+	trace_cobalt_fd_open(current, &context->fd, ufd, oflag);
 
 	ret = device->open(&context->fd, oflag);
 
@@ -168,7 +167,7 @@ int __rt_dev_open(struct xnsys_ppd *p, int ufd, const char *path, int oflag)
 	if (unlikely(ret < 0))
 		goto cleanup_out;
 
-	trace_cobalt_fd_created(context);
+	trace_cobalt_fd_created(&context->fd, ufd);
 
 	return ufd;
 
@@ -197,7 +196,7 @@ int __rt_dev_socket(struct xnsys_ppd *p, int ufd, int protocol_family,
 		goto cleanup_out;
 	ufd = ret;
 
-	trace_cobalt_fd_socket(current, context, protocol_family);
+	trace_cobalt_fd_socket(current, &context->fd, ufd, protocol_family);
 
 	ret = device->socket(&context->fd, protocol);
 
@@ -207,7 +206,7 @@ int __rt_dev_socket(struct xnsys_ppd *p, int ufd, int protocol_family,
 	if (unlikely(ret < 0))
 		goto cleanup_out;
 
-	trace_cobalt_fd_created(context);
+	trace_cobalt_fd_created(&context->fd, ufd);
 
 	return ufd;
 
@@ -220,7 +219,7 @@ err_out:
 EXPORT_SYMBOL_GPL(__rt_dev_socket);
 
 int
-__rt_dev_ioctl_fallback(struct rtdm_fd *fd, unsigned request, void __user *arg)
+__rt_dev_ioctl_fallback(struct rtdm_fd *fd, unsigned int request, void __user *arg)
 {
 	struct rtdm_device *dev = rtdm_fd_device(fd);
 	struct rtdm_device_info dev_info;

@@ -787,7 +787,6 @@ void rtdm_event_init(rtdm_event_t *event, unsigned long pending)
 
 EXPORT_SYMBOL_GPL(rtdm_event_init);
 
-#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
  * @brief Destroy an event
  *
@@ -803,7 +802,13 @@ EXPORT_SYMBOL_GPL(rtdm_event_init);
  *
  * Rescheduling: possible.
  */
-void rtdm_event_destroy(rtdm_event_t *event);
+void rtdm_event_destroy(rtdm_event_t *event)
+{
+	trace_cobalt_driver_event_destroy(event);
+	__rtdm_synch_flush(&event->synch_base, XNRMID);
+	xnselect_destroy(&event->select_block);
+}
+EXPORT_SYMBOL_GPL(rtdm_event_destroy);
 
 /**
  * @brief Signal an event occurrence to currently listening waiters
@@ -825,8 +830,12 @@ void rtdm_event_destroy(rtdm_event_t *event);
  *
  * Rescheduling: possible.
  */
-void rtdm_event_pulse(rtdm_event_t *event);
-#endif /* DOXYGEN_CPP */
+void rtdm_event_pulse(rtdm_event_t *event)
+{
+	trace_cobalt_driver_event_pulse(event);
+	__rtdm_synch_flush(&event->synch_base, 0);
+}
+EXPORT_SYMBOL_GPL(rtdm_event_pulse);
 
 /**
  * @brief Signal an event occurrence
@@ -1063,7 +1072,7 @@ EXPORT_SYMBOL_GPL(rtdm_event_clear);
  * Rescheduling: never.
  */
 int rtdm_event_select_bind(rtdm_event_t *event, rtdm_selector_t *selector,
-			   enum rtdm_selecttype type, unsigned fd_index)
+			   enum rtdm_selecttype type, unsigned int fd_index)
 {
 	struct xnselect_binding *binding;
 	int err;
@@ -1128,7 +1137,6 @@ void rtdm_sem_init(rtdm_sem_t *sem, unsigned long value)
 
 EXPORT_SYMBOL_GPL(rtdm_sem_init);
 
-#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
  * @brief Destroy a semaphore
  *
@@ -1144,8 +1152,13 @@ EXPORT_SYMBOL_GPL(rtdm_sem_init);
  *
  * Rescheduling: possible.
  */
-void rtdm_sem_destroy(rtdm_sem_t *sem);
-#endif /* DOXYGEN_CPP */
+void rtdm_sem_destroy(rtdm_sem_t *sem)
+{
+	trace_cobalt_driver_sem_destroy(sem);
+	__rtdm_synch_flush(&sem->synch_base, XNRMID);
+	xnselect_destroy(&sem->select_block);
+}
+EXPORT_SYMBOL_GPL(rtdm_sem_destroy);
 
 /**
  * @brief Decrement a semaphore
@@ -1338,7 +1351,7 @@ EXPORT_SYMBOL_GPL(rtdm_sem_up);
  * Rescheduling: never.
  */
 int rtdm_sem_select_bind(rtdm_sem_t *sem, rtdm_selector_t *selector,
-			 enum rtdm_selecttype type, unsigned fd_index)
+			 enum rtdm_selecttype type, unsigned int fd_index)
 {
 	struct xnselect_binding *binding;
 	int err;
@@ -1403,7 +1416,6 @@ void rtdm_mutex_init(rtdm_mutex_t *mutex)
 
 EXPORT_SYMBOL_GPL(rtdm_mutex_init);
 
-#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
  * @brief Destroy a mutex
  *
@@ -1419,7 +1431,13 @@ EXPORT_SYMBOL_GPL(rtdm_mutex_init);
  *
  * Rescheduling: possible.
  */
-void rtdm_mutex_destroy(rtdm_mutex_t *mutex);
+void rtdm_mutex_destroy(rtdm_mutex_t *mutex)
+{
+	trace_cobalt_driver_mutex_destroy(mutex);
+
+	__rtdm_synch_flush(&mutex->synch_base, XNRMID);
+}
+EXPORT_SYMBOL_GPL(rtdm_mutex_destroy);
 
 /**
  * @brief Release a mutex
@@ -1438,8 +1456,18 @@ void rtdm_mutex_destroy(rtdm_mutex_t *mutex);
  *
  * Rescheduling: possible.
  */
-void rtdm_mutex_unlock(rtdm_mutex_t *mutex);
-#endif /* DOXYGEN_CPP */
+void rtdm_mutex_unlock(rtdm_mutex_t *mutex)
+{
+	if (!XENO_ASSERT(RTDM, !xnsched_interrupt_p()))
+		return;
+
+	trace_cobalt_driver_mutex_release(mutex);
+
+	if (unlikely(xnsynch_release(&mutex->synch_base,
+				     xnsched_current_thread()) != NULL))
+		xnsched_run();
+}
+EXPORT_SYMBOL_GPL(rtdm_mutex_unlock);
 
 /**
  * @brief Request a mutex

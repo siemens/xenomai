@@ -35,9 +35,10 @@ static DEFINE_XNLOCK(__rtdm_fd_lock);
 static LIST_HEAD(rtdm_fd_cleanup_queue);
 static struct semaphore rtdm_fd_cleanup_sem;
 
-extern int
-__rt_dev_ioctl_fallback(struct rtdm_fd *fd, unsigned request, void __user *arg);
-extern void __rt_dev_unref(struct rtdm_fd *fd, unsigned idx);
+int __rt_dev_ioctl_fallback(struct rtdm_fd *fd,
+			    unsigned int request, void __user *arg);
+
+void __rt_dev_unref(struct rtdm_fd *fd, unsigned int idx);
 
 static int enosys(void)
 {
@@ -73,7 +74,7 @@ static struct rtdm_fd *rtdm_fd_fetch(struct xnsys_ppd *p, int ufd)
 }
 
 int rtdm_fd_enter(struct xnsys_ppd *p, struct rtdm_fd *fd, int ufd,
-	unsigned magic, struct rtdm_fd_ops *ops)
+	unsigned int magic, struct rtdm_fd_ops *ops)
 {
 	struct rtdm_fd_index *idx;
 	spl_t s;
@@ -169,7 +170,7 @@ int rtdm_fd_enter(struct xnsys_ppd *p, struct rtdm_fd *fd, int ufd,
 	return err;
 }
 
-struct rtdm_fd *rtdm_fd_get(struct xnsys_ppd *p, int ufd, unsigned magic)
+struct rtdm_fd *rtdm_fd_get(struct xnsys_ppd *p, int ufd, unsigned int magic)
 {
 	struct rtdm_fd *res;
 	spl_t s;
@@ -300,7 +301,7 @@ void rtdm_fd_unlock(struct rtdm_fd *fd)
 }
 EXPORT_SYMBOL_GPL(rtdm_fd_unlock);
 
-int rtdm_fd_ioctl(struct xnsys_ppd *p, int ufd, unsigned request, ...)
+int rtdm_fd_ioctl(struct xnsys_ppd *p, int ufd, unsigned int request, ...)
 {
 	void __user *arg;
 	struct rtdm_fd *fd;
@@ -317,9 +318,7 @@ int rtdm_fd_ioctl(struct xnsys_ppd *p, int ufd, unsigned request, ...)
 		goto out;
 	}
 
-#if 0
-	trace_cobalt_fd_ioctl(current, fd, request, arg);
-#endif
+	trace_cobalt_fd_ioctl(current, fd, ufd, request);
 
 	if (ipipe_root_p)
 		err = fd->ops->ioctl_nrt(fd, request, arg);
@@ -337,10 +336,9 @@ int rtdm_fd_ioctl(struct xnsys_ppd *p, int ufd, unsigned request, ...)
 
 	rtdm_fd_put(fd);
   out:
-#if 0
 	if (err < 0)
-		trace_cobalt_fd_ioctl_status(current, fd, err);
-#endif
+		trace_cobalt_fd_ioctl_status(current, fd, ufd, err);
+
 	return err;
 }
 EXPORT_SYMBOL_GPL(rtdm_fd_ioctl);
@@ -357,9 +355,7 @@ rtdm_fd_read(struct xnsys_ppd *p, int ufd, void __user *buf, size_t size)
 		goto out;
 	}
 
-#if 0
-	trace_cobalt_fd_read(current, fd, size);
-#endif
+	trace_cobalt_fd_read(current, fd, ufd, size);
 
 	if (ipipe_root_p)
 		err = fd->ops->read_nrt(fd, buf, size);
@@ -372,10 +368,9 @@ rtdm_fd_read(struct xnsys_ppd *p, int ufd, void __user *buf, size_t size)
 	rtdm_fd_put(fd);
 
   out:
-#if 0
 	if (err < 0)
-		trace_cobalt_fd_read_status(current, fd, err);
-#endif
+		trace_cobalt_fd_read_status(current, fd, ufd, err);
+
 	return err;
 }
 EXPORT_SYMBOL_GPL(rtdm_fd_read);
@@ -392,9 +387,7 @@ ssize_t rtdm_fd_write(struct xnsys_ppd *p, int ufd,
 		goto out;
 	}
 
-#if 0
-	trace_cobalt_fd_write(current, fd, size);
-#endif
+	trace_cobalt_fd_write(current, fd, ufd, size);
 
 	if (ipipe_root_p)
 		err = fd->ops->write_nrt(fd, buf, size);
@@ -407,10 +400,9 @@ ssize_t rtdm_fd_write(struct xnsys_ppd *p, int ufd,
 	rtdm_fd_put(fd);
 
   out:
-#if 0
 	if (err < 0)
-		trace_cobalt_fd_write_status(current, fd, err);
-#endif
+		trace_cobalt_fd_write_status(current, fd, ufd, err);
+
 	return err;
 }
 EXPORT_SYMBOL_GPL(rtdm_fd_write);
@@ -427,9 +419,7 @@ rtdm_fd_recvmsg(struct xnsys_ppd *p, int ufd, struct msghdr *msg, int flags)
 		goto out;
 	}
 
-#if 0
-	trace_cobalt_fd_recvmsg(current, fd, flags);
-#endif
+	trace_cobalt_fd_recvmsg(current, fd, ufd, flags);
 
 	if (ipipe_root_p)
 		err = fd->ops->recvmsg_nrt(fd, msg, flags);
@@ -442,10 +432,9 @@ rtdm_fd_recvmsg(struct xnsys_ppd *p, int ufd, struct msghdr *msg, int flags)
 	rtdm_fd_put(fd);
 
   out:
-#if 0
 	if (err < 0)
-		trace_cobalt_fd_recvmsg_status(current, fd, err);
-#endif
+		trace_cobalt_fd_recvmsg_status(current, fd, ufd, err);
+
 	return err;
 }
 EXPORT_SYMBOL_GPL(rtdm_fd_recvmsg);
@@ -462,9 +451,7 @@ rtdm_fd_sendmsg(struct xnsys_ppd *p, int ufd, const struct msghdr *msg, int flag
 		goto out;
 	}
 
-#if 0
-	trace_cobalt_fd_sendmsg(current, fd, flags);
-#endif
+	trace_cobalt_fd_sendmsg(current, fd, ufd, flags);
 
 	if (ipipe_root_p)
 		err = fd->ops->sendmsg_nrt(fd, msg, flags);
@@ -477,10 +464,9 @@ rtdm_fd_sendmsg(struct xnsys_ppd *p, int ufd, const struct msghdr *msg, int flag
 	rtdm_fd_put(fd);
 
   out:
-#if 0
 	if (err < 0)
-		trace_cobalt_fd_sendmsg_status(current, fd, err);
-#endif
+		trace_cobalt_fd_sendmsg_status(current, fd, ufd, err);
+
 	return err;
 }
 EXPORT_SYMBOL_GPL(rtdm_fd_sendmsg);
@@ -494,7 +480,7 @@ rtdm_fd_close_inner(struct xnsys_ppd *p, struct rtdm_fd_index *idx, spl_t s)
 	kfree(idx);
 }
 
-int rtdm_fd_close(struct xnsys_ppd *p, int ufd, unsigned magic)
+int rtdm_fd_close(struct xnsys_ppd *p, int ufd, unsigned int magic)
 {
 	struct rtdm_fd_index *idx;
 	struct rtdm_fd *fd;
@@ -512,9 +498,7 @@ int rtdm_fd_close(struct xnsys_ppd *p, int ufd, unsigned magic)
 		return -EBADF;
 	}
 
-#if 0
-	trace_cobalt_fd_close(current, fd, fd->refs);
-#endif
+	trace_cobalt_fd_close(current, fd, ufd, fd->refs);
 
 	__rt_dev_unref(fd, xnid_id(&idx->id));
 	rtdm_fd_close_inner(p, idx, s);
@@ -564,7 +548,8 @@ int rtdm_fd_valid_p(int ufd)
  *
  * Rescheduling: never.
  */
-int rtdm_fd_select_bind(int ufd, struct xnselector *selector, unsigned type)
+int rtdm_fd_select_bind(int ufd, struct xnselector *selector,
+			unsigned int type)
 {
 	struct xnsys_ppd *p;
 	struct rtdm_fd *fd;

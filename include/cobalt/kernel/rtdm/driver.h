@@ -1466,22 +1466,9 @@ void rtdm_event_signal(rtdm_event_t *event);
 
 void rtdm_event_clear(rtdm_event_t *event);
 
-#ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
-void __rtdm_synch_flush(struct xnsynch *synch, unsigned long reason);
+void rtdm_event_pulse(rtdm_event_t *event);
 
-static inline void rtdm_event_pulse(rtdm_event_t *event)
-{
-	trace_cobalt_driver_event_pulse(event);
-	__rtdm_synch_flush(&event->synch_base, 0);
-}
-
-static inline void rtdm_event_destroy(rtdm_event_t *event)
-{
-	trace_cobalt_driver_event_destroy(event);
-	__rtdm_synch_flush(&event->synch_base, XNRMID);
-	xnselect_destroy(&event->select_block);
-}
-#endif /* !DOXYGEN_CPP */
+void rtdm_event_destroy(rtdm_event_t *event);
 
 /* --- semaphore services --- */
 
@@ -1499,14 +1486,7 @@ int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
 		       rtdm_toseq_t *timeout_seq);
 void rtdm_sem_up(rtdm_sem_t *sem);
 
-#ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
-static inline void rtdm_sem_destroy(rtdm_sem_t *sem)
-{
-	trace_cobalt_driver_sem_destroy(sem);
-	__rtdm_synch_flush(&sem->synch_base, XNRMID);
-	xnselect_destroy(&sem->select_block);
-}
-#endif /* !DOXYGEN_CPP */
+void rtdm_sem_destroy(rtdm_sem_t *sem);
 
 /* --- mutex services --- */
 
@@ -1518,27 +1498,8 @@ void rtdm_mutex_init(rtdm_mutex_t *mutex);
 int rtdm_mutex_lock(rtdm_mutex_t *mutex);
 int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
 			 rtdm_toseq_t *timeout_seq);
-
-#ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
-static inline void rtdm_mutex_unlock(rtdm_mutex_t *mutex)
-{
-	if (!XENO_ASSERT(RTDM, !xnsched_interrupt_p()))
-		return;
-
-	trace_cobalt_driver_mutex_release(mutex);
-
-	if (unlikely(xnsynch_release(&mutex->synch_base,
-				     xnsched_current_thread()) != NULL))
-		xnsched_run();
-}
-
-static inline void rtdm_mutex_destroy(rtdm_mutex_t *mutex)
-{
-	trace_cobalt_driver_mutex_destroy(mutex);
-
-	__rtdm_synch_flush(&mutex->synch_base, XNRMID);
-}
-#endif /* !DOXYGEN_CPP */
+void rtdm_mutex_unlock(rtdm_mutex_t *mutex);
+void rtdm_mutex_destroy(rtdm_mutex_t *mutex);
 
 /* --- utility functions --- */
 

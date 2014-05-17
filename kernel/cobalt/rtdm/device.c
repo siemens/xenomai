@@ -64,7 +64,7 @@ int rtdm_no_support(void)
 
 int rtdm_select_bind_no_support(struct rtdm_fd *fd,
 				struct xnselector *selector,
-				unsigned type, unsigned index)
+				unsigned int type, unsigned int index)
 {
 	return -EBADF;
 }
