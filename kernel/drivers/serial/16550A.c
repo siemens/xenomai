@@ -312,9 +312,7 @@ static int rt_16550_set_config(struct rt_16550_context *ctx,
 	rtdm_lock_get_irqsave(&ctx->lock, lock_ctx);
 
 	if (config->config_mask & RTSER_SET_BAUD) {
-		int dev_id = container_of(((void *)ctx),
-					  struct rtdm_dev_context,
-					  dev_private)->device->device_id;
+		int dev_id = rtdm_fd_device(rtdm_private_to_fd(ctx))->device_id;
 		int baud_div;
 
 		ctx->config.baud_rate = config->baud_rate;
@@ -439,16 +437,15 @@ void rt_16550_cleanup_ctx(struct rt_16550_context *ctx)
 	rtdm_mutex_destroy(&ctx->out_lock);
 }
 
-int rt_16550_open(struct rtdm_dev_context *context,
-		  rtdm_user_info_t * user_info, int oflags)
+int rt_16550_open(struct rtdm_fd *fd, int oflags)
 {
 	struct rt_16550_context *ctx;
-	int dev_id = context->device->device_id;
+	int dev_id = rtdm_fd_device(fd)->device_id;
 	int err;
 	uint64_t *dummy;
 	rtdm_lockctx_t lock_ctx;
 
-	ctx = (struct rt_16550_context *)context->dev_private;
+	ctx = rtdm_fd_to_private(fd);
 
 	/* IPC initialisation - cannot fail with used parameters */
 	rtdm_lock_init(&ctx->lock);
@@ -480,8 +477,8 @@ int rt_16550_open(struct rtdm_dev_context *context,
 	rt_16550_set_config(ctx, &default_config, &dummy);
 
 	err = rtdm_irq_request(&ctx->irq_handle, irq[dev_id],
-			       rt_16550_interrupt, irqtype[dev_id],
-			       context->device->proc_name, ctx);
+			rt_16550_interrupt, irqtype[dev_id],
+			rtdm_fd_device(fd)->proc_name, ctx);
 	if (err) {
 		/* reset DTR and RTS */
 		rt_16550_reg_out(rt_16550_io_mode_from_ctx(ctx), ctx->base_addr,
@@ -504,8 +501,7 @@ int rt_16550_open(struct rtdm_dev_context *context,
 	return 0;
 }
 
-int rt_16550_close(struct rtdm_dev_context *context,
-		   rtdm_user_info_t * user_info)
+void rt_16550_close(struct rtdm_fd *fd)
 {
 	struct rt_16550_context *ctx;
 	unsigned long base;
@@ -513,7 +509,7 @@ int rt_16550_close(struct rtdm_dev_context *context,
 	uint64_t *in_history;
 	rtdm_lockctx_t lock_ctx;
 
-	ctx = (struct rt_16550_context *)context->dev_private;
+	ctx = rtdm_fd_to_private(fd);
 	base = ctx->base_addr;
 	mode = rt_16550_io_mode_from_ctx(ctx);
 
@@ -539,13 +535,9 @@ int rt_16550_close(struct rtdm_dev_context *context,
 	rt_16550_cleanup_ctx(ctx);
 
 	kfree(in_history);
-
-	return 0;
 }
 
-int rt_16550_ioctl(struct rtdm_dev_context *context,
-		   rtdm_user_info_t * user_info,
-		   unsigned int request, void *arg)
+int rt_16550_ioctl(struct rtdm_fd *fd, unsigned int request, void *arg)
 {
 	rtdm_lockctx_t lock_ctx;
 	struct rt_16550_context *ctx;
@@ -553,15 +545,15 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
 	unsigned long base;
 	int mode;
 
-	ctx = (struct rt_16550_context *)context->dev_private;
+	ctx = rtdm_fd_to_private(fd);
 	base = ctx->base_addr;
 	mode = rt_16550_io_mode_from_ctx(ctx);
 
 	switch (request) {
 	case RTSER_RTIOC_GET_CONFIG:
-		if (user_info)
+		if (rtdm_fd_is_user(fd))
 			err =
-			    rtdm_safe_copy_to_user(user_info, arg,
+			    rtdm_safe_copy_to_user(fd, arg,
 						   &ctx->config,
 						   sizeof(struct
 							  rtser_config));
@@ -577,9 +569,9 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
 
 		config = (struct rtser_config *)arg;
 
-		if (user_info) {
+		if (rtdm_fd_is_user(fd)) {
 			err =
-			    rtdm_safe_copy_from_user(user_info, &config_buf,
+			    rtdm_safe_copy_from_user(fd, &config_buf,
 						     arg,
 						     sizeof(struct
 							    rtser_config));
@@ -591,8 +583,8 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
 
 		if ((config->config_mask & RTSER_SET_BAUD) &&
 		    (config->baud_rate >
-		     baud_base[context->device->device_id] ||
-		     config->baud_rate <= 0))
+			    baud_base[rtdm_fd_device(fd)->device_id] ||
+			    config->baud_rate <= 0))
 			/* invalid baudrate for this port */
 			return -EINVAL;
 
@@ -631,7 +623,7 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
 
 		rtdm_lock_put_irqrestore(&ctx->lock, lock_ctx);
 
-		if (user_info) {
+		if (rtdm_fd_is_user(fd)) {
 			struct rtser_status status_buf;
 
 			status_buf.line_status =
@@ -640,7 +632,7 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
 			    rt_16550_reg_in(mode, base, MSR);
 
 			err =
-			    rtdm_safe_copy_to_user(user_info, arg,
+			    rtdm_safe_copy_to_user(fd, arg,
 						   &status_buf,
 						   sizeof(struct
 							  rtser_status));
@@ -654,9 +646,9 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
 	}
 
 	case RTSER_RTIOC_GET_CONTROL:
-		if (user_info)
+		if (rtdm_fd_is_user(fd))
 			err =
-			    rtdm_safe_copy_to_user(user_info, arg,
+			    rtdm_safe_copy_to_user(fd, arg,
 						   &ctx->mcr_status,
 						   sizeof(int));
 		else
@@ -725,9 +717,9 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
 
 		rtdm_lock_put_irqrestore(&ctx->lock, lock_ctx);
 
-		if (user_info)
+		if (rtdm_fd_is_user(fd))
 			err =
-			    rtdm_safe_copy_to_user(user_info, arg, &ev,
+			    rtdm_safe_copy_to_user(fd, arg, &ev,
 						   sizeof(struct
 							  rtser_event));
 			else
@@ -788,8 +780,7 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
 	return err;
 }
 
-ssize_t rt_16550_read(struct rtdm_dev_context * context,
-		      rtdm_user_info_t * user_info, void *buf, size_t nbyte)
+ssize_t rt_16550_read(struct rtdm_fd *fd, void *buf, size_t nbyte)
 {
 	struct rt_16550_context *ctx;
 	rtdm_lockctx_t lock_ctx;
@@ -806,10 +797,10 @@ ssize_t rt_16550_read(struct rtdm_dev_context * context,
 	if (nbyte == 0)
 		return 0;
 
-	if (user_info && !rtdm_rw_user_ok(user_info, buf, nbyte))
+	if (rtdm_fd_is_user(fd) && !rtdm_rw_user_ok(fd, buf, nbyte))
 		return -EFAULT;
 
-	ctx = (struct rt_16550_context *)context->dev_private;
+	ctx = rtdm_fd_to_private(fd);
 
 	rtdm_toseq_init(&timeout_seq, ctx->config.rx_timeout);
 
@@ -857,9 +848,9 @@ ssize_t rt_16550_read(struct rtdm_dev_context * context,
 				   separately. */
 				subblock = IN_BUFFER_SIZE - in_pos;
 
-				if (user_info) {
+				if (rtdm_fd_is_user(fd)) {
 					if (rtdm_copy_to_user
-					    (user_info, out_pos,
+					    (fd, out_pos,
 					     &ctx->in_buf[in_pos],
 					     subblock) != 0) {
 						ret = -EFAULT;
@@ -876,8 +867,8 @@ ssize_t rt_16550_read(struct rtdm_dev_context * context,
 				in_pos = 0;
 			}
 
-			if (user_info) {
-				if (rtdm_copy_to_user(user_info, out_pos,
+			if (rtdm_fd_is_user(fd)) {
+				if (rtdm_copy_to_user(fd, out_pos,
 						      &ctx->in_buf[in_pos],
 						      subblock) != 0) {
 					ret = -EFAULT;
@@ -952,9 +943,7 @@ break_unlocked:
 	return ret;
 }
 
-ssize_t rt_16550_write(struct rtdm_dev_context * context,
-		       rtdm_user_info_t * user_info, const void *buf,
-		       size_t nbyte)
+ssize_t rt_16550_write(struct rtdm_fd *fd, const void *buf, size_t nbyte)
 {
 	struct rt_16550_context *ctx;
 	rtdm_lockctx_t lock_ctx;
@@ -970,10 +959,10 @@ ssize_t rt_16550_write(struct rtdm_dev_context * context,
 	if (nbyte == 0)
 		return 0;
 
-	if (user_info && !rtdm_read_user_ok(user_info, buf, nbyte))
+	if (rtdm_fd_is_user(fd) && !rtdm_read_user_ok(fd, buf, nbyte))
 		return -EFAULT;
 
-	ctx = (struct rt_16550_context *)context->dev_private;
+	ctx = rtdm_fd_to_private(fd);
 
 	rtdm_toseq_init(&timeout_seq, ctx->config.rx_timeout);
 
@@ -1000,9 +989,9 @@ ssize_t rt_16550_write(struct rtdm_dev_context * context,
 				   end separately. */
 				subblock = OUT_BUFFER_SIZE - out_pos;
 
-				if (user_info) {
+				if (rtdm_fd_is_user(fd)) {
 					if (rtdm_copy_from_user
-					    (user_info,
+					    (fd,
 					     &ctx->out_buf[out_pos],
 					     in_pos, subblock) != 0) {
 						ret = -EFAULT;
@@ -1019,9 +1008,9 @@ ssize_t rt_16550_write(struct rtdm_dev_context * context,
 				out_pos = 0;
 			}
 
-			if (user_info) {
+			if (rtdm_fd_is_user(fd)) {
 				if (rtdm_copy_from_user
-				    (user_info, &ctx->out_buf[out_pos],
+				    (fd, &ctx->out_buf[out_pos],
 				     in_pos, subblock) != 0) {
 					ret = -EFAULT;
 					break;
@@ -1085,10 +1074,10 @@ static const struct rtdm_device __initdata device_tmpl = {
 	.context_size		= sizeof(struct rt_16550_context),
 	.device_name		= "",
 
-	.open_nrt		= rt_16550_open,
+	.open			= rt_16550_open,
 
 	.ops = {
-		.close_nrt	= rt_16550_close,
+		.close		= rt_16550_close,
 
 		.ioctl_rt	= rt_16550_ioctl,
 		.ioctl_nrt	= rt_16550_ioctl,

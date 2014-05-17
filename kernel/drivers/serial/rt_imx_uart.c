@@ -738,8 +738,7 @@ static int rt_imx_uart_setup_ufcr(struct rt_imx_uart_port *port)
 /* half the RX buffer size */
 #define CTSTL 16
 
-static int rt_imx_uart_open(struct rtdm_dev_context *context,
-			    rtdm_user_info_t *user_info, int oflags)
+static int rt_imx_uart_open(struct rtdm_fd *fd, int oflags)
 {
 	struct rt_imx_uart_ctx *ctx;
 	struct rt_imx_uart_port *port;
@@ -748,8 +747,8 @@ static int rt_imx_uart_open(struct rtdm_dev_context *context,
 	int retval;
 	uint64_t *dummy;
 
-	ctx = (struct rt_imx_uart_ctx *)context->dev_private;
-	ctx->port = (struct rt_imx_uart_port *)context->device->device_data;
+	ctx = rtdm_fd_to_private(fd);
+	ctx->port = (struct rt_imx_uart_port *)rtdm_fd_device(fd)->device_data;
 
 	port = ctx->port;
 
@@ -793,7 +792,7 @@ static int rt_imx_uart_open(struct rtdm_dev_context *context,
 
 	retval = rtdm_irq_request(&ctx->irq_handle,
 				  port->irq, rt_imx_uart_int, 0,
-				  context->device->proc_name, ctx);
+				  rtdm_fd_device(fd)->proc_name, ctx);
 	if (retval)
 		return retval;
 
@@ -822,15 +821,14 @@ static int rt_imx_uart_open(struct rtdm_dev_context *context,
 	return 0;
 }
 
-int rt_imx_uart_close(struct rtdm_dev_context *context,
-		      rtdm_user_info_t *user_info)
+void rt_imx_uart_close(struct rtdm_fd *fd)
 {
 	struct rt_imx_uart_ctx *ctx;
 	uint64_t *in_history;
 	rtdm_lockctx_t lock_ctx;
 	unsigned long temp;
 
-	ctx = (struct rt_imx_uart_ctx *)context->dev_private;
+	ctx = rtdm_fd_to_private(fd);
 
 	rtdm_lock_get_irqsave(&ctx->lock, lock_ctx);
 
@@ -855,25 +853,22 @@ int rt_imx_uart_close(struct rtdm_dev_context *context,
 
 	if (in_history)
 		kfree(in_history);
-
-	return 0;
 }
 
-static int rt_imx_uart_ioctl(struct rtdm_dev_context *context,
-			     rtdm_user_info_t *user_info,
+static int rt_imx_uart_ioctl(struct rtdm_fd *fd,
 			     unsigned int request, void *arg)
 {
 	rtdm_lockctx_t lock_ctx;
 	struct rt_imx_uart_ctx *ctx;
 	int err = 0;
 
-	ctx = (struct rt_imx_uart_ctx *)context->dev_private;
+	ctx = rtdm_fd_to_private(fd);
 
 	switch (request) {
 	case RTSER_RTIOC_GET_CONFIG:
-		if (user_info)
+		if (rtdm_fd_is_user(fd))
 			err =
-			    rtdm_safe_copy_to_user(user_info, arg,
+			    rtdm_safe_copy_to_user(fd, arg,
 						   &ctx->config,
 						   sizeof(struct rtser_config));
 		else
@@ -888,9 +883,9 @@ static int rt_imx_uart_ioctl(struct rtdm_dev_context *context,
 
 		config = (struct rtser_config *)arg;
 
-		if (user_info) {
+		if (rtdm_fd_is_user(fd)) {
 			err =
-			    rtdm_safe_copy_from_user(user_info, &config_buf,
+			    rtdm_safe_copy_from_user(fd, &config_buf,
 						     arg,
 						     sizeof(struct
 							    rtser_config));
@@ -942,14 +937,14 @@ static int rt_imx_uart_ioctl(struct rtdm_dev_context *context,
 
 		rtdm_lock_put_irqrestore(&ctx->lock, lock_ctx);
 
-		if (user_info) {
+		if (rtdm_fd_is_user(fd)) {
 			struct rtser_status status_buf;
 
 
 			status_buf.line_status = status;
 			status_buf.modem_status = msr;
 			err =
-			    rtdm_safe_copy_to_user(user_info, arg,
+			    rtdm_safe_copy_to_user(fd, arg,
 						   &status_buf,
 						   sizeof(struct
 							  rtser_status));
@@ -961,9 +956,9 @@ static int rt_imx_uart_ioctl(struct rtdm_dev_context *context,
 	}
 
 	case RTSER_RTIOC_GET_CONTROL:
-		if (user_info)
+		if (rtdm_fd_is_user(fd))
 			err =
-			    rtdm_safe_copy_to_user(user_info, arg,
+			    rtdm_safe_copy_to_user(fd, arg,
 						   &ctx->mcr_status,
 						   sizeof(int));
 		else
@@ -1034,9 +1029,9 @@ static int rt_imx_uart_ioctl(struct rtdm_dev_context *context,
 
 		rtdm_lock_put_irqrestore(&ctx->lock, lock_ctx);
 
-		if (user_info)
+		if (rtdm_fd_is_user(fd))
 			err =
-			    rtdm_safe_copy_to_user(user_info, arg, &ev,
+			    rtdm_safe_copy_to_user(fd, arg, &ev,
 						   sizeof(struct
 							  rtser_event));
 			else
@@ -1091,8 +1086,7 @@ wait_unlock_out:
 	return err;
 }
 
-ssize_t rt_imx_uart_read(struct rtdm_dev_context *context,
-			 rtdm_user_info_t *user_info, void *buf, size_t nbyte)
+ssize_t rt_imx_uart_read(struct rtdm_fd *fd, void *buf, size_t nbyte)
 {
 	struct rt_imx_uart_ctx *ctx;
 	rtdm_lockctx_t lock_ctx;
@@ -1109,10 +1103,10 @@ ssize_t rt_imx_uart_read(struct rtdm_dev_context *context,
 	if (nbyte == 0)
 		return 0;
 
-	if (user_info && !rtdm_rw_user_ok(user_info, buf, nbyte))
+	if (rtdm_fd_is_user(fd) && !rtdm_rw_user_ok(fd, buf, nbyte))
 		return -EFAULT;
 
-	ctx = (struct rt_imx_uart_ctx *)context->dev_private;
+	ctx = rtdm_fd_to_private(fd);
 
 	rtdm_toseq_init(&timeout_seq, ctx->config.rx_timeout);
 
@@ -1152,9 +1146,9 @@ ssize_t rt_imx_uart_read(struct rtdm_dev_context *context,
 				   separately. */
 				subblock = IN_BUFFER_SIZE - in_pos;
 
-				if (user_info) {
+				if (rtdm_fd_is_user(fd)) {
 					if (rtdm_copy_to_user
-					    (user_info, out_pos,
+					    (fd, out_pos,
 					     &ctx->in_buf[in_pos],
 					     subblock) != 0) {
 						ret = -EFAULT;
@@ -1171,8 +1165,8 @@ ssize_t rt_imx_uart_read(struct rtdm_dev_context *context,
 				in_pos = 0;
 			}
 
-			if (user_info) {
-				if (rtdm_copy_to_user(user_info, out_pos,
+			if (rtdm_fd_is_user(fd)) {
+				if (rtdm_copy_to_user(fd, out_pos,
 						      &ctx->in_buf[in_pos],
 						      subblock) != 0) {
 					ret = -EFAULT;
@@ -1248,9 +1242,8 @@ break_unlocked:
 	return ret;
 }
 
-static ssize_t rt_imx_uart_write(struct rtdm_dev_context *context,
-				 rtdm_user_info_t *user_info, const void *buf,
-				 size_t nbyte)
+static ssize_t rt_imx_uart_write(struct rtdm_fd *fd, const void *buf,
+				size_t nbyte)
 {
 	struct rt_imx_uart_ctx *ctx;
 	rtdm_lockctx_t lock_ctx;
@@ -1266,10 +1259,10 @@ static ssize_t rt_imx_uart_write(struct rtdm_dev_context *context,
 	if (nbyte == 0)
 		return 0;
 
-	if (user_info && !rtdm_read_user_ok(user_info, buf, nbyte))
+	if (rtdm_fd_is_user(fd) && !rtdm_read_user_ok(fd, buf, nbyte))
 		return -EFAULT;
 
-	ctx = (struct rt_imx_uart_ctx *)context->dev_private;
+	ctx = rtdm_fd_to_private(fd);
 
 	rtdm_toseq_init(&timeout_seq, ctx->config.rx_timeout);
 
@@ -1296,9 +1289,9 @@ static ssize_t rt_imx_uart_write(struct rtdm_dev_context *context,
 				   end separately. */
 				subblock = OUT_BUFFER_SIZE - out_pos;
 
-				if (user_info) {
+				if (rtdm_fd_is_user(fd)) {
 					if (rtdm_copy_from_user
-					    (user_info,
+					    (fd,
 					     &ctx->out_buf[out_pos],
 					     in_pos, subblock) != 0) {
 						ret = -EFAULT;
@@ -1315,9 +1308,9 @@ static ssize_t rt_imx_uart_write(struct rtdm_dev_context *context,
 				out_pos = 0;
 			}
 
-			if (user_info) {
+			if (rtdm_fd_is_user(fd)) {
 				if (rtdm_copy_from_user
-				    (user_info, &ctx->out_buf[out_pos],
+				    (fd, &ctx->out_buf[out_pos],
 				     in_pos, subblock) != 0) {
 					ret = -EFAULT;
 					break;
@@ -1377,10 +1370,10 @@ static const struct rtdm_device __initdata device_tmpl = {
 	.context_size		= sizeof(struct rt_imx_uart_ctx),
 	.device_name		= "",
 
-	.open_nrt		= rt_imx_uart_open,
+	.open			= rt_imx_uart_open,
 
 	.ops = {
-		.close_nrt	= rt_imx_uart_close,
+		.close		= rt_imx_uart_close,
 		.ioctl_rt	= rt_imx_uart_ioctl,
 		.ioctl_nrt	= rt_imx_uart_ioctl,
 		.read_rt	= rt_imx_uart_read,
