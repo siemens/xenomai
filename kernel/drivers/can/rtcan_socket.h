@@ -126,6 +126,8 @@ struct rtcan_socket {
 
     struct list_head    socket_list;
 
+    unsigned long	flags;
+
     /* Transmission timeout in ns. Protected by rtcan_socket_lock
      * in all socket structures. */
     nanosecs_rel_t      tx_timeout;
@@ -184,15 +186,13 @@ struct rtcan_socket {
  *
  *  @param[in] sock Pointer to socket structure
  *
- *  @return Pointer to context of type struct rtdm_dev_context this socket
+ *  @return Pointer to a file descriptor of type struct rtdm_fd this socket
  *          belongs to
  */
 /* FIXME: to be replaced with container_of */
-static inline struct rtdm_dev_context *rtcan_socket_context(
-    struct rtcan_socket *sock)
+static inline struct rtdm_fd *rtcan_socket_to_fd(struct rtcan_socket *sock)
 {
-    return (struct rtdm_dev_context *)((void *)sock -
-	(void *)(&((struct rtdm_dev_context *)NULL)->dev_private));
+    return rtdm_private_to_fd(sock);
 }
 
 /* Spinlock protecting the ring buffers and the timeouts of all
@@ -200,8 +200,8 @@ static inline struct rtdm_dev_context *rtcan_socket_context(
 extern rtdm_lock_t rtcan_socket_lock;
 extern struct list_head rtcan_socket_list;
 
-extern void rtcan_socket_init(struct rtdm_dev_context *context);
-extern void rtcan_socket_cleanup(struct rtdm_dev_context *context);
+extern void rtcan_socket_init(struct rtdm_fd *fd);
+extern void rtcan_socket_cleanup(struct rtdm_fd *fd);
 
 
 #endif  /* __RTCAN_SOCKET_H_ */

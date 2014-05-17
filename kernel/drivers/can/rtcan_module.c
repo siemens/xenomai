@@ -169,7 +169,7 @@ static const struct file_operations rtcan_proc_devices_ops = {
 static int rtcan_read_proc_sockets(struct seq_file *p, void *data)
 {
     struct rtcan_socket *sock;
-    struct rtdm_dev_context *context;
+    struct rtdm_fd *fd;
     struct rtcan_device *dev;
     char name[IFNAMSIZ] = "not-bound";
     char rx_timeout[20], tx_timeout[20];
@@ -179,16 +179,16 @@ static int rtcan_read_proc_sockets(struct seq_file *p, void *data)
     if (down_interruptible(&rtcan_devices_nrt_lock))
 	return -ERESTARTSYS;
 
-    /* fd Name___________ Filter ErrMask RX_Timeout TX_Timeout RX_BufFull TX_Lo
-     *  0 rtcan0               1 0x00010 1234567890 1234567890 1234567890 12345
+    /* Name___________ Filter ErrMask RX_Timeout TX_Timeout RX_BufFull TX_Lo
+     * rtcan0               1 0x00010 1234567890 1234567890 1234567890 12345
      */
-    seq_printf(p, "fd Name___________ Filter ErrMask RX_Timeout_ns "
+    seq_printf(p, "Name___________ Filter ErrMask RX_Timeout_ns "
 		  "TX_Timeout_ns RX_BufFull TX_Lo\n");
 
     rtdm_lock_get_irqsave(&rtcan_recv_list_lock, lock_ctx);
 
     list_for_each_entry(sock, &rtcan_socket_list, socket_list) {
-	context = rtcan_socket_context(sock);
+	fd = rtcan_socket_to_fd(sock);
 	if (rtcan_sock_is_bound(sock)) {
 	    ifindex = atomic_read(&sock->ifindex);
 	    if (ifindex) {
@@ -204,8 +204,8 @@ static int rtcan_read_proc_sockets(struct seq_file *p, void *data)
 			       tx_timeout, sizeof(tx_timeout));
 	rtcan_get_timeout_name(sock->rx_timeout,
 			       rx_timeout, sizeof(rx_timeout));
-	seq_printf(p, "%2d %-15s %6d 0x%05x %13s %13s %10d %5d\n",
-		   context->fd, name, sock->flistlen, sock->err_mask,
+	seq_printf(p, "%-15s %6d 0x%05x %13s %13s %10d %5d\n",
+		   name, sock->flistlen, sock->err_mask,
 		   rx_timeout, tx_timeout, sock->rx_buf_full,
 		   rtcan_loopback_enabled(sock));
     }
@@ -286,23 +286,22 @@ static int rtcan_read_proc_filter(struct seq_file *p, void *data)
 {
     struct rtcan_device *dev = p->private;
     struct rtcan_recv *recv_listener = dev->recv_list;
-    struct rtdm_dev_context *context;
+    struct rtdm_fd *fd;
     rtdm_lockctx_t lock_ctx;
 
-    /*  fd __CAN_ID__ _CAN_Mask_ Inv MatchCount
-     *   3 0x12345678 0x12345678  no 1234567890
+    /*  __CAN_ID__ _CAN_Mask_ Inv MatchCount
+     *  0x12345678 0x12345678  no 1234567890
      */
 
-    seq_printf(p, "fd __CAN_ID__ _CAN_Mask_ Inv MatchCount\n");
+    seq_printf(p, "__CAN_ID__ _CAN_Mask_ Inv MatchCount\n");
 
     rtdm_lock_get_irqsave(&rtcan_recv_list_lock, lock_ctx);
 
     /* Loop over the reception list of the device */
     while (recv_listener != NULL) {
-	context = rtcan_socket_context(recv_listener->sock);
+	fd = rtcan_socket_to_fd(recv_listener->sock);
 
-	seq_printf(p, "%2d 0x%08x 0x%08x %s %10d\n",
-		   context->fd,
+	seq_printf(p, "0x%08x 0x%08x %s %10d\n",
 		   recv_listener->can_filter.can_id,
 		   recv_listener->can_filter.can_mask & ~CAN_INV_FILTER,
 		   (recv_listener->can_filter.can_mask & CAN_INV_FILTER) ?
@@ -394,7 +393,7 @@ static int rtcan_proc_register(void)
     }
 
     proc_create("devices", S_IFREG | S_IRUGO | S_IWUSR, rtcan_proc_root,
-	        &rtcan_proc_devices_ops);
+		&rtcan_proc_devices_ops);
     proc_create("version", S_IFREG | S_IRUGO | S_IWUSR, rtcan_proc_root,
 		&rtcan_proc_version_ops);
     proc_create("sockets", S_IFREG | S_IRUGO | S_IWUSR, rtcan_proc_root,

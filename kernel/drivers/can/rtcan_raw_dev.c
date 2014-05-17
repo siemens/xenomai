@@ -366,8 +366,7 @@ static inline int rtcan_raw_ioctl_dev_set(struct rtcan_device *dev,
     return ret;
 }
 
-int rtcan_raw_ioctl_dev(struct rtdm_dev_context *context,
-			rtdm_user_info_t *user_info, int request, void *arg)
+int rtcan_raw_ioctl_dev(struct rtdm_fd *fd, int request, void *arg)
 {
     int ret = 0;
     struct ifreq *ifr;
@@ -381,9 +380,9 @@ int rtcan_raw_ioctl_dev(struct rtdm_dev_context *context,
     case SIOCGCANBAUDRATE:
     case SIOCGCANCUSTOMBITTIME:
 
-	if (user_info) {
-	    if (!rtdm_rw_user_ok(user_info, arg, sizeof(struct ifreq)) ||
-		rtdm_copy_from_user(user_info, &ifr_buf, arg,
+	if (rtdm_fd_is_user(fd)) {
+	    if (!rtdm_rw_user_ok(fd, arg, sizeof(struct ifreq)) ||
+		rtdm_copy_from_user(fd, &ifr_buf, arg,
 				    sizeof(struct ifreq)))
 		return -EFAULT;
 
@@ -396,10 +395,10 @@ int rtcan_raw_ioctl_dev(struct rtdm_dev_context *context,
 	ret = rtcan_raw_ioctl_dev_get(dev, request, ifr);
 	rtcan_dev_dereference(dev);
 
-	if (user_info && !ret) {
+	if (rtdm_fd_is_user(fd) && !ret) {
 	    /* Since we yet tested if user memory is rw safe,
 	       we can copy to user space directly */
-	    if (rtdm_copy_to_user(user_info, arg, ifr,
+	    if (rtdm_copy_to_user(fd, arg, ifr,
 				  sizeof(struct ifreq)))
 		return -EFAULT;
 	}
@@ -410,11 +409,11 @@ int rtcan_raw_ioctl_dev(struct rtdm_dev_context *context,
     case SIOCSCANBAUDRATE:
     case SIOCSCANCUSTOMBITTIME:
 
-	if (user_info) {
+	if (rtdm_fd_is_user(fd)) {
 	    /* Copy struct ifreq from userspace */
-	    if (!rtdm_read_user_ok(user_info, arg,
+	    if (!rtdm_read_user_ok(fd, arg,
 				   sizeof(struct ifreq)) ||
-		rtdm_copy_from_user(user_info, &ifr_buf, arg,
+		rtdm_copy_from_user(fd, &ifr_buf, arg,
 				    sizeof(struct ifreq)))
 		return -EFAULT;
 

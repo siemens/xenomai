@@ -34,9 +34,9 @@
 
 LIST_HEAD(rtcan_socket_list);
 
-void rtcan_socket_init(struct rtdm_dev_context *context)
+void rtcan_socket_init(struct rtdm_fd *fd)
 {
-    struct rtcan_socket *sock = (struct rtcan_socket *)&context->dev_private;
+    struct rtcan_socket *sock = rtdm_fd_to_private(fd);
     rtdm_lockctx_t lock_ctx;
 
 
@@ -64,9 +64,9 @@ void rtcan_socket_init(struct rtdm_dev_context *context)
 }
 
 
-void rtcan_socket_cleanup(struct rtdm_dev_context *context)
+void rtcan_socket_cleanup(struct rtdm_fd *fd)
 {
-    struct rtcan_socket *sock = (struct rtcan_socket *)&context->dev_private;
+    struct rtcan_socket *sock = rtdm_fd_to_private(fd);
     struct tx_wait_queue *tx_waiting;
     rtdm_lockctx_t lock_ctx;
     int tx_list_empty;

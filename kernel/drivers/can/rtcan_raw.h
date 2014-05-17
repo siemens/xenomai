@@ -22,8 +22,7 @@
 
 #ifdef __KERNEL__
 
-int rtcan_raw_ioctl_dev(struct rtdm_dev_context *context,
-			rtdm_user_info_t *user_info, int request, void *arg);
+int rtcan_raw_ioctl_dev(struct rtdm_fd *fd, int request, void *arg);
 
 int rtcan_raw_check_filter(struct rtcan_socket *sock,
 			   int ifindex, struct rtcan_filter_list *flist);

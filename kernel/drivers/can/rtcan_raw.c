@@ -52,7 +52,7 @@
  * Set if socket wants to receive a high precision timestamp together with
  * CAN frames
  */
-#define RTCAN_GET_TIMESTAMP         RTDM_USER_CONTEXT_FLAG
+#define RTCAN_GET_TIMESTAMP         0
 
 
 MODULE_AUTHOR("RT-Socket-CAN Development Team");
@@ -80,12 +80,17 @@ static void rtcan_rcv_deliver(struct rtcan_recv *recv_listener,
     int size_free;
     size_t cpy_size, first_part_size;
     struct rtcan_rb_frame *frame = &skb->rb_frame;
-    struct rtcan_socket *sock = recv_listener->sock;
-    struct rtdm_dev_context *context = rtcan_socket_context(sock);
+    struct rtdm_fd *fd = rtdm_private_to_fd(recv_listener->sock);
+    struct rtcan_socket *sock;
+
+    if (rtdm_fd_lock(fd) < 0)
+	return;
+
+    sock = recv_listener->sock;
 
     cpy_size = skb->rb_frame_size;
     /* Check if socket wants to receive a timestamp */
-    if (test_bit(RTCAN_GET_TIMESTAMP, &context->context_flags)) {
+    if (test_bit(RTCAN_GET_TIMESTAMP, &sock->flags)) {
 	cpy_size += RTCAN_TIMESTAMP_SIZE;
 	frame->can_dlc |= RTCAN_HAS_TIMESTAMP;
     } else
@@ -122,9 +127,11 @@ static void rtcan_rcv_deliver(struct rtcan_recv *recv_listener,
     } else {
 	/* Overflow of socket's ring buffer! */
 	sock->rx_buf_full++;
-	RTCAN_RTDM_DBG("%s: socket buffer overflow (fd=%d), message discarded\n",
-		       rtcan_proto_raw_dev.driver_name, context->fd);
+	RTCAN_RTDM_DBG("%s: socket buffer overflow, message discarded\n",
+		       rtcan_proto_raw_dev.driver_name);
     }
+
+    rtdm_fd_unlock(fd);
 }
 
 
@@ -208,14 +215,13 @@ EXPORT_SYMBOL_GPL(rtcan_loopback);
 #endif /* CONFIG_XENO_DRIVERS_CAN_LOOPBACK */
 
 
-int rtcan_raw_socket(struct rtdm_dev_context *context,
-		     rtdm_user_info_t *user_info, int protocol)
+int rtcan_raw_socket(struct rtdm_fd *fd, int protocol)
 {
     /* Only protocol CAN_RAW is supported */
     if (protocol != CAN_RAW && protocol != 0)
 	return -EPROTONOSUPPORT;
 
-    rtcan_socket_init(context);
+    rtcan_socket_init(fd);
 
     return 0;
 }
@@ -232,11 +238,9 @@ static inline void rtcan_raw_unbind(struct rtcan_socket *sock)
 }
 
 
-static int rtcan_raw_close(struct rtdm_dev_context *context,
-			   rtdm_user_info_t *user_info)
+static void rtcan_raw_close(struct rtdm_fd *fd)
 {
-    struct rtcan_socket *sock =
-	(struct rtcan_socket *)&context->dev_private;
+    struct rtcan_socket *sock = rtdm_fd_to_private(fd);
     rtdm_lockctx_t lock_ctx;
 
     /* Get lock for reception lists */
@@ -249,17 +253,14 @@ static int rtcan_raw_close(struct rtdm_dev_context *context,
     rtdm_lock_put_irqrestore(&rtcan_recv_list_lock, lock_ctx);
 
 
-    rtcan_socket_cleanup(context);
-
-    return 0;
+    rtcan_socket_cleanup(fd);
 }
 
 
-int rtcan_raw_bind(struct rtdm_dev_context *context,
+int rtcan_raw_bind(struct rtdm_fd *fd,
 		   struct sockaddr_can *scan)
 {
-    struct rtcan_socket *sock =
-	(struct rtcan_socket *)&context->dev_private;
+    struct rtcan_socket *sock = rtdm_fd_to_private(fd);
     rtdm_lockctx_t lock_ctx;
     int ret = 0;
 
@@ -273,12 +274,6 @@ int rtcan_raw_bind(struct rtdm_dev_context *context,
 
     /* Get lock for reception lists */
     rtdm_lock_get_irqsave(&rtcan_recv_list_lock, lock_ctx);
-
-    /* Test if socket is about to be closed */
-    if (unlikely(test_bit(RTDM_CLOSING, &context->context_flags))) {
-	ret = -EBADF;
-	goto out;
-    }
 
     if ((ret = rtcan_raw_check_filter(sock, scan->can_ifindex,
 				      sock->flist)))
@@ -297,11 +292,10 @@ int rtcan_raw_bind(struct rtdm_dev_context *context,
 }
 
 
-static int rtcan_raw_setsockopt(struct rtdm_dev_context *context,
-				rtdm_user_info_t *user_info,
+static int rtcan_raw_setsockopt(struct rtdm_fd *fd,
 				struct _rtdm_setsockopt_args *so)
 {
-    struct rtcan_socket *sock = (struct rtcan_socket *)&context->dev_private;
+    struct rtcan_socket *sock = rtdm_fd_to_private(fd);
     struct rtcan_filter_list *flist;
     int ifindex = atomic_read(&sock->ifindex);
     rtdm_lockctx_t lock_ctx;
@@ -326,9 +320,9 @@ static int rtcan_raw_setsockopt(struct rtdm_dev_context *context,
 	    flist = (struct rtcan_filter_list *)rtdm_malloc(so->optlen + sizeof(int));
 	    if (flist == NULL)
 		return -ENOMEM;
-	    if (user_info) {
-		if (!rtdm_read_user_ok(user_info, so->optval, so->optlen) ||
-		    rtdm_copy_from_user(user_info, flist->flist,
+	    if (rtdm_fd_is_user(fd)) {
+		if (!rtdm_read_user_ok(fd, so->optval, so->optlen) ||
+		    rtdm_copy_from_user(fd, flist->flist,
 					so->optval, so->optlen)) {
 		    rtdm_free(flist);
 		    return -EFAULT;
@@ -369,9 +363,9 @@ static int rtcan_raw_setsockopt(struct rtdm_dev_context *context,
 	if (so->optlen != sizeof(can_err_mask_t))
 	    return -EINVAL;
 
-	if (user_info) {
-	    if (!rtdm_read_user_ok(user_info, so->optval, so->optlen) ||
-		rtdm_copy_from_user(user_info, &err_mask, so->optval, so->optlen))
+	if (rtdm_fd_is_user(fd)) {
+	    if (!rtdm_read_user_ok(fd, so->optval, so->optlen) ||
+		rtdm_copy_from_user(fd, &err_mask, so->optval, so->optlen))
 		return -EFAULT;
 	} else
 	    memcpy(&err_mask, so->optval, so->optlen);
@@ -388,9 +382,9 @@ static int rtcan_raw_setsockopt(struct rtdm_dev_context *context,
 	if (so->optlen != sizeof(int))
 	    return -EINVAL;
 
-	if (user_info) {
-	    if (!rtdm_read_user_ok(user_info, so->optval, so->optlen) ||
-		rtdm_copy_from_user(user_info, &val, so->optval, so->optlen))
+	if (rtdm_fd_is_user(fd)) {
+	    if (!rtdm_read_user_ok(fd, so->optval, so->optlen) ||
+		rtdm_copy_from_user(fd, &val, so->optval, so->optlen))
 		return -EFAULT;
 	} else
 	    memcpy(&val, so->optval, so->optlen);
@@ -411,8 +405,7 @@ static int rtcan_raw_setsockopt(struct rtdm_dev_context *context,
 }
 
 
-int rtcan_raw_ioctl(struct rtdm_dev_context *context,
-		    rtdm_user_info_t *user_info,
+int rtcan_raw_ioctl(struct rtdm_fd *fd,
 		    unsigned int request, void *arg)
 {
     int ret = 0;
@@ -422,11 +415,11 @@ int rtcan_raw_ioctl(struct rtdm_dev_context *context,
 	struct _rtdm_setsockaddr_args *setaddr, setaddr_buf;
 	struct sockaddr_can *sockaddr, sockaddr_buf;
 
-	if (user_info) {
+	if (rtdm_fd_is_user(fd)) {
 	    /* Copy argument structure from userspace */
-	    if (!rtdm_read_user_ok(user_info, arg,
+	    if (!rtdm_read_user_ok(fd, arg,
 				   sizeof(struct _rtdm_setsockaddr_args)) ||
-		rtdm_copy_from_user(user_info, &setaddr_buf, arg,
+		rtdm_copy_from_user(fd, &setaddr_buf, arg,
 				    sizeof(struct _rtdm_setsockaddr_args)))
 		return -EFAULT;
 
@@ -437,9 +430,9 @@ int rtcan_raw_ioctl(struct rtdm_dev_context *context,
 		return -EINVAL;
 
 	    /* Copy argument structure from userspace */
-	    if (!rtdm_read_user_ok(user_info, arg,
+	    if (!rtdm_read_user_ok(fd, arg,
 				   sizeof(struct sockaddr_can)) ||
-		rtdm_copy_from_user(user_info, &sockaddr_buf, setaddr->addr,
+		rtdm_copy_from_user(fd, &sockaddr_buf, setaddr->addr,
 				    sizeof(struct sockaddr_can)))
 		return -EFAULT;
 	    sockaddr = &sockaddr_buf;
@@ -449,7 +442,7 @@ int rtcan_raw_ioctl(struct rtdm_dev_context *context,
 	}
 
 	/* Now, all required data are in kernel space */
-	ret = rtcan_raw_bind(context, sockaddr);
+	ret = rtcan_raw_bind(fd, sockaddr);
 
 	break;
     }
@@ -458,10 +451,10 @@ int rtcan_raw_ioctl(struct rtdm_dev_context *context,
 	struct _rtdm_setsockopt_args *setopt;
 	struct _rtdm_setsockopt_args setopt_buf;
 
-	if (user_info) {
-	    if (!rtdm_read_user_ok(user_info, arg,
+	if (rtdm_fd_is_user(fd)) {
+	    if (!rtdm_read_user_ok(fd, arg,
 				   sizeof(struct _rtdm_setsockopt_args)) ||
-		rtdm_copy_from_user(user_info, &setopt_buf, arg,
+		rtdm_copy_from_user(fd, &setopt_buf, arg,
 				    sizeof(struct _rtdm_setsockopt_args)))
 		return -EFAULT;
 
@@ -469,33 +462,33 @@ int rtcan_raw_ioctl(struct rtdm_dev_context *context,
 	} else
 	    setopt = (struct _rtdm_setsockopt_args *)arg;
 
-	return rtcan_raw_setsockopt(context, user_info, setopt);
+	return rtcan_raw_setsockopt(fd, setopt);
     }
 
     case RTCAN_RTIOC_TAKE_TIMESTAMP: {
+	struct rtcan_socket *sock = rtdm_fd_to_private(fd);
 	long timestamp_switch = (long)arg;
 
 	if (timestamp_switch == RTCAN_TAKE_TIMESTAMPS)
-	    set_bit(RTCAN_GET_TIMESTAMP, &context->context_flags);
+	    set_bit(RTCAN_GET_TIMESTAMP, &sock->flags);
 	else
-	    clear_bit(RTCAN_GET_TIMESTAMP, &context->context_flags);
+	    clear_bit(RTCAN_GET_TIMESTAMP, &sock->flags);
 	break;
     }
 
     case RTCAN_RTIOC_RCV_TIMEOUT:
     case RTCAN_RTIOC_SND_TIMEOUT: {
 	/* Do some work these requests have in common. */
-	struct rtcan_socket *sock =
-	    (struct rtcan_socket *)&context->dev_private;
+	struct rtcan_socket *sock = rtdm_fd_to_private(fd);
 
 	nanosecs_rel_t *timeout = (nanosecs_rel_t *)arg;
 	nanosecs_rel_t timeo_buf;
 
-	if (user_info) {
+	if (rtdm_fd_is_user(fd)) {
 	    /* Copy 64 bit timeout value from userspace */
-	    if (!rtdm_read_user_ok(user_info, arg,
+	    if (!rtdm_read_user_ok(fd, arg,
 				   sizeof(nanosecs_rel_t)) ||
-		rtdm_copy_from_user(user_info, &timeo_buf,
+		rtdm_copy_from_user(fd, &timeo_buf,
 				    arg, sizeof(nanosecs_rel_t)))
 		return -EFAULT;
 
@@ -512,7 +505,7 @@ int rtcan_raw_ioctl(struct rtdm_dev_context *context,
     }
 
     default:
-	ret = rtcan_raw_ioctl_dev(context, user_info, request, arg);
+	ret = rtcan_raw_ioctl_dev(fd, request, arg);
 	break;
     }
 
@@ -539,12 +532,10 @@ int rtcan_raw_ioctl(struct rtdm_dev_context *context,
     recv_buf_index = (recv_buf_index + len) & (RTCAN_RXBUF_SIZE - 1);
 
 
-ssize_t rtcan_raw_recvmsg(struct rtdm_dev_context *context,
-			  rtdm_user_info_t *user_info,
+ssize_t rtcan_raw_recvmsg(struct rtdm_fd *fd,
 			  struct msghdr *msg, int flags)
 {
-    struct rtcan_socket *sock =
-	(struct rtcan_socket *)&context->dev_private;
+    struct rtcan_socket *sock = rtdm_fd_to_private(fd);
     struct sockaddr_can scan;
     nanosecs_rel_t timeout;
     struct iovec *iov = (struct iovec *)msg->msg_iov;
@@ -574,8 +565,8 @@ ssize_t rtcan_raw_recvmsg(struct rtdm_dev_context *context,
 	if (msg->msg_namelen < sizeof(struct sockaddr_can))
 	    return -EINVAL;
 
-	if (user_info) {
-	    if (!rtdm_rw_user_ok(user_info, msg->msg_name, msg->msg_namelen))
+	if (rtdm_fd_is_user(fd)) {
+	    if (!rtdm_rw_user_ok(fd, msg->msg_name, msg->msg_namelen))
 		return -EFAULT;
 	}
 
@@ -588,11 +579,11 @@ ssize_t rtcan_raw_recvmsg(struct rtdm_dev_context *context,
     if (msg->msg_iovlen != 1)
 	return -EMSGSIZE;
 
-    if (user_info) {
+    if (rtdm_fd_is_user(fd)) {
 	/* Copy IO vector from userspace */
-	if (!rtdm_rw_user_ok(user_info, msg->msg_iov,
+	if (!rtdm_rw_user_ok(fd, msg->msg_iov,
 			     sizeof(struct iovec)) ||
-	    rtdm_copy_from_user(user_info, &iov_buf, msg->msg_iov,
+	    rtdm_copy_from_user(fd, &iov_buf, msg->msg_iov,
 				sizeof(struct iovec)))
 	    return -EFAULT;
 
@@ -604,8 +595,8 @@ ssize_t rtcan_raw_recvmsg(struct rtdm_dev_context *context,
 	return -EMSGSIZE;
 
     /* Check buffer if in user space */
-    if (user_info) {
-	if (!rtdm_rw_user_ok(user_info, iov->iov_base, iov->iov_len))
+    if (rtdm_fd_is_user(fd)) {
+	if (!rtdm_rw_user_ok(fd, iov->iov_base, iov->iov_len))
 	    return -EFAULT;
     }
 
@@ -613,8 +604,8 @@ ssize_t rtcan_raw_recvmsg(struct rtdm_dev_context *context,
 	if (msg->msg_controllen < sizeof(nanosecs_abs_t))
 	    return -EINVAL;
 
-	if (user_info) {
-	    if (!rtdm_rw_user_ok(user_info, msg->msg_control,
+	if (rtdm_fd_is_user(fd)) {
+	    if (!rtdm_rw_user_ok(fd, msg->msg_control,
 				 msg->msg_controllen))
 		return -EFAULT;
 	}
@@ -716,12 +707,12 @@ ssize_t rtcan_raw_recvmsg(struct rtdm_dev_context *context,
 
     /* Last duty: Copy all back to the caller's buffers. */
 
-    if (user_info) {
+    if (rtdm_fd_is_user(fd)) {
 	/* Copy to user space */
 
 	/* Copy socket address */
 	if (msg->msg_namelen) {
-	    if (rtdm_copy_to_user(user_info, msg->msg_name, &scan,
+	    if (rtdm_copy_to_user(fd, msg->msg_name, &scan,
 				  sizeof(struct sockaddr_can)))
 		return -EFAULT;
 
@@ -729,21 +720,21 @@ ssize_t rtcan_raw_recvmsg(struct rtdm_dev_context *context,
 	}
 
 	/* Copy CAN frame */
-	if (rtdm_copy_to_user(user_info, iov->iov_base, &frame,
+	if (rtdm_copy_to_user(fd, iov->iov_base, &frame,
 			      sizeof(can_frame_t)))
 	    return -EFAULT;
 	/* Adjust iovec in the common way */
 	iov->iov_base += sizeof(can_frame_t);
 	iov->iov_len -= sizeof(can_frame_t);
 	/* ... and copy it, too. */
-	if (rtdm_copy_to_user(user_info, msg->msg_iov, iov,
+	if (rtdm_copy_to_user(fd, msg->msg_iov, iov,
 			      sizeof(struct iovec)))
 	    return -EFAULT;
 
 	/* Copy timestamp if existent and wanted */
 	if (msg->msg_controllen) {
 	    if (can_dlc & RTCAN_HAS_TIMESTAMP) {
-		if (rtdm_copy_to_user(user_info, msg->msg_control,
+		if (rtdm_copy_to_user(fd, msg->msg_control,
 				      &timestamp, RTCAN_TIMESTAMP_SIZE))
 		    return -EFAULT;
 
@@ -782,12 +773,10 @@ ssize_t rtcan_raw_recvmsg(struct rtdm_dev_context *context,
 }
 
 
-ssize_t rtcan_raw_sendmsg(struct rtdm_dev_context *context,
-			  rtdm_user_info_t *user_info,
+ssize_t rtcan_raw_sendmsg(struct rtdm_fd *fd,
 			  const struct msghdr *msg, int flags)
 {
-    struct rtcan_socket *sock =
-	(struct rtcan_socket *)&context->dev_private;
+    struct rtcan_socket *sock = rtdm_fd_to_private(fd);
     struct sockaddr_can *scan = (struct sockaddr_can *)msg->msg_name;
     struct sockaddr_can scan_buf;
     struct iovec *iov = (struct iovec *)msg->msg_iov;
@@ -834,11 +823,11 @@ ssize_t rtcan_raw_sendmsg(struct rtdm_dev_context *context,
 	if (msg->msg_namelen < sizeof(struct sockaddr_can))
 	    return -EINVAL;
 
-	if (user_info) {
+	if (rtdm_fd_is_user(fd)) {
 	    /* Copy socket address from userspace */
-	    if (!rtdm_read_user_ok(user_info, msg->msg_name,
+	    if (!rtdm_read_user_ok(fd, msg->msg_name,
 				   sizeof(struct sockaddr_can)) ||
-		rtdm_copy_from_user(user_info, &scan_buf, msg->msg_name,
+		rtdm_copy_from_user(fd, &scan_buf, msg->msg_name,
 				    sizeof(struct sockaddr_can)))
 		return -EFAULT;
 
@@ -852,11 +841,11 @@ ssize_t rtcan_raw_sendmsg(struct rtdm_dev_context *context,
 	ifindex = scan->can_ifindex;
     }
 
-    if (user_info) {
+    if (rtdm_fd_is_user(fd)) {
 	/* Copy IO vector from userspace */
-	if (!rtdm_rw_user_ok(user_info, msg->msg_iov,
+	if (!rtdm_rw_user_ok(fd, msg->msg_iov,
 			     sizeof(struct iovec)) ||
-	    rtdm_copy_from_user(user_info, &iov_buf, msg->msg_iov,
+	    rtdm_copy_from_user(fd, &iov_buf, msg->msg_iov,
 				sizeof(struct iovec)))
 	    return -EFAULT;
 
@@ -869,11 +858,11 @@ ssize_t rtcan_raw_sendmsg(struct rtdm_dev_context *context,
 
     frame = (can_frame_t *)iov->iov_base;
 
-    if (user_info) {
+    if (rtdm_fd_is_user(fd)) {
 	/* Copy CAN frame from userspace */
-	if (!rtdm_read_user_ok(user_info, iov->iov_base,
+	if (!rtdm_read_user_ok(fd, iov->iov_base,
 			       sizeof(can_frame_t)) ||
-	    rtdm_copy_from_user(user_info, &frame_buf, iov->iov_base,
+	    rtdm_copy_from_user(fd, &frame_buf, iov->iov_base,
 				sizeof(can_frame_t)))
 	    return -EFAULT;
 
@@ -884,8 +873,8 @@ ssize_t rtcan_raw_sendmsg(struct rtdm_dev_context *context,
     iov->iov_base += sizeof(can_frame_t);
     iov->iov_len -= sizeof(can_frame_t);
     /* ... and copy it back to userspace if necessary */
-    if (user_info) {
-	if (rtdm_copy_to_user(user_info, msg->msg_iov, iov,
+    if (rtdm_fd_is_user(fd)) {
+	if (rtdm_copy_to_user(fd, msg->msg_iov, iov,
 			      sizeof(struct iovec)))
 	    return -EFAULT;
     }
@@ -915,25 +904,19 @@ ssize_t rtcan_raw_sendmsg(struct rtdm_dev_context *context,
      * atomic. Finally, the task must be deregistered again (also atomic). */
     cobalt_atomic_enter(s);
 
-    if (likely(!test_bit(RTDM_CLOSING, &context->context_flags))) {
+    list_add(&tx_wait.tx_wait_list, &sock->tx_wait_head);
 
-	    list_add(&tx_wait.tx_wait_list, &sock->tx_wait_head);
+    /* Try to pass the guard in order to access the controller */
+    ret = rtdm_sem_timeddown(&dev->tx_sem, timeout, NULL);
 
-	    /* Try to pass the guard in order to access the controller */
-	    ret = rtdm_sem_timeddown(&dev->tx_sem, timeout, NULL);
-
-	    /* Only dequeue task again if socket isn't being closed i.e. if
-	     * this task was not unblocked within the close() function. */
-	    if (likely(tx_wait.tx_wait_list.next != LIST_POISON1))
-		/* Dequeue this task from the TX wait queue */
-		list_del(&tx_wait.tx_wait_list);
-	    else
-		/* The socket was closed. */
-		ret = -EBADF;
-
-    } else
+    /* Only dequeue task again if socket isn't being closed i.e. if
+     * this task was not unblocked within the close() function. */
+    if (likely(tx_wait.tx_wait_list.next != LIST_POISON1))
+	/* Dequeue this task from the TX wait queue */
+	list_del(&tx_wait.tx_wait_list);
+    else
 	/* The socket was closed. */
-	    ret = -EBADF;
+	ret = -EBADF;
 
     cobalt_atomic_leave(s);
 
@@ -1002,10 +985,10 @@ static struct rtdm_device rtcan_proto_raw_dev = {
     protocol_family:    PF_CAN,
     socket_type:        SOCK_RAW,
 
-    socket_nrt:         rtcan_raw_socket,
+    socket:		rtcan_raw_socket,
 
     ops: {
-	close_nrt:      rtcan_raw_close,
+	close:		rtcan_raw_close,
 
 	ioctl_rt:       rtcan_raw_ioctl,
 	ioctl_nrt:      rtcan_raw_ioctl,
