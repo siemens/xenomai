@@ -1,3 +1,6 @@
+source "kernel/xenomai/Kconfig"
+source "drivers/xenomai/Kconfig"
+
 config XENO_HW_MATH_EMU
         bool
 	default y if MATH_EMU || MATH_EMULATION
@@ -17,7 +20,7 @@ config XENO_HW_WANT_TIP
 config XENO_HW_FPU
 	def_bool PPC_FPU
 
-menu "Hardware options"
+menu "Platform-specific options"
 
 config XENO_HW_UNLOCKED_SWITCH
 	bool "Unlocked context switch"
@@ -26,15 +29,10 @@ config XENO_HW_UNLOCKED_SWITCH
 	default y
 	help
 
-	The nucleus may allow non-atomic execution of the
+	The Cobalt core may allow non-atomic execution of the
 	machine-dependent context switching code, so that other CPUs
 	and/or local interrupts may execute concurrently.
 
 	This option reduces interrupt latency when costly cache and
-	TLB flushes are required to switch context, and may improve
-	concurrency on some SMP/multi-core systems as well.
-
+	TLB flushes are required to switch context.
 endmenu
-
-source "kernel/xenomai/Kconfig"
-source "drivers/xenomai/Kconfig"

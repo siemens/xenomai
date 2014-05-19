@@ -1,13 +1,18 @@
 menuconfig XENOMAI
 	depends on X86_TSC || !X86
-	bool "Xenomai"
+	bool "Xenomai/cobalt"
 	select IPIPE
 	default y
 	help
-	  Xenomai is a real-time extension to the Linux kernel. Note
-	  that Xenomai relies on Adeos interrupt pipeline (CONFIG_IPIPE
-	  option) to be enabled, so enabling this option selects the
-	  CONFIG_IPIPE option.
+	  Xenomai's Cobalt core is a real-time extension to the Linux
+	  kernel, which exhibits very short interrupt and scheduling
+	  latency, without affecting the regular kernel services.
+
+	  This option enables the set of extended kernel services
+	  required to run the real-time applications in user-space,
+	  over the Xenomai libraries.
+
+	  Please visit http://xenomai.org for more information.
 
 if XENOMAI
 source "arch/@LINUX_ARCH@/xenomai/Kconfig"
