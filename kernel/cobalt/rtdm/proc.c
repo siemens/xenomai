@@ -195,7 +195,7 @@ static int openfd_show(struct xnvfile_regular_iterator *it, void *data)
 	i = (int)it->pos - 1;
 
 	fd = rtdm_fd_get(&__xnsys_global_ppd, i, RTDM_FD_MAGIC);
-	if (fd == NULL)
+	if (IS_ERR(fd))
 		return VFILE_SEQ_SKIP;
 
 	context = rtdm_fd_to_context(fd);
