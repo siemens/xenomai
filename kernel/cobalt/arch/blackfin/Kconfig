@@ -1,2 +1,5 @@
+config XENO_HW_FPU
+	def_bool n
+
 source "kernel/xenomai/Kconfig"
 source "drivers/xenomai/Kconfig"

@@ -1,20 +1,5 @@
-menu "Hardware options"
-
 config XENO_HW_FPU
-	bool "FPU support"
-	default y
-	help
-	The FPU executes instructions from the processor's normal
-	instruction stream. It can handle the types of high-precision
-	floating-point processing operations commonly found in
-	scientific, engineering, and business applications.
-	If your target system has no FPU, say NO here; otherwise,
-	enabling FPU support when available may greatly improve
-	performance. You can obtain more information about the
-	Float-Point Unit on the x86 platform at the following URL:
-	http://www.intel.com/design/intarch/techinfo/Pentium/fpu.htm
-
-endmenu
+	def_bool y
 
 source "kernel/xenomai/Kconfig"
 source "drivers/xenomai/Kconfig"

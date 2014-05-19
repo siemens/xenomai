@@ -2,8 +2,6 @@ config XENO_HW_MATH_EMU
         bool
 	default y if MATH_EMU || MATH_EMULATION
 
-menu "Hardware options"
-
 config IPIPE_WANT_ACTIVE_MM
         bool
 
@@ -17,17 +15,9 @@ config XENO_HW_WANT_TIP
 	bool
 
 config XENO_HW_FPU
-	bool "FPU support"
-	depends on PPC_FPU
-	default y
-	help
-	The FPU executes instructions from the processor's normal
-	instruction stream. It can handle the types of high-precision
-	floating-point processing operations commonly found in
-	scientific, engineering, and business applications.
-	If your target system has no FPU, say NO here; otherwise,
-	enabling FPU support when the hardware is available may
-	greatly improve	performance.
+	def_bool PPC_FPU
+
+menu "Hardware options"
 
 config XENO_HW_UNLOCKED_SWITCH
 	bool "Unlocked context switch"
