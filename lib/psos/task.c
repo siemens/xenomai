@@ -183,6 +183,7 @@ static void *task_trampoline(void *arg)
 	struct psos_task *task = arg;
 	struct psos_task_args *args = &task->args;
 	struct service svc;
+	int ret;
 
 	CANCEL_DEFER(svc);
 
@@ -190,8 +191,19 @@ static void *task_trampoline(void *arg)
 
 	threadobj_lock(&task->thobj);
 
-	if (task->mode & T_TSLICE)
-		threadobj_set_rr(&task->thobj, &psos_rrperiod);
+	if (task->mode & T_TSLICE) {
+		ret = threadobj_set_rr(&task->thobj, &psos_rrperiod);
+		if (ret) {
+			warning("task %s failed to enter round-robin scheduling, %s",
+				threadobj_get_name(&task->thobj),
+				symerror(ret));
+			threadobj_set_magic(&task->thobj, ~task_magic);
+			threadobj_unlock(&task->thobj);
+			CANCEL_RESTORE(svc);
+			threadobj_notify_entry();
+			return (void *)(long)ret;
+		}
+	}
 
 	if (task->mode & T_NOPREEMPT)
 		__threadobj_lock_sched(&task->thobj);
