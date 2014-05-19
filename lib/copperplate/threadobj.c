@@ -1399,6 +1399,8 @@ static void cancel_sync(struct threadobj *thobj) /* thobj->lock held */
 	int oldstate, ret = 0;
 	sem_t *sem;
 
+	threadobj_cancel_1_corespec(thobj);
+
 	/*
 	 * We have to allocate the cancel sync sema4 in the main heap
 	 * dynamically, so that it always lives in valid memory when
@@ -1414,7 +1416,6 @@ static void cancel_sync(struct threadobj *thobj) /* thobj->lock held */
 		__STD(sem_init(sem, sem_scope_attribute, 0));
 
 	thobj->cancel_sem = sem;
-	threadobj_cancel_1_corespec(thobj);
 
 	/*
 	 * If the thread to delete is warming up, wait until it
