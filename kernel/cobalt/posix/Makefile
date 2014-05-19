@@ -19,4 +19,4 @@ posix-y :=		\
 	timer.o		\
 	timerfd.o
 
-ccflags-y := -Iarch/$(SRCARCH)/xenomai/include -Iinclude/xenomai
+ccflags-y := -Iarch/$(SRCARCH)/xenomai/include -Iinclude/xenomai -Ikernel

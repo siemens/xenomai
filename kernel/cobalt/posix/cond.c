@@ -52,6 +52,7 @@
 #include "mutex.h"
 #include "cond.h"
 #include "clock.h"
+#include <trace/events/cobalt-posix.h>
 
 static inline void
 cond_destroy_internal(xnhandle_t handle, struct cobalt_kqueues *q)
@@ -111,9 +112,6 @@ pthread_cond_init(struct cobalt_cond_shadow *cnd, const pthread_condattr_t *attr
 	struct list_head *condq;
 	struct xnsys_ppd *sys_ppd;
 	spl_t s;
-
-	if (attr == NULL)
-		attr = &cobalt_default_cond_attr;
 
 	cond = xnmalloc(sizeof(*cond));
 	if (cond == NULL)
@@ -360,8 +358,9 @@ unlock_and_return:
 int cobalt_cond_init(struct cobalt_cond_shadow __user *u_cnd,
 		     const pthread_condattr_t __user *u_attr)
 {
-	pthread_condattr_t locattr, *attr;
+	const pthread_condattr_t *attr;
 	struct cobalt_cond_shadow cnd;
+	pthread_condattr_t locattr;
 	int err;
 
 	if (__xn_safe_copy_from_user(&cnd, u_cnd, sizeof(cnd)))
@@ -374,9 +373,10 @@ int cobalt_cond_init(struct cobalt_cond_shadow __user *u_cnd,
 
 		attr = &locattr;
 	} else
-		attr = NULL;
+		attr = &cobalt_default_cond_attr;
 
-	/* Always use default attribute. */
+	trace_cobalt_cond_init(u_cnd, attr);
+
 	err = pthread_cond_init(&cnd, attr);
 	if (err < 0)
 		return err;
@@ -391,6 +391,8 @@ int cobalt_cond_destroy(struct cobalt_cond_shadow __user *u_cnd)
 
 	if (__xn_safe_copy_from_user(&cnd, u_cnd, sizeof(cnd)))
 		return -EFAULT;
+
+	trace_cobalt_cond_destroy(u_cnd);
 
 	err = pthread_cond_destroy(&cnd);
 	if (err < 0)
@@ -432,14 +434,18 @@ int cobalt_cond_wait_prologue(struct cobalt_cond_shadow __user *u_cnd,
 
 	if (timed) {
 		err = __xn_safe_copy_from_user(&ts, u_ts, sizeof(ts))?-EFAULT:0;
-		if (!err)
+		if (!err) {
+			trace_cobalt_cond_timedwait(u_cnd, u_mx, &ts);
 			err = cobalt_cond_timedwait_prologue(cur,
 							     cnd, mx, timed,
 							     ts2ns(&ts) + 1);
-	} else
+		}
+	} else {
+		trace_cobalt_cond_wait(u_cnd, u_mx);
 		err = cobalt_cond_timedwait_prologue(cur, cnd,
 						     mx, timed,
 						     XN_INFINITE);
+	}
 
 	switch(err) {
 	case 0:

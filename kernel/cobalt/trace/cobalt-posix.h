@@ -5,6 +5,7 @@
 #define _TRACE_COBALT_POSIX_H
 
 #include <linux/tracepoint.h>
+#include <xenomai/posix/cond.h>
 
 #define __timespec_fields(__name)				\
 	__field(__kernel_time_t, tv_sec_##__name)		\
@@ -69,21 +70,6 @@
 	}								\
 	__ret;								\
 })
-
-DECLARE_EVENT_CLASS(cobalt_posix_timespec,
-	TP_PROTO(struct timespec *ts),
-	TP_ARGS(ts),
-
-	TP_STRUCT__entry(
-		__timespec_fields(ts)
-	),
-
-	TP_fast_assign(
-		__assign_timespec(ts, ts);
-	),
-
-	TP_printk("time=(%ld.%09ld)", __timespec_args(ts))
-);
 
 DECLARE_EVENT_CLASS(cobalt_posix_schedparam,
 	TP_PROTO(unsigned long pth, int policy,
@@ -656,6 +642,79 @@ DEFINE_EVENT(cobalt_clock_ident, cobalt_clock_register,
 DEFINE_EVENT(cobalt_clock_ident, cobalt_clock_deregister,
 	TP_PROTO(const char *name, clockid_t clk_id),
 	TP_ARGS(name, clk_id)
+);
+
+#define cobalt_print_clock(__clk_id)					\
+	__print_symbolic(__clk_id,					\
+			 {CLOCK_MONOTONIC, "CLOCK_MONOTONIC"},		\
+			 {CLOCK_MONOTONIC_RAW, "CLOCK_MONOTONIC_RAW"},	\
+			 {CLOCK_REALTIME, "CLOCK_REALTIME"})
+
+TRACE_EVENT(cobalt_cond_init,
+	TP_PROTO(const struct cobalt_cond_shadow __user *u_cnd,
+		 const pthread_condattr_t *attr),
+	TP_ARGS(u_cnd, attr),
+	TP_STRUCT__entry(
+		__field(const struct cobalt_cond_shadow __user *, u_cnd)
+		__field(clockid_t, clk_id)
+		__field(int, pshared)
+	),
+	TP_fast_assign(
+		__entry->u_cnd = u_cnd;
+		__entry->clk_id = attr->clock;
+		__entry->pshared = attr->pshared;
+	),
+	TP_printk("cond=%p attr={ .clock=%s, .pshared=%d }",
+		  __entry->u_cnd,
+		  cobalt_print_clock(__entry->clk_id),
+		  __entry->pshared)
+);
+
+TRACE_EVENT(cobalt_cond_destroy,
+	TP_PROTO(const struct cobalt_cond_shadow __user *u_cnd),
+	TP_ARGS(u_cnd),
+	TP_STRUCT__entry(
+		__field(const struct cobalt_cond_shadow __user *, u_cnd)
+	),
+	TP_fast_assign(
+		__entry->u_cnd = u_cnd;
+	),
+	TP_printk("cond=%p", __entry->u_cnd)
+);
+
+TRACE_EVENT(cobalt_cond_timedwait,
+	TP_PROTO(const struct cobalt_cond_shadow __user *u_cnd,
+		 const struct cobalt_mutex_shadow __user *u_mx,
+		 const struct timespec *timeout),
+	TP_ARGS(u_cnd, u_mx, timeout),
+	TP_STRUCT__entry(
+		__field(const struct cobalt_cond_shadow __user *, u_cnd)
+		__field(const struct cobalt_mutex_shadow __user *, u_mx)
+		__timespec_fields(timeout)
+	),
+	TP_fast_assign(
+		__entry->u_cnd = u_cnd;
+		__entry->u_mx = u_mx;
+		__assign_timespec(timeout, timeout);
+	),
+	TP_printk("cond=%p, mutex=%p, timeout=(%ld.%09ld)",
+		  __entry->u_cnd, __entry->u_mx, __timespec_args(timeout))
+);
+
+TRACE_EVENT(cobalt_cond_wait,
+	TP_PROTO(const struct cobalt_cond_shadow __user *u_cnd,
+		 const struct cobalt_mutex_shadow __user *u_mx),
+	TP_ARGS(u_cnd, u_mx),
+	TP_STRUCT__entry(
+		__field(const struct cobalt_cond_shadow __user *, u_cnd)
+		__field(const struct cobalt_mutex_shadow __user *, u_mx)
+	),
+	TP_fast_assign(
+		__entry->u_cnd = u_cnd;
+		__entry->u_mx = u_mx;
+	),
+	TP_printk("cond=%p, mutex=%p",
+		  __entry->u_cnd, __entry->u_mx)
 );
 
 #endif /* _TRACE_COBALT_POSIX_H */
