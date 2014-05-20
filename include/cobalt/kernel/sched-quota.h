@@ -26,6 +26,11 @@
 
 #ifdef CONFIG_XENO_OPT_SCHED_QUOTA
 
+#define XNSCHED_QUOTA_MIN_PRIO	1
+#define XNSCHED_QUOTA_MAX_PRIO	255
+#define XNSCHED_QUOTA_NR_PRIO	\
+	(XNSCHED_QUOTA_MAX_PRIO - XNSCHED_QUOTA_MIN_PRIO + 1)
+
 extern struct xnsched_class xnsched_class_quota;
 
 struct xnsched_quota_group {

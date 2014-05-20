@@ -29,7 +29,10 @@
 
 #ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
 
-#include <cobalt/kernel/heap.h>
+#define XNSCHED_SPORADIC_MIN_PRIO	1
+#define XNSCHED_SPORADIC_MAX_PRIO	255
+#define XNSCHED_SPORADIC_NR_PRIO	\
+	(XNSCHED_SPORADIC_MAX_PRIO - XNSCHED_SPORADIC_MIN_PRIO + 1)
 
 extern struct xnsched_class xnsched_class_sporadic;
 

@@ -381,9 +381,19 @@ using the Cobalt core.
 
 .Scheduling
 
-- Calling +pthread_setschedparam()+ may cause a secondary mode switch
-  for the caller, but does not cause any mode switch for the target
-  thread unlike with Xenomai 2.x.
+- +sched_get_priority_max()+ returns a larger value for all real-time
+  policies over Cobalt, compared to their Mercury counterpart, which
+  are directly mapped over the native Linux scheduling policies
+  instead (e.g. 255 vs 99 for SCHED_FIFO/RR). Applications wary of
+  portability between the Cobalt and Mercury cores should probe for
+  such limit.
+
+- The +SCHED_SPORADIC+ and +SCHED_TP classes now support up to 255
+  priority levels, instead of 99 as previously with Xenomai 2.x.
+
+- +pthread_setschedparam()+ may cause a secondary mode switch for the
+  caller, but will not cause any mode switch for the target thread
+  unlike with Xenomai 2.x.
 
 [normal]
   This is a requirement for maintaining both the *glibc* and the

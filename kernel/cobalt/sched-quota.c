@@ -299,8 +299,8 @@ static int xnsched_quota_declare(struct xnthread *thread,
 	struct xnsched_quota *qs;
 	int tgid;
 
-	if (p->quota.prio < XNSCHED_RT_MIN_PRIO ||
-	    p->quota.prio > XNSCHED_RT_MAX_PRIO)
+	if (p->quota.prio < XNSCHED_QUOTA_MIN_PRIO ||
+	    p->quota.prio > XNSCHED_QUOTA_MAX_PRIO)
 		return -EINVAL;
 
 	tgid = p->quota.tgid;

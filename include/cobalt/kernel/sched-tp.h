@@ -26,6 +26,11 @@
 
 #ifdef CONFIG_XENO_OPT_SCHED_TP
 
+#define XNSCHED_TP_MIN_PRIO	1
+#define XNSCHED_TP_MAX_PRIO	255
+#define XNSCHED_TP_NR_PRIO	\
+	(XNSCHED_TP_MAX_PRIO - XNSCHED_TP_MIN_PRIO + 1)
+
 extern struct xnsched_class xnsched_class_tp;
 
 struct xnsched_tp_window {

@@ -165,8 +165,8 @@ static int xnsched_tp_declare(struct xnthread *thread,
 {
 	struct xnsched *sched = thread->sched;
 
-	if (p->tp.prio < XNSCHED_RT_MIN_PRIO ||
-	    p->tp.prio > XNSCHED_RT_MAX_PRIO)
+	if (p->tp.prio < XNSCHED_TP_MIN_PRIO ||
+	    p->tp.prio > XNSCHED_TP_MAX_PRIO)
 		return -EINVAL;
 
 	list_add_tail(&thread->tp_link, &sched->tp.threads);

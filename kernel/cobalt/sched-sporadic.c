@@ -17,6 +17,7 @@
  * 02111-1307, USA.
  */
 #include <cobalt/kernel/sched.h>
+#include <cobalt/kernel/heap.h>
 
 #define MAX_REPLENISH CONFIG_XENO_OPT_SCHED_SPORADIC_MAXREPL
 
@@ -285,12 +286,13 @@ static int xnsched_sporadic_declare(struct xnthread *thread,
 {
 	struct xnsched_sporadic_data *pss;
 
-	if (p->pss.low_prio < -1 ||
-	    p->pss.low_prio > XNSCHED_RT_MAX_PRIO)
+	if (p->pss.low_prio != -1 &&
+	    (p->pss.low_prio < XNSCHED_SPORADIC_MIN_PRIO ||
+	     p->pss.low_prio > XNSCHED_SPORADIC_MAX_PRIO))
 		return -EINVAL;
 
-	if (p->pss.normal_prio < XNSCHED_RT_MIN_PRIO ||
-	    p->pss.normal_prio > XNSCHED_RT_MAX_PRIO)
+	if (p->pss.normal_prio < XNSCHED_SPORADIC_MIN_PRIO ||
+	    p->pss.normal_prio > XNSCHED_SPORADIC_MAX_PRIO)
 		return -EINVAL;
 
 	if (p->pss.init_budget == 0)
@@ -308,7 +310,7 @@ static int xnsched_sporadic_declare(struct xnthread *thread,
 	if (p->pss.max_repl < 1 || p->pss.max_repl > MAX_REPLENISH)
 		return -EINVAL;
 
-	pss = xnmalloc(sizeof(struct xnsched_sporadic_data));
+	pss = xnmalloc(sizeof(*pss));
 	if (pss == NULL)
 		return -ENOMEM;
 

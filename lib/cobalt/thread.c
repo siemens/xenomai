@@ -45,32 +45,33 @@ static void prefault_stack(void)
 }
 
 static int libc_setschedparam(pthread_t thread,
-			      int policy_ex, const struct sched_param_ex *param_ex)
+			      int policy, const struct sched_param_ex *param_ex)
 {
 	struct sched_param param;
-	int policy, priority;
+	int priority;
 
 	priority = param_ex->sched_priority;
 
-	switch (policy_ex) {
+	switch (policy) {
 	case SCHED_WEAK:
 		policy = priority ? SCHED_FIFO : SCHED_OTHER;
 		break;
-	case SCHED_COBALT:
-	case SCHED_TP:
-	case SCHED_SPORADIC:
-	case SCHED_QUOTA:
+	default:
 		policy = SCHED_FIFO;
+		/* falldown wanted. */
+	case SCHED_OTHER:
+	case SCHED_FIFO:
+	case SCHED_RR:
 		/*
-		 * Our priority range is larger than the regular
-		 * kernel's, limit the priority value accordingly.
+		 * The Cobalt priority range is larger than those of
+		 * the native SCHED_FIFO/RR classes, so we have to cap
+		 * the priority value accordingly.  We also remap
+		 * "weak" (negative) priorities - which are only
+		 * meaningful for the Cobalt core - to regular values.
 		 */
 		if (priority > std_maxpri)
 			priority = std_maxpri;
-		break;
-	default:
-		policy = policy_ex;
-		if (priority < 0)
+		else if (priority < 0)
 			priority = -priority;
 	}
 
