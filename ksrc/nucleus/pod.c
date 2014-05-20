@@ -1391,7 +1391,8 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 		}
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
-		xnthread_clear_info(thread, XNRMID | XNTIMEO | XNBREAK | XNWAKEN | XNROBBED);
+		xnthread_clear_info(thread, XNRMID | XNTIMEO | XNBREAK | \
+				    XNWAKEN | XNROBBED | XNKICKED);
 	}
 
 	/* Don't start the timer for a thread indefinitely delayed by
