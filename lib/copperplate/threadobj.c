@@ -48,8 +48,8 @@ union copperplate_wait_union {
 
 static void finalize_thread(void *p);
 
-static int request_setschedparam(struct threadobj *thobj,
-				 const struct coresched_attributes *csa);
+static int request_setschedparam(struct threadobj *thobj, int policy,
+				 const struct sched_param_ex *param_ex);
 
 static int request_cancel(struct threadobj *thobj);
 
@@ -89,7 +89,8 @@ struct remote_cancel {
 
 struct remote_setsched {
 	pthread_t tid;
-	struct coresched_attributes attr;
+	int policy;
+	struct sched_param_ex param_ex;
 };
 
 struct remote_request {
@@ -147,7 +148,8 @@ static void *agent_loop(void *arg)
 		switch (rq->req) {
 		case RMT_SETSCHED:
 			ret = copperplate_renice_local_thread(rq->u.setsched.tid,
-							      &rq->u.setsched.attr);
+							      rq->u.setsched.policy,
+							      &rq->u.setsched.param_ex);
 			break;
 		case RMT_CANCEL:
 			ret = pthread_cancel(rq->u.cancel.tid);
@@ -197,8 +199,8 @@ static void start_agent(void)
 	sigaddset(&set, SIGAGENT);
 	pthread_sigmask(SIG_BLOCK, &set, NULL);
 
-	cta.sched.policy = SCHED_RT;
-	cta.sched.param.sched_priority = threadobj_agent_prio;
+	cta.policy = SCHED_RT;
+	cta.param_ex.sched_priority = threadobj_agent_prio;
 	cta.prologue = agent_prologue;
 	cta.run = agent_loop;
 	cta.arg = NULL;
@@ -402,33 +404,33 @@ void __threadobj_set_scheduler(struct threadobj *thobj,
 
 int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock held, dropped */
 {
-	struct coresched_attributes csa;
-	int ret;
+	struct sched_param_ex param_ex;
+	int policy, ret;
 
 	__threadobj_check_locked(thobj);
 
-	csa.policy = SCHED_RT;
+	policy = SCHED_RT;
 	if (prio == 0) {
 		thobj->status &= ~__THREAD_S_RR;
-		csa.policy = SCHED_OTHER;
+		policy = SCHED_OTHER;
 	} else if (thobj->status & __THREAD_S_RR) {
-		csa.param.sched_rr_quantum = thobj->tslice;
-		csa.policy = SCHED_RR;
+		param_ex.sched_rr_quantum = thobj->tslice;
+		policy = SCHED_RR;
 	}
 
 	/*
 	 * As a side effect, resetting SCHED_RR will refill the time
 	 * credit for the target thread with the last quantum set.
 	 */
-	csa.param.sched_priority = prio;
+	param_ex.sched_priority = prio;
 	thobj->priority = prio;
-	thobj->policy = csa.policy;
+	thobj->policy = policy;
 
 	if (thobj == threadobj_current()) {
 		threadobj_unlock(thobj);
-		ret = request_setschedparam(thobj, &csa);
+		ret = request_setschedparam(thobj, policy, &param_ex);
 	} else {
-		ret = request_setschedparam(thobj, &csa);
+		ret = request_setschedparam(thobj, policy, &param_ex);
 		threadobj_unlock(thobj);
 	}
 
@@ -842,8 +844,8 @@ void __threadobj_set_scheduler(struct threadobj *thobj,
 
 int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock held, dropped */
 {
-	struct coresched_attributes csa;
-	int ret;
+	struct sched_param_ex param_ex;
+	int policy, ret;
 
 	__threadobj_check_locked(thobj);
 
@@ -859,22 +861,22 @@ int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock hel
 		return 0;
 	}
 
-	csa.policy = SCHED_RT;
+	policy = SCHED_RT;
 	if (prio == 0) {
 		thobj->status &= ~__THREAD_S_RR;
-		csa.policy = SCHED_OTHER;
+		policy = SCHED_OTHER;
 	} else if (thobj->status & __THREAD_S_RR)
-		csa.policy = SCHED_RR;
+		policy = SCHED_RR;
 
-	csa.param.sched_priority = prio;
+	param_ex.sched_priority = prio;
 	thobj->priority = prio;
-	thobj->policy = csa.policy;
+	thobj->policy = policy;
 
 	if (thobj == threadobj_current()) {
 		threadobj_unlock(thobj);
-		ret = request_setschedparam(thobj, &csa);
+		ret = request_setschedparam(thobj, policy, &param_ex);
 	} else {
-		ret = request_setschedparam(thobj, &csa);
+		ret = request_setschedparam(thobj, policy, &param_ex);
 		threadobj_unlock(thobj);
 	}
 
@@ -1051,8 +1053,8 @@ int threadobj_stat(struct threadobj *thobj,
 
 #endif /* CONFIG_XENO_MERCURY */
 
-static int request_setschedparam(struct threadobj *thobj,
-				 const struct coresched_attributes *csa)
+static int request_setschedparam(struct threadobj *thobj, int policy,
+				 const struct sched_param_ex *param_ex)
 {
 #ifdef CONFIG_XENO_PSHARED
 	struct remote_request *rq;
@@ -1065,7 +1067,8 @@ static int request_setschedparam(struct threadobj *thobj,
 
 		rq->req = RMT_SETSCHED;
 		rq->u.setsched.tid = thobj->tid;
-		rq->u.setsched.attr = *csa;
+		rq->u.setsched.policy = policy;
+		rq->u.setsched.param_ex = *param_ex;
 
 		ret = __bt(send_agent(thobj, rq));
 		if (ret)
@@ -1073,7 +1076,7 @@ static int request_setschedparam(struct threadobj *thobj,
 		return ret;
 	}
 #endif
-	return __bt(copperplate_renice_local_thread(thobj->tid, csa));
+	return __bt(copperplate_renice_local_thread(thobj->tid, policy, param_ex));
 }
 
 static int request_cancel(struct threadobj *thobj) /* thobj->lock held, dropped. */

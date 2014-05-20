@@ -416,8 +416,8 @@ int rt_task_create(RT_TASK *task, const char *name,
 
 	cta.detachstate = mode & T_JOINABLE ?
 		PTHREAD_CREATE_JOINABLE : PTHREAD_CREATE_DETACHED;
-	cta.sched.policy = prio ? SCHED_RT : SCHED_OTHER;
-	cta.sched.param.sched_priority = prio;
+	cta.policy = prio ? SCHED_RT : SCHED_OTHER;
+	cta.param_ex.sched_priority = prio;
 	cta.prologue = task_prologue_1;
 	cta.run = task_entry;
 	cta.arg = tcb;
@@ -716,11 +716,11 @@ out:
 int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 {
 	struct threadobj *current = threadobj_current();
-	struct coresched_attributes csa;
+	struct sched_param_ex param_ex;
 	struct alchemy_task *tcb;
 	struct service svc;
+	int policy, ret;
 	pthread_t self;
-	int ret;
 
 	if (mode & ~(T_LOCK | T_WARNSW))
 		return -EINVAL;
@@ -754,9 +754,9 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 	if (task)
 		task->thread = self;
 
-	csa.policy = prio ? SCHED_RT : SCHED_OTHER;
-	csa.param.sched_priority = prio;
-	ret = __bt(copperplate_renice_local_thread(self, &csa));
+	policy = prio ? SCHED_RT : SCHED_OTHER;
+	param_ex.sched_priority = prio;
+	ret = __bt(copperplate_renice_local_thread(self, policy, &param_ex));
 out:
 	CANCEL_RESTORE(svc);
 

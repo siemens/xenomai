@@ -23,11 +23,11 @@
 #include <time.h>
 #include <pthread.h>
 #include <semaphore.h>
-#include <sched.h>
 #include <xeno_config.h>
 #include <boilerplate/list.h>
 #include <boilerplate/ancillaries.h>
 #include <boilerplate/limits.h>
+#include <boilerplate/sched.h>
 #include <copperplate/heapobj.h>
 
 #define HOBJ_MINLOG2    3
@@ -55,19 +55,11 @@ struct shared_heap {
 	} buckets[HOBJ_NBUCKETS];
 };
 
-struct coresched_attributes {
-	int policy;
-#ifdef CONFIG_XENO_COBALT
-	struct sched_param_ex param;
-#else
-	struct sched_param param;
-#endif
-};
-
 struct corethread_attributes {
 	size_t stacksize;
 	int detachstate;
-	struct coresched_attributes sched;
+	int policy;
+	struct sched_param_ex param_ex;
 	int (*prologue)(void *arg);
 	void *(*run)(void *arg);
 	void *arg;
@@ -91,8 +83,8 @@ int copperplate_kill_tid(pid_t tid, int sig);
 int copperplate_create_thread(struct corethread_attributes *cta,
 			      pthread_t *tid);
 
-int copperplate_renice_local_thread(pthread_t tid,
-				    const struct coresched_attributes *csa);
+int copperplate_renice_local_thread(pthread_t tid, int policy,
+				    const struct sched_param_ex *param_ex);
 
 void copperplate_bootstrap_minimal(const char *arg0,
 				   char *mountpt);

@@ -346,8 +346,8 @@ u_long t_create(const char *name, u_long prio,
 		goto fail_register;
 	}
 
-	cta.sched.policy = SCHED_RT;
-	cta.sched.param.sched_priority = cprio;
+	cta.policy = SCHED_RT;
+	cta.param_ex.sched_priority = cprio;
 	cta.prologue = task_prologue;
 	cta.run = task_trampoline;
 	cta.arg = task;

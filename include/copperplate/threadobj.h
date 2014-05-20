@@ -20,12 +20,12 @@
 #define _COPPERPLATE_THREADOBJ_H
 
 #include <time.h>
-#include <sched.h>
 #include <semaphore.h>
 #include <signal.h>
 #include <pthread.h>
 #include <boilerplate/list.h>
 #include <boilerplate/lock.h>
+#include <boilerplate/sched.h>
 #include <copperplate/clockobj.h>
 #include <copperplate/heapobj.h>
 #include <copperplate/debug.h>

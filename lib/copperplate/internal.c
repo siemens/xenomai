@@ -79,10 +79,10 @@ int copperplate_create_thread(struct corethread_attributes *cta,
 	return __bt(thread_spawn_epilogue(cta));
 }
 
-int copperplate_renice_local_thread(pthread_t tid,
-				    const struct coresched_attributes *csa)
+int copperplate_renice_local_thread(pthread_t tid, int policy,
+				    const struct sched_param_ex *param_ex)
 {
-	return __bt(-pthread_setschedparam_ex(tid, csa->policy, &csa->param));
+	return __bt(-pthread_setschedparam_ex(tid, policy, param_ex));
 }
 
 static inline void prepare_wait_corespec(void)
@@ -137,10 +137,14 @@ int copperplate_create_thread(struct corethread_attributes *cta,
 	return __bt(thread_spawn_epilogue(cta));
 }
 
-int copperplate_renice_local_thread(pthread_t tid,
-				    const struct coresched_attributes *csa)
+int copperplate_renice_local_thread(pthread_t tid, int policy,
+				    const struct sched_param_ex *param_ex)
 {
-	return __bt(-__RT(pthread_setschedparam(tid, csa->policy, &csa->param)));
+	struct sched_param param = {
+		.sched_priority = param_ex->sched_priority,
+	};
+
+	return __bt(-__RT(pthread_setschedparam(tid, policy, &param)));
 }
 
 static inline void prepare_wait_corespec(void)
@@ -212,7 +216,8 @@ static void *thread_trampoline(void *arg)
 	__RT(sem_post(&cta->__reserved.warm));
 	thread_spawn_wait(&released);
 	__RT(sem_destroy(&released));
-	ret = __bt(copperplate_renice_local_thread(pthread_self(), &_cta.sched));
+	ret = __bt(copperplate_renice_local_thread(pthread_self(),
+			   _cta.policy, &_cta.param_ex));
 	if (ret)
 		warning("cannot renice core thread, %s", symerror(ret));
 
