@@ -338,6 +338,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 includesubdir = $(includedir)/mercury/boilerplate
 includesub_HEADERS = \
+	sched.h		\
 	limits.h	\
 	signal.h	\
 	trace.h		\
