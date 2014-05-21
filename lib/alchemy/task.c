@@ -268,7 +268,8 @@ static int create_tcb(struct alchemy_task **tcbp, RT_TASK *task,
 
 	idata.magic = task_magic;
 	idata.finalizer = task_finalizer;
-	idata.priority = prio;
+	idata.policy = prio ? SCHED_FIFO : SCHED_OTHER;
+	idata.param_ex.sched_priority = prio;
 	ret = threadobj_init(&tcb->thobj, &idata);
 	if (ret)
 		goto fail_threadinit;
@@ -416,8 +417,8 @@ int rt_task_create(RT_TASK *task, const char *name,
 
 	cta.detachstate = mode & T_JOINABLE ?
 		PTHREAD_CREATE_JOINABLE : PTHREAD_CREATE_DETACHED;
-	cta.policy = prio ? SCHED_RT : SCHED_OTHER;
-	cta.param_ex.sched_priority = prio;
+	cta.policy = threadobj_get_policy(&tcb->thobj);
+	threadobj_copy_schedparam(&cta.param_ex, &tcb->thobj);
 	cta.prologue = task_prologue_1;
 	cta.run = task_entry;
 	cta.arg = tcb;
@@ -1228,9 +1229,10 @@ RT_TASK *rt_task_self(void)
  */
 int rt_task_set_priority(RT_TASK *task, int prio)
 {
+	struct sched_param_ex param_ex;
 	struct alchemy_task *tcb;
 	struct service svc;
-	int ret;
+	int policy, ret;
 
 	ret = check_task_priority(prio);
 	if (ret)
@@ -1242,7 +1244,10 @@ int rt_task_set_priority(RT_TASK *task, int prio)
 	if (tcb == NULL)
 		goto out;
 
-	ret = threadobj_set_priority(&tcb->thobj, prio);
+	policy = prio ? SCHED_FIFO : SCHED_OTHER;
+	param_ex.sched_priority = prio;
+	ret = threadobj_set_schedparam(&tcb->thobj, policy, &param_ex);
+	put_alchemy_task(tcb);
 out:
 	CANCEL_RESTORE(svc);
 
@@ -1353,20 +1358,26 @@ out:
  */
 int rt_task_slice(RT_TASK *task, RTIME quantum)
 {
+	struct sched_param_ex param_ex;
 	struct alchemy_task *tcb;
-	struct timespec slice;
 	struct service svc;
-	int ret;
+	int ret, policy;
 
 	CANCEL_DEFER(svc);
-
-	clockobj_ticks_to_timespec(&alchemy_clock, quantum, &slice);
 
 	tcb = get_alchemy_task_or_self(task, &ret);
 	if (tcb == NULL)
 		goto out;
 
-	ret = threadobj_set_rr(&tcb->thobj, &slice);
+	param_ex.sched_priority = threadobj_get_priority(&tcb->thobj);
+	if (quantum) {
+		policy = SCHED_RR;
+		clockobj_ticks_to_timespec(&alchemy_clock, quantum,
+					   &param_ex.sched_rr_quantum);
+	} else
+		policy = param_ex.sched_priority ? SCHED_FIFO : SCHED_OTHER;
+
+	ret = threadobj_set_schedparam(&tcb->thobj, policy, &param_ex);
 	put_alchemy_task(tcb);
 out:
 	CANCEL_RESTORE(svc);

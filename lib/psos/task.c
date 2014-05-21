@@ -182,8 +182,8 @@ static void *task_trampoline(void *arg)
 {
 	struct psos_task *task = arg;
 	struct psos_task_args *args = &task->args;
+	struct sched_param_ex param_ex;
 	struct service svc;
-	int ret;
 
 	CANCEL_DEFER(svc);
 
@@ -192,17 +192,9 @@ static void *task_trampoline(void *arg)
 	threadobj_lock(&task->thobj);
 
 	if (task->mode & T_TSLICE) {
-		ret = threadobj_set_rr(&task->thobj, &psos_rrperiod);
-		if (ret) {
-			warning("task %s failed to enter round-robin scheduling, %s",
-				threadobj_get_name(&task->thobj),
-				symerror(ret));
-			threadobj_set_magic(&task->thobj, ~task_magic);
-			threadobj_unlock(&task->thobj);
-			CANCEL_RESTORE(svc);
-			threadobj_notify_entry();
-			return (void *)(long)ret;
-		}
+		param_ex.sched_priority = threadobj_get_priority(&task->thobj);
+		param_ex.sched_rr_quantum = psos_rrperiod;
+		threadobj_set_schedparam(&task->thobj, SCHED_RR, &param_ex);
 	}
 
 	if (task->mode & T_NOPREEMPT)
@@ -335,7 +327,8 @@ u_long t_create(const char *name, u_long prio,
 
 	idata.magic = task_magic;
 	idata.finalizer = task_finalizer;
-	idata.priority = cprio;
+	idata.policy = cprio ? SCHED_RT : SCHED_OTHER;
+	idata.param_ex.sched_priority = cprio;
 	ret = threadobj_init(&task->thobj, &idata);
 	if (ret)
 		goto fail_threadinit;
@@ -346,7 +339,7 @@ u_long t_create(const char *name, u_long prio,
 		goto fail_register;
 	}
 
-	cta.policy = SCHED_RT;
+	cta.policy = idata.policy;
 	cta.param_ex.sched_priority = cprio;
 	cta.prologue = task_prologue;
 	cta.run = task_trampoline;
@@ -447,8 +440,9 @@ u_long t_resume(u_long tid)
 
 u_long t_setpri(u_long tid, u_long newprio, u_long *oldprio_r)
 {
+	struct sched_param_ex param_ex;
+	int policy, ret, cprio = 1;
 	struct psos_task *task;
-	int ret, cprio = 1;
 
 	task = get_psos_task_or_self(tid, &ret);
 	if (task == NULL)
@@ -467,7 +461,10 @@ u_long t_setpri(u_long tid, u_long newprio, u_long *oldprio_r)
 		return ERR_SETPRI;
 	}
 
-	ret = threadobj_set_priority(&task->thobj, cprio);
+	policy = cprio ? SCHED_RT : SCHED_OTHER;
+	param_ex.sched_priority = cprio;
+	ret = threadobj_set_schedparam(&task->thobj, policy, &param_ex);
+	put_psos_task(task);
 	if (ret)
 		return ERR_OBJDEL;
 
@@ -573,8 +570,9 @@ u_long t_setreg(u_long tid, u_long regnum, u_long regvalue)
 
 u_long t_mode(u_long mask, u_long newmask, u_long *oldmode_r)
 {
+	struct sched_param_ex param_ex;
 	struct psos_task *task;
-	int ret;
+	int policy, ret;
 
 	task = get_psos_task_or_self(0, &ret);
 	if (task == NULL)
@@ -593,15 +591,18 @@ u_long t_mode(u_long mask, u_long newmask, u_long *oldmode_r)
 	else if (*oldmode_r & T_NOPREEMPT)
 		__threadobj_unlock_sched(&task->thobj);
 
-	/*
-	 * Copperplate won't accept to turn round-robin on/off when
-	 * preemption is disabled, so we leave user a chance to do the
-	 * right thing first.
-	 */
-	if (task->mode & T_TSLICE)
-		threadobj_set_rr(&task->thobj, &psos_rrperiod);
-	else if (*oldmode_r & T_TSLICE)
-		threadobj_set_rr(&task->thobj, NULL);
+	param_ex.sched_priority = threadobj_get_priority(&task->thobj);
+
+	if (((task->mode ^ *oldmode_r) & T_TSLICE) == 0)
+		goto done;	/* rr status not changed. */
+
+	if (task->mode & T_TSLICE) {
+		policy = SCHED_RR;
+		param_ex.sched_rr_quantum = psos_rrperiod;
+	} else
+		policy = param_ex.sched_priority ? SCHED_FIFO : SCHED_OTHER;
+
+	threadobj_set_schedparam(&task->thobj, policy, &param_ex);
 done:
 	put_psos_task(task);
 

@@ -48,6 +48,9 @@ union copperplate_wait_union {
 
 static void finalize_thread(void *p);
 
+static void set_global_priority(struct threadobj *thobj, int policy,
+				const struct sched_param_ex *param_ex);
+
 static int request_setschedparam(struct threadobj *thobj, int policy,
 				 const struct sched_param_ex *param_ex);
 
@@ -389,54 +392,6 @@ int threadobj_unlock_sched(void)
 	return __bt(__threadobj_unlock_sched(current));
 }
 
-void __threadobj_set_scheduler(struct threadobj *thobj,
-			       int policy, int prio) /* thobj->lock held */
-{
-	__threadobj_check_locked(thobj);
-
-	/*
-	 * XXX: Internal call which bypasses the normal scheduling
-	 * policy tracking: use with care.
-	 */
-	thobj->priority = prio;
-	thobj->policy = policy;
-}
-
-int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock held, dropped */
-{
-	struct sched_param_ex param_ex;
-	int policy, ret;
-
-	__threadobj_check_locked(thobj);
-
-	policy = SCHED_RT;
-	if (prio == 0) {
-		thobj->status &= ~__THREAD_S_RR;
-		policy = SCHED_OTHER;
-	} else if (thobj->status & __THREAD_S_RR) {
-		param_ex.sched_rr_quantum = thobj->tslice;
-		policy = SCHED_RR;
-	}
-
-	/*
-	 * As a side effect, resetting SCHED_RR will refill the time
-	 * credit for the target thread with the last quantum set.
-	 */
-	param_ex.sched_priority = prio;
-	thobj->priority = prio;
-	thobj->policy = policy;
-
-	if (thobj == threadobj_current()) {
-		threadobj_unlock(thobj);
-		ret = request_setschedparam(thobj, policy, &param_ex);
-	} else {
-		ret = request_setschedparam(thobj, policy, &param_ex);
-		threadobj_unlock(thobj);
-	}
-
-	return __bt(ret);
-}
-
 int threadobj_set_mode(int clrmask, int setmask, int *mode_r) /* current->lock held */
 {
 	struct threadobj *current = threadobj_current();
@@ -465,31 +420,16 @@ int threadobj_set_mode(int clrmask, int setmask, int *mode_r) /* current->lock h
 	return 0;
 }
 
-static int set_rr(struct threadobj *thobj, const struct timespec *quantum)
+static inline int enable_rr_corespec(struct threadobj *thobj,
+				     int *policy,
+				     const struct sched_param_ex *param_ex) /* thobj->lock held */
 {
-	struct sched_param_ex xparam;
-	pthread_t tid = thobj->tid;
-	int ret, policy;
+	return 0;
+}
 
-	if (quantum && (quantum->tv_sec || quantum->tv_nsec)) {
-		policy = SCHED_RR;
-		xparam.sched_rr_quantum = *quantum;
-		thobj->status |= __THREAD_S_RR;
-		thobj->tslice = *quantum;
-		xparam.sched_priority = thobj->priority ?: 1;
-	} else {
-		policy = thobj->policy;
-		thobj->status &= ~__THREAD_S_RR;
-		xparam.sched_rr_quantum.tv_sec = 0;
-		xparam.sched_rr_quantum.tv_nsec = 0;
-		xparam.sched_priority = thobj->priority;
-	}
-
-	threadobj_unlock(thobj);
-	ret = pthread_setschedparam_ex(tid, policy, &xparam);
-	threadobj_lock(thobj);
-
-	return __bt(-ret);
+static inline void disable_rr_corespec(struct threadobj *thobj)
+{
+	/* nop */
 }
 
 int threadobj_set_periodic(struct threadobj *thobj,
@@ -759,21 +699,24 @@ static inline int threadobj_unblocked_corespec(struct threadobj *current)
 
 int __threadobj_lock_sched(struct threadobj *current) /* current->lock held */
 {
-	pthread_t tid = current->tid;
-	struct sched_param param;
+	struct sched_param_ex param_ex;
+	int ret;
 
 	__threadobj_check_locked(current);
 
-	if (current->schedlock_depth++ > 0)
-		return 0;
+	if (current->schedlock_depth > 0)
+		goto done;
 
-	current->core.prio_unlocked = current->priority;
+	current->core.schedparam_unlocked = current->schedparam;
 	current->core.policy_unlocked = current->policy;
-	current->priority = threadobj_lock_prio;
-	current->policy = SCHED_RT;
-	param.sched_priority = threadobj_lock_prio;
+	param_ex.sched_priority = threadobj_lock_prio;
+	ret = __bt(threadobj_set_schedparam(current, SCHED_FIFO, &param_ex));
+	if (ret)
+		return __bt(ret);
+done:
+	current->schedlock_depth++;
 
-	return __bt(-pthread_setschedparam(tid, SCHED_RT, &param));
+	return 0;
 }
 
 int threadobj_lock_sched(void)
@@ -790,10 +733,6 @@ int threadobj_lock_sched(void)
 
 int __threadobj_unlock_sched(struct threadobj *current) /* current->lock held */
 {
-	pthread_t tid = current->tid;
-	struct sched_param param;
-	int policy, ret;
-
 	__threadobj_check_locked(current);
 
 	if (current->schedlock_depth == 0)
@@ -802,14 +741,9 @@ int __threadobj_unlock_sched(struct threadobj *current) /* current->lock held */
 	if (--current->schedlock_depth > 0)
 		return 0;
 
-	current->priority = current->core.prio_unlocked;
-	param.sched_priority = current->core.prio_unlocked;
-	policy = current->core.policy_unlocked;
-	threadobj_unlock(current);
-	ret = pthread_setschedparam(tid, policy, &param);
-	threadobj_lock(current);
-
-	return __bt(-ret);
+	return __bt(threadobj_set_schedparam(current,
+					     current->core.policy_unlocked,
+					     &current->core.schedparam_unlocked));
 }
 
 int threadobj_unlock_sched(void)
@@ -820,65 +754,6 @@ int threadobj_unlock_sched(void)
 	threadobj_lock(current);
 	ret = __threadobj_unlock_sched(current);
 	threadobj_unlock(current);
-
-	return __bt(ret);
-}
-
-void __threadobj_set_scheduler(struct threadobj *thobj,
-			       int policy, int prio) /* thobj->lock held */
-{
-	__threadobj_check_locked(thobj);
-
-	/*
-	 * XXX: Internal call which bypasses the normal scheduling
-	 * policy tracking: use with care.
-	 */
-	if (thobj->schedlock_depth > 0) {
-		thobj->core.prio_unlocked = prio;
-		thobj->core.policy_unlocked = policy;
-	} else {
-		thobj->priority = prio;
-		thobj->policy = policy;
-	}
-}
-
-int threadobj_set_priority(struct threadobj *thobj, int prio) /* thobj->lock held, dropped */
-{
-	struct sched_param_ex param_ex;
-	int policy, ret;
-
-	__threadobj_check_locked(thobj);
-
-	/*
-	 * We don't actually change the scheduling priority in case
-	 * the target thread holds the scheduler lock, but only record
-	 * the level to set when unlocking.
-	 */
-	if (thobj->schedlock_depth > 0) {
-		thobj->core.prio_unlocked = prio;
-		thobj->core.policy_unlocked = prio ? SCHED_RT : SCHED_OTHER;
-		threadobj_unlock(thobj);
-		return 0;
-	}
-
-	policy = SCHED_RT;
-	if (prio == 0) {
-		thobj->status &= ~__THREAD_S_RR;
-		policy = SCHED_OTHER;
-	} else if (thobj->status & __THREAD_S_RR)
-		policy = SCHED_RR;
-
-	param_ex.sched_priority = prio;
-	thobj->priority = prio;
-	thobj->policy = policy;
-
-	if (thobj == threadobj_current()) {
-		threadobj_unlock(thobj);
-		ret = request_setschedparam(thobj, policy, &param_ex);
-	} else {
-		ret = request_setschedparam(thobj, policy, &param_ex);
-		threadobj_unlock(thobj);
-	}
 
 	return __bt(ret);
 }
@@ -906,56 +781,37 @@ int threadobj_set_mode(int clrmask, int setmask, int *mode_r) /* current->lock h
 	return __bt(ret);
 }
 
-static int set_rr(struct threadobj *thobj, const struct timespec *quantum)
+static int enable_rr_corespec(struct threadobj *thobj,
+			      int *policy,
+			      const struct sched_param_ex *param_ex) /* thobj->lock held */
 {
-	pthread_t tid = thobj->tid;
-	struct sched_param param;
 	struct itimerspec value;
-	int policy, ret;
+	int ret;
 
-	if (quantum && (quantum->tv_sec || quantum->tv_nsec)) {
-		value.it_interval = *quantum;
-		value.it_value = *quantum;
-		thobj->tslice = *quantum;
+	/*
+	 * Switch to SCHED_FIFO policy instead of SCHED_RR, and use a
+	 * per-thread timer in order to implement round-robin manually
+	 * since we want a per-thread time quantum.
+	 */
+	value.it_interval = param_ex->sched_rr_quantum;
+	value.it_value = value.it_interval;
+	ret = timer_settime(thobj->core.rr_timer, 0, &value, NULL);
+	if (ret)
+		return __bt(-errno);
 
-		if (thobj->status & __THREAD_S_RR) {
-			/* Changing quantum of ongoing RR. */
-			ret = timer_settime(thobj->core.rr_timer, 0, &value, NULL);
-			return ret ? __bt(-errno) : 0;
-		}
+	*policy = SCHED_FIFO;
 
-		thobj->status |= __THREAD_S_RR;
-		/*
-		 * Switch to SCHED_FIFO policy, assign default prio=1
-		 * if coming from SCHED_OTHER. We use a per-thread
-		 * timer to implement manual round-robin.
-		 */
-		policy = SCHED_FIFO;
-		param.sched_priority = thobj->priority ?: 1;
-		ret = timer_settime(thobj->core.rr_timer, 0, &value, NULL);
-		if (ret)
-			return __bt(-errno);
-	} else {
-		if ((thobj->status & __THREAD_S_RR) == 0)
-			return 0;
-		thobj->status &= ~__THREAD_S_RR;
-		/*
-		 * Disarm timer and reset scheduling parameters to
-		 * former policy.
-		 */
-		value.it_value.tv_sec = 0;
-		value.it_value.tv_nsec = 0;
-		value.it_interval = value.it_value;
-		timer_settime(thobj->core.rr_timer, 0, &value, NULL);
-		param.sched_priority = thobj->priority;
-		policy = thobj->policy;
-	}
+	return 0;
+}
 
-	threadobj_unlock(thobj);
-	ret = pthread_setschedparam(tid, policy, &param);
-	threadobj_lock(thobj);
+static void disable_rr_corespec(struct threadobj *thobj)
+{
+ 	struct itimerspec value;
 
-	return __bt(-ret);
+	value.it_value.tv_sec = 0;
+	value.it_value.tv_nsec = 0;
+	value.it_interval = value.it_value;
+	timer_settime(thobj->core.rr_timer, 0, &value, NULL);
 }
 
 int threadobj_set_periodic(struct threadobj *thobj,
@@ -1133,6 +989,14 @@ void *__threadobj_alloc(size_t tcb_struct_size,
 	return p;
 }
 
+static void set_global_priority(struct threadobj *thobj, int policy,
+				const struct sched_param_ex *param_ex)
+{
+	thobj->schedparam = *param_ex;
+	thobj->policy = policy;
+	thobj->global_priority = param_ex->sched_priority;
+}
+
 int threadobj_init(struct threadobj *thobj,
 		   struct threadobj_init_data *idata)
 {
@@ -1148,9 +1012,8 @@ int threadobj_init(struct threadobj *thobj,
 	thobj->schedlock_depth = 0;
 	thobj->status = __THREAD_S_WARMUP;
 	thobj->run_state = __THREAD_S_DORMANT;
-	thobj->priority = idata->priority;
-	thobj->policy = idata->priority ? SCHED_RT : SCHED_OTHER;
-	holder_init(&thobj->wait_link);
+	set_global_priority(thobj, idata->policy, &idata->param_ex);
+	holder_init(&thobj->wait_link); /* mandatory */
 	thobj->cnode = __node_id;
 	thobj->pid = 0;
 	thobj->cancel_sem = NULL;
@@ -1250,7 +1113,7 @@ int threadobj_start(struct threadobj *thobj)	/* thobj->lock held. */
 	thobj->status |= __THREAD_S_STARTED;
 	__RT(pthread_cond_signal(&thobj->barrier));
 
-	if (current && thobj->priority <= current->priority)
+	if (current && thobj->global_priority <= current->global_priority)
 		return 0;
 
 	/*
@@ -1610,30 +1473,45 @@ void threadobj_spin(ticks_t ns)
 		cpu_relax();
 }
 
-int threadobj_set_rr(struct threadobj *thobj, const struct timespec *quantum)
-{				/* thobj->lock held */
+int threadobj_set_schedparam(struct threadobj *thobj, int policy,
+			     const struct sched_param_ex *param_ex) /* thobj->lock held */
+{
+	int ret;
+
 	__threadobj_check_locked(thobj);
 
-	/*
-	 * XXX: we enforce locality since both Cobalt and Mercury need
-	 * this for set_rr(). This seems an acceptable limitation
-	 * compared to introducing a significantly more complex
-	 * implementation only for supporting a somewhat weird feature
-	 * (i.e. controlling the round-robin state of remote threads).
-	 */
-	if (!threadobj_local_p(thobj))
-		return -EINVAL;
-
-	/*
-	 * It makes no sense to enable/disable round-robin while
-	 * holding the scheduler lock. Prevent this, which makes our
-	 * logic simpler in the Mercury case with respect to tracking
-	 * the current scheduling parameters.
-	 */
 	if (thobj->schedlock_depth > 0)
-		return -EINVAL;
+		return __bt(-EPERM);
 
-	return __bt(set_rr(thobj, quantum));
+	/*
+	 * XXX: only local threads may switch to SCHED_RR since both
+	 * Cobalt and Mercury need this for different reasons.
+	 *
+	 * This seems an acceptable limitation compared to introducing
+	 * a significantly more complex implementation only for
+	 * supporting a somewhat weird feature (i.e. controlling the
+	 * round-robin state of threads running in remote processes).
+	 */
+	if (policy == SCHED_RR) {
+		if (!threadobj_local_p(thobj))
+			return -EINVAL;
+		thobj->tslice = param_ex->sched_rr_quantum;
+		ret = enable_rr_corespec(thobj, &policy, param_ex);
+		if (ret)
+			return __bt(ret);
+	} else if (thobj->policy == SCHED_RR) /* Switching off round-robin. */
+		disable_rr_corespec(thobj);
+
+	set_global_priority(thobj, policy, param_ex);
+
+	if (thobj == threadobj_current()) {
+		threadobj_unlock(thobj);
+		ret = request_setschedparam(thobj, policy, param_ex);
+		threadobj_lock(thobj);
+	} else
+		ret = request_setschedparam(thobj, policy, param_ex);
+
+	return __bt(ret);
 }
 
 static inline int main_overlay(void)
@@ -1655,7 +1533,8 @@ static inline int main_overlay(void)
 
 	idata.magic = 0x0;
 	idata.finalizer = NULL;
-	idata.priority = 0;
+	idata.policy = SCHED_OTHER;
+	idata.param_ex.sched_priority = 0;
 	ret = threadobj_init(tcb, &idata);
 	if (ret) {
 		__threadobj_free(tcb);

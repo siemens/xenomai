@@ -75,7 +75,7 @@ char *format_thread_status(const struct thread_data *p, char *buf, size_t len)
 	if (p->schedlock > 0)
 		*wp++ = 'l';
 
-	if (p->status & __THREAD_S_RR)
+	if (p->policy == SCHED_RR)
 		*wp++ = 'r';
 
 	*wp = '\0';

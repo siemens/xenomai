@@ -173,7 +173,7 @@ static inline char *task_decode_status(struct wind_task *task, char *buf)
 	if (threadobj_get_lockdepth(&task->thobj) > 0)
 		strcat(buf, "+sched_lock");
 	status = threadobj_get_status(&task->thobj);
-	if (status & __THREAD_S_RR)
+	if (threadobj_get_policy(&task->thobj) == SCHED_RR)
 		strcat(buf, "+sched_rr");
 	if (status & __THREAD_S_SUSPENDED)
 		strcat(buf, "+suspended");
@@ -226,7 +226,7 @@ static void *task_trampoline(void *arg)
 {
 	struct wind_task *task = arg;
 	struct wind_task_args *args = &task->args;
-	struct timespec quantum;
+	struct sched_param_ex param_ex;
 	struct service svc;
 	int ret;
 
@@ -247,10 +247,11 @@ static void *task_trampoline(void *arg)
 
 	/* Turn on time slicing if RR globally enabled. */
 	if (wind_time_slice) {
-		clockobj_ticks_to_timespec(&wind_clock,
-					   wind_time_slice, &quantum);
+		clockobj_ticks_to_timespec(&wind_clock, wind_time_slice,
+					   &param_ex.sched_rr_quantum);
 		threadobj_lock(&task->thobj);
-		threadobj_set_rr(&task->thobj, &quantum);
+		param_ex.sched_priority = threadobj_get_priority(&task->thobj);
+		threadobj_set_schedparam(&task->thobj, SCHED_RR, &param_ex);
 		threadobj_unlock(&task->thobj);
 	}
 
@@ -352,7 +353,8 @@ static STATUS __taskInit(struct wind_task *task,
 
 	idata.magic = task_magic;
 	idata.finalizer = task_finalizer;
-	idata.priority = cprio;
+	idata.policy = cprio ? SCHED_RT : SCHED_OTHER;
+	idata.param_ex.sched_priority = cprio;
 	ret = threadobj_init(&task->thobj, &idata);
 	if (ret) {
 		errno = S_memLib_NOT_ENOUGH_MEMORY;
@@ -377,7 +379,7 @@ static STATUS __taskInit(struct wind_task *task,
 
 	registry_init_file(&task->fsobj, &registry_ops, 0);
 
-	cta.policy = SCHED_RT;
+	cta.policy = idata.policy;
 	cta.param_ex.sched_priority = cprio;
 	cta.prologue = task_prologue;
 	cta.run = task_trampoline;
@@ -730,9 +732,10 @@ void taskExit(int code)
 
 STATUS taskPrioritySet(TASK_ID tid, int prio)
 {
+	struct sched_param_ex param_ex;
 	struct wind_task *task;
+	int ret, policy, cprio;
 	struct service svc;
-	int ret, cprio;
 
 	task = get_wind_task(tid);
 	if (task == NULL)
@@ -746,8 +749,12 @@ STATUS taskPrioritySet(TASK_ID tid, int prio)
 	}
 
 	CANCEL_DEFER(svc);
-	ret = threadobj_set_priority(&task->thobj, cprio);
+	policy = cprio ? SCHED_RT : SCHED_OTHER;
+	param_ex.sched_priority = cprio;
+	ret = threadobj_set_schedparam(&task->thobj, policy, &param_ex);
 	CANCEL_RESTORE(svc);
+
+	put_wind_task(task);
 
 	if (ret) {
 	objid_error:

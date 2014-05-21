@@ -115,8 +115,8 @@ int open_threads(struct fsobj *fsobj, void *priv)
 		strncpy(p->name, thobj->name, sizeof(p->name) - 1);
 		p->name[sizeof(p->name) - 1] = '\0';
 		p->pid = thobj->pid;
-		p->priority = thobj->priority;
-		p->policy = thobj->policy;
+		p->priority = threadobj_get_priority(thobj);
+		p->policy = threadobj_get_policy(thobj);
 		threadobj_stat(thobj, &statbuf);
 		threadobj_unlock(thobj);
 		p->status = statbuf.status;

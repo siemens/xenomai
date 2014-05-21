@@ -81,7 +81,7 @@ void threadobj_save_timeout(struct threadobj_corespec *corespec,
 struct threadobj_corespec {
 	pthread_cond_t grant_sync;
 	int policy_unlocked;
-	int prio_unlocked;
+	struct sched_param_ex schedparam_unlocked;
 	timer_t rr_timer;
 	struct timespec wakeup;
 	ticks_t period;
@@ -115,14 +115,13 @@ void threadobj_save_timeout(struct threadobj_corespec *corespec,
 /*
  * threadobj->status, updated with ->lock held.
  */
-#define __THREAD_S_RR		(1 << 0)	/* Undergoes round-robin. */
-#define __THREAD_S_STARTED	(1 << 1)	/* threadobj_start() called. */
-#define __THREAD_S_WARMUP	(1 << 2)	/* threadobj_prologue() not called yet. */
-#define __THREAD_S_ABORTED	(1 << 3)	/* Cancelled before start. */
-#define __THREAD_S_LOCKED	(1 << 4)	/* threadobj_lock() granted (debug only). */
-#define __THREAD_S_ACTIVE	(1 << 5)	/* Running user code. */
-#define __THREAD_S_SUSPENDED	(1 << 6)	/* Suspended via threadobj_suspend(). */
-#define __THREAD_S_SAFE		(1 << 7)	/* TCB release deferred. */
+#define __THREAD_S_STARTED	(1 << 0)	/* threadobj_start() called. */
+#define __THREAD_S_WARMUP	(1 << 1)	/* threadobj_prologue() not called yet. */
+#define __THREAD_S_ABORTED	(1 << 2)	/* Cancelled before start. */
+#define __THREAD_S_LOCKED	(1 << 3)	/* threadobj_lock() granted (debug only). */
+#define __THREAD_S_ACTIVE	(1 << 4)	/* Running user code. */
+#define __THREAD_S_SUSPENDED	(1 << 5)	/* Suspended via threadobj_suspend(). */
+#define __THREAD_S_SAFE		(1 << 6)	/* TCB release deferred. */
 #define __THREAD_S_DEBUG	(1 << 31)	/* Debug mode enabled. */
 /*
  * threadobj->run_state, locklessly updated by "current", merged
@@ -163,7 +162,8 @@ struct threadobj {
 	int status;
 	int run_state;
 	int policy;
-	int priority;
+	struct sched_param_ex schedparam;
+	int global_priority;
 	pid_t cnode;
 	pid_t pid;
 	char name[32];
@@ -192,7 +192,8 @@ struct threadobj {
 struct threadobj_init_data {
 	unsigned int magic;
 	cpu_set_t affinity;
-	int priority;
+	int policy;
+	struct sched_param_ex param_ex;
 	void (*finalizer)(struct threadobj *thobj);
 };
 
@@ -322,15 +323,10 @@ int __threadobj_unlock_sched(struct threadobj *current);
 
 int threadobj_unlock_sched(void);
 
-void __threadobj_set_scheduler(struct threadobj *thobj,
-			       int policy, int prio);
-
-int threadobj_set_priority(struct threadobj *thobj, int prio);
+int threadobj_set_schedparam(struct threadobj *thobj, int policy,
+			     const struct sched_param_ex *param_ex);
 
 int threadobj_set_mode(int clrmask, int setmask, int *mode_r);
-
-int threadobj_set_rr(struct threadobj *thobj,
-		     const struct timespec *quantum);
 
 int threadobj_set_periodic(struct threadobj *thobj,
 			   const struct timespec *__restrict__ idate,
@@ -377,9 +373,20 @@ int threadobj_pkg_init(void);
 		__p;							\
 	})
 
+static inline int threadobj_get_policy(struct threadobj *thobj)
+{
+	return thobj->policy;
+}
+
 static inline int threadobj_get_priority(struct threadobj *thobj)
 {
-	return thobj->priority;
+	return thobj->schedparam.sched_priority;
+}
+
+static inline void threadobj_copy_schedparam(struct sched_param_ex *param_ex,
+					     const struct threadobj *thobj)
+{
+	*param_ex = thobj->schedparam;
 }
 
 static inline int threadobj_lock(struct threadobj *thobj)
@@ -410,6 +417,7 @@ static inline int threadobj_trylock(struct threadobj *thobj)
 
 static inline int threadobj_unlock(struct threadobj *thobj)
 {
+	__threadobj_check_locked(thobj);
 	__threadobj_tag_unlocked(thobj);
 	return write_unlock_safe(&thobj->lock, thobj->cancel_state);
 }

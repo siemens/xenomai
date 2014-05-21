@@ -21,25 +21,39 @@
 #include "tickLib.h"
 #include "taskLib.h"
 
+static int switch_slicing(struct threadobj *thobj, struct timespec *quantum)
+{
+	struct sched_param_ex param_ex;
+	int policy;
+
+	param_ex.sched_priority = threadobj_get_priority(thobj);
+
+	if (quantum) {
+		policy = SCHED_RR;
+		param_ex.sched_rr_quantum = *quantum;
+	} else
+		policy = param_ex.sched_priority ? SCHED_FIFO : SCHED_OTHER;
+
+	return __bt(threadobj_set_schedparam(thobj, policy, &param_ex));
+}
+
 STATUS kernelTimeSlice(int ticks)
 {
-	struct timespec quantum;
+	struct timespec quantum, *p = NULL;
 	struct wind_task *task;
 
-	/* Convert VxWorks ticks to timespec. */
-	clockobj_ticks_to_timespec(&wind_clock, ticks, &quantum);
+	if (ticks) {
+		/* Convert VxWorks ticks to timespec. */
+		clockobj_ticks_to_timespec(&wind_clock, ticks, &quantum);
+		p = &quantum;
+	}
 
 	/*
-	 * XXX: Enable/disable round-robin for all threads known by
-	 * the current process. Round-robin is most commonly about
-	 * having multiple threads getting an equal share of time for
-	 * running the same bulk of code, so applying this policy
-	 * session-wide to multiple Xenomai processes would not make
-	 * much sense. I.e. one is better off having all those threads
-	 * running within a single process.
+	 * Enable/disable round-robin for all threads known by the
+	 * current process.
 	 */
 	wind_time_slice = ticks;
-	do_each_wind_task(task, threadobj_set_rr(&task->thobj, &quantum));
+	do_each_wind_task(task, switch_slicing(&task->thobj, p));
 
 	return OK;
 }
