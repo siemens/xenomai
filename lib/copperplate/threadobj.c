@@ -1514,6 +1514,23 @@ int threadobj_set_schedparam(struct threadobj *thobj, int policy,
 	return __bt(ret);
 }
 
+int threadobj_set_schedprio(struct threadobj *thobj, int priority)
+{				/* thobj->lock held */
+	struct sched_param_ex param_ex;
+	int policy;
+
+	__threadobj_check_locked(thobj);
+
+	param_ex = thobj->schedparam;
+	param_ex.sched_priority = priority;
+	policy = thobj->policy;
+
+	if (policy == SCHED_RR)
+		param_ex.sched_rr_quantum = thobj->tslice;
+
+	return __bt(threadobj_set_schedparam(thobj, policy, &param_ex));
+}
+
 static inline int main_overlay(void)
 {
 	struct threadobj_init_data idata;

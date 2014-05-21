@@ -326,6 +326,8 @@ int threadobj_unlock_sched(void);
 int threadobj_set_schedparam(struct threadobj *thobj, int policy,
 			     const struct sched_param_ex *param_ex);
 
+int threadobj_set_schedprio(struct threadobj *thobj, int priority);
+
 int threadobj_set_mode(int clrmask, int setmask, int *mode_r);
 
 int threadobj_set_periodic(struct threadobj *thobj,
