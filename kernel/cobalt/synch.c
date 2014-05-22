@@ -519,8 +519,13 @@ struct xnthread *xnsynch_release(struct xnsynch *synch,
 
 	trace_cobalt_synch_release(synch);
 
-	if (unlikely(xnthread_test_state(thread, XNWEAK)))
-		__xnsynch_fixup_rescnt(thread);
+	if (unlikely(xnthread_test_state(thread, XNWEAK))) {
+		if (xnthread_get_rescnt(thread) == 0)
+			xnshadow_send_sig(thread, SIGDEBUG,
+					  SIGDEBUG_RESCNT_IMBALANCE);
+		else
+			xnthread_dec_rescnt(thread);
+	}
 
 	lockp = xnsynch_fastlock(synch);
 	threadh = xnthread_handle(thread);
@@ -638,16 +643,6 @@ void xnsynch_requeue_sleeper(struct xnthread *thread)
 	xnsynch_renice_thread(owner, thread);
 }
 EXPORT_SYMBOL_GPL(xnsynch_requeue_sleeper);
-
-void __xnsynch_fixup_rescnt(struct xnthread *thread)
-{
-	if (xnthread_get_rescnt(thread) == 0)
-		xnshadow_send_sig(thread, SIGDEBUG,
-				  SIGDEBUG_RESCNT_IMBALANCE);
-	else
-		xnthread_dec_rescnt(thread);
-}
-EXPORT_SYMBOL_GPL(__xnsynch_fixup_rescnt);
 
 struct xnthread *__xnsynch_transfer_ownership(struct xnsynch *synch,
 					      struct xnthread *lastowner)

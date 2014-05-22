@@ -108,8 +108,6 @@ static inline struct xnthread *xnsynch_owner(struct xnsynch *synch)
 	(((fastlock) & ~XNSYNCH_FLCLAIM) | ((enable) ? XNSYNCH_FLCLAIM : 0))
 #define xnsynch_fast_mask_claimed(fastlock) ((fastlock & ~XNSYNCH_FLCLAIM))
 
-void __xnsynch_fixup_rescnt(struct xnthread *thread);
-
 struct xnthread *__xnsynch_transfer_ownership(struct xnsynch *synch,
 					      struct xnthread *lastowner);
 #if XENO_DEBUG(SYNCH_RELAX)
