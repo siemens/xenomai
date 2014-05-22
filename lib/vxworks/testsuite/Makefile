@@ -22,6 +22,10 @@ all: $(TESTS)
 %: %.c
 	$(CC) -o $@ $< $(CFLAGS) $(LDFLAGS)
 
+install: all
+	install -d $(prefix)/testsuite/vxworks
+	install -t $(prefix)/testsuite/vxworks $(TESTS)
+
 clean:
 	$(RM) $(TESTS) *~
 
