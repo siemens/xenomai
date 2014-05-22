@@ -194,23 +194,33 @@ static void *thread_trampoline(void *arg)
 	 * structure early on.
 	 */
 	_cta = *cta;
-	ret = cta->prologue(cta->arg);
-	cta->__reserved.status = ret;
-	if (ret)
-		goto fail;
 
 	ret = __bt(-__RT(sem_init(&released, 0, 0)));
 	if (ret) {
 		ret = -errno;
 		cta->__reserved.status = ret;
+		warning("lack of resources for core thread, %s", symerror(ret));
 		goto fail;
 	}
 
 	cta->__reserved.released = &released;
+	ret = cta->prologue(cta->arg);
+	cta->__reserved.status = ret;
+	if (ret) {
+		__RT(sem_destroy(&released));
+		backtrace_check();
+		goto fail;
+	}
+
 	/*
-	 * CAUTION: over Cobalt, we have to switch back to primary
-	 * mode _before_ releasing the parent thread, so that proper
-	 * priority rules apply between the parent and child threads.
+	 * CAUTION: Once the prologue handler has run successfully,
+	 * the client code may assume that we can't fail spawning the
+	 * child thread anymore, which guarantees that
+	 * copperplate_create_thread() will return a success code
+	 * after this point. This is important so that any thread
+	 * finalizer installed by the prologue handler won't conflict
+	 * with the cleanup code the client may run whenever
+	 * copperplate_create_thread() fails.
 	 */
 	prepare_wait_corespec();
 	__RT(sem_post(&cta->__reserved.warm));
@@ -223,7 +233,6 @@ static void *thread_trampoline(void *arg)
 
 	return _cta.run(_cta.arg);
 fail:
-	backtrace_check();
 	__RT(sem_post(&cta->__reserved.warm));
 
 	return (void *)(long)ret;
