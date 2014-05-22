@@ -45,7 +45,7 @@ COBALT_IMPL(int, sem_init, (sem_t *sem, int pshared, unsigned value))
 
 	err = -XENOMAI_SKINCALL3(__cobalt_muxid,
 				 sc_cobalt_sem_init, _sem, pshared, value);
-	if (err < 0) {
+	if (err) {
 		errno = err;
 		return -1;
 	}
