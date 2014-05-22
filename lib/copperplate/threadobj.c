@@ -420,14 +420,19 @@ int threadobj_set_mode(int clrmask, int setmask, int *mode_r) /* current->lock h
 	return 0;
 }
 
+static inline int prepare_rr_corespec(struct threadobj *thobj, int policy,
+				      const struct sched_param_ex *param_ex) /* thobj->lock held */
+{
+	return policy;
+}
+
 static inline int enable_rr_corespec(struct threadobj *thobj,
-				     int *policy,
 				     const struct sched_param_ex *param_ex) /* thobj->lock held */
 {
 	return 0;
 }
 
-static inline void disable_rr_corespec(struct threadobj *thobj)
+static inline void disable_rr_corespec(struct threadobj *thobj) /* thobj->lock held */
 {
 	/* nop */
 }
@@ -781,30 +786,28 @@ int threadobj_set_mode(int clrmask, int setmask, int *mode_r) /* current->lock h
 	return __bt(ret);
 }
 
+static inline int prepare_rr_corespec(struct threadobj *thobj, int policy,
+				      const struct sched_param_ex *param_ex) /* thobj->lock held */
+{
+	return SCHED_FIFO;
+}
+
 static int enable_rr_corespec(struct threadobj *thobj,
-			      int *policy,
 			      const struct sched_param_ex *param_ex) /* thobj->lock held */
 {
 	struct itimerspec value;
 	int ret;
 
-	/*
-	 * Switch to SCHED_FIFO policy instead of SCHED_RR, and use a
-	 * per-thread timer in order to implement round-robin manually
-	 * since we want a per-thread time quantum.
-	 */
 	value.it_interval = param_ex->sched_rr_quantum;
 	value.it_value = value.it_interval;
 	ret = timer_settime(thobj->core.rr_timer, 0, &value, NULL);
 	if (ret)
 		return __bt(-errno);
 
-	*policy = SCHED_FIFO;
-
 	return 0;
 }
 
-static void disable_rr_corespec(struct threadobj *thobj)
+static void disable_rr_corespec(struct threadobj *thobj) /* thobj->lock held */
 {
  	struct itimerspec value;
 
@@ -1476,12 +1479,30 @@ void threadobj_spin(ticks_t ns)
 int threadobj_set_schedparam(struct threadobj *thobj, int policy,
 			     const struct sched_param_ex *param_ex) /* thobj->lock held */
 {
-	int ret;
+	int ret, _policy;
 
 	__threadobj_check_locked(thobj);
 
 	if (thobj->schedlock_depth > 0)
 		return __bt(-EPERM);
+
+	_policy = policy;
+	if (policy == SCHED_RR)
+		_policy = prepare_rr_corespec(thobj, policy, param_ex);
+	/*
+	 * NOTE: if the current thread suddently starves as a result
+	 * of switching itself to a scheduling class with no runtime
+	 * budget, it will hold its own lock for an indefinite amount
+	 * of time, i.e. until it gets some budget again. That seems a
+	 * more acceptable/less likely risk than introducing a race
+	 * window between the moment set_schedparam() is actually
+	 * applied at OS level, and the update of the priority
+	 * information in set_global_priority(), as both must be seen
+	 * as a single logical operation.
+	 */
+	ret = request_setschedparam(thobj, _policy, param_ex);
+	if (ret)
+		return __bt(ret);
 
 	/*
 	 * XXX: only local threads may switch to SCHED_RR since both
@@ -1495,29 +1516,22 @@ int threadobj_set_schedparam(struct threadobj *thobj, int policy,
 	if (policy == SCHED_RR) {
 		if (!threadobj_local_p(thobj))
 			return -EINVAL;
-		thobj->tslice = param_ex->sched_rr_quantum;
-		ret = enable_rr_corespec(thobj, &policy, param_ex);
+		ret = enable_rr_corespec(thobj, param_ex);
 		if (ret)
 			return __bt(ret);
+		thobj->tslice = param_ex->sched_rr_quantum;
 	} else if (thobj->policy == SCHED_RR) /* Switching off round-robin. */
 		disable_rr_corespec(thobj);
 
 	set_global_priority(thobj, policy, param_ex);
 
-	if (thobj == threadobj_current()) {
-		threadobj_unlock(thobj);
-		ret = request_setschedparam(thobj, policy, param_ex);
-		threadobj_lock(thobj);
-	} else
-		ret = request_setschedparam(thobj, policy, param_ex);
-
-	return __bt(ret);
+	return 0;
 }
 
 int threadobj_set_schedprio(struct threadobj *thobj, int priority)
 {				/* thobj->lock held */
 	struct sched_param_ex param_ex;
-	int policy;
+	int policy, ret;
 
 	__threadobj_check_locked(thobj);
 
@@ -1528,7 +1542,9 @@ int threadobj_set_schedprio(struct threadobj *thobj, int priority)
 	if (policy == SCHED_RR)
 		param_ex.sched_rr_quantum = thobj->tslice;
 
-	return __bt(threadobj_set_schedparam(thobj, policy, &param_ex));
+	ret = __bt(threadobj_set_schedparam(thobj, policy, &param_ex));
+
+	return ret;
 }
 
 static inline int main_overlay(void)
