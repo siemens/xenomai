@@ -28,6 +28,10 @@ all: $(TESTS)
 %: %.c
 	$(CC) -o $@ $< $(CFLAGS) $(LDFLAGS)
 
+install: all
+	install -d $(prefix)/testsuite/psos
+	install -t $(prefix)/testsuite/psos $(TESTS)
+
 clean:
 	$(RM) $(TESTS) *~
 
