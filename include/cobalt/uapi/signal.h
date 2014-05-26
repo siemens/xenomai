@@ -46,6 +46,9 @@
 #define SIGDEBUG			SIGXCPU
 #define sigdebug_code(si)		((si)->si_value.sival_int)
 #define sigdebug_reason(si)		(sigdebug_code(si) & 0xff)
+#define sigdebug_marker			0xfccf0000
+#define sigdebug_marked(si)		\
+	((sigdebug_code(si) & 0xffff0000) == sigdebug_marker)
 
 /* Possible values of sigdebug_reason() */
 #define SIGDEBUG_UNDEFINED		0

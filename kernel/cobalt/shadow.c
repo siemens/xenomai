@@ -579,7 +579,7 @@ void xnshadow_relax(int notify, int reason)
 			memset(&si, 0, sizeof(si));
 			si.si_signo = SIGDEBUG;
 			si.si_code = SI_QUEUE;
-			si.si_int = reason;
+			si.si_int = reason | sigdebug_marker;
 			send_sig_info(SIGDEBUG, &si, p);
 		}
 		xnsynch_detect_claimed_relax(thread);
@@ -819,7 +819,7 @@ static inline int disable_ondemand_memory(void)
 		memset(&si, 0, sizeof(si));
 		si.si_signo = SIGDEBUG;
 		si.si_code = SI_QUEUE;
-		si.si_int = SIGDEBUG_NOMLOCK;
+		si.si_int = SIGDEBUG_NOMLOCK | sigdebug_marker;
 		send_sig_info(SIGDEBUG, &si, p);
 		return 0;
 	}
@@ -1170,14 +1170,14 @@ static unsigned long map_mayday_page(struct task_struct *p)
 }
 
 /* nklock locked, irqs off */
-void xnshadow_call_mayday(struct xnthread *thread, int sigtype)
+void xnshadow_call_mayday(struct xnthread *thread, int reason)
 {
 	struct task_struct *p = xnthread_host_task(thread);
 
 	/* Mayday traps are available to userland threads only. */
 	XENO_BUGON(NUCLEUS, !xnthread_test_state(thread, XNUSER));
 	xnthread_set_info(thread, XNKICKED);
-	xnshadow_send_sig(thread, SIGDEBUG, sigtype);
+	xnshadow_send_sig(thread, SIGDEBUG, reason);
 	xnarch_call_mayday(p);
 }
 EXPORT_SYMBOL_GPL(xnshadow_call_mayday);
@@ -1651,7 +1651,7 @@ void xnshadow_send_sig(struct xnthread *thread, int sig, int arg)
 		},
 		.task = xnthread_host_task(thread),
 		.signo = sig,
-		.sigval = arg,
+		.sigval = sig == SIGDEBUG ? arg | sigdebug_marker : arg,
 	};
 
 	trace_cobalt_lostage_request("signal", sigwork.task);

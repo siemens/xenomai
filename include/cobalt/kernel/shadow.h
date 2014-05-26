@@ -109,7 +109,7 @@ void xnshadow_send_sig(struct xnthread *thread,
 		       int sig,
 		       int arg);
 
-void xnshadow_call_mayday(struct xnthread *thread, int sigtype);
+void xnshadow_call_mayday(struct xnthread *thread, int reason);
 
 void __xnshadow_kick(struct xnthread *thread);
 
