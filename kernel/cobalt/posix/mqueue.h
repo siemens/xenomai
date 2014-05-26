@@ -22,8 +22,12 @@
 #include <linux/types.h>
 #include <linux/fcntl.h>
 
-struct cobalt_process;
-struct mq_attr;
+struct mq_attr {
+	long mq_flags;
+	long mq_maxmsg;
+	long mq_msgsize;
+	long mq_curmsgs;
+};
 
 int cobalt_mq_open(const char __user *u_name, int oflags,
 		   mode_t mode, struct mq_attr __user *u_attr, mqd_t uqd);

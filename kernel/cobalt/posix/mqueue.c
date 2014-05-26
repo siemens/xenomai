@@ -39,17 +39,11 @@
 #include "timer.h"
 #include "mqueue.h"
 #include "clock.h"
+#include <trace/events/cobalt-posix.h>
 
 #define COBALT_MSGMAX		65536
 #define COBALT_MSGSIZEMAX	(16*1024*1024)
 #define COBALT_MSGPRIOMAX 	32768
-
-struct mq_attr {
-	long mq_flags;
-	long mq_maxmsg;
-	long mq_msgsize;
-	long mq_curmsgs;
-};
 
 struct cobalt_mq {
 	unsigned magic;
@@ -1013,6 +1007,8 @@ int cobalt_mq_notify(mqd_t fd, const struct sigevent *__user evp)
 		goto out;
 	}
 
+	trace_cobalt_mq_notify(fd, evp ? &sev : NULL);
+
 	err = mq_notify(mqd, fd, evp ? &sev : NULL);
 
   out:
@@ -1047,11 +1043,15 @@ int cobalt_mq_open(const char __user *u_name, int oflags,
 	} else
 		attr = NULL;
 
+	trace_cobalt_mq_open(name, oflags, mode, uqd);
+
 	return mq_open(uqd, name, oflags, mode, attr);
 }
 
 int cobalt_mq_close(mqd_t uqd)
 {
+	trace_cobalt_mq_close(uqd);
+
 	return mq_close(uqd);
 }
 
@@ -1065,6 +1065,8 @@ int cobalt_mq_unlink(const char __user *u_name)
 		return -EFAULT;
 	if (len >= sizeof(name))
 		return -ENAMETOOLONG;
+
+	trace_cobalt_mq_unlink(name);
 
 	return mq_unlink(name);
 }
@@ -1085,6 +1087,8 @@ int cobalt_mq_getattr(mqd_t uqd, struct mq_attr __user *u_attr)
 	if (err)
 		return err;
 
+	trace_cobalt_mq_getattr(uqd, &attr);
+
 	return __xn_safe_copy_to_user(u_attr, &attr, sizeof(attr));
 }
 
@@ -1103,6 +1107,8 @@ int cobalt_mq_setattr(mqd_t uqd, const struct mq_attr __user *u_attr,
 		err = -EFAULT;
 		goto out;
 	}
+
+	trace_cobalt_mq_setattr(uqd, &attr);
 
 	err = mq_setattr(mqd, &attr, &oattr);
   out:
@@ -1144,8 +1150,11 @@ int cobalt_mq_timedsend(mqd_t uqd, const void __user *u_buf, size_t len,
 			goto out;
 		}
 		timeoutp = &timeout;
-	} else
+		trace_cobalt_mq_timedsend(uqd, u_buf, len, prio, &timeout);
+	} else {
 		timeoutp = NULL;
+		trace_cobalt_mq_send(uqd, u_buf, len, prio);
+	}
 
 	msg = cobalt_mq_timedsend_inner(mqd, len, timeoutp);
 	if (IS_ERR(msg)) {
@@ -1201,8 +1210,11 @@ int cobalt_mq_timedreceive(mqd_t uqd, void __user *u_buf,
 		}
 
 		timeoutp = &timeout;
-	} else
+		trace_cobalt_mq_timedreceive(uqd, u_buf, len, &timeout);
+	} else {
 		timeoutp = NULL;
+		trace_cobalt_mq_receive(uqd, u_buf, len);
+	}
 
 	msg = cobalt_mq_timedrcv_inner(mqd, len, timeoutp);
 	if (IS_ERR(msg)) {

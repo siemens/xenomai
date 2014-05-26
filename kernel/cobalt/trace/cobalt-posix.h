@@ -6,6 +6,7 @@
 
 #include <linux/tracepoint.h>
 #include <xenomai/posix/cond.h>
+#include <xenomai/posix/mqueue.h>
 
 #define __timespec_fields(__name)				\
 	__field(__kernel_time_t, tv_sec_##__name)		\
@@ -715,6 +716,198 @@ TRACE_EVENT(cobalt_cond_wait,
 	),
 	TP_printk("cond=%p, mutex=%p",
 		  __entry->u_cnd, __entry->u_mx)
+);
+
+TRACE_EVENT(cobalt_mq_open,
+	TP_PROTO(const char *name, int oflags, mode_t mode, mqd_t mqd),
+	TP_ARGS(name, oflags, mode, mqd),
+
+	TP_STRUCT__entry(
+		__string(name, name)
+		__field(int, oflags)
+		__field(mode_t, mode)
+		__field(mqd_t, mqd)
+	),
+
+	TP_fast_assign(
+		__assign_str(name, name);
+		__entry->oflags = oflags;
+		__entry->mode = (oflags & O_CREAT) ? mode : 0;
+		__entry->mqd = mqd;
+	),
+
+	TP_printk("name=%s oflags=%#x(%s) mode=%o mqd=%d",
+		  __get_str(name),
+		  __entry->oflags, cobalt_print_oflags(__entry->oflags),
+		  __entry->mode,
+		  __entry->mqd)
+);
+
+TRACE_EVENT(cobalt_mq_notify,
+	TP_PROTO(mqd_t mqd, const struct sigevent *sev),
+	TP_ARGS(mqd, sev),
+
+	TP_STRUCT__entry(
+		__field(mqd_t, mqd)
+		__field(int, signo)
+	),
+
+	TP_fast_assign(
+		__entry->mqd = mqd;
+		__entry->signo = sev && sev->sigev_notify != SIGEV_NONE ?
+			sev->sigev_signo : 0;
+	),
+
+	TP_printk("mqd=%d signo=%d",
+		  __entry->mqd, __entry->signo)
+);
+
+TRACE_EVENT(cobalt_mq_close,
+	TP_PROTO(mqd_t mqd),
+	TP_ARGS(mqd),
+
+	TP_STRUCT__entry(
+		__field(mqd_t, mqd)
+	),
+
+	TP_fast_assign(
+		__entry->mqd = mqd;
+	),
+
+	TP_printk("mqd=%d", __entry->mqd)
+);
+
+TRACE_EVENT(cobalt_mq_unlink,
+	TP_PROTO(const char *name),
+	TP_ARGS(name),
+
+	TP_STRUCT__entry(
+		__string(name, name)
+	),
+
+	TP_fast_assign(
+		__assign_str(name, name);
+	),
+
+	TP_printk("name=%s", __get_str(name))
+);
+
+TRACE_EVENT(cobalt_mq_timedsend,
+	TP_PROTO(mqd_t mqd, const void __user *u_buf, size_t len,
+		 unsigned int prio, const struct timespec *timeout),
+	TP_ARGS(mqd, u_buf, len, prio, timeout),
+	TP_STRUCT__entry(
+		__field(mqd_t, mqd)
+		__field(const void __user *, u_buf)
+		__field(size_t, len)
+		__field(unsigned int, prio)
+		__timespec_fields(timeout)
+	),
+	TP_fast_assign(
+		__entry->mqd = mqd;
+		__entry->u_buf = u_buf;
+		__entry->len = len;
+		__entry->prio = prio;
+		__assign_timespec(timeout, timeout);
+	),
+	TP_printk("mqd=%d buf=%p len=%Zu prio=%u timeout=(%ld.%09ld)",
+		  __entry->mqd, __entry->u_buf, __entry->len,
+		  __entry->prio, __timespec_args(timeout))
+);
+
+TRACE_EVENT(cobalt_mq_send,
+	TP_PROTO(mqd_t mqd, const void __user *u_buf, size_t len,
+		 unsigned int prio),
+	TP_ARGS(mqd, u_buf, len, prio),
+	TP_STRUCT__entry(
+		__field(mqd_t, mqd)
+		__field(const void __user *, u_buf)
+		__field(size_t, len)
+		__field(unsigned int, prio)
+	),
+	TP_fast_assign(
+		__entry->mqd = mqd;
+		__entry->u_buf = u_buf;
+		__entry->len = len;
+		__entry->prio = prio;
+	),
+	TP_printk("mqd=%d buf=%p len=%Zu prio=%u",
+		  __entry->mqd, __entry->u_buf, __entry->len,
+		  __entry->prio)
+);
+
+TRACE_EVENT(cobalt_mq_timedreceive,
+	TP_PROTO(mqd_t mqd, const void __user *u_buf, size_t len,
+		 const struct timespec *timeout),
+	TP_ARGS(mqd, u_buf, len, timeout),
+	TP_STRUCT__entry(
+		__field(mqd_t, mqd)
+		__field(const void __user *, u_buf)
+		__field(size_t, len)
+		__timespec_fields(timeout)
+	),
+	TP_fast_assign(
+		__entry->mqd = mqd;
+		__entry->u_buf = u_buf;
+		__entry->len = len;
+		__assign_timespec(timeout, timeout);
+	),
+	TP_printk("mqd=%d buf=%p len=%Zu timeout=(%ld.%09ld)",
+		  __entry->mqd, __entry->u_buf, __entry->len,
+		  __timespec_args(timeout))
+);
+
+TRACE_EVENT(cobalt_mq_receive,
+	TP_PROTO(mqd_t mqd, const void __user *u_buf, size_t len),
+	TP_ARGS(mqd, u_buf, len),
+	TP_STRUCT__entry(
+		__field(mqd_t, mqd)
+		__field(const void __user *, u_buf)
+		__field(size_t, len)
+	),
+	TP_fast_assign(
+		__entry->mqd = mqd;
+		__entry->u_buf = u_buf;
+		__entry->len = len;
+	),
+	TP_printk("mqd=%d buf=%p len=%Zu",
+		  __entry->mqd, __entry->u_buf, __entry->len)
+);
+
+DECLARE_EVENT_CLASS(cobalt_posix_mqattr,
+	TP_PROTO(mqd_t mqd, const struct mq_attr *attr),
+	TP_ARGS(mqd, attr),
+	TP_STRUCT__entry(
+		__field(mqd_t, mqd)
+		__field(long, flags)
+		__field(long, curmsgs)
+		__field(long, msgsize)
+		__field(long, maxmsg)
+	),
+	TP_fast_assign(
+		__entry->mqd = mqd;
+		__entry->flags = attr->mq_flags;
+		__entry->curmsgs = attr->mq_curmsgs;
+		__entry->msgsize = attr->mq_msgsize;
+		__entry->maxmsg = attr->mq_maxmsg;
+	),
+	TP_printk("mqd=%d flags=%#lx(%s) curmsgs=%ld msgsize=%ld maxmsg=%ld",
+		  __entry->mqd,
+		  __entry->flags, cobalt_print_oflags(__entry->flags),
+		  __entry->curmsgs,
+		  __entry->msgsize,
+		  __entry->maxmsg
+	)
+);
+
+DEFINE_EVENT(cobalt_posix_mqattr, cobalt_mq_getattr,
+	TP_PROTO(mqd_t mqd, const struct mq_attr *attr),
+	TP_ARGS(mqd, attr)
+);
+
+DEFINE_EVENT(cobalt_posix_mqattr, cobalt_mq_setattr,
+	TP_PROTO(mqd_t mqd, const struct mq_attr *attr),
+	TP_ARGS(mqd, attr)
 );
 
 #endif /* _TRACE_COBALT_POSIX_H */
