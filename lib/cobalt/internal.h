@@ -20,6 +20,7 @@
 
 #include <signal.h>
 #include <pthread.h>
+#include <sched.h>
 #include <semaphore.h>
 #include <errno.h>
 #include <time.h>
@@ -126,6 +127,9 @@ int cobalt_event_destroy(cobalt_event_t *event);
 
 int cobalt_sem_inquire(sem_t *sem, struct cobalt_sem_info *info,
 		       pid_t *waitlist, size_t waitsz);
+
+int cobalt_sched_weighted_prio(int policy,
+			       const struct sched_param_ex *param_ex);
 
 void cobalt_thread_init(void);
 

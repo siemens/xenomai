@@ -513,3 +513,11 @@ int cobalt_sem_inquire(sem_t *sem, struct cobalt_sem_info *info,
 				 sc_cobalt_sem_inquire, _sem,
 				 info, waitlist, waitsz);
 }
+
+int cobalt_sched_weighted_prio(int policy,
+			       const struct sched_param_ex *param_ex)
+{
+	return XENOMAI_SKINCALL2(__cobalt_muxid,
+				 sc_cobalt_sched_weightprio, policy,
+				 param_ex);
+}
