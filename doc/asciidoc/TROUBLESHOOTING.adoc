@@ -1,9 +1,8 @@
-Troubleshooting guide
-=====================
+Troubleshooting guide for Xenomai 3.x
+=====================================
 
 This file is a troubleshooting guide about various known issues
-regarding Xenomai.
-
+regarding Xenomai 3.x.
 
 [[kconf]]
 Kernel configuration

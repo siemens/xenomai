@@ -1,5 +1,5 @@
-Installing Xenomai {xenover}
-============================
+Installing Xenomai 3.x
+======================
 
 The latest version of this document is available at
 http://www.xenomai.org/documentation/xenomai-forge/html/README.INSTALL/[this address].

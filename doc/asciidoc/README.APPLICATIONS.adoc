@@ -1,5 +1,5 @@
-Building and running applications with Xenomai {xenover}
-========================================================
+Building and running applications with Xenomai 3.x
+==================================================
 
 The latest version of this document is available at
 http://www.xenomai.org/documentation/xenomai-forge/html/README.APPLICATIONS/[this address].
