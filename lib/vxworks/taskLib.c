@@ -270,29 +270,26 @@ static void *task_trampoline(void *arg)
 }
 
 /*
- * By default, VxWorks priorities are mapped 1:1 to SCHED_RT
- * levels. SCHED_RT is SCHED_COBALT in dual kernel mode, or SCHED_FIFO
- * when running over the Mercury core. We allow up to 257 priority
- * levels over Cobalt when running in primary mode, 99 over the
- * regular glibc's POSIX interface.
+ * By default, WIND kernel priorities are reversely mapped to
+ * SCHED_FIFO levels. The available priority range is [1..256] over
+ * Cobalt when running in primary mode, and [1..99] over the regular
+ * kernel with the POSIX interface.
  *
- * NOTE: in dual kernel mode, a thread transitioning to secondary mode
- * has its priority ceiled to 99 in the SCHED_FIFO class.
+ * NOTE: over Cobalt, a thread transitioning to secondary mode has its
+ * priority ceiled to 99 in the regular POSIX SCHED_FIFO class.
  *
- * The application code may override the routines doing the priority
- * mappings from VxWorks to SCHED_RT (normalize) and conversely
- * (denormalize). The bottom line is that normalized priorities should
- * be in the range [ 1 .. sched_get_priority_max(SCHED_RT) - 1 ]
- * inclusive.
+ * The application code may override the routine doing the priority
+ * mapping from VxWorks to SCHED_FIFO (normalize). Normalized
+ * priorities returned by this routine must be in the range [ 1
+ * .. sched_get_priority_max(SCHED_FIFO) - 1 ] inclusive.
  */
-
 __attribute__ ((weak))
 int wind_task_normalize_priority(int wind_prio)
 {
 	/*
-	 * SCHED_RT priorities are always 1-based regardless of the
+	 * SCHED_FIFO priorities are always 1-based regardless of the
 	 * underlying real-time core. We remap the lowest VxWorks
-	 * priority to the lowest available level in the SCHED_RT
+	 * priority to the lowest available level in the SCHED_FIFO
 	 * policy.
 	 */
 	if (wind_prio > threadobj_high_prio - 1)
@@ -300,14 +297,14 @@ int wind_task_normalize_priority(int wind_prio)
 		      "priority levels to range [%d..0]",
 		      threadobj_high_prio - 1);
 
-	/* Map a VxWorks priority level to a SCHED_RT one. */
+	/* Map a VxWorks priority level to a SCHED_FIFO one. */
 	return threadobj_high_prio - wind_prio - 1;
 }
 
 __attribute__ ((weak))
 int wind_task_denormalize_priority(int core_prio)
 {
-	/* Map a SCHED_RT priority level to a VxWorks one. */
+	/* Map a SCHED_FIFO priority level to a VxWorks one. */
 	return threadobj_high_prio - core_prio - 1;
 }
 
@@ -353,7 +350,7 @@ static STATUS __taskInit(struct wind_task *task,
 
 	idata.magic = task_magic;
 	idata.finalizer = task_finalizer;
-	idata.policy = cprio ? SCHED_RT : SCHED_OTHER;
+	idata.policy = cprio ? SCHED_FIFO : SCHED_OTHER;
 	idata.param_ex.sched_priority = cprio;
 	ret = threadobj_init(&task->thobj, &idata);
 	if (ret) {
@@ -749,7 +746,7 @@ STATUS taskPrioritySet(TASK_ID tid, int prio)
 	}
 
 	CANCEL_DEFER(svc);
-	policy = cprio ? SCHED_RT : SCHED_OTHER;
+	policy = cprio ? SCHED_FIFO : SCHED_OTHER;
 	param_ex.sched_priority = cprio;
 	ret = threadobj_set_schedparam(&task->thobj, policy, &param_ex);
 	CANCEL_RESTORE(svc);

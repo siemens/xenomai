@@ -62,7 +62,7 @@ struct threadobj_stat {
 	ticks_t timeout;
 };
 
-#define SCHED_RT  SCHED_COBALT
+#define SCHED_CORE  SCHED_COBALT
 
 static inline
 void threadobj_save_timeout(struct threadobj_corespec *corespec,
@@ -100,7 +100,7 @@ struct threadobj_stat {
 	ticks_t timeout;
 };
 
-#define SCHED_RT  SCHED_FIFO
+#define SCHED_CORE  SCHED_FIFO
 
 static inline
 void threadobj_save_timeout(struct threadobj_corespec *corespec,

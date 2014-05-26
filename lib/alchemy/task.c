@@ -319,8 +319,8 @@ fail_syncinit:
  *
  * This service creates a task with access to the full set of Xenomai
  * real-time services. If @a prio is non-zero, the new task belongs to
- * Xenomai's real-time FIFO scheduling class, aka SCHED_RT. If @a prio
- * is zero, the task belongs to the regular SCHED_OTHER class.
+ * Xenomai's real-time FIFO scheduling class, aka SCHED_FIFO. If @a
+ * prio is zero, the task belongs to the regular SCHED_OTHER class.
  *
  * Creating tasks with zero priority is useful for running non
  * real-time processes which may invoke blocking real-time services,
@@ -382,15 +382,15 @@ fail_syncinit:
  *
  * When running over the Cobalt core:
  *
- * - calling rt_task_create() causes SCHED_RT tasks to switch to
+ * - calling rt_task_create() causes SCHED_FIFO tasks to switch to
  * secondary mode.
  *
- * - members of Xenomai's SCHED_RT class running in the primary domain
- * have utmost priority over all Linux activities in the system,
- * including regular interrupt handlers.
+ * - members of Xenomai's SCHED_FIFO class running in the primary
+ * domain have utmost priority over all Linux activities in the
+ * system, including Linux interrupt handlers.
  *
- * When running over the Mercury core, the SCHED_RT class is mapped
- * over the regular POSIX SCHED_FIFO class.
+ * When running over the Mercury core, the new task belongs to the
+ * regular POSIX SCHED_FIFO class.
  *
  * @note Tasks can be referred to from multiple processes which all
  * belong to the same Xenomai session.
@@ -649,7 +649,7 @@ out:
  * process into a Xenomai-enabled task.
  *
  * If @a prio is non-zero, the new task moves to Xenomai's real-time
- * FIFO scheduling class, aka SCHED_RT. If @a prio is zero, the task
+ * FIFO scheduling class, aka SCHED_FIFO. If @a prio is zero, the task
  * moves to the regular SCHED_OTHER class.
  *
  * Running Xenomai tasks with zero priority is useful for running non
@@ -755,7 +755,7 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 	if (task)
 		task->thread = self;
 
-	policy = prio ? SCHED_RT : SCHED_OTHER;
+	policy = prio ? SCHED_FIFO : SCHED_OTHER;
 	param_ex.sched_priority = prio;
 	ret = __bt(copperplate_renice_local_thread(self, policy, &param_ex));
 out:

@@ -202,7 +202,7 @@ static void start_agent(void)
 	sigaddset(&set, SIGAGENT);
 	pthread_sigmask(SIG_BLOCK, &set, NULL);
 
-	cta.policy = SCHED_RT;
+	cta.policy = SCHED_CORE;
 	cta.param_ex.sched_priority = threadobj_agent_prio;
 	cta.prologue = agent_prologue;
 	cta.run = agent_loop;
@@ -496,7 +496,7 @@ static void unblock_sighandler(int sig)
 static void roundrobin_handler(int sig)
 {
 	/*
-	 * We do manual round-robin over SCHED_FIFO(RT) to allow for
+	 * We do manual round-robin over SCHED_FIFO to allow for
 	 * multiple arbitrary time slices (i.e. vs the kernel
 	 * pre-defined and fixed one).
 	 */
@@ -537,7 +537,7 @@ static inline void pkg_init_corespec(void)
 	/*
 	 * We don't have builtin scheduler-lock feature over Mercury,
 	 * so we emulate it by reserving the highest thread priority
-	 * level from the SCHED_RT class to disable involuntary
+	 * level from the SCHED_FIFO class to disable involuntary
 	 * preemption.
 	 *
 	 * NOTE: The remote agent thread will also run with the
@@ -1583,7 +1583,7 @@ static inline int main_overlay(void)
 
 int threadobj_pkg_init(void)
 {
-	threadobj_irq_prio = __RT(sched_get_priority_max(SCHED_RT));
+	threadobj_irq_prio = __RT(sched_get_priority_max(SCHED_CORE));
 	threadobj_high_prio = threadobj_irq_prio - 1;
 	threadobj_agent_prio = threadobj_high_prio;
 

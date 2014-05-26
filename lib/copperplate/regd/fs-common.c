@@ -143,8 +143,8 @@ int open_threads(struct fsobj *fsobj, void *priv)
 		format_time(p->timeout, tbuf, sizeof(tbuf));
 		format_thread_status(p, sbuf, sizeof(sbuf));
 		switch (p->policy) {
-		case SCHED_RT:
-			sched_class = "rt";
+		case SCHED_FIFO:
+			sched_class = "fifo";
 			break;
 		case SCHED_RR:
 			sched_class = "rr";

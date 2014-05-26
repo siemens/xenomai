@@ -157,7 +157,7 @@ static int timerobj_spawn_server(void)
 	if (svthread)
 		goto out;
 
-	cta.policy = SCHED_RT;
+	cta.policy = SCHED_CORE;
 	cta.param_ex.sched_priority = threadobj_irq_prio;
 	cta.prologue = server_prologue;
 	cta.run = timerobj_server;

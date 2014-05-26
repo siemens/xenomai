@@ -214,21 +214,19 @@ static void *task_trampoline(void *arg)
 }
 
 /*
- * By default, pSOS priorities are mapped 1:1 to SCHED_RT
- * levels. SCHED_RT is SCHED_COBALT in dual kernel mode, or SCHED_FIFO
- * when running over the Mercury core. We allow up to 257 priority
- * levels over Cobalt when running in primary mode, 99 over the
- * regular glibc's POSIX interface.
+ * By default, pSOS priorities are mapped 1:1 to SCHED_FIFO
+ * levels. The available priority range is [1..256] over Cobalt when
+ * running in primary mode, and [1..99] over the regular kernel with
+ * the POSIX interface.
  *
- * NOTE: in dual kernel mode, a thread transitioning to secondary mode
- * has its priority ceiled to 99 in the SCHED_FIFO class.
+ * NOTE: over Cobalt, a thread transitioning to secondary mode has its
+ * priority ceiled to 99 in the regular POSIX SCHED_FIFO class.
  *
  * The application code may override the routine doing the priority
- * mapping from pSOS to SCHED_RT (normalize). The bottom line is that
- * normalized priorities should be in the range
- * [ 1 .. sched_get_priority_max(SCHED_RT) - 1 ] inclusive.
+ * mapping from pSOS to SCHED_FIFO (normalize). Normalized priorities
+ * returned by this routine must be in the range [ 1
+ * .. sched_get_priority_max(SCHED_FIFO) - 1 ] inclusive.
  */
-
 __attribute__ ((weak))
 int psos_task_normalize_priority(unsigned long psos_prio)
 {
@@ -237,20 +235,20 @@ int psos_task_normalize_priority(unsigned long psos_prio)
 		      "priority levels to range [1..%d]",
 		      threadobj_high_prio);
 
-	/* Map a pSOS priority level to a SCHED_RT one. */
+	/* Map a pSOS priority level to a SCHED_FIFO one. */
 	return psos_prio;
 }
 
 /*
- * Although default pSOS priorities are mapped 1:1 to SCHED_RT,
- * we do still have to use a denormalize function because these
- * calls are weak and application code may be override the call
- * and implement the mapping differently.
+ * Although default pSOS priorities are mapped 1:1 to SCHED_FIFO, we
+ * do still have to use a denormalize function because these calls are
+ * weak and application code may be override the call and implement
+ * the mapping differently.
  */
 __attribute__ ((weak))
 unsigned long psos_task_denormalize_priority(int core_prio)
 {
-	/* Map a SCHED_RT priority level to a pSOS one. */
+	/* Map a SCHED_FIFO priority level to a pSOS one. */
 	return core_prio;
 }
 
@@ -327,7 +325,7 @@ u_long t_create(const char *name, u_long prio,
 
 	idata.magic = task_magic;
 	idata.finalizer = task_finalizer;
-	idata.policy = cprio ? SCHED_RT : SCHED_OTHER;
+	idata.policy = cprio ? SCHED_FIFO : SCHED_OTHER;
 	idata.param_ex.sched_priority = cprio;
 	ret = threadobj_init(&task->thobj, &idata);
 	if (ret)
@@ -461,7 +459,7 @@ u_long t_setpri(u_long tid, u_long newprio, u_long *oldprio_r)
 		return ERR_SETPRI;
 	}
 
-	policy = cprio ? SCHED_RT : SCHED_OTHER;
+	policy = cprio ? SCHED_FIFO : SCHED_OTHER;
 	param_ex.sched_priority = cprio;
 	ret = threadobj_set_schedparam(&task->thobj, policy, &param_ex);
 	put_psos_task(task);
