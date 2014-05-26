@@ -420,6 +420,17 @@ int threadobj_set_mode(int clrmask, int setmask, int *mode_r) /* current->lock h
 	return 0;
 }
 
+static inline int map_priority_corespec(int policy,
+					const struct sched_param_ex *param_ex)
+{
+	int prio;
+
+	prio = cobalt_sched_weighted_prio(policy, param_ex);
+	assert(prio >= 0);
+
+	return prio;
+}
+
 static inline int prepare_rr_corespec(struct threadobj *thobj, int policy,
 				      const struct sched_param_ex *param_ex) /* thobj->lock held */
 {
@@ -786,6 +797,12 @@ int threadobj_set_mode(int clrmask, int setmask, int *mode_r) /* current->lock h
 	return __bt(ret);
 }
 
+static inline int map_priority_corespec(int policy,
+					const struct sched_param_ex *param_ex)
+{
+	return param_ex->sched_priority;
+}
+
 static inline int prepare_rr_corespec(struct threadobj *thobj, int policy,
 				      const struct sched_param_ex *param_ex) /* thobj->lock held */
 {
@@ -997,7 +1014,7 @@ static void set_global_priority(struct threadobj *thobj, int policy,
 {
 	thobj->schedparam = *param_ex;
 	thobj->policy = policy;
-	thobj->global_priority = param_ex->sched_priority;
+	thobj->global_priority = map_priority_corespec(policy, param_ex);
 }
 
 int threadobj_init(struct threadobj *thobj,
