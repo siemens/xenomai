@@ -160,7 +160,7 @@ int cobalt_thread_stat(pid_t pid,
 
 int cobalt_thread_setschedparam_ex(unsigned long tid,
 				   int policy,
-				   struct sched_param_ex __user *u_param,
+				   const struct sched_param_ex __user *u_param,
 				   unsigned long __user *u_window_offset,
 				   int __user *u_promoted);
 
@@ -169,6 +169,9 @@ int cobalt_thread_getschedparam_ex(unsigned long tid,
 				   struct sched_param_ex __user *u_param);
 
 int cobalt_sched_yield(void);
+
+int cobalt_sched_weighted_prio(int policy,
+			       const struct sched_param_ex __user *u_param);
 
 int cobalt_sched_min_prio(int policy);
 

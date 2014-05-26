@@ -23,7 +23,8 @@
 #define COBALT_BINDING_MAGIC            0x50534531
 
 #define sc_cobalt_thread_create         0
-/* 1-2 unimplemented */
+/* 1 unimplemented */
+#define sc_cobalt_sched_weightprio      2
 #define sc_cobalt_sched_yield           3
 #define sc_cobalt_thread_make_periodic  4
 #define sc_cobalt_thread_wait           5

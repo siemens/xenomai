@@ -303,7 +303,7 @@ get_policy_param(union xnsched_policy_param *param,
 	case SCHED_RR:
 		/* if unspecified, use current one. */
 		tslice = ts2ns(&param_ex->sched_rr_quantum);
-		if (tslice == XN_INFINITE)
+		if (tslice == XN_INFINITE && tslice_r)
 			tslice = *tslice_r;
 		/* falldown wanted */
 	case SCHED_FIFO:
@@ -345,7 +345,8 @@ get_policy_param(union xnsched_policy_param *param,
 		return NULL;
 	}
 
-	*tslice_r = tslice;
+	if (tslice_r)
+		*tslice_r = tslice;
 
 	return sched_class;
 }
@@ -811,7 +812,7 @@ static inline int pthread_set_mode_np(int clrmask, int setmask, int *mode_r)
  */
 int cobalt_thread_setschedparam_ex(unsigned long pth,
 				   int policy,
-				   struct sched_param_ex __user *u_param,
+				   const struct sched_param_ex __user *u_param,
 				   unsigned long __user *u_window_offset,
 				   int __user *u_promoted)
 {
@@ -1756,4 +1757,27 @@ ssize_t cobalt_sched_getconfig_np(int cpu, int policy,
 	return ret;
 }
 
+int cobalt_sched_weighted_prio(int policy,
+			       const struct sched_param_ex __user *u_param)
+{
+	struct xnsched_class *sched_class;
+	union xnsched_policy_param param;
+	struct sched_param_ex param_ex;
+	int prio;
+
+	if (__xn_safe_copy_from_user(&param_ex, u_param, sizeof(param_ex)))
+		return -EFAULT;
+
+	sched_class = get_policy_param(&param, policy, &param_ex, NULL);
+	if (sched_class == NULL)
+		return -EINVAL;
+
+	prio = param_ex.sched_priority;
+	if (prio < 0)
+		prio = -prio;
+
+	return prio + sched_class->weight;
+}
+
 /*@}*/
+
