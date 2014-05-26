@@ -31,22 +31,22 @@
  * Global priority scale for Xenomai's core scheduling class,
  * available to SCHED_COBALT members.
  */
-#define XNSCHED_RT_MIN_PRIO	0
-#define XNSCHED_RT_MAX_PRIO	257
-#define XNSCHED_RT_NR_PRIO	\
-	(XNSCHED_RT_MAX_PRIO - XNSCHED_RT_MIN_PRIO + 1)
+#define XNSCHED_CORE_MIN_PRIO	0
+#define XNSCHED_CORE_MAX_PRIO	259
+#define XNSCHED_CORE_NR_PRIO	\
+	(XNSCHED_CORE_MAX_PRIO - XNSCHED_CORE_MIN_PRIO + 1)
 
 /*
- * Common POSIX priority range for SCHED_FIFO, and all other classes
- * except SCHED_COBALT.
+ * Priority range for SCHED_FIFO, and all other classes Cobalt
+ * implements except SCHED_COBALT.
  */
 #define XNSCHED_FIFO_MIN_PRIO	1
-#define XNSCHED_FIFO_MAX_PRIO	255
+#define XNSCHED_FIFO_MAX_PRIO	256
 
-#if XNSCHED_RT_NR_PRIO > XNSCHED_CLASS_WEIGHT_FACTOR ||	\
-  (defined(CONFIG_XENO_OPT_SCALABLE_SCHED) &&		\
-   XNSCHED_RT_NR_PRIO > XNSCHED_MLQ_LEVELS)
-#error "SCHED_COBALT has too many priority levels"
+#if XNSCHED_CORE_NR_PRIO > XNSCHED_CLASS_WEIGHT_FACTOR ||	\
+  (defined(CONFIG_XENO_OPT_SCALABLE_SCHED) &&			\
+   XNSCHED_CORE_NR_PRIO > XNSCHED_MLQ_LEVELS)
+#error "XNSCHED_MLQ_LEVELS is too low"
 #endif
 
 extern struct xnsched_class xnsched_class_rt;

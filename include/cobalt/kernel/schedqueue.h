@@ -30,11 +30,11 @@
 
 /*
  * Multi-level priority queue, suitable for handling the runnable
- * thread queue of a scheduling class with O(1) property. We only
- * manage a descending queuing order, i.e. highest numbered priorities
- * come first.
+ * thread queue of the core scheduling class with O(1) property. We
+ * only manage a descending queuing order, i.e. highest numbered
+ * priorities come first.
  */
-#define XNSCHED_MLQ_LEVELS  258	/* i.e. XNSCHED_RT_NR_PRIO */
+#define XNSCHED_MLQ_LEVELS  260	/* i.e. XNSCHED_CORE_NR_PRIO */
 
 struct xnsched_mlq {
 	int elems;

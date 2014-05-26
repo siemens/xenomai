@@ -312,8 +312,8 @@ get_policy_param(union xnsched_policy_param *param,
 			return NULL;
 		break;
 	case SCHED_COBALT:
-		if (prio < XNSCHED_RT_MIN_PRIO ||
-		    prio > XNSCHED_RT_MAX_PRIO)
+		if (prio < XNSCHED_CORE_MIN_PRIO ||
+		    prio > XNSCHED_CORE_MAX_PRIO)
 			return NULL;
 		break;
 #ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
@@ -1239,7 +1239,7 @@ int cobalt_sched_min_prio(int policy)
 		ret = XNSCHED_FIFO_MIN_PRIO;
 		break;
 	case SCHED_COBALT:
-		ret = XNSCHED_RT_MIN_PRIO;
+		ret = XNSCHED_CORE_MIN_PRIO;
 		break;
 	case SCHED_NORMAL:
 	case SCHED_WEAK:
@@ -1267,7 +1267,7 @@ int cobalt_sched_max_prio(int policy)
 		ret = XNSCHED_FIFO_MAX_PRIO;
 		break;
 	case SCHED_COBALT:
-		ret = XNSCHED_RT_MAX_PRIO;
+		ret = XNSCHED_CORE_MAX_PRIO;
 		break;
 	case SCHED_NORMAL:
 		ret = 0;

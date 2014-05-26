@@ -89,11 +89,6 @@ static void xnsched_tp_init(struct xnsched *sched)
 	char timer_name[XNOBJECT_NAME_LEN];
 	int n;
 
-	/*
-	 * Build the runqueues.
-	 * CAUTION: we may inherit RT priority during PIP boost, so we
-	 * need as many levels as SCHED_RT defines.
-	 */
 	for (n = 0; n < CONFIG_XENO_OPT_SCHED_TP_NRPART; n++)
 		xnsched_initq(&tp->partitions[n].runnable);
 

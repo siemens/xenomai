@@ -384,11 +384,11 @@ using the Cobalt core.
 - +sched_get_priority_max()+ returns a larger value for all real-time
   policies over Cobalt, compared to their Mercury counterpart, which
   are directly mapped over the native Linux scheduling policies
-  instead (e.g. 255 vs 99 for SCHED_FIFO/RR). Applications wary of
+  instead (e.g. 256 vs 99 for SCHED_FIFO/RR). Applications wary of
   portability between the Cobalt and Mercury cores should probe for
   such limit.
 
-- The +SCHED_SPORADIC+ and +SCHED_TP classes now support up to 255
+- The +SCHED_SPORADIC+ and +SCHED_TP classes now support up to 256
   priority levels, instead of 99 as previously with Xenomai 2.x.
 
 - +pthread_setschedparam()+ may cause a secondary mode switch for the
