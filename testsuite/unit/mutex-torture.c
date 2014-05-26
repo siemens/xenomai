@@ -50,7 +50,7 @@ static const char *reason_str[] = {
 
 static void sigdebug(int sig, siginfo_t *si, void *context)
 {
-	unsigned int reason = si->si_value.sival_int;
+	unsigned int reason = sigdebug_reason(si);
 
 	printf("\nSIGDEBUG received, reason %d: %s\n", reason,
 	       reason <= SIGDEBUG_WATCHDOG ? reason_str[reason] : "<unknown>");

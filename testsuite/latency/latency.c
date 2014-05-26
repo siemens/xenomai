@@ -547,7 +547,7 @@ static void sigdebug(int sig, siginfo_t *si, void *context)
 {
 	const char fmt[] = "Mode switch detected (reason: %s), aborting.\n"
 		"Enable XENO_OPT_DEBUG_TRACE_RELAX to find the cause.\n";
-	unsigned int reason = si->si_value.sival_int;
+	unsigned int reason = sigdebug_reason(si);
 	int n __attribute__ ((unused));
 	static char buffer[256];
 

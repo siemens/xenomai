@@ -397,23 +397,35 @@ int cobalt_monitor_drain_all_sync(cobalt_monitor_t *mon)
 	return ret;
 }
 
+#define __raw_write_out(__msg)					\
+	do {							\
+		int __ret;					\
+		__ret = write(1, __msg , sizeof(__msg) - 1);	\
+		(void)__ret;					\
+	} while (0)
+
+#define raw_write_out(__msg)	__raw_write_out("Xenomai/cobalt: " __msg "\n")
+
 void cobalt_sigdebug_handler(int sig, siginfo_t *si, void *context)
 {
-	if (si->si_value.sival_int == SIGDEBUG_NOMLOCK) {
-		fprintf(stderr, "Xenomai: process memory not locked "
-			"(missing mlockall?)\n");
-		fflush(stderr);
-		exit(4);
+	if (!sigdebug_marked(si))
+		goto forward;
+
+	switch (sigdebug_reason(si)) {
+	case SIGDEBUG_NOMLOCK:
+		raw_write_out("process memory not locked (missing mlockall?)");
+		_exit(4);
+	case SIGDEBUG_RESCNT_IMBALANCE:
+		raw_write_out("internal resource count imbalance");
+		_exit(5);
+	case SIGDEBUG_WATCHDOG:
+		raw_write_out("watchdog triggered");
+		break;
 	}
 
-	/*
-	 * XNTRAPSW was set for the thread but no user-defined handler
-	 * has been set to override our internal handler, so let's
-	 * restore the setting before we registered and re-raise the
-	 * signal. Usually triggers the default signal action.
-	 */
-	sigaction(SIGXCPU, &__cobalt_orig_sigdebug, NULL);
-	pthread_kill(pthread_self(), SIGXCPU);
+forward:
+	sigaction(SIGDEBUG, &__cobalt_orig_sigdebug, NULL);
+	pthread_kill(pthread_self(), SIGDEBUG);
 }
 
 static inline
