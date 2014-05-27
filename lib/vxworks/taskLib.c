@@ -34,6 +34,7 @@
 #include "copperplate/syncobj.h"
 #include "copperplate/cluster.h"
 #include "copperplate/internal.h"
+#include "copperplate/registry-obstack.h"
 #include "vxworks/errnoLib.h"
 
 union wind_wait_union {
@@ -165,48 +166,60 @@ static void task_finalizer(struct threadobj *thobj)
 
 #ifdef CONFIG_XENO_REGISTRY
 
-static inline char *task_decode_status(struct wind_task *task, char *buf)
+static void task_decode_status(struct fsobstack *o, struct wind_task *task)
 {
-	int status;
+	int status = threadobj_get_status(&task->thobj);
 
-	*buf = '\0';
 	if (threadobj_get_lockdepth(&task->thobj) > 0)
-		strcat(buf, "+sched_lock");
-	status = threadobj_get_status(&task->thobj);
-	if (threadobj_get_policy(&task->thobj) == SCHED_RR)
-		strcat(buf, "+sched_rr");
-	if (status & __THREAD_S_SUSPENDED)
-		strcat(buf, "+suspended");
-	if (status & (__THREAD_S_WAIT|__THREAD_S_TIMEDWAIT))
-		strcat(buf, "+pending");
-	else if (status & __THREAD_S_DELAYED)
-		strcat(buf, "+delayed");
-	else
-		strcat(buf, "+ready");
+		fsobstack_grow_string(o, " LOCK");
 
-	return buf + 1;
+	if (threadobj_get_policy(&task->thobj) == SCHED_RR)
+		fsobstack_grow_string(o, " RR");
+
+	if (status & __THREAD_S_SUSPENDED)
+		fsobstack_grow_string(o, " SUSPEND");
+
+	if (status & (__THREAD_S_WAIT|__THREAD_S_TIMEDWAIT))
+		fsobstack_grow_string(o, " PEND");
+	else if (status & __THREAD_S_DELAYED)
+		fsobstack_grow_string(o, " DELAY");
+	else
+		fsobstack_grow_string(o, " READY");
 }
 
-static ssize_t task_registry_read(struct fsobj *fsobj,
-				  char *buf, size_t size, off_t offset,
-				  void *priv)
+static int task_registry_open(struct fsobj *fsobj, void *priv)
 {
+	struct fsobstack *o = priv;
 	struct wind_task *task;
-	char sbuf[64];
-	size_t len;
+	int ret;
 
 	task = container_of(fsobj, struct wind_task, fsobj);
-	len =  sprintf(buf,       "name       = %s\n", task->name);
-	len += sprintf(buf + len, "errno      = %d\n", threadobj_get_errno(&task->thobj));
-	len += sprintf(buf + len, "status     = %s\n", task_decode_status(task, sbuf));
-	len += sprintf(buf + len, "priority   = %d\n", wind_task_get_priority(task));
-	len += sprintf(buf + len, "lock_depth = %d\n", threadobj_get_lockdepth(&task->thobj));
+	ret = threadobj_lock(&task->thobj);
+	if (ret)
+		return -EIO;
 
-	return (ssize_t)len;
+	fsobstack_init(o);
+
+	fsobstack_grow_format(o, "errno      = %d\n",
+			      threadobj_get_errno(&task->thobj));
+	fsobstack_grow_string(o, "status     =");
+	task_decode_status(o, task);
+	fsobstack_grow_format(o, "\npriority   = %d\n",
+			      wind_task_get_priority(task));
+	fsobstack_grow_format(o, "lock_depth = %d\n",
+			      threadobj_get_lockdepth(&task->thobj));
+
+	threadobj_unlock(&task->thobj);
+
+	fsobstack_finish(o);
+
+	return 0;
 }
 
 static struct registry_operations registry_ops = {
-	.read	= task_registry_read
+	.open		= task_registry_open,
+	.release	= fsobj_obstack_release,
+	.read		= fsobj_obstack_read
 };
 
 #else
@@ -239,8 +252,8 @@ static void *task_trampoline(void *arg)
 	ret = __bt(registry_add_file(&task->fsobj, O_RDONLY,
 				     "/vxworks/tasks/%s", task->name));
 	if (ret)
-		warning("failed to export task %s to registry",
-			task->name);
+		warning("failed to export task %s to registry, %s",
+			task->name, symerror(ret));
 
 	/* Wait for someone to run taskActivate() upon us. */
 	threadobj_wait_start();
@@ -374,7 +387,7 @@ static STATUS __taskInit(struct wind_task *task,
 		return ERROR;
 	}
 
-	registry_init_file(&task->fsobj, &registry_ops, 0);
+	registry_init_file_obstack(&task->fsobj, &registry_ops);
 
 	cta.policy = idata.policy;
 	cta.param_ex.sched_priority = cprio;

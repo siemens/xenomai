@@ -25,7 +25,6 @@
 #include <vxworks/taskLib.h>
 
 struct wind_task_args {
-
 	FUNCPTR entry;
 	long arg0;
 	long arg1;
@@ -40,15 +39,11 @@ struct wind_task_args {
 };
 
 struct wind_task {
-
 	pthread_mutex_t safelock;
-
 	struct WIND_TCB *tcb;
 	struct WIND_TCB priv_tcb;
-
 	char name[XNOBJECT_NAME_LEN];
 	struct wind_task_args args;
-
 	struct threadobj thobj;
 	struct fsobj fsobj;
 	struct clusterobj cobj;
