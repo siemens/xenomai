@@ -45,7 +45,7 @@ int __cobalt_muxid = -1;
 
 struct sigaction __cobalt_orig_sigdebug;
 
-pthread_t __cobalt_main_tid;
+pthread_t __cobalt_main_ptid;
 
 int __rtdm_muxid = -1;
 
@@ -200,7 +200,7 @@ static inline void dump_configuration(void)
 
 static __libcobalt_ctor void __init_cobalt(void)
 {
-	pthread_t tid = pthread_self();
+	pthread_t ptid = pthread_self();
 	struct sched_param parm;
 	int policy, ret;
 	const char *p;
@@ -217,7 +217,7 @@ static __libcobalt_ctor void __init_cobalt(void)
 		report_error("running non-SMP libraries on SMP kernel?");
 #endif
 
-	__cobalt_main_tid = tid;
+	__cobalt_main_ptid = ptid;
 
 	if (__cobalt_defer_init)
 		return;
@@ -233,7 +233,7 @@ static __libcobalt_ctor void __init_cobalt(void)
 		exit(EXIT_FAILURE);
 	}
 
-	ret = __STD(pthread_getschedparam(tid, &policy, &parm));
+	ret = __STD(pthread_getschedparam(ptid, &policy, &parm));
 	if (ret) {
 		report_error("pthread_getschedparam: %s", strerror(ret));
 		exit(EXIT_FAILURE);
@@ -257,7 +257,7 @@ static __libcobalt_ctor void __init_cobalt(void)
 		parm.sched_priority = 0;
 	}
 	
-	ret = __RT(pthread_setschedparam(tid, policy, &parm));
+	ret = __RT(pthread_setschedparam(ptid, policy, &parm));
 	if (ret) {
 		report_error("pthread_setschedparam: %s", strerror(ret));
 		exit(EXIT_FAILURE);

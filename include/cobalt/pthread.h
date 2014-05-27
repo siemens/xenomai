@@ -43,7 +43,7 @@ COBALT_DECL(int, pthread_attr_setschedpolicy(pthread_attr_t *attr,
 COBALT_DECL(int, pthread_attr_setschedparam(pthread_attr_t *attr,
 					    const struct sched_param *par));
 
-COBALT_DECL(int, pthread_create(pthread_t *tid,
+COBALT_DECL(int, pthread_create(pthread_t *ptid_r,
 				const pthread_attr_t *attr,
 				void *(*start) (void *),
 				void *arg));
@@ -124,9 +124,9 @@ COBALT_DECL(int, pthread_cond_signal(pthread_cond_t *cond));
 
 COBALT_DECL(int, pthread_cond_broadcast(pthread_cond_t *cond));
 
-COBALT_DECL(int, pthread_kill(pthread_t tid, int sig));
+COBALT_DECL(int, pthread_kill(pthread_t ptid, int sig));
 
-COBALT_DECL(int, pthread_join(pthread_t tid, void **retval));
+COBALT_DECL(int, pthread_join(pthread_t ptid, void **retval));
 
 COBALT_DECL(int, pthread_mutexattr_getprotocol(const pthread_mutexattr_t *attr,
 					       int *proto));
@@ -155,18 +155,18 @@ int pthread_set_name_np(pthread_t thread,
 
 COBALT_DECL(int, pthread_setname_np(pthread_t thread, const char *name));
 
-int pthread_probe_np(pid_t tid);
+int pthread_probe_np(pid_t ptid);
 
-int pthread_create_ex(pthread_t *tid,
+int pthread_create_ex(pthread_t *ptid_r,
 		      const pthread_attr_ex_t *attr_ex,
 		      void *(*start)(void *),
 		      void *arg);
 
-int pthread_getschedparam_ex(pthread_t tid,
+int pthread_getschedparam_ex(pthread_t ptid,
 			     int *pol,
 			     struct sched_param_ex *par);
 
-int pthread_setschedparam_ex(pthread_t tid,
+int pthread_setschedparam_ex(pthread_t ptid,
 			     int pol,
 			     const struct sched_param_ex *par);
 

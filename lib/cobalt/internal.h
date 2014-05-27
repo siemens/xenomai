@@ -145,7 +145,7 @@ struct xnfeatinfo;
 
 void cobalt_check_features(struct xnfeatinfo *finfo);
 
-extern pthread_t __cobalt_main_tid;
+extern pthread_t __cobalt_main_ptid;
 
 extern struct sigaction __cobalt_orig_sigdebug;
 

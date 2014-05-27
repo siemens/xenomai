@@ -38,7 +38,7 @@ static int std_maxpri;
 
 static void prefault_stack(void)
 {
-	if (pthread_self() == __cobalt_main_tid) {
+	if (pthread_self() == __cobalt_main_ptid) {
 		char stk[cobalt_get_stacksize(1)];
 		__cobalt_prefault(stk);
 	}
@@ -232,7 +232,7 @@ static void *cobalt_thread_trampoline(void *p)
 	 * Volatile is to prevent (too) smart gcc releases from
 	 * trashing the syscall registers (see later comment).
 	 */
-	volatile pthread_t tid = pthread_self();
+	volatile pthread_t ptid = pthread_self();
 	void *(*start)(void *), *arg, *retval;
 	int personality, parent_prio, policy;
 	struct pthread_iargs *iargs = p;
@@ -251,7 +251,7 @@ static void *cobalt_thread_trampoline(void *p)
 	arg = iargs->arg;
 
 	/* Set our scheduling parameters for the host kernel first. */
-	ret = libc_setschedparam(tid, policy, &param_ex);
+	ret = libc_setschedparam(ptid, policy, &param_ex);
 	if (ret)
 		goto sync_with_creator;
 
@@ -259,7 +259,7 @@ static void *cobalt_thread_trampoline(void *p)
 	 * Do _not_ inline the call to pthread_self() in the syscall
 	 * macro: this trashes the syscall regs on some archs.
 	 */
-	ret = -XENOMAI_SKINCALL5(__cobalt_muxid, sc_cobalt_thread_create, tid,
+	ret = -XENOMAI_SKINCALL5(__cobalt_muxid, sc_cobalt_thread_create, ptid,
 				 policy, &param_ex, personality, &u_winoff);
 	if (ret == 0) {
 		cobalt_set_current();
@@ -295,7 +295,7 @@ sync_with_creator:
 	return retval;
 }
 
-int pthread_create_ex(pthread_t *tid,
+int pthread_create_ex(pthread_t *ptid_r,
 		      const pthread_attr_ex_t *attr_ex,
 		      void *(*start) (void *), void *arg)
 {
@@ -303,7 +303,7 @@ int pthread_create_ex(pthread_t *tid,
 	struct pthread_iargs iargs;
 	struct sched_param param;
 	pthread_attr_t attr;
-	pthread_t ltid;
+	pthread_t lptid;
 	size_t stksz;
 
 	if (attr_ex == NULL)
@@ -351,7 +351,7 @@ int pthread_create_ex(pthread_t *tid,
 	iargs.ret = EAGAIN;
 	__STD(sem_init(&iargs.sync, 0, 0));
 
-	ret = __STD(pthread_create(&ltid, &attr, cobalt_thread_trampoline, &iargs));
+	ret = __STD(pthread_create(&lptid, &attr, cobalt_thread_trampoline, &iargs));
 	if (ret)
 		goto fail;
 
@@ -362,7 +362,7 @@ int pthread_create_ex(pthread_t *tid,
 		if (ret == 0) {
 			ret = iargs.ret;
 			if (ret == 0)
-				*tid = ltid;
+				*ptid_r = lptid;
 			break;
 		}
 		ret = -errno;
@@ -376,7 +376,7 @@ fail:
 	return ret;
 }
 
-COBALT_IMPL(int, pthread_create, (pthread_t *tid,
+COBALT_IMPL(int, pthread_create, (pthread_t *ptid_r,
 				  const pthread_attr_t *attr,
 				  void *(*start) (void *), void *arg))
 {
@@ -394,7 +394,7 @@ COBALT_IMPL(int, pthread_create, (pthread_t *tid,
 	attr_ex.nonstd.sched_param.sched_priority = param.sched_priority;
 	attr_ex.nonstd.personality = 0; /* Default: use Cobalt. */
 
-	return pthread_create_ex(tid, &attr_ex, start, arg);
+	return pthread_create_ex(ptid_r, &attr_ex, start, arg);
 }
 
 int pthread_make_periodic_np(pthread_t thread,
