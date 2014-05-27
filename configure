@@ -637,6 +637,7 @@ ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
 LIBOBJS
+XENO_DEMO_DIR
 XENO_TEST_DIR
 XENO_FUSE_CFLAGS
 XENO_USER_APP_LDFLAGS
@@ -874,6 +875,7 @@ enable_valgrind_client
 enable_dlopen_libs
 enable_tls
 with_testdir
+with_demodir
 enable_fortify
 '
       ac_precious_vars='build_alias
@@ -1579,8 +1581,11 @@ Optional Packages:
   --with-dbx-xsl-root     specify the Docbook XML XSL stylesheet root. Default
                           is to use well-known locations (or network if
                           --enable-dbx-network was passed)
-  --with-testdir=<test-binaries-dir>
-                          location for test binaries (defaults to $bindir)
+  --with-testdir=<test-exec-dir>
+                          location for test executables (defaults to $bindir)
+  --with-demo=<demo-program-dir>
+                          location for demo programs (defaults to
+                          $prefix/demo)
 
 Some influential environment variables:
   CC          C compiler command
@@ -14308,8 +14313,8 @@ $as_echo "#define HAVE_TLS 1" >>confdefs.h
 	fi
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking location for test binaries" >&5
-$as_echo_n "checking location for test binaries... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking location for test executables" >&5
+$as_echo_n "checking location for test executables... " >&6; }
 
 # Check whether --with-testdir was given.
 if test "${with_testdir+set}" = set; then :
@@ -14327,6 +14332,26 @@ fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $XENO_TEST_DIR" >&5
 $as_echo "$XENO_TEST_DIR" >&6; }
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking location for demo programs" >&5
+$as_echo_n "checking location for demo programs... " >&6; }
+
+# Check whether --with-demodir was given.
+if test "${with_demodir+set}" = set; then :
+  withval=$with_demodir;
+	case "$withval" in
+	"" | y | ye | yes | n | no)
+	    as_fn_error $? "You must supply an argument to --with-demodir" "$LINENO" 5
+	  ;;
+	esac
+	XENO_DEMO_DIR="$withval"
+
+else
+  XENO_DEMO_DIR=$prefix/demo
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $XENO_DEMO_DIR" >&5
+$as_echo "$XENO_DEMO_DIR" >&6; }
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for test source generation" >&5
 $as_echo_n "checking for test source generation... " >&6; }
@@ -14434,7 +14459,8 @@ fi
 
 
 
-ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config:scripts/xeno-config-$rtcore_type.in scripts/xeno lib/Makefile lib/boilerplate/Makefile lib/cobalt/Makefile lib/cobalt/arch/Makefile lib/cobalt/arch/arm/Makefile lib/cobalt/arch/arm/include/Makefile lib/cobalt/arch/arm/include/asm/Makefile lib/cobalt/arch/arm/include/asm/xenomai/Makefile lib/cobalt/arch/powerpc/Makefile lib/cobalt/arch/powerpc/include/Makefile lib/cobalt/arch/powerpc/include/asm/Makefile lib/cobalt/arch/powerpc/include/asm/xenomai/Makefile lib/cobalt/arch/blackfin/Makefile lib/cobalt/arch/blackfin/include/Makefile lib/cobalt/arch/blackfin/include/asm/Makefile lib/cobalt/arch/blackfin/include/asm/xenomai/Makefile lib/cobalt/arch/x86/Makefile lib/cobalt/arch/x86/include/Makefile lib/cobalt/arch/x86/include/asm/Makefile lib/cobalt/arch/x86/include/asm/xenomai/Makefile lib/cobalt/arch/nios2/Makefile lib/cobalt/arch/nios2/include/Makefile lib/cobalt/arch/nios2/include/asm/Makefile lib/cobalt/arch/nios2/include/asm/xenomai/Makefile lib/cobalt/arch/sh/Makefile lib/cobalt/arch/sh/include/Makefile lib/cobalt/arch/sh/include/asm/Makefile lib/cobalt/arch/sh/include/asm/xenomai/Makefile lib/copperplate/Makefile lib/copperplate/regd/Makefile lib/alchemy/Makefile lib/vxworks/Makefile lib/psos/Makefile lib/analogy/Makefile testsuite/Makefile testsuite/latency/Makefile testsuite/cyclic/Makefile testsuite/switchtest/Makefile testsuite/clocktest/Makefile testsuite/unit/Makefile testsuite/xeno-test/Makefile testsuite/regression/Makefile testsuite/regression/posix/Makefile utils/Makefile utils/can/Makefile utils/analogy/Makefile utils/ps/Makefile utils/slackspot/Makefile include/Makefile include/nocore/Makefile include/cobalt/uapi/Makefile include/cobalt/uapi/asm-generic/Makefile include/cobalt/uapi/kernel/Makefile include/cobalt/uapi/rtdm/Makefile include/cobalt/Makefile include/cobalt/sys/Makefile include/cobalt/kernel/Makefile include/cobalt/kernel/rtdm/Makefile include/cobalt/kernel/rtdm/analogy/Makefile include/cobalt/boilerplate/Makefile include/rtdm/Makefile include/rtdm/uapi/Makefile include/mercury/Makefile include/mercury/boilerplate/Makefile include/boilerplate/Makefile include/copperplate/Makefile include/alchemy/Makefile include/vxworks/Makefile include/psos/Makefile"
+
+ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config:scripts/xeno-config-$rtcore_type.in scripts/xeno lib/Makefile lib/boilerplate/Makefile lib/cobalt/Makefile lib/cobalt/arch/Makefile lib/cobalt/arch/arm/Makefile lib/cobalt/arch/arm/include/Makefile lib/cobalt/arch/arm/include/asm/Makefile lib/cobalt/arch/arm/include/asm/xenomai/Makefile lib/cobalt/arch/powerpc/Makefile lib/cobalt/arch/powerpc/include/Makefile lib/cobalt/arch/powerpc/include/asm/Makefile lib/cobalt/arch/powerpc/include/asm/xenomai/Makefile lib/cobalt/arch/blackfin/Makefile lib/cobalt/arch/blackfin/include/Makefile lib/cobalt/arch/blackfin/include/asm/Makefile lib/cobalt/arch/blackfin/include/asm/xenomai/Makefile lib/cobalt/arch/x86/Makefile lib/cobalt/arch/x86/include/Makefile lib/cobalt/arch/x86/include/asm/Makefile lib/cobalt/arch/x86/include/asm/xenomai/Makefile lib/cobalt/arch/nios2/Makefile lib/cobalt/arch/nios2/include/Makefile lib/cobalt/arch/nios2/include/asm/Makefile lib/cobalt/arch/nios2/include/asm/xenomai/Makefile lib/cobalt/arch/sh/Makefile lib/cobalt/arch/sh/include/Makefile lib/cobalt/arch/sh/include/asm/Makefile lib/cobalt/arch/sh/include/asm/xenomai/Makefile lib/copperplate/Makefile lib/copperplate/regd/Makefile lib/alchemy/Makefile lib/vxworks/Makefile lib/psos/Makefile lib/analogy/Makefile testsuite/Makefile testsuite/latency/Makefile testsuite/cyclic/Makefile testsuite/switchtest/Makefile testsuite/clocktest/Makefile testsuite/unit/Makefile testsuite/xeno-test/Makefile testsuite/regression/Makefile testsuite/regression/posix/Makefile utils/Makefile utils/can/Makefile utils/analogy/Makefile utils/ps/Makefile utils/slackspot/Makefile demo/Makefile demo/posix/Makefile demo/posix/cobalt/Makefile demo/alchemy/Makefile demo/alchemy/cobalt/Makefile include/Makefile include/nocore/Makefile include/cobalt/uapi/Makefile include/cobalt/uapi/asm-generic/Makefile include/cobalt/uapi/kernel/Makefile include/cobalt/uapi/rtdm/Makefile include/cobalt/Makefile include/cobalt/sys/Makefile include/cobalt/kernel/Makefile include/cobalt/kernel/rtdm/Makefile include/cobalt/kernel/rtdm/analogy/Makefile include/cobalt/boilerplate/Makefile include/rtdm/Makefile include/rtdm/uapi/Makefile include/mercury/Makefile include/mercury/boilerplate/Makefile include/boilerplate/Makefile include/copperplate/Makefile include/alchemy/Makefile include/vxworks/Makefile include/psos/Makefile"
 
 
 if test \! x$XENO_MAYBE_DOCDIR = x ; then
@@ -15560,6 +15586,11 @@ do
     "utils/analogy/Makefile") CONFIG_FILES="$CONFIG_FILES utils/analogy/Makefile" ;;
     "utils/ps/Makefile") CONFIG_FILES="$CONFIG_FILES utils/ps/Makefile" ;;
     "utils/slackspot/Makefile") CONFIG_FILES="$CONFIG_FILES utils/slackspot/Makefile" ;;
+    "demo/Makefile") CONFIG_FILES="$CONFIG_FILES demo/Makefile" ;;
+    "demo/posix/Makefile") CONFIG_FILES="$CONFIG_FILES demo/posix/Makefile" ;;
+    "demo/posix/cobalt/Makefile") CONFIG_FILES="$CONFIG_FILES demo/posix/cobalt/Makefile" ;;
+    "demo/alchemy/Makefile") CONFIG_FILES="$CONFIG_FILES demo/alchemy/Makefile" ;;
+    "demo/alchemy/cobalt/Makefile") CONFIG_FILES="$CONFIG_FILES demo/alchemy/cobalt/Makefile" ;;
     "include/Makefile") CONFIG_FILES="$CONFIG_FILES include/Makefile" ;;
     "include/nocore/Makefile") CONFIG_FILES="$CONFIG_FILES include/nocore/Makefile" ;;
     "include/cobalt/uapi/Makefile") CONFIG_FILES="$CONFIG_FILES include/cobalt/uapi/Makefile" ;;

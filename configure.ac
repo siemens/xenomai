@@ -716,9 +716,9 @@ EOF
 	fi
 fi
 
-AC_MSG_CHECKING(location for test binaries)
+AC_MSG_CHECKING(location for test executables)
 AC_ARG_WITH(testdir,
-    AS_HELP_STRING([--with-testdir=<test-binaries-dir>],[location for test binaries (defaults to $bindir)]),
+    AS_HELP_STRING([--with-testdir=<test-exec-dir>],[location for test executables (defaults to $bindir)]),
     [
 	case "$withval" in
 	"" | y | ye | yes | n | no)
@@ -728,6 +728,19 @@ AC_ARG_WITH(testdir,
 	XENO_TEST_DIR="$withval"
     ], [XENO_TEST_DIR=$bindir])
 AC_MSG_RESULT($XENO_TEST_DIR)
+
+AC_MSG_CHECKING(location for demo programs)
+AC_ARG_WITH(demodir,
+    AS_HELP_STRING([--with-demo=<demo-program-dir>],[location for demo programs (defaults to $prefix/demo)]),
+    [
+	case "$withval" in
+	"" | y | ye | yes | n | no)
+	    AC_MSG_ERROR([You must supply an argument to --with-demodir])
+	  ;;
+	esac
+	XENO_DEMO_DIR="$withval"
+    ], [XENO_DEMO_DIR=$prefix/demo])
+AC_MSG_RESULT($XENO_DEMO_DIR)
 
 AC_MSG_CHECKING([for test source generation])
 AC_RUN_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
@@ -826,6 +839,7 @@ AC_SUBST(XENO_USER_APP_CFLAGS)
 AC_SUBST(XENO_USER_APP_LDFLAGS)
 AC_SUBST(XENO_FUSE_CFLAGS)
 AC_SUBST(XENO_TEST_DIR)
+AC_SUBST(XENO_DEMO_DIR)
 
 AC_CONFIG_FILES([ \
 	Makefile \
@@ -881,6 +895,11 @@ AC_CONFIG_FILES([ \
 	utils/analogy/Makefile \
 	utils/ps/Makefile \
 	utils/slackspot/Makefile \
+	demo/Makefile \
+	demo/posix/Makefile \
+	demo/posix/cobalt/Makefile \
+	demo/alchemy/Makefile \
+	demo/alchemy/cobalt/Makefile \
 	include/Makefile \
 	include/nocore/Makefile \
 	include/cobalt/uapi/Makefile \
