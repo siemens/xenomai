@@ -345,7 +345,7 @@ u_long t_create(const char *name, u_long prio,
 	cta.stacksize = ustack;
 	cta.detachstate = PTHREAD_CREATE_DETACHED;
 
-	ret = __bt(copperplate_create_thread(&cta, &task->thobj.tid));
+	ret = __bt(copperplate_create_thread(&cta, &task->thobj.ptid));
 	if (ret) {
 		cluster_delobj(&psos_task_table, &task->cobj);
 	fail_register:

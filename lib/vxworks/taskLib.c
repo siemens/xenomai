@@ -396,7 +396,7 @@ static STATUS __taskInit(struct wind_task *task,
 	cta.arg = task;
 	cta.stacksize = stacksize;
 	cta.detachstate = PTHREAD_CREATE_DETACHED;
-	ret = __bt(copperplate_create_thread(&cta, &task->thobj.tid));
+	ret = __bt(copperplate_create_thread(&cta, &task->thobj.ptid));
 	if (ret) {
 		registry_destroy_file(&task->fsobj);
 		cluster_delobj(&wind_task_table, &task->cobj);

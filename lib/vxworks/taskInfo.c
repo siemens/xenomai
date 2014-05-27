@@ -123,7 +123,7 @@ STATUS taskGetInfo(TASK_ID task_id, TASK_DESC *desc)
 	strncpy(desc->td_name, task->name, sizeof(desc->td_name));
 	desc->td_entry = tcb->entry;
 	desc->td_errorStatus = *task->thobj.errno_pointer;
-	ret = pthread_getattr_np(task->thobj.tid, &attr);
+	ret = pthread_getattr_np(task->thobj.ptid, &attr);
 	put_wind_task(task);
 
 	/*

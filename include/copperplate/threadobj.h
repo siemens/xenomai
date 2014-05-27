@@ -154,7 +154,7 @@ struct syncobj;
 
 struct threadobj {
 	unsigned int magic;	/* Must be first. */
-	pthread_t tid;
+	pthread_t ptid;
 	pthread_mutex_t lock;
 
 	int schedlock_depth;

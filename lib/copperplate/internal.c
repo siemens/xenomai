@@ -53,7 +53,7 @@ pid_t copperplate_get_tid(void)
 #include "cobalt/internal.h"
 
 int copperplate_create_thread(struct corethread_attributes *cta,
-			      pthread_t *tid)
+			      pthread_t *ptid_r)
 {
 	pthread_attr_ex_t attr_ex;
 	size_t stacksize;
@@ -71,7 +71,7 @@ int copperplate_create_thread(struct corethread_attributes *cta,
 	pthread_attr_setinheritsched_ex(&attr_ex, PTHREAD_INHERIT_SCHED);
 	pthread_attr_setstacksize_ex(&attr_ex, stacksize);
 	pthread_attr_setdetachstate_ex(&attr_ex, cta->detachstate);
-	ret = __bt(-pthread_create_ex(tid, &attr_ex, thread_trampoline, cta));
+	ret = __bt(-pthread_create_ex(ptid_r, &attr_ex, thread_trampoline, cta));
 	pthread_attr_destroy_ex(&attr_ex);
 	if (ret)
 		return __bt(ret);
@@ -79,10 +79,10 @@ int copperplate_create_thread(struct corethread_attributes *cta,
 	return __bt(thread_spawn_epilogue(cta));
 }
 
-int copperplate_renice_local_thread(pthread_t tid, int policy,
+int copperplate_renice_local_thread(pthread_t ptid, int policy,
 				    const struct sched_param_ex *param_ex)
 {
-	return __bt(-pthread_setschedparam_ex(tid, policy, param_ex));
+	return __bt(-pthread_setschedparam_ex(ptid, policy, param_ex));
 }
 
 static inline void prepare_wait_corespec(void)
@@ -110,7 +110,7 @@ int copperplate_kill_tid(pid_t tid, int sig)
 }
 
 int copperplate_create_thread(struct corethread_attributes *cta,
-			      pthread_t *tid)
+			      pthread_t *ptid_r)
 {
 	pthread_attr_t attr;
 	size_t stacksize;
@@ -128,7 +128,7 @@ int copperplate_create_thread(struct corethread_attributes *cta,
 	pthread_attr_setinheritsched(&attr, PTHREAD_INHERIT_SCHED);
 	pthread_attr_setstacksize(&attr, stacksize);
 	pthread_attr_setdetachstate(&attr, cta->detachstate);
-	ret = __bt(-pthread_create(tid, &attr, thread_trampoline, cta));
+	ret = __bt(-pthread_create(ptid_r, &attr, thread_trampoline, cta));
 	pthread_attr_destroy(&attr);
 
 	if (ret)
@@ -137,14 +137,14 @@ int copperplate_create_thread(struct corethread_attributes *cta,
 	return __bt(thread_spawn_epilogue(cta));
 }
 
-int copperplate_renice_local_thread(pthread_t tid, int policy,
+int copperplate_renice_local_thread(pthread_t ptid, int policy,
 				    const struct sched_param_ex *param_ex)
 {
 	struct sched_param param = {
 		.sched_priority = param_ex->sched_priority,
 	};
 
-	return __bt(-__RT(pthread_setschedparam(tid, policy, &param)));
+	return __bt(-__RT(pthread_setschedparam(ptid, policy, &param)));
 }
 
 static inline void prepare_wait_corespec(void)

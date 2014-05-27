@@ -87,11 +87,11 @@ static pid_t agent_pid;
 #define RMT_CANCEL	1
 
 struct remote_cancel {
-	pthread_t tid;
+	pthread_t ptid;
 };
 
 struct remote_setsched {
-	pthread_t tid;
+	pthread_t ptid;
 	int policy;
 	struct sched_param_ex param_ex;
 };
@@ -150,12 +150,12 @@ static void *agent_loop(void *arg)
 		rq = si.si_ptr;
 		switch (rq->req) {
 		case RMT_SETSCHED:
-			ret = copperplate_renice_local_thread(rq->u.setsched.tid,
+			ret = copperplate_renice_local_thread(rq->u.setsched.ptid,
 							      rq->u.setsched.policy,
 							      &rq->u.setsched.param_ex);
 			break;
 		case RMT_CANCEL:
-			ret = pthread_cancel(rq->u.cancel.tid);
+			ret = pthread_cancel(rq->u.cancel.ptid);
 			break;
 		default:
 			panic("invalid remote request #%d", rq->req);
@@ -187,7 +187,7 @@ static inline int send_agent(struct threadobj *thobj,
 static void start_agent(void)
 {
 	struct corethread_attributes cta;
-	pthread_t tid;
+	pthread_t ptid;
 	sigset_t set;
 	int ret;
 
@@ -210,7 +210,7 @@ static void start_agent(void)
 	cta.stacksize = PTHREAD_STACK_MIN * 4;
 	cta.detachstate = PTHREAD_CREATE_DETACHED;
 
-	ret = copperplate_create_thread(&cta, &tid);
+	ret = copperplate_create_thread(&cta, &ptid);
 	if (ret)
 		panic("failed to start agent thread, %s", symerror(ret));
 }
@@ -454,7 +454,7 @@ int threadobj_set_periodic(struct threadobj *thobj,
 {				/* thobj->lock held */
 	__threadobj_check_locked(thobj);
 
-	return -pthread_make_periodic_np(thobj->tid,
+	return -pthread_make_periodic_np(thobj->ptid,
 					 CLOCK_COPPERPLATE, idate, period);
 }
 
@@ -942,7 +942,7 @@ static int request_setschedparam(struct threadobj *thobj, int policy,
 			return -ENOMEM;
 
 		rq->req = RMT_SETSCHED;
-		rq->u.setsched.tid = thobj->tid;
+		rq->u.setsched.ptid = thobj->ptid;
 		rq->u.setsched.policy = policy;
 		rq->u.setsched.param_ex = *param_ex;
 
@@ -952,12 +952,12 @@ static int request_setschedparam(struct threadobj *thobj, int policy,
 		return ret;
 	}
 #endif
-	return __bt(copperplate_renice_local_thread(thobj->tid, policy, param_ex));
+	return __bt(copperplate_renice_local_thread(thobj->ptid, policy, param_ex));
 }
 
 static int request_cancel(struct threadobj *thobj) /* thobj->lock held, dropped. */
 {
-	pthread_t tid = thobj->tid;
+	pthread_t ptid = thobj->ptid;
 #ifdef CONFIG_XENO_PSHARED
 	struct remote_request *rq;
 	int ret;
@@ -969,7 +969,7 @@ static int request_cancel(struct threadobj *thobj) /* thobj->lock held, dropped.
 			return -ENOMEM;
 
 		rq->req = RMT_CANCEL;
-		rq->u.cancel.tid = tid;
+		rq->u.cancel.ptid = ptid;
 
 		ret = __bt(send_agent(thobj, rq));
 		if (ret)
@@ -981,7 +981,7 @@ static int request_cancel(struct threadobj *thobj) /* thobj->lock held, dropped.
 
 	/* We might race, glibc will check. */
 
-	pthread_cancel(tid);
+	pthread_cancel(ptid);
 
 	return 0;
 }
@@ -1025,7 +1025,7 @@ int threadobj_init(struct threadobj *thobj,
 	int ret;
 
 	thobj->magic = idata->magic;
-	thobj->tid = 0;
+	thobj->ptid = 0;
 	thobj->tracer = NULL;
 	thobj->wait_sobj = NULL;
 	thobj->finalizer = idata->finalizer;
@@ -1237,7 +1237,7 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 	} else
 		*thobj->name = '\0';
 
-	thobj->tid = pthread_self();
+	thobj->ptid = pthread_self();
 	thobj->pid = copperplate_get_tid();
 	thobj->errno_pointer = &errno;
 	threadobj_set_agent(thobj);
@@ -1445,7 +1445,7 @@ int threadobj_unblock(struct threadobj *thobj) /* thobj->lock held */
 	if (!threadobj_local_p(thobj))
 		return __bt(-copperplate_kill_tid(thobj->pid, SIGRELS));
 
-	return __bt(-__RT(pthread_kill(thobj->tid, SIGRELS)));
+	return __bt(-__RT(pthread_kill(thobj->ptid, SIGRELS)));
 }
 
 int threadobj_sleep(const struct timespec *ts)

@@ -81,9 +81,9 @@ pid_t copperplate_get_tid(void);
 int copperplate_kill_tid(pid_t tid, int sig);
 
 int copperplate_create_thread(struct corethread_attributes *cta,
-			      pthread_t *tid);
+			      pthread_t *ptid);
 
-int copperplate_renice_local_thread(pthread_t tid, int policy,
+int copperplate_renice_local_thread(pthread_t ptid, int policy,
 				    const struct sched_param_ex *param_ex);
 
 void copperplate_bootstrap_minimal(const char *arg0,
