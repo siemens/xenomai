@@ -56,6 +56,12 @@ struct syncobj;
 extern "C" {
 #endif
 
+void fsobstack_grow_string(struct fsobstack *o,
+			   const char *s);
+
+void fsobstack_grow_char(struct fsobstack *o,
+			 char c);
+
 int fsobstack_grow_format(struct fsobstack *o,
 			  const char *fmt, ...);
 

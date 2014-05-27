@@ -834,6 +834,16 @@ int fsobstack_grow_format(struct fsobstack *o, const char *fmt, ...)
 	return -ENOMEM;
 }
 
+void fsobstack_grow_string(struct fsobstack *o, const char *s)
+{
+	obstack_grow(&o->obstack, s, strlen(s));
+}
+
+void fsobstack_grow_char(struct fsobstack *o, char c)
+{
+	obstack_1grow(&o->obstack, c);
+}
+
 int fsobstack_grow_file(struct fsobstack *o, const char *path)
 {
 	int len = 0;
