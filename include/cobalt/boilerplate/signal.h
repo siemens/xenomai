@@ -20,7 +20,13 @@
 
 #include <cobalt/signal.h>
 
-#define SIGAGENT	(SIGRTMIN + 12) /* Request to remote agent */
+/* Generates reserved signal numbers for Boilerplate/Copperplate. */
+#define __SIGRSVD(n)	(SIGRTMIN + 8 + (n))
+
+#define SIGAGENT	__SIGRSVD(0) /* Request to remote agent */
+
+/* Generates private signal numbers for clients, up to SIGRTMAX. */
+#define __SIGPRIV(n)	__SIGRSVD(8 + (n))
 
 #define SIGSAFE_LOCK_ENTRY(__safelock)					\
   	do {								\

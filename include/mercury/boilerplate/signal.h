@@ -24,11 +24,17 @@
 #define sigev_notify_thread_id	 _sigev_un._tid
 #endif
 
-#define SIGSUSP		(SIGRTMIN + 8)	/* Suspend request */
-#define SIGRESM		(SIGRTMIN + 9)	/* Resume request */
-#define SIGRELS		(SIGRTMIN + 10) /* Syscall abort */
-#define SIGRRB		(SIGRTMIN + 11) /* Round-robin event */
-#define SIGAGENT	(SIGRTMIN + 12) /* Request to remote agent */
+/* Generates reserved signal numbers for Boilerplate/Copperplate. */
+#define __SIGRSVD(n)	(SIGRTMIN + 8 + (n))
+
+#define SIGSUSP		__SIGRSVD(0)	/* Suspend request */
+#define SIGRESM		__SIGRSVD(1)	/* Resume request */
+#define SIGRELS		__SIGRSVD(2)	/* Syscall abort */
+#define SIGRRB		__SIGRSVD(3)	/* Round-robin event */
+#define SIGAGENT	__SIGRSVD(4)	/* Request to remote agent */
+
+/* Generates private signal numbers for clients, up to SIGRTMAX. */
+#define __SIGPRIV(n)	__SIGRSVD(8 + (n))
 
 #define SIGSAFE_LOCK_ENTRY(__safelock)					\
   	do {								\
