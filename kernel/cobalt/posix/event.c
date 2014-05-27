@@ -42,6 +42,7 @@
 #include "thread.h"
 #include "clock.h"
 #include "event.h"
+#include <trace/events/cobalt-posix.h>
 
 struct event_wait_context {
 	struct xnthread_wait_context wc;
@@ -61,6 +62,8 @@ int cobalt_event_init(struct cobalt_event_shadow __user *u_event,
 	unsigned long datoff;
 	struct xnheap *heap;
 	spl_t s;
+
+	trace_cobalt_event_init(u_event, value, flags);
 
 	event = xnmalloc(sizeof(*event));
 	if (event == NULL)
@@ -133,7 +136,9 @@ int cobalt_event_wait(struct cobalt_event_shadow __user *u_event,
 			tmode = XN_ABSOLUTE;
 		} else
 			timeout = XN_NONBLOCK;
-	}
+		trace_cobalt_event_timedwait(u_event, bits, mode, &ts);
+	} else
+		trace_cobalt_event_wait(u_event, bits, mode);
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -267,6 +272,8 @@ int cobalt_event_destroy(struct cobalt_event_shadow __user *u_event)
 	xnhandle_t handle;
 	int ret = 0;
 	spl_t s;
+
+	trace_cobalt_event_destroy(u_event);
 
 	handle = cobalt_get_handle_from_user(&u_event->handle);
 

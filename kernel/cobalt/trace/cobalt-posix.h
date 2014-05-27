@@ -7,6 +7,7 @@
 #include <linux/tracepoint.h>
 #include <xenomai/posix/cond.h>
 #include <xenomai/posix/mqueue.h>
+#include <xenomai/posix/event.h>
 
 #define __timespec_fields(__name)				\
 	__field(__kernel_time_t, tv_sec_##__name)		\
@@ -908,6 +909,104 @@ DEFINE_EVENT(cobalt_posix_mqattr, cobalt_mq_getattr,
 DEFINE_EVENT(cobalt_posix_mqattr, cobalt_mq_setattr,
 	TP_PROTO(mqd_t mqd, const struct mq_attr *attr),
 	TP_ARGS(mqd, attr)
+);
+
+#define cobalt_print_evflags(__flags)			\
+	__print_flags(__flags,  "|",			\
+		      {COBALT_EVENT_SHARED, "shared"},	\
+		      {COBALT_EVENT_PRIO, "prio"})
+
+TRACE_EVENT(cobalt_event_init,
+	TP_PROTO(const struct cobalt_event_shadow __user *u_event,
+		 unsigned long value, int flags),
+	TP_ARGS(u_event, value, flags),
+	TP_STRUCT__entry(
+		__field(const struct cobalt_event_shadow __user *, u_event)
+		__field(unsigned long, value)
+		__field(int, flags)
+	),
+	TP_fast_assign(
+		__entry->u_event = u_event;
+		__entry->value = value;
+		__entry->flags = flags;
+	),
+	TP_printk("event=%p value=%lu flags=%#x(%s)",
+		  __entry->u_event, __entry->value,
+		  __entry->flags, cobalt_print_evflags(__entry->flags))
+);
+
+#define cobalt_print_evmode(__mode)			\
+	__print_symbolic(__mode,			\
+			 {COBALT_EVENT_ANY, "any"},	\
+			 {COBALT_EVENT_ALL, "all"})
+
+TRACE_EVENT(cobalt_event_timedwait,
+	TP_PROTO(const struct cobalt_event_shadow __user *u_event,
+		 unsigned long bits, int mode,
+		 const struct timespec *timeout),
+	TP_ARGS(u_event, bits, mode, timeout),
+	TP_STRUCT__entry(
+		__field(const struct cobalt_event_shadow __user *, u_event)
+		__field(unsigned long, bits)
+		__field(int, mode)
+		__timespec_fields(timeout)
+	),
+	TP_fast_assign(
+		__entry->u_event = u_event;
+		__entry->bits = bits;
+		__entry->mode = mode;
+		__assign_timespec(timeout, timeout);
+	),
+	TP_printk("event=%p bits=%#lx mode=%#x(%s) timeout=(%ld.%09ld)",
+		  __entry->u_event, __entry->bits, __entry->mode,
+		  cobalt_print_evmode(__entry->mode),
+		  __timespec_args(timeout))
+);
+
+TRACE_EVENT(cobalt_event_wait,
+	TP_PROTO(const struct cobalt_event_shadow __user *u_event,
+		 unsigned long bits, int mode),
+	TP_ARGS(u_event, bits, mode),
+	TP_STRUCT__entry(
+		__field(const struct cobalt_event_shadow __user *, u_event)
+		__field(unsigned long, bits)
+		__field(int, mode)
+	),
+	TP_fast_assign(
+		__entry->u_event = u_event;
+		__entry->bits = bits;
+		__entry->mode = mode;
+	),
+	TP_printk("event=%p bits=%#lx mode=%#x(%s)",
+		  __entry->u_event, __entry->bits, __entry->mode,
+		  cobalt_print_evmode(__entry->mode))
+);
+
+DECLARE_EVENT_CLASS(cobalt_event_ident,
+	TP_PROTO(const struct cobalt_event_shadow __user *u_event),
+	TP_ARGS(u_event),
+	TP_STRUCT__entry(
+		__field(const struct cobalt_event_shadow __user *, u_event)
+	),
+	TP_fast_assign(
+		__entry->u_event = u_event;
+	),
+	TP_printk("event=%p", __entry->u_event)
+);
+
+DEFINE_EVENT(cobalt_event_ident, cobalt_event_destroy,
+	TP_PROTO(const struct cobalt_event_shadow __user *u_event),
+	TP_ARGS(u_event)
+);
+
+DEFINE_EVENT(cobalt_event_ident, cobalt_event_sync,
+	TP_PROTO(const struct cobalt_event_shadow __user *u_event),
+	TP_ARGS(u_event)
+);
+
+DEFINE_EVENT(cobalt_event_ident, cobalt_event_inquire,
+	TP_PROTO(const struct cobalt_event_shadow __user *u_event),
+	TP_ARGS(u_event)
 );
 
 #endif /* _TRACE_COBALT_POSIX_H */
