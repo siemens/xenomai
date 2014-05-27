@@ -61,7 +61,7 @@
 #define sc_cobalt_mq_timedsend          37
 /* 38 unimplemented */
 #define sc_cobalt_mq_timedreceive       39
-#define sc_cobalt_thread_probe          40
+/* 40 unimplemented */
 #define sc_cobalt_sched_minprio         41
 #define sc_cobalt_sched_maxprio         42
 #define sc_cobalt_timer_create          43

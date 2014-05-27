@@ -1082,23 +1082,6 @@ int cobalt_thread_set_name_np(unsigned long pth, const char __user *u_name)
 	return 0;
 }
 
-int cobalt_thread_probe_np(pid_t pid)
-{
-	int ret = 0;
-	spl_t s;
-
-	trace_cobalt_pthread_probe(pid);
-
-	xnlock_get_irqsave(&nklock, s);
-
-	if (cobalt_thread_find(pid) == NULL)
-		ret = -ESRCH;
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	return ret;
-}
-
 int cobalt_thread_kill(unsigned long pth, int sig)
 {
 	struct cobalt_local_hkey hkey;
