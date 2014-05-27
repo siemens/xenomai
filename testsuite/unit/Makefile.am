@@ -3,7 +3,6 @@ testdir = @XENO_TEST_DIR@
 CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 
 test_PROGRAMS = 	\
-	wakeup-time 	\
 	rtdm
 
 if XENO_COBALT
@@ -107,21 +106,6 @@ check_vdso_LDADD = 		\
 else
 coredep_lib =
 endif
-
-wakeup_time_SOURCES = wakeup-time.c
-
-wakeup_time_CPPFLAGS =					\
-	@XENO_USER_CFLAGS@				\
-	-I$(top_srcdir)/include
-
-wakeup_time_LDFLAGS =
-
-wakeup_time_LDADD = 				\
-	../../lib/alchemy/libalchemy.la 	\
-	../../lib/copperplate/libcopperplate.la \
-	$(coredep_lib) 				\
-	@XENO_USER_LDADD@			\
-	-lpthread -lrt -lm
 
 rtdm_SOURCES = rtdm.c
 

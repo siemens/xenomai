@@ -79,7 +79,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-test_PROGRAMS = wakeup-time$(EXEEXT) rtdm$(EXEEXT) $(am__EXEEXT_1)
+test_PROGRAMS = rtdm$(EXEEXT) $(am__EXEEXT_1)
 @XENO_COBALT_TRUE@am__append_1 = arith	\
 @XENO_COBALT_TRUE@	mutex-torture 	\
 @XENO_COBALT_TRUE@	cond-torture 	\
@@ -182,13 +182,6 @@ sched_tp_OBJECTS = $(am_sched_tp_OBJECTS)
 sched_tp_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(sched_tp_LDFLAGS) $(LDFLAGS) -o $@
-am_wakeup_time_OBJECTS = wakeup_time-wakeup-time.$(OBJEXT)
-wakeup_time_OBJECTS = $(am_wakeup_time_OBJECTS)
-wakeup_time_DEPENDENCIES = ../../lib/alchemy/libalchemy.la \
-	../../lib/copperplate/libcopperplate.la $(am__DEPENDENCIES_1)
-wakeup_time_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(wakeup_time_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -224,14 +217,12 @@ am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(arith_SOURCES) $(check_vdso_SOURCES) \
 	$(cond_torture_SOURCES) $(mutex_torture_SOURCES) \
-	$(rtdm_SOURCES) $(sched_quota_SOURCES) $(sched_tp_SOURCES) \
-	$(wakeup_time_SOURCES)
+	$(rtdm_SOURCES) $(sched_quota_SOURCES) $(sched_tp_SOURCES)
 DIST_SOURCES = $(am__arith_SOURCES_DIST) \
 	$(am__check_vdso_SOURCES_DIST) \
 	$(am__cond_torture_SOURCES_DIST) \
 	$(am__mutex_torture_SOURCES_DIST) $(rtdm_SOURCES) \
-	$(am__sched_quota_SOURCES_DIST) $(am__sched_tp_SOURCES_DIST) \
-	$(wakeup_time_SOURCES)
+	$(am__sched_quota_SOURCES_DIST) $(am__sched_tp_SOURCES_DIST)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -507,19 +498,6 @@ CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 @XENO_COBALT_TRUE@	@XENO_USER_LDADD@	\
 @XENO_COBALT_TRUE@	-lpthread -lrt -lm
 
-wakeup_time_SOURCES = wakeup-time.c
-wakeup_time_CPPFLAGS = \
-	@XENO_USER_CFLAGS@				\
-	-I$(top_srcdir)/include
-
-wakeup_time_LDFLAGS = 
-wakeup_time_LDADD = \
-	../../lib/alchemy/libalchemy.la 	\
-	../../lib/copperplate/libcopperplate.la \
-	$(coredep_lib) 				\
-	@XENO_USER_LDADD@			\
-	-lpthread -lrt -lm
-
 rtdm_SOURCES = rtdm.c
 rtdm_CPPFLAGS = \
 	@XENO_USER_CFLAGS@				\
@@ -645,10 +623,6 @@ sched-tp$(EXEEXT): $(sched_tp_OBJECTS) $(sched_tp_DEPENDENCIES) $(EXTRA_sched_tp
 	@rm -f sched-tp$(EXEEXT)
 	$(AM_V_CCLD)$(sched_tp_LINK) $(sched_tp_OBJECTS) $(sched_tp_LDADD) $(LIBS)
 
-wakeup-time$(EXEEXT): $(wakeup_time_OBJECTS) $(wakeup_time_DEPENDENCIES) $(EXTRA_wakeup_time_DEPENDENCIES) 
-	@rm -f wakeup-time$(EXEEXT)
-	$(AM_V_CCLD)$(wakeup_time_LINK) $(wakeup_time_OBJECTS) $(wakeup_time_LDADD) $(LIBS)
-
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 
@@ -663,7 +637,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtdm-rtdm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sched_quota-sched-quota.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sched_tp-sched-tp.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wakeup_time-wakeup-time.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -797,20 +770,6 @@ sched_tp-sched-tp.obj: sched-tp.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sched-tp.c' object='sched_tp-sched-tp.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(sched_tp_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o sched_tp-sched-tp.obj `if test -f 'sched-tp.c'; then $(CYGPATH_W) 'sched-tp.c'; else $(CYGPATH_W) '$(srcdir)/sched-tp.c'; fi`
-
-wakeup_time-wakeup-time.o: wakeup-time.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(wakeup_time_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT wakeup_time-wakeup-time.o -MD -MP -MF $(DEPDIR)/wakeup_time-wakeup-time.Tpo -c -o wakeup_time-wakeup-time.o `test -f 'wakeup-time.c' || echo '$(srcdir)/'`wakeup-time.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/wakeup_time-wakeup-time.Tpo $(DEPDIR)/wakeup_time-wakeup-time.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wakeup-time.c' object='wakeup_time-wakeup-time.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(wakeup_time_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o wakeup_time-wakeup-time.o `test -f 'wakeup-time.c' || echo '$(srcdir)/'`wakeup-time.c
-
-wakeup_time-wakeup-time.obj: wakeup-time.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(wakeup_time_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT wakeup_time-wakeup-time.obj -MD -MP -MF $(DEPDIR)/wakeup_time-wakeup-time.Tpo -c -o wakeup_time-wakeup-time.obj `if test -f 'wakeup-time.c'; then $(CYGPATH_W) 'wakeup-time.c'; else $(CYGPATH_W) '$(srcdir)/wakeup-time.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/wakeup_time-wakeup-time.Tpo $(DEPDIR)/wakeup_time-wakeup-time.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wakeup-time.c' object='wakeup_time-wakeup-time.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(wakeup_time_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o wakeup_time-wakeup-time.obj `if test -f 'wakeup-time.c'; then $(CYGPATH_W) 'wakeup-time.c'; else $(CYGPATH_W) '$(srcdir)/wakeup-time.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
