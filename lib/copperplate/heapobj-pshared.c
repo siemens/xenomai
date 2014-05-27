@@ -612,6 +612,19 @@ static int create_main_heap(void)
 
 	len = size + sizeof(*m_heap);
 
+	/*
+	 * Bind to (and optionally create) the main session's heap:
+	 *
+	 * If --reset-session was given, drop any previous heap for
+	 * the same session name.
+	 *
+	 * If the heap already exists, check whether the leading
+	 * process who created it is still alive, in which case we'll
+	 * bind to it, unless the requested size differs.
+	 *
+	 * Otherwise, create the heap for the new emerging session and
+	 * bind to it.
+	 */
 	snprintf(hobj->name, sizeof(hobj->name), "%s.main-heap", session);
 	snprintf(hobj->fsname, sizeof(hobj->fsname), "/xeno:%s", hobj->name);
 
@@ -647,6 +660,8 @@ static int create_main_heap(void)
 		}
 		munmap(m_heap, len);
 	}
+
+	ftruncate(fd, 0);  /* Clear all previous contents if any. */
 
 	ret = ftruncate(fd, len);
 	if (ret)
