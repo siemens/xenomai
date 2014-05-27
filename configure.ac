@@ -909,16 +909,6 @@ if test \! x$XENO_MAYBE_DOCDIR = x ; then
 	doc/Makefile \
 	doc/txt/Makefile \
 	doc/man/Makefile \
-	doc/man/clocktest.man \
-	doc/man/cyclictest.man \
-	doc/man/latency.man \
-	doc/man/rtcanconfig.man \
-	doc/man/rtcanrecv.man \
-	doc/man/rtcansend.man \
-	doc/man/switchbench.man \
-	doc/man/switchtest.man \
-	doc/man/xeno.man \
-	doc/man/xeno-config.man \
 	doc/doxygen/Makefile \
 	doc/doxygen/Doxyfile-common \
 	doc/doxygen/Doxyfile \

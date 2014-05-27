@@ -1,0 +1,37 @@
+// ** The above line should force tbl to be a preprocessor **
+// Man page for xeno
+//
+// Copyright (C) 2010 Roland Stigge <stigge@antcom.de>
+//
+// You may distribute under the terms of the GNU General Public
+// License as specified in the file COPYING that comes with the
+// Xenomai distribution.
+//
+//
+CLOCKTEST(1)
+============
+:doctype: manpage
+:revdate: 2010/14/02
+:man source: Xenomai
+:man version: {xenover}
+:man manual: Xenomai Manual
+
+NAME
+-----
+xeno - Wrapper for Xenomai executables
+
+SYNOPSIS
+---------
+xeno [xenomai command]
+
+DESCRIPTION
+------------
+*xeno*
+is a wrapper script that hides distribution-specific installation
+prefixes when running standard Xenomai commands.
+
+AUTHOR
+-------
+The wrapper script xeno and this manpage were initially written by
+Roland Stigge for the Debian project but may be
+used elsewhere.

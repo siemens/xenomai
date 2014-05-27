@@ -1,0 +1,44 @@
+if !CONFIG_XENO_ASCIIDOC
+$(man1_MANS): %.1: $(MAN_DOCSDIR)/%.1
+	@cp $< $@
+
+CLEANFILES = $(man1_MANS)
+else
+
+ASCIIDOC_HTML_OPTS=-a icons -a iconsdir=../asciidoc-icons \
+	-a linkcss -a stylesdir=../asciidoc-css -a scriptsdir=../asciidoc-js \
+	-a toc -a toclevels=3 -a max-width=55em -a xenover=$(PACKAGE_VERSION)
+
+ASCIIDOC_PDF_OPTS=-a icons -a toc -a toclevels=3 -a xenover=$(PACKAGE_VERSION)
+
+ASCIIDOC_MAN_OPTS=-a xenover=$(PACKAGE_VERSION)
+
+ASCIIDOC_TXT_OPTS=-a xenover=$(PACKAGE_VERSION) -a encoding=ascii
+
+tmpdir=adoc_plaintext
+
+%: %.adoc Makefile
+	@$(mkdir_p) $@
+	$(ASCIIDOC) -n -b xhtml11 $(ASCIIDOC_HTML_OPTS) -o $@/index.html $<
+
+%.1: %.adoc Makefile
+	$(A2X) -f manpage -D . $(ASCIIDOC_MAN_OPTS) $<       
+
+%.pdf: %.adoc Makefile
+	$(A2X) -f pdf -D . $(ASCIIDOC_PDF_OPTS) $<
+
+$(tmpdir)/%.txt: %.adoc Makefile $(top_srcdir)/doc/asciidoc/plaintext.conf $(top_srcdir)/doc/asciidoc/plaintext.xsl
+	@$(mkdir_p) $(tmpdir)
+	$(ASCIIDOC) --backend docbook -f $(top_srcdir)/doc/asciidoc/plaintext.conf \
+		--doctype book $(ASCIIDOC_TXT_OPTS) \
+		--out-file $(tmpdir)/$*.xml $<
+	xsltproc --stringparam toc.section.depth 4 --nonet \
+		--output $(tmpdir)/$*.html $(top_srcdir)/doc/asciidoc/plaintext.xsl \
+		$(tmpdir)/$*.xml
+	w3m -cols 80 -dump -T text/html -no-graph $(tmpdir)/$*.html > $@
+
+%.txt: $(tmpdir)/%.txt Makefile $(top_srcdir)/doc/asciidoc/plaintext_postproc.awk
+	awk -f $(top_srcdir)/doc/asciidoc/plaintext_postproc.awk $(tmpdir)/$*.txt > $@
+endif
+
+include $(top_srcdir)/doc/install-dist.rules

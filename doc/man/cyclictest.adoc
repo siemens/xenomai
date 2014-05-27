@@ -1,0 +1,80 @@
+// ** The above line should force tbl to be a preprocessor **
+// Man page for cyclictest
+//
+// Copyright (C) 2008 Roland Stigge <stigge@antcom.de>
+//
+// You may distribute under the terms of the GNU General Public
+// License as specified in the file COPYING that comes with the
+// Xenomai distribution.
+//
+//
+CYCLICTEST(1)
+=============
+:doctype: manpage
+:revdate: 2008/04/01
+:man source: Xenomai
+:man version: {xenover}
+:man manual: Xenomai Manual
+
+NAME
+-----
+cyclictest - Xenomai high resolution timer test
+
+SYNOPSIS
+---------
+// The general command line
+*cyclictest* [options]
+
+DESCRIPTION
+------------
+*cyclictest* is part of the Xenomai test suite and tests the POSIX skin of Xenomai with a cyclic timer test.
+
+For this program to work, you need to run a suitable Xenomai enabled kernel with the respective module (xeno_posix).
+
+OPTIONS
+--------
+*cyclictest* accepts the following options:
+
+*-b USEC, --breaktrace=USEC*::
+send break trace command when latency > USEC
+
+*-c CLOCK, --clock=CLOCK*::
+select clock:
+0 = CLOCK_MONOTONIC (default)
+1 = CLOCK_REALTIME
+
+*-d DIST, --distance=DIST*::
+distance of thread intervals in us default=500
+
+*-i INTV, --interval=INTV*::
+base interval of thread in us default=1000
+
+*-l LOOPS, --loops=LOOPS*::
+number of loops: default=0 (endless)
+
+*-n, --nanosleep*::
+use clock_nanosleep
+
+*-p PRIO, --prio=PRIO*::
+priority of highest prio thread
+
+*-q, --quiet*::
+print only a summary on exit
+
+*-r, --relative*::
+use relative timer instead of absolute
+
+//.B -s, --system
+//use sys_nanosleep and sys_setitimer
+
+*-t NUM, --threads=NUM*::
+number of threads: default=1
+
+*-v, --verbose*::
+output values on stdout for statistics +
+format: n:c:v n=tasknum c=count v=value in us
+
+AUTHOR
+-------
+*cyclictest* was written by Thomas Gleixner. This man page
+was written by Roland Stigge.

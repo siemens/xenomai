@@ -1,0 +1,53 @@
+// ** The above line should force tbl to be a preprocessor **
+// Man page for clocktest
+//
+// Copyright (C) 2008 Roland Stigge <stigge@antcom.de>
+//
+// You may distribute under the terms of the GNU General Public
+// License as specified in the file COPYING that comes with the
+// Xenomai distribution.
+//
+//
+CLOCKTEST(1)
+============
+:doctype: manpage
+:revdate: 2008/04/01
+:man source: Xenomai
+:man version: {xenover}
+:man manual: Xenomai Manual
+
+NAME
+----
+clocktest - Xenomai Clock Test
+
+SYNOPSIS
+--------
+*clocktest* ['OPTIONS']
+
+DESCRIPTION
+-----------
+*clocktest* is part of the Xenomai test suite and tests the Clock. For each
+CPU, it repeatedly prints a time offset (compared to the reference
+gettimeofday()), a drift value, the number of warps and the maximum warp in
+microseconds.
+
+For this program to work, you need to run a suitable Xenomai enabled kernel
+with the respective module (xeno_posix).
+
+OPTIONS
+-------
+*-C <clock_id>*::
+	clock to be tested, default=0 (CLOCK_REALTIME=0, CLOCK_MONOTONIC=1, 
+CLOCK_HOST_REALTIME=42)
+
+*-T <test_duration_seconds>*::
+	default=0 (Never stop, ^C to end)
+
+*-D*::
+	print extra diagnostics for CLOCK_HOST_REALTIME
+
+AUTHOR
+------
+*clocktest* was written by Jan Kiszka. This man page
+was written by Roland Stigge.
+

@@ -1,0 +1,47 @@
+XENO-TEST(1)
+============
+:doctype: manpage
+:revdata: 2013/08/25
+:man source: Xenomai
+:man version: {xenover}
+:man manual: Xenomai Manual
+
+NAME
+-----
+xeno-test - Run latency test under load
+
+SYNOPSIS
+---------
+*xeno-test* [ -l loadscript ] [ latency options ]
+
+DESCRIPTION
+------------
+
+*xeno-test* runs a series of test finishing with the latency test run
+with a user script to generate load, in order to measure the best case
+and worst case latencies. The default command used to generate load is
+"dohell 900".
+
+OPTIONS
+--------
+*xeno-test* accepts the following options:
+
+*-l <loadscript>*::
+run <loadscript> while running latency, in order to measure latency
+under load, the link:../dohell/index.html[dohell(1)] script is provided for
+this purpose, see its link:../dohell/index.html[manual page] for more details.
+
+*other options*::
+are passed to the latency test, see link:../latency/index.html[latency(1)] 
+for the list of supported options.
+
+SEE ALSO
+--------
+
+*link:../dohell/index.html[dohell(1)], link:../latency/index.html[latency(1)]*.
+
+EXAMPLE
+--------
+--------------------------------------------------------------------------------
+xeno-test -l "dohell -s 192.168.0.5 -m /mnt -l /ltp" -p 100 -g histo
+--------------------------------------------------------------------------------

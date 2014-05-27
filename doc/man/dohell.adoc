@@ -1,0 +1,55 @@
+DOHELL(1)
+=========
+:doctype: manpage
+:revdata: 2013/08/25
+:man source: Xenomai
+:man version: {xenover}
+:man manual: Xenomai Manual
+
+NAME
+-----
+dohell - Generate load, in parallel of the latency test
+
+SYNOPSIS
+---------
+*dohell* [ -b <path> ] [ -s <server> ] [ -p <port> ] [ -m <path> ] [ -l <path> | <duration> ]
+
+DESCRIPTION
+------------
+
+*dohell* generates some load, using commonly available commands, in parallel 
+of the link:../latency/index.html[latency(1)] test or as part of 
+link:../xeno-test/index.html[xeno-test(1)]. 
+
+OPTIONS
+--------
+
+*dohell* accepts the following options: 
+
+*-b*:: runs the hackbench test repetitively during the run-time of the
+*dohell* script;
+
+*-s*:: run nc to continuously send data to a server through network;
+
+*-p*:: if *-s* is used, specificy the port to which to send data, if
+  not specified, port 9 (aka discard) is used;
+
+*-m <path>*:: run dd to write data to the *<path>* directory;
+
+*-l <path>*:: mutually exclusive with *<duration>*; the dohell script runs 
+during two runs of the LTP script *runalltests.sh* found in the *<path>* 
+directory;
+
+*<duration>*:: mutually exclusive with *-l*; run dohell for the given duration 
+in seconds.
+
+SEE ALSO
+--------
+
+*link:../xeno-test/index.html[xeno-test(1)], link:../latency/index.html[latency(1)]*.
+
+EXAMPLE
+--------
+--------------------------------------------------------------------------------
+dohell -s 192.168.0.5 -m /mnt -l /ltp
+--------------------------------------------------------------------------------

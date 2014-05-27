@@ -1,0 +1,103 @@
+// ** The above line should force tbl to be a preprocessor **
+// Man page for switchtest
+//
+// Copyright (C) 2008 Roland Stigge <stigge@antcom.de>
+//
+// You may distribute under the terms of the GNU General Public
+// License as specified in the file COPYING that comes with the
+// Xenomai distribution.
+//
+//
+SWITCHTEST(1)
+=============
+:doctype: manpage
+:revdate: 2008/04/19
+:man source: Xenomai
+:man version: {xenover}
+:man manual: Xenomai Manual
+
+NAME
+-----
+switchtest - Xenomai context switch test
+
+SYNOPSIS
+---------
+// The general command line
+*switchtest* [options] threadspec threadspec...
+
+DESCRIPTION
+------------
+*switchtest* is part of Xenomai. It can be used to test thread context
+switches. *switchtest* creates threads of various types and attempts to
+switch context between these threads, printing the count of context switches
+every second. A suitable Xenomai enabled kernel with the respective module
+(xeno_posix) must be installed.
+
+OPTIONS
+--------
+Each threadspec specifies the characteristics of a thread to be created:
+
+threadspec = (rtk|rtup|rtus|rtuo)(_fp|_ufpp|_ufps)\*[0-9]*
+
+*rtk*::
+for a kernel-space real-time thread
+
+*rtup*::
+for a user-space real-time thread running in primary mode
+
+*rtus*::
+for a user-space real-time thread running in secondary mode
+
+*rtuo*::
+for a user-space real-time thread oscillating between primary and secondary mode
+
+*_fp*::
+means that the created thread will have the XNFPU bit armed (only valid for rtk)
+
+*_ufpp*::
+means that the created thread will use the FPU when in primary mode (invalid for rtus)
+
+*_ufps*::
+means that the created thread will use the FPU when in secondary mode (invalid for rtk and rtup)
+
+*[0-9]*::
+specifies the ID of the CPU where the created thread will run, 0 if unspecified
+
+Passing no
+*threadspec*
+is equivalent to running:
+
+switchtest rtkN rtkN rtk_fpN rtk_fpN rtk_fp_ufppN rtk_fp_ufppN rtupN rtupN rtup_ufppN
+rtup_ufppN rtusN rtusN rtus_ufpsN rtus_ufpsN rtuoN rtuoN rtuo_ufppN rtuo_ufppN rtuo_ufpsN
+rtuo_ufpsN rtuo_ufpp_ufpsN rtuo_ufpp_ufpsN
+
+with N=1,...,nr_cpus, i.e. occurrences of all the arguments for each CPU
+
+Passing only the --nofpu or -n argument is equivalent to running:
+
+switchtest rtkN rtkN rtupN rtupN rtusN rtusN rtuoN rtuoN
+
+similar to the above.
+
+*switchtest* accepts the following options:
+
+*--help, -h*::
+print usage information and exit
+
+*--lines <lines>, -l <lines>*::
+print headers every <lines> lines
+
+*--quiet or -q*::
+prevent this program from printing every second the count of ncontext switches
+
+*--timeout <duration>, -T <duration>*::
+limit the test duration to <duration> seconds
+
+*--nofpu, -n*::
+disables any use of FPU instructions
+
+AUTHOR
+-------
+*switchtest* was written by Philippe Gerum and Gilles
+Chanteperdrix. This man page was written by
+Roland Stigge.
