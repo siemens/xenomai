@@ -155,8 +155,6 @@ int pthread_set_name_np(pthread_t thread,
 
 COBALT_DECL(int, pthread_setname_np(pthread_t thread, const char *name));
 
-int pthread_probe_np(pid_t ptid);
-
 int pthread_create_ex(pthread_t *ptid_r,
 		      const pthread_attr_ex_t *attr_ex,
 		      void *(*start)(void *),

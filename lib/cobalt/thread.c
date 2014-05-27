@@ -440,12 +440,6 @@ COBALT_IMPL(int, pthread_setname_np, (pthread_t thread, const char *name))
 				  sc_cobalt_thread_set_name, thread, name);
 }
 
-int pthread_probe_np(pid_t tid)
-{
-	return XENOMAI_SKINCALL1(__cobalt_muxid,
-				 sc_cobalt_thread_probe, tid);
-}
-
 int sched_setconfig_np(int cpu, int policy,
 		       const union sched_config *config, size_t len)
 {
