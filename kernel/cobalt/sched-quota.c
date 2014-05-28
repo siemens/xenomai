@@ -596,7 +596,7 @@ xnsched_quota_find_group(struct xnsched *sched, int tgid)
 			return tg;
 	}
 
-	return tg;
+	return NULL;
 }
 EXPORT_SYMBOL_GPL(xnsched_quota_find_group);
 
