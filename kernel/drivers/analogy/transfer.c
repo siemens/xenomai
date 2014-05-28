@@ -209,13 +209,16 @@ unsigned int a4l_get_irq(a4l_dev_t * dev)
 
 #ifdef CONFIG_PROC_FS
 
-int a4l_rdproc_transfer(struct seq_file *p, void *data)
+int a4l_rdproc_transfer(struct seq_file *seq, void *v)
 {
+	a4l_trf_t *transfer = (a4l_trf_t *) seq->private;
 	int i;
-	a4l_trf_t *transfer = (a4l_trf_t *) data;
 
-	seq_printf(p, "--  Subdevices --\n\n");
-	seq_printf(p, "| idx | type\n");
+	if (v != SEQ_START_TOKEN)
+		return -EINVAL;
+
+	seq_printf(seq, "--  Subdevices --\n\n");
+	seq_printf(seq, "| idx | type\n");
 
 	/* Gives the subdevice type's name */
 	for (i = 0; i < transfer->nb_subd; i++) {
@@ -261,7 +264,7 @@ int a4l_rdproc_transfer(struct seq_file *p, void *data)
 			type = "Unknown subdevice";
 		}
 
-		seq_printf(p, "|  %02d | %s\n", i, type);
+		seq_printf(seq, "|  %02d | %s\n", i, type);
 	}
 
 	return 0;
