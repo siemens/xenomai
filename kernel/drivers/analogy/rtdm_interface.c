@@ -28,24 +28,24 @@
 #include <rtdm/driver.h>
 #include <rtdm/analogy/device.h>
 
-int (*a4l_ioctl_functions[]) (a4l_cxt_t *, void *) = {
-	a4l_ioctl_devcfg,
-	a4l_ioctl_devinfo,
-	a4l_ioctl_subdinfo,
-	a4l_ioctl_chaninfo,
-	a4l_ioctl_rnginfo,
-	a4l_ioctl_cmd,
-	a4l_ioctl_cancel,
-	a4l_ioctl_insnlist,
-	a4l_ioctl_insn,
-	a4l_ioctl_bufcfg,
-	a4l_ioctl_bufinfo,
-	a4l_ioctl_poll,
-	a4l_ioctl_mmap,
-	a4l_ioctl_nbchaninfo,
-	a4l_ioctl_nbrnginfo,
-	a4l_ioctl_bufcfg2,
-	a4l_ioctl_bufinfo2
+int (* const a4l_ioctl_functions[]) (a4l_cxt_t *, void *) = {
+	[_IOC_NR(A4L_DEVCFG)] = a4l_ioctl_devcfg,
+	[_IOC_NR(A4L_DEVINFO)] = a4l_ioctl_devinfo,
+	[_IOC_NR(A4L_SUBDINFO)] = a4l_ioctl_subdinfo,
+	[_IOC_NR(A4L_CHANINFO)] = a4l_ioctl_chaninfo,
+	[_IOC_NR(A4L_RNGINFO)] = a4l_ioctl_rnginfo,
+	[_IOC_NR(A4L_CMD)] = a4l_ioctl_cmd,
+	[_IOC_NR(A4L_CANCEL)] = a4l_ioctl_cancel,
+	[_IOC_NR(A4L_INSNLIST)] = a4l_ioctl_insnlist,
+	[_IOC_NR(A4L_INSN)] = a4l_ioctl_insn,
+	[_IOC_NR(A4L_BUFCFG)] = a4l_ioctl_bufcfg,
+	[_IOC_NR(A4L_BUFINFO)] = a4l_ioctl_bufinfo,
+	[_IOC_NR(A4L_POLL)] = a4l_ioctl_poll,
+	[_IOC_NR(A4L_MMAP)] = a4l_ioctl_mmap,
+	[_IOC_NR(A4L_NBCHANINFO)] = a4l_ioctl_nbchaninfo,
+	[_IOC_NR(A4L_NBRNGINFO)] = a4l_ioctl_nbrnginfo,
+	[_IOC_NR(A4L_BUFCFG2)] = a4l_ioctl_bufcfg2,
+	[_IOC_NR(A4L_BUFINFO2)] = a4l_ioctl_bufinfo2
 };
 
 #ifdef CONFIG_PROC_FS
