@@ -1619,15 +1619,15 @@ static void *user_process_attach(void)
 
 static struct xnsyscall user_syscalls[] = {
 	SKINCALL_DEF(sc_nucleus_migrate, xnshadow_sys_migrate, current),
-	SKINCALL_DEF(sc_nucleus_arch, xnarch_local_syscall, any),
+	SKINCALL_DEF(sc_nucleus_arch, xnarch_local_syscall, current),
 	SKINCALL_DEF(sc_nucleus_bind, xnshadow_sys_bind, lostage),
 	SKINCALL_DEF(sc_nucleus_info, xnshadow_sys_info, lostage),
-	SKINCALL_DEF(sc_nucleus_trace, xnshadow_sys_trace, any),
+	SKINCALL_DEF(sc_nucleus_trace, xnshadow_sys_trace, current),
 	SKINCALL_DEF(sc_nucleus_heap_info, xnshadow_sys_heap_info, lostage),
-	SKINCALL_DEF(sc_nucleus_current, xnshadow_sys_current, any),
+	SKINCALL_DEF(sc_nucleus_current, xnshadow_sys_current, current),
 	SKINCALL_DEF(sc_nucleus_mayday, xnshadow_sys_mayday, oneway),
 	SKINCALL_DEF(sc_nucleus_backtrace, xnshadow_sys_backtrace, current),
-	SKINCALL_DEF(sc_nucleus_serialdbg, xnshadow_sys_serialdbg, any),
+	SKINCALL_DEF(sc_nucleus_serialdbg, xnshadow_sys_serialdbg, current),
 };
 
 static struct xnpersonality user_personality = {
@@ -1935,12 +1935,14 @@ restart:
 	 * opposite domain.
 	 */
 	if (sysflags & __xn_exec_lostage) {
-		/* Syscall must run into the Linux domain. */
+		/*
+		 * The syscall must run from the Linux domain.
+		 */
 		if (ipd == &xnsched_realtime_domain) {
 			/*
 			 * Request originates from the Xenomai domain:
-			 * just relax the caller and execute the
-			 * syscall immediately after.
+			 * relax the caller then invoke the syscall
+			 * handler right after.
 			 */
 			xnshadow_relax(1, SIGDEBUG_MIGRATE_SYSCALL);
 			switched = 1;
@@ -1954,22 +1956,15 @@ restart:
 			return EVENT_PROPAGATE;
 	} else if (sysflags & (__xn_exec_histage | __xn_exec_current)) {
 		/*
-		 * Syscall must be processed either by Xenomai, or by
-		 * the calling domain.
+		 * Syscall must run either from the Xenomai domain, or
+		 * from the calling domain.
+		 *
+		 * If the request originates from the Linux domain,
+		 * hand it over to our secondary-mode dispatcher.
+		 * Otherwise, invoke the syscall handler immediately.
 		 */
 		if (ipd != &xnsched_realtime_domain)
-			/*
-			 * Request originates from the Linux domain:
-			 * propagate the event to our Linux-based
-			 * handler, so that the caller is hardened and
-			 * the syscall is eventually executed from
-			 * there.
-			 */
 			return EVENT_PROPAGATE;
-		/*
-		 * Request originates from the Xenomai domain: run the
-		 * syscall immediately.
-		 */
 	}
 
 	ret = sc->svc(__xn_reg_arglist(regs));

@@ -42,7 +42,7 @@ struct xnsyscall {
 #define __xn_exec_lostage    0x1
 /* Syscall must run into the Xenomai domain. */
 #define __xn_exec_histage    0x2
-/* Shadow syscall; caller must be mapped. */
+/* Shadow syscall: caller must be mapped. */
 #define __xn_exec_shadow     0x4
 /* Switch back toggle; caller must return to its original mode. */
 #define __xn_exec_switchback 0x8
@@ -54,8 +54,6 @@ struct xnsyscall {
 #define __xn_exec_adaptive   0x40
 /* Do not restart syscall upon signal receipt. */
 #define __xn_exec_norestart  0x80
-/* Context-agnostic syscall. Will actually run in Xenomai domain. */
-#define __xn_exec_any        0x0
 /* Shorthand for shadow init syscall. */
 #define __xn_exec_init       __xn_exec_lostage
 /* Shorthand for shadow syscall in Xenomai space. */
@@ -69,7 +67,7 @@ struct xnsyscall {
 /* Shorthand for domain probing syscall */
 #define __xn_exec_probing   (__xn_exec_current|__xn_exec_adaptive)
 /* Shorthand for oneway trap - does not return to call site. */
-#define __xn_exec_oneway    (__xn_exec_any|__xn_exec_norestart)
+#define __xn_exec_oneway    __xn_exec_norestart
 
 	unsigned long flags;
 };
