@@ -29,6 +29,10 @@
 #include <xeno_config.h>
 #include <rtdm/analogy.h>
 
+#define RTDM_DEVICES_PROC "/proc/xenomai/rtdm/named_devices"
+#define ANALOGY_DRIVERS_PROC "/proc/analogy/drivers"
+#define ANALOGY_DEVICES_PROC "/proc/analogy/devices"
+
 #define __OPTS_DELIMITER ","
 
 enum actions {
@@ -207,8 +211,9 @@ int main(int argc, char *argv[])
 	    !(actions & DO_BUFCONFIG) && argc - optind < 2) {
 		do_print_usage();
 		goto out_a4l_config;
-	} else if (!(actions & DO_DETACH) && argc - optind >= 2)
+	} else if (!(actions & DO_DETACH) && argc - optind >= 2) {
 		actions |= DO_ATTACH;
+	}
 
 	/* Whatever the action, we need to retrieve the device path */
 	devfile = argv[optind];
@@ -219,23 +224,23 @@ int main(int argc, char *argv[])
 	if (fd < 0) {
 		err = fd;
 		fprintf(stderr,
-			"analogy_config: a4l_open failed err=%d\n", err);
+			"analogy_config: a4l_open(%s) failed err=%d\n", devfile,
+			err);
 		goto out_a4l_config;
 	}
 
 	if (actions & DO_DETACH) {
-
 		err = a4l_sys_detach(fd);
 		if (err < 0)
 			fprintf(stderr,
-				"analogy_config: detach failed err=%d\n", err);
+				"analogy_config: a4l_detach(%s) failed err=%d\n",
+				devfile, err);
 		goto out_a4l_config;
 	}
 
 	if (actions & DO_ATTACH) {
 
 		a4l_lnkdesc_t lnkdsc;
-
 		memset(&lnkdsc, 0, sizeof(a4l_lnkdesc_t));
 
 		/* Fill the descriptor with the driver name */
@@ -244,17 +249,17 @@ int main(int argc, char *argv[])
 
 		/* Process driver-specific options */
 		if (argc - optind == 3) {
-
 			err = process_extra_arg(&lnkdsc, argv[optind + 2]);
 			if (err < 0)
 				goto out_a4l_config;
 		}
 
-		/* Go... */
+		/* Go...*/
 		err = a4l_sys_attach(fd, &lnkdsc);
 		if (err < 0) {
 			fprintf(stderr,
-				"analogy_config: attach failed err=%d\n", err);
+				"analogy_config: a4l_attach(%s) failed err=%d\n",
+				lnkdsc.bname, err);
 			goto out_a4l_config;
 		}
 
@@ -267,13 +272,23 @@ int main(int argc, char *argv[])
 		err = a4l_sys_bufcfg(fd, A4L_BUF_DEFMAGIC, bufsize);
 		if (err < 0) {
 			fprintf(stderr,
-				"analogy_config: bufffer configuraiton failed "
-				"(err=%d)\n", err);
+				"analogy_config: a4l_bufcfg(%s) configuration failed "
+				"err=%d\n", devfile, err);
 			goto out_a4l_config;
 		}
 	}
 
 out_a4l_config:
+        if (err < 0) {
+		fprintf(stderr,
+			"analogy_config: please chek the rtdm and analogy procs \n"
+			" - rtdm devices:    %s \n"
+			" - analogy devices: %s \n"
+			" - analogy drivers: %s \n",
+			RTDM_DEVICES_PROC,
+			ANALOGY_DEVICES_PROC,
+			ANALOGY_DRIVERS_PROC);
+	}
 
 	if (fd >= 0)
 		a4l_sys_close(fd);
