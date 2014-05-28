@@ -154,12 +154,14 @@ static void __create_fifo_thread(pthread_t *tid, const char *name,
 static double run_quota(int quota)
 {
 	size_t len = sched_quota_confsz();
+	int ret, tgid, n, quota_sum;
 	unsigned long long count;
 	union sched_config cf;
 	struct timespec req;
-	int ret, tgid, n;
 	double percent;
 	char label[8];
+
+	cf.quota.sum_r = &quota_sum;
 
 	cf.quota.op = sched_quota_add;
 	cf.quota.add.tgid_r = &tgid;
@@ -175,7 +177,8 @@ static double run_quota(int quota)
 	if (ret)
 		error(1, ret, "sched_setconfig_np(set-quota, tgid=%d)", tgid);
 
-	printf("new thread group #%d on CPU0\n", tgid);
+	printf("new thread group #%d on CPU0, quota sum is %d%%\n",
+	       tgid, quota_sum);
 
 	for (n = 0; n < nrthreads; n++) {
 		sprintf(label, "t%d", n);

@@ -1453,10 +1453,10 @@ get_tp_config(int cpu, union sched_config __user *u_config,
 #ifdef CONFIG_XENO_OPT_SCHED_QUOTA
 
 static inline
-int set_quota_config(int cpu, const union sched_config *config, size_t len)
+int do_quota_config(int cpu, const union sched_config *config, size_t len)
 {
+	int ret = -ESRCH, quota_percent, quota_peak_percent, quota_sum;
 	const struct __sched_config_quota *p = &config->quota;
-	int ret = -ESRCH, quota_percent, quota_peak_percent;
 	struct xnsched_quota_group *tg;
 	struct xnsched *sched;
 	spl_t s;
@@ -1470,13 +1470,17 @@ int set_quota_config(int cpu, const union sched_config *config, size_t len)
 			return -ENOMEM;
 		xnlock_get_irqsave(&nklock, s);
 		sched = xnsched_struct(cpu);
-		ret = xnsched_quota_create_group(tg, sched);
+		ret = xnsched_quota_create_group(tg, sched, &quota_sum);
 		xnlock_put_irqrestore(&nklock, s);
-		if (ret == 0)
-			ret = __xn_safe_copy_to_user(p->add.tgid_r, &tg->tgid,
-						     sizeof(tg->tgid));
 		if (ret)
 			xnfree(tg);
+		else {
+			ret = __xn_safe_copy_to_user(p->add.tgid_r, &tg->tgid,
+						     sizeof(tg->tgid));
+			if (ret == 0 && p->sum_r)
+				ret = __xn_safe_copy_to_user(p->sum_r, &quota_sum,
+							     sizeof(quota_sum));
+		}
 		return ret;
 	}
 
@@ -1485,10 +1489,14 @@ int set_quota_config(int cpu, const union sched_config *config, size_t len)
 		sched = xnsched_struct(cpu);
 		tg = xnsched_quota_find_group(sched, p->remove.tgid);
 		if (tg) {
-			ret = xnsched_quota_destroy_group(tg);
+			ret = xnsched_quota_destroy_group(tg, &quota_sum);
 			xnlock_put_irqrestore(&nklock, s);
-			if (ret == 0)
+			if (ret == 0) {
 				xnfree(tg);
+				if (p->sum_r)
+					ret = __xn_safe_copy_to_user(p->sum_r, &quota_sum,
+								     sizeof(quota_sum));
+			}
 			return ret;
 		}
 		xnlock_put_irqrestore(&nklock, s);
@@ -1502,10 +1510,14 @@ int set_quota_config(int cpu, const union sched_config *config, size_t len)
 		if (tg) {
 			xnsched_quota_set_limit(tg,
 						p->set.quota,
-						p->set.quota_peak);
+						p->set.quota_peak,
+						&quota_sum);
 			ret = 0;
 		}
 		xnlock_put_irqrestore(&nklock, s);
+		if (ret == 0 && p->sum_r)
+			ret = __xn_safe_copy_to_user(p->sum_r, &quota_sum,
+						     sizeof(quota_sum));
 		return ret;
 	}
 
@@ -1516,6 +1528,7 @@ int set_quota_config(int cpu, const union sched_config *config, size_t len)
 		if (tg) {
 			quota_percent = tg->quota_percent;
 			quota_peak_percent = tg->quota_peak_percent;
+			quota_sum = xnsched_quota_sum_all(sched);
 			ret = 0;
 		}
 		xnlock_put_irqrestore(&nklock, s);
@@ -1528,6 +1541,9 @@ int set_quota_config(int cpu, const union sched_config *config, size_t len)
 		ret = __xn_safe_copy_to_user(p->get.quota_peak_r,
 					     &quota_peak_percent,
 					     sizeof(quota_peak_percent));
+		if (ret == 0 && p->sum_r)
+			ret = __xn_safe_copy_to_user(p->sum_r, &quota_sum,
+						     sizeof(quota_sum));
 		return ret;
 	}
 
@@ -1545,13 +1561,13 @@ ssize_t get_quota_config(int cpu, union sched_config __user *u_config,
 
 	buf.quota.op = sched_quota_get;
 
-	return set_quota_config(cpu, &buf, len);
+	return do_quota_config(cpu, &buf, len);
 }
 
 #else /* !CONFIG_XENO_OPT_SCHED_QUOTA */
 
 static inline
-int set_quota_config(int cpu, const union sched_config *config, size_t len)
+int do_quota_config(int cpu, const union sched_config *config, size_t len)
 {
 	return -EINVAL;
 }
@@ -1677,7 +1693,7 @@ int cobalt_sched_setconfig_np(int cpu, int policy,
 		ret = set_tp_config(cpu, buf, len);
 		break;
 	case SCHED_QUOTA:
-		ret = set_quota_config(cpu, buf, len);
+		ret = do_quota_config(cpu, buf, len);
 		break;
 	default:
 		ret = -EINVAL;

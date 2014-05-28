@@ -215,6 +215,21 @@ static void quota_limit_handler(struct xntimer *timer)
 	xnsched_set_self_resched(sched);
 }
 
+static int quota_sum_all(struct xnsched_quota *qs)
+{
+	struct xnsched_quota_group *tg;
+	int sum;
+
+	if (list_empty(&qs->groups))
+		return 0;
+
+	sum = 0;
+	list_for_each_entry(tg, &qs->groups, next)
+		sum += tg->quota_percent;
+
+	return sum;
+}
+
 static void xnsched_quota_init(struct xnsched *sched)
 {
 	char limiter_name[XNOBJECT_NAME_LEN], refiller_name[XNOBJECT_NAME_LEN];
@@ -469,7 +484,8 @@ static void xnsched_quota_migrate(struct xnthread *thread, struct xnsched *sched
 }
 
 int xnsched_quota_create_group(struct xnsched_quota_group *tg,
-			       struct xnsched *sched)
+			       struct xnsched *sched,
+			       int *quota_sum_r)
 {
 	int tgid, nr_groups = CONFIG_XENO_OPT_SCHED_QUOTA_NR_GROUPS;
 	struct xnsched_quota *qs = &sched->quota;
@@ -498,12 +514,14 @@ int xnsched_quota_create_group(struct xnsched_quota_group *tg,
 			      qs->period_ns, qs->period_ns, XN_RELATIVE);
 
 	list_add(&tg->next, &qs->groups);
+	*quota_sum_r = quota_sum_all(qs);
 
 	return 0;
 }
 EXPORT_SYMBOL_GPL(xnsched_quota_create_group);
 
-int xnsched_quota_destroy_group(struct xnsched_quota_group *tg)
+int xnsched_quota_destroy_group(struct xnsched_quota_group *tg,
+				int *quota_sum_r)
 {
 	struct xnsched_quota *qs = &tg->sched->quota;
 
@@ -518,39 +536,41 @@ int xnsched_quota_destroy_group(struct xnsched_quota_group *tg)
 	if (list_empty(&qs->groups))
 		xntimer_stop(&qs->refill_timer);
 
+	*quota_sum_r = quota_sum_all(qs);
+
 	return 0;
 }
 EXPORT_SYMBOL_GPL(xnsched_quota_destroy_group);
 
 void xnsched_quota_set_limit(struct xnsched_quota_group *tg,
-			     int quota_percent, int quota_peak_percent)
+			     int quota_percent, int quota_peak_percent,
+			     int *quota_sum_r)
 {
 	struct xnsched_quota *qs = &tg->sched->quota;
 
 	atomic_only();
 
-	if (quota_percent < 0) { /* Quota off. */
-		tg->quota_percent = 100;
-		tg->quota_peak_percent = 100;
-		tg->quota_ns = qs->period_ns;
-		tg->quota_peak_ns = qs->period_ns;
-		tg->run_budget_ns = qs->period_ns;
-		return;
-	}
-
-	if (quota_percent > 100)
+	if (quota_percent < 0 || quota_percent > 100) { /* Quota off. */
 		quota_percent = 100;
-	if (quota_peak_percent > 100)
-		quota_peak_percent = 100;
+		tg->quota_ns = qs->period_ns;
+	} else
+		tg->quota_ns = xnarch_div64(qs->period_ns * quota_percent, 100);
+
 	if (quota_peak_percent < quota_percent)
 		quota_peak_percent = quota_percent;
 
+	if (quota_peak_percent < 0 || quota_peak_percent > 100) {
+		quota_peak_percent = 100;
+		tg->quota_peak_ns = qs->period_ns;
+	} else
+		tg->quota_peak_ns = xnarch_div64(qs->period_ns * quota_peak_percent, 100);
+
 	tg->quota_percent = quota_percent;
 	tg->quota_peak_percent = quota_peak_percent;
-	tg->quota_ns = xnarch_div64(qs->period_ns * quota_percent, 100);
-	tg->quota_peak_ns = xnarch_div64(qs->period_ns * quota_peak_percent, 100);
 	tg->run_budget_ns = tg->quota_ns;
 	tg->run_credit_ns = 0;	/* Drop accumulated credit. */
+
+	*quota_sum_r = quota_sum_all(qs);
 
 	/*
 	 * Apply the new budget immediately, in case a member of this
@@ -579,6 +599,16 @@ xnsched_quota_find_group(struct xnsched *sched, int tgid)
 	return tg;
 }
 EXPORT_SYMBOL_GPL(xnsched_quota_find_group);
+
+int xnsched_quota_sum_all(struct xnsched *sched)
+{
+	struct xnsched_quota *qs = &sched->quota;
+
+	atomic_only();
+
+	return quota_sum_all(qs);
+}
+EXPORT_SYMBOL_GPL(xnsched_quota_sum_all);
 
 #ifdef CONFIG_XENO_OPT_VFILE
 

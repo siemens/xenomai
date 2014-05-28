@@ -66,15 +66,20 @@ static inline int xnsched_quota_init_thread(struct xnthread *thread)
 }
 
 int xnsched_quota_create_group(struct xnsched_quota_group *tg,
-			       struct xnsched *sched);
+			       struct xnsched *sched,
+			       int *quota_sum_r);
 
-int xnsched_quota_destroy_group(struct xnsched_quota_group *tg);
+int xnsched_quota_destroy_group(struct xnsched_quota_group *tg,
+				int *quota_sum_r);
 
 void xnsched_quota_set_limit(struct xnsched_quota_group *tg,
-			     int quota_percent, int quota_peak_percent);
+			     int quota_percent, int quota_peak_percent,
+			     int *quota_sum_r);
 
 struct xnsched_quota_group *
 xnsched_quota_find_group(struct xnsched *sched, int tgid);
+
+int xnsched_quota_sum_all(struct xnsched *sched);
 
 #endif /* !CONFIG_XENO_OPT_SCHED_QUOTA */
 
