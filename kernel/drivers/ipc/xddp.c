@@ -78,7 +78,7 @@ static char *__xddp_link_target(void *obj)
 {
 	struct xddp_socket *sk = obj;
 
-	return kasformat("%d", sk->minor);
+	return kasformat("/dev/rtp%d", sk->minor);
 }
 
 extern struct xnptree rtipc_ptree;
