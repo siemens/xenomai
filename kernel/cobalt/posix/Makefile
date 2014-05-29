@@ -11,6 +11,7 @@ posix-y :=		\
 	mutex.o		\
 	mutex_attr.o	\
 	nsem.o		\
+	sched.o		\
 	sem.o		\
 	select.o	\
 	signal.o	\

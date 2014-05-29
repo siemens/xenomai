@@ -30,6 +30,7 @@
 #include <rtdm/fd.h>
 #include "internal.h"
 #include "thread.h"
+#include "sched.h"
 #include "mutex.h"
 #include "cond.h"
 #include "mqueue.h"
