@@ -300,6 +300,8 @@ ssize_t xnbufd_copy_to_kmem(void *to, struct xnbufd *bufd, size_t len)
 {
 	caddr_t from;
 
+	thread_only();
+
 	if (len == 0)
 		goto out;
 
@@ -328,7 +330,7 @@ ssize_t xnbufd_copy_to_kmem(void *to, struct xnbufd *bufd, size_t len)
 	 * here, since the source buffer would live in kernel space in
 	 * such a case.
 	 */
-	if (!xnsched_interrupt_p() && current->mm == bufd->b_mm) {
+	if (current->mm == bufd->b_mm) {
 		preemptible_only();
 		if (__xn_safe_copy_from_user(to, (void __user *)from, len))
 			return -EFAULT;
@@ -341,7 +343,6 @@ ssize_t xnbufd_copy_to_kmem(void *to, struct xnbufd *bufd, size_t len)
 
 advance_offset:
 	bufd->b_off += len;
-
 out:
 	return (ssize_t)bufd->b_off;
 }
@@ -407,6 +408,8 @@ ssize_t xnbufd_copy_from_kmem(struct xnbufd *bufd, void *from, size_t len)
 {
 	caddr_t to;
 
+	thread_only();
+
 	if (len == 0)
 		goto out;
 
@@ -433,7 +436,7 @@ ssize_t xnbufd_copy_from_kmem(struct xnbufd *bufd, void *from, size_t len)
 	 * here: feeding a RT activity with data from a non-RT context
 	 * is wrong in the first place, so never mind.
 	 */
-	if (!xnsched_interrupt_p() && current->mm == bufd->b_mm) {
+	if (current->mm == bufd->b_mm) {
 		preemptible_only();
 		if (__xn_safe_copy_to_user((void __user *)to, from, len))
 			return -EFAULT;
@@ -468,7 +471,6 @@ direct_copy:
 
 advance_offset:
 	bufd->b_off += len;
-
 out:
 	return (ssize_t)bufd->b_off;
 }

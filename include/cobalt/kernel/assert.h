@@ -87,6 +87,7 @@
 #define atomic_only()		XENO_BUGON(CONTEXT, (xnlock_is_owner(&nklock) && hard_irqs_disabled()) == 0)
 #define preemptible_only()	XENO_BUGON(CONTEXT, xnlock_is_owner(&nklock) || hard_irqs_disabled())
 #define realtime_cpu_only()	XENO_BUGON(CONTEXT, !xnsched_supported_cpu(ipipe_processor_id()))
+#define thread_only()		XENO_BUGON(CONTEXT, xnsched_interrupt_p())
 
 void __xnsys_assert_failed(const char *file, int line, const char *msg);
 

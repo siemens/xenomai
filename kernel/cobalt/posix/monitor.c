@@ -53,6 +53,7 @@
 #include "thread.h"
 #include "clock.h"
 #include "monitor.h"
+#include <trace/events/cobalt-posix.h>
 
 int cobalt_monitor_init(struct cobalt_monitor_shadow __user *u_mon,
 			clockid_t clk_id, int flags)
