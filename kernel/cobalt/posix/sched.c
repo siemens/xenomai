@@ -372,7 +372,6 @@ int do_quota_config(int cpu, const union sched_config *config, size_t len)
 	const struct __sched_config_quota *p = &config->quota;
 	struct cobalt_sched_group *group;
 	struct xnsched_quota_group *tg;
-	struct cobalt_kqueues *kq;
 	struct xnsched *sched;
 	spl_t s;
 
@@ -384,7 +383,8 @@ int do_quota_config(int cpu, const union sched_config *config, size_t len)
 		if (group == NULL)
 			return -ENOMEM;
 		tg = &group->quota;
-		kq = cobalt_kqueues(0);
+		group->pshared = p->add.pshared != 0;
+		group->kq = cobalt_kqueues(group->pshared);
 		xnlock_get_irqsave(&nklock, s);
 		sched = xnsched_struct(cpu);
 		ret = xnsched_quota_create_group(tg, sched, &quota_sum);
@@ -392,7 +392,7 @@ int do_quota_config(int cpu, const union sched_config *config, size_t len)
 			xnlock_put_irqrestore(&nklock, s);
 			xnfree(group);
 		} else {
-			list_add(&group->next, &kq->schedq);
+			list_add(&group->next, &group->kq->schedq);
 			xnlock_put_irqrestore(&nklock, s);
 			ret = __xn_safe_copy_to_user(p->add.tgid_r, &tg->tgid,
 						     sizeof(tg->tgid));
@@ -412,6 +412,10 @@ int do_quota_config(int cpu, const union sched_config *config, size_t len)
 			return ret;
 		}
 		group = container_of(tg, struct cobalt_sched_group, quota);
+		if (group->kq != cobalt_kqueues(group->pshared)) {
+			xnlock_put_irqrestore(&nklock, s);
+			return ret;
+		}
 		ret = xnsched_quota_destroy_group(tg, &quota_sum);
 		if (ret) {
 			xnlock_put_irqrestore(&nklock, s);
@@ -430,15 +434,20 @@ int do_quota_config(int cpu, const union sched_config *config, size_t len)
 		xnlock_get_irqsave(&nklock, s);
 		sched = xnsched_struct(cpu);
 		tg = xnsched_quota_find_group(sched, p->set.tgid);
-		if (tg) {
-			xnsched_quota_set_limit(tg,
-						p->set.quota,
-						p->set.quota_peak,
-						&quota_sum);
-			ret = 0;
+		if (tg == NULL) {
+			xnlock_put_irqrestore(&nklock, s);
+			return ret;
 		}
+		group = container_of(tg, struct cobalt_sched_group, quota);
+		if (group->kq != cobalt_kqueues(group->pshared)) {
+			xnlock_put_irqrestore(&nklock, s);
+			return ret;
+		}
+		xnsched_quota_set_limit(tg, p->set.quota, p->set.quota_peak,
+					&quota_sum);
 		xnlock_put_irqrestore(&nklock, s);
-		if (ret == 0 && p->sum_r)
+		ret = 0;
+		if (p->sum_r)
 			ret = __xn_safe_copy_to_user(p->sum_r, &quota_sum,
 						     sizeof(quota_sum));
 		return ret;
@@ -448,15 +457,19 @@ int do_quota_config(int cpu, const union sched_config *config, size_t len)
 		xnlock_get_irqsave(&nklock, s);
 		sched = xnsched_struct(cpu);
 		tg = xnsched_quota_find_group(sched, p->get.tgid);
-		if (tg) {
-			quota_percent = tg->quota_percent;
-			quota_peak_percent = tg->quota_peak_percent;
-			quota_sum = xnsched_quota_sum_all(sched);
-			ret = 0;
-		}
-		xnlock_put_irqrestore(&nklock, s);
-		if (ret)
+		if (tg == NULL) {
+			xnlock_put_irqrestore(&nklock, s);
 			return ret;
+		}
+		group = container_of(tg, struct cobalt_sched_group, quota);
+		if (group->kq != cobalt_kqueues(group->pshared)) {
+			xnlock_put_irqrestore(&nklock, s);
+			return ret;
+		}
+		quota_percent = tg->quota_percent;
+		quota_peak_percent = tg->quota_peak_percent;
+		quota_sum = xnsched_quota_sum_all(sched);
+		xnlock_put_irqrestore(&nklock, s);
 		ret = __xn_safe_copy_to_user(p->get.quota_r, &quota_percent,
 					     sizeof(quota_percent));
 		if (ret)

@@ -164,6 +164,7 @@ static double run_quota(int quota)
 	cf.quota.sum_r = &quota_sum;
 
 	cf.quota.op = sched_quota_add;
+	cf.quota.add.pshared = 0;
 	cf.quota.add.tgid_r = &tgid;
 	ret = sched_setconfig_np(0, SCHED_QUOTA, &cf, len);
 	if (ret)

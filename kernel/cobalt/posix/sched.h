@@ -21,8 +21,12 @@
 #include <linux/list.h>
 #include <cobalt/kernel/sched.h>
 
+struct cobalt_kqueues;
+
 struct cobalt_sched_group {
 	struct xnsched_quota_group quota;
+	struct cobalt_kqueues *kq;
+	int pshared;
 	struct list_head next;
 };
 

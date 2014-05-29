@@ -85,6 +85,7 @@ struct __sched_config_quota {
 	int op;
 	int *sum_r;
 	struct {
+		int pshared;
 		int *tgid_r;
 	} add;
 	struct {
