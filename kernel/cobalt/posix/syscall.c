@@ -59,6 +59,7 @@ static void *cobalt_process_attach(void)
 	INIT_LIST_HEAD(&cc->kqueues.threadq);
 	INIT_LIST_HEAD(&cc->kqueues.monitorq);
 	INIT_LIST_HEAD(&cc->kqueues.eventq);
+	INIT_LIST_HEAD(&cc->kqueues.schedq);
 	INIT_LIST_HEAD(&cc->sigwaiters);
 	xntree_init(&cc->usems);
 	bitmap_fill(cc->timers_map, CONFIG_XENO_OPT_NRTIMERS);
@@ -77,6 +78,7 @@ static void cobalt_process_detach(void *arg)
 	cobalt_mutexq_cleanup(&cc->kqueues);
 	cobalt_condq_cleanup(&cc->kqueues);
 	cobalt_eventq_cleanup(&cc->kqueues);
+	cobalt_sched_cleanup(&cc->kqueues);
 
 	kfree(cc);
 }

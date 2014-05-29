@@ -29,6 +29,7 @@ struct cobalt_kqueues {
 	struct list_head threadq;
 	struct list_head monitorq;
 	struct list_head eventq;
+	struct list_head schedq;
 };
 
 struct cobalt_timer;

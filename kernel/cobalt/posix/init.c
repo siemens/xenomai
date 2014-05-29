@@ -48,6 +48,7 @@
 #include <linux/init.h>
 #include "internal.h"
 #include "thread.h"
+#include "sched.h"
 #include "cond.h"
 #include "mutex.h"
 #include "sem.h"
@@ -73,6 +74,7 @@ void cobalt_cleanup(void)
 	cobalt_sem_pkg_cleanup();
 	cobalt_cond_pkg_cleanup();
 	cobalt_mutex_pkg_cleanup();
+	cobalt_sched_pkg_cleanup();
 }
 
 int __init cobalt_init(void)
@@ -83,6 +85,7 @@ int __init cobalt_init(void)
 	if (ret)
 		return ret;
 
+	cobalt_sched_pkg_init();
 	cobalt_mutex_pkg_init();
 	cobalt_sem_pkg_init();
 	cobalt_cond_pkg_init();

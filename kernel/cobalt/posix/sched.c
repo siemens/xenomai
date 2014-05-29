@@ -20,6 +20,7 @@
 #include <linux/types.h>
 #include "internal.h"
 #include "thread.h"
+#include "sched.h"
 #include "clock.h"
 #include <trace/events/cobalt-posix.h>
 
@@ -369,7 +370,9 @@ int do_quota_config(int cpu, const union sched_config *config, size_t len)
 {
 	int ret = -ESRCH, quota_percent, quota_peak_percent, quota_sum;
 	const struct __sched_config_quota *p = &config->quota;
+	struct cobalt_sched_group *group;
 	struct xnsched_quota_group *tg;
+	struct cobalt_kqueues *kq;
 	struct xnsched *sched;
 	spl_t s;
 
@@ -377,16 +380,20 @@ int do_quota_config(int cpu, const union sched_config *config, size_t len)
 		return -EINVAL;
 
 	if (p->op == sched_quota_add) {
-		tg = xnmalloc(sizeof(*tg));
-		if (tg == NULL)
+		group = xnmalloc(sizeof(*group));
+		if (group == NULL)
 			return -ENOMEM;
+		tg = &group->quota;
+		kq = cobalt_kqueues(0);
 		xnlock_get_irqsave(&nklock, s);
 		sched = xnsched_struct(cpu);
 		ret = xnsched_quota_create_group(tg, sched, &quota_sum);
-		xnlock_put_irqrestore(&nklock, s);
-		if (ret)
-			xnfree(tg);
-		else {
+		if (ret) {
+			xnlock_put_irqrestore(&nklock, s);
+			xnfree(group);
+		} else {
+			list_add(&group->next, &kq->schedq);
+			xnlock_put_irqrestore(&nklock, s);
 			ret = __xn_safe_copy_to_user(p->add.tgid_r, &tg->tgid,
 						     sizeof(tg->tgid));
 			if (ret == 0 && p->sum_r)
@@ -400,18 +407,22 @@ int do_quota_config(int cpu, const union sched_config *config, size_t len)
 		xnlock_get_irqsave(&nklock, s);
 		sched = xnsched_struct(cpu);
 		tg = xnsched_quota_find_group(sched, p->remove.tgid);
-		if (tg) {
-			ret = xnsched_quota_destroy_group(tg, &quota_sum);
+		if (tg == NULL) {
 			xnlock_put_irqrestore(&nklock, s);
-			if (ret == 0) {
-				xnfree(tg);
-				if (p->sum_r)
-					ret = __xn_safe_copy_to_user(p->sum_r, &quota_sum,
-								     sizeof(quota_sum));
-			}
 			return ret;
 		}
+		group = container_of(tg, struct cobalt_sched_group, quota);
+		ret = xnsched_quota_destroy_group(tg, &quota_sum);
+		if (ret) {
+			xnlock_put_irqrestore(&nklock, s);
+			return ret;
+		}
+		list_del(&group->next);
 		xnlock_put_irqrestore(&nklock, s);
+		xnfree(group);
+		if (p->sum_r)
+			ret = __xn_safe_copy_to_user(p->sum_r, &quota_sum,
+						     sizeof(quota_sum));
 		return ret;
 	}
 
@@ -689,6 +700,38 @@ int cobalt_sched_weighted_prio(int policy,
 		prio = -prio;
 
 	return prio + sched_class->weight;
+}
+
+void cobalt_sched_cleanup(struct cobalt_kqueues *q)
+{
+	struct cobalt_sched_group *group;
+	int quota_sum;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	for (;;) {
+		if (list_empty(&q->schedq))
+			break;
+
+		group = list_get_entry(&q->schedq, struct cobalt_sched_group, next);
+		xnsched_quota_destroy_group(&group->quota, &quota_sum);
+		xnlock_put_irqrestore(&nklock, s);
+		xnfree(group);
+		xnlock_get_irqsave(&nklock, s);
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+}
+
+void cobalt_sched_pkg_init(void)
+{
+	INIT_LIST_HEAD(&cobalt_global_kqueues.schedq);
+}
+
+void cobalt_sched_pkg_cleanup(void)
+{
+	cobalt_sched_cleanup(&cobalt_global_kqueues);
 }
 
 /*@}*/

@@ -18,7 +18,13 @@
 #ifndef _COBALT_POSIX_SCHED_H
 #define _COBALT_POSIX_SCHED_H
 
+#include <linux/list.h>
 #include <cobalt/kernel/sched.h>
+
+struct cobalt_sched_group {
+	struct xnsched_quota_group quota;
+	struct list_head next;
+};
 
 struct xnsched_class *
 cobalt_sched_policy_param(union xnsched_policy_param *param,
@@ -43,5 +49,11 @@ ssize_t cobalt_sched_getconfig_np(int cpu,
 				  int policy,
 				  union sched_config __user *u_config,
 				  size_t len);
+
+void cobalt_sched_cleanup(struct cobalt_kqueues *q);
+
+void cobalt_sched_pkg_init(void);
+
+void cobalt_sched_pkg_cleanup(void);
 
 #endif /* !_COBALT_POSIX_SCHED_H */
