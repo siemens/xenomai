@@ -28,8 +28,6 @@
 #include <rtdm/ipc.h>
 #include "internal.h"
 
-#define trace(m,a...) printk(KERN_WARNING "%s: " m "\n", __FUNCTION__, ##a)
-
 #define BUFP_SOCKET_MAGIC 0xa61a61a6
 
 struct bufp_socket {
@@ -61,7 +59,6 @@ struct bufp_wait_context {
 	struct rtipc_wait_context wc;
 	size_t len;
 	struct bufp_socket *sk;
-	rtdm_lockctx_t lockctx;
 };
 
 static struct sockaddr_ipc nullsa = {
@@ -135,13 +132,12 @@ static void bufp_close(struct rtipc_private *priv,
 		struct rtdm_fd *fd)
 {
 	struct bufp_socket *sk = priv->state;
+	rtdm_lockctx_t s;
 
 	rtdm_event_destroy(&sk->i_event);
 	rtdm_event_destroy(&sk->o_event);
 
 	if (sk->name.sipc_port > -1) {
-		spl_t s;
-
 		cobalt_atomic_enter(s);
 		xnmap_remove(portmap, sk->name.sipc_port);
 		cobalt_atomic_leave(s);
@@ -166,6 +162,7 @@ static ssize_t __bufp_readbuf(struct bufp_socket *sk,
 	rtdm_toseq_t toseq;
 	ssize_t len, ret;
 	size_t rbytes, n;
+	rtdm_lockctx_t s;
 	u_long rdtoken;
 	off_t rdoff;
 
@@ -173,8 +170,7 @@ static ssize_t __bufp_readbuf(struct bufp_socket *sk,
 
 	rtdm_toseq_init(&toseq, sk->rx_timeout);
 
-	rtipc_enter_atomic(wait.lockctx);
-
+	cobalt_atomic_enter(s);
 redo:
 	for (;;) {
 		/*
@@ -203,12 +199,12 @@ redo:
 			 * Release the lock while retrieving the data
 			 * to keep latency low.
 			 */
-			rtipc_leave_atomic(wait.lockctx);
+			cobalt_atomic_leave(s);
 			ret = xnbufd_copy_from_kmem(bufd, sk->bufmem + rdoff, n);
 			if (ret < 0)
 				return ret;
 
-			rtipc_enter_atomic(wait.lockctx);
+			cobalt_atomic_enter(s);
 			/*
 			 * In case we were preempted while retrieving
 			 * the message, we have to re-read the whole
@@ -279,7 +275,7 @@ redo:
 			break;
 	}
 out:
-	rtipc_leave_atomic(wait.lockctx);
+	cobalt_atomic_leave(s);
 
 	return ret;
 }
@@ -409,6 +405,7 @@ static ssize_t __bufp_writebuf(struct bufp_socket *rsk,
 	struct rtipc_wait_context *wc;
 	struct xnthread *waiter;
 	rtdm_toseq_t toseq;
+	rtdm_lockctx_t s;
 	ssize_t len, ret;
 	size_t wbytes, n;
 	u_long wrtoken;
@@ -418,8 +415,7 @@ static ssize_t __bufp_writebuf(struct bufp_socket *rsk,
 
 	rtdm_toseq_init(&toseq, sk->rx_timeout);
 
-	rtipc_enter_atomic(wait.lockctx);
-
+	cobalt_atomic_enter(s);
 redo:
 	for (;;) {
 		/*
@@ -448,11 +444,11 @@ redo:
 			 * Release the lock while copying the data to
 			 * keep latency low.
 			 */
-			rtipc_leave_atomic(wait.lockctx);
+			cobalt_atomic_leave(s);
 			ret = xnbufd_copy_to_kmem(rsk->bufmem + wroff, bufd, n);
 			if (ret < 0)
 				return ret;
-			rtipc_enter_atomic(wait.lockctx);
+			cobalt_atomic_enter(s);
 			/*
 			 * In case we were preempted while copying the
 			 * message, we have to write the whole thing
@@ -511,7 +507,7 @@ redo:
 			break;
 	}
 out:
-	rtipc_leave_atomic(wait.lockctx);
+	cobalt_atomic_leave(s);
 
 	return ret;
 }
@@ -525,8 +521,8 @@ static ssize_t __bufp_sendmsg(struct rtipc_private *priv,
 	ssize_t len, rdlen, vlen, ret = 0;
 	struct rtdm_fd *rfd;
 	struct xnbufd bufd;
+	rtdm_lockctx_t s;
 	int nvec;
-	spl_t s;
 
 	len = rtipc_get_iov_flatlen(iov, iovlen);
 	if (len == 0)
@@ -583,7 +579,6 @@ static ssize_t __bufp_sendmsg(struct rtipc_private *priv,
 	rtdm_fd_unlock(rfd);
 
 	return len - rdlen;
-
 fail:
 	rtdm_fd_unlock(rfd);
 
@@ -662,7 +657,7 @@ static int __bufp_bind_socket(struct rtipc_private *priv,
 	struct bufp_socket *sk = priv->state;
 	int ret = 0, port;
 	struct rtdm_fd *fd;
-	spl_t s;
+	rtdm_lockctx_t s;
 
 	if (sa->sipc_family != AF_RTIPC)
 		return -EINVAL;
@@ -735,9 +730,9 @@ static int __bufp_connect_socket(struct bufp_socket *sk,
 				 struct sockaddr_ipc *sa)
 {
 	struct bufp_socket *rsk;
+	rtdm_lockctx_t s;
 	xnhandle_t h;
 	int ret;
-	spl_t s;
 
 	if (sa == NULL) {
 		sa = &nullsa;
@@ -804,9 +799,9 @@ static int __bufp_setsockopt(struct bufp_socket *sk,
 	struct _rtdm_setsockopt_args sopt;
 	struct rtipc_port_label plabel;
 	struct timeval tv;
+	rtdm_lockctx_t s;
 	int ret = 0;
 	size_t len;
-	spl_t s;
 
 	if (rtipc_get_arg(fd, &sopt, arg, sizeof(sopt)))
 		return -EFAULT;
@@ -899,9 +894,9 @@ static int __bufp_getsockopt(struct bufp_socket *sk,
 	struct _rtdm_getsockopt_args sopt;
 	struct rtipc_port_label plabel;
 	struct timeval tv;
+	rtdm_lockctx_t s;
 	socklen_t len;
 	int ret = 0;
-	spl_t s;
 
 	if (rtipc_get_arg(fd, &sopt, arg, sizeof(sopt)))
 		return -EFAULT;

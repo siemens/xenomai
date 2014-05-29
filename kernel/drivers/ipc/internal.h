@@ -114,7 +114,5 @@ extern struct xnptree rtipc_ptree;
 #define rtipc_get_wait_context		xnthread_get_wait_context
 
 #define rtipc_peek_wait_head(obj)	xnsynch_peek_pendq(&(obj)->synch_base)
-#define rtipc_enter_atomic(lockctx)	xnlock_get_irqsave(&nklock, (lockctx))
-#define rtipc_leave_atomic(lockctx)	xnlock_put_irqrestore(&nklock, (lockctx))
 
 #endif /* !_RTIPC_INTERNAL_H */

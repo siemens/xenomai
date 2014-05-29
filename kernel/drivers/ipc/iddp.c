@@ -28,8 +28,6 @@
 #include <rtdm/ipc.h>
 #include "internal.h"
 
-#define trace(m,a...) printk(KERN_WARNING "%s: " m "\n", __FUNCTION__, ##a)
-
 #define IDDP_SOCKET_MAGIC 0xa37a37a8
 
 struct iddp_message {
@@ -115,8 +113,8 @@ __iddp_alloc_mbuf(struct iddp_socket *sk, size_t len,
 {
 	struct iddp_message *mbuf = NULL;
 	rtdm_toseq_t timeout_seq;
+	rtdm_lockctx_t s;
 	int ret = 0;
-	spl_t s;
 
 	rtdm_toseq_init(&timeout_seq, timeout);
 
@@ -195,10 +193,9 @@ static void iddp_close(struct rtipc_private *priv,
 {
 	struct iddp_socket *sk = priv->state;
 	struct iddp_message *mbuf;
+	rtdm_lockctx_t s;
 
 	if (sk->name.sipc_port > -1) {
-		spl_t s;
-
 		cobalt_atomic_enter(s);
 		xnmap_remove(portmap, sk->name.sipc_port);
 		cobalt_atomic_leave(s);
@@ -239,7 +236,7 @@ static ssize_t __iddp_recvmsg(struct rtipc_private *priv,
 	struct iddp_message *mbuf;
 	nanosecs_rel_t timeout;
 	struct xnbufd bufd;
-	spl_t s;
+	rtdm_lockctx_t s;
 
 	if (!test_bit(_IDDP_BOUND, &sk->status))
 		return -EAGAIN;
@@ -387,7 +384,7 @@ static ssize_t __iddp_sendmsg(struct rtipc_private *priv,
 	struct rtdm_fd *rfd;
 	int nvec, wroff, ret;
 	struct xnbufd bufd;
-	spl_t s;
+	rtdm_lockctx_t s;
 
 	len = rtipc_get_iov_flatlen(iov, iovlen);
 	if (len == 0)
@@ -529,9 +526,9 @@ static int __iddp_bind_socket(struct rtipc_private *priv,
 	struct iddp_socket *sk = priv->state;
 	int ret = 0, port;
 	struct rtdm_fd *fd;
+	rtdm_lockctx_t s;
 	void *poolmem;
 	size_t poolsz;
-	spl_t s;
 
 	if (sa->sipc_family != AF_RTIPC)
 		return -EINVAL;
@@ -617,9 +614,9 @@ static int __iddp_connect_socket(struct iddp_socket *sk,
 				 struct sockaddr_ipc *sa)
 {
 	struct iddp_socket *rsk;
+	rtdm_lockctx_t s;
 	xnhandle_t h;
 	int ret;
-	spl_t s;
 
 	if (sa == NULL) {
 		sa = &nullsa;
@@ -686,9 +683,9 @@ static int __iddp_setsockopt(struct iddp_socket *sk,
 	struct _rtdm_setsockopt_args sopt;
 	struct rtipc_port_label plabel;
 	struct timeval tv;
+	rtdm_lockctx_t s;
 	int ret = 0;
 	size_t len;
-	spl_t s;
 
 	if (rtipc_get_arg(fd, &sopt, arg, sizeof(sopt)))
 		return -EFAULT;
@@ -781,9 +778,9 @@ static int __iddp_getsockopt(struct iddp_socket *sk,
 	struct _rtdm_getsockopt_args sopt;
 	struct rtipc_port_label plabel;
 	struct timeval tv;
+	rtdm_lockctx_t s;
 	socklen_t len;
 	int ret = 0;
-	spl_t s;
 
 	if (rtipc_get_arg(fd, &sopt, arg, sizeof(sopt)))
 		return -EFAULT;

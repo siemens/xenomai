@@ -150,7 +150,7 @@ static int __xddp_resize_streambuf(struct xddp_socket *sk) /* sk->lock held */
 static void __xddp_free_handler(void *buf, void *skarg) /* nklock free */
 {
 	struct xddp_socket *sk = skarg;
-	rtdm_lockctx_t lockctx;
+	rtdm_lockctx_t s;
 
 	if (buf != sk->buffer) {
 		xnheap_free(sk->bufpool, buf);
@@ -159,7 +159,7 @@ static void __xddp_free_handler(void *buf, void *skarg) /* nklock free */
 
 	/* Reset the streaming buffer. */
 
-	rtdm_lock_get_irqsave(&sk->lock, lockctx);
+	rtdm_lock_get_irqsave(&sk->lock, s);
 
 	sk->fillsz = 0;
 	sk->buffer_port = -1;
@@ -173,7 +173,7 @@ static void __xddp_free_handler(void *buf, void *skarg) /* nklock free */
 	if (unlikely(sk->curbufsz != sk->reqbufsz))
 		__xddp_resize_streambuf(sk);
 
-	rtdm_lock_put_irqrestore(&sk->lock, lockctx);
+	rtdm_lock_put_irqrestore(&sk->lock, s);
 }
 
 static void __xddp_output_handler(struct xnpipe_mh *mh, void *skarg) /* nklock held */
@@ -241,7 +241,7 @@ static void xddp_close(struct rtipc_private *priv,
 		      struct rtdm_fd *fd)
 {
 	struct xddp_socket *sk = priv->state;
-	spl_t s;
+	rtdm_lockctx_t s;
 
 	sk->monitor = NULL;
 
@@ -381,7 +381,7 @@ static ssize_t __xddp_stream(struct xddp_socket *sk,
 {
 	struct xddp_message *mbuf;
 	size_t fillptr, rembytes;
-	rtdm_lockctx_t lockctx;
+	rtdm_lockctx_t s;
 	ssize_t outbytes;
 	int ret;
 
@@ -390,7 +390,7 @@ static ssize_t __xddp_stream(struct xddp_socket *sk,
 	 * the nklock directly or indirectly, so holding our socket
 	 * lock across those calls is fine.
 	 */
-	rtdm_lock_get_irqsave(&sk->lock, lockctx);
+	rtdm_lock_get_irqsave(&sk->lock, s);
 
 	/*
 	 * There are two cases in which we must remove the cork
@@ -416,10 +416,10 @@ static ssize_t __xddp_stream(struct xddp_socket *sk,
 		fillptr = sk->fillsz;
 		sk->fillsz += outbytes;
 
-		rtdm_lock_put_irqrestore(&sk->lock, lockctx);
+		rtdm_lock_put_irqrestore(&sk->lock, s);
 		ret = xnbufd_copy_to_kmem(mbuf->data + fillptr,
 					  bufd, outbytes);
-		rtdm_lock_get_irqsave(&sk->lock, lockctx);
+		rtdm_lock_get_irqsave(&sk->lock, s);
 
 		if (ret < 0) {
 			outbytes = ret;
@@ -445,7 +445,7 @@ static ssize_t __xddp_stream(struct xddp_socket *sk,
 	}
 
 out:
-	rtdm_lock_put_irqrestore(&sk->lock, lockctx);
+	rtdm_lock_put_irqrestore(&sk->lock, s);
 
 	return outbytes;
 }
@@ -462,7 +462,7 @@ static ssize_t __xddp_sendmsg(struct rtipc_private *priv,
 	struct rtdm_fd *rfd;
 	int nvec, to, from;
 	struct xnbufd bufd;
-	spl_t s;
+	rtdm_lockctx_t s;
 
 	len = rtipc_get_iov_flatlen(iov, iovlen);
 	if (len == 0)
@@ -663,10 +663,10 @@ static int __xddp_bind_socket(struct rtipc_private *priv,
 {
 	struct xddp_socket *sk = priv->state;
 	struct xnpipe_operations ops;
+	rtdm_lockctx_t s;
 	size_t poolsz;
 	void *poolmem;
 	int ret = 0;
-	spl_t s;
 
 	if (sa->sipc_family != AF_RTIPC)
 		return -EINVAL;
@@ -767,9 +767,9 @@ static int __xddp_connect_socket(struct xddp_socket *sk,
 				 struct sockaddr_ipc *sa)
 {
 	struct xddp_socket *rsk;
+	rtdm_lockctx_t s;
 	xnhandle_t h;
 	int ret;
-	spl_t s;
 
 	if (sa == NULL) {
 		sa = &nullsa;
@@ -836,11 +836,10 @@ static int __xddp_setsockopt(struct xddp_socket *sk,
 	int (*monitor)(struct rtdm_fd *fd, int event, long arg);
 	struct _rtdm_setsockopt_args sopt;
 	struct rtipc_port_label plabel;
-	rtdm_lockctx_t lockctx;
 	struct timeval tv;
+	rtdm_lockctx_t s;
 	int ret = 0;
 	size_t len;
-	spl_t s;
 
 	if (rtipc_get_arg(fd, &sopt, arg, sizeof(sopt)))
 		return -EFAULT;
@@ -882,13 +881,13 @@ static int __xddp_setsockopt(struct xddp_socket *sk,
 				return -EINVAL;
 			}
 		}
-		rtdm_lock_get_irqsave(&sk->lock, lockctx);
+		rtdm_lock_get_irqsave(&sk->lock, s);
 		sk->reqbufsz = len;
 		if (len != sk->curbufsz &&
 		    !test_bit(_XDDP_SYNCWAIT, &sk->status) &&
 		    test_bit(_XDDP_BOUND, &sk->status))
 			ret = __xddp_resize_streambuf(sk);
-		rtdm_lock_put_irqrestore(&sk->lock, lockctx);
+		rtdm_lock_put_irqrestore(&sk->lock, s);
 		break;
 
 	case XDDP_POOLSZ:
@@ -951,9 +950,9 @@ static int __xddp_getsockopt(struct xddp_socket *sk,
 	struct _rtdm_getsockopt_args sopt;
 	struct rtipc_port_label plabel;
 	struct timeval tv;
+	rtdm_lockctx_t s;
 	socklen_t len;
 	int ret = 0;
-	spl_t s;
 
 	if (rtipc_get_arg(fd, &sopt, arg, sizeof(sopt)))
 		return -EFAULT;
