@@ -382,14 +382,14 @@ config XENO_OPT_DEBUG_CONTEXT
        Xenomai code, aimed at detecting when regular linux code is
        entered from a real-time context, and conversely.
 
-config XENO_OPT_DEBUG_XNLOCK
-	bool "Spinlock latency measurement"
+config XENO_OPT_DEBUG_LOCKING
+	bool "Spinlock debugging support"
 	default y if SMP
 	help
 
-	This option activates measurements of Xenomai spinlocks
-	spinning time and duration. It should have a low overhead, and
-	helps finding latency spots due to masking
+	This option activates runtime assertions, and measurements of
+	Xenomai spinlocks spinning time and duration. It should have a
+	low overhead, and helps finding latency spots due to masking
 	sections. Statistics about the longest masking section may be
 	found in /proc/xenomai/lock.
 

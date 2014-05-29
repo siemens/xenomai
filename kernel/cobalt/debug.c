@@ -520,7 +520,7 @@ static inline void init_thread_relax_trace(struct xnthread *thread)
 
 #endif /* !XENO_OPT_DEBUG_TRACE_RELAX */
 
-#if XENO_DEBUG(XNLOCK)
+#if XENO_DEBUG(LOCKING)
 
 #define XNLOCK_DBG_MAX_SPINS		10000000
 
@@ -612,7 +612,7 @@ int xnlock_dbg_release(struct xnlock *lock,
 }
 EXPORT_SYMBOL_GPL(xnlock_dbg_release);
 
-#endif /* !XENO_DEBUG(XNLOCK) */
+#endif /* !XENO_DEBUG(LOCKING) */
 
 void xndebug_shadow_init(struct xnthread *thread)
 {

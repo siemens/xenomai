@@ -27,7 +27,7 @@
 #include <xenomai/version.h>
 #include "debug.h"
 
-#if XENO_DEBUG(XNLOCK)
+#if XENO_DEBUG(LOCKING)
 
 static int lock_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 {
@@ -90,7 +90,7 @@ static struct xnvfile_regular lock_vfile = {
 	.ops = &lock_vfile_ops,
 };
 
-#endif /* XENO_DEBUG(XNLOCK) */
+#endif /* XENO_DEBUG(LOCKING) */
 
 static int latency_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 {
@@ -216,7 +216,7 @@ static struct xnvfile_regular apc_vfile = {
 void xnprocfs_cleanup_tree(void)
 {
 #if XENO_DEBUG(NUCLEUS)
-#if XENO_DEBUG(XNLOCK)
+#if XENO_DEBUG(LOCKING)
 	xnvfile_destroy_regular(&lock_vfile);
 #endif
 	xnvfile_destroy_dir(&debug_vfroot);
@@ -255,7 +255,7 @@ int __init xnprocfs_init_tree(void)
 	xnvfile_init_regular("apc", &apc_vfile, &nkvfroot);
 #ifdef CONFIG_XENO_OPT_DEBUG
 	xnvfile_init_dir("debug", &debug_vfroot, &nkvfroot);
-#if XENO_DEBUG(XNLOCK)
+#if XENO_DEBUG(LOCKING)
 	xnvfile_init_regular("lock", &lock_vfile, &debug_vfroot);
 #endif
 #endif /* XENO_DEBUG(NUCLEUS) */

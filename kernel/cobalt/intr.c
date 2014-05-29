@@ -386,13 +386,13 @@ static inline void xnintr_irq_detach(struct xnintr *intr)
 
 #else /* !CONFIG_XENO_OPT_SHIRQ */
 
-#if defined(CONFIG_SMP) || XENO_DEBUG(XNLOCK)
+#if defined(CONFIG_SMP) || XENO_DEBUG(LOCKING)
 struct xnintr_irq {
 	DECLARE_XNLOCK(lock);
 } ____cacheline_aligned_in_smp;
 
 static struct xnintr_irq xnirqs[IPIPE_NR_IRQS];
-#endif /* CONFIG_SMP || XENO_DEBUG(XNLOCK) */
+#endif /* CONFIG_SMP || XENO_DEBUG(LOCKING) */
 
 static inline struct xnintr *xnintr_shirq_first(unsigned int irq)
 {

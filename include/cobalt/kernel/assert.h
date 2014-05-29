@@ -61,8 +61,8 @@
 #define CONFIG_XENO_OPT_DEBUG_CONTEXT 0
 #endif
 
-#ifndef CONFIG_XENO_OPT_DEBUG_XNLOCK
-#define CONFIG_XENO_OPT_DEBUG_XNLOCK 0
+#ifndef CONFIG_XENO_OPT_DEBUG_LOCKING
+#define CONFIG_XENO_OPT_DEBUG_LOCKING 0
 #endif
 
 #ifndef CONFIG_XENO_OPT_DEBUG_SYNCH_RELAX
@@ -86,7 +86,7 @@
 #define interrupt_only()	XENO_BUGON(CONTEXT, !xnsched_interrupt_p())
 #define realtime_cpu_only()	XENO_BUGON(CONTEXT, !xnsched_supported_cpu(ipipe_processor_id()))
 #define thread_only()		XENO_BUGON(CONTEXT, xnsched_interrupt_p())
-#if XENO_DEBUG(XNLOCK)
+#if XENO_DEBUG(LOCKING)
 #define atomic_only()		XENO_BUGON(CONTEXT, (xnlock_is_owner(&nklock) && hard_irqs_disabled()) == 0)
 #define preemptible_only()	XENO_BUGON(CONTEXT, xnlock_is_owner(&nklock) || hard_irqs_disabled())
 #else

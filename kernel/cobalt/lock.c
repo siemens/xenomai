@@ -27,7 +27,7 @@
 #include <cobalt/kernel/lock.h>
 
 DEFINE_XNLOCK(nklock);
-#if defined(CONFIG_SMP) || XENO_DEBUG(XNLOCK)
+#if defined(CONFIG_SMP) || XENO_DEBUG(LOCKING)
 EXPORT_SYMBOL_GPL(nklock);
 
 void __xnlock_spin(int cpu, struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
@@ -58,9 +58,9 @@ void ___xnlock_put(struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
 }
 EXPORT_SYMBOL_GPL(___xnlock_put);
 #endif /* out of line xnlock */
-#endif /* CONFIG_SMP || XENO_DEBUG(XNLOCK) */
+#endif /* CONFIG_SMP || XENO_DEBUG(LOCKING) */
 
-#if XENO_DEBUG(XNLOCK)
+#if XENO_DEBUG(LOCKING)
 DEFINE_PER_CPU(struct xnlockinfo, xnlock_stats);
 EXPORT_PER_CPU_SYMBOL_GPL(xnlock_stats);
 #endif
