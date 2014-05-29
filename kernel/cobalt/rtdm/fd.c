@@ -29,9 +29,7 @@
 #include <trace/events/cobalt-rtdm.h>
 #include <rtdm/fd.h>
 
-#ifdef CONFIG_SMP
-static DEFINE_XNLOCK(__rtdm_fd_lock);
-#endif
+DEFINE_PRIVATE_XNLOCK(__rtdm_fd_lock);
 static LIST_HEAD(rtdm_fd_cleanup_queue);
 static struct semaphore rtdm_fd_cleanup_sem;
 
