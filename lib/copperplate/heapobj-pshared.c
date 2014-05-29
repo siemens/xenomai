@@ -661,7 +661,9 @@ static int create_main_heap(void)
 		munmap(m_heap, len);
 	}
 
-	ftruncate(fd, 0);  /* Clear all previous contents if any. */
+	ret = ftruncate(fd, 0);  /* Clear all previous contents if any. */
+	if (ret)
+		goto unlink_fail;
 
 	ret = ftruncate(fd, len);
 	if (ret)
