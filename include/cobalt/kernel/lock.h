@@ -195,6 +195,13 @@ int ___xnlock_get(struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS);
 void ___xnlock_put(struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS);
 #endif /* out of line xnlock */
 
+#if XENO_DEBUG(XNLOCK)
+/* Disable UP-over-SMP kernel optimization in debug mode. */
+#define __locking_active__  1
+#else
+#define __locking_active__  ipipe_smp_p
+#endif
+
 static inline spl_t
 __xnlock_get_irqsave(struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
 {
@@ -202,7 +209,7 @@ __xnlock_get_irqsave(struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
 
 	splhigh(flags);
 
-	if (ipipe_smp_p)
+	if (__locking_active__)
 		flags |= ___xnlock_get(lock /*, */ XNLOCK_DBG_PASS_CONTEXT);
 
 	return flags;
@@ -212,7 +219,7 @@ static inline void __xnlock_put_irqrestore(struct xnlock *lock, spl_t flags
 					   /*, */ XNLOCK_DBG_CONTEXT_ARGS)
 {
 	/* Only release the lock if we didn't take it recursively. */
-	if (ipipe_smp_p && !(flags & 2))
+	if (__locking_active__ && !(flags & 2))
 		___xnlock_put(lock /*, */ XNLOCK_DBG_PASS_CONTEXT);
 
 	splexit(flags & 1);
@@ -220,14 +227,15 @@ static inline void __xnlock_put_irqrestore(struct xnlock *lock, spl_t flags
 
 static inline int xnlock_is_owner(struct xnlock *lock)
 {
-	if (ipipe_smp_p)
+	if (__locking_active__)
 		return atomic_read(&lock->owner) == ipipe_processor_id();
-	return hard_irqs_disabled();
+
+	return 1;
 }
 
 static inline int __xnlock_get(struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
 {
-	if (ipipe_smp_p)
+	if (__locking_active__)
 		return ___xnlock_get(lock /* , */ XNLOCK_DBG_PASS_CONTEXT);
 
 	return 0;
@@ -235,9 +243,11 @@ static inline int __xnlock_get(struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARG
 
 static inline void __xnlock_put(struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
 {
-	if (ipipe_smp_p)
+	if (__locking_active__)
 		___xnlock_put(lock /*, */ XNLOCK_DBG_PASS_CONTEXT);	
 }
+
+#undef __locking_active__
 
 #else /* !(CONFIG_SMP || XENO_DEBUG(XNLOCK) */
 
