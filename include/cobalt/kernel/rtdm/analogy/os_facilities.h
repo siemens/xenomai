@@ -110,6 +110,8 @@ typedef rtdm_task_proc_t a4l_task_proc_t;
 
 #define a4l_task_sleep(delay) rtdm_task_sleep(delay)
 
+#define a4l_task_should_stop() rtdm_task_should_stop()
+
 /* --- Time section --- */
 
 static inline void a4l_udelay(unsigned int us)

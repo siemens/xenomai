@@ -237,21 +237,21 @@ static void task_proc(void *arg)
 
 	struct fake_priv *priv = (struct fake_priv *)dev->priv;
 
-	while (1) {
+	while(!a4l_task_should_stop()) {
 
 		int running;
 
 		running = priv->ai_running;
 		if (running && ai_push_values(ai_subd) < 0)
-			break;
+			continue;
 
 		running = priv->ao_running;
 		if (running && ao_pull_values(ao_subd) < 0)
-			break;
+			continue;
 
 		running = priv->ai2_running;
 		if (running && ai2_push_values(ai2_subd) < 0)
-			break;
+			continue;
 
 		a4l_task_sleep(TASK_PERIOD);
 	}
@@ -596,6 +596,8 @@ int test_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 			    "Fake AI task",
 			    task_proc,
 			    dev, A4L_TASK_HIGHEST_PRIORITY);
+	if (ret)
+		a4l_dbg(1, drv_dbg, dev, "Error creating A4L task \n");
 
 	a4l_dbg(1, drv_dbg, dev, "AI2 subdevice registered\n");
 
