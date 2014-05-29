@@ -134,7 +134,7 @@ static void write_task_proc(void *arg)
 	int err;
 	RTIME write_time;
 	ssize_t sz = sizeof(RTIME);
-	ssize_t written = 0;
+	int written = 0;
 
 	err = rt_task_set_periodic(NULL, TM_NOW,
 				   rt_timer_ns2ticks(write_task_period_ns));
@@ -161,7 +161,7 @@ static void write_task_proc(void *arg)
 			       strerror(-err));
 			break;
 		} else if (written != sz) {
-			printf(WTASK_PREFIX "only %d / %d byte transmitted\n",
+			printf(WTASK_PREFIX "only %d / %zd byte transmitted\n",
 			       written, sz);
 			break;
 		}
@@ -183,7 +183,7 @@ static void read_task_proc(void *arg)
 	RTIME write_time = 0;
 	RTIME irq_time   = 0;
 	ssize_t sz = sizeof(RTIME);
-	ssize_t read = 0;
+	int read = 0;
 	struct rtser_event rx_event;
 
 	printf(" Nr |   write->irq    |    irq->read    |   write->read   |\n");
@@ -221,7 +221,7 @@ static void read_task_proc(void *arg)
 			       strerror(-err));
 			break;
 		} else {
-			printf(RTASK_PREFIX "only %d / %d byte received \n",
+			printf(RTASK_PREFIX "only %d / %zd byte received \n",
 			       read, sz);
 			break;
 		}
