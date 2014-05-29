@@ -898,13 +898,6 @@ void cobalt_semq_cleanup(struct cobalt_kqueues *q)
 
 	list_for_each_entry_safe(sem, tmp, &q->semq, link) {
 		xnlock_put_irqrestore(&nklock, s);
-#if XENO_DEBUG(COBALT)
-		if (sem->flags & SEM_NAMED)
-			printk(XENO_INFO "unlinking Cobalt semaphore \"%s\"\n",
-				xnregistry_key(sem->handle));
-		 else
-			printk(XENO_INFO "deleting Cobalt semaphore %p\n", sem);
-#endif /* XENO_DEBUG(COBALT) */
 		if (sem->flags & SEM_NAMED)
 			cobalt_nsem_unlink_inner(sem->handle);
 		cobalt_sem_destroy_inner(sem->handle);

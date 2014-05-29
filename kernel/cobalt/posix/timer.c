@@ -701,9 +701,6 @@ void cobalt_timers_cleanup(struct cobalt_process *p)
 		timer_cleanup(p, timer);
 		xnlock_put_irqrestore(&nklock, s);
 		xnfree(timer);
-#if XENO_DEBUG(COBALT)
-		printk(XENO_INFO "deleting Cobalt timer %u\n", id);
-#endif /* XENO_DEBUG(COBALT) */
 		xnlock_get_irqsave(&nklock, s);
 	}
 out:

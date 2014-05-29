@@ -471,10 +471,6 @@ void cobalt_mutexq_cleanup(struct cobalt_kqueues *q)
 	list_for_each_entry_safe(mutex, tmp, &q->mutexq, link) {
 		xnlock_put_irqrestore(&nklock, s);
 		cobalt_mutex_destroy_inner(mutex->handle, q);
-#if XENO_DEBUG(COBALT)
-		printk(XENO_INFO "deleting Cobalt mutex %p\n",
-		       mutex);
-#endif /* XENO_DEBUG(COBALT) */
 		xnlock_get_irqsave(&nklock, s);
 	}
 out:

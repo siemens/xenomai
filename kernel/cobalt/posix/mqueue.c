@@ -172,10 +172,6 @@ static inline void mq_destroy(struct cobalt_mq *mq)
 	int resched;
 	spl_t s;
 
-#if XENO_DEBUG(COBALT)
-	printk(XENO_INFO "deleting Cobalt message queue \"/%s\"\n", mq->name);
-#endif
-
 	xnlock_get_irqsave(&nklock, s);
 	resched = (xnsynch_destroy(&mq->receivers) == XNSYNCH_RESCHED);
 	resched = (xnsynch_destroy(&mq->senders) == XNSYNCH_RESCHED) || resched;
@@ -1270,9 +1266,6 @@ void cobalt_mq_pkg_cleanup(void)
 	list_for_each_entry_safe(mq, tmp, &cobalt_mqq, link) {
 		xnlock_put_irqrestore(&nklock, s);
 		mq_destroy(mq);
-#if XENO_DEBUG(COBALT)
-		printk(XENO_INFO "unlinking Cobalt mq \"/%s\"\n", mq->name);
-#endif /* XENO_DEBUG(COBALT) */
 		xnlock_get_irqsave(&nklock, s);
 	}
 out:

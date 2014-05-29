@@ -453,12 +453,13 @@ config XENO_OPT_WATCHDOG_TIMEOUT
 	Watchdog timeout value (in seconds).
 
 config XENO_OPT_DEBUG_COBALT
-	bool "Cobalt cleanup checks"
+	bool "Cobalt debugging support"
 	default n
 	help
 
-	When enabled, this option makes the Cobalt API warn about
-	auto-clean operations executed upon application termination.
+	This option activates various checks inside the Cobalt API,
+	mainly to help debugging applications. This option has no
+	significant overhead.
 
 config XENO_OPT_DEBUG_RTDM
 	bool "RTDM debugging checks"
