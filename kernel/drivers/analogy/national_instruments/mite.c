@@ -42,6 +42,7 @@
  * ISSUES:
  */
 
+#include <linux/module.h>
 #include "mite.h"
 
 #ifdef CONFIG_DEBUG_MITE

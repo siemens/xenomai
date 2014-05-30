@@ -31,6 +31,8 @@
 
 #include <stdarg.h>
 #include <linux/fs.h>
+#include <linux/slab.h>
+#include <linux/mm.h>
 #include <cobalt/kernel/select.h>
 #include <rtdm/fd.h>
 #include "internal.h"

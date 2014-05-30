@@ -24,6 +24,7 @@
  */
 #include <linux/percpu.h>
 #include <linux/errno.h>
+#include <linux/ipipe_tickdev.h>
 #include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/timer.h>
 #include <cobalt/kernel/clock.h>

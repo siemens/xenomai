@@ -46,6 +46,7 @@
  */
 
 #include <linux/init.h>
+#include <linux/module.h>
 #include "internal.h"
 #include "thread.h"
 #include "sched.h"

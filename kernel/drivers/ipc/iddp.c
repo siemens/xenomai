@@ -22,6 +22,7 @@
 #include <linux/list.h>
 #include <linux/kernel.h>
 #include <linux/vmalloc.h>
+#include <linux/slab.h>
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/bufd.h>
 #include <cobalt/kernel/map.h>

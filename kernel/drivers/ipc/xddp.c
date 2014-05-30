@@ -20,6 +20,7 @@
 
 #include <linux/module.h>
 #include <linux/string.h>
+#include <linux/slab.h>
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/bufd.h>
 #include <cobalt/kernel/pipe.h>

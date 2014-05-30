@@ -35,6 +35,7 @@
  *
  *@{*/
 
+#include <linux/slab.h>
 #include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/registry.h>

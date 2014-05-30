@@ -21,7 +21,8 @@
  * An abstract RTOS core.
  */
 #include <linux/init.h>
-#include <linux/ipipe.h>
+#include <linux/module.h>
+#include <linux/ipipe_tickdev.h>
 #include <xenomai/version.h>
 #include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/clock.h>

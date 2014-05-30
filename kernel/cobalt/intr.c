@@ -24,6 +24,8 @@
 */
 
 #include <linux/mutex.h>
+#include <linux/ipipe.h>
+#include <linux/ipipe_tickdev.h>
 #include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/intr.h>
 #include <cobalt/kernel/stat.h>

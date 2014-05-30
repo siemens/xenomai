@@ -22,6 +22,7 @@
 
 #include <linux/types.h>
 #include <linux/err.h>
+#include <linux/slab.h>
 #include <cobalt/kernel/select.h>
 #include <cobalt/uapi/syscall.h>
 #include <cobalt/kernel/tree.h>

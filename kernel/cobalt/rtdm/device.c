@@ -28,6 +28,7 @@
 #include <linux/module.h>
 #include <linux/delay.h>
 #include <linux/semaphore.h>
+#include <linux/slab.h>
 #include <cobalt/kernel/apc.h>
 #include "rtdm/internal.h"
 #include <trace/events/cobalt-rtdm.h>

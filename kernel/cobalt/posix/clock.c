@@ -54,6 +54,7 @@
  * Specification.</a>
  *
  *@{*/
+#include <linux/clocksource.h>
 #include <linux/bitmap.h>
 #include <cobalt/kernel/vdso.h>
 #include <cobalt/kernel/clock.h>

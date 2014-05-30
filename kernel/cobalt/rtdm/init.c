@@ -31,6 +31,7 @@
  */
 
 #include <linux/init.h>
+#include <linux/module.h>
 #include "rtdm/syscall.h"
 #include "rtdm/internal.h"
 

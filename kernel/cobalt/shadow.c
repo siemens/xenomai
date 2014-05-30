@@ -39,6 +39,7 @@
 #include <linux/kthread.h>
 #include <linux/mman.h>
 #include <linux/mm.h>
+#include <linux/slab.h>
 #include <linux/cred.h>
 #include <linux/jhash.h>
 #include <linux/file.h>
@@ -46,6 +47,7 @@
 #include <linux/vmalloc.h>
 #include <linux/completion.h>
 #include <linux/kallsyms.h>
+#include <linux/ipipe_tickdev.h>
 #include <asm/signal.h>
 #include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/heap.h>

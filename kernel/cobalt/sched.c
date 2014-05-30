@@ -18,6 +18,7 @@
  *
  * @ingroup sched
  */
+#include <linux/module.h>
 #include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/thread.h>
 #include <cobalt/kernel/timer.h>

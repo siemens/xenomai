@@ -43,7 +43,8 @@
  *   as yet. Terry Barnaby, BEAM Ltd.
  *
  */
-
+#include <linux/module.h>
+#include <linux/slab.h>
 #include "../intel/8255.h"
 #include "mite.h"
 #include "ni_stc.h"
@@ -4520,7 +4521,6 @@ static void ni_gpct_cancel(a4l_subd_t *subd)
 {
 	a4l_dev_t *dev = subd->dev;
 	struct ni_gpct *counter = (struct ni_gpct *)subd->priv;
-	int retval;
 
 	a4l_ni_tio_cancel(counter);
 	ni_e_series_enable_second_irq(dev, counter->counter_index, 0);

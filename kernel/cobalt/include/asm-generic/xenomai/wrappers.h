@@ -28,16 +28,6 @@
 #error "CONFIG_IPIPE_LEGACY must be switched off"
 #endif
 
-#include <linux/module.h>
-#include <linux/slab.h>
-#include <linux/ipipe.h>
-#include <linux/ipipe_tickdev.h>
-#include <linux/sched.h>
-#include <linux/sched/rt.h>
-#include <linux/pid.h>
-#include <linux/mm.h>
-#include <asm/io.h>
-
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,14,0)
 #define get_current_uuid() current_uid()
 #else

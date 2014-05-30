@@ -64,6 +64,7 @@ HEAP {
 #include <linux/sched.h>
 #include <linux/mm.h>
 #include <linux/semaphore.h>
+#include <linux/slab.h>
 #include <asm/io.h>
 #include <cobalt/kernel/thread.h>
 #include <cobalt/kernel/heap.h>
