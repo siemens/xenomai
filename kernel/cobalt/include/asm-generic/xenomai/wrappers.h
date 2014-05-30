@@ -38,10 +38,6 @@
 #include <linux/mm.h>
 #include <asm/io.h>
 
-#ifndef pgprot_noncached
-#define pgprot_noncached(p) (p)
-#endif /* !pgprot_noncached */
-
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,14,0)
 #define get_current_uuid() current_uid()
 #else
