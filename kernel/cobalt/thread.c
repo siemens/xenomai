@@ -340,7 +340,7 @@ xnticks_t xnthread_get_period(struct xnthread *thread)
 	 * - or zero, meaning "no periodic activity".
 	 */
 	if (xntimer_running_p(&thread->ptimer))
-		period = xntimer_get_interval(&thread->ptimer);
+		period = xntimer_interval(&thread->ptimer);
 	else if (xnthread_test_state(thread,XNRRB))
 		period = xnthread_time_slice(thread);
 

@@ -188,10 +188,16 @@ struct xntimer {
 	struct list_head adjlink;
 	/** Timer status. */
 	unsigned long status;
-	/** Periodic interval (raw ticks, 0 == one shot). */
+	/** Periodic interval (clock ticks, 0 == one shot). */
 	xnticks_t interval;
-	/** Date of next periodic release point (raw ticks). */
-	xnticks_t pexpect;
+	/** Periodic interval (nanoseconds, 0 == one shot). */
+	xnticks_t interval_ns;
+	/** Count of timer ticks in periodic mode. */
+	xnticks_t periodic_ticks;
+	/** First tick date in periodic mode. */
+	xnticks_t start_date;
+	/** Date of next periodic release point (timer ticks). */
+	xnticks_t pexpect_ticks;
 	/** Sched structure to which the timer is attached. */
 	struct xnsched *sched;
 	/** Timeout handler. */
@@ -255,20 +261,19 @@ static inline xntimerq_t *xntimer_this_queue(struct xntimer *timer)
 	return &tmd->q;
 }
 
-static inline xnticks_t xntimer_interval(struct xntimer *timer)
+static inline void xntimer_update_date(struct xntimer *timer)
 {
-	return timer->interval;
+	xntimerh_date(&timer->aplink) = timer->start_date +
+		xnclock_ns_to_ticks(xntimer_clock(timer),
+				timer->periodic_ticks * timer->interval_ns);
+
 }
 
 static inline xnticks_t xntimer_pexpect(struct xntimer *timer)
 {
-	return timer->pexpect;
-}
-
-static inline xnticks_t xntimer_pexpect_forward(struct xntimer *timer,
-						xnticks_t delta)
-{
-	return timer->pexpect += delta;
+	return timer->start_date +
+		xnclock_ns_to_ticks(xntimer_clock(timer),
+				timer->pexpect_ticks * timer->interval_ns);
 }
 
 static inline void xntimer_set_priority(struct xntimer *timer,
@@ -290,6 +295,11 @@ static inline int xntimer_running_p(struct xntimer *timer)
 static inline int xntimer_fired_p(struct xntimer *timer)
 {
 	return (timer->status & XNTIMER_FIRED) != 0;
+}
+
+static inline int xntimer_periodic_p(struct xntimer *timer)
+{
+	return (timer->status & XNTIMER_PERIODIC) != 0;
 }
 
 static inline int xntimer_reload_p(struct xntimer *timer)
@@ -368,10 +378,30 @@ void xntimer_destroy(struct xntimer *timer);
  * \addtogroup timer
  *@{ */
 
+/**
+ * @fn xnticks_t xntimer_interval(struct xntimer *timer)
+ *
+ * @brief Return the timer interval value.
+ *
+ * Return the timer interval value in nanoseconds.
+ *
+ * @param timer The address of a valid timer descriptor.
+ *
+ * @return The duration of a period in nanoseconds. The special value
+ * XN_INFINITE is returned if @a timer is currently disabled or
+ * one shot.
+ *
+ * @remark Tags: isr-allowed.
+ */
+static inline xnticks_t xntimer_interval(struct xntimer *timer)
+{
+	return timer->interval_ns;
+}
+
 int xntimer_start(struct xntimer *timer,
-		  xnticks_t value,
-		  xnticks_t interval,
-		  xntmode_t mode);
+		xnticks_t value,
+		xnticks_t interval,
+		xntmode_t mode);
 
 void __xntimer_stop(struct xntimer *timer);
 

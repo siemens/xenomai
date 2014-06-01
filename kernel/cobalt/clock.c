@@ -201,17 +201,19 @@ static void adjust_timer(struct xntimer *timer, xntimerq_t *q,
 			 xnsticks_t delta)
 {
 	struct xnclock *clock = xntimer_clock(timer);
-	xnticks_t period, mod;
+	xnticks_t period, div;
 	xnsticks_t diff;
 
 	xntimerh_date(&timer->aplink) -= delta;
 
-	if ((timer->status & XNTIMER_PERIODIC) == 0)
+	if (xntimer_periodic_p(timer) == 0)
 		goto enqueue;
 
+	timer->start_date -= delta;
 	period = xntimer_interval(timer);
-	timer->pexpect -= delta;
-	diff = xnclock_read_raw(clock) - xntimerh_date(&timer->aplink);
+	diff = xnclock_ticks_to_ns(clock,
+				xnclock_read_raw(clock) -
+				xntimerh_date(&timer->aplink));
 
 	if ((xnsticks_t) (diff - period) >= 0) {
 		/*
@@ -221,8 +223,9 @@ static void adjust_timer(struct xntimer *timer, xntimerq_t *q,
 		 * that timer will tick only once and the lost ticks
 		 * will be counted as overruns.
 		 */
-		mod = xnarch_mod64(diff, period);
-		xntimerh_date(&timer->aplink) += diff - mod;
+		div = xnarch_div64(diff, period);
+		timer->periodic_ticks += div;
+		xntimer_update_date(timer);
 	} else if (delta < 0
 		   && (timer->status & XNTIMER_FIRED)
 		   && (xnsticks_t) (diff + period) <= 0) {
@@ -233,9 +236,10 @@ static void adjust_timer(struct xntimer *timer, xntimerq_t *q,
 		 * time to a sooner date, real-time periodic timers do
 		 * not tick until the original date has passed.
 		 */
-		mod = xnarch_mod64(-diff, period);
-		xntimerh_date(&timer->aplink) += diff + mod;
-		timer->pexpect += diff + mod;
+		div = xnarch_div64(-diff, period);
+		timer->periodic_ticks -= div;
+		timer->pexpect_ticks -= div;
+		xntimer_update_date(timer);
 	}
 
 enqueue:
@@ -384,7 +388,7 @@ static int clock_vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
 	p->scheduled = xnstat_counter_get(&timer->scheduled);
 	p->fired = xnstat_counter_get(&timer->fired);
 	p->timeout = xntimer_get_timeout(timer);
-	p->interval = xntimer_get_interval(timer);
+	p->interval = xntimer_interval(timer);
 	p->status = timer->status;
 	knamecpy(p->handler, timer->handler_name);
 	knamecpy(p->name, timer->name);
@@ -552,7 +556,7 @@ void xnclock_tick(struct xnclock *clock)
 {
 	xntimerq_t *timerq = &xnclock_this_timerdata(clock)->q;
 	struct xnsched *sched = xnsched_current();
-	xnticks_t now, interval;
+	xnticks_t now, interval_ticks;
 	struct xntimer *timer;
 	xnsticks_t delta;
 	xntimerh_t *h;
@@ -618,7 +622,10 @@ void xnclock_tick(struct xnclock *clock)
 			 * wait for 250 ms for the user to continue
 			 * program execution.
 			 */
-			interval = xnclock_ns_to_ticks(clock, 250000000ULL);
+			if (timer->interval_ns > 250000000)
+				goto advance;
+			interval_ticks = 250000000 /
+				(unsigned)timer->interval_ns;
 			goto requeue;
 		}
 	fire:
@@ -633,11 +640,12 @@ void xnclock_tick(struct xnclock *clock)
 		if (!xntimer_reload_p(timer))
 			continue;
 	advance:
-		interval = timer->interval;
+		interval_ticks = 1;
 	requeue:
-		do
-			xntimerh_date(&timer->aplink) += interval;
-		while (xntimerh_date(&timer->aplink) < now + clock->gravity);
+		do {
+			timer->periodic_ticks += interval_ticks;
+			xntimer_update_date(timer);
+		} while (xntimerh_date(&timer->aplink) < now + clock->gravity);
 #ifdef CONFIG_SMP
 		/*
 		 * Make sure to pick the right percpu queue, in case

@@ -137,10 +137,14 @@ int xntimer_start(struct xntimer *timer,
 
 	xntimerh_date(&timer->aplink) = date;
 
+	timer->interval_ns = XN_INFINITE;
 	timer->interval = XN_INFINITE;
 	if (interval != XN_INFINITE) {
+		timer->interval_ns = interval;
 		timer->interval = xnclock_ns_to_ticks(clock, interval);
-		timer->pexpect = date;
+		timer->periodic_ticks = 0;
+		timer->start_date = date;
+		timer->pexpect_ticks = 0;
 		timer->status |= XNTIMER_PERIODIC;
 	}
 
@@ -256,29 +260,6 @@ xnticks_t xntimer_get_timeout(struct xntimer *timer)
 EXPORT_SYMBOL_GPL(xntimer_get_timeout);
 
 /**
- * @fn xnticks_t xntimer_get_interval(struct xntimer *timer)
- *
- * @brief Return the timer interval value.
- *
- * Return the timer interval value in nanoseconds.
- *
- * @param timer The address of a valid timer descriptor.
- *
- * @return The duration of a period in nanoseconds. The special value
- * XN_INFINITE is returned if @a timer is currently disabled or
- * one shot.
- *
- * @remark Tags: isr-allowed.
- */
-xnticks_t xntimer_get_interval(struct xntimer *timer)
-{
-	struct xnclock *clock = xntimer_clock(timer);
-
-	return xnclock_ticks_to_ns_rounded(clock, timer->interval);
-}
-EXPORT_SYMBOL_GPL(xntimer_get_interval);
-
-/**
  * @fn void xntimer_init(struct xntimer *timer,struct xnclock *clock,void (*handler)(struct xntimer *timer), struct xnthread *thread)
  * @brief Initialize a timer object.
  *
@@ -329,7 +310,7 @@ void __xntimer_init(struct xntimer *timer,
 	xntimer_set_priority(timer, XNTIMER_STDPRIO);
 	timer->status = XNTIMER_DEQUEUED;
 	timer->handler = handler;
-	timer->interval = 0;
+	timer->interval_ns = 0;
 	/*
 	 * Timers have to run on a real-time CPU, i.e. a member of the
 	 * xnsched_realtime_cpus mask. If the new timer is affine to a
@@ -366,7 +347,7 @@ void xntimer_switch_tracking(struct xntimer *timer,
 {
 	struct xnclock *oldclock = timer->tracker;
 	spl_t s;
-	
+
 	xnlock_get_irqsave(&nklock, s);
 	list_del(&timer->next_stat);
 	oldclock->nrtimers--;
@@ -486,16 +467,19 @@ void xntimer_release_ipi(void)
  */
 unsigned long long xntimer_get_overruns(struct xntimer *timer, xnticks_t now)
 {
-	xnticks_t period = xntimer_interval(timer);
-	xnsticks_t delta = now - timer->pexpect;
+	xnticks_t period = timer->interval;
+	xnsticks_t delta;
 	unsigned long long overruns = 0;
 
+	delta = now - xntimer_pexpect(timer);
 	if (unlikely(delta >= (xnsticks_t) period)) {
+		period = timer->interval_ns;
+		delta = xnclock_ticks_to_ns(xntimer_clock(timer), delta);
 		overruns = xnarch_div64(delta, period);
-		timer->pexpect += period * overruns;
+		timer->pexpect_ticks += overruns;
 	}
 
-	timer->pexpect += period;
+	timer->pexpect_ticks++;
 	return overruns;
 }
 EXPORT_SYMBOL_GPL(xntimer_get_overruns);

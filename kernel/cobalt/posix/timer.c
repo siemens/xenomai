@@ -121,7 +121,7 @@ cobalt_timer_by_id(struct cobalt_process *cc, timer_t timer_id)
 
 	if (test_bit(timer_id, cc->timers_map))
 		return NULL;
-	
+
 	return cc->timers[timer_id];
 }
 
@@ -185,7 +185,7 @@ static inline int timer_create(clockid_t clockid,
 	timer = xnmalloc(sizeof(*timer));
 	if (timer == NULL)
 		return -ENOMEM;
-	
+
 	timer->sigp.si.si_errno = 0;
 	timer->sigp.si.si_code = SI_TIMER;
 	timer->sigp.si.si_overrun = 0;
@@ -667,7 +667,7 @@ int cobalt_timer_deliver(timer_t timerid) /* nklocked, IRQs off. */
 		/* Killed before ultimate delivery, who cares then? */
 		return 0;
 
-	if (!xntimer_interval(&timer->timerbase))
+	if (!xntimer_periodic_p(&timer->timerbase))
 		timer->overruns = 0;
 	else {
 		now = xnclock_read_raw(xntimer_clock(&timer->timerbase));
