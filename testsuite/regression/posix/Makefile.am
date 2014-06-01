@@ -5,6 +5,7 @@ CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 noinst_HEADERS = check.h
 
 test_PROGRAMS = \
+	clock_settime \
 	leaks \
 	mq_select \
 	timerfd
