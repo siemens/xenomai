@@ -491,7 +491,7 @@ ssize_t get_quota_config(int cpu, union sched_config __user *u_config,
 			 size_t len)
 {
 	union sched_config buf;
-	
+
 	if (__xn_safe_copy_from_user(&buf, (const void __user *)u_config, len))
 		return -EFAULT;
 
@@ -718,7 +718,9 @@ int cobalt_sched_weighted_prio(int policy,
 void cobalt_sched_cleanup(struct cobalt_kqueues *q)
 {
 	struct cobalt_sched_group *group;
+#ifdef CONFIG_XENO_OPT_SCHED_QUOTA
 	int quota_sum;
+#endif
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -728,7 +730,9 @@ void cobalt_sched_cleanup(struct cobalt_kqueues *q)
 			break;
 
 		group = list_get_entry(&q->schedq, struct cobalt_sched_group, next);
+#ifdef CONFIG_XENO_OPT_SCHED_QUOTA
 		xnsched_quota_destroy_group(&group->quota, &quota_sum);
+#endif
 		xnlock_put_irqrestore(&nklock, s);
 		xnfree(group);
 		xnlock_get_irqsave(&nklock, s);

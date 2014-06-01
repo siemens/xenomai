@@ -24,7 +24,9 @@
 struct cobalt_kqueues;
 
 struct cobalt_sched_group {
+#ifdef CONFIG_XENO_OPT_SCHED_QUOTA
 	struct xnsched_quota_group quota;
+#endif
 	struct cobalt_kqueues *kq;
 	int pshared;
 	struct list_head next;
