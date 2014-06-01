@@ -36,6 +36,7 @@
 
 #include <linux/module.h>
 #include <linux/ioport.h>
+#include <linux/io.h>
 #include <asm/byteorder.h>
 #include <rtdm/analogy/device.h>
 

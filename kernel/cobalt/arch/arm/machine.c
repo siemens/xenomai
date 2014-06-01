@@ -19,6 +19,7 @@
  */
 
 #include <linux/mm.h>
+#include <linux/ipipe_tickdev.h>
 #include <cobalt/kernel/arith.h>
 #include <asm/cacheflush.h>
 #include <asm/xenomai/machine.h>

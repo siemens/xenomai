@@ -20,6 +20,7 @@
 
 #include <linux/module.h>
 #include <linux/ioport.h>
+#include <linux/io.h>
 #include <rtdm/analogy/device.h>
 
 #include "8255.h"

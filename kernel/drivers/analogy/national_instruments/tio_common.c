@@ -41,6 +41,8 @@
  */
 
 #include <linux/module.h>
+#include <linux/slab.h>
+#include <linux/io.h>
 #include <rtdm/analogy/device.h>
 
 #include "ni_tio.h"
