@@ -265,3 +265,8 @@ static __libcobalt_ctor void __init_cobalt(void)
 		exit(EXIT_FAILURE);
 	}
 }
+
+static void __attribute__((destructor)) __fini_cobalt(void)
+{
+	cobalt_print_exit();
+}
