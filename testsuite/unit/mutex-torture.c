@@ -442,7 +442,6 @@ static void pi_wait(void)
 	check_current_prio(3);
 
 	dispatch("pi mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
-	sched_yield();
 
 	check_current_prio(2);
 
