@@ -58,12 +58,12 @@ int __heapobj_init_private(struct heapobj *hobj, const char *name,
 	if (ph == NULL)
 		return __bt(-ENOMEM);
 
-	__RT(pthread_mutexattr_init(&mattr));
-	__RT(pthread_mutexattr_settype(&mattr, mutex_type_attribute));
-	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
-	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
+	pthread_mutexattr_init(&mattr);
+	pthread_mutexattr_settype(&mattr, mutex_type_attribute);
+	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
+	pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
 	ret = __bt(-__RT(pthread_mutex_init(&ph->lock, &mattr)));
-	__RT(pthread_mutexattr_destroy(&mattr));
+	pthread_mutexattr_destroy(&mattr);
 	if (ret) {
 		free(ph);
 		return ret;

@@ -22,55 +22,11 @@
 #include "current.h"
 #include "internal.h"
 
-COBALT_IMPL(int, pthread_mutexattr_init, (pthread_mutexattr_t *attr))
-{
-	return -XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_mutexattr_init, attr);
-}
+static pthread_mutexattr_t cobalt_default_mutexattr;
 
-COBALT_IMPL(int, pthread_mutexattr_destroy, (pthread_mutexattr_t *attr))
+void cobalt_default_mutexattr_init(void)
 {
-	return -XENOMAI_SKINCALL1(__cobalt_muxid,sc_cobalt_mutexattr_destroy,attr);
-}
-
-COBALT_IMPL(int, pthread_mutexattr_gettype, (const pthread_mutexattr_t *attr,
-					     int *type))
-{
-	return -XENOMAI_SKINCALL2(__cobalt_muxid,
-				  sc_cobalt_mutexattr_gettype, attr, type);
-}
-
-COBALT_IMPL(int, pthread_mutexattr_settype, (pthread_mutexattr_t *attr,
-					     int type))
-{
-	return -XENOMAI_SKINCALL2(__cobalt_muxid,
-				  sc_cobalt_mutexattr_settype, attr, type);
-}
-
-COBALT_IMPL(int, pthread_mutexattr_getprotocol, (const pthread_mutexattr_t *attr,
-						 int *proto))
-{
-	return -XENOMAI_SKINCALL2(__cobalt_muxid,
-				  sc_cobalt_mutexattr_getprotocol, attr, proto);
-}
-
-COBALT_IMPL(int, pthread_mutexattr_setprotocol, (pthread_mutexattr_t *attr,
-						 int proto))
-{
-	return -XENOMAI_SKINCALL2(__cobalt_muxid,
-				  sc_cobalt_mutexattr_setprotocol, attr, proto);
-}
-
-COBALT_IMPL(int, pthread_mutexattr_getpshared, (const pthread_mutexattr_t *attr,
-						int *pshared))
-{
-	return -XENOMAI_SKINCALL2(__cobalt_muxid,
-				  sc_cobalt_mutexattr_getpshared, attr, pshared);
-}
-
-COBALT_IMPL(int, pthread_mutexattr_setpshared, (pthread_mutexattr_t *attr, int pshared))
-{
-	return -XENOMAI_SKINCALL2(__cobalt_muxid,
-				  sc_cobalt_mutexattr_setpshared, attr, pshared);
+	pthread_mutexattr_init(&cobalt_default_mutexattr);
 }
 
 COBALT_IMPL(int, pthread_mutex_init, (pthread_mutex_t *mutex,
@@ -78,8 +34,9 @@ COBALT_IMPL(int, pthread_mutex_init, (pthread_mutex_t *mutex,
 {
 	struct cobalt_mutex_shadow *_mutex =
 		&((union cobalt_mutex_union *)mutex)->shadow_mutex;
+	struct cobalt_mutexattr kmattr;
 	struct mutex_dat *datp;
-	int err;
+	int err, tmp;
 
 	if (_mutex->magic == COBALT_MUTEX_MAGIC) {
 		err = -XENOMAI_SKINCALL1(__cobalt_muxid,
@@ -89,7 +46,29 @@ COBALT_IMPL(int, pthread_mutex_init, (pthread_mutex_t *mutex,
 			return err;
 	}
 
-	err = -XENOMAI_SKINCALL2(__cobalt_muxid,sc_cobalt_mutex_init,_mutex,attr);
+	if (attr == NULL)
+		attr = &cobalt_default_mutexattr;
+
+	err = pthread_mutexattr_getpshared(attr, &tmp);
+	if (err)
+		return err;
+	kmattr.pshared = tmp;
+
+	err = pthread_mutexattr_gettype(attr, &tmp);
+	if (err)
+		return err;
+	kmattr.type = tmp;
+
+	err = pthread_mutexattr_getprotocol(attr, &tmp);
+	if (err)
+		return err;
+	if (tmp == PTHREAD_PRIO_PROTECT) { /* Prio ceiling unsupported */
+		err = EINVAL;
+		return err;
+	}
+	kmattr.protocol = tmp;
+
+	err = -XENOMAI_SKINCALL2(__cobalt_muxid,sc_cobalt_mutex_init,_mutex,&kmattr);
 	if (err)
 		return err;
 

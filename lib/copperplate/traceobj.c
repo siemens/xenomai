@@ -48,20 +48,20 @@ int traceobj_init(struct traceobj *trobj, const char *label, int nr_marks)
 	pthread_condattr_t cattr;
 	int ret;
 
-	__RT(pthread_mutexattr_init(&mattr));
-	__RT(pthread_mutexattr_settype(&mattr, mutex_type_attribute));
-	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
-	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
+	pthread_mutexattr_init(&mattr);
+	pthread_mutexattr_settype(&mattr, mutex_type_attribute);
+	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
+	pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
 	ret = __bt(-__RT(pthread_mutex_init(&trobj->lock, &mattr)));
-	__RT(pthread_mutexattr_destroy(&mattr));
+	pthread_mutexattr_destroy(&mattr);
 	if (ret)
 		return ret;
 
-	__RT(pthread_condattr_init(&cattr));
-	__RT(pthread_condattr_setpshared(&cattr, PTHREAD_PROCESS_PRIVATE));
-	__RT(pthread_condattr_setclock(&cattr, CLOCK_COPPERPLATE));
+	pthread_condattr_init(&cattr);
+	pthread_condattr_setpshared(&cattr, PTHREAD_PROCESS_PRIVATE);
+	pthread_condattr_setclock(&cattr, CLOCK_COPPERPLATE);
 	ret = __bt(-__RT(pthread_cond_init(&trobj->join, &cattr)));
-	__RT(pthread_condattr_destroy(&cattr));
+	pthread_condattr_destroy(&cattr);
 	if (ret) {
 		__RT(pthread_mutex_destroy(&trobj->lock));
 		return ret;
@@ -142,7 +142,7 @@ fail:
 		warning("valgrind detected: ignoring sequence mismatch");
 		goto out;
 	}
-		
+
 	warning("mismatching execution sequence detected");
 	compare_marks(trobj, tseq, nr_seq);
 	read_unlock_safe(&trobj->lock, state);

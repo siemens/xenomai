@@ -175,12 +175,12 @@ static int init_heap(struct shared_heap *heap, const char *name,
 	heap->maxcont = heap->total;
 	__list_init_nocheck(heap, &heap->extents);
 
-	__RT(pthread_mutexattr_init(&mattr));
-	__RT(pthread_mutexattr_settype(&mattr, mutex_type_attribute));
-	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
-	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_SHARED));
+	pthread_mutexattr_init(&mattr);
+	pthread_mutexattr_settype(&mattr, mutex_type_attribute);
+	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
+	pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_SHARED);
 	ret = __bt(-__RT(pthread_mutex_init(&heap->lock, &mattr)));
-	__RT(pthread_mutexattr_destroy(&mattr));
+	pthread_mutexattr_destroy(&mattr);
 	if (ret)
 		return ret;
 
@@ -203,12 +203,12 @@ static int init_main_heap(struct session_heap *m_heap, void *mem, size_t size)
 
 	m_heap->cpid = copperplate_get_tid();
 
-	__RT(pthread_mutexattr_init(&mattr));
-	__RT(pthread_mutexattr_settype(&mattr, mutex_type_attribute));
-	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
-	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_SHARED));
+	pthread_mutexattr_init(&mattr);
+	pthread_mutexattr_settype(&mattr, mutex_type_attribute);
+	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
+	pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_SHARED);
 	ret = __bt(-__RT(pthread_mutex_init(&m_heap->sysgroup.lock, &mattr)));
-	__RT(pthread_mutexattr_destroy(&mattr));
+	pthread_mutexattr_destroy(&mattr);
 	if (ret)
 		return ret;
 
@@ -881,7 +881,7 @@ int heapobj_extend(struct heapobj *hobj, size_t size, void *unused)
 
 	if (hobj == &main_pool)	/* Can't extend the main pool. */
 		return __bt(-EINVAL);
-		
+
 	if (size <= HOBJ_PAGE_SIZE * 2)
 		return __bt(-EINVAL);
 

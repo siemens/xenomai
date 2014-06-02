@@ -56,19 +56,13 @@
 static int cobalt_mutex_init_inner(struct cobalt_mutex_shadow *shadow,
 				   struct cobalt_mutex *mutex,
 				   struct mutex_dat *datp,
-				   const pthread_mutexattr_t *attr)
+				   const struct cobalt_mutexattr *attr)
 {
 	int synch_flags = XNSYNCH_PRIO | XNSYNCH_OWNER;
 	struct xnsys_ppd *sys_ppd;
 	struct cobalt_kqueues *kq;
 	spl_t s;
 	int err;
-
-	if (!attr)
-		attr = &cobalt_default_mutex_attr;
-
-	if (attr->magic != COBALT_MUTEX_ATTR_MAGIC)
-		return -EINVAL;
 
 	kq = cobalt_kqueues(attr->pshared);
 	sys_ppd = xnsys_ppd_get(attr->pshared);
@@ -101,7 +95,7 @@ static int cobalt_mutex_init_inner(struct cobalt_mutex_shadow *shadow,
 	return 0;
 }
 
-static void 
+static void
 cobalt_mutex_destroy_inner(xnhandle_t handle, struct cobalt_kqueues *q)
 {
 	struct cobalt_mutex *mutex;
@@ -111,7 +105,7 @@ cobalt_mutex_destroy_inner(xnhandle_t handle, struct cobalt_kqueues *q)
 	mutex = xnregistry_lookup(handle, NULL);
 	if (!cobalt_obj_active(mutex, COBALT_MUTEX_MAGIC, typeof(*mutex))) {
 		xnlock_put_irqrestore(&nklock, s);
-		printk("mutex_destroy: invalid mutex %x\n", 
+		printk("mutex_destroy: invalid mutex %x\n",
 			mutex ? mutex->magic : ~0);
 		return;
 	}
@@ -274,10 +268,9 @@ int cobalt_mutex_check_init(struct cobalt_mutex_shadow __user *u_mx)
 }
 
 int cobalt_mutex_init(struct cobalt_mutex_shadow __user *u_mx,
-		      const pthread_mutexattr_t __user *u_attr)
+		      const struct cobalt_mutexattr __user *u_attr)
 {
-	const pthread_mutexattr_t *attr;
-	pthread_mutexattr_t locattr;
+	struct cobalt_mutexattr attr;
 	struct cobalt_mutex *mutex;
 	struct cobalt_mutex_shadow mx;
 	struct mutex_dat *datp;
@@ -286,30 +279,24 @@ int cobalt_mutex_init(struct cobalt_mutex_shadow __user *u_mx,
 	if (__xn_safe_copy_from_user(&mx, u_mx, sizeof(mx)))
 		return -EFAULT;
 
-	if (u_attr) {
-		if (__xn_safe_copy_from_user(&locattr, u_attr,
-					     sizeof(locattr)))
-			return -EFAULT;
-
-		attr = &locattr;
-	} else
-		attr = &cobalt_default_mutex_attr;
+	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
+		return -EFAULT;
 
 	mutex = xnmalloc(sizeof(*mutex));
 	if (mutex == NULL)
 		return -ENOMEM;
 
-	datp = xnheap_alloc(&xnsys_ppd_get(attr->pshared)->sem_heap,
+	datp = xnheap_alloc(&xnsys_ppd_get(attr.pshared)->sem_heap,
 			     sizeof(*datp));
 	if (datp == NULL) {
 		xnfree(mutex);
 		return -EAGAIN;
 	}
 
-	err = cobalt_mutex_init_inner(&mx, mutex, datp, attr);
+	err = cobalt_mutex_init_inner(&mx, mutex, datp, &attr);
 	if (err) {
 		xnfree(mutex);
-		xnheap_free(&xnsys_ppd_get(attr->pshared)->sem_heap, datp);
+		xnheap_free(&xnsys_ppd_get(attr.pshared)->sem_heap, datp);
 		return err;
 	}
 
@@ -410,7 +397,7 @@ int cobalt_mutex_lock(struct cobalt_mutex_shadow __user *u_mx)
 	err = cobalt_mutex_timedlock_break(xnregistry_lookup(handle, NULL),
 					   0, NULL);
 	xnlock_put_irqrestore(&nklock, s);
-	
+
 	return err;
 }
 

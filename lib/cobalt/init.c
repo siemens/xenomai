@@ -218,6 +218,8 @@ static __libcobalt_ctor void __init_cobalt(void)
 #endif
 
 	__cobalt_main_ptid = ptid;
+	cobalt_default_mutexattr_init();
+	cobalt_default_condattr_init();
 
 	if (__cobalt_defer_init)
 		return;
@@ -256,7 +258,7 @@ static __libcobalt_ctor void __init_cobalt(void)
 		policy = SCHED_OTHER;
 		parm.sched_priority = 0;
 	}
-	
+
 	ret = __RT(pthread_setschedparam(ptid, policy, &parm));
 	if (ret) {
 		report_error("pthread_setschedparam: %s", strerror(ret));

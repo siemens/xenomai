@@ -27,8 +27,6 @@
 struct cobalt_kqueues;
 struct cobalt_mutex;
 
-typedef struct cobalt_condattr pthread_condattr_t;
-
 struct cobalt_cond {
 	unsigned int magic;
 	struct xnsynch synchbase;
@@ -36,32 +34,16 @@ struct cobalt_cond {
 	struct list_head link;
 	struct list_head mutex_link;
 	unsigned long *pending_signals;
-	pthread_condattr_t attr;
+	struct cobalt_condattr attr;
 	struct cobalt_mutex *mutex;
 	struct cobalt_kqueues *owningq;
 	xnhandle_t handle;
 };
 
-extern const pthread_condattr_t cobalt_default_cond_attr;
-
 int cobalt_cond_deferred_signals(struct cobalt_cond *cond);
 
-int cobalt_condattr_init(pthread_condattr_t __user *u_attr);
-
-int cobalt_condattr_destroy(pthread_condattr_t __user *u_attr);
-
-int cobalt_condattr_getclock(const pthread_condattr_t __user *u_attr,
-			     clockid_t __user *u_clock);
-
-int cobalt_condattr_setclock(pthread_condattr_t __user *u_attr, clockid_t clock);
-
-int cobalt_condattr_getpshared(const pthread_condattr_t __user *u_attr,
-			       int __user *u_pshared);
-
-int cobalt_condattr_setpshared(pthread_condattr_t __user *u_attr, int pshared);
-
 int cobalt_cond_init(struct cobalt_cond_shadow __user *u_cnd,
-		     const pthread_condattr_t __user *u_attr);
+		     const struct cobalt_condattr __user *u_attr);
 
 int cobalt_cond_destroy(struct cobalt_cond_shadow __user *u_cnd);
 

@@ -409,17 +409,17 @@ SEM_ID semMCreate(int options)
 	 * consideration for priority while serializing threads is
 	 * just asking for troubles anyway.
 	 */
-	__RT(pthread_mutexattr_init(&mattr));
-	__RT(pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE));
+	pthread_mutexattr_init(&mattr);
+	pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE);
 #ifdef CONFIG_XENO_MERCURY
 	pthread_mutexattr_setrobust_np(&mattr, PTHREAD_MUTEX_ROBUST_NP);
 #endif
 	if (options & SEM_INVERSION_SAFE)
-		__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
-	__RT(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute));
+		pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
+	pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute);
 
 	__RT(pthread_mutex_init(&sem->u.msem.lock, &mattr));
-	__RT(pthread_mutexattr_destroy(&mattr));
+	pthread_mutexattr_destroy(&mattr);
 
 	CANCEL_RESTORE(svc);
 

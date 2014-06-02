@@ -22,47 +22,21 @@
 #include "thread.h"
 #include <cobalt/uapi/mutex.h>
 
-typedef struct cobalt_mutexattr pthread_mutexattr_t;
-
 struct cobalt_mutex {
 	unsigned int magic;
 	struct xnsynch synchbase;
 	/** cobalt_mutexq */
 	struct list_head link;
 	struct list_head conds;
-	pthread_mutexattr_t attr;
+	struct cobalt_mutexattr attr;
 	struct cobalt_kqueues *owningq;
 	xnhandle_t handle;
 };
 
-extern const pthread_mutexattr_t cobalt_default_mutex_attr;
-
-int cobalt_mutexattr_init(pthread_mutexattr_t __user *u_attr);
-
-int cobalt_mutexattr_destroy(pthread_mutexattr_t __user *u_attr);
-
-int cobalt_mutexattr_gettype(const pthread_mutexattr_t __user *u_attr,
-			     int __user *u_type);
-
-int cobalt_mutexattr_settype(pthread_mutexattr_t __user *u_attr,
-			     int type);
-
-int cobalt_mutexattr_getprotocol(const pthread_mutexattr_t __user *u_attr,
-				 int __user *u_proto);
-
-int cobalt_mutexattr_setprotocol(pthread_mutexattr_t __user *u_attr,
-				 int proto);
-
-int cobalt_mutexattr_getpshared(const pthread_mutexattr_t __user *u_attr,
-				int __user *u_pshared);
-
-int cobalt_mutexattr_setpshared(pthread_mutexattr_t __user *u_attr,
-				int pshared);
-
 int cobalt_mutex_check_init(struct cobalt_mutex_shadow __user *u_mx);
 
 int cobalt_mutex_init(struct cobalt_mutex_shadow __user *u_mx,
-		      const pthread_mutexattr_t __user *u_attr);
+		      const struct cobalt_mutexattr __user *u_attr);
 
 int cobalt_mutex_destroy(struct cobalt_mutex_shadow __user *u_mx);
 

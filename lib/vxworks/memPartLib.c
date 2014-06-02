@@ -62,12 +62,12 @@ PART_ID memPartCreate(char *pPool, unsigned int poolSize)
 		return (PART_ID)0;
 	}
 
-	__RT(pthread_mutexattr_init(&mattr));
-	__RT(pthread_mutexattr_settype(&mattr, mutex_type_attribute));
-	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
-	__RT(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute));
+	pthread_mutexattr_init(&mattr);
+	pthread_mutexattr_settype(&mattr, mutex_type_attribute);
+	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
+	pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute);
 	__RT(pthread_mutex_init(&mp->lock, &mattr));
-	__RT(pthread_mutexattr_destroy(&mattr));
+	pthread_mutexattr_destroy(&mattr);
 	mp->magic = mempart_magic;
 
 	CANCEL_RESTORE(svc);

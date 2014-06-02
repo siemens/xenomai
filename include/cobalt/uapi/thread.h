@@ -26,16 +26,14 @@
 #define PTHREAD_CONFORMING     0
 
 struct cobalt_mutexattr {
-	unsigned int magic: 24;
-	unsigned int type: 2;
-	unsigned int protocol: 2;
-	unsigned int pshared: 1;
+	int type : 3;
+	int protocol : 3;
+	int pshared : 2;
 };
 
 struct cobalt_condattr {
-	unsigned int magic: 24;
-	unsigned int clock: 2;
-	unsigned int pshared: 1;
+	int clock : 3;
+	int pshared : 2;
 };
 
 struct cobalt_threadstat {

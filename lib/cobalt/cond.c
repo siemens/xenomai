@@ -21,6 +21,8 @@
 #include "current.h"
 #include "internal.h"
 
+static pthread_condattr_t cobalt_default_condattr;
+
 static inline unsigned long *cond_get_signalsp(struct cobalt_cond_shadow *shadow)
 {
 	if (shadow->attr.pshared)
@@ -43,51 +45,34 @@ cond_get_mutex_datp(struct cobalt_cond_shadow *shadow)
 	return shadow->mutex_datp;
 }
 
-COBALT_IMPL(int, pthread_condattr_init, (pthread_condattr_t *attr))
+void cobalt_default_condattr_init(void)
 {
-	return -XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_condattr_init, attr);
+	pthread_condattr_init(&cobalt_default_condattr);
 }
 
-COBALT_IMPL(int, pthread_condattr_destroy, (pthread_condattr_t *attr))
-{
-	return -XENOMAI_SKINCALL1(__cobalt_muxid,sc_cobalt_condattr_destroy,attr);
-}
-
-COBALT_IMPL(int, pthread_condattr_getclock, (const pthread_condattr_t *attr,
-					     clockid_t *clk_id))
-{
-	return -XENOMAI_SKINCALL2(__cobalt_muxid,
-				  sc_cobalt_condattr_getclock, attr, clk_id);
-}
-
-COBALT_IMPL(int, pthread_condattr_setclock, (pthread_condattr_t *attr,
-					     clockid_t clk_id))
-{
-	return -XENOMAI_SKINCALL2(__cobalt_muxid,
-				  sc_cobalt_condattr_setclock, attr, clk_id);
-}
-
-COBALT_IMPL(int, pthread_condattr_getpshared, (const pthread_condattr_t *attr,
-					       int *pshared))
-{
-	return -XENOMAI_SKINCALL2(__cobalt_muxid,
-				  sc_cobalt_condattr_getpshared, attr, pshared);
-}
-
-COBALT_IMPL(int, pthread_condattr_setpshared, (pthread_condattr_t *attr, int pshared))
-{
-	return -XENOMAI_SKINCALL2(__cobalt_muxid,
-				  sc_cobalt_condattr_setpshared, attr, pshared);
-}
 
 COBALT_IMPL(int, pthread_cond_init, (pthread_cond_t *cond,
 				     const pthread_condattr_t * attr))
 {
 	struct cobalt_cond_shadow *_cnd = &((union cobalt_cond_union *)cond)->shadow_cond;
 	unsigned long *pending_signalsp;
-	int err;
+	struct cobalt_condattr kcattr;
+	int err, tmp;
 
-	err = -XENOMAI_SKINCALL2(__cobalt_muxid, sc_cobalt_cond_init, _cnd, attr);
+	if (attr == NULL)
+		attr = &cobalt_default_condattr;
+
+	err = pthread_condattr_getpshared(attr, &tmp);
+	if (err)
+		return err;
+	kcattr.pshared = tmp;
+
+	err = pthread_condattr_getclock(attr, &tmp);
+	if (err)
+		return err;
+	kcattr.clock = tmp;
+
+	err = -XENOMAI_SKINCALL2(__cobalt_muxid, sc_cobalt_cond_init, _cnd, &kcattr);
 	if (err)
 		return err;
 

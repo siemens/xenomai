@@ -3,13 +3,11 @@ obj-$(CONFIG_XENOMAI) += posix.o
 posix-y :=		\
 	clock.o		\
 	cond.o		\
-	cond_attr.o	\
 	event.o		\
 	init.o		\
 	monitor.o	\
 	mqueue.o	\
 	mutex.o		\
-	mutex_attr.o	\
 	nsem.o		\
 	sched.o		\
 	sem.o		\

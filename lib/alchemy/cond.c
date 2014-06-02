@@ -127,11 +127,11 @@ int rt_cond_create(RT_COND *cond, const char *name)
 	}
 
 	generate_name(ccb->name, name, &cond_namegen);
-	__RT(pthread_condattr_init(&cattr));
-	__RT(pthread_condattr_setpshared(&cattr, mutex_scope_attribute));
-	__RT(pthread_condattr_setclock(&cattr, CLOCK_COPPERPLATE));
+	pthread_condattr_init(&cattr);
+	pthread_condattr_setpshared(&cattr, mutex_scope_attribute);
+	pthread_condattr_setclock(&cattr, CLOCK_COPPERPLATE);
 	__RT(pthread_cond_init(&ccb->cond, &cattr));
-	__RT(pthread_condattr_destroy(&cattr));
+	pthread_condattr_destroy(&cattr);
 
 	registry_init_file(&ccb->fsobj, &registry_ops, 0);
 

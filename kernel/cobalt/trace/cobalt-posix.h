@@ -517,7 +517,7 @@ TRACE_EVENT(cobalt_psem_open,
 TRACE_EVENT(cobalt_psem_open_failed,
 	TP_PROTO(const char *name, int oflags, mode_t mode,
 		 unsigned int value, int status),
-        TP_ARGS(name, oflags, mode, value, status),
+	TP_ARGS(name, oflags, mode, value, status),
 	TP_STRUCT__entry(
 		__string(name, name)
 		__field(int, oflags)
@@ -654,7 +654,7 @@ DEFINE_EVENT(cobalt_clock_ident, cobalt_clock_deregister,
 
 TRACE_EVENT(cobalt_cond_init,
 	TP_PROTO(const struct cobalt_cond_shadow __user *u_cnd,
-		 const pthread_condattr_t *attr),
+		 const struct cobalt_condattr *attr),
 	TP_ARGS(u_cnd, attr),
 	TP_STRUCT__entry(
 		__field(const struct cobalt_cond_shadow __user *, u_cnd)

@@ -105,7 +105,7 @@ cond_destroy_internal(xnhandle_t handle, struct cobalt_kqueues *q)
  *
  */
 static inline int
-pthread_cond_init(struct cobalt_cond_shadow *cnd, const pthread_condattr_t *attr)
+pthread_cond_init(struct cobalt_cond_shadow *cnd, const struct cobalt_condattr *attr)
 {
 	int synch_flags = XNSYNCH_PRIO | XNSYNCH_NOPIP, err;
 	struct cobalt_cond *cond, *old_cond;
@@ -128,11 +128,6 @@ pthread_cond_init(struct cobalt_cond_shadow *cnd, const pthread_condattr_t *attr
 	*(cond->pending_signals) = 0;
 
 	xnlock_get_irqsave(&nklock, s);
-
-	if (attr->magic != COBALT_COND_ATTR_MAGIC) {
-		err = -EINVAL;
-		goto err_free_pending_signals;
-	}
 
 	condq = &cobalt_kqueues(attr->pshared)->condq;
 
@@ -224,7 +219,7 @@ static inline int pthread_cond_destroy(struct cobalt_cond_shadow *cnd)
 		xnlock_put_irqrestore(&nklock, s);
 		return -EINVAL;
 	}
-	
+
 	if (!cobalt_obj_active(cnd, COBALT_COND_MAGIC, struct cobalt_cond_shadow)
 	    || !cobalt_obj_active(cond, COBALT_COND_MAGIC, struct cobalt_cond)) {
 		xnlock_put_irqrestore(&nklock, s);
@@ -356,28 +351,21 @@ unlock_and_return:
 }
 
 int cobalt_cond_init(struct cobalt_cond_shadow __user *u_cnd,
-		     const pthread_condattr_t __user *u_attr)
+		     const struct cobalt_condattr __user *u_attr)
 {
-	const pthread_condattr_t *attr;
 	struct cobalt_cond_shadow cnd;
-	pthread_condattr_t locattr;
+	struct cobalt_condattr attr;
 	int err;
 
 	if (__xn_safe_copy_from_user(&cnd, u_cnd, sizeof(cnd)))
 		return -EFAULT;
 
-	if (u_attr) {
-		if (__xn_safe_copy_from_user(&locattr,
-					     u_attr, sizeof(locattr)))
-			return -EFAULT;
+	if (__xn_safe_copy_from_user(&attr, u_attr, sizeof(attr)))
+		return -EFAULT;
 
-		attr = &locattr;
-	} else
-		attr = &cobalt_default_cond_attr;
+	trace_cobalt_cond_init(u_cnd, &attr);
 
-	trace_cobalt_cond_init(u_cnd, attr);
-
-	err = pthread_cond_init(&cnd, attr);
+	err = pthread_cond_init(&cnd, &attr);
 	if (err < 0)
 		return err;
 

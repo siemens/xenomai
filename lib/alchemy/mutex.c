@@ -131,15 +131,15 @@ int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 
 	generate_name(mcb->name, name, &mutex_namegen);
 	mcb->owner = NO_ALCHEMY_TASK;
-	__RT(pthread_mutexattr_init(&mattr));
-	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
-	__RT(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute));
-	__RT(pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE));
+	pthread_mutexattr_init(&mattr);
+	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
+	pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute);
+	pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE);
 #ifdef CONFIG_XENO_MERCURY
 	pthread_mutexattr_setrobust_np(&mattr, PTHREAD_MUTEX_ROBUST_NP);
 #endif
 	__RT(pthread_mutex_init(&mcb->lock, &mattr));
-	__RT(pthread_mutexattr_destroy(&mattr));
+	pthread_mutexattr_destroy(&mattr);
 
 	registry_init_file(&mcb->fsobj, &registry_ops, 0);
 

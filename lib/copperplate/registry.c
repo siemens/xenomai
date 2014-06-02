@@ -150,7 +150,7 @@ done:
 	return __bt(ret);
 }
 
-int registry_init_file(struct fsobj *fsobj, 
+int registry_init_file(struct fsobj *fsobj,
 		       const struct registry_operations *ops,
 		       size_t privsz)
 {
@@ -165,12 +165,12 @@ int registry_init_file(struct fsobj *fsobj,
 	fsobj->privsz = privsz;
 	pvholder_init(&fsobj->link);
 
-	__RT(pthread_mutexattr_init(&mattr));
-	__RT(pthread_mutexattr_settype(&mattr, mutex_type_attribute));
-	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
-	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
+	pthread_mutexattr_init(&mattr);
+	pthread_mutexattr_settype(&mattr, mutex_type_attribute);
+	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
+	pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
 	ret = __bt(-__RT(pthread_mutex_init(&fsobj->lock, &mattr)));
-	__RT(pthread_mutexattr_destroy(&mattr));
+	pthread_mutexattr_destroy(&mattr);
 
 	return ret;
 }
@@ -712,12 +712,12 @@ int __registry_pkg_init(const char *arg0, char *mountpt)
 	pthread_attr_t thattr;
 	int ret;
 
-	__RT(pthread_mutexattr_init(&mattr));
-	__RT(pthread_mutexattr_settype(&mattr, mutex_type_attribute));
-	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
-	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
+	pthread_mutexattr_init(&mattr);
+	pthread_mutexattr_settype(&mattr, mutex_type_attribute);
+	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
+	pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
 	ret = __bt(-__RT(pthread_mutex_init(&p->lock, &mattr)));
-	__RT(pthread_mutexattr_destroy(&mattr));
+	pthread_mutexattr_destroy(&mattr);
 	if (ret)
 		return ret;
 
@@ -812,9 +812,9 @@ int fsobstack_grow_format(struct fsobstack *o, const char *fmt, ...)
 	va_list ap;
 
 	for (;;) {
-               va_start(ap, fmt);
-               n = vsnprintf(p, len, fmt, ap);
-               va_end(ap);
+	       va_start(ap, fmt);
+	       n = vsnprintf(p, len, fmt, ap);
+	       va_end(ap);
 
 	       if (n > 0 && n < len)
 		       obstack_grow(&o->obstack, p, n);
@@ -822,14 +822,14 @@ int fsobstack_grow_format(struct fsobstack *o, const char *fmt, ...)
 	       if (p != buf)
 		       pvfree(p);
 
-               if (n < len)
+	       if (n < len)
 		       return n < 0 ? -EINVAL : n;
 
 	       len = n + 1;
 	       p = pvmalloc(len);
 	       if (p == NULL)
 		       break;
-           }
+	   }
 
 	return -ENOMEM;
 }
@@ -849,7 +849,7 @@ int fsobstack_grow_file(struct fsobstack *o, const char *path)
 	int len = 0;
 	FILE *fp;
 	int c;
-	
+
 	fp = fopen(path, "r");
 	if (fp == NULL)
 		return -errno;

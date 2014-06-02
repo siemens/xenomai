@@ -82,20 +82,7 @@
 #define sc_cobalt_sem_inquire           58
 #define sc_cobalt_event_inquire         59
 #define sc_cobalt_sigqueue		60
-#define sc_cobalt_mutexattr_init        61
-#define sc_cobalt_mutexattr_destroy     62
-#define sc_cobalt_mutexattr_gettype     63
-#define sc_cobalt_mutexattr_settype     64
-#define sc_cobalt_mutexattr_getprotocol 65
-#define sc_cobalt_mutexattr_setprotocol 66
-#define sc_cobalt_mutexattr_getpshared  67
-#define sc_cobalt_mutexattr_setpshared  68
-#define sc_cobalt_condattr_init         69
-#define sc_cobalt_condattr_destroy      70
-#define sc_cobalt_condattr_getclock     71
-#define sc_cobalt_condattr_setclock     72
-#define sc_cobalt_condattr_getpshared   73
-#define sc_cobalt_condattr_setpshared   74
+/* 61-74 unimplemented */
 #define sc_cobalt_thread_join           75
 #define sc_cobalt_thread_kill           76
 #define sc_cobalt_select                77

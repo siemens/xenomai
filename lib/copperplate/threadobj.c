@@ -1043,20 +1043,20 @@ int threadobj_init(struct threadobj *thobj,
 	 * __threadobj_alloc(), do not overwrite.
 	 */
 
-	__RT(pthread_mutexattr_init(&mattr));
-	__RT(pthread_mutexattr_settype(&mattr, mutex_type_attribute));
-	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
-	__RT(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute));
+	pthread_mutexattr_init(&mattr);
+	pthread_mutexattr_settype(&mattr, mutex_type_attribute);
+	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
+	pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute);
 	ret = __bt(-__RT(pthread_mutex_init(&thobj->lock, &mattr)));
-	__RT(pthread_mutexattr_destroy(&mattr));
+	pthread_mutexattr_destroy(&mattr);
 	if (ret)
 		return ret;
 
-	__RT(pthread_condattr_init(&cattr));
-	__RT(pthread_condattr_setpshared(&cattr, mutex_scope_attribute));
-	__RT(pthread_condattr_setclock(&cattr, CLOCK_COPPERPLATE));
+	pthread_condattr_init(&cattr);
+	pthread_condattr_setpshared(&cattr, mutex_scope_attribute);
+	pthread_condattr_setclock(&cattr, CLOCK_COPPERPLATE);
 	ret = __bt(-__RT(pthread_cond_init(&thobj->barrier, &cattr)));
-	__RT(pthread_condattr_destroy(&cattr));
+	pthread_condattr_destroy(&cattr);
 	if (ret) {
 		__RT(pthread_mutex_destroy(&thobj->lock));
 		return ret;

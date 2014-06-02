@@ -184,12 +184,12 @@ u_long pt_create(const char *name,
 	memset(pt->bitmap, 0, overhead - sizeof(*pt) + sizeof(pt->bitmap));
 	*nbuf = pt->nblks;
 
-	__RT(pthread_mutexattr_init(&mattr));
-	__RT(pthread_mutexattr_settype(&mattr, mutex_type_attribute));
-	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
-	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
+	pthread_mutexattr_init(&mattr);
+	pthread_mutexattr_settype(&mattr, mutex_type_attribute);
+	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
+	pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
 	__RT(pthread_mutex_init(&pt->lock, &mattr));
-	__RT(pthread_mutexattr_destroy(&mattr));
+	pthread_mutexattr_destroy(&mattr);
 
 	pt->magic = pt_magic;
 	*ptid_r = (u_long)pt;

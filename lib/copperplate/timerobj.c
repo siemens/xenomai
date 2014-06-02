@@ -205,13 +205,13 @@ int timerobj_init(struct timerobj *tmobj)
 	if (ret)
 		return __bt(-errno);
 
-	__RT(pthread_mutexattr_init(&mattr));
-	__RT(pthread_mutexattr_settype(&mattr, mutex_type_attribute));
-	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
-	ret = __RT(pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute));
+	pthread_mutexattr_init(&mattr);
+	pthread_mutexattr_settype(&mattr, mutex_type_attribute);
+	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
+	ret = pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute);
 	assert(ret == 0);
 	ret = __bt(-__RT(pthread_mutex_init(&tmobj->lock, &mattr)));
-	__RT(pthread_mutexattr_destroy(&mattr));
+	pthread_mutexattr_destroy(&mattr);
 
 	return ret;
 }
@@ -281,12 +281,12 @@ int timerobj_pkg_init(void)
 	pthread_mutexattr_t mattr;
 	int ret;
 
-	__RT(pthread_mutexattr_init(&mattr));
-	__RT(pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE));
-	__RT(pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT));
-	__RT(pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE));
+	pthread_mutexattr_init(&mattr);
+	pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE);
+	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
+	pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
 	ret = __bt(-__RT(pthread_mutex_init(&svlock, &mattr)));
-	__RT(pthread_mutexattr_destroy(&mattr));
+	pthread_mutexattr_destroy(&mattr);
 
 	return ret;
 }
