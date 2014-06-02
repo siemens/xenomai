@@ -30,16 +30,16 @@
 #define RTSWITCH_NRT     0
 #define RTSWITCH_KERNEL  0x20000
 
-typedef struct {
+struct rtswitch_task {
 	struct rttst_swtest_task base;
 	rtdm_event_t rt_synch;
 	struct semaphore nrt_synch;
 	struct xnthread ktask;          /* For kernel-space real-time tasks. */
 	unsigned last_switch;
-} rtswitch_task_t;
+};
 
-typedef struct rtswitch_context {
-	rtswitch_task_t *tasks;
+struct rtswitch_context {
+	struct rtswitch_task *tasks;
 	unsigned tasks_count;
 	unsigned next_index;
 	struct semaphore lock;
@@ -53,9 +53,9 @@ typedef struct rtswitch_context {
 	unsigned failed;
 	struct rttst_swtest_error error;
 
-	rtswitch_task_t *utask;
+	struct rtswitch_task *utask;
 	rtdm_nrtsig_t wake_utask;
-} rtswitch_context_t;
+};
 
 static unsigned int start_index;
 
@@ -79,9 +79,9 @@ static int report(const char *fmt, ...)
 	return ret;
 }
 
-static void handle_ktask_error(rtswitch_context_t *ctx, unsigned fp_val)
+static void handle_ktask_error(struct rtswitch_context *ctx, unsigned fp_val)
 {
-	rtswitch_task_t *cur = &ctx->tasks[ctx->error.last_switch.to];
+	struct rtswitch_task *cur = &ctx->tasks[ctx->error.last_switch.to];
 	unsigned i;
 
 	ctx->failed = 1;
@@ -89,7 +89,7 @@ static void handle_ktask_error(rtswitch_context_t *ctx, unsigned fp_val)
 
 	if ((cur->base.flags & RTSWITCH_RT) == RTSWITCH_RT)
 		for (i = 0; i < ctx->tasks_count; i++) {
-			rtswitch_task_t *task = &ctx->tasks[i];
+			struct rtswitch_task *task = &ctx->tasks[i];
 
 			/* Find the first non kernel-space task. */
 			if ((task->base.flags & RTSWITCH_KERNEL))
@@ -112,10 +112,10 @@ static void handle_ktask_error(rtswitch_context_t *ctx, unsigned fp_val)
 		}
 }
 
-static int rtswitch_pend_rt(rtswitch_context_t *ctx,
+static int rtswitch_pend_rt(struct rtswitch_context *ctx,
 			    unsigned idx)
 {
-	rtswitch_task_t *task;
+	struct rtswitch_task *task;
 	int rc;
 
 	if (idx > ctx->tasks_count)
@@ -136,9 +136,9 @@ static int rtswitch_pend_rt(rtswitch_context_t *ctx,
 
 static void timed_wake_up(rtdm_timer_t *timer)
 {
-	rtswitch_context_t *ctx =
-		container_of(timer, rtswitch_context_t, wake_up_delay);
-	rtswitch_task_t *task;
+	struct rtswitch_context *ctx =
+		container_of(timer, struct rtswitch_context, wake_up_delay);
+	struct rtswitch_task *task;
 
 	task = &ctx->tasks[ctx->next_task];
 
@@ -153,11 +153,11 @@ static void timed_wake_up(rtdm_timer_t *timer)
 	}
 }
 
-static int rtswitch_to_rt(rtswitch_context_t *ctx,
+static int rtswitch_to_rt(struct rtswitch_context *ctx,
 			  unsigned from_idx,
 			  unsigned to_idx)
 {
-	rtswitch_task_t *from, *to;
+	struct rtswitch_task *from, *to;
 	int rc;
 
 	if (from_idx > ctx->tasks_count || to_idx > ctx->tasks_count)
@@ -214,10 +214,10 @@ static int rtswitch_to_rt(rtswitch_context_t *ctx,
 	return 0;
 }
 
-static int rtswitch_pend_nrt(rtswitch_context_t *ctx,
+static int rtswitch_pend_nrt(struct rtswitch_context *ctx,
 			     unsigned idx)
 {
-	rtswitch_task_t *task;
+	struct rtswitch_task *task;
 
 	if (idx > ctx->tasks_count)
 		return -EINVAL;
@@ -235,11 +235,11 @@ static int rtswitch_pend_nrt(rtswitch_context_t *ctx,
 	return 0;
 }
 
-static int rtswitch_to_nrt(rtswitch_context_t *ctx,
+static int rtswitch_to_nrt(struct rtswitch_context *ctx,
 			   unsigned from_idx,
 			   unsigned to_idx)
 {
-	rtswitch_task_t *from, *to;
+	struct rtswitch_task *from, *to;
 	unsigned expected, fp_val;
 	int fp_check;
 
@@ -351,9 +351,9 @@ static int rtswitch_to_nrt(rtswitch_context_t *ctx,
 	return 0;
 }
 
-static int rtswitch_set_tasks_count(rtswitch_context_t *ctx, unsigned count)
+static int rtswitch_set_tasks_count(struct rtswitch_context *ctx, unsigned count)
 {
-	rtswitch_task_t *tasks;
+	struct rtswitch_task *tasks;
 
 	if (ctx->tasks_count == count)
 		return 0;
@@ -377,10 +377,10 @@ static int rtswitch_set_tasks_count(rtswitch_context_t *ctx, unsigned count)
 	return 0;
 }
 
-static int rtswitch_register_task(rtswitch_context_t *ctx,
+static int rtswitch_register_task(struct rtswitch_context *ctx,
 				  struct rttst_swtest_task *arg)
 {
-	rtswitch_task_t *t;
+	struct rtswitch_task *t;
 
 	down(&ctx->lock);
 
@@ -403,16 +403,16 @@ static int rtswitch_register_task(rtswitch_context_t *ctx,
 }
 
 struct taskarg {
-	rtswitch_context_t *ctx;
-	rtswitch_task_t *task;
+	struct rtswitch_context *ctx;
+	struct rtswitch_task *task;
 };
 
 static void rtswitch_ktask(void *cookie)
 {
 	struct taskarg *arg = (struct taskarg *) cookie;
 	unsigned int fp_val, expected, to, i = 0;
-	rtswitch_context_t *ctx = arg->ctx;
-	rtswitch_task_t *task = arg->task;
+	struct rtswitch_context *ctx = arg->ctx;
+	struct rtswitch_task *task = arg->task;
 
 	to = task->base.index;
 
@@ -456,13 +456,13 @@ static void rtswitch_ktask(void *cookie)
 	}
 }
 
-static int rtswitch_create_ktask(rtswitch_context_t *ctx,
+static int rtswitch_create_ktask(struct rtswitch_context *ctx,
 				 struct rttst_swtest_task *ptask)
 {
 	union xnsched_policy_param param;
 	struct xnthread_start_attr sattr;
 	struct xnthread_init_attr iattr;
-	rtswitch_task_t *task;
+	struct rtswitch_task *task;
 	struct taskarg arg;
 	int init_flags;
 	char name[30];
@@ -525,13 +525,13 @@ static int rtswitch_create_ktask(rtswitch_context_t *ctx,
 
 static void rtswitch_utask_waker(rtdm_nrtsig_t sig, void *arg)
 {
-	rtswitch_context_t *ctx = (rtswitch_context_t *)arg;
+	struct rtswitch_context *ctx = (struct rtswitch_context *)arg;
 	up(&ctx->utask->nrt_synch);
 }
 
 static int rtswitch_open(struct rtdm_fd *fd, int oflags)
 {
-	rtswitch_context_t *ctx = rtdm_fd_to_private(fd);
+	struct rtswitch_context *ctx = rtdm_fd_to_private(fd);
 	int err;
 
 	ctx->tasks = NULL;
@@ -552,14 +552,14 @@ static int rtswitch_open(struct rtdm_fd *fd, int oflags)
 
 static void rtswitch_close(struct rtdm_fd *fd)
 {
-	rtswitch_context_t *ctx = rtdm_fd_to_private(fd);
+	struct rtswitch_context *ctx = rtdm_fd_to_private(fd);
 	unsigned i;
 
 	if (ctx->tasks) {
 		set_cpus_allowed(current, cpumask_of_cpu(ctx->cpu));
 
 		for (i = 0; i < ctx->next_index; i++) {
-			rtswitch_task_t *task = &ctx->tasks[i];
+			struct rtswitch_task *task = &ctx->tasks[i];
 
 			if (task->base.flags & RTSWITCH_KERNEL) {
 				rtdm_task_destroy(&task->ktask);
@@ -577,7 +577,7 @@ static int rtswitch_ioctl_nrt(struct rtdm_fd *fd,
 			      unsigned int request,
 			      void *arg)
 {
-	rtswitch_context_t *ctx = rtdm_fd_to_private(fd);
+	struct rtswitch_context *ctx = rtdm_fd_to_private(fd);
 	struct rttst_swtest_task task;
 	struct rttst_swtest_dir fromto;
 	unsigned long count;
@@ -680,7 +680,7 @@ static int rtswitch_ioctl_rt(struct rtdm_fd *fd,
 			     unsigned int request,
 			     void *arg)
 {
-	rtswitch_context_t *ctx = rtdm_fd_to_private(fd);
+	struct rtswitch_context *ctx = rtdm_fd_to_private(fd);
 	struct rttst_swtest_task task;
 	struct rttst_swtest_dir fromto;
 
@@ -729,7 +729,7 @@ static struct rtdm_device device = {
 	.struct_version = RTDM_DEVICE_STRUCT_VER,
 
 	.device_flags = RTDM_NAMED_DEVICE,
-	.context_size = sizeof(rtswitch_context_t),
+	.context_size = sizeof(struct rtswitch_context),
 	.device_name = "",
 
 	.open = rtswitch_open,
