@@ -25,7 +25,6 @@
 #include <asm/xenomai/wrappers.h>
 #include <asm/xenomai/machine.h>
 #include <cobalt/uapi/asm-generic/syscall.h>
-#include <cobalt/uapi/signal.h>
 
 struct task_struct;
 struct pt_regs;

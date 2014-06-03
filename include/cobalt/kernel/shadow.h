@@ -20,8 +20,11 @@
 #ifndef _COBALT_KERNEL_SHADOW_H
 #define _COBALT_KERNEL_SHADOW_H
 
+#include <linux/signal.h>
+#include <linux/sched.h>
 #include <asm/xenomai/syscall.h>
 #include <cobalt/uapi/kernel/types.h>
+#include <cobalt/uapi/signal.h>
 
 struct xnthread;
 struct xnthread_user_window;
