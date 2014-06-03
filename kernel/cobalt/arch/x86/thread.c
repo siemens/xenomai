@@ -42,7 +42,7 @@
 
 #else /* !CONFIG_CC_STACKPROTECTOR */
 
-#define __CANARY_OUPUT
+#define __CANARY_OUTPUT
 #define __CANARY_INPUT
 #define __CANARY_SWITCH
 
@@ -90,7 +90,7 @@ static inline void do_switch_threads(struct xnarchtcb *out_tcb,
 
 #ifdef CONFIG_CC_STACKPROTECTOR
 
-#define __CANARY_OUPUT							\
+#define __CANARY_OUTPUT							\
 	, [gs_canary] "=m" (irq_stack_union.stack_canary)
 
 #define __CANARY_INPUT							\
@@ -104,7 +104,7 @@ static inline void do_switch_threads(struct xnarchtcb *out_tcb,
 
 #else /* !CONFIG_CC_STACKPROTECTOR */
 
-#define __CANARY_OUPUT
+#define __CANARY_OUTPUT
 #define __CANARY_INPUT
 #define __CANARY_SWITCH
 
@@ -129,7 +129,7 @@ static inline void do_switch_threads(struct xnarchtcb *out_tcb,
 			     "popfq\n\t"				\
 			     : "=S" (__rsi), "=D" (__rdi), "=a"	(__rax), \
 			       "=b" (__rbx), "=c" (__rcx), "=d" (__rdx)	\
-			       __CANARY_OUPUT				\
+			       __CANARY_OUTPUT				\
 			     : "0" (next), "1" (prev), "5" (p_rsp), "4" (n_rsp), \
 			       "2" (p_rip), "3" (n_rip)			\
 			       __CANARY_INPUT				\
