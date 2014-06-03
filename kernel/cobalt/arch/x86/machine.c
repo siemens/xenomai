@@ -18,6 +18,7 @@
  *   02111-1307, USA.
  */
 
+#include <linux/ipipe_tickdev.h>
 #include <cobalt/kernel/arith.h>
 #include <asm/xenomai/machine.h>
 #include <asm/xenomai/smi.h>
