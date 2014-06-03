@@ -62,22 +62,6 @@ COBALT_DECL(int, pthread_setschedparam(pthread_t thread,
 COBALT_DECL(int, pthread_yield(void));
 #endif
 
-COBALT_DECL(int, pthread_mutexattr_init(pthread_mutexattr_t *attr));
-
-COBALT_DECL(int, pthread_mutexattr_destroy(pthread_mutexattr_t *attr));
-
-COBALT_DECL(int, pthread_mutexattr_gettype(const pthread_mutexattr_t *attr,
-					   int *type));
-
-COBALT_DECL(int, pthread_mutexattr_settype(pthread_mutexattr_t *attr,
-					   int type));
-
-COBALT_DECL(int, pthread_mutexattr_getpshared(const pthread_mutexattr_t *attr,
-					      int *pshared));
-
-COBALT_DECL(int, pthread_mutexattr_setpshared(pthread_mutexattr_t *attr,
-					      int pshared));
-
 COBALT_DECL(int, pthread_mutex_init(pthread_mutex_t *mutex,
 				    const pthread_mutexattr_t *attr));
 
@@ -91,22 +75,6 @@ COBALT_DECL(int, pthread_mutex_timedlock(pthread_mutex_t *mutex,
 COBALT_DECL(int, pthread_mutex_trylock(pthread_mutex_t *mutex));
 
 COBALT_DECL(int, pthread_mutex_unlock(pthread_mutex_t *mutex));
-
-COBALT_DECL(int, pthread_condattr_init(pthread_condattr_t *attr));
-
-COBALT_DECL(int, pthread_condattr_destroy(pthread_condattr_t *attr));
-
-COBALT_DECL(int, pthread_condattr_getclock(const pthread_condattr_t *attr,
-					   clockid_t *clk_id));
-
-COBALT_DECL(int, pthread_condattr_setclock(pthread_condattr_t *attr,
-					   clockid_t clk_id));
-
-COBALT_DECL(int, pthread_condattr_getpshared(const pthread_condattr_t *attr,
-					     int *pshared));
-
-COBALT_DECL(int, pthread_condattr_setpshared(pthread_condattr_t *attr,
-					     int pshared));
 
 COBALT_DECL(int, pthread_cond_init (pthread_cond_t *cond,
 				    const pthread_condattr_t *attr));
@@ -127,18 +95,6 @@ COBALT_DECL(int, pthread_cond_broadcast(pthread_cond_t *cond));
 COBALT_DECL(int, pthread_kill(pthread_t ptid, int sig));
 
 COBALT_DECL(int, pthread_join(pthread_t ptid, void **retval));
-
-COBALT_DECL(int, pthread_mutexattr_getprotocol(const pthread_mutexattr_t *attr,
-					       int *proto));
-
-COBALT_DECL(int, pthread_mutexattr_setprotocol(pthread_mutexattr_t *attr,
-					       int proto));
-
-COBALT_DECL(int, pthread_condattr_getclock(const pthread_condattr_t *attr,
-					   clockid_t *clk_id));
-
-COBALT_DECL(int, pthread_condattr_setclock(pthread_condattr_t *attr,
-					   clockid_t clk_id));
 
 int pthread_make_periodic_np(pthread_t thread,
 			     clockid_t clk_id,
