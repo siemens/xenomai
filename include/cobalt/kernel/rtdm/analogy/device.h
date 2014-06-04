@@ -22,7 +22,7 @@
 #ifndef _COBALT_RTDM_ANALOGY_DEVICE_H
 #define _COBALT_RTDM_ANALOGY_DEVICE_H
 
-#include <rtdm/analogy/os_facilities.h>
+#include <rtdm/analogy/rtdm_helpers.h>
 #include <rtdm/analogy/transfer.h>
 #include <rtdm/analogy/driver.h>
 
@@ -33,25 +33,24 @@
 struct a4l_device {
 
 	/* Spinlock for global device use */
-	a4l_lock_t lock;
+	rtdm_lock_t lock;
 
 	/* Device specific flags */
 	unsigned long flags;
 
 	/* Driver assigned to this device thanks to attaching
 	   procedure */
-	a4l_drv_t *driver;
+	struct a4l_driver *driver;
 
 	/* Hidden description stuff */
 	struct list_head subdvsq;
 
 	/* Context-dependent stuff */
-	a4l_trf_t transfer;
+	struct a4l_transfer transfer;
 
 	/* Private data useful for drivers functioning */
 	void *priv;
 };
-typedef struct a4l_device a4l_dev_t;
 
 /* --- Devices tab related functions --- */
 void a4l_init_devs(void);
@@ -59,11 +58,11 @@ int a4l_check_cleanup_devs(void);
 int a4l_rdproc_devs(struct seq_file *p, void *data);
 
 /* --- Context related function / macro --- */
-void a4l_set_dev(a4l_cxt_t *cxt);
+void a4l_set_dev(struct a4l_device_context *cxt);
 #define a4l_get_dev(x) ((x)->dev)
 
 /* --- Upper layer functions --- */
-int a4l_ioctl_devcfg(a4l_cxt_t * cxt, void *arg);
-int a4l_ioctl_devinfo(a4l_cxt_t * cxt, void *arg);
+int a4l_ioctl_devcfg(struct a4l_device_context * cxt, void *arg);
+int a4l_ioctl_devinfo(struct a4l_device_context * cxt, void *arg);
 
 #endif /* !_COBALT_RTDM_ANALOGY_DEVICE_H */

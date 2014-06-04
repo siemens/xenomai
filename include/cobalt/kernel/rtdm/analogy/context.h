@@ -37,9 +37,8 @@ struct a4l_device_context {
 	   subdevice */
 	struct a4l_buffer *buffer;
 };
-typedef struct a4l_device_context a4l_cxt_t;
 
-static inline int a4l_get_minor(a4l_cxt_t *cxt)
+static inline int a4l_get_minor(struct a4l_device_context *cxt)
 {
 	/* Get a pointer on the container structure */
 	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);

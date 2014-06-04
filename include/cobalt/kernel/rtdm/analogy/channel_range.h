@@ -43,10 +43,10 @@
  * - their references;
  *
  * Such parameters must be declared for each channel composing a
- * subdevice. The structure a4l_channel (a4l_chan_t) is used to
+ * subdevice. The structure a4l_channel (struct a4l_channel) is used to
  * define one channel.
  *
- * Another structure named a4l_channels_desc (a4l_chdesc_t)
+ * Another structure named a4l_channels_desc (struct a4l_channels_desc)
  * gathers all channels for a specific subdevice. This latter
  * structure also stores :
  * - the channels count;
@@ -58,7 +58,7 @@
  *
  * Usually the channels descriptor looks like this:
  * <tt> @verbatim
-a4l_chdesc_t example_chan = {
+struct a4l_channels_desc example_chan = {
 	mode: A4L_CHAN_GLOBAL_CHANDESC, -> Global declaration
 					      mode is set
 	length: 8, -> 8 channels
@@ -86,10 +86,10 @@ a4l_chdesc_t example_chan = {
  * range will be selected for each enabled channel.
  *
  * Consequently, for each channel, the developer must declare all the
- * possible ranges in a structure called a4l_rngtab_t. Here is an
+ * possible ranges in a structure called struct a4l_rngtab. Here is an
  * example:
  * <tt> @verbatim
-a4l_rngtab_t example_tab = {
+struct a4l_rngtab example_tab = {
     length: 2,
     rngs: {
 	RANGE_V(-5,5),
@@ -100,7 +100,7 @@ a4l_rngtab_t example_tab = {
  *
  * For each subdevice, a specific structure is designed to gather all
  * the ranges tabs of all the channels. In this structure, called
- * a4l_rngdesc_t, three fields must be filled:
+ * struct a4l_rngdesc, three fields must be filled:
  * - the declaration mode (A4L_RNG_GLOBAL_RNGDESC or
  *   A4L_RNG_PERCHAN_RNGDESC);
  * - the number of ranges tab;
@@ -113,7 +113,7 @@ a4l_rngtab_t example_tab = {
  *
  * Here is an example:
  * <tt> @verbatim
-a4l_rngdesc_t example_rng = RNG_GLOBAL(example_tab);
+struct a4l_rngdesc example_rng = RNG_GLOBAL(example_tab);
 @endverbatim </tt>
  *
  * @{
@@ -160,7 +160,6 @@ struct a4l_channel {
 	unsigned long flags; /*!< Channel flags to define the reference. */
 	unsigned long nb_bits; /*!< Channel resolution. */
 };
-typedef struct a4l_channel a4l_chan_t;
 
 /*!
  * @anchor A4L_CHAN_xxx @name Channels declaration mode
@@ -188,9 +187,8 @@ typedef struct a4l_channel a4l_chan_t;
 struct a4l_channels_desc {
 	unsigned long mode; /*!< Declaration mode (global or per channel) */
 	unsigned long length; /*!< Channels count */
-	a4l_chan_t chans[]; /*!< Channels tab */
+	struct a4l_channel chans[]; /*!< Channels tab */
 };
-typedef struct a4l_channels_desc a4l_chdesc_t;
 
 /**
  * Internal use flag (must not be used by driver developer)
@@ -206,7 +204,6 @@ struct a4l_range {
 	long max; /*!< Maximal falue */
 	unsigned long flags; /*!< Range flags (unit, etc.) */
 };
-typedef struct a4l_range a4l_rng_t;
 
 /**
  * Macro to declare a (unique) range with no unit defined
@@ -233,9 +230,8 @@ typedef struct a4l_range a4l_rng_t;
 /* Ranges tab descriptor */
 struct a4l_rngtab {
 	unsigned char length;
-	a4l_rng_t rngs[];
+	struct a4l_range rngs[];
 };
-typedef struct a4l_rngtab a4l_rngtab_t;
 
 /**
  * Constant to define a ranges descriptor as global (inter-channel)
@@ -250,9 +246,8 @@ typedef struct a4l_rngtab a4l_rngtab_t;
 struct a4l_rngdesc {
 	unsigned char mode;
 	unsigned char length;
-	a4l_rngtab_t *rngtabs[];
+	struct a4l_rngtab *rngtabs[];
 };
-typedef struct a4l_rngdesc a4l_rngdesc_t;
 
 /**
  * Macro to declare a ranges global descriptor in one line
@@ -263,12 +258,12 @@ typedef struct a4l_rngdesc a4l_rngdesc_t;
 	.rngtabs = {&(x)},		\
 }
 
-extern a4l_rngdesc_t a4l_range_bipolar10;
-extern a4l_rngdesc_t a4l_range_bipolar5;
-extern a4l_rngdesc_t a4l_range_unipolar10;
-extern a4l_rngdesc_t a4l_range_unipolar5;
-extern a4l_rngdesc_t a4l_range_unknown;
-extern a4l_rngdesc_t a4l_range_fake;
+extern struct a4l_rngdesc a4l_range_bipolar10;
+extern struct a4l_rngdesc a4l_range_bipolar5;
+extern struct a4l_rngdesc a4l_range_unipolar10;
+extern struct a4l_rngdesc a4l_range_unipolar5;
+extern struct a4l_rngdesc a4l_range_unknown;
+extern struct a4l_rngdesc a4l_range_fake;
 
 #define range_digital a4l_range_unipolar5
 

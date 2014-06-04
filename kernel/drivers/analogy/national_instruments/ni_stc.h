@@ -1284,7 +1284,7 @@ typedef struct ni_board_struct{
 
 	int n_aochan;
 	int aobits;
-	a4l_rngdesc_t *ao_range_table;
+	struct a4l_rngdesc *ao_range_table;
 	int ao_fifo_depth;
 
 	unsigned ao_speed;
@@ -1306,10 +1306,10 @@ typedef struct ni_board_struct{
 #define NUM_GPCT 2
 
 #define NI_PRIVATE_COMMON					\
-	uint16_t (*stc_readw)(a4l_dev_t *dev, int register);	\
-	uint32_t (*stc_readl)(a4l_dev_t *dev, int register);	\
-	void (*stc_writew)(a4l_dev_t *dev, uint16_t value, int register);	\
-	void (*stc_writel)(a4l_dev_t *dev, uint32_t value, int register);	\
+	uint16_t (*stc_readw)(struct a4l_device *dev, int register);	\
+	uint32_t (*stc_readl)(struct a4l_device *dev, int register);	\
+	void (*stc_writew)(struct a4l_device *dev, uint16_t value, int register);	\
+	void (*stc_writel)(struct a4l_device *dev, uint32_t value, int register);	\
 	\
 	int dio_state;						\
 	int pfi_state;						\
@@ -1328,9 +1328,9 @@ typedef struct ni_board_struct{
 	int n_left;						\
 	unsigned int ai_calib_source;				\
 	unsigned int ai_calib_source_enabled;			\
-	a4l_lock_t window_lock; \
-	a4l_lock_t soft_reg_copy_lock; \
-	a4l_lock_t mite_channel_lock; \
+	rtdm_lock_t window_lock; \
+	rtdm_lock_t soft_reg_copy_lock; \
+	rtdm_lock_t mite_channel_lock; \
 								\
 	int changain_state;					\
 	unsigned int changain_spec;				\

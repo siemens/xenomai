@@ -23,7 +23,7 @@
 #define _COBALT_RTDM_ANALOGY_DRIVER_H
 
 #include <linux/list.h>
-#include <rtdm/analogy/os_facilities.h>
+#include <rtdm/analogy/rtdm_helpers.h>
 #include <rtdm/analogy/context.h>
 #include <rtdm/analogy/buffer.h>
 
@@ -59,13 +59,12 @@ struct a4l_driver {
 				   /**< Detach procedure */
 
 };
-typedef struct a4l_driver a4l_drv_t;
 
 /* Driver list related functions */
 
-int a4l_register_drv(a4l_drv_t * drv);
-int a4l_unregister_drv(a4l_drv_t * drv);
-int a4l_lct_drv(char *pin, a4l_drv_t ** pio);
+int a4l_register_drv(struct a4l_driver * drv);
+int a4l_unregister_drv(struct a4l_driver * drv);
+int a4l_lct_drv(char *pin, struct a4l_driver ** pio);
 #ifdef CONFIG_PROC_FS
 int a4l_rdproc_drvs(struct seq_file *p, void *data);
 #endif /* CONFIG_PROC_FS */

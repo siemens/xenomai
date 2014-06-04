@@ -29,51 +29,51 @@
 
 /* --- Common ranges declarations --- */
 
-a4l_rngtab_t rng_bipolar10 = { 1, {
+struct a4l_rngtab rng_bipolar10 = { 1, {
 		RANGE_V(-10, 10),
 	}};
-a4l_rngdesc_t a4l_range_bipolar10 = RNG_GLOBAL(rng_bipolar10);
+struct a4l_rngdesc a4l_range_bipolar10 = RNG_GLOBAL(rng_bipolar10);
 
-a4l_rngtab_t rng_bipolar5 = { 1, {
+struct a4l_rngtab rng_bipolar5 = { 1, {
 		RANGE_V(-5, 5),
 	}};
-a4l_rngdesc_t a4l_range_bipolar5 = RNG_GLOBAL(rng_bipolar5);
+struct a4l_rngdesc a4l_range_bipolar5 = RNG_GLOBAL(rng_bipolar5);
 
-a4l_rngtab_t rng_unipolar10 = { 1, {
+struct a4l_rngtab rng_unipolar10 = { 1, {
 		RANGE_V(0, 10),
 	}};
-a4l_rngdesc_t a4l_range_unipolar10 = RNG_GLOBAL(rng_unipolar10);
+struct a4l_rngdesc a4l_range_unipolar10 = RNG_GLOBAL(rng_unipolar10);
 
-a4l_rngtab_t rng_unipolar5 = { 1, {
+struct a4l_rngtab rng_unipolar5 = { 1, {
 		RANGE_V(0, 5),
 	}};
-a4l_rngdesc_t a4l_range_unipolar5 = RNG_GLOBAL(rng_unipolar5);
+struct a4l_rngdesc a4l_range_unipolar5 = RNG_GLOBAL(rng_unipolar5);
 
-a4l_rngtab_t rng_unknown = { 1, {
+struct a4l_rngtab rng_unknown = { 1, {
 		RANGE(0, 1),
 	}};
-a4l_rngdesc_t a4l_range_unknown = RNG_GLOBAL(rng_unknown);
+struct a4l_rngdesc a4l_range_unknown = RNG_GLOBAL(rng_unknown);
 
-a4l_rngtab_t rng_fake = { 0, {
+struct a4l_rngtab rng_fake = { 0, {
 		RANGE(0, 0),
 	}};
-a4l_rngdesc_t a4l_range_fake = RNG_GLOBAL(rng_fake);
+struct a4l_rngdesc a4l_range_fake = RNG_GLOBAL(rng_fake);
 
 /* --- Basic channel / range management functions --- */
 
-a4l_chan_t *a4l_get_chfeat(a4l_subd_t *sb, int idx)
+struct a4l_channel *a4l_get_chfeat(struct a4l_subdevice *sb, int idx)
 {
 	int i = (sb->chan_desc->mode != A4L_CHAN_GLOBAL_CHANDESC) ? idx : 0;
 	return &(sb->chan_desc->chans[i]);
 }
 
-a4l_rng_t *a4l_get_rngfeat(a4l_subd_t *sb, int chidx, int rngidx)
+struct a4l_range *a4l_get_rngfeat(struct a4l_subdevice *sb, int chidx, int rngidx)
 {
 	int i = (sb->rng_desc->mode != A4L_RNG_GLOBAL_RNGDESC) ? chidx : 0;
 	return &(sb->rng_desc->rngtabs[i]->rngs[rngidx]);
 }
 
-int a4l_check_chanlist(a4l_subd_t *subd,
+int a4l_check_chanlist(struct a4l_subdevice *subd,
 		       unsigned char nb_chan, unsigned int *chans)
 {
 	int i, j;
@@ -119,15 +119,15 @@ int a4l_check_chanlist(a4l_subd_t *subd,
 
 /* --- Upper layer functions --- */
 
-a4l_subd_t * a4l_alloc_subd(int sizeof_priv,
-			    void (*setup)(a4l_subd_t *))
+struct a4l_subdevice * a4l_alloc_subd(int sizeof_priv,
+			    void (*setup)(struct a4l_subdevice *))
 {
-	a4l_subd_t *subd;
+	struct a4l_subdevice *subd;
 
-	subd = rtdm_malloc(sizeof(a4l_subd_t) + sizeof_priv);
+	subd = rtdm_malloc(sizeof(struct a4l_subdevice) + sizeof_priv);
 
 	if(subd != NULL) {
-		memset(subd, 0 , sizeof(a4l_subd_t) + sizeof_priv);
+		memset(subd, 0 , sizeof(struct a4l_subdevice) + sizeof_priv);
 		if(setup != NULL)
 			setup(subd);
 	}
@@ -135,7 +135,7 @@ a4l_subd_t * a4l_alloc_subd(int sizeof_priv,
 	return subd;
 }
 
-int a4l_add_subd(a4l_dev_t * dev, a4l_subd_t * subd)
+int a4l_add_subd(struct a4l_device * dev, struct a4l_subdevice * subd)
 {
 	struct list_head *this;
 	int i = 0;
@@ -157,10 +157,10 @@ int a4l_add_subd(a4l_dev_t * dev, a4l_subd_t * subd)
 	return i;
 }
 
-a4l_subd_t *a4l_get_subd(a4l_dev_t *dev, int idx)
+struct a4l_subdevice *a4l_get_subd(struct a4l_device *dev, int idx)
 {
 	int i = 0;
-	a4l_subd_t *subd = NULL;
+	struct a4l_subdevice *subd = NULL;
 	struct list_head *this;
 
 	/* This function is not optimized as we do not go through the
@@ -168,7 +168,7 @@ a4l_subd_t *a4l_get_subd(a4l_dev_t *dev, int idx)
 
 	list_for_each(this, &dev->subdvsq) {
 		if(idx == i++)
-			subd = list_entry(this, a4l_subd_t, list);
+			subd = list_entry(this, struct a4l_subdevice, list);
 	}
 
 	return subd;
@@ -176,10 +176,10 @@ a4l_subd_t *a4l_get_subd(a4l_dev_t *dev, int idx)
 
 /* --- IOCTL / FOPS functions --- */
 
-int a4l_ioctl_subdinfo(a4l_cxt_t * cxt, void *arg)
+int a4l_ioctl_subdinfo(struct a4l_device_context * cxt, void *arg)
 {
 	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
-	a4l_dev_t *dev = a4l_get_dev(cxt);
+	struct a4l_device *dev = a4l_get_dev(cxt);
 	int i, ret = 0;
 	a4l_sbinfo_t *subd_info;
 
@@ -214,10 +214,10 @@ int a4l_ioctl_subdinfo(a4l_cxt_t * cxt, void *arg)
 
 }
 
-int a4l_ioctl_nbchaninfo(a4l_cxt_t * cxt, void *arg)
+int a4l_ioctl_nbchaninfo(struct a4l_device_context * cxt, void *arg)
 {
 	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
-	a4l_dev_t *dev = a4l_get_dev(cxt);
+	struct a4l_device *dev = a4l_get_dev(cxt);
 	a4l_chinfo_arg_t inarg;
 
 	/* Basic checking */
@@ -251,15 +251,15 @@ int a4l_ioctl_nbchaninfo(a4l_cxt_t * cxt, void *arg)
 	return 0;
 }
 
-int a4l_ioctl_chaninfo(a4l_cxt_t * cxt, void *arg)
+int a4l_ioctl_chaninfo(struct a4l_device_context * cxt, void *arg)
 {
 	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	int i, ret = 0;
-	a4l_dev_t *dev = a4l_get_dev(cxt);
+	struct a4l_device *dev = a4l_get_dev(cxt);
 	a4l_chinfo_t *chan_info;
 	a4l_chinfo_arg_t inarg;
-	a4l_chdesc_t *chan_desc;
-	a4l_rngdesc_t *rng_desc;
+	struct a4l_channels_desc *chan_desc;
+	struct a4l_rngdesc *rng_desc;
 
 	/* Basic checking */
 	if (!test_bit(A4L_DEV_ATTACHED_NR, &dev->flags)) {
@@ -320,13 +320,13 @@ int a4l_ioctl_chaninfo(a4l_cxt_t * cxt, void *arg)
 	return ret;
 }
 
-int a4l_ioctl_nbrnginfo(a4l_cxt_t * cxt, void *arg)
+int a4l_ioctl_nbrnginfo(struct a4l_device_context * cxt, void *arg)
 {
 	int i;
 	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
-	a4l_dev_t *dev = a4l_get_dev(cxt);
+	struct a4l_device *dev = a4l_get_dev(cxt);
 	a4l_rnginfo_arg_t inarg;
-	a4l_rngdesc_t *rng_desc;
+	struct a4l_rngdesc *rng_desc;
 
 	/* Basic checking */
 	if (!test_bit(A4L_DEV_ATTACHED_NR, &dev->flags)) {
@@ -374,13 +374,13 @@ int a4l_ioctl_nbrnginfo(a4l_cxt_t * cxt, void *arg)
 	return 0;
 }
 
-int a4l_ioctl_rnginfo(a4l_cxt_t * cxt, void *arg)
+int a4l_ioctl_rnginfo(struct a4l_device_context * cxt, void *arg)
 {
 	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	int i, ret = 0;
 	unsigned int tmp;
-	a4l_dev_t *dev = a4l_get_dev(cxt);
-	a4l_rngdesc_t *rng_desc;
+	struct a4l_device *dev = a4l_get_dev(cxt);
+	struct a4l_rngdesc *rng_desc;
 	a4l_rnginfo_t *rng_info;
 	a4l_rnginfo_arg_t inarg;
 

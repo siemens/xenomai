@@ -30,19 +30,17 @@ struct a4l_kernel_instruction {
 	void *data;
 	void *__udata;
 };
-typedef struct a4l_kernel_instruction a4l_kinsn_t;
 
 struct a4l_kernel_instruction_list {
 	unsigned int count;
-	a4l_kinsn_t *insns;
+	struct a4l_kernel_instruction *insns;
 	a4l_insn_t *__uinsns;
 };
-typedef struct a4l_kernel_instruction_list a4l_kilst_t;
 
 /* Instruction related functions */
 
 /* Upper layer functions */
-int a4l_ioctl_insnlist(a4l_cxt_t * cxt, void *arg);
-int a4l_ioctl_insn(a4l_cxt_t * cxt, void *arg);
+int a4l_ioctl_insnlist(struct a4l_device_context * cxt, void *arg);
+int a4l_ioctl_insn(struct a4l_device_context * cxt, void *arg);
 
 #endif /* !_COBALT_RTDM_ANALOGY_BUFFER_H */

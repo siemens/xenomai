@@ -74,7 +74,7 @@
  * @return 0 on success, otherwise negative error code.
  *
  */
-int a4l_register_drv(a4l_drv_t * drv);
+int a4l_register_drv(struct a4l_driver * drv);
 EXPORT_SYMBOL_GPL(a4l_register_drv);
 
 /**
@@ -88,7 +88,7 @@ EXPORT_SYMBOL_GPL(a4l_register_drv);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int a4l_unregister_drv(a4l_drv_t * drv);
+int a4l_unregister_drv(struct a4l_driver * drv);
 EXPORT_SYMBOL_GPL(a4l_unregister_drv);
 
 /** @} */
@@ -151,8 +151,8 @@ EXPORT_SYMBOL_GPL(a4l_range_fake);
  * case of error a negative error code is returned.
  *
  */
-a4l_subd_t * a4l_alloc_subd(int sizeof_priv,
-				  void (*setup)(a4l_subd_t *));
+struct a4l_subdevice * a4l_alloc_subd(int sizeof_priv,
+				  void (*setup)(struct a4l_subdevice *));
 EXPORT_SYMBOL_GPL(a4l_alloc_subd);
 
 /**
@@ -169,7 +169,7 @@ EXPORT_SYMBOL_GPL(a4l_alloc_subd);
  * case of error a negative error code is returned.
  *
  */
-int a4l_add_subd(a4l_dev_t *dev, a4l_subd_t *subd);
+int a4l_add_subd(struct a4l_device *dev, struct a4l_subdevice *subd);
 EXPORT_SYMBOL_GPL(a4l_add_subd);
 
 /**
@@ -188,10 +188,8 @@ EXPORT_SYMBOL_GPL(a4l_add_subd);
  * @return 0 on success, otherwise negative error code.
  *
  */
-a4l_subd_t *a4l_get_subd(a4l_dev_t *dev, int idx);
+struct a4l_subdevice *a4l_get_subd(struct a4l_device *dev, int idx);
 EXPORT_SYMBOL_GPL(a4l_get_subd);
-
-/** @} */
 
 /* --- Buffer section --- */
 
@@ -269,7 +267,7 @@ EXPORT_SYMBOL_GPL(a4l_get_subd);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int a4l_buf_prepare_absput(a4l_subd_t *subd, unsigned long count);
+int a4l_buf_prepare_absput(struct a4l_subdevice *subd, unsigned long count);
 EXPORT_SYMBOL_GPL(a4l_buf_prepare_absput);
 
 /**
@@ -294,7 +292,7 @@ EXPORT_SYMBOL_GPL(a4l_buf_prepare_absput);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int a4l_buf_commit_absput(a4l_subd_t *subd, unsigned long count);
+int a4l_buf_commit_absput(struct a4l_subdevice *subd, unsigned long count);
 EXPORT_SYMBOL_GPL(a4l_buf_commit_absput);
 
 /**
@@ -316,7 +314,7 @@ EXPORT_SYMBOL_GPL(a4l_buf_commit_absput);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int a4l_buf_prepare_put(a4l_subd_t *subd, unsigned long count);
+int a4l_buf_prepare_put(struct a4l_subdevice *subd, unsigned long count);
 EXPORT_SYMBOL_GPL(a4l_buf_prepare_put);
 
 /**
@@ -338,7 +336,7 @@ EXPORT_SYMBOL_GPL(a4l_buf_prepare_put);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int a4l_buf_commit_put(a4l_subd_t *subd, unsigned long count);
+int a4l_buf_commit_put(struct a4l_subdevice *subd, unsigned long count);
 EXPORT_SYMBOL_GPL(a4l_buf_commit_put);
 
 /**
@@ -356,7 +354,7 @@ EXPORT_SYMBOL_GPL(a4l_buf_commit_put);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int a4l_buf_put(a4l_subd_t *subd, void *bufdata, unsigned long count);
+int a4l_buf_put(struct a4l_subdevice *subd, void *bufdata, unsigned long count);
 EXPORT_SYMBOL_GPL(a4l_buf_put);
 
 /**
@@ -381,7 +379,7 @@ EXPORT_SYMBOL_GPL(a4l_buf_put);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int a4l_buf_prepare_absget(a4l_subd_t *subd, unsigned long count);
+int a4l_buf_prepare_absget(struct a4l_subdevice *subd, unsigned long count);
 EXPORT_SYMBOL_GPL(a4l_buf_prepare_absget);
 
 /**
@@ -406,7 +404,7 @@ EXPORT_SYMBOL_GPL(a4l_buf_prepare_absget);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int a4l_buf_commit_absget(a4l_subd_t *subd, unsigned long count);
+int a4l_buf_commit_absget(struct a4l_subdevice *subd, unsigned long count);
 EXPORT_SYMBOL_GPL(a4l_buf_commit_absget);
 
 /**
@@ -428,7 +426,7 @@ EXPORT_SYMBOL_GPL(a4l_buf_commit_absget);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int a4l_buf_prepare_get(a4l_subd_t *subd, unsigned long count);
+int a4l_buf_prepare_get(struct a4l_subdevice *subd, unsigned long count);
 EXPORT_SYMBOL_GPL(a4l_buf_prepare_get);
 
 /**
@@ -450,7 +448,7 @@ EXPORT_SYMBOL_GPL(a4l_buf_prepare_get);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int a4l_buf_commit_get(a4l_subd_t *subd, unsigned long count);
+int a4l_buf_commit_get(struct a4l_subdevice *subd, unsigned long count);
 EXPORT_SYMBOL_GPL(a4l_buf_commit_get);
 
 /**
@@ -469,7 +467,7 @@ EXPORT_SYMBOL_GPL(a4l_buf_commit_get);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int a4l_buf_get(a4l_subd_t *subd, void *bufdata, unsigned long count);
+int a4l_buf_get(struct a4l_subdevice *subd, void *bufdata, unsigned long count);
 EXPORT_SYMBOL_GPL(a4l_buf_get);
 
 /**
@@ -492,7 +490,7 @@ EXPORT_SYMBOL_GPL(a4l_buf_get);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int a4l_buf_evt(a4l_subd_t *subd, unsigned long evts);
+int a4l_buf_evt(struct a4l_subdevice *subd, unsigned long evts);
 EXPORT_SYMBOL_GPL(a4l_buf_evt);
 
 /**
@@ -503,7 +501,7 @@ EXPORT_SYMBOL_GPL(a4l_buf_evt);
  * @return the amount of data available in the Analogy buffer.
  *
  */
-unsigned long a4l_buf_count(a4l_subd_t *subd);
+unsigned long a4l_buf_count(struct a4l_subdevice *subd);
 EXPORT_SYMBOL_GPL(a4l_buf_count);
 
 #ifdef DOXYGEN_CPP		/* Only used for doxygen doc generation */
@@ -516,7 +514,7 @@ EXPORT_SYMBOL_GPL(a4l_buf_count);
  * @return the command descriptor.
  *
  */
-a4l_cmd_t *a4l_get_cmd(a4l_subd_t * subd);
+struct a4l_cmd_desc *a4l_get_cmd(struct a4l_subdevice * subd);
 
 #endif /* DOXYGEN_CPP */
 
@@ -528,7 +526,7 @@ a4l_cmd_t *a4l_get_cmd(a4l_subd_t * subd);
  * @return the channel index.
  *
  */
-int a4l_get_chan(a4l_subd_t *subd);
+int a4l_get_chan(struct a4l_subdevice *subd);
 EXPORT_SYMBOL_GPL(a4l_get_chan);
 
 /** @} */
@@ -550,7 +548,7 @@ EXPORT_SYMBOL_GPL(a4l_get_chan);
  * is registered.
  *
  */
-unsigned int a4l_get_irq(a4l_dev_t * dev);
+unsigned int a4l_get_irq(struct a4l_device * dev);
 EXPORT_SYMBOL_GPL(a4l_get_irq);
 
 /**
@@ -560,10 +558,10 @@ EXPORT_SYMBOL_GPL(a4l_get_irq);
  * @param[in] irq Line number of the addressed IRQ
  * @param[in] handler Interrupt handler
  * @param[in] flags Registration flags:
- * - A4L_IRQ_SHARED: enable IRQ-sharing with other drivers
+ * - RTDM_IRQTYPE_SHARED: enable IRQ-sharing with other drivers
  *   (Warning: real-time drivers and non-real-time drivers cannot
  *   share an interrupt line).
- * - A4L_IRQ_EDGE: mark IRQ as edge-triggered (Warning: this flag
+ * - RTDM_IRQTYPE_EDGE: mark IRQ as edge-triggered (Warning: this flag
  *   is meaningless in RTDM-less context).
  * - A4L_IRQ_DISABLED: keep IRQ disabled when calling the action
  *   handler (Warning: this flag is ignored in RTDM-enabled
@@ -574,7 +572,7 @@ EXPORT_SYMBOL_GPL(a4l_get_irq);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int a4l_request_irq(a4l_dev_t * dev,
+int a4l_request_irq(struct a4l_device * dev,
 		       unsigned int irq,
 		       a4l_irq_hdlr_t handler,
 		       unsigned long flags, void *cookie);
@@ -589,7 +587,7 @@ EXPORT_SYMBOL_GPL(a4l_request_irq);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int a4l_free_irq(a4l_dev_t * dev, unsigned int irq);
+int a4l_free_irq(struct a4l_device * dev, unsigned int irq);
 EXPORT_SYMBOL_GPL(a4l_free_irq);
 
 /** @} */
@@ -602,56 +600,6 @@ EXPORT_SYMBOL_GPL(a4l_free_irq);
  * @{
  */
 
-#ifdef DOXYGEN_CPP		/* Only used for doxygen doc generation */
-
-/**
- * @brief Intialise and start an Analogy task
- *
- * This function belongs to a minimal set of task management services
- * (with a4l_task_destroy() and a4l_task_sleep()). Such features
- * are not critical for Analogy driver development.
- *
- * @param[in,out] task Task handle
- * @param[in] name Optional task name
- * @param[in] proc Procedure to be executed by the task
- * @param[in] arg Custom argument passed to @c proc() on entry
- * @param[in] priority Priority of the task
- *
- * @return 0 on success, otherwise negative error code
- *
- */
-int a4l_task_init(a4l_task_t * task,
-		  const char *name,
-		  a4l_task_proc_t proc, void *arg, int priority);
-
-/**
- * @brief Destroy an Analogy task
- *
- * This function belongs to a minimal set of task management services
- * (with a4l_task_init() and a4l_task_sleep()). Such features
- * are not critical for Analogy driver development.
- *
- * @param[in,out] task Task handle
- *
- */
-void a4l_task_destroy(a4l_task_t * task);
-
-/**
- * @brief Make the current Analogy task passively wait a defined delay
- *
- * This function belongs to a minimal set of task management services
- * (with a4l_task_init() and a4l_task_destroy()). Such features
- * are not critical for Analogy driver development.
- *
- * @param[in] nsdelay Amount of time expressed in nanoseconds during
- * which the Analogy task must be sleeping.
- *
- * @return 0 on success, otherwise negative error code
- *
- */
-int a4l_task_sleep(unsigned long long nsdelay);
-
-#endif /* DOXYGEN_CPP */
 
 /**
  * @brief Get the absolute time in nanoseconds

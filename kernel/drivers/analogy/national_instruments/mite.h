@@ -58,7 +58,7 @@ struct mite_channel {
 
 struct mite_struct {
 	struct list_head list;
-	a4l_lock_t lock;
+	rtdm_lock_t lock;
 	u32 used;
 	u32 num_channels;
 
@@ -134,8 +134,8 @@ void a4l_mite_release_channel(struct mite_channel *mite_chan);
 
 void a4l_mite_dma_arm(struct mite_channel *mite_chan);
 void a4l_mite_dma_disarm(struct mite_channel *mite_chan);
-int a4l_mite_sync_input_dma(struct mite_channel *mite_chan, a4l_subd_t *subd);
-int a4l_mite_sync_output_dma(struct mite_channel *mite_chan, a4l_subd_t *subd);
+int a4l_mite_sync_input_dma(struct mite_channel *mite_chan, struct a4l_subdevice *subd);
+int a4l_mite_sync_output_dma(struct mite_channel *mite_chan, struct a4l_subdevice *subd);
 u32 a4l_mite_bytes_written_to_memory_lb(struct mite_channel *mite_chan);
 u32 a4l_mite_bytes_written_to_memory_ub(struct mite_channel *mite_chan);
 u32 a4l_mite_bytes_read_from_memory_lb(struct mite_channel *mite_chan);
@@ -145,7 +145,7 @@ u32 a4l_mite_get_status(struct mite_channel *mite_chan);
 int a4l_mite_done(struct mite_channel *mite_chan);
 void a4l_mite_prep_dma(struct mite_channel *mite_chan,
 		   unsigned int num_device_bits, unsigned int num_memory_bits);
-int a4l_mite_buf_change(struct mite_dma_descriptor_ring *ring, a4l_subd_t *subd);
+int a4l_mite_buf_change(struct mite_dma_descriptor_ring *ring, struct a4l_subdevice *subd);
 
 #ifdef CONFIG_DEBUG_MITE
 void mite_print_chsr(unsigned int chsr);

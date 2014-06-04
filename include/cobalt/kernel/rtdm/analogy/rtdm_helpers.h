@@ -19,8 +19,8 @@
  * along with Xenomai; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-#ifndef _COBALT_RTDM_ANALOGY_OS_FACILITIES_H
-#define _COBALT_RTDM_ANALOGY_OS_FACILITIES_H
+#ifndef _COBALT_RTDM_ANALOGY_RTDM_HELPERS_H
+#define _COBALT_RTDM_ANALOGY_RTDM_HELPERS_H
 
 #include <linux/fs.h>
 #include <linux/spinlock.h>
@@ -31,8 +31,7 @@
 #include <asm/uaccess.h>
 #include <rtdm/driver.h>
 
-/* --- Kernel traces functions --- */
-
+/* --- Trace section  --- */
 #define A4L_PROMPT "Analogy: "
 
 #define RTDM_SUBCLASS_ANALOGY 0
@@ -78,50 +77,11 @@
 #define a4l_dbg(level, debug, dev, fmt, args...)			\
 	__a4l_dbg(level, debug, "%s: " fmt, __a4l_dev_name(dev), ##args)
 
-/* --- Spinlock section --- */
-
-typedef rtdm_lock_t a4l_lock_t;
-
-#define A4L_LOCK_UNLOCKED(__name) RTDM_LOCK_UNLOCKED(__name)
-
-#define DEFINE_A4L_LOCK(__name)		\
-	a4l_lock_t __name = A4L_LOCK_UNLOCKED(__name)
-
-#define a4l_lock_init(lock) rtdm_lock_init(lock)
-#define a4l_lock(lock) rtdm_lock_get(lock)
-#define a4l_unlock(lock) rtdm_lock_put(lock)
-#define a4l_lock_irqsave(lock, context)	\
-    rtdm_lock_get_irqsave(lock, context)
-#define a4l_unlock_irqrestore(lock, context) \
-    rtdm_lock_put_irqrestore(lock, context)
-
-/* --- Task section --- */
-
-#define A4L_TASK_LOWEST_PRIORITY RTDM_TASK_LOWEST_PRIORITY
-#define A4L_TASK_HIGHEST_PRIORITY RTDM_TASK_HIGHEST_PRIORITY
-
-typedef rtdm_task_t a4l_task_t;
-typedef rtdm_task_proc_t a4l_task_proc_t;
-
-#define a4l_task_init(tsk, name, proc, arg, priority) \
-    rtdm_task_init(tsk, name, proc, arg, priority, 0)
-
-#define a4l_task_destroy(tsk) rtdm_task_destroy(tsk)
-
-#define a4l_task_sleep(delay) rtdm_task_sleep(delay)
-
-#define a4l_task_should_stop() rtdm_task_should_stop()
 
 /* --- Time section --- */
-
 static inline void a4l_udelay(unsigned int us)
 {
 	rtdm_task_busy_sleep(((nanosecs_rel_t) us) * 1000);
-}
-
-static inline nanosecs_abs_t a4l_get_rawtime(void)
-{
-	return rtdm_clock_read();
 }
 
 /* Function which gives absolute time */
@@ -131,9 +91,6 @@ nanosecs_abs_t a4l_get_time(void);
 void a4l_init_time(void);
 
 /* --- IRQ section --- */
-
-#define A4L_IRQ_SHARED RTDM_IRQTYPE_SHARED
-#define A4L_IRQ_EDGE RTDM_IRQTYPE_EDGE
 #define A4L_IRQ_DISABLED 0
 
 typedef int (*a4l_irq_hdlr_t) (unsigned int irq, void *d);
@@ -146,16 +103,14 @@ struct a4l_irq_descriptor {
 	void *cookie;
 	rtdm_irq_t rtdm_desc;
 };
-typedef struct a4l_irq_descriptor a4l_irq_desc_t;
 
-int __a4l_request_irq(a4l_irq_desc_t * dsc,
+int __a4l_request_irq(struct a4l_irq_descriptor * dsc,
 		      unsigned int irq,
 		      a4l_irq_hdlr_t handler,
 		      unsigned long flags, void *cookie);
-int __a4l_free_irq(a4l_irq_desc_t * dsc);
+int __a4l_free_irq(struct a4l_irq_descriptor * dsc);
 
 /* --- Synchronization section --- */
-
 #define __NRT_WAITER 1
 #define __RT_WAITER 2
 #define __EVT_PDING 3
@@ -166,21 +121,17 @@ struct a4l_sync {
 	rtdm_nrtsig_t nrt_sig;
 	wait_queue_head_t wq;
 };
-typedef struct a4l_sync a4l_sync_t;
 
 #define a4l_select_sync(snc, slr, type, fd) \
 	rtdm_event_select_bind(&((snc)->rtdm_evt), slr, type, fd)
 
-int a4l_init_sync(a4l_sync_t * snc);
-void a4l_cleanup_sync(a4l_sync_t * snc);
-void a4l_flush_sync(a4l_sync_t * snc);
-int a4l_wait_sync(a4l_sync_t * snc, int rt);
-int a4l_timedwait_sync(a4l_sync_t * snc,
+int a4l_init_sync(struct a4l_sync * snc);
+void a4l_cleanup_sync(struct a4l_sync * snc);
+void a4l_flush_sync(struct a4l_sync * snc);
+int a4l_wait_sync(struct a4l_sync * snc, int rt);
+int a4l_timedwait_sync(struct a4l_sync * snc,
 		       int rt, unsigned long long ns_timeout);
-void a4l_signal_sync(a4l_sync_t * snc);
+void a4l_signal_sync(struct a4l_sync * snc);
 
-/* --- Misc section --- */
 
-#define a4l_test_rt() rtdm_in_rt_context()
-
-#endif /* !_COBALT_RTDM_ANALOGY_OS_FACILITIES_H */
+#endif /* !_COBALT_RTDM_ANALOGY_RTDM_HELPERS_H */

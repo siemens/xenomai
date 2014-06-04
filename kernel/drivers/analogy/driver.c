@@ -30,7 +30,7 @@ static LIST_HEAD(a4l_drvs);
 
 /* --- Driver list management functions --- */
 
-int a4l_lct_drv(char *pin, a4l_drv_t ** pio)
+int a4l_lct_drv(char *pin, struct a4l_driver ** pio)
 {
 	struct list_head *this;
 	int ret = -EINVAL;
@@ -40,7 +40,7 @@ int a4l_lct_drv(char *pin, a4l_drv_t ** pio)
 	/* Goes through the linked list so as to find
 	   a driver instance with the same name */
 	list_for_each(this, &a4l_drvs) {
-		a4l_drv_t *drv = list_entry(this, a4l_drv_t, list);
+		struct a4l_driver *drv = list_entry(this, struct a4l_driver, list);
 
 		if (strcmp(drv->board_name, pin) == 0) {
 			/* The argument pio can be NULL
@@ -55,7 +55,7 @@ int a4l_lct_drv(char *pin, a4l_drv_t ** pio)
 	return ret;
 }
 
-int a4l_register_drv(a4l_drv_t * drv)
+int a4l_register_drv(struct a4l_driver * drv)
 {
 	if (!realtime_core_enabled())
 		return 0;
@@ -69,7 +69,7 @@ int a4l_register_drv(a4l_drv_t * drv)
 		return -EINVAL;
 }
 
-int a4l_unregister_drv(a4l_drv_t * drv)
+int a4l_unregister_drv(struct a4l_driver * drv)
 {
 	if (!realtime_core_enabled())
 		return 0;
@@ -99,7 +99,7 @@ int a4l_rdproc_drvs(struct seq_file *p, void *data)
 	seq_printf(p, "| idx | driver name\n");
 
 	list_for_each(this, &a4l_drvs) {
-		a4l_drv_t *drv = list_entry(this, a4l_drv_t, list);
+		struct a4l_driver *drv = list_entry(this, struct a4l_driver, list);
 
 		seq_printf(p, "|  %02d | %s\n", i++, drv->board_name);
 	}

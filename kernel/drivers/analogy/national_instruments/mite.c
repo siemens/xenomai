@@ -69,7 +69,7 @@ static int mite_probe(struct pci_dev *dev, const struct pci_device_id *id)
 
 	memset(mite, 0, sizeof(struct mite_struct));
 
-	a4l_lock_init(&mite->lock);
+	rtdm_lock_init(&mite->lock);
 
 	mite->pcidev = dev;
 	if (pci_enable_device(dev) < 0) {
@@ -313,7 +313,7 @@ a4l_mite_request_channel_in_range(struct mite_struct *mite,
 
 	/* spin lock so a4l_mite_release_channel can be called safely
 	   from interrupts */
-	a4l_lock_irqsave(&mite->lock, flags);
+	rtdm_lock_get_irqsave(&mite->lock, flags);
 	for (i = min_channel; i <= max_channel; ++i) {
 
 	__a4l_dbg(1, drv_dbg,
@@ -328,7 +328,7 @@ a4l_mite_request_channel_in_range(struct mite_struct *mite,
 			break;
 		}
 	}
-	a4l_unlock_irqrestore(&mite->lock, flags);
+	rtdm_lock_put_irqrestore(&mite->lock, flags);
 	return channel;
 }
 
@@ -338,7 +338,7 @@ void a4l_mite_release_channel(struct mite_channel *mite_chan)
 	unsigned long flags;
 
 	/* Spin lock to prevent races with mite_request_channel */
-	a4l_lock_irqsave(&mite->lock, flags);
+	rtdm_lock_get_irqsave(&mite->lock, flags);
 	if (mite->channel_allocated[mite_chan->channel]) {
 		/* disable all channel's interrupts */
 		writel(CHCR_CLR_DMA_IE | CHCR_CLR_LINKP_IE |
@@ -352,7 +352,7 @@ void a4l_mite_release_channel(struct mite_channel *mite_chan)
 		mite_chan->ring = NULL;
 		mmiowb();
 	}
-	a4l_unlock_irqrestore(&mite->lock, flags);
+	rtdm_lock_put_irqrestore(&mite->lock, flags);
 }
 
 void a4l_mite_dma_arm(struct mite_channel *mite_chan)
@@ -367,11 +367,11 @@ void a4l_mite_dma_arm(struct mite_channel *mite_chan)
 	smp_mb();
 	/* arm */
 	chor = CHOR_START;
-	a4l_lock_irqsave(&mite->lock, flags);
+	rtdm_lock_get_irqsave(&mite->lock, flags);
 	mite_chan->done = 0;
 	writel(chor, mite->mite_io_addr + MITE_CHOR(mite_chan->channel));
 	mmiowb();
-	a4l_unlock_irqrestore(&mite->lock, flags);
+	rtdm_lock_put_irqrestore(&mite->lock, flags);
 }
 
 void a4l_mite_dma_disarm(struct mite_channel *mite_chan)
@@ -384,9 +384,9 @@ void a4l_mite_dma_disarm(struct mite_channel *mite_chan)
 	writel(chor, mite->mite_io_addr + MITE_CHOR(mite_chan->channel));
 }
 
-int a4l_mite_buf_change(struct mite_dma_descriptor_ring *ring, a4l_subd_t *subd)
+int a4l_mite_buf_change(struct mite_dma_descriptor_ring *ring, struct a4l_subdevice *subd)
 {
-	a4l_buf_t *buf = subd->buf;
+	struct a4l_buffer *buf = subd->buf;
 	unsigned int n_links;
 	int i;
 
@@ -576,7 +576,7 @@ u32 a4l_mite_bytes_read_from_memory_ub(struct mite_channel * mite_chan)
 	return mite_device_bytes_transferred(mite_chan) + in_transit_count;
 }
 
-int a4l_mite_sync_input_dma(struct mite_channel *mite_chan, a4l_subd_t *subd)
+int a4l_mite_sync_input_dma(struct mite_channel *mite_chan, struct a4l_subdevice *subd)
 {
 	unsigned int nbytes_lb, nbytes_ub;
 
@@ -591,9 +591,9 @@ int a4l_mite_sync_input_dma(struct mite_channel *mite_chan, a4l_subd_t *subd)
 	return a4l_buf_commit_absput(subd, nbytes_lb);
 }
 
-int a4l_mite_sync_output_dma(struct mite_channel *mite_chan, a4l_subd_t *subd)
+int a4l_mite_sync_output_dma(struct mite_channel *mite_chan, struct a4l_subdevice *subd)
 {
-	a4l_buf_t *buf = subd->buf;
+	struct a4l_buffer *buf = subd->buf;
 	unsigned int nbytes_ub, nbytes_lb;
 	int err;
 
@@ -624,7 +624,7 @@ u32 a4l_mite_get_status(struct mite_channel *mite_chan)
 	u32 status;
 	unsigned long flags;
 
-	a4l_lock_irqsave(&mite->lock, flags);
+	rtdm_lock_get_irqsave(&mite->lock, flags);
 	status = readl(mite->mite_io_addr + MITE_CHSR(mite_chan->channel));
 	if (status & CHSR_DONE) {
 		mite_chan->done = 1;
@@ -632,7 +632,7 @@ u32 a4l_mite_get_status(struct mite_channel *mite_chan)
 		       mite->mite_io_addr + MITE_CHOR(mite_chan->channel));
 	}
 	mmiowb();
-	a4l_unlock_irqrestore(&mite->lock, flags);
+	rtdm_lock_put_irqrestore(&mite->lock, flags);
 	return status;
 }
 
@@ -643,9 +643,9 @@ int a4l_mite_done(struct mite_channel *mite_chan)
 	int done;
 
 	a4l_mite_get_status(mite_chan);
-	a4l_lock_irqsave(&mite->lock, flags);
+	rtdm_lock_get_irqsave(&mite->lock, flags);
 	done = mite_chan->done;
-	a4l_unlock_irqrestore(&mite->lock, flags);
+	rtdm_lock_put_irqrestore(&mite->lock, flags);
 	return done;
 }
 

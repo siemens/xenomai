@@ -105,20 +105,20 @@ static inline unsigned int NI_PFI_OUTPUT_RTSI(unsigned rtsi_channel) {
 
 /* Ranges declarations */
 
-extern a4l_rngdesc_t a4l_range_ni_E_ai;
-extern a4l_rngdesc_t a4l_range_ni_E_ai_limited;
-extern a4l_rngdesc_t a4l_range_ni_E_ai_limited14;
-extern a4l_rngdesc_t a4l_range_ni_E_ai_bipolar4;
-extern a4l_rngdesc_t a4l_range_ni_E_ai_611x;
-extern a4l_rngdesc_t range_ni_E_ai_622x;
-extern a4l_rngdesc_t range_ni_E_ai_628x;
-extern a4l_rngdesc_t a4l_range_ni_S_ai_6143;
-extern a4l_rngdesc_t a4l_range_ni_E_ao_ext;
+extern struct a4l_rngdesc a4l_range_ni_E_ai;
+extern struct a4l_rngdesc a4l_range_ni_E_ai_limited;
+extern struct a4l_rngdesc a4l_range_ni_E_ai_limited14;
+extern struct a4l_rngdesc a4l_range_ni_E_ai_bipolar4;
+extern struct a4l_rngdesc a4l_range_ni_E_ai_611x;
+extern struct a4l_rngdesc range_ni_E_ai_622x;
+extern struct a4l_rngdesc range_ni_E_ai_628x;
+extern struct a4l_rngdesc a4l_range_ni_S_ai_6143;
+extern struct a4l_rngdesc a4l_range_ni_E_ao_ext;
 
 /* Misc functions declarations */
 
 int a4l_ni_E_interrupt(unsigned int irq, void *d);
-int a4l_ni_E_init(a4l_dev_t *dev);
+int a4l_ni_E_init(struct a4l_device *dev);
 
 
 #endif /* !__ANALOGY_NI_MIO_H__ */

@@ -29,7 +29,7 @@
 #include <asm/errno.h>
 #include <rtdm/analogy/device.h>
 
-int a4l_do_insn_gettime(a4l_kinsn_t * dsc)
+int a4l_do_insn_gettime(struct a4l_kernel_instruction * dsc)
 {
 	nanosecs_abs_t ns;
 	uint32_t ns2;
@@ -53,7 +53,7 @@ int a4l_do_insn_gettime(a4l_kinsn_t * dsc)
 	return 0;
 }
 
-int a4l_do_insn_wait(a4l_kinsn_t * dsc)
+int a4l_do_insn_wait(struct a4l_kernel_instruction * dsc)
 {
 	unsigned int us;
 	unsigned int *data = (unsigned int *)dsc->data;
@@ -83,10 +83,10 @@ int a4l_do_insn_wait(a4l_kinsn_t * dsc)
 	return 0;
 }
 
-int a4l_do_insn_trig(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
+int a4l_do_insn_trig(struct a4l_device_context * cxt, struct a4l_kernel_instruction * dsc)
 {
-	a4l_subd_t *subd;
-	a4l_dev_t *dev = a4l_get_dev(cxt);
+	struct a4l_subdevice *subd;
+	struct a4l_device *dev = a4l_get_dev(cxt);
 	unsigned int trignum;
 	unsigned int *data = (unsigned int*)dsc->data;
 
@@ -117,7 +117,7 @@ int a4l_do_insn_trig(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
 	return subd->trigger(subd, trignum);
 }
 
-int a4l_fill_insndsc(a4l_cxt_t * cxt, a4l_kinsn_t * dsc, void *arg)
+int a4l_fill_insndsc(struct a4l_device_context * cxt, struct a4l_kernel_instruction * dsc, void *arg)
 {
 	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	int ret = 0;
@@ -161,7 +161,7 @@ out_insndsc:
 	return ret;
 }
 
-int a4l_free_insndsc(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
+int a4l_free_insndsc(struct a4l_device_context * cxt, struct a4l_kernel_instruction * dsc)
 {
 	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	int ret = 0;
@@ -177,7 +177,7 @@ int a4l_free_insndsc(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
 	return ret;
 }
 
-int a4l_do_special_insn(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
+int a4l_do_special_insn(struct a4l_device_context * cxt, struct a4l_kernel_instruction * dsc)
 {
 	int ret = 0;
 
@@ -205,12 +205,12 @@ int a4l_do_special_insn(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
 	return ret;
 }
 
-int a4l_do_insn(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
+int a4l_do_insn(struct a4l_device_context * cxt, struct a4l_kernel_instruction * dsc)
 {
 	int ret;
-	a4l_subd_t *subd;
-	a4l_dev_t *dev = a4l_get_dev(cxt);
-	int (*hdlr) (a4l_subd_t *, a4l_kinsn_t *) = NULL;
+	struct a4l_subdevice *subd;
+	struct a4l_device *dev = a4l_get_dev(cxt);
+	int (*hdlr) (struct a4l_subdevice *, struct a4l_kernel_instruction *) = NULL;
 
 	/* Checks the subdevice index */
 	if (dsc->idx_subd >= dev->transfer.nb_subd) {
@@ -285,12 +285,12 @@ out_do_insn:
 	return ret;
 }
 
-int a4l_ioctl_insn(a4l_cxt_t * cxt, void *arg)
+int a4l_ioctl_insn(struct a4l_device_context * cxt, void *arg)
 {
 	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	int ret = 0;
-	a4l_kinsn_t insn;
-	a4l_dev_t *dev = a4l_get_dev(cxt);
+	struct a4l_kernel_instruction insn;
+	struct a4l_device *dev = a4l_get_dev(cxt);
 
 	if (!rtdm_in_rt_context() && rtdm_rt_capable(fd))
 		return -ENOSYS;
@@ -326,7 +326,7 @@ err_ioctl_insn:
 	return ret;
 }
 
-int a4l_fill_ilstdsc(a4l_cxt_t * cxt, a4l_kilst_t * dsc, void *arg)
+int a4l_fill_ilstdsc(struct a4l_device_context * cxt, struct a4l_kernel_instruction_list * dsc, void *arg)
 {
 	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	int i, ret = 0;
@@ -348,7 +348,7 @@ int a4l_fill_ilstdsc(a4l_cxt_t * cxt, a4l_kilst_t * dsc, void *arg)
 	/* Keeps the user pointer in an opaque field */
 	dsc->__uinsns = (a4l_insn_t *)dsc->insns;
 
-	dsc->insns = rtdm_malloc(dsc->count * sizeof(a4l_kinsn_t));
+	dsc->insns = rtdm_malloc(dsc->count * sizeof(struct a4l_kernel_instruction));
 	if (dsc->insns == NULL)
 		return -ENOMEM;
 
@@ -366,7 +366,7 @@ int a4l_fill_ilstdsc(a4l_cxt_t * cxt, a4l_kilst_t * dsc, void *arg)
 	return ret;
 }
 
-int a4l_free_ilstdsc(a4l_cxt_t * cxt, a4l_kilst_t * dsc)
+int a4l_free_ilstdsc(struct a4l_device_context * cxt, struct a4l_kernel_instruction_list * dsc)
 {
 	int i, ret = 0;
 
@@ -389,12 +389,12 @@ int a4l_free_ilstdsc(a4l_cxt_t * cxt, a4l_kilst_t * dsc)
 /* This function is not optimized in terms of memory footprint and
    CPU charge; however, the whole analogy instruction system was not
    designed for performance issues */
-int a4l_ioctl_insnlist(a4l_cxt_t * cxt, void *arg)
+int a4l_ioctl_insnlist(struct a4l_device_context * cxt, void *arg)
 {
 	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	int i, ret = 0;
-	a4l_kilst_t ilst;
-	a4l_dev_t *dev = a4l_get_dev(cxt);
+	struct a4l_kernel_instruction_list ilst;
+	struct a4l_device *dev = a4l_get_dev(cxt);
 
 	if (!rtdm_in_rt_context() && rtdm_rt_capable(fd))
 		return -ENOSYS;

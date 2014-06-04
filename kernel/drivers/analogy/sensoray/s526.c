@@ -166,9 +166,9 @@ struct s526_subd_dio_priv {
 #define ADDR_CHAN_REG(reg, chan) (devpriv->io_base + (reg) + (chan) * 8)
 
 
-static int s526_gpct_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
+static int s526_gpct_insn_config(struct a4l_subdevice *subd, struct a4l_kernel_instruction *insn)
 {
-	a4l_dev_t *dev = subd->dev;
+	struct a4l_device *dev = subd->dev;
 	struct s526_subd_gpct_priv *subdpriv =
 	    (struct s526_subd_gpct_priv *)subd->priv;
 	unsigned int *data = (unsigned int *)insn->data;
@@ -307,9 +307,9 @@ static int s526_gpct_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	return 0;
 }
 
-static int s526_gpct_rinsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
+static int s526_gpct_rinsn(struct a4l_subdevice *subd, struct a4l_kernel_instruction *insn)
 {
-	a4l_dev_t *dev = subd->dev;
+	struct a4l_device *dev = subd->dev;
 	uint32_t *data = (uint32_t *)insn->data;
 	int counter_channel = CR_CHAN(insn->chan_desc);
 	unsigned short datalow;
@@ -334,9 +334,9 @@ static int s526_gpct_rinsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	return 0;
 }
 
-static int s526_gpct_winsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
+static int s526_gpct_winsn(struct a4l_subdevice *subd, struct a4l_kernel_instruction *insn)
 {
-	a4l_dev_t *dev = subd->dev;
+	struct a4l_device *dev = subd->dev;
 	struct s526_subd_gpct_priv *subdpriv =
 	    (struct s526_subd_gpct_priv *)subd->priv;
 	uint32_t *data = (uint32_t *)insn->data;
@@ -404,9 +404,9 @@ static int s526_gpct_winsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	return 0;
 }
 
-static int s526_ai_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
+static int s526_ai_insn_config(struct a4l_subdevice *subd, struct a4l_kernel_instruction *insn)
 {
-	a4l_dev_t *dev = subd->dev;
+	struct a4l_device *dev = subd->dev;
 	struct s526_subd_ai_priv *subdpriv =
 	    (struct s526_subd_ai_priv *)subd->priv;
 	unsigned int *data = (unsigned int *)insn->data;
@@ -436,9 +436,9 @@ static int s526_ai_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	return 0;
 }
 
-static int s526_ai_rinsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
+static int s526_ai_rinsn(struct a4l_subdevice *subd, struct a4l_kernel_instruction *insn)
 {
-	a4l_dev_t *dev = subd->dev;
+	struct a4l_device *dev = subd->dev;
 	struct s526_subd_ai_priv *subdpriv =
 	    (struct s526_subd_ai_priv *)subd->priv;
 	uint16_t *data = (uint16_t *)insn->data;
@@ -486,9 +486,9 @@ static int s526_ai_rinsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	return 0;
 }
 
-static int s526_ao_winsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
+static int s526_ao_winsn(struct a4l_subdevice *subd, struct a4l_kernel_instruction *insn)
 {
-	a4l_dev_t *dev = subd->dev;
+	struct a4l_device *dev = subd->dev;
 	struct s526_subd_ao_priv *subdpriv =
 	    (struct s526_subd_ao_priv *)subd->priv;
 	uint16_t *data = (uint16_t *)insn->data;
@@ -508,7 +508,7 @@ static int s526_ao_winsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	return 0;
 }
 
-static int s526_ao_rinsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
+static int s526_ao_rinsn(struct a4l_subdevice *subd, struct a4l_kernel_instruction *insn)
 {
 	struct s526_subd_ao_priv *subdpriv =
 		(struct s526_subd_ao_priv *)subd->priv;
@@ -522,9 +522,9 @@ static int s526_ao_rinsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	return 0;
 }
 
-static int s526_dio_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
+static int s526_dio_insn_config(struct a4l_subdevice *subd, struct a4l_kernel_instruction *insn)
 {
-	a4l_dev_t *dev = subd->dev;
+	struct a4l_device *dev = subd->dev;
 	struct s526_subd_dio_priv *subdpriv =
 	    (struct s526_subd_dio_priv *)subd->priv;
 	unsigned int *data = (unsigned int *)insn->data;
@@ -558,9 +558,9 @@ static int s526_dio_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	return 0;
 }
 
-static int s526_dio_insn_bits(a4l_subd_t *subd, a4l_kinsn_t *insn)
+static int s526_dio_insn_bits(struct a4l_subdevice *subd, struct a4l_kernel_instruction *insn)
 {
-	a4l_dev_t *dev = subd->dev;
+	struct a4l_device *dev = subd->dev;
 	struct s526_subd_dio_priv *subdpriv =
 		(struct s526_subd_dio_priv *)subd->priv;
 	uint8_t *data = (uint8_t *)insn->data;
@@ -582,7 +582,7 @@ static int s526_dio_insn_bits(a4l_subd_t *subd, a4l_kinsn_t *insn)
 
 /* --- Channels descriptor --- */
 
-static a4l_chdesc_t s526_chan_desc_gpct = {
+static struct a4l_channels_desc s526_chan_desc_gpct = {
 	.mode = A4L_CHAN_GLOBAL_CHANDESC,
 	.length = S526_GPCT_CHANS,
 	.chans = {
@@ -590,7 +590,7 @@ static a4l_chdesc_t s526_chan_desc_gpct = {
 	},
 };
 
-static a4l_chdesc_t s526_chan_desc_ai = {
+static struct a4l_channels_desc s526_chan_desc_ai = {
 	.mode = A4L_CHAN_GLOBAL_CHANDESC,
 	.length = S526_AI_CHANS,
 	.chans = {
@@ -598,7 +598,7 @@ static a4l_chdesc_t s526_chan_desc_ai = {
 	},
 };
 
-static a4l_chdesc_t s526_chan_desc_ao = {
+static struct a4l_channels_desc s526_chan_desc_ao = {
 	.mode = A4L_CHAN_GLOBAL_CHANDESC,
 	.length = S526_AO_CHANS,
 	.chans = {
@@ -606,7 +606,7 @@ static a4l_chdesc_t s526_chan_desc_ao = {
 	},
 };
 
-static a4l_chdesc_t s526_chan_desc_dio = {
+static struct a4l_channels_desc s526_chan_desc_dio = {
 	.mode = A4L_CHAN_GLOBAL_CHANDESC,
 	.length = S526_DIO_CHANS,
 	.chans = {
@@ -617,7 +617,7 @@ static a4l_chdesc_t s526_chan_desc_dio = {
 /* --- Subdevice initialization functions --- */
 
 /* General purpose counter/timer (gpct) */
-static void setup_subd_gpct(a4l_subd_t *subd)
+static void setup_subd_gpct(struct a4l_subdevice *subd)
 {
 	subd->flags = A4L_SUBD_COUNTER;
 	subd->chan_desc = &s526_chan_desc_gpct;
@@ -627,7 +627,7 @@ static void setup_subd_gpct(a4l_subd_t *subd)
 }
 
 /* Analog input subdevice */
-static void setup_subd_ai(a4l_subd_t *subd)
+static void setup_subd_ai(struct a4l_subdevice *subd)
 {
 	subd->flags = A4L_SUBD_AI;
 	subd->chan_desc = &s526_chan_desc_ai;
@@ -637,7 +637,7 @@ static void setup_subd_ai(a4l_subd_t *subd)
 }
 
 /* Analog output subdevice */
-static void setup_subd_ao(a4l_subd_t *subd)
+static void setup_subd_ao(struct a4l_subdevice *subd)
 {
 	subd->flags = A4L_SUBD_AO;
 	subd->chan_desc = &s526_chan_desc_ao;
@@ -647,7 +647,7 @@ static void setup_subd_ao(a4l_subd_t *subd)
 }
 
 /* Digital i/o subdevice */
-static void setup_subd_dio(a4l_subd_t *subd)
+static void setup_subd_dio(struct a4l_subdevice *subd)
 {
 	subd->flags = A4L_SUBD_DIO;
 	subd->chan_desc = &s526_chan_desc_dio;
@@ -657,7 +657,7 @@ static void setup_subd_dio(a4l_subd_t *subd)
 }
 
 struct setup_subd {
-	void (*setup_func) (a4l_subd_t *);
+	void (*setup_func) (struct a4l_subdevice *);
 	int sizeof_priv;
 };
 
@@ -680,7 +680,7 @@ static struct setup_subd setup_subds[4] = {
 	},
 };
 
-static int dev_s526_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
+static int dev_s526_attach(struct a4l_device *dev, a4l_lnkdesc_t *arg)
 {
 	int io_base;
 	int i;
@@ -703,7 +703,7 @@ static int dev_s526_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 
 	/* Allocate the subdevice structures. */
 	for (i = 0; i < 4; i++) {
-		a4l_subd_t *subd = a4l_alloc_subd(setup_subds[i].sizeof_priv,
+		struct a4l_subdevice *subd = a4l_alloc_subd(setup_subds[i].sizeof_priv,
 						  setup_subds[i].setup_func);
 
 		if (subd == NULL)
@@ -721,7 +721,7 @@ static int dev_s526_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 	return 0;
 }
 
-static int dev_s526_detach(a4l_dev_t *dev)
+static int dev_s526_detach(struct a4l_device *dev)
 {
 	int err = 0;
 
@@ -731,7 +731,7 @@ static int dev_s526_detach(a4l_dev_t *dev)
 	return err;
 }
 
-static a4l_drv_t drv_s526 = {
+static struct a4l_driver drv_s526 = {
 	.owner = THIS_MODULE,
 	.board_name = "analogy_s526",
 	.attach = dev_s526_attach,

@@ -62,7 +62,7 @@ static inline unsigned int read_register(struct ni_gpct *counter,
 	return counter->counter_dev->read_register(counter, reg);
 }
 
-struct ni_gpct_device *a4l_ni_gpct_device_construct(a4l_dev_t * dev,
+struct ni_gpct_device *a4l_ni_gpct_device_construct(struct a4l_device * dev,
 	void (*write_register) (struct ni_gpct * counter, unsigned int bits,
 		enum ni_gpct_register reg),
 	unsigned int (*read_register) (struct ni_gpct * counter,
@@ -80,7 +80,7 @@ struct ni_gpct_device *a4l_ni_gpct_device_construct(a4l_dev_t * dev,
 	counter_dev->write_register = write_register;
 	counter_dev->read_register = read_register;
 	counter_dev->variant = variant;
-	a4l_lock_init(&counter_dev->regs_lock);
+	rtdm_lock_init(&counter_dev->regs_lock);
 	BUG_ON(num_counters == 0);
 
 	counter_dev->counters =
@@ -152,14 +152,14 @@ void ni_tio_set_bits_transient(struct ni_gpct *counter,
 	unsigned long flags;
 
 	BUG_ON(register_index >= NITIO_Num_Registers);
-	a4l_lock_irqsave(&counter_dev->regs_lock, flags);
+	rtdm_lock_get_irqsave(&counter_dev->regs_lock, flags);
 	counter_dev->regs[register_index] &= ~bit_mask;
 	counter_dev->regs[register_index] |= (bit_values & bit_mask);
 	write_register(counter,
 		       counter_dev->regs[register_index] | transient_bit_values,
 		       register_index);
 	mmiowb();
-	a4l_unlock_irqrestore(&counter_dev->regs_lock, flags);
+	rtdm_lock_put_irqrestore(&counter_dev->regs_lock, flags);
 }
 
 /* ni_tio_set_bits( ) is for safely writing to registers whose bits
@@ -187,9 +187,9 @@ unsigned int ni_tio_get_soft_copy(const struct ni_gpct *counter,
 	unsigned value;
 
 	BUG_ON(register_index >= NITIO_Num_Registers);
-	a4l_lock_irqsave(&counter_dev->regs_lock, flags);
+	rtdm_lock_get_irqsave(&counter_dev->regs_lock, flags);
 	value = counter_dev->regs[register_index];
-	a4l_unlock_irqrestore(&counter_dev->regs_lock, flags);
+	rtdm_lock_put_irqrestore(&counter_dev->regs_lock, flags);
 	return value;
 }
 
@@ -1402,7 +1402,7 @@ static int ni_tio_get_gate_src(struct ni_gpct *counter,
 	return 0;
 }
 
-int a4l_ni_tio_insn_config(struct ni_gpct *counter, a4l_kinsn_t *insn)
+int a4l_ni_tio_insn_config(struct ni_gpct *counter, struct a4l_kernel_instruction *insn)
 {
 	unsigned int *data = (unsigned int *)insn->data;
 
@@ -1448,7 +1448,7 @@ int a4l_ni_tio_insn_config(struct ni_gpct *counter, a4l_kinsn_t *insn)
 	return -EINVAL;
 }
 
-int a4l_ni_tio_rinsn(struct ni_gpct *counter, a4l_kinsn_t *insn)
+int a4l_ni_tio_rinsn(struct ni_gpct *counter, struct a4l_kernel_instruction *insn)
 {
 	struct ni_gpct_device *counter_dev = counter->counter_dev;
 	const unsigned int channel = CR_CHAN(insn->chan_desc);
@@ -1517,7 +1517,7 @@ static unsigned int ni_tio_next_load_register(struct ni_gpct *counter)
 	}
 }
 
-int a4l_ni_tio_winsn(struct ni_gpct *counter, a4l_kinsn_t *insn)
+int a4l_ni_tio_winsn(struct ni_gpct *counter, struct a4l_kernel_instruction *insn)
 {
 	struct ni_gpct_device *counter_dev = counter->counter_dev;
 	const unsigned int channel = CR_CHAN(insn->chan_desc);
@@ -1618,12 +1618,12 @@ int a4l_ni_tio_input_inttrig(struct ni_gpct *counter, lsampl_t trignum)
 	if (trignum != 0)
 		return -EINVAL;
 
-	a4l_lock_irqsave(&counter->lock, flags);
+	rtdm_lock_get_irqsave(&counter->lock, flags);
 	if (counter->mite_chan)
 		a4l_mite_dma_arm(counter->mite_chan);
 	else
 		retval = -EIO;
-	a4l_unlock_irqrestore(&counter->lock, flags);
+	rtdm_lock_put_irqrestore(&counter->lock, flags);
 	if (retval < 0)
 		return retval;
 	retval = ni_tio_arm(counter, 1, NI_GPCT_ARM_IMMEDIATE);
@@ -1636,7 +1636,7 @@ int a4l_ni_tio_input_inttrig(struct ni_gpct *counter, lsampl_t trignum)
 	return retval;
 }
 
-static int ni_tio_input_cmd(struct ni_gpct *counter, a4l_cmd_t *cmd)
+static int ni_tio_input_cmd(struct ni_gpct *counter, struct a4l_cmd_desc *cmd)
 {
 	struct ni_gpct_device *counter_dev = counter->counter_dev;
 	int retval = 0;
@@ -1677,13 +1677,13 @@ static int ni_tio_input_cmd(struct ni_gpct *counter, a4l_cmd_t *cmd)
 	return retval;
 }
 
-static int ni_tio_output_cmd(struct ni_gpct *counter, a4l_cmd_t *cmd)
+static int ni_tio_output_cmd(struct ni_gpct *counter, struct a4l_cmd_desc *cmd)
 {
 	__a4l_err("ni_tio: output commands not yet implemented.\n");
 	return -ENOTSUPP;
 }
 
-static int ni_tio_cmd_setup(struct ni_gpct *counter, a4l_cmd_t *cmd)
+static int ni_tio_cmd_setup(struct ni_gpct *counter, struct a4l_cmd_desc *cmd)
 {
 	int retval = 0, set_gate_source = 0;
 	unsigned int gate_source;
@@ -1707,12 +1707,12 @@ static int ni_tio_cmd_setup(struct ni_gpct *counter, a4l_cmd_t *cmd)
 	return retval;
 }
 
-int a4l_ni_tio_cmd(struct ni_gpct *counter, a4l_cmd_t *cmd)
+int a4l_ni_tio_cmd(struct ni_gpct *counter, struct a4l_cmd_desc *cmd)
 {
 	int retval = 0;
 	unsigned long flags;
 
-	a4l_lock_irqsave(&counter->lock, flags);
+	rtdm_lock_get_irqsave(&counter->lock, flags);
 	if (counter->mite_chan == NULL) {
 		__a4l_err("a4l_ni_tio_cmd: commands only supported with DMA."
 			     " Interrupt-driven commands not yet implemented.\n");
@@ -1727,11 +1727,11 @@ int a4l_ni_tio_cmd(struct ni_gpct *counter, a4l_cmd_t *cmd)
 			}
 		}
 	}
-	a4l_unlock_irqrestore(&counter->lock, flags);
+	rtdm_lock_put_irqrestore(&counter->lock, flags);
 	return retval;
 }
 
-a4l_cmd_t a4l_ni_tio_cmd_mask = {
+struct a4l_cmd_desc a4l_ni_tio_cmd_mask = {
 	.idx_subd = 0,
 	.start_src = TRIG_NOW | TRIG_INT | TRIG_OTHER | TRIG_EXT,
 	.scan_begin_src = TRIG_FOLLOW | TRIG_EXT | TRIG_OTHER,
@@ -1740,7 +1740,7 @@ a4l_cmd_t a4l_ni_tio_cmd_mask = {
 	.stop_src = TRIG_NONE,
 };
 
-int a4l_ni_tio_cmdtest(struct ni_gpct *counter, a4l_cmd_t *cmd)
+int a4l_ni_tio_cmdtest(struct ni_gpct *counter, struct a4l_cmd_desc *cmd)
 {
 	/* Make sure trigger sources are trivially valid */
 
@@ -1791,11 +1791,11 @@ int a4l_ni_tio_cancel(struct ni_gpct *counter)
 	unsigned long flags;
 
 	ni_tio_arm(counter, 0, 0);
-	a4l_lock_irqsave(&counter->lock, flags);
+	rtdm_lock_get_irqsave(&counter->lock, flags);
 	if (counter->mite_chan) {
 		a4l_mite_dma_disarm(counter->mite_chan);
 	}
-	a4l_unlock_irqrestore(&counter->lock, flags);
+	rtdm_lock_put_irqrestore(&counter->lock, flags);
 	ni_tio_configure_dma(counter, 0, 0);
 
 	ni_tio_set_bits(counter,
@@ -1821,7 +1821,7 @@ static int should_ack_gate(struct ni_gpct *counter)
 		return 1;
 		break;
 	case ni_gpct_variant_e_series:
-		a4l_lock_irqsave(&counter->lock, flags);
+		rtdm_lock_get_irqsave(&counter->lock, flags);
 		{
 			if (counter->mite_chan == NULL ||
 				counter->mite_chan->dir != A4L_INPUT ||
@@ -1829,7 +1829,7 @@ static int should_ack_gate(struct ni_gpct *counter)
 				retval = 1;
 			}
 		}
-		a4l_unlock_irqrestore(&counter->lock, flags);
+		rtdm_lock_put_irqrestore(&counter->lock, flags);
 		break;
 	}
 	return retval;
@@ -1903,14 +1903,14 @@ void a4l_ni_tio_acknowledge_and_confirm(struct ni_gpct *counter,
 }
 
 /* TODO: to be adapted after a4l_buf_evt review */
-void a4l_ni_tio_handle_interrupt(struct ni_gpct *counter, a4l_dev_t *dev)
+void a4l_ni_tio_handle_interrupt(struct ni_gpct *counter, struct a4l_device *dev)
 {
 	unsigned gpct_mite_status;
 	unsigned long flags;
 	int gate_error;
 	int tc_error;
 	int perm_stale_data;
-	a4l_subd_t *subd =
+	struct a4l_subdevice *subd =
 		a4l_get_subd(dev, NI_GPCT_SUBDEV(counter->counter_index));
 
 	a4l_ni_tio_acknowledge_and_confirm(counter, &gate_error, &tc_error,
@@ -1935,9 +1935,9 @@ void a4l_ni_tio_handle_interrupt(struct ni_gpct *counter, a4l_dev_t *dev)
 	case ni_gpct_variant_e_series:
 		break;
 	}
-	a4l_lock_irqsave(&counter->lock, flags);
+	rtdm_lock_get_irqsave(&counter->lock, flags);
 	if (counter->mite_chan == NULL) {
-		a4l_unlock_irqrestore(&counter->lock, flags);
+		rtdm_lock_put_irqrestore(&counter->lock, flags);
 		return;
 	}
 	gpct_mite_status = a4l_mite_get_status(counter->mite_chan);
@@ -1947,7 +1947,7 @@ void a4l_ni_tio_handle_interrupt(struct ni_gpct *counter, a4l_dev_t *dev)
 			MITE_CHOR(counter->mite_chan->channel));
 	}
 	a4l_mite_sync_input_dma(counter->mite_chan, subd);
-	a4l_unlock_irqrestore(&counter->lock, flags);
+	rtdm_lock_put_irqrestore(&counter->lock, flags);
 }
 
 void a4l_ni_tio_set_mite_channel(struct ni_gpct *counter,
@@ -1955,9 +1955,9 @@ void a4l_ni_tio_set_mite_channel(struct ni_gpct *counter,
 {
 	unsigned long flags;
 
-	a4l_lock_irqsave(&counter->lock, flags);
+	rtdm_lock_get_irqsave(&counter->lock, flags);
 	counter->mite_chan = mite_chan;
-	a4l_unlock_irqrestore(&counter->lock, flags);
+	rtdm_lock_put_irqrestore(&counter->lock, flags);
 }
 
 #endif /* CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE */

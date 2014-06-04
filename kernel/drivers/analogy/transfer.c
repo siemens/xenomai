@@ -29,10 +29,10 @@
 
 /* --- Initialization / cleanup / cancel functions --- */
 
-int a4l_precleanup_transfer(a4l_cxt_t * cxt)
+int a4l_precleanup_transfer(struct a4l_device_context * cxt)
 {
-	a4l_dev_t *dev;
-	a4l_trf_t *tsf;
+	struct a4l_device *dev;
+	struct a4l_transfer *tsf;
 	int i, err = 0;
 
 	dev = a4l_get_dev(cxt);
@@ -75,10 +75,10 @@ out_error:
 	return err;
 }
 
-int a4l_cleanup_transfer(a4l_cxt_t * cxt)
+int a4l_cleanup_transfer(struct a4l_device_context * cxt)
 {
-	a4l_dev_t *dev;
-	a4l_trf_t *tsf;
+	struct a4l_device *dev;
+	struct a4l_transfer *tsf;
 
 	dev = a4l_get_dev(cxt);
 	tsf = &dev->transfer;
@@ -88,21 +88,21 @@ int a4l_cleanup_transfer(a4l_cxt_t * cxt)
 		rtdm_free(tsf->subds);
 	}
 
-	memset(tsf, 0, sizeof(a4l_trf_t));
+	memset(tsf, 0, sizeof(struct a4l_transfer));
 
 	return 0;
 }
 
-void a4l_presetup_transfer(a4l_cxt_t *cxt)
+void a4l_presetup_transfer(struct a4l_device_context *cxt)
 {
-	a4l_dev_t *dev = NULL;
-	a4l_trf_t *tsf;
+	struct a4l_device *dev = NULL;
+	struct a4l_transfer *tsf;
 
 	dev = a4l_get_dev(cxt);
 	tsf = &dev->transfer;
 
 	/* Clear the structure */
-	memset(tsf, 0, sizeof(a4l_trf_t));
+	memset(tsf, 0, sizeof(struct a4l_transfer));
 
 	tsf->default_bufsize = A4L_BUF_DEFSIZE;
 
@@ -111,10 +111,10 @@ void a4l_presetup_transfer(a4l_cxt_t *cxt)
 	tsf->irq_desc.irq = A4L_IRQ_UNUSED;
 }
 
-int a4l_setup_transfer(a4l_cxt_t * cxt)
+int a4l_setup_transfer(struct a4l_device_context * cxt)
 {
-	a4l_dev_t *dev = NULL;
-	a4l_trf_t *tsf;
+	struct a4l_device *dev = NULL;
+	struct a4l_transfer *tsf;
 	struct list_head *this;
 	int i = 0, ret = 0;
 
@@ -131,7 +131,7 @@ int a4l_setup_transfer(a4l_cxt_t * cxt)
 		  "a4l_setup_transfer: nb_subd=%d\n", tsf->nb_subd);
 
 	/* Allocates a suitable tab for the subdevices */
-	tsf->subds = rtdm_malloc(tsf->nb_subd * sizeof(a4l_subd_t *));
+	tsf->subds = rtdm_malloc(tsf->nb_subd * sizeof(struct a4l_subdevice *));
 	if (tsf->subds == NULL) {
 		__a4l_err("a4l_setup_transfer: call1(alloc) failed \n");
 		ret = -ENOMEM;
@@ -140,7 +140,7 @@ int a4l_setup_transfer(a4l_cxt_t * cxt)
 
 	/* Recovers the subdevices pointers */
 	list_for_each(this, &dev->subdvsq) {
-		tsf->subds[i++] = list_entry(this, a4l_subd_t, list);
+		tsf->subds[i++] = list_entry(this, struct a4l_subdevice, list);
 	}
 
 out_setup_tsf:
@@ -153,7 +153,7 @@ out_setup_tsf:
 
 /* --- IRQ handling section --- */
 
-int a4l_request_irq(a4l_dev_t * dev,
+int a4l_request_irq(struct a4l_device * dev,
 		    unsigned int irq,
 		    a4l_irq_hdlr_t handler,
 		    unsigned long flags, void *cookie)
@@ -167,7 +167,7 @@ int a4l_request_irq(a4l_dev_t * dev,
 	/* A spinlock is used so as to prevent race conditions
 	   on the field "irq" of the IRQ descriptor
 	   (even if such a case is bound not to happen) */
-	a4l_lock_irqsave(&dev->lock, __flags);
+	rtdm_lock_get_irqsave(&dev->lock, __flags);
 
 	ret = __a4l_request_irq(&dev->transfer.irq_desc,
 				irq, handler, flags, cookie);
@@ -177,12 +177,12 @@ int a4l_request_irq(a4l_dev_t * dev,
 		dev->transfer.irq_desc.irq = A4L_IRQ_UNUSED;
 	}
 
-	a4l_unlock_irqrestore(&dev->lock, __flags);
+	rtdm_lock_put_irqrestore(&dev->lock, __flags);
 
 	return ret;
 }
 
-int a4l_free_irq(a4l_dev_t * dev, unsigned int irq)
+int a4l_free_irq(struct a4l_device * dev, unsigned int irq)
 {
 
 	int ret = 0;
@@ -200,7 +200,7 @@ int a4l_free_irq(a4l_dev_t * dev, unsigned int irq)
 	return 0;
 }
 
-unsigned int a4l_get_irq(a4l_dev_t * dev)
+unsigned int a4l_get_irq(struct a4l_device * dev)
 {
 	return dev->transfer.irq_desc.irq;
 }
@@ -211,7 +211,7 @@ unsigned int a4l_get_irq(a4l_dev_t * dev)
 
 int a4l_rdproc_transfer(struct seq_file *seq, void *v)
 {
-	a4l_trf_t *transfer = (a4l_trf_t *) seq->private;
+	struct a4l_transfer *transfer = (struct a4l_transfer *) seq->private;
 	int i;
 
 	if (v != SEQ_START_TOKEN)

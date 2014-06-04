@@ -28,7 +28,7 @@
 #include <rtdm/driver.h>
 #include <rtdm/analogy/device.h>
 
-int (* const a4l_ioctl_functions[]) (a4l_cxt_t *, void *) = {
+int (* const a4l_ioctl_functions[]) (struct a4l_device_context *, void *) = {
 	[_IOC_NR(A4L_DEVCFG)] = a4l_ioctl_devcfg,
 	[_IOC_NR(A4L_DEVINFO)] = a4l_ioctl_devinfo,
 	[_IOC_NR(A4L_SUBDINFO)] = a4l_ioctl_subdinfo,
@@ -132,14 +132,14 @@ void a4l_cleanup_proc(void)
 
 int a4l_open(struct rtdm_fd *fd, int flags)
 {
-	a4l_cxt_t *cxt = (a4l_cxt_t *)rtdm_fd_to_private(fd);
+	struct a4l_device_context *cxt = (struct a4l_device_context *)rtdm_fd_to_private(fd);
 
 	/* Get a pointer on the selected device
 	   (thanks to minor index) */
 	a4l_set_dev(cxt);
 
 	/* Initialize the buffer structure */
-	cxt->buffer = rtdm_malloc(sizeof(a4l_buf_t));
+	cxt->buffer = rtdm_malloc(sizeof(struct a4l_buffer));
 	a4l_init_buffer(cxt->buffer);
 
 	/* Allocate the asynchronous buffer
@@ -154,7 +154,7 @@ int a4l_open(struct rtdm_fd *fd, int flags)
 
 void a4l_close(struct rtdm_fd *fd)
 {
-	a4l_cxt_t *cxt = (a4l_cxt_t *)rtdm_fd_to_private(fd);
+	struct a4l_device_context *cxt = (struct a4l_device_context *)rtdm_fd_to_private(fd);
 
 	/* Cancel the maybe occuring asynchronous transfer */
 	a4l_cancel_buffer(cxt);
@@ -171,7 +171,7 @@ void a4l_close(struct rtdm_fd *fd)
 
 ssize_t a4l_read(struct rtdm_fd *fd, void *buf, size_t nbytes)
 {
-	a4l_cxt_t *cxt = (a4l_cxt_t *)rtdm_fd_to_private(fd);
+	struct a4l_device_context *cxt = (struct a4l_device_context *)rtdm_fd_to_private(fd);
 
 	/* Jump into the RT domain if possible */
 	if (!rtdm_in_rt_context() && rtdm_rt_capable(fd))
@@ -185,7 +185,7 @@ ssize_t a4l_read(struct rtdm_fd *fd, void *buf, size_t nbytes)
 
 ssize_t a4l_write(struct rtdm_fd *fd, const void *buf, size_t nbytes)
 {
-	a4l_cxt_t *cxt = (a4l_cxt_t *)rtdm_fd_to_private(fd);
+	struct a4l_device_context *cxt = (struct a4l_device_context *)rtdm_fd_to_private(fd);
 
 	/* Jump into the RT domain if possible */
 	if (!rtdm_in_rt_context() && rtdm_rt_capable(fd))
@@ -199,7 +199,7 @@ ssize_t a4l_write(struct rtdm_fd *fd, const void *buf, size_t nbytes)
 
 int a4l_ioctl(struct rtdm_fd *fd, unsigned int request, void *arg)
 {
-	a4l_cxt_t *cxt = (a4l_cxt_t *)rtdm_fd_to_private(fd);
+	struct a4l_device_context *cxt = (struct a4l_device_context *)rtdm_fd_to_private(fd);
 
 	return a4l_ioctl_functions[_IOC_NR(request)] (cxt, arg);
 }
@@ -208,7 +208,7 @@ int a4l_rt_select(struct rtdm_fd *fd,
 		  rtdm_selector_t *selector,
 		  enum rtdm_selecttype type, unsigned fd_index)
 {
-	a4l_cxt_t *cxt = (a4l_cxt_t *)rtdm_fd_to_private(fd);
+	struct a4l_device_context *cxt = (struct a4l_device_context *)rtdm_fd_to_private(fd);
 
 	return a4l_select(cxt, selector, type, fd_index);
 }

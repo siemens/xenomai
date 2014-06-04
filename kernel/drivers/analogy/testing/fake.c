@@ -19,7 +19,7 @@ struct fake_priv {
 	unsigned long quanta_cnt;
 
 	/* Task descriptor */
-	a4l_task_t task;
+	rtdm_task_t task;
 
 	/* Statuses of the asynchronous subdevices */
 	int ai_running;
@@ -58,7 +58,7 @@ struct dio_priv {
 
 /* Channels descriptors */
 
-static a4l_chdesc_t analog_chandesc = {
+static struct a4l_channels_desc analog_chandesc = {
 	.mode = A4L_CHAN_GLOBAL_CHANDESC,
 	.length = 8,
 	.chans = {
@@ -66,7 +66,7 @@ static a4l_chdesc_t analog_chandesc = {
 	},
 };
 
-static a4l_chdesc_t dio_chandesc = {
+static struct a4l_channels_desc dio_chandesc = {
 	.mode = A4L_CHAN_GLOBAL_CHANDESC,
 	.length = 16,
 	.chans = {
@@ -75,7 +75,7 @@ static a4l_chdesc_t dio_chandesc = {
 };
 
 /* Ranges tab */
-static a4l_rngtab_t analog_rngtab = {
+static struct a4l_rngtab analog_rngtab = {
 	.length = 2,
 	.rngs = {
 		RANGE_V(-5,5),
@@ -83,11 +83,11 @@ static a4l_rngtab_t analog_rngtab = {
 	},
 };
 /* Ranges descriptor */
-static a4l_rngdesc_t analog_rngdesc = RNG_GLOBAL(analog_rngtab);
+static struct a4l_rngdesc analog_rngdesc = RNG_GLOBAL(analog_rngtab);
 
 /* Command options masks */
 
-static a4l_cmd_t ai_cmd_mask = {
+static struct a4l_cmd_desc ai_cmd_mask = {
 	.idx_subd = 0,
 	.start_src = TRIG_NOW,
 	.scan_begin_src = TRIG_TIMER,
@@ -96,7 +96,7 @@ static a4l_cmd_t ai_cmd_mask = {
 	.stop_src = TRIG_COUNT | TRIG_NONE,
 };
 
-static a4l_cmd_t ao_cmd_mask = {
+static struct a4l_cmd_desc ao_cmd_mask = {
 	.idx_subd = 0,
 	.start_src = TRIG_NOW | TRIG_INT,
 	.scan_begin_src = TRIG_TIMER,
@@ -116,27 +116,27 @@ static inline uint16_t ai_value_output(struct ai_priv *priv)
 		0x8000, 0xa000, 0xc000, 0xffff
 	};
 	static unsigned int output_idx;
-	static DEFINE_A4L_LOCK(output_lock);
+	static DEFINE_RTDM_LOCK(output_lock);
 
 	unsigned long flags;
 	unsigned int idx;
 
-	a4l_lock_irqsave(&output_lock, flags);
+	rtdm_lock_get_irqsave(&output_lock, flags);
 
 	output_idx += priv->quanta_cnt;
 	if(output_idx == 8)
 		output_idx = 0;
 	idx = output_idx;
 
-	a4l_unlock_irqrestore(&output_lock, flags);
+	rtdm_lock_put_irqrestore(&output_lock, flags);
 
 	return output_tab[idx] / priv->amplitude_div;
 }
 
-int ai_push_values(a4l_subd_t *subd)
+int ai_push_values(struct a4l_subdevice *subd)
 {
 	struct ai_priv *priv = (struct ai_priv *)subd->priv;
-	a4l_cmd_t *cmd = a4l_get_cmd(subd);
+	struct a4l_cmd_desc *cmd = a4l_get_cmd(subd);
 	uint64_t now_ns, elapsed_ns = 0;
 	int i = 0;
 
@@ -170,7 +170,7 @@ int ai_push_values(a4l_subd_t *subd)
 
 /* --- Data retrieval for AO --- */
 
-int ao_pull_values(a4l_subd_t *subd)
+int ao_pull_values(struct a4l_subdevice *subd)
 {
 	struct ao_ai2_priv *priv = (struct ao_ai2_priv *)subd->priv;
 	int err;
@@ -197,7 +197,7 @@ int ao_pull_values(a4l_subd_t *subd)
 
 /* --- Data redirection for 2nd AI (from AO) --- */
 
-int ai2_push_values(a4l_subd_t *subd)
+int ai2_push_values(struct a4l_subdevice *subd)
 {
 	struct ao_ai2_priv *priv = *((struct ao_ai2_priv **)subd->priv);
 	int err = 0;
@@ -230,14 +230,14 @@ int ai2_push_values(a4l_subd_t *subd)
 
 static void task_proc(void *arg)
 {
-	a4l_dev_t *dev = (a4l_dev_t *)arg;
-	a4l_subd_t *ai_subd = (a4l_subd_t *)a4l_get_subd(dev, AI_SUBD);
-	a4l_subd_t *ao_subd = (a4l_subd_t *)a4l_get_subd(dev, AO_SUBD);
-	a4l_subd_t *ai2_subd = (a4l_subd_t *)a4l_get_subd(dev, AI2_SUBD);
+	struct a4l_device *dev = (struct a4l_device *)arg;
+	struct a4l_subdevice *ai_subd = (struct a4l_subdevice *)a4l_get_subd(dev, AI_SUBD);
+	struct a4l_subdevice *ao_subd = (struct a4l_subdevice *)a4l_get_subd(dev, AO_SUBD);
+	struct a4l_subdevice *ai2_subd = (struct a4l_subdevice *)a4l_get_subd(dev, AI2_SUBD);
 
 	struct fake_priv *priv = (struct fake_priv *)dev->priv;
 
-	while(!a4l_task_should_stop()) {
+	while(!rtdm_task_should_stop()) {
 
 		int running;
 
@@ -253,13 +253,13 @@ static void task_proc(void *arg)
 		if (running && ai2_push_values(ai2_subd) < 0)
 			continue;
 
-		a4l_task_sleep(TASK_PERIOD);
+		rtdm_task_sleep(TASK_PERIOD);
 	}
 }
 
 /* --- Asynchronous AI functions --- */
 
-static int ai_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
+static int ai_cmd(struct a4l_subdevice *subd, struct a4l_cmd_desc *cmd)
 {
 	struct fake_priv *priv = (struct fake_priv *)subd->dev->priv;
 	struct ai_priv *ai_priv = (struct ai_priv *)subd->priv;
@@ -283,7 +283,7 @@ static int ai_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 
 }
 
-static int ai_cmdtest(a4l_subd_t *subd, a4l_cmd_t *cmd)
+static int ai_cmdtest(struct a4l_subdevice *subd, struct a4l_cmd_desc *cmd)
 {
 	if(cmd->scan_begin_src == TRIG_TIMER)
 	{
@@ -298,14 +298,14 @@ static int ai_cmdtest(a4l_subd_t *subd, a4l_cmd_t *cmd)
 	return 0;
 }
 
-static void ai_cancel(a4l_subd_t *subd)
+static void ai_cancel(struct a4l_subdevice *subd)
 {
 	struct fake_priv *priv = (struct fake_priv *)subd->dev->priv;
 
 	priv->ai_running = 0;
 }
 
-static void ai_munge(a4l_subd_t *subd, void *buf, unsigned long size)
+static void ai_munge(struct a4l_subdevice *subd, void *buf, unsigned long size)
 {
 	int i;
 
@@ -315,13 +315,13 @@ static void ai_munge(a4l_subd_t *subd, void *buf, unsigned long size)
 
 /* --- Asynchronous A0 functions --- */
 
-int ao_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
+int ao_cmd(struct a4l_subdevice *subd, struct a4l_cmd_desc *cmd)
 {
 	a4l_info(subd->dev, "ao_cmd: (subd=%d)\n", subd->idx);
 	return 0;
 }
 
-int ao_trigger(a4l_subd_t *subd, lsampl_t trignum)
+int ao_trigger(struct a4l_subdevice *subd, lsampl_t trignum)
 {
 	struct fake_priv *priv = (struct fake_priv *)subd->dev->priv;
 
@@ -330,7 +330,7 @@ int ao_trigger(a4l_subd_t *subd, lsampl_t trignum)
 	return 0;
 }
 
-void ao_cancel(a4l_subd_t *subd)
+void ao_cancel(struct a4l_subdevice *subd)
 {
 	struct fake_priv *priv = (struct fake_priv *)subd->dev->priv;
 	struct ao_ai2_priv *ao_priv = (struct ao_ai2_priv *)subd->priv;
@@ -341,8 +341,8 @@ void ao_cancel(a4l_subd_t *subd)
 
 	running = priv->ai2_running;
 	if (running) {
-		a4l_subd_t *ai2_subd =
-			(a4l_subd_t *)a4l_get_subd(subd->dev, AI2_SUBD);
+		struct a4l_subdevice *ai2_subd =
+			(struct a4l_subdevice *)a4l_get_subd(subd->dev, AI2_SUBD);
 		/* Here, we have not saved the required amount of
 		   data; so, we cannot know whether or not, it is the
 		   end of the acquisition; that is why we force it */
@@ -354,7 +354,7 @@ void ao_cancel(a4l_subd_t *subd)
 
 /* --- Asynchronous 2nd AI functions --- */
 
-int ai2_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
+int ai2_cmd(struct a4l_subdevice *subd, struct a4l_cmd_desc *cmd)
 {
 	struct fake_priv *priv = (struct fake_priv *)subd->dev->priv;
 
@@ -363,7 +363,7 @@ int ai2_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 	return 0;
 }
 
-void ai2_cancel(a4l_subd_t *subd)
+void ai2_cancel(struct a4l_subdevice *subd)
 {
 	struct fake_priv *priv = (struct fake_priv *)subd->dev->priv;
 	struct ao_ai2_priv *ai2_priv = *((struct ao_ai2_priv **)subd->priv);
@@ -375,8 +375,8 @@ void ai2_cancel(a4l_subd_t *subd)
 
 	running = priv->ao_running;
 	if (running) {
-		a4l_subd_t *ao_subd =
-			(a4l_subd_t *)a4l_get_subd(subd->dev, AO_SUBD);
+		struct a4l_subdevice *ao_subd =
+			(struct a4l_subdevice *)a4l_get_subd(subd->dev, AO_SUBD);
 		/* Here, we have not saved the required amount of
 		   data; so, we cannot know whether or not, it is the
 		   end of the acquisition; that is why we force it */
@@ -389,7 +389,7 @@ void ai2_cancel(a4l_subd_t *subd)
 
 /* --- Synchronous AI functions --- */
 
-static int ai_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
+static int ai_insn_read(struct a4l_subdevice *subd, struct a4l_kernel_instruction *insn)
 {
 	struct ai_priv *priv = (struct ai_priv *)subd->priv;
 	uint16_t *data = (uint16_t *)insn->data;
@@ -403,7 +403,7 @@ static int ai_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 
 /* --- Synchronous DIO function --- */
 
-static int dio_insn_bits(a4l_subd_t *subd, a4l_kinsn_t *insn)
+static int dio_insn_bits(struct a4l_subdevice *subd, struct a4l_kernel_instruction *insn)
 {
 	struct dio_priv *priv = (struct dio_priv *)subd->priv;
 	uint16_t *data = (uint16_t *)insn->data;
@@ -423,7 +423,7 @@ static int dio_insn_bits(a4l_subd_t *subd, a4l_kinsn_t *insn)
 
 /* --- Synchronous AO + AI2 functions --- */
 
-int ao_insn_write(a4l_subd_t *subd, a4l_kinsn_t *insn)
+int ao_insn_write(struct a4l_subdevice *subd, struct a4l_kernel_instruction *insn)
 {
 	struct ao_ai2_priv *priv = (struct ao_ai2_priv *)subd->priv;
 	uint16_t *data = (uint16_t *)insn->data;
@@ -438,7 +438,7 @@ int ao_insn_write(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	return 0;
 }
 
-int ai2_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
+int ai2_insn_read(struct a4l_subdevice *subd, struct a4l_kernel_instruction *insn)
 {
 	struct ao_ai2_priv *priv = *((struct ao_ai2_priv **)subd->priv);
 	uint16_t *data = (uint16_t *)insn->data;
@@ -455,7 +455,7 @@ int ai2_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 
 /* --- Initialization functions --- */
 
-void setup_ai_subd(a4l_subd_t *subd)
+void setup_ai_subd(struct a4l_subdevice *subd)
 {
 	/* Fill the subdevice structure */
 	subd->flags |= A4L_SUBD_AI;
@@ -471,7 +471,7 @@ void setup_ai_subd(a4l_subd_t *subd)
 	subd->insn_read = ai_insn_read;
 }
 
-void setup_dio_subd(a4l_subd_t *subd)
+void setup_dio_subd(struct a4l_subdevice *subd)
 {
 	/* Fill the subdevice structure */
 	subd->flags |= A4L_SUBD_DIO;
@@ -480,7 +480,7 @@ void setup_dio_subd(a4l_subd_t *subd)
 	subd->insn_bits = dio_insn_bits;
 }
 
-void setup_ao_subd(a4l_subd_t *subd)
+void setup_ao_subd(struct a4l_subdevice *subd)
 {
 	/* Fill the subdevice structure */
 	subd->flags |= A4L_SUBD_AO;
@@ -495,7 +495,7 @@ void setup_ao_subd(a4l_subd_t *subd)
 	subd->insn_write = ao_insn_write;
 }
 
-void setup_ai2_subd(a4l_subd_t *subd)
+void setup_ai2_subd(struct a4l_subdevice *subd)
 {
 	/* Fill the subdevice structure */
 	subd->flags |= A4L_SUBD_AI;
@@ -511,10 +511,10 @@ void setup_ai2_subd(a4l_subd_t *subd)
 
 /* --- Attach / detach functions ---  */
 
-int test_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
+int test_attach(struct a4l_device *dev, a4l_lnkdesc_t *arg)
 {
 	int ret = 0;
-	a4l_subd_t *subd;
+	struct a4l_subdevice *subd;
 	struct fake_priv *priv = (struct fake_priv *)dev->priv;
 	struct ai_priv *ai_priv;
 	struct ao_ai2_priv *shared_priv;
@@ -592,10 +592,10 @@ int test_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 
 	a4l_dbg(1, drv_dbg, dev, "AI2 subdevice registered\n");
 
-	ret = a4l_task_init(&priv->task,
+	ret = rtdm_task_init(&priv->task,
 			    "Fake AI task",
 			    task_proc,
-			    dev, A4L_TASK_HIGHEST_PRIORITY);
+			    dev, RTDM_TASK_HIGHEST_PRIORITY, 0);
 	if (ret)
 		a4l_dbg(1, drv_dbg, dev, "Error creating A4L task \n");
 
@@ -606,11 +606,11 @@ int test_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 	return 0;
 }
 
-int test_detach(a4l_dev_t *dev)
+int test_detach(struct a4l_device *dev)
 {
 	struct fake_priv *priv = (struct fake_priv *)dev->priv;
 
-	a4l_task_destroy(&priv->task);
+	rtdm_task_destroy(&priv->task);
 
 	a4l_dbg(1, drv_dbg, dev, "detach procedure complete\n");
 
@@ -619,7 +619,7 @@ int test_detach(a4l_dev_t *dev)
 
 /* --- Module stuff --- */
 
-static a4l_drv_t test_drv = {
+static struct a4l_driver test_drv = {
 	.owner = THIS_MODULE,
 	.board_name = "analogy_fake",
 	.attach = test_attach,

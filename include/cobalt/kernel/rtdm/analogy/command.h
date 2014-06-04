@@ -26,10 +26,10 @@
 #define CR_AREF(a) (((a)>>24)&0xf)
 
 /* --- Command related function --- */
-void a4l_free_cmddesc(a4l_cmd_t * desc);
+void a4l_free_cmddesc(struct a4l_cmd_desc * desc);
 
 /* --- Upper layer functions --- */
-int a4l_check_cmddesc(a4l_cxt_t * cxt, a4l_cmd_t * desc);
-int a4l_ioctl_cmd(a4l_cxt_t * cxt, void *arg);
+int a4l_check_cmddesc(struct a4l_device_context * cxt, struct a4l_cmd_desc * desc);
+int a4l_ioctl_cmd(struct a4l_device_context * cxt, void *arg);
 
 #endif /* !_COBALT_RTDM_ANALOGY_COMMAND_H */

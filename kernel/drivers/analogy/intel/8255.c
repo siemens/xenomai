@@ -29,7 +29,7 @@
 #define CALLBACK_FUNC		(((subd_8255_t *)subd->priv)->cb_func)
 
 /* Channels descriptor */
-static a4l_chdesc_t chandesc_8255 = {
+static struct a4l_channels_desc chandesc_8255 = {
 	.mode = A4L_CHAN_GLOBAL_CHANDESC,
 	.length = 24,
 	.chans = {
@@ -38,7 +38,7 @@ static a4l_chdesc_t chandesc_8255 = {
 };
 
 /* Command options mask */
-static a4l_cmd_t cmd_mask_8255 = {
+static struct a4l_cmd_desc cmd_mask_8255 = {
 	.idx_subd = 0,
 	.start_src = TRIG_NOW,
 	.scan_begin_src = TRIG_EXT,
@@ -47,7 +47,7 @@ static a4l_cmd_t cmd_mask_8255 = {
 	.stop_src = TRIG_NONE,
 };
 
-void a4l_subdev_8255_interrupt(a4l_subd_t *subd)
+void a4l_subdev_8255_interrupt(struct a4l_subdevice *subd)
 {
 	sampl_t d;
 
@@ -74,7 +74,7 @@ static int subdev_8255_cb(int dir, int port, int data, unsigned long arg)
 	}
 }
 
-static void do_config(a4l_subd_t *subd)
+static void do_config(struct a4l_subdevice *subd)
 {
 	int config;
 	subd_8255_t *subd_8255 = (subd_8255_t *)subd->priv;
@@ -92,13 +92,13 @@ static void do_config(a4l_subd_t *subd)
 	CALLBACK_FUNC(1, _8255_CR, config, CALLBACK_ARG);
 }
 
-int subd_8255_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
+int subd_8255_cmd(struct a4l_subdevice *subd, struct a4l_cmd_desc *cmd)
 {
 	/* FIXME */
 	return 0;
 }
 
-int subd_8255_cmdtest(a4l_subd_t *subd, a4l_cmd_t *cmd)
+int subd_8255_cmdtest(struct a4l_subdevice *subd, struct a4l_cmd_desc *cmd)
 {
 	if (cmd->start_arg != 0) {
 		cmd->start_arg = 0;
@@ -124,12 +124,12 @@ int subd_8255_cmdtest(a4l_subd_t *subd, a4l_cmd_t *cmd)
 	return 0;
 }
 
-void subd_8255_cancel(a4l_subd_t *subd)
+void subd_8255_cancel(struct a4l_subdevice *subd)
 {
 	/* FIXME */
 }
 
-int subd_8255_insn_bits(a4l_subd_t *subd, a4l_kinsn_t *insn)
+int subd_8255_insn_bits(struct a4l_subdevice *subd, struct a4l_kernel_instruction *insn)
 {
 	subd_8255_t *subd_8255 = (subd_8255_t *)subd->priv;
 	uint32_t *data = (uint32_t *)insn->data;
@@ -159,7 +159,7 @@ int subd_8255_insn_bits(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	return 0;
 }
 
-int subd_8255_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
+int subd_8255_insn_config(struct a4l_subdevice *subd, struct a4l_kernel_instruction *insn)
 {
 	unsigned int mask;
 	unsigned int bits;
@@ -199,11 +199,11 @@ int subd_8255_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	return 0;
 }
 
-void a4l_subdev_8255_init(a4l_subd_t *subd)
+void a4l_subdev_8255_init(struct a4l_subdevice *subd)
 {
 	subd_8255_t *subd_8255 = (subd_8255_t *)subd->priv;
 	/* Initializes the subdevice structure */
-	memset(&subd, 0, sizeof(a4l_subd_t));
+	memset(&subd, 0, sizeof(struct a4l_subdevice));
 
 	/* Subdevice filling part */
 
@@ -235,7 +235,7 @@ EXPORT_SYMBOL_GPL(a4l_subdev_8255_init);
 
 */
 
-static int dev_8255_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
+static int dev_8255_attach(struct a4l_device *dev, a4l_lnkdesc_t *arg)
 {
 	unsigned long *addrs;
 	int i, err = 0;
@@ -250,7 +250,7 @@ static int dev_8255_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 	addrs = (unsigned long*) arg->opts;
 
 	for(i = 0; i < (arg->opts_size / sizeof(unsigned long)); i++) {
-		a4l_subd_t * subd;
+		struct a4l_subdevice * subd;
 		subd_8255_t *subd_8255;
 
 		subd = a4l_alloc_subd(sizeof(subd_8255_t), NULL);
@@ -265,7 +265,7 @@ static int dev_8255_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 			goto out_attach;
 		}
 
-		memset(&subd, 0, sizeof(a4l_subd_t));
+		memset(&subd, 0, sizeof(struct a4l_subdevice));
 		memset(subd->priv, 0, sizeof(subd_8255_t));
 
 		subd_8255 = (subd_8255_t *)subd->priv;
@@ -294,9 +294,9 @@ out_attach:
 	return err;
 }
 
-static int dev_8255_detach(a4l_dev_t *dev)
+static int dev_8255_detach(struct a4l_device *dev)
 {
-	a4l_subd_t *subd;
+	struct a4l_subdevice *subd;
 	int i = 0;
 
 	while((subd = a4l_get_subd(dev, i++)) != NULL) {
@@ -308,7 +308,7 @@ static int dev_8255_detach(a4l_dev_t *dev)
 	return 0;
 }
 
-static a4l_drv_t drv_8255 = {
+static struct a4l_driver drv_8255 = {
 	.owner = THIS_MODULE,
 	.board_name = "analogy_8255",
 	.attach = dev_8255_attach,

@@ -97,9 +97,9 @@ typedef struct parport_priv {
 
 #define devpriv ((parport_priv_t *)(dev->priv))
 
-static int parport_insn_a(a4l_subd_t *subd, a4l_kinsn_t *insn)
+static int parport_insn_a(struct a4l_subdevice *subd, struct a4l_kernel_instruction *insn)
 {
-	a4l_dev_t *dev = subd->dev;
+	struct a4l_device *dev = subd->dev;
 	uint8_t *data = (uint8_t *)insn->data;
 
 	if (data[0]) {
@@ -114,9 +114,9 @@ static int parport_insn_a(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	return 0;
 }
 
-static int parport_insn_config_a(a4l_subd_t *subd, a4l_kinsn_t *insn)
+static int parport_insn_config_a(struct a4l_subdevice *subd, struct a4l_kernel_instruction *insn)
 {
-	a4l_dev_t *dev = subd->dev;
+	struct a4l_device *dev = subd->dev;
 	parport_spriv_t *spriv = (parport_spriv_t *)subd->priv;
 	unsigned int *data = (unsigned int *)insn->data;
 
@@ -149,9 +149,9 @@ static int parport_insn_config_a(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	return 0;
 }
 
-static int parport_insn_b(a4l_subd_t *subd, a4l_kinsn_t *insn)
+static int parport_insn_b(struct a4l_subdevice *subd, struct a4l_kernel_instruction *insn)
 {
-	a4l_dev_t *dev = subd->dev;
+	struct a4l_device *dev = subd->dev;
 	uint8_t *data = (uint8_t *)insn->data;
 
 	if (data[0]) {
@@ -163,9 +163,9 @@ static int parport_insn_b(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	return 0;
 }
 
-static int parport_insn_c(a4l_subd_t *subd, a4l_kinsn_t *insn)
+static int parport_insn_c(struct a4l_subdevice *subd, struct a4l_kernel_instruction *insn)
 {
-	a4l_dev_t *dev = subd->dev;
+	struct a4l_device *dev = subd->dev;
 	uint8_t *data = (uint8_t *)insn->data;
 
 	data[0] &= 0x0f;
@@ -181,7 +181,7 @@ static int parport_insn_c(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	return 2;
 }
 
-static int parport_intr_insn(a4l_subd_t *subd, a4l_kinsn_t *insn)
+static int parport_intr_insn(struct a4l_subdevice *subd, struct a4l_kernel_instruction *insn)
 {
 	uint8_t *data = (uint8_t *)insn->data;
 
@@ -192,7 +192,7 @@ static int parport_intr_insn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	return 0;
 }
 
-static a4l_cmd_t parport_intr_cmd_mask = {
+static struct a4l_cmd_desc parport_intr_cmd_mask = {
 	.idx_subd = 0,
 	.start_src = TRIG_NOW,
 	.scan_begin_src = TRIG_EXT,
@@ -201,7 +201,7 @@ static a4l_cmd_t parport_intr_cmd_mask = {
 	.stop_src = TRIG_NONE,
 };
 
-static int parport_intr_cmdtest(a4l_subd_t *subd, a4l_cmd_t * cmd)
+static int parport_intr_cmdtest(struct a4l_subdevice *subd, struct a4l_cmd_desc * cmd)
 {
 
 	if (cmd->start_arg != 0) {
@@ -223,9 +223,9 @@ static int parport_intr_cmdtest(a4l_subd_t *subd, a4l_cmd_t * cmd)
 	return 0;
 }
 
-static int parport_intr_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
+static int parport_intr_cmd(struct a4l_subdevice *subd, struct a4l_cmd_desc *cmd)
 {
-	a4l_dev_t *dev = subd->dev;
+	struct a4l_device *dev = subd->dev;
 
 	devpriv->c_data |= 0x10;
 	outb(devpriv->c_data, devpriv->io_base + PARPORT_C);
@@ -235,9 +235,9 @@ static int parport_intr_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 	return 0;
 }
 
-static void parport_intr_cancel(a4l_subd_t *subd)
+static void parport_intr_cancel(struct a4l_subdevice *subd)
 {
-	a4l_dev_t *dev = subd->dev;
+	struct a4l_device *dev = subd->dev;
 
 	a4l_info(dev, "parport_intr_cancel: cancel in progress\n");
 
@@ -249,8 +249,8 @@ static void parport_intr_cancel(a4l_subd_t *subd)
 
 static int parport_interrupt(unsigned int irq, void *d)
 {
-	a4l_dev_t *dev = d;
-	a4l_subd_t *subd = a4l_get_subd(dev, 3);
+	struct a4l_device *dev = d;
+	struct a4l_subdevice *subd = a4l_get_subd(dev, 3);
 
 	if (!devpriv->enable_irq) {
 		a4l_err(dev, "parport_interrupt: bogus irq, ignored\n");
@@ -266,7 +266,7 @@ static int parport_interrupt(unsigned int irq, void *d)
 
 /* --- Channels descriptor --- */
 
-static a4l_chdesc_t parport_chan_desc_a = {
+static struct a4l_channels_desc parport_chan_desc_a = {
 	.mode = A4L_CHAN_GLOBAL_CHANDESC,
 	.length = 8,
 	.chans = {
@@ -274,7 +274,7 @@ static a4l_chdesc_t parport_chan_desc_a = {
 	},
 };
 
-static a4l_chdesc_t parport_chan_desc_b = {
+static struct a4l_channels_desc parport_chan_desc_b = {
 	.mode = A4L_CHAN_GLOBAL_CHANDESC,
 	.length = 5,
 	.chans = {
@@ -282,7 +282,7 @@ static a4l_chdesc_t parport_chan_desc_b = {
 	},
 };
 
-static a4l_chdesc_t parport_chan_desc_c = {
+static struct a4l_channels_desc parport_chan_desc_c = {
 	.mode = A4L_CHAN_GLOBAL_CHANDESC,
 	.length = 4,
 	.chans = {
@@ -290,7 +290,7 @@ static a4l_chdesc_t parport_chan_desc_c = {
 	},
 };
 
-static a4l_chdesc_t parport_chan_desc_intr = {
+static struct a4l_channels_desc parport_chan_desc_intr = {
 	.mode = A4L_CHAN_GLOBAL_CHANDESC,
 	.length = 1,
 	.chans = {
@@ -300,7 +300,7 @@ static a4l_chdesc_t parport_chan_desc_intr = {
 
 /* --- Subdevice initialization functions --- */
 
-static void setup_subd_a(a4l_subd_t *subd)
+static void setup_subd_a(struct a4l_subdevice *subd)
 {
 	subd->flags = A4L_SUBD_DIO;
 	subd->chan_desc = &parport_chan_desc_a;
@@ -309,7 +309,7 @@ static void setup_subd_a(a4l_subd_t *subd)
 	subd->insn_config = parport_insn_config_a;
 }
 
-static void setup_subd_b(a4l_subd_t *subd)
+static void setup_subd_b(struct a4l_subdevice *subd)
 {
 	subd->flags = A4L_SUBD_DI;
 	subd->chan_desc = &parport_chan_desc_b;
@@ -317,7 +317,7 @@ static void setup_subd_b(a4l_subd_t *subd)
 	subd->insn_bits = parport_insn_b;
 }
 
-static void setup_subd_c(a4l_subd_t *subd)
+static void setup_subd_c(struct a4l_subdevice *subd)
 {
 	subd->flags = A4L_SUBD_DO;
 	subd->chan_desc = &parport_chan_desc_c;
@@ -325,7 +325,7 @@ static void setup_subd_c(a4l_subd_t *subd)
 	subd->insn_bits = parport_insn_c;
 }
 
-static void setup_subd_intr(a4l_subd_t *subd)
+static void setup_subd_intr(struct a4l_subdevice *subd)
 {
 	subd->flags = A4L_SUBD_DI;
 	subd->chan_desc = &parport_chan_desc_intr;
@@ -337,13 +337,13 @@ static void setup_subd_intr(a4l_subd_t *subd)
 	subd->cancel = parport_intr_cancel;
 }
 
-static void (*setup_subds[3])(a4l_subd_t *) = {
+static void (*setup_subds[3])(struct a4l_subdevice *) = {
 	setup_subd_a,
 	setup_subd_b,
 	setup_subd_c
 };
 
-static int dev_parport_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
+static int dev_parport_attach(struct a4l_device *dev, a4l_lnkdesc_t *arg)
 {
 	int i, err = 0, irq = A4L_IRQ_UNUSED;
 	unsigned long io_base;
@@ -374,7 +374,7 @@ static int dev_parport_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 
 	for (i = 0; i < 3; i++) {
 
-		a4l_subd_t *subd = a4l_alloc_subd(sizeof(parport_spriv_t),
+		struct a4l_subdevice *subd = a4l_alloc_subd(sizeof(parport_spriv_t),
 						  setup_subds[i]);
 		if (subd == NULL)
 			return -ENOMEM;
@@ -386,7 +386,7 @@ static int dev_parport_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 
 	if (irq != A4L_IRQ_UNUSED) {
 
-		a4l_subd_t *subd;
+		struct a4l_subdevice *subd;
 
 		a4l_info(dev, "dev_parport_attach: irq = %d\n", irq);
 
@@ -416,7 +416,7 @@ static int dev_parport_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 	return 0;
 }
 
-static int dev_parport_detach(a4l_dev_t *dev)
+static int dev_parport_detach(struct a4l_device *dev)
 {
 	int err = 0;
 
@@ -431,7 +431,7 @@ static int dev_parport_detach(a4l_dev_t *dev)
 	return err;
 }
 
-static a4l_drv_t drv_parport = {
+static struct a4l_driver drv_parport = {
 	.owner = THIS_MODULE,
 	.board_name = "analogy_parport",
 	.attach = dev_parport_attach,

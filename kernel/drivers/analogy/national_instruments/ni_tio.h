@@ -517,11 +517,11 @@ struct ni_gpct {
 	unsigned chip_index;
 	uint64_t clock_period_ps; /* clock period in picoseconds */
 	struct mite_channel *mite_chan;
-	a4l_lock_t lock;
+	rtdm_lock_t lock;
 };
 
 struct ni_gpct_device {
-	a4l_dev_t *dev;
+	struct a4l_device *dev;
 	void (*write_register)(struct ni_gpct * counter,
 				unsigned int bits, enum ni_gpct_register reg);
 	unsigned (*read_register)(struct ni_gpct * counter,
@@ -530,7 +530,7 @@ struct ni_gpct_device {
 	struct ni_gpct **counters;
 	unsigned num_counters;
 	unsigned regs[NITIO_Num_Registers];
-	a4l_lock_t regs_lock;
+	rtdm_lock_t regs_lock;
 };
 
 #define Gi_Auto_Increment_Mask		0xff
@@ -1158,12 +1158,12 @@ static inline unsigned int Gi_Gate_Interrupt_Enable_Bit(unsigned int counter_ind
 #define NI_RTSI_OUTPUT_RTSI_BRD(x) (NI_RTSI_OUTPUT_RTSI_BRD_0 + (x))
 
 
-int a4l_ni_tio_rinsn(struct ni_gpct *counter, a4l_kinsn_t *insn);
-int a4l_ni_tio_winsn(struct ni_gpct *counter, a4l_kinsn_t *insn);
-int a4l_ni_tio_insn_config(struct ni_gpct *counter, a4l_kinsn_t *insn);
+int a4l_ni_tio_rinsn(struct ni_gpct *counter, struct a4l_kernel_instruction *insn);
+int a4l_ni_tio_winsn(struct ni_gpct *counter, struct a4l_kernel_instruction *insn);
+int a4l_ni_tio_insn_config(struct ni_gpct *counter, struct a4l_kernel_instruction *insn);
 void a4l_ni_tio_init_counter(struct ni_gpct *counter);
 
-struct ni_gpct_device *a4l_ni_gpct_device_construct(a4l_dev_t * dev,
+struct ni_gpct_device *a4l_ni_gpct_device_construct(struct a4l_device * dev,
 	void (*write_register) (struct ni_gpct * counter, unsigned int bits,
 		enum ni_gpct_register reg),
 	unsigned int (*read_register) (struct ni_gpct * counter,
@@ -1174,14 +1174,14 @@ void a4l_ni_gpct_device_destroy(struct ni_gpct_device *counter_dev);
 #if (defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) || \
      defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE_MODULE))
 
-extern a4l_cmd_t a4l_ni_tio_cmd_mask;
+extern struct a4l_cmd_desc a4l_ni_tio_cmd_mask;
 
 int a4l_ni_tio_input_inttrig(struct ni_gpct *counter, lsampl_t trignum);
-int a4l_ni_tio_cmd(struct ni_gpct *counter, a4l_cmd_t *cmd);
-int a4l_ni_tio_cmdtest(struct ni_gpct *counter, a4l_cmd_t *cmd);
+int a4l_ni_tio_cmd(struct ni_gpct *counter, struct a4l_cmd_desc *cmd);
+int a4l_ni_tio_cmdtest(struct ni_gpct *counter, struct a4l_cmd_desc *cmd);
 int a4l_ni_tio_cancel(struct ni_gpct *counter);
 
-void a4l_ni_tio_handle_interrupt(struct ni_gpct *counter, a4l_dev_t *dev);
+void a4l_ni_tio_handle_interrupt(struct ni_gpct *counter, struct a4l_device *dev);
 void a4l_ni_tio_set_mite_channel(struct ni_gpct *counter,
 			     struct mite_channel *mite_chan);
 void a4l_ni_tio_acknowledge_and_confirm(struct ni_gpct *counter,

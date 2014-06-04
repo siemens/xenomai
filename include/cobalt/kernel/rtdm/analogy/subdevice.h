@@ -58,25 +58,25 @@ struct a4l_subdevice {
 	/* Descriptors stuff */
 	unsigned long flags;
 			 /**< Type flags */
-	a4l_chdesc_t *chan_desc;
+	struct a4l_channels_desc *chan_desc;
 				/**< Tab of channels descriptors pointers */
-	a4l_rngdesc_t *rng_desc;
+	struct a4l_rngdesc *rng_desc;
 				/**< Tab of ranges descriptors pointers */
-	a4l_cmd_t *cmd_mask;
+	struct a4l_cmd_desc *cmd_mask;
 			    /**< Command capabilities mask */
 
 	/* Functions stuff */
-	int (*insn_read) (struct a4l_subdevice *, a4l_kinsn_t *);
+	int (*insn_read) (struct a4l_subdevice *, struct a4l_kernel_instruction *);
 							/**< Callback for the instruction "read" */
-	int (*insn_write) (struct a4l_subdevice *, a4l_kinsn_t *);
+	int (*insn_write) (struct a4l_subdevice *, struct a4l_kernel_instruction *);
 							 /**< Callback for the instruction "write" */
-	int (*insn_bits) (struct a4l_subdevice *, a4l_kinsn_t *);
+	int (*insn_bits) (struct a4l_subdevice *, struct a4l_kernel_instruction *);
 							/**< Callback for the instruction "bits" */
-	int (*insn_config) (struct a4l_subdevice *, a4l_kinsn_t *);
+	int (*insn_config) (struct a4l_subdevice *, struct a4l_kernel_instruction *);
 							  /**< Callback for the configuration instruction */
-	int (*do_cmd) (struct a4l_subdevice *, a4l_cmd_t *);
+	int (*do_cmd) (struct a4l_subdevice *, struct a4l_cmd_desc *);
 					/**< Callback for command handling */
-	int (*do_cmdtest) (struct a4l_subdevice *, a4l_cmd_t *);
+	int (*do_cmdtest) (struct a4l_subdevice *, struct a4l_cmd_desc *);
 						       /**< Callback for command checking */
 	void (*cancel) (struct a4l_subdevice *);
 					 /**< Callback for asynchronous transfer cancellation */
@@ -88,15 +88,14 @@ struct a4l_subdevice {
 	char priv[0];
 		  /**< Private data */
 };
-typedef struct a4l_subdevice a4l_subd_t;
 
 /*! @} subdevice */
 
 /* --- Subdevice related functions and macros --- */
 
-a4l_chan_t *a4l_get_chfeat(a4l_subd_t * sb, int idx);
-a4l_rng_t *a4l_get_rngfeat(a4l_subd_t * sb, int chidx, int rngidx);
-int a4l_check_chanlist(a4l_subd_t * subd,
+struct a4l_channel *a4l_get_chfeat(struct a4l_subdevice * sb, int idx);
+struct a4l_range *a4l_get_rngfeat(struct a4l_subdevice * sb, int chidx, int rngidx);
+int a4l_check_chanlist(struct a4l_subdevice * subd,
 		       unsigned char nb_chan, unsigned int *chans);
 
 #define a4l_subd_is_input(x) ((A4L_SUBD_MASK_READ & (x)->flags) != 0)
@@ -108,14 +107,14 @@ int a4l_check_chanlist(a4l_subd_t * subd,
 
 /* --- Upper layer functions --- */
 
-a4l_subd_t * a4l_get_subd(struct a4l_device *dev, int idx);
-a4l_subd_t * a4l_alloc_subd(int sizeof_priv,
-			    void (*setup)(a4l_subd_t *));
-int a4l_add_subd(struct a4l_device *dev, a4l_subd_t * subd);
-int a4l_ioctl_subdinfo(a4l_cxt_t * cxt, void *arg);
-int a4l_ioctl_chaninfo(a4l_cxt_t * cxt, void *arg);
-int a4l_ioctl_rnginfo(a4l_cxt_t * cxt, void *arg);
-int a4l_ioctl_nbchaninfo(a4l_cxt_t * cxt, void *arg);
-int a4l_ioctl_nbrnginfo(a4l_cxt_t * cxt, void *arg);
+struct a4l_subdevice * a4l_get_subd(struct a4l_device *dev, int idx);
+struct a4l_subdevice * a4l_alloc_subd(int sizeof_priv,
+			    void (*setup)(struct a4l_subdevice *));
+int a4l_add_subd(struct a4l_device *dev, struct a4l_subdevice * subd);
+int a4l_ioctl_subdinfo(struct a4l_device_context * cxt, void *arg);
+int a4l_ioctl_chaninfo(struct a4l_device_context * cxt, void *arg);
+int a4l_ioctl_rnginfo(struct a4l_device_context * cxt, void *arg);
+int a4l_ioctl_nbchaninfo(struct a4l_device_context * cxt, void *arg);
+int a4l_ioctl_nbrnginfo(struct a4l_device_context * cxt, void *arg);
 
 #endif /* !_COBALT_RTDM_ANALOGY_SUBDEVICE_H */

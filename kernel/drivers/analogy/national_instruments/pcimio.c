@@ -157,7 +157,7 @@ MODULE_DEVICE_TABLE(pci, ni_pci_table);
 */
 
 #if 0
-static a4l_rngtab_t rng_ni_M_628x_ao = { 8, {
+static struct a4l_rngtab rng_ni_M_628x_ao = { 8, {
 	RANGE(-10, 10),
 	RANGE(-5, 5),
 	RANGE(-2, 2),
@@ -168,22 +168,22 @@ static a4l_rngtab_t rng_ni_M_628x_ao = { 8, {
 	RANGE(4, 6),
 	RANGE_ext(-1, 1)
 }};
-static a4l_rngdesc_t range_ni_M_628x_ao =
+static struct a4l_rngdesc range_ni_M_628x_ao =
 	RNG_GLOBAL(rng_ni_M_628x_ao);
 #endif
 
-static a4l_rngtab_t rng_ni_M_625x_ao = { 3, {
+static struct a4l_rngtab rng_ni_M_625x_ao = { 3, {
 	RANGE(-10, 10),
 	RANGE(-5, 5),
 	RANGE_ext(-1, 1)
 }};
-static a4l_rngdesc_t range_ni_M_625x_ao =
+static struct a4l_rngdesc range_ni_M_625x_ao =
 	RNG_GLOBAL(rng_ni_M_625x_ao);
 
-static a4l_rngtab_t rng_ni_M_622x_ao = { 1, {
+static struct a4l_rngtab rng_ni_M_622x_ao = { 1, {
 	RANGE(-10, 10),
 }};
-static a4l_rngdesc_t range_ni_M_622x_ao =
+static struct a4l_rngdesc range_ni_M_622x_ao =
 	RNG_GLOBAL(rng_ni_M_622x_ao);
 
 static ni_board ni_boards[]={
@@ -1117,30 +1117,30 @@ static ni_board ni_boards[]={
 /* However, the 611x boards still aren't working, so I'm disabling
  * non-windowed STC access temporarily */
 
-static void e_series_win_out(a4l_dev_t *dev, uint16_t data, int reg)
+static void e_series_win_out(struct a4l_device *dev, uint16_t data, int reg)
 {
 	unsigned long flags;
 
-	a4l_lock_irqsave(&devpriv->window_lock, flags);
+	rtdm_lock_get_irqsave(&devpriv->window_lock, flags);
 	ni_writew(reg, Window_Address);
 	ni_writew(data, Window_Data);
-	a4l_unlock_irqrestore(&devpriv->window_lock, flags);
+	rtdm_lock_put_irqrestore(&devpriv->window_lock, flags);
 }
 
-static uint16_t e_series_win_in(a4l_dev_t *dev, int reg)
+static uint16_t e_series_win_in(struct a4l_device *dev, int reg)
 {
 	unsigned long flags;
 	uint16_t ret;
 
-	a4l_lock_irqsave(&devpriv->window_lock, flags);
+	rtdm_lock_get_irqsave(&devpriv->window_lock, flags);
 	ni_writew(reg, Window_Address);
 	ret = ni_readw(Window_Data);
-	a4l_unlock_irqrestore(&devpriv->window_lock,flags);
+	rtdm_lock_put_irqrestore(&devpriv->window_lock,flags);
 
 	return ret;
 }
 
-static void m_series_stc_writew(a4l_dev_t *dev, uint16_t data, int reg)
+static void m_series_stc_writew(struct a4l_device *dev, uint16_t data, int reg)
 {
 	unsigned offset;
 	switch(reg)
@@ -1294,7 +1294,7 @@ static void m_series_stc_writew(a4l_dev_t *dev, uint16_t data, int reg)
 	ni_writew(data, offset);
 }
 
-static uint16_t m_series_stc_readw(a4l_dev_t *dev, int reg)
+static uint16_t m_series_stc_readw(struct a4l_device *dev, int reg)
 {
 	unsigned offset;
 	switch(reg)
@@ -1331,7 +1331,7 @@ static uint16_t m_series_stc_readw(a4l_dev_t *dev, int reg)
 	return ni_readw(offset);
 }
 
-static void m_series_stc_writel(a4l_dev_t *dev, uint32_t data, int reg)
+static void m_series_stc_writel(struct a4l_device *dev, uint32_t data, int reg)
 {
 	unsigned offset;
 
@@ -1373,7 +1373,7 @@ static void m_series_stc_writel(a4l_dev_t *dev, uint32_t data, int reg)
 	ni_writel(data, offset);
 }
 
-static uint32_t m_series_stc_readl(a4l_dev_t *dev, int reg)
+static uint32_t m_series_stc_readl(struct a4l_device *dev, int reg)
 {
 	unsigned offset;
 	switch(reg)
@@ -1399,13 +1399,13 @@ static uint32_t m_series_stc_readl(a4l_dev_t *dev, int reg)
 	return ni_readl(offset);
 }
 
-static void win_out2(a4l_dev_t *dev, uint32_t data, int reg)
+static void win_out2(struct a4l_device *dev, uint32_t data, int reg)
 {
 	devpriv->stc_writew(dev, data >> 16, reg);
 	devpriv->stc_writew(dev, data & 0xffff, reg + 1);
 }
 
-static uint32_t win_in2(a4l_dev_t *dev, int reg)
+static uint32_t win_in2(struct a4l_device *dev, int reg)
 {
 	uint32_t bits;
 	bits = devpriv->stc_readw(dev, reg) << 16;
@@ -1413,7 +1413,7 @@ static uint32_t win_in2(a4l_dev_t *dev, int reg)
 	return bits;
 }
 
-static void m_series_init_eeprom_buffer(a4l_dev_t *dev)
+static void m_series_init_eeprom_buffer(struct a4l_device *dev)
 {
 	static const int Start_Cal_EEPROM = 0x400;
 	static const unsigned window_size = 10;
@@ -1442,7 +1442,7 @@ static void m_series_init_eeprom_buffer(a4l_dev_t *dev)
 	writel(0x0, devpriv->mite->mite_io_addr + 0x30);
 }
 
-static void init_6143(a4l_dev_t *dev)
+static void init_6143(struct a4l_device *dev)
 {
 	/* Disable interrupts */
 	devpriv->stc_writew(dev, 0, Interrupt_Control_Register);
@@ -1466,7 +1466,7 @@ static void init_6143(a4l_dev_t *dev)
 	ni_writew(devpriv->ai_calib_source, Calibration_Channel_6143);
 }
 
-static int pcimio_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
+static int pcimio_attach(struct a4l_device *dev, a4l_lnkdesc_t *arg)
 {
 	int ret, bus, slot, i, irq;
 	struct mite_struct *mite = NULL;
@@ -1544,7 +1544,7 @@ static int pcimio_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 		a4l_info(dev, "pcimio_attach: found irq %u\n", irq);
 		ret = a4l_request_irq(dev,
 				      irq,
-				      a4l_ni_E_interrupt, A4L_IRQ_SHARED, dev);
+				      a4l_ni_E_interrupt, RTDM_IRQTYPE_SHARED, dev);
 		if(ret < 0)
 			a4l_err(dev, "pcimio_attach: irq not available\n");
 	}
@@ -1556,7 +1556,7 @@ static int pcimio_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 	return ret;
 }
 
-static int pcimio_detach(a4l_dev_t *dev)
+static int pcimio_detach(struct a4l_device *dev)
 {
 	if(a4l_get_irq(dev)!=A4L_IRQ_UNUSED){
 		a4l_free_irq(dev,a4l_get_irq(dev));
@@ -1574,7 +1574,7 @@ static int pcimio_detach(a4l_dev_t *dev)
 	return 0;
 }
 
-static a4l_drv_t pcimio_drv = {
+static struct a4l_driver pcimio_drv = {
 	.owner = THIS_MODULE,
 	.board_name = "analogy_ni_pcimio",
 	.attach = pcimio_attach,

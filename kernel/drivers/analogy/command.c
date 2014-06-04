@@ -29,13 +29,13 @@
 
 /* --- Command descriptor management functions --- */
 
-int a4l_fill_cmddesc(a4l_cxt_t * cxt, a4l_cmd_t * desc, void *arg)
+int a4l_fill_cmddesc(struct a4l_device_context * cxt, struct a4l_cmd_desc * desc, void *arg)
 {
 	int ret = 0;
 	unsigned int *tmpchans = NULL;
 
 	ret = rtdm_safe_copy_from_user(rtdm_private_to_fd(cxt),
-				       desc, arg, sizeof(a4l_cmd_t));
+				       desc, arg, sizeof(struct a4l_cmd_desc));
 	if (ret != 0)
 		goto out_cmddesc;
 
@@ -78,16 +78,16 @@ int a4l_fill_cmddesc(a4l_cxt_t * cxt, a4l_cmd_t * desc, void *arg)
 	return ret;
 }
 
-void a4l_free_cmddesc(a4l_cmd_t * desc)
+void a4l_free_cmddesc(struct a4l_cmd_desc * desc)
 {
 	if (desc->chan_descs != NULL)
 		rtdm_free(desc->chan_descs);
 }
 
-int a4l_check_cmddesc(a4l_cxt_t * cxt, a4l_cmd_t * desc)
+int a4l_check_cmddesc(struct a4l_device_context * cxt, struct a4l_cmd_desc * desc)
 {
-	a4l_dev_t *dev = a4l_get_dev(cxt);
-	a4l_subd_t *subd;
+	struct a4l_device *dev = a4l_get_dev(cxt);
+	struct a4l_subdevice *subd;
 
 	if (desc->idx_subd >= dev->transfer.nb_subd) {
 		__a4l_err("a4l_check_cmddesc: "
@@ -121,7 +121,7 @@ int a4l_check_cmddesc(a4l_cxt_t * cxt, a4l_cmd_t * desc)
 
 /* --- Command checking functions --- */
 
-int a4l_check_generic_cmdcnt(a4l_cmd_t * desc)
+int a4l_check_generic_cmdcnt(struct a4l_cmd_desc * desc)
 {
 	unsigned int tmp1, tmp2;
 
@@ -223,11 +223,11 @@ int a4l_check_generic_cmdcnt(a4l_cmd_t * desc)
 	return 0;
 }
 
-int a4l_check_specific_cmdcnt(a4l_cxt_t * cxt, a4l_cmd_t * desc)
+int a4l_check_specific_cmdcnt(struct a4l_device_context * cxt, struct a4l_cmd_desc * desc)
 {
 	unsigned int tmp1, tmp2;
-	a4l_dev_t *dev = a4l_get_dev(cxt);
-	a4l_cmd_t *cmd_mask = dev->transfer.subds[desc->idx_subd]->cmd_mask;
+	struct a4l_device *dev = a4l_get_dev(cxt);
+	struct a4l_cmd_desc *cmd_mask = dev->transfer.subds[desc->idx_subd]->cmd_mask;
 
 	if (cmd_mask == NULL)
 		return 0;
@@ -286,12 +286,12 @@ int a4l_check_specific_cmdcnt(a4l_cxt_t * cxt, a4l_cmd_t * desc)
 
 /* --- IOCTL / FOPS function --- */
 
-int a4l_ioctl_cmd(a4l_cxt_t * cxt, void *arg)
+int a4l_ioctl_cmd(struct a4l_device_context * cxt, void *arg)
 {
 	int ret = 0, simul_flag = 0;
-	a4l_cmd_t *cmd_desc = NULL;
-	a4l_dev_t *dev = a4l_get_dev(cxt);
-	a4l_subd_t *subd;
+	struct a4l_cmd_desc *cmd_desc = NULL;
+	struct a4l_device *dev = a4l_get_dev(cxt);
+	struct a4l_subdevice *subd;
 
 	/* The command launching cannot be done in real-time because
 	   of some possible buffer allocations in the drivers */
@@ -306,10 +306,10 @@ int a4l_ioctl_cmd(a4l_cxt_t * cxt, void *arg)
 	}
 
 	/* Allocates the command */
-	cmd_desc = (a4l_cmd_t *) rtdm_malloc(sizeof(a4l_cmd_t));
+	cmd_desc = (struct a4l_cmd_desc *) rtdm_malloc(sizeof(struct a4l_cmd_desc));
 	if (cmd_desc == NULL)
 		return -ENOMEM;
-	memset(cmd_desc, 0, sizeof(a4l_cmd_t));
+	memset(cmd_desc, 0, sizeof(struct a4l_cmd_desc));
 
 	/* Gets the command */
 	ret = a4l_fill_cmddesc(cxt, cmd_desc, arg);

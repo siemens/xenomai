@@ -147,7 +147,7 @@ int a4l_get_rnginfo(a4l_desc_t *dsc,
 
 #define a4l_is_rng_global(x) ((x)->flags & A4L_RNG_GLOBAL)
 
-int a4l_snd_command(a4l_desc_t *dsc, a4l_cmd_t *cmd);
+int a4l_snd_command(a4l_desc_t *dsc, struct a4l_cmd_desc *cmd);
 
 int a4l_snd_cancel(a4l_desc_t *dsc, unsigned int idx_subd);
 

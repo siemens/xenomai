@@ -82,7 +82,7 @@ struct ni_660x_subd_priv {
    allows for 4 */
 #define MAX_DMA_CHANNEL 4
 
-static a4l_chdesc_t chandesc_ni660x = {
+static struct a4l_channels_desc chandesc_ni660x = {
 	.mode = A4L_CHAN_GLOBAL_CHANDESC,
 	.length = NUM_PFI_CHANNELS,
 	.chans = {
@@ -476,12 +476,12 @@ struct ni_660x_private {
 	struct mite_dma_descriptor_ring
 	  *mite_rings[NI_660X_MAX_NUM_CHIPS][counters_per_chip];
 
-	a4l_lock_t mite_channel_lock;
+	rtdm_lock_t mite_channel_lock;
 	/* Interrupt_lock prevents races between interrupt and
 	   comedi_poll */
-	a4l_lock_t interrupt_lock;
+	rtdm_lock_t interrupt_lock;
 	unsigned int dma_configuration_soft_copies[NI_660X_MAX_NUM_CHIPS];
-	a4l_lock_t soft_reg_copy_lock;
+	rtdm_lock_t soft_reg_copy_lock;
 	unsigned short pfi_output_selects[NUM_PFI_CHANNELS];
 
 	struct ni_660x_board *board_ptr;
@@ -490,28 +490,28 @@ struct ni_660x_private {
 #undef devpriv
 #define devpriv ((struct ni_660x_private *)dev->priv)
 
-static inline struct ni_660x_private *private(a4l_dev_t *dev)
+static inline struct ni_660x_private *private(struct a4l_device *dev)
 {
 	return (struct ni_660x_private*) dev->priv;
 }
 
 /* Initialized in ni_660x_find_device() */
-static inline const struct ni_660x_board *board(a4l_dev_t *dev)
+static inline const struct ni_660x_board *board(struct a4l_device *dev)
 {
 	return ((struct ni_660x_private*)dev->priv)->board_ptr;
 }
 
 #define n_ni_660x_boards ARRAY_SIZE(ni_660x_boards)
 
-static int ni_660x_attach(a4l_dev_t *dev,
+static int ni_660x_attach(struct a4l_device *dev,
 					 a4l_lnkdesc_t *arg);
-static int ni_660x_detach(a4l_dev_t *dev);
-static void init_tio_chip(a4l_dev_t *dev, int chipset);
-static void ni_660x_select_pfi_output(a4l_dev_t *dev,
+static int ni_660x_detach(struct a4l_device *dev);
+static void init_tio_chip(struct a4l_device *dev, int chipset);
+static void ni_660x_select_pfi_output(struct a4l_device *dev,
 				      unsigned pfi_channel,
 				      unsigned output_select);
 
-static a4l_drv_t ni_660x_drv = {
+static struct a4l_driver ni_660x_drv = {
 	.board_name = "analogy_ni_660x",
 	.owner = THIS_MODULE,
 	.attach = ni_660x_attach,
@@ -519,29 +519,29 @@ static a4l_drv_t ni_660x_drv = {
    .privdata_size = sizeof(struct ni_660x_private),
 };
 
-static int ni_660x_set_pfi_routing(a4l_dev_t *dev, unsigned chan,
+static int ni_660x_set_pfi_routing(struct a4l_device *dev, unsigned chan,
 				   unsigned source);
 
 /* Possible instructions for a GPCT */
 static int ni_660x_GPCT_rinsn(
-			      a4l_subd_t *s,
-			      a4l_kinsn_t *insn);
+			      struct a4l_subdevice *s,
+			      struct a4l_kernel_instruction *insn);
 static int ni_660x_GPCT_insn_config(
-				    a4l_subd_t *s,
-				    a4l_kinsn_t *insn);
+				    struct a4l_subdevice *s,
+				    struct a4l_kernel_instruction *insn);
 static int ni_660x_GPCT_winsn(
-			      a4l_subd_t *s,
-			      a4l_kinsn_t *insn);
+			      struct a4l_subdevice *s,
+			      struct a4l_kernel_instruction *insn);
 
 /* Possible instructions for Digital IO */
 static int ni_660x_dio_insn_config(
-	       a4l_subd_t *s,
-	       a4l_kinsn_t *insn);
+	       struct a4l_subdevice *s,
+	       struct a4l_kernel_instruction *insn);
 static int ni_660x_dio_insn_bits(
-	     a4l_subd_t *s,
-	     a4l_kinsn_t *insn);
+	     struct a4l_subdevice *s,
+	     struct a4l_kernel_instruction *insn);
 
-static inline unsigned ni_660x_num_counters(a4l_dev_t *dev)
+static inline unsigned ni_660x_num_counters(struct a4l_device *dev)
 {
 	return board(dev)->n_chips * counters_per_chip;
 }
@@ -765,7 +765,7 @@ static enum NI_660x_Register ni_gpct_to_660x_register(enum ni_gpct_register reg)
 	return ni_660x_register;
 }
 
-static inline void ni_660x_write_register(a4l_dev_t *dev,
+static inline void ni_660x_write_register(struct a4l_device *dev,
 					  unsigned chip_index, unsigned bits,
 					  enum NI_660x_Register reg)
 {
@@ -788,7 +788,7 @@ static inline void ni_660x_write_register(a4l_dev_t *dev,
 	}
 }
 
-static inline unsigned ni_660x_read_register(a4l_dev_t *dev,
+static inline unsigned ni_660x_read_register(struct a4l_device *dev,
 					     unsigned chip_index,
 					     enum NI_660x_Register reg)
 {
@@ -815,7 +815,7 @@ static inline unsigned ni_660x_read_register(a4l_dev_t *dev,
 static void ni_gpct_write_register(struct ni_gpct *counter,
 				   unsigned int bits, enum ni_gpct_register reg)
 {
-	a4l_dev_t *dev = counter->counter_dev->dev;
+	struct a4l_device *dev = counter->counter_dev->dev;
 	enum NI_660x_Register ni_660x_register = ni_gpct_to_660x_register(reg);
 
 	ni_660x_write_register(dev, counter->chip_index, bits,
@@ -825,7 +825,7 @@ static void ni_gpct_write_register(struct ni_gpct *counter,
 static unsigned ni_gpct_read_register(struct ni_gpct *counter,
 				      enum ni_gpct_register reg)
 {
-	a4l_dev_t *dev = counter->counter_dev->dev;
+	struct a4l_device *dev = counter->counter_dev->dev;
 	enum NI_660x_Register ni_660x_register = ni_gpct_to_660x_register(reg);
 
 	return ni_660x_read_register(dev, counter->chip_index,
@@ -841,12 +841,12 @@ struct mite_dma_descriptor_ring *mite_ring(struct ni_660x_private *priv,
 }
 
 static inline
-void ni_660x_set_dma_channel(a4l_dev_t *dev,
+void ni_660x_set_dma_channel(struct a4l_device *dev,
 			     unsigned int mite_channel, struct ni_gpct *counter)
 {
 	unsigned long flags;
 
-	a4l_lock_irqsave(&private(dev)->soft_reg_copy_lock, flags);
+	rtdm_lock_get_irqsave(&private(dev)->soft_reg_copy_lock, flags);
 	private(dev)->dma_configuration_soft_copies[counter->chip_index] &=
 	    ~dma_select_mask(mite_channel);
 	private(dev)->dma_configuration_soft_copies[counter->chip_index] |=
@@ -858,16 +858,16 @@ void ni_660x_set_dma_channel(a4l_dev_t *dev,
 			       [counter->chip_index] |
 			       dma_reset_bit(mite_channel), DMAConfigRegister);
 	mmiowb();
-	a4l_unlock_irqrestore(&private(dev)->soft_reg_copy_lock, flags);
+	rtdm_lock_put_irqrestore(&private(dev)->soft_reg_copy_lock, flags);
 }
 
 static inline
-void ni_660x_unset_dma_channel(a4l_dev_t *dev,
+void ni_660x_unset_dma_channel(struct a4l_device *dev,
 			       unsigned int mite_channel,
 			       struct ni_gpct *counter)
 {
 	unsigned long flags;
-	a4l_lock_irqsave(&private(dev)->soft_reg_copy_lock, flags);
+	rtdm_lock_get_irqsave(&private(dev)->soft_reg_copy_lock, flags);
 	private(dev)->dma_configuration_soft_copies[counter->chip_index] &=
 	    ~dma_select_mask(mite_channel);
 	private(dev)->dma_configuration_soft_copies[counter->chip_index] |=
@@ -877,22 +877,22 @@ void ni_660x_unset_dma_channel(a4l_dev_t *dev,
 			       dma_configuration_soft_copies
 			       [counter->chip_index], DMAConfigRegister);
 	mmiowb();
-	a4l_unlock_irqrestore(&private(dev)->soft_reg_copy_lock, flags);
+	rtdm_lock_put_irqrestore(&private(dev)->soft_reg_copy_lock, flags);
 }
 
-static int ni_660x_request_mite_channel(a4l_dev_t *dev,
+static int ni_660x_request_mite_channel(struct a4l_device *dev,
 					struct ni_gpct *counter,
 					enum io_direction direction)
 {
 	unsigned long flags;
 	struct mite_channel *mite_chan;
 
-	a4l_lock_irqsave(&private(dev)->mite_channel_lock, flags);
+	rtdm_lock_get_irqsave(&private(dev)->mite_channel_lock, flags);
 	BUG_ON(counter->mite_chan);
 	mite_chan = mite_request_channel(private(dev)->mite,
 					 mite_ring(private(dev), counter));
 	if (mite_chan == NULL) {
-		a4l_unlock_irqrestore(&private(dev)->mite_channel_lock, flags);
+		rtdm_lock_put_irqrestore(&private(dev)->mite_channel_lock, flags);
 		a4l_err(dev,
 			"%s: failed to reserve mite dma channel for counter.\n",
 			__FUNCTION__);
@@ -901,16 +901,16 @@ static int ni_660x_request_mite_channel(a4l_dev_t *dev,
 	mite_chan->dir = direction;
 	a4l_ni_tio_set_mite_channel(counter, mite_chan);
 	ni_660x_set_dma_channel(dev, mite_chan->channel, counter);
-	a4l_unlock_irqrestore(&private(dev)->mite_channel_lock, flags);
+	rtdm_lock_put_irqrestore(&private(dev)->mite_channel_lock, flags);
 	return 0;
 }
 
-void ni_660x_release_mite_channel(a4l_dev_t *dev,
+void ni_660x_release_mite_channel(struct a4l_device *dev,
 				  struct ni_gpct *counter)
 {
 	unsigned long flags;
 
-	a4l_lock_irqsave(&private(dev)->mite_channel_lock, flags);
+	rtdm_lock_get_irqsave(&private(dev)->mite_channel_lock, flags);
 	if (counter->mite_chan) {
 		struct mite_channel *mite_chan = counter->mite_chan;
 
@@ -918,10 +918,10 @@ void ni_660x_release_mite_channel(a4l_dev_t *dev,
 		a4l_ni_tio_set_mite_channel(counter, NULL);
 		a4l_mite_release_channel(mite_chan);
 	}
-	a4l_unlock_irqrestore(&private(dev)->mite_channel_lock, flags);
+	rtdm_lock_put_irqrestore(&private(dev)->mite_channel_lock, flags);
 }
 
-static int ni_660x_cmd(a4l_subd_t *s, a4l_cmd_t* cmd)
+static int ni_660x_cmd(struct a4l_subdevice *s, struct a4l_cmd_desc* cmd)
 {
 	int retval;
 
@@ -941,13 +941,13 @@ static int ni_660x_cmd(a4l_subd_t *s, a4l_cmd_t* cmd)
 	return retval;
 }
 
-static int ni_660x_cmdtest(a4l_subd_t *s, a4l_cmd_t *cmd)
+static int ni_660x_cmdtest(struct a4l_subdevice *s, struct a4l_cmd_desc *cmd)
 {
 	struct ni_gpct *counter = subdev_priv->counter;
 	return a4l_ni_tio_cmdtest(counter, cmd);
 }
 
-static int ni_660x_cancel(a4l_subd_t *s)
+static int ni_660x_cancel(struct a4l_subdevice *s)
 {
 	struct ni_gpct *counter = subdev_priv->counter;
 	int retval;
@@ -957,7 +957,7 @@ static int ni_660x_cancel(a4l_subd_t *s)
 	return retval;
 }
 
-static void set_tio_counterswap(a4l_dev_t *dev, int chipset)
+static void set_tio_counterswap(struct a4l_device *dev, int chipset)
 {
 	/* See P. 3.5 of the Register-Level Programming manual.  The
 	   CounterSwap bit has to be set on the second chip, otherwise
@@ -973,10 +973,10 @@ static void set_tio_counterswap(a4l_dev_t *dev, int chipset)
 				       chipset, 0, ClockConfigRegister);
 }
 
-static void ni_660x_handle_gpct_interrupt(a4l_dev_t *dev,
-					  a4l_subd_t *s)
+static void ni_660x_handle_gpct_interrupt(struct a4l_device *dev,
+					  struct a4l_subdevice *s)
 {
-   a4l_buf_t *buf = s->buf;
+   struct a4l_buffer *buf = s->buf;
 
    a4l_ni_tio_handle_interrupt(subdev_priv->counter, dev);
    if ( test_bit(A4L_BUF_EOA_NR, &buf->flags) &&
@@ -989,27 +989,27 @@ static void ni_660x_handle_gpct_interrupt(a4l_dev_t *dev,
 
 static int ni_660x_interrupt(unsigned int irq, void *d)
 {
-	a4l_dev_t *dev = d;
+	struct a4l_device *dev = d;
 	unsigned long flags;
 
 	if (test_bit(A4L_DEV_ATTACHED_NR, &dev->flags))
 		return -ENOENT;
 
 	/* Lock to avoid race with comedi_poll */
-	a4l_lock_irqsave(&private(dev)->interrupt_lock, flags);
+	rtdm_lock_get_irqsave(&private(dev)->interrupt_lock, flags);
 	smp_mb();
 
 	while (&dev->subdvsq != dev->subdvsq.next) {
 		struct list_head *this = dev->subdvsq.next;
-		a4l_subd_t *tmp = list_entry(this, a4l_subd_t, list);
+		struct a4l_subdevice *tmp = list_entry(this, struct a4l_subdevice, list);
 		ni_660x_handle_gpct_interrupt(dev, tmp);
 	}
 
-	a4l_unlock_irqrestore(&private(dev)->interrupt_lock, flags);
+	rtdm_lock_put_irqrestore(&private(dev)->interrupt_lock, flags);
 	return 0;
 }
 
-static int ni_660x_alloc_mite_rings(a4l_dev_t *dev)
+static int ni_660x_alloc_mite_rings(struct a4l_device *dev)
 {
 	unsigned int i;
 	unsigned int j;
@@ -1026,7 +1026,7 @@ static int ni_660x_alloc_mite_rings(a4l_dev_t *dev)
 	return 0;
 }
 
-static void ni_660x_free_mite_rings(a4l_dev_t *dev)
+static void ni_660x_free_mite_rings(struct a4l_device *dev)
 {
 	unsigned int i;
 	unsigned int j;
@@ -1050,9 +1050,9 @@ static void __exit driver_ni_660x_cleanup_module(void)
 module_init(driver_ni_660x_init_module);
 module_exit(driver_ni_660x_cleanup_module);
 
-static int ni_660x_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
+static int ni_660x_attach(struct a4l_device *dev, a4l_lnkdesc_t *arg)
 {
-	a4l_subd_t *s;
+	struct a4l_subdevice *s;
 	int ret;
 	int err;
 	int bus, slot;
@@ -1095,9 +1095,9 @@ static int ni_660x_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 	private(dev)->mite      = mitedev;
 	private(dev)->board_ptr = boardptr;
 
-	a4l_lock_init(&private(dev)->mite_channel_lock);
-	a4l_lock_init(&private(dev)->interrupt_lock);
-	a4l_lock_init(&private(dev)->soft_reg_copy_lock);
+	rtdm_lock_init(&private(dev)->mite_channel_lock);
+	rtdm_lock_init(&private(dev)->interrupt_lock);
+	rtdm_lock_init(&private(dev)->soft_reg_copy_lock);
 	for (i = 0; i < NUM_PFI_CHANNELS; ++i) {
 		private(dev)->pfi_output_selects[i] = pfi_output_select_counter;
 	}
@@ -1171,7 +1171,7 @@ static int ni_660x_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 			kmalloc(sizeof(struct ni_gpct), GFP_KERNEL);
 		private(dev)->counter_dev->counters[i]->counter_dev =
 			private(dev)->counter_dev;
-		a4l_lock_init(&(private(dev)->counter_dev->counters[i]->lock));
+		rtdm_lock_init(&(private(dev)->counter_dev->counters[i]->lock));
 	}
 
 	for (i = 0; i < NI_660X_MAX_NUM_COUNTERS; ++i) {
@@ -1183,7 +1183,7 @@ static int ni_660x_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 				return -ENOMEM;
 
 			s->flags             = A4L_SUBD_COUNTER;
-			s->chan_desc         = rtdm_malloc (sizeof (a4l_chdesc_t));
+			s->chan_desc         = rtdm_malloc (sizeof (struct a4l_channels_desc));
 			s->chan_desc->length = 3;
 			s->insn_read         = ni_660x_GPCT_rinsn;
 			s->insn_write        = ni_660x_GPCT_winsn;
@@ -1237,7 +1237,7 @@ static int ni_660x_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 
 	ret = a4l_request_irq(dev,
 			      mite_irq(private(dev)->mite),
-			      ni_660x_interrupt, A4L_IRQ_SHARED, dev);
+			      ni_660x_interrupt, RTDM_IRQTYPE_SHARED, dev);
 
 	if (ret < 0) {
 		a4l_err(dev, "%s: IRQ not available\n", __FUNCTION__);
@@ -1256,7 +1256,7 @@ static int ni_660x_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 	return 0;
 }
 
-static int ni_660x_detach(a4l_dev_t *dev)
+static int ni_660x_detach(struct a4l_device *dev)
 {
 	int i;
 
@@ -1288,12 +1288,12 @@ static int ni_660x_detach(a4l_dev_t *dev)
 	return 0;
 }
 
-static int ni_660x_GPCT_rinsn(a4l_subd_t *s, a4l_kinsn_t *insn)
+static int ni_660x_GPCT_rinsn(struct a4l_subdevice *s, struct a4l_kernel_instruction *insn)
 {
 	return a4l_ni_tio_rinsn(subdev_priv->counter, insn);
 }
 
-static void init_tio_chip(a4l_dev_t *dev, int chipset)
+static void init_tio_chip(struct a4l_device *dev, int chipset)
 {
 	unsigned int i;
 
@@ -1313,17 +1313,17 @@ static void init_tio_chip(a4l_dev_t *dev, int chipset)
 		ni_660x_write_register(dev, chipset, 0, IOConfigReg(i));
 }
 
-static int ni_660x_GPCT_insn_config(a4l_subd_t *s, a4l_kinsn_t *insn)
+static int ni_660x_GPCT_insn_config(struct a4l_subdevice *s, struct a4l_kernel_instruction *insn)
 {
 	return a4l_ni_tio_insn_config (subdev_priv->counter, insn);
 }
 
-static int ni_660x_GPCT_winsn(a4l_subd_t *s, a4l_kinsn_t *insn)
+static int ni_660x_GPCT_winsn(struct a4l_subdevice *s, struct a4l_kernel_instruction *insn)
 {
 	return a4l_ni_tio_winsn(subdev_priv->counter, insn);
 }
 
-static int ni_660x_dio_insn_bits(a4l_subd_t *s, a4l_kinsn_t *insn)
+static int ni_660x_dio_insn_bits(struct a4l_subdevice *s, struct a4l_kernel_instruction *insn)
 {
 	unsigned int* data = (unsigned int*) insn->data;
 	unsigned int base_bitfield_channel = CR_CHAN(insn->chan_desc);
@@ -1344,7 +1344,7 @@ static int ni_660x_dio_insn_bits(a4l_subd_t *s, a4l_kinsn_t *insn)
 	return 0;
 }
 
-static void ni_660x_select_pfi_output(a4l_dev_t *dev,
+static void ni_660x_select_pfi_output(struct a4l_device *dev,
 				      unsigned pfi_channel,
 				      unsigned output_select)
 {
@@ -1388,7 +1388,7 @@ static void ni_660x_select_pfi_output(a4l_dev_t *dev,
 			       IOConfigReg(pfi_channel));
 }
 
-static int ni_660x_set_pfi_routing(a4l_dev_t *dev, unsigned chan,
+static int ni_660x_set_pfi_routing(struct a4l_device *dev, unsigned chan,
 				   unsigned source)
 {
 	BUG_ON(chan >= NUM_PFI_CHANNELS);
@@ -1414,14 +1414,14 @@ static int ni_660x_set_pfi_routing(a4l_dev_t *dev, unsigned chan,
 	return 0;
 }
 
-static unsigned ni_660x_get_pfi_routing(a4l_dev_t *dev,
+static unsigned ni_660x_get_pfi_routing(struct a4l_device *dev,
 					unsigned chan)
 {
 	BUG_ON(chan >= NUM_PFI_CHANNELS);
 	return private(dev)->pfi_output_selects[chan];
 }
 
-static void ni660x_config_filter(a4l_dev_t *dev,
+static void ni660x_config_filter(struct a4l_device *dev,
 				 unsigned pfi_channel,
 				 int filter)
 {
@@ -1433,11 +1433,11 @@ static void ni660x_config_filter(a4l_dev_t *dev,
 	ni_660x_write_register(dev, 0, bits, IOConfigReg(pfi_channel));
 }
 
-static int ni_660x_dio_insn_config(a4l_subd_t *s, a4l_kinsn_t *insn)
+static int ni_660x_dio_insn_config(struct a4l_subdevice *s, struct a4l_kernel_instruction *insn)
 {
 	unsigned int* data = insn->data;
 	int chan = CR_CHAN(insn->chan_desc);
-	a4l_dev_t* dev = s->dev;
+	struct a4l_device* dev = s->dev;
 
 	if (data == NULL)
 		return -EINVAL;

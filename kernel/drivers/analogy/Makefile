@@ -11,7 +11,7 @@ xeno_analogy-y := \
 	driver.o \
 	driver_facilities.o \
 	instruction.o \
-	os_facilities.o \
+	rtdm_helpers.o \
 	subdevice.o \
 	transfer.o \
 	rtdm_interface.o

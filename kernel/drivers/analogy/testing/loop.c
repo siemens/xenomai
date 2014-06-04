@@ -8,7 +8,7 @@
 #define LOOP_OUTPUT_SUBD 1
 
 /* Channels descriptor */
-static a4l_chdesc_t loop_chandesc = {
+static struct a4l_channels_desc loop_chandesc = {
 	.mode = A4L_CHAN_GLOBAL_CHANDESC,
 	.length = 8,
 	.chans = {
@@ -17,7 +17,7 @@ static a4l_chdesc_t loop_chandesc = {
 };
 
 /* Ranges tab */
-static a4l_rngtab_t loop_rngtab = {
+static struct a4l_rngtab loop_rngtab = {
 	.length =  2,
 	.rngs = {
 		RANGE_V(-5,5),
@@ -25,10 +25,10 @@ static a4l_rngtab_t loop_rngtab = {
 	},
 };
 /* Ranges descriptor */
-a4l_rngdesc_t loop_rngdesc = RNG_GLOBAL(loop_rngtab);
+struct a4l_rngdesc loop_rngdesc = RNG_GLOBAL(loop_rngtab);
 
 /* Command options mask */
-static a4l_cmd_t loop_cmd_mask = {
+static struct a4l_cmd_desc loop_cmd_mask = {
 	.idx_subd = 0,
 	.start_src = TRIG_NOW | TRIG_INT,
 	.scan_begin_src = TRIG_TIMER,
@@ -41,7 +41,7 @@ static a4l_cmd_t loop_cmd_mask = {
 struct loop_priv {
 
 	/* Task descriptor */
-	a4l_task_t loop_task;
+	rtdm_task_t loop_task;
 
 	/* Misc fields */
 	int loop_running;
@@ -62,8 +62,8 @@ static void loop_task_proc(void *arg);
 /* Timer task routine  */
 static void loop_task_proc(void *arg)
 {
-	a4l_dev_t *dev = (a4l_dev_t*)arg;
-	a4l_subd_t *input_subd, *output_subd;
+	struct a4l_device *dev = (struct a4l_device*)arg;
+	struct a4l_subdevice *input_subd, *output_subd;
 	lpprv_t *priv = (lpprv_t *)dev->priv;
 
 	input_subd = a4l_get_subd(dev, LOOP_INPUT_SUBD);
@@ -106,14 +106,14 @@ static void loop_task_proc(void *arg)
 			}
 		}
 
-		a4l_task_sleep(LOOP_TASK_PERIOD);
+		rtdm_task_sleep(LOOP_TASK_PERIOD);
 	}
 }
 
 /* --- Analogy Callbacks --- */
 
 /* Command callback */
-int loop_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
+int loop_cmd(struct a4l_subdevice *subd, struct a4l_cmd_desc *cmd)
 {
 	a4l_info(subd->dev, "loop_cmd: (subd=%d)\n", subd->idx);
 
@@ -122,7 +122,7 @@ int loop_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 }
 
 /* Trigger callback */
-int loop_trigger(a4l_subd_t *subd, lsampl_t trignum)
+int loop_trigger(struct a4l_subdevice *subd, lsampl_t trignum)
 {
 	lpprv_t *priv = (lpprv_t *)subd->dev->priv;
 
@@ -134,7 +134,7 @@ int loop_trigger(a4l_subd_t *subd, lsampl_t trignum)
 }
 
 /* Cancel callback */
-void loop_cancel(a4l_subd_t *subd)
+void loop_cancel(struct a4l_subdevice *subd)
 {
 	lpprv_t *priv = (lpprv_t *)subd->dev->priv;
 
@@ -144,7 +144,7 @@ void loop_cancel(a4l_subd_t *subd)
 }
 
 /* Read instruction callback */
-int loop_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
+int loop_insn_read(struct a4l_subdevice *subd, struct a4l_kernel_instruction *insn)
 {
 	lpprv_t *priv = (lpprv_t*)subd->dev->priv;
 	uint16_t *data = (uint16_t *)insn->data;
@@ -160,7 +160,7 @@ int loop_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 }
 
 /* Write instruction callback */
-int loop_insn_write(a4l_subd_t *subd, a4l_kinsn_t *insn)
+int loop_insn_write(struct a4l_subdevice *subd, struct a4l_kernel_instruction *insn)
 {
 	lpprv_t *priv = (lpprv_t*)subd->dev->priv;
 	uint16_t *data = (uint16_t *)insn->data;
@@ -175,9 +175,9 @@ int loop_insn_write(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	return 0;
 }
 
-void setup_input_subd(a4l_subd_t *subd)
+void setup_input_subd(struct a4l_subdevice *subd)
 {
-	memset(subd, 0, sizeof(a4l_subd_t));
+	memset(subd, 0, sizeof(struct a4l_subdevice));
 
 	subd->flags |= A4L_SUBD_AI;
 	subd->flags |= A4L_SUBD_CMD;
@@ -191,9 +191,9 @@ void setup_input_subd(a4l_subd_t *subd)
 	subd->insn_write = loop_insn_write;
 }
 
-void setup_output_subd(a4l_subd_t *subd)
+void setup_output_subd(struct a4l_subdevice *subd)
 {
-	memset(subd, 0, sizeof(a4l_subd_t));
+	memset(subd, 0, sizeof(struct a4l_subdevice));
 
 	subd->flags = A4L_SUBD_AO;
 	subd->flags |= A4L_SUBD_CMD;
@@ -209,11 +209,11 @@ void setup_output_subd(a4l_subd_t *subd)
 }
 
 /* Attach callback */
-int loop_attach(a4l_dev_t *dev,
+int loop_attach(struct a4l_device *dev,
 		a4l_lnkdesc_t *arg)
 {
 	int ret = 0;
-	a4l_subd_t *subd;
+	struct a4l_subdevice *subd;
 	lpprv_t *priv = (lpprv_t *)dev->priv;
 
 	/* Add the fake input subdevice */
@@ -240,27 +240,27 @@ int loop_attach(a4l_dev_t *dev,
 	priv->loop_running = 0;
 	priv->loop_insn_value = 0;
 
-	ret = a4l_task_init(&priv->loop_task,
+	ret = rtmd_task_init(&priv->loop_task,
 			    "a4l_loop task",
 			    loop_task_proc,
-			    dev, A4L_TASK_HIGHEST_PRIORITY);
+			    dev, RTDM_TASK_HIGHEST_PRIORITY, 0);
 
 	return ret;
 }
 
 /* Detach callback */
-int loop_detach(a4l_dev_t *dev)
+int loop_detach(struct a4l_device *dev)
 {
 	lpprv_t *priv = (lpprv_t *)dev->priv;
 
-	a4l_task_destroy(&priv->loop_task);
+	rtdm_task_destroy(&priv->loop_task);
 
 	return 0;
 }
 
 /* --- Module part --- */
 
-static a4l_drv_t loop_drv = {
+static struct a4l_driver loop_drv = {
 	.owner = THIS_MODULE,
 	.board_name = "analogy_loop",
 	.attach = loop_attach,

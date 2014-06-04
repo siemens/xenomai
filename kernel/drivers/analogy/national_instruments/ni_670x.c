@@ -104,12 +104,12 @@ struct ni_670x_subd_priv {
 	void* counter;
 };
 
-static int ni_670x_ao_winsn(a4l_subd_t *subd, a4l_kinsn_t *insn);
-static int ni_670x_ao_rinsn(a4l_subd_t *subd, a4l_kinsn_t *insn);
-static int ni_670x_dio_insn_bits(a4l_subd_t *subd, a4l_kinsn_t *insn);
-static int ni_670x_dio_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn);
+static int ni_670x_ao_winsn(struct a4l_subdevice *subd, struct a4l_kernel_instruction *insn);
+static int ni_670x_ao_rinsn(struct a4l_subdevice *subd, struct a4l_kernel_instruction *insn);
+static int ni_670x_dio_insn_bits(struct a4l_subdevice *subd, struct a4l_kernel_instruction *insn);
+static int ni_670x_dio_insn_config(struct a4l_subdevice *subd, struct a4l_kernel_instruction *insn);
 
-static a4l_chdesc_t ni_670x_desc_dio = {
+static struct a4l_channels_desc ni_670x_desc_dio = {
 	.mode = A4L_CHAN_GLOBAL_CHANDESC,
 	.length = 8,
 	.chans = {
@@ -117,7 +117,7 @@ static a4l_chdesc_t ni_670x_desc_dio = {
 	},
 };
 
-static a4l_chdesc_t ni_670x_desc_ao = {
+static struct a4l_channels_desc ni_670x_desc_ao = {
 	.mode = A4L_CHAN_GLOBAL_CHANDESC,
 	.length = 0, /* initialized later according to the board found */
 	.chans = {
@@ -126,10 +126,10 @@ static a4l_chdesc_t ni_670x_desc_ao = {
 };
 
 
-static a4l_rngtab_t range_0_20mA = { 1, {RANGE_mA(0, 20)} };
-static a4l_rngtab_t rng_bipolar10 = { 1, {RANGE_V(-10, 10) }};
+static struct a4l_rngtab range_0_20mA = { 1, {RANGE_mA(0, 20)} };
+static struct a4l_rngtab rng_bipolar10 = { 1, {RANGE_V(-10, 10) }};
 
-a4l_rngtab_t *range_table_list[32] = {
+struct a4l_rngtab *range_table_list[32] = {
 	&rng_bipolar10, &rng_bipolar10, &rng_bipolar10, &rng_bipolar10,
 	&rng_bipolar10, &rng_bipolar10, &rng_bipolar10, &rng_bipolar10,
 	&rng_bipolar10, &rng_bipolar10, &rng_bipolar10, &rng_bipolar10,
@@ -141,7 +141,7 @@ a4l_rngtab_t *range_table_list[32] = {
 
 static A4L_RNGDESC(32) ni670x_ao_desc;
 
-static void setup_subd_ao(a4l_subd_t *subd)
+static void setup_subd_ao(struct a4l_subdevice *subd)
 {
 	int i;
 	int nchans;
@@ -152,7 +152,7 @@ static void setup_subd_ao(a4l_subd_t *subd)
 	subd->chan_desc->length    = nchans;
 	if (nchans == 32) {
 
-		subd->rng_desc = (a4l_rngdesc_t*) &ni670x_ao_desc;
+		subd->rng_desc = (struct a4l_rngdesc*) &ni670x_ao_desc;
 		subd->rng_desc->mode = A4L_RNG_PERCHAN_RNGDESC;
 		for (i = 0 ; i < 16 ; i++) {
 			subd->rng_desc->rngtabs[i] =&rng_bipolar10;
@@ -165,7 +165,7 @@ static void setup_subd_ao(a4l_subd_t *subd)
 	subd->insn_read = &ni_670x_ao_rinsn;
 }
 
-static void setup_subd_dio(a4l_subd_t *s)
+static void setup_subd_dio(struct a4l_subdevice *s)
 {
 	/* Digital i/o subdevice */
 	s->flags = A4L_SUBD_DIO;
@@ -176,7 +176,7 @@ static void setup_subd_dio(a4l_subd_t *s)
 }
 
 struct setup_subd {
-	void (*setup_func) (a4l_subd_t *);
+	void (*setup_func) (struct a4l_subdevice *);
 	int sizeof_priv;
 };
 
@@ -224,16 +224,16 @@ MODULE_DEVICE_TABLE(pci, ni_670x_pci_table);
 
 #define devpriv ((struct ni_670x_private *)dev->priv)
 
-static inline struct ni_670x_private *private(a4l_dev_t *dev)
+static inline struct ni_670x_private *private(struct a4l_device *dev)
 {
 	return (struct ni_670x_private*) dev->priv;
 }
 
 
-static int ni_670x_attach (a4l_dev_t *dev, a4l_lnkdesc_t *arg);
-static int ni_670x_detach(a4l_dev_t *dev);
+static int ni_670x_attach (struct a4l_device *dev, a4l_lnkdesc_t *arg);
+static int ni_670x_detach(struct a4l_device *dev);
 
-static a4l_drv_t ni_670x_drv = {
+static struct a4l_driver ni_670x_drv = {
 	.owner = THIS_MODULE,
 	.board_name = "analogy_ni_670x",
 	.attach = ni_670x_attach,
@@ -254,7 +254,7 @@ static void __exit driver_ni_670x_cleanup_module(void)
 module_init(driver_ni_670x_init_module);
 module_exit(driver_ni_670x_cleanup_module);
 
-static int ni_670x_attach (a4l_dev_t *dev, a4l_lnkdesc_t *arg)
+static int ni_670x_attach (struct a4l_device *dev, a4l_lnkdesc_t *arg)
 {
 	int ret, bus, slot, i, irq;
 	struct mite_struct *mite;
@@ -309,7 +309,7 @@ static int ni_670x_attach (a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 	a4l_info(dev, "ni670x attach: found %s board\n", board->name);
 
 	for (i = 0; i < 2; i++) {
-		a4l_subd_t *subd =
+		struct a4l_subdevice *subd =
 			a4l_alloc_subd(setup_subds[i].sizeof_priv, NULL);
 
 		if (subd == NULL) {
@@ -340,7 +340,7 @@ static int ni_670x_attach (a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 	return 0;
 }
 
-static int ni_670x_detach(a4l_dev_t *dev)
+static int ni_670x_detach(struct a4l_device *dev)
 {
 	a4l_info(dev, "%s: ni670x detach procedure started...\n", __FUNCTION__);
 
@@ -354,9 +354,9 @@ static int ni_670x_detach(a4l_dev_t *dev)
 }
 
 
-static int ni_670x_dio_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
+static int ni_670x_dio_insn_config(struct a4l_subdevice *subd, struct a4l_kernel_instruction *insn)
 {
-	a4l_dev_t *dev = subd->dev;
+	struct a4l_device *dev = subd->dev;
 	unsigned int *data = (unsigned int *)insn->data;
 	int chan = CR_CHAN(insn->chan_desc);
 	struct ni_670x_subd_priv *subdpriv =
@@ -385,7 +385,7 @@ static int ni_670x_dio_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	return 0;
 }
 
-static int ni_670x_ao_winsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
+static int ni_670x_ao_winsn(struct a4l_subdevice *subd, struct a4l_kernel_instruction *insn)
 {
 	int i;
 	unsigned int tmp;
@@ -422,7 +422,7 @@ static int ni_670x_ao_winsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
    return 0;
 }
 
-static int ni_670x_ao_rinsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
+static int ni_670x_ao_rinsn(struct a4l_subdevice *subd, struct a4l_kernel_instruction *insn)
 {
 	int i;
 	unsigned int* dtmp;
@@ -437,7 +437,7 @@ static int ni_670x_ao_rinsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 }
 
 
-static int ni_670x_dio_insn_bits(a4l_subd_t *subd, a4l_kinsn_t *insn)
+static int ni_670x_dio_insn_bits(struct a4l_subdevice *subd, struct a4l_kernel_instruction *insn)
 {
 	return -ENOSYS;
 }

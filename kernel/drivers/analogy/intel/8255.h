@@ -49,8 +49,8 @@ typedef struct subd_8255_struct {
 #define CR_A_MODE(a)	((a)<<5)
 #define CR_CW		0x80
 
-void a4l_subdev_8255_init(a4l_subd_t *subd);
-void a4l_subdev_8255_interrupt(a4l_subd_t *subd);
+void a4l_subdev_8255_init(struct a4l_subdevice *subd);
+void a4l_subdev_8255_interrupt(struct a4l_subdevice *subd);
 
 #else /* !CONFIG_XENO_DRIVERS_ANALOGY_8255 */
 

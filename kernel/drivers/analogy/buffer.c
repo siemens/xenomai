@@ -33,7 +33,7 @@
    allocated with vmalloc() and all physical addresses of the pages which
    compose the virtual buffer are hold in a table */
 
-void a4l_free_buffer(a4l_buf_t * buf_desc)
+void a4l_free_buffer(struct a4l_buffer * buf_desc)
 {
 	if (buf_desc->pg_list != NULL) {
 		rtdm_free(buf_desc->pg_list);
@@ -50,7 +50,7 @@ void a4l_free_buffer(a4l_buf_t * buf_desc)
 	}
 }
 
-int a4l_alloc_buffer(a4l_buf_t *buf_desc, int buf_size)
+int a4l_alloc_buffer(struct a4l_buffer *buf_desc, int buf_size)
 {
 	int ret = 0;
 	char *vaddr, *vabase;
@@ -89,7 +89,7 @@ out_virt_contig_alloc:
 	return ret;
 }
 
-static void a4l_reinit_buffer(a4l_buf_t *buf_desc)
+static void a4l_reinit_buffer(struct a4l_buffer *buf_desc)
 {
 	/* No command to process yet */
 	buf_desc->cur_cmd = NULL;
@@ -109,21 +109,21 @@ static void a4l_reinit_buffer(a4l_buf_t *buf_desc)
 	a4l_flush_sync(&buf_desc->sync);
 }
 
-void a4l_init_buffer(a4l_buf_t *buf_desc)
+void a4l_init_buffer(struct a4l_buffer *buf_desc)
 {
-	memset(buf_desc, 0, sizeof(a4l_buf_t));
+	memset(buf_desc, 0, sizeof(struct a4l_buffer));
 	a4l_init_sync(&buf_desc->sync);
 	a4l_reinit_buffer(buf_desc);
 }
 
-void a4l_cleanup_buffer(a4l_buf_t *buf_desc)
+void a4l_cleanup_buffer(struct a4l_buffer *buf_desc)
 {
 	a4l_cleanup_sync(&buf_desc->sync);
 }
 
-int a4l_setup_buffer(a4l_cxt_t *cxt, a4l_cmd_t *cmd)
+int a4l_setup_buffer(struct a4l_device_context *cxt, struct a4l_cmd_desc *cmd)
 {
-	a4l_buf_t *buf_desc = cxt->buffer;
+	struct a4l_buffer *buf_desc = cxt->buffer;
 	int i;
 
 	/* Retrieve the related subdevice */
@@ -153,7 +153,7 @@ int a4l_setup_buffer(a4l_cxt_t *cxt, a4l_cmd_t *cmd)
 	/* Computes the count to reach, if need be */
 	if (cmd->stop_src == TRIG_COUNT) {
 		for (i = 0; i < cmd->nb_chan; i++) {
-			a4l_chan_t *chft;
+			struct a4l_channel *chft;
 			chft = a4l_get_chfeat(buf_desc->subd,
 					      CR_CHAN(cmd->chan_descs[i]));
 			buf_desc->end_count += chft->nb_bits / 8;
@@ -167,10 +167,10 @@ int a4l_setup_buffer(a4l_cxt_t *cxt, a4l_cmd_t *cmd)
 	return 0;
 }
 
-void a4l_cancel_buffer(a4l_cxt_t *cxt)
+void a4l_cancel_buffer(struct a4l_device_context *cxt)
 {
-	a4l_buf_t *buf_desc = cxt->buffer;
-	a4l_subd_t *subd = buf_desc->subd;
+	struct a4l_buffer *buf_desc = cxt->buffer;
+	struct a4l_subdevice *subd = buf_desc->subd;
 
 	if (!subd || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
 		return;
@@ -197,10 +197,10 @@ void a4l_cancel_buffer(a4l_cxt_t *cxt)
 
 /* --- Munge related function --- */
 
-int a4l_get_chan(a4l_subd_t *subd)
+int a4l_get_chan(struct a4l_subdevice *subd)
 {
 	int i, j, tmp_count, tmp_size = 0;
-	a4l_cmd_t *cmd;
+	struct a4l_cmd_desc *cmd;
 
 	cmd = a4l_get_cmd(subd);
 	if (!cmd)
@@ -245,9 +245,9 @@ int a4l_get_chan(a4l_subd_t *subd)
 /* The following functions are explained in the Doxygen section
    "Buffer management services" in driver_facilities.c */
 
-int a4l_buf_prepare_absput(a4l_subd_t *subd, unsigned long count)
+int a4l_buf_prepare_absput(struct a4l_subdevice *subd, unsigned long count)
 {
-	a4l_buf_t *buf = subd->buf;
+	struct a4l_buffer *buf = subd->buf;
 
 	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
 		return -ENOENT;
@@ -259,9 +259,9 @@ int a4l_buf_prepare_absput(a4l_subd_t *subd, unsigned long count)
 }
 
 
-int a4l_buf_commit_absput(a4l_subd_t *subd, unsigned long count)
+int a4l_buf_commit_absput(struct a4l_subdevice *subd, unsigned long count)
 {
-	a4l_buf_t *buf = subd->buf;
+	struct a4l_buffer *buf = subd->buf;
 
 	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
 		return -ENOENT;
@@ -272,9 +272,9 @@ int a4l_buf_commit_absput(a4l_subd_t *subd, unsigned long count)
 	return __abs_put(buf, count);
 }
 
-int a4l_buf_prepare_put(a4l_subd_t *subd, unsigned long count)
+int a4l_buf_prepare_put(struct a4l_subdevice *subd, unsigned long count)
 {
-	a4l_buf_t *buf = subd->buf;
+	struct a4l_buffer *buf = subd->buf;
 
 	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
 		return -ENOENT;
@@ -285,9 +285,9 @@ int a4l_buf_prepare_put(a4l_subd_t *subd, unsigned long count)
 	return __pre_put(buf, count);
 }
 
-int a4l_buf_commit_put(a4l_subd_t *subd, unsigned long count)
+int a4l_buf_commit_put(struct a4l_subdevice *subd, unsigned long count)
 {
-	a4l_buf_t *buf = subd->buf;
+	struct a4l_buffer *buf = subd->buf;
 
 	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
 		return -ENOENT;
@@ -298,9 +298,9 @@ int a4l_buf_commit_put(a4l_subd_t *subd, unsigned long count)
 	return __put(buf, count);
 }
 
-int a4l_buf_put(a4l_subd_t *subd, void *bufdata, unsigned long count)
+int a4l_buf_put(struct a4l_subdevice *subd, void *bufdata, unsigned long count)
 {
-	a4l_buf_t *buf = subd->buf;
+	struct a4l_buffer *buf = subd->buf;
 	int err;
 
 	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
@@ -321,9 +321,9 @@ int a4l_buf_put(a4l_subd_t *subd, void *bufdata, unsigned long count)
 	return err;
 }
 
-int a4l_buf_prepare_absget(a4l_subd_t *subd, unsigned long count)
+int a4l_buf_prepare_absget(struct a4l_subdevice *subd, unsigned long count)
 {
-	a4l_buf_t *buf = subd->buf;
+	struct a4l_buffer *buf = subd->buf;
 
 	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
 		return -ENOENT;
@@ -334,9 +334,9 @@ int a4l_buf_prepare_absget(a4l_subd_t *subd, unsigned long count)
 	return __pre_abs_get(buf, count);
 }
 
-int a4l_buf_commit_absget(a4l_subd_t *subd, unsigned long count)
+int a4l_buf_commit_absget(struct a4l_subdevice *subd, unsigned long count)
 {
-	a4l_buf_t *buf = subd->buf;
+	struct a4l_buffer *buf = subd->buf;
 
 	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
 		return -ENOENT;
@@ -347,9 +347,9 @@ int a4l_buf_commit_absget(a4l_subd_t *subd, unsigned long count)
 	return __abs_get(buf, count);
 }
 
-int a4l_buf_prepare_get(a4l_subd_t *subd, unsigned long count)
+int a4l_buf_prepare_get(struct a4l_subdevice *subd, unsigned long count)
 {
-	a4l_buf_t *buf = subd->buf;
+	struct a4l_buffer *buf = subd->buf;
 
 	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
 		return -ENOENT;
@@ -360,9 +360,9 @@ int a4l_buf_prepare_get(a4l_subd_t *subd, unsigned long count)
 	return __pre_get(buf, count);
 }
 
-int a4l_buf_commit_get(a4l_subd_t *subd, unsigned long count)
+int a4l_buf_commit_get(struct a4l_subdevice *subd, unsigned long count)
 {
-	a4l_buf_t *buf = subd->buf;
+	struct a4l_buffer *buf = subd->buf;
 
 	/* Basic checkings */
 
@@ -375,9 +375,9 @@ int a4l_buf_commit_get(a4l_subd_t *subd, unsigned long count)
 	return __get(buf, count);
 }
 
-int a4l_buf_get(a4l_subd_t *subd, void *bufdata, unsigned long count)
+int a4l_buf_get(struct a4l_subdevice *subd, void *bufdata, unsigned long count)
 {
-	a4l_buf_t *buf = subd->buf;
+	struct a4l_buffer *buf = subd->buf;
 	int err;
 
 	/* Basic checkings */
@@ -402,9 +402,9 @@ int a4l_buf_get(a4l_subd_t *subd, void *bufdata, unsigned long count)
 	return err;
 }
 
-int a4l_buf_evt(a4l_subd_t *subd, unsigned long evts)
+int a4l_buf_evt(struct a4l_subdevice *subd, unsigned long evts)
 {
-	a4l_buf_t *buf = subd->buf;
+	struct a4l_buffer *buf = subd->buf;
 	int tmp;
 	unsigned long wake = 0, count = ULONG_MAX;
 
@@ -441,9 +441,9 @@ int a4l_buf_evt(a4l_subd_t *subd, unsigned long evts)
 	return 0;
 }
 
-unsigned long a4l_buf_count(a4l_subd_t *subd)
+unsigned long a4l_buf_count(struct a4l_subdevice *subd)
 {
-	a4l_buf_t *buf = subd->buf;
+	struct a4l_buffer *buf = subd->buf;
 	unsigned long ret = 0;
 
 	/* Basic checking */
@@ -477,12 +477,12 @@ static struct vm_operations_struct a4l_vm_ops = {
 	.close = a4l_unmap,
 };
 
-int a4l_ioctl_mmap(a4l_cxt_t *cxt, void *arg)
+int a4l_ioctl_mmap(struct a4l_device_context *cxt, void *arg)
 {
 	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	a4l_mmap_t map_cfg;
-	a4l_dev_t *dev;
-	a4l_buf_t *buf;
+	struct a4l_device *dev;
+	struct a4l_buffer *buf;
 	int ret;
 
 	/* The mmap operation cannot be performed in a
@@ -534,11 +534,11 @@ int a4l_ioctl_mmap(a4l_cxt_t *cxt, void *arg)
 
 /* --- IOCTL / FOPS functions --- */
 
-int a4l_ioctl_cancel(a4l_cxt_t * cxt, void *arg)
+int a4l_ioctl_cancel(struct a4l_device_context * cxt, void *arg)
 {
 	unsigned int idx_subd = (unsigned long)arg;
-	a4l_dev_t *dev = a4l_get_dev(cxt);
-	a4l_subd_t *subd;
+	struct a4l_device *dev = a4l_get_dev(cxt);
+	struct a4l_subdevice *subd;
 
 	/* Basically check the device */
 	if (!test_bit(A4L_DEV_ATTACHED_NR, &dev->flags)) {
@@ -575,12 +575,12 @@ int a4l_ioctl_cancel(a4l_cxt_t * cxt, void *arg)
    asynchronous buffer.
    (BUFCFG = free of the current buffer + allocation of a new one) */
 
-int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg)
+int a4l_ioctl_bufcfg(struct a4l_device_context * cxt, void *arg)
 {
 	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
-	a4l_dev_t *dev = a4l_get_dev(cxt);
-	a4l_buf_t *buf = cxt->buffer;
-	a4l_subd_t *subd = buf->subd;
+	struct a4l_device *dev = a4l_get_dev(cxt);
+	struct a4l_buffer *buf = cxt->buffer;
+	struct a4l_subdevice *subd = buf->subd;
 	a4l_bufcfg_t buf_cfg;
 
 	/* As Linux API is used to allocate a virtual buffer,
@@ -633,11 +633,11 @@ int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg)
    could be broken, this facility would be handled by the original
    BUFCFG ioctl. At the next major release, this ioctl will vanish. */
 
-int a4l_ioctl_bufcfg2(a4l_cxt_t * cxt, void *arg)
+int a4l_ioctl_bufcfg2(struct a4l_device_context * cxt, void *arg)
 {
 	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
-	a4l_dev_t *dev = a4l_get_dev(cxt);
-	a4l_buf_t *buf = cxt->buffer;
+	struct a4l_device *dev = a4l_get_dev(cxt);
+	struct a4l_buffer *buf = cxt->buffer;
 	a4l_bufcfg2_t buf_cfg;
 
 	/* Basic checking */
@@ -667,12 +667,12 @@ int a4l_ioctl_bufcfg2(a4l_cxt_t * cxt, void *arg)
    - tell the user app the size of the asynchronous buffer
    - display the read/write counters (how many bytes to read/write) */
 
-int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg)
+int a4l_ioctl_bufinfo(struct a4l_device_context * cxt, void *arg)
 {
 	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
-	a4l_dev_t *dev = a4l_get_dev(cxt);
-	a4l_buf_t *buf = cxt->buffer;
-	a4l_subd_t *subd = buf->subd;
+	struct a4l_device *dev = a4l_get_dev(cxt);
+	struct a4l_buffer *buf = cxt->buffer;
+	struct a4l_subdevice *subd = buf->subd;
 	a4l_bufinfo_t info;
 
 	unsigned long tmp_cnt;
@@ -778,11 +778,11 @@ data which should trigger a wake-up. If the ABI could be broken, this
 facility would be handled by the original BUFINFO ioctl. At the next
 major release, this ioctl will vanish. */
 
-int a4l_ioctl_bufinfo2(a4l_cxt_t * cxt, void *arg)
+int a4l_ioctl_bufinfo2(struct a4l_device_context * cxt, void *arg)
 {
 	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
-	a4l_dev_t *dev = a4l_get_dev(cxt);
-	a4l_buf_t *buf = cxt->buffer;
+	struct a4l_device *dev = a4l_get_dev(cxt);
+	struct a4l_buffer *buf = cxt->buffer;
 	a4l_bufcfg2_t buf_cfg;
 
 	/* Basic checking */
@@ -803,11 +803,11 @@ int a4l_ioctl_bufinfo2(a4l_cxt_t * cxt, void *arg)
 /* The function a4l_read_buffer can be considered as the kernel entry
    point of the RTDM syscall read. This syscall is supposed to be used
    only during asynchronous acquisitions */
-ssize_t a4l_read_buffer(a4l_cxt_t * cxt, void *bufdata, size_t nbytes)
+ssize_t a4l_read_buffer(struct a4l_device_context * cxt, void *bufdata, size_t nbytes)
 {
-	a4l_dev_t *dev = a4l_get_dev(cxt);
-	a4l_buf_t *buf = cxt->buffer;
-	a4l_subd_t *subd = buf->subd;
+	struct a4l_device *dev = a4l_get_dev(cxt);
+	struct a4l_buffer *buf = cxt->buffer;
+	struct a4l_subdevice *subd = buf->subd;
 	ssize_t count = 0;
 
 	/* Basic checkings */
@@ -905,11 +905,11 @@ out_a4l_read:
 /* The function a4l_write_buffer can be considered as the kernel entry
    point of the RTDM syscall write. This syscall is supposed to be
    used only during asynchronous acquisitions */
-ssize_t a4l_write_buffer(a4l_cxt_t *cxt, const void *bufdata, size_t nbytes)
+ssize_t a4l_write_buffer(struct a4l_device_context *cxt, const void *bufdata, size_t nbytes)
 {
-	a4l_dev_t *dev = a4l_get_dev(cxt);
-	a4l_buf_t *buf = cxt->buffer;
-	a4l_subd_t *subd = buf->subd;
+	struct a4l_device *dev = a4l_get_dev(cxt);
+	struct a4l_buffer *buf = cxt->buffer;
+	struct a4l_subdevice *subd = buf->subd;
 	ssize_t count = 0;
 
 	/* Basic checkings */
@@ -994,13 +994,13 @@ out_a4l_write:
 	return count;
 }
 
-int a4l_select(a4l_cxt_t *cxt,
+int a4l_select(struct a4l_device_context *cxt,
 	       rtdm_selector_t *selector,
 	       enum rtdm_selecttype type, unsigned fd_index)
 {
-	a4l_dev_t *dev = a4l_get_dev(cxt);
-	a4l_buf_t *buf = cxt->buffer;
-	a4l_subd_t *subd = buf->subd;
+	struct a4l_device *dev = a4l_get_dev(cxt);
+	struct a4l_buffer *buf = cxt->buffer;
+	struct a4l_subdevice *subd = buf->subd;
 
 	/* Basic checkings */
 
@@ -1039,14 +1039,14 @@ int a4l_select(a4l_cxt_t *cxt,
 	return a4l_select_sync(&(buf->sync), selector, type, fd_index);
 }
 
-int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg)
+int a4l_ioctl_poll(struct a4l_device_context * cxt, void *arg)
 {
 	struct rtdm_fd *fd = rtdm_private_to_fd(cxt);
 	int ret = 0;
 	unsigned long tmp_cnt = 0;
-	a4l_dev_t *dev = a4l_get_dev(cxt);
-	a4l_buf_t *buf = cxt->buffer;
-	a4l_subd_t *subd = buf->subd;
+	struct a4l_device *dev = a4l_get_dev(cxt);
+	struct a4l_buffer *buf = cxt->buffer;
+	struct a4l_subdevice *subd = buf->subd;
 	a4l_poll_t poll;
 
 	if (!rtdm_in_rt_context() && rtdm_rt_capable(fd))

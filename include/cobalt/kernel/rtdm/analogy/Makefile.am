@@ -7,6 +7,6 @@ noinst_HEADERS =	\
 	device.h	\
 	driver.h	\
 	instruction.h	\
-	os_facilities.h	\
+	rtdm_helpers.h	\
 	subdevice.h	\
 	transfer.h
