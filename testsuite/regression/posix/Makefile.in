@@ -80,7 +80,8 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-test_PROGRAMS = leaks$(EXEEXT) mq_select$(EXEEXT) timerfd$(EXEEXT)
+test_PROGRAMS = clock_settime$(EXEEXT) leaks$(EXEEXT) \
+	mq_select$(EXEEXT) timerfd$(EXEEXT)
 subdir = testsuite/regression/posix
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/config/depcomp $(noinst_HEADERS)
@@ -101,14 +102,18 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(testdir)"
 PROGRAMS = $(test_PROGRAMS)
-leaks_SOURCES = leaks.c
-leaks_OBJECTS = leaks.$(OBJEXT)
-leaks_LDADD = $(LDADD)
-leaks_DEPENDENCIES = ../../../lib/cobalt/libcobalt.la
+clock_settime_SOURCES = clock_settime.c
+clock_settime_OBJECTS = clock_settime.$(OBJEXT)
+clock_settime_LDADD = $(LDADD)
+clock_settime_DEPENDENCIES = ../../../lib/cobalt/libcobalt.la
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+leaks_SOURCES = leaks.c
+leaks_OBJECTS = leaks.$(OBJEXT)
+leaks_LDADD = $(LDADD)
+leaks_DEPENDENCIES = ../../../lib/cobalt/libcobalt.la
 mq_select_SOURCES = mq_select.c
 mq_select_OBJECTS = mq_select.$(OBJEXT)
 mq_select_LDADD = $(LDADD)
@@ -150,8 +155,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = leaks.c mq_select.c timerfd.c
-DIST_SOURCES = leaks.c mq_select.c timerfd.c
+SOURCES = clock_settime.c leaks.c mq_select.c timerfd.c
+DIST_SOURCES = clock_settime.c leaks.c mq_select.c timerfd.c
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -444,6 +449,10 @@ clean-testPROGRAMS:
 	echo " rm -f" $$list; \
 	rm -f $$list
 
+clock_settime$(EXEEXT): $(clock_settime_OBJECTS) $(clock_settime_DEPENDENCIES) $(EXTRA_clock_settime_DEPENDENCIES) 
+	@rm -f clock_settime$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(clock_settime_OBJECTS) $(clock_settime_LDADD) $(LIBS)
+
 leaks$(EXEEXT): $(leaks_OBJECTS) $(leaks_DEPENDENCIES) $(EXTRA_leaks_DEPENDENCIES) 
 	@rm -f leaks$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(leaks_OBJECTS) $(leaks_LDADD) $(LIBS)
@@ -462,6 +471,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/clock_settime.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/leaks.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mq_select.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/timerfd.Po@am__quote@
