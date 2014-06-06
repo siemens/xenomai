@@ -135,11 +135,17 @@ static inline uint16_t ai_value_output(struct ai_priv *priv)
 
 int ai_push_values(struct a4l_subdevice *subd)
 {
-	struct ai_priv *priv = (struct ai_priv *)subd->priv;
-	struct a4l_cmd_desc *cmd = a4l_get_cmd(subd);
 	uint64_t now_ns, elapsed_ns = 0;
+	struct a4l_cmd_desc *cmd;
+	struct ai_priv *priv;
 	int i = 0;
 
+	if (!subd)
+		return -EINVAL;
+
+	priv = (struct ai_priv *)subd->priv;
+
+	cmd = a4l_get_cmd(subd);
 	if (!cmd)
 		return -EPIPE;
 
@@ -230,28 +236,38 @@ int ai2_push_values(struct a4l_subdevice *subd)
 
 static void task_proc(void *arg)
 {
-	struct a4l_device *dev = (struct a4l_device *)arg;
-	struct a4l_subdevice *ai_subd = (struct a4l_subdevice *)a4l_get_subd(dev, AI_SUBD);
-	struct a4l_subdevice *ao_subd = (struct a4l_subdevice *)a4l_get_subd(dev, AO_SUBD);
-	struct a4l_subdevice *ai2_subd = (struct a4l_subdevice *)a4l_get_subd(dev, AI2_SUBD);
+	struct a4l_subdevice *ai_subd, *ao_subd, *ai2_subd;
+	struct a4l_device *dev;
+	struct fake_priv *priv;
+	int running;
 
-	struct fake_priv *priv = (struct fake_priv *)dev->priv;
+	dev = arg;
+	ai_subd = a4l_get_subd(dev, AI_SUBD);
+	ao_subd = a4l_get_subd(dev, AO_SUBD);
+	ai2_subd = a4l_get_subd(dev, AI2_SUBD);
+
+	priv = dev->priv;
 
 	while(!rtdm_task_should_stop()) {
 
-		int running;
-
 		running = priv->ai_running;
-		if (running && ai_push_values(ai_subd) < 0)
+		if (running && ai_push_values(ai_subd) < 0) {
+			/* on error, wait for detach to destroy the task */
+			rtdm_task_sleep(RTDM_TIMEOUT_INFINITE);
 			continue;
+		}
 
 		running = priv->ao_running;
-		if (running && ao_pull_values(ao_subd) < 0)
+		if (running && ao_pull_values(ao_subd) < 0) {
+			rtdm_task_sleep(RTDM_TIMEOUT_INFINITE);
 			continue;
+		}
 
 		running = priv->ai2_running;
-		if (running && ai2_push_values(ai2_subd) < 0)
+		if (running && ai2_push_values(ai2_subd) < 0) {
+			rtdm_task_sleep(RTDM_TIMEOUT_INFINITE);
 			continue;
+		}
 
 		rtdm_task_sleep(TASK_PERIOD);
 	}
