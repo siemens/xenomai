@@ -163,21 +163,11 @@ int pthread_getschedparam_ex(pthread_t thread,
 
 COBALT_IMPL(int, sched_yield, (void))
 {
-	unsigned long status;
-	int ret;
+	if (cobalt_get_current() == XN_NO_HANDLE ||
+	    (cobalt_get_current_mode() & (XNWEAK|XNRELAX)) == (XNWEAK|XNRELAX))
+		return __STD(sched_yield());
 
-	status = cobalt_get_current_mode();
-	if (status & XNRELAX)
-		goto libc_yield;
-
-	ret = -XENOMAI_SKINCALL0(__cobalt_muxid, sc_cobalt_sched_yield);
-	if (ret == EPERM)
-		goto libc_yield;
-
-	return ret;
-
-libc_yield:
-	return __STD(sched_yield());
+	return -XENOMAI_SKINCALL0(__cobalt_muxid, sc_cobalt_sched_yield);
 }
 
 COBALT_IMPL(int, sched_get_priority_min, (int policy))
