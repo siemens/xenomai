@@ -66,11 +66,6 @@ static inline void __xnsched_rt_dequeue(struct xnthread *thread)
 	xnsched_delq(&thread->sched->rt.runnable, thread);
 }
 
-static inline struct xnthread *__xnsched_rt_pick(struct xnsched *sched)
-{
-	return xnsched_getq(&sched->rt.runnable);
-}
-
 static inline void __xnsched_rt_setparam(struct xnthread *thread,
 					 const union xnsched_policy_param *p)
 {
@@ -110,6 +105,15 @@ static inline int xnsched_rt_init_thread(struct xnthread *thread)
 {
 	return 0;
 }
+
+#ifdef CONFIG_XENO_OPT_SCHED_CLASSES
+struct xnthread *xnsched_rt_pick(struct xnsched *sched);
+#else
+static inline struct xnthread *xnsched_rt_pick(struct xnsched *sched)
+{
+	return xnsched_getq(&sched->rt.runnable);
+}
+#endif
 
 void xnsched_rt_tick(struct xnsched *sched);
 

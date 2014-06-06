@@ -173,10 +173,11 @@ static void quota_refill_handler(struct xntimer *timer)
 	struct xnsched_quota_group *tg;
 	struct xnthread *thread, *tmp;
 	struct xnsched_quota *qs;
+	struct xnsched *sched;
 
 	qs = container_of(timer, struct xnsched_quota, refill_timer);
-
 	XENO_BUGON(NUCLEUS, list_empty(&qs->groups));
+	sched = container_of(qs, struct xnsched, quota);
 
 	list_for_each_entry(tg, &qs->groups, next) {
 		/* Allot a new runtime budget for the group. */
@@ -195,7 +196,7 @@ static void quota_refill_handler(struct xntimer *timer)
 		 */
 		list_for_each_entry_safe_reverse(thread, tmp, &tg->expired, quota_expired) {
 			list_del_init(&thread->quota_expired);
-			xnsched_addq(&qs->runnable, thread);
+			xnsched_addq(&sched->rt.runnable, thread);
 		}
 	}
 
@@ -235,7 +236,6 @@ static void xnsched_quota_init(struct xnsched *sched)
 	char limiter_name[XNOBJECT_NAME_LEN], refiller_name[XNOBJECT_NAME_LEN];
 	struct xnsched_quota *qs = &sched->quota;
 
-	xnsched_initq(&qs->runnable);
 	qs->period_ns = CONFIG_XENO_OPT_SCHED_QUOTA_PERIOD * 1000ULL;
 	INIT_LIST_HEAD(&qs->groups);
 
@@ -347,8 +347,8 @@ static void xnsched_quota_forget(struct xnthread *thread)
 
 static void xnsched_quota_kick(struct xnthread *thread)
 {
-	struct xnsched_quota *qs = &thread->sched->quota;
 	struct xnsched_quota_group *tg = thread->quota;
+	struct xnsched *sched = thread->sched;
 
 	/*
 	 * Allow a kicked thread to be elected for running until it
@@ -357,7 +357,7 @@ static void xnsched_quota_kick(struct xnthread *thread)
 	 */
 	if (tg->run_budget_ns == 0 && !list_empty(&thread->quota_expired)) {
 		list_del_init(&thread->quota_expired);
-		xnsched_addq_tail(&qs->runnable, thread);
+		xnsched_addq_tail(&sched->rt.runnable, thread);
 	}
 }
 
@@ -369,39 +369,39 @@ static inline int thread_is_runnable(struct xnthread *thread)
 
 static void xnsched_quota_enqueue(struct xnthread *thread)
 {
-	struct xnsched_quota *qs = &thread->sched->quota;
 	struct xnsched_quota_group *tg = thread->quota;
+	struct xnsched *sched = thread->sched;
 
 	if (!thread_is_runnable(thread))
 		list_add_tail(&thread->quota_expired, &tg->expired);
 	else
-		xnsched_addq_tail(&qs->runnable, thread);
+		xnsched_addq_tail(&sched->rt.runnable, thread);
 
 	tg->nr_active++;
 }
 
 static void xnsched_quota_dequeue(struct xnthread *thread)
 {
-	struct xnsched_quota *qs = &thread->sched->quota;
 	struct xnsched_quota_group *tg = thread->quota;
+	struct xnsched *sched = thread->sched;
 
 	if (!list_empty(&thread->quota_expired))
 		list_del_init(&thread->quota_expired);
 	else
-		xnsched_delq(&qs->runnable, thread);
+		xnsched_delq(&sched->rt.runnable, thread);
 
 	tg->nr_active--;
 }
 
 static void xnsched_quota_requeue(struct xnthread *thread)
 {
-	struct xnsched_quota *qs = &thread->sched->quota;
 	struct xnsched_quota_group *tg = thread->quota;
+	struct xnsched *sched = thread->sched;
 
 	if (!thread_is_runnable(thread))
 		list_add(&thread->quota_expired, &tg->expired);
 	else
-		xnsched_addq(&qs->runnable, thread);
+		xnsched_addq(&sched->rt.runnable, thread);
 
 	tg->nr_active++;
 }
@@ -428,13 +428,20 @@ static struct xnthread *xnsched_quota_pick(struct xnsched *sched)
 	else
 		otg->run_budget_ns = 0;
 pick:
-	next = xnsched_getq(&qs->runnable);
+	next = xnsched_getq(&sched->rt.runnable);
 	if (next == NULL) {
 		xntimer_stop(&qs->limit_timer);
 		return NULL;
 	}
 
+	/*
+	 * As we basically piggyback on the SCHED_FIFO runqueue, make
+	 * sure to detect non-quota threads.
+	 */
 	tg = next->quota;
+	if (tg == NULL)
+		return next;
+
 	tg->run_start_ns = now;
 
 	/*

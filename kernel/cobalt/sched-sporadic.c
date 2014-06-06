@@ -358,7 +358,7 @@ static struct xnthread *xnsched_sporadic_pick(struct xnsched *sched)
 
 	next = xnsched_getq(&sched->rt.runnable);
 	if (next == NULL)
-		goto swap_budgets;
+		goto swap;
 
 	if (curr == next)
 		return next;
@@ -366,23 +366,16 @@ static struct xnthread *xnsched_sporadic_pick(struct xnsched *sched)
 	/* Arm the drop timer for an incoming sporadic thread. */
 	if (next->pss)
 		sporadic_resume_activity(next);
-
+swap:
 	/*
-	 * Do not consider an outgoing thread that temporarily moved
-	 * to the sporadic scheduling class (i.e. PIP enforcement): it
-	 * has an infinite time budget to release asap what some
-	 * sporadic thread wants, so there is no replenishment
-	 * operation involved.
+	 * A non-sporadic outgoing thread is having a priority
+	 * inheritance boost, so apply an infinite time budget as we
+	 * want it to release the claimed resource asap. Otherwise,
+	 * clear the drop timer, then schedule a replenishment
+	 * operation.
 	 */
-swap_budgets:
-	if (curr->base_class != &xnsched_class_sporadic)
-		return next;
-
-	/*
-	 * We are about to block or preempt a sporadic thread. Clear
-	 * the drop timer, then schedule a replenishment operation.
-	 */
-	sporadic_suspend_activity(curr);
+	if (curr->pss)
+		sporadic_suspend_activity(curr);
 
 	return next;
 }

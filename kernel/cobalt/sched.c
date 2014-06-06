@@ -276,7 +276,7 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
 
 	return NULL; /* Never executed because of the idle class. */
 #else /* !CONFIG_XENO_OPT_SCHED_CLASSES */
-	thread = __xnsched_rt_pick(sched);
+	thread = xnsched_rt_pick(sched);
 	if (unlikely(thread == NULL))
 		thread = &sched->rootcb;
 
@@ -594,6 +594,45 @@ struct xnthread *xnsched_findq(struct xnsched_mlq *q, int prio)
 	return list_first_entry(head, struct xnthread, rlink);
 }
 
+#ifdef CONFIG_XENO_OPT_SCHED_CLASSES
+
+struct xnthread *xnsched_rt_pick(struct xnsched *sched)
+{
+	struct xnsched_mlq *q = &sched->rt.runnable;
+	struct xnthread *thread;
+	struct list_head *head;
+	int idx;
+
+	if (q->elems == 0)
+		return NULL;
+
+	/*
+	 * Some scheduling policies may be implemented as variants of
+	 * the core SCHED_FIFO class, sharing its runqueue
+	 * (e.g. SCHED_SPORADIC, SCHED_QUOTA). This means that we have
+	 * to do some cascading to call the right pick handler
+	 * eventually.
+	 */
+	idx = xnsched_weightq(q);
+	head = q->heads + idx;
+	XENO_BUGON(NUCLEUS, list_empty(head));
+
+	/*
+	 * The active class (i.e. ->sched_class) is the one currently
+	 * queuing the thread, reflecting any priority boost due to
+	 * PIP.
+	 */
+	thread = list_first_entry(head, struct xnthread, rlink);
+	if (unlikely(thread->sched_class != &xnsched_class_rt))
+		return thread->sched_class->sched_pick(sched);
+
+	del_q(q, &thread->rlink, idx);
+
+	return thread;
+}
+
+#endif /* CONFIG_XENO_OPT_SCHED_CLASSES */
+
 #else /* !CONFIG_XENO_OPT_SCALABLE_SCHED */
 
 struct xnthread *xnsched_findq(struct list_head *q, int prio)
@@ -611,6 +650,27 @@ struct xnthread *xnsched_findq(struct list_head *q, int prio)
 
 	return NULL;
 }
+
+#ifdef CONFIG_XENO_OPT_SCHED_CLASSES
+
+struct xnthread *xnsched_rt_pick(struct xnsched *sched)
+{
+	struct list_head *q = &sched->rt.runnable;
+	struct xnthread *thread;
+
+	if (list_empty(q))
+		return NULL;
+
+	thread = list_first_entry(q, struct xnthread, rlink);
+	if (unlikely(thread->sched_class != &xnsched_class_rt))
+		return thread->sched_class->sched_pick(sched);
+
+	list_del(&thread->rlink);
+
+	return thread;
+}
+
+#endif /* CONFIG_XENO_OPT_SCHED_CLASSES */
 
 #endif /* !CONFIG_XENO_OPT_SCALABLE_SCHED */
 

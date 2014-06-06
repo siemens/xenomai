@@ -53,7 +53,6 @@ struct xnsched_quota {
 	xnticks_t period_ns;
 	struct xntimer refill_timer;
 	struct xntimer limit_timer;
-	xnsched_queue_t runnable;
 	struct list_head groups;
 };
 

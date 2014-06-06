@@ -83,11 +83,6 @@ static void xnsched_rt_rotate(struct xnsched *sched,
 	xnsched_putback(thread);
 }
 
-static struct xnthread *xnsched_rt_pick(struct xnsched *sched)
-{
-	return __xnsched_rt_pick(sched);
-}
-
 void xnsched_rt_tick(struct xnsched *sched)
 {
 	/*
