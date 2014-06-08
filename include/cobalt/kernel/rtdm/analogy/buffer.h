@@ -107,7 +107,7 @@ static inline int __produce(struct a4l_device_context *cxt,
 			buf->size - start_ptr : tmp_cnt;
 
 		/* Perform the copy */
-		if (rtdm_fd_is_user(fd) == 0)
+		if (cxt == NULL)
 			memcpy(buf->buf + start_ptr, pin, blk_size);
 		else
 			ret = rtdm_safe_copy_from_user(fd,
@@ -140,7 +140,7 @@ static inline int __consume(struct a4l_device_context *cxt,
 			buf->size - start_ptr : tmp_cnt;
 
 		/* Perform the copy */
-		if (rtdm_fd_is_user(fd) == 0)
+		if (cxt == NULL)
 			memcpy(pout, buf->buf + start_ptr, blk_size);
 		else
 			ret = rtdm_safe_copy_to_user(fd,
