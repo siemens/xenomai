@@ -541,7 +541,7 @@ int test_attach(struct a4l_device *dev, a4l_lnkdesc_t *arg)
 	priv->amplitude_div = 1;
 	priv->quanta_cnt = 1;
 
-	if (arg->opts_size >= sizeof(unsigned long)) {
+	if (arg->opts_size) {
 		unsigned long *args = (unsigned long *)arg->opts;
 		priv->amplitude_div = args[0];
 
