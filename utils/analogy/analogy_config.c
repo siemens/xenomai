@@ -29,7 +29,7 @@
 #include <xeno_config.h>
 #include <rtdm/analogy.h>
 
-#define RTDM_DEVICES_PROC "/proc/xenomai/rtdm/named_devices"
+#define RTDM_DEVICES_PROC    "/proc/xenomai/rtdm/named_devices"
 #define ANALOGY_DRIVERS_PROC "/proc/analogy/drivers"
 #define ANALOGY_DEVICES_PROC "/proc/analogy/devices"
 
@@ -58,101 +58,174 @@ struct option a4l_conf_opts[] = {
 };
 
 /* Misc functions */
-static void do_print_version(void)
+static void print_version(void)
 {
 	fprintf(stdout, "analogy_config: version %s\n", PACKAGE_VERSION);
 }
 
-static void do_print_usage(void)
+static void print_usage(void)
 {
-	fprintf(stdout,
-		"usage:\tanalogy_config [OPTS] devfile driver "
-		"<driver options, ex: 0x378,7>\n");
+	fprintf(stdout, "usage:\tanalogy_config [OPTS] devfile driver "
+			"<driver specific options>"
+		        "- ex: [OPTS] analogy0 analogy_fake 0x378,7,18 \n");
 	fprintf(stdout, "\tOPTS:\t -v, --verbose: verbose output\n");
 	fprintf(stdout, "\t\t -q, --quiet: quiet output\n");
 	fprintf(stdout, "\t\t -V, --version: print program version\n");
 	fprintf(stdout, "\t\t -r, --remove: detach a device\n");
-	fprintf(stdout,
-		"\t\t -S, --buffer-size: set default buffer size in kB\n");
+	fprintf(stdout, "\t\t -S, --buffer-size: set default size in kB\n");
 	fprintf(stdout, "\tDeprecated options:\n");
-	fprintf(stdout,
-		"\t\t -R, --read-buffer-size: read buffer size in kB\n");
-	fprintf(stdout,
-		"\t\t -W, --write-buffer-size: write buffer size in kB\n");
+	fprintf(stdout, "\t\t -R, --read-buffer-size: read buffer size in kB\n");
+	fprintf(stdout, "\t\t -W, --write-buffer-size: write buffer size in kB\n");
 }
 
-static int parse_extra_arg(char *opts, unsigned int *nb, unsigned long *res)
+static int parse_extra_arg(char const *opts, a4l_lnkdesc_t *lnkdsc)
 {
+	int i, err, cnt, len, ofs;
+	unsigned long *p;
+	char const *q;
 
-	int err = 0, len, ofs;
-
-	/* Check arg and inits it */
-	if (nb == NULL)
-		return -EINVAL;
-	*nb = 0;
-
-	/* We set errno to 0 so as to be sure that
-	   strtoul did not fail */
-	errno = 0;
-
-	do {
-		(*nb)++;
-		len = strlen(opts);
-		ofs = strcspn(opts, __OPTS_DELIMITER);
-		if (res != NULL) {
-			res[(*nb) - 1] = strtoul(opts, NULL, 0);
-			if (errno != 0) {
-				err = -errno;
-				goto out_compute_opts;
-			}
-		}
-		opts += ofs + 1;
-	} while (len != ofs);
-
-out_compute_opts:
-	(*nb) *= sizeof(unsigned long);
-	return err;
-}
-
-static int process_extra_arg(a4l_lnkdesc_t *lnkdsc, char *arg)
-{
-	int err = 0;
-
-	if ((err = parse_extra_arg(arg, &lnkdsc->opts_size, NULL)) < 0) {
-		goto err_opts;
+	/* count the numer of driver specific comma separated arguments */
+	q = opts;
+	cnt = 1;
+	while ((q = strstr(q, __OPTS_DELIMITER)) != NULL) {
+		   q += strlen(__OPTS_DELIMITER);
+		   cnt++;
 	}
 
-	lnkdsc->opts = malloc(lnkdsc->opts_size);
-	if (lnkdsc->opts == NULL) {
-		fprintf(stderr,
-			"analogy_config: memory allocation failed\n");
+	/* alloc memory for the individual params converted to unsigned long */
+	len = cnt * sizeof(unsigned long);
+	p = malloc(len);
+	if (!p) {
+		fprintf(stderr, "analogy_config: memory allocation failed\n");
 		err = -ENOMEM;
 		goto out;
 	}
 
-	if ((err = parse_extra_arg(arg,
-				   &lnkdsc->opts_size, lnkdsc->opts)) < 0) {
-		goto err_opts;
-	}
+	lnkdsc->opts = (void *)p;
+	lnkdsc->opts_size = len;
 
+	/* We set errno to 0 so as to be sure that strtoul did not fail */
+	errno = 0;
+	i = 0;
+	do {
+		len = strlen(opts);
+		ofs = strcspn(opts, __OPTS_DELIMITER);
+		p[i] = strtoul(opts, NULL, 0);
+		if (errno != 0) {
+			err = -errno;
+			goto fail;
+		}
+		opts += ofs + 1;
+		i++;
+	} while (len != ofs);
+
+	return 0;
+
+fail:
+        free(p);
 out:
-	return err;
-
-err_opts:
-	fprintf(stderr,
-		"analogy_config: specific-driver options recovery failed\n");
-	fprintf(stderr,
-		"\twarning: specific-driver options must be integer value\n");
-	do_print_usage();
+	lnkdsc->opts  = NULL;
+	lnkdsc->opts_size = 0;
 
 	return err;
 }
 
+static inline int do_detach(int fd, char *devfile)
+{
+	int err;
+
+	err = a4l_sys_detach(fd);
+	if (err < 0)
+		fprintf(stderr,"analogy_config: a4l_detach(%s) failed err=%d\n",
+			devfile, err);
+	return err;
+}
+
+static inline int do_attach(int fd, int argc, char *argv[], int optind)
+{
+	a4l_lnkdesc_t lnkdsc;
+	int err;
+
+	memset(&lnkdsc, 0, sizeof(a4l_lnkdesc_t));
+	lnkdsc.bname = argv[optind + 1];
+	lnkdsc.bname_size = strlen(argv[optind + 1]);
+
+	/* Process driver specific options if any */
+	if (argc - optind == 3) {
+		err = parse_extra_arg(argv[optind + 2], &lnkdsc);
+		if (err < 0) {
+			fprintf(stderr, "analogy_config: "
+					"driver specific options failed\n");
+			fprintf(stderr, "\twarning: driver specific "
+					"options must be integers \n");
+			print_usage();
+			return err;
+		}
+	}
+
+	err = a4l_sys_attach(fd, &lnkdsc);
+	if (err < 0)
+		fprintf(stderr, "analogy_config: a4l_attach(%s) failed err=%d\n",
+			lnkdsc.bname, err);
+
+	if (lnkdsc.opts != NULL)
+		free(lnkdsc.opts);
+
+	return err;
+}
+
+static inline int do_bufcfg(int fd, char *devfile, int bufsize)
+{
+	int err;
+	/*
+	 * inform the driver of the size of the buffer it will need to
+	 * allocate at opening.
+	 */
+	err = a4l_sys_bufcfg(fd, A4L_BUF_DEFMAGIC, bufsize);
+	if (err < 0) {
+		fprintf(stderr,
+			"analogy_config: a4l_bufcfg(%s) configuration failed "
+			"err=%d\n", devfile, err);
+	}
+
+	return err;
+}
+
+static inline int check_params(enum actions *actions, const int argc, int optind)
+{
+	/* Here we have choice:
+	 *  - if the option -r is set, only one additional option is useful
+	 *  - if the option -S is set without no attach options
+	 *  - if the option -S is set with attach options
+	 */
+
+	if ((*actions & DO_DETACH) && argc - optind < 1 ) {
+		fprintf(stderr, "analogy_config: specify a device to detach\n");
+		return -EINVAL;
+	}
+
+	if ((*actions & DO_DETACH) && (*actions & DO_BUFCONFIG)) {
+		fprintf(stderr,
+			"analogy_config: skipping buffer size configuration"
+			"because of detach action\n");
+	}
+
+	if (!(*actions & DO_DETACH) &&
+	    !(*actions & DO_BUFCONFIG) && argc - optind < 2) {
+		print_usage();
+		return -EINVAL;;
+	}
+	else if (!(*actions & DO_DETACH) && argc - optind >= 2)
+		*actions |= DO_ATTACH;
+
+	return 0;
+}
+
 int main(int argc, char *argv[])
 {
-	int c;
-	char *devfile;
 	int err = 0, fd = -1;
+	char *devfile;
+	int c;
 
 	/* Compute arguments */
 	while ((c =
@@ -160,8 +233,8 @@ int main(int argc, char *argv[])
 			    NULL)) >= 0) {
 		switch (c) {
 		case 'h':
-			do_print_usage();
-			goto out_a4l_config;
+			print_usage();
+			goto done;
 		case 'v':
 			vlevel = 2;
 			break;
@@ -169,8 +242,8 @@ int main(int argc, char *argv[])
 			vlevel = 0;
 			break;
 		case 'V':
-			do_print_version();
-			goto out_a4l_config;
+			print_version();
+			goto done;
 		case 'r':
 			actions |= DO_DETACH;
 			break;
@@ -185,110 +258,49 @@ int main(int argc, char *argv[])
 			bufsize = strtoul(optarg, NULL, 0);
 			break;
 		default:
-			do_print_usage();
-			goto out_a4l_config;
+			print_usage();
+			goto done;
 		}
 	}
 
-	/* Here we have choice:
-	   - if the option -r is set, only one additional option is
-	     useful
-	   - if the option -S is set without no attach options
-	   - if the option -S is set with attach options */
+	err = check_params(&actions, argc, optind);
+	if (err)
+		goto done;
 
-	if ((actions & DO_DETACH) && argc - optind < 1 ) {
-		fprintf(stderr, "analogy_config: specify a device to detach\n");
-		goto out_a4l_config;
-	}
-
-	if ((actions & DO_DETACH) && (actions & DO_BUFCONFIG)) {
-		fprintf(stderr,
-			"analogy_config: skipping buffer size configuration"
-			"because of detach action\n");
-	}
-
-	if (!(actions & DO_DETACH) &&
-	    !(actions & DO_BUFCONFIG) && argc - optind < 2) {
-		do_print_usage();
-		goto out_a4l_config;
-	} else if (!(actions & DO_DETACH) && argc - optind >= 2) {
-		actions |= DO_ATTACH;
-	}
-
-	/* Whatever the action, we need to retrieve the device path */
 	devfile = argv[optind];
-	/* Init the descriptor structure */
 
-	/* Open the specified file */
 	fd = a4l_sys_open(devfile);
 	if (fd < 0) {
 		err = fd;
-		fprintf(stderr,
-			"analogy_config: a4l_open(%s) failed err=%d\n", devfile,
-			err);
-		goto out_a4l_config;
+		fprintf(stderr,"analogy_config: a4l_open(%s) failed err=%d\n",
+			devfile, err);
+		goto done;
 	}
 
 	if (actions & DO_DETACH) {
-		err = a4l_sys_detach(fd);
-		if (err < 0)
-			fprintf(stderr,
-				"analogy_config: a4l_detach(%s) failed err=%d\n",
-				devfile, err);
-		goto out_a4l_config;
+		err = do_detach(fd, devfile);
+	}
+	else {
+		if (actions & DO_ATTACH)
+			err = do_attach(fd, argc, argv, optind);
+
+		if (err)
+			goto done;
+
+		if (actions & DO_BUFCONFIG)
+			err = do_bufcfg(fd, devfile, bufsize);
 	}
 
-	if (actions & DO_ATTACH) {
-
-		a4l_lnkdesc_t lnkdsc;
-		memset(&lnkdsc, 0, sizeof(a4l_lnkdesc_t));
-
-		/* Fill the descriptor with the driver name */
-		lnkdsc.bname = argv[optind + 1];
-		lnkdsc.bname_size = strlen(argv[optind + 1]);
-
-		/* Process driver-specific options */
-		if (argc - optind == 3) {
-			err = process_extra_arg(&lnkdsc, argv[optind + 2]);
-			if (err < 0)
-				goto out_a4l_config;
-		}
-
-		/* Go...*/
-		err = a4l_sys_attach(fd, &lnkdsc);
-		if (err < 0) {
-			fprintf(stderr,
-				"analogy_config: a4l_attach(%s) failed err=%d\n",
-				lnkdsc.bname, err);
-			goto out_a4l_config;
-		}
-
-		if (lnkdsc.opts != NULL)
-			free(lnkdsc.opts);
-	}
-
-	if (actions & DO_BUFCONFIG) {
-
-		err = a4l_sys_bufcfg(fd, A4L_BUF_DEFMAGIC, bufsize);
-		if (err < 0) {
-			fprintf(stderr,
-				"analogy_config: a4l_bufcfg(%s) configuration failed "
-				"err=%d\n", devfile, err);
-			goto out_a4l_config;
-		}
-	}
-
-out_a4l_config:
-        if (err < 0) {
+done:
+        if (err < 0)
 		fprintf(stderr,
-			"analogy_config: please chek the rtdm and analogy procs \n"
+			"analogy_config: chek the rtdm and analogy procs \n"
 			" - rtdm devices:    %s \n"
 			" - analogy devices: %s \n"
 			" - analogy drivers: %s \n",
 			RTDM_DEVICES_PROC,
 			ANALOGY_DEVICES_PROC,
 			ANALOGY_DRIVERS_PROC);
-	}
 
 	if (fd >= 0)
 		a4l_sys_close(fd);
