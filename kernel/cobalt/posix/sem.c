@@ -736,13 +736,13 @@ int cobalt_sem_trywait(struct cobalt_sem_shadow __user *u_sem)
 
 int cobalt_sem_getvalue(struct cobalt_sem_shadow __user *u_sem, int __user *u_sval)
 {
+	int ret, sval = -1;
 	xnhandle_t handle;
-	int ret, sval;
 
 	handle = cobalt_get_handle_from_user(&u_sem->handle);
 
 	ret = sem_getvalue(handle, &sval);
-	trace_cobalt_psem_getvalue(handle, ret ? -1 : sval);
+	trace_cobalt_psem_getvalue(handle, sval);
 	if (ret)
 		return ret;
 
