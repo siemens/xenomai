@@ -16,44 +16,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/**
- * @ingroup cobalt
- * @defgroup cobalt_time Clocks and timers services.
- *
- * Clocks and timers services.
- *
- * Cobalt supports three built-in clocks:
- *
- * CLOCK_REALTIME maps to the nucleus system clock, keeping time as the amount
- * of time since the Epoch, with a resolution of one nanosecond.
- *
- * CLOCK_MONOTONIC maps to an architecture-dependent high resolution
- * counter, so is suitable for measuring short time
- * intervals. However, when used for sleeping (with
- * clock_nanosleep()), the CLOCK_MONOTONIC clock has a resolution of
- * one nanosecond, like the CLOCK_REALTIME clock.
- *
- * CLOCK_MONOTONIC_RAW is Linux-specific, and provides monotonic time
- * values from a hardware timer which is not adjusted by NTP. This is
- * strictly equivalent to CLOCK_MONOTONIC with Xenomai, which is not
- * NTP adjusted either.
- *
- * In addition, external clocks can be dynamically registered using
- * the cobalt_clock_register() service. These clocks are fully managed
- * by Cobalt extension code, which should advertise each incoming tick
- * by calling xnclock_tick() for the relevant clock, from an interrupt
- * context.
- *
- * Timer objects may be created with the timer_create() service using
- * any of the built-in or external clocks. The resolution of these
- * timers is clock-specific. However, built-in clocks all have
- * nanosecond resolution, as specified for clock_nanosleep().
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_08.html#tag_02_08_05">
- * Specification.</a>
- *
- *@{*/
 #include <linux/clocksource.h>
 #include <linux/bitmap.h>
 #include <cobalt/kernel/vdso.h>
@@ -67,21 +29,6 @@ static struct xnclock *external_clocks[COBALT_MAX_EXTCLOCKS];
 
 DECLARE_BITMAP(cobalt_clock_extids, COBALT_MAX_EXTCLOCKS);
 
-/**
- * Read the host-synchronised realtime clock.
- *
- * Obtain the current time with NTP corrections from the Linux domain
- *
- * @param tp pointer to a struct timespec
- *
- * @retval 0 on success;
- * @retval -1 if no suitable NTP-corrected clocksource is availabel
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/gettimeofday.html">
- * Specification.</a>
- *
- */
 static int do_clock_host_realtime(struct timespec *tp)
 {
 #ifdef CONFIG_XENO_OPT_HOSTRT
@@ -350,5 +297,3 @@ void cobalt_clock_deregister(struct xnclock *clock)
 	xnclock_deregister(clock);
 }
 EXPORT_SYMBOL_GPL(cobalt_clock_deregister);
-
-/*@}*/

@@ -16,35 +16,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/**
- * @defgroup posix Cobalt/POSIX real-time API.
- *
- * The Cobalt interface is an implementation of a small subset of the
- * Single Unix specification over Xenomai generic RTOS core.
- *
- * The following table gives equivalence between Alchemy services and
- * Cobalt services.
- *
- * <CENTER>
- * <TABLE>
- * <TR><TH>Alchemy services</TH>    <TH>Cobalt services</TH></TR>
- * <TR><TD>@ref alchemy_alarm</TD>  <TD>@ref cobalt_time</TD></TR>
- * <TR><TD>@ref alchemy_cond</TD>   <TD>@ref cobalt_cond</TD></TR>
- * <TR><TD>@ref alchemy_event</TD>  <TD>no direct equivalence, <BR>
- *                                      see @ref cobalt_cond</TD></TR>
- * <TR><TD>@ref alchemy_heap</TD>   <TD>no direct equivalence<BR>
- * <TR><TD>@ref alchemy_mutex</TD>  <TD>@ref cobalt_mutex</TD></TR>
- * <TR><TD>@ref alchemy_pipe</TD>   <TD>no direct equivalence, <BR>
- *                                      see @ref cobalt_mq</TD></TR>
- * <TR><TD>@ref alchemy_queue</TD>  <TD>@ref cobalt_mq</TD></TR>
- * <TR><TD>@ref alchemy_sem</TD>    <TD>@ref cobalt_sem</TD></TR>
- * <TR><TD>@ref alchemy_task</TD>   <TD>@ref cobalt_thread</TD></TR>
- * <TR><TD>@ref alchemy_timer</TD>  <TD>@ref cobalt_time</TD></TR>
- * </TABLE>
- * </CENTER>
- *
- */
-
 #include <linux/init.h>
 #include <linux/module.h>
 #include "internal.h"

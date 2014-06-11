@@ -34,6 +34,15 @@
 #include "heap.h"
 #include "alarm.h"
 
+/**
+ * @defgroup alchemy Alchemy API
+ *
+ * A programming interface reminiscent from traditional RTOS APIs
+ *
+ * This interface is an evolution of the former @a native API
+ * available with the Xenomai 2.x series.
+ */
+
 static unsigned int clock_resolution = 1; /* nanosecond. */
 
 static const struct option alchemy_options[] = {

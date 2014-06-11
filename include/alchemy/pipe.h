@@ -22,10 +22,15 @@
 #include <stdint.h>
 #include <alchemy/timer.h>
 
-/* Creation flags. */
+/**
+ * @addtogroup alchemy_pipe
+ * @{
+ */
+
+/** Creation flags. */
 #define P_MINOR_AUTO	XNPIPE_MINOR_AUTO
 
-/* Operation flags. */
+/** Operation flags. */
 #define P_URGENT  0x1
 #define P_NORMAL  0x0
 
@@ -81,5 +86,7 @@ int rt_pipe_unbind(RT_PIPE *pipe);
 #ifdef __cplusplus
 }
 #endif
+
+/** @} */
 
 #endif /* _XENOMAI_ALCHEMY_PIPE_H */

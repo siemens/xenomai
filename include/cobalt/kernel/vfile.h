@@ -26,12 +26,14 @@
 
 #if defined(CONFIG_XENO_OPT_VFILE) || defined(DOXYGEN_CPP)
 
-/** @addtogroup vfile
- *@{*/
-
 #include <linux/proc_fs.h>
 #include <linux/seq_file.h>
 #include <cobalt/kernel/lock.h>
+
+/**
+ * @addtogroup core_vfile
+ * @{
+ */
 
 struct xnvfile_directory;
 struct xnvfile_regular_iterator;
@@ -665,6 +667,6 @@ void xnvfile_destroy_link(struct xnvfile_link *vlink)
 
 #endif /* !CONFIG_XENO_OPT_VFILE */
 
-/*@}*/
+/** @} */
 
 #endif /* !_COBALT_KERNEL_VFILE_H */

@@ -16,16 +16,15 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- *
- * @ingroup nucleus
- * @defgroup lock SMP locking services.
- *
- * SMP locking services.
- * @{
  */
 #include <linux/module.h>
 #include <cobalt/kernel/lock.h>
 
+/**
+ * @ingroup core
+ * @defgroup core_lock SMP locking services
+ * @{
+ */
 DEFINE_XNLOCK(nklock);
 #if defined(CONFIG_SMP) || XENO_DEBUG(LOCKING)
 EXPORT_SYMBOL_GPL(nklock);
@@ -65,4 +64,4 @@ DEFINE_PER_CPU(struct xnlockinfo, xnlock_stats);
 EXPORT_PER_CPU_SYMBOL_GPL(xnlock_stats);
 #endif
 
-/*@}*/
+/** @} */

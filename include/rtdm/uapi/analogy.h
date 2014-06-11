@@ -123,7 +123,7 @@ typedef struct a4l_dev_info a4l_dvinfo_t;
 #define A4L_BUFINFO2 _IOWR(CIO,16,a4l_bufcfg_t)
 
 /*!
- * @addtogroup async1_lib
+ * @addtogroup analogy_lib_async1
  * @{
  */
 
@@ -327,7 +327,7 @@ struct a4l_cmd_desc {
 };
 typedef struct a4l_cmd_desc a4l_cmd_t;
 
-/*! @} async1_lib */
+/*! @} analogy_lib_async1 */
 
 /* --- Range section --- */
 
@@ -371,7 +371,7 @@ typedef struct a4l_cmd_desc a4l_cmd_t;
 #define A4L_SUBD_MASK_SPECIAL 0x20000000
 
 /*!
- * @addtogroup subdevice
+ * @addtogroup analogy_subdevice
  * @{
  */
 
@@ -538,7 +538,7 @@ typedef struct a4l_rng_info_arg a4l_rnginfo_arg_t;
 #define A4L_INSN_MASK_SPECIAL 0x2000000
 
 /*!
- * @addtogroup sync1_lib
+ * @addtogroup analogy_lib_sync1
  * @{
  */
 
@@ -700,6 +700,6 @@ struct a4l_instruction_list {
 };
 typedef struct a4l_instruction_list a4l_insnlst_t;
 
-/*! @} sync1_lib */
+/*! @} analogy_lib_sync1 */
 
 #endif /* _RTDM_UAPI_ANALOGY_H */

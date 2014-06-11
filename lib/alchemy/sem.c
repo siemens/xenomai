@@ -10,14 +10,28 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
-
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
- *
- * @defgroup alchemy_sem Semaphore services.
- * @ingroup alchemy_sem
+ */
+
+#include <errno.h>
+#include <string.h>
+#include <stdlib.h>
+#include <copperplate/threadobj.h>
+#include <copperplate/heapobj.h>
+#include <copperplate/registry-obstack.h>
+#include "reference.h"
+#include "internal.h"
+#include "sem.h"
+#include "timer.h"
+
+/**
  * @ingroup alchemy
+ * @defgroup alchemy_sem Semaphore services
+ *
+ * Counting semaphore IPC mechanism
  *
  * A counting semaphore is a synchronization object for controlling
  * the concurrency level allowed in accessing a resource from multiple
@@ -36,18 +50,9 @@
  * to serialize access to a critical section. However, mutexes should
  * be used instead in order to prevent priority inversions, based on
  * the priority inheritance protocol.
+ *
+ * @{
  */
-
-#include <errno.h>
-#include <string.h>
-#include <stdlib.h>
-#include <copperplate/threadobj.h>
-#include <copperplate/heapobj.h>
-#include <copperplate/registry-obstack.h>
-#include "reference.h"
-#include "internal.h"
-#include "sem.h"
-#include "timer.h"
 
 struct syncluster alchemy_sem_table;
 
@@ -392,7 +397,7 @@ out:
  * incremented by one, unless the semaphore is used in "pulse" mode
  * (see rt_sem_create()).
  *
- * @param The descriptor address of the semaphore to signal.
+ * @param sem The descriptor address of the semaphore to signal.
  *
  * @return Zero is returned upon success. Otherwise:
  *
@@ -427,7 +432,7 @@ out:
  * All tasks currently waiting on the semaphore are immediately
  * unblocked. The semaphore count is set to zero.
  *
- * @param The descriptor address of the semaphore to broadcast.
+ * @param sem The descriptor address of the semaphore to broadcast.
  *
  * @return Zero is returned upon success. Otherwise:
  *
@@ -464,6 +469,9 @@ out:
  *
  * @param sem The descriptor address of the semaphore to get the
  * status of.
+ *
+ * @param info A pointer to the @ref RT_SEM_INFO "return
+ * buffer" to copy the information to.
  *
  * @return Zero is returned and status information is written to the
  * structure pointed at by @a info upon success. Otherwise:
@@ -569,3 +577,5 @@ int rt_sem_unbind(RT_SEM *sem)
 	sem->handle = 0;
 	return 0;
 }
+
+/** @} */

@@ -10,24 +10,11 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
-
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
- *
- * @defgroup alchemy_queue Message queue services.
- * @ingroup alchemy_queue
- * @ingroup alchemy
- *
- * Queue services.
- *
- * Message queueing is a method by which real-time tasks can exchange
- * or pass data through a Xenomai-managed queue of messages. Messages
- * can vary in length and be assigned different types or usages. A
- * message queue can be created by one task and used by multiple tasks
- * that send and/or receive messages to the queue.
  */
-
 #include <errno.h>
 #include <string.h>
 #include <copperplate/threadobj.h>
@@ -38,6 +25,20 @@
 #include "queue.h"
 #include "timer.h"
 
+/**
+ * @ingroup alchemy
+ * @defgroup alchemy_queue Message queue services
+ *
+ * real-time IPC mechanism for sending messages of arbitrary size
+ *
+ * Message queueing is a method by which real-time tasks can exchange
+ * or pass data through a Xenomai-managed queue of messages. Messages
+ * can vary in length and be assigned different types or usages. A
+ * message queue can be created by one task and used by multiple tasks
+ * that send and/or receive messages to the queue.
+ *
+ * @{
+ */
 struct syncluster alchemy_queue_table;
 
 static DEFINE_NAME_GENERATOR(queue_namegen, "queue",
@@ -160,6 +161,11 @@ fnref_register(libalchemy, queue_finalize);
  * be pre-allocated for holding messages. Message buffers will be
  * claimed and released to this pool.  The buffer pool memory cannot
  * be extended. See note.
+ *
+ * @param qlimit This parameter allows to limit the maximum number of
+ * messages which can be queued at any point in time, sending to a
+ * full queue begets an error. The special value Q_UNLIMITED can be
+ * passed to disable the limit check.
  *
  * @param mode The queue creation mode. The following flags can be
  * OR'ed into this bitmask, each of them affecting the new queue:
@@ -1081,6 +1087,9 @@ out:
  * @param q The descriptor address of the queue to get the status
  * of.
  *
+ * @param info A pointer to the @ref RT_QUEUE_INFO "return
+ * buffer" to copy the information to.
+ *
  * @return Zero is returned and status information is written to the
  * structure pointed at by @a info upon success. Otherwise:
  *
@@ -1187,3 +1196,5 @@ int rt_queue_unbind(RT_QUEUE *queue)
 	queue->handle = 0;
 	return 0;
 }
+
+/** @} */

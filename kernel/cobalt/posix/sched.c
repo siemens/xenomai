@@ -14,8 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
- *
- * @{
  */
 #include <linux/types.h>
 #include "internal.h"
@@ -517,89 +515,6 @@ ssize_t get_quota_config(int cpu, union sched_config __user *u_config,
 
 #endif /* !CONFIG_XENO_OPT_SCHED_QUOTA */
 
-/**
- * Load CPU-specific scheduler settings for a given policy.  A
- * configuration is strictly local to the target @a cpu, and may
- * differ from other processors.
- *
- * @param cpu processor to load the configuration of.
- *
- * @param policy scheduling policy to which the configuration data
- * applies. Currently, SCHED_TP and SCHED_QUOTA are valid.
- *
- * @param u_config a pointer to the configuration data to load on @a
- * cpu, applicable to @a policy.
- *
- * @par Settings applicable to SCHED_TP
- *
- * This call installs the temporal partitions for @a cpu.
- *
- * - config.tp.windows should be a non-null set of time windows,
- * defining the scheduling time slots for @a cpu. Each window defines
- * its offset from the start of the global time frame
- * (windows[].offset), a duration (windows[].duration), and the
- * partition id it applies to (windows[].ptid).
- *
- * Time windows must be strictly contiguous, i.e. windows[n].offset +
- * windows[n].duration shall equal windows[n + 1].offset.
- * If windows[].ptid is in the range
- * [0..CONFIG_XENO_OPT_SCHED_TP_NRPART-1], SCHED_TP threads which
- * belong to the partition being referred to may run for the duration
- * of the time window.
- *
- * Time holes may be defined using windows assigned to the pseudo
- * partition #-1, during which no SCHED_TP threads may be scheduled.
- *
- * - config.tp.nr_windows should define the number of elements present
- * in the config.tp.windows[] array.
- *
- * @par Settings applicable to SCHED_QUOTA
- *
- * This call manages thread groups running on @a cpu.
- *
- * - config.quota.op should define the operation to be carried
- * out. Valid operations are:
- *
- *    - sched_quota_add for creating a new thread group on @a cpu.
- *      The new group identifier will be written back to
- *      config.quota.add.tgid_r upon success. A new group is given no
- *      initial runtime budget when created. sched_quota_set should be
- *      issued to enable it.
- *
- *    - sched_quota_remove for deleting a thread group on @a cpu. The
- *      group identifier should be passed in config.quota.remove.tgid.
- *
- *    - sched_quota_set for updating the scheduling parameters of a
- *      thread group defined on @a cpu. The group identifier should be
- *      passed in config.quota.set.tgid, along with the allotted
- *      percentage of the quota interval (config.quota.set.quota), and
- *      the peak percentage allowed (config.quota.set.quota_peak).
- *
- *    - sched_quota_get for retrieving the scheduling parameters of a
- *      thread group defined on @a cpu. The group identifier should be
- *      passed in config.quota.get.tgid. The allotted percentage of
- *      the quota interval (config.quota.get.quota_r), and the peak
- *      percentage (config.quota.get.quota_peak_r) will be written to
- *      the given output variables. The result of this operation is
- *      identical to calling sched_getconfig_np().
- *
- * @param len overall length of the configuration data (in bytes).
- *
- * @return 0 on success;
- * @return an error number if:
- *
- * - EINVAL, @a cpu is invalid, or @a policy is unsupported by the
- * current kernel configuration, @a len is invalid, or @a u_config
- * contains invalid parameters.
- *
- * - ENOMEM, lack of memory to perform the operation.
- *
- * - EBUSY, with @a policy equal to SCHED_QUOTA, if an attempt is made
- *   to remove a thread group which still manages threads.
- *
- * - ESRCH, with @a policy equal to SCHED_QUOTA, if the group
- *   identifier required to perform the operation is not valid.
- */
 int cobalt_sched_setconfig_np(int cpu, int policy,
 			      const union sched_config __user *u_config,
 			      size_t len)
@@ -640,36 +555,6 @@ out:
 	return ret;
 }
 
-/**
- * Retrieve CPU-specific scheduler settings for a given policy.  A
- * configuration is strictly local to the target @a cpu, and may
- * differ from other processors.
- *
- * @param cpu processor to retrieve the configuration of.
- *
- * @param policy scheduling policy to which the configuration data
- * applies. Currently, SCHED_TP and SCHED_QUOTA are valid.
- *
- * @param u_config a pointer to a memory area where the configuration
- * data will be copied back. This area must be at least @a len bytes
- * long.
- *
- * @param len overall length of the configuration data (in bytes).
- *
- * @return the number of bytes copied to @a u_config on success;
- * @return a negative error number if:
- *
- * - EINVAL, @a cpu is invalid, or @a policy is unsupported by the
- * current kernel configuration, or @a len cannot hold the retrieved
- * configuration data.
- *
- * - ESRCH, with @a policy equal to SCHED_QUOTA, if the group
- *   identifier required to perform the operation is not valid.
- *
- * - ENOMEM, lack of memory to perform the operation.
- *
- * - ENOSPC, @a len is too short.
- */
 ssize_t cobalt_sched_getconfig_np(int cpu, int policy,
 				  union sched_config __user *u_config,
 				  size_t len)
@@ -750,5 +635,3 @@ void cobalt_sched_pkg_cleanup(void)
 {
 	cobalt_sched_cleanup(&cobalt_global_kqueues);
 }
-
-/*@}*/

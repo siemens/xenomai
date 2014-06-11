@@ -22,12 +22,15 @@
 #include <stdint.h>
 #include <alchemy/timer.h>
 
-/*
- * Creation flags.
+/**
+ * @addtogroup alchemy_queue
+ * @{
  */
+
+/** Creation flags. */
 #define Q_PRIO  0x1	/* Pend by task priority order. */
 #define Q_FIFO  0x0	/* Pend by FIFO order. */
-/* Deprecated, compat only. */
+/** Deprecated, compat only. */
 #define Q_SHARED 0x0
 
 #define Q_UNLIMITED 0	/* No size limit. */
@@ -166,5 +169,7 @@ int rt_queue_unbind(RT_QUEUE *queue);
 #ifdef __cplusplus
 }
 #endif
+
+/** @} */
 
 #endif /* _XENOMAI_ALCHEMY_QUEUE_H */

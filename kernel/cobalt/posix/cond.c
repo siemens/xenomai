@@ -16,37 +16,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/**
- * @ingroup cobalt
- * @defgroup cobalt_cond Condition variables services.
- *
- * Condition variables services.
- *
- * A condition variable is a synchronization object that allows threads to
- * suspend execution until some predicate on shared data is satisfied. The basic
- * operations on conditions are: signal the condition (when the predicate
- * becomes true), and wait for the condition, suspending the thread execution
- * until another thread signals the condition.
- *
- * A condition variable must always be associated with a mutex, to avoid the
- * race condition where a thread prepares to wait on a condition variable and
- * another thread signals the condition just before the first thread actually
- * waits on it.
- *
- * Before it can be used, a condition variable has to be initialized with
- * pthread_cond_init(). An attribute object, which reference may be passed to
- * this service, allows to select the features of the created condition
- * variable, namely the @a clock used by the pthread_cond_timedwait() service
- * (@a CLOCK_REALTIME is used by default), and whether it may be shared between
- * several processes (it may not be shared by default, see
- * pthread_condattr_setpshared()).
- *
- * Note that only pthread_cond_init() may be used to initialize a condition
- * variable, using the static initializer @a PTHREAD_COND_INITIALIZER is
- * not supported.
- *
- *@{*/
-
 #include "internal.h"
 #include "thread.h"
 #include "mutex.h"
@@ -79,31 +48,6 @@ cond_destroy_internal(xnhandle_t handle, struct cobalt_kqueues *q)
 	xnfree(cond);
 }
 
-/**
- * Initialize a condition variable.
- *
- * This service initializes the condition variable @a cnd, using the condition
- * variable attributes object @a attr. If @a attr is @a NULL or this service is
- * called from user-space, default attributes are used (see
- * pthread_condattr_init()).
- *
- * @param cnd the condition variable to be initialized;
- *
- * @param attr the condition variable attributes object.
- *
- * @return 0 on succes,
- * @return an error number if:
- * - EINVAL, the condition variable attributes object @a attr is invalid or
- *   uninitialized;
- * - EBUSY, the condition variable @a cnd was already initialized;
- * - ENOMEM, insufficient memory exists in the system heap to initialize the
- *   condition variable, increase CONFIG_XENO_OPT_SYS_HEAPSZ.
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_init.html">
- * Specification.</a>
- *
- */
 static inline int
 pthread_cond_init(struct cobalt_cond_shadow *cnd, const struct cobalt_condattr *attr)
 {
@@ -185,28 +129,6 @@ do_init:
 	return err;
 }
 
-/**
- * Destroy a condition variable.
- *
- * This service destroys the condition variable @a cnd, if no thread is
- * currently blocked on it. The condition variable becomes invalid for all
- * condition variable services (they all return the EINVAL error) except
- * pthread_cond_init().
- *
- * @param cnd the condition variable to be destroyed.
- *
- * @return 0 on succes,
- * @return an error number if:
- * - EINVAL, the condition variable @a cnd is invalid;
- * - EPERM, the condition variable is not process-shared and does not belong to
- *   the current process;
- * - EBUSY, some thread is currently using the condition variable.
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_destroy.html">
- * Specification.</a>
- *
- */
 static inline int pthread_cond_destroy(struct cobalt_cond_shadow *cnd)
 {
 	struct cobalt_cond *cond;
@@ -545,5 +467,3 @@ void cobalt_cond_pkg_cleanup(void)
 {
 	cobalt_condq_cleanup(&cobalt_global_kqueues);
 }
-
-/*@}*/

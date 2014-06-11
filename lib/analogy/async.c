@@ -24,9 +24,9 @@
 #include <rtdm/analogy.h>
 #include "internal.h"
 
-/*!
- * @ingroup level1_lib
- * @defgroup async1_lib Asynchronous acquisition API
+/**
+ * @ingroup analogy_lib_level1
+ * @defgroup analogy_lib_async1 Asynchronous acquisition API
  * @{
  */
 
@@ -348,9 +348,9 @@ int a4l_mmap(a4l_desc_t * dsc,
 
 /** @} Command syscall API */
 
-/*!
- * @ingroup level2_lib
- * @defgroup async2_lib Asynchronous acquisition API
+/**
+ * @ingroup analogy_lib_level2
+ * @defgroup analogy_lib_async2 Asynchronous acquisition API
  * @{
  */
 

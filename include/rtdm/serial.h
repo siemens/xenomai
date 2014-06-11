@@ -17,11 +17,16 @@
  * You should have received a copy of the GNU General Public License
  * along with Xenomai; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
- *
- * @ingroup rtserial
- *
- * @ingroup profiles
- * @defgroup rtserial Serial Devices
+ */
+#ifndef _RTDM_SERIAL_H
+#define _RTDM_SERIAL_H
+
+#include <rtdm/rtdm.h>
+#include <rtdm/uapi/serial.h>
+
+/**
+ * @ingroup rtdm_profiles
+ * @defgroup rtdm_serial Serial Devices
  *
  * This is the common interface a RTDM-compliant serial device has to provide.
  * Feel free to comment on this profile via the Xenomai mailing list
@@ -69,10 +74,5 @@
  * - -EAGAIN (no data written in non-blocking mode)
  * - -EBADF (device has been closed while writing)
  */
-#ifndef _RTDM_SERIAL_H
-#define _RTDM_SERIAL_H
-
-#include <rtdm/rtdm.h>
-#include <rtdm/uapi/serial.h>
 
 #endif /* !_RTDM_SERIAL_H */

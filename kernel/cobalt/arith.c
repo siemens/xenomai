@@ -16,18 +16,14 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- *
- * @ingroup arith
  */
-
-/**
- * @ingroup nucleus
- * @defgroup arith Helpers for in-kernel arithmetics
- *
- *@{*/
-
 #include <linux/module.h>
 
+/**
+ * @ingroup core
+ * @defgroup core_arith Helpers for in-kernel arithmetics
+ * @{
+ */
 unsigned long long xnarch_generic_full_divmod64(unsigned long long a,
 						unsigned long long b,
 						unsigned long long *rem)
@@ -49,4 +45,4 @@ unsigned long long xnarch_generic_full_divmod64(unsigned long long a,
 }
 EXPORT_SYMBOL_GPL(xnarch_generic_full_divmod64);
 
-/*@}*/
+/** @} */

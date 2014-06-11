@@ -14,20 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
- *
- * @defgroup alchemy_alarm Alarm services.
- * @ingroup alchemy_alarm
- * @ingroup alchemy
- *
- * Alarms are general watchdog timers. Alchemy tasks may create any
- * number of alarms and use them to run a user-defined handler, after
- * a specified initial delay has elapsed. Alarms can be either one
- * shot or periodic; in the latter case, the real-time system
- * automatically reprograms the alarm for the next shot according to a
- * user-defined interval value.
- *
- *@{*/
-
+ */
 #include <errno.h>
 #include <string.h>
 #include <copperplate/threadobj.h>
@@ -36,6 +23,22 @@
 #include "internal.h"
 #include "alarm.h"
 #include "timer.h"
+
+/**
+ * @ingroup alchemy
+ * @defgroup alchemy_alarm Alarm services
+ *
+ * General-purpose watchdog timers
+ *
+ * Alarms are general-purpose watchdog timers. Alchemy tasks may
+ * create any number of alarms and use them to run a user-defined
+ * handler, after a specified initial delay has elapsed. Alarms can be
+ * either one shot or periodic; in the latter case, the real-time
+ * system automatically reprograms the alarm for the next shot
+ * according to a user-defined interval value.
+ *
+ * @{
+ */
 
 struct pvcluster alchemy_alarm_table;
 
@@ -367,6 +370,9 @@ out:
  * @param alarm The descriptor address of the alarm to get the status
  * of.
  *
+ * @param info A pointer to the @ref RT_ALARM_INFO "return
+ * buffer" to copy the information to.
+ *
  * @return Zero is returned and status information is written to the
  * structure pointed at by @a info upon success. Otherwise:
  *
@@ -398,4 +404,4 @@ out:
 	return ret;
 }
 
-/*@}*/
+/** @} */

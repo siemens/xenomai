@@ -22,7 +22,12 @@
 #include <stdint.h>
 #include <alchemy/timer.h>
 
-/* Creation flags. */
+/**
+ * @addtogroup alchemy_buffer
+ * @{
+ */
+
+/** Creation flags. */
 #define B_PRIO  0x1	/* Pend by task priority order. */
 #define B_FIFO  0x0	/* Pend by FIFO order. */
 
@@ -138,5 +143,7 @@ int rt_buffer_unbind(RT_BUFFER *bf);
 #ifdef __cplusplus
 }
 #endif
+
+/** @} */
 
 #endif /* _XENOMAI_ALCHEMY_BUFFER_H */

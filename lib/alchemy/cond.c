@@ -14,25 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
- *
- * @defgroup alchemy_cond Condition variable services.
- * @ingroup alchemy_cond
- * @ingroup alchemy
- *
- * Condition variable services.
- *
- * A condition variable is a synchronization object which allows tasks
- * to suspend execution until some predicate on shared data is
- * satisfied. The basic operations on conditions are: signal the
- * condition (when the predicate becomes true), and wait for the
- * condition, blocking the task execution until another task signals
- * the condition.  A condition variable must always be associated with
- * a mutex, to avoid a well-known race condition where a task prepares
- * to wait on a condition variable and another task signals the
- * condition just before the first task actually waits on it.
- *
- *@{*/
-
+ */
 #include <errno.h>
 #include <string.h>
 #include <copperplate/threadobj.h>
@@ -42,9 +24,25 @@
 #include "timer.h"
 #include "mutex.h"
 
-/*
- * XXX: Alchemy condvars are paired with Alchemy mutex objects, so we
- * must rely on POSIX condvars directly.
+/**
+ * @ingroup alchemy
+ * @defgroup alchemy_cond Condition variable services
+ *
+ * POSIXish condition variable mechanism
+ *
+ * A condition variable is a synchronization mechanism which allows
+ * tasks to suspend execution until some predicate on some arbitrary
+ * shared data is satisfied.
+ *
+ * The basic operations on conditions are: signal the condition (when
+ * the predicate becomes true), and wait for the condition, blocking
+ * the task execution until another task signals the condition.  A
+ * condition variable must always be associated with a mutex, to avoid
+ * a well-known race condition where a task prepares to wait on a
+ * condition variable and another task signals the condition just
+ * before the first task actually waits on it.
+ *
+ * @{
  */
 
 struct syncluster alchemy_cond_table;
@@ -126,6 +124,10 @@ int rt_cond_create(RT_COND *cond, const char *name)
 		goto out;
 	}
 
+	/*
+	 * XXX: Alchemy condvars are paired with Alchemy mutex
+	 * objects, so we must rely on POSIX condvars directly.
+	 */
 	generate_name(ccb->name, name, &cond_namegen);
 	pthread_condattr_init(&cattr);
 	pthread_condattr_setpshared(&cattr, mutex_scope_attribute);
@@ -222,7 +224,7 @@ out:
  * immediately unblocks the first waiting task (by queuing priority
  * order).
  *
- * @param The descriptor address of the condition variable to signal.
+ * @param cond The descriptor address of the condition variable to signal.
  *
  * @return Zero is returned upon success. Otherwise:
  *
@@ -245,12 +247,12 @@ int rt_cond_signal(RT_COND *cond)
 
 /**
  * @fn int rt_cond_broadcast(RT_COND *cond)
- * @brief Broadcast a condition variable.
+ * @brief Broadcast a condition variable
  *
  * All tasks currently waiting on the condition variable are
  * immediately unblocked.
  *
- * @param The descriptor address of the condition variable to
+ * @param cond The descriptor address of the condition variable to
  * broadcast.
  *
  * @return Zero is returned upon success. Otherwise:
@@ -282,6 +284,9 @@ int rt_cond_broadcast(RT_COND *cond)
  * @param cond The descriptor address of the condition variable to
  * wait on.
  *
+ * @param mutex The address of the mutex serializing the access to the
+ * shared data.
+ *
  * @param timeout A delay expressed in clock ticks.
  */
 
@@ -294,6 +299,9 @@ int rt_cond_broadcast(RT_COND *cond)
  *
  * @param cond The descriptor address of the condition variable to
  * wait on.
+ *
+ * @param mutex The address of the mutex serializing the access to the
+ * shared data.
  *
  * @param abs_timeout An absolute date expressed in clock ticks.
  */
@@ -309,6 +317,9 @@ int rt_cond_broadcast(RT_COND *cond)
  *
  * @param cond The descriptor address of the condition variable to
  * wait on.
+ *
+ * @param mutex The address of the mutex serializing the access to the
+ * shared data.
  *
  * @param abs_timeout An absolute date expressed in clock ticks,
  * specifying a time limit to wait for the condition variable to be
@@ -378,8 +389,11 @@ int rt_cond_wait_timed(RT_COND *cond, RT_MUTEX *mutex,
  * This routine returns the status information about the specified
  * condition variable.
  *
- * @param The descriptor address of the condition variable to get the
- * status of.
+ * @param cond The descriptor address of the condition variable to get
+ * the status of.
+ *
+ * @param info A pointer to the @ref RT_COND_INFO "return
+ * buffer" to copy the information to.
  *
  * @return Zero is returned and status information is written to the
  * structure pointed at by @a info upon success. Otherwise:
@@ -477,4 +491,4 @@ int rt_cond_unbind(RT_COND *cond)
 	return 0;
 }
 
-/*@}*/
+/** @} */

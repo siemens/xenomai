@@ -17,24 +17,6 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- *
- * @ingroup sched
- * @defgroup sched-quota SCHED_QUOTA scheduling policy
- *
- * This file implements the SCHED_QUOTA scheduling policy for Xenomai.
- *
- * This policy enforces a limitation on the CPU consumption of threads
- * over a globally defined period, known as the quota interval. This
- * is done by pooling threads with common requirements in groups, and
- * giving each group a share of the global period
- * (CONFIG_XENO_OPT_SCHED_QUOTA_PERIOD).
- *
- * When threads have entirely consumed the quota allotted to the group
- * they belong to, the latter is suspended as a whole, until the next
- * quota interval starts. At this point, a new runtime budget is
- * given to each group, in accordance with its share.
- *
- *@{
  */
 #include <linux/bitmap.h>
 #include <cobalt/kernel/sched.h>
@@ -490,6 +472,25 @@ static void xnsched_quota_migrate(struct xnthread *thread, struct xnsched *sched
 	xnsched_set_policy(thread, &xnsched_class_rt, &param);
 }
 
+/**
+ * @ingroup sched
+ * @defgroup sched-quota SCHED_QUOTA scheduling policy
+ *
+ * This file implements the SCHED_QUOTA scheduling policy for Xenomai.
+ *
+ * This policy enforces a limitation on the CPU consumption of threads
+ * over a globally defined period, known as the quota interval. This
+ * is done by pooling threads with common requirements in groups, and
+ * giving each group a share of the global period
+ * (CONFIG_XENO_OPT_SCHED_QUOTA_PERIOD).
+ *
+ * When threads have entirely consumed the quota allotted to the group
+ * they belong to, the latter is suspended as a whole, until the next
+ * quota interval starts. At this point, a new runtime budget is
+ * given to each group, in accordance with its share.
+ *
+ *@{
+ */
 int xnsched_quota_create_group(struct xnsched_quota_group *tg,
 			       struct xnsched *sched,
 			       int *quota_sum_r)
@@ -616,6 +617,8 @@ int xnsched_quota_sum_all(struct xnsched *sched)
 	return quota_sum_all(qs);
 }
 EXPORT_SYMBOL_GPL(xnsched_quota_sum_all);
+
+/** @} */
 
 #ifdef CONFIG_XENO_OPT_VFILE
 
@@ -758,5 +761,3 @@ struct xnsched_class xnsched_class_quota = {
 	.name			=	"quota"
 };
 EXPORT_SYMBOL_GPL(xnsched_class_quota);
-
-/*@}*/

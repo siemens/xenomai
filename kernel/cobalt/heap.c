@@ -15,9 +15,29 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- *
- * @ingroup nucleus
- * @defgroup heap Dynamic memory allocation services.
+ */
+#include <stdarg.h>
+#include <linux/miscdevice.h>
+#include <linux/device.h>
+#include <linux/vmalloc.h>
+#include <linux/mm.h>
+#include <linux/fs.h>
+#include <linux/spinlock.h>
+#include <linux/sched.h>
+#include <linux/mm.h>
+#include <linux/semaphore.h>
+#include <linux/slab.h>
+#include <asm/io.h>
+#include <cobalt/kernel/thread.h>
+#include <cobalt/kernel/heap.h>
+#include <cobalt/kernel/vfile.h>
+#include <cobalt/kernel/ppd.h>
+#include <cobalt/kernel/vdso.h>
+#include <cobalt/kernel/assert.h>
+
+/**
+ * @ingroup core
+ * @defgroup core_heap Dynamic memory allocation services.
  *
  * The implementation of the memory allocator follows the algorithm
  * described in a USENIX 1988 paper called "Design of a General
@@ -54,25 +74,6 @@ HEAP {
  *
  *@{
  */
-#include <stdarg.h>
-#include <linux/miscdevice.h>
-#include <linux/device.h>
-#include <linux/vmalloc.h>
-#include <linux/mm.h>
-#include <linux/fs.h>
-#include <linux/spinlock.h>
-#include <linux/sched.h>
-#include <linux/mm.h>
-#include <linux/semaphore.h>
-#include <linux/slab.h>
-#include <asm/io.h>
-#include <cobalt/kernel/thread.h>
-#include <cobalt/kernel/heap.h>
-#include <cobalt/kernel/vfile.h>
-#include <cobalt/kernel/ppd.h>
-#include <cobalt/kernel/vdso.h>
-#include <cobalt/kernel/assert.h>
-
 struct xnheap kheap;		/* System heap */
 EXPORT_SYMBOL_GPL(kheap);
 
@@ -1416,4 +1417,4 @@ int __init xnheap_mount(void)
 	return 0;
 }
 
-/*@}*/
+/** @} */

@@ -20,13 +20,6 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- *
- * @ingroup nucleus
- * @defgroup shadow Real-time shadow services.
- *
- * Real-time shadow services.
- *
- *@{
  */
 #include <stdarg.h>
 #include <linux/unistd.h>
@@ -67,6 +60,14 @@
 #include <asm-generic/xenomai/mayday.h>
 #include "debug.h"
 
+/**
+ * @ingroup core
+ * @defgroup core_shadow Real-time shadow services
+ *
+ * Real-time shadow services.
+ *
+ * @{
+ */
 #define EVENT_PROPAGATE   0
 #define EVENT_STOP        1
 
@@ -2649,4 +2650,4 @@ struct xnpersonality xenomai_personality = {
 };
 EXPORT_SYMBOL_GPL(xenomai_personality);
 
-/*@}*/
+/** @} */

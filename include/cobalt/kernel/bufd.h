@@ -16,17 +16,18 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- *
- * \ingroup bufd
  */
 
 #ifndef _COBALT_KERNEL_BUFD_H
 #define _COBALT_KERNEL_BUFD_H
 
-/*! \addtogroup bufd
- *@{*/
-
 #include <linux/types.h>
+
+/**
+ * @addtogroup core_bufd
+ *
+ * @{
+ */
 
 struct mm_struct;
 
@@ -90,6 +91,6 @@ static inline void xnbufd_reset(struct xnbufd *bufd)
 	bufd->b_off = 0;
 }
 
-/*@}*/
+/** @} */
 
 #endif /* !_COBALT_KERNEL_BUFD_H */

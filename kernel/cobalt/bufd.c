@@ -16,13 +16,19 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- *
- * @ingroup bufd
  */
 
+#include <cobalt/kernel/heap.h>
+#include <cobalt/kernel/sched.h>
+#include <cobalt/kernel/bufd.h>
+#include <cobalt/kernel/assert.h>
+#include <asm/xenomai/syscall.h>
+
 /**
- * @ingroup nucleus
- * @defgroup bufd Buffer descriptors.
+ * @ingroup core
+ * @defgroup core_bufd Buffer descriptor
+ *
+ * Abstraction for copying data to/from different address spaces
  *
  * A buffer descriptor is a simple abstraction dealing with copy
  * operations to/from memory buffers which may belong to different
@@ -140,12 +146,6 @@
  *   @endcode
  *
  *@{*/
-
-#include <cobalt/kernel/heap.h>
-#include <cobalt/kernel/sched.h>
-#include <cobalt/kernel/bufd.h>
-#include <cobalt/kernel/assert.h>
-#include <asm/xenomai/syscall.h>
 
 /**
  * @fn void xnbufd_map_kread(struct xnbufd *bufd, const void *ptr, size_t len)
@@ -660,4 +660,4 @@ ssize_t xnbufd_unmap_kwrite(struct xnbufd *bufd)
 }
 EXPORT_SYMBOL_GPL(xnbufd_unmap_kwrite);
 
-/*@}*/
+/** @} */

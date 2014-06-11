@@ -14,24 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
- *
- * @defgroup alchemy_buffer Buffer services.
- * @ingroup alchemy_buffer
- * @ingroup alchemy
- *
- * A buffer is a lightweight IPC object, implementing a fast, one-way
- * producer-consumer data path. All messages written are buffered in a
- * single memory area in strict FIFO order, until read either in
- * blocking or non-blocking mode.
- *
- * Message are always atomically handled on the write side (i.e. no
- * interleave, no short writes), whilst only complete messages are
- * normally returned to the read side. However, short reads may happen
- * under a well-defined situation (see note in rt_buffer_read()),
- * albeit they can be fully avoided by proper use of the buffer.
- *
- *@{*/
-
+ */
 #include <errno.h>
 #include <string.h>
 #include <copperplate/threadobj.h>
@@ -41,6 +24,25 @@
 #include "buffer.h"
 #include "timer.h"
 
+/**
+ * @ingroup alchemy
+ * @defgroup alchemy_buffer Buffer services
+ *
+ * Lightweight FIFO IPC mechanism
+ *
+ * A buffer is a lightweight IPC mechanism, implementing a fast,
+ * one-way producer-consumer data path. All messages written are
+ * buffered in a single memory area in strict FIFO order, until read
+ * either in blocking or non-blocking mode.
+ *
+ * Message are always atomically handled on the write side (i.e. no
+ * interleave, no short writes), whilst only complete messages are
+ * normally returned to the read side. However, short reads may happen
+ * under a well-defined situation (see note in rt_buffer_read()),
+ * albeit they can be fully avoided by proper use of the buffer.
+ *
+ * @{
+ */
 struct syncluster alchemy_buffer_table;
 
 static DEFINE_NAME_GENERATOR(buffer_namegen, "buffer",
@@ -839,6 +841,9 @@ out:
  * @param bf The descriptor address of the buffer to get the status
  * of.
  *
+ * @param info A pointer to the @ref RT_BUFFER_INFO "return
+ * buffer" to copy the information to.
+ *
  * @return Zero is returned and status information is written to the
  * structure pointed at by @a info upon success. Otherwise:
  *
@@ -944,4 +949,4 @@ int rt_buffer_unbind(RT_BUFFER *bf)
 	return 0;
 }
 
-/*@}*/
+/** @} */

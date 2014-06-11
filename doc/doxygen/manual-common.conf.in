@@ -657,11 +657,7 @@ INCLUDE_FILE_PATTERNS  =
 # omitted =1 is assumed.
 
 PREDEFINED = DOXYGEN_CPP \
-        EXPORT_SYMBOL_GPL(symbol)=// \
-	__KERNEL__ \
-        CONFIG_XENO_OPT_PIPE \
-        CONFIG_XENO_OPT_REGISTRY \
-        CONFIG_XENO_OPT_RTDM_SELECT
+        EXPORT_SYMBOL_GPL(symbol)=//
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then 
 # this tag can be used to specify a list of macro names that should be expanded. 
@@ -860,42 +856,12 @@ DOT_CLEANUP            = YES
 # with spaces.
 
 INPUT                  =						\
-		       @top_srcdir@/include/cobalt			\
-		       @top_srcdir@/include/cobalt/kernel		\
-		       @top_srcdir@/include/cobalt/kernel/rtdm		\
-		       @top_srcdir@/include/cobalt/kernel/rtdm/analogy	\
-		       @top_srcdir@/include/cobalt/sys			\
-		       @top_srcdir@/include/cobalt/uapi			\
-		       @top_srcdir@/include/cobalt/uapi/kernel		\
-		       @top_srcdir@/include/cobalt/uapi/rtdm		\
-		       @top_srcdir@/include/boilerplate			\
-		       @top_srcdir@/include/copperplate			\
-		       @top_srcdir@/include/alchemy			\
-		       @top_srcdir@/include/vxworks			\
-		       @top_srcdir@/include/psos			\
-		       @top_srcdir@/include/rtdm			\
-		       @top_srcdir@/include/rtdm/uapi			\
-		       @top_srcdir@/kernel/cobalt			\
-		       @top_srcdir@/kernel/cobalt/arch/arm		\
-		       @top_srcdir@/kernel/cobalt/arch/powerpc		\
-		       @top_srcdir@/kernel/cobalt/arch/x86		\
-		       @top_srcdir@/kernel/cobalt/arch/blackfin		\
-		       @top_srcdir@/kernel/cobalt/arch/nios2		\
-		       @top_srcdir@/kernel/cobalt/arch/sh		\
-		       @top_srcdir@/kernel/cobalt/rtdm			\
-		       @top_srcdir@/kernel/cobalt/posix			\
-		       @top_srcdir@/kernel/drivers/ipc			\
-		       @top_srcdir@/kernel/drivers/serial		\
-		       @top_srcdir@/kernel/drivers/analogy		\
-		       @top_srcdir@/kernel/drivers/can			\
-		       @top_srcdir@/kernel/drivers/testing		\
-		       @top_srcdir@/lib/boilerplate			\
-		       @top_srcdir@/lib/cobalt				\
-		       @top_srcdir@/lib/analogy				\
-		       @top_srcdir@/lib/copperplate			\
-		       @top_srcdir@/lib/alchemy				\
-		       @top_srcdir@/lib/psos				\
-		       @top_srcdir@/lib/vxworks
+ 		       @top_srcdir@/include				\
+ 		       @top_srcdir@/kernel/cobalt			\
+ 		       @top_srcdir@/kernel/drivers			\
+ 		       @top_srcdir@/lib/cobalt				\
+ 		       @top_srcdir@/lib/analogy				\
+ 		       @top_srcdir@/lib/alchemy
 
 # The EXAMPLE_PATH tag can be used to specify one or more files or
 # directories that contain example code fragments that are included (see

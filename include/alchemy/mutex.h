@@ -23,6 +23,11 @@
 #include <alchemy/timer.h>
 #include <alchemy/task.h>
 
+/**
+ * @addtogroup alchemy_mutex
+ * @{
+ */
+
 struct RT_MUTEX {
 	uintptr_t handle;
 };
@@ -92,5 +97,7 @@ int rt_mutex_unbind(RT_MUTEX *mutex);
 #ifdef __cplusplus
 }
 #endif
+
+/** @} */
 
 #endif /* _XENOMAI_ALCHEMY_MUTEX_H */

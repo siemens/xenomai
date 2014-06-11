@@ -39,10 +39,10 @@
 #include <trace/events/cobalt-core.h>
 
 /**
- * @ingroup nucleus
- * @defgroup thread Thread services.
+ * @ingroup core
+ * @defgroup core_thread Thread services
  * @{
-*/
+ */
 
 static unsigned int idtags;
 
@@ -1168,6 +1168,8 @@ EXPORT_SYMBOL_GPL(xnthread_unblock);
  * xnthread_wait_period() will delay the thread until the next
  * periodic release point in the processor timeline is reached.
  *
+ * @param thread The core thread to make periodic.
+ *
  * @param idate The initial (absolute) date of the first release
  * point, expressed in nanoseconds. The affected thread will be
  * delayed by the first call to xnthread_wait_period() until this
@@ -1778,4 +1780,4 @@ void __xnthread_test_cancel(struct xnthread *curr)
 }
 EXPORT_SYMBOL_GPL(__xnthread_test_cancel);
 
-/*@}*/
+/** @} */

@@ -56,7 +56,7 @@ typedef struct xnselector rtdm_selector_t;
 enum rtdm_selecttype;
 
 /*!
- * @addtogroup devregister
+ * @addtogroup rtdm_device_register
  * @{
  */
 
@@ -83,7 +83,7 @@ enum rtdm_selecttype;
 /*!
  * @anchor drv_versioning @name Driver Versioning
  * Current revisions of RTDM structures, encoding of driver versions. See
- * @ref api_versioning "API Versioning" for the interface revision.
+ * @ref rtdm_api_versioning "API Versioning" for the interface revision.
  * @{
  */
 /** Version of struct rtdm_device */
@@ -109,8 +109,10 @@ enum rtdm_selecttype;
 #define RTDM_DRIVER_PATCH_VER(ver)	((ver) & 0xFF)
 /** @} Driver Versioning */
 
+/** @} rtdm_device_register */
+
 /*!
- * @addtogroup rtdmsync
+ * @addtogroup rtdm_sync
  * @{
  */
 
@@ -131,7 +133,7 @@ enum rtdm_selecttype {
 };
 /** @} RTDM_SELECTTYPE_xxx */
 
-/** @} rtdmsync */
+/** @} rtdm_sync */
 
 /*!
  * @name Operation Handler Prototypes
@@ -314,7 +316,7 @@ struct rtdm_device {
 	/** Device class ID, see @ref RTDM_CLASS_xxx */
 	int device_class;
 	/** Device sub-class, see RTDM_SUBCLASS_xxx definition in the
-	 *  @ref profiles "Device Profiles" */
+	 *  @ref rtdm_profiles "Device Profiles" */
 	int device_sub_class;
 	/** Supported device profile version */
 	int profile_version;
@@ -392,15 +394,57 @@ typedef nanosecs_abs_t rtdm_toseq_t;
 void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, nanosecs_rel_t timeout);
 
 /*!
- * @addtogroup rtdmsync
+ * @addtogroup rtdm_sync
  * @{
  */
 
-/* --- spin lock services --- */
 /*!
- * @name Global Lock across Scheduler Invocation
+ * @defgroup rtdm_sync_biglock Big dual kernel lock
  * @{
  */
+
+/**
+ * @brief Enter atomic section (dual kernel only)
+ *
+ * This call opens a fully atomic section, serializing execution with
+ * respect to all interrupt handlers (including for real-time IRQs)
+ * and Xenomai threads running on all CPUs.
+ *
+ * @param context name of local variable to store the context in. This
+ * variable updated by the real-time core will hold the information
+ * required to leave the atomic section properly.
+ *
+ * @note Atomic sections may be nested.
+ *
+ * @note Since the strongest lock is acquired by this service, it can
+ * be used to synchronize real-time and non-real-time contexts.
+ *
+ * @warning This service is not portable to the Mercury core, and
+ * should be restricted to Cobalt-specific use cases.
+ */
+#define cobalt_atomic_enter(context)			\
+	do {						\
+		xnlock_get_irqsave(&nklock, (context));	\
+		__xnsched_lock();			\
+	} while (0)
+
+/**
+ * @brief Leave atomic section (dual kernel only)
+ *
+ * This call closes an atomic section previously opened by a call to
+ * cobalt_atomic_enter(), restoring the preemption and interrupt state
+ * which prevailed prior to entering the exited section.
+ *
+ * @param context name of local variable which stored the context.
+ *
+ * @warning This service is not portable to the Mercury core, and
+ * should be restricted to Cobalt-specific use cases.
+ */
+#define cobalt_atomic_leave(context)				\
+	do {							\
+		__xnsched_unlock();				\
+		xnlock_put_irqrestore(&nklock, (context));	\
+	} while (0)
 
 /**
  * @brief Execute code block atomically (DEPRECATED)
@@ -461,10 +505,10 @@ rtdm_execute_atomically(void) { }
 }
 #endif
 
-/** @} Global Lock across Scheduler Invocation */
+/** @} Big dual kernel lock */
 
-/*!
- * @name Spinlock with Preemption Deactivation
+/**
+ * @defgroup rtdm_sync_spinlock Spinlock with preemption deactivation
  * @{
  */
 
@@ -548,6 +592,7 @@ static inline void rtdm_lock_put(rtdm_lock_t *lock)
 }
 
 /**
+ * @fn void rtdm_lock_get_irqsave(rtdm_lock_t *lock, rtdm_lockctx_t context)
  * Acquire lock and disable preemption, by stalling the head domain.
  *
  * @param lock Address of lock variable
@@ -566,16 +611,16 @@ static inline void rtdm_lock_put(rtdm_lock_t *lock)
  */
 static inline rtdm_lockctx_t __rtdm_lock_get_irqsave(rtdm_lock_t *lock)
 {
-	rtdm_lockctx_t s;
+	rtdm_lockctx_t context;
 
-	s = ipipe_test_and_stall_head();
+	context = ipipe_test_and_stall_head();
 	spin_lock(lock);
 	__xnsched_lock();
 
-	return s;
+	return context;
 }
-#define rtdm_lock_get_irqsave(__lock, __s)	\
-	((__s) = __rtdm_lock_get_irqsave(__lock))
+#define rtdm_lock_get_irqsave(__lock, __context)	\
+	((__context) = __rtdm_lock_get_irqsave(__lock))
 
 /**
  * Release lock and restore preemption state
@@ -595,11 +640,11 @@ static inline rtdm_lockctx_t __rtdm_lock_get_irqsave(rtdm_lock_t *lock)
  * Rescheduling: possible.
  */
 static inline
-void rtdm_lock_put_irqrestore(rtdm_lock_t *lock, rtdm_lockctx_t s)
+void rtdm_lock_put_irqrestore(rtdm_lock_t *lock, rtdm_lockctx_t context)
 {
 	spin_unlock(lock);
 	__xnsched_unlock();
-	ipipe_restore_head(s);
+	ipipe_restore_head(context);
 }
 
 /**
@@ -640,55 +685,10 @@ void rtdm_lock_put_irqrestore(rtdm_lock_t *lock, rtdm_lockctx_t s)
 #define rtdm_lock_irqrestore(context)	\
 	splexit(context)
 
-/**
- * @brief Enter atomic section (dual kernel only)
- *
- * This call opens a fully atomic section, serializing execution with
- * respect to all interrupt handlers (including for real-time IRQs)
- * and Xenomai threads running on all CPUs.
- *
- * @param context name of local variable to store the context in. This
- * variable updated by the real-time core will hold the information
- * required to leave the atomic section properly.
- *
- * @note Atomic sections may be nested.
- *
- * @note Since the strongest lock is acquired by this service, it can
- * be used to synchronize real-time and non-real-time contexts.
- *
- * @warning This service is not portable to the Mercury core, and
- * should be restricted to Cobalt-specific use cases.
- */
-#define cobalt_atomic_enter(context)			\
-	do {						\
-		xnlock_get_irqsave(&nklock, (context));	\
-		__xnsched_lock();			\
-	} while (0)
-
-/**
- * @brief Leave atomic section (dual kernel only)
- *
- * This call closes an atomic section previously opened by a call to
- * cobalt_atomic_enter(), restoring the preemption and interrupt state
- * which prevailed prior to entering the exited section.
- *
- * @param context name of local variable which stored the context.
- *
- * @warning This service is not portable to the Mercury core, and
- * should be restricted to Cobalt-specific use cases.
- */
-#define cobalt_atomic_leave(context)				\
-	do {							\
-		__xnsched_unlock();				\
-		xnlock_put_irqrestore(&nklock, (context));	\
-	} while (0)
-
 /** @} Spinlock with Preemption Deactivation */
 
-/*!
- * @name Signal, test and wait for a condition atomically
- * @{
- */
+#ifndef DOXYGEN_CPP
+
 struct rtdm_waitqueue {
 	struct xnsynch wait;
 };
@@ -704,26 +704,11 @@ typedef struct rtdm_waitqueue rtdm_waitqueue_t;
 #define DEFINE_RTDM_WAITQUEUE_ONSTACK(__name)	\
 	DEFINE_RTDM_WAITQUEUE(__name)
 
-/**
- * @brief  Initialize a RTDM wait queue
- *
- * Sets up a wait queue structure for further use.
- *
- * @param wq waitqueue to initialize.
- */
 static inline void rtdm_waitqueue_init(struct rtdm_waitqueue *wq)
 {
 	*wq = (struct rtdm_waitqueue)RTDM_WAITQUEUE_INITIALIZER(*wq);
 }
 
-/**
- * @brief  Deletes a RTDM wait queue
- *
- * Dismantles a wait queue structure, releasing all resources attached
- * to it.
- *
- * @param wq waitqueue to delete.
- */
 static inline void rtdm_waitqueue_destroy(struct rtdm_waitqueue *wq)
 {
 	xnsynch_destroy(&wq->wait);
@@ -738,42 +723,6 @@ static inline int __rtdm_timedwait(struct rtdm_waitqueue *wq,
 	return xnsynch_sleep_on(&wq->wait, timeout, XN_RELATIVE);
 }
 
-/**
- * @brief  Timed sleep on a locked waitqueue until a condition gets true
- *
- * The calling task is put to sleep until @a __cond evaluates to true
- * or a timeout occurs. The condition is checked each time the
- * waitqueue @a __wq is signaled.
- *
- * The waitqueue must have been locked by a call to
- * rtdm_waitqueue_lock() prior to calling this service.
- *
- * @param __wq locked waitqueue to wait on. The waitqueue lock is
- * dropped when sleeping, then reacquired before this service returns
- * to the caller.
- *
- * @param __cond C expression for the event to wait for.
- *
- * @param __timeout relative timeout in nanoseconds, see
- * @ref RTDM_TIMEOUT_xxx for special values.
- * 
- * @param[in,out] __toseq handle of a timeout sequence as returned by
- * rtdm_toseq_init() or NULL.
- *
- * @return 0 on success, otherwise:
- *
- * - -EINTR is returned if calling task has received a Linux signal or
- * has been forcibly unblocked by a call to rtdm_task_unblock().
- *
- * - -ETIMEDOUT is returned if the if the request has not been satisfied
- * within the specified amount of time.
- *
- * @note rtdm_waitqueue_signal() has to be called after changing any
- * variable that could change the result of the wait condition.
- *
- * @note Passing RTDM_TIMEOUT_NONE to @a __timeout makes no sense for
- * such service, and might cause unexpected behavior.
- */
 #define rtdm_timedwait_condition_locked(__wq, __cond, __timeout, __toseq) \
 	({								\
 		int __ret = 0;						\
@@ -782,30 +731,6 @@ static inline int __rtdm_timedwait(struct rtdm_waitqueue *wq,
 		__ret;							\
 	})
 
-/**
- * @brief  Sleep on a locked waitqueue until a condition gets true
- *
- * The calling task is put to sleep until @a __cond evaluates to
- * true. The condition is checked each time the waitqueue @a __wq is
- * signaled.
- *
- * The waitqueue must have been locked by a call to
- * rtdm_waitqueue_lock() prior to calling this service.
- *
- * @param __wq locked waitqueue to wait on. The waitqueue lock is
- * dropped when sleeping, then reacquired before this service returns
- * to the caller.
- *
- * @param __cond C expression for the event to wait for.
- *
- * @return 0 on success, otherwise:
- *
- * - -EINTR is returned if calling task has received a Linux signal or
- * has been forcibly unblocked by a call to rtdm_task_unblock().
- *
- * @note rtdm_waitqueue_signal() has to be called after changing any
- * variable that could change the result of the wait condition.
- */
 #define rtdm_wait_condition_locked(__wq, __cond)			\
 	({								\
 		int __ret = 0;						\
@@ -815,37 +740,6 @@ static inline int __rtdm_timedwait(struct rtdm_waitqueue *wq,
 		__ret;							\
 	})
 
-/**
- * @brief  Timed sleep on a waitqueue until a condition gets true
- *
- * The calling task is put to sleep until @a __cond evaluates to true
- * or a timeout occurs. The condition is checked each time the
- * waitqueue @a __wq is signaled.
- *
- * @param __wq waitqueue to wait on.
- *
- * @param __cond C expression for the event to wait for.
- *
- * @param __timeout relative timeout in nanoseconds, see
- * @ref RTDM_TIMEOUT_xxx for special values.
- * 
- * @param[in,out] __toseq handle of a timeout sequence as returned by
- * rtdm_toseq_init() or NULL.
- *
- * @return 0 on success, otherwise:
- *
- * - -EINTR is returned if calling task has received a Linux signal or
- * has been forcibly unblocked by a call to rtdm_task_unblock().
- *
- * - -ETIMEDOUT is returned if the if the request has not been satisfied
- * within the specified amount of time.
- *
- * @note rtdm_waitqueue_signal() has to be called after changing any
- * variable that could change the result of the wait condition.
- *
- * @note Passing RTDM_TIMEOUT_NONE to @a __timeout makes no sense for
- * such service, and might cause unexpected behavior.
- */
 #define rtdm_timedwait_condition(__wq, __cond, __timeout, __toseq)	\
 	({								\
 		spl_t __s;						\
@@ -857,90 +751,12 @@ static inline int __rtdm_timedwait(struct rtdm_waitqueue *wq,
 		__ret;							\
 	})
 
-/**
- * @brief Timed sleep on a waitqueue unconditionally
- *
- * The calling task is put to sleep until the waitqueue is signaled by
- * either rtdm_waitqueue_signal() or rtdm_waitqueue_broadcast(), or
- * flushed by a call to rtdm_waitqueue_flush(), or a timeout occurs.
- *
- * @param __wq waitqueue to wait on.
- *
- * @param __timeout relative timeout in nanoseconds, see
- * @ref RTDM_TIMEOUT_xxx for special values.
- * 
- * @param[in,out] __toseq handle of a timeout sequence as returned by
- * rtdm_toseq_init() or NULL.
- *
- * @return 0 on success, otherwise:
- *
- * - -EINTR is returned if the waitqueue has been flushed, or the
- * calling task has received a Linux signal or has been forcibly
- * unblocked by a call to rtdm_task_unblock().
- *
- * - -ETIMEDOUT is returned if the if the request has not been satisfied
- * within the specified amount of time.
- *
- * @note Passing RTDM_TIMEOUT_NONE to @a __timeout makes no sense for
- * such service, and might cause unexpected behavior.
- */
 #define rtdm_timedwait(__wq, __timeout, __toseq)			\
 	__rtdm_timedwait(__wq, __timeout, __toseq)
 
-/**
- * @brief Timed sleep on a locked waitqueue unconditionally
- *
- * The calling task is put to sleep until the waitqueue is signaled by
- * either rtdm_waitqueue_signal() or rtdm_waitqueue_broadcast(), or
- * flushed by a call to rtdm_waitqueue_flush(), or a timeout occurs.
- *
- * The waitqueue must have been locked by a call to
- * rtdm_waitqueue_lock() prior to calling this service.
- *
- * @param __wq locked waitqueue to wait on. The waitqueue lock is
- * dropped when sleeping, then reacquired before this service returns
- * to the caller.
- *
- * @param __timeout relative timeout in nanoseconds, see
- * @ref RTDM_TIMEOUT_xxx for special values.
- * 
- * @param[in,out] __toseq handle of a timeout sequence as returned by
- * rtdm_toseq_init() or NULL.
- *
- * @return 0 on success, otherwise:
- *
- * - -EINTR is returned if the waitqueue has been flushed, or the
- * calling task has received a Linux signal or has been forcibly
- * unblocked by a call to rtdm_task_unblock().
- *
- * - -ETIMEDOUT is returned if the if the request has not been satisfied
- * within the specified amount of time.
- *
- * @note Passing RTDM_TIMEOUT_NONE to @a __timeout makes no sense for
- * such service, and might cause unexpected behavior.
- */
 #define rtdm_timedwait_locked(__wq, __timeout, __toseq)			\
 	rtdm_timedwait(__wq, __timeout, __toseq)
 
-/**
- * @brief  Sleep on a waitqueue until a condition gets true
- *
- * The calling task is put to sleep until @a __cond evaluates to
- * true. The condition is checked each time the waitqueue @a __wq is
- * signaled.
- *
- * @param __wq waitqueue to wait on
- *
- * @param __cond C expression for the event to wait for.
- *
- * @return 0 on success, otherwise:
- *
- * - -EINTR is returned if calling task has received a Linux signal or
- * has been forcibly unblocked by a call to rtdm_task_unblock().
- *
- * @note rtdm_waitqueue_signal() has to be called after changing any
- * variable that could change the result of the wait condition.
- */
 #define rtdm_wait_condition(__wq, __cond)				\
 	({								\
 		spl_t __s;						\
@@ -951,82 +767,15 @@ static inline int __rtdm_timedwait(struct rtdm_waitqueue *wq,
 		__ret;							\
 	})
 
-/**
- * @brief Sleep on a waitqueue unconditionally
- *
- * The calling task is put to sleep until the waitqueue is signaled by
- * either rtdm_waitqueue_signal() or rtdm_waitqueue_broadcast(), or
- * flushed by a call to rtdm_waitqueue_flush().
- *
- * @param __wq waitqueue to wait on.
- *
- * @return 0 on success, otherwise:
- *
- * - -EINTR is returned if the waitqueue has been flushed, or the
- * calling task has received a Linux signal or has been forcibly
- * unblocked by a call to rtdm_task_unblock().
- */
 #define rtdm_wait(__wq)							\
 	xnsynch_sleep_on(&(__wq)->wait,	XN_INFINITE, XN_RELATIVE)
 
-/**
- * @brief Sleep on a locked waitqueue unconditionally
- *
- * The calling task is put to sleep until the waitqueue is signaled by
- * either rtdm_waitqueue_signal() or rtdm_waitqueue_broadcast(), or
- * flushed by a call to rtdm_waitqueue_flush().
- *
- * The waitqueue must have been locked by a call to
- * rtdm_waitqueue_lock() prior to calling this service.
- *
- * @param __wq locked waitqueue to wait on. The waitqueue lock is
- * dropped when sleeping, then reacquired before this service returns
- * to the caller.
- *
- * @return 0 on success, otherwise:
- *
- * - -EINTR is returned if the waitqueue has been flushed, or the
- * calling task has received a Linux signal or has been forcibly
- * unblocked by a call to rtdm_task_unblock().
- */
 #define rtdm_wait_locked(__wq)  rtdm_wait(__wq)
 
-/**
- * @brief Lock a waitqueue
- *
- * Acquires the lock on the waitqueue @a __wq.
- *
- * @param __wq waitqueue to lock.
- *
- * @param context name of local variable to store the context in.
- *
- * @note Recursive locking might lead to unexpected behavior,
- * including lock up.
- */
 #define rtdm_waitqueue_lock(__wq, __context)  cobalt_atomic_enter(__context)
 
-/**
- * @brief Unlock a waitqueue
- *
- * Releases the lock on the waitqueue @a __wq.
- *
- * @param __wq waitqueue to unlock.
- *
- * @param context name of local variable to store the context in.
- */
 #define rtdm_waitqueue_unlock(__wq, __context)  cobalt_atomic_leave(__context)
 
-/**
- * @brief Signal a waitqueue
- *
- * Signals the waitqueue @a __wq, waking up a single waiter (if
- * any).
- *
- * @param __wq waitqueue to signal.
- *
- * @return non-zero if a task has been readied as a result of this
- * call, zero otherwise.
- */
 #define rtdm_waitqueue_signal(__wq)					\
 	({								\
 		struct xnthread *__waiter;				\
@@ -1043,104 +792,31 @@ static inline int __rtdm_timedwait(struct rtdm_waitqueue *wq,
 		__ret == XNSYNCH_RESCHED;				\
 	})
 
-/**
- * @brief Broadcast a waitqueue
- *
- * Broadcast the waitqueue @a __wq, waking up all waiters. Each
- * readied task may assume to have received the wake up event.
- *
- * @param __wq waitqueue to broadcast.
- *
- * @return non-zero if at least one task has been readied as a result
- * of this call, zero otherwise.
- */
 #define rtdm_waitqueue_broadcast(__wq)	\
 	__rtdm_waitqueue_flush(__wq, 0)
 
-/**
- * @brief Flush a waitqueue
- *
- * Flushes the waitqueue @a __wq, unblocking all waiters with an error
- * status (-EINTR).
- *
- * @param __wq waitqueue to flush.
- *
- * @return non-zero if at least one task has been readied as a result
- * of this call, zero otherwise.
- */
 #define rtdm_waitqueue_flush(__wq)	\
 	__rtdm_waitqueue_flush(__wq, XNBREAK)
 
-/**
- * @brief Signal a particular waiter on a waitqueue
- *
- * Signals the waitqueue @a __wq, waking up waiter @a __waiter only,
- * which must be currently sleeping on the waitqueue.
- *
- * @param __wq waitqueue to signal.
- *
- * @param __waiter RTDM task to wake up.
- */
 #define rtdm_waitqueue_wakeup(__wq, __waiter)				\
 	do {								\
 		xnsynch_wakeup_this_sleeper(&(__wq)->wait, __waiter);	\
 		xnsched_run();						\
 	} while (0)
 
-/**
- * @brief Simple iterator for waitqueues
- *
- * This construct traverses the wait list of a given waitqueue
- * @a __wq, assigning each RTDM task pointer to the cursor variable
- * @a __pos, which must be of type rtdm_task_t.
- *
- * @a __wq must have been locked by a call to rtdm_waitqueue_lock()
- * prior to traversing its wait list.
- *
- * @param __pos cursor variable holding a pointer to the RTDM task
- * being fetched.
- *
- * @param __wq waitqueue to scan.
- *
- * @note The waitqueue should not be signaled, broadcast or flushed
- * during the traversal, unless the loop is aborted immediately
- * after. Should multiple waiters be readied while iterating, the safe
- * form rtdm_for_each_waiter_safe() must be used for traversal
- * instead.
- */
 #define rtdm_for_each_waiter(__pos, __wq)		\
 	xnsynch_for_each_sleeper(__pos, &(__wq)->wait)
 
-/**
- * @brief Safe iterator for waitqueues
- *
- * This construct traverses the wait list of a given waitqueue
- * @a __wq, assigning each RTDM task pointer to the cursor variable
- * @a __pos, which must be of type rtdm_task_t.
- *
- * Unlike with rtdm_for_each_waiter(), the waitqueue may be signaled,
- * broadcast or flushed during the traversal.
- *
- * @a __wq must have been locked by a call to rtdm_waitqueue_lock()
- * prior to traversing its wait list.
- *
- * @param __pos cursor variable holding a pointer to the RTDM task
- * being fetched.
- *
- * @param __tmp temporary cursor variable.
- *
- * @param __wq waitqueue to scan.
- */
 #define rtdm_for_each_waiter_safe(__pos, __tmp, __wq)	\
 	xnsynch_for_each_sleeper_safe(__pos, __tmp, &(__wq)->wait)
 
-/** @} Signal, test and wait for a condition atomically */
+#endif /* !DOXYGEN_CPP */
 
-/** @} rtdmsync */
+/** @} rtdm_sync */
 
 /* --- Interrupt management services --- */
 /*!
- * @addtogroup rtdmirq
+ * @addtogroup rtdm_irq
  * @{
  */
 
@@ -1196,7 +872,7 @@ typedef int (*rtdm_irq_handler_t)(rtdm_irq_t *irq_handle);
  * Rescheduling: never.
  */
 #define rtdm_irq_get_arg(irq_handle, type)	((type *)irq_handle->cookie)
-/** @} rtdmirq */
+/** @} rtdm_irq */
 
 int rtdm_irq_request(rtdm_irq_t *irq_handle, unsigned int irq_no,
 		     rtdm_irq_handler_t handler, unsigned long flags,
@@ -1227,7 +903,7 @@ static inline int rtdm_irq_disable(rtdm_irq_t *irq_handle)
 /* --- non-real-time signalling services --- */
 
 /*!
- * @addtogroup nrtsignal
+ * @addtogroup rtdm_nrtsignal
  * @{
  */
 
@@ -1244,7 +920,7 @@ typedef unsigned rtdm_nrtsig_t;
  * blocking operations.
  */
 typedef void (*rtdm_nrtsig_handler_t)(rtdm_nrtsig_t nrt_sig, void *arg);
-/** @} nrtsignal */
+/** @} rtdm_nrtsignal */
 
 #ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
 static inline int rtdm_nrtsig_init(rtdm_nrtsig_t *nrt_sig,
@@ -1274,7 +950,7 @@ static inline void rtdm_nrtsig_pend(rtdm_nrtsig_t *nrt_sig)
 /* --- timer services --- */
 
 /*!
- * @addtogroup rtdmtimer
+ * @addtogroup rtdm_timer
  * @{
  */
 
@@ -1304,7 +980,7 @@ enum rtdm_timer_mode {
 };
 /** @} RTDM_TIMERMODE_xxx */
 
-/** @} rtdmtimer */
+/** @} rtdm_timer */
 
 #ifndef DOXYGEN_CPP /* Avoid broken doxygen output */
 #define rtdm_timer_init(timer, handler, name)		\
@@ -1339,7 +1015,7 @@ static inline void rtdm_timer_stop_in_handler(rtdm_timer_t *timer)
 
 /* --- task services --- */
 /*!
- * @addtogroup rtdmtask
+ * @addtogroup rtdm_task
  * @{
  */
 
@@ -1368,7 +1044,7 @@ typedef void (*rtdm_task_proc_t)(void *arg);
 #define RTDM_TASK_LOWER_PRIORITY	(-1)
 /** @} Task Priority Modification */
 
-/** @} rtdmtask */
+/** @} rtdm_task */
 
 int rtdm_task_init(rtdm_task_t *task, const char *name,
 		   rtdm_task_proc_t task_proc, void *arg,

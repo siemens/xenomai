@@ -10,21 +10,11 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
-
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
- *
- * @defgroup alchemy_heap Heap management services.
- * @ingroup alchemy_heap
- * @ingroup alchemy
- *
- * Heaps are regions of memory used for dynamic memory allocation in
- * a time-bounded fashion. Blocks of memory are allocated and freed in
- * an arbitrary order and the pattern of allocation and size of blocks
- * is not known until run time.
- *
- *@{*/
+ */
 
 #include <errno.h>
 #include <string.h>
@@ -36,6 +26,19 @@
 #include "heap.h"
 #include "timer.h"
 
+/**
+ * @ingroup alchemy
+ * @defgroup alchemy_heap Heap management services
+ *
+ * Region of memory dedicated to real-time allocation
+ *
+ * Heaps are regions of memory used for dynamic memory allocation in
+ * a time-bounded fashion. Blocks of memory are allocated and freed in
+ * an arbitrary order and the pattern of allocation and size of blocks
+ * is not known until run time.
+ *
+ * @{
+ */
 struct syncluster alchemy_heap_table;
 
 static DEFINE_NAME_GENERATOR(heap_namegen, "heap",
@@ -558,6 +561,9 @@ out:
  * @param heap The descriptor address of the heap to get the status
  * of.
  *
+ * @param info A pointer to the @ref RT_HEAP_INFO "return
+ * buffer" to copy the information to.
+ *
  * @return Zero is returned and status information is written to the
  * structure pointed at by @a info upon success. Otherwise:
  *
@@ -663,4 +669,4 @@ int rt_heap_unbind(RT_HEAP *heap)
 	return 0;
 }
 
-/*@}*/
+/** @} */

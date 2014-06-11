@@ -31,6 +31,45 @@
 #include "sem_heap.h"
 #include "internal.h"
 
+/**
+ * @ingroup cobalt
+ * @defgroup cobalt_time Clocks and timers
+ *
+ * Cobalt/POSIX clock and timer services
+ *
+ * Cobalt supports three built-in clocks:
+ *
+ * CLOCK_REALTIME maps to the nucleus system clock, keeping time as the amount
+ * of time since the Epoch, with a resolution of one nanosecond.
+ *
+ * CLOCK_MONOTONIC maps to an architecture-dependent high resolution
+ * counter, so is suitable for measuring short time
+ * intervals. However, when used for sleeping (with
+ * clock_nanosleep()), the CLOCK_MONOTONIC clock has a resolution of
+ * one nanosecond, like the CLOCK_REALTIME clock.
+ *
+ * CLOCK_MONOTONIC_RAW is Linux-specific, and provides monotonic time
+ * values from a hardware timer which is not adjusted by NTP. This is
+ * strictly equivalent to CLOCK_MONOTONIC with Xenomai, which is not
+ * NTP adjusted either.
+ *
+ * In addition, external clocks can be dynamically registered using
+ * the cobalt_clock_register() service. These clocks are fully managed
+ * by Cobalt extension code, which should advertise each incoming tick
+ * by calling xnclock_tick() for the relevant clock, from an interrupt
+ * context.
+ *
+ * Timer objects may be created with the timer_create() service using
+ * any of the built-in or external clocks. The resolution of these
+ * timers is clock-specific. However, built-in clocks all have
+ * nanosecond resolution, as specified for clock_nanosleep().
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_08.html#tag_02_08_05">
+ * Specification.</a>
+ *
+ *@{
+ */
 COBALT_IMPL(int, clock_getres, (clockid_t clock_id, struct timespec *tp))
 {
 	int ret;
@@ -182,3 +221,5 @@ COBALT_IMPL(unsigned int, sleep, (unsigned int seconds))
 
 	return 0;
 }
+
+/** @} */

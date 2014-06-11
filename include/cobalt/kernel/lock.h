@@ -25,7 +25,7 @@
 #include <cobalt/kernel/assert.h>
 
 /**
- * @addtogroup lock
+ * @addtogroup core_lock
  *
  * @{
  */
@@ -269,6 +269,6 @@ static inline void __xnlock_put(struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_AR
 
 DECLARE_EXTERN_XNLOCK(nklock);
 
-/*@}*/
+/** @} */
 
 #endif /* !_COBALT_KERNEL_LOCK_H */

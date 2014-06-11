@@ -21,28 +21,28 @@
  */
 
 /*!
- * @ingroup Analogy4Linux
- * @defgroup Analogylib4Linux Library API.
+ * @ingroup analogy
+ * @defgroup analogy_lib Analogy user API
  *
  * This is the API interface of Analogy library
  *
  */
 
 /*!
- * @ingroup Analogylib4Linux
- * @defgroup syscall Level 0 API (Syscall API)
+ * @ingroup analogy_lib
+ * @defgroup analogy_lib_syscall Level 0 API
  *
- * This is the API interface which encapsulates common syscalls
- * structure
- * Warning: this API level should not be used
+ * System call interface to core Analogy services
+ *
+ * This interface should not be used directly by applications.
  */
 
 #include <rtdm/analogy.h>
 #include "internal.h"
 
 /*!
- * @ingroup syscall
- * @defgroup basic_sys Basic Syscall API
+ * @ingroup analogy_lib_syscall
+ * @defgroup analogy_lib_core Basic Syscall API
  * @{
  */
 
@@ -126,8 +126,8 @@ int a4l_sys_write(int fd, void *buf, size_t nbyte)
 /** @} */
 
 /*!
- * @ingroup syscall
- * @defgroup attach_sys Attach / detach Syscall API
+ * @ingroup analogy_lib_syscall
+ * @defgroup analogy_lib_attach Attach / detach Syscall API
  * @{
  */
 

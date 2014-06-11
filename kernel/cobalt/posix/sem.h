@@ -63,7 +63,7 @@ cobalt_sem_init_inner(const char *name, struct cobalt_sem_shadow *sem,
 
 int cobalt_sem_destroy_inner(xnhandle_t handle);
 
-void cobalt_nsem_unlink_inner(xnhandle_t handle);
+void cobalt_sem_unlink_inner(xnhandle_t handle);
 
 void cobalt_sem_usems_cleanup(struct cobalt_process *cc);
 

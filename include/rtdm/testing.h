@@ -17,11 +17,16 @@
  * You should have received a copy of the GNU General Public License
  * along with Xenomai; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
- *
- * @ingroup rttesting
- *
- * @ingroup profiles
- * @defgroup rttesting Testing Devices
+ */
+#ifndef _RTDM_TESTING_H
+#define _RTDM_TESTING_H
+
+#include <rtdm/rtdm.h>
+#include <rtdm/uapi/testing.h>
+
+/**
+ * @ingroup rtdm_profiles
+ * @defgroup rtdm_testing Testing Devices
  *
  * This group of devices is intended to provide in-kernel testing results.
  * Feel free to comment on this profile via the Xenomai mailing list
@@ -52,10 +57,5 @@
  * Mandatory Environments: see @ref TSTIOCTLs below @n
  * Specific return values: see @ref TSTIOCTLs below @n
  */
-#ifndef _RTDM_TESTING_H
-#define _RTDM_TESTING_H
-
-#include <rtdm/rtdm.h>
-#include <rtdm/uapi/testing.h>
 
 #endif /* _RTDM_TESTING_H */

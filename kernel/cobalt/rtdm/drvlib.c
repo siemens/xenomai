@@ -21,15 +21,6 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/*!
- * @ingroup rtdm
- * @defgroup driverapi Driver Development API
- *
- * This is the lower interface of RTDM provided to device drivers, currently
- * limited to kernel-space. Real-time drivers should only use functions of
- * this interface in order to remain portable.
- */
-
 #include <linux/bitops.h>
 #include <linux/delay.h>
 #include <linux/mman.h>
@@ -43,9 +34,9 @@
 #include "internal.h"
 #include <trace/events/cobalt-rtdm.h>
 
-/*!
- * @ingroup driverapi
- * @defgroup rtdmclock Clock Services
+/**
+ * @ingroup rtdm_driver_interface
+ * @defgroup rtdm_clock Clock Services
  * @{
  */
 
@@ -105,9 +96,9 @@ nanosecs_abs_t rtdm_clock_read_monotonic(void);
 #endif /* DOXYGEN_CPP */
 /** @} */
 
-/*!
- * @ingroup driverapi
- * @defgroup rtdmtask Task Services
+/**
+ * @ingroup rtdm_driver_interface
+ * @defgroup rtdm_task Task Services
  * @{
  */
 
@@ -485,9 +476,9 @@ void rtdm_task_busy_sleep(nanosecs_rel_t delay)
 EXPORT_SYMBOL_GPL(rtdm_task_busy_sleep);
 /** @} */
 
-/*!
- * @ingroup driverapi
- * @defgroup rtdmtimer Timer Services
+/**
+ * @ingroup rtdm_driver_interface
+ * @defgroup rtdm_timer Timer Services
  * @{
  */
 
@@ -677,9 +668,9 @@ void __rtdm_synch_flush(struct xnsynch *synch, unsigned long reason)
 
 EXPORT_SYMBOL_GPL(__rtdm_synch_flush);
 
-/*!
- * @ingroup driverapi
- * @defgroup rtdmsync Synchronisation Services
+/**
+ * @ingroup rtdm_driver_interface
+ * @defgroup rtdm_sync Synchronisation Services
  * @{
  */
 
@@ -747,8 +738,9 @@ EXPORT_SYMBOL_GPL(rtdm_toseq_init);
 
 /** @} */
 
-/*!
- * @name Event Services
+/**
+ * @ingroup rtdm_sync
+ * @defgroup rtdm_sync_event Event Services
  * @{
  */
 
@@ -1098,8 +1090,9 @@ EXPORT_SYMBOL_GPL(rtdm_event_select_bind);
 
 /** @} */
 
-/*!
- * @name Semaphore Services
+/**
+ * @ingroup rtdm_sync
+ * @defgroup rtdm_sync_sem Semaphore Services
  * @{
  */
 
@@ -1377,8 +1370,9 @@ EXPORT_SYMBOL_GPL(rtdm_sem_select_bind);
 
 /** @} */
 
-/*!
- * @name Mutex Services
+/**
+ * @ingroup rtdm_sync
+ * @defgroup rtdm_sync_mutex Mutex services
  * @{
  */
 
@@ -1592,9 +1586,9 @@ EXPORT_SYMBOL_GPL(rtdm_mutex_timedlock);
 
 /** @} Synchronisation services */
 
-/*!
- * @ingroup driverapi
- * @defgroup rtdmirq Interrupt Management Services
+/**
+ * @ingroup rtdm_driver_interface
+ * @defgroup rtdm_irq Interrupt Management Services
  * @{
  */
 
@@ -1733,9 +1727,9 @@ int rtdm_irq_disable(rtdm_irq_t *irq_handle);
 
 #ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 
-/*!
- * @ingroup driverapi
- * @defgroup nrtsignal Non-Real-Time Signalling Services
+/**
+ * @ingroup rtdm_driver_interface
+ * @defgroup rtdm_nrtsignal Non-Real-Time Signalling Services
  *
  * These services provide a mechanism to request the execution of a specified
  * handler in non-real-time context. The triggering can safely be performed in
@@ -1808,9 +1802,9 @@ void rtdm_nrtsig_pend(rtdm_nrtsig_t *nrt_sig);
 
 #endif /* DOXYGEN_CPP */
 
-/*!
- * @ingroup driverapi
- * @defgroup util Utility Services
+/**
+ * @ingroup rtdm_driver_interface
+ * @defgroup rtdm_util Utility Services
  * @{
  */
 
@@ -1942,7 +1936,7 @@ static int rtdm_do_mmap(struct rtdm_fd *fd,
 /**
  * Map a kernel memory range into the address space of the user.
  *
- * @param[in] user_info User information pointer as passed to the invoked
+ * @param[in] fd RTDM file descriptor as passed to the invoked
  * device operation handler
  * @param[in] src_addr Kernel virtual address to be mapped
  * @param[in] len Length of the memory range
@@ -2014,7 +2008,7 @@ EXPORT_SYMBOL_GPL(rtdm_mmap_to_user);
 /**
  * Map an I/O memory range into the address space of the user.
  *
- * @param[in] user_info User information pointer as passed to the invoked
+ * @param[in] fd RTDM file descriptor as passed to the invoked
  * device operation handler
  * @param[in] src_addr physical I/O address to be mapped
  * @param[in] len Length of the memory range
@@ -2082,7 +2076,7 @@ EXPORT_SYMBOL_GPL(rtdm_iomap_to_user);
 /**
  * Unmap a user memory range.
  *
- * @param[in] user_info User information pointer as passed to
+ * @param[in] fd RTDM file descriptor as passed to 
  * rtdm_mmap_to_user() when requesting to map the memory range
  * @param[in] ptr User address or the memory range
  * @param[in] len Length of the memory range
@@ -2121,11 +2115,11 @@ EXPORT_SYMBOL_GPL(rtdm_munmap);
 /**
  * @brief Enforces a rate limit
  *
- * This function enforces a rate limit: not more than @rs->burst callbacks
- * in every @rs->interval.
+ * This function enforces a rate limit: not more than @a rs->burst callbacks
+ * in every @a rs->interval.
  *
- * @param[in,out] rtdm_ratelimit_state data
- * @param[in] name of calling function
+ * @param[in,out] rs rtdm_ratelimit_state data
+ * @param[in] func name of calling function
  *
  * @return 0 means callback will be suppressed and 1 means go ahead and do it
  *
@@ -2262,7 +2256,7 @@ void rtdm_free(void *ptr);
 /**
  * Check if read access to user-space memory block is safe
  *
- * @param[in] user_info User information pointer as passed to the invoked
+ * @param[in] fd RTDM file descriptor as passed to the invoked
  * device operation handler
  * @param[in] ptr Address of the user-provided memory block
  * @param[in] size Size of the memory block
@@ -2286,7 +2280,7 @@ int rtdm_read_user_ok(struct rtdm_fd *fd, const void __user *ptr,
 /**
  * Check if read/write access to user-space memory block is safe
  *
- * @param[in] user_info User information pointer as passed to the invoked
+ * @param[in] fd RTDM file descriptor as passed to the invoked
  * device operation handler
  * @param[in] ptr Address of the user-provided memory block
  * @param[in] size Size of the memory block
@@ -2310,7 +2304,7 @@ int rtdm_rw_user_ok(struct rtdm_fd *fd, const void __user *ptr,
 /**
  * Copy user-space memory block to specified buffer
  *
- * @param[in] user_info User information pointer as passed to the invoked
+ * @param[in] fd RTDM file descriptor as passed to the invoked
  * device operation handler
  * @param[in] dst Destination buffer address
  * @param[in] src Address of the user-space memory block
@@ -2340,7 +2334,7 @@ int rtdm_copy_from_user(struct rtdm_fd *fd, void *dst,
  * Check if read access to user-space memory block and copy it to specified
  * buffer
  *
- * @param[in] user_info User information pointer as passed to the invoked
+ * @param[in] fd RTDM file descriptor as passed to the invoked
  * device operation handler
  * @param[in] dst Destination buffer address
  * @param[in] src Address of the user-space memory block
@@ -2369,7 +2363,7 @@ int rtdm_safe_copy_from_user(struct rtdm_fd *fd, void *dst,
 /**
  * Copy specified buffer to user-space memory block
  *
- * @param[in] user_info User information pointer as passed to the invoked
+ * @param[in] fd RTDM file descriptor as passed to the invoked
  * device operation handler
  * @param[in] dst Address of the user-space memory block
  * @param[in] src Source buffer address
@@ -2399,7 +2393,7 @@ int rtdm_copy_to_user(struct rtdm_fd *fd, void __user *dst,
  * Check if read/write access to user-space memory block is safe and copy
  * specified buffer to it
  *
- * @param[in] user_info User information pointer as passed to the invoked
+ * @param[in] fd RTDM file descriptor as passed to the invoked
  * device operation handler
  * @param[in] dst Address of the user-space memory block
  * @param[in] src Source buffer address
@@ -2428,7 +2422,7 @@ int rtdm_safe_copy_to_user(struct rtdm_fd *fd, void __user *dst,
 /**
  * Copy user-space string to specified buffer
  *
- * @param[in] user_info User information pointer as passed to the invoked
+ * @param[in] fd RTDM file descriptor as passed to the invoked
  * device operation handler
  * @param[in] dst Destination buffer address
  * @param[in] src Address of the user-space string
@@ -2477,7 +2471,7 @@ int rtdm_in_rt_context(void);
 /**
  * Test if the caller is capable of running in real-time context
  *
- * @param[in] user_info User information pointer as passed to the invoked
+ * @param[in] fd RTDM file descriptor as passed to the invoked
  * device operation handler
  *
  * @return Non-zero is returned if the caller is able to execute in real-time

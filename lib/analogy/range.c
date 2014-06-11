@@ -60,8 +60,8 @@ static void data8_set(void *dst, lsampl_t val)
 #endif /* !DOXYGEN_CPP */
 
 /*!
- * @ingroup level2_lib
- * @defgroup rng2_lib Range / conversion API
+ * @ingroup analogy_lib_level2
+ * @defgroup analogy_lib_rng2 Range / conversion API
  * @{
  */
 

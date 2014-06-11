@@ -23,13 +23,15 @@
 #ifndef _COBALT_KERNEL_CLOCK_H
 #define _COBALT_KERNEL_CLOCK_H
 
-/*! \addtogroup clock
- *@{*/
-
 #include <linux/ipipe.h>
 #include <cobalt/kernel/list.h>
 #include <cobalt/kernel/vfile.h>
 #include <cobalt/uapi/kernel/types.h>
+
+/**
+ * @addtogroup core_clock
+ * @{
+ */
 
 struct xnsched;
 struct xntimerdata;
@@ -275,6 +277,6 @@ int xnclock_init(unsigned long long freq);
 
 void xnclock_cleanup(void);
 
-/*@}*/
+/** @} */
 
 #endif /* !_COBALT_KERNEL_CLOCK_H */

@@ -10,16 +10,25 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
-
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
- *
- * @defgroup alchemy_mutex Mutex services.
- * @ingroup alchemy_mutex
+ */
+#include <errno.h>
+#include <string.h>
+#include <copperplate/threadobj.h>
+#include <copperplate/heapobj.h>
+#include "internal.h"
+#include "mutex.h"
+#include "timer.h"
+#include "task.h"
+
+/**
  * @ingroup alchemy
+ * @defgroup alchemy_mutex Mutex services
  *
- * Mutex services.
+ * POSIXish mutual exclusion servicesl
  *
  * A mutex is a MUTual EXclusion object, and is useful for protecting
  * shared data structures from concurrent modifications, and
@@ -34,22 +43,8 @@
  * Xenomai mutex services enforce a priority inheritance protocol in
  * order to solve priority inversions.
  *
- *@{*/
-
-#include <errno.h>
-#include <string.h>
-#include <copperplate/threadobj.h>
-#include <copperplate/heapobj.h>
-#include "internal.h"
-#include "mutex.h"
-#include "timer.h"
-#include "task.h"
-
-/*
- * XXX: we can't obtain priority inheritance with syncobj, so we have
- * to base this code directly over the POSIX layer.
+ * @{
  */
-
 struct syncluster alchemy_mutex_table;
 
 static DEFINE_NAME_GENERATOR(mutex_namegen, "mutex",
@@ -129,6 +124,11 @@ int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 		goto out;
 	}
 
+
+	/*
+	 * XXX: we can't obtain priority inheritance with syncobj, so
+	 * we have to base this code directly over the POSIX layer.
+	 */
 	generate_name(mcb->name, name, &mutex_namegen);
 	mcb->owner = NO_ALCHEMY_TASK;
 	pthread_mutexattr_init(&mattr);
@@ -404,7 +404,10 @@ int rt_mutex_release(RT_MUTEX *mutex)
  * This routine returns the status information about the specified
  * mutex.
  *
- * @param The descriptor address of the mutex to get the status of.
+ * @param mutex The descriptor address of the mutex to get the status of.
+ *
+ * @param info A pointer to the @ref RT_MUTEX_INFO "return
+ * buffer" to copy the information to.
  *
  * @return Zero is returned and status information is written to the
  * structure pointed at by @a info upon success. Otherwise:
@@ -522,4 +525,4 @@ int rt_mutex_unbind(RT_MUTEX *mutex)
 	return 0;
 }
 
-/*@}*/
+/** @} */

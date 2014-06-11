@@ -22,6 +22,38 @@
 #include "current.h"
 #include "internal.h"
 
+/**
+ * @ingroup cobalt
+ * @defgroup cobalt_mutex Mutual exclusion
+ *
+ * Cobalt/POSIX mutual exclusion services
+ *
+ * A mutex is a MUTual EXclusion device, and is useful for protecting
+ * shared data structures from concurrent modifications, and implementing
+ * critical sections and monitors.
+ *
+ * A mutex has two possible states: unlocked (not owned by any thread), and
+ * locked (owned by one thread). A mutex can never be owned by two different
+ * threads simultaneously. A thread attempting to lock a mutex that is already
+ * locked by another thread is suspended until the owning thread unlocks the
+ * mutex first.
+ *
+ * Before it can be used, a mutex has to be initialized with
+ * pthread_mutex_init(). An attribute object, which reference may be passed to
+ * this service, allows to select the features of the created mutex, namely its
+ * @a type (see pthread_mutexattr_settype()), the priority @a protocol it
+ * uses (see pthread_mutexattr_setprotocol()) and whether it may be shared
+ * between several processes (see pthread_mutexattr_setpshared()).
+ *
+ * By default, Cobalt mutexes are of the normal type, use no
+ * priority protocol and may not be shared between several processes.
+ *
+ * Note that only pthread_mutex_init() may be used to initialize a mutex, using
+ * the static initializer @a PTHREAD_MUTEX_INITIALIZER is not supported.
+ *
+ *@{
+ */
+
 static pthread_mutexattr_t cobalt_default_mutexattr;
 
 void cobalt_default_mutexattr_init(void)
@@ -306,3 +338,5 @@ do_syscall:
 
 	return -err;
 }
+
+/** @} */

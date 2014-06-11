@@ -22,11 +22,16 @@
 #include <stdint.h>
 #include <alchemy/timer.h>
 
-/* Creation flags. */
+/**
+ * @addtogroup alchemy_event
+ * @{
+ */
+
+/** Creation flags. */
 #define EV_PRIO  0x1	/* Pend by task priority order. */
 #define EV_FIFO  0x0	/* Pend by FIFO order. */
 
-/* Operation flags. */
+/** Operation flags. */
 #define EV_ANY  0x1	/* Disjunctive wait. */
 #define EV_ALL  0x0	/* Conjunctive wait. */
 
@@ -114,5 +119,7 @@ int rt_event_unbind(RT_EVENT *event);
 #ifdef __cplusplus
 }
 #endif
+
+/** @} */
 
 #endif /* _XENOMAI_ALCHEMY_EVENT_H */

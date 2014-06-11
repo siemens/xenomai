@@ -24,9 +24,9 @@
 
 /*
  *
- * @ingroup rtipc
- * @ingroup profiles
- * @defgroup rtipc Real-time IPC protocols
+ * @ingroup rtdm_ipc
+ * @ingroup rtdm_profiles
+ * @defgroup rtdm_ipc Real-time IPC protocols
  *
  * @b Profile @b Revision: 1
  * @n

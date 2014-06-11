@@ -15,10 +15,6 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- *
- * @ingroup nucleus
- * @defgroup synch Thread synchronization services.
- * @{
  */
 #include <stdarg.h>
 #include <cobalt/kernel/sched.h>
@@ -27,6 +23,12 @@
 #include <cobalt/kernel/clock.h>
 #include <cobalt/kernel/shadow.h>
 #include <trace/events/cobalt-core.h>
+
+/**
+ * @ingroup core
+ * @defgroup core_synch Thread synchronization services.
+ * @{
+ */
 
 /**
  * @fn void xnsynch_init(struct xnsynch *synch, int flags,
@@ -557,7 +559,7 @@ static struct xnthread *transfer_ownership(struct xnsynch *synch,
 }
 
 /**
- * @fn struct xnthread *xnsynch_release(struct xnsynch *synch, struct xnthread *owner);
+ * @fn struct xnthread *xnsynch_release(struct xnsynch *synch, struct xnthread *thread)
  * @brief Give the resource ownership to the next waiting thread.
  *
  * This service releases the ownership of the given synchronization
@@ -571,7 +573,7 @@ static struct xnthread *transfer_ownership(struct xnsynch *synch,
  * @param synch The descriptor address of the synchronization object
  * whose ownership is changed.
  *
- * @param owner The descriptor address of the current owner.
+ * @param thread The descriptor address of the current owner.
  *
  * @return The descriptor address of the unblocked thread.
  *
@@ -904,5 +906,4 @@ void xnsynch_detect_claimed_relax(struct xnthread *owner)
 
 #endif /* XENO_DEBUG(SYNCH_RELAX) */
 
-
-/*@}*/
+/** @} */

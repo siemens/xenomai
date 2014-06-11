@@ -16,21 +16,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/**
- * @ingroup cobalt
- * @defgroup cobalt_sem Semaphores services.
- *
- * Semaphores services.
- *
- * Semaphores are counters for resources shared between threads. The basic
- * operations on semaphores are: increment the counter atomically, and wait
- * until the counter is non-null and decrement it atomically.
- *
- * Semaphores have a maximum value past which they cannot be incremented.  The
- * macro @a SEM_VALUE_MAX is defined to be this maximum value.
- *
- *@{*/
-
 #include <stddef.h>
 #include <linux/err.h>
 #include "internal.h"
@@ -188,38 +173,6 @@ out:
 	return ERR_PTR(ret);
 }
 
-/**
- * Destroy an unnamed semaphore.
- *
- * This service destroys the semaphore @a sm. Threads currently blocked on @a sm
- * are unblocked and the service they called return -1 with @a errno set to
- * EINVAL. The semaphore is then considered invalid by all semaphore services
- * (they all fail with @a errno set to EINVAL) except sem_init().
- *
- * This service fails if @a sm is a named semaphore.
- *
- * @param sm the semaphore to be destroyed.
- *
- * @retval always 0 on success.  If SEM_WARNDEL was mentioned in
- * sem_init_np(), the semaphore is deleted as requested and a strictly
- * positive value is returned to warn the caller if threads were
- * pending on it, otherwise zero is returned. If SEM_NOBUSYDEL was
- * mentioned in sem_init_np(), sem_destroy() may succeed only if no
- * thread is waiting on the semaphore to delete, otherwise -EBUSY is
- * returned.
- *
- * @retval -1 with @a errno set if:
- * - EINVAL, the semaphore @a sm is invalid or a named semaphore;
- * - EPERM, the semaphore @a sm is not process-shared and does not belong to the
- *   current process.
- * - EBUSY, a thread is currently waiting on the semaphore @a sm with
- * SEM_NOBUSYDEL set.
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_destroy.html">
- * Specification.</a>
- *
- */
 static int sem_destroy(struct cobalt_sem_shadow *sm)
 {
 	struct cobalt_sem *sem;
@@ -264,100 +217,6 @@ static int sem_destroy(struct cobalt_sem_shadow *sm)
 	return ret;
 }
 
-/**
- * Open a named semaphore.
- *
- * This service establishes a connection between the semaphore named @a name and
- * the calling context (kernel-space as a whole, or user-space process).
- *
- * If no semaphore named @a name exists and @a oflags has the @a O_CREAT bit
- * set, the semaphore is created by this function, using two more arguments:
- * - a @a mode argument, of type @b mode_t, currently ignored;
- * - a @a value argument, of type @b unsigned, specifying the initial value of
- *   the created semaphore.
- *
- * If @a oflags has the two bits @a O_CREAT and @a O_EXCL set and the semaphore
- * already exists, this service fails.
- *
- * @a name may be any arbitrary string, in which slashes have no particular
- * meaning. However, for portability, using a name which starts with a slash and
- * contains no other slash is recommended.
- *
- * If sem_open() is called from the same context (kernel-space as a whole, or
- * user-space process) several times with the same value of @a name, the same
- * address is returned.
- *
- * @param name the name of the semaphore to be created;
- *
- * @param oflags flags.
- *
- * @return the address of the named semaphore on success;
- * @return SEM_FAILED with @a errno set if:
- * - ENAMETOOLONG, the length of the @a name argument exceeds 64 characters;
- * - EEXIST, the bits @a O_CREAT and @a O_EXCL were set in @a oflags and the
- *   named semaphore already exists;
- * - ENOENT, the bit @a O_CREAT is not set in @a oflags and the named semaphore
- *   does not exist;
- * - ENOSPC, insufficient memory exists in the system heap to create the
- *   semaphore, increase CONFIG_XENO_OPT_SYS_HEAPSZ;
- * - EINVAL, the @a value argument exceeds @a SEM_VALUE_MAX.
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_open.html">
- * Specification.</a>
- *
- */
-
-/**
- * Close a named semaphore.
- *
- * This service closes the semaphore @a sm. The semaphore is destroyed only when
- * unlinked with a call to the sem_unlink() service and when each call to
- * sem_open() matches a call to this service.
- *
- * When a semaphore is destroyed, the memory it used is returned to the system
- * heap, so that further references to this semaphore are not guaranteed to
- * fail, as is the case for unnamed semaphores.
- *
- * This service fails if @a sm is an unnamed semaphore.
- *
- * @param sm the semaphore to be closed.
- *
- * @retval 0 on success;
- * @retval -1 with @a errno set if:
- * - EINVAL, the semaphore @a sm is invalid or is an unnamed semaphore.
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_close.html">
- * Specification.</a>
- *
- */
-
-/**
- * Unlink a named semaphore.
- *
- * This service unlinks the semaphore named @a name. This semaphore is not
- * destroyed until all references obtained with sem_open() are closed by calling
- * sem_close(). However, the unlinked semaphore may no longer be reached with
- * the sem_open() service.
- *
- * When a semaphore is destroyed, the memory it used is returned to the system
- * heap, so that further references to this semaphore are not guaranteed to
- * fail, as is the case for unnamed semaphores.
- *
- * @param name the name of the semaphore to be unlinked.
- *
- * @retval 0 on success;
- * @retval -1 with @a errno set if:
- * - ENAMETOOLONG, the length of the @a name argument exceeds 64 characters;
- * - ENOENT, the named semaphore does not exist.
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_unlink.html">
- * Specification.</a>
- *
- */
-
 static inline int sem_trywait_inner(struct cobalt_sem *sem)
 {
 	if (sem == NULL || sem->magic != COBALT_SEM_MAGIC)
@@ -374,27 +233,6 @@ static inline int sem_trywait_inner(struct cobalt_sem *sem)
 	return 0;
 }
 
-/**
- * Attempt to decrement a semaphore.
- *
- * This service is equivalent to sem_wait(), except that it returns
- * immediately if the semaphore @a sm is currently depleted, and that
- * it is not a cancellation point.
- *
- * @param sem the semaphore to be decremented.
- *
- * @retval 0 on success;
- * @retval -1 with @a errno set if:
- * - EINVAL, the specified semaphore is invalid or uninitialized;
- * - EPERM, the semaphore @a sm is not process-shared and does not belong to the
- *   current process;
- * - EAGAIN, the specified semaphore is currently fully depleted.
- *
- * * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_trywait.html">
- * Specification.</a>
- *
- */
 static int sem_trywait(xnhandle_t handle)
 {
 	int err;
@@ -475,78 +313,11 @@ einval:
 	goto out;
 }
 
-/**
- * Decrement a semaphore.
- *
- * This service decrements the semaphore @a sm if it is currently if
- * its value is greater than 0. If the semaphore's value is currently
- * zero, the calling thread is suspended until the semaphore is
- * posted, or a signal is delivered to the calling thread.
- *
- * This service is a cancellation point for Cobalt threads (created
- * with the pthread_create() service). When such a thread is cancelled
- * while blocked in a call to this service, the semaphore state is
- * left unchanged before the cancellation cleanup handlers are called.
- *
- * @param sem the semaphore to be decremented.
- *
- * @retval 0 on success;
- * @retval -1 with @a errno set if:
- * - EPERM, the caller context is invalid;
- * - EINVAL, the semaphore is invalid or uninitialized;
- * - EPERM, the semaphore @a sm is not process-shared and does not belong to the
- *   current process;
- * - EINTR, the caller was interrupted by a signal while blocked in this
- *   service.
- *
- * @par Valid contexts:
- * - Xenomai kernel-space thread,
- * - Xenomai user-space thread (switches to primary mode).
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_wait.html">
- * Specification.</a>
- *
- */
 static int sem_wait(xnhandle_t handle)
 {
 	return sem_wait_inner(handle, 0, NULL);
 }
 
-/**
- * Attempt, during a bounded time, to decrement a semaphore.
- *
- * This service is equivalent to sem_wait(), except that the caller is only
- * blocked until the timeout @a abs_timeout expires.
- *
- * @param sem the semaphore to be decremented;
- *
- * @param abs_timeout the timeout, expressed as an absolute value of
- * the relevant clock for the semaphore, either CLOCK_MONOTONIC if
- * SEM_RAWCLOCK was mentioned via sem_init_np(), or CLOCK_REALTIME
- * otherwise.
- *
- * @retval 0 on success;
- * @retval -1 with @a errno set if:
- * - EPERM, the caller context is invalid;
- * - EINVAL, the semaphore is invalid or uninitialized;
- * - EINVAL, the specified timeout is invalid;
- * - EPERM, the semaphore @a sm is not process-shared and does not belong to the
- *   current process;
- * - EINTR, the caller was interrupted by a signal while blocked in this
- *   service;
- * - ETIMEDOUT, the semaphore could not be decremented and the
- *   specified timeout expired.
- *
- * @par Valid contexts:
- * - Xenomai kernel-space thread,
- * - Xenomai user-space thread (switches to primary mode).
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_timedwait.html">
- * Specification.</a>
- *
- */
 static int sem_timedwait(xnhandle_t handle,
 			 const struct timespec __user *abs_timeout)
 {
@@ -584,30 +355,6 @@ int sem_post_inner(struct cobalt_sem *sem, struct cobalt_kqueues *ownq, int bcas
 	return 0;
 }
 
-/**
- * Post a semaphore.
- *
- * This service posts the semaphore @a sm.
- *
- * If no thread is currently blocked on this semaphore, its count is
- * incremented unless "pulse" mode is enabled for it (see
- * sem_init_np(), SEM_PULSE). If a thread is blocked on the semaphore,
- * the thread heading the wait queue is unblocked.
- *
- * @param sm the semaphore to be signaled.
- *
- * @retval 0 on success;
- * @retval -1 with errno set if:
- * - EINVAL, the specified semaphore is invalid or uninitialized;
- * - EPERM, the semaphore @a sm is not process-shared and does not belong to the
- *   current process;
- * - EAGAIN, the semaphore count is @a SEM_VALUE_MAX.
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_post.html">
- * Specification.</a>
- *
- */
 static int sem_post(xnhandle_t handle)
 {
 	struct cobalt_sem *sm;
@@ -622,34 +369,6 @@ static int sem_post(xnhandle_t handle)
 	return ret;
 }
 
-/**
- * Get the value of a semaphore.
- *
- * This service stores at the address @a value, the current count of the
- * semaphore @a sm. The state of the semaphore is unchanged.
- *
- * If the semaphore is currently fully depleted, the value stored is
- * zero, unless SEM_REPORT was mentioned for a non-standard semaphore
- * (see sem_init_np()), in which case the current number of waiters is
- * returned as the semaphore's negative value (e.g. -2 would mean the
- * semaphore is fully depleted AND two threads are currently pending
- * on it).
- *
- * @param sem a semaphore;
- *
- * @param value address where the semaphore count will be stored on success.
- *
- * @retval 0 on success;
- * @retval -1 with @a errno set if:
- * - EINVAL, the semaphore is invalid or uninitialized;
- * - EPERM, the semaphore @a sm is not process-shared and does not belong to the
- *   current process.
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_getvalue.html">
- * Specification.</a>
- *
- */
 static int sem_getvalue(xnhandle_t handle, int *value)
 {
 	struct cobalt_sem *sem;
@@ -899,7 +618,7 @@ void cobalt_semq_cleanup(struct cobalt_kqueues *q)
 	list_for_each_entry_safe(sem, tmp, &q->semq, link) {
 		xnlock_put_irqrestore(&nklock, s);
 		if (sem->flags & SEM_NAMED)
-			cobalt_nsem_unlink_inner(sem->handle);
+			cobalt_sem_unlink_inner(sem->handle);
 		cobalt_sem_destroy_inner(sem->handle);
 		xnlock_get_irqsave(&nklock, s);
 	}
@@ -917,5 +636,3 @@ void cobalt_sem_pkg_cleanup(void)
 {
 	cobalt_semq_cleanup(&cobalt_global_kqueues);
 }
-
-/*@}*/

@@ -15,11 +15,7 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- *
- * @ingroup nucleus
- * @defgroup debug Debugging services.
- *@{
-*/
+ */
 #include <linux/types.h>
 #include <linux/limits.h>
 #include <linux/ctype.h>
@@ -31,6 +27,11 @@
 #include <cobalt/kernel/ppd.h>
 #include "debug.h"
 
+/**
+ * @ingroup core
+ * @defgroup core_debug Debugging services
+ * @{
+ */
 struct xnvfile_directory debug_vfroot;
 EXPORT_SYMBOL_GPL(debug_vfroot);
 
@@ -654,4 +655,4 @@ void xndebug_cleanup(void)
 	cleanup_trace_relax();
 }
 
-/*@}*/
+/** @} */

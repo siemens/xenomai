@@ -29,11 +29,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
- *
- * @ingroup rtcan
  */
 #ifndef _RTDM_UAPI_CAN_H
 #define _RTDM_UAPI_CAN_H
+
+/**
+ * @addtogroup rtdm_can
+ * @{
+ */
 
 #define RTCAN_PROFILE_VER  2
 
@@ -963,10 +966,6 @@ typedef struct can_frame {
 #define CAN_ERR_TRX_CANL_SHORT_TO_VCC	0x60 /**< 0110 0000 */
 #define CAN_ERR_TRX_CANL_SHORT_TO_GND	0x70 /**< 0111 0000 */
 #define CAN_ERR_TRX_CANL_SHORT_TO_CANH	0x80 /**< 1000 0000 */
-/** @} */
-
-/* controller specific additional information / data[5..7] */
-
 /** @} */
 
 /** @} */

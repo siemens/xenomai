@@ -23,6 +23,11 @@
 #include <alchemy/timer.h>
 #include <alchemy/mutex.h>
 
+/**
+ * @addtogroup alchemy_cond
+ * @{
+ */
+
 struct RT_COND {
 	uintptr_t handle;
 };
@@ -88,5 +93,7 @@ int rt_cond_unbind(RT_COND *cond);
 #ifdef __cplusplus
 }
 #endif
+
+/** @} */
 
 #endif /* _XENOMAI_ALCHEMY_COND_H */

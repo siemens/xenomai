@@ -26,18 +26,22 @@
 #include <copperplate/threadobj.h>
 #include <alchemy/timer.h>
 
+/**
+ * @addtogroup alchemy_task
+ * @{
+ */
+
+/** Task priorities. */
 #define T_LOPRIO  0
 #define T_HIPRIO  99
 
-/*
- * Task mode bits.
- */
+/** Task mode bits. */
 #define T_LOCK		__THREAD_M_LOCK
-/* Cobalt only, nop over Mercury. */
+/** Cobalt only, nop over Mercury. */
 #define T_WARNSW	__THREAD_M_WARNSW
 #define T_CONFORMING	__THREAD_M_CONFORMING
 #define T_JOINABLE	__THREAD_M_SPARE0
-/* Deprecated, compat only. */
+/** Deprecated, compat only. */
 #define T_FPU		0x0
 
 struct RT_TASK {
@@ -202,5 +206,7 @@ int rt_task_unbind(RT_TASK *task);
 #ifdef __cplusplus
 }
 #endif
+
+/** @} */
 
 #endif /* _XENOMAI_ALCHEMY_TASK_H */

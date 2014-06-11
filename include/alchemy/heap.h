@@ -22,9 +22,12 @@
 #include <stdint.h>
 #include <alchemy/timer.h>
 
-/*
- * Creation flags.
+/**
+ * @addtogroup alchemy_heap
+ * @{
  */
+
+/** Creation flags. */
 #define H_PRIO    0x1	/* Pend by task priority order. */
 #define H_FIFO    0x0	/* Pend by FIFO order. */
 #define H_SINGLE  0x4	/* Manage as single-block area. */
@@ -127,5 +130,7 @@ int rt_heap_unbind(RT_HEAP *heap);
 #ifdef __cplusplus
 }
 #endif
+
+/** @} */
 
 #endif /* _XENOMAI_ALCHEMY_HEAP_H */

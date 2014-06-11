@@ -17,23 +17,7 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- *
- * \ingroup timer
  */
-
-/*!
- * \ingroup nucleus
- * \defgroup timer Timer services.
- *
- * The Xenomai timer facility depends on a Xenomai clock source
- * (xnclock) for scheduling the next activation times.
- *
- * The Xenomai core provides and depends on a monotonic clock source
- * (nkclock) with nanosecond resolution, driving the platform timer
- * hardware exposed by the interrupt pipeline.
- *
- *@{*/
-
 #include <linux/ipipe.h>
 #include <linux/ipipe_tickdev.h>
 #include <linux/sched.h>
@@ -45,6 +29,20 @@
 #include <cobalt/kernel/trace.h>
 #include <cobalt/kernel/arith.h>
 #include <trace/events/cobalt-core.h>
+
+/**
+ * @ingroup core
+ * @defgroup core_timer Timer services
+ *
+ * The Xenomai timer facility depends on a clock source (xnclock) for
+ * scheduling the next activation times.
+ *
+ * The core provides and depends on a monotonic clock source (nkclock)
+ * with nanosecond resolution, driving the platform timer hardware
+ * exposed by the interrupt pipeline.
+ *
+ * @{
+ */
 
 int xntimer_heading_p(struct xntimer *timer)
 {
@@ -741,4 +739,4 @@ void xntimer_cleanup_proc(void)
 
 #endif /* CONFIG_XENO_OPT_VFILE */
 
-/*@}*/
+/** @} */

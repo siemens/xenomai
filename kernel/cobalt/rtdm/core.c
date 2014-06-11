@@ -20,12 +20,6 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/*!
- * @ingroup driverapi
- * @defgroup interdrv Inter-Driver API
- * @{
- */
-
 #include <linux/workqueue.h>
 #include <linux/slab.h>
 #include <cobalt/kernel/ppd.h>
@@ -35,6 +29,13 @@
 #include "rtdm/internal.h"
 #define CREATE_TRACE_POINTS
 #include <trace/events/cobalt-rtdm.h>
+
+/**
+ * @ingroup rtdm
+ * @defgroup rtdm_driver_interface Driver programming interface
+ * RTDM driver programming interface
+ * @{
+ */
 
 #define CLOSURE_RETRY_PERIOD_MS	100
 
@@ -239,6 +240,11 @@ __rt_dev_ioctl_fallback(struct rtdm_fd *fd, unsigned int request, void __user *a
 #ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 
 /**
+ * @addtogroup rtdm_sync
+ *@{
+ */
+
+/**
  * @brief Increment context reference counter
  *
  * @param[in] context Device context
@@ -306,13 +312,412 @@ void rtdm_context_unlock(struct rtdm_dev_context *context);
 void rtdm_context_put(struct rtdm_dev_context *context);
 
 /**
+ * @ingroup rtdm_sync
+ * @defgroup rtdm_sync_wq Wait queue
+ * RTDM wait queues
+ * @{
+ */
+
+/**
+ * @fn void rtdm_waitqueue_init(struct rtdm_waitqueue *wq)
+ * @brief  Initialize a RTDM wait queue
+ *
+ * Sets up a wait queue structure for further use.
+ *
+ * @param wq waitqueue to initialize.
+ */
+void rtdm_waitqueue_init(struct rtdm_waitqueue *wq);
+
+/**
+ * @fn void rtdm_waitqueue_destroy(struct rtdm_waitqueue *wq)
+ * @brief  Deletes a RTDM wait queue
+ *
+ * Dismantles a wait queue structure, releasing all resources attached
+ * to it.
+ *
+ * @param wq waitqueue to delete.
+ */
+void rtdm_waitqueue_destroy(struct rtdm_waitqueue *wq);
+
+/**
+ * @fn rtdm_timedwait_condition_locked(struct rtdm_wait_queue *wq, C_expr condition, nanosecs_rel_t timeout, rtdm_toseq_t *toseq)
+ * @brief Timed sleep on a locked waitqueue until a condition gets true
+ *
+ * The calling task is put to sleep until @a condition evaluates to
+ * true or a timeout occurs. The condition is checked each time the
+ * waitqueue @a wq is signaled.
+ *
+ * The waitqueue must have been locked by a call to
+ * rtdm_waitqueue_lock() prior to calling this service.
+ *
+ * @param wq locked waitqueue to wait on. The waitqueue lock is
+ * dropped when sleeping, then reacquired before this service returns
+ * to the caller.
+ *
+ * @param condition C expression for the event to wait for.
+ *
+ * @param timeout relative timeout in nanoseconds, see
+ * @ref RTDM_TIMEOUT_xxx for special values.
+ * 
+ * @param[in,out] toseq handle of a timeout sequence as returned by
+ * rtdm_toseq_init() or NULL.
+ *
+ * @return 0 on success, otherwise:
+ *
+ * - -EINTR is returned if calling task has received a Linux signal or
+ * has been forcibly unblocked by a call to rtdm_task_unblock().
+ *
+ * - -ETIMEDOUT is returned if the if the request has not been satisfied
+ * within the specified amount of time.
+ *
+ * @note rtdm_waitqueue_signal() has to be called after changing any
+ * variable that could change the result of the wait condition.
+ *
+ * @note Passing RTDM_TIMEOUT_NONE to @a timeout makes no sense for
+ * such service, and might cause unexpected behavior.
+ */
+rtdm_timedwait_condition_locked(struct rtdm_wait_queue *wq, C_expr condition,
+				nanosecs_rel_t timeout, rtdm_toseq_t *toseq);
+
+/**
+ * @fn rtdm_wait_condition_locked(struct rtdm_wait_queue *wq, C_expr condition)
+ * @brief Sleep on a locked waitqueue until a condition gets true
+ *
+ * The calling task is put to sleep until @a condition evaluates to
+ * true. The condition is checked each time the waitqueue @a wq is
+ * signaled.
+ *
+ * The waitqueue must have been locked by a call to
+ * rtdm_waitqueue_lock() prior to calling this service.
+ *
+ * @param wq locked waitqueue to wait on. The waitqueue lock is
+ * dropped when sleeping, then reacquired before this service returns
+ * to the caller.
+ *
+ * @param condition C expression for the event to wait for.
+ *
+ * @return 0 on success, otherwise:
+ *
+ * - -EINTR is returned if calling task has received a Linux signal or
+ * has been forcibly unblocked by a call to rtdm_task_unblock().
+ *
+ * @note rtdm_waitqueue_signal() has to be called after changing any
+ * variable that could change the result of the wait condition.
+ */
+rtdm_wait_condition_locked(struct rtdm_wait_queue *wq, C_expr condition);
+
+/**
+ * @fn rtdm_timedwait_condition(struct rtdm_wait_queue *wq, C_expr condition, nanosecs_rel_t timeout, rtdm_toseq_t *toseq)
+ * @brief Timed sleep on a waitqueue until a condition gets true
+ *
+ * The calling task is put to sleep until @a condition evaluates to
+ * true or a timeout occurs. The condition is checked each time the
+ * waitqueue @a wq is signaled.
+ *
+ * @param wq waitqueue to wait on.
+ *
+ * @param condition C expression for the event to wait for.
+ *
+ * @param timeout relative timeout in nanoseconds, see
+ * @ref RTDM_TIMEOUT_xxx for special values.
+ * 
+ * @param[in,out] toseq handle of a timeout sequence as returned by
+ * rtdm_toseq_init() or NULL.
+ *
+ * @return 0 on success, otherwise:
+ *
+ * - -EINTR is returned if calling task has received a Linux signal or
+ * has been forcibly unblocked by a call to rtdm_task_unblock().
+ *
+ * - -ETIMEDOUT is returned if the if the request has not been satisfied
+ * within the specified amount of time.
+ *
+ * @note rtdm_waitqueue_signal() has to be called after changing any
+ * variable that could change the result of the wait condition.
+ *
+ * @note Passing RTDM_TIMEOUT_NONE to @a timeout makes no sense for
+ * such service, and might cause unexpected behavior.
+ */
+rtdm_timedwait_condition(struct rtdm_wait_queue *wq, C_expr condition,
+			 nanosecs_rel_t timeout, rtdm_toseq_t *toseq);
+
+/**
+ * @fn void rtdm_timedwait(struct rtdm_wait_queue *wq, nanosecs_rel_t timeout, rtdm_toseq_t *toseq)
+ * @brief Timed sleep on a waitqueue unconditionally
+ *
+ * The calling task is put to sleep until the waitqueue is signaled by
+ * either rtdm_waitqueue_signal() or rtdm_waitqueue_broadcast(), or
+ * flushed by a call to rtdm_waitqueue_flush(), or a timeout occurs.
+ *
+ * @param wq waitqueue to wait on.
+ *
+ * @param timeout relative timeout in nanoseconds, see
+ * @ref RTDM_TIMEOUT_xxx for special values.
+ * 
+ * @param[in,out] toseq handle of a timeout sequence as returned by
+ * rtdm_toseq_init() or NULL.
+ *
+ * @return 0 on success, otherwise:
+ *
+ * - -EINTR is returned if the waitqueue has been flushed, or the
+ * calling task has received a Linux signal or has been forcibly
+ * unblocked by a call to rtdm_task_unblock().
+ *
+ * - -ETIMEDOUT is returned if the if the request has not been satisfied
+ * within the specified amount of time.
+ *
+ * @note Passing RTDM_TIMEOUT_NONE to @a timeout makes no sense for
+ * such service, and might cause unexpected behavior.
+ */
+void rtdm_timedwait(struct rtdm_wait_queue *wq,
+		    nanosecs_rel_t timeout, rtdm_toseq_t *toseq);
+
+/**
+ * @fn void rtdm_timedwait_locked(struct rtdm_wait_queue *wq, nanosecs_rel_t timeout, rtdm_toseq_t *toseq)
+ * @brief Timed sleep on a locked waitqueue unconditionally
+ *
+ * The calling task is put to sleep until the waitqueue is signaled by
+ * either rtdm_waitqueue_signal() or rtdm_waitqueue_broadcast(), or
+ * flushed by a call to rtdm_waitqueue_flush(), or a timeout occurs.
+ *
+ * The waitqueue must have been locked by a call to
+ * rtdm_waitqueue_lock() prior to calling this service.
+ *
+ * @param wq locked waitqueue to wait on. The waitqueue lock is
+ * dropped when sleeping, then reacquired before this service returns
+ * to the caller.
+ *
+ * @param timeout relative timeout in nanoseconds, see
+ * @ref RTDM_TIMEOUT_xxx for special values.
+ * 
+ * @param[in,out] toseq handle of a timeout sequence as returned by
+ * rtdm_toseq_init() or NULL.
+ *
+ * @return 0 on success, otherwise:
+ *
+ * - -EINTR is returned if the waitqueue has been flushed, or the
+ * calling task has received a Linux signal or has been forcibly
+ * unblocked by a call to rtdm_task_unblock().
+ *
+ * - -ETIMEDOUT is returned if the if the request has not been satisfied
+ * within the specified amount of time.
+ *
+ * @note Passing RTDM_TIMEOUT_NONE to @a timeout makes no sense for
+ * such service, and might cause unexpected behavior.
+ */
+void rtdm_timedwait_locked(struct rtdm_wait_queue *wq,
+			   nanosecs_rel_t timeout, rtdm_toseq_t *toseq);
+
+/**
+ * @fn rtdm_wait_condition(struct rtdm_wait_queue *wq, C_expr condition)
+ * @brief Sleep on a waitqueue until a condition gets true
+ *
+ * The calling task is put to sleep until @a condition evaluates to
+ * true. The condition is checked each time the waitqueue @a wq is
+ * signaled.
+ *
+ * @param wq waitqueue to wait on
+ *
+ * @param condition C expression for the event to wait for.
+ *
+ * @return 0 on success, otherwise:
+ *
+ * - -EINTR is returned if calling task has received a Linux signal or
+ * has been forcibly unblocked by a call to rtdm_task_unblock().
+ *
+ * @note rtdm_waitqueue_signal() has to be called after changing any
+ * variable that could change the result of the wait condition.
+ */
+rtdm_wait_condition(struct rtdm_wait_queue *wq, C_expr condition);
+
+/**
+ * @fn void rtdm_wait(struct rtdm_wait_queue *wq)
+ * @brief Sleep on a waitqueue unconditionally
+ *
+ * The calling task is put to sleep until the waitqueue is signaled by
+ * either rtdm_waitqueue_signal() or rtdm_waitqueue_broadcast(), or
+ * flushed by a call to rtdm_waitqueue_flush().
+ *
+ * @param wq waitqueue to wait on.
+ *
+ * @return 0 on success, otherwise:
+ *
+ * - -EINTR is returned if the waitqueue has been flushed, or the
+ * calling task has received a Linux signal or has been forcibly
+ * unblocked by a call to rtdm_task_unblock().
+ */
+void rtdm_wait(struct rtdm_wait_queue *wq);
+
+/**
+ * @fn void rtdm_wait_locked(struct rtdm_wait_queue *wq)
+ * @brief Sleep on a locked waitqueue unconditionally
+ *
+ * The calling task is put to sleep until the waitqueue is signaled by
+ * either rtdm_waitqueue_signal() or rtdm_waitqueue_broadcast(), or
+ * flushed by a call to rtdm_waitqueue_flush().
+ *
+ * The waitqueue must have been locked by a call to
+ * rtdm_waitqueue_lock() prior to calling this service.
+ *
+ * @param wq locked waitqueue to wait on. The waitqueue lock is
+ * dropped when sleeping, then reacquired before this service returns
+ * to the caller.
+ *
+ * @return 0 on success, otherwise:
+ *
+ * - -EINTR is returned if the waitqueue has been flushed, or the
+ * calling task has received a Linux signal or has been forcibly
+ * unblocked by a call to rtdm_task_unblock().
+ */
+void rtdm_wait_locked(struct rtdm_wait_queue *wq);
+
+/**
+ * @fn void rtdm_waitqueue_lock(struct rtdm_wait_queue *wq, rtdm_lockctx_t context)
+ * @brief Lock a waitqueue
+ *
+ * Acquires the lock on the waitqueue @a wq.
+ *
+ * @param wq waitqueue to lock.
+ *
+ * @param context name of local variable to store the context in.
+ *
+ * @note Recursive locking might lead to unexpected behavior,
+ * including lock up.
+ */
+void rtdm_waitqueue_lock(struct rtdm_wait_queue *wq, rtdm_lockctx_t context);
+
+/**
+ * @fn void rtdm_waitqueue_unlock(struct rtdm_wait_queue *wq, rtdm_lockctx_t context)
+ * @brief Unlock a waitqueue
+ *
+ * Releases the lock on the waitqueue @a wq.
+ *
+ * @param wq waitqueue to unlock.
+ *
+ * @param context name of local variable to retrieve the context from.
+ */
+void rtdm_waitqueue_unlock(struct rtdm_wait_queue *wq, rtdm_lockctx_t context);
+
+/**
+ * @fn void rtdm_waitqueue_signal(struct rtdm_wait_queue *wq)
+ * @brief Signal a waitqueue
+ *
+ * Signals the waitqueue @a wq, waking up a single waiter (if
+ * any).
+ *
+ * @param wq waitqueue to signal.
+ *
+ * @return non-zero if a task has been readied as a result of this
+ * call, zero otherwise.
+ */
+void rtdm_waitqueue_signal(struct rtdm_wait_queue *wq);
+
+/**
+ * @fn void rtdm_waitqueue_broadcast(struct rtdm_wait_queue *wq)
+ * @brief Broadcast a waitqueue
+ *
+ * Broadcast the waitqueue @a wq, waking up all waiters. Each
+ * readied task may assume to have received the wake up event.
+ *
+ * @param wq waitqueue to broadcast.
+ *
+ * @return non-zero if at least one task has been readied as a result
+ * of this call, zero otherwise.
+ */
+void rtdm_waitqueue_broadcast(struct rtdm_wait_queue *wq);
+
+/**
+ * @fn void rtdm_waitqueue_flush(struct rtdm_wait_queue *wq)
+ * @brief Flush a waitqueue
+ *
+ * Flushes the waitqueue @a wq, unblocking all waiters with an error
+ * status (-EINTR).
+ *
+ * @param wq waitqueue to flush.
+ *
+ * @return non-zero if at least one task has been readied as a result
+ * of this call, zero otherwise.
+ */
+void rtdm_waitqueue_flush(struct rtdm_wait_queue *wq);
+
+/**
+ * @fn void rtdm_waitqueue_wakeup(struct rtdm_wait_queue *wq, rtdm_task_t waiter)
+ * @brief Signal a particular waiter on a waitqueue
+ *
+ * Signals the waitqueue @a wq, waking up waiter @a waiter only,
+ * which must be currently sleeping on the waitqueue.
+ *
+ * @param wq waitqueue to signal.
+ *
+ * @param waiter RTDM task to wake up.
+ */
+void rtdm_waitqueue_wakeup(struct rtdm_wait_queue *wq, rtdm_task_t waiter);
+
+/**
+ * @fn rtdm_for_each_waiter(rtdm_task_t pos, struct rtdm_wait_queue *wq)
+ * @brief Simple iterator for waitqueues
+ *
+ * This construct traverses the wait list of a given waitqueue
+ * @a wq, assigning each RTDM task pointer to the cursor variable
+ * @a pos, which must be of type rtdm_task_t.
+ *
+ * @a wq must have been locked by a call to rtdm_waitqueue_lock()
+ * prior to traversing its wait list.
+ *
+ * @param pos cursor variable holding a pointer to the RTDM task
+ * being fetched.
+ *
+ * @param wq waitqueue to scan.
+ *
+ * @note The waitqueue should not be signaled, broadcast or flushed
+ * during the traversal, unless the loop is aborted immediately
+ * after. Should multiple waiters be readied while iterating, the safe
+ * form rtdm_for_each_waiter_safe() must be used for traversal
+ * instead.
+ */
+rtdm_for_each_waiter(rtdm_task_t pos, struct rtdm_wait_queue *wq);
+
+/**
+ * @fn rtdm_for_each_waiter_safe(rtdm_task_t pos, rtdm_task_t tmp, struct rtdm_wait_queue *wq)
+ * @brief Safe iterator for waitqueues
+ *
+ * This construct traverses the wait list of a given waitqueue
+ * @a wq, assigning each RTDM task pointer to the cursor variable
+ * @a pos, which must be of type rtdm_task_t.
+ *
+ * Unlike with rtdm_for_each_waiter(), the waitqueue may be signaled,
+ * broadcast or flushed during the traversal.
+ *
+ * @a wq must have been locked by a call to rtdm_waitqueue_lock()
+ * prior to traversing its wait list.
+ *
+ * @param pos cursor variable holding a pointer to the RTDM task
+ * being fetched.
+ *
+ * @param tmp temporary cursor variable.
+ *
+ * @param wq waitqueue to scan.
+ */
+rtdm_for_each_waiter_safe(rtdm_task_t pos, rtdm_task_t tmp, struct rtdm_wait_queue *wq);
+
+/** @} in rtdm_sync */
+
+/** @} add rtdm_sync */
+
+/**
+ * @defgroup rtdm_foo Driver to driver services
+ * Inter-driver interface
+ *@{
+ */
+
+/**
  * @brief Open a device
  *
  * Refer to rt_dev_open() for parameters and return values
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  */
@@ -325,7 +730,7 @@ int rtdm_open(const char *path, int oflag, ...);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  */
@@ -338,7 +743,7 @@ int rtdm_socket(int protocol_family, int socket_type, int protocol);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  */
@@ -351,7 +756,7 @@ int rtdm_close(int fd);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  */
@@ -364,7 +769,7 @@ int rtdm_ioctl(int fd, int request, ...);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  */
@@ -377,7 +782,7 @@ ssize_t rtdm_read(int fd, void *buf, size_t nbyte);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  */
@@ -390,7 +795,7 @@ ssize_t rtdm_write(int fd, const void *buf, size_t nbyte);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  */
@@ -403,7 +808,7 @@ ssize_t rtdm_recvmsg(int fd, struct msghdr *msg, int flags);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  */
@@ -417,7 +822,7 @@ ssize_t rtdm_recvfrom(int fd, void *buf, size_t len, int flags,
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  */
@@ -430,7 +835,7 @@ ssize_t rtdm_recv(int fd, void *buf, size_t len, int flags);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  */
@@ -443,7 +848,7 @@ ssize_t rtdm_sendmsg(int fd, const struct msghdr *msg, int flags);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  */
@@ -457,7 +862,7 @@ ssize_t rtdm_sendto(int fd, const void *buf, size_t len, int flags,
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  */
@@ -470,7 +875,7 @@ ssize_t rtdm_send(int fd, const void *buf, size_t len, int flags);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  */
@@ -483,7 +888,7 @@ int rtdm_bind(int fd, const struct sockaddr *my_addr, socklen_t addrlen);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  */
@@ -496,20 +901,20 @@ int rtdm_connect(int fd, const struct sockaddr *serv_addr, socklen_t addrlen);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  */
 int rtdm_listen(int fd, int backlog);
 
 /**
- * @brief Accept a connection requests
+ * @brief Accept a connection request
  *
  * Refer to rt_dev_accept() for parameters and return values
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  */
@@ -522,7 +927,7 @@ int rtdm_accept(int fd, struct sockaddr *addr, socklen_t *addrlen);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  */
@@ -535,7 +940,7 @@ int rtdm_shutdown(int fd, int how);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  */
@@ -549,7 +954,7 @@ int rtdm_getsockopt(int fd, int level, int optname, void *optval,
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  */
@@ -563,7 +968,7 @@ int rtdm_setsockopt(int fd, int level, int optname, const void *optval,
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  */
@@ -576,16 +981,18 @@ int rtdm_getsockname(int fd, struct sockaddr *name, socklen_t *namelen);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  */
 int rtdm_getpeername(int fd, struct sockaddr *name, socklen_t *namelen);
 
+/** @} Inter-driver calls */
+
 /** @} */
 
 /*!
- * @addtogroup userapi
+ * @addtogroup rtdm_user_api
  * @{
  */
 
@@ -601,7 +1008,7 @@ int rtdm_getpeername(int fd, struct sockaddr *name, socklen_t *namelen);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  *
@@ -622,7 +1029,7 @@ int rt_dev_open(const char *path, int oflag, ...);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  *
@@ -644,7 +1051,7 @@ int rt_dev_socket(int protocol_family, int socket_type, int protocol);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  *
@@ -665,7 +1072,7 @@ int rt_dev_close(int fd);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  *
@@ -685,7 +1092,7 @@ int rt_dev_ioctl(int fd, int request, ...);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  *
@@ -705,7 +1112,7 @@ ssize_t rt_dev_read(int fd, void *buf, size_t nbyte);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  *
@@ -725,7 +1132,7 @@ ssize_t rt_dev_write(int fd, const void *buf, size_t nbyte);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  *
@@ -748,7 +1155,7 @@ ssize_t rt_dev_recvmsg(int fd, struct msghdr *msg, int flags);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  *
@@ -770,7 +1177,7 @@ ssize_t rt_dev_recvfrom(int fd, void *buf, size_t len, int flags,
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  *
@@ -790,7 +1197,7 @@ ssize_t rt_dev_recv(int fd, void *buf, size_t len, int flags);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  *
@@ -813,7 +1220,7 @@ ssize_t rt_dev_sendmsg(int fd, const struct msghdr *msg, int flags);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  *
@@ -835,7 +1242,7 @@ ssize_t rt_dev_sendto(int fd, const void *buf, size_t len, int flags,
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  *
@@ -855,7 +1262,7 @@ ssize_t rt_dev_send(int fd, const void *buf, size_t len, int flags);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  *
@@ -875,7 +1282,7 @@ int rt_dev_bind(int fd, const struct sockaddr *my_addr, socklen_t addrlen);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  *
@@ -895,7 +1302,7 @@ int rt_dev_connect(int fd, const struct sockaddr *serv_addr,
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  *
@@ -915,7 +1322,7 @@ int rt_dev_listen(int fd, int backlog);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  *
@@ -934,7 +1341,7 @@ int rt_dev_accept(int fd, struct sockaddr *addr, socklen_t *addrlen);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  *
@@ -956,7 +1363,7 @@ int rt_dev_shutdown(int fd, int how);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  *
@@ -979,7 +1386,7 @@ int rt_dev_getsockopt(int fd, int level, int optname, void *optval,
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  *
@@ -1000,7 +1407,7 @@ int rt_dev_setsockopt(int fd, int level, int optname, const void *optval,
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  *
@@ -1020,7 +1427,7 @@ int rt_dev_getsockname(int fd, struct sockaddr *name, socklen_t *namelen);
  *
  * Environments:
  *
- * Depends on driver implementation, see @ref profiles "Device Profiles".
+ * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
  *
  * Rescheduling: possible.
  *
@@ -1028,6 +1435,7 @@ int rt_dev_getsockname(int fd, struct sockaddr *name, socklen_t *namelen);
  * http://www.opengroup.org/onlinepubs/009695399
  */
 int rt_dev_getpeername(int fd, struct sockaddr *name, socklen_t *namelen);
-/** @} */
 
 #endif /* DOXYGEN_CPP */
+
+/** @} */

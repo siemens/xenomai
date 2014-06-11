@@ -183,8 +183,8 @@ static int __a4l_fill_desc(int fd, a4l_desc_t * dsc)
 #endif /* !DOXYGEN_CPP */
 
 /*!
- * @ingroup syscall
- * @defgroup descriptor_sys Descriptor Syscall API
+ * @ingroup analogy_lib_syscall
+ * @defgroup analogy_lib_descriptor Descriptor Syscall API
  * @{
  */
 
@@ -269,8 +269,8 @@ out_a4l_sys_desc:
 /*! @} Descriptor Syscall API */
 
 /*!
- * @ingroup level1_lib
- * @defgroup descriptor1_lib Descriptor API
+ * @ingroup analogy_lib_level1
+ * @defgroup analogy_lib_descriptor1 Descriptor API
  *
  * This is the API interface used to fill and use Analogy device
  * descriptor structure

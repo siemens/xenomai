@@ -23,10 +23,12 @@
 #ifndef _COBALT_KERNEL_MAP_H
 #define _COBALT_KERNEL_MAP_H
 
-/*! \addtogroup map
- *@{*/
-
 #include <asm/bitsperlong.h>
+
+/**
+ * @addtogroup core_map
+ * @{
+ */
 
 #define XNMAP_MAX_KEYS	(BITS_PER_LONG * BITS_PER_LONG)
 
@@ -71,6 +73,6 @@ static inline void *xnmap_fetch(struct xnmap *map, int key)
 	return map->objarray[ofkey];
 }
 
-/*@}*/
+/** @} */
 
 #endif /* !_COBALT_KERNEL_MAP_H */

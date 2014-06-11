@@ -19,11 +19,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
- *
- * @ingroup rtcan
- *
- * @ingroup profiles
- * @defgroup rtcan CAN Devices
+ */
+#ifndef _RTDM_CAN_H
+#define _RTDM_CAN_H
+
+#include <net/if.h>
+#include <rtdm/rtdm.h>
+#include <rtdm/uapi/can.h>
+
+/**
+ * @ingroup rtdm_profiles
+ * @defgroup rtdm_can CAN Devices
  *
  * This is the common interface a RTDM-compliant CAN device has to provide.
  * Feel free to report bugs and comments on this profile to the "Socketcan"
@@ -219,23 +225,15 @@
  *          successful transmission of the message.
  *
  * @{
- */
-#ifndef _RTDM_CAN_H
-#define _RTDM_CAN_H
-
-#include <net/if.h>
-#include <rtdm/rtdm.h>
-#include <rtdm/uapi/can.h>
-
-/**
+ *
  * @anchor CANutils @name CAN example and utility programs
- * @{ */
-/** @example rtcanconfig.c */
-/** @example rtcansend.c */
-/** @example rtcanrecv.c */
-/** @example rtcan_rtt.c */
-/** @} */
-
-/** @} */
-
+ * @{
+ * @example rtcanconfig.c
+ * @example rtcansend.c
+ * @example rtcanrecv.c
+ * @example rtcan_rtt.c
+ * @}
+ *
+ * @}
+ */
 #endif /* !_RTDM_CAN_H */

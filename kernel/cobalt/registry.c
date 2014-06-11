@@ -17,13 +17,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
- *
- * \ingroup registry
  */
 
-/*!
- * \ingroup nucleus
- * \defgroup registry Registry services.
+#include <linux/slab.h>
+#include <cobalt/kernel/sched.h>
+#include <cobalt/kernel/heap.h>
+#include <cobalt/kernel/registry.h>
+#include <cobalt/kernel/thread.h>
+#include <cobalt/kernel/apc.h>
+#include <cobalt/kernel/assert.h>
+
+/**
+ * @ingroup core
+ * @defgroup core_registry Registry services
  *
  * The registry provides a mean to index object descriptors on unique
  * alphanumeric keys. When labeled this way, an object is globally
@@ -33,15 +39,8 @@
  * yet, the registry can be asked to set up a rendez-vous, blocking
  * the caller until the object is eventually registered.
  *
- *@{*/
-
-#include <linux/slab.h>
-#include <cobalt/kernel/sched.h>
-#include <cobalt/kernel/heap.h>
-#include <cobalt/kernel/registry.h>
-#include <cobalt/kernel/thread.h>
-#include <cobalt/kernel/apc.h>
-#include <cobalt/kernel/assert.h>
+ *@{
+ */
 
 struct xnobject *registry_obj_slots;
 EXPORT_SYMBOL_GPL(registry_obj_slots);
@@ -918,4 +917,4 @@ unlock_and_exit:
  * @remark Tags: isr-allowed.
  */
 
-/*@}*/
+/** @} */

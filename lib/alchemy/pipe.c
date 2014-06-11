@@ -10,16 +10,29 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
-
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
- *
- * @defgroup alchemy_pipe Message pipe services.
- * @ingroup alchemy_pipe
+ */
+#include <unistd.h>
+#include <errno.h>
+#include <string.h>
+#include <fcntl.h>
+#include "rtdm/ipc.h"
+#include "copperplate/threadobj.h"
+#include "copperplate/heapobj.h"
+#include "copperplate/cluster.h"
+#include "reference.h"
+#include "internal.h"
+#include "pipe.h"
+#include "timer.h"
+
+/**
  * @ingroup alchemy
+ * @defgroup alchemy_pipe Message pipe services
  *
- * Message pipe services.
+ * Two-way communication channel between Xenomai & Linux domains
  *
  * A message pipe is a two-way communication channel between Xenomai
  * threads and normal Linux threads using regular file I/O operations
@@ -40,20 +53,9 @@
  *
  * @note Alchemy's message pipes are fully based on the @ref
  * RTIPC_PROTO "XDDP protocol" available from the RTDM/ipc driver.
+ *
+ * @{
  */
-#include <unistd.h>
-#include <errno.h>
-#include <string.h>
-#include <fcntl.h>
-#include "rtdm/ipc.h"
-#include "copperplate/threadobj.h"
-#include "copperplate/heapobj.h"
-#include "copperplate/cluster.h"
-#include "reference.h"
-#include "internal.h"
-#include "pipe.h"
-#include "timer.h"
-
 struct syncluster alchemy_pipe_table;
 
 static DEFINE_NAME_GENERATOR(pipe_namegen, "pipe",
@@ -282,6 +284,12 @@ out:
  * @param buf A pointer to a memory area which will be written upon
  * success with the message received.
  *
+ * @param size The count of bytes from the received message to read up
+ * into @a buf. If @a size is lower than the actual message size,
+ * -ENOBUFS is returned since the incompletely received message would
+ * be lost. If @a size is zero, this call returns immediately with no
+ * other action.
+ *
  * @param timeout A delay expressed in clock ticks.
  */
 
@@ -298,6 +306,12 @@ out:
  * @param buf A pointer to a memory area which will be written upon
  * success with the message received.
  *
+ * @param size The count of bytes from the received message to read up
+ * into @a buf. If @a size is lower than the actual message size,
+ * -ENOBUFS is returned since the incompletely received message would
+ * be lost. If @a size is zero, this call returns immediately with no
+ * other action.
+ *
  * @param abs_timeout An absolute date expressed in clock ticks.
  */
 
@@ -312,6 +326,12 @@ out:
  *
  * @param buf A pointer to a memory area which will be written upon
  * success with the message received.
+ *
+ * @param size The count of bytes from the received message to read up
+ * into @a buf. If @a size is lower than the actual message size,
+ * -ENOBUFS is returned since the incompletely received message would
+ * be lost. If @a size is zero, this call returns immediately with no
+ * other action.
  *
  * @param abs_timeout An absolute date expressed in clock ticks,
  * specifying a time limit to wait for a message to be available from
@@ -554,3 +574,5 @@ int rt_pipe_unbind(RT_PIPE *pipe)
 	pipe->handle = 0;
 	return 0;
 }
+
+/** @} */

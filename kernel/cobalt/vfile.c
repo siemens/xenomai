@@ -19,9 +19,19 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include <stdarg.h>
+#include <linux/ctype.h>
+#include <linux/uaccess.h>
+#include <linux/module.h>
+#include <linux/slab.h>
+#include <cobalt/kernel/lock.h>
+#include <cobalt/kernel/assert.h>
+#include <cobalt/kernel/vfile.h>
+#include <asm/xenomai/wrappers.h>
+
 /**
- * @ingroup nucleus
- * @defgroup vfile Virtual file services
+ * @ingroup core
+ * @defgroup core_vfile Virtual file services
  *
  * Virtual files provide a mean to export Xenomai object states to
  * user-space, based on common kernel interfaces.  This encapsulation
@@ -71,16 +81,6 @@
  * objects.
  *
  *@{*/
-
-#include <stdarg.h>
-#include <linux/ctype.h>
-#include <linux/uaccess.h>
-#include <linux/module.h>
-#include <linux/slab.h>
-#include <cobalt/kernel/lock.h>
-#include <cobalt/kernel/assert.h>
-#include <cobalt/kernel/vfile.h>
-#include <asm/xenomai/wrappers.h>
 
 /**
  * @var struct xnvfile_directory nkvfroot
@@ -983,4 +983,4 @@ void xnvfile_destroy_root(void)
 	remove_proc_entry("xenomai", NULL);
 }
 
-/*@}*/
+/** @} */

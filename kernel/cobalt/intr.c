@@ -17,10 +17,6 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- *
- * @ingroup nucleus
- * @defgroup intr Interrupt management.
- * @{
 */
 
 #include <linux/mutex.h>
@@ -33,6 +29,11 @@
 #include <cobalt/kernel/assert.h>
 #include <trace/events/cobalt-core.h>
 
+/**
+ * @ingroup core
+ * @defgroup core_irq Interrupt management
+ * @{
+ */
 #define XNINTR_MAX_UNHANDLED	1000
 
 static DEFINE_MUTEX(intrlock);
@@ -1030,4 +1031,4 @@ void xnintr_cleanup_proc(void)
 
 #endif /* CONFIG_XENO_OPT_VFILE */
 
-/*@}*/
+/** @} */

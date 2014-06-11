@@ -27,16 +27,16 @@
 #include "thread.h"
 #include <trace/events/cobalt-posix.h>
 
-DEFINE_XNLOCK(nsem_lock);
+DEFINE_PRIVATE_XNLOCK(named_sem_lock);
 
-struct nsem {
+struct named_sem {
 	struct cobalt_sem *sem;
 	struct cobalt_sem_shadow __user *usem;
 	unsigned int refs;
 	struct xnid id;
 };
 
-static struct nsem *nsem_search(struct cobalt_process *cc, xnhandle_t handle)
+static struct named_sem *sem_search(struct cobalt_process *cc, xnhandle_t handle)
 {
 	struct xnid *i;
 	
@@ -44,16 +44,16 @@ static struct nsem *nsem_search(struct cobalt_process *cc, xnhandle_t handle)
 	if (i == NULL)
 		return NULL;
 	
-	return container_of(i, struct nsem, id);
+	return container_of(i, struct named_sem, id);
 }
 
 static struct cobalt_sem_shadow __user *
-nsem_open(struct cobalt_process *cc, struct cobalt_sem_shadow __user *ushadow, 
-	const char *name, int oflags, mode_t mode, unsigned int value)
+sem_open(struct cobalt_process *cc, struct cobalt_sem_shadow __user *ushadow, 
+	 const char *name, int oflags, mode_t mode, unsigned int value)
 {
 	struct cobalt_sem_shadow shadow;
 	struct cobalt_sem *sem;
-	struct nsem *u, *v;
+	struct named_sem *u, *v;
 	xnhandle_t handle;
 	spl_t s;
 	int rc;
@@ -69,14 +69,14 @@ nsem_open(struct cobalt_process *cc, struct cobalt_sem_shadow __user *ushadow,
 		if ((oflags & (O_CREAT | O_EXCL)) == (O_CREAT | O_EXCL))
 			return ERR_PTR(-EEXIST);
 
-		xnlock_get_irqsave(&nsem_lock, s);
-		u = nsem_search(cc, handle);
+		xnlock_get_irqsave(&named_sem_lock, s);
+		u = sem_search(cc, handle);
 		if (u) {
 			++u->refs;
-			xnlock_put_irqrestore(&nsem_lock, s);
+			xnlock_put_irqrestore(&named_sem_lock, s);
 			return u->usem;
 		}
-		xnlock_put_irqrestore(&nsem_lock, s);
+		xnlock_put_irqrestore(&named_sem_lock, s);
 
 		xnlock_get_irqsave(&nklock, s);
 		sem = xnregistry_lookup(handle, NULL);
@@ -128,11 +128,11 @@ nsem_open(struct cobalt_process *cc, struct cobalt_sem_shadow __user *ushadow,
 	u->usem = ushadow;
 	u->refs = 1;
 
-	xnlock_get_irqsave(&nsem_lock, s);
-	v = nsem_search(cc, handle);
+	xnlock_get_irqsave(&named_sem_lock, s);
+	v = sem_search(cc, handle);
 	if (v) {
 		++v->refs;
-		xnlock_put_irqrestore(&nsem_lock, s);
+		xnlock_put_irqrestore(&named_sem_lock, s);
 		xnlock_get_irqsave(&nklock, s);
 		--sem->refs;
 		xnlock_put_irqrestore(&nklock, s);
@@ -141,7 +141,7 @@ nsem_open(struct cobalt_process *cc, struct cobalt_sem_shadow __user *ushadow,
 		u = v;
 	} else {
 		xnid_enter(&cc->usems, &u->id, handle);
-		xnlock_put_irqrestore(&nsem_lock, s);
+		xnlock_put_irqrestore(&named_sem_lock, s);
 	}
 
 	trace_cobalt_psem_open(name, handle, oflags, mode, value);
@@ -149,14 +149,14 @@ nsem_open(struct cobalt_process *cc, struct cobalt_sem_shadow __user *ushadow,
 	return u->usem;
 }
 
-static int nsem_close(struct cobalt_process *cc, xnhandle_t handle)
+static int sem_close(struct cobalt_process *cc, xnhandle_t handle)
 {
-	struct nsem *u;
+	struct named_sem *u;
 	spl_t s;
 	int err;
 
-	xnlock_get_irqsave(&nsem_lock, s);
-	u = nsem_search(cc, handle);
+	xnlock_get_irqsave(&named_sem_lock, s);
+	u = sem_search(cc, handle);
 	if (u == NULL) {
 		err = -ENOENT;
 		goto err_unlock;
@@ -168,7 +168,7 @@ static int nsem_close(struct cobalt_process *cc, xnhandle_t handle)
 	}
 	
 	xnid_remove(&cc->usems, &u->id);
-	xnlock_put_irqrestore(&nsem_lock, s);
+	xnlock_put_irqrestore(&named_sem_lock, s);
 			
 	cobalt_sem_destroy_inner(handle);
 	
@@ -176,23 +176,23 @@ static int nsem_close(struct cobalt_process *cc, xnhandle_t handle)
 	return 1;
 	
   err_unlock:
-	xnlock_put_irqrestore(&nsem_lock, s);
+	xnlock_put_irqrestore(&named_sem_lock, s);
 	return err;
 }
 
-void cobalt_nsem_unlink_inner(xnhandle_t handle)
+void cobalt_sem_unlink_inner(xnhandle_t handle)
 {
 	if (cobalt_sem_destroy_inner(handle) == -EBUSY)
 		xnregistry_unlink(xnregistry_key(handle));
 }
 
 int cobalt_sem_open(struct cobalt_sem_shadow __user *__user *u_addr,
-		const char __user *u_name,
-		int oflags, mode_t mode, unsigned value)
+		    const char __user *u_name,
+		    int oflags, mode_t mode, unsigned value)
 {
 	struct cobalt_sem_shadow __user *usm;
-	struct cobalt_process *cc;
 	char name[COBALT_MAXNAME + 1];
+	struct cobalt_process *cc;
 	long len;
 
 	cc = cobalt_process_context();
@@ -209,7 +209,7 @@ int cobalt_sem_open(struct cobalt_sem_shadow __user *__user *u_addr,
 	if (len == 0)
 		return -EINVAL;
 
-	usm = nsem_open(cc, usm, name, oflags, mode, value);
+	usm = sem_open(cc, usm, name, oflags, mode, value);
 	if (IS_ERR(usm)) {
 		trace_cobalt_psem_open_failed(name, oflags, mode,
 					      value, PTR_ERR(usm));
@@ -233,15 +233,30 @@ int cobalt_sem_close(struct cobalt_sem_shadow __user *usm)
 	handle = cobalt_get_handle_from_user(&usm->handle);
 	trace_cobalt_psem_close(handle);
 
-	return nsem_close(cc, handle);
+	return sem_close(cc, handle);
+}
+
+static inline int sem_unlink(const char *name)
+{
+	xnhandle_t handle;
+	int ret;
+
+	if (name[0] != '/')
+		return -EINVAL;
+
+	ret = xnregistry_bind(name + 1, XN_NONBLOCK, XN_RELATIVE, &handle);
+	if (ret == -EWOULDBLOCK)
+		return -ENOENT;
+
+	cobalt_sem_unlink_inner(handle);
+
+	return 0;
 }
 
 int cobalt_sem_unlink(const char __user *u_name)
 {
 	char name[COBALT_MAXNAME + 1];
-	xnhandle_t handle;
 	long len;
-	int rc;
 
 	len = __xn_safe_strncpy_from_user(name, u_name, sizeof(name));
 	if (len < 0)
@@ -251,29 +266,21 @@ int cobalt_sem_unlink(const char __user *u_name)
 
 	trace_cobalt_psem_unlink(name);
 
-	if (name[0] != '/')
-		return -EINVAL;
-
-	rc = xnregistry_bind(&name[1], XN_NONBLOCK, XN_RELATIVE, &handle);
-	if (rc == -EWOULDBLOCK)
-		return -ENOENT;
-
-	cobalt_nsem_unlink_inner(handle);
-	return 0;
+	return sem_unlink(name);
 }
 
-static void cobalt_usem_close(void *cookie, struct xnid *i)
+static void cleanup_named_sems(void *cookie, struct xnid *i)
 {
 	struct cobalt_process *cc;
-	struct nsem *u;
+	struct named_sem *u;
 
 	cc = cookie;
-	u = container_of(i, struct nsem, id);
+	u = container_of(i, struct named_sem, id);
 	u->refs = 1;
-	nsem_close(cc, xnid_id(i));
+	sem_close(cc, xnid_id(i));
 }
 
 void cobalt_sem_usems_cleanup(struct cobalt_process *cc)
 {
-	xntree_cleanup(&cc->usems, cc, cobalt_usem_close);
+	xntree_cleanup(&cc->usems, cc, cleanup_named_sems);
 }

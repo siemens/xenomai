@@ -19,6 +19,15 @@
 #include <copperplate/threadobj.h>
 #include "timer.h"
 
+/**
+ * @ingroup alchemy
+ * @defgroup alchemy_timer Timer management services
+ *
+ * Services for reading and spinning on the hardware timer
+ *
+ * @{
+ */
+
 struct clockobj alchemy_clock;
 
 /**
@@ -142,3 +151,5 @@ void rt_timer_spin(RTIME ns)
 {
 	threadobj_spin(ns);
 }
+
+/** @} */

@@ -16,13 +16,16 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- *
- * @ingroup map
  */
 
+#include <linux/module.h>
+#include <cobalt/kernel/heap.h>
+#include <cobalt/kernel/map.h>
+#include <asm/xenomai/machine.h>
+
 /**
- * @ingroup nucleus
- * @defgroup map Lightweight key-to-object mapping service
+ * @ingroup core
+ * @defgroup core_map Lightweight key-to-object mapping service
  *
  * A map is a simple indexing structure which associates unique
  * integer keys with pointers to objects.  The current implementation
@@ -41,12 +44,8 @@
  * which are dynamically expandable and allow arbitrary key types;
  * Xenomai maps don't).
  *
- *@{*/
-
-#include <linux/module.h>
-#include <cobalt/kernel/heap.h>
-#include <cobalt/kernel/map.h>
-#include <asm/xenomai/machine.h>
+ * @{
+ */
 
 /**
  * @fn void xnmap_create(int nkeys, int reserve, int offset)
@@ -269,4 +268,4 @@ EXPORT_SYMBOL_GPL(xnmap_remove);
  * @remark Tags: isr-allowed.
  */
 
-/*@}*/
+/** @} */

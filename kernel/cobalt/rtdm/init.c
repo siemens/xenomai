@@ -20,20 +20,22 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/*!
+#include <linux/init.h>
+#include <linux/module.h>
+#include "rtdm/syscall.h"
+#include "rtdm/internal.h"
+
+/**
  * @ingroup rtdm
- * @defgroup profiles Device Profiles
+ * @defgroup rtdm_profiles Device Profiles
+ *
+ * Pre-defined classes of real-time devices
  *
  * Device profiles define which operation handlers a driver of a certain class
  * has to implement, which name or protocol it has to register, which IOCTLs
  * it has to provide, and further details. Sub-classes can be defined in order
  * to extend a device profile with more hardware-specific functions.
  */
-
-#include <linux/init.h>
-#include <linux/module.h>
-#include "rtdm/syscall.h"
-#include "rtdm/internal.h"
 
 MODULE_DESCRIPTION("Real-Time Driver Model");
 MODULE_AUTHOR("jan.kiszka@web.de");

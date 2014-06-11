@@ -30,6 +30,19 @@
 #include "timer.h"
 #include "heap.h"
 
+/**
+ * @ingroup alchemy
+ * @defgroup alchemy_task Task management services
+ *
+ * Services dealing with preemptive multi-tasking
+ *
+ * Each Alchemy task is an independent portion of the overall
+ * application code embodied in a C procedure, which executes on its
+ * own stack context.
+ *
+ * @{
+ */
+
 union alchemy_wait_union {
 	struct alchemy_task_wait task_wait;
 	struct alchemy_buffer_wait buffer_wait;
@@ -2082,3 +2095,5 @@ int rt_task_unbind(RT_TASK *task)
 	*task = NO_ALCHEMY_TASK;
 	return 0;
 }
+
+/** @} */

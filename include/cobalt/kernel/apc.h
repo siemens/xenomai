@@ -16,18 +16,18 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- *
- * \ingroup apc
  */
 
 #ifndef _COBALT_KERNEL_APC_H
 #define _COBALT_KERNEL_APC_H
 
-/*! \addtogroup apc
- *@{*/
-
 #include <linux/ipipe.h>
 #include <asm/xenomai/machine.h>
+
+/**
+ * @addtogroup core_apc
+ * @{
+ */
 
 int xnapc_alloc(const char *name,
 		void (*handler)(void *cookie),
@@ -76,6 +76,6 @@ static inline void xnapc_schedule(int apc)
 
 void apc_dispatch(unsigned int virq, void *arg);
 
-/*@}*/
+/** @} */
 
 #endif /* !_COBALT_KERNEL_APC_H */

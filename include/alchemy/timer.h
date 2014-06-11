@@ -22,6 +22,11 @@
 #include <stddef.h>
 #include <copperplate/clockobj.h>
 
+/**
+ * @addtogroup alchemy_timer
+ * @{
+ */
+
 typedef ticks_t RTIME;
 
 typedef sticks_t SRTIME;
@@ -123,5 +128,7 @@ void rt_timer_spin(RTIME ns);
 #ifdef __cplusplus
 }
 #endif
+
+/** @} */
 
 #endif /* _ALCHEMY_TIMER_H */

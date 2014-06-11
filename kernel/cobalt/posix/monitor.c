@@ -17,12 +17,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
- *
- * \ingroup cobalt
- * \defgroup cobalt_monitor Synchronization monitor services
- *
- * Synchronization monitor services
- *
+ */
+#include "internal.h"
+#include "thread.h"
+#include "clock.h"
+#include "monitor.h"
+#include <trace/events/cobalt-posix.h>
+
+/*
  * The Cobalt monitor is a double-wait condition object, serializing
  * accesses through a gate. It behaves like a mutex + two condition
  * variables combo with extended signaling logic. Folding several
@@ -48,13 +50,7 @@
  *
  * Implementation-wise, the monitor logic is shared with the Cobalt
  * thread object.
-  */
-#include "internal.h"
-#include "thread.h"
-#include "clock.h"
-#include "monitor.h"
-#include <trace/events/cobalt-posix.h>
-
+ */
 int cobalt_monitor_init(struct cobalt_monitor_shadow __user *u_mon,
 			clockid_t clk_id, int flags)
 {

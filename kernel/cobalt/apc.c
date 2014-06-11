@@ -16,29 +16,29 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- *
- * @ingroup apc
  */
-
-/**
- * @ingroup nucleus
- * @defgroup apc Asynchronous Procedure Calls
- *
- * APC is the acronym for Asynchronous Procedure Call, a mean by which
- * activities from the Xenomai domain can schedule deferred
- * invocations of handlers to be run into the Linux domain, as soon as
- * possible when the Linux kernel gets back in control. Up to
- * BITS_PER_LONG APC slots can be active at any point in time.
- *
- * APC support is built upon the interrupt pipeline's virtual
- * interrupt support.
- *
- *@{*/
-
 #include <linux/spinlock.h>
 #include <linux/ipipe.h>
 #include <cobalt/kernel/apc.h>
 
+/**
+ * @ingroup core
+ * @defgroup core_apc Asynchronous Procedure Calls
+ *
+ * Services for scheduling function calls in the Linux domain
+ *
+ * APC is the acronym for Asynchronous Procedure Call, a mean by which
+ * activities from the Xenomai domain can schedule deferred
+ * invocations of handlers to be run into the Linux domain, as soon as
+ * possible when the Linux kernel gets back in control.
+ *
+ * Up to BITS_PER_LONG APC slots can be active at any point in time.
+ *
+ * APC support is built upon the interrupt pipeline's virtual
+ * interrupt support.
+ *
+ * @{
+ */
 static IPIPE_DEFINE_SPINLOCK(apc_lock);
 
 void apc_dispatch(unsigned int virq, void *arg)
@@ -158,4 +158,4 @@ void xnapc_free(int apc)
 }
 EXPORT_SYMBOL_GPL(xnapc_free);
 
-/*@}*/
+/** @} */

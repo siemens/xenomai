@@ -26,14 +26,14 @@
 #include "internal.h"
 
 /*!
- * @ingroup Analogylib4Linux
- * @defgroup level1_lib Level 1 API
+ * @ingroup analogy_lib
+ * @defgroup analogy_lib_level1 Level 1 API
  * @{
  */
 
 /*!
- * @ingroup level1_lib
- * @defgroup sync1_lib Synchronous acquisition API
+ * @ingroup analogy_lib_level1
+ * @defgroup analogy_lib_sync1 Synchronous acquisition API
  * @{
  */
 
@@ -95,14 +95,14 @@ int a4l_snd_insn(a4l_desc_t * dsc, a4l_insn_t * arg)
 /** @} Level 1 API */
 
 /*!
- * @ingroup Analogylib4Linux
- * @defgroup level2_lib Level 2 API
+ * @ingroup analogy_lib
+ * @defgroup analogy_lib_level2 Level 2 API
  * @{
  */
 
 /*!
- * @ingroup level2_lib
- * @defgroup sync2_lib Synchronous acquisition API
+ * @ingroup analogy_lib_level2
+ * @defgroup analogy_lib_sync2 Synchronous acquisition API
  * @{
  */
 

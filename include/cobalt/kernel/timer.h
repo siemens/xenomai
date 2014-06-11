@@ -374,9 +374,10 @@ void xntimer_switch_tracking(struct xntimer *timer,
 
 void xntimer_destroy(struct xntimer *timer);
 
-/*!
- * \addtogroup timer
- *@{ */
+/**
+ * @addtogroup core_timer
+ *@{
+ */
 
 /**
  * @fn xnticks_t xntimer_interval(struct xntimer *timer)
@@ -444,7 +445,7 @@ static inline void xntimer_dequeue(struct xntimer *timer,
 	timer->status |= XNTIMER_DEQUEUED;
 }
 
-/*@}*/
+/** @} */
 
 void xntimer_init_proc(void);
 

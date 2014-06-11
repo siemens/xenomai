@@ -18,8 +18,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
- *
- * @ingroup userapi
+ * @ingroup rtdm_user_api
  */
 #ifndef _RTDM_UAPI_RTDM_H
 #define _RTDM_UAPI_RTDM_H
@@ -30,7 +29,7 @@
  */
 
 /*!
- * @anchor api_versioning @name API Versioning
+ * @anchor rtdm_api_versioning @name API Versioning
  * @{ */
 /** Common user and driver API version */
 #define RTDM_API_VER			9
@@ -62,7 +61,7 @@ typedef int64_t nanosecs_rel_t;
 /** @} rtdm */
 
 /*!
- * @addtogroup profiles
+ * @addtogroup rtdm_profiles
  * @{
  */
 
@@ -112,7 +111,7 @@ typedef struct rtdm_device_info {
 	int device_class;
 
 	/** Device sub-class, either RTDM_SUBCLASS_GENERIC or a
-	 *  RTDM_SUBCLASS_xxx definition of the related @ref profiles
+	 *  RTDM_SUBCLASS_xxx definition of the related @ref rtdm_profiles
 	 *  "Device Profile" */
 	int device_sub_class;
 
@@ -130,7 +129,7 @@ typedef struct rtdm_device_info {
 
 /*!
  * @anchor common_IOCTLs    @name Common IOCTLs
- * The following IOCTLs are common to all device profiles.
+ * The following IOCTLs are common to all device rtdm_profiles.
  * @{
  */
 

@@ -15,12 +15,6 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- *
- *
- * @ingroup nucleus
- * @defgroup clock Clock services.
- *
- * @{
  */
 #include <linux/percpu.h>
 #include <linux/errno.h>
@@ -32,7 +26,12 @@
 #include <cobalt/kernel/vdso.h>
 #include <asm/xenomai/calibration.h>
 #include <trace/events/cobalt-core.h>
-
+/**
+ * @ingroup core
+ * @defgroup core_clock Clock services.
+ *
+ * @{
+ */
 unsigned long nktimerlat;
 
 atomic_t nkclklk;
@@ -703,4 +702,4 @@ int __init xnclock_init(unsigned long long freq)
 	return 0;
 }
 
-/*@}*/
+/** @} */

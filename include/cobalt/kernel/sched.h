@@ -25,9 +25,6 @@
 #ifndef _COBALT_KERNEL_SCHED_H
 #define _COBALT_KERNEL_SCHED_H
 
-/*! \addtogroup sched
- *@{*/
-
 #include <linux/percpu.h>
 #include <cobalt/kernel/thread.h>
 #include <cobalt/kernel/schedqueue.h>
@@ -38,6 +35,11 @@
 #include <cobalt/kernel/vfile.h>
 #include <cobalt/kernel/assert.h>
 #include <asm/xenomai/machine.h>
+
+/*
+ * @addtogroup core_sched
+ * @{
+ */
 
 /* Sched status flags */
 #define XNRESCHED	0x10000000	/* Needs rescheduling */
@@ -704,6 +706,6 @@ static inline void xnsched_kick(struct xnthread *thread)
 
 #endif /* !CONFIG_XENO_OPT_SCHED_CLASSES */
 
-/*@}*/
+/** @} */
 
 #endif /* !_COBALT_KERNEL_SCHED_H */

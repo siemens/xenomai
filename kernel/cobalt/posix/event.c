@@ -17,11 +17,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
- *
- * \ingroup cobalt
- * \defgroup cobalt_event Event flag group
- *
- * Event flag group services.
+ */
+#include "internal.h"
+#include "thread.h"
+#include "clock.h"
+#include "event.h"
+#include <trace/events/cobalt-posix.h>
+
+/*
+ * Cobalt event notification services
  *
  * An event flag group is a synchronization object represented by a
  * long-word structure; every available bit in such word can be used
@@ -38,11 +42,6 @@
  * We expose this non-POSIX feature through the internal API, as a
  * fast IPC mechanism available to the Copperplate interface.
  */
-#include "internal.h"
-#include "thread.h"
-#include "clock.h"
-#include "event.h"
-#include <trace/events/cobalt-posix.h>
 
 struct event_wait_context {
 	struct xnthread_wait_context wc;

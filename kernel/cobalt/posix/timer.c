@@ -16,11 +16,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/**
- * @addtogroup cobalt_time
- *
- *@{*/
-
 #include <linux/module.h>
 #include <linux/cred.h>
 #include <linux/err.h>
@@ -125,48 +120,6 @@ cobalt_timer_by_id(struct cobalt_process *cc, timer_t timer_id)
 	return cc->timers[timer_id];
 }
 
-/**
- * Create a timer object.
- *
- * This service creates a time object using the clock @a clockid.
- *
- * If @a evp is not @a NULL, it describes the notification mechanism
- * used on timer expiration. Only thread-directed notification is
- * supported (evp->sigev_notify set to @a SIGEV_THREAD_ID).
- *
- * If @a evp is NULL, the current Cobalt thread will receive the
- * notifications with signal SIGALRM.
- *
- * The recipient thread is delivered notifications when it calls any
- * of the sigwait(), sigtimedwait() or sigwaitinfo() services.
- *
- * If this service succeeds, an identifier for the created timer is
- * returned at the address @a timerid. The timer is unarmed until
- * started with the timer_settime() service.
- *
- * @param clockid clock used as a timing base;
- *
- * @param evp description of the asynchronous notification to occur
- * when the timer expires;
- *
- * @param timerid address where the identifier of the created timer
- * will be stored on success.
- *
- * @retval 0 on success;
- * @retval -1 with @a errno set if:
- * - EINVAL, the clock @a clockid is invalid;
- * - EINVAL, the member @a sigev_notify of the @b sigevent structure at the
- *   address @a evp is not SIGEV_THREAD_ID;
- * - EINVAL, the  member @a sigev_signo of the @b sigevent structure is an
- *   invalid signal number;
- * - EAGAIN, the maximum number of timers was exceeded, recompile with a larger
- *   value.
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_create.html">
- * Specification.</a>
- *
- */
 static inline int timer_create(clockid_t clockid,
 			       const struct sigevent *__restrict__ evp,
 			       timer_t * __restrict__ timerid)
@@ -417,55 +370,6 @@ timer_deliver_late(struct cobalt_process *cc, timer_t timerid)
 	xnlock_put_irqrestore(&nklock, s);
 }
 
-/**
- * Start or stop a timer.
- *
- * This service sets a timer expiration date and reload value of the
- * timer @a timerid. If @a ovalue is not @a NULL, the current
- * expiration date and reload value are stored at the address @a
- * ovalue as with timer_gettime().
- *
- * If the member @a it_value of the @b itimerspec structure at @a
- * value is zero, the timer is stopped, otherwise the timer is
- * started. If the member @a it_interval is not zero, the timer is
- * periodic. The current thread must be a Cobalt thread (created with
- * pthread_create()) and will be notified via signal of timer
- * expirations. Note that these notifications will cause user-space
- * threads to switch to secondary mode.
- *
- * When starting the timer, if @a flags is TIMER_ABSTIME, the expiration value
- * is interpreted as an absolute date of the clock passed to the timer_create()
- * service. Otherwise, the expiration value is interpreted as a time interval.
- *
- * Expiration date and reload value are rounded to an integer count of
- * nanoseconds.
- *
- * @param timerid identifier of the timer to be started or stopped;
- *
- * @param flags one of 0 or TIMER_ABSTIME;
- *
- * @param value address where the specified timer expiration date and reload
- * value are read;
- *
- * @param ovalue address where the specified timer previous expiration date and
- * reload value are stored if not @a NULL.
- *
- * @retval 0 on success;
- * @retval -1 with @a errno set if:
- * - EINVAL, the specified timer identifier, expiration date or reload value is
- *   invalid. For @a timerid to be valid, it must belong to the current process.
- *
- * @par Valid contexts:
- * - Cobalt kernel-space thread,
- * - kernel-space thread cancellation cleanup routine,
- * - Cobalt user-space thread (switches to primary mode),
- * - user-space thread cancellation cleanup routine.
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_settime.html">
- * Specification.</a>
- *
- */
 static inline int
 timer_settime(timer_t timerid, int flags,
 	      const struct itimerspec *__restrict__ value,
@@ -508,33 +412,6 @@ out:
 	return ret;
 }
 
-/**
- * Get timer next expiration date and reload value.
- *
- * This service stores, at the address @a value, the expiration date
- * (member @a it_value) and reload value (member @a it_interval) of
- * the timer @a timerid. The values are returned as time intervals,
- * and as multiples of the system clock tick duration (see note in
- * section @ref cobalt_time "Clocks and timers services" for details
- * on the duration of the system clock tick). If the timer was not
- * started, the returned members @a it_value and @a it_interval of @a
- * value are zero.
- *
- * @param timerid timer identifier;
- *
- * @param value address where the timer expiration date and reload value are
- * stored on success.
- *
- * @retval 0 on success;
- * @retval -1 with @a errno set if:
- * - EINVAL, @a timerid is invalid. For @a timerid to be valid, it
- * must belong to the current process.
- *
- * @see
- * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_gettime.html">
- * Specification.</a>
- *
- */
 static inline int timer_gettime(timer_t timerid, struct itimerspec *value)
 {
 	struct cobalt_timer *timer;
@@ -706,4 +583,3 @@ void cobalt_timers_cleanup(struct cobalt_process *p)
 out:
 	xnlock_put_irqrestore(&nklock, s);
 }
-/*@}*/

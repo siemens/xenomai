@@ -17,13 +17,19 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- *
- * @ingroup select
  */
 
+#include <linux/types.h>
+#include <linux/bitops.h>	/* For hweight_long */
+#include <cobalt/kernel/heap.h>
+#include <cobalt/kernel/sched.h>
+#include <cobalt/kernel/synch.h>
+#include <cobalt/kernel/select.h>
+#include <cobalt/kernel/apc.h>
+
 /**
- * @ingroup nucleus
- * @defgroup select File descriptors events multiplexing services.
+ * @ingroup core
+ * @defgroup core_select File descriptors events multiplexing services
  *
  * File descriptors events multiplexing services.
  *
@@ -43,15 +49,8 @@
  * - a @a struct @a xnselector structure, the selection structure,  passed by
  * the thread calling the xnselect service, where this service does all its
  * housekeeping.
- *@{*/
-
-#include <linux/types.h>
-#include <linux/bitops.h>	/* For hweight_long */
-#include <cobalt/kernel/heap.h>
-#include <cobalt/kernel/sched.h>
-#include <cobalt/kernel/synch.h>
-#include <cobalt/kernel/select.h>
-#include <cobalt/kernel/apc.h>
+ * @{
+ */
 
 static LIST_HEAD(selector_list);
 static int deletion_apc;
@@ -463,4 +462,4 @@ int xnselect_umount(void)
 	return 0;
 }
 
-/*@}*/
+/** @} */

@@ -18,18 +18,18 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- *
- * \ingroup select
  */
 
 #ifndef _COBALT_KERNEL_SELECT_H
 #define _COBALT_KERNEL_SELECT_H
 
-/*! \addtogroup select
- *@{*/
-
 #include <cobalt/kernel/list.h>
 #include <cobalt/kernel/thread.h>
+
+/**
+ * @addtogroup core_select
+ * @{
+ */
 
 #define XNSELECT_READ      0
 #define XNSELECT_WRITE     1
@@ -146,6 +146,6 @@ int xnselect_mount(void);
 
 int xnselect_umount(void);
 
-/*@}*/
+/** @} */
 
 #endif /* _COBALT_KERNEL_SELECT_H */

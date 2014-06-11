@@ -15,10 +15,6 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- *
- * \defgroup nucleus Xenomai nucleus.
- *
- * An abstract RTOS core.
  */
 #include <linux/init.h>
 #include <linux/module.h>
@@ -38,6 +34,15 @@
 #include "rtdm/internal.h"
 #include "posix/internal.h"
 #include "procfs.h"
+
+/**
+ * @defgroup core Xenomai nucleus
+ *
+ * The Xenomai nucleus supplements the native Linux kernel in dual
+ * kernel configurations. It deals with all time-critical activities,
+ * such as handling interrupts, and scheduling real-time threads. The
+ * nucleus has higher priority over all the native kernel activities.
+ */
 
 MODULE_DESCRIPTION("Xenomai nucleus");
 MODULE_AUTHOR("rpm@xenomai.org");

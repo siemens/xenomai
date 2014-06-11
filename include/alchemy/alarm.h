@@ -22,6 +22,11 @@
 #include <stdint.h>
 #include <alchemy/timer.h>
 
+/**
+ * @addtogroup alchemy_alarm
+ * @{
+ */
+
 struct RT_ALARM {
 	uintptr_t handle;
 };
@@ -75,5 +80,7 @@ int rt_alarm_inquire(RT_ALARM *alarm,
 #ifdef __cplusplus
 }
 #endif
+
+/** @} */
 
 #endif /* _XENOMAI_ALCHEMY_ALARM_H */

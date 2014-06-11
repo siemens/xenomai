@@ -14,10 +14,23 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
- *
- * @defgroup alchemy_event Event flag group services.
- * @ingroup alchemy_event
+ */
+#include <errno.h>
+#include <string.h>
+#include <stdlib.h>
+#include <copperplate/threadobj.h>
+#include <copperplate/heapobj.h>
+#include <copperplate/registry-obstack.h>
+#include "reference.h"
+#include "internal.h"
+#include "event.h"
+#include "timer.h"
+
+/**
  * @ingroup alchemy
+ * @defgroup alchemy_event Event flag group services
+ *
+ * Inter-task notification mechanism based on discrete flags
  *
  * An event flag group is a synchronization object represented by a
  * long-word structure; every available bit in this word represents a
@@ -31,18 +44,9 @@
  * (all awaited events must have occurred to satisfy the wait
  * request), or in a disjunctive way (at least one of the awaited
  * events must have occurred to satisfy the wait request).
+ *
+ * @{
  */
-
-#include <errno.h>
-#include <string.h>
-#include <stdlib.h>
-#include <copperplate/threadobj.h>
-#include <copperplate/heapobj.h>
-#include <copperplate/registry-obstack.h>
-#include "reference.h"
-#include "internal.h"
-#include "event.h"
-#include "timer.h"
 
 struct syncluster alchemy_event_table;
 
@@ -274,10 +278,10 @@ out:
 }
 
 /**
- * @fn int rt_event_read(RT_EVENT *event, unsigned long mask, unsigned long *mask_r, int mode, RTIME timeout)
+ * @fn int rt_event_wait(RT_EVENT *event, unsigned long mask, unsigned long *mask_r, int mode, RTIME timeout)
  * @brief Wait for an arbitrary set of events (with relative scalar timeout).
  *
- * This routine is a variant of rt_event_read_timed() accepting a
+ * This routine is a variant of rt_event_wait_timed() accepting a
  * relative timeout specification expressed as a scalar value.
  *
  * @param event The descriptor address of the event flag group to wait
@@ -294,10 +298,10 @@ out:
  */
 
 /**
- * @fn int rt_event_read_until(RT_EVENT *event, unsigned long mask, unsigned long *mask_r, int mode, RTIME abs_timeout)
+ * @fn int rt_event_wait_until(RT_EVENT *event, unsigned long mask, unsigned long *mask_r, int mode, RTIME abs_timeout)
  * @brief Wait for an arbitrary set of events (with absolute scalar timeout).
  *
- * This routine is a variant of rt_event_read_timed() accepting an
+ * This routine is a variant of rt_event_wait_timed() accepting an
  * absolute timeout specification expressed as a scalar value.
  *
  * @param event The descriptor address of the event flag group to wait
@@ -314,7 +318,7 @@ out:
  */
 
 /**
- * @fn int rt_event_read_timed(RT_EVENT *event, unsigned long mask, unsigned long *mask_r, int mode, const struct timespec *abs_timeout)
+ * @fn int rt_event_wait_timed(RT_EVENT *event, unsigned long mask, unsigned long *mask_r, int mode, const struct timespec *abs_timeout)
  * @brief Wait for an arbitrary set of events.
  *
  * Waits for one or more events to be signaled in @a event, or until a
@@ -419,7 +423,7 @@ out:
  * request satisfied as a result of this operation are immediately
  * readied.
  *
- * @param The descriptor address of the event flag group to signal.
+ * @param event The descriptor address of the event flag group to signal.
  *
  * @param mask The set of events to be posted.
  *
@@ -498,6 +502,9 @@ out:
  *
  * @param event The descriptor address of the event flag group to get
  * the status of.
+ *
+ * @param info A pointer to the @ref RT_EVENT_INFO "return
+ * buffer" to copy the information to.
  *
  * @return Zero is returned and status information is written to the
  * structure pointed at by @a info upon success. Otherwise:
@@ -604,3 +611,5 @@ int rt_event_unbind(RT_EVENT *event)
 	event->handle = 0;
 	return 0;
 }
+
+/** @} */

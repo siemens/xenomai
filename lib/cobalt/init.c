@@ -35,6 +35,14 @@
 #include "internal.h"
 #include "init.h"
 
+/**
+ * @defgroup cobalt Cobalt/POSIX real-time API
+ *
+ * The Cobalt interface is an implementation of a small subset of the
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/">
+ * Single Unix specification</a> over the Xenomai generic RTOS core.
+ */
+
 __attribute__ ((weak))
 int __cobalt_defer_init = 0;
 

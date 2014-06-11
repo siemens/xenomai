@@ -24,9 +24,9 @@
 
 #include <rtdm/uapi/analogy.h>
 
-/*!
- * @ingroup driverfacilities
- * @defgroup channelrange Channels and ranges
+/**
+ * @ingroup analogy_driver_facilities
+ * @defgroup analogy_channel_range Channels and ranges
  *
  * Channels
  *

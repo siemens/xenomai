@@ -20,11 +20,6 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/*!
- * @addtogroup driverapi
- * @{
- */
-
 #include <linux/module.h>
 #include <linux/delay.h>
 #include <linux/semaphore.h>
@@ -32,6 +27,11 @@
 #include <cobalt/kernel/apc.h>
 #include "rtdm/internal.h"
 #include <trace/events/cobalt-rtdm.h>
+
+/**
+ * @addtogroup rtdm_driver_interface
+ * @{
+ */
 
 #define RTDM_DEVICE_MAGIC	0x82846877
 
@@ -131,9 +131,9 @@ struct rtdm_device *get_protocol_device(int protocol_family, int socket_type)
 	return device;
 }
 
-/*!
- * @ingroup driverapi
- * @defgroup devregister Device Registration Services
+/**
+ * @ingroup rtdm_driver_interface
+ * @defgroup rtdm_device_register Device Registration Services
  * @{
  */
 

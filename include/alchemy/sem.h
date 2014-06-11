@@ -22,7 +22,12 @@
 #include <stdint.h>
 #include <alchemy/timer.h>
 
-/* Creation flags. */
+/**
+ * @addtogroup alchemy_sem
+ * @{
+ */
+
+/** Creation flags. */
 #define S_PRIO  0x1	/* Pend by task priority order. */
 #define S_FIFO  0x0	/* Pend by FIFO order. */
 #define S_PULSE 0x2	/* Enable pulse mode. */
@@ -98,5 +103,7 @@ int rt_sem_unbind(RT_SEM *sem);
 #ifdef __cplusplus
 }
 #endif
+
+/** @} */
 
 #endif /* _XENOMAI_ALCHEMY_SEM_H */

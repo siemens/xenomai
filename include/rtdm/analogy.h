@@ -25,7 +25,7 @@
 #include <rtdm/uapi/analogy.h>
 
 /*!
-  @addtogroup descriptor_sys
+  @addtogroup analogy_lib_descriptor
   @{
  */
 

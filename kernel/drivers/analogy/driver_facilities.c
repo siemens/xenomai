@@ -20,31 +20,26 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/*!
- * @defgroup Analogy4Linux Analogy API.
- *
- * This is the API interface of Analogy (kernel layer and user
- * layer)
- *
- */
-
-/*!
- * @ingroup Analogy4Linux
- * @defgroup driverfacilities Driver API.
- *
- * This is the API interface of Analogy provided to device drivers.
- *
- */
-
 #include <linux/module.h>
 #include <linux/fs.h>
 #include <rtdm/analogy/device.h>
 
+/**
+ * @defgroup analogy Analogy interface
+ * A RTDM-based interface for implementing DAQ card drivers
+ */
+
+/**
+ * @ingroup analogy
+ * @defgroup analogy_driver_facilities Driver API
+ * Programming interface provided to DAQ card drivers
+ */
+
 /* --- Driver section --- */
 
-/*!
- * @ingroup driverfacilities
- * @defgroup driver Driver management services
+/**
+ * @ingroup analogy_driver_facilities
+ * @defgroup analogy_driver Driver management services
  *
  * Analogy driver registration / unregistration
  *
@@ -95,9 +90,9 @@ EXPORT_SYMBOL_GPL(a4l_unregister_drv);
 
 /* --- Subdevice section --- */
 
-/*!
- * @ingroup driverfacilities
- * @defgroup subdevice Subdevice management services
+/**
+ * @ingroup analogy_driver_facilities
+ * @defgroup analogy_subdevice Subdevice management services
  *
  * Subdevice declaration in a driver
  *
@@ -191,10 +186,12 @@ EXPORT_SYMBOL_GPL(a4l_add_subd);
 struct a4l_subdevice *a4l_get_subd(struct a4l_device *dev, int idx);
 EXPORT_SYMBOL_GPL(a4l_get_subd);
 
+/** @} */
+
 /* --- Buffer section --- */
 
-/*!
- * @ingroup driverfacilities
+/**
+ * @ingroup analogy_driver_facilities
  * @defgroup analogy_buffer Buffer management services
  *
  * Buffer management services
@@ -533,9 +530,9 @@ EXPORT_SYMBOL_GPL(a4l_get_chan);
 
 /* --- IRQ handling section --- */
 
-/*!
- * @ingroup driverfacilities
- * @defgroup analogy_interrupt Interrupt management services
+/**
+ * @ingroup analogy_driver_facilities
+ * @defgroup analogy_irq Interrupt management services
  * @{
  */
 
@@ -594,12 +591,11 @@ EXPORT_SYMBOL_GPL(a4l_free_irq);
 
 /* --- Misc section --- */
 
-/*!
- * @ingroup driverfacilities
- * @defgroup misc Misc services
+/**
+ * @ingroup analogy_driver_facilities
+ * @defgroup analogy_misc Misc services
  * @{
  */
-
 
 /**
  * @brief Get the absolute time in nanoseconds
