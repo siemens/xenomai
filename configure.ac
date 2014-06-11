@@ -447,10 +447,16 @@ if test x${XENO_BUILD_DOC} = xy -a x"$W3M" = x ; then
    AC_MSG_ERROR([Missing the w3m tool to build the documentation])
 fi
 
-if test x"$docdir" = x; then
+if test x$docdir = x; then
 	docdir=$datadir/doc/$PACKAGE-$VERSION
 fi
 AC_SUBST(docdir)
+
+XENO_RUN_DOC=y
+if test x$XENO_BUILD_DOC = x -a x$XENO_INSTALL_DOC = x; then
+   unset XENO_RUN_DOC
+fi
+AM_CONDITIONAL(XENO_RUN_DOC,[test "$XENO_RUN_DOC" = y])
 
 dnl Check for Valgrind client API support.
 dnl Some GCC releases produce broken assembly code for Valgrind
@@ -870,16 +876,14 @@ AC_CONFIG_FILES([ \
 	include/psos/Makefile \
 	])
 
-if test \! x$XENO_INSTALL_DOC = x ; then
+if test \! x$XENO_RUN_DOC = x ; then
       AC_CONFIG_FILES([ \
 	doc/Makefile \
 	doc/man/Makefile \
 	doc/doxygen/Makefile \
-	doc/doxygen/Doxyfile-common \
-	doc/doxygen/Doxyfile \
-	doc/doxygen/Doxyfile-nucleus \
-	doc/doxygen/Doxyfile-cobalt \
-	doc/doxygen/Doxyfile-rtdm \
+	doc/doxygen/manual-common.conf \
+	doc/doxygen/manual-html.conf \
+	doc/doxygen/manual-pdf.conf \
 	doc/asciidoc/Makefile \
       ])
 fi

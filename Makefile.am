@@ -11,7 +11,7 @@ SUBDIRS = 		\
 	utils		\
 	demo
 
-if XENO_INSTALL_DOC
+if XENO_RUN_DOC
 SUBDIRS += doc
 endif
 

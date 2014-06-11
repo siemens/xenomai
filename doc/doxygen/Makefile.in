@@ -80,9 +80,8 @@ host_triplet = @host@
 target_triplet = @target@
 DIST_COMMON = $(top_srcdir)/doc/install-dist.rules \
 	$(srcdir)/Makefile.in $(srcdir)/Makefile.am \
-	$(srcdir)/Doxyfile-common.in $(srcdir)/Doxyfile.in \
-	$(srcdir)/Doxyfile-nucleus.in $(srcdir)/Doxyfile-cobalt.in \
-	$(srcdir)/Doxyfile-rtdm.in
+	$(srcdir)/manual-common.conf.in $(srcdir)/manual-html.conf.in \
+	$(srcdir)/manual-pdf.conf.in
 subdir = doc/doxygen
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config/ac_prog_cc_for_build.m4 \
@@ -96,8 +95,8 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/include/xeno_config.h
-CONFIG_CLEAN_FILES = Doxyfile-common Doxyfile Doxyfile-nucleus \
-	Doxyfile-cobalt Doxyfile-rtdm
+CONFIG_CLEAN_FILES = manual-common.conf manual-html.conf \
+	manual-pdf.conf
 CONFIG_CLEAN_VPATH_FILES =
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -296,12 +295,9 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-HTML_DOCS = api api/search
-PDF_DOCS = nucleus-api.pdf cobalt-api.pdf rtdm-api.pdf
-EXTRA_DIST = \
-	Doxyfile.in Doxyfile-common.in Doxyfile-nucleus.in \
-	Doxyfile-cobalt.in Doxyfile-rtdm.in
-
+HTML_DOCS = manual-html manual-html/search
+PDF_DOCS = manual.pdf
+EXTRA_DIST = manual-common.conf.in manual-html.conf.in manual-pdf.conf.in
 @XENO_BUILD_DOC_FALSE@HTML_DOCSDIR = $(srcdir)/../generated/html/
 @XENO_BUILD_DOC_TRUE@HTML_DOCSDIR = ./
 @XENO_BUILD_DOC_FALSE@PDF_DOCSDIR = $(srcdir)/../generated/pdf/
@@ -342,15 +338,11 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
-Doxyfile-common: $(top_builddir)/config.status $(srcdir)/Doxyfile-common.in
+manual-common.conf: $(top_builddir)/config.status $(srcdir)/manual-common.conf.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
-Doxyfile: $(top_builddir)/config.status $(srcdir)/Doxyfile.in
+manual-html.conf: $(top_builddir)/config.status $(srcdir)/manual-html.conf.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
-Doxyfile-nucleus: $(top_builddir)/config.status $(srcdir)/Doxyfile-nucleus.in
-	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
-Doxyfile-cobalt: $(top_builddir)/config.status $(srcdir)/Doxyfile-cobalt.in
-	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
-Doxyfile-rtdm: $(top_builddir)/config.status $(srcdir)/Doxyfile-rtdm.in
+manual-pdf.conf: $(top_builddir)/config.status $(srcdir)/manual-pdf.conf.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
 mostlyclean-libtool:
@@ -516,26 +508,22 @@ uninstall-am: uninstall-local
 	tags-am uninstall uninstall-am uninstall-local
 
 
-# Doxygen documentation
-@XENO_BUILD_DOC_TRUE@api: doxygen-api
-
 @XENO_BUILD_DOC_TRUE@all-local: $(HTML_DOCS) $(PDF_DOCS)
 
-@XENO_BUILD_DOC_TRUE@doxygen-api: Doxyfile
-@XENO_BUILD_DOC_TRUE@	$(DOXYGEN) $(DOXYDOC_OPTS)
+@XENO_BUILD_DOC_TRUE@manual-html:
+@XENO_BUILD_DOC_TRUE@	$(DOXYGEN) $@.conf
 
-@XENO_BUILD_DOC_TRUE@%-api.pdf: FORCE
-@XENO_BUILD_DOC_TRUE@	$(MAKE) Doxyfile-$*
-@XENO_BUILD_DOC_TRUE@	$(DOXYGEN) $(DOXYDOC_OPTS) Doxyfile-$*
-@XENO_BUILD_DOC_TRUE@	$(MAKE) -C latex-$* refman.pdf
-@XENO_BUILD_DOC_TRUE@	mv latex-$*/refman.pdf $@
+@XENO_BUILD_DOC_TRUE@%.pdf: FORCE
+@XENO_BUILD_DOC_TRUE@	$(DOXYGEN) $*-pdf.conf
+@XENO_BUILD_DOC_TRUE@	$(MAKE) -C $*-latex refman.pdf
+@XENO_BUILD_DOC_TRUE@	mv $*-latex/refman.pdf $@
 
 @XENO_BUILD_DOC_TRUE@distclean-local:
-@XENO_BUILD_DOC_TRUE@	for dir in $(HTML_DOCS) latex-*; do \
+@XENO_BUILD_DOC_TRUE@	for dir in $(HTML_DOCS) *-latex; do \
 @XENO_BUILD_DOC_TRUE@	    if test -d $$dir ; then $(RM) -R $$dir ; fi ; \
 @XENO_BUILD_DOC_TRUE@	done
 
-@XENO_BUILD_DOC_TRUE@.PHONY: doxygen-api FORCE
+@XENO_BUILD_DOC_TRUE@.PHONY: manual-html FORCE
 
 @XENO_BUILD_DOC_TRUE@.DELETE_ON_ERROR:
 

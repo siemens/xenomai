@@ -661,6 +661,8 @@ XENO_TLSF_FALSE
 XENO_TLSF_TRUE
 CONFIG_XENO_SHARED_FALSE
 CONFIG_XENO_SHARED_TRUE
+XENO_RUN_DOC_FALSE
+XENO_RUN_DOC_TRUE
 W3M
 A2X
 ASCIIDOC
@@ -13524,8 +13526,21 @@ if test x${XENO_BUILD_DOC} = xy -a x"$W3M" = x ; then
    as_fn_error $? "Missing the w3m tool to build the documentation" "$LINENO" 5
 fi
 
-if test x"$docdir" = x; then
+if test x$docdir = x; then
 	docdir=$datadir/doc/$PACKAGE-$VERSION
+fi
+
+
+XENO_RUN_DOC=y
+if test x$XENO_BUILD_DOC = x -a x$XENO_INSTALL_DOC = x; then
+   unset XENO_RUN_DOC
+fi
+ if test "$XENO_RUN_DOC" = y; then
+  XENO_RUN_DOC_TRUE=
+  XENO_RUN_DOC_FALSE='#'
+else
+  XENO_RUN_DOC_TRUE='#'
+  XENO_RUN_DOC_FALSE=
 fi
 
 
@@ -14096,8 +14111,8 @@ fi
 ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config:scripts/xeno-config-$rtcore_type.in scripts/xeno lib/Makefile lib/boilerplate/Makefile lib/cobalt/Makefile lib/cobalt/arch/Makefile lib/cobalt/arch/arm/Makefile lib/cobalt/arch/arm/include/Makefile lib/cobalt/arch/arm/include/asm/Makefile lib/cobalt/arch/arm/include/asm/xenomai/Makefile lib/cobalt/arch/powerpc/Makefile lib/cobalt/arch/powerpc/include/Makefile lib/cobalt/arch/powerpc/include/asm/Makefile lib/cobalt/arch/powerpc/include/asm/xenomai/Makefile lib/cobalt/arch/blackfin/Makefile lib/cobalt/arch/blackfin/include/Makefile lib/cobalt/arch/blackfin/include/asm/Makefile lib/cobalt/arch/blackfin/include/asm/xenomai/Makefile lib/cobalt/arch/x86/Makefile lib/cobalt/arch/x86/include/Makefile lib/cobalt/arch/x86/include/asm/Makefile lib/cobalt/arch/x86/include/asm/xenomai/Makefile lib/cobalt/arch/nios2/Makefile lib/cobalt/arch/nios2/include/Makefile lib/cobalt/arch/nios2/include/asm/Makefile lib/cobalt/arch/nios2/include/asm/xenomai/Makefile lib/cobalt/arch/sh/Makefile lib/cobalt/arch/sh/include/Makefile lib/cobalt/arch/sh/include/asm/Makefile lib/cobalt/arch/sh/include/asm/xenomai/Makefile lib/copperplate/Makefile lib/copperplate/regd/Makefile lib/alchemy/Makefile lib/vxworks/Makefile lib/psos/Makefile lib/analogy/Makefile testsuite/Makefile testsuite/latency/Makefile testsuite/cyclic/Makefile testsuite/switchtest/Makefile testsuite/clocktest/Makefile testsuite/unit/Makefile testsuite/xeno-test/Makefile testsuite/regression/Makefile testsuite/regression/posix/Makefile utils/Makefile utils/can/Makefile utils/analogy/Makefile utils/ps/Makefile utils/slackspot/Makefile demo/Makefile demo/posix/Makefile demo/posix/cobalt/Makefile demo/alchemy/Makefile demo/alchemy/cobalt/Makefile include/Makefile include/nocore/Makefile include/cobalt/uapi/Makefile include/cobalt/uapi/asm-generic/Makefile include/cobalt/uapi/kernel/Makefile include/cobalt/uapi/rtdm/Makefile include/cobalt/Makefile include/cobalt/sys/Makefile include/cobalt/kernel/Makefile include/cobalt/kernel/rtdm/Makefile include/cobalt/kernel/rtdm/analogy/Makefile include/cobalt/boilerplate/Makefile include/rtdm/Makefile include/rtdm/uapi/Makefile include/mercury/Makefile include/mercury/boilerplate/Makefile include/boilerplate/Makefile include/copperplate/Makefile include/alchemy/Makefile include/vxworks/Makefile include/psos/Makefile"
 
 
-if test \! x$XENO_INSTALL_DOC = x ; then
-      ac_config_files="$ac_config_files doc/Makefile doc/man/Makefile doc/doxygen/Makefile doc/doxygen/Doxyfile-common doc/doxygen/Doxyfile doc/doxygen/Doxyfile-nucleus doc/doxygen/Doxyfile-cobalt doc/doxygen/Doxyfile-rtdm doc/asciidoc/Makefile"
+if test \! x$XENO_RUN_DOC = x ; then
+      ac_config_files="$ac_config_files doc/Makefile doc/man/Makefile doc/doxygen/Makefile doc/doxygen/manual-common.conf doc/doxygen/manual-html.conf doc/doxygen/manual-pdf.conf doc/asciidoc/Makefile"
 
 fi
 
@@ -14276,6 +14291,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${XENO_INSTALL_DOC_TRUE}" && test -z "${XENO_INSTALL_DOC_FALSE}"; then
   as_fn_error $? "conditional \"XENO_INSTALL_DOC\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${XENO_RUN_DOC_TRUE}" && test -z "${XENO_RUN_DOC_FALSE}"; then
+  as_fn_error $? "conditional \"XENO_RUN_DOC\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${CONFIG_XENO_SHARED_TRUE}" && test -z "${CONFIG_XENO_SHARED_FALSE}"; then
@@ -15240,11 +15259,9 @@ do
     "doc/Makefile") CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
     "doc/man/Makefile") CONFIG_FILES="$CONFIG_FILES doc/man/Makefile" ;;
     "doc/doxygen/Makefile") CONFIG_FILES="$CONFIG_FILES doc/doxygen/Makefile" ;;
-    "doc/doxygen/Doxyfile-common") CONFIG_FILES="$CONFIG_FILES doc/doxygen/Doxyfile-common" ;;
-    "doc/doxygen/Doxyfile") CONFIG_FILES="$CONFIG_FILES doc/doxygen/Doxyfile" ;;
-    "doc/doxygen/Doxyfile-nucleus") CONFIG_FILES="$CONFIG_FILES doc/doxygen/Doxyfile-nucleus" ;;
-    "doc/doxygen/Doxyfile-cobalt") CONFIG_FILES="$CONFIG_FILES doc/doxygen/Doxyfile-cobalt" ;;
-    "doc/doxygen/Doxyfile-rtdm") CONFIG_FILES="$CONFIG_FILES doc/doxygen/Doxyfile-rtdm" ;;
+    "doc/doxygen/manual-common.conf") CONFIG_FILES="$CONFIG_FILES doc/doxygen/manual-common.conf" ;;
+    "doc/doxygen/manual-html.conf") CONFIG_FILES="$CONFIG_FILES doc/doxygen/manual-html.conf" ;;
+    "doc/doxygen/manual-pdf.conf") CONFIG_FILES="$CONFIG_FILES doc/doxygen/manual-pdf.conf" ;;
     "doc/asciidoc/Makefile") CONFIG_FILES="$CONFIG_FILES doc/asciidoc/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;

@@ -78,7 +78,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-@XENO_INSTALL_DOC_TRUE@am__append_1 = doc
+@XENO_RUN_DOC_TRUE@am__append_1 = doc
 subdir = .
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure $(am__configure_deps) \

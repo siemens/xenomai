@@ -1,47 +1,4 @@
-@INCLUDE = Doxyfile-common
-
-# Doxyfile 1.3.4
-
-# The PROJECT_NAME tag is a single word (or a sequence of words surrounded
-# by quotes) that should identify the project.
-
-PROJECT_NAME           = "Xenomai"
-
-
-#---------------------------------------------------------------------------
-# configuration options related to the input files
-#---------------------------------------------------------------------------
-
-# The INPUT tag can be used to specify the files and/or directories that contain
-# documented source files. You may enter file names like "myfile.cpp" or
-# directories like "/usr/src/myproject". Separate the files or directories
-# with spaces.
-
-INPUT                  = \
-	@top_srcdir@/include/cobalt/uapi \
-	@top_srcdir@/include/cobalt/kernel \
-	@top_srcdir@/kernel/cobalt \
-	@top_srcdir@/include/nocore \
-	@top_srcdir@/include/boilerplate \
-	@top_srcdir@/include/copperplate \
-	@top_srcdir@/include/alchemy \
-	@top_srcdir@/include/rtdm \
-	@top_srcdir@/include/analogy \
-	@top_srcdir@/lib/copperplate \
-	@top_srcdir@/lib/alchemy \
-	@top_srcdir@/lib/analogy \
-	@top_srcdir@/kernel/drivers/analogy \
-	@top_srcdir@/doc/doxygen
-
-# The EXAMPLE_PATH tag can be used to specify one or more files or
-# directories that contain example code fragments that are included (see
-# the \include command).
-
-EXAMPLE_PATH           = @top_srcdir@/utils
-
-#---------------------------------------------------------------------------
-# configuration options related to the HTML output
-#---------------------------------------------------------------------------
+@INCLUDE = manual-common.conf
 
 # If the GENERATE_HTML tag is set to YES (the default) Doxygen will
 # generate HTML output.
@@ -52,7 +9,7 @@ GENERATE_HTML          = YES
 # If a relative path is entered the value of OUTPUT_DIRECTORY will be
 # put in front of it. If left blank `html' will be used as the default path.
 
-HTML_OUTPUT            = api
+HTML_OUTPUT            = manual-html
 
 # The HTML_FILE_EXTENSION tag can be used to specify the file extension for
 # each generated HTML page (for example: .htm,.php,.asp). If it is left blank
@@ -78,12 +35,6 @@ HTML_FOOTER            =
 # will generate a default style sheet
 
 HTML_STYLESHEET        =
-
-# If the HTML_ALIGN_MEMBERS tag is set to YES, the members of classes,
-# files or namespaces will be aligned in HTML using tables. If set to
-# NO a bullet list will be used.
-
-HTML_ALIGN_MEMBERS     = YES
 
 # If the GENERATE_HTMLHELP tag is set to YES, additional index files
 # will be generated that can be used as input for tools like the

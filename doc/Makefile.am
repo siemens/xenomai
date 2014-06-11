@@ -1,4 +1,4 @@
-SUBDIRS=asciidoc doxygen man
+SUBDIRS=doxygen asciidoc man
 
 GENERATE_DOC=$(top_srcdir)/scripts/maint/generate-doc
 
@@ -8,3 +8,4 @@ generate-doc:
 	else \
 		srcdir=$(srcdir) $(GENERATE_DOC) ; \
 	fi
+

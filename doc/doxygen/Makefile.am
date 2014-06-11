@@ -1,9 +1,6 @@
-HTML_DOCS=api api/search
-PDF_DOCS= nucleus-api.pdf cobalt-api.pdf rtdm-api.pdf
-
-EXTRA_DIST = \
-	Doxyfile.in Doxyfile-common.in Doxyfile-nucleus.in \
-	Doxyfile-cobalt.in Doxyfile-rtdm.in
+HTML_DOCS = manual-html manual-html/search
+PDF_DOCS  = manual.pdf
+EXTRA_DIST = manual-common.conf.in manual-html.conf.in manual-pdf.conf.in
 
 if !XENO_BUILD_DOC
 HTML_DOCSDIR = $(srcdir)/../generated/html/
@@ -12,26 +9,22 @@ else
 HTML_DOCSDIR = ./
 PDF_DOCSDIR = ./
 
-# Doxygen documentation
-api: doxygen-api
-
 all-local: $(HTML_DOCS) $(PDF_DOCS)
 
-doxygen-api: Doxyfile
-	$(DOXYGEN) $(DOXYDOC_OPTS)
+manual-html:
+	$(DOXYGEN) $@.conf
 
-%-api.pdf: FORCE
-	$(MAKE) Doxyfile-$*
-	$(DOXYGEN) $(DOXYDOC_OPTS) Doxyfile-$*
-	$(MAKE) -C latex-$* refman.pdf
-	mv latex-$*/refman.pdf $@
+%.pdf: FORCE
+	$(DOXYGEN) $*-pdf.conf
+	$(MAKE) -C $*-latex refman.pdf
+	mv $*-latex/refman.pdf $@
 
 distclean-local:
-	for dir in $(HTML_DOCS) latex-*; do \
+	for dir in $(HTML_DOCS) *-latex; do \
 	    if test -d $$dir ; then $(RM) -R $$dir ; fi ; \
 	done
 
-.PHONY: doxygen-api FORCE
+.PHONY: manual-html FORCE
 
 .DELETE_ON_ERROR:
 
