@@ -926,7 +926,6 @@ AC_CONFIG_FILES([ \
 if test \! x$XENO_MAYBE_DOCDIR = x ; then
       AC_CONFIG_FILES([ \
 	doc/Makefile \
-	doc/txt/Makefile \
 	doc/man/Makefile \
 	doc/doxygen/Makefile \
 	doc/doxygen/Doxyfile-common \
