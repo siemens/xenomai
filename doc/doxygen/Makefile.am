@@ -5,7 +5,7 @@ EXTRA_DIST = \
 	Doxyfile.in Doxyfile-common.in Doxyfile-nucleus.in \
 	Doxyfile-cobalt.in Doxyfile-rtdm.in
 
-if !CONFIG_XENO_DOC_DOX
+if !XENO_BUILD_DOC
 HTML_DOCSDIR = $(srcdir)/../generated/html/
 PDF_DOCSDIR = $(srcdir)/../generated/pdf/
 else

@@ -78,6 +78,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
+@XENO_INSTALL_DOC_TRUE@am__append_1 = doc
 subdir = .
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure $(am__configure_deps) \
@@ -157,7 +158,7 @@ am__define_uniq_tagged_files = \
 ETAGS = etags
 CTAGS = ctags
 CSCOPE = cscope
-DIST_SUBDIRS = $(SUBDIRS)
+DIST_SUBDIRS = lib config include scripts testsuite utils demo doc
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -306,7 +307,6 @@ XENO_DEMO_DIR = @XENO_DEMO_DIR@
 XENO_FUSE_CFLAGS = @XENO_FUSE_CFLAGS@
 XENO_HOST_STRING = @XENO_HOST_STRING@
 XENO_LIB_LDFLAGS = @XENO_LIB_LDFLAGS@
-XENO_MAYBE_DOCDIR = @XENO_MAYBE_DOCDIR@
 XENO_POSIX_WRAPPERS = @XENO_POSIX_WRAPPERS@
 XENO_TARGET_ARCH = @XENO_TARGET_ARCH@
 XENO_TARGET_CORE = @XENO_TARGET_CORE@
@@ -374,16 +374,8 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 ACLOCAL_AMFLAGS = -I config
 SUDO = sudo
-SUBDIRS = \
-	lib 		\
-	config		\
-	include		\
-	scripts		\
-	testsuite	\
-	utils		\
-	demo		\
-	@XENO_MAYBE_DOCDIR@
-
+SUBDIRS = lib config include scripts testsuite utils demo \
+	$(am__append_1)
 EXTRA_DIST = kernel debian
 all: all-recursive
 

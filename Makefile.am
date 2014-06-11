@@ -9,8 +9,11 @@ SUBDIRS = 		\
 	scripts		\
 	testsuite	\
 	utils		\
-	demo		\
-	@XENO_MAYBE_DOCDIR@
+	demo
+
+if XENO_INSTALL_DOC
+SUBDIRS += doc
+endif
 
 EXTRA_DIST = kernel debian
 

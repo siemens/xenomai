@@ -37,7 +37,7 @@ man1_MANS = \
 	xeno-test.1 \
 	dohell.1
 
-if !CONFIG_XENO_ASCIIDOC
+if !XENO_BUILD_DOC
 HTML_DOCSDIR = $(srcdir)/../generated/html/
 PDF_DOCSDIR = $(srcdir)/../generated/pdf/
 MAN_DOCSDIR = $(srcdir)/../generated/man/

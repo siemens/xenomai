@@ -659,10 +659,6 @@ XENO_POSIX_WRAPPERS
 LD_FILE_OPTION
 XENO_TLSF_FALSE
 XENO_TLSF_TRUE
-CONFIG_XENO_ASCIIDOC_FALSE
-CONFIG_XENO_ASCIIDOC_TRUE
-CONFIG_XENO_DOC_DOX_FALSE
-CONFIG_XENO_DOC_DOX_TRUE
 CONFIG_XENO_SHARED_FALSE
 CONFIG_XENO_SHARED_TRUE
 W3M
@@ -682,7 +678,10 @@ DBX_DOC_TRUE
 DBX_DOC_ROOT
 DOXYGEN_HAVE_DOT
 DOXYGEN
-XENO_MAYBE_DOCDIR
+XENO_INSTALL_DOC_FALSE
+XENO_INSTALL_DOC_TRUE
+XENO_BUILD_DOC_FALSE
+XENO_BUILD_DOC_TRUE
 XENO_REGISTRY_FALSE
 XENO_REGISTRY_TRUE
 FUSE_LIBS
@@ -863,14 +862,13 @@ enable_smp
 enable_x86_vsyscall
 enable_arm_tsc
 enable_arm_quirks
+enable_doc_build
 enable_doc_install
-enable_dox_doc
 enable_dbx
 enable_dbx_network
 with_dbx_root
 with_docbook_xsl_root
 enable_verbose_latex
-enable_asciidoc
 enable_valgrind_client
 enable_dlopen_libs
 enable_tls
@@ -1548,14 +1546,13 @@ Optional Features:
                           s3c24x, sa1100. [default=kuser]
   --enable-arm-quirks     Enable quirks for specific systems. Currently
                           supported quirks are for sa1100 and xscale3.
+  --enable-doc-build      Build Xenomai documentation
   --disable-doc-install   Do not install documentation
-  --enable-dox-doc        Build Doxygen documentation
   --enable-dbx            Build Docbook XML documentation.
   --enable-dbx-network    Try to access Docbook DTD and XSL stylesheets
                           through network (default is to die if local
                           installation can not be found by configure).
-  --enable-verbose-latex  Uses LaTeX non-stop mode
-  --enable-asciidoc       Build Asciidoc documentation
+  --enable-nonstop-latex  Use LaTeX non-stop mode
   --enable-valgrind-client
                           Enable Valgrind client API
   --enable-dlopen-libs    Allow dynamic loading of Xenomai libraries
@@ -13288,52 +13285,46 @@ $as_echo "${CONFIG_XENO_CPU_XSC3:-no}" >&6; }
 fi
 
 
-if test x"$docdir" = x; then
-	docdir=$datadir/doc/$PACKAGE-$VERSION
-fi
-
-
-if test \! -d $srcdir/doc ; then
-    unset XENO_MAYBE_DOCDIR
-else
-    XENO_MAYBE_DOCDIR=doc
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether installing documentation" >&5
-$as_echo_n "checking whether installing documentation... " >&6; }
-    # Check whether --enable-doc-install was given.
-if test "${enable_doc_install+set}" = set; then :
-  enableval=$enable_doc_install; case "$enableval" in
-       y | yes);;
-       *) unset XENO_MAYBE_DOCDIR;;
-       esac
-fi
-
-    { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${XENO_MAYBE_DOCDIR:-no}" >&5
-$as_echo "${XENO_MAYBE_DOCDIR:-no}" >&6; }
-fi
-
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for Doxygen documentation" >&5
-$as_echo_n "checking for Doxygen documentation... " >&6; }
-# Check whether --enable-dox-doc was given.
-if test "${enable_dox_doc+set}" = set; then :
-  enableval=$enable_dox_doc; case "$enableval" in
-	y | yes) CONFIG_XENO_DOC_DOX=y ;;
-	*) unset CONFIG_XENO_DOC_DOX ;;
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to build documentation" >&5
+$as_echo_n "checking whether to build documentation... " >&6; }
+# Check whether --enable-doc-build was given.
+if test "${enable_doc_build+set}" = set; then :
+  enableval=$enable_doc_build; case "$enableval" in
+	y | yes) XENO_BUILD_DOC=y ;;
+	*) unset XENO_BUILD_DOC ;;
 	esac
 fi
 
-
-if test \! -d $srcdir/doc ; then
-    if test x$CONFIG_XENO_DOC_DOX = xy ;
-    then
-	as_fn_error $? "documentation tree is missing" "$LINENO" 5
-    fi
-    { $as_echo "$as_me:${as_lineno-$LINENO}: result: not present" >&5
-$as_echo "not present" >&6; }
+ if test "$XENO_BUILD_DOC" = y; then
+  XENO_BUILD_DOC_TRUE=
+  XENO_BUILD_DOC_FALSE='#'
 else
-    { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${CONFIG_XENO_DOC_DOX:-no}" >&5
-$as_echo "${CONFIG_XENO_DOC_DOX:-no}" >&6; }
+  XENO_BUILD_DOC_TRUE='#'
+  XENO_BUILD_DOC_FALSE=
 fi
+
+
+XENO_INSTALL_DOC=y
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to install documentation" >&5
+$as_echo_n "checking whether to install documentation... " >&6; }
+# Check whether --enable-doc-install was given.
+if test "${enable_doc_install+set}" = set; then :
+  enableval=$enable_doc_install; case "$enableval" in
+ y | yes);;
+ *) unset XENO_INSTALL_DOC;;
+esac
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: ${XENO_INSTALL_DOC:-no}" >&5
+$as_echo "${XENO_INSTALL_DOC:-no}" >&6; }
+ if test "$XENO_INSTALL_DOC" = y; then
+  XENO_INSTALL_DOC_TRUE=
+  XENO_INSTALL_DOC_FALSE='#'
+else
+  XENO_INSTALL_DOC_TRUE='#'
+  XENO_INSTALL_DOC_FALSE=
+fi
+
 
 # Extract the first word of "doxygen", so it can be a program name with args.
 set dummy doxygen; ac_word=$2
@@ -13373,8 +13364,8 @@ fi
 
 
 
-if test x${CONFIG_XENO_DOC_DOX} = xy -a x"$DOXYGEN" = x ; then
-   as_fn_error $? "Missing the Doxygen tools to generate the documentation" "$LINENO" 5
+if test x${XENO_BUILD_DOC} = xy -a x"$DOXYGEN" = x ; then
+   as_fn_error $? "Missing the Doxygen tools to build the documentation" "$LINENO" 5
 fi
 
 # Extract the first word of "dot", so it can be a program name with args.
@@ -13421,15 +13412,6 @@ else
    DOXYGEN_SHOW_INCLUDE_FILES=YES
 fi
 
-case "$CONFIG_XENO_DOC_DBX" in
-y | ye | yes)
-    DBX_DOC=yes ;;
-*)
-    DBX_DOC="" ;;
-esac
-DBX_NET="$CONFIG_XENO_DBX_NET"
-DBX_ROOT="$CONFIG_XENO_DBX_ROOT"
-DBX_XSL_ROOT="$CONFIG_XENO_DBX_XSL_ROOT"
 
 DBX_DOC_ROOT="doc/docbook"
 
@@ -13713,49 +13695,23 @@ fi
 
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether using LaTeX non-stop mode" >&5
-$as_echo_n "checking whether using LaTeX non-stop mode... " >&6; }
+LATEX_BATCHMODE=YES
+LATEX_MODE=batch
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for LaTeX mode" >&5
+$as_echo_n "checking for LaTeX mode... " >&6; }
 # Check whether --enable-verbose-latex was given.
 if test "${enable_verbose_latex+set}" = set; then :
   enableval=$enable_verbose_latex; case "$enableval" in
-	y | yes) CONFIG_XENO_DOC_LATEX_NONSTOP=y ;;
-	*) unset CONFIG_XENO_DOC_LATEX_NONSTOP ;;
+	y | yes)
+	   LATEX_BATCHMODE=NO
+	   LATEX_MODE=non-stop
+	   ;;
+	*) ;;
 	esac
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: ${CONFIG_XENO_DOC_LATEX_NONSTOP:-no}" >&5
-$as_echo "${CONFIG_XENO_DOC_LATEX_NONSTOP:-no}" >&6; }
-
-if test x${CONFIG_XENO_DOC_LATEX_NONSTOP} = xy; then
-   LATEX_BATCHMODE=NO
-   LATEX_MODE=nonstopmode
-else
-   LATEX_BATCHMODE=YES
-   LATEX_MODE=batchmode
-fi
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for asciidoc documentation" >&5
-$as_echo_n "checking for asciidoc documentation... " >&6; }
-# Check whether --enable-asciidoc was given.
-if test "${enable_asciidoc+set}" = set; then :
-  enableval=$enable_asciidoc; case "$enableval" in
-	y | yes) CONFIG_XENO_ASCIIDOC=y ;;
-	*) unset CONFIG_XENO_ASCIIDOC ;;
-	esac
-fi
-
-
-if test \! -d $srcdir/doc ; then
-    if test x$CONFIG_XENO_ASCIIDOC = xy ;
-    then
-	as_fn_error $? "documentation tree is missing" "$LINENO" 5
-    fi
-    { $as_echo "$as_me:${as_lineno-$LINENO}: result: not present" >&5
-$as_echo "not present" >&6; }
-else
-    { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${CONFIG_XENO_ASCIIDOC:-no}" >&5
-$as_echo "${CONFIG_XENO_ASCIIDOC:-no}" >&6; }
-fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: ${LATEX_MODE}" >&5
+$as_echo "${LATEX_MODE}" >&6; }
 
 # Extract the first word of "asciidoc", so it can be a program name with args.
 set dummy asciidoc; ac_word=$2
@@ -13794,8 +13750,8 @@ $as_echo "no" >&6; }
 fi
 
 
-if test x${CONFIG_XENO_ASCIIDOC} = xy -a x"$ASCIIDOC" = x ; then
-   as_fn_error $? "Missing the asciidoc tool to generate the documentation" "$LINENO" 5
+if test x${XENO_BUILD_DOC} = xy -a x"$ASCIIDOC" = x ; then
+   as_fn_error $? "Missing the asciidoc tool to build the documentation" "$LINENO" 5
 fi
 # Extract the first word of "a2x", so it can be a program name with args.
 set dummy a2x; ac_word=$2
@@ -13834,8 +13790,8 @@ $as_echo "no" >&6; }
 fi
 
 
-if test x${CONFIG_XENO_ASCIIDOC} = xy -a x"$A2X" = x ; then
-   as_fn_error $? "Missing the a2x tool to generate the documentation" "$LINENO" 5
+if test x${XENO_BUILD_DOC} = xy -a x"$A2X" = x ; then
+   as_fn_error $? "Missing the a2x tool to build the documentation" "$LINENO" 5
 fi
 # Extract the first word of "w3m", so it can be a program name with args.
 set dummy w3m; ac_word=$2
@@ -13874,9 +13830,14 @@ $as_echo "no" >&6; }
 fi
 
 
-if test x${CONFIG_XENO_ASCIIDOC} = xy -a x"$W3M" = x ; then
-   as_fn_error $? "Missing the w3m tool to generate the documentation" "$LINENO" 5
+if test x${XENO_BUILD_DOC} = xy -a x"$W3M" = x ; then
+   as_fn_error $? "Missing the w3m tool to build the documentation" "$LINENO" 5
 fi
+
+if test x"$docdir" = x; then
+	docdir=$datadir/doc/$PACKAGE-$VERSION
+fi
+
 
 
 ac_fn_c_check_header_mongrel "$LINENO" "valgrind/valgrind.h" "ac_cv_header_valgrind_valgrind_h" "$ac_includes_default"
@@ -14043,24 +14004,6 @@ fi
 cat >>confdefs.h <<_ACEOF
 #define CONFIG_XENO_DEFAULT_PERIOD $CONFIG_XENO_DEFAULT_PERIOD
 _ACEOF
-
-
-
- if test "$CONFIG_XENO_DOC_DOX" = y; then
-  CONFIG_XENO_DOC_DOX_TRUE=
-  CONFIG_XENO_DOC_DOX_FALSE='#'
-else
-  CONFIG_XENO_DOC_DOX_TRUE='#'
-  CONFIG_XENO_DOC_DOX_FALSE=
-fi
-
- if test "$CONFIG_XENO_ASCIIDOC" = y; then
-  CONFIG_XENO_ASCIIDOC_TRUE=
-  CONFIG_XENO_ASCIIDOC_FALSE='#'
-else
-  CONFIG_XENO_ASCIIDOC_TRUE='#'
-  CONFIG_XENO_ASCIIDOC_FALSE=
-fi
 
 
  if test x$rtcore_type = xcobalt -o x$debug_mode = x; then
@@ -14463,7 +14406,7 @@ fi
 ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config:scripts/xeno-config-$rtcore_type.in scripts/xeno lib/Makefile lib/boilerplate/Makefile lib/cobalt/Makefile lib/cobalt/arch/Makefile lib/cobalt/arch/arm/Makefile lib/cobalt/arch/arm/include/Makefile lib/cobalt/arch/arm/include/asm/Makefile lib/cobalt/arch/arm/include/asm/xenomai/Makefile lib/cobalt/arch/powerpc/Makefile lib/cobalt/arch/powerpc/include/Makefile lib/cobalt/arch/powerpc/include/asm/Makefile lib/cobalt/arch/powerpc/include/asm/xenomai/Makefile lib/cobalt/arch/blackfin/Makefile lib/cobalt/arch/blackfin/include/Makefile lib/cobalt/arch/blackfin/include/asm/Makefile lib/cobalt/arch/blackfin/include/asm/xenomai/Makefile lib/cobalt/arch/x86/Makefile lib/cobalt/arch/x86/include/Makefile lib/cobalt/arch/x86/include/asm/Makefile lib/cobalt/arch/x86/include/asm/xenomai/Makefile lib/cobalt/arch/nios2/Makefile lib/cobalt/arch/nios2/include/Makefile lib/cobalt/arch/nios2/include/asm/Makefile lib/cobalt/arch/nios2/include/asm/xenomai/Makefile lib/cobalt/arch/sh/Makefile lib/cobalt/arch/sh/include/Makefile lib/cobalt/arch/sh/include/asm/Makefile lib/cobalt/arch/sh/include/asm/xenomai/Makefile lib/copperplate/Makefile lib/copperplate/regd/Makefile lib/alchemy/Makefile lib/vxworks/Makefile lib/psos/Makefile lib/analogy/Makefile testsuite/Makefile testsuite/latency/Makefile testsuite/cyclic/Makefile testsuite/switchtest/Makefile testsuite/clocktest/Makefile testsuite/unit/Makefile testsuite/xeno-test/Makefile testsuite/regression/Makefile testsuite/regression/posix/Makefile utils/Makefile utils/can/Makefile utils/analogy/Makefile utils/ps/Makefile utils/slackspot/Makefile demo/Makefile demo/posix/Makefile demo/posix/cobalt/Makefile demo/alchemy/Makefile demo/alchemy/cobalt/Makefile include/Makefile include/nocore/Makefile include/cobalt/uapi/Makefile include/cobalt/uapi/asm-generic/Makefile include/cobalt/uapi/kernel/Makefile include/cobalt/uapi/rtdm/Makefile include/cobalt/Makefile include/cobalt/sys/Makefile include/cobalt/kernel/Makefile include/cobalt/kernel/rtdm/Makefile include/cobalt/kernel/rtdm/analogy/Makefile include/cobalt/boilerplate/Makefile include/rtdm/Makefile include/rtdm/uapi/Makefile include/mercury/Makefile include/mercury/boilerplate/Makefile include/boilerplate/Makefile include/copperplate/Makefile include/alchemy/Makefile include/vxworks/Makefile include/psos/Makefile"
 
 
-if test \! x$XENO_MAYBE_DOCDIR = x ; then
+if test \! x$XENO_INSTALL_DOC = x ; then
       ac_config_files="$ac_config_files doc/Makefile doc/man/Makefile doc/doxygen/Makefile doc/doxygen/Doxyfile-common doc/doxygen/Doxyfile doc/doxygen/Doxyfile-nucleus doc/doxygen/Doxyfile-cobalt doc/doxygen/Doxyfile-rtdm doc/asciidoc/Makefile doc/docbook/Makefile doc/docbook/catalog doc/docbook/custom-stylesheets/Makefile doc/docbook/custom-stylesheets/xsl/Makefile doc/docbook/custom-stylesheets/xsl/common/Makefile doc/docbook/custom-stylesheets/xsl/fo/Makefile doc/docbook/custom-stylesheets/xsl/html/Makefile doc/docbook/custom-stylesheets/xsl/html/chunk.xsl doc/docbook/custom-stylesheets/xsl/html/onechunk.xsl"
 
 fi
@@ -14637,6 +14580,14 @@ if test -z "${XENO_REGISTRY_TRUE}" && test -z "${XENO_REGISTRY_FALSE}"; then
   as_fn_error $? "conditional \"XENO_REGISTRY\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
+if test -z "${XENO_BUILD_DOC_TRUE}" && test -z "${XENO_BUILD_DOC_FALSE}"; then
+  as_fn_error $? "conditional \"XENO_BUILD_DOC\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${XENO_INSTALL_DOC_TRUE}" && test -z "${XENO_INSTALL_DOC_FALSE}"; then
+  as_fn_error $? "conditional \"XENO_INSTALL_DOC\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
 if test -z "${DBX_DOC_TRUE}" && test -z "${DBX_DOC_FALSE}"; then
   as_fn_error $? "conditional \"DBX_DOC\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
@@ -14647,14 +14598,6 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${CONFIG_XENO_SHARED_TRUE}" && test -z "${CONFIG_XENO_SHARED_FALSE}"; then
   as_fn_error $? "conditional \"CONFIG_XENO_SHARED\" was never defined.
-Usually this means the macro was only invoked conditionally." "$LINENO" 5
-fi
-if test -z "${CONFIG_XENO_DOC_DOX_TRUE}" && test -z "${CONFIG_XENO_DOC_DOX_FALSE}"; then
-  as_fn_error $? "conditional \"CONFIG_XENO_DOC_DOX\" was never defined.
-Usually this means the macro was only invoked conditionally." "$LINENO" 5
-fi
-if test -z "${CONFIG_XENO_ASCIIDOC_TRUE}" && test -z "${CONFIG_XENO_ASCIIDOC_FALSE}"; then
-  as_fn_error $? "conditional \"CONFIG_XENO_ASCIIDOC\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${XENO_TLSF_TRUE}" && test -z "${XENO_TLSF_FALSE}"; then

@@ -1,4 +1,4 @@
-if !CONFIG_XENO_ASCIIDOC
+if !XENO_BUILD_DOC
 $(man1_MANS): %.1: $(MAN_DOCSDIR)/%.1
 	@cp $< $@
 

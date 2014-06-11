@@ -387,48 +387,30 @@ fi
 
 dnl Documentation package.
 
-if test x"$docdir" = x; then
-	docdir=$datadir/doc/$PACKAGE-$VERSION
-fi
-AC_SUBST(docdir)
-
-if test \! -d $srcdir/doc ; then
-    unset XENO_MAYBE_DOCDIR
-else
-    XENO_MAYBE_DOCDIR=doc
-    AC_MSG_CHECKING(whether installing documentation)
-    AC_ARG_ENABLE(doc-install,
-       AS_HELP_STRING([--disable-doc-install], [Do not install documentation]),
-       [case "$enableval" in
-       y | yes);;
-       *) unset XENO_MAYBE_DOCDIR;;
-       esac])
-    AC_MSG_RESULT(${XENO_MAYBE_DOCDIR:-no})
-fi
-AC_SUBST(XENO_MAYBE_DOCDIR)
-
-AC_MSG_CHECKING(for Doxygen documentation)
-AC_ARG_ENABLE(dox-doc,
-	AS_HELP_STRING([--enable-dox-doc], [Build Doxygen documentation]),
+AC_MSG_CHECKING(whether to build documentation)
+AC_ARG_ENABLE(doc-build,
+	AS_HELP_STRING([--enable-doc-build], [Build Xenomai documentation]),
 	[case "$enableval" in
-	y | yes) CONFIG_XENO_DOC_DOX=y ;;
-	*) unset CONFIG_XENO_DOC_DOX ;;
+	y | yes) XENO_BUILD_DOC=y ;;
+	*) unset XENO_BUILD_DOC ;;
 	esac])
+AM_CONDITIONAL(XENO_BUILD_DOC,[test "$XENO_BUILD_DOC" = y])
 
-if test \! -d $srcdir/doc ; then
-    if test x$CONFIG_XENO_DOC_DOX = xy ;
-    then
-	AC_MSG_ERROR([documentation tree is missing])
-    fi
-    AC_MSG_RESULT([not present])
-else
-    AC_MSG_RESULT(${CONFIG_XENO_DOC_DOX:-no})
-fi
+XENO_INSTALL_DOC=y
+AC_MSG_CHECKING(whether to install documentation)
+AC_ARG_ENABLE(doc-install,
+AS_HELP_STRING([--disable-doc-install], [Do not install documentation]),
+[case "$enableval" in
+ y | yes);;
+ *) unset XENO_INSTALL_DOC;;
+esac])
+AC_MSG_RESULT(${XENO_INSTALL_DOC:-no})
+AM_CONDITIONAL(XENO_INSTALL_DOC,[test "$XENO_INSTALL_DOC" = y])
 
 AC_CHECK_PROG(DOXYGEN, doxygen, doxygen)
 
-if test x${CONFIG_XENO_DOC_DOX} = xy -a x"$DOXYGEN" = x ; then
-   AC_MSG_ERROR([Missing the Doxygen tools to generate the documentation])
+if test x${XENO_BUILD_DOC} = xy -a x"$DOXYGEN" = x ; then
+   AC_MSG_ERROR([Missing the Doxygen tools to build the documentation])
 fi
 
 AC_CHECK_PROG(DOXYGEN_HAVE_DOT, dot, YES, NO)
@@ -438,64 +420,39 @@ else
    DOXYGEN_SHOW_INCLUDE_FILES=YES
 fi
 
-case "$CONFIG_XENO_DOC_DBX" in
-y | ye | yes)
-    DBX_DOC=yes ;;
-*)
-    DBX_DOC="" ;;
-esac
-DBX_NET="$CONFIG_XENO_DBX_NET"
-DBX_ROOT="$CONFIG_XENO_DBX_ROOT"
-DBX_XSL_ROOT="$CONFIG_XENO_DBX_XSL_ROOT"
 DBX_DOC_INIT(doc/docbook, doc/generated, 4.2)
 
-AC_MSG_CHECKING(whether using LaTeX non-stop mode)
+LATEX_BATCHMODE=YES
+LATEX_MODE=batch
+AC_MSG_CHECKING(for LaTeX mode)
 AC_ARG_ENABLE(verbose-latex,
-	AS_HELP_STRING([--enable-verbose-latex], [Uses LaTeX non-stop mode]),
+	AS_HELP_STRING([--enable-nonstop-latex], [Use LaTeX non-stop mode]),
 	[case "$enableval" in
-	y | yes) CONFIG_XENO_DOC_LATEX_NONSTOP=y ;;
-	*) unset CONFIG_XENO_DOC_LATEX_NONSTOP ;;
+	y | yes) 
+	   LATEX_BATCHMODE=NO
+	   LATEX_MODE=non-stop
+	   ;;
+	*) ;;
 	esac])
-AC_MSG_RESULT(${CONFIG_XENO_DOC_LATEX_NONSTOP:-no})
-
-if test x${CONFIG_XENO_DOC_LATEX_NONSTOP} = xy; then
-   LATEX_BATCHMODE=NO
-   LATEX_MODE=nonstopmode
-else
-   LATEX_BATCHMODE=YES
-   LATEX_MODE=batchmode
-fi
-
-AC_MSG_CHECKING(for asciidoc documentation)
-AC_ARG_ENABLE(asciidoc,
-	AS_HELP_STRING([--enable-asciidoc], [Build Asciidoc documentation]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_ASCIIDOC=y ;;
-	*) unset CONFIG_XENO_ASCIIDOC ;;
-	esac])
-
-if test \! -d $srcdir/doc ; then
-    if test x$CONFIG_XENO_ASCIIDOC = xy ;
-    then
-	AC_MSG_ERROR([documentation tree is missing])
-    fi
-    AC_MSG_RESULT([not present])
-else
-    AC_MSG_RESULT(${CONFIG_XENO_ASCIIDOC:-no})
-fi
+AC_MSG_RESULT(${LATEX_MODE})
 
 AC_CHECK_PROG(ASCIIDOC, asciidoc, asciidoc)
-if test x${CONFIG_XENO_ASCIIDOC} = xy -a x"$ASCIIDOC" = x ; then
-   AC_MSG_ERROR([Missing the asciidoc tool to generate the documentation])
+if test x${XENO_BUILD_DOC} = xy -a x"$ASCIIDOC" = x ; then
+   AC_MSG_ERROR([Missing the asciidoc tool to build the documentation])
 fi
 AC_CHECK_PROG(A2X, a2x, a2x)
-if test x${CONFIG_XENO_ASCIIDOC} = xy -a x"$A2X" = x ; then
-   AC_MSG_ERROR([Missing the a2x tool to generate the documentation])
+if test x${XENO_BUILD_DOC} = xy -a x"$A2X" = x ; then
+   AC_MSG_ERROR([Missing the a2x tool to build the documentation])
 fi
 AC_CHECK_PROG(W3M, w3m, w3m)
-if test x${CONFIG_XENO_ASCIIDOC} = xy -a x"$W3M" = x ; then
-   AC_MSG_ERROR([Missing the w3m tool to generate the documentation])
+if test x${XENO_BUILD_DOC} = xy -a x"$W3M" = x ; then
+   AC_MSG_ERROR([Missing the w3m tool to build the documentation])
 fi
+
+if test x"$docdir" = x; then
+	docdir=$datadir/doc/$PACKAGE-$VERSION
+fi
+AC_SUBST(docdir)
 
 dnl Check for Valgrind client API support.
 dnl Some GCC releases produce broken assembly code for Valgrind
@@ -575,14 +532,6 @@ AM_CONDITIONAL(CONFIG_XENO_SHARED,[test "$enable_shared" = 'yes'])
 
 # Default sampling period (ns) used in various tests
 AC_DEFINE_UNQUOTED(CONFIG_XENO_DEFAULT_PERIOD,$CONFIG_XENO_DEFAULT_PERIOD,[config])
-
-dnl
-dnl Produce automake conditionals.
-dnl
-
-dnl Documentation.
-AM_CONDITIONAL(CONFIG_XENO_DOC_DOX,[test "$CONFIG_XENO_DOC_DOX" = y])
-AM_CONDITIONAL(CONFIG_XENO_ASCIIDOC,[test "$CONFIG_XENO_ASCIIDOC" = y])
 
 dnl Allocator for Copperplate
 dnl Note: in dual kernel mode, we don't want malloc, no matter what.
@@ -923,7 +872,7 @@ AC_CONFIG_FILES([ \
 	include/psos/Makefile \
 	])
 
-if test \! x$XENO_MAYBE_DOCDIR = x ; then
+if test \! x$XENO_INSTALL_DOC = x ; then
       AC_CONFIG_FILES([ \
 	doc/Makefile \
 	doc/man/Makefile \

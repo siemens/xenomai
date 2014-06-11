@@ -223,7 +223,6 @@ XENO_DEMO_DIR = @XENO_DEMO_DIR@
 XENO_FUSE_CFLAGS = @XENO_FUSE_CFLAGS@
 XENO_HOST_STRING = @XENO_HOST_STRING@
 XENO_LIB_LDFLAGS = @XENO_LIB_LDFLAGS@
-XENO_MAYBE_DOCDIR = @XENO_MAYBE_DOCDIR@
 XENO_POSIX_WRAPPERS = @XENO_POSIX_WRAPPERS@
 XENO_TARGET_ARCH = @XENO_TARGET_ARCH@
 XENO_TARGET_CORE = @XENO_TARGET_CORE@
@@ -309,18 +308,18 @@ PDF_DOCS = README.INSTALL.pdf README.APPLICATIONS.pdf MIGRATION.pdf TROUBLESHOOT
 EXTRA_DIST = README.INSTALL.adoc README.APPLICATIONS.adoc TROUBLESHOOTING.adoc \
 	plaintext.conf plaintext_postproc.awk plaintext.xsl
 
-@CONFIG_XENO_ASCIIDOC_FALSE@HTML_DOCSDIR = $(srcdir)/../generated/html/
-@CONFIG_XENO_ASCIIDOC_TRUE@HTML_DOCSDIR = ./
-@CONFIG_XENO_ASCIIDOC_FALSE@PDF_DOCSDIR = $(srcdir)/../generated/pdf/
-@CONFIG_XENO_ASCIIDOC_TRUE@PDF_DOCSDIR = ./
-@CONFIG_XENO_ASCIIDOC_TRUE@TXT_DOCS = README.INSTALL.txt README.APPLICATIONS.txt MIGRATION.txt TROUBLESHOOTING.txt
-@CONFIG_XENO_ASCIIDOC_TRUE@ASCIIDOC_HTML_OPTS = -a icons -a iconsdir=../asciidoc-icons \
-@CONFIG_XENO_ASCIIDOC_TRUE@	-a linkcss -a stylesdir=../asciidoc-css -a scriptsdir=../asciidoc-js \
-@CONFIG_XENO_ASCIIDOC_TRUE@	-a toc -a toclevels=3 -a max-width=55em -a xenover=$(PACKAGE_VERSION)
+@XENO_BUILD_DOC_FALSE@HTML_DOCSDIR = $(srcdir)/../generated/html/
+@XENO_BUILD_DOC_TRUE@HTML_DOCSDIR = ./
+@XENO_BUILD_DOC_FALSE@PDF_DOCSDIR = $(srcdir)/../generated/pdf/
+@XENO_BUILD_DOC_TRUE@PDF_DOCSDIR = ./
+@XENO_BUILD_DOC_TRUE@TXT_DOCS = README.INSTALL.txt README.APPLICATIONS.txt MIGRATION.txt TROUBLESHOOTING.txt
+@XENO_BUILD_DOC_TRUE@ASCIIDOC_HTML_OPTS = -a icons -a iconsdir=../asciidoc-icons \
+@XENO_BUILD_DOC_TRUE@	-a linkcss -a stylesdir=../asciidoc-css -a scriptsdir=../asciidoc-js \
+@XENO_BUILD_DOC_TRUE@	-a toc -a toclevels=3 -a max-width=55em -a xenover=$(PACKAGE_VERSION)
 
-@CONFIG_XENO_ASCIIDOC_TRUE@ASCIIDOC_PDF_OPTS = -a icons -a toc -a toclevels=3 -a xenover=$(PACKAGE_VERSION)
-@CONFIG_XENO_ASCIIDOC_TRUE@ASCIIDOC_TXT_OPTS = -a xenover=$(PACKAGE_VERSION) -a encoding=ascii
-@CONFIG_XENO_ASCIIDOC_TRUE@tmpdir = adoc_plaintext
+@XENO_BUILD_DOC_TRUE@ASCIIDOC_PDF_OPTS = -a icons -a toc -a toclevels=3 -a xenover=$(PACKAGE_VERSION)
+@XENO_BUILD_DOC_TRUE@ASCIIDOC_TXT_OPTS = -a xenover=$(PACKAGE_VERSION) -a encoding=ascii
+@XENO_BUILD_DOC_TRUE@tmpdir = adoc_plaintext
 doc_top_distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)
 GEN_DOC_DIST_ROOT = $(doc_top_distdir)/doc/generated
 all: all-am
@@ -405,7 +404,7 @@ distdir: $(DISTFILES)
 	  dist-hook
 check-am: all-am
 check: check-am
-@CONFIG_XENO_ASCIIDOC_FALSE@all-local:
+@XENO_BUILD_DOC_FALSE@all-local:
 all-am: Makefile all-local
 installdirs:
 install: install-am
@@ -520,45 +519,45 @@ uninstall-am: uninstall-local
 	ps ps-am tags-am uninstall uninstall-am uninstall-local
 
 
-@CONFIG_XENO_ASCIIDOC_TRUE@all-local: $(HTML_DOCS) $(PDF_DOCS) $(TXT_DOCS)
+@XENO_BUILD_DOC_TRUE@all-local: $(HTML_DOCS) $(PDF_DOCS) $(TXT_DOCS)
 
-@CONFIG_XENO_ASCIIDOC_TRUE@%: %.adoc Makefile
-@CONFIG_XENO_ASCIIDOC_TRUE@	@$(mkdir_p) $@
-@CONFIG_XENO_ASCIIDOC_TRUE@	$(ASCIIDOC) -n -b xhtml11 $(ASCIIDOC_HTML_OPTS) -o $@/index.html $<
+@XENO_BUILD_DOC_TRUE@%: %.adoc Makefile
+@XENO_BUILD_DOC_TRUE@	@$(mkdir_p) $@
+@XENO_BUILD_DOC_TRUE@	$(ASCIIDOC) -n -b xhtml11 $(ASCIIDOC_HTML_OPTS) -o $@/index.html $<
 
-@CONFIG_XENO_ASCIIDOC_TRUE@%.pdf: %.adoc Makefile
-@CONFIG_XENO_ASCIIDOC_TRUE@	$(A2X) -f pdf -D . $(ASCIIDOC_PDF_OPTS) $<
+@XENO_BUILD_DOC_TRUE@%.pdf: %.adoc Makefile
+@XENO_BUILD_DOC_TRUE@	$(A2X) -f pdf -D . $(ASCIIDOC_PDF_OPTS) $<
 
-@CONFIG_XENO_ASCIIDOC_TRUE@$(tmpdir)/%.txt: %.adoc Makefile plaintext.conf plaintext.xsl
-@CONFIG_XENO_ASCIIDOC_TRUE@	@$(mkdir_p) $(tmpdir)
-@CONFIG_XENO_ASCIIDOC_TRUE@	$(ASCIIDOC) --backend docbook -f $(srcdir)/plaintext.conf \
-@CONFIG_XENO_ASCIIDOC_TRUE@		--doctype article $(ASCIIDOC_TXT_OPTS) \
-@CONFIG_XENO_ASCIIDOC_TRUE@		--out-file $(tmpdir)/$*.xml $<
-@CONFIG_XENO_ASCIIDOC_TRUE@	xsltproc --stringparam toc.section.depth 3 --nonet \
-@CONFIG_XENO_ASCIIDOC_TRUE@		--output $(tmpdir)/$*.html $(srcdir)/plaintext.xsl \
-@CONFIG_XENO_ASCIIDOC_TRUE@		$(tmpdir)/$*.xml
-@CONFIG_XENO_ASCIIDOC_TRUE@	w3m -cols 80 -dump -T text/html -no-graph $(tmpdir)/$*.html > $@
+@XENO_BUILD_DOC_TRUE@$(tmpdir)/%.txt: %.adoc Makefile plaintext.conf plaintext.xsl
+@XENO_BUILD_DOC_TRUE@	@$(mkdir_p) $(tmpdir)
+@XENO_BUILD_DOC_TRUE@	$(ASCIIDOC) --backend docbook -f $(srcdir)/plaintext.conf \
+@XENO_BUILD_DOC_TRUE@		--doctype article $(ASCIIDOC_TXT_OPTS) \
+@XENO_BUILD_DOC_TRUE@		--out-file $(tmpdir)/$*.xml $<
+@XENO_BUILD_DOC_TRUE@	xsltproc --stringparam toc.section.depth 3 --nonet \
+@XENO_BUILD_DOC_TRUE@		--output $(tmpdir)/$*.html $(srcdir)/plaintext.xsl \
+@XENO_BUILD_DOC_TRUE@		$(tmpdir)/$*.xml
+@XENO_BUILD_DOC_TRUE@	w3m -cols 80 -dump -T text/html -no-graph $(tmpdir)/$*.html > $@
 
-@CONFIG_XENO_ASCIIDOC_TRUE@%.txt: $(tmpdir)/%.txt Makefile plaintext_postproc.awk
-@CONFIG_XENO_ASCIIDOC_TRUE@	awk -f $(srcdir)/plaintext_postproc.awk $(tmpdir)/$*.txt > $@
+@XENO_BUILD_DOC_TRUE@%.txt: $(tmpdir)/%.txt Makefile plaintext_postproc.awk
+@XENO_BUILD_DOC_TRUE@	awk -f $(srcdir)/plaintext_postproc.awk $(tmpdir)/$*.txt > $@
 
-@CONFIG_XENO_ASCIIDOC_TRUE@asciidoc-icons asciidoc-icons/callouts:
-@CONFIG_XENO_ASCIIDOC_TRUE@	@$(RM) -R asciidoc-icons
-@CONFIG_XENO_ASCIIDOC_TRUE@	@test -d /usr/share/asciidoc/images && \
-@CONFIG_XENO_ASCIIDOC_TRUE@	cp -a /usr/share/asciidoc/images/icons asciidoc-icons || \
-@CONFIG_XENO_ASCIIDOC_TRUE@	cp -a /usr/share/asciidoc/icons asciidoc-icons
+@XENO_BUILD_DOC_TRUE@asciidoc-icons asciidoc-icons/callouts:
+@XENO_BUILD_DOC_TRUE@	@$(RM) -R asciidoc-icons
+@XENO_BUILD_DOC_TRUE@	@test -d /usr/share/asciidoc/images && \
+@XENO_BUILD_DOC_TRUE@	cp -a /usr/share/asciidoc/images/icons asciidoc-icons || \
+@XENO_BUILD_DOC_TRUE@	cp -a /usr/share/asciidoc/icons asciidoc-icons
 
-@CONFIG_XENO_ASCIIDOC_TRUE@asciidoc-css:
-@CONFIG_XENO_ASCIIDOC_TRUE@	@$(mkdir_p) $@
-@CONFIG_XENO_ASCIIDOC_TRUE@	@test -d /usr/share/asciidoc/stylesheets/xhtml11.css && \
-@CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/share/asciidoc/stylesheets/xhtml11.css $@ || \
-@CONFIG_XENO_ASCIIDOC_TRUE@	true
-@CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/share/asciidoc/stylesheets/xhtml11-quirks.css $@
+@XENO_BUILD_DOC_TRUE@asciidoc-css:
+@XENO_BUILD_DOC_TRUE@	@$(mkdir_p) $@
+@XENO_BUILD_DOC_TRUE@	@test -d /usr/share/asciidoc/stylesheets/xhtml11.css && \
+@XENO_BUILD_DOC_TRUE@	@cp -a /usr/share/asciidoc/stylesheets/xhtml11.css $@ || \
+@XENO_BUILD_DOC_TRUE@	true
+@XENO_BUILD_DOC_TRUE@	@cp -a /usr/share/asciidoc/stylesheets/xhtml11-quirks.css $@
 
-@CONFIG_XENO_ASCIIDOC_TRUE@asciidoc-js:
-@CONFIG_XENO_ASCIIDOC_TRUE@	@$(mkdir_p) $@
-@CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/share/asciidoc/javascripts/asciidoc*.js $@
-@CONFIG_XENO_ASCIIDOC_TRUE@	@cp -a /usr/share/asciidoc/javascripts/toc.js $@
+@XENO_BUILD_DOC_TRUE@asciidoc-js:
+@XENO_BUILD_DOC_TRUE@	@$(mkdir_p) $@
+@XENO_BUILD_DOC_TRUE@	@cp -a /usr/share/asciidoc/javascripts/asciidoc*.js $@
+@XENO_BUILD_DOC_TRUE@	@cp -a /usr/share/asciidoc/javascripts/toc.js $@
 
 install-htmldocs: $(HTML_DOCS:%=$(HTML_DOCSDIR)%)
 	docs="$(HTML_DOCS)"; abs_builddir=$$PWD; \

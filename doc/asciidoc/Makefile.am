@@ -4,7 +4,7 @@ PDF_DOCS=README.INSTALL.pdf README.APPLICATIONS.pdf MIGRATION.pdf TROUBLESHOOTIN
 EXTRA_DIST=README.INSTALL.adoc README.APPLICATIONS.adoc TROUBLESHOOTING.adoc \
 	plaintext.conf plaintext_postproc.awk plaintext.xsl
 
-if !CONFIG_XENO_ASCIIDOC
+if !XENO_BUILD_DOC
 HTML_DOCSDIR = $(srcdir)/../generated/html/
 PDF_DOCSDIR = $(srcdir)/../generated/pdf/
 else
