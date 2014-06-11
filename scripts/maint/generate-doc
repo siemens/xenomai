@@ -11,7 +11,7 @@ die()
 
 progname=`basename $0`
 
-if ! [ -f docbook/catalog -a -d "$srcdir/generated" ]; then
+if ! [ -d "$srcdir/generated" ]; then
     die $progname must be run from the doc sub-directory of the build \
 tree and passed a correct srcdir variable.
 fi
@@ -35,7 +35,7 @@ echo -n 'Looking for removed files...'
 { cd "$abs_srcdir" && find generated -type f -print ; } | {
 cd tmp-dist/doc && while read -a file; do
     if ! [ -f "${file[*]}" ]; then
-	echo "${file[*]}" >> ../removed
+	echo "${qfile[*]}" >> ../removed
     fi
 done
 }

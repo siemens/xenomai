@@ -420,8 +420,6 @@ else
    DOXYGEN_SHOW_INCLUDE_FILES=YES
 fi
 
-DBX_DOC_INIT(doc/docbook, doc/generated, 4.2)
-
 LATEX_BATCHMODE=YES
 LATEX_MODE=batch
 AC_MSG_CHECKING(for LaTeX mode)
@@ -883,15 +881,6 @@ if test \! x$XENO_INSTALL_DOC = x ; then
 	doc/doxygen/Doxyfile-cobalt \
 	doc/doxygen/Doxyfile-rtdm \
 	doc/asciidoc/Makefile \
-	doc/docbook/Makefile \
-	doc/docbook/catalog \
-	doc/docbook/custom-stylesheets/Makefile \
-	doc/docbook/custom-stylesheets/xsl/Makefile \
-	doc/docbook/custom-stylesheets/xsl/common/Makefile \
-	doc/docbook/custom-stylesheets/xsl/fo/Makefile \
-	doc/docbook/custom-stylesheets/xsl/html/Makefile \
-	doc/docbook/custom-stylesheets/xsl/html/chunk.xsl \
-	doc/docbook/custom-stylesheets/xsl/html/onechunk.xsl \
       ])
 fi
 
