@@ -1218,7 +1218,7 @@ allows debugging memory-related issues with the help of
 </tr>
 <tr>
 <td class="hdlist1">
-<strong>--enable-registry</strong>
+<strong>--enable-registry[=/registry-root-path]</strong>
 <br />
 </td>
 <td class="hdlist2">
@@ -1233,25 +1233,29 @@ allows debugging memory-related issues with the help of
         libraries to be installed on the build system.
 </p>
 <div class="paragraph"><p>When this option is enabled, the system creates a file
-hierachy under <code>/mnt/xenomai/&lt;session&gt;.&lt;pid&gt;</code> (by default),
-where you can access the internal state of the active
-real-time objects. The session label is obtained from the
---session runtime switch. E.g. looking at the properties of a
-VxWorks task could be done as follows:</p></div>
+hierachy under <code>/var/run/xenomai/[&lt;user&gt;/]&lt;session&gt;/&lt;pid&gt;</code>
+(by default), where you can access the internal state of the
+active real-time objects. The session label is obtained from
+the --session runtime switch. If left out, it is "anon" and
+the user name is not inserted as well. E.g. looking at the
+properties of a VxWorks task could be done as follows:</p></div>
 </td>
 </tr>
 </table></div>
 <div class="listingblock">
 <div class="content">
-<pre><code>                $ cat /mnt/xenomai/anon.12656/vxworks/tasks/windTask
+<pre><code>                $ cat /var/run/xenomai/anon.12656/vxworks/tasks/windTask
                 name       = windTask
                 errno      = 0
                 status     = ready
                 priority   = 70
                 lock_depth = 0</code></pre>
 </div></div>
-<div class="paragraph"><p>You may override the default root of the registry hierarchy by
-using the <code>--registry-root</code> runtime option (see below).</p></div>
+<div class="paragraph"><p>You may override the default root of the registry hierarchy
+either statically at build time by passing the desired root
+path to the --enable-registry configuration switch, or
+dynamically by using the <code>--registry-root</code> runtime option
+passed to the application.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -1870,7 +1874,7 @@ Xenomai 3.x, you should have a look at
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-10-31 12:36:14 CET
+Last updated 2015-02-12 12:24:41 CET
 </div>
 </div>
 </body>

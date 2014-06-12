@@ -544,8 +544,13 @@ add the following line to the +Device+ section:
 
 ==== pthread_create: Resource temporarily unavailable
 
-The switchtest test creates many kernel threads, this means that the
-options +CONFIG_XENO_OPT_SYS_HEAPSZ+ and
-+CONFIG_XENO_OPT_SYS_STACKPOOLSZ+, in your kernel configuration,
-should be configured to large enough values. Try increasing them,
-rebuilding the kernel.
+The switchtest test creates many kernel threads, an operation which
+consumes memory taken from internal pools managed by the Xenomai
+real-time core.
+
+Xenomai 2.x and 3.x series require +CONFIG_XENO_OPT_SYS_HEAPSZ+ to be
+large enough in the kernel configuration settings, to cope with the
+allocation requests.
+
+Xenomai 2.x may also require to increase the
++CONFIG_XENO_OPT_SYS_STACKPOOLSZ+ setting.

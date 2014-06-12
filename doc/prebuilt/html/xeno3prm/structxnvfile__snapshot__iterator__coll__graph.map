@@ -1,5 +1,5 @@
 <map id="xnvfile_snapshot_iterator" name="xnvfile_snapshot_iterator">
-<area shape="rect" id="node2" href="$structxnvfile__snapshot.html" title="Snapshot vfile descriptor. " alt="" coords="95,96,215,123"/>
-<area shape="rect" id="node3" href="$structxnvfile__snapshot__ops.html" title="Snapshot vfile operation descriptor. " alt="" coords="5,5,152,32"/>
-<area shape="rect" id="node4" href="$structxnvfile__rev__tag.html" title="Snapshot revision tag. " alt="" coords="177,5,287,32"/>
+<area shape="rect" id="node2" href="$structxnvfile__snapshot.html" title="Snapshot vfile descriptor. " alt="" coords="95,95,215,121"/>
+<area shape="rect" id="node3" href="$structxnvfile__snapshot__ops.html" title="Snapshot vfile operation descriptor. " alt="" coords="5,5,153,32"/>
+<area shape="rect" id="node4" href="$structxnvfile__rev__tag.html" title="Snapshot revision tag. " alt="" coords="177,5,288,32"/>
 </map>

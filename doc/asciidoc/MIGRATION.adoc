@@ -104,14 +104,14 @@ filesystem.  The hierarchy of the Xenomai registry is organized as
 follows:
 
 ----------------------------------------------------------------------------    
-  /mount-point              /* registry fs root, defaults to /var/run/xenomai*/
-   [/user]                  /* user name, missing if "anon" session */
-      /session              /* shared session name or "anon" */
-        /pid                /* application (main) pid */
-          /skin             /* API name: alchemy/vxworks/psos/... */
-            /family         /* object class (task, semaphore, ...) */
-              { exported objects... }
-        /system             /* session-wide information */
+/mount-point              /* registry fs root, defaults to /var/run/xenomai */
+ [/user]                  /* user name, missing if "anon" session */
+    /session              /* shared session name or "anon" */
+      /pid                /* application (main) pid */
+        /skin             /* API name: alchemy/vxworks/psos/... */
+          /family         /* object class (task, semaphore, ...) */
+             { exported objects... }
+      /system             /* session-wide information */
 ----------------------------------------------------------------------------    
     
 Each leaf entry under a session hierarchy is normally viewable, for
@@ -883,6 +883,47 @@ static int foo_mmap(struct rtdm_fd *fd, struct vm_area_struct *vma)
 }
 ------------------------------------------------------------
 
+- the rtdm_nrtsig API has changed, the rtdm_nrtsig_init() function no
+  longer returns errors, it has the void return type. The rtdm_nrtsig_t
+  type has changed from an integer to a structure. In consequence, the
+  nrtsig handler first argument is now a pointer to the rtdm_nrtsig_t
+  structure.
+
+.Rationale
+************************************************************************
+Recent versions of the I-pipe patch support an ipipe_post_work_root()
+service, which has the advantage over the VIRQ support, that it does not
+require allocating one different VIRQ for each handler. As a consequence
+drivers may use as many rtdm_nrtsig_t structures as they like, there is
+no chance of running out of VIRQs.
+************************************************************************
+
+  The new relevant prototypes are therefore:
+
+-------------------------------------------------------------------------
+typedef void (*rtdm_nrtsig_handler_t)(rtdm_nrtsig_t *nrt_sig, void *arg);
+
+void rtdm_nrtsig_init(rtdm_nrtsig_t *nrt_sig,
+     rtdm_nrtsig_handler_t handler, void *arg);
+-------------------------------------------------------------------------
+
+- a new rtdm_schedule_nrt_work() was added to allow scheduling a Linux
+  work queue from primary mode.
+
+.Rationale
+************************************************************************
+Scheduling a Linux workqueue maybe a convenient way for adriver to recover
+for an error which requires synchronization with Linux. Typically, recovering
+from a PCI error may involve accessing the PCI config space, which requires
+access to a Linux spinlock so can not be done from primary mode.
+************************************************************************
+
+  The prototype of this new service is:
+
+------------------------------------------------------
+void rtdm_schedule_nrt_work(struct work_struct *work);
+------------------------------------------------------
+
 ==== Adaptive syscalls ====
 
 +ioctl()+, +read()+, +write()+, +recvmsg()+ and +sendmsg()+ have
@@ -971,6 +1012,24 @@ This directory is aliased to /sys/class/rtdm.
 
   * reading +type+ returns the device type (_named_ or _protocol_).
 
+=== Inter-Driver API ===
+
+The legacy (and redundant) rt_dev_*() API for calling the I/O services
+exposed by a RTDM driver from another driver was dropped, in favour of
+a direct use of the existing rtdm_*() API in kernel space. For
+instance, calls to +rt_dev_open()+ should be converted to
++rtdm_open()+, +rt_dev_socket()+ to +rtdm_socket()+ and so on.
+
+.Rationale
+******************************************************************
+Having two APIs for exactly the same purpose is uselessly confusing,
+particularly for kernel programming. Since the user-space version of
+the rt_dev_*() API was also dropped in favor of the regular POSIX I/O
+calls exposed by +libcobalt+, the choice was made to retain the most
+straightforward naming for the RTDM-to-RTDM API, keeping the +rtdm_+
+prefix.
+******************************************************************
+
 == Analogy interface changes ==
 
 === Files renamed ===
@@ -1002,6 +1061,99 @@ analogy/ioctl.h -> all files merged into rtdm/analogy.h
 
 As a consequence of these changes, the former include/analogy/ file
 tree has been entirely removed.
+
+== RTnet changes ==
+
+RTnet is integrated into Xenomai 3, but some of its behaviour and
+interfaces were changed in an attempt to simplify it.
+
+- a network driver kernel module can not be unloaded as long as the
+  network interface it implements is up
+
+- the RTnet drivers API changed, to make it simpler, and closer to
+  the mainline API
+
+  * module refcounting is now automatically done by the stack, no
+    call is necessary to RTNET_SET_MODULE_OWNER, RTNET_MOD_INC_USE_COUNT,
+    RTNET_MOD_DEC_USE_COUNT
+
+  * per-driver skb receive pools were removed from drivers, they are
+    now handled by the RTnet stack. In consequence, drivers now need
+    to pass an additional argument to the rt_alloc_etherdev() service:
+    the number of buffers in the pool. The new prototype is:
+
+------------------------------------------------------------------------------------
+struct rtnet_device *rt_alloc_etherdev(unsigned sizeof_priv, unsigned rx_pool_size);
+------------------------------------------------------------------------------------
+
+    Any explicit call to rtskb_pool_init() can be removed. In
+    addition, drivers should now use the rtnetdev_alloc_rtskb() to
+    allocate buffers from the network device receive pool; much like
+    its counterpart netdev_alloc_skb(), it takes as first argument a
+    pointer to a network device structure. It prototype is:
+
+--------------------------------------------------------------------------------
+struct rtskb *rtnetdev_alloc_rtskb(struct rtnet_device *dev, unsigned int size);
+--------------------------------------------------------------------------------
+
+  * for driver which wish to explicitly handle skb pools, the
+    signature of rtskb_pool_init has changed: it takes an additional
+    pointer to a structure containing callbacks called when the first
+    buffer is allocated and when the last buffer is returned, so that
+    the rtskb_pool() can implicitly lock a parent structure. The new
+    prototype is:
+
+-----------------------------------------------------------------------
+struct rtskb_pool_lock_ops {
+    int (*trylock)(void *cookie);
+    void (*unlock)(void *cookie);
+};
+
+unsigned int rtskb_pool_init(struct rtskb_pool *pool,
+			  unsigned int initial_size,
+			  const struct rtskb_pool_lock_ops *lock_ops,
+			  void *lock_cookie);
+-----------------------------------------------------------------------
+
+  * for the typical case where an skb pool locks the containing
+    module, the function rtskb_module_pool_init() was added which has
+    the same interface as the old rtskb_poll_init() function. Its
+    prototype is:
+
+-----------------------------------------------------------------------
+unsigned int rtskb_module_pool_init(struct rtskb_pool *pool,
+					unsigned int initial_size);
+-----------------------------------------------------------------------
+
+
+  * in order to ease the port of recent drivers, the following
+    services were added, which work much like their Linux counterpart:
+    rtnetdev_priv(), rtdev_emerg(), rtdev_alert(), rtdev_crit(),
+    rtdev_err(), rtdev_warn(), rtdev_notice(), rtdev_info(),
+    rtdev_dbg(), rtdev_vdbg(), RTDEV_TX_OK, RTDEV_TX_BUSY,
+    rtskb_checksum_none_assert(), rtskb_tx_timestamp(). Their
+    declarations are equivalent to:
+
+-----------------------------------------------------------------------
+#define RTDEV_TX_OK	0
+#define RTDEV_TX_BUSY	1
+
+void *rtndev_priv(struct rtnet_device *dev);
+
+void rtdev_emerg(struct rntet_device *dev, const char *format, ...);
+void rtdev_alert(struct rntet_device *dev, const char *format, ...);
+void rtdev_crit(struct rntet_device *dev, const char *format, ...);
+void rtdev_err(struct rntet_device *dev, const char *format, ...);
+void rtdev_warn(struct rntet_device *dev, const char *format, ...);
+void rtdev_notice(struct rntet_device *dev, const char *format, ...);
+void rtdev_info(struct rntet_device *dev, const char *format, ...);
+void rtdev_dbg(struct rntet_device *dev, const char *format, ...);
+void rtdev_vdbg(struct rntet_device *dev, const char *format, ...);
+
+void rtskb_checksum_non_assert(struct rtskb *skb);
+void rtskb_tx_timestamp(struct rtskb *skb);
+-----------------------------------------------------------------------
+
 
 == POSIX interface changes ==
 

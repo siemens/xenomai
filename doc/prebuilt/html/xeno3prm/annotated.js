@@ -15,6 +15,8 @@ var annotated =
     [ "can_bittime_std", "structcan__bittime__std.html", "structcan__bittime__std" ],
     [ "can_filter", "structcan__filter.html", "structcan__filter" ],
     [ "can_frame", "structcan__frame.html", "structcan__frame" ],
+    [ "macb_dma_desc", "structmacb__dma__desc.html", "structmacb__dma__desc" ],
+    [ "macb_tx_skb", "structmacb__tx__skb.html", "structmacb__tx__skb" ],
     [ "RT_ALARM_INFO", "structRT__ALARM__INFO.html", "structRT__ALARM__INFO" ],
     [ "RT_BUFFER_INFO", "structRT__BUFFER__INFO.html", "structRT__BUFFER__INFO" ],
     [ "RT_COND_INFO", "structRT__COND__INFO.html", "structRT__COND__INFO" ],

@@ -6,6 +6,7 @@ var group__cobalt__core__synch =
     [ "xnsynch_peek_pendq", "group__cobalt__core__synch.html#ga4f98598194fa76a8b0ff298387429b9d", null ],
     [ "xnsynch_release", "group__cobalt__core__synch.html#gad38fe2be85e02bf1298418674ab6386f", null ],
     [ "xnsynch_sleep_on", "group__cobalt__core__synch.html#ga51cec970cb57608abe882c98bee72347", null ],
+    [ "xnsynch_try_acquire", "group__cobalt__core__synch.html#gad5cad7eeaa18834c9ba8843511a67628", null ],
     [ "xnsynch_wakeup_one_sleeper", "group__cobalt__core__synch.html#ga54162964059c62d7a7b45ef22911662f", null ],
     [ "xnsynch_wakeup_this_sleeper", "group__cobalt__core__synch.html#ga8096364cd5d717dae816c74dcc05a8ac", null ]
 ];

@@ -1,4 +1,4 @@
 <map id="Thread scheduling control" name="Thread scheduling control">
-<area shape="rect" id="node1" href="$group__sched__quota.html" title="The SCHED_QUOTA policy enforces a limitation on the CPU consumption of threads over a globally define..." alt="" coords="371,5,562,46"/>
-<area shape="rect" id="node2" href="$group__cobalt__core.html" title="The Cobalt core is a co&#45;kernel which supplements the Linux kernel for delivering real&#45;time services w..." alt="" coords="5,12,104,39"/>
+<area shape="rect" id="node1" href="$group__sched__quota.html" title="The SCHED_QUOTA policy enforces a limitation on the CPU consumption of threads over a globally define..." alt="" coords="371,5,561,47"/>
+<area shape="rect" id="node2" href="$group__cobalt__core.html" title="The Cobalt core is a co&#45;kernel which supplements the Linux kernel for delivering real&#45;time services w..." alt="" coords="5,13,104,39"/>
 </map>

@@ -1,32 +1,32 @@
 <map id="include/cobalt/kernel/rtdm/analogy/transfer.h" name="include/cobalt/kernel/rtdm/analogy/transfer.h">
-<area shape="rect" id="node2" href="$include_2cobalt_2kernel_2rtdm_2analogy_2buffer_8h.html" title="Analogy for Linux, buffer related features. " alt="" coords="1090,96,1234,123"/>
-<area shape="rect" id="node5" href="$driver_8h.html" title="Real&#45;Time Driver Model for Xenomai, driver API header. " alt="" coords="1090,411,1184,437"/>
-<area shape="rect" id="node39" href="$uapi_2analogy_8h.html" title="Analogy for Linux, UAPI bits. " alt="" coords="1365,336,1501,363"/>
-<area shape="rect" id="node40" href="$rtdm__helpers_8h.html" title="Analogy for Linux, Operation system facilities. " alt="" coords="441,336,628,363"/>
-<area shape="rect" id="node46" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations. " alt="" coords="1174,336,1329,363"/>
-<area shape="rect" id="node47" href="$command_8h_source.html" title="rtdm/analogy/command.h" alt="" coords="1226,253,1394,280"/>
-<area shape="rect" id="node48" href="$subdevice_8h.html" title="Analogy for Linux, subdevice related features. " alt="" coords="1470,171,1641,197"/>
-<area shape="rect" id="node12" href="$include_2cobalt_2kernel_2heap_8h_source.html" title="cobalt/kernel/heap.h" alt="" coords="1068,493,1206,520"/>
-<area shape="rect" id="node16" href="$assert_8h_source.html" title="cobalt/kernel/assert.h" alt="" coords="429,741,576,768"/>
-<area shape="rect" id="node17" href="$cobalt_2kernel_2ancillaries_8h_source.html" title="cobalt/kernel/ancillaries.h" alt="" coords="418,816,586,843"/>
-<area shape="rect" id="node21" href="$include_2cobalt_2kernel_2sched_8h_source.html" title="cobalt/kernel/sched.h" alt="" coords="846,493,993,520"/>
-<area shape="rect" id="node24" href="$kernel_2synch_8h_source.html" title="cobalt/kernel/synch.h" alt="" coords="1080,667,1226,693"/>
-<area shape="rect" id="node28" href="$intr_8h_source.html" title="cobalt/kernel/intr.h" alt="" coords="60,493,189,520"/>
-<area shape="rect" id="node30" href="$kernel_2select_8h_source.html" title="cobalt/kernel/select.h" alt="" coords="1540,493,1686,520"/>
-<area shape="rect" id="node31" href="$include_2cobalt_2kernel_2clock_8h_source.html" title="cobalt/kernel/clock.h" alt="" coords="1711,493,1853,520"/>
-<area shape="rect" id="node32" href="$apc_8h_source.html" title="cobalt/kernel/apc.h" alt="" coords="1231,493,1362,520"/>
-<area shape="rect" id="node33" href="$include_2cobalt_2kernel_2init_8h_source.html" title="cobalt/kernel/init.h" alt="" coords="1388,493,1516,520"/>
-<area shape="rect" id="node34" href="$tree_8h_source.html" title="cobalt/kernel/tree.h" alt="" coords="316,584,449,611"/>
-<area shape="rect" id="node35" href="$fd_8h.html" title="rtdm/fd.h" alt="" coords="697,493,772,520"/>
-<area shape="rect" id="node36" href="$rtdm_2rtdm_8h.html" title="rtdm/rtdm.h" alt="" coords="1878,493,1966,520"/>
-<area shape="rect" id="node14" href="$cobalt_2kernel_2lock_8h_source.html" title="cobalt/kernel/lock.h" alt="" coords="920,584,1054,611"/>
-<area shape="rect" id="node18" href="$cobalt_2kernel_2list_8h_source.html" title="cobalt/kernel/list.h" alt="" coords="1506,741,1634,768"/>
-<area shape="rect" id="node19" href="$cobalt_2uapi_2kernel_2types_8h_source.html" title="cobalt/uapi/kernel\l/types.h" alt="" coords="1603,577,1726,618"/>
-<area shape="rect" id="node20" href="$include_2cobalt_2uapi_2kernel_2heap_8h_source.html" title="cobalt/uapi/kernel\l/heap.h" alt="" coords="1403,577,1526,618"/>
-<area shape="rect" id="node22" href="$include_2cobalt_2kernel_2thread_8h_source.html" title="cobalt/kernel/thread.h" alt="" coords="1080,584,1226,611"/>
-<area shape="rect" id="node25" href="$schedqueue_8h_source.html" title="cobalt/kernel/schedqueue.h" alt="" coords="1352,667,1533,693"/>
-<area shape="rect" id="node26" href="$sched-tp_8h_source.html" title="cobalt/kernel/sched&#45;tp.h" alt="" coords="524,584,685,611"/>
-<area shape="rect" id="node27" href="$sched-weak_8h_source.html" title="cobalt/kernel/sched\l&#45;weak.h" alt="" coords="710,577,844,618"/>
-<area shape="rect" id="node49" href="$instruction_8h.html" title="Analogy for Linux, instruction related features. " alt="" coords="2688,253,2860,280"/>
-<area shape="rect" id="node50" href="$channel__range_8h.html" title="Analogy for Linux, channel, range related features. " alt="" coords="1477,246,1624,287"/>
+<area shape="rect" id="node2" href="$include_2cobalt_2kernel_2rtdm_2analogy_2buffer_8h.html" title="Analogy for Linux, buffer related features. " alt="" coords="1089,95,1234,121"/>
+<area shape="rect" id="node5" href="$driver_8h.html" title="Real&#45;Time Driver Model for Xenomai, driver API header. " alt="" coords="1089,408,1184,435"/>
+<area shape="rect" id="node39" href="$uapi_2analogy_8h.html" title="Analogy for Linux, UAPI bits. " alt="" coords="1364,333,1500,360"/>
+<area shape="rect" id="node40" href="$rtdm__helpers_8h.html" title="Analogy for Linux, Operation system facilities. " alt="" coords="440,333,627,360"/>
+<area shape="rect" id="node46" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations. " alt="" coords="1174,333,1328,360"/>
+<area shape="rect" id="node47" href="$command_8h_source.html" title="rtdm/analogy/command.h" alt="" coords="1225,251,1394,278"/>
+<area shape="rect" id="node48" href="$subdevice_8h.html" title="Analogy for Linux, subdevice related features. " alt="" coords="1470,169,1640,196"/>
+<area shape="rect" id="node12" href="$include_2cobalt_2kernel_2heap_8h_source.html" title="cobalt/kernel/heap.h" alt="" coords="1067,490,1206,517"/>
+<area shape="rect" id="node16" href="$assert_8h_source.html" title="cobalt/kernel/assert.h" alt="" coords="428,736,575,763"/>
+<area shape="rect" id="node17" href="$cobalt_2kernel_2ancillaries_8h_source.html" title="cobalt/kernel/ancillaries.h" alt="" coords="417,811,586,837"/>
+<area shape="rect" id="node21" href="$include_2cobalt_2kernel_2sched_8h_source.html" title="cobalt/kernel/sched.h" alt="" coords="846,490,992,517"/>
+<area shape="rect" id="node24" href="$kernel_2synch_8h_source.html" title="cobalt/kernel/synch.h" alt="" coords="1079,661,1226,688"/>
+<area shape="rect" id="node28" href="$intr_8h_source.html" title="cobalt/kernel/intr.h" alt="" coords="60,490,189,517"/>
+<area shape="rect" id="node30" href="$kernel_2select_8h_source.html" title="cobalt/kernel/select.h" alt="" coords="1539,490,1686,517"/>
+<area shape="rect" id="node31" href="$include_2cobalt_2kernel_2clock_8h_source.html" title="cobalt/kernel/clock.h" alt="" coords="1710,490,1853,517"/>
+<area shape="rect" id="node32" href="$apc_8h_source.html" title="cobalt/kernel/apc.h" alt="" coords="1230,490,1362,517"/>
+<area shape="rect" id="node33" href="$include_2cobalt_2kernel_2init_8h_source.html" title="cobalt/kernel/init.h" alt="" coords="1387,490,1515,517"/>
+<area shape="rect" id="node34" href="$tree_8h_source.html" title="cobalt/kernel/tree.h" alt="" coords="315,579,448,606"/>
+<area shape="rect" id="node35" href="$fd_8h.html" title="rtdm/fd.h" alt="" coords="696,490,771,517"/>
+<area shape="rect" id="node36" href="$rtdm_2rtdm_8h.html" title="rtdm/rtdm.h" alt="" coords="1877,490,1966,517"/>
+<area shape="rect" id="node14" href="$cobalt_2kernel_2lock_8h_source.html" title="cobalt/kernel/lock.h" alt="" coords="920,579,1054,606"/>
+<area shape="rect" id="node18" href="$cobalt_2kernel_2list_8h_source.html" title="cobalt/kernel/list.h" alt="" coords="1506,736,1634,763"/>
+<area shape="rect" id="node19" href="$cobalt_2uapi_2kernel_2types_8h_source.html" title="cobalt/uapi/kernel\l/types.h" alt="" coords="1602,572,1726,613"/>
+<area shape="rect" id="node20" href="$include_2cobalt_2uapi_2kernel_2heap_8h_source.html" title="cobalt/uapi/kernel\l/heap.h" alt="" coords="1402,572,1526,613"/>
+<area shape="rect" id="node22" href="$include_2cobalt_2kernel_2thread_8h_source.html" title="cobalt/kernel/thread.h" alt="" coords="1079,579,1226,606"/>
+<area shape="rect" id="node25" href="$schedqueue_8h_source.html" title="cobalt/kernel/schedqueue.h" alt="" coords="1351,661,1532,688"/>
+<area shape="rect" id="node26" href="$sched-tp_8h_source.html" title="cobalt/kernel/sched&#45;tp.h" alt="" coords="524,579,685,606"/>
+<area shape="rect" id="node27" href="$sched-weak_8h_source.html" title="cobalt/kernel/sched\l&#45;weak.h" alt="" coords="709,572,844,613"/>
+<area shape="rect" id="node49" href="$instruction_8h.html" title="Analogy for Linux, instruction related features. " alt="" coords="2688,251,2860,278"/>
+<area shape="rect" id="node50" href="$channel__range_8h.html" title="Analogy for Linux, channel, range related features. " alt="" coords="1476,244,1623,285"/>
 </map>

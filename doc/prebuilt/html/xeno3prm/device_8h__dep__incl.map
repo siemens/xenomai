@@ -1,6 +1,6 @@
 <map id="include/cobalt/kernel/rtdm/analogy/device.h" name="include/cobalt/kernel/rtdm/analogy/device.h">
-<area shape="rect" id="node2" href="$8255_8h_source.html" title="kernel/drivers/analogy\l/intel/8255.h" alt="" coords="5,103,155,145"/>
-<area shape="rect" id="node3" href="$mite_8h_source.html" title="kernel/drivers/analogy\l/national_instruments\l/mite.h" alt="" coords="179,96,328,152"/>
-<area shape="rect" id="node4" href="$ni__tio_8h_source.html" title="kernel/drivers/analogy\l/national_instruments\l/ni_tio.h" alt="" coords="352,96,501,152"/>
-<area shape="rect" id="node5" href="$ni__stc_8h_source.html" title="kernel/drivers/analogy\l/national_instruments\l/ni_stc.h" alt="" coords="352,200,501,256"/>
+<area shape="rect" id="node2" href="$8255_8h_source.html" title="kernel/drivers/analogy\l/intel/8255.h" alt="" coords="5,102,155,143"/>
+<area shape="rect" id="node3" href="$mite_8h_source.html" title="kernel/drivers/analogy\l/national_instruments\l/mite.h" alt="" coords="179,95,328,151"/>
+<area shape="rect" id="node4" href="$ni__tio_8h_source.html" title="kernel/drivers/analogy\l/national_instruments\l/ni_tio.h" alt="" coords="352,95,501,151"/>
+<area shape="rect" id="node5" href="$ni__stc_8h_source.html" title="kernel/drivers/analogy\l/national_instruments\l/ni_stc.h" alt="" coords="352,199,501,255"/>
 </map>

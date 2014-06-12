@@ -1,0 +1,10 @@
+<map id="kernel/cobalt/arch" name="kernel/cobalt/arch">
+<area shape="rect" id="node2" href="dir_6a40f876f93c277f35ffecd4692e7977.html" title="arm" alt="" coords="517,63,589,111"/>
+<area shape="rect" id="node3" href="dir_647a00eeea8903d30b2eee193ebd76f2.html" title="blackfin" alt="" coords="421,63,493,111"/>
+<area shape="rect" id="node4" href="dir_450c4eda98054711fe3b9a7c06afecad.html" title="nios2" alt="" coords="325,63,397,111"/>
+<area shape="rect" id="node5" href="dir_25e49298d301bd192c0e26d887efdd9c.html" title="powerpc" alt="" coords="229,63,301,111"/>
+<area shape="rect" id="node6" href="dir_6f5af3d85fe9b309d07e816be2cf9e41.html" title="sh" alt="" coords="133,63,205,111"/>
+<area shape="rect" id="node7" href="dir_f3b483aa1b7f8030f8913003a662da23.html" title="x86" alt="" coords="37,63,109,111"/>
+<area shape="rect" id="clust2" href="dir_443493556012e525cacaf512a8b70d84.html" alt="" coords="27,52,696,121"/>
+<area shape="rect" id="clust1" href="dir_b3be2d7afe8b01522a793317a09a296c.html" title="cobalt" alt="" coords="16,16,707,132"/>
+</map>

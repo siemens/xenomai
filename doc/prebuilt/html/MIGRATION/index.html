@@ -927,13 +927,14 @@ filesystem.  The hierarchy of the Xenomai registry is organized as
 follows:</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><code>    /mount-point            /* registry fs root, defaults to /mnt/xenomai */
-        /session            /* shared session name or "anon" */
-            /pid            /* application (main) pid */
-               /skin        /* API name: alchemy/vxworks/psos/... */
-                  /family   /* object class (task, semaphore, ...) */
-                     { exported objects... }
-            /system         /* session-wide information */</code></pre>
+<pre><code>/mount-point              /* registry fs root, defaults to /var/run/xenomai */
+ [/user]                  /* user name, missing if "anon" session */
+    /session              /* shared session name or "anon" */
+      /pid                /* application (main) pid */
+        /skin             /* API name: alchemy/vxworks/psos/... */
+          /family         /* object class (task, semaphore, ...) */
+             { exported objects... }
+      /system             /* session-wide information */</code></pre>
 </div></div>
 <div class="paragraph"><p>Each leaf entry under a session hierarchy is normally viewable, for
 retrieving the information attached to the corresponding object, such
@@ -980,10 +981,10 @@ of all timers from the registered Xenomai clocks.
 </dd>
 </dl></div>
 <div class="paragraph"><p>There is no kernel-based time base management anymore with Xenomai
-3.0-rc2. Functionally speaking, only the former <em>master</em> time base
+3.0-rc3. Functionally speaking, only the former <em>master</em> time base
 remains, periodic timing is now controlled locally from the Xenomai
 libraries in user-space.</p></div>
-<div class="paragraph"><p>Xenomai 3.0-rc2 defines a built-in clock named <em>coreclk</em>, which has
+<div class="paragraph"><p>Xenomai 3.0-rc3 defines a built-in clock named <em>coreclk</em>, which has
 the same properties than the former <em>master</em> time base available with
 Xenomai 2.x (i.e. tickless with nanosecond resolution).</p></div>
 <div class="paragraph"><p>The settings of existing clocks can be read from entries under the new
@@ -1879,6 +1880,61 @@ rtdm_mmap_iomem() for mapping I/O memory.
         ...
 }</code></pre>
 </div></div>
+<div class="ulist"><ul>
+<li>
+<p>
+the rtdm_nrtsig API has changed, the rtdm_nrtsig_init() function no
+  longer returns errors, it has the void return type. The rtdm_nrtsig_t
+  type has changed from an integer to a structure. In consequence, the
+  nrtsig handler first argument is now a pointer to the rtdm_nrtsig_t
+  structure.
+</p>
+</li>
+</ul></div>
+<div class="sidebarblock">
+<div class="content">
+<div class="title">Rationale</div>
+<div class="paragraph"><p>Recent versions of the I-pipe patch support an ipipe_post_work_root()
+service, which has the advantage over the VIRQ support, that it does not
+require allocating one different VIRQ for each handler. As a consequence
+drivers may use as many rtdm_nrtsig_t structures as they like, there is
+no chance of running out of VIRQs.</p></div>
+</div></div>
+<div class="literalblock">
+<div class="content">
+<pre><code>The new relevant prototypes are therefore:</code></pre>
+</div></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>typedef void (*rtdm_nrtsig_handler_t)(rtdm_nrtsig_t *nrt_sig, void *arg);
+
+void rtdm_nrtsig_init(rtdm_nrtsig_t *nrt_sig,
+     rtdm_nrtsig_handler_t handler, void *arg);</code></pre>
+</div></div>
+<div class="ulist"><ul>
+<li>
+<p>
+a new rtdm_schedule_nrt_work() was added to allow scheduling a Linux
+  work queue from primary mode.
+</p>
+</li>
+</ul></div>
+<div class="sidebarblock">
+<div class="content">
+<div class="title">Rationale</div>
+<div class="paragraph"><p>Scheduling a Linux workqueue maybe a convenient way for adriver to recover
+for an error which requires synchronization with Linux. Typically, recovering
+from a PCI error may involve accessing the PCI config space, which requires
+access to a Linux spinlock so can not be done from primary mode.</p></div>
+</div></div>
+<div class="literalblock">
+<div class="content">
+<pre><code>The prototype of this new service is:</code></pre>
+</div></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>void rtdm_schedule_nrt_work(struct work_struct *work);</code></pre>
+</div></div>
 </div>
 <div class="sect3">
 <h4 id="_adaptive_syscalls">5.2.5. Adaptive syscalls</h4>
@@ -2010,6 +2066,24 @@ reading <code>type</code> returns the device type (<em>named</em> or <em>protoco
 </ul></div>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_inter_driver_api">5.4. Inter-Driver API</h3>
+<div class="paragraph"><p>The legacy (and redundant) rt_dev_*() API for calling the I/O services
+exposed by a RTDM driver from another driver was dropped, in favour of
+a direct use of the existing rtdm_*() API in kernel space. For
+instance, calls to <code>rt_dev_open()</code> should be converted to
+<code>rtdm_open()</code>, <code>rt_dev_socket()</code> to <code>rtdm_socket()</code> and so on.</p></div>
+<div class="sidebarblock">
+<div class="content">
+<div class="title">Rationale</div>
+<div class="paragraph"><p>Having two APIs for exactly the same purpose is uselessly confusing,
+particularly for kernel programming. Since the user-space version of
+the rt_dev_*() API was also dropped in favor of the regular POSIX I/O
+calls exposed by <code>libcobalt</code>, the choice was made to retain the most
+straightforward naming for the RTDM-to-RTDM API, keeping the <code>rtdm_</code>
+prefix.</p></div>
+</div></div>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -2055,7 +2129,133 @@ tree has been entirely removed.</p></div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_posix_interface_changes">7. POSIX interface changes</h2>
+<h2 id="_rtnet_changes">7. RTnet changes</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>RTnet is integrated into Xenomai 3, but some of its behaviour and
+interfaces were changed in an attempt to simplify it.</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+a network driver kernel module can not be unloaded as long as the
+  network interface it implements is up
+</p>
+</li>
+<li>
+<p>
+the RTnet drivers API changed, to make it simpler, and closer to
+  the mainline API
+</p>
+<div class="ulist"><ul>
+<li>
+<p>
+module refcounting is now automatically done by the stack, no
+    call is necessary to RTNET_SET_MODULE_OWNER, RTNET_MOD_INC_USE_COUNT,
+    RTNET_MOD_DEC_USE_COUNT
+</p>
+</li>
+<li>
+<p>
+per-driver skb receive pools were removed from drivers, they are
+    now handled by the RTnet stack. In consequence, drivers now need
+    to pass an additional argument to the rt_alloc_etherdev() service:
+    the number of buffers in the pool. The new prototype is:
+</p>
+</li>
+</ul></div>
+</li>
+</ul></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>struct rtnet_device *rt_alloc_etherdev(unsigned sizeof_priv, unsigned rx_pool_size);</code></pre>
+</div></div>
+<div class="literalblock">
+<div class="content">
+<pre><code>Any explicit call to rtskb_pool_init() can be removed. In
+addition, drivers should now use the rtnetdev_alloc_rtskb() to
+allocate buffers from the network device receive pool; much like
+its counterpart netdev_alloc_skb(), it takes as first argument a
+pointer to a network device structure. It prototype is:</code></pre>
+</div></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>struct rtskb *rtnetdev_alloc_rtskb(struct rtnet_device *dev, unsigned int size);</code></pre>
+</div></div>
+<div class="ulist"><ul>
+<li>
+<p>
+for driver which wish to explicitly handle skb pools, the
+    signature of rtskb_pool_init has changed: it takes an additional
+    pointer to a structure containing callbacks called when the first
+    buffer is allocated and when the last buffer is returned, so that
+    the rtskb_pool() can implicitly lock a parent structure. The new
+    prototype is:
+</p>
+</li>
+</ul></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>struct rtskb_pool_lock_ops {
+    int (*trylock)(void *cookie);
+    void (*unlock)(void *cookie);
+};
+
+unsigned int rtskb_pool_init(struct rtskb_pool *pool,
+                          unsigned int initial_size,
+                          const struct rtskb_pool_lock_ops *lock_ops,
+                          void *lock_cookie);</code></pre>
+</div></div>
+<div class="ulist"><ul>
+<li>
+<p>
+for the typical case where an skb pool locks the containing
+    module, the function rtskb_module_pool_init() was added which has
+    the same interface as the old rtskb_poll_init() function. Its
+    prototype is:
+</p>
+</li>
+</ul></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>unsigned int rtskb_module_pool_init(struct rtskb_pool *pool,
+                                        unsigned int initial_size);</code></pre>
+</div></div>
+<div class="ulist"><ul>
+<li>
+<p>
+in order to ease the port of recent drivers, the following
+    services were added, which work much like their Linux counterpart:
+    rtnetdev_priv(), rtdev_emerg(), rtdev_alert(), rtdev_crit(),
+    rtdev_err(), rtdev_warn(), rtdev_notice(), rtdev_info(),
+    rtdev_dbg(), rtdev_vdbg(), RTDEV_TX_OK, RTDEV_TX_BUSY,
+    rtskb_checksum_none_assert(), rtskb_tx_timestamp(). Their
+    declarations are equivalent to:
+</p>
+</li>
+</ul></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>#define RTDEV_TX_OK     0
+#define RTDEV_TX_BUSY   1
+
+void *rtndev_priv(struct rtnet_device *dev);
+
+void rtdev_emerg(struct rntet_device *dev, const char *format, ...);
+void rtdev_alert(struct rntet_device *dev, const char *format, ...);
+void rtdev_crit(struct rntet_device *dev, const char *format, ...);
+void rtdev_err(struct rntet_device *dev, const char *format, ...);
+void rtdev_warn(struct rntet_device *dev, const char *format, ...);
+void rtdev_notice(struct rntet_device *dev, const char *format, ...);
+void rtdev_info(struct rntet_device *dev, const char *format, ...);
+void rtdev_dbg(struct rntet_device *dev, const char *format, ...);
+void rtdev_vdbg(struct rntet_device *dev, const char *format, ...);
+
+void rtskb_checksum_non_assert(struct rtskb *skb);
+void rtskb_tx_timestamp(struct rtskb *skb);</code></pre>
+</div></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_posix_interface_changes">8. POSIX interface changes</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>As mentioned earlier, the former <strong>POSIX skin</strong> is known as the <strong>Cobalt
 API</strong> in Xenomai 3.x, available as <code>libcobalt.{so,a}</code>. The Cobalt API
@@ -2065,7 +2265,7 @@ a standalone library.</p></div>
 specifically implemented by Xenomai to honor real-time requirements
 using the Cobalt core.</p></div>
 <div class="sect2">
-<h3 id="_interrupt_management">7.1. Interrupt management</h3>
+<h3 id="_interrupt_management">8.1. Interrupt management</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2111,7 +2311,7 @@ kernel Cobalt environment.</td>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_scheduling">7.2. Scheduling</h3>
+<h3 id="_scheduling">8.2. Scheduling</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2245,7 +2445,7 @@ out the delayed Xenomai thread indefinitely.</p></div>
 </div></div>
 </div>
 <div class="sect2">
-<h3 id="_thread_management">7.3. Thread management</h3>
+<h3 id="_thread_management">8.3. Thread management</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2286,7 +2486,7 @@ condition variable).</td>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_semaphores">7.4. Semaphores</h3>
+<h3 id="_semaphores">8.4. Semaphores</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2301,7 +2501,7 @@ With Cobalt, sem_wait(), sem_trywait(), sem_timedwait(), and
 </ul></div>
 </div>
 <div class="sect2">
-<h3 id="_process_management">7.5. Process management</h3>
+<h3 id="_process_management">8.5. Process management</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2313,7 +2513,7 @@ In a <code>fork()</code> &#8594; <code>exec()</code> sequence, all Cobalt API ob
 </ul></div>
 </div>
 <div class="sect2">
-<h3 id="real-time-signals">7.6. Real-time signals</h3>
+<h3 id="real-time-signals">8.6. Real-time signals</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2368,7 +2568,7 @@ the regular Linux kernel.</p></div>
 <code>kill()</code> system call.</p></div>
 </div>
 <div class="sect2">
-<h3 id="_timers">7.7. Timers</h3>
+<h3 id="_timers">8.7. Timers</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2440,7 +2640,7 @@ pthread_wait_np() calls is available from the <a href="#trank">Transition Kit</a
 </div>
 </div>
 <div class="sect2">
-<h3 id="_clocks">7.8. Clocks</h3>
+<h3 id="_clocks">8.8. Clocks</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2460,7 +2660,7 @@ is subject to change with ABI revisions.</td>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_message_queues">7.9. Message queues</h3>
+<h3 id="_message_queues">8.9. Message queues</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2477,7 +2677,7 @@ is subject to change with ABI revisions.</td>
 </ul></div>
 </div>
 <div class="sect2">
-<h3 id="_posix_i_o_services">7.10. POSIX I/O services</h3>
+<h3 id="_posix_i_o_services">8.10. POSIX I/O services</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2514,10 +2714,10 @@ Similarly, the real-time suitable STDIO routines are now part of
 </div>
 </div>
 <div class="sect1">
-<h2 id="_alchemy_interface_formerly_em_native_api_em">8. Alchemy interface (formerly <em>native API</em>)</h2>
+<h2 id="_alchemy_interface_formerly_em_native_api_em">9. Alchemy interface (formerly <em>native API</em>)</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_general">8.1. General</h3>
+<h3 id="_general">9.1. General</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2530,7 +2730,7 @@ will result in -EINVAL being returned.
 </ul></div>
 </div>
 <div class="sect2">
-<h3 id="_interrupt_management_2">8.2. Interrupt management</h3>
+<h3 id="_interrupt_management_2">9.2. Interrupt management</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2550,7 +2750,7 @@ receipts, as explained <a href="#userirqtip">here</a>.</td>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_i_o_regions">8.3. I/O regions</h3>
+<h3 id="_i_o_regions">9.3. I/O regions</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2561,7 +2761,7 @@ The RT_IOREGION API is gone. I/O memory resources should
 </ul></div>
 </div>
 <div class="sect2">
-<h3 id="_timing_services">8.4. Timing services</h3>
+<h3 id="_timing_services">9.4. Timing services</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2711,7 +2911,7 @@ is available from the <a href="#trank">Transition Kit</a>.</td>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_mutexes">8.5. Mutexes</h3>
+<h3 id="_mutexes">9.5. Mutexes</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2738,7 +2938,7 @@ handle is returned, which has the same meaning as a zero value in the
 former <code>locked</code> field.</p></div>
 </div>
 <div class="sect2">
-<h3 id="_condition_variables">8.6. Condition variables</h3>
+<h3 id="_condition_variables">9.6. Condition variables</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2756,7 +2956,7 @@ count of waiting tasks anymore.
 </ul></div>
 </div>
 <div class="sect2">
-<h3 id="_events">8.7. Events</h3>
+<h3 id="_events">9.7. Events</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2812,7 +3012,7 @@ of events received by a single RT_EVENT object.</p></div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_task_management">8.8. Task management</h3>
+<h3 id="_task_management">9.8. Task management</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2936,7 +3136,7 @@ deprecated flags is available from the <a href="#trank">Transition Kit</a>.</td>
 </ul></div>
 </div>
 <div class="sect2">
-<h3 id="_message_queues_2">8.9. Message queues</h3>
+<h3 id="_message_queues_2">9.9. Message queues</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2969,7 +3169,7 @@ Q_DMA
 </div>
 </div>
 <div class="sect2">
-<h3 id="_heaps">8.10. Heaps</h3>
+<h3 id="_heaps">9.10. Heaps</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -3035,7 +3235,7 @@ with the removal of H_DMA, returning a physical address (phys_addr)
 </div>
 </div>
 <div class="sect2">
-<h3 id="_alarms">8.11. Alarms</h3>
+<h3 id="_alarms">9.11. Alarms</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -3082,7 +3282,7 @@ field <code>active</code> has been added, to reflect the current state of
 </div>
 </div>
 <div class="sect2">
-<h3 id="_message_pipes">8.12. Message pipes</h3>
+<h3 id="_message_pipes">9.12. Message pipes</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -3110,10 +3310,10 @@ Writing to a message pipe is allowed from all contexts, including
 </div>
 </div>
 <div class="sect1">
-<h2 id="_psos_interface_changes">9. pSOS interface changes</h2>
+<h2 id="_psos_interface_changes">10. pSOS interface changes</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_memory_regions">9.1. Memory regions</h3>
+<h3 id="_memory_regions">10.1. Memory regions</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -3124,7 +3324,7 @@ Writing to a message pipe is allowed from all contexts, including
 </ul></div>
 </div>
 <div class="sect2">
-<h3 id="_scheduling_2">9.2. Scheduling</h3>
+<h3 id="_scheduling_2">10.2. Scheduling</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -3150,10 +3350,10 @@ normalization/denormalization handlers as no-ops by default.</p></div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_vxworks_interface_changes">10. VxWorks interface changes</h2>
+<h2 id="_vxworks_interface_changes">11. VxWorks interface changes</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_task_management_2">10.1. Task management</h3>
+<h3 id="_task_management_2">11.1. Task management</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -3167,7 +3367,7 @@ should be refreshed by calling <code>taskTcb()</code> anew, each time reading th
 <code>status</code> field is required.</p></div>
 </div>
 <div class="sect2">
-<h3 id="_scheduling_3">10.2. Scheduling</h3>
+<h3 id="_scheduling_3">11.2. Scheduling</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -3190,7 +3390,7 @@ int wind_task_denormalize_priority(int core_prio);</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="trank">11. Using the Transition Kit</h2>
+<h2 id="trank">12. Using the Transition Kit</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>Xenomai 2 applications in user-space may use a library and a set of
 compatibility headers, aimed at easing the process of transitioning to
@@ -3236,7 +3436,7 @@ CC = $(shell $(CONFIG_CMD) --cc)</code></pre>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-10-31 12:36:14 CET
+Last updated 2015-02-12 12:24:41 CET
 </div>
 </div>
 </body>

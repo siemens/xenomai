@@ -1,5 +1,5 @@
 <map id="a4l_subdevice" name="a4l_subdevice">
-<area shape="rect" id="node2" href="$structa4l__cmd__desc.html" title="Structure describing the asynchronous instruction. " alt="" coords="5,96,112,123"/>
-<area shape="rect" id="node3" href="$structa4l__channels__desc.html" title="Structure describing a channels set. " alt="" coords="136,96,269,123"/>
+<area shape="rect" id="node2" href="$structa4l__cmd__desc.html" title="Structure describing the asynchronous instruction. " alt="" coords="5,95,112,121"/>
+<area shape="rect" id="node3" href="$structa4l__channels__desc.html" title="Structure describing a channels set. " alt="" coords="136,95,269,121"/>
 <area shape="rect" id="node4" href="$structa4l__channel.html" title="Structure describing some channel&#39;s characteristics. " alt="" coords="157,5,248,32"/>
 </map>

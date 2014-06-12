@@ -75,6 +75,13 @@ link:installing-xenomai-3-x[configuration switch]).
 	instead of +/var/run/xenomai+ by default (see the
 	+--enable-registry+ switch from the configuration options).
 
+*--shared-registry*::
+
+	Exports the registry of the process to other users. If access
+	is possible, also depends on permissions of the registry path.
+	By default, the registry is only accessible for the user that
+	started the Xenomai process.
+
 *--no-registry*::
 
 	This switch disables registry support at runtime. No real-time

@@ -1439,11 +1439,14 @@ add the following line to the <code>Device</code> section:</p></div>
 <h3 id="_issues_when_running_the_em_switchtest_em_program">3.2. Issues when running the <em>switchtest</em> program</h3>
 <div class="sect3">
 <h4 id="_pthread_create_resource_temporarily_unavailable">3.2.1. pthread_create: Resource temporarily unavailable</h4>
-<div class="paragraph"><p>The switchtest test creates many kernel threads, this means that the
-options <code>CONFIG_XENO_OPT_SYS_HEAPSZ</code> and
-<code>CONFIG_XENO_OPT_SYS_STACKPOOLSZ</code>, in your kernel configuration,
-should be configured to large enough values. Try increasing them,
-rebuilding the kernel.</p></div>
+<div class="paragraph"><p>The switchtest test creates many kernel threads, an operation which
+consumes memory taken from internal pools managed by the Xenomai
+real-time core.</p></div>
+<div class="paragraph"><p>Xenomai 2.x and 3.x series require <code>CONFIG_XENO_OPT_SYS_HEAPSZ</code> to be
+large enough in the kernel configuration settings, to cope with the
+allocation requests.</p></div>
+<div class="paragraph"><p>Xenomai 2.x may also require to increase the
+<code>CONFIG_XENO_OPT_SYS_STACKPOOLSZ</code> setting.</p></div>
 </div>
 </div>
 </div>
@@ -1452,7 +1455,7 @@ rebuilding the kernel.</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-10-31 12:36:14 CET
+Last updated 2015-02-12 12:24:41 CET
 </div>
 </div>
 </body>

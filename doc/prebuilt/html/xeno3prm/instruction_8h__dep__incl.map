@@ -1,11 +1,11 @@
 <map id="include/cobalt/kernel/rtdm/analogy/instruction.h" name="include/cobalt/kernel/rtdm/analogy/instruction.h">
-<area shape="rect" id="node2" href="$subdevice_8h.html" title="Analogy for Linux, subdevice related features. " alt="" coords="166,97,340,138"/>
-<area shape="rect" id="node3" href="$include_2cobalt_2kernel_2rtdm_2analogy_2buffer_8h.html" title="Analogy for Linux, buffer related features. " alt="" coords="179,187,328,229"/>
-<area shape="rect" id="node4" href="$analogy_2driver_8h.html" title="Analogy for Linux, driver facilities. " alt="" coords="90,278,237,319"/>
-<area shape="rect" id="node10" href="$transfer_8h.html" title="Analogy for Linux, transfer related features. " alt="" coords="263,278,423,319"/>
-<area shape="rect" id="node5" href="$device_8h.html" title="Analogy for Linux, device related features. " alt="" coords="176,369,331,410"/>
-<area shape="rect" id="node6" href="$8255_8h_source.html" title="kernel/drivers/analogy\l/intel/8255.h" alt="" coords="5,466,155,507"/>
-<area shape="rect" id="node7" href="$mite_8h_source.html" title="kernel/drivers/analogy\l/national_instruments\l/mite.h" alt="" coords="179,459,328,515"/>
-<area shape="rect" id="node8" href="$ni__tio_8h_source.html" title="kernel/drivers/analogy\l/national_instruments\l/ni_tio.h" alt="" coords="352,459,501,515"/>
-<area shape="rect" id="node9" href="$ni__stc_8h_source.html" title="kernel/drivers/analogy\l/national_instruments\l/ni_stc.h" alt="" coords="352,563,501,619"/>
+<area shape="rect" id="node2" href="$subdevice_8h.html" title="Analogy for Linux, subdevice related features. " alt="" coords="166,95,341,136"/>
+<area shape="rect" id="node3" href="$include_2cobalt_2kernel_2rtdm_2analogy_2buffer_8h.html" title="Analogy for Linux, buffer related features. " alt="" coords="179,184,328,225"/>
+<area shape="rect" id="node4" href="$analogy_2driver_8h.html" title="Analogy for Linux, driver facilities. " alt="" coords="90,273,238,315"/>
+<area shape="rect" id="node10" href="$transfer_8h.html" title="Analogy for Linux, transfer related features. " alt="" coords="263,273,423,315"/>
+<area shape="rect" id="node5" href="$device_8h.html" title="Analogy for Linux, device related features. " alt="" coords="176,363,331,404"/>
+<area shape="rect" id="node6" href="$8255_8h_source.html" title="kernel/drivers/analogy\l/intel/8255.h" alt="" coords="5,459,155,501"/>
+<area shape="rect" id="node7" href="$mite_8h_source.html" title="kernel/drivers/analogy\l/national_instruments\l/mite.h" alt="" coords="179,452,328,508"/>
+<area shape="rect" id="node8" href="$ni__tio_8h_source.html" title="kernel/drivers/analogy\l/national_instruments\l/ni_tio.h" alt="" coords="352,452,501,508"/>
+<area shape="rect" id="node9" href="$ni__stc_8h_source.html" title="kernel/drivers/analogy\l/national_instruments\l/ni_stc.h" alt="" coords="352,556,501,612"/>
 </map>

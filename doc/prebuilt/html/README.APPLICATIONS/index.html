@@ -824,8 +824,19 @@ switch is a nop over <em>Cobalt</em>.</p></div>
 <dd>
 <p>
         Tells Xenomai to root the object registry at the given path,
-        instead of <code>/mnt/xenomai</code> by default (see the
+        instead of <code>/var/run/xenomai</code> by default (see the
         <code>--enable-registry</code> switch from the configuration options).
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>--shared-registry</strong>
+</dt>
+<dd>
+<p>
+        Exports the registry of the process to other users. If access
+        is possible, also depends on permissions of the registry path.
+        By default, the registry is only accessible for the user that
+        started the Xenomai process.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -834,7 +845,7 @@ switch is a nop over <em>Cobalt</em>.</p></div>
 <dd>
 <p>
         This switch disables registry support at runtime. No real-time
-        objects will be exported to <code>/mnt/xenomai/&lt;session&gt;.&lt;pid&gt;</code>,
+        objects will be exported to <code>/var/run/xenomai/[&lt;user&gt;/]&lt;session&gt;/&lt;pid&gt;</code>,
         despite the registry code was compiled in.
 </p>
 </dd>
@@ -879,8 +890,8 @@ another process from the same session. This is done using a
 common heap area, shared by all processes within the same
 session.</p></div>
 <div class="paragraph"><p>This label is also used to form the registry mount point for
-each process, e.g. <code>/mnt/xenomai/&lt;session&gt;.&lt;pid&gt;</code>. See
-<code>--enable-registry</code> from the build options.</p></div>
+each process, e.g. <code>/var/run/xenomai/[&lt;user&gt;/]&lt;session&gt;/&lt;pid&gt;</code>.
+See <code>--enable-registry</code> from the build options.</p></div>
 <div class="paragraph"><p>By default, <em>anon</em> is used as the session label.</p></div>
 </dd>
 <dt class="hdlist1">
@@ -997,7 +1008,7 @@ package is called <em>valgrind-devel</em> on Fedora.</td>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-10-31 12:36:14 CET
+Last updated 2015-02-12 12:24:41 CET
 </div>
 </div>
 </body>

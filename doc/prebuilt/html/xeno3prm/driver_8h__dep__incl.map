@@ -1,20 +1,42 @@
 <map id="include/cobalt/kernel/rtdm/driver.h" name="include/cobalt/kernel/rtdm/driver.h">
-<area shape="rect" id="node2" href="$include_2cobalt_2kernel_2rtdm_2analogy_2buffer_8h.html" title="Analogy for Linux, buffer related features. " alt="" coords="219,369,369,410"/>
-<area shape="rect" id="node10" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations. " alt="" coords="119,97,277,138"/>
-<area shape="rect" id="node13" href="$rtdm__helpers_8h.html" title="Analogy for Linux, Operation system facilities. " alt="" coords="383,278,573,319"/>
-<area shape="rect" id="node14" href="$cobalt_2kernel_2rtdm_2udd_8h.html" title="Copyright (C) 2014 Philippe Gerum rpm@xenomai.org " alt="" coords="433,97,574,138"/>
-<area shape="rect" id="node15" href="$kernel_2cobalt_2rtdm_2internal_8h_source.html" title="kernel/cobalt/rtdm\l/internal.h" alt="" coords="599,97,725,138"/>
-<area shape="rect" id="node16" href="$rtcan__internal_8h_source.html" title="kernel/drivers/can\l/rtcan_internal.h" alt="" coords="750,97,875,138"/>
-<area shape="rect" id="node17" href="$rtcan__socket_8h_source.html" title="kernel/drivers/can\l/rtcan_socket.h" alt="" coords="899,97,1025,138"/>
-<area shape="rect" id="node19" href="$kernel_2drivers_2ipc_2internal_8h_source.html" title="kernel/drivers/ipc\l/internal.h" alt="" coords="1049,97,1170,138"/>
-<area shape="rect" id="node3" href="$analogy_2driver_8h.html" title="Analogy for Linux, driver facilities. " alt="" coords="292,459,439,501"/>
-<area shape="rect" id="node9" href="$transfer_8h.html" title="Analogy for Linux, transfer related features. " alt="" coords="107,459,267,501"/>
-<area shape="rect" id="node4" href="$device_8h.html" title="Analogy for Linux, device related features. " alt="" coords="289,550,443,591"/>
-<area shape="rect" id="node5" href="$8255_8h_source.html" title="kernel/drivers/analogy\l/intel/8255.h" alt="" coords="118,647,267,689"/>
-<area shape="rect" id="node6" href="$mite_8h_source.html" title="kernel/drivers/analogy\l/national_instruments\l/mite.h" alt="" coords="291,640,441,696"/>
-<area shape="rect" id="node7" href="$ni__tio_8h_source.html" title="kernel/drivers/analogy\l/national_instruments\l/ni_tio.h" alt="" coords="465,640,614,696"/>
-<area shape="rect" id="node8" href="$ni__stc_8h_source.html" title="kernel/drivers/analogy\l/national_instruments\l/ni_stc.h" alt="" coords="465,744,614,800"/>
-<area shape="rect" id="node11" href="$command_8h_source.html" title="include/cobalt/kernel\l/rtdm/analogy/command.h" alt="" coords="83,187,257,229"/>
-<area shape="rect" id="node12" href="$subdevice_8h.html" title="Analogy for Linux, subdevice related features. " alt="" coords="31,278,205,319"/>
-<area shape="rect" id="node18" href="$rtcan__list_8h_source.html" title="kernel/drivers/can\l/rtcan_list.h" alt="" coords="899,187,1025,229"/>
+<area shape="rect" id="node2" href="$include_2cobalt_2kernel_2rtdm_2analogy_2buffer_8h.html" title="Analogy for Linux, buffer related features. " alt="" coords="171,414,320,455"/>
+<area shape="rect" id="node10" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations. " alt="" coords="228,102,386,143"/>
+<area shape="rect" id="node13" href="$rtdm__helpers_8h.html" title="Analogy for Linux, Operation system facilities. " alt="" coords="396,310,586,351"/>
+<area shape="rect" id="node14" href="$cobalt_2kernel_2rtdm_2udd_8h.html" title="Copyright (C) 2014 Philippe Gerum rpm@xenomai.org " alt="" coords="462,102,603,143"/>
+<area shape="rect" id="node15" href="$kernel_2cobalt_2rtdm_2internal_8h_source.html" title="kernel/cobalt/rtdm\l/internal.h" alt="" coords="628,102,754,143"/>
+<area shape="rect" id="node16" href="$rtcan__internal_8h_source.html" title="kernel/drivers/can\l/rtcan_internal.h" alt="" coords="779,102,904,143"/>
+<area shape="rect" id="node17" href="$rtcan__socket_8h_source.html" title="kernel/drivers/can\l/rtcan_socket.h" alt="" coords="928,102,1054,143"/>
+<area shape="rect" id="node19" href="$kernel_2drivers_2ipc_2internal_8h_source.html" title="kernel/drivers/ipc\l/internal.h" alt="" coords="1078,102,1200,143"/>
+<area shape="rect" id="node20" href="$rt__at91__ether_8h_source.html" title="kernel/drivers/net\l/drivers/rt_at91_ether.h" alt="" coords="1224,102,1380,143"/>
+<area shape="rect" id="node21" href="$rtcfg_8h_source.html" title="kernel/drivers/net\l/stack/include/rtcfg\l/rtcfg.h" alt="" coords="1404,95,1538,151"/>
+<area shape="rect" id="node22" href="$nomac_8h_source.html" title="kernel/drivers/net\l/stack/include/rtmac\l/nomac/nomac.h" alt="" coords="1562,95,1702,151"/>
+<area shape="rect" id="node24" href="$tdma_8h_source.html" title="kernel/drivers/net\l/stack/include/rtmac\l/tdma/tdma.h" alt="" coords="1666,303,1806,359"/>
+<area shape="rect" id="node28" href="$tdma__worker_8h_source.html" title="kernel/drivers/net\l/stack/include/rtmac\l/tdma/tdma_worker.h" alt="" coords="2420,95,2565,151"/>
+<area shape="rect" id="node29" href="$rtnet__internal_8h_source.html" title="kernel/drivers/net\l/stack/include/rtnet\l_internal.h" alt="" coords="1907,95,2040,151"/>
+<area shape="rect" id="node37" href="$rtnet__socket_8h_source.html" title="kernel/drivers/net\l/stack/include/rtnet\l_socket.h" alt="" coords="2262,95,2395,151"/>
+<area shape="rect" id="node3" href="$analogy_2driver_8h.html" title="Analogy for Linux, driver facilities. " alt="" coords="305,511,453,552"/>
+<area shape="rect" id="node9" href="$transfer_8h.html" title="Analogy for Linux, transfer related features. " alt="" coords="120,511,280,552"/>
+<area shape="rect" id="node4" href="$device_8h.html" title="Analogy for Linux, device related features. " alt="" coords="302,600,456,641"/>
+<area shape="rect" id="node5" href="$8255_8h_source.html" title="kernel/drivers/analogy\l/intel/8255.h" alt="" coords="131,697,280,738"/>
+<area shape="rect" id="node6" href="$mite_8h_source.html" title="kernel/drivers/analogy\l/national_instruments\l/mite.h" alt="" coords="304,689,454,745"/>
+<area shape="rect" id="node7" href="$ni__tio_8h_source.html" title="kernel/drivers/analogy\l/national_instruments\l/ni_tio.h" alt="" coords="478,689,627,745"/>
+<area shape="rect" id="node8" href="$ni__stc_8h_source.html" title="kernel/drivers/analogy\l/national_instruments\l/ni_stc.h" alt="" coords="478,793,627,849"/>
+<area shape="rect" id="node11" href="$command_8h_source.html" title="include/cobalt/kernel\l/rtdm/analogy/command.h" alt="" coords="96,206,270,247"/>
+<area shape="rect" id="node12" href="$subdevice_8h.html" title="Analogy for Linux, subdevice related features. " alt="" coords="44,310,218,351"/>
+<area shape="rect" id="node18" href="$rtcan__list_8h_source.html" title="kernel/drivers/can\l/rtcan_list.h" alt="" coords="928,206,1054,247"/>
+<area shape="rect" id="node23" href="$nomac__dev_8h_source.html" title="kernel/drivers/net\l/stack/include/rtmac\l/nomac/nomac_dev.h" alt="" coords="1556,199,1703,255"/>
+<area shape="rect" id="node25" href="$tdma__dev_8h_source.html" title="kernel/drivers/net\l/stack/include/rtmac\l/tdma/tdma_dev.h" alt="" coords="1420,407,1560,463"/>
+<area shape="rect" id="node26" href="$tdma__ioctl_8h_source.html" title="kernel/drivers/net\l/stack/include/rtmac\l/tdma/tdma_ioctl.h" alt="" coords="1584,407,1724,463"/>
+<area shape="rect" id="node27" href="$tdma__proto_8h_source.html" title="kernel/drivers/net\l/stack/include/rtmac\l/tdma/tdma_proto.h" alt="" coords="1748,407,1888,463"/>
+<area shape="rect" id="node30" href="$af__inet_8h_source.html" title="kernel/drivers/net\l/stack/include/ipv4\l/af_inet.h" alt="" coords="1986,199,2116,255"/>
+<area shape="rect" id="node31" href="$rtcfg__conn__event_8h_source.html" title="kernel/drivers/net\l/stack/include/rtcfg\l/rtcfg_conn_event.h" alt="" coords="2141,199,2278,255"/>
+<area shape="rect" id="node32" href="$rtcfg__event_8h_source.html" title="kernel/drivers/net\l/stack/include/rtcfg\l/rtcfg_event.h" alt="" coords="1831,303,1964,359"/>
+<area shape="rect" id="node34" href="$rtcfg__proc_8h_source.html" title="kernel/drivers/net\l/stack/include/rtcfg\l/rtcfg_proc.h" alt="" coords="2303,199,2436,255"/>
+<area shape="rect" id="node35" href="$rtnet__rtpc_8h_source.html" title="kernel/drivers/net\l/stack/include/rtnet\l_rtpc.h" alt="" coords="1828,199,1962,255"/>
+<area shape="rect" id="node33" href="$rtcfg__frame_8h_source.html" title="kernel/drivers/net\l/stack/include/rtcfg\l/rtcfg_frame.h" alt="" coords="1912,407,2046,463"/>
+<area shape="rect" id="node36" href="$icmp_8h_source.html" title="kernel/drivers/net\l/stack/include/ipv4\l/icmp.h" alt="" coords="2214,303,2344,359"/>
+<area shape="rect" id="node38" href="$ip__sock_8h_source.html" title="kernel/drivers/net\l/stack/include/ipv4\l/ip_sock.h" alt="" coords="2460,199,2591,255"/>
+<area shape="rect" id="node39" href="$protocol_8h_source.html" title="kernel/drivers/net\l/stack/include/ipv4\l/protocol.h" alt="" coords="2615,199,2746,255"/>
+<area shape="rect" id="node40" href="$ip__fragment_8h_source.html" title="kernel/drivers/net\l/stack/include/ipv4\l/ip_fragment.h" alt="" coords="2700,303,2831,359"/>
+<area shape="rect" id="node41" href="$tcp_8h_source.html" title="kernel/drivers/net\l/stack/include/ipv4/tcp.h" alt="" coords="2512,310,2676,351"/>
 </map>

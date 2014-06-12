@@ -1,8 +1,8 @@
 <map id="Level 2 API" name="Level 2 API">
-<area shape="rect" id="node1" href="$group__analogy__lib.html" title="Analogy user API" alt="" coords="6,107,130,133"/>
-<area shape="rect" id="node2" href="$group__analogy__lib__rng2.html" title="Range / conversion API" alt="" coords="335,5,497,32"/>
-<area shape="rect" id="node3" href="$group__analogy__lib__calibration.html" title="Software calibration API" alt="" coords="335,56,497,83"/>
-<area shape="rect" id="node4" href="$group__analogy__lib__math.html" title="Math API" alt="" coords="377,107,455,133"/>
-<area shape="rect" id="node6" href="$group__analogy__lib__sync2.html" title="Synchronous acquisition API" alt="" coords="321,157,511,184"/>
-<area shape="rect" id="node7" href="$group__analogy__lib__async2.html" title="Asynchronous acquisition API" alt="" coords="317,208,515,235"/>
+<area shape="rect" id="node1" href="$group__analogy__lib.html" title="Analogy user API" alt="" coords="5,107,129,133"/>
+<area shape="rect" id="node2" href="$group__analogy__lib__rng2.html" title="Range / conversion API" alt="" coords="334,5,495,32"/>
+<area shape="rect" id="node3" href="$group__analogy__lib__calibration.html" title="Software calibration API" alt="" coords="333,56,496,83"/>
+<area shape="rect" id="node4" href="$group__analogy__lib__math.html" title="Math API" alt="" coords="376,107,453,133"/>
+<area shape="rect" id="node6" href="$group__analogy__lib__sync2.html" title="Synchronous acquisition API" alt="" coords="319,157,510,184"/>
+<area shape="rect" id="node7" href="$group__analogy__lib__async2.html" title="Asynchronous acquisition API" alt="" coords="316,208,513,235"/>
 </map>

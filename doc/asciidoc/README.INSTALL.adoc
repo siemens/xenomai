@@ -400,7 +400,7 @@ Generic configuration options (both cores)
 	allows multiple processes to share real-time objects
 	(e.g. tasks, semaphores).
 
-*--enable-registry*::
+*--enable-registry[=/registry-root-path]*::
 
 	Xenomai APIs can export their internal state through a
 	pseudo-filesystem, which files may be read to obtain
@@ -421,7 +421,7 @@ Generic configuration options (both cores)
 	properties of a VxWorks task could be done as follows:
 
 --------------------------------------------------------------------
-		$ cat /var/run/xenomai/anon/12656/vxworks/tasks/windTask
+		$ cat /var/run/xenomai/anon.12656/vxworks/tasks/windTask 
 		name       = windTask
 		errno      = 0
 		status     = ready
@@ -430,8 +430,11 @@ Generic configuration options (both cores)
 --------------------------------------------------------------------
 
 [normal]
-	You may override the default root of the registry hierarchy by
-	using the `--registry-root` runtime option (see below).
+	You may override the default root of the registry hierarchy
+	either statically at build time by passing the desired root
+	path to the --enable-registry configuration switch, or
+	dynamically by using the `--registry-root` runtime option
+	passed to the application.
 
 [NOTE]
 When running over _Xenomai/cobalt_, the `/proc/xenomai` interface is

@@ -1,6 +1,6 @@
 <map id="Level 1 API" name="Level 1 API">
-<area shape="rect" id="node1" href="$group__analogy__lib.html" title="Analogy user API" alt="" coords="6,56,130,83"/>
-<area shape="rect" id="node3" href="$group__analogy__lib__sync1.html" title="Synchronous acquisition API" alt="" coords="321,5,511,32"/>
-<area shape="rect" id="node4" href="$group__analogy__lib__async1.html" title="Asynchronous acquisition API" alt="" coords="317,56,515,83"/>
-<area shape="rect" id="node5" href="$group__analogy__lib__descriptor1.html" title="Descriptor API" alt="" coords="362,107,470,133"/>
+<area shape="rect" id="node1" href="$group__analogy__lib.html" title="Analogy user API" alt="" coords="5,56,129,83"/>
+<area shape="rect" id="node3" href="$group__analogy__lib__sync1.html" title="Synchronous acquisition API" alt="" coords="319,5,510,32"/>
+<area shape="rect" id="node4" href="$group__analogy__lib__async1.html" title="Asynchronous acquisition API" alt="" coords="316,56,513,83"/>
+<area shape="rect" id="node5" href="$group__analogy__lib__descriptor1.html" title="Descriptor API" alt="" coords="361,107,469,133"/>
 </map>

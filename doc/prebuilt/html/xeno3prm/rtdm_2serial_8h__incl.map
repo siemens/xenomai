@@ -1,8 +1,8 @@
 <map id="include/rtdm/serial.h" name="include/rtdm/serial.h">
-<area shape="rect" id="node2" href="$rtdm_2rtdm_8h.html" title="rtdm/rtdm.h" alt="" coords="347,80,436,107"/>
+<area shape="rect" id="node2" href="$rtdm_2rtdm_8h.html" title="rtdm/rtdm.h" alt="" coords="347,80,437,107"/>
 <area shape="rect" id="node13" href="$rtdm_2uapi_2serial_8h.html" title="Real&#45;Time Driver Model for Xenomai, serial device profile header. " alt="" coords="461,80,584,107"/>
 <area shape="rect" id="node3" href="$fcntl_8h_source.html" title="fcntl.h" alt="" coords="5,155,64,181"/>
-<area shape="rect" id="node8" href="$unistd_8h_source.html" title="unistd.h" alt="" coords="358,155,425,181"/>
+<area shape="rect" id="node8" href="$unistd_8h_source.html" title="unistd.h" alt="" coords="358,155,426,181"/>
 <area shape="rect" id="node9" href="$ioctl_8h_source.html" title="sys/ioctl.h" alt="" coords="451,155,533,181"/>
 <area shape="rect" id="node10" href="$socket_8h_source.html" title="sys/socket.h" alt="" coords="558,155,655,181"/>
 <area shape="rect" id="node11" href="$include_2cobalt_2boilerplate_2wrappers_8h_source.html" title="boilerplate/wrappers.h" alt="" coords="680,155,829,181"/>
