@@ -38,9 +38,9 @@ man1_MANS = \
 	dohell.1
 
 if !XENO_BUILD_DOC
-HTML_DOCSDIR = $(srcdir)/../generated/html/
-PDF_DOCSDIR = $(srcdir)/../generated/pdf/
-MAN_DOCSDIR = $(srcdir)/../generated/man/
+HTML_DOCSDIR = $(srcdir)/../prebuilt/html/
+PDF_DOCSDIR = $(srcdir)/../prebuilt/pdf/
+MAN_DOCSDIR = $(srcdir)/../prebuilt/man/
 else
 HTML_DOCSDIR = ./
 PDF_DOCSDIR = ./

@@ -7,16 +7,16 @@ tmpdir=/tmp/xenomai-documentation
 
 USAGE="$0 [ -q | -v ] [ -d ] [ -h ] installdir dirs
 
-Extract Xenomai documentation tree for directories "dirs". Where dirs are taken
-as subdirectories of git repository root. Extracted documentation trees
-are copied as subdirectories of "installdir".
+Extract Xenomai documentation tree for directories "dirs". Where dirs
+are taken as subdirectories of git repository root. Extracted
+documentation trees are copied as subdirectories of "installdir".
 
 For instance:
-$0 download.gna.org:/upload/xenomai/documentation xenomai-2.0
+$0 download.gna.org:/upload/xenomai/documentation xenomai-3.0
 
-extracts the generated documentation from the xenomai-2.0 repository
+extracts the prebuilt documentation from the xenomai-3.0 repository
 and copy it to
-download.gna.org:/upload/xenomai/documentation/xenomai-2.0
+download.gna.org:/upload/xenomai/documentation/xenomai-3.0
 
 Options:
 -q, --quiet    quiet, print only error messages, suitable for cron jobs.
@@ -90,14 +90,14 @@ for dir in ${1+"$@"}; do
     $ECHO done.
 
     $ECHO Changing files and directories modes...
-    find $dir/doc/generated $dir/doc/nodist | xargs chmod u=rwX,g=rwX,o=rX
+    find $dir/doc/prebuilt $dir/doc/nodist | xargs chmod u=rwX,g=rwX,o=rX
     chmod u=rw,g=rw $dir/TROUBLESHOOTING $dir/README.INSTALL
     $ECHO done.
 
     $ECHO Copying to $installdir/$dir...
     mkdir -p $installdir/$dir
     $RSYNC -e ssh -prltgDz --delete --delete-after \
-	$dir/doc/generated/ $dir/doc/nodist/ \
+	$dir/doc/prebuilt/ $dir/doc/nodist/ \
 	$dir/README.INSTALL $dir/TROUBLESHOOTING \
 	$installdir/$dir/
     $ECHO done.

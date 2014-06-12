@@ -5,8 +5,8 @@ EXTRA_DIST=README.INSTALL.adoc README.APPLICATIONS.adoc TROUBLESHOOTING.adoc \
 	plaintext.conf plaintext_postproc.awk plaintext.xsl
 
 if !XENO_BUILD_DOC
-HTML_DOCSDIR = $(srcdir)/../generated/html/
-PDF_DOCSDIR = $(srcdir)/../generated/pdf/
+HTML_DOCSDIR = $(srcdir)/../prebuilt/html/
+PDF_DOCSDIR = $(srcdir)/../prebuilt/pdf/
 else
 HTML_DOCSDIR = ./
 PDF_DOCSDIR = ./

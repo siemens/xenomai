@@ -115,7 +115,7 @@ Documentation:
 -------------
 
 The RTDM CAN profile is documented using Doxygen in Xenomai's
-"doc/generated/html/api/index.html"
+"doc/prebuilt/html/manual/index.html"
 
 
 Feedback:
