@@ -438,7 +438,7 @@ dvi: dvi-am
 
 dvi-am:
 
-html: html-am
+@XENO_BUILD_DOC_FALSE@html: html-am
 
 html-am:
 
@@ -482,7 +482,7 @@ mostlyclean: mostlyclean-am
 
 mostlyclean-am: mostlyclean-generic mostlyclean-libtool
 
-pdf: pdf-am
+@XENO_BUILD_DOC_FALSE@pdf: pdf-am
 
 pdf-am:
 
@@ -508,7 +508,16 @@ uninstall-am: uninstall-local
 	tags-am uninstall uninstall-am uninstall-local
 
 
-@XENO_BUILD_DOC_TRUE@all-local: $(HTML_DOCS) $(PDF_DOCS)
+@XENO_BUILD_DOC_FALSE@html pdf:
+@XENO_BUILD_DOC_FALSE@	@echo "build tree not configured for regenerating documentation"
+@XENO_BUILD_DOC_FALSE@	@echo "reconfigure with --enable-doc-build"
+@XENO_BUILD_DOC_FALSE@	@/bin/false
+
+@XENO_BUILD_DOC_TRUE@all-local: html pdf
+
+@XENO_BUILD_DOC_TRUE@html: $(HTML_DOCS)
+
+@XENO_BUILD_DOC_TRUE@pdf: $(PDF_DOCS)
 
 @XENO_BUILD_DOC_TRUE@manual-html:
 @XENO_BUILD_DOC_TRUE@	$(DOXYGEN) $@.conf

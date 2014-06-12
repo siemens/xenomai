@@ -651,12 +651,17 @@ uninstall-am:
 	ps ps-am tags tags-am uninstall uninstall-am
 
 
+doxygen asciidoc man: FORCE
+	$(MAKE) -C $@
+
 generate-doc:
 	@if test \! -e $(GENERATE_DOC) -o \! -e $(top_srcdir)/.git ; then \
 		echo "$@ wants $top_srcdir to be a GIT working tree." ; \
 	else \
 		srcdir=$(srcdir) $(GENERATE_DOC) ; \
 	fi
+
+.PHONY: FORCE
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

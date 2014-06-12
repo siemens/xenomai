@@ -13,6 +13,11 @@ SUBDIRS = 		\
 
 if XENO_RUN_DOC
 SUBDIRS += doc
+
+doc/%: FORCE
+	$(MAKE) -C doc/ $*
+
+.PHONY: FORCE
 endif
 
 EXTRA_DIST = kernel debian

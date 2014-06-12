@@ -829,6 +829,11 @@ uninstall-am:
 	ps ps-am tags tags-am uninstall uninstall-am
 
 
+@XENO_RUN_DOC_TRUE@doc/%: FORCE
+@XENO_RUN_DOC_TRUE@	$(MAKE) -C doc/ $*
+
+@XENO_RUN_DOC_TRUE@.PHONY: FORCE
+
 dist-hook:
 	rm -fr `find $(distdir) -name '.svn' -o -name CVS  -o -name '.#*' \
 		-o -name '*~' -o -name autom4te.cache`

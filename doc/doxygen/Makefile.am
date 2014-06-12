@@ -5,11 +5,20 @@ EXTRA_DIST = manual-common.conf.in manual-html.conf.in manual-pdf.conf.in
 if !XENO_BUILD_DOC
 HTML_DOCSDIR = $(srcdir)/../generated/html/
 PDF_DOCSDIR = $(srcdir)/../generated/pdf/
+
+html pdf:
+	@echo "build tree not configured for regenerating documentation"
+	@echo "reconfigure with --enable-doc-build"
+	@/bin/false
 else
 HTML_DOCSDIR = ./
 PDF_DOCSDIR = ./
 
-all-local: $(HTML_DOCS) $(PDF_DOCS)
+all-local: html pdf
+
+html: $(HTML_DOCS)
+
+pdf: $(PDF_DOCS)
 
 manual-html:
 	$(DOXYGEN) $@.conf
