@@ -1,0 +1,6 @@
+<map id="Analogy user API" name="Analogy user API">
+<area shape="rect" id="node1" href="$group__analogy__lib__syscall.html" title="Level 0 API" alt="" coords="349,5,440,32"/>
+<area shape="rect" id="node4" href="$group__analogy__lib__level1.html" title="Level 1 API" alt="" coords="349,56,440,83"/>
+<area shape="rect" id="node5" href="$group__analogy__lib__level2.html" title="Level 2 API" alt="" coords="349,107,440,133"/>
+<area shape="rect" id="node3" href="$group__analogy.html" title="A RTDM&#45;based interface for implementing DAQ card drivers. " alt="" coords="5,56,128,83"/>
+</map>

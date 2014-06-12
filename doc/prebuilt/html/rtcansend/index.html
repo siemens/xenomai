@@ -1,0 +1,177 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
+<meta name="generator" content="AsciiDoc 8.6.8" />
+<title>RTCANSEND(1)</title>
+<link rel="stylesheet" href="../asciidoc-css/asciidoc.css" type="text/css" />
+
+
+<script type="text/javascript" src="../asciidoc-js/asciidoc.js"></script>
+<script type="text/javascript">
+/*<![CDATA[*/
+asciidoc.install(3);
+/*]]>*/
+</script>
+</head>
+<body class="manpage" style="max-width:55em">
+<div id="header">
+<h1>
+RTCANSEND(1) Manual Page
+</h1>
+<div id="toc">
+  <div id="toctitle">Table of Contents</div>
+  <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
+</div>
+<h2>NAME</h2>
+<div class="sectionbody">
+<p>rtcansend -
+   Xenomai tool for sending CAN messages
+</p>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_synopsis">1. SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="paragraph"><p><strong>rtcansend</strong> &lt;can-interface&gt; [Options] &lt;can-msg&gt;</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">2. DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph"><p><strong>rtcansend</strong> is part of Xenomai. It is used to send messages via a CAN
+interface. The system must run a suitable Xenomai enabled kernel with the
+respective module (xeno_native and the CAN driver).</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_options">3. OPTIONS</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>&lt;can-interface&gt; is the CAN interface file.</p></div>
+<div class="paragraph"><p>&lt;can-msg&gt; can consist of up to 8 bytes given as a space separated list.</p></div>
+<div class="paragraph"><p><strong>rtcansend</strong> accepts the following options:</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+<strong>-i, --identifier=ID</strong>
+</dt>
+<dd>
+<p>
+CAN Identifier (default = 1)
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-r, --rtr</strong>
+</dt>
+<dd>
+<p>
+send remote request
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-e, --extended</strong>
+</dt>
+<dd>
+<p>
+send extended frame
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-l, --loop=COUNT</strong>
+</dt>
+<dd>
+<p>
+send message COUNT times
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-c, --count</strong>
+</dt>
+<dd>
+<p>
+message count in data[0-3]
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-d, --delay=MS</strong>
+</dt>
+<dd>
+<p>
+delay in ms (default = 1ms)
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-s, --send</strong>
+</dt>
+<dd>
+<p>
+use send instead of sendto
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-t, --timeout=MS</strong>
+</dt>
+<dd>
+<p>
+timeout in ms
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-L, --loopback=0|1</strong>
+</dt>
+<dd>
+<p>
+switch local loopback off or on
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-v, --verbose</strong>
+</dt>
+<dd>
+<p>
+be verbose
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-p, --print=MODULO</strong>
+</dt>
+<dd>
+<p>
+print every MODULO message
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-h, --help</strong>
+</dt>
+<dd>
+<p>
+a usage description
+</p>
+</dd>
+</dl></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">4. SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph"><p><strong><a href="../rtcanconfig/index.html">rtcanconfig(1)</a>, <a href="../rtcanrecv/index.html">rtcanrecv(1)</a></strong>.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_authors">5. AUTHORS</h2>
+<div class="sectionbody">
+<div class="paragraph"><p><strong>rtcansend</strong> was written by Wolfgang Grandegger, Jan
+Kiszka and Philippe Gerum. This man page
+was written by Roland Stigge.</p></div>
+</div>
+</div>
+</div>
+<div id="footnotes"><hr /></div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2014-05-27 15:38:31 CEST
+</div>
+</div>
+</body>
+</html>

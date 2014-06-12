@@ -1,0 +1,23 @@
+<map id="include/cobalt/kernel/sched.h" name="include/cobalt/kernel/sched.h">
+<area shape="rect" id="node3" href="$thread_8h_source.html" title="cobalt/kernel/thread.h" alt="" coords="869,104,1016,131"/>
+<area shape="rect" id="node11" href="$vfile_8h.html" title="This file is part of the Xenomai project. " alt="" coords="1083,600,1217,627"/>
+<area shape="rect" id="node15" href="$assert_8h_source.html" title="cobalt/kernel/assert.h" alt="" coords="1083,757,1229,784"/>
+<area shape="rect" id="node37" href="$schedqueue_8h_source.html" title="cobalt/kernel/schedqueue.h" alt="" coords="164,443,345,469"/>
+<area shape="rect" id="node38" href="$sched-tp_8h_source.html" title="cobalt/kernel/sched&#45;tp.h" alt="" coords="1790,104,1951,131"/>
+<area shape="rect" id="node39" href="$sched-weak_8h_source.html" title="cobalt/kernel/sched\l&#45;weak.h" alt="" coords="1975,97,2109,138"/>
+<area shape="rect" id="node40" href="$sched-sporadic_8h.html" title="Definitions for the SSP scheduling class. " alt="" coords="2134,97,2268,138"/>
+<area shape="rect" id="node41" href="$sched-quota_8h_source.html" title="cobalt/kernel/sched\l&#45;quota.h" alt="" coords="2293,97,2427,138"/>
+<area shape="rect" id="node42" href="$sched-idle_8h.html" title="Definitions for the IDLE scheduling class. " alt="" coords="2451,97,2585,138"/>
+<area shape="rect" id="node43" href="$sched-rt_8h.html" title="Definitions for the RT scheduling class. " alt="" coords="2610,104,2768,131"/>
+<area shape="rect" id="node6" href="$list_8h_source.html" title="cobalt/kernel/list.h" alt="" coords="640,600,768,627"/>
+<area shape="rect" id="node8" href="$stat_8h_source.html" title="cobalt/kernel/stat.h" alt="" coords="972,443,1105,469"/>
+<area shape="rect" id="node16" href="$trace_8h_source.html" title="cobalt/kernel/trace.h" alt="" coords="1561,832,1700,859"/>
+<area shape="rect" id="node25" href="$timer_8h.html" title="cobalt/kernel/timer.h" alt="" coords="843,360,983,387"/>
+<area shape="rect" id="node26" href="$registry_8h.html" title="This file is part of the Xenomai project. " alt="" coords="725,195,880,221"/>
+<area shape="rect" id="node27" href="$synch_8h_source.html" title="cobalt/kernel/synch.h" alt="" coords="621,277,768,304"/>
+<area shape="rect" id="node29" href="$schedparam_8h_source.html" title="cobalt/kernel/schedparam.h" alt="" coords="94,195,276,221"/>
+<area shape="rect" id="node30" href="$shadow_8h_source.html" title="cobalt/kernel/shadow.h" alt="" coords="1125,195,1280,221"/>
+<area shape="rect" id="node9" href="$clock_8h.html" title="cobalt/kernel/clock.h" alt="" coords="922,517,1064,544"/>
+<area shape="rect" id="node14" href="$lock_8h_source.html" title="cobalt/kernel/lock.h" alt="" coords="843,683,977,709"/>
+<area shape="rect" id="node20" href="$ancillaries_8h_source.html" title="cobalt/kernel/ancillaries.h" alt="" coords="1071,832,1240,859"/>
+</map>

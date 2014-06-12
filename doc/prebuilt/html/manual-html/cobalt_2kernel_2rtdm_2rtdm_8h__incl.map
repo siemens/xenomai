@@ -1,0 +1,18 @@
+<map id="include/cobalt/kernel/rtdm/rtdm.h" name="include/cobalt/kernel/rtdm/rtdm.h">
+<area shape="rect" id="node7" href="$ppd_8h.html" title="cobalt/kernel/ppd.h" alt="" coords="503,96,634,123"/>
+<area shape="rect" id="node32" href="$rtdm_2uapi_2rtdm_8h.html" title="Real&#45;Time Driver Model for Xenomai, user API header. " alt="" coords="1321,96,1438,123"/>
+<area shape="rect" id="node8" href="$cobalt_2kernel_2list_8h_source.html" title="cobalt/kernel/list.h" alt="" coords="380,253,508,280"/>
+<area shape="rect" id="node10" href="$shadow_8h_source.html" title="cobalt/kernel/shadow.h" alt="" coords="1090,171,1245,197"/>
+<area shape="rect" id="node16" href="$cobalt_2kernel_2lock_8h_source.html" title="cobalt/kernel/lock.h" alt="" coords="783,253,917,280"/>
+<area shape="rect" id="node26" href="$include_2cobalt_2kernel_2heap_8h_source.html" title="cobalt/kernel/heap.h" alt="" coords="625,171,764,197"/>
+<area shape="rect" id="node28" href="$fd_8h_source.html" title="rtdm/fd.h" alt="" coords="321,171,396,197"/>
+<area shape="rect" id="node13" href="$cobalt_2uapi_2kernel_2types_8h_source.html" title="cobalt/uapi/kernel\l/types.h" alt="" coords="942,246,1065,287"/>
+<area shape="rect" id="node15" href="$include_2cobalt_2uapi_2signal_8h_source.html" title="cobalt/uapi/signal.h" alt="" coords="1270,253,1404,280"/>
+<area shape="rect" id="node14" href="$cobalt_2uapi_2kernel_2limits_8h_source.html" title="cobalt/uapi/kernel\l/limits.h" alt="" coords="1023,486,1146,527"/>
+<area shape="rect" id="node19" href="$assert_8h_source.html" title="cobalt/kernel/assert.h" alt="" coords="672,336,818,363"/>
+<area shape="rect" id="node20" href="$cobalt_2kernel_2trace_8h_source.html" title="cobalt/kernel/trace.h" alt="" coords="564,411,704,437"/>
+<area shape="rect" id="node23" href="$cobalt_2kernel_2ancillaries_8h_source.html" title="cobalt/kernel/ancillaries.h" alt="" coords="752,411,921,437"/>
+<area shape="rect" id="node22" href="$cobalt_2uapi_2kernel_2trace_8h_source.html" title="cobalt/uapi/kernel\l/trace.h" alt="" coords="596,486,720,527"/>
+<area shape="rect" id="node27" href="$include_2cobalt_2uapi_2kernel_2heap_8h_source.html" title="cobalt/uapi/kernel\l/heap.h" alt="" coords="532,246,656,287"/>
+<area shape="rect" id="node29" href="$tree_8h_source.html" title="cobalt/kernel/tree.h" alt="" coords="222,253,356,280"/>
+</map>

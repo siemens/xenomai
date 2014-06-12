@@ -1,4 +1,4 @@
-Installing Xenomai 2.99.0
+Installing Xenomai 3.x
 
 -------------------------------------------------------------------------------
 
@@ -370,7 +370,7 @@ partial]           available, with varying overhead:
                        with no level specification.
                      * full includes partial settings, but the optimizer is
                        disabled (-O0), and even more consistency checks may be
-                       performed. In addition to CONFIG_XENO_DEBUG, the macro
+                       performed. In addition to __XENO_DEBUG__, the macro
                        CONFIG_XENO_DEBUG_FULL is defined. This level introduces
                        the most overhead, which may triple the worst-case
                        latency, or even more.
@@ -500,6 +500,9 @@ You may override the default root of the registry hierarchy by using the
 
 --enable-fortify
     Enables support for applications compiled in _FORTIFY_SOURCE mode.
+--disable-valgrind-client
+    Turns off the Valgrind client support, forcing CONFIG_XENO_VALGRIND_API off
+    in the Xenomai configuration header.
 
 Cobalt-specific configuration options
 

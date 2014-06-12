@@ -1,0 +1,6 @@
+<map id="kernel/drivers/analogy/national_instruments/ni_tio.h" name="kernel/drivers/analogy/national_instruments/ni_tio.h">
+<area shape="rect" id="node2" href="$ni__stc_8h.html" title="Register descriptions for NI DAQ&#45;STC chip. " alt="" coords="92,109,241,165"/>
+<area shape="rect" id="node5" href="$tio__common_8c.html" title="Hardware driver for NI general purpose counter. " alt="" coords="265,109,415,165"/>
+<area shape="rect" id="node3" href="$mio__common_8c.html" title="Hardware driver for DAQ&#45;STC based boards. " alt="" coords="5,213,155,269"/>
+<area shape="rect" id="node4" href="$pcimio_8c.html" title="Hardware driver for NI PCI&#45;MIO E series cards. " alt="" coords="179,213,328,269"/>
+</map>

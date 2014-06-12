@@ -1,0 +1,164 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
+<meta name="generator" content="AsciiDoc 8.6.8" />
+<title>CYCLICTEST(1)</title>
+<link rel="stylesheet" href="../asciidoc-css/asciidoc.css" type="text/css" />
+
+
+<script type="text/javascript" src="../asciidoc-js/asciidoc.js"></script>
+<script type="text/javascript">
+/*<![CDATA[*/
+asciidoc.install(3);
+/*]]>*/
+</script>
+</head>
+<body class="manpage" style="max-width:55em">
+<div id="header">
+<h1>
+CYCLICTEST(1) Manual Page
+</h1>
+<div id="toc">
+  <div id="toctitle">Table of Contents</div>
+  <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
+</div>
+<h2>NAME</h2>
+<div class="sectionbody">
+<p>cyclictest -
+   Xenomai high resolution timer test
+</p>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_synopsis">1. SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="paragraph"><p><strong>cyclictest</strong> [options]</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">2. DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph"><p><strong>cyclictest</strong> is part of the Xenomai test suite and tests the POSIX skin of Xenomai with a cyclic timer test.</p></div>
+<div class="paragraph"><p>For this program to work, you need to run a suitable Xenomai enabled kernel with the respective module (xeno_posix).</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_options">3. OPTIONS</h2>
+<div class="sectionbody">
+<div class="paragraph"><p><strong>cyclictest</strong> accepts the following options:</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+<strong>-b USEC, --breaktrace=USEC</strong>
+</dt>
+<dd>
+<p>
+send break trace command when latency &gt; USEC
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-c CLOCK, --clock=CLOCK</strong>
+</dt>
+<dd>
+<p>
+select clock:
+0 = CLOCK_MONOTONIC (default)
+1 = CLOCK_REALTIME
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-d DIST, --distance=DIST</strong>
+</dt>
+<dd>
+<p>
+distance of thread intervals in us default=500
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-i INTV, --interval=INTV</strong>
+</dt>
+<dd>
+<p>
+base interval of thread in us default=1000
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-l LOOPS, --loops=LOOPS</strong>
+</dt>
+<dd>
+<p>
+number of loops: default=0 (endless)
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-n, --nanosleep</strong>
+</dt>
+<dd>
+<p>
+use clock_nanosleep
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-p PRIO, --prio=PRIO</strong>
+</dt>
+<dd>
+<p>
+priority of highest prio thread
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-q, --quiet</strong>
+</dt>
+<dd>
+<p>
+print only a summary on exit
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-r, --relative</strong>
+</dt>
+<dd>
+<p>
+use relative timer instead of absolute
+</p>
+</dd>
+</dl></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+<strong>-t NUM, --threads=NUM</strong>
+</dt>
+<dd>
+<p>
+number of threads: default=1
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>-v, --verbose</strong>
+</dt>
+<dd>
+<p>
+output values on stdout for statistics<br />
+format: n:c:v n=tasknum c=count v=value in us
+</p>
+</dd>
+</dl></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_author">4. AUTHOR</h2>
+<div class="sectionbody">
+<div class="paragraph"><p><strong>cyclictest</strong> was written by Thomas Gleixner. This man page
+was written by Roland Stigge.</p></div>
+</div>
+</div>
+</div>
+<div id="footnotes"><hr /></div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2014-05-27 15:38:31 CEST
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,5 @@
+<map id="kernel/drivers/analogy/national_instruments/mite.h" name="kernel/drivers/analogy/national_instruments/mite.h">
+<area shape="rect" id="node2" href="$mio__common_8c.html" title="Hardware driver for DAQ&#45;STC based boards. " alt="" coords="5,109,155,165"/>
+<area shape="rect" id="node3" href="$mite_8c.html" title="Hardware driver for NI Mite PCI interface chip. " alt="" coords="179,109,328,165"/>
+<area shape="rect" id="node4" href="$pcimio_8c.html" title="Hardware driver for NI PCI&#45;MIO E series cards. " alt="" coords="352,109,501,165"/>
+</map>

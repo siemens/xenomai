@@ -1,0 +1,22 @@
+<map id="include/cobalt/kernel/select.h" name="include/cobalt/kernel/select.h">
+<area shape="rect" id="node2" href="$cobalt_2kernel_2list_8h_source.html" title="cobalt/kernel/list.h" alt="" coords="119,584,247,611"/>
+<area shape="rect" id="node4" href="$include_2cobalt_2kernel_2thread_8h_source.html" title="cobalt/kernel/thread.h" alt="" coords="472,96,619,123"/>
+<area shape="rect" id="node7" href="$stat_8h_source.html" title="cobalt/kernel/stat.h" alt="" coords="152,419,285,445"/>
+<area shape="rect" id="node16" href="$cobalt_2kernel_2trace_8h_source.html" title="cobalt/kernel/trace.h" alt="" coords="1290,816,1429,843"/>
+<area shape="rect" id="node25" href="$include_2cobalt_2kernel_2timer_8h.html" title="cobalt/kernel/timer.h" alt="" coords="195,328,335,355"/>
+<area shape="rect" id="node26" href="$cobalt_2kernel_2registry_8h.html" title="This file is part of the Xenomai project. " alt="" coords="245,171,400,197"/>
+<area shape="rect" id="node27" href="$kernel_2synch_8h_source.html" title="cobalt/kernel/synch.h" alt="" coords="355,245,501,272"/>
+<area shape="rect" id="node29" href="$schedparam_8h_source.html" title="cobalt/kernel/schedparam.h" alt="" coords="841,171,1023,197"/>
+<area shape="rect" id="node30" href="$shadow_8h_source.html" title="cobalt/kernel/shadow.h" alt="" coords="526,171,681,197"/>
+<area shape="rect" id="node34" href="$include_2cobalt_2uapi_2kernel_2thread_8h_source.html" title="cobalt/uapi/kernel\l/thread.h" alt="" coords="1235,321,1359,362"/>
+<area shape="rect" id="node8" href="$include_2cobalt_2kernel_2clock_8h.html" title="cobalt/kernel/clock.h" alt="" coords="357,501,499,528"/>
+<area shape="rect" id="node10" href="$vfile_8h.html" title="This file is part of the Xenomai project. " alt="" coords="470,584,604,611"/>
+<area shape="rect" id="node24" href="$cobalt_2uapi_2kernel_2types_8h_source.html" title="cobalt/uapi/kernel\l/types.h" alt="" coords="902,577,1025,618"/>
+<area shape="rect" id="node13" href="$cobalt_2kernel_2lock_8h_source.html" title="cobalt/kernel/lock.h" alt="" coords="525,667,659,693"/>
+<area shape="rect" id="node15" href="$assert_8h_source.html" title="cobalt/kernel/assert.h" alt="" coords="755,741,901,768"/>
+<area shape="rect" id="node20" href="$cobalt_2kernel_2ancillaries_8h_source.html" title="cobalt/kernel/ancillaries.h" alt="" coords="743,816,912,843"/>
+<area shape="rect" id="node19" href="$cobalt_2uapi_2kernel_2trace_8h_source.html" title="cobalt/uapi/kernel\l/trace.h" alt="" coords="1163,891,1287,933"/>
+<area shape="rect" id="node23" href="$cobalt_2uapi_2kernel_2limits_8h_source.html" title="cobalt/uapi/kernel\l/limits.h" alt="" coords="902,891,1025,933"/>
+<area shape="rect" id="node28" href="$uapi_2kernel_2synch_8h_source.html" title="cobalt/uapi/kernel\l/synch.h" alt="" coords="875,411,999,453"/>
+<area shape="rect" id="node33" href="$include_2cobalt_2uapi_2signal_8h_source.html" title="cobalt/uapi/signal.h" alt="" coords="951,245,1085,272"/>
+</map>

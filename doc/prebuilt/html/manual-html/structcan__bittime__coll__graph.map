@@ -1,0 +1,4 @@
+<map id="can_bittime" name="can_bittime">
+<area shape="rect" id="node2" href="$structcan__bittime__btr.html" title="Hardware&#45;specific BTR bit&#45;times. " alt="" coords="5,5,115,32"/>
+<area shape="rect" id="node3" href="$structcan__bittime__std.html" title="Standard bit&#45;time parameters according to Bosch. " alt="" coords="140,5,255,32"/>
+</map>

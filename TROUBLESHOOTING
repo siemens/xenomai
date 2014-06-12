@@ -1,4 +1,4 @@
-Troubleshooting guide
+Troubleshooting guide for Xenomai 3.x
 
 -------------------------------------------------------------------------------
 
@@ -55,7 +55,7 @@ Table of Contents
     5.4. My application reserves a lot of memory
 
 This file is a troubleshooting guide about various known issues regarding
-Xenomai.
+Xenomai 3.x.
 
 
 1. Kernel configuration

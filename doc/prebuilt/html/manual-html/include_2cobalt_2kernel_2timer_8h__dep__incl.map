@@ -1,0 +1,51 @@
+<map id="include/cobalt/kernel/timer.h" name="include/cobalt/kernel/timer.h">
+<area shape="rect" id="node2" href="$kernel_2synch_8h_source.html" title="include/cobalt/kernel\l/synch.h" alt="" coords="1647,97,1788,138"/>
+<area shape="rect" id="node5" href="$include_2cobalt_2kernel_2thread_8h_source.html" title="include/cobalt/kernel\l/thread.h" alt="" coords="1395,278,1536,319"/>
+<area shape="rect" id="node39" href="$kernel_2cobalt_2timer_8c.html" title="kernel/cobalt/timer.c" alt="" coords="1742,467,1881,493"/>
+<area shape="rect" id="node47" href="$kernel_2cobalt_2posix_2signal_8h_source.html" title="kernel/cobalt/posix\l/signal.h" alt="" coords="2213,369,2344,410"/>
+<area shape="rect" id="node50" href="$kernel_2cobalt_2posix_2timer_8h_source.html" title="kernel/cobalt/posix\l/timer.h" alt="" coords="2109,459,2240,501"/>
+<area shape="rect" id="node3" href="$include_2cobalt_2kernel_2pipe_8h_source.html" title="include/cobalt/kernel\l/pipe.h" alt="" coords="1741,369,1883,410"/>
+<area shape="rect" id="node4" href="$cobalt_2kernel_2registry_8h.html" title="This file is part of the Xenomai project. " alt="" coords="1383,187,1524,229"/>
+<area shape="rect" id="node7" href="$driver_8h.html" title="Real&#45;Time Driver Model for Xenomai, driver API header. " alt="" coords="776,459,917,501"/>
+<area shape="rect" id="node44" href="$kernel_2cobalt_2posix_2cond_8h_source.html" title="kernel/cobalt/posix\l/cond.h" alt="" coords="2008,278,2139,319"/>
+<area shape="rect" id="node45" href="$kernel_2cobalt_2posix_2event_8h_source.html" title="kernel/cobalt/posix\l/event.h" alt="" coords="1803,278,1933,319"/>
+<area shape="rect" id="node46" href="$kernel_2cobalt_2posix_2monitor_8h_source.html" title="kernel/cobalt/posix\l/monitor.h" alt="" coords="1700,187,1831,229"/>
+<area shape="rect" id="node29" href="$kernel_2drivers_2ipc_2internal_8h_source.html" title="kernel/drivers/ipc\l/internal.h" alt="" coords="210,550,331,591"/>
+<area shape="rect" id="node38" href="$registry_8c.html" title="This file is part of the Xenomai project. " alt="" coords="1043,467,1197,493"/>
+<area shape="rect" id="node43" href="$kernel_2cobalt_2posix_2sem_8h_source.html" title="kernel/cobalt/posix\l/sem.h" alt="" coords="1587,369,1717,410"/>
+<area shape="rect" id="node6" href="$include_2cobalt_2kernel_2sched_8h.html" title="Scheduler interface header. " alt="" coords="1216,369,1357,410"/>
+<area shape="rect" id="node40" href="$include_2cobalt_2kernel_2select_8h.html" title="file descriptors events multiplexing header. " alt="" coords="909,369,1051,410"/>
+<area shape="rect" id="node41" href="$kernel_2cobalt_2posix_2thread_8h_source.html" title="kernel/cobalt/posix\l/thread.h" alt="" coords="1381,369,1512,410"/>
+<area shape="rect" id="node30" href="$bufd_8c.html" title="kernel/cobalt/bufd.c" alt="" coords="1376,467,1512,493"/>
+<area shape="rect" id="node31" href="$kernel_2cobalt_2posix_2internal_8h_source.html" title="kernel/cobalt/posix\l/internal.h" alt="" coords="1221,459,1352,501"/>
+<area shape="rect" id="node32" href="$kernel_2cobalt_2posix_2sched_8h_source.html" title="kernel/cobalt/posix\l/sched.h" alt="" coords="2315,459,2445,501"/>
+<area shape="rect" id="node8" href="$include_2cobalt_2kernel_2rtdm_2analogy_2buffer_8h.html" title="Analogy for Linux, buffer related features. " alt="" coords="669,822,819,863"/>
+<area shape="rect" id="node12" href="$rtdm__interface_8c.html" title="Analogy for Linux, user interface (open, read, write, ioctl, proc) " alt="" coords="1117,1094,1267,1135"/>
+<area shape="rect" id="node14" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations. " alt="" coords="777,550,935,591"/>
+<area shape="rect" id="node17" href="$rtdm__helpers_8h.html" title="Analogy for Linux, Operation system facilities. " alt="" coords="958,731,1148,773"/>
+<area shape="rect" id="node19" href="$kernel_2cobalt_2rtdm_2internal_8h_source.html" title="kernel/cobalt/rtdm\l/internal.h" alt="" coords="355,550,481,591"/>
+<area shape="rect" id="node22" href="$drvlib_8c.html" title="Real&#45;Time Driver Model for Xenomai, driver library. " alt="" coords="457,641,583,682"/>
+<area shape="rect" id="node24" href="$kernel_2cobalt_2posix_2select_8c.html" title="This file is part of the Xenomai project. " alt="" coords="1221,550,1352,591"/>
+<area shape="rect" id="node25" href="$posix_2syscall_8c.html" title="This file is part of the Xenomai project. " alt="" coords="1880,550,2011,591"/>
+<area shape="rect" id="node26" href="$rtcan__internal_8h_source.html" title="kernel/drivers/can\l/rtcan_internal.h" alt="" coords="557,550,683,591"/>
+<area shape="rect" id="node27" href="$rtcan__socket_8h_source.html" title="kernel/drivers/can\l/rtcan_socket.h" alt="" coords="1072,550,1197,591"/>
+<area shape="rect" id="node9" href="$analogy_2driver_8h.html" title="Analogy for Linux, driver facilities. " alt="" coords="835,913,983,954"/>
+<area shape="rect" id="node13" href="$transfer_8h.html" title="Analogy for Linux, transfer related features. " alt="" coords="651,913,811,954"/>
+<area shape="rect" id="node10" href="$device_8h.html" title="Analogy for Linux, device related features. " alt="" coords="888,1003,1043,1045"/>
+<area shape="rect" id="node11" href="$kernel_2drivers_2analogy_2buffer_8c.html" title="Analogy for Linux, buffer related features. " alt="" coords="891,1094,1040,1135"/>
+<area shape="rect" id="node15" href="$command_8h_source.html" title="include/cobalt/kernel\l/rtdm/analogy/command.h" alt="" coords="659,641,832,682"/>
+<area shape="rect" id="node16" href="$subdevice_8h.html" title="Analogy for Linux, subdevice related features. " alt="" coords="657,731,831,773"/>
+<area shape="rect" id="node18" href="$rtdm__helpers_8c.html" title="Analogy for Linux, RTDM helpers. " alt="" coords="1059,822,1208,863"/>
+<area shape="rect" id="node20" href="$core_8c.html" title="Real&#45;Time Driver Model for Xenomai, device operation multiplexing. " alt="" coords="306,641,432,682"/>
+<area shape="rect" id="node21" href="$cobalt_2rtdm_2device_8c.html" title="Real&#45;Time Driver Model for Xenomai, device management. " alt="" coords="5,641,131,682"/>
+<area shape="rect" id="node23" href="$kernel_2cobalt_2rtdm_2init_8c.html" title="Real&#45;Time Driver Model for Xenomai. " alt="" coords="155,641,281,682"/>
+<area shape="rect" id="node28" href="$rtcan__list_8h_source.html" title="kernel/drivers/can\l/rtcan_list.h" alt="" coords="1072,641,1197,682"/>
+<area shape="rect" id="node33" href="$include_2copperplate_2init_8h_source.html" title="include/copperplate\l/init.h" alt="" coords="2182,550,2316,591"/>
+<area shape="rect" id="node34" href="$lib_2cobalt_2internal_8h_source.html" title="lib/cobalt/internal.h" alt="" coords="2341,557,2472,584"/>
+<area shape="rect" id="node35" href="$lib_2alchemy_2task_8h_source.html" title="lib/alchemy/task.h" alt="" coords="2496,557,2624,584"/>
+<area shape="rect" id="node36" href="$include_2alchemy_2mutex_8h_source.html" title="include/alchemy/mutex.h" alt="" coords="2387,648,2553,675"/>
+<area shape="rect" id="node37" href="$lib_2alchemy_2mutex_8h_source.html" title="lib/alchemy/mutex.h" alt="" coords="2579,648,2717,675"/>
+<area shape="rect" id="node42" href="$kernel_2cobalt_2posix_2mutex_8h_source.html" title="kernel/cobalt/posix\l/mutex.h" alt="" coords="1587,459,1717,501"/>
+<area shape="rect" id="node48" href="$threadobj_8h_source.html" title="include/copperplate\l/threadobj.h" alt="" coords="2521,459,2655,501"/>
+<area shape="rect" id="node49" href="$include_2alchemy_2task_8h_source.html" title="include/alchemy/task.h" alt="" coords="2673,557,2828,584"/>
+</map>

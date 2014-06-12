@@ -1,0 +1,17 @@
+<map id="include/cobalt/kernel/timer.h" name="include/cobalt/kernel/timer.h">
+<area shape="rect" id="node2" href="$synch_8h_source.html" title="include/cobalt/kernel\l/synch.h" alt="" coords="133,97,275,138"/>
+<area shape="rect" id="node5" href="$thread_8h_source.html" title="include/cobalt/kernel\l/thread.h" alt="" coords="241,278,383,319"/>
+<area shape="rect" id="node3" href="$pipe_8h_source.html" title="include/cobalt/kernel\l/pipe.h" alt="" coords="76,369,217,410"/>
+<area shape="rect" id="node4" href="$registry_8h.html" title="This file is part of the Xenomai project. " alt="" coords="133,187,275,229"/>
+<area shape="rect" id="node7" href="$driver_8h.html" title="Real&#45;Time Driver Model for Xenomai, driver API header. " alt="" coords="241,459,383,501"/>
+<area shape="rect" id="node6" href="$sched_8h.html" title="Scheduler interface header. " alt="" coords="241,369,383,410"/>
+<area shape="rect" id="node16" href="$select_8h.html" title="file descriptors events multiplexing header. " alt="" coords="407,369,548,410"/>
+<area shape="rect" id="node8" href="$buffer_8h.html" title="Analogy for Linux, buffer related features. " alt="" coords="187,822,336,863"/>
+<area shape="rect" id="node12" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations. " alt="" coords="86,550,244,591"/>
+<area shape="rect" id="node15" href="$rtdm__helpers_8h.html" title="Analogy for Linux, Operation system facilities. " alt="" coords="350,731,540,773"/>
+<area shape="rect" id="node9" href="$analogy_2driver_8h.html" title="Analogy for Linux, driver facilities. " alt="" coords="259,913,407,954"/>
+<area shape="rect" id="node11" href="$transfer_8h.html" title="Analogy for Linux, transfer related features. " alt="" coords="75,913,235,954"/>
+<area shape="rect" id="node10" href="$device_8h.html" title="Analogy for Linux, device related features. " alt="" coords="256,1003,411,1045"/>
+<area shape="rect" id="node13" href="$command_8h_source.html" title="include/cobalt/kernel\l/rtdm/analogy/command.h" alt="" coords="49,641,223,682"/>
+<area shape="rect" id="node14" href="$subdevice_8h.html" title="Analogy for Linux, subdevice related features. " alt="" coords="49,731,223,773"/>
+</map>

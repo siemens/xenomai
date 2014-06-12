@@ -1,0 +1,8 @@
+<map id="include/cobalt/kernel/clock.h" name="include/cobalt/kernel/clock.h">
+<area shape="rect" id="node3" href="$list_8h_source.html" title="cobalt/kernel/list.h" alt="" coords="39,104,167,131"/>
+<area shape="rect" id="node5" href="$vfile_8h.html" title="This file is part of the Xenomai project. " alt="" coords="192,104,326,131"/>
+<area shape="rect" id="node8" href="$lock_8h_source.html" title="cobalt/kernel/lock.h" alt="" coords="410,187,544,213"/>
+<area shape="rect" id="node10" href="$assert_8h_source.html" title="cobalt/kernel/assert.h" alt="" coords="479,261,626,288"/>
+<area shape="rect" id="node11" href="$trace_8h_source.html" title="cobalt/kernel/trace.h" alt="" coords="333,336,472,363"/>
+<area shape="rect" id="node15" href="$ancillaries_8h_source.html" title="cobalt/kernel/ancillaries.h" alt="" coords="610,336,779,363"/>
+</map>

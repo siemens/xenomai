@@ -1,0 +1,13 @@
+<map id="Alchemy API" name="Alchemy API">
+<area shape="rect" id="node1" href="$group__alchemy__heap.html" title="Region of memory dedicated to real&#45;time allocation. " alt="" coords="153,5,338,32"/>
+<area shape="rect" id="node2" href="$group__alchemy__pipe.html" title="Two&#45;way communication channel between Xenomai &amp; Linux domains. " alt="" coords="167,56,323,83"/>
+<area shape="rect" id="node3" href="$group__alchemy__sem.html" title="Counting semaphore IPC mechanism. " alt="" coords="175,107,316,133"/>
+<area shape="rect" id="node4" href="$group__alchemy__queue.html" title="real&#45;time IPC mechanism for sending messages of arbitrary size " alt="" coords="162,157,329,184"/>
+<area shape="rect" id="node5" href="$group__alchemy__task.html" title="Services dealing with preemptive multi&#45;tasking. " alt="" coords="154,208,337,235"/>
+<area shape="rect" id="node6" href="$group__alchemy__buffer.html" title="Lightweight FIFO IPC mechanism. " alt="" coords="190,259,301,285"/>
+<area shape="rect" id="node8" href="$group__alchemy__event.html" title="Inter&#45;task notification mechanism based on discrete flags. " alt="" coords="160,309,331,336"/>
+<area shape="rect" id="node9" href="$group__alchemy__cond.html" title="POSIXish condition variable mechanism. " alt="" coords="182,361,309,402"/>
+<area shape="rect" id="node10" href="$group__alchemy__alarm.html" title="General&#45;purpose watchdog timers. " alt="" coords="191,427,300,453"/>
+<area shape="rect" id="node11" href="$group__alchemy__timer.html" title="Services for reading and spinning on the hardware timer. " alt="" coords="152,477,339,504"/>
+<area shape="rect" id="node12" href="$group__alchemy__mutex.html" title="POSIXish mutual exclusion servicesl. " alt="" coords="190,528,301,555"/>
+</map>

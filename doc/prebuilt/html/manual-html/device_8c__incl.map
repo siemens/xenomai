@@ -1,0 +1,31 @@
+<map id="kernel/cobalt/rtdm/device.c" name="kernel/cobalt/rtdm/device.c">
+<area shape="rect" id="node6" href="$apc_8h.html" title="cobalt/kernel/apc.h" alt="" coords="571,344,703,371"/>
+<area shape="rect" id="node9" href="$rtdm_2internal_8h_source.html" title="rtdm/internal.h" alt="" coords="1563,96,1668,123"/>
+<area shape="rect" id="node12" href="$ppd_8h.html" title="cobalt/kernel/ppd.h" alt="" coords="1591,253,1723,280"/>
+<area shape="rect" id="node30" href="$tree_8h_source.html" title="cobalt/kernel/tree.h" alt="" coords="2999,435,3132,461"/>
+<area shape="rect" id="node33" href="$driver_8h.html" title="Real&#45;Time Driver Model for Xenomai, driver API header. " alt="" coords="1949,171,2043,197"/>
+<area shape="rect" id="node13" href="$cobalt_2kernel_2list_8h_source.html" title="cobalt/kernel/list.h" alt="" coords="909,525,1037,552"/>
+<area shape="rect" id="node14" href="$shadow_8h_source.html" title="cobalt/kernel/shadow.h" alt="" coords="1598,435,1753,461"/>
+<area shape="rect" id="node20" href="$cobalt_2kernel_2lock_8h_source.html" title="cobalt/kernel/lock.h" alt="" coords="2206,435,2340,461"/>
+<area shape="rect" id="node26" href="$cobalt_2kernel_2heap_8h_source.html" title="cobalt/kernel/heap.h" alt="" coords="1583,344,1721,371"/>
+<area shape="rect" id="node28" href="$fd_8h_source.html" title="rtdm/fd.h" alt="" coords="2820,344,2895,371"/>
+<area shape="rect" id="node18" href="$cobalt_2uapi_2kernel_2types_8h_source.html" title="cobalt/uapi/kernel\l/types.h" alt="" coords="1830,518,1953,559"/>
+<area shape="rect" id="node19" href="$include_2cobalt_2uapi_2signal_8h_source.html" title="cobalt/uapi/signal.h" alt="" coords="1315,525,1449,552"/>
+<area shape="rect" id="node22" href="$assert_8h_source.html" title="cobalt/kernel/assert.h" alt="" coords="2475,525,2621,552"/>
+<area shape="rect" id="node23" href="$cobalt_2kernel_2trace_8h_source.html" title="cobalt/kernel/trace.h" alt="" coords="2165,608,2304,635"/>
+<area shape="rect" id="node25" href="$cobalt_2kernel_2ancillaries_8h_source.html" title="cobalt/kernel/ancillaries.h" alt="" coords="2581,608,2749,635"/>
+<area shape="rect" id="node27" href="$cobalt_2uapi_2kernel_2heap_8h_source.html" title="cobalt/uapi/kernel\l/heap.h" alt="" coords="2006,427,2129,469"/>
+<area shape="rect" id="node36" href="$include_2cobalt_2kernel_2sched_8h.html" title="Scheduler interface header. " alt="" coords="1849,253,1996,280"/>
+<area shape="rect" id="node38" href="$kernel_2synch_8h_source.html" title="cobalt/kernel/synch.h" alt="" coords="1376,435,1523,461"/>
+<area shape="rect" id="node44" href="$vfile_8h.html" title="This file is part of the Xenomai project. " alt="" coords="1797,344,1931,371"/>
+<area shape="rect" id="node45" href="$intr_8h_source.html" title="cobalt/kernel/intr.h" alt="" coords="2298,253,2427,280"/>
+<area shape="rect" id="node46" href="$include_2cobalt_2kernel_2select_8h.html" title="file descriptors events multiplexing header. " alt="" coords="1151,253,1297,280"/>
+<area shape="rect" id="node47" href="$include_2cobalt_2kernel_2clock_8h.html" title="cobalt/kernel/clock.h" alt="" coords="1373,253,1515,280"/>
+<area shape="rect" id="node48" href="$cobalt_2kernel_2init_8h_source.html" title="cobalt/kernel/init.h" alt="" coords="2452,253,2580,280"/>
+<area shape="rect" id="node37" href="$include_2cobalt_2kernel_2thread_8h_source.html" title="cobalt/kernel/thread.h" alt="" coords="1209,344,1356,371"/>
+<area shape="rect" id="node39" href="$schedqueue_8h_source.html" title="cobalt/kernel/schedqueue.h" alt="" coords="1069,435,1251,461"/>
+<area shape="rect" id="node40" href="$sched-tp_8h_source.html" title="cobalt/kernel/sched&#45;tp.h" alt="" coords="2114,344,2275,371"/>
+<area shape="rect" id="node41" href="$sched-weak_8h_source.html" title="cobalt/kernel/sched\l&#45;weak.h" alt="" coords="2299,337,2433,378"/>
+<area shape="rect" id="node42" href="$sched-sporadic_8h.html" title="Definitions for the SSP scheduling class. " alt="" coords="2458,337,2592,378"/>
+<area shape="rect" id="node43" href="$sched-quota_8h_source.html" title="cobalt/kernel/sched\l&#45;quota.h" alt="" coords="1955,337,2089,378"/>
+</map>

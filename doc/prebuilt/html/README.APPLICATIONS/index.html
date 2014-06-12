@@ -1,0 +1,303 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
+<meta name="generator" content="AsciiDoc 8.6.8" />
+<title>Building and running applications with Xenomai 3.x</title>
+<link rel="stylesheet" href="../asciidoc-css/asciidoc.css" type="text/css" />
+
+
+<script type="text/javascript" src="../asciidoc-js/asciidoc.js"></script>
+<script type="text/javascript">
+/*<![CDATA[*/
+asciidoc.install(3);
+/*]]>*/
+</script>
+</head>
+<body class="article" style="max-width:55em">
+<div id="header">
+<h1>Building and running applications with Xenomai 3.x</h1>
+<div id="toc">
+  <div id="toctitle">Table of Contents</div>
+  <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph"><p>The latest version of this document is available at
+<a href="http://www.xenomai.org/documentation/xenomai-forge/html/README.APPLICATIONS/">this address</a>.</p></div>
+<div class="paragraph"><p>Make sure to read the
+<a href="http://www.xenomai.org/documentation/xenomai-forge/html/README.INSTALL/">installation
+document</a> before going through this one.</p></div>
+<div class="paragraph"><p>For questions, corrections and improvements, write to
+<a href="mailto:xenomai@xenomai.org">the mailing list</a>.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_compiling_a_xenomai_application">1. Compiling a Xenomai application</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>You should use the <code>xeno-config</code> script to get the proper compilation
+and linker flags related to Xenomai, in order to build your
+application for whichever <em>Cobalt</em> or <em>Mercury</em> core.</p></div>
+<div class="paragraph"><p>Here is a trivial Makefile fragment retrieving the compiler and flags
+for building the single-file application <code>vxapp.c</code>, over the VxWorks
+emulation API:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>XENO_CONFIG := /usr/xenomai/bin/xeno-config
+CFLAGS := $(shell $(XENO_CONFIG) --vxworks --cflags)
+LDFLAGS := $(shell $(XENO_CONFIG) --vxworks --ldflags)
+CC := $(shell $(XENO_CONFIG) --cc)
+
+EXECUTABLE := vxapp
+
+all: $(EXECUTABLE)
+
+%: %.c
+        $(CC) -o $@ $&lt; $(CFLAGS) $(LDFLAGS)</code></pre>
+</div></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_running_a_xenomai_application">2. Running a Xenomai application</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>For <em>Cobalt</em>, you will need the real-time core built into the target
+Linux kernel as described in
+<a href="http://www.xenomai.org/documentation/xenomai-forge/html/README.INSTALL/">this
+document</a>.</p></div>
+<div class="paragraph"><p>For <em>Mercury</em>, you need no Xenomai-specific kernel support so far,
+beyond what your host Linux kernel already provides. Your kernel
+should at least provide high resolution timer support
+(<code>CONFIG_HIGH_RES_TIMERS</code>), and likely complete preemption
+(<em>PREEMPT_RT</em>) if your application requires short and bounded
+latencies.</p></div>
+<div class="paragraph"><p>An application recognises a set of options that may be passed on the
+command line, namely:</p></div>
+<div class="hdlist"><table>
+<tr>
+<td class="hdlist1">
+<strong>--&lt;api&gt;-clock-resolution=&lt;ns&gt;</strong>
+<br />
+</td>
+<td class="hdlist2">
+<p style="margin-top: 0;">
+        The clock resolution available with the real-time API, given
+        as a count of nano-seconds, i.e. HZ=(1000000000 / ns).
+</p>
+<div class="paragraph"><p>&lt;api&gt; is the name of one of the existing Xenomai APIs your
+application can be linked against, e.g. <em>psos</em>, <em>vxworks</em> or
+<em>alchemy</em>. When your application combines multiple APIs, you
+may pass several clock-resolution switches to set them all.</p></div>
+<div class="paragraph"><p>The default value depends on the API being considered. For
+instance, the VxWorks &#8482; and pSOS &#8482; emulators default to
+1 millisecond clock rates. The Alchemy API is tickless by
+default, i.e. <code>--alchemy-clock-resolution=1</code>.</p></div>
+</td>
+</tr>
+</table></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/caution.png" alt="Caution" />
+</td>
+<td class="content">Specifying a resolution greater than 1 nanosecond requires
+the low resolution clock support to be available from the Xenomai
+libraries (see the <code>--enable-lores-clock</code>
+<a href="http://www.xenomai.org/documentation/xenomai-forge/html/README.INSTALL/">configuration
+switch</a>).</td>
+</tr></table>
+</div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+<strong>--mem-pool-size=&lt;kb&gt;</strong>
+</dt>
+<dd>
+<p>
+        The initial size in Kilobytes of the main memory pool. This
+        option only makes sense when the TLSF allocator is being used
+        (i.e. <code>--enable-debug</code> is not specified when compiling the
+        Xenomai libraries). This is only a hint, since TLSF will
+        increase the main pool size dynamically as needed, if needed.
+</p>
+<div class="paragraph"><p>However, this option may be used to pre-allocate the specified
+amount of memory to the application process, thus avoiding
+costly system calls to extend the data segment of such process
+while operating in time critical mode.</p></div>
+</dd>
+<dt class="hdlist1">
+<strong>--no-mlock</strong>
+</dt>
+<dd>
+<p>
+        Tells the Xenomai libraries not to lock the process memory
+        while initializing. The application will have to handle this
+        task when and how it sees fit, in order to avoid the extra
+        latency induced by virtual memory paging.  Otherwise,
+        <code>mlockall(MCL_CURRENT | MCL_FUTURE)</code> is automatically invoked
+        as part of the API initialization duties.
+</p>
+<div class="paragraph"><p>This flag only applies to the <em>Mercury</em> core. Memory must be
+locked when invoking dual kernel services, therefore this
+switch is a nop over <em>Cobalt</em>.</p></div>
+</dd>
+<dt class="hdlist1">
+<strong>--registry-root=&lt;path&gt;</strong>
+</dt>
+<dd>
+<p>
+        Tells Xenomai to root the object registry at the given path,
+        instead of <code>/mnt/xenomai</code> by default (see the
+        <code>--enable-registry</code> switch from the configuration options).
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>--no-registry</strong>
+</dt>
+<dd>
+<p>
+        This switch disables registry support at runtime. No real-time
+        objects will be exported to <code>/mnt/xenomai/&lt;session&gt;.&lt;pid&gt;</code>,
+        despite the registry code was compiled in.
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>--session=&lt;label&gt;</strong>
+</dt>
+<dd>
+<p>
+        Name of the session the new process will be part of (or create
+        if not present). If <code>--enable-pshared</code> was given when
+        configuring the Xenomai libraries, this label allows multiple
+        processes giving the same label at startup to operate on the
+        same set of objects.
+</p>
+<div class="paragraph"><p>For instance, a process can post a semaphore created by
+another process from the same session. This is done using a
+common heap area, shared by all processes within the same
+session.</p></div>
+<div class="paragraph"><p>This label is also used to form the registry mount point for
+each process, e.g. <code>/mnt/xenomai/&lt;session&gt;.&lt;pid&gt;</code>. See
+<code>--enable-registry</code> from the build options.</p></div>
+<div class="paragraph"><p>By default, <em>anon</em> is used as the session label.</p></div>
+</dd>
+<dt class="hdlist1">
+<strong>--reset</strong>
+</dt>
+<dd>
+<p>
+        Forces removal of an older session. This only works if the
+        process which initiated the former session has exited,
+        otherwise an error is raised.
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>--cpu-affinity=&lt;cpu[,cpu]&#8230;&gt;</strong>
+</dt>
+<dd>
+<p>
+        Sets the CPU affinity of threads created by the Xenomai
+        libraries within the new process.
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>--version</strong>
+</dt>
+<dd>
+<p>
+        Writes the Xenomai version information to stdout. The program
+        immediately exits with a success code afterwards.
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>--dump-config</strong>
+</dt>
+<dd>
+<p>
+        Dumps the configuration settings to stdout. Those settings are
+        defined as a result of running the configure script. The
+        program immediately exits with a success code afterwards.
+</p>
+</dd>
+</dl></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_valgrind_support">3. Valgrind support</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Running Xenomai applications over <em>Valgrind</em> is currently available to
+the <em>Mercury</em> core only.</p></div>
+<div class="paragraph"><p>When the Valgrind API is available to the application process, the
+configuration symbol CONFIG_XENO_VALGRIND_API is defined at build
+time, and may be tested for existence by the application code. See the
+tool documentation at
+<a href="http://valgrind.org/docs/manual/manual-core-adv.html#manual-core-adv.clientreq/">this address</a>.</p></div>
+<div class="paragraph"><p>The Xenomai autoconf script will detect the Valgrind core header on
+the build system automatically, and define this symbol accordingly
+(i.e. /usr/include/valgrind/valgrind.h).</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/note.png" alt="Note" />
+</td>
+<td class="content">You may need to install the Valgrind development package on your
+build system to provide for the core header files. For instance, such
+package is called <em>valgrind-devel</em> on Fedora.</td>
+</tr></table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_available_real_time_apis">4. Available real-time APIs</h2>
+<div class="sectionbody">
+<div class="hdlist"><table>
+<tr>
+<td class="hdlist1">
+<strong>Alchemy</strong>
+<br />
+</td>
+<td class="hdlist2">
+<p style="margin-top: 0;">
+                This is a re-implementation from scratch of Xenomai&#8217;s
+                2.x <em>native</em> API, fully rebased on the new RTOS
+                abstraction interface.
+</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<strong>pSOS</strong>
+<br />
+</td>
+<td class="hdlist2">
+<p style="margin-top: 0;">
+                <a href="http://www.windriver.com">pSOS &#8482;</a> is a registered
+                trademark of Wind River Systems, Inc.
+</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<strong>VxWorks</strong>
+<br />
+</td>
+<td class="hdlist2">
+<p style="margin-top: 0;">
+                <a href="http://www.windriver.com">VxWorks &#8482;</a> is a registered
+                trademark of Wind River Systems, Inc.
+</p>
+</td>
+</tr>
+</table></div>
+</div>
+</div>
+</div>
+<div id="footnotes"><hr /></div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2014-05-27 15:38:31 CEST
+</div>
+</div>
+</body>
+</html>

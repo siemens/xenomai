@@ -1,0 +1,1094 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
+<meta name="generator" content="AsciiDoc 8.6.8" />
+<title>Installing Xenomai 3.x</title>
+<link rel="stylesheet" href="../asciidoc-css/asciidoc.css" type="text/css" />
+
+
+<script type="text/javascript" src="../asciidoc-js/asciidoc.js"></script>
+<script type="text/javascript">
+/*<![CDATA[*/
+asciidoc.install(3);
+/*]]>*/
+</script>
+</head>
+<body class="article" style="max-width:55em">
+<div id="header">
+<h1>Installing Xenomai 3.x</h1>
+<div id="toc">
+  <div id="toctitle">Table of Contents</div>
+  <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph"><p>The latest version of this document is available at
+<a href="http://www.xenomai.org/documentation/xenomai-forge/html/README.INSTALL/">this address</a>.</p></div>
+<div class="paragraph"><p>For questions, corrections and improvements, write to
+<a href="mailto:xenomai@xenomai.org">the mailing list</a>.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_introduction">1. Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Xenomai 3 is the new architecture of the Xenomai RTOS emulation
+system, which can run seamlessly as a dual kernel (i.e. like the
+legacy Xenomai 2.x, I-pipe based), or over mainline Linux kernels
+(likely PREEMPT-RT enabled, but this is not mandatory, if the latency
+requirements are relaxed).</p></div>
+<div class="paragraph"><p>This new architecture therefore exhibits two real-time cores, selected
+at build time. The dual kernel core nicknamed <em>Cobalt</em>, is a
+significant rework of the Xenomai 2.x system. The native linux
+version, an enhanced implementation of the experimental
+<a href="http://www.osadl.org/Migration-Portability.migration-portability.0.html">Xenomai/SOLO</a>
+work, is called <em>Mercury</em>.</p></div>
+<div class="paragraph"><p>This magic works with the introduction of the "Copperplate" interface,
+which mediates between the real-time API/emulator your application
+uses, and the underlying real-time core. This way, applications are
+able to run in either environments without visible change.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_installation_steps">2. Installation steps</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Xenomai follows a split source model, decoupling the kernel space
+support from the user-space libraries.</p></div>
+<div class="paragraph"><p>To this end, kernel and user-space Xenomai components are respectively
+available under the <code>kernel/</code> and <code>lib/</code> sub-trees. Other top-level
+directories, such as scripts/, testsuite/ and utils/, provide
+additional scripts and programs to be used on either the build host,
+or the runtime target.</p></div>
+<div class="paragraph"><p>The <code>kernel/</code> sub-tree which implements the in-kernel support code is
+seen as a built-in extension of the Linux kernel.  Therefore, the
+standard Linux kernel configuration process should be used to define
+the various settings for the Xenomai kernel components. All of the
+kernel code Xenomai currently introduces implements the <em>Cobalt</em> core
+(i.e. dual kernel configuration). As of today, the <em>Mercury</em> core
+needs no Xenomai-specific code in kernel space.</p></div>
+<div class="paragraph"><p>The <code>lib/</code> sub-tree contains the various user-space libraries exported
+by the Xenomai framework to the applications. This tree is built
+separately from the kernel support. Libraries are built in order to
+support the selected core, either <em>Cobalt</em> or <em>Mercury</em>.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="cobalt-core-install">3. Installing the <em>Cobalt</em> core</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_preparing_the_em_cobalt_em_kernel">3.1. Preparing the <em>Cobalt</em> kernel</h3>
+<div class="paragraph"><p><em>Xenomai/cobalt</em> provides a real-time extension kernel seamlessly
+integrated to Linux, therefore the first step is to build it as part
+of the target kernel. To this end, <code>scripts/prepare-kernel.sh</code> is a
+shell script which sets up the target kernel properly. The syntax is
+as follows:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>$ scripts/prepare-kernel.sh [--linux=&lt;linux-srctree&gt;]
+[--ipipe=&lt;ipipe-patch&gt;] [--arch=&lt;target-arch&gt;]</code></pre>
+</div></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+<code>--linux</code>
+</dt>
+<dd>
+<p>
+specifies the path of the target kernel source tree. Such
+    kernel tree may be already configured or not, indifferently. This
+    path defaults to $PWD.
+</p>
+</dd>
+<dt class="hdlist1">
+<code>--ipipe</code>
+</dt>
+<dd>
+<p>
+specifies the path of the interrupt pipeline (aka I-pipe)
+    patch to apply against the kernel tree. Suitable patches are
+    available with <em>Xenomai/cobalt</em> under
+    <code>kernel/cobalt/arch/&lt;target-arch&gt;/patches</code>. This parameter can be
+    omitted if the I-pipe has already been patched in, or the script
+    shall suggest an appropriate one. The script will detect whether
+    the interrupt pipeline code is already present into the kernel
+    tree, and skip this operation if so.
+</p>
+</dd>
+<dt class="hdlist1">
+<code>--arch</code>
+</dt>
+<dd>
+<p>
+tells the script about the target architecture. If
+    unspecified, the build host architecture suggested as a reasonable
+    default.
+</p>
+</dd>
+</dl></div>
+<div class="paragraph"><p>For instance, the following command would prepare the Linux tree
+located at <code>/home/me/linux-3.8-ipipe</code> in order to patch the Xenomai
+support in:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>$ cd xenomai-forge
+$ scripts/prepare-kernel.sh --linux=/home/me/linux-3.8</code></pre>
+</div></div>
+<div class="paragraph"><p>Note: The script will infer the location of the Xenomai kernel code
+from its own location within the Xenomai source tree. For instance, if
+<code>/home/me/xenomai-forge/scripts/prepare-kernel.sh</code> is executing, then
+the Xenomai kernel code available from
+<code>/home/me/xenomai-forge/kernel/cobalt</code> will be patched in the target
+Linux kernel.</p></div>
+</div>
+<div class="sect2">
+<h3 id="_configuring_and_compiling_the_em_cobalt_em_kernel">3.2. Configuring and compiling the <em>Cobalt</em> kernel</h3>
+<div class="paragraph"><p>Once prepared, the target kernel can be configured as usual. All
+Xenomai configuration options are available from the "Xenomai"
+toplevel Kconfig menu.</p></div>
+<div class="paragraph"><p>There are several important kernel configuration options, documented
+in the <a href="TROUBLESHOOTING.html#kconf">TROUBLESHOOTING</a> guide.</p></div>
+<div class="paragraph"><p>Once configured, the kernel can be compiled as usual.</p></div>
+<div class="paragraph"><p>If you want several different configs/builds at hand, you may reuse
+the same source by adding <code>O=../build-&lt;target&gt;</code> to each make
+invocation.</p></div>
+<div class="paragraph"><p>In order to cross-compile the Linux kernel, pass an ARCH and
+CROSS_COMPILE variable on make command line. See sections
+<a href="#cobalt-core-arm">"Building a <em>Cobalt/arm</em> kernel"</a>,
+<a href="#cobalt-core-powerpc">"Building a <em>Cobalt/powerpc</em> kernel"</a>,
+<a href="#cobalt-core-blackfin">"Building a <em>Cobalt/blackfin</em> kernel"</a>,
+<a href="#cobalt-core-x86">"Building a <em>Cobalt/x86</em> kernel"</a>,
+for examples.</p></div>
+</div>
+<div class="sect2">
+<h3 id="cobalt-build-examples">3.3. Examples of building the <em>Cobalt</em> kernel</h3>
+<div class="paragraph"><p>The examples in following sections use the following conventions:</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+<code>$linux_tree</code>
+</dt>
+<dd>
+<p>
+path to the target kernel sources
+</p>
+</dd>
+<dt class="hdlist1">
+<code>$xenomai_root</code>
+</dt>
+<dd>
+<p>
+path to the Xenomai sources
+</p>
+</dd>
+</dl></div>
+<div class="sect3">
+<h4 id="cobalt-core-x86">3.3.1. Building a <em>Cobalt/x86</em> kernel (32/64bit)</h4>
+<div class="paragraph"><p>Building <em>Xenomai/cobalt</em> for x86 is almost the same for 32bit and 64bit
+platforms. You should note, however, that it is not possible to run
+Xenomai libraries compiled for x86_32 on a kernel compiled for x86_64,
+and conversely.</p></div>
+<div class="paragraph"><p>Assuming that you want to build natively for a x86_64 system (x86_32
+cross-build options from x86_64 appear between brackets), you would
+typically run:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>$ cd $linux_tree
+$ $xenomai_root/scripts/prepare-kernel.sh --arch=x86 \
+  --ipipe=$xenomai_root/kernel/cobalt/arch/x86/patches/ipipe-core-X.Y.Z-x86-NN.patch
+$ make [ARCH=i386] xconfig/gconfig/menuconfig</code></pre>
+</div></div>
+<div class="paragraph"><p>&#8230;configure the kernel (see also the recommended settings
+<a href="http://www.xenomai.org/index.php/Configuring_x86_kernels">here</a>).</p></div>
+<div class="paragraph"><p>Enable Xenomai options, then build with:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>$ make [ARCH=i386] bzImage modules</code></pre>
+</div></div>
+<div class="paragraph"><p>Now, let&#8217;s say that you really want to build Xenomai for a
+Pentium-based x86 32bit platform, using the native host toolchain; the
+typical steps would be as follows:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>$ cd $linux_tree
+$ $xenomai_root/scripts/prepare-kernel.sh --arch=i386 \
+  --ipipe=$xenomai_root/kernel/cobalt/arch/x86/patches/ipipe-core-X.Y.Z-x86-NN.patch
+$ make xconfig/gconfig/menuconfig</code></pre>
+</div></div>
+<div class="paragraph"><p>&#8230;configure the kernel (see also the recommended settings
+<a href="http://www.xenomai.org/index.php/Configuring_x86_kernels">here</a>).</p></div>
+<div class="paragraph"><p>Enable Xenomai options, then build with:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>$ make bzImage modules</code></pre>
+</div></div>
+<div class="paragraph"><p>Similarly, for a 64bit platform, you would use:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>$ cd $linux_tree
+$ $xenomai_root/scripts/prepare-kernel.sh --arch=x86_64 \
+  --ipipe=$xenomai_root/kernel/cobalt/arch/x86/patches/ipipe-core-X.Y.Z-x86-NN.patch
+$ make xconfig/gconfig/menuconfig</code></pre>
+</div></div>
+<div class="paragraph"><p>&#8230;configure the kernel (see also the recommended settings
+<a href="http://www.xenomai.org/index.php/Configuring_x86_kernels">here</a>).</p></div>
+<div class="paragraph"><p>Enable Xenomai options, then build with:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>$ make bzImage modules</code></pre>
+</div></div>
+<div class="paragraph"><p>The remaining examples illustrate how to cross-compile a
+<em>Cobalt</em>-enabled kernel for various architectures. Of course, you would
+have to install the proper cross-compilation toolchain for the target
+system first.</p></div>
+</div>
+<div class="sect3">
+<h4 id="cobalt-core-powerpc">3.3.2. Building a <em>Cobalt/powerpc</em> kernel (32/64bit)</h4>
+<div class="paragraph"><p>A typical cross-compilation setup, in order to build Xenomai for a
+ppc-6xx architecture running a 3.8.13 kernel. We use the DENX ELDK
+cross-compiler:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>$ cd $linux_tree
+$ $xenomai_root/scripts/prepare-kernel.sh --arch=powerpc \
+  --ipipe=$xenomai_root/kernel/cobalt/arch/powerpc/patches/ipipe-core-3.8.13-powerpc-1.patch
+$ make ARCH=powerpc CROSS_COMPILE=ppc_6xx- xconfig/gconfig/menuconfig</code></pre>
+</div></div>
+<div class="paragraph"><p>&#8230;select the kernel and Xenomai options, save the configuration</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>$ make ARCH=powerpc CROSS_COMPILE=powerpc-linux- uImage modules</code></pre>
+</div></div>
+<div class="paragraph"><p>&#8230;manually install the kernel image and modules to the proper location</p></div>
+</div>
+<div class="sect3">
+<h4 id="cobalt-core-blackfin">3.3.3. Building a <em>Cobalt/blackfin</em> kernel</h4>
+<div class="paragraph"><p>The Blackfin is a MMU-less, DSP-type architecture running uClinux.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>$ cd $linux_tree
+$ $xenomai_root/scripts/prepare-kernel.sh --arch=blackfin \
+  --ipipe=$xenomai_root/kernel/cobalt/arch/blackfin/patches/ipipe-core-X.Y.Z-x86-NN.patch
+$ make ARCH=blackfin CROSS_COMPILE=bfin-uclinux- xconfig/gconfig/menuconfig</code></pre>
+</div></div>
+<div class="paragraph"><p>&#8230;select the kernel and Xenomai options, then compile with:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>$ make linux image</code></pre>
+</div></div>
+<div class="paragraph"><p>&#8230;then install as needed</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>$ cp images/linux /tftpboot/...</code></pre>
+</div></div>
+</div>
+<div class="sect3">
+<h4 id="cobalt-core-arm">3.3.4. Building  <em>Cobalt/arm</em> kernel</h4>
+<div class="paragraph"><p>Using codesourcery toolchain named <code>arm-none-linux-gnueabi-gcc</code> and
+compiling for a CSB637 board (AT91RM9200 based), a typical compilation
+will look like:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>$ cd $linux_tree
+$ $xenomai_root/scripts/prepare-kernel.sh --arch=arm \
+  --ipipe=$xenomai_root/kernel/cobalt/arch/arm/patches/ipipe-core-X.Y.Z-x86-NN.patch
+$ mkdir -p $build_root/linux
+$ make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi- O=$build_root/linux \
+  csb637_defconfig
+$ make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi- O=$build_root/linux \
+  bzImage modules</code></pre>
+</div></div>
+<div class="paragraph"><p>&#8230;manually install the kernel image, system map and modules to the proper location</p></div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="mercury-core-install">4. Installing the <em>Mercury</em> core</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>For <em>Mercury</em>, you need no Xenomai-specific kernel support so far,
+beyond what your host Linux kernel already provides. Your kernel
+should at least provide high resolution timer support
+(<code>CONFIG_HIGH_RES_TIMERS</code>), and likely complete preemption
+(<em>PREEMPT_RT</em>) if your application requires short and bounded
+latencies.</p></div>
+<div class="paragraph"><p>Kernels with no real-time support can be used too, likely for basic
+debugging tasks, and/or running applications which do not have strict
+response time requirements.</p></div>
+<div class="paragraph"><p>Therefore, unlike with <em>Cobalt</em>, there is no additional steps for
+preparing and/or configuring the kernel for <em>Mercury</em>.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="library-install">5. Installing the Xenomai libraries and tools</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_prerequisites">5.1. Prerequisites</h3>
+<div class="sect3">
+<h4 id="_generic_requirements_both_cores">5.1.1. Generic requirements (both cores)</h4>
+<div class="ulist"><ul>
+<li>
+<p>
+GCC must have support for legacy atomic builtins (__sync form).
+</p>
+</li>
+<li>
+<p>
+GCC should have a (sane/working) support for TLS preferably,
+although this is not mandatory if building with <code>--disable-tls</code>.
+</p>
+</li>
+</ul></div>
+</div>
+<div class="sect3">
+<h4 id="_em_cobalt_em_specific_requirements">5.1.2. <em>Cobalt</em>-specific requirements</h4>
+<div class="ulist"><ul>
+<li>
+<p>
+The kernel version must be 3.5.7 or better.
+</p>
+</li>
+<li>
+<p>
+An interrupt pipeline (I-pipe) patch must be available for your
+  target kernel. You can find the official patches issued by the
+  Xenomai project <a href="http://download.gna.org/adeos/patches/v3.x/">there</a>.
+  Only patches from the <strong>ipipe-core</strong> series are appropriate, legacy
+  patches from the <strong>adeos-ipipe</strong> series are not.
+</p>
+</li>
+<li>
+<p>
+A timestamp counter (TSC) is required from running on a x86_32
+  hardware. Unlike with Xenomai 2.x, TSC-emulation using a PIT
+  register is not available.
+</p>
+</li>
+</ul></div>
+</div>
+<div class="sect3">
+<h4 id="_em_mercury_em_specific_requirement">5.1.3. <em>Mercury</em>-specific requirement</h4>
+<div class="ulist"><ul>
+<li>
+<p>
+Only [eg]libc-based platforms are currently supported.
+</p>
+</li>
+</ul></div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_configuring">5.2. Configuring</h3>
+<div class="paragraph"><p>A common autoconf script prepares for building the libraries and
+programs, for both the <em>Cobalt</em> and <em>Mercury</em> cores. The core-specific
+code which may be needed internally is automatically and transparently
+selected at compilation-time by the build process.</p></div>
+<div class="paragraph"><p>The options listed below can be passed to this script.</p></div>
+<div class="sect3">
+<h4 id="_generic_configuration_options_both_cores">5.2.1. Generic configuration options (both cores)</h4>
+<div class="hdlist"><table>
+<tr>
+<td class="hdlist1">
+<strong>--with=core=&lt;type&gt;</strong>
+<br />
+</td>
+<td class="hdlist2">
+<p style="margin-top: 0;">
+        Indicates which real-time core you want to build the support
+        libraries for, namely <em>cobalt</em> or <em>mercury</em>. This option
+        defaults to <em>cobalt</em>.
+</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<strong>--prefix=&lt;dir&gt;</strong>
+<br />
+</td>
+<td class="hdlist2">
+<p style="margin-top: 0;">
+        Specifies the root installation path for libraries, include
+        files, scripts and executables. Running <code>$ make install</code>
+        installs these files to <code>$DESTDIR/&lt;dir&gt;</code>.  This directory
+        defaults to /usr/xenomai.
+</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<strong>--enable-debug[=partial]</strong>
+<br />
+</td>
+<td class="hdlist2">
+<p style="margin-top: 0;">
+        This switch controls the debug level. Three levels are
+        available, with varying overhead:
+</p>
+<div class="ulist"><ul>
+<li>
+<p>
+<em>symbols</em> enables debug symbols to be compiled in the
+        libraries and executables, still turning on the optimizer
+        (-O2). This option has no overhead, it is useful to get
+        meaningful backtraces using gdb while running the application
+        at nominal speed.
+</p>
+</li>
+<li>
+<p>
+<em>partial</em> includes <em>symbols</em>, and also turns on internal
+        consistency checks within the Xenomai code (mostly present in
+        the Copperplate layer). The <code>CONFIG_XENO_DEBUG</code> macro is
+        defined, for both the Xenomai libraries and the applications
+        getting their C compilation flags from the <code>xeno-config</code>
+        script (i.e. <code>xeno-config --cflags</code>). The partial debug mode
+        implicitly turns on <code>--enable-assert</code>. A measurable overhead
+        is introduced by this level.  This is the default level when
+        <code>--enable-debug</code> is mentioned with no level specification.
+</p>
+</li>
+<li>
+<p>
+<em>full</em> includes <em>partial</em> settings, but the optimizer is
+        disabled (-O0), and even more consistency checks may be
+        performed.  In addition to <code>__XENO_DEBUG__</code>, the macro
+        <code>CONFIG_XENO_DEBUG_FULL</code> is defined. This level introduces the
+        most overhead, which may triple the worst-case latency, or
+        even more.
+</p>
+<div class="paragraph"><p>Over the <em>Mercury</em> core, enabling <em>partial</em> or <em>full</em> debug
+modes also causes the standard malloc interface to be used
+internally instead of a fast real-time allocator (TLSF). This
+allows debugging memory-related issues with the help of
+<em>Valgrind</em> or other dynamic memory analysers.</p></div>
+</li>
+</ul></div>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<strong>--disable-debug</strong>
+<br />
+</td>
+<td class="hdlist2">
+<p style="margin-top: 0;">
+         Fully turns off all consistency checks and assertions, turns
+         on the optimizer and disables debug symbol generation.
+</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<strong>--enable-assert</strong>
+<br />
+</td>
+<td class="hdlist2">
+<p style="margin-top: 0;">
+        A number of debug assertion statements are present into the
+        Xenomai libraries, checking the internal consistency of the
+        runtime system dynamically (see <code>man assert(3)</code>). Passing
+        <code>--disable-assert</code> to the configure script disables built-in
+        assertions unconditionally. By default, assertions are enabled
+        in partial or full debug modes, disabled otherwise.
+</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<strong>--enable-pshared</strong>
+<br />
+</td>
+<td class="hdlist2">
+<p style="margin-top: 0;">
+        Enable shared multi-processing. When enabled, this option
+        allows multiple processes to share real-time objects
+        (e.g. tasks, semaphores).
+</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<strong>--enable-registry</strong>
+<br />
+</td>
+<td class="hdlist2">
+<p style="margin-top: 0;">
+        Xenomai APIs can export their internal state through a
+        pseudo-filesystem, which files may be read to obtain
+        information about the existing real-time objects, such as
+        tasks, semaphores, message queues and so on.  This feature is
+        supported by <a href="http://fuse.sourceforge.net/">FUSE</a>, which must be
+        available on the target system. Building the Xenomai libraries
+        with the registry support requires the FUSE development
+        libraries to be installed on the build system.
+</p>
+<div class="paragraph"><p>When this option is enabled, the system creates a file
+hierachy under <code>/mnt/xenomai/&lt;session&gt;.&lt;pid&gt;</code> (by default),
+where you can access the internal state of the active
+real-time objects. The session label is obtained from the
+--session runtime switch. E.g. looking at the properties of a
+VxWorks task could be done as follows:</p></div>
+</td>
+</tr>
+</table></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>                $ cat /mnt/xenomai/anon.12656/vxworks/tasks/windTask
+                name       = windTask
+                errno      = 0
+                status     = ready
+                priority   = 70
+                lock_depth = 0</code></pre>
+</div></div>
+<div class="paragraph"><p>You may override the default root of the registry hierarchy by
+using the <code>--registry-root</code> runtime option (see below).</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/note.png" alt="Note" />
+</td>
+<td class="content">When running over <em>Xenomai/cobalt</em>, the <code>/proc/xenomai</code>
+interface is also available for inspecting the core system state.</td>
+</tr></table>
+</div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+<strong>--enable-lores-clock</strong>
+</dt>
+<dd>
+<p>
+        Enables support for low resolution clocks. By default,
+        libraries are built with no support for tick-based timing. If
+        you need such support (e.g. for pSOS &#8482; or VxWorks &#8482;
+        APIs), then you can turn it on using this option.
+</p>
+</dd>
+</dl></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/note.png" alt="Note" />
+</td>
+<td class="content">The POSIX API does not support tick-based timing. Alchemy may
+use it optionally.</td>
+</tr></table>
+</div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+<strong>--enable-clock-monotonic-raw</strong>
+</dt>
+<dd>
+<p>
+        The Xenomai libraries requires a monotonic clock to be
+        available from the underlying POSIX interface. When
+        <code>CLOCK_MONOTONIC_RAW</code> is available on your system, you may
+        want to pass this switch, otherwise <code>CLOCK_MONOTONIC</code> will be
+        used by default.
+</p>
+</dd>
+</dl></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/note.png" alt="Note" />
+</td>
+<td class="content">The <em>Cobalt</em> core implements <code>CLOCK_MONOTONIC_RAW</code>, so this switch
+is turned on by default when building with <code>--with-core=cobalt</code>. On
+the contrary, this option is turned off by default when building for
+the <em>Mercury</em> core, since we don&#8217;t know in advance whether this feature
+does exist on the target kernel.</td>
+</tr></table>
+</div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+<strong>--enable-tls</strong>
+</dt>
+<dd>
+<p>
+        Xenomai can use GCC&#8217;s thread local storage extension (TLS) to
+        speed up the retrieval of the per-thread information it uses
+        internally. This switch enables TLS, use the converse
+        <code>--disable-tls</code> to prevent this.
+</p>
+<div class="paragraph"><p>Due to GCC bugs regarding this feature with some
+release,architecture combinations, whether TLS is turned on by
+default is a per-architecture decision. Currently, this
+feature is enabled for x86 and powerpc by default, other
+architectures will require <code>--enable-tls</code> to be passed to the
+configure script explicitly.</p></div>
+<div class="paragraph"><p>Unless <code>--enable-dlopen-libs</code> is present, the <em>initial-exec</em>
+TLS model is selected.</p></div>
+<div class="paragraph"><p>When TLS is disabled, POSIX&#8217;s thread-specific data management
+services are used internally (i.e. pthread_set/getspecific()).</p></div>
+</dd>
+<dt class="hdlist1">
+<strong>--enable-dlopen-libs</strong>
+</dt>
+<dd>
+<p>
+        This switch allows programs to load Xenomai-based libraries
+        dynamically, using the <code>dlopen(3)</code> routine. Enabling dynamic
+        loading introduces some overhead in TLS accesses when enabled
+        (see <code>--enable-tls</code>), which might be noticeable depending on
+        the architecture.
+</p>
+<div class="paragraph"><p>To support dynamic loading when <code>--enable-tls</code> is turned on,
+the <em>global-dynamic</em> TLS model is automatically selected.</p></div>
+<div class="paragraph"><p>Applications loading <code>libcobalt.so</code> dynamically may want to
+create the XENO_NOSHADOW environment variable prior to calling
+<code>dlopen()</code>, to prevent auto-shadowing of the calling context.</p></div>
+<div class="paragraph"><p>Dynamic loading of Xenomai-based libraries is disabled by
+default.</p></div>
+</dd>
+<dt class="hdlist1">
+<strong>--enable-async-cancel</strong>
+</dt>
+<dd>
+<p>
+        Enables asynchronous cancellation of Xenomai threads created
+        by the real-time APIs, making provision to protect the Xenomai
+        implementation code accordingly.
+</p>
+<div class="paragraph"><p>When disabled, Xenomai assumes that threads may exit due to
+cancellation requests only when they reach cancellation points
+(like system calls). Asynchronous cancellation is enabled by
+default.</p></div>
+</dd>
+<dt class="hdlist1">
+<strong>--enable-smp</strong>
+</dt>
+<dd>
+<p>
+        Turns on SMP support for Xenomai libraries.
+</p>
+</dd>
+</dl></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/caution.png" alt="Caution" />
+</td>
+<td class="content">SMP support must be enabled in Xenomai libraries when the
+client applications are running over a SMP-capable kernel.</td>
+</tr></table>
+</div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+<strong>--enable-fortify</strong>
+</dt>
+<dd>
+<p>
+        Enables support for applications compiled in
+        <code>_FORTIFY_SOURCE</code> mode.
+</p>
+</dd>
+<dt class="hdlist1">
+<strong>--disable-valgrind-client</strong>
+</dt>
+<dd>
+<p>
+        Turns off the Valgrind client support, forcing
+        <code>CONFIG_XENO_VALGRIND_API</code> off in the Xenomai configuration
+        header.
+</p>
+</dd>
+</dl></div>
+</div>
+<div class="sect3">
+<h4 id="_em_cobalt_em_specific_configuration_options">5.2.2. <em>Cobalt</em>-specific configuration options</h4>
+<div class="tableblock">
+<table rules="cols"
+width="100%"
+frame="hsides"
+cellspacing="0" cellpadding="4">
+<col width="33%" />
+<col width="33%" />
+<col width="33%" />
+<thead>
+<tr>
+<th align="center" valign="top">NAME              </th>
+<th align="center" valign="top">DESCRIPTION                    </th>
+<th align="center" valign="top">DEFAULT
+<span class="footnote" id="_footnote_disable"><br />[Each option enabled by default can be forcibly disabled by passing <code>--disable-&lt;option&gt;</code> to the configure script.]<br /></span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" valign="top"><p class="table"><code>--enable-x86-vsyscall</code></p></td>
+<td align="left" valign="top"><p class="table">Use the x86/vsyscall interface
+                        for issuing syscalls. If disabled,
+                        the legacy 0x80 vector will be used.
+                        Turning on this option requires NPTL.</p></td>
+<td align="left" valign="top"><p class="table">enabled</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table"><code>--enable-arm-tsc</code></p></td>
+<td align="left" valign="top"><p class="table">Enable ARM TSC emulation.
+                        <span class="footnote"><br />[In the unusual
+                        situation where Xenomai
+                        does not support the kuser generic
+                        emulation for the target SOC, use
+                        this option to specify another tsc
+                        emulation method.
+                        See <code>--help</code> for a list of valid
+                        values.]<br /></span></p></td>
+<td align="left" valign="top"><p class="table">kuser</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table"><code>--enable-arm-quirks</code></p></td>
+<td align="left" valign="top"><p class="table">Enable quirks for specific ARM
+                        SOCs Currently sa1100 and
+                        xscale3 are supported.</p></td>
+<td align="left" valign="top"><p class="table">disabled</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_cross_compilation">5.3. Cross-compilation</h3>
+<div class="paragraph"><p>In order to cross-compile the Xenomai libraries and programs, you will
+need to pass a <code>--host</code> and <code>--build</code> option to the configure
+script. The <code>--host</code> option allow to select the architecture for which
+the libraries and programs are built. The <code>--build</code> option allows to
+choose the architecture on which the compilation tools are run,
+i.e. the system running the configure script.</p></div>
+<div class="paragraph"><p>Since cross-compiling requires specific tools, such tools are
+generally prefixed with the host architecture name; for example, a
+compiler for the PowerPC architecture may be named
+<code>powerpc-linux-gcc</code>.</p></div>
+<div class="paragraph"><p>When passing <code>--host=powerpc-linux</code> to configure, it will
+automatically use <code>powerpc-linux-</code> as a prefix to all
+compilation tools names and infer the host architecture name from this
+prefix. If configure is unable to infer the architecture name from the
+cross-compilation tools prefix, you will have to manually pass the
+name of all compilation tools using at least the CC and LD, variables
+on configure command line.</p></div>
+<div class="paragraph"><p>The easiest way to build a GNU cross-compiler might involve using
+crosstool-ng, available <a href="http://crosstool-ng.org/">here</a>.</p></div>
+<div class="paragraph"><p>If you want to avoid to build your own cross compiler, you might if
+find easier to use the ELDK. It includes the GNU cross development
+tools, such as the compilers, binutils, gdb, etc., and a number of
+pre-built target tools and libraries required on the target
+system. See <a href="http://www.denx.de/wiki/DULG/ELDK">here</a> for further
+details.</p></div>
+<div class="paragraph"><p>Some other pre-built toolchains:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Mentor Sourcery CodeBench Lite Edition, available
+<a href="http://www.mentor.com/embedded-software/sourcery-tools/sourcery-codebench/editions/lite-edition/">here</a>;
+</p>
+</li>
+<li>
+<p>
+Linaro toolchain (for the ARM architecture), available
+<a href="https://launchpad.net/linaro-toolchain-binaries">here</a>.
+</p>
+</li>
+</ul></div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="library-install-examples">6. Examples of building the Xenomai libraries and tools</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>The examples in following sections use the following conventions:</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+<code>$xenomai_root</code>
+</dt>
+<dd>
+<p>
+path to the Xenomai sources
+</p>
+</dd>
+<dt class="hdlist1">
+<code>$build_root</code>
+</dt>
+<dd>
+<p>
+path to a clean build directory
+</p>
+</dd>
+<dt class="hdlist1">
+<code>$staging_dir</code>
+</dt>
+<dd>
+<p>
+path to a directory that will hold the installed file
+ temporarily before they are moved to their final location; when used
+ in a cross-compilation setup, it is usually a NFS mount point from
+ the target&#8217;s root directory to the local build host, as a
+ consequence of which running <code>make&#160;DESTDIR=$staging_dir&#160;install</code> on
+ the host immediately updates the target system with the installed
+ programs and libraries.
+</p>
+</dd>
+</dl></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/caution.png" alt="Caution" />
+</td>
+<td class="content">In the examples below, make sure to add <code>--enable-smp</code> to the
+configure script options if building for a SMP-enabled kernel.</td>
+</tr></table>
+</div>
+<div class="sect2">
+<h3 id="_building_the_x86_libraries_32_64bit">6.1. Building the x86 libraries (32/64bit)</h3>
+<div class="paragraph"><p>Assuming that you want to build the <em>Mercury</em> libraries natively for a
+x86_64/SMP system, enabling shared multi-processing support. You would
+typically run:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>$ mkdir $build_root &amp;&amp; cd $build_root
+$ $xenomai_root/configure --with-core=mercury --enable-smp --enable-pshared
+$ make install</code></pre>
+</div></div>
+<div class="paragraph"><p>Conversely, cross-building the <em>Cobalt</em> libraries from x86_64 with the
+same feature set, for running on x86_32 could be:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>$ mkdir $build_root &amp;&amp; cd $build_root
+$ $xenomai_root/configure --with-core=cobalt --enable-smp --enable-pshared \
+  --host=i686-linux CFLAGS="-m32 -O2" LDFLAGS="-m32"
+$ make install</code></pre>
+</div></div>
+<div class="paragraph"><p>After installing the build tree (i.e. using "make install"), the
+installation root should be populated with the librairies, programs
+and header files you can use to build Xenomai-based real-time
+applications.  This directory path defaults to <code>/usr/xenomai</code>.</p></div>
+<div class="paragraph"><p>The remaining examples illustrate how to cross-compile Xenomai for
+various architectures. Of course, you would have to install the proper
+cross-compilation toolchain for the target system first.</p></div>
+</div>
+<div class="sect2">
+<h3 id="_building_the_ppc32_libraries">6.2. Building the PPC32 libraries</h3>
+<div class="paragraph"><p>A typical cross-compilation setup, in order to build the <em>Cobalt</em>
+libraries for a ppc-6xx architecture. In that example, we want the
+debug symbols to be generated for the executable, with no runtime
+overhead though. We use the DENX ELDK cross-compiler:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>$ cd $build_root
+$ $xenomai_root/configure --host=powerpc-linux --with-core=cobalt \
+  --enable-debug=symbols
+$ make DESTDIR=$staging_dir install</code></pre>
+</div></div>
+</div>
+<div class="sect2">
+<h3 id="_building_the_ppc64_libraries">6.3. Building the PPC64 libraries</h3>
+<div class="paragraph"><p>Same process than for a 32bit PowerPC target, using a crosstool-built
+toolchain for ppc64/SMP.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>$ cd $build_root
+$ $xenomai_root/configure --host=powerpc64-unknown-linux-gnu \
+  --with-core=cobalt --enable-smp
+$ make DESTDIR=$staging_dir install</code></pre>
+</div></div>
+</div>
+<div class="sect2">
+<h3 id="_building_the_blackfin_libraries">6.4. Building the Blackfin libraries</h3>
+<div class="paragraph"><p>Another cross-compilation setup, in order to build the <em>Cobalt</em>
+libraries for the Blackfin architecture. We use
+<a href="http://blackfin.uclinux.org/doku.php?id=toolchain:installing">ADI&#8217;s
+toolchain</a> for this purpose:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>$ mkdir $build_root &amp;&amp; cd $build_root
+$ $xenomai_root/configure --host=bfin-linux-uclibc --with-core=cobalt
+$ make DESTDIR=$staging_dir install</code></pre>
+</div></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/note.png" alt="Note" />
+</td>
+<td class="content">Xenomai uses the FDPIC shared library format on this
+architecture. In case of problem running the testsuite, try restarting
+the last two build steps, passing the <code>--disable-shared</code> option to the
+"configure" script.</td>
+</tr></table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_building_the_arm_libraries">6.5. Building the ARM libraries</h3>
+<div class="paragraph"><p>Using codesourcery toolchain named <code>arm-none-linux-gnueabi-gcc</code> and
+compiling for a CSB637 board (AT91RM9200 based), a typical cross-compilation
+from a x86_32 desktop would look like:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>$ mkdir $build_root/xenomai &amp;&amp; cd $build_root/xenomai
+$ $xenomai_root/configure CFLAGS="-march=armv4t" LDFLAGS="-march=armv4t" \
+  --build=i686-pc-linux-gnu --host=arm-none-linux-gnueabi- --with-core=cobalt
+$ make DESTDIR=$staging_dir install</code></pre>
+</div></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="../asciidoc-icons/important.png" alt="Important" />
+</td>
+<td class="content">Unlike previous releases, Xenomai no longer passes any arm
+architecture specific flags, or FPU flags to gcc, so, users are
+expected to pass them using the CFLAGS and LDFLAGS variables as
+demonstrated above, where the AT91RM9200 is based on the ARM920T core,
+implementing the <code>armv4</code> architecture. The following table summarizes
+the CFLAGS and options which were automatically passed in previous
+revisions and which now need to be explicitely passed to configure,
+for the supported SOCs:</td>
+</tr></table>
+</div>
+<div class="tableblock">
+<table rules="cols"
+width="100%"
+frame="hsides"
+cellspacing="0" cellpadding="4">
+<caption class="title">Table 1. ARM configure options and compilation flags</caption>
+<col width="33%" />
+<col width="33%" />
+<col width="33%" />
+<thead>
+<tr>
+<th align="center" valign="top">SOC       </th>
+<th align="center" valign="top"> CFLAGS                           </th>
+<th align="center" valign="top"> configure options</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" valign="top"><p class="table">at91rm9200</p></td>
+<td align="left" valign="top"><p class="table"><code>-march=armv4t -msoft-float</code></p></td>
+<td align="left" valign="top"><p class="table"><code></code></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">at91sam9x</p></td>
+<td align="left" valign="top"><p class="table"><code>-march=armv5 -msoft-float</code></p></td>
+<td align="left" valign="top"><p class="table"><code></code></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">imx1</p></td>
+<td align="left" valign="top"><p class="table"><code>-march=armv4t -msoft-float</code></p></td>
+<td align="left" valign="top"><p class="table"><code></code></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">imx21</p></td>
+<td align="left" valign="top"><p class="table"><code>-march=armv5 -msoft-float</code></p></td>
+<td align="left" valign="top"><p class="table"><code></code></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">imx31</p></td>
+<td align="left" valign="top"><p class="table"><code>-march=armv6 -mfpu=vfp</code></p></td>
+<td align="left" valign="top"><p class="table"><code></code></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">imx51/imx53</p></td>
+<td align="left" valign="top"><p class="table"><code>-march=armv7-a -mfpu=vfp3</code>
+                <span class="footnote" id="_footnote_armv7"><br />[Depending on the                 gcc versions the flag for armv7                 may be <code>-march=armv7-a</code> or                 <code>-march=armv7a</code>]<br /></span></p></td>
+<td align="left" valign="top"><p class="table"><code></code></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">imx6q</p></td>
+<td align="left" valign="top"><p class="table"><code>-march=armv7-a -mfpu=vfp3</code> <span class="footnoteref"><br /><a href="#_footnote_armv7">[armv7]</a><br /></span></p></td>
+<td align="left" valign="top"><p class="table"><code>--enable-smp</code></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">ixp4xx</p></td>
+<td align="left" valign="top"><p class="table"><code>-march=armv5 -msoft-float</code></p></td>
+<td align="left" valign="top"><p class="table"><code><code>--enable-arm-tsc=ixp4xx</code></code></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">omap3</p></td>
+<td align="left" valign="top"><p class="table"><code>-march=armv7-a -mfpu=vfp3</code> <span class="footnoteref"><br /><a href="#_footnote_armv7">[armv7]</a><br /></span></p></td>
+<td align="left" valign="top"><p class="table"><code></code></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">omap4</p></td>
+<td align="left" valign="top"><p class="table"><code>-march=armv7-a -mfpu=vfp3</code> <span class="footnoteref"><br /><a href="#_footnote_armv7">[armv7]</a><br /></span></p></td>
+<td align="left" valign="top"><p class="table"><code>--enable-smp</code></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">orion</p></td>
+<td align="left" valign="top"><p class="table"><code>-march=armv5 -mfpu=vfp</code></p></td>
+<td align="left" valign="top"><p class="table"><code></code></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">pxa</p></td>
+<td align="left" valign="top"><p class="table"><code>-march=armv5 -msoft-float</code></p></td>
+<td align="left" valign="top"><p class="table"><code></code></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">pxa3xx</p></td>
+<td align="left" valign="top"><p class="table"><code>-march=armv5 -msoft-float</code></p></td>
+<td align="left" valign="top"><p class="table"><code>--enable-arm-quirks=xscale3</code></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">s3c24xx</p></td>
+<td align="left" valign="top"><p class="table"><code>-march=armv4t -msoft-float</code></p></td>
+<td align="left" valign="top"><p class="table"><code></code></p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">sa1100</p></td>
+<td align="left" valign="top"><p class="table"><code>-march=armv4t -msoft-float</code></p></td>
+<td align="left" valign="top"><p class="table"><code>--enable-arm-quirks=sa1100</code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="paragraph"><p>It is possible to build for an older architecture version (v6 instead
+of v7, or v4 instead of v5), if your toolchain does not support the
+target architecture, the only restriction being that if SMP is
+enabled, the architecture should not be less than v6.</p></div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_testing_the_installation">7. Testing the installation</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_booting_the_em_cobalt_em_kernel">7.1. Booting the <em>Cobalt</em> kernel</h3>
+<div class="paragraph"><p>In order to test the Xenomai installation over <em>Cobalt</em>, you should
+first try to boot the patched kernel. Check the kernel boot log for
+messages like these:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>$ dmesg | grep -i xenomai
+I-pipe: head domain Xenomai registered.
+[Xenomai] Cobalt vX.Y.Z enabled</code></pre>
+</div></div>
+<div class="paragraph"><p>If the kernel fails booting, or the log messages indicates an error
+status instead, see the
+<a href="TROUBLESHOOTING.html#kerror">TROUBLESHOOTING</a> guide.</p></div>
+</div>
+<div class="sect2">
+<h3 id="_testing_the_real_time_system_both_cores">7.2. Testing the real-time system (both cores)</h3>
+<div class="paragraph"><p>First, run the latency test:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>$ /usr/xenomai/bin/latency</code></pre>
+</div></div>
+<div class="paragraph"><p>The latency test should display a message every second with minimum,
+maximum and average latency values. If this test displays an error
+message, hangs, or displays unexpected values, see the
+<a href="TROUBLESHOOTING.html#latency">TROUBLESHOOTING</a> guide.</p></div>
+<div class="paragraph"><p>If the latency test succeeds, you should try next to run the
+<code>xeno-test</code> test in order to assess the worst-case latency of your
+system. Try:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><code>$ xeno-test --help</code></pre>
+</div></div>
+</div>
+</div>
+</div>
+</div>
+<div id="footnotes"><hr /></div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2014-05-27 15:38:31 CEST
+</div>
+</div>
+</body>
+</html>
