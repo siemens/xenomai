@@ -869,9 +869,10 @@ INPUT                  =						\
 # directories that contain example code fragments that are included (see
 # the \include command).
 
-EXAMPLE_PATH           =			\
-		       @top_srcdir@/demo/posix	\
-		       @top_srcdir@/demo/alchemy
+EXAMPLE_PATH           =				\
+		       @top_srcdir@/demo/posix		\
+		       @top_srcdir@/demo/alchemy	\
+		       @top_srcdir@/utils
 
 # The INCLUDE_PATH tag can be used to specify one or more directories that
 # contain include files that are not input files but should be processed by

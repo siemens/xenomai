@@ -231,7 +231,7 @@
  * @example rtcanconfig.c
  * @example rtcansend.c
  * @example rtcanrecv.c
- * @example rtcan_rtt.c
+ * @example can-rtt.c
  * @}
  *
  * @}
