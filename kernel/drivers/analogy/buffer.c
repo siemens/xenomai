@@ -821,8 +821,7 @@ ssize_t a4l_read_buffer(struct a4l_device_context * cxt, void *bufdata, size_t n
 	}
 
 	if (!a4l_subd_is_input(subd)) {
-		__a4l_err("a4l_read: current context "
-			  "does not work with an input subdevice\n");
+		__a4l_err("a4l_read: operation requires an input subdevice \n");
 		return -EINVAL;
 	}
 
@@ -923,8 +922,7 @@ ssize_t a4l_write_buffer(struct a4l_device_context *cxt, const void *bufdata, si
 	}
 
 	if (!a4l_subd_is_output(subd)) {
-		__a4l_err("a4l_write: current context "
-			  "does not work with an output subdevice\n");
+		__a4l_err("a4l_write: operation requires an output subdevice \n");
 		return -EINVAL;
 	}
 
