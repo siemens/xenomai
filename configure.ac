@@ -879,7 +879,6 @@ AC_CONFIG_FILES([ \
 if test \! x$XENO_RUN_DOC = x ; then
       AC_CONFIG_FILES([ \
 	doc/Makefile \
-	doc/man/Makefile \
 	doc/doxygen/Makefile \
 	doc/doxygen/manual-common.conf \
 	doc/doxygen/manual-html.conf \

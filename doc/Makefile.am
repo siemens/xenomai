@@ -1,8 +1,8 @@
-SUBDIRS=doxygen asciidoc man
+SUBDIRS=doxygen asciidoc
 
 RESYNC_SCRIPT=$(top_srcdir)/scripts/maint/resync-doc
 
-doxygen asciidoc man: FORCE
+doxygen asciidoc: FORCE
 	$(MAKE) -C $@
 
 resync prebuild: FORCE

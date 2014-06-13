@@ -4,12 +4,12 @@
 # Parameters :
 # HTML_DOCS list of html documentation directories
 # PDF_DOCS list of pdf files
-# PS_DOCS list of ps files
+# MAN_DOCS list of man files
 #
 # HTML_DOCSDIR: where directories listed in HTML_DOCS should be taken from (this
 # can be from . or from a directory containing pre-built versions)
 #
-# PDF_DOCSDIR & PS_DOCSDIR: same thing for pdf and ps files.
+# PDF_DOCSDIR & MAN_DOCSDIR: same thing for pdf and man files.
 docdir=@docdir@
 
 doc_top_distdir=$(top_builddir)/$(PACKAGE)-$(VERSION)
@@ -37,14 +37,14 @@ install-pdfdocs: $(PDF_DOCS:%=$(PDF_DOCSDIR)%)
 	    $(INSTALL_DATA) $$f $$dest; \
 	done
 
-install-psdocs: $(PS_DOCS:%=$(PS_DOCSDIR)%)
-	docs="$^"; dest=$(DESTDIR)$(docdir)/ps; \
+install-mandocs: $(MAN_DOCS:%=$(MAN_DOCSDIR)%)
+	docs="$^"; dest=$(DESTDIR)$(docdir)/man; \
 	$(mkinstalldirs) $$dest && \
 	for f in $$docs; do \
 	    $(INSTALL_DATA) $$f $$dest; \
 	done
 
-install-docs-local: install-htmldocs install-psdocs install-pdfdocs
+install-docs-local: install-htmldocs install-pdfdocs install-mandocs
 
 dist-htmldocs: $(HTML_DOCS:%=$(HTML_DOCSDIR)%)
 	docs="$(HTML_DOCS)"; abs_builddir=$$PWD; \
@@ -67,23 +67,21 @@ dist-pdfdocs: $(PDF_DOCS:%=$(PDF_DOCSDIR)%)
 	    $(INSTALL_DATA) $$f $$dest; \
 	done
 
-dist-psdocs: $(PS_DOCS:%=$(PS_DOCSDIR)%)
-	docs="$^"; dest=$(GEN_DOC_DIST_ROOT)/ps; \
+dist-mandocs: $(MAN_DOCS:%=$(MAN_DOCSDIR)%)
+	docs="$^"; dest=$(GEN_DOC_DIST_ROOT)/man; \
 	$(mkinstalldirs) $$dest && \
 	for f in $$docs; do \
 	    $(INSTALL_DATA) $$f $$dest; \
 	done
 
-dist-docs-hook: all-local dist-htmldocs dist-pdfdocs dist-psdocs
-
-
+dist-docs-hook: all-local dist-htmldocs dist-mandocs dist-pdfdocs
 
 # To make distcheck happy.
 uninstall-docs:
-	if test -n "$(HTML_DOCS)" -o -n "$(PDF_DOCS)" -o -n "$(PS_DOCS)"; then \
+	if test -n "$(HTML_DOCS)" -o -n "$(PDF_DOCS)" -o -n "$(MAN_DOCS)"; then \
 	    targets="$(HTML_DOCS:%=$(DESTDIR)$(docdir)/html/%) \
 		$(PDF_DOCS:%=$(DESTDIR)$(docdir)/pdf/%) \
-		$(PS_DOCS:%=$(DESTDIR)$(docdir)/ps/%)"; \
+		$(MAN_DOCS:%=$(DESTDIR)$(docdir)/man/%)"; \
 	    for t in $$targets; do \
 		if test -d $$t; then $(RM) $$t/*; $(RM) -r $$t; \
 		else $(RM) $$t; fi; \

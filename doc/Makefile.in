@@ -338,7 +338,7 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-SUBDIRS = doxygen asciidoc man
+SUBDIRS = doxygen asciidoc
 RESYNC_SCRIPT = $(top_srcdir)/scripts/maint/resync-doc
 all: all-recursive
 
@@ -651,7 +651,7 @@ uninstall-am:
 	ps ps-am tags tags-am uninstall uninstall-am
 
 
-doxygen asciidoc man: FORCE
+doxygen asciidoc: FORCE
 	$(MAKE) -C $@
 
 resync prebuild: FORCE

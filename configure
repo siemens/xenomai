@@ -14112,7 +14112,7 @@ ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scri
 
 
 if test \! x$XENO_RUN_DOC = x ; then
-      ac_config_files="$ac_config_files doc/Makefile doc/man/Makefile doc/doxygen/Makefile doc/doxygen/manual-common.conf doc/doxygen/manual-html.conf doc/doxygen/manual-pdf.conf doc/asciidoc/Makefile"
+      ac_config_files="$ac_config_files doc/Makefile doc/doxygen/Makefile doc/doxygen/manual-common.conf doc/doxygen/manual-html.conf doc/doxygen/manual-pdf.conf doc/asciidoc/Makefile"
 
 fi
 
@@ -15257,7 +15257,6 @@ do
     "include/vxworks/Makefile") CONFIG_FILES="$CONFIG_FILES include/vxworks/Makefile" ;;
     "include/psos/Makefile") CONFIG_FILES="$CONFIG_FILES include/psos/Makefile" ;;
     "doc/Makefile") CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
-    "doc/man/Makefile") CONFIG_FILES="$CONFIG_FILES doc/man/Makefile" ;;
     "doc/doxygen/Makefile") CONFIG_FILES="$CONFIG_FILES doc/doxygen/Makefile" ;;
     "doc/doxygen/manual-common.conf") CONFIG_FILES="$CONFIG_FILES doc/doxygen/manual-common.conf" ;;
     "doc/doxygen/manual-html.conf") CONFIG_FILES="$CONFIG_FILES doc/doxygen/manual-html.conf" ;;
