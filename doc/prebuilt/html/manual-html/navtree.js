@@ -30,15 +30,16 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "16550A__io_8h_source.html",
-"dir_5a38c1f94216cded26ec8a32c2398c47.html",
-"functions_g.html",
-"group__analogy__lib__async1.html#ga445f702491148979ffca8185822098b2",
-"group__core__thread__states.html#gae7835ab0a2123b72a6818c6ea3923ba0",
-"group__rtdm__sync__spinlock.html#gad122b937f723fade24e729dcf1374ac6",
-"kernel_2cobalt_2rtdm_2internal_8h_source.html",
-"ni__tio_8h.html#a5019009aec1d283449b8d620ddb50869a7134fab47347a4c4c414428d71dbb185",
-"rtdm_2uapi_2ipc_8h.html#aabfcbcb5ac86a1edac4035264bc7d2b8afb2400ca0886ef0a4eff1328afd92c18",
-"structrtdm__device.html#aed46d0d1567069de23a7400ff987610b"
+"dir_58f64ab01bd9771d8c5795837d9008f0.html",
+"functions_func.html",
+"group__analogy__lib__async1.html#ga43ab969b00aae973ef4b67c234b17720",
+"group__core__thread__states.html#ga4d188db22a4cc3f521934cdcc6ba7d06",
+"group__rtdm__nrtsignal.html#ga4417c31c4990c3655f8ab4e7de6afa49",
+"kernel_2cobalt_2arch_2blackfin_2include_2asm_2xenomai_2uapi_2syscall_8h_source.html",
+"ni__stc_8h.html#a052b1e54e28cc2e4c62bd1bb2e0141b2a6d016828a16379e04224989496fa22df",
+"rtdm_2uapi_2can_8h.html#gae4ba49824d17e7d06300cb8b4a4bff45",
+"structa4l__subdevice.html#af9aac6252faa3c04e045819823977ac8",
+"vfile_8h.html#ga7f46f9d1249c5d855b5ead672a0d6ee5"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

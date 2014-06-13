@@ -1,0 +1,178 @@
+'\" t
+.\"     Title: xeno-config
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 2006/03/27
+.\"    Manual: Xenomai Manual
+.\"    Source: Xenomai 2.99.0
+.\"  Language: English
+.\"
+.TH "XENO\-CONFIG" "1" "2006/03/27" "Xenomai 2\&.99\&.0" "Xenomai Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+xeno-config \- Display Xenomai libraries configuration
+.SH "SYNOPSIS"
+.sp
+\fBxeno\-config\fR
+.sp
+\fBxeno\-config\fR \fB\-\-v\fR | \fB\-\-verbose\fR
+.PP
+\fBxeno\-config \-\-help\fR
+.RS 4
+\fBxeno\-config\fR
+[\fB\-\-version\fR] [\fB\-\-cc\fR] [\fB\-\-arch\fR] [\fB\-\-prefix\fR] [\fB\-\-skin native|posix|psos|rtdm|uitron|vrtx|vxworks\fR] [\fB\-\-cflags\fR] [\fB\-\-ldflags\fR] [\fB\-\-lib\fR*\fB\-dir\fR|\fB\-\-library\-dir\fR|\fB\-\-libdir\fR|\fB\-\-user\-libdir\fR]
+.RE
+.SH "DESCRIPTION"
+.sp
+\fBxeno\-config\fR is a script that is used to to display the compiler and linker flags that are required for building applications that use Xenomai\&. Any combination of options can be chosen (except \fB\-\-verbose\fR and \fB\-\-help\fR) to display configuration information, and options can be given in any order\&. The command output one line for each option, in the same order as the options\&.
+.sp
+When \fBxeno\-config \-\-verbose\fR is executed, all configuration information is displayed in a different, more human\-readable format\&.
+.sp
+When \fBxeno\-config\fR is executed without any options, the output is equivalent to than when executing \fBxeno\-config \-\-verbose\fR then \fBxeno\-config \-\-help\fR\&.
+.SH "OPTIONS"
+.PP
+\fB\-\-v, \-\-verbose\fR
+.RS 4
+Outputs all configuration information, in a human\-readable format\&.
+.RE
+.PP
+\fB\-\-help\fR
+.RS 4
+Outputs the list of available command\-line options\&.
+.RE
+.PP
+\fB\-\-version\fR
+.RS 4
+Outputs one line with the installed Xenomai version\&.
+.RE
+.PP
+\fB\-\-cc\fR
+.RS 4
+Outputs one line with the path to the C compiler command that was used to compiled Xenomai\&.
+.RE
+.PP
+\fB\-\-arch\fR
+.RS 4
+Outputs one line with the architecture to compile to, e\&.g\&. i386\&. May be different from the architecture of the currently running system, if cross\-compiling\&.
+.RE
+.PP
+\fB\-\-prefix\fR
+.RS 4
+Outputs one line with the absolute path to the base Xenomai installation directory\&.
+.RE
+.PP
+\fB\-\-skin\fR
+.RS 4
+Choose the skin for which xeno\-config should print the compilation flags\&.
+.RE
+.PP
+\fB\-\-cflags\fR
+.RS 4
+Outputs one line with the C compiler command\-line options that are necessary to compile applications that use the Xenomai skin passed to the
+\fB\-\-skin\fR
+option\&.
+.RE
+.PP
+\fB\-\-ldflags\fR
+.RS 4
+Outputs one line with the C compiler command\-line options that are necessary to link applications that use the Xenomai skin passed to the
+\fB\-\-skin\fR
+option with the necessary libraries\&.
+.RE
+.PP
+\fB\-\-lib\fR*\fB\-dir, \-\-library\-dir, \-\-libdir, \-\-user\-libdir\fR
+.RS 4
+Outputs one line with the absolute path to Xenomai\(cqs libraries\&. In the \-\-lib*\-dir option name, the
+\fB*\fR
+is meant as a wildcard:
+\fB\-\-lib\-dir\fR,
+\fB\-\-libfoo\-dir\fR
+and
+\fB\-\-libbar\-dir\fR
+are all valid and synonymous options\&.
+.RE
+.SH "DEPRECATED OPTIONS"
+.PP
+\fB\-\-xeno\-cflags\fR
+.RS 4
+This option is deprecated, please use
+\fB\-\-skin\fR
+and
+\fB\-\-cflags\fR
+instead\&. Outputs one line with the C compiler command\-line options that are necessary to compile applications that use any Xenomai skin, except the posix skin\&.
+.RE
+.PP
+\fB\-\-xeno\-ldflags\fR
+.RS 4
+This option is deprecated, please use
+\fB\-\-skin\fR
+and
+\fB\-\-ldflags\fR
+instead\&. Outputs one line with the C compiler command\-line options that are necessary to link applications that use any Xenomai skin, except the posix skin, with the necessary libraries\&. Note that the particular
+\fB\-llibskin\fR
+flag should be added to the flags returned by this option\&.
+.RE
+.PP
+\fB\-\-posix\-cflags\fR
+.RS 4
+This option is deprecated, please use
+\fB\-\-skin posix \-\-cflags\fR
+instead\&. Outputs one line with the C compiler command\-line options that are necessary to compile applications that use Xenomai\(cqs Posix\-compatible layer library\&.
+.RE
+.PP
+\fB\-\-posix\-ldflags\fR
+.RS 4
+This option is deprecated, please use
+\fB\-\-skin posix \-\-ldflags\fR
+instead\&. Outputs one line with the C compiler command\-line options that are necessary to link applications against Xenomai\(cqs Posix\-compatible layer library\&.
+.RE
+.SH "ENVIRONMENT VARIABLES"
+.PP
+\fBDESTDIR\fR
+.RS 4
+If the
+\fBDESTDIR\fR
+variable is set, its content is prepended to the Xenomai installed directories and files names output by the
+\fB\-\-prefix\fR
+and
+\fB\-\-library\-dir\fR
+options, and to the Xenomai installation directories in the flags output by the
+\fB\-\-xeno\-cflags\fR,
+\fB\-\-xeno\-ldflags\fR,
+\fB\-\-posix\-cflags\fR,
+\fB\-\-posix\-ldflags\fR
+options\&.
+.RE
+.sp
+If \fBDESTDIR\fR was set when compiling and installing Xenomai, e\&.g\&. for cross\-compilation, \fBDESTDIR\fR must be set to the same value before calling \fBxeno\-config\fR, in order to output valid directory and file names\&.
+.SH "RETURN CODES"
+.PP
+\fB0\fR
+.RS 4
+Successful script execution\&.
+.RE
+.PP
+\fB1\fR
+.RS 4
+The
+\fB\-\-posix\-ldflags\fR
+option has been given but Posix support is not available in Xenomai; or an invalid argument has been given on the command\-line\&.
+.RE

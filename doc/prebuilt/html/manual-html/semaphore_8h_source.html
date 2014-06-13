@@ -128,24 +128,24 @@ $(document).ready(function(){initNavTree('semaphore_8h_source.html','');});
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;                          <span class="keywordtype">int</span> pshared,</div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;                          <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> value));</div>
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;COBALT_DECL(<span class="keywordtype">int</span>, sem_destroy(sem_t *sem));</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;COBALT_DECL(<span class="keywordtype">int</span>, <a class="code" href="group__cobalt__sem.html#ga6bc9a7dd941a9b5e319715b767af5682">sem_destroy</a>(sem_t *sem));</div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;COBALT_DECL(<span class="keywordtype">int</span>, sem_post(sem_t *sem));</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;COBALT_DECL(<span class="keywordtype">int</span>, <a class="code" href="group__cobalt__sem.html#ga015dce85cab8477c679cc47968958247">sem_post</a>(sem_t *sem));</div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;COBALT_DECL(<span class="keywordtype">int</span>, sem_wait(sem_t *sem));</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;COBALT_DECL(<span class="keywordtype">int</span>, <a class="code" href="group__cobalt__sem.html#gaad70020dca2241a2b78e272ca033271b">sem_wait</a>(sem_t *sem));</div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;COBALT_DECL(<span class="keywordtype">int</span>, sem_timedwait(sem_t *sem,</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;COBALT_DECL(<span class="keywordtype">int</span>, <a class="code" href="group__cobalt__sem.html#ga19192f37769545c4c4661dc8d0b3daf9">sem_timedwait</a>(sem_t *sem,</div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;                               <span class="keyword">const</span> <span class="keyword">struct</span> timespec *abs_timeout));</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;COBALT_DECL(<span class="keywordtype">int</span>, sem_trywait(sem_t *sem));</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;COBALT_DECL(<span class="keywordtype">int</span>, <a class="code" href="group__cobalt__sem.html#ga4de7a9a334b01b6373b017aaefa07cf0">sem_trywait</a>(sem_t *sem));</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;COBALT_DECL(<span class="keywordtype">int</span>, sem_getvalue(sem_t *sem, <span class="keywordtype">int</span> *value));</div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;</div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;COBALT_DECL(sem_t *, sem_open(<span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">int</span> oflags, ...));</div>
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;COBALT_DECL(<span class="keywordtype">int</span>, sem_close(sem_t *sem));</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;COBALT_DECL(<span class="keywordtype">int</span>, <a class="code" href="group__cobalt__sem.html#ga4e398fea1080fd7919e5c72ee94e2fc5">sem_close</a>(sem_t *sem));</div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;COBALT_DECL(<span class="keywordtype">int</span>, sem_unlink(<span class="keyword">const</span> <span class="keywordtype">char</span> *name));</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;COBALT_DECL(<span class="keywordtype">int</span>, <a class="code" href="group__cobalt__sem.html#ga776256d1a473906f8b7490689bfcb75c">sem_unlink</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name));</div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="keywordtype">int</span> sem_init_np(sem_t *sem,</div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;                <span class="keywordtype">int</span> flags,</div>
@@ -158,6 +158,13 @@ $(document).ready(function(){initNavTree('semaphore_8h_source.html','');});
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* !_COBALT_SEMAPHORE_H */</span><span class="preprocessor"></span></div>
+<div class="ttc" id="group__cobalt__sem_html_ga015dce85cab8477c679cc47968958247"><div class="ttname"><a href="group__cobalt__sem.html#ga015dce85cab8477c679cc47968958247">sem_post</a></div><div class="ttdeci">int sem_post(sem_t *sem)</div><div class="ttdoc">Post a semaphore. </div><div class="ttdef"><b>Definition:</b> semaphore.c:149</div></div>
+<div class="ttc" id="group__cobalt__sem_html_ga4e398fea1080fd7919e5c72ee94e2fc5"><div class="ttname"><a href="group__cobalt__sem.html#ga4e398fea1080fd7919e5c72ee94e2fc5">sem_close</a></div><div class="ttdeci">int sem_close(sem_t *sem)</div><div class="ttdoc">Close a named semaphore. </div><div class="ttdef"><b>Definition:</b> semaphore.c:520</div></div>
+<div class="ttc" id="group__cobalt__sem_html_ga776256d1a473906f8b7490689bfcb75c"><div class="ttname"><a href="group__cobalt__sem.html#ga776256d1a473906f8b7490689bfcb75c">sem_unlink</a></div><div class="ttdeci">int sem_unlink(const char *name)</div><div class="ttdoc">Unlink a named semaphore. </div><div class="ttdef"><b>Definition:</b> semaphore.c:565</div></div>
+<div class="ttc" id="group__cobalt__sem_html_ga19192f37769545c4c4661dc8d0b3daf9"><div class="ttname"><a href="group__cobalt__sem.html#ga19192f37769545c4c4661dc8d0b3daf9">sem_timedwait</a></div><div class="ttdeci">int sem_timedwait(sem_t *sem, const struct timespec *abs_timeout)</div><div class="ttdoc">Attempt to decrement a semaphore with a time limit. </div><div class="ttdef"><b>Definition:</b> semaphore.c:340</div></div>
+<div class="ttc" id="group__cobalt__sem_html_ga6bc9a7dd941a9b5e319715b767af5682"><div class="ttname"><a href="group__cobalt__sem.html#ga6bc9a7dd941a9b5e319715b767af5682">sem_destroy</a></div><div class="ttdeci">int sem_destroy(sem_t *sem)</div><div class="ttdoc">Destroy an unnamed semaphore. </div><div class="ttdef"><b>Definition:</b> semaphore.c:106</div></div>
+<div class="ttc" id="group__cobalt__sem_html_ga4de7a9a334b01b6373b017aaefa07cf0"><div class="ttname"><a href="group__cobalt__sem.html#ga4de7a9a334b01b6373b017aaefa07cf0">sem_trywait</a></div><div class="ttdeci">int sem_trywait(sem_t *sem)</div><div class="ttdoc">Attempt to decrement a semaphore. </div><div class="ttdef"><b>Definition:</b> semaphore.c:214</div></div>
+<div class="ttc" id="group__cobalt__sem_html_gaad70020dca2241a2b78e272ca033271b"><div class="ttname"><a href="group__cobalt__sem.html#gaad70020dca2241a2b78e272ca033271b">sem_wait</a></div><div class="ttdeci">int sem_wait(sem_t *sem)</div><div class="ttdoc">Decrement a semaphore. </div><div class="ttdef"><b>Definition:</b> semaphore.c:283</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

@@ -278,7 +278,7 @@ Macros</h2></td></tr>
 <tr class="separator:ga8086092a2e40c1b0429caaad3b2c8675"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga0fdfaa2091c61c2db8caa7a51e8c0037"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga0fdfaa2091c61c2db8caa7a51e8c0037"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#ga0fdfaa2091c61c2db8caa7a51e8c0037">CAN_ERR_PROT</a>&#160;&#160;&#160;0x00000008U</td></tr>
-<tr class="memdesc:ga0fdfaa2091c61c2db8caa7a51e8c0037"><td class="mdescLeft">&#160;</td><td class="mdescRight">Protocol violations (see <a class="el" href="group__rtdm__can.html#Error2">data[2]</a>, <a class="el" href="/home/rpm/git/xenomai-forge/include/rtdm/uapi/can.h.html#Error3">data[3]</a>) <br/></td></tr>
+<tr class="memdesc:ga0fdfaa2091c61c2db8caa7a51e8c0037"><td class="mdescLeft">&#160;</td><td class="mdescRight">Protocol violations (see <a class="el" href="group__rtdm__can.html#Error2">data[2]</a>, <a class="el" href="/opt/packages/xenomai-forge/include/rtdm/uapi/can.h.html#Error3">data[3]</a>) <br/></td></tr>
 <tr class="separator:ga0fdfaa2091c61c2db8caa7a51e8c0037"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaf0026f916a985610cc449ffa6a31445f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gaf0026f916a985610cc449ffa6a31445f"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#gaf0026f916a985610cc449ffa6a31445f">CAN_ERR_TRX</a>&#160;&#160;&#160;0x00000010U</td></tr>
@@ -560,13 +560,17 @@ Enumerations</h2></td></tr>
 <tr><td colspan="2"><div class="groupText"><p><a class="anchor" id="CAN_STATE"></a>States a CAN controller can be in. </p>
 </div></td></tr>
 <tr class="memitem:ga8680f5710e1a13d553067cc32c86226b"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#ga8680f5710e1a13d553067cc32c86226b">CAN_STATE</a> { <br/>
-&#160;&#160;<a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba026154ef3a7f9cb633e43ab7e63d769c">CAN_STATE_ERROR_ACTIVE</a> = 0
-, <a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba15263a89961afbc4e813c7ccfc59e5ff">CAN_STATE_ERROR_WARNING</a> = 1
-, <a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226bac2cd08cde738273c5e5df8306c48d8ae">CAN_STATE_ERROR_PASSIVE</a> = 2
-, <a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba679935a8710667fcb99423d217cd9959">CAN_STATE_BUS_OFF</a>, 
+&#160;&#160;<a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba026154ef3a7f9cb633e43ab7e63d769c">CAN_STATE_ERROR_ACTIVE</a> = 0, 
+<a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba7db2add3bd2ed5a01893a3d2a012ac67">CAN_STATE_ACTIVE</a> = 0, 
+<a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba15263a89961afbc4e813c7ccfc59e5ff">CAN_STATE_ERROR_WARNING</a> = 1, 
+<a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba8e8ffc38c3886c8ab4b7a6ebd24db2e1">CAN_STATE_BUS_WARNING</a> = 1, 
 <br/>
-&#160;&#160;<a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226bacc4b4039f38316b01662d775eeb981ff">CAN_STATE_SCANNING_BAUDRATE</a>, 
-<a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba644e7a441f2e607b93528d3128508cc8">CAN_STATE_STOPPED</a>, 
+&#160;&#160;<a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226bac2cd08cde738273c5e5df8306c48d8ae">CAN_STATE_ERROR_PASSIVE</a> = 2, 
+<a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba16806979589ee8f20ee84c767903b667">CAN_STATE_BUS_PASSIVE</a> = 2, 
+<a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba679935a8710667fcb99423d217cd9959">CAN_STATE_BUS_OFF</a>, 
+<a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226bacc4b4039f38316b01662d775eeb981ff">CAN_STATE_SCANNING_BAUDRATE</a>, 
+<br/>
+&#160;&#160;<a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba644e7a441f2e607b93528d3128508cc8">CAN_STATE_STOPPED</a>, 
 <a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba2bb74d448dac491e9cfcc7f7bcc14857">CAN_STATE_SLEEPING</a>
 <br/>
  }</td></tr>

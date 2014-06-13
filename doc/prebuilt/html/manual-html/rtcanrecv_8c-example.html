@@ -87,7 +87,333 @@ $(document).ready(function(){initNavTree('rtcanrecv_8c-example.html','');});
 <div class="title">rtcanrecv.c</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"></div><!-- fragment --> </div><!-- contents -->
+<div class="fragment"><div class="line"><span class="preprocessor">#include &lt;stdio.h&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;stdlib.h&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;signal.h&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;unistd.h&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;time.h&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;errno.h&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;getopt.h&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;sys/mman.h&gt;</span></div>
+<div class="line"></div>
+<div class="line"><span class="preprocessor">#include &lt;alchemy/task.h&gt;</span></div>
+<div class="line"></div>
+<div class="line"><span class="preprocessor">#include &lt;rtdm/can.h&gt;</span></div>
+<div class="line"></div>
+<div class="line"><span class="keyword">static</span> <span class="keywordtype">void</span> print_usage(<span class="keywordtype">char</span> *prg)</div>
+<div class="line">{</div>
+<div class="line">    fprintf(stderr,</div>
+<div class="line">            <span class="stringliteral">&quot;Usage: %s [&lt;can-interface&gt;] [Options]\n&quot;</span></div>
+<div class="line">            <span class="stringliteral">&quot;Options:\n&quot;</span></div>
+<div class="line">            <span class="stringliteral">&quot; -f  --filter=id:mask[:id:mask]... apply filter\n&quot;</span></div>
+<div class="line">            <span class="stringliteral">&quot; -e  --error=mask      receive error messages\n&quot;</span></div>
+<div class="line">            <span class="stringliteral">&quot; -t, --timeout=MS      timeout in ms\n&quot;</span></div>
+<div class="line">            <span class="stringliteral">&quot; -T, --timestamp       with absolute timestamp\n&quot;</span></div>
+<div class="line">            <span class="stringliteral">&quot; -R, --timestamp-rel   with relative timestamp\n&quot;</span></div>
+<div class="line">            <span class="stringliteral">&quot; -v, --verbose         be verbose\n&quot;</span></div>
+<div class="line">            <span class="stringliteral">&quot; -p, --print=MODULO    print every MODULO message\n&quot;</span></div>
+<div class="line">            <span class="stringliteral">&quot; -h, --help            this help\n&quot;</span>,</div>
+<div class="line">            prg);</div>
+<div class="line">}</div>
+<div class="line"></div>
+<div class="line"></div>
+<div class="line"><span class="keyword">extern</span> <span class="keywordtype">int</span> optind, opterr, optopt;</div>
+<div class="line"></div>
+<div class="line"><span class="keyword">static</span> <span class="keywordtype">int</span> s = -1, verbose = 0, print = 1;</div>
+<div class="line"><span class="keyword">static</span> <a class="code" href="group__rtdm.html#gaededf91e760e3268235351dcc9d9dcda">nanosecs_rel_t</a> timeout = 0, with_timestamp = 0, timestamp_rel = 0;</div>
+<div class="line"></div>
+<div class="line">RT_TASK rt_task_desc;</div>
+<div class="line"></div>
+<div class="line"><span class="preprocessor">#define BUF_SIZ 255</span></div>
+<div class="line"><span class="preprocessor"></span><span class="preprocessor">#define MAX_FILTER 16</span></div>
+<div class="line"><span class="preprocessor"></span></div>
+<div class="line"><span class="keyword">struct </span><a name="_a0"></a><a class="code" href="structsockaddr__can.html">sockaddr_can</a> recv_addr;</div>
+<div class="line"><span class="keyword">struct </span><a name="_a1"></a><a class="code" href="structcan__filter.html">can_filter</a> recv_filter[MAX_FILTER];</div>
+<div class="line"><span class="keyword">static</span> <span class="keywordtype">int</span> filter_count = 0;</div>
+<div class="line"></div>
+<div class="line"><span class="keyword">static</span> <span class="keywordtype">int</span> add_filter(u_int32_t <span class="keywordtype">id</span>, u_int32_t mask)</div>
+<div class="line">{</div>
+<div class="line">    <span class="keywordflow">if</span> (filter_count &gt;= MAX_FILTER)</div>
+<div class="line">        <span class="keywordflow">return</span> -1;</div>
+<div class="line">    recv_filter[filter_count].<a name="a2"></a><a class="code" href="structcan__filter.html#aac0f27fee94e90063d8a80f4928e1298">can_id</a> = id;</div>
+<div class="line">    recv_filter[filter_count].can_mask = mask;</div>
+<div class="line">    printf(<span class="stringliteral">&quot;Filter #%d: id=0x%08x mask=0x%08x\n&quot;</span>, filter_count, <span class="keywordtype">id</span>, mask);</div>
+<div class="line">    filter_count++;</div>
+<div class="line">    <span class="keywordflow">return</span> 0;</div>
+<div class="line">}</div>
+<div class="line"></div>
+<div class="line"><span class="keyword">static</span> <span class="keywordtype">void</span> cleanup(<span class="keywordtype">void</span>)</div>
+<div class="line">{</div>
+<div class="line">    <span class="keywordtype">int</span> ret;</div>
+<div class="line"></div>
+<div class="line">    <span class="keywordflow">if</span> (verbose)</div>
+<div class="line">        printf(<span class="stringliteral">&quot;Cleaning up...\n&quot;</span>);</div>
+<div class="line"></div>
+<div class="line">    <span class="keywordflow">if</span> (s &gt;= 0) {</div>
+<div class="line">        ret = <a name="a3"></a><a class="code" href="group__rtdm__user__api.html#gaa34c1ddf4e2deb727a1ab3cd648ce5d9">rt_dev_close</a>(s);</div>
+<div class="line">        s = -1;</div>
+<div class="line">        <span class="keywordflow">if</span> (ret) {</div>
+<div class="line">            fprintf(stderr, <span class="stringliteral">&quot;rt_dev_close: %s\n&quot;</span>, strerror(-ret));</div>
+<div class="line">        }</div>
+<div class="line">        exit(EXIT_SUCCESS);</div>
+<div class="line">    }</div>
+<div class="line">}</div>
+<div class="line"></div>
+<div class="line"><span class="keyword">static</span> <span class="keywordtype">void</span> cleanup_and_exit(<span class="keywordtype">int</span> sig)</div>
+<div class="line">{</div>
+<div class="line">    <span class="keywordflow">if</span> (verbose)</div>
+<div class="line">        printf(<span class="stringliteral">&quot;Signal %d received\n&quot;</span>, sig);</div>
+<div class="line">    cleanup();</div>
+<div class="line">    exit(0);</div>
+<div class="line">}</div>
+<div class="line"></div>
+<div class="line"><span class="keyword">static</span> <span class="keywordtype">void</span> rt_task(<span class="keywordtype">void</span>)</div>
+<div class="line">{</div>
+<div class="line">    <span class="keywordtype">int</span> i, ret, count = 0;</div>
+<div class="line">    <span class="keyword">struct </span><a name="_a4"></a><a class="code" href="structcan__frame.html">can_frame</a> frame;</div>
+<div class="line">    <span class="keyword">struct </span><a class="code" href="structsockaddr__can.html">sockaddr_can</a> addr;</div>
+<div class="line">    socklen_t addrlen = <span class="keyword">sizeof</span>(addr);</div>
+<div class="line">    <span class="keyword">struct </span>msghdr msg;</div>
+<div class="line">    <span class="keyword">struct </span>iovec iov;</div>
+<div class="line">    <a class="code" href="group__rtdm.html#gad3b24c25feabadba465f8797d8c7fe27">nanosecs_abs_t</a> timestamp, timestamp_prev = 0;</div>
+<div class="line"></div>
+<div class="line">    <span class="keywordflow">if</span> (with_timestamp) {</div>
+<div class="line">        msg.msg_iov = &amp;iov;</div>
+<div class="line">        msg.msg_iovlen = 1;</div>
+<div class="line">        msg.msg_name = (<span class="keywordtype">void</span> *)&amp;addr;</div>
+<div class="line">        msg.msg_namelen = <span class="keyword">sizeof</span>(<span class="keyword">struct </span><a class="code" href="structsockaddr__can.html">sockaddr_can</a>);</div>
+<div class="line">        msg.msg_control = (<span class="keywordtype">void</span> *)&amp;timestamp;</div>
+<div class="line">        msg.msg_controllen = <span class="keyword">sizeof</span>(<a name="a5"></a><a class="code" href="group__rtdm.html#gad3b24c25feabadba465f8797d8c7fe27">nanosecs_abs_t</a>);</div>
+<div class="line">    }</div>
+<div class="line"></div>
+<div class="line">    <span class="keywordflow">while</span> (1) {</div>
+<div class="line">        <span class="keywordflow">if</span> (with_timestamp) {</div>
+<div class="line">            iov.iov_base = (<span class="keywordtype">void</span> *)&amp;frame;</div>
+<div class="line">            iov.iov_len = <span class="keyword">sizeof</span>(<a name="a6"></a><a class="code" href="group__rtdm__can.html#gace340cdd98cbfd2525c9d6b23cdd2188">can_frame_t</a>);</div>
+<div class="line">            ret = <a name="a7"></a><a class="code" href="group__rtdm__user__api.html#gacea5109e178100cdecaa9053c64632d1">rt_dev_recvmsg</a>(s, &amp;msg, 0);</div>
+<div class="line">        } <span class="keywordflow">else</span></div>
+<div class="line">            ret = <a name="a8"></a><a class="code" href="group__rtdm__user__api.html#ga0cc144457c649f197d485581686273dd">rt_dev_recvfrom</a>(s, (<span class="keywordtype">void</span> *)&amp;frame, <span class="keyword">sizeof</span>(<a class="code" href="structcan__frame.html">can_frame_t</a>), 0,</div>
+<div class="line">                                  (<span class="keyword">struct</span> sockaddr *)&amp;addr, &amp;addrlen);</div>
+<div class="line">        <span class="keywordflow">if</span> (ret &lt; 0) {</div>
+<div class="line">            <span class="keywordflow">switch</span> (ret) {</div>
+<div class="line">            <span class="keywordflow">case</span> -ETIMEDOUT:</div>
+<div class="line">                <span class="keywordflow">if</span> (verbose)</div>
+<div class="line">                    printf(<span class="stringliteral">&quot;rt_dev_recv: timed out&quot;</span>);</div>
+<div class="line">                <span class="keywordflow">continue</span>;</div>
+<div class="line">            <span class="keywordflow">case</span> -EBADF:</div>
+<div class="line">                <span class="keywordflow">if</span> (verbose)</div>
+<div class="line">                    printf(<span class="stringliteral">&quot;rt_dev_recv: aborted because socket was closed&quot;</span>);</div>
+<div class="line">                <span class="keywordflow">break</span>;</div>
+<div class="line">            <span class="keywordflow">default</span>:</div>
+<div class="line">                fprintf(stderr, <span class="stringliteral">&quot;rt_dev_recv: %s\n&quot;</span>, strerror(-ret));</div>
+<div class="line">            }</div>
+<div class="line">            <span class="keywordflow">break</span>;</div>
+<div class="line">        }</div>
+<div class="line"></div>
+<div class="line">        <span class="keywordflow">if</span> (print &amp;&amp; (count % print) == 0) {</div>
+<div class="line">            printf(<span class="stringliteral">&quot;#%d: (%d) &quot;</span>, count, addr.can_ifindex);</div>
+<div class="line">            <span class="keywordflow">if</span> (with_timestamp &amp;&amp; msg.msg_controllen) {</div>
+<div class="line">                <span class="keywordflow">if</span> (timestamp_rel) {</div>
+<div class="line">                printf(<span class="stringliteral">&quot;%lldns &quot;</span>, (<span class="keywordtype">long</span> <span class="keywordtype">long</span>)(timestamp - timestamp_prev));</div>
+<div class="line">                    timestamp_prev = timestamp;</div>
+<div class="line">                } <span class="keywordflow">else</span></div>
+<div class="line">                    printf(<span class="stringliteral">&quot;%lldns &quot;</span>, (<span class="keywordtype">long</span> <span class="keywordtype">long</span>)timestamp);</div>
+<div class="line">            }</div>
+<div class="line">            <span class="keywordflow">if</span> (frame.can_id &amp; <a name="a9"></a><a class="code" href="group__rtdm__can.html#ga24df2eae50a2cef0f7f08c73a246a012">CAN_ERR_FLAG</a>)</div>
+<div class="line">                printf(<span class="stringliteral">&quot;!0x%08x!&quot;</span>, frame.can_id &amp; <a name="a10"></a><a class="code" href="group__rtdm__can.html#gad4061a08b8c5aa6de3bb390efd3b6bd6">CAN_ERR_MASK</a>);</div>
+<div class="line">            <span class="keywordflow">else</span> <span class="keywordflow">if</span> (frame.can_id &amp; <a name="a11"></a><a class="code" href="group__rtdm__can.html#ga5ae55ab3741140024858bd7b8762ea42">CAN_EFF_FLAG</a>)</div>
+<div class="line">                printf(<span class="stringliteral">&quot;&lt;0x%08x&gt;&quot;</span>, frame.can_id &amp; <a name="a12"></a><a class="code" href="group__rtdm__can.html#ga83b943dca61d0aad5b07ec01c3317572">CAN_EFF_MASK</a>);</div>
+<div class="line">            <span class="keywordflow">else</span></div>
+<div class="line">                printf(<span class="stringliteral">&quot;&lt;0x%03x&gt;&quot;</span>, frame.can_id &amp; <a name="a13"></a><a class="code" href="group__rtdm__can.html#gafe4fc3f9cab58aeeb463861289e8ce93">CAN_SFF_MASK</a>);</div>
+<div class="line"></div>
+<div class="line">            printf(<span class="stringliteral">&quot; [%d]&quot;</span>, frame.can_dlc);</div>
+<div class="line">            <span class="keywordflow">if</span> (!(frame.can_id &amp; <a name="a14"></a><a class="code" href="group__rtdm__can.html#gaf324d65226057755175038a15d9bbd75">CAN_RTR_FLAG</a>))</div>
+<div class="line">                <span class="keywordflow">for</span> (i = 0; i &lt; frame.can_dlc; i++) {</div>
+<div class="line">                    printf(<span class="stringliteral">&quot; %02x&quot;</span>, frame.data[i]);</div>
+<div class="line">                }</div>
+<div class="line">            <span class="keywordflow">if</span> (frame.can_id &amp; <a class="code" href="group__rtdm__can.html#ga24df2eae50a2cef0f7f08c73a246a012">CAN_ERR_FLAG</a>) {</div>
+<div class="line">                printf(<span class="stringliteral">&quot; ERROR &quot;</span>);</div>
+<div class="line">                <span class="keywordflow">if</span> (frame.can_id &amp; <a name="a15"></a><a class="code" href="group__rtdm__can.html#ga8b0903e35c75de100b97a7b3e368b269">CAN_ERR_BUSOFF</a>)</div>
+<div class="line">                    printf(<span class="stringliteral">&quot;bus-off&quot;</span>);</div>
+<div class="line">                <span class="keywordflow">if</span> (frame.can_id &amp; <a name="a16"></a><a class="code" href="group__rtdm__can.html#ga8086092a2e40c1b0429caaad3b2c8675">CAN_ERR_CRTL</a>)</div>
+<div class="line">                    printf(<span class="stringliteral">&quot;controller problem&quot;</span>);</div>
+<div class="line">            } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (frame.can_id &amp; <a class="code" href="group__rtdm__can.html#gaf324d65226057755175038a15d9bbd75">CAN_RTR_FLAG</a>)</div>
+<div class="line">                printf(<span class="stringliteral">&quot; remote request&quot;</span>);</div>
+<div class="line">            printf(<span class="stringliteral">&quot;\n&quot;</span>);</div>
+<div class="line">        }</div>
+<div class="line">        count++;</div>
+<div class="line">    }</div>
+<div class="line">}</div>
+<div class="line"></div>
+<div class="line"><span class="keywordtype">int</span> main(<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span> **argv)</div>
+<div class="line">{</div>
+<div class="line">    <span class="keywordtype">int</span> opt, ret;</div>
+<div class="line">    u_int32_t id, mask;</div>
+<div class="line">    u_int32_t err_mask = 0;</div>
+<div class="line">    <span class="keyword">struct </span>ifreq ifr;</div>
+<div class="line">    <span class="keywordtype">char</span> *ptr;</div>
+<div class="line">    <span class="keywordtype">char</span> name[32];</div>
+<div class="line"></div>
+<div class="line">    <span class="keyword">struct </span>option long_options[] = {</div>
+<div class="line">        { <span class="stringliteral">&quot;help&quot;</span>, no_argument, 0, <span class="charliteral">&#39;h&#39;</span> },</div>
+<div class="line">        { <span class="stringliteral">&quot;verbose&quot;</span>, no_argument, 0, <span class="charliteral">&#39;v&#39;</span>},</div>
+<div class="line">        { <span class="stringliteral">&quot;filter&quot;</span>, required_argument, 0, <span class="charliteral">&#39;f&#39;</span>},</div>
+<div class="line">        { <span class="stringliteral">&quot;error&quot;</span>, required_argument, 0, <span class="charliteral">&#39;e&#39;</span>},</div>
+<div class="line">        { <span class="stringliteral">&quot;timeout&quot;</span>, required_argument, 0, <span class="charliteral">&#39;t&#39;</span>},</div>
+<div class="line">        { <span class="stringliteral">&quot;timestamp&quot;</span>, no_argument, 0, <span class="charliteral">&#39;T&#39;</span>},</div>
+<div class="line">        { <span class="stringliteral">&quot;timestamp-rel&quot;</span>, no_argument, 0, <span class="charliteral">&#39;R&#39;</span>},</div>
+<div class="line">        { 0, 0, 0, 0},</div>
+<div class="line">    };</div>
+<div class="line"></div>
+<div class="line">    mlockall(MCL_CURRENT | MCL_FUTURE);</div>
+<div class="line"></div>
+<div class="line">    signal(SIGTERM, cleanup_and_exit);</div>
+<div class="line">    signal(SIGINT, cleanup_and_exit);</div>
+<div class="line"></div>
+<div class="line">    <span class="keywordflow">while</span> ((opt = getopt_long(argc, argv, <span class="stringliteral">&quot;hve:f:t:p:RT&quot;</span>,</div>
+<div class="line">                              long_options, NULL)) != -1) {</div>
+<div class="line">        <span class="keywordflow">switch</span> (opt) {</div>
+<div class="line">        <span class="keywordflow">case</span> <span class="charliteral">&#39;h&#39;</span>:</div>
+<div class="line">            print_usage(argv[0]);</div>
+<div class="line">            exit(0);</div>
+<div class="line"></div>
+<div class="line">        <span class="keywordflow">case</span> <span class="charliteral">&#39;p&#39;</span>:</div>
+<div class="line">            print = strtoul(optarg, NULL, 0);</div>
+<div class="line">            <span class="keywordflow">break</span>;</div>
+<div class="line"></div>
+<div class="line">        <span class="keywordflow">case</span> <span class="charliteral">&#39;v&#39;</span>:</div>
+<div class="line">            verbose = 1;</div>
+<div class="line">            <span class="keywordflow">break</span>;</div>
+<div class="line"></div>
+<div class="line">        <span class="keywordflow">case</span> <span class="charliteral">&#39;e&#39;</span>:</div>
+<div class="line">            err_mask = strtoul(optarg, NULL, 0);</div>
+<div class="line">            <span class="keywordflow">break</span>;</div>
+<div class="line"></div>
+<div class="line">        <span class="keywordflow">case</span> <span class="charliteral">&#39;f&#39;</span>:</div>
+<div class="line">            ptr = optarg;</div>
+<div class="line">            <span class="keywordflow">while</span> (1) {</div>
+<div class="line">                <span class="keywordtype">id</span> = strtoul(ptr, NULL, 0);</div>
+<div class="line">                ptr = strchr(ptr, <span class="charliteral">&#39;:&#39;</span>);</div>
+<div class="line">                <span class="keywordflow">if</span> (!ptr) {</div>
+<div class="line">                    fprintf(stderr, <span class="stringliteral">&quot;filter must be applied in the form id:mask[:id:mask]...\n&quot;</span>);</div>
+<div class="line">                    exit(1);</div>
+<div class="line">                }</div>
+<div class="line">                ptr++;</div>
+<div class="line">                mask = strtoul(ptr, NULL, 0);</div>
+<div class="line">                ptr = strchr(ptr, <span class="charliteral">&#39;:&#39;</span>);</div>
+<div class="line">                add_filter(<span class="keywordtype">id</span>, mask);</div>
+<div class="line">                <span class="keywordflow">if</span> (!ptr)</div>
+<div class="line">                    <span class="keywordflow">break</span>;</div>
+<div class="line">                ptr++;</div>
+<div class="line">            }</div>
+<div class="line">            <span class="keywordflow">break</span>;</div>
+<div class="line"></div>
+<div class="line">        <span class="keywordflow">case</span> <span class="charliteral">&#39;t&#39;</span>:</div>
+<div class="line">            timeout = (<a name="a17"></a><a class="code" href="group__rtdm.html#gaededf91e760e3268235351dcc9d9dcda">nanosecs_rel_t</a>)strtoul(optarg, NULL, 0) * 1000000;</div>
+<div class="line">            <span class="keywordflow">break</span>;</div>
+<div class="line"></div>
+<div class="line">        <span class="keywordflow">case</span> <span class="charliteral">&#39;R&#39;</span>:</div>
+<div class="line">            timestamp_rel = 1;</div>
+<div class="line">        <span class="keywordflow">case</span> <span class="charliteral">&#39;T&#39;</span>:</div>
+<div class="line">            with_timestamp = 1;</div>
+<div class="line">            <span class="keywordflow">break</span>;</div>
+<div class="line"></div>
+<div class="line">        <span class="keywordflow">default</span>:</div>
+<div class="line">            fprintf(stderr, <span class="stringliteral">&quot;Unknown option %c\n&quot;</span>, opt);</div>
+<div class="line">            <span class="keywordflow">break</span>;</div>
+<div class="line">        }</div>
+<div class="line">    }</div>
+<div class="line"></div>
+<div class="line">    ret = <a name="a18"></a><a class="code" href="group__rtdm__user__api.html#ga95cfb4d81e3faf578015cad5750b22a3">rt_dev_socket</a>(<a name="a19"></a><a class="code" href="group__rtdm__can.html#gaeac0c3db7a1e021f17987bcc76893849">PF_CAN</a>, SOCK_RAW, <a name="a20"></a><a class="code" href="group__rtdm__can.html#ga57682d9a1e4f4d90943dbaa683582bf5">CAN_RAW</a>);</div>
+<div class="line">    <span class="keywordflow">if</span> (ret &lt; 0) {</div>
+<div class="line">        fprintf(stderr, <span class="stringliteral">&quot;rt_dev_socket: %s\n&quot;</span>, strerror(-ret));</div>
+<div class="line">        <span class="keywordflow">return</span> -1;</div>
+<div class="line">    }</div>
+<div class="line">    s = ret;</div>
+<div class="line"></div>
+<div class="line">    <span class="keywordflow">if</span> (argv[optind] == NULL) {</div>
+<div class="line">        <span class="keywordflow">if</span> (verbose)</div>
+<div class="line">            printf(<span class="stringliteral">&quot;interface all\n&quot;</span>);</div>
+<div class="line"></div>
+<div class="line">        ifr.ifr_ifindex = 0;</div>
+<div class="line">    } <span class="keywordflow">else</span> {</div>
+<div class="line">        <span class="keywordflow">if</span> (verbose)</div>
+<div class="line">            printf(<span class="stringliteral">&quot;interface %s\n&quot;</span>, argv[optind]);</div>
+<div class="line"></div>
+<div class="line">        strncpy(ifr.ifr_name, argv[optind], IFNAMSIZ);</div>
+<div class="line">        <span class="keywordflow">if</span> (verbose)</div>
+<div class="line">            printf(<span class="stringliteral">&quot;s=%d, ifr_name=%s\n&quot;</span>, s, ifr.ifr_name);</div>
+<div class="line"></div>
+<div class="line">        ret = <a name="a21"></a><a class="code" href="group__rtdm__user__api.html#ga72b69315a44f235b05627a0c257c01f4">rt_dev_ioctl</a>(s, <a name="a22"></a><a class="code" href="group__rtdm__can.html#gaee74ae50c8ea0a6aee277c6f124a3866">SIOCGIFINDEX</a>, &amp;ifr);</div>
+<div class="line">        <span class="keywordflow">if</span> (ret &lt; 0) {</div>
+<div class="line">            fprintf(stderr, <span class="stringliteral">&quot;rt_dev_ioctl GET_IFINDEX: %s\n&quot;</span>, strerror(-ret));</div>
+<div class="line">            <span class="keywordflow">goto</span> failure;</div>
+<div class="line">        }</div>
+<div class="line">    }</div>
+<div class="line"></div>
+<div class="line">    <span class="keywordflow">if</span> (err_mask) {</div>
+<div class="line">        ret = <a name="a23"></a><a class="code" href="group__rtdm__user__api.html#gaada2561361357285840c5b054fe20681">rt_dev_setsockopt</a>(s, <a name="a24"></a><a class="code" href="group__rtdm__can.html#gad981aa82a29d828882a2fb4c35c1cdd7">SOL_CAN_RAW</a>, <a name="a25"></a><a class="code" href="group__rtdm__can.html#ga451ba35aa4d0bef48cb7b0416f5b4367">CAN_RAW_ERR_FILTER</a>,</div>
+<div class="line">                                &amp;err_mask, <span class="keyword">sizeof</span>(err_mask));</div>
+<div class="line">        <span class="keywordflow">if</span> (ret &lt; 0) {</div>
+<div class="line">            fprintf(stderr, <span class="stringliteral">&quot;rt_dev_setsockopt: %s\n&quot;</span>, strerror(-ret));</div>
+<div class="line">            <span class="keywordflow">goto</span> failure;</div>
+<div class="line">        }</div>
+<div class="line">        <span class="keywordflow">if</span> (verbose)</div>
+<div class="line">            printf(<span class="stringliteral">&quot;Using err_mask=%#x\n&quot;</span>, err_mask);</div>
+<div class="line">    }</div>
+<div class="line"></div>
+<div class="line">    <span class="keywordflow">if</span> (filter_count) {</div>
+<div class="line">        ret = <a class="code" href="group__rtdm__user__api.html#gaada2561361357285840c5b054fe20681">rt_dev_setsockopt</a>(s, <a class="code" href="group__rtdm__can.html#gad981aa82a29d828882a2fb4c35c1cdd7">SOL_CAN_RAW</a>, <a name="a26"></a><a class="code" href="group__rtdm__can.html#ga87313c6e632294aa4582899a3bbc89e4">CAN_RAW_FILTER</a>,</div>
+<div class="line">                                &amp;recv_filter, filter_count *</div>
+<div class="line">                                <span class="keyword">sizeof</span>(<span class="keyword">struct</span> <a class="code" href="structcan__filter.html">can_filter</a>));</div>
+<div class="line">        <span class="keywordflow">if</span> (ret &lt; 0) {</div>
+<div class="line">            fprintf(stderr, <span class="stringliteral">&quot;rt_dev_setsockopt: %s\n&quot;</span>, strerror(-ret));</div>
+<div class="line">            <span class="keywordflow">goto</span> failure;</div>
+<div class="line">        }</div>
+<div class="line">    }</div>
+<div class="line"></div>
+<div class="line">    recv_addr.can_family = <a name="a27"></a><a class="code" href="group__rtdm__can.html#ga546620c7e758f003b24b7fdae4f97bd4">AF_CAN</a>;</div>
+<div class="line">    recv_addr.can_ifindex = ifr.ifr_ifindex;</div>
+<div class="line">    ret = <a name="a28"></a><a class="code" href="group__rtdm__user__api.html#ga5442e4f8737560e3294bd5bab61ad3fd">rt_dev_bind</a>(s, (<span class="keyword">struct</span> sockaddr *)&amp;recv_addr,</div>
+<div class="line">                      <span class="keyword">sizeof</span>(<span class="keyword">struct</span> <a class="code" href="structsockaddr__can.html">sockaddr_can</a>));</div>
+<div class="line">    <span class="keywordflow">if</span> (ret &lt; 0) {</div>
+<div class="line">        fprintf(stderr, <span class="stringliteral">&quot;rt_dev_bind: %s\n&quot;</span>, strerror(-ret));</div>
+<div class="line">        <span class="keywordflow">goto</span> failure;</div>
+<div class="line">    }</div>
+<div class="line"></div>
+<div class="line">    <span class="keywordflow">if</span> (timeout) {</div>
+<div class="line">        <span class="keywordflow">if</span> (verbose)</div>
+<div class="line">            printf(<span class="stringliteral">&quot;Timeout: %lld ns\n&quot;</span>, (<span class="keywordtype">long</span> <span class="keywordtype">long</span>)timeout);</div>
+<div class="line">        ret = <a class="code" href="group__rtdm__user__api.html#ga72b69315a44f235b05627a0c257c01f4">rt_dev_ioctl</a>(s, <a name="a29"></a><a class="code" href="group__rtdm__can.html#gad8af08ea3624e8e9c464ff143fcb66c0">RTCAN_RTIOC_RCV_TIMEOUT</a>, &amp;timeout);</div>
+<div class="line">        <span class="keywordflow">if</span> (ret) {</div>
+<div class="line">            fprintf(stderr, <span class="stringliteral">&quot;rt_dev_ioctl RCV_TIMEOUT: %s\n&quot;</span>, strerror(-ret));</div>
+<div class="line">            <span class="keywordflow">goto</span> failure;</div>
+<div class="line">        }</div>
+<div class="line">    }</div>
+<div class="line"></div>
+<div class="line">    <span class="keywordflow">if</span> (with_timestamp) {</div>
+<div class="line">        ret = <a class="code" href="group__rtdm__user__api.html#ga72b69315a44f235b05627a0c257c01f4">rt_dev_ioctl</a>(s, <a name="a30"></a><a class="code" href="group__rtdm__can.html#gaedd7bd75a1983735052fed62e101e5ce">RTCAN_RTIOC_TAKE_TIMESTAMP</a>, <a name="a31"></a><a class="code" href="group__rtdm__can.html#gae39894e7e6d107d4bab150cc0ef993c8">RTCAN_TAKE_TIMESTAMPS</a>);</div>
+<div class="line">        <span class="keywordflow">if</span> (ret) {</div>
+<div class="line">            fprintf(stderr, <span class="stringliteral">&quot;rt_dev_ioctl TAKE_TIMESTAMP: %s\n&quot;</span>, strerror(-ret));</div>
+<div class="line">            <span class="keywordflow">goto</span> failure;</div>
+<div class="line">        }</div>
+<div class="line">    }</div>
+<div class="line"></div>
+<div class="line">    snprintf(name, <span class="keyword">sizeof</span>(name), <span class="stringliteral">&quot;rtcanrecv-%d&quot;</span>, getpid());</div>
+<div class="line">    ret = <a name="a32"></a><a class="code" href="group__alchemy__task.html#ga72e0a9355d06c346a95bf88b857a9749">rt_task_shadow</a>(&amp;rt_task_desc, name, 0, 0);</div>
+<div class="line">    <span class="keywordflow">if</span> (ret) {</div>
+<div class="line">        fprintf(stderr, <span class="stringliteral">&quot;rt_task_shadow: %s\n&quot;</span>, strerror(-ret));</div>
+<div class="line">        <span class="keywordflow">goto</span> failure;</div>
+<div class="line">    }</div>
+<div class="line"></div>
+<div class="line">    rt_task();</div>
+<div class="line">    <span class="comment">/* never returns */</span></div>
+<div class="line"></div>
+<div class="line"> failure:</div>
+<div class="line">    cleanup();</div>
+<div class="line">    <span class="keywordflow">return</span> -1;</div>
+<div class="line">}</div>
+</div><!-- fragment --> </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

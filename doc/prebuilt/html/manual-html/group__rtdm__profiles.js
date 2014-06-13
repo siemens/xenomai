@@ -3,6 +3,7 @@ var group__rtdm__profiles =
     [ "CAN Devices", "group__rtdm__can.html", "group__rtdm__can" ],
     [ "Serial Devices", "group__rtdm__serial.html", null ],
     [ "Testing Devices", "group__rtdm__testing.html", null ],
+    [ "Real-time IPC", "group__rtdm__ipc.html", "group__rtdm__ipc" ],
     [ "rtdm_device_info", "structrtdm__device__info.html", [
       [ "device_class", "structrtdm__device__info.html#add4bb1bdd7e6003bb348411f8c2c55f5", null ],
       [ "device_flags", "structrtdm__device__info.html#a7f651ee79cf7bd714b5556d505d8704c", null ],

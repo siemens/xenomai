@@ -109,6 +109,9 @@ Functions</h2></td></tr>
 <tr class="memitem:ga889551a09dbb57727ea733dd79cc2e36"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__thread.html#ga889551a09dbb57727ea733dd79cc2e36">pthread_getschedparam_ex</a> (pthread_t thread, int *__restrict__ policy_r, struct sched_param_ex *__restrict__ param_ex)</td></tr>
 <tr class="memdesc:ga889551a09dbb57727ea733dd79cc2e36"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get extended scheduling policy of thread.  <a href="#ga889551a09dbb57727ea733dd79cc2e36">More...</a><br/></td></tr>
 <tr class="separator:ga889551a09dbb57727ea733dd79cc2e36"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gae1a96424296ef872696c7fb90a8ae9aa"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__thread.html#gae1a96424296ef872696c7fb90a8ae9aa">pthread_create</a> (pthread_t *ptid_r, const pthread_attr_t *attr, void *(*start)(void *), void *arg)</td></tr>
+<tr class="memdesc:gae1a96424296ef872696c7fb90a8ae9aa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new thread.  <a href="#gae1a96424296ef872696c7fb90a8ae9aa">More...</a><br/></td></tr>
+<tr class="separator:gae1a96424296ef872696c7fb90a8ae9aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaae4f4c1f668e3494be684d8630104f80"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__thread.html#gaae4f4c1f668e3494be684d8630104f80">pthread_make_periodic_np</a> (pthread_t thread, clockid_t clk_id, const struct timespec *__restrict__ starttp, const struct timespec *__restrict__ periodtp)</td></tr>
 <tr class="memdesc:gaae4f4c1f668e3494be684d8630104f80"><td class="mdescLeft">&#160;</td><td class="mdescRight">Make a thread periodic.  <a href="#gaae4f4c1f668e3494be684d8630104f80">More...</a><br/></td></tr>
 <tr class="separator:gaae4f4c1f668e3494be684d8630104f80"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -120,6 +123,73 @@ Functions</h2></td></tr>
 <p>Cobalt/POSIX thread management services. </p>
 <dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_09.html#tag_02_09">Specification.</a> </dd></dl>
 <h2 class="groupheader">Function Documentation</h2>
+<a class="anchor" id="gae1a96424296ef872696c7fb90a8ae9aa"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int pthread_create </td>
+          <td>(</td>
+          <td class="paramtype">pthread_t *&#160;</td>
+          <td class="paramname"><em>ptid_r</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const pthread_attr_t *&#160;</td>
+          <td class="paramname"><em>attr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *(*)(void *)&#160;</td>
+          <td class="paramname"><em>start</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>arg</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a new thread. </p>
+<p>This service creates a thread managed by the Xenomai nucleus in dual kernel configuration.</p>
+<p>The new thread signal mask is inherited from the current thread, if it was also created with <a class="el" href="group__cobalt__thread.html#gae1a96424296ef872696c7fb90a8ae9aa" title="Create a new thread. ">pthread_create()</a>, otherwise the new thread signal mask is empty.</p>
+<p>Other attributes of the new thread depend on the <em>attr</em> argument. If <em>attr</em> is NULL, default values for these attributes are used.</p>
+<p>Returning from the <em>start</em> routine has the same effect as calling pthread_exit() with the return value.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">ptid_r</td><td>address where the identifier of the new thread will be stored on success;</td></tr>
+    <tr><td class="paramname">attr</td><td>thread attributes;</td></tr>
+    <tr><td class="paramname">start</td><td>thread start routine;</td></tr>
+    <tr><td class="paramname">arg</td><td>opaque user-supplied argument passed to <em>start</em>;</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on success; </dd>
+<dd>
+an error number if:<ul>
+<li>EINVAL, <em>attr</em> is invalid;</li>
+<li>EAGAIN, insufficient memory exists in the system heap to create a new thread, increase CONFIG_XENO_OPT_SYS_HEAPSZ;</li>
+<li>EINVAL, thread attribute <em>inheritsched</em> is set to PTHREAD_INHERIT_SCHED and the calling thread does not belong to the Cobalt interface;</li>
+</ul>
+</dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_create.html">Specification.</a></dd></dl>
+<dl class="section note"><dt>Note</dt><dd></dd></dl>
+<p>When creating or shadowing a Xenomai thread for the first time in user-space, Xenomai installs a handler for the SIGSHADOW signal. If you had installed a handler before that, it will be automatically called by Xenomai for SIGSHADOW signals that it has not sent.</p>
+<p>If, however, you install a signal handler for SIGSHADOW after creating or shadowing the first Xenomai thread, you have to explicitly call the function cobalt_sigshadow_handler at the beginning of your signal handler, using its return to know if the signal was in fact an internal signal of Xenomai (in which case it returns 1), or if you should handle the signal (in which case it returns 0). cobalt_sigshadow_handler prototype is:</p>
+<p><b>int cobalt_sigshadow_handler(int sig, struct siginfo *si, void *ctxt);</b></p>
+<p>Which means that you should register your handler with sigaction, using the SA_SIGINFO flag, and pass all the arguments you received to cobalt_sigshadow_handler. </p>
+
+</div>
+</div>
 <a class="anchor" id="ga889551a09dbb57727ea733dd79cc2e36"></a>
 <div class="memitem">
 <div class="memproto">

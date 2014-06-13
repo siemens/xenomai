@@ -1,0 +1,88 @@
+'\" t
+.\"     Title: rtcanrecv
+.\"    Author: [see the "AUTHORS" section]
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 2008/04/19
+.\"    Manual: Xenomai Manual
+.\"    Source: Xenomai 2.99.0
+.\"  Language: English
+.\"
+.TH "RTCANRECV" "1" "2008/04/19" "Xenomai 2\&.99\&.0" "Xenomai Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+rtcanrecv \- Xenomai tool for receiving CAN messages
+.SH "SYNOPSIS"
+.sp
+\fBrtcanrecv\fR [<can\-interface>] [Options]
+.SH "DESCRIPTION"
+.sp
+\fBrtcanrecv\fR is part of Xenomai\&. It is used to receive messages via a CAN interface\&. The system must run a suitable Xenomai enabled kernel with the respective module (xeno_native and the CAN driver)\&.
+.SH "OPTIONS"
+.sp
+<can\-interface> is the CAN interface file\&.
+.sp
+\fBrtcanrecv\fR accepts the following options:
+.PP
+\fB\-f, \-\-filter=id:mask[:id:mask]\&...\fR
+.RS 4
+apply filter
+.RE
+.PP
+\fB\-e, \-\-error=mask\fR
+.RS 4
+receive error messages
+.RE
+.PP
+\fB\-t, \-\-timeout=MS\fR
+.RS 4
+timeout in ms
+.RE
+.PP
+\fB\-T, \-\-timestamp\fR
+.RS 4
+with absolute timestamp
+.RE
+.PP
+\fB\-R, \-\-timestamp\-rel\fR
+.RS 4
+with relative timestamp
+.RE
+.PP
+\fB\-v, \-\-verbose\fR
+.RS 4
+be verbose
+.RE
+.PP
+\fB\-p, \-\-print=MODULO\fR
+.RS 4
+print every MODULO message
+.RE
+.PP
+\fB\-h, \-\-help\fR
+.RS 4
+this help
+.RE
+.SH "SEE ALSO"
+.sp
+\fBrtcanconfig(1)\fR\fB, \fR\fBrtcansend(1)\fR\&.
+.SH "AUTHORS"
+.sp
+\fBrtcanrecv\fR was written by Wolfgang Grandegger, Jan Kiszka and Philippe Gerum\&. This man page was written by Roland Stigge\&.

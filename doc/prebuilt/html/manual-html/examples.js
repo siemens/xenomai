@@ -2,10 +2,10 @@ var examples =
 [
     [ "bufp-label.c", "bufp-label_8c-example.html", null ],
     [ "bufp-readwrite.c", "bufp-readwrite_8c-example.html", null ],
+    [ "can-rtt.c", "can-rtt_8c-example.html", null ],
     [ "cross-link.c", "cross-link_8c-example.html", null ],
     [ "iddp-label.c", "iddp-label_8c-example.html", null ],
     [ "iddp-sendrecv.c", "iddp-sendrecv_8c-example.html", null ],
-    [ "rtcan_rtt.c", "rtcan_rtt_8c-example.html", null ],
     [ "rtcanconfig.c", "rtcanconfig_8c-example.html", null ],
     [ "rtcanrecv.c", "rtcanrecv_8c-example.html", null ],
     [ "rtcansend.c", "rtcansend_8c-example.html", null ],

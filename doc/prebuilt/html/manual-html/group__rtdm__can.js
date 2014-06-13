@@ -138,8 +138,11 @@ var group__rtdm__can =
     ] ],
     [ "CAN_STATE", "group__rtdm__can.html#ga8680f5710e1a13d553067cc32c86226b", [
       [ "CAN_STATE_ERROR_ACTIVE", "group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba026154ef3a7f9cb633e43ab7e63d769c", null ],
+      [ "CAN_STATE_ACTIVE", "group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba7db2add3bd2ed5a01893a3d2a012ac67", null ],
       [ "CAN_STATE_ERROR_WARNING", "group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba15263a89961afbc4e813c7ccfc59e5ff", null ],
+      [ "CAN_STATE_BUS_WARNING", "group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba8e8ffc38c3886c8ab4b7a6ebd24db2e1", null ],
       [ "CAN_STATE_ERROR_PASSIVE", "group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226bac2cd08cde738273c5e5df8306c48d8ae", null ],
+      [ "CAN_STATE_BUS_PASSIVE", "group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba16806979589ee8f20ee84c767903b667", null ],
       [ "CAN_STATE_BUS_OFF", "group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba679935a8710667fcb99423d217cd9959", null ],
       [ "CAN_STATE_SCANNING_BAUDRATE", "group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226bacc4b4039f38316b01662d775eeb981ff", null ],
       [ "CAN_STATE_STOPPED", "group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba644e7a441f2e607b93528d3128508cc8", null ],

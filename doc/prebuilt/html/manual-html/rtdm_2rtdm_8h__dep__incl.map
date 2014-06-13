@@ -3,13 +3,13 @@
 <area shape="rect" id="node3" href="$driver_8h.html" title="Real&#45;Time Driver Model for Xenomai, driver API header. " alt="" coords="779,81,920,122"/>
 <area shape="rect" id="node35" href="$kernel_2drivers_2ipc_2internal_8h_source.html" title="kernel/drivers/ipc\l/internal.h" alt="" coords="1321,171,1441,213"/>
 <area shape="rect" id="node36" href="$cobalt_2kernel_2rtdm_2ipc_8h.html" title="This file is part of the Xenomai project. " alt="" coords="1467,171,1608,213"/>
-<area shape="rect" id="node37" href="$cobalt_2kernel_2rtdm_2serial_8h.html" title="include/cobalt/kernel\l/rtdm/serial.h" alt="" coords="1693,81,1835,122"/>
-<area shape="rect" id="node38" href="$cobalt_2kernel_2rtdm_2testing_8h.html" title="include/cobalt/kernel\l/rtdm/testing.h" alt="" coords="1859,81,2000,122"/>
-<area shape="rect" id="node39" href="$rtdm_2can_8h.html" title="include/rtdm/can.h" alt="" coords="1191,88,1320,115"/>
-<area shape="rect" id="node40" href="$rtdm_2ipc_8h.html" title="This file is part of the Xenomai project. " alt="" coords="1632,179,1757,205"/>
-<area shape="rect" id="node41" href="$rtdm_2serial_8h.html" title="Real&#45;Time Driver Model for Xenomai, serial device profile header. " alt="" coords="2024,88,2163,115"/>
-<area shape="rect" id="node42" href="$rtdm_2testing_8h.html" title="Real&#45;Time Driver Model for Xenomai, testing device profile header. " alt="" coords="2187,88,2333,115"/>
-<area shape="rect" id="node43" href="$rtdm_2uapi_2ipc_8h.html" title="This file is part of the Xenomai project. " alt="" coords="1465,88,1617,115"/>
+<area shape="rect" id="node37" href="$rtdm_2uapi_2ipc_8h.html" title="This file is part of the Xenomai project. " alt="" coords="1465,88,1617,115"/>
+<area shape="rect" id="node38" href="$rtdm_2ipc_8h.html" title="This file is part of the Xenomai project. " alt="" coords="1632,179,1757,205"/>
+<area shape="rect" id="node39" href="$cobalt_2kernel_2rtdm_2serial_8h.html" title="include/cobalt/kernel\l/rtdm/serial.h" alt="" coords="1693,81,1835,122"/>
+<area shape="rect" id="node40" href="$cobalt_2kernel_2rtdm_2testing_8h.html" title="include/cobalt/kernel\l/rtdm/testing.h" alt="" coords="1859,81,2000,122"/>
+<area shape="rect" id="node41" href="$rtdm_2can_8h.html" title="include/rtdm/can.h" alt="" coords="1191,88,1320,115"/>
+<area shape="rect" id="node42" href="$rtdm_2serial_8h.html" title="Real&#45;Time Driver Model for Xenomai, serial device profile header. " alt="" coords="2024,88,2163,115"/>
+<area shape="rect" id="node43" href="$rtdm_2testing_8h.html" title="Real&#45;Time Driver Model for Xenomai, testing device profile header. " alt="" coords="2187,88,2333,115"/>
 <area shape="rect" id="node44" href="$lib_2analogy_2internal_8h.html" title="Analogy for Linux, internal declarations. " alt="" coords="2357,88,2499,115"/>
 <area shape="rect" id="node4" href="$include_2cobalt_2kernel_2rtdm_2analogy_2buffer_8h.html" title="Analogy for Linux, buffer related features. " alt="" coords="765,443,915,485"/>
 <area shape="rect" id="node18" href="$rtdm__interface_8c.html" title="Analogy for Linux, user interface (open, read, write, ioctl, proc) " alt="" coords="5,722,155,763"/>

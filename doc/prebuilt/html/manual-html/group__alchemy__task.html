@@ -1340,7 +1340,8 @@ Functions</h2></td></tr>
 <li>the caller always returns from this service in primary mode.</li>
 </ul>
 <dl class="section note"><dt>Note</dt><dd>Tasks can be referred to from multiple processes which all belong to the same Xenomai session. </dd></dl>
-
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanrecv_8c-example.html#a32">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a23">rtcansend.c</a>.</dd>
+</dl>
 <p>References <a class="el" href="group__alchemy__task.html#ga2ac6cf9677bae1012ecbcb6037d14fcb">T_LOCK</a>, and <a class="el" href="group__alchemy__task.html#ga725324cb26d8b5835c0818acb738bfe6">T_WARNSW</a>.</p>
 
 </div>
@@ -1369,7 +1370,7 @@ Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>See <a class="el" href="group__alchemy__task.html#ga0dc2deebe7500c9d21ff05d51d5efaa8" title="Delay the current real-time task (with absolute wakeup date). ">rt_task_sleep_until()</a>.</dd></dl>
 <dl class="section note"><dt>Note</dt><dd>The <em>delay</em> value is interpreted as a multiple of the Alchemy clock resolution (see &ndash;alchemy-clock-resolution option, defaults to 1 nanosecond). </dd></dl>
-<dl><dt><b>Examples: </b></dt><dd><a class="el" href="cross-link_8c-example.html#a4">cross-link.c</a>.</dd>
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="cross-link_8c-example.html#a4">cross-link.c</a>, and <a class="el" href="rtcansend_8c-example.html#a3">rtcansend.c</a>.</dd>
 </dl>
 </div>
 </div>

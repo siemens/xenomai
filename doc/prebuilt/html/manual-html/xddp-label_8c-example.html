@@ -193,7 +193,7 @@ $(document).ready(function(){initNavTree('xddp-label_8c-example.html','');});
 <div class="line"><span class="comment">         * endpoint is represented by a port number within the XDDP</span></div>
 <div class="line"><span class="comment">         * protocol namespace.</span></div>
 <div class="line"><span class="comment">         */</span></div>
-<div class="line">        s = socket(AF_RTIPC, SOCK_DGRAM, <a name="a2"></a><a class="code" href="rtdm_2uapi_2ipc_8h.html#aabfcbcb5ac86a1edac4035264bc7d2b8a28a488c3e7fc47dee4d5757f215f62e9">IPCPROTO_XDDP</a>);</div>
+<div class="line">        s = socket(AF_RTIPC, SOCK_DGRAM, <a name="a2"></a><a class="code" href="group__rtdm__ipc.html#ggaabfcbcb5ac86a1edac4035264bc7d2b8a28a488c3e7fc47dee4d5757f215f62e9">IPCPROTO_XDDP</a>);</div>
 <div class="line">        <span class="keywordflow">if</span> (s &lt; 0) {</div>
 <div class="line">                perror(<span class="stringliteral">&quot;socket&quot;</span>);</div>
 <div class="line">                exit(EXIT_FAILURE);</div>
@@ -204,7 +204,7 @@ $(document).ready(function(){initNavTree('xddp-label_8c-example.html','');});
 <div class="line"><span class="comment">         * binding, in addition to the port number (if given).</span></div>
 <div class="line"><span class="comment">         */</span></div>
 <div class="line">        strcpy(plabel.label, XDDP_PORT_LABEL);</div>
-<div class="line">        ret = setsockopt(s, SOL_XDDP, <a name="a3"></a><a class="code" href="rtdm_2uapi_2ipc_8h.html#af8b123d7b54c95dd655b8a3b02d2759f">XDDP_LABEL</a>,</div>
+<div class="line">        ret = setsockopt(s, SOL_XDDP, <a name="a3"></a><a class="code" href="group__rtdm__ipc.html#gaf8b123d7b54c95dd655b8a3b02d2759f">XDDP_LABEL</a>,</div>
 <div class="line">                         &amp;plabel, <span class="keyword">sizeof</span>(plabel));</div>
 <div class="line">        <span class="keywordflow">if</span> (ret)</div>
 <div class="line">                fail(<span class="stringliteral">&quot;setsockopt&quot;</span>);</div>
@@ -248,7 +248,7 @@ $(document).ready(function(){initNavTree('xddp-label_8c-example.html','');});
 <div class="line">        <span class="keyword">struct </span>timeval tv;</div>
 <div class="line">        socklen_t addrlen;</div>
 <div class="line"></div>
-<div class="line">        s = socket(AF_RTIPC, SOCK_DGRAM, <a class="code" href="rtdm_2uapi_2ipc_8h.html#aabfcbcb5ac86a1edac4035264bc7d2b8a28a488c3e7fc47dee4d5757f215f62e9">IPCPROTO_XDDP</a>);</div>
+<div class="line">        s = socket(AF_RTIPC, SOCK_DGRAM, <a class="code" href="group__rtdm__ipc.html#ggaabfcbcb5ac86a1edac4035264bc7d2b8a28a488c3e7fc47dee4d5757f215f62e9">IPCPROTO_XDDP</a>);</div>
 <div class="line">        <span class="keywordflow">if</span> (s &lt; 0) {</div>
 <div class="line">                perror(<span class="stringliteral">&quot;socket&quot;</span>);</div>
 <div class="line">                exit(EXIT_FAILURE);</div>
@@ -263,7 +263,7 @@ $(document).ready(function(){initNavTree('xddp-label_8c-example.html','');});
 <div class="line"><span class="comment">         */</span></div>
 <div class="line">        tv.tv_sec = 1;</div>
 <div class="line">        tv.tv_usec = 0;</div>
-<div class="line">        ret = setsockopt(s, SOL_SOCKET, <a name="a4"></a><a class="code" href="rtdm_2uapi_2ipc_8h.html#af2d1ed6a34336a6f3df80fb518325846">SO_RCVTIMEO</a>,</div>
+<div class="line">        ret = setsockopt(s, SOL_SOCKET, <a name="a4"></a><a class="code" href="group__rtdm__ipc.html#gaf2d1ed6a34336a6f3df80fb518325846">SO_RCVTIMEO</a>,</div>
 <div class="line">                         &amp;tv, <span class="keyword">sizeof</span>(tv));</div>
 <div class="line">        <span class="keywordflow">if</span> (ret)</div>
 <div class="line">                fail(<span class="stringliteral">&quot;setsockopt&quot;</span>);</div>
@@ -273,7 +273,7 @@ $(document).ready(function(){initNavTree('xddp-label_8c-example.html','');});
 <div class="line"><span class="comment">         * when connecting, instead of the port number.</span></div>
 <div class="line"><span class="comment">         */</span></div>
 <div class="line">        strcpy(plabel.label, XDDP_PORT_LABEL);</div>
-<div class="line">        ret = setsockopt(s, SOL_XDDP, <a class="code" href="rtdm_2uapi_2ipc_8h.html#af8b123d7b54c95dd655b8a3b02d2759f">XDDP_LABEL</a>,</div>
+<div class="line">        ret = setsockopt(s, SOL_XDDP, <a class="code" href="group__rtdm__ipc.html#gaf8b123d7b54c95dd655b8a3b02d2759f">XDDP_LABEL</a>,</div>
 <div class="line">                         &amp;plabel, <span class="keyword">sizeof</span>(plabel));</div>
 <div class="line">        <span class="keywordflow">if</span> (ret)</div>
 <div class="line">                fail(<span class="stringliteral">&quot;setsockopt&quot;</span>);</div>
@@ -401,11 +401,11 @@ $(document).ready(function(){initNavTree('xddp-label_8c-example.html','');});
 <div class="line"></div>
 <div class="line">        <span class="comment">/* Both real-time threads have the same attribute set. */</span></div>
 <div class="line"></div>
-<div class="line">        errno = pthread_create(&amp;rt1, &amp;rtattr, &amp;realtime_thread1, NULL);</div>
+<div class="line">        errno = <a name="a5"></a><a class="code" href="group__cobalt__thread.html#gae1a96424296ef872696c7fb90a8ae9aa">pthread_create</a>(&amp;rt1, &amp;rtattr, &amp;realtime_thread1, NULL);</div>
 <div class="line">        <span class="keywordflow">if</span> (errno)</div>
 <div class="line">                fail(<span class="stringliteral">&quot;pthread_create&quot;</span>);</div>
 <div class="line"></div>
-<div class="line">        errno = pthread_create(&amp;rt2, &amp;rtattr, &amp;realtime_thread2, NULL);</div>
+<div class="line">        errno = <a class="code" href="group__cobalt__thread.html#gae1a96424296ef872696c7fb90a8ae9aa">pthread_create</a>(&amp;rt2, &amp;rtattr, &amp;realtime_thread2, NULL);</div>
 <div class="line">        <span class="keywordflow">if</span> (errno)</div>
 <div class="line">                fail(<span class="stringliteral">&quot;pthread_create&quot;</span>);</div>
 <div class="line"></div>
@@ -414,7 +414,7 @@ $(document).ready(function(){initNavTree('xddp-label_8c-example.html','');});
 <div class="line">        pthread_attr_setinheritsched(&amp;regattr, PTHREAD_EXPLICIT_SCHED);</div>
 <div class="line">        pthread_attr_setschedpolicy(&amp;regattr, SCHED_OTHER);</div>
 <div class="line"></div>
-<div class="line">        errno = pthread_create(&amp;nrt, &amp;regattr, &amp;regular_thread, NULL);</div>
+<div class="line">        errno = <a class="code" href="group__cobalt__thread.html#gae1a96424296ef872696c7fb90a8ae9aa">pthread_create</a>(&amp;nrt, &amp;regattr, &amp;regular_thread, NULL);</div>
 <div class="line">        <span class="keywordflow">if</span> (errno)</div>
 <div class="line">                fail(<span class="stringliteral">&quot;pthread_create&quot;</span>);</div>
 <div class="line"></div>

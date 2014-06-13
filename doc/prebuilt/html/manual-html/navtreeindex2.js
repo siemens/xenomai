@@ -1,5 +1,6 @@
 var NAVTREEINDEX2 =
 {
+"functions_func.html":[2,1,1],
 "functions_g.html":[2,1,0,7],
 "functions_h.html":[2,1,0,8],
 "functions_i.html":[2,1,0,9],
@@ -15,8 +16,8 @@ var NAVTREEINDEX2 =
 "functions_u.html":[2,1,0,19],
 "functions_v.html":[2,1,0,20],
 "functions_vars.html":[2,1,2],
-"globals.html":[3,1,0,0],
 "globals.html":[3,1,0],
+"globals.html":[3,1,0,0],
 "globals_b.html":[3,1,0,1],
 "globals_c.html":[3,1,0,2],
 "globals_defs.html":[3,1,6],
@@ -33,8 +34,8 @@ var NAVTREEINDEX2 =
 "globals_enum.html":[3,1,4],
 "globals_eval.html":[3,1,5],
 "globals_f.html":[3,1,0,3],
-"globals_func.html":[3,1,1,0],
 "globals_func.html":[3,1,1],
+"globals_func.html":[3,1,1,0],
 "globals_func_b.html":[3,1,1,1],
 "globals_func_c.html":[3,1,1,2],
 "globals_func_g.html":[3,1,1,3],
@@ -248,6 +249,5 @@ var NAVTREEINDEX2 =
 "group__analogy__lib__async1.html#ga1fb4b9b153dc9bb3ee3127144b21ee53":[1,3,1,0,0,16],
 "group__analogy__lib__async1.html#ga247528c4d75db12782aad05b41faf394":[1,3,1,0,0,33],
 "group__analogy__lib__async1.html#ga2ea3059ec078a38795989d303036226b":[1,3,1,0,0,9],
-"group__analogy__lib__async1.html#ga3f2f598789c55c83c65d7f395918a5a9":[1,3,1,0,0,13],
-"group__analogy__lib__async1.html#ga43ab969b00aae973ef4b67c234b17720":[1,3,1,0,0,32]
+"group__analogy__lib__async1.html#ga3f2f598789c55c83c65d7f395918a5a9":[1,3,1,0,0,13]
 };

@@ -188,7 +188,7 @@ $(document).ready(function(){initNavTree('xddp-echo_8c-example.html','');});
 <div class="line"><span class="comment">         * endpoint is represented by a port number within the XDDP</span></div>
 <div class="line"><span class="comment">         * protocol namespace.</span></div>
 <div class="line"><span class="comment">         */</span></div>
-<div class="line">        s = socket(AF_RTIPC, SOCK_DGRAM, <a name="a1"></a><a class="code" href="rtdm_2uapi_2ipc_8h.html#aabfcbcb5ac86a1edac4035264bc7d2b8a28a488c3e7fc47dee4d5757f215f62e9">IPCPROTO_XDDP</a>);</div>
+<div class="line">        s = socket(AF_RTIPC, SOCK_DGRAM, <a name="a1"></a><a class="code" href="group__rtdm__ipc.html#ggaabfcbcb5ac86a1edac4035264bc7d2b8a28a488c3e7fc47dee4d5757f215f62e9">IPCPROTO_XDDP</a>);</div>
 <div class="line">        <span class="keywordflow">if</span> (s &lt; 0) {</div>
 <div class="line">                perror(<span class="stringliteral">&quot;socket&quot;</span>);</div>
 <div class="line">                exit(EXIT_FAILURE);</div>
@@ -200,7 +200,7 @@ $(document).ready(function(){initNavTree('xddp-echo_8c-example.html','');});
 <div class="line"><span class="comment">         * Xenomai&#39;s system pool.</span></div>
 <div class="line"><span class="comment">         */</span></div>
 <div class="line">        poolsz = 16384; <span class="comment">/* bytes */</span></div>
-<div class="line">        ret = setsockopt(s, SOL_XDDP, <a name="a2"></a><a class="code" href="rtdm_2uapi_2ipc_8h.html#a40cc2513c4beb830fe3af2c205292d27">XDDP_POOLSZ</a>,</div>
+<div class="line">        ret = setsockopt(s, SOL_XDDP, <a name="a2"></a><a class="code" href="group__rtdm__ipc.html#ga40cc2513c4beb830fe3af2c205292d27">XDDP_POOLSZ</a>,</div>
 <div class="line">                         &amp;poolsz, <span class="keyword">sizeof</span>(poolsz));</div>
 <div class="line">        <span class="keywordflow">if</span> (ret)</div>
 <div class="line">                fail(<span class="stringliteral">&quot;setsockopt&quot;</span>);</div>
@@ -324,7 +324,7 @@ $(document).ready(function(){initNavTree('xddp-echo_8c-example.html','');});
 <div class="line">        pthread_attr_setschedpolicy(&amp;rtattr, SCHED_FIFO);</div>
 <div class="line">        pthread_attr_setschedparam(&amp;rtattr, &amp;rtparam);</div>
 <div class="line"></div>
-<div class="line">        errno = pthread_create(&amp;rt, &amp;rtattr, &amp;realtime_thread, NULL);</div>
+<div class="line">        errno = <a name="a3"></a><a class="code" href="group__cobalt__thread.html#gae1a96424296ef872696c7fb90a8ae9aa">pthread_create</a>(&amp;rt, &amp;rtattr, &amp;realtime_thread, NULL);</div>
 <div class="line">        <span class="keywordflow">if</span> (errno)</div>
 <div class="line">                fail(<span class="stringliteral">&quot;pthread_create&quot;</span>);</div>
 <div class="line"></div>
@@ -333,7 +333,7 @@ $(document).ready(function(){initNavTree('xddp-echo_8c-example.html','');});
 <div class="line">        pthread_attr_setinheritsched(&amp;regattr, PTHREAD_EXPLICIT_SCHED);</div>
 <div class="line">        pthread_attr_setschedpolicy(&amp;regattr, SCHED_OTHER);</div>
 <div class="line"></div>
-<div class="line">        errno = pthread_create(&amp;nrt, &amp;regattr, &amp;regular_thread, NULL);</div>
+<div class="line">        errno = <a class="code" href="group__cobalt__thread.html#gae1a96424296ef872696c7fb90a8ae9aa">pthread_create</a>(&amp;nrt, &amp;regattr, &amp;regular_thread, NULL);</div>
 <div class="line">        <span class="keywordflow">if</span> (errno)</div>
 <div class="line">                fail(<span class="stringliteral">&quot;pthread_create&quot;</span>);</div>
 <div class="line"></div>

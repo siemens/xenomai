@@ -147,7 +147,7 @@ $(document).ready(function(){initNavTree('iddp-sendrecv_8c-example.html','');});
 <div class="line">        <span class="keywordtype">size_t</span> poolsz;</div>
 <div class="line">        <span class="keywordtype">int</span> ret, s;</div>
 <div class="line"></div>
-<div class="line">        s = socket(AF_RTIPC, SOCK_DGRAM, <a name="a1"></a><a class="code" href="rtdm_2uapi_2ipc_8h.html#aabfcbcb5ac86a1edac4035264bc7d2b8a7f1e80711306177a6f5d48031efe0080">IPCPROTO_IDDP</a>);</div>
+<div class="line">        s = socket(AF_RTIPC, SOCK_DGRAM, <a name="a1"></a><a class="code" href="group__rtdm__ipc.html#ggaabfcbcb5ac86a1edac4035264bc7d2b8a7f1e80711306177a6f5d48031efe0080">IPCPROTO_IDDP</a>);</div>
 <div class="line">        <span class="keywordflow">if</span> (s &lt; 0)</div>
 <div class="line">                fail(<span class="stringliteral">&quot;socket&quot;</span>);</div>
 <div class="line"></div>
@@ -157,7 +157,7 @@ $(document).ready(function(){initNavTree('iddp-sendrecv_8c-example.html','');});
 <div class="line"><span class="comment">         * of Xenomai&#39;s system pool.</span></div>
 <div class="line"><span class="comment">         */</span></div>
 <div class="line">        poolsz = 32768; <span class="comment">/* bytes */</span></div>
-<div class="line">        ret = setsockopt(s, SOL_IDDP, <a name="a2"></a><a class="code" href="rtdm_2uapi_2ipc_8h.html#a458014cc6cab9854202a0852a9f00c39">IDDP_POOLSZ</a>,</div>
+<div class="line">        ret = setsockopt(s, SOL_IDDP, <a name="a2"></a><a class="code" href="group__rtdm__ipc.html#ga458014cc6cab9854202a0852a9f00c39">IDDP_POOLSZ</a>,</div>
 <div class="line">                         &amp;poolsz, <span class="keyword">sizeof</span>(poolsz));</div>
 <div class="line">        <span class="keywordflow">if</span> (ret)</div>
 <div class="line">                fail(<span class="stringliteral">&quot;setsockopt&quot;</span>);</div>
@@ -189,7 +189,7 @@ $(document).ready(function(){initNavTree('iddp-sendrecv_8c-example.html','');});
 <div class="line">        <span class="keywordtype">int</span> ret, s, n = 0, len;</div>
 <div class="line">        <span class="keyword">struct </span>timespec ts;</div>
 <div class="line"></div>
-<div class="line">        s = socket(AF_RTIPC, SOCK_DGRAM, <a class="code" href="rtdm_2uapi_2ipc_8h.html#aabfcbcb5ac86a1edac4035264bc7d2b8a7f1e80711306177a6f5d48031efe0080">IPCPROTO_IDDP</a>);</div>
+<div class="line">        s = socket(AF_RTIPC, SOCK_DGRAM, <a class="code" href="group__rtdm__ipc.html#ggaabfcbcb5ac86a1edac4035264bc7d2b8a7f1e80711306177a6f5d48031efe0080">IPCPROTO_IDDP</a>);</div>
 <div class="line">        <span class="keywordflow">if</span> (s &lt; 0)</div>
 <div class="line">                fail(<span class="stringliteral">&quot;socket&quot;</span>);</div>
 <div class="line"></div>
@@ -265,7 +265,7 @@ $(document).ready(function(){initNavTree('iddp-sendrecv_8c-example.html','');});
 <div class="line">        pthread_attr_setschedpolicy(&amp;svattr, SCHED_FIFO);</div>
 <div class="line">        pthread_attr_setschedparam(&amp;svattr, &amp;svparam);</div>
 <div class="line"></div>
-<div class="line">        errno = pthread_create(&amp;svtid, &amp;svattr, &amp;server, NULL);</div>
+<div class="line">        errno = <a name="a3"></a><a class="code" href="group__cobalt__thread.html#gae1a96424296ef872696c7fb90a8ae9aa">pthread_create</a>(&amp;svtid, &amp;svattr, &amp;server, NULL);</div>
 <div class="line">        <span class="keywordflow">if</span> (errno)</div>
 <div class="line">                fail(<span class="stringliteral">&quot;pthread_create&quot;</span>);</div>
 <div class="line"></div>
@@ -275,7 +275,7 @@ $(document).ready(function(){initNavTree('iddp-sendrecv_8c-example.html','');});
 <div class="line">        pthread_attr_setschedpolicy(&amp;clattr, SCHED_FIFO);</div>
 <div class="line">        pthread_attr_setschedparam(&amp;clattr, &amp;clparam);</div>
 <div class="line"></div>
-<div class="line">        errno = pthread_create(&amp;cltid, &amp;clattr, &amp;client, NULL);</div>
+<div class="line">        errno = <a class="code" href="group__cobalt__thread.html#gae1a96424296ef872696c7fb90a8ae9aa">pthread_create</a>(&amp;cltid, &amp;clattr, &amp;client, NULL);</div>
 <div class="line">        <span class="keywordflow">if</span> (errno)</div>
 <div class="line">                fail(<span class="stringliteral">&quot;pthread_create&quot;</span>);</div>
 <div class="line"></div>

@@ -83,6 +83,8 @@ $(document).ready(function(){initNavTree('group__cobalt__sem.html','');});
 </script>
 <div id="doc-content">
 <div class="header">
+  <div class="summary">
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">Semaphores<div class="ingroups"><a class="el" href="group__cobalt.html">Cobalt/POSIX real-time API</a></div></div>  </div>
 </div><!--header-->
@@ -98,10 +100,337 @@ Collaboration diagram for Semaphores:</div>
 <area shape="rect" id="node2" href="group__cobalt.html" title="The Cobalt interface is an implementation of a small subset of the Single Unix specification over the..." alt="" coords="6,5,191,32"/></map>
 </td></tr></table></center>
 </div>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:ga6bc9a7dd941a9b5e319715b767af5682"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__sem.html#ga6bc9a7dd941a9b5e319715b767af5682">sem_destroy</a> (sem_t *sem)</td></tr>
+<tr class="memdesc:ga6bc9a7dd941a9b5e319715b767af5682"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy an unnamed semaphore.  <a href="#ga6bc9a7dd941a9b5e319715b767af5682">More...</a><br/></td></tr>
+<tr class="separator:ga6bc9a7dd941a9b5e319715b767af5682"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga015dce85cab8477c679cc47968958247"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__sem.html#ga015dce85cab8477c679cc47968958247">sem_post</a> (sem_t *sem)</td></tr>
+<tr class="memdesc:ga015dce85cab8477c679cc47968958247"><td class="mdescLeft">&#160;</td><td class="mdescRight">Post a semaphore.  <a href="#ga015dce85cab8477c679cc47968958247">More...</a><br/></td></tr>
+<tr class="separator:ga015dce85cab8477c679cc47968958247"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga4de7a9a334b01b6373b017aaefa07cf0"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__sem.html#ga4de7a9a334b01b6373b017aaefa07cf0">sem_trywait</a> (sem_t *sem)</td></tr>
+<tr class="memdesc:ga4de7a9a334b01b6373b017aaefa07cf0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Attempt to decrement a semaphore.  <a href="#ga4de7a9a334b01b6373b017aaefa07cf0">More...</a><br/></td></tr>
+<tr class="separator:ga4de7a9a334b01b6373b017aaefa07cf0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaad70020dca2241a2b78e272ca033271b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__sem.html#gaad70020dca2241a2b78e272ca033271b">sem_wait</a> (sem_t *sem)</td></tr>
+<tr class="memdesc:gaad70020dca2241a2b78e272ca033271b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Decrement a semaphore.  <a href="#gaad70020dca2241a2b78e272ca033271b">More...</a><br/></td></tr>
+<tr class="separator:gaad70020dca2241a2b78e272ca033271b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga19192f37769545c4c4661dc8d0b3daf9"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__sem.html#ga19192f37769545c4c4661dc8d0b3daf9">sem_timedwait</a> (sem_t *sem, const struct timespec *abs_timeout)</td></tr>
+<tr class="memdesc:ga19192f37769545c4c4661dc8d0b3daf9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Attempt to decrement a semaphore with a time limit.  <a href="#ga19192f37769545c4c4661dc8d0b3daf9">More...</a><br/></td></tr>
+<tr class="separator:ga19192f37769545c4c4661dc8d0b3daf9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga4e398fea1080fd7919e5c72ee94e2fc5"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__sem.html#ga4e398fea1080fd7919e5c72ee94e2fc5">sem_close</a> (sem_t *sem)</td></tr>
+<tr class="memdesc:ga4e398fea1080fd7919e5c72ee94e2fc5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Close a named semaphore.  <a href="#ga4e398fea1080fd7919e5c72ee94e2fc5">More...</a><br/></td></tr>
+<tr class="separator:ga4e398fea1080fd7919e5c72ee94e2fc5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga776256d1a473906f8b7490689bfcb75c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__sem.html#ga776256d1a473906f8b7490689bfcb75c">sem_unlink</a> (const char *name)</td></tr>
+<tr class="memdesc:ga776256d1a473906f8b7490689bfcb75c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Unlink a named semaphore.  <a href="#ga776256d1a473906f8b7490689bfcb75c">More...</a><br/></td></tr>
+<tr class="separator:ga776256d1a473906f8b7490689bfcb75c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>Cobalt/POSIX semaphore services. </p>
 <p>Semaphores are counters for resources shared between threads. The basic operations on semaphores are: increment the counter atomically, and wait until the counter is non-null and decrement it atomically.</p>
 <p>Semaphores have a maximum value past which they cannot be incremented. The macro <em>SEM_VALUE_MAX</em> is defined to be this maximum value. </p>
+<h2 class="groupheader">Function Documentation</h2>
+<a class="anchor" id="ga4e398fea1080fd7919e5c72ee94e2fc5"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int sem_close </td>
+          <td>(</td>
+          <td class="paramtype">sem_t *&#160;</td>
+          <td class="paramname"><em>sem</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Close a named semaphore. </p>
+<p>This service closes the semaphore <em>sem</em>. The semaphore is destroyed only when unlinked with a call to the <a class="el" href="group__cobalt__sem.html#ga776256d1a473906f8b7490689bfcb75c" title="Unlink a named semaphore. ">sem_unlink()</a> service and when each call to sem_open() matches a call to this service.</p>
+<p>When a semaphore is destroyed, the memory it used is returned to the system heap, so that further references to this semaphore are not guaranteed to fail, as is the case for unnamed semaphores.</p>
+<p>This service fails if <em>sem</em> is an unnamed semaphore.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">sem</td><td>the semaphore to be closed.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">0</td><td>on success; </td></tr>
+    <tr><td class="paramname">-1</td><td>with <em>errno</em> set if:<ul>
+<li>EINVAL, the semaphore <em>sem</em> is invalid or is an unnamed semaphore.</li>
+</ul>
+</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_close.html">Specification.</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga6bc9a7dd941a9b5e319715b767af5682"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int sem_destroy </td>
+          <td>(</td>
+          <td class="paramtype">sem_t *&#160;</td>
+          <td class="paramname"><em>sem</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Destroy an unnamed semaphore. </p>
+<p>This service destroys the semaphore <em>sem</em>. Threads currently blocked on <em>sem</em> are unblocked and the service they called return -1 with <em>errno</em> set to EINVAL. The semaphore is then considered invalid by all semaphore services (they all fail with <em>errno</em> set to EINVAL) except sem_init().</p>
+<p>This service fails if <em>sem</em> is a named semaphore.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">sem</td><td>the semaphore to be destroyed.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">always</td><td>0 on success. If SEM_WARNDEL was mentioned in sem_init_np(), the semaphore is deleted as requested and a strictly positive value is returned to warn the caller if threads were pending on it, otherwise zero is returned. If SEM_NOBUSYDEL was mentioned in sem_init_np(), <a class="el" href="group__cobalt__sem.html#ga6bc9a7dd941a9b5e319715b767af5682" title="Destroy an unnamed semaphore. ">sem_destroy()</a> may succeed only if no thread is waiting on the semaphore to delete, otherwise -EBUSY is returned.</td></tr>
+    <tr><td class="paramname">-1</td><td>with <em>errno</em> set if:<ul>
+<li>EINVAL, the semaphore <em>sem</em> is invalid or a named semaphore;</li>
+<li>EPERM, the semaphore <em>sem</em> is not process-shared and does not belong to the current process.</li>
+<li>EBUSY, a thread is currently waiting on the semaphore <em>sem</em> with SEM_NOBUSYDEL set.</li>
+</ul>
+</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_destroy.html">Specification.</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga015dce85cab8477c679cc47968958247"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int sem_post </td>
+          <td>(</td>
+          <td class="paramtype">sem_t *&#160;</td>
+          <td class="paramname"><em>sem</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Post a semaphore. </p>
+<p>This service posts the semaphore <em>sem</em>.</p>
+<p>If no thread is currently blocked on this semaphore, its count is incremented unless "pulse" mode is enabled for it (see sem_init_np(), SEM_PULSE). If a thread is blocked on the semaphore, the thread heading the wait queue is unblocked.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">sem</td><td>the semaphore to be signaled.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">0</td><td>on success; </td></tr>
+    <tr><td class="paramname">-1</td><td>with errno set if:<ul>
+<li>EINVAL, the specified semaphore is invalid or uninitialized;</li>
+<li>EPERM, the semaphore <em>sm</em> is not process-shared and does not belong to the current process;</li>
+<li>EAGAIN, the semaphore count is <em>SEM_VALUE_MAX</em>.</li>
+</ul>
+</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_post.html">Specification.</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga19192f37769545c4c4661dc8d0b3daf9"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int sem_timedwait </td>
+          <td>(</td>
+          <td class="paramtype">sem_t *&#160;</td>
+          <td class="paramname"><em>sem</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const struct timespec *&#160;</td>
+          <td class="paramname"><em>abs_timeout</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Attempt to decrement a semaphore with a time limit. </p>
+<p>This service is equivalent to <a class="el" href="group__cobalt__sem.html#gaad70020dca2241a2b78e272ca033271b" title="Decrement a semaphore. ">sem_wait()</a>, except that the caller is only blocked until the timeout <em>abs_timeout</em> expires.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">sem</td><td>the semaphore to be decremented;</td></tr>
+    <tr><td class="paramname">abs_timeout</td><td>the timeout, expressed as an absolute value of the relevant clock for the semaphore, either CLOCK_MONOTONIC if SEM_RAWCLOCK was mentioned via sem_init_np(), or CLOCK_REALTIME otherwise.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">0</td><td>on success; </td></tr>
+    <tr><td class="paramname">-1</td><td>with <em>errno</em> set if:<ul>
+<li>EPERM, the caller context is invalid;</li>
+<li>EINVAL, the semaphore is invalid or uninitialized;</li>
+<li>EINVAL, the specified timeout is invalid;</li>
+<li>EPERM, the semaphore <em>sm</em> is not process-shared and does not belong to the current process;</li>
+<li>EINTR, the caller was interrupted by a signal while blocked in this service;</li>
+<li>ETIMEDOUT, the semaphore could not be decremented and the specified timeout expired.</li>
+</ul>
+</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section user"><dt>Valid contexts:</dt><dd><ul>
+<li>Xenomai kernel-space thread,</li>
+<li>Xenomai user-space thread (switches to primary mode).</li>
+</ul>
+</dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_timedwait.html">Specification.</a> </dd></dl>
+
+<p>References <a class="el" href="group__cobalt__sem.html#ga4de7a9a334b01b6373b017aaefa07cf0">sem_trywait()</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="ga4de7a9a334b01b6373b017aaefa07cf0"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int sem_trywait </td>
+          <td>(</td>
+          <td class="paramtype">sem_t *&#160;</td>
+          <td class="paramname"><em>sem</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Attempt to decrement a semaphore. </p>
+<p>This service is equivalent to <a class="el" href="group__cobalt__sem.html#gaad70020dca2241a2b78e272ca033271b" title="Decrement a semaphore. ">sem_wait()</a>, except that it returns immediately if the semaphore <em>sem</em> is currently depleted, and that it is not a cancellation point.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">sem</td><td>the semaphore to be decremented.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">0</td><td>on success; </td></tr>
+    <tr><td class="paramname">-1</td><td>with <em>errno</em> set if:<ul>
+<li>EINVAL, the specified semaphore is invalid or uninitialized;</li>
+<li>EPERM, the semaphore <em>sem</em> is not process-shared and does not belong to the current process;</li>
+<li>EAGAIN, the specified semaphore is currently fully depleted.</li>
+<li></li>
+</ul>
+</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_trywait.html">Specification.</a> </dd></dl>
+
+<p>Referenced by <a class="el" href="group__cobalt__sem.html#ga19192f37769545c4c4661dc8d0b3daf9">sem_timedwait()</a>, and <a class="el" href="group__cobalt__sem.html#gaad70020dca2241a2b78e272ca033271b">sem_wait()</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="ga776256d1a473906f8b7490689bfcb75c"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int sem_unlink </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>name</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Unlink a named semaphore. </p>
+<p>This service unlinks the semaphore named <em>name</em>. This semaphore is not destroyed until all references obtained with sem_open() are closed by calling <a class="el" href="group__cobalt__sem.html#ga4e398fea1080fd7919e5c72ee94e2fc5" title="Close a named semaphore. ">sem_close()</a>. However, the unlinked semaphore may no longer be reached with the sem_open() service.</p>
+<p>When a semaphore is destroyed, the memory it used is returned to the system heap, so that further references to this semaphore are not guaranteed to fail, as is the case for unnamed semaphores.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">name</td><td>the name of the semaphore to be unlinked.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">0</td><td>on success; </td></tr>
+    <tr><td class="paramname">-1</td><td>with <em>errno</em> set if:<ul>
+<li>ENAMETOOLONG, the length of the <em>name</em> argument exceeds 64 characters;</li>
+<li>ENOENT, the named semaphore does not exist.</li>
+</ul>
+</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_unlink.html">Specification.</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="gaad70020dca2241a2b78e272ca033271b"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int sem_wait </td>
+          <td>(</td>
+          <td class="paramtype">sem_t *&#160;</td>
+          <td class="paramname"><em>sem</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Decrement a semaphore. </p>
+<p>This service decrements the semaphore <em>sem</em> if it is currently if its value is greater than 0. If the semaphore's value is currently zero, the calling thread is suspended until the semaphore is posted, or a signal is delivered to the calling thread.</p>
+<p>This service is a cancellation point for Cobalt threads (created with the <a class="el" href="group__cobalt__thread.html#gae1a96424296ef872696c7fb90a8ae9aa" title="Create a new thread. ">pthread_create()</a> service). When such a thread is cancelled while blocked in a call to this service, the semaphore state is left unchanged before the cancellation cleanup handlers are called.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">sem</td><td>the semaphore to be decremented.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">0</td><td>on success; </td></tr>
+    <tr><td class="paramname">-1</td><td>with <em>errno</em> set if:<ul>
+<li>EPERM, the caller context is invalid;</li>
+<li>EINVAL, the semaphore is invalid or uninitialized;</li>
+<li>EPERM, the semaphore <em>sem</em> is not process-shared and does not belong to the current process;</li>
+<li>EINTR, the caller was interrupted by a signal while blocked in this service.</li>
+</ul>
+</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section user"><dt>Valid contexts:</dt><dd><ul>
+<li>Xenomai kernel-space thread,</li>
+<li>Xenomai user-space thread (switches to primary mode).</li>
+</ul>
+</dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_wait.html">Specification.</a> </dd></dl>
+
+<p>References <a class="el" href="group__cobalt__sem.html#ga4de7a9a334b01b6373b017aaefa07cf0">sem_trywait()</a>.</p>
+
+</div>
+</div>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

@@ -255,13 +255,17 @@ CAN controller states</h2></td></tr>
 <tr><td class="ititle" colspan="2"><p><a class="anchor" id="amgrpbeee666541059166baa8758375561c32"></a><a class="anchor" id="CAN_STATE"></a>States a CAN controller can be in. </p>
 </td></tr>
 <tr class="memitem:ga8680f5710e1a13d553067cc32c86226b"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#ga8680f5710e1a13d553067cc32c86226b">CAN_STATE</a> { <br/>
-&#160;&#160;<a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba026154ef3a7f9cb633e43ab7e63d769c">CAN_STATE_ERROR_ACTIVE</a> = 0
-, <a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba15263a89961afbc4e813c7ccfc59e5ff">CAN_STATE_ERROR_WARNING</a> = 1
-, <a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226bac2cd08cde738273c5e5df8306c48d8ae">CAN_STATE_ERROR_PASSIVE</a> = 2
-, <a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba679935a8710667fcb99423d217cd9959">CAN_STATE_BUS_OFF</a>, 
+&#160;&#160;<a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba026154ef3a7f9cb633e43ab7e63d769c">CAN_STATE_ERROR_ACTIVE</a> = 0, 
+<a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba7db2add3bd2ed5a01893a3d2a012ac67">CAN_STATE_ACTIVE</a> = 0, 
+<a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba15263a89961afbc4e813c7ccfc59e5ff">CAN_STATE_ERROR_WARNING</a> = 1, 
+<a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba8e8ffc38c3886c8ab4b7a6ebd24db2e1">CAN_STATE_BUS_WARNING</a> = 1, 
 <br/>
-&#160;&#160;<a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226bacc4b4039f38316b01662d775eeb981ff">CAN_STATE_SCANNING_BAUDRATE</a>, 
-<a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba644e7a441f2e607b93528d3128508cc8">CAN_STATE_STOPPED</a>, 
+&#160;&#160;<a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226bac2cd08cde738273c5e5df8306c48d8ae">CAN_STATE_ERROR_PASSIVE</a> = 2, 
+<a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba16806979589ee8f20ee84c767903b667">CAN_STATE_BUS_PASSIVE</a> = 2, 
+<a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba679935a8710667fcb99423d217cd9959">CAN_STATE_BUS_OFF</a>, 
+<a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226bacc4b4039f38316b01662d775eeb981ff">CAN_STATE_SCANNING_BAUDRATE</a>, 
+<br/>
+&#160;&#160;<a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba644e7a441f2e607b93528d3128508cc8">CAN_STATE_STOPPED</a>, 
 <a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba2bb74d448dac491e9cfcc7f7bcc14857">CAN_STATE_SLEEPING</a>
 <br/>
  }</td></tr>
@@ -359,7 +363,7 @@ Error mask</h2></td></tr>
 <tr class="separator:ga8086092a2e40c1b0429caaad3b2c8675"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga0fdfaa2091c61c2db8caa7a51e8c0037"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga0fdfaa2091c61c2db8caa7a51e8c0037"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#ga0fdfaa2091c61c2db8caa7a51e8c0037">CAN_ERR_PROT</a>&#160;&#160;&#160;0x00000008U</td></tr>
-<tr class="memdesc:ga0fdfaa2091c61c2db8caa7a51e8c0037"><td class="mdescLeft">&#160;</td><td class="mdescRight">Protocol violations (see <a class="el" href="group__rtdm__can.html#Error2">data[2]</a>, <a class="el" href="/home/rpm/git/xenomai-forge/include/rtdm/uapi/can.h.html#Error3">data[3]</a>) <br/></td></tr>
+<tr class="memdesc:ga0fdfaa2091c61c2db8caa7a51e8c0037"><td class="mdescLeft">&#160;</td><td class="mdescRight">Protocol violations (see <a class="el" href="group__rtdm__can.html#Error2">data[2]</a>, <a class="el" href="/opt/packages/xenomai-forge/include/rtdm/uapi/can.h.html#Error3">data[3]</a>) <br/></td></tr>
 <tr class="separator:ga0fdfaa2091c61c2db8caa7a51e8c0037"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaf0026f916a985610cc449ffa6a31445f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gaf0026f916a985610cc449ffa6a31445f"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdm__can.html#gaf0026f916a985610cc449ffa6a31445f">CAN_ERR_TRX</a>&#160;&#160;&#160;0x00000010U</td></tr>
@@ -754,7 +758,8 @@ Specific return values:<ul>
 </div><div class="memdoc">
 <p>Listen-Only mode</p>
 <p>In this mode the CAN controller would give no acknowledge to the CAN-bus, even if a message is received successfully and messages would not be transmitted. This mode might be useful for bus-monitoring, hot-plugging or throughput analysis. </p>
-
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanconfig_8c-example.html#a3">rtcanconfig.c</a>.</dd>
+</dl>
 </div>
 </div>
 <a class="anchor" id="ga19ec0cc4379e80c32cbd333cf7c145e9"></a>
@@ -768,7 +773,8 @@ Specific return values:<ul>
 </div><div class="memdoc">
 <p>Loopback mode</p>
 <p>In this mode the CAN controller does an internal loop-back, a message is transmitted and simultaneously received. That mode can be used for self test operation. </p>
-
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanconfig_8c-example.html#a4">rtcanconfig.c</a>.</dd>
+</dl>
 </div>
 </div>
 <a class="anchor" id="ga7fa1bc55bccfadf780c0556c7d4d7fef"></a>
@@ -816,7 +822,8 @@ Specific return values:</p>
 <li>-EFAULT (It was not possible to access user space memory area at the specified address.)</li>
 <li>-EINVAL (Invalid length "optlen")</li>
 </ul>
-
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanrecv_8c-example.html#a25">rtcanrecv.c</a>.</dd>
+</dl>
 </div>
 </div>
 <a class="anchor" id="ga87313c6e632294aa4582899a3bbc89e4"></a>
@@ -852,7 +859,8 @@ Specific return values:<ul>
   </table>
   </dd>
 </dl>
-
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="can-rtt_8c-example.html#a9">can-rtt.c</a>, <a class="el" href="rtcanrecv_8c-example.html#a26">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a19">rtcansend.c</a>.</dd>
+</dl>
 </div>
 </div>
 <a class="anchor" id="gaa7eb7dc3aa940a0aca20d3a564a147d9"></a>
@@ -887,7 +895,8 @@ Specific return values:</p>
 <li>-EINVAL (Invalid length "optlen")</li>
 <li>-EOPNOTSUPP (not supported, check RT-Socket-CAN kernel parameters). </li>
 </ul>
-
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcansend_8c-example.html#a15">rtcansend.c</a>.</dd>
+</dl>
 </div>
 </div>
 <a class="anchor" id="ga712942ca3d0d621184fb2019a24677c3"></a>
@@ -937,7 +946,8 @@ Specific return values:</p>
 <li>User-space task (RT, non-RT)</li>
 </ul>
 <p>Rescheduling: never. </p>
-
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanrecv_8c-example.html#a29">rtcanrecv.c</a>.</dd>
+</dl>
 </div>
 </div>
 <a class="anchor" id="gad3758528585b2779e8949df671f1cf6c"></a>
@@ -972,7 +982,8 @@ Specific return values:</p>
 <li>User-space task (RT, non-RT)</li>
 </ul>
 <p>Rescheduling: never. </p>
-
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcansend_8c-example.html#a22">rtcansend.c</a>.</dd>
+</dl>
 </div>
 </div>
 <a class="anchor" id="gaedd7bd75a1983735052fed62e101e5ce"></a>
@@ -1003,7 +1014,8 @@ Specific return values:</p>
 </ul>
 <dl class="section note"><dt>Note</dt><dd>Activating taking timestamps only has an effect on newly received CAN messages from the bus. Frames that already are in the socket buffer do not have timestamps if it was deactivated before. See <a class="el" href="group__rtdm__can.html#Recv">Receive</a> for more details.</dd></dl>
 <p>Rescheduling: never. </p>
-
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanrecv_8c-example.html#a30">rtcanrecv.c</a>.</dd>
+</dl>
 </div>
 </div>
 <a class="anchor" id="ga9a3032f07b3a6a2f92eb2ba25a4ff8bf"></a>
@@ -1172,7 +1184,8 @@ Specific return values:</p>
 <li>User-space task (RT, non-RT)</li>
 </ul>
 <p>Rescheduling: never. </p>
-
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="can-rtt_8c-example.html#a7">can-rtt.c</a>, <a class="el" href="rtcanconfig_8c-example.html#a10">rtcanconfig.c</a>, <a class="el" href="rtcanrecv_8c-example.html#a22">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a17">rtcansend.c</a>.</dd>
+</dl>
 </div>
 </div>
 <a class="anchor" id="ga7c070037c218b40de849ebf4d299f977"></a>
@@ -1210,7 +1223,8 @@ Specific return values:</p>
 </ul>
 <dl class="section note"><dt>Note</dt><dd>Setting the baud rate is a configuration task. It should be done deliberately or otherwise CAN messages will likely be lost.</dd></dl>
 <p>Rescheduling: possible. </p>
-
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanconfig_8c-example.html#a11">rtcanconfig.c</a>.</dd>
+</dl>
 </div>
 </div>
 <a class="anchor" id="ga26fa69d2cded6e172b96b4a6dc3798df"></a>
@@ -1247,7 +1261,8 @@ Specific return values:</p>
 </ul>
 <dl class="section note"><dt>Note</dt><dd>Setting special controller modes is a configuration task. It should be done deliberately or otherwise CAN messages will likely be lost.</dd></dl>
 <p>Rescheduling: possible. </p>
-
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanconfig_8c-example.html#a26">rtcanconfig.c</a>.</dd>
+</dl>
 </div>
 </div>
 <a class="anchor" id="ga4e9547dcb608fd0b8d5cf57f926e5176"></a>
@@ -1284,7 +1299,8 @@ Specific return values:</p>
 </ul>
 <dl class="section note"><dt>Note</dt><dd>Setting the bit-time is a configuration task. It should be done deliberately or otherwise CAN messages will likely be lost.</dd></dl>
 <p>Rescheduling: possible. </p>
-
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanconfig_8c-example.html#a25">rtcanconfig.c</a>.</dd>
+</dl>
 </div>
 </div>
 <a class="anchor" id="ga72b56a34fe466bca858b1f5f401e1076"></a>
@@ -1321,10 +1337,11 @@ Specific return values:</p>
 <li>Kernel-based task</li>
 <li>User-space task (RT, non-RT)</li>
 </ul>
-<dl class="section note"><dt>Note</dt><dd>Setting a CAN controller into normal operation after a bus-off can take some time (128 occurrences of 11 consecutive recessive bits). In such a case, although this IOCTL will return immediately with success and <a class="el" href="group__rtdm__can.html#ga5b5f750db08d56f40489679f22236ef4">SIOCGCANSTATE</a> will report CAN_STATE_ACTIVE, bus-off recovery may still be in progress. <br/>
+<dl class="section note"><dt>Note</dt><dd>Setting a CAN controller into normal operation after a bus-off can take some time (128 occurrences of 11 consecutive recessive bits). In such a case, although this IOCTL will return immediately with success and <a class="el" href="group__rtdm__can.html#ga5b5f750db08d56f40489679f22236ef4">SIOCGCANSTATE</a> will report <a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba7db2add3bd2ed5a01893a3d2a012ac67">CAN_STATE_ACTIVE</a>, bus-off recovery may still be in progress. <br/>
 If a controller is bus-off, setting it into stop mode will return no error but the controller remains bus-off.</dd></dl>
 <p>Rescheduling: possible. </p>
-
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanconfig_8c-example.html#a27">rtcanconfig.c</a>.</dd>
+</dl>
 </div>
 </div>
 <a class="anchor" id="gad981aa82a29d828882a2fb4c35c1cdd7"></a>
@@ -1339,7 +1356,8 @@ If a controller is bus-off, setting it into stop mode will return no error but t
 
 <p>CAN socket levels. </p>
 <p>Used for <a class="el" href="group__rtdm__can.html#Sockopts">Sockopts</a> for the particular protocols. </p>
-
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="can-rtt_8c-example.html#a8">can-rtt.c</a>, <a class="el" href="rtcanrecv_8c-example.html#a24">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a14">rtcansend.c</a>.</dd>
+</dl>
 </div>
 </div>
 <h2 class="groupheader">Typedef Documentation</h2>
@@ -1378,7 +1396,8 @@ If a controller is bus-off, setting it into stop mode will return no error but t
 
 <p>Raw CAN frame. </p>
 <p>Central structure for receiving and sending CAN frames. </p>
-
+<dl><dt><b>Examples: </b></dt><dd><a class="el" href="rtcanrecv_8c-example.html#a6">rtcanrecv.c</a>.</dd>
+</dl>
 </div>
 </div>
 <h2 class="groupheader">Enumeration Type Documentation</h2>
@@ -1419,7 +1438,7 @@ If a controller is bus-off, setting it into stop mode will return no error but t
 </td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="ggac0d6cdda2cf4abb51116b86bc99acf99af9c617b6b198770017f6e7198bfb50b6"></a>CAN_MODE_START</em>&#160;</td><td class="fielddoc">
 <p>Set controller into normal operation. <br/>
- Coming from stopped mode or bus off, the controller begins with no errors in CAN_STATE_ACTIVE. </p>
+ Coming from stopped mode or bus off, the controller begins with no errors in <a class="el" href="group__rtdm__can.html#gga8680f5710e1a13d553067cc32c86226ba7db2add3bd2ed5a01893a3d2a012ac67">CAN_STATE_ACTIVE</a>. </p>
 </td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="ggac0d6cdda2cf4abb51116b86bc99acf99a57866c198e12c54747aca0786dc33e3e"></a>CAN_MODE_SLEEP</em>&#160;</td><td class="fielddoc">
 <p>Set controller into Sleep mode. <br/>
@@ -1444,10 +1463,19 @@ If a controller is bus-off, setting it into stop mode will return no error but t
 <tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><em><a class="anchor" id="gga8680f5710e1a13d553067cc32c86226ba026154ef3a7f9cb633e43ab7e63d769c"></a>CAN_STATE_ERROR_ACTIVE</em>&#160;</td><td class="fielddoc">
 <p>CAN controller is error active. </p>
 </td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="gga8680f5710e1a13d553067cc32c86226ba7db2add3bd2ed5a01893a3d2a012ac67"></a>CAN_STATE_ACTIVE</em>&#160;</td><td class="fielddoc">
+<p>CAN controller is active. </p>
+</td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="gga8680f5710e1a13d553067cc32c86226ba15263a89961afbc4e813c7ccfc59e5ff"></a>CAN_STATE_ERROR_WARNING</em>&#160;</td><td class="fielddoc">
 <p>CAN controller is error active, warning level is reached. </p>
 </td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="gga8680f5710e1a13d553067cc32c86226ba8e8ffc38c3886c8ab4b7a6ebd24db2e1"></a>CAN_STATE_BUS_WARNING</em>&#160;</td><td class="fielddoc">
+<p>CAN controller is error active, warning level is reached. </p>
+</td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="gga8680f5710e1a13d553067cc32c86226bac2cd08cde738273c5e5df8306c48d8ae"></a>CAN_STATE_ERROR_PASSIVE</em>&#160;</td><td class="fielddoc">
+<p>CAN controller is error passive. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="gga8680f5710e1a13d553067cc32c86226ba16806979589ee8f20ee84c767903b667"></a>CAN_STATE_BUS_PASSIVE</em>&#160;</td><td class="fielddoc">
 <p>CAN controller is error passive. </p>
 </td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="gga8680f5710e1a13d553067cc32c86226ba679935a8710667fcb99423d217cd9959"></a>CAN_STATE_BUS_OFF</em>&#160;</td><td class="fielddoc">

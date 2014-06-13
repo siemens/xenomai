@@ -22,6 +22,7 @@
 <area shape="rect" id="node46" href="$include_2cobalt_2kernel_2clock_8h.html" title="cobalt/kernel/clock.h" alt="" coords="1111,253,1253,280"/>
 <area shape="rect" id="node47" href="$apc_8h.html" title="cobalt/kernel/apc.h" alt="" coords="1482,344,1613,371"/>
 <area shape="rect" id="node48" href="$include_2cobalt_2kernel_2init_8h_source.html" title="cobalt/kernel/init.h" alt="" coords="2343,253,2471,280"/>
+<area shape="rect" id="node49" href="$rtdm_2rtdm_8h.html" title="rtdm/rtdm.h" alt="" coords="2495,253,2584,280"/>
 <area shape="rect" id="node34" href="$include_2cobalt_2kernel_2thread_8h_source.html" title="cobalt/kernel/thread.h" alt="" coords="2664,344,2811,371"/>
 <area shape="rect" id="node37" href="$schedqueue_8h_source.html" title="cobalt/kernel/schedqueue.h" alt="" coords="2272,435,2453,461"/>
 <area shape="rect" id="node38" href="$sched-tp_8h_source.html" title="cobalt/kernel/sched&#45;tp.h" alt="" coords="2110,344,2271,371"/>

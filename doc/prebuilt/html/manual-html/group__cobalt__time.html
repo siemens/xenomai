@@ -103,10 +103,13 @@ Collaboration diagram for Clocks and timers:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ga8a24ab6b0901162bbbbbca4f5205abd0"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0">timer_create</a> (clockid_t clockid, const struct sigevent *__restrict__ evp, timer_t *__restrict__ timerid)</td></tr>
+<tr class="memitem:ga8a24ab6b0901162bbbbbca4f5205abd0"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0">timer_create</a> (clockid_t clockid, const struct sigevent *__restrict__ evp, timer_t *__restrict__ timerid)</td></tr>
 <tr class="memdesc:ga8a24ab6b0901162bbbbbca4f5205abd0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a timer.  <a href="#ga8a24ab6b0901162bbbbbca4f5205abd0">More...</a><br/></td></tr>
 <tr class="separator:ga8a24ab6b0901162bbbbbca4f5205abd0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga520e1913c35aa3352259dafa3259d140"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__time.html#ga520e1913c35aa3352259dafa3259d140">timer_gettime</a> (timer_t timerid, struct itimerspec *value)</td></tr>
+<tr class="memitem:ga2c513dc9b3734f5e23fc7b8a5cf11c95"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__time.html#ga2c513dc9b3734f5e23fc7b8a5cf11c95">timer_settime</a> (timer_t timerid, int flags, const struct itimerspec *__restrict__ value, struct itimerspec *__restrict__ ovalue)</td></tr>
+<tr class="memdesc:ga2c513dc9b3734f5e23fc7b8a5cf11c95"><td class="mdescLeft">&#160;</td><td class="mdescRight">Start or stop a timer.  <a href="#ga2c513dc9b3734f5e23fc7b8a5cf11c95">More...</a><br/></td></tr>
+<tr class="separator:ga2c513dc9b3734f5e23fc7b8a5cf11c95"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga520e1913c35aa3352259dafa3259d140"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__time.html#ga520e1913c35aa3352259dafa3259d140">timer_gettime</a> (timer_t timerid, struct itimerspec *value)</td></tr>
 <tr class="memdesc:ga520e1913c35aa3352259dafa3259d140"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get timer next expiration date and reload value.  <a href="#ga520e1913c35aa3352259dafa3259d140">More...</a><br/></td></tr>
 <tr class="separator:ga520e1913c35aa3352259dafa3259d140"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -123,9 +126,6 @@ Functions</h2></td></tr>
 <a class="anchor" id="ga8a24ab6b0901162bbbbbca4f5205abd0"></a>
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">int timer_create </td>
@@ -151,11 +151,6 @@ Functions</h2></td></tr>
           <td></td><td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>Create a timer. </p>
@@ -163,7 +158,7 @@ Functions</h2></td></tr>
 <p>If <em>evp</em> is not <em>NULL</em>, it describes the notification mechanism used on timer expiration. Only thread-directed notification is supported (evp-&gt;sigev_notify set to <em>SIGEV_THREAD_ID</em>).</p>
 <p>If <em>evp</em> is NULL, the current Cobalt thread will receive the notifications with signal SIGALRM.</p>
 <p>The recipient thread is delivered notifications when it calls any of the sigwait(), sigtimedwait() or sigwaitinfo() services.</p>
-<p>If this service succeeds, an identifier for the created timer is returned at the address <em>timerid</em>. The timer is unarmed until started with the timer_settime() service.</p>
+<p>If this service succeeds, an identifier for the created timer is returned at the address <em>timerid</em>. The timer is unarmed until started with the <a class="el" href="group__cobalt__time.html#ga2c513dc9b3734f5e23fc7b8a5cf11c95" title="Start or stop a timer. ">timer_settime()</a> service.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">clockid</td><td>clock used as a timing base;</td></tr>
@@ -192,9 +187,6 @@ Functions</h2></td></tr>
 <a class="anchor" id="ga520e1913c35aa3352259dafa3259d140"></a>
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">int timer_gettime </td>
@@ -214,11 +206,6 @@ Functions</h2></td></tr>
           <td></td><td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>Get timer next expiration date and reload value. </p>
@@ -241,6 +228,77 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_gettime.html">Specification.</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga2c513dc9b3734f5e23fc7b8a5cf11c95"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">timer_settime </td>
+          <td>(</td>
+          <td class="paramtype">timer_t&#160;</td>
+          <td class="paramname"><em>timerid</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>flags</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const struct itimerspec *__restrict__&#160;</td>
+          <td class="paramname"><em>value</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct itimerspec *__restrict__&#160;</td>
+          <td class="paramname"><em>ovalue</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Start or stop a timer. </p>
+<p>This service sets a timer expiration date and reload value of the timer <em>timerid</em>. If <em>ovalue</em> is not <em>NULL</em>, the current expiration date and reload value are stored at the address <em>ovalue</em> as with <a class="el" href="group__cobalt__time.html#ga520e1913c35aa3352259dafa3259d140" title="Get timer next expiration date and reload value. ">timer_gettime()</a>.</p>
+<p>If the member <em>it_value</em> of the <b>itimerspec</b> structure at <em>value</em> is zero, the timer is stopped, otherwise the timer is started. If the member <em>it_interval</em> is not zero, the timer is periodic. The current thread must be a Cobalt thread (created with <a class="el" href="group__cobalt__thread.html#gae1a96424296ef872696c7fb90a8ae9aa" title="Create a new thread. ">pthread_create()</a>) and will be notified via signal of timer expirations. Note that these notifications will cause user-space threads to switch to secondary mode.</p>
+<p>When starting the timer, if <em>flags</em> is TIMER_ABSTIME, the expiration value is interpreted as an absolute date of the clock passed to the <a class="el" href="group__cobalt__time.html#ga8a24ab6b0901162bbbbbca4f5205abd0" title="Create a timer. ">timer_create()</a> service. Otherwise, the expiration value is interpreted as a time interval.</p>
+<p>Expiration date and reload value are rounded to an integer count of nanoseconds.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">timerid</td><td>identifier of the timer to be started or stopped;</td></tr>
+    <tr><td class="paramname">flags</td><td>one of 0 or TIMER_ABSTIME;</td></tr>
+    <tr><td class="paramname">value</td><td>address where the specified timer expiration date and reload value are read;</td></tr>
+    <tr><td class="paramname">ovalue</td><td>address where the specified timer previous expiration date and reload value are stored if not <em>NULL</em>.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">0</td><td>on success; </td></tr>
+    <tr><td class="paramname">-1</td><td>with <em>errno</em> set if:<ul>
+<li>EINVAL, the specified timer identifier, expiration date or reload value is invalid. For <em>timerid</em> to be valid, it must belong to the current process.</li>
+</ul>
+</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section user"><dt>Valid contexts:</dt><dd><ul>
+<li>Cobalt kernel-space thread,</li>
+<li>kernel-space thread cancellation cleanup routine,</li>
+<li>Cobalt user-space thread (switches to primary mode),</li>
+<li>user-space thread cancellation cleanup routine.</li>
+</ul>
+</dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_settime.html">Specification.</a> </dd></dl>
 
 </div>
 </div>

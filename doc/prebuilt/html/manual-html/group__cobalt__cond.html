@@ -83,6 +83,8 @@ $(document).ready(function(){initNavTree('group__cobalt__cond.html','');});
 </script>
 <div id="doc-content">
 <div class="header">
+  <div class="summary">
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">Condition variables<div class="ingroups"><a class="el" href="group__cobalt.html">Cobalt/POSIX real-time API</a></div></div>  </div>
 </div><!--header-->
@@ -98,12 +100,106 @@ Collaboration diagram for Condition variables:</div>
 <area shape="rect" id="node2" href="group__cobalt.html" title="The Cobalt interface is an implementation of a small subset of the Single Unix specification over the..." alt="" coords="6,5,191,32"/></map>
 </td></tr></table></center>
 </div>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:gad5b6c558bcd5260289981207b9ca9687"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__cond.html#gad5b6c558bcd5260289981207b9ca9687">pthread_cond_init</a> (pthread_cond_t *cond, const pthread_condattr_t *attr)</td></tr>
+<tr class="memdesc:gad5b6c558bcd5260289981207b9ca9687"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize a condition variable.  <a href="#gad5b6c558bcd5260289981207b9ca9687">More...</a><br/></td></tr>
+<tr class="separator:gad5b6c558bcd5260289981207b9ca9687"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaa1587e01856a579b78effd0a1a284a47"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__cobalt__cond.html#gaa1587e01856a579b78effd0a1a284a47">pthread_cond_destroy</a> (pthread_cond_t *cond)</td></tr>
+<tr class="memdesc:gaa1587e01856a579b78effd0a1a284a47"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy a condition variable.  <a href="#gaa1587e01856a579b78effd0a1a284a47">More...</a><br/></td></tr>
+<tr class="separator:gaa1587e01856a579b78effd0a1a284a47"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>Cobalt/POSIX condition variable services. </p>
 <p>A condition variable is a synchronization object that allows threads to suspend execution until some predicate on shared data is satisfied. The basic operations on conditions are: signal the condition (when the predicate becomes true), and wait for the condition, suspending the thread execution until another thread signals the condition.</p>
 <p>A condition variable must always be associated with a mutex, to avoid the race condition where a thread prepares to wait on a condition variable and another thread signals the condition just before the first thread actually waits on it.</p>
-<p>Before it can be used, a condition variable has to be initialized with pthread_cond_init(). An attribute object, which reference may be passed to this service, allows to select the features of the created condition variable, namely the <em>clock</em> used by the pthread_cond_timedwait() service (<em>CLOCK_REALTIME</em> is used by default), and whether it may be shared between several processes (it may not be shared by default, see pthread_condattr_setpshared()).</p>
-<p>Note that only pthread_cond_init() may be used to initialize a condition variable, using the static initializer <em>PTHREAD_COND_INITIALIZER</em> is not supported. </p>
+<p>Before it can be used, a condition variable has to be initialized with <a class="el" href="group__cobalt__cond.html#gad5b6c558bcd5260289981207b9ca9687" title="Initialize a condition variable. ">pthread_cond_init()</a>. An attribute object, which reference may be passed to this service, allows to select the features of the created condition variable, namely the <em>clock</em> used by the pthread_cond_timedwait() service (<em>CLOCK_REALTIME</em> is used by default), and whether it may be shared between several processes (it may not be shared by default, see pthread_condattr_setpshared()).</p>
+<p>Note that only <a class="el" href="group__cobalt__cond.html#gad5b6c558bcd5260289981207b9ca9687" title="Initialize a condition variable. ">pthread_cond_init()</a> may be used to initialize a condition variable, using the static initializer <em>PTHREAD_COND_INITIALIZER</em> is not supported. </p>
+<h2 class="groupheader">Function Documentation</h2>
+<a class="anchor" id="gaa1587e01856a579b78effd0a1a284a47"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int pthread_cond_destroy </td>
+          <td>(</td>
+          <td class="paramtype">pthread_cond_t *&#160;</td>
+          <td class="paramname"><em>cond</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Destroy a condition variable. </p>
+<p>This service destroys the condition variable <em>cond</em>, if no thread is currently blocked on it. The condition variable becomes invalid for all condition variable services (they all return the EINVAL error) except <a class="el" href="group__cobalt__cond.html#gad5b6c558bcd5260289981207b9ca9687" title="Initialize a condition variable. ">pthread_cond_init()</a>.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">cond</td><td>the condition variable to be destroyed.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on succes, </dd>
+<dd>
+an error number if:<ul>
+<li>EINVAL, the condition variable <em>cond</em> is invalid;</li>
+<li>EPERM, the condition variable is not process-shared and does not belong to the current process;</li>
+<li>EBUSY, some thread is currently using the condition variable.</li>
+</ul>
+</dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_destroy.html">Specification.</a> </dd></dl>
+
+<p>Referenced by <a class="el" href="group__alchemy__cond.html#ga04646a121e57765848eb2a51ed6be855">rt_cond_create()</a>, and <a class="el" href="group__alchemy__cond.html#gaba59b188f10b142b4f2500dd719aa35f">rt_cond_delete()</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="gad5b6c558bcd5260289981207b9ca9687"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int pthread_cond_init </td>
+          <td>(</td>
+          <td class="paramtype">pthread_cond_t *&#160;</td>
+          <td class="paramname"><em>cond</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const pthread_condattr_t *&#160;</td>
+          <td class="paramname"><em>attr</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Initialize a condition variable. </p>
+<p>This service initializes the condition variable <em>cond</em>, using the condition variable attributes object <em>attr</em>. If <em>attr</em> is <em>NULL</em> or this service is called from user-space, default attributes are used (see pthread_condattr_init()).</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">cond</td><td>the condition variable to be initialized;</td></tr>
+    <tr><td class="paramname">attr</td><td>the condition variable attributes object.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 on succes, </dd>
+<dd>
+an error number if:<ul>
+<li>EINVAL, the condition variable attributes object <em>attr</em> is invalid or uninitialized;</li>
+<li>EBUSY, the condition variable <em>cond</em> was already initialized;</li>
+<li>ENOMEM, insufficient memory exists in the system heap to initialize the condition variable, increase CONFIG_XENO_OPT_SYS_HEAPSZ.</li>
+</ul>
+</dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_init.html">Specification.</a> </dd></dl>
+
+<p>Referenced by <a class="el" href="group__alchemy__cond.html#ga04646a121e57765848eb2a51ed6be855">rt_cond_create()</a>.</p>
+
+</div>
+</div>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

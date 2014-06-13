@@ -87,7 +87,276 @@ $(document).ready(function(){initNavTree('rtcanconfig_8c-example.html','');});
 <div class="title">rtcanconfig.c</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"></div><!-- fragment --> </div><!-- contents -->
+<div class="fragment"><div class="line"><span class="comment">/*</span></div>
+<div class="line"><span class="comment"> * Program to configuring the CAN controller</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * Copyright (C) 2006 Wolfgang Grandegger &lt;wg@grandegger.com&gt;</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * Copyright (C) 2005, 2006 Sebastian Smolorz</span></div>
+<div class="line"><span class="comment"> *                          &lt;Sebastian.Smolorz@stud.uni-hannover.de&gt;</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * This program is free software; you can redistribute it and/or modify</span></div>
+<div class="line"><span class="comment"> * it under the terms of the GNU General Public License as published by</span></div>
+<div class="line"><span class="comment"> * the Free Software Foundation; either version 2 of the License, or</span></div>
+<div class="line"><span class="comment"> * (at your option) any later version.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * This program is distributed in the hope that it will be useful,</span></div>
+<div class="line"><span class="comment"> * but WITHOUT ANY WARRANTY; without even the implied warranty of</span></div>
+<div class="line"><span class="comment"> * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span></div>
+<div class="line"><span class="comment"> * GNU General Public License for more details.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * You should have received a copy of the GNU General Public License</span></div>
+<div class="line"><span class="comment"> * along with this program; if not, write to the Free Software</span></div>
+<div class="line"><span class="comment"> * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.</span></div>
+<div class="line"><span class="comment"> */</span></div>
+<div class="line"></div>
+<div class="line"><span class="preprocessor">#include &lt;stdio.h&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;stdlib.h&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;signal.h&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;unistd.h&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;string.h&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;time.h&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;errno.h&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;getopt.h&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;sys/mman.h&gt;</span></div>
+<div class="line"></div>
+<div class="line"><span class="preprocessor">#include &lt;rtdm/can.h&gt;</span></div>
+<div class="line"></div>
+<div class="line"><span class="keyword">static</span> <span class="keywordtype">void</span> print_usage(<span class="keywordtype">char</span> *prg)</div>
+<div class="line">{</div>
+<div class="line">    fprintf(stderr,</div>
+<div class="line">            <span class="stringliteral">&quot;Usage: %s &lt;can-interface&gt; [Options] [up|down|start|stop|sleep]\n&quot;</span></div>
+<div class="line">            <span class="stringliteral">&quot;Options:\n&quot;</span></div>
+<div class="line">            <span class="stringliteral">&quot; -v, --verbose            be verbose\n&quot;</span></div>
+<div class="line">            <span class="stringliteral">&quot; -h, --help               this help\n&quot;</span></div>
+<div class="line">            <span class="stringliteral">&quot; -c, --ctrlmode=CTRLMODE  listenonly, loopback or none\n&quot;</span></div>
+<div class="line">            <span class="stringliteral">&quot; -b, --baudrate=BPS       baudrate in bits/sec\n&quot;</span></div>
+<div class="line">            <span class="stringliteral">&quot; -B, --bittime=BTR0:BTR1  BTR or standard bit-time\n&quot;</span></div>
+<div class="line">            <span class="stringliteral">&quot; -B, --bittime=BRP:PROP_SEG:PHASE_SEG1:PHASE_SEG2:SJW:SAM\n&quot;</span>,</div>
+<div class="line">            prg);</div>
+<div class="line">}</div>
+<div class="line"></div>
+<div class="line"><span class="keyword">static</span> <a class="code" href="group__rtdm__can.html#ga1c314e1f81a7211a9778da835202a741">can_baudrate_t</a> string_to_baudrate(<span class="keywordtype">char</span> *str)</div>
+<div class="line">{</div>
+<div class="line">    <a class="code" href="group__rtdm__can.html#ga1c314e1f81a7211a9778da835202a741">can_baudrate_t</a> baudrate;</div>
+<div class="line">    <span class="keywordflow">if</span> (sscanf(str, <span class="stringliteral">&quot;%i&quot;</span>, &amp;baudrate) != 1)</div>
+<div class="line">        <span class="keywordflow">return</span> -1;</div>
+<div class="line">    <span class="keywordflow">return</span> baudrate;</div>
+<div class="line">}</div>
+<div class="line"></div>
+<div class="line"><span class="keyword">static</span> <span class="keywordtype">int</span> string_to_mode(<span class="keywordtype">char</span> *str)</div>
+<div class="line">{</div>
+<div class="line">    <span class="keywordflow">if</span> ( !strcmp(str, <span class="stringliteral">&quot;up&quot;</span>) || !strcmp(str, <span class="stringliteral">&quot;start&quot;</span>) )</div>
+<div class="line">        <span class="keywordflow">return</span> <a name="a0"></a><a class="code" href="group__rtdm__can.html#ggac0d6cdda2cf4abb51116b86bc99acf99af9c617b6b198770017f6e7198bfb50b6">CAN_MODE_START</a>;</div>
+<div class="line">    <span class="keywordflow">else</span> <span class="keywordflow">if</span> ( !strcmp(str, <span class="stringliteral">&quot;down&quot;</span>) || !strcmp(str, <span class="stringliteral">&quot;stop&quot;</span>) )</div>
+<div class="line">        <span class="keywordflow">return</span> <a name="a1"></a><a class="code" href="group__rtdm__can.html#ggac0d6cdda2cf4abb51116b86bc99acf99a04f549e87bf7ddf764c563062dd76790">CAN_MODE_STOP</a>;</div>
+<div class="line">    <span class="keywordflow">else</span> <span class="keywordflow">if</span> ( !strcmp(str, <span class="stringliteral">&quot;sleep&quot;</span>) )</div>
+<div class="line">        <span class="keywordflow">return</span> <a name="a2"></a><a class="code" href="group__rtdm__can.html#ggac0d6cdda2cf4abb51116b86bc99acf99a57866c198e12c54747aca0786dc33e3e">CAN_MODE_SLEEP</a>;</div>
+<div class="line">    <span class="keywordflow">return</span> -EINVAL;</div>
+<div class="line">}</div>
+<div class="line"></div>
+<div class="line"><span class="keyword">static</span> <span class="keywordtype">int</span> string_to_ctrlmode(<span class="keywordtype">char</span> *str)</div>
+<div class="line">{</div>
+<div class="line">    <span class="keywordflow">if</span> ( !strcmp(str, <span class="stringliteral">&quot;listenonly&quot;</span>) )</div>
+<div class="line">        <span class="keywordflow">return</span> <a name="a3"></a><a class="code" href="group__rtdm__can.html#gae4ba49824d17e7d06300cb8b4a4bff45">CAN_CTRLMODE_LISTENONLY</a>;</div>
+<div class="line">    <span class="keywordflow">else</span> <span class="keywordflow">if</span> ( !strcmp(str, <span class="stringliteral">&quot;loopback&quot;</span>) )</div>
+<div class="line">        <span class="keywordflow">return</span> <a name="a4"></a><a class="code" href="group__rtdm__can.html#ga19ec0cc4379e80c32cbd333cf7c145e9">CAN_CTRLMODE_LOOPBACK</a>;</div>
+<div class="line">    <span class="keywordflow">else</span> <span class="keywordflow">if</span> ( !strcmp(str, <span class="stringliteral">&quot;none&quot;</span>) )</div>
+<div class="line">        <span class="keywordflow">return</span> 0;</div>
+<div class="line"></div>
+<div class="line">    <span class="keywordflow">return</span> -1;</div>
+<div class="line">}</div>
+<div class="line"></div>
+<div class="line"><span class="keywordtype">int</span> main(<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span> *argv[])</div>
+<div class="line">{</div>
+<div class="line">    <span class="keywordtype">char</span>    ifname[16];</div>
+<div class="line">    <span class="keywordtype">int</span>     can_fd = -1;</div>
+<div class="line">    <span class="keywordtype">int</span>     new_baudrate = -1;</div>
+<div class="line">    <span class="keywordtype">int</span>     new_mode = -1;</div>
+<div class="line">    <span class="keywordtype">int</span>     new_ctrlmode = 0, set_ctrlmode = 0;</div>
+<div class="line">    <span class="keywordtype">int</span>     verbose = 0;</div>
+<div class="line">    <span class="keywordtype">int</span>     bittime_count = 0, bittime_data[6];</div>
+<div class="line">    <a class="code" href="group__rtdm__can.html#ga1c314e1f81a7211a9778da835202a741">can_baudrate_t</a> *baudrate;</div>
+<div class="line">    <a class="code" href="group__rtdm__can.html#gaa1db20ee5ae4803157e38db4b6c6150b">can_ctrlmode_t</a> *ctrlmode;</div>
+<div class="line">    <a class="code" href="group__rtdm__can.html#ga47a129d7188a7cd7b68fbf60ebbfd9e8">can_mode_t</a> *mode;</div>
+<div class="line">    <span class="keyword">union </span>{</div>
+<div class="line">      <span class="keyword">struct </span>ifreq ifr;</div>
+<div class="line">      <span class="keyword">struct </span><a name="_a5"></a><a class="code" href="structcan__bittime.html">can_bittime</a> bittime;</div>
+<div class="line">      <a class="code" href="group__rtdm__can.html#ga1c314e1f81a7211a9778da835202a741">can_baudrate_t</a> baudrate;</div>
+<div class="line">      <a class="code" href="group__rtdm__can.html#gaa1db20ee5ae4803157e38db4b6c6150b">can_ctrlmode_t</a> ctrlmode;</div>
+<div class="line">      <a class="code" href="group__rtdm__can.html#ga47a129d7188a7cd7b68fbf60ebbfd9e8">can_mode_t</a> mode;</div>
+<div class="line">    } u;</div>
+<div class="line">    <span class="keyword">struct </span><a class="code" href="structcan__bittime.html">can_bittime</a> *bittime;</div>
+<div class="line">    <span class="keywordtype">int</span> opt, ret;</div>
+<div class="line">    <span class="keywordtype">char</span>* ptr;</div>
+<div class="line"></div>
+<div class="line">    <span class="keyword">struct </span>option long_options[] = {</div>
+<div class="line">        { <span class="stringliteral">&quot;help&quot;</span>, no_argument, 0, <span class="charliteral">&#39;h&#39;</span> },</div>
+<div class="line">        { <span class="stringliteral">&quot;verbose&quot;</span>, no_argument, 0, <span class="charliteral">&#39;v&#39;</span>},</div>
+<div class="line">        { <span class="stringliteral">&quot;baudrate&quot;</span>, required_argument, 0, <span class="charliteral">&#39;b&#39;</span>},</div>
+<div class="line">        { <span class="stringliteral">&quot;bittime&quot;</span>, required_argument, 0, <span class="charliteral">&#39;B&#39;</span>},</div>
+<div class="line">        { <span class="stringliteral">&quot;ctrlmode&quot;</span>, required_argument, 0, <span class="charliteral">&#39;c&#39;</span>},</div>
+<div class="line">        { 0, 0, 0, 0},</div>
+<div class="line">    };</div>
+<div class="line"></div>
+<div class="line">    <span class="keywordflow">while</span> ((opt = getopt_long(argc, argv, <span class="stringliteral">&quot;hvb:B:c:&quot;</span>,</div>
+<div class="line">                              long_options, NULL)) != -1) {</div>
+<div class="line">        <span class="keywordflow">switch</span> (opt) {</div>
+<div class="line">        <span class="keywordflow">case</span> <span class="charliteral">&#39;h&#39;</span>:</div>
+<div class="line">            print_usage(argv[0]);</div>
+<div class="line">            exit(0);</div>
+<div class="line"></div>
+<div class="line">        <span class="keywordflow">case</span> <span class="charliteral">&#39;v&#39;</span>:</div>
+<div class="line">            verbose = 1;</div>
+<div class="line">            <span class="keywordflow">break</span>;</div>
+<div class="line"></div>
+<div class="line">        <span class="keywordflow">case</span> <span class="charliteral">&#39;b&#39;</span>:</div>
+<div class="line">            new_baudrate = string_to_baudrate(optarg);</div>
+<div class="line">            <span class="keywordflow">if</span> (new_baudrate == -1) {</div>
+<div class="line">                print_usage(argv[0]);</div>
+<div class="line">                exit(0);</div>
+<div class="line">            }</div>
+<div class="line">            <span class="keywordflow">break</span>;</div>
+<div class="line"></div>
+<div class="line">        <span class="keywordflow">case</span> <span class="charliteral">&#39;B&#39;</span>:</div>
+<div class="line">            ptr = optarg;</div>
+<div class="line">            <span class="keywordflow">while</span> (1) {</div>
+<div class="line">                bittime_data[bittime_count++] = strtoul(ptr, NULL, 0);</div>
+<div class="line">                <span class="keywordflow">if</span> (!(ptr = strchr(ptr, <span class="charliteral">&#39;:&#39;</span>)))</div>
+<div class="line">                    <span class="keywordflow">break</span>;</div>
+<div class="line">                ptr++;</div>
+<div class="line">            }</div>
+<div class="line">            <span class="keywordflow">if</span> (bittime_count != 2 &amp;&amp; bittime_count != 6) {</div>
+<div class="line">                print_usage(argv[0]);</div>
+<div class="line">                exit(0);</div>
+<div class="line">            }</div>
+<div class="line">            <span class="keywordflow">break</span>;</div>
+<div class="line"></div>
+<div class="line">        <span class="keywordflow">case</span> <span class="charliteral">&#39;c&#39;</span>:</div>
+<div class="line">            ret = string_to_ctrlmode(optarg);</div>
+<div class="line">            <span class="keywordflow">if</span> (ret == -1) {</div>
+<div class="line">                print_usage(argv[0]);</div>
+<div class="line">                exit(0);</div>
+<div class="line">            }</div>
+<div class="line">            new_ctrlmode |= ret;</div>
+<div class="line">            set_ctrlmode = 1;</div>
+<div class="line">            <span class="keywordflow">break</span>;</div>
+<div class="line"></div>
+<div class="line">            <span class="keywordflow">break</span>;</div>
+<div class="line"></div>
+<div class="line">        <span class="keywordflow">default</span>:</div>
+<div class="line">            fprintf(stderr, <span class="stringliteral">&quot;Unknown option %c\n&quot;</span>, opt);</div>
+<div class="line">            <span class="keywordflow">break</span>;</div>
+<div class="line">        }</div>
+<div class="line">    }</div>
+<div class="line"></div>
+<div class="line">    <span class="comment">/* Get CAN interface name */</span></div>
+<div class="line">    <span class="keywordflow">if</span> (optind != argc - 1 &amp;&amp; optind != argc - 2) {</div>
+<div class="line">        print_usage(argv[0]);</div>
+<div class="line">        <span class="keywordflow">return</span> 0;</div>
+<div class="line">    }</div>
+<div class="line"></div>
+<div class="line">    strncpy(ifname, argv[optind], IFNAMSIZ);</div>
+<div class="line">    strncpy(u.ifr.ifr_name, ifname, IFNAMSIZ);</div>
+<div class="line"></div>
+<div class="line">    <span class="keywordflow">if</span> (optind == argc - 2) {   <span class="comment">/* Get mode setting */</span></div>
+<div class="line">        new_mode = string_to_mode(argv[optind + 1]);</div>
+<div class="line">        <span class="keywordflow">if</span> (verbose)</div>
+<div class="line">            printf(<span class="stringliteral">&quot;mode: %s (%#x)\n&quot;</span>, argv[optind + 1], new_mode);</div>
+<div class="line">        <span class="keywordflow">if</span> (new_mode &lt; 0) {</div>
+<div class="line">            print_usage(argv[0]);</div>
+<div class="line">            <span class="keywordflow">return</span> 0;</div>
+<div class="line">        }</div>
+<div class="line">    }</div>
+<div class="line"></div>
+<div class="line">    can_fd = <a name="a6"></a><a class="code" href="group__rtdm__user__api.html#ga95cfb4d81e3faf578015cad5750b22a3">rt_dev_socket</a>(<a name="a7"></a><a class="code" href="group__rtdm__can.html#gaeac0c3db7a1e021f17987bcc76893849">PF_CAN</a>, SOCK_RAW, <a name="a8"></a><a class="code" href="group__rtdm__can.html#ga57682d9a1e4f4d90943dbaa683582bf5">CAN_RAW</a>);</div>
+<div class="line">    <span class="keywordflow">if</span> (can_fd &lt; 0) {</div>
+<div class="line">        fprintf(stderr, <span class="stringliteral">&quot;Cannot open RTDM CAN socket. Maybe driver not loaded? \n&quot;</span>);</div>
+<div class="line">        <span class="keywordflow">return</span> can_fd;</div>
+<div class="line">    }</div>
+<div class="line"></div>
+<div class="line">    ret = <a name="a9"></a><a class="code" href="group__rtdm__user__api.html#ga72b69315a44f235b05627a0c257c01f4">rt_dev_ioctl</a>(can_fd, <a name="a10"></a><a class="code" href="group__rtdm__can.html#gaee74ae50c8ea0a6aee277c6f124a3866">SIOCGIFINDEX</a>, &amp;u.ifr);</div>
+<div class="line">    <span class="keywordflow">if</span> (ret) {</div>
+<div class="line">        fprintf(stderr,<span class="stringliteral">&quot;Can&#39;t get interface index for %s, code = %d\n&quot;</span>, ifname, ret);</div>
+<div class="line">        <span class="keywordflow">return</span> ret;</div>
+<div class="line">    }</div>
+<div class="line"></div>
+<div class="line"></div>
+<div class="line">    <span class="keywordflow">if</span> (new_baudrate != -1) {</div>
+<div class="line">        <span class="keywordflow">if</span> (verbose)</div>
+<div class="line">            printf(<span class="stringliteral">&quot;baudrate: %d\n&quot;</span>, new_baudrate);</div>
+<div class="line">        baudrate = &amp;u.baudrate;</div>
+<div class="line">        *baudrate = new_baudrate;</div>
+<div class="line">        ret = <a class="code" href="group__rtdm__user__api.html#ga72b69315a44f235b05627a0c257c01f4">rt_dev_ioctl</a>(can_fd, <a name="a11"></a><a class="code" href="group__rtdm__can.html#ga7c070037c218b40de849ebf4d299f977">SIOCSCANBAUDRATE</a>, &amp;u.ifr);</div>
+<div class="line">        <span class="keywordflow">if</span> (ret) {</div>
+<div class="line">            <span class="keywordflow">goto</span> abort;</div>
+<div class="line">        }</div>
+<div class="line">    }</div>
+<div class="line"></div>
+<div class="line">    <span class="keywordflow">if</span> (bittime_count) {</div>
+<div class="line">        bittime = &amp;u.bittime;</div>
+<div class="line">        <span class="keywordflow">if</span> (bittime_count == 2) {</div>
+<div class="line">            bittime-&gt;<a name="a12"></a><a class="code" href="structcan__bittime.html#a7635b85b6a373e78cdbed846986e330f">type</a> = <a name="a13"></a><a class="code" href="group__rtdm__can.html#gga42c4f551b57f47d4e004c02505a01f71ae164a942c698440f2548bd82fea33e55">CAN_BITTIME_BTR</a>;</div>
+<div class="line">            bittime-&gt;<a name="a14"></a><a class="code" href="structcan__bittime.html#a1553dfa8833111c9b6f1dc2ab4984b72">btr</a>.<a name="a15"></a><a class="code" href="structcan__bittime__btr.html#a17d058dedc9a9339e378f2b7b352a554">btr0</a> = bittime_data[0];</div>
+<div class="line">            bittime-&gt;<a class="code" href="structcan__bittime.html#a1553dfa8833111c9b6f1dc2ab4984b72">btr</a>.<a name="a16"></a><a class="code" href="structcan__bittime__btr.html#a6d93f9587762eb9d0a9a05612b108afe">btr1</a> = bittime_data[1];</div>
+<div class="line">            <span class="keywordflow">if</span> (verbose)</div>
+<div class="line">                printf(<span class="stringliteral">&quot;bit-time: btr0=0x%02x btr1=0x%02x\n&quot;</span>,</div>
+<div class="line">                       bittime-&gt;<a class="code" href="structcan__bittime.html#a1553dfa8833111c9b6f1dc2ab4984b72">btr</a>.<a class="code" href="structcan__bittime__btr.html#a17d058dedc9a9339e378f2b7b352a554">btr0</a>, bittime-&gt;<a class="code" href="structcan__bittime.html#a1553dfa8833111c9b6f1dc2ab4984b72">btr</a>.<a class="code" href="structcan__bittime__btr.html#a6d93f9587762eb9d0a9a05612b108afe">btr1</a>);</div>
+<div class="line">        } <span class="keywordflow">else</span> {</div>
+<div class="line">            bittime-&gt;<a class="code" href="structcan__bittime.html#a7635b85b6a373e78cdbed846986e330f">type</a> = <a name="a17"></a><a class="code" href="group__rtdm__can.html#gga42c4f551b57f47d4e004c02505a01f71a160d7c514df2477f8016ed1bf5a6709f">CAN_BITTIME_STD</a>;</div>
+<div class="line">            bittime-&gt;<a name="a18"></a><a class="code" href="structcan__bittime.html#a63ff3bc997c3c48090dfcff8876dc909">std</a>.<a name="a19"></a><a class="code" href="structcan__bittime__std.html#a08d6def90babb8958ec9da1f328e2bae">brp</a> = bittime_data[0];</div>
+<div class="line">            bittime-&gt;<a class="code" href="structcan__bittime.html#a63ff3bc997c3c48090dfcff8876dc909">std</a>.<a name="a20"></a><a class="code" href="structcan__bittime__std.html#a071c82fd3d0a66ce45fe51c8fedb156a">prop_seg</a> = bittime_data[1];</div>
+<div class="line">            bittime-&gt;<a class="code" href="structcan__bittime.html#a63ff3bc997c3c48090dfcff8876dc909">std</a>.<a name="a21"></a><a class="code" href="structcan__bittime__std.html#a4ea4b12dc1d6cec75599f88b3c3dde3c">phase_seg1</a> = bittime_data[2];</div>
+<div class="line">            bittime-&gt;<a class="code" href="structcan__bittime.html#a63ff3bc997c3c48090dfcff8876dc909">std</a>.<a name="a22"></a><a class="code" href="structcan__bittime__std.html#a55a0d5efff79f06626177ff46101997b">phase_seg2</a> = bittime_data[3];</div>
+<div class="line">            bittime-&gt;<a class="code" href="structcan__bittime.html#a63ff3bc997c3c48090dfcff8876dc909">std</a>.<a name="a23"></a><a class="code" href="structcan__bittime__std.html#a0c42abf9132d5e08196a0af51b86905f">sjw</a> = bittime_data[4];</div>
+<div class="line">            bittime-&gt;<a class="code" href="structcan__bittime.html#a63ff3bc997c3c48090dfcff8876dc909">std</a>.<a name="a24"></a><a class="code" href="structcan__bittime__std.html#ae6ab12fbeab86132bd178d63a1fd968f">sam</a> = bittime_data[5];</div>
+<div class="line">            <span class="keywordflow">if</span> (verbose)</div>
+<div class="line">                printf(<span class="stringliteral">&quot;bit-time: brp=%d prop_seg=%d phase_seg1=%d &quot;</span></div>
+<div class="line">                       <span class="stringliteral">&quot;phase_seg2=%d sjw=%d sam=%d\n&quot;</span>,</div>
+<div class="line">                       bittime-&gt;<a class="code" href="structcan__bittime.html#a63ff3bc997c3c48090dfcff8876dc909">std</a>.<a class="code" href="structcan__bittime__std.html#a08d6def90babb8958ec9da1f328e2bae">brp</a>,</div>
+<div class="line">                       bittime-&gt;<a class="code" href="structcan__bittime.html#a63ff3bc997c3c48090dfcff8876dc909">std</a>.<a class="code" href="structcan__bittime__std.html#a071c82fd3d0a66ce45fe51c8fedb156a">prop_seg</a>,</div>
+<div class="line">                       bittime-&gt;<a class="code" href="structcan__bittime.html#a63ff3bc997c3c48090dfcff8876dc909">std</a>.<a class="code" href="structcan__bittime__std.html#a4ea4b12dc1d6cec75599f88b3c3dde3c">phase_seg1</a>,</div>
+<div class="line">                       bittime-&gt;<a class="code" href="structcan__bittime.html#a63ff3bc997c3c48090dfcff8876dc909">std</a>.<a class="code" href="structcan__bittime__std.html#a55a0d5efff79f06626177ff46101997b">phase_seg2</a>,</div>
+<div class="line">                       bittime-&gt;<a class="code" href="structcan__bittime.html#a63ff3bc997c3c48090dfcff8876dc909">std</a>.<a class="code" href="structcan__bittime__std.html#a0c42abf9132d5e08196a0af51b86905f">sjw</a>,</div>
+<div class="line">                       bittime-&gt;<a class="code" href="structcan__bittime.html#a63ff3bc997c3c48090dfcff8876dc909">std</a>.<a class="code" href="structcan__bittime__std.html#ae6ab12fbeab86132bd178d63a1fd968f">sam</a>);</div>
+<div class="line">        }</div>
+<div class="line"></div>
+<div class="line">        ret = <a class="code" href="group__rtdm__user__api.html#ga72b69315a44f235b05627a0c257c01f4">rt_dev_ioctl</a>(can_fd, <a name="a25"></a><a class="code" href="group__rtdm__can.html#ga4e9547dcb608fd0b8d5cf57f926e5176">SIOCSCANCUSTOMBITTIME</a>, &amp;u.ifr);</div>
+<div class="line">        <span class="keywordflow">if</span> (ret) {</div>
+<div class="line">            <span class="keywordflow">goto</span> abort;</div>
+<div class="line">        }</div>
+<div class="line"></div>
+<div class="line">    }</div>
+<div class="line"></div>
+<div class="line">    <span class="keywordflow">if</span> (set_ctrlmode != 0) {</div>
+<div class="line">        ctrlmode = &amp;u.ctrlmode;</div>
+<div class="line">        *ctrlmode = new_ctrlmode;</div>
+<div class="line">        <span class="keywordflow">if</span> (verbose)</div>
+<div class="line">            printf(<span class="stringliteral">&quot;ctrlmode: %#x\n&quot;</span>, new_ctrlmode);</div>
+<div class="line">        ret = <a class="code" href="group__rtdm__user__api.html#ga72b69315a44f235b05627a0c257c01f4">rt_dev_ioctl</a>(can_fd, <a name="a26"></a><a class="code" href="group__rtdm__can.html#ga26fa69d2cded6e172b96b4a6dc3798df">SIOCSCANCTRLMODE</a>, &amp;u.ifr);</div>
+<div class="line">        <span class="keywordflow">if</span> (ret) {</div>
+<div class="line">            <span class="keywordflow">goto</span> abort;</div>
+<div class="line">        }</div>
+<div class="line">    }</div>
+<div class="line"></div>
+<div class="line">    <span class="keywordflow">if</span> (new_mode != -1) {</div>
+<div class="line">        mode = &amp;u.mode;</div>
+<div class="line">        *mode = new_mode;</div>
+<div class="line">        ret = <a class="code" href="group__rtdm__user__api.html#ga72b69315a44f235b05627a0c257c01f4">rt_dev_ioctl</a>(can_fd, <a name="a27"></a><a class="code" href="group__rtdm__can.html#ga72b56a34fe466bca858b1f5f401e1076">SIOCSCANMODE</a>, &amp;u.ifr);</div>
+<div class="line">        <span class="keywordflow">if</span> (ret) {</div>
+<div class="line">            <span class="keywordflow">goto</span> abort;</div>
+<div class="line">        }</div>
+<div class="line">    }</div>
+<div class="line"></div>
+<div class="line">    <a name="a28"></a><a class="code" href="group__rtdm__user__api.html#gaa34c1ddf4e2deb727a1ab3cd648ce5d9">rt_dev_close</a>(can_fd);</div>
+<div class="line">    <span class="keywordflow">return</span> 0;</div>
+<div class="line"></div>
+<div class="line"> abort:</div>
+<div class="line">    <a class="code" href="group__rtdm__user__api.html#gaa34c1ddf4e2deb727a1ab3cd648ce5d9">rt_dev_close</a>(can_fd);</div>
+<div class="line">    <span class="keywordflow">return</span> ret;</div>
+<div class="line">}</div>
+</div><!-- fragment --> </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

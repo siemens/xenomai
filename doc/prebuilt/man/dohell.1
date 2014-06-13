@@ -1,0 +1,96 @@
+'\" t
+.\"     Title: dohell
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 06/13/2014
+.\"    Manual: Xenomai Manual
+.\"    Source: Xenomai 2.99.0
+.\"  Language: English
+.\"
+.TH "DOHELL" "1" "06/13/2014" "Xenomai 2\&.99\&.0" "Xenomai Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+dohell \- Generate load, in parallel of the latency test
+.SH "SYNOPSIS"
+.sp
+\fBdohell\fR [ \-b <path> ] [ \-s <server> ] [ \-p <port> ] [ \-m <path> ] [ \-l <path> | <duration> ]
+.SH "DESCRIPTION"
+.sp
+\fBdohell\fR generates some load, using commonly available commands, in parallel of the latency(1) test or as part of xeno\-test(1)\&.
+.SH "OPTIONS"
+.sp
+\fBdohell\fR accepts the following options:
+.PP
+\fB\-b\fR
+.RS 4
+runs the hackbench test repetitively during the run\-time of the
+\fBdohell\fR
+script;
+.RE
+.PP
+\fB\-s\fR
+.RS 4
+run nc to continuously send data to a server through network;
+.RE
+.PP
+\fB\-p\fR
+.RS 4
+if
+\fB\-s\fR
+is used, specificy the port to which to send data, if not specified, port 9 (aka discard) is used;
+.RE
+.PP
+\fB\-m <path>\fR
+.RS 4
+run dd to write data to the
+\fB<path>\fR
+directory;
+.RE
+.PP
+\fB\-l <path>\fR
+.RS 4
+mutually exclusive with
+\fB<duration>\fR; the dohell script runs during two runs of the LTP script
+\fBrunalltests\&.sh\fR
+found in the
+\fB<path>\fR
+directory;
+.RE
+.PP
+\fB<duration>\fR
+.RS 4
+mutually exclusive with
+\fB\-l\fR; run dohell for the given duration in seconds\&.
+.RE
+.SH "SEE ALSO"
+.sp
+\fBxeno\-test(1)\fR\fB, \fR\fBlatency(1)\fR\&.
+.SH "EXAMPLE"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+dohell \-s 192\&.168\&.0\&.5 \-m /mnt \-l /ltp
+.fi
+.if n \{\
+.RE
+.\}
