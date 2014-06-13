@@ -227,14 +227,17 @@ typedef int can_ctrlmode_t;
 enum CAN_STATE {
 	/** CAN controller is error active */
 	CAN_STATE_ERROR_ACTIVE = 0,
+	/** CAN controller is active */
 	CAN_STATE_ACTIVE = 0,
 
 	/** CAN controller is error active, warning level is reached */
 	CAN_STATE_ERROR_WARNING = 1,
+	/** CAN controller is error active, warning level is reached */
 	CAN_STATE_BUS_WARNING = 1,
 
 	/** CAN controller is error passive */
 	CAN_STATE_ERROR_PASSIVE = 2,
+	/** CAN controller is error passive */
 	CAN_STATE_BUS_PASSIVE = 2,
 
 	/** CAN controller went into Bus Off */

@@ -22,11 +22,9 @@
 #ifndef _RTDM_UAPI_IPC_H
 #define _RTDM_UAPI_IPC_H
 
-/*
- *
- * @ingroup rtdm_ipc
+/**
  * @ingroup rtdm_profiles
- * @defgroup rtdm_ipc Real-time IPC protocols
+ * @defgroup rtdm_ipc Real-time IPC
  *
  * @b Profile @b Revision: 1
  * @n
@@ -46,8 +44,9 @@
  * @anchor rtipc_operations @name Supported operations
  * Standard socket operations supported by the RTIPC protocols.
  * @{
- *
- * Create an endpoint for communication in the AF_RTIPC domain.
+ */
+
+/** Create an endpoint for communication in the AF_RTIPC domain.
  *
  * @param[in] domain The communication domain. Must be AF_RTIPC.
  *
@@ -62,7 +61,6 @@
  * - -ENOPROTOOPT (Protocol is known, but not compiled in the RTIPC driver).
  *   See @ref RTIPC_PROTO "RTIPC protocols"
  *   for available protocols.
- * .
  *
  * @par Calling context:
  * non-RT
@@ -77,6 +75,8 @@ int socket__AF_RTIPC(int domain =AF_RTIPC, int type =SOCK_DGRAM, int protocol);
  * Blocking calls to any of the @ref sendmsg__AF_RTIPC "sendmsg" or @ref
  * recvmsg__AF_RTIPC "recvmsg" functions will be unblocked when the socket
  * is closed and return with an error.
+ *
+ * @param[in] sockfd The socket descriptor to close.
  *
  * @return In addition to the standard error codes for @c close(2),
  * the following specific error code may be returned:
@@ -860,6 +860,18 @@ struct sockaddr_ipc {
 #ifdef DOXYGEN_CPP
 #define SO_RCVTIMEO defined_by_kernel_header_file
 #endif
+/** @} */
+
+/**
+ * @anchor rtdm_ipc_examples @name RTIPC examples
+ * @{ */
+/** @example bufp-readwrite.c */
+/** @example bufp-label.c */
+/** @example iddp-label.c */
+/** @example iddp-sendrecv.c */
+/** @example xddp-echo.c */
+/** @example xddp-label.c */
+/** @example xddp-stream.c */
 /** @} */
 
 /** @} */

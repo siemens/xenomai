@@ -40,7 +40,6 @@
  */
 
 /**
- * @fn int mq_open(const char *name, int oflags, mode_t mode, struct mq_attr *attr)
  * @brief Open a message queue
  *
  * This service establishes a connection between the message queue named @a name
@@ -134,7 +133,6 @@ COBALT_IMPL(mqd_t, mq_open, (const char *name, int oflags, ...))
 }
 
 /**
- * @fn int mq_close(mqd_t mqd)
  * @brief Close a message queue
  *
  * This service closes the message queue descriptor @a mqd. The
@@ -159,20 +157,19 @@ COBALT_IMPL(mqd_t, mq_open, (const char *name, int oflags, ...))
  * Specification.</a>
  *
  */
-COBALT_IMPL(int, mq_close, (mqd_t q))
+COBALT_IMPL(int, mq_close, (mqd_t mqd))
 {
 	int err;
 
-	err = XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_mq_close, q);
+	err = XENOMAI_SKINCALL1(__cobalt_muxid, sc_cobalt_mq_close, mqd);
 	if (!err)
-		return __STD(close(q));
+		return __STD(close(mqd));
 
 	errno = -err;
 	return -1;
 }
 
 /**
- * @fn int mq_unlink(const char *name)
  * @brief Unlink a message queue
  *
  * This service unlinks the message queue named @a name. The message queue is
@@ -213,7 +210,6 @@ COBALT_IMPL(int, mq_unlink, (const char *name))
 }
 
 /**
- * @fn int mq_getattr(mqd_t mqd, struct mq_attr *attr)
  * @brief Get message queue attributes
  *
  * This service stores, at the address @a attr, the attributes of the messages
@@ -239,11 +235,11 @@ COBALT_IMPL(int, mq_unlink, (const char *name))
  * Specification.</a>
  *
  */
-COBALT_IMPL(int, mq_getattr, (mqd_t q, struct mq_attr *attr))
+COBALT_IMPL(int, mq_getattr, (mqd_t mqd, struct mq_attr *attr))
 {
 	int err;
 
-	err = XENOMAI_SKINCALL2(__cobalt_muxid, sc_cobalt_mq_getattr, q, attr);
+	err = XENOMAI_SKINCALL2(__cobalt_muxid, sc_cobalt_mq_getattr, mqd, attr);
 	if (!err)
 		return 0;
 
@@ -252,7 +248,6 @@ COBALT_IMPL(int, mq_getattr, (mqd_t q, struct mq_attr *attr))
 }
 
 /**
- * @fn int mq_setattr(mqd_t mqd, const struct mq_attr *__restrict__ attr, struct mq_attr *__restrict__ oattr)
  * @brief Set message queue attributes
  *
  * This service sets the flags of the @a mqd descriptor to the value
@@ -280,14 +275,14 @@ COBALT_IMPL(int, mq_getattr, (mqd_t q, struct mq_attr *attr))
  * Specification.</a>
  *
  */
-COBALT_IMPL(int, mq_setattr, (mqd_t q,
+COBALT_IMPL(int, mq_setattr, (mqd_t mqd,
 			      const struct mq_attr *__restrict__ attr,
 			      struct mq_attr *__restrict__ oattr))
 {
 	int err;
 
 	err = XENOMAI_SKINCALL3(__cobalt_muxid,
-				sc_cobalt_mq_setattr, q, attr, oattr);
+				sc_cobalt_mq_setattr, mqd, attr, oattr);
 	if (!err)
 		return 0;
 
@@ -381,7 +376,6 @@ COBALT_IMPL(ssize_t, mq_timedreceive, (mqd_t q,
 }
 
 /**
- * @fn int mq_notify(mqd_t mqd, const struct sigevent *evp)
  * @brief Enable notification on message arrival
  *
  * If @a evp is not @a NULL and is the address of a @b sigevent
@@ -422,12 +416,12 @@ COBALT_IMPL(ssize_t, mq_timedreceive, (mqd_t q,
  * Specification.</a>
  *
  */
-COBALT_IMPL(int, mq_notify, (mqd_t q, const struct sigevent *evp))
+COBALT_IMPL(int, mq_notify, (mqd_t mqd, const struct sigevent *evp))
 {
 	int err;
 
 	err = XENOMAI_SKINCALL2(__cobalt_muxid,
-				sc_cobalt_mq_notify, q, evp);
+				sc_cobalt_mq_notify, mqd, evp);
 	if (err) {
 		errno = -err;
 		return -1;

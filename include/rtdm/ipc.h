@@ -24,16 +24,4 @@
 #include <rtdm/rtdm.h>
 #include <rtdm/uapi/ipc.h>
 
-/**
- * @anchor rtipc_examples @name RTIPC examples
- * @{ */
-/** @example bufp-readwrite.c */
-/** @example bufp-label.c */
-/** @example iddp-label.c */
-/** @example iddp-sendrecv.c */
-/** @example xddp-echo.c */
-/** @example xddp-label.c */
-/** @example xddp-stream.c */
-/** @} */
-
 #endif /* !_RTDM_IPC_H */

@@ -194,13 +194,3 @@ LATEX_BATCHMODE        = @LATEX_BATCHMODE@
 # in the output.
 
 LATEX_HIDE_INDICES     = NO
-
-#---------------------------------------------------------------------------
-# Configuration options related to the preprocessor
-#---------------------------------------------------------------------------
-
-# The INCLUDE_PATH tag can be used to specify one or more directories that
-# contain include files that are not input files but should be processed by
-# the preprocessor.
-
-INCLUDE_PATH           =

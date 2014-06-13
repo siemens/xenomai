@@ -656,8 +656,10 @@ INCLUDE_FILE_PATTERNS  =
 # or name=definition (no spaces). If the definition and the = are 
 # omitted =1 is assumed.
 
-PREDEFINED = DOXYGEN_CPP \
-        EXPORT_SYMBOL_GPL(symbol)=//
+PREDEFINED = DOXYGEN_CPP		\
+        "EXPORT_SYMBOL_GPL(symbol)=//"	\
+	"COBALT_IMPL(T,I,A)=T I A"	\
+	"COBALT_DECL(T,P)=T P"
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then 
 # this tag can be used to specify a list of macro names that should be expanded. 
@@ -870,3 +872,11 @@ INPUT                  =						\
 EXAMPLE_PATH           =			\
 		       @top_srcdir@/demo/posix	\
 		       @top_srcdir@/demo/alchemy
+
+# The INCLUDE_PATH tag can be used to specify one or more directories that
+# contain include files that are not input files but should be processed by
+# the preprocessor.
+
+INCLUDE_PATH           = @top_srcdir@/include		\
+		       	 @top_srcdir@/include/cobalt	\
+		       	 @top_srcdir@/include/mercury

@@ -337,7 +337,7 @@ COBALT_IMPL(int, sem_wait, (sem_t *sem))
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_timedwait.html">
  * Specification.</a>
  */
-COBALT_IMPL(int, sem_timedwait, (sem_t *sem, const struct timespec *ts))
+COBALT_IMPL(int, sem_timedwait, (sem_t *sem, const struct timespec *abs_timeout))
 {
 	struct cobalt_sem_shadow *_sem = &((union cobalt_sem_union *)sem)->shadow_sem;
 	int err, oldtype;
@@ -350,7 +350,7 @@ COBALT_IMPL(int, sem_timedwait, (sem_t *sem, const struct timespec *ts))
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
 	err = -XENOMAI_SKINCALL2(__cobalt_muxid,
-				 sc_cobalt_sem_timedwait, _sem, ts);
+				 sc_cobalt_sem_timedwait, _sem, abs_timeout);
 
 	pthread_setcanceltype(oldtype, NULL);
 
