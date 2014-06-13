@@ -24,8 +24,6 @@
 #include "sem.h"
 #include <trace/events/cobalt-posix.h>
 
-#define SEM_NAMED    0x80000000
-
 static inline struct cobalt_kqueues *sem_kqueue(struct cobalt_sem *sem)
 {
 	int pshared = !!(sem->flags & SEM_PSHARED);
@@ -57,20 +55,20 @@ int cobalt_sem_destroy_inner(xnhandle_t handle)
 		xnsched_run();
 		ret = 1;
 	}
-	
+
 	xnlock_put_irqrestore(&nklock, s);
 
 	xnheap_free(&xnsys_ppd_get(!!(sem->flags & SEM_PSHARED))->sem_heap,
 		sem->datp);
 	xnregistry_remove(sem->handle);
-	
+
 	xnfree(sem);
 
 	return ret;
 }
 
 struct cobalt_sem *
-cobalt_sem_init_inner(const char *name, struct cobalt_sem_shadow *sm, 
+cobalt_sem_init_inner(const char *name, struct cobalt_sem_shadow *sm,
 		      int flags, unsigned int value)
 {
 	struct cobalt_sem *sem, *osem;
@@ -134,7 +132,7 @@ cobalt_sem_init_inner(const char *name, struct cobalt_sem_shadow *sm,
 		ret = -EINVAL;
 		goto err_lock_put;
 	}
-	
+
 	ret = xnregistry_enter(sem->name, sem, &sem->handle, NULL);
 	if (ret < 0)
 		goto err_lock_put;
@@ -150,7 +148,7 @@ cobalt_sem_init_inner(const char *name, struct cobalt_sem_shadow *sm,
 	sem->flags = flags;
 	sem->owningq = kq;
 	sem->refs = name[0] ? 2 : 1;
-			
+
 	sm->magic = name[0] ? COBALT_NAMED_SEM_MAGIC : COBALT_SEM_MAGIC;
 	sm->handle = sem->handle;
 	sm->datp_offset = xnheap_mapped_offset(&sys_ppd->sem_heap, datp);
@@ -289,7 +287,7 @@ redo:
 		tmode = sem->flags & SEM_RAWCLOCK ? XN_ABSOLUTE : XN_REALTIME;
 		info = xnsynch_sleep_on(&sem->synchbase, ts2ns(&ts) + 1, tmode);
 	} else
-		info = xnsynch_sleep_on(&sem->synchbase, 
+		info = xnsynch_sleep_on(&sem->synchbase,
 					XN_INFINITE, XN_RELATIVE);
 	if (info & XNRMID)
 		goto einval;
@@ -346,7 +344,7 @@ int sem_post_inner(struct cobalt_sem *sem, struct cobalt_kqueues *ownq, int bcas
 	} else {
 		if (atomic_long_read(&sem->datp->value) < 0) {
 			atomic_long_set(&sem->datp->value, 0);
-			if (xnsynch_flush(&sem->synchbase, 0) == 
+			if (xnsynch_flush(&sem->synchbase, 0) ==
 				XNSYNCH_RESCHED)
 				xnsched_run();
 		}

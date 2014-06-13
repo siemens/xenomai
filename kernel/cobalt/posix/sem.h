@@ -54,11 +54,12 @@ typedef struct
 
 #include <cobalt/uapi/sem.h>
 
-#define SEM_VALUE_MAX (INT_MAX)
-#define SEM_FAILED    NULL
+#define SEM_VALUE_MAX	(INT_MAX)
+#define SEM_FAILED	NULL
+#define SEM_NAMED	0x80000000
 
-struct cobalt_sem * 
-cobalt_sem_init_inner(const char *name, struct cobalt_sem_shadow *sem, 
+struct cobalt_sem *
+cobalt_sem_init_inner(const char *name, struct cobalt_sem_shadow *sem,
 		int flags, unsigned value);
 
 int cobalt_sem_destroy_inner(xnhandle_t handle);

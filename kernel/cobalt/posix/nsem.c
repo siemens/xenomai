@@ -39,16 +39,16 @@ struct named_sem {
 static struct named_sem *sem_search(struct cobalt_process *cc, xnhandle_t handle)
 {
 	struct xnid *i;
-	
+
 	i = xnid_fetch(&cc->usems, handle);
 	if (i == NULL)
 		return NULL;
-	
+
 	return container_of(i, struct named_sem, id);
 }
 
 static struct cobalt_sem_shadow __user *
-sem_open(struct cobalt_process *cc, struct cobalt_sem_shadow __user *ushadow, 
+sem_open(struct cobalt_process *cc, struct cobalt_sem_shadow __user *ushadow,
 	 const char *name, int oflags, mode_t mode, unsigned int value)
 {
 	struct cobalt_sem_shadow shadow;
@@ -84,7 +84,7 @@ sem_open(struct cobalt_process *cc, struct cobalt_sem_shadow __user *ushadow,
 			xnlock_put_irqrestore(&nklock, s);
 			return ERR_PTR(-EINVAL);
 		}
-			
+
 		if (sem) {
 			++sem->refs;
 			xnlock_put_irqrestore(&nklock, s);
@@ -93,7 +93,7 @@ sem_open(struct cobalt_process *cc, struct cobalt_sem_shadow __user *ushadow,
 			goto retry_bind;
 		}
 		break;
-		
+
 	case -EWOULDBLOCK:
 		/* Not found */
 		if ((oflags & O_CREAT) == 0)
@@ -101,7 +101,7 @@ sem_open(struct cobalt_process *cc, struct cobalt_sem_shadow __user *ushadow,
 
 		shadow.magic = 0;
 		sem = cobalt_sem_init_inner
-			(&name[1], &shadow, SEM_PSHARED, value);
+			(&name[1], &shadow, SEM_PSHARED | SEM_NAMED, value);
 		if (IS_ERR(sem)) {
 			rc = PTR_ERR(sem);
 			if (rc == -EEXIST)
@@ -121,7 +121,7 @@ sem_open(struct cobalt_process *cc, struct cobalt_sem_shadow __user *ushadow,
 	}
 
 	u = xnmalloc(sizeof(*u));
-	if (u == NULL) 
+	if (u == NULL)
 		return ERR_PTR(-ENOMEM);
 
 	u->sem = sem;
@@ -161,20 +161,20 @@ static int sem_close(struct cobalt_process *cc, xnhandle_t handle)
 		err = -ENOENT;
 		goto err_unlock;
 	}
-	
+
 	if (--u->refs) {
 		err = 0;
 		goto err_unlock;
 	}
-	
+
 	xnid_remove(&cc->usems, &u->id);
 	xnlock_put_irqrestore(&named_sem_lock, s);
-			
+
 	cobalt_sem_destroy_inner(handle);
-	
+
 	xnfree(u);
 	return 1;
-	
+
   err_unlock:
 	xnlock_put_irqrestore(&named_sem_lock, s);
 	return err;
