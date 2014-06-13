@@ -35,7 +35,7 @@ echo -n 'Looking for removed files...'
 { cd "$abs_srcdir" && find prebuilt -type f -print ; } | {
 cd tmp-dist/doc && while read -a file; do
     if ! [ -f "${file[*]}" ]; then
-	echo "${qfile[*]}" >> ../removed
+	echo "${file[*]}" >> ../removed
     fi
 done
 }
