@@ -1,6 +1,4 @@
-/**
- * @brief Scheduling with runtime quota.
- *
+/*
  * Copyright (C) 2013 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
@@ -473,15 +471,13 @@ static void xnsched_quota_migrate(struct xnthread *thread, struct xnsched *sched
 }
 
 /**
- * @ingroup sched
- * @defgroup sched-quota SCHED_QUOTA scheduling policy
+ * @ingroup core_sched
+ * @defgroup sched_quota SCHED_QUOTA scheduling policy
  *
- * This file implements the SCHED_QUOTA scheduling policy for Xenomai.
- *
- * This policy enforces a limitation on the CPU consumption of threads
- * over a globally defined period, known as the quota interval. This
- * is done by pooling threads with common requirements in groups, and
- * giving each group a share of the global period
+ * The SCHED_QUOTA policy enforces a limitation on the CPU consumption
+ * of threads over a globally defined period, known as the quota
+ * interval. This is done by pooling threads with common requirements
+ * in groups, and giving each group a share of the global period
  * (CONFIG_XENO_OPT_SCHED_QUOTA_PERIOD).
  *
  * When threads have entirely consumed the quota allotted to the group

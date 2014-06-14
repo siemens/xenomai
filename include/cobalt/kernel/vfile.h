@@ -1,8 +1,5 @@
-/**
- * @file
- * This file is part of the Xenomai project.
- *
- * @note Copyright (C) 2010 Philippe Gerum <rpm@xenomai.org>
+/*
+ * Copyright (C) 2010 Philippe Gerum <rpm@xenomai.org>
  *
  * Xenomai is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -17,8 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
- *
- * @ingroup vfile
  */
 
 #ifndef _COBALT_KERNEL_VFILE_H

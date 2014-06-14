@@ -17,12 +17,16 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  */
-
 #ifndef _COBALT_KERNEL_STAT_H
 #define _COBALT_KERNEL_STAT_H
 
 #include <cobalt/kernel/clock.h>
 
+/*
+ * @ingroup core_thread
+ * @defgroup core_stat Thread runtime statistics
+ * @{
+ */
 #ifdef CONFIG_XENO_OPT_STATS
 
 typedef struct xnstat_exectime {
@@ -142,5 +146,7 @@ typedef struct xnstat_counter {
 	xnstat_exectime_update(sched, date); \
 	xnstat_exectime_set_current(sched, new_account); \
 })
+
+/** @} */
 
 #endif /* !_COBALT_KERNEL_STAT_H */

@@ -1,7 +1,6 @@
-/**
- * @file
+/*
  * Hardware driver for NI Mite PCI interface chip
- * @note Copyright (C) 1999 David A. Schleef <ds@schleef.org>
+ * Copyright (C) 1999 David A. Schleef <ds@schleef.org>
  *
  * This code is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
@@ -17,7 +16,6 @@
  * along with Xenomai; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-
 #ifndef __ANALOGY_NI_MIO_H__
 #define __ANALOGY_NI_MIO_H__
 

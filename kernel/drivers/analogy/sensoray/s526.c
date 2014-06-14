@@ -1,5 +1,4 @@
-/**
- * @file
+/*
  * Analogy driver for Sensoray Model 526 board
  *
  * Copyright (C) 2009 Simon Boulay <simon.boulay@gmail.com>

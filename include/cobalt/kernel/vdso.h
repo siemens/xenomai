@@ -1,7 +1,4 @@
-/**
- * @brief Definitions for global semaphore heap shared objects
- * @author Wolfgang Mauerer
- *
+/*
  * Copyright (C) 2009 Wolfgang Mauerer <wolfgang.mauerer@siemens.com>.
  *
  * Xenomai is free software; you can redistribute it and/or modify

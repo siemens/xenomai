@@ -1,5 +1,4 @@
-/**
- * @file
+/*
  * Register descriptions for NI DAQ-STC chip
  *
  * Copyright (C) 1998-9 David A. Schleef <ds@schleef.org>
@@ -22,7 +21,6 @@
  * 340934b.pdf  DAQ-STC reference manual
  *
  */
-
 #ifndef __ANALOGY_NI_STC_H__
 #define __ANALOGY_NI_STC_H__
 

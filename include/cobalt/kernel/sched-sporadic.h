@@ -1,7 +1,4 @@
-/*!\file sched-sporadic.h
- * \brief Definitions for the SSP scheduling class.
- * \author Philippe Gerum
- *
+/*
  * Copyright (C) 2009 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
@@ -19,13 +16,17 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  */
-
 #ifndef _COBALT_KERNEL_SCHED_SPORADIC_H
 #define _COBALT_KERNEL_SCHED_SPORADIC_H
 
 #ifndef _COBALT_KERNEL_SCHED_H
 #error "please don't include cobalt/kernel/sched-sporadic.h directly"
 #endif
+
+/**
+ * @addtogroup core_sched
+ * @{
+ */
 
 #ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
 
@@ -68,5 +69,7 @@ static inline int xnsched_sporadic_init_thread(struct xnthread *thread)
 }
 
 #endif /* !CONFIG_XENO_OPT_SCHED_SPORADIC */
+
+/** @} */
 
 #endif /* !_COBALT_KERNEL_SCHED_SPORADIC_H */

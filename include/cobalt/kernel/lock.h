@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2001-2008,2012 Philippe Gerum <rpm@xenomai.org>.
  * Copyright (C) 2004,2005 Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>.
  *
@@ -31,14 +31,36 @@
  */
 typedef unsigned long spl_t;
 
+/**
+ * Hard disable interrupts on the local processor, saving previous state.
+ *
+ * @param[out] x An unsigned long integer context variable
+ */
 #define splhigh(x)  ((x) = ipipe_test_and_stall_head() & 1)
 #ifdef CONFIG_SMP
+/**
+ * Restore the saved hard interrupt state on the local processor.
+ *
+ * @param[in] x The context variable previously updated by splhigh()
+ */
 #define splexit(x)  ipipe_restore_head(x & 1)
 #else /* !CONFIG_SMP */
 #define splexit(x)  ipipe_restore_head(x)
 #endif /* !CONFIG_SMP */
+/**
+ * Hard disable interrupts on the local processor.
+ */
 #define splmax()    ipipe_stall_head()
+/**
+ * Hard enable interrupts on the local processor.
+ */
 #define splnone()   ipipe_unstall_head()
+/**
+ * Test hard interrupt state on the local processor.
+ *
+ * @return Zero if the local processor currently accepts interrupts,
+ * non-zero otherwise.
+ */
 #define spltest()   ipipe_test_head()
 
 #if XENO_DEBUG(LOCKING)

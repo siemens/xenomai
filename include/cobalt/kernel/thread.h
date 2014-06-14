@@ -1,5 +1,5 @@
 /*
- * @note Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
@@ -15,8 +15,6 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- *
- * \ingroup thread
  */
 #ifndef _COBALT_KERNEL_THREAD_H
 #define _COBALT_KERNEL_THREAD_H
@@ -35,6 +33,10 @@
 #include <asm/xenomai/machine.h>
 #include <asm/xenomai/thread.h>
 
+/**
+ * @addtogroup core_thread
+ * @{
+ */
 #define XNTHREAD_BLOCK_BITS   (XNSUSP|XNPEND|XNDELAY|XNDORMANT|XNRELAX|XNMIGRATE|XNHELD)
 #define XNTHREAD_MODE_BITS    (XNLOCK|XNRRB|XNTRAPSW|XNTRAPLB)
 
@@ -453,5 +455,7 @@ int __xnthread_set_schedparam(struct xnthread *thread,
 int xnthread_set_schedparam(struct xnthread *thread,
 			    struct xnsched_class *sched_class,
 			    const union xnsched_policy_param *sched_param);
+
+/** @} */
 
 #endif /* !_COBALT_KERNEL_THREAD_H */

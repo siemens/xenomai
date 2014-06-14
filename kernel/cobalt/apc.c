@@ -1,6 +1,5 @@
-/**
- * @file
- * @note Copyright (C) 2007,2012 Philippe Gerum <rpm@xenomai.org>.
+/*
+ * Copyright (C) 2007,2012 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by

@@ -1,6 +1,5 @@
-/**
- * @file
- * @note Copyright (C) 2009 Philippe Gerum <rpm@xenomai.org>.
+/*
+ * Copyright (C) 2009 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -17,7 +16,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  */
-
 #include <cobalt/kernel/heap.h>
 #include <cobalt/kernel/sched.h>
 #include <cobalt/kernel/bufd.h>

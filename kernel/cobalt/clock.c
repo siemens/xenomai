@@ -1,5 +1,5 @@
-/**
- * @note Copyright (C) 2006-2011 Philippe Gerum <rpm@xenomai.org>.
+/*
+ * Copyright (C) 2006-2011 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@
 #include <trace/events/cobalt-core.h>
 /**
  * @ingroup core
- * @defgroup core_clock Clock services.
+ * @defgroup core_clock Clock services
  *
  * @{
  */
@@ -296,9 +296,7 @@ static void adjust_clock_timers(struct xnclock *clock, xnsticks_t delta)
  *
  * @param delta The adjustment value expressed in nanoseconds.
  *
- * @note This routine must be entered nklock locked, interrupts off.
- *
- * @coretags{task-unrestricted}
+ * @coretags{task-unrestricted, atomic-entry}
  *
  * @note Xenomai tracks the system time in @a nkclock, as a
  * monotonously increasing count of ticks since the epoch. The epoch

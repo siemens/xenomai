@@ -1672,7 +1672,7 @@ void xnthread_migrate_passive(struct xnthread *thread, struct xnsched *sched)
  * class implementation for @a sched_class. Invalid parameters passed
  * into @a sched_param are common causes of error.
  *
- * Side-effects:
+ * @sideeffect
  *
  * - This service does not call the rescheduling procedure but may
  * affect the state of the runnable queue for the previous and new

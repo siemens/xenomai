@@ -1,6 +1,5 @@
-/**
- * @file
- * @note Copyright &copy; 2005 Gilles Chanteperdrix.
+/*
+ * Copyright &copy; 2005 Gilles Chanteperdrix.
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -21,8 +20,26 @@
 
 /**
  * @ingroup core
- * @defgroup core_arith Helpers for in-kernel arithmetics
+ * @defgroup core_arith In-kernel arithmetics
+ *
+ * A collection of helpers performing arithmetics not implicitly
+ * available from kernel context via GCC helpers. Many of these
+ * routines enable 64bit arithmetics on 32bit systems. Xenomai
+ * architecture ports normally implement the performance critical ones
+ * in hand-crafted assembly code (see
+ * kernel/cobalt/arch/\<arch\>/include/asm/xenomai/uapi/arith.h).
  * @{
+ */
+
+/**
+ * Architecture-independent div64 operation with remainder.
+ *
+ * @param a dividend
+ *
+ * @param b divisor
+ *
+ * @param rem if non-NULL, a pointer to a 64bit variable for
+ * collecting the remainder from the division.
  */
 unsigned long long xnarch_generic_full_divmod64(unsigned long long a,
 						unsigned long long b,

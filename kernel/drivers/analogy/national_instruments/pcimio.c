@@ -1,5 +1,4 @@
-/**
- * @file
+/*
  * Hardware driver for NI PCI-MIO E series cards
  *
  * Copyright (C) 1997-8 David A. Schleef <ds@schleef.org>

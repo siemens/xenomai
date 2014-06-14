@@ -1,8 +1,5 @@
-/**
- * @file
- * This file is part of the Xenomai project.
- *
- * @note Copyright (C) 2004 Philippe Gerum <rpm@xenomai.org>
+/*
+ * Copyright (C) 2004 Philippe Gerum <rpm@xenomai.org>
  *
  * Xenomai is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -17,10 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
- *
- * \ingroup registry
  */
-
 #ifndef _COBALT_KERNEL_REGISTRY_H
 #define _COBALT_KERNEL_REGISTRY_H
 
@@ -28,6 +22,11 @@
 #include <cobalt/kernel/synch.h>
 #include <cobalt/kernel/vfile.h>
 
+/**
+ * @addtogroup core_registry
+ *
+ * @{
+ */
 struct xnpnode;
 
 struct xnobject {
@@ -193,5 +192,7 @@ unsigned xnregistry_hash_size(void);
 extern struct xnpnode_ops xnregistry_vfsnap_ops;
 
 extern struct xnpnode_ops xnregistry_vlink_ops;
+
+/** @} */
 
 #endif /* !_COBALT_KERNEL_REGISTRY_H */

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2010 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify

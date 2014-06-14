@@ -1,4 +1,4 @@
-/**
+/*
  *   Generic arithmetic/conversion routines.
  *   Copyright &copy; 2005 Stelian Pop.
  *   Copyright &copy; 2005 Gilles Chanteperdrix.

@@ -1,5 +1,5 @@
 /*
- * @note Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
@@ -15,10 +15,7 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- *
- * \ingroup heap
  */
-
 #ifndef _COBALT_KERNEL_HEAP_H
 #define _COBALT_KERNEL_HEAP_H
 
@@ -29,22 +26,27 @@
 #include <cobalt/uapi/kernel/types.h>
 #include <cobalt/uapi/kernel/heap.h>
 
-/*
- * Minimum page size is 2 ** XNHEAP_MINLOG2 (must be large enough to
+/**
+ * @addtogroup core_heap
+ * @{
+ *
+ * @par Implementation constraints
+ *
+ * - Minimum page size is 2 ** XNHEAP_MINLOG2 (must be large enough to
  * hold a pointer).
  *
- * Maximum page size is 2 ** XNHEAP_MAXLOG2.
+ * - Maximum page size is 2 ** XNHEAP_MAXLOG2.
  *
- * Minimum block size equals the minimum page size.
+ * - Minimum block size equals the minimum page size.
  *
- * Requested block size smaller than the minimum block size is
+ * - Requested block size smaller than the minimum block size is
  * rounded to the minimum block size.
  *
- * Requested block size larger than 2 times the page size is rounded
- * to the next page boundary and obtained from the free page
- * list. So we need a bucket for each power of two between
- * XNHEAP_MINLOG2 and XNHEAP_MAXLOG2 inclusive, plus one to honor
- * requests ranging from the maximum page size to twice this size.
+ * - Requested block size larger than 2 times the page size is rounded
+ * to the next page boundary and obtained from the free page list. So
+ * we need a bucket for each power of two between XNHEAP_MINLOG2 and
+ * XNHEAP_MAXLOG2 inclusive, plus one to honor requests ranging from
+ * the maximum page size to twice this size.
  */
 #define XNHEAP_PAGE_SIZE	512 /* A reasonable value for the xnheap page size */
 #define XNHEAP_PAGE_MASK	(~(XNHEAP_PAGE_SIZE-1))
@@ -254,5 +256,7 @@ int xnheap_remap_io_page_range(struct file *filp,
 int xnheap_remap_kmem_page_range(struct vm_area_struct *vma,
 				 unsigned long from, unsigned long to,
 				 unsigned long size, pgprot_t prot);
+
+/** @} */
 
 #endif /* !_COBALT_KERNEL_HEAP_H */

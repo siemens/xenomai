@@ -1,10 +1,9 @@
-/**
- * @file
+/*
  * Real-Time Driver Model for Xenomai, driver library
  *
- * @note Copyright (C) 2005-2007 Jan Kiszka <jan.kiszka@web.de>
- * @note Copyright (C) 2005 Joerg Langenberg <joerg.langenberg@gmx.net>
- * @note Copyright (C) 2008 Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>
+ * Copyright (C) 2005-2007 Jan Kiszka <jan.kiszka@web.de>
+ * Copyright (C) 2005 Joerg Langenberg <joerg.langenberg@gmx.net>
+ * Copyright (C) 2008 Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -20,7 +19,6 @@
  * along with Xenomai; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-
 #include <linux/bitops.h>
 #include <linux/delay.h>
 #include <linux/mman.h>
@@ -55,16 +53,7 @@
  * Whether this happens automatically (as on Xenomai) or is controlled by the
  * application depends on the RTDM host environment.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{unrestricted}
  */
 nanosecs_abs_t rtdm_clock_read(void);
 
@@ -81,16 +70,7 @@ nanosecs_abs_t rtdm_clock_read(void);
  * Whether this happens automatically (as on Xenomai) or is controlled by the
  * application depends on the RTDM host environment.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{unrestricted}
  */
 nanosecs_abs_t rtdm_clock_read_monotonic(void);
 #endif /* DOXYGEN_CPP */
@@ -103,11 +83,11 @@ nanosecs_abs_t rtdm_clock_read_monotonic(void);
  */
 
 /**
- * @brief Intialise and start a real-time task
+ * @brief Initialise and start a real-time task
  *
- * After initialising a task, the task handle remains valid and can be passed
- * to RTDM services until either rtdm_task_destroy() or rtdm_task_join_nrt()
- * was invoked.
+ * After initialising a task, the task handle remains valid and can be
+ * passed to RTDM services until either rtdm_task_destroy() or
+ * rtdm_task_join_nrt() was invoked.
  *
  * @param[in,out] task Task handle
  * @param[in] name Optional task name
@@ -120,9 +100,7 @@ nanosecs_abs_t rtdm_clock_read_monotonic(void);
  *
  * @return 0 on success, otherwise negative error code
  *
- * Calling context: This service can be called from secondary mode only.
- *
- * Rescheduling: possible.
+ * @coretags{secondary-only, might-switch}
  */
 int rtdm_task_init(rtdm_task_t *task, const char *name,
 		   rtdm_task_proc_t task_proc, void *arg,
@@ -188,14 +166,7 @@ EXPORT_SYMBOL_GPL(rtdm_task_init);
  * @note Passing the same task handle to RTDM services after the completion of
  * this function is not allowed.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- *
- * Rescheduling: yes.
+ * @coretags{secondary-only, might-switch}
  */
 void rtdm_task_destroy(rtdm_task_t *task);
 
@@ -209,9 +180,7 @@ void rtdm_task_destroy(rtdm_task_t *task);
  * @return Non-zero indicates that a termination request is pending,
  * in which case the caller should wrap up and exit.
  *
- * Calling context: kernel task
- *
- * Rescheduling: none.
+ * @coretags{rtdm-task, might-switch}
  */
 int rtdm_task_should_stop(void);
 
@@ -222,16 +191,7 @@ int rtdm_task_should_stop(void);
  * @param[in] priority New priority of the task, see also
  * @ref rtdmtaskprio "Task Priority Range"
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: possible.
+ * @coretags{task-unrestricted, might-switch}
  */
 void rtdm_task_set_priority(rtdm_task_t *task, int priority);
 
@@ -242,16 +202,7 @@ void rtdm_task_set_priority(rtdm_task_t *task, int priority);
  * @param[in] period New period in nanoseconds of a cyclic task, 0 for
  * non-cyclic mode
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: possible.
+ * @coretags{task-unrestricted}
  */
 int rtdm_task_set_period(rtdm_task_t *task, nanosecs_rel_t period);
 
@@ -265,14 +216,7 @@ int rtdm_task_set_period(rtdm_task_t *task, nanosecs_rel_t period);
  * - -ETIMEDOUT is returned if a timer overrun occurred, which indicates
  * that a previous release point has been missed by the calling task.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel-based task
- * - User-space task (RT)
- *
- * Rescheduling: always, unless a timer overrun occured.
+ * @coretags{primary-only, might-switch}
  */
 int rtdm_task_wait_period(void);
 
@@ -282,16 +226,7 @@ int rtdm_task_wait_period(void);
  * @return Non-zero is returned if the task was actually unblocked from a
  * pending wait state, 0 otherwise.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: possible.
+ * @coretags{unrestricted, might-switch}
  */
 int rtdm_task_unblock(rtdm_task_t *task);
 
@@ -300,14 +235,7 @@ int rtdm_task_unblock(rtdm_task_t *task);
  *
  * @return Pointer to task handle
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{mode-unrestricted}
  */
 rtdm_task_t *rtdm_task_current(void);
 
@@ -325,14 +253,7 @@ rtdm_task_t *rtdm_task_current(void);
  * - -EPERM @e may be returned if an illegal invocation environment is
  * detected.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel-based task
- * - User-space task (RT)
- *
- * Rescheduling: always.
+ * @coretags{primary-only, might-switch}
  */
 int rtdm_task_sleep(nanosecs_rel_t delay);
 
@@ -351,14 +272,7 @@ int rtdm_task_sleep(nanosecs_rel_t delay);
  * - -EPERM @e may be returned if an illegal invocation environment is
  * detected.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel-based task
- * - User-space task (RT)
- *
- * Rescheduling: always, unless the specified time already passed.
+ * @coretags{primary-only, might-switch}
  */
 int rtdm_task_sleep_until(nanosecs_abs_t wakeup_time);
 
@@ -378,14 +292,7 @@ int rtdm_task_sleep_until(nanosecs_abs_t wakeup_time);
  *
  * - -EINVAL is returned if an invalid parameter was passed.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel-based task
- * - User-space task (RT)
- *
- * Rescheduling: always, unless the specified time already passed.
+ * @coretags{primary-only, might-switch}
  */
 int rtdm_task_sleep_abs(nanosecs_abs_t wakeup_time, enum rtdm_timer_mode mode);
 
@@ -421,14 +328,7 @@ EXPORT_SYMBOL_GPL(__rtdm_task_sleep);
  * The user has to take of this, otherwise rtdm_task_join_nrt() will never
  * return.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - User-space task (non-RT)
- *
- * Rescheduling: possible.
+ * @coretags{secondary-only}
  */
 void rtdm_task_join_nrt(rtdm_task_t *task, unsigned int poll_delay)
 {
@@ -445,22 +345,16 @@ EXPORT_SYMBOL_GPL(rtdm_task_join_nrt);
 /**
  * @brief Busy-wait a specified amount of time
  *
+ * This service does not schedule out the caller, but rather spins in
+ * a tight loop, burning CPU cycles until the timeout elapses.
+ *
  * @param[in] delay Delay in nanoseconds. Note that a zero delay does @b not
  * have the meaning of @c RTDM_TIMEOUT_INFINITE here.
  *
  * @note The caller must not be migratable to different CPUs while executing
  * this service. Otherwise, the actual delay will be undefined.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine (should be avoided or kept short)
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never (except due to external interruptions).
+ * @coretags{unrestricted}
  */
 void rtdm_task_busy_sleep(nanosecs_rel_t delay)
 {
@@ -492,15 +386,7 @@ EXPORT_SYMBOL_GPL(rtdm_task_busy_sleep);
  *
  * @return 0 on success, otherwise negative error code
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{task-unrestricted}
  */
 int rtdm_timer_init(rtdm_timer_t *timer, rtdm_timer_handler_t handler,
 		    const char *name);
@@ -511,15 +397,7 @@ int rtdm_timer_init(rtdm_timer_t *timer, rtdm_timer_handler_t handler,
  *
  * @param[in,out] timer Timer handle as returned by rtdm_timer_init()
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{task-unrestricted}
  */
 void rtdm_timer_destroy(rtdm_timer_t *timer)
 {
@@ -548,16 +426,7 @@ EXPORT_SYMBOL_GPL(rtdm_timer_destroy);
  * - -ETIMEDOUT is returned if @c expiry describes an absolute date in the
  * past.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{unrestricted}
  */
 int rtdm_timer_start(rtdm_timer_t *timer, nanosecs_abs_t expiry,
 		     nanosecs_rel_t interval, enum rtdm_timer_mode mode)
@@ -579,16 +448,7 @@ EXPORT_SYMBOL_GPL(rtdm_timer_start);
  *
  * @param[in,out] timer Timer handle as returned by rtdm_timer_init()
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{unrestricted}
  */
 void rtdm_timer_stop(rtdm_timer_t *timer)
 {
@@ -618,13 +478,7 @@ EXPORT_SYMBOL_GPL(rtdm_timer_stop);
  * - -ETIMEDOUT is returned if @c expiry describes an absolute date in the
  * past.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Timer handler
- *
- * Rescheduling: never.
+ * @coretags{isr-only}
  */
 int rtdm_timer_start_in_handler(rtdm_timer_t *timer, nanosecs_abs_t expiry,
 				nanosecs_rel_t interval,
@@ -635,13 +489,7 @@ int rtdm_timer_start_in_handler(rtdm_timer_t *timer, nanosecs_abs_t expiry,
  *
  * @param[in,out] timer Timer handle as returned by rtdm_timer_init()
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Timer handler
- *
- * Rescheduling: never.
+ * @coretags{isr-only}
  */
 void rtdm_timer_stop_in_handler(rtdm_timer_t *timer);
 #endif /* DOXYGEN_CPP */
@@ -718,14 +566,7 @@ int device_service_routine(...)
  * interpret special timeout values (infinite and non-blocking),
  * disburdening the driver developer from handling them separately.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel-based task
- * - User-space task (RT)
- *
- * Rescheduling: never.
+ * @coretags{task-unrestricted}
  */
 void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, nanosecs_rel_t timeout)
 {
@@ -750,15 +591,7 @@ EXPORT_SYMBOL_GPL(rtdm_toseq_init);
  * @param[in,out] event Event handle
  * @param[in] pending Non-zero if event shall be initialised as set, 0 otherwise
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{task-unrestricted}
  */
 void rtdm_event_init(rtdm_event_t *event, unsigned long pending)
 {
@@ -784,15 +617,7 @@ EXPORT_SYMBOL_GPL(rtdm_event_init);
  *
  * @param[in,out] event Event handle as returned by rtdm_event_init()
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: possible.
+ * @coretags{task-unrestricted, might-switch}
  */
 void rtdm_event_destroy(rtdm_event_t *event)
 {
@@ -811,16 +636,7 @@ EXPORT_SYMBOL_GPL(rtdm_event_destroy);
  *
  * @param[in,out] event Event handle as returned by rtdm_event_init()
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: possible.
+ * @coretags{unrestricted, might-switch}
  */
 void rtdm_event_pulse(rtdm_event_t *event)
 {
@@ -838,16 +654,7 @@ EXPORT_SYMBOL_GPL(rtdm_event_pulse);
  *
  * @param[in,out] event Event handle as returned by rtdm_event_init()
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: possible.
+ * @coretags{unrestricted, might-switch}
  */
 void rtdm_event_signal(rtdm_event_t *event)
 {
@@ -889,14 +696,7 @@ EXPORT_SYMBOL_GPL(rtdm_event_signal);
  * - -EPERM @e may be returned if an illegal invocation environment is
  * detected.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel-based task
- * - User-space task (RT)
- *
- * Rescheduling: possible.
+ * @coretags{primary-only, might-switch}
  */
 int rtdm_event_wait(rtdm_event_t *event)
 {
@@ -934,14 +734,7 @@ EXPORT_SYMBOL_GPL(rtdm_event_wait);
  * - -EWOULDBLOCK is returned if a negative @a timeout (i.e., non-blocking
  * operation) has been specified.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel-based task
- * - User-space task (RT)
- *
- * Rescheduling: possible.
+ * @coretags{primary-only, might-switch}
  */
 int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
 			 rtdm_toseq_t *timeout_seq)
@@ -1006,16 +799,7 @@ EXPORT_SYMBOL_GPL(rtdm_event_timedwait);
  *
  * @param[in,out] event Event handle as returned by rtdm_event_init()
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{unrestricted}
  */
 void rtdm_event_clear(rtdm_event_t *event)
 {
@@ -1053,15 +837,7 @@ EXPORT_SYMBOL_GPL(rtdm_event_clear);
  *
  * - -EINVAL is returned if @a type or @a fd_index are invalid.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{task-unrestricted}
  */
 int rtdm_event_select_bind(rtdm_event_t *event, rtdm_selector_t *selector,
 			   enum rtdm_selecttype type, unsigned int fd_index)
@@ -1102,15 +878,7 @@ EXPORT_SYMBOL_GPL(rtdm_event_select_bind);
  * @param[in,out] sem Semaphore handle
  * @param[in] value Initial value of the semaphore
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{task-unrestricted}
  */
 void rtdm_sem_init(rtdm_sem_t *sem, unsigned long value)
 {
@@ -1135,15 +903,7 @@ EXPORT_SYMBOL_GPL(rtdm_sem_init);
  *
  * @param[in,out] sem Semaphore handle as returned by rtdm_sem_init()
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: possible.
+ * @coretags{task-unrestricted, might-switch}
  */
 void rtdm_sem_destroy(rtdm_sem_t *sem)
 {
@@ -1171,14 +931,7 @@ EXPORT_SYMBOL_GPL(rtdm_sem_destroy);
  * - -EPERM @e may be returned if an illegal invocation environment is
  * detected.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel-based task
- * - User-space task (RT)
- *
- * Rescheduling: possible.
+ * @coretags{primary-only, might-switch}
  */
 int rtdm_sem_down(rtdm_sem_t *sem)
 {
@@ -1216,14 +969,7 @@ EXPORT_SYMBOL_GPL(rtdm_sem_down);
  * - -EPERM @e may be returned if an illegal invocation environment is
  * detected.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel-based task
- * - User-space task (RT)
- *
- * Rescheduling: possible.
+ * @coretags{primary-only, might-switch}
  */
 int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
 		       rtdm_toseq_t *timeout_seq)
@@ -1282,16 +1028,7 @@ EXPORT_SYMBOL_GPL(rtdm_sem_timeddown);
  *
  * @param[in,out] sem Semaphore handle as returned by rtdm_sem_init()
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: possible.
+ * @coretags{unrestricted, might-switch}
  */
 void rtdm_sem_up(rtdm_sem_t *sem)
 {
@@ -1333,15 +1070,7 @@ EXPORT_SYMBOL_GPL(rtdm_sem_up);
  *
  * - -EINVAL is returned if @a type or @a fd_index are invalid.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{task-unrestricted}
  */
 int rtdm_sem_select_bind(rtdm_sem_t *sem, rtdm_selector_t *selector,
 			 enum rtdm_selecttype type, unsigned int fd_index)
@@ -1385,15 +1114,7 @@ EXPORT_SYMBOL_GPL(rtdm_sem_select_bind);
  *
  * @param[in,out] mutex Mutex handle
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{task-unrestricted}
  */
 void rtdm_mutex_init(rtdm_mutex_t *mutex)
 {
@@ -1411,15 +1132,7 @@ EXPORT_SYMBOL_GPL(rtdm_mutex_init);
  *
  * @param[in,out] mutex Mutex handle as returned by rtdm_mutex_init()
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: possible.
+ * @coretags{task-unrestricted, might-switch}
  */
 void rtdm_mutex_destroy(rtdm_mutex_t *mutex)
 {
@@ -1437,14 +1150,7 @@ EXPORT_SYMBOL_GPL(rtdm_mutex_destroy);
  *
  * @param[in,out] mutex Mutex handle as returned by rtdm_mutex_init()
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel-based task
- * - User-space task (RT)
- *
- * Rescheduling: possible.
+ * @coretags{primary-only, might-switch}
  */
 void rtdm_mutex_unlock(rtdm_mutex_t *mutex)
 {
@@ -1474,14 +1180,7 @@ EXPORT_SYMBOL_GPL(rtdm_mutex_unlock);
  * - -EPERM @e may be returned if an illegal invocation environment is
  * detected.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel-based task
- * - User-space task (RT)
- *
- * Rescheduling: possible.
+ * @coretags{primary-only, might-switch}
  */
 int rtdm_mutex_lock(rtdm_mutex_t *mutex)
 {
@@ -1515,14 +1214,7 @@ EXPORT_SYMBOL_GPL(rtdm_mutex_lock);
  * - -EPERM @e may be returned if an illegal invocation environment is
  * detected.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel-based task
- * - User-space task (RT)
- *
- * Rescheduling: possible.
+ * @coretags{primary-only, might-switch}
  */
 int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
 			 rtdm_toseq_t *timeout_seq)
@@ -1611,14 +1303,7 @@ EXPORT_SYMBOL_GPL(rtdm_mutex_timedlock);
  *
  * - -EBUSY is returned if the specified IRQ line is already in use.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - User-space task (non-RT)
- *
- * Rescheduling: never.
+ * @coretags{secondary-only}
  */
 int rtdm_irq_request(rtdm_irq_t *irq_handle, unsigned int irq_no,
 		     rtdm_irq_handler_t handler, unsigned long flags,
@@ -1655,14 +1340,7 @@ EXPORT_SYMBOL_GPL(rtdm_irq_request);
  * pending event on the given IRQ line is fully processed on return from this
  * service.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - User-space task (non-RT)
- *
- * Rescheduling: never.
+ * @coretags{secondary-only}
  */
 int rtdm_irq_free(rtdm_irq_t *irq_handle);
 
@@ -1681,16 +1359,7 @@ int rtdm_irq_free(rtdm_irq_t *irq_handle);
  * allow the invocation over RT and interrupt contexts. The caller is
  * responsible for excluding such conflicts.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: possible.
+ * @coretags{secondary-only}
  */
 int rtdm_irq_enable(rtdm_irq_t *irq_handle);
 
@@ -1709,16 +1378,7 @@ int rtdm_irq_enable(rtdm_irq_t *irq_handle);
  * allow the invocation over RT and interrupt contexts. The caller is
  * responsible for excluding such conflicts.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{secondary-only}
  */
 int rtdm_irq_disable(rtdm_irq_t *irq_handle);
 #endif /* DOXYGEN_CPP */
@@ -1750,15 +1410,7 @@ int rtdm_irq_disable(rtdm_irq_t *irq_handle);
  *
  * - -EAGAIN is returned if no free signal slot is available.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{task-unrestricted}
  */
 int rtdm_nrtsig_init(rtdm_nrtsig_t *nrt_sig, rtdm_nrtsig_handler_t handler,
 		     void *arg);
@@ -1768,15 +1420,7 @@ int rtdm_nrtsig_init(rtdm_nrtsig_t *nrt_sig, rtdm_nrtsig_handler_t handler,
  *
  * @param[in,out] nrt_sig Signal handle
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{task-unrestricted}
  */
 void rtdm_nrtsig_destroy(rtdm_nrtsig_t *nrt_sig);
 
@@ -1785,17 +1429,7 @@ void rtdm_nrtsig_destroy(rtdm_nrtsig_t *nrt_sig);
  *
  * @param[in,out] nrt_sig Signal handle
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never in real-time context, possible in non-real-time
- * environments.
+ * @coretags{unrestricted}
  */
 void rtdm_nrtsig_pend(rtdm_nrtsig_t *nrt_sig);
 /** @} Non-Real-Time Signalling Services */
@@ -1978,14 +1612,7 @@ static int rtdm_do_mmap(struct rtdm_fd *fd,
  * documentaion (e.g. Linux Device Drivers book) on virtual memory management
  * for details.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - User-space task (non-RT)
- *
- * Rescheduling: possible.
+ * @coretags{secondary-only}
  */
 int rtdm_mmap_to_user(struct rtdm_fd *fd,
 		      void *src_addr, size_t len,
@@ -2046,14 +1673,7 @@ EXPORT_SYMBOL_GPL(rtdm_mmap_to_user);
  * documentaion (e.g. Linux Device Drivers book) on virtual memory management
  * for details.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - User-space task (non-RT)
- *
- * Rescheduling: possible.
+ * @coretags{secondary-only}
  */
 int rtdm_iomap_to_user(struct rtdm_fd *fd,
 		       phys_addr_t src_addr, size_t len,
@@ -2088,14 +1708,7 @@ EXPORT_SYMBOL_GPL(rtdm_iomap_to_user);
  * - -EPERM @e may be returned if an illegal invocation environment is
  * detected.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - User-space task (non-RT)
- *
- * Rescheduling: possible.
+ * @coretags{secondary-only}
  */
 int rtdm_munmap(struct rtdm_fd *fd, void *ptr, size_t len)
 {
@@ -2123,15 +1736,7 @@ EXPORT_SYMBOL_GPL(rtdm_munmap);
  *
  * @return 0 means callback will be suppressed and 1 means go ahead and do it
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: possible.
+ * @coretags{unrestricted}
  */
 int rtdm_ratelimit(struct rtdm_ratelimit_state *rs, const char *func)
 {
@@ -2177,17 +1782,7 @@ EXPORT_SYMBOL_GPL(rtdm_ratelimit);
  * @return On success, this service returns the number of characters printed.
  * Otherwise, a negative error code is returned.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine (consider the overhead!)
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never in real-time context, possible in non-real-time
- * environments.
+ * @coretags{unrestricted}
  */
 void rtdm_printk_ratelimited(const char *format, ...);
 
@@ -2200,38 +1795,19 @@ void rtdm_printk_ratelimited(const char *format, ...);
  * @return On success, this service returns the number of characters printed.
  * Otherwise, a negative error code is returned.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine (consider the overhead!)
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never in real-time context, possible in non-real-time
- * environments.
+ * @coretags{unrestricted}
  */
 void rtdm_printk(const char *format, ...);
 
 /**
- * Allocate memory block in real-time context
+ * Allocate memory block
  *
  * @param[in] size Requested size of the memory block
  *
  * @return The pointer to the allocated block is returned on success, NULL
  * otherwise.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine (consider the overhead!)
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{unrestricted}
  */
 void *rtdm_malloc(size_t size);
 
@@ -2240,16 +1816,7 @@ void *rtdm_malloc(size_t size);
  *
  * @param[in] ptr Pointer to memory block as returned by rtdm_malloc()
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine (consider the overhead!)
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{unrestricted}
  */
 void rtdm_free(void *ptr);
 
@@ -2264,15 +1831,7 @@ void rtdm_free(void *ptr);
  * @return Non-zero is return when it is safe to read from the specified
  * memory block, 0 otherwise.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{task-unrestricted}
  */
 int rtdm_read_user_ok(struct rtdm_fd *fd, const void __user *ptr,
 		      size_t size);
@@ -2288,15 +1847,7 @@ int rtdm_read_user_ok(struct rtdm_fd *fd, const void __user *ptr,
  * @return Non-zero is return when it is safe to read from or write to the
  * specified memory block, 0 otherwise.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{task-unrestricted}
  */
 int rtdm_rw_user_ok(struct rtdm_fd *fd, const void __user *ptr,
 		    size_t size);
@@ -2317,15 +1868,7 @@ int rtdm_rw_user_ok(struct rtdm_fd *fd, const void __user *ptr,
  * @note Before invoking this service, verify via rtdm_read_user_ok() that the
  * provided user-space address can securely be accessed.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{task-unrestricted}
  */
 int rtdm_copy_from_user(struct rtdm_fd *fd, void *dst,
 			const void __user *src, size_t size);
@@ -2347,15 +1890,7 @@ int rtdm_copy_from_user(struct rtdm_fd *fd, void *dst,
  * @note This service is a combination of rtdm_read_user_ok and
  * rtdm_copy_from_user.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{task-unrestricted}
  */
 int rtdm_safe_copy_from_user(struct rtdm_fd *fd, void *dst,
 			     const void __user *src, size_t size);
@@ -2376,15 +1911,7 @@ int rtdm_safe_copy_from_user(struct rtdm_fd *fd, void *dst,
  * @note Before invoking this service, verify via rtdm_rw_user_ok() that the
  * provided user-space address can securely be accessed.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{task-unrestricted}
  */
 int rtdm_copy_to_user(struct rtdm_fd *fd, void __user *dst,
 		      const void *src, size_t size);
@@ -2406,15 +1933,7 @@ int rtdm_copy_to_user(struct rtdm_fd *fd, void __user *dst,
  * @note This service is a combination of rtdm_rw_user_ok and
  * rtdm_copy_to_user.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{task-unrestricted}
  */
 int rtdm_safe_copy_to_user(struct rtdm_fd *fd, void __user *dst,
 			   const void *src, size_t size);
@@ -2437,15 +1956,7 @@ int rtdm_safe_copy_to_user(struct rtdm_fd *fd, void __user *dst,
  * @note This services already includes a check of the source address,
  * calling rtdm_read_user_ok() for @a src explicitly is not required.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{task-unrestricted}
  */
 int rtdm_strncpy_from_user(struct rtdm_fd *fd, char *dst,
 			   const char __user *src, size_t count);
@@ -2456,15 +1967,7 @@ int rtdm_strncpy_from_user(struct rtdm_fd *fd, char *dst,
  * @return Non-zero is returned if the caller resides in real-time context, 0
  * otherwise.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{task-unrestricted}
  */
 int rtdm_in_rt_context(void);
 
@@ -2484,14 +1987,7 @@ int rtdm_in_rt_context(void);
  * for the driver to reject the request via -ENOSYS so that RTDM can switch
  * the caller and restart the request in real-time context.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{task-unrestricted}
  */
 int rtdm_rt_capable(struct rtdm_fd *fd);
 

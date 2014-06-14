@@ -1,7 +1,6 @@
-/**
- * @file
+/*
  * Analogy driver for standard parallel port
- * @note Copyright (C) 1998,2001 David A. Schleef <ds@schleef.org>
+ * Copyright (C) 1998,2001 David A. Schleef <ds@schleef.org>
  *
  * This code is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published

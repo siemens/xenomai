@@ -1,5 +1,4 @@
-/**
- * @file
+/*
  * Hardware driver for 8255 chip
  * @note Copyright (C) 1999 David A. Schleef <ds@schleef.org>
  *
@@ -17,7 +16,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
-
 #ifndef __ANALOGY_8255_H__
 #define __ANALOGY_8255_H__
 

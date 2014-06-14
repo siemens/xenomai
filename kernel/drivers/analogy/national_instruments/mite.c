@@ -1,5 +1,4 @@
-/**
- * @file
+/*
  * Hardware driver for NI Mite PCI interface chip
  *
  * Copyright (C) 1999 David A. Schleef <ds@schleef.org>

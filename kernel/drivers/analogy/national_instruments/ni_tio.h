@@ -1,7 +1,6 @@
-/**
- * @file
+/*
  * Hardware driver for NI general purpose counter
- * @note Copyright (C) 2006 Frank Mori Hess <fmhess@users.sourceforge.net>
+ * Copyright (C) 2006 Frank Mori Hess <fmhess@users.sourceforge.net>
  *
  * This code is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
@@ -17,7 +16,6 @@
  * along with Xenomai; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-
 #ifndef __ANALOGY_NI_TIO_H__
 #define __ANALOGY_NI_TIO_H__
 

@@ -1,5 +1,4 @@
-/**
- * @file
+/*
  * Hardware driver for DAQ-STC based boards
  *
  * Copyright (C) 1997-2001 David A. Schleef <ds@schleef.org>

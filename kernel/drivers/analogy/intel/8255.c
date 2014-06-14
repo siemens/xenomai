@@ -1,7 +1,6 @@
-/**
- * @file
+/*
  * Analogy subdevice driver for 8255 chip
- * @note Copyright (C) 1999 David A. Schleef <ds@schleef.org>
+ * Copyright (C) 1999 David A. Schleef <ds@schleef.org>
  *
  * This code is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
@@ -17,7 +16,6 @@
  * along with Xenomai; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-
 #include <linux/module.h>
 #include <linux/ioport.h>
 #include <linux/io.h>

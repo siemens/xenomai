@@ -21,7 +21,7 @@
 #include <cobalt/uapi/kernel/types.h>
 
 /**
- * @ingroup core
+ * @ingroup core_thread
  * @defgroup core_thread_states Thread state flags
  * @brief Bits reporting permanent or transient states of threads
  * @{
@@ -55,7 +55,7 @@
 /** @} */
 
 /**
- * @ingroup core
+ * @ingroup core_thread
  * @defgroup core_thread_info Thread information flags
  * @brief Bits reporting events notified to threads
  * @{

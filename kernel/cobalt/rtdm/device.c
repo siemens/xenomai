@@ -1,9 +1,8 @@
-/**
- * @file
+/*
  * Real-Time Driver Model for Xenomai, device management
  *
- * @note Copyright (C) 2005 Jan Kiszka <jan.kiszka@web.de>
- * @note Copyright (C) 2005 Joerg Langenberg <joerg.langenberg@gmx.net>
+ * Copyright (C) 2005 Jan Kiszka <jan.kiszka@web.de>
+ * Copyright (C) 2005 Joerg Langenberg <joerg.langenberg@gmx.net>
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -19,7 +18,6 @@
  * along with Xenomai; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-
 #include <linux/module.h>
 #include <linux/delay.h>
 #include <linux/semaphore.h>
@@ -155,13 +153,7 @@ struct rtdm_device *get_protocol_device(int protocol_family, int socket_type)
  *
  * - -EAGAIN is returned if some /proc entry cannot be created.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- *
- * Rescheduling: never.
+ * @coretags{secondary-only}
  */
 int rtdm_dev_register(struct rtdm_device *device)
 {
@@ -316,13 +308,7 @@ EXPORT_SYMBOL_GPL(rtdm_dev_register);
  * - -EAGAIN is returned if the device is busy with open instances and 0 has
  * been passed for @a poll_delay.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- *
- * Rescheduling: never.
+ * @coretags{secondary-only}
  */
 int rtdm_dev_unregister(struct rtdm_device *device, unsigned int poll_delay)
 {

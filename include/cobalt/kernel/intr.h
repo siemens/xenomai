@@ -1,5 +1,5 @@
 /*
- * @note Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
@@ -15,14 +15,16 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- *
- * \ingroup intr
  */
-
 #ifndef _COBALT_KERNEL_INTR_H
 #define _COBALT_KERNEL_INTR_H
 
 #include <cobalt/kernel/stat.h>
+
+/**
+ * @addtogroup core_irq
+ * @{
+ */
 
 /* Possible return values of ISR. */
 #define XN_ISR_NONE	 0x1
@@ -131,5 +133,7 @@ void xnintr_put_query_lock(void);
 
 int xnintr_query_next(int irq, struct xnintr_iterator *iterator,
 		      char *name_buf);
+
+/** @} */
 
 #endif /* !_COBALT_KERNEL_INTR_H */

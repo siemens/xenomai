@@ -467,19 +467,10 @@ void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, nanosecs_rel_t timeout);
  * invocation of rescheduling calls may break the atomicity until the task
  * gains the CPU again.
  *
- * Environments:
+ * @coretags{unrestricted}
  *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: possible, depends on functions called within @a code_block.
- *
- * @warning This construct is deprecated and will be phased out in
- * Xenomai 3.0. Please use rtdm_waitqueue services instead.
+ * @deprecated This construct will be phased out in Xenomai
+ * 3.0. Please use rtdm_waitqueue services instead.
  */
 #ifdef DOXYGEN_CPP /* Beautify doxygen output */
 #define RTDM_EXECUTE_ATOMICALLY(code_block)	\
@@ -531,15 +522,7 @@ typedef unsigned long rtdm_lockctx_t;
  *
  * @param lock Address of lock variable
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{task-unrestricted}
  */
 static inline void rtdm_lock_init(rtdm_lock_t *lock)
 {
@@ -551,16 +534,7 @@ static inline void rtdm_lock_init(rtdm_lock_t *lock)
  *
  * @param lock Address of lock variable
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{unrestricted}
  */
 static inline void rtdm_lock_get(rtdm_lock_t *lock)
 {
@@ -574,16 +548,7 @@ static inline void rtdm_lock_get(rtdm_lock_t *lock)
  *
  * @param lock Address of lock variable
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{unrestricted, might-switch}
  */
 static inline void rtdm_lock_put(rtdm_lock_t *lock)
 {
@@ -598,16 +563,7 @@ static inline void rtdm_lock_put(rtdm_lock_t *lock)
  * @param lock Address of lock variable
  * @param context name of local variable to store the context in
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{unrestricted}
  */
 static inline rtdm_lockctx_t __rtdm_lock_get_irqsave(rtdm_lock_t *lock)
 {
@@ -628,16 +584,7 @@ static inline rtdm_lockctx_t __rtdm_lock_get_irqsave(rtdm_lock_t *lock)
  * @param lock Address of lock variable
  * @param context name of local variable which stored the context
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: possible.
+ * @coretags{unrestricted}
  */
 static inline
 void rtdm_lock_put_irqrestore(rtdm_lock_t *lock, rtdm_lockctx_t context)
@@ -652,16 +599,7 @@ void rtdm_lock_put_irqrestore(rtdm_lock_t *lock, rtdm_lockctx_t context)
  *
  * @param context name of local variable to store the context in
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{unrestricted}
  */
 #define rtdm_lock_irqsave(context)	\
 	splhigh(context)
@@ -671,16 +609,7 @@ void rtdm_lock_put_irqrestore(rtdm_lock_t *lock, rtdm_lockctx_t context)
  *
  * @param context name of local variable which stored the context
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: possible.
+ * @coretags{unrestricted}
  */
 #define rtdm_lock_irqrestore(context)	\
 	splexit(context)
@@ -863,13 +792,7 @@ typedef int (*rtdm_irq_handler_t)(rtdm_irq_t *irq_handle);
  * @return The argument pointer registered on rtdm_irq_request() is returned,
  * type-casted to the specified @a type.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Interrupt service routine
- *
- * Rescheduling: never.
+ * @coretags{unrestricted}
  */
 #define rtdm_irq_get_arg(irq_handle, type)	((type *)irq_handle->cookie)
 /** @} rtdm_irq */

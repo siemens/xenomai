@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2013 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
@@ -22,6 +22,11 @@
 #ifndef _COBALT_KERNEL_SCHED_H
 #error "please don't include cobalt/kernel/sched-weak.h directly"
 #endif
+
+/**
+ * @addtogroup core_sched
+ * @{
+ */
 
 #ifdef CONFIG_XENO_OPT_SCHED_WEAK
 
@@ -48,5 +53,7 @@ static inline int xnsched_weak_init_thread(struct xnthread *thread)
 }
 
 #endif /* CONFIG_XENO_OPT_SCHED_WEAK */
+
+/** @} */
 
 #endif /* !_COBALT_KERNEL_SCHED_WEAK_H */

@@ -487,7 +487,9 @@ device_initcall(xenomai_init);
  * <TR><TD>secondary-only</TD>	<TD>Must be called from a regular Linux task</TD></TR>
  * <TR><TD>primary-only</TD>	<TD>Must be called from a hard real-time task</TD></TR>
  * <TR><TD>isr-only</TD>	<TD>Must be called from a hard real-time IRQ handler</TD></TR>
- * <TR><TD>task-unrestricted</TD>	<TD>May be called from a regular Linux or hard real-time task context indifferently</TD></TR>
+ * <TR><TD>rtdm-task</TD>	<TD>Must be called from a RTDM driver task</TD></TR>
+ * <TR><TD>mode-unrestricted</TD>	<TD>Must be called from a Xenomai task context in either primary or secondary mode</TD></TR>
+ * <TR><TD>task-unrestricted</TD>	<TD>May be called from a regular Linux or Xenomai task context indifferently</TD></TR>
  * <TR><TD>unrestricted</TD>	<TD>May be called from any context previously described</TD></TR>
  * <TR><TD>atomic-entry</TD>	<TD>Caller must currently hold the Xenomai nucleus big lock</TD></TR>
  * </TABLE>

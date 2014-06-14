@@ -45,19 +45,19 @@
  *
  * @par Supported Operations
  * @b Open @n
- * Environments: non-RT (RT optional, deprecated)@n
+ * @coretags{secondary-only}
  * Specific return values: none @n
  * @n
  * @b Close @n
- * Environments: non-RT (RT optional, deprecated)@n
+ * @coretags{secondary-only}
  * Specific return values: none @n
  * @n
  * @b IOCTL @n
- * Mandatory Environments: see @ref SERIOCTLs "below" @n
+ * @coretags{task-unrestricted}. See @ref SERIOCTLs "below" @n
  * Specific return values: see @ref SERIOCTLs "below" @n
  * @n
  * @b Read @n
- * Environments: RT (non-RT optional)@n
+ * @coretags{mode-unrestricted}
  * Specific return values:
  * - -ETIMEDOUT
  * - -EINTR (interrupted explicitly or by signal)
@@ -67,7 +67,7 @@
  * .
  * @n
  * @b Write @n
- * Environments: RT (non-RT optional)@n
+ * @coretags{mode-unrestricted}
  * Specific return values:
  * - -ETIMEDOUT
  * - -EINTR (interrupted explicitly or by signal)

@@ -53,7 +53,7 @@
  * @par Supported Operations
  * @n
  * @b Socket @n
- * Environments: non-RT (RT optional, deprecated)@n
+ * @coretags{secondary-only}
  * @n
  * Specific return values:
  * - -EPROTONOSUPPORT (Protocol is not supported by the driver.
@@ -66,13 +66,13 @@
  * Blocking calls to any of the @ref Send or @ref Recv "Receive" functions
  * will be unblocked when the socket is closed and return with an error. @n
  * @n
- * Environments: non-RT (RT optional, deprecated)@n
+ * @coretags{secondary-only}
  * @n
  * Specific return values: none @n
  * @n
  * @n
  * @b IOCTL @n
- * Mandatory Environments: see @ref CANIOCTLs "below" @n
+ * @coretags{task-unrestricted}. see @ref CANIOCTLs "below"
  * Specific return values: see @ref CANIOCTLs "below" @n
  * @n
  * @n
@@ -92,7 +92,7 @@
  * bound to when no socket address is given to them. @n
  * @n
  * @n
- * Environments: non-RT (RT optional)@n
+ * @coretags{secondary-only}
  * @n
  * Specific return values:
  * - -EFAULT (It was not possible to access user space memory area at the
@@ -121,7 +121,7 @@
  *   .
  * .
  * @n
- * Environments: non-RT (RT optional)@n
+ * @coretags{task-unrestricted}
  * Specific return values: see links to options above. @n
  * @n
  * @n
@@ -159,7 +159,7 @@
  * @n
  * Supported Flags [out]: none @n
  * @n
- * Environments: RT (non-RT optional)@n
+ * @coretags{mode-unrestricted}
  * @n
  * Specific return values:
  * - Non-negative value (Indicating the successful reception of a CAN message.
@@ -198,7 +198,7 @@
  *                 succeed if it would not block. This flag takes precedence
  *                 over a timeout specified by @ref RTCAN_RTIOC_SND_TIMEOUT.)
  * .
- * Environments: RT (non-RT optional)@n
+ * @coretags{mode-unrestricted}
  * @n
  * Specific return values:
  * - Non-negative value equal to given buffer size (Indicating the

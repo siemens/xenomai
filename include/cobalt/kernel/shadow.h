@@ -16,7 +16,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  */
-
 #ifndef _COBALT_KERNEL_SHADOW_H
 #define _COBALT_KERNEL_SHADOW_H
 
@@ -26,6 +25,10 @@
 #include <cobalt/uapi/kernel/types.h>
 #include <cobalt/uapi/signal.h>
 
+/**
+ * @addtogroup core_shadow
+ * @{
+ */
 struct xnthread;
 struct xnthread_user_window;
 struct pt_regs;
@@ -130,5 +133,7 @@ void xnshadow_pop_personality(struct xnpersonality *prev);
 int xnshadow_yield(xnticks_t min, xnticks_t max);
 
 extern struct xnpersonality xenomai_personality;
+
+/** @} */
 
 #endif /* !_COBALT_KERNEL_SHADOW_H */

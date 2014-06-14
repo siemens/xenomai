@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2008 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
@@ -16,13 +16,17 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  */
-
 #ifndef _COBALT_KERNEL_SCHED_TP_H
 #define _COBALT_KERNEL_SCHED_TP_H
 
 #ifndef _COBALT_KERNEL_SCHED_H
 #error "please don't include cobalt/kernel/sched-tp.h directly"
 #endif
+
+/**
+ * @addtogroup core_sched
+ * @{
+ */
 
 #ifdef CONFIG_XENO_OPT_SCHED_TP
 
@@ -89,5 +93,7 @@ xnsched_tp_get_schedule(struct xnsched *sched);
 void xnsched_tp_put_schedule(struct xnsched_tp_schedule *gps);
 
 #endif /* CONFIG_XENO_OPT_SCHED_TP */
+
+/** @} */
 
 #endif /* !_COBALT_KERNEL_SCHED_TP_H */

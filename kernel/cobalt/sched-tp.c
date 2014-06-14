@@ -1,6 +1,4 @@
-/**
- * @brief Temporal partitioning (typical of IMA systems).
- *
+/*
  * Copyright (C) 2008 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify

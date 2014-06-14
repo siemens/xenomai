@@ -1,7 +1,4 @@
 /*
- * @file
- * This file is part of the Xenomai project.
- *
  * Copyright (C) 2011 Philippe Gerum <rpm@xenomai.org>
  *
  * This program is free software; you can redistribute it and/or

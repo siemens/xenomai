@@ -1,9 +1,6 @@
-/**
- * @file
- * Real-Time Driver Model for Xenomai, device operation multiplexing
- *
- * @note Copyright (C) 2005 Jan Kiszka <jan.kiszka@web.de>
- * @note Copyright (C) 2005 Joerg Langenberg <joerg.langenberg@gmx.net>
+/*
+ * Copyright (C) 2005 Jan Kiszka <jan.kiszka@web.de>
+ * Copyright (C) 2005 Joerg Langenberg <joerg.langenberg@gmx.net>
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -19,7 +16,6 @@
  * along with Xenomai; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-
 #include <linux/workqueue.h>
 #include <linux/slab.h>
 #include <cobalt/kernel/ppd.h>
@@ -245,86 +241,14 @@ __rt_dev_ioctl_fallback(struct rtdm_fd *fd, unsigned int request, void __user *a
  */
 
 /**
- * @brief Increment context reference counter
- *
- * @param[in] context Device context
- *
- * @note rtdm_context_get() automatically increments the lock counter. You
- * only need to call this function in special scenarios, e.g. when keeping
- * additional references to the context structure that have different
- * lifetimes. Only use rtdm_context_lock() on contexts that are currently
- * locked via an earlier rtdm_context_get()/rtdm_contex_lock() or while
- * running a device operation handler.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
- */
-void rtdm_context_lock(struct rtdm_dev_context *context);
-
-/**
- * @brief Decrement context reference counter
- *
- * @param[in] context Device context
- *
- * @note Every call to rtdm_context_locked() must be matched by a
- * rtdm_context_unlock() invocation.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
- */
-void rtdm_context_unlock(struct rtdm_dev_context *context);
-
-/**
- * @brief Release a device context obtained via rtdm_context_get()
- *
- * @param[in] context Device context
- *
- * @note Every successful call to rtdm_context_get() must be matched by a
- * rtdm_context_put() invocation.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
- */
-void rtdm_context_put(struct rtdm_dev_context *context);
-
-/**
- * @ingroup rtdm_sync
- * @defgroup rtdm_sync_wq Wait queue
- * RTDM wait queues
- * @{
- */
-
-/**
  * @fn void rtdm_waitqueue_init(struct rtdm_waitqueue *wq)
  * @brief  Initialize a RTDM wait queue
  *
  * Sets up a wait queue structure for further use.
  *
  * @param wq waitqueue to initialize.
+ *
+ * @coretags{task-unrestricted}
  */
 void rtdm_waitqueue_init(struct rtdm_waitqueue *wq);
 
@@ -336,6 +260,8 @@ void rtdm_waitqueue_init(struct rtdm_waitqueue *wq);
  * to it.
  *
  * @param wq waitqueue to delete.
+ *
+ * @coretags{task-unrestricted}
  */
 void rtdm_waitqueue_destroy(struct rtdm_waitqueue *wq);
 
@@ -375,6 +301,8 @@ void rtdm_waitqueue_destroy(struct rtdm_waitqueue *wq);
  *
  * @note Passing RTDM_TIMEOUT_NONE to @a timeout makes no sense for
  * such service, and might cause unexpected behavior.
+ *
+ * @coretags{primary-only, might-switch}
  */
 rtdm_timedwait_condition_locked(struct rtdm_wait_queue *wq, C_expr condition,
 				nanosecs_rel_t timeout, rtdm_toseq_t *toseq);
@@ -403,6 +331,8 @@ rtdm_timedwait_condition_locked(struct rtdm_wait_queue *wq, C_expr condition,
  *
  * @note rtdm_waitqueue_signal() has to be called after changing any
  * variable that could change the result of the wait condition.
+ *
+ * @coretags{primary-only, might-switch}
  */
 rtdm_wait_condition_locked(struct rtdm_wait_queue *wq, C_expr condition);
 
@@ -437,6 +367,8 @@ rtdm_wait_condition_locked(struct rtdm_wait_queue *wq, C_expr condition);
  *
  * @note Passing RTDM_TIMEOUT_NONE to @a timeout makes no sense for
  * such service, and might cause unexpected behavior.
+ *
+ * @coretags{primary-only, might-switch}
  */
 rtdm_timedwait_condition(struct rtdm_wait_queue *wq, C_expr condition,
 			 nanosecs_rel_t timeout, rtdm_toseq_t *toseq);
@@ -468,6 +400,8 @@ rtdm_timedwait_condition(struct rtdm_wait_queue *wq, C_expr condition,
  *
  * @note Passing RTDM_TIMEOUT_NONE to @a timeout makes no sense for
  * such service, and might cause unexpected behavior.
+ *
+ * @coretags{primary-only, might-switch}
  */
 void rtdm_timedwait(struct rtdm_wait_queue *wq,
 		    nanosecs_rel_t timeout, rtdm_toseq_t *toseq);
@@ -504,6 +438,8 @@ void rtdm_timedwait(struct rtdm_wait_queue *wq,
  *
  * @note Passing RTDM_TIMEOUT_NONE to @a timeout makes no sense for
  * such service, and might cause unexpected behavior.
+ *
+ * @coretags{primary-only, might-switch}
  */
 void rtdm_timedwait_locked(struct rtdm_wait_queue *wq,
 			   nanosecs_rel_t timeout, rtdm_toseq_t *toseq);
@@ -527,6 +463,8 @@ void rtdm_timedwait_locked(struct rtdm_wait_queue *wq,
  *
  * @note rtdm_waitqueue_signal() has to be called after changing any
  * variable that could change the result of the wait condition.
+ *
+ * @coretags{primary-only, might-switch}
  */
 rtdm_wait_condition(struct rtdm_wait_queue *wq, C_expr condition);
 
@@ -545,6 +483,8 @@ rtdm_wait_condition(struct rtdm_wait_queue *wq, C_expr condition);
  * - -EINTR is returned if the waitqueue has been flushed, or the
  * calling task has received a Linux signal or has been forcibly
  * unblocked by a call to rtdm_task_unblock().
+ *
+ * @coretags{primary-only, might-switch}
  */
 void rtdm_wait(struct rtdm_wait_queue *wq);
 
@@ -568,6 +508,8 @@ void rtdm_wait(struct rtdm_wait_queue *wq);
  * - -EINTR is returned if the waitqueue has been flushed, or the
  * calling task has received a Linux signal or has been forcibly
  * unblocked by a call to rtdm_task_unblock().
+ *
+ * @coretags{primary-only, might-switch}
  */
 void rtdm_wait_locked(struct rtdm_wait_queue *wq);
 
@@ -583,6 +525,8 @@ void rtdm_wait_locked(struct rtdm_wait_queue *wq);
  *
  * @note Recursive locking might lead to unexpected behavior,
  * including lock up.
+ *
+ * @coretags{unrestricted}
  */
 void rtdm_waitqueue_lock(struct rtdm_wait_queue *wq, rtdm_lockctx_t context);
 
@@ -595,6 +539,8 @@ void rtdm_waitqueue_lock(struct rtdm_wait_queue *wq, rtdm_lockctx_t context);
  * @param wq waitqueue to unlock.
  *
  * @param context name of local variable to retrieve the context from.
+ *
+ * @coretags{unrestricted}
  */
 void rtdm_waitqueue_unlock(struct rtdm_wait_queue *wq, rtdm_lockctx_t context);
 
@@ -609,6 +555,8 @@ void rtdm_waitqueue_unlock(struct rtdm_wait_queue *wq, rtdm_lockctx_t context);
  *
  * @return non-zero if a task has been readied as a result of this
  * call, zero otherwise.
+ *
+ * @coretags{unrestricted, might-switch}
  */
 void rtdm_waitqueue_signal(struct rtdm_wait_queue *wq);
 
@@ -623,6 +571,8 @@ void rtdm_waitqueue_signal(struct rtdm_wait_queue *wq);
  *
  * @return non-zero if at least one task has been readied as a result
  * of this call, zero otherwise.
+ *
+ * @coretags{unrestricted, might-switch}
  */
 void rtdm_waitqueue_broadcast(struct rtdm_wait_queue *wq);
 
@@ -637,6 +587,8 @@ void rtdm_waitqueue_broadcast(struct rtdm_wait_queue *wq);
  *
  * @return non-zero if at least one task has been readied as a result
  * of this call, zero otherwise.
+ *
+ * @coretags{unrestricted, might-switch}
  */
 void rtdm_waitqueue_flush(struct rtdm_wait_queue *wq);
 
@@ -650,6 +602,8 @@ void rtdm_waitqueue_flush(struct rtdm_wait_queue *wq);
  * @param wq waitqueue to signal.
  *
  * @param waiter RTDM task to wake up.
+ *
+ * @coretags{unrestricted, might-switch}
  */
 void rtdm_waitqueue_wakeup(struct rtdm_wait_queue *wq, rtdm_task_t waiter);
 
@@ -674,6 +628,8 @@ void rtdm_waitqueue_wakeup(struct rtdm_wait_queue *wq, rtdm_task_t waiter);
  * after. Should multiple waiters be readied while iterating, the safe
  * form rtdm_for_each_waiter_safe() must be used for traversal
  * instead.
+ *
+ * @coretags{unrestricted}
  */
 rtdm_for_each_waiter(rtdm_task_t pos, struct rtdm_wait_queue *wq);
 
@@ -697,15 +653,15 @@ rtdm_for_each_waiter(rtdm_task_t pos, struct rtdm_wait_queue *wq);
  * @param tmp temporary cursor variable.
  *
  * @param wq waitqueue to scan.
+ *
+ * @coretags{unrestricted}
  */
 rtdm_for_each_waiter_safe(rtdm_task_t pos, rtdm_task_t tmp, struct rtdm_wait_queue *wq);
 
-/** @} in rtdm_sync */
-
-/** @} add rtdm_sync */
+/** @} rtdm_sync */
 
 /**
- * @defgroup rtdm_foo Driver to driver services
+ * @defgroup rtdm_interdriver_api Driver to driver services
  * Inter-driver interface
  *@{
  */
@@ -715,102 +671,84 @@ rtdm_for_each_waiter_safe(rtdm_task_t pos, rtdm_task_t tmp, struct rtdm_wait_que
  *
  * Refer to rt_dev_open() for parameters and return values
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * @coretags{secondary-only, might-switch}
  */
 int rtdm_open(const char *path, int oflag, ...);
 
 /**
  * @brief Create a socket
  *
- * Refer to rt_dev_socket() for parameters and return values
+ * Refer to rt_dev_socket() for parameters and return values. Action
+ * depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * @coretags{secondary-only, might-switch}
  */
 int rtdm_socket(int protocol_family, int socket_type, int protocol);
 
 /**
  * @brief Close a device or socket
  *
- * Refer to rt_dev_close() for parameters and return values
+ * Refer to rt_dev_close() for parameters and return values. Action
+ * depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * @coretags{secondary-only, might-switch}
  */
 int rtdm_close(int fd);
 
 /**
  * @brief Issue an IOCTL
  *
- * Refer to rt_dev_ioctl() for parameters and return values
+ * Refer to rt_dev_ioctl() for parameters and return values. Action
+ * depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * @coretags{task-unrestricted, might-switch}
  */
 int rtdm_ioctl(int fd, int request, ...);
 
 /**
  * @brief Read from device
  *
- * Refer to rt_dev_read() for parameters and return values
+ * Refer to rt_dev_read() for parameters and return values. Action
+ * depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * @coretags{mode-unrestricted, might-switch}
  */
 ssize_t rtdm_read(int fd, void *buf, size_t nbyte);
 
 /**
  * @brief Write to device
  *
- * Refer to rt_dev_write() for parameters and return values
+ * Refer to rt_dev_write() for parameters and return values. Action
+ * depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * @coretags{mode-unrestricted, might-switch}
  */
 ssize_t rtdm_write(int fd, const void *buf, size_t nbyte);
 
 /**
  * @brief Receive message from socket
  *
- * Refer to rt_dev_recvmsg() for parameters and return values
+ * Refer to rt_dev_recvmsg() for parameters and return values. Action
+ * depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * @coretags{mode-unrestricted, might-switch}
  */
 ssize_t rtdm_recvmsg(int fd, struct msghdr *msg, int flags);
 
 /**
  * @brief Receive message from socket
  *
- * Refer to rt_dev_recvfrom() for parameters and return values
+ * Refer to rt_dev_recvfrom() for parameters and return values. Action
+ * depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * @coretags{mode-unrestricted, might-switch}
  */
 ssize_t rtdm_recvfrom(int fd, void *buf, size_t len, int flags,
 		      struct sockaddr *from, socklen_t *fromlen);
@@ -818,39 +756,33 @@ ssize_t rtdm_recvfrom(int fd, void *buf, size_t len, int flags,
 /**
  * @brief Receive message from socket
  *
- * Refer to rt_dev_recv() for parameters and return values
+ * Refer to rt_dev_recv() for parameters and return values. Action
+ * depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * @coretags{mode-unrestricted, might-switch}
  */
 ssize_t rtdm_recv(int fd, void *buf, size_t len, int flags);
 
 /**
  * @brief Transmit message to socket
  *
- * Refer to rt_dev_sendmsg() for parameters and return values
+ * Refer to rt_dev_sendmsg() for parameters and return values. Action
+ * depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * @coretags{mode-unrestricted, might-switch}
  */
 ssize_t rtdm_sendmsg(int fd, const struct msghdr *msg, int flags);
 
 /**
  * @brief Transmit message to socket
  *
- * Refer to rt_dev_sendto() for parameters and return values
+ * Refer to rt_dev_sendto() for parameters and return values. Action
+ * depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * @coretags{mode-unrestricted, might-switch}
  */
 ssize_t rtdm_sendto(int fd, const void *buf, size_t len, int flags,
 		    const struct sockaddr *to, socklen_t tolen);
@@ -858,91 +790,77 @@ ssize_t rtdm_sendto(int fd, const void *buf, size_t len, int flags,
 /**
  * @brief Transmit message to socket
  *
- * Refer to rt_dev_send() for parameters and return values
+ * Refer to rt_dev_send() for parameters and return values. Action
+ * depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * @coretags{mode-unrestricted, might-switch}
  */
 ssize_t rtdm_send(int fd, const void *buf, size_t len, int flags);
 
 /**
  * @brief Bind to local address
  *
- * Refer to rt_dev_bind() for parameters and return values
+ * Refer to rt_dev_bind() for parameters and return values. Action
+ * depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * @coretags{task-unrestricted, might-switch}
  */
 int rtdm_bind(int fd, const struct sockaddr *my_addr, socklen_t addrlen);
 
 /**
  * @brief Connect to remote address
  *
- * Refer to rt_dev_connect() for parameters and return values
+ * Refer to rt_dev_connect() for parameters and return values. Action
+ * depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * @coretags{mode-unrestricted, might-switch}
  */
 int rtdm_connect(int fd, const struct sockaddr *serv_addr, socklen_t addrlen);
 
 /**
- * @brief Listen for incomming connection requests
+ * @brief Listen to incoming connection requests
  *
- * Refer to rt_dev_listen() for parameters and return values
+ * Refer to rt_dev_listen() for parameters and return values. Action
+ * depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * @coretags{task-unrestricted, might-switch}
  */
 int rtdm_listen(int fd, int backlog);
 
 /**
  * @brief Accept a connection request
  *
- * Refer to rt_dev_accept() for parameters and return values
+ * Refer to rt_dev_accept() for parameters and return values. Action
+ * depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * @coretags{mode-unrestricted, might-switch}
  */
 int rtdm_accept(int fd, struct sockaddr *addr, socklen_t *addrlen);
 
 /**
  * @brief Shut down parts of a connection
  *
- * Refer to rt_dev_shutdown() for parameters and return values
+ * Refer to rt_dev_shutdown() for parameters and return values. Action
+ * depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * @coretags{secondary-only, might-switch}
  */
 int rtdm_shutdown(int fd, int how);
 
 /**
  * @brief Get socket option
  *
- * Refer to rt_dev_getsockopt() for parameters and return values
+ * Refer to rt_dev_getsockopt() for parameters and return values. Action
+ * depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * @coretags{task-unrestricted, might-switch}
  */
 int rtdm_getsockopt(int fd, int level, int optname, void *optval,
 		    socklen_t *optlen);
@@ -950,13 +868,11 @@ int rtdm_getsockopt(int fd, int level, int optname, void *optval,
 /**
  * @brief Set socket option
  *
- * Refer to rt_dev_setsockopt() for parameters and return values
+ * Refer to rt_dev_setsockopt() for parameters and return values. Action
+ * depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * @coretags{task-unrestricted, might-switch}
  */
 int rtdm_setsockopt(int fd, int level, int optname, const void *optval,
 		    socklen_t optlen);
@@ -964,26 +880,22 @@ int rtdm_setsockopt(int fd, int level, int optname, const void *optval,
 /**
  * @brief Get local socket address
  *
- * Refer to rt_dev_getsockname() for parameters and return values
+ * Refer to rt_dev_getsockname() for parameters and return values. Action
+ * depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * @coretags{task-unrestricted, might-switch}
  */
 int rtdm_getsockname(int fd, struct sockaddr *name, socklen_t *namelen);
 
 /**
  * @brief Get socket destination address
  *
- * Refer to rt_dev_getpeername() for parameters and return values
+ * Refer to rt_dev_getpeername() for parameters and return values. Action
+ * depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * @coretags{task-unrestricted, might-switch}
  */
 int rtdm_getpeername(int fd, struct sockaddr *name, socklen_t *namelen);
 
@@ -1006,14 +918,13 @@ int rtdm_getpeername(int fd, struct sockaddr *name, socklen_t *namelen);
  * @return Positive file descriptor value on success, otherwise a negative
  * error code.
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * Action depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
  * @see @c open() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399
+ *
+ * @coretags{secondary-only, might-switch}
  */
 int rt_dev_open(const char *path, int oflag, ...);
 
@@ -1027,14 +938,13 @@ int rt_dev_open(const char *path, int oflag, ...);
  * @return Positive file descriptor value on success, otherwise a negative
  * error code.
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * Action depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
  * @see @c socket() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399
+ *
+ * @coretags{secondary-only, might-switch}
  */
 int rt_dev_socket(int protocol_family, int socket_type, int protocol);
 
@@ -1049,14 +959,13 @@ int rt_dev_socket(int protocol_family, int socket_type, int protocol);
  * non-real-time context, rt_dev_close() must be issued within non-real-time
  * as well. Otherwise, the call will fail.
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * Action depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
  * @see @c close() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399
+ *
+ * @coretags{secondary-only, might-switch}
  */
 int rt_dev_close(int fd);
 
@@ -1070,14 +979,13 @@ int rt_dev_close(int fd);
  *
  * @return Positiv value on success, otherwise negative error code
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * Action depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
  * @see @c ioctl() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399
+ *
+ * @coretags{task-unrestricted, might-switch}
  */
 int rt_dev_ioctl(int fd, int request, ...);
 
@@ -1090,14 +998,13 @@ int rt_dev_ioctl(int fd, int request, ...);
  *
  * @return Number of bytes read, otherwise negative error code
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * Action depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
  * @see @c read() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399
+ *
+ * @coretags{mode-unrestricted, might-switch}
  */
 ssize_t rt_dev_read(int fd, void *buf, size_t nbyte);
 
@@ -1110,14 +1017,13 @@ ssize_t rt_dev_read(int fd, void *buf, size_t nbyte);
  *
  * @return Number of bytes written, otherwise negative error code
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * Action depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
  * @see @c write() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399
+ *
+ * @coretags{mode-unrestricted, might-switch}
  */
 ssize_t rt_dev_write(int fd, const void *buf, size_t nbyte);
 
@@ -1130,14 +1036,13 @@ ssize_t rt_dev_write(int fd, const void *buf, size_t nbyte);
  *
  * @return Number of bytes received, otherwise negative error code
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * Action depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
  * @see @c recvmsg() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399
+ *
+ * @coretags{mode-unrestricted, might-switch}
  */
 ssize_t rt_dev_recvmsg(int fd, struct msghdr *msg, int flags);
 
@@ -1153,14 +1058,13 @@ ssize_t rt_dev_recvmsg(int fd, struct msghdr *msg, int flags);
  *
  * @return Number of bytes received, otherwise negative error code
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * Action depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
  * @see @c recvfrom() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399
+ *
+ * @coretags{mode-unrestricted, might-switch}
  */
 ssize_t rt_dev_recvfrom(int fd, void *buf, size_t len, int flags,
 			struct sockaddr *from, socklen_t *fromlen);
@@ -1175,14 +1079,13 @@ ssize_t rt_dev_recvfrom(int fd, void *buf, size_t len, int flags,
  *
  * @return Number of bytes received, otherwise negative error code
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * Action depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
  * @see @c recv() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399
+ *
+ * @coretags{mode-unrestricted, might-switch}
  */
 ssize_t rt_dev_recv(int fd, void *buf, size_t len, int flags);
 
@@ -1195,14 +1098,13 @@ ssize_t rt_dev_recv(int fd, void *buf, size_t len, int flags);
  *
  * @return Number of bytes sent, otherwise negative error code
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * Action depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
  * @see @c sendmsg() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399
+ *
+ * @coretags{mode-unrestricted, might-switch}
  */
 ssize_t rt_dev_sendmsg(int fd, const struct msghdr *msg, int flags);
 
@@ -1218,14 +1120,13 @@ ssize_t rt_dev_sendmsg(int fd, const struct msghdr *msg, int flags);
  *
  * @return Number of bytes sent, otherwise negative error code
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * Action depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
  * @see @c sendto() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399
+ *
+ * @coretags{mode-unrestricted, might-switch}
  */
 ssize_t rt_dev_sendto(int fd, const void *buf, size_t len, int flags,
 		      const struct sockaddr *to, socklen_t tolen);
@@ -1240,14 +1141,13 @@ ssize_t rt_dev_sendto(int fd, const void *buf, size_t len, int flags,
  *
  * @return Number of bytes sent, otherwise negative error code
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * Action depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
  * @see @c send() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399
+ *
+ * @coretags{mode-unrestricted, might-switch}
  */
 ssize_t rt_dev_send(int fd, const void *buf, size_t len, int flags);
 
@@ -1260,14 +1160,13 @@ ssize_t rt_dev_send(int fd, const void *buf, size_t len, int flags);
  *
  * @return 0 on success, otherwise negative error code
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * Action depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
  * @see @c bind() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399
+ *
+ * @coretags{mode-unrestricted, might-switch}
  */
 int rt_dev_bind(int fd, const struct sockaddr *my_addr, socklen_t addrlen);
 
@@ -1280,14 +1179,13 @@ int rt_dev_bind(int fd, const struct sockaddr *my_addr, socklen_t addrlen);
  *
  * @return 0 on success, otherwise negative error code
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * Action depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
  * @see @c connect() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399
+ *
+ * @coretags{mode-unrestricted, might-switch}
  */
 int rt_dev_connect(int fd, const struct sockaddr *serv_addr,
 		   socklen_t addrlen);
@@ -1300,19 +1198,18 @@ int rt_dev_connect(int fd, const struct sockaddr *serv_addr,
  *
  * @return 0 on success, otherwise negative error code
  *
- * Environments:
+ * Action depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
- *
- * @see @c lsiten() in IEEE Std 1003.1,
+ * @see @c listen() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399
+ *
+ * @coretags{task-unrestricted, might-switch}
  */
 int rt_dev_listen(int fd, int backlog);
 
 /**
- * @brief Accept a connection requests
+ * @brief Accept connection requests
  *
  * @param[in] fd File descriptor as returned by rt_dev_socket()
  * @param[out] addr Buffer for remote address
@@ -1320,14 +1217,13 @@ int rt_dev_listen(int fd, int backlog);
  *
  * @return 0 on success, otherwise negative error code
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * Action depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
  * @see @c accept() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399
+ *
+ * @coretags{mode-unrestricted, might-switch}
  */
 int rt_dev_accept(int fd, struct sockaddr *addr, socklen_t *addrlen);
 
@@ -1339,14 +1235,13 @@ int rt_dev_accept(int fd, struct sockaddr *addr, socklen_t *addrlen);
 *
  * @return 0 on success, otherwise negative error code
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * Action depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
  * @see @c shutdown() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399
+ *
+ * @coretags{secondary-only, might-switch}
  */
 int rt_dev_shutdown(int fd, int how);
 
@@ -1361,14 +1256,13 @@ int rt_dev_shutdown(int fd, int how);
  *
  * @return 0 on success, otherwise negative error code
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * Action depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
  * @see @c getsockopt() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399
+ *
+ * @coretags{task-unrestricted, might-switch}
  */
 int rt_dev_getsockopt(int fd, int level, int optname, void *optval,
 		      socklen_t *optlen);
@@ -1384,14 +1278,13 @@ int rt_dev_getsockopt(int fd, int level, int optname, void *optval,
  *
  * @return 0 on success, otherwise negative error code
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * Action depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
  * @see @c setsockopt() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399
+ *
+ * @coretags{task-unrestricted, might-switch}
  */
 int rt_dev_setsockopt(int fd, int level, int optname, const void *optval,
 		      socklen_t optlen);
@@ -1405,14 +1298,13 @@ int rt_dev_setsockopt(int fd, int level, int optname, const void *optval,
  *
  * @return 0 on success, otherwise negative error code
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * Action depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
  * @see @c getsockname() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399
+ *
+ * @coretags{task-unrestricted, might-switch}
  */
 int rt_dev_getsockname(int fd, struct sockaddr *name, socklen_t *namelen);
 
@@ -1425,14 +1317,13 @@ int rt_dev_getsockname(int fd, struct sockaddr *name, socklen_t *namelen);
  *
  * @return 0 on success, otherwise negative error code
  *
- * Environments:
- *
- * Depends on driver implementation, see @ref rtdm_profiles "Device Profiles".
- *
- * Rescheduling: possible.
+ * Action depends on driver implementation, see @ref rtdm_profiles
+ * "Device Profiles".
  *
  * @see @c getpeername() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399
+ *
+ * @coretags{task-unrestricted, might-switch}
  */
 int rt_dev_getpeername(int fd, struct sockaddr *name, socklen_t *namelen);
 

@@ -293,15 +293,7 @@ typedef struct rtser_event {
  *
  * @return 0 on success, otherwise negative error code
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{task-unrestricted}
  */
 #define RTSER_RTIOC_GET_CONFIG	\
 	_IOR(RTIOC_TYPE_SERIAL, 0x00, struct rtser_config)
@@ -318,20 +310,12 @@ typedef struct rtser_event {
  * - -ENOMEM is returned if a new history buffer for timestamps cannot be
  * allocated.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
+ * @coretags{task-unrestricted}
  *
  * @note If rtser_config contains a valid timestamp_history and the
  * addressed device has been opened in non-real-time context, this IOCTL must
  * be issued in non-real-time context as well. Otherwise, this command will
  * fail.
- *
- * Rescheduling: never.
  */
 #define RTSER_RTIOC_SET_CONFIG	\
 	_IOW(RTIOC_TYPE_SERIAL, 0x01, struct rtser_config)
@@ -343,21 +327,13 @@ typedef struct rtser_event {
  *
  * @return 0 on success, otherwise negative error code
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
+ * @coretags{task-unrestricted}
  *
  * @note The error states @c RTSER_LSR_OVERRUN_ERR, @c RTSER_LSR_PARITY_ERR,
  * @c RTSER_LSR_FRAMING_ERR, and @c RTSER_SOFT_OVERRUN_ERR that may have
  * occured during previous read accesses to the device will be saved for being
  * reported via this IOCTL. Upon return from @c RTSER_RTIOC_GET_STATUS, the
  * saved state will be cleared.
- *
- * Rescheduling: never.
  */
 #define RTSER_RTIOC_GET_STATUS	\
 	_IOR(RTIOC_TYPE_SERIAL, 0x02, struct rtser_status)
@@ -370,15 +346,7 @@ typedef struct rtser_event {
  *
  * @return 0 on success, otherwise negative error code
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{task-unrestricted}
  */
 #define RTSER_RTIOC_GET_CONTROL	\
 	_IOR(RTIOC_TYPE_SERIAL, 0x03, int)
@@ -390,15 +358,7 @@ typedef struct rtser_event {
  *
  * @return 0 on success, otherwise negative error code
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{task-unrestricted}
  */
 #define RTSER_RTIOC_SET_CONTROL	\
 	_IOW(RTIOC_TYPE_SERIAL, 0x04, int)
@@ -416,14 +376,7 @@ typedef struct rtser_event {
  * - -EBADF is returned if the file descriptor is invalid or the device has
  * just been closed.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel-based task
- * - User-space task (RT)
- *
- * Rescheduling: possible.
+ * @coretags{mode-unrestricted}
  */
 #define RTSER_RTIOC_WAIT_EVENT	\
 	_IOR(RTIOC_TYPE_SERIAL, 0x05, struct rtser_event)
@@ -436,18 +389,10 @@ typedef struct rtser_event {
  *
  * @return 0 on success, otherwise negative error code
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
+ * @coretags{task-unrestricted}
  *
  * @note A set break condition may also be cleared on UART line
  * reconfiguration.
- *
- * Rescheduling: never.
  */
 #define RTSER_RTIOC_BREAK_CTL	\
 	_IOR(RTIOC_TYPE_SERIAL, 0x06, int)

@@ -1,6 +1,5 @@
-/**
- * @file
- * @note Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
+/*
+ * Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
@@ -16,8 +15,6 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- *
- * \ingroup timer
  */
 
 #ifndef _COBALT_KERNEL_TIMER_H
@@ -27,6 +24,10 @@
 #include <cobalt/kernel/stat.h>
 #include <cobalt/kernel/list.h>
 
+/**
+ * @addtogroup core_timer
+ * @{
+ */
 #define XN_INFINITE   ((xnticks_t)0)
 #define XN_NONBLOCK   ((xnticks_t)-1)
 
@@ -375,11 +376,6 @@ void xntimer_switch_tracking(struct xntimer *timer,
 void xntimer_destroy(struct xntimer *timer);
 
 /**
- * @addtogroup core_timer
- *@{
- */
-
-/**
  * @fn xnticks_t xntimer_interval(struct xntimer *timer)
  *
  * @brief Return the timer interval value.
@@ -495,5 +491,7 @@ char *xntimer_format_time(xnticks_t ns,
 int xntimer_grab_hardware(int cpu);
 
 void xntimer_release_hardware(int cpu);
+
+/** @} */
 
 #endif /* !_COBALT_KERNEL_TIMER_H */

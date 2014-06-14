@@ -1,7 +1,4 @@
-/*!\file cobalt/kernel/select.h
- * \brief file descriptors events multiplexing header.
- * \author Gilles Chanteperdrix
- *
+/*
  * Copyright (C) 2008 Efixo <gilles.chanteperdrix@xenomai.org>
  *
  * Xenomai is free software; you can redistribute it and/or modify
@@ -19,7 +16,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  */
-
 #ifndef _COBALT_KERNEL_SELECT_H
 #define _COBALT_KERNEL_SELECT_H
 

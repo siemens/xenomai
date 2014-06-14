@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2001-2013 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
@@ -15,8 +15,6 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- *
- * @ingroup sched
  */
 #include <linux/module.h>
 #include <cobalt/kernel/sched.h>
@@ -28,6 +26,12 @@
 #include <cobalt/kernel/arith.h>
 #define CREATE_TRACE_POINTS
 #include <trace/events/cobalt-core.h>
+
+/**
+ * @ingroup core
+ * @defgroup core_sched Thread scheduling control
+ * @{
+ */
 
 DEFINE_PER_CPU(struct xnsched, nksched);
 EXPORT_PER_CPU_SYMBOL_GPL(nksched);
@@ -1395,3 +1399,5 @@ void xnsched_cleanup_proc(void)
 }
 
 #endif /* CONFIG_XENO_OPT_VFILE */
+
+/** @} */

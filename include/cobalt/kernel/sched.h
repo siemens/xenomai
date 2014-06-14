@@ -1,7 +1,4 @@
-/**\file
- * \brief Scheduler interface header.
- * \author Philippe Gerum
- *
+/*
  * Copyright (C) 2008 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
@@ -18,10 +15,7 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- *
- * \ingroup sched
  */
-
 #ifndef _COBALT_KERNEL_SCHED_H
 #define _COBALT_KERNEL_SCHED_H
 
@@ -36,7 +30,7 @@
 #include <cobalt/kernel/assert.h>
 #include <asm/xenomai/machine.h>
 
-/*
+/**
  * @addtogroup core_sched
  * @{
  */
@@ -470,15 +464,7 @@ void xnsched_migrate_passive(struct xnthread *thread,
  * @param sched_param The scheduling parameter providing rotation
  * information to the specified scheduling class.
  *
- * Environments:
- *
- * This service should be called from:
- *
- * - Kernel-based task
- * - Interrupt service routine
- * - User-space task (primary mode only)
- *
- * Rescheduling: never.
+ * @coretags{unrestricted, atomic-entry}
  */
 static inline void xnsched_rotate(struct xnsched *sched,
 				  struct xnsched_class *sched_class,

@@ -1,7 +1,6 @@
-/**
- * @file
+/*
  * Hardware driver for NI general purpose counter
- * @note Copyright (C) 2006 Frank Mori Hess <fmhess@users.sourceforge.net>
+ * Copyright (C) 2006 Frank Mori Hess <fmhess@users.sourceforge.net>
  *
  * This code is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published

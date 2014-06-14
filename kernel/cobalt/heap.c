@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
@@ -37,7 +37,7 @@
 
 /**
  * @ingroup core
- * @defgroup core_heap Dynamic memory allocation services.
+ * @defgroup core_heap Dynamic memory allocation services
  *
  * The implementation of the memory allocator follows the algorithm
  * described in a USENIX 1988 paper called "Design of a General

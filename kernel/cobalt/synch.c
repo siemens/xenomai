@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2001-2008 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
@@ -26,7 +26,7 @@
 
 /**
  * @ingroup core
- * @defgroup core_synch Thread synchronization services.
+ * @defgroup core_synch Thread synchronization services
  * @{
  */
 
@@ -561,7 +561,7 @@ static struct xnthread *transfer_ownership(struct xnsynch *synch,
  *
  * @return The descriptor address of the unblocked thread.
  *
- * Side-effects:
+ * @sideeffect
  *
  * - The effective priority of the previous resource owner might be
  * lowered to its base priority value as a consequence of the priority
@@ -713,7 +713,7 @@ EXPORT_SYMBOL_GPL(xnsynch_peek_pendq);
  * applying the new scheduling state. Otherwise, XNSYNCH_DONE is
  * returned.
  *
- * Side-effects:
+ * @sideeffect
  *
  * - The effective priority of the previous resource owner might be
  * lowered to its base priority value as a consequence of the priority

@@ -1,5 +1,5 @@
 /*
- * @note Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
@@ -15,10 +15,7 @@
  * along with Xenomai; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
- *
- * \ingroup synch
  */
-
 #ifndef _COBALT_KERNEL_SYNCH_H
 #define _COBALT_KERNEL_SYNCH_H
 
@@ -27,6 +24,10 @@
 #include <cobalt/kernel/timer.h>
 #include <cobalt/uapi/kernel/synch.h>
 
+/**
+ * @addtogroup core_synch
+ * @{
+ */
 #define XNSYNCH_CLAIMED 0x10	/* Claimed by other thread(s) w/ PIP */
 
 #define XNSYNCH_FLCLAIM XN_HANDLE_SPARE3 /* Corresponding bit in fast lock */
@@ -172,5 +173,7 @@ void xnsynch_release_all_ownerships(struct xnthread *thread);
 void xnsynch_requeue_sleeper(struct xnthread *thread);
 
 void xnsynch_forget_sleeper(struct xnthread *thread);
+
+/** @} */
 
 #endif /* !_COBALT_KERNEL_SYNCH_H_ */

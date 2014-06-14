@@ -1,7 +1,4 @@
-/**
- * @file
- * This file is part of the Xenomai project.
- *
+/*
  * Copyright (C) 2005 Philippe Gerum <rpm@xenomai.org>
  * Copyright (C) 2005 Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>
  *

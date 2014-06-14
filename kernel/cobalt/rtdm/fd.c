@@ -17,7 +17,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-
 #include <linux/list.h>
 #include <linux/err.h>
 #include <linux/slab.h>
@@ -536,15 +535,7 @@ int rtdm_fd_valid_p(int ufd)
  *
  * - -EINVAL is returned if @a type or @a fd_index are invalid.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{task-unrestricted}
  */
 int rtdm_fd_select_bind(int ufd, struct xnselector *selector,
 			unsigned int type)

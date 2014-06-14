@@ -16,9 +16,13 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  */
-
 #ifndef _COBALT_KERNEL_SCHEDPARAM_H
 #define _COBALT_KERNEL_SCHEDPARAM_H
+
+/**
+ * @addtogroup core_sched
+ * @{
+ */
 
 struct xnsched_idle_param {
 	int prio;
@@ -67,5 +71,7 @@ union xnsched_policy_param {
 	struct xnsched_quota_param quota;
 #endif
 };
+
+/** @} */
 
 #endif /* !_COBALT_KERNEL_SCHEDPARAM_H */

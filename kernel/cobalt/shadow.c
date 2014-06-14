@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2001-2013 Philippe Gerum <rpm@xenomai.org>.
  * Copyright (C) 2001-2013 The Xenomai project <http://www.xenomai.org>
  * Copyright (C) 2006 Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>

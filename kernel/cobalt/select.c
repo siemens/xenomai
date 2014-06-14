@@ -1,6 +1,5 @@
-/**
- * @author Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>
- *
+/*
+ * Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>
  * Copyright (C) 2008 Efixo
  *
  * Xenomai is free software; you can redistribute it and/or modify
@@ -18,7 +17,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  */
-
 #include <linux/types.h>
 #include <linux/bitops.h>	/* For hweight_long */
 #include <cobalt/kernel/heap.h>
@@ -29,12 +27,10 @@
 
 /**
  * @ingroup core
- * @defgroup core_select File descriptors events multiplexing services
+ * @defgroup core_select Synchronous I/O multiplexing
  *
- * File descriptors events multiplexing services.
- *
- * This module implements the services needed for implementing the posix
- * "select" service, or any other events multiplexing services.
+ * This module implements the services needed for implementing the
+ * POSIX select() service, or any other event multiplexing services.
  *
  * Following the implementation of the posix select service, this module defines
  * three types of events:

@@ -1,7 +1,4 @@
-/*!\file sched-idle.h
- * \brief Definitions for the IDLE scheduling class.
- * \author Philippe Gerum
- *
+/*
  * Copyright (C) 2008 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
@@ -19,13 +16,17 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  */
-
 #ifndef _COBALT_KERNEL_SCHED_IDLE_H
 #define _COBALT_KERNEL_SCHED_IDLE_H
 
 #ifndef _COBALT_KERNEL_SCHED_H
 #error "please don't include cobalt/kernel/sched-idle.h directly"
 #endif
+
+/**
+ * @addtogroup core_sched
+ * @{
+ */
 
 /* Idle priority level - actually never used for indexing. */
 #define XNSCHED_IDLE_PRIO	-1
@@ -58,5 +59,7 @@ static inline int xnsched_idle_init_thread(struct xnthread *thread)
 {
 	return 0;
 }
+
+/** @} */
 
 #endif /* !_COBALT_KERNEL_SCHED_IDLE_H */

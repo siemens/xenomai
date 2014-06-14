@@ -16,11 +16,15 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  */
-
 #ifndef _COBALT_KERNEL_SCHEDQUEUE_H
 #define _COBALT_KERNEL_SCHEDQUEUE_H
 
 #include <cobalt/kernel/list.h>
+
+/**
+ * @addtogroup core_sched
+ * @{
+ */
 
 #define XNSCHED_CLASS_WEIGHT_FACTOR	1024
 
@@ -96,5 +100,7 @@ typedef struct list_head xnsched_queue_t;
 #endif /* !CONFIG_XENO_OPT_SCALABLE_SCHED */
 
 struct xnthread *xnsched_findq(xnsched_queue_t *q, int prio);
+
+/** @} */
 
 #endif /* !_COBALT_KERNEL_SCHEDQUEUE_H */

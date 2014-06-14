@@ -361,7 +361,7 @@ typedef struct can_frame {
  *
  * @param [in] optlen Size of filter list: count * sizeof( struct can_filter).
  * @n
- * Environments: non-RT (RT optional)@n
+ * @coretags{task-unrestricted}
  * @n
  * Specific return values:
  * - -EFAULT (It was not possible to access user space memory area at the
@@ -394,7 +394,7 @@ typedef struct can_frame {
  *
  * @param [in] optlen Size of error mask: sizeof(can_err_mask_t).
  *
- * Environments: non-RT (RT optional)@n
+ * @coretags{task-unrestricted}
  * @n
  * Specific return values:
  * - -EFAULT (It was not possible to access user space memory area at the
@@ -422,7 +422,7 @@ typedef struct can_frame {
  *
  * @param [in] optlen Size of int: sizeof(int).
  *
- * Environments: non-RT (RT optional)@n
+ * @coretags{task-unrestricted}
  * @n
  * Specific return values:
  * - -EFAULT (It was not possible to access user space memory area at the
@@ -461,16 +461,7 @@ typedef struct can_frame {
  *            specified address.
  * - -ENODEV: No device with specified name exists.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
- *
+ * @coretags{task-unrestricted}
  */
 #ifdef DOXYGEN_CPP /* For Doxygen only, already defined by kernel headers */
 #define SIOCGIFINDEX defined_by_kernel_header_file
@@ -497,18 +488,10 @@ typedef struct can_frame {
  * - -EDOM  : Baud rate not possible.
  * - -EAGAIN: Request could not be successully fulfilled. Try again.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
+ * @coretags{task-unrestricted, might-switch}
  *
  * @note Setting the baud rate is a configuration task. It should
  * be done deliberately or otherwise CAN messages will likely be lost.
- *
- * Rescheduling: possible.
  */
 #define SIOCSCANBAUDRATE	_IOW(RTIOC_TYPE_CAN, 0x01, struct ifreq)
 
@@ -527,15 +510,7 @@ typedef struct can_frame {
  * - -ENODEV: No device with specified name exists.
  * - -EINVAL: No baud rate was set yet.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{task-unrestricted}
  */
 #define SIOCGCANBAUDRATE	_IOWR(RTIOC_TYPE_CAN, 0x02, struct ifreq)
 
@@ -558,23 +533,15 @@ typedef struct can_frame {
  * - -EINVAL: No valid baud rate, see @ref can_baudrate_t.
  * - -EAGAIN: Request could not be successully fulfilled. Try again.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
+ * @coretags{task-unrestricted, might-switch}
  *
  * @note Setting the bit-time is a configuration task. It should
  * be done deliberately or otherwise CAN messages will likely be lost.
- *
- * Rescheduling: possible.
  */
 #define SIOCSCANCUSTOMBITTIME	_IOW(RTIOC_TYPE_CAN, 0x03, struct ifreq)
 
 /**
- * Get custum bit-time parameters
+ * Get custom bit-time parameters
  *
  * @param [in,out] arg Pointer to interface request structure buffer
  *                    (<TT>struct ifreq</TT> from linux/if.h).
@@ -588,15 +555,7 @@ typedef struct can_frame {
  * - -ENODEV: No device with specified name exists.
  * - -EINVAL: No baud rate was set yet.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{task-unrestricted}
  */
 #define SIOCGCANCUSTOMBITTIME	_IOWR(RTIOC_TYPE_CAN, 0x04, struct ifreq)
 
@@ -623,13 +582,7 @@ typedef struct can_frame {
 		controller is stopped or bus off.
  * - -EOPNOTSUPP: unknown mode
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
+ * @coretags{task-unrestricted, might-switch}
  *
  * @note Setting a CAN controller into normal operation after a bus-off can
  * take some time (128 occurrences of 11 consecutive recessive bits).
@@ -638,8 +591,6 @@ typedef struct can_frame {
  * bus-off recovery may still be in progress. @n
  * If a controller is bus-off, setting it into stop mode will return no error
  * but the controller remains bus-off.
- *
- * Rescheduling: possible.
  */
 #define SIOCSCANMODE		_IOW(RTIOC_TYPE_CAN, 0x05, struct ifreq)
 
@@ -665,15 +616,7 @@ typedef struct can_frame {
  *            specified address.
  * - -ENODEV: No device with specified name exists.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: possible.
+ * @coretags{task-unrestricted, might-switch}
  */
 #define SIOCGCANSTATE		_IOWR(RTIOC_TYPE_CAN, 0x06, struct ifreq)
 
@@ -696,18 +639,10 @@ typedef struct can_frame {
  * - -EINVAL: No valid baud rate, see @ref can_baudrate_t.
  * - -EAGAIN: Request could not be successully fulfilled. Try again.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
+ * @coretags{task-unrestricted, might-switch}
  *
  * @note Setting special controller modes is a configuration task. It should
  * be done deliberately or otherwise CAN messages will likely be lost.
- *
- * Rescheduling: possible.
  */
 #define SIOCSCANCTRLMODE	_IOW(RTIOC_TYPE_CAN, 0x07, struct ifreq)
 
@@ -727,15 +662,7 @@ typedef struct can_frame {
  * - -ENODEV: No device with specified name exists.
  * - -EINVAL: No baud rate was set yet.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: possible.
+ * @coretags{task-unrestricted, might-switch}
  */
 #define SIOCGCANCTRLMODE	_IOWR(RTIOC_TYPE_CAN, 0x08, struct ifreq)
 
@@ -749,20 +676,12 @@ typedef struct can_frame {
  *
  * @return 0 on success.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
+ * @coretags{task-unrestricted}
  *
  * @note Activating taking timestamps only has an effect on newly received
  * CAN messages from the bus. Frames that already are in the socket buffer do
  * not have timestamps if it was deactivated before. See @ref Recv "Receive"
  * for more details.
- *
- * Rescheduling: never.
  */
 #define RTCAN_RTIOC_TAKE_TIMESTAMP _IOW(RTIOC_TYPE_CAN, 0x09, int)
 
@@ -787,15 +706,7 @@ typedef struct can_frame {
  * - -EFAULT: It was not possible to access user space memory area at the
  *            specified address.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{task-unrestricted}
  */
 #define RTCAN_RTIOC_RCV_TIMEOUT	_IOW(RTIOC_TYPE_CAN, 0x0A, nanosecs_rel_t)
 
@@ -820,15 +731,7 @@ typedef struct can_frame {
  * - -EFAULT: It was not possible to access user space memory area at the
  *            specified address.
  *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task (RT, non-RT)
- *
- * Rescheduling: never.
+ * @coretags{task-unrestricted}
  */
 #define RTCAN_RTIOC_SND_TIMEOUT	_IOW(RTIOC_TYPE_CAN, 0x0B, nanosecs_rel_t)
 /** @} */
