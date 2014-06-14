@@ -23,7 +23,7 @@
 #include <cobalt/kernel/thread.h>
 
 /**
- * @addtogroup core_select
+ * @addtogroup cobalt_core_select
  * @{
  */
 

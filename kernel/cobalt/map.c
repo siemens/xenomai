@@ -22,8 +22,8 @@
 #include <asm/xenomai/machine.h>
 
 /**
- * @ingroup core
- * @defgroup core_map Lightweight key-to-object mapping service
+ * @ingroup cobalt_core
+ * @defgroup cobalt_core_map Lightweight key-to-object mapping service
  *
  * A map is a simple indexing structure which associates unique
  * integer keys with pointers to objects.  The current implementation

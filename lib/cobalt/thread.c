@@ -31,8 +31,8 @@
 #include <boilerplate/ancillaries.h>
 
 /**
- * @ingroup cobalt
- * @defgroup cobalt_thread Thread management
+ * @ingroup cobalt_api
+ * @defgroup cobalt_api_thread Thread management
  *
  * Cobalt/POSIX thread management services
  *
@@ -688,8 +688,8 @@ COBALT_IMPL(int, pthread_join, (pthread_t thread, void **retval))
 /** @} */
 
 /**
- * @ingroup cobalt
- * @defgroup cobalt_sched Scheduling management
+ * @ingroup cobalt_api
+ * @defgroup cobalt_api_sched Scheduling management
  *
  * Cobalt/POSIX scheduling management services
  * @{

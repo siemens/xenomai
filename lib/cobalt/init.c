@@ -36,11 +36,12 @@
 #include "init.h"
 
 /**
- * @defgroup cobalt Cobalt/POSIX real-time API
+ * @ingroup cobalt
+ * @defgroup cobalt_api POSIX interface
  *
- * The Cobalt interface is an implementation of a small subset of the
+ * The Cobalt/POSIX interface is an implementation of a subset of the
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/">
- * Single Unix specification</a> over the Xenomai generic RTOS core.
+ * Single Unix specification</a> over the Cobalt core.
  */
 
 __attribute__ ((weak))

@@ -131,7 +131,7 @@ TAB_SIZE               = 8
 # You can put \n's in the value part of an alias to insert newlines.
 
 ALIASES                = \
- 		       "coretags{1}=@par Tags\n@ref core-tags \"\1\""	\
+ 		       "coretags{1}=@par Tags\n@ref cobalt-core-tags \"\1\""	\
 		       "sideeffect=@par Side effects\n"
 
 # Set the OPTIMIZE_OUTPUT_FOR_C tag to YES if your project consists of C sources 

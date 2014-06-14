@@ -26,8 +26,8 @@
 #include <cobalt/kernel/apc.h>
 
 /**
- * @ingroup core
- * @defgroup core_select Synchronous I/O multiplexing
+ * @ingroup cobalt_core
+ * @defgroup cobalt_core_select Synchronous I/O multiplexing
  *
  * This module implements the services needed for implementing the
  * POSIX select() service, or any other event multiplexing services.

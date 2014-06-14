@@ -20,7 +20,7 @@
 #define _COBALT_KERNEL_SCHEDPARAM_H
 
 /**
- * @addtogroup core_sched
+ * @addtogroup cobalt_core_sched
  * @{
  */
 

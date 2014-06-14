@@ -19,8 +19,8 @@
 #include <linux/module.h>
 
 /**
- * @ingroup core
- * @defgroup core_arith In-kernel arithmetics
+ * @ingroup cobalt_core
+ * @defgroup cobalt_core_arith In-kernel arithmetics
  *
  * A collection of helpers performing arithmetics not implicitly
  * available from kernel context via GCC helpers. Many of these

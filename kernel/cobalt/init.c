@@ -36,14 +36,17 @@
 #include "procfs.h"
 
 /**
- * @defgroup core Xenomai nucleus
+ * @defgroup cobalt Cobalt
  *
- * The Xenomai nucleus supplements the native Linux kernel in dual
- * kernel configurations. It deals with all time-critical activities,
- * such as handling interrupts, and scheduling real-time threads. The
- * nucleus has higher priority over all the native kernel activities.
+ * Cobalt supplements the native Linux kernel in dual kernel
+ * configurations. It deals with all time-critical activities, such as
+ * handling interrupts, and scheduling real-time threads. The Cobalt
+ * kernel has higher priority over all the native kernel activities.
+ *
+ * Cobalt provides an implementation of the POSIX and RTDM interfaces
+ * based on a set of generic RTOS building blocks.
  */
-MODULE_DESCRIPTION("Xenomai nucleus");
+MODULE_DESCRIPTION("Cobalt kernel");
 MODULE_AUTHOR("rpm@xenomai.org");
 MODULE_LICENSE("GPL");
 
@@ -468,14 +471,19 @@ fail:
 device_initcall(xenomai_init);
 
 /**
- * @ingroup core
- * @page dual-kernel-core-tags Dual kernel service tags
- * @anchor core-tags
+ * @ingroup cobalt
+ * @defgroup cobalt_core Cobalt kernel
  *
- * Xenomai core services in dual kernel configuration may be
- * restricted to particular calling contexts, or entail specific
- * side-effects. To describe this information, each service documented
- * by this manual bears a set of tags when applicable.
+ * The Cobalt kernel implements generic RTOS building blocks.
+ *
+ * @{
+ *
+ * @page cobalt-core-tags Dual kernel service tags
+ *
+ * Cobalt kernel services may be restricted to particular calling
+ * contexts, or entail specific side-effects. To describe this
+ * information, each service documented by this manual bears a set of
+ * tags when applicable.
  *
  * The table below matches the tags used throughout the documentation
  * with the description of their meaning for the caller.
@@ -484,20 +492,22 @@ device_initcall(xenomai_init);
  * <b>Context tags</b>
  * <TABLE>
  * <TR><TH>Tag</TH> <TH>Context on entry</TH></TR>
- * <TR><TD>secondary-only</TD>	<TD>Must be called from a regular Linux task</TD></TR>
- * <TR><TD>primary-only</TD>	<TD>Must be called from a hard real-time task</TD></TR>
- * <TR><TD>isr-only</TD>	<TD>Must be called from a hard real-time IRQ handler</TD></TR>
+ * <TR><TD>primary-only</TD>	<TD>Must be called from a Cobalt task in primary mode</TD></TR>
+ * <TR><TD>coreirq-only</TD>	<TD>Must be called from a Cobalt IRQ handler</TD></TR>
+ * <TR><TD>secondary-only</TD>	<TD>Must be called from a Cobalt task in secondary mode or regular Linux task</TD></TR>
  * <TR><TD>rtdm-task</TD>	<TD>Must be called from a RTDM driver task</TD></TR>
- * <TR><TD>mode-unrestricted</TD>	<TD>Must be called from a Xenomai task context in either primary or secondary mode</TD></TR>
- * <TR><TD>task-unrestricted</TD>	<TD>May be called from a regular Linux or Xenomai task context indifferently</TD></TR>
+ * <TR><TD>mode-unrestricted</TD>	<TD>Must be called from a Cobalt task in either primary or secondary mode</TD></TR>
+ * <TR><TD>task-unrestricted</TD>	<TD>May be called from a Cobalt or regular Linux task indifferently</TD></TR>
  * <TR><TD>unrestricted</TD>	<TD>May be called from any context previously described</TD></TR>
- * <TR><TD>atomic-entry</TD>	<TD>Caller must currently hold the Xenomai nucleus big lock</TD></TR>
+ * <TR><TD>atomic-entry</TD>	<TD>Caller must currently hold the big Cobalt kernel lock (nklock)</TD></TR>
  * </TABLE>
  *
  * @par
  * <b>Possible side-effects</b>
  * <TABLE>
  * <TR><TH>Tag</TH> <TH>Description</TH></TR>
- * <TR><TD>might-switch</TD>	<TD>A thread context switch may happen in the Xenomai core</TD></TR>
+ * <TR><TD>might-switch</TD>	<TD>The Cobalt kernel may switch context</TD></TR>
  * </TABLE>
+ *
+ * @}
  */

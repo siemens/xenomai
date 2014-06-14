@@ -25,7 +25,7 @@
 #include <cobalt/uapi/kernel/synch.h>
 
 /**
- * @addtogroup core_synch
+ * @addtogroup cobalt_core_synch
  * @{
  */
 #define XNSYNCH_CLAIMED 0x10	/* Claimed by other thread(s) w/ PIP */

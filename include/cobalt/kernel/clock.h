@@ -25,7 +25,7 @@
 #include <cobalt/uapi/kernel/types.h>
 
 /**
- * @addtogroup core_clock
+ * @addtogroup cobalt_core_clock
  * @{
  */
 

@@ -23,7 +23,7 @@
 #include <asm/xenomai/machine.h>
 
 /**
- * @addtogroup core_apc
+ * @addtogroup cobalt_core_apc
  * @{
  */
 

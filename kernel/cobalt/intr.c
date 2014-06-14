@@ -29,8 +29,8 @@
 #include <trace/events/cobalt-core.h>
 
 /**
- * @ingroup core
- * @defgroup core_irq Interrupt management
+ * @ingroup cobalt_core
+ * @defgroup cobalt_core_irq Interrupt management
  * @{
  */
 #define XNINTR_MAX_UNHANDLED	1000

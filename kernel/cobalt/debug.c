@@ -28,8 +28,8 @@
 #include "debug.h"
 
 /**
- * @ingroup core
- * @defgroup core_debug Debugging services
+ * @ingroup cobalt_core
+ * @defgroup cobalt_core_debug Debugging services
  * @{
  */
 struct xnvfile_directory debug_vfroot;

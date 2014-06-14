@@ -27,7 +27,7 @@
 #include <cobalt/uapi/kernel/heap.h>
 
 /**
- * @addtogroup core_heap
+ * @addtogroup cobalt_core_heap
  * @{
  *
  * @par Implementation constraints

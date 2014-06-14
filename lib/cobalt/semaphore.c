@@ -27,8 +27,8 @@
 #include "internal.h"
 
 /**
- * @ingroup cobalt
- * @defgroup cobalt_sem Semaphores
+ * @ingroup cobalt_api
+ * @defgroup cobalt_api_sem Semaphores
  *
  * Cobalt/POSIX semaphore services
  *

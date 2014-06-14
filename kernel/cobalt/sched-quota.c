@@ -471,7 +471,7 @@ static void xnsched_quota_migrate(struct xnthread *thread, struct xnsched *sched
 }
 
 /**
- * @ingroup core_sched
+ * @ingroup cobalt_core_sched
  * @defgroup sched_quota SCHED_QUOTA scheduling policy
  *
  * The SCHED_QUOTA policy enforces a limitation on the CPU consumption

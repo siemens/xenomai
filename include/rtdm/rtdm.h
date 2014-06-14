@@ -30,7 +30,7 @@
 #include <boilerplate/wrappers.h>
 
 /**
- * @defgroup rtdm Real-Time Driver Model
+ * @defgroup rtdm RTDM
  *
  * The Real-Time Driver Model (RTDM) provides a unified interface to
  * both users and developers of real-time device

@@ -26,7 +26,7 @@
 #include <cobalt/kernel/lock.h>
 
 /**
- * @addtogroup core_vfile
+ * @addtogroup cobalt_core_vfile
  * @{
  */
 

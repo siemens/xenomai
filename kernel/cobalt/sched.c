@@ -28,8 +28,8 @@
 #include <trace/events/cobalt-core.h>
 
 /**
- * @ingroup core
- * @defgroup core_sched Thread scheduling control
+ * @ingroup cobalt_core
+ * @defgroup cobalt_core_sched Thread scheduling control
  * @{
  */
 
@@ -100,7 +100,7 @@ MODULE_PARM_DESC(watchdog_timeout, "Watchdog timeout (s)");
  * software lockups. It kills any offending thread which is found to
  * monopolize the CPU so as to starve the Linux kernel for too long.
  *
- * @coretags{isr-only, atomic-entry}
+ * @coretags{coreirq-only, atomic-entry}
  */
 static void watchdog_handler(struct xntimer *timer)
 {

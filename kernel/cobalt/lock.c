@@ -21,8 +21,8 @@
 #include <cobalt/kernel/lock.h>
 
 /**
- * @ingroup core
- * @defgroup core_lock Locking services
+ * @ingroup cobalt_core
+ * @defgroup cobalt_core_lock Locking services
  *
  * The Xenomai core deals with concurrent activities from two distinct
  * kernels running side-by-side. When interrupts are involved, the

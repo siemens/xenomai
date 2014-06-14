@@ -22,7 +22,7 @@
 #include <asm/bitsperlong.h>
 
 /**
- * @addtogroup core_map
+ * @addtogroup cobalt_core_map
  * @{
  */
 

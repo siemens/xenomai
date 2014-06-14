@@ -26,7 +26,7 @@
 #include <cobalt/uapi/signal.h>
 
 /**
- * @addtogroup core_shadow
+ * @addtogroup cobalt_core_shadow
  * @{
  */
 struct xnthread;

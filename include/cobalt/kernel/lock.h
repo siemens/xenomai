@@ -25,7 +25,7 @@
 #include <cobalt/kernel/assert.h>
 
 /**
- * @addtogroup core_lock
+ * @addtogroup cobalt_core_lock
  *
  * @{
  */

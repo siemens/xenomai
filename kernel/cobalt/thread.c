@@ -39,8 +39,8 @@
 #include <trace/events/cobalt-core.h>
 
 /**
- * @ingroup core
- * @defgroup core_thread Thread services
+ * @ingroup cobalt_core
+ * @defgroup cobalt_core_thread Thread services
  * @{
  */
 

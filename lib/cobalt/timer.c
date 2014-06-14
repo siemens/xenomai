@@ -21,7 +21,7 @@
 #include "internal.h"
 
 /**
- * @addtogroup cobalt_time
+ * @addtogroup cobalt_api_time
  * @{
  */
 
@@ -174,7 +174,7 @@ COBALT_IMPL(int, timer_settime, (timer_t timerid,
  * (member @a it_value) and reload value (member @a it_interval) of
  * the timer @a timerid. The values are returned as time intervals,
  * and as multiples of the system clock tick duration (see note in
- * section @ref cobalt_time "Clocks and timers services" for details
+ * section @ref cobalt_api_time "Clocks and timers services" for details
  * on the duration of the system clock tick). If the timer was not
  * started, the returned members @a it_value and @a it_interval of @a
  * value are zero.

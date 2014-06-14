@@ -23,8 +23,8 @@
 #include "internal.h"
 
 /**
- * @ingroup cobalt
- * @defgroup cobalt_mutex Mutual exclusion
+ * @ingroup cobalt_api
+ * @defgroup cobalt_api_mutex Mutual exclusion
  *
  * Cobalt/POSIX mutual exclusion services
  *

@@ -32,8 +32,8 @@
 #include "internal.h"
 
 /**
- * @ingroup cobalt
- * @defgroup cobalt_time Clocks and timers
+ * @ingroup cobalt_api
+ * @defgroup cobalt_api_time Clocks and timers
  *
  * Cobalt/POSIX clock and timer services
  *

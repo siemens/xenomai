@@ -23,8 +23,8 @@
 #include <cobalt/kernel/clock.h>
 
 /*
- * @ingroup core_thread
- * @defgroup core_stat Thread runtime statistics
+ * @ingroup cobalt_core_thread
+ * @defgroup cobalt_core_stat Thread runtime statistics
  * @{
  */
 #ifdef CONFIG_XENO_OPT_STATS

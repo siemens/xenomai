@@ -22,7 +22,7 @@
 #include <cobalt/kernel/stat.h>
 
 /**
- * @addtogroup core_irq
+ * @addtogroup cobalt_core_irq
  * @{
  */
 

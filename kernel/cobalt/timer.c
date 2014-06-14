@@ -30,8 +30,8 @@
 #include <trace/events/cobalt-core.h>
 
 /**
- * @ingroup core
- * @defgroup core_timer Timer services
+ * @ingroup cobalt_core
+ * @defgroup cobalt_core_timer Timer services
  *
  * The Xenomai timer facility depends on a clock source (xnclock) for
  * scheduling the next activation times.

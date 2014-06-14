@@ -23,7 +23,8 @@
 #include <rtdm/analogy/device.h>
 
 /**
- * @defgroup analogy Analogy interface
+ * @ingroup cobalt
+ * @defgroup analogy Analogy framework
  * A RTDM-based interface for implementing DAQ card drivers
  */
 

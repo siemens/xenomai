@@ -25,7 +25,7 @@
 #include <cobalt/kernel/list.h>
 
 /**
- * @addtogroup core_timer
+ * @addtogroup cobalt_core_timer
  * @{
  */
 #define XN_INFINITE   ((xnticks_t)0)

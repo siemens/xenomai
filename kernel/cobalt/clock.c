@@ -27,8 +27,8 @@
 #include <asm/xenomai/calibration.h>
 #include <trace/events/cobalt-core.h>
 /**
- * @ingroup core
- * @defgroup core_clock Clock services
+ * @ingroup cobalt_core
+ * @defgroup cobalt_core_clock Clock services
  *
  * @{
  */
@@ -544,7 +544,7 @@ EXPORT_SYMBOL_GPL(xnclock_deregister);
  *
  * @param clock The clock for which a new event was received.
  *
- * @coretags{isr-only, atomic-entry}
+ * @coretags{coreirq-only, atomic-entry}
  *
  * @note The current CPU must be part of the real-time affinity set,
  * otherwise weird things may happen.

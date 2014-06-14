@@ -31,7 +31,7 @@
 #include <asm/xenomai/machine.h>
 
 /**
- * @addtogroup core_sched
+ * @addtogroup cobalt_core_sched
  * @{
  */
 

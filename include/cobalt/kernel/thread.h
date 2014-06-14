@@ -34,7 +34,7 @@
 #include <asm/xenomai/thread.h>
 
 /**
- * @addtogroup core_thread
+ * @addtogroup cobalt_core_thread
  * @{
  */
 #define XNTHREAD_BLOCK_BITS   (XNSUSP|XNPEND|XNDELAY|XNDORMANT|XNRELAX|XNMIGRATE|XNHELD)

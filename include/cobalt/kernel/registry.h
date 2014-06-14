@@ -23,7 +23,7 @@
 #include <cobalt/kernel/vfile.h>
 
 /**
- * @addtogroup core_registry
+ * @addtogroup cobalt_core_registry
  *
  * @{
  */

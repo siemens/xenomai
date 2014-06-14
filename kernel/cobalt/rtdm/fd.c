@@ -167,6 +167,19 @@ int rtdm_fd_enter(struct xnsys_ppd *p, struct rtdm_fd *fd, int ufd,
 	return err;
 }
 
+/**
+ * @brief Retrieve and lock a RTDM file descriptor
+ *
+ * @param[in] ufd User-side file descriptor
+ *
+ * @return Pointer to the RTDM file descriptor matching @a ufd, or
+ * ERR_PTR(-EBADF).
+ *
+ * @note The file descriptor returned must be later released by a call
+ * to rtdm_fd_put().
+ *
+ * @coretags{unrestricted}
+ */
 struct rtdm_fd *rtdm_fd_get(struct xnsys_ppd *p, int ufd, unsigned int magic)
 {
 	struct rtdm_fd *res;
@@ -262,6 +275,16 @@ static void rtdm_fd_put_inner(struct rtdm_fd *fd, spl_t s)
 	}
 }
 
+/**
+ * @brief Release a RTDM file descriptor obtained via rtdm_fd_get()
+ *
+ * @param[in] fd RTDM file descriptor to release
+ *
+ * @note Every call to rtdm_fd_get() must be matched by a call to
+ * rtdm_fd_put().
+ *
+ * @coretags{unrestricted}
+ */
 void rtdm_fd_put(struct rtdm_fd *fd)
 {
 	spl_t s;
@@ -271,6 +294,20 @@ void rtdm_fd_put(struct rtdm_fd *fd)
 }
 EXPORT_SYMBOL_GPL(rtdm_fd_put);
 
+/**
+ * @brief Hold a reference on a RTDM file descriptor
+ *
+ * @param[in] fd Target file descriptor
+ *
+ * @note rtdm_fd_lock() increments the reference counter of @a fd. You
+ * only need to call this function in special scenarios, e.g. when
+ * keeping additional references to the file descriptor that have
+ * different lifetimes. Only use rtdm_fd_lock() on descriptors that
+ * are currently locked via an earlier rtdm_fd_get()/rtdm_fd_lock() or
+ * while running a device operation handler.
+ *
+ * @coretags{unrestricted}
+ */
 int rtdm_fd_lock(struct rtdm_fd *fd)
 {
 	spl_t s;
@@ -287,12 +324,22 @@ int rtdm_fd_lock(struct rtdm_fd *fd)
 }
 EXPORT_SYMBOL_GPL(rtdm_fd_lock);
 
+/**
+ * @brief Drop a reference on a RTDM file descriptor
+ *
+ * @param[in] fd Target file descriptor
+ *
+ * @note Every call to rtdm_fd_lock() must be matched by a call to
+ * rtdm_fd_unlock().
+ *
+ * @coretags{unrestricted}
+ */
 void rtdm_fd_unlock(struct rtdm_fd *fd)
 {
 	spl_t s;
 
 	xnlock_get_irqsave(&__rtdm_fd_lock, s);
-/* just warn if context was a dangling pointer */
+	/* Warn if fd was unreferenced. */
 	XENO_ASSERT(NUCLEUS, fd->refs > 0);
 	rtdm_fd_put_inner(fd, s);
 }

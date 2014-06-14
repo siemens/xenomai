@@ -25,8 +25,8 @@
 #include <cobalt/kernel/assert.h>
 
 /**
- * @ingroup core
- * @defgroup core_registry Registry services
+ * @ingroup cobalt_core
+ * @defgroup cobalt_core_registry Registry services
  *
  * The registry provides a mean to index object descriptors on unique
  * alphanumeric keys. When labeled this way, an object is globally

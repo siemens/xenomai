@@ -36,8 +36,8 @@
 #include <cobalt/kernel/assert.h>
 
 /**
- * @ingroup core
- * @defgroup core_heap Dynamic memory allocation services
+ * @ingroup cobalt_core
+ * @defgroup cobalt_core_heap Dynamic memory allocation services
  *
  * The implementation of the memory allocator follows the algorithm
  * described in a USENIX 1988 paper called "Design of a General

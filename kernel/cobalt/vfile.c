@@ -26,8 +26,8 @@
 #include <asm/xenomai/wrappers.h>
 
 /**
- * @ingroup core
- * @defgroup core_vfile Virtual file services
+ * @ingroup cobalt_core
+ * @defgroup cobalt_core_vfile Virtual file services
  *
  * Virtual files provide a mean to export Xenomai object states to
  * user-space, based on common kernel interfaces.  This encapsulation

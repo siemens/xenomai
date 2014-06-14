@@ -21,8 +21,8 @@
 #include <cobalt/kernel/apc.h>
 
 /**
- * @ingroup core
- * @defgroup core_apc Asynchronous Procedure Calls
+ * @ingroup cobalt_core
+ * @defgroup cobalt_core_apc Asynchronous Procedure Calls
  *
  * Services for scheduling function calls in the Linux domain
  *

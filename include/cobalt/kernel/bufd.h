@@ -22,7 +22,7 @@
 #include <linux/types.h>
 
 /**
- * @addtogroup core_bufd
+ * @addtogroup cobalt_core_bufd
  *
  * @{
  */

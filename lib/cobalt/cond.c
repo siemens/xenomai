@@ -22,8 +22,8 @@
 #include "internal.h"
 
 /**
- * @ingroup cobalt
- * @defgroup cobalt_cond Condition variables
+ * @ingroup cobalt_api
+ * @defgroup cobalt_api_cond Condition variables
  *
  * Cobalt/POSIX condition variable services
  *

@@ -22,7 +22,7 @@
 #include <cobalt/kernel/list.h>
 
 /**
- * @addtogroup core_sched
+ * @addtogroup cobalt_core_sched
  * @{
  */
 

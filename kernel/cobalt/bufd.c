@@ -23,8 +23,8 @@
 #include <asm/xenomai/syscall.h>
 
 /**
- * @ingroup core
- * @defgroup core_bufd Buffer descriptor
+ * @ingroup cobalt_core
+ * @defgroup cobalt_core_bufd Buffer descriptor
  *
  * Abstraction for copying data to/from different address spaces
  *

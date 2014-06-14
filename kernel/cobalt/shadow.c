@@ -61,8 +61,8 @@
 #include "debug.h"
 
 /**
- * @ingroup core
- * @defgroup core_shadow Real-time shadow services
+ * @ingroup cobalt_core
+ * @defgroup cobalt_core_shadow Real-time shadow services
  *
  * Real-time shadow services.
  *

@@ -25,8 +25,8 @@
 #include <trace/events/cobalt-core.h>
 
 /**
- * @ingroup core
- * @defgroup core_synch Thread synchronization services
+ * @ingroup cobalt_core
+ * @defgroup cobalt_core_synch Thread synchronization services
  * @{
  */
 

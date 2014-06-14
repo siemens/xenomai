@@ -26,8 +26,8 @@
 #include "internal.h"
 
 /**
- * @ingroup cobalt
- * @defgroup cobalt_mq Message queues
+ * @ingroup cobalt_api
+ * @defgroup cobalt_api_mq Message queues
  *
  * Cobalt/POSIX message queue services
  *

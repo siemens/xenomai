@@ -478,7 +478,7 @@ EXPORT_SYMBOL_GPL(rtdm_timer_stop);
  * - -ETIMEDOUT is returned if @c expiry describes an absolute date in the
  * past.
  *
- * @coretags{isr-only}
+ * @coretags{coreirq-only}
  */
 int rtdm_timer_start_in_handler(rtdm_timer_t *timer, nanosecs_abs_t expiry,
 				nanosecs_rel_t interval,
@@ -489,7 +489,7 @@ int rtdm_timer_start_in_handler(rtdm_timer_t *timer, nanosecs_abs_t expiry,
  *
  * @param[in,out] timer Timer handle as returned by rtdm_timer_init()
  *
- * @coretags{isr-only}
+ * @coretags{coreirq-only}
  */
 void rtdm_timer_stop_in_handler(rtdm_timer_t *timer);
 #endif /* DOXYGEN_CPP */
