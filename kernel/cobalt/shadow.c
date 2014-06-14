@@ -449,7 +449,7 @@ void ipipe_migration_hook(struct task_struct *p) /* hw IRQs off */
  * domain to Xenomai. The shadow will resume in the Xenomai domain as
  * returning from schedule().
  *
- * @remark Tags: secondary-only, might-switch.
+ * @coretags{secondary-only, might-switch}
  */
 int xnshadow_harden(void)
 {
@@ -522,7 +522,7 @@ EXPORT_SYMBOL_GPL(xnshadow_harden);
  *
  * @param reason The reason to report along with the SIGDEBUG signal.
  *
- * @remark Tags: primary-only, might-switch.
+ * @coretags{primary-only, might-switch}
  *
  * @note "current" is valid here since the shadow runs with the
  * properties of the Linux task.
@@ -878,7 +878,7 @@ static unsigned long mayday_unmapped_area(struct file *file,
  * - -EBUSY is returned if either the current Linux task or the
  * associated shadow thread is already involved in a shadow mapping.
  *
- * @remark Tags: secondary-only.
+ * @coretags{secondary-only}
  */
 int xnshadow_map_user(struct xnthread *thread,
 		      unsigned long __user *u_window_offset)
@@ -1020,7 +1020,7 @@ static inline void wakeup_parent(struct completion *done)
  * - -EBUSY is returned if either the current Linux task or the
  * associated shadow thread is already involved in a shadow mapping.
  *
- * @remark Tags: secondary-only, might-switch.
+ * @coretags{secondary-only, might-switch}
  */
 int xnshadow_map_kernel(struct xnthread *thread, struct completion *done)
 {
@@ -1686,7 +1686,7 @@ EXPORT_SYMBOL_GPL(xnshadow_send_sig);
  *   personality. This handler is passed a pointer to the per-process
  *   data received earlier from the ops->attach_process() handler.
  *
- * @remark Tags: none.
+ * @coretags{secondary-only}
  */
 int xnshadow_register_personality(struct xnpersonality *personality)
 {
@@ -1714,7 +1714,7 @@ EXPORT_SYMBOL_GPL(xnshadow_register_personality);
 /*
  * @brief Unregister an interface personality.
  *
- * @remark Tags: none.
+ * @coretags{secondary-only}
  */
 int xnshadow_unregister_personality(int muxid)
 {
@@ -1753,7 +1753,7 @@ EXPORT_SYMBOL_GPL(xnshadow_unregister_personality);
  * @return the per-process data if the current context is a user-space
  * process; @return NULL otherwise.
  *
- * @remark Tags: atomic-entry.
+ * @coretags{task-unrestricted, atomic-entry}
  */
 void *xnshadow_get_context(unsigned int muxid)
 {
@@ -1775,7 +1775,7 @@ EXPORT_SYMBOL_GPL(xnshadow_get_context);
  * save this handle for unstacking @a muxid when applicable via a call
  * to xnshadow_pop_personality().
  *
- * @remark Tags: secondary-only.
+ * @coretags{secondary-only}
  */
 struct xnpersonality *
 xnshadow_push_personality(int muxid)
@@ -1817,7 +1817,7 @@ EXPORT_SYMBOL_GPL(xnshadow_push_personality);
  * @param prev the previous personality which was returned by the
  * latest call to xnshadow_push_personality() for the current thread.
  *
- * @remark Tags: secondary-only.
+ * @coretags{secondary-only}
  */
 void xnshadow_pop_personality(struct xnpersonality *prev)
 {

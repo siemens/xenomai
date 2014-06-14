@@ -378,12 +378,11 @@ static struct file_operations vfile_snapshot_fops = {
  * change to the data which may be part of the collected records,
  * should also invoke xnvfile_touch() on the associated tag.
  *
- * - entry.lockops is a pointer to a @ref vfile_lockops "locking
- * descriptor", defining the lock and unlock operations for the
- * vfile. This pointer may be left to NULL, in which case the
- * operations on the nucleus lock (i.e. nklock) will be used
- * internally around calls to data collection handlers (see @ref
- * snapshot_ops "operation descriptor").
+ * - entry.lockops is a pointer to a @ref vfile_lockops "lock descriptor",
+ * defining the lock and unlock operations for the vfile. This pointer
+ * may be left to NULL, in which case the operations on the nucleus
+ * lock (i.e. nklock) will be used internally around calls to data
+ * collection handlers (see @ref snapshot_ops "operation descriptor").
  *
  * - .ops is a pointer to an @ref snapshot_ops "operation descriptor".
  *
@@ -397,7 +396,7 @@ static struct file_operations vfile_snapshot_fops = {
  * - -ENOMEM is returned if the virtual file entry cannot be created
  * in the /proc hierarchy.
  *
- * @remark Tags: secondary-only.
+ * @coretags{secondary-only}
  */
 int xnvfile_init_snapshot(const char *name,
 			  struct xnvfile_snapshot *vfile,
@@ -637,7 +636,7 @@ static struct file_operations vfile_regular_fops = {
  * - -ENOMEM is returned if the virtual file entry cannot be created
  * in the /proc hierarchy.
  *
- * @remark Tags: secondary-only.
+ * @coretags{secondary-only}
  */
 int xnvfile_init_regular(const char *name,
 			 struct xnvfile_regular *vfile,
@@ -681,7 +680,7 @@ EXPORT_SYMBOL_GPL(xnvfile_init_regular);
  * - -ENOMEM is returned if the virtual directory entry cannot be
  * created in the /proc hierarchy.
  *
- * @remark Tags: secondary-only.
+ * @coretags{secondary-only}
  */
 int xnvfile_init_dir(const char *name,
 		     struct xnvfile_directory *vdir,
@@ -728,7 +727,7 @@ EXPORT_SYMBOL_GPL(xnvfile_init_dir);
  * - -ENOMEM is returned if the virtual link entry cannot be created
  * in the /proc hierarchy.
  *
- * @remark Tags: secondary-only.
+ * @coretags{secondary-only}
  */
 int xnvfile_init_link(const char *from,
 		      const char *to,
@@ -760,7 +759,7 @@ EXPORT_SYMBOL_GPL(xnvfile_init_link);
  * @param vfile A pointer to the virtual file descriptor to
  * remove.
  *
- * @remark Tags: secondary-only.
+ * @coretags{secondary-only}
  */
 void xnvfile_destroy(struct xnvfile *vfile)
 {
@@ -793,7 +792,7 @@ EXPORT_SYMBOL_GPL(xnvfile_destroy);
  *
  * - -EFAULT indicates an invalid source buffer address.
  *
- * @remark Tags: secondary-only.
+ * @coretags{secondary-only}
  */
 ssize_t xnvfile_get_blob(struct xnvfile_input *input,
 			 void *data, size_t size)
@@ -837,7 +836,7 @@ EXPORT_SYMBOL_GPL(xnvfile_get_blob);
  *
  * - -EFAULT indicates an invalid source buffer address.
  *
- * @remark Tags: secondary-only.
+ * @coretags{secondary-only}
  */
 ssize_t xnvfile_get_string(struct xnvfile_input *input,
 			   char *s, size_t maxlen)
@@ -889,7 +888,7 @@ EXPORT_SYMBOL_GPL(xnvfile_get_string);
  *
  * - -EFAULT indicates an invalid source buffer address.
  *
- * @remark Tags: secondary-only.
+ * @coretags{secondary-only}
  */
 ssize_t xnvfile_get_integer(struct xnvfile_input *input, long *valp)
 {

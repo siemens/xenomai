@@ -392,7 +392,7 @@ void xntimer_destroy(struct xntimer *timer);
  * XN_INFINITE is returned if @a timer is currently disabled or
  * one shot.
  *
- * @remark Tags: isr-allowed.
+ * @coretags{unrestricted, atomic-entry}
  */
 static inline xnticks_t xntimer_interval(struct xntimer *timer)
 {

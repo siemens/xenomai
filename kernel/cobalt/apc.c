@@ -108,7 +108,7 @@ void apc_dispatch(unsigned int virq, void *arg)
  *
  * - -EBUSY is returned if no more APC slots are available.
  *
- * @remark Tags: none.
+ * @coretags{unrestricted}
  */
 int xnapc_alloc(const char *name,
 		void (*handler)(void *cookie), void *cookie)
@@ -148,7 +148,7 @@ EXPORT_SYMBOL_GPL(xnapc_alloc);
  * @param apc The APC id. to release, as returned by a successful call
  * to the xnapc_alloc() service.
  *
- * @remark Tags: none.
+ * @coretags{unrestricted}
  */
 void xnapc_free(int apc)
 {

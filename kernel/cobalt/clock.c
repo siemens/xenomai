@@ -298,7 +298,7 @@ static void adjust_clock_timers(struct xnclock *clock, xnsticks_t delta)
  *
  * @note This routine must be entered nklock locked, interrupts off.
  *
- * @remark Tags: none.
+ * @coretags{task-unrestricted}
  *
  * @note Xenomai tracks the system time in @a nkclock, as a
  * monotonously increasing count of ticks since the epoch. The epoch
@@ -475,7 +475,7 @@ static inline void cleanup_clock_proc(struct xnclock *clock) { }
  *
  * @param clock The new clock to register.
  *
- * @remark Tags: secondary-only.
+ * @coretags{secondary-only}
  */
 int xnclock_register(struct xnclock *clock)
 {
@@ -516,7 +516,7 @@ EXPORT_SYMBOL_GPL(xnclock_register);
  *
  * @param clock The clock to deregister.
  *
- * @remark Tags: secondary-only.
+ * @coretags{secondary-only}
  */
 void xnclock_deregister(struct xnclock *clock)
 {
@@ -546,7 +546,7 @@ EXPORT_SYMBOL_GPL(xnclock_deregister);
  *
  * @param clock The clock for which a new event was received.
  *
- * @remark Tags: primary-only, isr-only, atomic-entry.
+ * @coretags{isr-only, atomic-entry}
  *
  * @note The current CPU must be part of the real-time affinity set,
  * otherwise weird things may happen.

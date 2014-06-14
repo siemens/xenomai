@@ -77,9 +77,8 @@
  * @return the address of the new map is returned on success;
  * otherwise, NULL is returned if @a nkeys is invalid.
  *
- * @remark Tags: none.
+ * @coretags{task-unrestricted}
  */
-
 struct xnmap *xnmap_create(int nkeys, int reserve, int offset)
 {
 	struct xnmap *map;
@@ -115,9 +114,8 @@ EXPORT_SYMBOL_GPL(xnmap_create);
  *
  * @param map The address of the map to delete.
  *
- * @remark Tags: none.
+ * @coretags{task-unrestricted}
  */
-
 void xnmap_delete(struct xnmap *map)
 {
 	xnfree(map);
@@ -149,9 +147,8 @@ EXPORT_SYMBOL_GPL(xnmap_delete);
  *
  * - -ENOSPC when no more free key is available.
  *
- * @remark Tags: isr-allowed.
+ * @coretags{unrestricted}
  */
-
 int xnmap_enter(struct xnmap *map, int key, void *objaddr)
 {
 	int hi, lo, ofkey = key - map->offset;
@@ -209,9 +206,8 @@ EXPORT_SYMBOL_GPL(xnmap_enter);
  *
  * - -ESRCH is returned if @a key is invalid.
  *
- * @remark Tags: isr-allowed.
+ * @coretags{unrestricted}
  */
-
 int xnmap_remove(struct xnmap *map, int key)
 {
 	int ofkey = key - map->offset, hi, lo;
@@ -247,7 +243,7 @@ EXPORT_SYMBOL_GPL(xnmap_remove);
  * otherwise NULL is returned when @a key is invalid or no object is
  * currently indexed on it.
  *
- * @remark Tags: isr-allowed.
+ * @coretags{unrestricted}
  */
 
 /**
@@ -265,7 +261,7 @@ EXPORT_SYMBOL_GPL(xnmap_remove);
  * otherwise NULL is returned when no object is currently indexed on
  * @a key.
  *
- * @remark Tags: isr-allowed.
+ * @coretags{unrestricted}
  */
 
 /** @} */

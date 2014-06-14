@@ -130,7 +130,8 @@ TAB_SIZE               = 8
 # will result in a user-defined paragraph with heading "Side Effects:". 
 # You can put \n's in the value part of an alias to insert newlines.
 
-ALIASES                = 
+ALIASES                = \
+ 		       "coretags{1}=@par Tags\n@ref core-tags \"\1\""
 
 # Set the OPTIMIZE_OUTPUT_FOR_C tag to YES if your project consists of C sources 
 # only. Doxygen will then generate output that is more tailored for C. 
@@ -657,6 +658,7 @@ INCLUDE_FILE_PATTERNS  =
 # omitted =1 is assumed.
 
 PREDEFINED = DOXYGEN_CPP		\
+	CONFIG_SMP			\
         "EXPORT_SYMBOL_GPL(symbol)=//"	\
 	"COBALT_IMPL(T,I,A)=T I A"	\
 	"COBALT_DECL(T,P)=T P"

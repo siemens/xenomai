@@ -63,7 +63,7 @@ static int deletion_apc;
  *
  * @param select_block pointer to the xnselect structure to be initialized
  *
- * @remark Tags: none.
+ * @coretags{task-unrestricted}
  */
 void xnselect_init(struct xnselect *select_block)
 {
@@ -105,7 +105,7 @@ static inline int xnselect_wakeup(struct xnselector *selector)
  * @retval -EINVAL if @a type or @a index is invalid;
  * @retval 0 otherwise.
  *
- * @remark Tags: might-switch, atomic-entry.
+ * @coretags{task-unrestricted, might-switch, atomic-entry}
  */
 int xnselect_bind(struct xnselect *select_block,
 		  struct xnselect_binding *binding,
@@ -172,7 +172,7 @@ EXPORT_SYMBOL_GPL(__xnselect_signal);
  * @param select_block pointer to the @a xnselect structure associated
  * with a file descriptor
  *
- * @remark Tags: might-switch.
+ * @coretags{task-unrestricted, might-switch}
  */
 void xnselect_destroy(struct xnselect *select_block)
 {
@@ -280,7 +280,7 @@ static unsigned fd_set_popcount(fd_set *set, unsigned n)
  *
  * @retval 0
  *
- * @remark Tags: none.
+ * @coretags{task-unrestricted}
  */
 int xnselector_init(struct xnselector *selector)
 {
@@ -320,7 +320,7 @@ EXPORT_SYMBOL_GPL(xnselector_init);
  * @retval 0 in case of timeout.
  * @retval the number of file descriptors having received an event.
  *
- * @remark Tags: might-switch.
+ * @coretags{primary-only, might-switch}
  */
 int xnselect(struct xnselector *selector,
 	     fd_set *out_fds[XNSELECT_MAX_TYPES],
@@ -394,7 +394,7 @@ EXPORT_SYMBOL_GPL(xnselect);
  *
  * @param selector the selector block to be destroyed
  *
- * @remark Tags: none.
+ * @coretags{task-unrestricted}
  */
 void xnselector_destroy(struct xnselector *selector)
 {

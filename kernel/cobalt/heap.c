@@ -256,9 +256,8 @@ static void init_extent(struct xnheap *heap, struct xnextent *extent)
  *
  * - -EINVAL is returned whenever a parameter is invalid.
  *
- * @remark Tags: none.
+ * @coretags{task-unrestricted}
  */
-
 int xnheap_init(struct xnheap *heap,
 		void *heapaddr, unsigned long heapsize, unsigned long pagesize)
 {
@@ -355,9 +354,8 @@ EXPORT_SYMBOL_GPL(xnheap_init);
  * can be a format string, in which case succeeding parameters will be used
  * to resolve the final label.
  *
- * @remark Tags: none.
+ * @coretags{task-unrestricted}
  */
-
 void xnheap_set_label(struct xnheap *heap, const char *label, ...)
 {
 	va_list args;
@@ -388,9 +386,8 @@ EXPORT_SYMBOL_GPL(xnheap_set_label);
  * @param cookie If @a flushfn is non-NULL, @a cookie is an opaque
  * pointer which will be passed unmodified to @a flushfn.
  *
- * @remark Tags: none.
+ * @coretags{task-unrestricted}
  */
-
 void xnheap_destroy(struct xnheap *heap,
 		    void (*flushfn)(struct xnheap *heap,
 				    void *extaddr,
@@ -545,9 +542,8 @@ splitpage:
  * @return The address of the allocated region upon success, or NULL
  * if no memory is available from the specified heap.
  *
- * @remark Tags: isr-allowed.
+ * @coretags{unrestricted}
  */
-
 void *xnheap_alloc(struct xnheap *heap, unsigned long size)
 {
 	unsigned long pagenum, bsize;
@@ -675,9 +671,8 @@ EXPORT_SYMBOL_GPL(xnheap_alloc);
  * the block is not a valid region of the specified heap. Additional
  * return codes can also be defined locally by the @a ckfn routine.
  *
- * @remark Tags: isr-allowed.
+ * @coretags{unrestricted}
  */
-
 int xnheap_test_and_free(struct xnheap *heap, void *block, int (*ckfn) (void *block))
 {
 	caddr_t freepage, lastpage, nextpage, tailpage, freeptr, *tailptr;
@@ -878,9 +873,8 @@ EXPORT_SYMBOL_GPL(xnheap_test_and_free);
  * - -EINVAL is returned whenever the memory address does not
  * represent a valid block.
  *
- * @remark Tags: isr-allowed.
+ * @coretags{unrestricted}
  */
-
 int xnheap_free(struct xnheap *heap, void *block)
 {
 	return xnheap_test_and_free(heap, block, NULL);
@@ -904,9 +898,8 @@ EXPORT_SYMBOL_GPL(xnheap_free);
  * @return 0 is returned upon success, or -EINVAL is returned if
  * @a extsize differs from the initial extent's size.
  *
- * @remark Tags: isr-allowed.
+ * @coretags{unrestricted}
  */
-
 int xnheap_extend(struct xnheap *heap, void *extaddr, unsigned long extsize)
 {
 	struct xnextent *extent = extaddr;

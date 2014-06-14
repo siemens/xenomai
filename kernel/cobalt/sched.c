@@ -96,7 +96,7 @@ MODULE_PARM_DESC(watchdog_timeout, "Watchdog timeout (s)");
  * software lockups. It kills any offending thread which is found to
  * monopolize the CPU so as to starve the Linux kernel for too long.
  *
- * @remark Tags: primary-only, isr-only, atomic-entry.
+ * @coretags{isr-only, atomic-entry}
  */
 static void watchdog_handler(struct xntimer *timer)
 {
@@ -734,7 +734,7 @@ static inline void switch_context(struct xnsched *sched,
  * @return Non-zero is returned if a context switch actually happened,
  * otherwise zero if the current thread was left running.
  *
- * @remark Tags: none.
+ * @coretags{unrestricted}
  */
 static inline int test_resched(struct xnsched *sched)
 {

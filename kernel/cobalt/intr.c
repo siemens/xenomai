@@ -603,9 +603,8 @@ static void clear_irqstats(struct xnintr *intr)
  * @return 0 is returned on success. Otherwise, -EINVAL is returned if
  * @a irq is not a valid interrupt number.
  *
- * @remark Tags: secondary-only.
+ * @coretags{secondary-only}
  */
-
 int xnintr_init(struct xnintr *intr, const char *name,
 		unsigned int irq, xnisr_t isr, xniack_t iack,
 		int flags)
@@ -644,7 +643,7 @@ EXPORT_SYMBOL_GPL(xnintr_init);
  * @param intr The descriptor address of the interrupt object to
  * destroy.
  *
- * @remark Tags: secondary-only.
+ * @coretags{secondary-only}
  */
 void xnintr_destroy(struct xnintr *intr)
 {
@@ -680,7 +679,7 @@ EXPORT_SYMBOL_GPL(xnintr_destroy);
  * @note The caller <b>must not</b> hold nklock when invoking this service,
  * this would cause deadlocks.
  *
- * @remark Tags: secondary-only.
+ * @coretags{secondary-only}
  *
  * @note Attaching an interrupt resets the tracked number of receipts
  * to zero.
@@ -734,7 +733,7 @@ EXPORT_SYMBOL_GPL(xnintr_attach);
  * @note The caller <b>must not</b> hold nklock when invoking this
  * service, this would cause deadlocks.
  *
- * @remark Tags: secondary-only.
+ * @coretags{secondary-only}
  */
 void xnintr_detach(struct xnintr *intr)
 {
@@ -762,9 +761,8 @@ EXPORT_SYMBOL_GPL(xnintr_detach);
  * @param intr The descriptor address of the interrupt object to
  * enable.
  *
- * @remark Tags: secondary-only.
+ * @coretags{secondary-only}
  */
-
 void xnintr_enable(struct xnintr *intr)
 {
 	secondary_mode_only();
@@ -784,9 +782,8 @@ EXPORT_SYMBOL_GPL(xnintr_enable);
  * @param intr The descriptor address of the interrupt object to
  * disable.
  *
- * @remark Tags: secondary-only.
+ * @coretags{secondary-only}
  */
-
 void xnintr_disable(struct xnintr *intr)
 {
 	secondary_mode_only();
@@ -810,9 +807,8 @@ EXPORT_SYMBOL_GPL(xnintr_disable);
  * @note Depending on architectures, setting more than one bit in @a
  * cpumask could be meaningless.
  *
- * @remark Tags: secondary-only.
+ * @coretags{secondary-only}
  */
-
 void xnintr_affinity(struct xnintr *intr, cpumask_t cpumask)
 {
 	secondary_mode_only();

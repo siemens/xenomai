@@ -97,7 +97,7 @@ int xntimer_heading_p(struct xntimer *timer)
  * @return 0 is returned upon success, or -ETIMEDOUT if an absolute
  * date in the past has been given.
  *
- * @remark Tags: atomic-entry.
+ * @coretags{unrestricted, atomic-entry}
  */
 int xntimer_start(struct xntimer *timer,
 		  xnticks_t value, xnticks_t interval,
@@ -170,7 +170,7 @@ EXPORT_SYMBOL_GPL(xntimer_start);
  *
  * @param timer The address of a valid timer descriptor.
  *
- * @remark Tags: atomic-entry, isr-allowed.
+ * @coretags{unrestricted, atomic-entry}
  */
 void __xntimer_stop(struct xntimer *timer)
 {
@@ -208,7 +208,7 @@ EXPORT_SYMBOL_GPL(__xntimer_stop);
  * @return The expiration date in nanoseconds. The special value
  * XN_INFINITE is returned if @a timer is currently disabled.
  *
- * @remark Tags: isr-allowed.
+ * @coretags{unrestricted, atomic-entry}
  */
 xnticks_t xntimer_get_date(struct xntimer *timer)
 {
@@ -236,7 +236,7 @@ EXPORT_SYMBOL_GPL(xntimer_get_date);
  * the associated handler has not been fired yet); in such a case, 1
  * is returned.
  *
- * @remark Tags: irqs-off, isr-allowed.
+ * @coretags{unrestricted, atomic-entry}
  */
 xnticks_t xntimer_get_timeout(struct xntimer *timer)
 {
@@ -284,7 +284,7 @@ EXPORT_SYMBOL_GPL(xntimer_get_timeout);
  * There is no limitation on the number of timers which can be
  * created/active concurrently.
  *
- * @remark Tags: none.
+ * @coretags{unrestricted}
  */
 #ifdef DOXYGEN_CPP
 void xntimer_init(struct xntimer *timer, struct xnclock *clock,
@@ -371,7 +371,7 @@ EXPORT_SYMBOL_GPL(xntimer_switch_tracking);
  *
  * @param timer The address of a valid timer descriptor.
  *
- * @remark Tags: none.
+ * @coretags{unrestricted}
  */
 void xntimer_destroy(struct xntimer *timer)
 {
@@ -396,16 +396,16 @@ EXPORT_SYMBOL_GPL(xntimer_destroy);
 /**
  * Migrate a timer.
  *
- * This call migrates a timer to another cpu. In order to avoid pathological
- * cases, it must be called from the CPU to which @a timer is currently
- * attached.
+ * This call migrates a timer to another cpu. In order to avoid
+ * pathological cases, it must be called from the CPU to which @a
+ * timer is currently attached.
  *
  * @param timer The address of the timer object to be migrated.
  *
  * @param sched The address of the destination per-CPU scheduler
  * slot.
  *
- * @remark Tags: atomic-entry.
+ * @coretags{unrestricted, atomic-entry}
  */
 void __xntimer_migrate(struct xntimer *timer, struct xnsched *sched)
 {				/* nklocked, IRQs off */
@@ -461,7 +461,7 @@ void xntimer_release_ipi(void)
  *
  * @return the number of overruns of @a timer at date @a now
  *
- * @remark Tags: irqs-off, isr-allowed.
+ * @coretags{unrestricted, atomic-entry}
  */
 unsigned long long xntimer_get_overruns(struct xntimer *timer, xnticks_t now)
 {
@@ -531,14 +531,7 @@ EXPORT_SYMBOL_GPL(xntimer_format_time);
  *
  * @param cdev An pointer to the clock device which notifies us.
  *
- * Environment:
- *
- * This routine is a callback invoked from the kernel's clock event
- * handlers.
- *
- * @note GENERIC_CLOCKEVENTS is required from the host kernel.
- *
- * @remark Tags: none.
+ * @coretags{unrestricted}
  */
 static int program_htick_shot(unsigned long delay,
 			      struct clock_event_device *cdev)
@@ -580,7 +573,7 @@ static int program_htick_shot(unsigned long delay,
  *
  * @param cdev An opaque pointer to the clock device which notifies us.
  *
- * @remark Tags: none.
+ * @coretags{unrestricted}
  *
  * @note GENERIC_CLOCKEVENTS is required from the host kernel.
  */
@@ -643,7 +636,7 @@ static void switch_htick_mode(enum clock_event_mode mode,
  * invalid calibration results; in such a case, such hardware is
  * unusable for any timing duties.
  *
- * @remark Tags: secondary-only.
+ * @coretags{secondary-only}
  */
 int xntimer_grab_hardware(int cpu)
 {
@@ -690,7 +683,7 @@ int xntimer_grab_hardware(int cpu)
  *
  * @param cpu The CPU number the timer was grabbed from.
  *
- * @remark Tags: secondary-only.
+ * @coretags{secondary-only}
  */
 void xntimer_release_hardware(int cpu)
 {

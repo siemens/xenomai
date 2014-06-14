@@ -162,7 +162,7 @@
  *
  * @param len The length of the kernel buffer starting at @a ptr.
  *
- * @remark Tags: isr-allowed.
+ * @coretags{unrestricted}
  */
 
 /**
@@ -180,9 +180,8 @@
  *
  * @param len The length of the kernel buffer starting at @a ptr.
  *
- * @remark Tags: isr-allowed.
+ * @coretags{unrestricted}
  */
-
 void xnbufd_map_kmem(struct xnbufd *bufd, void *ptr, size_t len)
 {
 	bufd->b_ptr = ptr;
@@ -210,7 +209,7 @@ EXPORT_SYMBOL_GPL(xnbufd_map_kmem);
  *
  * @param len The length of the user buffer starting at @a ptr.
  *
- * @remark Tags: none.
+ * @coretags{task-unrestricted}
  */
 
 /**
@@ -230,7 +229,7 @@ EXPORT_SYMBOL_GPL(xnbufd_map_kmem);
  *
  * @param len The length of the user buffer starting at @a ptr.
  *
- * @remark Tags: none.
+ * @coretags{task-unrestricted}
  */
 
 void xnbufd_map_umem(struct xnbufd *bufd, void __user *ptr, size_t len)
@@ -284,7 +283,7 @@ EXPORT_SYMBOL_GPL(xnbufd_map_umem);
  *   an invalid context. This error is only returned when the debug
  *   mode is disabled; otherwise a panic assertion is raised.
  *
- * @remark Tags: none.
+ * @coretags{task-unrestricted}
  *
  * @note Calling this routine while holding the nklock and/or running
  * with interrupts disabled is invalid, and doing so will trigger a
@@ -295,7 +294,6 @@ EXPORT_SYMBOL_GPL(xnbufd_map_umem);
  * xnbufd_copy_to_kmem() may only be called from a preemptible section
  * (Linux-wise).
  */
-
 ssize_t xnbufd_copy_to_kmem(void *to, struct xnbufd *bufd, size_t len)
 {
 	caddr_t from;
@@ -392,7 +390,7 @@ EXPORT_SYMBOL_GPL(xnbufd_copy_to_kmem);
  * - -ENOMEM is returned when no memory is available from the nucleus
  *    heap to allocate the carry over buffer.
  *
- * @remark Tags: none.
+ * @coretags{unrestricted}
  *
  * @note Calling this routine while holding the nklock and/or running
  * with interrupts disabled is invalid, and doing so will trigger a
@@ -403,7 +401,6 @@ EXPORT_SYMBOL_GPL(xnbufd_copy_to_kmem);
  * xnbufd_copy_to_kmem() may only be called from a preemptible section
  * (Linux-wise).
  */
-
 ssize_t xnbufd_copy_from_kmem(struct xnbufd *bufd, void *from, size_t len)
 {
 	caddr_t to;
@@ -488,13 +485,12 @@ EXPORT_SYMBOL_GPL(xnbufd_copy_from_kmem);
  * @return The number of bytes read so far from the memory area
  * covered by @a ubufd.
  *
- * @remark Tags: none.
+ * @coretags{task-unrestricted}
  *
  * @note Calling this routine while holding the nklock and/or running
  * with interrupts disabled is invalid, and doing so will trigger a
  * debug assertion.
  */
-
 ssize_t xnbufd_unmap_uread(struct xnbufd *bufd)
 {
 	preemptible_only();
@@ -525,13 +521,12 @@ EXPORT_SYMBOL_GPL(xnbufd_unmap_uread);
  * @return The number of bytes written so far to the memory area
  * covered by @a ubufd.
  *
- * @remark Tags: none.
+ * @coretags{task-unrestricted}
  *
  * @note Calling this routine while holding the nklock and/or running
  * with interrupts disabled is invalid, and doing so will trigger a
  * debug assertion.
  */
-
 ssize_t xnbufd_unmap_uwrite(struct xnbufd *bufd)
 {
 	ssize_t ret = 0;
@@ -574,7 +569,7 @@ EXPORT_SYMBOL_GPL(xnbufd_unmap_uwrite);
  *
  * @param bufd The address of the buffer descriptor to reset.
  *
- * @remark Tags: isr-allowed.
+ * @coretags{unrestricted}
  */
 
 /**
@@ -595,9 +590,8 @@ EXPORT_SYMBOL_GPL(xnbufd_unmap_uwrite);
  *
  * @param bufd The address of the buffer descriptor to invalidate.
  *
- * @remark Tags: isr-allowed.
+ * @coretags{unrestricted}
  */
-
 void xnbufd_invalidate(struct xnbufd *bufd)
 {
 #if XENO_DEBUG(NUCLEUS)
@@ -624,9 +618,8 @@ EXPORT_SYMBOL_GPL(xnbufd_invalidate);
  * @return The number of bytes read so far from the memory area
  * covered by @a ubufd.
  *
- * @remark Tags: isr-allowed.
+ * @coretags{task-unrestricted}
  */
-
 ssize_t xnbufd_unmap_kread(struct xnbufd *bufd)
 {
 #if XENO_DEBUG(NUCLEUS)
@@ -648,9 +641,8 @@ EXPORT_SYMBOL_GPL(xnbufd_unmap_kread);
  * @return The number of bytes written so far to the memory area
  * covered by @a ubufd.
  *
- * @remark Tags: isr-allowed.
+ * @coretags{task-unrestricted}
  */
-
 ssize_t xnbufd_unmap_kwrite(struct xnbufd *bufd)
 {
 #if XENO_DEBUG(NUCLEUS)

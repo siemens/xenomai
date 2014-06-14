@@ -75,7 +75,7 @@
  * valid fast-lock address is required if XNSYNCH_OWNER is set in @a
  * flags.
  *
- * @remark Tags: none.
+ * @coretags{task-unrestricted}
  */
 void xnsynch_init(struct xnsynch *synch, int flags, atomic_long_t *fastlock)
 {
@@ -129,7 +129,7 @@ EXPORT_SYMBOL_GPL(xnsynch_init);
  * caller, for detecting respectively: object deletion, timeout or
  * signal/unblock conditions which might have happened while waiting.
  *
- * @remark Tags: might-switch.
+ * @coretags{primary-only, might-switch}
  */
 int xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
 		     xntmode_t timeout_mode)
@@ -178,7 +178,7 @@ EXPORT_SYMBOL_GPL(xnsynch_sleep_on);
  *
  * @return The descriptor address of the unblocked thread.
  *
- * @remark Tags: isr-allowed.
+ * @coretags{unrestricted}
  */
 struct xnthread *xnsynch_wakeup_one_sleeper(struct xnsynch *synch)
 {
@@ -254,7 +254,7 @@ EXPORT_SYMBOL_GPL(xnsynch_wakeup_many_sleepers);
  * @param sleeper The thread to unblock which MUST be currently linked
  * to the synchronization object's pending queue (i.e. synch->pendq).
  *
- * @remark Tags: isr-allowed.
+ * @coretags{unrestricted}
  */
 void xnsynch_wakeup_this_sleeper(struct xnsynch *synch, struct xnthread *sleeper)
 {
@@ -330,7 +330,7 @@ static void xnsynch_renice_thread(struct xnthread *thread,
  * caller, for detecting respectively: object deletion, timeout or
  * signal/unblock conditions which might have happened while waiting.
  *
- * @remark Tags: might-switch.
+ * @coretags{primary-only, might-switch}
  */
 int xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 		    xntmode_t timeout_mode)
@@ -474,22 +474,6 @@ out:
 }
 EXPORT_SYMBOL_GPL(xnsynch_acquire);
 
-/**
- * @internal
- * @fn void clear_boost(struct xnsynch *synch, struct xnthread *owner);
- * @brief Clear the priority boost.
- *
- * This service is called internally whenever a synchronization object
- * is not claimed anymore by sleepers to reset the object owner's
- * priority to its initial level.
- *
- * @param synch The descriptor address of the synchronization object.
- *
- * @param owner The descriptor address of the thread which
- * currently owns the synchronization object.
- *
- * @remark Tags: atomic-entry.
- */
 static void clear_boost(struct xnsynch *synch, struct xnthread *owner)
 {
 	struct xnthread *target;
@@ -586,7 +570,7 @@ static struct xnthread *transfer_ownership(struct xnsynch *synch,
  * - The synchronization object ownership is transfered to the
  * unblocked thread.
  *
- * @remark Tags: none.
+ * @coretags{primary-only, might-switch}
  */
 struct xnthread *xnsynch_release(struct xnsynch *synch,
 				 struct xnthread *thread)
@@ -615,24 +599,15 @@ struct xnthread *xnsynch_release(struct xnsynch *synch,
 }
 EXPORT_SYMBOL_GPL(xnsynch_release);
 
-/**
- * @internal
- * @fn void xnsynch_requeue_sleeper(struct xnthread *thread);
- * @brief Change a sleeper's priority.
- *
- * This service is used by the PIP code to update the pending priority
- * of a sleeping thread.
- *
- * @param thread The descriptor address of the affected thread.
- *
- * @remark Tags: atomic-entry.
- */
-
 void xnsynch_requeue_sleeper(struct xnthread *thread)
 {
 	struct xnsynch *synch = thread->wchan;
 	struct xnthread *owner;
 
+	/*
+	 * Update the position of a thread waiting for a lock w/ PIP
+	 * enabled.
+	 */
 	if ((synch->status & XNSYNCH_PRIO) == 0)
 		return;
 
@@ -687,7 +662,7 @@ EXPORT_SYMBOL_GPL(xnsynch_requeue_sleeper);
  *
  * @return The descriptor address of the unblocked thread.
  *
- * @remark Tags: isr-allowed.
+ * @coretags{unrestricted}
  */
 struct xnthread *xnsynch_peek_pendq(struct xnsynch *synch)
 {
@@ -746,9 +721,8 @@ EXPORT_SYMBOL_GPL(xnsynch_peek_pendq);
  *
  * - The synchronization object is no more owned by any thread.
  *
- * @remark Tags: isr-allowed.
+ * @coretags{unrestricted}
  */
-
 int xnsynch_flush(struct xnsynch *synch, int reason)
 {
 	struct xnthread *sleeper, *tmp;
@@ -780,24 +754,15 @@ int xnsynch_flush(struct xnsynch *synch, int reason)
 }
 EXPORT_SYMBOL_GPL(xnsynch_flush);
 
-/**
- * @internal
- * @fn void xnsynch_forget_sleeper(struct xnthread *thread);
- * @brief Abort a wait for a resource.
- *
- * Performs all the necessary housekeeping chores to stop a thread
- * from waiting on a given synchronization object.
- *
- * @param thread The descriptor address of the affected thread.
- *
- * @remark Tags: atomic-entry.
- */
-
 void xnsynch_forget_sleeper(struct xnthread *thread)
 {
 	struct xnsynch *synch = thread->wchan, *nsynch;
 	struct xnthread *owner, *target;
 
+	/*
+	 * Do all the necessary housekeeping chores to stop a thread
+	 * from waiting on a given synchronization object.
+	 */
 	trace_cobalt_synch_forget(synch);
 
 	xnthread_clear_state(thread, XNPEND);
@@ -836,24 +801,15 @@ void xnsynch_forget_sleeper(struct xnthread *thread)
 }
 EXPORT_SYMBOL_GPL(xnsynch_forget_sleeper);
 
-/**
- * @internal
- * @fn void xnsynch_release_all_ownerships(struct xnthread *thread);
- * @brief Release all ownerships.
- *
- * This call is used internally to release all the ownerships obtained
- * by a thread on synchronization objects. This routine must be
- * entered interrupts off.
- *
- * @param thread The descriptor address of the affected thread.
- *
- * @remark Tags: atomic-entry.
- */
-
 void xnsynch_release_all_ownerships(struct xnthread *thread)
 {
 	struct xnsynch *synch, *tmp;
 
+	/*
+	 * Release all the ownerships obtained by a thread on
+	 * synchronization objects. This routine must be entered
+	 * interrupts off.
+	 */
 	xnthread_for_each_claimed_safe(synch, tmp, thread) {
 		xnsynch_release(synch, thread);
 		if (synch->cleanup)

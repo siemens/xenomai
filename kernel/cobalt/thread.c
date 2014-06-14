@@ -541,7 +541,7 @@ void __xnthread_cleanup(struct xnthread *curr)
  * - -EINVAL is returned if @a attr->flags has invalid bits set, or @a
  *   attr->affinity is invalid (e.g. empty).
  *
- * @remark Tags: secondary-only.
+ * @coretags{secondary-only}
  */
 int xnthread_init(struct xnthread *thread,
 		  const struct xnthread_init_attr *attr,
@@ -622,7 +622,7 @@ EXPORT_SYMBOL_GPL(xnthread_init);
  *
  * @retval -EBUSY if @a thread was not dormant or stopped ;
  *
- * @remark Tags: might-switch.
+ * @coretags{task-unrestricted, might-switch}
  */
 int xnthread_start(struct xnthread *thread,
 		   const struct xnthread_start_attr *attr)
@@ -685,7 +685,7 @@ EXPORT_SYMBOL_GPL(xnthread_start);
  * temporarily for sleeping. If this mode bit is set, such thread
  * would return immediately with XNBREAK set from xnthread_suspend().
  *
- * @remark Tags: might-switch.
+ * @coretags{task-unrestricted, might-switch}
  *
  * @note Setting @a clrmask and @a setmask to zero leads to a nop,
  * only returning the previous mode if @a mode_r is a valid address.
@@ -783,7 +783,7 @@ EXPORT_SYMBOL_GPL(xnthread_set_mode);
  * then this service immediately exits without suspending the thread,
  * but raises the XNBREAK condition in its information mask.
  *
- * @remark Tags: isr-allowed, might-switch.
+ * @coretags{unrestricted, might-switch}
  */
 void xnthread_suspend(struct xnthread *thread, int mask,
 		      xnticks_t timeout, xntmode_t timeout_mode,
@@ -993,7 +993,7 @@ EXPORT_SYMBOL_GPL(xnthread_suspend);
  * - XNBREAK means that the wait has been forcibly broken by a call to
  * xnthread_unblock().
  *
- * @remark Tags: isr-allowed.
+ * @coretags{unrestricted, might-switch}
  */
 void xnthread_resume(struct xnthread *thread, int mask)
 {
@@ -1111,7 +1111,7 @@ EXPORT_SYMBOL_GPL(xnthread_resume);
  * @return non-zero is returned if the thread was actually unblocked
  * from a pending wait state, 0 otherwise.
  *
- * @remark Tags: isr-allowed.
+ * @coretags{unrestricted, might-switch}
  */
 int xnthread_unblock(struct xnthread *thread)
 {
@@ -1198,7 +1198,7 @@ EXPORT_SYMBOL_GPL(xnthread_unblock);
  * returned if @a timeout_mode is not compatible with @a idate, such
  * as XN_RELATIVE with @a idate different from XN_INFINITE.
  *
- * @remark Tags: none.
+ * @coretags{task-unrestricted}
  */
 int xnthread_set_periodic(struct xnthread *thread, xnticks_t idate,
 			  xntmode_t timeout_mode, xnticks_t period)
@@ -1276,7 +1276,7 @@ EXPORT_SYMBOL_GPL(xnthread_set_periodic);
  * calling thread. If @a overruns_r is valid, the count of pending
  * overruns is copied to the pointed memory location.
  *
- * @remark Tags: primary-only, might-sleep.
+ * @coretags{primary-only, might-switch}
  */
 int xnthread_wait_period(unsigned long *overruns_r)
 {
@@ -1350,7 +1350,7 @@ EXPORT_SYMBOL_GPL(xnthread_wait_period);
  *   - @a quantum is smaller than the master clock gravity, which
  * denotes a spurious value.
  *
- * @remark Tags: none.
+ * @coretags{task-unrestricted}
  */
 int xnthread_set_slice(struct xnthread *thread, xnticks_t quantum)
 {
@@ -1402,7 +1402,7 @@ EXPORT_SYMBOL_GPL(xnthread_set_slice);
  *
  * @param thread The descriptor address of the thread to terminate.
  *
- * @remark Tags: might-switch.
+ * @coretags{task-unrestricted, might-switch}
  */
 void xnthread_cancel(struct xnthread *thread)
 {
@@ -1477,7 +1477,7 @@ EXPORT_SYMBOL_GPL(xnthread_cancel);
  * - -EBUSY indicates that another thread is already waiting for @a
  *   thread to terminate.
  *
- * @remark Tags: might-switch.
+ * @coretags{task-unrestricted, might-switch}
  */
 int xnthread_join(struct xnthread *thread, bool uninterruptible)
 {
@@ -1544,6 +1544,8 @@ out:
 }
 EXPORT_SYMBOL_GPL(xnthread_join);
 
+#ifdef CONFIG_SMP
+
 /**
  * @fn int xnthread_migrate(int cpu)
  * @brief Migrate the current thread.
@@ -1560,11 +1562,8 @@ EXPORT_SYMBOL_GPL(xnthread_join);
  * @retval -EINVAL if the current thread affinity forbids this
  * migration.
  *
- * @remark Tags: might-switch.
+ * @coretags{primary-only, might-switch}
  */
-
-#ifdef CONFIG_SMP
-
 int xnthread_migrate(int cpu)
 {
 	struct xnthread *thread;
@@ -1683,7 +1682,7 @@ void xnthread_migrate_passive(struct xnthread *thread, struct xnsched *sched)
  * or ready thread moves it to the end of the runnable queue, thus
  * causing a manual round-robin.
  *
- * @remark Tags: none.
+ * @coretags{task-unregistred}
  *
  * @note The changes only apply to the Xenomai scheduling parameters
  * for @a thread. There is no propagation/translation of such changes

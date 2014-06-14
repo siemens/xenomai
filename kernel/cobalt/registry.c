@@ -618,7 +618,7 @@ static inline int registry_wakeup_sleepers(const char *key)
  *
  * - -EEXIST is returned if the @a key is already in use.
  *
- * @remark Tags: might-switch.
+ * @coretags{unrestricted, might-switch, atomic-entry}
  */
 int xnregistry_enter(const char *key, void *objaddr,
 		     xnhandle_t *phandle, struct xnpnode *pnode)
@@ -729,7 +729,7 @@ EXPORT_SYMBOL_GPL(xnregistry_enter);
  * - -ETIMEDOUT is returned if the object cannot be retrieved within
  * the specified amount of time.
  *
- * @remark Tags: primary-only, might-switch.
+ * @coretags{primary-only, might-switch}
  */
 int xnregistry_bind(const char *key, xnticks_t timeout, int timeout_mode,
 		    xnhandle_t *phandle)
@@ -799,9 +799,8 @@ EXPORT_SYMBOL_GPL(xnregistry_bind);
  * - -ESRCH is returned if @a handle does not reference a registered
  * object.
  *
- * @remark Tags: none.
+ * @coretags{unrestricted}
  */
-
 int xnregistry_remove(xnhandle_t handle)
 {
 	struct xnobject *object;
@@ -851,7 +850,7 @@ EXPORT_SYMBOL_GPL(xnregistry_remove);
 /**
  * Turn a named object into an anonymous object
  *
- * @remark Tags: none.
+ * @coretags{unrestricted}
  */
 int xnregistry_unlink(const char *key)
 {
@@ -914,7 +913,7 @@ unlock_and_exit:
  * on success. Otherwise, NULL is returned if @a handle does not
  * reference a registered object.
  *
- * @remark Tags: isr-allowed.
+ * @coretags{unrestricted}
  */
 
 /** @} */
