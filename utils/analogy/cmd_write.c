@@ -202,6 +202,8 @@ error:
 
 	cfg->chans = NULL;
 
+	fprintf(stderr, "cmd_write: leaving %s in error\n", __FUNCTION__);
+
 	return err;
 }
 
@@ -267,14 +269,20 @@ static void print_config(struct config *cfg)
 
 static void cleanup_config(struct config *cfg)
 {
-	if (cfg->buffer)
+	if (cfg->buffer) {
 		free(cfg->buffer);
+		cfg->buffer = NULL;
+	}
 
-	if (cfg->dsc.sbdata)
+	if (cfg->dsc.sbdata) {
 		free(cfg->dsc.sbdata);
+		cfg->dsc.sbdata = NULL;
+	}
 
-	if (cfg->dsc.fd != -1)
+	if (cfg->dsc.fd != -1) {
 		a4l_close(&cfg->dsc);
+		cfg->dsc.fd = -1;
+	}
 }
 
 static int init_config(struct config *cfg, int argc, char *argv[])
@@ -375,7 +383,7 @@ out:
 
 /* --- Input management part --- */
 
-static int process_input(struct config *cfg)
+static int process_input(struct config *cfg, int *elements)
 {
 	int err = 0, filled = 0;
 
@@ -389,8 +397,7 @@ static int process_input(struct config *cfg)
 		double value;
 		char tmp[128];
 
-		/* Data from stdin are supposed to be double values
-		   coming from wf_generate... */
+		/* stdin data are supposed to be double values from wf_generate  */
 		err = fread(&value, sizeof(double), 1, cfg->input);
 		if (err != 1 && !feof(cfg->input)) {
 			err = -errno;
@@ -401,7 +408,7 @@ static int process_input(struct config *cfg)
 		else if (err == 0 && feof(cfg->input))
 			goto out;
 
-		/* ...and these data are just for one channel... */
+		/* the data is just for one channel */
 		err = a4l_dtoraw(cfg->cinfo, cfg->rinfo, tmp, &value, 1);
 		if (err < 0) {
 			fprintf(stderr,
@@ -410,7 +417,7 @@ static int process_input(struct config *cfg)
 			goto out;
 		}
 
-		/* ...so we have to duplicate the conversion if many
+		/* so we have to duplicate the conversion if many
 		   channels are selected for the acquisition */
 		for (i = 0; i < cfg->chans_count; i++)
 			memcpy(cfg->buffer + filled * scan_size + i * chan_size,
@@ -420,30 +427,41 @@ static int process_input(struct config *cfg)
 	}
 
 out:
+        if (err < 0)
+		return err;
 
-	return err < 0 ? err : filled;
+        *elements = filled;
+
+	return 0;
 }
 
 /* --- Acquisition related stuff --- */
-
 static int run_acquisition(struct config *cfg)
 {
-	int err = 0;
+	int err = 0, elements = 0;
 
 	/* The return value of a4l_sizeof_chan() was already
 	controlled in init_config so no need to do it twice */
 	int chan_size = a4l_sizeof_chan(cfg->cinfo);
 	int scan_size = cfg->chans_count * chan_size;
 
-	err = cfg->input ? process_input(cfg) : BUFFER_DEPTH;
-	if (err > 0)
-		err = a4l_async_write(&cfg->dsc,
-				      cfg->buffer,
-				      err * scan_size, A4L_INFINITE);
-	else if (err == 0)
-		err = -ENOENT;
+	if (cfg->input) {
+		err = process_input(cfg, &elements);
+		if (err < 0)
+			return err;
+	}
+	else
+		elements = BUFFER_DEPTH;
 
-	return err < 0 ? err : 0;
+	if (elements == 0)
+		return -ENOENT;
+
+	err = a4l_async_write(&cfg->dsc, cfg->buffer, elements * scan_size,
+		              A4L_INFINITE);
+	if (err < 0)
+		return err;
+
+	return 0;
 }
 
 static int init_acquisition(struct config *cfg)
